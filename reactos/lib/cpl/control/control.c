@@ -17,10 +17,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: control.c,v 1.1 2004/06/19 00:11:44 kuehng Exp $
+/* $Id: control.c,v 1.2 2004/06/28 12:05:16 ekohl Exp $
  *
  * PROJECT:         ReactOS System Control Panel
- * FILE:            lib/cpl/system/control.cpp
+ * FILE:            lib/cpl/system/control.c
  * PURPOSE:         ReactOS System Control Panel
  * PROGRAMMER:      Gero Kuehn (reactos.filter@gkware.com)
  * UPDATE HISTORY:
@@ -47,6 +47,22 @@
 #define CTL_DEBUG(x)
 #endif
 
+
+#define MYWNDCLASS _T("CTLPANELCLASS")
+
+typedef LONG (CALLBACK *CPLAPPLETFUNC)(HWND hwndCPL, UINT uMsg, LPARAM lParam1, LPARAM lParam2);
+
+typedef struct CPLLISTENTRY
+{
+	TCHAR pszPath[MAX_PATH];
+	HMODULE hDLL;
+	CPLAPPLETFUNC pFunc;
+	CPLINFO CPLInfo;
+	int nIndex;
+} CPLLISTENTRY;
+
+
+HWND hListView;
 HINSTANCE hInst;
 HWND hMainWnd;
 
@@ -59,19 +75,6 @@ void dbgprint(TCHAR *format,...)
 	OutputDebugString(buf);
 	va_end(va);
 }
-
-#define MYWNDCLASS _T("CTLPANELCLASS")
-HWND hListView;
-
-typedef LONG  (CALLBACK *CPLAPPLETFUNC)(HWND hwndCPL, UINT uMsg, LPARAM lParam1, LPARAM lParam2);
-
-typedef struct CPLLISTENTRY{
-	TCHAR pszPath[MAX_PATH];
-	HMODULE hDLL;
-	CPLAPPLETFUNC pFunc;
-	CPLINFO CPLInfo;
-	int nIndex;
-} CPLLISTENTRY;
 
 void PopulateCPLList(HWND hLisCtrl)
 {
@@ -99,7 +102,7 @@ void PopulateCPLList(HWND hLisCtrl)
 
 		pEntry->hDLL = LoadLibrary(pEntry->pszPath);
 		CTL_DEBUG((_T("Handle %08X\r\n"),pEntry->hDLL));
-		pEntry->pFunc = (CPLAPPLETFUNC)GetProcAddress(pEntry->hDLL,_T("CPlApplet"));
+		pEntry->pFunc = (CPLAPPLETFUNC)GetProcAddress(pEntry->hDLL,"CPlApplet");
 		CTL_DEBUG((_T("CPLFunc %08X\r\n"),pEntry->pFunc));
 		if(pEntry->pFunc && pEntry->pFunc(hLisCtrl,CPL_INIT,0,0))
 		{
@@ -119,7 +122,6 @@ void PopulateCPLList(HWND hLisCtrl)
 				LoadString(pEntry->hDLL,pEntry->CPLInfo.idName,Name,MAX_PATH);
 				if(_tcslen(Name))
 				{
-				
 				LV_ITEM lvi;
 
 				memset(&lvi,0x00,sizeof(lvi));
@@ -149,41 +151,41 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	switch(uMsg)
 	{
 	case WM_CREATE:
-		{		
+		{
 		RECT rect;
 		LV_COLUMN column;
 		GetClientRect(hWnd,&rect);
-		hListView = CreateWindow(WC_LISTVIEW,_T(""),LVS_REPORT | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL   | WS_VISIBLE | WS_CHILD|WS_BORDER|WS_TABSTOP,0,0,rect.right ,rect.bottom,hWnd,NULL,hInst,0);
+		hListView = CreateWindow(WC_LISTVIEW,_T(""),LVS_REPORT | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_VISIBLE | WS_CHILD | WS_TABSTOP,0,0,rect.right ,rect.bottom,hWnd,NULL,hInst,0);
 		CTL_DEBUG((_T("Listview Window %08X\r\n"),hListView));
 
 		memset(&column,0x00,sizeof(column));
 		column.mask=LVCF_FMT | LVCF_WIDTH | LVCF_SUBITEM|LVCF_TEXT;
 		column.fmt=LVCFMT_LEFT;
-		column.cx = 200;
+		column.cx = (rect.right - rect.left) / 3;
 		column.iSubItem = 0;
 		column.pszText = _T("Name");
 		ListView_InsertColumn(hListView,0,&column);
-		column.cx = 200;
+		column.cx = (rect.right - rect.left) - ((rect.right - rect.left) / 3) - 1;
 		column.iSubItem = 1;
 		column.pszText = _T("Comment");
 		ListView_InsertColumn(hListView,1,&column);
 		PopulateCPLList(hListView);
 		ListView_SetColumnWidth(hListView,2,LVSCW_AUTOSIZE_USEHEADER);
-	    ListView_Update(hListView,0);
+		ListView_Update(hListView,0);
 		}
 		break;
 	case WM_DESTROY:
-		PostQuitMessage(0);	
+		PostQuitMessage(0);
 		break;
 	case WM_SIZE:
-		{		
+		{
 		RECT rect;
 		GetClientRect(hWnd,&rect);
 		MoveWindow(hListView,0,0,rect.right,rect.bottom,TRUE);
 		}
 		break;
 	case WM_NOTIFY:
-		{		
+		{
 		NMHDR *phdr;
 		phdr = (NMHDR*)lParam;
 		switch(phdr->code)
@@ -193,7 +195,7 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			int nSelect;
 			LV_ITEM lvi;
 			CPLLISTENTRY *pEntry;
-			nSelect=SendMessage(hListView,LVM_GETNEXTITEM,(WPARAM)-1,LVNI_FOCUSED); 
+			nSelect=SendMessage(hListView,LVM_GETNEXTITEM,(WPARAM)-1,LVNI_FOCUSED);
 			
 			if(nSelect==-1) // no items
 			{
@@ -262,7 +264,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,char *lpCmdLine,i
 	wc.lpfnWndProc = MyWindowProc;
 	RegisterClass(&wc);
 	InitCommonControls();
-	hMainWnd = CreateWindow(MYWNDCLASS,_T("Control Panel"),WS_OVERLAPPEDWINDOW,300,300,500,300,NULL,LoadMenu(hInst,MAKEINTRESOURCE(IDM_MAINMENU)),hInst,0);
+	hMainWnd = CreateWindowEx(WS_EX_CLIENTEDGE,MYWNDCLASS,_T("Control Panel"),WS_OVERLAPPEDWINDOW,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,NULL,LoadMenu(hInst,MAKEINTRESOURCE(IDM_MAINMENU)),hInst,0);
 	if(!hMainWnd) {
 		CTL_DEBUG((_T("Unable to create window\r\n")));
 		return -1;
