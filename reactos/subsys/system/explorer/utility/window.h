@@ -641,3 +641,41 @@ inline int ListView_GetItemData(HWND list_ctrl, int idx)
 
 	return item.lParam;
 }
+
+inline int ListView_FindItemPara(HWND list_ctrl, LPARAM param)
+{
+	LVFINDINFO fi;
+
+	fi.flags = LVFI_PARAM;
+	fi.lParam = param;
+
+	return ListView_FindItem(list_ctrl, -1, &fi);
+}
+
+inline int ListView_GetFocusedItem(HWND list_ctrl)
+{
+	int idx = ListView_GetItemCount(list_ctrl);
+
+	while(--idx >= 0)
+		if (ListView_GetItemState(list_ctrl, idx, LVIS_FOCUSED))
+			break;
+
+	return idx;
+}
+
+
+struct ListSort : public WindowHandle
+{
+	ListSort(HWND hwndListview, PFNLVCOMPARE compare_fct);
+
+	void	toggle_sort(int idx);
+	void	sort();
+
+	int		_sort_crit;
+	bool	_direction;
+
+protected:
+	PFNLVCOMPARE _compare_fct;
+
+	static int CALLBACK CompareFunc(LPARAM lparam1, LPARAM lparam2, LPARAM lparamSort);
+};

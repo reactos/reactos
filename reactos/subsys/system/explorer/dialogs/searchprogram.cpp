@@ -95,7 +95,8 @@ FindProgramDlg::FindProgramDlg(HWND hwnd)
  :	super(hwnd),
 	_list_ctrl(GetDlgItem(hwnd, IDC_MAILS_FOUND)),
 	_himl(ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR32, 0, 0)),
-	_thread(collect_programs_callback, hwnd, this)
+	_thread(collect_programs_callback, hwnd, this),
+	_sort(_list_ctrl, CompareFunc/*, (LPARAM)this*/)
 {
 	SetWindowIcon(hwnd, IDI_REACTOS/*IDI_SEARCH*/);
 
@@ -155,6 +156,8 @@ void FindProgramDlg::Refresh(bool delete_cache)
 	_tcslwr(buffer);
 #endif
 	_lwr_filter = buffer;
+
+	HiddenWindow hide_listctrl(_list_ctrl);
 
 	ListView_DeleteAllItems(_list_ctrl);
 
@@ -243,8 +246,7 @@ void FindProgramDlg::add_entry(const FPDEntry& cache_entry)
 	item.pszText = cache_entry._shell_entry->_display_name;
 	item.iImage = cache_entry._idxIcon;
 	item.lParam = (LPARAM) &cache_entry;
-
-	item.iItem = ListView_InsertItem(_list_ctrl, &item);
+	item.iItem = ListView_InsertItem(_list_ctrl, &item);	// We could use the information in _sort to enable manual sorting while populating the list.
 
 	item.mask = LVIF_TEXT;
 	item.iSubItem = 1;
@@ -274,6 +276,10 @@ int FindProgramDlg::Command(int id, int code)
 			Refresh(true);
 			break;
 
+		  case IDOK:
+			LaunchSelected();
+			break;
+
 		  default:
 			return super::Command(id, code);
 		}
@@ -284,6 +290,23 @@ int FindProgramDlg::Command(int id, int code)
 		}
 
 	return TRUE;
+}
+
+void FindProgramDlg::LaunchSelected()
+{
+	Lock lock(_thread._crit_sect);
+
+	int count = ListView_GetSelectedCount(_list_ctrl);
+	//TODO: ask user if there are many selected items
+
+	for(int idx=-1; (idx=ListView_GetNextItem(_list_ctrl, idx, LVNI_SELECTED))!=-1; ) {
+		LPARAM lparam = ListView_GetItemData(_list_ctrl, idx);
+
+		if (lparam) {
+			FPDEntry& cache_entry = *(FPDEntry*)lparam;
+			cache_entry._shell_entry->launch_entry(_hwnd);
+		}
+	}
 }
 
 int FindProgramDlg::Notify(int id, NMHDR* pnmh)
@@ -307,16 +330,59 @@ int FindProgramDlg::Notify(int id, NMHDR* pnmh)
 		}*/}
 		break;
 
-	  case NM_DBLCLK: {
-		LPNMLISTVIEW pnmv = (LPNMLISTVIEW) pnmh;
-		LPARAM lparam = ListView_GetItemData(pnmh->hwndFrom, pnmv->iItem);
+	  case NM_DBLCLK:
+		if (pnmh->hwndFrom == _list_ctrl)
+			LaunchSelected();
+		/*{
+			Lock lock(_thread._crit_sect);
 
-		if (lparam) {
-			FPDEntry& cache_entry = *(FPDEntry*)lparam;
-			cache_entry._shell_entry->launch_entry(_hwnd);
+			LPNMLISTVIEW pnmv = (LPNMLISTVIEW) pnmh;
+			LPARAM lparam = ListView_GetItemData(pnmh->hwndFrom, pnmv->iItem);
+
+			if (lparam) {
+				FPDEntry& cache_entry = *(FPDEntry*)lparam;
+				cache_entry._shell_entry->launch_entry(_hwnd);
+			}
+		}*/
+		break;
+
+	  case HDN_ITEMCLICK: {
+		WaitCursor wait;
+		NMHEADER* phdr = (NMHEADER*)pnmh;
+
+		if (GetParent(pnmh->hwndFrom) == _list_ctrl) {
+			if (_thread._cache_valid) {	// disable manual sorting while populating the list
+				_sort.toggle_sort(phdr->iItem);
+				_sort.sort();
+			}
 		}
 		break;}
 	}
 
 	return 0;
+}
+
+int CALLBACK FindProgramDlg::CompareFunc(LPARAM lparam1, LPARAM lparam2, LPARAM lparamSort)
+{
+	ListSort* sort = (ListSort*)lparamSort;
+
+	FPDEntry& a = *(FPDEntry*)lparam1;
+	FPDEntry& b = *(FPDEntry*)lparam2;
+
+	int cmp = 0;
+
+	switch(sort->_sort_crit) {
+	  case 0:
+		cmp = _tcsicoll(a._shell_entry->_display_name, b._shell_entry->_display_name);
+		break;
+
+	  case 1:
+		cmp = _tcsicoll(a._path, b._path);
+		break;
+
+	  case 2:
+		cmp = _tcsicoll(a._menu_path, b._menu_path);
+	}
+
+	return sort->_direction? -cmp: cmp;
 }

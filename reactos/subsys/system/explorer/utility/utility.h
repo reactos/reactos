@@ -128,6 +128,21 @@ protected:
 };
 
 
+struct HiddenWindow : public WindowHandle
+{
+	HiddenWindow(HWND hwnd)
+	 :	WindowHandle(hwnd)
+	{
+		SetWindowPos(hwnd, 0, 0, 0, 0, 0, SWP_HIDEWINDOW|SWP_NOREDRAW|SWP_NOMOVE|SWP_NOSIZE|SWP_NOZORDER);
+	}
+
+	~HiddenWindow()
+	{
+		SetWindowPos(_hwnd, 0, 0, 0, 0, 0, SWP_SHOWWINDOW|SWP_NOMOVE|SWP_NOSIZE|SWP_NOZORDER);
+	}
+};
+
+
  /// critical section wrapper
 
 struct CritSect : public CRITICAL_SECTION

@@ -94,12 +94,16 @@ protected:
 
 	String	_common_programs, _user_programs;
 
+	ListSort _sort;
+
 	virtual LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam);
 	virtual int	Command(int id, int code);
 	virtual int	Notify(int id, NMHDR* pnmh);
 
 	void	Refresh(bool delete_cache=false);
 	void	add_entry(const FPDEntry& cache_entry);
+	void	LaunchSelected();
 
 	static void collect_programs_callback(ShellFolder& folder, ShellEntry* entry, void* param);
+	static int CALLBACK CompareFunc(LPARAM lparam1, LPARAM lparam2, LPARAM lparamSort);
 };

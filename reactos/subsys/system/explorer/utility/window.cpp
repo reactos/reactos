@@ -897,3 +897,35 @@ ToolTip::ToolTip(HWND owner)
 {
 	activate();
 }
+
+
+ListSort::ListSort(HWND hwndListview, PFNLVCOMPARE compare_fct)
+ :	WindowHandle(hwndListview),
+	_compare_fct(compare_fct)
+{
+	_sort_crit = 0;
+	_direction = false;
+}
+
+void ListSort::toggle_sort(int idx)
+{
+	if (_sort_crit == idx)
+		_direction = !_direction;
+	else {
+		_sort_crit = idx;
+		_direction = false;
+	}
+}
+
+void ListSort::sort()
+{
+	int idx = ListView_GetSelectionMark(_hwnd);
+	LPARAM param = ListView_GetItemData(_hwnd, idx);
+
+	ListView_SortItems(_hwnd, _compare_fct, (LPARAM)this);
+
+	if (idx >= 0) {
+		idx = ListView_FindItemPara(_hwnd, param);
+		ListView_EnsureVisible(_hwnd, idx, FALSE);
+	}
+}
