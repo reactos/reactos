@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.25 2003/12/14 14:05:47 weiden Exp $
+/* $Id: input.c,v 1.26 2004/02/07 15:39:14 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -47,9 +47,13 @@
 
 /* GLOBALS *******************************************************************/
 
+#define ENABLEMOUSEGDICALLBACK 1
+
 static HANDLE MouseDeviceHandle;
+#if !ENABLEMOUSEGDICALLBACK
 static HANDLE MouseThreadHandle;
 static CLIENT_ID MouseThreadId;
+#endif
 static HANDLE KeyboardThreadHandle;
 static CLIENT_ID KeyboardThreadId;
 static HANDLE KeyboardDeviceHandle;
@@ -57,10 +61,9 @@ static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
 PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue = 0;
 
-#define ENABLEMOUSEGDICALLBACK 1
-
 /* FUNCTIONS *****************************************************************/
 
+#if !ENABLEMOUSEGDICALLBACK
 VOID STDCALL_FUNC STATIC
 MouseThreadMain(PVOID StartContext)
 {
@@ -136,6 +139,7 @@ MouseThreadMain(PVOID StartContext)
     DPRINT("Mouse Input Thread Stopped...\n");
   }
 }
+#endif
 
 VOID STDCALL_FUNC STATIC
 KeyboardThreadMain(PVOID StartContext)
@@ -361,18 +365,6 @@ InitInputImpl(VOID)
   /* Initialize the default keyboard layout */
   (VOID)W32kGetDefaultKeyLayout();
   
-  Status = PsCreateSystemThread(&MouseThreadHandle,
-				THREAD_ALL_ACCESS,
-				NULL,
-				NULL,
-				&MouseThreadId,
-				MouseThreadMain,
-				NULL);
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("Win32K: Failed to create keyboard thread.\n");
-  }
-  
 #if ENABLEMOUSEGDICALLBACK
   /*
    * Connect to the mouse class driver.
@@ -385,12 +377,12 @@ InitInputImpl(VOID)
 			     0,
 			     NULL,
 			     NULL);
-  Status = NtOpenFile(&MouseDeviceHandle,
+  Status = ZwOpenFile(&MouseDeviceHandle,
 		      FILE_ALL_ACCESS,
 		      &MouseObjectAttributes,
 		      &Iosb,
 		      0,
-		      0);
+		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("Win32K: Failed to open mouse.\n");
@@ -405,8 +397,8 @@ InitInputImpl(VOID)
    
    if (!NT_SUCCESS(Status))
      {
-       DPRINT1("Win32K: Failed to reference mouse file object.\n");
-       NtClose(MouseDeviceHandle);
+       DPRINT1("Win32K: Failed to reference mouse file object. (0x%X)\n", Status);
+       ZwClose(MouseDeviceHandle);
        return STATUS_SUCCESS;
      }
    KeInitializeEvent(&IoEvent, FALSE, NotificationEvent);
@@ -444,6 +436,18 @@ InitInputImpl(VOID)
        NtClose(MouseDeviceHandle);
        return STATUS_SUCCESS;
      }
+#else
+  Status = PsCreateSystemThread(&MouseThreadHandle,
+				THREAD_ALL_ACCESS,
+				NULL,
+				NULL,
+				&MouseThreadId,
+				MouseThreadMain,
+				NULL);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("Win32K: Failed to create mouse thread.\n");
+  }
 #endif
   
   return STATUS_SUCCESS;
