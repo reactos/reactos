@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 long
-labs(long j)
+_wtol(const wchar_t *str)
 {
-  return j<0 ? -j : j;
+  return wcstol(str, 0, 10);
 }

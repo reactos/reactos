@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.33 1999/12/29 17:10:41 ekohl Exp $
+; $Id: ntdll.def,v 1.34 1999/12/30 01:33:28 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -537,19 +537,19 @@ __toascii
 ;_allrem
 ;_allshl
 ;_allshr
-;_atoi64
+_atoi64
 ;_aulldiv
 ;_aullrem
 ;_aullshr
 ;_chkstk
 ;_fltused
-;_ftol
-;_i64toa
-;_i64tow
-;_itoa
-;_itow
-;_ltoa
-;_ltow
+_ftol
+_i64toa
+_i64tow
+_itoa
+_itow
+_ltoa
+_ltow
 _memccpy
 _memicmp
 ;_snprintf
@@ -562,16 +562,16 @@ _strnicmp
 _strupr
 _tolower
 _toupper
-;_ultoa
-;_ultow
+_ultoa
+_ultow
 ;_vsnprintf
 _wcsicmp
 _wcslwr
 _wcsnicmp
 _wcsupr
-;_wtoi
-;_wtoi64
-;_wtol
+_wtoi
+_wtoi64
+_wtol
 abs
 atan
 atoi
@@ -642,9 +642,9 @@ wcspbrk
 wcsrchr
 wcsspn
 wcsstr
-;wcstol
+wcstol
 ;wcstombs
-;wcstoul
+wcstoul
 LdrGetExportByName
 LdrGetExportByOrdinal
 LdrLoadDll

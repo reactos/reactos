@@ -1,8 +1,8 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <stdlib.h>
 
-long
-labs(long j)
+int
+_wtoi(const wchar_t *str)
 {
-  return j<0 ? -j : j;
+  return (int)wcstol(str, 0, 10);
 }

@@ -5,9 +5,9 @@
 
 
 long
-strtol(const char *nptr, char **endptr, int base)
+wcstol(const wchar_t *nptr, wchar_t **endptr, int base)
 {
-  const char *s = nptr;
+  const wchar_t *s = nptr;
   unsigned long acc;
   int c;
   unsigned long cutoff;
@@ -20,23 +20,23 @@ strtol(const char *nptr, char **endptr, int base)
    */
   do {
     c = *s++;
-  } while (isspace(c));
+  } while (iswctype(c, _SPACE));
   if (c == '-')
   {
     neg = 1;
     c = *s++;
   }
-  else if (c == '+')
+  else if (c == L'+')
     c = *s++;
   if ((base == 0 || base == 16) &&
-      c == '0' && (*s == 'x' || *s == 'X'))
+      c == L'0' && (*s == L'x' || *s == L'X'))
   {
     c = s[1];
     s += 2;
     base = 16;
   }
   if (base == 0)
-    base = c == '0' ? 8 : 10;
+    base = c == L'0' ? 8 : 10;
 
   /*
    * Compute the cutoff value between legal numbers and illegal
@@ -60,10 +60,10 @@ strtol(const char *nptr, char **endptr, int base)
   cutoff /= (unsigned long)base;
   for (acc = 0, any = 0;; c = *s++)
   {
-    if (isdigit(c))
-      c -= '0';
-    else if (isalpha(c))
-      c -= isupper(c) ? 'A' - 10 : 'a' - 10;
+    if (iswctype(c, _DIGIT))
+      c -= L'0';
+    else if (iswctype(c, _ALPHA))
+      c -= iswctype(c, _UPPER) ? L'A' - 10 : L'a' - 10;
     else
       break;
     if (c >= base)
@@ -84,6 +84,6 @@ strtol(const char *nptr, char **endptr, int base)
   else if (neg)
     acc = -acc;
   if (endptr != 0)
-    *endptr = any ? (char *)s - 1 : (char *)nptr;
+    *endptr = any ? (wchar_t *)s - 1 : (wchar_t *)nptr;
   return acc;
 }
