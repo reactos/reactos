@@ -749,7 +749,7 @@ RtlDestroyHeap (
 
 LPVOID
 STDCALL
-RtlReAllocHeap (
+RtlReAllocateHeap (
 	HANDLE	hheap,
 	DWORD	flags,
 	LPVOID	ptr, 
