@@ -20,7 +20,7 @@ endif
 #
 ifeq ($(HOST),mingw32-linux)
 NASM_FORMAT = win32
-PREFIX = i386-mingw32msv-
+PREFIX = mingw32-
 EXE_POSTFIX :=
 EXE_PREFIX := ./
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
