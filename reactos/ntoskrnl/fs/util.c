@@ -1,4 +1,4 @@
-/* $Id: util.c,v 1.17 2004/08/15 16:39:02 chorns Exp $
+/* $Id: util.c,v 1.18 2004/08/21 20:40:27 tamlin Exp $
  *
  * reactos/ntoskrnl/fs/util.c
  *
@@ -287,8 +287,8 @@ FsRtlGetFileSize (
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 FsRtlInsertPerStreamContext (
     IN PFSRTL_ADVANCED_FCB_HEADER PerStreamContext,
     IN PFSRTL_PER_STREAM_CONTEXT Ptr
@@ -301,8 +301,8 @@ FsRtlInsertPerStreamContext (
 /*
  * @unimplemented
  */
-STDCALL
 PFSRTL_PER_STREAM_CONTEXT
+STDCALL
 FsRtlRemovePerStreamContext (
     IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
     IN PVOID OwnerId OPTIONAL,
@@ -316,8 +316,8 @@ FsRtlRemovePerStreamContext (
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 FsRtlInsertPerFileObjectContext (
     IN PFSRTL_ADVANCED_FCB_HEADER PerFileObjectContext,
     IN PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/ Ptr
@@ -376,8 +376,8 @@ FsRtlPostStackOverflow (
 /*
  * @unimplemented
  */
-STDCALL
 PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/
+STDCALL
 FsRtlRemovePerFileObjectContext (
    IN PFSRTL_ADVANCED_FCB_HEADER PerFileObjectContext,
     IN PVOID OwnerId OPTIONAL,
@@ -417,8 +417,8 @@ FsRtlSyncVolumes (
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 FsRtlTeardownPerStreamContexts (
   IN PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader
   )

@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.12 2004/08/15 16:39:02 chorns Exp $
+/* $Id: notify.c,v 1.13 2004/08/21 20:38:53 tamlin Exp $
  *
  * reactos/ntoskrnl/fs/notify.c
  *
@@ -74,8 +74,8 @@ FsRtlNotifyCleanup (
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 FsRtlNotifyFilterChangeDirectory (
     IN PNOTIFY_SYNC NotifySync,
     IN PLIST_ENTRY NotifyList,
@@ -96,8 +96,8 @@ FsRtlNotifyFilterChangeDirectory (
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 FsRtlNotifyFilterReportChange (
     IN PNOTIFY_SYNC NotifySync,
     IN PLIST_ENTRY NotifyList,
@@ -311,8 +311,8 @@ FsRtlNotifyVolumeEvent (
  *
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 FsRtlRegisterFileSystemFilterCallbacks (
     IN PVOID		Unknown1,
     IN PVOID		Unknown2

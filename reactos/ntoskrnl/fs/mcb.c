@@ -1,4 +1,4 @@
-/* $Id: mcb.c,v 1.13 2004/08/15 16:39:02 chorns Exp $
+/* $Id: mcb.c,v 1.14 2004/08/21 20:36:38 tamlin Exp $
  *
  * reactos/ntoskrnl/fs/mcb.c
  *
@@ -130,8 +130,8 @@ FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
 /*
  * @unimplemented
  */
-STDCALL
 BOOLEAN
+STDCALL
 FsRtlLookupLastLargeMcbEntryAndIndex (
     IN PLARGE_MCB OpaqueMcb,
     OUT PLONGLONG LargeVbn,
@@ -146,8 +146,8 @@ FsRtlLookupLastLargeMcbEntryAndIndex (
 /*
  * @unimplemented
  */
-STDCALL
 PFSRTL_PER_STREAM_CONTEXT
+STDCALL
 FsRtlLookupPerStreamContextInternal (
     IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
     IN PVOID OwnerId OPTIONAL,
@@ -161,8 +161,8 @@ FsRtlLookupPerStreamContextInternal (
 /*
  * @unimplemented
  */
-STDCALL
 PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/
+STDCALL
 FsRtlLookupPerFileObjectContext (
     IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
     IN PVOID OwnerId OPTIONAL,
@@ -267,8 +267,8 @@ FsRtlRemoveMcbEntry (IN PMCB     Mcb,
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 FsRtlResetLargeMcb (
     IN PLARGE_MCB Mcb,
     IN BOOLEAN SelfSynchronized
