@@ -534,8 +534,10 @@ void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
 
 	g_Globals._prescan_nodes = false;
 
+	bool mdi = true;	//@@
+
 	 // create main window
-	MainFrameBase::Create(lpCmdLine, true, cmdshow);
+	MainFrameBase::Create(lpCmdLine, mdi, cmdshow);
 }
 
 
