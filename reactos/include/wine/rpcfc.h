@@ -46,6 +46,8 @@
 
 #define RPC_FC_CPSTRUCT                 0x18 /* conformant structure w/ pointers */
 
+#define RPC_FC_CVSTRUCT                 0x19 /* conformant varying struct */
+
 #define RPC_FC_BOGUS_STRUCT		0x1a /* complex structure */
 
 #define RPC_FC_CARRAY			0x1b /* conformant array */
