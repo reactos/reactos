@@ -8140,7 +8140,13 @@ SetTimer(
 	 UINT uElapse,
 	 TIMERPROC lpTimerFunc);
 
-
+typedef
+VOID STDCALL_FUNC
+(*PTIMERAPCROUTINE)(
+	LPVOID lpArgToCompletionRoutine,
+	DWORD dwTimerLowValue,
+	DWORD dwTimerHighValue
+	);
 WINBOOL
 STDCALL
 SetWaitableTimer(HANDLE hTimer,

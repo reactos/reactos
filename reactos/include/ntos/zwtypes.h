@@ -1793,6 +1793,12 @@ typedef struct _KINTERRUPT
 
 typedef struct _KINTERRUPT *PKINTERRUPT;
 
+typedef VOID STDCALL_FUNC
+(*PTIMER_APC_ROUTINE)(
+  IN PVOID  TimerContext,
+  IN ULONG  TimerLowValue,
+  IN LONG  TimerHighValue);
+
 #endif /* __USE_W32API */
 
 /* BEGIN REACTOS ONLY */

@@ -456,14 +456,6 @@ typedef struct _SMALL_RECT
   SHORT Bottom;
 } SMALL_RECT, *PSMALL_RECT;
 
-
-typedef VOID STDCALL_FUNC
-(*PTIMERAPCROUTINE)(
-	LPVOID lpArgToCompletionRoutine,
-	DWORD dwTimerLowValue,
-	DWORD dwTimerHighValue
-	);
-
 #include "except.h"
 
 #else /* __USE_W32API */

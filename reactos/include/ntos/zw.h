@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.31 2004/10/24 15:26:13 weiden Exp $
+/* $Id: zw.h,v 1.32 2004/10/24 16:49:48 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -761,7 +761,7 @@ STDCALL
 NtCreateMutant(
 	OUT PHANDLE MutantHandle,
 	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
 	IN BOOLEAN InitialOwner
 	);
 
@@ -770,7 +770,7 @@ STDCALL
 ZwCreateMutant(
 	OUT PHANDLE MutantHandle,
 	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
 	IN BOOLEAN InitialOwner
 	);
 
@@ -2996,20 +2996,20 @@ NTSTATUS
 STDCALL
 NtQueryMutant(
 	IN HANDLE MutantHandle,
-	IN CINT MutantInformationClass,
+	IN MUTANT_INFORMATION_CLASS MutantInformationClass,
 	OUT PVOID MutantInformation,
-	IN ULONG Length,
-	OUT PULONG ResultLength
+	IN ULONG MutantInformationLength,
+	OUT PULONG ResultLength  OPTIONAL
 	);
 
 NTSTATUS
 STDCALL
 ZwQueryMutant(
 	IN HANDLE MutantHandle,
-	IN CINT MutantInformationClass,
+	IN MUTANT_INFORMATION_CLASS MutantInformationClass,
 	OUT PVOID MutantInformation,
-	IN ULONG Length,
-	OUT PULONG ResultLength
+	IN ULONG MutantInformationLength,
+	OUT PULONG ResultLength  OPTIONAL
 	);
 
 /*
@@ -3055,7 +3055,7 @@ NtQuerySemaphore(
 	IN	SEMAPHORE_INFORMATION_CLASS	SemaphoreInformationClass,
 	OUT	PVOID				SemaphoreInformation,
 	IN	ULONG				Length,
-	OUT	PULONG				ReturnLength
+	OUT	PULONG				ReturnLength  OPTIONAL
 	);
 
 NTSTATUS
@@ -3065,7 +3065,7 @@ ZwQuerySemaphore(
 	IN	SEMAPHORE_INFORMATION_CLASS	SemaphoreInformationClass,
 	OUT	PVOID				SemaphoreInformation,
 	IN	ULONG				Length,
-	OUT	PULONG				ReturnLength
+	OUT	PULONG				ReturnLength  OPTIONAL
 	);
 
 
@@ -3172,19 +3172,19 @@ NTSTATUS
 STDCALL
 NtQueryTimer(
 	IN HANDLE TimerHandle,
-	IN CINT TimerInformationClass,
+	IN TIMER_INFORMATION_CLASS TimerInformationClass,
 	OUT PVOID TimerInformation,
-	IN ULONG Length,
-	OUT PULONG ResultLength
+	IN ULONG TimerInformationLength,
+	OUT PULONG ReturnLength  OPTIONAL
 	);
 NTSTATUS
 STDCALL
 ZwQueryTimer(
 	IN HANDLE TimerHandle,
-	IN CINT TimerInformationClass,
+	IN TIMER_INFORMATION_CLASS TimerInformationClass,
 	OUT PVOID TimerInformation,
-	IN ULONG Length,
-	OUT PULONG ResultLength
+	IN ULONG TimerInformationLength,
+	OUT PULONG ReturnLength  OPTIONAL
 	);
 
 /*
@@ -3519,14 +3519,14 @@ NTSTATUS
 STDCALL	
 NtReleaseMutant(
 	IN HANDLE MutantHandle,
-	IN PULONG ReleaseCount OPTIONAL
+	IN PLONG PreviousCount  OPTIONAL
 	);
 
 NTSTATUS
 STDCALL	
 ZwReleaseMutant(
 	IN HANDLE MutantHandle,
-	IN PULONG ReleaseCount OPTIONAL
+	IN PLONG PreviousCount  OPTIONAL
 	);
 
 /*
@@ -3542,7 +3542,7 @@ STDCALL
 NtReleaseSemaphore(
 	IN	HANDLE	SemaphoreHandle,
 	IN	LONG	ReleaseCount,
-	OUT	PLONG	PreviousCount
+	OUT	PLONG	PreviousCount  OPTIONAL
 	);
 
 NTSTATUS
@@ -3550,7 +3550,7 @@ STDCALL
 ZwReleaseSemaphore(
 	IN	HANDLE	SemaphoreHandle,
 	IN	LONG	ReleaseCount,
-	OUT	PLONG	PreviousCount
+	OUT	PLONG	PreviousCount  OPTIONAL
 	);
 
 /*
@@ -4316,16 +4316,16 @@ ZwSetSystemTime(
 NTSTATUS
 STDCALL
 NtSetTimerResolution(
-	IN ULONG RequestedResolution,
-	IN BOOL SetOrUnset,
-	OUT PULONG ActualResolution
+	IN ULONG DesiredResolution,
+	IN BOOLEAN SetResolution,
+	OUT PULONG CurrentResolution
 	);
 NTSTATUS
 STDCALL
 ZwSetTimerResolution(
-	IN ULONG RequestedResolution,
-	IN BOOL SetOrUnset,
-	OUT PULONG ActualResolution
+	IN ULONG DesiredResolution,
+	IN BOOLEAN SetResolution,
+	OUT PULONG CurrentResolution
 	);
 
 /*
@@ -5561,11 +5561,11 @@ STDCALL
 NtSetTimer(
 	IN HANDLE TimerHandle,
 	IN PLARGE_INTEGER DueTime,
-	IN PTIMERAPCROUTINE TimerApcRoutine,
-	IN PVOID TimerContext,
-	IN BOOL WakeTimer,
-	IN ULONG Period OPTIONAL,
-	OUT PBOOLEAN PreviousState OPTIONAL
+	IN PTIMER_APC_ROUTINE TimerApcRoutine  OPTIONAL,
+	IN PVOID TimerContext  OPTIONAL,
+	IN BOOLEAN ResumeTimer,
+	IN LONG Period  OPTIONAL,
+	OUT PBOOLEAN PreviousState  OPTIONAL
 	);
 
 /*
@@ -6326,11 +6326,11 @@ STDCALL
 ZwSetTimer(
 	IN HANDLE TimerHandle,
 	IN PLARGE_INTEGER DueTime,
-	IN PTIMERAPCROUTINE TimerApcRoutine,
-	IN PVOID TimerContext,
-	IN BOOL WakeTimer,
-	IN ULONG Period OPTIONAL,
-	OUT PBOOLEAN PreviousState OPTIONAL
+	IN PTIMER_APC_ROUTINE TimerApcRoutine  OPTIONAL,
+	IN PVOID TimerContext  OPTIONAL,
+	IN BOOLEAN ResumeTimer,
+	IN LONG Period  OPTIONAL,
+	OUT PBOOLEAN PreviousState  OPTIONAL
 	);
 
 /*

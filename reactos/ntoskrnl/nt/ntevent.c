@@ -282,16 +282,18 @@ NtQueryEvent(IN HANDLE EventHandle,
        return(Status);
      }
 
-   RetLen = sizeof(EVENT_BASIC_INFORMATION);
-   Status = MmCopyToCaller(ReturnLength, &RetLen, sizeof(ULONG));
-   if (!NT_SUCCESS(Status))
+   if (ReturnLength != NULL)
      {
-       ObDereferenceObject(Event);
-       return(Status);
+       RetLen = sizeof(EVENT_BASIC_INFORMATION);
+       Status = MmCopyToCaller(ReturnLength, &RetLen, sizeof(ULONG));
+       if (!NT_SUCCESS(Status))
+         {
+           ObDereferenceObject(Event);
+           return(Status);
+         }
      }
 
    ObDereferenceObject(Event);
-
    return(STATUS_SUCCESS);
 }
 

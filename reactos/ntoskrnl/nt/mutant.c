@@ -106,7 +106,7 @@ NtInitializeMutantImplementation(VOID)
 NTSTATUS STDCALL
 NtCreateMutant(OUT PHANDLE MutantHandle,
 	       IN ACCESS_MASK DesiredAccess,
-	       IN POBJECT_ATTRIBUTES ObjectAttributes,
+	       IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
 	       IN BOOLEAN InitialOwner)
 {
   PKMUTEX Mutant;
@@ -159,21 +159,19 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
 
 NTSTATUS STDCALL
 NtQueryMutant(IN HANDLE MutantHandle,
-	      IN CINT MutantInformationClass,
+	      IN MUTANT_INFORMATION_CLASS MutantInformationClass,
 	      OUT PVOID MutantInformation,
-	      IN ULONG Length,
-	      OUT PULONG ResultLength)
+	      IN ULONG MutantInformationLength,
+	      OUT PULONG ResultLength  OPTIONAL)
 {
-  PMUTANT_BASIC_INFORMATION Info;
+  MUTANT_BASIC_INFORMATION SafeMutantInformation;
   PKMUTANT Mutant;
   NTSTATUS Status;
-
-  Info = (PMUTANT_BASIC_INFORMATION)MutantInformation;
 
   if (MutantInformationClass > MutantBasicInformation)
     return(STATUS_INVALID_INFO_CLASS);
 
-  if (Length < sizeof(MUTANT_BASIC_INFORMATION))
+  if (MutantInformationLength < sizeof(MUTANT_BASIC_INFORMATION))
     return(STATUS_INFO_LENGTH_MISMATCH);
 
   Status = ObReferenceObjectByHandle(MutantHandle,
@@ -187,23 +185,37 @@ NtQueryMutant(IN HANDLE MutantHandle,
       return(Status);
     }
 
-  Info->Count = KeReadStateMutant(Mutant);
-  Info->Owned = (Mutant->OwnerThread != NULL);
-  Info->Abandoned = Mutant->Abandoned;
+  SafeMutantInformation.Count = KeReadStateMutant(Mutant);
+  SafeMutantInformation.Owned = (Mutant->OwnerThread != NULL);
+  SafeMutantInformation.Abandoned = Mutant->Abandoned;
 
   ObDereferenceObject(Mutant);
+  
+  Status = MmCopyToCaller(MutantInformation, &SafeMutantInformation, sizeof(MUTANT_BASIC_INFORMATION));
+  if(NT_SUCCESS(Status))
+  {
+    if(ResultLength != NULL)
+    {
+      ULONG RetLen = sizeof(MUTANT_BASIC_INFORMATION);
+      Status = MmCopyToCaller(ResultLength, &RetLen, sizeof(ULONG));
+    }
+    else
+    {
+      Status = STATUS_SUCCESS;
+    }
+  }
 
-  return(STATUS_SUCCESS);
+  return Status;
 }
 
 
 NTSTATUS STDCALL
 NtReleaseMutant(IN HANDLE MutantHandle,
-		IN PULONG ReleaseCount OPTIONAL)
+		IN PLONG PreviousCount  OPTIONAL)
 {
   PKMUTANT Mutant;
   NTSTATUS Status;
-  ULONG Count;
+  LONG Count;
 
   Status = ObReferenceObjectByHandle(MutantHandle,
 				     MUTANT_ALL_ACCESS,
@@ -222,12 +234,16 @@ NtReleaseMutant(IN HANDLE MutantHandle,
 			  FALSE);
   ObDereferenceObject(Mutant);
 
-  if (ReleaseCount != NULL)
+  if (PreviousCount != NULL)
     {
-      *ReleaseCount = Count;
+      Status = MmCopyToCaller(PreviousCount, &Count, sizeof(LONG));
+    }
+  else
+    {
+      Status = STATUS_SUCCESS;
     }
 
-  return(STATUS_SUCCESS);
+  return Status;
 }
 
 /* EOF */

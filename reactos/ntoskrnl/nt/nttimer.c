@@ -1,4 +1,4 @@
-/* $Id: nttimer.c,v 1.25 2004/10/22 20:41:10 ekohl Exp $
+/* $Id: nttimer.c,v 1.26 2004/10/24 16:49:49 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -243,13 +243,13 @@ NtOpenTimer(OUT PHANDLE TimerHandle,
 
 NTSTATUS STDCALL
 NtQueryTimer(IN HANDLE TimerHandle,
-	     IN CINT TimerInformationClass,
-	     OUT PVOID UnsafeTimerInformation,
-	     IN ULONG Length,
-	     OUT PULONG UnsafeResultLength)
+	     IN TIMER_INFORMATION_CLASS TimerInformationClass,
+	     OUT PVOID TimerInformation,
+	     IN ULONG TimerInformationLength,
+	     OUT PULONG ReturnLength  OPTIONAL)
 {
   PNTTIMER Timer;
-  TIMER_BASIC_INFORMATION TimerInformation;
+  TIMER_BASIC_INFORMATION SafeTimerInformation;
   ULONG ResultLength;
   NTSTATUS Status;
 
@@ -269,18 +269,18 @@ NtQueryTimer(IN HANDLE TimerHandle,
       ObDereferenceObject(Timer);
       return(STATUS_INVALID_INFO_CLASS);
     }
-  if (Length < sizeof(TIMER_BASIC_INFORMATION))
+  if (TimerInformationLength < sizeof(TIMER_BASIC_INFORMATION))
     {
       ObDereferenceObject(Timer);
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
 
-  memcpy(&TimerInformation.TimeRemaining, &Timer->Timer.DueTime,
+  memcpy(&SafeTimerInformation.TimeRemaining, &Timer->Timer.DueTime,
 	 sizeof(LARGE_INTEGER));
-  TimerInformation.SignalState = (BOOLEAN)Timer->Timer.Header.SignalState;
+  SafeTimerInformation.SignalState = (BOOLEAN)Timer->Timer.Header.SignalState;
   ResultLength = sizeof(TIMER_BASIC_INFORMATION);
 
-  Status = MmCopyToCaller(UnsafeTimerInformation, &TimerInformation,
+  Status = MmCopyToCaller(TimerInformation, &SafeTimerInformation,
 			  sizeof(TIMER_BASIC_INFORMATION));
   if (!NT_SUCCESS(Status))
     {
@@ -288,9 +288,9 @@ NtQueryTimer(IN HANDLE TimerHandle,
       return(Status);
     }
 
-  if (UnsafeResultLength != NULL)
+  if (ReturnLength != NULL)
     {
-      Status = MmCopyToCaller(UnsafeResultLength, &ResultLength,
+      Status = MmCopyToCaller(ReturnLength, &ResultLength,
 			      sizeof(ULONG));
       if (!NT_SUCCESS(Status))
 	{
@@ -306,11 +306,11 @@ NtQueryTimer(IN HANDLE TimerHandle,
 NTSTATUS STDCALL
 NtSetTimer(IN HANDLE TimerHandle,
 	   IN PLARGE_INTEGER DueTime,
-	   IN PTIMERAPCROUTINE TimerApcRoutine,
-	   IN PVOID TimerContext,
-	   IN BOOL WakeTimer,
-	   IN ULONG Period OPTIONAL,
-	   OUT PBOOLEAN PreviousState OPTIONAL)
+	   IN PTIMER_APC_ROUTINE TimerApcRoutine  OPTIONAL,
+	   IN PVOID TimerContext  OPTIONAL,
+	   IN BOOLEAN ResumeTimer,
+	   IN LONG Period  OPTIONAL,
+	   OUT PBOOLEAN PreviousState  OPTIONAL)
 {
    PNTTIMER Timer;
    NTSTATUS Status;

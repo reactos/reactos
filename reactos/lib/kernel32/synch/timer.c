@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.18 2004/10/24 12:26:27 weiden Exp $
+/* $Id: timer.c,v 1.19 2004/10/24 16:49:48 weiden Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -188,7 +188,7 @@ SetWaitableTimer(HANDLE hTimer,
 
    Status = NtSetTimer(hTimer,
 		       (LARGE_INTEGER *)pDueTime,
-		       pfnCompletionRoutine,
+		       (PTIMER_APC_ROUTINE)pfnCompletionRoutine,
 		       lpArgToCompletionRoutine,
 		       fResume,
 		       lPeriod,

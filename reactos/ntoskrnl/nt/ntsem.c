@@ -1,4 +1,4 @@
-/* $Id: ntsem.c,v 1.22 2004/08/15 16:39:09 chorns Exp $
+/* $Id: ntsem.c,v 1.23 2004/10/24 16:49:49 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -76,7 +76,7 @@ NtInitializeSemaphoreImplementation(VOID)
 NTSTATUS STDCALL
 NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
 		  IN ACCESS_MASK DesiredAccess,
-		  IN POBJECT_ATTRIBUTES ObjectAttributes,
+		  IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
 		  IN LONG InitialCount,
 		  IN LONG MaximumCount)
 {
@@ -138,7 +138,7 @@ NtQuerySemaphore(IN HANDLE SemaphoreHandle,
 		 IN SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
 		 OUT PVOID SemaphoreInformation,
 		 IN ULONG SemaphoreInformationLength,
-		 OUT PULONG ReturnLength)
+		 OUT PULONG ReturnLength  OPTIONAL)
 {
    PSEMAPHORE_BASIC_INFORMATION Info;
    PKSEMAPHORE Semaphore;
@@ -164,7 +164,8 @@ NtQuerySemaphore(IN HANDLE SemaphoreHandle,
    Info->CurrentCount = KeReadStateSemaphore(Semaphore);
    Info->MaximumCount = Semaphore->Limit;
 
-   *ReturnLength = sizeof(SEMAPHORE_BASIC_INFORMATION);
+   if (ReturnLength != NULL)
+     *ReturnLength = sizeof(SEMAPHORE_BASIC_INFORMATION);
 
    ObDereferenceObject(Semaphore);
 
@@ -174,7 +175,7 @@ NtQuerySemaphore(IN HANDLE SemaphoreHandle,
 NTSTATUS STDCALL
 NtReleaseSemaphore(IN HANDLE SemaphoreHandle,
 		   IN LONG ReleaseCount,
-		   OUT PLONG PreviousCount)
+		   OUT PLONG PreviousCount  OPTIONAL)
 {
    PKSEMAPHORE Semaphore;
    NTSTATUS Status;

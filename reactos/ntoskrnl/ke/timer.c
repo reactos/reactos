@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.83 2004/10/23 14:52:51 blight Exp $
+/* $Id: timer.c,v 1.84 2004/10/24 16:49:49 weiden Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -95,9 +95,9 @@ NtQueryTimerResolution(OUT PULONG MinimumResolution,
 
 
 NTSTATUS STDCALL
-NtSetTimerResolution(IN ULONG RequestedResolution,
-		     IN BOOL SetOrUnset,
-		     OUT PULONG ActualResolution)
+NtSetTimerResolution(IN ULONG DesiredResolution,
+		     IN BOOLEAN SetResolution,
+		     OUT PULONG CurrentResolution)
 {
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
