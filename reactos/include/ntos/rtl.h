@@ -1320,6 +1320,12 @@ RtlGetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
 			       PBOOLEAN GroupDefaulted);
 
 NTSTATUS STDCALL
+RtlGetLastNtStatus(VOID);
+
+ULONG STDCALL
+RtlGetLastWin32Error(VOID);
+
+NTSTATUS STDCALL
 RtlGetNextRange (IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
 		 OUT PRTL_RANGE *Range,
 		 IN BOOLEAN MoveForwards);
@@ -2218,6 +2224,9 @@ RtlReserveChunk (
 VOID STDCALL
 RtlResetRtlTranslations (IN PNLSTABLEINFO NlsTable);
 
+VOID STDCALL
+RtlRestoreLastWin32Error(IN ULONG Error);
+
 /*
  * VOID
  * RtlRetrieveUlong (
@@ -2287,6 +2296,11 @@ RtlSelfRelativeToAbsoluteSD2(
 VOID STDCALL
 RtlSetAllBits (IN PRTL_BITMAP BitMapHeader);
 
+NTSTATUS STDCALL
+RtlSetAttributesSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+				   IN SECURITY_DESCRIPTOR_CONTROL Control,
+				   OUT PULONG Revision);
+
 VOID
 STDCALL
 RtlSetBit (
@@ -2319,6 +2333,18 @@ RtlSetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
 			       BOOLEAN GroupDefaulted);
 
 NTSTATUS STDCALL
+RtlSetInformationAcl (PACL Acl,
+		      PVOID Information,
+		      ULONG InformationLength,
+		      ACL_INFORMATION_CLASS InformationClass);
+
+VOID STDCALL
+RtlSetLastWin32Error(IN ULONG Error);
+
+VOID STDCALL
+RtlSetLastWin32ErrorAndNtStatusFromNtStatus(IN NTSTATUS Status);
+
+NTSTATUS STDCALL
 RtlSetOwnerSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
 			       PSID Owner,
 			       BOOLEAN OwnerDefaulted);
@@ -2332,12 +2358,6 @@ RtlSetSaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
 VOID STDCALL
 RtlSetSecurityDescriptorRMControl(PSECURITY_DESCRIPTOR SecurityDescriptor,
 				  PUCHAR RMControl);
-
-NTSTATUS STDCALL
-RtlSetInformationAcl (PACL Acl,
-		      PVOID Information,
-		      ULONG InformationLength,
-		      ACL_INFORMATION_CLASS InformationClass);
 
 NTSTATUS STDCALL
 RtlSetTimeZoneInformation (IN OUT PTIME_ZONE_INFORMATION TimeZoneInformation);

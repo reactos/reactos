@@ -453,6 +453,8 @@ RtlGetDaclSecurityDescriptor@16
 RtlGetFirstRange@12
 RtlGetFullPathName_U@16
 RtlGetGroupSecurityDescriptor@12
+RtlGetLastNtStatus@0
+RtlGetLastWin32Error@0
 RtlGetLongestNtPathLength@0
 RtlGetNextRange@12
 RtlGetNtGlobalFlags@0
@@ -577,6 +579,7 @@ RtlReleasePebLock@0
 RtlReleaseResource@4
 ;RtlRemoteCall
 RtlResetRtlTranslations@4
+RtlRestoreLastWin32Error@4=RtlSetLastWin32Error@4
 RtlRunDecodeUnicodeString@8
 RtlRunEncodeUnicodeString@8
 RtlSecondsSince1970ToTime@8
@@ -593,6 +596,8 @@ RtlSetDaclSecurityDescriptor@16
 RtlSetEnvironmentVariable@12
 RtlSetGroupSecurityDescriptor@12
 RtlSetInformationAcl@16
+RtlSetLastWin32Error@4
+RtlSetLastWin32ErrorAndNtStatusFromNtStatus@4
 RtlSetOwnerSecurityDescriptor@12
 RtlSetSaclSecurityDescriptor@16
 RtlSetSecurityDescriptorRMControl@8
