@@ -60,11 +60,13 @@ bool is_libc_include ( const string& inc )
 {
 	string s ( inc );
 	strlwr ( &s[0] );
+	if ( s == "basetsd.h" )
+		return true;
+	if ( s == "except.h" )
+		return true;
 	if ( s == "limits.h" )
 		return true;
 	if ( s == "stdarg.h" )
-		return true;
-	if ( s == "basetsd.h" )
 		return true;
 	return false;
 }
@@ -78,7 +80,7 @@ BOOL FileEnumProc ( PWIN32_FIND_DATA pwfd, const char* filename, long lParam )
 
 void main()
 {
-	EnumFilesInDirectory ( "c:/cvs/reactos/include", "*.h", FileEnumProc, 0, TRUE, FALSE );
+	EnumFilesInDirectory ( "c:/cvs/reactos/apps/utils/sdkparse/include", "*.h", FileEnumProc, 0, TRUE, FALSE );
 }
 
 bool import_file ( const char* filename )
@@ -91,14 +93,14 @@ bool import_file ( const char* filename )
 			return true;
 	}
 
-	printf ( "%s\n", filename );
-
 	string s;
 	if ( !File::LoadIntoString ( s, filename ) )
 	{
 		printf ( "Couldn't load \"%s\" for input.\n", filename );
 		exit(0);
 	}
+
+	printf ( "%s\n", filename );
 
 	// strip comments from the file...
 	strip_comments ( s, true );
@@ -408,20 +410,34 @@ char* findend ( char* p, bool& externc )
 
 Type identify ( const vector<string>& tokens, int off )
 {
-	if ( tokens[0] == "typedef_tident" )
+	/*if ( tokens.size() >= (off+6) )
+	{
+		if ( tokens[off+5] == "NtCurrentTeb" )
+			_CrtDbgBreak();
+	}*/
+	if ( tokens[off] == "typedef_tident" )
 		return T_TIDENT;
+	else if ( tokens[off] == "if" )
+		return T_IF;
+	else if ( tokens[off] == "while" )
+		return T_WHILE;
+	else if ( tokens[off] == "do" )
+		return T_DO;
 	int parens = 0;
+	int brackets = 0;
 	for ( int i = off; i < tokens.size(); i++ )
 	{
-		if ( tokens[i] == "(" )
+		if ( tokens[i] == "(" && !brackets )
 			parens++;
+		else if ( tokens[i] == "{" )
+			brackets++;
 		else if ( (tokens[i] == "struct" || tokens[i] == "union") && !parens )
 		{
 			for ( int j = i + 1; j < tokens.size(); j++ )
 			{
 				if ( tokens[j] == "{" )
 					return T_STRUCT;
-				else if ( tokens[j] == ";" )
+				else if ( tokens[j] == "(" || tokens[j] == ";" || tokens[j] == "*" )
 					break;
 			}
 		}
@@ -585,6 +601,8 @@ int parse_param ( const vector<string>& tokens, int off, vector<string>& names, 
 
 int parse_function ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies )
 {
+	vector<string> fauxnames;
+
 	while ( tokens[off+1] != "(" )
 		depend ( tokens[off++], dependencies );
 	name ( tokens[off++], names );
@@ -594,14 +612,26 @@ int parse_function ( const vector<string>& tokens, int off, vector<string>& name
 	while ( tokens[off] != ")" )
 	{
 		off++;
-		vector<string> fauxnames;
 		off = parse_param ( tokens, off, fauxnames, dependencies );
 		ASSERT ( tokens[off] == "," || tokens[off] == ")" );
 	}
 
 	off++;
 
-	ASSERT ( tokens[off] == ";" );
+	// is this just a function *declaration* ?
+	if ( tokens[off] == ";" )
+		return off;
+
+	// we have a function body...
+	ASSERT ( tokens[off] == "{" );
+	off++;
+
+	while ( tokens[off] != "}" )
+	{
+		Type t = identify ( tokens, off );
+		off = parse_type ( t, tokens, off, fauxnames, dependencies );
+	}
+
 	return off;
 }
 

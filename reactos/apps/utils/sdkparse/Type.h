@@ -12,6 +12,9 @@ typedef enum
 	T_VARIABLE,
 	T_FUNCTION,
 	T_FUNCTION_PTR,
+	T_IF,
+	T_WHILE,
+	T_DO,
 	T_STRUCT
 } Type;
 

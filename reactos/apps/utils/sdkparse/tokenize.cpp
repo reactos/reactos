@@ -44,7 +44,7 @@ void tokenize ( const string& text, vector<string>& tokens )
 						ASSERT(0);
 						break;
 					default:
-						p++;
+						end++;
 						break;
 					}
 				}
@@ -53,6 +53,8 @@ void tokenize ( const string& text, vector<string>& tokens )
 					end++;
 					break;
 				}
+				else
+					end++;
 			}
 			tokens.push_back ( string ( p, end-p ) );
 			p = end;
@@ -122,6 +124,46 @@ void tokenize ( const string& text, vector<string>& tokens )
 		case ';':
 			tokens.push_back ( ";" );
 			p++;
+			break;
+		case '\\':
+			switch ( p[1] )
+			{
+			case '\n':
+				tokens.push_back ( string ( p, 2 ) );
+				p += 2;
+				break;
+			default:
+				ASSERT(0); // shouldn't hit here, I think
+				tokens.push_back ( "\\" );
+				p++;
+				break;
+			}
+			break;
+		case '|':
+			switch ( p[1] )
+			{
+			case '|':
+				tokens.push_back ( string ( p, 2 ) );
+				p += 2;
+				break;
+			default:
+				tokens.push_back ( "|" );
+				p++;
+				break;
+			}
+			break;
+		case '&':
+			switch ( p[1] )
+			{
+			case '&':
+				tokens.push_back ( string ( p, 2 ) );
+				p += 2;
+				break;
+			default:
+				tokens.push_back ( "&" );
+				p++;
+				break;
+			}
 			break;
 		case '=':
 			switch ( p[1] )
@@ -204,7 +246,7 @@ void tokenize ( const string& text, vector<string>& tokens )
 			}
 			break;
 		case '#':
-			while ( *p != '\n' )
+			while ( *p && *p != '\n' )
 				p++;
 			break;
 		default:
