@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.16 2000/06/29 23:35:44 dwelch Exp $
+/* $Id: unicode.c,v 1.17 2001/02/25 12:51:43 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1190,8 +1190,10 @@ RtlUnicodeStringToInteger (
 	ULONG Val;
 	BOOLEAN addneg = FALSE;
 
+    *Value = 0;
 	Str = String->Buffer;
-	for (i = 0; i < String->Length; i++)
+
+	for (i = 0; i < String->Length / sizeof(WCHAR); i++)
 	{
 		if (*Str == L'b')
 		{
@@ -1224,24 +1226,20 @@ RtlUnicodeStringToInteger (
 		}
 		else if ((*Str > L'1') && (Base == 2))
 		{
-			*Value = 0;
 			return STATUS_INVALID_PARAMETER;
 		}
 		else if (((*Str > L'7') || (*Str < L'0')) && (Base == 8))
 		{
-			*Value = 0;
 			return STATUS_INVALID_PARAMETER;
 		}
 		else if (((*Str > L'9') || (*Str < L'0')) && (Base == 10))
 		{
-			*Value = 0;
 			return STATUS_INVALID_PARAMETER;
 		}
 		else if ((((*Str > L'9') || (*Str < L'0')) ||
 		          ((towupper (*Str) > L'F') ||
 		           (towupper (*Str) < L'A'))) && (Base == 16))
 		{
-			*Value = 0;
 			return STATUS_INVALID_PARAMETER;
 		}
 		else
