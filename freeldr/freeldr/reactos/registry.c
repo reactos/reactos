@@ -753,10 +753,21 @@ RegEnumValue(HKEY Key,
 	    *ValueName = 0;
 	  if (Type != NULL)
 	    *Type = Key->DataType;
+      if (Data != NULL)
+        {
+          if (Key->DataSize <= sizeof(PUCHAR))
+            {
+              memcpy(Data, &Key->Data, min(Key->DataSize, *DataSize));
+            }
+          else
+            {
+              memcpy(Data, Key->Data, min(Key->DataSize, *DataSize));
+            }
+        }
 	  if (DataSize != NULL)
-	    *DataSize = Key->DataSize;
+	    *DataSize = min(Key->DataSize, *DataSize);
 
-	  /* FIXME: return more values */
+      return(ERROR_SUCCESS);
 	}
     }
 
@@ -777,7 +788,26 @@ RegEnumValue(HKEY Key,
 			    VALUE,
 			    ValueList);
 
-  /* FIXME: return values */
+  /* enumerate non-default value */
+  if (ValueName != NULL)
+    memcpy(ValueName, Value->Name, min(Value->NameSize, *NameSize));
+  if (Type != NULL)
+    *Type = Value->DataType;
+
+  if (Data != NULL)
+    {
+      if (Value->DataSize <= sizeof(PUCHAR))
+        {
+          memcpy(Data, &Value->Data, min(Value->DataSize, *DataSize));
+        }
+      else
+        {
+          memcpy(Data, Value->Data, min(Value->DataSize, *DataSize));
+        }
+    }
+
+  if (DataSize != NULL)
+    *DataSize = min(Value->DataSize, *DataSize);
 
   return(ERROR_SUCCESS);
 }

@@ -1,3 +1,9 @@
+Changes in v1.8.9 (4/25/2003) (chorns)
+
+- Detect PCI busses
+- Detect IDE controllers and devices
+- Improved RegEnumValue()
+
 Changes in v1.8.8 (4/25/2003) (ekohl)
 
 - Added memmove().

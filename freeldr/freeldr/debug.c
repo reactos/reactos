@@ -204,6 +204,18 @@ VOID DebugPrintHeader(U32 Mask)
 		DebugPrintChar(':');
 		DebugPrintChar(' ');
 		break;
+	case DPRINT_HWDETECT:
+		DebugPrintChar('H');
+		DebugPrintChar('W');
+		DebugPrintChar('D');
+		DebugPrintChar('E');
+		DebugPrintChar('T');
+		DebugPrintChar('E');
+		DebugPrintChar('C');
+		DebugPrintChar('T');
+		DebugPrintChar(':');
+		DebugPrintChar(' ');
+		break;
 	default:
 		DebugPrintChar('U');
 		DebugPrintChar('N');

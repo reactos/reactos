@@ -26,6 +26,7 @@
 
 #define BOOL	int
 #define BOOLEAN	int
+typedef BOOLEAN *PBOOLEAN;
 
 #define CHAR	char
 #define PCHAR	char *
@@ -60,6 +61,10 @@ typedef U64					__u64;
 typedef S64					__s64;
 
 #endif // __i386__
+
+typedef U8 *PU8;
+typedef U16 *PU16;
+typedef U32 *PU32;
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 

@@ -110,7 +110,7 @@ BOOL UiInitialize(VOID)
 
 			if (!VideoSetMode(VideoMode))
 			{
-				printf("Error: unable to set video display mode 0x%x\n", VideoMode);
+				printf("Error: unable to set video display mode 0x%x\n", (int) VideoMode);
 				printf("Defaulting to 80x25 text mode.\n");
 				printf("Press any key to continue.\n");
 				getch();

@@ -46,7 +46,7 @@
 //
 VOID VideoSetPixel16(U32 X, U32 Y, U8 Color)
 {
-	U8		CurrentColor;
+	//U8		CurrentColor;
 	U8*		MemoryPointer;
 	U32		ByteOffset;
 	U8		BitInByte;

@@ -34,6 +34,7 @@
 	#define DPRINT_REGISTRY		0x00000080  // OR this with DebugPrintMask to enable registry messages
 	#define DPRINT_REACTOS		0x00000100  // OR this with DebugPrintMask to enable ReactOS messages
 	#define DPRINT_LINUX		  0x00000200  // OR this with DebugPrintMask to enable Linux messages
+  #define DPRINT_HWDETECT		0x00000400  // OR this with DebugPrintMask to enable hardware detection messages
 
 	VOID	DebugInit(VOID);
 	VOID	DebugPrint(U32 Mask, char *format, ...);

@@ -845,7 +845,7 @@ BOOL Ext2ReadBlock(U32 BlockNumber, PVOID Buffer)
 	// Make sure its a valid block
 	if (BlockNumber > Ext2SuperBlock->s_blocks_count)
 	{
-		sprintf(ErrorString, "Error reading block %d - block out of range.", BlockNumber);
+		sprintf(ErrorString, "Error reading block %d - block out of range.", (int) BlockNumber);
 		FileSystemError(ErrorString);
 		return FALSE;
 	}

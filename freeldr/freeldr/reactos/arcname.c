@@ -85,7 +85,7 @@ void ConstructArcPath(PUCHAR ArcPath, PUCHAR SystemFolder, U32 Disk, U32 Partiti
 		 * floppy disk path:
 		 *  multi(0)disk(0)fdisk(x)\path
 		 */
-		sprintf(tmp, "fdisk(%d)", Disk);
+		sprintf(tmp, "fdisk(%d)", (int) Disk);
 		strcat(ArcPath, tmp);
 	}
 	else
@@ -94,7 +94,7 @@ void ConstructArcPath(PUCHAR ArcPath, PUCHAR SystemFolder, U32 Disk, U32 Partiti
 		 * hard disk path:
 		 *  multi(0)disk(0)rdisk(x)partition(y)\path
 		 */
-		sprintf(tmp, "rdisk(%d)partition(%d)", (Disk - 0x80), Partition);
+		sprintf(tmp, "rdisk(%d)partition(%d)", (int) (Disk - 0x80), (int) Partition);
 		strcat(ArcPath, tmp);
 	}
 
