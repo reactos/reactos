@@ -1413,6 +1413,7 @@ KdbEnterDebuggerException(
    /* Exception inside the debugger? Game over. */
    if (InterlockedIncrement(&KdbEntryCount) > 1)
    {
+      Ke386RestoreFlags(OldEflags);
       return kdHandleException;
    }
 
