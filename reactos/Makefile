@@ -47,7 +47,7 @@ DEVICE_DRIVERS = vidport vga blue ide null floppy
 INPUT_DRIVERS = keyboard mouclass psaux
 
 #FS_DRIVERS = vfat minix ext2 template
-FS_DRIVERS = vfat ms np
+FS_DRIVERS = vfat ms np cdfs
 
 #NET_DRIVERS = ndis tdi tcpip tditest wshtcpip afd
 NET_DRIVERS = ndis tdi tcpip tditest wshtcpip afd
