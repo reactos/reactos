@@ -390,6 +390,10 @@ PspExitProcess(PEPROCESS Process)
     
     ObKillProcess(Process);
     KeSetProcess(&Process->Pcb, IO_NO_INCREMENT);
+
+    /* NOTE: This dereference corresponds to reference in NtTerminateProcess. */
+    ObDereferenceObject(Process);
+
     return(STATUS_SUCCESS);
 }
 
@@ -439,8 +443,13 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
     /* Only master thread remains... kill it off */
     if (PsGetCurrentThread()->ThreadsProcess == Process) {
         
-        /* Unlock and dereference */
-        ObDereferenceObject(Process);
+        /*
+         * NOTE: Dereferencing of the Process structure takes place in
+         * PspExitProcess. If we would do it here the Win32 Process
+         * information would be destroyed before the Win32 Destroy
+         * thread/process callback is called.
+         */
+        
         PspExitThread(ExitStatus);
         return(STATUS_SUCCESS);
     }
