@@ -1310,7 +1310,7 @@ HRESULT SHELL_GetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSiz
 	    if (SUCCEEDED(hr))
 		pstr = PathAddBackslashA(pstr);
 	}
-	/* The only other valid case is a item ID list beginning at "My Computer". */
+	/* The only other valid case is a item ID list beginning at "My Computer" */
  	else if (_ILIsMyComputer(pidl))
 	    pidl = ILGetNext(pidl);
 
@@ -1343,7 +1343,7 @@ HRESULT SHELL_GetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSiz
 	} else
 	    hr = E_INVALIDARG;
 
-	TRACE_(shell)("-- %s, 0x%08lx\n", pszPath, S_OK);
+	TRACE_(shell)("-- %s, 0x%08lx\n", pszPath, hr);
 	return hr;
 }
 
@@ -1393,7 +1393,7 @@ HRESULT SHELL_GetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSi
 	    if (SUCCEEDED(hr))
 		pstr = PathAddBackslashW(pstr);
 	}
-	/* The only other valid case is a item ID list beginning at "My Computer". */
+	/* The only other valid case is a item ID list beginning at "My Computer" */
  	else if (_ILIsMyComputer(pidl))
 	    pidl = ILGetNext(pidl);
 
