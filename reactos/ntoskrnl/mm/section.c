@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.111 2003/05/16 17:36:23 ekohl Exp $
+/* $Id: section.c,v 1.112 2003/05/17 13:43:44 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -513,7 +513,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        (Region->Protect == PAGE_READWRITE ||
 	Region->Protect == PAGE_EXECUTE_READWRITE))
      {
-       Attributes = PAGE_READONLY;
+	 Attributes = Region->Protect == PAGE_READWRITE ? PAGE_READONLY : PAGE_EXECUTE_READ;
      }
    else
      {
@@ -1265,7 +1265,8 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
   if (Section->AllocationAttributes & SEC_PHYSICALMEMORY)
     {
       DPRINT1("Trying to page out from physical memory section address 0x%X "
-	      "process %d\n", Address, AddressSpace->Process->UniqueProcessId);
+	      "process %d\n", Address, 
+	      AddressSpace->Process ? AddressSpace->Process->UniqueProcessId : 0);
       KeBugCheck(0);
     }
 
@@ -1276,7 +1277,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
   if (!MmIsPagePresent(AddressSpace->Process, Address))
     {
       DPRINT1("Trying to page out not-present page at (%d,0x%.8X).\n",
-	      AddressSpace->Process->UniqueProcessId, Address);
+	  AddressSpace->Process ? AddressSpace->Process->UniqueProcessId : 0, Address);
       KeBugCheck(0);
     }
   PhysicalAddress = 
@@ -1390,7 +1391,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 	    {
 	      DPRINT1("Private page, non-dirty but not swapped out "
 		      "process %d address 0x%.8X\n",
-		      AddressSpace->Process->UniqueProcessId,
+		      AddressSpace->Process ? AddressSpace->Process->UniqueProcessId : 0,
 		      Address);	      
 	      KeBugCheck(0);
 	    }
@@ -1610,7 +1611,8 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
   if (Section->AllocationAttributes & SEC_PHYSICALMEMORY)
     {
       DPRINT1("Trying to write back page from physical memory mapped at %X "
-	      "process %d\n", Address, AddressSpace->Process->UniqueProcessId);
+	      "process %d\n", Address, 
+	      AddressSpace->Process ? AddressSpace->Process->UniqueProcessId : 0);
       KeBugCheck(0);
     }
 
@@ -1621,7 +1623,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
   if (!MmIsPagePresent(AddressSpace->Process, Address))
     {
       DPRINT1("Trying to page out not-present page at (%d,0x%.8X).\n",
-	      AddressSpace->Process->UniqueProcessId, Address);
+	  AddressSpace->Process ? AddressSpace->Process->UniqueProcessId : 0, Address);
       KeBugCheck(0);
     }
   PhysicalAddress = 
@@ -3584,16 +3586,115 @@ MmMapViewInSystemSpace (IN	PVOID	SectionObject,
 			OUT	PVOID	* MappedBase,
 			IN OUT	PULONG	ViewSize)
 {
-  UNIMPLEMENTED;
-  return (STATUS_NOT_IMPLEMENTED);
+  PSECTION_OBJECT Section;
+  PMADDRESS_SPACE AddressSpace;
+  NTSTATUS Status;
+
+  DPRINT("MmMapViewInSystemSpace() called\n");
+
+  Section = (PSECTION_OBJECT)SectionObject;
+  AddressSpace = MmGetKernelAddressSpace();
+
+  MmLockSection(Section);
+  MmLockAddressSpace(AddressSpace);
+
+  
+  if ((*ViewSize) == 0)
+    {
+      (*ViewSize) = Section->MaximumSize.u.LowPart;
+    }
+  else if ((*ViewSize) > Section->MaximumSize.u.LowPart)
+    {
+      (*ViewSize) = Section->MaximumSize.u.LowPart;
+    }
+
+  MmLockSectionSegment(Section->Segments);
+
+
+  Status = MmMapViewOfSegment(NULL,
+			      AddressSpace,
+			      Section,
+			      Section->Segments,
+			      MappedBase,
+			      *ViewSize,
+			      PAGE_READWRITE,
+			      0);
+
+  MmUnlockSectionSegment(Section->Segments);
+  MmUnlockAddressSpace(AddressSpace);
+  MmUnlockSection(Section);
+
+  return Status;
 }
 
 
 NTSTATUS STDCALL
 MmUnmapViewInSystemSpace (IN	PVOID	MappedBase)
 {
-  UNIMPLEMENTED;
-  return (STATUS_NOT_IMPLEMENTED);
+  PMEMORY_AREA MemoryArea;
+  PMADDRESS_SPACE AddressSpace;
+  PSECTION_OBJECT Section;
+  PMM_SECTION_SEGMENT Segment;
+  KIRQL oldIrql;
+  PLIST_ENTRY CurrentEntry;
+  PMM_REGION CurrentRegion;
+  NTSTATUS Status;
+
+  DPRINT("MmUnmapViewInSystemSpace() called\n");
+
+  AddressSpace = MmGetKernelAddressSpace();
+
+  DPRINT("Opening memory area at base address %x\n",
+	 MappedBase);
+  MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
+					 MappedBase);
+  if (MemoryArea == NULL)
+    {
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  MemoryArea->DeleteInProgress = TRUE;
+
+  MmLockSection(MemoryArea->Data.SectionData.Section);
+  MmLockSectionSegment(MemoryArea->Data.SectionData.Segment);
+  Section = MemoryArea->Data.SectionData.Section;
+  Segment = MemoryArea->Data.SectionData.Segment;
+  KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
+  RemoveEntryList(&MemoryArea->Data.SectionData.ViewListEntry);
+  KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
+
+  CurrentEntry = MemoryArea->Data.SectionData.RegionListHead.Flink;
+  while (CurrentEntry != &MemoryArea->Data.SectionData.RegionListHead)
+    {
+      CurrentRegion =
+	CONTAINING_RECORD(CurrentEntry, MM_REGION, RegionListEntry);
+      CurrentEntry = CurrentEntry->Flink;
+      ExFreePool(CurrentRegion);
+    }
+
+  if (MemoryArea->Data.SectionData.Section->AllocationAttributes & 
+      SEC_PHYSICALMEMORY)
+    {
+      Status = MmFreeMemoryArea(AddressSpace,
+				MappedBase,
+				0,
+				NULL,
+				NULL);
+    }
+  else
+    {
+      Status = MmFreeMemoryArea(AddressSpace,
+				MappedBase,
+				0,
+				MmFreeSectionPage,
+				MemoryArea);
+    }
+
+  MmUnlockSectionSegment(Segment);
+  MmUnlockSection(Section);
+  ObDereferenceObject(Section);
+
+  return(STATUS_SUCCESS);
 }
 
 
@@ -3620,7 +3721,7 @@ MmSetBankedSection (DWORD	Unknown0,
  * ARGUMENTS
  *	SectionObjiect (OUT)
  *		Caller supplied storage for the resulting pointer
- *		to a SECTION_BOJECT instance;
+ *		to a SECTION_OBJECT instance;
  *		
  *	DesiredAccess
  *		Specifies the desired access to the section can be a
