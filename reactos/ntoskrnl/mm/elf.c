@@ -1,4 +1,4 @@
-/* $Id: elf.c,v 1.3 2004/12/30 08:13:00 hyperion Exp $
+/* $Id$
 */
 
 #include <ntoskrnl.h>
@@ -365,7 +365,7 @@ Elf64FmtCreateSection
  Elf_Off cbPHdrOffset;
  PVOID pBuffer;
  PMM_SECTION_SEGMENT pssSegments;
- Elf_Addr nImageBase;
+ Elf_Addr nImageBase = 0;
  Elf_Addr nEntryPoint;
  ULONG nPrevVirtualEndOfSegment;
  ULONG i;
