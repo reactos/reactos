@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.53 2003/12/12 18:18:21 weiden Exp $
+/* $Id: winpos.c,v 1.54 2003/12/13 18:42:52 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -766,10 +766,15 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
             InsertAfterWindow = ParentWindow->LastChild;
          else
             InsertAfterWindow = IntGetWindowObject(WinPos.hwndInsertAfter);
-         ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
-         IntUnlinkWindow(Window);
-         IntLinkWindow(Window, ParentWindow, InsertAfterWindow);
-         ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+         /* Do nothing if hwndInsertAfter is HWND_BOTTOM and Window is already
+            the last window */
+         if (InsertAfterWindow != Window)
+         {
+             ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+             IntUnlinkWindow(Window);
+             IntLinkWindow(Window, ParentWindow, InsertAfterWindow);
+             ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+         }
          if (InsertAfterWindow != NULL)
             IntReleaseWindowObject(InsertAfterWindow);
       }
@@ -794,7 +799,9 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 
    /* FIXME: Actually do something with WVR_VALIDRECTS */
 
-   if (!(WinPos.flags & SWP_NOMOVE))
+   if (! (WinPos.flags & SWP_NOMOVE)
+       && (NewWindowRect.left != OldWindowRect.left
+           || NewWindowRect.top != OldWindowRect.top))
    {
       WinPosInternalMoveWindow(Window,
                                NewWindowRect.left - OldWindowRect.left,
