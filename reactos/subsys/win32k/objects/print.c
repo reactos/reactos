@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.22 2004/07/17 15:52:43 blight Exp $ */
+/* $Id: print.c,v 1.23 2004/07/17 17:37:41 blight Exp $ */
 #include <w32k.h>
 
 INT
@@ -65,8 +65,8 @@ IntEngExtEscape(
    INT      OutSize,
    LPVOID   OutData)
 {
-   if (Escape == 0x1101) /* get opengl driver info */
-      return 0; /* use default driver */
+   if (Escape == 0x1101)
+      return 0;
 
    UNIMPLEMENTED;
    return -1;
