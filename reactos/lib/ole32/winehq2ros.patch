@@ -4,7 +4,7 @@ RCS file: /home/wine/wine/dlls/ole32/ifs.h,v
 retrieving revision 1.11
 diff -u -r1.11 ifs.h
 --- ifs.h	23 Jan 2004 22:51:42 -0000	1.11
-+++ ifs.h	28 Jan 2004 21:32:28 -0000
++++ ifs.h	14 Mar 2004 09:24:36 -0000
 @@ -35,6 +35,7 @@
  
  typedef struct IMalloc16 IMalloc16, *LPMALLOC16;
@@ -13,3 +13,18 @@ diff -u -r1.11 ifs.h
  #define INTERFACE IMalloc16
  #define IMalloc16_METHODS \
      IUnknown_METHODS \
+Index: oleproxy.c
+===================================================================
+RCS file: /home/wine/wine/dlls/ole32/oleproxy.c,v
+retrieving revision 1.13
+diff -u -r1.13 oleproxy.c
+--- oleproxy.c	23 Jan 2004 01:51:34 -0000	1.13
++++ oleproxy.c	14 Mar 2004 09:24:39 -0000
+@@ -35,6 +35,7 @@
+ 
+ #include <stdlib.h>
+ #include <stdarg.h>
++#include <stddef.h>
+ #include <stdio.h>
+ #include <string.h>
+ 
