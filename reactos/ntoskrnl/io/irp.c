@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.62 2004/06/23 21:42:50 ion Exp $
+/* $Id: irp.c,v 1.63 2004/08/10 06:26:42 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -116,7 +116,7 @@ IoIsValidNameGraftingBuffer(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PIRP STDCALL
 IoMakeAssociatedIrp(PIRP Irp,
@@ -130,10 +130,19 @@ IoMakeAssociatedIrp(PIRP Irp,
  */
 {
   PIRP AssocIrp;
-  
-  AssocIrp = IoAllocateIrp(StackSize,FALSE);
-  UNIMPLEMENTED;
-  return NULL;
+
+    /* Allocate the IRP */
+    AssocIrp = IoAllocateIrp(StackSize,FALSE);
+
+    /* Set the Flags */
+    AssocIrp->Flags |= IRP_ASSOCIATED_IRP;
+
+    /* Set the Thread */
+    AssocIrp->Tail.Overlay.Thread = Irp->Tail.Overlay.Thread;
+
+    /* Associate them */
+    AssocIrp->AssociatedIrp.MasterIrp = Irp;
+    return AssocIrp;
 }
 
 
@@ -160,6 +169,7 @@ IoInitializeIrp(PIRP Irp,
   Irp->CurrentLocation = StackSize;
   InitializeListHead(&Irp->ThreadListEntry);
   Irp->Tail.Overlay.CurrentStackLocation = &Irp->Stack[(ULONG)StackSize];
+  Irp->ApcEnvironment =  KeGetCurrentThread()->ApcStateIndex;
 }
 
 
@@ -422,7 +432,7 @@ IofCompleteRequest(PIRP Irp,
       DPRINT("Dispatching APC\n");
       KeInitializeApc(  &Irp->Tail.Apc,
                              &Irp->Tail.Overlay.Thread->Tcb,
-                             OriginalApcEnvironment,
+                             Irp->ApcEnvironment,
                              IoSecondStageCompletion,//kernel routine
                              NULL,
                              (PKNORMAL_ROUTINE) NULL,
@@ -527,8 +537,8 @@ IoSetTopLevelIrp(IN PIRP Irp)
 {
   PETHREAD Thread;
 
-  Thread = PsGetCurrentThread();
-  Thread->TopLevelIrp->TopLevelIrp = Irp;
+    Thread = PsGetCurrentThread();
+    Thread->TopLevelIrp = Irp;
 }
 
 
@@ -538,7 +548,7 @@ IoSetTopLevelIrp(IN PIRP Irp)
 PIRP STDCALL
 IoGetTopLevelIrp(VOID)
 {
-  return(PsGetCurrentThread()->TopLevelIrp->TopLevelIrp);
+    return(PsGetCurrentThread()->TopLevelIrp);
 }
 
 

@@ -285,7 +285,7 @@ IoSecondStageCompletion(
 
       KeInitializeApc(  &Irp->Tail.Apc,
                         KeGetCurrentThread(),
-                        OriginalApcEnvironment,
+                        CurrentApcEnvironment,
                         IoSecondStageCompletion_KernelApcRoutine,
                         IoSecondStageCompletion_RundownApcRoutine,
                         UserApcRoutine,

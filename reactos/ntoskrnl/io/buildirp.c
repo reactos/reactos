@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.41 2004/07/20 11:06:47 navaraf Exp $
+/* $Id: buildirp.c,v 1.42 2004/08/10 06:26:42 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -469,7 +469,7 @@ IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
    StackPtr->CompletionRoutine = NULL;
    
    Irp->MdlAddress = Mdl;
-   Irp->UserBuffer = NULL;
+   Irp->UserBuffer = MmGetMdlVirtualAddress(Mdl);
    Irp->AssociatedIrp.SystemBuffer = NULL;
       
    if (MajorFunction == IRP_MJ_READ)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.63 2004/08/08 20:33:17 ion Exp $
+/* $Id: ps.h,v 1.64 2004/08/10 06:26:42 ion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -169,12 +169,6 @@ typedef struct _KTHREAD
 #define	FSRTL_FAST_IO_TOP_LEVEL_IRP		(0x04)
 #define	FSRTL_MAX_TOP_LEVEL_IRP_FLAG		(0x04)
 
-typedef struct _TOP_LEVEL_IRP
-{
-	PIRP TopLevelIrp;
-	ULONG TopLevelIrpConst;
-} TOP_LEVEL_IRP;
-
 typedef struct
 {
   PACCESS_TOKEN Token;                              // 0x0
@@ -207,7 +201,7 @@ typedef struct _ETHREAD
   ULONG PerformanceCounterLow;                      /* 204/230 */
   PPS_IMPERSONATION_INFO ImpersonationInfo;         /* 208/234 */
   LIST_ENTRY IrpList;                               /* 20C/238 */
-  TOP_LEVEL_IRP* TopLevelIrp;                       /* 214/240 */
+  PIRP TopLevelIrp;                                 /* 214/240 */
   PDEVICE_OBJECT DeviceToVerify;                    /* 218/244 */
   ULONG ReadClusterSize;                            /* 21C/248 */
   UCHAR ForwardClusterOnly;                         /* 220/24C */
