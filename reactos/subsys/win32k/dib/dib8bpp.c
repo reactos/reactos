@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib8bpp.c,v 1.14 2004/02/21 09:06:25 navaraf Exp $ */
+/* $Id: dib8bpp.c,v 1.15 2004/03/26 23:48:47 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -364,7 +364,7 @@ void ScaleLineAvg8(PIXEL *Target, PIXEL *Source, int SrcWidth, int TgtWidth)
   int NumPixels = TgtWidth;
   int IntPart = SrcWidth / TgtWidth;
   int FractPart = SrcWidth % TgtWidth;
-  int Mid = TgtWidth / 2;
+  int Mid = TgtWidth >> 1;
   int E = 0;
   int skip;
   PIXEL p;
@@ -393,9 +393,9 @@ void ScaleRectAvg8(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
                   int TgtWidth, int TgtHeight, int srcPitch, int dstPitch)
 {
   int NumPixels = TgtHeight;
-  int IntPart = ((SrcHeight / TgtHeight) * srcPitch) / 2; //(SrcHeight / TgtHeight) * SrcWidth;
+  int IntPart = ((SrcHeight / TgtHeight) * srcPitch) >> 1; //(SrcHeight / TgtHeight) * SrcWidth;
   int FractPart = SrcHeight % TgtHeight;
-  int Mid = TgtHeight / 2;
+  int Mid = TgtHeight >> 1;
   int E = 0;
   int skip;
   PIXEL *ScanLine, *ScanLineAhead;
