@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.98 2004/06/23 07:31:22 gvg Exp $ */
+/* $Id: text.c,v 1.99 2004/06/23 15:30:21 weiden Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -284,7 +284,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("Could not font file: %wZ\n", Filename);
+      DPRINT("Could not font file: %wZ\n", FileName);
       NtGdiDeleteObject(NewFont);
       return 0;
    }

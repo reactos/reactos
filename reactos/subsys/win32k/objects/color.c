@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.42 2004/05/22 22:07:42 navaraf Exp $ */
+/* $Id: color.c,v 1.43 2004/06/23 15:30:20 weiden Exp $ */
 #include <w32k.h>
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
@@ -519,7 +519,7 @@ NtGdiUpdateColors(HDC hDC)
 {
    HWND hWnd;
 
-   hWnd = IntWindowFromDC(hDC);
+   hWnd = (HWND)NtUserCallOneParam((DWORD)hDC, ONEPARAM_ROUTINE_WINDOWFROMDC);
    if (hWnd == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
