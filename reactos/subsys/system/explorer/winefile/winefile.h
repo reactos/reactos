@@ -60,6 +60,10 @@
 #define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED  0x00002000
 #endif
 
+#ifndef BTNS_BUTTON
+#define BTNS_BUTTON TBSTYLE_BUTTON
+#endif
+
 
 #ifdef	_DEBUG
 #define	ASSERT(x)	{if (!(x)) DebugBreak();}
