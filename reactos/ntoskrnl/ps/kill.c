@@ -204,7 +204,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 
    oldIrql = KeAcquireDispatcherDatabaseLock();
    CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
-   KiWaitTest(&CurrentThread->Tcb.DispatcherHeader, IO_NO_INCREMENT);
+   KiDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader, IO_NO_INCREMENT);
    KeReleaseDispatcherDatabaseLock (oldIrql);
 
    /* The last thread shall close the door on exit */
@@ -331,7 +331,7 @@ PiTerminateProcess(PEPROCESS Process,
    }
    OldIrql = KeAcquireDispatcherDatabaseLock ();
    Process->Pcb.DispatcherHeader.SignalState = TRUE;
-   KiWaitTest(&Process->Pcb.DispatcherHeader, IO_NO_INCREMENT);
+   KiDispatcherObjectWake(&Process->Pcb.DispatcherHeader, IO_NO_INCREMENT);
    KeReleaseDispatcherDatabaseLock (OldIrql);
    ObDereferenceObject(Process);
    return(STATUS_SUCCESS);

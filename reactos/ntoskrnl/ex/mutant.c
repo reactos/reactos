@@ -1,13 +1,11 @@
-/* 
+/* $Id:$
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/mutant.c
- * PURPOSE:         Executive Management of Mutants
+ * PURPOSE:         Synchronization primitives
  * 
- * PROGRAMMERS:     
- *                  Alex Ionescu - Fix tab/space mismatching, tiny fixes to query function and
- *                                 add more debug output.
- *                  David Welch (welch@cwcom.net)
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -19,342 +17,360 @@
 POBJECT_TYPE ExMutantObjectType = NULL;
 
 static GENERIC_MAPPING ExpMutantMapping = {
-    STANDARD_RIGHTS_READ    | SYNCHRONIZE | MUTANT_QUERY_STATE,
-    STANDARD_RIGHTS_WRITE   | SYNCHRONIZE,
-    STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE | MUTANT_QUERY_STATE,
-    MUTANT_ALL_ACCESS};
+	STANDARD_RIGHTS_READ | SYNCHRONIZE | MUTANT_QUERY_STATE,
+	STANDARD_RIGHTS_WRITE | SYNCHRONIZE,
+	STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE | MUTANT_QUERY_STATE,
+	MUTANT_ALL_ACCESS};
 
-static const INFORMATION_CLASS_INFO ExMutantInfoClass[] = {
-    
-     /* MutantBasicInformation */
-    ICI_SQ_SAME( sizeof(MUTANT_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY ),
+static const INFORMATION_CLASS_INFO ExMutantInfoClass[] =
+{
+  ICI_SQ_SAME( sizeof(MUTANT_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY ), /* MutantBasicInformation */
 };
 
 /* FUNCTIONS *****************************************************************/
 
-VOID 
-STDCALL
+
+NTSTATUS STDCALL
+ExpCreateMutant(PVOID ObjectBody,
+		PVOID Parent,
+		PWSTR RemainingPath,
+		POBJECT_ATTRIBUTES ObjectAttributes)
+{
+  DPRINT("NtpCreateMutant(ObjectBody %x, Parent %x, RemainingPath %S)\n",
+	 ObjectBody, Parent, RemainingPath);
+
+  if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
+    {
+      return(STATUS_UNSUCCESSFUL);
+    }
+
+  return(STATUS_SUCCESS);
+}
+
+
+VOID STDCALL
 ExpDeleteMutant(PVOID ObjectBody)
 {
+  DPRINT("NtpDeleteMutant(ObjectBody %x)\n", ObjectBody);
 
-    DPRINT("ExpDeleteMutant(ObjectBody %x)\n", ObjectBody);
-
-    /* Make sure to release the Mutant */
-    KeReleaseMutant((PKMUTANT)ObjectBody,
-                    MUTANT_INCREMENT,
-                    TRUE,
-                    FALSE);
+  KeReleaseMutant((PKMUTANT)ObjectBody,
+		  MUTANT_INCREMENT,
+		  TRUE,
+		  FALSE);
 }
 
-VOID 
-INIT_FUNCTION
+
+VOID INIT_FUNCTION
 ExpInitializeMutantImplementation(VOID)
 {
+  ExMutantObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
 
-    /* Allocate the Object Type */
-    ExMutantObjectType = ExAllocatePoolWithTag(NonPagedPool, sizeof(OBJECT_TYPE), TAG('M', 't', 'n', 't'));
+  RtlpCreateUnicodeString(&ExMutantObjectType->TypeName, L"Mutant", NonPagedPool);
 
-    /* Create the Object Type */
-    RtlpCreateUnicodeString(&ExMutantObjectType->TypeName, L"Mutant", NonPagedPool);
-    ExMutantObjectType->Tag = TAG('M', 't', 'n', 't');
-    ExMutantObjectType->PeakObjects = 0;
-    ExMutantObjectType->PeakHandles = 0;
-    ExMutantObjectType->TotalObjects = 0;
-    ExMutantObjectType->TotalHandles = 0;
-    ExMutantObjectType->PagedPoolCharge = 0;
-    ExMutantObjectType->NonpagedPoolCharge = sizeof(KMUTANT);
-    ExMutantObjectType->Mapping = &ExpMutantMapping;
-    ExMutantObjectType->Dump = NULL;
-    ExMutantObjectType->Open = NULL;
-    ExMutantObjectType->Close = NULL;
-    ExMutantObjectType->Delete = ExpDeleteMutant;
-    ExMutantObjectType->Parse = NULL;
-    ExMutantObjectType->Security = NULL;
-    ExMutantObjectType->QueryName = NULL;
-    ExMutantObjectType->OkayToClose = NULL;
-    ExMutantObjectType->Create = NULL;
-    ExMutantObjectType->DuplicationNotify = NULL;
-    ObpCreateTypeObject(ExMutantObjectType);
+  ExMutantObjectType->Tag = TAG('M', 'T', 'N', 'T');
+  ExMutantObjectType->PeakObjects = 0;
+  ExMutantObjectType->PeakHandles = 0;
+  ExMutantObjectType->TotalObjects = 0;
+  ExMutantObjectType->TotalHandles = 0;
+  ExMutantObjectType->PagedPoolCharge = 0;
+  ExMutantObjectType->NonpagedPoolCharge = sizeof(KMUTANT);
+  ExMutantObjectType->Mapping = &ExpMutantMapping;
+  ExMutantObjectType->Dump = NULL;
+  ExMutantObjectType->Open = NULL;
+  ExMutantObjectType->Close = NULL;
+  ExMutantObjectType->Delete = ExpDeleteMutant;
+  ExMutantObjectType->Parse = NULL;
+  ExMutantObjectType->Security = NULL;
+  ExMutantObjectType->QueryName = NULL;
+  ExMutantObjectType->OkayToClose = NULL;
+  ExMutantObjectType->Create = ExpCreateMutant;
+  ExMutantObjectType->DuplicationNotify = NULL;
+
+  ObpCreateTypeObject(ExMutantObjectType);
 }
+
 
 /*
  * @implemented
  */
-NTSTATUS 
-STDCALL
+NTSTATUS STDCALL
 NtCreateMutant(OUT PHANDLE MutantHandle,
-               IN ACCESS_MASK DesiredAccess,
-               IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
-               IN BOOLEAN InitialOwner)
+	       IN ACCESS_MASK DesiredAccess,
+	       IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+	       IN BOOLEAN InitialOwner)
 {
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    HANDLE hMutant;
-    PKMUTANT Mutant;
-    NTSTATUS Status = STATUS_SUCCESS;
-    
-    DPRINT("NtCreateMutant(0x%x, 0x%x, 0x%x)\n", MutantHandle, DesiredAccess, ObjectAttributes);
+  KPROCESSOR_MODE PreviousMode;
+  HANDLE hMutant;
+  PKMUTEX Mutant;
+  NTSTATUS Status = STATUS_SUCCESS;
   
-    /* Check Output Safety */
-    if(PreviousMode == UserMode) {
-        
-        _SEH_TRY {
-            
-            ProbeForWrite(MutantHandle,
-                          sizeof(HANDLE),
-                          sizeof(ULONG));
-        } _SEH_HANDLE {
-            
-            Status = _SEH_GetExceptionCode();
-        
-        } _SEH_END;
+  PAGED_CODE();
+  
+  PreviousMode = ExGetPreviousMode();
 
-        if(!NT_SUCCESS(Status)) return Status;
+  if(PreviousMode == UserMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(MutantHandle,
+                    sizeof(HANDLE),
+                    sizeof(ULONG));
     }
-    
-    /* Create the Mutant Object*/
-    Status = ObCreateObject(PreviousMode,
-                            ExMutantObjectType,
-                            ObjectAttributes,
-                            PreviousMode,
-                            NULL,
-                            sizeof(KMUTANT),
-                            0,
-                            0,
-                            (PVOID*)&Mutant);
-    
-    /* Check for success */
-    if(NT_SUCCESS(Status)) {
-        
-        /* Initalize the Kernel Mutant */
-        DPRINT("Initializing the Mutant\n");
-        KeInitializeMutant(Mutant, InitialOwner);
-
-        /* Insert the Object */
-        Status = ObInsertObject((PVOID)Mutant,
-                                NULL,
-                                DesiredAccess,
-                                0,
-                                NULL,
-                                &hMutant);
-        ObDereferenceObject(Mutant);
-    
-        /* Check for success and return handle */
-        if(NT_SUCCESS(Status)) {
-            
-            _SEH_TRY {
-                
-                *MutantHandle = hMutant;
-            
-            } _SEH_HANDLE {
-                
-                Status = _SEH_GetExceptionCode();
-                
-            } _SEH_END;
-        }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
     }
+    _SEH_END;
+     
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
 
-    /* Return Status */
-    return Status;
+  Status = ObCreateObject(PreviousMode,
+			  ExMutantObjectType,
+			  ObjectAttributes,
+			  PreviousMode,
+			  NULL,
+			  sizeof(KMUTANT),
+			  0,
+			  0,
+			  (PVOID*)&Mutant);
+  if(NT_SUCCESS(Status))
+  {
+    KeInitializeMutant(Mutant,
+		       InitialOwner);
+
+    Status = ObInsertObject((PVOID)Mutant,
+			    NULL,
+			    DesiredAccess,
+			    0,
+			    NULL,
+			    &hMutant);
+    ObDereferenceObject(Mutant);
+    
+    if(NT_SUCCESS(Status))
+    {
+      _SEH_TRY
+      {
+        *MutantHandle = hMutant;
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+    }
+  }
+
+  return Status;
 }
 
 
 /*
  * @implemented
  */
-NTSTATUS 
-STDCALL
+NTSTATUS STDCALL
 NtOpenMutant(OUT PHANDLE MutantHandle,
-             IN ACCESS_MASK DesiredAccess,
-             IN POBJECT_ATTRIBUTES ObjectAttributes)
+	     IN ACCESS_MASK DesiredAccess,
+	     IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
-    HANDLE hMutant;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+  HANDLE hMutant;
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
   
-   PAGED_CODE();
+  PAGED_CODE();
 
-    DPRINT("NtOpenMutant(0x%x, 0x%x, 0x%x)\n", MutantHandle, DesiredAccess, ObjectAttributes);
+  DPRINT("NtOpenMutant(0x%x, 0x%x, 0x%x)\n", MutantHandle, DesiredAccess, ObjectAttributes);
 
-    /* Check Output Safety */
-    if(PreviousMode == UserMode) {
-        
-        _SEH_TRY {
-            
-            ProbeForWrite(MutantHandle,
-                          sizeof(HANDLE),
-                          sizeof(ULONG));
-        } _SEH_HANDLE {
-            
-            Status = _SEH_GetExceptionCode();
-        
-        } _SEH_END;
-     
-        if(!NT_SUCCESS(Status)) return Status;
+  PreviousMode = ExGetPreviousMode();
+
+  if(PreviousMode == UserMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(MutantHandle,
+                    sizeof(HANDLE),
+                    sizeof(ULONG));
     }
-    
-    /* Open the Object */
-    Status = ObOpenObjectByName(ObjectAttributes,
-                                ExMutantObjectType,
-                                NULL,
-                                PreviousMode,
-                                DesiredAccess,
-                                NULL,
-                                &hMutant);
-
-    /* Check for success and return handle */
-    if(NT_SUCCESS(Status)) {
-            
-        _SEH_TRY {
-            
-            *MutantHandle = hMutant;
-        
-        } _SEH_HANDLE {
-            
-            Status = _SEH_GetExceptionCode();
-            
-        } _SEH_END;
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
     }
+    _SEH_END;
 
-    /* Return Status */
-    return Status;
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
+
+  Status = ObOpenObjectByName(ObjectAttributes,
+			      ExMutantObjectType,
+			      NULL,
+			      PreviousMode,
+			      DesiredAccess,
+			      NULL,
+			      &hMutant);
+
+  if(NT_SUCCESS(Status))
+  {
+    _SEH_TRY
+    {
+      *MutantHandle = hMutant;
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+  }
+
+  return Status;
 }
+
 
 /*
  * @implemented
  */
-NTSTATUS 
-STDCALL
+NTSTATUS STDCALL
 NtQueryMutant(IN HANDLE MutantHandle,
-              IN MUTANT_INFORMATION_CLASS MutantInformationClass,
-              OUT PVOID MutantInformation,
-              IN ULONG MutantInformationLength,
-              OUT PULONG ResultLength  OPTIONAL)
+	      IN MUTANT_INFORMATION_CLASS MutantInformationClass,
+	      OUT PVOID MutantInformation,
+	      IN ULONG MutantInformationLength,
+	      OUT PULONG ResultLength  OPTIONAL)
 {
-    PKMUTANT Mutant;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
-    PMUTANT_BASIC_INFORMATION BasicInfo = (PMUTANT_BASIC_INFORMATION)MutantInformation;
-    
-    /* Check buffers and parameters */
-    DefaultQueryInfoBufferCheck(MutantInformationClass,
-                                ExMutantInfoClass,
-                                MutantInformation,
-                                MutantInformationLength,
-                                ResultLength,
-                                PreviousMode,
-                                &Status);
-    if(!NT_SUCCESS(Status)) {
-        
-        DPRINT1("NtQueryMutant() failed, Status: 0x%x\n", Status);
-        return Status;
-    }
+   PKMUTANT Mutant;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
    
    PAGED_CODE();
 
-    /* Open the Object */
-    Status = ObReferenceObjectByHandle(MutantHandle,
-                                       MUTANT_QUERY_STATE,
-                                       ExMutantObjectType,
-                                       PreviousMode,
-                                       (PVOID*)&Mutant,
-                                       NULL);
-    /* Check for Status */
-    if(NT_SUCCESS(Status)) {
+   PreviousMode = ExGetPreviousMode();
 
-         _SEH_TRY {
-             
-            /* Fill out the Basic Information Requested */
-            DPRINT1("Returning Mutant Information\n");
-            BasicInfo->CurrentCount = KeReadStateMutant(Mutant);
-            BasicInfo->OwnedByCaller = (Mutant->OwnerThread == KeGetCurrentThread());
-            BasicInfo->AbandonedState = Mutant->Abandoned;
+   DefaultQueryInfoBufferCheck(MutantInformationClass,
+                               ExMutantInfoClass,
+                               MutantInformation,
+                               MutantInformationLength,
+                               ResultLength,
+                               PreviousMode,
+                               &Status);
+   if(!NT_SUCCESS(Status))
+   {
+     DPRINT1("NtQueryMutant() failed, Status: 0x%x\n", Status);
+     return Status;
+   }
 
-            /* Return the Result Length if requested */
-           if(ResultLength) *ResultLength = sizeof(MUTANT_BASIC_INFORMATION);
-        
-        } _SEH_HANDLE {
-            
-            Status = _SEH_GetExceptionCode();
-            
-        } _SEH_END;
+   Status = ObReferenceObjectByHandle(MutantHandle,
+				      MUTANT_QUERY_STATE,
+				      ExMutantObjectType,
+				      PreviousMode,
+				      (PVOID*)&Mutant,
+				      NULL);
+   if(NT_SUCCESS(Status))
+   {
+     switch(MutantInformationClass)
+     {
+       case MutantBasicInformation:
+       {
+         PMUTANT_BASIC_INFORMATION BasicInfo = (PMUTANT_BASIC_INFORMATION)MutantInformation;
 
-        /* Release the Object */
-        ObDereferenceObject(Mutant);
-    }
-    
-    /* Return Status */
-    return Status;
+         _SEH_TRY
+         {
+           BasicInfo->Count = KeReadStateMutant(Mutant);
+           BasicInfo->Owned = (Mutant->OwnerThread != NULL);
+           BasicInfo->Abandoned = Mutant->Abandoned;
+
+           if(ResultLength != NULL)
+           {
+             *ResultLength = sizeof(MUTANT_BASIC_INFORMATION);
+           }
+         }
+         _SEH_HANDLE
+         {
+           Status = _SEH_GetExceptionCode();
+         }
+         _SEH_END;
+         break;
+       }
+
+       default:
+         Status = STATUS_NOT_IMPLEMENTED;
+         break;
+     }
+
+     ObDereferenceObject(Mutant);
+   }
+
+   return Status;
 }
 
 
 /*
  * @implemented
  */
-NTSTATUS 
-STDCALL
+NTSTATUS STDCALL
 NtReleaseMutant(IN HANDLE MutantHandle,
-                IN PLONG PreviousCount  OPTIONAL)
+		IN PLONG PreviousCount  OPTIONAL)
 {
-    PKMUTANT Mutant;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+   PKMUTANT Mutant;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
    
-    PAGED_CODE();
+   PAGED_CODE();
 
-    DPRINT("NtReleaseMutant(MutantHandle 0%x PreviousCount 0%x)\n", 
-            MutantHandle, 
-            PreviousCount);
+   DPRINT("NtReleaseMutant(MutantHandle 0%x PreviousCount 0%x)\n",
+	  MutantHandle, PreviousCount);
 
-    /* Check Output Safety */
-    if(PreviousMode == UserMode && PreviousCount) {
-        
-        _SEH_TRY {
-            
-            ProbeForWrite(PreviousCount,
-                          sizeof(LONG),
-                          sizeof(ULONG));
-        } _SEH_HANDLE {
-            
-            Status = _SEH_GetExceptionCode();
-        
-        } _SEH_END;
+   PreviousMode = ExGetPreviousMode();
+
+   if(PreviousCount != NULL && PreviousMode == UserMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(PreviousCount,
+                     sizeof(LONG),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
      
-        if(!NT_SUCCESS(Status)) return Status;
-    } 
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
 
-    /* Open the Object */
-    Status = ObReferenceObjectByHandle(MutantHandle,
-                                       MUTANT_QUERY_STATE,
-                                       ExMutantObjectType,
-                                       PreviousMode,
-                                       (PVOID*)&Mutant,
-                                       NULL);
-    
-    /* Check for Success and release if such */
-    if(NT_SUCCESS(Status)) {
-        
-        /* Save the Old State */
-        DPRINT1("Releasing Mutant\n");
-        LONG Prev = KeReleaseMutant(Mutant, MUTANT_INCREMENT, FALSE, FALSE);
-        ObDereferenceObject(Mutant);
+   Status = ObReferenceObjectByHandle(MutantHandle,
+				      MUTANT_QUERY_STATE,
+				      ExMutantObjectType,
+				      PreviousMode,
+				      (PVOID*)&Mutant,
+				      NULL);
+   if(NT_SUCCESS(Status))
+   {
+     LONG Prev = KeReleaseMutant(Mutant, MUTANT_INCREMENT, 0, FALSE);
+     ObDereferenceObject(Mutant);
 
-        /* Return it */        
-        if(PreviousCount) {
-            
-            _SEH_TRY {
-                
-                *PreviousCount = Prev;
-            
-            } _SEH_HANDLE {
-                
-                Status = _SEH_GetExceptionCode();
-            
-            } _SEH_END;
-        }
-    }
+     if(PreviousCount != NULL)
+     {
+       _SEH_TRY
+       {
+         *PreviousCount = Prev;
+       }
+       _SEH_HANDLE
+       {
+         Status = _SEH_GetExceptionCode();
+       }
+       _SEH_END;
+     }
+   }
 
-    /* Return Status */
-    return Status;
+   return Status;
 }
 
 /* EOF */

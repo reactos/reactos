@@ -200,7 +200,7 @@ _Ki386ContextSwitch:
 	 */
 	sti
 
-	call    @KeReleaseDispatcherDatabaseLockFromDpcLevel@0
+	call    _KeReleaseDispatcherDatabaseLockFromDpcLevel
 
 	cmpl	$0, _PiNrThreadsAwaitingReaping
 	je	5f

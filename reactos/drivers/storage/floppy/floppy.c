@@ -58,7 +58,7 @@ static ULONG gNumberOfControllers = 0;
 
 /* Queue thread management */
 static KEVENT QueueThreadTerminate;
-static PVOID QueueThreadObject;
+static PVOID ThreadObject;
 
 
 static VOID NTAPI MotorStopDpcFunc(PKDPC UnusedDpc,
@@ -378,8 +378,8 @@ static VOID NTAPI Unload(PDRIVER_OBJECT DriverObject)
   KdPrint(("floppy: unloading\n"));
 
   KeSetEvent(&QueueThreadTerminate, 0, FALSE);
-  KeWaitForSingleObject(QueueThreadObject, Executive, KernelMode, FALSE, 0);
-  ObDereferenceObject(QueueThreadObject);
+  KeWaitForSingleObject(ThreadObject, Executive, KernelMode, FALSE, 0);
+  ObDereferenceObject(ThreadObject);
 
   for(i = 0; i < gNumberOfControllers; i++)
     {
@@ -1152,7 +1152,7 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
       return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-  if(ObReferenceObjectByHandle(ThreadHandle, STANDARD_RIGHTS_ALL, NULL, KernelMode, &QueueThreadObject, NULL) != STATUS_SUCCESS)
+  if(ObReferenceObjectByHandle(ThreadHandle, STANDARD_RIGHTS_ALL, NULL, KernelMode, &ThreadObject, NULL) != STATUS_SUCCESS)
     {
       KdPrint(("floppy: Unable to reference returned thread handle; failing init\n"));
       return STATUS_UNSUCCESSFUL;

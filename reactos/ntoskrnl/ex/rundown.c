@@ -1,10 +1,11 @@
-/*
+/* $Id$
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/rundown.c
  * PURPOSE:         Rundown Protection Functions
  * 
- * PROGRAMMERS:     Alex Ionescu & Thomas Weidenmueller - Implementation
+ * PROGRAMMERS:     No programmer listed.
  */
 
 /* INCLUDES *****************************************************************/

@@ -1262,9 +1262,9 @@ typedef enum _MUTANT_INFORMATION_CLASS
 
 typedef struct _MUTANT_BASIC_INFORMATION
 {
-  LONG CurrentCount;
-  BOOLEAN OwnedByCaller;
-  BOOLEAN AbandonedState;
+  LONG Count;
+  BOOLEAN Owned;
+  BOOLEAN Abandoned;
 } MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
 
 

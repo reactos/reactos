@@ -160,7 +160,7 @@ IopCreateDriver(
 
    RtlZeroMemory(Object->DriverExtension, sizeof(DRIVER_EXTENSION));
 
-   Object->Type = IO_TYPE_DRIVER;
+   Object->Type = InternalDriverType;
 
    for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
       Object->MajorFunction[i] = IopInvalidDeviceRequest;

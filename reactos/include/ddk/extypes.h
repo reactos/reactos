@@ -30,23 +30,6 @@ typedef enum _WORK_QUEUE_TYPE {
     MaximumWorkQueue
 } WORK_QUEUE_TYPE;
 
-typedef struct _EX_QUEUE_WORKER_INFO {
-    UCHAR QueueDisabled:1;
-    UCHAR MakeThreadsAsNecessary:1;
-    UCHAR WaitMode:1;
-    ULONG WorkerCount:29;
-} EX_QUEUE_WORKER_INFO, *PEX_QUEUE_WORKER_INFO;
-
-typedef struct _EX_WORK_QUEUE {
-    KQUEUE WorkerQueue;
-    ULONG DynamicThreadCount;
-    ULONG WorkItemsProcessed;
-    ULONG WorkItemsProcessedLastPass;
-    ULONG QueueDepthLastPass;
-    EX_QUEUE_WORKER_INFO Info;    
-} EX_WORK_QUEUE, *PEX_WORK_QUEUE;
-
-
 typedef ULONG_PTR ERESOURCE_THREAD, *PERESOURCE_THREAD;
 
 typedef struct _OWNER_ENTRY
@@ -256,10 +239,6 @@ typedef VOID STDCALL_FUNC
 (*PCALLBACK_FUNCTION)(PVOID CallbackContext,
 		      PVOID Argument1,
 		      PVOID Argument2);
-
-extern struct _OBJECT_TYPE EXPORTED *ExMutantObjectType;
-extern struct _OBJECT_TYPE EXPORTED *ExSemaphoreObjectType;
-extern struct _OBJECT_TYPE EXPORTED *ExTimerType;
 
 #endif /* __INCLUDE_DDK_EXTYPES_H */
 

@@ -473,7 +473,7 @@ NtQueryTimer(IN HANDLE TimerHandle,
     PreviousMode = ExGetPreviousMode();
 
     DPRINT("NtQueryTimer(TimerHandle: %x, Class: %d)\n", TimerHandle, TimerInformationClass);
-
+    
     /* Check Validity */
     DefaultQueryInfoBufferCheck(TimerInformationClass,
                                 ExTimerInfoClass,
@@ -498,23 +498,27 @@ NtQueryTimer(IN HANDLE TimerHandle,
     
     /* Check for Success */
     if(NT_SUCCESS(Status)) {
-
-        /* Return the Basic Information */
-        _SEH_TRY {
-
-            /* FIXME: Interrupt correction based on Interrupt Time */
-            DPRINT("Returning Information for Timer: %x. Time Remaining: %d\n", Timer, Timer->KeTimer.DueTime.QuadPart);
-            BasicInfo->TimeRemaining.QuadPart = Timer->KeTimer.DueTime.QuadPart;
-            BasicInfo->SignalState = KeReadStateTimer(&Timer->KeTimer);
-
-            if(ReturnLength != NULL) *ReturnLength = sizeof(TIMER_BASIC_INFORMATION);
-
-        } _SEH_HANDLE {
-            
-                  Status = _SEH_GetExceptionCode();
-        } _SEH_END;
         
-        /* Dereference Object */
+        switch(TimerInformationClass) {
+           case TimerBasicInformation: {
+              /* Return the Basic Information */
+               _SEH_TRY {
+
+                  /* FIXME: Interrupt correction based on Interrupt Time */
+                  DPRINT("Returning Information for Timer: %x. Time Remaining: %d\n", Timer, Timer->KeTimer.DueTime.QuadPart);
+                  BasicInfo->TimeRemaining.QuadPart = Timer->KeTimer.DueTime.QuadPart;
+                  BasicInfo->SignalState = KeReadStateTimer(&Timer->KeTimer);
+
+                  if(ReturnLength != NULL) {
+                      *ReturnLength = sizeof(TIMER_BASIC_INFORMATION);
+                  }
+
+              } _SEH_HANDLE {
+                  Status = _SEH_GetExceptionCode();
+              } _SEH_END;
+           }
+        }
+        
         ObDereferenceObject(Timer);
     }
    

@@ -1,11 +1,11 @@
-/*
+/* $Id$
+ *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
  * FILE:               ntoskrnl/ex/work.c
  * PURPOSE:            Manage system work queues
  * 
- * PROGRAMMERS:        Alex Ionescu - Used correct work queue array and added some fixes and checks.
- *                     Gunnar Dalsnes - Implemented
+ * PROGRAMMERS:        David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES ******************************************************************/
@@ -25,10 +25,17 @@
 /*
  * PURPOSE: Queue of items waiting to be processed at normal priority
  */
-EX_WORK_QUEUE ExWorkerQueue[MaximumWorkQueue];
+KQUEUE EiNormalWorkQueue;
+
+KQUEUE EiCriticalWorkQueue;
+
+KQUEUE EiHyperCriticalWorkQueue;
 
 /* FUNCTIONS ****************************************************************/
 
+//static NTSTATUS STDCALL
+static VOID STDCALL
+ExWorkerThreadEntryPoint(IN PVOID context)
 /*
  * FUNCTION: Entry point for a worker thread
  * ARGUMENTS:
@@ -37,138 +44,138 @@ EX_WORK_QUEUE ExWorkerQueue[MaximumWorkQueue];
  * NOTE: To kill a worker thread you must queue an item whose callback
  * calls PsTerminateSystemThread
  */
-static
-VOID 
-STDCALL
-ExpWorkerThreadEntryPoint(IN PVOID Context)
 {
-    PWORK_QUEUE_ITEM WorkItem;
-    PLIST_ENTRY QueueEntry;
-    WORK_QUEUE_TYPE WorkQueueType;
-    PEX_WORK_QUEUE WorkQueue;
-   
-    /* Get Queue Type and Worker Queue */
-    WorkQueueType = (WORK_QUEUE_TYPE)Context;
-    WorkQueue = &ExWorkerQueue[WorkQueueType];
-    
-    /* Loop forever */
-    while (TRUE) {
-        
-        /* Wait for Something to Happen on the Queue */
-        QueueEntry = KeRemoveQueue(&WorkQueue->WorkerQueue, KernelMode, NULL);
-      
-        /* Can't happen since we do a KernelMode wait (and we're a system thread) */
-        ASSERT((NTSTATUS)QueueEntry != STATUS_USER_APC);
-      
-        /* this should never happen either, since we wait with NULL timeout,
-         * but there's a slight possibility that STATUS_TIMEOUT is returned
-         * at queue rundown in NT (unlikely) -Gunnar
-         */
-        ASSERT((NTSTATUS)QueueEntry != STATUS_TIMEOUT);
-    
-        /* Increment Processed Work Items */
-        InterlockedIncrement(&WorkQueue->WorkItemsProcessed);
 
-        /* Get the Work Item */
-        WorkItem = CONTAINING_RECORD(QueueEntry, WORK_QUEUE_ITEM, List);
-        
-        /* Call the Worker Routine */
-        WorkItem->WorkerRoutine(WorkItem->Parameter);
-    
-        /* Make sure it returned at right IRQL */
-        if (KeGetCurrentIrql() != PASSIVE_LEVEL) {
-        
-            /* FIXME: Make this an Ex */
-            KEBUGCHECK(WORKER_THREAD_RETURNED_AT_BAD_IRQL);
-        }
-    
-        /* Make sure it returned with Impersionation Disabled */
-        if (PsGetCurrentThread()->ActiveImpersonationInfo) {
-            
-            /* FIXME: Make this an Ex */
-            KEBUGCHECK(IMPERSONATING_WORKER_THREAD);
-        }
-    }
+   PWORK_QUEUE_ITEM item;
+   PLIST_ENTRY current;
+   
+   while (TRUE) 
+   {
+      current = KeRemoveQueue( (PKQUEUE)context, KernelMode, NULL );
+      
+      /* can't happend since we do a KernelMode wait (and we're a system thread) */
+      ASSERT((NTSTATUS)current != STATUS_USER_APC);
+      
+      /* this should never happend either, since we wait with NULL timeout,
+       * but there's a slight possibility that STATUS_TIMEOUT is returned
+       * at queue rundown in NT (unlikely) -Gunnar
+       */
+      ASSERT((NTSTATUS)current != STATUS_TIMEOUT);
+      
+      /* based on INVALID_WORK_QUEUE_ITEM bugcheck desc. */
+      if (current->Flink == NULL || current->Blink == NULL)
+      {
+         KeBugCheck(INVALID_WORK_QUEUE_ITEM);
+      }
+      
+      /* "reinitialize" item (same as done in ExInitializeWorkItem) */
+      current->Flink = NULL;
+      
+      item = CONTAINING_RECORD( current, WORK_QUEUE_ITEM, List);
+      item->WorkerRoutine(item->Parameter);
+      
+      if (KeGetCurrentIrql() != PASSIVE_LEVEL)
+      {
+         KeBugCheck(IRQL_NOT_LESS_OR_EQUAL);
+      }
+   }
+   
 }
 
-static 
-VOID 
-STDCALL
-ExpInitializeWorkQueue(WORK_QUEUE_TYPE WorkQueueType,
-                       KPRIORITY Priority)
+static VOID ExInitializeWorkQueue(PKQUEUE WorkQueue,
+				  KPRIORITY Priority)
 {
-    ULONG i;
-    PETHREAD Thread;
-    HANDLE hThread;
+   ULONG i;
+   PETHREAD Thread;
+   HANDLE   hThread;
    
-    /* Loop through how many threads we need to create */
-    for (i = 0; i < NUMBER_OF_WORKER_THREADS; i++) {
+   
+   for (i=0; i<NUMBER_OF_WORKER_THREADS; i++)
+     {
         
-        /* Create the System Thread */
-        PsCreateSystemThread(&hThread,
-                             THREAD_ALL_ACCESS,
-                             NULL,
-                             NULL,
-                             NULL,
-                             ExpWorkerThreadEntryPoint,
-                             (PVOID)WorkQueueType);
-        
-        /* Get the Thread */
-        ObReferenceObjectByHandle(hThread,
-                                  THREAD_SET_INFORMATION,
-                                  PsThreadType,
-                                  KernelMode,
-                                  (PVOID*)&Thread,
-                                  NULL);
-        
-        /* Set the Priority */
-        KeSetPriorityThread(&Thread->Tcb, Priority);
-        
-        /* Dereference and close handle */
-        ObDereferenceObject(Thread);
-        ZwClose(hThread);
-    }
+   PsCreateSystemThread(&hThread,
+			     THREAD_ALL_ACCESS,
+			     NULL,
+			     NULL,
+			     NULL,
+			     ExWorkerThreadEntryPoint,
+              WorkQueue);
+   ObReferenceObjectByHandle(hThread,
+				  THREAD_ALL_ACCESS,
+				  PsThreadType,
+				  KernelMode,
+				  (PVOID*)&Thread,
+				  NULL);
+	KeSetPriorityThread(&Thread->Tcb,
+			    Priority);
+	ObDereferenceObject(Thread);
+   ZwClose(hThread);
+     }
 }
 
-VOID 
-INIT_FUNCTION
-ExpInitializeWorkerThreads(VOID)
+VOID INIT_FUNCTION
+ExInitializeWorkerThreads(VOID)
 {
-    ULONG WorkQueueType;
-    
-    /* Initialize the Array */
-    for (WorkQueueType = 0; WorkQueueType < MaximumWorkQueue; WorkQueueType++) {
-    
-        RtlZeroMemory(&ExWorkerQueue[WorkQueueType], sizeof(EX_WORK_QUEUE));
-        KeInitializeQueue(&ExWorkerQueue[WorkQueueType].WorkerQueue, 0);
-    }
-    
-    /* Create the built-in worker threads for each work queue */
-    ExpInitializeWorkQueue(CriticalWorkQueue, LOW_REALTIME_PRIORITY);
-    ExpInitializeWorkQueue(DelayedWorkQueue, LOW_PRIORITY);
-    ExpInitializeWorkQueue(HyperCriticalWorkQueue, HIGH_PRIORITY);
+   KeInitializeQueue( &EiNormalWorkQueue, NUMBER_OF_WORKER_THREADS );
+   KeInitializeQueue( &EiCriticalWorkQueue , NUMBER_OF_WORKER_THREADS );
+   KeInitializeQueue( &EiHyperCriticalWorkQueue , NUMBER_OF_WORKER_THREADS );
+
+   ExInitializeWorkQueue(&EiNormalWorkQueue,
+			 LOW_PRIORITY);
+   ExInitializeWorkQueue(&EiCriticalWorkQueue,
+			 LOW_REALTIME_PRIORITY);
+   ExInitializeWorkQueue(&EiHyperCriticalWorkQueue,
+			 HIGH_PRIORITY);
 }
 
 /*
  * @implemented
- *
+ */
+VOID STDCALL
+ExQueueWorkItem (PWORK_QUEUE_ITEM	WorkItem,
+		 WORK_QUEUE_TYPE		QueueType)
+/*
  * FUNCTION: Inserts a work item in a queue for one of the system worker
  * threads to process
  * ARGUMENTS:
  *        WorkItem = Item to insert
  *        QueueType = Queue to insert it in
  */
-VOID 
-STDCALL
-ExQueueWorkItem(PWORK_QUEUE_ITEM WorkItem,
-                WORK_QUEUE_TYPE QueueType)
 {
     ASSERT(WorkItem!=NULL);
     ASSERT_IRQL(DISPATCH_LEVEL);
     ASSERT(WorkItem->List.Flink == NULL);
-    
-    /* Insert the Queue */
-    KeInsertQueue(&ExWorkerQueue[QueueType].WorkerQueue, &WorkItem->List);
+   /*
+    * Insert the item in the appropiate queue and wake up any thread
+    * waiting for something to do
+    */
+    switch(QueueType)
+    {
+    case DelayedWorkQueue:
+      KeInsertQueue (
+          &EiNormalWorkQueue,
+          &WorkItem->List
+            );
+   	break;
+	
+    case CriticalWorkQueue:
+            KeInsertQueue (
+              &EiCriticalWorkQueue,
+              &WorkItem->List
+              );
+   	    break;
+
+    case HyperCriticalWorkQueue:
+            KeInsertQueue (
+             &EiHyperCriticalWorkQueue,
+             &WorkItem->List
+             );
+        	break;
+     
+    default:
+        break;
+
+    }
 }
 
 /* EOF */

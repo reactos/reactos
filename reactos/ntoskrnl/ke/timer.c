@@ -107,11 +107,12 @@ KeInitializeTimerEx (PKTIMER Timer,
     
     /* Initialize the Dispatch Header */
     KeInitializeDispatcherHeader(&Timer->Header,
-                                 TimerNotificationObject + Type,
+                                 InternalNotificationTimer + Type,
                                  sizeof(KTIMER) / sizeof(ULONG),
                                  FALSE);
    
-    /* Initalize the Other data */
+    /* Initalize the List Head and other data */
+    InitializeListHead(&Timer->Header.WaitListHead);
     Timer->DueTime.QuadPart = 0;
     Timer->Period = 0;
 }
@@ -195,6 +196,7 @@ KeSetTimerEx (PKTIMER Timer,
     Timer->Dpc = Dpc;
     Timer->Period = Period;
     Timer->Header.SignalState = FALSE;
+    Timer->Header.Absolute = FALSE;
     
     /* Insert it */
     if (!KiInsertTimer(Timer, DueTime)) {
@@ -294,7 +296,7 @@ KiHandleExpiredTimer(PKTIMER Timer)
     /* Set it as Signaled */
     DPRINT("Setting Timer as Signaled\n");
     Timer->Header.SignalState = TRUE;
-    KiWaitTest(&Timer->Header, 0);   
+    KiDispatcherObjectWake(&Timer->Header, 0);   
 
     /* If the Timer is periodic, reinsert the timer with the new due time */
     if (Timer->Period) {
@@ -304,7 +306,7 @@ KiHandleExpiredTimer(PKTIMER Timer)
         if (!KiInsertTimer(Timer, DueTime)) {
 
            /* FIXME: I will think about how to handle this and fix it ASAP -- Alex */
-           DPRINT("CRITICAL UNHANDLED CASE: TIMER ALREADY EXPIRED!!!\n");
+           DPRINT1("CRITICAL UNHANDLED CASE: TIMER ALREADY EXPIRED!!!\n");
         };
     }
     
@@ -336,10 +338,8 @@ KiInsertTimer(PKTIMER Timer,
     
     DPRINT("KiInsertTimer(Timer %x DueTime %I64d)\n", Timer, DueTime.QuadPart);
     
-    /* Set default data */
+    /* Set it as Inserted */
     Timer->Header.Inserted = TRUE;
-    Timer->Header.Absolute = FALSE;
-    if (!Timer->Period) Timer->Header.SignalState = FALSE;
     
     /* Convert to relative time if needed */
     if (DueTime.u.HighPart >= 0) {

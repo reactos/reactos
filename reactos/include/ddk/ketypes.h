@@ -36,34 +36,23 @@ typedef VOID STDCALL_FUNC
 
 struct _DISPATCHER_HEADER;
 
-typedef enum _KOBJECTS {
-   EventNotificationObject = 0,
-   EventSynchronizationObject = 1,
-   MutantObject = 2,
-   ProcessObject = 3,
-   QueueObject = 4,
-   SemaphoreObject = 5,
-   ThreadObject = 6,
-   GateObject = 7,
-   TimerNotificationObject = 8,
-   TimerSynchronizationObject = 9,
-   Spare2Object = 10,
-   Spare3Object = 11,
-   Spare4Object = 12,
-   Spare5Object = 13,
-   Spare6Object = 14,
-   Spare7Object = 15,
-   Spare8Object = 16,
-   Spare9Object = 17,
-   ApcObject = 18,
-   DpcObject = 19,
-   DeviceQueueObject = 20,
-   EventPairObject = 21,
-   InterruptObject = 22,
-   ProfileObject = 23,
-   ThreadedDpcObject = 24,
-   MaximumKernelObject = 25
-} KOBJECTS;
+typedef enum _KERNEL_OBJECTS {
+	KNotificationEvent = 0,
+	KSynchronizationEvent = 1,
+	KMutant = 2,
+	KProcess = 3,
+	KQueue = 4,
+	KSemaphore = 5,
+	KThread = 6,
+	KNotificationTimer = 8,
+	KSynchronizationTimer = 9,
+	KApc = 18,
+	KDpc = 19,
+	KDeviceQueue = 20,
+	KEventPair = 21,
+	KInterrupt = 22,
+	KProfile = 23
+} KERNEL_OBJECTS;
 
 #include <pshpack1.h>
 

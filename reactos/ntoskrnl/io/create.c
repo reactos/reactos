@@ -176,7 +176,7 @@ IopCreateFile(PVOID			ObjectBody,
 	 FileObject,
 	 DeviceObject);
   FileObject->Vpb = DeviceObject->Vpb;
-  FileObject->Type = IO_TYPE_FILE;
+  FileObject->Type = InternalFileType;
 
   return(STATUS_SUCCESS);
 }
@@ -240,7 +240,7 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
 
   CreatedFileObject->DeviceObject = DeviceObject->Vpb->DeviceObject;
   CreatedFileObject->Vpb = DeviceObject->Vpb;
-  CreatedFileObject->Type = IO_TYPE_FILE;
+  CreatedFileObject->Type = InternalFileType;
   CreatedFileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
 
   // shouldn't we initialize the lock event, and several other things here too?

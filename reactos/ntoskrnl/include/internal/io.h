@@ -412,7 +412,7 @@ IoDestroyDriverList(VOID);
 /* bootlog.c */
 
 VOID
-IopInitBootLog(BOOLEAN StartBootLog);
+IopInitBootLog(VOID);
 
 VOID
 IopStartBootLog(VOID);

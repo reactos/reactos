@@ -49,12 +49,10 @@ VOID ExpInitializeProfileImplementation(VOID);
  */
 VOID MmInitSystem(ULONG Phase, PLOADER_PARAMETER_BLOCK LoaderBlock, ULONG LastKernelAddress);
 VOID IoInit(VOID);
-VOID IoInit2(BOOLEAN BootLog);
-VOID STDCALL IoInit3(VOID);
+VOID IoInit2(VOID);
 VOID ObInit(VOID);
 VOID PsInit(VOID);
 VOID CmInitializeRegistry(VOID);
-VOID STDCALL CmInitHives(BOOLEAN SetupBoot);
 VOID CmInit2(PCHAR CommandLine);
 VOID CmShutdownRegistry(VOID);
 BOOLEAN CmImportSystemHive(PCHAR ChunkBase, ULONG ChunkSize);

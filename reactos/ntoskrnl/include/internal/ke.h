@@ -115,17 +115,6 @@ typedef struct _KPROFILE
   struct _EPROCESS *Process;
 } KPROFILE, *PKPROFILE;
 
-/* Cached modules from the loader block */
-typedef enum _CACHED_MODULE_TYPE {
-    AnsiCodepage,
-    OemCodepage,
-    UnicodeCasemap,
-    SystemRegistry,
-    HardwareRegistry,
-    MaximumCachedModuleType,        
-} CACHED_MODULE_TYPE, *PCACHED_MODULE_TYPE;
-extern PLOADER_MODULE CachedModules[MaximumCachedModuleType];
-
 VOID STDCALL 
 DbgBreakPointNoBugCheck(VOID);
 
@@ -155,42 +144,30 @@ VOID STDCALL KeUpdateRunTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);
 
 VOID STDCALL KiExpireTimers(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2);
 
-KIRQL inline FASTCALL KeAcquireDispatcherDatabaseLock(VOID);
-VOID inline FASTCALL KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID);
-VOID inline FASTCALL KeReleaseDispatcherDatabaseLock(KIRQL Irql);
-VOID inline FASTCALL KeReleaseDispatcherDatabaseLockFromDpcLevel(VOID);
+KIRQL KeAcquireDispatcherDatabaseLock(VOID);
+VOID KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID);
+VOID KeReleaseDispatcherDatabaseLock(KIRQL Irql);
+VOID KeReleaseDispatcherDatabaseLockFromDpcLevel(VOID);
 
 BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr, KPRIORITY increment);
 VOID STDCALL KeExpireTimers(PKDPC Apc,
 			    PVOID Arg1,
 			    PVOID Arg2,
 			    PVOID Arg3);
-VOID inline FASTCALL KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULONG Type,
+VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULONG Type,
 				  ULONG Size, ULONG SignalState);
 VOID KeDumpStackFrames(PULONG Frame);
 BOOLEAN KiTestAlert(VOID);
 
-VOID FASTCALL KiAbortWaitThread(struct _KTHREAD* Thread, NTSTATUS WaitStatus);
-
-BOOLEAN STDCALL KiInsertTimer(PKTIMER Timer, LARGE_INTEGER DueTime);
-
-VOID inline FASTCALL KiSatisfyObjectWait(PDISPATCHER_HEADER Object, PKTHREAD Thread);
-
-BOOLEAN inline FASTCALL KiIsObjectSignaled(PDISPATCHER_HEADER Object, PKTHREAD Thread);
-
-VOID inline FASTCALL KiSatisifyMultipleObjectWaits(PKWAIT_BLOCK WaitBlock);
-
-VOID FASTCALL KiWaitTest(PDISPATCHER_HEADER Object, KPRIORITY Increment);
+BOOLEAN KiAbortWaitThread(struct _KTHREAD* Thread, NTSTATUS WaitStatus);
 
 PULONG KeGetStackTopThread(struct _ETHREAD* Thread);
 VOID KeContextToTrapFrame(PCONTEXT Context, PKTRAP_FRAME TrapFrame);
 VOID STDCALL KiDeliverApc(KPROCESSOR_MODE PreviousMode,
                   PVOID Reserved,
                   PKTRAP_FRAME TrapFrame);
-                  
-VOID STDCALL KeInitializeEventPair(PKEVENT_PAIR EventPair);
 		  
-VOID STDCALL KiInitializeUserApc(IN PVOID Reserved,
+VOID KiInitializeUserApc(IN PVOID Reserved,
 			 IN PKTRAP_FRAME TrapFrame,
 			 IN PKNORMAL_ROUTINE NormalRoutine,
 			 IN PVOID NormalContext,
@@ -206,7 +183,6 @@ STDCALL
 KeTestAlertThread(IN KPROCESSOR_MODE AlertMode);
 
 BOOLEAN STDCALL KeRemoveQueueApc (PKAPC Apc);
-VOID FASTCALL KiWakeQueue(IN PKQUEUE Queue);
 PLIST_ENTRY STDCALL KeRundownQueue(IN PKQUEUE Queue);
 
 extern LARGE_INTEGER SystemBootTime;
@@ -218,7 +194,7 @@ VOID KeInitInterrupts(VOID);
 VOID KeInitTimer(VOID);
 VOID KeInitDpc(struct _KPCR* Pcr);
 VOID KeInitDispatcher(VOID);
-VOID inline FASTCALL KeInitializeDispatcher(VOID);
+VOID KeInitializeDispatcher(VOID);
 VOID KiInitializeSystemClock(VOID);
 VOID KeInitializeBugCheck(VOID);
 VOID Phase1Initialization(PVOID Context);

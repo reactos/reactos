@@ -498,9 +498,7 @@ VOID STDCALL PsExitSpecialApc(PKAPC Apc,
 
 
 VOID 
-STDCALL
 KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First);
-
 NTSTATUS KeReleaseThread(PKTHREAD Thread);
 
 VOID
@@ -527,11 +525,8 @@ VOID PsUnfreezeProcessThreads(PEPROCESS Process);
 ULONG PsEnumThreadsByProcess(PEPROCESS Process);
 PEPROCESS PsGetNextProcess(PEPROCESS OldProcess);
 VOID
-STDCALL
-PsBlockThread(PNTSTATUS Status, 
-              UCHAR Alertable, 
-              ULONG WaitMode,
-              UCHAR WaitReason);
+PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode, 
+	      BOOLEAN DispatcherLock, KIRQL WaitIrql, UCHAR WaitReason);
 VOID
 PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus, KPRIORITY Increment);
 VOID
