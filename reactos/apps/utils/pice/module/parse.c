@@ -1939,54 +1939,58 @@ LPSTR DecodeVmFlags(ULONG flags)
 //*************************************************************************
 COMMAND_PROTOTYPE(ShowVirtualMemory)
 {
-	PEPROCESS my_current = IoGetCurrentProcess();
-    PLIST_ENTRY current_entry;
-	PMADDRESS_SPACE vma = NULL;
-	MEMORY_AREA* current;
-    char filename[64];
-
-	DPRINT((0,"ShowVirtualMemory()\n"));
-	if( my_current )
-    	vma = &(my_current->AddressSpace);
-
-    if(vma)
+  PEPROCESS my_current = IoGetCurrentProcess();
+  PLIST_ENTRY current_entry;
+  PMADDRESS_SPACE vma = NULL;
+  MEMORY_AREA* current;
+  char filename[64];
+  
+  DPRINT((0,"ShowVirtualMemory()\n"));
+  if( my_current )
+    vma = &(my_current->AddressSpace);
+  if( !vma )
+    vma = my_init_mm;
+  while( vma )
     {
-        if(pArgs->Count == 0)
+      if(pArgs->Count == 0)
         {
-            PutStatusText("START    END   LENGTH   VMA      TYPE   ATTR");
-			current_entry = vma->MAreaListHead.Flink;
-			while (current_entry != &vma->MAreaListHead)
+	  PutStatusText("START    END      LENGTH   VMA      TYPE   ATTR");
+	  current_entry = vma->MAreaListHead.Flink;
+	  while (current_entry != &vma->MAreaListHead)
             {
-                *filename = 0;
-
-				current = CONTAINING_RECORD(current_entry,
-							    MEMORY_AREA,
-							    Entry);
+	      *filename = 0;
+	      
+	      current = CONTAINING_RECORD(current_entry,
+					  MEMORY_AREA,
+					  Entry);
 				// find the filename
-                if(((current->Type == MEMORY_AREA_SECTION_VIEW_COMMIT) ||
-					(current->Type == MEMORY_AREA_SECTION_VIEW_RESERVE) )&&
-                    current->Data.SectionData.Section->FileObject)
+	      if(((current->Type == MEMORY_AREA_SECTION_VIEW_COMMIT) ||
+		  (current->Type == MEMORY_AREA_SECTION_VIEW_RESERVE) )&&
+		 current->Data.SectionData.Section->FileObject)
                 {
-                    if(IsAddressValid((ULONG)current->Data.SectionData.Section->FileObject->FileName.Buffer) )
-                        PICE_sprintf(filename,"%.64S",current->Data.SectionData.Section->FileObject->FileName.Buffer);
+		  if(IsAddressValid((ULONG)current->Data.SectionData.Section->FileObject->FileName.Buffer) )
+		    PICE_sprintf(filename,"%.64S",current->Data.SectionData.Section->FileObject->FileName.Buffer);
                 }
-
-                PICE_sprintf(tempCmd,"%.8X %.8X %.8X %.8X %x %x    %s\n",
-                        (ULONG)current->BaseAddress,
-                        (ULONG)current->BaseAddress+current->Length,
-						current->Length,
-                        (ULONG)current,
-                        current->Type, current->Attributes,//DecodeVmFlags(current->Type, current->Attributes),
-                        filename);
-                Print(OUTPUT_WINDOW,tempCmd);
-
-                if(WaitForKey()==FALSE)break;
-				current_entry = current_entry->Flink;
+	      
+	      PICE_sprintf(tempCmd,"%.8X %.8X %.8X %.8X %x %x    %s\n",
+			   (ULONG)current->BaseAddress,
+			   (ULONG)current->BaseAddress+current->Length,
+			   current->Length,
+			   (ULONG)current,
+			   current->Type, current->Attributes,//DecodeVmFlags(current->Type, current->Attributes),
+			   filename);
+	      Print(OUTPUT_WINDOW,tempCmd);
+	      
+	      if(WaitForKey()==FALSE)
+		break;
+	      current_entry = current_entry->Flink;
             }
         }
+      if( vma == &(my_current->AddressSpace) )
+	vma = my_init_mm;  // switch to kernel memory area
+      else vma = 0;        // if we already did kernel, end loop
     }
-
-    return TRUE;
+  return TRUE;
 }
 
 //*************************************************************************
