@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: internal.h,v 1.10 2004/10/03 09:27:22 ekohl Exp $ 
+/* $Id: internal.h,v 1.11 2004/10/08 11:52:30 ekohl Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -105,6 +105,9 @@ CreateUserHive (LPCWSTR lpKeyName,
 BOOL
 UpdateUsersShellFolderSettings(LPCWSTR lpUserProfilePath,
 			       HKEY hUserKey);
+
+/* userenv.c */
+extern HINSTANCE hInstance;
 
 #endif /* _INTERNAL_H */
 
