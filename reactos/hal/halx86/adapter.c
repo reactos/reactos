@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.13 2004/11/21 21:53:06 ion Exp $
+/* $Id: adapter.c,v 1.14 2004/11/24 17:54:38 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -273,8 +273,8 @@ HalpAllocateAdapterEx(
 		
 		/* Set up Bitmap */
 		RtlInitializeBitMap(AdapterObject->MapRegisters,
-				    (PULONG)(AdapterObject->MapRegisters + sizeof(RTL_BITMAP)),
-				    64);
+				    (PULONG)(AdapterObject->MapRegisters + 1),
+				    AllowedMapRegisters);
 				    
 		/* Reset the Bitmap */	
 		RtlSetAllBits(AdapterObject->MapRegisters);
