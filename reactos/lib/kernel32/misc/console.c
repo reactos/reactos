@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.60 2003/07/10 18:50:51 chorns Exp $
+/* $Id: console.c,v 1.61 2003/07/29 16:42:35 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2525,7 +2525,7 @@ RemoveConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
     {
       for (i = 0; i < NrCtrlHandlers; i++)
 	{
-	  if ((PHANDLER_ROUTINE) CtrlHandlers[i] == HandlerRoutine)
+	  if ( ((void*)(CtrlHandlers[i])) == (void*)HandlerRoutine)
 	    {
 	      CtrlHandlers[i] = CtrlHandlers[NrCtrlHandlers - 1];
 	      NrCtrlHandlers--;
