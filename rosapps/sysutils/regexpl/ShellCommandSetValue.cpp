@@ -1,4 +1,4 @@
-/* $Id: ShellCommandSetValue.cpp,v 1.5 2001/04/16 05:09:51 narnaoud Exp $
+/* $Id: ShellCommandSetValue.cpp,v 1.6 2001/04/24 23:05:56 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -336,7 +336,7 @@ CheckValueArgument:
       TCHAR *pchDest = (TCHAR *)pDataBuffer;
       while(*pchSrc)
       {
-        if (pchSrc[0] == _T('\\'))
+        if (pchSrc[0] == _T('^'))
         {
           if (pchSrc[1] == _T('a'))
             *pchDest = _T('\a');
@@ -423,7 +423,7 @@ const TCHAR * CShellCommandSetValue::GetHelpString()
 			_T("                    dwbe /\n")
 			_T("                    sz   \\\n")
 			_T("                    esz  - <VALUE> string is interpreted as string\n")
-			_T("    <PATH>       - Optional relative path of key which value will be processed.\n")
+			_T("    <PATH>       - Optional relative path of key which value will be processed. ^ is the escape char\n")
 			_T("    <VALUE_NAME> - Name of key's value. Default is key's default value.\n")
 			_T("    /?           - This help.\n");
 }
