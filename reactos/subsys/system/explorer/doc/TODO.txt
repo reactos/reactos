@@ -1,14 +1,14 @@
 - extend shell view code in Wine
 - tool tip texts for notification icons and clock display
 - context menus for quick launch bar
+- detect display mode changes and adjust desktop bar size
 - add rebars for resizable task bar, quick launch bar and notification area
 - handling of full screen applications
 - implement additional deskbands
-- Drag Drop on desktop does not work.
+- Drag Drop and file renaming on the desktop does not work.
 - implement Drag Drop from the tree view.
 - activate accelerator keys like <DEL> in shell view folders
-- short cut Ctrl+ESC to activate start menu
-- progman DDE server
+- program manager "progman" DDE server
 - command line parameters like "/e,/root,c:\"
 - Windows-key combos
 - Application Desktop Toolbars
