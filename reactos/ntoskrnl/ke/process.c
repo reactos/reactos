@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.19 2004/03/09 21:49:53 dwelch Exp $
+/* $Id: process.c,v 1.20 2004/06/23 22:31:51 ion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -115,6 +115,31 @@ KeDetachProcess (VOID)
    Ke386SetPageTableDirectory(PageDir);
 
    KeLowerIrql(oldlvl);
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+KeStackAttachProcess (
+    IN PKPROCESS Process,
+    OUT PRKAPC_STATE ApcState
+    )
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+KeUnstackDetachProcess (
+    IN PRKAPC_STATE ApcState
+    )
+{
+	UNIMPLEMENTED;
 }
 
 /* EOF */

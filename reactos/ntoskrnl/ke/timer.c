@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.73 2004/06/13 10:35:52 navaraf Exp $
+/* $Id: timer.c,v 1.74 2004/06/23 22:31:51 ion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -476,6 +476,33 @@ KeQueryTickCount(PLARGE_INTEGER TickCount)
 }
 
 /*
+ * @unimplemented
+ */
+STDCALL
+ULONG
+KeQueryRuntimeThread(
+	IN PKTHREAD Thread,
+	OUT PULONG UserTime
+	)
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+KeSetTimeIncrement(
+    IN ULONG MaxIncrement,
+    IN ULONG MinIncrement
+)
+{
+	UNIMPLEMENTED;
+}
+
+/*
  * We enter this function at IRQL DISPATCH_LEVEL, and with the
  * TimerListLock held.
  */
@@ -718,3 +745,44 @@ KiUpdateProcessThreadTime(VOID)
 
     KiReleaseSpinLock(&TimeLock);       
 } 
+
+/*
+ * @unimplemented
+ */
+VOID
+FASTCALL
+KeSetTimeUpdateNotifyRoutine(
+    IN PTIME_UPDATE_NOTIFY_ROUTINE NotifyRoutine
+    )
+{
+	UNIMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+KeUpdateRunTime(
+	IN PKTRAP_FRAME	TrapFrame
+)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID 
+KeUpdateSystemTime(
+	IN PKTRAP_FRAME   	TrapFrame,
+	IN ULONG  			Increment
+)
+{
+	UNIMPLEMENTED;
+}
+
+/*EOF*/
+

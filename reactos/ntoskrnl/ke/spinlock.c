@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.20 2004/01/18 22:41:53 gdalsnes Exp $
+/* $Id: spinlock.c,v 1.21 2004/06/23 22:31:51 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -56,6 +56,19 @@ KeSynchronizeExecution (PKINTERRUPT		Interrupt,
 }
 
 /*
+ * @unimplemented
+ */
+STDCALL
+KIRQL
+KeAcquireInterruptSpinLock(
+    IN PKINTERRUPT Interrupt
+    )
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+/*
  * @implemented
  */
 VOID STDCALL
@@ -98,6 +111,21 @@ KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
   KefAcquireSpinLockAtDpcLevel(SpinLock);
 }
 
+
+/*
+ * @unimplemented
+ */
+VOID
+FASTCALL
+KeAcquireInStackQueuedSpinLockAtDpcLevel(
+    IN PKSPIN_LOCK SpinLock,
+    IN PKLOCK_QUEUE_HANDLE LockHandle
+    )
+{
+	UNIMPLEMENTED;
+}
+
+
 #undef KefReleaseSpinLockFromDpcLevel
 
 /*
@@ -127,6 +155,17 @@ KeReleaseSpinLockFromDpcLevel (PKSPIN_LOCK	SpinLock)
   KefReleaseSpinLockFromDpcLevel(SpinLock);
 }
 
+/*
+ * @unimplemented
+ */
+VOID
+FASTCALL
+KeReleaseInStackQueuedSpinLockFromDpcLevel(
+    IN PKLOCK_QUEUE_HANDLE LockHandle
+    )
+{
+	UNIMPLEMENTED;
+}
 
 /*
  * @implemented
@@ -157,6 +196,18 @@ KiAcquireSpinLock(PKSPIN_LOCK SpinLock)
   }
 }
 
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+KeReleaseInterruptSpinLock(
+	IN PKINTERRUPT Interrupt,
+	IN KIRQL OldIrql
+	)
+{
+	UNIMPLEMENTED;
+}
 
 /*
  * @implemented

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.46 2003/12/31 05:33:03 jfilby Exp $
+/* $Id: kthread.c,v 1.47 2004/06/23 22:31:51 ion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -38,6 +38,24 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+KeCapturePersistentThreadState(
+	IN PVOID	CurrentThread,
+	IN ULONG	Setting1,
+	IN ULONG	Setting2,
+	IN ULONG	Setting3,
+	IN ULONG	Setting4,
+	IN ULONG	Setting5,
+	IN PVOID	ThreadState
+)
+{
+	UNIMPLEMENTED;
+}
+
 VOID
 KeFreeStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
 		PHYSICAL_ADDRESS PhysAddr, SWAPENTRY SwapEntry, BOOLEAN Dirty)
@@ -47,6 +65,19 @@ KeFreeStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
     {
       MmReleasePageMemoryConsumer(MC_NPPOOL, PhysAddr);
     }
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+KPRIORITY
+KeQueryPriorityThread (
+    IN PKTHREAD Thread
+    )
+{
+	UNIMPLEMENTED;
+	return 0;
 }
 
 NTSTATUS 
@@ -74,6 +105,19 @@ KeReleaseThread(PETHREAD Thread)
   Thread->Tcb.StackBase = NULL;
   Thread->Tcb.KernelStack = NULL;
   return(STATUS_SUCCESS);
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+BOOLEAN
+KeSetKernelStackSwapEnable(
+	IN BOOLEAN Enable
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
 }
 
 VOID
@@ -271,4 +315,54 @@ VOID STDCALL
 KeRescheduleThread()
 {
   PsDispatchThread(THREAD_STATE_READY);
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+KeRevertToUserAffinityThread(
+    VOID
+)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+CCHAR
+KeSetIdealProcessorThread (
+	IN PKTHREAD Thread,
+	IN CCHAR Processor
+	)
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+KeSetSystemAffinityThread(
+    IN KAFFINITY Affinity
+)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID 
+KeTerminateThread(
+	IN KPRIORITY   	 Increment  	 
+)
+{
+	UNIMPLEMENTED;
 }

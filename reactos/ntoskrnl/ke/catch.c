@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.42 2004/05/07 05:12:10 royce Exp $
+/* $Id: catch.c,v 1.43 2004/06/23 22:31:51 ion Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -216,6 +216,46 @@ ExRaiseStatus (IN NTSTATUS Status)
 }
 
 
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+ExRaiseException (
+	PEXCEPTION_RECORD pExcptRec
+	)
+{
+	UNIMPLEMENTED;
+}
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+ExRaiseHardError (
+	IN NTSTATUS ErrorStatus,
+	IN ULONG NumberOfParameters, 
+	IN PUNICODE_STRING UnicodeStringParameterMask OPTIONAL,
+	IN PVOID *Parameters, 
+	IN HARDERROR_RESPONSE_OPTION ResponseOption, 
+	OUT PHARDERROR_RESPONSE Response 
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+ExSystemExceptionFilter()
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
 NTSTATUS STDCALL
 NtRaiseException (IN PEXCEPTION_RECORD ExceptionRecord,
 		  IN PCONTEXT Context,
@@ -229,6 +269,47 @@ NtRaiseException (IN PEXCEPTION_RECORD ExceptionRecord,
   return(STATUS_SUCCESS);
 }
 
+/*
+ * @unimplemented
+ */
+STDCALL
+BOOLEAN
+KeDeregisterBugCheckReasonCallback(
+    IN PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord
+    )
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+ULONG
+KeGetRecommendedSharedDataAlignment(
+	VOID
+	)
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+BOOLEAN
+KeRegisterBugCheckReasonCallback(
+    IN PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord,
+    IN PKBUGCHECK_REASON_CALLBACK_ROUTINE CallbackRoutine,
+    IN KBUGCHECK_CALLBACK_REASON Reason,
+    IN PUCHAR Component
+    )
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
 
 /*
  * @implemented

@@ -136,4 +136,17 @@ NTSTATUS STDCALL KePulseEvent (PKEVENT		Event,
    return ((NTSTATUS)ret);
 }
 
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+KeSetEventBoostPriority(
+	IN PKEVENT Event,
+	IN PKTHREAD *Thread OPTIONAL
+)
+{
+	UNIMPLEMENTED;
+}
+
 /* EOF */

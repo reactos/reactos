@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.30 2004/01/18 22:42:50 gdalsnes Exp $
+/* $Id: dpc.c,v 1.31 2004/06/23 22:31:51 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -122,6 +122,30 @@ KiDispatchInterrupt(VOID)
    }
    KiReleaseSpinLock(&DpcQueueLock);
    KeLowerIrql(oldlvl);
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+KeFlushQueuedDpcs(
+	VOID
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID 
+KeIsExecutingDpc(
+	VOID
+)
+{
+	UNIMPLEMENTED;
 }
 
 /*
@@ -244,5 +268,19 @@ KeInitDpc(VOID)
    InitializeListHead(&DpcQueueHead);
    KeInitializeSpinLock(&DpcQueueLock);
 }
+
+/*
+ * @unimplemented
+ *
+STDCALL
+BOOLEAN
+KiIpiServiceRoutine(
+	IN PKTRAP_FRAME   		TrapFrame,
+	IN PKEXCEPTION_FRAME  	ExceptionFrame
+)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}*/
 
 /* EOF */
