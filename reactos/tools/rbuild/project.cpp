@@ -34,9 +34,6 @@ void Project::ReadXml()
 		if ( !head )
 			throw InvalidBuildFileException ( "Document contains no 'project' tag." );
 
-		if ( head->name == "!--" )
-			continue; // ignore comments
-
 		if ( head->name != "project" )
 		{
 			throw InvalidBuildFileException ( "Expected 'project', got '%s'.",

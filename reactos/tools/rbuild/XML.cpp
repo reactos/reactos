@@ -445,9 +445,10 @@ XMLParse(XMLFile& f,
 		return NULL;
 	bool end_tag;
 
-	while ( token[0] != '<' )
+	while ( token[0] != '<' || !strncmp ( token.c_str(), "<!--", 4 ) )
 	{
-		printf ( "syntax error: expecting xml tag, not '%s'\n", token.c_str() );
+		if ( token[0] != '<' )
+			printf ( "syntax error: expecting xml tag, not '%s'\n", token.c_str() );
 		if ( !f.get_token(token) )
 			return NULL;
 	}
