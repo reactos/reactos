@@ -112,7 +112,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    
    DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
-   if (Status == STATUS_PENDING)
+   if (Status == STATUS_PENDING  && (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
        KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
        Status = Irp->IoStatus.Status;
@@ -198,6 +198,7 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
 	KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
         Status = Irp->IoStatus.Status;
      }
+
    return(Status);
 }
 
