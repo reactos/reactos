@@ -1,21 +1,32 @@
+/* $Id: registry.c 12852 2005-01-06 13:58:04Z mf $
+ *
+ * COPYRIGHT:         See COPYING in the top level directory
+ * PROJECT:           ReactOS kernel
+ * PURPOSE:           Rtl registry functions
+ * FILE:              lib/rtl/registry.c
+ * PROGRAMER:         Eric Kohl
+ * REVISION HISTORY:
+ *                    2000/08/11: Created
+ */
+
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             ntoskrnl/cm/rtlfunc.c
- * PURPOSE:          Rtlxxx function for registry access
- * UPDATE HISTORY:
-*/
+ * TODO:
+ *   - finish RtlQueryRegistryValues()
+ *	- support RTL_QUERY_REGISTRY_DELETE
+ */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ****************************************************************/
 
-#include <ntoskrnl.h>
+#define __NTDRIVER__
+#include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
+#include <ntos/minmax.h>
+
 #define NDEBUG
-#include <internal/debug.h>
+#include <ntdll/ntdll.h>
 
-#include "cm.h"
 
-/* FUNCTIONS ****************************************************************/
-
+/* FUNCTIONS ***************************************************************/
 
 static NTSTATUS
 RtlpGetRegistryHandle(ULONG RelativeTo,
@@ -28,6 +39,8 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
   WCHAR KeyBuffer[MAX_PATH];
   OBJECT_ATTRIBUTES ObjectAttributes;
   NTSTATUS Status;
+
+  DPRINT("RtlpGetRegistryHandle()\n");
 
   if (RelativeTo & RTL_REGISTRY_HANDLE)
     {
@@ -45,7 +58,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
     RelativeTo &= ~RTL_REGISTRY_OPTIONAL;
 
   if (RelativeTo >= RTL_REGISTRY_MAXIMUM)
-    return STATUS_INVALID_PARAMETER;
+    return(STATUS_INVALID_PARAMETER);
 
   KeyName.Length = 0;
   KeyName.MaximumLength = MAX_PATH;
@@ -54,6 +67,11 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 
   switch (RelativeTo)
     {
+      case RTL_REGISTRY_ABSOLUTE:
+	RtlAppendUnicodeToString(&KeyName,
+				 L"\\");
+	break;
+
       case RTL_REGISTRY_SERVICES:
 	RtlAppendUnicodeToString(&KeyName,
 				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
@@ -92,6 +110,8 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 	break;
     }
 
+  DPRINT("KeyName %wZ\n", &KeyName);
+
   if (Path[0] == L'\\' && RelativeTo != RTL_REGISTRY_ABSOLUTE)
     {
       Path++;
@@ -99,7 +119,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
   RtlAppendUnicodeToString(&KeyName,
 			   Path);
 
-  DPRINT("KeyName '%wZ'\n", &KeyName);
+  DPRINT("KeyName %wZ\n", &KeyName);
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
@@ -187,8 +207,8 @@ RtlDeleteRegistryValue(IN ULONG RelativeTo,
   UNICODE_STRING Name;
 
   Status = RtlpGetRegistryHandle(RelativeTo,
-				 (PWSTR) Path,
-				 TRUE,
+				 (PWSTR)Path,
+				 FALSE,
 				 &KeyHandle);
   if (!NT_SUCCESS(Status))
     return(Status);
@@ -196,12 +216,12 @@ RtlDeleteRegistryValue(IN ULONG RelativeTo,
   RtlInitUnicodeString(&Name,
 		       ValueName);
 
-  NtDeleteValueKey(KeyHandle,
-		   &Name);
+  Status = NtDeleteValueKey(KeyHandle,
+			    &Name);
 
   NtClose(KeyHandle);
 
-  return(STATUS_SUCCESS);
+  return(Status);
 }
 
 
@@ -220,7 +240,7 @@ RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
 
   DPRINT ("RtlFormatCurrentUserKeyPath() called\n");
 
-  Status = ZwOpenThreadToken (NtCurrentThread (),
+  Status = NtOpenThreadToken (NtCurrentThread (),
 			      TOKEN_READ,
 			      TRUE,
 			      &TokenHandle);
@@ -228,22 +248,22 @@ RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
     {
       if (Status != STATUS_NO_TOKEN)
 	{
-	  DPRINT1 ("ZwOpenThreadToken() failed (Status %lx)\n", Status);
+	  DPRINT1 ("NtOpenThreadToken() failed (Status %lx)\n", Status);
 	  return Status;
 	}
 
-      Status = ZwOpenProcessToken (NtCurrentProcess (),
+      Status = NtOpenProcessToken (NtCurrentProcess (),
 				   TOKEN_READ,
 				   &TokenHandle);
       if (!NT_SUCCESS (Status))
 	{
-	  DPRINT1 ("ZwOpenProcessToken() failed (Status %lx)\n", Status);
+	  DPRINT1 ("NtOpenProcessToken() failed (Status %lx)\n", Status);
 	  return Status;
 	}
     }
 
   SidBuffer = (PSID_AND_ATTRIBUTES)Buffer;
-  Status = ZwQueryInformationToken (TokenHandle,
+  Status = NtQueryInformationToken (TokenHandle,
 				    TokenUser,
 				    (PVOID)SidBuffer,
 				    256,
@@ -251,7 +271,7 @@ RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
   NtClose (TokenHandle);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT ("ZwQueryInformationToken() failed (Status %lx)\n", Status);
+      DPRINT1 ("NtQueryInformationToken() failed (Status %lx)\n", Status);
       return Status;
     }
 
@@ -290,6 +310,9 @@ RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 		   OUT PHANDLE KeyHandle)
@@ -311,7 +334,9 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 			 &ObjectAttributes);
       RtlFreeUnicodeString(&KeyPath);
       if (NT_SUCCESS(Status))
-	return(STATUS_SUCCESS);
+	{
+	  return STATUS_SUCCESS;
+	}
     }
 
   RtlInitUnicodeString (&KeyPath,
@@ -324,7 +349,8 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
   Status = NtOpenKey(KeyHandle,
 		     DesiredAccess,
 		     &ObjectAttributes);
-  return(Status);
+
+  return Status;
 }
 
 
@@ -348,21 +374,24 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   PKEY_VALUE_FULL_INFORMATION FullValueInfo;
   ULONG BufferSize;
   ULONG ResultSize;
-  ULONG ValueNameSize;
   ULONG Index;
   ULONG StringLen;
+  ULONG ValueNameSize;
   PWSTR StringPtr;
+  PWSTR ExpandBuffer;
   PWSTR ValueName;
+  UNICODE_STRING EnvValue;
+  UNICODE_STRING EnvExpandedValue;
 
   DPRINT("RtlQueryRegistryValues() called\n");
 
   Status = RtlpGetRegistryHandle(RelativeTo,
-				 (PWSTR) Path,
+				 (PWSTR)Path,
 				 FALSE,
 				 &BaseKeyHandle);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("RtlpGetRegistryHandle() failed with status %x\n", Status);
+      DPRINT("RtlpGetRegistryHandle() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -402,7 +431,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	  RtlInitUnicodeString(&KeyName,
 			       QueryEntry->Name);
 
-	  BufferSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4096;
+	  BufferSize = sizeof (KEY_VALUE_PARTIAL_INFORMATION) + 4096;
 	  ValueInfo = ExAllocatePool(PagedPool, BufferSize);
 	  if (ValueInfo == NULL)
 	    {
@@ -410,7 +439,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	      break;
 	    }
 
-	  Status = ZwQueryValueKey(CurrentKeyHandle,
+	  Status = NtQueryValueKey(CurrentKeyHandle,
 				   &KeyName,
 				   KeyValuePartialInformation,
 				   ValueInfo,
@@ -422,7 +451,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		{
 		  ExFreePool(ValueInfo);
 		  Status = STATUS_OBJECT_NAME_NOT_FOUND;
-		  goto ByeBye;
+		  break;
 		}
 	
 	      if (QueryEntry->DefaultType == REG_SZ)
@@ -432,12 +461,11 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 
 		  SourceString = (PUNICODE_STRING)QueryEntry->DefaultData;
 		  ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
-		  if (ValueString->Buffer == 0)
+		  if (ValueString->Buffer == NULL)
 		    {
 		      ValueString->Length = SourceString->Length;
 		      ValueString->MaximumLength = SourceString->MaximumLength;
-		      ValueString->Buffer = ExAllocatePool(PagedPool,
-							   ValueString->MaximumLength);
+		      ValueString->Buffer = ExAllocatePool(PagedPool, BufferSize);
 		      if (!ValueString->Buffer)
 			break;
 		      ValueString->Buffer[0] = 0;
@@ -447,8 +475,8 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		    }
 		  else
 		    {
-		      ValueString->Length = RtlRosMin(SourceString->Length,
-						   ValueString->MaximumLength - sizeof(WCHAR));
+		      ValueString->Length = min(SourceString->Length,
+						ValueString->MaximumLength - sizeof(WCHAR));
 		      memcpy(ValueString->Buffer,
 			     SourceString->Buffer,
 			     ValueString->Length);
@@ -465,30 +493,81 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	    }
 	  else
 	    {
-	      if (ValueInfo->Type == REG_SZ ||
-		  ValueInfo->Type == REG_MULTI_SZ ||
-		  ValueInfo->Type == REG_EXPAND_SZ)
+	      if ((ValueInfo->Type == REG_SZ) ||
+		  (ValueInfo->Type == REG_MULTI_SZ) ||
+		  (ValueInfo->Type == REG_EXPAND_SZ && (QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND)))
 		{
 		  PUNICODE_STRING ValueString;
 
 		  ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
-		  if (ValueString->Buffer == 0)
+		  if (ValueString->Buffer == NULL)
 		    {
-		      RtlInitUnicodeString(ValueString,
-					   NULL);
 		      ValueString->MaximumLength = ValueInfo->DataLength;
-		      ValueString->Buffer = ExAllocatePool(PagedPool,
-							   ValueString->MaximumLength);
-		      if (!ValueString->Buffer)
-			break;
+		      ValueString->Buffer = ExAllocatePool(PagedPool, ValueString->MaximumLength);
+		      if (ValueString->Buffer == NULL)
+			{
+			  Status = STATUS_INSUFFICIENT_RESOURCES;
+			  break;
+			}
 		      ValueString->Buffer[0] = 0;
-		    }
-		  ValueString->Length = RtlRosMin(ValueInfo->DataLength,
-					       ValueString->MaximumLength) - sizeof(WCHAR);
+		     }
+		  ValueString->Length = min(ValueInfo->DataLength,
+					    ValueString->MaximumLength) - sizeof(WCHAR);
 		  memcpy(ValueString->Buffer,
 			 ValueInfo->Data,
 			 ValueString->Length);
 		  ((PWSTR)ValueString->Buffer)[ValueString->Length / sizeof(WCHAR)] = 0;
+		}
+	      else if (ValueInfo->Type == REG_EXPAND_SZ)
+		{
+		  PUNICODE_STRING ValueString;
+
+		  DPRINT("Expand REG_EXPAND_SZ type\n");
+
+		  ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
+
+		  ExpandBuffer = ExAllocatePool(PagedPool, ValueInfo->DataLength * 2);
+		  if (ExpandBuffer == NULL)
+		    {
+		      Status = STATUS_NO_MEMORY;
+		      break;
+		    }
+
+		  RtlInitUnicodeString(&EnvValue,
+				       (PWSTR)ValueInfo->Data);
+		  EnvExpandedValue.Length = 0;
+		  EnvExpandedValue.MaximumLength = ValueInfo->DataLength * 2;
+		  EnvExpandedValue.Buffer = ExpandBuffer;
+		  *ExpandBuffer = 0;
+
+		  RtlExpandEnvironmentStrings_U(Environment,
+						&EnvValue,
+						&EnvExpandedValue,
+						&StringLen);
+
+		  if (ValueString->Buffer == NULL)
+		    {
+		      ValueString->MaximumLength = EnvExpandedValue.Length + sizeof(WCHAR);
+		      ValueString->Length = EnvExpandedValue.Length;
+		      ValueString->Buffer = ExAllocatePool(PagedPool, ValueString->MaximumLength);
+		      if (ValueString->Buffer == NULL)
+			{
+			  Status = STATUS_INSUFFICIENT_RESOURCES;
+			  break;
+			}
+		    }
+		  else
+		    {
+		      ValueString->Length = min(EnvExpandedValue.Length,
+						ValueString->MaximumLength - sizeof(WCHAR));
+		    }
+
+		  memcpy(ValueString->Buffer,
+			 EnvExpandedValue.Buffer,
+			 ValueString->Length);
+		  ((PWSTR)ValueString->Buffer)[ValueString->Length / sizeof(WCHAR)] = 0;
+
+		  ExFreePool(ExpandBuffer);
 		}
 	      else
 		{
@@ -500,7 +579,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 
 	  if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DELETE)
 	    {
-	      DPRINT("FIXME: Delete value: %S\n", QueryEntry->Name);
+	      DPRINT1("FIXME: Delete value: %S\n", QueryEntry->Name);
 
 	    }
 
@@ -509,17 +588,13 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
       else
 	{
 	  DPRINT("Query value via query routine: %S\n", QueryEntry->Name);
-
 	  if (QueryEntry->Name != NULL)
 	    {
-	      DPRINT("Callback\n");
-
 	      RtlInitUnicodeString(&KeyName,
 				   QueryEntry->Name);
 
-	      BufferSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4096;
-	      ValueInfo = ExAllocatePool(PagedPool,
-					 BufferSize);
+	      BufferSize = sizeof (KEY_VALUE_PARTIAL_INFORMATION) + 4096;
+	      ValueInfo = ExAllocatePool(PagedPool, BufferSize);
 	      if (ValueInfo == NULL)
 		{
 		  Status = STATUS_NO_MEMORY;
@@ -534,7 +609,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 				       &ResultSize);
 	      if (!NT_SUCCESS(Status))
 		{
-		  if (! (QueryEntry->Flags & RTL_QUERY_REGISTRY_REQUIRED))
+		  if (!(QueryEntry->Flags & RTL_QUERY_REGISTRY_REQUIRED))
 		    {
 		      Status = QueryEntry->QueryRoutine(QueryEntry->Name,
 							QueryEntry->DefaultType,
@@ -563,6 +638,40 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      StringPtr = (PWSTR)((PUCHAR)StringPtr + StringLen);
 		    }
 		}
+	      else if ((ValueInfo->Type == REG_EXPAND_SZ) &&
+		       !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
+		{
+		  DPRINT("Expand REG_EXPAND_SZ type\n");
+
+		  ExpandBuffer = ExAllocatePool(PagedPool, ValueInfo->DataLength * 2);
+		  if (ExpandBuffer == NULL)
+		    {
+		      Status = STATUS_NO_MEMORY;
+		      break;
+		    }
+
+		  RtlInitUnicodeString(&EnvValue,
+				       (PWSTR)ValueInfo->Data);
+		  EnvExpandedValue.Length = 0;
+		  EnvExpandedValue.MaximumLength = ValueInfo->DataLength * 2 * sizeof(WCHAR);
+		  EnvExpandedValue.Buffer = ExpandBuffer;
+		  *ExpandBuffer = 0;
+
+		  RtlExpandEnvironmentStrings_U(Environment,
+						&EnvValue,
+						&EnvExpandedValue,
+						&StringLen);
+
+		  StringLen = (wcslen(ExpandBuffer) + 1) * sizeof(WCHAR);
+		  Status = QueryEntry->QueryRoutine(QueryEntry->Name,
+						    REG_SZ,
+						    (PVOID)ExpandBuffer,
+						    StringLen,
+						    Context,
+						    QueryEntry->EntryContext);
+
+		  ExFreePool(ExpandBuffer);
+		}
 	      else
 		{
 		  Status = QueryEntry->QueryRoutine(QueryEntry->Name,
@@ -575,12 +684,11 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 
 	      if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DELETE)
 		{
-		  DPRINT("FIXME: Delete value: %S\n", QueryEntry->Name);
+		  DPRINT1("FIXME: Delete value: %S\n", QueryEntry->Name);
 
 		}
 
 	      ExFreePool(ValueInfo);
-
 	      if (!NT_SUCCESS(Status))
 		break;
 	    }
@@ -601,16 +709,14 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	      DPRINT("Enumerate values\n");
 
 	      BufferSize = sizeof(KEY_VALUE_FULL_INFORMATION) + 4096;
-	      FullValueInfo = ExAllocatePool(PagedPool,
-					     BufferSize);
+	      FullValueInfo = ExAllocatePool(PagedPool, BufferSize);
 	      if (FullValueInfo == NULL)
 		{
 		  Status = STATUS_NO_MEMORY;
 		  break;
 		}
 	      ValueNameSize = 256 * sizeof(WCHAR);
-	      ValueName = ExAllocatePool(PagedPool,
-		                         ValueNameSize);
+	      ValueName = ExAllocatePool(PagedPool, ValueNameSize);
 	      if (ValueName == NULL)
 	        {
 		  Status = STATUS_NO_MEMORY;
@@ -645,25 +751,27 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      /* Should not happen, because the name length is limited to 255 characters */
 		      ExFreePool(ValueName);
 		      ValueNameSize = FullValueInfo->NameLength + sizeof(WCHAR);
-		      ValueName = ExAllocatePool(PagedPool, ValueNameSize);
+		      ValueName = RtlAllocateHeap(RtlGetProcessHeap(),
+						  0,
+						  ValueNameSize);
 		      if (ValueName == NULL)
 		        {
-			  Status = STATUS_NO_MEMORY;
-			  break;
-			}
+		          Status = STATUS_NO_MEMORY;
+		          break;
+		        }
 		    }
 
-		  RtlCopyMemory(ValueName,
-		                FullValueInfo->Name,
-				FullValueInfo->NameLength);
+		  memcpy(ValueName,
+			 FullValueInfo->Name,
+			 FullValueInfo->NameLength);
 		  ValueName[FullValueInfo->NameLength / sizeof(WCHAR)] = 0;
 
+		  DPRINT("FullValueInfo->Type: %lu\n", FullValueInfo->Type);
 		  if ((FullValueInfo->Type == REG_MULTI_SZ) &&
 		      !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
 		    {
 		      DPRINT("Expand REG_MULTI_SZ type\n");
-
-		      StringPtr = (PWSTR)((char*)FullValueInfo + FullValueInfo->DataOffset);
+		      StringPtr = (PWSTR)((PVOID)FullValueInfo + FullValueInfo->DataOffset);
 		      while (*StringPtr != 0)
 			{
 			  StringLen = (wcslen(StringPtr) + 1) * sizeof(WCHAR);
@@ -678,11 +786,46 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 			  StringPtr = (PWSTR)((PUCHAR)StringPtr + StringLen);
 			}
 		    }
+		  else if ((FullValueInfo->Type == REG_EXPAND_SZ) &&
+			   !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
+		    {
+		      DPRINT("Expand REG_EXPAND_SZ type\n");
+
+		      StringPtr = (PWSTR)((PVOID)FullValueInfo + FullValueInfo->DataOffset);
+		      ExpandBuffer = ExAllocatePool(PagedPool, FullValueInfo->DataLength * 2);
+		      if (ExpandBuffer == NULL)
+			{
+			  Status = STATUS_NO_MEMORY;
+			  break;
+			}
+
+		      RtlInitUnicodeString(&EnvValue,
+					   StringPtr);
+		      EnvExpandedValue.Length = 0;
+		      EnvExpandedValue.MaximumLength = FullValueInfo->DataLength * 2;
+		      EnvExpandedValue.Buffer = ExpandBuffer;
+		      *ExpandBuffer = 0;
+
+		      RtlExpandEnvironmentStrings_U(Environment,
+						    &EnvValue,
+						    &EnvExpandedValue,
+						    &StringLen);
+
+		      StringLen = (wcslen(ExpandBuffer) + 1) * sizeof(WCHAR);
+		      Status = QueryEntry->QueryRoutine(ValueName,
+							REG_SZ,
+							(PVOID)ExpandBuffer,
+							StringLen,
+							Context,
+							QueryEntry->EntryContext);
+
+		       ExFreePool(ExpandBuffer);
+		    }
 		  else
 		    {
 		      Status = QueryEntry->QueryRoutine(ValueName,
 							FullValueInfo->Type,
-							(char*)FullValueInfo + FullValueInfo->DataOffset,
+							(PVOID)FullValueInfo + FullValueInfo->DataOffset,
 							FullValueInfo->DataLength,
 							Context,
 							QueryEntry->EntryContext);
@@ -698,7 +841,6 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 
 	      ExFreePool(FullValueInfo);
 	      ExFreePool(ValueName);
-
 	      if (!NT_SUCCESS(Status))
 		break;
 	    }
@@ -707,14 +849,12 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
       QueryEntry++;
     }
 
-ByeBye:
-
   if (CurrentKeyHandle != BaseKeyHandle)
     NtClose(CurrentKeyHandle);
 
   NtClose(BaseKeyHandle);
 
-  return Status;
+  return(Status);
 }
 
 
@@ -734,7 +874,7 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
   UNICODE_STRING Name;
 
   Status = RtlpGetRegistryHandle(RelativeTo,
-				 (PWSTR) Path,
+				 (PWSTR)Path,
 				 TRUE,
 				 &KeyHandle);
   if (!NT_SUCCESS(Status))
@@ -743,16 +883,207 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
   RtlInitUnicodeString(&Name,
 		       ValueName);
 
-  NtSetValueKey(KeyHandle,
-		&Name,
-		0,
-		ValueType,
-		ValueData,
-		ValueLength);
+  Status = NtSetValueKey(KeyHandle,
+			 &Name,
+			 0,
+			 ValueType,
+			 ValueData,
+			 ValueLength);
+  if (NT_SUCCESS(Status))
+    NtClose(KeyHandle);
 
-  NtClose(KeyHandle);
+  return(Status);
+}
 
-  return(STATUS_SUCCESS);
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlpNtCreateKey(OUT HANDLE KeyHandle,
+		IN ACCESS_MASK DesiredAccess,
+		IN POBJECT_ATTRIBUTES ObjectAttributes,
+		IN ULONG Unused1,
+		OUT PULONG Disposition,
+		IN ULONG Unused2)
+{
+  if (ObjectAttributes != NULL)
+    ObjectAttributes->Attributes &= ~(OBJ_PERMANENT | OBJ_EXCLUSIVE);
+
+  return(NtCreateKey(KeyHandle,
+		     DesiredAccess,
+		     ObjectAttributes,
+		     0,
+		     NULL,
+		     0,
+		     Disposition));
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
+		      OUT PUNICODE_STRING SubKeyName,
+		      IN ULONG Index,
+		      IN ULONG Unused)
+{
+  PKEY_BASIC_INFORMATION KeyInfo = NULL;
+  ULONG BufferLength = 0;
+  ULONG ReturnedLength;
+  NTSTATUS Status;
+
+  if (SubKeyName->MaximumLength != 0)
+    {
+      BufferLength = SubKeyName->MaximumLength +
+		     sizeof(KEY_BASIC_INFORMATION);
+      KeyInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+				0,
+				BufferLength);
+      if (KeyInfo == NULL)
+	return(STATUS_NO_MEMORY);
+    }
+
+  Status = NtEnumerateKey(KeyHandle,
+			  Index,
+			  KeyBasicInformation,
+			  KeyInfo,
+			  BufferLength,
+			  &ReturnedLength);
+  if (NT_SUCCESS(Status))
+    {
+      if (KeyInfo->NameLength + sizeof(WCHAR) <= SubKeyName->MaximumLength)
+	{
+	  memmove(SubKeyName->Buffer,
+		  KeyInfo->Name,
+		  KeyInfo->NameLength);
+	  SubKeyName->Buffer[KeyInfo->NameLength / sizeof(WCHAR)] = 0;
+	  SubKeyName->Length = KeyInfo->NameLength;
+	}
+      else
+	{
+	  Status = STATUS_BUFFER_OVERFLOW;
+	}
+    }
+
+  if (KeyInfo != NULL)
+    {
+      RtlFreeHeap(RtlGetProcessHeap(),
+		  0,
+		  KeyInfo);
+    }
+
+  return(Status);
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlpNtMakeTemporaryKey(IN HANDLE KeyHandle)
+{
+  return(NtDeleteKey(KeyHandle));
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlpNtOpenKey(OUT HANDLE KeyHandle,
+	      IN ACCESS_MASK DesiredAccess,
+	      IN POBJECT_ATTRIBUTES ObjectAttributes,
+	      IN ULONG Unused)
+{
+  if (ObjectAttributes != NULL)
+    ObjectAttributes->Attributes &= ~(OBJ_PERMANENT | OBJ_EXCLUSIVE);
+
+  return(NtOpenKey(KeyHandle,
+		   DesiredAccess,
+		   ObjectAttributes));
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlpNtQueryValueKey(IN HANDLE KeyHandle,
+		    OUT PULONG Type OPTIONAL,
+		    OUT PVOID Data OPTIONAL,
+		    IN OUT PULONG DataLength OPTIONAL,
+		    IN ULONG Unused)
+{
+  PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+  UNICODE_STRING ValueName;
+  ULONG BufferLength;
+  ULONG ReturnedLength;
+  NTSTATUS Status;
+
+  RtlInitUnicodeString(&ValueName,
+		       NULL);
+
+  BufferLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION);
+  if (DataLength != NULL)
+    BufferLength = *DataLength;
+
+  ValueInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+			      0,
+			      BufferLength);
+  if (ValueInfo == NULL)
+    return(STATUS_NO_MEMORY);
+
+  Status = NtQueryValueKey(KeyHandle,
+			   &ValueName,
+			   KeyValuePartialInformation,
+			   ValueInfo,
+			   BufferLength,
+			   &ReturnedLength);
+  if (NT_SUCCESS(Status))
+    {
+      if (DataLength != NULL)
+	*DataLength = ValueInfo->DataLength;
+
+      if (Type != NULL)
+	*Type = ValueInfo->Type;
+
+      if (Data != NULL)
+	{
+	  memmove(Data,
+		  ValueInfo->Data,
+		  ValueInfo->DataLength);
+	}
+    }
+
+  RtlFreeHeap(RtlGetProcessHeap(),
+	      0,
+	      ValueInfo);
+
+  return(Status);
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlpNtSetValueKey(IN HANDLE KeyHandle,
+		  IN ULONG Type,
+		  IN PVOID Data,
+		  IN ULONG DataLength)
+{
+  UNICODE_STRING ValueName;
+
+  RtlInitUnicodeString(&ValueName,
+		       NULL);
+  return(NtSetValueKey(KeyHandle,
+		       &ValueName,
+		       0,
+		       Type,
+		       Data,
+		       DataLength));
 }
 
 /* EOF */

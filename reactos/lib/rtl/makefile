@@ -32,6 +32,7 @@ TARGET_OBJECTS = \
 	network.o \
 	nls.o \
 	random.o \
+	registry.o \
 	sd.o \
 	security.o \
 	sid.o \

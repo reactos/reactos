@@ -307,7 +307,6 @@ OBJECTS_CM = \
 	cm/regfile.o \
 	cm/registry.o  \
 	cm/regobj.o \
-	cm/rtlfunc.o
 
 # Debugger Support (Dbg)
 OBJECTS_DBG = \
