@@ -10,7 +10,7 @@ include $(PATH_TO_TOP)/rules.mak
 TEST_APPS = accelerator alive apc args atomtest bench bitblt button \
 button2 capclock carets combo consume copymove count dibtest dump_shared_data \
 edit enumwnd enumws event global_mem gradient hello mdi \
-hivetest icontest isotest lineclip linetest lock lpc \
+hivetest icontest isotest lineclip linetest lpc \
 mktime mstest multithrdwin multiwin mutex nptest patblt primitives pteb \
 regtest sectest sertest shaptest shm statst statst2 stretchblt suspend \
 tcpsvr terminate txtscale thread thread_msg tokentest vmtest \
