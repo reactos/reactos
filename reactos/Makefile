@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.264 2004/11/30 20:21:33 weiden Exp $
+# $Id: Makefile,v 1.265 2004/12/01 05:49:23 rcampbell Exp $
 #
 # Global makefile
 #
@@ -96,8 +96,8 @@ NET_DEVICE_DRIVERS = ne2000 pcnet
 STORAGE_DRIVERS = atapi cdrom class2 disk floppy scsiport diskdump
 
 # System applications
-# autochk cmd format services setup usetup welcome winlogon
-SYS_APPS = autochk calc cmd explorer expand format msiexec regedt32 regsvr32 \
+# autochk cmd format services setup usetup welcome winlogon msiexec 
+SYS_APPS = autochk calc cmd explorer expand format regedt32 regsvr32 \
   services setup taskmgr userinit usetup welcome vmwinst winlogon \
   regedit winefile
 
