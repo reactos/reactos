@@ -664,7 +664,7 @@ W32kTextOut(HDC  hDC,
   BrushOrigin.x = 0;
   BrushOrigin.y = 0;
 
-  // Do we use the current TEXTOBJ's logfont.lfOrientation or the DC's textAlign?
+  // Determine the yoff from the dc's w.textAlign
   if (dc->w.textAlign & TA_BASELINE) {
     yoff = 0;
   }
