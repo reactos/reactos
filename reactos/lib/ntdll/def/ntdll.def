@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.130 2004/09/16 10:25:15 gvg Exp $
+; $Id: ntdll.def,v 1.131 2004/09/16 11:47:18 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -161,6 +161,7 @@ NtProtectVirtualMemory@20
 NtPulseEvent@8
 NtQueryAttributesFile@8
 NtQueryDefaultLocale@8
+NtQueryDefaultUILanguage@4
 NtQueryDirectoryFile@44
 NtQueryDirectoryObject@28
 NtQueryEaFile@36
@@ -172,8 +173,9 @@ NtQueryInformationPort@20
 NtQueryInformationProcess@20
 NtQueryInformationThread@20
 NtQueryInformationToken@20
-NtQueryIoCompletion@20
+NtQueryInstallUILanguage@4
 NtQueryIntervalProfile@8
+NtQueryIoCompletion@20
 NtQueryKey@20
 NtQueryMultipleValueKey@24
 NtQueryMutant@20
@@ -219,6 +221,7 @@ NtSetContextChannel@4
 NtSetContextThread@8
 NtSetDefaultHardErrorPort@4
 NtSetDefaultLocale@8
+NtSetDefaultUILanguage@4
 NtSetEaFile@16
 NtSetEvent@8
 NtSetHighEventPair@4
@@ -776,6 +779,7 @@ ZwQueueApcThread@20
 ZwQueryInformationAtom@20
 ZwQueryAttributesFile@8
 ZwQueryDefaultLocale@8
+ZwQueryDefaultUILanguage@4
 ZwQueryDirectoryFile@44
 ZwQueryDirectoryObject@28
 ZwQueryEaFile@36
@@ -786,6 +790,7 @@ ZwQueryInformationPort@20
 ZwQueryInformationProcess@20
 ZwQueryInformationThread@20
 ZwQueryInformationToken@20
+ZwQueryInstallUILanguage@4
 ZwQueryIntervalProfile@8
 ZwQueryIoCompletion@20
 ZwQueryKey@20
@@ -832,6 +837,7 @@ ZwSetContextChannel@4
 ZwSetContextThread@8
 ZwSetDefaultHardErrorPort@4
 ZwSetDefaultLocale@8
+ZwSetDefaultUILanguage@4
 ZwSetEaFile@16
 ZwSetEvent@8
 ZwSetHighEventPair@4
