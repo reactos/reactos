@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.22 2003/03/12 05:40:46 rcampbell Exp $
+/* $Id: window.c,v 1.23 2003/03/18 06:44:11 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -760,7 +760,9 @@ IsWindowVisible(HWND hWnd)
 WINBOOL STDCALL
 IsZoomed(HWND hWnd)
 {
-  return FALSE;
+  ULONG uStyle = GetWindowLong(hWnd, GWL_STYLE);
+  
+  return (uStyle & WS_MAXIMIZE);
 }
 
 WINBOOL STDCALL
