@@ -1,4 +1,5 @@
-/*
+/* $Id: ioctrl.c,v 1.8 1999/11/07 14:07:35 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/ioctrl.c
@@ -9,6 +10,7 @@
  *                  Created 22/05/98
  *                  Filled in ZwDeviceIoControlFile 22/02/99
  *                  Fixed IO method handling 08/03/99
+ *                  Added APC support 05/11/99
  */
 
 /* INCLUDES *****************************************************************/
@@ -26,9 +28,6 @@ ULONG IoGetFunctionCodeFromCtlCode(ULONG ControlCode)
 }
 
 
-/*
- * NOTES: No apc support yet!
- */
 NTSTATUS
 STDCALL
 NtDeviceIoControlFile (
@@ -87,7 +86,10 @@ NtDeviceIoControlFile (
 				       FALSE,
 				       &KEvent,
 				       IoStatusBlock);
-   
+
+   Irp->Overlay.AsynchronousParameters.UserApcRoutine = UserApcRoutine;
+   Irp->Overlay.AsynchronousParameters.UserApcContext = UserApcContext;
+
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->DeviceObject = DeviceObject;
    StackPtr->Parameters.DeviceIoControl.InputBufferLength = InputBufferSize;
@@ -102,3 +104,4 @@ NtDeviceIoControlFile (
    return(Status);
 }
 
+/* EOF */

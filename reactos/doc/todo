@@ -21,7 +21,6 @@
        Error logging (see io/errlog.c)
        Buffer flushing (see io/flush.c)
        Io completion ports (see io/iocomp.c)
-       DeviceIoControl support (see io/ioctrl.c)
        File locking (see io/lock.c)
        Mailslots (see io/mailslot.c)
        Named pipes (see io/npipe.c)
