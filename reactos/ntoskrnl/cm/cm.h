@@ -14,10 +14,10 @@
 #define  REG_DEVICEMAP_KEY_NAME		L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP"
 #define  REG_RESOURCEMAP_KEY_NAME	L"\\Registry\\Machine\\HARDWARE\\RESOURCEMAP"
 #define  REG_CLASSES_KEY_NAME		L"\\Registry\\Machine\\Software\\Classes"
-#define  REG_SYSTEM_KEY_NAME		L"\\Registry\\Machine\\System"
-#define  REG_SOFTWARE_KEY_NAME		L"\\Registry\\Machine\\Software"
-#define  REG_SAM_KEY_NAME		L"\\Registry\\Machine\\Sam"
-#define  REG_SEC_KEY_NAME		L"\\Registry\\Machine\\Security"
+#define  REG_SYSTEM_KEY_NAME		L"\\Registry\\Machine\\SYSTEM"
+#define  REG_SOFTWARE_KEY_NAME		L"\\Registry\\Machine\\SOFTWARE"
+#define  REG_SAM_KEY_NAME		L"\\Registry\\Machine\\SAM"
+#define  REG_SEC_KEY_NAME		L"\\Registry\\Machine\\SECURITY"
 #define  REG_USER_KEY_NAME		L"\\Registry\\User"
 #define  REG_DEFAULT_USER_KEY_NAME	L"\\Registry\\User\\.Default"
 #define  REG_CURRENT_USER_KEY_NAME	L"\\Registry\\User\\CurrentUser"
@@ -450,6 +450,9 @@ CmiRemoveRegistryHive(PREGISTRY_HIVE RegistryHive);
 
 NTSTATUS
 CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive);
+
+ULONG
+CmiGetNumberOfSubKeys(PKEY_OBJECT KeyObject);
 
 ULONG
 CmiGetMaxNameLength(IN PKEY_OBJECT KeyObject);

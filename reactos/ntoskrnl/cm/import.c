@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.27 2004/01/05 14:28:19 weiden Exp $
+/* $Id: import.c,v 1.28 2004/01/31 14:33:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -186,7 +186,7 @@ CmImportSystemHive(PCHAR ChunkBase,
 
   /* Attach it to the machine key */
   RtlInitUnicodeString (&KeyName,
-			L"\\Registry\\Machine\\System");
+			REG_SYSTEM_KEY_NAME);
   InitializeObjectAttributes (&ObjectAttributes,
 			      &KeyName,
 			      OBJ_CASE_INSENSITIVE,
@@ -234,7 +234,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
     {
       /* Create '\Registry\Machine\HARDWARE' key. */
       RtlInitUnicodeString (&KeyName,
-			    L"\\Registry\\Machine\\HARDWARE");
+			    REG_HARDWARE_KEY_NAME);
       InitializeObjectAttributes (&ObjectAttributes,
 				  &KeyName,
 				  OBJ_CASE_INSENSITIVE,
@@ -255,7 +255,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
 
       /* Create '\Registry\Machine\HARDWARE\DESCRIPTION' key. */
       RtlInitUnicodeString(&KeyName,
-			   L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION");
+			   REG_DESCRIPTION_KEY_NAME);
       InitializeObjectAttributes (&ObjectAttributes,
 				  &KeyName,
 				  OBJ_CASE_INSENSITIVE,
@@ -276,7 +276,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
 
       /* Create '\Registry\Machine\HARDWARE\DEVICEMAP' key. */
       RtlInitUnicodeString (&KeyName,
-			    L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP");
+			    REG_DEVICEMAP_KEY_NAME);
       InitializeObjectAttributes (&ObjectAttributes,
 				  &KeyName,
 				  OBJ_CASE_INSENSITIVE,
@@ -297,7 +297,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
 
       /* Create '\Registry\Machine\HARDWARE\RESOURCEMAP' key. */
       RtlInitUnicodeString(&KeyName,
-			   L"\\Registry\\Machine\\HARDWARE\\RESOURCEMAP");
+			   REG_RESOURCEMAP_KEY_NAME);
       InitializeObjectAttributes (&ObjectAttributes,
 				  &KeyName,
 				  OBJ_CASE_INSENSITIVE,
@@ -338,7 +338,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
 
   /* Attach it to the machine key */
   RtlInitUnicodeString (&KeyName,
-			L"\\Registry\\Machine\\HARDWARE");
+			REG_HARDWARE_KEY_NAME);
   InitializeObjectAttributes (&ObjectAttributes,
 			      &KeyName,
 			      OBJ_CASE_INSENSITIVE,

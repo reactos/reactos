@@ -272,7 +272,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	       IN ULONG Length,
 	       OUT PULONG ResultLength)
 {
-  PKEY_OBJECT  KeyObject;
+  PKEY_OBJECT KeyObject;
+  PKEY_OBJECT SubKeyObject;
   PREGISTRY_HIVE  RegistryHive;
   PKEY_CELL  KeyCell, SubKeyCell;
   PHASH_TABLE_CELL  HashTableBlock;
@@ -314,6 +315,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   KeyCell = KeyObject->KeyCell;
   RegistryHive = KeyObject->RegistryHive;
 
+  SubKeyObject = NULL;
+
   /* Check for hightest possible sub key index */
   if (Index >= KeyCell->NumberOfSubKeys + KeyObject->NumberOfSubKeys)
     {
@@ -354,6 +357,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	  return STATUS_NO_MORE_ENTRIES;
 	}
 
+      SubKeyObject = CurKey;
       SubKeyCell = CurKey->KeyCell;
     }
   else
@@ -415,17 +419,28 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	    BasicInformation->TitleIndex = Index;
 	    BasicInformation->NameLength = NameSize;
 
-	    if (SubKeyCell->Flags & REG_KEY_NAME_PACKED)
+	    if (SubKeyObject != NULL)
 	      {
-		CmiCopyPackedName(BasicInformation->Name,
-				  SubKeyCell->Name,
-				  SubKeyCell->NameSize);
+		BasicInformation->NameLength = SubKeyObject->Name.Length;
+		RtlCopyMemory(BasicInformation->Name,
+			      SubKeyObject->Name.Buffer,
+			      SubKeyObject->Name.Length);
 	      }
 	    else
 	      {
-		RtlCopyMemory(BasicInformation->Name,
-			      SubKeyCell->Name,
-			      SubKeyCell->NameSize);
+		BasicInformation->NameLength = NameSize;
+		if (SubKeyCell->Flags & REG_KEY_NAME_PACKED)
+		  {
+		    CmiCopyPackedName(BasicInformation->Name,
+				      SubKeyCell->Name,
+				      SubKeyCell->NameSize);
+		  }
+		else
+		  {
+		    RtlCopyMemory(BasicInformation->Name,
+				  SubKeyCell->Name,
+				  SubKeyCell->NameSize);
+		  }
 	      }
 	  }
 	break;
@@ -456,19 +471,29 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	    NodeInformation->TitleIndex = Index;
 	    NodeInformation->ClassOffset = sizeof(KEY_NODE_INFORMATION) + NameSize;
 	    NodeInformation->ClassLength = SubKeyCell->ClassSize;
-	    NodeInformation->NameLength = NameSize;
 
-	    if (SubKeyCell->Flags & REG_KEY_NAME_PACKED)
+	    if (SubKeyObject != NULL)
 	      {
-		CmiCopyPackedName(NodeInformation->Name,
-				  SubKeyCell->Name,
-				  SubKeyCell->NameSize);
+		NodeInformation->NameLength = SubKeyObject->Name.Length;
+		RtlCopyMemory(NodeInformation->Name,
+			      SubKeyObject->Name.Buffer,
+			      SubKeyObject->Name.Length);
 	      }
 	    else
 	      {
-		RtlCopyMemory(NodeInformation->Name,
-			      SubKeyCell->Name,
-			      SubKeyCell->NameSize);
+		NodeInformation->NameLength = NameSize;
+		if (SubKeyCell->Flags & REG_KEY_NAME_PACKED)
+		  {
+		    CmiCopyPackedName(NodeInformation->Name,
+				      SubKeyCell->Name,
+				      SubKeyCell->NameSize);
+		  }
+		else
+		  {
+		    RtlCopyMemory(NodeInformation->Name,
+				  SubKeyCell->Name,
+				  SubKeyCell->NameSize);
+		  }
 	      }
 
 	    if (SubKeyCell->ClassSize != 0)
@@ -502,7 +527,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	    FullInformation->ClassOffset = sizeof(KEY_FULL_INFORMATION) -
 	      sizeof(WCHAR);
 	    FullInformation->ClassLength = SubKeyCell->ClassSize;
-	    FullInformation->SubKeys = SubKeyCell->NumberOfSubKeys;
+	    FullInformation->SubKeys = CmiGetNumberOfSubKeys(KeyObject); //SubKeyCell->NumberOfSubKeys;
 	    FullInformation->MaxNameLen = CmiGetMaxNameLength(KeyObject);
 	    FullInformation->MaxClassLen = CmiGetMaxClassLength(KeyObject);
 	    FullInformation->Values = SubKeyCell->NumberOfValues;
@@ -914,18 +939,9 @@ NtQueryKey(IN HANDLE KeyHandle,
 	    BasicInformation->TitleIndex = 0;
 	    BasicInformation->NameLength = KeyObject->Name.Length;
 
-	    if (KeyCell->Flags & REG_KEY_NAME_PACKED)
-	      {
-		CmiCopyPackedName(BasicInformation->Name,
-				  KeyCell->Name,
-				  KeyCell->NameSize);
-	      }
-	    else
-	      {
-		RtlCopyMemory(BasicInformation->Name,
-			      KeyCell->Name,
-			      KeyCell->NameSize);
-	      }
+	    RtlCopyMemory(BasicInformation->Name,
+			  KeyObject->Name.Buffer,
+			  KeyObject->Name.Length);
 	  }
 	break;
 
@@ -950,18 +966,9 @@ NtQueryKey(IN HANDLE KeyHandle,
 	    NodeInformation->ClassLength = KeyCell->ClassSize;
 	    NodeInformation->NameLength = KeyObject->Name.Length;
 
-	    if (KeyCell->Flags & REG_KEY_NAME_PACKED)
-	      {
-		CmiCopyPackedName(NodeInformation->Name,
-				  KeyCell->Name,
-				  KeyCell->NameSize);
-	      }
-	    else
-	      {
-		RtlCopyMemory(NodeInformation->Name,
-			      KeyCell->Name,
-			      KeyCell->NameSize);
-	      }
+	    RtlCopyMemory(NodeInformation->Name,
+			  KeyObject->Name.Buffer,
+			  KeyObject->Name.Length);
 
 	    if (KeyCell->ClassSize != 0)
 	      {
@@ -993,7 +1000,7 @@ NtQueryKey(IN HANDLE KeyHandle,
 	    FullInformation->TitleIndex = 0;
 	    FullInformation->ClassOffset = sizeof(KEY_FULL_INFORMATION) - sizeof(WCHAR);
 	    FullInformation->ClassLength = KeyCell->ClassSize;
-	    FullInformation->SubKeys = KeyCell->NumberOfSubKeys;
+	    FullInformation->SubKeys = CmiGetNumberOfSubKeys(KeyObject); //KeyCell->NumberOfSubKeys;
 	    FullInformation->MaxNameLen = CmiGetMaxNameLength(KeyObject);
 	    FullInformation->MaxClassLen = CmiGetMaxClassLength(KeyObject);
 	    FullInformation->Values = KeyCell->NumberOfValues;
