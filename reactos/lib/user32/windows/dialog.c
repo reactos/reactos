@@ -16,10 +16,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dialog.c,v 1.13 2003/07/27 17:48:43 ekohl Exp $
+/* $Id: dialog.c,v 1.14 2003/07/28 08:09:51 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/input.c
+ * FILE:            lib/user32/windows/dialog.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Thomas Weidenmueller (w3seek@users.sourceforge.net)
@@ -776,19 +776,18 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         HeapFree( GetProcessHeap(), 0, dlgInfo );
         return 0;
     }
-   
-	/* FIXME: implement SetWindowContextHelpId and enable following line
-    if (template.helpId) SetWindowContextHelpId( hwnd, template.helpId );
-	*/
 
-    if (unicode) 
+    if (template.helpId)
+        SetWindowContextHelpId( hwnd, template.helpId );
+
+    if (unicode)
     {
         SETDLGINFO(hwnd, dlgInfo); /* maybe SetPropW? */
-        SetWindowLongW( hwnd, DWL_DLGPROC, (LONG)dlgProc );        
+        SetWindowLongW( hwnd, DWL_DLGPROC, (LONG)dlgProc );
     }
     else
     {
-		SETDLGINFO(hwnd, dlgInfo);
+        SETDLGINFO(hwnd, dlgInfo);
         SetWindowLongA( hwnd, DWL_DLGPROC, (LONG)dlgProc );
     }
     

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.48 2003/07/27 11:54:41 dwelch Exp $
+/* $Id: window.c,v 1.49 2003/07/28 08:09:51 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1579,7 +1579,7 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
       lpPoints[i].x += XMove;
       lpPoints[i].y += YMove;
     }
-  return(MAKELONG(LOWORD(XMove), LOWORD(YMove))); 
+  return(MAKELONG(LOWORD(XMove), LOWORD(YMove)));
 }
 
 
@@ -1600,6 +1600,28 @@ WINBOOL STDCALL
 ClientToScreen(HWND hWnd, LPPOINT lpPoint)
 {
     return (MapWindowPoints( hWnd, NULL, lpPoint, 1 ));
+}
+
+
+WINBOOL
+STDCALL
+SetWindowContextHelpId(HWND hwnd,
+          DWORD dwContextHelpId)
+{
+  UNIMPLEMENTED;
+  return(FALSE);
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetWindowContextHelpId(HWND hwnd)
+{
+  UNIMPLEMENTED;
+  return(0);
 }
 
 /* EOF */

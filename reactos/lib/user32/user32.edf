@@ -291,7 +291,7 @@ GetListBoxInfo=GetListBoxInfo@4
 GetMenu=GetMenu@4
 GetMenuBarInfo=GetMenuBarInfo@16
 GetMenuCheckMarkDimensions=GetMenuCheckMarkDimensions@0
-;GetMenuContextHelpId
+GetMenuContextHelpId=GetMenuContextHelpId@4
 GetMenuDefaultItem=GetMenuDefaultItem@12
 GetMenuInfo=GetMenuInfo@8
 GetMenuItemCount=GetMenuItemCount@4
@@ -345,7 +345,7 @@ GetUserObjectInformationW=GetUserObjectInformationW@20
 ;GetUserObjectSecurity
 ;GetWinStationInfo
 GetWindow=GetWindow@8
-;GetWindowContextHelpId
+GetWindowContextHelpId=GetWindowContextHelpId@4
 GetWindowDC=GetWindowDC@4
 GetWindowInfo=GetWindowInfo@8
 GetWindowLongA=GetWindowLongA@8
@@ -574,7 +574,7 @@ SetLastErrorEx=SetLastErrorEx@8
 SetLayeredWindowAttributes=SetLayeredWindowAttributes@16
 ;SetLogonNotifyWindow
 SetMenu=SetMenu@8
-;SetMenuContextHelpId
+SetMenuContextHelpId=SetMenuContextHelpId@8
 SetMenuDefaultItem=SetMenuDefaultItem@12
 SetMenuInfo=SetMenuInfo@8
 SetMenuItemBitmaps=SetMenuItemBitmaps@20
@@ -607,7 +607,7 @@ SetUserObjectInformationA=SetUserObjectInformationA@16
 SetUserObjectInformationW=SetUserObjectInformationW@16
 ;SetUserObjectSecurity
 ;SetWinEventHook
-;SetWindowContextHelpId
+SetWindowContextHelpId=SetWindowContextHelpId@8
 SetWindowLongA=SetWindowLongA@12
 SetWindowLongW=SetWindowLongW@12
 SetWindowPlacement=SetWindowPlacement@8

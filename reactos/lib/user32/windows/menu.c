@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.10 2003/07/27 11:54:41 dwelch Exp $
+/* $Id: menu.c,v 1.11 2003/07/28 08:09:51 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -1114,6 +1114,32 @@ TrackPopupMenuEx(
   UNIMPLEMENTED;
   return FALSE;
 }
+
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetMenuContextHelpId(HMENU hmenu,
+          DWORD dwContextHelpId)
+{
+  UNIMPLEMENTED;
+  return(FALSE);
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetMenuContextHelpId(HMENU hmenu)
+{
+  UNIMPLEMENTED;
+  return(0);
+}
+
 
 static BOOL
 MenuIsBitmapItem(ULONG TypeData)

@@ -4919,7 +4919,6 @@ GetScrollRange(
 	       LPINT lpMinPos,
 	       LPINT lpMaxPos);
 
- 
 WINBOOL
 STDCALL
 ShowScrollBar(
@@ -4927,7 +4926,6 @@ ShowScrollBar(
 	      int wBar,
 	      WINBOOL bShow);
 
- 
 WINBOOL
 STDCALL
 EnableScrollBar(
@@ -4935,11 +4933,12 @@ EnableScrollBar(
 		UINT wSBflags,
 		UINT wArrows);
 
-BOOL STDCALL GetScrollBarInfo(
- HWND hwnd,
- LONG idObject,
- PSCROLLBARINFO psbi
-);
+BOOL
+STDCALL
+GetScrollBarInfo(
+		 HWND hwnd,
+		 LONG idObject,
+		 PSCROLLBARINFO psbi);
 
 WINBOOL
 STDCALL
@@ -4947,14 +4946,12 @@ GetClientRect(
 	      HWND hWnd,
 	      LPRECT lpRect);
 
- 
 WINBOOL
 STDCALL
 GetWindowRect(
 	      HWND hWnd,
 	      LPRECT lpRect);
 
- 
 WINBOOL
 STDCALL
 AdjustWindowRect(
@@ -4962,7 +4959,6 @@ AdjustWindowRect(
 		 DWORD dwStyle,
 		 WINBOOL bMenu);
 
- 
 WINBOOL
 STDCALL
 AdjustWindowRectEx(
@@ -4973,33 +4969,36 @@ AdjustWindowRectEx(
 
 WINBOOL
 STDCALL
-SetWindowContextHelpId(HWND, DWORD);
+SetWindowContextHelpId(
+		       HWND hwnd,
+		       DWORD dwContextHelpId);
 
 DWORD
 STDCALL
-GetWindowContextHelpId(HWND);
+GetWindowContextHelpId(
+		       HWND hwnd);
 
 WINBOOL
 STDCALL
-SetMenuContextHelpId(HMENU, DWORD);
+SetMenuContextHelpId(
+		     HMENU hmenu,
+		     DWORD dwContextHelpId);
 
 DWORD
 STDCALL
-GetMenuContextHelpId(HMENU);
+GetMenuContextHelpId(
+		     HMENU hmenu);
 
- 
 WINBOOL
 STDCALL
 MessageBeep(
 	    UINT uType);
 
- 
 int
 STDCALL
 ShowCursor(
 	   WINBOOL bShow);
 
- 
 WINBOOL
 STDCALL
 SetCursorPos(
