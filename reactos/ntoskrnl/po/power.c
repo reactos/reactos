@@ -245,8 +245,41 @@ NtPowerInformation(
 	IN ULONG OutputBufferLength
 	)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+   NTSTATUS Status;
+
+   DPRINT("NtPowerInformation(PowerInformationLevel 0x%x, InputBuffer 0x%x, "
+          "InputBufferLength 0x%x, OutputBuffer 0x%x, OutputBufferLength 0x%x)\n",
+          PowerInformationLevel,
+          InputBuffer, InputBufferLength,
+          OutputBuffer, OutputBufferLength);
+   switch (PowerInformationLevel)
+   {
+   case SystemBatteryState:
+      {
+      PSYSTEM_BATTERY_STATE BatteryState = (PSYSTEM_BATTERY_STATE)OutputBuffer;
+
+      if (InputBuffer != NULL)
+         return STATUS_INVALID_PARAMETER;
+      if (OutputBufferLength < sizeof(SYSTEM_BATTERY_STATE))
+         return STATUS_BUFFER_TOO_SMALL;
+
+      /* Just zero the struct (and thus set BatteryState->BatteryPresent = FALSE) */
+      RtlZeroMemory(BatteryState, sizeof(SYSTEM_BATTERY_STATE));
+      BatteryState->EstimatedTime = (ULONG)-1;
+
+      Status = STATUS_SUCCESS;
+      break;
+      }
+
+   default:
+      Status = STATUS_NOT_IMPLEMENTED;
+      DPRINT1("PowerInformationLevel 0x%x is UNIMPLEMENTED! Have a nice day.\n",
+              PowerInformationLevel);
+      for (;;);
+      break;
+   }
+
+   return Status;
 }
 
 /* EOF */

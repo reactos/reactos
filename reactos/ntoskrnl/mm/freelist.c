@@ -897,6 +897,154 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
    return PfnOffset;
 }
 
+LONG
+MmAllocPagesSpecifyRange(ULONG Consumer,
+                         PHYSICAL_ADDRESS LowestAddress,
+                         PHYSICAL_ADDRESS HighestAddress,
+                         ULONG NumberOfPages,
+                         PPFN_TYPE Pages)
+{
+   PPHYSICAL_PAGE PageDescriptor;
+   KIRQL oldIrql;
+   PFN_TYPE LowestPage, HighestPage;
+   PFN_TYPE pfn;
+   ULONG NumberOfPagesFound = 0;
+   ULONG i;
+
+   DPRINT("MmAllocPagesSpecifyRange()\n"
+          "    LowestAddress = 0x%08x%08x\n"
+          "    HighestAddress = 0x%08x%08x\n"
+          "    NumberOfPages = %d\n",
+          LowestAddress.u.HighPart, LowestAddress.u.LowPart,
+          HighestAddress.u.HighPart, HighestAddress.u.LowPart,
+          NumberOfPages);
+
+   if (NumberOfPages == 0)
+      return 0;
+
+   LowestPage = LowestAddress.QuadPart / PAGE_SIZE;
+   HighestPage = HighestAddress.QuadPart / PAGE_SIZE;
+   if ((HighestAddress.u.LowPart % PAGE_SIZE) != 0)
+      HighestPage++;
+   
+   if (LowestPage >= MmPageArraySize)
+   {
+      DPRINT1("MmAllocPagesSpecifyRange(): Out of memory\n");
+      return -1;
+   }
+   if (HighestPage > MmPageArraySize)
+      HighestPage = MmPageArraySize;
+
+   KeAcquireSpinLock(&PageListLock, &oldIrql);
+   if (LowestPage == 0 && HighestPage == MmPageArraySize)
+   {
+      PLIST_ENTRY ListEntry;
+      while (NumberOfPagesFound < NumberOfPages)
+      {
+         if (!IsListEmpty(&FreeZeroedPageListHead))
+         {
+            ListEntry = RemoveTailList(&FreeZeroedPageListHead);
+         }
+         else if (!IsListEmpty(&FreeUnzeroedPageListHead))
+         {
+            ListEntry = RemoveTailList(&FreeUnzeroedPageListHead);
+            UnzeroedPageCount--;
+         }
+         else
+         {
+            if (NumberOfPagesFound == 0)
+            {
+               KeReleaseSpinLock(&PageListLock, oldIrql);
+               DPRINT1("MmAllocPagesSpecifyRange(): Out of memory\n");
+               return -1;
+            }
+            else
+            {
+               break;
+            }
+         }
+         PageDescriptor = CONTAINING_RECORD(ListEntry, PHYSICAL_PAGE, ListEntry);
+
+         ASSERT(PageDescriptor->Flags.Type == MM_PHYSICAL_PAGE_FREE);
+         ASSERT(PageDescriptor->MapCount == 0);
+         ASSERT(PageDescriptor->ReferenceCount == 0);
+
+         /* Allocate the page */
+         PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_USED;
+         PageDescriptor->Flags.Consumer = Consumer;
+         PageDescriptor->ReferenceCount = 1;
+         PageDescriptor->LockCount = 0;
+         PageDescriptor->MapCount = 0;
+         PageDescriptor->SavedSwapEntry = 0; /* FIXME: Do we need swap entries? */
+         InsertTailList(&UsedPageListHeads[Consumer], &PageDescriptor->ListEntry);
+
+         MmStats.NrSystemPages++;
+         MmStats.NrFreePages--;
+
+         /* Remember the page */
+         pfn = PageDescriptor - MmPageArray;
+         Pages[NumberOfPagesFound++] = pfn;
+      }
+   }
+   else
+   {
+      INT LookForZeroedPages;
+      for (LookForZeroedPages = 1; LookForZeroedPages >= 0; LookForZeroedPages--)
+      {
+         for (pfn = LowestPage; pfn < HighestPage; pfn++)
+         {
+            PageDescriptor = MmPageArray + pfn;
+
+            if (PageDescriptor->Flags.Type != MM_PHYSICAL_PAGE_FREE)
+               continue;
+            if (PageDescriptor->Flags.Zero != LookForZeroedPages)
+               continue;
+
+            ASSERT(PageDescriptor->MapCount == 0);
+            ASSERT(PageDescriptor->ReferenceCount == 0);
+
+            /* Allocate the page */
+            PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_USED;
+            PageDescriptor->Flags.Consumer = Consumer;
+            PageDescriptor->ReferenceCount = 1;
+            PageDescriptor->LockCount = 0;
+            PageDescriptor->MapCount = 0;
+            PageDescriptor->SavedSwapEntry = 0; /* FIXME: Do we need swap entries? */
+            RemoveEntryList(&PageDescriptor->ListEntry);
+            InsertTailList(&UsedPageListHeads[Consumer], &PageDescriptor->ListEntry);
+
+            if (!PageDescriptor->Flags.Zero)
+               UnzeroedPageCount--;
+            MmStats.NrSystemPages++;
+            MmStats.NrFreePages--;
+
+            /* Remember the page */
+            Pages[NumberOfPagesFound++] = pfn;
+            if (NumberOfPagesFound == NumberOfPages)
+               break;
+         }
+         if (NumberOfPagesFound == NumberOfPages)
+            break;
+      }
+   }
+   KeReleaseSpinLock(&PageListLock, oldIrql);
+
+   /* Zero unzero-ed pages */
+   for (i = 0; i < NumberOfPagesFound; i++)
+   {
+      pfn = Pages[i];
+      if (MmPageArray[pfn].Flags.Zero == 0)
+      {
+         MiZeroPage(pfn);
+      }
+      else
+      {
+         MmPageArray[pfn].Flags.Zero = 0;
+      }
+   }
+
+   return NumberOfPagesFound;
+}
 
 NTSTATUS STDCALL
 MmZeroPageThreadMain(PVOID Ignored)

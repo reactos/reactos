@@ -1666,6 +1666,22 @@ typedef struct _OBJECT_DIRECTORY_INFORMATION
 } OBJECT_DIRECTORY_INFORMATION, *POBJECT_DIRECTORY_INFORMATION;
 
 
+/* system battery state */
+typedef struct _SYSTEM_BATTERY_STATE {
+	BOOLEAN  AcOnLine;
+	BOOLEAN  BatteryPresent;
+	BOOLEAN  Charging;
+	BOOLEAN  Discharging;
+	BOOLEAN  Spare1[4];
+	ULONG  MaxCapacity;
+	ULONG  RemainingCapacity;
+	ULONG  Rate;
+	ULONG  EstimatedTime;
+	ULONG  DefaultAlert1;
+	ULONG  DefaultAlert2;
+} SYSTEM_BATTERY_STATE, *PSYSTEM_BATTERY_STATE;
+
+
 // power information levels
 typedef enum _POWER_INFORMATION_LEVEL {
 	SystemPowerPolicyAc,

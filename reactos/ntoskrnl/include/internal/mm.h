@@ -697,6 +697,12 @@ VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address);
 
 PFN_TYPE MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry);
 
+LONG MmAllocPagesSpecifyRange(ULONG Consumer,
+                              PHYSICAL_ADDRESS LowestAddress,
+                              PHYSICAL_ADDRESS HighestAddress,
+                              ULONG NumberOfPages,
+                              PPFN_TYPE Pages);
+
 VOID MmDereferencePage(PFN_TYPE Page);
 
 VOID MmReferencePage(PFN_TYPE Page);
