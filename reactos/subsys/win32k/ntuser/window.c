@@ -267,8 +267,6 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   BOOLEAN BelongsToThreadData;
   
   ASSERT(Window);
-
-  MsqRemoveTimersWindow(ThreadData->MessageQueue, Window->Self);
   
   IntLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
   if(Window->Status & WINDOWSTATUS_DESTROYING)
@@ -326,6 +324,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
     if(BelongsToThreadData)
       IntSendMessage(Window->Self, WM_NCDESTROY, 0, 0);
   }
+  MsqRemoveTimersWindow(ThreadData->MessageQueue, Window->Self);
   
   /* flush the message queue */
   MsqRemoveWindowMessagesFromQueue(Window);
