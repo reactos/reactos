@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.28 2004/05/13 21:01:14 navaraf Exp $
+/* $Id: path.c,v 1.29 2004/08/25 15:04:19 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -373,7 +373,7 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING name)
    PWSTR buf = 0;
    PFILE_NAME_INFORMATION filenameinfo;
    ULONG backslashcount = 0;
-   PWSTR cntr;
+   ULONG Index;
    WCHAR var[4];
    
    DPRINT ("RtlSetCurrentDirectory %wZ\n", name);
@@ -436,7 +436,7 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING name)
 	RtlReleasePebLock ();
 	return Status;
      }
-   
+
    filenameinfo = RtlAllocateHeap(RtlGetProcessHeap(),
 				  0,
 				  MAX_PATH*sizeof(WCHAR)+sizeof(ULONG));
@@ -461,7 +461,8 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING name)
 	return(Status);
      }
    
-   if (filenameinfo->FileName[1]) // If it's just "\", we need special handling
+   /* If it's just "\", we need special handling */
+   if (filenameinfo->FileNameLength > sizeof(WCHAR))
      {
 	wcs = buf + size / sizeof(WCHAR) - 1;
 	if (*wcs == L'\\')
@@ -471,9 +472,11 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING name)
 	    size -= sizeof(WCHAR);
 	  }
 
-	for (cntr=filenameinfo->FileName;*cntr!=0;cntr++)
+	for (Index = 0;
+	     Index < filenameinfo->FileNameLength / sizeof(WCHAR);
+	     Index++)
 	  {
-	     if (*cntr=='\\') backslashcount++;
+	     if (filenameinfo->FileName[Index] == '\\') backslashcount++;
 	  }
 
 	DPRINT("%d \n",backslashcount);
@@ -483,9 +486,10 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING name)
 	  }
 	wcs++;
 
-	wcscpy(wcs,filenameinfo->FileName);
+	RtlCopyMemory(wcs, filenameinfo->FileName, filenameinfo->FileNameLength);
+	wcs[filenameinfo->FileNameLength / sizeof(WCHAR)] = 0;
 
-	size=((wcs-buf)+wcslen(filenameinfo->FileName))*sizeof(WCHAR);
+	size = (wcs - buf) * sizeof(WCHAR) + filenameinfo->FileNameLength;
      }
    
    RtlFreeHeap (RtlGetProcessHeap (),
@@ -505,7 +509,7 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING name)
 	   buf,
 	   size + sizeof(WCHAR));
    cd->DosPath.Length = size;
-   
+
    if (cd->Handle)
      NtClose(cd->Handle);
    cd->Handle = handle;
