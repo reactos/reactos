@@ -379,10 +379,10 @@ typedef struct _IMAGE_THUNK_DATA {
 	} u1;
 } IMAGE_THUNK_DATA,*PIMAGE_THUNK_DATA;
 typedef struct _IMAGE_IMPORT_DESCRIPTOR {
-	_ANONYMOUS_UNION union {
+	union {
 		DWORD Characteristics;
 		PIMAGE_THUNK_DATA OriginalFirstThunk;
-	} DUMMYUNIONNAME;
+	} ;
 	DWORD TimeDateStamp;
 	DWORD ForwarderChain;
 	DWORD Name;
@@ -635,6 +635,8 @@ typedef struct _IMAGE_RESOURCE_DIRECTORY {
 #define IMAGE_SIZEOF_ARCHIVE_MEMBER_HDR 60
 #define SIZEOF_RFPO_DATA 16
 #define IMAGE_FIRST_SECTION(h) ((PIMAGE_SECTION_HEADER) ((DWORD)h+FIELD_OFFSET(IMAGE_NT_HEADERS,OptionalHeader)+((PIMAGE_NT_HEADERS)(h))->FileHeader.SizeOfOptionalHeader))
+/* Temporarily adding this here. This file will die soon. */
+#define IMAGE_SCN_TYPE_NOLOAD 0x2L
 #define IMAGE_SCN_TYPE_NO_PAD 8
 #define IMAGE_SCN_CNT_CODE 32
 #define IMAGE_SCN_CNT_INITIALIZED_DATA 64
