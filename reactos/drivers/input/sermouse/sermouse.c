@@ -20,7 +20,7 @@
 /* Check for mouse on COM1? */
 #define SERMOUSE_COM1_SUPPORT
 /* Check for mouse on COM2? */
-#define SERMOUSE_COM2_SUPPORT
+/* #define SERMOUSE_COM2_SUPPORT */
 /* Create \??\Mouse* symlink for device? */
 #define SERMOUSE_MOUSESYMLINK_SUPPORT
 
