@@ -49,7 +49,7 @@ VOID IoAllocateController(PCONTROLLER_OBJECT ControllerObject,
    PCONTROLLER_QUEUE_ENTRY entry;
    IO_ALLOCATION_ACTION Result;
    
-   assert(KeGetCurrentIrql()==DISPATCH_LEVEL);
+   assert_irql(DISPATCH_LEVEL);
    
    entry=ExAllocatePool(NonPagedPool,sizeof(CONTROLLER_QUEUE_ENTRY));
    assert(entry!=NULL);
@@ -81,7 +81,7 @@ PCONTROLLER_OBJECT IoCreateController(ULONG Size)
 {
    PCONTROLLER_OBJECT controller;
    
-   assert(KeGetCurrentIrql()==PASSIVE_LEVEL);
+   assert_irql(PASSIVE_LEVEL);
    
    controller = ExAllocatePool(NonPagedPool,sizeof(CONTROLLER_OBJECT));
    if (controller==NULL)
@@ -95,7 +95,7 @@ PCONTROLLER_OBJECT IoCreateController(ULONG Size)
 	ExFreePool(controller);
 	return(NULL);
      }
-   
+
    KeInitializeDeviceQueue(&controller->DeviceWaitQueue);
    return(controller);
 }
@@ -107,8 +107,8 @@ VOID IoDeleteController(PCONTROLLER_OBJECT ControllerObject)
  *        ControllerObject = Controller object to be released
  */
 {
-   assert(KeGetCurrentIrql()==PASSIVE_LEVEL);
-   
+   assert_irql(PASSIVE_LEVEL);
+
    ExFreePool(ControllerObject->ControllerExtension);
    ExFreePool(ControllerObject);
 }
@@ -124,7 +124,7 @@ VOID IoFreeController(PCONTROLLER_OBJECT ControllerObject)
    PKDEVICE_QUEUE_ENTRY QEntry;
    CONTROLLER_QUEUE_ENTRY* Entry;
    IO_ALLOCATION_ACTION Result;
-   
+
    do
      {
 	QEntry = KeRemoveDeviceQueue(&ControllerObject->DeviceWaitQueue);
@@ -140,4 +140,4 @@ VOID IoFreeController(PCONTROLLER_OBJECT ControllerObject)
 	ExFreePool(Entry);
      } while (Result == DeallocateObject);
 }
-   
+

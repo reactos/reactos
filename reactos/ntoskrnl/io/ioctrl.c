@@ -50,15 +50,17 @@ NtDeviceIoControlFile (
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
    KEVENT KEvent;
-   
-   assert(KeGetCurrentIrql()==PASSIVE_LEVEL);
+
+   assert_irql(PASSIVE_LEVEL);
    
    DPRINT("NtDeviceIoControlFile(DeviceHandle %x Event %x UserApcRoutine %x "
-          "UserApcContext %x IoStatusBlock %x InputBuffer %x "
-          "InputBufferSize %x OutputBuffer %x OutputBufferSize %x)\n",
+          "UserApcContext %x IoStatusBlock %x IoControlCode %x "
+          "InputBuffer %x InputBufferSize %x OutputBuffer %x "
+          "OutputBufferSize %x)\n",
           DeviceHandle,Event,UserApcRoutine,UserApcContext,IoStatusBlock,
-          InputBuffer,InputBufferSize,OutputBuffer,OutputBufferSize);
-   
+          IoControlCode,InputBuffer,InputBufferSize,OutputBuffer,
+          OutputBufferSize);
+
    Status = ObReferenceObjectByHandle(DeviceHandle,
 				      FILE_READ_DATA | FILE_WRITE_DATA,
 				      NULL,
@@ -99,5 +101,4 @@ NtDeviceIoControlFile (
    }
    return(Status);
 }
-
 

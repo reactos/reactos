@@ -55,7 +55,7 @@ void KeDrainDpcQueue(void)
    PKDPC current;
    KIRQL oldlvl;
    
-   assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
+   assert_irql(DISPATCH_LEVEL);
    
    if (DpcQueueSize == 0)
      {
@@ -117,9 +117,9 @@ BOOLEAN KeInsertQueueDpc(PKDPC dpc, PVOID SystemArgument1,
 {
    DPRINT("KeInsertQueueDpc(dpc %x, SystemArgument1 %x, SystemArgument2 %x)\n",
 	  dpc, SystemArgument1, SystemArgument2);
-   
+
    assert(KeGetCurrentIrql()>=DISPATCH_LEVEL);
-   
+
    dpc->Number=0;
    dpc->Importance=Medium;
    dpc->SystemArgument1=SystemArgument1;
@@ -145,5 +145,4 @@ void KeInitDpc(void)
 {
    InitializeListHead(&DpcQueueHead);
 }
-
 
