@@ -761,11 +761,11 @@ VBESetColorRegisters(
    PSTATUS_BLOCK StatusBlock)
 {
    KV86M_REGISTERS BiosRegisters;
+   ULONG Entry;
+   PULONG OutputEntry;
 
    if (DeviceExtension->VGACompatible)
    {
-      ULONG Entry;
-
       for (Entry = ColorLookUpTable->FirstEntry;
            Entry < ColorLookUpTable->NumEntries + ColorLookUpTable->FirstEntry;
            Entry++)
@@ -780,14 +780,21 @@ VBESetColorRegisters(
    else
    {
       /*
-       * FIXME:
-       * This is untested code path, it's possible that it will
-       * not work at all or that Red and Blue colors will be swapped.
+       * We can't just copy the values, because we need to swap the Red 
+       * and Blue values.
        */
 
-      VideoPortMoveMemory(DeviceExtension->TrampolineMemory,
-         &ColorLookUpTable->LookupTable[0].RgbArray,
-         sizeof(DWORD) * ColorLookUpTable->NumEntries);
+      for (Entry = ColorLookUpTable->FirstEntry,
+           OutputEntry = DeviceExtension->TrampolineMemory;
+           Entry < ColorLookUpTable->NumEntries + ColorLookUpTable->FirstEntry;
+           Entry++, OutputEntry++)
+      {
+         *OutputEntry =
+            (ColorLookUpTable->LookupTable[Entry].RgbArray.Red << 16) |
+            (ColorLookUpTable->LookupTable[Entry].RgbArray.Green << 8) |
+            (ColorLookUpTable->LookupTable[Entry].RgbArray.Blue);
+      }
+
       BiosRegisters.Eax = 0x4F09;
       BiosRegisters.Ebx = 0;
       BiosRegisters.Ecx = ColorLookUpTable->NumEntries;
