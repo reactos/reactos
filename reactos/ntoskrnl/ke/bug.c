@@ -6,6 +6,7 @@
  * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *                  Created 22/05/98
+ *                  Phillip Susi: 12/8/99: Minor fix
  */
 
 /* INCLUDES *****************************************************************/
@@ -66,13 +67,15 @@ VOID KeBugCheckEx(ULONG BugCheckCode,
  * RETURNS: Doesn't
  */
 {
+   __asm__("cli\n\t");      //PJS: disable interrupts first, then do the rest
    DbgPrint("Bug detected (code %x param %x %x %x %x)\n",BugCheckCode,
 	  BugCheckParameter1,BugCheckParameter2,BugCheckParameter3,
 	  BugCheckParameter4);
    PsDumpThreads();
    KeDumpStackFrames(0,64);
-   __asm__("cli\n\t");
-   for(;;);
+   
+   for(;;)
+	   __asm__("hlt\n\t");	//PJS: use HLT instruction, rather than busy wait
 }
 
 VOID KeBugCheck(ULONG BugCheckCode)
