@@ -52,10 +52,10 @@ typedef struct _AFD_HANDLE_ {
 } AFD_HANDLE, *PAFD_HANDLE;
 
 typedef struct _AFD_POLL_INFO {
-    LARGE_INTEGER		        Timeout;
-    ULONG				HandleCount;
-    PAFD_HANDLE                         InternalUse;
-    AFD_HANDLE			        Handles[1];
+	LARGE_INTEGER Timeout;
+	ULONG HandleCount;
+	BOOLEAN Exclusive;
+	AFD_HANDLE Handles[1];
 } AFD_POLL_INFO, *PAFD_POLL_INFO;
 
 typedef struct _AFD_ACCEPT_DATA {

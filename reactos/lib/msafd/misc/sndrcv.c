@@ -15,15 +15,65 @@
 INT
 WSPAPI
 WSPAsyncSelect(
-    IN  SOCKET s, 
+    IN  SOCKET Handle, 
     IN  HWND hWnd, 
     IN  UINT wMsg, 
     IN  LONG lEvent, 
     OUT LPINT lpErrno)
 {
-  UNIMPLEMENTED
+	PSOCKET_INFORMATION Socket = NULL;
+	PASYNC_DATA AsyncData;
+	NTSTATUS Status;
+	ULONG BlockMode;
 
-  return 0;
+	/* Get the Socket Structure associated to this Socket */
+	Socket = GetSocketStructure(Handle);
+
+	/* Allocate the Async Data Structure to pass on to the Thread later */
+	HeapAlloc(GetProcessHeap(), 0, sizeof(*AsyncData));
+
+	/* Change the Socket to Non Blocking */
+	BlockMode = 1;
+	SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL);
+	Socket->SharedData.NonBlocking = TRUE;
+
+	/* Deactive WSPEventSelect */
+	if (Socket->SharedData.AsyncEvents) {
+		WSPEventSelect(Handle, NULL, 0, NULL);
+	}
+
+	/* Create the Asynch Thread if Needed */  
+	SockCreateOrReferenceAsyncThread();
+	
+	/* Open a Handle to AFD's Async Helper */
+	SockGetAsyncSelectHelperAfdHandle();
+
+	/* Store Socket Data */
+	Socket->SharedData.hWnd = hWnd;
+	Socket->SharedData.wMsg = wMsg;
+	Socket->SharedData.AsyncEvents = lEvent;
+	Socket->SharedData.AsyncDisabledEvents = 0;
+	Socket->SharedData.SequenceNumber++;
+
+        /* Return if there are no more Events */
+	if ((Socket->SharedData.AsyncEvents & (~Socket->SharedData.AsyncDisabledEvents)) == 0) {
+		HeapFree(GetProcessHeap(), 0, AsyncData);
+		return 0;
+	}
+
+	/* Set up the Async Data */
+	AsyncData->ParentSocket = Socket;
+	AsyncData->SequenceNumber = Socket->SharedData.SequenceNumber;
+
+	/* Begin Async Select by using I/O Completion */
+	Status = NtSetIoCompletion(SockAsyncCompletionPort,
+				  (PVOID)&SockProcessQueuedAsyncSelect,
+				  AsyncData,
+				  0,
+				  0);
+
+	/* Return */
+	return 0;
 }
 
 

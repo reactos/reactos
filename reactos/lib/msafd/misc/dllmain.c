@@ -20,12 +20,16 @@
 DWORD DebugTraceLevel = 0;
 #endif /* DBG */
 
-HANDLE							GlobalHeap;
-WSPUPCALLTABLE					Upcalls;
-LPWPUCOMPLETEOVERLAPPEDREQUEST	lpWPUCompleteOverlappedRequest;
-ULONG							SocketCount;
-PSOCKET_INFORMATION 			*Sockets = NULL;
-LIST_ENTRY						SockHelpersListHead = {NULL};
+HANDLE GlobalHeap;
+WSPUPCALLTABLE Upcalls;
+LPWPUCOMPLETEOVERLAPPEDREQUEST lpWPUCompleteOverlappedRequest;
+ULONG SocketCount;
+PSOCKET_INFORMATION *Sockets = NULL;
+LIST_ENTRY SockHelpersListHead = {NULL};
+ULONG SockAsyncThreadRefCount;
+HANDLE SockAsyncHelperAfdHandle;
+HANDLE SockAsyncCompletionPort;
+BOOLEAN SockAsyncSelectCalled;
 
 SOCKET 
 WSPAPI 
@@ -456,7 +460,7 @@ WSPSelect(
     
     /* Number of handles for AFD to Check */
     PollInfo->HandleCount = HandleCount;
-    PollInfo->InternalUse = 0;
+    PollInfo->Exclusive = FALSE;
     
     if (readfds != NULL) {
 	for (i = 0; i < readfds->fd_count; i++, j++) {
@@ -1289,6 +1293,342 @@ int CreateContext(PSOCKET_INFORMATION Socket)
 	NtClose( SockEvent );
 
 	return 0;
+}
+
+BOOLEAN SockCreateOrReferenceAsyncThread(VOID)
+{
+	HANDLE hAsyncThread;
+	DWORD AsyncThreadId;
+	HANDLE AsyncEvent;
+	OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags;
+	NTSTATUS Status;
+
+	/* Check if the Thread Already Exists */
+	if (SockAsyncThreadRefCount) {
+		return TRUE;
+	}
+	
+	/* Create the Completion Port */
+	if (!SockAsyncCompletionPort) {
+		Status = NtCreateIoCompletion(&SockAsyncCompletionPort,
+					      IO_COMPLETION_ALL_ACCESS,
+					      NULL,
+					      2); // Allow 2 threads only
+	
+		/* Protect Handle */	
+		HandleFlags.ProtectFromClose = TRUE;
+		HandleFlags.Inherit = FALSE;
+		Status = NtSetInformationObject(SockAsyncCompletionPort,
+						ObjectHandleInformation,
+						&HandleFlags,
+						sizeof(HandleFlags));
+	}
+    
+	/* Create the Async Event */
+	Status = NtCreateEvent(&AsyncEvent,
+			       EVENT_ALL_ACCESS,
+			       NULL,
+			       NotificationEvent,
+			       FALSE);
+    
+	/* Create the Async Thread */
+	hAsyncThread = CreateThread(NULL,
+				    0,
+				    (LPTHREAD_START_ROUTINE)SockAsyncThread,
+				    NULL,
+				    0,
+				    &AsyncThreadId);
+
+	/* Close the Handle */
+	NtClose(hAsyncThread);
+
+	/* Increase the Reference Count */
+	SockAsyncThreadRefCount++;
+	return TRUE;
+}
+
+int SockAsyncThread(PVOID ThreadParam)
+{
+	PVOID AsyncContext;
+	PASYNC_COMPLETION_ROUTINE AsyncCompletionRoutine;
+	IO_STATUS_BLOCK IOSB;
+	NTSTATUS Status;
+	LARGE_INTEGER Timeout;
+                          
+	/* Make the Thread Higher Priority */
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
+	
+	/* Do a KQUEUE/WorkItem Style Loop, thanks to IoCompletion Ports */
+	do {
+		Status =  NtRemoveIoCompletion (SockAsyncCompletionPort,
+						(PVOID*)&AsyncCompletionRoutine,
+						&AsyncContext,
+						&IOSB,
+						&Timeout);
+						
+		/* Call the Async Function */
+		if (NT_SUCCESS(Status)) {
+			//(*AsyncCompletionRoutine)(AsyncContext, IOSB);
+		} else {
+			/* It Failed, sleep for a second */
+			Sleep(1000);
+		}
+	} while ((Status != STATUS_TIMEOUT));
+
+    /* The Thread has Ended */
+    return 0;
+}
+
+BOOLEAN SockGetAsyncSelectHelperAfdHandle(VOID)
+{
+	UNICODE_STRING AfdHelper;
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	IO_STATUS_BLOCK IoSb;
+	NTSTATUS Status;
+	FILE_COMPLETION_INFORMATION CompletionInfo;
+	OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags;
+
+	/* First, make sure we're not already intialized */
+	if (SockAsyncHelperAfdHandle) {
+		return TRUE;
+	}
+
+	/* Set up Handle Name and Object */
+	RtlInitUnicodeString(&AfdHelper, L"\\Device\\Afd\\AsyncSelectHlp" );
+	InitializeObjectAttributes(&ObjectAttributes,
+				   &AfdHelper,
+				   OBJ_INHERIT | OBJ_CASE_INSENSITIVE,
+				   NULL,
+				   NULL);
+
+	/* Open the Handle to AFD */
+	Status = NtCreateFile(&SockAsyncHelperAfdHandle,
+			      GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+			      &ObjectAttributes,
+			      &IoSb,
+			      NULL,
+			      0,
+			      FILE_SHARE_READ | FILE_SHARE_WRITE,
+			      FILE_OPEN_IF,
+			      0,
+			      NULL,
+			      0);
+
+	/* 
+	 * Now Set up the Completion Port Information 
+	 * This means that whenever a Poll is finished, the routine will be executed
+	 */
+	CompletionInfo.Port = SockAsyncCompletionPort;
+	CompletionInfo.Key = SockAsyncSelectCompletionRoutine;
+	Status = NtSetInformationFile(SockAsyncHelperAfdHandle,
+				      &IoSb,
+				      &CompletionInfo,
+				      sizeof(CompletionInfo),
+				      FileCompletionInformation);
+				      
+				      
+	/* Protect the Handle */
+	HandleFlags.ProtectFromClose = TRUE;
+	HandleFlags.Inherit = FALSE;
+	Status = NtSetInformationObject(SockAsyncCompletionPort,
+					ObjectHandleInformation,
+					&HandleFlags,
+					sizeof(HandleFlags));
+
+
+	/* Set this variable to true so that Send/Recv/Accept will know wether to renable disabled events */
+	SockAsyncSelectCalled = TRUE;
+	return TRUE;
+}
+
+VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBlock)
+{
+
+	PASYNC_DATA AsyncData = Context;
+	PSOCKET_INFORMATION Socket;
+	ULONG x;
+    
+	/* Get the Socket */
+	Socket = AsyncData->ParentSocket;
+	
+	/* Check if the Sequence  Number Changed behind our back */
+	if (AsyncData->SequenceNumber != Socket->SharedData.SequenceNumber ){
+		return;
+	}
+
+	/* Check we were manually called b/c of a failure */
+	if (!NT_SUCCESS(IoStatusBlock->Status)) {
+		/* FIXME: Perform Upcall */
+		return;
+	}
+
+
+	for (x = 1; x; x<<=1) {
+		switch (AsyncData->AsyncSelectInfo.Handles[0].Events & x) {
+			case AFD_EVENT_RECEIVE:
+				if ((Socket->SharedData.AsyncEvents & FD_READ) && (!Socket->SharedData.AsyncDisabledEvents & FD_READ)) {
+					/* Make the Notifcation */
+					(Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
+								   Socket->SharedData.wMsg,
+								   Socket->Handle,
+								   WSAMAKESELECTREPLY(FD_READ, 0));
+					/* Disable this event until the next read(); */
+					Socket->SharedData.AsyncDisabledEvents |= FD_READ;
+				}
+			
+			case AFD_EVENT_OOB_RECEIVE:
+				if ((Socket->SharedData.AsyncEvents & FD_OOB) && (!Socket->SharedData.AsyncDisabledEvents & FD_OOB)) {
+					/* Make the Notifcation */
+					(Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
+								   Socket->SharedData.wMsg,
+								   Socket->Handle,
+								   WSAMAKESELECTREPLY(FD_OOB, 0));
+					/* Disable this event until the next read(); */
+					Socket->SharedData.AsyncDisabledEvents |= FD_OOB;
+				}
+		
+			case AFD_EVENT_SEND:
+				if ((Socket->SharedData.AsyncEvents & FD_WRITE) && (!Socket->SharedData.AsyncDisabledEvents & FD_WRITE)) {
+					/* Make the Notifcation */
+					(Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
+								   Socket->SharedData.wMsg,
+								   Socket->Handle,
+								   WSAMAKESELECTREPLY(FD_WRITE, 0));
+					/* Disable this event until the next write(); */
+					Socket->SharedData.AsyncDisabledEvents |= FD_WRITE;
+				}
+				
+			case AFD_EVENT_ACCEPT:
+				if ((Socket->SharedData.AsyncEvents & FD_ACCEPT) && (!Socket->SharedData.AsyncDisabledEvents & FD_ACCEPT)) {
+					/* Make the Notifcation */
+					(Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
+								   Socket->SharedData.wMsg,
+								   Socket->Handle,
+								   WSAMAKESELECTREPLY(FD_ACCEPT, 0));
+					/* Disable this event until the next accept(); */
+					Socket->SharedData.AsyncDisabledEvents |= FD_ACCEPT;
+				}
+
+			case AFD_EVENT_DISCONNECT:
+			case AFD_EVENT_ABORT:
+			case AFD_EVENT_CLOSE:
+				if ((Socket->SharedData.AsyncEvents & FD_CLOSE) && (!Socket->SharedData.AsyncDisabledEvents & FD_CLOSE)) {
+					/* Make the Notifcation */
+					(Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
+								   Socket->SharedData.wMsg,
+								   Socket->Handle,
+								   WSAMAKESELECTREPLY(FD_CLOSE, 0));
+					/* Disable this event forever; */
+					Socket->SharedData.AsyncDisabledEvents |= FD_CLOSE;
+				}
+
+			/* FIXME: Support QOS */
+		}
+	}
+	
+	/* Check if there are any events left for us to check */
+	if ((Socket->SharedData.AsyncEvents & (~Socket->SharedData.AsyncDisabledEvents)) == 0 ) {
+		return;
+	}
+
+	/* Keep Polling */
+	SockProcessAsyncSelect(Socket, AsyncData);
+	return;
+}
+
+VOID SockProcessAsyncSelect(PSOCKET_INFORMATION Socket, PASYNC_DATA AsyncData)
+{
+
+	ULONG lNetworkEvents;
+	NTSTATUS Status;
+
+	/* Set up the Async Data Event Info */
+	AsyncData->AsyncSelectInfo.Timeout.HighPart = 0x7FFFFFFF;
+	AsyncData->AsyncSelectInfo.Timeout.LowPart = 0xFFFFFFFF;
+	AsyncData->AsyncSelectInfo.HandleCount = 1;
+	AsyncData->AsyncSelectInfo.Exclusive = TRUE;
+	AsyncData->AsyncSelectInfo.Handles[0].Handle = Socket->Handle;
+	AsyncData->AsyncSelectInfo.Handles[0].Events = 0;
+
+	/* Remove unwanted events */
+	lNetworkEvents = Socket->SharedData.AsyncEvents & (~Socket->SharedData.AsyncDisabledEvents);
+
+	/* Set Events to wait for */
+	if (lNetworkEvents & FD_READ) {
+		AsyncData->AsyncSelectInfo.Handles[0].Events |= AFD_EVENT_RECEIVE;
+	}
+
+	if (lNetworkEvents & FD_WRITE) {
+		AsyncData->AsyncSelectInfo.Handles[0].Events |= AFD_EVENT_SEND;
+	}
+
+	if (lNetworkEvents & FD_OOB) {
+	        AsyncData->AsyncSelectInfo.Handles[0].Events |= AFD_EVENT_OOB_RECEIVE;
+	}
+
+	if (lNetworkEvents & FD_ACCEPT) {
+		AsyncData->AsyncSelectInfo.Handles[0].Events |= AFD_EVENT_ACCEPT;
+	}
+
+	if (lNetworkEvents & FD_CONNECT) {
+		AsyncData->AsyncSelectInfo.Handles[0].Events |= AFD_EVENT_CONNECT | AFD_EVENT_CONNECT_FAIL;
+	}
+
+	if (lNetworkEvents & FD_CLOSE) {
+		AsyncData->AsyncSelectInfo.Handles[0].Events |= AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT;
+	}
+
+	if (lNetworkEvents & FD_QOS) {
+		AsyncData->AsyncSelectInfo.Handles[0].Events |= AFD_EVENT_QOS;
+	}
+
+	if (lNetworkEvents & FD_GROUP_QOS) {
+		AsyncData->AsyncSelectInfo.Handles[0].Events |= AFD_EVENT_GROUP_QOS;
+	}
+	
+	/* Send IOCTL */
+	Status = NtDeviceIoControlFile (SockAsyncHelperAfdHandle,
+					NULL,
+					NULL,
+					AsyncData,
+					&AsyncData->IoStatusBlock,
+					IOCTL_AFD_SELECT,
+					&AsyncData->AsyncSelectInfo,
+					sizeof(AsyncData->AsyncSelectInfo),
+					&AsyncData->AsyncSelectInfo,
+					sizeof(AsyncData->AsyncSelectInfo));
+
+	/* I/O Manager Won't call the completion routine, let's do it manually */
+	if (NT_SUCCESS(Status)) {
+		return;
+	} else {
+		AsyncData->IoStatusBlock.Status = Status;
+		SockAsyncSelectCompletionRoutine(AsyncData, &AsyncData->IoStatusBlock);
+	}
+}
+
+VOID SockProcessQueuedAsyncSelect(PVOID Context, PIO_STATUS_BLOCK IoStatusBlock)
+{
+	PASYNC_DATA AsyncData = Context;
+	PSOCKET_INFORMATION Socket;
+
+	/* Get the Socket */	
+	Socket = AsyncData->ParentSocket;
+
+	/* If someone closed it, stop the function */
+	if (Socket->SharedData.State != SocketClosed) {
+		/* Check if the Sequence Number changed by now, in which case quit */
+		if (AsyncData->SequenceNumber == Socket->SharedData.SequenceNumber) {
+			/* Do the actuall select, if needed */
+			if ((Socket->SharedData.AsyncEvents & (~Socket->SharedData.AsyncDisabledEvents))) {
+				SockProcessAsyncSelect(Socket, AsyncData);
+			}
+		}
+	}
+	
+	/* Free the Context */
+	HeapFree(GetProcessHeap(), 0, AsyncData);
+	return;
 }
 
 BOOL

@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.35 2004/11/12 12:06:17 ekohl Exp $
+/* $Id: zw.h,v 1.36 2004/11/25 22:18:15 ion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3567,8 +3567,8 @@ NTSTATUS
 STDCALL
 NtRemoveIoCompletion(
    IN  HANDLE           IoCompletionHandle,
-   OUT PULONG           CompletionKey,
-   OUT PULONG           CompletionValue,
+   OUT PVOID           *CompletionKey,
+   OUT PVOID           *CompletionContext,
    OUT PIO_STATUS_BLOCK IoStatusBlock,
    IN  PLARGE_INTEGER   Timeout OPTIONAL
    );
@@ -3577,8 +3577,8 @@ NTSTATUS
 STDCALL
 ZwRemoveIoCompletion(
    IN  HANDLE           IoCompletionHandle,
-   OUT PULONG           CompletionKey,
-   OUT PULONG           CompletionValue,
+   OUT PVOID           *CompletionKey,
+   OUT PVOID           *CompletionValue,
    OUT PIO_STATUS_BLOCK IoStatusBlock,
    IN  PLARGE_INTEGER   Timeout OPTIONAL
    );
@@ -4094,8 +4094,8 @@ NTSTATUS
 STDCALL
 NtSetIoCompletion(
    IN HANDLE   IoCompletionPortHandle,
-   IN ULONG    CompletionKey,
-   IN ULONG    CompletionValue,
+   IN PVOID    CompletionKey,
+   IN PVOID    CompletionContext,
    IN NTSTATUS CompletionStatus,
    IN ULONG    CompletionInformation
    );
@@ -4104,8 +4104,8 @@ NTSTATUS
 STDCALL
 ZwSetIoCompletion(
    IN HANDLE   IoCompletionPortHandle,
-   IN ULONG    CompletionKey,
-   IN ULONG    CompletionValue,
+   IN PVOID    CompletionKey,
+   IN PVOID    CompletionContext,
    IN NTSTATUS CompletionStatus,
    IN ULONG    CompletionInformation
    );

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.49 2004/11/19 21:31:02 navaraf Exp $
+/* $Id: io.h,v 1.50 2004/11/25 22:18:16 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,8 +43,8 @@
 
 
 typedef struct _IO_COMPLETION_PACKET{
-   ULONG             Key;
-   ULONG             Overlapped;
+   PVOID             Key;
+   PVOID             Context;
    IO_STATUS_BLOCK   IoStatus;
    LIST_ENTRY        ListEntry;
 } IO_COMPLETION_PACKET, *PIO_COMPLETION_PACKET;

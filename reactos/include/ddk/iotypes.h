@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.69 2004/11/06 04:12:59 ion Exp $
+/* $Id: iotypes.h,v 1.70 2004/11/25 22:18:15 ion Exp $
  *
  */
 
@@ -752,7 +752,7 @@ typedef struct _SECTION_OBJECT_POINTERS
 typedef struct _IO_COMPLETION_CONTEXT
 {
    PVOID Port;
-   ULONG Key;
+   PVOID Key;
 } IO_COMPLETION_CONTEXT, *PIO_COMPLETION_CONTEXT;
 
 #define FO_FILE_OPEN                    0x00000001

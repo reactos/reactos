@@ -1,4 +1,4 @@
-/* $Id: iocompl.c,v 1.15 2004/10/30 22:18:17 weiden Exp $
+/* $Id: iocompl.c,v 1.16 2004/11/25 22:18:16 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -23,7 +23,7 @@ STDCALL
 CreateIoCompletionPort(
     HANDLE FileHandle,
     HANDLE ExistingCompletionPort,
-    DWORD CompletionKey,
+    ULONG_PTR CompletionKey,
     DWORD NumberOfConcurrentThreads
     )
 {
@@ -62,7 +62,7 @@ CreateIoCompletionPort(
    {
 #ifdef __USE_W32API
       CompletionInformation.Port = CompletionPort;
-      CompletionInformation.Key  = CompletionKey;
+      CompletionInformation.Key  = (PVOID)CompletionKey;
 #else
       CompletionInformation.IoCompletionHandle = CompletionPort;
       CompletionInformation.CompletionKey  = CompletionKey;
@@ -98,7 +98,7 @@ STDCALL
 GetQueuedCompletionStatus(
    HANDLE CompletionHandle,
    LPDWORD lpNumberOfBytesTransferred,
-   LPDWORD lpCompletionKey,
+   PULONG_PTR lpCompletionKey,
    LPOVERLAPPED *lpOverlapped,
    DWORD dwMilliseconds
    )
@@ -127,8 +127,8 @@ GetQueuedCompletionStatus(
    }
 
    errCode = NtRemoveIoCompletion(CompletionHandle,
-                                  lpCompletionKey,
-                                  lpNumberOfBytesTransferred,
+                                  (PVOID*)lpCompletionKey,
+                                  (PVOID*)lpNumberOfBytesTransferred,
                                   &IoStatus,
                                   &Interval);
 
@@ -166,10 +166,10 @@ PostQueuedCompletionStatus(
    NTSTATUS errCode;
 
    errCode = NtSetIoCompletion(CompletionHandle,  
-                               dwCompletionKey, 
-                               dwNumberOfBytesTransferred,//CompletionValue 
-                               0,                         //IoStatusBlock->Status
-                               (ULONG)lpOverlapped );     //IoStatusBlock->Information
+                               (PVOID)dwCompletionKey, 
+                               (PVOID)lpOverlapped,//CompletionValue 
+                               STATUS_SUCCESS,                         //IoStatusBlock->Status
+                               dwNumberOfBytesTransferred);     //IoStatusBlock->Information
 
    if ( !NT_SUCCESS(errCode) ) 
    {

@@ -42,7 +42,10 @@ WSPEventSelect(
 
 	/* Deactivate Async Select if there is one */
 	if (Socket->EventObject) {
-		//SockAsyncSelect(Socket, NULL, 0, 0);
+		Socket->SharedData.hWnd = NULL;
+		Socket->SharedData.wMsg = 0;
+		Socket->SharedData.AsyncEvents = 0;
+		Socket->SharedData.SequenceNumber++; // This will kill Async Select after the next completion
 	}
 
 	/* Set Structure Info */
