@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.14 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: message.c,v 1.15 2003/05/19 20:11:17 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -93,6 +93,13 @@ User32FreeAsciiConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 	RtlFreeHeap(RtlGetProcessHeap(), 0, TempString);
 	break;
       }
+    case WM_SETTEXT:
+      {
+	ANSI_STRING AnsiString;
+	RtlInitAnsiString(&AnsiString, (PSTR) lParam);
+	RtlFreeAnsiString(&AnsiString);
+	break;
+      }
     case WM_NCCREATE:
       {
 	CREATESTRUCTA* Cs;
@@ -131,6 +138,19 @@ User32ConvertToAsciiMessage(UINT* Msg, WPARAM* wParam, LPARAM* lParam)
 	CsA->lpszClass = AString.Buffer;
 
 	(*lParam) = (LPARAM)CsA;
+	break;
+      }
+    case WM_SETTEXT:
+      {
+	ANSI_STRING AnsiString;
+	UNICODE_STRING UnicodeString;
+	RtlInitUnicodeString(&UnicodeString, (PWSTR) *lParam);
+	if (NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
+	                                            &UnicodeString,
+	                                            TRUE)))
+	  {
+	    *lParam = (LPARAM) AnsiString.Buffer;
+	  }
 	break;
       }
     }
@@ -203,8 +223,22 @@ MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
 	UnicodeMsg->wParam = UnicodeMsg->wParam / 2;
 	break;
       }
+    case WM_SETTEXT:
+      {
+	ANSI_STRING AnsiString;
+	UNICODE_STRING UnicodeString;
+	RtlInitAnsiString(&AnsiString, (PSTR) AnsiMsg->lParam);
+	if (! NT_SUCCESS(RtlAnsiStringToUnicodeString(&UnicodeString,
+	                                              &AnsiString,
+	                                              TRUE)))
+	  {
+	  return FALSE;
+	  }
+	UnicodeMsg->lParam = (LPARAM) UnicodeString.Buffer;
+	break;
+      }
     }
-  return(TRUE);
+  return TRUE;
 }
 
 BOOL
@@ -228,6 +262,13 @@ MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT Result)
 	AnsiString.Buffer = (PSTR)AnsiMsg->lParam;
 	RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, FALSE);
 	RtlFreeHeap(RtlGetProcessHeap(), 0, TempString);
+	break;
+      }
+    case WM_SETTEXT:
+      {
+	UNICODE_STRING UnicodeString;
+	RtlInitUnicodeString(&UnicodeString, (PCWSTR) UnicodeMsg->lParam);
+	RtlFreeUnicodeString(&UnicodeString);
 	break;
       }
     }

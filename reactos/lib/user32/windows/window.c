@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.32 2003/05/18 07:51:41 gvg Exp $
+/* $Id: window.c,v 1.33 2003/05/19 20:11:17 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -897,7 +897,9 @@ IsWindow(HWND hWnd)
 WINBOOL STDCALL
 IsWindowUnicode(HWND hWnd)
 {
+#ifdef TODO
   UNIMPLEMENTED;
+#endif
   return FALSE;
 }
 
@@ -1021,16 +1023,14 @@ WINBOOL STDCALL
 SetWindowTextA(HWND hWnd,
 	       LPCSTR lpString)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return SendMessageA(hWnd, WM_SETTEXT, 0, (LPARAM)lpString);
 }
 
 WINBOOL STDCALL
 SetWindowTextW(HWND hWnd,
 	       LPCWSTR lpString)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return SendMessageW(hWnd, WM_SETTEXT, 0, (LPARAM)lpString);
 }
 
 WINBOOL STDCALL

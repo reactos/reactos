@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.45 2003/05/19 18:36:43 gvg Exp $
+/* $Id: defwnd.c,v 1.46 2003/05/19 20:11:17 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1477,6 +1477,12 @@ DefWindowProcA(HWND hWnd,
 				     strlen((PSTR)lParam) * sizeof(CHAR));
 	strcpy(WindowText, (PSTR)lParam);
 	SetPropA(hWnd, WindowTextAtom, WindowText);
+        if (0 != (GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION))
+	  {
+	    DefWndPaintNC(hWnd, (HRGN) 1);
+	  }
+	Result = (LPARAM) TRUE;
+	break;
       }
 
     case WM_NCDESTROY:
@@ -1579,9 +1585,13 @@ DefWindowProcW(HWND hWnd,
 				     wcslen((PWSTR)lParam) * sizeof(WCHAR));
 	wcscpy(WindowText, (PWSTR)lParam);
 	SetPropW(hWnd, WindowTextAtom, WindowText);
+        if (0 != (GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION))
+	  {
+	    DefWndPaintNC(hWnd, (HRGN) 1);
+	  }
+	Result = (LPARAM) TRUE;
+	break;
       }
-	  //FIXME: return correct code
-	  return TRUE;
 
     case WM_NCDESTROY:
       {
