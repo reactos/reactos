@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.43 2000/09/12 10:12:13 jean Exp $
+/* $Id: iface.c,v 1.44 2000/12/29 13:45:01 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -230,6 +230,8 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT _DriverObject,
                       FsdDirectoryControl;
    VfatDriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
                       VfatQueryVolumeInformation;
+   VfatDriverObject->MajorFunction[IRP_MJ_SHUTDOWN] =
+                      VfatShutdown;
 
    VfatDriverObject->DriverUnload = NULL;
    

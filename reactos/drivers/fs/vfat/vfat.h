@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.17 2000/09/12 10:12:13 jean Exp $ */
+/* $Id: vfat.h,v 1.18 2000/12/29 13:45:01 ekohl Exp $ */
 
 struct _BootSector { 
   unsigned char  magic0, res0, magic1;
@@ -236,3 +236,8 @@ NTSTATUS STDCALL VfatSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
  * From create.c
  */
 NTSTATUS ReadVolumeLabel(PDEVICE_EXTENSION DeviceExt, PVPB Vpb);
+
+/*
+ * functions from shutdown.c
+ */
+NTSTATUS STDCALL VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp);
