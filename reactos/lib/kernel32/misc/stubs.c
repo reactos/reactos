@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.67 2004/03/14 17:53:26 weiden Exp $
+/* $Id: stubs.c,v 1.68 2004/03/14 18:16:39 weiden Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -936,20 +936,6 @@ STDCALL
 GetProcessHandleCount(
     HANDLE hProcess,
     PDWORD pdwHandleCount
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetProcessIoCounters(
-    HANDLE hProcess,
-    PIO_COUNTERS lpIoCounters
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

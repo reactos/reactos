@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.60 2004/03/14 11:11:17 weiden Exp $
+/* $Id: proc.c,v 1.61 2004/03/14 18:16:40 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -840,6 +840,32 @@ GetProcessVersion (DWORD ProcessId)
       SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     }
   return (Version);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetProcessIoCounters(
+  HANDLE hProcess,
+  PIO_COUNTERS lpIoCounters)
+{
+  NTSTATUS Status;
+
+  Status = NtQueryInformationProcess(hProcess,
+				     ProcessIoCounters,
+				     lpIoCounters,
+				     sizeof(IO_COUNTERS),
+				     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+  
+  return TRUE;
 }
 
 /* EOF */
