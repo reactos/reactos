@@ -25,6 +25,7 @@
 #include <disk.h>
 #include <mm.h>
 #include <portio.h>
+#include <video.h>
 
 #include "../../reactos/registry.h"
 #include "hardware.h"
@@ -1931,6 +1932,75 @@ DetectPS2Mouse(HKEY BusKey)
 
 
 static VOID
+DetectDisplayController(HKEY BusKey)
+{
+  CHAR Buffer[80];
+  HKEY ControllerKey;
+  U16 VesaVersion;
+  S32 Error;
+
+  Error = RegCreateKey(BusKey,
+		       "DisplayController\\0",
+		       &ControllerKey);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "Failed to create controller key\n"));
+      return;
+    }
+  DbgPrint((DPRINT_HWDETECT, "Created key: PointerController\\0\n"));
+
+  /* Set 'ComponentInformation' value */
+  SetComponentInformation(ControllerKey,
+			  0x00,
+			  0,
+			  0xFFFFFFFF);
+
+  /* FIXME: Set 'ComponentInformation' value */
+
+  VesaVersion = BiosIsVesaSupported();
+  if (VesaVersion != 0)
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"VESA version %c.%c\n",
+		(VesaVersion >> 8) + '0',
+		(VesaVersion & 0xFF) + '0'));
+    }
+  else
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"VESA not supported\n"));
+    }
+
+  if (VesaVersion >= 0x0200)
+    {
+      strcpy(Buffer,
+             "VBE Display");
+    }
+  else
+    {
+      strcpy(Buffer,
+             "VGA Display");
+    }
+
+  /* Set 'Identifier' value */
+  Error = RegSetValue(ControllerKey,
+		      "Identifier",
+		      REG_SZ,
+		      (PU8)Buffer,
+		      strlen(Buffer) + 1);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"RegSetValue() failed (Error %u)\n",
+		(int)Error));
+      return;
+    }
+
+  /* FIXME: Add display peripheral (monitor) data */
+}
+
+
+static VOID
 DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
@@ -2018,6 +2088,8 @@ DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
   DetectKeyboardController(BusKey);
 
   DetectPS2Mouse(BusKey);
+
+  DetectDisplayController(BusKey);
 
   /* FIXME: Detect more ISA devices */
 }
