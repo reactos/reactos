@@ -554,7 +554,7 @@ ImageList_Create (INT cx, INT cy, UINT flags,
     TRACE("(%d %d 0x%x %d %d)\n", cx, cy, flags, cInitial, cGrow);
 
     if (flags & ILC_COLOR32)
-	FIXME("ILC_COLOR32 (24 bit color image list with 8 bit alpha channel) is not yet supported");
+	FIXME("ILC_COLOR32 (24 bit color image list with 8 bit alpha channel) is not yet supported\n");
 
     himl = (HIMAGELIST)Alloc (sizeof(struct _IMAGELIST));
     if (!himl)
