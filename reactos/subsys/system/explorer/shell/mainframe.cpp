@@ -73,7 +73,8 @@ MainFrame::MainFrame(HWND hwnd)
 	_hstatusbar = CreateStatusWindow(WS_CHILD|WS_VISIBLE, 0, hwnd, IDW_STATUSBAR);
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
 
-	update_explorer_view();
+	/* wait for PM_OPEN_WINDOW message before creating a shell view
+	update_explorer_view();*/
 }
 
 void MainFrame::update_explorer_view()
@@ -88,14 +89,16 @@ void MainFrame::update_explorer_view()
 	 // create explorer treeview
 	if (_create_info._open_mode & OWM_EXPLORE) {
 		if (!_left_hwnd) {
-			WindowCanvas canvas(_hwnd);
-			RECT rect = {0, 0, 0, 0};
-			DrawText(canvas, TEXT("My"), -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
+			ClientRect rect(_hwnd);
 
 			_left_hwnd = CreateWindowEx(WS_EX_CLIENTEDGE, WC_TREEVIEW, NULL,
 						WS_CHILD|WS_TABSTOP|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_NOTOOLTIPS|TVS_SHOWSELALWAYS,
 						0, rect.top, split_pos-SPLIT_WIDTH/2, rect.bottom-rect.top,
 						_hwnd, (HMENU)IDC_FILETREE, g_Globals._hInstance, 0);
+
+			 // display tree window as long as the shell view is not yet visible
+			resize_frame_rect(&rect);
+			MoveWindow(_left_hwnd, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, TRUE);
 		}
 	} else {
 		if (_left_hwnd) {
@@ -125,7 +128,7 @@ HWND MainFrame::Create()
 	HMENU hMenuFrame = LoadMenu(g_Globals._hInstance, MAKEINTRESOURCE(IDM_MAINFRAME));
 
 	return super::Create(WINDOW_CREATOR(MainFrame), 0,
-				(LPCTSTR)(int)g_Globals._hframeClass, ResString(IDS_TITLE), WS_OVERLAPPEDWINDOW,
+				(LPCTSTR)(int)g_Globals._hframeClass, ResString(IDS_TITLE), WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN,
 				CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 				0/*hwndDesktop*/, hMenuFrame);
 }
@@ -165,20 +168,34 @@ HWND MainFrame::Create(LPCITEMIDLIST pidl, int mode)
 
 void MainFrame::jump_to(LPCTSTR path, int mode)
 {
-	_create_info._open_mode = mode;
-	_create_info._shell_path = path;
-	_create_info._root_shell_path = SpecialFolderPath(CSIDL_DRIVES, _hwnd);	//@@
+	if (_shellBrowser.get() && (_create_info._open_mode&~OWM_PIDL)==(mode&~OWM_PIDL)) {
+		_create_info._shell_path = path;
 
-	update_explorer_view();
+		LPCITEMIDLIST pidl = _create_info._shell_path;
+		_shellBrowser->jump_to((void*)pidl);
+	} else {
+		_create_info._open_mode = mode;
+		_create_info._shell_path = path;
+		_create_info._root_shell_path = SpecialFolderPath(CSIDL_DRIVES, _hwnd);	//@@
+
+		update_explorer_view();
+	}
 }
 
 void MainFrame::jump_to(LPCITEMIDLIST path, int mode)
 {
-	_create_info._open_mode = mode;
-	_create_info._shell_path = path;
-	_create_info._root_shell_path = DesktopFolderPath();	//@@
+	if (_shellBrowser.get() && (_create_info._open_mode&~OWM_PIDL)==(mode&~OWM_PIDL)) {
+		_create_info._shell_path = path;
 
-	update_explorer_view();
+		LPCITEMIDLIST pidl = _create_info._shell_path;
+		_shellBrowser->jump_to((void*)pidl);
+	} else {
+		_create_info._open_mode = mode;
+		_create_info._shell_path = path;
+		_create_info._root_shell_path = DesktopFolderPath();	//@@
+
+		update_explorer_view();
+	}
 }
 
 
@@ -227,6 +244,10 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			return TRUE;
 
 		return FALSE;}
+
+	  case WM_ERASEBKGND:	// draw empty background as long as no view is visible
+		FillRect((HDC)wparam, ClientRect(_hwnd), GetSysColorBrush(COLOR_BTNFACE));
+		return TRUE;
 
 	  case WM_CLOSE:
 		DestroyWindow(_hwnd);
@@ -285,7 +306,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		}
 
 		jump_to(shell_path, (OPEN_WINDOW_MODE)wparam);
-		break;}
+		return TRUE;}	// success
 
 	  case PM_GET_CONTROLWINDOW:
 		if (wparam == FCW_STATUS)

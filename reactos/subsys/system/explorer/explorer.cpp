@@ -453,7 +453,7 @@ void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
 		if (valid_dir)
 			PostMessage(hMainFrame, PM_OPEN_WINDOW, 0, (LPARAM)lpCmdLine);
 		else
-			PostMessage(hMainFrame, PM_OPEN_WINDOW, OWM_EXPLORE|OWM_DETAILS, 0);
+			PostMessage(hMainFrame, PM_OPEN_WINDOW, 0/*OWM_EXPLORE|OWM_DETAILS*/, 0);
 	}
 }
 

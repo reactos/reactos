@@ -144,5 +144,11 @@ public:
 	int		_last_split;
 	RECT	_clnt_rect;
 
-	void	resize_children();
+	/*virtual*/ void resize_children();
+	/*virtual*/ void jump_to(void* path);
+
+	void	jump_to(Entry* entry);
+
+protected:
+	ShellDirectory*	_cur_dir;
 };

@@ -63,6 +63,8 @@ ShellBrowserChild::ShellBrowserChild(HWND hwnd, HWND left_hwnd, WindowHandle& ri
 	_split_pos = DEFAULT_SPLIT_POS;
 	_last_split = DEFAULT_SPLIT_POS;
 
+	_cur_dir = NULL;
+
 	Init(hwnd);
 }
 
@@ -96,14 +98,27 @@ LRESULT ShellBrowserChild::Init(HWND hWndFrame)
 	_himlSmall = (HIMAGELIST)SHGetFileInfo(TEXT("C:\\"), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX|SHGFI_SMALLICON);
 //	_himlLarge = (HIMAGELIST)SHGetFileInfo(TEXT("C:\\"), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX|SHGFI_LARGEICON);
 
-
 	if (_left_hwnd) {
 		InitializeTree();
-
 		InitDragDrop();
 	}
 
-	UpdateFolderView(_create_info._shell_path.get_folder());
+	const String& root_name = GetDesktopFolder().get_name(_create_info._root_shell_path, SHGDN_FORPARSING);
+
+	_root._drive_type = DRIVE_UNKNOWN;
+	lstrcpy(_root._volname, root_name);	// most of the time "Desktop"
+	_root._fs_flags = 0;
+	lstrcpy(_root._fs, TEXT("Desktop"));
+
+	_root._entry = new ShellDirectory(GetDesktopFolder(), _create_info._root_shell_path, _hwnd);
+
+	jump_to((void*)(LPCITEMIDLIST)_create_info._shell_path);
+
+	 // -> set_curdir()
+	_root._entry->read_directory();
+
+	/* already filled by ShellDirectory constructor
+	lstrcpy(_root._entry->_data.cFileName, TEXT("Desktop")); */
 
 	return 0;
 }
@@ -115,26 +130,6 @@ void ShellBrowserChild::InitializeTree()
 
 	TreeView_SetImageList(_left_hwnd, _himlSmall, TVSIL_NORMAL);
 	TreeView_SetScrollTime(_left_hwnd, 100);
-
-	const String& root_name = GetDesktopFolder().get_name(_create_info._root_shell_path, SHGDN_FORPARSING);
-
-	_root._drive_type = DRIVE_UNKNOWN;
-	lstrcpy(_root._volname, root_name);	// most of the time "Desktop"
-	_root._fs_flags = 0;
-	lstrcpy(_root._fs, TEXT("Desktop"));
-
-//@@	_root._entry->read_tree(shell_info._root_shell_path.get_folder(), info._shell_path, SORT_NAME/*_sortOrder*/);
-
-/*@todo
-	we should call read_tree() here to iterate through the hierarchy and open all folders from shell_info._root_shell_path to shell_info._shell_path
-	-> see FileChildWindow::FileChildWindow()
-*/
-	_root._entry = new ShellDirectory(GetDesktopFolder(), _create_info._root_shell_path, _hwnd);
-	_root._entry->read_directory();
-
-	/* already filled by ShellDirectory constructor
-	lstrcpy(_root._entry->_data.cFileName, TEXT("Desktop")); */
-
 
 	TV_ITEM tvItem;
 
@@ -349,25 +344,10 @@ void ShellBrowserChild::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
 {
 	CONTEXT("ShellBrowserChild::OnTreeItemSelected()");
 
-	ShellEntry* entry = (ShellEntry*)pnmtv->itemNew.lParam;
-
 	_last_sel = pnmtv->itemNew.hItem;
+	Entry* entry = (Entry*)pnmtv->itemNew.lParam;
 
-	if (entry->_etype == ET_SHELL) {
-		IShellFolder* folder;
-
-		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-			folder = static_cast<ShellDirectory*>(entry)->_folder;
-		else
-			folder = entry->get_parent_folder();
-
-		if (!folder) {
-			assert(folder);
-			return;
-		}
-
-		UpdateFolderView(folder);
-	}
+	jump_to(entry);
 }
 
 void ShellBrowserChild::UpdateFolderView(IShellFolder* folder)
@@ -538,7 +518,19 @@ int ShellBrowserChild::Command(int id, int code)
 		break;//@todo
 
 	  case ID_BROWSE_UP:
-		break;//@todo
+		if (_left_hwnd) {
+			//@@ not necessary in this simply case: jump_to(_cur_dir->_up);
+
+			 //@@ -> move into jump_to()
+			HTREEITEM hitem = TreeView_GetParent(_left_hwnd, _last_sel);
+
+			if (hitem)
+				TreeView_SelectItem(_left_hwnd, hitem);	// sends TVN_SELCHANGED notification
+		} else {
+			if (_cur_dir->_up)
+				jump_to(_cur_dir->_up);
+		}
+		break;
 
 	  default:
 		return 1;
@@ -564,10 +556,10 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pida)
 {
 	CONTEXT("ShellBrowserChild::OnDefaultCommand()");
 
-	if (pida->cidl>=1) {
+	if (pida->cidl >= 1) {
 		if (_left_hwnd) {	// explorer mode
-			if (_last_sel) {
-				ShellDirectory* parent = (ShellDirectory*)TreeView_GetItemData(_left_hwnd, _last_sel);
+			//@@if (_last_sel) {
+				ShellDirectory* parent = _cur_dir;//@@(ShellDirectory*)TreeView_GetItemData(_left_hwnd, _last_sel);
 
 				if (parent) {
 					try {
@@ -586,7 +578,7 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pida)
 							if (expand_folder(static_cast<ShellDirectory*>(entry)))
 								return S_OK;
 				}
-			}
+			//@@}
 		} else { // no tree control
 			if (MainFrame::OpenShellFolders(pida, _hWndFrame))
 				return S_OK;
@@ -624,4 +616,57 @@ bool ShellBrowserChild::expand_folder(ShellDirectory* entry)
 	}
 
 	return false;
+}
+
+
+void ShellBrowserChild::jump_to(void* path)
+{
+	Entry* entry = NULL;
+
+	 //@@
+	if (!_cur_dir)
+		_cur_dir = static_cast<ShellDirectory*>(_root._entry);
+
+/*@todo
+	we should call read_tree() here to iterate through the hierarchy and open all folders from shell_info._root_shell_path to shell_info._shell_path
+	_root._entry->read_tree(shell_info._root_shell_path.get_folder(), info._shell_path, SORT_NAME);
+	-> see FileChildWindow::FileChildWindow()
+*/
+
+	if (_cur_dir) {
+		_cur_dir->smart_scan();
+
+		entry = _cur_dir->find_entry(path);
+
+		if (entry)
+			jump_to(entry);
+	}
+
+		//@@ work around as long as we don't iterate correctly through the ShellEntry tree
+	if (!entry) {
+		LPITEMIDLIST pidl = (LPITEMIDLIST)path;
+		UpdateFolderView(ShellFolder(pidl));
+	}
+}
+
+void ShellBrowserChild::jump_to(Entry* entry)
+{
+	if (entry->_etype == ET_SHELL) {
+		IShellFolder* folder;
+		ShellDirectory* se = static_cast<ShellDirectory*>(entry);
+
+		if (se->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			folder = static_cast<ShellDirectory*>(se)->_folder;
+		else
+			folder = se->get_parent_folder();
+
+		if (!folder) {
+			assert(folder);
+			return;
+		}
+
+		UpdateFolderView(folder);
+
+		_cur_dir = se;
+	}
 }
