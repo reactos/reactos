@@ -1,5 +1,5 @@
 //
-//  IDE.H - defines and typedefs for the IDE Driver module.
+//  ATAPI.H - defines and typedefs for the IDE Driver module.
 //
 
 #ifndef __ATAPI_H
@@ -117,90 +117,6 @@ extern "C" {
   (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_ALT_STATUS)))
 #define IDEWriteDriveControl(Address, Data) \
   (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_DEV_CNTRL), (Data)))
-
-//    IDE_DEVICE_EXTENSION
-//
-//  DESCRIPTION:
-//    Extension to be placed in each device object
-//
-//  ACCESS:
-//    Allocated from NON-PAGED POOL
-//    Available at any IRQL
-//
-
-typedef struct _IDE_DEVICE_EXTENSION
-{
-  PDEVICE_OBJECT         DeviceObject;
-  PCONTROLLER_OBJECT     ControllerObject;
-  struct _IDE_DEVICE_EXTESION *DiskExtension;
-  PARTITION_INFORMATION  PartitionInfo;
-  int                    UnitNumber;
-  BOOLEAN                LBASupported;
-  BOOLEAN                DMASupported;
-  int                    BytesPerSector;
-  int                    LogicalHeads;
-  int                    LogicalCylinders;
-  int                    SectorsPerLogCyl;
-  int                    SectorsPerLogTrk;
-  int                    Offset;
-  int                    Size;
-
-  int                    Operation;
-  ULONG                  BytesRequested;
-  ULONG                  BytesToTransfer;
-  ULONG                  BytesRemaining;
-  ULONG                  StartingSector;
-  int                    SectorsTransferred;
-  BYTE                  *TargetAddress;
-
-} IDE_DEVICE_EXTENSION, *PIDE_DEVICE_EXTENSION;
-
-
-//    IDE_TIMER_STATES
-//
-//  DESCRIPTION:
-//    An enumeration containing the states in the timer DFA
-//
-
-typedef enum _IDE_TIMER_STATES {
-  IDETimerIdle,
-  IDETimerCmdWait,
-  IDETimerResetWaitForBusyNegate,
-  IDETimerResetWaitForDrdyAssert
-} IDE_TIMER_STATES;
-
-//    IDE_CONTROLLER_EXTENSION
-//
-//  DESCRIPTION:
-//    Driver-defined structure used to hold miscellaneous controller information.
-//
-//  ACCESS:
-//    Allocated from NON-PAGED POOL
-//    Available at any IRQL
-//
-
-typedef struct _IDE_CONTROLLER_EXTENSION
-{
-  KSPIN_LOCK             SpinLock;
-  int                    Number;
-  int                    Vector;
-  int                    CommandPortBase;
-  int                    ControlPortBase;
-  BOOLEAN                DMASupported;
-  BOOLEAN                ControllerInterruptBug;
-  PKINTERRUPT            Interrupt;
-
-  BOOLEAN                OperationInProgress;
-  BYTE                   DeviceStatus;
-  PIDE_DEVICE_EXTENSION  DeviceForOperation;
-  PIRP                   CurrentIrp;
-  int                    Retries;
-
-  IDE_TIMER_STATES       TimerState;
-  LONG                   TimerCount;
-  PDEVICE_OBJECT         TimerDevice;
-
-} IDE_CONTROLLER_EXTENSION, *PIDE_CONTROLLER_EXTENSION;
 
 
 

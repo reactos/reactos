@@ -1,4 +1,22 @@
-/* $Id: atapi.c,v 1.10 2002/03/05 00:05:28 ekohl Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 2001, 2002 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: atapi.c,v 1.11 2002/03/08 11:58:23 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -35,7 +53,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define  VERSION  "V0.0.1"
+#define VERSION  "0.0.1"
 
 
 //  -------------------------------------------------------  File Static Data
@@ -200,27 +218,6 @@ IDESwapBytePairs(char *Buf,
 }
 
 
-static BOOLEAN
-IdeFindDrive(int Address,
-	     int DriveIdx)
-{
-  ULONG Cyl;
-
-  DPRINT1("IdeFindDrive(Address %lx DriveIdx %lu) called!\n", Address, DriveIdx);
-
-  IDEWriteDriveHead(Address, IDE_DH_FIXED | (DriveIdx ? IDE_DH_DRV1 : 0));
-  IDEWriteCylinderLow(Address, 0x30);
-
-  Cyl = IDEReadCylinderLow(Address);
-  DPRINT1("Cylinder %lx\n", Cyl);
-
-
-  DPRINT1("IdeFindDrive() done!\n");
-//  for(;;);
-  return(Cyl == 0x30);
-}
-
-
 //  -------------------------------------------------------  Public Interface
 
 //    DriverEntry
@@ -320,7 +317,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 //    statusToReturn = newStatus;
 #endif
 
-  DPRINT1( "Returning from DriverEntry\n" );
+  DPRINT( "Returning from DriverEntry\n" );
 
   return(Status);
 }
@@ -386,17 +383,15 @@ AtapiFindCompatiblePciController(PVOID DeviceExtension,
 //	  (PciConfig.ProgIf & 0x05) == 0)
 	{
 	  /* both channels are in compatibility mode */
-	  DPRINT1("Bus %1lu  Device %2lu  Func %1lu  VenID 0x%04hx  DevID 0x%04hx\n",
+	  DPRINT("Bus %1lu  Device %2lu  Func %1lu  VenID 0x%04hx  DevID 0x%04hx\n",
 		 ConfigInfo->SystemIoBusNumber,
-//		 SlotNumber.u.AsULONG >> 3,
-//		 SlotNumber.u.AsULONG & 0x07,
 		 SlotNumber.u.bits.DeviceNumber,
 		 SlotNumber.u.bits.FunctionNumber,
 		 PciConfig.VendorID,
 		 PciConfig.DeviceID);
 	  DPRINT("ProgIF 0x%02hx\n", PciConfig.ProgIf);
 
-	  DPRINT1("Found IDE controller in compatibility mode!\n");
+	  DPRINT("Found IDE controller in compatibility mode!\n");
 
 	  ConfigInfo->NumberOfBuses = 1;
 	  ConfigInfo->MaximumNumberOfTargets = 2;
@@ -405,7 +400,7 @@ AtapiFindCompatiblePciController(PVOID DeviceExtension,
 	  if (ConfigInfo->AtdiskPrimaryClaimed == FALSE)
 	    {
 	      /* Both channels unclaimed: Claim primary channel */
-	      DPRINT1("Primary channel!\n");
+	      DPRINT("Primary channel!\n");
 
 	      DevExt->CommandPortBase = 0x01F0;
 	      DevExt->ControlPortBase = 0x03F6;
@@ -429,7 +424,7 @@ AtapiFindCompatiblePciController(PVOID DeviceExtension,
 	  else if (ConfigInfo->AtdiskSecondaryClaimed == FALSE)
 	    {
 	      /* Primary channel already claimed: claim secondary channel */
-	      DPRINT1("Secondary channel!\n");
+	      DPRINT("Secondary channel!\n");
 
 	      DevExt->CommandPortBase = 0x0170;
 	      DevExt->ControlPortBase = 0x0376;
@@ -542,7 +537,7 @@ AtapiStartIo(IN PVOID DeviceExtension,
   PATAPI_MINIPORT_EXTENSION DevExt;
   ULONG Result;
 
-  DPRINT1("AtapiStartIo() called\n");
+  DPRINT("AtapiStartIo() called\n");
 
   DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
 
@@ -581,10 +576,10 @@ AtapiStartIo(IN PVOID DeviceExtension,
     }
   else
     {
-      DPRINT1("SrbStatus = SRB_STATUS_PENDING\n");
+      DPRINT("SrbStatus = SRB_STATUS_PENDING\n");
     }
 
-  DPRINT1("AtapiStartIo() done\n");
+  DPRINT("AtapiStartIo() done\n");
 
   return(TRUE);
 }
@@ -777,13 +772,7 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 		   ControllerExtension);
 #endif
     }
-  else if (IsLastBlock)
-    {
-#if 0
-      /* Else more data is needed, setup next device I/O */
-      IDEStartController((PVOID)DeviceExtension);
-#endif
-    }
+
 
   if (IsLastBlock)
     {
@@ -810,6 +799,28 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 
 //  ----------------------------------------------------  Discardable statics
 
+
+/**********************************************************************
+ * NAME							INTERNAL
+ *	AtapiFindDevices
+ *
+ * DESCRIPTION
+ *	Searches for devices on the given port.
+ *
+ * RUN LEVEL
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS
+ *	DeviceExtension
+ *		Port device specific information.
+ *
+ *	ConfigInfo
+ *		Port configuration information.
+ *
+ * RETURN VALUE
+ *	TRUE: At least one device is attached to the port.
+ *	FALSE: No device is attached to the port.
+ */
 
 static BOOLEAN
 AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
@@ -1022,32 +1033,32 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
   IDESwapBytePairs(DrvParms->SerialNumber, 20);
   IDESwapBytePairs(DrvParms->FirmwareRev, 8);
   IDESwapBytePairs(DrvParms->ModelNumber, 40);
-  DPRINT("Config:%04x  Cyls:%5d  Heads:%2d  Sectors/Track:%3d  Gaps:%02d %02d\n", 
-         DrvParms->ConfigBits, 
-         DrvParms->LogicalCyls, 
-         DrvParms->LogicalHeads, 
-         DrvParms->SectorsPerTrack, 
-         DrvParms->InterSectorGap, 
+  DPRINT("Config:%04x  Cyls:%5d  Heads:%2d  Sectors/Track:%3d  Gaps:%02d %02d\n",
+         DrvParms->ConfigBits,
+         DrvParms->LogicalCyls,
+         DrvParms->LogicalHeads,
+         DrvParms->SectorsPerTrack,
+         DrvParms->InterSectorGap,
          DrvParms->InterSectorGapSize);
-  DPRINT("Bytes/PLO:%3d  Vendor Cnt:%2d  Serial number:[%.20s]\n", 
-         DrvParms->BytesInPLO, 
-         DrvParms->VendorUniqueCnt, 
+  DPRINT("Bytes/PLO:%3d  Vendor Cnt:%2d  Serial number:[%.20s]\n",
+         DrvParms->BytesInPLO,
+         DrvParms->VendorUniqueCnt,
          DrvParms->SerialNumber);
-  DPRINT("Cntlr type:%2d  BufSiz:%5d  ECC bytes:%3d  Firmware Rev:[%.8s]\n", 
-         DrvParms->ControllerType, 
-         DrvParms->BufferSize * IDE_SECTOR_BUF_SZ, 
-         DrvParms->ECCByteCnt, 
+  DPRINT("Cntlr type:%2d  BufSiz:%5d  ECC bytes:%3d  Firmware Rev:[%.8s]\n",
+         DrvParms->ControllerType,
+         DrvParms->BufferSize * IDE_SECTOR_BUF_SZ,
+         DrvParms->ECCByteCnt,
          DrvParms->FirmwareRev);
   DPRINT("Model:[%.40s]\n", DrvParms->ModelNumber);
-  DPRINT("RWMult?:%02x  LBA:%d  DMA:%d  MinPIO:%d ns  MinDMA:%d ns\n", 
-         (DrvParms->RWMultImplemented) & 0xff, 
+  DPRINT("RWMult?:%02x  LBA:%d  DMA:%d  MinPIO:%d ns  MinDMA:%d ns\n",
+         (DrvParms->RWMultImplemented) & 0xff,
          (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? 1 : 0,
-         (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0, 
+         (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0,
          DrvParms->MinPIOTransTime,
          DrvParms->MinDMATransTime);
   DPRINT("TM:Cyls:%d  Heads:%d  Sectors/Trk:%d Capacity:%ld\n",
-         DrvParms->TMCylinders, 
-         DrvParms->TMHeads, 
+         DrvParms->TMCylinders,
+         DrvParms->TMHeads,
          DrvParms->TMSectorsPerTrk,
          (ULONG)(DrvParms->TMCapacityLo + (DrvParms->TMCapacityHi << 16)));
   DPRINT("TM:SectorCount: 0x%04x%04x = %lu\n",
@@ -1261,9 +1272,204 @@ static ULONG
 AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 		      IN PSCSI_REQUEST_BLOCK Srb)
 {
-  DPRINT1("AtapiSendAtapiComamnd() called!\n");
-  DPRINT1("Not implemented yet!\n");
-  return(SRB_STATUS_SELECTION_TIMEOUT);
+#if 0
+//  PIDE_DRIVE_IDENTIFY DeviceParams;
+
+//  ULONG StartingSector,i;
+//  ULONG SectorCount;
+  UCHAR ByteCountHigh;
+  UCHAR ByteCountLow;
+//  UCHAR DrvHead;
+//  UCHAR SectorNumber;
+//  UCHAR Command;
+  ULONG Retries;
+  UCHAR Status;
+
+  DPRINT1("AtapiSendAtapiCommand() called!\n");
+
+  if ((Srb->PathId != 0) ||
+      (Srb->TargetId > 1) ||
+      (Srb->Lun != 0) ||
+      (DeviceExtension->DevicePresent[Srb->TargetId] == FALSE))
+    {
+      return(SRB_STATUS_SELECTION_TIMEOUT);
+    }
+
+  DPRINT1("AtapiSendAtapiCommand(): TargetId: %lu\n",
+	 Srb->TargetId);
+
+
+  /* Set pointer to data buffer. */
+  DeviceExtension->DataBuffer = (PUSHORT)Srb->DataBuffer;
+
+  DeviceExtension->CurrentSrb = Srb;
+  DeviceExtension->ExpectingInterrupt = TRUE;
+
+
+  /*  wait for BUSY to clear  */
+  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
+    {
+      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
+      if (!(Status & IDE_SR_BUSY))
+        {
+          break;
+        }
+      ScsiPortStallExecution(10);
+    }
+  DPRINT("status=%02x\n", Status);
+  DPRINT("waited %ld usecs for busy to clear\n", Retries * 10);
+  if (Retries >= IDE_MAX_BUSY_RETRIES)
+    {
+      DPRINT ("Drive is BUSY for too long\n");
+      return(SRB_STATUS_BUSY);
+#if 0
+      if (++ControllerExtension->Retries > IDE_MAX_CMD_RETRIES)
+        {
+          DbgPrint ("Max Retries on Drive reset reached, returning failure\n");
+          Irp = ControllerExtension->CurrentIrp;
+          Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
+          Irp->IoStatus.Information = 0;
+
+          return FALSE;
+        }
+      else
+        {
+          DPRINT ("Beginning drive reset sequence\n");
+          IDEBeginControllerReset(ControllerExtension);
+
+          return TRUE;
+        }
+#endif
+    }
+
+  /*  Select the desired drive  */
+  IDEWriteDriveHead(DeviceExtension->CommandPortBase,
+		    IDE_DH_FIXED | (Srb->TargetId ? IDE_DH_DRV1 : 0));
+
+  /*  wait for BUSY to clear and DRDY to assert */
+  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
+    {
+      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
+      if (!(Status & IDE_SR_BUSY) && (Status & IDE_SR_DRDY))
+	{
+	  break;
+	}
+      ScsiPortStallExecution(10);
+    }
+  DPRINT("waited %ld usecs for busy to clear after drive select\n", Retries * 10);
+  if (Retries >= IDE_MAX_BUSY_RETRIES)
+    {
+      DPRINT("Drive is BUSY for too long after drive select\n");
+      return(SRB_STATUS_BUSY);
+#if 0
+      if (ControllerExtension->Retries++ > IDE_MAX_CMD_RETRIES)
+	{
+          DbgPrint ("Max Retries on Drive reset reached, returning failure\n");
+          Irp = ControllerExtension->CurrentIrp;
+          Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
+          Irp->IoStatus.Information = 0;
+
+          return FALSE;
+	}
+      else
+        {
+          DPRINT("Beginning drive reset sequence\n");
+          IDEBeginControllerReset(ControllerExtension);
+
+          return TRUE;
+        }
+#endif
+    }
+
+  ByteCountLow = (UCHAR)(Srb->DataTransferLength & 0xFF);
+  ByteCountHigh = (UCHAR)(Srb->DataTransferLength >> 8);
+
+  IDEWriteCylinderHigh(DeviceExtension->CommandPortBase, ByteCountHigh);
+  IDEWriteCylinderLow(DeviceExtension->CommandPortBase, ByteCountLow);
+//  IDEWriteDriveHead(DeviceExtension->CommandPortBase, IDE_DH_FIXED | DrvHead);
+
+  /* Issue command to drive */
+  IDEWriteCommand(DeviceExtension->CommandPortBase, 0xA0); /* Packet command */
+
+
+  /*  wait for DRQ to assert */
+  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
+    {
+      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
+      if ((Status & IDE_SR_DRQ))
+	{
+	  break;
+	}
+      ScsiPortStallExecution(10);
+    }
+
+  IDEWriteBlock(DeviceExtension->CommandPortBase,
+		(PUSHORT)Srb->Cdb,
+		12);
+
+
+  DPRINT1("AtapiSendAtapiCommand() done\n");
+  return(SRB_STATUS_PENDING);
+#endif
+
+//#if 0
+  ULONG SrbStatus = SRB_STATUS_SELECTION_TIMEOUT;
+
+  DPRINT("AtapiSendAtapiCommand() called!\n");
+
+  switch (Srb->Cdb[0])
+    {
+      case SCSIOP_INQUIRY:
+	DPRINT("  SCSIOP_INQUIRY\n");
+	SrbStatus = AtapiInquiry(DeviceExtension,
+				 Srb);
+	break;
+
+      case SCSIOP_READ_CAPACITY:
+	DPRINT1("  SCSIOP_READ_CAPACITY\n");
+	break;
+
+      case SCSIOP_READ:
+	DPRINT1("  SCSIOP_READ\n");
+	break;
+
+      case SCSIOP_WRITE:
+	DPRINT1("  SCSIOP_WRITE\n");
+	break;
+
+      case SCSIOP_MODE_SENSE:
+	DPRINT1("  SCSIOP_MODE_SENSE\n");
+	break;
+
+      case SCSIOP_TEST_UNIT_READY:
+	DPRINT1("  SCSIOP_TEST_UNIT_READY\n");
+	break;
+
+      case SCSIOP_VERIFY:
+	DPRINT1("  SCSIOP_VERIFY\n");
+	break;
+
+      case SCSIOP_START_STOP_UNIT:
+	DPRINT1("  SCSIOP_START_STOP_UNIT\n");
+	break;
+
+      case SCSIOP_REQUEST_SENSE:
+	DPRINT1("  SCSIOP_REQUEST_SENSE\n");
+	break;
+
+     default:
+	DbgPrint("AtapiSendIdeCommand():unknown command %x\n",
+		 Srb->Cdb[0]);
+	break;
+    }
+
+  if (SrbStatus == SRB_STATUS_SELECTION_TIMEOUT)
+    {
+      DPRINT1("Not implemented yet!\n");
+    }
+
+  return(SrbStatus);
+//#endif
 }
 
 
@@ -1273,7 +1479,7 @@ AtapiSendIdeCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 {
   ULONG SrbStatus = SRB_STATUS_SUCCESS;
 
-  DPRINT1("AtapiSendIdeCommand() called!\n");
+  DPRINT("AtapiSendIdeCommand() called!\n");
 
   DPRINT("PathId: %lu  TargetId: %lu  Lun: %lu\n",
 	 Srb->PathId,
@@ -1306,13 +1512,13 @@ AtapiSendIdeCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	break;
 
      default:
-	DPRINT1("AtapiSendIdeCommand():unknown command %x\n",
-		Srb->Cdb[0]);
+	DbgPrint("AtapiSendIdeCommand():unknown command %x\n",
+		 Srb->Cdb[0]);
 	SrbStatus = SRB_STATUS_INVALID_REQUEST;
 	break;
     }
 
-  DPRINT1("AtapiSendIdeCommand() done!\n");
+  DPRINT("AtapiSendIdeCommand() done!\n");
 
   return(SrbStatus);
 }
@@ -1326,7 +1532,7 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   PINQUIRYDATA InquiryData;
   ULONG i;
 
-  DPRINT1("SCSIOP_INQUIRY: TargetId: %lu\n", Srb->TargetId);
+  DPRINT("SCSIOP_INQUIRY: TargetId: %lu\n", Srb->TargetId);
 
   if ((Srb->PathId != 0) ||
       (Srb->TargetId > 1) ||
@@ -1353,15 +1559,15 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
     }
   else
     {
-      /* FIXME: this is incorrect use SCSI-INQUIRY command!! */
-      /* cdrom drive */
-      InquiryData->DeviceType = READ_ONLY_DIRECT_ACCESS_DEVICE;
+      /* get it from the ATAPI configuration word */
+      InquiryData->DeviceType = (DeviceParams->ConfigBits >> 8) & 0x1F;
+      DPRINT("Device class: %u\n", InquiryData->DeviceType);
     }
 
   DPRINT("ConfigBits: 0x%x\n", DeviceParams->ConfigBits);
   if (DeviceParams->ConfigBits & 0x80)
     {
-      DPRINT1("Removable media!\n");
+      DPRINT("Removable media!\n");
       InquiryData->RemovableMedia = 1;
     }
 
@@ -1398,7 +1604,7 @@ AtapiReadCapacity(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   PIDE_DRIVE_IDENTIFY DeviceParams;
   ULONG LastSector;
 
-  DPRINT1("SCSIOP_READ_CAPACITY: TargetId: %lu\n", Srb->TargetId);
+  DPRINT("SCSIOP_READ_CAPACITY: TargetId: %lu\n", Srb->TargetId);
 
   if ((Srb->PathId != 0) ||
       (Srb->TargetId > 1) ||
@@ -1459,7 +1665,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   UCHAR Status;
 
 
-  DPRINT1("AtapiReadWrite() called!\n");
+  DPRINT("AtapiReadWrite() called!\n");
 
   if ((Srb->PathId != 0) ||
       (Srb->TargetId > 1) ||
@@ -1520,7 +1726,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 
   if (DrvHead & IDE_DH_LBA)
     {
-      DPRINT1("%s:BUS=%04x:DRV=%d:LBA=1:BLK=%08d:SC=%02x:CM=%02x\n",
+      DPRINT("%s:BUS=%04x:DRV=%d:LBA=1:BLK=%08d:SC=%02x:CM=%02x\n",
 	     (Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? "READ" : "WRITE",
 	     DeviceExtension->CommandPortBase,
 	     DrvHead & IDE_DH_DRV1 ? 1 : 0,
@@ -1531,7 +1737,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
     }
   else
     {
-      DPRINT1("%s:BUS=%04x:DRV=%d:LBA=0:CH=%02x:CL=%02x:HD=%01x:SN=%02x:SC=%02x:CM=%02x\n",
+      DPRINT("%s:BUS=%04x:DRV=%d:LBA=0:CH=%02x:CL=%02x:HD=%01x:SN=%02x:SC=%02x:CM=%02x\n",
              (Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? "READ" : "WRITE",
              DeviceExtension->CommandPortBase,
              DrvHead & IDE_DH_DRV1 ? 1 : 0, 
@@ -1561,8 +1767,8 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
         }
       ScsiPortStallExecution(10);
     }
-  DPRINT ("status=%02x\n", Status);
-  DPRINT ("waited %ld usecs for busy to clear\n", Retries * 10);
+  DPRINT("status=%02x\n", Status);
+  DPRINT("waited %ld usecs for busy to clear\n", Retries * 10);
   if (Retries >= IDE_MAX_BUSY_RETRIES)
     {
       DPRINT ("Drive is BUSY for too long\n");
@@ -1601,10 +1807,10 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	}
       ScsiPortStallExecution(10);
     }
-  DPRINT ("waited %ld usecs for busy to clear after drive select\n", Retries * 10);
+  DPRINT("waited %ld usecs for busy to clear after drive select\n", Retries * 10);
   if (Retries >= IDE_MAX_BUSY_RETRIES)
     {
-      DPRINT ("Drive is BUSY for too long after drive select\n");
+      DPRINT("Drive is BUSY for too long after drive select\n");
       return(SRB_STATUS_BUSY);
 #if 0
       if (ControllerExtension->Retries++ > IDE_MAX_CMD_RETRIES)
@@ -1618,7 +1824,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	}
       else
         {
-          DPRINT ("Beginning drive reset sequence\n");
+          DPRINT("Beginning drive reset sequence\n");
           IDEBeginControllerReset(ControllerExtension);
 
           return TRUE;
@@ -1652,7 +1858,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   /* FIXME: Write data here! */
 
 
-  DPRINT1("AtapiReadWrite() done!\n");
+  DPRINT("AtapiReadWrite() done!\n");
 
   /* Wait for interrupt. */
   return(SRB_STATUS_PENDING);
