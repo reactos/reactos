@@ -27,7 +27,7 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
   POINTL SourcePoint;
   PBITMAPOBJ DestBitmapObj;
   PBITMAPOBJ SrcBitmapObj;
-  BOOL Status, SurfDestAlloc, SurfSrcAlloc;
+  BOOL Status, SurfDestAlloc, SurfSrcAlloc, XlateAlloc;
   PPALOBJ DCLogPal;
   PPALGDI PalDestGDI, PalSourceGDI;
   PXLATEOBJ XlateObj = NULL;
@@ -49,6 +49,7 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
 
   SurfDestAlloc = FALSE;
   SurfSrcAlloc  = FALSE;
+  XlateAlloc = FALSE;
 
   // Determine surfaces to be used in the bitblt
   SurfDest = (PSURFOBJ)AccessUserObject(DCDest->Surface);
@@ -83,14 +84,16 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
     PalSourceGDI = (PPALGDI)AccessInternalObject(SourcePalette);
 
     XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalDestGDI->Mode, PalSourceGDI->Mode, DestPalette, SourcePalette);
+    XlateAlloc = TRUE;
   }
 
   // Perform the bitblt operation
 
   Status = IntEngBitBlt(SurfDest, SurfSrc, NULL, NULL, XlateObj, &DestRect, &SourcePoint, NULL, NULL, NULL, ROP);
 
-  if(SurfDestAlloc == TRUE) ExFreePool(SurfDest);
-  if(SurfSrcAlloc  == TRUE) ExFreePool(SurfSrc);
+  if (XlateAlloc) EngDeleteXlate(XlateObj);
+  if (SurfDestAlloc) ExFreePool(SurfDest);
+  if (SurfSrcAlloc) ExFreePool(SurfSrc);
 
   DC_ReleasePtr(hDCDest);
   DC_ReleasePtr(hDCSrc);

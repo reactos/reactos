@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.51 2003/03/22 23:57:32 gvg Exp $
+/* $Id: dc.c,v 1.52 2003/03/24 22:49:54 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -497,6 +497,7 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
     BITMAPOBJ_ReleasePtr(DCToDelete->w.hBitmap);
     if (DCToDelete->w.flags & DC_MEMORY)
     {
+      EngDeleteSurface (DCToDelete->Surface);
       W32kDeleteObject (DCToDelete->w.hFirstBitmap);
     }
   }
@@ -1082,6 +1083,7 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       objOrg = (HGDIOBJ)dc->w.hBitmap;
 
       /* Release the old bitmap, lock the new one and convert it to a SURF */
+      EngDeleteSurface(dc->Surface);
       BITMAPOBJ_ReleasePtr(objOrg);
       dc->w.hBitmap = hGDIObj;
       pb = BITMAPOBJ_HandleToPtr(hGDIObj);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.20 2003/03/11 00:21:41 gvg Exp $
+/* $Id: mouse.c,v 1.21 2003/03/24 22:49:54 gvg Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -320,37 +320,41 @@ EnableMouse(HDC hDisplayDC)
   SIZEL MouseSize;
   RECTL MouseRect;
 
-  dc = DC_HandleToPtr(hDisplayDC);
-  if( dc ){
-  	SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
-  	SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
-	DC_ReleasePtr( hDisplayDC );
+  if( hDisplayDC )
+  {
+    dc = DC_HandleToPtr(hDisplayDC);
+    SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
+    SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
+    DC_ReleasePtr( hDisplayDC );
 
-  	/* Create the default mouse cursor. */
-  	mouse_width = 32;
-  	mouse_height = 32;
-  	MouseSize.cx = 32;
-  	MouseSize.cy = 64;
-  	hMouseSurf = EngCreateBitmap(MouseSize, 4, BMF_1BPP, BMF_TOPDOWN, DefaultCursor);
-  	MouseSurf = (PSURFOBJ)AccessUserObject((ULONG) hMouseSurf);
+    /* Create the default mouse cursor. */
+    mouse_width = 32;
+    mouse_height = 32;
+    MouseSize.cx = 32;
+    MouseSize.cy = 64;
+    hMouseSurf = EngCreateBitmap(MouseSize, 4, BMF_1BPP, BMF_TOPDOWN, DefaultCursor);
+    MouseSurf = (PSURFOBJ)AccessUserObject((ULONG) hMouseSurf);
 
-  	/* Tell the display driver to set the pointer shape. */
+    /* Tell the display driver to set the pointer shape. */
 #if 0
-  	mouse_x = SurfObj->sizlBitmap.cx / 2;
-  	mouse_y = SurfObj->sizlBitmap.cy / 2;
+    mouse_x = SurfObj->sizlBitmap.cx / 2;
+    mouse_y = SurfObj->sizlBitmap.cy / 2;
 #else
-	mouse_x = 320;
-	mouse_y = 240;
+    mouse_x = 320;
+    mouse_y = 240;
 #endif
-  	PointerStatus = SurfGDI->SetPointerShape(SurfObj, MouseSurf, NULL, NULL,
-	                                         0, 0, mouse_x, mouse_y, &MouseRect,
-                                                 SPS_CHANGE);
+    PointerStatus = SurfGDI->SetPointerShape(SurfObj, MouseSurf, NULL, NULL,
+                                             0, 0, mouse_x, mouse_y, &MouseRect,
+                                             SPS_CHANGE);
 
-  	MouseEnabled = (SPS_ACCEPT_EXCLUDE == PointerStatus ||
-                        SPS_ACCEPT_NOEXCLUDE == PointerStatus);
+    MouseEnabled = (SPS_ACCEPT_EXCLUDE == PointerStatus ||
+                    SPS_ACCEPT_NOEXCLUDE == PointerStatus);
+
+    EngDeleteSurface(hMouseSurf);
   }
-  else{
-	MouseEnabled = FALSE;
+  else
+  {
+    MouseEnabled = FALSE;
   }
 }
 

@@ -154,6 +154,8 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
   }
 
   // Clean up
+  EngDeleteXlate(XlateObj);
+  EngDeletePalette(DIB_Palette);
   EngDeleteSurface(SourceBitmap);
   EngDeleteSurface(DestBitmap);
 
