@@ -40,14 +40,6 @@
 
 #include <locale.h>	// for setlocale()
 
-#ifndef __WINE__
-#include <io.h>		// for dup2()
-#include <fcntl.h>	// for _O_RDONLY
-#endif
-
-
-extern "C" int initialize_gdb_stub();	// start up GDB stub
-
 
 ExplorerGlobals g_Globals;
 
@@ -123,9 +115,7 @@ bool FileTypeManager::is_exe_file(LPCTSTR ext)
 
 const FileTypeInfo& FileTypeManager::operator[](String ext)
 {
-#ifndef __WINE__ ///@todo
 	_tcslwr((LPTSTR)ext.c_str());
-#endif
 
 	iterator found = find(ext);
 	if (found != end())
@@ -314,9 +304,7 @@ const Icon& IconCache::extract(LPCTSTR path, int idx)
 {
 	CachePair key(path, idx);
 
-#ifndef __WINE__ ///@todo
 	_tcslwr((LPTSTR)key.first.c_str());
-#endif
 
 	PathIdxMap::iterator found = _pathIdxMap.find(key);
 
@@ -642,42 +630,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	if (_tcsstr(lpCmdLine,TEXT("-noautostart")))
 		autostart = false;
 
-#ifndef __WINE__
-	if (_tcsstr(lpCmdLine,TEXT("-console"))) {
-		AllocConsole();
-
-		_dup2(_open_osfhandle((long)GetStdHandle(STD_INPUT_HANDLE), _O_RDONLY), 0);
-		_dup2(_open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), 0), 1);
-		_dup2(_open_osfhandle((long)GetStdHandle(STD_ERROR_HANDLE), 0), 2);
-
-		g_Globals._log = fdopen(1, "w");
-		setvbuf(g_Globals._log, 0, _IONBF, 0);
-
-		LOG(TEXT("starting explorer debug log\n"));
-	}
-#endif
-
-	bool use_gdb_stub = false;	// !IsDebuggerPresent();
-
-	if (_tcsstr(lpCmdLine,TEXT("-debug")))
-		use_gdb_stub = true;
-
-	if (_tcsstr(lpCmdLine,TEXT("-break"))) {
-		LOG(TEXT("debugger breakpoint"));
-#ifdef _MSC_VER
-		__asm int 3
-#else
-		asm("int3");
-#endif
-	}
-
-	 // activate GDB remote debugging stub if no other debugger is running
-	if (use_gdb_stub) {
-		LOG(TEXT("waiting for debugger connection...\n"));
-
-		initialize_gdb_stub();
-	}
-
 	g_Globals.init(hInstance);
 
 	 // initialize COM and OLE before creating the desktop window
@@ -689,9 +641,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		g_Globals._desktops.init();
 
 		hwndDesktop = DesktopWindow::Create();
-#ifdef _USE_HDESK
-		g_Globals._desktops.get_current_Desktop()->_hwndDesktop = hwndDesktop;
-#endif
 
 		if (autostart) {
 			char* argv[] = {"", "s"};	// call startup routine in SESSION_START mode

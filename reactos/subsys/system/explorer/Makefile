@@ -1,5 +1,5 @@
 #
-#  ReactOS explorer
+#  ReactOS lean explorer
 #
 #  Makefile
 #
@@ -78,12 +78,7 @@ OBJECTS = \
 	explorer.o \
 	entries.o \
 	winfs.o \
-	unixfs.o \
 	shellfs.o \
-	ntobjfs.o \
-	regfs.o \
-	fatfs.o \
-	webchild.o \
 	mainframe.o \
 	filechild.o \
 	pane.o \
@@ -94,11 +89,9 @@ OBJECTS = \
 	startmenu.o \
 	traynotify.o \
 	quicklaunch.o \
-	searchprogram.o \
-	settings.o \
-	i386-stub-win32.o
+	settings.o
 
-LIBS = gdi32 comctl32 ole32 uuid wsock32 oleaut32
+LIBS = gdi32 comctl32 ole32 uuid wsock32
 
 .PHONY: all depends implib clean install dist bootcd depends
 

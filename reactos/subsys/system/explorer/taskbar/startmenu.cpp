@@ -40,7 +40,6 @@
 #include "desktopbar.h"
 #include "startmenu.h"
 
-#include "../dialogs/searchprogram.h"
 #include "../dialogs/settings.h"
 
 
@@ -1623,11 +1622,6 @@ int StartMenuHandler::Command(int id, int code)
 
 	// search menu
 
-	  case IDC_SEARCH_PROGRAM:
-		CloseStartMenu(id);
-		Dialog::DoModal(IDD_SEARCH_PROGRAM, WINDOW_CREATOR(FindProgramDlg));
-		break;
-
 	  case IDC_SEARCH_FILES:
 		CloseStartMenu(id);
 		ShowSearchDialog();
@@ -1750,8 +1744,6 @@ void BrowseMenu::AddEntries()
 void SearchMenu::AddEntries()
 {
 	super::AddEntries();
-
-	AddButton(ResString(IDS_SEARCH_PRG),	ICID_APPS, false, IDC_SEARCH_PROGRAM);
 
 	AddButton(ResString(IDS_SEARCH_FILES),	ICID_SEARCH_DOC, false, IDC_SEARCH_FILES);
 

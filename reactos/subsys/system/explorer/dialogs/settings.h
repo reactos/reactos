@@ -39,21 +39,6 @@ struct DesktopSettingsDlg : public OwnerDrawParent<PropSheetPageDlg>
 	DesktopSettingsDlg(HWND hwnd);
 
 protected:
-	ResBitmap	_bmp0;
-	ResBitmap	_bmp1;
-	ResBitmap	_bmp2;
-	ResBitmap	_bmp3;
-	ResBitmap	_bmp4;
-	ResBitmap	_bmp5;
-	ResBitmap	_bmp6;
-	ResBitmap	_bmp7;
-	ResBitmap	_bmp8;
-	ResBitmap	_bmp9;
-	ResBitmap	_bmp10;
-
-	int	_alignment_cur;
-	int	_alignment_tmp;
-
 	virtual int Command(int id, int code);
 	virtual int Notify(int id, NMHDR* pnmh);
 };

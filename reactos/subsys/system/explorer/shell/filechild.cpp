@@ -30,9 +30,6 @@
 
 #include "../explorer.h"
 #include "../globals.h"
-#include "ntobjfs.h"
-#include "regfs.h"
-#include "fatfs.h"
 
 #include "../explorer_intres.h"
 
@@ -42,12 +39,7 @@ FileChildWndInfo::FileChildWndInfo(HWND hmdiclient, LPCTSTR path, ENTRY_TYPE ety
 	_etype(etype)
 {
 	if (etype == ET_UNKNOWN)
-#ifdef __WINE__
-		if (*path == '/')
-			_etype = ET_UNIX;
-		else
-#endif
-			_etype = ET_WINDOWS;
+		_etype = ET_WINDOWS;
 
 	_path = path;
 
@@ -71,30 +63,6 @@ ShellChildWndInfo::ShellChildWndInfo(HWND hmdiclient, LPCTSTR path, const ShellP
 }
 
 
-NtObjChildWndInfo::NtObjChildWndInfo(HWND hmdiclient, LPCTSTR path)
- :	FileChildWndInfo(hmdiclient, path, ET_NTOBJS)
-{
-}
-
-
-RegistryChildWndInfo::RegistryChildWndInfo(HWND hmdiclient, LPCTSTR path)
- :	FileChildWndInfo(hmdiclient, path, ET_REGISTRY)
-{
-}
-
-
-FATChildWndInfo::FATChildWndInfo(HWND hmdiclient, LPCTSTR path)
- :	FileChildWndInfo(hmdiclient, path, ET_FAT)
-{
-}
-
-
-WebChildWndInfo::WebChildWndInfo(HWND hmdiclient, LPCTSTR url)
- :	FileChildWndInfo(hmdiclient, url, ET_WEB)
-{
-}
-
-
 FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
  :	ChildWindow(hwnd, info)
 {
@@ -103,81 +71,15 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 	TCHAR drv[_MAX_DRIVE+1];
 	Entry* entry;
 
-	switch(info._etype) {
-	  case ET_SHELL: {	//@@ evtl. Aufteilung von FileChildWindow in ShellChildWindow, WinChildWindow, UnixChildWindow
-		_root._drive_type = DRIVE_UNKNOWN;
-		lstrcpy(drv, TEXT("\\"));
-		lstrcpy(_root._volname, TEXT("Desktop"));
-		_root._fs_flags = 0;
-		lstrcpy(_root._fs, TEXT("Shell"));
+	//assert(info._etype==ET_WINDOWS);
+	_root._drive_type = GetDriveType(info._path);
 
-		const ShellChildWndInfo& shell_info = static_cast<const ShellChildWndInfo&>(info);
-		_root._entry = new ShellDirectory(GetDesktopFolder(), DesktopFolderPath(), hwnd);
-		entry = _root._entry->read_tree((LPCTSTR)&*shell_info._shell_path, SORT_NAME);
-		break;}
-
-#ifdef __WINE__
-	  case ET_UNIX: {
-		_root._drive_type = GetDriveType(info._path);
-
-		_tsplitpath(info._path, drv, NULL, NULL, NULL);
-		lstrcat(drv, TEXT("/"));
-		lstrcpy(_root._volname, TEXT("root fs"));
-		_root._fs_flags = 0;
-		lstrcpy(_root._fs, TEXT("unixfs"));
-		lstrcpy(_root._path, TEXT("/"));
-		_root._entry = new UnixDirectory(_root._path);
-		entry = _root._entry->read_tree(info._path, SORT_NAME);
-		break;}
-
-#endif
-
-	  case ET_NTOBJS:
-		_root._drive_type = DRIVE_UNKNOWN;
-
-		_tsplitpath(info._path, drv, NULL, NULL, NULL);
-		lstrcat(drv, TEXT("\\"));
-		lstrcpy(_root._volname, TEXT("NT Object Namespace"));
-		lstrcpy(_root._fs, TEXT("NTOBJ"));
-		lstrcpy(_root._path, drv);
-		_root._entry = new NtObjDirectory(_root._path);
-		entry = _root._entry->read_tree(info._path, SORT_NAME);
-		break;
-
-	  case ET_REGISTRY:
-		_root._drive_type = DRIVE_UNKNOWN;
-
-		_tsplitpath(info._path, drv, NULL, NULL, NULL);
-		lstrcat(drv, TEXT("\\"));
-		lstrcpy(_root._volname, TEXT("Registry"));
-		lstrcpy(_root._fs, TEXT("Registry"));
-		lstrcpy(_root._path, drv);
-		_root._entry = new RegistryRoot();
-		entry = _root._entry->read_tree(info._path, SORT_NONE);
-		break;
-
-	  case ET_FAT:
-		_root._drive_type = DRIVE_UNKNOWN;
-
-		_tsplitpath(info._path, drv, NULL, NULL, NULL);
-		lstrcat(drv, TEXT("\\"));
-		lstrcpy(_root._volname, TEXT("FAT XXX"));	//@@
-		lstrcpy(_root._fs, TEXT("FAT"));
-		lstrcpy(_root._path, drv);
-		_root._entry = new FATDrive(TEXT("c:/reactos-bochs/cdrv.img"));	//TEXT("\\\\.\\F:"));	//@@
-		entry = _root._entry->read_tree(info._path, SORT_NONE);
-		break;
-
-	  default:	// ET_WINDOWS
-		_root._drive_type = GetDriveType(info._path);
-
-		_tsplitpath(info._path, drv, NULL, NULL, NULL);
-		lstrcat(drv, TEXT("\\"));
-		GetVolumeInformation(drv, _root._volname, _MAX_FNAME, 0, 0, &_root._fs_flags, _root._fs, _MAX_DIR);
-		lstrcpy(_root._path, drv);
-		_root._entry = new WinDirectory(_root._path);
-		entry = _root._entry->read_tree(info._path, SORT_NAME);
-	}
+	_tsplitpath(info._path, drv, NULL, NULL, NULL);
+	lstrcat(drv, TEXT("\\"));
+	GetVolumeInformation(drv, _root._volname, _MAX_FNAME, 0, 0, &_root._fs_flags, _root._fs, _MAX_DIR);
+	lstrcpy(_root._path, drv);
+	_root._entry = new WinDirectory(_root._path);
+	entry = _root._entry->read_tree(info._path, SORT_NAME);
 
 	if (info._etype != ET_SHELL)
 		wsprintf(_root._entry->_data.cFileName, TEXT("%s - %s"), drv, _root._fs);

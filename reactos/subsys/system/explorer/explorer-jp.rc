@@ -194,51 +194,11 @@ BEGIN
     PUSHBUTTON      "&Help",254,158,43,47,14 //FIXME?
 END
 
-IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 144, 65
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
-    WS_SYSMENU | WS_THICKFRAME
-EXSTYLE WS_EX_APPWINDOW
-CAPTION "スタートメニューからプログラムを検索" //FIXME?
-FONT 9, "MS UI Gothic", 0, 0, 0x1 //FIXME?
-BEGIN
-    LTEXT           "&Filter:",IDC_STATIC,7,9,18,8 //FIXME?
-    EDITTEXT        IDC_TOPIC,34,7,103,14,ES_AUTOHSCROLL
-    CONTROL         "List1",IDC_MAILS_FOUND,"SysListView32",LVS_REPORT | 
-                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
-                    WS_TABSTOP,7,25,130,33
-END
-
 IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 172
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "デスクトップのプロパティ" //FIXME?
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT           "Please select your prefered icon alignment algorithm:",
-                    IDC_STATIC,7,7,166,8 //FIXME?
-    CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,7,25,46,44
-    CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,57,25,46,44
-    CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,110,25,46,44
-    CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,159,25,46,44
-    CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,7,73,46,44
-    CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,57,73,46,44
-    CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,110,73,46,44
-    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,159,73,46,44
-    CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,7,121,46,44
-    CONTROL         "border H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,57,121,46,44
-    CONTROL         "round about",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,110,121,46,44
-    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
-                    WS_TABSTOP,159,121,46,44
 END
 
 IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 154
@@ -264,14 +224,6 @@ END
 #ifdef APSTUDIO_INVOKED
 GUIDELINES DESIGNINFO DISCARDABLE 
 BEGIN
-    IDD_SEARCH_PROGRAM, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 137
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 58
-    END
-
     IDD_DESKBAR_DESKTOP, DIALOG
     BEGIN
         LEFTMARGIN, 7

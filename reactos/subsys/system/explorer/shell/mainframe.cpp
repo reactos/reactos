@@ -32,11 +32,6 @@
 #include "../globals.h"
 #include "../externals.h"
 
-/* We can't include webchild.h here - otherwise MinGW produces errors like: "multiple definition of `QACONTAINERFLAGS'"
-#include "webchild.h"
-*/
-extern HWND create_webchildwindow(const WebChildWndInfo& info);
-
 #include "../explorer_intres.h"
 
 
@@ -77,10 +72,6 @@ MainFrame::MainFrame(HWND hwnd)
 		{0, 0, 0, BTNS_SEP, {0, 0}, 0, 0},
 		{7, ID_BROWSE_BACK, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 		{8, ID_BROWSE_FORWARD, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{9, ID_BROWSE_HOME, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{10, ID_BROWSE_SEARCH, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{11, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{12, ID_STOP, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 	};
 
 	_htoolbar = CreateToolbarEx(hwnd, WS_CHILD|WS_VISIBLE,
@@ -104,57 +95,10 @@ MainFrame::MainFrame(HWND hwnd)
 
 	drivebarBtn.fsStyle = BTNS_BUTTON;
 
-#ifdef __WINE__
-	 // insert unix file system button
-	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("/\0"));
-
-	drivebarBtn.idCommand = ID_DRIVE_UNIX_FS;
-	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-	++drivebarBtn.iString;
-#endif
-
 	 // insert explorer window button
 	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("Explore\0"));
 
 	drivebarBtn.idCommand = ID_DRIVE_DESKTOP;
-	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-	++drivebarBtn.iString;
-
-	 // insert shell namespace button
-	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("Shell\0"));
-
-	drivebarBtn.idCommand = ID_DRIVE_SHELL_NS;
-	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-	++drivebarBtn.iString;
-
-#define	W_VER_NT 0
-	if ((HIWORD(GetVersion())>>14) == W_VER_NT) {
-		 // insert NT object namespace button
-		SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("NT Obj\0"));
-
-		drivebarBtn.idCommand = ID_DRIVE_NTOBJ_NS;
-		SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-		++drivebarBtn.iString;
-	}
-
-	 // insert Registry button
-	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("Reg.\0"));
-
-	drivebarBtn.idCommand = ID_DRIVE_REGISTRY;
-	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-	++drivebarBtn.iString;
-
-	 // insert FAT direct file system access button
-	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("FAT\0"));
-
-	drivebarBtn.idCommand = ID_DRIVE_FAT;
-	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-	++drivebarBtn.iString;
-
-	 // insert web control button
-	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("Web\0"));
-
-	drivebarBtn.idCommand = ID_WEB_WINDOW;
 	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
 	++drivebarBtn.iString;
 
@@ -188,15 +132,6 @@ MainFrame::MainFrame(HWND hwnd)
 	WindowCanvas canvas(hwnd);
 	RECT rect = {0, 0, 0, 0};
 	DrawText(canvas, TEXT("My"), -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
-	HFONT hfont = GetStockFont(DEFAULT_GUI_FONT);
-
-	_haddressedit = CreateWindow(TEXT("EDIT"), TEXT("file://C:\\"), WS_CHILD|WS_VISIBLE, 0, 0, 0, rect.bottom,
-							hwnd, (HMENU)IDW_ADDRESSBAR, g_Globals._hInstance, 0);
-	SetWindowFont(_haddressedit, hfont, FALSE);
-
-	_hcommandedit = CreateWindow(TEXT("EDIT"), TEXT("> Command"), WS_CHILD|WS_VISIBLE, 0, 0, 0, rect.bottom,
-							hwnd, (HMENU)IDW_ADDRESSBAR, g_Globals._hInstance, 0);
-	SetWindowFont(_hcommandedit, hfont, FALSE);
 
 	/* CreateStatusWindow does not accept WS_BORDER
 		_hstatusbar = CreateWindowEx(WS_EX_NOPARENTNOTIFY, STATUSCLASSNAME, 0,
@@ -542,24 +477,6 @@ int MainFrame::Command(int id, int code)
 		CheckMenuItem(_menu_info._hMenuOptions, id, toggle_fullscreen()?MF_CHECKED:0);
 		break;
 
-#ifdef __WINE__
-	  case ID_DRIVE_UNIX_FS: {
-		TCHAR path[MAX_PATH];
-		FileChildWindow* child;
-
-		if (activate_child_window(TEXT("unixfs")))
-			break;
-
-		getcwd(path, MAX_PATH);
-
-#ifndef _NO_MDI
-		FileChildWindow::create(_hmdiclient, FileChildWndInfo(path));
-#else
-		///@todo SDI implementation
-#endif
-		break;}
-#endif
-
 	  case ID_DRIVE_DESKTOP: {
 		TCHAR path[MAX_PATH];
 
@@ -570,65 +487,6 @@ int MainFrame::Command(int id, int code)
 
 		ShellBrowserChild::create(ShellChildWndInfo(_hmdiclient, path, DesktopFolderPath()));
 		break;}
-
-	  case ID_DRIVE_SHELL_NS: {
-		TCHAR path[MAX_PATH];
-
-		if (activate_child_window(TEXT("Shell")))
-			break;
-
-		GetCurrentDirectory(MAX_PATH, path);
-
-#ifndef _NO_MDI
-		FileChildWindow::create(ShellChildWndInfo(_hmdiclient, path, DesktopFolderPath()));
-#else
-		///@todo SDI implementation
-#endif
-		break;}
-
-	  case ID_DRIVE_NTOBJ_NS: {
-		if (activate_child_window(TEXT("NTOBJ")))
-			break;
-
-#ifndef _NO_MDI
-		FileChildWindow::create(NtObjChildWndInfo(_hmdiclient, TEXT("\\")));
-#else
-		///@todo SDI implementation
-#endif
-	  break;}
-
-	  case ID_DRIVE_REGISTRY: {
-		if (activate_child_window(TEXT("Registry")))
-			break;
-
-#ifndef _NO_MDI
-		FileChildWindow::create(RegistryChildWndInfo(_hmdiclient, TEXT("\\")));
-#else
-		///@todo SDI implementation
-#endif
-	  break;}
-
-	  case ID_DRIVE_FAT: {
-
-	  	///@todo prompt for image file
-
-		if (activate_child_window(TEXT("FAT")))
-			break;
-
-#ifndef _NO_MDI
-		FileChildWindow::create(FATChildWndInfo(_hmdiclient, TEXT("FAT Image")));	//@@
-#else
-		///@todo SDI implementation
-#endif
-	  break;}
-
-	  case ID_WEB_WINDOW:
-#ifdef _DEBUG
-		create_webchildwindow(WebChildWndInfo(_hmdiclient, TEXT("http://localhost")));
-#else
-		create_webchildwindow(WebChildWndInfo(_hmdiclient, TEXT("http://www.reactos.com")));
-#endif
-		break;
 
 	///@todo There are even more menu items!
 
@@ -641,12 +499,7 @@ int MainFrame::Command(int id, int code)
 		break;
 
 	  case ID_EXPLORER_FAQ:
-		create_webchildwindow(WebChildWndInfo(_hmdiclient, TEXT("http://www.sky.franken.de/explorer/")));
-		break;
-
-	  case IDW_ADDRESSBAR:
-	  case IDW_COMMANDBAR:
-		//@@
+		launch_file(_hwnd, TEXT("http://www.sky.franken.de/explorer/"), SW_SHOW);
 		break;
 
 	  default:

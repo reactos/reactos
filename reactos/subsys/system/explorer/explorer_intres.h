@@ -42,7 +42,6 @@
 #define IDB_TOOLBAR                     103
 #define IDA_EXPLORER                    104
 #define ID_ACTIVATE                     105
-#define IDD_SEARCH_PROGRAM              105
 #define IDB_DRIVEBAR                    106
 #define IDD_DESKBAR_DESKTOP             106
 #define IDB_IMAGES                      107
@@ -96,43 +95,23 @@
 #define ID_VIEW_DRIVE_BAR               507
 #define ID_VIEW_TOOL_BAR                508
 #define IDC_ROS_EXPLORER                1000
-#define IDC_ICON_ALIGN_0                1002
-#define IDC_ICON_ALIGN_1                1003
-#define IDC_ICON_ALIGN_2                1004
-#define IDC_ICON_ALIGN_3                1005
-#define IDC_ICON_ALIGN_4                1006
-#define IDC_ICON_ALIGN_5                1007
-#define IDC_ICON_ALIGN_6                1008
-#define IDC_ICON_ALIGN_7                1009
-#define IDC_ICON_ALIGN_8                1010
-#define IDC_ICON_ALIGN_9                1011
-#define IDC_ICON_ALIGN_10               1012
 #define IDC_WWW                         1012
-#define IDC_ICON_ALIGN_11               1013
 #define IDC_TOPIC                       1017
 #define IDC_MAILS_FOUND                 1018
 #define ID_REFRESH                      1704
 #define ID_ABOUT_WINEFILE               1705
 #define IDC_FILETREE                    10001
 #define ID_EXPLORER_FAQ                 10002
-#define ID_WEB_WINDOW                   10003
 #define ID_WINDOW_AUTOSORT              0x8003
 #define ID_VIEW_FULLSCREEN              0x8004
 #define ID_PREFERED_SIZES               0x8005
 #define ID_DRIVE_DESKTOP                0x9000
-#define ID_DRIVE_SHELL_NS               0x9001
-#define ID_DRIVE_UNIX_FS                0x9002
-#define ID_DRIVE_NTOBJ_NS               0x9003
-#define ID_DRIVE_REGISTRY               0x9004
-#define ID_DRIVE_FAT                    0x9005
 #define ID_DRIVE_FIRST                  0x9006
 #define ID_ABOUT_WINDOWS                40002
 #define ID_ABOUT_EXPLORER               40003
 #define ID_DESKTOPBAR_SETTINGS          40004
 #define ID_BROWSE_BACK                  40005
 #define ID_BROWSE_FORWARD               40006
-#define ID_BROWSE_HOME                  40007
-#define ID_BROWSE_SEARCH                40008
 #define ID_STOP                         40009
 #define ID_MINIMIZE_ALL                 40010
 #define ID_EXPLORE                      40011
@@ -153,7 +132,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        161
+#define _APS_NEXT_RESOURCE_VALUE        162
 #define _APS_NEXT_COMMAND_VALUE         40015
 #define _APS_NEXT_CONTROL_VALUE         1003
 #define _APS_NEXT_SYMED_VALUE           101

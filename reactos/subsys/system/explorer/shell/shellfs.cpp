@@ -60,10 +60,10 @@ bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN
 			pDataObj->Release();
 
 			if (SUCCEEDED(hr)) {
-				LPCTSTR path = (LPCTSTR)GlobalLock(medium.UNION_MEMBER(hGlobal));
+				LPCTSTR path = (LPCTSTR)GlobalLock(medium.hGlobal);
 
 				 // fill with drive names "C:", ...
-				assert(_tcslen(path) < GlobalSize(medium.UNION_MEMBER(hGlobal)));
+				assert(_tcslen(path) < GlobalSize(medium.hGlobal));
 				_tcscpy(pw32fdata->cFileName, path);
 
 				UINT sem_org = SetErrorMode(SEM_FAILCRITICALERRORS);
@@ -92,8 +92,8 @@ bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN
 
 				SetErrorMode(sem_org);
 
-				GlobalUnlock(medium.UNION_MEMBER(hGlobal));
-				GlobalFree(medium.UNION_MEMBER(hGlobal));
+				GlobalUnlock(medium.hGlobal);
+				GlobalFree(medium.hGlobal);
 			}
 		}
 	}

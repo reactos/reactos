@@ -112,7 +112,6 @@ BEGIN
     IDS_CONTROL_PANEL       "Control Panel"
     IDS_PRINTERS            "Printers"
     IDS_BROWSE              "Browse Files"
-    IDS_SEARCH_PRG          "Search Programm..."
     IDS_ALL_USERS           "All Users\\"
     IDS_SEARCH              "Cãutare..."
     IDS_ABOUT_EXPLORER      "&Despre Explorer..."
@@ -190,115 +189,6 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 // Menu
 //
 
-IDM_WINEFILE MENU FIXED IMPURE 
-BEGIN
-    POPUP "&Datei"
-    BEGIN
-        MENUITEM "Ö&ffnen\tEingabetaste",       101
-        MENUITEM "&Verschieben...\tF7",         106
-        MENUITEM "&Kopieren...\tF8",            107
-        MENUITEM "&In Zwischenablage...\tF9",   118
-        MENUITEM "&Löschen\tEntf",              108
-        MENUITEM "&Umbenennen...",              109
-        MENUITEM "&Eigenschaften...\tAlt+Eingabetaste", ID_EDIT_PROPERTIES
-        MENUITEM SEPARATOR
-        MENUITEM "K&omprimieren...",            119
-        MENUITEM "Deko&mprimieren...",          120
-        MENUITEM SEPARATOR
-        MENUITEM "&Ausführen...",               ID_EXECUTE
-        MENUITEM "&Drucken...",                 102
-        MENUITEM "Zuord&nen...",                103
-        MENUITEM SEPARATOR
-        MENUITEM "Ver&zeichnis erstellen...",   ID_EXECUTE
-        MENUITEM "&Suchen...",                  104
-        MENUITEM "Dateien aus&wählen...",       116
-        MENUITEM SEPARATOR
-        MENUITEM "&Beenden\tAlt+X",             ID_FILE_EXIT
-    END
-    POPUP "Da&tenträger"
-    BEGIN
-        MENUITEM "Datenträger &kopieren...",    201
-        MENUITEM "Datenträger &benennen...",    202
-        MENUITEM SEPARATOR
-        MENUITEM "Datenträger &formatieren...", 203
-        MENUITEM SEPARATOR
-        MENUITEM "Netzwerklaufwerk &verbinden...", 252
-        MENUITEM "Netzwerklaufwerk &trennen...", 253
-        MENUITEM SEPARATOR
-        MENUITEM "F&reigeben als...",           254
-        MENUITEM "Freigabe been&den...",        255
-        MENUITEM SEPARATOR
-        MENUITEM "Laufwerk aus&wählen...",      251
-    END
-    POPUP "&Verzeichnisse"
-    BEGIN
-        MENUITEM "&Nächste Ebene einblenden\t+", 301
-        MENUITEM "&Zweig einblenden\t*",        302
-        MENUITEM "Alle &Ebenen einblenden\tStrg+*", 303
-        MENUITEM "Zweig &ausblenden\t-",        304
-        MENUITEM SEPARATOR
-        MENUITEM "&Verzweigungen kennzeichnen", 505
-    END
-    POPUP "&Ansicht"
-    BEGIN
-        MENUITEM "Struktur &und Verzeichnis",   413
-        MENUITEM "Nur St&ruktur",               411
-        MENUITEM "Nur &Verzeichnis",            412
-        MENUITEM SEPARATOR
-        MENUITEM "&Teilen",                     414
-        MENUITEM SEPARATOR
-        MENUITEM "&Name",                       ID_VIEW_NAME
-        MENUITEM "A&lle Dateiangaben",          ID_VIEW_ALL_ATTRIBUTES
-        , CHECKED
-        MENUITEM "&Bestimmte Dateiangaben...",  ID_VIEW_SELECTED_ATTRIBUTES
-        MENUITEM SEPARATOR
-        MENUITEM "Nach N&ame",                  404
-        MENUITEM "Nach T&yp",                   405
-        MENUITEM "Nach &Größe",                 406
-        MENUITEM "Nach &Datum",                 407
-        MENUITEM SEPARATOR
-        MENUITEM "Angaben ausw&ählen...",       409
-    END
-    POPUP "&Optionen"
-    BEGIN
-        MENUITEM "&Bestätigen...",              65535
-        MENUITEM "Schrift&art...",              65535
-        MENUITEM "Symbolleiste &definieren...", 65535
-        MENUITEM SEPARATOR
-        MENUITEM "Sy&mbolleiste",               ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "Lauf&werkleiste",             ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&Statusleiste",               ID_VIEW_STATUSBAR, CHECKED
-        MENUITEM "Vollb&ild\tStrg+Umschalt+S",  ID_VIEW_FULLSCREEN
-        MENUITEM SEPARATOR
-        MENUITEM "&Symbol nach Programmstart",  65535
-        MENUITEM "&Einstellungen beim Beenden speichern", 511
-    END
-    POPUP "&Sicherheit"
-    BEGIN
-        MENUITEM "&Berechtigungen...",          605
-        MENUITEM "Über&wachen...",              606
-        MENUITEM "Besi&tzer...",                607
-    END
-    POPUP "&Fenster"
-    BEGIN
-        MENUITEM "Neues &Fenster",              ID_WINDOW_NEW
-        MENUITEM "Über&lappend\tUmschalt+F5",   ID_WINDOW_CASCADE
-        MENUITEM "&Untereinander",              ID_WINDOW_TILE_HORZ
-        MENUITEM "&Nebeneinander\tUmschalt+F4", ID_WINDOW_TILE_VERT
-        MENUITEM "au&tomatisch anordnen",       ID_WINDOW_AUTOSORT
-        MENUITEM "&Symbole anordnen",           ID_WINDOW_ARRANGE
-        MENUITEM "&Aktualisieren\tF5",          ID_REFRESH
-    END
-    POPUP "&?"
-    BEGIN
-        MENUITEM "&Hilfethemen\tF1",            ID_HELP
-        MENUITEM "&Suchen...\tF1",              ID_HELP
-        MENUITEM "Hilfe &verwenden\tF1",        ID_HELP_USING
-        MENUITEM SEPARATOR
-        MENUITEM "Info about &Winefile...",     ID_ABOUT_WINEFILE
-    END
-END
-
 IDM_MAINFRAME MENU PRELOAD DISCARDABLE 
 BEGIN
     POPUP "&Datei"
@@ -363,23 +253,6 @@ BEGIN
                     151,90,38,12
 END
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Bitmap
-//
-
-IDB_ICON_ALIGN_0        BITMAP  DISCARDABLE     "res/icoalig0.bmp"
-IDB_ICON_ALIGN_1        BITMAP  DISCARDABLE     "res/icoalig1.bmp"
-IDB_ICON_ALIGN_2        BITMAP  DISCARDABLE     "res/icoalig2.bmp"
-IDB_ICON_ALIGN_3        BITMAP  DISCARDABLE     "res/icoalig3.bmp"
-IDB_ICON_ALIGN_4        BITMAP  DISCARDABLE     "res/icoalig4.bmp"
-IDB_ICON_ALIGN_5        BITMAP  DISCARDABLE     "res/icoalig5.bmp"
-IDB_ICON_ALIGN_6        BITMAP  DISCARDABLE     "res/icoalig6.bmp"
-IDB_ICON_ALIGN_7        BITMAP  DISCARDABLE     "res/icoalig7.bmp"
-IDB_ICON_ALIGN_8        BITMAP  DISCARDABLE     "res/icoalig8.bmp"
-IDB_ICON_ALIGN_9        BITMAP  DISCARDABLE     "res/icoalig9.bmp"
-IDB_ICON_ALIGN_10       BITMAP  DISCARDABLE     "res/icoali10.bmp"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -489,7 +362,6 @@ BEGIN
     IDS_CONTROL_PANEL       "Systemsteuerung"
     IDS_PRINTERS            "Drucker"
     IDS_BROWSE              "Dateien"
-    IDS_SEARCH_PRG          "Suche Programm..."
     IDS_ALL_USERS           "Alle Benutzer\\"
     IDS_SEARCH              "Suche"
     IDS_ABOUT_EXPLORER      "&Über Explorer..."
@@ -554,115 +426,6 @@ BEGIN
     END
 END
 
-IDM_WINEFILE MENU FIXED IMPURE 
-BEGIN
-    POPUP "&File"
-    BEGIN
-        MENUITEM "&Open\tEnter",                101
-        MENUITEM "&Move...\tF7",                106
-        MENUITEM "&Copy...\tF8",                107
-        MENUITEM "&In Clipboard...\tF9",        118
-        MENUITEM "&Delete\tDel",                108
-        MENUITEM "Re&name...",                  109
-        MENUITEM "Propert&ies...\tAlt+Enter",   ID_EDIT_PROPERTIES
-        MENUITEM SEPARATOR
-        MENUITEM "C&ompress...",                119
-        MENUITEM "Dec&ompress...",              120
-        MENUITEM SEPARATOR
-        MENUITEM "&Run...",                     ID_EXECUTE
-        MENUITEM "&Print...",                   102
-        MENUITEM "Associate...",                103
-        MENUITEM SEPARATOR
-        MENUITEM "Cr&eate Directory...",        ID_EXECUTE
-        MENUITEM "Searc&h...",                  104
-        MENUITEM "&Select Files...",            116
-        MENUITEM SEPARATOR
-        MENUITEM "E&xit\tAlt+X",                ID_FILE_EXIT
-    END
-    POPUP "&Disk"
-    BEGIN
-        MENUITEM "&Copy Disk...",               201
-        MENUITEM "&Label Disk...",              202
-        MENUITEM SEPARATOR
-        MENUITEM "&Format Disk...",             203
-        MENUITEM SEPARATOR
-        MENUITEM "Connect &Network Drive",      252
-        MENUITEM "&Disconnect Network Drive",   253
-        MENUITEM SEPARATOR
-        MENUITEM "Share as...",                 254
-        MENUITEM "&Remove Share...",            255
-        MENUITEM SEPARATOR
-        MENUITEM "&Select Drive...",            251
-    END
-    POPUP "&Directories"
-    BEGIN
-        MENUITEM "&Next Level\t+",              301
-        MENUITEM "Expand &Tree\t*",             302
-        MENUITEM "Expand &all\tStrg+*",         303
-        MENUITEM "Collapse &Tree\t-",           304
-        MENUITEM SEPARATOR
-        MENUITEM "&Mark Childs",                505
-    END
-    POPUP "&View"
-    BEGIN
-        MENUITEM "T&ree and Directory",         413
-        MENUITEM "Tr&ee Only",                  411
-        MENUITEM "Directory &Only",             412
-        MENUITEM SEPARATOR
-        MENUITEM "Sp&lit",                      414
-        MENUITEM SEPARATOR
-        MENUITEM "&Name",                       ID_VIEW_NAME
-        MENUITEM "&All File Details",           ID_VIEW_ALL_ATTRIBUTES
-        , CHECKED
-        MENUITEM "&Partial Details...",         ID_VIEW_SELECTED_ATTRIBUTES
-        MENUITEM SEPARATOR
-        MENUITEM "&Sort by Name",               404
-        MENUITEM "Sort &by Type",               405
-        MENUITEM "Sort by Si&ze",               406
-        MENUITEM "Sort by &Date",               407
-        MENUITEM SEPARATOR
-        MENUITEM "Sort by &...",                409
-    END
-    POPUP "&Options"
-    BEGIN
-        MENUITEM "&Confirmation...",            65535
-        MENUITEM "&Font...",                    65535
-        MENUITEM "Customize Tool&bar...",       65535
-        MENUITEM SEPARATOR
-        MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR, CHECKED
-        MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
-        MENUITEM SEPARATOR
-        MENUITEM "&Symbol nach Programmstart",  65535
-        MENUITEM "&Einstellungen beim Beenden speichern", 511
-    END
-    POPUP "&Security"
-    BEGIN
-        MENUITEM "&Access...",                  605
-        MENUITEM "&Logging...",                 606
-        MENUITEM "&Owner...",                   607
-    END
-    POPUP "&Window"
-    BEGIN
-        MENUITEM "New &Window",                 ID_WINDOW_NEW
-        MENUITEM "Cascading\tCtrl+F5",          ID_WINDOW_CASCADE
-        MENUITEM "Tile &Horizontally",          ID_WINDOW_TILE_HORZ
-        MENUITEM "Tile &Vertically\tCtrl+F4",   ID_WINDOW_TILE_VERT
-        MENUITEM "Arrange Automatically",       ID_WINDOW_AUTOSORT
-        MENUITEM "Arrange &Symbols",            ID_WINDOW_ARRANGE
-        MENUITEM "&Refresh\tF5",                ID_REFRESH
-    END
-    POPUP "&?"
-    BEGIN
-        MENUITEM "&Help Topics\tF1",            ID_HELP
-        MENUITEM "Help &Search...\tF1",         ID_HELP
-        MENUITEM "&Using Help\tF1",             ID_HELP_USING
-        MENUITEM SEPARATOR
-        MENUITEM "Info about &Winefile...",     ID_ABOUT_WINEFILE
-    END
-END
-
 IDM_DESKTOPBAR MENU DISCARDABLE 
 BEGIN
     POPUP ""
@@ -694,51 +457,11 @@ BEGIN
     PUSHBUTTON      "&Help",254,158,43,47,14
 END
 
-IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 144, 65
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
-    WS_SYSMENU | WS_THICKFRAME
-EXSTYLE WS_EX_APPWINDOW
-CAPTION "Search Program in Startmenu"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
-BEGIN
-    LTEXT           "&Filter:",IDC_STATIC,7,9,18,8
-    EDITTEXT        IDC_TOPIC,34,7,103,14,ES_AUTOHSCROLL
-    CONTROL         "List1",IDC_MAILS_FOUND,"SysListView32",LVS_REPORT | 
-                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
-                    WS_TABSTOP,7,25,130,33
-END
-
 IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 172
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Desktop Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Please select your prefered icon alignment algorithm:",
-                    IDC_STATIC,7,7,166,8
-    CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,7,25,46,44
-    CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,57,25,46,44
-    CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,110,25,46,44
-    CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,159,25,46,44
-    CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,7,73,46,44
-    CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,57,73,46,44
-    CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,110,73,46,44
-    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,159,73,46,44
-    CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,7,121,46,44
-    CONTROL         "border H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,57,121,46,44
-    CONTROL         "round about",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,110,121,46,44
-    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
-                    WS_TABSTOP,159,121,46,44
 END
 
 IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 154
@@ -764,14 +487,6 @@ END
 #ifdef APSTUDIO_INVOKED
 GUIDELINES DESIGNINFO DISCARDABLE 
 BEGIN
-    IDD_SEARCH_PROGRAM, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 137
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 58
-    END
-
     IDD_DESKBAR_DESKTOP, DIALOG
     BEGIN
         LEFTMARGIN, 7
@@ -833,7 +548,6 @@ BEGIN
     IDS_CONTROL_PANEL       "Control Panel"
     IDS_PRINTERS            "Printers"
     IDS_BROWSE              "Browse Files"
-    IDS_SEARCH_PRG          "Search Programm..."
     IDS_ALL_USERS           "All Users\\"
     IDS_SEARCH              "Search"
     IDS_ABOUT_EXPLORER      "&About Explorer..."
@@ -955,7 +669,6 @@ BEGIN
     IDS_CONTROL_PANEL       "Panneau de configuration"
     IDS_PRINTERS            "Imprimantes"
     IDS_BROWSE              "Parcourir"
-    IDS_SEARCH_PRG          "Recherche Programme..."
     IDS_ALL_USERS           "Tous les utilisateurs\\"
     IDS_SEARCH              "Rechercher"
     IDS_ABOUT_EXPLORER      "A propos de l'explorateur..."
@@ -985,121 +698,6 @@ END
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 #pragma code_page(1252)
 #endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
-
-IDM_WINEFILE MENU FIXED IMPURE 
-BEGIN
-    POPUP "&Ficheiro"
-    BEGIN
-        MENUITEM "&Abrir\tEnter",               101
-        MENUITEM "&Mover...\tF7",               106
-        MENUITEM "&Copiar...\tF8",              107
-        MENUITEM "&Na Clipboard\tF9",           118
-        MENUITEM "&Apagar\tDel",                108
-        MENUITEM "Re&nomear...",                109
-        MENUITEM "Propriedades\tAlt+Enter",     ID_EDIT_PROPERTIES
-        MENUITEM SEPARATOR
-        MENUITEM "Comprimir",                   119
-        MENUITEM "Descomprimir",                120
-        MENUITEM SEPARATOR
-        MENUITEM "Executar...",                 ID_EXECUTE
-        MENUITEM "Imprimir",                    102
-        MENUITEM "Associar",                    103
-        MENUITEM SEPARATOR
-        MENUITEM "Criar Directório...",         ID_EXECUTE
-        MENUITEM "Procurar...",                 104
-        MENUITEM "Seleccionar Ficheiros...",    116
-        MENUITEM SEPARATOR
-        MENUITEM "Sair\tAlt+X",                 ID_FILE_EXIT
-    END
-    POPUP "&Disco"
-    BEGIN
-        MENUITEM "Copiar Disco...",             201
-        MENUITEM "Rotular Disco...",            202
-        MENUITEM SEPARATOR
-        MENUITEM "Formatar Disco...",           203
-        MENUITEM SEPARATOR
-        MENUITEM "Conectar Drive de Rede",      252
-        MENUITEM "Disconectar Drive de Rede",   253
-        MENUITEM SEPARATOR
-        MENUITEM "Partilhar como...",           254
-        MENUITEM "Remover Partilha...",         255
-        MENUITEM SEPARATOR
-        MENUITEM "Seleccionar Drive...",        251
-    END
-    POPUP "&Directories"
-    BEGIN
-        MENUITEM "Próximo Nível\t+",            301
-        MENUITEM "Expandir Arvore\t*",          302
-        MENUITEM "Expandir Tudo\tStrg+*",       303
-        MENUITEM "Fechar Árvore\t-",            304
-        MENUITEM SEPARATOR
-        MENUITEM "&Mark Childs",                505
-    END
-    POPUP "&View"
-    BEGIN
-        MENUITEM "Árvore e Directório",         413
-        MENUITEM "Só Árvores",                  411
-        MENUITEM "Só Directório",               412
-        MENUITEM SEPARATOR
-        MENUITEM "Partir",                      414
-        MENUITEM SEPARATOR
-        MENUITEM "Nome",                        ID_VIEW_NAME
-        MENUITEM "&All File Details",           ID_VIEW_ALL_ATTRIBUTES
-        , CHECKED
-        MENUITEM "&Partial Details...",         ID_VIEW_SELECTED_ATTRIBUTES
-        MENUITEM SEPARATOR
-        MENUITEM "Ordenar por Nome",            404
-        MENUITEM "Ordenar por Tipo",            405
-        MENUITEM "Ordenar por Tamanho",         406
-        MENUITEM "Ordenar por Data",            407
-        MENUITEM SEPARATOR
-        MENUITEM "Ordenar por &...",            409
-    END
-    POPUP "&Opções"
-    BEGIN
-        MENUITEM "&Confirmação",                65535
-        MENUITEM "&Fonte",                      65535
-        MENUITEM "Customizar Barra de Ferramentas", 65535
-        MENUITEM SEPARATOR
-        MENUITEM "Barra de Ferramentas",        ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "Barra de Drives",             ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "Barra de Estado",             ID_VIEW_STATUSBAR, CHECKED
-        MENUITEM "Ecrã Cheio\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
-        MENUITEM SEPARATOR
-        MENUITEM "&Symbol nach Programmstart",  65535
-        MENUITEM "&Einstellungen beim Beenden speichern", 511
-    END
-    POPUP "&Segurança"
-    BEGIN
-        MENUITEM "&Acesso",                     605
-        MENUITEM "&Entrar",                     606
-        MENUITEM "&Dono",                       607
-    END
-    POPUP "&Janela"
-    BEGIN
-        MENUITEM "Nova Janela",                 ID_WINDOW_NEW
-        MENUITEM "Cascata\tCtrl+F5",            ID_WINDOW_CASCADE
-        MENUITEM "Mosaico &Horizontal",         ID_WINDOW_TILE_HORZ
-        MENUITEM "Mosaico &Vertical\tCtrl+F4",  ID_WINDOW_TILE_VERT
-        MENUITEM "Arranjar Automaticamente",    ID_WINDOW_AUTOSORT
-        MENUITEM "Arranjar Símbolos",           ID_WINDOW_ARRANGE
-        MENUITEM "&Actualizar\tF5",             ID_REFRESH
-    END
-    POPUP "&?"
-    BEGIN
-        MENUITEM "Tópicos da Ajuda\tF1",        ID_HELP
-        MENUITEM "Procurar Ajuda...\tF1",       ID_HELP
-        MENUITEM "Usar Ajuda\tF1",              ID_HELP_USING
-        MENUITEM SEPARATOR
-        MENUITEM "Info sobre &Winefile...",     ID_ABOUT_WINEFILE
-    END
-END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1157,7 +755,6 @@ BEGIN
     IDS_CONTROL_PANEL       "Painel de controle"
     IDS_PRINTERS            "Impressora"
     IDS_BROWSE              "Vasculhar Ficheiros"
-    IDS_SEARCH_PRG          "Procurar programa..."
     IDS_ALL_USERS           "Todos utilizadores\\"
     IDS_SEARCH              "Procurar"
     IDS_ABOUT_EXPLORER      "Sobre o Explorador..."

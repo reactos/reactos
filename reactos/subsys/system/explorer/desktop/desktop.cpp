@@ -45,31 +45,6 @@ static BOOL (WINAPI*SetShellWindow)(HWND);
 static BOOL (WINAPI*SetShellWindowEx)(HWND, HWND);
 
 
-#ifdef _USE_HDESK
-
-Desktop::Desktop(HDESK hdesktop/*, HWINSTA hwinsta*/)
- :	_hdesktop(hdesktop)
-//	_hwinsta(hwinsta)
-{
-}
-
-Desktop::~Desktop()
-{
-	if (_hdesktop)
-		CloseDesktop(_hdesktop);
-
-//	if (_hwinsta)
-//		CloseWindowStation(_hwinsta);
-
-	if (_pThread.get()) {
-		_pThread->Stop();
-		_pThread.release();
-	}
-}
-
-#endif
-
-
 Desktops::Desktops()
  :	_current_desktop(0)
 {
@@ -86,77 +61,7 @@ Desktops::~Desktops()
 void Desktops::init()
 {
 	resize(DESKTOP_COUNT);
-
-#ifdef _USE_HDESK
-	DesktopPtr& desktop = (*this)[0];
-
-	desktop = DesktopPtr(new Desktop(OpenInputDesktop(0, FALSE, DESKTOP_SWITCHDESKTOP)));
-#endif
 }
-
-#ifdef _USE_HDESK
-
-void Desktops::SwitchToDesktop(int idx)
-{
-	if (_current_desktop == idx)
-		return;
-
-	DesktopPtr& desktop = (*this)[idx];
-
-	DesktopThread* pThread = NULL;
-
-	if (desktop.get()) {
-		if (desktop->_hdesktop)
-			if (!SwitchDesktop(desktop->_hdesktop))
-				return;
-	} else {
-		FmtString desktop_name(TEXT("Desktop %d"), idx);
-
-		SECURITY_ATTRIBUTES saAttr = {sizeof(SECURITY_ATTRIBUTES), 0, TRUE};
-/*
-		HWINSTA hwinsta = CreateWindowStation(TEXT("ExplorerWinStation"), 0, GENERIC_ALL, &saAttr);
-
-		if (!SetProcessWindowStation(hwinsta))
-			return;
-*/
-		HDESK hdesktop = CreateDesktop(desktop_name, NULL, NULL, 0, GENERIC_ALL, &saAttr);
-		if (!hdesktop)
-			return;
-
-		desktop = DesktopPtr(new Desktop(hdesktop/*, hwinsta*/));
-
-		pThread = new DesktopThread(*desktop);
-	}
-
-	_current_desktop = idx;
-
-	if (pThread) {
-		desktop->_pThread = DesktopThreadPtr(pThread);
-		pThread->Start();
-	}
-}
-
-int DesktopThread::Run()
-{
-	if (!SetThreadDesktop(_desktop._hdesktop))
-		return -1;
-
-	HDESK hDesk_old = OpenInputDesktop(0, FALSE, DESKTOP_SWITCHDESKTOP);
-
-	if (!SwitchDesktop(_desktop._hdesktop))
-		return -1;
-
-	if (!_desktop._hwndDesktop)
-		_desktop._hwndDesktop = DesktopWindow::Create();
-
-	int ret = Window::MessageLoop();
-
-	SwitchDesktop(hDesk_old);
-
-	return ret;
-}
-
-#else // _USE_HDESK
 
 static BOOL CALLBACK DesktopEnumFct(HWND hwnd, LPARAM lparam)
 {
@@ -200,8 +105,6 @@ void Desktops::SwitchToDesktop(int idx)
 
 	_current_desktop = idx;
 }
-
-#endif // _USE_HDESK
 
 
 BOOL IsAnyDesktopRunning()
@@ -450,9 +353,6 @@ DesktopShellView::DesktopShellView(HWND hwnd, IShellView* pShellView)
 	 // subclass background window
 	new BackgroundWindow(_hwndListView);
 
-	_icon_algo = 1;	// default icon arrangement
-
-	PositionIcons();
 	InitDragDrop();
 }
 
@@ -494,14 +394,6 @@ LRESULT	DesktopShellView::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		if (!DoContextMenu(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)))
 			DoDesktopContextMenu(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 		break;
-
-	  case PM_SET_ICON_ALGORITHM:
-		_icon_algo = wparam;
-		PositionIcons();
-		break;
-
-	  case PM_GET_ICON_ALGORITHM:
-		return _icon_algo;
 
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
@@ -601,178 +493,4 @@ HRESULT DesktopShellView::DoDesktopContextMenu(int x, int y)
 	}
 
 	return hr;
-}
-
-
-#define	ARRANGE_BORDER_DOWN	 8
-#define	ARRANGE_BORDER_HV	 9
-#define	ARRANGE_ROUNDABOUT	10
-
-static const POINTS s_align_start[] = {
-	{0, 0},	// left/top
-	{0, 0},
-	{1, 0},	// right/top
-	{1, 0},
-	{0, 1},	// left/bottom
-	{0, 1},
-	{1, 1},	// right/bottom
-	{1, 1},
-
-	{0, 0},	// left/top
-	{0, 0},
-	{0, 0}
-};
-
-static const POINTS s_align_dir1[] = {
-	{ 0, +1},	// down
-	{+1,  0},	// right
-	{-1,  0},	// left
-	{ 0, +1},	// down
-	{ 0, -1},	// up
-	{+1,  0},	// right
-	{-1,  0},	// left
-	{ 0, -1},	// up
-
-	{ 0, +1},	// down
-	{+1,  0},	// right
-	{+1,  0}	// right
-};
-
-static const POINTS s_align_dir2[] = {
-	{+1,  0},	// right
-	{ 0, +1},	// down
-	{ 0, +1},	// down
-	{-1,  0},	// left
-	{+1,  0},	// right
-	{ 0, -1},	// up
-	{ 0, -1},	// up
-	{-1,  0},	// left
-
-	{+1,  0},	// right
-	{ 0, +1},	// down
-	{ 0, +1}	// down
-};
-
-typedef pair<int,int> IconPos;
-typedef map<IconPos, int> IconMap;
-
-void DesktopShellView::PositionIcons(int dir)
-{
-	DWORD spacing = ListView_GetItemSpacing(_hwndListView, FALSE);
-
-	RECT work_area;
-	SystemParametersInfo(SPI_GETWORKAREA, 0, &work_area, 0);
-
-	const POINTS& dir1 = s_align_dir1[_icon_algo];
-	const POINTS& dir2 = s_align_dir2[_icon_algo];
-	const POINTS& start_pos = s_align_start[_icon_algo];
-
-	int dir_x1 = dir1.x;
-	int dir_y1 = dir1.y;
-	int dir_x2 = dir2.x;
-	int dir_y2 = dir2.y;
-
-	int cx = LOWORD(spacing);
-	int cy = HIWORD(spacing);
-
-	int dx1 = dir_x1 * cx;
-	int dy1 = dir_y1 * cy;
-	int dx2 = dir_x2 * cx;
-	int dy2 = dir_y2 * cy;
-
-	int start_x = (start_pos.x * work_area.right)/cx*cx + (cx-32)/2;
-	int start_y = (start_pos.y * work_area.bottom)/cy*cy + 4/*(cy-32)/2*/;
-
-	if (start_x >= work_area.right)
-		start_x -= cx;
-
-	if (start_y >= work_area.bottom)
-		start_y -= cy;
-
-	int x = start_x;
-	int y = start_y;
-
-	int all = ListView_GetItemCount(_hwndListView);
-	int i1, i2;
-
-	if (dir > 0) {
-		i1 = 0;
-		i2 = all;
-	} else {
-		i1 = all-1;
-		i2 = -1;
-	}
-
-	IconMap pos_idx;
-	int cnt = 0;
-
-	for(int idx=i1; idx!=i2; idx+=dir) {
-		pos_idx[IconPos(y, x)] = idx;
-
-		if (_icon_algo == ARRANGE_BORDER_DOWN) {
-			if (++cnt & 1)
-				x = work_area.right - x;
-			else {
-				y += dy1;
-
-				if (y >= work_area.bottom) {
-					y = start_y;
-					x += dx2;
-				}
-			}
-
-			continue;
-		}
-		else if (_icon_algo == ARRANGE_BORDER_HV) {
-			if (++cnt & 1)
-				x = work_area.right - x;
-			else if (cnt & 2) {
-				y += dy1;
-
-				if (y >= work_area.bottom) {
-					y = start_y;
-					x += dx2;
-				}
-			} else {
-				x += dx1;
-
-				if (x >= work_area.right) {
-					x = start_x;
-					y += dy2;
-				}
-			}
-
-			continue;
-		}
-		else if (_icon_algo == ARRANGE_ROUNDABOUT) {
-
-			///@todo
-
-		}
-
-		x += dx1;
-		y += dy1;
-
-		if (x<0 || x>=work_area.right) {
-			x = start_x;
-			y += dy2;
-		} else if (y<0 || y>=work_area.bottom) {
-			y = start_y;
-			x += dx2;
-		}
-	}
-
-	 // use a little trick to get the icons where we want them to be...
-
-	for(IconMap::const_iterator it=pos_idx.end(); --it!=pos_idx.begin(); ) {
-		const IconPos& pos = it->first;
-
-		ListView_SetItemPosition32(_hwndListView, it->second, pos.second, pos.first);
-	}
-
-	for(IconMap::const_iterator it=pos_idx.begin(); it!=pos_idx.end(); ++it) {
-		const IconPos& pos = it->first;
-
-		ListView_SetItemPosition32(_hwndListView, it->second, pos.second, pos.first);
-	}
 }

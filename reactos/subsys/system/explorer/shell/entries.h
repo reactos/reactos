@@ -29,14 +29,7 @@
 enum ENTRY_TYPE {
 	ET_UNKNOWN,
 	ET_WINDOWS,
-#ifdef __WINE__
-	ET_UNIX,
-#endif
-	ET_SHELL,
-	ET_NTOBJS,
-	ET_REGISTRY,
-	ET_FAT,
-	ET_WEB
+	ET_SHELL
 };
 
 enum SORT_ORDER {

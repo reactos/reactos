@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) Console Application" 0x0103
 
-CFG=explorer - Win32 WineDll
+CFG=explorer - Win32 Release
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,19 +13,14 @@ CFG=explorer - Win32 WineDll
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "explorer.mak" CFG="explorer - Win32 WineDll"
+!MESSAGE NMAKE /f "explorer.mak" CFG="explorer - Win32 Release"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
 !MESSAGE "explorer - Win32 Release" (based on "Win32 (x86) Console Application")
 !MESSAGE "explorer - Win32 Debug" (based on "Win32 (x86) Console Application")
-!MESSAGE "explorer - Win32 Debug Release" (based on "Win32 (x86) Console Application")
 !MESSAGE "explorer - Win32 Unicode Release" (based on "Win32 (x86) Console Application")
 !MESSAGE "explorer - Win32 Unicode Debug" (based on "Win32 (x86) Console Application")
-!MESSAGE "explorer - Win32 _NO_COMUTIL" (based on "Win32 (x86) Console Application")
-!MESSAGE "explorer - Win32" (based on "Win32 (x86) Console Application")
-!MESSAGE "explorer - Win32 WineRelease" (based on "Win32 (x86) Console Application")
-!MESSAGE "explorer - Win32 WineDll" (based on "Win32 (x86) Console Application")
 !MESSAGE 
 
 # Begin Project
@@ -85,32 +80,6 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib shell32.lib comctl32.lib gdi32.lib user32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 # SUBTRACT LINK32 /pdb:none /force
 
-!ELSEIF  "$(CFG)" == "explorer - Win32 Debug Release"
-
-# PROP BASE Use_MFC 0
-# PROP BASE Use_Debug_Libraries 0
-# PROP BASE Output_Dir "DRelease"
-# PROP BASE Intermediate_Dir "DRelease"
-# PROP BASE Ignore_Export_Lib 0
-# PROP BASE Target_Dir ""
-# PROP Use_MFC 0
-# PROP Use_Debug_Libraries 0
-# PROP Output_Dir "DRelease"
-# PROP Intermediate_Dir "DRelease"
-# PROP Ignore_Export_Lib 0
-# PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_ROS_" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GR /GX /Zi /O2 /D "NDEBUG" /D "WIN32" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /FR /YX /FD /c
-# ADD BASE RSC /l 0x407 /d "NDEBUG"
-# ADD RSC /l 0x407 /d "NDEBUG"
-BSC32=bscmake.exe
-# ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
-LINK32=link.exe
-# ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 shell32.lib comctl32.lib gdi32.lib user32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386
-# SUBTRACT LINK32 /pdb:none /force
-
 !ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Release"
 
 # PROP BASE Use_MFC 0
@@ -163,127 +132,14 @@ LINK32=link.exe
 # ADD LINK32 shell32.lib comctl32.lib gdi32.lib user32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 # SUBTRACT LINK32 /pdb:none /force
 
-!ELSEIF  "$(CFG)" == "explorer - Win32 _NO_COMUTIL"
-
-# PROP BASE Use_MFC 0
-# PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "explorer___Win32__NO_COMUTIL"
-# PROP BASE Intermediate_Dir "explorer___Win32__NO_COMUTIL"
-# PROP BASE Ignore_Export_Lib 0
-# PROP BASE Target_Dir ""
-# PROP Use_MFC 0
-# PROP Use_Debug_Libraries 1
-# PROP Output_Dir "_NO_COMUTIL"
-# PROP Intermediate_Dir "_NO_COMUTIL"
-# PROP Ignore_Export_Lib 0
-# PROP Target_Dir ""
-# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_ROS_" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /FR /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GR /GX /ZI /Od /D "_DEBUG" /D "_NO_COMUTIL" /D "WIN32" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /FR /YX /FD /GZ /c
-# ADD BASE RSC /l 0x407 /d "_DEBUG"
-# ADD RSC /l 0x407 /d "_DEBUG"
-BSC32=bscmake.exe
-# ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
-LINK32=link.exe
-# ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# SUBTRACT BASE LINK32 /pdb:none
-# ADD LINK32 shell32.lib comctl32.lib gdi32.lib user32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# SUBTRACT LINK32 /pdb:none /force
-
-!ELSEIF  "$(CFG)" == "explorer - Win32"
-
-# PROP BASE Use_MFC 0
-# PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "Win32"
-# PROP BASE Intermediate_Dir "Win32"
-# PROP BASE Ignore_Export_Lib 0
-# PROP BASE Target_Dir ""
-# PROP Use_MFC 0
-# PROP Use_Debug_Libraries 1
-# PROP Output_Dir "Win32"
-# PROP Intermediate_Dir "Win32"
-# PROP Ignore_Export_Lib 0
-# PROP Target_Dir ""
-# ADD BASE CPP /nologo /MDd /W3 /Gm /GR /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_ROS_" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /FR /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GR /GX /ZI /Od /D "_DEBUG" /D "UNICODE" /D "WIN32" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /FR /YX /FD /GZ /c
-# ADD BASE RSC /l 0x407 /d "_DEBUG"
-# ADD RSC /l 0x407 /d "_DEBUG"
-BSC32=bscmake.exe
-# ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
-LINK32=link.exe
-# ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# SUBTRACT BASE LINK32 /pdb:none
-# ADD LINK32 gdi32.lib user32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Win32/wexplorer.exe" /pdbtype:sept
-# SUBTRACT LINK32 /pdb:none /force
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 WineRelease"
-
-# PROP BASE Use_MFC 0
-# PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "explorer___Win32_WineRelease"
-# PROP BASE Intermediate_Dir "explorer___Win32_WineRelease"
-# PROP BASE Ignore_Export_Lib 0
-# PROP BASE Target_Dir ""
-# PROP Use_MFC 0
-# PROP Use_Debug_Libraries 1
-# PROP Output_Dir "WineRelease"
-# PROP Intermediate_Dir "WineRelease"
-# PROP Ignore_Export_Lib 0
-# PROP Target_Dir ""
-# ADD BASE CPP /nologo /MDd /W3 /Gm /GR /GX /ZI /Od /D "_DEBUG" /D "UNICODE" /D "WIN32" /D "_ROS_" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /FR /YX /FD /GZ /c
-# ADD CPP /nologo /MT /W3 /GR /GX /O2 /D "NDEBUG" /D "UNICODE" /D "WIN32" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /FD /c
-# ADD BASE RSC /l 0x407 /d "_DEBUG"
-# ADD RSC /l 0x407 /d "_DEBUG"
-BSC32=bscmake.exe
-# ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
-LINK32=link.exe
-# ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# SUBTRACT BASE LINK32 /pdb:none
-# ADD LINK32 gdi32.lib user32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /incremental:no /machine:I386 /out:"WineRelease/wexplorer.exe" /pdbtype:sept
-# SUBTRACT LINK32 /pdb:none /debug /force
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 WineDll"
-
-# PROP BASE Use_MFC 0
-# PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "explorer___Win32_WineDll"
-# PROP BASE Intermediate_Dir "explorer___Win32_WineDll"
-# PROP BASE Ignore_Export_Lib 0
-# PROP BASE Target_Dir ""
-# PROP Use_MFC 0
-# PROP Use_Debug_Libraries 1
-# PROP Output_Dir "WineDll"
-# PROP Intermediate_Dir "WineDll"
-# PROP Ignore_Export_Lib 0
-# PROP Target_Dir ""
-# ADD BASE CPP /nologo /MT /W3 /GR /GX /O2 /D "NDEBUG" /D "UNICODE" /D "WIN32" /D "_ROS_" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /FD /c
-# ADD CPP /nologo /MD /W3 /GR /GX /O2 /D "NDEBUG" /D "UNICODE" /D "WIN32" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /FD /c
-# ADD BASE RSC /l 0x407 /d "_DEBUG"
-# ADD RSC /l 0x407 /d "_DEBUG"
-BSC32=bscmake.exe
-# ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
-LINK32=link.exe
-# ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /machine:I386 /pdbtype:sept
-# SUBTRACT BASE LINK32 /pdb:none /debug
-# ADD LINK32 gdi32.lib user32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /machine:I386 /out:"WineDll/wexplorer.exe" /pdbtype:sept
-# SUBTRACT LINK32 /pdb:none /debug /force
-
 !ENDIF 
 
 # Begin Target
 
 # Name "explorer - Win32 Release"
 # Name "explorer - Win32 Debug"
-# Name "explorer - Win32 Debug Release"
 # Name "explorer - Win32 Unicode Release"
 # Name "explorer - Win32 Unicode Debug"
-# Name "explorer - Win32 _NO_COMUTIL"
-# Name "explorer - Win32"
-# Name "explorer - Win32 WineRelease"
-# Name "explorer - Win32 WineDll"
 # Begin Group "utility"
 
 # PROP Default_Filter ""
@@ -365,55 +221,6 @@ SOURCE=.\res\config.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\de.rc
-
-!IF  "$(CFG)" == "explorer - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Debug"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Debug Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Release"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Debug"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 _NO_COMUTIL"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 WineRelease"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 WineDll"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\res\documents.ico
 # End Source File
 # Begin Source File
@@ -422,52 +229,8 @@ SOURCE=.\res\drivebar.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=.\en.rc
-
-!IF  "$(CFG)" == "explorer - Win32 Release"
-
+SOURCE=".\explorer-jp.rc"
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Debug"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Debug Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Release"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Debug"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 _NO_COMUTIL"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 WineRelease"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 WineDll"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -492,50 +255,6 @@ SOURCE=.\res\floating.ico
 # Begin Source File
 
 SOURCE=.\res\folder.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\icoali10.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\icoalig0.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\icoalig1.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\icoalig2.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\icoalig3.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\icoalig4.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\icoalig5.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\icoalig6.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\icoalig7.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\icoalig8.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\icoalig9.bmp
 # End Source File
 # Begin Source File
 
@@ -575,55 +294,6 @@ SOURCE=.\res\reactos.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\resource.rc
-
-!IF  "$(CFG)" == "explorer - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Debug"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Debug Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Release"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Debug"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 _NO_COMUTIL"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 WineRelease"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 WineDll"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=".\res\ros-big.ico"
 # End Source File
 # Begin Source File
@@ -633,10 +303,6 @@ SOURCE=".\res\search-doc.ico"
 # Begin Source File
 
 SOURCE=.\res\search.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\startmenu.bmp
 # End Source File
 # Begin Source File
 
@@ -703,22 +369,6 @@ SOURCE=.\desktop\desktop.cpp
 SOURCE=.\desktop\desktop.h
 # End Source File
 # End Group
-# Begin Group "doc"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\doc\changes.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\doc\readme.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\doc\TODO.txt
-# End Source File
-# End Group
 # Begin Group "shell"
 
 # PROP Default_Filter ""
@@ -729,14 +379,6 @@ SOURCE=.\shell\entries.cpp
 # Begin Source File
 
 SOURCE=.\shell\entries.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\shell\fatfs.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\shell\fatfs.h
 # End Source File
 # Begin Source File
 
@@ -756,27 +398,11 @@ SOURCE=.\shell\mainframe.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\shell\ntobjfs.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\shell\ntobjfs.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\shell\pane.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\shell\pane.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\shell\regfs.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\shell\regfs.h
 # End Source File
 # Begin Source File
 
@@ -800,22 +426,6 @@ SOURCE=.\shell\startup.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\shell\unixfs.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\shell\unixfs.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\shell\webchild.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\shell\webchild.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\shell\winfs.cpp
 # End Source File
 # Begin Source File
@@ -826,14 +436,6 @@ SOURCE=.\shell\winfs.h
 # Begin Group "dialogs"
 
 # PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\dialogs\searchprogram.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\dialogs\searchprogram.h
-# End Source File
 # Begin Source File
 
 SOURCE=.\dialogs\settings.cpp
@@ -862,10 +464,6 @@ SOURCE=.\externals.h
 # Begin Source File
 
 SOURCE=.\globals.h
-# End Source File
-# Begin Source File
-
-SOURCE=".\i386-stub-win32.c"
 # End Source File
 # End Target
 # End Project

@@ -751,13 +751,6 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 };
 
 
-#ifdef __WINE__	// Wine doesn't know of unnamed union members and uses some macros instead.
-#define	UNION_MEMBER(x) DUMMYUNIONNAME.##x
-#else
-#define	UNION_MEMBER(x) x
-#endif
-
-
  // encapsulation of STRRET structure for easy string retrieval with conversion
 
 #ifdef UNICODE
@@ -784,15 +777,15 @@ struct StrRetA : public STRRET
 	{
 		switch(uType) {
 		  case STRRET_WSTR:
-			WideCharToMultiByte(CP_ACP, 0, UNION_MEMBER(pOleStr), -1, b, l, NULL, NULL);
+			WideCharToMultiByte(CP_ACP, 0, pOleStr, -1, b, l, NULL, NULL);
 			break;
 
 		  case STRRET_OFFSET:
-			strcpyn(b, (LPCSTR)&shiid+UNION_MEMBER(uOffset), l);
+			strcpyn(b, (LPCSTR)&shiid+uOffset, l);
 			break;
 
 		  case STRRET_CSTR:
-			strcpyn(b, UNION_MEMBER(cStr), l);
+			strcpyn(b, cStr, l);
 		}
 	}
 };
@@ -810,15 +803,15 @@ struct StrRetW : public STRRET
 	{
 		switch(uType) {
 		  case STRRET_WSTR:
-			wcscpyn(b, UNION_MEMBER(pOleStr), l);
+			wcscpyn(b, pOleStr, l);
 			break;
 
 		  case STRRET_OFFSET:
-			MultiByteToWideChar(CP_ACP, 0, (LPCSTR)&shiid+UNION_MEMBER(uOffset), -1, b, l);
+			MultiByteToWideChar(CP_ACP, 0, (LPCSTR)&shiid+uOffset, -1, b, l);
 			break;
 
 		  case STRRET_CSTR:
-			MultiByteToWideChar(CP_ACP, 0, UNION_MEMBER(cStr), -1, b, l);
+			MultiByteToWideChar(CP_ACP, 0, cStr, -1, b, l);
 		}
 	}
 };
