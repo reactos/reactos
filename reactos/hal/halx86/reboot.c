@@ -1,4 +1,4 @@
-/* $Id: reboot.c,v 1.5 2003/12/28 22:38:09 fireball Exp $
+/* $Id: reboot.c,v 1.6 2004/03/18 19:58:35 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,13 +18,11 @@ static VOID
 HalReboot (VOID)
 {
     char data;
-    BYTE *mem;
+    extern PVOID HalpZeroPageMapping;
 
     /* enable warm reboot */
-    mem = (BYTE *)(0xd0000000 + 0x0000);
-//    mem = HalMapPhysicalMemory (0, 1);
-    mem[0x472] = 0x34;
-    mem[0x473] = 0x12;
+    ((PUCHAR)HalpZeroPageMapping)[0x472] = 0x34;
+    ((PUCHAR)HalpZeroPageMapping)[0x473] = 0x12;
 
     /* disable interrupts */
 #if defined(__GNUC__)

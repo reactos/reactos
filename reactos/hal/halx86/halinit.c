@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.6 2003/09/02 20:11:43 ea Exp $
+/* $Id: halinit.c,v 1.7 2004/03/18 19:58:35 dwelch Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -21,6 +21,10 @@
 
 #define NDEBUG
 #include <internal/debug.h>
+
+/* GLOBALS *****************************************************************/
+
+PVOID HalpZeroPageMapping = NULL;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -68,6 +72,8 @@ HalInitSystem (ULONG BootPhase,
     {
       /* Go to blue screen */
       HalClearDisplay (0x17); /* grey on blue */
+      
+      HalpZeroPageMapping = MmMapIoSpace((LARGE_INTEGER)0LL, PAGE_SIZE, FALSE);
     }
 
   return TRUE;
