@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.114 2004/05/10 17:07:18 weiden Exp $
+/* $Id: winpos.c,v 1.115 2004/05/13 20:46:28 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1350,70 +1350,69 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
   return(WasVisible);
 }
 
-VOID STATIC FASTCALL
-WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTests, POINT *Point,
-		     PWINDOW_OBJECT* Window, USHORT *HitTest)
+STATIC VOID FASTCALL
+WinPosSearchChildren(
+   PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTests, POINT *Point,
+   PWINDOW_OBJECT* Window, USHORT *HitTest)
 {
-  PWINDOW_OBJECT Current;
-  HWND *List, *phWnd;
+   PWINDOW_OBJECT Current;
+   HWND *List, *phWnd;
 
-  if((List = IntWinListChildren(ScopeWin)))
-  {
-    for(phWnd = List; *phWnd; ++phWnd)
-    {
-      if(!(Current = IntGetWindowObject(*phWnd)))
+   if ((List = IntWinListChildren(ScopeWin)))
+   {
+      for (phWnd = List; *phWnd; ++phWnd, IntReleaseWindowObject(Current))
       {
-        continue;
-      }
-      
-      if (Current->Style & WS_VISIBLE &&
-	  (!(Current->Style & WS_DISABLED) || (Current->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD) &&
-	  IntPtInWindow(Current, Point->x, Point->y))
-	  {
-	if(*Window)
-	{
-	  IntReleaseWindowObject(*Window);
-	}
-	*Window = Current;
-	    
-        if(Current->Style & WS_DISABLED)
-        {
-          *HitTest = HTERROR;
-	  ExFreePool(List);
-          return;
-        }
-        
-        if(OnlyHitTests && (Current->MessageQueue == OnlyHitTests))
-        {
-          *HitTest = IntSendMessage(Current->Self, WM_NCHITTEST, 0,
-                                    MAKELONG(Point->x, Point->y));
-          if((*HitTest) == (USHORT)HTTRANSPARENT)
-          {
+         if (!(Current = IntGetWindowObject(*phWnd)))
             continue;
-          }
-        }
-        else
-        {
-          *HitTest = HTCLIENT;
-        }
+      
+         if (!(Current->Style & WS_VISIBLE))
+            continue;
+
+         if ((Current->Style & (WS_POPUP | WS_CHILD | WS_DISABLED)) ==
+             (WS_CHILD | WS_DISABLED))
+            continue;
+
+         if (!IntPtInWindow(Current, Point->x, Point->y))
+            continue;
+
+         if (*Window)
+	    IntReleaseWindowObject(*Window);
+         *Window = Current;
+
+         if (Current->Style & WS_MINIMIZE)
+         {
+            *HitTest = HTCAPTION;
+            break;
+         }
+
+         if (Current->Style & WS_DISABLED)
+         {
+            *HitTest = HTERROR;
+            break;
+         }
         
-        if(Point->x >= Current->ClientRect.left &&
-           Point->x < Current->ClientRect.right &&
-           Point->y >= Current->ClientRect.top &&
-           Point->y < Current->ClientRect.bottom)
-        {
-          WinPosSearchChildren(Current, OnlyHitTests, Point, Window, HitTest);
-          ExFreePool(List);
-          return;
-        }
+         if (OnlyHitTests && (Current->MessageQueue == OnlyHitTests))
+         {
+            *HitTest = IntSendMessage(Current->Self, WM_NCHITTEST, 0,
+                                      MAKELONG(Point->x, Point->y));
+            if ((*HitTest) == (USHORT)HTTRANSPARENT)
+               continue;
+         }
+         else
+            *HitTest = HTCLIENT;
         
-        ExFreePool(List);
-        return;
+         if (Point->x >= Current->ClientRect.left &&
+             Point->x < Current->ClientRect.right &&
+             Point->y >= Current->ClientRect.top &&
+             Point->y < Current->ClientRect.bottom)
+         {
+            WinPosSearchChildren(Current, OnlyHitTests, Point, Window, HitTest);
+         }        
+
+         break;
       }
-      IntReleaseWindowObject(Current);
-    }
-    ExFreePool(List);
-  }
+      ExFreePool(List);
+   }
 }
 
 USHORT FASTCALL
