@@ -545,10 +545,9 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 	{
 		CONTEXT("ShellPath::ShellPath(IShellFolder*, LPCWSTR)");
 
-		if (path) {
-			ULONG l;
-			CHECKERROR(folder->ParseDisplayName(0, 0, (LPOLESTR)path, &l, &_p, 0));
-		} else
+		if (path)
+			CHECKERROR(folder->ParseDisplayName(0, 0, (LPOLESTR)path, NULL, &_p, 0));
+		else
 			_p = NULL;
 	}
 
@@ -556,10 +555,9 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 	{
 		OBJ_CONTEXT("ShellPath::ShellPath(LPCWSTR)", path);
 
-		if (path) {
-			ULONG l;
-			CHECKERROR(Desktop()->ParseDisplayName(0, 0, (LPOLESTR)path, &l, &_p, 0));
-		} else
+		if (path)
+			CHECKERROR(Desktop()->ParseDisplayName(0, 0, (LPOLESTR)path, NULL, &_p, 0));
+		else
 			_p = NULL;
 	}
 
@@ -567,12 +565,11 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 	{
 		CONTEXT("ShellPath::ShellPath(IShellFolder*, LPCSTR)");
 
-		ULONG l;
 		WCHAR b[MAX_PATH];
 
 		if (path) {
 			MultiByteToWideChar(CP_ACP, 0, path, -1, b, MAX_PATH);
-			CHECKERROR(folder->ParseDisplayName(0, 0, b, &l, &_p, 0));
+			CHECKERROR(folder->ParseDisplayName(0, 0, b, NULL, &_p, 0));
 		} else
 			_p = NULL;
 	}
@@ -581,12 +578,11 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 	{
 		CONTEXT("ShellPath::ShellPath(LPCSTR)");
 
-		ULONG l;
 		WCHAR b[MAX_PATH];
 
 		if (path) {
 			MultiByteToWideChar(CP_ACP, 0, path, -1, b, MAX_PATH);
-			CHECKERROR(Desktop()->ParseDisplayName(0, 0, b, &l, &_p, 0));
+			CHECKERROR(Desktop()->ParseDisplayName(0, 0, b, NULL, &_p, 0));
 		} else
 			_p = NULL;
 	}

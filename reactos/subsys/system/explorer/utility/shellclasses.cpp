@@ -130,6 +130,8 @@ CommonDesktop::~CommonDesktop()
 
 HRESULT path_from_pidlA(IShellFolder* folder, LPCITEMIDLIST pidl, LPSTR buffer, int len)
 {
+	CONTEXT("path_from_pidlA()");
+
 	StrRetA str;
 
 	HRESULT hr = folder->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &str);

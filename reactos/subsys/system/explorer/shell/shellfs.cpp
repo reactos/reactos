@@ -61,10 +61,12 @@ bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN
 
 			if (SUCCEEDED(hr)) {
 				LPCTSTR path = (LPCTSTR)GlobalLock(medium.UNION_MEMBER(hGlobal));
-				UINT sem_org = SetErrorMode(SEM_FAILCRITICALERRORS);
 
 				 // fill with drive names "C:", ...
+				assert(_tcslen(path) < GlobalSize(medium.UNION_MEMBER(hGlobal)));
 				_tcscpy(pw32fdata->cFileName, path);
+
+				UINT sem_org = SetErrorMode(SEM_FAILCRITICALERRORS);
 
 				if (GetFileAttributesEx(path, GetFileExInfoStandard, &fad)) {
 					pw32fdata->dwFileAttributes = fad.dwFileAttributes;
@@ -115,14 +117,13 @@ ShellPath ShellEntry::create_absolute_pidl() const
 	CONTEXT("ShellEntry::create_absolute_pidl()");
 
 	if (_up)
-		if (_up->_etype==ET_SHELL) {
+		if (_up->_etype == ET_SHELL) {
 			ShellDirectory* dir = static_cast<ShellDirectory*>(_up);
 
 			if (dir->_pidl->mkid.cb)	// Caching of absolute PIDLs could enhance performance.
 				return _pidl.create_absolute_pidl(dir->create_absolute_pidl());
-		} else {
+		} else
 			return _pidl.create_absolute_pidl(_up->create_absolute_pidl());
-		}
 
 	return _pidl;
 }
@@ -138,13 +139,13 @@ bool ShellEntry::get_path(PTSTR path) const
 		return false;
 */
 	FileSysShellPath fs_path(create_absolute_pidl());
+	LPCTSTR ret = fs_path;
 
-	if (!(LPCTSTR)fs_path)
+	if (ret) {
+		_tcscpy(path, ret);
+		return true;
+	} else
 		return false;
-
-	_tcscpy(path, fs_path);
-
-	return true;
 }
 
 

@@ -44,7 +44,7 @@ enum ICON_TYPE {
 	IT_STATIC,
 	IT_CACHED,
 	IT_DYNAMIC,
-	IT_SYSCACHE
+	IT_SYSCACHE	///@todo
 };
 
 enum ICON_ID {
@@ -85,7 +85,7 @@ struct Icon {
 struct IconCache {
 	void	init();
 
-	const Icon&	extract(String path);
+	const Icon&	extract(const String& path);
 	const Icon&	extract(LPCTSTR path, int idx);
 	const Icon&	extract(IExtractIcon* pExtract, LPCTSTR path, int idx);
 

@@ -172,12 +172,8 @@ void IconCache::init()
 }
 
 
-const Icon& IconCache::extract(String path)
+const Icon& IconCache::extract(const String& path)
 {
-#ifndef __WINE__ ///@todo
-	_tcslwr((LPTSTR)path.c_str());
-#endif
-
 	PathMap::iterator found = _pathMap.find(path);
 
 	if (found != _pathMap.end())
