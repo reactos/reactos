@@ -17,9 +17,7 @@ DrvLineTo(SURFOBJ *Surface,
 // FIXME: Use Mix to perform ROPs
 
 {
-  ULONG x, y, d, i, xchange, ychange, error,
-        iSolidColor, hx, vy;
-  LONG  deltax, deltay;
+  LONG deltax, deltay, x, y, d, i, xchange, ychange, error, iSolidColor, hx, vy;
 
   iSolidColor = Brush->iSolidColor; // FIXME: Brush Realization...
 
