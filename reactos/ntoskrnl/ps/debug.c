@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: debug.c,v 1.6 2002/09/08 10:23:40 chorns Exp $
+/* $Id: debug.c,v 1.7 2002/12/22 11:35:15 gvg Exp $
  *
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/debug.c
@@ -74,7 +74,7 @@ KeContextToTrapFrame(PCONTEXT Context,
 	 */
 /*	TrapFrame->Edx = Context->Edx; */
 	TrapFrame->Esi = Context->Esi;
-	TrapFrame->Edx = Context->Edi;
+	TrapFrame->Edi = Context->Edi;
      }
    if (Context->ContextFlags & CONTEXT_SEGMENTS)
      {
