@@ -54,6 +54,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB\Hardware Profiles\0000","Frien
 ; Keyboard Layouts
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000406","Layout File",0x00000000,"kbdda.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000406","Layout Text",0x00000000,"DA"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000040A","Layout File",0x00000000,"kbdes.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000040A","Layout Text",0x00000000,"ES"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000407","Layout File",0x00000000,"kbdgr.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000407","Layout Text",0x00000000,"GR"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000409","Layout File",0x00000000,"kbdus.dll"
