@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.17 2003/10/06 18:49:49 navaraf Exp $
+/* $Id: bitmap.c,v 1.18 2003/10/15 19:39:08 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -329,9 +329,9 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 				   0,
 				   NULL);
 
-      CloseHandle(hFile);
       if (hSection == NULL)
 	  {
+	    CloseHandle(hFile);
 	    return(NULL);
 	  }
       IconDIR = MapViewOfFile(hSection,
@@ -340,9 +340,10 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 				 0,
 				 0);
 
-      CloseHandle(hSection);
       if (IconDIR == NULL)
 	  {
+	    CloseHandle(hFile);
+	    CloseHandle(hSection);
 	    return(NULL);
 	  }
 
@@ -352,16 +353,18 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 
       if (!dirEntry)
 	  {
-         if (fuLoad & LR_LOADFROMFILE)
-		 {
+	       CloseHandle(hFile);
+	       CloseHandle(hSection);
 	       UnmapViewOfFile(IconDIR);
-		 }
-         return(NULL);
+	       return(NULL);
 	  }
 
       SafeIconImage = RtlAllocateHeap(RtlGetProcessHeap(), 0, dirEntry->dwBytesInRes); 
 
       memcpy(SafeIconImage, ((PBYTE)IconDIR) + dirEntry->dwImageOffset, dirEntry->dwBytesInRes);
+
+      CloseHandle(hFile);
+      CloseHandle(hSection);
   }
 
   //at this point we have a copy of the icon image to play with
