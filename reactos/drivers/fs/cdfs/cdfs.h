@@ -227,7 +227,11 @@ CdfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
 int CdfsStrcmpi( wchar_t *str1, wchar_t *str2 );
 void CdfsWstrcpy( wchar_t *str1, wchar_t *str2, int max );
 
+/* cleanup.c */
 
+NTSTATUS STDCALL
+CdfsCleanup(PDEVICE_OBJECT DeviceObject,
+	    PIRP Irp);
 
 /* close.c */
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdfs.c,v 1.6 2002/08/20 20:37:06 hyperion Exp $
+/* $Id: cdfs.c,v 1.7 2002/09/09 17:27:14 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -82,6 +82,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   /* Initialize driver data */
   DeviceObject->Flags = DO_DIRECT_IO;
   DriverObject->MajorFunction[IRP_MJ_CLOSE] = CdfsClose;
+  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = CdfsCleanup;
   DriverObject->MajorFunction[IRP_MJ_CREATE] = CdfsCreate;
   DriverObject->MajorFunction[IRP_MJ_READ] = CdfsRead;
   DriverObject->MajorFunction[IRP_MJ_WRITE] = CdfsWrite;
