@@ -100,8 +100,6 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
   GDIDEVICE *ppdev;
   GDIPOINTER *pgp;
 
-  ASSERT(WinSta);
-
   ASSERT(SurfObj != NULL);
 
   ppdev = GDIDEV(SurfObj);
