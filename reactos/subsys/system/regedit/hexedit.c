@@ -271,57 +271,47 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
 }
 
 static DWORD
-HEXEDIT_HitRegionTest(PHEXEDIT_DATA hed, POINTS pt, POINTS *ptClient)
+HEXEDIT_HitRegionTest(PHEXEDIT_DATA hed, POINTS pt)
 {
   WINDOWINFO wi;
-  int d, x;
+  int d;
   
-  wi.cbSize = sizeof(WINDOWINFO);
-  GetWindowInfo(hed->hWndSelf, &wi);
-  
-  x = pt.x - wi.rcClient.left;
-  if(ptClient)
-  {
-    ptClient->x = x;
-    ptClient->y = pt.y - wi.rcClient.top;
-  }
-  
-  if(x <= hed->LeftMargin)
+  if(pt.x <= hed->LeftMargin)
   {
     return HEHT_LEFTMARGIN;
   }
   
-  x -= hed->LeftMargin;
+  pt.x -= hed->LeftMargin;
   d = (4 * hed->CharWidth);
-  if(x <= d)
+  if(pt.x <= d)
   {
     return HEHT_ADDRESS;
   }
   
-  x -= d;
+  pt.x -= d;
   d = (hed->AddressSpacing * hed->CharWidth);
-  if(x <= d)
+  if(pt.x <= d)
   {
     return HEHT_ADDRESSSPACING;
   }
   
-  x -= d;
+  pt.x -= d;
   d = (3 * hed->ColumnsPerLine * hed->CharWidth);
-  if(x <= d)
+  if(pt.x <= d)
   {
     return HEHT_HEXDUMP;
   }
   
-  x -= d;
+  pt.x -= d;
   d = (hed->SplitSpacing * hed->CharWidth);
-  if(x <= d)
+  if(pt.x <= d)
   {
     return HEHT_HEXDUMPSPACING;
   }
   
-  x -= d;
+  pt.x -= d;
   d = (hed->ColumnsPerLine * hed->CharWidth);
-  if(x <= d)
+  if(pt.x <= d)
   {
     return HEHT_ASCIIDUMP;
   }
@@ -330,41 +320,57 @@ HEXEDIT_HitRegionTest(PHEXEDIT_DATA hed, POINTS pt, POINTS *ptClient)
 }
 
 static DWORD
-HEXEDIT_PositionFromPoint(PHEXEDIT_DATA hed, POINTS pt, DWORD *Hit)
+HEXEDIT_PositionFromPoint(PHEXEDIT_DATA hed, POINTS pt, DWORD Hit, POINT *EditPos, BOOL *EditField)
 {
   SCROLLINFO si;
-  POINTS ptClient;
-  DWORD Line;
-  
-  *Hit = HEXEDIT_HitRegionTest(hed, pt, &ptClient);
+  DWORD Pos, bufsize;
   
   si.cbSize = sizeof(SCROLLINFO);
   si.fMask = SIF_POS;
   GetScrollInfo(hed->hWndSelf, SB_VERT, &si);
   
+  EditPos->x = 0;
+  
   if(hed->LineHeight > 0)
   {
-    Line = min(si.nPos + (ptClient.y / hed->LineHeight), hed->nLines);
+    EditPos->y = min(si.nPos + (pt.y / hed->LineHeight), hed->nLines - 1);
   }
   else
-    return 0;
+  {
+    EditPos->y = si.nPos;
+  }
   
-  switch(*Hit)
+  switch(Hit)
   {
     case HEHT_LEFTMARGIN:
     case HEHT_ADDRESS:
     case HEHT_ADDRESSSPACING:
-      return Line * hed->ColumnsPerLine;
-    
     case HEHT_HEXDUMP:
-      return 0;
+      pt.x -= hed->LeftMargin + ((4 + hed->AddressSpacing) * hed->CharWidth);
+      *EditField = TRUE;
+      break;
     
-    case HEHT_ASCIIDUMP:
-      return 0;
-    
-    case HEHT_RIGHTMARGIN:
-      return (Line + 1) * hed->ColumnsPerLine;
+    default:
+      pt.x -= hed->LeftMargin + ((4 + hed->AddressSpacing + hed->SplitSpacing + (3 * hed->ColumnsPerLine)) * hed->CharWidth);
+      *EditField = FALSE;
+      break;
   }
+  
+  if(pt.x > 0)
+  {
+    INT BlockWidth = (*EditField ? hed->CharWidth * 3 : hed->CharWidth);
+    EditPos->x = min(hed->ColumnsPerLine, pt.x / BlockWidth);
+  }
+  
+  bufsize = (hed->hBuffer ? LocalSize(hed->hBuffer) : 0);
+  Pos = (EditPos->y * hed->ColumnsPerLine) + EditPos->x;
+  if(Pos > bufsize)
+  {
+    INT tmp = bufsize % hed->ColumnsPerLine;
+    Pos = bufsize;
+    EditPos->x = (tmp == 0 ? hed->ColumnsPerLine : tmp);
+  }
+  return Pos;
 }
 
 /*** Control specific messages ************************************************/
@@ -735,6 +741,23 @@ HEXEDIT_WM_GETDLGCODE(LPMSG Msg)
   return DLGC_WANTARROWS | DLGC_WANTCHARS;
 }
 
+static LRESULT
+HEXEDIT_WM_LBUTTONDOWN(PHEXEDIT_DATA hed, INT Buttons, POINTS Pt)
+{
+  BOOL NewField;
+  POINT EditPos;
+  DWORD Hit = HEXEDIT_HitRegionTest(hed, Pt);
+  
+  hed->Position = HEXEDIT_PositionFromPoint(hed, Pt, Hit, &EditPos, &NewField); 
+  hed->EditingField = NewField;
+  hed->CaretCol = EditPos.x;
+  hed->CaretLine = EditPos.y;
+  
+  HEXEDIT_MoveCaret(hed, TRUE);
+  
+  return 0;
+}
+
 static BOOL
 HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
 {
@@ -856,6 +879,9 @@ HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     
     case WM_SIZE:
       return HEXEDIT_WM_SIZE(hed, (DWORD)wParam, LOWORD(lParam), HIWORD(lParam));
+    
+    case WM_LBUTTONDOWN:
+      return HEXEDIT_WM_LBUTTONDOWN(hed, (INT)wParam, MAKEPOINTS(lParam));
     
     case WM_MOUSEWHEEL:
     {
