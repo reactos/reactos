@@ -1,4 +1,4 @@
-/* $Id: defedf.c,v 1.3 1999/08/20 05:53:04 ea Exp $
+/* $Id: defedf.c,v 1.4 1999/10/28 23:34:47 rex Exp $
  * 
  * reactos/iface/dll/defedf.c
  *
@@ -12,8 +12,13 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #ifndef MAX_PATH
-#define MAX_PATH _MAX_PATH
+# ifdef PATH_MAX
+#  define MAX_PATH PATH_MAX
+# else
+#  define MAX_PATH _MAX_PATH
+# endif
 #endif
 #include <string.h>
 
