@@ -178,7 +178,6 @@ HalpLowerIrql(KIRQL NewIrql)
 VOID FASTCALL
 KfLowerIrql (KIRQL	NewIrql)
 {
-  KIRQL OldIrql;
 
   if (NewIrql > KeGetCurrentIrql ())
     {
@@ -402,4 +401,23 @@ HalEnableSystemInterrupt (ULONG Vector,
   IOAPICUnmaskIrq (ThisCPU (), irq);
 
   return TRUE;
+}
+
+VOID FASTCALL
+HalRequestSoftwareInterrupt(
+  IN KIRQL Request)
+{
+  switch (Request)
+  {
+    case APC_LEVEL:
+      //ApcRequested = TRUE;
+      break;
+
+    case DISPATCH_LEVEL:
+      //DpcRequested = TRUE;
+      break;
+      
+    default:
+      KEBUGCHECK(0);
+  }
 }
