@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.32 2003/08/28 19:37:00 gvg Exp $
+/* $Id: stubs.c,v 1.33 2003/09/06 16:50:11 jimtabor Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -65,21 +65,6 @@ Chord(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-ChoosePixelFormat(
-	HDC				a0,
-	CONST PIXELFORMATDESCRIPTOR	*a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
 }
 
 
@@ -154,24 +139,6 @@ DeleteMetaFile(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-DescribePixelFormat(
-	HDC			a0,
-	int			a1,
-	UINT			a2,
-	LPPIXELFORMATDESCRIPTOR	a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 
 
 /*
@@ -454,20 +421,6 @@ GetPixel(
 	HDC	a0,
 	int	a1,
 	int	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-GetPixelFormat(
-	HDC	a0
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -817,22 +770,6 @@ SetPixelV(
 	int		a1,
 	int		a2,
 	COLORREF	a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetPixelFormat(
-	HDC				a0,
-	int				a1,
-	CONST PIXELFORMATDESCRIPTOR	*a2
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1898,20 +1835,6 @@ STDCALL
 wglShareLists(
 	HGLRC	a0,
 	HGLRC	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SwapBuffers(
-	HDC	a0
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

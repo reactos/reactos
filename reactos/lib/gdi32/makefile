@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.32 2003/08/07 04:03:22 royce Exp $
+# $Id: makefile,v 1.33 2003/09/06 16:50:10 jimtabor Exp $
 
 PATH_TO_TOP = ../..
 
@@ -29,6 +29,7 @@ MISC_OBJECTS = \
  misc/stubs.o \
  misc/stubsa.o \
  misc/stubsw.o \
+ misc/wingl.o \
  misc/win32k.o
 
 OBJECTS_OBJECTS = \
