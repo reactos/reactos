@@ -55,7 +55,7 @@ PcRTCGetCurrentDateTime(PU32 Year, PU32 Month, PU32 Day, PU32 Hour, PU32 Minute,
 
       if (NULL != Year)
         {
-          *Year = 100 * BCD_INT(Regs.b.cl) + BCD_INT(Regs.b.ch);
+          *Year = 100 * BCD_INT(Regs.b.ch) + BCD_INT(Regs.b.cl);
         }
       if (NULL != Month)
         {
