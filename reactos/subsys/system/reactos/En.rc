@@ -1,0 +1,13 @@
+/* $Id: En.rc,v 1.1 2004/12/24 17:16:43 ekohl Exp $ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+/* String Tables */
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAPTION  "ReactOS Setup"
+    IDS_TEXT     "You cannot install ReactOS directly from this CD!\n\n"\
+                 "Please restart your computer from this CD in order to install ReactOS."
+END
+
+/* EOF */
