@@ -1,4 +1,4 @@
-/* $Id: videoprt.c,v 1.14 2003/12/03 16:57:22 gvg Exp $
+/* $Id: videoprt.c,v 1.15 2003/12/03 18:58:41 navaraf Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -1373,7 +1373,7 @@ VideoPortZeroDeviceMemory(OUT PVOID  Destination,
 static BOOLEAN STDCALL
 VideoPortResetDisplayParameters(Columns, Rows)
 {
-  if (NULL != ResetDisplayParametersDeviceExtension)
+  if (NULL == ResetDisplayParametersDeviceExtension)
     {
       return(FALSE);
     }
