@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: gradient.c,v 1.12 2004/12/12 21:43:17 royce Exp $
+/* $Id: gradient.c,v 1.13 2004/12/14 04:26:49 royce Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -528,7 +528,10 @@ IntEngGradientFill(
     IN ULONG  ulMode)
 {
   BOOL Ret;
-  SURFOBJ *psoDest = &pboDest->SurfObj;
+  SURFOBJ *psoDest;
+  ASSERT(pboDest && psoDest && pco);
+
+  psoDest = &pboDest->SurfObj;
   ASSERT(psoDest);
   
   MouseSafetyOnDrawStart(
