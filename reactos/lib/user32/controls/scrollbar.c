@@ -1,4 +1,4 @@
-/* $Id: scrollbar.c,v 1.9 2003/02/17 21:03:52 jfilby Exp $
+/* $Id: scrollbar.c,v 1.10 2003/07/26 15:48:47 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -13,6 +13,7 @@
 #include <windows.h>
 #include <user32.h>
 #include <debug.h>
+#include <draw.h>
 
 /* GLOBAL VARIABLES **********************************************************/
 /*
@@ -75,7 +76,6 @@ static BOOL SCROLL_trackVertical;
 *****************************************************************/
 
 HBRUSH DefWndControlColor (HDC hDC, UINT ctlType);
-HPEN STDCALL GetSysColorPen (int nIndex);
 
 
 

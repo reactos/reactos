@@ -11,3 +11,4 @@
 
 VOID
 UserSetupInternalPos(VOID);
+VOID UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down );

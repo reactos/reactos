@@ -4576,7 +4576,7 @@ CheckMenuItem(
 	      UINT uCheck);
 
  
-WINBOOL
+UINT
 STDCALL
 EnableMenuItem(
 	       HMENU hMenu,

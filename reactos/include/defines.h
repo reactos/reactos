@@ -156,6 +156,7 @@ extern "C" {
 #define MF_STRING	(0L)
 #define MF_SYSMENU	(0x2000L)
 #define MF_USECHECKBITMAPS	(0x200L)
+#define MF_RIGHTJUSTIFY MF_HELP
 
 /* Ternary Raster Operations - BitBlt */
 #define BLACKNESS	0x00000042

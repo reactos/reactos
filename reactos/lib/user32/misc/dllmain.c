@@ -3,6 +3,7 @@
 #include <user32/callback.h>
 #include <user32/accel.h>
 #include <window.h>
+#include <menu.h>
 
 #ifdef DBG
 
@@ -44,6 +45,7 @@ Init(VOID)
     (PVOID)User32SendSTYLECHANGEDMessageForKernel;
 
   UserSetupInternalPos();
+  MenuInit();
   
   RtlInitializeCriticalSection(&U32AccelCacheLock);
 

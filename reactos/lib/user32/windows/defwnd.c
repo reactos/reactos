@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.55 2003/07/10 21:04:31 chorns Exp $
+/* $Id: defwnd.c,v 1.56 2003/07/26 15:48:47 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -16,6 +16,7 @@
 #include <window.h>
 #include <user32/wininternal.h>
 #include <string.h>
+#include <menu.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -289,8 +290,7 @@ void UserGetInsideRectNC( HWND hWnd, RECT *rect )
       }
 }
 
-
-void UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down )
+VOID UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down )
 {
   RECT Rect;
   HDC hDcMem;
@@ -453,9 +453,9 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
 VOID
 UserDrawFrameNC(HWND hWnd, RECT* rect, BOOL dlgFrame, BOOL active)
 {
-	HDC hDC = GetWindowDC(hWnd);
-    SelectObject( hDC, GetSysColorBrush(COLOR_WINDOW) ); 
-    DrawEdge(hDC, rect,EDGE_RAISED, BF_RECT | BF_MIDDLE);
+  HDC hDC = GetWindowDC(hWnd);
+  SelectObject( hDC, GetSysColorBrush(COLOR_WINDOW) ); 
+  DrawEdge(hDC, rect,EDGE_RAISED, BF_RECT | BF_MIDDLE);
 }
 
 
@@ -469,6 +469,7 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   RECT rect;
   ULONG Style;
   ULONG ExStyle;
+
   Active = GetWindowLongW(hWnd, GWL_STYLE) & WIN_NCACTIVATED;
   Style = GetWindowLong(hWnd, GWL_STYLE);
   ExStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
@@ -504,10 +505,16 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
       UserDrawCaptionNC(hDC, &r, hWnd, Style, Active);
     }
 
-/*  FIXME: Draw menu bar.  */
+  /*  Draw menu bar.  */
+  if (UserHasMenu(hWnd, Style))
+    {
+      RECT r = rect;
+      r.bottom = rect.top + GetSystemMetrics(SM_CYMENU);
 
-  DPRINT("drawing scrollbars..\n");
-/*  Draw scrollbars */
+      rect.top += MenuDrawMenuBar(hDC, &r, hWnd, FALSE);
+    }
+
+  /*  Draw scrollbars */
   if (Style & WS_VSCROLL)
       SCROLL_DrawScrollBar(hWnd, hDC, SB_VERT, TRUE, TRUE);
   if (Style & WS_HSCROLL)
@@ -516,7 +523,6 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   /* FIXME: Draw size box.*/
 
   ReleaseDC(hWnd, hDC);
-  
 }
 
 
@@ -712,14 +718,6 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
   return(HTNOWHERE);
 }
 
-
-VOID
-DefWndDrawSysButton(HWND hWnd, HDC hDC, BOOL Down)
-{
-  UNIMPLEMENTED;
-}
-
-
 LRESULT
 DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
@@ -736,18 +734,18 @@ DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
         case HTSYSMENU:
         {
-	        if (GetWindowLong(hWnd, GWL_STYLE) & WS_SYSMENU)
+	  if (GetWindowLong(hWnd, GWL_STYLE) & WS_SYSMENU)
             {
-	            if (!(GetWindowLong(hWnd, GWL_STYLE) & WS_MINIMIZE))
-	            {
-		            HDC hDC = GetWindowDC(hWnd);
-		            DefWndDrawSysButton(hWnd, hDC, TRUE);
-		            ReleaseDC(hWnd, hDC);
-	            }
-	        SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU,
-			             lParam);
-	        }
-            break;
+	      if (!(GetWindowLong(hWnd, GWL_STYLE) & WS_MINIMIZE))
+		{
+		  HDC hDC = GetWindowDC(hWnd);
+		  UserDrawSysMenuButton(hWnd, hDC, TRUE);
+		  ReleaseDC(hWnd, hDC);
+		}
+	      SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU,
+			   lParam);
+	    }
+	  break;
         }
         case HTMENU:
         {
@@ -916,6 +914,12 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, POINT Pt)
       case SC_CLOSE:
         SendMessageA(hWnd, WM_CLOSE, 0, 0);
         break;
+    case SC_MOUSEMENU:
+        MenuTrackMouseMenuBar(hWnd, wParam, Pt);
+	break;
+    case SC_KEYMENU:
+        MenuTrackKbdMenuBar(hWnd, wParam, Pt.x);
+	break;
       default:
       /* FIXME: Implement */
         UNIMPLEMENTED;
@@ -1001,7 +1005,13 @@ DefWndNCCalcSize(HWND hWnd, RECT* Rect)
       Rect->top -= TmpRect.top;
       Rect->right -= TmpRect.right;
       Rect->bottom -= TmpRect.bottom;
-      /* FIXME: Adjust if the window has a menu. */
+      if (UserHasMenu(hWnd, GetWindowLong(hWnd, GWL_EXSTYLE)))
+	{
+	  Rect->top += MenuGetMenuBarHeight(hWnd, 
+					    Rect->right - Rect->left,
+					    -TmpRect.left,
+					    -TmpRect.top) + 1;
+	}
       Rect->bottom = max(Rect->top, Rect->bottom);
       Rect->right = max(Rect->left, Rect->right);
     }
@@ -1158,8 +1168,7 @@ User32DefWindowProc(HWND hWnd,
 	PAINTSTRUCT Ps;
 	HDC hDC = BeginPaint(hWnd, &Ps);
 	if (hDC)
-	  {
-	  	
+	  {	  	
 	    HICON hIcon;
 	    if (GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE &&
 		(hIcon = (HICON)GetClassLongW(hWnd, GCL_HICON)) != NULL)
@@ -1173,12 +1182,12 @@ User32DefWindowProc(HWND hWnd,
 		     GetSystemMetrics(SM_CYICON)) / 2;
 		DrawIcon(hDC, x, y, hIcon);
 	      } 
-		if(GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_CLIENTEDGE)
-		{
-			RECT WindowRect;
-			GetClientRect(hWnd, &WindowRect);
-			DrawEdge(hDC, &WindowRect, EDGE_SUNKEN, BF_RECT);
-		}
+	    if (GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_CLIENTEDGE)
+	      {
+		RECT WindowRect;
+		GetClientRect(hWnd, &WindowRect);
+		DrawEdge(hDC, &WindowRect, EDGE_SUNKEN, BF_RECT);
+	      }
 	    EndPaint(hWnd, &Ps);
 	  }
 	return(0);
@@ -1235,7 +1244,7 @@ User32DefWindowProc(HWND hWnd,
 
     case WM_ACTIVATE:
       {
-  /* Check if the window is minimized. */
+	/* Check if the window is minimized. */
 	if (LOWORD(lParam) != WA_INACTIVE &&
 	    !(GetWindowLong(hWnd, GWL_STYLE) & WS_MINIMIZE))
 	  {
@@ -1432,14 +1441,14 @@ User32DefWindowProc(HWND hWnd,
               HWND hTopWnd = hWnd;
               if (!(GetClassLongW(hTopWnd, GCL_STYLE) & CS_NOCLOSE))
                 {
-                	if (bUnicode)
-                	  {
-                	    PostMessageW(hTopWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
-                	  }
-                	else
-                	  {
-                	    PostMessageA(hTopWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
-                	  }
+		  if (bUnicode)
+		    {
+		      PostMessageW(hTopWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+		    }
+		  else
+		    {
+		      PostMessageA(hTopWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+		    }
                 }
             }
       	}
