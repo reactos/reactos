@@ -110,7 +110,7 @@ SepInitSDs(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
@@ -122,8 +122,250 @@ SeCaptureSecurityDescriptor(
 	OUT PSECURITY_DESCRIPTOR *CapturedSecurityDescriptor
 	)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+  SECURITY_DESCRIPTOR DescriptorCopy;
+  PSECURITY_DESCRIPTOR NewDescriptor;
+  ULONG OwnerSAC = 0, GroupSAC = 0;
+  ULONG OwnerSize = 0, GroupSize = 0;
+  ULONG SaclSize = 0, DaclSize = 0;
+  ULONG DescriptorSize;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+  if(OriginalSecurityDescriptor != NULL)
+  {
+    if(CurrentMode != KernelMode)
+    {
+      _SEH_TRY
+      {
+        ProbeForRead(OriginalSecurityDescriptor,
+                     sizeof(SECURITY_DESCRIPTOR),
+                     sizeof(ULONG));
+
+        /* make a copy on the stack */
+        DescriptorCopy = *OriginalSecurityDescriptor;
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+      
+      if(!NT_SUCCESS(Status))
+      {
+        return Status;
+      }
+    }
+    else
+    {
+      /* make a copy on the stack */
+      DescriptorCopy = *OriginalSecurityDescriptor;
+    }
+    
+    if(CurrentMode == KernelMode && !CaptureIfKernel)
+    {
+      *CapturedSecurityDescriptor = OriginalSecurityDescriptor;
+      return STATUS_SUCCESS;
+    }
+    
+    if(DescriptorCopy.Revision != SECURITY_DESCRIPTOR_REVISION1)
+    {
+      return STATUS_UNKNOWN_REVISION;
+    }
+    
+    if(DescriptorCopy.Control & SE_SELF_RELATIVE)
+    {
+      /* in case we're dealing with a self-relative descriptor, do a basic convert
+         to an absolute descriptor. We do this so we can simply access the data
+         using the pointers without calculating them again. */
+      DescriptorCopy.Control &= ~SE_SELF_RELATIVE;
+      if(DescriptorCopy.Owner != NULL)
+      {
+        DescriptorCopy.Owner = (PSID)((ULONG_PTR)OriginalSecurityDescriptor + (ULONG_PTR)DescriptorCopy.Owner);
+      }
+      if(DescriptorCopy.Group != NULL)
+      {
+        DescriptorCopy.Group = (PSID)((ULONG_PTR)OriginalSecurityDescriptor + (ULONG_PTR)DescriptorCopy.Group);
+      }
+      if(DescriptorCopy.Dacl != NULL)
+      {
+        DescriptorCopy.Dacl = (PACL)((ULONG_PTR)OriginalSecurityDescriptor + (ULONG_PTR)DescriptorCopy.Dacl);
+      }
+      if(DescriptorCopy.Sacl != NULL)
+      {
+        DescriptorCopy.Sacl = (PACL)((ULONG_PTR)OriginalSecurityDescriptor + (ULONG_PTR)DescriptorCopy.Sacl);
+      }
+    }
+    
+    /* determine the size of the SIDs */
+#define DetermineSIDSize(SidType)                                              \
+    do {                                                                       \
+    if(DescriptorCopy.SidType != NULL)                                         \
+    {                                                                          \
+      SID *SidType = (SID*)DescriptorCopy.SidType;                             \
+                                                                               \
+      if(CurrentMode != KernelMode)                                            \
+      {                                                                        \
+        /* securely access the buffers! */                                     \
+        _SEH_TRY                                                               \
+        {                                                                      \
+          ProbeForRead(&SidType->SubAuthorityCount,                            \
+                       sizeof(SidType->SubAuthorityCount),                     \
+                       1);                                                     \
+          SidType##SAC = SidType->SubAuthorityCount;                           \
+          SidType##Size = RtlLengthRequiredSid(SidType##SAC);                  \
+          ProbeForRead(SidType,                                                \
+                       SidType##Size,                                          \
+                       sizeof(ULONG));                                         \
+          if(!RtlValidSid(SidType))                                            \
+          {                                                                    \
+            Status = STATUS_INVALID_SID;                                       \
+          }                                                                    \
+        }                                                                      \
+        _SEH_HANDLE                                                            \
+        {                                                                      \
+          Status = _SEH_GetExceptionCode();                                    \
+        }                                                                      \
+        _SEH_END;                                                              \
+                                                                               \
+        if(!NT_SUCCESS(Status))                                                \
+        {                                                                      \
+          return Status;                                                       \
+        }                                                                      \
+      }                                                                        \
+      else                                                                     \
+      {                                                                        \
+        SidType##SAC = SidType->SubAuthorityCount;                             \
+        SidType##Size = RtlLengthRequiredSid(SidType##SAC);                    \
+      }                                                                        \
+    }                                                                          \
+    } while(0)
+    
+    DetermineSIDSize(Owner);
+    DetermineSIDSize(Group);
+    
+    /* determine the size of the ACLs */
+#define DetermineACLSize(AclType, AclFlag)                                     \
+    do {                                                                       \
+    if((DescriptorCopy.Control & SE_##AclFlag##_PRESENT) &&                    \
+       DescriptorCopy.AclType != NULL)                                         \
+    {                                                                          \
+      PACL AclType = (PACL)DescriptorCopy.AclType;                             \
+                                                                               \
+      if(CurrentMode != KernelMode)                                            \
+      {                                                                        \
+        /* securely access the buffers! */                                     \
+        _SEH_TRY                                                               \
+        {                                                                      \
+          ProbeForRead(&AclType->AclSize,                                      \
+                       sizeof(AclType->AclSize),                               \
+                       1);                                                     \
+          AclType##Size = AclType->AclSize;                                    \
+          ProbeForRead(AclType,                                                \
+                       AclType##Size,                                          \
+                       sizeof(ULONG));                                         \
+          if(!RtlValidAcl(AclType))                                            \
+          {                                                                    \
+            Status = STATUS_INVALID_ACL;                                       \
+          }                                                                    \
+        }                                                                      \
+        _SEH_HANDLE                                                            \
+        {                                                                      \
+          Status = _SEH_GetExceptionCode();                                    \
+        }                                                                      \
+        _SEH_END;                                                              \
+                                                                               \
+        if(!NT_SUCCESS(Status))                                                \
+        {                                                                      \
+          return Status;                                                       \
+        }                                                                      \
+      }                                                                        \
+      else                                                                     \
+      {                                                                        \
+        AclType##Size = AclType->AclSize;                                      \
+      }                                                                        \
+    }                                                                          \
+    else                                                                       \
+    {                                                                          \
+      DescriptorCopy.AclType = NULL;                                           \
+    }                                                                          \
+    } while(0)
+    
+    DetermineACLSize(Sacl, SACL);
+    DetermineACLSize(Dacl, DACL);
+    
+    /* allocate enough memory to store a complete copy of a self-relative
+       security descriptor */
+    DescriptorSize = sizeof(SECURITY_DESCRIPTOR) +
+                     ROUND_UP(OwnerSize, sizeof(ULONG)) +
+                     ROUND_UP(GroupSize, sizeof(ULONG)) +
+                     ROUND_UP(SaclSize, sizeof(ULONG)) +
+                     ROUND_UP(DaclSize, sizeof(ULONG));
+
+    NewDescriptor = ExAllocatePool(PagedPool,
+                                   DescriptorSize);
+    if(NewDescriptor != NULL)
+    {
+      ULONG_PTR Offset = sizeof(SECURITY_DESCRIPTOR);
+      
+      NewDescriptor->Revision = DescriptorCopy.Revision;
+      NewDescriptor->Sbz1 = DescriptorCopy.Sbz1;
+      NewDescriptor->Control = DescriptorCopy.Control | SE_SELF_RELATIVE;
+      
+      /* setup the offsets to the SIDs and ACLs */
+      NewDescriptor->Owner = (PVOID)Offset;
+      Offset += ROUND_UP(OwnerSize, sizeof(ULONG));
+      NewDescriptor->Group = (PVOID)Offset;
+      Offset += ROUND_UP(GroupSize, sizeof(ULONG));
+      NewDescriptor->Sacl = (PVOID)Offset;
+      Offset += ROUND_UP(SaclSize, sizeof(ULONG));
+      NewDescriptor->Dacl = (PVOID)Offset;
+      
+      _SEH_TRY
+      {
+        /* copy the SIDs and ACLs to the new self-relative security descriptor */
+        RtlCopyMemory((PVOID)((ULONG_PTR)NewDescriptor + (ULONG_PTR)NewDescriptor->Owner),
+                      DescriptorCopy.Owner,
+                      OwnerSize);
+        RtlCopyMemory((PVOID)((ULONG_PTR)NewDescriptor + (ULONG_PTR)NewDescriptor->Group),
+                      DescriptorCopy.Group,
+                      GroupSize);
+        RtlCopyMemory((PVOID)((ULONG_PTR)NewDescriptor + (ULONG_PTR)NewDescriptor->Sacl),
+                      DescriptorCopy.Sacl,
+                      SaclSize);
+        RtlCopyMemory((PVOID)((ULONG_PTR)NewDescriptor + (ULONG_PTR)NewDescriptor->Dacl),
+                      DescriptorCopy.Dacl,
+                      DaclSize);
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+      
+      if(NT_SUCCESS(Status))
+      {
+        /* we're finally done! copy the pointer to the captured descriptor to
+           to the caller */
+        *CapturedSecurityDescriptor = NewDescriptor;
+        return STATUS_SUCCESS;
+      }
+      else
+      {
+        /* we failed to copy the data to the new descriptor */
+        ExFreePool(NewDescriptor);
+      }
+    }
+    else
+    {
+      Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+  }
+  else
+  {
+    /* nothing to do... */
+    *CapturedSecurityDescriptor = NULL;
+  }
+  
+  return Status;
 }
 
 /*
@@ -262,7 +504,7 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
@@ -272,8 +514,18 @@ SeReleaseSecurityDescriptor(
 	IN BOOLEAN CaptureIfKernelMode
 	)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+  /* WARNING! You need to call this function with the same value for CurrentMode
+              and CaptureIfKernelMode that you previously passed to
+              SeCaptureSecurityDescriptor() in order to avoid memory leaks! */
+  if(CapturedSecurityDescriptor != NULL &&
+     (CurrentMode == UserMode ||
+      (CurrentMode == KernelMode && CaptureIfKernelMode)))
+  {
+    /* only delete the descriptor when SeCaptureSecurityDescriptor() allocated one! */
+    ExFreePool(CapturedSecurityDescriptor);
+  }
+
+  return STATUS_SUCCESS;
 }
 
 /*
