@@ -28,7 +28,7 @@ STRING_OBJECTS = string/ctype.o string/memcpy.o string/memmove.o \
 OBJECTS = napi.o ldr/startup.o rtl/largeint.o rtl/namespc.o rtl/unicode.o \
           stdio/vsprintf.o $(STDLIB_OBJECTS) $(STRING_OBJECTS) \
           stubs/stubs.o rtl/heap.o rtl/critical.o rtl/mem.o \
-          ldr/utils.o
+          ldr/utils.o ntdll.coff
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = napi.o ldr\*.o rtl\*.o stdio\*.o string\*.o stubs\*.o ntdll.a  \
@@ -38,18 +38,23 @@ CLEAN_FILES = napi.o ldr/*.o rtl/*.o stdio/*.o string/*.o stubs/*.o ntall.a  \
               main/dllmain.o ntdll.o ntdll.dll junk.tmp base.tmp temp.exp ntdll.sym
 endif
 
+ntdll.coff: ntdll.rc ../../include/reactos/resource.h
+	windres ntdll.rc ntdll.coff
+
 ntdll.a: $(OBJECTS)
 	$(AR) csr ntdll.a $(OBJECTS)
 
 ntdll.dll: $(DLLMAIN) $(OBJECTS) 
 	$(LD) -r $(DLLMAIN) $(OBJECTS) -o ntdll.o
 	$(DLLTOOL) --dllname ntdll.dll --def def/ntdll.def \
-	           --output-lib ntdll.a
+	           --output-lib ntdll.a --add-stdcall-alias \
+		   --kill-at
 	$(CC) -specs=ntdll_specs -mdll -o junk.tmp \
 	      -Wl,--base-file,base.tmp ntdll.o
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname ntdll.dll --base-file base.tmp \
-	           --output-exp temp.exp --def def/ntdll.def
+	           --output-exp temp.exp --def def/ntdll.def \
+		   --add-stdcall-alias --kill-at
 	- $(RM) base.tmp
 	$(CC) -specs=ntdll_specs -mdll -o ntdll.dll ntdll.o \
 	      -Wl,--entry=_LdrStartup \

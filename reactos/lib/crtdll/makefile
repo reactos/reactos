@@ -119,16 +119,21 @@ OLD_OBJECTS = $(MISC_OBJECTS) stdlib/malloc.o stdlib/abort.o \
 	  stdlib/errno.o stdio/printf.o stdio/vprintf.o\
 	  $(QUAD_OBJECTS)
 
+RESOURCE_OBJECT = crtdll.coff
+
 OBJECTS = $(MISC_OBJECTS) $(STDLIB_OBJECTS) $(IO_OBJECTS) \
           $(FLOAT_OBJECTS) $(ASSERT_OBJECTS) $(PROCESS_OBJECTS) \
 	  $(STDIO_OBJECTS) $(CTYPE_OBJECTS) $(MATH_OBJECTS) \
 	  $(STRING_OBJECTS) $(TIME_OBJECTS) $(WCHAR_OBJECTS) \
 	  $(SYS_STAT_OBJECTS) misc/dllmain.o $(MALLOC_OBJECTS) \
 	  $(SEARCH_OBJECTS) $(CONIO_OBJECTS) $(DIRECT_OBJECTS) \
-	  $(SIGNAL_OBJECTS)
+	  $(SIGNAL_OBJECTS) $(RESOURCE_OBJECT)
 
 
- crtdll.a: $(OBJECTS)
+crtdll.coff: crtdll.rc ../../include/reactos/resource.h
+	windres crtdll.rc crtdll.coff
+
+crtdll.a: $(OBJECTS)
 	$(LD)  -r $(OBJECTS) -o crtdll.a
 
 crtdll.dll: $(DLLMAIN) $(OBJECTS) crtdll.def

@@ -52,6 +52,8 @@ LDR_OBJECTS = ldr/loader.o ldr/init.o
 
 CC_OBJECTS = cc/cacheman.o cc/block.o cc/view.o
 
+RESOURCE_OBJECT = ntoskrnl.coff
+
 objects: 
 	mkdir objects
 
@@ -97,10 +99,15 @@ objects/nt.o: $(NT_OBJECTS)
 objects/cc.o: $(CC_OBJECTS)
 	$(LD) -r $(CC_OBJECTS) -o objects/cc.o
 
+objects/ntoskrnl.coff: ntoskrnl.rc ../include/reactos/resource.h
+	windres ntoskrnl.rc objects/ntoskrnl.coff
+
+
 OBJECTS = objects/hal.o objects/ke.o objects/rtl.o objects/mm.o \
           objects/io.o objects/ob.o objects/ps.o objects/ex.o \
-	  objects/se.o objects/cm.o objects/dbg.o\
-	  objects/nt.o objects/cc.o objects/ldr.o
+	  objects/se.o objects/cm.o objects/dbg.o \
+	  objects/nt.o objects/cc.o objects/ldr.o \
+	  objects/ntoskrnl.coff
 	  
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = objects\*.o cc\*.o cm\*.o dbg\*.o ex\*.o hal\x86\*.o io\*.o  \
