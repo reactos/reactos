@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.65 2003/12/23 20:40:00 weiden Exp $
+/* $Id: winpos.c,v 1.66 2003/12/23 21:13:00 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -183,6 +183,7 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
       WindowObject->InternalPos = ExAllocatePool(NonPagedPool, sizeof(INTERNALPOS));
       if(!WindowObject->InternalPos)
       {
+        DPRINT1("Failed to allocate INTERNALPOS structure for window 0x%x\n", WindowObject->Self);
         return NULL;
       }
       WindowObject->InternalPos->IconTitle = 0;
@@ -226,7 +227,7 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
   return(WindowObject->InternalPos);
 }
 
-UINT STDCALL
+UINT FASTCALL
 WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 {
   POINT Size;
@@ -312,7 +313,7 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 	      {
 		if (!(WindowObject->Style & WS_MAXIMIZE))
 		  {
-		    return(-1);
+		    return 0;
 		  }
 		WindowObject->Style &= ~WS_MAXIMIZE;
 		*NewPos = InternalPos->NormalRect;
@@ -330,7 +331,7 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
   return(SwpFlags);
 }
 
-UINT STDCALL
+UINT FASTCALL
 WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
 		    POINT* MinTrack, POINT* MaxTrack)
 {
@@ -424,7 +425,7 @@ WinPosChangeActiveWindow(HWND hWnd, BOOL MouseMsg)
 }
 #endif
 
-LONG STATIC STDCALL
+LONG STATIC FASTCALL
 WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
 		   RECT* WindowRect, RECT* ClientRect)
 {
@@ -494,7 +495,7 @@ WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
   return wvrFlags;
 }
 
-BOOL STDCALL
+BOOL FASTCALL
 WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
 		       PWINDOWPOS WinPos,
 		       PRECT WindowRect,
@@ -617,7 +618,7 @@ WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
  * Update WindowRect and ClientRect of Window and all of its children
  * We keep both WindowRect and ClientRect in screen coordinates internally
  */
-static VOID
+VOID STATIC FASTCALL
 WinPosInternalMoveWindow(PWINDOW_OBJECT Window, INT MoveX, INT MoveY)
 {
   PWINDOW_OBJECT Child;
@@ -744,7 +745,7 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
 }
 
 /* x and y are always screen relative */
-BOOLEAN STDCALL
+BOOLEAN FASTCALL
 WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 		   INT cy, UINT flags)
 {
@@ -1077,7 +1078,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    return TRUE;
 }
 
-LRESULT STDCALL
+LRESULT FASTCALL
 WinPosGetNonClientSize(HWND Wnd, RECT* WindowRect, RECT* ClientRect)
 {
   *ClientRect = *WindowRect;
@@ -1273,7 +1274,7 @@ WinPosPtInWindow(PWINDOW_OBJECT Window, POINT Point)
 	 Point.y < Window->WindowRect.bottom);
 }
 
-USHORT STATIC STDCALL
+USHORT STATIC FASTCALL
 WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
 		     PWINDOW_OBJECT* Window)
 {
@@ -1324,7 +1325,7 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
   return(0);
 }
 
-USHORT STDCALL
+USHORT FASTCALL
 WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint, 
 		      PWINDOW_OBJECT* Window)
 {
