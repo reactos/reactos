@@ -3,6 +3,7 @@
  *
  * Copyright 2002 Bill Medland
  * Copyright 2002 Alexandre Julliard
+ * Copyright 2003 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,6 +20,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+/* To get ICON_SMALL2 with the MSVC headers */
+#define _WIN32_WINNT 0x0501
+
 #include <assert.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -30,8 +34,6 @@
 #include "winuser.h"
 
 #include "wine/test.h"
-
-HWND      WINAPI GetShellWindow(void);
 
 #ifndef SPI_GETDESKWALLPAPER
 #define SPI_GETDESKWALLPAPER 0x0073
@@ -54,20 +56,20 @@ static void check_parents( HWND hwnd, HWND ga_parent, HWND gwl_parent, HWND get_
     if (pGetAncestor)
     {
         res = pGetAncestor( hwnd, GA_PARENT );
-        ok( res == ga_parent, "Wrong result for GA_PARENT %p expected %p", res, ga_parent );
+        ok( res == ga_parent, "Wrong result for GA_PARENT %p expected %p\n", res, ga_parent );
     }
     res = (HWND)GetWindowLongA( hwnd, GWL_HWNDPARENT );
-    ok( res == gwl_parent, "Wrong result for GWL_HWNDPARENT %p expected %p", res, gwl_parent );
+    ok( res == gwl_parent, "Wrong result for GWL_HWNDPARENT %p expected %p\n", res, gwl_parent );
     res = GetParent( hwnd );
-    ok( res == get_parent, "Wrong result for GetParent %p expected %p", res, get_parent );
+    ok( res == get_parent, "Wrong result for GetParent %p expected %p\n", res, get_parent );
     res = GetWindow( hwnd, GW_OWNER );
-    ok( res == gw_owner, "Wrong result for GW_OWNER %p expected %p", res, gw_owner );
+    ok( res == gw_owner, "Wrong result for GW_OWNER %p expected %p\n", res, gw_owner );
     if (pGetAncestor)
     {
         res = pGetAncestor( hwnd, GA_ROOT );
-        ok( res == ga_root, "Wrong result for GA_ROOT %p expected %p", res, ga_root );
+        ok( res == ga_root, "Wrong result for GA_ROOT %p expected %p\n", res, ga_root );
         res = pGetAncestor( hwnd, GA_ROOTOWNER );
-        ok( res == ga_root_owner, "Wrong result for GA_ROOTOWNER %p expected %p", res, ga_root_owner );
+        ok( res == ga_root_owner, "Wrong result for GA_ROOTOWNER %p expected %p\n", res, ga_root_owner );
     }
 }
 
@@ -76,7 +78,7 @@ static HWND create_tool_window( LONG style, HWND parent )
 {
     HWND ret = CreateWindowExA(0, "ToolWindowClass", "Tool window 1", style,
                                0, 0, 100, 100, parent, 0, 0, NULL );
-    ok( ret != 0, "Creation failed" );
+    ok( ret != 0, "Creation failed\n" );
     return ret;
 }
 
@@ -93,14 +95,14 @@ static void test_parent_owner(void)
     /* child without parent, should fail */
     test = CreateWindowExA(0, "ToolWindowClass", "Tool window 1",
                            WS_CHILD, 0, 0, 100, 100, 0, 0, 0, NULL );
-    ok( !test, "WS_CHILD without parent created" );
+    ok( !test, "WS_CHILD without parent created\n" );
 
     /* desktop window */
     check_parents( desktop, 0, 0, 0, 0, 0, 0 );
     style = GetWindowLongA( desktop, GWL_STYLE );
-    ok( !SetWindowLongA( desktop, GWL_STYLE, WS_POPUP ), "Set GWL_STYLE on desktop succeeded" );
-    ok( !SetWindowLongA( desktop, GWL_STYLE, 0 ), "Set GWL_STYLE on desktop succeeded" );
-    ok( GetWindowLongA( desktop, GWL_STYLE ) == style, "Desktop style changed" );
+    ok( !SetWindowLongA( desktop, GWL_STYLE, WS_POPUP ), "Set GWL_STYLE on desktop succeeded\n" );
+    ok( !SetWindowLongA( desktop, GWL_STYLE, 0 ), "Set GWL_STYLE on desktop succeeded\n" );
+    ok( GetWindowLongA( desktop, GWL_STYLE ) == style, "Desktop style changed\n" );
 
     /* normal child window */
     test = create_tool_window( WS_CHILD, hwndMain );
@@ -276,9 +278,9 @@ static void test_parent_owner(void)
     check_parents( desktop, 0, 0, 0, 0, 0, 0 );
 #if 0 /* this test succeeds on NT but crashes on win9x systems */
     ret = (HWND)SetWindowLongA( test, GWL_HWNDPARENT, (LONG_PTR)hwndMain2 );
-    ok( !ret, "Set GWL_HWNDPARENT succeeded on desktop" );
+    ok( !ret, "Set GWL_HWNDPARENT succeeded on desktop\n" );
     check_parents( desktop, 0, 0, 0, 0, 0, 0 );
-    ok( !SetParent( desktop, hwndMain ), "SetParent succeeded on desktop" );
+    ok( !SetParent( desktop, hwndMain ), "SetParent succeeded on desktop\n" );
     check_parents( desktop, 0, 0, 0, 0, 0, 0 );
 #endif
     /* normal child window */
@@ -286,24 +288,24 @@ static void test_parent_owner(void)
     trace( "created child %p\n", test );
 
     ret = (HWND)SetWindowLongA( test, GWL_HWNDPARENT, (LONG_PTR)hwndMain2 );
-    ok( ret == hwndMain, "GWL_HWNDPARENT return value %p expected %p", ret, hwndMain );
+    ok( ret == hwndMain, "GWL_HWNDPARENT return value %p expected %p\n", ret, hwndMain );
     check_parents( test, hwndMain2, hwndMain2, hwndMain2, 0, hwndMain2, hwndMain2 );
 
     ret = (HWND)SetWindowLongA( test, GWL_HWNDPARENT, (LONG_PTR)child );
-    ok( ret == hwndMain2, "GWL_HWNDPARENT return value %p expected %p", ret, hwndMain2 );
+    ok( ret == hwndMain2, "GWL_HWNDPARENT return value %p expected %p\n", ret, hwndMain2 );
     check_parents( test, child, child, child, 0, hwndMain, hwndMain );
 
     ret = (HWND)SetWindowLongA( test, GWL_HWNDPARENT, (LONG_PTR)desktop );
-    ok( ret == child, "GWL_HWNDPARENT return value %p expected %p", ret, child );
+    ok( ret == child, "GWL_HWNDPARENT return value %p expected %p\n", ret, child );
     check_parents( test, desktop, 0, desktop, 0, test, desktop );
 
     /* window is now child of desktop so GWL_HWNDPARENT changes owner from now on */
     ret = (HWND)SetWindowLongA( test, GWL_HWNDPARENT, (LONG_PTR)child );
-    ok( ret == 0, "GWL_HWNDPARENT return value %p expected 0", ret );
+    ok( ret == 0, "GWL_HWNDPARENT return value %p expected 0\n", ret );
     check_parents( test, desktop, child, desktop, child, test, desktop );
 
     ret = (HWND)SetWindowLongA( test, GWL_HWNDPARENT, 0 );
-    ok( ret == child, "GWL_HWNDPARENT return value %p expected %p", ret, child );
+    ok( ret == child, "GWL_HWNDPARENT return value %p expected %p\n", ret, child );
     check_parents( test, desktop, 0, desktop, 0, test, desktop );
     DestroyWindow( test );
 
@@ -312,15 +314,15 @@ static void test_parent_owner(void)
     trace( "created top-level %p\n", test );
 
     ret = (HWND)SetWindowLongA( test, GWL_HWNDPARENT, (LONG_PTR)hwndMain2 );
-    ok( ret == 0, "GWL_HWNDPARENT return value %p expected 0", ret );
+    ok( ret == 0, "GWL_HWNDPARENT return value %p expected 0\n", ret );
     check_parents( test, desktop, hwndMain2, 0, hwndMain2, test, test );
 
     ret = (HWND)SetWindowLongA( test, GWL_HWNDPARENT, (LONG_PTR)child );
-    ok( ret == hwndMain2, "GWL_HWNDPARENT return value %p expected %p", ret, hwndMain2 );
+    ok( ret == hwndMain2, "GWL_HWNDPARENT return value %p expected %p\n", ret, hwndMain2 );
     check_parents( test, desktop, child, 0, child, test, test );
 
     ret = (HWND)SetWindowLongA( test, GWL_HWNDPARENT, 0 );
-    ok( ret == child, "GWL_HWNDPARENT return value %p expected %p", ret, child );
+    ok( ret == child, "GWL_HWNDPARENT return value %p expected %p\n", ret, child );
     check_parents( test, desktop, 0, 0, 0, test, test );
     DestroyWindow( test );
 
@@ -329,15 +331,15 @@ static void test_parent_owner(void)
     trace( "created popup %p\n", test );
 
     ret = (HWND)SetWindowLongA( test, GWL_HWNDPARENT, (LONG_PTR)hwndMain2 );
-    ok( ret == 0, "GWL_HWNDPARENT return value %p expected 0", ret );
+    ok( ret == 0, "GWL_HWNDPARENT return value %p expected 0\n", ret );
     check_parents( test, desktop, hwndMain2, hwndMain2, hwndMain2, test, hwndMain2 );
 
     ret = (HWND)SetWindowLongA( test, GWL_HWNDPARENT, (LONG_PTR)child );
-    ok( ret == hwndMain2, "GWL_HWNDPARENT return value %p expected %p", ret, hwndMain2 );
+    ok( ret == hwndMain2, "GWL_HWNDPARENT return value %p expected %p\n", ret, hwndMain2 );
     check_parents( test, desktop, child, child, child, test, hwndMain );
 
     ret = (HWND)SetWindowLongA( test, GWL_HWNDPARENT, 0 );
-    ok( ret == child, "GWL_HWNDPARENT return value %p expected %p", ret, child );
+    ok( ret == child, "GWL_HWNDPARENT return value %p expected %p\n", ret, child );
     check_parents( test, desktop, 0, 0, 0, test, test );
     DestroyWindow( test );
 
@@ -346,15 +348,15 @@ static void test_parent_owner(void)
     trace( "created child %p\n", test );
 
     ret = SetParent( test, desktop );
-    ok( ret == hwndMain, "SetParent return value %p expected %p", ret, hwndMain );
+    ok( ret == hwndMain, "SetParent return value %p expected %p\n", ret, hwndMain );
     check_parents( test, desktop, 0, desktop, 0, test, desktop );
 
     ret = SetParent( test, child );
-    ok( ret == desktop, "SetParent return value %p expected %p", ret, desktop );
+    ok( ret == desktop, "SetParent return value %p expected %p\n", ret, desktop );
     check_parents( test, child, child, child, 0, hwndMain, hwndMain );
 
     ret = SetParent( test, hwndMain2 );
-    ok( ret == child, "SetParent return value %p expected %p", ret, child );
+    ok( ret == child, "SetParent return value %p expected %p\n", ret, child );
     check_parents( test, hwndMain2, hwndMain2, hwndMain2, 0, hwndMain2, hwndMain2 );
     DestroyWindow( test );
 
@@ -363,7 +365,7 @@ static void test_parent_owner(void)
     trace( "created top-level %p\n", test );
 
     ret = SetParent( test, child );
-    ok( ret == desktop, "SetParent return value %p expected %p", ret, desktop );
+    ok( ret == desktop, "SetParent return value %p expected %p\n", ret, desktop );
     check_parents( test, child, child, 0, 0, hwndMain, test );
     DestroyWindow( test );
 
@@ -372,11 +374,11 @@ static void test_parent_owner(void)
     trace( "created owned popup %p\n", test );
 
     ret = SetParent( test, child );
-    ok( ret == desktop, "SetParent return value %p expected %p", ret, desktop );
+    ok( ret == desktop, "SetParent return value %p expected %p\n", ret, desktop );
     check_parents( test, child, child, hwndMain2, hwndMain2, hwndMain, hwndMain2 );
 
     ret = (HWND)SetWindowLongA( test, GWL_HWNDPARENT, (ULONG_PTR)hwndMain );
-    ok( ret == child, "GWL_HWNDPARENT return value %p expected %p", ret, child );
+    ok( ret == child, "GWL_HWNDPARENT return value %p expected %p\n", ret, child );
     check_parents( test, hwndMain, hwndMain, hwndMain2, hwndMain2, hwndMain, hwndMain2 );
     DestroyWindow( test );
 
@@ -387,13 +389,13 @@ static void test_parent_owner(void)
     test = create_tool_window( WS_POPUP, owner );
     trace( "created owner %p and popup %p\n", owner, test );
     ret = SetParent( test, child );
-    ok( ret == desktop, "SetParent return value %p expected %p", ret, desktop );
+    ok( ret == desktop, "SetParent return value %p expected %p\n", ret, desktop );
     check_parents( test, child, child, owner, owner, hwndMain, owner );
     /* window is now child of 'child' but owned by 'owner' */
     DestroyWindow( owner );
-    ok( IsWindow(test), "Window %p destroyed by owner destruction", test );
+    ok( IsWindow(test), "Window %p destroyed by owner destruction\n", test );
     check_parents( test, child, child, owner, owner, hwndMain, owner );
-    ok( !IsWindow(owner), "Owner %p not destroyed", owner );
+    ok( !IsWindow(owner), "Owner %p not destroyed\n", owner );
     DestroyWindow(test);
 
     /* owned top-level popup */
@@ -402,18 +404,18 @@ static void test_parent_owner(void)
     trace( "created owner %p and popup %p\n", owner, test );
     check_parents( test, desktop, owner, owner, owner, test, owner );
     DestroyWindow( owner );
-    ok( !IsWindow(test), "Window %p not destroyed by owner destruction", test );
+    ok( !IsWindow(test), "Window %p not destroyed by owner destruction\n", test );
 
     /* top-level popup owned by child */
     owner = create_tool_window( WS_CHILD, hwndMain2 );
     test = create_tool_window( WS_POPUP, 0 );
     trace( "created owner %p and popup %p\n", owner, test );
     ret = (HWND)SetWindowLongA( test, GWL_HWNDPARENT, (ULONG_PTR)owner );
-    ok( ret == 0, "GWL_HWNDPARENT return value %p expected 0", ret );
+    ok( ret == 0, "GWL_HWNDPARENT return value %p expected 0\n", ret );
     check_parents( test, desktop, owner, owner, owner, test, hwndMain2 );
     DestroyWindow( owner );
-    ok( IsWindow(test), "Window %p destroyed by owner destruction", test );
-    ok( !IsWindow(owner), "Owner %p not destroyed", owner );
+    ok( IsWindow(test), "Window %p destroyed by owner destruction\n", test );
+    ok( !IsWindow(owner), "Owner %p not destroyed\n", owner );
     check_parents( test, desktop, owner, owner, owner, test, owner );
     DestroyWindow(test);
 
@@ -554,10 +556,17 @@ static LRESULT CALLBACK cbt_hook_proc(int nCode, WPARAM wParam, LPARAM lParam)
     {
 	case HCBT_CREATEWND:
 	{
+	    DWORD style;
 	    CBT_CREATEWNDA *createwnd = (CBT_CREATEWNDA *)lParam;
 	    trace("HCBT_CREATEWND: hwnd %p, parent %p, style %08lx\n",
 		  (HWND)wParam, createwnd->lpcs->hwndParent, createwnd->lpcs->style);
 	    ok(createwnd->hwndInsertAfter == HWND_TOP, "hwndInsertAfter should be always HWND_TOP\n");
+
+	    /* WS_VISIBLE should be turned off yet */
+	    style = createwnd->lpcs->style & ~WS_VISIBLE;
+	    ok(style == GetWindowLongA((HWND)wParam, GWL_STYLE),
+		"style of hwnd and style in the CREATESTRUCT do not match: %08lx != %08lx\n",
+		GetWindowLongA((HWND)wParam, GWL_STYLE), style);
 	    break;
 	}
     }
@@ -599,7 +608,7 @@ static void test_shell_window()
         GetWindowThreadProcessId(shellWindow, &pid);
         hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
         ret = TerminateProcess(hProcess, 0);
-        ok(ret, "termination of previous shell process failed: GetLastError()=%ld", GetLastError());
+        ok(ret, "termination of previous shell process failed: GetLastError()=%ld\n", GetLastError());
         WaitForSingleObject(hProcess, INFINITE);    /* wait for termination */
         CloseHandle(hProcess);
     }
@@ -610,7 +619,7 @@ static void test_shell_window()
     ret = SetShellWindow(hwnd1);
     ok(ret, "first call to SetShellWindow(hwnd1)\n");
     shellWindow = GetShellWindow();
-    ok(shellWindow==hwnd1, "wrong shell window: %p", shellWindow);
+    ok(shellWindow==hwnd1, "wrong shell window: %p\n", shellWindow);
 
     ret = SetShellWindow(hwnd1);
     ok(!ret, "second call to SetShellWindow(hwnd1)\n");
@@ -638,7 +647,7 @@ static void test_shell_window()
     hwnd2 = CreateWindowEx(WS_EX_TOPMOST, TEXT("#32770"), TEXT("TEST2"), WS_OVERLAPPEDWINDOW/*|WS_VISIBLE*/, 150, 250, 300, 200, 0, 0, hinst, 0);
     trace("created window 2: %p\n", hwnd2);
     ret = SetShellWindow(hwnd2);
-    ok(!ret, "SetShellWindow(hwnd2) with WS_EX_TOPMOST");
+    ok(!ret, "SetShellWindow(hwnd2) with WS_EX_TOPMOST\n");
 
     hwnd3 = CreateWindowEx(0, TEXT("#32770"), TEXT("TEST3"), WS_OVERLAPPEDWINDOW/*|WS_VISIBLE*/, 200, 400, 300, 200, 0, 0, hinst, 0);
     trace("created window 3: %p\n", hwnd3);
@@ -652,7 +661,7 @@ static void test_shell_window()
     ret = SetShellWindow(hwnd4);
     ok(ret, "SetShellWindow(hwnd4)\n");
     shellWindow = GetShellWindow();
-    ok(shellWindow==hwnd4, "wrong shell window: %p - expected hwnd4", shellWindow);
+    ok(shellWindow==hwnd4, "wrong shell window: %p - expected hwnd4\n", shellWindow);
 
     nextWnd = GetWindow(hwnd4, GW_HWNDNEXT);
     ok(nextWnd==0, "wrong next window for hwnd4: %p - expected 0\n", nextWnd);
@@ -661,12 +670,12 @@ static void test_shell_window()
     ok(ret, "SetWindowPos(hwnd4, HWND_TOPMOST)\n");
 
     ret = SetWindowPos(hwnd4, hwnd3, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE);
-    ok(ret, "SetWindowPos(hwnd4, hwnd3");
+    ok(ret, "SetWindowPos(hwnd4, hwnd3\n");
 
     ret = SetShellWindow(hwnd3);
     ok(!ret, "SetShellWindow(hwnd3)\n");
     shellWindow = GetShellWindow();
-    ok(shellWindow==hwnd4, "wrong shell window: %p - expected hwnd4", shellWindow);
+    ok(shellWindow==hwnd4, "wrong shell window: %p - expected hwnd4\n", shellWindow);
 
     hwnd5 = CreateWindowEx(0, TEXT("#32770"), TEXT("TEST5"), WS_OVERLAPPEDWINDOW/*|WS_VISIBLE*/, 300, 600, 300, 200, 0, 0, hinst, 0);
     trace("created window 5: %p\n", hwnd5);
@@ -686,6 +695,441 @@ static void test_shell_window()
     DestroyWindow(hwnd5);
 }
 
+/************** MDI test ****************/
+
+static const char mdi_lParam_test_message[] = "just a test string";
+
+static void test_MDI_create(HWND parent, HWND mdi_client)
+{
+    MDICREATESTRUCTA mdi_cs;
+    HWND mdi_child;
+    static const WCHAR classW[] = {'M','D','I','_','c','h','i','l','d','_','C','l','a','s','s','_','1',0};
+    static const WCHAR titleW[] = {'M','D','I',' ','c','h','i','l','d',0};
+    BOOL isWin9x = FALSE;
+
+    mdi_cs.szClass = "MDI_child_Class_1";
+    mdi_cs.szTitle = "MDI child";
+    mdi_cs.hOwner = GetModuleHandle(0);
+    mdi_cs.x = CW_USEDEFAULT;
+    mdi_cs.y = CW_USEDEFAULT;
+    mdi_cs.cx = CW_USEDEFAULT;
+    mdi_cs.cy = CW_USEDEFAULT;
+    mdi_cs.style = 0;
+    mdi_cs.lParam = (LPARAM)mdi_lParam_test_message;
+    mdi_child = (HWND)SendMessageA(mdi_client, WM_MDICREATE, 0, (LPARAM)&mdi_cs);
+    ok(mdi_child != 0, "MDI child creation failed\n");
+    DestroyWindow(mdi_child);
+
+    mdi_cs.style = 0x7fffffff; /* without WS_POPUP */
+    mdi_child = (HWND)SendMessageA(mdi_client, WM_MDICREATE, 0, (LPARAM)&mdi_cs);
+    ok(mdi_child != 0, "MDI child creation failed\n");
+    DestroyWindow(mdi_child);
+
+    mdi_cs.style = 0xffffffff; /* with WS_POPUP */
+    mdi_child = (HWND)SendMessageA(mdi_client, WM_MDICREATE, 0, (LPARAM)&mdi_cs);
+    if (GetWindowLongA(mdi_client, GWL_STYLE) & MDIS_ALLCHILDSTYLES)
+    {
+        ok(!mdi_child, "MDI child with WS_POPUP and with MDIS_ALLCHILDSTYLES should fail\n");
+        DestroyWindow(mdi_child);
+    }
+    else
+        ok(mdi_child != 0, "MDI child creation failed\n");
+
+    /* test MDICREATESTRUCT A<->W mapping */
+    /* MDICREATESTRUCTA and MDICREATESTRUCTW have the same layout */
+    mdi_cs.style = 0;
+    mdi_cs.szClass = (LPCSTR)classW;
+    mdi_cs.szTitle = (LPCSTR)titleW;
+    SetLastError(0xdeadbeef);
+    mdi_child = (HWND)SendMessageW(mdi_client, WM_MDICREATE, 0, (LPARAM)&mdi_cs);
+    if (!mdi_child)
+    {
+        if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+            isWin9x = TRUE;
+        else
+            ok(mdi_child != 0, "MDI child creation failed\n");
+    }
+    DestroyWindow(mdi_child);
+
+    mdi_child = CreateMDIWindowA("MDI_child_Class_1", "MDI child",
+                                 0,
+                                 CW_USEDEFAULT, CW_USEDEFAULT,
+                                 CW_USEDEFAULT, CW_USEDEFAULT,
+                                 mdi_client, GetModuleHandle(0),
+                                 (LPARAM)mdi_lParam_test_message);
+    ok(mdi_child != 0, "MDI child creation failed\n");
+    DestroyWindow(mdi_child);
+
+    mdi_child = CreateMDIWindowA("MDI_child_Class_1", "MDI child",
+                                 0x7fffffff, /* without WS_POPUP */
+                                 CW_USEDEFAULT, CW_USEDEFAULT,
+                                 CW_USEDEFAULT, CW_USEDEFAULT,
+                                 mdi_client, GetModuleHandle(0),
+                                 (LPARAM)mdi_lParam_test_message);
+    ok(mdi_child != 0, "MDI child creation failed\n");
+    DestroyWindow(mdi_child);
+
+    mdi_child = CreateMDIWindowA("MDI_child_Class_1", "MDI child",
+                                 0xffffffff, /* with WS_POPUP */
+                                 CW_USEDEFAULT, CW_USEDEFAULT,
+                                 CW_USEDEFAULT, CW_USEDEFAULT,
+                                 mdi_client, GetModuleHandle(0),
+                                 (LPARAM)mdi_lParam_test_message);
+    if (GetWindowLongA(mdi_client, GWL_STYLE) & MDIS_ALLCHILDSTYLES)
+    {
+        ok(!mdi_child, "MDI child with WS_POPUP and with MDIS_ALLCHILDSTYLES should fail\n");
+        DestroyWindow(mdi_child);
+    }
+    else
+        ok(mdi_child != 0, "MDI child creation failed\n");
+
+    /* test MDICREATESTRUCT A<->W mapping */
+    SetLastError(0xdeadbeef);
+    mdi_child = CreateMDIWindowW(classW, titleW,
+                                 0,
+                                 CW_USEDEFAULT, CW_USEDEFAULT,
+                                 CW_USEDEFAULT, CW_USEDEFAULT,
+                                 mdi_client, GetModuleHandle(0),
+                                 (LPARAM)mdi_lParam_test_message);
+    if (!mdi_child)
+    {
+        if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+            isWin9x = TRUE;
+        else
+            ok(mdi_child != 0, "MDI child creation failed\n");
+    }
+    DestroyWindow(mdi_child);
+
+    mdi_child = CreateWindowExA(WS_EX_MDICHILD, "MDI_child_Class_1", "MDI child",
+                                0,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                mdi_client, 0, GetModuleHandle(0),
+                                (LPVOID)mdi_lParam_test_message);
+    ok(mdi_child != 0, "MDI child creation failed\n");
+    DestroyWindow(mdi_child);
+
+    mdi_child = CreateWindowExA(WS_EX_MDICHILD, "MDI_child_Class_1", "MDI child",
+                                0x7fffffff, /* without WS_POPUP */
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                mdi_client, 0, GetModuleHandle(0),
+                                (LPVOID)mdi_lParam_test_message);
+    ok(mdi_child != 0, "MDI child creation failed\n");
+    DestroyWindow(mdi_child);
+
+    mdi_child = CreateWindowExA(WS_EX_MDICHILD, "MDI_child_Class_1", "MDI child",
+                                0xffffffff, /* with WS_POPUP */
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                mdi_client, 0, GetModuleHandle(0),
+                                (LPVOID)mdi_lParam_test_message);
+    if (GetWindowLongA(mdi_client, GWL_STYLE) & MDIS_ALLCHILDSTYLES)
+    {
+        ok(!mdi_child, "MDI child with WS_POPUP and with MDIS_ALLCHILDSTYLES should fail\n");
+        DestroyWindow(mdi_child);
+    }
+    else
+        ok(mdi_child != 0, "MDI child creation failed\n");
+
+    /* test MDICREATESTRUCT A<->W mapping */
+    SetLastError(0xdeadbeef);
+    mdi_child = CreateWindowExW(WS_EX_MDICHILD, classW, titleW,
+                                0,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                mdi_client, 0, GetModuleHandle(0),
+                                (LPVOID)mdi_lParam_test_message);
+    if (!mdi_child)
+    {
+        if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+            isWin9x = TRUE;
+        else
+            ok(mdi_child != 0, "MDI child creation failed\n");
+    }
+    DestroyWindow(mdi_child);
+
+    /* This test fails on Win9x */
+    if (!isWin9x)
+    {
+        mdi_child = CreateWindowExA(WS_EX_MDICHILD, "MDI_child_Class_2", "MDI child",
+                                WS_CHILD,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                parent, 0, GetModuleHandle(0),
+                                (LPVOID)mdi_lParam_test_message);
+        ok(!mdi_child, "WS_EX_MDICHILD with a not MDIClient parent should fail\n");
+    }
+
+    mdi_child = CreateWindowExA(0, "MDI_child_Class_2", "MDI child",
+                                WS_CHILD, /* without WS_POPUP */
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                mdi_client, 0, GetModuleHandle(0),
+                                (LPVOID)mdi_lParam_test_message);
+    ok(mdi_child != 0, "MDI child creation failed\n");
+    DestroyWindow(mdi_child);
+
+    mdi_child = CreateWindowExA(0, "MDI_child_Class_2", "MDI child",
+                                WS_CHILD | WS_POPUP, /* with WS_POPUP */
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                mdi_client, 0, GetModuleHandle(0),
+                                (LPVOID)mdi_lParam_test_message);
+    ok(mdi_child != 0, "MDI child creation failed\n");
+    DestroyWindow(mdi_child);
+}
+
+static LRESULT WINAPI mdi_child_wnd_proc_1(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    switch (msg)
+    {
+        case WM_NCCREATE:
+        case WM_CREATE:
+        {
+            CREATESTRUCTA *cs = (CREATESTRUCTA *)lparam;
+            MDICREATESTRUCTA *mdi_cs = (MDICREATESTRUCTA *)cs->lpCreateParams;
+
+            ok(cs->dwExStyle & WS_EX_MDICHILD, "WS_EX_MDICHILD should be set\n");
+            ok(mdi_cs->lParam == (LPARAM)mdi_lParam_test_message, "wrong mdi_cs->lParam\n");
+
+            ok(!lstrcmpA(cs->lpszClass, "MDI_child_Class_1"), "wrong class name\n");
+            ok(!lstrcmpA(cs->lpszClass, mdi_cs->szClass), "class name does not match\n");
+            ok(!lstrcmpA(cs->lpszName, "MDI child"), "wrong title\n");
+            ok(!lstrcmpA(cs->lpszName, mdi_cs->szTitle), "title does not match\n");
+            ok(cs->hInstance == mdi_cs->hOwner, "%p != %p\n", cs->hInstance, mdi_cs->hOwner);
+
+            /* MDICREATESTRUCT should have original values */
+            ok(mdi_cs->style == 0 || mdi_cs->style == 0x7fffffff || mdi_cs->style == 0xffffffff,
+                "mdi_cs->style does not match (%08lx)\n", mdi_cs->style);
+            ok(mdi_cs->x == CW_USEDEFAULT, "%d != CW_USEDEFAULT\n", mdi_cs->x);
+            ok(mdi_cs->y == CW_USEDEFAULT, "%d != CW_USEDEFAULT\n", mdi_cs->y);
+            ok(mdi_cs->cx == CW_USEDEFAULT, "%d != CW_USEDEFAULT\n", mdi_cs->cx);
+            ok(mdi_cs->cy == CW_USEDEFAULT, "%d != CW_USEDEFAULT\n", mdi_cs->cy);
+
+            /* CREATESTRUCT should have fixed values */
+            ok(cs->x != CW_USEDEFAULT, "%d == CW_USEDEFAULT\n", cs->x);
+            ok(cs->y != CW_USEDEFAULT, "%d == CW_USEDEFAULT\n", cs->y);
+
+            /* cx/cy == CW_USEDEFAULT are translated to NOT zero values */
+            ok(cs->cx != CW_USEDEFAULT && cs->cx != 0, "%d == CW_USEDEFAULT\n", cs->cx);
+            ok(cs->cy != CW_USEDEFAULT && cs->cy != 0, "%d == CW_USEDEFAULT\n", cs->cy);
+
+            ok(!(cs->style & WS_POPUP), "WS_POPUP is not allowed\n");
+
+            if (GetWindowLongA(cs->hwndParent, GWL_STYLE) & MDIS_ALLCHILDSTYLES)
+            {
+                ok(cs->style == (mdi_cs->style | WS_CHILD | WS_CLIPSIBLINGS),
+                   "cs->style does not match (%08lx)\n", cs->style);
+            }
+            else
+            {
+                DWORD style = mdi_cs->style;
+                style &= ~WS_POPUP;
+                style |= WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION |
+                    WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+                ok(cs->style == style,
+                   "cs->style does not match (%08lx)\n", cs->style);
+            }
+            break;
+        }
+    }
+    return DefMDIChildProcA(hwnd, msg, wparam, lparam);
+}
+
+static LRESULT WINAPI mdi_child_wnd_proc_2(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    switch (msg)
+    {
+        case WM_NCCREATE:
+        case WM_CREATE:
+        {
+            CREATESTRUCTA *cs = (CREATESTRUCTA *)lparam;
+
+            ok(!(cs->dwExStyle & WS_EX_MDICHILD), "WS_EX_MDICHILD should not be set\n");
+            ok(cs->lpCreateParams == mdi_lParam_test_message, "wrong cs->lpCreateParams\n");
+
+            ok(!lstrcmpA(cs->lpszClass, "MDI_child_Class_2"), "wrong class name\n");
+            ok(!lstrcmpA(cs->lpszName, "MDI child"), "wrong title\n");
+
+            /* CREATESTRUCT should have fixed values */
+            /* For some reason Win9x doesn't translate cs->x from CW_USEDEFAULT,
+               while NT does. */
+            /*ok(cs->x != CW_USEDEFAULT, "%d == CW_USEDEFAULT\n", cs->x);*/
+            ok(cs->y != CW_USEDEFAULT, "%d == CW_USEDEFAULT\n", cs->y);
+
+            /* cx/cy == CW_USEDEFAULT are translated to 0 */
+            ok(cs->cx == 0, "%d != 0\n", cs->cx);
+            ok(cs->cy == 0, "%d != 0\n", cs->cy);
+            break;
+        }
+    }
+    return DefWindowProcA(hwnd, msg, wparam, lparam);
+}
+
+static LRESULT WINAPI mdi_main_wnd_procA(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    static HWND mdi_client;
+
+    switch (msg)
+    {
+        case WM_CREATE:
+        {
+            CLIENTCREATESTRUCT client_cs;
+            RECT rc;
+
+            GetClientRect(hwnd, &rc);
+
+            client_cs.hWindowMenu = 0;
+            client_cs.idFirstChild = 1;
+
+            /* MDIClient without MDIS_ALLCHILDSTYLES */
+            mdi_client = CreateWindowExA(0, "mdiclient",
+                                         NULL,
+                                         WS_CHILD /*| WS_VISIBLE*/,
+                                          /* tests depend on a not zero MDIClient size */
+                                         0, 0, rc.right, rc.bottom,
+                                         hwnd, 0, GetModuleHandle(0),
+                                         (LPVOID)&client_cs);
+            assert(mdi_client);
+            test_MDI_create(hwnd, mdi_client);
+            DestroyWindow(mdi_client);
+
+            /* MDIClient with MDIS_ALLCHILDSTYLES */
+            mdi_client = CreateWindowExA(0, "mdiclient",
+                                         NULL,
+                                         WS_CHILD | MDIS_ALLCHILDSTYLES /*| WS_VISIBLE*/,
+                                          /* tests depend on a not zero MDIClient size */
+                                         0, 0, rc.right, rc.bottom,
+                                         hwnd, 0, GetModuleHandle(0),
+                                         (LPVOID)&client_cs);
+            assert(mdi_client);
+            test_MDI_create(hwnd, mdi_client);
+            DestroyWindow(mdi_client);
+            break;
+        }
+
+        case WM_CLOSE:
+            PostQuitMessage(0);
+            break;
+    }
+    return DefFrameProcA(hwnd, mdi_client, msg, wparam, lparam);
+}
+
+static BOOL mdi_RegisterWindowClasses(void)
+{
+    WNDCLASSA cls;
+
+    cls.style = 0;
+    cls.lpfnWndProc = mdi_main_wnd_procA;
+    cls.cbClsExtra = 0;
+    cls.cbWndExtra = 0;
+    cls.hInstance = GetModuleHandleA(0);
+    cls.hIcon = 0;
+    cls.hCursor = LoadCursorA(0, (LPSTR)IDC_ARROW);
+    cls.hbrBackground = GetStockObject(WHITE_BRUSH);
+    cls.lpszMenuName = NULL;
+    cls.lpszClassName = "MDI_parent_Class";
+    if(!RegisterClassA(&cls)) return FALSE;
+
+    cls.lpfnWndProc = mdi_child_wnd_proc_1;
+    cls.lpszClassName = "MDI_child_Class_1";
+    if(!RegisterClassA(&cls)) return FALSE;
+
+    cls.lpfnWndProc = mdi_child_wnd_proc_2;
+    cls.lpszClassName = "MDI_child_Class_2";
+    if(!RegisterClassA(&cls)) return FALSE;
+
+    return TRUE;
+}
+
+static void test_mdi(void)
+{
+    HWND mdi_hwndMain;
+    /*MSG msg;*/
+
+    if (!mdi_RegisterWindowClasses()) assert(0);
+
+    mdi_hwndMain = CreateWindowExA(0, "MDI_parent_Class", "MDI parent window",
+                                   WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX |
+                                   WS_MAXIMIZEBOX /*| WS_VISIBLE*/,
+                                   100, 100, CW_USEDEFAULT, CW_USEDEFAULT,
+                                   GetDesktopWindow(), 0,
+                                   GetModuleHandle(0), NULL);
+    assert(mdi_hwndMain);
+/*
+    while(GetMessage(&msg, 0, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+*/
+}
+
+static void test_icons(void)
+{
+    WNDCLASSEXA cls;
+    HWND hwnd;
+    HICON icon = LoadIconA(0, (LPSTR)IDI_APPLICATION);
+    HICON icon2 = LoadIconA(0, (LPSTR)IDI_QUESTION);
+    HICON small_icon = LoadImageA(0, (LPSTR)IDI_APPLICATION, IMAGE_ICON,
+                                  GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED );
+    HICON res;
+
+    cls.cbSize = sizeof(cls);
+    cls.style = 0;
+    cls.lpfnWndProc = DefWindowProcA;
+    cls.cbClsExtra = 0;
+    cls.cbWndExtra = 0;
+    cls.hInstance = 0;
+    cls.hIcon = LoadIconA(0, (LPSTR)IDI_HAND);
+    cls.hIconSm = small_icon;
+    cls.hCursor = LoadCursorA(0, (LPSTR)IDC_ARROW);
+    cls.hbrBackground = GetStockObject(WHITE_BRUSH);
+    cls.lpszMenuName = NULL;
+    cls.lpszClassName = "IconWindowClass";
+
+    RegisterClassExA(&cls);
+
+    hwnd = CreateWindowExA(0, "IconWindowClass", "icon test", 0,
+                           100, 100, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, NULL, NULL);
+    assert( hwnd );
+
+    res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_BIG, 0 );
+    ok( res == 0, "wrong big icon %p/0\n", res );
+    res = (HICON)SendMessageA( hwnd, WM_SETICON, ICON_BIG, (LPARAM)icon );
+    ok( res == 0, "wrong previous big icon %p/0\n", res );
+    res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_BIG, 0 );
+    ok( res == icon, "wrong big icon after set %p/%p\n", res, icon );
+    res = (HICON)SendMessageA( hwnd, WM_SETICON, ICON_BIG, (LPARAM)icon2 );
+    ok( res == icon, "wrong previous big icon %p/%p\n", res, icon );
+    res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_BIG, 0 );
+    ok( res == icon2, "wrong big icon after set %p/%p\n", res, icon2 );
+
+    res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_SMALL, 0 );
+    ok( res == 0, "wrong small icon %p/0\n", res );
+    /* this test is XP specific */
+    /*res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_SMALL2, 0 );
+    ok( res != 0, "wrong small icon %p\n", res );*/
+    res = (HICON)SendMessageA( hwnd, WM_SETICON, ICON_SMALL, (LPARAM)icon );
+    ok( res == 0, "wrong previous small icon %p/0\n", res );
+    res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_SMALL, 0 );
+    ok( res == icon, "wrong small icon after set %p/%p\n", res, icon );
+    /* this test is XP specific */
+    /*res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_SMALL2, 0 );
+    ok( res == icon, "wrong small icon after set %p/%p\n", res, icon );*/
+    res = (HICON)SendMessageA( hwnd, WM_SETICON, ICON_SMALL, (LPARAM)small_icon );
+    ok( res == icon, "wrong previous small icon %p/%p\n", res, icon );
+    res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_SMALL, 0 );
+    ok( res == small_icon, "wrong small icon after set %p/%p\n", res, small_icon );
+    /* this test is XP specific */
+    /*res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_SMALL2, 0 );
+    ok( res == small_icon, "wrong small icon after set %p/%p\n", res, small_icon );*/
+
+    /* make sure the big icon hasn't changed */
+    res = (HICON)SendMessageA( hwnd, WM_GETICON, ICON_BIG, 0 );
+    ok( res == icon2, "wrong big icon after set %p/%p\n", res, icon2 );
+}
 
 START_TEST(win)
 {
@@ -711,5 +1155,9 @@ START_TEST(win)
 
     test_parent_owner();
     test_shell_window();
+
+    test_mdi();
+    test_icons();
+
     UnhookWindowsHookEx(hhook);
 }

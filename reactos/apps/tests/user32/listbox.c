@@ -99,7 +99,7 @@ keypress (HWND handle, WPARAM keycode, BYTE scancode, BOOL extended)
 
 #define listbox_field_ok(t, s, f, got) \
   ok (t.s.f==got.f, "style %#x, step " #s ", field " #f \
-      ": expected %d, got %d", (unsigned int)t.prop.add_style, \
+      ": expected %d, got %d\n", (unsigned int)t.prop.add_style, \
       t.s.f, got.f)
 
 #define listbox_todo_field_ok(t, s, f, got) \

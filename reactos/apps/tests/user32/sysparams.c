@@ -133,10 +133,10 @@ static void test_change_message( int action, int optional )
     if (change_counter==0 && optional==1)
         return;
     ok( 1 == change_counter,
-        "Missed a message: change_counter=%d", change_counter );
+        "Missed a message: change_counter=%d\n", change_counter );
     change_counter = 0;
     ok( action == change_last_param,
-        "Wrong action got %d expected %d", change_last_param, action );
+        "Wrong action got %d expected %d\n", change_last_param, action );
     change_last_param = 0;
 }
 
@@ -166,13 +166,13 @@ static void _test_reg_key( LPCSTR subKey1, LPCSTR subKey2, LPCSTR valName, LPCST
     if (rc==ERROR_SUCCESS)
     {
         ok( !strcmp( testValue, value ),
-            "Wrong value in registry: subKey=%s, valName=%s, testValue=%s, value=%s",
+            "Wrong value in registry: subKey=%s, valName=%s, testValue=%s, value=%s\n",
             subKey1, valName, testValue, value );
         found++;
     }
     else if (strict)
     {
-        ok(0,"Missing registry entry: subKey=%s, valName=%s",
+        ok(0,"Missing registry entry: subKey=%s, valName=%s\n",
            subKey1, valName);
     }
     if (subKey2 && !strict)
@@ -185,12 +185,12 @@ static void _test_reg_key( LPCSTR subKey1, LPCSTR subKey2, LPCSTR valName, LPCST
         if (rc==ERROR_SUCCESS)
         {
             ok( !strcmp( testValue, value ),
-                "Wrong value in registry: subKey=%s, valName=%s, testValue=%s, value=%s",
+                "Wrong value in registry: subKey=%s, valName=%s, testValue=%s, value=%s\n",
                 subKey2, valName, testValue, value );
             found++;
         }
     }
-    ok(found,"Missing registry entry: %s in %s or %s",
+    ok(found,"Missing registry entry: %s in %s or %s\n",
        valName, subKey1, (subKey2?subKey2:"<n/a>") );
 }
 
@@ -250,7 +250,7 @@ static void test_SPI_SETBEEP( void )                   /*      2 */
         ok(rc!=0,"SystemParametersInfoW: rc=%d err=%ld\n",rc,GetLastError());
         eq( b, curr_val, "SystemParametersInfoW", "%d" );
     }
-    ok( MessageBeep( MB_OK ), "Return value of MessageBeep when sound is disabled" );
+    ok( MessageBeep( MB_OK ), "Return value of MessageBeep when sound is disabled\n" );
 
     rc=SystemParametersInfoA( SPI_SETBEEP, old_b, 0, SPIF_UPDATEINIFILE );
     ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%ld\n",rc,GetLastError());
@@ -294,7 +294,7 @@ static void run_spi_setmouse_test( int curr_val[], POINT *req_change, POINT *pro
     for (i = 0; i < 3; i++)
     {
         ok(mi[i] == curr_val[i],
-           "incorrect value for %d: %d != %d", i, mi[i], curr_val[i]);
+           "incorrect value for %d: %d != %d\n", i, mi[i], curr_val[i]);
     }
 
     rc=SystemParametersInfoW( SPI_GETMOUSE, 0, mi, 0 );
@@ -304,7 +304,7 @@ static void run_spi_setmouse_test( int curr_val[], POINT *req_change, POINT *pro
         for (i = 0; i < 3; i++)
         {
             ok(mi[i] == curr_val[i],
-               "incorrect value for %d: %d != %d", i, mi[i], curr_val[i]);
+               "incorrect value for %d: %d != %d\n", i, mi[i], curr_val[i]);
         }
     }
 
@@ -315,8 +315,8 @@ static void run_spi_setmouse_test( int curr_val[], POINT *req_change, POINT *pro
         mouse_event( MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, 0, 0, 0, 0 );
         mouse_event( MOUSEEVENTF_MOVE, req_change[i].x, req_change[i].y, 0, 0 );
         GetCursorPos( &mv );
-        ok( proj_change[i].x == mv.x, "Projected dx and real dx comparison. May fail under high load." );
-        ok( proj_change[i].y == mv.y, "Projected dy equals real dy. May fail under high load." );
+        ok( proj_change[i].x == mv.x, "Projected dx and real dx comparison. May fail under high load.\n" );
+        ok( proj_change[i].y == mv.y, "Projected dy equals real dy. May fail under high load.\n" );
     }
 #endif
 }

@@ -30,9 +30,9 @@ static void wsprintfATest(void)
     int rc;
 
     rc=wsprintfA(buf, "%010ld", -1);
-    ok(rc == 10, "wsPrintfA length failure: rc=%d error=%ld",rc,GetLastError());
+    ok(rc == 10, "wsPrintfA length failure: rc=%d error=%ld\n",rc,GetLastError());
     ok((lstrcmpA(buf, "-000000001") == 0),
-       "wsprintfA zero padded negative value failure: buf=[%s]",buf);
+       "wsprintfA zero padded negative value failure: buf=[%s]\n",buf);
 }
 
 static void wsprintfWTest(void)
@@ -45,9 +45,9 @@ static void wsprintfWTest(void)
     rc=wsprintfW(buf, fmt, -1);
     if (rc==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
         return;
-    ok(rc == 10, "wsPrintfW length failure: rc=%d error=%ld",rc,GetLastError());
+    ok(rc == 10, "wsPrintfW length failure: rc=%d error=%ld\n",rc,GetLastError());
     ok((lstrcmpW(buf, target) == 0),
-       "wsprintfW zero padded negative value failure");
+       "wsprintfW zero padded negative value failure\n");
 }
 
 START_TEST(wsprintf)
