@@ -110,6 +110,71 @@ typedef struct _FONTOBJ
   PVOID  pvProducer;
 } FONTOBJ, *PFONTOBJ;
 
+typedef struct _IFIMETRICS 
+{
+  ULONG cjThis;
+  ULONG ulVersion;
+  PTRDIFF dpwszFamilyName;
+  PTRDIFF dpwszStyleName;
+  PTRDIFF dpwszFaceName;
+  PTRDIFF dpwszUniqueName;
+  PTRDIFF dpFontSim;
+  LONG lEmbedId;
+  LONG lItalicAngle;
+  LONG lCharBias;
+  PTRDIFF dpCharSets;
+  BYTE jWinCharSet;
+  BYTE jWinPitchAndFamily;
+  USHORT usWinWeight;
+  ULONG flInfo;
+  USHORT fsSelection;
+  USHORT fsType;
+  WORD fwdUnitsPerEm;
+  WORD fwdLowestPPEm;
+  WORD fwdWinAscender;
+  WORD fwdWinDescender;
+  WORD fwdMacAscender;
+  WORD fwdMacDescender;
+  WORD fwdMacLineGap;
+  WORD fwdTypoAscender;
+  WORD fwdTypoDescender;
+  WORD fwdTypoLineGap;
+  WORD fwdAveCharWidth;
+  WORD fwdMaxCharInc;
+  WORD fwdCapHeight;
+  WORD fwdXHeight;
+  WORD fwdSubScriptXSize;
+  WORD fwdSubScriptYSize;
+  WORD fwdSubScriptXOffset;
+  WORD fwdSubScriptYOffset;
+  WORD fwdSuperScriptXSize;
+  WORD fwdSuperScriptYSize;
+  WORD fwdSuperScriptXOffset;
+  WORD fwdSuperScriptYOffset;
+  WORD fwdUnderscoreSize;
+  WORD fwdUnderscorePosition;
+  WORD fwdStrikeoutSize;
+  WORD fwdStrikeoutPosition;
+  BYTE chFirstChar;
+  BYTE chLastChar;
+  BYTE chDefaultChar;
+  BYTE chBreakChar;
+  WCHAR wcFirstChar;
+  WCHAR wcLastChar;
+  WCHAR wcDefaultChar;
+  WCHAR wcBreakChar;
+  POINTL ptlBaseline;
+  POINTL ptlAspect;
+  POINTL ptlCaret;
+  RECTL rclFontBox;
+  BYTE achVendId[4];
+  ULONG cKerningPairs;
+  ULONG ulPanoseCulture;
+  PANOSE panose;
+} IFIMETRICS, *PIFIMETRICS;
+
+
+
 typedef struct _PATHOBJ
 {
   ULONG  fl;
@@ -232,6 +297,77 @@ enum _END_DOC_FLAGS
 #define  FP_WINDINGMODE    0x00000001
 #define  FP_ALTERNATEMODE  0x00000002
 
+enum _GLYPH_MODE
+{
+  FO_GLYPHBITS = 1,
+  FO_HGLYPHS,
+  FO_PATHOBJ
+};
+ 
+enum _QUERY_ADVANCE_WIDTH_TYPES
+{
+  QAW_GETWIDTHS = 1,
+  QAW_GETEASYWIDTHS 
+};
+
+enum _WIN_CHARSET
+{
+  ANSI_CHARSET = 1,
+  SYMBOL_CHARSET, 
+  SHIFTJIS_CHARSET, 
+  HANGEUL_CHARSET, 
+  CHINESEBIG5_CHARSET, 
+  OEM_CHARSET 
+};
+
+#define  FIXED_PITCH     0x00000000
+#define  VARIABLE_PITCH  0x00000001
+#define  FF_DECORATIVE   0x00000010
+#define  FF_DONTCARE     0x00000020
+#define  FF_MODERN       0x00000030
+#define  FF_ROMAN        0x00000040
+#define  FF_SCRIPT       0x00000050
+#define  FF_SWISS        0x00000060
+
+#define  FM_INFO_TECH_TRUETYPE  0x00000001
+#define  FM_INFO_TECH_BITMAP    0x00000002
+#define  FM_INFO_TECH_STROKE    0x00000004
+#define  FM_INFO_TECH_OUTLINE_NOT_TRUETYPE  0x00000008
+#define  FM_INFO_ARB_XFORMS     0x00000010
+#define  FM_INFO_1BBP           0x00000020
+#define  FM_INFO_INTEGER_WIDTH  0x00000040
+#define  FM_INFO_CONSTANT_WIDTH 0x00000080
+#define  FM_INFO_NOT_CONTIGUOUS 0x00000100
+#define  FM_INFO_PID_EMBEDDED 0x00000200
+#define  FM_INFO_RETURNS_OUTLINES 0x00000400
+#define  FM_INFO_RETURNS_STROKES 0x00000800
+#define  FM_INFO_RETURNS_BITMAPS 0x00001000
+#define  FM_INFO_UNICODE_COMPLIANT 0x00002000
+#define  FM_INFO_RIGHT_HANDED 0x00004000
+#define  FM_INFO_INTEGRAL_SCALING 0x00008000
+#define  FM_INFO_90_DEGREE_ROTATIONS 0x00010000
+#define  FM_INFO_OPTICALLY_FIXED_PITCH    0x00020000
+#define  FM_INFO_DO_NOT_ENUMERATE         0x00040000
+#define  FM_INFO_ISOTROPIC_SCALING_ONLY   0x00080000
+#define  FM_INFO_ANISOTROPIC_SCALING_ONLY 0x00100000
+#define  FM_INFO_TID_EMBEDDED             0x00200000
+#define  FM_INFO_FAMILY_EQUIV             0x00400000
+#define  FM_INFO_DBCS_FIXED_PITCH         0x00800000
+#define  FM_INFO_NONNEGATIVE_AC           0x01000000
+#define  FM_INFO_IGNORE_TC_RA_ABLE        0x02000000
+
+#define  FM_SEL_ITALIC 0x00000001
+#define  FM_SEL_UNDERSCORE 0x00000002
+#define  FM_SEL_NEGATIVE 0x00000004
+#define  FM_SEL_OUTLINED 0x00000008
+#define  FM_SEL_STRIKEOUT 0x00000010
+#define  FM_SEL_BOLD 0x00000020
+#define  FM_SEL_REGULAR 0x00000040
+
+#define  FM_TYPE_LICENSED 0x00000001
+#define  FM_READONLY_EMBED 0x00000002
+#define  FM_EDITABLE_EMBED 0x00000004
+
 /*
  * Functions Prefixed with Drv are calls made from GDI to DDI, and
  * everything else are calls made from DDI to GDI.  DDI is
@@ -337,10 +473,55 @@ VOID DrvFree(IN PVOID  Obj,
              IN ULONG  ID); 
 ULONG DrvGetGlyphMode(IN DHPDEV  DPev,
                       IN PFONTOBJ  FontObj); 
-
 ULONG DrvGetModes(IN HANDLE Driver,
                   IN ULONG DataSize,
                   OUT PDEVMODEW DM);
+PVOID DrvGetTrueTypeFile(IN ULONG  FileNumber, 
+                         IN PULONG  Size); 
+BOOL DrvLineTo(IN PSURFOBJ SurfObj, 
+               IN PCLIPOBJ ClipObj, 
+               IN PBRUSHOBJ  BrushObj, 
+               IN LONG  x1, 
+               IN LONG  y1, 
+               IN LONG  x2, 
+               IN LONG  y2, 
+               IN PRECTL  Bounds, 
+               IN MIX  Mix); 
+ULONG DrvLoadFontFile(IN ULONG  FileNumber, 
+                      IN PVOID  ViewData, 
+                      IN ULONG  ViewSize, 
+                      IN ULONG  LangID); 
+VOID DrvMovePointer(IN PSURFOBJ  SurfObj, 
+                    IN LONG  x, 
+                    IN LONG  y, 
+                    IN PRECTL  RectL); 
+BOOL DrvNextBand(IN PSURFOBJ  SurfObj, 
+                 OUT PPOINTL  PointL); 
+BOOL DrvPaint(IN PSURFOBJ  SurfObj, 
+              IN PCLIPOBJ  ClipObj, 
+              IN PBRUSHOBJ  BrushObj, 
+              IN PPOINTL  BrushOrg, 
+              IN MIX  Mix); 
+BOOL DrvQueryAdvanceWidths(IN DHPDEV  DPev, 
+                           IN PFONTOBJ  FontObj, 
+                           IN ULONG  Mode, 
+                           IN HGLYPH  Glyph, 
+                           OUT PVOID  *Widths, 
+                           IN ULONG  NumGlyphs); 
+PIFIMETRICS DrvQueryFont(IN DHPDEV  PDev, 
+                         IN ULONG  FileNumber, 
+                         IN ULONG  FaceIndex, 
+                         IN PULONG  Identifier); 
+LONG DrvQueryFontCaps(IN ULONG  CapsSize, 
+                      OUT PULONG  CapsData); 
+LONG DrvQueryFontData(IN DHPDEV  DPev, 
+                      IN PFONTOBJ  FontObj, 
+                      IN ULONG  Mode, 
+                      IN HGLYPH  Glyph, 
+                      IN PGLYPHDATA  GlyphData, 
+                      IN PVOID  DataBuffer, 
+                      IN ULONG  BufferSize); 
+ 
 
 BOOL EngAssociateSurface(IN HSURF  Surface,
                          IN HDEV  Dev,
