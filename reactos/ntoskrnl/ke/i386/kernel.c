@@ -149,7 +149,6 @@ KeApplicationProcessorInit(VOID)
   memset(Pcr, 0, PAGE_SIZE);
   Pcr->ProcessorNumber = (UCHAR)Offset;
   Pcr->Self = Pcr;
-  Pcr->Tib.Self = &Pcr->Tib;
   Pcr->Irql = HIGH_LEVEL;
 
   /* Mark the end of the exception handler list */
@@ -216,7 +215,6 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KPCR = (PKPCR)KPCR_BASE;
    memset(KPCR, 0, PAGE_SIZE);
    KPCR->Self = (PKPCR)KPCR_BASE;
-   KPCR->Tib.Self = (PKPCR_TIB)KPCR_BASE;
    KPCR->Irql = HIGH_LEVEL;
    KPCR->GDT = KiBootGdt;
    KPCR->IDT = (PUSHORT)KiIdt;
