@@ -1,18 +1,38 @@
-/* $Id: name.c,v 1.2 2000/02/25 23:27:51 ea Exp $
+/* $Id: dbcsname.c,v 1.1 2000/02/25 23:27:51 ea Exp $
  *
- * reactos/ntoskrnl/fs/name.c
+ * reactos/ntoskrnl/fs/dbcsname.c
  *
  */
 #include <ntos.h>
-
-/* DATA */
-
-PUCHAR	* FsRtlLegalAnsiCharacterArray = NULL;
+#include <ddk/ntifs.h>
 
 
 /**********************************************************************
  * NAME							EXPORTED
- *	FsRtlAreNamesEqual@16
+ *	FsRtlDissectDbcs@16
+ *
+ * DESCRIPTION
+ *	
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ */
+VOID
+STDCALL
+FsRtlDissectDbcs (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+	)
+{
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	FsRtlDoesDbcsContainWildCards@4
  *
  * DESCRIPTION
  *	
@@ -23,11 +43,8 @@ PUCHAR	* FsRtlLegalAnsiCharacterArray = NULL;
  */
 BOOLEAN
 STDCALL
-FsRtlAreNamesEqual (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
+FsRtlDoesDbcsContainWildCards (
+	DWORD	Unknown0
 	)
 {
 	return FALSE;
@@ -36,44 +53,20 @@ FsRtlAreNamesEqual (
 
 /**********************************************************************
  * NAME							EXPORTED
- * 	FsRtlDissectName@16
+ *	FsRtlIsDbcsInExpression@8
  *
  * DESCRIPTION
- *
+ *	
  * ARGUMENTS
  *
  * RETURN VALUE
  *
- */
-VOID
-STDCALL
-FsRtlDissectName (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
-{
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- * 	FsRtlDoesNameContainWildCards@4
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * NOTE
- * 	From Bo Branten's ntifs.h v12.
  */
 BOOLEAN
 STDCALL
-FsRtlDoesNameContainWildCards (
-	IN	PUNICODE_STRING	Name
+FsRtlIsDbcsInExpression (
+	DWORD	Unknown0,
+	DWORD	Unknown1
 	)
 {
 	return FALSE;
@@ -82,24 +75,48 @@ FsRtlDoesNameContainWildCards (
 
 /**********************************************************************
  * NAME							EXPORTED
- * 	FsRtlIsNameInExpression@16
+ *	FsRtlIsFatDbcsLegal@20
  *
  * DESCRIPTION
- *
+ *	
  * ARGUMENTS
  *
  * RETURN VALUE
  *
- * NOTE
- * 	From Bo Branten's ntifs.h v12.
  */
 BOOLEAN
 STDCALL
-FsRtlIsNameInExpression (
-	IN	PUNICODE_STRING	Expression,
-	IN	PUNICODE_STRING	Name,
-	IN	BOOLEAN		IgnoreCase,
-	IN	PWCHAR		UpcaseTable	OPTIONAL
+FsRtlIsFatDbcsLegal (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4
+	)
+{
+	return FALSE;
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	FsRtlIsHpfsDbcsLegal@20
+ *
+ * DESCRIPTION
+ *	
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ */
+BOOLEAN
+STDCALL
+FsRtlIsHpfsDbcsLegal (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4
 	)
 {
 	return FALSE;

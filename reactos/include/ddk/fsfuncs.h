@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.4 2000/02/24 23:27:52 ea Exp $ */
+/* $Id: fsfuncs.h,v 1.5 2000/02/25 23:27:50 ea Exp $ */
 VOID
 STDCALL
 FsRtlAddLargeMcbEntry (
@@ -69,11 +69,24 @@ FsRtlDeregisterUncProvider (
 	);
 VOID
 STDCALL
+FsRtlDissectDbcs (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+	);
+VOID
+STDCALL
 FsRtlDissectName (
 	DWORD	Unknown0,
 	DWORD	Unknown1,
 	DWORD	Unknown2,
 	DWORD	Unknown3
+	);
+BOOLEAN
+STDCALL
+FsRtlDoesDbcsContainWildCards (
+	IN	DWORD		Unknown0
 	);
 BOOLEAN
 STDCALL
@@ -120,6 +133,30 @@ FsRtlInitializeMcb (
 	);
 BOOLEAN
 STDCALL
+FsRtlIsDbcsInExpression (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	);
+BOOLEAN
+STDCALL
+FsRtlIsFatDbcsLegal (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4
+	);
+BOOLEAN
+STDCALL
+FsRtlIsHpfsDbcsLegal (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4
+	);
+BOOLEAN
+STDCALL
 FsRtlIsNameInExpression (
 	IN	PUNICODE_STRING	Expression,
 	IN	PUNICODE_STRING	Name,
@@ -136,6 +173,11 @@ STDCALL
 FsRtlIsTotalDeviceFailure (
 	NTSTATUS	NtStatus
 	);
+#define FsRtlIsUnicodeCharacterWild(C) ( \
+    (((C) >= 0x40) ? \
+    FALSE : \
+    FlagOn((*FsRtlLegalAnsiCharacterArray)[(C)], FSRTL_WILD_CHARACTER )) \
+    )
 VOID
 STDCALL
 FsRtlLookupLargeMcbEntry (

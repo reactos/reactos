@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.43 2000/02/21 22:39:46 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.44 2000/02/25 23:27:50 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -78,17 +78,27 @@ ExTryToAcquireResourceExclusiveLite
 FsRtlAddLargeMcbEntry@28
 FsRtlAddMcbEntry@16
 FsRtlAllocateResource@0
+FsRtlAreNamesEqual@16
 FsRtlBalanceReads@4
 FsRtlCopyRead@32
 FsRtlCopyWrite@32
 FsRtlDeregisterUncProvider@4
+FsRtlDissectDbcs@16
+FsRtlDissectName@16
+FsRtlDoesDbcsContainWildCards@4
+FsRtlDoesNameContainWildCards@4
 FsRtlGetFileSize@8
 FsRtlGetNextLargeMcbEntry@20
 FsRtlGetNextMcbEntry@20
 FsRtlInitializeLargeMcb@8
 FsRtlInitializeMcb@8
+FsRtlIsDbcsInExpression@8
+FsRtlIsFatDbcsLegal@20
+FsRtlIsHpfsDbcsLegal@20
+FsRtlIsNameInExpression@16
 FsRtlIsNtstatusExpected@4
 FsRtlIsTotalDeviceFailure@4
+FsRtlLegalAnsiCharacterArray DATA
 FsRtlLookupLargeMcbEntry@32
 FsRtlLookupLastLargeMcbEntry@12
 FsRtlLookupLastMcbEntry@12

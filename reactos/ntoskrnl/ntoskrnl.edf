@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.30 2000/02/21 22:39:46 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.31 2000/02/25 23:27:51 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -78,17 +78,27 @@ ExTryToAcquireResourceExclusiveLite
 FsRtlAddLargeMcbEntry=FsRtlAddLargeMcbEntry@28
 FsRtlAddMcbEntry=FsRtlAddMcbEntry@16
 FsRtlAllocateResource=FsRtlAllocateResource@0
+FsRtlAreNamesEqual=FsRtlAreNamesEqual@16
 FsRtlBalanceReads=FsRtlBalanceReads@4
 FsRtlCopyRead=FsRtlCopyRead@32
 FsRtlCopyWrite=FsRtlCopyWrite@32
 FsRtlDeregisterUncProvider=FsRtlDeregisterUncProvider@4
+FsRtlDissectDbcs=FsRtlDissectDbcs@16
+FsRtlDissectName=FsRtlDissectName@16
+FsRtlDoesDbcsContainWildCards=FsRtlDoesDbcsContainWildCards@4
+FsRtlDoesNameContainWildCards=FsRtlDoesNameContainWildCards@4
 FsRtlGetFileSize=FsRtlGetFileSize@8
 FsRtlGetNextLargeMcbEntry=FsRtlGetNextLargeMcbEntry@20
 FsRtlGetNextMcbEntry=FsRtlGetNextMcbEntry@20
 FsRtlInitializeLargeMcb=FsRtlInitializeLargeMcb@8
 FsRtlInitializeMcb=FsRtlInitializeMcb@8
+FsRtlIsDbcsInExpression=FsRtlIsDbcsInExpression@8
+FsRtlIsFatDbcsLegal=FsRtlIsFatDbcsLegal@20
+FsRtlIsHpfsDbcsLegal=FsRtlIsHpfsDbcsLegal@20
+FsRtlIsNameInExpression=FsRtlIsNameInExpression@16
 FsRtlIsNtstatusExpected=FsRtlIsNtstatusExpected@4
 FsRtlIsTotalDeviceFailure=FsRtlIsTotalDeviceFailure@4
+FsRtlLegalAnsiCharacterArray DATA
 FsRtlLookupLargeMcbEntry=FsRtlLookupLargeMcbEntry@32
 FsRtlLookupLastLargeMcbEntry=FsRtlLookupLastLargeMcbEntry@12
 FsRtlLookupLastMcbEntry=FsRtlLookupLastMcbEntry@12
