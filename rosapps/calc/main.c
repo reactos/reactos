@@ -32,7 +32,9 @@
 // Global Variables:
 HINSTANCE hInst;
 HWND hDlgWnd;
+TCHAR szTitle[MAX_LOADSTRING];
 CALC_TYPES CalcType;
+HACCEL hAccel;
 
 BOOL bDigitGrouping = FALSE;
 
@@ -95,6 +97,34 @@ void OnViewDigitGrouping(void)
     }
 }
 
+void OnViewHex(void)
+{
+}
+
+void OnViewDecimal(void)
+{
+}
+
+void OnViewOctal(void)
+{
+}
+
+void OnViewBinary(void)
+{
+}
+
+void OnViewDegrees(void)
+{
+}
+
+void OnViewRadians(void)
+{
+}
+
+void OnViewGrads(void)
+{
+}
+
 void OnHelpTopics(void)
 {
     WinHelp(hDlgWnd, _T("calc"), HELP_CONTENTS, 0);
@@ -137,11 +167,32 @@ LRESULT CALLBACK CalcWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
             CMD_MAP_ENTRY(ID_VIEW_STANDARD,       OnViewStandard)
             CMD_MAP_ENTRY(ID_VIEW_SCIENTIFIC,     OnViewScientific)
             CMD_MAP_ENTRY(ID_VIEW_DIGIT_GROUPING, OnViewDigitGrouping)
+            CMD_MAP_ENTRY(ID_VIEW_HEX,            OnViewHex)
+            CMD_MAP_ENTRY(ID_VIEW_DECIMAL,        OnViewDecimal)
+            CMD_MAP_ENTRY(ID_VIEW_OCTAL,          OnViewOctal)
+            CMD_MAP_ENTRY(ID_VIEW_BINARY,         OnViewBinary)
+            CMD_MAP_ENTRY(ID_VIEW_DEGREES,        OnViewDegrees)
+            CMD_MAP_ENTRY(ID_VIEW_RADIANS,        OnViewRadians)
+            CMD_MAP_ENTRY(ID_VIEW_GRADS,          OnViewGrads)
             CMD_MAP_ENTRY(ID_HELP_TOPICS,         OnHelpTopics)
             CMD_MAP_ENTRY(ID_HELP_ABOUT,          OnHelpAbout)
         END_CMD_MAP(0)
         break;
-
+/*
+    case WM_KEYUP:
+    case WM_KEYDOWN:
+        {
+        MSG msg;
+        msg.hwnd = hDlg;
+        msg.message = message;
+        msg.wParam = wParam;
+        msg.lParam = lParam;
+//        msg.time; 
+//        msg.pt; 
+        if (TranslateAccelerator(hDlg, hAccel, &msg)) return 0;
+        }
+        break;
+ */
     case WM_NOTIFY:
         {
         int     idctrl;
@@ -175,9 +226,12 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
     // Initialize global variables
     hInst = hInstance;
+    LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 
     // Load our settings from the registry
     LoadSettings();
+
+    hAccel = LoadAccelerators(hInstance, (LPCTSTR)IDR_ACCELERATOR);
 
     do {
         CurrentCalcType = CalcType;

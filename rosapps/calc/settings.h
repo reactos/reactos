@@ -32,6 +32,7 @@ extern "C" {
 #endif // _MSC_VER > 1000
 
 
+BOOL CheckResult(LONG error);
 void LoadSettings(void);
 void SaveSettings(void);
 

@@ -15,7 +15,6 @@
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
-
 /////////////////////////////////////////////////////////////////////////////
 // English (Australia) resources
 
@@ -64,13 +63,22 @@ BEGIN
         MENUITEM "S&tandard",                   ID_VIEW_STANDARD
         MENUITEM "&Scientific",                 ID_VIEW_SCIENTIFIC, CHECKED
         MENUITEM SEPARATOR
+        MENUITEM "&Hex\tF5",                    ID_VIEW_HEX
+        MENUITEM "&Decimal\tF6",                ID_VIEW_DECIMAL
+        MENUITEM "&Octal\tF7",                  ID_VIEW_OCTAL
+        MENUITEM "&Binary\tF8",                 ID_VIEW_BINARY
+        MENUITEM SEPARATOR
+        MENUITEM "D&egrees\tF2",                ID_VIEW_DEGREES
+        MENUITEM "&Radians\tF3",                ID_VIEW_RADIANS
+        MENUITEM "&Grads\tF4",                  ID_VIEW_GRADS
+        MENUITEM SEPARATOR
         MENUITEM "D&igit grouping",             ID_VIEW_DIGIT_GROUPING
     END
     POPUP "&Help"
     BEGIN
         MENUITEM "&Help Topics",                ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&About Calculator",           ID_HELP_ABOUT
+        MENUITEM "&About Scientific Calculator", ID_HELP_ABOUT
     END
 END
 
@@ -87,6 +95,12 @@ BEGIN
 END
 
 2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
 BEGIN
     "\r\n"
     "\0"
@@ -116,7 +130,7 @@ END
 
 IDD_SCIENTIFIC DIALOG DISCARDABLE  0, 0, 325, 156
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Calculator"
+CAPTION "ReactOS Scientific Calculator"
 MENU IDR_CALC_SCIENTIFIC
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -146,6 +160,34 @@ BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ACCELERATOR ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_F2,          ID_VIEW_DEGREES,    VIRTKEY, NOINVERT
+    VK_F3,          ID_VIEW_RADIANS,    VIRTKEY, NOINVERT
+    VK_F4,          ID_VIEW_GRADS,      VIRTKEY, NOINVERT
+    VK_F5,          ID_VIEW_HEX,        VIRTKEY, NOINVERT
+    VK_F6,          ID_VIEW_DECIMAL,    VIRTKEY, NOINVERT
+    VK_F7,          ID_VIEW_OCTAL,      VIRTKEY, NOINVERT
+    VK_F8,          ID_VIEW_BINARY,     VIRTKEY, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APP_TITLE           "ReactOS Calculator"
+END
 
 #endif    // English (Australia) resources
 /////////////////////////////////////////////////////////////////////////////

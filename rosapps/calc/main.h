@@ -35,10 +35,13 @@ extern "C" {
 #include "resource.h"
 
 
+#define MAX_LOADSTRING 100
+
 typedef enum _CALC_TYPES { STANDARD, SCIENTIFIC, HP42S, OTHER } CALC_TYPES;
 
 extern HINSTANCE hInst;
 extern HWND hDlgWnd;
+extern TCHAR szTitle[];
 extern CALC_TYPES CalcType;
 
 
