@@ -1,4 +1,4 @@
-/* $Id: cid.c,v 1.1 2004/09/28 15:02:29 weiden Exp $
+/* $Id: cid.c,v 1.2 2004/10/12 20:00:40 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -147,9 +147,8 @@ PsLockCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType)
   
   if(Found != NULL)
   {
-    BOOL GotLock;
     ULONG Attempt = 0;
-    do
+    for (;;)
     {
       if(InterlockedCompareExchange(&Found->Lock, 1, 0) == 0)
       {
@@ -167,7 +166,7 @@ PsLockCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType)
         /* try again, just wait shortly */
         KeDelayExecutionThread(KernelMode, FALSE, &ShortDelay);
       }
-    } while(!GotLock);
+    }
   }
   
   return Found;
