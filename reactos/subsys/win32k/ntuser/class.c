@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.61 2004/12/11 19:39:18 weiden Exp $
+/* $Id: class.c,v 1.62 2004/12/11 21:19:40 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -427,7 +427,7 @@ NtUserRegisterClassExWOW(
   
   if (ClassName->Length > 0)
   {
-    DPRINT1("NtUserRegisterClassExWOW(%S)\n", ClassName->Buffer);
+    DPRINT("NtUserRegisterClassExWOW(%S)\n", ClassName->Buffer);
     /* FIXME - Safely copy/verify the buffer first!!! */
     Status = RtlAddAtomToAtomTable(WinStaObject->AtomTable,
       ClassName->Buffer,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.251 2004/12/11 19:39:18 weiden Exp $
+/* $Id: window.c,v 1.252 2004/12/11 21:19:41 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2083,8 +2083,6 @@ NtUserDestroyWindow(HWND Wnd)
 {
   PWINDOW_OBJECT Window;
   BOOLEAN isChild;
-  
-  DbgPrint("DestroyWindow:0x%x\n", Wnd);
 
   Window = IntGetWindowObject(Wnd);
   if (Window == NULL)
