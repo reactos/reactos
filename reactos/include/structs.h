@@ -2094,6 +2094,18 @@ typedef  struct  tagHELPINFO {
 } HELPINFO,   *LPHELPINFO;
 
 typedef struct {
+    DWORD   mkSize;
+    CHAR    mkKeyList;
+    CHAR    szKeyphrase[1];
+} MULTIKEYHELPA, *PMULTIKEYHELPA, *LPMULTIKEYHELPA;
+
+typedef struct {
+    DWORD   mkSize;
+    WCHAR   mkKeyList;
+    WCHAR   szKeyphrase[1];
+} MULTIKEYHELPW, *PMULTIKEYHELPW, *LPMULTIKEYHELPW;
+
+typedef struct {
   int   wStructSize;
   int   x;
   int   y;
@@ -2102,6 +2114,27 @@ typedef struct {
   int   wMax;
   TCHAR rgchMember[2];
 } HELPWININFO;
+
+typedef struct {
+	int wStructSize;
+	int x;
+	int y;
+	int dx;
+	int dy;
+	int wMax;
+	CHAR rgchMember[2];
+} HELPWININFOA, *PHELPWININFOA, *LPHELPWININFOA;
+
+typedef struct {
+	int wStructSize;
+	int x;
+	int y;
+	int dx;
+	int dy;
+	int wMax;
+	WCHAR rgchMember[2];
+} HELPWININFOW, *PHELPWININFOW, *LPHELPWININFOW;
+
 
 typedef struct tagHIGHCONTRAST {
   UINT cbSize;
@@ -3841,12 +3874,14 @@ typedef struct tagTPMPARAMS {
   RECT rcExclude;
 } TPMPARAMS,   *LPTPMPARAMS;
 
+#if 0 // RobD - typedef removed due to conflict with mingw headers
 typedef struct _TRANSMIT_FILE_BUFFERS {
   PVOID Head;
   DWORD HeadLength;
   PVOID Tail;
   DWORD TailLength;
 } TRANSMIT_FILE_BUFFERS;
+#endif
 
 typedef struct _TT_HITTESTINFO {
   HWND hwnd;

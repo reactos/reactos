@@ -2629,6 +2629,7 @@ extern "C" {
 #define HELP_INDEX	(0x3L)
 #define HELP_KEY	(0x101L)
 #define HELP_MULTIKEY	(0x201L)
+#define HELP_SETWINPOS  (0x0203L)
 #define HELP_PARTIALKEY	(0x105L)
 #define HELP_QUIT	(0x2L)
 #define HELP_SETCONTENTS	(0x5L)
