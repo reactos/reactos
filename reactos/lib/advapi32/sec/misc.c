@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.27 2004/11/21 20:14:36 gdalsnes Exp $
+/* $Id: misc.c,v 1.28 2004/12/12 21:25:04 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -548,9 +548,25 @@ LookupAccountSidA (LPCSTR lpSystemName,
 		   LPDWORD cchReferencedDomainName,
 		   PSID_NAME_USE peUse)
 {
+  DWORD NameLength;
+  DWORD DomainLength;
+  
   DPRINT1("LookupAccountSidA is unimplemented, but returns success\n");
-  lstrcpynA(lpName, "Administrator", *cchName);
-  lstrcpynA(lpReferencedDomainName, "ReactOS", *cchReferencedDomainName);
+  
+  /* Calculate length needed */
+  NameLength = strlen("Administrator") + 1;
+  DomainLength = strlen("BUILTIN") + 1;
+  
+  if (*cchName < NameLength || *cchReferencedDomainName < DomainLength)
+  {
+    *cchName = NameLength;
+    *cchReferencedDomainName = DomainLength;
+    SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    return FALSE;
+  }
+  
+  if (lpName) lstrcpynA(lpName, "Administrator", *cchName);
+  if (lpReferencedDomainName) lstrcpynA(lpReferencedDomainName, "BUILTIN", *cchReferencedDomainName);
   return TRUE;
 }
 
@@ -569,9 +585,25 @@ LookupAccountSidW (LPCWSTR lpSystemName,
 		   LPDWORD cchReferencedDomainName,
 		   PSID_NAME_USE peUse)
 {
+  DWORD NameLength;
+  DWORD DomainLength;
+  
   DPRINT1("LookupAccountSidW is unimplemented, but returns success\n");
-  lstrcpynW(lpName, L"Administrator", *cchName);
-  lstrcpynW(lpReferencedDomainName, L"ReactOS", *cchReferencedDomainName);
+  
+  /* Calculate length needed */
+  NameLength = wcslen(L"Administrator") + sizeof(WCHAR);
+  DomainLength = wcslen(L"BUILTIN") + sizeof(WCHAR);
+  
+  if (*cchName < NameLength || *cchReferencedDomainName < DomainLength)
+  {
+    *cchName = NameLength;
+    *cchReferencedDomainName = DomainLength;
+    SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    return FALSE;
+  }
+  
+  if (lpName) lstrcpynW(lpName, L"Administrator", *cchName);
+  if (lpReferencedDomainName) lstrcpynW(lpReferencedDomainName, L"BUILTIN", *cchReferencedDomainName);
   return TRUE;
 }
 

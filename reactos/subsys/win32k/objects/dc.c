@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.150 2004/12/12 17:56:52 weiden Exp $
+/* $Id: dc.c,v 1.151 2004/12/12 21:25:05 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -2252,6 +2252,7 @@ IntEnumDisplaySettings(
   {
     if (iModeNum == 0 || CachedDevModes == NULL) /* query modes from drivers */
     {
+      BOOL PrimarySurfaceCreated = FALSE;
       UNICODE_STRING DriverFileNames;
       LPWSTR CurrentName;
       DRVENABLEDATA DrvEnableData;
@@ -2262,6 +2263,12 @@ IntEnumDisplaySettings(
       {
         DPRINT1("FindDriverFileNames failed\n");
         return FALSE;
+      }
+      
+      if (!HalQueryDisplayOwnership())
+      {
+        IntCreatePrimarySurface();
+        PrimarySurfaceCreated = TRUE;
       }
   
       /*
@@ -2328,6 +2335,10 @@ IntEnumDisplaySettings(
               SizeOfCachedDevModes = 0;
               CachedDevModes = NULL;
               CachedDevModesEnd = NULL;
+              if (PrimarySurfaceCreated)
+              {
+                IntDestroyPrimarySurface();
+              }
               SetLastWin32Error(STATUS_NO_MEMORY);
               return FALSE;
             }
@@ -2354,6 +2365,11 @@ IntEnumDisplaySettings(
           }
           break;
         }
+      }
+      
+      if (PrimarySurfaceCreated)
+      {
+        IntDestroyPrimarySurface();
       }
   
       RtlFreeUnicodeString(&DriverFileNames);

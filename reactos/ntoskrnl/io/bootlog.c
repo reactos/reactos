@@ -1,4 +1,4 @@
-/* $Id: bootlog.c,v 1.5 2004/09/28 12:50:23 ekohl Exp $
+/* $Id: bootlog.c,v 1.6 2004/12/12 21:25:04 weiden Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -65,12 +65,12 @@ IopBootLog(PUNICODE_STRING DriverName,
 
   ExAcquireResourceExclusiveLite(&IopBootLogResource, TRUE);
 
-  DPRINT("Boot log: %S %wZ\n",
+  DPRINT("Boot log: %wS %wZ\n",
 	 Success ? L"Loaded driver" : L"Did not load driver",
 	 DriverName);
 
   swprintf(Buffer,
-	   L"%s %wZ",
+	   L"%ws %wZ",
 	   Success ? L"Loaded driver" : L"Did not load driver",
 	   DriverName);
 

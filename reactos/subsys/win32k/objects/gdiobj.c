@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.74 2004/12/12 01:40:38 weiden Exp $
+ * $Id: gdiobj.c,v 1.75 2004/12/12 21:25:05 weiden Exp $
  */
 #include <w32k.h>
 
@@ -712,6 +712,9 @@ LockHandle:
       {
         DPRINT1("Attempted to lock object 0x%x, type mismatch (0x%x : 0x%x)\n", hObj, EntryType, ExpectedType);
       }
+#ifdef GDI_DEBUG
+      DPRINT1("-> called from %s:%i\n", file, line);
+#endif
     }
   }
   else if(PrevProcId == LockedProcessId)

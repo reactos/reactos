@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: common.c,v 1.7 2003/11/10 18:07:36 ekohl Exp $
+/* $Id: common.c,v 1.8 2004/12/12 21:25:04 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -146,8 +146,8 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
   DPRINT("CdfsDeviceIoControl(DeviceObject %x, CtlCode %x, "
 	 "InputBuffer %x, InputBufferSize %x, OutputBuffer %x, " 
 	 "POutputBufferSize %x (%x)\n", DeviceObject, CtlCode, 
-	 InputBuffer, InputBufferSize, OutputBuffer, pOutputBufferSize, 
-	 pOutputBufferSize ? *pOutputBufferSize : 0);
+	 InputBuffer, InputBufferSize, OutputBuffer, OutputBufferSize, 
+	 OutputBufferSize ? *OutputBufferSize : 0);
 
   KeInitializeEvent (&Event, NotificationEvent, FALSE);
 

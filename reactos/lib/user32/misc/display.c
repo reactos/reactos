@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.13 2004/11/16 16:27:48 blight Exp $
+/* $Id: display.c,v 1.14 2004/12/12 21:25:04 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -46,28 +46,45 @@ EnumDisplayDevicesA(
   PDISPLAY_DEVICEA lpDisplayDevice,
   DWORD dwFlags)
 {
-/* FIXME: This implementation doesn't convert the lpDisplayDevice structure! */
-#if 0
   BOOL rc;
   UNICODE_STRING Device;
+  DISPLAY_DEVICEW DisplayDeviceW;
+  
   if ( !RtlCreateUnicodeStringFromAsciiz ( &Device, (PCSZ)lpDevice ) )
     {
       SetLastError ( ERROR_OUTOFMEMORY );
       return FALSE;
     }
 
+  DisplayDeviceW.cb = lpDisplayDevice->cb;
   rc = NtUserEnumDisplayDevices (
     &Device,
     iDevNum,
-    lpDisplayDevice,
+    &DisplayDeviceW,
     dwFlags );
+  
+  /* Copy result from DisplayDeviceW to lpDisplayDevice */
+  lpDisplayDevice->StateFlags = DisplayDeviceW.StateFlags;
+  WideCharToMultiByte(CP_ACP,0,
+     DisplayDeviceW.DeviceName,wcslen(DisplayDeviceW.DeviceName),
+     lpDisplayDevice->DeviceName,sizeof(lpDisplayDevice->DeviceName) / sizeof(lpDisplayDevice->DeviceName[0]),
+     NULL,NULL);
+  WideCharToMultiByte(CP_ACP,0,
+     DisplayDeviceW.DeviceString,wcslen(DisplayDeviceW.DeviceString),
+     lpDisplayDevice->DeviceString,sizeof(lpDisplayDevice->DeviceString) / sizeof(lpDisplayDevice->DeviceString[0]),
+     NULL,NULL);
+  WideCharToMultiByte(CP_ACP,0,
+     DisplayDeviceW.DeviceID,wcslen(DisplayDeviceW.DeviceID),
+     lpDisplayDevice->DeviceID,sizeof(lpDisplayDevice->DeviceID) / sizeof(lpDisplayDevice->DeviceID[0]),
+     NULL,NULL);
+  WideCharToMultiByte(CP_ACP,0,
+     DisplayDeviceW.DeviceKey,wcslen(DisplayDeviceW.DeviceKey),
+     lpDisplayDevice->DeviceKey,sizeof(lpDisplayDevice->DeviceKey) / sizeof(lpDisplayDevice->DeviceKey[0]),
+     NULL,NULL);
 
   RtlFreeUnicodeString ( &Device );
 
   return rc;
-#else
-  return 0;
-#endif
 }
 
 
