@@ -17,7 +17,7 @@ extern "C" {
   typedef struct _MODIFIERS {
     PVK_TO_BIT pVkToBit;
     WORD wMaxModBits;
-    BYTE ModNumber[];
+    BYTE ModNumber[1];
   } MODIFIERS, *PMODIFIERS;
   
 #define TYPEDEF_VK_TO_WCHARS(i) \
