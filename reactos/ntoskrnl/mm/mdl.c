@@ -788,8 +788,9 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
             return NULL;
          }
 
-         /* FIXME: Raise an exception instead of bugchecking */
-         KEBUGCHECK(0);
+         /* Throw exception */
+         ExRaiseStatus(STATUS_ACCESS_VIOLATION);
+         ASSERT(0);
       }
 
       Mdl->Process = CurrentProcess;
