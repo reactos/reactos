@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.32 2003/07/24 20:52:58 chorns Exp $
+/* $Id: finfo.c,v 1.33 2003/09/20 20:31:57 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -100,13 +100,13 @@ VfatSetBasicInformation(PFILE_OBJECT FileObject,
   /* Check volume label bit */
   assert(0 == (FCB->entry.Attrib & 0x08));
 
-  FsdFileTimeToDosDateTime(&(BasicInfo->CreationTime),
+  FsdFileTimeToDosDateTime((TIME *)&(BasicInfo->CreationTime),
                            &(FCB->entry.CreationDate),  
                            &(FCB->entry.CreationTime));
-  FsdFileTimeToDosDateTime(&(BasicInfo->LastAccessTime),
+  FsdFileTimeToDosDateTime((TIME *)&(BasicInfo->LastAccessTime),
                            &(FCB->entry.AccessDate),  
                            NULL);
-  FsdFileTimeToDosDateTime(&(BasicInfo->LastWriteTime),
+  FsdFileTimeToDosDateTime((TIME *)&(BasicInfo->LastWriteTime),
                            &(FCB->entry.UpdateDate),
                            &(FCB->entry.UpdateTime));
 
@@ -138,13 +138,13 @@ VfatGetBasicInformation(PFILE_OBJECT FileObject,
 
   FsdDosDateTimeToFileTime(FCB->entry.CreationDate,
 			   FCB->entry.CreationTime,
-			   &BasicInfo->CreationTime);
+			   (TIME *)&BasicInfo->CreationTime);
   FsdDosDateTimeToFileTime(FCB->entry.AccessDate,
 			   0,
-			   &BasicInfo->LastAccessTime);
+			   (TIME *)&BasicInfo->LastAccessTime);
   FsdDosDateTimeToFileTime(FCB->entry.UpdateDate,
 			   FCB->entry.UpdateTime,
-			   &BasicInfo->LastWriteTime);
+			   (TIME *)&BasicInfo->LastWriteTime);
   BasicInfo->ChangeTime = BasicInfo->LastWriteTime;
 
   BasicInfo->FileAttributes = FCB->entry.Attrib;
@@ -340,13 +340,13 @@ VfatGetAllInformation(PFILE_OBJECT FileObject,
   /* Basic Information */
   FsdDosDateTimeToFileTime(Fcb->entry.CreationDate,
 			   Fcb->entry.CreationTime,
-			   &Info->BasicInformation.CreationTime);
+			   (TIME *)&Info->BasicInformation.CreationTime);
   FsdDosDateTimeToFileTime(Fcb->entry.AccessDate,
 			   0,
-			   &Info->BasicInformation.LastAccessTime);
+			   (TIME *)&Info->BasicInformation.LastAccessTime);
   FsdDosDateTimeToFileTime(Fcb->entry.UpdateDate,
 			   Fcb->entry.UpdateTime,
-			   &Info->BasicInformation.LastWriteTime);
+			   (TIME *)&Info->BasicInformation.LastWriteTime);
   Info->BasicInformation.ChangeTime = Info->BasicInformation.LastWriteTime;
   Info->BasicInformation.FileAttributes = Fcb->entry.Attrib;
 

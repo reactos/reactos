@@ -1,4 +1,4 @@
-/* $Id: isapnp.c,v 1.6 2003/07/15 10:42:53 gvg Exp $
+/* $Id: isapnp.c,v 1.7 2003/09/20 20:31:57 weiden Exp $
  *
  * PROJECT:         ReactOS ISA PnP Bus driver
  * FILE:            isapnp.c
@@ -217,24 +217,44 @@ static ULONG FindNextReadPort(VOID)
 {
 	ULONG Port;
 
+
+
 	Port = (ULONG)IsaPnPReadPort;
+
 	while (TRUE) {
+
 		Port += READ_DATA_PORT_STEP;
 
+
+
 		if (Port > ISAPNP_MAX_READ_PORT)
+
 		{
+
 			return 0;
+
 		}
 
+
+
 		/*
+
 		 * We cannot use NE2000 probe spaces for
+
 		 * ISAPnP or we will lock up machines
+
 		 */
+
 		if ((Port < 0x280) || (Port > 0x380))
+
 		{
+
 			return Port;
+
 		}
+
 	}
+
 }
 
 static BOOLEAN IsolateReadDataPortSelect(VOID)
@@ -1709,12 +1729,12 @@ DriverEntry(
 {
   DbgPrint("ISA Plug and Play Bus Driver\n");
 
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = ISAPNPDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = ISAPNPDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_READ] = ISAPNPDispatchReadWrite;
-  DriverObject->MajorFunction[IRP_MJ_WRITE] = ISAPNPDispatchReadWrite;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ISAPNPDispatchDeviceControl;
-  DriverObject->MajorFunction[IRP_MJ_PNP] = ISAPNPControl;
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)ISAPNPDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)ISAPNPDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)ISAPNPDispatchReadWrite;
+  DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)ISAPNPDispatchReadWrite;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)ISAPNPDispatchDeviceControl;
+  DriverObject->MajorFunction[IRP_MJ_PNP] = (PDRIVER_DISPATCH)ISAPNPControl;
   DriverObject->DriverExtension->AddDevice = ISAPNPAddDevice;
 
   return STATUS_SUCCESS;

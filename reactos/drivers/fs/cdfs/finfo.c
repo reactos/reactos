@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: finfo.c,v 1.7 2002/11/20 21:55:25 ekohl Exp $
+/* $Id: finfo.c,v 1.8 2003/09/20 20:31:57 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -105,13 +105,13 @@ CdfsGetBasicInformation(PFILE_OBJECT FileObject,
     return STATUS_BUFFER_OVERFLOW;
 
   CdfsDateTimeToFileTime(Fcb,
-			 &BasicInfo->CreationTime);
+			 (TIME *)&BasicInfo->CreationTime);
   CdfsDateTimeToFileTime(Fcb,
-			 &BasicInfo->LastAccessTime);
+			 (TIME *)&BasicInfo->LastAccessTime);
   CdfsDateTimeToFileTime(Fcb,
-			 &BasicInfo->LastWriteTime);
+			 (TIME *)&BasicInfo->LastWriteTime);
   CdfsDateTimeToFileTime(Fcb,
-			 &BasicInfo->ChangeTime);
+			 (TIME *)&BasicInfo->ChangeTime);
 
   CdfsFileFlagsToAttributes(Fcb,
 			    &BasicInfo->FileAttributes);
@@ -230,13 +230,13 @@ CdfsGetAllInformation(PFILE_OBJECT FileObject,
 
   /* Basic Information */
   CdfsDateTimeToFileTime(Fcb,
-			 &Info->BasicInformation.CreationTime);
+			 (TIME *)&Info->BasicInformation.CreationTime);
   CdfsDateTimeToFileTime(Fcb,
-			 &Info->BasicInformation.LastAccessTime);
+			 (TIME *)&Info->BasicInformation.LastAccessTime);
   CdfsDateTimeToFileTime(Fcb,
-			 &Info->BasicInformation.LastWriteTime);
+			 (TIME *)&Info->BasicInformation.LastWriteTime);
   CdfsDateTimeToFileTime(Fcb,
-			 &Info->BasicInformation.ChangeTime);
+			 (TIME *)&Info->BasicInformation.ChangeTime);
   CdfsFileFlagsToAttributes(Fcb,
 			    &Info->BasicInformation.FileAttributes);
 

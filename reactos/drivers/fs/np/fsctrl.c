@@ -1,4 +1,4 @@
-/* $Id: fsctrl.c,v 1.11 2003/08/07 11:47:32 silverblade Exp $
+/* $Id: fsctrl.c,v 1.12 2003/09/20 20:31:57 weiden Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -434,7 +434,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 
       case FSCTL_PIPE_PEEK:
 	DPRINT("Peeking pipe %wZ\n", &Pipe->PipeName);
-	Status = NpfsPeekPipe(Irp, IoStack);
+	Status = NpfsPeekPipe(Irp, (PIO_STACK_LOCATION)IoStack);
 	break;
 
       case FSCTL_PIPE_QUERY_EVENT:
@@ -469,12 +469,12 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 
       case FSCTL_PIPE_GET_STATE:
 	DPRINT("Get state\n");
-	Status = NpfsGetState(Irp, IoStack);
+	Status = NpfsGetState(Irp, (PIO_STACK_LOCATION)IoStack);
 	break;
 
       case FSCTL_PIPE_SET_STATE:
 	DPRINT("Set state\n");
-	Status = NpfsSetState(Irp, IoStack);
+	Status = NpfsSetState(Irp, (PIO_STACK_LOCATION)IoStack);
 	break;
 
       case FSCTL_PIPE_INTERNAL_READ:
