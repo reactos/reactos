@@ -836,10 +836,11 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
    
    DPRINT("Keyboard Driver 0.0.4\n");
 
-   DriverObject->MajorFunction[IRP_MJ_CREATE] = KbdDispatch;
-   DriverObject->MajorFunction[IRP_MJ_CLOSE] = KbdDispatch;
-   DriverObject->MajorFunction[IRP_MJ_READ] = KbdDispatch;
-   DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = KbdInternalDeviceControl;  
+   DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)KbdDispatch;
+   DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)KbdDispatch;
+   DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)KbdDispatch;
+   DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = 
+         (PDRIVER_DISPATCH)KbdInternalDeviceControl;  
 
    DriverObject->DriverStartIo = KbdStartIo;
 

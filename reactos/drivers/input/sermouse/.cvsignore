@@ -1,3 +1,5 @@
-sermouse.coff
-sermouse.sys.unstripped
+*.coff
+*.o
+*.sys
+*.sym
 *.map

@@ -321,11 +321,11 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    UNICODE_STRING SymlinkName = UNICODE_STRING_INITIALIZER(L"\\??\\MouseClass");   NTSTATUS Status;
 
 
-   DriverObject->MajorFunction[IRP_MJ_CREATE] = MouseClassDispatch;
-//   DriverObject->MajorFunction[IRP_MJ_CLOSE]  = MouseClassDispatch;
-//   DriverObject->MajorFunction[IRP_MJ_READ]   = MouseClassDispatch;
-   DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = MouseClassInternalDeviceControl; // to get GDI callback
-//   DriverObject->DriverStartIo                = MouseClassStartIo;
+   DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)MouseClassDispatch;
+//   DriverObject->MajorFunction[IRP_MJ_CLOSE]  = (PDRIVER_DISPATCH)MouseClassDispatch;
+//   DriverObject->MajorFunction[IRP_MJ_READ]   = (PDRIVER_DISPATCH)MouseClassDispatch;
+   DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = (PDRIVER_DISPATCH)MouseClassInternalDeviceControl; // to get GDI callback
+//   DriverObject->DriverStartIo                = (PDRIVER_STARTIO)MouseClassStartIo;
 
    Status = IoCreateDevice(DriverObject,
 			   sizeof(DEVICE_EXTENSION),
