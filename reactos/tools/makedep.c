@@ -42,6 +42,7 @@ typedef struct _INCL_FILE
     struct _INCL_FILE *included_by;   /* file that included this one */
     int                included_line; /* line where this file was included */
     int                system;        /* is it a system include (#include <name>) */
+    int                relative;      /* is the path relative? */
     struct _INCL_FILE *owner;
     struct _INCL_FILE *files[MAX_INCLUDES];
 } INCL_FILE;
@@ -177,22 +178,96 @@ static INCL_FILE *add_include( INCL_FILE *pFile, const char *name, int line, int
 {
     INCL_FILE **p = &firstInclude;
     int pos;
+    char *new_name;
+    int parent_name_length;
+    int relative = 0;
 
     for (pos = 0; pos < MAX_INCLUDES; pos++) if (!pFile->files[pos]) break;
     if (pos >= MAX_INCLUDES)
         fatal_error( "%s: %s: too many included files, please fix MAX_INCLUDES\n",
                      ProgramName, pFile->name );
 
-    while (*p && strcmp( name, (*p)->name )) p = &(*p)->next;
+    /* handle relative paths */
+    if (name[0] == '.')
+    {
+        relative = 1;
+
+        parent_name_length = strlen(pFile->filename);
+        new_name = xmalloc(strlen(name) + parent_name_length + 1);
+        strcpy(new_name, pFile->filename);
+
+        /* strip the file name part from the base name */
+        while (parent_name_length &&
+               new_name[parent_name_length - 1] != '/' &&
+               new_name[parent_name_length - 1] != '\\')
+        {
+            new_name[parent_name_length - 1] = 0;
+            parent_name_length--;
+        }
+
+        /* strip the (back)slash */
+        if (parent_name_length &&
+            (new_name[parent_name_length - 1] == '/' ||
+             new_name[parent_name_length - 1] == '\\'))
+        {
+            new_name[parent_name_length - 1] = 0;
+            parent_name_length--;
+        }
+
+        /* remove as much relative path components as we can */
+        while (parent_name_length && name[0] == '.')
+        {
+            if (!strncmp(name, "../", 3) || !strncmp(name, "..\\", 3))
+            {
+                /* skip over the relative portion */
+                name += 3;
+
+                /* strip one part component from the base name */
+                while (parent_name_length &&
+                       new_name[parent_name_length - 1] != '/' &&
+                       new_name[parent_name_length - 1] != '\\')
+                {
+                    new_name[parent_name_length - 1] = 0;
+                    parent_name_length--;
+                }
+
+                /* strip the (back)slash */
+                if (parent_name_length)
+                {
+                    new_name[parent_name_length - 1] = 0;
+                    parent_name_length--;
+                }
+            }
+            else if (!strncmp(name, "./", 2) || !strncmp(name, ".\\", 2))
+            {
+                name += 2;
+            }
+            else
+            {
+                fatal_error("%s:%d: Invalid path\n", pFile->filename, line);
+            }
+        }
+        if (parent_name_length)
+            strcat(new_name, "/");
+        strcat(new_name, name);
+    }
+    else
+    {
+        new_name = xstrdup(name);
+    }
+
+    while (*p && strcmp( new_name, (*p)->name )) p = &(*p)->next;
     if (!*p)
     {
         *p = xmalloc( sizeof(INCL_FILE) );
         memset( *p, 0, sizeof(INCL_FILE) );
-        (*p)->name = xstrdup(name);
+        (*p)->name = new_name;
         (*p)->included_by = pFile;
         (*p)->included_line = line;
         (*p)->system = system || pFile->system;
     }
+    else
+        free(new_name);
     pFile->files[pos] = *p;
     return *p;
 }
@@ -237,34 +312,42 @@ static FILE *open_include_file( INCL_FILE *pFile )
     FILE *file = NULL;
     INCL_PATH *path;
 
-    for (path = firstPath; path; path = path->next)
+    if (!pFile->relative)
     {
-        char *filename = xmalloc(strlen(path->name) + strlen(pFile->name) + 2);
-        strcpy( filename, path->name );
-        strcat( filename, "/" );
-        strcat( filename, pFile->name );
-        if ((file = fopen( filename, "r" )))
+        for (path = firstPath; path; path = path->next)
         {
-            pFile->filename = filename;
-            break;
+            char *filename = xmalloc(strlen(path->name) + strlen(pFile->name) + 2);
+            strcpy( filename, path->name );
+            strcat( filename, "/" );
+            strcat( filename, pFile->name );
+            if ((file = fopen( filename, "r" )))
+            {
+                pFile->filename = filename;
+                break;
+            }
+            free( filename );
         }
-        free( filename );
-    }
-    if (!file && pFile->system) return NULL;  /* ignore system files we cannot find */
 
-    /* try in src file directory */
-    if (!file)
-    {
-        char *p = strrchr(pFile->included_by->filename, '/');
-        if (p)
+        if (!file && pFile->system) return NULL;  /* ignore system files we cannot find */
+
+        /* try in src file directory */
+        if (!file)
         {
-            int l = p - pFile->included_by->filename + 1;
-            char *filename = xmalloc(l + strlen(pFile->name) + 1);
-            memcpy( filename, pFile->included_by->filename, l );
-            strcpy( filename + l, pFile->name );
-            if ((file = fopen( filename, "r" ))) pFile->filename = filename;
-            else free( filename );
+            char *p = strrchr(pFile->included_by->filename, '/');
+            if (p)
+            {
+                int l = p - pFile->included_by->filename + 1;
+                char *filename = xmalloc(l + strlen(pFile->name) + 1);
+                memcpy( filename, pFile->included_by->filename, l );
+                strcpy( filename + l, pFile->name );
+                if ((file = fopen( filename, "r" ))) pFile->filename = filename;
+                else free( filename );
+            }
         }
+    }
+    else
+    {
+        file = fopen( pFile->name, "r" );
     }
 
     if (!file)
