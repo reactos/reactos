@@ -1,6 +1,6 @@
 #ifndef _NTOS_H
 #define _NTOS_H
-/* $Id: ntos.h,v 1.16 2003/08/27 21:21:59 dwelch Exp $ */
+/* $Id: ntos.h,v 1.17 2003/10/15 21:15:18 ekohl Exp $ */
 
 #if defined(NTOS_MODE_USER)
 /* 
@@ -45,7 +45,6 @@
 #include "ntdll/csr.h"
 #include "ntdll/dbg.h"
 #include "ntdll/ldr.h"
-#include "ntdll/registry.h"
 #include "ntdll/rtl.h"
 #include "ntdll/trace.h"
 #include "rosrtl/thread.h"

@@ -1,4 +1,4 @@
-/* $Id: timezone.c,v 1.6 2003/09/12 17:51:48 vizzini Exp $
+/* $Id: timezone.c,v 1.7 2003/10/15 21:14:01 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -17,7 +17,6 @@
 
 #define NDEBUG
 #include <ntdll/ntdll.h>
-#include <ntdll/registry.h>
 
 
 /* FUNCTIONS *****************************************************************/
@@ -28,23 +27,12 @@
 NTSTATUS STDCALL
 RtlQueryTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
 {
-   HANDLE KeyHandle;
    RTL_QUERY_REGISTRY_TABLE QueryTable[8];
    UNICODE_STRING StandardName;
    UNICODE_STRING DaylightName;
    NTSTATUS Status;
    
    DPRINT("RtlQueryTimeZoneInformation()\n");
-   
-   Status = RtlpGetRegistryHandle(RTL_REGISTRY_CONTROL,
-				  L"TimeZoneInformation",
-				  TRUE,
-				  &KeyHandle);
-   if (!NT_SUCCESS(Status))
-     {
-	DPRINT("RtlpGetRegistryHandle failed (Status %x)\n", Status);
-	return Status;
-     }
    
    RtlZeroMemory(QueryTable,
 		 sizeof(QueryTable));
@@ -85,12 +73,11 @@ RtlQueryTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
    QueryTable[6].Flags = RTL_QUERY_REGISTRY_DIRECT;
    QueryTable[6].EntryContext = &TimeZoneInformation->DaylightDate;
    
-   Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-				   (PWSTR)KeyHandle,
+   Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+				   L"TimeZoneInformation",
 				   QueryTable,
 				   NULL,
 				   NULL);
-   NtClose(KeyHandle);
    
    return Status;
 }
@@ -102,104 +89,85 @@ RtlQueryTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
 NTSTATUS STDCALL
 RtlSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
 {
-   HANDLE KeyHandle;
    ULONG Length;
    NTSTATUS Status;
    
    DPRINT("RtlSetTimeZoneInformation()\n");
    
-   Status = RtlpGetRegistryHandle(RTL_REGISTRY_CONTROL,
+   Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
 				  L"TimeZoneInformation",
-				  TRUE,
-				  &KeyHandle);
-   if (!NT_SUCCESS(Status))
-     {
-	DPRINT("RtlpGetRegistryHandle failed (Status %x)\n", Status);
-	return Status;
-     }
-   
-   Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE,
-				  (PWSTR)KeyHandle,
 				  L"Bias",
 				  REG_DWORD,
 				  &TimeZoneInformation->Bias,
 				  sizeof(LONG));
    if (!NT_SUCCESS(Status))
      {
-	NtClose(KeyHandle);
 	return Status;
      }
    
    Length = (wcslen(TimeZoneInformation->StandardName) + 1) * sizeof(WCHAR);
-   Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE,
-				  (PWSTR)KeyHandle,
+   Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
+				  L"TimeZoneInformation",
 				  L"Standard Name",
 				  REG_SZ,
 				  TimeZoneInformation->StandardName,
 				  Length);
    if (!NT_SUCCESS(Status))
      {
-	NtClose(KeyHandle);
 	return Status;
      }
    
-   Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE,
-				  (PWSTR)KeyHandle,
+   Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
+				  L"TimeZoneInformation",
 				  L"Standard Bias",
 				  REG_DWORD,
 				  &TimeZoneInformation->StandardBias,
 				  sizeof(LONG));
    if (!NT_SUCCESS(Status))
      {
-	NtClose(KeyHandle);
 	return Status;
      }
    
-   Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE,
-				  (PWSTR)KeyHandle,
+   Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
+				  L"TimeZoneInformation",
 				  L"Standard Start",
 				  REG_BINARY,
 				  &TimeZoneInformation->StandardDate,
 				  sizeof(SYSTEMTIME));
    if (!NT_SUCCESS(Status))
      {
-	NtClose(KeyHandle);
 	return Status;
      }
    
    Length = (wcslen(TimeZoneInformation->DaylightName) + 1) * sizeof(WCHAR);
-   Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE,
-				  (PWSTR)KeyHandle,
+   Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
+				  L"TimeZoneInformation",
 				  L"Daylight Name",
 				  REG_SZ,
 				  TimeZoneInformation->DaylightName,
 				  Length);
    if (!NT_SUCCESS(Status))
      {
-	NtClose(KeyHandle);
 	return Status;
      }
    
-   Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE,
-				  (PWSTR)KeyHandle,
+   Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
+				  L"TimeZoneInformation",
 				  L"Daylight Bias",
 				  REG_DWORD,
 				  &TimeZoneInformation->DaylightBias,
 				  sizeof(LONG));
    if (!NT_SUCCESS(Status))
      {
-	NtClose(KeyHandle);
 	return Status;
      }
    
-   Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE,
-				  (PWSTR)KeyHandle,
+   Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
+				  L"TimeZoneInformation",
 				  L"Daylight Start",
 				  REG_BINARY,
 				  &TimeZoneInformation->DaylightDate,
 				  sizeof(SYSTEMTIME));
-   
-   NtClose(KeyHandle);
    
    return Status;
 }

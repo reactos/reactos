@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.24 2003/08/30 14:47:36 hbirr Exp $
+/* $Id: registry.c,v 1.25 2003/10/15 21:14:01 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -21,7 +21,6 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
-#include <ntdll/registry.h>
 #include <ntos/minmax.h>
 
 #define NDEBUG
@@ -29,6 +28,120 @@
 
 
 /* FUNCTIONS ***************************************************************/
+
+static NTSTATUS
+RtlpGetRegistryHandle(ULONG RelativeTo,
+		      PWSTR Path,
+		      BOOLEAN Create,
+		      PHANDLE KeyHandle)
+{
+  UNICODE_STRING KeyName;
+  WCHAR KeyBuffer[MAX_PATH];
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  NTSTATUS Status;
+
+  DPRINT("RtlpGetRegistryHandle()\n");
+
+  if (RelativeTo & RTL_REGISTRY_HANDLE)
+    {
+      Status = NtDuplicateObject(NtCurrentProcess(),
+				 (HANDLE)Path,
+				 NtCurrentProcess(),
+				 KeyHandle,
+				 0,
+				 FALSE,
+				 DUPLICATE_SAME_ACCESS);
+      return(Status);
+    }
+
+  if (RelativeTo & RTL_REGISTRY_OPTIONAL)
+    RelativeTo &= ~RTL_REGISTRY_OPTIONAL;
+
+  if (RelativeTo >= RTL_REGISTRY_MAXIMUM)
+    return(STATUS_INVALID_PARAMETER);
+
+  KeyName.Length = 0;
+  KeyName.MaximumLength = MAX_PATH;
+  KeyName.Buffer = KeyBuffer;
+  KeyBuffer[0] = 0;
+
+  switch (RelativeTo)
+    {
+      case RTL_REGISTRY_ABSOLUTE:
+	RtlAppendUnicodeToString(&KeyName,
+				 L"\\");
+	break;
+
+      case RTL_REGISTRY_SERVICES:
+	RtlAppendUnicodeToString(&KeyName,
+				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
+	break;
+
+      case RTL_REGISTRY_CONTROL:
+	RtlAppendUnicodeToString(&KeyName,
+				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\");
+	break;
+
+      case RTL_REGISTRY_WINDOWS_NT:
+	RtlAppendUnicodeToString(&KeyName,
+				 L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\");
+	break;
+
+      case RTL_REGISTRY_DEVICEMAP:
+	RtlAppendUnicodeToString(&KeyName,
+				 L"\\Registry\\Machine\\Hardware\\DeviceMap\\");
+	break;
+
+      case RTL_REGISTRY_USER:
+	Status = RtlFormatCurrentUserKeyPath(&KeyName);
+	if (!NT_SUCCESS(Status))
+	  return(Status);
+	break;
+
+      /* ReactOS specific */
+      case RTL_REGISTRY_ENUM:
+	RtlAppendUnicodeToString(&KeyName,
+				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+	break;
+    }
+
+  DPRINT("KeyName %wZ\n", &KeyName);
+
+  if (Path[0] == L'\\' && RelativeTo != RTL_REGISTRY_ABSOLUTE)
+    {
+      Path++;
+    }
+  RtlAppendUnicodeToString(&KeyName,
+			   Path);
+
+  DPRINT("KeyName %wZ\n", &KeyName);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+			     NULL,
+			     NULL);
+
+  if (Create == TRUE)
+    {
+      Status = NtCreateKey(KeyHandle,
+			   KEY_ALL_ACCESS,
+			   &ObjectAttributes,
+			   0,
+			   NULL,
+			   0,
+			   NULL);
+    }
+  else
+    {
+      Status = NtOpenKey(KeyHandle,
+			 KEY_ALL_ACCESS,
+			 &ObjectAttributes);
+    }
+
+  return(Status);
+}
+
 
 /*
  * @implemented
@@ -925,122 +1038,6 @@ RtlpNtSetValueKey(IN HANDLE KeyHandle,
 		       Type,
 		       Data,
 		       DataLength));
-}
-
-
-/* INTERNAL FUNCTIONS ******************************************************/
-
-NTSTATUS
-RtlpGetRegistryHandle(ULONG RelativeTo,
-		      PWSTR Path,
-		      BOOLEAN Create,
-		      PHANDLE KeyHandle)
-{
-  UNICODE_STRING KeyName;
-  WCHAR KeyBuffer[MAX_PATH];
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  NTSTATUS Status;
-
-  DPRINT("RtlpGetRegistryHandle()\n");
-
-  if (RelativeTo & RTL_REGISTRY_HANDLE)
-    {
-      Status = NtDuplicateObject(NtCurrentProcess(),
-				 (HANDLE)Path,
-				 NtCurrentProcess(),
-				 KeyHandle,
-				 0,
-				 FALSE,
-				 DUPLICATE_SAME_ACCESS);
-      return(Status);
-    }
-
-  if (RelativeTo & RTL_REGISTRY_OPTIONAL)
-    RelativeTo &= ~RTL_REGISTRY_OPTIONAL;
-
-  if (RelativeTo >= RTL_REGISTRY_MAXIMUM)
-    return(STATUS_INVALID_PARAMETER);
-
-  KeyName.Length = 0;
-  KeyName.MaximumLength = MAX_PATH;
-  KeyName.Buffer = KeyBuffer;
-  KeyBuffer[0] = 0;
-
-  switch (RelativeTo)
-    {
-      case RTL_REGISTRY_ABSOLUTE:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\");
-	break;
-
-      case RTL_REGISTRY_SERVICES:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
-	break;
-
-      case RTL_REGISTRY_CONTROL:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\");
-	break;
-
-      case RTL_REGISTRY_WINDOWS_NT:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\");
-	break;
-
-      case RTL_REGISTRY_DEVICEMAP:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\Registry\\Machine\\Hardware\\DeviceMap\\");
-	break;
-
-      case RTL_REGISTRY_USER:
-	Status = RtlFormatCurrentUserKeyPath(&KeyName);
-	if (!NT_SUCCESS(Status))
-	  return(Status);
-	break;
-
-      /* ReactOS specific */
-      case RTL_REGISTRY_ENUM:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
-	break;
-    }
-
-  DPRINT("KeyName %wZ\n", &KeyName);
-
-  if (Path[0] == L'\\' && RelativeTo != RTL_REGISTRY_ABSOLUTE)
-    {
-      Path++;
-    }
-  RtlAppendUnicodeToString(&KeyName,
-			   Path);
-
-  DPRINT("KeyName %wZ\n", &KeyName);
-
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyName,
-			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
-			     NULL,
-			     NULL);
-
-  if (Create == TRUE)
-    {
-      Status = NtCreateKey(KeyHandle,
-			   KEY_ALL_ACCESS,
-			   &ObjectAttributes,
-			   0,
-			   NULL,
-			   0,
-			   NULL);
-    }
-  else
-    {
-      Status = NtOpenKey(KeyHandle,
-			 KEY_ALL_ACCESS,
-			 &ObjectAttributes);
-    }
-
-  return(Status);
 }
 
 /* EOF */
