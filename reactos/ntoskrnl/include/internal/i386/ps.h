@@ -47,6 +47,8 @@
 
 #ifndef __ASM__
 
+#include "fpu.h"
+
 #pragma pack(push,4)
 
 // Fixme: Use correct types?
@@ -54,13 +56,6 @@ typedef struct _KPROCESSOR_STATE {
    PCONTEXT ContextFrame;
    PVOID SpecialRegisters;
 } KPROCESSOR_STATE;
-
-// Fixme: Use correct union for Fn/Fx Save Area?
-typedef struct _FX_SAVE_AREA {
-	UCHAR FnFxSaveArea[0x208];
-	ULONG NpxSavedCpu;
-	ULONG Cr0NpxState;
-} FX_SAVE_AREA, *PFX_SAVE_AREA;
   
 /* ProcessoR Control Block */ 
 typedef struct _KPRCB {
