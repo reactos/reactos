@@ -113,7 +113,7 @@ typedef struct tagHEAP
 #define HEAP_MAGIC       ((DWORD)('H' | ('E'<<8) | ('A'<<16) | ('P'<<24)))
 
 #define HEAP_DEF_SIZE        0x110000   /* Default heap size = 1Mb + 64Kb */
-#define HEAP_MIN_BLOCK_SIZE  (8+sizeof(ARENA_FREE))  /* Min. heap block size */
+#define HEAP_MIN_BLOCK_SIZE  (sizeof(ARENA_FREE) + 8)  /* Min. heap block size */
 #define COMMIT_MASK          0xffff  /* bitmask for commit/decommit granularity */
 
 
@@ -1125,7 +1125,7 @@ RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
  * RETURNS
  *	Pointer to allocated memory block
  *	NULL: Failure
- *
+ * 0x7d030f60--invalid flags in RtlHeapAllocate
  * @implemented
  */
 PVOID STDCALL
@@ -1148,7 +1148,7 @@ RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
     flags &= HEAP_GENERATE_EXCEPTIONS | HEAP_NO_SERIALIZE | HEAP_ZERO_MEMORY;
     flags |= heapPtr->flags;
     if (!(flags & HEAP_NO_SERIALIZE)) RtlEnterCriticalSection( &heapPtr->critSection );
-    size = (size + 3) & ~3;
+    size = (size + 7) & ~7;
     if (size < HEAP_MIN_BLOCK_SIZE) size = HEAP_MIN_BLOCK_SIZE;
 
     /* Locate a suitable free block */
@@ -1250,7 +1250,7 @@ BOOLEAN STDCALL RtlFreeHeap(
  * RETURNS
  *	Pointer to reallocated memory block
  *	NULL: Failure
- *
+ * 0x7d030f60--invalid flags in RtlHeapAllocate
  * @implemented
  */
 LPVOID STDCALL RtlReAllocateHeap(
@@ -1272,7 +1272,7 @@ LPVOID STDCALL RtlReAllocateHeap(
     flags &= HEAP_GENERATE_EXCEPTIONS | HEAP_NO_SERIALIZE | HEAP_ZERO_MEMORY |
              HEAP_REALLOC_IN_PLACE_ONLY;
     flags |= heapPtr->flags;
-    size = (size + 3) & ~3;
+    size = (size + 7) & ~7;
     if (size < HEAP_MIN_BLOCK_SIZE) size = HEAP_MIN_BLOCK_SIZE;
 
     if (!(flags & HEAP_NO_SERIALIZE)) RtlEnterCriticalSection( &heapPtr->critSection );
