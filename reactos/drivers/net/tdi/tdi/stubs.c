@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.1 1999/11/20 20:41:29 ea Exp $
+/* $Id: stubs.c,v 1.2 1999/11/21 23:48:14 ea Exp $
  *
  */
 #include <ntos.h>
@@ -30,12 +30,12 @@ NTSTATUS
 STDCALL
 TdiCopyBufferToMdl (
 	IN	PVOID	SourceBuffer,
-        IN	ULONG  SourceOffset,
-        IN	ULONG  SourceBytesToCopy,
-        IN	PMDL  DestinationMdlChain,
-        IN	ULONG  DestinationOffset,
-        IN	PULONG  BytesCopied
-        )
+	IN	ULONG	SourceOffset,
+	IN	ULONG	SourceBytesToCopy,
+	IN	PMDL	DestinationMdlChain,
+	IN	ULONG	DestinationOffset,
+	IN	PULONG	BytesCopied
+	)
 {
 	return STATUS_NOT_IMPLEMENTED;
 }
@@ -44,13 +44,13 @@ TdiCopyBufferToMdl (
 NTSTATUS 
 STDCALL
 TdiCopyMdlToBuffer (
-        IN PMDL  SourceMdlChain,
-        IN ULONG  SourceOffset,
-        IN PVOID  DestinationBuffer,
-        IN ULONG  DestinationOffset,
-        IN ULONG  DestinationBufferSize,
-        OUT PULONG  BytesCopied
-        )
+	IN	PMDL	SourceMdlChain,
+	IN	ULONG	SourceOffset,
+	IN	PVOID	DestinationBuffer,
+	IN	ULONG	DestinationOffset,
+	IN	ULONG	DestinationBufferSize,
+	OUT	PULONG	BytesCopied
+	)
 {
 	return STATUS_NOT_IMPLEMENTED;
 }

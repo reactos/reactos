@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.1 1999/11/20 20:41:29 ea Exp $
+/* $Id: stubs.c,v 1.2 1999/11/21 23:48:13 ea Exp $
  *
  */
 #include <ntos.h>
@@ -98,10 +98,10 @@ CTESignal (
 BOOLEAN
 STDCALL
 CTEStartTimer (
-	DOWRD	Unknown0,
-	DOWRD	Unknown1,
-	DOWRD	Unknown2,
-	DOWRD	Unknown3
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
 	)
 {
 	return FALSE;

@@ -1,0 +1,47 @@
+; $Id: tdi.edf,v 1.1 1999/11/21 23:48:13 ea Exp $
+;
+; TDI.SYS Kernel Module - ReactOS Operating System
+;
+LIBRARY TDI.SYS
+
+EXPORTS
+CTEAllocateString=CTEAllocateString@8
+CTEBlock=CTEBlock@4
+CTEInitEvent=CTEInitEvent@8
+CTEInitString=CTEInitString@8
+CTEInitTimer=CTEInitTimer@4
+CTEInitialize=CTEInitialize@0
+CTELogEvent=CTELogEvent@28
+CTEScheduleEvent=CTEScheduleEvent@8
+CTESignal=CTESignal@8
+CTEStartTimer=CTEStartTimer@16
+CTESystemUpTime=CTESystemUpTime@0
+TdiBuildNetbiosAddress=TdiBuildNetbiosAddress@12
+TdiBuildNetbiosAddressEa=TdiBuildNetbiosAddressEa@12
+TdiCopyBufferToMdl=TdiCopyBufferToMdl@24
+TdiCopyMdlToBuffer=TdiCopyMdlToBuffer@24
+TdiDefaultChainedRcvDatagramHandler=TdiDefaultChainedRcvDatagramHandler@40
+TdiDefaultChainedRcvExpeditedHandler=TdiDefaultChainedRcvExpeditedHandler@28
+TdiDefaultChainedReceiveHandler=TdiDefaultChainedReceiveHandler@28
+TdiDefaultConnectHandler=TdiDefaultConnectHandler@36
+TdiDefaultDisconnectHandler=TdiDefaultDisconnectHandler@28
+TdiDefaultErrorHandler=TdiDefaultErrorHandler@8
+TdiDefaultRcvDatagramHandler=TdiDefaultRcvDatagramHandler@44
+TdiDefaultRcvExpeditedHandler=TdiDefaultRcvExpeditedHandler@32
+TdiDefaultReceiveHandler=TdiDefaultReceiveHandler@32
+TdiDefaultSendPossibleHandler=TdiDefaultSendPossibleHandler@12
+TdiDeregisterAddressChangeHandler=TdiDeregisterAddressChangeHandler@4
+TdiDeregisterDeviceObject=TdiDeregisterDeviceObject@4
+TdiDeregisterNetAddress=TdiDeregisterNetAddress@4
+TdiDeregisterNotificationHandler=TdiDeregisterNotificationHandler@4
+TdiInitialize=TdiInitialize@0
+TdiMapBuffer=TdiMapBuffer@4
+TdiMapUserRequest=TdiMapUserRequest@12
+TdiOpenNetbiosAddress=TdiOpenNetbiosAddress@16
+TdiRegisterAddressChangeHandler=TdiRegisterAddressChangeHandler@12
+TdiRegisterDeviceObject=TdiRegisterDeviceObject@8
+TdiRegisterNetAddress=TdiRegisterNetAddress@8
+TdiRegisterNotificationHandler=TdiRegisterNotificationHandler@12
+TdiReturnChainedReceives=TdiReturnChainedReceives@8
+TdiUnmapBuffer=TdiUnmapBuffer@4
+; EOF

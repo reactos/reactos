@@ -1,14 +1,14 @@
-# $Id: Makefile,v 1.1 1999/11/20 20:41:28 ea Exp $
+# $Id: Makefile,v 1.2 1999/11/21 23:48:13 ea Exp $
 #
 # TDI.SYS build spec
 #
 
 TARGETNAME=tdi
 
-BASE_CFLAGS = -I../../include
+BASE_CFLAGS = -I../../../include
 
-OBJECTS_CTE = cte/stubs.o
-OBJECTS_TDI = tdi/stubs.o tdi/obsolete.o
+OBJECTS_CTE = cte/stubs.o cte/string.o
+OBJECTS_TDI = tdi/stubs.o tdi/obsolete.o tdi/handler.o
 
 OBJECTS_MISC = misc/main.o misc/$(TARGETNAME).coff
 
@@ -32,12 +32,13 @@ CLEAN_FILES = \
 		$(TARGETNAME).sys $(TARGETNAME).sym
 endif
 
-$(TARGETNAME).sys: $(OBJECTS) $(TARGETNAME).def
+$(TARGETNAME).sys: $(OBJECTS) misc/$(TARGETNAME).def
 	$(LD) -r $(OBJECTS) -o $(TARGETNAME).o
 	$(DLLTOOL) \
 		--dllname $(TARGETNAME).sys \
-		--def $(TARGETNAME).def \
-		--output-lib $(TARGETNAME).a
+		--def misc/$(TARGETNAME).def \
+		--output-lib $(TARGETNAME).a \
+		--kill-at
 	$(CC) \
 		--subsystem=native \
 		-mdll \
@@ -51,14 +52,15 @@ $(TARGETNAME).sys: $(OBJECTS) $(TARGETNAME).def
 		-Wl,--defsym,_edata=__data_end__ \
 		-Wl,--defsym,_etext=etext \
 		-Wl,--base-file,base.tmp $(TARGETNAME).o \
-		-specs=../../specs \
-		../../ntoskrnl/ntoskrnl.a
+		-specs=../../../specs \
+		../../../ntoskrnl/ntoskrnl.a
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGETNAME).sys \
 		--base-file base.tmp \
 		--output-exp temp.exp \
-		--def $(TARGETNAME).def
+		--def misc/$(TARGETNAME).def \
+		--kill-at
 	- $(RM) base.tmp
 	$(CC) \
 		--subsystem=native \
@@ -67,7 +69,7 @@ $(TARGETNAME).sys: $(OBJECTS) $(TARGETNAME).def
 		-e _DllMain@8 \
 		-o $(TARGETNAME).sys \
 		$(TARGETNAME).o \
-		../../ntoskrnl/ntoskrnl.a \
+		../../../ntoskrnl/ntoskrnl.a \
 		-Wl,--image-base,0x0 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
@@ -75,7 +77,7 @@ $(TARGETNAME).sys: $(OBJECTS) $(TARGETNAME).def
 		-Wl,--defsym,_edata=__data_end__ \
 		-Wl,--defsym,_etext=etext \
 		-Wl,temp.exp \
-		-specs=../../specs
+		-specs=../../../specs
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGETNAME).sys > $(TARGETNAME).sym
 
