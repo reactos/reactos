@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.13 2003/03/19 23:14:11 gdalsnes Exp $ */
+/* $Id: extypes.h,v 1.14 2003/04/10 23:14:46 hyperion Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
@@ -18,7 +18,7 @@ extern POBJECT_TYPE IMPORTED ExIoCompletionType;
 typedef ULONG INTERLOCKED_RESULT;
 typedef ULONG WORK_QUEUE_TYPE;
 
-typedef ULONG ERESOURCE_THREAD, *PERESOURCE_THREAD;
+typedef ULONG_PTR ERESOURCE_THREAD, *PERESOURCE_THREAD;
 
 typedef struct _OWNER_ENTRY
 {

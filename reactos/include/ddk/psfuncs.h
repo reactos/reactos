@@ -1,4 +1,4 @@
-/* $Id: psfuncs.h,v 1.22 2002/09/08 10:47:45 chorns Exp $
+/* $Id: psfuncs.h,v 1.23 2003/04/10 23:14:46 hyperion Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
@@ -48,8 +48,9 @@ VOID STDCALL PsEstablishWin32Callouts(PVOID Param1,
 				      ULONG W32ThreadSize,
 				      ULONG W32ProcessSize);
 
-struct _ETHREAD* STDCALL PsGetCurrentThread(VOID);
-struct _EPROCESS* STDCALL PsGetCurrentProcess(VOID);
+#define PsGetCurrentProcess() IoGetCurrentProcess()
+#define PsGetCurrentThread() ((struct _ETHREAD*) (KeGetCurrentThread()))
+
 PACCESS_TOKEN STDCALL PsReferenceImpersonationToken(struct _ETHREAD* Thread,
 						    PULONG Unknown1,
 						    PULONG Unknown2,

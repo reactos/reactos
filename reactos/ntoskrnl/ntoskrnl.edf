@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.135 2003/04/06 10:45:16 chorns Exp $
+; $Id: ntoskrnl.edf,v 1.136 2003/04/10 23:14:47 hyperion Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -635,10 +635,8 @@ PsCreateWin32Process=PsCreateWin32Process@4
 PsGetWin32Thread=PsGetWin32Thread@0
 PsGetWin32Process=PsGetWin32Process@0
 PsEstablishWin32Callouts=PsEstablishWin32Callouts@24
-PsGetCurrentProcess=PsGetCurrentProcess@0
 PsGetCurrentProcessId=PsGetCurrentProcessId@0
 PsGetCurrentThreadId=PsGetCurrentThreadId@0
-PsGetCurrentThread=PsGetCurrentThread@0
 PsGetProcessExitTime=PsGetProcessExitTime@0
 PsGetVersion=PsGetVersion@16
 PsImpersonateClient=PsImpersonateClient@20

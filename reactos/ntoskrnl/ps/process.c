@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.95 2003/01/19 01:46:32 hbirr Exp $
+/* $Id: process.c,v 1.96 2003/04/10 23:14:47 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -368,7 +368,7 @@ PsGetCurrentProcessId(VOID)
  * FUNCTION: Returns a pointer to the current process
  */
 PEPROCESS STDCALL
-PsGetCurrentProcess(VOID)
+IoGetCurrentProcess(VOID)
 {
    if (PsGetCurrentThread() == NULL || 
        PsGetCurrentThread()->ThreadsProcess == NULL)
@@ -379,12 +379,6 @@ PsGetCurrentProcess(VOID)
      {
 	return(PsGetCurrentThread()->ThreadsProcess);
      }
-}
-
-PEPROCESS STDCALL
-IoGetCurrentProcess(VOID)
-{
-  return(PsGetCurrentProcess());
 }
 
 NTSTATUS STDCALL
@@ -1220,6 +1214,7 @@ PsLookupProcessByProcessId(IN PVOID ProcessId,
       if (current->UniqueProcessId == (ULONG)ProcessId)
 	{
 	  *Process = current;
+          ObReferenceObject(current);
 	  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
 	  return(STATUS_SUCCESS);
 	}

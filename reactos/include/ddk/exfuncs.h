@@ -185,7 +185,7 @@ ExFreePool (
  *	);
  */
 #define ExGetCurrentResourceThread() \
-	((ERESOURCE_THREAD)PsGetCurrentThread())
+	((ERESOURCE_THREAD)KeGetCurrentThread())
 
 ULONG
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.107 2003/03/19 23:08:46 gdalsnes Exp $
+/* $Id: thread.c,v 1.108 2003/04/10 23:14:47 hyperion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -64,12 +64,6 @@ static GENERIC_MAPPING PiThreadMapping = {THREAD_READ,
 PKTHREAD STDCALL KeGetCurrentThread(VOID)
 {
    return(KeGetCurrentKPCR()->CurrentThread);
-}
-
-PETHREAD STDCALL PsGetCurrentThread(VOID)
-{
-  PKTHREAD CurrentThread = KeGetCurrentKPCR()->CurrentThread;
-  return(CONTAINING_RECORD(CurrentThread, ETHREAD, Tcb));
 }
 
 HANDLE STDCALL PsGetCurrentThreadId(VOID)
@@ -603,8 +597,14 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
 	  current->Cid.UniqueProcess == Cid->UniqueProcess)
 	{
 	  if (Process != NULL)
+          {
 	    *Process = current->ThreadsProcess;
+            ObReferenceObject(current->ThreadsProcess);
+          }
+
 	  *Thread = current;
+          ObReferenceObject(current);
+
 	  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 	  return(STATUS_SUCCESS);
 	}
@@ -637,6 +637,7 @@ PsLookupThreadByThreadId(IN PVOID ThreadId,
       if (current->Cid.UniqueThread == (HANDLE)ThreadId)
 	{
 	  *Thread = current;
+          ObReferenceObject(current);
 	  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 	  return(STATUS_SUCCESS);
 	}
