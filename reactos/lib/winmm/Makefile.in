@@ -5,9 +5,6 @@ SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = winmm.dll
 IMPORTS   = user32 advapi32 kernel32 ntdll
-ALTNAMES  = mmsystem.dll sound.dll
-
-SPEC_SRCS16 = $(ALTNAMES:.dll=.spec)
 
 C_SRCS = \
 	driver.c \
@@ -23,6 +20,10 @@ C_SRCS16 = \
 	message16.c \
 	mmsystem.c \
 	sound16.c
+
+SPEC_SRCS16 = \
+	mmsystem.spec \
+	sound.spec
 
 RC_SRCS = winmm_res.rc
 

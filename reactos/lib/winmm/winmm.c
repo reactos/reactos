@@ -83,7 +83,7 @@ static	BOOL	WINMM_CreateIData(HINSTANCE hInstDLL)
 	return FALSE;
     WINMM_IData->hWinMM32Instance = hInstDLL;
     InitializeCriticalSection(&WINMM_IData->cs);
-    WINMM_IData->cs.DebugInfo = (void*)__FILE__ ": WinMM";
+    WINMM_IData->cs.DebugInfo->Spare[1] = (DWORD)"WINMM_IData";
     WINMM_IData->psStopEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
     WINMM_IData->psLastEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
     TRACE("Created IData (%p)\n", WINMM_IData);
@@ -102,7 +102,6 @@ static	void WINMM_DeleteIData(void)
 	 * inside WINMM_IData */
         CloseHandle(WINMM_IData->psStopEvent);
         CloseHandle(WINMM_IData->psLastEvent);
-        WINMM_IData->cs.DebugInfo = NULL;
         DeleteCriticalSection(&WINMM_IData->cs);
         HeapFree(GetProcessHeap(), 0, WINMM_IData);
         WINMM_IData = NULL;
@@ -210,9 +209,10 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID fImpLoad)
 /**************************************************************************
  * find out the real mixer ID depending on hmix (depends on dwFlags)
  */
-static LPWINE_MIXER MIXER_GetDev(HMIXEROBJ hmix, DWORD dwFlags)
+static UINT MIXER_GetDev(HMIXEROBJ hmix, DWORD dwFlags, LPWINE_MIXER * lplpwm)
 {
     LPWINE_MIXER	lpwm = NULL;
+    UINT		uRet = MMSYSERR_NOERROR;
 
     switch (dwFlags & 0xF0000000ul) {
     case MIXER_OBJECTF_MIXER:
@@ -249,10 +249,15 @@ static LPWINE_MIXER MIXER_GetDev(HMIXEROBJ hmix, DWORD dwFlags)
 	lpwm = (LPWINE_MIXER)MMDRV_GetRelated(hmix, MMDRV_AUX,     TRUE,  MMDRV_MIXER);
 	break;
     default:
-	FIXME("Unsupported flag (%08lx)\n", dwFlags & 0xF0000000ul);
+	WARN("Unsupported flag (%08lx)\n", dwFlags & 0xF0000000ul);
+        lpwm = 0;
+        uRet = MMSYSERR_INVALFLAG;
 	break;
     }
-    return lpwm;
+    *lplpwm = lpwm;
+    if (lpwm == 0 && uRet == MMSYSERR_NOERROR)
+        uRet = MMSYSERR_INVALPARAM;
+    return uRet;
 }
 
 /**************************************************************************
@@ -284,8 +289,11 @@ UINT WINAPI mixerGetDevCapsA(UINT_PTR uDeviceID, LPMIXERCAPSA lpCaps, UINT uSize
 UINT WINAPI mixerGetDevCapsW(UINT_PTR uDeviceID, LPMIXERCAPSW lpCaps, UINT uSize)
 {
     MIXERCAPSA	micA;
-    UINT	ret = mixerGetDevCapsA(uDeviceID, &micA, sizeof(micA));
+    UINT	ret;
 
+    if (lpCaps == NULL) return MMSYSERR_INVALPARAM;
+
+    ret = mixerGetDevCapsA(uDeviceID, &micA, sizeof(micA));
     if (ret == MMSYSERR_NOERROR) {
 	MIXERCAPSW micW;
 	micW.wMid           = micA.wMid;
@@ -364,17 +372,17 @@ UINT WINAPI mixerClose(HMIXER hMix)
 UINT WINAPI mixerGetID(HMIXEROBJ hmix, LPUINT lpid, DWORD fdwID)
 {
     LPWINE_MIXER	lpwm;
+    UINT		uRet = MMSYSERR_NOERROR;
 
     TRACE("(%p %p %08lx)\n", hmix, lpid, fdwID);
 
-    if ((lpwm = MIXER_GetDev(hmix, fdwID)) == NULL) {
-	return MMSYSERR_INVALHANDLE;
-    }
+    if ((uRet = MIXER_GetDev(hmix, fdwID, &lpwm)) != MMSYSERR_NOERROR)
+	return uRet;
 
     if (lpid)
       *lpid = lpwm->mld.uDeviceID;
 
-    return MMSYSERR_NOERROR;
+    return uRet;
 }
 
 /**************************************************************************
@@ -384,11 +392,12 @@ UINT WINAPI mixerGetControlDetailsA(HMIXEROBJ hmix, LPMIXERCONTROLDETAILS lpmcdA
 				    DWORD fdwDetails)
 {
     LPWINE_MIXER	lpwm;
+    UINT		uRet = MMSYSERR_NOERROR;
 
     TRACE("(%p, %p, %08lx)\n", hmix, lpmcdA, fdwDetails);
 
-    if ((lpwm = MIXER_GetDev(hmix, fdwDetails)) == NULL)
-	return MMSYSERR_INVALHANDLE;
+    if ((uRet = MIXER_GetDev(hmix, fdwDetails, &lpwm)) != MMSYSERR_NOERROR)
+	return uRet;
 
     if (lpmcdA == NULL || lpmcdA->cbStruct != sizeof(*lpmcdA))
 	return MMSYSERR_INVALPARAM;
@@ -462,11 +471,12 @@ UINT WINAPI mixerGetLineControlsA(HMIXEROBJ hmix, LPMIXERLINECONTROLSA lpmlcA,
 				  DWORD fdwControls)
 {
     LPWINE_MIXER	lpwm;
+    UINT		uRet = MMSYSERR_NOERROR;
 
     TRACE("(%p, %p, %08lx)\n", hmix, lpmlcA, fdwControls);
 
-    if ((lpwm = MIXER_GetDev(hmix, fdwControls)) == NULL)
-	return MMSYSERR_INVALHANDLE;
+    if ((uRet = MIXER_GetDev(hmix, fdwControls, &lpwm)) != MMSYSERR_NOERROR)
+	return uRet;
 
     if (lpmlcA == NULL || lpmlcA->cbStruct != sizeof(*lpmlcA))
 	return MMSYSERR_INVALPARAM;
@@ -542,11 +552,12 @@ UINT WINAPI mixerGetLineControlsW(HMIXEROBJ hmix, LPMIXERLINECONTROLSW lpmlcW,
 UINT WINAPI mixerGetLineInfoA(HMIXEROBJ hmix, LPMIXERLINEA lpmliW, DWORD fdwInfo)
 {
     LPWINE_MIXER	lpwm;
+    UINT		uRet = MMSYSERR_NOERROR;
 
     TRACE("(%p, %p, %08lx)\n", hmix, lpmliW, fdwInfo);
 
-    if ((lpwm = MIXER_GetDev(hmix, fdwInfo)) == NULL)
-	return MMSYSERR_INVALHANDLE;
+    if ((uRet = MIXER_GetDev(hmix, fdwInfo, &lpwm)) != MMSYSERR_NOERROR)
+	return uRet;
 
     return MMDRV_Message(&lpwm->mld, MXDM_GETLINEINFO, (DWORD_PTR)lpmliW,
 			 fdwInfo, TRUE);
@@ -589,7 +600,8 @@ UINT WINAPI mixerGetLineInfoW(HMIXEROBJ hmix, LPMIXERLINEW lpmliW,
         WideCharToMultiByte( CP_ACP, 0, lpmliW->Target.szPname, -1, mliA.Target.szPname, sizeof(mliA.Target.szPname), NULL, NULL);
 	break;
     default:
-	FIXME("Unsupported fdwControls=0x%08lx\n", fdwInfo);
+	WARN("Unsupported fdwControls=0x%08lx\n", fdwInfo);
+        return MMSYSERR_INVALFLAG;
     }
 
     ret = mixerGetLineInfoA(hmix, &mliA, fdwInfo);
@@ -625,11 +637,12 @@ UINT WINAPI mixerSetControlDetails(HMIXEROBJ hmix, LPMIXERCONTROLDETAILS lpmcdA,
 				   DWORD fdwDetails)
 {
     LPWINE_MIXER	lpwm;
+    UINT		uRet = MMSYSERR_NOERROR;
 
     TRACE("(%p, %p, %08lx)\n", hmix, lpmcdA, fdwDetails);
 
-    if ((lpwm = MIXER_GetDev(hmix, fdwDetails)) == NULL)
-	return MMSYSERR_INVALHANDLE;
+    if ((uRet = MIXER_GetDev(hmix, fdwDetails, &lpwm)) != MMSYSERR_NOERROR)
+	return uRet;
 
     return MMDRV_Message(&lpwm->mld, MXDM_SETCONTROLDETAILS, (DWORD_PTR)lpmcdA,
 			 fdwDetails, TRUE);
@@ -665,8 +678,11 @@ UINT WINAPI auxGetNumDevs(void)
 UINT WINAPI auxGetDevCapsW(UINT_PTR uDeviceID, LPAUXCAPSW lpCaps, UINT uSize)
 {
     AUXCAPSA	acA;
-    UINT	ret = auxGetDevCapsA(uDeviceID, &acA, sizeof(acA));
+    UINT	ret;
 
+    if (lpCaps == NULL) return MMSYSERR_INVALPARAM;
+
+    ret = auxGetDevCapsA(uDeviceID, &acA, sizeof(acA));
     if (ret == MMSYSERR_NOERROR) {
 	AUXCAPSW acW;
 	acW.wMid           = acA.wMid;
@@ -1217,8 +1233,11 @@ UINT WINAPI midiOutGetDevCapsW(UINT_PTR uDeviceID, LPMIDIOUTCAPSW lpCaps,
 			       UINT uSize)
 {
     MIDIOUTCAPSA	mocA;
-    UINT		ret = midiOutGetDevCapsA(uDeviceID, &mocA, sizeof(mocA));
+    UINT		ret;
 
+    if (lpCaps == NULL) return MMSYSERR_INVALPARAM;
+
+    ret = midiOutGetDevCapsA(uDeviceID, &mocA, sizeof(mocA));
     if (ret == MMSYSERR_NOERROR) {
 	MIDIOUTCAPSW mocW;
 	mocW.wMid		= mocA.wMid;
@@ -1594,8 +1613,11 @@ UINT WINAPI midiInGetNumDevs(void)
 UINT WINAPI midiInGetDevCapsW(UINT_PTR uDeviceID, LPMIDIINCAPSW lpCaps, UINT uSize)
 {
     MIDIINCAPSA		micA;
-    UINT		ret = midiInGetDevCapsA(uDeviceID, &micA, sizeof(micA));
+    UINT		ret;
 
+    if (lpCaps == NULL) return MMSYSERR_INVALPARAM;
+
+    ret = midiInGetDevCapsA(uDeviceID, &micA, sizeof(micA));
     if (ret == MMSYSERR_NOERROR) {
 	MIDIINCAPSW micW;
 	micW.wMid           = micA.wMid;
@@ -2559,8 +2581,11 @@ UINT WINAPI waveOutGetDevCapsW(UINT_PTR uDeviceID, LPWAVEOUTCAPSW lpCaps,
 			       UINT uSize)
 {
     WAVEOUTCAPSA	wocA;
-    UINT 		ret = waveOutGetDevCapsA(uDeviceID, &wocA, sizeof(wocA));
+    UINT 		ret;
 
+    if (lpCaps == NULL) return MMSYSERR_INVALPARAM;
+
+    ret = waveOutGetDevCapsA(uDeviceID, &wocA, sizeof(wocA));
     if (ret == MMSYSERR_NOERROR) {
 	WAVEOUTCAPSW wocW;
 	wocW.wMid           = wocA.wMid;
@@ -2951,8 +2976,11 @@ UINT WINAPI waveInGetNumDevs(void)
 UINT WINAPI waveInGetDevCapsW(UINT_PTR uDeviceID, LPWAVEINCAPSW lpCaps, UINT uSize)
 {
     WAVEINCAPSA		wicA;
-    UINT		ret = waveInGetDevCapsA(uDeviceID, &wicA, sizeof(wicA));
+    UINT		ret;
 
+    if (lpCaps == NULL) return MMSYSERR_INVALPARAM;
+
+    ret = waveInGetDevCapsA(uDeviceID, &wicA, sizeof(wicA));
     if (ret == MMSYSERR_NOERROR) {
 	WAVEINCAPSW wicW;
 	wicW.wMid           = wicA.wMid;
@@ -3221,7 +3249,7 @@ DWORD WINAPI mmTaskRun(void* pmt)
 MMRESULT WINAPI mmTaskCreate(LPTASKCALLBACK cb, HANDLE* ph, DWORD client)
 {
     HANDLE               hThread;
-    HANDLE               hEvent;
+    HANDLE               hEvent = 0;
     struct mm_starter   *mms;
 
     mms = HeapAlloc(GetProcessHeap(), 0, sizeof(struct mm_starter));
@@ -3229,16 +3257,13 @@ MMRESULT WINAPI mmTaskCreate(LPTASKCALLBACK cb, HANDLE* ph, DWORD client)
 
     mms->cb = cb;
     mms->client = client;
-    if (ph) {
-        mms->event = hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-    } else {
-        mms->event = NULL;
-    }
+    if (ph) hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+    mms->event = hEvent;
 
-    hThread = CreateThread(0, 0, mmTaskRun, (LPVOID)mms, 0, NULL);
+    hThread = CreateThread(0, 0, mmTaskRun, mms, 0, NULL);
     if (!hThread) {
         HeapFree(GetProcessHeap(), 0, mms);
-        CloseHandle(hEvent);
+        if (hEvent) CloseHandle(hEvent);
         return TASKERR_OUTOFMEMORY;
     }
     if (ph) *ph = hEvent;
