@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.137 2004/05/30 14:01:13 weiden Exp $
+/* $Id: dc.c,v 1.138 2004/06/18 15:18:56 navaraf Exp $
  *
  * DC.C - Device context functions
  *
@@ -2050,6 +2050,10 @@ DC_AllocDC(PUNICODE_STRING Driver)
   NewDC->w.xformVport2World = NewDC->w.xformWorld2Wnd;
   NewDC->w.vport2WorldValid = TRUE;
   NewDC->w.MapMode = MM_TEXT;
+  NewDC->wndExtX = 1.0f;
+  NewDC->wndExtY = 1.0f;
+  NewDC->vportExtX = 1.0f;
+  NewDC->vportExtY = 1.0f;
 
   NewDC->w.hFont = NtGdiGetStockObject(SYSTEM_FONT);
   TextIntRealizeFont(NewDC->w.hFont);
@@ -2119,8 +2123,8 @@ DC_UpdateXforms(PDC  dc)
   FLOAT  scaleX, scaleY;
 
   /* Construct a transformation to do the window-to-viewport conversion */
-  scaleX = (dc->wndExtX ? (FLOAT)dc->vportExtX / (FLOAT)dc->wndExtX : 0.0);
-  scaleY = (dc->wndExtY ? (FLOAT)dc->vportExtY / (FLOAT)dc->wndExtY : 0.0);
+  scaleX = (dc->wndExtX ? (FLOAT)dc->vportExtX / (FLOAT)dc->wndExtX : 0.0f);
+  scaleY = (dc->wndExtY ? (FLOAT)dc->vportExtY / (FLOAT)dc->wndExtY : 0.0f);
   xformWnd2Vport.eM11 = scaleX;
   xformWnd2Vport.eM12 = 0.0;
   xformWnd2Vport.eM21 = 0.0;

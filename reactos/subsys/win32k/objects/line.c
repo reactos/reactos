@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.31 2004/05/14 16:55:18 navaraf Exp $ */
+/* $Id: line.c,v 1.32 2004/06/18 15:18:57 navaraf Exp $ */
 #include <w32k.h>
 
 // Some code from the WINE project source (www.winehq.com)
@@ -55,6 +55,7 @@ IntGdiLineTo(DC  *dc,
   BOOL     Ret;
   PGDIBRUSHOBJ PenBrushObj;
   RECTL    Bounds;
+  POINT    Points[2];
 
   SurfObj = (SURFOBJ*)AccessUserObject ( (ULONG)dc->Surface );
   if (NULL == SurfObj)
@@ -76,30 +77,23 @@ IntGdiLineTo(DC  *dc,
     }
   else
     {
-      if (dc->w.CursPosX <= XEnd)
-	{
-	  Bounds.left = dc->w.CursPosX;
-	  Bounds.right = XEnd;
-	}
-      else
-	{
-	  Bounds.left = XEnd;
-	  Bounds.right = dc->w.CursPosX;
-	}
-      Bounds.left += dc->w.DCOrgX;
-      Bounds.right += dc->w.DCOrgX;
-      if (dc->w.CursPosY <= YEnd)
-	{
-	  Bounds.top = dc->w.CursPosY;
-	  Bounds.bottom = YEnd;
-	}
-      else
-	{
-	  Bounds.top = YEnd;
-	  Bounds.bottom = dc->w.CursPosY;
-	}
-      Bounds.top += dc->w.DCOrgY;
-      Bounds.bottom += dc->w.DCOrgY;
+      Points[0].x = dc->w.CursPosX;
+      Points[0].y = dc->w.CursPosY;
+      Points[1].x = XEnd;
+      Points[1].y = YEnd;
+
+      IntLPtoDP(dc, Points, 2);
+
+      /* FIXME: Is it correct to do this after the transformation? */
+      Points[0].x += dc->w.DCOrgX;
+      Points[0].y += dc->w.DCOrgY;
+      Points[1].x += dc->w.DCOrgX;
+      Points[1].y += dc->w.DCOrgY;
+
+      Bounds.left = min(Points[0].x, Points[1].x);
+      Bounds.top = min(Points[0].y, Points[1].y);
+      Bounds.right = max(Points[0].x, Points[1].x);
+      Bounds.bottom = max(Points[0].y, Points[1].y);
 
       /* get BRUSHOBJ from current pen. */
       PenBrushObj = PENOBJ_LockPen( dc->w.hPen );
@@ -110,8 +104,8 @@ IntGdiLineTo(DC  *dc,
         Ret = IntEngLineTo(SurfObj,
                            dc->CombinedClip,
                            &PenBrushObj->BrushObject,
-                           dc->w.DCOrgX + dc->w.CursPosX, dc->w.DCOrgY + dc->w.CursPosY,
-                           dc->w.DCOrgX + XEnd,           dc->w.DCOrgY + YEnd,
+                           Points[0].x, Points[0].y,
+                           Points[1].x, Points[1].y,
                            &Bounds,
                            dc->w.ROPmode);
       }

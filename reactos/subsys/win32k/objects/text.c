@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.95 2004/05/30 14:51:45 jfilby Exp $ */
+/* $Id: text.c,v 1.96 2004/06/18 15:18:58 navaraf Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -1493,7 +1493,8 @@ NtGdiExtTextOut(
    FT_Render_Mode RenderMode;
    BOOLEAN Render;
    NTSTATUS Status;
-   INT *Dx = NULL;;
+   INT *Dx = NULL;
+   POINT Start;
 
    dc = DC_LockDc(hDC);
    if (!dc)
@@ -1518,8 +1519,11 @@ NtGdiExtTextOut(
  
    SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
 
-   XStart += dc->w.DCOrgX;
-   YStart += dc->w.DCOrgY;
+   Start.x = XStart; Start.y = YStart;
+   IntLPtoDP(dc, &Start, 1);
+
+   XStart = Start.x + dc->w.DCOrgX;
+   YStart = Start.y + dc->w.DCOrgY;
 
    TextObj = TEXTOBJ_LockText(dc->w.hFont);
 
