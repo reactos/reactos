@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.62 2003/06/07 11:34:36 chorns Exp $
+/* $Id: view.c,v 1.63 2003/06/16 19:16:32 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -259,6 +259,10 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
          RemoveEntryList(&current->CacheSegmentListEntry);
          RemoveEntryList(&current->CacheSegmentLRUListEntry);
 	 InsertHeadList(&FreeList, &current->BcbSegmentListEntry);
+         PagesPerSegment = current->Bcb->CacheSegmentSize / PAGE_SIZE;
+         PagesFreed = min(PagesPerSegment, Target);
+         Target -= PagesFreed;
+         (*NrFreed) += PagesFreed;
       }
       else
       {
@@ -272,10 +276,6 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
      current_entry = RemoveHeadList(&FreeList);
      current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
 				 BcbSegmentListEntry);
-     PagesPerSegment = current->Bcb->CacheSegmentSize / PAGE_SIZE;
-     PagesFreed = min(PagesPerSegment, Target);
-     Target -= PagesFreed;
-     (*NrFreed) += PagesFreed;
      CcRosInternalFreeCacheSegment(current);
   }
 
