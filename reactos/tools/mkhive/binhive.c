@@ -49,8 +49,8 @@
 #define  REG_EXTEND_HASH_TABLE_SIZE    4
 #define  REG_VALUE_LIST_CELL_MULTIPLE  4
 
-#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
-#define ROUND_UP(N, S) ROUND_DOWN((N) + (S) - 1, (S))
+#define ROUND_UP_POW2(N,S)   (((N) + (S) - 1) & ~((S) - 1))
+#define ROUND_DOWN_POW2(N,S) ((N) & ~((S) - 1))
 
 #define ABS_VALUE(V) (((V) < 0) ? -(V) : (V))
 
@@ -326,7 +326,7 @@ CmiCreateDefaultRootKeyCell(PKEY_CELL RootKeyCell, PCHAR KeyName)
 
   BaseKeyName = strrchr(KeyName, '\\') + 1;
   NameSize = strlen(BaseKeyName);
-  CellSize = ROUND_UP(sizeof(KEY_CELL) + NameSize - 1, 16);
+  CellSize = ROUND_UP_POW2(sizeof(KEY_CELL) + NameSize - 1, 16);
 
   memset (RootKeyCell, 0, CellSize);
   RootKeyCell->CellSize = (ULONG)-(LONG)CellSize;
@@ -786,7 +786,7 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
   *Block = NULL;
 
   /* Round to 16 bytes multiple */
-  CellSize = ROUND_UP(CellSize, 16);
+  CellSize = ROUND_UP_POW2(CellSize, 16);
 
   /* first search in free blocks */
   NewBlock = NULL;
