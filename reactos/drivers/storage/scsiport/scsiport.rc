@@ -1,5 +1,6 @@
 #include <defines.h>
 #include <reactos/resource.h>
+#include "scsiport_int.h"
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
@@ -22,7 +23,7 @@ BEGIN
         BEGIN
             VALUE "CompanyName",	RES_STR_COMPANY_NAME
             VALUE "FileDescription",	"SCSI Port Driver\0"
-            VALUE "FileVersion",	"0.0.0\0"
+            VALUE "FileVersion",	VERSION
             VALUE "InternalName",	"scsiport\0"
             VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
             VALUE "OriginalFilename",	"scsiport.sys\0"
