@@ -1,0 +1,19 @@
+Some notes on debugging the ReactOS kernel
+------------------------------------------
+
+* Interpreting crashes
+
+If the kernel causes a fatal cpu fault then it will print out a message and
+halt. This message contains important information for debugging the problem,
+look for these lines
+
+Exception: xx(yy)
+CS:EIP 20:zzzzzzzzzzzz
+
+Here xx is the type of error, usually either 14 or 13 and yy is the error
+code. Generally error codes 13 and 14 both mean the kernel tried to access
+some memory in an invalid way. zzzzzzzzz is the address of the erronous
+instruction.
+
+* Debugging with bochs
+
