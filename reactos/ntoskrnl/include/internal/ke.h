@@ -40,6 +40,7 @@ VOID KeSetGdtSelector(ULONG Entry, ULONG Value1, ULONG Value2);
 
 struct _KTHREAD;
 struct _KIRQ_TRAPFRAME;
+struct _KPCR;
 
 VOID STDCALL 
 DbgBreakPointNoBugCheck(VOID);
@@ -100,7 +101,7 @@ extern LARGE_INTEGER SystemBootTime;
 VOID KeInitExceptions(VOID);
 VOID KeInitInterrupts(VOID);
 VOID KeInitTimer(VOID);
-VOID KeInitDpc(VOID);
+VOID KeInitDpc(struct _KPCR* Pcr);
 VOID KeInitDispatcher(VOID);
 VOID KeInitializeDispatcher(VOID);
 VOID KeInitializeTimerImpl(VOID);

@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.41 2004/10/30 23:48:56 navaraf Exp $
+/* $Id: dpc.c,v 1.42 2004/10/31 13:20:58 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -288,13 +288,11 @@ KeSetTargetProcessorDpc (IN	PKDPC	Dpc,
 }
 
 VOID INIT_FUNCTION
-KeInitDpc(VOID)
+KeInitDpc(PKPCR Pcr)
 /*
  * FUNCTION: Initialize DPC handling
  */
 {
-   PKPCR Pcr;
-   Pcr = KeGetCurrentKPCR();
    InitializeListHead(&Pcr->PrcbData.DpcData[0].DpcListHead);
    KeInitializeSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
    Pcr->PrcbData.MaximumDpcQueueDepth = 0;

@@ -35,7 +35,6 @@
 
 ULONG KiPcrInitDone = 0;
 static ULONG PcrsAllocated = 0;
-static PFN_TYPE PcrPages[MAXIMUM_PROCESSORS];
 ULONG Ke386CpuidFlags, Ke386CpuidFlags2, Ke386CpuidExFlags;
 ULONG Ke386Cpuid = 0x300;
 ULONG Ke386CacheAlignment;
@@ -128,15 +127,42 @@ Ki386GetCpuId(VOID)
 VOID INIT_FUNCTION
 KePrepareForApplicationProcessorInit(ULONG Id)
 {
-  MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &PcrPages[Id]);
+  DPRINT("KePrepareForApplicationProcessorInit(Id %d)\n", Id);
+  PFN_TYPE PrcPfn;
+  PKPCR Pcr;
+
+  Pcr = (PKPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE);
+
+  MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &PrcPfn);
+  MmCreateVirtualMappingForKernel((PVOID)Pcr,
+				  PAGE_READWRITE,
+				  &PrcPfn,
+				  1);
+  /*
+   * Create a PCR for this processor
+   */
+  memset(Pcr, 0, PAGE_SIZE);
+  Pcr->ProcessorNumber = Id;
+  Pcr->Tib.Self = &Pcr->Tib;
+  Pcr->Self = Pcr;
+  Pcr->Irql = HIGH_LEVEL;
+
+  /* Mark the end of the exception handler list */
+  Pcr->Tib.ExceptionList = (PVOID)-1;
+
+  KeInitDpc(Pcr);
+
+
   KiGdtPrepareForApplicationProcessorInit(Id);
 }
 
 VOID
 KeApplicationProcessorInit(VOID)
 {
-  PKPCR KPCR;
   ULONG Offset;
+  PKPCR Pcr;
+
+  DPRINT("KeApplicationProcessorInit()\n");
 
   if (Ke386CpuidFlags & X86_FEATURE_PGE)
   {
@@ -150,30 +176,14 @@ KeApplicationProcessorInit(VOID)
      MiEnablePAE(NULL);
   }
 
-  /*
-   * Create a PCR for this processor
-   */
-  Offset = InterlockedIncrement((LONG *)&PcrsAllocated) - 1;
-  KPCR = (PKPCR)(KPCR_BASE + (Offset * PAGE_SIZE));
-  MmCreateVirtualMappingForKernel((PVOID)KPCR,
-				  PAGE_READWRITE,
-				  &PcrPages[Offset],
-				  1);
-  memset(KPCR, 0, PAGE_SIZE);
-  KPCR->ProcessorNumber = (UCHAR)Offset;
-  KPCR->Tib.Self = &KPCR->Tib;
-  KPCR->Self = KPCR;
-  KPCR->Irql = HIGH_LEVEL;
-
-  /* Mark the end of the exception handler list */
-  KPCR->Tib.ExceptionList = (PVOID)-1;
+  Offset = InterlockedIncrement(&PcrsAllocated) - 1;
+  Pcr = (PKPCR)((ULONG_PTR)KPCR_BASE + Offset * PAGE_SIZE);
 
   /*
    * Initialize the GDT
    */
-  KiInitializeGdt(KPCR);
-  
-  KeInitDpc();
+  KiInitializeGdt(Pcr);
+
 
   /*
    * It is now safe to process interrupts
@@ -227,6 +237,8 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KPCR->ProcessorNumber = 0;
    KiPcrInitDone = 1;
    PcrsAllocated++;
+
+   KeInitDpc(KPCR);
 
    /* Mark the end of the exception handler list */
    KPCR->Tib.ExceptionList = (PVOID)-1;
@@ -307,7 +319,6 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
 VOID INIT_FUNCTION
 KeInit2(VOID)
 {
-   KeInitDpc();
    KeInitializeBugCheck();
    KeInitializeDispatcher();
    KeInitializeTimerImpl();
