@@ -1,4 +1,4 @@
-/* $Id: isbad.c,v 1.5 2003/01/15 21:24:34 chorns Exp $
+/* $Id: isbad.c,v 1.6 2003/04/29 22:39:57 gvg Exp $
  *
  * lib/kernel32/mem/isbad.c
  *
@@ -7,6 +7,9 @@
  */
 #include <k32.h>
 
+#define NDEBUG
+#include <kernel32/kernel32.h>
+
 /* FIXME: Stubs. What is it for? */
 UINT
 wcsnlen (
@@ -14,6 +17,8 @@ wcsnlen (
 	UINT	ucchMax
 	)
 {
+	DPRINT1("wcsnlen stub called\n");
+
 	return 0;
 }
 
@@ -25,6 +30,8 @@ strnlen (
 	UINT	uiMax
 	)
 {
+	DPRINT1("strnlen stub called\n");
+
 	return 0;
 }
 
@@ -41,7 +48,7 @@ IsBadReadPtr (
 
 	if ( ucb == 0 )
 	{
-		return FALSE;
+		return TRUE;
 	}
 
 	VirtualQuery (
@@ -52,25 +59,25 @@ IsBadReadPtr (
 	
 	if ( MemoryInformation.State != MEM_COMMIT )
 	{
-		return FALSE;
+		return TRUE;
 	}
 		
 	if ( MemoryInformation.RegionSize < ucb )
 	{
-		return FALSE;
+		return TRUE;
 	}
 		
 	if ( MemoryInformation.Protect == PAGE_EXECUTE )
 	{
-		return FALSE;
+		return TRUE;
 	}
 		
 	if ( MemoryInformation.Protect == PAGE_NOACCESS )
 	{
-		return FALSE;
+		return TRUE;
 	}
 		
-	return TRUE;
+	return FALSE;
 			
 }
 
@@ -103,17 +110,17 @@ IsBadCodePtr (
 	
 	if ( MemoryInformation.State != MEM_COMMIT )
 	{
-		return FALSE;
+		return TRUE;
 	}	
 			
 	if (	(MemoryInformation.Protect == PAGE_EXECUTE)
 		|| (MemoryInformation.Protect == PAGE_EXECUTE_READ)
 		)
 	{
-		return TRUE;
+		return FALSE;
 	}
 		
-	return FALSE;
+	return TRUE;
 }
 
 
@@ -128,7 +135,7 @@ IsBadWritePtr (
 
 	if ( ucb == 0 )
 	{
-		return FALSE;
+		return TRUE;
 	}
 
 	VirtualQuery (
@@ -139,33 +146,33 @@ IsBadWritePtr (
 	
 	if ( MemoryInformation.State != MEM_COMMIT )
 	{
-		return FALSE;
+		return TRUE;
 	}
 		
 	if ( MemoryInformation.RegionSize < ucb )
 	{
-		return FALSE;
+		return TRUE;
 	}
 		
 		
 	if ( MemoryInformation.Protect == PAGE_READONLY)
 	{
-		return FALSE;
+		return TRUE;
 	}
 		
 	if (	(MemoryInformation.Protect == PAGE_EXECUTE)
 		|| (MemoryInformation.Protect == PAGE_EXECUTE_READ)
 		)
 	{
-		return FALSE;
+		return TRUE;
 	}
 		
 	if ( MemoryInformation.Protect == PAGE_NOACCESS )
 	{
-		return FALSE;	
+		return TRUE;	
 	}
 		
-	return TRUE;
+	return FALSE;
 }
 
 
