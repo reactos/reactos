@@ -155,7 +155,7 @@ implib:
 
 install:
 	-$(TOOLS_PATH)/rcopy $(TARGET) $(INSTALL_DIR)/$(TARGET)
-	-$(TOOLS_PATH)/rcopy notifyhook.dll $(INSTALL_DIR)/$(TARGET)
+	-$(TOOLS_PATH)/rcopy notifyhook.dll $(INSTALL_DIR)/system32/notifyhook.dll
 
 bootcd:
 
