@@ -373,8 +373,8 @@ char* skipsemi ( char* p )
 
 char* findend ( char* p, bool& externc )
 {
-	if ( !strncmp ( p, "static inline struct _TEB * NtCurrentTeb ( void )", 49 ) )
-		_CrtDbgBreak();
+	//if ( !strncmp ( p, "typedef enum _SE_OBJECT_TYPE", 28 ) )
+	//	_CrtDbgBreak();
 	// special-case for 'extern "C"'
 	if ( !strncmp ( p, "extern", 6 ) )
 	{
@@ -396,7 +396,7 @@ char* findend ( char* p, bool& externc )
 	{
 		char* end = strchr ( p, ')' );
 		ASSERT(end);
-		return end;
+		return end+1;
 	}
 	externc = false;
 	bool isStruct = false;
@@ -409,18 +409,44 @@ char* findend ( char* p, bool& externc )
 	char* semi = strchr ( p, '{' );
 	if ( !semi || semi > end )
 		return end;
-	p = skipsemi ( semi );
-	char* p2 = skip_ws ( p );
-	if ( *p2 == ';' )
-		p = p2 + 1;
+	end = skipsemi ( semi );
+
+	const char* structs[] = { "struct", "enum", "class" };
+	for ( int i = 0; i < sizeof(structs)/sizeof(structs[0]); i++ )
+	{
+		char* pStruct = strstr ( p, structs[i] );
+		if ( pStruct
+			&& pStruct < semi
+			&& !__iscsym(pStruct[-1])
+			&& !__iscsym(pStruct[strlen(structs[i])]) )
+		{
+			isStruct = true;
+			break;
+		}
+	}
+
+	if ( isStruct )
+	{
+		end = strchr ( end, ';' );
+		if ( !end )
+			end = p + strlen(p);
+		else
+			end++;
+	}
+	else
+	{
+		char* p2 = skip_ws ( end );
+		if ( *p2 == ';' )
+			end = p2 + 1;
+	}
 	return end;
 }
 
 Type identify ( const vector<string>& tokens, int off )
 {
-	/*if ( tokens.size() >= (off+6) )
+	/*if ( tokens.size() >= 3 )
 	{
-		if ( tokens[off+5] == "NtCurrentTeb" )
+		if ( tokens[off+2] == "_OBJECTS_AND_SID" )
 			_CrtDbgBreak();
 	}*/
 	if ( tokens[off] == "typedef_tident" )
