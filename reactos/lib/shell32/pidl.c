@@ -1287,70 +1287,55 @@ HRESULT WINAPI SHGetDataFromIDListW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, int n
 }
 
 /*************************************************************************
- * _SHGetPathFromIDListA
+ * SHELL_SHGetPathFromIDListA
  */
-HRESULT _SHGetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSize)
+HRESULT SHELL_SHGetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSize)
 {
-	HRESULT hr;
-	STRRET str;
-	LPSHELLFOLDER desktop;
-	LPSTR pstr;
+	LPSTR pstr = pszPath;
 	LPSTR end = pszPath + uOutSize;
+	HRESULT hr = S_OK;
 
-	/* If the item ID list begins at "My Computer", we can use
-	   an optimized loop to retrieve file system paths. */
- 	if (_ILIsMyComputer(pidl)) {
-	    LPCITEMIDLIST p = ILGetNext(pidl);
+	/* One case is a PIDL rooted at desktop level */
+	if (_ILIsValue(pidl) || _ILIsFolder(pidl)) {
+	    hr = SHGetSpecialFolderPathA(0, pstr, CSIDL_DESKTOP, FALSE);
+
+	    if (SUCCEEDED(hr))
+		pstr = PathAddBackslashA(pstr);
+	}
+	/* The only other valid case is a item ID list beginning at "My Computer". */
+ 	else if (_ILIsMyComputer(pidl))
+	    pidl = ILGetNext(pidl);
+
+        if (SUCCEEDED(hr)) {
 	    LPSTR txt;
 
-	    pstr = pszPath;
+	    while(pidl && pidl->mkid.cb && pstr<end) {
+		if (_ILIsSpecialFolder(pidl))
+		    {hr = E_INVALIDARG; break;}
 
-	    while(p && p->mkid.cb && pstr<end) {
-		if (_ILIsSpecialFolder(p))
-		    return E_INVALIDARG;
-
-		txt = _ILGetTextPointer(p);
+		txt = _ILGetTextPointer(pidl);
 		if (!txt)
-		    break;
+		    {hr = E_INVALIDARG; break;}
 
 		lstrcpynA(pstr, txt, end-pstr);
 
-		p = ILGetNext(p);
-		if (!p)
-		    break;
+		pidl = ILGetNext(pidl);
+		if (!pidl)
+		    {hr = E_INVALIDARG; break;}
 
-		if (!p->mkid.cb)
-		    return TRUE;
+		if (!pidl->mkid.cb) {
+		    /* We are at the end and successfully converted the complete PIDL. */
+		    break;
+		}
 
 		pstr = PathAddBackslashA(pstr);
 		if (!pstr)
-		    break;
-	    }
-	}
-
-	pstr = pszPath;
-
-	/* The only other valid case is a simple PIDL rooted at desktop level */
-        if (_ILIsValue(pidl) && _ILIsPidlSimple(pidl)) {
-	    hr = SHGetDesktopFolder(&desktop);
-
-	    if (SUCCEEDED(hr)) {
-		hr = SHGetSpecialFolderPathA(0, pszPath, CSIDL_DESKTOP, FALSE);
-
-		if (SUCCEEDED(hr)) {
-		    pstr = PathAddBackslashA(pszPath);
-		    hr = IShellFolder_GetDisplayNameOf(desktop, pidl, SHGDN_FORPARSING, &str);
-		}
-
-		IShellFolder_Release(desktop);
+		    {hr = E_INVALIDARG; break;}
 	    }
 	} else
-	    return E_INVALIDARG;
+	    hr = E_INVALIDARG;
 
-	if (SUCCEEDED(hr))
-	    hr = StrRetToStrNA(pstr, end-pstr, &str, pidl);
-
-	TRACE_(shell)("-- %s, 0x%08lx\n",pszPath, hr);
+	TRACE_(shell)("-- %s, 0x%08lx\n", pszPath, S_OK);
 	return hr;
 }
 
@@ -1379,78 +1364,63 @@ BOOL WINAPI SHGetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath)
 	if (!pidl)
 	    return FALSE;
 
-	hr = _SHGetPathFromIDListA(pidl, pszPath, MAX_PATH);
+	hr = SHELL_SHGetPathFromIDListA(pidl, pszPath, MAX_PATH);
 
 	return SUCCEEDED(hr);
 }
 
 /*************************************************************************
- * _SHGetPathFromIDListW
+ * SHELL_SHGetPathFromIDListW
  */
-HRESULT _SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSize)
+HRESULT SHELL_SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSize)
 {
-	HRESULT hr;
-	STRRET str;
-	LPSHELLFOLDER desktop;
-	LPWSTR pstr;
+	LPWSTR pstr = pszPath;
 	LPWSTR end = pszPath + uOutSize;
+	HRESULT hr = S_OK;
 
-	/* If the item ID list begins at "My Computer", we can use
-	   an optimized loop to retrieve file system paths. */
- 	if (_ILIsMyComputer(pidl)) {
-	    LPCITEMIDLIST p = ILGetNext(pidl);
+	/* One case is a PIDL rooted at desktop level */
+	if (_ILIsValue(pidl) || _ILIsFolder(pidl)) {
+	    hr = SHGetSpecialFolderPathW(0, pstr, CSIDL_DESKTOP, FALSE);
+
+	    if (SUCCEEDED(hr))
+		pstr = PathAddBackslashW(pstr);
+	}
+	/* The only other valid case is a item ID list beginning at "My Computer". */
+ 	else if (_ILIsMyComputer(pidl))
+	    pidl = ILGetNext(pidl);
+
+        if (SUCCEEDED(hr)) {
 	    LPSTR txt;
 
-	    pstr = pszPath;
+	    while(pidl && pidl->mkid.cb && pstr<end) {
+		if (_ILIsSpecialFolder(pidl))
+		    {hr = E_INVALIDARG; break;}
 
-	    while(p && p->mkid.cb && pstr<end) {
-		if (_ILIsSpecialFolder(p))
-		    return E_INVALIDARG;
-
-		txt = _ILGetTextPointer(p);
+		txt = _ILGetTextPointer(pidl);
 		if (!txt)
-		    break;
+		    {hr = E_INVALIDARG; break;}
 
 		if (!MultiByteToWideChar(CP_ACP, 0, txt, -1, pstr, uOutSize))
-		    break;
+		    {hr = E_OUTOFMEMORY; break;}
 
-		p = ILGetNext(p);
-		if (!p)
-		    break;
+		pidl = ILGetNext(pidl);
+		if (!pidl)
+		    {hr = E_INVALIDARG; break;}
 
-		if (!p->mkid.cb)
-		    return TRUE;
+		if (!pidl->mkid.cb) {
+		    /* We are at the end and successfully converted the complete PIDL. */
+		    break;
+		}
 
 		pstr = PathAddBackslashW(pstr);
 		if (!pstr)
-		    break;
-	    }
-	}
-
-	pstr = pszPath;
-
-	/* The only other valid case is a simple PIDL rooted at desktop level */
-        if (_ILIsValue(pidl) && _ILIsPidlSimple(pidl)) {
-	    hr = SHGetDesktopFolder(&desktop);
-
-	    if (SUCCEEDED(hr)) {
-		hr = SHGetSpecialFolderPathW(0, pszPath, CSIDL_DESKTOP, FALSE);
-
-		if (SUCCEEDED(hr)) {
-		    pstr = PathAddBackslashW(pszPath);
-		    hr = IShellFolder_GetDisplayNameOf(desktop, pidl, SHGDN_FORPARSING, &str);
-		}
-
-		IShellFolder_Release(desktop);
+		    {hr = E_INVALIDARG; break;}
 	    }
 	} else
-	    return E_INVALIDARG;
+	    hr = E_INVALIDARG;
 
-	if (SUCCEEDED(hr))
-	    hr = StrRetToStrNW(pstr, end-pstr, &str, pidl);
-
-	TRACE_(shell)("-- %s, 0x%08lx\n",debugstr_w(pszPath), hr);
-	return hr;
+    TRACE_(shell)("-- %s, 0x%08lx\n", debugstr_w(pszPath), hr);
+    return hr;
 }
 
 /*************************************************************************
@@ -1466,7 +1436,7 @@ BOOL WINAPI SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath)
 	if (!pidl)
 	    return FALSE;
 
-	hr = _SHGetPathFromIDListW(pidl, pszPath, MAX_PATH);
+	hr = SHELL_SHGetPathFromIDListW(pidl, pszPath, MAX_PATH);
 
 	TRACE_(shell)("-- %s, 0x%08lx\n",debugstr_w(pszPath), hr);
 	return SUCCEEDED(hr);

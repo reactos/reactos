@@ -922,21 +922,8 @@ BOOL WINAPI ShellExecuteExA32 (LPSHELLEXECUTEINFOA sei, SHELL_ExecuteA1632 execf
 	    if (SUCCEEDED(_ResolveShortCut(cmd, wdir, args, sei->hwnd, &sei->nShow, &tmpPidl))) {
 		if (!*cmd && tmpPidl) {
 		    /* We got a PIDL instead of a file system path. */
-		    IShellFolder* desktop;
-		    STRRET str;
-
-		    HRESULT hr = SHGetDesktopFolder(&desktop);
-
-		    if (SUCCEEDED(hr)) {
-			hr = IShellFolder_GetDisplayNameOf(desktop, tmpPidl, SHGDN_FORPARSING, &str);
-
-			if (SUCCEEDED(hr)) {
-			    hr = StrRetToStrNW(cmd, MAX_PATH, &str, tmpPidl);
-			    tmpPidl = NULL;
-			}
-
-			IShellFolder_Release(desktop);
-		    }
+		    if (SHGetPathFromIDListA(tmpPidl, cmd))
+			tmpPidl = NULL;
 
 		    if (cmd[0]==':' && cmd[1]==':') {
 			/* open shell folder for the specified class GUID */

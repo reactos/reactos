@@ -1311,7 +1311,7 @@ static HRESULT WINAPI IShellLinkA_fnResolve(IShellLinkA * iface, HWND hwnd, DWOR
     if (!This->sPath && This->pPidl) {
 	WCHAR buffer[MAX_PATH];
 
-	hr = _SHGetPathFromIDListW(This->pPidl, buffer, MAX_PATH);
+	hr = SHELL_SHGetPathFromIDListW(This->pPidl, buffer, MAX_PATH);
 
 	if (SUCCEEDED(hr) && *buffer) {
 	    This->sPath = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, (lstrlenW(buffer)+1)*sizeof(WCHAR));
@@ -1740,7 +1740,7 @@ static HRESULT WINAPI IShellLinkW_fnResolve(IShellLinkW * iface, HWND hwnd, DWOR
     if (!This->sPath && This->pPidl) {
 	WCHAR buffer[MAX_PATH];
 
-	hr = _SHGetPathFromIDListW(This->pPidl, buffer, MAX_PATH);
+	hr = SHELL_SHGetPathFromIDListW(This->pPidl, buffer, MAX_PATH);
 
 	if (SUCCEEDED(hr) && *buffer) {
 	    This->sPath = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, (lstrlenW(buffer)+1)*sizeof(WCHAR));
