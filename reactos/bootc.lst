@@ -3,6 +3,7 @@ system32\drivers\atapi.sys
 system32\drivers\class2.sys
 system32\drivers\disk.sys
 system32\drivers\vfatfs.sys
+system32\drivers\ndis.sys
 system32\config\system
 system32\ansi.nls
 system32\oem.nls
