@@ -26,41 +26,25 @@
 #define MAX_PLOTS 4
 #define MAX_CTRLS 4
 
-
 #ifdef __cplusplus
+extern "C" {
+#endif
 
+#if 0
 
-class TGraphCtrl
-{
 /* Attributes */
 public:
-  double AppendPoint(double dNewPoint0, double dNewPoint1 = 0.0,
-                     double dNewPoint2 = 0.0, double dNewPoint3 = 0.0);
-  void SetRange(double dLower, double dUpper, int nDecimalPlaces=1);
   void SetXUnits(const char* string);
   void SetYUnits(const char* string);
-  void SetGridColor(COLORREF color);
-  void SetPlotColor(int plot, COLORREF color);
-  void SetBackgroundColor(COLORREF color);
-  void InvalidateCtrl();
-  void DrawPoint();
-  void Reset();
 
   /* Operations */
 public:
   BOOL Create(DWORD dwStyle, const RECT& rect, HWND hParentWnd, UINT nID=NULL);
-  BOOL Create(HWND hWnd, HWND hParentWnd, UINT nID=NULL);
-  void Paint(HWND hWnd, HDC dc);
-  void Resize(void); 
 
-#if 0
-  static TGraphCtrl* LookupGraphCtrl(HWND hWnd);
-  static TGraphCtrl* pCtrlArray[MAX_CTRLS];
-  static int CtrlCount;
 #endif
 
-/* Implementation */
-public:
+typedef struct
+{
   int m_nShiftPixels;          /* amount to shift with each new point */
   int m_nYDecimals;
 
@@ -74,12 +58,7 @@ public:
   double m_dCurrentPosition[MAX_PLOTS];   /* current position */
   double m_dPreviousPosition[MAX_PLOTS];  /* previous position */
 
-/* Construction */
-public:
-  TGraphCtrl();
-  virtual ~TGraphCtrl();
-
-protected:
+/* those were protected fields */
   int m_nHalfShiftPixels;
   int m_nPlotShiftPixels;
   int m_nClientHeight;
@@ -104,18 +83,31 @@ protected:
   HPEN     m_penPlot[MAX_PLOTS];
   RECT     m_rectClient;
   RECT     m_rectPlot;
-};
-
-extern "C" {
-#endif
+} TGraphCtrl;
 
 extern LONG OldGraphCtrlWndProc;
+double  GraphCtrl_AppendPoint(TGraphCtrl* this, 
+                              double dNewPoint0, double dNewPoint1,
+                              double dNewPoint2, double dNewPoint3);
+BOOL    GraphCtrl_Create(TGraphCtrl* this, HWND hWnd, HWND hParentWnd, 
+UINT nID);
+void    GraphCtrl_DrawPoint(TGraphCtrl* this);
+void    GraphCtrl_InvalidateCtrl(TGraphCtrl* this);
+void    GraphCtrl_Paint(TGraphCtrl* this, HWND hWnd, HDC dc);
+void    GraphCtrl_Reset(TGraphCtrl* this);
+void    GraphCtrl_Resize(TGraphCtrl* this); 
+void    GraphCtrl_SetBackgroundColor(TGraphCtrl* this, COLORREF 
+color);
+void    GraphCtrl_SetGridColor(TGraphCtrl* this, COLORREF color);
+void    GraphCtrl_SetPlotColor(TGraphCtrl* this, int plot, COLORREF 
+color);
+void    GraphCtrl_SetRange(TGraphCtrl* this, double dLower, double 
+dUpper, int nDecimalPlaces);
 
 LRESULT CALLBACK GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 #ifdef __cplusplus
-};
+}
 #endif
-
 
 #endif /* __GRAPH_CTRL_H__ */

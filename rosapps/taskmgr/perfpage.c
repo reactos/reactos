@@ -5,30 +5,30 @@
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
-#define WIN32_LEAN_AND_MEAN		/* Exclude rarely-used stuff from Windows headers */
+	
+#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
-#include <process.h>
 #include <stdio.h>
+#include <winnt.h>
 
 #include "taskmgr.h"
 #include "perfpage.h"
@@ -40,7 +40,7 @@
 TGraphCtrl PerformancePageCpuUsageHistoryGraph;
 TGraphCtrl PerformancePageMemUsageHistoryGraph;
 
-HWND		hPerformancePage;								/* Performance Property Page */
+HWND		hPerformancePage;								// Performance Property Page
 
 HWND		hPerformancePageCpuUsageGraph;					// CPU Usage Graph
 HWND		hPerformancePageMemUsageGraph;					// MEM Usage Graph
@@ -79,7 +79,7 @@ static int	nPerformancePageHeight;
 
 static HANDLE	hPerformancePageEvent = NULL;	// When this event becomes signaled then we refresh the performance page
 
-void		PerformancePageRefreshThread(void *lpParameter);
+DWORD WINAPI	PerformancePageRefreshThread(void *lpParameter);
 
 void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference, int pos)
 {
@@ -181,30 +181,30 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 		GetClientRect(hPerformancePageCpuUsageHistoryGraph, &rc);
         // create the control
         //PerformancePageCpuUsageHistoryGraph.Create(0, rc, hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
-        PerformancePageCpuUsageHistoryGraph.Create(hPerformancePageCpuUsageHistoryGraph, hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
+        GraphCtrl_Create(&PerformancePageCpuUsageHistoryGraph, hPerformancePageCpuUsageHistoryGraph, hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
         // customize the control
-        PerformancePageCpuUsageHistoryGraph.SetRange(0.0, 100.0, 10) ;
+        GraphCtrl_SetRange(&PerformancePageCpuUsageHistoryGraph, 0.0, 100.0, 10);
 //        PerformancePageCpuUsageHistoryGraph.SetYUnits("Current") ;
 //        PerformancePageCpuUsageHistoryGraph.SetXUnits("Samples (Windows Timer: 100 msec)") ;
 //        PerformancePageCpuUsageHistoryGraph.SetBackgroundColor(RGB(0, 0, 64)) ;
 //        PerformancePageCpuUsageHistoryGraph.SetGridColor(RGB(192, 192, 255)) ;
 //        PerformancePageCpuUsageHistoryGraph.SetPlotColor(RGB(255, 255, 255)) ;
-        PerformancePageCpuUsageHistoryGraph.SetBackgroundColor(RGB(0, 0, 0)) ;
-        PerformancePageCpuUsageHistoryGraph.SetGridColor(RGB(152, 205, 152)) ;
-        PerformancePageCpuUsageHistoryGraph.SetPlotColor(0, RGB(255, 0, 0)) ;
-        PerformancePageCpuUsageHistoryGraph.SetPlotColor(1, RGB(0, 255, 0)) ;
+        GraphCtrl_SetBackgroundColor(&PerformancePageCpuUsageHistoryGraph, RGB(0, 0, 0)) ;
+        GraphCtrl_SetGridColor(&PerformancePageCpuUsageHistoryGraph, RGB(152, 205, 152)) ;
+        GraphCtrl_SetPlotColor(&PerformancePageCpuUsageHistoryGraph, 0, RGB(255, 0, 0)) ;
+        GraphCtrl_SetPlotColor(&PerformancePageCpuUsageHistoryGraph, 1, RGB(0, 255, 0)) ;
 
-		GetClientRect(hPerformancePageMemUsageHistoryGraph, &rc);
-        PerformancePageMemUsageHistoryGraph.Create(hPerformancePageMemUsageHistoryGraph, hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
-        PerformancePageMemUsageHistoryGraph.SetRange(0.0, 100.0, 10) ;
-        PerformancePageMemUsageHistoryGraph.SetBackgroundColor(RGB(0, 0, 0)) ;
-        PerformancePageMemUsageHistoryGraph.SetGridColor(RGB(152, 215, 152)) ;
-        PerformancePageMemUsageHistoryGraph.SetPlotColor(0, RGB(255, 255, 0)) ;
-
+        GetClientRect(hPerformancePageMemUsageHistoryGraph, &rc);
+        GraphCtrl_Create(&PerformancePageMemUsageHistoryGraph, hPerformancePageMemUsageHistoryGraph, hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
+        GraphCtrl_SetRange(&PerformancePageMemUsageHistoryGraph, 0.0, 100.0, 10) ;
+        GraphCtrl_SetBackgroundColor(&PerformancePageMemUsageHistoryGraph, RGB(0, 0, 0)) ;
+        GraphCtrl_SetGridColor(&PerformancePageMemUsageHistoryGraph, RGB(152, 215, 152)) ;
+        GraphCtrl_SetPlotColor(&PerformancePageMemUsageHistoryGraph, 0, RGB(255, 255, 0)) ;
 		// Start our refresh thread
 #ifdef RUN_PERF_PAGE
-		_beginthread(PerformancePageRefreshThread, 0, NULL);
+        CreateThread(NULL, 0, PerformancePageRefreshThread, NULL, 0, NULL);
 #endif
+
 		//
 		// Subclass graph buttons
 		//
@@ -232,6 +232,7 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
         break;
 #endif
 	case WM_SIZE:
+        do {
 		int		cx, cy;
 
  		if (wParam == SIZE_MINIMIZED)
@@ -243,6 +244,7 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 		nYDifference = cy - nPerformancePageHeight;
 		nPerformancePageWidth = cx;
 		nPerformancePageHeight = cy;
+        } while (0);
 
 		// Reposition the performance page's controls
         AdjustFrameSize(hPerformancePageTotalsFrame, hDlg, 0, nYDifference, 0);
@@ -318,7 +320,7 @@ void RefreshPerformancePage(void)
 	SetEvent(hPerformancePageEvent);
 }
 
-void PerformancePageRefreshThread(void *lpParameter)
+DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 {
 	ULONG	CommitChargeTotal;
 	ULONG	CommitChargeLimit;
@@ -343,7 +345,7 @@ void PerformancePageRefreshThread(void *lpParameter)
 
 	// If we couldn't create the event then exit the thread
 	if (!hPerformancePageEvent)
-		return;
+		return 0;
 
 	while (1)
 	{
@@ -355,7 +357,7 @@ void PerformancePageRefreshThread(void *lpParameter)
 		// If the wait failed then the event object must have been
 		// closed and the task manager is exiting so exit this thread
 		if (dwWaitVal == WAIT_FAILED)
-			return;
+			return 0;
 
 		if (dwWaitVal == WAIT_OBJECT_0)
 		{
@@ -448,20 +450,21 @@ void PerformancePageRefreshThread(void *lpParameter)
             //
             CommitChargeTotal = (ULONGLONG)PerfDataGetCommitChargeTotalK();
             CommitChargeLimit = (ULONGLONG)PerfDataGetCommitChargeLimitK();
-            nBarsUsed1 = ((CommitChargeTotal * 100) / CommitChargeLimit);
+            nBarsUsed1 = CommitChargeLimit ? ((CommitChargeTotal * 100) / CommitChargeLimit) : 0;
 
 			PhysicalMemoryTotal = PerfDataGetPhysicalMemoryTotalK();
 			PhysicalMemoryAvailable = PerfDataGetPhysicalMemoryAvailableK();
-            nBarsUsed2 = ((PhysicalMemoryAvailable * 100) / PhysicalMemoryTotal);
+            nBarsUsed2 = PhysicalMemoryTotal ? ((PhysicalMemoryAvailable * 100) / PhysicalMemoryTotal) : 0;
 
 
-            PerformancePageCpuUsageHistoryGraph.AppendPoint(CpuUsage, CpuKernelUsage);
-            PerformancePageMemUsageHistoryGraph.AppendPoint(nBarsUsed1, nBarsUsed2);
+            GraphCtrl_AppendPoint(&PerformancePageCpuUsageHistoryGraph, CpuUsage, CpuKernelUsage, 0.0, 0.0);
+            GraphCtrl_AppendPoint(&PerformancePageMemUsageHistoryGraph, nBarsUsed1, nBarsUsed2, 0.0, 0.0);
             //PerformancePageMemUsageHistoryGraph.SetRange(0.0, 100.0, 10) ;
 			InvalidateRect(hPerformancePageMemUsageHistoryGraph, NULL, FALSE);
 			InvalidateRect(hPerformancePageCpuUsageHistoryGraph, NULL, FALSE);
 		}
 	}
+        return 0;
 }
 
 void PerformancePage_OnViewShowKernelTimes(void)
