@@ -12,11 +12,12 @@ endif
 
 MAKE := @$(MAKE)
 
+ifeq ($(VERBOSE),no)
 # Do not print "Entering directory ..."
 MAKEFLAGS += --no-print-directory
-
-# Do not print "'target' is up to date."
+# Be silent
 MAKEFLAGS += --silent
+endif
 
 # Windows is default host environment
 ifeq ($(HOST),)

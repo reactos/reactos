@@ -1,5 +1,9 @@
 2004-07-23  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* rules.mak: Be silent only if VERBOSE=no.
+
+2004-07-23  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* rules.mak: Do not print "'target' is up to date." messages.
 
 2004-07-21  Casper S. Hornstrup  <chorns@users.sourceforge.net>
