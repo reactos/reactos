@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.40 2004/07/23 07:44:25 jimtabor Exp $
+/* $Id: sysinfo.c,v 1.41 2004/07/29 20:37:02 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -410,8 +410,22 @@ QSI_DEF(SystemPerformanceInformation)
 	Spi->OtherOperationCount = IoOtherOperationCount;
 
 	Spi->AvailablePages = MiNrAvailablePages;
-	Spi->TotalCommittedPages = MiUsedSwapPages;
-	Spi->TotalCommitLimit = MiFreeSwapPages + MiUsedSwapPages; /* FIXME */
+/*
+        Add up all the used "Commitied" memory + pagefile.
+        Not sure this is right. 8^\
+ */
+	Spi->TotalCommittedPages = MiMemoryConsumers[MC_PPOOL].PagesUsed +
+				   MiMemoryConsumers[MC_NPPOOL].PagesUsed+
+                                   MiMemoryConsumers[MC_CACHE].PagesUsed+
+		                   MiMemoryConsumers[MC_USER].PagesUsed+
+			           MiUsedSwapPages;
+/*
+	Add up the full system total + pagefile.
+	All this make Taskmgr happy but not sure it is the right numbers.
+	This too, fixes some of GlobalMemoryStatusEx numbers.
+*/
+        Spi->TotalCommitLimit = MmStats.NrTotalPages + MiFreeSwapPages +
+                                MiUsedSwapPages;
 
 	Spi->PeakCommitment = 0; /* FIXME */
 	Spi->PageFaults = 0; /* FIXME */
@@ -627,7 +641,7 @@ QSI_DEF(SystemProcessInformation)
                  SpiCur->Threads[i].ClientId = current->Cid;
                  SpiCur->Threads[i].Priority = current->Tcb.Priority;
                  SpiCur->Threads[i].BasePriority = current->Tcb.BasePriority;
-                 SpiCur->Threads[i].ContextSwitchCount = 0; //FIXME!
+                 SpiCur->Threads[i].ContextSwitchCount = current->Tcb.ContextSwitches;
                  SpiCur->Threads[i].State = current->Tcb.State;
                  SpiCur->Threads[i].WaitReason = current->Tcb.WaitReason;
                  i++;
@@ -832,7 +846,7 @@ QSI_DEF(SystemFileCacheInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 
-	Sci->CurrentSize = 0; /* FIXME */
+	Sci->CurrentSize = MiFreeSwapPages + MiUsedSwapPages; /* FIXME */
 	Sci->PeakSize = 0; /* FIXME */
 	Sci->PageFaultCount = 0; /* FIXME */
 	Sci->MinimumWorkingSet = 0; /* FIXME */
