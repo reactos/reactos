@@ -2000,12 +2000,12 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   UCHAR CylinderLow;
   UCHAR DrvHead;
   UCHAR SectorNumber;
-  UCHAR Command;
+  UCHAR Command = 0;
   ULONG Retries;
   UCHAR Status;
   BOOLEAN FASTCALL (*Handler)(PATAPI_MINIPORT_EXTENSION DevExt);
 
-  DPRINT("AtapiReadWrite() called!\n");
+  DPRINT("AtaiReadWrite() called!\n");
   DPRINT("SCSIOP_WRITE: TargetId: %lu\n",
 	 Srb->TargetId);
 
@@ -2144,13 +2144,16 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_MULTI_SECTOR_CMD)
         {
           Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ_MULTIPLE : IDE_CMD_WRITE_MULTIPLE;
+          DPRINT("Command = %x\n", Command);
 	}
       else
         {
           Command = Srb->SrbFlags & SRB_FLAGS_DATA_IN ? IDE_CMD_READ : IDE_CMD_WRITE;
+          DPRINT("Command = %x\n", Command);
 	}
     }
 
+  DPRINT("Executing Command = %x\n", Command);
   AtapiExecuteCommand(DeviceExtension, Command, Handler);
 
 #ifdef ENABLE_DMA
@@ -2182,7 +2185,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	    }
           if (Retries >= IDE_MAX_WRITE_RETRIES)
 	    {
-	      DPRINT1("Drive is BUSY for too long after sending write command\n");
+	      DPRINT("Drive is BUSY for too long after sending write command\n");
 	      return(SRB_STATUS_BUSY);
 	    }
 
@@ -2200,12 +2203,47 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
           /* Write data block */
           if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_DWORD_IO)
 	    {
-	      IDEWriteBlock32(DeviceExtension->CommandPortBase,
-			      TargetAddress,
-			      TransferSize);
+                UINT Temp = 0;
+                UINT ExtraWord = TransferSize & (sizeof(UINT)-1);
+                UINT EndOfBlock;
+
+                DPRINT("IDEWriteBlock32(%x, %d)\n", 
+                        DeviceExtension->CommandPortBase,
+                        TransferSize);
+                IDEWriteBlock32(DeviceExtension->CommandPortBase,
+                                TargetAddress,
+                                TransferSize);
+                if( ExtraWord ) {
+                    RtlCopyMemory( &Temp, 
+                                   TargetAddress + 
+                                   (TransferSize & (sizeof(UINT)-1)),
+                                   ExtraWord );
+                    IDEWriteBlock32(DeviceExtension->CommandPortBase,
+                                     &Temp,
+                                     sizeof(Temp));
+                    TransferSize = (TransferSize + sizeof(UINT)) &
+                        ~(sizeof(UINT) - 1);
+                }
+
+                Temp = 0;
+
+                DPRINT("TransferSize = %d (BPS %d)\n", 
+                        TransferSize, DeviceParams->BytesPerSector);
+
+                EndOfBlock = DeviceParams->BytesPerSector - 
+                    (TransferSize & (DeviceParams->BytesPerSector - 1));
+
+                while( EndOfBlock ) {
+                    DPRINT("Zeros Remaining %d\n", EndOfBlock);
+                    IDEWriteBlock32(DeviceExtension->CommandPortBase,
+                                    &Temp,
+                                    sizeof(Temp));
+                    EndOfBlock -= sizeof(Temp);
+                }
 	    }
           else
 	    {
+                DPRINT1("IDEWriteBlock(%x)\n", DeviceExtension->CommandPortBase);
 	      IDEWriteBlock(DeviceExtension->CommandPortBase,
 			    TargetAddress,
 			    TransferSize);
