@@ -12,9 +12,11 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
+#include <ntos/minmax.h>
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <base.h>
 #include <ddk/obfuncs.h>
 
 #define NDEBUG
@@ -26,140 +28,26 @@
 
 #define IS_PATH_SEPARATOR(x) (((x)==L'\\')||((x)==L'/'))
 
+
 /* GLOBALS ********************************************************************/
 
-static const UNICODE_STRING _condev = 
-{
-    .Length	    = sizeof(L"\\\\.\\CON") - sizeof(WCHAR),
-    .MaximumLength  = sizeof(L"\\\\.\\CON"),
-    .Buffer	    = L"\\\\.\\CON"
-};
+static const WCHAR DeviceRootW[] = L"\\\\.\\";
 
-static const UNICODE_STRING _lpt =
-{
-    .Length	    = sizeof(L"LPT") - sizeof(WCHAR),
-    .MaximumLength  = sizeof(L"LPT"),
-    .Buffer	    = L"LPT"
-};
+static const UNICODE_STRING _condev = RTL_CONSTANT_STRING(L"\\\\.\\CON");
 
-static const UNICODE_STRING _com =
-{
-    .Length	    = sizeof(L"COM") - sizeof(WCHAR),
-    .MaximumLength  = sizeof(L"COM"),
-    .Buffer	    = L"COM"
-};
+static const UNICODE_STRING _lpt = RTL_CONSTANT_STRING(L"LPT");
 
-static const UNICODE_STRING _prn =
-{
-    .Length	    = sizeof(L"PRN") - sizeof(WCHAR),
-    .MaximumLength  = sizeof(L"PRN"),
-    .Buffer	    = L"PRN"
-};
+static const UNICODE_STRING _com = RTL_CONSTANT_STRING(L"COM");
 
-static const UNICODE_STRING _aux =
-{
-    .Length	    = sizeof(L"AUX") - sizeof(WCHAR),
-    .MaximumLength  = sizeof(L"AUX"),
-    .Buffer	    = L"AUX"
-};
+static const UNICODE_STRING _prn = RTL_CONSTANT_STRING(L"PRN");
 
-static const UNICODE_STRING _con =
-{
-    .Length	    = sizeof(L"CON") - sizeof(WCHAR),
-    .MaximumLength  = sizeof(L"CON"),
-    .Buffer	    = L"CON"
-};
+static const UNICODE_STRING _aux = RTL_CONSTANT_STRING(L"AUX");
 
-static const UNICODE_STRING _nul =
-{
-    .Length	    = sizeof(L"NUL") - sizeof(WCHAR),
-    .MaximumLength  = sizeof(L"NUL"),
-    .Buffer	    = L"NUL"
-};
+static const UNICODE_STRING _con = RTL_CONSTANT_STRING(L"CON");
+
+static const UNICODE_STRING _nul = RTL_CONSTANT_STRING(L"NUL");
 
 /* FUNCTIONS *****************************************************************/
-
-static ULONG RtlpGetDotSequence (PWSTR p)
-{
-   ULONG Count = 0;
-   
-   for (;;)
-     {
-	if (*p == '.')
-	  Count++;
-	else if ((*p == '\\' || *p == '\0') && Count)
-	  return Count;
-	else
-	  return 0;
-	p++;
-     }
-   return 0;
-}
-
-
-static VOID RtlpEatPath (PWSTR Path)
-{
-   PWSTR p, prev;
-   
-   p = Path + 2;
-   prev = p;
-   
-   while ((*p) != 0 || ((*p) == L'\\' && (*(p+1)) == 0))
-     {
-	ULONG DotLen;
-	
-	DotLen = RtlpGetDotSequence (p+1);
-	DPRINT("DotSequenceLength %u\n", DotLen);
-	DPRINT("prev '%S' p '%S'\n",prev,p);
-
-        if (DotLen == 0)
-	  {
-	     prev = p;
-	     p = wcschr(p + 1, L'\\');
-	     if (p == NULL)
-	     {
-		 break;
-	     }
-	  }
-	else if (DotLen == 1)
-	  {
-	     wcscpy (p, p+2);
-	  }
-	else
-	  {
-	     if (DotLen > 2)
-	       {
-		  int n = DotLen - 2;
-		  
-		  while (n > 0 && prev > (Path + 2))
-		    {
-		       prev--;
-		       if ((*prev) == L'\\')
-			 n--;
-		    }
-	       }
-	     
-	     if (*(p + DotLen + 1) == 0)
-	       *(prev + 1) = 0;
-			else
-	       wcscpy (prev, p + DotLen + 1);
-	     p = prev;
-	     if (prev > (Path + 2))
-	       {
-		  prev--;
-		  while ((*prev) != L'\\')
-		    {
-		       prev--;
-		    }
-	       }
-	  }
-     }
-     if (Path[2] == 0)
-     {
-        Path[2] = L'\\';
-	Path[3] = 0;
-     }
-}
 
 
 /*
@@ -532,224 +420,338 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING name)
    return STATUS_SUCCESS;
 }
 
-/*
+
+
+/******************************************************************
+ *    collapse_path
+ *
+ * Helper for RtlGetFullPathName_U.
+ * 1) Convert slashes into backslashes
+ * 2) Get rid of duplicate backslashes
+ * 3) Get rid of . and .. components in the path.
+ */
+static inline void collapse_path( WCHAR *path, UINT mark )
+{
+    WCHAR *p, *next;
+
+    /* convert every / into a \ */
+    for (p = path; *p; p++) if (*p == '/') *p = '\\';
+
+    /* collapse duplicate backslashes */
+    next = path + max( 1, mark );
+    for (p = next; *p; p++) if (*p != '\\' || next[-1] != '\\') *next++ = *p;
+    *next = 0;
+
+    p = path + mark;
+    while (*p)
+    {
+        if (*p == '.')
+        {
+            switch(p[1])
+            {
+            case '\\': /* .\ component */
+                next = p + 2;
+                memmove( p, next, (wcslen(next) + 1) * sizeof(WCHAR) );
+                continue;
+            case 0:  /* final . */
+                if (p > path + mark) p--;
+                *p = 0;
+                continue;
+            case '.':
+                if (p[2] == '\\')  /* ..\ component */
+                {
+                    next = p + 3;
+                    if (p > path + mark)
+                    {
+                        p--;
+                        while (p > path + mark && p[-1] != '\\') p--;
+                    }
+                    memmove( p, next, (wcslen(next) + 1) * sizeof(WCHAR) );
+                    continue;
+                }
+                else if (!p[2])  /* final .. */
+                {
+                    if (p > path + mark)
+                    {
+                        p--;
+                        while (p > path + mark && p[-1] != '\\') p--;
+                        if (p > path + mark) p--;
+                    }
+                    *p = 0;
+                    continue;
+                }
+                break;
+            }
+        }
+        /* skip to the next component */
+        while (*p && *p != '\\') p++;
+        if (*p == '\\') p++;
+    }
+
+    /* remove trailing spaces and dots (yes, Windows really does that, don't ask) */
+    while (p > path + mark && (p[-1] == ' ' || p[-1] == '.')) p--;
+    *p = 0;
+}
+
+
+
+/******************************************************************
+ *    skip_unc_prefix
+ *
+ * Skip the \\share\dir\ part of a file name. Helper for RtlGetFullPathName_U.
+ */
+static const WCHAR *skip_unc_prefix( const WCHAR *ptr )
+{
+    ptr += 2;
+    while (*ptr && !IS_PATH_SEPARATOR(*ptr)) ptr++;  /* share name */
+    while (IS_PATH_SEPARATOR(*ptr)) ptr++;
+    while (*ptr && !IS_PATH_SEPARATOR(*ptr)) ptr++;  /* dir name */
+    while (IS_PATH_SEPARATOR(*ptr)) ptr++;
+    return ptr;
+}
+
+
+/******************************************************************
+ *    get_full_path_helper
+ *
+ * Helper for RtlGetFullPathName_U
+ * Note: name and buffer are allowed to point to the same memory spot
+ */
+static ULONG get_full_path_helper(
+   LPCWSTR name, 
+   LPWSTR buffer, 
+   ULONG size)
+{
+    ULONG                       reqsize = 0, mark = 0, dep = 0, deplen;
+    DOS_PATHNAME_TYPE           type;
+    LPWSTR                      ins_str = NULL;
+    LPCWSTR                     ptr;
+    const UNICODE_STRING*       cd;
+    WCHAR                       tmp[4];
+
+    /* return error if name only consists of spaces */
+    for (ptr = name; *ptr; ptr++) if (*ptr != ' ') break;
+    if (!*ptr) return 0;
+
+    RtlAcquirePebLock();
+
+    cd = &((PCURDIR)&NtCurrentTeb()->Peb->ProcessParameters->CurrentDirectoryName)->DosPath;
+
+    switch (type = RtlDetermineDosPathNameType_U(name))
+    {
+    case UNC_PATH:              /* \\foo   */
+        ptr = skip_unc_prefix( name );
+        mark = (ptr - name);
+        break;
+
+    case DEVICE_PATH:           /* \\.\foo */
+        mark = 4;
+        break;
+
+    case ABSOLUTE_DRIVE_PATH:   /* c:\foo  */
+        reqsize = sizeof(WCHAR);
+        tmp[0] = towupper(name[0]);
+        ins_str = tmp;
+        dep = 1;
+        mark = 3;
+        break;
+
+    case RELATIVE_DRIVE_PATH:   /* c:foo   */
+        dep = 2;
+        if (towupper(name[0]) != towupper(cd->Buffer[0]) || cd->Buffer[1] != ':')
+        {
+            UNICODE_STRING      var, val;
+
+            tmp[0] = '=';
+            tmp[1] = name[0];
+            tmp[2] = ':';
+            tmp[3] = '\0';
+            var.Length = 3 * sizeof(WCHAR);
+            var.MaximumLength = 4 * sizeof(WCHAR);
+            var.Buffer = tmp;
+            val.Length = 0;
+            val.MaximumLength = size;
+            val.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, size);
+
+            switch (RtlQueryEnvironmentVariable_U(NULL, &var, &val))
+            {
+            case STATUS_SUCCESS:
+                /* FIXME: Win2k seems to check that the environment variable actually points 
+                 * to an existing directory. If not, root of the drive is used
+                 * (this seems also to be the only spot in RtlGetFullPathName that the 
+                 * existence of a part of a path is checked)
+                 */
+                /* fall thru */
+            case STATUS_BUFFER_TOO_SMALL:
+                reqsize = val.Length + sizeof(WCHAR); /* append trailing '\\' */
+                val.Buffer[val.Length / sizeof(WCHAR)] = '\\';
+                ins_str = val.Buffer;
+                break;
+            case STATUS_VARIABLE_NOT_FOUND:
+                reqsize = 3 * sizeof(WCHAR);
+                tmp[0] = name[0];
+                tmp[1] = ':';
+                tmp[2] = '\\';
+                ins_str = tmp;
+                break;
+            default:
+                DPRINT1("Unsupported status code\n");
+                break;
+            }
+            mark = 3;
+            break;
+        }
+        /* fall through */
+
+    case RELATIVE_PATH:         /* foo     */
+        reqsize = cd->Length;
+        ins_str = cd->Buffer;
+        if (cd->Buffer[1] != ':')
+        {
+            ptr = skip_unc_prefix( cd->Buffer );
+            mark = ptr - cd->Buffer;
+        }
+        else mark = 3;
+        break;
+
+    case ABSOLUTE_PATH:         /* \xxx    */
+#ifdef __WINE__
+        if (name[0] == '/')  /* may be a Unix path */
+        {
+            const WCHAR *ptr = name;
+            int drive = find_drive_root( &ptr );
+            if (drive != -1)
+            {
+                reqsize = 3 * sizeof(WCHAR);
+                tmp[0] = 'A' + drive;
+                tmp[1] = ':';
+                tmp[2] = '\\';
+                ins_str = tmp;
+                mark = 3;
+                dep = ptr - name;
+                break;
+            }
+        }
+#endif
+        if (cd->Buffer[1] == ':')
+        {
+            reqsize = 2 * sizeof(WCHAR);
+            tmp[0] = cd->Buffer[0];
+            tmp[1] = ':';
+            ins_str = tmp;
+            mark = 3;
+        }
+        else
+        {
+            ptr = skip_unc_prefix( cd->Buffer );
+            reqsize = (ptr - cd->Buffer) * sizeof(WCHAR);
+            mark = reqsize / sizeof(WCHAR);
+            ins_str = cd->Buffer;
+        }
+        break;
+
+    case UNC_DOT_PATH:         /* \\.     */
+        reqsize = 4 * sizeof(WCHAR);
+        dep = 3;
+        tmp[0] = '\\';
+        tmp[1] = '\\';
+        tmp[2] = '.';
+        tmp[3] = '\\';
+        ins_str = tmp;
+        mark = 4;
+        break;
+
+    case INVALID_PATH:
+        goto done;
+    }
+
+    /* enough space ? */
+    deplen = wcslen(name + dep) * sizeof(WCHAR);
+    if (reqsize + deplen + sizeof(WCHAR) > size)
+    {
+        /* not enough space, return need size (including terminating '\0') */
+        reqsize += deplen + sizeof(WCHAR);
+        goto done;
+    }
+
+    memmove(buffer + reqsize / sizeof(WCHAR), name + dep, deplen + sizeof(WCHAR));
+    if (reqsize) memcpy(buffer, ins_str, reqsize);
+    reqsize += deplen;
+
+    if (ins_str && ins_str != tmp && ins_str != cd->Buffer)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, ins_str);
+
+    collapse_path( buffer, mark );
+    reqsize = wcslen(buffer) * sizeof(WCHAR);
+
+done:
+    RtlReleasePebLock();
+    return reqsize;
+}
+
+
+/******************************************************************
+ *    RtlGetFullPathName_U  (NTDLL.@)
+ *
+ * Returns the number of bytes written to buffer (not including the
+ * terminating NULL) if the function succeeds, or the required number of bytes
+ * (including the terminating NULL) if the buffer is too small.
+ *
+ * file_part will point to the filename part inside buffer (except if we use
+ * DOS device name, in which case file_in_buf is NULL)
+ *
  * @implemented
  */
-ULONG STDCALL
-RtlGetFullPathName_U(PWSTR DosName,
-		     ULONG size,
-		     PWSTR buf,
-		     PWSTR *FilePart)
+DWORD STDCALL RtlGetFullPathName_U(
+   const WCHAR* name, 
+   ULONG size, 
+   WCHAR* buffer,
+   WCHAR** file_part)
 {
-	WCHAR           *wcs, var[4], drive;
-	ULONG           len;
-	ULONG		templen = 0;
-	DWORD           offs, sz, type;
-	UNICODE_STRING  usvar, pfx;
-	PCURDIR cd;
-	NTSTATUS Status;
-	WCHAR TempFullPathName[MAX_PATH] = L"";
+    WCHAR*      ptr;
+    DWORD       dosdev;
+    DWORD       reqsize;
 
-	DPRINT("RtlGetFullPathName_U %S %ld %p %p\n",
-	       DosName, size, buf, FilePart);
+    DPRINT("RtlGetFullPathName_U(%S %lu %p %p)\n", name, size, buffer, file_part);
 
-  /* FIXME: this code is a mess! We should use Wine's implementation
-  of this function, since it's cleaner and IMO better. -Gunnar */
-  
-	if (!DosName || !*DosName)
-		return 0;
+    if (!name || !*name) return 0;
 
-	len = wcslen (DosName);
+    if (file_part) *file_part = NULL;
 
-	/* strip trailing spaces */
-	while (len && DosName[len - 1] == L' ')
-		len--;
-	if (!len)
-		return 0;
-	
-	/* strip trailing path separator (but don't change '\') */
-	if ((len > 1) &&
-	    IS_PATH_SEPARATOR(DosName[len - 1]))
-		len--;
-	if (FilePart)
-		*FilePart = NULL;
-	if (buf)
-		*buf = 0;
+    /* check for DOS device name */
+    dosdev = RtlIsDosDeviceName_U((WCHAR*)name);
+    if (dosdev)
+    {
+        DWORD   offset = HIWORD(dosdev) / sizeof(WCHAR); /* get it in WCHARs, not bytes */
+        DWORD   sz = LOWORD(dosdev); /* in bytes */
 
-CHECKPOINT;
-	/* check for DOS device name */
-	sz = RtlIsDosDeviceName_U (DosName);
-	if (sz)
-	{
-		offs = sz >> 17;
-		sz &= 0x0000FFFF;
-		if (sz + 8 >= size)
-		    return sz + 10;
-		if (buf)
-		{
-			wcscpy (buf, L"\\\\.\\");
-			wcsncat (buf, DosName + offs, sz / sizeof(WCHAR));
-		}
-		return sz + 8;
-	}
+        if (8 + sz + 2 > size) return sz + 10;
+        wcscpy(buffer, DeviceRootW);
+        memmove(buffer + 4, name + offset, sz);
+        buffer[4 + sz / sizeof(WCHAR)] = '\0';
+        /* file_part isn't set in this case */
+        return sz + 8;
+    }
 
-CHECKPOINT;
-	type = RtlDetermineDosPathNameType_U (DosName);
-
-	RtlAcquirePebLock();
-
-	cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectoryName);
-DPRINT("type %ld\n", type);
-	switch (type)
-	{
-		case 1:		/* \\xxx or \\.xxx */
-		case 6:		/* \\.\xxx */
-			break;
-
-		case 2:
-      break;
-#if 0    
-  /* this makes a direct CreateFileW call crash! */
-
-    case 2:   /* x:\xxx  */
-       *DosName = RtlUpcaseUnicodeChar (*DosName);
-       break;
-#endif      
-
-		case 3:		/* x:xxx   */
-			drive = RtlUpcaseUnicodeChar (*DosName);
-			DosName += 2;
-			len     -= 2;
-CHECKPOINT;
-			if (drive == RtlUpcaseUnicodeChar (cd->DosPath.Buffer[0]))
-			{
-CHECKPOINT;
-				memcpy (TempFullPathName, cd->DosPath.Buffer, cd->DosPath.Length);
-				templen = cd->DosPath.Length / sizeof(WCHAR);
-			}
-			else
-			{
-CHECKPOINT;
-				var[0] = L'=';
-				var[1] = drive;
-				var[2] = L':';
-				var[3] = 0;
-				usvar.Length = 3 * sizeof(WCHAR);
-				usvar.MaximumLength = 4 * sizeof(WCHAR);
-				usvar.Buffer = var;
-				pfx.Length = 0;
-				pfx.MaximumLength = MAX_PATH;
-				pfx.Buffer = TempFullPathName;
-				Status = RtlQueryEnvironmentVariable_U (NULL,
-				                                        &usvar,
-				                                        &pfx);
-CHECKPOINT;
-				if (!NT_SUCCESS(Status))
-				{
-CHECKPOINT;
-					if (Status == STATUS_BUFFER_TOO_SMALL)
-						return pfx.Length + len * 2 + 2;
-CHECKPOINT;
-					TempFullPathName[0] = drive;
-					TempFullPathName[1] = L':';
-					TempFullPathName[2] = L'\\';
-					TempFullPathName[3] = 0;
-					templen = 3;
-				}
-				else
-				{
-CHECKPOINT;
-					templen = pfx.Length / sizeof(WCHAR);
-				}
-
-			}
-			break;
-
-		case 4:		/* \xxx    */
-			wcsncpy (TempFullPathName, cd->DosPath.Buffer, 2);
-			TempFullPathName[2] = 0;
-			templen = wcslen(TempFullPathName);
-			break;
-
-		case 5:		/* xxx     */
-			memcpy (TempFullPathName, cd->DosPath.Buffer, cd->DosPath.Length);
-			templen = cd->DosPath.Length / sizeof(WCHAR);
-			break;
-
-		case 7:		/* \\.     */
-			memcpy (TempFullPathName, L"\\\\.\\", 8);
-			templen = 4;
-			break;
-
-		default:
-			return 0;
-	}
-
-
-	RtlReleasePebLock();
-
-	DPRINT("TempFullPathName \'%S\' DosName \'%S\' len %ld\n", TempFullPathName, DosName, len);
-	/* add dosname to prefix */
-	memcpy (TempFullPathName + templen, DosName, len * sizeof(WCHAR));
-  
-  /* dirty/temporary fix for the CreateFileW problem */
-  if (type == 2){
-    TempFullPathName[0] = RtlUpcaseUnicodeChar(TempFullPathName[0]);
-  }
-	len += templen;
-	TempFullPathName[len] = 0;
-
-	CHECKPOINT;
-	/* replace slashes */
-	wcs = wcschr(TempFullPathName, L'/');
-	while(wcs)
-	{
-	    *wcs = L'\\';
-	    wcs = wcschr(wcs + 1, L'/');
-	}
-
-	if (len == 2 && TempFullPathName[1] == L':')
-	{
-		TempFullPathName[len++] = L'\\';
-		TempFullPathName[len] = 0;
-	}
-
-
-	DPRINT("TempFullPathName \'%S\'\n", TempFullPathName);
-	RtlpEatPath (TempFullPathName);
-	DPRINT("TempFullPathName \'%S\'\n", TempFullPathName);
-
-	len = wcslen (TempFullPathName);
-
-	if (len < (size / sizeof(WCHAR)))
-	{
-		if (buf)
-			memcpy (buf, TempFullPathName, (len + 1) * sizeof(WCHAR));
-
-		/* find file part */
-		if (FilePart && buf)
-		{
-#if 0
-			*FilePart = wcsrchr(buf, L'\\');
-			if (*FilePart)
-			{
-			    (*FilePart)++;
-			}
-			else
-			{
-			    *FilePart = buf;
-			}
-#else
-			*FilePart = buf + len;
-			while (*FilePart != buf && **FilePart != L'\\')
-                            --(*FilePart);
-                        if (**FilePart == L'\\')
-                            ++(*FilePart);
-#endif
-		}
+    reqsize = get_full_path_helper(name, buffer, size);
+    if (!reqsize) return 0;
+    if (reqsize > size)
+    {
+        LPWSTR tmp = RtlAllocateHeap(RtlGetProcessHeap(), 0, reqsize);
+        reqsize = get_full_path_helper(name, tmp, reqsize);
+        if (reqsize > size)  /* it may have worked the second time */
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, tmp);
+            return reqsize + sizeof(WCHAR);
         }
+        memcpy( buffer, tmp, reqsize + sizeof(WCHAR) );
+        RtlFreeHeap(RtlGetProcessHeap(), 0, tmp);
+    }
 
-	return len * sizeof(WCHAR);
+    /* find file part */
+    if (file_part && (ptr = wcsrchr(buffer, '\\')) != NULL && ptr >= buffer + 2 && *++ptr)
+        *file_part = ptr;
+    return reqsize;
 }
 
 

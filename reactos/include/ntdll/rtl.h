@@ -17,6 +17,13 @@ extern "C" {
 
 #ifndef __USE_W32API
 
+#define RTL_CONSTANT_STRING(__SOURCE_STRING__) \
+{ \
+ sizeof(__SOURCE_STRING__) - sizeof((__SOURCE_STRING__)[0]), \
+ sizeof(__SOURCE_STRING__), \
+ (__SOURCE_STRING__) \
+}
+
 typedef struct _DEBUG_BUFFER
 {
   HANDLE SectionHandle;
@@ -355,7 +362,7 @@ RtlGetCurrentDirectory_U (
 ULONG
 STDCALL
 RtlGetFullPathName_U (
-	WCHAR *dosname,
+   const WCHAR *dosname,
 	ULONG size,
 	WCHAR *buf,
 	WCHAR **shortname
