@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.36 2001/04/16 02:02:03 dwelch Exp $
+# $Id: Makefile,v 1.37 2001/04/26 13:23:38 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -52,7 +52,7 @@ CFLAGS = -Iinclude -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror
 
 include $(PATH_TO_TOP)/rules.mak
 
-all: $(EXE_PREFIX)depends$(EXE_POSTFIX) \
+all: $(EXE_PREFIX)depends$(EXE_POSTFIX) include/internal/config.h \
 	$(OBJECTS_PATH) \
 	$(TARGETNAME).nostrip.exe \
 	$(TARGETNAME).exe \
