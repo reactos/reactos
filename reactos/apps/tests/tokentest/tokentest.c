@@ -488,10 +488,10 @@ main(int argc, char** argv[])
 	NTSTATUS Status;
 	HANDLE hSystemToken;
 	CHAR buffer[512];
+	HANDLE hOurToken;
 
         printf("Current process Token:\n");
 
-	HANDLE hOurToken;
         Status=ZwOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY|TOKEN_QUERY_SOURCE, &hOurToken);
 	if ( NT_SUCCESS(Status) )
 	{
