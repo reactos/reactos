@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.14 2000/11/20 19:59:09 ekohl Exp $
+# $Id: makefile_rex,v 1.15 2001/05/05 18:09:30 phreak Exp $
 #
 # ReactOS Operating System
 #
@@ -16,68 +16,16 @@ DLLTARGET=$(TARGET).dll
 
 all: $(DLLTARGET)
 
-INTERNAL_OBJECTS = \
-	internal/menu.o		\
-	internal/heapdup.o	\
-	internal/nc.o		\
-	internal/win.o		\
-	internal/dce.o		\
-	internal/msg.o		\
-	internal/queue.o	\
-	internal/signal.o	\
-	internal/event.o	\
-	internal/timer.o	\
-	internal/region.o	\
-	internal/text.o		\
-	internal/defwnd.o	\
-	internal/paint.o	\
-	internal/uitools.o	\
-	internal/dialog.o	\
-	internal/winpos.o
-
 MISC_OBJECTS = \
 	misc/sprintf.o		\
 	misc/dllmain.o		\
 	misc/string.o		\
-	misc/sysmetr.o		\
 	misc/winstat.o		\
-	misc/bitmap.o		\
-	misc/cursor.o		\
-	misc/vk.o		\
 	misc/stubs.o		\
 	misc/stubsa.o		\
-	misc/stubsw.o
+	misc/stubsw.o           \
+	misc/win32k.o
 
-
-WINDOWS_OBJECTS = \
-	windows/wndproc.o	\
-	windows/win.o		\
-	windows/hook.o		\
-	windows/spy.o		\
-	windows/queue.o		\
-	windows/winpos.o	\
-	windows/class.o		\
-	windows/dc.o		\
-	windows/timer.o		\
-	windows/rect.o		\
-	windows/msg.o		\
-	windows/input.o		\
-	windows/property.o	\
-	windows/focus.o		\
-	windows/paint.o		\
-	windows/msgbox.o	\
-	windows/dialog.o	\
-	windows/scroll.o	\
-	windows/defdlg.o 
-
-GRAPHICS_OBJECTS = \
-	graphics/rect.o		\
-	graphics/caret.o	\
-	graphics/text.o		\
-	graphics/syscol.o	\
-	graphics/fill.o		\
-	graphics/draw.o		\
-	graphics/icon.o
 
 CONTROLS_OBJECTS = \
 	controls/button.o	\
@@ -95,8 +43,7 @@ RESOURCE_OBJECTS = \
 
 RESOURCE_OBJECT = $(TARGET).coff
 
-OBJECTS = $(MISC_OBJECTS) $(INTERNAL_OBJECTS) $(GRAPHICS_OBJECTS) $(RESOURCE_OBJECTS) $(RESOURCE_OBJECT)\
-	$(CONTROLS_OBJECTS) $(WINDOWS_OBJECTS)
+OBJECTS = $(MISC_OBJECTS) $(RESOURCE_OBJECTS) $(RESOURCE_OBJECT)
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = misc\*.o windows\*.o internal\*.o controls\*.o graphics\*.o resources\*.o \
