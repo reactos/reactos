@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.64 2003/12/23 18:12:38 weiden Exp $
+/* $Id: winpos.c,v 1.65 2003/12/23 20:40:00 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -65,12 +65,15 @@
 /* FUNCTIONS *****************************************************************/
 
 #define HAS_DLGFRAME(Style, ExStyle) \
-       (((ExStyle) & WS_EX_DLGMODALFRAME) || \
-        (((Style) & WS_DLGFRAME) && !((Style) & WS_BORDER)))
+            (((ExStyle) & WS_EX_DLGMODALFRAME) || \
+            (((Style) & WS_DLGFRAME) && (!((Style) & WS_THICKFRAME))))
 
 #define HAS_THICKFRAME(Style, ExStyle) \
-       (((Style) & WS_THICKFRAME) && \
-        !((Style) & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)
+            (((Style) & WS_THICKFRAME) && \
+            (!(((Style) & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)))
+
+#define HAS_THINFRAME(Style, ExStyle) \
+            (((Style) & WS_BORDER) || (!((Style) & (WS_CHILD | WS_POPUP))))
 
 BOOL STDCALL
 NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
@@ -172,10 +175,14 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
   
   if (WindowObject->InternalPos == NULL)
     {
+      RECT WorkArea;
+      PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop; /* Or rather get it from the window? */
+      
+      WorkArea = (*(RECT*)Desktop->WorkArea);
+      
       WindowObject->InternalPos = ExAllocatePool(NonPagedPool, sizeof(INTERNALPOS));
       if(!WindowObject->InternalPos)
       {
-        DPRINT1("Failed to allocate INTERNALPOS structure for window 0x%x\n", WindowObject->Self);
         return NULL;
       }
       WindowObject->InternalPos->IconTitle = 0;
@@ -193,16 +200,16 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
           XInc += NtUserGetSystemMetrics(SM_CXFRAME);
           YInc += NtUserGetSystemMetrics(SM_CYFRAME);
         }
-        if (WindowObject->Style & WS_BORDER)
-        {
-          XInc += NtUserGetSystemMetrics(SM_CXBORDER);
-          YInc += NtUserGetSystemMetrics(SM_CYBORDER);
-        }
+        else if (HAS_THINFRAME(WindowObject->Style, WindowObject->ExStyle))
+	{
+	  XInc += NtUserGetSystemMetrics(SM_CXBORDER);
+	  YInc += NtUserGetSystemMetrics(SM_CYBORDER);
+	}
       }
-      WindowObject->InternalPos->MaxPos.x = -XInc;
-      WindowObject->InternalPos->MaxPos.y = -YInc;
-      WindowObject->InternalPos->IconPos.x = 0;
-      WindowObject->InternalPos->IconPos.y = 0;
+      WindowObject->InternalPos->MaxPos.x = WorkArea.left - XInc;
+      WindowObject->InternalPos->MaxPos.y = WorkArea.top - YInc;
+      WindowObject->InternalPos->IconPos.x = WorkArea.left;
+      WindowObject->InternalPos->IconPos.y = WorkArea.bottom - NtUserGetSystemMetrics(SM_CYMINIMIZED);
     }
   if (WindowObject->Style & WS_MINIMIZE)
     {
@@ -329,14 +336,18 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
 {
   MINMAXINFO MinMax;
   INT XInc, YInc;
+  RECT WorkArea;
+  PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop; /* Or rather get it from the window? */
+  
+  WorkArea = (*(RECT*)Desktop->WorkArea);
 
   /* Get default values. */
-  MinMax.ptMaxSize.x = NtUserGetSystemMetrics(SM_CXSCREEN);
-  MinMax.ptMaxSize.y = NtUserGetSystemMetrics(SM_CYSCREEN);
+  MinMax.ptMaxSize.x = WorkArea.right - WorkArea.left;
+  MinMax.ptMaxSize.y = WorkArea.bottom - WorkArea.top;
   MinMax.ptMinTrackSize.x = NtUserGetSystemMetrics(SM_CXMINTRACK);
   MinMax.ptMinTrackSize.y = NtUserGetSystemMetrics(SM_CYMINTRACK);
-  MinMax.ptMaxTrackSize.x = NtUserGetSystemMetrics(SM_CXSCREEN);
-  MinMax.ptMaxTrackSize.y = NtUserGetSystemMetrics(SM_CYSCREEN);
+  MinMax.ptMaxTrackSize.x = MinMax.ptMaxSize.x;
+  MinMax.ptMaxTrackSize.y = MinMax.ptMaxSize.y;
 
   if (HAS_DLGFRAME(Window->Style, Window->ExStyle))
     {
@@ -351,7 +362,7 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
 	  XInc += NtUserGetSystemMetrics(SM_CXFRAME);
 	  YInc += NtUserGetSystemMetrics(SM_CYFRAME);
 	}
-      if (Window->Style & WS_BORDER)
+      else if (HAS_THINFRAME(Window->Style, Window->ExStyle))
 	{
 	  XInc += NtUserGetSystemMetrics(SM_CXBORDER);
 	  YInc += NtUserGetSystemMetrics(SM_CYBORDER);
@@ -366,8 +377,8 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
     }
   else
     {
-      MinMax.ptMaxPosition.x -= XInc;
-      MinMax.ptMaxPosition.y -= YInc;
+      MinMax.ptMaxPosition.x -= WorkArea.left + XInc;
+      MinMax.ptMaxPosition.y -= WorkArea.top + YInc;
     }
 
   IntSendMessage(Window->Self, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax, TRUE);
