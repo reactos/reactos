@@ -1,3 +1,7 @@
+export VERBOSE = yes
+export BUILD_MAP = yes
+export BUILD_SYM = no
+
 # Default to half-verbose mode
 ifeq ($(VERBOSE),no)
   Q = @
@@ -163,6 +167,7 @@ export BIN2RES = $(Q)$(TOOLS_PATH)/bin2res/bin2res
 export XSLTPROC = $(Q)xsltproc
 export MS2PS = $(Q)$(TOOLS_PATH)/ms2ps/ms2ps
 export WRC = $(Q)$(TOOLS_PATH)/wrc/wrc
+export WIDL = $(Q)$(TOOLS_PATH)/widl/widl
 
 export STD_CFLAGS = -I$(PATH_TO_TOP)/include -I$(W32API_PATH)/include -pipe -march=$(OARCH) -D_M_IX86
 export STD_CPPFLAGS = $(STD_CFLAGS)

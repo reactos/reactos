@@ -10,9 +10,11 @@ PROGRAMS = widl$(EXEEXT)
 MODULE   = none
 
 C_SRCS = \
+	client.c \
 	hash.c \
 	header.c \
 	proxy.c \
+	server.c \
 	typelib.c \
 	utils.c \
 	widl.c \

@@ -41,12 +41,18 @@ extern int pedantic;
 extern int do_header;
 extern int do_typelib;
 extern int do_proxies;
+extern int do_client;
+extern int do_server;
 
 extern char *input_name;
 extern char *header_name;
 extern char *typelib_name;
 extern char *proxy_name;
 extern char *proxy_token;
+extern char *client_name;
+extern char *client_token;
+extern char *server_name;
+extern char *server_token;
 extern time_t now;
 
 extern int line_number;

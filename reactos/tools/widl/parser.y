@@ -39,6 +39,8 @@
 #include "header.h"
 #include "proxy.h"
 #include "typelib.h"
+#include "client.h"
+#include "server.h"
 
 #if defined(YYBYACC)
 	/* Berkeley yacc (byacc) doesn't seem to know about these */
@@ -224,7 +226,7 @@ static type_t std_uhyper = { "MIDL_uhyper" };
 
 %%
 
-input:	  gbl_statements			{ write_proxies($1); }
+input:	  gbl_statements			{ write_proxies($1); write_client($1); write_server($1); }
 	;
 
 gbl_statements:					{ $$ = NULL; }

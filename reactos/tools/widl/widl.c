@@ -42,20 +42,16 @@
 /* future options to reserve characters for: */
 /* a = alignment of structures */
 /* A = ACF input filename */
-/* c = client stub only? */
-/* C = client stub filename */
 /* J = do not search standard include path */
 /* O = generate interpreted stubs */
-/* p = proxy only? */
-/* P = proxy filename */
-/* s = server stub only? */
-/* S = server stub filename */
 /* u = UUID file only? */
 /* U = UUID filename */
 /* w = select win16/win32 output (?) */
 
 static char usage[] =
 "Usage: widl [options...] infile.idl\n"
+"   -c          Generate client stub\n"
+"   -C file     Name of client stub file (default is infile_c.c)\n"
 "   -d n        Set debug level to 'n'\n"
 "   -D id[=val] Define preprocessor identifier id=val\n"
 "   -E          Preprocess only\n"
@@ -63,6 +59,10 @@ static char usage[] =
 "   -H file     Name of header file (default is infile.h)\n"
 "   -I path     Set include search dir to path (multiple -I allowed)\n"
 "   -N          Do not preprocess input\n"
+"   -p          Generate proxy\n"
+"   -P file     Name of proxy file (default is infile_p.c)\n"
+"   -s          Generate server stub\n"
+"   -S file     Name of server stub file (default is infile_s.c)\n"
 "   -t          Generate typelib\n"
 "   -T file     Name of typelib file (default is infile.tlb)\n"
 "   -V          Print version and exit\n"
@@ -88,6 +88,8 @@ int preprocess_only = 0;
 int do_header = 0;
 int do_typelib = 0;
 int do_proxies = 0;
+int do_client = 0;
+int do_server = 0;
 int no_preprocess = 0;
 
 char *input_name;
@@ -96,6 +98,10 @@ char *header_token;
 char *typelib_name;
 char *proxy_name;
 char *proxy_token;
+char *client_name;
+char *client_token;
+char *server_name;
+char *server_token;
 char *temp_name;
 
 int line_number = 1;
@@ -137,8 +143,15 @@ int main(int argc,char *argv[])
 
   now = time(NULL);
 
-  while((optc = getopt(argc, argv, "d:D:EhH:I:NtT:VW")) != EOF) {
+  while((optc = getopt(argc, argv, "cC:d:D:EhH:I:NpP:sS:tT:VW")) != EOF) {
     switch(optc) {
+    case 'c':
+      do_everything = 0;
+      do_client = 1;
+      break;
+    case 'C':
+      client_name = strdup(optarg);
+      break;
     case 'd':
       debuglevel = strtol(optarg, NULL, 0);
       break;
@@ -162,6 +175,20 @@ int main(int argc,char *argv[])
     case 'N':
       no_preprocess = 1;
       break;
+    case 'p':
+      do_everything = 0;
+      do_proxies = 1;
+      break;
+    case 'P':
+      proxy_name = strdup(optarg);
+      break;
+    case 's':
+      do_everything = 0;
+      do_server = 1;
+      break;
+    case 'S':
+      server_name = strdup(optarg);
+      break;
     case 't':
       do_everything = 0;
       do_typelib = 1;
@@ -182,7 +209,7 @@ int main(int argc,char *argv[])
   }
 
   if(do_everything) {
-      do_header = do_typelib = do_proxies = 1;
+      do_header = do_typelib = do_proxies = do_client = do_server = 1;
   }
   if(optind < argc) {
     input_name = xstrdup(argv[optind]);
@@ -219,6 +246,18 @@ int main(int argc,char *argv[])
     proxy_name = dup_basename(input_name, ".idl");
     proxy_token = xstrdup(proxy_name);
     strcat(proxy_name, "_p.c");
+  }
+
+  if (!client_name && do_client) {
+    client_name = dup_basename(input_name, ".idl");
+    client_token = xstrdup(client_name);
+    strcat(client_name, "_c.c");
+  }
+
+  if (!server_name && do_server) {
+    server_name = dup_basename(input_name, ".idl");
+    server_token = xstrdup(server_name);
+    strcat(server_name, "_s.c");
   }
 
   wpp_add_cmdline_define("__WIDL__");
@@ -284,6 +323,8 @@ int main(int argc,char *argv[])
     exit(1);
   }
   header_name = NULL;
+  client_name = NULL;
+  server_name = NULL;
   return 0;
 }
 
@@ -293,7 +334,11 @@ static void rm_tempfile(void)
   if(temp_name)
     unlink(temp_name);
   if (header_name)
-    unlink( header_name );
+    unlink(header_name);
+  if (client_name)
+    unlink(client_name);
+  if (server_name)
+    unlink(server_name);
 }
 
 static void segvhandler(int sig)

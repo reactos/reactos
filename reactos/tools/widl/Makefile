@@ -13,10 +13,12 @@ TARGET = widl$(EXE_POSTFIX)
 all: $(TARGET)
 
 BASE_OBJECTS = \
+	client.o \
 	hash.o \
 	header.o \
 	lex.yy.o \
 	proxy.o \
+	server.o \
 	typelib.o \
 	utils.o \
 	widl.o \
