@@ -500,7 +500,7 @@ ExInterlockedPopEntryList (
 	PKSPIN_LOCK		Lock
 	);
 PSINGLE_LIST_ENTRY
-STDCALL
+FASTCALL
 ExInterlockedPopEntrySList (
 	PSLIST_HEADER	ListHead,
 	PKSPIN_LOCK	Lock
@@ -513,7 +513,7 @@ ExInterlockedPushEntryList (
 	PKSPIN_LOCK		Lock
 	);
 PSINGLE_LIST_ENTRY
-STDCALL
+FASTCALL
 ExInterlockedPushEntrySList (
 	PSLIST_HEADER		ListHead,
 	PSINGLE_LIST_ENTRY	ListEntry,
@@ -662,7 +662,7 @@ ExReleaseResource (
 	(ExReleaseResourceLite (Resource))
 
 VOID
-STDCALL
+FASTCALL
 ExReleaseResourceLite (
 	PERESOURCE	Resource
 	);

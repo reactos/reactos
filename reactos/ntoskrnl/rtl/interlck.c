@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.7 2001/06/04 11:26:12 chorns Exp $
+/* $Id: interlck.c,v 1.8 2001/06/20 20:00:36 ekohl Exp $
  *
  * reactos/ntoskrnl/rtl/interlck.c
  *
@@ -8,6 +8,8 @@
 #include <reactos/config.h>
 #include <ntos.h>
 #include <internal/debug.h>
+
+//#define USE_FASTCALL
 
 #if 0
 LONG FASTCALL InterlockedIncrement(PLONG Addend)
@@ -84,10 +86,11 @@ InterlockedCompareExchange (
 #else /* I386_FIX */
 
 /**********************************************************************
- * FASTCALL: @InterlockedIncrement@0
+ * FASTCALL: @InterlockedIncrement@4
  * STDCALL : _InterlockedIncrement@4
  */
-LONG FASTCALL InterlockedIncrement (PLONG Addend);
+LONG FASTCALL
+InterlockedIncrement(PLONG Addend);
 /*
  * FUNCTION: Increments a caller supplied variable of type LONG as an 
  * atomic operation
@@ -95,6 +98,8 @@ LONG FASTCALL InterlockedIncrement (PLONG Addend);
  *     Addend = Points to a variable whose value is to be increment
  * RETURNS: The incremented value
  */
+
+#ifndef USE_FASTCALL
 __asm__("\n\t.global _InterlockedIncrement@4\n\t"
 	"_InterlockedIncrement@4:\n\t"
 	"pushl %ebp\n\t"
@@ -108,33 +113,23 @@ __asm__("\n\t.global _InterlockedIncrement@4\n\t"
 	"movl %ebp,%esp\n\t"
 	"popl %ebp\n\t"
 	"ret $4\n\t");
-
-#if 0
-/*
-__asm__(
-#ifndef CONFIG_USE_FASTCALL 
-	".global _InterlockedIncrement@4\n"
-	"\t_InterlockedIncrement@4:\n"
-	"\tmovl 4(%esp), %ecx\n"
 #else
-	".global @InterlockedIncrement@0\n"
-	"\t@InterlockedIncrement@0:\n"
+__asm__("\n\t.global @InterlockedIncrement@4\n\t"
+	"@InterlockedIncrement@4:\n\t"
+	"movl $1,%eax\n\t"
+	"xaddl %eax,(%ecx)\n\t"
+	"incl %eax\n\t"
+	"ret\n\t");
 #endif
-	"\tmov  $1, %eax\n"
-	"\txadd %ecx, %eax\n"
-	"\tinc  %eax\n\n"
-#ifndef CONFIG_USE_FASTCALL 
-	"\tret  $4\n"
-#endif
-	);
-*/
-#endif       
-       
+
 /**********************************************************************
- * FASTCALL: @InterlockedDecrement@0
+ * FASTCALL: @InterlockedDecrement@4
  * STDCALL : _InterlockedDecrement@4
  */
-LONG FASTCALL InterlockedDecrement(PLONG Addend);
+LONG FASTCALL
+InterlockedDecrement(PLONG Addend);
+
+#ifndef USE_FASTCALL
 __asm__("\n\t.global _InterlockedDecrement@4\n\t"
 	"_InterlockedDecrement@4:\n\t"
 	"pushl %ebp\n\t"
@@ -148,20 +143,26 @@ __asm__("\n\t.global _InterlockedDecrement@4\n\t"
 	"movl %ebp,%esp\n\t"
 	"popl %ebp\n\t"
 	"ret $4\n\t");
- 
+#else
+__asm__("\n\t.global @InterlockedDecrement@4\n\t"
+	"@InterlockedDecrement@4:\n\t"
+	"movl $-1,%eax\n\t"
+	"xaddl %eax,(%ecx)\n\t"
+	"decl %eax\n\t"
+	"ret\n\t");
+#endif
+
 /**********************************************************************
- * FASTCALL: @InterlockedExchange@0
+ * FASTCALL: @InterlockedExchange@8
  * STDCALL : _InterlockedExchange@8
  */
 
-LONG
-FASTCALL
-InterlockedExchange (
-	PLONG	Target,
-	LONG	Value
-	);
-__asm__(
-	"\n\t.global _InterlockedExchange@8\n\t"
+LONG FASTCALL
+InterlockedExchange(PLONG Target,
+		    LONG Value);
+
+#ifndef USE_FASTCALL
+__asm__("\n\t.global _InterlockedExchange@8\n\t"
 	"_InterlockedExchange@8:\n\t"
 	"pushl %ebp\n\t"
 	"movl  %esp,%ebp\n\t"
@@ -172,115 +173,65 @@ __asm__(
 	"popl  %ebx\n\t"
 	"movl  %ebp,%esp\n\t"
 	"popl  %ebp\n\t"
-	"ret $8\n\t"
-	);
-/*
-__asm__(
-#ifndef CONFIG_USE_FASTCALL 
-	".global _InterlockedExchange@8\n"
-	"_InterlockedExchange@8:\n"
-	"\tmovl 4(%esp), %ecx\n"
-	"\tmovl 8(%esp), %edx\n"
+	"ret $8\n\t");
 #else
-	".global @InterlockedExchange@0\n"
-	"@InterlockedExchange@0:\n"
+__asm__("\n\t.global @InterlockedExchange@8\n\t"
+	"@InterlockedExchange@8:\n\t"
+	"movl (%ecx),%eax\n"
+	"xchgl %edx,(%ecx)\n\t"
+	"ret\n\t");
 #endif
-	"\tmovl %ecx, %eax\n"
-	"__InterlockedExchange_Loop:\n"
-	"\tlock\n"
-	"\tcmpxchg %ecx, %edx\n"
-	"\tjne __InterlockedExchange_Loop\n"
-#ifndef CONFIG_USE_FASTCALL 
-	"\tmovl %ecx, 4(%esp)\n"
-	"\tret $8\n"
-#else
-	"\tret\n"
-#endif
-	);
-*/
 
 
 /**********************************************************************
- * FASTCALL: @InterlockedExchangeAdd@0
+ * FASTCALL: @InterlockedExchangeAdd@8
  * STDCALL : _InterlockedExchangeAdd@8
  */
-LONG
-FASTCALL
-InterlockedExchangeAdd (
-	PLONG	Addend,
-	LONG	Value
-	);
-__asm__(
-	"\n\t.global _InterlockedExchangeAdd@8\n\t"
+LONG FASTCALL
+InterlockedExchangeAdd(PLONG Addend,
+		       LONG Value);
+
+#ifndef USE_FASTCALL
+__asm__("\n\t.global _InterlockedExchangeAdd@8\n\t"
 	"_InterlockedExchangeAdd@8:\n\t"
 	"movl 8(%esp),%eax\n\t"
 	"movl 4(%esp),%ebx\n\t"
 	"xaddl %eax,(%ebx)\n\t"
-	"ret $8\n\t"
-       );
-/*
-__asm__(
-#ifndef CONFIG_USE_FASTCALL 
-	".global _InterlockedExchangeAdd@8\n"
-	"\t_InterlockedExchangeAdd@8:\n"
-	"\tmovl 4(%esp), %ecx\n"
-	"\tmovl 8(%esp), %edx\n"
+	"ret $8\n\t");
 #else
-	".global @InterlockedExchangeAdd@0\n"
-	"\t@InterlockedExchangeAdd@0:\n"
+__asm__("\n\t.global @InterlockedExchangeAdd@8\n\t"
+	"@InterlockedExchangeAdd@8:\n\t"
+	"xaddl %edx,(%ecx)\n\t"
+	"movl %edx,%eax\n\t"
+	"ret\n\t");
 #endif
-	"\txadd %edx, %ecx\n"
-	"\tmovl %edx, %eax\n"
-#ifndef CONFIG_USE_FASTCALL 
-	"\tret  $8\n"
-#else
-	"\tret\n"
-#endif
-	);
-*/
 
 
 /**********************************************************************
- * FASTCALL: @InterlockedCompareExchange@4
+ * FASTCALL: @InterlockedCompareExchange@12
  * STDCALL : _InterlockedCompareExchange@12
  */
-PVOID
-FASTCALL
-InterlockedCompareExchange (
-	PVOID	* Destination,
-	PVOID	Exchange,
-	PVOID	Comperand
-	);
-__asm__(
-	"\n\t.global _InterlockedCompareExchange@12\n\t"
+PVOID FASTCALL
+InterlockedCompareExchange(PVOID *Destination,
+			   PVOID Exchange,
+			   PVOID Comperand);
+
+#ifndef USE_FASTCALL
+__asm__("\n\t.global _InterlockedCompareExchange@12\n\t"
 	"_InterlockedCompareExchange@12:\n\t"
 	"movl 12(%esp),%eax\n\t"
 	"movl 8(%esp),%edx\n\t"
 	"movl 4(%esp),%ebx\n\t"
 	"cmpxchg %edx,(%ebx)\n\t"
 	"movl %edx,%eax\n\t"
-	"ret $12\n\t"
-	);
-/*
-__asm__(
-#ifndef CONFIG_USE_FASTCALL 
-	".global _InterlockedCompareExchange@12\n"
-	"\t_InterlockedCompareExchange@12:\n"
-	"\tmovl 4(%esp), %ecx\n"
-	"\tmovl 8(%esp), %edx\n"
-	"\tmovl 12(%esp), %eax\n"
+	"ret $12\n\t");
 #else
-	".global @InterlockedCompareExchange@4\n"
-	"\t@InterlockedCompareExchange@4:\n"
-	"\tmovl 4(%esp), %eax\n"
+__asm__("\n\t.global @InterlockedCompareExchange@12\n\t"
+	"@InterlockedCompareExchange@12:\n\t"
+	"movl 4(%esp),%eax\n\t"
+	"cmpxchg %edx,(%ecx)\n\t"
+	"ret $4\n\t");
 #endif
-	"\tcmpxchg %ecx, %edx\n"
-#ifndef CONFIG_USE_FASTCALL 
-	"\tret $12\n"
-#else
-	"\tret $4\n"
-#endif
-*/
 
 #endif /* I386_FIX */
 

@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.16 2001/03/07 16:48:40 dwelch Exp $
+/* $Id: resource.c,v 1.17 2001/06/20 19:59:35 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -674,7 +674,7 @@ ExReinitializeResourceLite (
 }
 
 VOID
-STDCALL
+FASTCALL
 ExReleaseResourceLite (
 	PERESOURCE	Resource
 	)
