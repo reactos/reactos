@@ -45,4 +45,4 @@ static void RunTest()
 #endif
 }
 
-DISPATCHER(Eng_mem_1Test, "Win32k Engine Memory API")
+_Dispatcher(Eng_mem_1Test, "Win32k Engine Memory API")

@@ -1,3 +1,27 @@
+2004-10-24  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* config (REGRESSIONTESTS): Remove.
+	* tools/config.mk: Update.
+	* lib/kernel32/misc/dllmain.c: Update.
+	* drivers/net/tcpip/tests/Makefile (TARGET_OBJECTS): Add setup.o.
+	* lib/gdiplus/tests/Makefile (TARGET_OBJECTS): Ditto.
+	* lib/kernel32/tests/Makefile (TARGET_OBJECTS): Ditto.
+	* lib/ws2_32/tests/Makefile (TARGET_OBJECTS): Ditto.
+	* subsys/win32k/tests/makefile (TARGET_OBJECTS): Ditto.
+	* regtests/shared/regtests.h (SetupOnce, _SetupOnce): Declare.
+	(DISPATCHER): Rename to _Dispatcher.
+	* lib/gdiplus/tests/tests/test-1.c: Update.
+	* lib/kernel32/tests/tests/CreateFile.c: Ditto.
+	* lib/ws2_32/tests/tests/WinsockEvent.c: Ditto.
+	* subsys/win32k/tests/tests/eng-mem-1.c: Ditto.
+	* tools/helper.mk: Be quiet when building tests.
+	* tools/regtests.c: Remove unused code.
+	* drivers/net/tcpip/tests/setup.c: New file.
+	* lib/gdiplus/tests/setup.c: Ditto.
+	* lib/kernel32/tests/setup.c: Ditto.
+	* lib/ws2_32/tests/setup.c: Ditto.
+	* subsys/win32k/tests/setup.c: Ditto.
+
 2004-10-23  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* Makefile: Support regtests_implib.

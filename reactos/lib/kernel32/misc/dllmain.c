@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.36 2004/08/24 17:21:11 navaraf Exp $
+/* $Id: dllmain.c,v 1.37 2004/10/24 12:39:53 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,7 +11,6 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <roscfg.h>
 #include <k32.h>
 
 #define NDEBUG
@@ -95,18 +94,7 @@ DllMain(HANDLE hDll,
       case DLL_PROCESS_ATTACH:
 	DPRINT("DLL_PROCESS_ATTACH\n");
 
-#if !defined(REGTESTS)
-	/*
-	 * When running regression tests, this module need to receive
-	 * thread attach/detach notifications. This is needed because
-	 * the module is already loaded when the regression test suite
-	 * driver would load this module using LoadLibrary() so a
-	 * DLL_PROCESS_ATTACH notification is not sent. The regression
-	 * test suite driver sends thread notifications instead in this
-	 * case.
-	 */
 	LdrDisableThreadCalloutsForDll ((PVOID)hDll);
-#endif
 
 	/*
 	 * Connect to the csrss server

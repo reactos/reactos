@@ -123,4 +123,4 @@ static void RunTest()
   TestFile();
 }
 
-DISPATCHER(CreatefileTest, "CreateFileW")
+_Dispatcher(CreatefileTest, "CreateFileW")

@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.91 2004/10/23 21:05:12 chorns Exp $
+# $Id: helper.mk,v 1.92 2004/10/24 12:39:54 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -722,7 +722,7 @@ else
 endif
 
 $(MK_BASENAME).a: $(MK_OBJECTS)
-	$(AR) -r $(MK_BASENAME).a $(MK_OBJECTS)
+	$(AR) -rc $(MK_BASENAME).a $(MK_OBJECTS)
 
 $(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS)
 ifeq ($(MK_EXETYPE),dll)
@@ -815,7 +815,7 @@ else
 endif
 
 $(MK_BASENAME).a: $(MK_OBJECTS)
-	$(AR) -r $(MK_BASENAME).a $(MK_OBJECTS)
+	$(AR) -rc $(MK_BASENAME).a $(MK_OBJECTS)
 
 $(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS)
 	$(LD_CC) -Wl,--base-file,base.tmp \
@@ -882,8 +882,10 @@ endif # MK_MODE
 ifeq ($(MK_MODE),static)
 
 $(MK_FULLNAME): $(MK_EXTRADEP) $(MK_OBJECTS)
-	$(AR) -r $(MK_FULLNAME) $(MK_OBJECTS)
-	@echo $(MK_BASENAME)$(MK_EXT) was successfully built.
+	$(AR) -rc $(MK_FULLNAME) $(MK_OBJECTS)
+ifneq ($(TARGET_TYPE),test)
+	@echo $(MK_FULLNAME) was successfully built.
+endif
 
 # Static libraries dont have a nostrip version
 $(MK_NOSTRIPNAME):

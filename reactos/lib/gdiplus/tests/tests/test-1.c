@@ -8,4 +8,4 @@ RunTest()
 {
 }
 
-DISPATCHER(Test_1Test, "Test 1")
+_Dispatcher(Test_1Test, "Test 1")

@@ -70,21 +70,14 @@ TestWSACloseEvent()
   TestWSACloseEventFailure();
 }
 
-extern BOOL
-STDCALL
-DllMain(HANDLE hInstDll,
-        ULONG dwReason,
-        LPVOID lpReserved);
-
 static void
 RunTest()
 {
   WSADATA WSAData;
 
-  DllMain(NULL, DLL_PROCESS_ATTACH, NULL);
   WSAStartup(MAKEWORD(2, 0), &WSAData);
   TestWSACloseEvent();
   WSACleanup();
 }
 
-DISPATCHER(WinsockeventTest, "Winsock 2 event")
+_Dispatcher(WinsockeventTest, "Winsock 2 event")

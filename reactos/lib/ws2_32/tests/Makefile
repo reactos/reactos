@@ -12,7 +12,9 @@ TARGET_LIBS = ../ws2_32.a
 
 -include Makefile.tests
 
-TARGET_OBJECTS = $(addprefix tests/, $(TESTS))
+TARGET_OBJECTS = \
+  setup.o \
+  $(addprefix tests/, $(TESTS))
 
 include $(PATH_TO_TOP)/rules.mak
 

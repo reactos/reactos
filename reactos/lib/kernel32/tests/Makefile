@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2004/10/23 21:05:11 chorns Exp $
+# $Id: Makefile,v 1.5 2004/10/24 12:39:53 chorns Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -14,7 +14,9 @@ TARGET_LIBS = ../kernel32.a
 
 -include Makefile.tests
 
-TARGET_OBJECTS = $(addprefix tests/, $(TESTS))
+TARGET_OBJECTS = \
+  setup.o \
+  $(addprefix tests/, $(TESTS))
 
 include $(PATH_TO_TOP)/rules.mak
 

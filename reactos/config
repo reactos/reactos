@@ -48,11 +48,6 @@ ACPI := 0
 3GB := 1
 
 #
-# Whether to build regression tests
-#
-REGRESSIONTESTS := 0
-
-#
 # Whether to use Structured Exception Handling
 #
 SEH := 0
