@@ -15,14 +15,14 @@
                
 HRESULT WINAPI DirectDrawCreate(LPGUID lpGUID, LPDIRECTDRAW* lplpDD, LPUNKNOWN pUnkOuter) 
 {    	
-    if (pUnkOuter==NULL) return DDERR_INVALIDPARAMS;
+    if (pUnkOuter!=NULL) return DDERR_INVALIDPARAMS;
 	return DDRAW_Create(lpGUID, (LPVOID*) lplpDD, pUnkOuter, &IID_IDirectDraw, FALSE);
 }
 
                 
 HRESULT WINAPI DirectDrawCreateEx(LPGUID lpGUID, LPVOID* lplpDD, REFIID iid, LPUNKNOWN pUnkOuter)
 {
-	if (pUnkOuter==NULL) return DDERR_INVALIDPARAMS;
+	if (pUnkOuter!=NULL) return DDERR_INVALIDPARAMS;
 	if (!IsEqualGUID(iid, &IID_IDirectDraw7)) return DDERR_INVALIDPARAMS;
 
     return DDRAW_Create(lpGUID, lplpDD, pUnkOuter, iid, TRUE);
