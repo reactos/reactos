@@ -36,6 +36,351 @@
 extern "C" {
 #endif /* __cplusplus */
 
+WINBOOL
+STDCALL
+IMPSetIMEW( IN HWND hwnd, IN LPIMEPROW ime);
+
+WINBOOL
+STDCALL
+IMPQueryIMEW( IN OUT LPIMEPROW ime);
+
+WINBOOL
+STDCALL
+IMPGetIMEW( IN HWND hwnd, OUT LPIMEPROW ime);
+
+WINBOOL
+STDCALL
+SetCalendarInfoW(
+    LCID     Locale,
+    CALID    Calendar,
+    CALTYPE  CalType,
+    LPCWSTR  lpCalData);
+
+WINBOOL
+STDCALL
+EnumUILanguagesW(
+    IN UILANGUAGE_ENUMPROCW lpUILanguageEnumProc,
+    IN DWORD                dwFlags,
+    IN LONG_PTR             lParam);
+
+WINBOOL
+STDCALL
+EnumLanguageGroupLocalesW(
+    IN LANGGROUPLOCALE_ENUMPROCW lpLangGroupLocaleEnumProc,
+    IN LGRPID                    LanguageGroup,
+    IN DWORD                     dwFlags,
+    IN LONG_PTR                  lParam);
+
+WINBOOL
+STDCALL
+EnumSystemLanguageGroupsW(
+    IN LANGUAGEGROUP_ENUMPROCW lpLanguageGroupEnumProc,
+    IN DWORD                   dwFlags,
+    IN LONG_PTR                lParam);
+
+int
+STDCALL
+GetGeoInfoW(
+    GEOID       Location,
+    GEOTYPE     GeoType,
+    LPWSTR     lpGeoData,
+    int         cchData,
+    LANGID      LangId);
+
+WINBOOL
+STDCALL
+EnumDateFormatsExW(
+    IN DATEFMT_ENUMPROCEXW lpDateFmtEnumProcEx,
+    IN LCID                Locale,
+    IN DWORD               dwFlags);
+
+WINBOOL
+STDCALL
+EnumCalendarInfoExW(
+    IN CALINFO_ENUMPROCEXW lpCalInfoEnumProcEx,
+    IN LCID                Locale,
+    IN CALID               Calendar,
+    IN CALTYPE             CalType);
+
+int
+STDCALL
+GetCalendarInfoW(
+    LCID     Locale,
+    CALID    Calendar,
+    CALTYPE  CalType,
+    LPWSTR   lpCalData,
+    int      cchData,
+    LPDWORD  lpValue);
+
+WINBOOL
+STDCALL
+GetCPInfoExW(
+    IN UINT          CodePage,
+    IN DWORD         dwFlags,
+    OUT LPCPINFOEXW  lpCPInfoEx);
+
+WINBOOL
+STDCALL
+CheckNameLegalDOS8Dot3W(
+    LPCWSTR lpName,
+    LPSTR lpOemName OPTIONAL,
+    DWORD OemNameSize OPTIONAL,
+    PWINBOOL pbNameContainsSpaces OPTIONAL,
+    PWINBOOL pbNameLegal
+    );
+
+WINBOOL
+STDCALL
+CreateHardLinkW(
+    LPCWSTR lpFileName,
+    LPCWSTR lpExistingFileName,
+    LPSECURITY_ATTRIBUTES lpSecurityAttributes
+    );
+
+HANDLE
+STDCALL
+CreateJobObjectW(
+    LPSECURITY_ATTRIBUTES lpJobAttributes,
+    LPCWSTR lpName
+    );
+
+WINBOOL
+STDCALL
+DeleteVolumeMountPointW(
+    LPCWSTR lpszVolumeMountPoint
+    );
+
+WINBOOL
+STDCALL
+DnsHostnameToComputerNameW (
+    LPCWSTR Hostname,
+    LPWSTR ComputerName,
+    LPDWORD nSize
+    );
+
+WINBOOL
+STDCALL
+FindActCtxSectionStringW(
+    DWORD dwFlags,
+    const GUID *lpExtensionGuid,
+    ULONG ulSectionId,
+    LPCWSTR lpStringToFind,
+    PACTCTX_SECTION_KEYED_DATA ReturnedData
+    );
+
+HANDLE
+STDCALL
+FindFirstFileExW(
+    LPCWSTR lpFileName,
+    FINDEX_INFO_LEVELS fInfoLevelId,
+    LPVOID lpFindFileData,
+    FINDEX_SEARCH_OPS fSearchOp,
+    LPVOID lpSearchFilter,
+    DWORD dwAdditionalFlags
+    );
+
+HANDLE
+STDCALL
+FindFirstVolumeW(
+    LPWSTR lpszVolumeName,
+    DWORD cchBufferLength
+    );
+
+HANDLE
+STDCALL
+FindFirstVolumeMountPointW(
+    LPCWSTR lpszRootPathName,
+    LPWSTR lpszVolumeMountPoint,
+    DWORD cchBufferLength
+    );
+
+WINBOOL
+STDCALL
+FindNextVolumeW(
+    HANDLE hFindVolume,
+    LPWSTR lpszVolumeName,
+    DWORD cchBufferLength
+    );
+
+WINBOOL
+STDCALL
+FindNextVolumeMountPointW(
+    HANDLE hFindVolumeMountPoint,
+    LPWSTR lpszVolumeMountPoint,
+    DWORD cchBufferLength
+    );
+
+WINBOOL
+STDCALL
+GetComputerNameExW (
+    COMPUTER_NAME_FORMAT NameType,
+    LPWSTR lpBuffer,
+    LPDWORD nSize
+    );
+
+DWORD
+STDCALL
+GetDllDirectoryW(
+    DWORD nBufferLength,
+    LPWSTR lpBuffer
+    );
+
+DWORD
+STDCALL
+GetFirmwareEnvironmentVariableW(
+    LPCWSTR lpName,
+    LPCWSTR lpGuid,
+    PVOID   pBuffer,
+    DWORD    nSize
+    );
+
+DWORD
+STDCALL
+GetLongPathNameW(
+    LPCWSTR lpszShortPath,
+    LPWSTR  lpszLongPath,
+    DWORD    cchBuffer
+    );
+
+WINBOOL
+STDCALL
+GetModuleHandleExW(
+    DWORD        dwFlags,
+    LPCWSTR     lpModuleName,
+    HMODULE*    phModule
+    );
+
+UINT
+STDCALL
+GetSystemWow64DirectoryW(
+    LPWSTR lpBuffer,
+    UINT uSize
+    );
+
+WINBOOL
+STDCALL
+GetVolumeNameForVolumeMountPointW(
+    LPCWSTR lpszVolumeMountPoint,
+    LPWSTR lpszVolumeName,
+    DWORD cchBufferLength
+    );
+
+WINBOOL
+STDCALL
+GetVolumePathNameW(
+    LPCWSTR lpszFileName,
+    LPWSTR lpszVolumePathName,
+    DWORD cchBufferLength
+    );
+
+WINBOOL
+STDCALL
+GetVolumePathNamesForVolumeNameW(
+    LPCWSTR lpszVolumeName,
+    LPWSTR lpszVolumePathNames,
+    DWORD cchBufferLength,
+    PDWORD lpcchReturnLength
+    );
+
+HANDLE
+STDCALL
+OpenJobObjectW(
+    DWORD dwDesiredAccess,
+    WINBOOL bInheritHandle,
+    LPCWSTR lpName
+    );
+
+WINBOOL
+STDCALL
+ReplaceFileW(
+    LPCWSTR lpReplacedFileName,
+    LPCWSTR lpReplacementFileName,
+    LPCWSTR lpBackupFileName,
+    DWORD   dwReplaceFlags,
+    LPVOID  lpExclude,
+    LPVOID  lpReserved
+    );
+
+WINBOOL
+STDCALL
+SetComputerNameExW (
+    COMPUTER_NAME_FORMAT NameType,
+    LPCWSTR lpBuffer
+    );
+
+WINBOOL
+STDCALL
+SetDllDirectoryW(
+    LPCWSTR lpPathName
+    );
+
+WINBOOL
+STDCALL
+SetFileShortNameW(
+    HANDLE hFile,
+    LPCWSTR lpShortName
+    );
+
+WINBOOL
+STDCALL
+SetFirmwareEnvironmentVariableW(
+    LPCWSTR lpName,
+    LPCWSTR lpGuid,
+    PVOID    pValue,
+    DWORD    nSize
+    );
+
+WINBOOL
+STDCALL
+SetVolumeMountPointW(
+    LPCWSTR lpszVolumeMountPoint,
+    LPCWSTR lpszVolumeName
+    );
+
+WINBOOL
+STDCALL
+VerifyVersionInfoW(
+    LPOSVERSIONINFOEXW lpVersionInformation,
+    DWORD dwTypeMask,
+    DWORDLONG dwlConditionMask
+    );
+
+HDEVNOTIFY
+STDCALL
+RegisterDeviceNotificationW(
+    HANDLE hRecipient,
+    LPVOID NotificationFilter,
+    DWORD Flags
+    );
+
+UINT
+STDCALL
+GetRawInputDeviceInfoW(
+    HANDLE hDevice,
+    UINT uiCommand,
+    LPVOID pData,
+    PUINT pcbSize);
+
+LONG
+STDCALL
+BroadcastSystemMessageExW(
+    DWORD dwflags,
+    LPDWORD lpdwRecipients,
+    UINT uiMessage,
+    WPARAM wParam,
+    LPARAM lParam,
+    PBSMINFO pBSMInfo);
+
+LONG
+STDCALL
+CsrBroadcastSystemMessageExW(
+    DWORD dwflags,
+    LPDWORD lpdwRecipients,
+    UINT uiMessage,
+    WPARAM wParam,
+    LPARAM lParam,
+    PBSMINFO pBSMInfo);
+
 HFONT
 STDCALL
 CreateFontIndirectExW(const ENUMLOGFONTEXDVW *elfexd);

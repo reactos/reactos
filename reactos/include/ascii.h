@@ -35,6 +35,341 @@
 extern "C" {
 #endif /* __cplusplus */
 
+WINBOOL
+STDCALL
+IMPSetIMEA( IN HWND hwnd, IN LPIMEPROA ime);
+
+WINBOOL
+STDCALL
+IMPQueryIMEA( IN OUT LPIMEPROA ime);
+
+WINBOOL
+STDCALL
+IMPGetIMEA( IN HWND hwnd, OUT LPIMEPROA ime);
+
+WINBOOL
+STDCALL
+SetCalendarInfoA(
+    LCID     Locale,
+    CALID    Calendar,
+    CALTYPE  CalType,
+    LPCSTR  lpCalData);
+
+WINBOOL
+STDCALL
+EnumUILanguagesA(
+    IN UILANGUAGE_ENUMPROCA lpUILanguageEnumProc,
+    IN DWORD                dwFlags,
+    IN LONG_PTR             lParam);
+
+WINBOOL
+STDCALL
+EnumLanguageGroupLocalesA(
+    IN LANGGROUPLOCALE_ENUMPROCA lpLangGroupLocaleEnumProc,
+    IN LGRPID                    LanguageGroup,
+    IN DWORD                     dwFlags,
+    IN LONG_PTR                  lParam);
+
+WINBOOL
+STDCALL
+EnumSystemLanguageGroupsA(
+    IN LANGUAGEGROUP_ENUMPROCA lpLanguageGroupEnumProc,
+    IN DWORD                   dwFlags,
+    IN LONG_PTR                lParam);
+
+int
+STDCALL
+GetGeoInfoA(
+    GEOID       Location,
+    GEOTYPE     GeoType,
+    LPSTR     lpGeoData,
+    int         cchData,
+    LANGID      LangId);
+
+WINBOOL
+STDCALL
+EnumDateFormatsExA(
+    IN DATEFMT_ENUMPROCEXA lpDateFmtEnumProcEx,
+    IN LCID                Locale,
+    IN DWORD               dwFlags);
+
+WINBOOL
+STDCALL
+EnumCalendarInfoExA(
+    IN CALINFO_ENUMPROCEXA lpCalInfoEnumProcEx,
+    IN LCID                Locale,
+    IN CALID               Calendar,
+    IN CALTYPE             CalType);
+
+int
+STDCALL
+GetCalendarInfoA(
+    LCID     Locale,
+    CALID    Calendar,
+    CALTYPE  CalType,
+    LPSTR   lpCalData,
+    int      cchData,
+    LPDWORD  lpValue);
+
+WINBOOL
+STDCALL
+GetCPInfoExA(
+    IN UINT          CodePage,
+    IN DWORD         dwFlags,
+    OUT LPCPINFOEXA  lpCPInfoEx);
+
+WINBOOL
+STDCALL
+CheckNameLegalDOS8Dot3A(
+    LPCSTR lpName,
+    LPSTR lpOemName OPTIONAL,
+    DWORD OemNameSize OPTIONAL,
+    PWINBOOL pbNameContainsSpaces OPTIONAL,
+    PWINBOOL pbNameLegal
+    );
+
+WINBOOL
+STDCALL
+CreateHardLinkA(
+    LPCSTR lpFileName,
+    LPCSTR lpExistingFileName,
+    LPSECURITY_ATTRIBUTES lpSecurityAttributes
+    );
+
+HANDLE
+STDCALL
+CreateJobObjectA(
+    LPSECURITY_ATTRIBUTES lpJobAttributes,
+    LPCSTR lpName
+    );
+
+WINBOOL
+STDCALL
+DeleteVolumeMountPointA(
+    LPCSTR lpszVolumeMountPoint
+    );
+
+WINBOOL
+STDCALL
+DnsHostnameToComputerNameA (
+    LPCSTR Hostname,
+    LPSTR ComputerName,
+    LPDWORD nSize
+    );
+
+WINBOOL
+STDCALL
+FindActCtxSectionStringA(
+    DWORD dwFlags,
+    const GUID *lpExtensionGuid,
+    ULONG ulSectionId,
+    LPCSTR lpStringToFind,
+    PACTCTX_SECTION_KEYED_DATA ReturnedData
+    );
+
+HANDLE
+STDCALL
+FindFirstFileExA(
+    LPCSTR lpFileName,
+    FINDEX_INFO_LEVELS fInfoLevelId,
+    LPVOID lpFindFileData,
+    FINDEX_SEARCH_OPS fSearchOp,
+    LPVOID lpSearchFilter,
+    DWORD dwAdditionalFlags
+    );
+
+HANDLE
+STDCALL
+FindFirstVolumeA(
+    LPSTR lpszVolumeName,
+    DWORD cchBufferLength
+    );
+
+HANDLE
+STDCALL
+FindFirstVolumeMountPointA(
+    LPCSTR lpszRootPathName,
+    LPSTR lpszVolumeMountPoint,
+    DWORD cchBufferLength
+    );
+
+WINBOOL
+STDCALL
+FindNextVolumeA(
+    HANDLE hFindVolume,
+    LPSTR lpszVolumeName,
+    DWORD cchBufferLength
+    );
+
+WINBOOL
+STDCALL
+FindNextVolumeMountPointA(
+    HANDLE hFindVolumeMountPoint,
+    LPSTR lpszVolumeMountPoint,
+    DWORD cchBufferLength
+    );
+
+WINBOOL
+STDCALL
+GetComputerNameExA (
+    COMPUTER_NAME_FORMAT NameType,
+    LPSTR lpBuffer,
+    LPDWORD nSize
+    );
+
+DWORD
+STDCALL
+GetDllDirectoryA(
+    DWORD nBufferLength,
+    LPSTR lpBuffer
+    );
+
+DWORD
+STDCALL
+GetFirmwareEnvironmentVariableA(
+    LPCSTR lpName,
+    LPCSTR lpGuid,
+    PVOID   pBuffer,
+    DWORD    nSize
+    );
+
+DWORD
+STDCALL
+GetLongPathNameA(
+    LPCSTR lpszShortPath,
+    LPSTR  lpszLongPath,
+    DWORD    cchBuffer
+    );
+
+WINBOOL
+STDCALL
+GetModuleHandleExA(
+    DWORD        dwFlags,
+    LPCSTR     lpModuleName,
+    HMODULE*    phModule
+    );
+
+UINT
+STDCALL
+GetSystemWow64DirectoryA(
+    LPSTR lpBuffer,
+    UINT uSize
+    );
+
+WINBOOL
+STDCALL
+GetVolumeNameForVolumeMountPointA(
+    LPCSTR lpszVolumeMountPoint,
+    LPSTR lpszVolumeName,
+    DWORD cchBufferLength
+    );
+
+WINBOOL
+STDCALL
+GetVolumePathNameA(
+    LPCSTR lpszFileName,
+    LPSTR lpszVolumePathName,
+    DWORD cchBufferLength
+    );
+
+WINBOOL
+STDCALL
+GetVolumePathNamesForVolumeNameA(
+    LPCSTR lpszVolumeName,
+    LPSTR lpszVolumePathNames,
+    DWORD cchBufferLength,
+    PDWORD lpcchReturnLength
+    );
+
+HANDLE
+STDCALL
+OpenJobObjectA(
+    DWORD dwDesiredAccess,
+    WINBOOL bInheritHandle,
+    LPCSTR lpName
+    );
+
+WINBOOL
+STDCALL
+ReplaceFileA(
+    LPCSTR  lpReplacedFileName,
+    LPCSTR  lpReplacementFileName,
+    LPCSTR  lpBackupFileName,
+    DWORD   dwReplaceFlags,
+    LPVOID  lpExclude,
+    LPVOID  lpReserved
+    );
+
+WINBOOL
+STDCALL
+SetComputerNameExA (
+    COMPUTER_NAME_FORMAT NameType,
+    LPCSTR lpBuffer
+    );
+
+WINBOOL
+STDCALL
+SetDllDirectoryA(
+    LPCSTR lpPathName
+    );
+
+WINBOOL
+STDCALL
+SetFileShortNameA(
+    HANDLE hFile,
+    LPCSTR lpShortName
+    );
+
+WINBOOL
+STDCALL
+SetFirmwareEnvironmentVariableA(
+    LPCSTR lpName,
+    LPCSTR lpGuid,
+    PVOID    pValue,
+    DWORD    nSize
+    );
+
+WINBOOL
+STDCALL
+SetVolumeMountPointA(
+    LPCSTR lpszVolumeMountPoint,
+    LPCSTR lpszVolumeName
+    );
+
+WINBOOL
+STDCALL
+VerifyVersionInfoA(
+    LPOSVERSIONINFOEXA lpVersionInformation,
+    DWORD dwTypeMask,
+    DWORDLONG dwlConditionMask
+    );
+
+HDEVNOTIFY
+STDCALL
+RegisterDeviceNotificationA(
+    HANDLE hRecipient,
+    LPVOID NotificationFilter,
+    DWORD Flags
+    );
+
+UINT
+STDCALL
+GetRawInputDeviceInfoA(
+    HANDLE hDevice,
+    UINT uiCommand,
+    LPVOID pData,
+    PUINT pcbSize);
+
+LONG
+STDCALL
+BroadcastSystemMessageExA(
+    DWORD dwflags,
+    LPDWORD lpdwRecipients,
+    UINT uiMessage,
+    WPARAM wParam,
+    LPARAM lParam,
+    PBSMINFO pBSMInfo);
+
 HFONT 
 STDCALL
 CreateFontIndirectExA(const ENUMLOGFONTEXDVA *elfexd);

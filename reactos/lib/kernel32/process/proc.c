@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.55 2003/08/05 15:41:02 weiden Exp $
+/* $Id: proc.c,v 1.56 2003/08/28 19:37:00 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -28,7 +28,7 @@ VOID STDCALL
 RegisterWaitForInputIdle(WaitForInputIdleType lpfnRegisterWaitForInputIdle);
 
 WINBOOL STDCALL
-GetProcessId (HANDLE hProcess, LPDWORD lpProcessId);
+InternalGetProcessId (HANDLE hProcess, LPDWORD lpProcessId);
 
 
 /* FUNCTIONS ****************************************************************/
@@ -290,7 +290,7 @@ GetExitCodeProcess(HANDLE hProcess,
  * @implemented
  */
 WINBOOL STDCALL
-GetProcessId(HANDLE hProcess,
+InternalGetProcessId(HANDLE hProcess,
 	     LPDWORD lpProcessId)
 {
   PROCESS_BASIC_INFORMATION ProcessBasic;

@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.12 2003/07/10 18:50:51 chorns Exp $
+/* $Id: handle.c,v 1.13 2003/08/28 19:37:00 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,7 +19,7 @@
 /* GLOBALS *******************************************************************/
 
 WINBOOL STDCALL
-GetProcessId (HANDLE hProcess, LPDWORD lpProcessId);
+InternalGetProcessId (HANDLE hProcess, LPDWORD lpProcessId);
 
 HANDLE STDCALL
 DuplicateConsoleHandle (HANDLE	hConsole,
@@ -145,8 +145,8 @@ WINBOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
    DWORD SourceProcessId, TargetProcessId;
    if (IsConsoleHandle(hSourceHandle))
    {
-      if (FALSE == GetProcessId(hSourceProcessHandle, &SourceProcessId) || 
-	  FALSE == GetProcessId(hTargetProcessHandle, &TargetProcessId) ||
+      if (FALSE == InternalGetProcessId(hSourceProcessHandle, &SourceProcessId) || 
+	  FALSE == InternalGetProcessId(hTargetProcessHandle, &TargetProcessId) ||
 	  SourceProcessId != TargetProcessId ||
 	  SourceProcessId != GetCurrentProcessId())
       {

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.31 2003/08/26 12:28:53 weiden Exp $
+/* $Id: stubs.c,v 1.32 2003/08/28 19:37:00 gvg Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -5304,6 +5304,51 @@ PDD_UPDATEOVERLAYDATA puUpdateOverlayData
 DWORD STDCALL DdWaitForVerticalBlank( 
 HANDLE hDirectDraw,
 PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData
+)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL 
+STDCALL
+GdiPlayEMF
+(
+	LPWSTR     pwszPrinterName,
+	LPDEVMODEW pDevmode,
+	LPWSTR     pwszDocName,
+	EMFPLAYPROC pfnEMFPlayFn,
+	HANDLE     hPageQuery
+)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GdiInitSpool(VOID)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GdiPlayPrivatePageEMF
+(
+	HANDLE	SpoolFileHandle,
+	DWORD	unknown,
+	RECT	*prectDocument
 )
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

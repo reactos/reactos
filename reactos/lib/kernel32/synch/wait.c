@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.24 2003/07/20 19:53:53 royce Exp $
+/* $Id: wait.c,v 1.25 2003/08/28 19:37:00 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -215,11 +215,11 @@ WaitForMultipleObjectsEx(DWORD nCount,
 /*
  * @implemented
  */
-BOOL STDCALL
+DWORD STDCALL
 SignalObjectAndWait(HANDLE hObjectToSignal,
 		    HANDLE hObjectToWaitOn,
 		    DWORD dwMilliseconds,
-		    BOOL bAlertable)
+		    WINBOOL bAlertable)
 {
   PLARGE_INTEGER TimePtr;
   LARGE_INTEGER Time;

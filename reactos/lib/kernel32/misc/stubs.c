@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.54 2003/08/07 04:03:23 royce Exp $
+/* $Id: stubs.c,v 1.55 2003/08/28 19:37:00 gvg Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1151,4 +1151,2371 @@ VirtualBufferExceptionHandler (
     return 0;
 }
 
-/* EOF */
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+ActivateActCtx(
+    HANDLE hActCtx,
+    ULONG_PTR *lpCookie
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+AddRefActCtx(
+    HANDLE hActCtx
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+AllocateUserPhysicalPages(
+    HANDLE hProcess,
+    PULONG_PTR NumberOfPages,
+    PULONG_PTR PageArray
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+AssignProcessToJobObject(
+    HANDLE hJob,
+    HANDLE hProcess
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+BindIoCompletionCallback (
+    HANDLE FileHandle,
+    LPOVERLAPPED_COMPLETION_ROUTINE Function,
+    ULONG Flags
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+CancelDeviceWakeupRequest(
+    HANDLE hDevice
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+CancelTimerQueueTimer(
+    HANDLE TimerQueue,
+    HANDLE Timer
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+/*
+ * @unimplemented
+ */
+
+WINBOOL
+STDCALL
+ChangeTimerQueueTimer(
+    HANDLE TimerQueue,
+    HANDLE Timer,
+    ULONG DueTime,
+    ULONG Period
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+CreateActCtxA(
+    PCACTCTXA pActCtx
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+CreateActCtxW(
+    PCACTCTXW pActCtx
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+CreateJobSet (
+    ULONG NumJob,
+    PJOB_SET_ARRAY UserJobSet,
+    ULONG Flags)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+CreateMemoryResourceNotification(
+    MEMORY_RESOURCE_NOTIFICATION_TYPE NotificationType
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+CreateTimerQueue(
+    VOID
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+CreateTimerQueueTimer(
+    PHANDLE phNewTimer,
+    HANDLE TimerQueue,
+    WAITORTIMERCALLBACK Callback,
+    PVOID Parameter,
+    DWORD DueTime,
+    DWORD Period,
+    ULONG Flags
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+DeactivateActCtx(
+    DWORD dwFlags,
+    ULONG_PTR ulCookie
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+DeleteTimerQueue(
+    HANDLE TimerQueue
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+DeleteTimerQueueEx(
+    HANDLE TimerQueue,
+    HANDLE CompletionEvent
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+DeleteTimerQueueTimer(
+    HANDLE TimerQueue,
+    HANDLE Timer,
+    HANDLE CompletionEvent
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+FindActCtxSectionGuid(
+    DWORD dwFlags,
+    const GUID *lpExtensionGuid,
+    ULONG ulSectionId,
+    const GUID *lpGuidToFind,
+    PACTCTX_SECTION_KEYED_DATA ReturnedData
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+FindVolumeClose(
+    HANDLE hFindVolume
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+FindVolumeMountPointClose(
+    HANDLE hFindVolumeMountPoint
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+FreeUserPhysicalPages(
+    HANDLE hProcess,
+    PULONG_PTR NumberOfPages,
+    PULONG_PTR PageArray
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetCurrentActCtx(
+    HANDLE *lphActCtx)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetDevicePowerState(
+    HANDLE hDevice,
+    WINBOOL *pfOn
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetFileSizeEx(
+    HANDLE hFile,
+    PLARGE_INTEGER lpFileSize
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+GetNativeSystemInfo(
+    LPSYSTEM_INFO lpSystemInfo
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetNumaHighestNodeNumber(
+    PULONG HighestNodeNumber
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetNumaNodeProcessorMask(
+    UCHAR Node,
+    PULONGLONG ProcessorMask
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetNumaProcessorNode(
+    UCHAR Processor,
+    PUCHAR NodeNumber
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetProcessHandleCount(
+    HANDLE hProcess,
+    PDWORD pdwHandleCount
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetProcessId(
+    HANDLE Process
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetProcessIoCounters(
+    HANDLE hProcess,
+    PIO_COUNTERS lpIoCounters
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetProcessPriorityBoost(
+    HANDLE hProcess,
+    PWINBOOL pDisablePriorityBoost
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetSystemRegistryQuota(
+    PDWORD pdwQuotaAllowed,
+    PDWORD pdwQuotaUsed
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetSystemTimes(
+    LPFILETIME lpIdleTime,
+    LPFILETIME lpKernelTime,
+    LPFILETIME lpUserTime
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetThreadIOPendingFlag(
+    HANDLE hThread,
+    PWINBOOL lpIOIsPending
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+GetWriteWatch(
+    DWORD  dwFlags,
+    PVOID  lpBaseAddress,
+    SIZE_T dwRegionSize,
+    PVOID *lpAddresses,
+    PULONG_PTR lpdwCount,
+    PULONG lpdwGranularity
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GlobalMemoryStatusEx(
+    LPMEMORYSTATUSEX lpBuffer
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+HeapQueryInformation (
+    HANDLE HeapHandle, 
+    HEAP_INFORMATION_CLASS HeapInformationClass,
+    PVOID HeapInformation OPTIONAL,
+    SIZE_T HeapInformationLength OPTIONAL,
+    PSIZE_T ReturnLength OPTIONAL
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+HeapSetInformation (
+    HANDLE HeapHandle, 
+    HEAP_INFORMATION_CLASS HeapInformationClass,
+    PVOID HeapInformation OPTIONAL,
+    SIZE_T HeapInformationLength OPTIONAL
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+InitializeCriticalSectionAndSpinCount(
+    LPCRITICAL_SECTION lpCriticalSection,
+    DWORD dwSpinCount
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+InitializeSListHead (
+    PSLIST_HEADER ListHead
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+}
+
+/*
+ * @unimplemented
+ */
+PSLIST_ENTRY
+STDCALL
+InterlockedFlushSList (
+    PSLIST_HEADER ListHead
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+PSLIST_ENTRY
+STDCALL
+InterlockedPopEntrySList (
+    IN PSLIST_HEADER ListHead
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+PSLIST_ENTRY
+STDCALL
+InterlockedPushEntrySList (
+    IN PSLIST_HEADER ListHead,
+    IN PSLIST_ENTRY ListEntry
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+IsProcessInJob (
+    HANDLE ProcessHandle,
+    HANDLE JobHandle,
+    PWINBOOL Result
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+IsSystemResumeAutomatic(
+    VOID
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+IsWow64Process(
+    HANDLE hProcess,
+    PWINBOOL Wow64Process
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+MapUserPhysicalPages(
+    PVOID VirtualAddress,
+    ULONG_PTR NumberOfPages,
+    PULONG_PTR PageArray OPTIONAL
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+MapUserPhysicalPagesScatter(
+    PVOID *VirtualAddresses,
+    ULONG_PTR NumberOfPages,
+    PULONG_PTR PageArray OPTIONAL
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+OpenThread(
+    DWORD dwDesiredAccess,
+    WINBOOL bInheritHandle,
+    DWORD dwThreadId
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+QueryActCtxW(
+    DWORD dwFlags,
+    HANDLE hActCtx,
+    PVOID pvSubInstance,
+    ULONG ulInfoClass,
+    PVOID pvBuffer,
+    SIZE_T cbBuffer OPTIONAL,
+    SIZE_T *pcbWrittenOrRequired OPTIONAL
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+USHORT
+STDCALL
+QueryDepthSList (
+    PSLIST_HEADER ListHead
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+QueryInformationJobObject(
+    HANDLE hJob,
+    JOBOBJECTINFOCLASS JobObjectInformationClass,
+    LPVOID lpJobObjectInformation,
+    DWORD cbJobObjectInformationLength,
+    LPDWORD lpReturnLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+QueryMemoryResourceNotification(
+     HANDLE ResourceNotificationHandle,
+    PWINBOOL  ResourceState
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+QueueUserAPC(
+    PAPCFUNC pfnAPC,
+    HANDLE hThread,
+    ULONG_PTR dwData
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+QueueUserWorkItem(
+    LPTHREAD_START_ROUTINE Function,
+    PVOID Context,
+    ULONG Flags
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+ReadDirectoryChangesW(
+    HANDLE hDirectory,
+    LPVOID lpBuffer,
+    DWORD nBufferLength,
+    WINBOOL bWatchSubtree,
+    DWORD dwNotifyFilter,
+    LPDWORD lpBytesReturned,
+    LPOVERLAPPED lpOverlapped,
+    LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+ReadFileScatter(
+    HANDLE hFile,
+    FILE_SEGMENT_ELEMENT aSegmentArray[],
+    DWORD nNumberOfBytesToRead,
+    LPDWORD lpReserved,
+    LPOVERLAPPED lpOverlapped
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+RegisterWaitForSingleObject(
+    PHANDLE phNewWaitObject,
+    HANDLE hObject,
+    WAITORTIMERCALLBACK Callback,
+    PVOID Context,
+    ULONG dwMilliseconds,
+    ULONG dwFlags
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+RegisterWaitForSingleObjectEx(
+    HANDLE hObject,
+    WAITORTIMERCALLBACK Callback,
+    PVOID Context,
+    ULONG dwMilliseconds,
+    ULONG dwFlags
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+ReleaseActCtx(
+    HANDLE hActCtx
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+}
+
+/*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+RemoveVectoredExceptionHandler(
+    PVOID VectoredHandlerHandle
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+RequestDeviceWakeup(
+    HANDLE hDevice
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+RequestWakeupLatency(
+    LATENCY_TIME latency
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+ResetWriteWatch(
+    LPVOID lpBaseAddress,
+    SIZE_T dwRegionSize
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+RestoreLastError(
+    DWORD dwErrCode
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+SetCriticalSectionSpinCount(
+    LPCRITICAL_SECTION lpCriticalSection,
+    DWORD dwSpinCount
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetFilePointerEx(
+    HANDLE hFile,
+    LARGE_INTEGER liDistanceToMove,
+    PLARGE_INTEGER lpNewFilePointer,
+    DWORD dwMoveMethod
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetFileValidData(
+    HANDLE hFile,
+    LONGLONG ValidDataLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetInformationJobObject(
+    HANDLE hJob,
+    JOBOBJECTINFOCLASS JobObjectInformationClass,
+    LPVOID lpJobObjectInformation,
+    DWORD cbJobObjectInformationLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetMessageWaitingIndicator(
+    HANDLE hMsgIndicator,
+    ULONG ulMsgCount
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetProcessPriorityBoost(
+    HANDLE hProcess,
+    WINBOOL bDisablePriorityBoost
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+EXECUTION_STATE
+STDCALL
+SetThreadExecutionState(
+    EXECUTION_STATE esFlags
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+SetTimerQueueTimer(
+    HANDLE TimerQueue,
+    WAITORTIMERCALLBACK Callback,
+    PVOID Parameter,
+    DWORD DueTime,
+    DWORD Period,
+    WINBOOL PreferIo
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+TerminateJobObject(
+    HANDLE hJob,
+    UINT uExitCode
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+TzSpecificLocalTimeToSystemTime(
+    LPTIME_ZONE_INFORMATION lpTimeZoneInformation,
+    LPSYSTEMTIME lpLocalTime,
+    LPSYSTEMTIME lpUniversalTime
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+UnregisterWait(
+    HANDLE WaitHandle
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+UnregisterWaitEx(
+    HANDLE WaitHandle,
+    HANDLE CompletionEvent
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+WriteFileGather(
+    HANDLE hFile,
+    FILE_SEGMENT_ELEMENT aSegmentArray[],
+    DWORD nNumberOfBytesToWrite,
+    LPDWORD lpReserved,
+    LPOVERLAPPED lpOverlapped
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+WTSGetActiveConsoleSessionId(VOID)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+ZombifyActCtx(
+    HANDLE hActCtx
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+STDCALL
+AddVectoredExceptionHandler(
+    ULONG FirstHandler,
+    PVECTORED_EXCEPTION_HANDLER VectoredHandler
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+CheckNameLegalDOS8Dot3W(
+    LPCWSTR lpName,
+    LPSTR lpOemName OPTIONAL,
+    DWORD OemNameSize OPTIONAL,
+    PWINBOOL pbNameContainsSpaces OPTIONAL,
+    PWINBOOL pbNameLegal
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+CreateHardLinkW(
+    LPCWSTR lpFileName,
+    LPCWSTR lpExistingFileName,
+    LPSECURITY_ATTRIBUTES lpSecurityAttributes
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+CreateJobObjectW(
+    LPSECURITY_ATTRIBUTES lpJobAttributes,
+    LPCWSTR lpName
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+DeleteVolumeMountPointW(
+    LPCWSTR lpszVolumeMountPoint
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+DnsHostnameToComputerNameW (
+    LPCWSTR Hostname,
+    LPWSTR ComputerName,
+    LPDWORD nSize
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+FindActCtxSectionStringW(
+    DWORD dwFlags,
+    const GUID *lpExtensionGuid,
+    ULONG ulSectionId,
+    LPCWSTR lpStringToFind,
+    PACTCTX_SECTION_KEYED_DATA ReturnedData
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+FindFirstVolumeW(
+    LPWSTR lpszVolumeName,
+    DWORD cchBufferLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+FindFirstVolumeMountPointW(
+    LPCWSTR lpszRootPathName,
+    LPWSTR lpszVolumeMountPoint,
+    DWORD cchBufferLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+FindNextVolumeW(
+    HANDLE hFindVolume,
+    LPWSTR lpszVolumeName,
+    DWORD cchBufferLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+FindNextVolumeMountPointW(
+    HANDLE hFindVolumeMountPoint,
+    LPWSTR lpszVolumeMountPoint,
+    DWORD cchBufferLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetComputerNameExW (
+    COMPUTER_NAME_FORMAT NameType,
+    LPWSTR lpBuffer,
+    LPDWORD nSize
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetDllDirectoryW(
+    DWORD nBufferLength,
+    LPWSTR lpBuffer
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetFirmwareEnvironmentVariableW(
+    LPCWSTR lpName,
+    LPCWSTR lpGuid,
+    PVOID   pBuffer,
+    DWORD    nSize
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetLongPathNameW(
+    LPCWSTR lpszShortPath,
+    LPWSTR  lpszLongPath,
+    DWORD    cchBuffer
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetModuleHandleExW(
+    DWORD        dwFlags,
+    LPCWSTR     lpModuleName,
+    HMODULE*    phModule
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+GetSystemWow64DirectoryW(
+    LPWSTR lpBuffer,
+    UINT uSize
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetVolumeNameForVolumeMountPointW(
+    LPCWSTR lpszVolumeMountPoint,
+    LPWSTR lpszVolumeName,
+    DWORD cchBufferLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetVolumePathNameW(
+    LPCWSTR lpszFileName,
+    LPWSTR lpszVolumePathName,
+    DWORD cchBufferLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetVolumePathNamesForVolumeNameW(
+    LPCWSTR lpszVolumeName,
+    LPWSTR lpszVolumePathNames,
+    DWORD cchBufferLength,
+    PDWORD lpcchReturnLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+OpenJobObjectW(
+    DWORD dwDesiredAccess,
+    WINBOOL bInheritHandle,
+    LPCWSTR lpName
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+ReplaceFileW(
+    LPCWSTR lpReplacedFileName,
+    LPCWSTR lpReplacementFileName,
+    LPCWSTR lpBackupFileName,
+    DWORD   dwReplaceFlags,
+    LPVOID  lpExclude,
+    LPVOID  lpReserved
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetComputerNameExW (
+    COMPUTER_NAME_FORMAT NameType,
+    LPCWSTR lpBuffer
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetDllDirectoryW(
+    LPCWSTR lpPathName
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetFileShortNameW(
+    HANDLE hFile,
+    LPCWSTR lpShortName
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetFirmwareEnvironmentVariableW(
+    LPCWSTR lpName,
+    LPCWSTR lpGuid,
+    PVOID    pValue,
+    DWORD    nSize
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetVolumeMountPointW(
+    LPCWSTR lpszVolumeMountPoint,
+    LPCWSTR lpszVolumeName
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+VerifyVersionInfoW(
+    LPOSVERSIONINFOEXW lpVersionInformation,
+    DWORD dwTypeMask,
+    DWORDLONG dwlConditionMask
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+CheckNameLegalDOS8Dot3A(
+    LPCSTR lpName,
+    LPSTR lpOemName OPTIONAL,
+    DWORD OemNameSize OPTIONAL,
+    PWINBOOL pbNameContainsSpaces OPTIONAL,
+    PWINBOOL pbNameLegal
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+CreateHardLinkA(
+    LPCSTR lpFileName,
+    LPCSTR lpExistingFileName,
+    LPSECURITY_ATTRIBUTES lpSecurityAttributes
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+CreateJobObjectA(
+    LPSECURITY_ATTRIBUTES lpJobAttributes,
+    LPCSTR lpName
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+DeleteVolumeMountPointA(
+    LPCSTR lpszVolumeMountPoint
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+DnsHostnameToComputerNameA (
+    LPCSTR Hostname,
+    LPSTR ComputerName,
+    LPDWORD nSize
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+FindActCtxSectionStringA(
+    DWORD dwFlags,
+    const GUID *lpExtensionGuid,
+    ULONG ulSectionId,
+    LPCSTR lpStringToFind,
+    PACTCTX_SECTION_KEYED_DATA ReturnedData
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+FindFirstVolumeA(
+    LPSTR lpszVolumeName,
+    DWORD cchBufferLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+FindFirstVolumeMountPointA(
+    LPCSTR lpszRootPathName,
+    LPSTR lpszVolumeMountPoint,
+    DWORD cchBufferLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+FindNextVolumeA(
+    HANDLE hFindVolume,
+    LPSTR lpszVolumeName,
+    DWORD cchBufferLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+FindNextVolumeMountPointA(
+    HANDLE hFindVolumeMountPoint,
+    LPSTR lpszVolumeMountPoint,
+    DWORD cchBufferLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetComputerNameExA (
+    COMPUTER_NAME_FORMAT NameType,
+    LPSTR lpBuffer,
+    LPDWORD nSize
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetDllDirectoryA(
+    DWORD nBufferLength,
+    LPSTR lpBuffer
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetFirmwareEnvironmentVariableA(
+    LPCSTR lpName,
+    LPCSTR lpGuid,
+    PVOID   pBuffer,
+    DWORD    nSize
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetLongPathNameA(
+    LPCSTR lpszShortPath,
+    LPSTR  lpszLongPath,
+    DWORD    cchBuffer
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetModuleHandleExA(
+    DWORD        dwFlags,
+    LPCSTR     lpModuleName,
+    HMODULE*    phModule
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+GetSystemWow64DirectoryA(
+    LPSTR lpBuffer,
+    UINT uSize
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetVolumeNameForVolumeMountPointA(
+    LPCSTR lpszVolumeMountPoint,
+    LPSTR lpszVolumeName,
+    DWORD cchBufferLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetVolumePathNameA(
+    LPCSTR lpszFileName,
+    LPSTR lpszVolumePathName,
+    DWORD cchBufferLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetVolumePathNamesForVolumeNameA(
+    LPCSTR lpszVolumeName,
+    LPSTR lpszVolumePathNames,
+    DWORD cchBufferLength,
+    PDWORD lpcchReturnLength
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+OpenJobObjectA(
+    DWORD dwDesiredAccess,
+    WINBOOL bInheritHandle,
+    LPCSTR lpName
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+ReplaceFileA(
+    LPCSTR  lpReplacedFileName,
+    LPCSTR  lpReplacementFileName,
+    LPCSTR  lpBackupFileName,
+    DWORD   dwReplaceFlags,
+    LPVOID  lpExclude,
+    LPVOID  lpReserved
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetComputerNameExA (
+    COMPUTER_NAME_FORMAT NameType,
+    LPCSTR lpBuffer
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetDllDirectoryA(
+    LPCSTR lpPathName
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetFileShortNameA(
+    HANDLE hFile,
+    LPCSTR lpShortName
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetFirmwareEnvironmentVariableA(
+    LPCSTR lpName,
+    LPCSTR lpGuid,
+    PVOID    pValue,
+    DWORD    nSize
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetVolumeMountPointA(
+    LPCSTR lpszVolumeMountPoint,
+    LPCSTR lpszVolumeName
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+VerifyVersionInfoA(
+    LPOSVERSIONINFOEXA lpVersionInformation,
+    DWORD dwTypeMask,
+    DWORDLONG dwlConditionMask
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+LANGID
+STDCALL
+GetUserDefaultUILanguage(VOID)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+LANGID
+STDCALL
+GetSystemDefaultUILanguage(VOID)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetUserGeoID(
+    GEOID       GeoId)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+GEOID
+STDCALL
+GetUserGeoID(
+    GEOCLASS    GeoClass)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+EnumSystemGeoID(
+    GEOCLASS        GeoClass,
+    GEOID           ParentGeoId,
+    GEO_ENUMPROC    lpGeoEnumProc)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+IsValidLanguageGroup(
+    IN LGRPID  LanguageGroup,
+    IN DWORD   dwFlags)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetCalendarInfoA(
+    LCID     Locale,
+    CALID    Calendar,
+    CALTYPE  CalType,
+    LPCSTR  lpCalData)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+EnumUILanguagesA(
+    IN UILANGUAGE_ENUMPROCA lpUILanguageEnumProc,
+    IN DWORD                dwFlags,
+    IN LONG_PTR             lParam)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+EnumLanguageGroupLocalesA(
+    IN LANGGROUPLOCALE_ENUMPROCA lpLangGroupLocaleEnumProc,
+    IN LGRPID                    LanguageGroup,
+    IN DWORD                     dwFlags,
+    IN LONG_PTR                  lParam)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+EnumSystemLanguageGroupsA(
+    IN LANGUAGEGROUP_ENUMPROCA lpLanguageGroupEnumProc,
+    IN DWORD                   dwFlags,
+    IN LONG_PTR                lParam)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+GetGeoInfoA(
+    GEOID       Location,
+    GEOTYPE     GeoType,
+    LPSTR     lpGeoData,
+    int         cchData,
+    LANGID      LangId)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+EnumDateFormatsExA(
+    IN DATEFMT_ENUMPROCEXA lpDateFmtEnumProcEx,
+    IN LCID                Locale,
+    IN DWORD               dwFlags)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+EnumCalendarInfoExA(
+    IN CALINFO_ENUMPROCEXA lpCalInfoEnumProcEx,
+    IN LCID                Locale,
+    IN CALID               Calendar,
+    IN CALTYPE             CalType)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+GetCalendarInfoA(
+    LCID     Locale,
+    CALID    Calendar,
+    CALTYPE  CalType,
+    LPSTR   lpCalData,
+    int      cchData,
+    LPDWORD  lpValue)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetCPInfoExA(
+    IN UINT          CodePage,
+    IN DWORD         dwFlags,
+    OUT LPCPINFOEXA  lpCPInfoEx)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+SetCalendarInfoW(
+    LCID     Locale,
+    CALID    Calendar,
+    CALTYPE  CalType,
+    LPCWSTR  lpCalData)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+EnumUILanguagesW(
+    IN UILANGUAGE_ENUMPROCW lpUILanguageEnumProc,
+    IN DWORD                dwFlags,
+    IN LONG_PTR             lParam)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+EnumLanguageGroupLocalesW(
+    IN LANGGROUPLOCALE_ENUMPROCW lpLangGroupLocaleEnumProc,
+    IN LGRPID                    LanguageGroup,
+    IN DWORD                     dwFlags,
+    IN LONG_PTR                  lParam)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+EnumSystemLanguageGroupsW(
+    IN LANGUAGEGROUP_ENUMPROCW lpLanguageGroupEnumProc,
+    IN DWORD                   dwFlags,
+    IN LONG_PTR                lParam)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+GetGeoInfoW(
+    GEOID       Location,
+    GEOTYPE     GeoType,
+    LPWSTR     lpGeoData,
+    int         cchData,
+    LANGID      LangId)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+EnumDateFormatsExW(
+    IN DATEFMT_ENUMPROCEXW lpDateFmtEnumProcEx,
+    IN LCID                Locale,
+    IN DWORD               dwFlags)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+EnumCalendarInfoExW(
+    IN CALINFO_ENUMPROCEXW lpCalInfoEnumProcEx,
+    IN LCID                Locale,
+    IN CALID               Calendar,
+    IN CALTYPE             CalType)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+GetCalendarInfoW(
+    LCID     Locale,
+    CALID    Calendar,
+    CALTYPE  CalType,
+    LPWSTR   lpCalData,
+    int      cchData,
+    LPDWORD  lpValue)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetCPInfoExW(
+    IN UINT          CodePage,
+    IN DWORD         dwFlags,
+    OUT LPCPINFOEXW  lpCPInfoEx)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+RtlCaptureContext (
+    PCONTEXT ContextRecord
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+ULONGLONG
+STDCALL
+VerSetConditionMask(
+        ULONGLONG   ConditionMask,
+        DWORD   TypeMask,
+        BYTE    Condition
+        )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}

@@ -1,4 +1,4 @@
-; $Id: gdi32.edf,v 1.6 2003/08/26 12:28:53 weiden Exp $
+; $Id: gdi32.edf,v 1.7 2003/08/28 19:36:59 gvg Exp $
 ;
 ; gdi32.def
 ;
@@ -306,16 +306,16 @@ GdiGetPageHandle=GdiGetPageHandle@12
 GdiGetSpoolFileHandle=GdiGetSpoolFileHandle@12
 ;GdiGetSpoolMessage
 GdiGradientFill=GdiGradientFill@24
-;GdiInitSpool
+GdiInitSpool=GdiInitSpool@0
 ;GdiInitializeLanguagePack
 GdiIsMetaFileDC=GdiIsMetaFileDC@4
 GdiIsMetaPrintDC=GdiIsMetaPrintDC@4
 GdiIsPlayMetafileDC=GdiIsPlayMetafileDC@4
 GdiPlayDCScript=GdiPlayDCScript@24
-;GdiPlayEMF
+GdiPlayEMF=GdiPlayEMF@20
 GdiPlayJournal=GdiPlayJournal@20
 GdiPlayPageEMF=GdiPlayPageEMF@20
-;GdiPlayPrivatePageEMF
+GdiPlayPrivatePageEMF=GdiPlayPrivatePageEMF@12
 GdiPlayScript=GdiPlayScript@28
 ;GdiPrinterThunk
 GdiProcessSetup=GdiProcessSetup@0

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.39 2003/08/28 16:33:22 weiden Exp $
+/* $Id: stubs.c,v 1.40 2003/08/28 19:37:00 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1207,3 +1207,387 @@ ClientThreadSetup ( VOID )
   UNIMPLEMENTED;
   return FALSE;
 }
+
+/*
+ * @unimplemented
+ */
+HDEVNOTIFY
+STDCALL
+RegisterDeviceNotificationW(
+    HANDLE hRecipient,
+    LPVOID NotificationFilter,
+    DWORD Flags
+    )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+GetRawInputDeviceInfoW(
+    HANDLE hDevice,
+    UINT uiCommand,
+    LPVOID pData,
+    PUINT pcbSize)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+LONG
+STDCALL
+BroadcastSystemMessageExW(
+    DWORD dwflags,
+    LPDWORD lpdwRecipients,
+    UINT uiMessage,
+    WPARAM wParam,
+    LPARAM lParam,
+    PBSMINFO pBSMInfo)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+LONG
+STDCALL
+CsrBroadcastSystemMessageExW(
+    DWORD dwflags,
+    LPDWORD lpdwRecipients,
+    UINT uiMessage,
+    WPARAM wParam,
+    LPARAM lParam,
+    PBSMINFO pBSMInfo)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HDEVNOTIFY
+STDCALL
+RegisterDeviceNotificationA(
+    HANDLE hRecipient,
+    LPVOID NotificationFilter,
+    DWORD Flags
+    )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+GetRawInputDeviceInfoA(
+    HANDLE hDevice,
+    UINT uiCommand,
+    LPVOID pData,
+    PUINT pcbSize)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+LONG
+STDCALL
+BroadcastSystemMessageExA(
+    DWORD dwflags,
+    LPDWORD lpdwRecipients,
+    UINT uiMessage,
+    WPARAM wParam,
+    LPARAM lParam,
+    PBSMINFO pBSMInfo)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL 
+STDCALL
+AlignRects(LPRECT rect, DWORD b, DWORD c, DWORD d)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+LRESULT
+STDCALL
+DefRawInputProc(
+    PRAWINPUT* paRawInput,
+    INT nInput,
+    UINT cbSizeHeader)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL 
+DisableProcessWindowsGhosting(VOID)
+{
+  UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+GetLayeredWindowAttributes(
+    HWND hwnd,
+    COLORREF *pcrKey,
+    BYTE *pbAlpha,
+    DWORD *pdwFlags)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+GetRawInputBuffer(
+    PRAWINPUT   pData,
+    PUINT    pcbSize,
+    UINT         cbSizeHeader)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+GetRawInputData(
+    HRAWINPUT    hRawInput,
+    UINT         uiCommand,
+    LPVOID      pData,
+    PUINT    pcbSize,
+    UINT         cbSizeHeader)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+GetRawInputDeviceList(
+    PRAWINPUTDEVICELIST pRawInputDeviceList,
+    PUINT puiNumDevices,
+    UINT cbSize)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+GetRegisteredRawInputDevices(
+    PRAWINPUTDEVICE pRawInputDevices,
+    PUINT puiNumDevices,
+    UINT cbSize)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+GetWindowRgnBox(
+    HWND hWnd,
+    LPRECT lprc)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+IsGUIThread(
+    WINBOOL bConvert)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+IsWinEventHookInstalled(
+    DWORD event)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+PrintWindow(
+    HWND hwnd,
+    HDC hdcBlt,
+    UINT nFlags)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+RegisterRawInputDevices(
+    PCRAWINPUTDEVICE pRawInputDevices,
+    UINT uiNumDevices,
+    UINT cbSize)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+WINNLSGetIMEHotkey( IN HWND hwnd)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+WINNLSEnableIME( IN HWND hwnd, IN BOOL enable)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+WINNLSGetEnableStatus( IN HWND hwnd)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+IMPSetIMEW( IN HWND hwnd, IN LPIMEPROW ime)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+IMPQueryIMEW( IN OUT LPIMEPROW ime)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+IMPGetIMEW( IN HWND hwnd, OUT LPIMEPROW ime)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+IMPSetIMEA( IN HWND hwnd, IN LPIMEPROA ime)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+IMPQueryIMEA( IN OUT LPIMEPROA ime)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+IMPGetIMEA( IN HWND hwnd, OUT LPIMEPROA ime)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+

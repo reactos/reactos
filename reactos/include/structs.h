@@ -46,9 +46,9 @@
 #include <ntos/disk.h>
 #include <ntos/gditypes.h>
 
-// NOTE - _DISABLE_TIDENTS exists to keep ReactOS's source from
-// accidentally utilitizing ANSI/UNICODE-generic structs, defines
-// or functions.
+/* NOTE - _DISABLE_TIDENTS exists to keep ReactOS's source from
+   accidentally utilitizing ANSI/UNICODE-generic structs, defines
+   or functions. */
 #ifndef _DISABLE_TIDENTS
 #  ifdef UNICODE
 #    define typedef_tident(ident) typedef ident##W ident;
@@ -413,6 +413,56 @@ typedef struct tagCREATESTRUCTW {
 typedef_tident(CREATESTRUCT)
 typedef_tident(LPCREATESTRUCT)
 
+typedef struct _tagDATETIME {
+    WORD    year;
+    WORD    month;
+    WORD    day;
+    WORD    hour;
+    WORD    min;
+    WORD    sec;
+} DATETIME;
+
+typedef struct _tagIMEPROA {
+    HWND        hWnd;
+    DATETIME    InstDate;
+    UINT        wVersion;
+    BYTE        szDescription[50];
+    BYTE        szName[80];
+    BYTE        szOptions[30];
+} IMEPROA,*PIMEPROA,*NPIMEPROA,FAR *LPIMEPROA;
+typedef struct _tagIMEPROW {
+    HWND        hWnd;
+    DATETIME    InstDate;
+    UINT        wVersion;
+    WCHAR       szDescription[50];
+    WCHAR       szName[80];
+    WCHAR       szOptions[30];
+} IMEPROW,*PIMEPROW,*NPIMEPROW,FAR *LPIMEPROW;
+typedef_tident(IMEPRO)
+typedef_tident(NPIMEPRO)
+typedef_tident(LPIMEPRO)
+typedef_tident(PIMEPRO)
+
+typedef struct _cpinfoexA {
+    UINT    MaxCharSize;                    // max length (in bytes) of a char
+    BYTE    DefaultChar[MAX_DEFAULTCHAR];   // default character (MB)
+    BYTE    LeadByte[MAX_LEADBYTES];        // lead byte ranges
+    WCHAR   UnicodeDefaultChar;             // default character (Unicode)
+    UINT    CodePage;                       // code page id
+    CHAR    CodePageName[MAX_PATH];         // code page name (Unicode)
+} CPINFOEXA, *LPCPINFOEXA;
+typedef struct _cpinfoexW {
+    UINT    MaxCharSize;                    // max length (in bytes) of a char
+    BYTE    DefaultChar[MAX_DEFAULTCHAR];   // default character (MB)
+    BYTE    LeadByte[MAX_LEADBYTES];        // lead byte ranges
+    WCHAR   UnicodeDefaultChar;             // default character (Unicode)
+    UINT    CodePage;                       // code page id
+    WCHAR   CodePageName[MAX_PATH];         // code page name (Unicode)
+} CPINFOEXW, *LPCPINFOEXW;
+
+typedef_tident(CPINFOEX)
+typedef_tident(LPCPINFOEX)
+
 typedef struct tagCBT_CREATEWNDA {
   LPCREATESTRUCTA lpcs;
   HWND            hwndInsertAfter;
@@ -564,6 +614,66 @@ typedef struct tagLOGFONTW {
 typedef_tident(LOGFONT)
 typedef_tident(LPLOGFONT)
 typedef_tident(PLOGFONT)
+
+typedef struct tagRAWINPUTHEADER {
+    DWORD dwType;
+    DWORD dwSize;
+    HANDLE hDevice;
+    WPARAM wParam;
+} RAWINPUTHEADER, *PRAWINPUTHEADER, *LPRAWINPUTHEADER;
+
+typedef struct tagRAWINPUTDEVICELIST {
+    HANDLE hDevice;
+    DWORD dwType;
+} RAWINPUTDEVICELIST, *PRAWINPUTDEVICELIST;
+
+typedef struct tagRAWINPUTDEVICE {
+    USHORT usUsagePage;
+    USHORT usUsage;
+    DWORD dwFlags;
+    HWND hwndTarget;
+} RAWINPUTDEVICE, *PRAWINPUTDEVICE, *LPRAWINPUTDEVICE;
+
+typedef CONST RAWINPUTDEVICE* PCRAWINPUTDEVICE;
+
+typedef struct tagRAWMOUSE {
+    USHORT usFlags;
+    union {
+        ULONG ulButtons;
+        struct  {
+            USHORT  usButtonFlags;
+            USHORT  usButtonData;
+        };
+    };
+    ULONG ulRawButtons;
+    LONG lLastX;
+    LONG lLastY;
+    ULONG ulExtraInformation;
+} RAWMOUSE, *PRAWMOUSE, *LPRAWMOUSE;
+
+typedef struct tagRAWKEYBOARD {
+    USHORT MakeCode;
+    USHORT Flags;
+    USHORT Reserved;
+    USHORT VKey;
+    UINT   Message;
+    ULONG ExtraInformation;
+} RAWKEYBOARD, *PRAWKEYBOARD, *LPRAWKEYBOARD;
+
+typedef struct tagRAWHID {
+    DWORD dwSizeHid;
+    DWORD dwCount;
+    BYTE bRawData[1];
+} RAWHID, *PRAWHID, *LPRAWHID;
+
+typedef struct tagRAWINPUT {
+    RAWINPUTHEADER header;
+    union {
+        RAWMOUSE    mouse;
+        RAWKEYBOARD keyboard;
+        RAWHID      hid;
+    } data;
+} RAWINPUT, *PRAWINPUT, *LPRAWINPUT;
 
 typedef struct tagCHOOSEFONTA {
   DWORD        lStructSize;
@@ -795,6 +905,32 @@ typedef struct tagCOPYDATASTRUCT {
   PVOID lpData;
 } COPYDATASTRUCT;
 
+typedef struct tagACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA {
+    PVOID lpInformation;
+    PVOID lpSectionBase;
+    ULONG ulSectionLength;
+    PVOID lpSectionGlobalDataBase;
+    ULONG ulSectionGlobalDataLength;
+} ACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA, *PACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA;
+typedef const ACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA *PCACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA;
+
+typedef struct tagACTCTX_SECTION_KEYED_DATA {
+    ULONG cbSize;
+    ULONG ulDataFormatVersion;
+    PVOID lpData;
+    ULONG ulLength;
+    PVOID lpSectionGlobalData;
+    ULONG ulSectionGlobalDataLength;
+    PVOID lpSectionBase;
+    ULONG ulSectionTotalLength;
+    HANDLE hActCtx;
+    ULONG ulAssemblyRosterIndex;
+// 2600 stops here
+    ULONG ulFlags;
+    ACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA AssemblyMetadata;
+} ACTCTX_SECTION_KEYED_DATA, *PACTCTX_SECTION_KEYED_DATA;
+typedef const ACTCTX_SECTION_KEYED_DATA * PCACTCTX_SECTION_KEYED_DATA;
+
 typedef struct _cpinfo {
   UINT MaxCharSize;
   BYTE DefaultChar[MAX_DEFAULTCHAR];
@@ -844,6 +980,13 @@ typedef struct _CSADDR_INFO {
 } CSADDR_INFO;
 */
 
+typedef struct {
+    UINT cbSize;
+    HDESK hdesk;
+    HWND hwnd;
+    LUID luid;
+} BSMINFO, *PBSMINFO;
+
 typedef struct _currencyfmtA {
   UINT      NumDigits;
   UINT      LeadingZero;
@@ -867,6 +1010,53 @@ typedef struct _currencyfmtW {
 } CURRENCYFMTW;
 
 typedef_tident(CURRENCYFMT)
+
+typedef struct tagACTCTXA {
+    ULONG       cbSize;
+    DWORD       dwFlags;
+    LPCSTR      lpSource;
+    USHORT      wProcessorArchitecture;
+    LANGID      wLangId;
+    LPCSTR      lpAssemblyDirectory;
+    LPCSTR      lpResourceName;
+    LPCSTR      lpApplicationName;
+    HMODULE     hModule;
+} ACTCTXA, *PACTCTXA;
+
+typedef struct tagACTCTXW {
+    ULONG       cbSize;
+    DWORD       dwFlags;
+    LPCWSTR     lpSource;
+    USHORT      wProcessorArchitecture;
+    LANGID      wLangId;
+    LPCWSTR     lpAssemblyDirectory;
+    LPCWSTR     lpResourceName;
+    LPCWSTR     lpApplicationName;
+    HMODULE     hModule;
+} ACTCTXW, *PACTCTXW;
+
+typedef struct _JOB_SET_ARRAY {
+    HANDLE JobHandle;
+    DWORD MemberLevel;
+    DWORD Flags;
+} JOB_SET_ARRAY, *PJOB_SET_ARRAY;
+
+typedef struct _MEMORYSTATUSEX {
+    DWORD dwLength;
+    DWORD dwMemoryLoad;
+    DWORDLONG ullTotalPhys;
+    DWORDLONG ullAvailPhys;
+    DWORDLONG ullTotalPageFile;
+    DWORDLONG ullAvailPageFile;
+    DWORDLONG ullTotalVirtual;
+    DWORDLONG ullAvailVirtual;
+    DWORDLONG ullAvailExtendedVirtual;
+} MEMORYSTATUSEX, *LPMEMORYSTATUSEX;
+
+typedef const ACTCTXA *PCACTCTXA;
+typedef const ACTCTXW *PCACTCTXW;
+typedef_tident(ACTCTX)
+typedef_tident(PACTCTX)
 
 typedef struct _TRIVERTEX
 {
@@ -2671,7 +2861,7 @@ typedef struct _JOB_INFO_2W {
 } JOB_INFO_2W;
 
 typedef_tident(JOB_INFO_2)
-#endif//0
+#endif/*0*/
 
 typedef struct tagKERNINGPAIR {
   WORD wFirst;
@@ -2915,14 +3105,10 @@ typedef struct {
 typedef VOID MENUTEMPLATE, *LPMENUTEMPLATE;
 
 typedef struct tagMETAFILEPICT {
-#if 0
   LONG      mm;
   LONG      xExt;
   LONG      yExt;
   HMETAFILE hMF;
-#else
-  LONG      mm; // robd
-#endif
 } METAFILEPICT, *PMETAFILEPICT, *LPMETAFILEPICT;
 
 typedef struct tagMETAHEADER {
@@ -4429,18 +4615,18 @@ typedef struct _RASCONNA {
   HRASCONN  hrasconn;
   CHAR      szEntryName[RAS_MaxEntryName + 1];
 
-  // WINVER >= 0x400
+  /* WINVER >= 0x400 */
   CHAR      szDeviceType[ RAS_MaxDeviceType + 1 ];
   CHAR      szDeviceName[ RAS_MaxDeviceName + 1 ];
 
-  // WINVER >= 0x401
+  /* WINVER >= 0x401 */
   CHAR      szPhonebook[ MAX_PATH ];
   DWORD     dwSubEntry;
 
-  // WINVER >= 0x500
+  /* WINVER >= 0x500 */
   GUID      guidEntry;
 
-  // WINVER >= 0x501
+  /* WINVER >= 0x501 */
   DWORD     dwSessionId;
   DWORD     dwFlags;
   LUID      luid;
@@ -4451,18 +4637,18 @@ typedef struct _RASCONNW {
   HRASCONN  hrasconn;
   WCHAR     szEntryName[RAS_MaxEntryName + 1];
 
-  // WINVER >= 0x400
+  /* WINVER >= 0x400 */
   WCHAR     szDeviceType[ RAS_MaxDeviceType + 1 ];
   WCHAR     szDeviceName[ RAS_MaxDeviceName + 1 ];
 
-  // WINVER >= 0x401
+  /* WINVER >= 0x401 */
   WCHAR     szPhonebook[ MAX_PATH ];
   DWORD     dwSubEntry;
 
-  // WINVER >= 0x500
+  /* WINVER >= 0x500 */
   GUID      guidEntry;
 
-  // WINVER >= 0x501
+  /* WINVER >= 0x501 */
   DWORD     dwSessionId;
   DWORD     dwFlags;
   LUID      luid;
@@ -5227,7 +5413,7 @@ typedef struct tagTPMPARAMS {
   RECT rcExclude;
 } TPMPARAMS,   *LPTPMPARAMS;
 
-#if 0 // RobD - typedef removed due to conflict with mingw headers
+#if 0 /* RobD - typedef removed due to conflict with mingw headers */
 typedef struct _TRANSMIT_FILE_BUFFERS {
   PVOID Head;
   DWORD HeadLength;

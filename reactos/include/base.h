@@ -129,6 +129,9 @@ typedef HANDLE HIMAGELIST;
 typedef HANDLE HINSTANCE;
 typedef HANDLE HKEY, *PHKEY;
 typedef HANDLE HKL;
+typedef LONG    GEOID;
+typedef DWORD   GEOTYPE;
+typedef DWORD   GEOCLASS;
 typedef HANDLE HLOCAL;
 typedef HANDLE HMENU;
 typedef HANDLE HMETAFILE;
@@ -136,6 +139,7 @@ typedef HANDLE HMODULE;
 typedef HANDLE HPALETTE;
 typedef HANDLE HPEN;
 typedef HANDLE HRASCONN;
+typedef DWORD LGRPID;
 typedef long HRESULT;
 typedef HANDLE HRGN;
 typedef HANDLE HRSRC;
@@ -143,6 +147,7 @@ typedef HANDLE HSTMT;
 typedef HANDLE HSZ;
 typedef HANDLE HWINSTA;
 typedef HANDLE HWND;
+typedef HANDLE HRAWINPUT;
 typedef HANDLE HTASK;
 typedef HANDLE HWINEVENTHOOK;
 typedef VOID (CALLBACK* WINEVENTPROC)(HWINEVENTHOOK hWinEventHook,DWORD event,HWND hwnd,LONG idObject,LONG idChild,DWORD idEventThread,DWORD dwmsEventTime);
@@ -449,6 +454,7 @@ typedef WINBOOL CALLBACK (*DATEFMT_ENUMPROCW) (LPWSTR);
 typedef WINBOOL CALLBACK (*TIMEFMT_ENUMPROCA) (LPSTR);
 typedef WINBOOL CALLBACK (*TIMEFMT_ENUMPROCW) (LPWSTR);
 typedef WINBOOL CALLBACK (*CALINFO_ENUMPROCA) (LPSTR);
+typedef int (CALLBACK* EMFPLAYPROC)( HDC hdc, INT iFunction, HANDLE hPageQuery );
 typedef WINBOOL CALLBACK (*CALINFO_ENUMPROCW) (LPWSTR);
 typedef WINBOOL CALLBACK (*PHANDLER_ROUTINE) (DWORD);
 typedef VOID CALLBACK (*LPHANDLER_FUNCTION) (DWORD);
@@ -531,6 +537,19 @@ typedef WINBOOL CALLBACK (*PFNPROCESSPOLICIESW) (HWND, LPCWSTR, LPCWSTR, LPCWSTR
 #define SE_CHANGE_NOTIFY_NAME             TEXT("SeChangeNotifyPrivilege")
 #define SE_REMOTE_SHUTDOWN_NAME           TEXT("SeRemoteShutdownPrivilege")
 
+typedef BOOL (CALLBACK* LANGUAGEGROUP_ENUMPROCA)(LGRPID, LPSTR, LPSTR, DWORD, LONG_PTR);
+typedef BOOL (CALLBACK* LANGGROUPLOCALE_ENUMPROCA)(LGRPID, LCID, LPSTR, LONG_PTR);
+typedef BOOL (CALLBACK* UILANGUAGE_ENUMPROCA)(LPSTR, LONG_PTR);
+typedef BOOL (CALLBACK* DATEFMT_ENUMPROCEXA)(LPSTR, CALID);
+typedef BOOL (CALLBACK* CALINFO_ENUMPROCEXA)(LPSTR, CALID);
+
+typedef BOOL (CALLBACK* LANGUAGEGROUP_ENUMPROCW)(LGRPID, LPWSTR, LPWSTR, DWORD, LONG_PTR);
+typedef BOOL (CALLBACK* LANGGROUPLOCALE_ENUMPROCW)(LGRPID, LCID, LPWSTR, LONG_PTR);
+typedef BOOL (CALLBACK* UILANGUAGE_ENUMPROCW)(LPWSTR, LONG_PTR);
+typedef BOOL (CALLBACK* DATEFMT_ENUMPROCEXW)(LPWSTR, CALID);
+typedef BOOL (CALLBACK* CALINFO_ENUMPROCEXW)(LPWSTR, CALID);
+typedef BOOL (CALLBACK* GEO_ENUMPROC)(GEOID);
+
 #define SERVICES_ACTIVE_DATABASEW      L"ServicesActive"
 #define SERVICES_FAILED_DATABASEW      L"ServicesFailed"
 #define SERVICES_ACTIVE_DATABASEA      "ServicesActive"
@@ -559,6 +578,51 @@ typedef void (*CALLB) (void);
 typedef CALLB PFNCALLBACK;
 
 
+typedef enum _COMPUTER_NAME_FORMAT {
+    ComputerNameNetBIOS,
+    ComputerNameDnsHostname,
+    ComputerNameDnsDomain,
+    ComputerNameDnsFullyQualified,
+    ComputerNamePhysicalNetBIOS,
+    ComputerNamePhysicalDnsHostname,
+    ComputerNamePhysicalDnsDomain,
+    ComputerNamePhysicalDnsFullyQualified,
+    ComputerNameMax
+} COMPUTER_NAME_FORMAT ;
+
+typedef enum _HEAP_INFORMATION_CLASS {
+
+    HeapCompatibilityInformation
+
+} HEAP_INFORMATION_CLASS;
+
+typedef enum {
+    LT_DONT_CARE,
+    LT_LOWEST_LATENCY
+} LATENCY_TIME;
+
+typedef LONG (CALLBACK *PVECTORED_EXCEPTION_HANDLER)(
+    struct _EXCEPTION_POINTERS *ExceptionInfo
+    );
+
+typedef
+VOID
+(CALLBACK *PAPCFUNC)(
+    ULONG_PTR dwParam
+    );
+
+typedef VOID (CALLBACK *PFIBER_START_ROUTINE)(
+    LPVOID lpFiberParameter
+    );
+typedef PFIBER_START_ROUTINE LPFIBER_START_ROUTINE;
+
+typedef enum _MEMORY_RESOURCE_NOTIFICATION_TYPE {
+    LowMemoryResourceNotification,
+    HighMemoryResourceNotification
+} MEMORY_RESOURCE_NOTIFICATION_TYPE;
+
+typedef VOID (CALLBACK* WAITORTIMERCALLBACKFUNC) (PVOID, BOOLEAN );
+typedef WAITORTIMERCALLBACKFUNC WAITORTIMERCALLBACK;
 /* End of stuff from ddeml.h in old Cygnus headers */
 /* ----------------------------------------------- */
 

@@ -228,6 +228,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define VkKeyScanEx  VkKeyScanExW
 #define MapVirtualKey  MapVirtualKeyW
 #define MapVirtualKeyEx  MapVirtualKeyExW
+#define FindFirstVolumeMountPoint FindFirstVolumeMountPointW
+#define FindNextVolume FindNextVolumeW
 #define LoadAccelerators  LoadAcceleratorsW
 #define CreateAcceleratorTable  CreateAcceleratorTableW
 #define CopyAcceleratorTable  CopyAcceleratorTableW
@@ -245,6 +247,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define DrawText  DrawTextW
 #define DrawTextEx  DrawTextExW
 #define GrayString  GrayStringW
+#define CreateJobObject CreateJobObjectW
 #define DrawState  DrawStateW
 #define TabbedTextOut  TabbedTextOutW
 #define GetTabbedTextExtent  GetTabbedTextExtentW
@@ -278,6 +281,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define GetEnvironmentStrings  GetEnvironmentStringsW
 #define FreeEnvironmentStrings  FreeEnvironmentStringsW
 #define lstrcmp  lstrcmpW
+#define GetRawInputDeviceInfo GetRawInputDeviceInfoW
+#define BroadcastSystemMessageEx BroadcastSystemMessageExW
 #define lstrcmpi  lstrcmpiW
 #define lstrcpyn  lstrcpynW
 #define lstrcpy  lstrcpyW
@@ -286,6 +291,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define GetBinaryType  GetBinaryTypeW
 #define GetShortPathName  GetShortPathNameW
 #define SetFileSecurity  SetFileSecurityW
+#define CheckNameLegalDOS8Dot3 CheckNameLegalDOS8Dot3W
+#define CreateHardLink CreateHardLinkW
 #define GetFileSecurity  GetFileSecurityW
 #define FindFirstChangeNotification  FindFirstChangeNotificationW
 #define AccessCheckAndAuditAlarm  AccessCheckAndAuditAlarmW
@@ -311,6 +318,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define FindResource  FindResourceW
 #define FindResourceEx  FindResourceExW
 #define EnumResourceTypes  EnumResourceTypesW
+#define CreateActCtx CreateActCtxW
 #define EnumResourceNames  EnumResourceNamesW
 #define EnumResourceLanguages  EnumResourceLanguagesW
 #define BeginUpdateResource  BeginUpdateResourceW
@@ -336,6 +344,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define WritePrivateProfileSection  WritePrivateProfileSectionW
 #define GetDriveType  GetDriveTypeW
 #define GetSystemDirectory  GetSystemDirectoryW
+#define FindFirstFileEx FindFirstFileExW
+#define FindFirstVolume FindFirstVolumeW
 #define GetTempPath  GetTempPathW
 #define GetTempFileName  GetTempFileNameW
 #define GetWindowsDirectory  GetWindowsDirectoryW
@@ -346,9 +356,13 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define CreateDirectory  CreateDirectoryW
 #define CreateDirectoryEx  CreateDirectoryExW
 #define RemoveDirectory  RemoveDirectoryW
+#define GetLongPathName GetLongPathNameW
+#define GetModuleHandleEx GetModuleHandleExW
 #define GetFullPathName  GetFullPathNameW
 #define DefineDosDevice  DefineDosDeviceW
 #define QueryDosDevice  QueryDosDeviceW
+#define EnumLanguageGroupLocales EnumLanguageGroupLocalesW
+#define EnumSystemLanguageGroups EnumSystemLanguageGroupsW
 #define CreateFile  CreateFileW
 #define SetFileAttributes  SetFileAttributesW
 #define GetFileAttributes  GetFileAttributesW
@@ -356,6 +370,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define GetCompressedFileSize  GetCompressedFileSizeW
 #define DeleteFile  DeleteFileW
 #define FindFirstFileEx  FindFirstFileExW
+#define SetFileShortName SetFileShortNameW
+#define SetFirmwareEnvironmentVariable SetFirmwareEnvironmentVariableW
 #define FindFirstFile  FindFirstFileW
 #define FindNextFile  FindNextFileW
 #define SearchPath  SearchPathW
@@ -368,6 +384,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define CreateNamedPipe  CreateNamedPipeW
 #define GetNamedPipeHandleState  GetNamedPipeHandleStateW
 #define CallNamedPipe  CallNamedPipeW
+#define IMPGetIME IMPGetIMEW
 #define WaitNamedPipe  WaitNamedPipeW
 #define SetVolumeLabel  SetVolumeLabelW
 #define GetVolumeInformation  GetVolumeInformationW
@@ -384,6 +401,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define GetLogicalDriveStrings  GetLogicalDriveStringsW
 #define LoadLibrary  LoadLibraryW
 #define LoadLibraryEx  LoadLibraryExW
+#define FindNextVolumeMountPoint FindNextVolumeMountPointW
+#define GetComputerNameEx GetComputerNameExW
 #define GetModuleFileName  GetModuleFileNameW
 #define GetModuleHandle  GetModuleHandleW
 #define GetUserObjectInformation  GetUserObjectInformationW
@@ -394,6 +413,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define PeekMessage  PeekMessageW
 #define SendMessage  SendMessageW
 #define SendMessageTimeout  SendMessageTimeoutW
+#define IMPSetIME IMPSetIMEW
+#define IMPQueryIME IMPQueryIMEW
 #define SendNotifyMessage  SendNotifyMessageW
 #define SendMessageCallback  SendMessageCallbackW
 #define PostMessage  PostMessageW
@@ -409,6 +430,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define CompareString  CompareStringW
 #define LCMapString  LCMapStringW
 #define GetLocaleInfo  GetLocaleInfoW
+#define GetDllDirectory GetDllDirectoryW
+#define GetFirmwareEnvironmentVariable GetFirmwareEnvironmentVariableW
 #define SetLocaleInfo  SetLocaleInfoW
 #define GetTimeFormat  GetTimeFormatW
 #define GetDateFormat  GetDateFormatW
@@ -435,6 +458,10 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define WriteConsoleOutputCharacter  WriteConsoleOutputCharacterW
 #define FillConsoleOutputCharacter  FillConsoleOutputCharacterW
 #define WNetGetProviderName  WNetGetProviderNameW
+#define SetCalendarInfo SetCalendarInfoW
+#define EnumUILanguages EnumUILanguagesW
+#define GetSystemWow64Directory GetSystemWow64DirectoryW
+#define GetVolumeNameForVolumeMountPoint GetVolumeNameForVolumeMountPointW
 #define WNetGetNetworkInformation  WNetGetNetworkInformationW
 #define WNetGetLastError  WNetGetLastErrorW
 #define MultinetGetConnectionPerformance  MultinetGetConnectionPerformanceW
@@ -447,6 +474,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define WNetAddConnection  WNetAddConnectionW
 #define WNetAddConnection2  WNetAddConnection2W
 #define WNetAddConnection3  WNetAddConnection3W
+#define DnsHostnameToComputerName DnsHostnameToComputerNameW
+#define FindActCtxSectionString FindActCtxSectionStringW
 #define WNetCancelConnection  WNetCancelConnectionW
 #define WNetCancelConnection2  WNetCancelConnection2W
 #define WNetGetConnection  WNetGetConnectionW
@@ -457,26 +486,41 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define EnumDependentServices  EnumDependentServicesW
 #define EnumServicesStatus  EnumServicesStatusW
 #define GetServiceKeyName  GetServiceKeyNameW
+#define GetVolumePathName GetVolumePathNameW
+#define GetVolumePathNamesForVolumeName GetVolumePathNamesForVolumeNameW
 #define GetServiceDisplayName  GetServiceDisplayNameW
 #define OpenSCManager  OpenSCManagerW
+#define SetVolumeMountPoint SetVolumeMountPointW
+#define VerifyVersionInfo VerifyVersionInfoW
+#define RegisterDeviceNotification RegisterDeviceNotificationW
 #define OpenService  OpenServiceW
 #define QueryServiceConfig  QueryServiceConfigW
 #define QueryServiceLockStatus  QueryServiceLockStatusW
+#define GetGeoInfo GetGeoInfoW
+#define EnumDateFormatsEx EnumDateFormatsExW
 #define RegisterServiceCtrlHandler  RegisterServiceCtrlHandlerW
 #define StartServiceCtrlDispatcher  StartServiceCtrlDispatcherW
+#define EnumCalendarInfoEx EnumCalendarInfoExW
+#define GetCalendarInfo GetCalendarInfoW
 #define StartService  StartServiceW
 #define DragQueryFile DragQueryFileW
+#define GetCPInfoEx GetCPInfoExW
 #define ExtractAssociatedIcon ExtractAssociatedIconW
 #define ExtractIcon ExtractIconW
 #define FindExecutable FindExecutableW
 #define ShellAbout ShellAboutW
+#define DeleteVolumeMountPoint DeleteVolumeMountPointW
 #define ShellExecute ShellExecuteW
 #define DdeCreateStringHandle DdeCreateStringHandleW
 #define DdeInitialize DdeInitializeW
 #define DdeQueryString DdeQueryStringW
 #define LogonUser LogonUserW
+#define OpenJobObject OpenJobObjectW
+#define ReplaceFile ReplaceFileW
 #define CreateProcessAsUser CreateProcessAsUserW
 #define SHGetFileInfo SHGetFileInfoW
+#define SetComputerNameEx SetComputerNameExW
+#define SetDllDirectory SetDllDirectoryW
 #define SHGetPathFromIDList SHGetPathFromIDListW
 
 /* ASCII */
@@ -487,8 +531,12 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define RegCreateKeyEx  RegCreateKeyExA
 #define RegDeleteKey  RegDeleteKeyA
 #define RegDeleteValue  RegDeleteValueA
+#define EnumSystemLanguageGroups EnumSystemLanguageGroupsA
+#define GetGeoInfo GetGeoInfoA
 #define RegEnumKey  RegEnumKeyA
 #define RegEnumKeyEx  RegEnumKeyExA
+#define GetCalendarInfo GetCalendarInfoA
+#define GetCPInfoEx GetCPInfoExA
 #define RegEnumValue  RegEnumValueA
 #define RegLoadKey  RegLoadKeyA
 #define RegOpenKey  RegOpenKeyA
@@ -497,6 +545,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define RegQueryValue  RegQueryValueA
 #define RegQueryMultipleValues  RegQueryMultipleValuesA
 #define RegQueryValueEx  RegQueryValueExA
+#define GetFirmwareEnvironmentVariable GetFirmwareEnvironmentVariableA
+#define GetLongPathName GetLongPathNameA
 #define RegReplaceKey  RegReplaceKeyA
 #define RegRestoreKey  RegRestoreKeyA
 #define RegSaveKey  RegSaveKeyA
@@ -515,7 +565,22 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define DlgDirSelectComboBoxEx  DlgDirSelectComboBoxExA
 #define DefFrameProc  DefFrameProcA
 #define DefMDIChildProc  DefMDIChildProcA
+#define EnumUILanguages EnumUILanguagesA
+#define EnumLanguageGroupLocales EnumLanguageGroupLocalesA
 #define CreateMDIWindow  CreateMDIWindowA
+#define FindNextVolume FindNextVolumeA
+#define FindNextVolumeMountPoint FindNextVolumeMountPointA
+#define GetComputerNameEx GetComputerNameExA
+#define VerifyVersionInfo VerifyVersionInfoA
+#define SetFirmwareEnvironmentVariable SetFirmwareEnvironmentVariableA
+#define SetVolumeMountPoint SetVolumeMountPointA
+#define GetModuleHandleEx GetModuleHandleExA
+#define GetSystemWow64Directory GetSystemWow64DirectoryA
+#define GetVolumeNameForVolumeMountPoint GetVolumeNameForVolumeMountPointA
+#define GetVolumePathNamesForVolumeName GetVolumePathNamesForVolumeNameA
+#define OpenJobObject OpenJobObjectA
+#define GetVolumePathName GetVolumePathNameA
+#define GetDllDirectory GetDllDirectoryA
 #define WinHelp  WinHelpA
 #define ChangeDisplaySettings  ChangeDisplaySettingsA
 #define EnumDisplaySettings  EnumDisplaySettingsA
@@ -532,11 +597,19 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define LoadBitmap  LoadBitmapA
 #define LoadCursor  LoadCursorA
 #define LoadCursorFromFile  LoadCursorFromFileA
+#define ReplaceFile ReplaceFileA
+#define SetDllDirectory SetDllDirectoryA
+#define EnumDateFormatsEx EnumDateFormatsExA
+#define EnumCalendarInfoEx EnumCalendarInfoExA
+#define SetFileShortName SetFileShortNameA
+#define SetComputerNameEx SetComputerNameExA
 #define SetProp  SetPropA
 #define GetProp  GetPropA
 #define RemoveProp  RemovePropA
 #define EnumPropsEx  EnumPropsExA
 #define EnumProps  EnumPropsA
+#define CreateHardLink CreateHardLinkA
+#define CreateJobObject CreateJobObjectA
 #define SetWindowText  SetWindowTextA
 #define GetWindowText  GetWindowTextA
 #define GetWindowTextLength  GetWindowTextLengthA
@@ -558,6 +631,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define GetCharWidth  GetCharWidthA
 #define GetCharWidth32  GetCharWidth32A
 #define GetCharWidthFloat  GetCharWidthFloatA
+#define FindFirstVolume FindFirstVolumeA
+#define FindFirstVolumeMountPoint FindFirstVolumeMountPointA
 #define GetCharABCWidths  GetCharABCWidthsA
 #define GetCharABCWidthsFloat  GetCharABCWidthsFloatA
 #define GetGlyphOutline  GetGlyphOutlineA
@@ -595,6 +670,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define GetOpenFileName  GetOpenFileNameA
 #define GetSaveFileName  GetSaveFileNameA
 #define GetFileTitle  GetFileTitleA
+#define IMPSetIME IMPSetIMEA
 #define ChooseColor  ChooseColorA
 #define FindText  FindTextA
 #define ReplaceText  ReplaceTextA
@@ -608,6 +684,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define RegisterClass  RegisterClassA
 #define UnregisterClass  UnregisterClassA
 #define GetClassInfo  GetClassInfoA
+#define CreateActCtx CreateActCtxA
 #define RegisterClassEx  RegisterClassExA
 #define GetClassInfoEx  GetClassInfoExA
 #define CreateWindowEx  CreateWindowExA
@@ -643,6 +720,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define IsCharLower  IsCharLowerA
 #define GetKeyNameText  GetKeyNameTextA
 #define VkKeyScan  VkKeyScanA
+#define RegisterDeviceNotification RegisterDeviceNotificationA
+#define GetRawInputDeviceInfo GetRawInputDeviceInfoA
 #define VkKeyScanEx  VkKeyScanExA
 #define MapVirtualKey  MapVirtualKeyA
 #define MapVirtualKeyEx  MapVirtualKeyExA
@@ -661,6 +740,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define GetMenuItemInfo  GetMenuItemInfoA
 #define SetMenuItemInfo  SetMenuItemInfoA
 #define DrawText  DrawTextA
+#define BroadcastSystemMessageEx BroadcastSystemMessageExA
 #define DrawTextEx  DrawTextExA
 #define GrayString  GrayStringA
 #define DrawState  DrawStateA
@@ -669,7 +749,9 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define GetVersionEx  GetVersionExA
 #define wvsprintf  wvsprintfA
 #define wsprintf  wsprintfA
+#define FindActCtxSectionString FindActCtxSectionStringA
 #define LoadKeyboardLayout  LoadKeyboardLayoutA
+#define FindFirstFileEx FindFirstFileExA
 #define GetKeyboardLayoutName  GetKeyboardLayoutNameA
 #define CreateDesktop  CreateDesktopA
 #define OpenDesktop  OpenDesktopA
@@ -695,6 +777,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define CallMessageFilter CallMessageFilterA
 #define GetAltTabInfo GetAltTabInfoA
 #define FormatMessage  FormatMessageA
+#define CheckNameLegalDOS8Dot3 CheckNameLegalDOS8Dot3A
 #define GetEnvironmentStrings  GetEnvironmentStringsA
 #define FreeEnvironmentStrings  FreeEnvironmentStringsA
 #define lstrcmp  lstrcmpA
@@ -714,6 +797,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define ObjectPrivilegeAuditAlarm  ObjectPrivilegeAuditAlarmA
 #define ObjectCloseAuditAlarm  ObjectCloseAuditAlarmA
 #define PrivilegedServiceAuditAlarm  PrivilegedServiceAuditAlarmA
+#define DeleteVolumeMountPoint DeleteVolumeMountPointA
+#define DnsHostnameToComputerName DnsHostnameToComputerNameA
 #define OpenEventLog  OpenEventLogA
 #define RegisterEventSource  RegisterEventSourceA
 #define OpenBackupEventLog  OpenBackupEventLogA
@@ -836,11 +921,14 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define EnumSystemCodePages  EnumSystemCodePagesA
 #define EnumSystemLocales  EnumSystemLocalesA
 #define GetStringTypeEx  GetStringTypeExA
+#define SetCalendarInfo SetCalendarInfoA
 #define EnumDateFormats  EnumDateFormatsA
 #define GetConsoleTitle  GetConsoleTitleA
 #define ScrollConsoleScreenBuffer  ScrollConsoleScreenBufferA
 #define SetConsoleTitle  SetConsoleTitleA
 #define ReadConsole  ReadConsoleA
+#define IMPQueryIME IMPQueryIMEA
+#define IMPGetIME IMPGetIMEA
 #define WriteConsole  WriteConsoleA
 #define PeekConsoleInput  PeekConsoleInputA
 #define ReadConsoleInput  ReadConsoleInputA
@@ -884,6 +972,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define DragQueryFile DragQueryFileA
 #define ExtractAssociatedIcon ExtractAssociatedIconA
 #define ExtractIcon ExtractIconA
+#define FindFirstVolumeMountPoint FindFirstVolumeMountPointA
 #define FindExecutable FindExecutableA
 #define ShellAbout ShellAboutA
 #define ShellExecute ShellExecuteA
@@ -897,6 +986,753 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 
 #endif /* UNICODE and ASCII defines */
 #endif /* _DISABLE_TIDENTS */
+
+VOID
+STDCALL
+RtlCaptureContext (
+    PCONTEXT ContextRecord
+    );
+
+ULONGLONG
+STDCALL
+VerSetConditionMask(
+        ULONGLONG   ConditionMask,
+        DWORD   TypeMask,
+        BYTE    Condition
+        );
+
+INT
+STDCALL
+GetExpandedNameA(
+	LPSTR in,
+	LPSTR out
+	);
+INT
+STDCALL
+GetExpandedNameW(
+	LPWSTR in,
+	LPWSTR out
+	);
+
+UINT
+STDCALL
+WINNLSGetIMEHotkey( IN HWND hwnd);
+
+WINBOOL
+STDCALL
+WINNLSEnableIME( IN HWND hwnd, IN BOOL enable);
+
+WINBOOL
+STDCALL
+WINNLSGetEnableStatus( IN HWND hwnd);
+
+LANGID
+STDCALL
+GetUserDefaultUILanguage(VOID);
+
+LANGID
+STDCALL
+GetSystemDefaultUILanguage(VOID);
+
+WINBOOL
+STDCALL
+SetUserGeoID(
+    GEOID       GeoId);
+
+GEOID
+STDCALL
+GetUserGeoID(
+    GEOCLASS    GeoClass);
+
+WINBOOL
+STDCALL
+EnumSystemGeoID(
+    GEOCLASS        GeoClass,
+    GEOID           ParentGeoId,
+    GEO_ENUMPROC    lpGeoEnumProc);
+
+WINBOOL
+STDCALL
+IsValidLanguageGroup(
+    IN LGRPID  LanguageGroup,
+    IN DWORD   dwFlags);
+
+WINBOOL
+STDCALL
+ActivateActCtx(
+    HANDLE hActCtx,
+    ULONG_PTR *lpCookie
+    );
+
+VOID
+STDCALL
+AddRefActCtx(
+    HANDLE hActCtx
+    );
+
+WINBOOL
+STDCALL
+AllocateUserPhysicalPages(
+    HANDLE hProcess,
+    PULONG_PTR NumberOfPages,
+    PULONG_PTR PageArray
+    );
+
+WINBOOL
+STDCALL
+AssignProcessToJobObject(
+    HANDLE hJob,
+    HANDLE hProcess
+    );
+
+WINBOOL
+STDCALL
+BindIoCompletionCallback (
+    HANDLE FileHandle,
+    LPOVERLAPPED_COMPLETION_ROUTINE Function,
+    ULONG Flags
+    );
+
+WINBOOL
+STDCALL
+CancelDeviceWakeupRequest(
+    HANDLE hDevice
+    );
+
+WINBOOL
+STDCALL
+CancelTimerQueueTimer(
+    HANDLE TimerQueue,
+    HANDLE Timer
+    );
+
+WINBOOL
+STDCALL
+ChangeTimerQueueTimer(
+    HANDLE TimerQueue,
+    HANDLE Timer,
+    ULONG DueTime,
+    ULONG Period
+    );
+
+WINBOOL
+STDCALL
+CheckRemoteDebuggerPresent(
+    HANDLE hProcess,
+    PWINBOOL pbDebuggerPresent
+    );
+
+WINBOOL
+STDCALL
+ConvertFiberToThread(
+    VOID
+    );
+
+LONG
+STDCALL
+CopyLZFile(
+	INT a,
+	INT b
+	);
+
+HANDLE
+STDCALL
+CreateActCtxA(
+    PCACTCTXA pActCtx
+    );
+
+
+HANDLE
+STDCALL
+CreateActCtxW(
+    PCACTCTXW pActCtx
+    );
+
+LPVOID
+STDCALL
+CreateFiberEx(
+    SIZE_T dwStackCommitSize,
+    SIZE_T dwStackReserveSize,
+    DWORD dwFlags,
+    LPFIBER_START_ROUTINE lpStartAddress,
+    LPVOID lpParameter
+    );
+
+WINBOOL
+STDCALL
+CreateJobSet (
+    ULONG NumJob,
+    PJOB_SET_ARRAY UserJobSet,
+    ULONG Flags);
+
+HANDLE
+STDCALL
+CreateMemoryResourceNotification(
+    MEMORY_RESOURCE_NOTIFICATION_TYPE NotificationType
+    );
+
+HANDLE
+STDCALL
+CreateTimerQueue(
+    VOID
+    );
+
+WINBOOL
+STDCALL
+CreateTimerQueueTimer(
+    PHANDLE phNewTimer,
+    HANDLE TimerQueue,
+    WAITORTIMERCALLBACK Callback,
+    PVOID Parameter,
+    DWORD DueTime,
+    DWORD Period,
+    ULONG Flags
+    ) ;
+
+WINBOOL
+STDCALL
+DeactivateActCtx(
+    DWORD dwFlags,
+    ULONG_PTR ulCookie
+    );
+
+WINBOOL
+STDCALL
+DebugActiveProcessStop(
+    DWORD dwProcessId
+    );
+
+WINBOOL
+STDCALL
+DebugBreakProcess (
+    HANDLE Process
+    );
+
+WINBOOL
+STDCALL
+DebugSetProcessKillOnExit(
+    WINBOOL KillOnExit
+    );
+
+WINBOOL
+STDCALL
+DeleteTimerQueue(
+    HANDLE TimerQueue
+    );
+
+WINBOOL
+STDCALL
+DeleteTimerQueueEx(
+    HANDLE TimerQueue,
+    HANDLE CompletionEvent
+    );
+
+WINBOOL
+STDCALL
+DeleteTimerQueueTimer(
+    HANDLE TimerQueue,
+    HANDLE Timer,
+    HANDLE CompletionEvent
+    );
+
+WINBOOL
+STDCALL
+FindActCtxSectionGuid(
+    DWORD dwFlags,
+    const GUID *lpExtensionGuid,
+    ULONG ulSectionId,
+    const GUID *lpGuidToFind,
+    PACTCTX_SECTION_KEYED_DATA ReturnedData
+    );
+
+WINBOOL
+STDCALL
+FindVolumeClose(
+    HANDLE hFindVolume
+    );
+
+WINBOOL
+STDCALL
+FindVolumeMountPointClose(
+    HANDLE hFindVolumeMountPoint
+    );
+
+WINBOOL
+STDCALL
+FreeUserPhysicalPages(
+    HANDLE hProcess,
+    PULONG_PTR NumberOfPages,
+    PULONG_PTR PageArray
+    );
+
+WINBOOL
+STDCALL
+GetCurrentActCtx(
+    HANDLE *lphActCtx);
+
+WINBOOL
+STDCALL
+GetDevicePowerState(
+    HANDLE hDevice,
+    WINBOOL *pfOn
+    );
+
+WINBOOL
+STDCALL
+GetFileSizeEx(
+    HANDLE hFile,
+    PLARGE_INTEGER lpFileSize
+    );
+
+VOID
+STDCALL
+GetNativeSystemInfo(
+    LPSYSTEM_INFO lpSystemInfo
+    );
+
+WINBOOL
+STDCALL
+GetNumaHighestNodeNumber(
+    PULONG HighestNodeNumber
+    );
+
+WINBOOL
+STDCALL
+GetNumaNodeProcessorMask(
+    UCHAR Node,
+    PULONGLONG ProcessorMask
+    );
+
+WINBOOL
+STDCALL
+GetNumaProcessorNode(
+    UCHAR Processor,
+    PUCHAR NodeNumber
+    );
+
+WINBOOL
+STDCALL
+GetProcessHandleCount(
+    HANDLE hProcess,
+    PDWORD pdwHandleCount
+    );
+
+DWORD
+STDCALL
+GetProcessId(
+    HANDLE Process
+    );
+
+WINBOOL
+STDCALL
+GetProcessIoCounters(
+    HANDLE hProcess,
+    PIO_COUNTERS lpIoCounters
+    );
+
+WINBOOL
+STDCALL
+GetProcessPriorityBoost(
+    HANDLE hProcess,
+    PWINBOOL pDisablePriorityBoost
+    );
+
+WINBOOL
+STDCALL
+GetSystemRegistryQuota(
+    PDWORD pdwQuotaAllowed,
+    PDWORD pdwQuotaUsed
+    );
+
+WINBOOL
+STDCALL
+GetSystemTimes(
+    LPFILETIME lpIdleTime,
+    LPFILETIME lpKernelTime,
+    LPFILETIME lpUserTime
+    );
+
+WINBOOL
+STDCALL
+GetThreadIOPendingFlag(
+    HANDLE hThread,
+    PWINBOOL lpIOIsPending
+    );
+
+UINT
+STDCALL
+GetWriteWatch(
+    DWORD  dwFlags,
+    PVOID  lpBaseAddress,
+    SIZE_T dwRegionSize,
+    PVOID *lpAddresses,
+    PULONG_PTR lpdwCount,
+    PULONG lpdwGranularity
+    );
+
+WINBOOL
+STDCALL
+GlobalMemoryStatusEx(
+    LPMEMORYSTATUSEX lpBuffer
+    );
+
+WINBOOL
+STDCALL
+HeapQueryInformation (
+    HANDLE HeapHandle, 
+    HEAP_INFORMATION_CLASS HeapInformationClass,
+    PVOID HeapInformation OPTIONAL,
+    SIZE_T HeapInformationLength OPTIONAL,
+    PSIZE_T ReturnLength OPTIONAL
+    );
+
+WINBOOL
+STDCALL
+HeapSetInformation (
+    HANDLE HeapHandle, 
+    HEAP_INFORMATION_CLASS HeapInformationClass,
+    PVOID HeapInformation OPTIONAL,
+    SIZE_T HeapInformationLength OPTIONAL
+    );
+
+WINBOOL
+STDCALL
+InitializeCriticalSectionAndSpinCount(
+    LPCRITICAL_SECTION lpCriticalSection,
+    DWORD dwSpinCount
+    );
+
+VOID
+STDCALL
+InitializeSListHead (
+    PSLIST_HEADER ListHead
+    );
+
+PSLIST_ENTRY
+STDCALL
+InterlockedFlushSList (
+    PSLIST_HEADER ListHead
+    );
+
+#ifndef __NTDRIVER__ /* needed to avoid conflicts in win32k */
+PSLIST_ENTRY
+STDCALL
+InterlockedPopEntrySList (
+    PSLIST_HEADER ListHead
+    );
+
+PSLIST_ENTRY
+STDCALL
+InterlockedPushEntrySList (
+    PSLIST_HEADER ListHead,
+    PSLIST_ENTRY ListEntry
+    );
+
+#endif
+
+WINBOOL
+STDCALL
+IsProcessInJob (
+    HANDLE ProcessHandle,
+    HANDLE JobHandle,
+    PWINBOOL Result
+    );
+
+WINBOOL
+STDCALL
+IsSystemResumeAutomatic(
+    VOID
+    );
+
+WINBOOL
+STDCALL
+IsWow64Process(
+    HANDLE hProcess,
+    PWINBOOL Wow64Process
+    );
+
+WINBOOL
+STDCALL
+MapUserPhysicalPages(
+    PVOID VirtualAddress,
+    ULONG_PTR NumberOfPages,
+    PULONG_PTR PageArray OPTIONAL
+    );
+
+WINBOOL
+STDCALL
+MapUserPhysicalPagesScatter(
+    PVOID *VirtualAddresses,
+    ULONG_PTR NumberOfPages,
+    PULONG_PTR PageArray OPTIONAL
+    );
+
+HANDLE
+STDCALL
+OpenThread(
+    DWORD dwDesiredAccess,
+    WINBOOL bInheritHandle,
+    DWORD dwThreadId
+    );
+
+WINBOOL
+STDCALL
+QueryActCtxW(
+    DWORD dwFlags,
+    HANDLE hActCtx,
+    PVOID pvSubInstance,
+    ULONG ulInfoClass,
+    PVOID pvBuffer,
+    SIZE_T cbBuffer OPTIONAL,
+    SIZE_T *pcbWrittenOrRequired OPTIONAL
+    );
+
+USHORT
+STDCALL
+QueryDepthSList (
+    PSLIST_HEADER ListHead
+    );
+
+WINBOOL
+STDCALL
+QueryInformationJobObject(
+    HANDLE hJob,
+    JOBOBJECTINFOCLASS JobObjectInformationClass,
+    LPVOID lpJobObjectInformation,
+    DWORD cbJobObjectInformationLength,
+    LPDWORD lpReturnLength
+    );
+
+WINBOOL
+STDCALL
+QueryMemoryResourceNotification(
+     HANDLE ResourceNotificationHandle,
+    PWINBOOL  ResourceState
+    );
+
+DWORD
+STDCALL
+QueueUserAPC(
+    PAPCFUNC pfnAPC,
+    HANDLE hThread,
+    ULONG_PTR dwData
+    );
+
+WINBOOL
+STDCALL
+QueueUserWorkItem(
+    LPTHREAD_START_ROUTINE Function,
+    PVOID Context,
+    ULONG Flags
+    );
+
+WINBOOL
+STDCALL
+ReadDirectoryChangesW(
+    HANDLE hDirectory,
+    LPVOID lpBuffer,
+    DWORD nBufferLength,
+    WINBOOL bWatchSubtree,
+    DWORD dwNotifyFilter,
+    LPDWORD lpBytesReturned,
+    LPOVERLAPPED lpOverlapped,
+    LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
+    );
+
+WINBOOL
+STDCALL
+ReadFileScatter(
+    HANDLE hFile,
+    FILE_SEGMENT_ELEMENT aSegmentArray[],
+    DWORD nNumberOfBytesToRead,
+    LPDWORD lpReserved,
+    LPOVERLAPPED lpOverlapped
+    );
+
+WINBOOL
+STDCALL
+RegisterWaitForSingleObject(
+    PHANDLE phNewWaitObject,
+    HANDLE hObject,
+    WAITORTIMERCALLBACK Callback,
+    PVOID Context,
+    ULONG dwMilliseconds,
+    ULONG dwFlags
+    );
+
+HANDLE
+STDCALL
+RegisterWaitForSingleObjectEx(
+    HANDLE hObject,
+    WAITORTIMERCALLBACK Callback,
+    PVOID Context,
+    ULONG dwMilliseconds,
+    ULONG dwFlags
+    );
+
+VOID
+STDCALL
+ReleaseActCtx(
+    HANDLE hActCtx
+    );
+
+ULONG
+STDCALL
+RemoveVectoredExceptionHandler(
+    PVOID VectoredHandlerHandle
+    );
+
+WINBOOL
+STDCALL
+RequestDeviceWakeup(
+    HANDLE hDevice
+    );
+
+WINBOOL
+STDCALL
+RequestWakeupLatency(
+    LATENCY_TIME latency
+    );
+
+UINT
+STDCALL
+ResetWriteWatch(
+    LPVOID lpBaseAddress,
+    SIZE_T dwRegionSize
+    );
+
+VOID
+STDCALL
+RestoreLastError(
+    DWORD dwErrCode
+    );
+
+DWORD
+STDCALL
+SetCriticalSectionSpinCount(
+    LPCRITICAL_SECTION lpCriticalSection,
+    DWORD dwSpinCount
+    );
+
+WINBOOL
+STDCALL
+SetFilePointerEx(
+    HANDLE hFile,
+    LARGE_INTEGER liDistanceToMove,
+    PLARGE_INTEGER lpNewFilePointer,
+    DWORD dwMoveMethod
+    );
+
+WINBOOL
+STDCALL
+SetFileValidData(
+    HANDLE hFile,
+    LONGLONG ValidDataLength
+    );
+
+WINBOOL
+STDCALL
+SetInformationJobObject(
+    HANDLE hJob,
+    JOBOBJECTINFOCLASS JobObjectInformationClass,
+    LPVOID lpJobObjectInformation,
+    DWORD cbJobObjectInformationLength
+    );
+
+WINBOOL
+STDCALL
+SetMessageWaitingIndicator(
+    HANDLE hMsgIndicator,
+    ULONG ulMsgCount
+    );
+
+WINBOOL
+STDCALL
+SetProcessPriorityBoost(
+    HANDLE hProcess,
+    WINBOOL bDisablePriorityBoost
+    );
+
+EXECUTION_STATE
+STDCALL
+SetThreadExecutionState(
+    EXECUTION_STATE esFlags
+    );
+
+HANDLE
+STDCALL
+SetTimerQueueTimer(
+    HANDLE TimerQueue,
+    WAITORTIMERCALLBACK Callback,
+    PVOID Parameter,
+    DWORD DueTime,
+    DWORD Period,
+    WINBOOL PreferIo
+    );
+
+DWORD
+STDCALL
+SignalObjectAndWait(
+    HANDLE hObjectToSignal,
+    HANDLE hObjectToWaitOn,
+    DWORD dwMilliseconds,
+    WINBOOL bAlertable
+    );
+
+WINBOOL
+STDCALL
+TerminateJobObject(
+    HANDLE hJob,
+    UINT uExitCode
+    );
+
+WINBOOL
+STDCALL
+TzSpecificLocalTimeToSystemTime(
+    LPTIME_ZONE_INFORMATION lpTimeZoneInformation,
+    LPSYSTEMTIME lpLocalTime,
+    LPSYSTEMTIME lpUniversalTime
+    );
+
+WINBOOL
+STDCALL
+UnregisterWait(
+    HANDLE WaitHandle
+    );
+
+WINBOOL
+STDCALL
+UnregisterWaitEx(
+    HANDLE WaitHandle,
+    HANDLE CompletionEvent
+    );
+
+WINBOOL
+STDCALL
+WriteFileGather(
+    HANDLE hFile,
+    FILE_SEGMENT_ELEMENT aSegmentArray[],
+    DWORD nNumberOfBytesToWrite,
+    LPDWORD lpReserved,
+    LPOVERLAPPED lpOverlapped
+    );
+
+DWORD
+STDCALL
+WTSGetActiveConsoleSessionId(VOID);
+
+WINBOOL
+STDCALL
+ZombifyActCtx(
+    HANDLE hActCtx
+    );
+
+PVOID
+STDCALL
+AddVectoredExceptionHandler(
+    ULONG FirstHandler,
+    PVECTORED_EXCEPTION_HANDLER VectoredHandler
+    );
 
 HANDLE 
 STDCALL 
@@ -1402,6 +2238,113 @@ STDCALL
 GdiResetDCEMF(
 	HANDLE		SpoolFileHandle,
 	PDEVMODEW	pCurrDM);
+
+WINBOOL 
+STDCALL
+GdiPlayEMF
+(
+	LPWSTR     pwszPrinterName,
+	LPDEVMODEW pDevmode,
+	LPWSTR     pwszDocName,
+	EMFPLAYPROC pfnEMFPlayFn,
+	HANDLE     hPageQuery
+);
+
+WINBOOL
+STDCALL
+GdiInitSpool(VOID);
+
+WINBOOL
+STDCALL
+GdiPlayPrivatePageEMF
+(
+	HANDLE	SpoolFileHandle,
+	DWORD	unknown,
+	RECT	*prectDocument
+);
+
+WINBOOL 
+STDCALL
+AlignRects(LPRECT rect, DWORD b, DWORD c, DWORD d);
+
+LRESULT
+STDCALL
+DefRawInputProc(
+    PRAWINPUT* paRawInput,
+    INT nInput,
+    UINT cbSizeHeader);
+
+VOID
+STDCALL 
+DisableProcessWindowsGhosting(VOID);
+
+WINBOOL
+STDCALL
+GetLayeredWindowAttributes(
+    HWND hwnd,
+    COLORREF *pcrKey,
+    BYTE *pbAlpha,
+    DWORD *pdwFlags);
+
+UINT
+STDCALL
+GetRawInputBuffer(
+    PRAWINPUT   pData,
+    PUINT    pcbSize,
+    UINT         cbSizeHeader);
+
+UINT
+STDCALL
+GetRawInputData(
+    HRAWINPUT    hRawInput,
+    UINT         uiCommand,
+    LPVOID      pData,
+    PUINT    pcbSize,
+    UINT         cbSizeHeader);
+
+UINT
+STDCALL
+GetRawInputDeviceList(
+    PRAWINPUTDEVICELIST pRawInputDeviceList,
+    PUINT puiNumDevices,
+    UINT cbSize);
+
+UINT
+STDCALL
+GetRegisteredRawInputDevices(
+    PRAWINPUTDEVICE pRawInputDevices,
+    PUINT puiNumDevices,
+    UINT cbSize);
+
+int
+STDCALL
+GetWindowRgnBox(
+    HWND hWnd,
+    LPRECT lprc);
+
+WINBOOL
+STDCALL
+IsGUIThread(
+    WINBOOL bConvert);
+
+WINBOOL
+STDCALL
+IsWinEventHookInstalled(
+    DWORD event);
+
+WINBOOL
+STDCALL
+PrintWindow(
+    HWND hwnd,
+    HDC hdcBlt,
+    UINT nFlags);
+
+WINBOOL
+STDCALL
+RegisterRawInputDevices(
+    PCRAWINPUTDEVICE pRawInputDevices,
+    UINT uiNumDevices,
+    UINT cbSize);
 
 DWORD
 STDCALL 
@@ -3619,15 +4562,15 @@ TlsFree(
 	DWORD dwTlsIndex
 	);
 
-typedef VOID WINAPI (*PFLS_CALLBACK_FUNCTION)(PVOID lpFlsData);
+typedef VOID STDCALL (*PFLS_CALLBACK_FUNCTION)(PVOID lpFlsData);
 
-DWORD WINAPI FlsAlloc(PFLS_CALLBACK_FUNCTION lpCallback);
+DWORD STDCALL FlsAlloc(PFLS_CALLBACK_FUNCTION lpCallback);
 
-BOOL WINAPI FlsFree(DWORD dwFlsIndex);
+BOOL STDCALL FlsFree(DWORD dwFlsIndex);
 
-PVOID WINAPI FlsGetValue(DWORD dwFlsIndex);
+PVOID STDCALL FlsGetValue(DWORD dwFlsIndex);
 
-BOOL WINAPI FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData);
+BOOL STDCALL FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData);
 
 DWORD
 STDCALL
@@ -8323,33 +9266,33 @@ wglSwapLayerBuffers(HDC, UINT);
 /* ------------------------------------- */
 /* From shellapi.h in old Cygnus headers */
 
-WINBOOL WINAPI
+WINBOOL STDCALL
 DragQueryPoint (HDROP, LPPOINT);
 
-void WINAPI
+void STDCALL
 DragFinish (HDROP);
 
-void WINAPI
+void STDCALL
 DragAcceptFiles (HWND, WINBOOL);
 
-HICON WINAPI
+HICON STDCALL
 DuplicateIcon (HINSTANCE, HICON);
 
 /* end of stuff from shellapi.h in old Cygnus headers */
 /* -------------------------------------------------- */
 /* From ddeml.h in old Cygnus headers */
 
-HCONV WINAPI	DdeConnect (DWORD, HSZ, HSZ, CONVCONTEXT *);
-WINBOOL WINAPI	DdeDisconnect (HCONV);
-WINBOOL WINAPI	DdeFreeDataHandle (HDDEDATA);
-DWORD WINAPI	DdeGetData (HDDEDATA, BYTE *, DWORD, DWORD);
-UINT WINAPI	DdeGetLastError (DWORD);
-HDDEDATA WINAPI	DdeNameService (DWORD, HSZ, HSZ, UINT);
-WINBOOL WINAPI	DdePostAdvise (DWORD, HSZ, HSZ);
-HCONV WINAPI	DdeReconnect (HCONV);
-WINBOOL WINAPI	DdeUninitialize (DWORD);
-int WINAPI	DdeCmpStringHandles (HSZ, HSZ);
-HDDEDATA WINAPI	DdeCreateDataHandle (DWORD, LPBYTE, DWORD, DWORD, HSZ,
+HCONV STDCALL	DdeConnect (DWORD, HSZ, HSZ, CONVCONTEXT *);
+WINBOOL STDCALL	DdeDisconnect (HCONV);
+WINBOOL STDCALL	DdeFreeDataHandle (HDDEDATA);
+DWORD STDCALL	DdeGetData (HDDEDATA, BYTE *, DWORD, DWORD);
+UINT STDCALL	DdeGetLastError (DWORD);
+HDDEDATA STDCALL	DdeNameService (DWORD, HSZ, HSZ, UINT);
+WINBOOL STDCALL	DdePostAdvise (DWORD, HSZ, HSZ);
+HCONV STDCALL	DdeReconnect (HCONV);
+WINBOOL STDCALL	DdeUninitialize (DWORD);
+int STDCALL	DdeCmpStringHandles (HSZ, HSZ);
+HDDEDATA STDCALL	DdeCreateDataHandle (DWORD, LPBYTE, DWORD, DWORD, HSZ,
 				UINT, UINT);
 
 /* end of stuff from ddeml.h in old Cygnus headers */
@@ -8370,71 +9313,68 @@ VOID CopyMemory(PVOID Destination, CONST VOID* Source, DWORD Length);
 
 DWORD STDCALL GetCurrentTime(VOID);
 
-void WINAPI
+void STDCALL
 SHAddToRecentDocs (UINT, LPCVOID);
 
-LPITEMIDLIST WINAPI
+LPITEMIDLIST STDCALL
 SHBrowseForFolder (LPBROWSEINFO);
 
-void WINAPI
+void STDCALL
 SHChangeNotify (LONG, UINT, LPCVOID, LPCVOID);
 
-int WINAPI
+int STDCALL
 SHFileOperationA (LPSHFILEOPSTRUCTA);
 
-int WINAPI
+int STDCALL
 SHFileOperationW (LPSHFILEOPSTRUCTW);
 
-void WINAPI
+void STDCALL
 SHFreeNameMappings (HANDLE);
 
 /* Define when SHELLFOLDER is defined.
-HRESULT WINAPI
+HRESULT STDCALL
 SHGetDataFromIDList (LPSHELLFOLDER, LPCITEMIDLIST, int, PVOID, int);
 
-HRESULT WINAPI
+HRESULT STDCALL
 SHGetDesktopFolder (LPSHELLFOLDER);
 */
 
 /* Define when IUnknown is defined.
-HRESULT WINAPI
+HRESULT STDCALL
 SHGetInstanceExplorer (IUnknown **);
 */
 
 /* Define when MALLOC is defined.
-HRESULT WINAPI
+HRESULT STDCALL
 SHGetMalloc (LPMALLOC *);
 */
 
-HRESULT WINAPI
+HRESULT STDCALL
 SHGetSpecialFolderLocation (HWND, int, LPITEMIDLIST *);
 
 /* Define when REFCLSID is defined.
-HRESULT WINAPI
+HRESULT STDCALL
 SHLoadInProc (REFCLSID);
 */
 
 /* Win32 Fibers */
 
-typedef VOID (WINAPI * PFIBER_START_ROUTINE) (LPVOID lpFiberArgument);
-typedef PFIBER_START_ROUTINE LPFIBER_START_ROUTINE;
-
 #define FIBER_FLAG_FLOAT_SWITCH (1)
 
-BOOL WINAPI ConvertFiberToThread(void);
+BOOL STDCALL ConvertFiberToThread(void);
 
-LPVOID WINAPI ConvertThreadToFiber(LPVOID lpParameter);
+LPVOID STDCALL ConvertThreadToFiber(LPVOID lpParameter);
 
-LPVOID WINAPI ConvertThreadToFiberEx(LPVOID lpParameter, DWORD dwFlags);
+LPVOID STDCALL ConvertThreadToFiberEx(LPVOID lpParameter, DWORD dwFlags);
 
-LPVOID WINAPI CreateFiber
+LPVOID STDCALL CreateFiber
 (
  SIZE_T dwStackSize,
  LPFIBER_START_ROUTINE lpStartAddress,
  LPVOID lpParameter
 );
 
-LPVOID WINAPI CreateFiberEx
+LPVOID STDCALL CreateFiberEx
 (
  SIZE_T dwStackCommitSize,
  SIZE_T dwStackReserveSize,
@@ -8443,9 +9383,9 @@ LPVOID WINAPI CreateFiberEx
  LPVOID lpParameter
 );
 
-void WINAPI DeleteFiber(LPVOID lpFiber);
+void STDCALL DeleteFiber(LPVOID lpFiber);
 
-void WINAPI SwitchToFiber(LPVOID lpFiber);
+void STDCALL SwitchToFiber(LPVOID lpFiber);
 
 #define GetFiberData() *(LPVOID *)(((PNT_TIB)NtCurrentTeb())->Fib.FiberData)
 
