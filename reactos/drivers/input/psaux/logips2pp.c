@@ -18,7 +18,7 @@
  * Process a PS2++ or PS2T++ packet.
  */
 
-void ps2pp_process_packet(PDEVICE_EXTENSION DeviceExtension, PMOUSE_INPUT_DATA Input)
+void PS2PPProcessPacket(PDEVICE_EXTENSION DeviceExtension, PMOUSE_INPUT_DATA Input, int *wheel)
 {
     unsigned char *packet = DeviceExtension->MouseBuffer;
 
@@ -32,16 +32,16 @@ void ps2pp_process_packet(PDEVICE_EXTENSION DeviceExtension, PMOUSE_INPUT_DATA I
                 input_report_rel(dev, packet[2] & 0x80 ? REL_HWHEEL : REL_WHEEL,
 					(int) (packet[2] & 8) - (int) (packet[2] & 7)); */
 				
-				Input->ButtonData = (UINT)((WHEEL_DELTA) * ((int)(packet[2] & 8) - (int)(packet[2] & 7)));
-				Input->RawButtons |= ((packet[2] >> 4) & 1) ? GPM_B_FOURTH : 0;
-				Input->RawButtons |= ((packet[2] >> 5) & 1) ? GPM_B_FIFTH : 0;
+				*wheel = (int)(packet[2] & 8) - (int)(packet[2] & 7);
+				Input->RawButtons |= (((packet[2] >> 4) & 1) ? GPM_B_FOURTH : 0);
+				Input->RawButtons |= (((packet[2] >> 5) & 1) ? GPM_B_FIFTH : 0);
 
 				break;
 
 			case 0x0e: /* buttons 4, 5, 6, 7, 8, 9, 10 info */
 				
-				Input->RawButtons |= (packet[2] & 1) ? GPM_B_FOURTH : 0;
-				Input->RawButtons |= ((packet[2] >> 1) & 1) ? GPM_B_FIFTH : 0;
+				Input->RawButtons |= ((packet[2] & 1) ? GPM_B_FOURTH : 0);
+				Input->RawButtons |= (((packet[2] >> 1) & 1) ? GPM_B_FIFTH : 0);
 				
 				/* FIXME - support those buttons???
 				input_report_key(dev, BTN_BACK, (packet[2] >> 3) & 1);
@@ -57,7 +57,7 @@ void ps2pp_process_packet(PDEVICE_EXTENSION DeviceExtension, PMOUSE_INPUT_DATA I
 				input_report_rel(dev, packet[2] & 0x08 ? REL_HWHEEL : REL_WHEEL,
 					(int) ((packet[2] >> 4) & 8) - (int) ((packet[2] >> 4) & 7)); */
 				
-				Input->ButtonData = (UINT)((WHEEL_DELTA) *((int) ((packet[2] >> 4) & 8) - (int) ((packet[2] >> 4) & 7)));
+				*wheel = (int) ((packet[2] >> 4) & 8) - (int) ((packet[2] >> 4) & 7);
 
 				packet[0] = packet[2] | 0x08;
 				break;
@@ -86,16 +86,16 @@ static int ps2pp_cmd(PDEVICE_EXTENSION DeviceExtension, unsigned char *param, un
 	unsigned char d;
 	int i;
 
-	if (psmouse_command(DeviceExtension,  NULL, PSMOUSE_CMD_SETSCALE11))
+	if (SendCommand(DeviceExtension,  NULL, PSMOUSE_CMD_SETSCALE11))
 		return -1;
 
 	for (i = 6; i >= 0; i -= 2) {
 		d = (command >> i) & 3;
-		if(psmouse_command(DeviceExtension, &d, PSMOUSE_CMD_SETRES))
+		if(SendCommand(DeviceExtension, &d, PSMOUSE_CMD_SETRES))
 			return -1;
 	}
 
-	if (psmouse_command(DeviceExtension, param, PSMOUSE_CMD_POLL))
+	if (SendCommand(DeviceExtension, param, PSMOUSE_CMD_POLL))
 		return -1;
 
 	return 0;
@@ -116,18 +116,18 @@ static void ps2pp_set_smartscroll(PDEVICE_EXTENSION DeviceExtension)
 	ps2pp_cmd(DeviceExtension, param, 0x32);
 
 	param[0] = 0;
-	psmouse_command(DeviceExtension, param, PSMOUSE_CMD_SETRES);
-	psmouse_command(DeviceExtension, param, PSMOUSE_CMD_SETRES);
-	psmouse_command(DeviceExtension, param, PSMOUSE_CMD_SETRES);
+	SendCommand(DeviceExtension, param, PSMOUSE_CMD_SETRES);
+	SendCommand(DeviceExtension, param, PSMOUSE_CMD_SETRES);
+	SendCommand(DeviceExtension, param, PSMOUSE_CMD_SETRES);
 
-	if (DeviceExtension->psmouse_smartscroll == 1) 
+	if (DeviceExtension->SmartScroll == 1) 
 		param[0] = 1;
 	else
-	if (DeviceExtension->psmouse_smartscroll > 2)
+	if (DeviceExtension->SmartScroll > 2)
 		return;
 
 	/* else leave param[0] == 0 to disable */
-	psmouse_command(DeviceExtension, param, PSMOUSE_CMD_SETRES);
+	SendCommand(DeviceExtension, param, PSMOUSE_CMD_SETRES);
 }
 
 /*
@@ -136,13 +136,13 @@ static void ps2pp_set_smartscroll(PDEVICE_EXTENSION DeviceExtension)
  * also good reasons to use it, let the user decide).
  */
 
-void ps2pp_set_800dpi(PDEVICE_EXTENSION DeviceExtension)
+void PS2PPSet800dpi(PDEVICE_EXTENSION DeviceExtension)
 {
 	unsigned char param = 3;
-	psmouse_command(DeviceExtension, NULL, PSMOUSE_CMD_SETSCALE11);
-	psmouse_command(DeviceExtension, NULL, PSMOUSE_CMD_SETSCALE11);
-	psmouse_command(DeviceExtension, NULL, PSMOUSE_CMD_SETSCALE11);
-	psmouse_command(DeviceExtension, &param, PSMOUSE_CMD_SETRES);
+	SendCommand(DeviceExtension, NULL, PSMOUSE_CMD_SETSCALE11);
+	SendCommand(DeviceExtension, NULL, PSMOUSE_CMD_SETSCALE11);
+	SendCommand(DeviceExtension, NULL, PSMOUSE_CMD_SETSCALE11);
+	SendCommand(DeviceExtension, &param, PSMOUSE_CMD_SETRES);
 }
 
 /*
@@ -150,7 +150,7 @@ void ps2pp_set_800dpi(PDEVICE_EXTENSION DeviceExtension)
  * touchpad.
  */
 
-int ps2pp_detect_model(PDEVICE_EXTENSION DeviceExtension, unsigned char *param)
+int PS2PPDetectModel(PDEVICE_EXTENSION DeviceExtension, unsigned char *param)
 {
 	int i;
 	//char *vendor, *name;
@@ -162,7 +162,7 @@ int ps2pp_detect_model(PDEVICE_EXTENSION DeviceExtension, unsigned char *param)
 
 	//vendor = "Logitech";
 	//DbgPrint("Vendor: %s, name: %s\n", vendor, name);
-	DeviceExtension->model = ((param[0] >> 4) & 0x07) | ((param[0] << 3) & 0x78);
+	DeviceExtension->MouseModel = ((param[0] >> 4) & 0x07) | ((param[0] << 3) & 0x78);
 
 	/*if (param[1] < 3)
 		clear_bit(BTN_MIDDLE, DeviceExtension->dev.keybit);
@@ -172,23 +172,23 @@ int ps2pp_detect_model(PDEVICE_EXTENSION DeviceExtension, unsigned char *param)
 	DeviceExtension->MouseType = PSMOUSE_PS2;
 
 	for (i = 0; logitech_ps2pp[i] != -1; i++)
-		if (logitech_ps2pp[i] == DeviceExtension->model)
+		if (logitech_ps2pp[i] == DeviceExtension->MouseModel)
 			DeviceExtension->MouseType = PSMOUSE_PS2PP;
 
 	if (DeviceExtension->MouseType == PSMOUSE_PS2PP) {
 
 	/*	for (i = 0; logitech_4btn[i] != -1; i++)
-			if (logitech_4btn[i] == psmouse->model)
+			if (logitech_4btn[i] == DeviceExtension->MouseModel)
 				set_bit(BTN_SIDE, psmouse->dev.keybit);
 */
 		for (i = 0; logitech_wheel[i] != -1; i++)
-			if (logitech_wheel[i] == DeviceExtension->model) {
+			if (logitech_wheel[i] == DeviceExtension->MouseModel) {
 //				set_bit(REL_WHEEL, psmouse->dev.relbit);
 				//name = "Wheel Mouse";DbgPrint("Vendor: %s, name: %s\n", vendor, name);
 			}
 
 		for (i = 0; logitech_mx[i] != -1; i++)
-			if (logitech_mx[i]  == DeviceExtension->model) {
+			if (logitech_mx[i]  == DeviceExtension->MouseModel) {
 	/*			set_bit(BTN_SIDE, psmouse->dev.keybit);
 				set_bit(BTN_EXTRA, psmouse->dev.keybit);
 				set_bit(BTN_BACK, psmouse->dev.keybit);
@@ -201,20 +201,20 @@ int ps2pp_detect_model(PDEVICE_EXTENSION DeviceExtension, unsigned char *param)
  * Do Logitech PS2++ / PS2T++ magic init.
  */
 
-		if (DeviceExtension->model == 97) { /* TouchPad 3 */
+		if (DeviceExtension->MouseModel == 97) { /* TouchPad 3 */
 
 //			set_bit(REL_WHEEL, psmouse->dev.relbit);
 //			set_bit(REL_HWHEEL, psmouse->dev.relbit);
 
 			param[0] = 0x11; param[1] = 0x04; param[2] = 0x68; /* Unprotect RAM */
-			psmouse_command(DeviceExtension, param, 0x30d1);
+			SendCommand(DeviceExtension, param, 0x30d1);
 			param[0] = 0x11; param[1] = 0x05; param[2] = 0x0b; /* Enable features */
-			psmouse_command(DeviceExtension, param, 0x30d1);
+			SendCommand(DeviceExtension, param, 0x30d1);
 			param[0] = 0x11; param[1] = 0x09; param[2] = 0xc3; /* Enable PS2++ */
-			psmouse_command(DeviceExtension, param, 0x30d1);
+			SendCommand(DeviceExtension, param, 0x30d1);
 
 			param[0] = 0;
-			if (!psmouse_command(DeviceExtension, param, 0x13d1) &&
+			if (!SendCommand(DeviceExtension, param, 0x13d1) &&
 				param[0] == 0x06 && param[1] == 0x00 && param[2] == 0x14) {
 				//name = "TouchPad 3";DbgPrint("Vendor: %s, name: %s\n", vendor, name);
 				return PSMOUSE_PS2TPP;

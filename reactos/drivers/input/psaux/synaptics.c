@@ -402,7 +402,7 @@ void synaptics_process_byte(struct psmouse *psmouse, struct pt_regs *regs)
 
 #else
 
-int synaptics_init(PDEVICE_EXTENSION DeviceExtension)
+int InitSynaptics(PDEVICE_EXTENSION DeviceExtension)
 {
   return -1;
 }

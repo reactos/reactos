@@ -230,7 +230,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    UNICODE_STRING SymlinkName;
    PDEVICE_EXTENSION DeviceExtension;
 
-   if (detect_ps2_port() == TRUE) {
+   if (DetectPS2Port() == TRUE) {
      DbgPrint("PS2 Port Driver version 0.0.2\n");
    } else {
      DbgPrint("PS2 port not found.\n");
@@ -244,7 +244,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 
    DeviceObject = AllocatePointerDevice(DriverObject);
 
-   mouse_init(DeviceObject);
+   SetupMouse(DeviceObject, RegistryPath);
 
    return(STATUS_SUCCESS);
 }
