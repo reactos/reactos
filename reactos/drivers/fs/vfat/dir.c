@@ -1,4 +1,6 @@
 /*
+ * $Id: dir.c,v 1.20 2001/10/10 22:13:26 hbirr Exp $
+ *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/dir.c
@@ -99,11 +101,11 @@ VfatGetFileNameInformation (PVFATFCB pFcb,
 {
   ULONG Length;
   Length = vfat_wstrlen (pFcb->ObjectName);
-  if ((sizeof (FILE_DIRECTORY_INFORMATION) + Length) > BufferLength)
+  if ((sizeof (FILE_DIRECTORY_INFORMATION) + Length * sizeof(WCHAR)) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
   pInfo->FileNameLength = Length;
   pInfo->NextEntryOffset =
-    DWORD_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + Length);
+    DWORD_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + Length * sizeof(WCHAR));
   memcpy (pInfo->FileName, pFcb->ObjectName,
 	  sizeof (WCHAR) * (pInfo->FileNameLength));
   return STATUS_SUCCESS;
@@ -118,11 +120,11 @@ VfatGetFileDirectoryInformation (PVFATFCB pFcb,
   unsigned long long AllocSize;
   ULONG Length;
   Length = vfat_wstrlen (pFcb->ObjectName);
-  if ((sizeof (FILE_DIRECTORY_INFORMATION) + Length) > BufferLength)
+  if ((sizeof (FILE_DIRECTORY_INFORMATION) + Length * sizeof(WCHAR)) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
   pInfo->FileNameLength = Length;
   pInfo->NextEntryOffset =
-    DWORD_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + Length);
+    DWORD_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + Length * sizeof(WCHAR));
   memcpy (pInfo->FileName, pFcb->ObjectName,
 	  sizeof (WCHAR) * (pInfo->FileNameLength));
 //      pInfo->FileIndex=;
@@ -153,11 +155,11 @@ VfatGetFileFullDirectoryInformation (PVFATFCB pFcb,
   unsigned long long AllocSize;
   ULONG Length;
   Length = vfat_wstrlen (pFcb->ObjectName);
-  if ((sizeof (FILE_FULL_DIRECTORY_INFORMATION) + Length) > BufferLength)
+  if ((sizeof (FILE_FULL_DIRECTORY_INFORMATION) + Length * sizeof(WCHAR)) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
   pInfo->FileNameLength = Length;
   pInfo->NextEntryOffset =
-    DWORD_ROUND_UP (sizeof (FILE_FULL_DIRECTORY_INFORMATION) + Length);
+    DWORD_ROUND_UP (sizeof (FILE_FULL_DIRECTORY_INFORMATION) + Length * sizeof(WCHAR));
   memcpy (pInfo->FileName, pFcb->ObjectName,
 	  sizeof (WCHAR) * (pInfo->FileNameLength));
 //      pInfo->FileIndex=;
@@ -189,11 +191,11 @@ VfatGetFileBothInformation (PVFATFCB pFcb,
   unsigned long long AllocSize;
   ULONG Length;
   Length = vfat_wstrlen (pFcb->ObjectName);
-  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
+  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length * sizeof(WCHAR)) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
   pInfo->FileNameLength = Length;
   pInfo->NextEntryOffset =
-    DWORD_ROUND_UP (sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length);
+    DWORD_ROUND_UP (sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length * sizeof(WCHAR));
   memcpy (pInfo->FileName, pFcb->ObjectName,
 	  sizeof (WCHAR) * (pInfo->FileNameLength));
 //      pInfo->FileIndex=;
