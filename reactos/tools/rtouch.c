@@ -42,7 +42,7 @@ char* convert_path(char* origpath)
 int main(int argc, char* argv[])
 {
   char* path;
-  FILE* file;
+  int id;
 #ifdef WIN32
   time_t now;
   struct utimbuf fnow;
@@ -55,21 +55,21 @@ int main(int argc, char* argv[])
     }
 
   path = convert_path(argv[1]);
-  file = (FILE *)open(path, S_IWRITE);
-  if (file == (void*)-1)
+  id = open(path, S_IWRITE);
+  if (id < 0)
     {
-      file = (FILE *)open(path, S_IWRITE | O_CREAT);
-      if (file == (void*)-1)
+      id = open(path, S_IWRITE | O_CREAT);
+      if (id < 0)
         {
           fprintf(stderr, "Cannot create file.\n");
           exit(1);
         }
     }
 
-  fclose(file);
+  close(id);
 
 #ifdef WIN32
-  now = time();
+  now = time(NULL);
   fnow.actime = now;
   fnow.modtime = now;
   (int) utime(path, &fnow);
