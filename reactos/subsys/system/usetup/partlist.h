@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.h,v 1.10 2003/04/28 19:44:13 chorns Exp $
+/* $Id: partlist.h,v 1.11 2003/08/02 16:49:36 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -66,8 +66,11 @@ typedef struct _PARTENTRY
   BOOLEAN HidePartEntry;
 } PARTENTRY, *PPARTENTRY;
 
+
 typedef struct _DISKENTRY
 {
+  LIST_ENTRY ListEntry;
+
   ULONGLONG DiskSize;
   ULONGLONG Cylinders;
   ULONGLONG TracksPerCylinder;
@@ -77,7 +80,6 @@ typedef struct _DISKENTRY
   USHORT Port;
   USHORT Bus;
   USHORT Id;
-  BOOL FixedDisk;
 
   UNICODE_STRING DriverName;
 
@@ -99,11 +101,10 @@ typedef struct _PARTLIST
   ULONG TopDisk;
   ULONG TopPartition;
 
-  ULONG CurrentDisk;
+  PDISKENTRY CurrentDisk;
   ULONG CurrentPartition;
 
-  ULONG DiskCount;
-  PDISKENTRY DiskArray;
+  LIST_ENTRY DiskList;
 
 } PARTLIST, *PPARTLIST;
 
@@ -133,20 +134,20 @@ ScrollDownPartitionList(PPARTLIST List);
 VOID
 ScrollUpPartitionList(PPARTLIST List);
 
-BOOL
+BOOLEAN
 GetSelectedPartition(PPARTLIST List,
 		     PPARTDATA Data);
 
-BOOL
+BOOLEAN
 GetActiveBootPartition(PPARTLIST List,
 		       PPARTDATA Data);
 
-BOOL
+BOOLEAN
 CreateSelectedPartition(PPARTLIST List,
   ULONG PartType,
   ULONGLONG NewPartSize);
 
-BOOL
+BOOLEAN
 DeleteSelectedPartition(PPARTLIST List);
 
 #endif /* __PARTLIST_H__ */

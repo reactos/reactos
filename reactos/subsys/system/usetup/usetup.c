@@ -810,6 +810,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 	      return(SELECT_PARTITION_PAGE);
 	    }
 	}
+#if 0
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_C) /* C */
 	{
 	  /* Don't destroy the parition list here */;
@@ -823,6 +824,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 	    }
 	  return(SELECT_PARTITION_PAGE);
 	}
+#endif
 
       /* FIXME: Update status text */
 
@@ -1016,6 +1018,7 @@ ShowPartitionSizeInputBox(ULONG MaxSize,
 }
 
 
+#if 0
 static PAGE_NUMBER
 CreatePartitionPage(PINPUT_RECORD Ir)
 {
@@ -1076,7 +1079,7 @@ CreatePartitionPage(PINPUT_RECORD Ir)
               continue;
             }
 
-          assert(PartEntry->Unpartitioned == TRUE);
+//          assert(PartEntry->Unpartitioned == TRUE);
           PartEntry->PartType = PARTITION_ENTRY_UNUSED;
           PartEntry->Used = TRUE;
 
@@ -1130,6 +1133,7 @@ CreatePartitionPage(PINPUT_RECORD Ir)
 
   return(SELECT_PARTITION_PAGE);
 }
+#endif
 
 
 static PFILE_SYSTEM_LIST
@@ -2032,6 +2036,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
   SetStatusText("   Please wait...");
 
+#if 0
   if (ActivePartitionValid == FALSE)
     {
       /* Mark the chosen partition as active since there is no active
@@ -2092,6 +2097,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 		    }
 		  }
     }
+#endif
 
   if (ActivePartition.PartType == PARTITION_ENTRY_UNUSED)
     {
@@ -2812,9 +2818,11 @@ NtProcessStartup(PPEB Peb)
 	    Page = SelectPartitionPage(&Ir);
 	    break;
 
+#if 0
 	  case CREATE_PARTITION_PAGE:
 	    Page = CreatePartitionPage(&Ir);
 	    break;
+#endif
 
 	  case SELECT_FILE_SYSTEM_PAGE:
 	    Page = SelectFileSystemPage(&Ir);

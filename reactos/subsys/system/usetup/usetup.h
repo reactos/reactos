@@ -27,6 +27,11 @@
 #ifndef __USETUP_H__
 #define __USETUP_H__
 
+#ifdef assert
+#undef assert
+#endif
+#define assert(x)
+
 #define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
 #define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
 
