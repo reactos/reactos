@@ -508,27 +508,6 @@ EngQueryPalette(
 
 BOOL
 STDCALL
-EngRestoreFloatingPointState ( IN VOID *pBuffer )
-{
-  // www.osr.com/ddk/graphics/gdifncs_9l0n.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-ULONG
-STDCALL
-EngSaveFloatingPointState(
-	OUT VOID  *pBuffer,
-	IN ULONG  cjBufferSize
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_9tif.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
-BOOL
-STDCALL
 EngSetPointerTag(
 	IN HDEV  hdev,
 	IN SURFOBJ  *psoMask,
