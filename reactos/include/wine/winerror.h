@@ -20,6 +20,7 @@
 #define __WINE_WINERROR_H
 
 #include_next <winerror.h>
+#include <w32api.h>
 
 #ifdef RC_INVOKED
 #define _HRESULT_TYPEDEF_(x) (x)
@@ -34,6 +35,8 @@
  */
 #define ERROR_UNKNOWN                                      99999
 #define E_UNSPEC                                           E_FAIL
+#if (__W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5)
 #define CO_S_NOTALLINTERFACES                              _HRESULT_TYPEDEF_(0x00080012L)
+#endif
 
 #endif  /* __WINE_WINERROR_H */

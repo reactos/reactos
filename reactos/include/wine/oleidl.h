@@ -187,11 +187,16 @@ DEFINE_GUID(IID_IDropTarget, 0x00000122, 0x0000, 0x0000, 0xc0,0x00, 0x00,0x00,0x
 #define IDropTarget_DragLeave(p) (p)->lpVtbl->DragLeave(p)
 #define IDropTarget_Drop(p,a,b,c,d) (p)->lpVtbl->Drop(p,a,b,c,d)
 
+#if (__W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5)
+
 typedef enum tagBINDSPEED {
     BINDSPEED_INDEFINITE = 1,
     BINDSPEED_MODERATE = 2,
     BINDSPEED_IMMEDIATE = 3
 } BINDSPEED;
+
+#endif /* __W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5 */
+
 #ifndef __IOleCache2_FWD_DEFINED__
 #define __IOleCache2_FWD_DEFINED__
 typedef struct IOleCache2 IOleCache2;
