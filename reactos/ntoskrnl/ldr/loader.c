@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.100 2002/02/19 00:09:23 ekohl Exp $
+/* $Id: loader.c,v 1.101 2002/04/27 19:24:15 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -173,6 +173,7 @@ LdrInit1(VOID)
 VOID LdrInitModuleManagement(VOID)
 {
   HANDLE DirHandle, ModuleHandle;
+
   NTSTATUS Status;
   WCHAR NameBuffer[60];
   UNICODE_STRING ModuleName;
@@ -957,12 +958,12 @@ VOID LdrLoadAutoConfigDrivers (VOID)
     * Mailslot filesystem driver
     */
    LdrLoadAutoConfigDriver(L"msfs.sys");
-   
+#endif   
    /*
     * Named pipe filesystem driver
     */
    LdrLoadAutoConfigDriver(L"npfs.sys");
-#endif
+
    /*
     * Mouse drivers
     */
@@ -2241,6 +2242,7 @@ LdrSafePEGetExportAddress(
   else  /*  use hint  */
     {
       ExportAddress = (PVOID) ((DWORD)ImportModuleBase +
+
         FunctionList[Hint - ExportDir->Base]);
     }
 
