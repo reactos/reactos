@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.25 2004/11/28 12:59:33 ekohl Exp $
+/* $Id: time.c,v 1.26 2004/11/29 15:00:46 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,6 +30,7 @@ ULONG ExpTimeZoneId;
 VOID INIT_FUNCTION
 ExpInitTimeZoneInfo(VOID)
 {
+  LARGE_INTEGER CurrentTime;
   NTSTATUS Status;
 
   /* Read time zone information from the registry */
@@ -54,6 +55,23 @@ ExpInitTimeZoneInfo(VOID)
   SharedUserData->TimeZoneBias.High2Time = ExpTimeZoneBias.u.HighPart;
   SharedUserData->TimeZoneBias.LowPart = ExpTimeZoneBias.u.LowPart;
   SharedUserData->TimeZoneId = ExpTimeZoneId;
+
+  /* Convert boot time from local time to UTC */
+  SystemBootTime.QuadPart += ExpTimeZoneBias.QuadPart;
+
+  /* Convert sytem time from local time to UTC */
+  do
+    {
+      CurrentTime.u.HighPart = SharedUserData->SystemTime.High1Time;
+      CurrentTime.u.LowPart = SharedUserData->SystemTime.LowPart;
+    }
+  while (CurrentTime.u.HighPart != SharedUserData->SystemTime.High2Time);
+
+  CurrentTime.QuadPart += ExpTimeZoneBias.QuadPart;
+
+  SharedUserData->SystemTime.LowPart = CurrentTime.u.LowPart;
+  SharedUserData->SystemTime.High1Time = CurrentTime.u.HighPart;
+  SharedUserData->SystemTime.High2Time = CurrentTime.u.HighPart;
 }
 
 
@@ -70,17 +88,59 @@ NTSTATUS STDCALL
 NtSetSystemTime(IN PLARGE_INTEGER UnsafeNewSystemTime,
 		OUT PLARGE_INTEGER UnsafeOldSystemTime OPTIONAL)
 {
-  NTSTATUS Status;
   LARGE_INTEGER OldSystemTime;
   LARGE_INTEGER NewSystemTime;
   LARGE_INTEGER LocalTime;
   TIME_FIELDS TimeFields;
+  NTSTATUS Status;
 
   /* FIXME: Check for SeSystemTimePrivilege */
 
   if (UnsafeNewSystemTime == NULL)
     {
-      /* FIXME: update time zone settings */
+#if 0
+      TIME_ZONE_INFORMATION TimeZoneInfo;
+
+      /*
+       * Update the system time after the time zone was changed
+       */
+
+      /* Get the current time zone information */
+      Status = RtlQueryTimeZoneInformation(&ExpTimeZoneInfo);
+      if (!NT_SUCCESS(Status))
+        {
+          return Status;
+        }
+
+      /* Get the local time */
+      HalQueryRealTimeClock(&TimeFields);
+      RtlTimeFieldsToTime(&TimeFields,
+			  &LocalTime);
+
+      /* FIXME: Calculate transition dates */
+
+      /* Update the local time zone information */
+      memcpy(&ExpTimeZoneInfo,
+	     &TimeZoneInfo,
+	     sizeof(TIME_ZONE_INFORMATION));
+
+      ExpTimeZoneBias.QuadPart =
+	((LONGLONG)(ExpTimeZoneInfo.Bias + ExpTimeZoneInfo.StandardBias)) * TICKSPERMINUTE;
+      ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
+
+      /* Set the new time zone information */
+      SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.u.HighPart;
+      SharedUserData->TimeZoneBias.High2Time = ExpTimeZoneBias.u.HighPart;
+      SharedUserData->TimeZoneBias.LowPart = ExpTimeZoneBias.u.LowPart;
+      SharedUserData->TimeZoneId = ExpTimeZoneId;
+
+      /* Calculate the new system time */
+      ExLocalTimeToSystemTime(&LocalTime,
+			      &NewSystemTime);
+
+      /* Set the new system time */
+      KiSetSystemTime(&NewSystemTime);
+#endif
 
       return STATUS_SUCCESS;
     }
@@ -91,7 +151,7 @@ NtSetSystemTime(IN PLARGE_INTEGER UnsafeNewSystemTime,
     {
       return Status;
     }
-  
+
   if (UnsafeOldSystemTime != NULL)
     {
       KeQuerySystemTime(&OldSystemTime);
@@ -153,10 +213,7 @@ ExLocalTimeToSystemTime (
 	)
 {
   SystemTime->QuadPart =
-    LocalTime->QuadPart;
-#if 0
     LocalTime->QuadPart + ExpTimeZoneBias.QuadPart;
-#endif
 }
 
 
@@ -185,10 +242,7 @@ ExSystemTimeToLocalTime (
 	)
 {
   LocalTime->QuadPart =
-    SystemTime->QuadPart;
-#if 0
     SystemTime->QuadPart - ExpTimeZoneBias.QuadPart;
-#endif
 }
 
 /* EOF */
