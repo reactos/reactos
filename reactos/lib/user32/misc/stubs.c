@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.16 2002/10/20 14:52:45 ekohl Exp $
+/* $Id: stubs.c,v 1.17 2003/01/07 17:30:32 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -523,6 +523,30 @@ STDCALL
 WaitForInputIdle(
   HANDLE hProcess,
   DWORD dwMilliseconds)
+{
+  return 0;
+}
+
+
+
+HHOOK
+STDCALL
+SetWindowsHookExA(
+    int idHook,
+    HOOKPROC lpfn,
+    HINSTANCE hMod,
+    DWORD dwThreadId)
+{
+  return 0;
+}
+
+HHOOK
+STDCALL
+SetWindowsHookExW(
+    int idHook,
+    HOOKPROC lpfn,
+    HINSTANCE hMod,
+    DWORD dwThreadId)
 {
   return 0;
 }
