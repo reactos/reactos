@@ -1797,8 +1797,6 @@ W32kPaintRgn(HDC  hDC,
   ASSERT( ClipRegion );
   pBrush = BRUSHOBJ_LockBrush(dc->w.hBrush);
   ASSERT(pBrush);
-  DbgPrint("\t brush color: %x \n", pBrush->iSolidColor);
-
   BrushOrigin.x = dc->w.brushOrgX;
   BrushOrigin.y = dc->w.brushOrgY;
   SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
