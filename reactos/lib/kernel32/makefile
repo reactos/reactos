@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.41 2000/11/20 19:59:08 ekohl Exp $
+# $Id: makefile,v 1.42 2001/01/20 12:17:51 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -14,7 +14,8 @@ DLLTARGET=$(TARGET).dll
 
 all: $(DLLTARGET)
 
-SYNCH_OBJECTS = synch/critical.o synch/event.o synch/wait.o synch/intrlck.o synch/timer.o
+SYNCH_OBJECTS = synch/critical.o synch/event.o synch/intrlck.o synch/mutex.o \
+                synch/sem.o synch/timer.o synch/wait.o
 
 MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o misc/dllmain.o \
 		misc/console.o misc/time.o misc/stubs.o misc/rtl.o misc/ldr.o misc/res.o \
@@ -26,7 +27,8 @@ FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
 	       file/move.o file/lock.o file/rw.o file/delete.o \
 	       file/npipe.o
 
-MEM_OBJECTS = mem/virtual.o mem/heap.o mem/utils.o mem/section.o mem/isbad.o mem/procmem.o
+MEM_OBJECTS = mem/global.o mem/heap.o mem/utils.o mem/section.o mem/isbad.o \
+              mem/procmem.o mem/virtual.o
 
 NLS_OBJECTS =  nls/codepage.o nls/cpmisc.o nls/cptable.o\
  nls/cp37.o nls/cp437.o nls/cp500.o nls/cp737.o nls/cp775.o nls/cp850.o nls/cp852.o nls/cp855.o nls/cp857.o\
@@ -49,7 +51,7 @@ NLS_OBJECTS =  nls/codepage.o nls/cpmisc.o nls/cptable.o\
  nls/lcSLV.o nls/lcSQI.o nls/lcSRB.o nls/lcSRL.o nls/lcSVE.o nls/lcSVF.o nls/lcTRK.o nls/lcUKR.o\
  nls/locale.o nls/mbtowc.o nls/wctomb.o nls/ole2nls.o
 
-THREAD_OBJECTS =\
+THREAD_OBJECTS = \
 	thread/fiber.o	\
 	thread/thread.o	\
 	thread/tls.o

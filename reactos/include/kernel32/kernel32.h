@@ -31,6 +31,7 @@
 /* GLOBAL VARIABLES ***********************************************************/
 
 extern WINBOOL bIsFileApiAnsi;
+extern HANDLE hProcessHeap;
 
 
 /* FUNCTION PROTOTYPES ********************************************************/

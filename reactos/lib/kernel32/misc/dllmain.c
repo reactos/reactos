@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.15 2000/09/05 13:52:04 ekohl Exp $
+/* $Id: dllmain.c,v 1.16 2001/01/20 12:19:57 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,6 +22,8 @@
 
 extern UNICODE_STRING SystemDirectory;
 extern UNICODE_STRING WindowsDirectory;
+
+HANDLE hProcessHeap = NULL;
 
 static WINBOOL DllInitialized = FALSE;
 
@@ -65,6 +67,8 @@ WINBOOL STDCALL DllMain(HANDLE hInst,
 		  //	ZwTerminateProcess(NtCurrentProcess(), Status);
 	       }
 
+	     hProcessHeap = RtlGetProcessHeap();
+
 	     /*
 	      * Initialize WindowsDirectory and SystemDirectory
 	      */
@@ -74,7 +78,7 @@ WINBOOL STDCALL DllMain(HANDLE hInst,
 				     SharedUserData->NtSystemRoot);
 	     SystemDirectory.MaximumLength = WindowsDirectory.MaximumLength + 18;
 	     SystemDirectory.Length = WindowsDirectory.Length + 18;
-	     SystemDirectory.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
+	     SystemDirectory.Buffer = RtlAllocateHeap (hProcessHeap,
 						       0,
 						       SystemDirectory.MaximumLength);
 	     wcscpy (SystemDirectory.Buffer, WindowsDirectory.Buffer);

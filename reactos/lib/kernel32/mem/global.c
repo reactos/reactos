@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.4 2000/07/01 17:07:00 ea Exp $
+/* $Id: global.c,v 1.5 2001/01/20 12:18:54 ekohl Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -7,10 +7,17 @@
  * used.
  */
 
+/*
+ * NOTE: Only fixed memory is implemented!!
+ */
+
+#include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 #include <windows.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+
 
 #define MAGIC_GLOBAL_USED 0x5342BEEF
 #define GLOBAL_LOCK_MAX   0xFF
@@ -29,17 +36,18 @@ typedef struct __GLOBAL_LOCAL_HANDLE
 HGLOBAL WINAPI GlobalAlloc(UINT flags, DWORD size)
 {
    PGLOBAL_HANDLE	phandle;
-   LPVOID		palloc;
+   PVOID		palloc;
 
    DPRINT("GlobalAlloc( 0x%X, 0x%lX )\n", flags, size );
 
    if((flags & GMEM_MOVEABLE)==0) /* POINTER */
    {
-      palloc=HeapAlloc(__ProcessHeap, 0, size);
+      palloc=RtlAllocateHeap(hProcessHeap, 0, size);
       return (HGLOBAL) palloc;
    }
    else  /* HANDLE */
    {
+#if 0
       HeapLock(__ProcessHeap);
 
 
@@ -58,12 +66,15 @@ HGLOBAL WINAPI GlobalAlloc(UINT flags, DWORD size)
       HeapUnlock(__ProcessHeap);
 
       return (HGLOBAL) &(phandle->Pointer);
+#endif
+      return (HGLOBAL)NULL;
    }
 }
 
 /*********************************************************************
 *                    GlobalLock  --  KERNEL32                        *
 *********************************************************************/
+#if 0
 LPVOID WINAPI GlobalLock(HGLOBAL hmem)
 {
    PGLOBAL_HANDLE phandle;
@@ -90,10 +101,12 @@ LPVOID WINAPI GlobalLock(HGLOBAL hmem)
    HeapUnlock(__ProcessHeap);
    return palloc;
 }
+#endif
 
 /*********************************************************************
 *                    GlobalUnlock  --  KERNEL32                      *
 *********************************************************************/
+#if 0
 BOOL WINAPI GlobalUnlock(HGLOBAL hmem)
 {
    PGLOBAL_HANDLE	phandle;
@@ -121,10 +134,12 @@ BOOL WINAPI GlobalUnlock(HGLOBAL hmem)
    HeapUnlock(__ProcessHeap);
    return locked;
 }
+#endif
 
 /*********************************************************************
 *                    GlobalHandle  --  KERNEL32                      *
 *********************************************************************/
+#if 0
 HGLOBAL WINAPI GlobalHandle(LPCVOID pmem)
 {
    DPRINT("GlobalHandle( 0x%lX )\n", (ULONG) pmem );
@@ -134,10 +149,12 @@ HGLOBAL WINAPI GlobalHandle(LPCVOID pmem)
    else  /* MOVEABLE */
       return (HGLOBAL) *(LPVOID *)(pmem-sizeof(HANDLE));
 }
+#endif
 
 /*********************************************************************
 *                    GlobalReAlloc  --  KERNEL32                     *
 *********************************************************************/
+#if 0
 HGLOBAL WINAPI GlobalReAlloc(HGLOBAL hmem, DWORD size, UINT flags)
 {
    LPVOID		palloc;
@@ -218,22 +235,26 @@ HGLOBAL WINAPI GlobalReAlloc(HGLOBAL hmem, DWORD size, UINT flags)
    HeapUnlock(__ProcessHeap);
    return hnew;
 }
+#endif
 
 /*********************************************************************
 *                    GlobalFree  --  KERNEL32                        *
 *********************************************************************/
-HGLOBAL WINAPI GlobalHeapFree(GetProcessHeap(),0,HGLOBAL hmem)
+HGLOBAL WINAPI GlobalFree(HGLOBAL hmem)
 {
+#if 0
    PGLOBAL_HANDLE phandle;
+#endif
 
-   DPRINT("GlobalHeapFree(GetProcessHeap(),0, 0x%lX )\n", (ULONG) hmem );
+   DPRINT("GlobalFree( 0x%lX )\n", (ULONG) hmem );
 
-   if(((ULONG)hmem%4)==0) /* POINTER */
-   {
-      HeapHeapFree(GetProcessHeap(),0,__ProcessHeap, 0, (LPVOID) hmem);
-   }
-   else  /* HANDLE */
-   {
+   if (((ULONG)hmem % 4) == 0) /* POINTER */
+     {
+	RtlFreeHeap(hProcessHeap, 0, (LPVOID)hmem);
+     }
+   else /* HANDLE */
+     {
+#if 0
       HeapLock(__ProcessHeap);
       phandle=(PGLOBAL_HANDLE)(((LPVOID) hmem)-4);
       if(phandle->Magic==MAGIC_GLOBAL_USED)
@@ -246,7 +267,9 @@ HGLOBAL WINAPI GlobalHeapFree(GetProcessHeap(),0,HGLOBAL hmem)
          __HeapFreeFragment(__ProcessHeap, 0, phandle);
       }
       HeapUnlock(__ProcessHeap);
-   }
+#endif
+	hmem = NULL;
+     }
    return hmem;
 }
 
@@ -260,12 +283,13 @@ DWORD WINAPI GlobalSize(HGLOBAL hmem)
 
    DPRINT("GlobalSize( 0x%lX )\n", (ULONG) hmem );
 
-   if(((ULONG)hmem%8)==0)
+   if(((ULONG)hmem % 4) == 0)
    {
-      retval=HeapSize(__ProcessHeap, 0,  hmem);
+      retval = RtlSizeHeap(hProcessHeap, 0, hmem);
    }
    else
    {
+#if 0
       HeapLock(__ProcessHeap);
       phandle=(PGLOBAL_HANDLE)(((LPVOID) hmem)-4);
       if(phandle->Magic==MAGIC_GLOBAL_USED)
@@ -278,6 +302,8 @@ DWORD WINAPI GlobalSize(HGLOBAL hmem)
          retval=0;
       }
       HeapUnlock(__ProcessHeap);
+#endif
+      retval = 0;
    }
    return retval;
 }
@@ -285,41 +311,51 @@ DWORD WINAPI GlobalSize(HGLOBAL hmem)
 /*********************************************************************
 *                    GlobalWire  --  KERNEL32                        *
 *********************************************************************/
+#if 0
 LPVOID WINAPI GlobalWire(HGLOBAL hmem)
 {
    return GlobalLock( hmem );
 }
+#endif
 
 /*********************************************************************
 *                    GlobalUnWire  --  KERNEL32                      *
 *********************************************************************/
+#if 0
 BOOL WINAPI GlobalUnWire(HGLOBAL hmem)
 {
    return GlobalUnlock( hmem);
 }
+#endif
 
 /*********************************************************************
 *                    GlobalFix  --  KERNEL32                         *
 *********************************************************************/
+#if 0
 VOID WINAPI GlobalFix(HGLOBAL hmem)
 {
    GlobalLock( hmem );
 }
+#endif
 
 /*********************************************************************
 *                    GlobalUnfix  --  KERNEL32                       *
 *********************************************************************/
+#if 0
 VOID WINAPI GlobalUnfix(HGLOBAL hmem)
 {
    GlobalUnlock( hmem);
 }
+#endif
 
 /*********************************************************************
 *                    GlobalFlags  --  KERNEL32                       *
 *********************************************************************/
+#if 0
 UINT WINAPI GlobalFlags(HGLOBAL hmem)
 {
    return LocalFlags( (HLOCAL) hmem);
 }
+#endif
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.22 2000/09/05 13:52:04 ekohl Exp $
+/* $Id: stubs.c,v 1.23 2001/01/20 12:19:57 ekohl Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -2108,7 +2108,7 @@ GlobalAddAtomA (
 	return 0;
 }
 
-
+/*
 HGLOBAL
 STDCALL
 GlobalAlloc (
@@ -2119,7 +2119,7 @@ GlobalAlloc (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
+*/
 
 UINT
 STDCALL
@@ -2186,6 +2186,7 @@ GlobalFlags (
 }
 
 
+/*
 HGLOBAL
 STDCALL
 GlobalFree (
@@ -2195,7 +2196,7 @@ GlobalFree (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return hMem;
 }
-
+*/
 
 UINT
 STDCALL
@@ -2267,7 +2268,7 @@ GlobalReAlloc (
 	return 0;
 }
 
-
+/*
 DWORD
 STDCALL
 GlobalSize (
@@ -2277,7 +2278,7 @@ GlobalSize (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
+*/
 
 WINBOOL
 STDCALL
@@ -2635,9 +2636,6 @@ LocalUnlock (
 }
 
 
-
-
-
 int
 STDCALL
 MulDiv (
@@ -2829,64 +2827,12 @@ OpenConsoleW (
 }
 
 
-HANDLE
-STDCALL
-OpenMutexA (
-	DWORD	dwDesiredAccess,
-	WINBOOL	bInheritHandle,
-	LPCSTR	lpName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
-
-
-HANDLE
-STDCALL
-OpenMutexW (
-	DWORD	dwDesiredAccess,
-	WINBOOL	bInheritHandle,
-	LPCWSTR	lpName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
-
-
 DWORD
 STDCALL
 OpenProfileUserMapping (VOID)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-HANDLE
-STDCALL
-OpenSemaphoreA (
-	DWORD	dwDesiredAccess,
-	WINBOOL	bInheritHandle,
-	LPCSTR	lpName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
-
-
-HANDLE
-STDCALL
-OpenSemaphoreW (
-	DWORD	dwDesiredAccess,
-	WINBOOL	bInheritHandle,
-	LPCWSTR	lpName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
 }
 
 
@@ -2980,9 +2926,6 @@ RaiseException (
 }
 
 
-
-
-
 WINBOOL
 STDCALL
 RegisterConsoleVDM (
@@ -3024,32 +2967,6 @@ RegisterWowExec (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-
-WINBOOL
-STDCALL
-ReleaseMutex (
-	HANDLE	hMutex
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-ReleaseSemaphore (
-	HANDLE	hSemaphore,
-	LONG	lReleaseCount,
-	LPLONG	lpPreviousCount
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
 
 
 WINBOOL

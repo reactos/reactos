@@ -1,178 +1,36 @@
-/* $Id: wait.c,v 1.13 2000/12/08 22:08:02 chorns Exp $
+/* $Id: wait.c,v 1.14 2001/01/20 12:20:43 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/synch/wait.c
- * PURPOSE:         Wait  functions
+ * PURPOSE:         Wait functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
+
+/* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
 #include <kernel32/error.h>
 #include <windows.h>
 #include <wchar.h>
 
-HANDLE
-STDCALL
-CreateSemaphoreA (
-	LPSECURITY_ATTRIBUTES	lpSemaphoreAttributes,
-	LONG			lInitialCount,
-	LONG			lMaximumCount,
-	LPCSTR			lpName
-	)
+#include <kernel32/kernel32.h>
+
+/* FUNCTIONS ****************************************************************/
+
+DWORD STDCALL
+WaitForSingleObject(HANDLE hHandle,
+		    DWORD dwMilliseconds)
 {
-	UNICODE_STRING NameU;
-	ANSI_STRING Name;
-	HANDLE Handle;
-
-	RtlInitAnsiString (&Name,
-	                   (LPSTR)lpName);
-	RtlAnsiStringToUnicodeString (&NameU,
-	                              &Name,
-	                              TRUE);
-
-	Handle = CreateSemaphoreW (lpSemaphoreAttributes,
-	                           lInitialCount,
-	                           lMaximumCount,
-	                           NameU.Buffer);
-
-	RtlFreeUnicodeString (&NameU);
-
-	return Handle;
+   return WaitForSingleObjectEx(hHandle,
+				dwMilliseconds,
+				FALSE);
 }
 
 
-HANDLE
-STDCALL
-CreateSemaphoreW(
-		 LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
-		 LONG lInitialCount,
-		 LONG lMaximumCount,
-		 LPCWSTR lpName
-		 )
-{
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	NTSTATUS errCode;
-	UNICODE_STRING NameString;
-	HANDLE SemaphoreHandle;
-	if (lpName)
-		NameString.Length = lstrlenW(lpName)*sizeof(WCHAR);
-	else
-		NameString.Length = 0;
-	NameString.Buffer = (WCHAR *)lpName;
-	NameString.MaximumLength = NameString.Length;
-	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-	ObjectAttributes.RootDirectory = NULL;
-	ObjectAttributes.ObjectName = &NameString;
-	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE;
-	ObjectAttributes.SecurityDescriptor = NULL;
-	ObjectAttributes.SecurityQualityOfService = NULL;
-	if ( lpSemaphoreAttributes != NULL ) {
-		ObjectAttributes.SecurityDescriptor = lpSemaphoreAttributes->lpSecurityDescriptor;
-		if ( lpSemaphoreAttributes->bInheritHandle == TRUE )
-			ObjectAttributes.Attributes |= OBJ_INHERIT;
-	}
-	errCode = NtCreateSemaphore(
-	&SemaphoreHandle,
-	GENERIC_ALL,
-	&ObjectAttributes,
-	lInitialCount,
-	lMaximumCount
-	);
-	if (!NT_SUCCESS(errCode))
-		{
-		SetLastErrorByStatus (errCode);
-		return NULL;
-		}
-	return SemaphoreHandle;
-}
-
-HANDLE
-STDCALL
-CreateMutexA (
-	LPSECURITY_ATTRIBUTES	lpMutexAttributes,
-	WINBOOL			bInitialOwner,
-	LPCSTR			lpName
-	)
-{
-	UNICODE_STRING NameU;
-	ANSI_STRING Name;
-	HANDLE Handle;
-
-	RtlInitAnsiString (&Name,
-	                   (LPSTR)lpName);
-	RtlAnsiStringToUnicodeString (&NameU,
-	                              &Name,
-	                              TRUE);
-
-	Handle = CreateMutexW (lpMutexAttributes,
-	                       bInitialOwner,
-	                       NameU.Buffer);
-
-	RtlFreeUnicodeString (&NameU);
-
-	return Handle;
-}
-
-
-HANDLE
-STDCALL
-CreateMutexW (
-	LPSECURITY_ATTRIBUTES	lpMutexAttributes,
-	WINBOOL			bInitialOwner,
-	LPCWSTR			lpName
-	)
-{
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	NTSTATUS errCode;
-	UNICODE_STRING NameString;
-	HANDLE MutantHandle;
-
-	NameString.Length = lstrlenW(lpName)*sizeof(WCHAR);
-	NameString.Buffer = (WCHAR *)lpName;
-	NameString.MaximumLength = NameString.Length;
-
-	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-	ObjectAttributes.RootDirectory = NULL;
-	ObjectAttributes.ObjectName = &NameString;
-	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE;
-	ObjectAttributes.SecurityDescriptor = NULL;
-	ObjectAttributes.SecurityQualityOfService = NULL;
-
-	if ( lpMutexAttributes != NULL ) {
-		ObjectAttributes.SecurityDescriptor = lpMutexAttributes->lpSecurityDescriptor;
-		if ( lpMutexAttributes->bInheritHandle == TRUE )
-			ObjectAttributes.Attributes |= OBJ_INHERIT;
-	}
-	
-
-	errCode = NtCreateMutant(&MutantHandle,GENERIC_ALL, &ObjectAttributes,(BOOLEAN)bInitialOwner);
-	if (!NT_SUCCESS(errCode))
-	{
-		SetLastErrorByStatus (errCode);
-		return NULL;
-	}
-
-	return MutantHandle;
-
-}
-
-
-DWORD
-STDCALL
-WaitForSingleObject (
-	HANDLE	hHandle,
-	DWORD	dwMilliseconds
-	)
-{
-	return WaitForSingleObjectEx(hHandle,dwMilliseconds,FALSE);
-}
-
-
-DWORD
-STDCALL
+DWORD STDCALL
 WaitForSingleObjectEx(HANDLE hHandle,
                       DWORD  dwMilliseconds,
                       BOOL   bAlertable)
@@ -209,19 +67,21 @@ WaitForSingleObjectEx(HANDLE hHandle,
 }
 
 
-DWORD
-STDCALL
+DWORD STDCALL
 WaitForMultipleObjects(DWORD nCount,
                        CONST HANDLE *lpHandles,
                        BOOL  bWaitAll,
                        DWORD dwMilliseconds)
 {
-    return WaitForMultipleObjectsEx( nCount, lpHandles, bWaitAll ? WaitAll : WaitAny, dwMilliseconds, FALSE );
+   return WaitForMultipleObjectsEx(nCount,
+				   lpHandles,
+				   bWaitAll ? WaitAll : WaitAny,
+				   dwMilliseconds,
+				   FALSE);
 }
 
 
-DWORD
-STDCALL
+DWORD STDCALL
 WaitForMultipleObjectsEx(DWORD nCount,
                          CONST HANDLE *lpHandles,
                          BOOL  bWaitAll,
@@ -261,6 +121,16 @@ WaitForMultipleObjectsEx(DWORD nCount,
    SetLastErrorByStatus (errCode);
 
    return 0xFFFFFFFF;
+}
+
+
+BOOL STDCALL
+SignalObjectAndWait(HANDLE hObjectToSignal,
+		    HANDLE hObjectToWaitOn,
+		    DWORD dwMilliseconds,
+		    BOOL bAlertable)
+{
+   UNIMPLEMENTED
 }
 
 /* EOF */
