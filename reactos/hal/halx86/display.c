@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.9 2003/08/25 12:26:50 dwelch Exp $
+/* $Id: display.c,v 1.10 2003/08/27 20:56:26 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -708,6 +708,13 @@ HalDisplayString(IN PCH String)
 	{
 	  CursorY++;
 	  CursorX = 0;
+	}
+      else if (*pch == '\b')
+	{
+	  if (CursorX > 0)
+	    {
+	      CursorX--;
+	    }
 	}
       else if (*pch != '\r')
 	{
