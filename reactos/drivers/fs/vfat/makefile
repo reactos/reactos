@@ -5,7 +5,9 @@
 
 OBJECTS= blockdev.o iface.o dir.o
 
-all: $(OBJECTS)
+all: vfatfsd.o
+
+vfatfsd.o: $(OBJECTS)
 	$(LD) $(OBJECTS) -r -o vfatfsd.o 
 	$(NM) --numeric-sort vfatfsd.o > vfatfsd.sym
 

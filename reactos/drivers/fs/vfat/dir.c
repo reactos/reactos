@@ -1,4 +1,4 @@
-
+	
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -105,9 +105,9 @@ NTSTATUS FsdGetFileDirectoryInformation(PFCB pFcb,
   AllocSize = ((pFcb->entry.FileSize +  DeviceExt->BytesPerCluster - 1) /
           DeviceExt->BytesPerCluster) *
           DeviceExt->BytesPerCluster;
-  pInfo->AllocationSize.LowPart= AllocSize;
-  pInfo->AllocationSize.HighPart= AllocSize >>32;
+  LARGE_INTEGER_QUAD_PART(pInfo->AllocationSize) = AllocSize;
   pInfo->FileAttributes=pFcb->entry.Attrib;
+
   return STATUS_SUCCESS;
 }
 
@@ -138,8 +138,7 @@ NTSTATUS FsdGetFileFullDirectoryInformation(PFCB pFcb,
   AllocSize = ((pFcb->entry.FileSize +  DeviceExt->BytesPerCluster - 1) /
           DeviceExt->BytesPerCluster) *
           DeviceExt->BytesPerCluster;
-  pInfo->AllocationSize.LowPart= AllocSize;
-  pInfo->AllocationSize.HighPart= (AllocSize >>32);
+  LARGE_INTEGER_QUAD_PART(pInfo->AllocationSize) = AllocSize;
   pInfo->FileAttributes=pFcb->entry.Attrib;
 //      pInfo->EaSize=;
   return STATUS_SUCCESS;
@@ -176,8 +175,7 @@ DPRINT("sizeof %d,Length %d, BufLength %d, Next %d\n"
   AllocSize = ((pFcb->entry.FileSize +  DeviceExt->BytesPerCluster - 1) /
           DeviceExt->BytesPerCluster) *
           DeviceExt->BytesPerCluster;
-  pInfo->AllocationSize.LowPart= AllocSize;
-  pInfo->AllocationSize.HighPart= AllocSize >>32;
+  LARGE_INTEGER_QUAD_PART(pInfo->AllocationSize) = AllocSize;
   pInfo->FileAttributes=pFcb->entry.Attrib;
 //      pInfo->EaSize=;
   for (i=0;i<8 && (pFcb->entry.Filename[i]!=' ') ;i++)

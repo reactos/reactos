@@ -17,7 +17,7 @@
 #include <internal/string.h>
 #include <wstring.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *************************************************************/
@@ -165,13 +165,13 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
 	       }
 	     DeviceObject = IoGetAttachedDevice(DeviceObject);
 	  }
-//	DPRINT("Remainder %x\n",Remainder);
-//	DPRINT("Remainder %w\n",Remainder);
+	DPRINT("Remainder %x\n",Remainder);
+	DPRINT("Remainder %w\n",Remainder);
 	FileObject->FileName.Buffer = ExAllocatePool(NonPagedPool,
 						     wstrlen(Remainder));
 	RtlInitUnicodeString(&(FileObject->FileName),Remainder);
-//	DPRINT("FileObject->FileName.Buffer %x %w\n",
-//	       FileObject->FileName.Buffer,FileObject->FileName.Buffer);
+	DPRINT("FileObject->FileName.Buffer %x %w\n",
+	       FileObject->FileName.Buffer,FileObject->FileName.Buffer);
      }
    CHECKPOINT;
    
@@ -190,6 +190,7 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
    
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
    
+   DPRINT("DevObj StackSize %d\n", DeviceObject->StackSize);
    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
    if (Irp==NULL)
      {

@@ -26,7 +26,7 @@
 #include <wstring.h>
 #include <ddk/cctypes.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #include "vfat.h"
@@ -657,15 +657,29 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 {
    PWSTR current;
    PWSTR next;
-   PWSTR string = FileName;
-   PFCB ParentFcb = NULL;
-   PFCB Fcb = ExAllocatePool(NonPagedPool,sizeof(FCB));
+   PWSTR string;
+   PFCB ParentFcb;
+   PFCB Fcb;
    PFCB Temp;
    NTSTATUS Status;
-   
+
+   DPRINT("FsdOpenFile(%08lx, %08lx, %08lx)\n", 
+          DeviceExt,
+          FileObject,
+          FileName);
+
+CHECKPOINT;
+   string = FileName;
+CHECKPOINT;
+   ParentFcb = NULL;
+CHECKPOINT;
+   Fcb = ExAllocatePool(NonPagedPool, sizeof(FCB));
+CHECKPOINT;
    next = &string[0];
+CHECKPOINT;
    current = next+1;
    
+CHECKPOINT;
    while (next!=NULL)
      {
 	DPRINT("current %w next %x\n",current,next);
@@ -678,9 +692,11 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	     *next=0;
 	  }
 	
+CHECKPOINT;
       Status = FindFile(DeviceExt,Fcb,ParentFcb,current,NULL,NULL);
 	if (Status != STATUS_SUCCESS)
 	  {
+             /* FIXME: should the FCB be freed here?  */
 	     return(Status);
 	  }
 	Temp = Fcb;
@@ -693,6 +709,7 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	     Fcb = ParentFcb;
 	  }
        ParentFcb = Temp;
+CHECKPOINT;
      }
    FileObject->FsContext = ParentFcb;
    DPRINT("file opn, fcb=%x\n",ParentFcb);
@@ -1014,21 +1031,33 @@ NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
  * FUNCTION: Create or open a file
  */
 {
-   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
-   PFILE_OBJECT FileObject = Stack->FileObject;
+   PIO_STACK_LOCATION Stack;
+   PFILE_OBJECT FileObject;
    NTSTATUS Status;
    PDEVICE_EXTENSION DeviceExt;
 
-   DPRINT("VFAT FsdCreate...\n");
+   DPRINT("FsdCreate(DeviceObject %08lx, Irp %08lx)\n",
+          DeviceObject,
+          Irp);
 
+   Stack = IoGetCurrentIrpStackLocation(Irp);
+CHECKPOINT;
+   FileObject = Stack->FileObject;
+CHECKPOINT;
    DeviceExt = DeviceObject->DeviceExtension;
+CHECKPOINT;
    Status = FsdOpenFile(DeviceExt,FileObject,FileObject->FileName.Buffer);
+CHECKPOINT;
    
    Irp->IoStatus.Status = Status;
+CHECKPOINT;
    Irp->IoStatus.Information = 0;
+CHECKPOINT;
    
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-   return(Status);
+CHECKPOINT;
+
+   return Status;
 }
 
 
@@ -1049,7 +1078,7 @@ NTSTATUS FsdWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
    Length = Stack->Parameters.Write.Length;
    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-   Offset = Stack->Parameters.Write.ByteOffset.LowPart;
+   Offset = GET_LARGE_INTEGER_LOW_PART(Stack->Parameters.Write.ByteOffset);
 
    Status = FsdWriteFile(DeviceExt,FileObject,Buffer,Length,Offset);
 
@@ -1078,7 +1107,7 @@ NTSTATUS FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    
    Length = Stack->Parameters.Read.Length;
    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-   Offset = Stack->Parameters.Read.ByteOffset.LowPart;
+   Offset = GET_LARGE_INTEGER_LOW_PART(Stack->Parameters.Read.ByteOffset);
    
    Status = FsdReadFile(DeviceExt,FileObject,Buffer,Length,Offset,
 			&LengthRead);

@@ -91,7 +91,6 @@ VOID LdrInitModuleManagment(VOID)
 NTSTATUS 
 LdrLoadDriver(PUNICODE_STRING Filename)
 {
-  char BlockBuffer[512];
   PVOID ModuleLoadBase;
   NTSTATUS Status;
   HANDLE FileHandle;
@@ -107,23 +106,16 @@ LdrLoadDriver(PUNICODE_STRING Filename)
                              0,
                              NULL,
                              NULL);
+  CHECKPOINT;
   Status = ZwOpenFile(&FileHandle, 
                       FILE_ALL_ACCESS, 
                       &FileObjectAttributes, 
                       NULL, 0, 0);
+  CHECKPOINT;
   if (!NT_SUCCESS(Status))
     {
       return Status;
     }
-  CHECKPOINT;
-
-  /*  Read first block of image to determine type  */
-  Status = ZwReadFile(FileHandle, 0, 0, 0, 0, BlockBuffer, 512, 0, 0);
-  if (!NT_SUCCESS(Status))
-    {
-      ZwClose(FileHandle);
-      return Status;
-    }    
   CHECKPOINT;
 
   /*  Get the size of the file  */

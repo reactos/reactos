@@ -33,7 +33,7 @@
 #include <internal/io.h>
 #include <ddk/ntddk.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -125,7 +125,12 @@ PIO_STACK_LOCATION IoGetCurrentIrpStackLocation(PIRP Irp)
  * RETURNS: A pointer to the stack location
  */
 {
-   return(&Irp->Stack[Irp->CurrentLocation]);
+   DPRINT("IoGetCurrentIrpStackLocation: Irp %08lx CurLoc %d StkCnt %d\n", 
+          Irp,
+          Irp->CurrentLocation,
+          Irp->StackCount);
+
+   return &Irp->Stack[Irp->CurrentLocation];
 }
 
 
@@ -144,6 +149,11 @@ PIO_STACK_LOCATION IoGetNextIrpStackLocation(PIRP Irp)
  * RETURNS: A pointer to the stack location 
  */
 {
+   DPRINT("IoGetNextIrpStackLocation: Irp %08lx CurLoc %d StkCnt %d\n", 
+          Irp,
+          Irp->CurrentLocation,
+          Irp->StackCount);
+
    assert(Irp!=NULL);
    DPRINT("Irp %x Irp->StackPtr %x\n",Irp,Irp->CurrentLocation);
    return(&Irp->Stack[Irp->CurrentLocation-1]);
@@ -154,17 +164,22 @@ NTSTATUS IoCallDriver(PDEVICE_OBJECT DevObject, PIRP irp)
  * FUNCTION: Sends an IRP to the next lower driver
  */
 {
+   NTSTATUS Status;
    PDRIVER_OBJECT drv = DevObject->DriverObject;
    IO_STACK_LOCATION* param = IoGetNextIrpStackLocation(irp);
+
    DPRINT("Deviceobject %x\n",DevObject);
    DPRINT("Irp %x\n",irp);
+
    irp->Tail.Overlay.CurrentStackLocation--;
    irp->CurrentLocation--;
+
    DPRINT("Io stack address %x\n",param);
    DPRINT("Function %d Routine %x\n",param->MajorFunction,
 	  drv->MajorFunction[param->MajorFunction]);
 
-   return(drv->MajorFunction[param->MajorFunction](DevObject,irp));
+   Status = drv->MajorFunction[param->MajorFunction](DevObject,irp);
+   return Status;
 }
 
 PIRP IoAllocateIrp(CCHAR StackSize, BOOLEAN ChargeQuota)

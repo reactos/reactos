@@ -28,7 +28,7 @@
 #include <ddk/ntddk.h>
 
 
-#if 0
+#if CHECKED
 #define VALIDATE_POOL validate_kernel_pool()
 #else
 #define VALIDATE_POOL
@@ -528,11 +528,13 @@ asmlinkage VOID ExFreePool(PVOID block)
  *        block = block to free
  */
 {
-   block_hdr* blk=address_to_block(block);
-   OLD_DPRINT("(%s:%d) freeing block %x\n",__FILE__,__LINE__,blk);
-   
-//   DbgPrint("ExFreePool(block %x), size %d, caller %x\n",block,blk->size,
-//	    ((PULONG)&block)[-1]);
+   block_hdr *blk = address_to_block(block);
+
+   OLD_DPRINT("ExFreePool(block %x), size %d, caller %x\n",
+              block,
+              blk->size,
+              ((PULONG)&block)[-1]);
+   OLD_DPRINT("freeing block %x\n",blk);
    
    VALIDATE_POOL;
    
@@ -560,9 +562,9 @@ PVOID ExAllocateNonPagedPoolWithTag(ULONG type, ULONG size, ULONG Tag)
    block_hdr* current=NULL;
    void* block;
    
-//   DbgPrint("Blocks on free list %d\n",nr_free_blocks);
-//   DbgPrint("Blocks on used list %d\n",nr_used_blocks);
-//   OLD_DPRINT("ExAllocateNonPagedPool(type %d, size %d)\n",type,size);
+   OLD_DPRINT("Blocks on free list %d\n",nr_free_blocks);
+   OLD_DPRINT("Blocks on used list %d\n",nr_used_blocks);
+   OLD_DPRINT("ExAllocateNonPagedPool(type %d, size %d)\n",type,size);
    VALIDATE_POOL;
    
    /*
@@ -602,5 +604,6 @@ PVOID ExAllocateNonPagedPoolWithTag(ULONG type, ULONG size, ULONG Tag)
     */
    block=block_to_address(grow_kernel_pool(size));
    memset(block,0,size);
-   return(block);
+
+   return block;
 }

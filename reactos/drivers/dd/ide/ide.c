@@ -1946,12 +1946,14 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
   PIDE_CONTROLLER_EXTENSION  ControllerExtension;
 
     //  Setup Extension pointer
+CHECKPOINT;
   ControllerExtension = (PIDE_CONTROLLER_EXTENSION) Context;
 
     //  Handle state change if necessary
   switch (ControllerExtension->TimerState) 
     {
       case IDETimerResetWaitForBusyNegate:
+CHECKPOINT;
         if (!(IDEReadStatus(ControllerExtension->CommandPortBase) & 
             IDE_SR_BUSY))
           {
@@ -1962,6 +1964,7 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
         break;
         
       case IDETimerResetWaitForDrdyAssert:
+CHECKPOINT;
         if (IDEReadStatus(ControllerExtension->CommandPortBase) & 
             IDE_SR_DRQ)
           {
@@ -1988,12 +1991,14 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
     //  If we're counting down, then count.
   if (ControllerExtension->TimerCount > 0) 
     {
+CHECKPOINT;
       ControllerExtension->TimerCount--;
 
       //  Else we'll check the state and process if necessary
     } 
   else 
     {
+CHECKPOINT;
       switch (ControllerExtension->TimerState) 
         {
           case IDETimerIdle:
@@ -2001,6 +2006,7 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
 
           case IDETimerCmdWait:
               //  Command timed out, reset drive and try again or fail
+CHECKPOINT;
             if (++ControllerExtension->Retries > IDE_MAX_CMD_RETRIES)
               {
                 ControllerExtension->CurrentIrp->IoStatus.Status = STATUS_IO_TIMEOUT;
@@ -2015,6 +2021,7 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
 
           case IDETimerResetWaitForBusyNegate:
           case IDETimerResetWaitForDrdyAssert:
+CHECKPOINT;
             ControllerExtension->CurrentIrp->IoStatus.Status = STATUS_IO_TIMEOUT;
             ControllerExtension->CurrentIrp->IoStatus.Information = 0;
             IDEFinishOperation(ControllerExtension);
