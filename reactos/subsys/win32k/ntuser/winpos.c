@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.46 2003/11/23 11:39:48 navaraf Exp $
+/* $Id: winpos.c,v 1.47 2003/11/24 21:01:20 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -757,6 +757,8 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       WinPos.y -= Window->Parent->ClientRect.top;
    }
 
+   WinPosDoWinPosChanging(Window, &WinPos, &NewWindowRect, &NewClientRect);
+
    /* Fix up the flags. */
    if (!WinPosFixupFlags(&WinPos, Window))
    {
@@ -765,12 +767,10 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       return FALSE;
    }
 
-   WinPosDoWinPosChanging(Window, &WinPos, &NewWindowRect, &NewClientRect);
-
    /* Does the window still exist? */
    if (!IntIsWindow(WinPos.hwnd))
    {
-      /* FIXME: SetLastWin32Error */
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return FALSE;
    }
 
@@ -788,8 +788,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
        (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER))
    {
       VisBefore = VIS_ComputeVisibleRegion(
-         PsGetWin32Thread()->Desktop, Window, FALSE,
-         Window->Style & WS_CLIPCHILDREN, Window->Style & WS_CLIPSIBLINGS);
+         PsGetWin32Thread()->Desktop, Window, FALSE, FALSE, TRUE);
 
       if (UnsafeIntGetRgnBox(VisBefore, &TempRect) == NULLREGION)
       {
@@ -872,8 +871,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 
    /* Determine the new visible region */
    VisAfter = VIS_ComputeVisibleRegion(
-      PsGetWin32Thread()->Desktop, Window, FALSE,
-      Window->Style & WS_CLIPCHILDREN, Window->Style & WS_CLIPSIBLINGS);
+      PsGetWin32Thread()->Desktop, Window, FALSE, FALSE, TRUE);
 
    if (UnsafeIntGetRgnBox(VisAfter, &TempRect) == NULLREGION)
    {
@@ -902,7 +900,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
        * we don't have to crop (can't take anything away from an empty
        * region...)
        */
-      if (!(WinPos.flags & SWP_NOSIZE) && RgnType != ERROR &&
+      if (!(WinPos.flags & (SWP_NOSIZE | SWP_NOZORDER)) && RgnType != ERROR &&
           RgnType != NULLREGION)
       {
          RECT ORect = OldClientRect;
