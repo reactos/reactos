@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.16 2004/07/28 22:28:50 weiden Exp $
+/* $Id: guiconsole.c,v 1.17 2004/07/29 13:43:38 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -658,8 +658,8 @@ GuiConsoleLeftMouseUp(HWND hWnd, LPARAM lParam)
   
   rc.left = GuiData->SelectionStart.x;
   rc.top = GuiData->SelectionStart.y;
-  rc.right = (pt.x >= 0 ? (pt.x + GuiData->CharWidth - 1) / GuiData->CharWidth : 0);
-  rc.bottom = (pt.y >= 0 ? (pt.y + GuiData->CharHeight - 1) / GuiData->CharHeight : 0);
+  rc.right = (pt.x >= 0 ? (pt.x / GuiData->CharWidth) + 1 : 0);
+  rc.bottom = (pt.y >= 0 ? (pt.y / GuiData->CharHeight) + 1 : 0);
 
   /* exchange left/top with right/bottom if required */
   if(rc.left >= rc.right)
@@ -699,8 +699,8 @@ GuiConsoleMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
   rc.left = GuiData->SelectionStart.x;
   rc.top = GuiData->SelectionStart.y;
-  rc.right = (pt.x >= 0 ? (pt.x + GuiData->CharWidth - 1) / GuiData->CharWidth : 0);
-  rc.bottom = (pt.y >= 0 ? (pt.y + GuiData->CharHeight - 1) / GuiData->CharHeight : 0);
+  rc.right = (pt.x >= 0 ? (pt.x / GuiData->CharWidth) + 1 : 0);
+  rc.bottom = (pt.y >= 0 ? (pt.y / GuiData->CharHeight) + 1 : 0);
 
   /* exchange left/top with right/bottom if required */
   if(rc.left >= rc.right)
