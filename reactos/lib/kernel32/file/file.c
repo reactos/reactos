@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.45 2003/07/10 18:50:51 chorns Exp $
+/* $Id: file.c,v 1.46 2003/08/07 09:05:43 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -863,7 +863,7 @@ GetTempFileNameW(LPCWSTR lpPathName,
    HANDLE hFile;
    UINT unique = uUnique;
    UINT len;
-   const WCHAR *format = L"%.*S\\~%.3S%4.4x.TMP";
+   const WCHAR *format = L"%.*s\\~%.3s%4.4x.TMP";
    
    DPRINT("GetTempFileNameW(lpPathName %S, lpPrefixString %.*S, "
 	  "uUnique %x, lpTempFileName %x)\n", lpPathName, 4, 
