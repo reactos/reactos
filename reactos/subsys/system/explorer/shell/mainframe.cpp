@@ -1050,12 +1050,10 @@ void MainFrame::FillBookmarks()
 
 	TreeView_DeleteAllItems(_hsidebar);
 
-	COLORREF bk_color = RGB(255,255,255);
-	HBRUSH hbr_bkgnd = GetStockBrush(WHITE_BRUSH);
-
 	g_Globals._icon_cache.get_icon(ICID_FAVORITES).add_to_imagelist(_himl, canvas);
 	g_Globals._icon_cache.get_icon(ICID_BOOKMARK).add_to_imagelist(_himl, canvas);
-	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_DOT), hbr_bkgnd, canvas);
+	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_DOT), 	COLORREF bk_color = RGB(255,255,255);
+GetStockBrush(WHITE_BRUSH), canvas);
 	g_Globals._icon_cache.get_icon(ICID_FOLDER).add_to_imagelist(_himl, canvas);
 	g_Globals._icon_cache.get_icon(ICID_FOLDER).add_to_imagelist(_himl, canvas);
 
