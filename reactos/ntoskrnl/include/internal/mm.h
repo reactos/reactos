@@ -194,7 +194,11 @@ typedef struct _MADDRESS_SPACE
 #ifndef __USE_W32API
 /* VARIABLES */
 
-extern PVOID MmSystemRangeStart;
+#ifdef __NTOSKRNL__
+extern PVOID EXPORTED MmSystemRangeStart;
+#else
+extern PVOID IMPORTED MmSystemRangeStart;
+#endif
 
 #endif /* __USE_W32API */
 
