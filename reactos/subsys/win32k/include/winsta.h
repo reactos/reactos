@@ -52,6 +52,10 @@ W32kGetCaptureWindow(VOID);
 VOID STDCALL
 W32kSetCaptureWindow(struct _WINDOW_OBJECT* Window);
 
+inline VOID W32kAcquireWinStaLockShared();
+inline VOID W32kAcquireWinStaLockExclusive();
+inline VOID W32kReleaseWinStaLock();
+
 #endif /* __WIN32K_WINSTA_H */
 
 /* EOF */

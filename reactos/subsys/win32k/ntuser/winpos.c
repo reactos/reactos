@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.18 2003/08/01 14:38:51 dwelch Exp $
+/* $Id: winpos.c,v 1.19 2003/08/02 16:32:18 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -117,8 +117,7 @@ WinPosCreateIconTitle(PWINDOW_OBJECT WindowObject)
 BOOL STATIC FASTCALL
 WinPosShowIconTitle(PWINDOW_OBJECT WindowObject, BOOL Show)
 {
-  PINTERNALPOS InternalPos = NtUserGetProp(WindowObject->Self,
-					   AtomInternalPos);
+  PINTERNALPOS InternalPos = W32kGetProp(WindowObject, AtomInternalPos);
   PWINDOW_OBJECT IconWindow;
   NTSTATUS Status;
 
@@ -161,13 +160,12 @@ WinPosShowIconTitle(PWINDOW_OBJECT WindowObject, BOOL Show)
 PINTERNALPOS STATIC STDCALL
 WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
 {
-  PINTERNALPOS InternalPos = NtUserGetProp(WindowObject->Self, 
-					   AtomInternalPos);
+  PINTERNALPOS InternalPos = W32kGetProp(WindowObject, AtomInternalPos);
   if (InternalPos == NULL)
     {
       InternalPos = 
 	ExAllocatePool(NonPagedPool, sizeof(INTERNALPOS));
-      NtUserSetProp(WindowObject->Self, AtomInternalPos, InternalPos);
+      W32kSetProp(WindowObject, AtomInternalPos, InternalPos);
       InternalPos->IconTitle = 0;
       InternalPos->NormalRect = WindowObject->WindowRect;
       InternalPos->IconPos.x = InternalPos->MaxPos.x = 0xFFFFFFFF;
@@ -327,7 +325,7 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
   MinMax.ptMaxSize.x += 2 * XInc;
   MinMax.ptMaxSize.y += 2 * YInc;
 
-  Pos = NtUserGetProp(Window->Self, AtomInternalPos);
+  Pos = W32kGetProp(Window, AtomInternalPos);
   if (Pos != NULL)
     {
       MinMax.ptMaxPosition = Pos->MaxPos;

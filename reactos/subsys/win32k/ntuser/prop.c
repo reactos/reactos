@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.2 2003/05/18 17:16:17 ea Exp $
+/* $Id: prop.c,v 1.3 2003/08/02 16:32:18 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -83,11 +83,11 @@ NtUserRemoveProp(HWND hWnd, ATOM Atom)
   PPROPERTY Prop;
   HANDLE Data;
 
-  WindowObject = W32kGetWindowObject(hWnd);
-  if (WindowObject == NULL)
-    {
-      return(NULL);
-    }
+  if (!(WindowObject = W32kGetWindowObject(hWnd)))
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return NULL;
+  }
 
   Prop = W32kGetProp(WindowObject, Atom);
   if (Prop == NULL)
@@ -109,47 +109,65 @@ NtUserGetProp(HWND hWnd, ATOM Atom)
   PPROPERTY Prop;
   HANDLE Data = NULL;
 
-  WindowObject = W32kGetWindowObject(hWnd);
-  if (WindowObject == NULL)
-    {
-      return(FALSE);
-    }
+  W32kAcquireWinStaLockShared();
+
+  if (!(WindowObject = W32kGetWindowObject(hWnd)))
+  {
+    W32kReleaseWinStaLock();
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
 
   Prop = W32kGetProp(WindowObject, Atom);
   if (Prop != NULL)
-    {
-      Data = Prop->Data;
-    }
-  W32kReleaseWindowObject(WindowObject);
+  {
+    Data = Prop->Data;
+  }
+  
+  W32kReleaseWinStaLock();
+
   return(Data);
 }
+
+BOOL FASTCALL
+W32kSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data)
+{
+  PPROPERTY Prop;
+
+  Prop = W32kGetProp(Wnd, Atom);
+
+  if (Prop == NULL)
+  {
+    Prop = ExAllocatePool(PagedPool, sizeof(PROPERTY));
+    if (Prop == NULL) return FALSE;
+    Prop->Atom = Atom;
+    InsertTailList(&Wnd->PropListHead, &Prop->PropListEntry);
+  }
+
+  Prop->Data = Data;
+  return TRUE;
+}
+
 
 BOOL STDCALL
 NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
 {
-  PWINDOW_OBJECT WindowObject;
-  PPROPERTY Prop;
+  PWINDOW_OBJECT Wnd;
+  BOOL ret;
 
-  WindowObject = W32kGetWindowObject(hWnd);
-  if (WindowObject == NULL)
-    {
-      return(FALSE);
-    }
+  W32kAcquireWinStaLockExclusive();
 
-  Prop = W32kGetProp(WindowObject, Atom);
-  if (Prop == NULL)
-    {
-      Prop = ExAllocatePool(PagedPool, sizeof(PROPERTY));
-      if (Prop == NULL)
-	{
-	  W32kReleaseWindowObject(WindowObject);
-	  return(FALSE);
-	}
-      Prop->Atom = Atom;
-      InsertTailList(&WindowObject->PropListHead, &Prop->PropListEntry);
-    }
-  Prop->Data = Data;
-  W32kReleaseWindowObject(WindowObject);
-  return(TRUE);
+  if (!(Wnd = W32kGetWindowObject(hWnd)))
+  {
+    W32kReleaseWinStaLock();
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
+
+  ret = W32kSetProp(Wnd, Atom, Data);
+
+  W32kReleaseWinStaLock();
+  return ret;
 }
+
 /* EOF */

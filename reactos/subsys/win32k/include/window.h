@@ -1,12 +1,16 @@
 #ifndef __WIN32K_WINDOW_H
 #define __WIN32K_WINDOW_H
 
+struct _PROPERTY;
+struct _WINDOW_OBJECT;
+
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <include/class.h>
 #include <include/msgqueue.h>
 #include <include/winsta.h>
 #include <include/dce.h>
+#include <include/prop.h>
 
 typedef struct _PROPERTY
 {
