@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.41 2000/05/14 09:31:05 ea Exp $
+/* $Id: process.c,v 1.42 2000/05/14 09:34:14 ea Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -732,6 +732,7 @@ NTSTATUS STDCALL NtSetInformationProcess(IN HANDLE ProcessHandle,
 }
 
 
+#if 0
 /**********************************************************************
  * NAME							INTERNAL
  * 	PiSnapshotProcessTable
@@ -877,6 +878,6 @@ PiSnapshotProcessTable (
 	/* OK */	
 	return STATUS_SUCCESS;
 }
-
+#endif
 
 /* EOF */
