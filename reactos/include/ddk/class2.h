@@ -1,4 +1,4 @@
-/* $Id: class2.h,v 1.1 2002/09/19 16:17:13 ekohl Exp $
+/* $Id: class2.h,v 1.2 2003/04/26 22:51:21 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
