@@ -398,13 +398,20 @@ typedef struct _SYSTEM_LOCK_INFORMATION {
 #define PROTECT_FROM_CLOSE                0x01
 #define INHERIT                           0x02
 
-typedef struct _SYSTEM_HANDLE_INFORMATION {
-	ULONG  ProcessId;
-	UCHAR  ObjectTypeNumber;
-	UCHAR  Flags;
-	USHORT  Handle;
+typedef struct _SYSTEM_HANDLE_TABLE_ENTRY_INFO {
+	USHORT  UniqueProcessId;
+	USHORT  CreatorBackTraceIndex;
+	UCHAR  ObjectTypeIndex;
+	UCHAR  HandleAttributes;
+	USHORT  HandleValue;
 	PVOID  Object;
-	ACCESS_MASK  GrantedAccess;
+	ULONG  GrantedAccess;
+} SYSTEM_HANDLE_TABLE_ENTRY_INFO, *PSYSTEM_HANDLE_TABLE_ENTRY_INFO;
+
+typedef struct _SYSTEM_HANDLE_INFORMATION {
+	ULONG  NumberOfHandles;
+	SYSTEM_HANDLE_TABLE_ENTRY_INFO  Handles[1];
+
 } SYSTEM_HANDLE_INFORMATION, *PSYSTEM_HANDLE_INFORMATION;
 
 typedef struct _SYSTEM_OBJECT_TYPE_INFORMATION {

@@ -1,4 +1,4 @@
-/* $Id: win32.c,v 1.15 2004/11/06 01:43:59 weiden Exp $
+/* $Id: win32.c,v 1.16 2004/11/06 11:45:47 weiden Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -7,6 +7,7 @@
  * FILE:        reactos/lib/psapi/misc/win32.c
  * PURPOSE:     Win32 interfaces for PSAPI
  * PROGRAMMER:  KJK::Hyperion <noog@libero.it>
+ *              Thomas Weidenmueller <w3seek@reactos.com>
  * UPDATE HISTORY:
  *              10/06/2002: Created
  */
@@ -562,6 +563,49 @@ InternalGetModuleInformation(HANDLE hProcess,
   return 0;
 }
 
+
+typedef struct _INTERNAL_ENUM_PAGE_FILES_CONTEXT
+{
+  PENUM_PAGE_FILE_CALLBACKA pCallbackRoutine;
+  LPVOID lpContext;
+} INTERNAL_ENUM_PAGE_FILES_CONTEXT, *PINTERNAL_ENUM_PAGE_FILES_CONTEXT;
+
+
+static BOOL
+InternalAnsiPageFileCallback(LPVOID pContext,
+                             PENUM_PAGE_FILE_INFORMATION pPageFileInfo,
+                             LPCWSTR lpFilename)
+{
+  size_t slen;
+  LPSTR AnsiFileName;
+  PINTERNAL_ENUM_PAGE_FILES_CONTEXT Context = (PINTERNAL_ENUM_PAGE_FILES_CONTEXT)pContext;
+
+  slen = wcslen(lpFilename);
+
+  AnsiFileName = (LPSTR)LocalAlloc(LMEM_FIXED, (slen + 1) * sizeof(CHAR));
+  if(AnsiFileName != NULL)
+  {
+    BOOL Ret;
+
+    WideCharToMultiByte(CP_ACP,
+                        0,
+                        lpFilename,
+                        -1, /* only works if the string is NULL-terminated!!! */
+                        AnsiFileName,
+                        (slen + 1) * sizeof(CHAR),
+                        NULL,
+                        NULL);
+
+    Ret = Context->pCallbackRoutine(Context->lpContext, pPageFileInfo, AnsiFileName);
+
+    LocalFree((HLOCAL)AnsiFileName);
+
+    return Ret;
+  }
+
+  return FALSE;
+}
+
 /* PUBLIC *********************************************************************/
 
 /*
@@ -1030,49 +1074,6 @@ GetProcessImageFileNameA(HANDLE hProcess,
 }
 
 
-typedef struct _INTERNAL_ENUM_PAGE_FILES_CONTEXT
-{
-  PENUM_PAGE_FILE_CALLBACKA pCallbackRoutine;
-  LPVOID lpContext;
-} INTERNAL_ENUM_PAGE_FILES_CONTEXT, *PINTERNAL_ENUM_PAGE_FILES_CONTEXT;
-
-
-static BOOL
-InternalAnsiPageFileCallback(LPVOID pContext,
-                             PENUM_PAGE_FILE_INFORMATION pPageFileInfo,
-                             LPCWSTR lpFilename)
-{
-  size_t slen;
-  LPSTR AnsiFileName;
-  PINTERNAL_ENUM_PAGE_FILES_CONTEXT Context = (PINTERNAL_ENUM_PAGE_FILES_CONTEXT)pContext;
-  
-  slen = wcslen(lpFilename);
-  
-  AnsiFileName = (LPSTR)LocalAlloc(LMEM_FIXED, (slen + 1) * sizeof(CHAR));
-  if(AnsiFileName != NULL)
-  {
-    BOOL Ret;
-    
-    WideCharToMultiByte(CP_ACP,
-                        0,
-                        lpFilename,
-                        -1, /* only works if the string is NULL-terminated!!! */
-                        AnsiFileName,
-                        (slen + 1) * sizeof(CHAR),
-                        NULL,
-                        NULL);
-    
-    Ret = Context->pCallbackRoutine(Context->lpContext, pPageFileInfo, AnsiFileName);
-    
-    LocalFree((HLOCAL)AnsiFileName);
-    
-    return Ret;
-  }
-
-  return FALSE;
-}
-
-
 /*
  * @implemented
  */
@@ -1175,6 +1176,130 @@ EnumPageFilesW(PENUM_PAGE_FILE_CALLBACKW pCallbackRoutine,
   LocalFree((HLOCAL)Buffer);
 
   return Ret;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetPerformanceInfo(PPERFORMANCE_INFORMATION pPerformanceInformation,
+                   DWORD cb)
+{
+  SYSTEM_PERFORMANCE_INFORMATION spi;
+  SYSTEM_BASIC_INFORMATION sbi;
+  SYSTEM_HANDLE_INFORMATION shi;
+  PSYSTEM_PROCESS_INFORMATION ProcessInfo;
+  ULONG BufferSize, ProcOffset, ProcessCount, ThreadCount;
+  PVOID Buffer;
+  NTSTATUS Status;
+
+  Status = NtQuerySystemInformation(SystemPerformanceInformation,
+                                    &spi,
+                                    sizeof(spi),
+                                    NULL);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+
+  Status = NtQuerySystemInformation(SystemBasicInformation,
+                                    &sbi,
+                                    sizeof(sbi),
+                                    NULL);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+
+  /*
+   * allocate enough memory to get a dump of all processes and threads
+   */
+  BufferSize = 0;
+  for(;;)
+  {
+    BufferSize += 0x10000;
+    Buffer = (PVOID)LocalAlloc(LMEM_FIXED, BufferSize);
+    if(Buffer == NULL)
+    {
+      return FALSE;
+    }
+
+    Status = NtQuerySystemInformation(SystemProcessInformation,
+                                      Buffer,
+                                      BufferSize,
+                                      NULL);
+    if(Status == STATUS_INFO_LENGTH_MISMATCH)
+    {
+      LocalFree((HLOCAL)Buffer);
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  if(!NT_SUCCESS(Status))
+  {
+    LocalFree((HLOCAL)Buffer);
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+
+  /*
+   * determine the process and thread count
+   */
+  ProcessCount = ThreadCount = ProcOffset = 0;
+  ProcessInfo = (PSYSTEM_PROCESS_INFORMATION)Buffer;
+  do
+  {
+    ProcessInfo = (PSYSTEM_PROCESS_INFORMATION)((ULONG_PTR)ProcessInfo + ProcOffset);
+    ProcessCount++;
+    ThreadCount += ProcessInfo->NumberOfThreads;
+
+    ProcOffset = ProcessInfo->NextEntryOffset;
+  } while(ProcOffset != 0);
+
+  LocalFree((HLOCAL)Buffer);
+
+  /*
+   * it's enough to supply a SYSTEM_HANDLE_INFORMATION structure as buffer. Even
+   * though it returns STATUS_INFO_LENGTH_MISMATCH, it already sets the NumberOfHandles
+   * field which is all we're looking for anyway.
+   */
+  Status = NtQuerySystemInformation(SystemHandleInformation,
+                                    &shi,
+                                    sizeof(shi),
+                                    NULL);
+  if(!NT_SUCCESS(Status) && (Status != STATUS_INFO_LENGTH_MISMATCH))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+
+  /*
+   * all required information collected, fill the structure
+   */
+
+  pPerformanceInformation->cb = sizeof(PERFORMANCE_INFORMATION);
+  pPerformanceInformation->CommitTotal = spi.TotalCommittedPages;
+  pPerformanceInformation->CommitLimit = spi.TotalCommitLimit;
+  pPerformanceInformation->CommitPeak = spi.PeakCommitment;
+  pPerformanceInformation->PhysicalTotal = sbi.NumberOfPhysicalPages;
+  pPerformanceInformation->PhysicalAvailable = spi.AvailablePages;
+  pPerformanceInformation->SystemCache = 0; /* FIXME - where to get this information from? */
+  pPerformanceInformation->KernelTotal = spi.PagedPoolUsage + spi.NonPagedPoolUsage;
+  pPerformanceInformation->KernelPaged = spi.PagedPoolUsage;
+  pPerformanceInformation->KernelNonpaged = spi.NonPagedPoolUsage;
+  pPerformanceInformation->PageSize = sbi.PhysicalPageSize;
+  pPerformanceInformation->HandleCount = shi.NumberOfHandles;
+  pPerformanceInformation->ProcessCount = ProcessCount;
+  pPerformanceInformation->ThreadCount = ThreadCount;
+
+  return TRUE;
 }
 
 /* EOF */

@@ -1,22 +1,8 @@
-/* $Id: stubs.c,v 1.10 2004/11/06 01:42:04 weiden Exp $ */
+/* $Id: stubs.c,v 1.11 2004/11/06 11:45:47 weiden Exp $ */
 #include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetPerformanceInfo(PPERFORMANCE_INFORMATION pPerformanceInformation,
-                   DWORD cb)
-{
-  DPRINT1("PSAPI: GetPerformanceInfo is UNIMPLEMENTED!\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
-}
 
 
 /*
