@@ -28,12 +28,12 @@ UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
   // Transfer color info
 
   if (dc->w.bitsPerPixel <= 8) {
-    palEntry = palette->logpalette.palPalEntry + StartIndex;
+    palEntry = palette->logpalette->palPalEntry + StartIndex;
     if (StartIndex + Entries > (1 << dc->w.bitsPerPixel))
       Entries = (1 << dc->w.bitsPerPixel) - StartIndex;
 
-    if (StartIndex + Entries > palette->logpalette.palNumEntries)
-      Entries = palette->logpalette.palNumEntries - StartIndex;
+    if (StartIndex + Entries > palette->logpalette->palNumEntries)
+      Entries = palette->logpalette->palNumEntries - StartIndex;
 
     for (end = Colors + Entries; Colors < end; palEntry++, Colors++)
     {
@@ -670,9 +670,9 @@ RGBQUAD *DIB_MapPaletteColors(PDC dc, LPBITMAPINFO lpbmi)
   lpIndex = (DWORD *)&lpbmi->bmiColors[0];
 
   for (i=0; i<nNumColors; i++) {
-    lpRGB[i].rgbRed = palObj->logpalette.palPalEntry[*lpIndex].peRed;
-    lpRGB[i].rgbGreen = palObj->logpalette.palPalEntry[*lpIndex].peGreen;
-    lpRGB[i].rgbBlue = palObj->logpalette.palPalEntry[*lpIndex].peBlue;
+    lpRGB[i].rgbRed = palObj->logpalette->palPalEntry[*lpIndex].peRed;
+    lpRGB[i].rgbGreen = palObj->logpalette->palPalEntry[*lpIndex].peGreen;
+    lpRGB[i].rgbBlue = palObj->logpalette->palPalEntry[*lpIndex].peBlue;
     lpIndex++;
   }
 //    RELEASEDCINFO(hDC);
