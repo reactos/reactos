@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.10 2002/06/11 22:09:01 dwelch Exp $
+/* $Id: class.c,v 1.11 2002/06/14 18:55:09 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -176,9 +176,8 @@ RegisterClassExA(CONST WNDCLASSEX *lpwcx)
     return (ATOM)0;
   }
   
-  if (!RtlCreateUnicodeStringFromAsciiz(&ClassName, (PCSZ)lpwcx->lpszMenuName))
+  if (!RtlCreateUnicodeStringFromAsciiz(&ClassName, (PCSZ)lpwcx->lpszClassName))
     {
-      RtlFreeUnicodeString(&MenuName);
       SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return (ATOM)0;
     }
@@ -187,7 +186,7 @@ RegisterClassExA(CONST WNDCLASSEX *lpwcx)
   Class.lpszMenuName = (LPCTSTR)MenuName.Buffer;
   Class.lpszClassName = (LPCTSTR)ClassName.Buffer;
 
-  Atom = NtUserRegisterClassExWOW((WNDCLASSEX*)lpwcx,
+  Atom = NtUserRegisterClassExWOW(&Class,
 				  FALSE,
 				  0,
 				  0,
@@ -205,7 +204,7 @@ ATOM STDCALL
 RegisterClassExW(CONST WNDCLASSEX *lpwcx)
 {
   RTL_ATOM Atom;
-  
+
   Atom = NtUserRegisterClassExWOW((WNDCLASSEX*)lpwcx,
 				  TRUE,
 				  0,
@@ -220,7 +219,7 @@ ATOM STDCALL
 RegisterClassW(CONST WNDCLASS *lpWndClass)
 {
   WNDCLASSEX Class;
-  
+
   RtlMoveMemory(&Class.style, lpWndClass, sizeof(WNDCLASS));
   Class.cbSize = sizeof(WNDCLASSEX);
   Class.hIconSm = INVALID_HANDLE_VALUE;
