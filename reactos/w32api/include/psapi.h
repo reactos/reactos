@@ -50,7 +50,7 @@ typedef struct _PROCESS_MEMORY_COUNTERS {
 	DWORD PeakPagefileUsage;
 } PROCESS_MEMORY_COUNTERS,*PPROCESS_MEMORY_COUNTERS;
 
-typedef struct _PERFORMACE_INFORMATION {
+typedef struct _PERFORMANCE_INFORMATION {
 	DWORD cb;
 	SIZE_T CommitTotal;
 	SIZE_T CommitLimit;
