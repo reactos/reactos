@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.29 2002/09/08 10:23:25 chorns Exp $
+/* $Id: fs.c,v 1.30 2003/02/14 22:54:38 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -38,7 +38,7 @@ typedef struct _FS_CHANGE_NOTIFY_ENTRY
 
 /* GLOBALS ******************************************************************/
 
-static KSPIN_LOCK FileSystemListLock;
+static ERESOURCE FileSystemListLock;
 static LIST_ENTRY FileSystemListHead;
 
 static KSPIN_LOCK FsChangeNotifyListLock;
@@ -159,7 +159,7 @@ VOID
 IoInitFileSystemImplementation(VOID)
 {
   InitializeListHead(&FileSystemListHead);
-  KeInitializeSpinLock(&FileSystemListLock);
+  ExInitializeResourceLite(&FileSystemListLock);
 
   InitializeListHead(&FsChangeNotifyListHead);
   KeInitializeSpinLock(&FsChangeNotifyListLock);
@@ -169,43 +169,48 @@ IoInitFileSystemImplementation(VOID)
 VOID
 IoShutdownRegisteredFileSystems(VOID)
 {
-   KIRQL oldlvl;
-   PLIST_ENTRY current_entry;
-   FILE_SYSTEM_OBJECT* current;
-   PIRP Irp;
-   KEVENT Event;
-   IO_STATUS_BLOCK IoStatusBlock;
-   NTSTATUS Status;
+  PLIST_ENTRY current_entry;
+  FILE_SYSTEM_OBJECT* current;
+  PIRP Irp;
+  KEVENT Event;
+  IO_STATUS_BLOCK IoStatusBlock;
+  NTSTATUS Status;
 
-   DPRINT("IoShutdownRegisteredFileSystems()\n");
+  DPRINT("IoShutdownRegisteredFileSystems()\n");
 
-   KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
-   KeInitializeEvent(&Event,NotificationEvent,FALSE);
+  ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
+  KeInitializeEvent(&Event,
+		    NotificationEvent,
+		    FALSE);
 
-   current_entry = FileSystemListHead.Flink;
-   while (current_entry!=(&FileSystemListHead))
-     {
-	current = CONTAINING_RECORD(current_entry,FILE_SYSTEM_OBJECT,Entry);
+  current_entry = FileSystemListHead.Flink;
+  while (current_entry!=(&FileSystemListHead))
+    {
+      current = CONTAINING_RECORD(current_entry,FILE_SYSTEM_OBJECT,Entry);
 
-	/* send IRP_MJ_SHUTDOWN */
-	Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SHUTDOWN,
-					   current->DeviceObject,
-					   NULL,
-					   0,
-					   0,
-					   &Event,
-					   &IoStatusBlock);
+      /* send IRP_MJ_SHUTDOWN */
+      Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SHUTDOWN,
+					 current->DeviceObject,
+					 NULL,
+					 0,
+					 0,
+					 &Event,
+					 &IoStatusBlock);
 
-	Status = IoCallDriver(current->DeviceObject,Irp);
-	if (Status==STATUS_PENDING)
-	  {
-	     KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
-	  }
+      Status = IoCallDriver(current->DeviceObject,Irp);
+      if (Status == STATUS_PENDING)
+	{
+	  KeWaitForSingleObject(&Event,
+				Executive,
+				KernelMode,
+				FALSE,
+				NULL);
+	}
 
-	current_entry = current_entry->Flink;
-     }
+      current_entry = current_entry->Flink;
+    }
 
-   KeReleaseSpinLock(&FileSystemListLock,oldlvl);
+  ExReleaseResourceLite(&FileSystemListLock);
 }
 
 
@@ -330,7 +335,6 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
  * RETURNS: Status
  */
 {
-  KIRQL oldlvl;
   PLIST_ENTRY current_entry;
   FILE_SYSTEM_OBJECT* current;
   NTSTATUS Status;
@@ -366,7 +370,7 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
 	return(STATUS_UNRECOGNIZED_VOLUME);
     }
 
-  KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
+  ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
   current_entry = FileSystemListHead.Flink;
   while (current_entry!=(&FileSystemListHead))
     {
@@ -376,27 +380,24 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
 	  current_entry = current_entry->Flink;
 	  continue;
 	}
-      KeReleaseSpinLock(&FileSystemListLock,oldlvl);
       Status = IopMountFileSystem(current->DeviceObject,
 				  DeviceObject);
-      KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
       switch (Status)
 	{
 	  case STATUS_FS_DRIVER_REQUIRED:
-	    KeReleaseSpinLock(&FileSystemListLock,oldlvl);
 	    Status = IopLoadFileSystem(current->DeviceObject);
 	    if (!NT_SUCCESS(Status))
 	      {
-	        return(Status);
+		ExReleaseResourceLite(&FileSystemListLock);
+		return(Status);
 	      }
-	    KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
 	    current_entry = FileSystemListHead.Flink;
 	    continue;
 
 	  case STATUS_SUCCESS:
 	    DeviceObject->Vpb->Flags = DeviceObject->Vpb->Flags |
 	                               VPB_MOUNTED;
-	    KeReleaseSpinLock(&FileSystemListLock,oldlvl);
+	    ExReleaseResourceLite(&FileSystemListLock);
 	    return(STATUS_SUCCESS);
 
 	  case STATUS_UNRECOGNIZED_VOLUME:
@@ -404,7 +405,7 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
 	    current_entry = current_entry->Flink;
 	}
     }
-  KeReleaseSpinLock(&FileSystemListLock,oldlvl);
+  ExReleaseResourceLite(&FileSystemListLock);
 
   return(STATUS_UNRECOGNIZED_VOLUME);
 }
@@ -565,9 +566,13 @@ IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
   assert(Fs!=NULL);
 
   Fs->DeviceObject = DeviceObject;
-  ExInterlockedInsertTailList(&FileSystemListHead,
-			      &Fs->Entry,
-			      &FileSystemListLock);
+  ExAcquireResourceExclusiveLite(&FileSystemListLock, TRUE);
+
+  InsertTailList(&FileSystemListHead,
+		 &Fs->Entry);
+
+  ExReleaseResourceLite(&FileSystemListLock);
+
   IopNotifyFileSystemChange(DeviceObject,
 			    TRUE);
 }
@@ -576,13 +581,12 @@ IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 VOID STDCALL
 IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 {
-  KIRQL oldlvl;
   PLIST_ENTRY current_entry;
   PFILE_SYSTEM_OBJECT current;
 
   DPRINT("IoUnregisterFileSystem(DeviceObject %x)\n",DeviceObject);
 
-  KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
+  ExAcquireResourceExclusiveLite(&FileSystemListLock, TRUE);
   current_entry = FileSystemListHead.Flink;
   while (current_entry!=(&FileSystemListHead))
     {
@@ -591,13 +595,13 @@ IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 	{
 	  RemoveEntryList(current_entry);
 	  ExFreePool(current);
-	  KeReleaseSpinLock(&FileSystemListLock,oldlvl);
+	  ExReleaseResourceLite(&FileSystemListLock);
 	  IopNotifyFileSystemChange(DeviceObject, FALSE);
 	  return;
 	}
       current_entry = current_entry->Flink;
     }
-  KeReleaseSpinLock(&FileSystemListLock,oldlvl);
+  ExReleaseResourceLite(&FileSystemListLock);
 }
 
 
