@@ -459,12 +459,15 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 				       &ResultSize);
 	      if (!NT_SUCCESS(Status))
 		{
-		  Status = QueryEntry->QueryRoutine(QueryEntry->Name,
-						    QueryEntry->DefaultType,
-						    QueryEntry->DefaultData,
-						    QueryEntry->DefaultLength,
-						    Context,
-						    QueryEntry->EntryContext);
+		  if (! (QueryEntry->Flags & RTL_QUERY_REGISTRY_REQUIRED))
+		    {
+		      Status = QueryEntry->QueryRoutine(QueryEntry->Name,
+							QueryEntry->DefaultType,
+							QueryEntry->DefaultData,
+							QueryEntry->DefaultLength,
+							Context,
+							QueryEntry->EntryContext);
+		    }
 		}
 	      else if ((ValueInfo->Type == REG_MULTI_SZ) &&
 		       !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
