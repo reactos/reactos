@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.19 2004/08/15 16:39:00 chorns Exp $
+/* $Id: print.c,v 1.20 2004/08/21 15:34:32 tamlin Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -132,8 +132,8 @@ DbgPrompt (PCH OutputString,
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 DbgQueryDebugFilterState(
     IN ULONG ComponentId,
     IN ULONG Level
@@ -146,8 +146,8 @@ DbgQueryDebugFilterState(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 DbgSetDebugFilterState(
     IN ULONG ComponentId,
     IN ULONG Level,
