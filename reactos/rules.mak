@@ -30,9 +30,9 @@ NASM_CMD = nasm
 FLOPPY_DIR = /a
 # DIST_DIR should be relative from the top of the tree
 DIST_DIR = dist
-DOT := \\.
-DSEP := /
-ENABLE_DEPENDENCY_TRACKING := 1
+#DOT := \\.
+#DSEP := /
+#ENABLE_DEPENDENCY_TRACKING := 1
 endif
 
 ifeq ($(HOST),mingw32-windows)
@@ -51,9 +51,9 @@ DOSCLI = yes
 FLOPPY_DIR = A:
 # DIST_DIR should be relative from the top of the tree
 DIST_DIR = dist
-DOT := \.
-DSEP := \\
-ENABLE_DEPENDENCY_TRACKING := 1
+#DOT := \.
+#DSEP := \\
+#ENABLE_DEPENDENCY_TRACKING := 1
 endif
 
 CC = $(PREFIX)gcc
