@@ -1,10 +1,11 @@
-/* $Id: kdbg.c,v 1.3 1999/12/12 03:48:47 phreak Exp $
+/* $Id: kdbg.c,v 1.4 2000/01/19 16:24:15 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/hal/x86/kdbg.c
  * PURPOSE:         Serial i/o functions for the kernel debugger.
  * PROGRAMMER:      Emanuele Aliberti
+ *                  Eric Kohl
  * UPDATE HISTORY:
  *                  Created 05/09/99
  */
@@ -13,16 +14,11 @@
 
 #include <ddk/ntddk.h>
 
-
+#define NDEBUG
 #include <internal/debug.h>
 
 
 #define DEFAULT_BAUD_RATE    19200
-//#define DEFAULT_COM_PORT     2
-//#define DEFAULT_BASE_ADDRESS 0x2F8
-
-#define DEFAULT_COM_PORT     1
-#define DEFAULT_BASE_ADDRESS 0x3F8
 
 
 /* MACROS *******************************************************************/
@@ -58,8 +54,6 @@
 #define   SER_SCR(x)   ((x)+7)
 
 
-
-
 /* GLOBAL VARIABLES *********************************************************/
 
 ULONG KdComPortInUse = 0;
@@ -78,7 +72,7 @@ static BOOLEAN PortInitialized = FALSE;
 /* STATIC FUNCTIONS *********************************************************/
 
 static BOOLEAN
-KdDoesComPortExist (PUCHAR BaseAddress)
+KdpDoesComPortExist (PUCHAR BaseAddress)
 {
         BOOLEAN found;
         BYTE mcr;
@@ -131,16 +125,15 @@ KdDoesComPortExist (PUCHAR BaseAddress)
 BOOLEAN
 STDCALL
 KdPortInitialize (
-        PKD_PORT_INFORMATION PortInformation,
-        DWORD Unknown1,
-        DWORD Unknown2
-        )
+	PKD_PORT_INFORMATION	PortInformation,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
 {
-        ULONG BaseArray[5] = {0, 0x3F8, 0x2F8, 3E8, 2E8};
+        ULONG BaseArray[5] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
         char buffer[80];
         ULONG divisor;
         BYTE lcr;
-
 
         if (PortInitialized == FALSE)
         {
@@ -155,96 +148,68 @@ KdPortInitialize (
 
                 if (PortInformation->ComPort == 0)
                 {
-                        if (KdDoesComPortExist ((PUCHAR)BaseArray[2]))
+                        if (KdpDoesComPortExist ((PUCHAR)BaseArray[2]))
                         {
                                 PortBase = (PUCHAR)BaseArray[2];
                                 ComPort = 2;
+                                PortInformation->BaseAddress = (ULONG)PortBase;
+                                PortInformation->ComPort = ComPort;
 #ifndef NDEBUG
                                 sprintf (buffer,
                                          "\nSerial port COM%ld found at 0x%lx\n",
                                          ComPort,
                                          (ULONG)PortBase);
                                 HalDisplayString (buffer);
-#endif
+#endif /* NDEBUG */
                         }
-                        else if (KdDoesComPortExist ((PUCHAR)BaseArray[1]))
+                        else if (KdpDoesComPortExist ((PUCHAR)BaseArray[1]))
                         {
                                 PortBase = (PUCHAR)BaseArray[1];
                                 ComPort = 1;
+                                PortInformation->BaseAddress = (ULONG)PortBase;
+                                PortInformation->ComPort = ComPort;
 #ifndef NDEBUG
                                 sprintf (buffer,
                                          "\nSerial port COM%ld found at 0x%lx\n",
                                          ComPort,
                                          (ULONG)PortBase);
                                 HalDisplayString (buffer);
-#endif
+#endif /* NDEBUG */
                         }
                         else
                         {
                                 sprintf (buffer,
                                          "\nKernel Debugger: No COM port found!!!\n\n");
-                                  
                                 HalDisplayString (buffer);
                                 return FALSE;
                         }
                 }
                 else
                 {
-                        if (KdDoesComPortExist ((PUCHAR)BaseArray[PortInformation->ComPort]))
+                        if (KdpDoesComPortExist ((PUCHAR)BaseArray[PortInformation->ComPort]))
                         {
                                 PortBase = (PUCHAR)BaseArray[PortInformation->ComPort];
                                 ComPort = PortInformation->ComPort;
+                                PortInformation->BaseAddress = (ULONG)PortBase;
 #ifndef NDEBUG
                                 sprintf (buffer,
                                          "\nSerial port COM%ld found at 0x%lx\n",
                                          ComPort,
                                          (ULONG)PortBase);
                                 HalDisplayString (buffer);
-#endif
+#endif /* NDEBUG */
                         }
                         else
                         {
                                 sprintf (buffer,
                                          "\nKernel Debugger: No serial port found!!!\n\n");
-                          
                                 HalDisplayString (buffer);
                                 return FALSE;
                         }
                 }
 
-/*
-                if (KdDoesComPortExist ((PUCHAR)BaseArray[2]))
-                {
-                        PortBase = (PUCHAR)BaseArray[2];
-                        ComPort = 2;
-                        sprintf (buffer,
-                                 "\nCOM port found at 0x%lx\n",
-                                 (ULONG)PortBase);
-                          
-                        HalDisplayString (buffer);
-                }
-                else if (KdDoesComPortExist ((PUCHAR)BaseArray[1]))
-                {
-                        PortBase = (PUCHAR)BaseArray[1];
-                        ComPort = 1;
-                        sprintf (buffer,
-                                 "\nCOM port found at 0x%lx\n",
-                                 (ULONG)PortBase);
-                          
-                        HalDisplayString (buffer);
-                }
-                else
-                {
-                        sprintf (buffer,
-                                 "\nKernel Debugger: No COM port found!!!\n");
-                          
-                        HalDisplayString (buffer);
-                        return FALSE;
-                }
-*/
                 PortInitialized = TRUE;
         }
-
 
         /*
          * set baud rate and data format (8N1)
@@ -278,7 +243,7 @@ KdPortInitialize (
          * print message to blue screen
          */
         sprintf (buffer,
-                 "\nKernel Debugger using: COM%ld (Port 0x%lx) BaudRate %ld\n\n",
+                 "\nKernel Debugger: COM%ld (Port 0x%lx) BaudRate %ld\n\n",
                  ComPort,
                  (ULONG)PortBase,
                  BaudRate);
@@ -296,9 +261,8 @@ KdPortGetByte (
 	VOID
 	)
 {
-        if (PortInitialized == FALSE)
-                return 0;
-
+	if (PortInitialized == FALSE)
+		return 0;
 
 	return (BYTE) 0;
 }
@@ -319,16 +283,16 @@ KdPortPollByte (
 VOID
 STDCALL
 KdPortPutByte (
-        UCHAR ByteToSend
+	UCHAR ByteToSend
 	)
 {
-        if (PortInitialized == FALSE)
-                return;
+	if (PortInitialized == FALSE)
+		return;
 
-        while ((READ_PORT_UCHAR (SER_LSR(PortBase)) & SR_LSR_TBE) == 0)
-                ;
+	while ((READ_PORT_UCHAR (SER_LSR(PortBase)) & SR_LSR_TBE) == 0)
+		;
 
-        WRITE_PORT_UCHAR (SER_THR(PortBase), ByteToSend);
+	WRITE_PORT_UCHAR (SER_THR(PortBase), ByteToSend);
 }
 
 

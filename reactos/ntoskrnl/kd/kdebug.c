@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.3 2000/01/17 21:02:06 ekohl Exp $
+/* $Id: kdebug.c,v 1.4 2000/01/19 16:23:56 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,13 +30,13 @@
  *    writes the output to a log file.
  */
 
-#define SCREEN_DEBUGGING        /* debug info is printed on the screen */
-//#define SERIAL_DEBUGGING        /* remote debugging */
-//#define BOCHS_DEBUGGING         /* debug output using bochs */
+#define SCREEN_DEBUGGING	/* debug info is printed on the screen */
+//#define SERIAL_DEBUGGING	/* remote debugging */
+//#define BOCHS_DEBUGGING	/* debug output using bochs */
 
 
-#define SERIAL_DEBUG_PORT 0x03f8        /* COM 1 */
-// #define SERIAL_DEBUG_PORT 0x02f8       /* COM 2 */
+#define SERIAL_DEBUG_PORT 1	/* COM 1 */
+// #define SERIAL_DEBUG_PORT 2	/* COM 2 */
 #define SERIAL_DEBUG_BAUD_RATE 19200
 
 
@@ -75,7 +75,7 @@ KdInitSystem (VOID)
 #ifdef SERIAL_DEBUGGING
 	KD_PORT_INFORMATION PortInfo;
 
-	PortInfo.BaseAddress = SERIAL_DEBUG_PORT;
+	PortInfo.ComPort  = SERIAL_DEBUG_PORT;
 	PortInfo.BaudRate = SERIAL_DEBUG_BAUD_RATE;
 
 	KdPortInitialize (&PortInfo,
