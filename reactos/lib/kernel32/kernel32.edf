@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.18 2003/01/04 18:33:18 robd Exp $
+; $Id: kernel32.edf,v 1.19 2003/01/05 14:32:32 robd Exp $
 ;
 ; kernel32.edf
 ;
@@ -390,6 +390,10 @@ GlobalUnWire=GlobalUnWire@4
 GlobalUnfix=GlobalUnfix@4
 GlobalUnlock=GlobalUnlock@4
 GlobalWire=GlobalWire@4
+Heap32First=Heap32First@12
+Heap32ListFirst=Heap32ListFirst@8
+Heap32ListNext=Heap32ListNext@8
+Heap32Next=Heap32Next@4
 HeapAlloc=NTDLL.RtlAllocateHeap
 HeapCompact=HeapCompact@8
 HeapCreate=HeapCreate@12
@@ -452,6 +456,10 @@ LockFileEx=LockFileEx@24
 LockResource=LockResource@4
 MapViewOfFile=MapViewOfFile@20
 MapViewOfFileEx=MapViewOfFileEx@24
+Module32First=Module32First@8
+Module32FirstW=Module32FirstW@8
+Module32Next=Module32Next@8
+Module32NextW=Module32NextW@8
 MoveFileA=MoveFileA@8
 MoveFileExA=MoveFileExA@12
 MoveFileWithProgressA=MoveFileWithProgressA@20
@@ -612,10 +620,13 @@ SystemTimeToFileTime=SystemTimeToFileTime@8
 SystemTimeToTzSpecificLocalTime=SystemTimeToTzSpecificLocalTime@12
 TerminateProcess=TerminateProcess@8
 TerminateThread=TerminateThread@8
+Thread32First=Thread32First@8
+Thread32Next=Thread32Next@8
 TlsAlloc=TlsAlloc@0
 TlsFree=TlsFree@4
 TlsGetValue=TlsGetValue@4
 TlsSetValue=TlsSetValue@8
+Toolhelp32ReadProcessMemory=Toolhelp32ReadProcessMemory@20
 TransactNamedPipe=TransactNamedPipe@28
 TransmitCommChar=TransmitCommChar@8
 TrimVirtualBuffer=TrimVirtualBuffer@4

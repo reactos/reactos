@@ -386,6 +386,10 @@ GlobalUnWire@4
 GlobalUnfix@4
 GlobalUnlock@4
 GlobalWire@4
+Heap32First@12
+Heap32ListFirst@8
+Heap32ListNext@8
+Heap32Next@4
 HeapAlloc@12
 HeapCompact@8
 HeapCreate@12
@@ -448,6 +452,10 @@ LockFileEx@24
 LockResource@4
 MapViewOfFile@20
 MapViewOfFileEx@24
+Module32First@8
+Module32FirstW@8
+Module32Next@8
+Module32NextW@8
 MoveFileA@8
 MoveFileExA@12
 MoveFileWithProgressA@20
@@ -608,10 +616,13 @@ SystemTimeToFileTime@8
 SystemTimeToTzSpecificLocalTime@12
 TerminateProcess@8
 TerminateThread@8
+Thread32First@8
+Thread32Next@8
 TlsAlloc@0
 TlsFree@4
 TlsGetValue@4
 TlsSetValue@8
+Toolhelp32ReadProcessMemory@20
 TransactNamedPipe@28
 TransmitCommChar@8
 TrimVirtualBuffer@4
