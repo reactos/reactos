@@ -16,7 +16,7 @@ extern KSPIN_LOCK ConnectionEndpointListLock;
 
 NTSTATUS FileOpenAddress(
   PTDI_REQUEST Request,
-  PTA_ADDRESS_IP AddrList,
+  PTA_IP_ADDRESS AddrList,
   USHORT Protocol,
   PVOID Options);
 

@@ -252,7 +252,7 @@ VOID RequestWorker(
  */
 NTSTATUS FileOpenAddress(
   PTDI_REQUEST Request,
-  PTA_ADDRESS_IP Address,
+  PTA_IP_ADDRESS Address,
   USHORT Protocol,
   PVOID Options)
 {

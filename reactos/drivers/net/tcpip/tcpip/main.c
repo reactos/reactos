@@ -153,7 +153,7 @@ NTSTATUS TiCreateFileObject(
   PFILE_FULL_EA_INFORMATION EaInfo;
   PTRANSPORT_CONTEXT Context;
   PIO_STACK_LOCATION IrpSp;
-  PTA_ADDRESS_IP Address;
+  PTA_IP_ADDRESS Address;
   TDI_REQUEST Request;
   PVOID ClientContext;
   NTSTATUS Status;
@@ -191,8 +191,8 @@ CP
     /* This is a request to open an address */
 CP
     /* Parameter checks */
-    Address = (PTA_ADDRESS_IP)(EaInfo->EaName + EaInfo->EaNameLength);
-    if ((EaInfo->EaValueLength < sizeof(TA_ADDRESS_IP)) ||
+    Address = (PTA_IP_ADDRESS)(EaInfo->EaName + EaInfo->EaNameLength);
+    if ((EaInfo->EaValueLength < sizeof(TA_IP_ADDRESS)) ||
       (Address->TAAddressCount != 1) ||
       (Address->Address[0].AddressLength < TDI_ADDRESS_LENGTH_IP) ||
       (Address->Address[0].AddressType != TDI_ADDRESS_TYPE_IP)) {

@@ -51,7 +51,7 @@ inline DWORD TdiAddressSizeFromName(
 {
   switch (Name->sa_family) {
   case AF_INET:
-    return sizeof(TA_ADDRESS_IP);
+    return sizeof(TA_IP_ADDRESS);
   /* FIXME: More to come */
   }
   AFD_DbgPrint(MIN_TRACE, ("Unknown address family (%d).\n", Name->sa_family));
@@ -60,7 +60,7 @@ inline DWORD TdiAddressSizeFromName(
 
 
 VOID TdiBuildAddressIPv4(
-  PTA_ADDRESS_IP Address,
+  PTA_IP_ADDRESS Address,
   LPSOCKADDR Name)
 /*
  * FUNCTION: Builds an IPv4 TDI style address
@@ -93,7 +93,7 @@ NTSTATUS TdiBuildAddress(
 
   switch (Name->sa_family) {
   case AF_INET:
-    TdiBuildAddressIPv4((PTA_ADDRESS_IP)Address, Name);
+    TdiBuildAddressIPv4((PTA_IP_ADDRESS)Address, Name);
     break;
   /* FIXME: More to come */
   default:
@@ -313,7 +313,7 @@ NTSTATUS TdiOpenAddressFileIPv4(
  */
 {
   PFILE_FULL_EA_INFORMATION EaInfo;
-  PTA_ADDRESS_IP Address;
+  PTA_IP_ADDRESS Address;
   NTSTATUS Status;
   ULONG EaLength;
 
@@ -322,7 +322,7 @@ NTSTATUS TdiOpenAddressFileIPv4(
 
   EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
              TDI_TRANSPORT_ADDRESS_LENGTH +
-             sizeof(TA_ADDRESS_IP);
+             sizeof(TA_IP_ADDRESS);
   EaInfo = (PFILE_FULL_EA_INFORMATION)ExAllocatePool(NonPagedPool, EaLength);
   if (!EaInfo)
     return STATUS_INSUFFICIENT_RESOURCES;
@@ -332,8 +332,8 @@ NTSTATUS TdiOpenAddressFileIPv4(
   RtlCopyMemory(EaInfo->EaName,
                 TdiTransportAddress,
                 TDI_TRANSPORT_ADDRESS_LENGTH);
-  EaInfo->EaValueLength = sizeof(TA_ADDRESS_IP);
-  Address = (PTA_ADDRESS_IP)(EaInfo->EaName + TDI_TRANSPORT_ADDRESS_LENGTH);
+  EaInfo->EaValueLength = sizeof(TA_IP_ADDRESS);
+  Address = (PTA_IP_ADDRESS)(EaInfo->EaName + TDI_TRANSPORT_ADDRESS_LENGTH);
   TdiBuildAddressIPv4(Address, Name);
   Status = TdiOpenDevice(DeviceName,
                          EaLength,
@@ -1107,7 +1107,7 @@ NTSTATUS TdiReceiveDatagram(
     }
 
     /* FIXME: Get from socket information */
-    TdiAddressSize = sizeof(TA_ADDRESS_IP);
+    TdiAddressSize = sizeof(TA_IP_ADDRESS);
 
     ReceiveInfo = (PTDI_CONNECTION_INFORMATION)
         ExAllocatePool(NonPagedPool,
