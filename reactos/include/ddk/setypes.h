@@ -1,4 +1,4 @@
-/* $Id: setypes.h,v 1.12 2003/08/25 01:37:47 sedwards Exp $
+/* $Id: setypes.h,v 1.13 2004/02/02 12:03:43 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory for details
  * PROJECT:           ReactOS kernel
@@ -15,20 +15,31 @@
 #include <ntos/security.h>
 
 /* TOKEN_GROUPS structure */
-#define SE_GROUP_MANDATORY	(0x1L)
-#define SE_GROUP_ENABLED_BY_DEFAULT	(0x2L)
-#define SE_GROUP_ENABLED	(0x4L)
-#define SE_GROUP_OWNER	(0x8L)
-#define SE_GROUP_LOGON_ID	(0xc0000000L)
+#define SE_GROUP_MANDATORY                (0x1L)
+#define SE_GROUP_ENABLED_BY_DEFAULT       (0x2L)
+#define SE_GROUP_ENABLED                  (0x4L)
+#define SE_GROUP_OWNER                    (0x8L)
+#define SE_GROUP_LOGON_ID                 (0xC0000000L)
 
 /* ACL Defines */
-#define ACL_REVISION  (2)
+#define ACL_REVISION1     (1)
+#define ACL_REVISION2     (2)
+#define ACL_REVISION3     (3)
+#define MIN_ACL_REVISION  ACL_REVISION2
+#define MAX_ACL_REVISION  ACL_REVISION3
+
+#define ACL_REVISION    (2)
 
 /* ACE_HEADER structure */
-#define ACCESS_ALLOWED_ACE_TYPE      (0x0)
-#define ACCESS_DENIED_ACE_TYPE       (0x1)
-#define SYSTEM_AUDIT_ACE_TYPE        (0x2)
-#define SYSTEM_ALARM_ACE_TYPE        (0x3)
+#define ACCESS_MIN_MS_ACE_TYPE            (0x0)
+#define ACCESS_ALLOWED_ACE_TYPE           (0x0)
+#define ACCESS_DENIED_ACE_TYPE            (0x1)
+#define SYSTEM_AUDIT_ACE_TYPE             (0x2)
+#define SYSTEM_ALARM_ACE_TYPE             (0x3)
+#define ACCESS_MAX_MS_V2_ACE_TYPE         (0x3)
+#define ACCESS_ALLOWED_COMPOUND_ACE_TYPE  (0x4)
+#define ACCESS_MAX_MS_V3_ACE_TYPE         (0x4)
+#define ACCESS_MAX_MS_ACE_TYPE            (0x4)
 
 /* ACE flags in the ACE_HEADER structure */
 #define OBJECT_INHERIT_ACE           (0x1)
