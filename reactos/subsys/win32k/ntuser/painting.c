@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.84.2.4 2004/09/14 01:00:44 weiden Exp $
+ *  $Id: painting.c,v 1.84.2.5 2004/09/27 01:38:36 royce Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -174,7 +174,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
       {
         if(Current->Style & WS_VISIBLE)
         {
-          IntPaintWindows(Window, Flags);
+          IntPaintWindows(Current, Flags);
         }
       }
     }
