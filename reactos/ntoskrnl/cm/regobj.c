@@ -45,7 +45,9 @@ CmiObjectParse(PVOID ParsedObject,
   PKEY_CELL SubKeyCell;
   CHAR cPath[MAX_PATH];
   NTSTATUS Status;
-  PWSTR end;
+  PWSTR StartPtr;
+  PWSTR EndPtr;
+  ULONG Length;
   UNICODE_STRING LinkPath;
   UNICODE_STRING TargetPath;
 
@@ -63,22 +65,20 @@ CmiObjectParse(PVOID ParsedObject,
 
   DPRINT("Path '%S'\n", *Path);
 
-  if ((*Path[0]) == '\\')
-    {
-      end = wcschr((*Path) + 1, '\\');
-      if (end != NULL)
-	*end = 0;
-      wcstombs(cPath, (*Path) + 1, wcslen((*Path) + 1));
-      cPath[wcslen((*Path) + 1)] = 0;
-    }
+  /* Extract relevant path name */
+  StartPtr = *Path;
+  if (*StartPtr == L'\\')
+    StartPtr++;
+
+  EndPtr = wcschr(StartPtr, L'\\');
+  if (EndPtr != NULL)
+    Length = ((PCHAR)EndPtr - (PCHAR)StartPtr) / sizeof(WCHAR);
   else
-    {
-      end = wcschr((*Path), '\\');
-      if (end != NULL)
-	*end = 0;
-      wcstombs(cPath, (*Path), wcslen((*Path)));
-      cPath[wcslen((*Path))] = 0;
-    }
+    Length = wcslen(StartPtr);
+
+  wcstombs(cPath, StartPtr, Length);
+  cPath[Length] = 0;
+
 
   FoundObject = CmiScanKeyList(ParsedKey, cPath, Attributes);
   if (FoundObject == NULL)
@@ -92,15 +92,11 @@ CmiObjectParse(PVOID ParsedObject,
 				Attributes);
       if (!NT_SUCCESS(Status) || (SubKeyCell == NULL))
 	{
-	  if (end != NULL)
-	    {
-	      *end = '\\';
-	    }
 	  return(STATUS_UNSUCCESSFUL);
 	}
 
       if ((SubKeyCell->Type == REG_LINK_KEY_CELL_TYPE) &&
-	  !((Attributes & OBJ_OPENLINK) && (end == NULL)))
+	  !((Attributes & OBJ_OPENLINK) && (EndPtr == NULL) /*(end == NULL)*/))
 	{
 	  RtlInitUnicodeString(&LinkPath, NULL);
 	  Status = CmiGetLinkTarget(ParsedKey->RegistryHive,
@@ -112,18 +108,17 @@ CmiObjectParse(PVOID ParsedObject,
 
 	      /* build new FullPath for reparsing */
 	      TargetPath.MaximumLength = LinkPath.MaximumLength;
-	      if (end != NULL)
+	      if (EndPtr != NULL)
 		{
-		  *end = '\\';
-		  TargetPath.MaximumLength += (wcslen(end) * sizeof(WCHAR));
-	        }
+		  TargetPath.MaximumLength += (wcslen(EndPtr) * sizeof(WCHAR));
+		}
 	      TargetPath.Length = TargetPath.MaximumLength - sizeof(WCHAR);
 	      TargetPath.Buffer = ExAllocatePool(NonPagedPool,
 						 TargetPath.MaximumLength);
 	      wcscpy(TargetPath.Buffer, LinkPath.Buffer);
-	      if (end != NULL)
+	      if (EndPtr != NULL)
 		{
-		  wcscat(TargetPath.Buffer, end);
+		  wcscat(TargetPath.Buffer, EndPtr);
 		}
 
 	      RtlFreeUnicodeString(FullPath);
@@ -166,7 +161,7 @@ CmiObjectParse(PVOID ParsedObject,
   else
     {
       if ((FoundObject->KeyCell->Type == REG_LINK_KEY_CELL_TYPE) &&
-	  !((Attributes & OBJ_OPENLINK) && (end == NULL)))
+	  !((Attributes & OBJ_OPENLINK) && (EndPtr == NULL)/*(end == NULL)*/))
 	{
 	  DPRINT("Found link\n");
 
@@ -180,18 +175,17 @@ CmiObjectParse(PVOID ParsedObject,
 
 	      /* build new FullPath for reparsing */
 	      TargetPath.MaximumLength = LinkPath.MaximumLength;
-	      if (end != NULL)
+	      if (EndPtr != NULL)
 		{
-		  *end = '\\';
-		  TargetPath.MaximumLength += (wcslen(end) * sizeof(WCHAR));
-	        }
+		  TargetPath.MaximumLength += (wcslen(EndPtr) * sizeof(WCHAR));
+		}
 	      TargetPath.Length = TargetPath.MaximumLength - sizeof(WCHAR);
 	      TargetPath.Buffer = ExAllocatePool(NonPagedPool,
 						 TargetPath.MaximumLength);
 	      wcscpy(TargetPath.Buffer, LinkPath.Buffer);
-	      if (end != NULL)
+	      if (EndPtr != NULL)
 		{
-		  wcscat(TargetPath.Buffer, end);
+		  wcscat(TargetPath.Buffer, EndPtr);
 		}
 
 	      RtlFreeUnicodeString(FullPath);
@@ -226,15 +220,7 @@ CmiObjectParse(PVOID ParsedObject,
   }
 #endif
 
-  if (end != NULL)
-    {
-      *end = '\\';
-      *Path = end;
-    }
-  else
-    {
-      *Path = NULL;
-    }
+  *Path = EndPtr;
 
   VERIFY_KEY_OBJECT(FoundObject);
 
