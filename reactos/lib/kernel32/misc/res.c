@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.7 2000/08/28 21:45:43 ekohl Exp $
+/* $Id: res.c,v 1.8 2001/01/25 02:20:05 phreak Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -22,7 +22,7 @@ FindResourceA (
 	LPCSTR		lpType
 	)
 {
-	return FindResourceExA (hModule, lpName, lpType, 0);
+	return FindResourceExA (hModule, lpType, lpName, 0);
 }
 
 HRSRC
@@ -89,7 +89,7 @@ FindResourceW (
 	LPCWSTR		lpType
 	)
 {
-	return FindResourceExW (hModule, lpName, lpType, 0);
+	return FindResourceExW (hModule, lpType, lpName, 0);
 }
 
 HRSRC
