@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.79 2004/10/01 20:09:57 hbirr Exp $
+/* $Id: timer.c,v 1.79.4.1 2004/10/24 22:59:44 ion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -132,7 +132,7 @@ NtQueryPerformanceCounter(IN PLARGE_INTEGER Counter,
 
 NTSTATUS STDCALL
 NtDelayExecution(IN ULONG Alertable,
-		 IN TIME* Interval)
+		 IN PLARGE_INTEGER Interval)
 {
    NTSTATUS Status;
    LARGE_INTEGER Timeout;
@@ -212,10 +212,10 @@ KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
 {
   do
     {
-      CurrentTime->u.HighPart = SharedUserData->SystemTime.High1Part;
+      CurrentTime->u.HighPart = SharedUserData->SystemTime.High1Time;
       CurrentTime->u.LowPart = SharedUserData->SystemTime.LowPart;
     }
-  while (CurrentTime->u.HighPart != SharedUserData->SystemTime.High2Part);
+  while (CurrentTime->u.HighPart != SharedUserData->SystemTime.High2Time);
 }
 
 ULONGLONG STDCALL
@@ -225,10 +225,10 @@ KeQueryInterruptTime(VOID)
 
   do
     {
-      CurrentTime.u.HighPart = SharedUserData->InterruptTime.High1Part;
+      CurrentTime.u.HighPart = SharedUserData->InterruptTime.High1Time;
       CurrentTime.u.LowPart = SharedUserData->InterruptTime.LowPart;
     }
-  while (CurrentTime.u.HighPart != SharedUserData->InterruptTime.High2Part);
+  while (CurrentTime.u.HighPart != SharedUserData->InterruptTime.High2Time);
 
   return CurrentTime.QuadPart;
 }
@@ -637,22 +637,22 @@ KiUpdateSystemTime(KIRQL oldIrql,
     * Increment the number of timers ticks 
     */
    KeTickCount++;
-   SharedUserData->TickCountLow++;
+   SharedUserData->TickCountLowDeprecated++;
    KiAcquireSpinLock(&TimerValueLock);
 
    Time.u.LowPart = SharedUserData->InterruptTime.LowPart;
-   Time.u.HighPart = SharedUserData->InterruptTime.High1Part;
+   Time.u.HighPart = SharedUserData->InterruptTime.High1Time;
    Time.QuadPart += CLOCK_INCREMENT;
-   SharedUserData->InterruptTime.High2Part = Time.u.HighPart;
+   SharedUserData->InterruptTime.High2Time = Time.u.HighPart;
    SharedUserData->InterruptTime.LowPart = Time.u.LowPart;
-   SharedUserData->InterruptTime.High1Part = Time.u.HighPart;
+   SharedUserData->InterruptTime.High1Time = Time.u.HighPart;
 
    Time.u.LowPart = SharedUserData->SystemTime.LowPart;
-   Time.u.HighPart = SharedUserData->SystemTime.High1Part;
+   Time.u.HighPart = SharedUserData->SystemTime.High1Time;
    Time.QuadPart += CLOCK_INCREMENT;
-   SharedUserData->SystemTime.High2Part = Time.u.HighPart;
+   SharedUserData->SystemTime.High2Time = Time.u.HighPart;
    SharedUserData->SystemTime.LowPart = Time.u.LowPart;
-   SharedUserData->SystemTime.High1Part = Time.u.HighPart;
+   SharedUserData->SystemTime.High1Time = Time.u.HighPart;
 
    KiReleaseSpinLock(&TimerValueLock);
 
@@ -687,14 +687,14 @@ KeInitializeTimerImpl(VOID)
    HalQueryRealTimeClock(&TimeFields);
    RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
 
-   SharedUserData->TickCountLow = 0;
+   SharedUserData->TickCountLowDeprecated = 0;
    SharedUserData->TickCountMultiplier = 167783691; // 2^24 * 1193182 / 119310
-   SharedUserData->InterruptTime.High2Part = 0;
+   SharedUserData->InterruptTime.High2Time = 0;
    SharedUserData->InterruptTime.LowPart = 0;
-   SharedUserData->InterruptTime.High1Part = 0;
-   SharedUserData->SystemTime.High2Part = SystemBootTime.u.HighPart;
+   SharedUserData->InterruptTime.High1Time = 0;
+   SharedUserData->SystemTime.High1Time = SystemBootTime.u.HighPart;
    SharedUserData->SystemTime.LowPart = SystemBootTime.u.LowPart;
-   SharedUserData->SystemTime.High1Part = SystemBootTime.u.HighPart;
+   SharedUserData->SystemTime.High1Time = SystemBootTime.u.HighPart;
 
    TimerInitDone = TRUE;
    DPRINT("Finished KeInitializeTimerImpl()\n");

@@ -35,8 +35,6 @@ VOID RtlpImportUnicodeCasemap(PUSHORT TableBase, ULONG Size);
 VOID RtlpCreateInitialNlsTables(VOID);
 VOID RtlpCreateNlsSection(VOID);
 
-WCHAR RtlDowncaseUnicodeChar (IN WCHAR Source);
-
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_NLS_H */
 
 /* EOF */

@@ -69,55 +69,116 @@
 #define KTRAP_FRAME_RESERVED9      (0x8A)
 #define KTRAP_FRAME_SIZE           (0x8C)
 
+#define KTSS_ESP0 (0x4)
+#define KTSS_IOMAPBASE (0x66)
+
 #ifndef __ASM__
 
-typedef struct _KTRAP_FRAME
+typedef struct _KINTERRUPT
 {
-   PVOID DebugEbp;
-   PVOID DebugEip;
-   PVOID DebugArgMark;
-   PVOID DebugPointer;
-   PVOID TempCs;
-   PVOID TempEip;
-   ULONG Dr0;
-   ULONG Dr1;
-   ULONG Dr2;
-   ULONG Dr3;
-   ULONG Dr6;
-   ULONG Dr7;
-   USHORT Gs;
-   USHORT Reserved1;
-   USHORT Es;
-   USHORT Reserved2;
-   USHORT Ds;
-   USHORT Reserved3;
-   ULONG Edx;
-   ULONG Ecx;
-   ULONG Eax;
-   ULONG PreviousMode;
-   PVOID ExceptionList;
-   USHORT Fs;
-   USHORT Reserved4;
-   ULONG Edi;
-   ULONG Esi;
-   ULONG Ebx;
-   ULONG Ebp;
-   ULONG ErrorCode;
-   ULONG Eip;
-   ULONG Cs;
-   ULONG Eflags;
-   ULONG Esp;
-   USHORT Ss;
-   USHORT Reserved5;
-   USHORT V86_Es;
-   USHORT Reserved6;
-   USHORT V86_Ds;
-   USHORT Reserved7;
-   USHORT V86_Fs;
-   USHORT Reserved8;
-   USHORT V86_Gs;
-   USHORT Reserved9;
-} KTRAP_FRAME, *PKTRAP_FRAME;
+   ULONG Vector;
+   KAFFINITY ProcessorEnableMask;
+   PKSPIN_LOCK IrqLock;
+   BOOLEAN Shareable;
+   BOOLEAN FloatingSave;
+   PKSERVICE_ROUTINE ServiceRoutine;
+   PVOID ServiceContext;
+   LIST_ENTRY Entry;
+   KIRQL SynchLevel;
+} KINTERRUPT;
+
+#include <pshpack1.h>
+
+typedef struct _KTSSNOIOPM
+{
+  USHORT PreviousTask;
+  USHORT Reserved1;
+  ULONG  Esp0;
+  USHORT Ss0;
+  USHORT Reserved2;
+  ULONG  Esp1;
+  USHORT Ss1;
+  USHORT Reserved3;
+  ULONG  Esp2;
+  USHORT Ss2;
+  USHORT Reserved4;
+  ULONG  Cr3;
+  ULONG  Eip;
+  ULONG  Eflags;
+  ULONG  Eax;
+  ULONG  Ecx;
+  ULONG  Edx;
+  ULONG  Ebx;
+  ULONG  Esp;
+  ULONG  Ebp;
+  ULONG  Esi;
+  ULONG  Edi;
+  USHORT Es;
+  USHORT Reserved5;
+  USHORT Cs;
+  USHORT Reserved6;
+  USHORT Ss;
+  USHORT Reserved7;
+  USHORT Ds;
+  USHORT Reserved8;
+  USHORT Fs;
+  USHORT Reserved9;
+  USHORT Gs;
+  USHORT Reserved10;
+  USHORT Ldt;
+  USHORT Reserved11;
+  USHORT Trap;
+  USHORT IoMapBase;
+  /* no interrupt redirection map */
+  UCHAR IoBitmap[1];
+} KTSSNOIOPM;
+
+
+typedef struct _KTSS
+{
+  USHORT PreviousTask;
+  USHORT Reserved1;
+  ULONG  Esp0;
+  USHORT Ss0;
+  USHORT Reserved2;
+  ULONG  Esp1;
+  USHORT Ss1;
+  USHORT Reserved3;
+  ULONG  Esp2;
+  USHORT Ss2;
+  USHORT Reserved4;
+  ULONG  Cr3;
+  ULONG  Eip;
+  ULONG  Eflags;
+  ULONG  Eax;
+  ULONG  Ecx;
+  ULONG  Edx;
+  ULONG  Ebx;
+  ULONG  Esp;
+  ULONG  Ebp;
+  ULONG  Esi;
+  ULONG  Edi;
+  USHORT Es;
+  USHORT Reserved5;
+  USHORT Cs;
+  USHORT Reserved6;
+  USHORT Ss;
+  USHORT Reserved7;
+  USHORT Ds;
+  USHORT Reserved8;
+  USHORT Fs;
+  USHORT Reserved9;
+  USHORT Gs;
+  USHORT Reserved10;
+  USHORT Ldt;
+  USHORT Reserved11;
+  USHORT Trap;
+  USHORT IoMapBase;
+  /* no interrupt redirection map */
+  UCHAR  IoBitmap[8193];
+} KTSS;
+
+#include <poppack.h>
 
 typedef struct _KIRQ_TRAPFRAME
 {

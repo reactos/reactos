@@ -25,7 +25,6 @@
  */
 
 #include <internal/v86m.h>
-#include <ntos/tss.h>
 #include <internal/trap.h>
 #include <internal/ps.h>
 			

@@ -5,9 +5,6 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-
 typedef enum
 {
   wmCenter = 0,
@@ -66,6 +63,10 @@ typedef struct _DESKTOP_OBJECT
   PVOID BlockInputThread;
 } DESKTOP_OBJECT, *PDESKTOP_OBJECT;
 
+typedef struct _RUNDOWN_DESCRIPTOR {
+    ULONG References;
+    PKEVENT RundownEvent;
+} RUNDOWN_DESCRIPTOR, *PRUNDOWN_DESCRIPTOR;
 
 typedef VOID (*PLOOKASIDE_MINMAX_ROUTINE)(
   POOL_TYPE PoolType,

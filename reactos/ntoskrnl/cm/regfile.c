@@ -18,10 +18,6 @@
 
 /* LOCAL MACROS *************************************************************/
 
-#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
-
-#define ABS_VALUE(V) (((V) < 0) ? -(V) : (V))
-
 BOOLEAN CmiDoVerify = FALSE;
 
 static ULONG

@@ -8,15 +8,21 @@
 #ifndef __INCLUDE_INTERNAL_LDR_H
 #define __INCLUDE_INTERNAL_LDR_H
 
-#include <pe.h>
 #include <internal/io.h>
-#include <ntdll/ldr.h>
 #include <internal/module.h>
 
 #define  KERNEL_MODULE_NAME  L"ntoskrnl.exe"
 #define  HAL_MODULE_NAME  L"hal.dll"
 #define  DRIVER_ROOT_NAME  L"\\Driver\\"
 #define  FILESYSTEM_ROOT_NAME  L"\\FileSystem\\"
+
+typedef struct _LOADER_MODULE
+{
+   ULONG ModStart;
+   ULONG ModEnd;
+   ULONG String;
+   ULONG Reserved;
+} LOADER_MODULE, *PLOADER_MODULE;
 
 
 extern ULONG_PTR LdrHalBase;
@@ -81,7 +87,7 @@ LdrpQueryModuleInformation(PVOID Buffer,
 			   ULONG Size,
 			   PULONG ReqSize);
 
-PVOID STDCALL
+PVOID STDCALL	
 RtlImageDirectoryEntryToData (
 	IN PVOID	BaseAddress,
 	IN BOOLEAN	ImageLoaded,

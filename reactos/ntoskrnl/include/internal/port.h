@@ -69,7 +69,7 @@ LpcRequestPort (PEPORT		Port,
 NTSTATUS
 STDCALL
 LpcSendTerminationPort (PEPORT	Port,
-			TIME	CreationTime);
+			LARGE_INTEGER	CreationTime);
 
 /* EPORT.Type */
 

@@ -7,6 +7,7 @@
 
 #include <internal/ntoskrnl.h>
 #include <internal/arch/mm.h>
+#include <ddk/ntddscsi.h>
 
 /* TYPES *********************************************************************/
 
@@ -45,10 +46,6 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 
 #define NR_SECTION_PAGE_TABLES           (1024)
 #define NR_SECTION_PAGE_ENTRIES          (1024)
-
-#ifndef __USE_W32API
-#define MM_LOWEST_USER_ADDRESS (4096)
-#endif
 
 #define MM_VIRTMEM_GRANULARITY (64 * 1024) /* Although Microsoft says this isn't hardcoded anymore,
                                               they won't be able to change it. Stuff depends on it */
@@ -137,22 +134,7 @@ typedef struct _SECTION_OBJECT
   };
 } SECTION_OBJECT;
 
-#ifndef __USE_W32API
-
 typedef struct _SECTION_OBJECT *PSECTION_OBJECT;
-
-typedef struct _EPROCESS_QUOTA_BLOCK {
-KSPIN_LOCK      QuotaLock;
-ULONG           ReferenceCount;
-ULONG           QuotaPeakPoolUsage[2];
-ULONG           QuotaPoolUsage[2];
-ULONG           QuotaPoolLimit[2];
-ULONG           PeakPagefileUsage;
-ULONG           PagefileUsage;
-ULONG           PagefileLimit;
-} EPROCESS_QUOTA_BLOCK, *PEPROCESS_QUOTA_BLOCK;
-
-#endif /* __USE_W32API */
 
 typedef struct
 {
@@ -205,17 +187,6 @@ typedef struct _KNODE {
    UCHAR NodeNumber;
    ULONG Flags;
 } KNODE, *PKNODE;
-
-#ifndef __USE_W32API
-/* VARIABLES */
-
-#ifdef __NTOSKRNL__
-extern PVOID EXPORTED MmSystemRangeStart;
-#else
-extern PVOID IMPORTED MmSystemRangeStart;
-#endif
-
-#endif /* __USE_W32API */
 
 typedef struct
 {
@@ -302,6 +273,34 @@ typedef struct _MM_REGION
    ULONG Length;
    LIST_ENTRY RegionListEntry;
 } MM_REGION, *PMM_REGION;
+
+#define MM_CORE_DUMP_HEADER_MAGIC         (0xdeafbead)
+#define MM_CORE_DUMP_HEADER_VERSION       (0x1)
+
+#define MM_CORE_DUMP_TYPE_NONE            (0x0)
+#define MM_CORE_DUMP_TYPE_MINIMAL         (0x1)
+#define MM_CORE_DUMP_TYPE_FULL            (0x2)
+
+typedef struct _MM_CORE_DUMP_HEADER
+{
+  ULONG Magic;
+  ULONG Version;
+  ULONG Type;
+  KTRAP_FRAME TrapFrame;
+  ULONG BugCheckCode;
+  ULONG BugCheckParameters[4];
+  PVOID FaultingStackBase;
+  ULONG FaultingStackSize;
+  ULONG PhysicalMemorySize;
+} MM_CORE_DUMP_HEADER, *PMM_CORE_DUMP_HEADER;
+
+typedef struct MM_CORE_DUMP_FUNCTIONS
+{
+  NTSTATUS STDCALL (*DumpPrepare)(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers);
+  NTSTATUS STDCALL (*DumpInit)(VOID);
+  NTSTATUS STDCALL (*DumpWrite)(LARGE_INTEGER Address, PMDL Mdl);
+  NTSTATUS STDCALL (*DumpFinish)(VOID);
+} MM_CORE_DUMP_FUNCTIONS, *PMM_CORE_DUMP_FUNCTIONS;
 
 /* FUNCTIONS */
 

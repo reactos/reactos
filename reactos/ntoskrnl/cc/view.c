@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.78 2004/09/19 12:11:44 hbirr Exp $
+/* $Id: view.c,v 1.78.4.1 2004/10/24 22:59:43 ion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -65,8 +65,6 @@
  */
 //#define CACHE_BITMAP
 
-#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
-#define ROUND_DOWN(N, S) (((N) % (S)) ? ROUND_UP(N, S) - S : N)
 
 #define TAG_CSEG  TAG('C', 'S', 'E', 'G')
 #define TAG_BCB   TAG('B', 'C', 'B', ' ')

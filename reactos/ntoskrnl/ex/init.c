@@ -55,7 +55,7 @@ ExInit3 (VOID)
 BOOLEAN STDCALL
 ExIsProcessorFeaturePresent(IN ULONG ProcessorFeature)
 {
-  if (ProcessorFeature >= PROCESSOR_FEATURES_MAX)
+  if (ProcessorFeature >= PROCESSOR_FEATURE_MAX)
     return(FALSE);
 
   return(SharedUserData->ProcessorFeatures[ProcessorFeature]);

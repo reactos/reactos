@@ -245,10 +245,11 @@ KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
 /*
  * @implemented
  */
-VOID STDCALL 
-KiDeliverApc(ULONG Unknown1,
-	     ULONG Unknown2,
-	     ULONG Unknown3)
+VOID STDCALL KiDeliverApc (
+        IN KPROCESSOR_MODE  PreviousMode,
+        IN PKEXCEPTION_FRAME  ExceptionFrame,
+        IN PKTRAP_FRAME  TrapFrame
+)
 /*
  * FUNCTION: Deliver an APC to the current thread.
  * NOTES: This is called from the IRQL switching code if the current thread

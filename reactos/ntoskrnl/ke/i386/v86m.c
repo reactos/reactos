@@ -703,7 +703,7 @@ KeV86Exception(ULONG ExceptionNr, PKTRAP_FRAME Tf, ULONG address)
 
   VTf = (PKV86M_TRAP_FRAME)Tf;
 
-  if(KeGetCurrentProcess()->NtVdmFlag)
+  if(PsGetCurrentProcess()->Pcb.NtVdmFlag)
   {
     VTf->regs->PStatus = (PNTSTATUS) ExceptionNr;
     if(ExceptionNr != 14) return 1;
@@ -814,7 +814,7 @@ KeV86Exception(ULONG ExceptionNr, PKTRAP_FRAME Tf, ULONG address)
 			     Tf->ErrorCode);
 	if (!NT_SUCCESS(Status))
 	  {
-            if(KeGetCurrentProcess()->NtVdmFlag)
+            if (PsGetCurrentProcess()->Pcb.NtVdmFlag)
             {
               VTf->regs->PStatus = (PNTSTATUS) STATUS_NONCONTINUABLE_EXCEPTION;
               return 1;

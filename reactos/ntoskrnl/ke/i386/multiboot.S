@@ -1,4 +1,4 @@
-#include <roscfg.h>
+#include <reactos/roscfg.h>
 #include <internal/ntoskrnl.h>
 #include <internal/i386/segment.h>
 #include <internal/ps.h>

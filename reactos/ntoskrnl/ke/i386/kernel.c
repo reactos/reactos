@@ -147,7 +147,7 @@ KeApplicationProcessorInit(VOID)
 				  &PcrPages[Offset],
 				  1);
   memset(KPCR, 0, PAGE_SIZE);
-  KPCR->ProcessorNumber = (UCHAR)Offset;
+  KPCR->Number = (UCHAR)Offset;
   KPCR->Self = KPCR;
   KPCR->Irql = HIGH_LEVEL;
 
@@ -219,7 +219,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KPCR->GDT = KiBootGdt;
    KPCR->IDT = (PUSHORT)KiIdt;
    KPCR->TSS = &KiBootTss;
-   KPCR->ProcessorNumber = 0;
+   KPCR->Number = 0;
    KiPcrInitDone = 1;
    PcrsAllocated++;
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: trap.s,v 1.20 2004/07/01 02:40:23 hyperion Exp $
+/* $Id: trap.s,v 1.20.8.1 2004/10/24 22:59:44 ion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/trap.s
@@ -26,10 +26,8 @@
 
 /* INCLUDES ******************************************************************/
 	
-#include <ddk/status.h>
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
-#include <ddk/defines.h>
 
 /* FUNCTIONS *****************************************************************/
 

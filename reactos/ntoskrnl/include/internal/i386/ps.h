@@ -47,6 +47,11 @@
 
 #ifndef __ASM__
 
+#include <ndk/mmtypes.h>
+#include <ndk/potypes.h>
+#include <ndk/ketypes.h>
+
+
 #pragma pack(push,4)
 
 // Fixme: Use correct types?
@@ -194,28 +199,12 @@ typedef struct _KPRCB {
 
 #pragma pack(pop)
 
-#ifndef __USE_W32API
-
 #pragma pack(push,4)
-/*
- * Processor Control Region Thread Information Block
- */
-typedef struct _KPCR_TIB {
-  PVOID  ExceptionList;         /* 00 */
-  PVOID  StackBase;             /* 04 */
-  PVOID  StackLimit;            /* 08 */
-  PVOID  SubSystemTib;          /* 0C */
-  union {
-    PVOID  FiberData;           /* 10 */
-    DWORD  Version;             /* 10 */
-  };
-  PVOID  ArbitraryUserPointer;  /* 14 */
-} KPCR_TIB, *PKPCR_TIB; /* 18 */
 
 /*
  * Processor Control Region
  */
-typedef struct _KPCR {
+typedef struct _IKPCR {
   KPCR_TIB  Tib;                /* 00 */
   struct _KPCR  *Self;          /* 18 */
   struct _KPRCB  *PCRCB;        /* 1C */
@@ -240,35 +229,11 @@ typedef struct _KPCR {
   ULONG  L2CacheSize;           /* 8C */
   ULONG  HalReserved[16];       /* 90 */
   ULONG  InterruptMode;         /* D0 */
-  UCHAR  KernelReserved2[0x4C]; /* D4 */
+  UCHAR  KernelReserved2[0x40]; /* D4 */
   KPRCB  PrcbData;              /* 120 */
-} KPCR, *PKPCR;
+} IKPCR, *PIKPCR;
 
 #pragma pack(pop)
-#endif /* __USE_W32API */
-
-
-#ifndef __USE_W32API
-
-static inline PKPCR KeGetCurrentKPCR(VOID)
-{
-  ULONG value;
-
-#if defined(__GNUC__)
-  __asm__ __volatile__ ("movl %%fs:0x18, %0\n\t"
-	  : "=r" (value)
-    : /* no inputs */
-    );
-#elif defined(_MSC_VER)
-  __asm mov eax, fs:0x18;
-  __asm mov value, eax;
-#else
-#error Unknown compiler for inline assembler
-#endif
-  return((PKPCR)value);
-}
-
-#endif /* __USE_W32API */
 
 VOID
 Ki386ContextSwitch(struct _KTHREAD* NewThread, 

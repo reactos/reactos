@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.31 2004/08/25 15:08:28 navaraf Exp $
+/* $Id: copy.c,v 1.31.6.1 2004/10/24 22:59:43 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,8 +16,6 @@
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
-
-#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
 static PFN_TYPE CcZeroPage = 0;
 
@@ -553,7 +551,7 @@ CcDeferWrite (
 /*
  * @unimplemented
  */
-BOOLEAN
+VOID
 STDCALL
 CcFastCopyRead (
 	IN	PFILE_OBJECT		FileObject,
@@ -565,22 +563,20 @@ CcFastCopyRead (
 	)
 {
 	UNIMPLEMENTED;
-	return FALSE;
 }
 /*
  * @unimplemented
  */
-BOOLEAN
+VOID
 STDCALL
 CcFastCopyWrite (
 	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			FileOffset,
 	IN	ULONG			Length,
 	IN	PVOID			Buffer
 	)
 {
 	UNIMPLEMENTED;
-	return FALSE;
 }
 
 /*

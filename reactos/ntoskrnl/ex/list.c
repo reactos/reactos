@@ -1,4 +1,4 @@
-/* $Id: list.c,v 1.13 2004/08/15 16:39:01 chorns Exp $
+/* $Id: list.c,v 1.13.6.1 2004/10/24 22:59:43 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,9 +13,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <reactos/debug.h>
 
 static KSPIN_LOCK ExpGlobalListLock = { 0, };
 

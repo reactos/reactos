@@ -31,10 +31,8 @@
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
-#ifdef __USE_W32API
 struct _KPROCESS* KeGetCurrentProcess(VOID);
 VOID KeSetGdtSelector(ULONG Entry, ULONG Value1, ULONG Value2);
-#endif
 
 #ifndef __ASM__
 
@@ -75,7 +73,8 @@ KeUpdateSystemTime(
 );
 
 VOID KiUpdateSystemTime (KIRQL oldIrql, struct _KIRQ_TRAPFRAME* Tf);
-
+VOID FASTCALL KiAcquireSpinLock(PKSPIN_LOCK SpinLock);
+VOID FASTCALL KiReleaseSpinLock(PKSPIN_LOCK SpinLock);
 KIRQL KeAcquireDispatcherDatabaseLock(VOID);
 VOID KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID);
 VOID KeReleaseDispatcherDatabaseLock(KIRQL Irql);
@@ -157,6 +156,9 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 		 ULONG BugCheckParameter4,
 		 PKTRAP_FRAME Tf);
 #define KEBUGCHECKWITHTF(a,b,c,d,e,f) DbgPrint("KeBugCheckWithTf at %s:%i\n",__FILE__,__LINE__), KeBugCheckWithTf(a,b,c,d,e,f)
+#define KEBUGCHECKEX(a,b,c,d,e) DbgPrint("KeBugCheckEx at %s:%i\n",__FILE__,__LINE__), KeBugCheckEx(a,b,c,d,e)
+#define KEBUGCHECK(a) DbgPrint("KeBugCheck at %s:%i\n",__FILE__,__LINE__), KeBugCheck(a)
+
 VOID
 KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG ExceptionNr, ULONG cr2);
 

@@ -4,28 +4,22 @@
 #define __NO_CTYPE_INLINES
 
 
-#include <roscfg.h>
+#include <reactos/roscfg.h>
 #include <reactos/version.h>
 #include <reactos/resource.h>
 #include <reactos/bugcodes.h>
+#include <reactos/defines.h>
+#include <reactos/string.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
-#include <roskrnl.h>
-#include <ntos/minmax.h>
-#include <ntos/synch.h>
-#include <ntos/keyboard.h>
-#include <ntos/ntdef.h>
-#include <rosrtl/minmax.h>
-#include <rosrtl/string.h>
-#include <ddk/halfuncs.h>
-#include <ddk/kefuncs.h>
-#include <ddk/pnptypes.h>
-#include <ddk/pnpfuncs.h>
+#include <ddk/ntifs.h>
+#include <ndk/ntndk.h>
+
+/* Leave Intact */
 #include <internal/ctype.h>
-#include <internal/ntoskrnl.h>
 #include <internal/id.h>
 #include <internal/ke.h>
 #include <internal/i386/segment.h>
@@ -37,6 +31,7 @@
 #include <internal/ps.h>
 #include <internal/mm.h>
 #include <internal/cc.h>
+#include <internal/cm.h>
 #include <internal/io.h>
 #include <internal/po.h>
 #include <internal/ob.h>
@@ -54,10 +49,5 @@
 #include <internal/dbg.h>
 #include <internal/trap.h>
 #include <internal/safe.h>
-#include <ntdll/ldr.h>
-#include <napi/core.h>
-#include <napi/dbg.h>
-#include <napi/teb.h>
-#include <napi/win32.h>
 
 #endif /* INCLUDE_NTOSKRNL_H */

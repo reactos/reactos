@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.70 2004/10/01 20:26:04 gvg Exp $
+/* $Id: ps.h,v 1.70.4.1 2004/10/24 22:59:44 ion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -42,34 +42,19 @@ struct _EJOB;
 #ifndef __ASM__
 
 #include <internal/mm.h>
-#include <napi/teb.h>
+#include <internal/ob.h>
+#include <ndk/pstypes.h>
 
 #ifndef KeGetCurrentProcessorNumber
 #define KeGetCurrentProcessorNumber() (KeGetCurrentKPCR()->ProcessorNumber)
 #endif
 
+typedef DWORD (WINAPI *LPTHREAD_START_ROUTINE)(LPVOID);
+
 extern HANDLE SystemProcessHandle;
 
 extern LCID PsDefaultThreadLocaleId;
 extern LCID PsDefaultSystemLocaleId;
-
-#ifndef __USE_W32API
-
-#include <pshpack1.h>
-
-typedef struct _KAPC_STATE
-{
-   LIST_ENTRY ApcListHead[2];
-   struct _KPROCESS* Process;
-   UCHAR KernelApcInProgress;
-   UCHAR KernelApcPending;
-   UCHAR UserApcPending;
-   UCHAR Reserved;
-} KAPC_STATE, *PKAPC_STATE, *__restrict PRKAPC_STATE;
-
-#include <poppack.h>
-
-#endif /* __USE_W32API */
 
 #include <pshpack1.h>
 
@@ -164,25 +149,15 @@ typedef struct _KTHREAD
 #define	FSRTL_FAST_IO_TOP_LEVEL_IRP		(0x04)
 #define	FSRTL_MAX_TOP_LEVEL_IRP_FLAG		(0x04)
 
-#ifndef __USE_W32API
-typedef struct
-{
-  PACCESS_TOKEN Token;
-  BOOLEAN CopyOnOpen;
-  BOOLEAN EffectiveOnly;
-  SECURITY_IMPERSONATION_LEVEL Level;
-} PS_IMPERSONATION_INFORMATION, *PPS_IMPERSONATION_INFORMATION;
-#endif
-
 #include <pshpack1.h>
 
 typedef struct _ETHREAD
 {
   KTHREAD Tcb;
-  TIME CreateTime;
+  LARGE_INTEGER CreateTime;
   USHORT NestedFaultCount;
   UCHAR ApcNeeded;
-  TIME ExitTime;
+  LARGE_INTEGER ExitTime;
   LIST_ENTRY LpcReplyChain;
   NTSTATUS ExitStatus;
   PVOID OfsChain;
@@ -222,14 +197,6 @@ typedef struct _ETHREAD
 } ETHREAD;
 
 #include <poppack.h>
-
-
-#ifndef __USE_W32API
-
-typedef struct _ETHREAD *PETHREAD;
-
-#endif /* __USE_W32API */
-
 
 typedef struct _KPROCESS 
 {
@@ -313,14 +280,10 @@ struct _EPROCESS
   ULONG                 LockCount;                    /* 07C */
 
   /* Time of process creation. */
-#ifdef __USE_W32API
-  LARGE_INTEGER                  CreateTime;                   /* 080 */
-#else
-  TIME                  CreateTime;                   /* 080 */
-#endif
+  LARGE_INTEGER                  CreateTime;                   /* 080  */
 
   /* Time of process exit. */
-  TIME                  ExitTime;                     /* 088 */
+  LARGE_INTEGER                  ExitTime;                     /* 088 */
   /* Unknown. */
   PVOID                 LockOwner;                    /* 090 */
   /* Process id. */

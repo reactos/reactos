@@ -9,8 +9,7 @@
 #ifndef __INCLUDE_INTERNAL_OBJMGR_H
 #define __INCLUDE_INTERNAL_OBJMGR_H
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
+#include <ndk/zwtypes.h>
 
 struct _EPROCESS;
 
@@ -21,6 +20,42 @@ typedef struct
 } COMMON_BODY_HEADER, *PCOMMON_BODY_HEADER;
 
 typedef PVOID POBJECT;
+
+typedef struct _HANDLE_TABLE
+{
+   LIST_ENTRY ListHead;
+   KSPIN_LOCK ListLock;
+} HANDLE_TABLE;
+typedef struct _OBJECT_HEADER
+/*
+ * PURPOSE: Header for every object managed by the object manager
+ */
+{
+   UNICODE_STRING Name;
+   LIST_ENTRY Entry;
+   LONG RefCount;
+   LONG HandleCount;
+   BOOLEAN CloseInProcess;
+   BOOLEAN Permanent;
+   BOOLEAN Inherit;
+   struct _DIRECTORY_OBJECT* Parent;
+   POBJECT_TYPE ObjectType;
+   PSECURITY_DESCRIPTOR SecurityDescriptor;
+   
+   /*
+    * PURPOSE: Object type
+    * NOTE: This overlaps the first member of the object body
+    */
+   CSHORT Type;
+   
+   /*
+    * PURPOSE: Object size
+    * NOTE: This overlaps the second member of the object body
+    */
+   CSHORT Size;
+   
+   
+} OBJECT_HEADER, *POBJECT_HEADER;
 
 typedef struct _DIRECTORY_OBJECT
 {

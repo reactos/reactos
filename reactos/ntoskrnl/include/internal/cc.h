@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
 
-/* $Id: cc.h,v 1.21 2004/08/25 15:08:29 navaraf Exp $ */
+/* $Id: cc.h,v 1.21.6.1 2004/10/24 22:59:44 ion Exp $ */
 #include <ddk/ntifs.h>
 #include <reactos/bugcodes.h>
 
@@ -54,6 +54,11 @@ typedef struct _CACHE_SEGMENT
   struct _CACHE_SEGMENT* NextInChain;
 } CACHE_SEGMENT, *PCACHE_SEGMENT;
 
+typedef struct _ROS_QUERY_LCN_MAPPING
+{
+  LARGE_INTEGER LcnDiskOffset;
+} ROS_QUERY_LCN_MAPPING, *PROS_QUERY_LCN_MAPPING;
+
 typedef struct _INTERNAL_BCB
 {
   PUBLIC_BCB PFCB;
@@ -81,6 +86,12 @@ CcInitView(VOID);
 
 NTSTATUS 
 CcRosFreeCacheSegment(PBCB, PCACHE_SEGMENT);
+
+NTSTATUS STDCALL
+CcRosInitializeFileCache (PFILE_OBJECT	FileObject,
+		          ULONG		CacheSegmentSize);
+NTSTATUS STDCALL
+CcRosReleaseFileCache (PFILE_OBJECT	FileObject);
 
 NTSTATUS 
 ReadCacheSegment(PCACHE_SEGMENT CacheSeg);

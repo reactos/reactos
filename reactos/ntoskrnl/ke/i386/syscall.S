@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.17 2004/08/21 21:13:45 tamlin Exp $
+/* $Id: syscall.S,v 1.17.6.1 2004/10/24 22:59:44 ion Exp $
  *
  * FILE:            ntoskrnl/ke/i386/syscall.S
  * PURPOSE:         2E trap handler
@@ -25,11 +25,10 @@
  *                  ???
  */
 
-#include <ddk/status.h>
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
 #include <internal/i386/ke.h>
-#include <roscfg.h>
+#include <reactos/roscfg.h>
 
 #define KernelMode  (0)
 #define UserMode    (1)

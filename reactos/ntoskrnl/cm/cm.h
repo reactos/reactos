@@ -356,13 +356,6 @@ extern KSPIN_LOCK CmiKeyListLock;
 extern LIST_ENTRY CmiHiveListHead;
 extern ERESOURCE CmiHiveListLock;
 
-/* Registry Callback Function */
-typedef NTSTATUS (*PEX_CALLBACK_FUNCTION ) (
-    IN PVOID CallbackContext,
-    IN PVOID Argument1,
-    IN PVOID Argument2
-    );
-
 VOID
 CmiVerifyBinHeader(PHBIN BinHeader);
 VOID

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.198 2004/10/03 03:03:54 ion Exp $
+/* $Id: main.c,v 1.198.4.1 2004/10/24 22:59:44 ion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -30,8 +30,6 @@
 
 #include <ntoskrnl.h>
 #include "../dbg/kdb.h"
-#include <ntos/bootvid.h>
-#include <napi/core.h>
 
 #ifdef HALDBG
 #include <internal/ntosdbg.h>
@@ -691,7 +689,7 @@ ExpInitializeExecutive(VOID)
 
   /* On the assumption that we can now access disks start up the debug
    * logger thread */
-  if ((KdDebuggerEnabled == TRUE) && (KdDebugState & KD_DEBUG_BOOTLOG))
+  if ((*KdDebuggerEnabled == TRUE) && (KdDebugState & KD_DEBUG_BOOTLOG))
     {
       DebugLogInit2();
     }

@@ -361,7 +361,6 @@ OBJECTS_CC = \
 	cc/fs.o \
 	cc/pin.o \
 	cc/mdl.o \
-	cc/misc.o \
 	cc/view.o
 
 # Kernel Debugger Support (Kd)
@@ -565,7 +564,7 @@ TARGET_CLEAN = \
   $(PATH_TO_TOP)/include/reactos/bugcodes.h \
   $(DEP_OBJECTS)
 
-ex/napi.o: ex/napi.c $(PATH_TO_TOP)/include/ntdll/napi.h
+ex/napi.o: ex/napi.c $(PATH_TO_TOP)/include/reactos/napi.h
 
 ke/main.o: ke/main.c $(PATH_TO_TOP)/include/reactos/buildno.h
 

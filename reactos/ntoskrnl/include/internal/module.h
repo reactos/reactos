@@ -3,9 +3,7 @@
 #define __MODULE_H
 
 #include <ddk/ntddk.h>
-#include <roscfg.h>
-#include <pe.h>
-#include <ntos/kdbgsyms.h>
+#include <reactos/roscfg.h>
 
 typedef struct _MODULE_TEXT_SECTION
 {

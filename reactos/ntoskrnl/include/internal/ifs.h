@@ -1,9 +1,16 @@
 #ifndef __INCLUDE_INTERNAL_IFS_H
 #define __INCLUDE_INTERNAL_IFS_H
-/* $Id: ifs.h,v 1.6 2003/08/14 18:30:28 silverblade Exp $ */
+/* $Id: ifs.h,v 1.6.32.1 2004/10/24 22:59:44 ion Exp $ */
 
 #include <ddk/ntifs.h>
-#include <ntos.h>
+
+typedef struct _FILE_LOCK_TOC {
+	KSPIN_LOCK			SpinLock;
+	LIST_ENTRY			GrantedListHead;
+	LIST_ENTRY			PendingListHead;
+	LIST_ENTRY			CompletedListHead;
+	LIST_ENTRY			UnlockedListHead;
+} FILE_LOCK_TOC, *PFILE_LOCK_TOC;
 
 /* Look for "FSrt" in mem view */
 #define IFS_POOL_TAG 0x74725346

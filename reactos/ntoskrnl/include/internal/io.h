@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.44 2004/09/23 11:26:09 ekohl Exp $
+/* $Id: io.h,v 1.44.4.1 2004/10/24 22:59:44 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,11 +33,6 @@
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <internal/module.h>
-
-
-#ifndef __USE_W32API
-#define DEVICE_TYPE_FROM_CTL_CODE(ctlCode) (((ULONG)(ctlCode&0xffff0000))>>16)
-#endif
 
 #define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
 

@@ -28,7 +28,6 @@
 
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
-#include <ntos/tss.h>
 #include <internal/ntoskrnl.h>
 		
 /* FUNCTIONS ****************************************************************/

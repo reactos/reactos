@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bthread.S,v 1.9 2003/06/16 19:18:48 hbirr Exp $
+/* $Id: bthread.S,v 1.9.34.1 2004/10/24 22:59:44 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,10 +27,8 @@
 
 /* INCLUDES ******************************************************************/
 	
-#include <ddk/status.h>
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
-#include <ddk/defines.h>
 
 /* Values for contextflags */
 #define CONTEXT_i386    0x10000

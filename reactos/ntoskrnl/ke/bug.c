@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.46 2004/09/28 15:02:29 weiden Exp $
+/* $Id: bug.c,v 1.46.4.1 2004/10/24 22:59:44 ion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -31,7 +31,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#include <ntos/bootvid.h>
 #include <internal/debug.h>
 #include "../../hal/halx86/include/hal.h"
 

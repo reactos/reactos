@@ -107,7 +107,7 @@ ExReleaseRundownProtectionEx (
     if (RunRef->Count & EX_RUNDOWN_ACTIVE) {
 
         /* Get Pointer */
-        RundownDescriptor = RunRef->Pointer;
+        RundownDescriptor = RunRef->Ptr;
 
         /* Decrease Reference Count */
         RundownDescriptor->References -= Count;
@@ -177,7 +177,7 @@ ExWaitForRundownProtectionRelease (
     KeInitializeEvent(RundownDescriptor.RundownEvent, NotificationEvent, FALSE);
 
     /* Save Rundown Descriptor. This is safe because this stack won't be modified */
-    RunRef->Pointer = &RundownDescriptor;
+    RunRef->Ptr = &RundownDescriptor;
 
     /* Set the Count to 1 so nobody else acquires and so release notifies us */
     RunRef->Count++;

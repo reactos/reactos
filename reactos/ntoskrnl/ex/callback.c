@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.12 2004/08/15 16:39:01 chorns Exp $
+/* $Id: callback.c,v 1.12.6.1 2004/10/24 22:59:43 ion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/callback.c
@@ -287,7 +287,7 @@ ExNotifyCallback(
    KIRQL                   OldIrql;
 
    /* Acquire the Lock */
-   OldIrql = KfAcquireSpinLock(&CallbackObject->Lock);
+   KeAcquireSpinLock(&CallbackObject->Lock, &OldIrql);
 
    /* Enumerate through all the registered functions */
    for (RegisteredCallbacks = CallbackObject->RegisteredCallbacks.Flink;
@@ -308,7 +308,7 @@ ExNotifyCallback(
          CallbackRegistration->InUse += 1;
 
          /* Release the Spinlock before making the call */
-         KfReleaseSpinLock(&CallbackObject->Lock, OldIrql);
+         KeReleaseSpinLock(&CallbackObject->Lock, OldIrql);
 
          /* Call the Registered Function */
          CallbackRegistration->CallbackFunction (
@@ -318,7 +318,7 @@ ExNotifyCallback(
          );
 
          /* Get SpinLock back */
-         OldIrql = KfAcquireSpinLock(&CallbackObject->Lock);
+         KeAcquireSpinLock(&CallbackObject->Lock, &OldIrql);
 
          /* We are not in use anymore */
          CallbackRegistration->InUse -= 1;
@@ -331,7 +331,7 @@ ExNotifyCallback(
       }
    }
    /* Unsynchronize and release the Callback Object */
-   KfReleaseSpinLock(&CallbackObject->Lock, OldIrql);
+   KeReleaseSpinLock(&CallbackObject->Lock, OldIrql);
 }
 
 /*
@@ -386,7 +386,7 @@ ExRegisterCallback(
    CallbackRegistration->CallbackContext = CallbackContext; /* The documented NotifyCallback returns the Context, so we must save this somewhere    */
 
    /* Acquire SpinLock */
-   OldIrql = KfAcquireSpinLock (&CallbackObject->Lock);
+   KeAcquireSpinLock (&CallbackObject->Lock, &OldIrql);
 
    /* Add Callback if 1) No Callbacks registered or 2) Multiple Callbacks allowed */
    if(CallbackObject->AllowMultipleCallbacks || IsListEmpty(&CallbackObject->RegisteredCallbacks))
@@ -400,7 +400,7 @@ ExRegisterCallback(
    }
 
    /* Release SpinLock */
-   KfReleaseSpinLock(&CallbackObject->Lock, OldIrql);
+   KeReleaseSpinLock(&CallbackObject->Lock, OldIrql);
 
    /* Return handle to Registration Object */
    return (PVOID) CallbackRegistration;
@@ -436,7 +436,7 @@ ExUnregisterCallback(
    CallbackObject = CallbackRegistration->CallbackObject;
 
    /* Lock the Object */
-   OldIrql = KfAcquireSpinLock (&CallbackObject->Lock);
+   KeAcquireSpinLock (&CallbackObject->Lock, &OldIrql);
 
    /* We can't Delete the Callback if it's in use, because this would create a call towards a null pointer => crash */
    while (CallbackRegistration->InUse)
@@ -446,7 +446,7 @@ ExUnregisterCallback(
       CallbackRegistration->PendingDeletion = TRUE;
 
       /* We are going to wait for the event, so the Lock isn't necessary */
-      KfReleaseSpinLock (&CallbackObject->Lock, OldIrql);
+      KeReleaseSpinLock (&CallbackObject->Lock, OldIrql);
 
       /* Make sure the event is cleared */
       KeClearEvent (&ExpCallbackEvent);
@@ -461,14 +461,14 @@ ExUnregisterCallback(
       );
 
       /* We need the Lock again */
-      OldIrql = KfAcquireSpinLock(&CallbackObject->Lock);
+      KeAcquireSpinLock(&CallbackObject->Lock, &OldIrql);
    }
 
    /* Remove the Callback */
    RemoveEntryList(&CallbackRegistration->RegisteredCallbacks);
 
    /* It's now safe to release the lock */
-   KfReleaseSpinLock(&CallbackObject->Lock, OldIrql);
+   KeReleaseSpinLock(&CallbackObject->Lock, OldIrql);
 
    /* Delete this registration */
    ExFreePool(CallbackRegistration);

@@ -9,8 +9,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#include <ntdll/napi.h>
 #include <internal/debug.h>
+#include <reactos/napi.h>
 
 /* GLOBALS ******************************************************************/
 
