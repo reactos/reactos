@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.82 2004/01/31 23:53:45 gvg Exp $
+/* $Id: utils.c,v 1.83 2004/03/06 20:32:06 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1416,117 +1416,124 @@ LdrpGetOrLoadModule(PWCHAR SerachPath,
 }
 
 static NTSTATUS
-LdrpProcessImportDirectory(PLDR_MODULE Module, 
-			   PLDR_MODULE ImportedModule,
-			   PCHAR ImportedName)
+LdrpProcessImportDirectory(
+   PLDR_MODULE Module, 
+   PLDR_MODULE ImportedModule, 
+   PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory,
+   PCHAR ImportedName)
 {
-   PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
    NTSTATUS Status;
    PVOID* ImportAddressList;
    PULONG FunctionNameList;
-   DWORD pName;
-   WORD pHint;
    PVOID IATBase;
    ULONG OldProtect;
    ULONG Ordinal;
    ULONG IATSize;
-   PCHAR Name;
 
-   DPRINT("LdrpProcessImportDirectory(%x '%wZ', %x '%wZ', %x '%s')\n",
-          Module, &Module->BaseDllName, ImportedModule, 
-	  &ImportedModule->BaseDllName, ImportedName, ImportedName);
+   DPRINT("LdrpProcessImportDirectory(%x '%wZ', '%s')\n",
+          Module, &Module->BaseDllName, ImportedName);
 
-   ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)
-                              RtlImageDirectoryEntryToData(Module->BaseAddress, 
-			                                   TRUE, 
-							   IMAGE_DIRECTORY_ENTRY_IMPORT, 
-							   NULL);
    if (ImportModuleDirectory == NULL)
      {
-       return STATUS_UNSUCCESSFUL;
+       PCHAR Name;
+
+       ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)
+                                  RtlImageDirectoryEntryToData(Module->BaseAddress, 
+                                                               TRUE, 
+                                                               IMAGE_DIRECTORY_ENTRY_IMPORT, 
+                                                               NULL);
+       if (ImportModuleDirectory == NULL)
+         {
+           return STATUS_UNSUCCESSFUL;
+         }
+
+       while (ImportModuleDirectory->dwRVAModuleName)
+         {
+           Name = (PCHAR)Module->BaseAddress + ImportModuleDirectory->dwRVAModuleName;
+           if (0 == _stricmp(Name, ImportedName))
+             {
+               break;
+             }
+           ImportModuleDirectory++;
+         }
+
+       if (ImportModuleDirectory->dwRVAModuleName == 0)
+         {
+           return STATUS_UNSUCCESSFUL;
+         }
      }
 
-   while (ImportModuleDirectory->dwRVAModuleName)
+   /* Get the import address list. */
+   ImportAddressList = (PVOID *)(Module->BaseAddress + ImportModuleDirectory->dwRVAFunctionAddressList);
+
+   /* Get the list of functions to import. */
+   if (ImportModuleDirectory->dwRVAFunctionNameList != 0)
      {
-       Name = (PCHAR)Module->BaseAddress + ImportModuleDirectory->dwRVAModuleName;
-       if (0 == _stricmp(Name, ImportedName))
-         {
+       FunctionNameList = (PULONG) (Module->BaseAddress + ImportModuleDirectory->dwRVAFunctionNameList);
+     }
+   else
+     {
+       FunctionNameList = (PULONG)(Module->BaseAddress + ImportModuleDirectory->dwRVAFunctionAddressList);
+     }
 
-           /* Get the import address list. */
-           ImportAddressList = (PVOID *)(Module->BaseAddress + ImportModuleDirectory->dwRVAFunctionAddressList);
+   /* Get the size of IAT. */
+   IATSize = 0;
+   while (FunctionNameList[IATSize] != 0L)
+     {
+       IATSize++;
+     }
 
-           /* Get the list of functions to import. */
-           if (ImportModuleDirectory->dwRVAFunctionNameList != 0)
-             {
-               FunctionNameList = (PULONG) (Module->BaseAddress + ImportModuleDirectory->dwRVAFunctionNameList);
-             }
-           else
-             {
-               FunctionNameList = (PULONG)(Module->BaseAddress + ImportModuleDirectory->dwRVAFunctionAddressList);
-             }
-
-           /* Get the size of IAT. */
-           IATSize = 0;
-           while (FunctionNameList[IATSize] != 0L)
-             {
-               IATSize++;
-             }
-
-          /* Unprotect the region we are about to write into. */
-          IATBase = (PVOID)ImportAddressList;
-          Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                          IATBase,
-                                          IATSize * sizeof(PVOID*),
-                                          PAGE_READWRITE,
-                                          &OldProtect);
-          if (!NT_SUCCESS(Status))
+  /* Unprotect the region we are about to write into. */
+  IATBase = (PVOID)ImportAddressList;
+  Status = NtProtectVirtualMemory(NtCurrentProcess(),
+                                  IATBase,
+                                  IATSize * sizeof(PVOID*),
+                                  PAGE_READWRITE,
+                                  &OldProtect);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Failed to unprotect IAT.\n");
+      return(Status);
+    }
+ 
+  /* Walk through function list and fixup addresses. */
+  while (*FunctionNameList != 0L)
+    {
+      if ((*FunctionNameList) & 0x80000000)
+        {
+          Ordinal = (*FunctionNameList) & 0x7fffffff;
+          *ImportAddressList = LdrGetExportByOrdinal(ImportedModule->BaseAddress, Ordinal);
+        }
+      else
+        {
+          IMAGE_IMPORT_BY_NAME *pe_name;
+          pe_name = RVA(Module->BaseAddress, *FunctionNameList);
+          *ImportAddressList = LdrGetExportByName(ImportedModule->BaseAddress, pe_name->Name, pe_name->Hint);
+          if ((*ImportAddressList) == NULL)
             {
-              DPRINT1("Failed to unprotect IAT.\n");
-              return(Status);
+              DPRINT1("Failed to import %s\n", pe_name->Name);
+              return STATUS_UNSUCCESSFUL;
             }
-         
-          /* Walk through function list and fixup addresses. */
-         
-          while (*FunctionNameList != 0L)
-            {
-              if ((*FunctionNameList) & 0x80000000)
-                {
-                  Ordinal = (*FunctionNameList) & 0x7fffffff;
-                  *ImportAddressList = LdrGetExportByOrdinal(ImportedModule->BaseAddress, Ordinal);
-                }
-              else
-                {
-                  pName = (DWORD) (Module->BaseAddress + *FunctionNameList + 2);
-                  pHint = *(PWORD)(Module->BaseAddress + *FunctionNameList);
+        }
+      ImportAddressList++;
+      FunctionNameList++;
+   }
 
-                  *ImportAddressList = LdrGetExportByName(ImportedModule->BaseAddress, (PUCHAR)pName, pHint);
-                  if ((*ImportAddressList) == NULL)
-                    {
-                      DPRINT1("Failed to import %s\n", pName);
-                      return STATUS_UNSUCCESSFUL;
-                    }
-                }
-              ImportAddressList++;
-              FunctionNameList++;
-           }
-
-           /* Protect the region we are about to write into. */
-           Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                           IATBase,
-                                           IATSize * sizeof(PVOID*),
-                                           OldProtect,
-                                           &OldProtect);
-           if (!NT_SUCCESS(Status))
-             {
-               DPRINT1("Failed to protect IAT.\n");
-               return(Status);
-             }
-	 }
-       ImportModuleDirectory++;
+   /* Protect the region we are about to write into. */
+   Status = NtProtectVirtualMemory(NtCurrentProcess(),
+                                   IATBase,
+                                   IATSize * sizeof(PVOID*),
+                                   OldProtect,
+                                   &OldProtect);
+   if (!NT_SUCCESS(Status))
+     {
+       DPRINT1("Failed to protect IAT.\n");
+       return(Status);
      }
 
    return STATUS_SUCCESS;
 }
+
 
 NTSTATUS LdrpAdjustImportDirectory(PLDR_MODULE Module, 
 				   PLDR_MODULE ImportedModule,
@@ -1726,7 +1733,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
 	     {
 	       TRACE_LDR("%wZ has stale binding to %wZ\n", 
 		         &Module->BaseDllName, &ImportedModule->BaseDllName);
-	       Status = LdrpProcessImportDirectory(Module, ImportedModule, ImportedName);
+	       Status = LdrpProcessImportDirectory(Module, ImportedModule, NULL, ImportedName);
 	       if (!NT_SUCCESS(Status))
 	         {
 		   DPRINT1("failed to import %s\n", ImportedName);
@@ -1787,7 +1794,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
 	       if (WrongForwarder ||
 	           ImportedModule->Flags & IMAGE_NOT_AT_BASE)
 		 {
-                   Status = LdrpProcessImportDirectory(Module, ImportedModule, ImportedName);
+                   Status = LdrpProcessImportDirectory(Module, ImportedModule, NULL, ImportedName);
 	           if (!NT_SUCCESS(Status))
 	             {
 		       DPRINT1("failed to import %s\n", ImportedName);
@@ -1813,7 +1820,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
 		    */
 		   TRACE_LDR("Stale BIND %s from %wZ\n", 
 		             ImportedName, &Module->BaseDllName);
-                   Status = LdrpProcessImportDirectory(Module, ImportedModule, ImportedName);
+                   Status = LdrpProcessImportDirectory(Module, ImportedModule, NULL, ImportedName);
 	           if (!NT_SUCCESS(Status))
 	             {
 		       DPRINT1("faild to import %s\n", ImportedName);
@@ -1844,13 +1851,14 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
                DPRINT1("failed to load %s\n", ImportedName);
                return Status;
              }
-	   if (Module == ImportedModule)
-	     {
-	       LdrpDecrementLoadCount(Module, FALSE);
-	     }
+           if (Module == ImportedModule)
+             {
+               LdrpDecrementLoadCount(Module, FALSE);
+             }
+
 	   TRACE_LDR("Initializing imports for %wZ from %s\n",
 	             &Module->BaseDllName, ImportedName);
-           Status = LdrpProcessImportDirectory(Module, ImportedModule, ImportedName);
+           Status = LdrpProcessImportDirectory(Module, ImportedModule, ImportModuleDirectoryCurrent, ImportedName);
 	   if (!NT_SUCCESS(Status))
 	     {
 	       DPRINT1("failed to import %s\n", ImportedName);
@@ -1859,6 +1867,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
 	   ImportModuleDirectoryCurrent++;
 	 }
      }
+
    if (TlsDirectory && TlsSize > 0)
      {
        LdrpAcquireTlsSlot(Module, TlsSize, FALSE);
