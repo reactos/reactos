@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.30 2001/08/01 10:12:33 hbirr Exp $
+/* $Id: create.c,v 1.31 2001/08/03 19:00:41 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -110,7 +110,6 @@ GetEntryName (PVOID Block, PULONG _Offset, PWSTR Name, PULONG _jloop,
   ULONG StartingSector = *_StartingSector;
   ULONG jloop = *_jloop;
   ULONG cpos;
-  PVOID OldBlock;
 
   test = (FATDirEntry *) Block;
   test2 = (slot *) Block;
@@ -118,23 +117,23 @@ GetEntryName (PVOID Block, PULONG _Offset, PWSTR Name, PULONG _jloop,
   *Name = 0;
 
   if (IsDeletedEntry (Block, Offset))
-    {
-      return (FALSE);
-    }
+  {
+    return (FALSE);
+  }
 
   if (test2[Offset].attr == 0x0f)
-    {
-      vfat_initstr (Name, 256);
-      vfat_wcsncpy (Name, test2[Offset].name0_4, 5);
-      vfat_wcsncat (Name, test2[Offset].name5_10, 5, 6);
-      vfat_wcsncat (Name, test2[Offset].name11_12, 11, 2);
+  {
+    vfat_initstr (Name, 256);
+    vfat_wcsncpy (Name, test2[Offset].name0_4, 5);
+    vfat_wcsncat (Name, test2[Offset].name5_10, 5, 6);
+    vfat_wcsncat (Name, test2[Offset].name11_12, 11, 2);
 
-      cpos = 0;
-      while ((test2[Offset].id != 0x41) && (test2[Offset].id != 0x01) &&
-	     (test2[Offset].attr > 0))
-	{
-	  Offset++;
-	  if (Offset == ENTRIES_PER_SECTOR)
+    cpos = 0;
+    while ((test2[Offset].id != 0x41) && (test2[Offset].id != 0x01) &&
+      (test2[Offset].attr > 0))
+	  {
+	    Offset++;
+	    if (Offset == ENTRIES_PER_SECTOR)
 	    {
 	      Offset = 0;
 	      /* FIXME: Check status */
@@ -145,65 +144,35 @@ GetEntryName (PVOID Block, PULONG _Offset, PWSTR Name, PULONG _jloop,
 			       StartingSector, 1, Block);
 	      test2 = (slot *) Block;
 	    }
-	  cpos++;
-	  vfat_movstr (Name, 13, 0, cpos * 13);
-	  vfat_wcsncpy (Name, test2[Offset].name0_4, 5);
-	  vfat_wcsncat (Name, test2[Offset].name5_10, 5, 6);
-	  vfat_wcsncat (Name, test2[Offset].name11_12, 11, 2);
+	    cpos++;
+	    vfat_movstr (Name, 13, 0, cpos * 13);
+	    vfat_wcsncpy (Name, test2[Offset].name0_4, 5);
+	    vfat_wcsncat (Name, test2[Offset].name5_10, 5, 6);
+	    vfat_wcsncat (Name, test2[Offset].name11_12, 11, 2);
+	  }
 
-	}
-
-      // save values for returning
-      *_Offset = Offset;
-      *_jloop = jloop;
-      *_StartingSector = StartingSector;
-
-      if (Offset + 1 == ENTRIES_PER_SECTOR)
-	{
-	  // save the old sector
-	  OldBlock = ExAllocatePool (NonPagedPool, BLOCKSIZE);
-	  memcpy (OldBlock, Block, BLOCKSIZE);
-
-	  // read the next sector
-	  Offset = 0;
-	  /* FIXME: Check status */
-	  GetNextSector (DeviceExt, StartingSector, &StartingSector, FALSE);
-	  jloop++;
-	  /* FIXME: Check status */
-	  VfatReadSectors (DeviceExt->StorageDevice, StartingSector, 1, Block);
-
-	  test2 = (slot *) Block;
-
-	  if (IsDeletedEntry (Block, Offset))
-	    {
-	      ExFreePool (OldBlock);
-	      *_Offset = Offset;
-	      *_jloop = jloop;
-	      *_StartingSector = StartingSector;
-	      return FALSE;
-	    }
-
-	  // restore the old sector
-	  memcpy (Block, OldBlock, BLOCKSIZE);
-	  ExFreePool (OldBlock);
-	}
-      else
-	{
-	  if (IsDeletedEntry (Block, Offset + 1))
-	    {
-	      Offset++;
-	      *_Offset = Offset;
-	      *_jloop = jloop;
-	      *_StartingSector = StartingSector;
-	      return (FALSE);
-	    }
-	}
-      return (TRUE);
+    Offset++;
+    if (Offset == ENTRIES_PER_SECTOR)
+	  {
+	    Offset = 0;
+	    /* FIXME: Check status */
+	    GetNextSector (DeviceExt, StartingSector, &StartingSector, FALSE);
+	    jloop++;
+	    /* FIXME: Check status */
+	    VfatReadSectors (DeviceExt->StorageDevice, StartingSector, 1, Block);
+      test2 = (slot *) Block;
     }
 
-  vfat8Dot3ToString (test[Offset].Filename, test[Offset].Ext, Name);
+	  *_Offset = Offset;
+	  *_jloop = jloop;
+	  *_StartingSector = StartingSector;
 
-  *_Offset = Offset;
+	  if (IsDeletedEntry (Block, Offset))
+      return FALSE;
+    else
+      return TRUE;
+	}
+  vfat8Dot3ToString (test[Offset].Filename, test[Offset].Ext, Name);
 
   return (TRUE);
 }
@@ -303,6 +272,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
   ULONG Size;
   char *block;
   WCHAR name[256];
+  WCHAR name2[14];
   ULONG StartingSector;
   ULONG NextCluster;
   WCHAR TempStr[2];
@@ -340,7 +310,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 	  if (DeviceExt->FatType == FAT32)
 	    Fcb->entry.FirstCluster = 2;
 	  else
-	    Fcb->entry.FirstCluster = 1;    
+	    Fcb->entry.FirstCluster = 1;
 	  if (StartSector)
 	    *StartSector = StartingSector;
 	  if (Entry)
@@ -391,22 +361,9 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 	  if (GetEntryName
 	      ((PVOID) block, &i, name, &j, DeviceExt, &StartingSector))
 	    {
-	      if (wstrcmpjoki (name, FileToFind))
+        vfat8Dot3ToString(((FATDirEntry *) block)[i].Filename,((FATDirEntry *) block)[i].Ext, name2);
+	      if (wstrcmpjoki (name, FileToFind) || wstrcmpjoki (name2, FileToFind))
 		{
-		  /* In the case of a long filename, the firstcluster is 
-		     stored in the next record -- where it's short name is */
-		  if (((FATDirEntry *) block)[i].Attrib == 0x0f)
-		    i++;
-		  if (i == (ENTRIES_PER_SECTOR))
-		    {
-		      /* FIXME: Check status */
-		      GetNextSector (DeviceExt, StartingSector, &StartingSector, FALSE);
-
-		      /* FIXME: Check status */
-		      VfatReadSectors (DeviceExt->StorageDevice,
-				       StartingSector, 1, block);
-		      i = 0;
-		    }
 		  if (Parent && Parent->PathName)
 		  {
 		    len = wcslen(Parent->PathName);
