@@ -1,24 +1,28 @@
-# $Id: makefile,v 1.1 2001/11/28 23:35:16 ea Exp $
+# $Id: makefile,v 1.2 2002/06/18 22:15:57 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
 TARGET_TYPE = dynlink
 
-TARGET_PATH = misc
-
 TARGET_NAME = psapi
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 
+TARGET_CFLAGS = -I./include -Wall
+
+TARGET_LFLAGS = -nostdlib
+
+TARGET_BASE = 0x68F70000
+
 TARGET_OBJECTS = \
 	misc/dllmain.o \
+	misc/malloc.o \
 	misc/stubs.o \
-	$(TARGET_NAME).coff
+	misc/win32.o \
+	enum/module.o \
+	enum/process.o
 	
 include $(PATH_TO_TOP)/rules.mak
-
 include $(TOOLS_PATH)/helper.mk
-
-TARGET_CLEAN = *.o *.coff misc/*.o
 
 # EOF

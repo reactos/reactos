@@ -1,145 +1,191 @@
-/* $Id: stubs.c,v 1.1 2001/11/28 23:35:16 ea Exp $ */
+/* $Id: stubs.c,v 1.2 2002/06/18 22:15:58 hyperion Exp $ */
 #include <windows.h>
 #include <psapi.h>
 
-BOOL STDCALL
-EmptyWorkingSet(HANDLE hProcess)
+#if 0
+BOOL STDCALL EnumPageFiles(
+  PENUM_PAGE_CALLBACKW pCallbackRoutine,
+  LPVOID lpContext
+)
 {
-	return FALSE;
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
+}
+#endif
+BOOL STDCALL EnumProcessModules(
+  HANDLE hProcess,      // handle to process
+  HMODULE *lphModule,   // array of module handles
+  DWORD cb,             // size of array
+  LPDWORD lpcbNeeded    // number of bytes required
+)
+{
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
 }
 
-BOOL STDCALL
-EnumDeviceDrivers(
-    LPVOID *lpImageBase,
-    DWORD cb,
-    LPDWORD lpcbNeeded)
+DWORD STDCALL GetDeviceDriverBaseNameA(
+  LPVOID ImageBase,  // driver load address
+  LPSTR lpBaseName,  // driver base name buffer
+  DWORD nSize        // size of buffer
+)
 {
-	return FALSE;
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
 }
 
-BOOL STDCALL
-EnumPageFiles(
-    PENUM_PAGE_CALLBACKW pCallbackRoutine,
-    LPVOID lpContext)
+DWORD STDCALL GetDeviceDriverBaseNameW(
+  LPVOID ImageBase,  // driver load address
+  LPWSTR lpBaseName, // driver base name buffer
+  DWORD nSize        // size of buffer
+)
 {
-	return FALSE;
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
 }
 
-BOOL STDCALL EnumProcesses(
-  DWORD *lpidProcess,
-  DWORD cb,
-  DWORD *cbNeeded)
+DWORD STDCALL GetDeviceDriverFileNameA(
+  LPVOID ImageBase,  // driver load address
+  LPSTR lpFilename,  // path buffer
+  DWORD nSize        // size of buffer
+)
 {
-	return FALSE;
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
 }
 
-BOOL STDCALL
-EnumProcessModules(
-  HANDLE hProcess,
-  HMODULE *lphModule,
-  DWORD cb,
-  LPDWORD lpcbNeeded)
+DWORD STDCALL GetDeviceDriverFileNameW(
+  LPVOID ImageBase,  // driver load address
+  LPWSTR lpFilename, // path buffer
+  DWORD nSize        // size of buffer
+)
 {
-	return FALSE;
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
 }
 
-DWORD STDCALL
-GetDeviceDriverBaseName(
-  LPVOID ImageBase,
-  LPTSTR lpBaseName,
-  DWORD nSize)
+DWORD STDCALL GetMappedFileNameA(
+  HANDLE hProcess,    // handle to process
+  LPVOID lpv,         // address to verify
+  LPSTR lpFilename,   // file name buffer
+  DWORD nSize         // size of buffer
+)
 {
-	return 0;
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
 }
 
-DWORD STDCALL GetDeviceDriverFileName(
-  LPVOID ImageBase,
-  LPTSTR lpFilename,
-  DWORD nSize)
+DWORD STDCALL GetMappedFileNameW(
+  HANDLE hProcess,    // handle to process
+  LPVOID lpv,         // address to verify
+  LPWSTR lpFilename,  // file name buffer
+  DWORD nSize         // size of buffer
+)
 {
-	return 0;
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
 }
 
-DWORD STDCALL
-GetMappedFileName(
-  HANDLE hProcess,
-  LPVOID lpv,
-  LPTSTR lpFilename,
-  DWORD nSize)
+DWORD STDCALL GetModuleBaseNameA(
+  HANDLE hProcess,    // handle to process
+  HMODULE hModule,    // handle to module
+  LPSTR lpBaseName,   // base name buffer
+  DWORD nSize         // maximum characters to retrieve
+)
 {
-	return 0;
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
 }
 
-DWORD STDCALL
-GetModuleBaseName(
-  HANDLE hProcess,
-  HMODULE hModule,
-  LPTSTR lpBaseName,
-  DWORD nSize)
+DWORD STDCALL GetModuleBaseNameW(
+  HANDLE hProcess,    // handle to process
+  HMODULE hModule,    // handle to module
+  LPWSTR lpBaseName,  // base name buffer
+  DWORD nSize         // maximum characters to retrieve
+)
 {
-	return 0;
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
 }
 
-DWORD STDCALL
-GetModuleFileNameEx(
-  HANDLE hProcess,
-  HMODULE hModule,
-  LPTSTR lpFilename,
-  DWORD nSize)
+DWORD STDCALL GetModuleFileNameExA(
+  HANDLE hProcess,    // handle to process
+  HMODULE hModule,    // handle to module
+  LPSTR lpFilename,   // path buffer
+  DWORD nSize         // maximum characters to retrieve
+)
 {
-	return 0;
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
 }
 
-BOOL STDCALL
-GetModuleInformation(
-  HANDLE hProcess,
-  HMODULE hModule,
-  LPMODULEINFO lpmodinfo,
-  DWORD cb)
+DWORD STDCALL GetModuleFileNameExW(
+  HANDLE hProcess,    // handle to process
+  HMODULE hModule,    // handle to module
+  LPWSTR lpFilename,  // path buffer
+  DWORD nSize         // maximum characters to retrieve
+)
 {
-	return FALSE;
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
 }
 
-BOOL STDCALL
-GetPerformanceInfo(
+BOOL STDCALL GetModuleInformation(
+  HANDLE hProcess,         // handle to process
+  HMODULE hModule,         // handle to module
+  LPMODULEINFO lpmodinfo,  // information buffer
+  DWORD cb                 // size of buffer
+)
+{
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
+}
+#if 0
+BOOL STDCALL GetPerformanceInfo(
   PPERFORMANCE_INFORMATION pPerformanceInformation, 
-  DWORD cb)
+  DWORD cb 
+
+)
 {
-	return FALSE;
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
+}
+#endif
+BOOL STDCALL GetProcessMemoryInfo(
+  HANDLE Process,                          // handle to process
+  PPROCESS_MEMORY_COUNTERS ppsmemCounters, // buffer
+  DWORD cb                                 // size of buffer
+)
+{
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
 }
 
-BOOL STDCALL
-GetProcessMemoryInfo(
-  HANDLE Process,
-  PPROCESS_MEMORY_COUNTERS ppsmemCounters,
-  DWORD cb)
+BOOL STDCALL GetWsChanges(
+  HANDLE hProcess,                         // handle to process
+  PPSAPI_WS_WATCH_INFORMATION lpWatchInfo, // buffer
+  DWORD cb                                 // size of buffer
+)
 {
-	return FALSE;
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
 }
 
-BOOL STDCALL
-GetWsChanges(
-  HANDLE hProcess,
-  PPSAPI_WS_WATCH_INFORMATION lpWatchInfo,
-  DWORD cb)
+BOOL STDCALL InitializeProcessForWsWatch(
+  HANDLE hProcess  // handle to process
+)
 {
-	return FALSE;
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
 }
 
-BOOL STDCALL
-InitializeProcessForWsWatch(
-  HANDLE hProcess)
+BOOL STDCALL QueryWorkingSet(
+  HANDLE hProcess,  // handle to process
+  PVOID pv,         // information buffer
+  DWORD cb          // size of buffer
+)
 {
-	return FALSE;
-}
-
-BOOL STDCALL
-QueryWorkingSet(
-  HANDLE hProcess,
-  PVOID pv,
-  DWORD cb)
-{
-	return FALSE;
+ SetLastError(ERROR_INVALID_FUNCTION);
+ return FALSE;
 }
 
 /* EOF */
