@@ -47,7 +47,7 @@ C_SRCS = \
 	shpolicy.c \
 	shv_bg_cmenu.c \
 	shv_item_cmenu.c \
-	systray.c \
+	ros-systray.c \
 	shlcpanel.c
 
 RC_SRCS = shres.rc version.rc

@@ -134,8 +134,10 @@ HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uI
 	(((kst) & MK_SHIFT) ? DROPEFFECT_LINK : DROPEFFECT_COPY):\
 	DROPEFFECT_MOVE)
 
+#ifndef __REACTOS__
 /* Systray */
 BOOL SYSTRAY_Init(void);
+#endif
 
 /* OLE32 */
 extern HINSTANCE hShellOle32;

@@ -938,6 +938,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
     WCHAR buffer[1024];
     const WCHAR* ext;
 
+    /* make a local copy of the LPSHELLEXECUTEINFO structure and work with this from now on */
     memcpy(&sei_tmp, psei, sizeof(sei_tmp));
 
     TRACE("mask=0x%08lx hwnd=%p verb=%s file=%s parm=%s dir=%s show=0x%08x class=%s\n",
@@ -948,6 +949,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
 
     psei->hProcess = NULL;
 
+    /* make copies of all path/command strings */
     if (sei_tmp.lpFile)
 	strcpyW(wszApplicationName, sei_tmp.lpFile);
     else
@@ -963,6 +965,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
     else
 	*wszDir = '\0';
 
+    /* adjust string pointers to point to the new buffers */
     sei_tmp.lpFile = wszApplicationName;
     sei_tmp.lpParameters = wszParameters;
     sei_tmp.lpDirectory = wszDir;
@@ -1030,9 +1033,6 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
             return FALSE;
     }
 
-    /* Else, try to execute the filename */
-    TRACE("execute:'%s','%s'\n", debugstr_w(sei_tmp.lpFile), debugstr_w(sei_tmp.lpParameters));
-
 
     /* resolve shell shortcuts */
     ext = PathFindExtensionW(sei_tmp.lpFile);
@@ -1043,7 +1043,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
 					    sei_tmp.hwnd, sei_tmp.lpVerb?sei_tmp.lpVerb:wszEmpty, &sei_tmp.nShow, (LPITEMIDLIST*)&sei_tmp.lpIDList);
 
 	if (psei->lpIDList)
-	    psei->fMask |= SEE_MASK_IDLIST;
+	    psei->fMask |= SEE_MASK_IDLIST; //@@ nicht sei_tmp.fMask ?! 
 
 	if (SUCCEEDED(hr))
 	{
@@ -1102,6 +1102,9 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
     if (*sei_tmp.lpDirectory)
 	if (ExpandEnvironmentStringsW(sei_tmp.lpDirectory, buffer, MAX_PATH))
 	    lstrcpyW(wszDir/*sei_tmp.lpDirectory*/, buffer);
+
+    /* Else, try to execute the filename */
+    TRACE("execute:'%s','%s','%s'\n", debugstr_w(wszApplicationName), debugstr_w(wszCommandline), debugstr_w(wszDir));
 
 
     /* separate out command line arguments from executable file name */
@@ -1181,7 +1184,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
 	if (sei_tmp.lpIDList!=psei->lpIDList && sei_tmp.lpIDList)
 	    SHFree(sei_tmp.lpIDList);
 
-        TRACE("execfunc: retval=%d psei->hInstApp=%p\n", retval, psei->hInstApp);
+        TRACE("execfunc: retval=%d sei_tmp.hInstApp=%p\n", retval, sei_tmp.hInstApp);
         return TRUE;
     }
 
