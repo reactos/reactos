@@ -48,6 +48,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(updown);
 typedef struct
 {
     HWND      Self;            /* Handle to this up-down control */
+    HWND      Notify;          /* Handle to the parent window */
     UINT      AccelCount;      /* Number of elements in AccelVect */
     UDACCEL*  AccelVect;       /* Vector containing AccelCount elements */
     INT       AccelIndex;      /* Current accel index, -1 if not accel'ing */
@@ -562,8 +563,7 @@ static void UPDOWN_DoAction (UPDOWN_INFO *infoPtr, int delta, int action)
     ni.hdr.hwndFrom = infoPtr->Self;
     ni.hdr.idFrom   = GetWindowLongW (infoPtr->Self, GWL_ID);
     ni.hdr.code = UDN_DELTAPOS;
-    if (!SendMessageW(GetParent (infoPtr->Self), WM_NOTIFY,
-		   (WPARAM)ni.hdr.idFrom, (LPARAM)&ni)) {
+    if (!SendMessageW(infoPtr->Notify, WM_NOTIFY, (WPARAM)ni.hdr.idFrom, (LPARAM)&ni)) {
         /* Parent said: OK to adjust */
 
         /* Now adjust value with (maybe new) delta */
@@ -574,10 +574,8 @@ static void UPDOWN_DoAction (UPDOWN_INFO *infoPtr, int delta, int action)
     }
 
     /* Also, notify it. This message is sent in any case. */
-    SendMessageW( GetParent(infoPtr->Self),
-		  dwStyle & UDS_HORZ ? WM_HSCROLL : WM_VSCROLL,
-		  MAKELONG(SB_THUMBPOSITION, infoPtr->CurVal),
-		  (LPARAM)infoPtr->Self);
+    SendMessageW( infoPtr->Notify, dwStyle & UDS_HORZ ? WM_HSCROLL : WM_VSCROLL,
+		  MAKELONG(SB_THUMBPOSITION, infoPtr->CurVal), (LPARAM)infoPtr->Self);
 }
 
 /***********************************************************************
@@ -616,7 +614,7 @@ static BOOL UPDOWN_CancelMode (UPDOWN_INFO *infoPtr)
 	hdr.hwndFrom = infoPtr->Self;
 	hdr.idFrom   = GetWindowLongW (infoPtr->Self, GWL_ID);
 	hdr.code = NM_RELEASEDCAPTURE;
-	SendMessageW(GetParent (infoPtr->Self), WM_NOTIFY, hdr.idFrom, (LPARAM)&hdr);
+	SendMessageW(infoPtr->Notify, WM_NOTIFY, hdr.idFrom, (LPARAM)&hdr);
 	ReleaseCapture();
     }
 
@@ -720,6 +718,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam,
 
 	    /* initialize the info struct */
 	    infoPtr->Self = hwnd;
+	    infoPtr->Notify = ((LPCREATESTRUCTA)lParam)->hwndParent;
 	    infoPtr->AccelCount = 0;
 	    infoPtr->AccelVect = 0;
 	    infoPtr->AccelIndex = -1;
@@ -798,7 +797,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam,
 	    if ( (infoPtr->Flags & FLAG_MOUSEIN) &&
 		 (infoPtr->Flags & FLAG_ARROW) ) {
 
-	    	SendMessageW( GetParent(hwnd),
+	    	SendMessageW( infoPtr->Notify,
 			      dwStyle & UDS_HORZ ? WM_HSCROLL : WM_VSCROLL,
                   	      MAKELONG(SB_ENDSCROLL, infoPtr->CurVal),
 			      (LPARAM)hwnd);
