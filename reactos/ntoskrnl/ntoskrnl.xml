@@ -6,7 +6,6 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
 	<define name="__3GB__" />
-	<define name="__ELF_WORD_SIZE">32</define>
 	<include base="kjs">include</include>
 	<include base="ntoskrnl">include</include>
 	<library>csq</library>
@@ -259,7 +258,6 @@
 		<file>drvlck.c</file>
 		<file>elf32.c</file>
 		<file>elf64.c</file>
-		<file>elf.c</file>
 		<file>freelist.c</file>
 		<file>iospace.c</file>
 		<file>kmap.c</file>
