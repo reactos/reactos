@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.18 2003/09/30 15:46:59 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.19 2003/10/03 13:37:53 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1074,7 +1074,7 @@ IopInvalidateDeviceRelations(
   NTSTATUS Status;
   ULONG i;
 
-  DPRINT("DeviceNode %x  Pdo %x\n", DeviceNode, Pdo);
+  DPRINT("DeviceNode %x\n", DeviceNode);
 
   DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
 
