@@ -24,8 +24,8 @@
  * processor can create races too.
  */
 #define __NTDRIVER__
-#include <ntddk.h>
-#include "csq.h"
+#include <ddk/ntddk.h>
+#include <ddk/csq.h>
 
 
 VOID NTAPI IopCsqCancelRoutine(PDEVICE_OBJECT DeviceObject,

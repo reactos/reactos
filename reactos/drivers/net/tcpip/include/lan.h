@@ -8,7 +8,7 @@
 #define __LAN_H
 
 
-/* Medias we support */
+/* Media we support */
 #define MEDIA_ETH 0
 
 #define MAX_MEDIA 1
@@ -71,7 +71,7 @@ typedef struct LAN_ADAPTER {
 /* Ethernet types. We swap constants so we can compare values at runtime
    without swapping them there */
 #define ETYPE_IPv4 WH2N(0x0800)
-#define ETYPE_IPv6 WH2N(0x0000) /* FIXME */
+#define ETYPE_IPv6 WH2N(0x86DD)
 #define ETYPE_ARP  WH2N(0x0806)
 
 /* Protocols */

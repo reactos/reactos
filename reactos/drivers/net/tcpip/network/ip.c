@@ -84,7 +84,8 @@ VOID FreeIF(
 
 
 PADDRESS_ENTRY CreateADE(
-    PIP_INTERFACE IF,    PIP_ADDRESS Address,
+    PIP_INTERFACE IF,    
+    PIP_ADDRESS Address,
     UCHAR Type,
     PNET_TABLE_ENTRY NTE)
 /*
