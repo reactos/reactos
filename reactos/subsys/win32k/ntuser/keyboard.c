@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.16 2003/11/24 16:15:00 gvg Exp $
+/* $Id: keyboard.c,v 1.17 2003/11/25 01:09:06 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -925,6 +925,20 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize ) {
   return ret;
 }
 
+/* Search the keyboard layout modifiers table for the shift bit.  I don't
+ * want to count on the shift bit not moving, because it can be specified
+ * in the layout */
+
+static DWORD FASTCALL GetShiftBit( PKBDTABLES pkKT ) {
+  int i;
+
+  for( i = 0; pkKT->pCharModifiers->pVkToBit[i].Vk; i++ ) 
+    if( pkKT->pCharModifiers->pVkToBit[i].Vk == VK_SHIFT ) 
+      return pkKT->pCharModifiers->pVkToBit[i].ModBits;
+
+  return 0;
+}
+
 /*
  * Filter this message according to the current key layout, setting wParam
  * appropriately.
@@ -934,6 +948,7 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
   KIRQL OldIrql;
   DWORD ScanCode = 0, ModifierBits = 0;
   DWORD i = 0;
+  DWORD BaseMapping = 0;
   DWORD RawVk = 0;
   static WORD NumpadConversion[][2] = 
     { { VK_DELETE, VK_DECIMAL },
@@ -965,10 +980,13 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
   /* Get the raw scan code, so we can look up whether the key is a numpad
    * key */
   ScanCode = (Msg->lParam >> 16) & 0xff;
-  Msg->wParam = IntMapVirtualKeyEx( ScanCode, 1, KeyboardLayout );
+  BaseMapping = Msg->wParam = 
+    IntMapVirtualKeyEx( ScanCode, 1, KeyboardLayout );
   RawVk = KeyboardLayout->pusVSCtoVK[ScanCode];
 
-  if ((ModifierBits & NUMLOCK_BIT) && (RawVk & KNUMP)) 
+  if ((ModifierBits & NUMLOCK_BIT) && 
+      !(ModifierBits & GetShiftBit(KeyboardLayout)) && 
+      (RawVk & KNUMP)) 
     {
       /* The key in question is a numpad key.  Search for a translation. */
       for (i = 0; NumpadConversion[i][0]; i++) 
@@ -980,6 +998,8 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
 	    }
 	}
     }
+
+  DbgPrint("Key: [%04x -> %04x]\n", BaseMapping, Msg->wParam);
 
   /* Now that we have the VK, we can set the keymap appropriately
    * This is a better place for this code, as it's guaranteed to be
