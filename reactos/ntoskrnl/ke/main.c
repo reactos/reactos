@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.195 2004/09/23 11:27:08 ekohl Exp $
+/* $Id: main.c,v 1.196 2004/09/23 18:00:29 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -682,7 +682,11 @@ ExpInitializeExecutive(VOID)
   CPRINT("CommandLine: %s\n", (PUCHAR)KeLoaderBlock.CommandLine);
   Status = IoCreateSystemRootLink((PUCHAR)KeLoaderBlock.CommandLine);
   if (!NT_SUCCESS(Status))
+  {
+    DbgPrint ( "IoCreateSystemRootLink FAILED: (0x%x) - ", Status );
+    DbgPrintErrorMessage ( Status );
     KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);
+  }
 
 #ifdef KDBG
   KdbInitProfiling2();
