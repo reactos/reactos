@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.42 2002/11/27 20:52:29 hbirr Exp $
+/* $Id: handle.c,v 1.43 2003/03/17 22:28:55 gdalsnes Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -687,7 +687,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
 	DPRINT("Reference from %x\n", ((PULONG)&Handle)[-1]);
      }
    
-   if (AccessMode == UserMode)
+   if (DesiredAccess && AccessMode == UserMode)
      {
 	RtlMapGenericMask(&DesiredAccess, ObjectHeader->ObjectType->Mapping);
 
