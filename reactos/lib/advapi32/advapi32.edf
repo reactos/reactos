@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.9 2000/09/06 19:57:58 ekohl Exp $
+; $Id: advapi32.edf,v 1.10 2000/09/27 01:22:31 ekohl Exp $
 ;
 ; advapi32.def
 ;
@@ -288,8 +288,8 @@ QueryServiceStatus=QueryServiceStatus@8
 ;ReadEventLogA=ReadEventLogA@28
 ;ReadEventLogW=ReadEventLogW@28
 RegCloseKey=RegCloseKey@4
-;RegConnectRegistryA=RegConnectRegistryA@12
-;RegConnectRegistryW=RegConnectRegistryW@12
+RegConnectRegistryA=RegConnectRegistryA@12
+RegConnectRegistryW=RegConnectRegistryW@12
 RegCreateKeyA=RegCreateKeyA@12
 RegCreateKeyExA=RegCreateKeyExA@36
 RegCreateKeyExW=RegCreateKeyExW@36
@@ -300,12 +300,12 @@ RegDeleteValueA=RegDeleteValueA@8
 RegDeleteValueW=RegDeleteValueW@8
 RegEnumKeyA=RegEnumKeyA@16
 RegEnumKeyExA=RegEnumKeyExA@32
-;RegEnumKeyExW=RegEnumKeyExW@32
-;RegEnumKeyW=RegEnumKeyW@16
+RegEnumKeyExW=RegEnumKeyExW@32
+RegEnumKeyW=RegEnumKeyW@16
 RegEnumValueA=RegEnumValueA@32
-;RegEnumValueW=RegEnumValueW@32
+RegEnumValueW=RegEnumValueW@32
 RegFlushKey=RegFlushKey@4
-;RegGetKeySecurity=RegGetKeySecurity@16
+RegGetKeySecurity=RegGetKeySecurity@16
 RegLoadKeyA=RegLoadKeyA@12
 RegLoadKeyW=RegLoadKeyW@12
 RegNotifyChangeKeyValue=RegNotifyChangeKeyValue@20
@@ -316,24 +316,24 @@ RegOpenKeyW=RegOpenKeyW@12
 RegQueryInfoKeyA=RegQueryInfoKeyA@48
 RegQueryInfoKeyW=RegQueryInfoKeyW@48
 RegQueryMultipleValuesA=RegQueryMultipleValuesA@20
-;RegQueryMultipleValuesW=RegQueryMultipleValuesW@20
+RegQueryMultipleValuesW=RegQueryMultipleValuesW@20
 RegQueryValueA=RegQueryValueA@16
 RegQueryValueExA=RegQueryValueExA@24
 RegQueryValueExW=RegQueryValueExW@24
-;RegQueryValueW=RegQueryValueW@16
+RegQueryValueW=RegQueryValueW@16
 RegReplaceKeyA=RegReplaceKeyA@16
-;RegReplaceKeyW=RegReplaceKeyW@16
+RegReplaceKeyW=RegReplaceKeyW@16
 RegRestoreKeyA=RegRestoreKeyA@12
-;RegRestoreKeyW=RegRestoreKeyW@12
+RegRestoreKeyW=RegRestoreKeyW@12
 RegSaveKeyA=RegSaveKeyA@12
-;RegSaveKeyW=RegSaveKeyW@12
-;RegSetKeySecurity=RegSetKeySecurity@12
+RegSaveKeyW=RegSaveKeyW@12
+RegSetKeySecurity=RegSetKeySecurity@12
 RegSetValueA=RegSetValueA@20
 RegSetValueExA=RegSetValueExA@24
 RegSetValueExW=RegSetValueExW@24
 RegSetValueW=RegSetValueW@20
 RegUnLoadKeyA=RegUnLoadKeyA@8
-;RegUnLoadKeyW=RegUnLoadKeyW@8
+RegUnLoadKeyW=RegUnLoadKeyW@8
 ;RegisterEventSourceA=RegisterEventSourceA@8
 ;RegisterEventSourceW=RegisterEventSourceW@8
 RegisterServiceCtrlHandlerA=RegisterServiceCtrlHandlerA@8

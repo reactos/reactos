@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.10 2000/09/08 22:54:13 ekohl Exp $
+/* $Id: reg.c,v 1.11 2000/09/27 01:21:27 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -363,8 +363,62 @@ RegDeleteKeyA(
 	LPCSTR	lpSubKey
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	UNICODE_STRING SubKeyStringW;
+	ANSI_STRING SubKeyStringA;
+	HANDLE ParentKey;
+	HANDLE TargetKey;
+	NTSTATUS Status;
+	LONG ErrorCode;
+
+	Status = MapDefaultKey(&ParentKey,
+			       hKey);
+	if (!NT_SUCCESS(Status))
+	{
+		ErrorCode = RtlNtStatusToDosError(Status);
+
+		SetLastError (ErrorCode);
+		return ErrorCode;
+	}
+
+	RtlInitAnsiString(&SubKeyStringA,
+			  (LPSTR)lpSubKey);
+	RtlAnsiStringToUnicodeString(&SubKeyStringW,
+				     &SubKeyStringA,
+				     TRUE);
+
+	InitializeObjectAttributes (&ObjectAttributes,
+				    &SubKeyStringW,
+				    OBJ_CASE_INSENSITIVE,
+				    (HANDLE)ParentKey,
+				    NULL);
+
+	Status = NtOpenKey (&TargetKey,
+			    DELETE,
+			    &ObjectAttributes);
+
+	RtlFreeUnicodeString (&SubKeyStringW);
+
+	if (!NT_SUCCESS(Status))
+	{
+		ErrorCode = RtlNtStatusToDosError(Status);
+
+		SetLastError (ErrorCode);
+		return ErrorCode;
+	}
+
+	Status = NtDeleteKey(TargetKey);
+
+	NtClose(TargetKey);
+
+	if (!NT_SUCCESS(Status))
+	{
+		ErrorCode = RtlNtStatusToDosError(Status);
+
+		SetLastError (ErrorCode);
+		return ErrorCode;
+	}
+	return ERROR_SUCCESS;
 }
 
 
@@ -404,7 +458,6 @@ RegDeleteKeyW(
 				    (HANDLE)ParentKey,
 				    NULL);
 
-
 	Status = NtOpenKey (&TargetKey,
 			    DELETE,
 			    &ObjectAttributes);
@@ -441,8 +494,42 @@ RegDeleteValueA(
 	LPCSTR	lpValueName
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+	UNICODE_STRING ValueNameW;
+	ANSI_STRING ValueNameA;
+	NTSTATUS Status;
+	LONG ErrorCode;
+	HANDLE KeyHandle;
+
+	Status = MapDefaultKey(&KeyHandle,
+			       hKey);
+	if (!NT_SUCCESS(Status))
+	{
+		ErrorCode = RtlNtStatusToDosError(Status);
+
+		SetLastError (ErrorCode);
+		return ErrorCode;
+	}
+
+	RtlInitAnsiString(&ValueNameA,
+			  (LPSTR)lpValueName);
+	RtlAnsiStringToUnicodeString(&ValueNameW,
+				     &ValueNameA,
+				     TRUE);
+
+	Status = NtDeleteValueKey(KeyHandle,
+				  &ValueNameW);
+
+	RtlFreeUnicodeString (&ValueNameW);
+
+	if (!NT_SUCCESS(Status))
+	{
+		ErrorCode = RtlNtStatusToDosError(Status);
+
+		SetLastError (ErrorCode);
+		return ErrorCode;
+	}
+
+	return ERROR_SUCCESS;
 }
 
 
@@ -472,7 +559,7 @@ RegDeleteValueW(
 	}
 
 	RtlInitUnicodeString(&ValueName,
-			     lpValueName);
+			     (LPWSTR)lpValueName);
 
 	Status = NtDeleteValueKey(KeyHandle,
 				  &ValueName);
@@ -500,8 +587,16 @@ RegEnumKeyA(
 	DWORD	cbName
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+	DWORD dwLength = cbName;
+
+	return RegEnumKeyExA(hKey,
+			     dwIndex,
+			     lpName,
+			     &dwLength,
+			     NULL,
+			     NULL,
+			     NULL,
+			     NULL);
 }
 
 
