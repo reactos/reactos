@@ -52,7 +52,7 @@ HRESULT WINAPI OLEPRO32_DllRegisterServer()
 /***********************************************************************
  *		DllCanUnloadNow (OLEPRO32.255)
  */
-HRESULT WINAPI OLEPRO32_DllCanUnloadNow( )
+HRESULT WINAPI OLEPRO32_DllCanUnloadNow(void)
 {
 	FIXME("not implemented (olepro32.dll) \n");
 	return S_OK;
