@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.56 2004/10/30 23:48:56 navaraf Exp $
+/* $Id: kthread.c,v 1.57 2004/11/07 22:55:38 navaraf Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -324,12 +324,6 @@ crashes. I'm disabling it again, until we fix the APC implementation...
    /*
     * Do x86 specific part
     */
-}
-
-VOID STDCALL
-KeRescheduleThread(VOID)
-{
-  PsDispatchThread(THREAD_STATE_READY);
 }
 
 /*

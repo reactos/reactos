@@ -185,6 +185,7 @@ OBJECTS_IO = \
 	io/iomgr.o \
 	io/iowork.o \
 	io/irp.o \
+	io/irq.o \
 	io/lock.o \
 	io/mailslot.o \
 	io/mdl.o \

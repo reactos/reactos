@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.53 2004/11/01 19:01:25 hbirr Exp $
+/* $Id: irq.c,v 1.54 2004/11/07 22:55:38 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -187,7 +187,6 @@ static PKSPIN_LOCK isr_lock[NR_IRQS] = {NULL,};
 static KSPIN_LOCK isr_table_lock = {0,};
 
 #define TAG_ISR_LOCK     TAG('I', 'S', 'R', 'L')
-#define TAG_KINTERRUPT   TAG('K', 'I', 'S', 'R')
 
 /* FUNCTIONS ****************************************************************/
 
@@ -399,7 +398,7 @@ KeDumpIrqList(VOID)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+BOOLEAN STDCALL
 KeConnectInterrupt(PKINTERRUPT InterruptObject)
 {
    KIRQL oldlvl;
@@ -412,9 +411,8 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
    Vector = InterruptObject->Vector;
 
    if (Vector < IRQ_BASE && Vector >= IRQ_BASE + NR_IRQS)
-   {
-      return STATUS_INVALID_PARAMETER;
-   }
+      return FALSE;
+
    Vector -= IRQ_BASE;
 
    /*
@@ -430,7 +428,7 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
        (InterruptObject->Shareable == FALSE || ListHead->Shareable==FALSE))
      {
 	KeReleaseSpinLock(&isr_table_lock,oldlvl);
-	return(STATUS_INVALID_PARAMETER);
+	return FALSE;
      }
    else
      {
@@ -462,7 +460,7 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
    
    KeDumpIrqList();
 
-   return STATUS_SUCCESS;
+   return TRUE;
 }
 
 
@@ -514,127 +512,9 @@ KeInitializeInterrupt(PKINTERRUPT InterruptObject,
    InterruptObject->ProcessorEnableMask = ProcessorEnableMask;
    InterruptObject->SynchLevel = SynchronizeIrql;
    InterruptObject->Shareable = ShareVector;
-   InterruptObject->FloatingSave = FALSE;
+   InterruptObject->FloatingSave = FloatingSave;
 
    return STATUS_SUCCESS;
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS STDCALL
-IoConnectInterrupt(PKINTERRUPT* InterruptObject,
-		   PKSERVICE_ROUTINE ServiceRoutine,
-		   PVOID ServiceContext,
-		   PKSPIN_LOCK SpinLock,
-		   ULONG Vector,
-		   KIRQL Irql,
-		   KIRQL SynchronizeIrql,
-		   KINTERRUPT_MODE InterruptMode,
-		   BOOLEAN ShareVector,
-		   KAFFINITY ProcessorEnableMask,
-		   BOOLEAN FloatingSave)
-/*
- * FUNCTION: Registers a driver's isr to be called when its device interrupts
- * ARGUMENTS:
- *        InterruptObject (OUT) = Points to the interrupt object created on 
- *                                return
- *        ServiceRoutine = Routine to be called when the device interrupts
- *        ServiceContext = Parameter to be passed to ServiceRoutine
- *        SpinLock = Initalized spinlock that will be used to synchronize
- *                   access between the isr and other driver routines. This is
- *                   required if the isr handles more than one vector or the
- *                   driver has more than one isr
- *        Vector = Interrupt vector to allocate 
- *                 (returned from HalGetInterruptVector)
- *        Irql = DIRQL returned from HalGetInterruptVector
- *        SynchronizeIrql = DIRQL at which the isr will execute. This must
- *                          be the highest of all the DIRQLs returned from
- *                          HalGetInterruptVector if the driver has multiple
- *                          isrs
- *        InterruptMode = Specifies if the interrupt is LevelSensitive or
- *                        Latched
- *        ShareVector = Specifies if the vector can be shared
- *        ProcessorEnableMask = Processors on the isr can run
- *        FloatingSave = TRUE if the floating point stack should be saved when
- *                       the isr runs. Must be false for x86 drivers
- * RETURNS: Status
- * IRQL: PASSIVE_LEVEL
- */
-{
-   PKINTERRUPT Interrupt;
-   NTSTATUS Status = STATUS_SUCCESS;
-   
-   ASSERT_IRQL(PASSIVE_LEVEL);
-   
-   DPRINT("IoConnectInterrupt(Vector %x)\n",Vector);
-   
-   /*
-    * Check the parameters
-    */
-   if (Vector < IRQ_BASE || Vector >= NR_IRQS + IRQ_BASE)
-     {
-	return(STATUS_INVALID_PARAMETER);
-     }
-   if (FloatingSave == TRUE)
-     {
-	return(STATUS_INVALID_PARAMETER);
-     }
-   
-   /*
-    * Initialize interrupt object
-    */
-   Interrupt=ExAllocatePoolWithTag(NonPagedPool,sizeof(KINTERRUPT),
-				   TAG_KINTERRUPT);
-   if (Interrupt==NULL)
-     {
-	return(STATUS_INSUFFICIENT_RESOURCES);
-     }
-
-   Status = KeInitializeInterrupt(Interrupt,
-				  ServiceRoutine,
-				  ServiceContext,
-				  SpinLock,
-				  Vector,
-				  Irql,
-				  SynchronizeIrql,
-				  InterruptMode,
-				  ShareVector,
-				  ProcessorEnableMask,
-				  FloatingSave);
-   if (!NT_SUCCESS(Status))
-     {
-	ExFreePool(Interrupt);
-	return Status;
-     }
-
-   Status = KeConnectInterrupt(Interrupt);
-   if (!NT_SUCCESS(Status))
-     {
-	ExFreePool(Interrupt);
-	return Status;
-     }
-
-   *InterruptObject = Interrupt;
-
-   return(STATUS_SUCCESS);
-}
-
-
-/*
- * @implemented
- */
-VOID STDCALL
-IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
-/*
- * FUNCTION: Releases a drivers isr
- * ARGUMENTS:
- *        InterruptObject = isr to release
- */
-{
-  KeDisconnectInterrupt(InterruptObject);
-  ExFreePool(InterruptObject);
 }
 
 /* EOF */

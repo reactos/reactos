@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.48 2004/11/07 21:18:33 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.49 2004/11/07 22:55:38 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -378,6 +378,7 @@ IoOpenDeviceRegistryKey(
          ExFreePool(KeyNameBuffer);
          return Status;
       }
+      KeyName.Length += DriverKeyLength - sizeof(UNICODE_NULL);
    }
    else
    {

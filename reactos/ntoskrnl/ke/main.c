@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.203 2004/11/05 17:41:34 ekohl Exp $
+/* $Id: main.c,v 1.204 2004/11/07 22:55:38 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -58,6 +58,7 @@ LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
 ULONG EXPORTED KeDcacheFlushCount = 0;
 ULONG EXPORTED KeIcacheFlushCount = 0;
 ULONG EXPORTED KiDmaIoCoherency = 0; /* RISC Architectures only */
+ULONG EXPORTED InitSafeBootMode = 0; /* KB83764 */
 #else
 /* Microsoft-style declarations */
 EXPORTED ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
@@ -68,6 +69,7 @@ EXPORTED LOADER_PARAMETER_BLOCK KeLoaderBlock;
 EXPORTED ULONG KeDcacheFlushCount = 0;
 EXPORTED ULONG KeIcacheFlushCount = 0;
 EXPORTED ULONG KiDmaIoCoherency = 0; /* RISC Architectures only */
+EXPORTED ULONG InitSafeBootMode = 0; /* KB83764 */
 #endif	/* __GNUC__ */
 
 static LOADER_MODULE KeLoaderModules[64];
@@ -1002,8 +1004,8 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    */
   LdrSafePEProcessModule((PVOID)KERNEL_BASE, (PVOID)KERNEL_BASE, (PVOID)DriverBase, &DriverSize);
 
-  /* Now our imports from HAL is fixed. This is the first */
-  /* time in the boot process that we can use HAL         */
+  /* Now our imports from HAL are fixed. This is the first */
+  /* time in the boot process that we can use HAL          */
 
   FirstKrnlPhysAddr = KeLoaderModules[0].ModStart - KERNEL_BASE + 0x200000;
   LastKrnlPhysAddr = LastKernelAddress - KERNEL_BASE + 0x200000;

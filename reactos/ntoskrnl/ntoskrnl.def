@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.198 2004/11/07 18:45:52 hyperion Exp $
+; $Id: ntoskrnl.def,v 1.199 2004/11/07 22:55:37 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -303,6 +303,7 @@ InbvResetDisplay@0
 InbvSetScrollRegion@16
 InbvSetTextColor@4
 InbvSolidColorFill@20
+InitSafeBootMode DATA
 @InterlockedCompareExchange@12
 @InterlockedDecrement@4
 @InterlockedExchange@8
@@ -592,7 +593,6 @@ KeQuerySystemTime@4
 KeQueryTickCount@4
 KeQueryTimeIncrement@0
 KeRaiseUserException@4
-KeRescheduleThread@0
 KeReadStateEvent@4
 KeReadStateMutant@4
 KeReadStateMutex@4

@@ -45,9 +45,6 @@ struct _KPCR;
 VOID STDCALL 
 DbgBreakPointNoBugCheck(VOID);
 
-VOID STDCALL KeRescheduleThread();
-
-
 VOID
 STDCALL
 KeProfileInterrupt(
