@@ -98,12 +98,14 @@ static __declspec(noreturn) void __stdcall _SEHCompilerSpecificHandler
 
 #define _SEH_TRY_FILTER_FINALLY(FILTER_, FINALLY_) \
  {                                                                             \
-  static const _SEHHandlers_t _SEHHandlers =                                   \
+  static _SEHHandlers_t _SEHHandlers =                                     	 \
   {                                                                            \
-   (FILTER_),                                                                  \
+   (NULL),                                                                  	\
    _SEHCompilerSpecificHandler,                                                \
-   (FINALLY_)                                                                  \
+   (NULL)                                                                  	\
   };                                                                           \
+  _SEHHandlers.SH_Filter = FILTER_;                                            \
+  _SEHHandlers.SH_Finally = FINALLY_;                                          \
                                                                                \
   _SEHFrame_t _SEHFrame;                                                       \
   volatile _SEHPortableFrame_t * _SEHPortableFrame;                            \
