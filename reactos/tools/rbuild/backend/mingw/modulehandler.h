@@ -10,10 +10,11 @@ public:
 	virtual bool CanHandleModule ( Module& module ) = 0;
 	virtual void Process ( Module& module ) = 0;
 protected:
+	std::string MingwModuleHandler::GetWorkingDirectory ();
 	std::string ReplaceExtension ( std::string filename,
 	                               std::string newExtension );
 	std::string GetModuleArchiveFilename ( Module& module );
-	std::string GetModuleLibraryDependencies ( Module& module );
+	std::string GetImportLibraryDependencies ( Module& module );
 	std::string GetSourceFilenames ( Module& module );
 	std::string GetObjectFilename ( std::string sourceFilename );
 	std::string GetObjectFilenames ( Module& module );

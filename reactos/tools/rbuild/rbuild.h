@@ -24,6 +24,7 @@ public:
 	~Project ();
 	void ProcessXML ( const XMLElement& e,
 	                  const std::string& path );
+	Module* LocateModule ( std::string name );
 private:
 	void ReadXml ();
 	XMLFile xmlfile;
@@ -34,12 +35,14 @@ private:
 enum ModuleType
 {
 	BuildTool,
+	StaticLibrary,
 	KernelModeDLL
 };
 
 class Module
 {
 public:
+	Project* project;
 	const XMLElement& node;
 	std::string name;
 	std::string path;
@@ -47,7 +50,8 @@ public:
 	std::vector<File*> files;
 	std::vector<Library*> libraries;
 
-	Module ( const XMLElement& moduleNode,
+	Module ( Project* project,
+	         const XMLElement& moduleNode,
 	         const std::string& moduleName,
 	         const std::string& modulePath );
 	~Module();

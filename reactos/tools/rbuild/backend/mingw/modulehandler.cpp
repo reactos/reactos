@@ -13,6 +13,12 @@ MingwModuleHandler::MingwModuleHandler ( FILE* fMakefile )
 }
 
 string
+MingwModuleHandler::GetWorkingDirectory ()
+{
+	return ".";
+}
+
+string
 MingwModuleHandler::ReplaceExtension ( string filename,
 	                                   string newExtension )
 {
@@ -30,7 +36,7 @@ MingwModuleHandler::GetModuleArchiveFilename ( Module& module )
 }
 
 string
-MingwModuleHandler::GetModuleLibraryDependencies ( Module& module )
+MingwModuleHandler::GetImportLibraryDependencies ( Module& module )
 {
 	if ( module.libraries.size () == 0 )
 		return "";
@@ -40,7 +46,9 @@ MingwModuleHandler::GetModuleLibraryDependencies ( Module& module )
 	{
 		if ( dependencies.size () > 0 )
 			dependencies += " ";
-		dependencies += module.libraries[i]->name;
+		Module* importedModule = module.project->LocateModule ( module.libraries[i]->name );
+		assert ( importedModule != NULL );
+		dependencies += importedModule->GetPath ().c_str ();
 	}
 	return dependencies;
 }
@@ -96,8 +104,8 @@ MingwModuleHandler::GenerateObjectFileTargets ( Module& module )
 		string objectFilename = GetObjectFilename ( sourceFilename );
 		fprintf ( fMakefile,
 		          "%s: %s\n",
-		          sourceFilename.c_str (),
-		          objectFilename.c_str() );
+		          objectFilename.c_str (),
+		          sourceFilename.c_str() );
 		fprintf ( fMakefile,
 		          "\t${gcc} -c %s -o %s\n",
 		          sourceFilename.c_str (),
@@ -146,10 +154,40 @@ MingwKernelModuleHandler::Process ( Module& module )
 void
 MingwKernelModuleHandler::GenerateKernelModuleTarget ( Module& module )
 {
-	fprintf ( fMakefile, "%s: %s\n",
+	string workingDirectory = GetWorkingDirectory ( );
+	string archiveFilename = GetModuleArchiveFilename ( module );
+	string importLibraryDependencies = GetImportLibraryDependencies ( module );
+	fprintf ( fMakefile, "%s: %s %s\n",
 	          module.GetPath ().c_str (),
-	          GetModuleLibraryDependencies ( module ).c_str () );
-	fprintf ( fMakefile, "\t\n\n" );
+	          archiveFilename.c_str (),
+	          importLibraryDependencies.c_str () );
+	fprintf ( fMakefile,
+	          "\t${gcc} -Wl,--base-file,%s/base.tmp -o %s/junk.tmp %s %s\n",
+	          workingDirectory.c_str (),
+	          workingDirectory.c_str (),
+	          archiveFilename.c_str (),
+	          importLibraryDependencies.c_str () );
+	fprintf ( fMakefile,
+	          "\t${rm} %s/junk.tmp\n",
+	          workingDirectory.c_str () );
+	fprintf ( fMakefile,
+	          "\t${dlltool} --dllname %s --base-file %s/base.tmp --output-exp %s/temp.exp --kill-at\n",
+	          module.GetPath ().c_str (),
+	          workingDirectory.c_str (),
+	          workingDirectory.c_str ());
+	fprintf ( fMakefile,
+	          "\t${rm} %s/base.tmp\n",
+	          workingDirectory.c_str () );
+	fprintf ( fMakefile,
+	          "\t${ld} -Wl,%s/temp.exp -o %s %s %s\n",
+	          workingDirectory.c_str (),
+	          module.GetPath ().c_str (),
+	          archiveFilename.c_str (),
+	          importLibraryDependencies.c_str () );
+	fprintf ( fMakefile,
+	          "\t${rm} %s/temp.exp\n",
+	          workingDirectory.c_str () );
+	
 	GenerateArchiveTarget ( module );
 	GenerateObjectFileTargets ( module );
 }

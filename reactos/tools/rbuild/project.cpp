@@ -64,7 +64,7 @@ Project::ProcessXML ( const XMLElement& e, const string& path )
 	{
 		att = e.GetAttribute ( "name", true );
 		assert(att);
-		Module* module = new Module ( e, att->value, path );
+		Module* module = new Module ( this, e, att->value, path );
 		modules.push_back ( module );
 		module->ProcessXML ( e, path );
 		return;
@@ -77,4 +77,16 @@ Project::ProcessXML ( const XMLElement& e, const string& path )
 	}
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
 		ProcessXML ( *e.subElements[i], subpath );
+}
+
+Module*
+Project::LocateModule ( string name )
+{
+	for ( size_t i = 0; i < modules.size (); i++ )
+	{
+		if (modules[i]->name == name)
+			return modules[i];
+	}
+
+	return NULL;
 }

@@ -61,9 +61,11 @@ MingwBackend::GenerateHeader ()
 void
 MingwBackend::GenerateGlobalVariables ()
 {
+	fprintf ( fMakefile, "rm = del /y\n" );
 	fprintf ( fMakefile, "gcc = gcc\n" );
 	fprintf ( fMakefile, "ld = ld\n" );
 	fprintf ( fMakefile, "ar = ar\n" );
+	fprintf ( fMakefile, "dlltool = dlltool\n" );
 	fprintf ( fMakefile, "\n" );
 }
 

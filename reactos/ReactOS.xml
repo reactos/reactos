@@ -4,6 +4,9 @@
 			<file>depends.c</file>
 		</module>
 	</directory>
+	<directory name="lib">
+		<xi:include href="lib/directory.xml" />
+	</directory>
 	<directory name="ntoskrnl">
 		<xi:include href="ntoskrnl/module.xml" />
 	</directory>

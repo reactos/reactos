@@ -40,10 +40,12 @@ FixSeparator ( const string& s )
 }
 #endif
 
-Module::Module ( const XMLElement& moduleNode,
+Module::Module ( Project* project,
+                 const XMLElement& moduleNode,
                  const string& moduleName,
                  const string& modulePath )
-	: node(moduleNode),
+	: project(project),
+	  node(moduleNode),
 	  name(moduleName),
 	  path(modulePath)
 {
@@ -87,6 +89,8 @@ Module::GetModuleType ( const XMLAttribute& attribute )
 {
 	if ( attribute.value == "buildtool" )
 		return BuildTool;
+	if ( attribute.value == "staticlibrary" )
+		return StaticLibrary;
 	if ( attribute.value == "kernelmodedll" )
 		return KernelModeDLL;
 	throw InvalidAttributeValueException ( attribute.name,
