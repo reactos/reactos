@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.55 2003/10/12 17:05:48 hbirr Exp $
+/* $Id: mminit.c,v 1.56 2003/11/16 15:19:28 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -47,6 +47,7 @@ extern unsigned int _bss_end__;
 static MEMORY_AREA* kernel_text_desc = NULL;
 static MEMORY_AREA* kernel_init_desc = NULL;
 static MEMORY_AREA* kernel_map_desc = NULL;
+static MEMORY_AREA* kernel_kpcr_desc = NULL;
 static MEMORY_AREA* kernel_data_desc = NULL;
 static MEMORY_AREA* kernel_param_desc = NULL;
 static MEMORY_AREA* kernel_pool_desc = NULL;
@@ -133,6 +134,16 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
 		      FALSE,
 		      FALSE);
 
+   BaseAddress = (PVOID)KPCR_BASE;
+   MmCreateMemoryArea(NULL,
+		      MmGetKernelAddressSpace(),
+		      MEMORY_AREA_SYSTEM,
+		      &BaseAddress,
+		      PAGE_SIZE * MAXIMUM_PROCESSORS,
+		      0,
+		      &kernel_kpcr_desc,
+		      FALSE,
+		      FALSE);
    BaseAddress = (PVOID)KERNEL_BASE;
    Length = PAGE_ROUND_UP(((ULONG)&_text_end__)) - KERNEL_BASE;
    ParamLength = ParamLength - Length;
@@ -375,17 +386,16 @@ MmInit1(ULONG FirstKrnlPhysAddr,
        MmStats.NrTotalPages += 256;
      }
 #ifdef BIOS_MEM_FIX
-  MmStats.NrTotalPages += 16;
+   MmStats.NrTotalPages += 16;
 #endif
    DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGE_SIZE) / 1024);
 
-   LastKernelAddress = (ULONG)MmInitializePageList(
-					   (PVOID)FirstKrnlPhysAddr,
-					   (PVOID)LastKrnlPhysAddr,
-					   MmStats.NrTotalPages,
-					   PAGE_ROUND_UP(LastKernelAddress),
-             BIOSMemoryMap,
-             AddressRangeCount);
+   LastKernelAddress = (ULONG)MmInitializePageList((PVOID)FirstKrnlPhysAddr,
+					           (PVOID)LastKrnlPhysAddr,
+					           MmStats.NrTotalPages,
+					           PAGE_ROUND_UP(LastKernelAddress),
+                                                   BIOSMemoryMap,
+                                                   AddressRangeCount);
    kernel_len = LastKrnlPhysAddr - FirstKrnlPhysAddr;
    
    /*
@@ -400,23 +410,21 @@ MmInit1(ULONG FirstKrnlPhysAddr,
 	MmSetPageProtect(NULL,
 			 (PVOID)i,
 			 PAGE_EXECUTE_READ);
-   }
+     }
 
    DPRINT("Invalidating between %x and %x\n",
 	  LastKernelAddress,
-	  KERNEL_BASE + 2 * PAGE_TABLE_SIZE);
-   for (i=(LastKernelAddress); 
-	 i<(KERNEL_BASE + 2 * PAGE_TABLE_SIZE); 
-	 i=i+PAGE_SIZE)
+	  0xc0600000);
+   for (i=(LastKernelAddress); i<0xc0600000; i+=PAGE_SIZE)
      {
 	 MmRawDeleteVirtualMapping((PVOID)(i));
      }
    DPRINT("Almost done MmInit()\n");
 #ifndef MP
    /* FIXME: This is broken in SMP mode */
-   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me, FALSE, NULL, NULL);
-   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me2, FALSE, NULL, NULL);
-   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me3, FALSE, NULL, NULL);
+   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me, TRUE, NULL, NULL);
+   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me2, TRUE, NULL, NULL);
+   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me3, TRUE, NULL, NULL);
 #endif
    /*
     * Intialize memory areas
@@ -429,6 +437,8 @@ MmInit1(ULONG FirstKrnlPhysAddr,
 VOID INIT_FUNCTION
 MmInit2(VOID)
 {
+   MmInitializeRmapList();
+   MmInitializePageOp();
    MmInitSectionImplementation();
    MmInitPagingFile();
 }
@@ -445,10 +455,8 @@ MmInit3(VOID)
    MmDeletePageTable(NULL, 0);
 #endif
    MmInitZeroPageThread();
-   MmInitPagerThread();
    MmCreatePhysicalMemorySection();
-   MmInitializeRmapList();
-   MmInitializePageOp();
+   MiInitBalancerThread();
 
    /*
     * Initialise the modified page writer.
