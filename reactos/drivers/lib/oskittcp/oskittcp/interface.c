@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <oskittcp.h>
 #include <oskitdebug.h>
 #include <sys/param.h>
