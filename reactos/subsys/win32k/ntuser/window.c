@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.247 2004/09/28 15:02:30 weiden Exp $
+/* $Id: window.c,v 1.248 2004/11/15 23:10:42 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1338,7 +1338,7 @@ IntCalcDefPosSize(PWINDOW_OBJECT Parent, PWINDOW_OBJECT WindowObject, RECT *rc, 
   
   if(Parent != NULL)
   {
-    NtGdiIntersectRect(rc, rc, &Parent->ClientRect);
+    IntGdiIntersectRect(rc, rc, &Parent->ClientRect);
     
     if(IncPos)
     {
@@ -1793,7 +1793,7 @@ IntCreateWindowEx(DWORD dwExStyle,
   WindowObject->WindowRect.bottom = Pos.y + Size.cy;
   if (0 != (WindowObject->Style & WS_CHILD) && ParentWindow)
     {
-      NtGdiOffsetRect(&(WindowObject->WindowRect), ParentWindow->ClientRect.left,
+      IntGdiOffsetRect(&(WindowObject->WindowRect), ParentWindow->ClientRect.left,
                       ParentWindow->ClientRect.top);
     }
   WindowObject->ClientRect = WindowObject->WindowRect;
@@ -1822,7 +1822,7 @@ IntCreateWindowEx(DWORD dwExStyle,
   WindowObject->WindowRect.bottom = Pos.y + Size.cy;
   if (0 != (WindowObject->Style & WS_CHILD) && ParentWindow)
     {
-      NtGdiOffsetRect(&(WindowObject->WindowRect), ParentWindow->ClientRect.left,
+      IntGdiOffsetRect(&(WindowObject->WindowRect), ParentWindow->ClientRect.left,
                       ParentWindow->ClientRect.top);
     }
   WindowObject->ClientRect = WindowObject->WindowRect;
@@ -1858,7 +1858,7 @@ IntCreateWindowEx(DWORD dwExStyle,
   Result = WinPosGetNonClientSize(WindowObject->Self, 
 				  &WindowObject->WindowRect,
 				  &WindowObject->ClientRect);
-  NtGdiOffsetRect(&WindowObject->WindowRect, 
+  IntGdiOffsetRect(&WindowObject->WindowRect, 
 		 MaxPos.x - WindowObject->WindowRect.left,
 		 MaxPos.y - WindowObject->WindowRect.top);
 

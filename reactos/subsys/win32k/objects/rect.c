@@ -16,44 +16,100 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rect.c,v 1.7 2004/05/10 17:07:20 weiden Exp $ */
+/* $Id: rect.c,v 1.8 2004/11/15 23:10:42 gvg Exp $ */
 #include <w32k.h>
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL STDCALL
-NtGdiSetEmptyRect(PRECT Rect)
+VOID FASTCALL
+IntGdiSetEmptyRect(PRECT Rect)
 {
   Rect->left = Rect->right = Rect->top = Rect->bottom = 0;
-  return(TRUE);
 }
 
 BOOL STDCALL
-NtGdiIsEmptyRect(const RECT* Rect)
+NtGdiSetEmptyRect(PRECT UnsafeRect)
+{
+  RECT Rect;
+  NTSTATUS Status;
+
+  IntGdiSetEmptyRect(&Rect);
+
+  Status = MmCopyToCaller(UnsafeRect, &Rect, sizeof(RECT));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+BOOL FASTCALL
+IntGdiIsEmptyRect(const RECT* Rect)
 {
   return(Rect->left >= Rect->right || Rect->top >= Rect->bottom);
 }
 
 BOOL STDCALL
-NtGdiOffsetRect(LPRECT Rect, INT x, INT y)
+NtGdiIsEmptyRect(const RECT* UnsafeRect)
+{
+  RECT Rect;
+  NTSTATUS Status;
+
+  Status = MmCopyFromCaller(&Rect, UnsafeRect, sizeof(RECT));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return FALSE;
+    }
+
+  return IntGdiIsEmptyRect(&Rect);
+}
+
+VOID FASTCALL
+IntGdiOffsetRect(LPRECT Rect, INT x, INT y)
 {
   Rect->left += x;
   Rect->right += x;
   Rect->top += y;
   Rect->bottom += y;
-  return(TRUE);
 }
 
-
 BOOL STDCALL
-NtGdiUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
+NtGdiOffsetRect(LPRECT UnsafeRect, INT x, INT y)
 {
-  if (NtGdiIsEmptyRect(Src1))
+  RECT Rect;
+  NTSTATUS Status;
+
+  Status = MmCopyFromCaller(&Rect, UnsafeRect, sizeof(RECT));
+  if (! NT_SUCCESS(Status))
     {
-      if (NtGdiIsEmptyRect(Src2))
+      SetLastNtError(Status);
+      return FALSE;
+    }
+
+  IntGdiOffsetRect(&Rect, x, y);
+
+  Status = MmCopyToCaller(UnsafeRect, &Rect, sizeof(RECT));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+BOOL FASTCALL
+IntGdiUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
+{
+  if (IntGdiIsEmptyRect(Src1))
+    {
+      if (IntGdiIsEmptyRect(Src2))
 	{
-	  NtGdiSetEmptyRect(Dest);
-	  return(FALSE);
+	  IntGdiSetEmptyRect(Dest);
+	  return FALSE;
 	}
       else
 	{
@@ -62,7 +118,7 @@ NtGdiUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
     }
   else
     {
-      if (NtGdiIsEmptyRect(Src2))
+      if (IntGdiIsEmptyRect(Src2))
 	{
 	  *Dest = *Src1;
 	}
@@ -74,33 +130,124 @@ NtGdiUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
 	  Dest->bottom = max(Src1->bottom, Src2->bottom);
 	}
     }
-  return(TRUE);
+
+  return TRUE;
 }
 
 BOOL STDCALL
-NtGdiSetRect(PRECT Rect, INT left, INT top, INT right, INT bottom)
+NtGdiUnionRect(PRECT UnsafeDest, const RECT* UnsafeSrc1, const RECT* UnsafeSrc2)
+{
+  RECT Dest, Src1, Src2;
+  NTSTATUS Status;
+  BOOL Ret;
+
+  Status = MmCopyFromCaller(&Src1, UnsafeSrc1, sizeof(RECT));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return FALSE;
+    }
+  Status = MmCopyFromCaller(&Src2, UnsafeSrc2, sizeof(RECT));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return FALSE;
+    }
+
+  Ret = IntGdiUnionRect(&Dest, &Src1, &Src2);
+
+  if (Ret)
+    {
+      Status = MmCopyToCaller(UnsafeDest, &Dest, sizeof(RECT));
+      if (! NT_SUCCESS(Status))
+        {
+          SetLastNtError(Status);
+          return FALSE;
+        }
+    }
+
+  return Ret;
+}
+
+VOID FASTCALL
+IntGdiSetRect(PRECT Rect, INT left, INT top, INT right, INT bottom)
 {
   Rect->left = left;
   Rect->top = top;
   Rect->right = right;
   Rect->bottom = bottom;
-  return(TRUE);
 }
 
 BOOL STDCALL
-NtGdiIntersectRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
+NtGdiSetRect(PRECT UnsafeRect, INT left, INT top, INT right, INT bottom)
 {
-  if (NtGdiIsEmptyRect(Src1) || NtGdiIsEmptyRect(Src2) ||
+  RECT Rect;
+  NTSTATUS Status;
+
+  IntGdiSetRect(&Rect, left, top, right, bottom);
+
+  Status = MmCopyToCaller(UnsafeRect, &Rect, sizeof(RECT));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+BOOL FASTCALL
+IntGdiIntersectRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
+{
+  if (IntGdiIsEmptyRect(Src1) || IntGdiIsEmptyRect(Src2) ||
       Src1->left >= Src2->right || Src2->left >= Src1->right ||
       Src1->top >= Src2->bottom || Src2->top >= Src1->bottom)
     {
-      NtGdiSetEmptyRect(Dest);
-      return(FALSE);
+      IntGdiSetEmptyRect(Dest);
+      return FALSE;
     }
+
   Dest->left = max(Src1->left, Src2->left);
   Dest->right = min(Src1->right, Src2->right);
   Dest->top = max(Src1->top, Src2->top);
   Dest->bottom = min(Src1->bottom, Src2->bottom);
-  return(TRUE);
+
+  return TRUE;
 }
+
+BOOL STDCALL
+NtGdiIntersectRect(PRECT UnsafeDest, const RECT* UnsafeSrc1, const RECT* UnsafeSrc2)
+{
+  RECT Dest, Src1, Src2;
+  NTSTATUS Status;
+  BOOL Ret;
+
+  Status = MmCopyFromCaller(&Src1, UnsafeSrc1, sizeof(RECT));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return FALSE;
+    }
+  Status = MmCopyFromCaller(&Src2, UnsafeSrc2, sizeof(RECT));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return FALSE;
+    }
+
+  Ret = IntGdiIntersectRect(&Dest, &Src2, &Src2);
+
+  if (Ret)
+    {
+      Status = MmCopyToCaller(UnsafeDest, &Dest, sizeof(RECT));
+      if (! NT_SUCCESS(Status))
+        {
+          SetLastNtError(Status);
+          return FALSE;
+        }
+    }
+
+  return Ret;
+}
+
 /* EOF */

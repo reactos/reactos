@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.121 2004/09/24 15:07:38 navaraf Exp $
+/* $Id: winpos.c,v 1.122 2004/11/15 23:10:42 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -439,11 +439,11 @@ WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
       Parent = IntGetParentObject(Window);
       if (0 != (Window->Style & WS_CHILD) && Parent)
 	{
-	  NtGdiOffsetRect(&(params.rgrc[0]), - Parent->ClientRect.left,
+	  IntGdiOffsetRect(&(params.rgrc[0]), - Parent->ClientRect.left,
 	                      - Parent->ClientRect.top);
-	  NtGdiOffsetRect(&(params.rgrc[1]), - Parent->ClientRect.left,
+	  IntGdiOffsetRect(&(params.rgrc[1]), - Parent->ClientRect.left,
 	                      - Parent->ClientRect.top);
-	  NtGdiOffsetRect(&(params.rgrc[2]), - Parent->ClientRect.left,
+	  IntGdiOffsetRect(&(params.rgrc[2]), - Parent->ClientRect.left,
 	                      - Parent->ClientRect.top);
 	}
       params.lppos = &winposCopy;
@@ -458,7 +458,7 @@ WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
           *ClientRect = params.rgrc[0];
 	  if ((Window->Style & WS_CHILD) && Parent)
 	    {
-	      NtGdiOffsetRect(ClientRect, Parent->ClientRect.left,
+	      IntGdiOffsetRect(ClientRect, Parent->ClientRect.left,
 	                      Parent->ClientRect.top);
 	    }
           FixClientRect(ClientRect, WindowRect);
@@ -534,7 +534,7 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
       WindowRect->top = Y;
       WindowRect->right += X - WindowObject->WindowRect.left;
       WindowRect->bottom += Y - WindowObject->WindowRect.top;
-      NtGdiOffsetRect(ClientRect,
+      IntGdiOffsetRect(ClientRect,
         X - WindowObject->WindowRect.left,
         Y - WindowObject->WindowRect.top);
     }
@@ -1025,9 +1025,9 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
          {
             RECT ORect = OldClientRect;
             RECT NRect = NewClientRect;
-            NtGdiOffsetRect(&ORect, - OldWindowRect.left, - OldWindowRect.top);
-            NtGdiOffsetRect(&NRect, - NewWindowRect.left, - NewWindowRect.top);
-            NtGdiIntersectRect(&CopyRect, &ORect, &NRect);
+            IntGdiOffsetRect(&ORect, - OldWindowRect.left, - OldWindowRect.top);
+            IntGdiOffsetRect(&NRect, - NewWindowRect.left, - NewWindowRect.top);
+            IntGdiIntersectRect(&CopyRect, &ORect, &NRect);
             REGION_CropRgn(CopyRgn, CopyRgn, &CopyRect, NULL);
          }
 

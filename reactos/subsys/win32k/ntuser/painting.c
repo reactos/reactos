@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.86 2004/09/28 15:02:30 weiden Exp $
+ *  $Id: painting.c,v 1.87 2004/11/15 23:10:42 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -695,7 +695,7 @@ IntFixCaret(HWND hWnd, LPRECT lprc, UINT flags)
       rcCaret.top = pt.y;
       rcCaret.right = pt.x + CaretInfo->Size.cx;
       rcCaret.bottom = pt.y + CaretInfo->Size.cy;
-      if (NtGdiIntersectRect(lprc, lprc, &rcCaret))
+      if (IntGdiIntersectRect(lprc, lprc, &rcCaret))
       {
          NtUserHideCaret(0);
          lprc->left = pt.x;
@@ -717,9 +717,12 @@ IntFixCaret(HWND hWnd, LPRECT lprc, UINT flags)
  */
 
 HDC STDCALL
-NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
+NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 {
    PWINDOW_OBJECT Window;
+   PAINTSTRUCT Ps;
+   PROSRGNDATA Rgn;
+   NTSTATUS Status;
 
    if (!(Window = IntGetWindowObject(hWnd)))
    {
@@ -729,10 +732,11 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
 
    NtUserHideCaret(hWnd);
 
-   lPs->hdc = NtUserGetDCEx(hWnd, 0, DCX_INTERSECTUPDATE | DCX_WINDOWPAINT |
+   RtlZeroMemory(&Ps, sizeof(PAINTSTRUCT));
+   Ps.hdc = NtUserGetDCEx(hWnd, 0, DCX_INTERSECTUPDATE | DCX_WINDOWPAINT |
       DCX_USESTYLE);
 
-   if (!lPs->hdc)
+   if (!Ps.hdc)
    {
       IntReleaseWindowObject(Window);
       return NULL;
@@ -743,33 +747,49 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
    {
       MsqDecPaintCountQueue(Window->MessageQueue);
       IntValidateParent(Window, Window->UpdateRegion);
-      NtGdiGetRgnBox(Window->UpdateRegion, &lPs->rcPaint);
-      NtGdiOffsetRect(&lPs->rcPaint,
-         Window->WindowRect.left - Window->ClientRect.left,
-         Window->WindowRect.top - Window->ClientRect.top);
+      Rgn = RGNDATA_LockRgn(Window->UpdateRegion);
+      if (NULL != Rgn)
+        {
+          UnsafeIntGetRgnBox(Rgn, &Ps.rcPaint);
+          RGNDATA_UnlockRgn(Window->UpdateRegion);
+          IntGdiOffsetRect(&Ps.rcPaint,
+                           Window->WindowRect.left - Window->ClientRect.left,
+                           Window->WindowRect.top - Window->ClientRect.top);
+        }
+      else
+        {
+          IntGetClientRect(Window, &Ps.rcPaint);
+        }
       GDIOBJ_SetOwnership(Window->UpdateRegion, PsGetCurrentProcess());
       NtGdiDeleteObject(Window->UpdateRegion);
       Window->UpdateRegion = NULL;
    }
    else
    {
-      NtUserGetClientRect(Window->Self, &lPs->rcPaint);
+      IntGetClientRect(Window, &Ps.rcPaint);
    }
    IntUnLockWindowUpdate(Window);
 
    if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
    {
       Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBKGND;
-      lPs->fErase = !IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)lPs->hdc, 0);
+      Ps.fErase = !IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)Ps.hdc, 0);
    }
    else
    {
-      lPs->fErase = FALSE;
+      Ps.fErase = FALSE;
    }
 
    IntReleaseWindowObject(Window);
 
-   return lPs->hdc;
+   Status = MmCopyToCaller(UnsafePs, &Ps, sizeof(PAINTSTRUCT));
+   if (! NT_SUCCESS(Status))
+   {
+      SetLastNtError(Status);
+      return NULL;
+   }
+
+   return Ps.hdc;
 }
 
 /*
@@ -1019,13 +1039,13 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *lprcScroll,
       IntGdiGetClipBox(hDC, &rClip);
    IntLPtoDP(DC, (LPPOINT)&rClip, 2);
 
-   NtGdiIntersectRect(&rClipped_src, &rSrc, &rClip);
+   IntGdiIntersectRect(&rClipped_src, &rSrc, &rClip);
 
    rDst = rClipped_src;
-   NtGdiSetRect(&offset, 0, 0, dx, dy);
+   IntGdiSetRect(&offset, 0, 0, dx, dy);
    IntLPtoDP(DC, (LPPOINT)&offset, 2);
-   NtGdiOffsetRect(&rDst, offset.right - offset.left,  offset.bottom - offset.top);
-   NtGdiIntersectRect(&rDst, &rDst, &rClip);
+   IntGdiOffsetRect(&rDst, offset.right - offset.left,  offset.bottom - offset.top);
+   IntGdiIntersectRect(&rDst, &rDst, &rClip);
 
    /*
     * Copy bits, if possible.
@@ -1035,7 +1055,7 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *lprcScroll,
    {
       RECT rDst_lp = rDst, rSrc_lp = rDst;
 
-      NtGdiOffsetRect(&rSrc_lp, offset.left - offset.right, offset.top - offset.bottom);
+      IntGdiOffsetRect(&rSrc_lp, offset.left - offset.right, offset.top - offset.bottom);
       IntDPtoLP(DC, (LPPOINT)&rDst_lp, 2);
       IntDPtoLP(DC, (LPPOINT)&rSrc_lp, 2);
       DC_UnlockDc(hDC);
@@ -1097,10 +1117,10 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *lprcScroll,
  */
 
 DWORD STDCALL
-NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *rect,
-   const RECT *clipRect, HRGN hrgnUpdate, LPRECT rcUpdate, UINT flags)
+NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *UnsafeRect,
+   const RECT *UnsafeClipRect, HRGN hrgnUpdate, LPRECT rcUpdate, UINT flags)
 {
-   RECT rc, cliprc, caretrc;
+   RECT rc, cliprc, caretrc, rect, clipRect;
    INT Result;
    PWINDOW_OBJECT Window;
    HDC hDC;
@@ -1108,6 +1128,7 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *rect,
    HWND hwndCaret;
    BOOL bUpdate = (rcUpdate || hrgnUpdate || flags & (SW_INVALIDATE | SW_ERASE));
    BOOL bOwnRgn = TRUE;
+   NTSTATUS Status;
 
    Window = IntGetWindowObject(hWnd);
    if (!Window || !IntIsWindowDrawable(Window))
@@ -1117,11 +1138,27 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *rect,
    }
 
    IntGetClientRect(Window, &rc);
-   if (rect)
-      NtGdiIntersectRect(&rc, &rc, rect);
+   if (NULL != UnsafeRect)
+   {
+      Status = MmCopyFromCaller(&rect, UnsafeRect, sizeof(RECT));  
+      if (! NT_SUCCESS(Status))
+      {
+         SetLastNtError(Status);
+         return ERROR;
+      }
+      IntGdiIntersectRect(&rc, &rc, &rect);
+   }
 
-   if (clipRect)
-      NtGdiIntersectRect(&cliprc, &rc, clipRect);
+   if (NULL != UnsafeClipRect)
+   {
+      Status = MmCopyFromCaller(&clipRect, UnsafeClipRect, sizeof(RECT));  
+      if (! NT_SUCCESS(Status))
+      {
+         SetLastNtError(Status);
+         return ERROR;
+      }
+      IntGdiIntersectRect(&cliprc, &rc, &clipRect);
+   }
    else
       cliprc = rc;
 
@@ -1180,7 +1217,7 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *rect,
             r.top -= ClientOrigin.y;
             r.right -= ClientOrigin.x;
             r.bottom -= ClientOrigin.y;
-            if (!rect || NtGdiIntersectRect(&dummy, &r, &rc))
+            if (! UnsafeRect || IntGdiIntersectRect(&dummy, &r, &rc))
                WinPosSetWindowPos(List[i], 0, r.left + dx, r.top + dy, 0, 0,
                                   SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE |
                                   SWP_NOREDRAW);
