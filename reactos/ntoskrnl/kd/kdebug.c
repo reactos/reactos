@@ -60,7 +60,8 @@ PrintString(char* fmt,...)
   va_list ap;
 
   va_start(ap, fmt);
-  vsprintf(buffer, fmt, ap);
+  _vsnprintf(buffer, sizeof(buffer) - 1, fmt, ap);
+  buffer[sizeof(buffer) - 1] = 0;
   va_end(ap);
 
   HalDisplayString(buffer);
