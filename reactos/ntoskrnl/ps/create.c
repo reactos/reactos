@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.74 2004/07/10 17:01:03 hbirr Exp $
+/* $Id: create.c,v 1.75 2004/07/13 11:48:32 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -64,9 +64,9 @@ PsAssignImpersonationToken(PETHREAD Thread,
    if (TokenHandle != NULL)
      {
 	Status = ObReferenceObjectByHandle(TokenHandle,
-					   0,
+					   TOKEN_IMPERSONATE,
 					   SepTokenObjectType,
-					   UserMode,
+					   KeGetPreviousMode(),
 					   (PVOID*)&Token,
 					   NULL);
 	if (!NT_SUCCESS(Status))
@@ -83,13 +83,14 @@ PsAssignImpersonationToken(PETHREAD Thread,
 
    PsImpersonateClient(Thread,
 		       Token,
-		       0,
-		       0,
+		       FALSE,
+		       FALSE,
 		       ImpersonationLevel);
    if (Token != NULL)
      {
 	ObDereferenceObject(Token);
      }
+
    return(STATUS_SUCCESS);
 }
 
@@ -261,6 +262,10 @@ NtOpenThreadToken (IN HANDLE ThreadHandle,
 
   if (OpenAsSelf)
     {
+      Token = Thread->ThreadsProcess->Token;
+    }
+  else
+    {
       if (Thread->ActiveImpersonationInfo == FALSE)
 	{
 	  ObDereferenceObject (Thread);
@@ -268,10 +273,6 @@ NtOpenThreadToken (IN HANDLE ThreadHandle,
 	}
 
       Token = Thread->ImpersonationInfo->Token;
-    }
-  else
-    {
-      Token = Thread->ThreadsProcess->Token;
     }
 
   if (Token == NULL)
