@@ -997,9 +997,9 @@ static const CSIDL_DATA CSIDL_Data[] =
 	/*"Documents and Settings\\"*/"All Users\\Documents\\My Video"
     },
     { /* CSIDL_RESOURCES */
-	0, 0, /* FIXME */
+	0, (HKEY)2,
 	NULL,
-	NULL
+	"Resources"
     },
     { /* CSIDL_RESOURCES_LOCALIZED */
 	0, 0, /* FIXME */
@@ -1070,6 +1070,15 @@ HRESULT WINAPI SHGetFolderPathW(
 	MultiByteToWideChar(CP_ACP, 0, CSIDL_Data[folder].szValueName, -1, szValueName, MAX_PATH);
 	MultiByteToWideChar(CP_ACP, 0, CSIDL_Data[folder].szDefaultPath, -1, szDefaultPath, MAX_PATH);
 
+	/* Special case for some values that don't exist in registry */
+	if (CSIDL_Data[folder].hRootKey == (HKEY)2)
+	{
+	    GetWindowsDirectoryW(pszPath, MAX_PATH);
+	    PathAddBackslashW(pszPath);
+	    strcatW(pszPath, szDefaultPath);
+	    return S_OK;
+	}
+        
 	if (dwCsidlFlags & CSIDL_MYFLAG_SHFOLDER)
 	{
 	  /*   user shell folders */
