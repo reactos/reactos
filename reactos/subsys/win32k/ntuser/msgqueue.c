@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.80 2004/03/31 19:44:34 weiden Exp $
+/* $Id: msgqueue.c,v 1.81 2004/04/07 21:12:08 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -906,6 +906,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   LRESULT Result;
   PUSER_MESSAGE_QUEUE ThreadQueue;
   LARGE_INTEGER Timeout;
+  PLIST_ENTRY Entry;
 
   KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
 
@@ -944,7 +945,21 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
         WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
                                               UserMode, FALSE, (uTimeout ? &Timeout : NULL), NULL);
         if(WaitStatus == STATUS_TIMEOUT)
-          {DbgPrint("MsqSendMessage timed out\n");
+          {
+            IntLockMessageQueue(MessageQueue);
+            Entry = MessageQueue->SentMessagesListHead.Flink;
+            while (Entry != &MessageQueue->SentMessagesListHead)
+              {
+                if ((PUSER_SENT_MESSAGE) CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry)
+                    == Message)
+                  {
+                    Message->CompletionEvent = NULL;
+                    break;
+                  }
+                Entry = Entry->Flink;
+              }
+            IntUnLockMessageQueue(MessageQueue);
+            DbgPrint("MsqSendMessage timed out\n");
             break;
           }
         while (MsqDispatchOneSentMessage(ThreadQueue))
@@ -1066,7 +1081,7 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
   InitializeListHead(&MessageQueue->PostedMessagesListHead);
   InitializeListHead(&MessageQueue->SentMessagesListHead);
   InitializeListHead(&MessageQueue->HardwareMessagesListHead);
-  ExInitializeFastMutex(&MessageQueue->HardwareLock);
+  KeInitializeMutex(&MessageQueue->HardwareLock, 0);
   ExInitializeFastMutex(&MessageQueue->Lock);
   MessageQueue->QuitPosted = FALSE;
   MessageQueue->QuitExitCode = 0;

@@ -50,7 +50,7 @@ typedef struct _USER_MESSAGE_QUEUE
   /* Queue for hardware messages for the queue. */
   LIST_ENTRY HardwareMessagesListHead;
   /* Lock for the hardware message list. */
-  FAST_MUTEX HardwareLock;
+  KMUTEX HardwareLock;
   /* Lock for the queue. */
   FAST_MUTEX Lock;
   /* Pointer to the current WM_MOUSEMOVE message */
@@ -189,10 +189,10 @@ LPARAM FASTCALL MsqGetMessageExtraInfo(VOID);
   ExReleaseFastMutex(&MsgQueue->Lock)
 
 #define IntLockHardwareMessageQueue(MsgQueue) \
-  ExAcquireFastMutex(&MsgQueue->HardwareLock)
+  KeWaitForMutexObject(&MsgQueue->HardwareLock, UserRequest, KernelMode, FALSE, NULL)
 
 #define IntUnLockHardwareMessageQueue(MsgQueue) \
-  ExReleaseFastMutex(&MsgQueue->HardwareLock)
+  KeReleaseMutex(&MsgQueue->HardwareLock, FALSE)
 
 /* check the queue status */
 #define MsqIsSignaled(MsgQueue) \
