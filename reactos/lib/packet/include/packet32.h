@@ -33,6 +33,7 @@
 #ifndef __PACKET32
 #define __PACKET32
 
+#include <stddef.h>
 #include <winsock2.h>
 
 // Working modes
