@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.4 2004/03/16 11:34:51 ekohl Exp $
+/* $Id: registry.c,v 1.5 2004/08/15 19:02:40 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -7,11 +7,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#include <ntos.h>
-#include <windows.h>
-#include <string.h>
-
-#include "internal.h"
+#include "precomp.h"
 
 
 /* FUNCTIONS ***************************************************************/

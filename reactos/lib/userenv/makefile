@@ -4,6 +4,8 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = userenv
 
+TARGET_PCH = precomp.h
+
 TARGET_BASE = $(TARGET_BASE_LIB_USERENV)
 
 TARGET_CFLAGS = -fno-builtin -D__USE_W32API -D_WIN32_IE=0x0400

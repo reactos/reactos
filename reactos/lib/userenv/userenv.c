@@ -1,4 +1,4 @@
-/* $Id: userenv.c,v 1.2 2004/03/13 20:49:07 ekohl Exp $ 
+/* $Id: userenv.c,v 1.3 2004/08/15 19:02:40 chorns Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -7,11 +7,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#include <ntos.h>
-#include <windows.h>
-#include <userenv.h>
-
-#include "internal.h"
+#include "precomp.h"
 
 
 BOOL WINAPI

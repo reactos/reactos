@@ -1,4 +1,4 @@
-/* $Id: setup.c,v 1.5 2004/06/24 14:48:33 ekohl Exp $ 
+/* $Id: setup.c,v 1.6 2004/08/15 19:02:40 chorns Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -7,15 +7,8 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#include <ntos.h>
-#include <windows.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
+#include "precomp.h"
 
-#include <userenv.h>
-
-#include "internal.h"
 
 typedef struct _DIRDATA
 {

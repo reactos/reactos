@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.11 2004/05/03 12:05:44 ekohl Exp $
+/* $Id: profile.c,v 1.12 2004/08/15 19:02:40 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -7,13 +7,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#include <ntos.h>
-#include <windows.h>
-#include <string.h>
-
-#include <userenv.h>
-
-#include "internal.h"
+#include "precomp.h"
 
 
 /* FUNCTIONS ***************************************************************/

@@ -1,4 +1,4 @@
-/* $Id: environment.c,v 1.5 2004/06/29 12:06:01 ekohl Exp $
+/* $Id: environment.c,v 1.6 2004/08/15 19:02:40 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -7,12 +7,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <windows.h>
-#include <userenv.h>
-
-#include "internal.h"
+#include "precomp.h"
 
 
 static BOOL
