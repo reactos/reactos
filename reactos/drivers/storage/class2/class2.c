@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.49 2004/02/29 11:21:58 hbirr Exp $
+/* $Id: class2.c,v 1.50 2004/03/07 19:53:08 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -2134,6 +2134,10 @@ ScsiClassSplitRequest(IN PDEVICE_OBJECT DeviceObject,
   /* Initialize transfer data for first request */
   Offset = CurrentStack->Parameters.Read.ByteOffset;
   TransferLength = CurrentStack->Parameters.Read.Length;
+
+  /* Set the result length */
+  Irp->IoStatus.Information = TransferLength;
+
   DataLength = MaximumBytes;
   RequestCount = ROUND_UP(TransferLength, MaximumBytes) / MaximumBytes;
 
