@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: polyfill.c,v 1.10 2003/08/16 21:17:20 royce Exp $
+/* $Id: polyfill.c,v 1.11 2003/08/17 17:32:58 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -37,7 +37,7 @@
 #include <include/object.h>
 #include <include/paint.h>
 
-#define NDEBUG
+#undef NDEBUG
 #include <win32k/debug1.h>
 
 INT abs(INT nm);
@@ -146,9 +146,9 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
     rc->ToY = From.y;
     rc->YDirection = -1;
 
-	// lines that go up get walked backwards, so need to be offset
-	// by -1 in order to make the walk identically on a pixel-level
-	rc->Error = -1;
+    // lines that go up get walked backwards, so need to be offset
+    // by -1 in order to make the walk identically on a pixel-level
+    rc->Error = -1;
   }
   else
   {
@@ -158,7 +158,7 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
     rc->ToY = To.y;
     rc->YDirection = 1;
 
-	rc->Error = 0;
+    rc->Error = 0;
   }
 
   rc->x = rc->FromX;
@@ -178,25 +178,8 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
 
   rc->pNext = 0;
 
-  rc->XIntercept[0] = rc->x;
-  rc->XIntercept[1] = rc->x;
-
-  if ( rc->xmajor && rc->absdy )
-  {
-    int x1 = rc->x;
-    int steps = (rc->ErrorMax-rc->Error-1) / rc->absdy;
-    if ( steps )
-    {
-      rc->x += steps * rc->XDirection;
-      rc->Error += steps * rc->absdy;
-      ASSERT ( rc->Error < rc->ErrorMax );
-      rc->XIntercept[0] = MIN(x1,rc->x);
-      rc->XIntercept[1] = MAX(x1,rc->x);
-    }
-  }
-
-  DPRINT("MakeEdge (%i,%i)->(%i,%i) d=(%i,%i) dir=(%i,%i) err=%i max=%i\n",
-    From.x, From.y, To.x, To.y, rc->dx, rc->dy, rc->XDirection, rc->YDirection, rc->Error, rc->ErrorMax );
+  //DPRINT("MakeEdge (%i,%i)->(%i,%i) d=(%i,%i) dir=(%i,%i) err=%i max=%i\n",
+  //  From.x, From.y, To.x, To.y, rc->dx, rc->dy, rc->XDirection, rc->YDirection, rc->Error, rc->ErrorMax );
 
   return rc;
 }
@@ -334,20 +317,11 @@ POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
   if ( 0 == pEdge->dy )
     return;
 
-  ASSERT ( pEdge->FromY < Scanline && pEdge->ToY >= Scanline );
+  ASSERT ( pEdge->FromY <= Scanline && pEdge->ToY >= Scanline );
 
   if ( pEdge->xmajor )
   {
     int steps;
-    // we should require exactly 1 step to step onto current scanline...
-    ASSERT ( (pEdge->ErrorMax-pEdge->Error-1) / pEdge->absdy == 0 );
-    pEdge->x += pEdge->XDirection;
-    pEdge->Error += pEdge->absdy;
-    ASSERT ( pEdge->Error >= pEdge->ErrorMax );
-
-    // now step onto current scanline...
-    pEdge->Error -= pEdge->absdx;
-    pEdge->y++;
 
     ASSERT ( pEdge->y == Scanline );
 
@@ -368,9 +342,22 @@ POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
       pEdge->XIntercept[0] = pEdge->x;
       pEdge->XIntercept[1] = pEdge->x;
     }
+
+    // we should require exactly 1 step to step onto next scanline...
+    ASSERT ( (pEdge->ErrorMax-pEdge->Error-1) / pEdge->absdy == 0 );
+    pEdge->x += pEdge->XDirection;
+    pEdge->Error += pEdge->absdy;
+    ASSERT ( pEdge->Error >= pEdge->ErrorMax );
+
+    // now step onto next scanline...
+    pEdge->Error -= pEdge->absdx;
+    pEdge->y++;
   }
   else // then this is a y-major line
   {
+    pEdge->XIntercept[0] = pEdge->x;
+    pEdge->XIntercept[1] = pEdge->x;
+
     pEdge->Error += pEdge->absdx;
     pEdge->y++;
 
@@ -380,13 +367,10 @@ POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
       pEdge->x += pEdge->XDirection;
       ASSERT ( pEdge->Error < pEdge->ErrorMax );
     }
-
-    pEdge->XIntercept[0] = pEdge->x;
-    pEdge->XIntercept[1] = pEdge->x;
   }
 
-  DPRINT("Line (%d, %d) to (%d, %d) intersects scanline %d at (%d,%d)\n",
-          pEdge->FromX, pEdge->FromY, pEdge->ToX, pEdge->ToY, Scanline, pEdge->XIntercept[0], pEdge->XIntercept[1] );
+  //DPRINT("Line (%d, %d) to (%d, %d) intersects scanline %d at (%d,%d)\n",
+  //        pEdge->FromX, pEdge->FromY, pEdge->ToX, pEdge->ToY, Scanline, pEdge->XIntercept[0], pEdge->XIntercept[1] );
 }
 
 /*
@@ -405,7 +389,7 @@ POLYGONFILL_BuildActiveList ( int Scanline, FILL_EDGE_LIST* list, FILL_EDGE** Ac
   {
     FILL_EDGE* pEdge = list->Edges[i];
     ASSERT(pEdge);
-    if ( pEdge->FromY < Scanline && pEdge->ToY >= Scanline )
+    if ( pEdge->FromY <= Scanline && pEdge->ToY >= Scanline )
     {
       POLYGONFILL_UpdateScanline ( pEdge, Scanline );
       POLYGONFILL_ActiveListInsert ( ActiveHead, pEdge );
@@ -439,8 +423,8 @@ POLYGONFILL_FillScanLineAlternate(
 
   while ( NULL != pRight )
   {
-    int x1 = pLeft->XIntercept[1]+1;
-    int x2 = pRight->XIntercept[0];
+    int x1 = pLeft->XIntercept[0];
+    int x2 = pRight->XIntercept[1];
     if ( x2 > x1 )
     {
       RECTL BoundRect;
@@ -449,7 +433,7 @@ POLYGONFILL_FillScanLineAlternate(
       BoundRect.left = x1;
       BoundRect.right = x2;
 
-      DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
+      //DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
       IntEngLineTo( SurfObj,
 			  dc->CombinedClip,
 			  BrushObj,
@@ -477,43 +461,84 @@ POLYGONFILL_FillScanLineWinding(
   MIX RopMode )
 {
   FILL_EDGE *pLeft, *pRight;
-  int winding = 0;
+  int x1, x2, winding = 0;
+  RECTL BoundRect;
 
   if ( !ActiveHead )
     return;
+
+  BoundRect.top = ScanLine;
+  BoundRect.bottom = ScanLine + 1;
 
   pLeft = ActiveHead;
   winding = pLeft->YDirection;
   pRight = pLeft->pNext;
   ASSERT(pRight);
 
+  // setup first line...
+  x1 = pLeft->XIntercept[0];
+  x2 = pRight->XIntercept[1];
+
+  pLeft = pRight;
+  pRight = pLeft->pNext;
+  winding += pLeft->YDirection;
+
   while ( NULL != pRight )
   {
-    int x1 = pLeft->XIntercept[1]+1;
-    int x2 = pRight->XIntercept[0];
-    if ( winding && x2 > x1 )
+    int newx1 = pLeft->XIntercept[0];
+    int newx2 = pRight->XIntercept[1];
+    if ( winding )
     {
-      RECTL BoundRect;
-      BoundRect.top = ScanLine;
-      BoundRect.bottom = ScanLine + 1;
-      BoundRect.left = x1;
-      BoundRect.right = x2;
+      // check and see if this new line touches the previous...
+      if ( (newx1 >= x1 && newx1 <= x2)
+	|| (newx2 >= x1 && newx2 <= x2)
+	|| (x1 >= newx1 && x1 <= newx2)
+	|| (x2 >= newx2 && x2 <= newx2)
+	)
+      {
+	// yup, just tack it on to our existing line
+	x1 = MIN(x1,newx1);
+	x2 = MAX(x2,newx2);
+      }
+      else
+      {
+	// nope - render the old line..
+	BoundRect.left = x1;
+	BoundRect.right = x2;
 
-      DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
-      IntEngLineTo( SurfObj,
-			  dc->CombinedClip,
-			  BrushObj,
-			  x1,
-			  ScanLine,
-			  x2,
-			  ScanLine,
-			  &BoundRect, // Bounding rectangle
-			  RopMode); // MIX
+	//DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
+	IntEngLineTo( SurfObj,
+		      dc->CombinedClip,
+		      BrushObj,
+		      x1,
+		      ScanLine,
+		      x2,
+		      ScanLine,
+		      &BoundRect, // Bounding rectangle
+		      RopMode); // MIX
+
+	x1 = newx1;
+	x2 = newx2;
+      }
     }
     pLeft = pRight;
     pRight = pLeft->pNext;
     winding += pLeft->YDirection;
   }
+  // there will always be a line left-over, render it now...
+  BoundRect.left = x1;
+  BoundRect.right = x2;
+
+  //DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
+  IntEngLineTo( SurfObj,
+		dc->CombinedClip,
+		BrushObj,
+		x1,
+		ScanLine,
+		x2,
+		ScanLine,
+		&BoundRect, // Bounding rectangle
+		RopMode); // MIX
 }
 
 //When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and 
@@ -550,7 +575,7 @@ FillPolygon(
     PBRUSHOBJ BrushObj,
     MIX RopMode );
 
-  DPRINT("FillPolygon\n");
+  //DPRINT("FillPolygon\n");
 
   /* Create Edge List. */
   list = POLYGONFILL_MakeEdgeList(Points, Count);
@@ -566,7 +591,7 @@ FillPolygon(
   /* For each Scanline from BoundRect.bottom to BoundRect.top, 
    * determine line segments to draw
    */
-  for ( ScanLine = BoundRect.top + 1; ScanLine < BoundRect.bottom; ++ScanLine )
+  for ( ScanLine = BoundRect.top; ScanLine < BoundRect.bottom; ++ScanLine )
   {
     POLYGONFILL_BuildActiveList(ScanLine, list, &ActiveHead);
     //DEBUG_PRINT_ACTIVE_EDGELIST(ActiveHead);

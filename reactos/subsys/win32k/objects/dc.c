@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.69 2003/08/17 03:32:59 royce Exp $
+/* $Id: dc.c,v 1.70 2003/08/17 17:32:58 royce Exp $
  *
  * DC.C - Device context functions
  *
@@ -74,16 +74,22 @@ func_type STDCALL  func_name( HDC hdc ) \
  * important that the function has the right signature, for the implementation
  * we can do whatever we want.
  */
-#define DC_GET_VAL_EX( func_name, ret_x, ret_y, type ) \
-BOOL STDCALL  func_name( HDC hdc, LP##type pt ) \
-{                                  \
-  PDC dc = DC_HandleToPtr ( hdc ); \
-  if (!dc)                         \
-    return FALSE;                  \
-  ((LPPOINT)pt)->x = dc->ret_x;    \
-  ((LPPOINT)pt)->y = dc->ret_y;    \
-  DC_ReleasePtr ( hdc );           \
-  return TRUE;                     \
+#define DC_GET_VAL_EX( W32kFuncName, IntFuncName, ret_x, ret_y, type ) \
+VOID FASTCALL IntFuncName ( PDC dc, LP##type pt )  \
+{                                                  \
+  ASSERT ( dc );                                   \
+  ASSERT ( pt );                                   \
+  ((LPPOINT)pt)->x = dc->ret_x;                    \
+  ((LPPOINT)pt)->y = dc->ret_y;                    \
+}                                                  \
+BOOL STDCALL W32kFuncName ( HDC hdc, LP##type pt ) \
+{                                                  \
+  PDC dc = DC_HandleToPtr ( hdc );                 \
+  if ( !dc )                                       \
+    return FALSE;                                  \
+  IntFuncName ( dc, pt );                          \
+  DC_ReleasePtr ( hdc );                           \
+  return TRUE;                                     \
 }
 
 #define DC_SET_MODE( func_name, dc_field, min_val, max_val ) \
@@ -601,7 +607,7 @@ W32kEnumObjects(HDC  hDC,
 
 DC_GET_VAL( COLORREF, W32kGetBkColor, w.backgroundColor )
 DC_GET_VAL( INT, W32kGetBkMode, w.backgroundMode )
-DC_GET_VAL_EX( W32kGetBrushOrgEx, w.brushOrgX, w.brushOrgY, POINT )
+DC_GET_VAL_EX( W32kGetBrushOrgEx, IntGetBrushOrgEx, w.brushOrgX, w.brushOrgY, POINT )
 DC_GET_VAL( HRGN, W32kGetClipRgn, w.hClipRgn )
 
 HGDIOBJ STDCALL
@@ -610,7 +616,7 @@ W32kGetCurrentObject(HDC  hDC, UINT  ObjectType)
   UNIMPLEMENTED;
 }
 
-DC_GET_VAL_EX( W32kGetCurrentPositionEx, w.CursPosX, w.CursPosY, POINT )
+DC_GET_VAL_EX ( W32kGetCurrentPositionEx, IntGetCurrentPositionEx, w.CursPosX, w.CursPosY, POINT )
 
 BOOL STDCALL
 W32kGetDCOrgEx(HDC  hDC, LPPOINT  Point)
@@ -1111,10 +1117,10 @@ DC_GET_VAL( INT, W32kGetROP2, w.ROPmode )
 DC_GET_VAL( INT, W32kGetStretchBltMode, w.stretchBltMode )
 DC_GET_VAL( UINT, W32kGetTextAlign, w.textAlign )
 DC_GET_VAL( COLORREF, W32kGetTextColor, w.textColor )
-DC_GET_VAL_EX( W32kGetViewportExtEx, vportExtX, vportExtY, SIZE )
-DC_GET_VAL_EX( W32kGetViewportOrgEx, vportOrgX, vportOrgY, POINT )
-DC_GET_VAL_EX( W32kGetWindowExtEx, wndExtX, wndExtY, SIZE )
-DC_GET_VAL_EX( W32kGetWindowOrgEx, wndOrgX, wndOrgY, POINT )
+DC_GET_VAL_EX( W32kGetViewportExtEx, IntGetViewportExtEx, vportExtX, vportExtY, SIZE )
+DC_GET_VAL_EX( W32kGetViewportOrgEx, IntGetViewportOrgEx, vportOrgX, vportOrgY, POINT )
+DC_GET_VAL_EX( W32kGetWindowExtEx, IntGetWindowExtEx, wndExtX, wndExtY, SIZE )
+DC_GET_VAL_EX( W32kGetWindowOrgEx, IntGetWindowOrgEx, wndOrgX, wndOrgY, POINT )
 
 HDC STDCALL
 W32kResetDC(HDC  hDC, CONST DEVMODEW *InitData)
@@ -1216,10 +1222,11 @@ W32kSaveDC(HDC  hDC)
   return  ret;
 }
 
-HGDIOBJ STDCALL
+HGDIOBJ
+STDCALL
 W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 {
-  HGDIOBJ   objOrg;
+  HGDIOBJ objOrg = NULL; // default to failure
   BITMAPOBJ *pb;
   PDC dc;
   PPENOBJ pen;
@@ -1234,12 +1241,14 @@ W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   if(!hDC || !hGDIObj) return NULL;
 
   dc = DC_HandleToPtr(hDC);
+  ASSERT ( dc );
+
   objectMagic = GDIOBJ_GetHandleMagic (hGDIObj);
 //  GdiObjHdr = hGDIObj;
 
   // FIXME: Get object handle from GDIObj and use it instead of GDIObj below?
 
-  switch(objectMagic)
+  switch ( objectMagic )
   {
     case GO_PEN_MAGIC:
       objOrg = (HGDIOBJ)dc->w.hPen;
@@ -1247,15 +1256,16 @@ W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 
       // Convert the color of the pen to the format of the DC
       PalGDI = (PPALGDI)AccessInternalObject((ULONG) dc->w.hPalette);
-      if( PalGDI )
+      if ( PalGDI )
       {
 	XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
+	ASSERT ( XlateObj );
 	pen = GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
 	if( pen )
 	{
 	  pen->logpen.lopnColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
+	  GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
 	}
-	GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
 	EngDeleteXlate(XlateObj);
       }
       break;
@@ -1269,6 +1279,7 @@ W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       if( PalGDI )
       {
 	XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
+	ASSERT(XlateObj);
 	brush = GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
 	if( brush )
 	{
@@ -1295,6 +1306,7 @@ W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       BITMAPOBJ_ReleasePtr(objOrg);
       dc->w.hBitmap = hGDIObj;
       pb = BITMAPOBJ_HandleToPtr(hGDIObj);
+      ASSERT(pb);
       dc->Surface = BitmapToSurf(pb);
 
       // if we're working with a DIB, get the palette [fixme: only create if the selected palette is null]
@@ -1309,31 +1321,34 @@ W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
           if(pb->dib->dsBmih.biBitCount == 8) { NumColors = 256; }
 
           ColorMap = ExAllocatePool(PagedPool, sizeof(COLORREF) * NumColors);
+          ASSERT(ColorMap);
           for (Index = 0; Index < NumColors; Index++)
-            {
+          {
             ColorMap[Index] = RGB(pb->ColorMap[Index].rgbRed,
                                   pb->ColorMap[Index].rgbGreen,
                                   pb->ColorMap[Index].rgbBlue);
           }
           dc->w.hPalette = EngCreatePalette(PAL_INDEXED, NumColors, (ULONG *) ColorMap, 0, 0, 0);
           ExFreePool(ColorMap);
-        } else
-        if(16 == pb->dib->dsBmih.biBitCount)
+        }
+        else if ( 16 == pb->dib->dsBmih.biBitCount )
         {
           dc->w.hPalette = EngCreatePalette(PAL_BITFIELDS, pb->dib->dsBmih.biClrUsed, NULL, 0x7c00, 0x03e0, 0x001f);
-        } else
-        if(pb->dib->dsBmih.biBitCount >= 24)
+        }
+        else if(pb->dib->dsBmih.biBitCount >= 24)
         {
           dc->w.hPalette = EngCreatePalette(PAL_RGB, pb->dib->dsBmih.biClrUsed, NULL, 0, 0, 0);
         }
-      } else {
+      }
+      else
+      {
         dc->w.bitsPerPixel = pb->bitmap.bmBitsPixel;
       }
 
       DC_ReleasePtr ( hDC );
-      hVisRgn = W32kCreateRectRgn(0, 0, pb->size.cx, pb->size.cy);
-      W32kSelectVisRgn(hDC, hVisRgn);
-      W32kDeleteObject(hVisRgn);
+      hVisRgn = W32kCreateRectRgn ( 0, 0, pb->size.cx, pb->size.cy );
+      W32kSelectVisRgn ( hDC, hVisRgn );
+      W32kDeleteObject ( hVisRgn );
 
       return objOrg;
 
@@ -1344,8 +1359,7 @@ W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       return NULL;
 #endif
     default:
-      DC_ReleasePtr ( hDC );
-      return NULL;
+      break;
   }
   DC_ReleasePtr( hDC );
   return objOrg;
@@ -1360,132 +1374,126 @@ DC_SET_MODE( W32kSetStretchBltMode, w.stretchBltMode, BLACKONWHITE, HALFTONE )
 COLORREF STDCALL
 W32kSetBkColor(HDC hDC, COLORREF color)
 {
-  COLORREF  oldColor;
+  COLORREF oldColor;
   PDC  dc = DC_HandleToPtr(hDC);
 
-  if (!dc)
-  {
+  if ( !dc )
     return 0x80000000;
-  }
 
   oldColor = dc->w.backgroundColor;
   dc->w.backgroundColor = color;
-  DC_ReleasePtr( hDC );
-  return  oldColor;
+  DC_ReleasePtr ( hDC );
+  return oldColor;
 }
 
-STATIC VOID FASTCALL
-W32kSetDCState16(HDC  hDC, HDC  hDCSave)
+STATIC
+VOID
+FASTCALL
+W32kSetDCState16 ( HDC hDC, HDC hDCSave )
 {
   PDC  dc, dcs;
 
-  dc = DC_HandleToPtr(hDC);
-  if (dc == NULL)
+  dc = DC_HandleToPtr ( hDC );
+  if ( dc )
   {
-    return;
-  }
-
-  dcs = DC_HandleToPtr(hDCSave);
-  if (dcs == NULL)
-  {
-	DC_ReleasePtr( hDC );
-    return;
-  }
-  if (!dcs->w.flags & DC_SAVED)
-  {
-    return;
-  }
-
-  dc->w.flags            = dcs->w.flags & ~DC_SAVED;
-
-  dc->w.hFirstBitmap     = dcs->w.hFirstBitmap;
-
-#if 0
-  dc->w.hDevice          = dcs->w.hDevice;
-#endif
-
-  dc->w.totalExtent      = dcs->w.totalExtent;
-  dc->w.ROPmode          = dcs->w.ROPmode;
-  dc->w.polyFillMode     = dcs->w.polyFillMode;
-  dc->w.stretchBltMode   = dcs->w.stretchBltMode;
-  dc->w.relAbsMode       = dcs->w.relAbsMode;
-  dc->w.backgroundMode   = dcs->w.backgroundMode;
-  dc->w.backgroundColor  = dcs->w.backgroundColor;
-  dc->w.textColor        = dcs->w.textColor;
-  dc->w.brushOrgX        = dcs->w.brushOrgX;
-  dc->w.brushOrgY        = dcs->w.brushOrgY;
-  dc->w.textAlign        = dcs->w.textAlign;
-  dc->w.charExtra        = dcs->w.charExtra;
-  dc->w.breakTotalExtra  = dcs->w.breakTotalExtra;
-  dc->w.breakCount       = dcs->w.breakCount;
-  dc->w.breakExtra       = dcs->w.breakExtra;
-  dc->w.breakRem         = dcs->w.breakRem;
-  dc->w.MapMode          = dcs->w.MapMode;
-  dc->w.GraphicsMode     = dcs->w.GraphicsMode;
-#if 0
-  /* Apparently, the DC origin is not changed by [GS]etDCState */
-  dc->w.DCOrgX           = dcs->w.DCOrgX;
-  dc->w.DCOrgY           = dcs->w.DCOrgY;
-#endif
-  dc->w.CursPosX         = dcs->w.CursPosX;
-  dc->w.CursPosY         = dcs->w.CursPosY;
-  dc->w.ArcDirection     = dcs->w.ArcDirection;
-
-#if 0
-  dc->w.xformWorld2Wnd   = dcs->w.xformWorld2Wnd;
-  dc->w.xformWorld2Vport = dcs->w.xformWorld2Vport;
-  dc->w.xformVport2World = dcs->w.xformVport2World;
-  dc->w.vport2WorldValid = dcs->w.vport2WorldValid;
-#endif
-
-  dc->wndOrgX            = dcs->wndOrgX;
-  dc->wndOrgY            = dcs->wndOrgY;
-  dc->wndExtX            = dcs->wndExtX;
-  dc->wndExtY            = dcs->wndExtY;
-  dc->vportOrgX          = dcs->vportOrgX;
-  dc->vportOrgY          = dcs->vportOrgY;
-  dc->vportExtX          = dcs->vportExtX;
-  dc->vportExtY          = dcs->vportExtY;
-
-  if (!(dc->w.flags & DC_MEMORY))
-  {
-    dc->w.bitsPerPixel = dcs->w.bitsPerPixel;
-  }
-
-#if 0
-  if (dcs->w.hClipRgn)
-  {
-    if (!dc->w.hClipRgn)
+    dcs = DC_HandleToPtr ( hDCSave );
+    if ( dcs )
     {
-      dc->w.hClipRgn = W32kCreateRectRgn( 0, 0, 0, 0 );
-    }
-    W32kCombineRgn( dc->w.hClipRgn, dcs->w.hClipRgn, 0, RGN_COPY );
-  }
-  else
-  {
-    if (dc->w.hClipRgn)
-    {
-      W32kDeleteObject( dc->w.hClipRgn );
-    }
+      if ( dcs->w.flags & DC_SAVED )
+      {
+	dc->w.flags            = dcs->w.flags & ~DC_SAVED;
 
-    dc->w.hClipRgn = 0;
-  }
-  CLIPPING_UpdateGCRegion( dc );
-#endif
-
-  W32kSelectObject( hDC, dcs->w.hBitmap );
-  W32kSelectObject( hDC, dcs->w.hBrush );
-  W32kSelectObject( hDC, dcs->w.hFont );
-  W32kSelectObject( hDC, dcs->w.hPen );
-  W32kSetBkColor( hDC, dcs->w.backgroundColor);
-  W32kSetTextColor( hDC, dcs->w.textColor);
+	dc->w.hFirstBitmap     = dcs->w.hFirstBitmap;
 
 #if 0
-  GDISelectPalette16( hDC, dcs->w.hPalette, FALSE );
+	dc->w.hDevice          = dcs->w.hDevice;
 #endif
 
-  DC_ReleasePtr( hDCSave );
-  DC_ReleasePtr( hDC );
+	dc->w.totalExtent      = dcs->w.totalExtent;
+	dc->w.ROPmode          = dcs->w.ROPmode;
+	dc->w.polyFillMode     = dcs->w.polyFillMode;
+	dc->w.stretchBltMode   = dcs->w.stretchBltMode;
+	dc->w.relAbsMode       = dcs->w.relAbsMode;
+	dc->w.backgroundMode   = dcs->w.backgroundMode;
+	dc->w.backgroundColor  = dcs->w.backgroundColor;
+	dc->w.textColor        = dcs->w.textColor;
+	dc->w.brushOrgX        = dcs->w.brushOrgX;
+	dc->w.brushOrgY        = dcs->w.brushOrgY;
+	dc->w.textAlign        = dcs->w.textAlign;
+	dc->w.charExtra        = dcs->w.charExtra;
+	dc->w.breakTotalExtra  = dcs->w.breakTotalExtra;
+	dc->w.breakCount       = dcs->w.breakCount;
+	dc->w.breakExtra       = dcs->w.breakExtra;
+	dc->w.breakRem         = dcs->w.breakRem;
+	dc->w.MapMode          = dcs->w.MapMode;
+	dc->w.GraphicsMode     = dcs->w.GraphicsMode;
+#if 0
+	/* Apparently, the DC origin is not changed by [GS]etDCState */
+	dc->w.DCOrgX           = dcs->w.DCOrgX;
+	dc->w.DCOrgY           = dcs->w.DCOrgY;
+#endif
+	dc->w.CursPosX         = dcs->w.CursPosX;
+	dc->w.CursPosY         = dcs->w.CursPosY;
+	dc->w.ArcDirection     = dcs->w.ArcDirection;
+
+#if 0
+	dc->w.xformWorld2Wnd   = dcs->w.xformWorld2Wnd;
+	dc->w.xformWorld2Vport = dcs->w.xformWorld2Vport;
+	dc->w.xformVport2World = dcs->w.xformVport2World;
+	dc->w.vport2WorldValid = dcs->w.vport2WorldValid;
+#endif
+
+	dc->wndOrgX            = dcs->wndOrgX;
+	dc->wndOrgY            = dcs->wndOrgY;
+	dc->wndExtX            = dcs->wndExtX;
+	dc->wndExtY            = dcs->wndExtY;
+	dc->vportOrgX          = dcs->vportOrgX;
+	dc->vportOrgY          = dcs->vportOrgY;
+	dc->vportExtX          = dcs->vportExtX;
+	dc->vportExtY          = dcs->vportExtY;
+
+	if (!(dc->w.flags & DC_MEMORY))
+	{
+	  dc->w.bitsPerPixel = dcs->w.bitsPerPixel;
+	}
+
+#if 0
+	if (dcs->w.hClipRgn)
+	{
+	  if (!dc->w.hClipRgn)
+	  {
+	    dc->w.hClipRgn = W32kCreateRectRgn( 0, 0, 0, 0 );
+	  }
+	  W32kCombineRgn( dc->w.hClipRgn, dcs->w.hClipRgn, 0, RGN_COPY );
+	}
+	else
+	{
+	  if (dc->w.hClipRgn)
+	  {
+	    W32kDeleteObject( dc->w.hClipRgn );
+	  }
+
+	  dc->w.hClipRgn = 0;
+	}
+	CLIPPING_UpdateGCRegion( dc );
+#endif
+
+	W32kSelectObject( hDC, dcs->w.hBitmap );
+	W32kSelectObject( hDC, dcs->w.hBrush );
+	W32kSelectObject( hDC, dcs->w.hFont );
+	W32kSelectObject( hDC, dcs->w.hPen );
+	W32kSetBkColor( hDC, dcs->w.backgroundColor);
+	W32kSetTextColor( hDC, dcs->w.textColor);
+
+#if 0
+	GDISelectPalette16( hDC, dcs->w.hPalette, FALSE );
+#endif
+      }
+
+      DC_ReleasePtr ( hDCSave );
+    }
+    DC_ReleasePtr ( hDC );
+  }
 }
 
 //  ----------------------------------------------------  Private Interface
@@ -1493,38 +1501,38 @@ W32kSetDCState16(HDC  hDC, HDC  hDCSave)
 HDC FASTCALL
 DC_AllocDC(LPCWSTR  Driver)
 {
-  	PDC  NewDC;
-  	HDC  hDC;
+  PDC  NewDC;
+  HDC  hDC;
 
-  	hDC = (HDC) GDIOBJ_AllocObj(sizeof(DC), GO_DC_MAGIC);
-  	if (hDC == NULL)
-  	{
-  	  return  NULL;
-  	}
+  hDC = (HDC) GDIOBJ_AllocObj(sizeof(DC), GO_DC_MAGIC);
+  if (hDC == NULL)
+  {
+    return  NULL;
+  }
 
-	NewDC = (PDC) GDIOBJ_LockObj( hDC, GO_DC_MAGIC );
+  NewDC = (PDC) GDIOBJ_LockObj( hDC, GO_DC_MAGIC );
 
-  	if (Driver != NULL)
-  	{
-  	  NewDC->DriverName = ExAllocatePool(PagedPool, (wcslen(Driver) + 1) * sizeof(WCHAR));
-  	  wcscpy(NewDC->DriverName, Driver);
-  	}
+  if (Driver != NULL)
+  {
+    NewDC->DriverName = ExAllocatePool(PagedPool, (wcslen(Driver) + 1) * sizeof(WCHAR));
+    wcscpy(NewDC->DriverName, Driver);
+  }
 
-	NewDC->w.xformWorld2Wnd.eM11 = 1.0f;
-	NewDC->w.xformWorld2Wnd.eM12 = 0.0f;
-	NewDC->w.xformWorld2Wnd.eM21 = 0.0f;
-	NewDC->w.xformWorld2Wnd.eM22 = 1.0f;
-	NewDC->w.xformWorld2Wnd.eDx = 0.0f;
-	NewDC->w.xformWorld2Wnd.eDy = 0.0f;
-	NewDC->w.xformWorld2Vport = NewDC->w.xformWorld2Wnd;
-	NewDC->w.xformVport2World = NewDC->w.xformWorld2Wnd;
-	NewDC->w.vport2WorldValid = TRUE;
+  NewDC->w.xformWorld2Wnd.eM11 = 1.0f;
+  NewDC->w.xformWorld2Wnd.eM12 = 0.0f;
+  NewDC->w.xformWorld2Wnd.eM21 = 0.0f;
+  NewDC->w.xformWorld2Wnd.eM22 = 1.0f;
+  NewDC->w.xformWorld2Wnd.eDx = 0.0f;
+  NewDC->w.xformWorld2Wnd.eDy = 0.0f;
+  NewDC->w.xformWorld2Vport = NewDC->w.xformWorld2Wnd;
+  NewDC->w.xformVport2World = NewDC->w.xformWorld2Wnd;
+  NewDC->w.vport2WorldValid = TRUE;
 
-	NewDC->w.hFont = W32kGetStockObject(SYSTEM_FONT);
-	TextIntRealizeFont(NewDC->w.hFont);
+  NewDC->w.hFont = W32kGetStockObject(SYSTEM_FONT);
+  TextIntRealizeFont(NewDC->w.hFont);
 
-	GDIOBJ_UnlockObj( hDC, GO_DC_MAGIC );
-  	return  hDC;
+  GDIOBJ_UnlockObj( hDC, GO_DC_MAGIC );
+  return  hDC;
 }
 
 HDC FASTCALL

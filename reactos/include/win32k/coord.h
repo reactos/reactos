@@ -1,6 +1,8 @@
 #ifndef __WIN32K_COORD_H
 #define __WIN32K_COORD_H
 
+#include "dc.h"
+
 BOOL
 STDCALL
 W32kCombineTransform (
@@ -15,17 +17,30 @@ W32kDPtoLP (
 	LPPOINT	Points,
 	int	Count
 	);
+
+int
+FASTCALL
+IntGetGraphicsMode ( PDC dc );
+
 int
 STDCALL
-W32kGetGraphicsMode (
-	HDC	hDC
-	);
+W32kGetGraphicsMode ( HDC hDC );
+
 BOOL
 STDCALL
 W32kGetWorldTransform (
 	HDC	hDC,
 	LPXFORM	Xform
 	);
+
+VOID
+FASTCALL
+CoordLPtoDP ( PDC Dc, LPPOINT Point );
+
+VOID
+FASTCALL
+IntLPtoDP ( PDC dc, LPPOINT Points, INT Count );
+
 BOOL
 STDCALL
 W32kLPtoDP (

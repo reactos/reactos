@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.21 2003/08/13 20:24:04 chorns Exp $
+/* $Id: xlate.c,v 1.22 2003/08/17 17:32:58 royce Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -213,8 +213,8 @@ XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
   UINT     i;
 
   NewXlate = (HPALETTE)CreateGDIHandle(sizeof( XLATEGDI ), sizeof( XLATEOBJ ));
-  if( !ValidEngHandle( NewXlate ) )
-	return NULL;
+  if ( !ValidEngHandle ( NewXlate ) )
+    return NULL;
 
   XlateObj = (XLATEOBJ*) AccessUserObject( (ULONG) NewXlate );
   XlateGDI = (XLATEGDI*) AccessInternalObject( (ULONG) NewXlate );

@@ -35,14 +35,18 @@ W32kArcTo(HDC  hDC,
                 int  YRadial2);
 
 INT
+FASTCALL
+IntGetArcDirection ( PDC dc );
+
+INT
 STDCALL
-W32kGetArcDirection(HDC  hDC);
+W32kGetArcDirection ( HDC hDC );
 
 BOOL
 STDCALL
 W32kLineTo(HDC  hDC,
-                 int  XEnd,
-                 int  YEnd);
+           int  XEnd,
+           int  YEnd );
 
 BOOL
 STDCALL

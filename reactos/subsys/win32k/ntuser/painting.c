@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: painting.c,v 1.27 2003/08/15 02:51:53 silverblade Exp $
+/* $Id: painting.c,v 1.28 2003/08/17 17:32:58 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -458,10 +458,11 @@ PaintRedrawWindow( PWINDOW_OBJECT Window,
 		   ULONG Flags, 
 		   ULONG ExFlags)
 {
-    DbgPrint("[win32k.sys:painting] In PaintRedrawWindow()\n");
   RECT Rect, Rect2;
   POINT Pt;
   HRGN hRgn = NULL;
+
+  DbgPrint("[win32k.sys:painting] In PaintRedrawWindow()\n");
 
   if ((RDW_INVALIDATE | RDW_FRAME) == (Flags & (RDW_INVALIDATE | RDW_FRAME)) ||
       (RDW_VALIDATE | RDW_NOFRAME) == (Flags & (RDW_VALIDATE | RDW_NOFRAME)))

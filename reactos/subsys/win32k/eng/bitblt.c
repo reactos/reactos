@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.25 2003/08/04 19:57:05 royce Exp $
+/* $Id: bitblt.c,v 1.26 2003/08/17 17:32:58 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -43,7 +43,7 @@
 #include <include/copybits.h>
 #include <include/inteng.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <win32k/debug1.h>
 
 typedef BOOLEAN STDCALL (*PBLTRECTFUNC)(PSURFOBJ OutputObj,
@@ -84,17 +84,17 @@ BOOL STDCALL EngIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
 
 static BOOLEAN STDCALL
 BltMask(PSURFOBJ Dest,
-        PSURFGDI DestGDI,
-        PSURFOBJ Source,
-        PSURFGDI SourceGDI,
-        PSURFOBJ Mask, 
-        PXLATEOBJ ColorTranslation,
+	PSURFGDI DestGDI,
+	PSURFOBJ Source,
+	PSURFGDI SourceGDI,
+	PSURFOBJ Mask, 
+	PXLATEOBJ ColorTranslation,
 	PRECTL DestRect,
-        PPOINTL SourcePoint,
-        PPOINTL MaskPoint,
-        PBRUSHOBJ Brush,
+	PPOINTL SourcePoint,
+	PPOINTL MaskPoint,
+	PBRUSHOBJ Brush,
 	PPOINTL BrushPoint,
-        ROP4 Rop4)
+	ROP4 Rop4)
 {
   LONG i, j, dx, dy, c8;
   BYTE *tMask, *lMask;
@@ -135,17 +135,17 @@ BltMask(PSURFOBJ Dest,
 
 static BOOLEAN STDCALL
 BltPatCopy(PSURFOBJ Dest,
-           PSURFGDI DestGDI,
-           PSURFOBJ Source,
-           PSURFGDI SourceGDI,
-           PSURFOBJ Mask, 
-           PXLATEOBJ ColorTranslation,
+	   PSURFGDI DestGDI,
+	   PSURFOBJ Source,
+	   PSURFGDI SourceGDI,
+	   PSURFOBJ Mask, 
+	   PXLATEOBJ ColorTranslation,
 	   PRECTL DestRect,
-           PPOINTL SourcePoint,
-           PPOINTL MaskPoint,
-           PBRUSHOBJ Brush,
+	   PPOINTL SourcePoint,
+	   PPOINTL MaskPoint,
+	   PBRUSHOBJ Brush,
 	   PPOINTL BrushPoint,
-           ROP4 Rop4)
+	   ROP4 Rop4)
 {
   // These functions are assigned if we're working with a DIB
   // The assigned functions depend on the bitsPerPixel of the DIB

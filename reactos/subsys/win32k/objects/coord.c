@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: coord.c,v 1.14 2003/08/13 20:24:05 chorns Exp $
+/* $Id: coord.c,v 1.15 2003/08/17 17:32:58 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -118,21 +118,27 @@ W32kDPtoLP(HDC  hDC,
 }
 
 int
-STDCALL
-W32kGetGraphicsMode(HDC  hDC)
+FASTCALL
+IntGetGraphicsMode ( PDC dc )
 {
-  PDC  dc;
-  int  GraphicsMode;
+  ASSERT ( dc );
+  return dc->w.GraphicsMode;
+}
 
-  dc = DC_HandleToPtr (hDC);
-  if (!dc)
+int
+STDCALL
+W32kGetGraphicsMode ( HDC hDC )
+{
+  PDC dc = DC_HandleToPtr ( hDC );
+  int GraphicsMode = 0; // default to failure
+
+  if ( dc )
   {
-    return  0;
+    GraphicsMode = dc->w.GraphicsMode;
+    DC_ReleasePtr ( hDC );
   }
 
-  GraphicsMode = dc->w.GraphicsMode;
-  DC_ReleasePtr( hDC );
-  return  GraphicsMode;
+  return GraphicsMode;
 }
 
 BOOL
@@ -156,8 +162,9 @@ W32kGetWorldTransform(HDC  hDC,
   return  TRUE;
 }
 
-VOID STATIC
-CoordLPtoDP(PDC Dc, LPPOINT Point)
+VOID
+FASTCALL
+CoordLPtoDP ( PDC Dc, LPPOINT Point )
 {
   FLOAT x, y;
   x = (FLOAT)Point->x;
@@ -166,6 +173,16 @@ CoordLPtoDP(PDC Dc, LPPOINT Point)
     y * Dc->w.xformWorld2Vport.eM21 + Dc->w.xformWorld2Vport.eDx;
   Point->y = x * Dc->w.xformWorld2Vport.eM12 +
     y * Dc->w.xformWorld2Vport.eM22 + Dc->w.xformWorld2Vport.eDy;
+}
+
+VOID
+FASTCALL
+IntLPtoDP ( PDC dc, LPPOINT Points, INT Count )
+{
+  INT i;
+
+  for ( i = 0; i < Count; i++ )
+    CoordLPtoDP ( dc, &Points[i] );
 }
 
 /*!
@@ -177,28 +194,29 @@ CoordLPtoDP(PDC Dc, LPPOINT Point)
  * \return  TRUE 	if success.
 */
 BOOL STDCALL
-W32kLPtoDP(HDC hDC, LPPOINT UnsafePoints, INT Count)
+W32kLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
 {
-  PDC Dc;
-  INT i;
-  LPPOINT Points = (LPPOINT) ExAllocatePool( PagedPool, Count*sizeof(POINT));
+  PDC dc = DC_HandleToPtr ( hDC );
+  LPPOINT Points;
 
-  ASSERT(Points);
+  if ( !dc )
+    return FALSE;
+
+  Points = (LPPOINT)ExAllocatePool ( PagedPool, Count*sizeof(POINT) );
+
+  ASSERT ( Points );
+
   MmCopyFromCaller( Points, UnsafePoints, Count*sizeof(POINT) );
 
-  Dc = DC_HandleToPtr (hDC);
-  if (Dc == NULL)
-    {
-      return(FALSE);
-    }
+  IntLPtoDP ( dc, UnsafePoints, Count );
 
-  for (i = 0; i < Count; i++)
-    {
-      CoordLPtoDP(Dc, &Points[i]);
-    }
-  DC_ReleasePtr( hDC );
-  MmCopyToCaller(  UnsafePoints, Points, Count*sizeof(POINT) );
-  return(TRUE);
+  MmCopyToCaller ( UnsafePoints, Points, Count*sizeof(POINT) );
+
+  ExFreePool ( Points );
+
+  DC_ReleasePtr ( hDC );
+
+  return TRUE;
 }
 
 BOOL

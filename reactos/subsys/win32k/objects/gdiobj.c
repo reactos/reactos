@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.34 2003/08/11 21:10:49 royce Exp $
+ * $Id: gdiobj.c,v 1.35 2003/08/17 17:32:58 royce Exp $
  *
  */
 
@@ -590,12 +590,21 @@ GDIOBJ_LockObjDbg ( const char* file, int line, HGDIOBJ hObj, WORD Magic )
   if ( handleEntry == 0
        || (handleEntry->wMagic != Magic && Magic != GO_MAGIC_DONTCARE )
        || (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF
-           && handleEntry->hProcessId != PsGetCurrentProcessId ()
+	   && handleEntry->hProcessId != PsGetCurrentProcessId ()
 	  )
      )
     {
-      DPRINT1("GDIBOJ_LockObj failed for %d, magic: %d, reqMagic\n",
-		  (WORD)((size_t)hObj&0xffff), handleEntry->wMagic, Magic);
+      int reason = 0;
+      if ( handleEntry == 0 )
+	reason = 1;
+      else if ( handleEntry->wMagic != Magic && Magic != GO_MAGIC_DONTCARE )
+	reason = 2;
+      else if ( handleEntry->hProcessId != (HANDLE)0xFFFFFFFF
+	   && handleEntry->hProcessId != PsGetCurrentProcessId () )
+	reason = 3;
+
+      DPRINT1("GDIOBJ_LockObj failed for %d, magic: %d, reqMagic %d reason %d\n",
+		  (WORD)((size_t)hObj&0xffff), handleEntry->wMagic, Magic, reason );
       DPRINT1("\tcalled from: %s:%i\n", file, line );
       return  NULL;
     }

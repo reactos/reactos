@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objconv.c,v 1.10 2003/08/11 21:10:49 royce Exp $ */
+/* $Id: objconv.c,v 1.11 2003/08/17 17:32:58 royce Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -35,27 +35,43 @@
 #include <include/object.h>
 #include <include/surface.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <win32k/debug1.h>
 
 
-PBRUSHOBJ FASTCALL PenToBrushObj(PDC dc, PENOBJ *pen)
+BRUSHOBJ*
+FASTCALL
+PenToBrushObj ( BRUSHOBJ *brush, PENOBJ *pen )
 {
-  BRUSHOBJ *BrushObj;
-  //XLATEOBJ *RGBtoVGA16;
+  ASSERT ( pen );
+  ASSERT ( brush );
+  memset ( brush, 0, sizeof(BRUSHOBJ) );
+  if ( pen->logpen.lopnStyle == PS_NULL )
+    brush->logbrush.lbStyle = BS_NULL;
+  else
+    brush->iSolidColor = pen->logpen.lopnColor;
+  return brush;
+}
 
-  ASSERT( pen );
-
-  BrushObj = ExAllocatePool(NonPagedPool, sizeof(BRUSHOBJ));
-  BrushObj->iSolidColor = pen->logpen.lopnColor;
-
-  return BrushObj;
+BRUSHOBJ*
+FASTCALL
+HPenToBrushObj ( BRUSHOBJ *brush, HPEN hpen )
+{
+  PENOBJ *pen;
+  ASSERT ( hpen );
+  ASSERT ( brush );
+  pen = (PPENOBJ)GDIOBJ_LockObj ( hpen, GO_PEN_MAGIC );
+  ASSERT ( pen );
+  PenToBrushObj ( brush, pen );
+  GDIOBJ_UnlockObj ( hpen, GO_PEN_MAGIC );
+  return brush;
 }
 
 HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj)
 {
   HBITMAP BitmapHandle;
 
+  ASSERT ( BitmapObj );
   if (NULL != BitmapObj->dib)
     {
     BitmapHandle = EngCreateBitmap(BitmapObj->size, BitmapObj->dib->dsBm.bmWidthBytes,

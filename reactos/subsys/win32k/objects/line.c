@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.18 2003/08/11 21:10:49 royce Exp $ */
+/* $Id: line.c,v 1.19 2003/08/17 17:32:58 royce Exp $ */
 
 // Some code from the WINE project source (www.winehq.com)
 
@@ -41,11 +41,11 @@
 BOOL
 STDCALL
 W32kAngleArc(HDC  hDC,
-                   int  X,
-                   int  Y,
-                   DWORD  Radius,
-                   FLOAT  StartAngle,
-                   FLOAT  SweepAngle)
+             int  X,
+             int  Y,
+             DWORD  Radius,
+             FLOAT  StartAngle,
+             FLOAT  SweepAngle)
 {
   UNIMPLEMENTED;
 }
@@ -53,22 +53,26 @@ W32kAngleArc(HDC  hDC,
 BOOL
 STDCALL
 W32kArc(HDC  hDC,
-              int  LeftRect,
-              int  TopRect,
-              int  RightRect,
-              int  BottomRect,
-              int  XStartArc,
-              int  YStartArc,
-              int  XEndArc,
-              int  YEndArc)
+        int  LeftRect,
+        int  TopRect,
+        int  RightRect,
+        int  BottomRect,
+        int  XStartArc,
+        int  YStartArc,
+        int  XEndArc,
+        int  YEndArc)
 {
   DC *dc = DC_HandleToPtr(hDC);
   if(!dc) return FALSE;
 
   if(PATH_IsPathOpen(dc->w.path))
+  {
+    DC_ReleasePtr ( hDC );
     return PATH_Arc(hDC, LeftRect, TopRect, RightRect, BottomRect,
                     XStartArc, YStartArc, XEndArc, YEndArc);
+  }
 
+  // FIXME
 //   EngArc(dc, LeftRect, TopRect, RightRect, BottomRect, UNIMPLEMENTED
 //          XStartArc, YStartArc, XEndArc, YEndArc);
 
@@ -79,50 +83,60 @@ W32kArc(HDC  hDC,
 BOOL
 STDCALL
 W32kArcTo(HDC  hDC,
-                int  LeftRect,
-                int  TopRect,
-                int  RightRect,
-                int  BottomRect,
-                int  XRadial1,
-                int  YRadial1,
-                int  XRadial2,
-                int  YRadial2)
+          int  LeftRect,
+          int  TopRect,
+          int  RightRect,
+          int  BottomRect,
+          int  XRadial1,
+          int  YRadial1,
+          int  XRadial2,
+          int  YRadial2)
 {
   BOOL result;
-  DC *dc = DC_HandleToPtr(hDC);
-  if(!dc) return FALSE;
+  //DC *dc;
 
   // Line from current position to starting point of arc
-  W32kLineTo(hDC, XRadial1, YRadial1);
+  if ( !W32kLineTo(hDC, XRadial1, YRadial1) )
+    return FALSE;
+
+  //dc = DC_HandleToPtr(hDC);
+
+  //if(!dc) return FALSE;
 
   // Then the arc is drawn.
   result = W32kArc(hDC, LeftRect, TopRect, RightRect, BottomRect,
                    XRadial1, YRadial1, XRadial2, YRadial2);
 
+  //DC_ReleasePtr( hDC );
+
   // If no error occured, the current position is moved to the ending point of the arc.
   if(result)
-  {
     W32kMoveToEx(hDC, XRadial2, YRadial2, NULL);
-  }
-  DC_ReleasePtr( hDC );
+
   return result;
+}
+
+INT
+FASTCALL
+IntGetArcDirection ( PDC dc )
+{
+  ASSERT ( dc );
+  return dc->w.ArcDirection;
 }
 
 INT
 STDCALL
 W32kGetArcDirection(HDC  hDC)
 {
-  PDC dc;
-  int ret;
+  PDC dc = DC_HandleToPtr (hDC);
+  int ret = 0; // default to failure
 
-  dc = DC_HandleToPtr (hDC);
-  if (!dc)
+  if ( dc )
   {
-    return 0;
+    ret = IntGetArcDirection ( dc );
+    DC_ReleasePtr( hDC );
   }
 
-  ret = dc->w.ArcDirection;
-  DC_ReleasePtr( hDC );
   return ret;
 }
 
@@ -132,27 +146,36 @@ W32kLineTo(HDC  hDC,
            int  XEnd,
            int  YEnd)
 {
-  DC *dc = DC_HandleToPtr(hDC);
-  SURFOBJ *SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
-  BOOL Ret;
-  PPENOBJ Pen;
-  RECT Bounds;
+  DC      *dc = DC_HandleToPtr(hDC);
+  SURFOBJ *SurfObj;
+  BOOL     Ret;
+  BRUSHOBJ PenBrushObj;
+  RECT     Bounds;
 
-  if (NULL == dc)
+  if ( !dc )
     {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
     }
 
+  SurfObj = (SURFOBJ*)AccessUserObject ( (ULONG)dc->Surface );
+
   if (PATH_IsPathOpen(dc->w.path))
     {
+      DC_ReleasePtr(hDC);
       Ret = PATH_LineTo(hDC, XEnd, YEnd);
+      if (Ret)
+	{
+	  // FIXME - PATH_LineTo should maybe do this...
+	  dc = DC_HandleToPtr(hDC);
+	  dc->w.CursPosX = XEnd;
+	  dc->w.CursPosY = YEnd;
+	  DC_ReleasePtr(hDC);
+	}
+      return Ret;
     }
   else
     {
-      Pen = (PPENOBJ) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
-      ASSERT(NULL != Pen);
-
       if (dc->w.CursPosX <= XEnd)
 	{
 	  Bounds.left = dc->w.CursPosX;
@@ -174,19 +197,20 @@ W32kLineTo(HDC  hDC,
 	{
 	  Bounds.top = YEnd;
 	  Bounds.bottom = dc->w.CursPosY;
-        }
+	}
       Bounds.top += dc->w.DCOrgY;
       Bounds.bottom += dc->w.DCOrgY;
 
+      /* make BRUSHOBJ from current pen. */
+      HPenToBrushObj ( &PenBrushObj, dc->w.hPen );
+
       Ret = IntEngLineTo(SurfObj,
                          dc->CombinedClip,
-                         PenToBrushObj(dc, Pen),
+                         &PenBrushObj,
                          dc->w.DCOrgX + dc->w.CursPosX, dc->w.DCOrgY + dc->w.CursPosY,
                          dc->w.DCOrgX + XEnd,           dc->w.DCOrgY + YEnd,
                          &Bounds,
                          dc->w.ROPmode);
-
-      GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
     }
 
   if (Ret)
@@ -201,84 +225,96 @@ W32kLineTo(HDC  hDC,
 
 BOOL
 STDCALL
-W32kMoveToEx(HDC  hDC,
-                   int  X,
-                   int  Y,
-                   LPPOINT  Point)
+W32kMoveToEx(HDC      hDC,
+             int      X,
+             int      Y,
+             LPPOINT  Point)
 {
-  DC *dc = DC_HandleToPtr( hDC );
+  DC   *dc = DC_HandleToPtr( hDC );
+  BOOL  PathIsOpen;
 
-  if(!dc) return FALSE;
+  if ( !dc ) return FALSE;
 
-  if(Point) {
+  if ( Point )
+  {
     Point->x = dc->w.CursPosX;
     Point->y = dc->w.CursPosY;
   }
   dc->w.CursPosX = X;
   dc->w.CursPosY = Y;
 
-  if(PATH_IsPathOpen(dc->w.path)){
-  	DC_ReleasePtr( hDC );
-    return PATH_MoveTo(hDC);
-  }
-  DC_ReleasePtr( hDC );
+  PathIsOpen = PATH_IsPathOpen(dc->w.path);
+
+  DC_ReleasePtr ( hDC );
+
+  if ( PathIsOpen )
+    return PATH_MoveTo ( hDC );
+
   return TRUE;
 }
 
 BOOL
 STDCALL
-W32kPolyBezier(HDC  hDC,
-                     CONST LPPOINT  pt,
-                     DWORD  Count)
+W32kPolyBezier(HDC            hDC,
+               CONST LPPOINT  pt,
+               DWORD          Count)
 {
   DC *dc = DC_HandleToPtr(hDC);
-  if(!dc) return FALSE;
+  BOOL ret = FALSE; // default to FAILURE
 
-  if(PATH_IsPathOpen(dc->w.path)){
-	DC_ReleasePtr( hDC );
-    return PATH_PolyBezier(hDC, pt, Count);
+  if ( !dc ) return FALSE;
+
+  if ( PATH_IsPathOpen(dc->w.path) )
+  {
+    DC_ReleasePtr( hDC );
+    return PATH_PolyBezier ( hDC, pt, Count );
   }
 
   /* We'll convert it into line segments and draw them using Polyline */
   {
     POINT *Pts;
     INT nOut;
-    BOOL ret;
 
-    Pts = GDI_Bezier(pt, Count, &nOut);
-    if(!Pts) return FALSE;
-    DbgPrint("Pts = %p, no = %d\n", Pts, nOut);
-    ret = W32kPolyline(dc->hSelf, Pts, nOut);
-    ExFreePool(Pts);
-	DC_ReleasePtr( hDC );
-    return ret;
+    Pts = GDI_Bezier ( pt, Count, &nOut );
+    if ( Pts )
+    {
+      DbgPrint("Pts = %p, no = %d\n", Pts, nOut);
+      ret = W32kPolyline(dc->hSelf, Pts, nOut);
+      ExFreePool(Pts);
+    }
   }
+  DC_ReleasePtr( hDC );
+  return ret;
 }
 
 BOOL
 STDCALL
 W32kPolyBezierTo(HDC  hDC,
-                       CONST LPPOINT  pt,
-                       DWORD  Count)
+                 CONST LPPOINT  pt,
+                 DWORD  Count)
 {
   DC *dc = DC_HandleToPtr(hDC);
-  BOOL ret;
+  BOOL ret = FALSE; // default to failure
 
-  if(!dc) return FALSE;
+  if ( !dc ) return ret;
 
-  if(PATH_IsPathOpen(dc->w.path))
-    ret = PATH_PolyBezierTo(hDC, pt, Count);
-  else { /* We'll do it using PolyBezier */
+  if ( PATH_IsPathOpen(dc->w.path) )
+    ret = PATH_PolyBezierTo ( hDC, pt, Count );
+  else /* We'll do it using PolyBezier */
+  {
     POINT *npt;
     npt = ExAllocatePool(NonPagedPool, sizeof(POINT) * (Count + 1));
-    if(!npt) return FALSE;
-    npt[0].x = dc->w.CursPosX;
-    npt[0].y = dc->w.CursPosY;
-    memcpy(npt + 1, pt, sizeof(POINT) * Count);
-    ret = W32kPolyBezier(dc->hSelf, npt, Count+1);
-    ExFreePool(npt);
+    if ( npt )
+    {
+      npt[0].x = dc->w.CursPosX;
+      npt[0].y = dc->w.CursPosY;
+      memcpy(npt + 1, pt, sizeof(POINT) * Count);
+      ret = W32kPolyBezier(dc->hSelf, npt, Count+1);
+      ExFreePool(npt);
+    }
   }
-  if(ret) {
+  if ( ret )
+  {
     dc->w.CursPosX = pt[Count-1].x;
     dc->w.CursPosY = pt[Count-1].y;
   }
@@ -288,114 +324,120 @@ W32kPolyBezierTo(HDC  hDC,
 
 BOOL
 STDCALL
-W32kPolyDraw(HDC  hDC,
-                   CONST LPPOINT  pt,
-                   CONST LPBYTE  Types,
-                   int  Count)
+W32kPolyDraw(HDC            hDC,
+             CONST LPPOINT  pt,
+             CONST LPBYTE   Types,
+             int            Count)
 {
   UNIMPLEMENTED;
 }
 
 BOOL
-STDCALL
-W32kPolyline(HDC  hDC,
-                   CONST LPPOINT  pt,
-                   int  Count)
+FASTCALL
+IntPolyline(PDC           dc,
+            CONST LPPOINT pt,
+            int           Count)
 {
-  DC		*dc = DC_HandleToPtr(hDC);
-  SURFOBJ	*SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
-  BOOL ret;
-  LONG i;
-  PPENOBJ   pen;
+  SURFOBJ     *SurfObj = NULL;
+  BOOL         ret = FALSE; // default to failure
+  LONG         i;
   PROSRGNDATA  reg;
-  POINT *pts;
+  BRUSHOBJ     PenBrushObj;
+  POINT       *pts;
 
-  if (!dc) 
-    return(FALSE);
+  SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
+  ASSERT(SurfObj);
 
-  if(PATH_IsPathOpen(dc->w.path))
+  if ( PATH_IsPathOpen ( dc->w.path ) )
+    return PATH_Polyline ( dc, pt, Count );
+
+  reg = (PROSRGNDATA)GDIOBJ_LockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
+
+  //FIXME: Do somthing with reg...
+
+  //Allocate "Count" bytes of memory to hold a safe copy of pt
+  pts = (POINT*)ExAllocatePool ( NonPagedPool, sizeof(POINT)*Count );
+  if ( pts )
   {
-    ret = PATH_Polyline(hDC, pt, Count);
-  }
-  else
-  {
-    pen = (PPENOBJ) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
-    reg = (PROSRGNDATA)GDIOBJ_LockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
-
-    ASSERT( pen );
-
-    //FIXME: Do somthing with reg...
-
-    //Allocate "Count" bytes of memory to hold a safe copy of pt
-    if (!(pts=ExAllocatePool(NonPagedPool, sizeof(POINT) * Count))) 
+    // safely copy pt to local version
+    if ( STATUS_SUCCESS == MmCopyFromCaller(pts, pt, sizeof(POINT)*Count) )
     {
-      GDIOBJ_UnlockObj( dc->w.hGCClipRgn, GO_REGION_MAGIC );
-      GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
-      DC_ReleasePtr( hDC );
-      return(FALSE);
-    }
- 
-    //safly copy pt to local version
-    if (STATUS_SUCCESS!=MmCopyFromCaller(pts, pt, sizeof(POINT) * Count))
-    {
-      ExFreePool(pts);
-      GDIOBJ_UnlockObj( dc->w.hGCClipRgn, GO_REGION_MAGIC );
-      GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
-      DC_ReleasePtr( hDC );
-      return(FALSE);
+      //offset the array of point by the dc->w.DCOrg
+      for ( i = 0; i < Count; i++ )
+      {
+	pts[i].x += dc->w.DCOrgX;
+	pts[i].y += dc->w.DCOrgY;
+      }
+
+      /* make BRUSHOBJ from current pen. */
+      HPenToBrushObj ( &PenBrushObj, dc->w.hPen );
+
+      //get IntEngPolyline to do the drawing.
+      ret = IntEngPolyline(SurfObj,
+			   dc->CombinedClip,
+			   &PenBrushObj,
+			   pts,
+			   Count,
+			   dc->w.ROPmode);
     }
 
-    //offset the array of point by the dc->w.DCOrg
-    for(i=0; i<Count; i++)
-    {
-      pts[i].x += dc->w.DCOrgX;
-      pts[i].y += dc->w.DCOrgY;
-    }
-  
-    //get IntEngPolyline to do the drawing.
-    ret = IntEngPolyline(SurfObj,
-	                 dc->CombinedClip,
-	                 PenToBrushObj(dc, pen),
-	                 pts,
-                         Count,
-	                 dc->w.ROPmode);
-
-    //Clean up
-    ExFreePool(pts);
-    GDIOBJ_UnlockObj( dc->w.hGCClipRgn, GO_REGION_MAGIC );
-    GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
+    ExFreePool ( pts );
   }
 
-  DC_ReleasePtr( hDC );
-  return(ret);
+  //Clean up
+  GDIOBJ_UnlockObj ( dc->w.hGCClipRgn, GO_REGION_MAGIC );
+
+  return ret;
 }
 
 BOOL
 STDCALL
-W32kPolylineTo(HDC  hDC,
-                     CONST LPPOINT  pt,
-                     DWORD  Count)
+W32kPolyline(HDC            hDC,
+             CONST LPPOINT  pt,
+             int            Count)
+{
+  DC    *dc = DC_HandleToPtr(hDC);
+  BOOL   ret = FALSE; // default to failure
+
+  if ( dc )
+  {
+    ret = IntPolyline ( dc, pt, Count );
+
+    DC_ReleasePtr( hDC );
+  }
+
+  return ret;
+}
+
+BOOL
+STDCALL
+W32kPolylineTo(HDC            hDC,
+               CONST LPPOINT  pt,
+               DWORD          Count)
 {
   DC *dc = DC_HandleToPtr(hDC);
-  BOOL ret;
+  BOOL ret = FALSE; // default to failure
 
-  if(!dc) return FALSE;
+  if ( !dc ) return ret;
 
   if(PATH_IsPathOpen(dc->w.path))
   {
     ret = PATH_PolylineTo(hDC, pt, Count);
   }
-  else { /* do it using Polyline */
+  else /* do it using Polyline */
+  {
     POINT *pts = ExAllocatePool(NonPagedPool, sizeof(POINT) * (Count + 1));
-    if(!pts) return FALSE;
-
-    pts[0].x = dc->w.CursPosX;
-    pts[0].y = dc->w.CursPosY;
-    memcpy( pts + 1, pt, sizeof(POINT) * Count);
-    ret = W32kPolyline(hDC, pts, Count + 1);
-    ExFreePool(pts);
+    if ( pts )
+    {
+      pts[0].x = dc->w.CursPosX;
+      pts[0].y = dc->w.CursPosY;
+      memcpy( pts + 1, pt, sizeof(POINT) * Count);
+      ret = W32kPolyline(hDC, pts, Count + 1);
+      ExFreePool(pts);
+    }
   }
-  if(ret) {
+  if ( ret )
+  {
     dc->w.CursPosX = pt[Count-1].x;
     dc->w.CursPosY = pt[Count-1].y;
   }
@@ -405,10 +447,10 @@ W32kPolylineTo(HDC  hDC,
 
 BOOL
 STDCALL
-W32kPolyPolyline(HDC  hDC,
-                       CONST LPPOINT  pt,
-                       CONST LPDWORD  PolyPoints,
-                       DWORD  Count)
+W32kPolyPolyline(HDC            hDC,
+                 CONST LPPOINT  pt,
+                 CONST LPDWORD  PolyPoints,
+                 DWORD          Count)
 {
    UNIMPLEMENTED;
 }
@@ -416,25 +458,20 @@ W32kPolyPolyline(HDC  hDC,
 int
 STDCALL
 W32kSetArcDirection(HDC  hDC,
-                         int  ArcDirection)
+                    int  ArcDirection)
 {
   PDC  dc;
-  INT  nOldDirection;
+  INT  nOldDirection = 0; // default to FAILURE
 
   dc = DC_HandleToPtr (hDC);
-  if (!dc)
+  if ( !dc ) return 0;
+
+  if ( ArcDirection == AD_COUNTERCLOCKWISE || ArcDirection == AD_CLOCKWISE )
   {
-    return 0;
-  }
-  if (ArcDirection != AD_COUNTERCLOCKWISE && ArcDirection != AD_CLOCKWISE)
-  {
-//    SetLastError(ERROR_INVALID_PARAMETER);
-	DC_ReleasePtr( hDC );
-    return 0;
+    nOldDirection = dc->w.ArcDirection;
+    dc->w.ArcDirection = ArcDirection;
   }
 
-  nOldDirection = dc->w.ArcDirection;
-  dc->w.ArcDirection = ArcDirection;
   DC_ReleasePtr( hDC );
   return nOldDirection;
 }

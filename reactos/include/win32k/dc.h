@@ -173,6 +173,7 @@ INT STDCALL  W32kGetBkMode(HDC  hDC);
 BOOL STDCALL  W32kGetBrushOrgEx(HDC  hDC, LPPOINT brushOrg);
 HRGN STDCALL  W32kGetClipRgn(HDC  hDC);
 HGDIOBJ STDCALL  W32kGetCurrentObject(HDC  hDC, UINT  ObjectType);
+VOID FASTCALL IntGetCurrentPositionEx (PDC  dc,  LPPOINT currentPosition);
 BOOL STDCALL  W32kGetCurrentPositionEx(HDC  hDC, LPPOINT currentPosition);
 BOOL STDCALL  W32kGetDCOrgEx(HDC  hDC, LPPOINT  Point);
 HDC STDCALL  W32kGetDCState16(HDC  hDC);

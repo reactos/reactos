@@ -1,4 +1,4 @@
-/* $Id: button.c,v 1.8 2003/08/15 15:55:02 weiden Exp $
+/* $Id: button.c,v 1.9 2003/08/17 17:32:58 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -133,9 +133,11 @@ inline static void paint_button( HWND hwnd, LONG style, UINT action )
 /* retrieve the button text; returned buffer must be freed by caller */
 inline static WCHAR *get_button_text( HWND hwnd )
 {
+    INT len;
+    WCHAR *buffer;
     DbgPrint("[button] In get_button_text()\n");
-    INT len = GetWindowTextLengthW( hwnd );
-    WCHAR *buffer = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) );
+    len = GetWindowTextLengthW( hwnd );
+    buffer = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) );
     if (buffer) GetWindowTextW( hwnd, buffer, len + 1 );
     DbgPrint("[button] TextLen %d Text = %s\n", len, buffer);
     return buffer;
@@ -147,14 +149,17 @@ inline static WCHAR *get_button_text( HWND hwnd )
 static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
                                            WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
-    DbgPrint("[button] ButtonWndProc called : msg %d\n", uMsg);
-
     RECT rect;
     POINT pt;
-    LONG style = GetWindowLongA( hWnd, GWL_STYLE );
-    UINT btn_type = get_button_type( style );
+    LONG style;
+    UINT btn_type;
     LONG state;
     HANDLE oldHbitmap;
+
+    DbgPrint("[button] ButtonWndProc called : msg %d\n", uMsg);
+
+    style = GetWindowLongA( hWnd, GWL_STYLE );
+    btn_type = get_button_type( style );
 
     pt.x = LOWORD(lParam);
     pt.y = HIWORD(lParam);
@@ -181,8 +186,8 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
 
         if (!hbitmapCheckBoxes)
         {
-            DbgPrint("[button] Loading bitmaps\n");
             BITMAP bmp;
+            DbgPrint("[button] Loading bitmaps\n");
             hbitmapCheckBoxes = LoadBitmapW(0, MAKEINTRESOURCEW(OBM_CHECKBOXES));
             GetObjectW( hbitmapCheckBoxes, sizeof(bmp), &bmp );
             checkBoxWidth  = bmp.bmWidth / 4;
@@ -202,10 +207,12 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         DbgPrint("[button] WM_PAINT\n");
         if (btnPaintFunc[btn_type])
         {
-            DbgPrint("[button] About to draw...\n");
             PAINTSTRUCT ps;
-            HDC hdc = wParam ? (HDC)wParam : BeginPaint( hWnd, &ps );
-            int nOldMode = SetBkMode( hdc, OPAQUE );
+	    HDC hdc;
+	    int nOldMode;
+            DbgPrint("[button] About to draw...\n");
+            hdc = wParam ? (HDC)wParam : BeginPaint( hWnd, &ps );
+            nOldMode = SetBkMode( hdc, OPAQUE );
             (btnPaintFunc[btn_type])( hWnd, hdc, ODA_DRAWENTIRE );
             SetBkMode(hdc, nOldMode); /*  reset painting mode */
             if( !wParam ) EndPaint( hWnd, &ps );
@@ -297,11 +304,12 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
 
     case WM_SETTEXT:
     {
-    DbgPrint("[button] WM_SETTEXT");
-        /* Clear an old text here as Windows does */
-        HDC hdc = GetDC(hWnd);
+        HDC hdc;
         HBRUSH hbrush;
         RECT client, rc;
+        DbgPrint("[button] WM_SETTEXT");
+        /* Clear an old text here as Windows does */
+        hdc = GetDC(hWnd);
 
         hbrush = (HBRUSH)SendMessageW(GetParent(hWnd), WM_CTLCOLORSTATIC,
 				      (WPARAM)hdc, (LPARAM)hWnd);
@@ -537,15 +545,17 @@ static UINT BUTTON_BStoDT(DWORD style)
  */
 static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
 {
-    DbgPrint("[button] In BUTTON_CalcLabelRect()\n");
-   LONG style = GetWindowLongA( hwnd, GWL_STYLE );
+   LONG style;
    WCHAR *text;
    ICONINFO    iconInfo;
    BITMAP      bm;
    UINT        dtStyle = BUTTON_BStoDT(style);
    RECT        r = *rc;
    INT         n;
-   
+
+   DbgPrint("[button] In BUTTON_CalcLabelRect()\n");
+   style = GetWindowLongA( hwnd, GWL_STYLE );
+
    /* Calculate label rectangle according to label type */
    switch (style & (BS_ICON|BS_BITMAP))
    {
@@ -653,15 +663,19 @@ static BOOL CALLBACK BUTTON_DrawTextCallback(HDC hdc, LPARAM lp, WPARAM wp, int 
  */
 static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, RECT *rc)
 {
-    DbgPrint("[button] In BUTTON_DrawLabel()\n");
    DRAWSTATEPROC lpOutputProc = NULL;
    LPARAM lp;
    WPARAM wp = 0;
    HBRUSH hbr = 0;
-   UINT flags = IsWindowEnabled(hwnd) ? DSS_NORMAL : DSS_DISABLED;
-   LONG state = get_button_state( hwnd );
-   LONG style = GetWindowLongA( hwnd, GWL_STYLE );
+   UINT flags;
+   LONG state;
+   LONG style;
    WCHAR *text = NULL;
+
+   DbgPrint("[button] In BUTTON_DrawLabel()\n");
+   flags = IsWindowEnabled(hwnd) ? DSS_NORMAL : DSS_DISABLED;
+   state = get_button_state( hwnd );
+   style = GetWindowLongA( hwnd, GWL_STYLE );
 
    /* FIXME: To draw disabled label in Win31 look-and-feel, we probably
     * must use DSS_MONO flag and COLOR_GRAYTEXT brush (or maybe DSS_UNION).
@@ -709,7 +723,6 @@ static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, RECT *rc)
  */
 static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
 {
-    DbgPrint("[button] In PB_Paint()\n");
     RECT     rc, focus_rect, r;
     UINT     dtFlags;
     HRGN     hRgn;
@@ -718,10 +731,15 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     INT      oldBkMode;
     COLORREF oldTxtColor;
     HFONT hFont;
-    LONG state = get_button_state( hwnd );
-    LONG style = GetWindowLongA( hwnd, GWL_STYLE );
-    BOOL pushedState = (state & BUTTON_HIGHLIGHTED);
+    LONG state;
+    LONG style;
+    BOOL pushedState;
     UINT uState;
+
+    DbgPrint("[button] In PB_Paint()\n");
+    state = get_button_state( hwnd );
+    style = GetWindowLongA( hwnd, GWL_STYLE );
+    pushedState = (state & BUTTON_HIGHLIGHTED);
 
     GetClientRect( hwnd, &rc );
 

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.59 2003/08/15 02:51:53 silverblade Exp $
+/* $Id: window.c,v 1.60 2003/08/17 17:32:58 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -489,12 +489,13 @@ CreateWindowExA(DWORD dwExStyle,
 		HINSTANCE hInstance,
 		LPVOID lpParam)
 {
-    DbgPrint("[window] CreateWindowExA style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
   UNICODE_STRING WindowName;
   UNICODE_STRING ClassName;
   HWND Handle;
   INT sw;
-  
+
+  DbgPrint("[window] CreateWindowExA style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
+
   /* Register built-in controls if not already done */
   if (! ControlsInitCalled)
     {

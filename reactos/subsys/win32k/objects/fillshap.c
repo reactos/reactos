@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.24 2003/08/16 05:00:14 royce Exp $ */
+/* $Id: fillshap.c,v 1.25 2003/08/17 17:32:58 royce Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -31,7 +31,7 @@
 #include <include/paint.h>
 #include <internal/safe.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <win32k/debug1.h>
 
 BOOL
@@ -96,128 +96,149 @@ extern BOOL FillPolygon(PDC dc,
 
 #endif
 
-//This implementation is blatantly ripped off from W32kRectangle
 BOOL
-STDCALL
-W32kPolygon(HDC  hDC,
-            CONST PPOINT UnsafePoints,
-            int Count)
+FASTCALL
+IntPolygon(PDC          dc,
+           CONST PPOINT UnsafePoints,
+           int          Count)
 {
-  DC *dc = DC_HandleToPtr(hDC);
-  SURFOBJ *SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
-  PBRUSHOBJ OutBrushObj, FillBrushObj;
-  BOOL ret;
+  SURFOBJ *SurfObj;
+  BRUSHOBJ PenBrushObj, *FillBrushObj;
+  BOOL ret = FALSE; // default to failure
   PRECTL RectBounds;
-  PENOBJ *pen;
   RECTL DestRect;
   int CurrentPoint;
   PPOINT Points;
   NTSTATUS Status;
 
-  DPRINT("In W32kPolygon()\n");
-  
-  if (NULL == dc || NULL == UnsafePoints || Count < 2)
+  ASSERT(dc); // caller's responsibility to pass a valid dc
+
+  if ( NULL == UnsafePoints || Count < 2 )
     {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
     }
 
+  SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
+  ASSERT(SurfObj);
+
   /* Copy points from userspace to kernelspace */
   Points = ExAllocatePool(PagedPool, Count * sizeof(POINT));
   if (NULL == Points)
-    {
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-      return FALSE;
-    }
-  Status = MmCopyFromCaller(Points, UnsafePoints, Count * sizeof(POINT));
-  if (! NT_SUCCESS(Status))
-    {
-      SetLastNtError(Status);
-      ExFreePool(Points);
-      return FALSE;
-    }
-
-  /* Convert to screen coordinates */
-  for (CurrentPoint = 0; CurrentPoint < Count; CurrentPoint++)
-    {
-      Points[CurrentPoint].x += dc->w.DCOrgX;
-      Points[CurrentPoint].y += dc->w.DCOrgY;
-    }
-
-  RectBounds = GDIOBJ_LockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
-  //ei not yet implemented ASSERT(RectBounds);
-
-  if (PATH_IsPathOpen(dc->w.path)) 
-    {
-      ret = PATH_Polygon(hDC, Points, Count);
-    }
+    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
   else
+  {
+    Status = MmCopyFromCaller(Points, UnsafePoints, Count * sizeof(POINT));
+    if ( !NT_SUCCESS(Status) )
+      SetLastNtError(Status);
+    else
     {
-      /* Get the current pen. */
-      pen = (PENOBJ*) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
-      ASSERT(pen);
-      OutBrushObj = (PBRUSHOBJ) PenToBrushObj(dc, pen);
-      GDIOBJ_UnlockObj(dc->w.hPen, GO_PEN_MAGIC);
+      /* Convert to screen coordinates */
+      for (CurrentPoint = 0; CurrentPoint < Count; CurrentPoint++)
+	{
+	  Points[CurrentPoint].x += dc->w.DCOrgX;
+	  Points[CurrentPoint].y += dc->w.DCOrgY;
+	}
 
-      DestRect.left   = Points[0].x;
-      DestRect.right  = Points[0].x;
-      DestRect.top    = Points[0].y;
-      DestRect.bottom = Points[0].y;
+      RectBounds = GDIOBJ_LockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
+      //ei not yet implemented ASSERT(RectBounds);
 
-      for (CurrentPoint = 1; CurrentPoint < Count; ++CurrentPoint)
+      if (PATH_IsPathOpen(dc->w.path)) 
+	ret = PATH_Polygon(dc, Points, Count );
+      else
+      {
+	DestRect.left   = Points[0].x;
+	DestRect.right  = Points[0].x;
+	DestRect.top    = Points[0].y;
+	DestRect.bottom = Points[0].y;
+
+	for (CurrentPoint = 1; CurrentPoint < Count; ++CurrentPoint)
 	{
 	  DestRect.left     = MIN(DestRect.left, Points[CurrentPoint].x);
 	  DestRect.right    = MAX(DestRect.right, Points[CurrentPoint].x);
 	  DestRect.top      = MIN(DestRect.top, Points[CurrentPoint].y);
 	  DestRect.bottom   = MAX(DestRect.bottom, Points[CurrentPoint].y);
 	}
-	
-      /* Now fill the polygon with the current brush. */
-      FillBrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
 
 #if 1
-      ret = FillPolygon ( dc, SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
+	/* Now fill the polygon with the current brush. */
+	FillBrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
+	ASSERT(FillBrushObj);
+	if ( FillBrushObj->logbrush.lbStyle != BS_NULL )
+	  ret = FillPolygon ( dc, SurfObj, FillBrushObj, dc->w.ROPmode, Points, Count, DestRect );
+	GDIOBJ_UnlockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
 #endif
-      // Draw the Polygon Edges with the current pen
-      for (CurrentPoint = 0; CurrentPoint < Count; ++CurrentPoint)
+
+	/* make BRUSHOBJ from current pen. */
+	HPenToBrushObj ( &PenBrushObj, dc->w.hPen );
+
+	// Draw the Polygon Edges with the current pen ( if not a NULL pen )
+	if ( PenBrushObj.logbrush.lbStyle != BS_NULL )
 	{
-	  POINT To, From; //, Next;
+	  for ( CurrentPoint = 0; CurrentPoint < Count; ++CurrentPoint )
+	  {
+	    POINT To, From; //, Next;
 
-	  /* Let CurrentPoint be i
-	   * if i+1 > Count, Draw a line from Points[i] to Points[0]
-	   * Draw a line from Points[i] to Points[i+1]
-	   */
-	  From = Points[CurrentPoint];
-	  if (Count <= CurrentPoint + 1)
-	    {
+	    /* Let CurrentPoint be i
+	     * if i+1 > Count, Draw a line from Points[i] to Points[0]
+	     * Draw a line from Points[i] to Points[i+1]
+	     */
+	    From = Points[CurrentPoint];
+	    if (Count <= CurrentPoint + 1)
 	      To = Points[0];
-	    }
-	  else
-	    {
+	    else
 	      To = Points[CurrentPoint + 1];
-	    }
 
-	  DPRINT("Polygon Making line from (%d,%d) to (%d,%d)\n", From.x, From.y, To.x, To.y );
-	  ret = IntEngLineTo(SurfObj,
-	                     dc->CombinedClip,
-	                     OutBrushObj,
-	                     From.x, 
-	                     From.y, 
-	                     To.x, 
-	                     To.y,
-	                     &DestRect,
-	                     dc->w.ROPmode); /* MIX */
-		  
+	    //DPRINT("Polygon Making line from (%d,%d) to (%d,%d)\n", From.x, From.y, To.x, To.y );
+	    ret = IntEngLineTo(SurfObj,
+			       dc->CombinedClip,
+			       &PenBrushObj,
+			       From.x,
+			       From.y,
+			       To.x,
+			       To.y,
+			       &DestRect,
+			       dc->w.ROPmode); /* MIX */
+	  }
 	}
 #if 0
-      ret = FillPolygon ( dc, SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
+	/* Now fill the polygon with the current brush. */
+	FillBrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
+	ASSERT(FillBrushObj);
+	if ( FillBrushObj->logbrush.lbStyle != BS_NULL )
+	  ret = FillPolygon ( dc, SurfObj, FillBrushObj, dc->w.ROPmode, Points, Count, DestRect );
+	GDIOBJ_UnlockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
 #endif
-      GDIOBJ_UnlockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
+      }
+
+      GDIOBJ_UnlockObj ( dc->w.hGCClipRgn, GO_REGION_MAGIC );
     }
-  
-  GDIOBJ_UnlockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
-  DC_ReleasePtr(hDC);
-  ExFreePool(Points);
+    ExFreePool ( Points );
+  }
+  return ret;
+}
+
+//This implementation is blatantly ripped off from W32kRectangle
+BOOL
+STDCALL
+W32kPolygon(HDC          hDC,
+            CONST PPOINT UnsafePoints,
+            int          Count)
+{
+  DC *dc;
+  BOOL ret = FALSE; // default to failure
+
+  //DPRINT("In W32kPolygon()\n");
+
+  dc = DC_HandleToPtr ( hDC );
+
+  if ( !dc )
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+  else
+  {
+    ret = IntPolygon ( dc, UnsafePoints, Count );
+    DC_ReleasePtr ( hDC );
+  }
 
   return ret;
 }
@@ -225,112 +246,134 @@ W32kPolygon(HDC  hDC,
 
 BOOL
 STDCALL
-W32kPolyPolygon(HDC  hDC,
-                      CONST LPPOINT  Points,
-                      CONST LPINT  PolyCounts,
-                      int  Count)
+W32kPolyPolygon(HDC            hDC,
+                CONST LPPOINT  Points,
+                CONST LPINT    PolyCounts,
+                int            Count)
 {
   UNIMPLEMENTED;
 }
 
 BOOL
-STDCALL
-W32kRectangle(HDC  hDC,
-                    int  LeftRect,
-                    int  TopRect,
-                    int  RightRect,
-                    int  BottomRect)
+FASTCALL
+IntRectangle(PDC dc,
+	     int LeftRect,
+	     int TopRect,
+	     int RightRect,
+	     int BottomRect)
 {
-  DC		*dc = DC_HandleToPtr(hDC);
-  SURFOBJ	*SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
-  PBRUSHOBJ	BrushObj;
-  BOOL ret;
-  PRECTL	RectBounds;
-  PENOBJ * pen;
-  RECTL        DestRect;
+  SURFOBJ   *SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
+  BRUSHOBJ   PenBrushObj, *FillBrushObj;
+  BOOL       ret = FALSE; // default to failure
+  PRECTL     RectBounds;
+  RECTL      DestRect;
 
-  if(!dc)
-   return FALSE;
+  ASSERT ( dc ); // caller's responsibility to set this up
 
-  RectBounds = GDIOBJ_LockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
+  RectBounds = GDIOBJ_LockObj ( dc->w.hGCClipRgn, GO_REGION_MAGIC );
   //ei not yet implemented ASSERT(RectBounds);
 
-  if(PATH_IsPathOpen(dc->w.path))
+  if ( PATH_IsPathOpen(dc->w.path) )
   {
-    ret = PATH_Rectangle(hDC, LeftRect, TopRect, RightRect, BottomRect);
+    ret = PATH_Rectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
   }
   else
   {
-    // Draw the rectangle with the current pen
-    pen = (PENOBJ*) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
-    ASSERT(pen);
-    BrushObj = (PBRUSHOBJ)PenToBrushObj(dc, pen);
-    GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC );
-
-    LeftRect += dc->w.DCOrgX;
-    RightRect += dc->w.DCOrgX - 1;
-    TopRect += dc->w.DCOrgY;
+    LeftRect   += dc->w.DCOrgX;
+    RightRect  += dc->w.DCOrgX - 1;
+    TopRect    += dc->w.DCOrgY;
     BottomRect += dc->w.DCOrgY - 1;
 
-    ret = IntEngLineTo(SurfObj,
-                       dc->CombinedClip,
-                       BrushObj,
-                       LeftRect, TopRect, RightRect, TopRect,
-                       RectBounds, // Bounding rectangle
-                       dc->w.ROPmode); // MIX
+    FillBrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
 
-    ret = IntEngLineTo(SurfObj,
-                       dc->CombinedClip,
-                       BrushObj,
-                       RightRect, TopRect, RightRect, BottomRect,
-                       RectBounds, // Bounding rectangle
-                       dc->w.ROPmode); // MIX
-
-    ret = IntEngLineTo(SurfObj,
-                       dc->CombinedClip,
-                       BrushObj,
-                       RightRect, BottomRect, LeftRect, BottomRect,
-                       RectBounds, // Bounding rectangle
-                       dc->w.ROPmode); // MIX
-
-    ret = IntEngLineTo(SurfObj,
-                       dc->CombinedClip,
-                       BrushObj,
-                       LeftRect, BottomRect, LeftRect, TopRect,
-                       RectBounds, // Bounding rectangle
-                       dc->w.ROPmode); // MIX */
-
-    // FIXME: BrushObj is obtained above; decide which one is correct
-    BrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
-
-    if (BrushObj)
+    ASSERT(FillBrushObj); // FIXME - I *think* this should always happen...
+    // it would be nice to remove the following if statement if that proves to be true
+    if ( FillBrushObj )
     {
-      if (BrushObj->logbrush.lbStyle != BS_NULL)
-        {
-          DestRect.left = LeftRect + 1;
-          DestRect.right = RightRect;
-          DestRect.top = TopRect + 1;
-          DestRect.bottom = BottomRect;
-          ret = IntEngBitBlt(SurfObj,
-                          NULL,
-                          NULL,
-                          NULL,
-                          NULL,
-                          &DestRect,
-                          NULL,
-                          NULL,
-                          BrushObj,
-                          NULL,
-                          PATCOPY);
-        }
+      if ( FillBrushObj->logbrush.lbStyle != BS_NULL )
+      {
+	DestRect.left = LeftRect;
+	DestRect.right = RightRect;
+	DestRect.top = TopRect;
+	DestRect.bottom = BottomRect;
+	ret = ret && IntEngBitBlt(SurfObj,
+				  NULL,
+				  NULL,
+				  NULL,
+				  NULL,
+				  &DestRect,
+				  NULL,
+				  NULL,
+				  FillBrushObj,
+				  NULL,
+				  PATCOPY);
+      }
     }
+
     GDIOBJ_UnlockObj( dc->w.hBrush, GO_BRUSH_MAGIC );
+
+    /* make BRUSHOBJ from current pen. */
+    HPenToBrushObj ( &PenBrushObj, dc->w.hPen );
+
+    // Draw the rectangle with the current pen
+
+    ret = TRUE; // change default to success
+
+    if ( PenBrushObj.logbrush.lbStyle != BS_NULL )
+    {
+      ret = ret && IntEngLineTo(SurfObj,
+			 dc->CombinedClip,
+			 &PenBrushObj,
+			 LeftRect, TopRect, RightRect, TopRect,
+			 RectBounds, // Bounding rectangle
+			 dc->w.ROPmode); // MIX
+
+      ret = ret && IntEngLineTo(SurfObj,
+			 dc->CombinedClip,
+			 &PenBrushObj,
+			 RightRect, TopRect, RightRect, BottomRect,
+			 RectBounds, // Bounding rectangle
+			 dc->w.ROPmode); // MIX
+
+      ret = ret && IntEngLineTo(SurfObj,
+			 dc->CombinedClip,
+			 &PenBrushObj,
+			 RightRect, BottomRect, LeftRect, BottomRect,
+			 RectBounds, // Bounding rectangle
+			 dc->w.ROPmode); // MIX
+
+      ret = ret && IntEngLineTo(SurfObj,
+			 dc->CombinedClip,
+			 &PenBrushObj,
+			 LeftRect, BottomRect, LeftRect, TopRect,
+			 RectBounds, // Bounding rectangle
+			 dc->w.ROPmode); // MIX */
+    }
   }
 
-// FIXME: Move current position in DC?
+  // FIXME: Move current position in DC?
   GDIOBJ_UnlockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
-  DC_ReleasePtr( hDC );
   return TRUE;
+}
+
+BOOL
+STDCALL
+W32kRectangle(HDC  hDC,
+              int  LeftRect,
+              int  TopRect,
+              int  RightRect,
+              int  BottomRect)
+{
+  DC   *dc = DC_HandleToPtr(hDC);
+  BOOL  ret = FALSE; // default to failure
+
+  if ( dc )
+  {
+    ret = IntRectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
+    DC_ReleasePtr ( hDC );
+  }
+
+  return ret;
 }
 
 BOOL

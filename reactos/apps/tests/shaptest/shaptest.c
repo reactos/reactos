@@ -10,14 +10,20 @@
 
 #include <windows.h>
 #include <stdio.h>
+#include <assert.h>
 
+#ifndef ASSERT
+#define ASSERT assert
+#endif
+
+#define nelem(x) (sizeof (x) / sizeof *(x))
 
 HFONT tf;
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
 void PolygonTest ( HDC hdc )
 {
-  HPEN BluePen, OldPen;
+  HPEN Pen, OldPen;
   HBRUSH RedBrush, OldBrush;
   DWORD Mode;
   POINT PointsAlternate[] =
@@ -48,49 +54,99 @@ void PolygonTest ( HDC hdc )
     { 7, 7 },
     { 3, 7 },
   };
+  POINT Square1[] =
+  {
+    { 1, 15 },
+    { 3, 15 },
+    { 3, 17 },
+    { 1, 17 }
+  };
+  POINT Square2[] =
+  {
+    { 5, 15 },
+    { 7, 15 },
+    { 7, 17 },
+    { 5, 17 }
+  };
+  POINT Square3[] =
+  {
+    { 1, 23 },
+    { 3, 23 },
+    { 3, 25 },
+    { 1, 25 }
+  };
+  POINT Square4[] =
+  {
+    { 5, 23 },
+    { 7, 23 },
+    { 7, 25 },
+    { 5, 25 }
+  };
+  POINT Square5[] =
+  {
+    { 1, 31 },
+    { 3, 31 },
+    { 3, 33 },
+    { 1, 33 }
+  };
+  POINT Square6[] =
+  {
+    { 5, 31 },
+    { 7, 31 },
+    { 7, 33 },
+    { 5, 33 }
+  };
 
   //create a pen to draw the shape
-  BluePen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0xff));
+  Pen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0xff));
+  ASSERT(Pen);
   RedBrush = CreateSolidBrush(RGB(0xff, 0, 0));
+  ASSERT(RedBrush);
 
-  //initialize a set of points for alternate.
-  /*lpPointsAlternate[0].x = 20;
-  lpPointsAlternate[0].y = 80; //{20,80};
-  lpPointsAlternate[1].x = 60;
-  lpPointsAlternate[1].y = 20; //{60,20};
-  lpPointsAlternate[2].x = 90;
-  lpPointsAlternate[2].y = 80; //{90,80};
-  lpPointsAlternate[3].x = 20;
-  lpPointsAlternate[3].y = 40; //{20,40};
-  lpPointsAlternate[4].x = 100;
-  lpPointsAlternate[4].y = 40; //{100,40};
-
-  //initialize a set of points for winding.
-  lpPointsWinding[0].x = 130;
-  lpPointsWinding[0].y = 80; //{130,80};
-  lpPointsWinding[1].x = 170;
-  lpPointsWinding[1].y = 20; //{170,20};
-  lpPointsWinding[2].x = 200;
-  lpPointsWinding[2].y = 80; //{200,80};
-  lpPointsWinding[3].x = 130;
-  lpPointsWinding[3].y = 40; //{130,40};
-  lpPointsWinding[4].x = 210;
-  lpPointsWinding[4].y = 40; //{210,40};
-*/
-  OldPen = (HPEN)SelectObject(hdc, BluePen);
+  OldPen = (HPEN)SelectObject(hdc, Pen);
   OldBrush = (HBRUSH)SelectObject(hdc, RedBrush);
 
   Mode = GetPolyFillMode(hdc);
 
   SetPolyFillMode(hdc, ALTERNATE);
-  Polygon(hdc,PointsAlternate,sizeof(PointsAlternate)/sizeof(PointsAlternate[0]));
+  Polygon(hdc,PointsAlternate,nelem(PointsAlternate));
 
   SetPolyFillMode(hdc, WINDING);
-  Polygon(hdc,PointsWinding,sizeof(PointsWinding)/sizeof(PointsWinding[0]));
+  Polygon(hdc,PointsWinding,nelem(PointsWinding));
 
   Rectangle ( hdc, 1, 1, 10, 10 );
-  Polygon(hdc,Tri1,sizeof(Tri1)/sizeof(Tri1[0]));
-  Polygon(hdc,Tri2,sizeof(Tri2)/sizeof(Tri2[0]));
+  Polygon(hdc,Tri1,nelem(Tri1));
+  Polygon(hdc,Tri2,nelem(Tri2));
+
+  Rectangle ( hdc,  1, 11,  4, 14 );
+  Rectangle ( hdc,  5, 11,  8, 14 );
+  Rectangle ( hdc,  9, 11, 12, 14 );
+  Rectangle ( hdc, 13, 11, 16, 14 );
+  Polygon(hdc,Square1,nelem(Square1));
+  Polygon(hdc,Square2,nelem(Square2));
+  Rectangle ( hdc,  1, 19,  4, 22 );
+  Rectangle ( hdc,  5, 19,  8, 22 );
+  Rectangle ( hdc,  9, 19, 12, 22 );
+  Rectangle ( hdc, 13, 19, 16, 22 );
+  Polygon(hdc,Square3,nelem(Square3));
+  Polygon(hdc,Square4,nelem(Square4));
+  Rectangle ( hdc,  1, 27,  4, 30 );
+  Rectangle ( hdc,  5, 27,  8, 30 );
+  Rectangle ( hdc,  9, 27, 12, 30 );
+  Rectangle ( hdc, 13, 27, 16, 30 );
+
+  // switch to null pen to make surey they display correctly
+  DeleteObject ( SelectObject(hdc, OldPen) );
+  Pen = CreatePen ( PS_NULL, 0, 0 );
+  ASSERT(Pen);
+  OldPen = (HPEN)SelectObject(hdc, Pen);
+
+  Polygon(hdc,Square5,nelem(Square5));
+  Polygon(hdc,Square6,nelem(Square6));
+  Rectangle ( hdc,  1, 35,  4, 38 );
+  Rectangle ( hdc,  5, 35,  8, 38 );
+  Rectangle ( hdc,  9, 35, 12, 38 );
+  Rectangle ( hdc, 13, 35, 16, 38 );
 
   //cleanup
   SetPolyFillMode(hdc, Mode);
