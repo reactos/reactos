@@ -1,4 +1,4 @@
-/* $Id: painting.c,v 1.10 2003/03/20 08:22:01 gvg Exp $
+/* $Id: painting.c,v 1.11 2003/03/20 10:10:12 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -584,11 +584,11 @@ PaintingFindWinToRepaint(HWND hWnd, PW32THREAD Thread)
     }
 
   ExAcquireFastMutex(&BaseWindow->ChildrenListLock);
-  current_entry = Thread->WindowListHead.Flink;
-  while (current_entry != &Thread->WindowListHead)
+  current_entry = BaseWindow->ChildrenListHead.Flink;
+  while (current_entry != &BaseWindow->ChildrenListHead)
     {
       Window = CONTAINING_RECORD(current_entry, WINDOW_OBJECT,
-				 ThreadListEntry);
+				 ChildrenListHead);
       if (Window->Style & WS_VISIBLE)
 	{
 	  hFoundWnd = PaintingFindWinToRepaint(Window->Self, Thread);
