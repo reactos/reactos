@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: driver.c,v 1.33 2003/12/12 12:53:10 gvg Exp $
+/* $Id: driver.c,v 1.34 2003/12/12 12:54:30 gvg Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -245,7 +245,6 @@ PFILE_OBJECT DRIVER_FindMPDriver(LPCWSTR Name)
   NTSTATUS Status;
   PFILE_OBJECT VideoFileObject;
 
-__asm__("int $3\n");
   RtlRosInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\DISPLAY1");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DeviceName,
