@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.27 2003/12/13 13:27:46 jfilby Exp $
+; $Id: msvcrt.def,v 1.28 2003/12/24 23:20:08 sedwards Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -7,61 +7,64 @@ EXPORTS
 ;----------------------------------------------------------------------
 ;	C++ Mangled Symbols
 ;----------------------------------------------------------------------
-;$I10_OUTPUT
-;??0__non_rtti_object@@QAE@ABV0@@Z
-;??0__non_rtti_object@@QAE@PBD@Z
-;??0bad_cast@@AAE@PBQBD@Z
-;??0bad_cast@@QAE@ABQBD@Z
-;??0bad_cast@@QAE@ABV0@@Z
-;??0bad_cast@@QAE@PBD@Z
-;??0bad_typeid@@QAE@ABV0@@Z
-;??0bad_typeid@@QAE@PBD@Z
-;??0exception@@QAE@ABQBD@Z
-;??0exception@@QAE@ABV0@@Z
-;??0exception@@QAE@XZ
-;??1__non_rtti_object@@UAE@XZ
-;??1bad_cast@@UAE@XZ
-;??1bad_typeid@@UAE@XZ
-;??1exception@@UAE@XZ
+$I10_OUTPUT=MSVCRT_I10_OUTPUT @1
+??0__non_rtti_object@@QAE@ABV0@@Z=__thiscall_MSVCRT___non_rtti_object_copy_ctor @2
+??0__non_rtti_object@@QAE@PBD@Z=__thiscall_MSVCRT___non_rtti_object_ctor @3
+??0bad_cast@@QAE@ABQBD@Z=__thiscall_MSVCRT_bad_cast_ctor @4
+??0bad_cast@@QAE@ABV0@@Z=__thiscall_MSVCRT_bad_cast_copy_ctor @5
+??0bad_typeid@@QAE@ABV0@@Z=__thiscall_MSVCRT_bad_typeid_copy_ctor @6
+??0bad_typeid@@QAE@PBD@Z=__thiscall_MSVCRT_bad_typeid_ctor @7
+??0exception@@QAE@ABQBD@Z=__thiscall_MSVCRT_exception_ctor @8
+??0exception@@QAE@ABV0@@Z=__thiscall_MSVCRT_exception_copy_ctor @9
+??0exception@@QAE@XZ=__thiscall_MSVCRT_exception_default_ctor @10
+??1__non_rtti_object@@UAE@XZ=__thiscall_MSVCRT___non_rtti_object_dtor @11
+??1bad_cast@@UAE@XZ=__thiscall_MSVCRT_bad_cast_dtor @12
+??1bad_typeid@@UAE@XZ=__thiscall_MSVCRT_bad_typeid_dtor @13
+??1exception@@UAE@XZ=__thiscall_MSVCRT_exception_dtor @14
+??1type_info@@UAE@XZ=__thiscall_MSVCRT_type_info_dtor @15
+??2@YAPAXI@Z=MSVCRT_operator_new @16
+??_U@YAPAXI@Z=MSVCRT_operator_new @36
+??3@YAXPAX@Z=MSVCRT_operator_delete @17
+??_V@YAXPAX@Z=MSVCRT_operator_delete @37
+??4__non_rtti_object@@QAEAAV0@ABV0@@Z=__thiscall_MSVCRT___non_rtti_object_opequals @18
+??4bad_cast@@QAEAAV0@ABV0@@Z=__thiscall_MSVCRT_bad_cast_opequals @19
+??4bad_typeid@@QAEAAV0@ABV0@@Z=__thiscall_MSVCRT_bad_typeid_opequals @20
+??4exception@@QAEAAV0@ABV0@@Z=__thiscall_MSVCRT_exception_opequals @21
+??8type_info@@QBEHABV0@@Z=__thiscall_MSVCRT_type_info_opequals_equals @22
+??9type_info@@QBEHABV0@@Z=__thiscall_MSVCRT_type_info_opnot_equals @23
+??_7__non_rtti_object@@6B@=MSVCRT___non_rtti_object_vtable @24 DATA
+??_7bad_cast@@6B@=MSVCRT_bad_cast_vtable @25 DATA
+??_7bad_typeid@@6B@=MSVCRT_bad_typeid_vtable @26 DATA
+??_7exception@@6B@=MSVCRT_exception_vtable @27 DATA
+??_E__non_rtti_object@@UAEPAXI@Z=__thiscall_MSVCRT___non_rtti_object_vector_dtor @28
+??_Ebad_cast@@UAEPAXI@Z=__thiscall_MSVCRT_bad_cast_vector_dtor @29
+??_Ebad_typeid@@UAEPAXI@Z=__thiscall_MSVCRT_bad_typeid_vector_dtor @30
+??_Eexception@@UAEPAXI@Z=__thiscall_MSVCRT_exception_vector_dtor @31
+??_G__non_rtti_object@@UAEPAXI@Z=__thiscall_MSVCRT___non_rtti_object_scalar_dtor @32
+??_Gbad_cast@@UAEPAXI@Z=__thiscall_MSVCRT_bad_cast_scalar_dtor @33
+??_Gbad_typeid@@UAEPAXI@Z=__thiscall_MSVCRT_bad_typeid_scalar_dtor @34
+??_Gexception@@UAEPAXI@Z=__thiscall_MSVCRT_exception_scalar_dtor @35
+?_query_new_handler@@YAP6AHI@ZXZ=MSVCRT__query_new_handler @38
+?_query_new_mode@@YAHXZ=MSVCRT__query_new_mode @39
+?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z=MSVCRT__set_new_handler @40
+?_set_new_mode@@YAHH@Z=MSVCRT__set_new_mode @41
+?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z=MSVCRT__set_se_translator @42
+?before@type_info@@QBEHABV1@@Z=__thiscall_MSVCRT_type_info_before @43
+?raw_name@type_info@@QBEPBDXZ=__thiscall_MSVCRT_type_info_raw_name @45
+?set_new_handler@@YAP6AXXZP6AXXZ@Z=MSVCRT__set_new_handler @46
+?set_terminate@@YAP6AXXZP6AXXZ@Z=MSVCRT_set_terminate @47
+?set_unexpected@@YAP6AXXZP6AXXZ@Z=MSVCRT_set_unexpected @48
+?terminate@@YAXXZ=MSVCRT_terminate @49
+?unexpected@@YAXXZ=MSVCRT_unexpected @50
+?what@exception@@UBEPBDXZ=__thiscall_MSVCRT_what_exception @51
 ??1type_info@@UAE@XZ=MSVCRT_type_info_dtor
-??2@YAPAXI@Z=MSVCRT_operator_new
-??_U@YAPAXI@Z=MSVCRT_operator_new
-??3@YAXPAX@Z=MSVCRT_operator_delete
-??_V@YAXPAX@Z=MSVCRT_operator_delete
-;??4__non_rtti_object@@QAEAAV0@ABV0@@Z
-;??4bad_cast@@QAEAAV0@ABV0@@Z
-;??4bad_typeid@@QAEAAV0@ABV0@@Z
-;??4exception@@QAEAAV0@ABV0@@Z
-;??8type_info@@QBEHABV0@@Z
-;??9type_info@@QBEHABV0@@Z
-;??_7__non_rtti_object@@6B@
-;??_7bad_cast@@6B@
-;??_7bad_typeid@@6B@
-;??_7exception@@6B@
-;??_E__non_rtti_object@@UAEPAXI@Z
-;??_Ebad_cast@@UAEPAXI@Z
-;??_Ebad_typeid@@UAEPAXI@Z
-;??_Eexception@@UAEPAXI@Z
+
+;?name@type_info@@QBEPBDXZ=__thiscall_MSVCRT_type_info_name @44
+;??0bad_cast@@QAE@PBD@Z
+;??0bad_cast@@AAE@PBQBD@Z
 ;??_Fbad_cast@@QAEXXZ
 ;??_Fbad_typeid@@QAEXXZ
-;??_G__non_rtti_object@@UAEPAXI@Z
-;??_Gbad_cast@@UAEPAXI@Z
-;??_Gbad_typeid@@UAEPAXI@Z
-;??_Gexception@@UAEPAXI@Z
-;?_query_new_handler@@YAP6AHI@ZXZ
-;?_query_new_mode@@YAHXZ
-?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z=MSVCRT__set_new_handler
-?_set_new_mode@@YAHH@Z=MSVCRT__set_new_mode
-;?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z
-;?before@type_info@@QBEHABV1@@Z
-;?name@type_info@@QBEPBDXZ
-;?raw_name@type_info@@QBEPBDXZ
-;?set_new_handler@@YAP6AXXZP6AXXZ@Z
-;?set_terminate@@YAP6AXXZP6AXXZ@Z
-;?set_unexpected@@YAP6AXXZP6AXXZ@Z
-?terminate@@YAXXZ=MSVCRT_terminate
-;?unexpected@@YAXXZ
-;?what@exception@@UBEPBDXZ
+
 ;----------------------------------------------------------------------
 ;	C Undecorated Symbols
 ;----------------------------------------------------------------------
@@ -90,17 +93,17 @@ _HUGE DATA
 ;_Strftime
 _XcptFilter
 ;__CxxCallUnwindDtor
-;__CxxDetectRethrow
+__CxxDetectRethrow
 ;__CxxExceptionFilter
 __CxxFrameHandler
 ;__CxxLongjmpUnwind
-;__CxxQueryExceptionSize
+__CxxQueryExceptionSize
 ;__CxxRegisterExceptionObject
 ;__CxxUnregisterExceptionObject
 ;__DestructExceptionObject
-;__RTCastToVoid
-;__RTDynamicCast
-;__RTtypeid
+__RTCastToVoid=MSVCRT___RTCastToVoid
+__RTDynamicCast=MSVCRT___RTDynamicCast
+__RTtypeid=MSVCRT___RTtypeid
 ;__STRINGTOLD
 __argc DATA
 __argv DATA
@@ -371,7 +374,7 @@ _kbhit
 _lfind
 _loaddll
 _local_unwind2
-;_lock
+_lock
 _locking
 _logb
 ;_longjmpex
@@ -487,7 +490,7 @@ _seterrormode
 _setjmp
 _setjmp3
 ;_setmaxstdio
-;_setmbcp
+_setmbcp
 _setmode
 ;_setsystime
 _sleep
@@ -547,7 +550,7 @@ _ungetch
 ;_ungetwch
 _unlink
 _unloaddll
-;_unlock
+_unlock
 _utime
 ;_utime64
 ;_vscprintf

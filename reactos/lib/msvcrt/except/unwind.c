@@ -1,4 +1,6 @@
 #include <windows.h>
+#include <excpt.h>
+#include <wine/winternl.h>
 
 /*
  * @implemented

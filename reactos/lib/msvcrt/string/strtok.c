@@ -1,4 +1,8 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
+#ifdef __USE_W32API
+#undef __USE_W32API
+#endif
+
 #include <msvcrt/string.h>
 #include <msvcrt/internal/tls.h>
 

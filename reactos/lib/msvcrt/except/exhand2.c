@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <excpt.h>
 
 #ifdef __GNUC__
 #else

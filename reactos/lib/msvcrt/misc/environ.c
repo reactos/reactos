@@ -1,4 +1,4 @@
-/* $Id: environ.c,v 1.5 2003/11/14 17:13:31 weiden Exp $
+/* $Id: environ.c,v 1.6 2003/12/24 23:20:08 sedwards Exp $
  *
  * dllmain.c
  *
@@ -24,6 +24,7 @@ char *_acmdln = NULL;       /* pointer to ascii command line */
 char **_environ = NULL;     /* pointer to environment block */
 char ***_environ_dll = &_environ;/* pointer to environment block */
 char **__initenv = NULL;
+#undef _pgmptr 
 char *_pgmptr = NULL;       /* pointer to program name */
 int __app_type = 0; //_UNKNOWN_APP; /* application type */
 int __mb_cur_max = 1;

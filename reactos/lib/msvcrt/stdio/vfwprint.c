@@ -1,5 +1,9 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
+#ifdef __USE_W32API
+#undef __USE_W32API
+#endif
+
 //#include <stdarg.h>
 #include <msvcrt/stdarg.h> // robd
 #include <msvcrt/crttypes.h> // robd
@@ -7,6 +11,7 @@
 #include <msvcrt/stdio.h>
 #include <msvcrt/malloc.h>
 #include <msvcrt/internal/file.h>
+
 
 int _isnanl(double x);
 int _isinfl(double x);

@@ -1,6 +1,9 @@
-/* $Id: errno.c,v 1.11 2003/12/03 17:17:03 navaraf Exp $
+/* $Id: errno.c,v 1.12 2003/12/24 23:20:08 sedwards Exp $
  *
  */
+#ifdef __USE_W32API
+#undef __USE_W32API
+#endif 
 
 #include <msvcrt/errno.h>
 #include <msvcrt/internal/tls.h>

@@ -3,6 +3,12 @@
 #include <msvcrt/string.h>
 #include <limits.h>
 
+#include <windows.h>
+#include <msvcrt/internal/tls.h>
+#include <msvcrt/stdlib.h>
+
+#define NDEBUG
+#include <msvcrt/msvcrtdbg.h>
 
 int _current_category;	/* used by setlocale */
 const char *_current_locale;
@@ -146,4 +152,15 @@ struct lconv _lconv = {
 struct lconv *localeconv(void)
 {
   return (struct lconv *) &_lconv;
+}
+
+/*********************************************************************
+ *		_setmbcp (MSVCRT.@)
+ *
+ * @unimplemented
+ */
+void _setmbcp(int cp)
+{
+DPRINT1("_setmbcp - stub\n");
+return;
 }

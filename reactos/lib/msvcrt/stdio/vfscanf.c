@@ -29,7 +29,9 @@
 #include <msvcrt/wchar.h>
 #include <msvcrt/malloc.h>
 #include <msvcrt/mbstring.h>
+#ifndef __USE_W32API
 #include <msvcrt/internal/file.h>
+#endif
 #include <msvcrt/internal/stdio.h>
 
 /* The internal entry points for `strtoX' take an extra flag argument

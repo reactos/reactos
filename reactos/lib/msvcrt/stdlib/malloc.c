@@ -1,42 +1,31 @@
+/*
+ * msvcrt.dll heap functions
+ *
+ * Copyright 2000 Jon Griffiths
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * Note: Win32 heap operations are MT safe. We only lock the new
+ *       handler and non atomic heap operations
+ */
+
 #include <windows.h>
 #include <msvcrt/stdlib.h>
 #include <msvcrt/malloc.h>
 
 extern HANDLE hHeap;
-
-typedef void (*MSVCRT_new_handler_func)(unsigned long size);
-static MSVCRT_new_handler_func MSVCRT_new_handler;
-static int MSVCRT_new_mode;
-
-/* ??2@YAPAXI@Z (MSVCRT.@) */
-void* MSVCRT_operator_new(unsigned long size)
-{
-  void *retval = HeapAlloc(hHeap, 0, size);
-
-/*  FIXME: LOCK_HEAP; */
-  if(!retval && MSVCRT_new_handler)
-    (*MSVCRT_new_handler)(size);
-/*  FIXME: UNLOCK_HEAP; */
-
-  return retval;
-}
-
-/* ??3@YAXPAX@Z (MSVCRT.@) */
-void MSVCRT_operator_delete(void *mem)
-{
-  HeapFree(hHeap, 0, mem);
-}
-
-/* ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z (MSVCRT.@) */
-MSVCRT_new_handler_func MSVCRT__set_new_handler(MSVCRT_new_handler_func func)
-{
-  MSVCRT_new_handler_func old_handler;
-/*  FIXME:  LOCK_HEAP; */
-  old_handler = MSVCRT_new_handler;
-  MSVCRT_new_handler = func;
-/*  FIXME:  UNLOCK_HEAP; */
-  return old_handler;
-}
 
 /*
  * @implemented
@@ -84,17 +73,6 @@ void* _expand(void* _ptr, size_t _size)
 size_t _msize(void* _ptr)
 {
    return HeapSize(hHeap, 0, _ptr);
-}
-
-/* ?_set_new_mode@@YAHH@Z (MSVCRT.@) */
-int MSVCRT__set_new_mode(int mode)
-{
-  int old_mode;
-/*  FIXME:  LOCK_HEAP; */
-  old_mode = MSVCRT_new_mode;
-  MSVCRT_new_mode = mode;
-/*  FIXME:  UNLOCK_HEAP; */
-  return old_mode;
 }
 
 /*

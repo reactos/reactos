@@ -4,6 +4,10 @@
 #include <msvcrt/malloc.h>
 #include <msvcrt/internal/file.h>
 
+#ifdef __USE_W32API
+#include <ntdef.h>
+#endif
+
 int _isnanl(double x);
 int _isinfl(double x);
 int _isnan(double x);
