@@ -2513,7 +2513,7 @@ exit_handler:
       cabname = (char *) (fi->folder->cab[0]->filename);
     }
 
-    ERR(errmsg, cabname);
+    ERR((char *)errmsg, cabname);
   }
 }
 
