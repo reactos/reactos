@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: resource.c,v 1.17 2004/07/03 17:40:24 navaraf Exp $
+/* $Id: resource.c,v 1.18 2004/07/18 23:52:50 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/resource.c
@@ -716,8 +716,9 @@ IoReportResourceUsage(PUNICODE_STRING DriverClassName,
       *       a conflict is detected with another driver.
       */
 {
-  UNIMPLEMENTED;
-  return(STATUS_NOT_IMPLEMENTED);
+   DPRINT1("IoReportResourceUsage is unimplemented\n");
+   *ConflictDetected = FALSE;
+   return STATUS_SUCCESS;
 }
 
 /*
