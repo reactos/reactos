@@ -110,6 +110,15 @@ HalpSetCmosData(PBUS_HANDLER BusHandler,
 		ULONG Offset,
 		ULONG Length);
 
+/* mca.h */
+ULONG STDCALL
+HalpGetMicroChannelData(PBUS_HANDLER BusHandler,
+			ULONG BusNumber,
+			ULONG SlotNumber,
+			PVOID Buffer,
+			ULONG Offset,
+			ULONG Length);
+
 #endif /* __INTERNAL_HAL_BUS_H */
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: bus.c,v 1.3 2002/09/08 10:22:24 chorns Exp $
+/* $Id: bus.c,v 1.4 2002/10/02 19:32:57 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -172,6 +172,16 @@ HalpInitBusHandlers(VOID)
 
    BusHandler->TranslateBusAddress =
 	(pTranslateBusAddress)HalpTranslateIsaBusAddress;
+
+
+  /* add MicroChannel bus handler */
+  BusHandler = HalpAllocateBusHandler(MicroChannel,
+				      Pos,
+				      0);
+   if (BusHandler == NULL)
+     return;
+
+  BusHandler->GetBusData = (pGetSetBusData)HalpGetMicroChannelData;
 }
 
 

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2002/09/08 10:22:24 chorns Exp $
+# $Id: Makefile,v 1.6 2002/10/02 19:32:57 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -51,6 +51,7 @@ HAL_OBJECTS = \
 	isa.o \
 	kdbg.o \
 	mbr.o \
+	mca.o \
 	misc.o \
 	mp.o \
 	pci.o \
