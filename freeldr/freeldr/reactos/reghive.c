@@ -457,9 +457,9 @@ setKeyValue (HKEY currentKey,
   return  TRUE;
 }
 
-VOID
-RegImportHive(PCHAR ChunkBase,
-	      U32 ChunkSize)
+BOOL
+RegImportTextHive(PCHAR ChunkBase,
+		  U32 ChunkSize)
 {
   HKEY  currentKey = INVALID_HANDLE_VALUE;
   char *newKeyName = NULL;
@@ -475,7 +475,7 @@ RegImportHive(PCHAR ChunkBase,
 
   regChunk = checkAndSkipMagic (ChunkBase);
   if (regChunk == 0)
-    return;
+    return FALSE;
 
   while (regChunk != 0 && *regChunk != 0 && (((U32)regChunk-(U32)ChunkBase) < ChunkSize))
   {
@@ -577,13 +577,15 @@ RegImportHive(PCHAR ChunkBase,
     MmFreeMemory(data);
   }
 
-  return;
+  return TRUE;
 }
 
+#if 0
 BOOL
 RegExportHive(PCHAR ChunkBase, U32* ChunkSize)
 {
   return(TRUE);
 }
+#endif
 
 /* EOF */

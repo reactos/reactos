@@ -452,6 +452,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 
         PARTITION_TABLE_ENTRY PartitionTableEntry;
         U32 rosPartition;
+	BOOL TextHive = FALSE;
 
 	//
 	// Open the operating system section
@@ -518,15 +519,15 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 
         /* recalculate the boot partition for freeldr */
 	i = 0;
-        rosPartition = 0;
-        while (1)
+	rosPartition = 0;
+	while (1)
 	{
-           if (!DiskGetPartitionEntry(BootDrive, ++i, &PartitionTableEntry))
+	   if (!DiskGetPartitionEntry(BootDrive, ++i, &PartitionTableEntry))
 	   {
 	      BootPartition = 0;
 	      break;
 	   }
-           if (IsRecognizedPartition(PartitionTableEntry.SystemIndicator))
+	   if (IsRecognizedPartition(PartitionTableEntry.SystemIndicator))
 	   {
 	      if (++rosPartition == BootPartition)
 	      {
@@ -640,6 +641,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	 * Find the System hive image name
 	 * and try to load it off the disk
 	 */
+#if 0
 	if(IniReadSettingByName(SectionId, "SystemHive", value, 1024))
 	{
 		/*
@@ -663,15 +665,34 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		strcat(szFileName, "SYSTEM32\\CONFIG\\");
 		strcat(szFileName, value);
 	}
+#endif
+
+	strcpy(szFileName, szBootPath);
+	strcat(szFileName, "SYSTEM32\\CONFIG\\SYSTEM");
 
 	DbgPrint((DPRINT_REACTOS, "SystemHive: '%s'", szFileName));
 
 	FilePointer = FsOpenFile(szFileName);
 	if (FilePointer == NULL)
 	{
-		strcat(value, " not found.");
-		UiMessageBox(value);
-		return;
+//		strcat(value, " not found.");
+//		UiMessageBox(value);
+//		return;
+		strcpy(szFileName, szBootPath);
+		strcat(szFileName, "SYSTEM32\\CONFIG\\SYSTEM.HIV");
+
+		DbgPrint((DPRINT_REACTOS, "SystemHive: '%s'", szFileName));
+
+		FilePointer = FsOpenFile(szFileName);
+		if (FilePointer == NULL)
+		{
+			UiMessageBox("Could not find the system hive!");
+			return;
+		}
+		else
+		{
+			TextHive = TRUE;
+		}
 	}
 
 	/*
@@ -688,7 +709,15 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	 */
 	Base = MultiBootLoadModule(FilePointer, szFileName, &Size);
 	RegInitializeRegistry();
-	RegImportHive(Base, Size);
+
+	if (TextHive)
+	{
+		RegImportTextHive(Base, Size);
+	}
+	else
+	{
+		RegImportBinaryHive(Base, Size);
+	}
 
 	UiDrawProgressBarCenter(15, 100, "Loading ReactOS...");
 	DbgPrint((DPRINT_REACTOS, "SystemHive loaded at 0x%x size %u", (unsigned)Base, (unsigned)Size));
@@ -698,7 +727,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	 */
 	DetectHardware();
 #if 0
-	Base = MultiBootCreateModule(HARDWARE.HIV);
+	Base = MultiBootCreateModule("HARDWARE.HIV");
 	RegExportHive("\\Registry\\Machine\\HARDWARE", Base, &Size);
 	MultiBootCloseModule(Base, Size);
 #endif
