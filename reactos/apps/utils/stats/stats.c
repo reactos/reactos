@@ -16,6 +16,8 @@ typedef struct _EXTENSION_INFO
   struct _EXTENSION_INFO * Next;
   struct _FILE_INFO * StatInfoList;
   TCHAR ExtName[16];
+  TCHAR ExpandedExtName[128];
+  DWORD nExtensions;
   TCHAR Description[256];
   DWORD FileCount;
   DWORD LineCount;
@@ -80,14 +82,28 @@ AddExtension(LPTSTR ExtName,
 {
   PEXTENSION_INFO ExtInfo;
   PEXTENSION_INFO Info;
+  TCHAR *t;
+  DWORD ln;
 
   ExtInfo = (PEXTENSION_INFO) HeapAlloc (GetProcessHeap(), 0, sizeof (EXTENSION_INFO));
   if (!ExtInfo)
     return NULL;
+  
+  for(t = ExtName; *t != _T('\0'); t += _tcslen(t) + 1);
+  ln = (DWORD)t - (DWORD)ExtName;
+  
   ZeroMemory (ExtInfo, sizeof (EXTENSION_INFO));
-  _tcscpy (ExtInfo->ExtName, ExtName);
+  memcpy (ExtInfo->ExtName, ExtName, ln);
   _tcscpy (ExtInfo->Description, Description);
-
+  
+  for(t = ExtInfo->ExtName; *t != _T('\0'); t += _tcslen(t) + 1)
+  {
+    if(ExtInfo->nExtensions++ != 0)
+      _tcscat (ExtInfo->ExpandedExtName, _T(";"));
+    _tcscat (ExtInfo->ExpandedExtName, _T("*."));
+    _tcscat (ExtInfo->ExpandedExtName, t);
+  }
+  
   if (ExtInfoList)
   {
     Info = ExtInfoList;
@@ -273,14 +289,22 @@ PrintStatistics()
   TotalFileCount = 0;
   TotalLineCount = 0;
   Info = ExtInfoList;
-
-  while (Info != NULL)
+  
+  for (Info = ExtInfoList; Info != NULL; Info = Info->Next)
+  {
+    TotalFileCount += Info->FileCount;
+    TotalLineCount += Info->LineCount;
+  }
+  
+  TotalAvgLF = (TotalFileCount ? TotalLineCount / TotalFileCount : 0);
+  
+  for (Info = ExtInfoList; Info != NULL; Info = Info->Next)
   {
     DWORD AvgLF;
 
     if (Info->FileCount != 0)
     {
-      AvgLF = Info->LineCount / Info->FileCount;
+      AvgLF = (Info->FileCount ? Info->LineCount / Info->FileCount : 0);
     }
     else
     {
@@ -288,19 +312,13 @@ PrintStatistics()
     }
 
     _tprintf (_T("\n"));
-    _tprintf (_T("File extension         : %s\n"), Info->ExtName);
+    _tprintf (_T("File extension%c        : %s\n"), ((Info->nExtensions > 1) ? _T('s') : _T(' ')), Info->ExpandedExtName);
     _tprintf (_T("File ext. description  : %s\n"), Info->Description);
     _tprintf (_T("Number of files        : %lu\n"), Info->FileCount);
     _tprintf (_T("Number of lines        : %lu\n"), Info->LineCount);
+    _tprintf (_T("Proportion of lines    : %.2f %%\n"), (float)(TotalLineCount ? (((float)Info->LineCount * 100) / (float)TotalLineCount) : 0));
     _tprintf (_T("Average no. lines/file : %lu\n"), AvgLF);
-
-    TotalFileCount += Info->FileCount;
-    TotalLineCount += Info->LineCount;
-
-    Info = Info->Next;
   }
-
-  TotalAvgLF = TotalLineCount / TotalFileCount;
 
   _tprintf (_T("\n"));
   _tprintf (_T("Total number of files  : %lu\n"), TotalFileCount);
@@ -316,16 +334,20 @@ ProcessFiles(LPTSTR Path)
   PEXTENSION_INFO Info;
   TCHAR SearchPath[256];
   TCHAR FileName[256];
+  TCHAR *Ext;
   HANDLE SearchHandle;
   BOOL More;
 
   Info = ExtInfoList;
   while (Info != NULL)
   {
+   Ext = Info->ExtName;
+   do
+   {
     ZeroMemory (&FindFile, sizeof (FindFile));
     _tcscpy (SearchPath, Path);
     _tcscat (SearchPath, _T("\\*."));
-    _tcscat (SearchPath, Info->ExtName);
+    _tcscat (SearchPath, Ext);
     _tcscpy (FindFile.cFileName, SearchPath);
     SearchHandle = FindFirstFile (SearchPath, &FindFile);
     if (SearchHandle != INVALID_HANDLE_VALUE)
@@ -362,6 +384,8 @@ ProcessFiles(LPTSTR Path)
       }
       FindClose (SearchHandle);
     }
+    Ext += _tcslen(Ext) + 1;
+   } while(*Ext != _T('\0'));
     Info = Info->Next;
   }
   return TRUE;
@@ -450,8 +474,9 @@ main (int argc, char * argv [])
   }
 
   Initialize();
-  AddExtension (_T("c"), _T("Source files"));
-  AddExtension (_T("h"), _T("Header files"));
+  AddExtension (_T("c\0\0"), _T("Ansi C Source files"));
+  AddExtension (_T("cpp\0cxx\0\0"), _T("C++ Source files"));
+  AddExtension (_T("h\0\0"), _T("Header files"));
   Execute (argv[1]);
   Cleanup();
 
