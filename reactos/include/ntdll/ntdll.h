@@ -15,12 +15,14 @@
 
 #ifdef NDEBUG
 #if defined(__GNUC__)
+#define TRACE_LDR(args...) if (NtGlobalFlag & FLG_SHOW_LDR_SNAPS) { DbgPrint("(LDR:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); }
 #define DPRINT(args...)
 #else
 #define DPRINT
 #endif	/* __GNUC__ */
 #define CHECKPOINT
 #else
+#define TRACE_LDR(args...) do { DbgPrint("(LDR:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0)
 #define DPRINT(args...) do { DbgPrint("(NTDLL:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0)
 #define CHECKPOINT do { DbgPrint("(NTDLL:%s:%d) Checkpoint\n",__FILE__,__LINE__); } while(0)
 #endif

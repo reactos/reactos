@@ -13,6 +13,15 @@ typedef BOOL STDCALL_FUNC
 		  ULONG ul_reason_for_call,
 		  LPVOID lpReserved);
 
+/* Module flags */
+#define IMAGE_DLL		0x00000004
+#define LOAD_IN_PROGRESS	0x00001000
+#define UNLOAD_IN_PROGRESS	0x00002000
+#define ENTRY_PROCESSED		0x00004000
+#define DONT_CALL_FOR_THREAD	0x00040000
+#define PROCESS_ATTACH_CALLED	0x00080000
+#define IMAGE_NOT_AT_BASE	0x00200000
+
 typedef struct _LDR_MODULE
 {
    LIST_ENTRY     InLoadOrderModuleList;
@@ -67,7 +76,7 @@ typedef struct _MODULE_INFORMATION
   MODULE_ENTRY ModuleEntry[1];
 } MODULE_INFORMATION, *PMODULE_INFORMATION;
 
-#if defined(KDBG) || defined(DBG)
+#ifdef KDBG
 
 VOID
 LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule);
@@ -90,7 +99,7 @@ NTSTATUS STDCALL
 LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress);
 
 NTSTATUS STDCALL
-LdrGetDllHandle(IN ULONG Unknown1,
+LdrGetDllHandle(IN PWCHAR Path OPTIONAL,
 		IN ULONG Unknown2,
 		IN PUNICODE_STRING DllName,
 		OUT PVOID *BaseAddress);
