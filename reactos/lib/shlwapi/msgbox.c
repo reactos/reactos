@@ -273,8 +273,7 @@ INT_PTR WINAPI SHMessageBoxCheckA(HWND hWnd, LPCSTR lpszText, LPCSTR lpszTitle,
 
   iRetVal = SHMessageBoxCheckW(hWnd, szTextBuff, lpszTitle ? szTitleBuff : NULL,
                                dwType, iRet, szIdBuff);
-  if (szTextBuff)
-    HeapFree(GetProcessHeap(), 0, szTextBuff);
+  HeapFree(GetProcessHeap(), 0, szTextBuff);
   return iRetVal;
 }
 

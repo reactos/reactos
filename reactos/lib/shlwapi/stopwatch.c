@@ -32,15 +32,10 @@
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-#include "wine/unicode.h"
 #include "windef.h"
 #include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
 #include "winreg.h"
 #include "winternl.h"
-#define NO_SHLWAPI_STREAM
-#include "shlwapi.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
