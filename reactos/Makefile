@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.268 2004/12/09 06:04:40 sedwards Exp $
+# $Id: Makefile,v 1.269 2004/12/11 17:53:11 blight Exp $
 #
 # Global makefile
 #
@@ -6,6 +6,16 @@
 PATH_TO_TOP = .
 
 include $(PATH_TO_TOP)/rules.mak
+
+ifeq ($(VERBOSE),no)
+  HALFVERBOSEECHO = @:
+else
+ifeq ($(VERBOSE),yes)
+  HALFVERBOSEECHO = @:
+else
+  HALFVERBOSEECHO = @echo
+endif
+endif
 
 #
 # Define to build ReactOS external targets
@@ -156,6 +166,7 @@ clean: tools dk_clean iface_native_clean iface_additional_clean hallib_clean \
        $(REGTESTS:%=%_clean) clean_after tools_clean
 
 clean_after:
+	$(HALFVERBOSEECHO) [RM]      /include/roscfg.h
 	$(RM) $(PATH_TO_TOP)/include/roscfg.h
 
 fastinstall: tools install_dirs install_before \
@@ -172,18 +183,31 @@ freeldr:
 	$(MAKE) -C $(FREELDR_DIR)
 
 bootcd_directory_layout:
+	$(HALFVERBOSEECHO) [RMKDIR]  $(BOOTCD_DIR)
 	$(RMKDIR) $(BOOTCD_DIR)
+	$(HALFVERBOSEECHO) [RMKDIR]  $(BOOTCD_DIR)/bootdisk
 	$(RMKDIR) $(BOOTCD_DIR)/bootdisk
+	$(HALFVERBOSEECHO) [RMKDIR]  $(BOOTCD_DIR)/loader
 	$(RMKDIR) $(BOOTCD_DIR)/loader
+	$(HALFVERBOSEECHO) [RMKDIR]  $(BOOTCD_DIR)/reactos
 	$(RMKDIR) $(BOOTCD_DIR)/reactos
+	$(HALFVERBOSEECHO) [RMKDIR]  $(BOOTCD_DIR)/reactos/system32
 	$(RMKDIR) $(BOOTCD_DIR)/reactos/system32
+	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/bootsect/isoboot.bin to ${BOOTCD_DIR}/../isoboot.bin
 	$(CP) ${FREELDR_DIR}/bootsect/isoboot.bin ${BOOTCD_DIR}/../isoboot.bin
+	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/bootsect/dosmbr.bin to ${BOOTCD_DIR}/loader/dosmbr.bin
 	$(CP) ${FREELDR_DIR}/bootsect/dosmbr.bin ${BOOTCD_DIR}/loader/dosmbr.bin
+	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/bootsect/ext2.bin to ${BOOTCD_DIR}/loader/ext2.bin
 	$(CP) ${FREELDR_DIR}/bootsect/ext2.bin ${BOOTCD_DIR}/loader/ext2.bin
+	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/bootsect/fat.bin to ${BOOTCD_DIR}/loader/fat.bin
 	$(CP) ${FREELDR_DIR}/bootsect/fat.bin ${BOOTCD_DIR}/loader/fat.bin
+	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/bootsect/fat32.bin to ${BOOTCD_DIR}/loader/fat32.bin
 	$(CP) ${FREELDR_DIR}/bootsect/fat32.bin ${BOOTCD_DIR}/loader/fat32.bin
+	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/bootsect/isoboot.bin to ${BOOTCD_DIR}/loader/isoboot.bin
 	$(CP) ${FREELDR_DIR}/bootsect/isoboot.bin ${BOOTCD_DIR}/loader/isoboot.bin
+	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/freeldr/obj/i386/freeldr.sys to ${BOOTCD_DIR}/loader/freeldr.sys
 	$(CP) ${FREELDR_DIR}/freeldr/obj/i386/freeldr.sys ${BOOTCD_DIR}/loader/freeldr.sys
+	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/freeldr/obj/i386/setupldr.sys to ${BOOTCD_DIR}/loader/setupldr.sys
 	$(CP) ${FREELDR_DIR}/freeldr/obj/i386/setupldr.sys ${BOOTCD_DIR}/loader/setupldr.sys
 
 bootcd_bootstrap_files: $(COMPONENTS:%=%_bootcd) $(HALS:%=%_bootcd) $(BUS:%=%_bootcd) \
@@ -191,18 +215,31 @@ bootcd_bootstrap_files: $(COMPONENTS:%=%_bootcd) $(HALS:%=%_bootcd) $(BUS:%=%_bo
   $(KERNEL_DRIVERS:%=%_bootcd) $(SUBSYS:%=%_bootcd) $(SYS_APPS:%=%_bootcd)
 
 bootcd_install_before:
+	$(HALFVERBOSEECHO) [RLINE]   bootdata/autorun.inf to $(BOOTCD_DIR)/autorun.inf
 	$(RLINE) bootdata/autorun.inf $(BOOTCD_DIR)/autorun.inf
+	$(HALFVERBOSEECHO) [RLINE]   bootdata/readme.txt to $(BOOTCD_DIR)/readme.txt
 	$(RLINE) bootdata/readme.txt $(BOOTCD_DIR)/readme.txt
+	$(HALFVERBOSEECHO) [RLINE]   bootdata/hivecls.inf to $(BOOTCD_DIR)/reactos/hivecls.inf
 	$(RLINE) bootdata/hivecls.inf $(BOOTCD_DIR)/reactos/hivecls.inf
+	$(HALFVERBOSEECHO) [RLINE]   bootdata/hivedef.inf to $(BOOTCD_DIR)/reactos/hivedef.inf
 	$(RLINE) bootdata/hivedef.inf $(BOOTCD_DIR)/reactos/hivedef.inf
+	$(HALFVERBOSEECHO) [RLINE]   bootdata/hivesft.inf to $(BOOTCD_DIR)/reactos/hivesft.inf
 	$(RLINE) bootdata/hivesft.inf $(BOOTCD_DIR)/reactos/hivesft.inf
+	$(HALFVERBOSEECHO) [RLINE]   bootdata/hivesys.inf to $(BOOTCD_DIR)/reactos/hivesys.inf
 	$(RLINE) bootdata/hivesys.inf $(BOOTCD_DIR)/reactos/hivesys.inf
+	$(HALFVERBOSEECHO) [RLINE]   bootdata/txtsetup.sif to $(BOOTCD_DIR)/reactos/txtsetup.sif
 	$(RLINE) bootdata/txtsetup.sif $(BOOTCD_DIR)/reactos/txtsetup.sif
+	$(HALFVERBOSEECHO) [COPY]    bootdata/icon.ico to $(BOOTCD_DIR)/icon.ico
 	$(CP) bootdata/icon.ico $(BOOTCD_DIR)/icon.ico
+	$(HALFVERBOSEECHO) [COPY]    subsys/system/welcome/welcome.exe  to $(BOOTCD_DIR)/reactos/welcome.exe
 	$(CP) subsys/system/welcome/welcome.exe $(BOOTCD_DIR)/reactos/welcome.exe
+	$(HALFVERBOSEECHO) [COPY]    media/nls/c_1252.nls to $(BOOTCD_DIR)/reactos/c_1252.nls
 	$(CP) media/nls/c_1252.nls $(BOOTCD_DIR)/reactos/c_1252.nls
+	$(HALFVERBOSEECHO) [COPY]    media/nls/c_437.nls to $(BOOTCD_DIR)/reactos/c_437.nls
 	$(CP) media/nls/c_437.nls $(BOOTCD_DIR)/reactos/c_437.nls
+	$(HALFVERBOSEECHO) [COPY]    media/nls/l_intl.nls to $(BOOTCD_DIR)/reactos/l_intl.nls
 	$(CP) media/nls/l_intl.nls $(BOOTCD_DIR)/reactos/l_intl.nls
+	$(HALFVERBOSEECHO) [COPY]    media/drivers/etc/services to $(BOOTCD_DIR)/reactos/services
 	$(CP) media/drivers/etc/services $(BOOTCD_DIR)/reactos/services
 
 bootcd_basic: bootcd_directory_layout bootcd_bootstrap_files bootcd_install_before
@@ -211,20 +248,31 @@ bootcd_makecd:
 	$(CABMAN) /C bootdata/packages/reactos.dff /L $(BOOTCD_DIR)/reactos /I
 	$(CABMAN) /C bootdata/packages/reactos.dff /RC $(BOOTCD_DIR)/reactos/reactos.inf /L $(BOOTCD_DIR)/reactos /N
 	- $(RM) $(BOOTCD_DIR)/reactos/reactos.inf
+	$(HALFVERBOSEECHO) [CDMAKE]  ReactOS.iso
 	$(CDMAKE) -v -m -b $(BOOTCD_DIR)/../isoboot.bin $(BOOTCD_DIR) REACTOS ReactOS.iso
 
 ubootcd_unattend:
+	$(HALFVERBOSEECHO) [COPY]    bootdata/unattend.inf to $(BOOTCD_DIR)/reactos/unattend.inf
 	$(CP) bootdata/unattend.inf $(BOOTCD_DIR)/reactos/unattend.inf
 
 livecd_directory_layout:
+	$(HALFVERBOSEECHO) [RMKDIR]  $(LIVECD_DIR)
 	$(RMKDIR) $(LIVECD_DIR)
+	$(HALFVERBOSEECHO) [RMKDIR]  $(LIVECD_DIR)/loader
 	$(RMKDIR) $(LIVECD_DIR)/loader
+	$(HALFVERBOSEECHO) [RMKDIR]  $(LIVECD_DIR)/reactos
 	$(RMKDIR) $(LIVECD_DIR)/reactos
+	$(HALFVERBOSEECHO) [RMKDIR]  $(LIVECD_DIR)/Profiles/All\ Users/Desktop
 	$(RMKDIR) $(LIVECD_DIR)/Profiles/All\ Users/Desktop
+	$(HALFVERBOSEECHO) [RMKDIR]  $(LIVECD_DIR)/Profiles/Default\ User/Desktop
 	$(RMKDIR) $(LIVECD_DIR)/Profiles/Default\ User/Desktop
+	$(HALFVERBOSEECHO) [RMKDIR]  $(LIVECD_DIR)/Profiles/Default\ User/My\ Documents
 	$(RMKDIR) $(LIVECD_DIR)/Profiles/Default\ User/My\ Documents
+	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/bootsect/isoboot.bin to ${LIVECD_DIR}/../isoboot.bin
 	$(CP) ${FREELDR_DIR}/bootsect/isoboot.bin ${LIVECD_DIR}/../isoboot.bin
+	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/freeldr/obj/i386/freeldr.sys to ${LIVECD_DIR}/loader/setupldr.sys
 	$(CP) ${FREELDR_DIR}/freeldr/obj/i386/freeldr.sys ${LIVECD_DIR}/loader/setupldr.sys
+	$(HALFVERBOSEECHO) [RLINE]   bootdata/livecd.ini to $(LIVECD_DIR)/freeldr.ini
 	$(RLINE) bootdata/livecd.ini $(LIVECD_DIR)/freeldr.ini
 
 livecd_bootstrap_files:
@@ -236,6 +284,7 @@ livecd_install_before:
 livecd_basic: livecd_directory_layout livecd_bootstrap_files livecd_install_before
 
 livecd_makecd:
+	$(HALFVERBOSEECHO) [CDMAKE]  roslive.iso
 	$(CDMAKE) -m -j -b $(LIVECD_DIR)/../isoboot.bin $(LIVECD_DIR) REACTOS roslive.iso
 
 bootcd: bootcd_basic bootcd_makecd
@@ -388,17 +437,29 @@ dk_implib:
 # WARNING! Be very sure that there are no important files
 #          in these directories before cleaning them!!!
 dk_clean:
+	$(HALFVERBOSEECHO) [RM]      $(DDK_PATH_LIB)/*.a
 	$(RM) $(DDK_PATH_LIB)/*.a
-# $(RM) $(DDK_PATH_INC)/*.h
+#	$(HALFVERBOSEECHO) [RM]      $(DDK_PATH_INC)/*.h
+#	$(RM) $(DDK_PATH_INC)/*.h
+	$(HALFVERBOSEECHO) [RMDIR]   $(DDK_PATH_LIB)
 	$(RMDIR) $(DDK_PATH_LIB)
+#	$(HALFVERBOSEECHO) [RMDIR]   $(DDK_PATH_INC)
 #	$(RMDIR) $(DDK_PATH_INC)
+	$(HALFVERBOSEECHO) [RM]      $(SDK_PATH_LIB)/*.a
 	$(RM) $(SDK_PATH_LIB)/*.a
-# $(RM) $(SDK_PATH_INC)/*.h
+#	$(HALFVERBOSEECHO) [RM]      $(SDK_PATH_INC)/*.h
+#	$(RM) $(SDK_PATH_INC)/*.h
+	$(HALFVERBOSEECHO) [RMDIR]   $(SDK_PATH_LIB)
 	$(RMDIR) $(SDK_PATH_LIB)
+#	$(HALFVERBOSEECHO) [RMDIR]   $(SDK_PATH_INC)
 #	$(RMDIR) $(SDK_PATH_INC)
+	$(HALFVERBOSEECHO) [RM]      $(XDK_PATH_LIB)/*.a
 	$(RM) $(XDK_PATH_LIB)/*.a
+#	$(HALFVERBOSEECHO) [RM]      $(XDK_PATH_INC)/*.h
 #	$(RM) $(XDK_PATH_INC)/*.h
+	$(HALFVERBOSEECHO) [RMDIR]   $(XDK_PATH_LIB)
 	$(RMDIR) $(XDK_PATH_LIB)
+#	$(HALFVERBOSEECHO) [RMDIR]   $(XDK_PATH_INC)
 #	$(RMDIR) $(XDK_PATH_INC)
 
 dk_install:
@@ -909,45 +970,78 @@ $(REGTESTS:%=%_install): %_install:
 #
 
 install_clean:
+	$(HALFVERBOSEECHO) [RM]      $(INSTALL_DIR)/system32/drivers/*.*
 	$(RM) $(INSTALL_DIR)/system32/drivers/*.*
+	$(HALFVERBOSEECHO) [RM]      $(INSTALL_DIR)/system32/config/*.*
 	$(RM) $(INSTALL_DIR)/system32/config/*.*
+	$(HALFVERBOSEECHO) [RM]      $(INSTALL_DIR)/system32/*.*
 	$(RM) $(INSTALL_DIR)/system32/*.*
+	$(HALFVERBOSEECHO) [RM]      $(INSTALL_DIR)/symbols/*.*
 	$(RM) $(INSTALL_DIR)/symbols/*.*
+	$(HALFVERBOSEECHO) [RM]      $(INSTALL_DIR)/media/fonts/*.*
 	$(RM) $(INSTALL_DIR)/media/fonts/*.*
+	$(HALFVERBOSEECHO) [RM]      $(INSTALL_DIR)/media/*.*
 	$(RM) $(INSTALL_DIR)/media/*.*
+	$(HALFVERBOSEECHO) [RM]      $(INSTALL_DIR)/inf/*.*
 	$(RM) $(INSTALL_DIR)/inf/*.*
+	$(HALFVERBOSEECHO) [RM]      $(INSTALL_DIR)/bin/*.*
 	$(RM) $(INSTALL_DIR)/bin/*.*
+	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)/system32/drivers
 	$(RMDIR) $(INSTALL_DIR)/system32/drivers
+	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)/system32/config
 	$(RMDIR) $(INSTALL_DIR)/system32/config
+	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)/system32
 	$(RMDIR) $(INSTALL_DIR)/system32
+	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)/symbols
 	$(RMDIR) $(INSTALL_DIR)/symbols
+	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)/media/fonts
 	$(RMDIR) $(INSTALL_DIR)/media/fonts
+	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)/media
 	$(RMDIR) $(INSTALL_DIR)/media
+	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)/inf
 	$(RMDIR) $(INSTALL_DIR)/inf
+	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)/bin
 	$(RMDIR) $(INSTALL_DIR)/bin
+	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)
 	$(RMDIR) $(INSTALL_DIR)
 
 install_dirs:
+	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)
 	$(RMKDIR) $(INSTALL_DIR)
+	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/bin
 	$(RMKDIR) $(INSTALL_DIR)/bin
+	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/inf
 	$(RMKDIR) $(INSTALL_DIR)/inf
+	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/media
 	$(RMKDIR) $(INSTALL_DIR)/media
+	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/media/fonts
 	$(RMKDIR) $(INSTALL_DIR)/media/fonts
+	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/symbols
 	$(RMKDIR) $(INSTALL_DIR)/symbols
+	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/system32
 	$(RMKDIR) $(INSTALL_DIR)/system32
+	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/system32/config
 	$(RMKDIR) $(INSTALL_DIR)/system32/config
+	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/system32/drivers
 	$(RMKDIR) $(INSTALL_DIR)/system32/drivers
+	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/system32/drivers/etc
 	$(RMKDIR) $(INSTALL_DIR)/system32/drivers/etc
 
 install_before:
+	$(HALFVERBOSEECHO) [INSTALL] media/inf to $(INSTALL_DIR)/inf
 	$(CP) media/inf $(INSTALL_DIR)/inf
+	$(HALFVERBOSEECHO) [INSTALL] media/fonts to $(INSTALL_DIR)/media/fonts
 	$(CP) media/fonts $(INSTALL_DIR)/media/fonts
+	$(HALFVERBOSEECHO) [INSTALL] media/nls to $(INSTALL_DIR)/system32
 	$(CP) media/nls $(INSTALL_DIR)/system32
+	$(HALFVERBOSEECHO) [INSTALL] media/nls/c_1252.nls to $(INSTALL_DIR)/system32/ansi.nls
 	$(CP) media/nls/c_1252.nls $(INSTALL_DIR)/system32/ansi.nls
+	$(HALFVERBOSEECHO) [INSTALL] media/nls/c_437.nls to $(INSTALL_DIR)/system32/oem.nls
 	$(CP) media/nls/c_437.nls $(INSTALL_DIR)/system32/oem.nls
+	$(HALFVERBOSEECHO) [INSTALL] media/nls/l_intl.nls to $(INSTALL_DIR)/system32/casemap.nls
 	$(CP) media/nls/l_intl.nls $(INSTALL_DIR)/system32/casemap.nls
-	$(CP) media/drivers/etc/services \
-		$(INSTALL_DIR)/system32/drivers/etc/services
+	$(HALFVERBOSEECHO) [INSTALL] media/drivers/etc/services to $(INSTALL_DIR)/system32/drivers/etc/services
+	$(CP) media/drivers/etc/services $(INSTALL_DIR)/system32/drivers/etc/services
 
 .PHONY: install_clean install_dirs install_before
 

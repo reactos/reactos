@@ -32,10 +32,10 @@ DEPENDS_PATH := $(PATH_TO_TOP)/tools
 endif
 
 ifeq ($(VERBOSE),no)
-  HALFVERBOSEECHO = :
+  HALFVERBOSEECHO = @:
 else
 ifeq ($(VERBOSE),yes)
-  HALFVERBOSEECHO = :
+  HALFVERBOSEECHO = @:
 else
   HALFVERBOSEECHO = @echo
 endif

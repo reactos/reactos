@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.99 2004/12/11 16:02:22 blight Exp $
+# $Id: helper.mk,v 1.100 2004/12/11 17:53:12 blight Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -706,10 +706,10 @@ ifeq ($(MK_INSTALL_FULLNAME),)
 endif
 
 ifeq ($(VERBOSE),no)
-  HALFVERBOSEECHO = :
+  HALFVERBOSEECHO = @:
 else
 ifeq ($(VERBOSE),yes)
-  HALFVERBOSEECHO = :
+  HALFVERBOSEECHO = @:
 else
   HALFVERBOSEECHO = @echo
 endif
@@ -1037,6 +1037,8 @@ endif # MK_INSTALL
 ifeq ($(INSTALL_SYMBOLS),yes)
 
 forceinstall: $(SUBDIRS:%=%_install) $(MK_FULLNAME) $(MK_BASENAME).sym
+	$(HALFVERBOSEECHO) [INSTALL] $(MK_FULLNAME) to $(MK_INSTALLDIR)/$(MK_INSTALL_FULLNAME)
+	$(HALFVERBOSEECHO) [INSTALL] $(MK_BASENAME).sym to symbols/$(MK_INSTALL_BASENAME).sym
 	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_INSTALL_FULLNAME)
 	-$(CP) $(MK_BASENAME).sym $(INSTALL_DIR)/symbols/$(MK_INSTALL_BASENAME).sym
 	@echo $(MK_FULLNAME) was successfully installed.
@@ -1044,6 +1046,7 @@ forceinstall: $(SUBDIRS:%=%_install) $(MK_FULLNAME) $(MK_BASENAME).sym
 else # INSTALL_SYMBOLS
 
 forceinstall: $(SUBDIRS:%=%_install) $(MK_FULLNAME)
+	$(HALFVERBOSEECHO) [INSTALL] $(MK_FULLNAME) to $(MK_INSTALLDIR)/$(MK_INSTALL_FULLNAME)
 	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_INSTALL_FULLNAME)
 
 endif # INSTALL_SYMBOLS
