@@ -12,7 +12,7 @@ $(WINEBUILD_INT): $(TOOLS_INT)
 ifneq ($(INTERMEDIATE),$(OUTPUT))
 $(WINEBUILD_OUT): $(TOOLS_OUT)
 	$(ECHO_MKDIR)
-	@{mkdir} $@
+	${mkdir} $@
 endif
 
 WINEBUILD_TARGET = \

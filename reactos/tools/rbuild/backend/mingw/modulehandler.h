@@ -147,6 +147,7 @@ private:
 	bool IsWineModule () const;
 	std::string GetDefinitionFilename () const;
 	static std::string RemoveVariables ( std::string path);
+	void GenerateBuildMapCode ();
 public:
 	const Module& module;
 	string_list clean_files;

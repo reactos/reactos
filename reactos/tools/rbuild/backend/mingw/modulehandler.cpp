@@ -938,6 +938,41 @@ MingwModuleHandler::GenerateCommands (
 }
 
 void
+MingwModuleHandler::GenerateBuildMapCode ()
+{
+	fprintf ( fMakefile,
+	          "ifeq ($(ROS_BUILDMAP),full)\n" );
+
+	string mapFilename = PassThruCacheDirectory (
+		GetBasename ( module.GetPath () ) + ".map",
+		true );
+	CLEAN_FILE ( mapFilename );
+	
+	fprintf ( fMakefile,
+	          "\t$(ECHO_OBJDUMP)\n" );
+	fprintf ( fMakefile,
+	          "\t$(Q)${objdump} -d -S $@ > %s\n",
+	          mapFilename.c_str () );
+
+	fprintf ( fMakefile,
+	          "else\n" );
+	fprintf ( fMakefile,
+	          "ifeq ($(ROS_BUILDMAP),yes)\n" );
+
+	fprintf ( fMakefile,
+	          "\t$(ECHO_NM)\n" );
+	fprintf ( fMakefile,
+	          "\t$(Q)${nm} --numeric-sort $@ > %s\n",
+	          mapFilename.c_str () );
+
+	fprintf ( fMakefile,
+	          "endif\n" );
+
+	fprintf ( fMakefile,
+	          "endif\n" );
+}
+
+void
 MingwModuleHandler::GenerateLinkerCommand (
 	const string& dependencies,
 	const string& linker,
@@ -1018,7 +1053,10 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          GetLinkerMacro ().c_str () );
 	}
 
-	fprintf ( fMakefile, "\t$(ECHO_RSYM)\n" );
+	GenerateBuildMapCode ();
+
+	fprintf ( fMakefile,
+	          "\t$(ECHO_RSYM)\n" );
 	fprintf ( fMakefile,
 	          "\t$(Q)$(RSYM_TARGET) $@ $@\n\n" );
 }
@@ -1242,7 +1280,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 
 	fprintf (
 		fMakefile,
-		"%s += $(PROJECT_CFLAGS)\n",
+		"%s += $(PROJECT_CFLAGS) -g\n",
 		cflagsMacro.c_str () );
 
 	fprintf (
@@ -1252,7 +1290,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 
 	fprintf (
 		fMakefile,
-		"%s_LFLAGS += $(PROJECT_LFLAGS)\n",
+		"%s_LFLAGS += $(PROJECT_LFLAGS) -g\n",
 		module.name.c_str () );
 
 	fprintf (
