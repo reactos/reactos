@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.17 2003/11/25 01:09:06 arty Exp $
+/* $Id: keyboard.c,v 1.18 2003/11/25 22:28:00 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -999,7 +999,7 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
 	}
     }
 
-  DbgPrint("Key: [%04x -> %04x]\n", BaseMapping, Msg->wParam);
+  DPRINT("Key: [%04x -> %04x]\n", BaseMapping, Msg->wParam);
 
   /* Now that we have the VK, we can set the keymap appropriately
    * This is a better place for this code, as it's guaranteed to be
