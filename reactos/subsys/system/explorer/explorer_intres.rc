@@ -126,6 +126,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_STARTMENU           "Startmenu"
+    IDS_MINIMIZE_ALL        "mimimize all windows"
 END
 
 #endif    // Romanian resources
@@ -501,6 +502,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_STARTMENU           "Startmenu"
+    IDS_MINIMIZE_ALL        "alle Fenster minimieren"
 END
 
 #endif    // German (Germany) resources
@@ -843,6 +845,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_STARTMENU           "Startmenu"
+    IDS_MINIMIZE_ALL        "mimimize all windows"
 END
 
 #endif    // English (U.S.) resources
@@ -963,9 +966,211 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_STARTMENU           "Startmenu"
+    IDS_MINIMIZE_ALL        "mimimize all windows"
 END
 
 #endif    // French (France) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Portuguese (Portugal) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_PTG)
+#ifdef _WIN32
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_WINEFILE MENU FIXED IMPURE 
+BEGIN
+    POPUP "&Ficheiro"
+    BEGIN
+        MENUITEM "&Abrir\tEnter",               101
+        MENUITEM "&Mover...\tF7",               106
+        MENUITEM "&Copiar...\tF8",              107
+        MENUITEM "&Na Clipboard\tF9",           118
+        MENUITEM "&Apagar\tDel",                108
+        MENUITEM "Re&nomear...",                109
+        MENUITEM "Propriedades\tAlt+Enter",     ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "Comprimir",                   119
+        MENUITEM "Descomprimir",                120
+        MENUITEM SEPARATOR
+        MENUITEM "Executar...",                 ID_EXECUTE
+        MENUITEM "Imprimir",                    102
+        MENUITEM "Associar",                    103
+        MENUITEM SEPARATOR
+        MENUITEM "Criar Directório...",         ID_EXECUTE
+        MENUITEM "Procurar...",                 104
+        MENUITEM "Seleccionar Ficheiros...",    116
+        MENUITEM SEPARATOR
+        MENUITEM "Sair\tAlt+X",                 ID_FILE_EXIT
+    END
+    POPUP "&Disco"
+    BEGIN
+        MENUITEM "Copiar Disco...",             201
+        MENUITEM "Rotular Disco...",            202
+        MENUITEM SEPARATOR
+        MENUITEM "Formatar Disco...",           203
+        MENUITEM SEPARATOR
+        MENUITEM "Conectar Drive de Rede",      252
+        MENUITEM "Disconectar Drive de Rede",   253
+        MENUITEM SEPARATOR
+        MENUITEM "Partilhar como...",           254
+        MENUITEM "Remover Partilha...",         255
+        MENUITEM SEPARATOR
+        MENUITEM "Seleccionar Drive...",        251
+    END
+    POPUP "&Directories"
+    BEGIN
+        MENUITEM "Próximo Nível\t+",            301
+        MENUITEM "Expandir Arvore\t*",          302
+        MENUITEM "Expandir Tudo\tStrg+*",       303
+        MENUITEM "Fechar Árvore\t-",            304
+        MENUITEM SEPARATOR
+        MENUITEM "&Mark Childs",                505
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Árvore e Directório",         413
+        MENUITEM "Só Árvores",                  411
+        MENUITEM "Só Directório",               412
+        MENUITEM SEPARATOR
+        MENUITEM "Partir",                      414
+        MENUITEM SEPARATOR
+        MENUITEM "Nome",                        ID_VIEW_NAME
+        MENUITEM "&All File Details",           ID_VIEW_ALL_ATTRIBUTES
+        , CHECKED
+        MENUITEM "&Partial Details...",         ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "Ordenar por Nome",            404
+        MENUITEM "Ordenar por Tipo",            405
+        MENUITEM "Ordenar por Tamanho",         406
+        MENUITEM "Ordenar por Data",            407
+        MENUITEM SEPARATOR
+        MENUITEM "Ordenar por &...",            409
+    END
+    POPUP "&Opções"
+    BEGIN
+        MENUITEM "&Confirmação",                65535
+        MENUITEM "&Fonte",                      65535
+        MENUITEM "Customizar Barra de Ferramentas", 65535
+        MENUITEM SEPARATOR
+        MENUITEM "Barra de Ferramentas",        ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "Barra de Drives",             ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "Barra de Estado",             ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "Ecrã Cheio\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
+        MENUITEM SEPARATOR
+        MENUITEM "&Symbol nach Programmstart",  65535
+        MENUITEM "&Einstellungen beim Beenden speichern", 511
+    END
+    POPUP "&Segurança"
+    BEGIN
+        MENUITEM "&Acesso",                     605
+        MENUITEM "&Entrar",                     606
+        MENUITEM "&Dono",                       607
+    END
+    POPUP "&Janela"
+    BEGIN
+        MENUITEM "Nova Janela",                 ID_WINDOW_NEW
+        MENUITEM "Cascata\tCtrl+F5",            ID_WINDOW_CASCADE
+        MENUITEM "Mosaico &Horizontal",         ID_WINDOW_TILE_HORZ
+        MENUITEM "Mosaico &Vertical\tCtrl+F4",  ID_WINDOW_TILE_VERT
+        MENUITEM "Arranjar Automaticamente",    ID_WINDOW_AUTOSORT
+        MENUITEM "Arranjar Símbolos",           ID_WINDOW_ARRANGE
+        MENUITEM "&Actualizar\tF5",             ID_REFRESH
+    END
+    POPUP "&?"
+    BEGIN
+        MENUITEM "Tópicos da Ajuda\tF1",        ID_HELP
+        MENUITEM "Procurar Ajuda...\tF1",       ID_HELP
+        MENUITEM "Usar Ajuda\tF1",              ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "Info sobre &Winefile...",     ID_ABOUT_WINEFILE
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Executar"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,162,10
+    CONTROL         "Co&mando:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
+                    18,60,10
+    EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
+    CONTROL         "Como &Símbolo",214,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,3,45,71,12
+    DEFPUSHBUTTON   "&OK",1,158,6,47,14
+    PUSHBUTTON      "&Cancelar",2,158,23,47,14
+    PUSHBUTTON      "&Ajuda",254,158,43,47,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE               "Explorador do Reactos"
+    IDS_START               "Iniciar"
+    IDS_LOGOFF              "Terminar sessão..."
+    IDS_SHUTDOWN            "Desligar..."
+    IDS_LAUNCH              "Executar..."
+    IDS_START_HELP          "Ajuda"
+    IDS_SEARCH_FILES        "Procurar..."
+    IDS_DOCUMENTS           "Documentos"
+    IDS_FAVORITES           "Favoritos"
+    IDS_PROGRAMS            "Programas"
+    IDS_SETTINGS            "Definições"
+    IDS_EXPLORE             "Explorar"
+    IDS_EMPTY               "(Vazio)"
+    IDS_RECENT              "Documentos recentes"
+    IDS_ADMIN               "Administrar"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NETWORK             "Rede"
+    IDS_CONNECTIONS         "Conecções da rede"
+    IDS_DRIVES              "Drives"
+    IDS_SEARCH_COMPUTER     "Procurar computador..."
+    IDS_SETTINGS_MENU       "Menu das definições"
+    IDS_CONTROL_PANEL       "Painel de controle"
+    IDS_PRINTERS            "Impressora"
+    IDS_BROWSE              "Vasculhar Ficheiros"
+    IDS_SEARCH_PRG          "Procurar programa..."
+    IDS_ALL_USERS           "Todos utilizadores\\"
+    IDS_SEARCH              "Procurar"
+    IDS_ABOUT_EXPLORER      "Sobre o Explorador..."
+    IDS_LAUNCH_MANY_PROGRAMS 
+                            "You have selected more than one program.\nAre you sure you want to launch all of them?"
+    IDS_DESKTOPBAR_SETTINGS "Desktop Settings"
+    IDS_DESKTOP             "Desktop"
+    IDS_TASKBAR             "Taskbar"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "Startmenu"
+    IDS_MINIMIZE_ALL        "mimimize all windows"
+END
+
+#endif    // Portuguese (Portugal) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
