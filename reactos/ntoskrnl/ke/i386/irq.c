@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.39 2004/01/05 14:28:21 weiden Exp $
+/* $Id: irq.c,v 1.40 2004/01/18 22:58:10 gdalsnes Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -627,7 +627,7 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
    InterruptObject->IrqLock = isr_lock[Vector];
 
    KeRaiseIrql(InterruptObject->SynchLevel,&synch_oldlvl);
-   KeAcquireSpinLockAtDpcLevel(InterruptObject->IrqLock);
+   KiAcquireSpinLock(InterruptObject->IrqLock);
    DPRINT("%x %x\n",isr_table[Vector].Flink,isr_table[Vector].Blink);
    if (IsListEmpty(&isr_table[Vector]))
    {
@@ -640,7 +640,7 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
    InsertTailList(&isr_table[Vector],&InterruptObject->Entry);
    DPRINT("%x %x\n",InterruptObject->Entry.Flink,
           InterruptObject->Entry.Blink);
-   KeReleaseSpinLockFromDpcLevel(InterruptObject->IrqLock);
+   KiReleaseSpinLock(InterruptObject->IrqLock);
    KeLowerIrql(synch_oldlvl);
    
    /*
@@ -668,7 +668,7 @@ KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
    KIRQL oldlvl;
    
    KeRaiseIrql(InterruptObject->SynchLevel,&oldlvl);
-   KeAcquireSpinLockAtDpcLevel(InterruptObject->IrqLock);
+   KiAcquireSpinLock(InterruptObject->IrqLock);
    RemoveEntryList(&InterruptObject->Entry);
    if (IsListEmpty(&isr_table[InterruptObject->Vector]))
    {
@@ -678,7 +678,7 @@ KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
       HalDisableSystemInterrupt(InterruptObject->Vector + IRQ_BASE, 0);
 #endif
    }
-   KeReleaseSpinLockFromDpcLevel(InterruptObject->IrqLock);
+   KiReleaseSpinLock(InterruptObject->IrqLock);
    KeLowerIrql(oldlvl);
 }
 
