@@ -1,29 +1,18 @@
-# $Id: makefile,v 1.7 2003/08/26 13:44:12 rcampbell Exp $
+# $Id: makefile,v 1.8 2003/10/04 21:30:05 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
-SHELL32_ALIAS  = roshel32
-COMCTL32_ALIAS = rosctl32
-#SHELL32_ALIAS  = shell32
-#COMCTL32_ALIAS = comctl32
-
-#TARGET_NAME = $(SHELL32_ALIAS)
-TARGET_NAME = roshel32
-
-TARGET_DEFNAME = shell32
+TARGET_NAME = shell32
 
 TARGET_TYPE = dynlink
 
-#TARGET_SDKLIBS = ntdll.a kernel32.a user32.a gdi32.a advapi32.a $(COMCTL32_ALIAS).a msvcrt.a
 TARGET_SDKLIBS = ntdll.a kernel32.a user32.a gdi32.a advapi32.a msvcrt.a
 
 TARGET_GCCLIBS = comctl32 comdlg32 version
 
-TARGET_CFLAGS = -D_WIN32_IE=0x0400 -DUNICODE -D_UNICODE -O2 -Wall -Wstrict-prototypes -fno-builtin -DDBG
+TARGET_CFLAGS = -D_WIN32_IE=0x0400 -D__USE_W32API -DUNICODE -D_UNICODE -O2 -Wall -Wstrict-prototypes -fno-builtin
 
-TARGET_CPPFLAGS = -D_WIN32_IE=0x0400 -DUNICODE -D_UNICODE -O2 -Wall -Wstrict-prototypes -fno-builtin -DDBG
-
-#TARGET_LFLAGS = -nostdlib
+TARGET_CPPFLAGS = -D_WIN32_IE=0x0400 -D__USE_W32API -DUNICODE -D_UNICODE -O2 -Wall -Wstrict-prototypes -fno-builtin
 
 TARGET_BASE = 0x77260000
 
@@ -47,8 +36,3 @@ TARGET_CLEAN = $(TARGET_OBJECTS) $(TARGET_NAME).coff
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
-
-MK_CFLAGS = -D_WIN32_IE=0x0400 -D_UNICODE -DUNICODE -I./ 
-MK_CPPFLAGS = -D_WIN32_IE=0x0400 -D_UNICODE -DUNICODE -I./ 
-MK_RCFLAGS = -D_WIN32_IE=0x0400 -D_UNICODE -DUNICODE
-
