@@ -6,7 +6,7 @@ PATH_TO_TOP = ../..
 
 include $(PATH_TO_TOP)/rules.mak
 
-DRIVERS = usbport miniport/usbuhci miniport/usbehci miniport/usbohci usbhub
+DRIVERS = usbport miniport/usbuhci miniport/usbehci miniport/usbohci usbhub usbd
 
 all: $(DRIVERS)
 
