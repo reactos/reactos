@@ -29,6 +29,9 @@
  *
  *    06-Nov-1999 (Eric Kohl <ekohl@abo.rhein-zeiung.de>)
  *        Little fix to keep DEL quiet inside batch files.
+ *
+ *    28-Jan-2004 (Michael Fritscher <michael@fritscher.net>)
+ *        Added prompt ("/P") and yes ("/Y") option.
  */
 
 #include "config.h"
@@ -50,13 +53,13 @@ enum
 	DEL_ATTRIBUTES = 0x001,   /* /A : not implemented */
 	DEL_ERROR      = 0x002,   /* /E : not implemented */
 	DEL_NOTHING    = 0x004,   /* /N */
-	DEL_PROMPT     = 0x008,   /* /P : not implemented */
+	DEL_PROMPT     = 0x008,   /* /P */
 	DEL_QUIET      = 0x010,   /* /Q */
 	DEL_SUBDIR     = 0x020,   /* /S : not implemented */
 	DEL_TOTAL      = 0x040,   /* /T */
 	DEL_WIPE       = 0x080,   /* /W */
 	DEL_EMPTYDIR   = 0x100,   /* /X : not implemented */
-	DEL_YES        = 0x200,   /* /Y : not implemented */
+	DEL_YES        = 0x200,   /* /Y */
 	DEL_ZAP        = 0x400    /* /Z */
 };
 
@@ -94,18 +97,19 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 	{
 		ConOutPuts (_T("Deletes one or more files.\n"
 		               "\n"
-		               "DEL [/N /P /T /Q /W /Z] file ...\n"
-		               "DELETE [/N /P /T /Q /W /Z] file ...\n"
-		               "ERASE [/N /P /T /Q /W /Z] file ...\n"
+		               "DEL [/N /P /T /Q /W /Y /Z] file ...\n"
+		               "DELETE [/N /P /T /Q /W /Y /Z] file ...\n"
+		               "ERASE [/N /P /T /Q /W /Y /Z] file ...\n"
 		               "\n"
 		               "  file  Specifies the file(s) to delete.\n"
 		               "\n"
 		               "  /N    Nothing.\n"
-		               "  /P    Prompts for confirmation before deleting each file.\n"
-		               "        (Not implemented yet!)\n"
+		               "  /P    Prompt for confirmation before deleting each file.\n"
 		               "  /T    Display total number of deleted files and freed disk space.\n"
 		               "  /Q    Quiet.\n"
 		               "  /W    Wipe. Overwrite the file with zeros before deleting it.\n"
+		               "        (Not implemented yet!)\n"
+		               "  /Y    Kill even *.* without asking.\n"
 		               "  /Z    Zap (delete hidden, read-only and system files).\n"));
 
 		return 0;
@@ -147,7 +151,9 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 						case _T('W'):
 							dwFlags |= DEL_WIPE;
 							break;
-
+						case _T('Y'):
+							dwFlags |= DEL_YES;
+							break;
 						case _T('Z'):
 							dwFlags |= DEL_ZAP;
 							break;
@@ -178,12 +184,15 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
                             !_tcscmp (arg[i], _T("*.*")))
 			{
                                 INT res;
-
-                                res = FilePromptYN (_T("All files in directory will be deleted!\n"
-                                                       "Are you sure (Y/N)?"));
+                                if (!((dwFlags & DEL_YES) || (dwFlags & DEL_QUIET) || (dwFlags & DEL_PROMPT)))
+                                {
+                                	res = FilePromptYN (_T("All files in the directory will be deleted!\n"
+                                             "Are you sure (Y/N)?"));
+                                
                                 if ((res == PROMPT_NO) ||
                                     (res == PROMPT_BREAK))
 					break;
+				}
 			}
 
 			if (*arg[i] != _T('/'))
@@ -229,9 +238,23 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 #ifdef _DEBUG
 						ConErrPrintf (_T("Full filename: %s\n"), szFullPath);
 #endif
+						/*ask for deleting */
+						if(dwFlags & DEL_PROMPT) 
+						{
+							INT res;
+							ConErrPrintf (_T("The file %s will be deleted! "), szFullPath);
+		                                	res = FilePromptYN (_T("Are you sure (Y/N)?"));
+		                                        
+		                                        if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
+		                                        {
+		                                        	continue;  //FIXME: Errorcode?
+		                                        }
+						}	
 
 						if (!(dwFlags & DEL_QUIET) && !(dwFlags & DEL_TOTAL))
 							ConErrPrintf (_T("Deleting: %s\n"), szFullPath);
+
+		                                
 
 						/* delete the file */
 						if (!(dwFlags & DEL_NOTHING))
@@ -280,6 +303,21 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 					                 MAX_PATH,
 					                 szFullPath,
 					                 &pFilePart);
+
+						
+					/*ask for deleting */
+					if((dwFlags & DEL_PROMPT) && (FindFirstFile(szFullPath, &f) != INVALID_HANDLE_VALUE)) //Don't ask if the file doesn't exist, the following code will make the error-msg 
+					{
+						INT res;
+						ConErrPrintf (_T("The file %s will be deleted! "), szFullPath);
+	                                	res = FilePromptYN (_T("Are you sure (Y/N)?"));
+	                                        
+	                                        if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
+	                                        {
+	                                        	break;   //FIXME: Errorcode?
+	                                        }
+					}	
+
 #ifdef _DEBUG
 					ConErrPrintf (_T("Full path: %s\n"), szFullPath);
 #endif
