@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.182 2004/01/05 14:28:21 weiden Exp $
+/* $Id: main.c,v 1.183 2004/01/09 17:16:26 sedwards Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -294,7 +294,7 @@ ExpInitializeExecutive(VOID)
   BOOLEAN SetupBoot;
   PCHAR p1, p2;
   ULONG MaxMem;
-  BOOLEAN NoBootScreen = FALSE;
+  BOOLEAN NoGuiBoot = FALSE;
   UNICODE_STRING Name;
   HANDLE InitDoneEventHandle;
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -356,10 +356,10 @@ ExpInitializeExecutive(VOID)
 	   }
 	}
      }
-    else if (!_strnicmp(p2, "NOBOOTSCREEN", 12))
+    else if (!_strnicmp(p2, "NOGUIBOOT", 12))
       {
         p2 += 12;
-        NoBootScreen = TRUE;
+        NoGuiBoot = TRUE;
       }
      else if (!_strnicmp(p2, "CRASHDUMP", 9))
       {
@@ -642,7 +642,7 @@ ExpInitializeExecutive(VOID)
   IopInitializeBootDrivers();
 
   /* Display the boot screen image if not disabled */
-  if (!NoBootScreen)
+  if (!NoGuiBoot)
     {
       InbvEnableBootDriver(TRUE);
     }
@@ -757,7 +757,7 @@ ExpInitializeExecutive(VOID)
           KEBUGCHECKEX(SESSION5_INITIALIZATION_FAILED, Status, 0, 0, 0);
         }
 
-      if (!NoBootScreen)
+      if (!NoGuiBoot)
         {
           InbvEnableBootDriver(FALSE);
         }
@@ -769,7 +769,7 @@ ExpInitializeExecutive(VOID)
   else
     {
       /* On failure to create 'ReactOSInitDone' event, go to text mode ASAP */
-      if (!NoBootScreen)
+      if (!NoGuiBoot)
         {
           InbvEnableBootDriver(FALSE);
         }
