@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.11 2002/10/01 19:27:18 chorns Exp $
+/* $Id: fsctl.c,v 1.12 2002/11/11 21:49:18 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -291,7 +291,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
       Status = STATUS_INSUFFICIENT_RESOURCES;
       goto ByeBye;
    }
-   Ccb = ExAllocatePoolWithTag (NonPagedPool, sizeof (VFATCCB), TAG_CCB);
+   Ccb = ExAllocateFromNPagedLookasideList(&VfatGlobalData->CcbLookasideList);
    if (Ccb == NULL)
    {
       Status =  STATUS_INSUFFICIENT_RESOURCES;
@@ -367,9 +367,9 @@ ByeBye:
      if (DeviceExt && DeviceExt->FATFileObject)
         ObDereferenceObject (DeviceExt->FATFileObject);
      if (Fcb)
-        ExFreePool(Fcb);
+        vfatDestroyFCB(Fcb);
      if (Ccb)
-        ExFreePool(Ccb);
+        vfatDestroyCCB(Ccb);
      if (DeviceObject)
        IoDeleteDevice(DeviceObject);
      if (VolumeFcb)

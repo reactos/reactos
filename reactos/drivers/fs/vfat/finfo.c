@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.21 2002/09/30 20:47:28 hbirr Exp $
+/* $Id: finfo.c,v 1.22 2002/11/11 21:49:18 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -22,22 +22,17 @@
 
 static NTSTATUS
 VfatGetStandardInformation(PVFATFCB FCB,
-			   PDEVICE_OBJECT DeviceObject,
 			   PFILE_STANDARD_INFORMATION StandardInfo,
 			   PULONG BufferLength)
 /*
  * FUNCTION: Retrieve the standard file information
  */
 {
-  PDEVICE_EXTENSION DeviceExtension;
 
   if (*BufferLength < sizeof(FILE_STANDARD_INFORMATION))
     return STATUS_BUFFER_OVERFLOW;
 
-  DeviceExtension = DeviceObject->DeviceExtension;
   /* PRECONDITION */
-  assert (DeviceExtension != NULL);
-  assert (DeviceExtension->FatInfo.BytesPerCluster != 0);
   assert (StandardInfo != NULL);
   assert (FCB != NULL);
 
@@ -56,8 +51,6 @@ VfatGetStandardInformation(PVFATFCB FCB,
 
 static NTSTATUS
 VfatSetPositionInformation(PFILE_OBJECT FileObject,
-			   PVFATFCB FCB,
-			   PDEVICE_OBJECT DeviceObject,
 			   PFILE_POSITION_INFORMATION PositionInfo)
 {
   DPRINT ("FsdSetPositionInformation()\n");
@@ -113,9 +106,7 @@ VfatGetBasicInformation(PFILE_OBJECT FileObject,
   FsdDosDateTimeToFileTime(FCB->entry.UpdateDate,
 			   FCB->entry.UpdateTime,
 			   &BasicInfo->LastWriteTime);
-  FsdDosDateTimeToFileTime(FCB->entry.UpdateDate,
-			   FCB->entry.UpdateTime,
-			   &BasicInfo->ChangeTime);
+  BasicInfo->ChangeTime = BasicInfo->LastWriteTime;
 
   BasicInfo->FileAttributes = FCB->entry.Attrib;
   DPRINT("Getting attributes %x\n", BasicInfo->FileAttributes);
@@ -165,7 +156,7 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
     }
     KeReleaseSpinLock(&DeviceExt->FcbListLock, oldIrql);
     DPRINT("RefCount:%d\n", count);
-    if (NT_SUCCESS(Status) && vfatFCBIsDirectory(DeviceExt, FCB))
+    if (NT_SUCCESS(Status) && vfatFCBIsDirectory(FCB))
     {
       memset (&tmpFcb, 0, sizeof(VFATFCB));
       tmpFcb.ObjectName = tmpFcb.PathName;
@@ -208,16 +199,13 @@ VfatGetNameInformation(PFILE_OBJECT FileObject,
   assert (FCB != NULL);
 
   NameLength = wcslen(FCB->PathName) * sizeof(WCHAR);
-  if (*BufferLength < sizeof(FILE_NAME_INFORMATION) + NameLength)
+  if (*BufferLength < sizeof(FILE_NAME_INFORMATION) + NameLength + sizeof(WCHAR))
     return STATUS_BUFFER_OVERFLOW;
 
   NameInfo->FileNameLength = NameLength;
-  memcpy(NameInfo->FileName,
-	 FCB->PathName,
-	 NameLength + sizeof(WCHAR));
+  memcpy(NameInfo->FileName, FCB->PathName, NameLength + sizeof(WCHAR));
 
-  *BufferLength -=
-    (sizeof(FILE_NAME_INFORMATION) + NameLength + sizeof(WCHAR));
+  *BufferLength -= (sizeof(FILE_NAME_INFORMATION) + NameLength + sizeof(WCHAR));
 
   return STATUS_SUCCESS;
 }
@@ -262,9 +250,7 @@ VfatGetNetworkOpenInformation(PVFATFCB Fcb,
   FsdDosDateTimeToFileTime(Fcb->entry.UpdateDate,
 			   Fcb->entry.UpdateTime,
 			   &NetworkInfo->LastWriteTime);
-  FsdDosDateTimeToFileTime(Fcb->entry.UpdateDate,
-			   Fcb->entry.UpdateTime,
-			   &NetworkInfo->ChangeTime);
+  NetworkInfo->ChangeTime = NetworkInfo->LastWriteTime;
   NetworkInfo->AllocationSize = Fcb->RFCB.AllocationSize;
   NetworkInfo->EndOfFile = Fcb->RFCB.FileSize;
   NetworkInfo->FileAttributes = Fcb->entry.Attrib;
@@ -289,7 +275,7 @@ VfatGetAllInformation(PFILE_OBJECT FileObject,
   assert (Fcb);
 
   NameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
-  if (*BufferLength < sizeof(FILE_ALL_INFORMATION) + NameLength)
+  if (*BufferLength < sizeof(FILE_ALL_INFORMATION) + NameLength + sizeof(WCHAR))
     return(STATUS_BUFFER_OVERFLOW);
 
   /* Basic Information */
@@ -302,9 +288,7 @@ VfatGetAllInformation(PFILE_OBJECT FileObject,
   FsdDosDateTimeToFileTime(Fcb->entry.UpdateDate,
 			   Fcb->entry.UpdateTime,
 			   &Info->BasicInformation.LastWriteTime);
-  FsdDosDateTimeToFileTime(Fcb->entry.UpdateDate,
-			   Fcb->entry.UpdateTime,
-			   &Info->BasicInformation.ChangeTime);
+  Info->BasicInformation.ChangeTime = Info->BasicInformation.LastWriteTime;
   Info->BasicInformation.FileAttributes = Fcb->entry.Attrib;
 
   /* Standard Information */
@@ -335,9 +319,7 @@ VfatGetAllInformation(PFILE_OBJECT FileObject,
 
   /* Name Information */
   Info->NameInformation.FileNameLength = NameLength;
-  RtlCopyMemory(Info->NameInformation.FileName,
-		Fcb->PathName,
-		NameLength + sizeof(WCHAR));
+  RtlCopyMemory(Info->NameInformation.FileName, Fcb->PathName, NameLength + sizeof(WCHAR));
 
   *BufferLength -= (sizeof(FILE_ALL_INFORMATION) + NameLength + sizeof(WCHAR));
 
@@ -451,7 +433,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
 	Cluster = NCluster;
      }
   }
-  if (!vfatFCBIsDirectory(DeviceExt, Fcb))
+  if (!vfatFCBIsDirectory(Fcb))
   {
     Fcb->entry.FileSize = NewSize;  
   }
@@ -512,7 +494,6 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
     {
     case FileStandardInformation:
       RC = VfatGetStandardInformation(FCB,
-				      IrpContext->DeviceObject,
 				      SystemBuffer,
 				      &BufferLength);
       break;
@@ -621,8 +602,6 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
     {
     case FilePositionInformation:
       RC = VfatSetPositionInformation(IrpContext->FileObject,
-				      FCB,
-				      IrpContext->DeviceObject,
 				      SystemBuffer);
       break;
     case FileDispositionInformation:

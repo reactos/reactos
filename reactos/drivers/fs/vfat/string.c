@@ -1,4 +1,4 @@
-/* $Id: string.c,v 1.8 2001/07/05 01:51:53 rex Exp $
+/* $Id: string.c,v 1.9 2002/11/11 21:49:18 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,102 +19,6 @@
 #include "vfat.h"
 
 /* FUNCTIONS ****************************************************************/
-
-void vfat_initstr(wchar_t *wstr, ULONG wsize)
-/*
- * FUNCTION: Initialize a string for use with a long file name
- */
-{
-  int i;
-  wchar_t nc=0;
-  for(i=0; i<wsize; i++)
-  {
-    *wstr=nc;
-    wstr++;
-  }
-  wstr=wstr-wsize;
-}
-
-wchar_t * vfat_wcsncat(wchar_t * dest, const wchar_t * src,size_t wstart, size_t wcount)
-/*
- * FUNCTION: Append a string for use with a long file name
- */
-{
-   int i;
-
-   dest+=wstart;
-   for(i=0; i<wcount; i++)
-   {
-     *dest=src[i];
-     dest++;
-   }
-   dest=dest-(wcount+wstart);
-
-   return dest;
-}
-
-wchar_t * vfat_wcsncpy(wchar_t * dest, const wchar_t *src,size_t wcount)
-/*
- * FUNCTION: Copy a string for use with long file names
- */
-{
- int i;
-   
-   for (i=0;i<wcount;i++)
-   {
-     dest[i]=src[i];
-     if(!dest[i]) break;
-   }
-   return(dest);
-}
-
-wchar_t * vfat_movstr(wchar_t *src, ULONG dpos,
-                      ULONG spos, ULONG len)
-/*
- * FUNCTION: Move the characters in a string to a new position in the same
- *           string
- */
-{
- int i;
-
-  if(dpos<=spos)
-  {
-    for(i=0; i<len; i++)
-    {
-      src[dpos++]=src[spos++];
-    }
-  }
-  else
-  {
-    dpos+=len-1;
-    spos+=len-1;
-    for(i=0; i<len; i++)
-    {
-      src[dpos--]=src[spos--];
-    }
-  }
-
-  return(src);
-}
-
-BOOLEAN wstrcmpi(PWSTR s1, PWSTR s2)
-/*
- * FUNCTION: Compare to wide character strings
- * return TRUE if s1==s2
- */
-{
-   while (towlower(*s1)==towlower(*s2))
-     {
-	if ((*s1)==0 && (*s2)==0)
-	  {
-	     return(TRUE);
-	  }
-	
-	s1++;
-	s2++;	
-     }
-   return(FALSE);
-}
 
 BOOLEAN wstrcmpjoki(PWSTR s1, PWSTR s2)
 /*

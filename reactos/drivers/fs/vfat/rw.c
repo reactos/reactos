@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.49 2002/10/01 19:27:18 chorns Exp $
+/* $Id: rw.c,v 1.50 2002/11/11 21:49:18 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -945,10 +945,6 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
       }
    }
 
-   if (ByteOffset.QuadPart > OldFileSize.QuadPart)
-   {
-      CcZeroData(IrpContext->FileObject, &OldFileSize, &ByteOffset, TRUE);
-   }
 
    if (!(IrpContext->Irp->Flags & (IRP_NOCACHE|IRP_PAGING_IO)) &&
       !(Fcb->Flags & (FCB_IS_PAGE_FILE|FCB_IS_VOLUME)))
@@ -973,6 +969,10 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
 	  }
 	  CcRosInitializeFileCache(IrpContext->FileObject, &Fcb->RFCB.Bcb, CacheSize);
       }
+      if (ByteOffset.QuadPart > OldFileSize.QuadPart)
+      {
+          CcZeroData(IrpContext->FileObject, &OldFileSize, &ByteOffset, TRUE);
+      }
       if (CcCopyWrite(IrpContext->FileObject, &ByteOffset, Length,
                       1 /*IrpContext->Flags & IRPCONTEXT_CANWAIT*/, Buffer))
       {
@@ -990,6 +990,10 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
       // non cached write
       CHECKPOINT;
 
+      if (ByteOffset.QuadPart > OldFileSize.QuadPart)
+      {
+         CcZeroData(IrpContext->FileObject, &OldFileSize, &ByteOffset, TRUE);
+      }
       Buffer = VfatGetUserBuffer(IrpContext->Irp);
       if (!Buffer)
       {

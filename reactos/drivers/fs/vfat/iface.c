@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iface.c,v 1.65 2002/08/20 20:37:07 hyperion Exp $
+/* $Id: iface.c,v 1.66 2002/11/11 21:49:18 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/iface.c
@@ -88,6 +88,12 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
    DriverObject->DriverUnload = NULL;
 
+   ExInitializeNPagedLookasideList(&VfatGlobalData->FcbLookasideList, 
+                                   NULL, NULL, 0, sizeof(VFATFCB), TAG_FCB, 0);
+   ExInitializeNPagedLookasideList(&VfatGlobalData->CcbLookasideList, 
+                                   NULL, NULL, 0, sizeof(VFATCCB), TAG_CCB, 0);
+   ExInitializeNPagedLookasideList(&VfatGlobalData->IrpContextLookasideList, 
+                                   NULL, NULL, 0, sizeof(VFAT_IRP_CONTEXT), TAG_IRP, 0);
    IoRegisterFileSystem(DeviceObject);
    return(STATUS_SUCCESS);
 }

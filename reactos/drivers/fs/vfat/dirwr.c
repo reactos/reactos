@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.31 2002/10/01 19:27:18 chorns Exp $
+/* $Id: dirwr.c,v 1.32 2002/11/11 21:49:18 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -427,6 +427,16 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   /* set dates and times */
   KeQuerySystemTime (&SystemTime);
   ExSystemTimeToLocalTime (&SystemTime, &LocalTime);
+#if 0
+  {
+    TIME_FIELDS tf;
+    RtlTimeToTimeFields (&LocalTime, &tf);
+    DPRINT1("%d.%d.%d %02d:%02d:%02d.%03d '%S'\n", 
+	    tf.Day, tf.Month, tf.Year, tf.Hour, 
+	    tf.Minute, tf.Second, tf.Milliseconds,
+	    pFileObject->FileName.Buffer);
+  }
+#endif
   FsdFileTimeToDosDateTime ((TIME *) & LocalTime, &pEntry->CreationDate,
                             &pEntry->CreationTime);
   pEntry->UpdateDate = pEntry->CreationDate;
@@ -522,7 +532,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
 
   // FEXME: check status
   vfatMakeFCBFromDirEntry (DeviceExt, pDirFcb, FileName, pEntry,
-                           start + nbSlots - 1, &newFCB);
+                           start, start + nbSlots - 1, &newFCB);
   vfatAttachFCBToFileObject (DeviceExt, newFCB, pFileObject);
 
   DPRINT ("new : entry=%11.11s\n", newFCB->entry.Filename);

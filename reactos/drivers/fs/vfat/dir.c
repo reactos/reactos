@@ -1,5 +1,5 @@
 /*
- * $Id: dir.c,v 1.26 2002/09/08 10:22:12 chorns Exp $
+ * $Id: dir.c,v 1.27 2002/11/11 21:49:18 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -75,32 +75,14 @@ FsdFileTimeToDosDateTime (TIME * FileTime, WORD * pwDosDate, WORD * pwDosTime)
 }
 
 
-
-unsigned long
-vfat_wstrlen (PWSTR s)
-{
-  WCHAR c = ' ';
-  unsigned int len = 0;
-
-  while (c != 0)
-    {
-      c = *s;
-      s++;
-      len++;
-    };
-  s -= len;
-
-  return len - 1;
-}
-
-#define DWORD_ROUND_UP(x) ( (((ULONG)(x))%32) ? ((((ULONG)x)&(~0x1f))+0x20) : ((ULONG)x) )
+#define DWORD_ROUND_UP(x)   ROUND_UP((x), (sizeof(DWORD)))
 
 NTSTATUS
 VfatGetFileNameInformation (PVFATFCB pFcb,
 			   PFILE_NAMES_INFORMATION pInfo, ULONG BufferLength)
 {
   ULONG Length;
-  Length = vfat_wstrlen (pFcb->ObjectName) * sizeof(WCHAR);
+  Length = wcslen (pFcb->ObjectName) * sizeof(WCHAR);
   if ((sizeof (FILE_DIRECTORY_INFORMATION) + Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
   pInfo->FileNameLength = Length;
@@ -116,9 +98,8 @@ VfatGetFileDirectoryInformation (PVFATFCB pFcb,
 				PFILE_DIRECTORY_INFORMATION pInfo,
 				ULONG BufferLength)
 {
-  unsigned long long AllocSize;
   ULONG Length;
-  Length = vfat_wstrlen (pFcb->ObjectName) * sizeof(WCHAR);
+  Length = wcslen (pFcb->ObjectName) * sizeof(WCHAR);
   if ((sizeof (FILE_DIRECTORY_INFORMATION) + Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
   pInfo->FileNameLength = Length;
@@ -132,13 +113,12 @@ VfatGetFileDirectoryInformation (PVFATFCB pFcb,
 			    &pInfo->LastAccessTime);
   FsdDosDateTimeToFileTime (pFcb->entry.UpdateDate, pFcb->entry.UpdateTime,
 			    &pInfo->LastWriteTime);
-  FsdDosDateTimeToFileTime (pFcb->entry.UpdateDate, pFcb->entry.UpdateTime,
-			    &pInfo->ChangeTime);
-  pInfo->EndOfFile = RtlConvertUlongToLargeInteger (pFcb->entry.FileSize);
+  pInfo->ChangeTime = pInfo->LastWriteTime;
+  pInfo->EndOfFile.u.HighPart = 0;
+  pInfo->EndOfFile.u.LowPart = pFcb->entry.FileSize;
   /* Make allocsize a rounded up multiple of BytesPerCluster */
-  AllocSize = ((pFcb->entry.FileSize + DeviceExt->FatInfo.BytesPerCluster - 1) /
-	       DeviceExt->FatInfo.BytesPerCluster) * DeviceExt->FatInfo.BytesPerCluster;
-  pInfo->AllocationSize.QuadPart = AllocSize;
+  pInfo->AllocationSize.u.HighPart = 0;
+  pInfo->AllocationSize.u.LowPart = ROUND_UP(pFcb->entry.FileSize, DeviceExt->FatInfo.BytesPerCluster);
   pInfo->FileAttributes = pFcb->entry.Attrib;
 
   return STATUS_SUCCESS;
@@ -150,9 +130,8 @@ VfatGetFileFullDirectoryInformation (PVFATFCB pFcb,
 				    PFILE_FULL_DIRECTORY_INFORMATION pInfo,
 				    ULONG BufferLength)
 {
-  unsigned long long AllocSize;
   ULONG Length;
-  Length = vfat_wstrlen (pFcb->ObjectName) * sizeof(WCHAR);
+  Length = wcslen (pFcb->ObjectName) * sizeof(WCHAR);
   if ((sizeof (FILE_FULL_DIRECTORY_INFORMATION) + Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
   pInfo->FileNameLength = Length;
@@ -166,13 +145,12 @@ VfatGetFileFullDirectoryInformation (PVFATFCB pFcb,
 			    &pInfo->LastAccessTime);
   FsdDosDateTimeToFileTime (pFcb->entry.UpdateDate, pFcb->entry.UpdateTime,
 			    &pInfo->LastWriteTime);
-  FsdDosDateTimeToFileTime (pFcb->entry.UpdateDate, pFcb->entry.UpdateTime,
-			    &pInfo->ChangeTime);
-  pInfo->EndOfFile = RtlConvertUlongToLargeInteger (pFcb->entry.FileSize);
+  pInfo->ChangeTime = pInfo->LastWriteTime;
+  pInfo->EndOfFile.u.HighPart = 0;
+  pInfo->EndOfFile.u.LowPart = pFcb->entry.FileSize;
   /* Make allocsize a rounded up multiple of BytesPerCluster */
-  AllocSize = ((pFcb->entry.FileSize + DeviceExt->FatInfo.BytesPerCluster - 1) /
-	       DeviceExt->FatInfo.BytesPerCluster) * DeviceExt->FatInfo.BytesPerCluster;
-  pInfo->AllocationSize.QuadPart = AllocSize;
+  pInfo->AllocationSize.u.HighPart = 0;
+  pInfo->AllocationSize.u.LowPart = ROUND_UP(pFcb->entry.FileSize, DeviceExt->FatInfo.BytesPerCluster);
   pInfo->FileAttributes = pFcb->entry.Attrib;
 //      pInfo->EaSize=;
   return STATUS_SUCCESS;
@@ -184,15 +162,19 @@ VfatGetFileBothInformation (PVFATFCB pFcb,
 			   PFILE_BOTH_DIRECTORY_INFORMATION pInfo,
 			   ULONG BufferLength)
 {
-  short i;
-  unsigned long long AllocSize;
   ULONG Length;
-  Length = vfat_wstrlen (pFcb->ObjectName) * sizeof(WCHAR);
+  Length = wcslen (pFcb->ObjectName) * sizeof(WCHAR);
   if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
   pInfo->FileNameLength = Length;
-  pInfo->NextEntryOffset =
+  pInfo->NextEntryOffset = 
     DWORD_ROUND_UP (sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length);
+  /* 
+   * vfatGetDirEntryName must be called befor the long name is copyed.
+   * The terminating null will overwrite the first character from long name. 
+   */
+  vfatGetDirEntryName(&pFcb->entry, pInfo->ShortName);
+  pInfo->ShortNameLength = wcslen(pInfo->ShortName) * sizeof(WCHAR);
   memcpy (pInfo->FileName, pFcb->ObjectName, Length);
 //      pInfo->FileIndex=;
   FsdDosDateTimeToFileTime (pFcb->entry.CreationDate,
@@ -201,24 +183,14 @@ VfatGetFileBothInformation (PVFATFCB pFcb,
 			    &pInfo->LastAccessTime);
   FsdDosDateTimeToFileTime (pFcb->entry.UpdateDate, pFcb->entry.UpdateTime,
 			    &pInfo->LastWriteTime);
-  FsdDosDateTimeToFileTime (pFcb->entry.UpdateDate, pFcb->entry.UpdateTime,
-			    &pInfo->ChangeTime);
-  pInfo->EndOfFile = RtlConvertUlongToLargeInteger (pFcb->entry.FileSize);
+  pInfo->ChangeTime = pInfo->LastWriteTime;
+  pInfo->EndOfFile.u.HighPart = 0;
+  pInfo->EndOfFile.u.LowPart = pFcb->entry.FileSize;
   /* Make allocsize a rounded up multiple of BytesPerCluster */
-  AllocSize = ((pFcb->entry.FileSize + DeviceExt->FatInfo.BytesPerCluster - 1) /
-	       DeviceExt->FatInfo.BytesPerCluster) * DeviceExt->FatInfo.BytesPerCluster;
-  pInfo->AllocationSize.QuadPart = AllocSize;
+  pInfo->AllocationSize.u.HighPart = 0;
+  pInfo->AllocationSize.u.LowPart = ROUND_UP(pFcb->entry.FileSize, DeviceExt->FatInfo.BytesPerCluster);
   pInfo->FileAttributes = pFcb->entry.Attrib;
 //      pInfo->EaSize=;
-  for (i = 0; i < 8 && (pFcb->entry.Filename[i] != ' '); i++)
-    pInfo->ShortName[i] = pFcb->entry.Filename[i];
-  pInfo->ShortNameLength = i;
-  pInfo->ShortName[i] = '.';
-  for (i = 0; i < 3 && (pFcb->entry.Ext[i] != ' '); i++)
-    pInfo->ShortName[i + 1 + pInfo->ShortNameLength] = pFcb->entry.Ext[i];
-  if (i)
-    pInfo->ShortNameLength += (i + 1);
-  pInfo->ShortNameLength *= sizeof(WCHAR);
   return STATUS_SUCCESS;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: direntry.c,v 1.9 2002/10/01 19:27:17 chorns Exp $
+/* $Id: direntry.c,v 1.10 2002/11/11 21:49:18 hbirr Exp $
  *
  *
  * FILE:             DirEntry.c
@@ -20,12 +20,7 @@
 
 #include "vfat.h"
 
-#define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGE_SIZE ? \
-		   (pDeviceExt)->FatInfo.BytesPerCluster : PAGE_SIZE)
-
-#define  ENTRIES_PER_CACHEPAGE(pDeviceExt)  (ENTRIES_PER_SECTOR * \
-		   (CACHEPAGESIZE(pDeviceExt) / ((pDeviceExt)->FatInfo.BytesPerSector)))
-
+#define ENTRIES_PER_PAGE   (PAGE_SIZE / sizeof (FATDirEntry))
 
 ULONG 
 vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
@@ -76,129 +71,131 @@ vfatGetDirEntryName (PFAT_DIR_ENTRY  dirEntry,  PWSTR  entryName)
   vfat8Dot3ToString (dirEntry->Filename, dirEntry->Ext, entryName);
 }
 
-NTSTATUS
-vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
-                     PVFATFCB  pDirectoryFCB,
-                     ULONG * pDirectoryIndex,
-                     PWSTR pLongFileName,
-                     PFAT_DIR_ENTRY pDirEntry)
+
+NTSTATUS vfatGetNextDirEntry(PVOID * pContext,
+			     PVOID * pPage,
+			     IN PVFATFCB pDirFcb,
+			     IN OUT PULONG pDirIndex,
+			     OUT PWSTR pFileName,
+			     OUT PFAT_DIR_ENTRY pDirEntry,
+			     OUT PULONG pStartIndex)
 {
-  ULONG  indexInPage = *pDirectoryIndex % ENTRIES_PER_CACHEPAGE(pDeviceExt);
-  ULONG  pageNumber = *pDirectoryIndex / ENTRIES_PER_CACHEPAGE(pDeviceExt);
-  PVOID  currentPage = NULL;
-  FATDirEntry * fatDirEntry;
-  slot * longNameEntry;
-  ULONG  cpos;
-  LARGE_INTEGER FileOffset;
-  PVOID Context;
+    ULONG dirMap;
+    PWCHAR pName;
+    LARGE_INTEGER FileOffset;
+    FATDirEntry * fatDirEntry;
+    slot * longNameEntry;
+    ULONG index;
 
-  DPRINT ("vfatGetNextDirEntry (%x,%x,%d,%x,%x)\n",
-          pDeviceExt,
-          pDirectoryFCB,
-          *pDirectoryIndex,
-          pLongFileName,
-          pDirEntry);
+    DPRINT ("vfatGetNextDirEntry (%x,%x,%d,%x,%x)\n",
+            DeviceExt,
+            pDirFcb,
+            *pDirIndex,
+            pFileName,
+            pDirEntry);
 
-  *pLongFileName = 0;
+    *pFileName = 0;
 
-  FileOffset.QuadPart = pageNumber * CACHEPAGESIZE(pDeviceExt);
-  if (!CcMapData(pDirectoryFCB->FileObject, &FileOffset, 
-         CACHEPAGESIZE(pDeviceExt), TRUE, &Context, &currentPage))
-  {
-    return STATUS_UNSUCCESSFUL;
-  }
+    FileOffset.u.HighPart = 0;
+    FileOffset.u.LowPart = ROUND_DOWN(*pDirIndex * sizeof(FATDirEntry), PAGE_SIZE);
 
-  while (TRUE)
-  {
-    fatDirEntry = (FATDirEntry *) currentPage;
-
-    if (vfatIsDirEntryEndMarker (&fatDirEntry [indexInPage]))
+    if (*pContext == NULL || (*pDirIndex % ENTRIES_PER_PAGE) == 0)
     {
-      DPRINT ("end of directory, returning no more entries\n");
-      CcUnpinData(Context);
-      return  STATUS_NO_MORE_ENTRIES;
+       if (*pContext != NULL)
+       {
+	  CcUnpinData(*pContext);
+       }
+       if (!CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
+       {
+	  *pContext = NULL;
+          return STATUS_NO_MORE_ENTRIES;
+       }
     }
-    else if (vfatIsDirEntryLongName (&fatDirEntry [indexInPage])
-      && !vfatIsDirEntryDeleted (&fatDirEntry [indexInPage]))
+
+
+    fatDirEntry = (FATDirEntry*)(*pPage) + *pDirIndex % ENTRIES_PER_PAGE;
+    longNameEntry = (slot*) fatDirEntry;
+    dirMap = 0;
+
+    if (pStartIndex)
     {
-      DPRINT ("  long name entry found at %d\n", *pDirectoryIndex);
-      longNameEntry = (slot *) currentPage;
-
-      DPRINT ("  name chunk1:[%.*S] chunk2:[%.*S] chunk3:[%.*S]\n",
-              5, longNameEntry [indexInPage].name0_4,
-              6, longNameEntry [indexInPage].name5_10,
-              2, longNameEntry [indexInPage].name11_12);
-
-      vfat_initstr (pLongFileName, 256);
-      vfat_wcsncpy (pLongFileName, longNameEntry [indexInPage].name0_4, 5);
-      vfat_wcsncat (pLongFileName, longNameEntry [indexInPage].name5_10, 5, 6);
-      vfat_wcsncat (pLongFileName, longNameEntry [indexInPage].name11_12, 11, 2);
-
-      DPRINT ("  longName: [%S]\n", pLongFileName);
-
-      cpos = 0;
-      while ((longNameEntry [indexInPage].id != 0x41) &&
-             (longNameEntry [indexInPage].id != 0x01) &&
-             (longNameEntry [indexInPage].attr > 0))
-      {
-        (*pDirectoryIndex)++;
-        indexInPage++;
-        if (indexInPage == ENTRIES_PER_CACHEPAGE(pDeviceExt))
-        {
-          indexInPage = 0;
-          pageNumber++;
-
-          CcUnpinData(Context);
-          FileOffset.QuadPart = pageNumber * CACHEPAGESIZE(pDeviceExt);
-          if (!CcMapData(pDirectoryFCB->FileObject, &FileOffset, 
-                 CACHEPAGESIZE(pDeviceExt), TRUE, &Context, &currentPage))
-          {
-            return  STATUS_UNSUCCESSFUL;
-          }
-          longNameEntry = (slot *) currentPage;
-        }
-        DPRINT ("  index %d\n", *pDirectoryIndex);
-
-        DPRINT ("  name chunk1:[%.*S] chunk2:[%.*S] chunk3:[%.*S]\n",
-                5, longNameEntry [indexInPage].name0_4,
-                6, longNameEntry [indexInPage].name5_10,
-                2, longNameEntry [indexInPage].name11_12);
-
-        cpos++;
-        vfat_movstr (pLongFileName, 13, 0, cpos * 13);
-        vfat_wcsncpy (pLongFileName, longNameEntry [indexInPage].name0_4, 5);
-        vfat_wcsncat (pLongFileName, longNameEntry [indexInPage].name5_10, 5, 6);
-        vfat_wcsncat (pLongFileName, longNameEntry [indexInPage].name11_12, 11, 2);
-
-        DPRINT ("  longName: [%S]\n", pLongFileName);
-
-      }
-      (*pDirectoryIndex)++;
-      indexInPage++;
-      if (indexInPage == ENTRIES_PER_CACHEPAGE(pDeviceExt))
-      {
-        indexInPage = 0;
-        pageNumber++;
-
-        CcUnpinData(Context);
-        FileOffset.QuadPart = pageNumber * CACHEPAGESIZE(pDeviceExt);
-        if (!CcMapData(pDirectoryFCB->FileObject, &FileOffset, 
-               CACHEPAGESIZE(pDeviceExt), TRUE, &Context, &currentPage))
-         {
-          return STATUS_UNSUCCESSFUL;
-        }
-      }
+	*pStartIndex = *pDirIndex;
     }
-    else
+
+    while (TRUE)
     {
-      memcpy (pDirEntry, &fatDirEntry [indexInPage], sizeof (FAT_DIR_ENTRY));
-      (*pDirectoryIndex)++;
-      break;
+	if (vfatIsDirEntryEndMarker(fatDirEntry))
+	{
+	    CcUnpinData(*pContext);
+	    *pContext = NULL;
+	    return STATUS_NO_MORE_ENTRIES;
+	}
+
+	if (vfatIsDirEntryDeleted (fatDirEntry))
+	{
+	    dirMap = 0;
+	    *pFileName = 0;
+	    if (pStartIndex)
+	    {
+		*pStartIndex = *pDirIndex + 1;
+	    }
+	}
+	else
+	{
+	    if (vfatIsDirEntryLongName (fatDirEntry))
+	    {
+		if (dirMap == 0)
+		{
+		    DPRINT ("  long name entry found at %d\n", *pDirIndex);
+                    memset(pFileName, 0, 256 * sizeof(WCHAR));
+		}
+
+		DPRINT ("  name chunk1:[%.*S] chunk2:[%.*S] chunk3:[%.*S]\n",
+			 5, longNameEntry->name0_4,
+			 6, longNameEntry->name5_10,
+			 2, longNameEntry->name11_12);
+
+		index = (longNameEntry->id & 0x1f) - 1;
+		dirMap |= 1 << index;
+		pName = pFileName + 13 * index;
+
+		memcpy(pName, longNameEntry->name0_4, 5 * sizeof(WCHAR));
+		memcpy(pName + 5, longNameEntry->name5_10, 6 * sizeof(WCHAR));
+		memcpy(pName + 11, longNameEntry->name11_12, 2 * sizeof(WCHAR));
+      
+		DPRINT ("  longName: [%S]\n", pFileName);
+	    }
+	    else
+	    {
+	        memcpy (pDirEntry, fatDirEntry, sizeof (FAT_DIR_ENTRY));
+		break;
+	    }
+	}
+	(*pDirIndex)++;
+	if ((*pDirIndex % ENTRIES_PER_PAGE) == 0)
+	{
+	    CcUnpinData(*pContext);
+	    FileOffset.u.LowPart += PAGE_SIZE;
+	    if (!CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
+	    {
+		CHECKPOINT;
+		*pContext = NULL;
+		return STATUS_NO_MORE_ENTRIES;
+	    }
+	    fatDirEntry = (FATDirEntry*)*pPage;
+	    longNameEntry = (slot*) *pPage;
+	}
+	else
+	{
+	    fatDirEntry++;
+	    longNameEntry++;
+	}
     }
-  }
-  CcUnpinData(Context);
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
+
+
+
 
 
 

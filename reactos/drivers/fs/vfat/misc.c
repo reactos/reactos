@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.3 2002/09/30 20:49:44 hbirr Exp $
+/* $Id: misc.c,v 1.4 2002/11/11 21:49:18 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -94,7 +94,7 @@ NTSTATUS STDCALL VfatBuildRequest (
 VOID VfatFreeIrpContext (PVFAT_IRP_CONTEXT IrpContext)
 {
    assert (IrpContext);
-   ExFreePool(IrpContext);
+   ExFreeToNPagedLookasideList(&VfatGlobalData->IrpContextLookasideList, IrpContext);
 }
 
 PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject, PIRP Irp)
@@ -107,7 +107,7 @@ PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    assert (DeviceObject);
    assert (Irp);
 
-   IrpContext = ExAllocatePool (NonPagedPool, sizeof(VFAT_IRP_CONTEXT));
+   IrpContext = ExAllocateFromNPagedLookasideList(&VfatGlobalData->IrpContextLookasideList);
    if (IrpContext)
    {
       RtlZeroMemory(IrpContext, sizeof(IrpContext));
