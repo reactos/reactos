@@ -2991,6 +2991,14 @@ typedef struct _LANA_ENUM {
 } LANA_ENUM;
 
 
+typedef struct tagLOADPARMS32 {
+  LPSTR lpEnvAddress;
+  LPSTR lpCmdLine;
+  LPSTR lpCmdShow;
+  DWORD dwReserved;
+} LOADPARMS32;
+
+
 typedef struct tagLOCALESIGNATURE {
   DWORD  lsUsb[4];
   DWORD  lsCsbDefault[2];

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.74 2004/05/02 14:47:05 weiden Exp $
+/* $Id: stubs.c,v 1.75 2004/05/03 14:34:44 weiden Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -323,20 +323,6 @@ IsDBCSLeadByteEx (
 }
 
 #endif
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-LoadModule (
-    LPCSTR  lpModuleName,
-    LPVOID  lpParameterBlock
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
 
 
 /*
