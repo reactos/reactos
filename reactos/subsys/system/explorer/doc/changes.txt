@@ -61,5 +61,7 @@ If you search for more information, look into the CVS repository.
 31.01.2004	m. fuchs	included Registry as virtual file system
 02.02.2004	m. fuchs	reading of FAT image files
 07.02.2004	m. fuchs	included IE/Mozilla as Active X control
-08.02.2003	m. fuchs	desktop switching
-16.02.200	m. fuchs	lean explorer version without additional bells and whistles -> see CVS branch "lean-explorer"
+08.02.2004	m. fuchs	desktop switching
+16.02.2004	m. fuchs	lean explorer version without additional bells and whistles -> see CVS branch "lean-explorer"
+23.02.2004	m. fuchs	start menu navigation using first characters of entry names
+						fixes for leaking GDI handles
