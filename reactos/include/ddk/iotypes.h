@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.9 1999/12/26 20:21:02 ea Exp $
+/* $Id: iotypes.h,v 1.10 2000/02/26 09:58:06 ariadne Exp $
  * 
  */
 
@@ -151,7 +151,7 @@ typedef struct _IO_STACK_LOCATION
         struct {
             ULONG Length;
             FILE_INFORMATION_CLASS FileInformationClass;
-            struct FILE_OBJECT* FileObject;
+            struct _FILE_OBJECT* FileObject;
             union {
                 struct {
                     BOOLEAN ReplaceIfExists;
