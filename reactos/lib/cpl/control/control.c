@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: control.c,v 1.6 2004/10/29 12:27:58 ekohl Exp $
+/* $Id: control.c,v 1.7 2004/10/29 16:59:16 ekohl Exp $
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/control.c
@@ -158,7 +158,7 @@ VOID PopulateCPLList(HWND hLisCtrl)
 					LV_ITEM lvi;
 
 					memset(&lvi,0x00,sizeof(lvi));
-					lvi.mask = LVIF_TEXT|LVIF_PARAM|LVIF_STATE|LVIF_IMAGE;
+					lvi.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
 					lvi.pszText = Name;
 					lvi.state = 0;
 					lvi.iImage = index;
@@ -189,12 +189,12 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			LV_COLUMN column;
 
 			GetClientRect(hWnd,&rect);
-			hListView = CreateWindow(WC_LISTVIEW,_T(""),LVS_REPORT | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_VISIBLE | WS_CHILD | WS_TABSTOP,0,0,rect.right ,rect.bottom,hWnd,NULL,hInst,0);
+			hListView = CreateWindow(WC_LISTVIEW,_T(""),LVS_REPORT | LVS_ALIGNLEFT | LVS_SORTASCENDING | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_VISIBLE | WS_CHILD | WS_TABSTOP,0,0,rect.right ,rect.bottom,hWnd,NULL,hInst,0);
 			CTL_DEBUG((_T("Listview Window %08X\r\n"),hListView));
 
 			memset(&column,0x00,sizeof(column));
-			column.mask=LVCF_FMT | LVCF_WIDTH | LVCF_SUBITEM|LVCF_TEXT;
-			column.fmt=LVCFMT_LEFT;
+			column.mask = LVCF_FMT | LVCF_WIDTH | LVCF_SUBITEM | LVCF_TEXT;
+			column.fmt = LVCFMT_LEFT;
 			column.cx = (rect.right - rect.left) / 3;
 			column.iSubItem = 0;
 			column.pszText = _T("Name");
