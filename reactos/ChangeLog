@@ -1,3 +1,20 @@
+2003-05-13  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* ntoskrnl/Makefile (OBJECTS_IO): Add io/rawfs.o.
+	* ntoskrnl/cm/registry.c (CmiInitHives): Check status using NT_SUCCESS().
+	* ntoskrnl/include/internal/io.h (RawFsIsRawFileSystemDeviceObject,
+	RawFsDriverEntry): Add prototypes.
+	* ntoskrnl/include/internal/ntoskrnl.h (IoInit2): Add prototype.
+	* ntoskrnl/io/device.c (IopCreateDriverObject): Handle unnamed services.
+	* ntoskrnl/io/fs.c (IoMountVolume): Handle mounting of raw volumes.
+	(IoRegisterFileSystem): Add registered filesystem device objects at the
+	head of the list.
+	* ntoskrnl/io/iomgr.c (IoInit2): New function.
+	* ntoskrnl/ke/main.c (ExpInitializeExecutive): Call IoInit2().
+	* ntoskrnl/mm/section.c (MmQuerySectionView): Check return value of call
+	to MmFindRegion().
+	* ntoskrnl/io/rawfs.c: New file.
+
 2003-05-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* lib/fslib/vfatlib/vfatlib.c (VfatFormat): Set hidden sectors.

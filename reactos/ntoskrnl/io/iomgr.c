@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.31 2003/02/25 16:48:32 ekohl Exp $
+/* $Id: iomgr.c,v 1.32 2003/05/13 21:28:26 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -281,6 +281,33 @@ VOID IoInit (VOID)
   PnpInit();
 }
 
+VOID IoInit2(VOID)
+{
+  PDEVICE_NODE DeviceNode;
+  NTSTATUS Status;
+
+  /* Initialize raw filesystem driver */
+
+  /* Use IopRootDeviceNode for now */
+  Status = IopCreateDeviceNode(IopRootDeviceNode,
+    NULL,
+    &DeviceNode);
+  if (!NT_SUCCESS(Status))
+    {
+      CPRINT("IopCreateDeviceNode() failed with status (%x)\n", Status);
+      return;
+    }
+
+  Status = IopInitializeDriver(RawFsDriverEntry,
+    DeviceNode,
+    TRUE);
+  if (!NT_SUCCESS(Status))
+    {
+      IopFreeDeviceNode(DeviceNode);
+      CPRINT("IopInitializeDriver() failed with status (%x)\n", Status);
+      return;
+    }
+}
 
 PGENERIC_MAPPING STDCALL
 IoGetFileObjectGenericMapping(VOID)

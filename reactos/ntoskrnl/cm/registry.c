@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.94 2003/04/22 21:14:04 ekohl Exp $
+/* $Id: registry.c,v 1.95 2003/05/13 21:28:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -812,7 +812,7 @@ CmiInitHives(BOOLEAN SetupBoot)
 			       BufferSize,
 			       &ResultSize);
       NtClose(KeyHandle);
-      if (ValueInfo == NULL)
+      if (!NT_SUCCESS(Status))
 	{
 	  ExFreePool(ValueInfo);
 	  return(Status);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.29 2003/02/25 16:50:46 ekohl Exp $
+/* $Id: io.h,v 1.30 2003/05/13 21:28:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -329,6 +329,16 @@ IoCreateDriverList(VOID);
 
 NTSTATUS
 IoDestroyDriverList(VOID);
+
+
+/* rawfs.c */
+
+BOOLEAN
+RawFsIsRawFileSystemDeviceObject(IN PDEVICE_OBJECT DeviceObject);
+
+NTSTATUS STDCALL
+RawFsDriverEntry(PDRIVER_OBJECT DriverObject,
+  PUNICODE_STRING RegistryPath);
 
 
 /* pnproot.c */

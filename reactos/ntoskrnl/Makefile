@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.93 2003/04/05 09:37:44 chorns Exp $
+# $Id: Makefile,v 1.94 2003/05/13 21:28:26 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -198,6 +198,7 @@ OBJECTS_IO = \
 	io/pnproot.o \
 	io/process.o \
 	io/queue.o \
+	io/rawfs.o \
 	io/resource.o \
 	io/rw.o \
 	io/share.o \

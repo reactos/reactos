@@ -40,6 +40,7 @@ VOID NtInit(VOID);
  */
 VOID MmInitSystem(ULONG Phase, PLOADER_PARAMETER_BLOCK LoaderBlock, ULONG LastKernelAddress);
 VOID IoInit(VOID);
+VOID IoInit2(VOID);
 VOID ObInit(VOID);
 VOID PsInit(VOID);
 VOID CmInitializeRegistry(VOID);

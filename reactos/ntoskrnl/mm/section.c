@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.108 2003/04/26 23:13:32 hyperion Exp $
+/* $Id: section.c,v 1.109 2003/05/13 21:28:26 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1808,6 +1808,10 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
   Region = MmFindRegion(MemoryArea->BaseAddress,
 			&MemoryArea->Data.SectionData.RegionListHead,
 			Address, &RegionBaseAddress);
+  if (Region == NULL)
+    {
+      return STATUS_UNSUCCESSFUL;
+    }
   Info->BaseAddress = (PVOID)PAGE_ROUND_DOWN(Address);
   Info->AllocationBase = MemoryArea->BaseAddress;
   Info->AllocationProtect = MemoryArea->Attributes;

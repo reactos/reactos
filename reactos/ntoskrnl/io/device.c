@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.51 2003/05/12 10:00:46 ekohl Exp $
+/* $Id: device.c,v 1.52 2003/05/13 21:28:26 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -249,7 +249,7 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
   *DriverObject = NULL;
 
   /*  Create ModuleName string  */
-  if (ServiceName != NULL)
+  if ((ServiceName != NULL) && (ServiceName->Buffer != NULL))
     {
       if (FileSystem == TRUE)
 	wcscpy(NameBuffer, FILESYSTEM_ROOT_NAME);
@@ -264,7 +264,7 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
 
   /* Initialize ObjectAttributes for driver object */
   InitializeObjectAttributes(&ObjectAttributes,
-			     (ServiceName != NULL)? &DriverName : NULL,
+			     ((ServiceName != NULL) && (ServiceName->Buffer != NULL))? &DriverName : NULL,
 			     OBJ_PERMANENT,
 			     NULL,
 			     NULL);

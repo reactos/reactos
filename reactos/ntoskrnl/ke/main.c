@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.152 2003/04/26 23:13:30 hyperion Exp $
+/* $Id: main.c,v 1.153 2003/05/13 21:28:26 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -539,6 +539,8 @@ ExpInitializeExecutive(VOID)
 #endif /* KDBG */
 
   IoCreateDriverList();
+
+  IoInit2();
 
   /*  Pass 4: process boot loaded drivers  */
   BootDriverCount = 0;

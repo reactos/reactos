@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.31 2003/02/24 23:14:05 hbirr Exp $
+/* $Id: fs.c,v 1.32 2003/05/13 21:28:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -34,7 +34,6 @@ typedef struct _FS_CHANGE_NOTIFY_ENTRY
   PDRIVER_OBJECT DriverObject;
   PFSDNOTIFICATIONPROC FSDNotificationProc;
 } FS_CHANGE_NOTIFY_ENTRY, *PFS_CHANGE_NOTIFY_ENTRY;
-
 
 /* GLOBALS ******************************************************************/
 
@@ -224,7 +223,7 @@ IopMountFileSystem(PDEVICE_OBJECT DeviceObject,
   PIRP Irp;
   NTSTATUS Status;
 
-  DPRINT("IoAskFileSystemToMountDevice(DeviceObject %x, DeviceToMount %x)\n",
+  DPRINT("IopMountFileSystem(DeviceObject %x, DeviceToMount %x)\n",
 	 DeviceObject,DeviceToMount);
 
   assert_irql(PASSIVE_LEVEL);
@@ -365,8 +364,17 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
 	  current_entry = current_entry->Flink;
 	  continue;
 	}
-      Status = IopMountFileSystem(current->DeviceObject,
-				  DeviceObject);
+      /* If we are not allowed to mount this volume as a raw filesystem volume
+         then don't try this */
+      if (!AllowRawMount && RawFsIsRawFileSystemDeviceObject(current->DeviceObject))
+        {
+          Status = STATUS_UNRECOGNIZED_VOLUME;
+        }
+      else
+        {
+          Status = IopMountFileSystem(current->DeviceObject,
+    				  DeviceObject);
+        }
       switch (Status)
 	{
 	  case STATUS_FS_DRIVER_REQUIRED:
@@ -549,7 +557,12 @@ IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
   Fs->DeviceObject = DeviceObject;
   ExAcquireResourceExclusiveLite(&FileSystemListLock, TRUE);
 
-  InsertTailList(&FileSystemListHead,
+  /* The RAW filesystem device objects must be last in the list so the
+     raw filesystem driver is the last filesystem driver asked to mount
+     a volume. It is always the first filesystem driver registered so
+     we use InsertHeadList() here as opposed to the other alternative
+     InsertTailList(). */
+  InsertHeadList(&FileSystemListHead,
 		 &Fs->Entry);
 
   ExReleaseResourceLite(&FileSystemListLock);
