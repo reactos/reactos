@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: usetup.c,v 1.3 2002/09/25 14:48:35 ekohl Exp $
+/* $Id: usetup.c,v 1.4 2002/10/18 20:04:00 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS user-mode setup application
@@ -34,12 +34,13 @@
 #include <ntos/keyboard.h>
 
 #include "usetup.h"
+#include "partlist.h"
 
 
 #define INTRO_PAGE			0
 #define INSTALL_INTRO_PAGE		1
 
-#define CHOOSE_PARTITION_PAGE		3
+#define SELECT_PARTITION_PAGE		3
 #define SELECT_FILE_SYSTEM_PAGE		4
 #define CHECK_FILE_SYSTEM_PAGE		5
 #define PREPARE_COPY_PAGE		6
@@ -52,7 +53,15 @@
 #define REBOOT_PAGE			102
 
 
+/* GLOBALS ******************************************************************/
+
 HANDLE ProcessHeap;
+
+BOOL PartDataValid = FALSE;
+PARTDATA PartData;
+
+CHAR InstallDir[51];
+
 
 /* FUNCTIONS ****************************************************************/
 
@@ -222,7 +231,7 @@ RepairIntroPage(PINPUT_RECORD Ir)
 static ULONG
 IntroPage(PINPUT_RECORD Ir)
 {
-  SetTextXY(6, 8, "Welcome to the ReactOS Setup");
+  SetHighlightedTextXY(6, 8, "Welcome to the ReactOS Setup");
 
   SetTextXY(6, 11, "This part of the setup copies the ReactOS Operating System to your");
   SetTextXY(6, 12, "computer and prepares the second part of the setup.");
@@ -294,8 +303,7 @@ InstallIntroPage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
 	{
-	  /* FIXME: Preliminary exit */
-	  return(CHOOSE_PARTITION_PAGE);
+	  return(SELECT_PARTITION_PAGE);
 	}
     }
 
@@ -304,190 +312,29 @@ InstallIntroPage(PINPUT_RECORD Ir)
 
 
 static ULONG
-ChoosePartitionPage(PINPUT_RECORD Ir)
+SelectPartitionPage(PINPUT_RECORD Ir)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  SYSTEM_DEVICE_INFORMATION Sdi;
-  DISK_GEOMETRY DiskGeometry;
-  ULONG ReturnSize;
-  NTSTATUS Status;
-  ULONG DiskCount;
-  IO_STATUS_BLOCK Iosb;
-  WCHAR Buffer[MAX_PATH];
-  UNICODE_STRING Name;
-  HANDLE FileHandle;
-  ULONG Line;
-  ULONG i;
+  PPARTLIST PartList;
+  SHORT xScreen;
+  SHORT yScreen;
 
-  DRIVE_LAYOUT_INFORMATION *LayoutBuffer;
-  SCSI_ADDRESS ScsiAddress;
-  ULONGLONG DiskSize;
-  char *Scale;
-  char *PartType;
+  SetTextXY(6, 8, "The list below shows existing partitions and unused disk");
+  SetTextXY(6, 9, "space for new partitions.");
 
+  SetTextXY(8, 11, "\xf9  Press UP or DOWN to select a list entry.");
+  SetTextXY(8, 13, "\xf9  Press ENTER to install ReactOS onto the selected partition.");
+  SetTextXY(8, 15, "\xf9  Press C to create a new partition.");
+  SetTextXY(8, 17, "\xf9  Press D to delete an existing partition.");
 
+  SetStatusText("   Please wait...");
 
-  SetTextXY(6, 8, "Choose install partition");
+  GetScreenSize(&xScreen, &yScreen);
 
-  Status = NtQuerySystemInformation(SystemDeviceInformation,
-				    &Sdi,
-				    sizeof(SYSTEM_DEVICE_INFORMATION),
-				    &ReturnSize);
-  if (!NT_SUCCESS(Status))
+  PartList = CreatePartitionList(2, 19, xScreen - 3, yScreen - 3);
+  if (PartList == NULL)
     {
-      SetTextXY(8, 10, "NtQuerySystemInformation failed!");
-    }
-
-  PrintTextXY(6, 12, "Setup found %lu %s on this computer.",
-	    Sdi.NumberOfDisks, (Sdi.NumberOfDisks == 1) ? "harddisk" : "harddisks");
-
-  Line = 14;
-  for (DiskCount = 0; DiskCount < Sdi.NumberOfDisks; DiskCount++)
-    {
-      swprintf(Buffer,
-	       L"\\Device\\Harddisk%d\\Partition0",
-	       DiskCount);
-      RtlInitUnicodeString(&Name,
-			   Buffer);
-
-      InitializeObjectAttributes(&ObjectAttributes,
-				 &Name,
-				 0,
-				 NULL,
-				 NULL);
-
-      Status = NtOpenFile(&FileHandle,
-			  0x10001,
-			  &ObjectAttributes,
-			  &Iosb,
-			  1,
-			  FILE_SYNCHRONOUS_IO_NONALERT);
-      if (NT_SUCCESS(Status))
-	{
-	  Status = NtDeviceIoControlFile(FileHandle,
-					 NULL,
-					 NULL,
-					 NULL,
-					 &Iosb,
-					 IOCTL_DISK_GET_DRIVE_GEOMETRY,
-					 NULL,
-					 0,
-					 &DiskGeometry,
-					 sizeof(DISK_GEOMETRY));
-	  if (NT_SUCCESS(Status))
-	    {
-	      Status = NtDeviceIoControlFile(FileHandle,
-					     NULL,
-					     NULL,
-					     NULL,
-					     &Iosb,
-					     IOCTL_SCSI_GET_ADDRESS,
-					     NULL,
-					     0,
-					     &ScsiAddress,
-					     sizeof(SCSI_ADDRESS));
-
-	      if (DiskGeometry.MediaType == FixedMedia)
-		{
-		  DiskSize = DiskGeometry.Cylinders.QuadPart *
-			(ULONGLONG)DiskGeometry.TracksPerCylinder *
-			(ULONGLONG)DiskGeometry.SectorsPerTrack *
-			(ULONGLONG)DiskGeometry.BytesPerSector;
-#if 0
-		  if (DiskSize >= 0x120000000ULL) /* 10 GB */
-		    {
-		      DiskSize
-		      Scale = "GB";
-		    }
-		  else
-#endif
-		    {
-		      DiskSize = (DiskSize + (1 << 19)) >> 20;
-		      Scale = "MB";
-		    }
-
-		  PrintTextXY(8, Line++,
-			      "%I64u %s Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
-			      DiskSize,
-			      Scale,
-			      DiskCount,
-			      ScsiAddress.PortNumber,
-			      ScsiAddress.PathId,
-			      ScsiAddress.TargetId);
-
-		  LayoutBuffer = (DRIVE_LAYOUT_INFORMATION*)RtlAllocateHeap(ProcessHeap, 0, 8192);
-
-		  Status = NtDeviceIoControlFile(FileHandle,
-						 NULL,
-						 NULL,
-						 NULL,
-						 &Iosb,
-						 IOCTL_DISK_GET_DRIVE_LAYOUT,
-						 NULL,
-						 0,
-						 LayoutBuffer,
-						 8192);
-		  if (NT_SUCCESS(Status))
-		    {
-		      for (i = 0; i < LayoutBuffer->PartitionCount; i++)
-			{
-			  if ((LayoutBuffer->PartitionEntry[i].PartitionType != PARTITION_ENTRY_UNUSED) &&
-			      !IsContainerPartition(LayoutBuffer->PartitionEntry[i].PartitionType))
-			    {
-			      if ((LayoutBuffer->PartitionEntry[i].PartitionType == PARTITION_FAT_12) ||
-				  (LayoutBuffer->PartitionEntry[i].PartitionType == PARTITION_FAT_16) ||
-				  (LayoutBuffer->PartitionEntry[i].PartitionType == PARTITION_HUGE) ||
-				  (LayoutBuffer->PartitionEntry[i].PartitionType == PARTITION_XINT13))
-				{
-				  PartType = "FAT";
-				}
-			      else if ((LayoutBuffer->PartitionEntry[i].PartitionType == PARTITION_FAT32) ||
-				       (LayoutBuffer->PartitionEntry[i].PartitionType == PARTITION_FAT32_XINT13))
-				{
-				  PartType = "FAT32";
-				}
-			      else if (LayoutBuffer->PartitionEntry[i].PartitionType == PARTITION_IFS)
-				{
-				  PartType = "NTFS"; /* FIXME: Not quite correct! */
-				}
-			      else
-				{
-				  PartType = "Unknown";
-				}
-
-			      PrintTextXY(10, Line++,
-					  "%d: nr: %d type: %x (%s)  %I64u MB",
-					  i,
-					  LayoutBuffer->PartitionEntry[i].PartitionNumber,
-					  LayoutBuffer->PartitionEntry[i].PartitionType,
-					  PartType,
-				      (LayoutBuffer->PartitionEntry[i].PartitionLength.QuadPart + (1 << 19)) >>20);
-
-
-
-			    }
-			}
-		    }
-
-		  RtlFreeHeap(ProcessHeap, 0, LayoutBuffer);
-		}
-	    }
-	  else
-	    {
-	      PrintTextXY(8, Line++,
-			  "Harddisk %lu:  Failed to retrieve drive geometry (Status %lx)",
-			  DiskCount, Status);
-	    }
-
-	  NtClose(FileHandle);
-	  Line++;
-	}
-      else
-	{
-	  PrintTextXY(8, Line++,
-		      "Harddisk %lu:  Failed to open (Status %lx)",
-		      DiskCount, Status);
-	}
+      /* FIXME: show an error dialog */
+      return(QUIT_PAGE);
     }
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
@@ -500,29 +347,127 @@ ChoosePartitionPage(PINPUT_RECORD Ir)
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
-	    return(QUIT_PAGE);
+	    {
+	      DestroyPartitionList(PartList);
+	      return(QUIT_PAGE);
+	    }
 	  break;
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))
+	{
+	  ScrollDownPartitionList(PartList);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))
+	{
+	  ScrollUpPartitionList(PartList);
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
 	{
+	  PartDataValid = GetPartitionData(PartList, &PartData);
+	  DestroyPartitionList(PartList);
 	  return(SELECT_FILE_SYSTEM_PAGE);
 	}
+
+      /* FIXME: Update status text */
+
     }
 
-  return(CHOOSE_PARTITION_PAGE);
+  DestroyPartitionList(PartList);
+
+  return(SELECT_PARTITION_PAGE);
 }
 
 
 static ULONG
 SelectFileSystemPage(PINPUT_RECORD Ir)
 {
+  ULONGLONG DiskSize;
+  ULONGLONG PartSize;
+  PCHAR DiskUnit;
+  PCHAR PartUnit;
+  PCHAR PartType;
 
-  SetTextXY(6, 8, "Select a file system");
+  if (PartDataValid == FALSE)
+    {
+      /* FIXME: show an error dialog */
+      return(QUIT_PAGE);
+    }
 
-  SetTextXY(6, 10, "At present, ReactOS can not be installed on unformatted partitions.");
+  /* adjust disk size */
+  if (PartData.DiskSize >= 0x280000000ULL) /* 10 GB */
+    {
+      DiskSize = (PartData.DiskSize + (1 << 29)) >> 30;
+      DiskUnit = "GB";
+    }
+  else
+    {
+      DiskSize = (PartData.DiskSize + (1 << 19)) >> 20;
+      DiskUnit = "MB";
+    }
+
+  /* adjust partition size */
+  if (PartData.PartSize >= 0x280000000ULL) /* 10 GB */
+    {
+      PartSize = (PartData.PartSize + (1 << 29)) >> 30;
+      PartUnit = "GB";
+    }
+  else
+    {
+      PartSize = (PartData.PartSize + (1 << 19)) >> 20;
+      PartUnit = "MB";
+    }
+
+  /* adjust partition type */
+  if ((PartData.PartType == PARTITION_FAT_12) ||
+      (PartData.PartType == PARTITION_FAT_16) ||
+      (PartData.PartType == PARTITION_HUGE) ||
+      (PartData.PartType == PARTITION_XINT13))
+    {
+      PartType = "FAT";
+    }
+  else if ((PartData.PartType == PARTITION_FAT32) ||
+	   (PartData.PartType == PARTITION_FAT32_XINT13))
+    {
+      PartType = "FAT32";
+    }
+  else if (PartData.PartType == PARTITION_IFS)
+    {
+      PartType = "NTFS"; /* FIXME: Not quite correct! */
+    }
+  else
+    {
+      PartType = "Unknown";
+    }
+
+  SetTextXY(6, 8, "ReactOS will be installed");
+
+  PrintTextXY(8, 9, "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu.",
+	      PartData.DiskNumber,
+	      DiskSize,
+	      DiskUnit,
+	      PartData.Port,
+	      PartData.Bus,
+	      PartData.Id);
+
+  PrintTextXY(8, 10, "on Partition %lu (%I64u %s) %s",
+	      PartData.PartNumber,
+	      PartSize,
+	      PartUnit,
+	      PartType);
+
+  SetTextXY(6, 13, "Select a file system for the partition from the list below.");
+
+  SetTextXY(8, 15, "\xf9  Press UP or DOWN to select a file system.");
+  SetTextXY(8, 17, "\xf9  Press ENTER to format the partition.");
+  SetTextXY(8, 19, "\xf9  Press ESC to select another partition.");
+
+  /* FIXME: use a real list later */
+  SetInvertedTextXY(6, 22, " Keep current file system (no changes) ");
 
 
-  SetStatusText("   ENTER = Continue   F3 = Quit");
+  SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
   while(TRUE)
     {
@@ -534,6 +479,10 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 	  if (ConfirmQuit(Ir) == TRUE)
 	    return(QUIT_PAGE);
 	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x1B) /* ESC */
+	{
+	  return(SELECT_PARTITION_PAGE);
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
 	{
@@ -580,10 +529,19 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 static ULONG
 InstallDirectoryPage(PINPUT_RECORD Ir)
 {
+  ULONG Length;
 
-  SetTextXY(6, 8, "Enter the install directory");
+  SetTextXY(6, 8, "Setup installs ReactOS files onto the selected partition. Choose a");
+  SetTextXY(6, 9, "directory where you want ReactOS to be installed:");
 
-  SetTextXY(6, 12, "Install directory:  \reactos");
+  strcpy(InstallDir, "\\reactos");
+  Length = strlen(InstallDir);
+
+  SetInputTextXY(8, 11, 51, InstallDir);
+
+  SetTextXY(6, 14, "To change the suggested directory, press BACKSPACE to delete");
+  SetTextXY(6, 15, "characters and then type the directory where you want ReactOS to");
+  SetTextXY(6, 16, "be installed.");
 
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
@@ -599,9 +557,28 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 	    return(QUIT_PAGE);
 	  break;
 	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* Return */
 	{
 	  return(PREPARE_COPY_PAGE);
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x08) /* Backspace */
+	{
+	  if (Length > 0)
+	    {
+	      Length--;
+	      InstallDir[Length] = 0;
+	      SetInputTextXY(8, 11, 51, InstallDir);
+	    }
+	}
+      else if (isprint(Ir->Event.KeyEvent.uChar.AsciiChar))
+	{
+	  if (Length < 50)
+	    {
+	      InstallDir[Length] = Ir->Event.KeyEvent.uChar.AsciiChar;
+	      Length++;
+	      InstallDir[Length] = 0;
+	      SetInputTextXY(8, 11, 51, InstallDir);
+	    }
 	}
     }
 
@@ -619,6 +596,10 @@ PrepareCopyPage(PINPUT_RECORD Ir)
   SetTextXY(6, 12, "Build file copy list");
 
   SetTextXY(6, 14, "Create directories");
+
+  SetStatusText("   Please wait...");
+
+
 
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
@@ -785,8 +766,7 @@ NtProcessStartup(PPEB Peb)
     {
       ClearScreen();
 
-      SetTextXY(4, 3, " ReactOS 0.0.20 Setup ");
-      SetTextXY(4, 4, "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD");
+      SetUnderlinedTextXY(4, 3, " ReactOS 0.0.20 Setup ");
 
       switch (Page)
 	{
@@ -808,8 +788,8 @@ NtProcessStartup(PPEB Peb)
 	  case DEVICE_SETTINGS_PAGE:
 #endif
 
-	  case CHOOSE_PARTITION_PAGE:
-	    Page = ChoosePartitionPage(&Ir);
+	  case SELECT_PARTITION_PAGE:
+	    Page = SelectPartitionPage(&Ir);
 	    break;
 
 	  case SELECT_FILE_SYSTEM_PAGE:

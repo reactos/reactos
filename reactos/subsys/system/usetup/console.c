@@ -830,6 +830,11 @@ ClearScreen(VOID)
   coPos.X = 0;
   coPos.Y = 0;
 
+  FillConsoleOutputAttribute(0x17,
+			     xScreen * yScreen,
+			     coPos,
+			     &Written);
+
   FillConsoleOutputCharacter(' ',
 			     xScreen * yScreen,
 			     coPos,
@@ -872,6 +877,114 @@ SetTextXY(SHORT x, SHORT y, PCHAR Text)
 
   WriteConsoleOutputCharacters(Text,
 			       strlen(Text),
+			       coPos);
+}
+
+
+VOID
+SetInputTextXY(SHORT x, SHORT y, SHORT len, PCHAR Text)
+{
+  COORD coPos;
+  ULONG Length;
+  ULONG Written;
+
+  coPos.X = x;
+  coPos.Y = y;
+
+  Length = strlen(Text);
+
+  FillConsoleOutputAttribute(0x70,
+			     len,
+			     coPos,
+			     &Written);
+
+  WriteConsoleOutputCharacters(Text,
+			       Length,
+			       coPos);
+
+  coPos.X += Length;
+  FillConsoleOutputCharacter('_',
+			     1,
+			     coPos,
+			     &Written);
+
+  if (len > Length + 1)
+    {
+      coPos.X++;
+      FillConsoleOutputCharacter(' ',
+				 len - Length - 1,
+				 coPos,
+				 &Written);
+    }
+}
+
+
+VOID
+SetUnderlinedTextXY(SHORT x, SHORT y, PCHAR Text)
+{
+  COORD coPos;
+  ULONG Length;
+  ULONG Written;
+
+  coPos.X = x;
+  coPos.Y = y;
+
+  Length = strlen(Text);
+
+  WriteConsoleOutputCharacters(Text,
+			       Length,
+			       coPos);
+
+  coPos.Y++;
+  FillConsoleOutputCharacter(0xCD,
+			     Length,
+			     coPos,
+			     &Written);
+}
+
+
+VOID
+SetInvertedTextXY(SHORT x, SHORT y, PCHAR Text)
+{
+  COORD coPos;
+  ULONG Length;
+  ULONG Written;
+
+  coPos.X = x;
+  coPos.Y = y;
+
+  Length = strlen(Text);
+
+  FillConsoleOutputAttribute(0x71,
+			     Length,
+			     coPos,
+			     &Written);
+
+  WriteConsoleOutputCharacters(Text,
+			       Length,
+			       coPos);
+}
+
+
+VOID
+SetHighlightedTextXY(SHORT x, SHORT y, PCHAR Text)
+{
+  COORD coPos;
+  ULONG Length;
+  ULONG Written;
+
+  coPos.X = x;
+  coPos.Y = y;
+
+  Length = strlen(Text);
+
+  FillConsoleOutputAttribute(0x1F,
+			     Length,
+			     coPos,
+			     &Written);
+
+  WriteConsoleOutputCharacters(Text,
+			       Length,
 			       coPos);
 }
 

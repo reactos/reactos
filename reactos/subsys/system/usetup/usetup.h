@@ -1,8 +1,8 @@
 /*
 */
 
-#ifndef __CONSOLE_H__
-#define __CONSOLE_H__
+#ifndef __USETUP_H__
+#define __USETUP_H__
 
 
 #define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
@@ -95,8 +95,20 @@ VOID
 SetTextXY(SHORT x, SHORT y, PCHAR Text);
 
 VOID
+SetInputTextXY(SHORT x, SHORT y, SHORT len, PCHAR Text);
+
+VOID
+SetUnderlinedTextXY(SHORT x, SHORT y, PCHAR Text);
+
+VOID
+SetInvertedTextXY(SHORT x, SHORT y, PCHAR Text);
+
+VOID
+SetHighlightedTextXY(SHORT x, SHORT y, PCHAR Text);
+
+VOID
 PrintTextXY(SHORT x, SHORT y, char* fmt,...);
 
-#endif /* __CONSOLE_H__*/
+#endif /* __USETUP_H__*/
 
 /* EOF */
