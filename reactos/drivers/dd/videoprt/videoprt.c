@@ -1,4 +1,4 @@
-/* $Id: videoprt.c,v 1.12 2003/11/05 22:31:50 gvg Exp $
+/* $Id: videoprt.c,v 1.13 2003/11/30 19:15:21 gvg Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -9,7 +9,8 @@
 #include <roskrnl.h>
 #include <ddk/ntddvid.h>
 
-#include "../../../ntoskrnl/include/internal/v86m.h"
+#include "internal/v86m.h"
+#include "internal/ps.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -704,12 +705,17 @@ VideoPortInt10(IN PVOID  HwDeviceExtension,
   KV86M_REGISTERS Regs;
   NTSTATUS Status;
   PEPROCESS CallingProcess;
+  PEPROCESS OldProcess;
+  PETHREAD CurrentThread;
 
   DPRINT("VideoPortInt10\n");
 
   CallingProcess = PsGetCurrentProcess();
   if (CallingProcess != Csrss)
     {
+      CurrentThread = PsGetCurrentThread();
+      OldProcess = CurrentThread->OldProcess;
+      CurrentThread->OldProcess = NULL;
       KeAttachProcess(Csrss);
     }
 
@@ -726,6 +732,7 @@ VideoPortInt10(IN PVOID  HwDeviceExtension,
   if (CallingProcess != Csrss)
     {
       KeDetachProcess();
+      CurrentThread->OldProcess = OldProcess;
     }
 
   return(Status);

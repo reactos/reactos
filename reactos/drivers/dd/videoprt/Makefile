@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2003/11/05 22:31:50 gvg Exp $
+# $Id: Makefile,v 1.3 2003/11/30 19:15:21 gvg Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = export_driver
 
 TARGET_NAME = videoprt
 
-TARGET_CFLAGS += -Wall -Werror
+TARGET_CFLAGS += -Wall -Werror -I$(PATH_TO_TOP)/ntoskrnl/include
 
 TARGET_OBJECTS = videoprt.o
 
