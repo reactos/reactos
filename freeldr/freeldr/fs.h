@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1999, 2000, 2001  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -91,20 +91,8 @@ BOOL	IsEndOfFile(PFILE FileHandle);
 
 #define	EOF	-1
 
-#define	ATTR_NORMAL		0x00
-#define	ATTR_READONLY	0x01
-#define	ATTR_HIDDEN		0x02
-#define	ATTR_SYSTEM		0x04
-#define	ATTR_VOLUMENAME	0x08
-#define	ATTR_DIRECTORY	0x10
-#define	ATTR_ARCHIVE	0x20
-
 #define	FS_FAT			1
 #define	FS_NTFS			2
 #define	FS_EXT2			3
-
-#define	FAT12			1
-#define	FAT16			2
-#define	FAT32			3
 
 #endif // #defined __FS_H

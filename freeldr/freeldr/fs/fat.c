@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1999, 2000, 2001  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,9 +41,13 @@ ULONG				FatType = 0;			// FAT12, FAT16, or FAT32
 ULONG				FatDriveNumber = 0;
 
 
-BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartHead, ULONG VolumeStartTrack, ULONG VolumeStartSector, ULONG FatFileSystemType)
+BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
 {
-	FatType = FatFileSystemType;
+	ULONG	PhysicalTrack;
+	ULONG	PhysicalHead;
+	ULONG	PhysicalSector;
+
+	// Store the drive number
 	FatDriveNumber = DriveNumber;
 
 	//
@@ -72,14 +76,32 @@ BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartHead, ULONG VolumeStartTr
 		return FALSE;
 	}
 
-	//
 	// Now try to read the boot sector
 	// If this fails then abort
-	//
-	if (!BiosInt13Read(DriveNumber, VolumeStartHead, VolumeStartTrack, VolumeStartSector, 1, FatVolumeBootSector))
+	if (BiosInt13ExtensionsSupported(DriveNumber))
 	{
-		return FALSE;
+		if (!BiosInt13ReadExtended(DriveNumber, VolumeStartSector, 1, FatVolumeBootSector))
+		{
+			FileSystemError("Disk read error.");
+			return FALSE;
+		}
 	}
+	else
+	{
+		// Calculate the physical disk offsets
+		PhysicalSector = 1 + (VolumeStartSector % get_sectors(DriveNumber));
+		PhysicalHead = (VolumeStartSector / get_sectors(DriveNumber)) % get_heads(DriveNumber);
+		PhysicalTrack = (VolumeStartSector / get_sectors(DriveNumber)) / get_heads(DriveNumber);
+
+		if (!BiosInt13Read(DriveNumber, PhysicalHead, PhysicalTrack, PhysicalSector, 1, FatVolumeBootSector))
+		{
+			FileSystemError("Disk read error.");
+			return FALSE;
+		}
+	}
+
+	// Get the FAT type
+	FatType = FatDetermineFatType(FatVolumeBootSector);
 
 #ifdef DEBUG
 
@@ -236,6 +258,38 @@ BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartHead, ULONG VolumeStartTr
 	}
 
 	return TRUE;
+}
+
+ULONG FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector)
+{
+	ULONG				RootDirSectors;
+	ULONG				DataSectorCount;
+	ULONG				SectorsPerFat;
+	ULONG				TotalSectors;
+	ULONG				CountOfClusters;
+	PFAT32_BOOTSECTOR	Fat32BootSector = (PFAT32_BOOTSECTOR)FatBootSector;
+
+	RootDirSectors = ((FatBootSector->RootDirEntries * 32) + (FatBootSector->BytesPerSector - 1)) / FatBootSector->BytesPerSector;
+	SectorsPerFat = FatBootSector->SectorsPerFat ? FatBootSector->SectorsPerFat : Fat32BootSector->SectorsPerFatBig;
+	TotalSectors = FatBootSector->TotalSectors ? FatBootSector->TotalSectors : FatBootSector->TotalSectorsBig;
+	DataSectorCount = TotalSectors - (FatBootSector->ReservedSectors + (FatBootSector->NumberOfFats * SectorsPerFat) + RootDirSectors);
+	CountOfClusters = DataSectorCount / FatBootSector->SectorsPerCluster;
+
+	if (CountOfClusters < 4085)
+	{
+		/* Volume is FAT12 */
+		return FAT12;
+	}
+	else if (CountOfClusters < 65525)
+	{
+		/* Volume is FAT16 */
+		return FAT16;
+	}
+	else
+	{
+		/* Volume is FAT32 */
+		return FAT32;
+	}
 }
 
 PVOID FatBufferDirectory(UINT32 DirectoryStartCluster, PUINT32 EntryCountPointer, BOOL RootDirectory)

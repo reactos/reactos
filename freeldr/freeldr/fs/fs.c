@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1999, 2000, 2001  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 
 #include <freeldr.h>
 #include <fs.h>
+#include "filesys.h"
 #include "fat.h"
 #include <disk.h>
 #include <rtl.h>
@@ -31,10 +32,7 @@
 // DATA
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-GEOMETRY	DriveGeometry;
-ULONG		VolumeHiddenSectors;
-ULONG		CurrentlyOpenDriveNumber;
-ULONG		FileSystemType = 0;			// Type of filesystem on boot device, set by OpenDiskDrive()
+ULONG		FileSystemType = 0;	// Type of filesystem on boot device, set by OpenDiskDrive()
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
@@ -73,27 +71,19 @@ VOID FileSystemError(PUCHAR ErrorString)
  */
 BOOL OpenDiskDrive(ULONG DriveNumber, ULONG PartitionNumber)
 {
-	ULONG				BootablePartitionCount = 0;
-	ULONG				BootPartition = 0;
-	ULONG				PartitionStartHead;
-	ULONG				PartitionStartSector;
-	ULONG				PartitionStartCylinder;
-	MASTER_BOOT_RECORD	DriveMasterBootRecord;
+	MASTER_BOOT_RECORD		DriveMasterBootRecord;
+	PARTITION_TABLE_ENTRY	PartitionTableEntry;
 
 	DbgPrint((DPRINT_FILESYSTEM, "OpenDiskDrive() DriveNumber: 0x%x PartitionNumber: 0x%x\n", DriveNumber, PartitionNumber));
 
-	CurrentlyOpenDriveNumber = DriveNumber;
-
-	//
 	// Check and see if it is a floppy drive
 	// If so then just assume FAT12 file system type
-	//
-	if (DriveNumber < 0x80)
+	if (FsInternalIsDiskPartitioned(DriveNumber) == FALSE)
 	{
 		DbgPrint((DPRINT_FILESYSTEM, "Drive is a floppy diskette drive. Assuming FAT12 file system.\n"));
 
 		FileSystemType = FS_FAT;
-		return FatOpenVolume(DriveNumber, 0, 0, 1, FAT12);
+		return FatOpenVolume(DriveNumber, 0);
 	}
 
 	//
@@ -130,103 +120,134 @@ BOOL OpenDiskDrive(ULONG DriveNumber, ULONG PartitionNumber)
 #endif // defined DEBUG
 
 
-	//
 	// Check the partition table magic value
-	//
 	if (DriveMasterBootRecord.MasterBootRecordMagic != 0xaa55)
 	{
 		FileSystemError("Invalid partition table magic (0xaa55)");
 		return FALSE;
 	}
 
+	// Get the requested partition entry
 	if (PartitionNumber == 0)
 	{
-		//
-		// Count the bootable partitions
-		//
-		if (DriveMasterBootRecord.PartitionTable[0].BootIndicator == 0x80)
+		// Partition requested was zero which means the boot partition
+		if (FsInternalGetActivePartitionEntry(DriveNumber, &PartitionTableEntry) == FALSE)
 		{
-			BootablePartitionCount++;
-			BootPartition = 1;
-		}
-		if (DriveMasterBootRecord.PartitionTable[1].BootIndicator == 0x80)
-		{
-			BootablePartitionCount++;
-			BootPartition = 2;
-		}
-		if (DriveMasterBootRecord.PartitionTable[2].BootIndicator == 0x80)
-		{
-			BootablePartitionCount++;
-			BootPartition = 3;
-		}
-		if (DriveMasterBootRecord.PartitionTable[3].BootIndicator == 0x80)
-		{
-			BootablePartitionCount++;
-			BootPartition = 4;
-		}
-
-		//
-		// Make sure there was only one bootable partition
-		//
-		if (BootablePartitionCount != 1)
-		{
-			FileSystemError("Too many bootable partitions or none found.");
 			return FALSE;
 		}
-		else
+	}
+	else
+	{
+		// Get requested partition
+		if (FsInternalGetPartitionEntry(DriveNumber, PartitionNumber, &PartitionTableEntry) == FALSE)
 		{
-			//
-			// We found the boot partition, so set the partition number
-			//
-			PartitionNumber = BootPartition;
+			return FALSE;
 		}
 	}
 
-	//
-	// Right now the partition number is one-based
-	// and we need zero based
-	//
-	PartitionNumber--;
-
-	//
 	// Check for valid partition
-	//
-	if (DriveMasterBootRecord.PartitionTable[PartitionNumber].SystemIndicator == PARTITION_ENTRY_UNUSED)
+	if (PartitionTableEntry.SystemIndicator == PARTITION_ENTRY_UNUSED)
 	{
 		FileSystemError("Invalid partition.");
 		return FALSE;
 	}
 
-	PartitionStartHead = DriveMasterBootRecord.PartitionTable[PartitionNumber].StartHead;
-	PartitionStartSector = DriveMasterBootRecord.PartitionTable[PartitionNumber].StartSector & 0x3F;
-	PartitionStartCylinder = MAKE_CYLINDER(
-		DriveMasterBootRecord.PartitionTable[PartitionNumber].StartCylinder,
-		DriveMasterBootRecord.PartitionTable[PartitionNumber].StartSector);
-
-	DbgPrint((DPRINT_FILESYSTEM, "PartitionStartHead: %d\n", PartitionStartHead));
-	DbgPrint((DPRINT_FILESYSTEM, "PartitionStartSector: %d\n", PartitionStartSector));
-	DbgPrint((DPRINT_FILESYSTEM, "PartitionStartCylinder: %d\n", PartitionStartCylinder));
-	DbgPrint((DPRINT_FILESYSTEM, "PartitionNumber: %d\n", PartitionNumber));
-
-	switch (DriveMasterBootRecord.PartitionTable[PartitionNumber].SystemIndicator)
+	switch (PartitionTableEntry.SystemIndicator)
 	{
 	case PARTITION_FAT_12:
-		FileSystemType = FS_FAT;
-		return FatOpenVolume(DriveNumber, PartitionStartHead, PartitionStartCylinder, PartitionStartSector, FAT12);
 	case PARTITION_FAT_16:
 	case PARTITION_HUGE:
 	case PARTITION_XINT13:
-		FileSystemType = FS_FAT;
-		return FatOpenVolume(DriveNumber, PartitionStartHead, PartitionStartCylinder, PartitionStartSector, FAT16);
 	case PARTITION_FAT32:
 	case PARTITION_FAT32_XINT13:
 		FileSystemType = FS_FAT;
-		return FatOpenVolume(DriveNumber, PartitionStartHead, PartitionStartCylinder, PartitionStartSector, FAT32);
+		return FatOpenVolume(DriveNumber, PartitionTableEntry.StartSector);
 	default:
 		FileSystemType = 0;
 		FileSystemError("Unsupported file system.");
 		return FALSE;
 	}
+
+	return TRUE;
+}
+
+BOOL FsInternalIsDiskPartitioned(ULONG DriveNumber)
+{
+	// Hard disks use drive numbers >= 0x80
+	// So if the drive number indicates a hard disk
+	// then return TRUE
+	if (DriveNumber >= 0x80)
+	{
+		return TRUE;
+	}
+
+	// Drive is a floppy diskette so return FALSE
+	return FALSE;
+}
+
+BOOL FsInternalGetActivePartitionEntry(ULONG DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+{
+	ULONG				BootablePartitionCount = 0;
+	MASTER_BOOT_RECORD	MasterBootRecord;
+
+	// Read master boot record
+	if (!BiosInt13Read(DriveNumber, 0, 0, 1, 1, &MasterBootRecord))
+	{
+		FileSystemError("Disk read error.");
+		return FALSE;
+	}
+
+	// Count the bootable partitions
+	if (MasterBootRecord.PartitionTable[0].BootIndicator == 0x80)
+	{
+		BootablePartitionCount++;
+		BootPartition = 0;
+	}
+	if (MasterBootRecord.PartitionTable[1].BootIndicator == 0x80)
+	{
+		BootablePartitionCount++;
+		BootPartition = 1;
+	}
+	if (MasterBootRecord.PartitionTable[2].BootIndicator == 0x80)
+	{
+		BootablePartitionCount++;
+		BootPartition = 2;
+	}
+	if (MasterBootRecord.PartitionTable[3].BootIndicator == 0x80)
+	{
+		BootablePartitionCount++;
+		BootPartition = 3;
+	}
+
+	// Make sure there was only one bootable partition
+	if (BootablePartitionCount != 1)
+	{
+		FileSystemError("Too many bootable partitions or none found.");
+		return FALSE;
+	}
+
+	// Copy the partition table entry
+	RtlCopyMemory(PartitionTableEntry, &MasterBootRecord.PartitionTable[BootPartition], sizeof(PARTITION_TABLE_ENTRY));
+
+	return TRUE;
+}
+
+BOOL FsInternalGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+{
+	MASTER_BOOT_RECORD	MasterBootRecord;
+
+	// Read master boot record
+	if (!BiosInt13Read(DriveNumber, 0, 0, 1, 1, &MasterBootRecord))
+	{
+		FileSystemError("Disk read error.");
+		return FALSE;
+	}
+
+	// PartitionNumber is one-based and we need it zero-based
+	PartitionNumber--;
+
+	// Copy the partition table entry
+	RtlCopyMemory(PartitionTableEntry, &MasterBootRecord.PartitionTable[PartitionNumber], sizeof(PARTITION_TABLE_ENTRY));
 
 	return TRUE;
 }

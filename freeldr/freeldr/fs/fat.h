@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 2001  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -126,7 +126,8 @@ typedef struct
 
 
 
-BOOL	FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartHead, ULONG VolumeStartTrack, ULONG VolumeStartSector, ULONG FatFileSystemType);
+BOOL	FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector);
+ULONG	FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector);
 PVOID	FatBufferDirectory(UINT32 DirectoryStartCluster, PUINT32 EntryCountPointer, BOOL RootDirectory);
 BOOL	FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, UINT32 EntryCount, PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
 BOOL	FatLookupFile(PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
@@ -146,8 +147,6 @@ VOID	FatSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
 ULONG	FatGetFilePointer(FILE *FileHandle);
 BOOL	FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 
-
-#define	EOF	-1
 
 #define	ATTR_NORMAL		0x00
 #define	ATTR_READONLY	0x01

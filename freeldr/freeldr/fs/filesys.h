@@ -17,31 +17,14 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-	.text
-	.code16
+#include <fs.h>
 
-#define ASM
-#include "asmcode.h"
-#include "multiboot.h"
+#ifndef __FILESYS_H
+#define __FILESYS_H
 
+BOOL	FsInternalIsDiskPartitioned(ULONG DriveNumber);		// Returns TRUE if the disk contains partitions, FALSE if floppy disk
+BOOL	FsInternalGetActivePartitionEntry(ULONG DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);	// Returns the active partition table entry
+BOOL	FsInternalGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);	// Returns the active partition table entry
+ULONG	FsInternalGetPartitionCount(ULONG DriveNumber);		// Returns the number of partitions on the disk
 
-	.code32
-EXTERN(_JumpToBootCode)
-	call	switch_to_real
-	.code16
-
-	/* Set the boot drive */
-	movb	(_BootDrive),%dl
-
-	ljmpl	$0x0000,$0x7C00
-
-
-	.code32
-EXTERN(_JumpToLinuxBootCode)
-	call	switch_to_real
-	.code16
-
-	/* Set the boot drive */
-	movb	(_BootDrive),%dl
-
-	ljmpl	$0x0200,$0x9000
+#endif // #defined __FILESYS_H

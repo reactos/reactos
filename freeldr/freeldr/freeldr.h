@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1999, 2000, 2001  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@
 
 
 /* just some stuff */
-#define VERSION		"FreeLoader v0.8"
-#define COPYRIGHT	"Copyright (C) 1999, 2000 Brian Palmer <brianp@sginet.com>"
+#define VERSION		"FreeLoader v0.9"
+#define COPYRIGHT	"Copyright (C) 1998-2002 Brian Palmer <brianp@sginet.com>"
 
 #define ROSLDR_MAJOR_VERSION	0
 #define ROSLDR_MINOR_VERSION	8
