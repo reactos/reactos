@@ -332,7 +332,6 @@ void ShellDirectory::read_directory(int scan_flags)
 #define FETCH_ITEM_COUNT	32
 			LPITEMIDLIST pidls[FETCH_ITEM_COUNT];
 			ULONG cnt = 0;
-			ULONG n;
 
 			memset(pidls, 0, sizeof(pidls));
 
@@ -345,7 +344,7 @@ void ShellDirectory::read_directory(int scan_flags)
 			if (hr_next == S_FALSE)
 				break;
 
-			for(n=0; n<cnt; ++n) {
+			for(ULONG n=0; n<cnt; ++n) {
 				WIN32_FIND_DATA w32fd;
 				BY_HANDLE_FILE_INFORMATION bhfi;
 				bool bhfi_valid = false;
