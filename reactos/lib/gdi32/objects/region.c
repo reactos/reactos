@@ -8,7 +8,9 @@
 #include <win32k/kapi.h>
 
 
-
+/*
+ * @unimplemented
+ */
 HRGN
 STDCALL
 CreatePolyPolygonRgn(
@@ -23,7 +25,9 @@ CreatePolyPolygonRgn(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HBRUSH
 STDCALL
 CreatePatternBrush(
@@ -35,7 +39,9 @@ CreatePatternBrush(
 }
 
 
-
+/*
+ * @implemented
+ */
 HRGN
 STDCALL
 CreateRectRgn(
@@ -49,7 +55,9 @@ CreateRectRgn(
 }
 
 
-
+/*
+ * @implemented
+ */
 HRGN
 STDCALL
 CreateRectRgnIndirect(
@@ -60,7 +68,9 @@ CreateRectRgnIndirect(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HRGN
 STDCALL
 CreateRoundRectRgn(
@@ -76,6 +86,10 @@ CreateRoundRectRgn(
 	return 0;
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 EqualRgn(
@@ -86,6 +100,10 @@ EqualRgn(
 	return W32kEqualRgn(a0,a1);
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 OffsetRgn(
@@ -97,6 +115,10 @@ OffsetRgn(
 	return W32kOffsetRgn(a0,a1,a2);
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 GetRgnBox(
@@ -107,6 +129,10 @@ GetRgnBox(
 	return W32kGetRgnBox(a0,a1);
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 SetRectRgn(
@@ -120,6 +146,10 @@ SetRectRgn(
 	return W32kSetRectRgn(a0,a1,a2,a3,a4);
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 CombineRgn(
@@ -132,6 +162,10 @@ CombineRgn(
 	return W32kCombineRgn(a0,a1,a2,a3);
 }
 
+
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetRegionData(
@@ -143,6 +177,10 @@ GetRegionData(
 	return W32kGetRegionData(a0,a1,a2);
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 PaintRgn(
@@ -152,5 +190,3 @@ PaintRgn(
 {
 	return W32kPaintRgn( a0, a1 );
 }
-
-

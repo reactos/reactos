@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.9 2003/06/22 21:33:48 gvg Exp $
+/* $Id: stubsw.c,v 1.10 2003/07/10 15:35:49 chorns Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -12,6 +12,9 @@
 #include <windows.h>
 #include <win32k/kapi.h>
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 AddFontResourceW(
@@ -23,7 +26,9 @@ AddFontResourceW(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HMETAFILE
 STDCALL
 CopyMetaFileW(
@@ -36,6 +41,9 @@ CopyMetaFileW(
 }
 
 
+/*
+ * @unimplemented
+ */
 HDC
 STDCALL
 CreateICW(
@@ -50,6 +58,9 @@ CreateICW(
 }
 
 
+/*
+ * @unimplemented
+ */
 HDC
 STDCALL
 CreateMetaFileW(
@@ -61,6 +72,9 @@ CreateMetaFileW(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 CreateScalableFontResourceW(
@@ -75,6 +89,9 @@ CreateScalableFontResourceW(
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 DeviceCapabilitiesExW(
@@ -90,6 +107,9 @@ DeviceCapabilitiesExW(
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 EnumFontFamiliesExW(
@@ -105,6 +125,9 @@ EnumFontFamiliesExW(
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 EnumFontFamiliesW(
@@ -119,6 +142,9 @@ EnumFontFamiliesW(
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 EnumFontsW(
@@ -133,6 +159,9 @@ EnumFontsW(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetCharWidthW(
@@ -147,6 +176,9 @@ GetCharWidthW(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetCharWidth32W(
@@ -161,6 +193,9 @@ GetCharWidth32W(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 APIENTRY
 GetCharWidthFloatW(
@@ -175,6 +210,9 @@ GetCharWidthFloatW(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 APIENTRY
 GetCharABCWidthsW(
@@ -189,6 +227,9 @@ GetCharABCWidthsW(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 APIENTRY
 GetCharABCWidthsFloatW(
@@ -203,6 +244,9 @@ GetCharABCWidthsFloatW(
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetGlyphOutlineW(
@@ -220,6 +264,9 @@ GetGlyphOutlineW(
 }
 
 
+/*
+ * @unimplemented
+ */
 HMETAFILE
 STDCALL
 GetMetaFileW(
@@ -231,6 +278,9 @@ GetMetaFileW(
 }
 
 
+/*
+ * @unimplemented
+ */
 UINT
 APIENTRY
 GetOutlineTextMetricsW(
@@ -244,6 +294,9 @@ GetOutlineTextMetricsW(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 APIENTRY
 GetTextExtentExPointW(
@@ -261,6 +314,9 @@ GetTextExtentExPointW(
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetCharacterPlacementW(
@@ -277,6 +333,9 @@ GetCharacterPlacementW(
 }
 
 
+/*
+ * @unimplemented
+ */
 HDC
 STDCALL
 ResetDCW(
@@ -289,6 +348,9 @@ ResetDCW(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 RemoveFontResourceW(
@@ -300,6 +362,9 @@ RemoveFontResourceW(
 }
 
 
+/*
+ * @unimplemented
+ */
 HENHMETAFILE 
 STDCALL 
 CopyEnhMetaFileW(
@@ -312,6 +377,9 @@ CopyEnhMetaFileW(
 }
 
 
+/*
+ * @unimplemented
+ */
 HDC   
 STDCALL 
 CreateEnhMetaFileW(
@@ -326,6 +394,9 @@ CreateEnhMetaFileW(
 }
 
 
+/*
+ * @unimplemented
+ */
 HENHMETAFILE  
 STDCALL 
 GetEnhMetaFileW(
@@ -337,6 +408,9 @@ GetEnhMetaFileW(
 }
 
 
+/*
+ * @unimplemented
+ */
 UINT  
 STDCALL 
 GetEnhMetaFileDescriptionW(
@@ -350,6 +424,9 @@ GetEnhMetaFileDescriptionW(
 }
 
 
+/*
+ * @unimplemented
+ */
 int 
 STDCALL 
 StartDocW(
@@ -362,6 +439,9 @@ StartDocW(
 }
 
 
+/*
+ * @unimplemented
+ */
 int   
 STDCALL 
 GetObjectW(
@@ -375,6 +455,9 @@ GetObjectW(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 PolyTextOutW(
@@ -388,6 +471,9 @@ PolyTextOutW(
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetTextFaceW(
@@ -401,6 +487,9 @@ GetTextFaceW(
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetKerningPairsW(
@@ -414,6 +503,9 @@ GetKerningPairsW(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetLogColorSpaceW(
@@ -426,6 +518,9 @@ GetLogColorSpaceW(
 	return FALSE;
 }
 
+/*
+ * @unimplemented
+ */
 HCOLORSPACE
 STDCALL
 CreateColorSpaceW(
@@ -437,6 +532,9 @@ CreateColorSpaceW(
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetICMProfileW(
@@ -450,6 +548,9 @@ GetICMProfileW(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetICMProfileW(
@@ -462,6 +563,9 @@ SetICMProfileW(
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 EnumICMProfilesW(
@@ -475,6 +579,9 @@ EnumICMProfilesW(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 wglUseFontBitmapsW(
@@ -489,6 +596,9 @@ wglUseFontBitmapsW(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 wglUseFontOutlinesW(
@@ -507,6 +617,9 @@ wglUseFontOutlinesW(
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 UpdateICMRegKeyW(
@@ -527,6 +640,9 @@ UpdateICMRegKeyW(
  */
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetFontResourceInfoW(

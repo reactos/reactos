@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.1 2003/06/26 21:52:40 gvg Exp $
+/* $Id: clip.c,v 1.2 2003/07/10 15:35:49 chorns Exp $
  *
  * PROJECT:         ReactOS gdi32.dll
  * FILE:            lib/gdi32/objects/clip.c
@@ -29,6 +29,9 @@
 #include <windows.h>
 #include <win32k/kapi.h>
 
+/*
+ * @implemented
+ */
 int
 STDCALL
 SelectClipRgn(HDC DC, HRGN Rgn)

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.20 2003/06/26 21:52:40 gvg Exp $
+/* $Id: stubs.c,v 1.21 2003/07/10 15:35:49 chorns Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -14,6 +14,9 @@
 #include <windows.h>
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AnimatePalette(
@@ -28,6 +31,9 @@ AnimatePalette(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 Arc(
@@ -47,7 +53,9 @@ Arc(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 CancelDC(
@@ -59,7 +67,9 @@ CancelDC(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 Chord(
@@ -79,7 +89,9 @@ Chord(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 ChoosePixelFormat(
@@ -92,7 +104,9 @@ ChoosePixelFormat(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HMETAFILE
 STDCALL
 CloseMetaFile(
@@ -104,7 +118,9 @@ CloseMetaFile(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HBRUSH
 STDCALL
 CreateBrushIndirect(
@@ -116,7 +132,9 @@ CreateBrushIndirect(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HBRUSH
 STDCALL
 CreateDIBPatternBrush(
@@ -129,7 +147,9 @@ CreateDIBPatternBrush(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HBRUSH
 STDCALL
 CreateDIBPatternBrushPt(
@@ -142,7 +162,9 @@ CreateDIBPatternBrushPt(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HRGN
 STDCALL
 CreateEllipticRgn(
@@ -157,7 +179,9 @@ CreateEllipticRgn(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HRGN
 STDCALL
 CreateEllipticRgnIndirect(
@@ -169,7 +193,9 @@ CreateEllipticRgnIndirect(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HBRUSH
 STDCALL
 CreateHatchBrush(
@@ -182,7 +208,9 @@ CreateHatchBrush(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HPALETTE
 STDCALL
 CreatePalette(
@@ -193,6 +221,10 @@ CreatePalette(
 	return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeleteMetaFile(
@@ -204,7 +236,9 @@ DeleteMetaFile(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 DescribePixelFormat(
@@ -220,6 +254,9 @@ DescribePixelFormat(
 
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 DrawEscape(
@@ -234,7 +271,9 @@ DrawEscape(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 Ellipse(
@@ -250,7 +289,9 @@ Ellipse(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 EnumObjects(
@@ -265,7 +306,9 @@ EnumObjects(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 Escape(
@@ -281,8 +324,9 @@ Escape(
 }
 
 
-
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 ExtEscape(
@@ -299,7 +343,9 @@ ExtEscape(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 ExcludeClipRect(
@@ -315,7 +361,9 @@ ExcludeClipRect(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HRGN
 STDCALL
 ExtCreateRegion(
@@ -329,7 +377,9 @@ ExtCreateRegion(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 ExtFloodFill(
@@ -345,7 +395,9 @@ ExtFloodFill(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 FillRgn(
@@ -359,7 +411,9 @@ FillRgn(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 FloodFill(
@@ -374,7 +428,9 @@ FloodFill(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 FrameRgn(
@@ -390,7 +446,9 @@ FrameRgn(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetROP2(
@@ -402,7 +460,9 @@ GetROP2(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetAspectRatioFilterEx(
@@ -415,7 +475,9 @@ GetAspectRatioFilterEx(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 COLORREF
 STDCALL
 GetBkColor(
@@ -427,7 +489,9 @@ GetBkColor(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetBkMode(
@@ -439,7 +503,9 @@ GetBkMode(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetBoundsRect(
@@ -453,7 +519,9 @@ GetBoundsRect(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetBrushOrgEx(
@@ -466,6 +534,9 @@ GetBrushOrgEx(
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetClipRgn(
@@ -478,7 +549,9 @@ GetClipRgn(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetMetaRgn(
@@ -491,7 +564,9 @@ GetMetaRgn(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HGDIOBJ
 STDCALL
 GetCurrentObject(
@@ -504,7 +579,9 @@ GetCurrentObject(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetCurrentPositionEx(
@@ -517,8 +594,9 @@ GetCurrentPositionEx(
 }
 
 
-
-
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetFontData(
@@ -534,7 +612,9 @@ GetFontData(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetGraphicsMode(
@@ -546,8 +626,9 @@ GetGraphicsMode(
 }
 
 
-
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetMapMode(
@@ -559,7 +640,9 @@ GetMapMode(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetMetaFileBitsEx(
@@ -573,7 +656,9 @@ GetMetaFileBitsEx(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 COLORREF
 STDCALL
 GetNearestColor(
@@ -586,7 +671,9 @@ GetNearestColor(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetNearestPaletteIndex(
@@ -599,7 +686,9 @@ GetNearestPaletteIndex(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetObjectType(
@@ -611,6 +700,9 @@ GetObjectType(
 }
 
 
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetPaletteEntries(
@@ -625,7 +717,9 @@ GetPaletteEntries(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 COLORREF
 STDCALL
 GetPixel(
@@ -639,7 +733,9 @@ GetPixel(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetPixelFormat(
@@ -651,8 +747,9 @@ GetPixelFormat(
 }
 
 
-
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetRasterizerCaps(
@@ -668,7 +765,9 @@ GetRasterizerCaps(
 
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetStretchBltMode(
@@ -680,7 +779,9 @@ GetStretchBltMode(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetSystemPaletteEntries(
@@ -695,7 +796,9 @@ GetSystemPaletteEntries(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetSystemPaletteUse(
@@ -707,7 +810,9 @@ GetSystemPaletteUse(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetTextCharacterExtra(
@@ -719,7 +824,9 @@ GetTextCharacterExtra(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetTextAlign(
@@ -731,7 +838,9 @@ GetTextAlign(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 COLORREF
 STDCALL
 GetTextColor(
@@ -743,6 +852,9 @@ GetTextColor(
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetTextCharset(
@@ -754,7 +866,9 @@ GetTextCharset(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetTextCharsetInfo(
@@ -768,7 +882,9 @@ GetTextCharsetInfo(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 TranslateCharsetInfo(
@@ -782,7 +898,9 @@ TranslateCharsetInfo(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetFontLanguageInfo(
@@ -794,6 +912,9 @@ GetFontLanguageInfo(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetViewportExtEx(
@@ -806,7 +927,9 @@ GetViewportExtEx(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetViewportOrgEx(
@@ -819,7 +942,9 @@ GetViewportOrgEx(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetWindowExtEx(
@@ -833,6 +958,9 @@ GetWindowExtEx(
 
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetWindowOrgEx(
@@ -845,7 +973,9 @@ GetWindowOrgEx(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 IntersectClipRect(
@@ -861,7 +991,9 @@ IntersectClipRect(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 InvertRgn(
@@ -874,7 +1006,9 @@ InvertRgn(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 LineDDA(
@@ -891,8 +1025,9 @@ LineDDA(
 }
 
 
-
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 OffsetClipRgn(
@@ -906,9 +1041,9 @@ OffsetClipRgn(
 }
 
 
-
-
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 Pie(
@@ -928,7 +1063,9 @@ Pie(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 PlayMetaFile(
@@ -941,10 +1078,9 @@ PlayMetaFile(
 }
 
 
-
-
-
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 PolyPolygon(
@@ -959,7 +1095,9 @@ PolyPolygon(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 PtInRegion(
@@ -973,7 +1111,9 @@ PtInRegion(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 PtVisible(
@@ -987,7 +1127,9 @@ PtVisible(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 RectInRegion(
@@ -1000,7 +1142,9 @@ RectInRegion(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 RectVisible(
@@ -1013,7 +1157,9 @@ RectVisible(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 RestoreDC(
@@ -1026,6 +1172,9 @@ RestoreDC(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 RoundRect(
@@ -1043,7 +1192,9 @@ RoundRect(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 ResizePalette(
@@ -1056,7 +1207,9 @@ ResizePalette(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 SaveDC(
@@ -1068,7 +1221,9 @@ SaveDC(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 ExtSelectClipRgn(
@@ -1082,7 +1237,9 @@ ExtSelectClipRgn(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 SetMetaRgn(
@@ -1094,7 +1251,9 @@ SetMetaRgn(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 COLORREF
 STDCALL
 SetBkColor(
@@ -1107,7 +1266,9 @@ SetBkColor(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 SetBkMode(
@@ -1120,7 +1281,9 @@ SetBkMode(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 SetBoundsRect(
@@ -1134,7 +1297,9 @@ SetBoundsRect(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 SetMapperFlags(
@@ -1147,7 +1312,9 @@ SetMapperFlags(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 SetGraphicsMode(
@@ -1160,7 +1327,9 @@ SetGraphicsMode(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HMETAFILE
 STDCALL
 SetMetaFileBitsEx(
@@ -1173,7 +1342,9 @@ SetMetaFileBitsEx(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 SetPaletteEntries(
@@ -1188,7 +1359,9 @@ SetPaletteEntries(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetPixelV(
@@ -1203,7 +1376,9 @@ SetPixelV(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetPixelFormat(
@@ -1217,6 +1392,9 @@ SetPixelFormat(
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 SetROP2(
@@ -1229,7 +1407,9 @@ SetROP2(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 SetStretchBltMode(
@@ -1242,7 +1422,9 @@ SetStretchBltMode(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 SetSystemPaletteUse(
@@ -1255,7 +1437,9 @@ SetSystemPaletteUse(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 SetTextCharacterExtra(
@@ -1268,7 +1452,9 @@ SetTextCharacterExtra(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 SetTextAlign(
@@ -1281,7 +1467,9 @@ SetTextAlign(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetTextJustification(
@@ -1295,7 +1483,9 @@ SetTextJustification(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 UpdateColors(
@@ -1307,7 +1497,9 @@ UpdateColors(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 PlayMetaFileRecord(
@@ -1322,7 +1514,9 @@ PlayMetaFileRecord(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumMetaFile(
@@ -1337,7 +1531,9 @@ EnumMetaFile(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HENHMETAFILE
 STDCALL
 CloseEnhMetaFile(
@@ -1349,7 +1545,9 @@ CloseEnhMetaFile(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeleteEnhMetaFile(
@@ -1361,7 +1559,9 @@ DeleteEnhMetaFile(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumEnhMetaFile(
@@ -1377,7 +1577,9 @@ EnumEnhMetaFile(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetEnhMetaFileBits(
@@ -1391,7 +1593,9 @@ GetEnhMetaFileBits(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetEnhMetaFileHeader(
@@ -1405,7 +1609,9 @@ GetEnhMetaFileHeader(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetEnhMetaFilePaletteEntries(
@@ -1419,7 +1625,9 @@ GetEnhMetaFilePaletteEntries(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetEnhMetaFilePixelFormat(
@@ -1433,7 +1641,9 @@ GetEnhMetaFilePixelFormat(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetWinMetaFileBits(
@@ -1449,7 +1659,9 @@ GetWinMetaFileBits(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 PlayEnhMetaFile(
@@ -1463,7 +1675,9 @@ PlayEnhMetaFile(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 PlayEnhMetaFileRecord(
@@ -1478,7 +1692,9 @@ PlayEnhMetaFileRecord(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HENHMETAFILE
 STDCALL
 SetEnhMetaFileBits(
@@ -1491,7 +1707,9 @@ SetEnhMetaFileBits(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HENHMETAFILE
 STDCALL
 SetWinMetaFileBits(
@@ -1507,7 +1725,9 @@ SetWinMetaFileBits(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GdiComment(
@@ -1521,7 +1741,9 @@ GdiComment(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AngleArc(
@@ -1538,7 +1760,9 @@ AngleArc(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 PolyPolyline(
@@ -1553,7 +1777,9 @@ PolyPolyline(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetWorldTransform(
@@ -1566,7 +1792,9 @@ GetWorldTransform(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetWorldTransform(
@@ -1579,7 +1807,9 @@ SetWorldTransform(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 ModifyWorldTransform(
@@ -1593,7 +1823,9 @@ ModifyWorldTransform(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 CombineTransform(
@@ -1607,7 +1839,9 @@ CombineTransform(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetDIBColorTable(
@@ -1622,7 +1856,9 @@ GetDIBColorTable(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 SetDIBColorTable(
@@ -1637,7 +1873,9 @@ SetDIBColorTable(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetColorAdjustment(
@@ -1650,7 +1888,9 @@ SetColorAdjustment(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetColorAdjustment(
@@ -1663,7 +1903,9 @@ GetColorAdjustment(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HPALETTE
 STDCALL
 CreateHalftonePalette(
@@ -1675,7 +1917,9 @@ CreateHalftonePalette(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 EndDoc(
@@ -1687,7 +1931,9 @@ EndDoc(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 StartPage(
@@ -1699,7 +1945,9 @@ StartPage(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 EndPage(
@@ -1711,7 +1959,9 @@ EndPage(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 AbortDoc(
@@ -1723,7 +1973,9 @@ AbortDoc(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 SetAbortProc(
@@ -1736,7 +1988,9 @@ SetAbortProc(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AbortPath(
@@ -1748,7 +2002,9 @@ AbortPath(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 ArcTo(
@@ -1768,7 +2024,9 @@ ArcTo(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 BeginPath(
@@ -1780,7 +2038,9 @@ BeginPath(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 CloseFigure(
@@ -1792,7 +2052,9 @@ CloseFigure(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EndPath(
@@ -1804,7 +2066,9 @@ EndPath(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 FillPath(
@@ -1816,7 +2080,9 @@ FillPath(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 FlattenPath(
@@ -1828,7 +2094,9 @@ FlattenPath(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetPath(
@@ -1843,7 +2111,9 @@ GetPath(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HRGN
 STDCALL
 PathToRegion(
@@ -1855,7 +2125,9 @@ PathToRegion(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 PolyDraw(
@@ -1870,7 +2142,9 @@ PolyDraw(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SelectClipPath(
@@ -1883,7 +2157,9 @@ SelectClipPath(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 SetArcDirection(
@@ -1896,7 +2172,9 @@ SetArcDirection(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetMiterLimit(
@@ -1910,7 +2188,9 @@ SetMiterLimit(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 StrokeAndFillPath(
@@ -1922,7 +2202,9 @@ StrokeAndFillPath(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 StrokePath(
@@ -1934,7 +2216,9 @@ StrokePath(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 WidenPath(
@@ -1946,7 +2230,9 @@ WidenPath(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HPEN
 STDCALL
 ExtCreatePen(
@@ -1962,7 +2248,9 @@ ExtCreatePen(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetMiterLimit(
@@ -1975,7 +2263,9 @@ GetMiterLimit(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetArcDirection(
@@ -1987,7 +2277,9 @@ GetArcDirection(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HRGN
 STDCALL
 CreatePolygonRgn(
@@ -2001,7 +2293,9 @@ CreatePolygonRgn(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DPtoLP(
@@ -2015,7 +2309,9 @@ DPtoLP(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 PolyBezier(
@@ -2029,7 +2325,9 @@ PolyBezier(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 PolyBezierTo(
@@ -2043,7 +2341,9 @@ PolyBezierTo(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 PolylineTo(
@@ -2057,7 +2357,9 @@ PolylineTo(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetViewportExtEx(
@@ -2072,7 +2374,9 @@ SetViewportExtEx(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetWindowExtEx(
@@ -2087,7 +2391,9 @@ SetWindowExtEx(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 OffsetWindowOrgEx(
@@ -2102,7 +2408,9 @@ OffsetWindowOrgEx(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 ScaleViewportExtEx(
@@ -2119,7 +2427,9 @@ ScaleViewportExtEx(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 ScaleWindowExtEx(
@@ -2136,7 +2446,9 @@ ScaleWindowExtEx(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetBitmapDimensionEx(
@@ -2151,7 +2463,9 @@ SetBitmapDimensionEx(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetBrushOrgEx(
@@ -2166,7 +2480,9 @@ SetBrushOrgEx(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetDCOrgEx(
@@ -2179,7 +2495,9 @@ GetDCOrgEx(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 FixBrushOrgEx(
@@ -2194,7 +2512,9 @@ FixBrushOrgEx(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 UnrealizeObject(
@@ -2206,7 +2526,9 @@ UnrealizeObject(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GdiFlush()
@@ -2216,7 +2538,9 @@ GdiFlush()
 }
 
 
-
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GdiSetBatchLimit(
@@ -2228,7 +2552,9 @@ GdiSetBatchLimit(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GdiGetBatchLimit()
@@ -2238,6 +2564,9 @@ GdiGetBatchLimit()
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 SetICMMode(
@@ -2250,6 +2579,9 @@ SetICMMode(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 CheckColorsInGamut(
@@ -2264,6 +2596,9 @@ CheckColorsInGamut(
 }
 
 
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 GetColorSpace(
@@ -2275,6 +2610,9 @@ GetColorSpace(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetColorSpace(
@@ -2287,6 +2625,9 @@ SetColorSpace(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeleteColorSpace(
@@ -2298,6 +2639,9 @@ DeleteColorSpace(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetDeviceGammaRamp(
@@ -2310,6 +2654,9 @@ GetDeviceGammaRamp(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetDeviceGammaRamp(
@@ -2322,6 +2669,9 @@ SetDeviceGammaRamp(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 ColorMatchToTarget(
@@ -2335,6 +2685,9 @@ ColorMatchToTarget(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 wglCopyContext(
@@ -2348,7 +2701,9 @@ wglCopyContext(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HGLRC
 STDCALL
 wglCreateContext(
@@ -2360,7 +2715,9 @@ wglCreateContext(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HGLRC
 STDCALL
 wglCreateLayerContext(
@@ -2373,7 +2730,9 @@ wglCreateLayerContext(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 wglDeleteContext(
@@ -2385,7 +2744,9 @@ wglDeleteContext(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HGLRC
 STDCALL
 wglGetCurrentContext(VOID)
@@ -2395,7 +2756,9 @@ wglGetCurrentContext(VOID)
 }
 
 
-
+/*
+ * @unimplemented
+ */
 HDC
 STDCALL
 wglGetCurrentDC(VOID)
@@ -2405,7 +2768,9 @@ wglGetCurrentDC(VOID)
 }
 
 
-
+/*
+ * @unimplemented
+ */
 PROC
 STDCALL
 wglGetProcAddress(
@@ -2417,7 +2782,9 @@ wglGetProcAddress(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 wglMakeCurrent(
@@ -2430,7 +2797,9 @@ wglMakeCurrent(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 wglShareLists(
@@ -2443,6 +2812,9 @@ wglShareLists(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SwapBuffers(
@@ -2454,7 +2826,9 @@ SwapBuffers(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 wglDescribeLayerPlane(
@@ -2470,6 +2844,9 @@ wglDescribeLayerPlane(
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 wglSetLayerPaletteEntries(
@@ -2485,6 +2862,9 @@ wglSetLayerPaletteEntries(
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 wglGetLayerPaletteEntries(
@@ -2500,6 +2880,9 @@ wglGetLayerPaletteEntries(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 wglRealizeLayerPalette(
@@ -2513,6 +2896,9 @@ wglRealizeLayerPalette(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 wglSwapLayerBuffers(
@@ -2531,6 +2917,9 @@ wglSwapLayerBuffers(
  */
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GdiPlayDCScript(
@@ -2547,6 +2936,9 @@ GdiPlayDCScript(
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GdiPlayJournal(
@@ -2562,6 +2954,9 @@ GdiPlayJournal(
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GdiPlayScript(
@@ -2579,6 +2974,9 @@ GdiPlayScript(
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetGlyphOutlineWow(
@@ -2596,6 +2994,9 @@ GetGlyphOutlineWow(
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetRandomRgn(
@@ -2609,6 +3010,9 @@ GetRandomRgn(
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetRelAbs(
@@ -2621,7 +3025,9 @@ GetRelAbs(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 SelectBrushLocal(
@@ -2634,7 +3040,9 @@ SelectBrushLocal(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 SelectFontLocal(
@@ -2647,6 +3055,9 @@ SelectFontLocal(
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 SetFontEnumeration(
@@ -2658,6 +3069,9 @@ SetFontEnumeration(
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 SetRelAbs(
@@ -2670,6 +3084,9 @@ SetRelAbs(
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 gdiPlaySpoolStream(
@@ -2686,6 +3103,9 @@ gdiPlaySpoolStream(
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetFontResourceInfo(
@@ -2698,6 +3118,5 @@ GetFontResourceInfo(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
 
 /* EOF */

@@ -1,5 +1,22 @@
 2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/gdi32/main/dllmain.c: Add @implemented and @unimplemented
+	to APIs.
+	* lib/gdi32/misc/stubs.c: Ditto.
+	* lib/gdi32/misc/stubsa.c: Ditto.
+	* lib/gdi32/misc/stubsw.c: Ditto.
+	* lib/gdi32/objects/bitblt.c: Ditto.
+	* lib/gdi32/objects/brush.c: Ditto.
+	* lib/gdi32/objects/clip.c: Ditto.
+	* lib/gdi32/objects/dc.c: Ditto.
+	* lib/gdi32/objects/fillshap.c: Ditto.
+	* lib/gdi32/objects/line.c: Ditto.
+	* lib/gdi32/objects/pen.c: Ditto.
+	* lib/gdi32/objects/region.c: Ditto.
+	* lib/gdi32/objects/text.c: Ditto.
+
+2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* drivers/storage/class2/class2.c: Add @implemented and @unimplemented
 	to APIs.
 

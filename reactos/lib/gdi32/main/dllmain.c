@@ -1,9 +1,9 @@
 /*
  * dllmain.c
  *
- * $Revision: 1.6 $
+ * $Revision: 1.7 $
  * $Author: chorns $
- * $Date: 2002/09/08 10:22:40 $
+ * $Date: 2003/07/10 15:35:49 $
  *
  */
 
@@ -26,6 +26,9 @@ DllMain (
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 WINAPI
 GdiDllInitialize (
@@ -55,6 +58,7 @@ GdiDllInitialize (
 
 	return TRUE;
 }
+
 
 VOID
 WINAPI

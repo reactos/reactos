@@ -7,6 +7,9 @@
 #include <ddk/ntddk.h>
 #include <win32k/kapi.h>
 
+/*
+ * @implemented
+ */
 HGDIOBJ STDCALL
 GetStockObject(int Index)
 {
@@ -14,12 +17,19 @@ GetStockObject(int Index)
 }
 
 
+/*
+ * @implemented
+ */
 int STDCALL
 GetClipBox(HDC hDc, LPRECT Rect)
 {
   return(W32kGetClipBox(hDc, Rect));
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 GetPolyFillMode(
@@ -29,6 +39,10 @@ GetPolyFillMode(
 	return W32kGetPolyFillMode(a0);
 }
 
+
+/*
+ * @implemented
+ */
 HDC
 STDCALL
 CreateDCA (
@@ -98,6 +112,10 @@ CreateDCA (
 	return hDC;
 }
 
+
+/*
+ * @implemented
+ */
 HDC
 STDCALL
 CreateDCW (
@@ -115,12 +133,19 @@ CreateDCW (
 			);
 }
 
+
+/*
+ * @implemented
+ */
 BOOL STDCALL DeleteDC( HDC hDC )
 {
   return W32kDeleteDC( hDC );
 }
 
 
+/*
+ * @implemented
+ */
 HDC
 STDCALL
 CreateCompatibleDC(
@@ -130,6 +155,10 @@ CreateCompatibleDC(
 	return W32kCreateCompatableDC(hDC);
 }
 
+
+/*
+ * @implemented
+ */
 HGDIOBJ
 STDCALL
 SelectObject(
@@ -140,6 +169,10 @@ SelectObject(
 	return W32kSelectObject(hDC, hGDIObj);
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 SetMapMode(
@@ -150,6 +183,10 @@ SetMapMode(
   return W32kSetMapMode( a0, a1 );
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 SetViewportOrgEx(
@@ -162,6 +199,10 @@ SetViewportOrgEx(
   return W32kSetViewportOrgEx( a0, a1, a2, a3 );
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 OffsetViewportOrgEx(
@@ -174,6 +215,10 @@ OffsetViewportOrgEx(
   return W32kOffsetViewportOrgEx(DC, XOffset, YOffset, Point);
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 SetWindowOrgEx(
@@ -187,6 +232,9 @@ SetWindowOrgEx(
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 DeleteObject(
@@ -196,6 +244,10 @@ DeleteObject(
 	return W32kDeleteObject(a0);
 }
 
+
+/*
+ * @implemented
+ */
 HPALETTE
 STDCALL
 SelectPalette(
@@ -207,6 +259,10 @@ SelectPalette(
 	return W32kSelectPalette( a0, a1,a2 );
 }
 
+
+/*
+ * @implemented
+ */
 UINT
 STDCALL
 RealizePalette(
@@ -217,6 +273,9 @@ RealizePalette(
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 LPtoDP(
@@ -228,6 +287,10 @@ LPtoDP(
 	return W32kLPtoDP(a0, a1, a2);
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 SetPolyFillMode(
@@ -239,6 +302,9 @@ SetPolyFillMode(
 }
 
 
+/*
+ * @implemented
+ */
 int
 STDCALL
 GetDeviceCaps(

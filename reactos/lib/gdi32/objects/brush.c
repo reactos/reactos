@@ -8,6 +8,9 @@
 #include <win32k/kapi.h>
 
 
+/*
+ * @implemented
+ */
 HBRUSH
 STDCALL
 CreateSolidBrush(

@@ -7,6 +7,9 @@
 #include <ddk/ntddk.h>
 #include <win32k/kapi.h>
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 Polygon(HDC	hDC,
@@ -16,6 +19,10 @@ Polygon(HDC	hDC,
 	return W32kPolygon(hDC, (CONST PPOINT)lpPoints, nCount);
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 Rectangle(HDC  hDC,

@@ -8,6 +8,9 @@
 #include <ddk/ntddk.h>
 #include <win32k/kapi.h>
 
+/*
+ * @implemented
+ */
 BOOL  
 STDCALL 
 TextOutA(
@@ -33,6 +36,10 @@ TextOutA(
 	return ret;
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 TextOutW(
@@ -45,11 +52,16 @@ TextOutW(
 	return W32kTextOut(hDC, XStart, YStart, String, Count);
 }
 
+
+/*
+ * @implemented
+ */
 COLORREF  STDCALL 
 SetTextColor(HDC hDC, COLORREF color)
 {
   return(W32kSetTextColor(hDC, color));
 }
+
 
 static BOOL
 MetricsCharConvert(WCHAR w, BCHAR *b)
@@ -85,6 +97,10 @@ MetricsCharConvert(WCHAR w, BCHAR *b)
   return TRUE;
   }
 
+
+/*
+ * @implemented
+ */
 BOOL 
 STDCALL 
 GetTextMetricsA(
@@ -195,6 +211,10 @@ GetTextMetricsA(
   return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 BOOL 
 STDCALL 
 GetTextMetricsW(
@@ -205,6 +225,10 @@ GetTextMetricsW(
 	return W32kGetTextMetrics(hdc, tm);
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 APIENTRY
 GetTextExtentPointA(
@@ -228,6 +252,10 @@ GetTextExtentPointA(
 	return ret;
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 APIENTRY
 GetTextExtentPointW(
@@ -241,6 +269,9 @@ GetTextExtentPointW(
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 APIENTRY
 GetTextExtentPoint32A(
@@ -265,6 +296,9 @@ GetTextExtentPoint32A(
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 APIENTRY
 GetTextExtentPoint32W(
@@ -277,6 +311,10 @@ GetTextExtentPoint32W(
   return W32kGetTextExtentPoint32(hDC, String, Count, Size);
 }
 
+
+/*
+ * @implemented
+ */
 BOOL  
 STDCALL 
 ExtTextOutA(
@@ -304,6 +342,10 @@ ExtTextOutA(
 	return ret;
 }
 
+
+/*
+ * @implemented
+ */
 BOOL  
 STDCALL 
 ExtTextOutW(
@@ -320,6 +362,10 @@ ExtTextOutW(
 	return W32kTextOut(hDC, X, Y, String, Count);
 }
 
+
+/*
+ * @implemented
+ */
 HFONT
 STDCALL
 CreateFontIndirectA(
@@ -343,6 +389,10 @@ CreateFontIndirectA(
 	return ret;
 }
 
+
+/*
+ * @implemented
+ */
 HFONT
 STDCALL
 CreateFontIndirectW(
@@ -352,6 +402,10 @@ CreateFontIndirectW(
 	return W32kCreateFontIndirect((CONST LPLOGFONTW)lf);
 }
 
+
+/*
+ * @implemented
+ */
 HFONT
 STDCALL
 CreateFontA(
@@ -386,6 +440,10 @@ CreateFontA(
 	return ret;
 }
 
+
+/*
+ * @implemented
+ */
 HFONT
 STDCALL
 CreateFontW(

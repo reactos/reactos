@@ -8,6 +8,9 @@
 #include <win32k/kapi.h>
 #include <debug.h>
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 BitBlt(HDC  hDCDest,
@@ -23,6 +26,10 @@ BitBlt(HDC  hDCDest,
 	return W32kBitBlt(hDCDest, XDest, YDest, Width, Height, hDCSrc, XSrc, YSrc, ROP);
 }
 
+
+/*
+ * @implemented
+ */
 HBITMAP
 STDCALL
 CreateBitmap(INT  Width,
@@ -34,6 +41,10 @@ CreateBitmap(INT  Width,
 	return W32kCreateBitmap(Width, Height, Planes, BitsPerPel, Bits);
 }
 
+
+/*
+ * @implemented
+ */
 HBITMAP
 STDCALL
 CreateBitmapIndirect(CONST BITMAP  *BM)
@@ -41,6 +52,10 @@ CreateBitmapIndirect(CONST BITMAP  *BM)
 	return W32kCreateBitmapIndirect(BM);
 }
 
+
+/*
+ * @implemented
+ */
 HBITMAP
 STDCALL
 CreateCompatibleBitmap(HDC hDC,
@@ -50,6 +65,10 @@ CreateCompatibleBitmap(HDC hDC,
 	return W32kCreateCompatibleBitmap(hDC, Width, Height);
 }
 
+
+/*
+ * @implemented
+ */
 HBITMAP
 STDCALL
 CreateDiscardableBitmap(HDC  hDC,
@@ -59,6 +78,10 @@ CreateDiscardableBitmap(HDC  hDC,
 	return W32kCreateDiscardableBitmap(hDC, Width, Height);
 }
 
+
+/*
+ * @implemented
+ */
 HBITMAP
 STDCALL
 CreateDIBitmap(HDC  hDC,
@@ -71,6 +94,10 @@ CreateDIBitmap(HDC  hDC,
 	return W32kCreateDIBitmap(hDC, bmih, Init, bInit, bmi, Usage);
 }
 
+
+/*
+ * @implemented
+ */
 LONG
 STDCALL
 GetBitmapBits(HBITMAP  hBitmap,
@@ -80,6 +107,10 @@ GetBitmapBits(HBITMAP  hBitmap,
 	return W32kGetBitmapBits(hBitmap, Count, Bits);
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 GetBitmapDimensionEx(HBITMAP  hBitmap,
@@ -88,6 +119,10 @@ GetBitmapDimensionEx(HBITMAP  hBitmap,
 	return W32kGetBitmapDimensionEx(hBitmap, Dimension);
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 GetDIBits(HDC  hDC,
@@ -101,6 +136,10 @@ GetDIBits(HDC  hDC,
 	return W32kGetDIBits(hDC, hBitmap, StartScan, ScanLines, Bits, bi, Usage);
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 MaskBlt(HDC  hDCDest,
@@ -119,6 +158,10 @@ MaskBlt(HDC  hDCDest,
 	return W32kMaskBlt(hDCDest, XDest, YDest, Width, Height, hDCSrc, XSrc, YSrc, hMaskBitmap, xMask, yMask, ROP);
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 PlgBlt(HDC  hDCDest,
@@ -135,6 +178,10 @@ PlgBlt(HDC  hDCDest,
 	return W32kPlgBlt(hDCDest, Point, hDCSrc, XSrc, YSrc, Width, Height, hMaskBitmap, xMask, yMask);
 }
 
+
+/*
+ * @implemented
+ */
 LONG
 STDCALL
 SetBitmapBits(HBITMAP  hBitmap,
@@ -144,6 +191,10 @@ SetBitmapBits(HBITMAP  hBitmap,
 	return W32kSetBitmapBits(hBitmap, Bytes, Bits);
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 SetDIBits(HDC  hDC,
@@ -157,6 +208,10 @@ SetDIBits(HDC  hDC,
 	return W32kSetDIBits(hDC, hBitmap, StartScan, ScanLines, Bits, bmi, ColorUse);
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 SetDIBitsToDevice(HDC  hDC,
@@ -176,6 +231,10 @@ SetDIBitsToDevice(HDC  hDC,
 		Bits, bmi, ColorUse);
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 StretchBlt(
@@ -211,6 +270,10 @@ StretchBlt(
 	return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 StretchDIBits(HDC  hDC,
@@ -231,6 +294,10 @@ StretchDIBits(HDC  hDC,
 		SrcWidth, SrcHeight, Bits, BitsInfo, Usage, ROP);
 }
 
+
+/*
+ * @implemented
+ */
 HBITMAP 
 STDCALL 
 CreateDIBSection(HDC hDC,
@@ -243,6 +310,10 @@ CreateDIBSection(HDC hDC,
 	return W32kCreateDIBSection(hDC, bmi, Usage, Bits, hSection, dwOffset);
 }
 
+
+/*
+ * @implemented
+ */
 COLORREF 
 STDCALL 
 SetPixel(HDC  hDC,
@@ -253,6 +324,10 @@ SetPixel(HDC  hDC,
 	return W32kSetPixel(hDC, X, Y, Color);
 }
 
+
+/*
+ * @implemented
+ */
 BOOL STDCALL
 PatBlt(HDC hDC, INT Top, INT Left, INT Width, INT Height, ULONG Rop)
 {
