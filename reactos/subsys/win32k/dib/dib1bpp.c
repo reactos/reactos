@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib1bpp.c,v 1.18 2004/04/06 17:54:32 weiden Exp $ */
+/* $Id: dib1bpp.c,v 1.19 2004/04/06 21:19:44 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -405,7 +405,7 @@ DIB_1BPP_BitBlt(
 
    UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
    UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);  
-   RoundedRight = DestRect->right - ((DestRect->right - DestRect->left) & 0x7);
+   RoundedRight = DestRect->right - ((DestRect->right - DestRect->left) & 0x31);
    SourceY = SourcePoint->y;
 
    for (Y = DestRect->top; Y < DestRect->bottom; Y++)
@@ -417,16 +417,18 @@ DIB_1BPP_BitBlt(
          Y * DestSurf->lDelta);
 
       X = DestRect->left;
-      if (X & 7)
+      if (X & 31)
       {
+         /* FIXME: This case is completely untested!!! */
+         
          Dest = *((PBYTE)DestBits);
-         NoBits = 7 - (X & 7);
+         NoBits = 31 - (X & 31);
 
          if (UsesSource)
          {
             Source = 0;
-            for (k = 7 - NoBits; k < NoBits; k++)
-               Source |= (DIB_GetSource(SourceSurf, SourceGDI, SourceX + k, SourceY, ColorTranslation) << (7 - k));
+            for (k = 31 - NoBits; k < NoBits; k++)
+               Source |= (DIB_GetSource(SourceSurf, SourceGDI, SourceX + k, SourceY, ColorTranslation) << (31 - k));
          }
 
          if (UsesPattern)
@@ -434,8 +436,8 @@ DIB_1BPP_BitBlt(
             if (Brush->iSolidColor == 0xFFFFFFFF)
             {
                Pattern = 0;
-               for (k = 7 - NoBits; k < NoBits; k++)
-                  Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k) % PatternWidth, Y % PatternHeight) << (7 - k));
+               for (k = 31 - NoBits; k < NoBits; k++)
+                  Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k) % PatternWidth, Y % PatternHeight) << (31 - k));
             }
             else
             {
@@ -444,8 +446,10 @@ DIB_1BPP_BitBlt(
          }
 
          Dest = DIB_DoRop(Rop4, Dest, Source, Pattern);	    
-         Dest &= ~((1 << (7 - NoBits)) - 1);
-         Dest |= *((PBYTE)DestBits) & ((1 << (7 - NoBits)) - 1);
+         Dest &= ~((1 << (31 - NoBits)) - 1);
+         Dest |= *((PBYTE)DestBits) & ((1 << (31 - NoBits)) - 1);
+
+         *DestBits = Dest;
          
          X += NoBits;
          SourceX += NoBits;
