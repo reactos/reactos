@@ -412,9 +412,9 @@ TEST_STATUS TestGlobalReAllocFixed()
         else
         {
             OUTPUT_Line("Alloced Handle: ");
-            OUTPUT_HexDword(hMem);
+            OUTPUT_HexDword((DWORD)hMem);
             OUTPUT_Line("ReAlloced Handle: ");
-            OUTPUT_HexDword(hReAlloced);
+            OUTPUT_HexDword((DWORD)hReAlloced);
             if (hMem == hReAlloced)
             {
                 OUTPUT_Line("GlobalReAlloc returned the same pointer.  The documentation states that this is wrong, but Windows NT works this way.");    
@@ -455,9 +455,9 @@ TEST_STATUS TestGlobalReAllocFixed()
         else
         {
             OUTPUT_Line("Alloced Handle: ");
-            OUTPUT_HexDword(hMem);
+            OUTPUT_HexDword((DWORD)hMem);
             OUTPUT_Line("ReAlloced Handle: ");
-            OUTPUT_HexDword(hReAlloced);
+            OUTPUT_HexDword((DWORD)hReAlloced);
             if (hMem != hReAlloced)
             {
                 OUTPUT_Line("GlobalReAlloc returned a different.");
@@ -516,9 +516,9 @@ TEST_STATUS TestGlobalReAllocMovable()
         else
         {
             OUTPUT_Line("Alloced Handle: ");
-            OUTPUT_HexDword(hMem);
+            OUTPUT_HexDword((DWORD)hMem);
             OUTPUT_Line("ReAlloced Handle: ");
-            OUTPUT_HexDword(hReAlloced);
+            OUTPUT_HexDword((DWORD)hReAlloced);
             
             pMem = GlobalLock(hReAlloced);
             hMem = hReAlloced;
@@ -559,9 +559,9 @@ TEST_STATUS TestGlobalReAllocMovable()
         else
         {
             OUTPUT_Line("Alloced Handle: ");
-            OUTPUT_HexDword(hMem);
+            OUTPUT_HexDword((DWORD)hMem);
             OUTPUT_Line("ReAlloced Handle: ");
-            OUTPUT_HexDword(hReAlloced);
+            OUTPUT_HexDword((DWORD)hReAlloced);
             if (hMem != hReAlloced)
             {
                 OUTPUT_Line("GlobalReAlloc returned a different block.");
@@ -679,7 +679,7 @@ TEST_STATUS TestGlobalFlagsMoveable()
     if (0 != hMem)
     {
         OUTPUT_Line("Allocation handle: ");
-        OUTPUT_HexDword(hMem);
+        OUTPUT_HexDword((DWORD)hMem);
         OUTPUT_Line("Testing for a discarded flag");
         uFlags = GlobalFlags(hMem);
         if (0 != (uFlags & GMEM_DISCARDED)) /*discarded*/
@@ -720,7 +720,7 @@ TEST_STATUS TestGlobalFlagsFixed()
     {
 
         OUTPUT_Line("Allocation handle: ");
-        OUTPUT_HexDword(hMem);
+        OUTPUT_HexDword((DWORD)hMem);
 
         OUTPUT_Line("Testing initial allocation");
         OUTPUT_Line("Testing for non-discarded and lock of 0");
@@ -796,7 +796,7 @@ TEST_STATUS TestGlobalHandle()
     {
 
         OUTPUT_Line("Allocation handle: ");
-        OUTPUT_HexDword(hMem);
+        OUTPUT_HexDword((DWORD)hMem);
         
         hTest = GlobalHandle(hMem);
         if (hMem == hTest)
@@ -806,7 +806,7 @@ TEST_STATUS TestGlobalHandle()
         else
         {
             OUTPUT_Line("GlobalHandle returned:");
-            OUTPUT_HexDword(hTest);
+            OUTPUT_HexDword((DWORD)hTest);
             subtest = TEST_CombineStatus(subtest, FAILED);
         }
 
@@ -830,7 +830,7 @@ TEST_STATUS TestGlobalHandle()
     {
 
         OUTPUT_Line("Allocation handle: ");
-        OUTPUT_HexDword(hMem);
+        OUTPUT_HexDword((DWORD)hMem);
         pMem = GlobalLock(hMem);
         hTest = GlobalHandle(pMem);
         if (hMem == hTest)
@@ -840,7 +840,7 @@ TEST_STATUS TestGlobalHandle()
         else
         {
             OUTPUT_Line("GlobalHandle returned:");
-            OUTPUT_HexDword(hTest);
+            OUTPUT_HexDword((DWORD)hTest);
             subtest = TEST_CombineStatus(subtest, FAILED);
         }
 
@@ -979,7 +979,7 @@ TEST_STATUS TestGlobalDiscard()
     if (0 != hMem)
     {
         OUTPUT_Line("Allocation handle: ");
-        OUTPUT_HexDword(hMem);
+        OUTPUT_HexDword((DWORD)hMem);
         
         hTest = GlobalDiscard(hMem);
         if (0 == hTest)
