@@ -2834,19 +2834,23 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 
 		if (visible_cols & COL_INDEX) {
 			_stprintf(buffer, sLongHexFmt, index);
+
 			if (calcWidthCol == -1)
 				output_text(pane, dis, col, buffer, DT_RIGHT);
 			else if (calcWidthCol==col || calcWidthCol==COLUMNS)
 				calc_width(pane, dis, col, buffer);
+
 			col++;
 		}
 
 		if (visible_cols & COL_LINKS) {
 			wsprintf(buffer, sNumFmt, entry->bhfi.nNumberOfLinks);
+
 			if (calcWidthCol == -1)
 				output_text(pane, dis, col, buffer, DT_CENTER);
 			else if (calcWidthCol==col || calcWidthCol==COLUMNS)
 				calc_width(pane, dis, col, buffer);
+
 			col++;
 		}
 	} else
