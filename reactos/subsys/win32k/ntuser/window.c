@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.243 2004/07/09 20:57:38 gvg Exp $
+/* $Id: window.c,v 1.244 2004/07/14 21:52:23 sedwards Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1430,7 +1430,7 @@ IntCreateWindowEx(DWORD dwExStyle,
        * native ole32.OleInitialize uses HWND_MESSAGE to create the
        * message window (style: WS_POPUP|WS_DISABLED)
        */
-      UNIMPLEMENTED;
+      DPRINT1("FIXME - Parent is HWND_MESSAGE\n");
     }
   else if (hWndParent)
     {
