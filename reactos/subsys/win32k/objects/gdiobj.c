@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.69 2004/07/03 13:55:36 navaraf Exp $
+ * $Id: gdiobj.c,v 1.70 2004/07/04 01:23:32 navaraf Exp $
  *
  */
 #include <w32k.h>
@@ -178,6 +178,7 @@ static HGDIOBJ StockObjects[NB_STOCK_OBJECTS];
 static PGDI_HANDLE_TABLE  HandleTable = 0;
 static FAST_MUTEX  HandleTableMutex;
 static FAST_MUTEX  RefCountHandling;
+static LARGE_INTEGER  ShortDelay;
 
 /*!
  * Allocate GDI object table.
@@ -344,7 +345,12 @@ GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
   newObject->Magic = GDI_TYPE_TO_MAGIC(ObjectType);
   newObject->lockfile = NULL;
   newObject->lockline = 0;
+#if 0
   ExInitializeFastMutex(&newObject->Lock);
+#else
+  newObject->LockTid = 0;
+  newObject->LockCount = 0;
+#endif
   HandleTable->Handles[Index] = newObject;
 #if GDI_COUNT_OBJECTS
   HandleTable->HandlesCount++;
@@ -550,6 +556,8 @@ InitGdiObjectHandleTable (VOID)
   ExInitializeFastMutex (&HandleTableMutex);
   ExInitializeFastMutex (&RefCountHandling);
 
+  ShortDelay.QuadPart = -100;
+
   HandleTable = GDIOBJ_iAllocHandleTable (GDI_HANDLE_COUNT);
   DPRINT("HandleTable: %x\n", HandleTable );
 
@@ -704,6 +712,7 @@ GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
       return NULL;
     }
 
+#if 0
 #ifdef NDEBUG
   ExAcquireFastMutex(&ObjHdr->Lock);
 #else /* NDEBUG */
@@ -719,6 +728,24 @@ GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
       DPRINT1("  Disregard previous message about object 0x%x, it's ok\n", hObj);
     }
 #endif /* NDEBUG */
+#else
+  if (ObjHdr->LockTid == (DWORD)PsGetCurrentThreadId())
+    {
+      InterlockedIncrement(&ObjHdr->LockCount);
+    }
+  else
+    {
+      for (;;)
+        {
+          if (InterlockedCompareExchange(&ObjHdr->LockTid, (DWORD)PsGetCurrentThreadId(), 0))
+            {
+              InterlockedIncrement(&ObjHdr->LockCount);
+              break;
+            }
+          /* FIXME: KeDelayExecutionThread(KernelMode, FALSE, &ShortDelay); */
+        }
+    }
+#endif
 
   ExAcquireFastMutex(&RefCountHandling);
   ObjHdr->dwCount++;
@@ -780,7 +807,26 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ObjectType)
       return NULL;
     }
 
+#if 0
   ExAcquireFastMutex(&ObjHdr->Lock);
+#else
+  if (ObjHdr->LockTid == (DWORD)PsGetCurrentThreadId())
+    {
+      InterlockedIncrement(&ObjHdr->LockCount);
+    }
+  else
+    {
+      for (;;)
+        {
+          if (InterlockedCompareExchange(&ObjHdr->LockTid, (DWORD)PsGetCurrentThreadId(), 0))
+            {
+              InterlockedIncrement(&ObjHdr->LockCount);
+              break;
+            }
+          /* FIXME: KeDelayExecutionThread(KernelMode, FALSE, &ShortDelay); */
+        }
+    }
+#endif
 
   ExAcquireFastMutex(&RefCountHandling);
   ObjHdr->dwCount++;
@@ -813,7 +859,14 @@ GDIOBJ_UnlockObj(HGDIOBJ hObj, DWORD ObjectType)
     return FALSE;
   }
 
+#if 0
   ExReleaseFastMutex(&ObjHdr->Lock);
+#else
+  if (InterlockedDecrement(&ObjHdr->LockCount) == 0)
+    {
+      InterlockedExchange(&ObjHdr->LockTid, 0);
+    }
+#endif
 
   ExAcquireFastMutex(&RefCountHandling);
   if (0 == (ObjHdr->dwCount & ~0x80000000))

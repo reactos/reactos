@@ -49,7 +49,9 @@ typedef struct _GDIOBJHDR
   WORD Magic;
   const char* lockfile;
   int lockline;
-  FAST_MUTEX Lock;
+/*  FAST_MUTEX Lock;*/
+  DWORD LockTid;
+  DWORD LockCount;
 } GDIOBJHDR, *PGDIOBJHDR;
 
 typedef struct _GDIMULTILOCK

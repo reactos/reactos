@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.59 2004/07/03 17:40:27 navaraf Exp $ */
+/* $Id: cursoricon.c,v 1.60 2004/07/04 01:23:32 navaraf Exp $ */
 #include <w32k.h>
 
 PCURICON_OBJECT FASTCALL
@@ -88,10 +88,8 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
       if (NULL != CurInfo->CurrentCursorObject && CurInfo->ShowingCursor)
       {
          /* Remove the cursor if it was displayed */
-         if (GDIDEVFUNCS(SurfObj).MovePointer)
-           GDIDEVFUNCS(SurfObj).MovePointer(SurfObj, -1, -1, &PointerRect);
-         else
-           EngMovePointer(SurfObj, -1, -1, &PointerRect);
+         if (GDIDEV(SurfObj)->MovePointer)
+           GDIDEV(SurfObj)->MovePointer(SurfObj, -1, -1, &PointerRect);
          SetPointerRect(CurInfo, &PointerRect);
       }
 
@@ -174,13 +172,15 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
                                                         CurInfo->y, 
                                                         &PointerRect,
                                                         SPS_CHANGE);
+      DbgPrint("SetCursor: DrvSetPointerShape() returned %x\n",
+         GDIDEV(SurfObj)->PointerStatus);
     }
     else
     {
       GDIDEV(SurfObj)->PointerStatus = SPS_DECLINE;
     }
 
-    if(((GDIDEVICE *)SurfObj->hdev)->PointerStatus == SPS_DECLINE)
+    if(GDIDEV(SurfObj)->PointerStatus == SPS_DECLINE)
     {
       GDIDEV(SurfObj)->PointerStatus = EngSetPointerShape(
                          SurfObj, soMask, soColor, XlateObj,
@@ -190,7 +190,11 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
                          CurInfo->y, 
                          &PointerRect,
                          SPS_CHANGE);
-      DbgPrint("SetCursor: DrvSetPointerShape() returned SPS_DECLINE\n");
+      GDIDEV(SurfObj)->MovePointer = EngMovePointer;
+    }
+    else
+    {
+      GDIDEV(SurfObj)->MovePointer = GDIDEVFUNCS(SurfObj).MovePointer;
     }
     
     SetPointerRect(CurInfo, &PointerRect);

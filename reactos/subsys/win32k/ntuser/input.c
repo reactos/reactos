@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.35 2004/07/03 13:55:36 navaraf Exp $
+/* $Id: input.c,v 1.36 2004/07/04 01:23:32 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -640,14 +640,9 @@ IntMouseInput(MOUSEINPUT *mi)
       {
         SurfObj = &BitmapObj->SurfObj;
 
-        if(GDIDEVFUNCS(SurfObj).MovePointer)
+        if (GDIDEV(SurfObj)->MovePointer)
         {
-          GDIDEVFUNCS(SurfObj).MovePointer(
-             SurfObj, MousePos.x, MousePos.y, &PointerRect);
-        }
-        else
-        {
-          EngMovePointer(SurfObj, MousePos.x, MousePos.y, &PointerRect);
+          GDIDEV(SurfObj)->MovePointer(SurfObj, MousePos.x, MousePos.y, &PointerRect);
         }
 
         BITMAPOBJ_UnlockBitmap(hBitmap);

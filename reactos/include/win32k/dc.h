@@ -116,6 +116,8 @@ typedef struct
   DRIVER_FUNCTIONS DriverFunctions;
   PFILE_OBJECT VideoFileObject;
 
+  PGD_MOVEPOINTER MovePointer;
+
   struct {
      BOOL Enable;
      LONG Column;
