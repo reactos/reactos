@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.119 2004/12/18 11:05:03 hbirr Exp $ */
+/* $Id: text.c,v 1.120 2004/12/18 17:50:22 royce Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -1830,7 +1830,22 @@ NtGdiExtTextOut(
        */
 
       HSourceGlyph = EngCreateBitmap(bitSize, pitch, (glyph->bitmap.pixel_mode == ft_pixel_mode_grays) ? BMF_8BPP : BMF_1BPP, BMF_TOPDOWN, glyph->bitmap.buffer);
+      if ( !HSourceGlyph )
+      {
+        EngDeleteXlate(XlateObj);
+        EngDeleteXlate(XlateObj2);
+        DPRINT1("WARNING: EngLockSurface() failed!\n");
+        goto fail;
+      }
       SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
+      if ( !SourceGlyphSurf )
+      {
+        EngDeleteSurface((HSURF)HSourceGlyph);
+        EngDeleteXlate(XlateObj);
+        EngDeleteXlate(XlateObj2);
+        DPRINT1("WARNING: EngLockSurface() failed!\n");
+        goto fail;
+      }
     
       /*
        * Use the font data as a mask to paint onto the DCs surface using a
