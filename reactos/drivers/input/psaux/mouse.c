@@ -548,14 +548,14 @@ static void psmouse_initialize(PDEVICE_EXTENSION DeviceExtension)
  * We also set the resolution and scaling.
  */
 
-	psmouse_set_resolution(DeviceExtension);
+	//psmouse_set_resolution(DeviceExtension);
 	psmouse_command(DeviceExtension,  NULL, PSMOUSE_CMD_SETSCALE11);
 
 /*
  * We set the mouse into streaming mode.
  */
 
-	psmouse_command(DeviceExtension, param, PSMOUSE_CMD_SETSTREAM);
+	//psmouse_command(DeviceExtension, param, PSMOUSE_CMD_SETSTREAM);
 
 /*
  * Last, we enable the mouse so that we get reports from it.
@@ -579,9 +579,9 @@ BOOLEAN mouse_init (PDEVICE_OBJECT DeviceObject)
   DeviceExtension->PreviousButtons = 0;
   DeviceExtension->MouseType = 0;
   
-  DeviceExtension->psmouse_noext = 0; // Set this to 1 if you don't want to detect enhanced mice
+  DeviceExtension->psmouse_noext = 1; // Set this to 1 if you don't want to detect enhanced mice (BOCHS?)
   DeviceExtension->psmouse_smartscroll = PSMOUSE_LOGITECH_SMARTSCROLL;
-  DeviceExtension->Resolution = 400; // Set this to the resolution of the mouse
+  DeviceExtension->Resolution = 0; // Set this to the resolution of the mouse
   
   DeviceExtension->InputDataCount[0] = 0;
   DeviceExtension->InputDataCount[1] = 0;
