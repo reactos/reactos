@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.4 2001/01/20 18:40:27 ekohl Exp $
+/* $Id: winlogon.c,v 1.5 2001/04/26 01:36:32 phreak Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -200,6 +200,8 @@ VOID DoLoginUser(PCHAR Name, PCHAR Password)
 	return;
      }
    WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
+   CloseHandle( ProcessInformation.hProcess );
+   CloseHandle( ProcessInformation.hThread );
 }
 
 int STDCALL
