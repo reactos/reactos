@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.43 2000/01/26 21:10:16 jfilby Exp $
+/* $Id: loader.c,v 1.44 2000/01/31 20:25:43 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -176,7 +176,7 @@ static VOID LdrLoadAutoConfigDriver (LPWSTR	RelativeDriverName)
    NTSTATUS	Status;
    UNICODE_STRING	DriverName;
    
-   DbgPrint("Loading %w\n",RelativeDriverName);
+   DbgPrint("Loading %S\n",RelativeDriverName);
    
    LdrGetSystemDirectory(TmpFileName, (MAX_PATH * sizeof(WCHAR)));
    wcscat(TmpFileName, L"\\drivers\\");
