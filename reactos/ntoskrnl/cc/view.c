@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.66 2003/07/11 01:23:14 royce Exp $
+/* $Id: view.c,v 1.67 2003/07/15 19:30:33 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -132,9 +132,6 @@ CcRosFlushCacheSegment(PCACHE_SEGMENT CacheSegment)
   return(Status);
 }
 
-VOID CcRosRemoveUnusedFiles(VOID);
-
-
 NTSTATUS
 CcRosFlushDirtyPages(ULONG Target, PULONG Count)
 {
@@ -231,7 +228,7 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
  */
 {
   PLIST_ENTRY current_entry;
-  PCACHE_SEGMENT current;
+  PCACHE_SEGMENT current, last = NULL;
   ULONG PagesPerSegment;
   ULONG PagesFreed;
   KIRQL oldIrql;
@@ -266,7 +263,33 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
       }
       else
       {
-         KeReleaseSpinLock(&current->Bcb->BcbLock, oldIrql);
+         if (last != current && current->MappedCount > 0 && !current->Dirty)
+	   {
+	     ULONG i;
+	     NTSTATUS Status;
+	        
+             current->ReferenceCount++;
+	     last = current;
+             KeReleaseSpinLock(&current->Bcb->BcbLock, oldIrql);
+	     ExReleaseFastMutex(&ViewLock);
+	     for (i = 0; i < current->Bcb->CacheSegmentSize / PAGE_SIZE; i++)
+	       {
+	         PHYSICAL_ADDRESS Page;
+		 Page = MmGetPhysicalAddress(current->BaseAddress + i * PAGE_SIZE);
+                 Status = MmPageOutPhysicalAddress(Page);
+		 if (!NT_SUCCESS(Status))
+		   {
+		     break;
+		   }
+	       }
+             ExAcquireFastMutex(&ViewLock);
+             KeAcquireSpinLock(&current->Bcb->BcbLock, &oldIrql);
+	     current->ReferenceCount--;
+             KeReleaseSpinLock(&current->Bcb->BcbLock, oldIrql);
+             current_entry = &current->CacheSegmentLRUListEntry;
+	     continue;
+	   }
+	 KeReleaseSpinLock(&current->Bcb->BcbLock, oldIrql);
       }
   }
   ExReleaseFastMutex(&ViewLock);
@@ -353,6 +376,7 @@ CcRosLookupCacheSegment(PBCB Bcb, ULONG FileOffset)
 	{
 	  current->ReferenceCount++;
 	  KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
+          ExAcquireFastMutex(&current->Lock);
 	  return(current);
 	}
       current_entry = current_entry->Flink;
@@ -376,7 +400,6 @@ CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset)
     {
       KeBugCheck(0);
     }
-  ExAcquireFastMutex(&CacheSeg->Lock);
   if (!CacheSeg->Dirty)
     {
       ExAcquireFastMutex(&ViewLock);
@@ -415,7 +438,6 @@ CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
     {
       return(STATUS_UNSUCCESSFUL);
     }
-  ExAcquireFastMutex(&CacheSeg->Lock);
 
   WasDirty = CacheSeg->Dirty;
   CacheSeg->Dirty = CacheSeg->Dirty || NowDirty;
@@ -449,8 +471,7 @@ CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
 NTSTATUS STATIC
 CcRosCreateCacheSegment(PBCB Bcb,
 			ULONG FileOffset,
-			PCACHE_SEGMENT* CacheSeg,
-			BOOLEAN Lock)
+			PCACHE_SEGMENT* CacheSeg)
 {
   ULONG i;
   PCACHE_SEGMENT current;
@@ -507,10 +528,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
 	ExReleaseFastMutex(&ViewLock);
 	ExFreeToNPagedLookasideList(&CacheSegLookasideList, *CacheSeg);
 	*CacheSeg = current;
-	if (Lock)
-	{
-          ExAcquireFastMutex(&current->Lock);
-	}
+        ExAcquireFastMutex(&current->Lock);
 	return STATUS_SUCCESS;
      }
      if (current->FileOffset < FileOffset)
@@ -600,11 +618,6 @@ CcRosCreateCacheSegment(PBCB Bcb,
 	KeBugCheck(0);
      }
   }
-  if (!Lock)
-  {
-     ExReleaseFastMutex(&current->Lock);
-  }
-
   return(STATUS_SUCCESS);
 }
 
@@ -641,14 +654,13 @@ CcRosGetCacheSegmentChain(PBCB Bcb,
 	}
       else
 	{
-	  CcRosCreateCacheSegment(Bcb, CurrentOffset, &current, FALSE);
+	  CcRosCreateCacheSegment(Bcb, CurrentOffset, &current);
 	  CacheSegList[i] = current;
 	}
     }
 
   for (i = 0; i < (Length / Bcb->CacheSegmentSize); i++)
     {
-      ExAcquireFastMutex(&CacheSegList[i]->Lock);
       if (i == 0)
 	{
 	  *CacheSeg = CacheSegList[i];
@@ -684,16 +696,12 @@ CcRosGetCacheSegment(PBCB Bcb,
     * Look for a cache segment already mapping the same data.
     */
    current = CcRosLookupCacheSegment(Bcb, FileOffset);
-   if (current != NULL)
-   {
-      ExAcquireFastMutex(&current->Lock);
-   }
-   else
+   if (current == NULL)
    {
      /*
       * Otherwise create a new segment.
       */
-      Status = CcRosCreateCacheSegment(Bcb, FileOffset, &current, TRUE);
+      Status = CcRosCreateCacheSegment(Bcb, FileOffset, &current);
       if (!NT_SUCCESS(Status))
       {
 	return Status;
@@ -873,7 +881,6 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
 	 current = CcRosLookupCacheSegment (Bcb, Offset.u.LowPart);
 	 if (current != NULL)
 	 {
-	    ExAcquireFastMutex(&current->Lock);
 	    if (current->Dirty)
 	    {
 	       Status = CcRosFlushCacheSegment(current);
@@ -1000,7 +1007,7 @@ VOID CcRosReferenceCache(PFILE_OBJECT FileObject)
 VOID CcRosSetRemoveOnClose(PSECTION_OBJECT_POINTERS SectionObjectPointer)
 {
   PBCB Bcb;
-//  DPRINT1("CcRosSetRemoveOnClose()\n");
+  DPRINT("CcRosSetRemoveOnClose()\n");
   ExAcquireFastMutex(&ViewLock);
   Bcb = (PBCB)SectionObjectPointer->SharedCacheMap;
   if (Bcb)
