@@ -206,12 +206,17 @@ BOOL WINAPI IsUserAdmin(VOID)
     TRACE("\n");
 
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+    {
         return FALSE;
+    }
 
     if (!GetTokenInformation(hToken, TokenGroups, NULL, 0, &dwSize))
     {
-        CloseHandle(hToken);
-        return FALSE;
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        {
+            CloseHandle(hToken);
+            return FALSE;
+        }
     }
 
     lpGroups = MyMalloc(dwSize);
@@ -337,4 +342,119 @@ LPSTR WINAPI UnicodeToMultiByte(LPCWSTR lpUnicodeStr, UINT uCodePage)
     }
 
     return lpMultiByteStr;
+}
+
+
+/**************************************************************************
+ * DoesUserHavePrivilege [SETUPAPI.@]
+ *
+ * Check whether the current user has got a given privilege.
+ *
+ * PARAMS
+ *     lpPrivilegeName  [I] Name of the privilege to be checked
+ *
+ * RETURNS
+ *     Success: TRUE
+ *     Failure: FALSE
+ */
+BOOL WINAPI DoesUserHavePrivilege(LPCWSTR lpPrivilegeName)
+{
+    HANDLE hToken;
+    DWORD dwSize;
+    PTOKEN_PRIVILEGES lpPrivileges;
+    LUID PrivilegeLuid;
+    DWORD i;
+    BOOL bResult = FALSE;
+
+    TRACE("%s\n", debugstr_w(lpPrivilegeName));
+
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+        return FALSE;
+
+    if (!GetTokenInformation(hToken, TokenPrivileges, NULL, 0, &dwSize))
+    {
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        {
+            CloseHandle(hToken);
+            return FALSE;
+        }
+    }
+
+    lpPrivileges = MyMalloc(dwSize);
+    if (lpPrivileges == NULL)
+    {
+        CloseHandle(hToken);
+        return FALSE;
+    }
+
+    if (!GetTokenInformation(hToken, TokenPrivileges, lpPrivileges, dwSize, &dwSize))
+    {
+        MyFree(lpPrivileges);
+        CloseHandle(hToken);
+        return FALSE;
+    }
+
+    CloseHandle(hToken);
+
+    if (!LookupPrivilegeValueW(NULL, lpPrivilegeName, &PrivilegeLuid))
+    {
+        MyFree(lpPrivileges);
+        return FALSE;
+    }
+
+    for (i = 0; i < lpPrivileges->PrivilegeCount; i++)
+    {
+        if (lpPrivileges->Privileges[i].Luid.HighPart == PrivilegeLuid.HighPart &&
+            lpPrivileges->Privileges[i].Luid.LowPart == PrivilegeLuid.LowPart)
+        {
+            bResult = TRUE;
+        }
+    }
+
+    MyFree(lpPrivileges);
+
+    return bResult;
+}
+
+
+/**************************************************************************
+ * EnablePrivilege [SETUPAPI.@]
+ *
+ * Enables or disables one of the current users privileges.
+ *
+ * PARAMS
+ *     lpPrivilegeName  [I] Name of the privilege to be changed
+ *     bEnable          [I] TRUE: Enables the privilege
+ *                          FALSE: Disables the privilege
+ *
+ * RETURNS
+ *     Success: TRUE
+ *     Failure: FALSE
+ */
+BOOL WINAPI EnablePrivilege(LPCWSTR lpPrivilegeName, BOOL bEnable)
+{
+    TOKEN_PRIVILEGES Privileges;
+    HANDLE hToken;
+    BOOL bResult;
+
+    TRACE("%s %s\n", debugstr_w(lpPrivilegeName), bEnable ? "TRUE" : "FALSE");
+
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+        return FALSE;
+
+    Privileges.PrivilegeCount = 1;
+    Privileges.Privileges[0].Attributes = (bEnable) ? SE_PRIVILEGE_ENABLED : 0;
+
+    if (!LookupPrivilegeValueW(NULL, lpPrivilegeName,
+                               &Privileges.Privileges[0].Luid))
+    {
+        CloseHandle(hToken);
+        return FALSE;
+    }
+
+    bResult = AdjustTokenPrivileges(hToken, FALSE, &Privileges, 0, NULL, NULL);
+
+    CloseHandle(hToken);
+
+    return bResult;
 }

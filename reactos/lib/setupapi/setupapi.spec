@@ -197,9 +197,9 @@
 @ stub DelayedMove
 @ stub DelimStringToMultiSz
 @ stub DestroyTextFileReadBuffer
-@ stub DoesUserHavePrivilege
+@ stdcall DoesUserHavePrivilege(wstr)
 @ stdcall DuplicateString(wstr)
-@ stub EnablePrivilege
+@ stdcall EnablePrivilege(wstr long)
 @ stub ExtensionPropSheetPageProc
 @ stub FileExists
 @ stub FreeStringArray
