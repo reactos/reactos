@@ -18,7 +18,7 @@ extern "C" {
 #endif//__cplusplus
 
 #ifdef _MSC_VER
-#define UNIMPLEMENTED
+#define UNIMPLEMENTED DBGPRINT( "UNIMPLEMENTED" )
 #endif//_MSC_VER
 
 /* FUNCTION: Append OpenGL Rendering Context (GLRC) to list
@@ -183,12 +183,97 @@ WGL_SetContextCallBack( const ICDTable *table )
 }
 
 
+/* FUNCTION: Attempts to find the best matching pixel format for HDC
+ * ARGUMENTS: [IN] pdf  PFD describing what kind of format you want
+ * RETURNS: one-based positive format index on success, 0 on failure
+ */
+#define BUFFERDEPTH_SCORE(want, have) \
+	((want == 0) ? (0) : ((want < have) ? (1) : ((want > have) ? (3) : (0))))
 int
 APIENTRY
 rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
 {
-	UNIMPLEMENTED;
-	return 0;
+	GLDRIVERDATA *icd;
+	PIXELFORMATDESCRIPTOR icdPfd;
+	int i;
+	int best = -1;
+	int score, bestScore = 0x7fff; /* used to choose a pfd if no exact match */
+	int icdNumFormats;
+	const DWORD compareFlags = PFD_DRAW_TO_WINDOW | PFD_DRAW_TO_BITMAP |
+	                           PFD_SUPPORT_GDI | PFD_SUPPORT_OPENGL;
+
+	/* load ICD */
+	icd = OPENGL32_LoadICDForHDC( hdc );
+	if (icd == NULL)
+		return 0;
+
+	/* check input */
+	if (pfd->nSize != sizeof (PIXELFORMATDESCRIPTOR) || pfd->nVersion != 1)
+	{
+		SetLastError( 0 ); /* FIXME: use appropriate errorcode */
+		return 0;
+	}
+
+	/* get number of formats -- FIXME: use 1 or 0 as index? */
+	icdNumFormats = icd->DrvDescribePixelFormat( hdc, 1,
+	                                  sizeof (PIXELFORMATDESCRIPTOR), NULL );
+	if (icdNumFormats == 0)
+	{
+		DBGPRINT( "DrvDescribePixelFormat failed (%d)", GetLastError() );
+		return 0;
+	}
+
+	/* try to find best format */
+	for (i = 0; i < icdNumFormats; i++)
+	{
+		if (icd->DrvDescribePixelFormat( hdc, i + 1,
+		                         sizeof (PIXELFORMATDESCRIPTOR), &icdPfd ) == 0)
+		{
+			DBGPRINT( "Warning: DrvDescribePixelFormat failed (%d)",
+			          GetLastError() );
+			break;
+		}
+
+		/* compare flags */
+		if ((pfd->dwFlags & compareFlags) != (icdPfd.dwFlags & compareFlags))
+			continue;
+		if (!(pfd->dwFlags & PFD_DOUBLEBUFFER_DONTCARE) &&
+		    ((pfd->dwFlags & PFD_DOUBLEBUFFER) != (icdPfd.dwFlags & PFD_DOUBLEBUFFER)))
+			continue;
+		if (!(pfd->dwFlags & PFD_STEREO_DONTCARE) &&
+		    ((pfd->dwFlags & PFD_STEREO) != (icdPfd.dwFlags & PFD_STEREO)))
+			continue;
+
+		/* check other attribs */
+		score = 0; /* higher is worse */
+		if (pfd->iPixelType != icdPfd.iPixelType)
+			score += 5; /* this is really bad i think */
+		if (pfd->iLayerType != icdPfd.iLayerType)
+			score += 15; /* this is very very bad ;) */
+
+		score += BUFFERDEPTH_SCORE(pfd->cAlphaBits, icdPfd.cAlphaBits);
+		score += BUFFERDEPTH_SCORE(pfd->cAccumBits, icdPfd.cAccumBits);
+		score += BUFFERDEPTH_SCORE(pfd->cDepthBits, icdPfd.cDepthBits);
+		score += BUFFERDEPTH_SCORE(pfd->cStencilBits, icdPfd.cStencilBits);
+		score += BUFFERDEPTH_SCORE(pfd->cAuxBuffers, icdPfd.cAuxBuffers);
+
+		/* check score */
+		if (score < bestScore)
+		{
+			bestScore = score;
+			best = i + 1;
+			if (bestScore == 0)
+				break;
+		}
+	}
+
+	if (best == -1)
+	{
+		SetLastError( 0 ); /* FIXME: set appropriate error */
+		return 0;
+	}
+
+	return best;
 }
 
 
@@ -312,11 +397,11 @@ rosglCreateLayerContext( HDC hdc, int layer )
 	}
 
 	/* create context */
-	if (icd->DrvCreateLayerContext)
+	if (icd->DrvCreateLayerContext != NULL)
 		drvHglrc = icd->DrvCreateLayerContext( hdc, layer );
 	if (drvHglrc == NULL)
 	{
-		if (layer == 0)
+		if (layer == 0 && icd->DrvCreateContext != NULL)
 			drvHglrc = icd->DrvCreateContext( hdc );
 		else
 			DBGPRINT( "Warning: CreateLayerContext not supported by ICD!" );
@@ -568,6 +653,7 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 		OPENGL32_threaddata->glrc->is_current = FALSE;
 	glrc->is_current = TRUE;
 	glrc->thread_id = GetCurrentThreadId();
+	glrc->hdc = hdc;
 	OPENGL32_threaddata->glrc = glrc;
 
 	return TRUE;
