@@ -94,6 +94,16 @@ win32k.sys   = 2
 
 helb____.ttf = 6
 timr____.ttf = 6
+Vera.ttf     = 6
+VeraBd.ttf   = 6
+VeraBI.ttf   = 6
+VeraIt.ttf   = 6
+VeraMoBd.ttf = 6
+VeraMoBI.ttf = 6
+VeraMoIt.ttf = 6
+VeraMono.ttf = 6
+VeraSe.ttf   = 6
+VeraSeBd.ttf = 6
 
 winhello.exe = 2
 

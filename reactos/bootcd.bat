@@ -131,8 +131,7 @@ copy /Y subsys\system\setup\setup.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\system\winlogon\winlogon.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\win32k\win32k.sys %BOOTCD_DIR%\disk\install
 
-copy /Y media\fonts\helb____.ttf %BOOTCD_DIR%\disk\install
-copy /Y media\fonts\timr____.ttf %BOOTCD_DIR%\disk\install
+copy /Y media\fonts\*.ttf %BOOTCD_DIR%\disk\install
 
 rem copy test apps
 copy /Y apps\tests\winhello\winhello.exe %BOOTCD_DIR%\disk\install

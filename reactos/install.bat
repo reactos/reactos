@@ -144,8 +144,7 @@ copy apps\testsets\msvcrt\fileio\fileio.exe %ROS_INSTALL_TESTS%
 copy apps\testsets\msvcrt\mbtowc\mbtowc.exe %ROS_INSTALL_TESTS%
 copy apps\testsets\test\test.exe %ROS_INSTALL_TESTS%
 copy apps\testsets\testperl\testperl.exe %ROS_INSTALL_TESTS%
-copy media\fonts\helb____.ttf %ROS_INSTALL%\media\fonts
-copy media\fonts\timr____.ttf %ROS_INSTALL%\media\fonts
+copy media\fonts\*.ttf %ROS_INSTALL%\media\fonts
 rem copy media\nls\*.nls %ROS_INSTALL%\system32
 copy ntoskrnl\ntoskrnl.map %ROS_INSTALL%\symbols
 

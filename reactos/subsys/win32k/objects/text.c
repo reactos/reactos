@@ -31,6 +31,22 @@ INT FontsLoaded = 0;
 BOOL InitFontSupport()
 {
   ULONG error;
+  UINT File;
+  static WCHAR *FontFiles[] =
+  {
+  L"\\SystemRoot\\media\\fonts\\helb____.ttf",
+  L"\\SystemRoot\\media\\fonts\\timr____.ttf",
+  L"\\SystemRoot\\media\\fonts\\Vera.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraBd.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraBI.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraIt.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraMoBd.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraMoBI.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraMoIt.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraMono.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraSe.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraSeBd.ttf"
+  };
 
   error = FT_Init_FreeType(&library);
   if(error)
@@ -38,11 +54,12 @@ BOOL InitFontSupport()
     return FALSE;
   }
 
-#ifndef TODO
-  W32kAddFontResource(L"\\SystemRoot\\media\\fonts\\arial.ttf");
-#endif
-  W32kAddFontResource(L"\\SystemRoot\\media\\fonts\\helb____.ttf");
-  W32kAddFontResource(L"\\SystemRoot\\media\\fonts\\timr____.ttf");
+  for (File = 0; File < sizeof(FontFiles) / sizeof(WCHAR *); File++)
+    {
+    DPRINT("Loading font %S\n", FontFiles[File]);
+
+    W32kAddFontResource(FontFiles[File]);
+    }
 
   DPRINT("All fonts loaded\n");
 
@@ -52,7 +69,6 @@ BOOL InitFontSupport()
 static NTSTATUS
 GetFontObjectsFromTextObj(PTEXTOBJ TextObj, HFONT *FontHandle, PFONTOBJ *FontObj, PFONTGDI *FontGDI)
 {
-  UINT i;
   NTSTATUS Status = STATUS_SUCCESS;
 
   ASSERT(NULL != TextObj && NULL != TextObj->GDIFontHandle);
