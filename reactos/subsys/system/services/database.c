@@ -390,7 +390,7 @@ ScmCheckDriver(PSERVICE Service)
   UNICODE_STRING DirName;
   HANDLE DirHandle;
   NTSTATUS Status;
-  PDIRECTORY_BASIC_INFORMATION DirInfo;
+  POBJECT_DIRECTORY_INFORMATION DirInfo;
   ULONG BufferLength;
   ULONG DataLength;
   ULONG Index;
@@ -424,7 +424,7 @@ ScmCheckDriver(PSERVICE Service)
       return(Status);
     }
 
-  BufferLength = sizeof(DIRECTORY_BASIC_INFORMATION) +
+  BufferLength = sizeof(OBJECT_DIRECTORY_INFORMATION) +
 		 2 * MAX_PATH * sizeof(WCHAR);
   DirInfo = HeapAlloc(GetProcessHeap(),
 		      HEAP_ZERO_MEMORY,

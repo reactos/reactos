@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.89 2004/12/18 15:52:51 hbirr Exp $
+/* $Id$
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -58,7 +58,7 @@ PsAssignImpersonationToken(PETHREAD Thread,
 	  {
 	     return(Status);
 	  }
-	ImpersonationLevel = Token->ImpersonationLevel;
+	ImpersonationLevel = SeTokenImpersonationLevel(Token);
      }
    else
      {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.70 2004/12/24 17:45:58 weiden Exp $
+ *  $Id$
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -1004,7 +1004,7 @@ BuildWindowStationNameList(
    char InitialBuffer[256], *Buffer;
    ULONG Context, ReturnLength, BufferSize;
    DWORD EntryCount;
-   PDIRECTORY_BASIC_INFORMATION DirEntry;
+   POBJECT_DIRECTORY_INFORMATION DirEntry;
    WCHAR NullWchar;
 	
    /*
@@ -1090,7 +1090,7 @@ BuildWindowStationNameList(
     */
    ReturnLength = sizeof(DWORD);
    EntryCount = 0;
-   for (DirEntry = (PDIRECTORY_BASIC_INFORMATION) Buffer; 0 != DirEntry->ObjectName.Length;
+   for (DirEntry = (POBJECT_DIRECTORY_INFORMATION) Buffer; 0 != DirEntry->ObjectName.Length;
         DirEntry++)
    {
       ReturnLength += DirEntry->ObjectName.Length + sizeof(WCHAR);
@@ -1137,7 +1137,7 @@ BuildWindowStationNameList(
    lpBuffer = (PVOID) ((PCHAR) lpBuffer + sizeof(DWORD));
 
    NullWchar = L'\0';
-   for (DirEntry = (PDIRECTORY_BASIC_INFORMATION) Buffer; 0 != DirEntry->ObjectName.Length;
+   for (DirEntry = (POBJECT_DIRECTORY_INFORMATION) Buffer; 0 != DirEntry->ObjectName.Length;
         DirEntry++)
    {
       Status = MmCopyToCaller(lpBuffer, DirEntry->ObjectName.Buffer, DirEntry->ObjectName.Length);

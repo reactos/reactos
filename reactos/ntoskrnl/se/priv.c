@@ -1,4 +1,4 @@
-/* $Id: priv.c,v 1.11 2004/08/15 16:39:11 chorns Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -98,7 +98,7 @@ SepInitPrivileges (VOID)
 
 
 BOOLEAN
-SepPrivilegeCheck (PACCESS_TOKEN Token,
+SepPrivilegeCheck (PTOKEN Token,
 		   PLUID_AND_ATTRIBUTES Privileges,
 		   ULONG PrivilegeCount,
 		   ULONG PrivilegeControl,
@@ -223,7 +223,7 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
 		  IN PBOOLEAN Result)
 {
   PLUID_AND_ATTRIBUTES Privilege;
-  PACCESS_TOKEN Token;
+  PTOKEN Token;
   ULONG PrivilegeCount;
   ULONG PrivilegeControl;
   ULONG Length;

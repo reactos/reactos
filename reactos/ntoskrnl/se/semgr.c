@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.51 2004/11/21 18:35:05 gdalsnes Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -320,7 +320,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 		 POOL_TYPE PoolType)
 {
   PSECURITY_DESCRIPTOR Descriptor;
-  PACCESS_TOKEN Token;
+  PTOKEN Token;
   ULONG OwnerLength = 0;
   ULONG GroupLength = 0;
   ULONG DaclLength = 0;
@@ -557,10 +557,11 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 
 
 static BOOLEAN
-SepSidInToken(PACCESS_TOKEN Token,
+SepSidInToken(PACCESS_TOKEN _Token,
 	      PSID Sid)
 {
   ULONG i;
+  PTOKEN Token = (PTOKEN)_Token;
 
   if (Token->UserAndGroupCount == 0)
   {
@@ -793,7 +794,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 {
   SECURITY_SUBJECT_CONTEXT SubjectSecurityContext;
   KPROCESSOR_MODE PreviousMode;
-  PACCESS_TOKEN Token;
+  PTOKEN Token;
   NTSTATUS Status;
 
   DPRINT("NtAccessCheck() called\n");

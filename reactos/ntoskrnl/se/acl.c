@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.22 2004/12/10 16:50:37 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -220,8 +220,8 @@ SepInitDACLs(VOID)
 }
 
 NTSTATUS STDCALL 
-SepCreateImpersonationTokenDacl(PACCESS_TOKEN Token, 
-                                PACCESS_TOKEN PrimaryToken,
+SepCreateImpersonationTokenDacl(PTOKEN Token, 
+                                PTOKEN PrimaryToken,
                                 PACL *Dacl)
 {
   ULONG AclLength;
