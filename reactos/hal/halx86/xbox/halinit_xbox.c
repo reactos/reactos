@@ -1,4 +1,4 @@
-/* $Id: halinit_xbox.c,v 1.1 2004/12/04 21:43:37 gvg Exp $
+/* $Id: halinit_xbox.c,v 1.2 2004/12/04 22:52:59 gvg Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <hal.h>
+#include "halxbox.h"
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -22,6 +23,8 @@
 VOID
 HalpInitPhase0(VOID)
 {
+  HalpHooks.InitPciBus = HalpXboxInitPciBus;
+
   HalpInitPICs();
 
   /* Setup busy waiting */

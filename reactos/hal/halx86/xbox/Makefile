@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/12/04 21:43:37 gvg Exp $
+# $Id: Makefile,v 1.2 2004/12/04 22:52:59 gvg Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -64,7 +64,8 @@ XBOX_OBJECTS = \
 flashleds.o \
 	display_xbox.o \
 	font.o \
-	halinit_xbox.o
+	halinit_xbox.o \
+	pci_xbox.o
 
 HAL_OBJECTS = $(GENERIC_OBJECTS) $(XBOX_OBJECTS)
 

@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.2 2004/12/04 21:40:55 gvg Exp $
+/* $Id: halinit.c,v 1.3 2004/12/04 22:52:59 gvg Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -20,6 +20,7 @@
 /* GLOBALS *****************************************************************/
 
 PVOID HalpZeroPageMapping = NULL;
+HALP_HOOKS HalpHooks;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -38,6 +39,7 @@ HalInitSystem (ULONG BootPhase,
 {
   if (BootPhase == 0)
     {
+      RtlZeroMemory(&HalpHooks, sizeof(HALP_HOOKS));
       HalpInitPhase0();      
     }
   else if (BootPhase == 1)

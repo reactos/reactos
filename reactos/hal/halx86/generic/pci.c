@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.1 2004/12/03 20:10:43 gvg Exp $
+/* $Id: pci.c,v 1.2 2004/12/04 22:52:59 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,6 +21,7 @@
 #include <ddk/ntddk.h>
 #include <bus.h>
 #include <halirq.h>
+#include <hal.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -764,6 +765,10 @@ HalpInitPciBus(VOID)
 //		(pGetSetBusData)HalpAdjustPciResourceList;
   BusHandler->AssignSlotResources =
     (pAssignSlotResources)HalpAssignPciSlotResources;
+  if (NULL != HalpHooks.InitPciBus)
+    {
+      HalpHooks.InitPciBus(0, BusHandler);
+    }
 
 
   /* agp bus (bus 1) handler */
@@ -780,6 +785,10 @@ HalpInitPciBus(VOID)
 //		(pGetSetBusData)HalpAdjustPciResourceList;
   BusHandler->AssignSlotResources =
     (pAssignSlotResources)HalpAssignPciSlotResources;
+  if (NULL != HalpHooks.InitPciBus)
+    {
+      HalpHooks.InitPciBus(1, BusHandler);
+    }
 
 
   /* PCI bus (bus 2) handler */
@@ -796,6 +805,10 @@ HalpInitPciBus(VOID)
 //		(pGetSetBusData)HalpAdjustPciResourceList;
   BusHandler->AssignSlotResources =
     (pAssignSlotResources)HalpAssignPciSlotResources;
+  if (NULL != HalpHooks.InitPciBus)
+    {
+      HalpHooks.InitPciBus(2, BusHandler);
+    }
 
   DPRINT("HalpInitPciBus() finished.\n");
 }

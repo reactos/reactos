@@ -433,8 +433,11 @@ static inline VOID Ki386WriteFsByte(ULONG offset, BYTE value)
 #error Unknown compiler for inline assembler
 #endif
 
+typedef struct tagHALP_HOOKS
+{
+  void (*InitPciBus)(ULONG BusNumber, PBUS_HANDLER BusHandler);
+} HALP_HOOKS, *PHALP_HOOKS;
 
-
-
+extern HALP_HOOKS HalpHooks;
 
 #endif /* __INTERNAL_HAL_HAL_H */
