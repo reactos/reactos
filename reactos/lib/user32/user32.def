@@ -204,6 +204,7 @@ EXPORTS
 ;EqualRect
 ;ExcludeUpdateRgn
 ExitWindowsEx = ExitWindowsEx@8
+ExitWindowsEx@8
 ;FillRect
 ;FindWindowA
 ;FindWindowExA
