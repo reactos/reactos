@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.5 2002/11/24 20:25:49 jfilby Exp $
+/* $Id: draw.c,v 1.6 2003/03/01 06:05:36 rcampbell Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -1332,10 +1332,10 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
 BOOL WINAPI DrawFrameControl( HDC hdc, LPRECT rc, UINT uType,
                                   UINT uState )
 {
-    /* Win95 doesn't support drawing in other mapping modes */
+   /* Win95 doesn't support drawing in other mapping modes
     if(GetMapMode(hdc) != MM_TEXT)
         return FALSE;
-
+    */
     switch(uType)
     {
     case DFC_BUTTON:
@@ -1344,14 +1344,17 @@ BOOL WINAPI DrawFrameControl( HDC hdc, LPRECT rc, UINT uType,
       return UITOOLS95_DrawFrameCaption(hdc, rc, uState);
     case DFC_MENU:
       return UITOOLS95_DrawFrameMenu(hdc, rc, uState);
+    /*
+    case DFC_POPUPMENU:
+      break;
+    */
     case DFC_SCROLL:
       return UITOOLS95_DrawFrameScroll(hdc, rc, uState);
     default:
-      DbgPrint("(%x,%p,%d,%x), bad type!\n", hdc,rc,uType,uState );
+      DbgPrint("(%p,%p,%d,%x), bad type!\n", hdc,rc,uType,uState );
     }
     return FALSE;
 }
-
 /* Ported from WINE20020904 */
 BOOL WINAPI DrawEdge( HDC hdc, LPRECT rc, UINT edge, UINT flags )
 {
