@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.21 2004/07/10 14:38:24 weiden Exp $
+/* $Id: misc.c,v 1.22 2004/08/15 17:03:15 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -6,9 +6,7 @@
  * PURPOSE:         Miscellaneous security functions
  */
 
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <windows.h>
+#include "advapi32.h"
 #include <accctrl.h>
 
 #define NDEBUG

@@ -1,10 +1,12 @@
-# $Id: makefile,v 1.41 2004/06/17 09:07:12 ekohl Exp $
+# $Id: makefile,v 1.42 2004/08/15 17:03:14 chorns Exp $
 
 PATH_TO_TOP = ../..
 
 TARGET_TYPE = dynlink
 
 TARGET_NAME = advapi32
+
+TARGET_PCH = advapi32.h
 
 TARGET_CFLAGS = -Wall -Werror -fno-builtin -D__USE_W32API
 # TARGET_CFLAGS += -DUNICODE

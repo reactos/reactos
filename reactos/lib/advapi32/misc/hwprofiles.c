@@ -1,4 +1,4 @@
-/* $Id: hwprofiles.c,v 1.2 2004/06/17 09:07:12 ekohl Exp $
+/* $Id: hwprofiles.c,v 1.3 2004/08/15 17:03:14 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -8,8 +8,8 @@
  * UPDATE HISTORY:
  *	20042502
  */
-#include <ddk/ntddk.h>
-#include <windows.h>
+
+#include "advapi32.h"
 #include <debug.h>
 
 /******************************************************************************

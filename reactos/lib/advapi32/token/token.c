@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.12 2004/07/12 12:05:49 ekohl Exp $
+/* $Id: token.c,v 1.13 2004/08/15 17:03:15 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,9 +9,8 @@
  *                  Created 01/11/98
  */
 
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <windows.h>
+#include "advapi32.h"
+
 
 /*
  * @implemented

@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.53 2004/07/18 23:52:30 navaraf Exp $
+/* $Id: reg.c,v 1.54 2004/08/15 17:03:14 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,14 +12,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <ddk/ntddk.h>
-#include <rosrtl/string.h>
-#include <ntdll/rtl.h>
-#include <windows.h>
-#include <wchar.h>
-
+#include "advapi32.h"
 #define NDEBUG
 #include <debug.h>
 

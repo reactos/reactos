@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.7 2003/02/02 19:26:07 hyperion Exp $
+/* $Id: dllmain.c,v 1.8 2004/08/15 17:03:14 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,9 +9,7 @@
  *                  Created ???
  */
 
-#include <ddk/ntddk.h>
-#include <windows.h>
-
+#include "advapi32.h"
 #define NDEBUG
 #include <debug.h>
 

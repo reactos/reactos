@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.22 2004/07/03 17:40:21 navaraf Exp $
+/* $Id: scm.c,v 1.23 2004/08/15 17:03:15 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,12 +12,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <windows.h>
-#include <wchar.h>
-#include <tchar.h>
-
+#include "advapi32.h"
 #define DBG
 #include <debug.h>
 

@@ -1,4 +1,4 @@
-/* $Id: logon.c,v 1.10 2004/08/10 21:18:16 gvg Exp $
+/* $Id: logon.c,v 1.11 2004/08/15 17:03:14 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -7,11 +7,7 @@
  * PROGRAMMER:  Eric Kohl
  */
 
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <windows.h>
-#include <string.h>
-
+#include "advapi32.h"
 #define NDEBUG
 #include <debug.h>
 

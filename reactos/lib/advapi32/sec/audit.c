@@ -1,4 +1,4 @@
-/* $Id: audit.c,v 1.2 2003/07/20 22:11:58 ekohl Exp $
+/* $Id: audit.c,v 1.3 2004/08/15 17:03:15 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,9 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <windows.h>
+#include "advapi32.h"
 
 
 /* FUNCTIONS ****************************************************************/

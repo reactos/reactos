@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.13 2004/06/20 23:39:07 gdalsnes Exp $
+/* $Id: sid.c,v 1.14 2004/08/15 17:03:15 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -6,10 +6,8 @@
  * PURPOSE:         Security ID functions
  */
 
+#include "advapi32.h"
 #include <debug.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <windows.h>
 
 
 /*

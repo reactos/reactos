@@ -1,5 +1,11 @@
 2004-08-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/advapi32/.cvsignore: Ignore *.gch.
+	* lib/advapi32/advapi32.h: New file.
+	* lib/advapi32/*/*.c: Use pre-compiled header.
+
+2004-08-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* ntoskrnl/include/.cvsignore: New file.
 	* ntoskrnl/include/ntoskrnl.h: Ditto.
 	* ntoskrnl/*/*.c: Use pre-compiled header.
