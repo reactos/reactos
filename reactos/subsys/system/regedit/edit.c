@@ -633,7 +633,25 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
     }
     else if (EditBin == TRUE || type == REG_NONE || type == REG_BINARY)
     {
-        if(valueDataLen > 0)
+        #ifndef UNICODE
+        LPWSTR u_valuename;
+        int len_vname = lstrlen(valueName);
+        
+	if(len_vname > 0)
+        {
+          if(!(u_valuename = HeapAlloc(GetProcessHeap(), 0, (len_vname + 1) * sizeof(WCHAR))))
+          {
+            error(hwnd, IDS_TOO_BIG_VALUE, len_vname);
+            goto done;
+          }
+	  /* convert the ansi value name to an unicode string */
+          MultiByteToWideChar(CP_ACP, 0, valueName, -1, u_valuename, len_vname + 1);
+          valueDataLen *= sizeof(WCHAR);
+        }
+        else
+          u_valuename = L"";
+        #endif
+	if(valueDataLen > 0)
         {
 	    if(!(binValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen)))
             {
@@ -641,10 +659,21 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
               goto done;
             }
 	    
-	    lRet = RegQueryValueEx(hKey, valueName, 0, 0, (LPBYTE)binValueData, &valueDataLen);
+	    /* force to use the unicode version, so editing strings in binary mode is correct */
+	    lRet = RegQueryValueExW(hKey,
+	                            #ifndef UNICODE
+	                            u_valuename,
+	                            #else
+	                            valueName,
+	                            #endif
+				    0, 0, (LPBYTE)binValueData, &valueDataLen);
             if (lRet != ERROR_SUCCESS)
             {
                 HeapFree(GetProcessHeap(), 0, binValueData);
+                #ifndef UNICODE
+                if(len_vname > 0)
+                  HeapFree(GetProcessHeap(), 0, u_valuename);
+                #endif
 	        error(hwnd, IDS_BAD_VALUE, valueName);
                 goto done;
             }
@@ -656,12 +685,23 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
 
         if (DialogBox(0, MAKEINTRESOURCE(IDD_EDIT_BIN_DATA), hwnd, modify_binary_dlgproc) == IDOK)
         {
-	    lRet = RegSetValueEx(hKey, valueName, 0, type, (LPBYTE)binValueData, valueDataLen);
+	    /* force to use the unicode version, so editing strings in binary mode is correct */
+	    lRet = RegSetValueExW(hKey,
+	                          #ifndef UNICODE
+	                          u_valuename,
+	                          #else
+	                          valueName,
+	                          #endif
+				  0, type, (LPBYTE)binValueData, valueDataLen);
             if (lRet == ERROR_SUCCESS)
                 result = TRUE;
         }
         if(binValueData != NULL)
 	  HeapFree(GetProcessHeap(), 0, binValueData);
+        #ifndef UNICODE
+        if(len_vname > 0)
+          HeapFree(GetProcessHeap(), 0, u_valuename);
+        #endif
     }
     else
     {
