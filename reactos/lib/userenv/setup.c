@@ -1,4 +1,4 @@
-/* $Id: setup.c,v 1.4 2004/03/13 20:49:07 ekohl Exp $ 
+/* $Id: setup.c,v 1.5 2004/06/24 14:48:33 ekohl Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -36,7 +36,9 @@ DefaultUserDirectories[] =
   {FALSE, L"Start Menu"},
   {FALSE, L"Start Menu\\Programs"},
   {FALSE, L"Start Menu\\Programs\\Startup"},
-
+  {TRUE,  L"Local Settings"},
+  {TRUE,  L"Local Settings\\Application Data"},
+  {FALSE, L"Local Settings\\Temp"},
   {FALSE, NULL}
 };
 
