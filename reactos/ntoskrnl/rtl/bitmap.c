@@ -1,4 +1,4 @@
-/* $Id: bitmap.c,v 1.5 2002/11/05 20:52:38 hbirr Exp $
+/* $Id: bitmap.c,v 1.6 2002/11/11 22:53:26 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -38,24 +38,24 @@ RtlAreBitsClear (
 	ULONG Size = BitMapHeader->SizeOfBitMap;
 	ULONG Shift;
 	ULONG Count;
-	PCHAR Ptr;
+	PULONG Ptr;
 
 	if (StartingIndex >= Size ||
 	    !Length ||
 	    (StartingIndex + Length > Size))
 		return FALSE;
 
-	Ptr = (PCHAR)BitMapHeader->Buffer + (StartingIndex / 8);
+	Ptr = (PULONG)BitMapHeader->Buffer + (StartingIndex / 32);
 	while (Length)
 	{
-		/* get bit shift in current byte */
-		Shift = StartingIndex & 7;
+		/* get bit shift in current dword */
+		Shift = StartingIndex & 0x1F;
 
-		/* get number of bits to check in current byte */
-		Count = (Length > 8 - Shift) ? 8 - Shift : Length;
+		/* get number of bits to check in current dword */
+		Count = (Length > 32 - Shift) ? 32 - Shift : Length;
 
-		/* check byte */
-		if (*Ptr++ & (~(0xFF << Count) << Shift))
+		/* check dword */
+		if (*Ptr++ & (~(0xFFFFFFFF << Count) << Shift))
 			return FALSE;
 
 		Length -= Count;
@@ -77,24 +77,24 @@ RtlAreBitsSet (
 	ULONG Size = BitMapHeader->SizeOfBitMap;
 	ULONG Shift;
 	ULONG Count;
-	PCHAR Ptr;
+	PULONG Ptr;
 
 	if (StartingIndex >= Size ||
 	    !Length ||
 	    (StartingIndex + Length > Size))
 		return FALSE;
 
-	Ptr = (PCHAR)BitMapHeader->Buffer + (StartingIndex / 8);
+	Ptr = (PULONG)BitMapHeader->Buffer + (StartingIndex / 32);
 	while (Length)
 	{
-		/* get bit shift in current byte */
-		Shift = StartingIndex & 7;
+		/* get bit shift in current dword */
+		Shift = StartingIndex & 0x1F;
 
-		/* get number of bits to check in current byte */
-		Count = (Length > 8 - Shift) ? 8 - Shift : Length;
+		/* get number of bits to check in current dword */
+		Count = (Length > 32 - Shift) ? 32 - Shift : Length;
 
-		/* check byte */
-		if (~*Ptr++ & (~(0xFF << Count) << Shift))
+		/* check dword */
+		if (~*Ptr++ & (~(0xFFFFFFFF << Count) << Shift))
 			return FALSE;
 
 		Length -= Count;
@@ -113,7 +113,7 @@ RtlClearAllBits (
 {
 	memset (BitMapHeader->Buffer,
 	        0x00,
-	        ALIGN(BitMapHeader->SizeOfBitMap, 8));
+	        ALIGN(BitMapHeader->SizeOfBitMap, 32));
 }
 
 
@@ -128,7 +128,7 @@ RtlClearBits (
 	ULONG Size = BitMapHeader->SizeOfBitMap;
 	ULONG Count;
 	ULONG Shift;
-	PCHAR Ptr;
+	PULONG Ptr;
 
 	if (StartingIndex >= Size || NumberToClear == 0)
 		return;
@@ -136,17 +136,17 @@ RtlClearBits (
 	if (StartingIndex + NumberToClear > Size)
 		NumberToClear = Size - StartingIndex;
 
-	Ptr = (PCHAR)BitMapHeader->Buffer + (StartingIndex / 8);
+	Ptr = (PULONG)BitMapHeader->Buffer + (StartingIndex / 32);
 	while (NumberToClear)
 	{
-		/* bit shift in current byte */
-		Shift = StartingIndex & 7;
+		/* bit shift in current dword */
+		Shift = StartingIndex & 0x1F;
 
-		/* number of bits to change in current byte */
-		Count = (NumberToClear > 8 - Shift ) ? 8 - Shift : NumberToClear;
+		/* number of bits to change in current dword */
+		Count = (NumberToClear > 32 - Shift ) ? 32 - Shift : NumberToClear;
 
-		/* adjust byte */
-		*Ptr++ &= ~(~(0xFF << Count) << Shift);
+		/* adjust dword */
+		*Ptr++ &= ~(~(0xFFFFFFFF << Count) << Shift);
 		NumberToClear -= Count;
 		StartingIndex += Count;
 	}
@@ -164,8 +164,8 @@ RtlFindClearBits (
 	ULONG Size = BitMapHeader->SizeOfBitMap;
 	ULONG Index;
 	ULONG Count;
-	PCHAR Ptr;
-	CHAR  Mask;
+	PULONG Ptr;
+	ULONG  Mask;
 
 	if (NumberToFind > Size || NumberToFind == 0)
 		return -1;
@@ -174,8 +174,8 @@ RtlFindClearBits (
 		HintIndex = 0;
 
 	Index = HintIndex;
-	Ptr = (PCHAR)BitMapHeader->Buffer + (Index / 8);
-	Mask  = 1 << (Index & 7);
+	Ptr = (PULONG)BitMapHeader->Buffer + (Index / 32);
+	Mask  = 1 << (Index & 0x1F);
 
 	while (HintIndex < Size)
 	{
@@ -241,8 +241,8 @@ RtlFindFirstRunClear (
 	ULONG Size = BitMapHeader->SizeOfBitMap;
 	ULONG Index;
 	ULONG Count;
-	PCHAR Ptr;
-	CHAR  Mask;
+	PULONG Ptr;
+	ULONG  Mask;
 
 	if (*StartingIndex > Size)
 	{
@@ -251,8 +251,8 @@ RtlFindFirstRunClear (
 	}
 
 	Index = *StartingIndex;
-	Ptr = (PCHAR)BitMapHeader->Buffer + (Index / 8);
-	Mask = 1 << (Index & 7);
+	Ptr = (PULONG)BitMapHeader->Buffer + (Index / 32);
+	Mask = 1 << (Index & 0x1F);
 
 	/* skip set bits */
 	for (; Index < Size && *Ptr & Mask; Index++)
@@ -300,8 +300,8 @@ RtlFindFirstRunSet (
 	ULONG Size = BitMapHeader->SizeOfBitMap;
 	ULONG Index;
 	ULONG Count;
-	PCHAR Ptr;
-	CHAR  Mask;
+	PULONG Ptr;
+	ULONG  Mask;
 
 	if (*StartingIndex > Size)
 	{
@@ -310,8 +310,8 @@ RtlFindFirstRunSet (
 	}
 
 	Index = *StartingIndex;
-	Ptr = (PCHAR)BitMapHeader->Buffer + (Index / 8);
-	Mask = 1 << (Index & 7);
+	Ptr = (PULONG)BitMapHeader->Buffer + (Index / 32);
+	Mask = 1 << (Index & 0x1F);
 
 	/* skip clear bits */
 	for (; Index < Size && ~*Ptr & Mask; Index++)
@@ -357,13 +357,13 @@ RtlFindLongestRunClear (
 	)
 {
 	ULONG Size = BitMapHeader->SizeOfBitMap;
-	PCHAR Ptr = (PCHAR)BitMapHeader->Buffer;
+	PULONG Ptr = (PULONG)BitMapHeader->Buffer;
 	ULONG Index = 0;
 	ULONG Count;
 	ULONG Max = 0;
 	ULONG Start;
 	ULONG Maxstart = 0;
-	CHAR  Mask = 1;
+	ULONG  Mask = 1;
 
 	while (Index < Size)
 	{
@@ -414,13 +414,13 @@ RtlFindLongestRunSet (
 	)
 {
 	ULONG Size = BitMapHeader->SizeOfBitMap;
-	PCHAR Ptr = (PCHAR)BitMapHeader->Buffer;
+	PULONG Ptr = (PULONG)BitMapHeader->Buffer;
 	ULONG Index = 0;
 	ULONG Count;
 	ULONG Max = 0;
 	ULONG Start;
 	ULONG Maxstart = 0;
-	CHAR  Mask = 1;
+	ULONG  Mask = 1;
 
 	while (Index < Size)
 	{
@@ -474,7 +474,7 @@ RtlFindSetBits (
 	ULONG Size = BitMapHeader->SizeOfBitMap;
 	ULONG Index;
 	ULONG Count;
-	PCHAR Ptr;
+	PULONG Ptr;
 	CHAR  Mask;
 
 	if (NumberToFind > Size || NumberToFind == 0)
@@ -484,8 +484,8 @@ RtlFindSetBits (
 		HintIndex = 0;
 
 	Index = HintIndex;
-	Ptr = (PCHAR)BitMapHeader->Buffer + (Index / 8);
-	Mask = 1 << (Index & 7);
+	Ptr = (PULONG)BitMapHeader->Buffer + (Index / 32);
+	Mask = 1 << (Index & 0x1F);
 
 	while (HintIndex < Size)
 	{
@@ -547,11 +547,11 @@ RtlNumberOfClearBits (
 	PRTL_BITMAP	BitMapHeader
 	)
 {
-	PCHAR Ptr = (PCHAR)BitMapHeader->Buffer;
+	PULONG Ptr = (PULONG)BitMapHeader->Buffer;
 	ULONG Size = BitMapHeader->SizeOfBitMap;
 	ULONG Index;
 	ULONG Count;
-	CHAR Mask;
+	ULONG Mask;
 
 	for (Mask = 1, Index = 0, Count = 0; Index < Size; Index++)
 	{
@@ -576,11 +576,11 @@ RtlNumberOfSetBits (
 	PRTL_BITMAP	BitMapHeader
 	)
 {
-	PCHAR Ptr = (PCHAR)BitMapHeader->Buffer;
+	PULONG Ptr = (PULONG)BitMapHeader->Buffer;
 	ULONG Size = BitMapHeader->SizeOfBitMap;
 	ULONG Index;
 	ULONG Count;
-	CHAR Mask;
+	ULONG Mask;
 
 	for (Mask = 1, Index = 0, Count = 0; Index < Size; Index++)
 	{
@@ -607,7 +607,7 @@ RtlSetAllBits (
 {
 	memset (BitMapHeader->Buffer,
 	        0xFF,
-	        ALIGN(BitMapHeader->SizeOfBitMap, 8));
+	        ALIGN(BitMapHeader->SizeOfBitMap, 32));
 }
 
 
@@ -622,7 +622,7 @@ RtlSetBits (
 	ULONG Size = BitMapHeader->SizeOfBitMap;
 	ULONG Count;
 	ULONG Shift;
-	PCHAR Ptr;
+	PULONG Ptr;
 
 	if (StartingIndex >= Size || NumberToSet == 0)
 		return;
@@ -630,17 +630,17 @@ RtlSetBits (
 	if (StartingIndex + NumberToSet > Size)
 		NumberToSet = Size - StartingIndex;
 
-	Ptr = (PCHAR)BitMapHeader->Buffer + (StartingIndex / 8);
+	Ptr = (PULONG)BitMapHeader->Buffer + (StartingIndex / 32);
 	while (NumberToSet)
 	{
-		/* bit shift in current byte */
-		Shift = StartingIndex & 7;
+		/* bit shift in current dword */
+		Shift = StartingIndex & 0x1F;
 
-		/* number of bits to change in current byte */
-		Count = (NumberToSet > 8 - Shift) ? 8 - Shift : NumberToSet;
+		/* number of bits to change in current dword */
+		Count = (NumberToSet > 32 - Shift) ? 32 - Shift : NumberToSet;
 
-		/* adjust byte */
-		*Ptr++ |= ~(0xFF << Count) << Shift;
+		/* adjust dword */
+		*Ptr++ |= ~(0xFFFFFFFF << Count) << Shift;
 		NumberToSet -= Count;
 		StartingIndex += Count;
 	}
