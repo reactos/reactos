@@ -6,7 +6,7 @@
 HOST = mingw32-windows
 
 # uncomment if you use bochs and it displays only 30 rows
-# BOCHS_30ROWS = yes
+#BOCHS_30ROWS = yes
 
 ifeq ($(HOST),mingw32-linux)
 TOPDIR := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
@@ -73,6 +73,8 @@ RC = $(PREFIX)windres
 RCINC = --include-dir $(PATH_TO_TOP)/include
 OBJCOPY = $(PREFIX)objcopy
 
+%.o: %.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
 %.o: %.cc
 	$(CC) $(CFLAGS) -c $< -o $@
 %.o: %.c
