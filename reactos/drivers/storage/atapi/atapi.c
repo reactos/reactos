@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.24 2002/05/28 09:34:18 ekohl Exp $
+/* $Id: atapi.c,v 1.25 2002/07/13 11:31:02 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -255,6 +255,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
   NTSTATUS Status;
 
   DPRINT("ATAPI Driver %s\n", VERSION);
+  DPRINT("RegistryPath: '%wZ'\n", RegistryPath);
 
   /* Initialize data structure */
   RtlZeroMemory(&InitData,
@@ -1171,7 +1172,7 @@ AtapiPolledRead(IN ULONG CommandPort,
       ScsiPortStallExecution(10);
     }
   DPRINT("status=%02x\n", Status);
-  DPRINT("waited %ld usecs for busy to clear\n", Retries * 10);
+  DPRINT("waited %ld usecs for busy to clear\n", RetryCount * 10);
   if (RetryCount >= IDE_MAX_BUSY_RETRIES)
     {
       DPRINT("Drive is BUSY for too long\n");
