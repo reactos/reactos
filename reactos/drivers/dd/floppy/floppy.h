@@ -85,6 +85,7 @@
 //
 #define FloppyWriteDOR(A, V) (WRITE_PORT_UCHAR((PVOID)(A) + FLOPPY_REG_DOR, (V)))
 #define FloppyReadMSTAT(A) (READ_PORT_UCHAR((PVOID)(A) + FLOPPY_REG_MSTAT))
+#define FloppyWriteMSTAT(A, V) (WRITE_PORT_UCHAR((PVOID)(A) + FLOPPY_REG_MSTAT, (V)))
 #define FloppyReadDATA(A) (READ_PORT_UCHAR((PVOID)(A) + FLOPPY_REG_DATA))
 #define FloppyWriteDATA(A, V) (WRITE_PORT_UCHAR((PVOID)(A) + FLOPPY_REG_DATA, (V)))
 #define FloppyReadDIR(A) (READ_PORT_UCHAR((PVOID)(A) + FLOPPY_REG_DIR))
