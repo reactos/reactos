@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.59 2003/02/02 16:57:49 ekohl Exp $
+# $Id: makefile,v 1.60 2003/02/16 18:47:41 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,30 +8,15 @@ TARGET_NAME = kernel32
 
 TARGET_BASE = 0x77f00000
 
-TARGET_CFLAGS = -DKERNEL32_BASE=$(TARGET_DLLBASE) -I./
+TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_LFLAGS = -nostartfiles
-
-TARGET_SDKLIBS = ntdll.a
+TARGET_SDKLIBS = ntdll.a kernel32.a
 
 TARGET_GCCLIBS = gcc
 
 TARGET_PCH = k32.h
 
-TARGET_OBJECTS = $(TARGET_NAME).o
-
-TARGET_CLEAN = except/*.o file/*.o mem/*.o misc/*.o nls/*.o \
-             process/*.o string/*.o synch/*.o thread/*.o
-
-
-include $(PATH_TO_TOP)/rules.mak
-
-include $(TOOLS_PATH)/helper.mk
-
-depends:
-	make -f errormsg.mak
-
-.PHONY: depends
+TARGET_CLEAN = errcodes.rc msg?????.bin
 
 SYNCH_OBJECTS = synch/critical.o synch/event.o synch/intrlck.o synch/mutex.o \
                 synch/sem.o synch/timer.o synch/wait.o
@@ -53,7 +38,6 @@ FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
 
 MEM_OBJECTS = mem/global.o mem/heap.o mem/isbad.o mem/local.o \
               mem/procmem.o mem/section.o mem/virtual.o
-
 
 NLS_OBJECTS =  nls/codepage.o nls/cpmisc.o \
  nls/cptable.o nls/lctable.o \
@@ -91,7 +75,6 @@ NLS_CP_OBJECTS =  \
  nls/cp10000.o nls/cp10006.o nls/cp10007.o \
  nls/cp10029.o nls/cp10079.o nls/cp10081.o
 
-
 THREAD_OBJECTS = \
 	thread/fiber.o	\
 	thread/thread.o	\
@@ -107,15 +90,24 @@ STRING_OBJECTS = string/lstring.o
 
 EXCEPT_OBJECTS = except/except.o
 
-OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
-          $(PROCESS_OBJECTS) $(STRING_OBJECTS) $(MEM_OBJECTS) \
-          $(SYNCH_OBJECTS) $(EXCEPT_OBJECTS)
+TARGET_OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
+          	$(PROCESS_OBJECTS) $(STRING_OBJECTS) $(MEM_OBJECTS) \
+          	$(SYNCH_OBJECTS) $(EXCEPT_OBJECTS)
 
 #$(NLS_OBJECTS)
 
 
-$(TARGET_NAME).o: $(OBJECTS) errcodes.rc
-	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o
+include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
+
+$(TARGET_NAME).coff: errcodes.rc
+
+errcodes.rc: $(TARGET_NAME).mc
+	$(MC) \
+		-H $(PATH_TO_TOP)/include/reactos/errcodes.h \
+		-o errcodes.rc \
+		$(TARGET_NAME).mc
 
 %/TAGS:
 	etags -o $(@D)/TAGS $(@D)/\*.c
