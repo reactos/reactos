@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.20 2004/08/21 15:34:32 tamlin Exp $
+/* $Id: print.c,v 1.21 2004/12/10 14:58:25 blight Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -61,6 +61,13 @@ DbgPrint(PCH Format, ...)
    ANSI_STRING DebugString;
    CHAR Buffer[1024];
    va_list ap;
+#ifdef SERIALIZE_DBGPRINT
+   LONG MyTableIndex;
+   static LONG Lock = 0;
+   static LONG TableWriteIndex = 0, TableReadIndex = 0;
+   static PCHAR MessageTable[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+#  define MESSAGETABLE_SIZE  (sizeof (MessageTable) / sizeof (MessageTable[0]))
+#endif /* SERIALIZE_DBGPRINT */
 
    /* init ansi string */
    DebugString.Buffer = Buffer;
@@ -70,7 +77,62 @@ DbgPrint(PCH Format, ...)
    DebugString.Length = _vsnprintf (Buffer, sizeof( Buffer ), Format, ap);
    va_end (ap);
 
-   KdpPrintString (&DebugString);
+#ifdef SERIALIZE_DBGPRINT
+   /* check if we are already running */
+   if (InterlockedCompareExchange(&Lock, 1, 0) == 1)
+     {
+        PCHAR Dup;
+        Dup = ExAllocatePool(NonPagedPool, DebugString.Length + 1);
+        memcpy(Dup, DebugString.Buffer, DebugString.Length);
+        Dup[DebugString.Length] = '\0';
+
+        MyTableIndex = InterlockedIncrement(&TableWriteIndex) - 1;
+        InterlockedCompareExchange(&TableWriteIndex, 0, MESSAGETABLE_SIZE);
+        MyTableIndex %= MESSAGETABLE_SIZE;
+
+        if (MessageTable[MyTableIndex] != NULL) /* table is full */
+          {
+             DebugString.Buffer = "CRITICAL ERROR: DbgPrint Table is FULL!";
+             DebugString.Length = 39;
+             KdpPrintString(&DebugString);
+             for (;;);
+          }
+        else
+          {
+             /*DebugString.Buffer = "µµµ";
+             DebugString.Length = 3;
+             KdpPrintString(&DebugString);*/
+             MessageTable[MyTableIndex] = Dup;
+          }
+     }
+   else
+     {
+#endif /* SERIALIZE_DBGPRINT */
+        KdpPrintString (&DebugString);
+#ifdef SERIALIZE_DBGPRINT
+        MyTableIndex = TableReadIndex;
+        while (MessageTable[MyTableIndex] != NULL)
+          {
+             /*DebugString.Buffer = "$$$";
+             DebugString.Length = 3;
+             KdpPrintString(&DebugString);*/
+
+             DebugString.Buffer = MessageTable[MyTableIndex];
+             MessageTable[MyTableIndex] = NULL;
+             DebugString.Length = strlen(DebugString.Buffer);
+             DebugString.MaximumLength = DebugString.Length + 1;
+
+             KdpPrintString(&DebugString);
+             ExFreePool(DebugString.Buffer);
+
+             MyTableIndex = InterlockedIncrement(&TableReadIndex);
+             InterlockedCompareExchange(&TableReadIndex, 0, MESSAGETABLE_SIZE);
+             MyTableIndex %= MESSAGETABLE_SIZE;
+          }
+        InterlockedDecrement(&Lock);
+     }
+#  undef MESSAGETABLE_SIZE
+#endif /* SERIALIZE_DBGPRINT */
 
    return (ULONG)DebugString.Length;
 }
