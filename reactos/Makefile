@@ -51,7 +51,7 @@ $(ROS_INTERMEDIATE):
 endif
 
 include tools/Makefile
-include Makefile.auto
+-include Makefile.auto
 
 PREAUTO := \
 	include$(SEP)reactos$(SEP)buildno.h \
