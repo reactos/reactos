@@ -92,7 +92,7 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
       if (dglen < qu->query_dglen) continue;
       if (memcmp(qu->query_dgram+DNS_HDRSIZE,
 		 dgram+DNS_HDRSIZE,
-		 qu->query_dglen-DNS_HDRSIZE))
+		 (size_t) qu->query_dglen-DNS_HDRSIZE))
 	continue;
       if (viatcp) {
 	assert(qu->state == query_tcpw);
@@ -207,10 +207,10 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
 	if (!qu->vb.used) goto x_truncated;
 	if (st) { adns__query_fail(qu,st); return; }
 	l= strlen(qu->vb.buf)+1;
-	qu->answer->cname= adns__alloc_preserved(qu,l);
+	qu->answer->cname= adns__alloc_preserved(qu,(size_t) l);
 	if (!qu->answer->cname) { adns__query_fail(qu,adns_s_nomemory); return; }
 
-	qu->cname_dgram= adns__alloc_mine(qu,dglen);
+	qu->cname_dgram= adns__alloc_mine(qu, (size_t) dglen);
 	memcpy(qu->cname_dgram,dgram,(size_t) dglen);
 
 	memcpy(qu->answer->cname,qu->vb.buf, (size_t) l);
@@ -299,7 +299,7 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
 
   /* Now, we have some RRs which we wanted. */
 
-  qu->answer->rrs.untyped= adns__alloc_interim(qu,qu->typei->rrsz*wantedrrs);
+  qu->answer->rrs.untyped= adns__alloc_interim(qu,(size_t) qu->typei->rrsz*wantedrrs);
   if (!qu->answer->rrs.untyped) { adns__query_fail(qu,adns_s_nomemory); return; }
 
   typei= qu->typei;
@@ -359,7 +359,7 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
 			      qu->typei->type, qu->flags);
     if (st) { adns__query_fail(qu,st); return; }
     
-    newquery= realloc(qu->query_dgram,qu->vb.used);
+    newquery= realloc(qu->query_dgram, (size_t) qu->vb.used);
     if (!newquery) { adns__query_fail(qu,adns_s_nomemory); return; }
     
     qu->query_dgram= newquery;
