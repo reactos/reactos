@@ -1293,7 +1293,7 @@ LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
    stack->running--;
    stack->stackpos = proc;
     
-   if (!stack->SubclassProcs) {
+   if (!stack->SubclassProcs && !stack->running) {
       TRACE("Last Subclass removed, cleaning up\n");
       /* clean up our heap and reset the origional window procedure */
       if (IsWindowUnicode (hWnd))
