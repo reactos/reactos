@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.11 2000/08/05 18:01:52 dwelch Exp $
+/* $Id: env.c,v 1.12 2000/12/28 20:38:27 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,19 +22,16 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-STDCALL
-RtlCreateEnvironment (
-	BOOLEAN	Initialize,
-	PVOID	*Environment
-	)
+NTSTATUS STDCALL
+RtlCreateEnvironment(BOOLEAN Inherit,
+		     PWSTR *Environment)
 {
 	MEMORY_BASIC_INFORMATION MemInfo;
 	PVOID EnvPtr = NULL;
 	NTSTATUS Status = STATUS_SUCCESS;
 	ULONG RegionSize = PAGESIZE;
 
-	if (Initialize == FALSE)
+	if (Inherit == TRUE)
 	{
 		RtlAcquirePebLock ();
 #if 0
@@ -95,30 +92,23 @@ RtlCreateEnvironment (
 }
 
 
-VOID
-STDCALL
-RtlDestroyEnvironment (
-	PVOID	Environment
-	)
+VOID STDCALL
+RtlDestroyEnvironment(PWSTR Environment)
 {
-	ULONG Size = 0;
+   ULONG Size = 0;
 
-	NtFreeVirtualMemory (NtCurrentProcess (),
-	                     &Environment,
-	                     &Size,
-	                     MEM_RELEASE);
+   NtFreeVirtualMemory(NtCurrentProcess(),
+		       (PVOID*)&Environment,
+		       &Size,
+		       MEM_RELEASE);
 }
 
 
-
-NTSTATUS
-STDCALL
-RtlExpandEnvironmentStrings_U (
-	PVOID		Environment,
-	PUNICODE_STRING	Source,
-	PUNICODE_STRING	Destination,
-	PULONG		Length
-	)
+NTSTATUS STDCALL
+RtlExpandEnvironmentStrings_U(PWSTR Environment,
+			      PUNICODE_STRING Source,
+			      PUNICODE_STRING Destination,
+			      PULONG Length)
 {
 	UNICODE_STRING var;
 	UNICODE_STRING val;
@@ -199,36 +189,31 @@ copy:
 }
 
 
-VOID
-STDCALL
-RtlSetCurrentEnvironment (
-	PVOID	NewEnvironment,
-	PVOID	*OldEnvironment
-	)
+VOID STDCALL
+RtlSetCurrentEnvironment(PWSTR NewEnvironment,
+			 PWSTR *OldEnvironment)
 {
-	PVOID EnvPtr;
+   PVOID EnvPtr;
 
-	DPRINT ("NewEnvironment %x OldEnvironment %x\n",
-	        NewEnvironment, OldEnvironment);
+   DPRINT ("NewEnvironment %x OldEnvironment %x\n",
+	   NewEnvironment, OldEnvironment);
 
-	RtlAcquirePebLock ();
+   RtlAcquirePebLock();
 
-	EnvPtr = NtCurrentPeb()->ProcessParameters->Environment;
-	NtCurrentPeb()->ProcessParameters->Environment = NewEnvironment;
+   EnvPtr = NtCurrentPeb()->ProcessParameters->Environment;
+   NtCurrentPeb()->ProcessParameters->Environment = NewEnvironment;
 
-	if (OldEnvironment != NULL)
-		*OldEnvironment = EnvPtr;
+   if (OldEnvironment != NULL)
+     *OldEnvironment = EnvPtr;
 
-	RtlReleasePebLock ();
+   RtlReleasePebLock();
 }
 
 
-NTSTATUS
-STDCALL
-RtlSetEnvironmentVariable (
-	PVOID		*Environment,
-	PUNICODE_STRING	Name,
-	PUNICODE_STRING	Value)
+NTSTATUS STDCALL
+RtlSetEnvironmentVariable(PWSTR *Environment,
+			  PUNICODE_STRING Name,
+			  PUNICODE_STRING Value)
 {
 	MEMORY_BASIC_INFORMATION mbi;
 	UNICODE_STRING var;
@@ -380,7 +365,7 @@ found:
 			{
 				size = 0;
 				NtFreeVirtualMemory (NtCurrentProcess (),
-				                     (VOID**)&env,
+				                     (PVOID*)&env,
 				                     &size,
 				                     MEM_RELEASE);
 			}
@@ -412,19 +397,16 @@ found:
 	}
    if (Environment == NULL)
      {
-	RtlReleasePebLock ();
+	RtlReleasePebLock();
      }
    return Status;
 }
 
 
-NTSTATUS
-STDCALL
-RtlQueryEnvironmentVariable_U (
-	PVOID		Environment,
-	PUNICODE_STRING	Name,
-	PUNICODE_STRING	Value
-	)
+NTSTATUS STDCALL
+RtlQueryEnvironmentVariable_U(PWSTR Environment,
+			      PUNICODE_STRING Name,
+			      PUNICODE_STRING Value)
 {
 	NTSTATUS Status;
 	PWSTR wcs;

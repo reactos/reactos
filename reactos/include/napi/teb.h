@@ -48,7 +48,7 @@ typedef struct _RTL_USER_PROCESS_PARAMETERS
    UNICODE_STRING	DllPath;		//  30h
    UNICODE_STRING	ImagePathName;		//  38h
    UNICODE_STRING	CommandLine;		//  40h
-   PVOID		Environment;		//  48h
+   PWSTR		Environment;		//  48h
    ULONG		StartingX;		//  4Ch
    ULONG		StartingY;		//  50h
    ULONG		CountX;			//  54h
@@ -61,7 +61,7 @@ typedef struct _RTL_USER_PROCESS_PARAMETERS
    UNICODE_STRING	WindowTitle;		//  70h
    UNICODE_STRING	DesktopInfo;		//  78h
    UNICODE_STRING	ShellInfo;		//  80h
-   UNICODE_STRING	RuntimeData;		//  88h
+   UNICODE_STRING	RuntimeInfo;		//  88h
    RTL_DRIVE_LETTER_CURDIR DLCurrentDirectory[0x20]; // 90h
 } RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
 
@@ -214,12 +214,11 @@ typedef struct _NT_TEB
 
    PVOID StackCommit;                  // F88h
    PVOID StackCommitMax;               // F8Ch
-   PVOID StackReserved;                // F90h
+   PVOID StackReserve;                 // F90h
 } NT_TEB, *PNT_TEB;
 
 #define PEB_STARTUPINFO (0xb0003000)
 
-//#define NtCurrentPeb() ((PPEB)PEB_BASE)
 #define NtCurrentPeb() (NtCurrentTeb()->Peb)
 
 static inline PNT_TEB NtCurrentTeb(VOID)

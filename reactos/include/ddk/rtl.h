@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.44 2000/11/20 19:59:07 ekohl Exp $
+/* $Id: rtl.h,v 1.45 2000/12/28 20:38:26 ekohl Exp $
  * 
  */
 
@@ -16,13 +16,13 @@ typedef struct _INITIAL_TEB
 	PVOID StackLimit;
 	PVOID StackCommit;
 	PVOID StackCommitMax;
-	PVOID StackReserved;
+	PVOID StackReserve;
 } INITIAL_TEB, *PINITIAL_TEB;
 
 typedef struct _CONTROLLER_OBJECT
 {
    CSHORT Type;
-   CSHORT Size;   
+   CSHORT Size;
    PVOID ControllerExtension;
    KDEVICE_QUEUE DeviceWaitQueue;
    ULONG Spare1;

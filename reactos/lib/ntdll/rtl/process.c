@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.22 2000/12/09 04:34:52 phreak Exp $
+/* $Id: process.c,v 1.23 2000/12/28 20:38:27 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -26,9 +26,8 @@
 #define STACK_TOP (0xb0000000)
 
 HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
-				   DWORD dwStackSize,
+				   ULONG StackSize,
 				   LPTHREAD_START_ROUTINE lpStartAddress,
-				   DWORD dwCreationFlags,
 				   PCLIENT_ID ClientId)
 {
    NTSTATUS Status;
@@ -36,7 +35,6 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
    OBJECT_ATTRIBUTES ObjectAttributes;
    CONTEXT ThreadContext;
    INITIAL_TEB InitialTeb;
-   BOOLEAN CreateSuspended = FALSE;
    PVOID BaseAddress;
    CLIENT_ID Cid;
    
@@ -46,17 +44,11 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
    ObjectAttributes.Attributes = 0;
    ObjectAttributes.SecurityQualityOfService = NULL;
 
-   if (dwCreationFlags & CREATE_SUSPENDED)
-     CreateSuspended = TRUE;
-   else
-     CreateSuspended = FALSE;
-
-
-   BaseAddress = (PVOID)(STACK_TOP - dwStackSize);
+   BaseAddress = (PVOID)(STACK_TOP - StackSize);
    Status = NtAllocateVirtualMemory(ProcessHandle,
 				    &BaseAddress,
 				    0,
-				    (PULONG)&dwStackSize,
+				    (PULONG)&StackSize,
 				    MEM_COMMIT,
 				    PAGE_READWRITE);
    if (!NT_SUCCESS(Status))
@@ -85,7 +77,7 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
 			   &Cid,
 			   &ThreadContext,
 			   &InitialTeb,
-			   CreateSuspended);
+			   FALSE);
    if (ClientId != NULL)
      {
 	memcpy(&ClientId->UniqueThread, &Cid.UniqueThread, sizeof(ULONG));
@@ -94,11 +86,11 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
    return(ThreadHandle);
 }
 
-static NTSTATUS RtlpMapFile(
-PRTL_USER_PROCESS_PARAMETERS	Ppb,
-//PUNICODE_STRING ApplicationName,
-			    PHANDLE Section,
-			    PCHAR ImageFileName)
+static NTSTATUS
+RtlpMapFile(PRTL_USER_PROCESS_PARAMETERS Ppb,
+	    ULONG Attributes,
+	    PHANDLE Section,
+	    PCHAR ImageFileName)
 {
    HANDLE hFile;
    IO_STATUS_BLOCK IoStatusBlock;
@@ -116,9 +108,8 @@ PRTL_USER_PROCESS_PARAMETERS	Ppb,
 //   DbgPrint("ImagePathName %x\n", Ppb->ImagePathName.Buffer);
    
    InitializeObjectAttributes(&ObjectAttributes,
-//			      ApplicationName,
 			      &(Ppb->ImagePathName),
-			      OBJ_CASE_INSENSITIVE,
+			      Attributes & (OBJ_CASE_INSENSITIVE | OBJ_INHERIT),
 			      NULL,
 			      SecurityDescriptor);
 
@@ -145,7 +136,7 @@ PRTL_USER_PROCESS_PARAMETERS	Ppb,
      }
    for (i = 0; i < 8; i++)
      {
-	ImageFileName[i] = (CHAR)(s[i]);     
+	ImageFileName[i] = (CHAR)(s[i]);
      }
    if (e != NULL)
      {
@@ -282,50 +273,51 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS
-STDCALL
-RtlCreateUserProcess (
-	PUNICODE_STRING			CommandLine,		// verified
-	ULONG				Unknown2,
-	PRTL_USER_PROCESS_PARAMETERS	Ppb,			// verified
-	PSECURITY_DESCRIPTOR		ProcessSd,
-	PSECURITY_DESCRIPTOR		ThreadSd,
-	BOOL				bInheritHandles,
-	DWORD				dwCreationFlags,
-	ULONG				Unknown8,
-	ULONG				Unknown9,
-	PRTL_USER_PROCESS_INFO		ProcessInfo		// verified
-	)
+
+NTSTATUS STDCALL
+RtlCreateUserProcess(PUNICODE_STRING ImageFileName,
+		     ULONG Attributes,
+		     PRTL_USER_PROCESS_PARAMETERS ProcessParameters,
+		     PSECURITY_DESCRIPTOR ProcessSecurityDescriptor,
+		     PSECURITY_DESCRIPTOR ThreadSecurityDescriptor,
+		     HANDLE ParentProcess,
+		     BOOLEAN CurrentDirectory,
+		     HANDLE DebugPort,
+		     HANDLE ExceptionPort,
+		     PRTL_PROCESS_INFO ProcessInfo)
 {
    HANDLE hSection;
    HANDLE hThread;
    NTSTATUS Status;
-   LPTHREAD_START_ROUTINE  lpStartAddress = NULL;
+   LPTHREAD_START_ROUTINE lpStartAddress = NULL;
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
    ULONG retlen;
-   CHAR ImageFileName[8];
+   CHAR FileName[8];
    ANSI_STRING ProcedureName;
    
    DPRINT("RtlCreateUserProcess\n");
    
-//   Status = RtlpMapFile(CommandLine,
-   Status = RtlpMapFile(Ppb,
+   Status = RtlpMapFile(ProcessParameters,
+			Attributes,
 			&hSection,
-			ImageFileName);
+			FileName);
    if( !NT_SUCCESS( Status ) )
      return Status;
+
    /*
     * Create a new process
     */
-   
+   if (ParentProcess == NULL)
+     ParentProcess = NtCurrentProcess();
+
    Status = NtCreateProcess(&(ProcessInfo->ProcessHandle),
 			    PROCESS_ALL_ACCESS,
 			    NULL,
-			    NtCurrentProcess(),
-			    bInheritHandles,
+			    ParentProcess,
+			    CurrentDirectory,
 			    hSection,
-			    NULL,
-			    NULL);
+			    DebugPort,
+			    ExceptionPort);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
@@ -334,7 +326,6 @@ RtlCreateUserProcess (
    /*
     * Get some information about the process
     */
-   
    NtQueryInformationProcess(ProcessInfo->ProcessHandle,
 			     ProcessBasicInformation,
 			     &ProcessBasicInfo,
@@ -346,14 +337,15 @@ RtlCreateUserProcess (
 			  
    Status = NtSetInformationProcess(ProcessInfo->ProcessHandle,
 				    ProcessImageFileName,
-				    ImageFileName,
+				    FileName,
 				    8);
-			  
+
    /*
     * Create Process Environment Block
     */
    DPRINT("Creating peb\n");
-   KlInitPeb(ProcessInfo->ProcessHandle, Ppb);
+   KlInitPeb(ProcessInfo->ProcessHandle,
+	     ProcessParameters);
 
    DPRINT("Retrieving entry point address\n");
    RtlInitAnsiString (&ProcedureName, "LdrInitializeThunk");
@@ -373,7 +365,6 @@ RtlCreateUserProcess (
 //				  Headers.OptionalHeader.SizeOfStackReserve,
 				  0x200000,
 				  lpStartAddress,
-				  dwCreationFlags,
 				  &(ProcessInfo->ClientId));
    if (hThread == NULL)
    {

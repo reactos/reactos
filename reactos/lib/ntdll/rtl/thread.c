@@ -14,7 +14,6 @@
 #include <ddk/ntddk.h>
 #include <napi/i386/segment.h>
 #include <napi/teb.h>
-//#include <string.h>
 #include <ntdll/rtl.h>
 
 #define NDEBUG
@@ -29,7 +28,7 @@ RtlCreateUserThread(HANDLE ProcessHandle,
                     PSECURITY_DESCRIPTOR SecurityDescriptor,
                     BOOLEAN CreateSuspended,
                     LONG StackZeroBits,
-                    PULONG StackReserved,
+                    PULONG StackReserve,
                     PULONG StackCommit,
                     PTHREAD_START_ROUTINE StartAddress,
                     PVOID   Parameter,
@@ -41,7 +40,7 @@ RtlCreateUserThread(HANDLE ProcessHandle,
     OBJECT_ATTRIBUTES ObjectAttributes;
     INITIAL_TEB InitialTeb;
     CONTEXT ThreadContext;
-    ULONG ReservedSize;
+    ULONG ReserveSize;
     ULONG CommitSize;
     ULONG GuardSize;
     ULONG RegionSize;
@@ -53,21 +52,21 @@ RtlCreateUserThread(HANDLE ProcessHandle,
     else
        CommitSize = PAGESIZE;
 
-    if ((StackReserved != NULL) && (*StackReserved > 0x100000))
-       ReservedSize = *StackReserved;
+    if ((StackReserve != NULL) && (*StackReserve > 0x100000))
+       ReserveSize = *StackReserve;
     else
-       ReservedSize = 0x100000; /* 1MByte */
+       ReserveSize = 0x100000; /* 1MByte */
 
     GuardSize = PAGESIZE;
 
     RegionSize = 0;
 
     /* Reserve stack */
-    InitialTeb.StackReserved = NULL;
+    InitialTeb.StackReserve = NULL;
     Status = NtAllocateVirtualMemory(ProcessHandle,
-                                     &InitialTeb.StackReserved,
+                                     &InitialTeb.StackReserve,
                                      0,
-                                     &ReservedSize,
+                                     &ReserveSize,
                                      MEM_RESERVE,
                                      PAGE_READWRITE);
 
@@ -78,12 +77,12 @@ RtlCreateUserThread(HANDLE ProcessHandle,
     }
 
     DPRINT("StackReserved: %p ReservedSize: 0x%lx\n",
-           InitialTeb.StackReserved, ReservedSize);
+           InitialTeb.StackReserve, ReserveSize);
 
-    InitialTeb.StackBase = (PVOID)(InitialTeb.StackReserved + ReservedSize);
+    InitialTeb.StackBase = (PVOID)(InitialTeb.StackReserve + ReserveSize);
     InitialTeb.StackCommit = (PVOID)(InitialTeb.StackBase - CommitSize);
     InitialTeb.StackLimit = (PVOID)(InitialTeb.StackCommit - PAGESIZE);
-    InitialTeb.StackCommitMax = (PVOID)(InitialTeb.StackReserved + PAGESIZE);
+    InitialTeb.StackCommitMax = (PVOID)(InitialTeb.StackReserve + PAGESIZE);
 
     DPRINT("StackBase: %p\n",
            InitialTeb.StackBase);
@@ -100,7 +99,7 @@ RtlCreateUserThread(HANDLE ProcessHandle,
     {
         /* release the stack space */
         NtFreeVirtualMemory(ProcessHandle,
-                            InitialTeb.StackReserved,
+                            InitialTeb.StackReserve,
                             &RegionSize,
                             MEM_RELEASE);
 
@@ -123,7 +122,7 @@ RtlCreateUserThread(HANDLE ProcessHandle,
     {
         /* release the stack space */
         NtFreeVirtualMemory(ProcessHandle,
-                            InitialTeb.StackReserved,
+                            InitialTeb.StackReserve,
                             &RegionSize,
                             MEM_RELEASE);
 
@@ -163,7 +162,7 @@ RtlCreateUserThread(HANDLE ProcessHandle,
     {
         /* release the stack space */
         NtFreeVirtualMemory(ProcessHandle,
-                            InitialTeb.StackReserved,
+                            InitialTeb.StackReserve,
                             &RegionSize,
                             MEM_RELEASE);
 
@@ -176,8 +175,8 @@ RtlCreateUserThread(HANDLE ProcessHandle,
         *StackCommit = CommitSize;
 
     /* return reserved stack size */
-    if (StackReserved)
-        *StackReserved = ReservedSize;
+    if (StackReserve)
+        *StackReserve = ReserveSize;
 
     /* return thread handle */
     if (ThreadHandle)

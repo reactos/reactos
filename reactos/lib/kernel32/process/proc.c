@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.35 2000/09/05 13:52:30 ekohl Exp $
+/* $Id: proc.c,v 1.36 2000/12/28 20:38:27 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -306,11 +306,8 @@ SleepEx (
 }
 
 
-VOID
-STDCALL
-GetStartupInfoW (
-	LPSTARTUPINFOW	lpStartupInfo
-	)
+VOID STDCALL
+GetStartupInfoW(LPSTARTUPINFOW lpStartupInfo)
 {
    PRTL_USER_PROCESS_PARAMETERS Params;
 
@@ -335,8 +332,8 @@ GetStartupInfoW (
    lpStartupInfo->dwFlags = Params->Flags;
    lpStartupInfo->wShowWindow = Params->ShowWindowFlags;
    lpStartupInfo->lpReserved = Params->ShellInfo.Buffer;
-   lpStartupInfo->cbReserved2 = Params->RuntimeData.Length;
-   lpStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeData.Buffer;
+   lpStartupInfo->cbReserved2 = Params->RuntimeInfo.Length;
+   lpStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeInfo.Buffer;
 
    lpStartupInfo->hStdInput = Params->InputHandle;
    lpStartupInfo->hStdOutput = Params->OutputHandle;
@@ -344,11 +341,8 @@ GetStartupInfoW (
 }
 
 
-VOID
-STDCALL
-GetStartupInfoA (
-	LPSTARTUPINFOA	lpStartupInfo
-	)
+VOID STDCALL
+GetStartupInfoA(LPSTARTUPINFOA lpStartupInfo)
 {
    PRTL_USER_PROCESS_PARAMETERS Params;
    ANSI_STRING AnsiString;
@@ -399,8 +393,8 @@ GetStartupInfoA (
 	lpLocalStartupInfo->dwFillAttribute = Params->FillAttribute;
 	lpLocalStartupInfo->dwFlags = Params->Flags;
 	lpLocalStartupInfo->wShowWindow = Params->ShowWindowFlags;
-	lpLocalStartupInfo->cbReserved2 = Params->RuntimeData.Length;
-	lpLocalStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeData.Buffer;
+	lpLocalStartupInfo->cbReserved2 = Params->RuntimeInfo.Length;
+	lpLocalStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeInfo.Buffer;
 
 	lpLocalStartupInfo->hStdInput = Params->InputHandle;
 	lpLocalStartupInfo->hStdOutput = Params->OutputHandle;

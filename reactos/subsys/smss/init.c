@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.20 2000/12/05 18:14:07 ekohl Exp $
+/* $Id: init.c,v 1.21 2000/12/28 20:38:28 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -41,7 +41,7 @@ HANDLE SmApiPort = INVALID_HANDLE_VALUE;
 HANDLE DbgSsApiPort = INVALID_HANDLE_VALUE;
 HANDLE DbgUiApiPort = INVALID_HANDLE_VALUE;
 
-PVOID SmSystemEnvironment = NULL;
+PWSTR SmSystemEnvironment = NULL;
 
 
 /* FUNCTIONS ****************************************************************/
@@ -168,7 +168,7 @@ BOOL InitSessionManager (HANDLE	Children[])
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING CmdLineW;
    PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
-   RTL_USER_PROCESS_INFO ProcessInfo;
+   RTL_PROCESS_INFO ProcessInfo;
    HANDLE CsrssInitEvent;
 
    WCHAR UnicodeBuffer[MAX_PATH];
@@ -223,7 +223,7 @@ BOOL InitSessionManager (HANDLE	Children[])
 			NULL);
    
    /* Create the system environment */
-   Status = RtlCreateEnvironment (TRUE,
+   Status = RtlCreateEnvironment (FALSE,
 				  &SmSystemEnvironment);
    if (!NT_SUCCESS(Status))
      return FALSE;
@@ -302,14 +302,14 @@ BOOL InitSessionManager (HANDLE	Children[])
 			       NULL);
 
    Status = RtlCreateUserProcess (&UnicodeString,
-				  0,
+				  OBJ_CASE_INSENSITIVE,
 				  ProcessParameters,
 				  NULL,
 				  NULL,
+				  NULL,
 				  FALSE,
-				  0,
-				  0,
-				  0,
+				  NULL,
+				  NULL,
 				  &ProcessInfo);
    
    RtlDestroyProcessParameters (ProcessParameters);
@@ -352,14 +352,14 @@ BOOL InitSessionManager (HANDLE	Children[])
 			      NULL);
    
    Status = RtlCreateUserProcess(&UnicodeString,
-				 0,
+				 OBJ_CASE_INSENSITIVE,
 				 ProcessParameters,
 				 NULL,
 				 NULL,
+				 NULL,
 				 FALSE,
-				 0,
-				 0,
-				 0,
+				 NULL,
+				 NULL,
 				 &ProcessInfo);
    
    RtlDestroyProcessParameters(ProcessParameters);

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.26 2000/12/23 02:37:40 dwelch Exp $
+/* $Id: create.c,v 1.27 2000/12/28 20:38:27 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -470,7 +470,7 @@ static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
          */
         Teb.StackCommit = InitialTeb->StackCommit;
         Teb.StackCommitMax = InitialTeb->StackCommitMax;
-        Teb.StackReserved = InitialTeb->StackReserved;
+        Teb.StackReserve = InitialTeb->StackReserve;
      }
 
 

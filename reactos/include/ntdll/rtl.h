@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.19 2000/08/15 12:37:46 ekohl Exp $
+/* $Id: rtl.h,v 1.20 2000/12/28 20:38:27 ekohl Exp $
  *
  */
 
@@ -28,24 +28,34 @@ typedef struct _CRITICAL_SECTION {
 } CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
 
 
-/*
- * Preliminary data type!!
- *
- * This definition is not finished yet. It will change in the future.
- */
-typedef struct _RTL_USER_PROCESS_INFO
+typedef struct _SECTION_IMAGE_INFORMATION
 {
-	ULONG		Unknown1;		// 0x00
-	HANDLE		ProcessHandle;		// 0x04
-	HANDLE		ThreadHandle;		// 0x08
-	CLIENT_ID	ClientId;		// 0x0C
-	ULONG		Unknown5;		// 0x14
-	LONG		StackZeroBits;		// 0x18
-	LONG		StackReserved;		// 0x1C
-	LONG		StackCommit;		// 0x20
-	ULONG		Unknown9;		// 0x24
-// more data ... ???
-} RTL_USER_PROCESS_INFO, *PRTL_USER_PROCESS_INFO;
+   PVOID ProcessEntryPoint;
+   ULONG StackZero;
+   ULONG StackReserve;
+   ULONG StackCommit;
+   ULONG SubsystemType;
+   USHORT MinorImageVersion;
+   USHORT MajorImageVersion;
+   ULONG u4;
+   ULONG Characteristics;
+   USHORT Machine;
+   BOOLEAN Executable;
+   USHORT u6;
+   ULONG u7;
+   ULONG u8;
+   ULONG u9;
+}SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
+
+
+typedef struct _RTL_PROCESS_INFO
+{
+   ULONG Size;
+   HANDLE ProcessHandle;
+   HANDLE ThreadHandle;
+   CLIENT_ID ClientId;
+   SECTION_IMAGE_INFORMATION ImageInfo;
+} RTL_PROCESS_INFO, *PRTL_PROCESS_INFO;
 
 
 
@@ -207,19 +217,19 @@ NTSTATUS
 STDCALL
 RtlCreateEnvironment (
 	BOOLEAN	Inherit,
-	PVOID	*Environment
+	PWSTR	*Environment
 	);
 
 VOID
 STDCALL
 RtlDestroyEnvironment (
-	PVOID	Environment
+	PWSTR	Environment
 	);
 
 NTSTATUS
 STDCALL
 RtlExpandEnvironmentStrings_U (
-	PVOID		Environment,
+	PWSTR		Environment,
 	PUNICODE_STRING	Source,
 	PUNICODE_STRING	Destination,
 	PULONG		Length
@@ -228,7 +238,7 @@ RtlExpandEnvironmentStrings_U (
 NTSTATUS
 STDCALL
 RtlQueryEnvironmentVariable_U (
-	PVOID		Environment,
+	PWSTR		Environment,
 	PUNICODE_STRING	Name,
 	PUNICODE_STRING	Value
 	);
@@ -236,14 +246,14 @@ RtlQueryEnvironmentVariable_U (
 VOID
 STDCALL
 RtlSetCurrentEnvironment (
-	PVOID	NewEnvironment,
-	PVOID	*OldEnvironment
+	PWSTR	NewEnvironment,
+	PWSTR	*OldEnvironment
 	);
 
 NTSTATUS
 STDCALL
 RtlSetEnvironmentVariable (
-	PVOID		*Environment,
+	PWSTR		*Environment,
 	PUNICODE_STRING	Name,
 	PUNICODE_STRING	Value
 	);
@@ -255,7 +265,7 @@ RtlCreateUserThread (
 	IN	PSECURITY_DESCRIPTOR	SecurityDescriptor,
 	IN	BOOLEAN			CreateSuspended,
 	IN	LONG			StackZeroBits,
-	IN OUT	PULONG			StackReserved,
+	IN OUT	PULONG			StackReserve,
 	IN OUT	PULONG			StackCommit,
 	IN	PTHREAD_START_ROUTINE	StartAddress,
 	IN	PVOID			Parameter,
@@ -270,57 +280,52 @@ RtlFreeUserThreadStack (
 	IN	HANDLE	ThreadHandle
 	);
 
-/*
- * Preliminary prototype!!
- *
- * This prototype is not finished yet. It will change in the future.
- */
 NTSTATUS
 STDCALL
 RtlCreateUserProcess (
-	PUNICODE_STRING			CommandLine,
-	ULONG				Unknown2,
-	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters,	// verified
-	PSECURITY_DESCRIPTOR		ProcessSd,
-	PSECURITY_DESCRIPTOR		ThreadSd,
-	BOOL				bInheritHandles,
-	DWORD				dwCreationFlags,
-	ULONG				Unknown8,
-	ULONG				Unknown9,
-	PRTL_USER_PROCESS_INFO		ProcessInfo		// verified
+	IN	PUNICODE_STRING			ImageFileName,
+	IN	ULONG				Attributes,
+	IN	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters,
+	IN	PSECURITY_DESCRIPTOR		ProcessSecutityDescriptor OPTIONAL,
+	IN	PSECURITY_DESCRIPTOR		ThreadSecurityDescriptor OPTIONAL,
+	IN	HANDLE				ParentProcess OPTIONAL,
+	IN	BOOLEAN				CurrentDirectory,
+	IN	HANDLE				DebugPort OPTIONAL,
+	IN	HANDLE				ExceptionPort OPTIONAL,
+	OUT	PRTL_PROCESS_INFO		ProcessInfo
 	);
 
 NTSTATUS
 STDCALL
 RtlCreateProcessParameters (
-	IN OUT	PRTL_USER_PROCESS_PARAMETERS	*ProcessParameters,
-	IN	PUNICODE_STRING	CommandLine,
-	IN	PUNICODE_STRING	DllPath,
-	IN	PUNICODE_STRING	CurrentDirectory,
-	IN	PUNICODE_STRING	ImagePathName,
-	IN	PVOID		Environment,
-	IN	PUNICODE_STRING	WindowTitle,
-	IN	PUNICODE_STRING	DesktopInfo,
-	IN	PUNICODE_STRING	ShellInfo,
-	IN	PUNICODE_STRING	RuntimeData
+	OUT	PRTL_USER_PROCESS_PARAMETERS	*ProcessParameters,
+	IN	PUNICODE_STRING	ImagePathName OPTIONAL,
+	IN	PUNICODE_STRING	DllPath OPTIONAL,
+	IN	PUNICODE_STRING	CurrentDirectory OPTIONAL,
+	IN	PUNICODE_STRING	CommandLine OPTIONAL,
+	IN	PWSTR		Environment OPTIONAL,
+	IN	PUNICODE_STRING	WindowTitle OPTIONAL,
+	IN	PUNICODE_STRING	DesktopInfo OPTIONAL,
+	IN	PUNICODE_STRING	ShellInfo OPTIONAL,
+	IN	PUNICODE_STRING	RuntimeInfo OPTIONAL
 	);
 
 PRTL_USER_PROCESS_PARAMETERS
 STDCALL
 RtlDeNormalizeProcessParams (
-	IN OUT	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
+	IN	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
 	);
 
 VOID
 STDCALL
 RtlDestroyProcessParameters (
-	IN OUT	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
+	IN	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
 	);
 
 PRTL_USER_PROCESS_PARAMETERS
 STDCALL
 RtlNormalizeProcessParams (
-	IN OUT	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
+	IN	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
 	);
 
 NTSTATUS
