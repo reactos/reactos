@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.70 2004/12/17 19:42:46 navaraf Exp $
+/* $Id: windc.c,v 1.71 2004/12/26 20:34:49 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -770,11 +770,13 @@ DceEmptyCache()
 }
 
 VOID FASTCALL 
-DceResetActiveDCEs(PWINDOW_OBJECT Window, int DeltaX, int DeltaY)
+DceResetActiveDCEs(PWINDOW_OBJECT Window)
 {
   DCE *pDCE;
   PDC dc;
   PWINDOW_OBJECT CurrentWindow;
+  INT DeltaX;
+  INT DeltaY;
 
   if (NULL == Window)
     {
@@ -801,16 +803,10 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window, int DeltaX, int DeltaY)
                   continue;
                 }
             }
-          if (!GDIOBJ_OwnedByCurrentProcess(pDCE->hDC))
-            {
-              /* skip DCs we don't even own */
-              goto skip;
-            }
 
           dc = DC_LockDc(pDCE->hDC);
           if (dc == NULL)
             {
-skip:
               if (Window->Self != pDCE->hwndCurrent)
                 {
                   IntReleaseWindowObject(CurrentWindow);
@@ -818,11 +814,22 @@ skip:
               pDCE = pDCE->next;
               continue;
             }
-          if ((0 != DeltaX || 0 != DeltaY)
-              && (Window == CurrentWindow || IntIsChildWindow(Window->Self, CurrentWindow->Self)))
+          if (Window == CurrentWindow || IntIsChildWindow(Window->Self, CurrentWindow->Self))
             {
-              dc->w.DCOrgX += DeltaX;
-              dc->w.DCOrgY += DeltaY;
+              if (pDCE->DCXFlags & DCX_WINDOW)
+                {
+                  DeltaX = CurrentWindow->WindowRect.left - dc->w.DCOrgX;
+                  DeltaY = CurrentWindow->WindowRect.top - dc->w.DCOrgY;
+                  dc->w.DCOrgX = CurrentWindow->WindowRect.left;
+                  dc->w.DCOrgY = CurrentWindow->WindowRect.top;
+                }
+              else
+                {
+                  DeltaX = CurrentWindow->ClientRect.left - dc->w.DCOrgX;
+                  DeltaY = CurrentWindow->ClientRect.top - dc->w.DCOrgY;
+                  dc->w.DCOrgX = CurrentWindow->ClientRect.left;
+                  dc->w.DCOrgY = CurrentWindow->ClientRect.top;
+                }
               if (NULL != dc->w.hClipRgn)
                 {
                   NtGdiOffsetRgn(dc->w.hClipRgn, DeltaX, DeltaY);

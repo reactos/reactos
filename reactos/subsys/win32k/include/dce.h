@@ -53,6 +53,6 @@ HWND FASTCALL IntWindowFromDC(HDC hDc);
 PDCE FASTCALL DceFreeDCE(PDCE dce, BOOLEAN Force);
 void FASTCALL DceFreeWindowDCE(PWINDOW_OBJECT Window);
 void FASTCALL DceEmptyCache(void);
-VOID FASTCALL DceResetActiveDCEs(PWINDOW_OBJECT Window, int DeltaX, int DeltaY);
+VOID FASTCALL DceResetActiveDCEs(PWINDOW_OBJECT Window);
 
 #endif /* _WIN32K_DCE_H */

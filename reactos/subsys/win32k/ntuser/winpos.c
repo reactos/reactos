@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.127 2004/12/12 23:08:12 navaraf Exp $
+/* $Id: winpos.c,v 1.128 2004/12/26 20:34:49 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -977,9 +977,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       Window->Style |= WS_VISIBLE;
    }
 
-   DceResetActiveDCEs(Window,
-                      NewWindowRect.left - OldWindowRect.left,
-                      NewWindowRect.top - OldWindowRect.top);
+   DceResetActiveDCEs(Window);
 
    if (!(WinPos.flags & SWP_NOREDRAW))
    {
