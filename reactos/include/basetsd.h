@@ -4,6 +4,26 @@
 #pragma GCC system_header
 #endif
 
+#ifdef __USE_W32API
+
+#include_next <basetsd.h>
+
+#ifdef __GNUC__
+#ifndef __int64
+#define __int64 long long
+#endif
+#endif
+
+typedef unsigned long DWORD_PTR, *PDWORD_PTR;
+typedef int INT_PTR, *PINT_PTR;
+typedef unsigned int UINT_PTR, *PUINT_PTR;
+typedef long LONG_PTR, *PLONG_PTR;
+typedef unsigned long ULONG_PTR, *PULONG_PTR;
+typedef ULONG_PTR SIZE_T, *PSIZE_T;
+typedef LONG_PTR SSIZE_T, *PSSIZE_T;
+
+#else /* __USE_W32API */
+
 #ifdef __GNUC__
 #ifndef __int64
 #define __int64 long long
@@ -115,5 +135,7 @@ typedef unsigned __int64 UINT64,  *PUINT64;
 }
 #endif
 #endif /* !RC_INVOKED */
+
+#endif /* !__USE_W32API */
 
 #endif /* _BASETSD_H */

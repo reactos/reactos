@@ -951,7 +951,8 @@ static inline void WINAPI DbgUserBreakPoint(void) { __asm__ __volatile__("int3")
 void WINAPI DbgBreakPoint(void);
 void WINAPI DbgUserBreakPoint(void);
 #endif  /* __i386__ && __GNUC__ */
-void WINAPIV DbgPrint(LPCSTR fmt, ...);
+ULONG DbgPrint(PCH Format,...);
+//void WINAPIV DbgPrint(LPCSTR fmt, ...);
 
 NTSTATUS  WINAPI LdrAccessResource(HMODULE,const IMAGE_RESOURCE_DATA_ENTRY*,void**,PULONG);
 NTSTATUS  WINAPI LdrFindResourceDirectory_U(HMODULE,const LDR_RESOURCE_INFO*,ULONG,const IMAGE_RESOURCE_DIRECTORY**);

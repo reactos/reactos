@@ -1,3 +1,14 @@
+2003-12-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	Changes for compiling with w32api/Wine
+
+	* include/basetsd.h: #include_next <basetsd.h>. Add definitions missing
+	in w32api.
+	* include/mmddk.h: #include_next <mmddk.h>. Add definitions missing in
+	w32api.
+	* include/wine/winternl.h (DbgPrint): Use ReactOS prototype to avoid
+	conflicts.
+
 2003-12-09  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* rules.mak (WINEBUILD): Define.
