@@ -1,8 +1,14 @@
 #ifndef __WINE_OLEIDL_H
 #define __WINE_OLEIDL_H
 
+#include <w32api.h>
 #include <unknwn.h>
 #include_next <oleidl.h>
+
+#if ((__W32API_MAJOR_VERSION == 2 && __W32API_MINOR_VERSION >= 5) || __W32API_MAJOR_VERSION > 2)
+#define __IOleCacheControl_INTERFACE_DEFINED__
+#define __IOleCache2_INTERFACE_DEFINED__
+#endif
 
 DEFINE_GUID(IID_IOleWindow, 0x00000114, 0x0000, 0x0000, 0xc0,0x00, 0x00,0x00,0x00,0x00,0x00,0x46);
 
@@ -380,6 +386,7 @@ struct IOleCacheControl : public IUnknown
 };
 #else
 typedef struct IOleCacheControlVtbl IOleCacheControlVtbl;
+
 struct IOleCacheControl {
     const IOleCacheControlVtbl* lpVtbl;
 };
