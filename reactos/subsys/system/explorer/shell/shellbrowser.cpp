@@ -193,20 +193,27 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 		HWND hwndParent = ::GetParent(hwndTreeView);
 		Entry* entry = (Entry*)itemData;
 
-		IShellFolder* folder;
+		IShellFolder* shell_folder;
+		ShellDirectory* dir;
 
-		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-			folder = static_cast<ShellDirectory*>(entry)->_folder;
-		else
-			folder = entry->_up? static_cast<ShellDirectory*>(entry->_up)->_folder: Desktop();
+		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			dir = static_cast<ShellDirectory*>(entry);
+			shell_folder = dir->_folder;
+		} else {
+			dir = static_cast<ShellDirectory*>(entry->_up);
+			shell_folder = dir? dir->_folder: Desktop();
+		}
 
-		folder->AddRef();
+		shell_folder->AddRef();
 
-		if (folder) {
+		if (shell_folder) {
 			LPCITEMIDLIST pidl = static_cast<ShellEntry*>(entry)->_pidl;
 
 			IContextMenu* pcm;
-			HRESULT hr = folder->GetUIObjectOf(hwndParent, 1, &pidl, IID_IContextMenu, NULL, (LPVOID*)&pcm);
+
+			HRESULT hr = CDefFolderMenu_Create2(dir?dir->_pidl:DesktopFolder(), hwndParent, 1, &pidl, shell_folder, NULL, 0, NULL, &pcm);
+
+//			HRESULT hr = shell_folder->GetUIObjectOf(hwndParent, 1, &pidl, IID_IContextMenu, NULL, (LPVOID*)&pcm);
 
 			if (SUCCEEDED(hr)) {
 				HMENU hPopup = CreatePopupMenu();
@@ -251,7 +258,7 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 				pcm->Release();
 			}
 
-			folder->Release();
+			shell_folder->Release();
 		}
 	}
 }

@@ -136,7 +136,16 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case WM_CREATE: {
 		HRESULT hr = Desktop()->CreateViewObject(_hwnd, IID_IShellView, (void**)&_pShellView);
+/* also possible:
+		SFV_CREATE sfv_create;
 
+		sfv_create.cbSize = sizeof(SFV_CREATE);
+		sfv_create.pshf = Desktop();
+		sfv_create.psvOuter = NULL;
+		sfv_create.psfvcb = NULL;
+
+		HRESULT hr = SHCreateShellFolderView(&sfv_create, &_pShellView);
+*/
 		HWND hWndView = 0;
 
 		if (SUCCEEDED(hr)) {
@@ -150,7 +159,7 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 			hr = _pShellView->CreateViewWindow(NULL, &fs, this, &rect, &hWndView);
 
-			//TODO: use IShellBrowser::GetViewStateStream() to restore previous view state
+			//TODO: use IShellBrowser::GetViewStateStream() to restore previous view state -> see SHOpenRegStream()
 
 			if (SUCCEEDED(hr)) {
 				_pShellView->UIActivate(SVUIA_ACTIVATE_FOCUS);

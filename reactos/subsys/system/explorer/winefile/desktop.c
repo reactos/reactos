@@ -190,7 +190,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 #endif
 
 		 // Initializing the Explorer Bar
-		if (!(hwndExplorerBar=InitializeExplorerBar(hInstance, nShowCmd)))
+		if (!(hwndExplorerBar=InitializeExplorerBar(hInstance)))
 		{
 			fprintf(stderr,"FATAL: Explorer bar could not be initialized properly ! Exiting !\n");
 			return 1;

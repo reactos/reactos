@@ -64,7 +64,7 @@ DWORD LoadProperty(int PInt)
 }
 
 // Initialize and create the Explorer Panel
-HWND InitializeExplorerBar(HINSTANCE hInstance, int nCmdShow)
+HWND InitializeExplorerBar(HINSTANCE hInstance)
 {
 	HWND ExplorerBar;
 	WNDCLASS ExplorerBarClass;
@@ -99,7 +99,7 @@ HWND InitializeExplorerBar(HINSTANCE hInstance, int nCmdShow)
 			ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
 			DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, "Timmons");
 
-	ShowWindow(ExplorerBar, nCmdShow);								// Show the bar
+	ShowWindow(ExplorerBar, SW_SHOW);								// Show the bar
 
 	return ExplorerBar;
 }
@@ -338,7 +338,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
  // Initializing the Explorer Bar !
  //
 
-  if (!(ExplHnd=InitializeExplorerBar(hInstance, nCmdShow)))
+  if (!(ExplHnd=InitializeExplorerBar(hInstance)))
 	 {
 	   fprintf(stderr,"FATAL : Explorer bar could not be initialized properly ! Exiting !\n");
 	   return 1;

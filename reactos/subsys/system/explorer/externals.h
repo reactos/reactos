@@ -47,7 +47,7 @@ extern HWND create_desktop_window(HINSTANCE hInstance);
 extern BOOL IsAnyDesktopRunning();
 
  // start desktop bar
-extern HWND InitializeExplorerBar(HINSTANCE hInstance, int nCmdShow);
+extern HWND InitializeExplorerBar(HINSTANCE hInstance);
 
  // load plugins
 extern int LoadAvailablePlugIns(HWND ExplWnd);

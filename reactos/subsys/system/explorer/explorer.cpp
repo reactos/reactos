@@ -146,16 +146,18 @@ int explorer_main(HINSTANCE hinstance, HWND hwndParent, int cmdshow)
 
 		InitInstance(hinstance);
 
-#ifndef _ROS_	// don't maximize if being called from the ROS desktop
-		if (cmdshow == SW_SHOWNORMAL)
-				/*TODO: read window placement from registry */
-			cmdshow = SW_MAXIMIZE;
-#endif
-
 		if (hwndParent)
 			g_Globals._desktop_mode = true;
 
-		explorer_show_frame(hwndParent, cmdshow);
+		if (cmdshow != SW_HIDE) {
+#ifndef _ROS_	// don't maximize if being called from the ROS desktop
+			if (cmdshow == SW_SHOWNORMAL)
+					/*TODO: read window placement from registry */
+				cmdshow = SW_MAXIMIZE;
+#endif
+
+			explorer_show_frame(hwndParent, cmdshow);
+		}
 
 		while(GetMessage(&msg, 0, 0, 0)) {
 			if (g_Globals._hMainWnd && SendMessage(g_Globals._hMainWnd, WM_TRANSLATE_MSG, 0, (LPARAM)&msg))
@@ -190,6 +192,11 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	if (!lstrcmp(lpCmdLine,TEXT("-desktop")))
 		startup_desktop = TRUE;
 
+	if (!lstrcmp(lpCmdLine,TEXT("-noexplorer"))) {
+		nShowCmd = SW_HIDE;
+		startup_desktop = TRUE;
+	}
+
 	HWND hwndDesktop = 0;
 
 	if (startup_desktop)
@@ -197,7 +204,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		hwndDesktop = create_desktop_window(hInstance);
 
 		 // Initialize the explorer bar
-		HWND hwndExplorerBar = InitializeExplorerBar(hInstance, nShowCmd);
+		HWND hwndExplorerBar = InitializeExplorerBar(hInstance);
 
 		 // Load plugins
 		LoadAvailablePlugIns(hwndExplorerBar);
