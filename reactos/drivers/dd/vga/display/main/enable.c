@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.25 $
- * $Author: gvg $
- * $Date: 2003/03/08 13:16:52 $
+ * $Revision: 1.26 $
+ * $Author: hbirr $
+ * $Date: 2003/03/09 21:44:24 $
  *
  */
 
@@ -210,7 +210,7 @@ DrvAssertMode(IN DHPDEV DPev,
     }
     VGAInitialized = FALSE;
   }
-
+  return TRUE;
 }
 
 
