@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.26 2001/07/19 18:42:02 ekohl Exp $
+/* $Id: file.c,v 1.27 2001/08/06 18:35:15 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -163,7 +163,7 @@ SetFilePointer(HANDLE hFile,
 	       DWORD dwMoveMethod)
 {
    FILE_POSITION_INFORMATION FilePosition;
-   FILE_END_OF_FILE_INFORMATION FileEndOfFile;
+   FILE_STANDARD_INFORMATION FileStandart;
    NTSTATUS errCode;
    IO_STATUS_BLOCK IoStatusBlock;
    LARGE_INTEGER Distance;
@@ -187,11 +187,11 @@ SetFilePointer(HANDLE hFile,
      {
 	NtQueryInformationFile(hFile,
                                &IoStatusBlock,
-                               &FileEndOfFile,
-                               sizeof(FILE_END_OF_FILE_INFORMATION),
-                               FileEndOfFileInformation);
+                               &FileStandart,
+                               sizeof(FILE_STANDARD_INFORMATION),
+                               FileStandardInformation);
         FilePosition.CurrentByteOffset.QuadPart =
-                FileEndOfFile.EndOfFile.QuadPart - Distance.QuadPart;
+                  FileStandart.EndOfFile.QuadPart + Distance.QuadPart;
      }
    else if ( dwMoveMethod == FILE_BEGIN )
      {
