@@ -57,7 +57,7 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
 {
   ULONG Length;
   ULONG MiniPortExtensionSize;
-  PORT_CONFIGURATION_INFORMATION PortConfig;
+  PPORT_CONFIGURATION_INFORMATION PortConfig;
   ULONG PortNumber;
 
   KSPIN_LOCK IrpLock;
