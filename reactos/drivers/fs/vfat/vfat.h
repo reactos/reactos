@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.53 2003/01/25 15:55:08 hbirr Exp $ */
+/* $Id: vfat.h,v 1.54 2003/01/31 15:55:18 ekohl Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -52,7 +52,7 @@ struct _BootSector32
   unsigned long  Signature1;				// 508
 } __attribute__((packed));
 
-struct _BootBackupSector
+struct _FsInfoSector
 {
   unsigned long  ExtBootSignature2;			// 0
   unsigned char  Res6[480];				// 4
