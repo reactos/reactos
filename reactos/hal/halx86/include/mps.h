@@ -5,10 +5,8 @@
  * FIXME: This does not work if we have more than 24 IRQs (ie. more than one 
  * I/O APIC) 
  */
-#define VECTOR2IRQ(vector) (((vector) - FIRST_DEVICE_VECTOR) / 8)
-#define IRQ2VECTOR(vector) ((vector * 8) + FIRST_DEVICE_VECTOR)
-#define VECTOR2IRQL(vector) (DISPATCH_LEVEL /* 2 */ + 1 + VECTOR2IRQ(vector))
-#define IRQL2VECTOR(irql) (IRQ2VECTOR(irql - DISPATCH_LEVEL /* 2 */ - 1))
+#define IRQL2VECTOR(irql)   IRQ2VECTOR(PROFILE_LEVEL - (irql))
+#define IRQL2TPR(irql)	    (((irql) == PASSIVE_LEVEL) ? 0 : ((irql) >= CLOCK1_LEVEL ? 0xff : IRQL2VECTOR(irql)))
 
 
 #define APIC_DEFAULT_BASE     0xFEE00000    /* Default Local APIC Base Register Address */
@@ -39,11 +37,12 @@
 #define APIC_CCRT    0x0390 /* Current Count Register for Timer (R) */
 #define APIC_TDCR    0x03E0 /* Timer Divide Configuration Register (R/W) */
 
-#define APIC_ID_MASK       (0xF << 24)
-#define GET_APIC_ID(x)	   (((x) & APIC_ID_MASK) >> 24)
-#define APIC_VER_MASK      0xFF00FF
-#define GET_APIC_VERSION(x)((x) & 0xFF)
-#define GET_APIC_MAXLVT(x) (((x) >> 16) & 0xFF)
+#define APIC_ID_MASK		(0xF << 24)
+#define GET_APIC_ID(x)		(((x) & APIC_ID_MASK) >> 24)
+#define	GET_APIC_LOGICAL_ID(x)	(((x)>>24)&0xFF)
+#define APIC_VER_MASK		0xFF00FF
+#define GET_APIC_VERSION(x)	((x) & 0xFF)
+#define GET_APIC_MAXLVT(x)	(((x) >> 16) & 0xFF)
 
 #define APIC_TPR_PRI       0xFF
 #define APIC_TPR_INT       0xF0
@@ -207,22 +206,21 @@ typedef struct _IOAPIC_INFO
  * to work around the 'lost local interrupt if more than 2 IRQ
  * sources per level' errata.
  */
-#define LOCAL_TIMER_VECTOR 	  0xEF
+#define LOCAL_TIMER_VECTOR 	    0xEF
 
-#define CALL_FUNCTION_VECTOR	0xFB
-#define RESCHEDULE_VECTOR		  0xFC
-#define INVALIDATE_TLB_VECTOR	0xFD
-#define ERROR_VECTOR				  0xFE
-#define SPURIOUS_VECTOR			  0xFF  /* Must be 0xXF */
+#define CALL_FUNCTION_VECTOR	    0xFB
+#define RESCHEDULE_VECTOR	    0xFC
+#define INVALIDATE_TLB_VECTOR	    0xFD
+#define ERROR_VECTOR		    0xFE
+#define SPURIOUS_VECTOR		    0xFF  /* Must be 0xXF */
 
-/*
- * First APIC vector available to drivers: (vectors 0x30-0xEE)
- * we start at 0x31 to spread out vectors evenly between priority
- * levels.
- */
-#define FIRST_DEVICE_VECTOR	  0x31
-#define FIRST_SYSTEM_VECTOR	  0xEF
-#define NUMBER_DEVICE_VECTORS (FIRST_SYSTEM_VECTOR - FIRST_DEVICE_VECTOR)
+#if 0
+/* This values are defined in halirql.h */
+#define FIRST_DEVICE_VECTOR	    0x30
+#define FIRST_SYSTEM_VECTOR	    0xEF
+#endif
+
+#define NUMBER_DEVICE_VECTORS	    (FIRST_SYSTEM_VECTOR - FIRST_DEVICE_VECTOR)
 
 
 /* MP Floating Pointer Structure */
@@ -430,8 +428,8 @@ typedef enum {
 VOID HalpInitMPS(VOID);
 volatile ULONG IOAPICRead(ULONG Apic, ULONG Offset);
 VOID IOAPICWrite(ULONG Apic, ULONG Offset, ULONG Value);
-VOID IOAPICMaskIrq(ULONG Apic, ULONG Irq);
-VOID IOAPICUnmaskIrq(ULONG Apic, ULONG Irq);
+VOID IOAPICMaskIrq(ULONG Irq);
+VOID IOAPICUnmaskIrq(ULONG Irq);
 volatile inline ULONG APICRead(ULONG Offset);
 inline VOID APICWrite(ULONG Offset, ULONG Value);
 inline VOID APICSendEOI(VOID);

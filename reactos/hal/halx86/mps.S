@@ -1,4 +1,4 @@
-/* $Id: mps.S,v 1.2 2004/11/01 14:37:19 hbirr Exp $
+/* $Id: mps.S,v 1.3 2004/11/01 19:01:25 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -36,19 +36,6 @@
   popl  %ds; \
   popa;
 
-.globl _MpsTimerInterrupt
-_MpsTimerInterrupt:
-  /* Save registers */	
-  BEFORE
-
-  /* Call the C handler */
-  call  _MpsTimerHandler
-
-	/* Return to the caller */
-  AFTER
-  iret
-
-
 .globl _MpsErrorInterrupt
 _MpsErrorInterrupt:
   /* Save registers */	
@@ -74,4 +61,36 @@ _MpsSpuriousInterrupt:
   AFTER
   iret
 
+.global _MpsTimerInterrupt
+_MpsTimerInterrupt:
+	cld
+	pusha	
+	movl	$0xef,%ebx		
+  	pushl 	%ds
+  	pushl 	%es
+  	pushl 	%fs
+  	pushl	%gs
+  	movl	$0xceafbeef,%eax
+  	pushl 	%eax
+  	movl	$(KERNEL_DS),%eax
+  	movl	%eax,%ds
+  	movl	%eax,%es
+  	movl	%eax,%gs
+  	movl	$(PCR_SELECTOR),%eax
+  	movl	%eax,%fs
+  	pushl 	%esp
+  	pushl 	%ebx
+  	call	_MpsTimerHandler
+    	popl	%eax
+  	popl	%eax
+  	popl	%eax
+  	popl	%gs
+  	popl	%fs
+  	popl	%es
+  	popl	%ds
+  	popa
+  	iret
+  
+  
+  
 /* EOF */

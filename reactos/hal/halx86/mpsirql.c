@@ -11,10 +11,12 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <roscfg.h>
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
 #include <internal/ps.h>
 #include <ntos/minmax.h>
+#include <halirq.h>
 #include <hal.h>
 #include <mps.h>
 
@@ -23,19 +25,9 @@
 
 /* GLOBALS ******************************************************************/;
 
-#define IRQ_BASE    (0x30)
-#define NR_VECTORS  (0x100 - IRQ_BASE)
-
-extern IMPORTED ULONG DpcQueueSize;
-
-static ULONG HalpPendingInterruptCount[NR_VECTORS];
-
-static VOID KeSetCurrentIrql (KIRQL newlvl);
 
 VOID STDCALL
 KiInterruptDispatch2 (ULONG Irq, KIRQL old_level);
-
-#define IRQL2TPR(irql) (FIRST_DEVICE_VECTOR + ((irql - DISPATCH_LEVEL /* 2 */ - 1) * 8))
 
 /* FUNCTIONS ****************************************************************/
 
@@ -45,100 +37,66 @@ KIRQL STDCALL KeGetCurrentIrql (VOID)
  * RETURNS: The current irq level
  */
 {
-  if (KeGetCurrentKPCR ()->Irql > HIGH_LEVEL)
+  KIRQL irql;
+  ULONG Flags;
+
+  Ki386SaveFlags(Flags);
+  Ki386DisableInterrupts();
+  irql = KeGetCurrentKPCR()->Irql;
+  Ki386RestoreFlags(Flags);
+
+  if (irql > HIGH_LEVEL)
     {
-      DPRINT1 ("CurrentIrql %x\n", KeGetCurrentKPCR ()->Irql);
+      DPRINT1 ("CurrentIrql %x\n", irql);
       KEBUGCHECK (0);
       for(;;);
     }
-
-   return(KeGetCurrentKPCR ()->Irql);
+  return irql;
 }
 
 
-static VOID KeSetCurrentIrql (KIRQL NewIrql)
+VOID KeSetCurrentIrql (KIRQL NewIrql)
 /*
  * PURPOSE: Sets the current irq level without taking any action
  */
 {
+  ULONG Flags;
   if (NewIrql > HIGH_LEVEL)
     {
       DPRINT1 ("NewIrql %x\n", NewIrql);
       KEBUGCHECK (0);
       for(;;);
     }
-
-   KeGetCurrentKPCR ()->Irql = NewIrql;
-}
-
-
-VOID HalpEndSystemInterrupt (KIRQL Irql)
-/*
- * FUNCTION: Enable all irqs with higher priority.
- */
-{
-  ULONG flags;
-  /* Interrupts should be disabled while enabling irqs */
-  Ki386SaveFlags(flags);
+  Ki386SaveFlags(Flags);
   Ki386DisableInterrupts();
-  APICWrite (APIC_TPR, IRQL2TPR (Irql) & APIC_TPR_PRI);
-  Ki386RestoreFlags(flags);
+  KeGetCurrentKPCR()->Irql = NewIrql;
+  Ki386RestoreFlags(Flags);
 }
 
 
-VOID STATIC
-HalpExecuteIrqs(KIRQL NewIrql)
-{
-  ULONG VectorLimit, i;
-  
-  VectorLimit = min(IRQL2VECTOR (NewIrql), NR_VECTORS);
-
-  /*
-   * For each vector if there have been any deferred interrupts then now
-   * dispatch them.
-   */
-  for (i = 0; i < VectorLimit; i++)
-    {
-      if (HalpPendingInterruptCount[i] > 0)
-	{
-	   KeSetCurrentIrql (VECTOR2IRQL (i));
-
-           while (HalpPendingInterruptCount[i] > 0)
-	     {
-	       /*
-	        * For each deferred interrupt execute all the handlers at DIRQL.
-	        */
-	       KiInterruptDispatch2 (i, NewIrql);
-	       HalpPendingInterruptCount[i]--;
-	     }
-	   KeSetCurrentIrql (KeGetCurrentIrql () - 1);
-	   HalpEndSystemInterrupt (KeGetCurrentIrql ());
-	}
-    }
-
-}
 
 
-VOID STATIC
+VOID 
 HalpLowerIrql(KIRQL NewIrql)
 {
-  if (NewIrql >= PROFILE_LEVEL)
-    {
-      KeSetCurrentIrql (NewIrql);
-      return;
-    }
-  HalpExecuteIrqs (NewIrql);
+  PKPCR Pcr = KeGetCurrentKPCR();
   if (NewIrql >= DISPATCH_LEVEL)
     {
       KeSetCurrentIrql (NewIrql);
+      APICWrite(APIC_TPR, IRQL2TPR (NewIrql) & APIC_TPR_PRI);
       return;
     }
-  KeSetCurrentIrql (DISPATCH_LEVEL);
-  if (DpcQueueSize > 0)
+  if (KeGetCurrentIrql() > APC_LEVEL)
+  {
+    KeSetCurrentIrql (DISPATCH_LEVEL);
+    APICWrite(APIC_TPR, IRQL2TPR (DISPATCH_LEVEL) & APIC_TPR_PRI);
+    if (Pcr->HalReserved[1])
     {
-      KiDispatchInterrupt ();
+      Pcr->HalReserved[1] = 0;
+      KiDispatchInterrupt();
     }
-  KeSetCurrentIrql (APC_LEVEL);
+    KeSetCurrentIrql (APC_LEVEL);
+  }
   if (NewIrql == APC_LEVEL)
     {
       return;
@@ -171,10 +129,10 @@ HalpLowerIrql(KIRQL NewIrql)
 VOID FASTCALL
 KfLowerIrql (KIRQL	NewIrql)
 {
-
-  if (NewIrql > KeGetCurrentIrql ())
+  KIRQL oldIrql = KeGetCurrentIrql();
+  if (NewIrql > oldIrql)
     {
-      DPRINT1 ("NewIrql %x CurrentIrql %x\n", NewIrql, KeGetCurrentIrql ());
+      DPRINT1 ("NewIrql %x CurrentIrql %x\n", NewIrql, oldIrql);
       KEBUGCHECK (0);
       for(;;);
     }
@@ -227,6 +185,7 @@ KIRQL FASTCALL
 KfRaiseIrql (KIRQL	NewIrql)
 {
   KIRQL OldIrql;
+  ULONG Flags;
   
   if (NewIrql < KeGetCurrentIrql ())
     {
@@ -234,9 +193,15 @@ KfRaiseIrql (KIRQL	NewIrql)
       KEBUGCHECK (0);
       for(;;);
     }
-  
+  Ki386SaveFlags(Flags);
+  Ki386DisableInterrupts();
+  if (NewIrql > DISPATCH_LEVEL)
+    {
+      APICWrite (APIC_TPR, IRQL2TPR (NewIrql) & APIC_TPR_PRI);
+    }
   OldIrql = KeGetCurrentIrql ();
   KeSetCurrentIrql (NewIrql);
+  Ki386RestoreFlags(Flags);
   return OldIrql;
 }
 
@@ -316,28 +281,34 @@ KeRaiseIrqlToSynchLevel (VOID)
 
 BOOLEAN STDCALL
 HalBeginSystemInterrupt (ULONG Vector,
-	KIRQL Irql,
-	PKIRQL OldIrql)
+			 KIRQL Irql,
+			 PKIRQL OldIrql)
 {
+  ULONG Flags;
   DPRINT("Vector (0x%X)  Irql (0x%X)\n", Vector, Irql);
-
-  if (Vector < FIRST_DEVICE_VECTOR ||
-    Vector >= FIRST_DEVICE_VECTOR + NUMBER_DEVICE_VECTORS) {
-    DPRINT("Not a device interrupt\n");
-	  return FALSE;
-  }
-
-  HalDisableSystemInterrupt (Vector, 0);
-
-  APICSendEOI();
 
   if (KeGetCurrentIrql () >= Irql)
     {
-      HalpPendingInterruptCount[Vector]++;
-      return(FALSE);
+      DPRINT1("current irql %d, new irql %d\n", KeGetCurrentIrql(), Irql);
+      KEBUGCHECK(0);
     }
+
+  if (Vector < FIRST_DEVICE_VECTOR ||
+      Vector >= FIRST_DEVICE_VECTOR + NUMBER_DEVICE_VECTORS) 
+  {
+    DPRINT1("Not a device interrupt, vector %x\n", Vector);
+    return FALSE;
+  }
+
+  Ki386SaveFlags(Flags);
+  Ki386DisableInterrupts();
+  APICWrite (APIC_TPR, IRQL2TPR (Irql) & APIC_TPR_PRI);
+
+  APICSendEOI();
+
   *OldIrql = KeGetCurrentIrql ();
   KeSetCurrentIrql (Irql);
+  Ki386RestoreFlags(Flags);
 
   return(TRUE);
 }
@@ -351,25 +322,25 @@ HalEndSystemInterrupt (KIRQL Irql,
  */
 {
   HalpLowerIrql (Irql);
-  HalpEndSystemInterrupt (Irql);
 }
   
 BOOLEAN STDCALL
 HalDisableSystemInterrupt (ULONG Vector,
-	ULONG Unknown2)
+			   KIRQL Irql)
 {
   ULONG irq;
 
   DPRINT ("Vector (0x%X)\n", Vector);
 
   if (Vector < FIRST_DEVICE_VECTOR ||
-    Vector >= FIRST_DEVICE_VECTOR + NUMBER_DEVICE_VECTORS)  {
-    DPRINT("Not a device interrupt\n");
-	  return FALSE;
+      Vector >= FIRST_DEVICE_VECTOR + NUMBER_DEVICE_VECTORS)  
+  {
+    DPRINT1("Not a device interrupt, vector=%x\n", Vector);
+    return FALSE;
   }
 
   irq = VECTOR2IRQ (Vector);
-  IOAPICMaskIrq (ThisCPU (), irq);
+  IOAPICMaskIrq (irq);
 
   return TRUE;  
 }
@@ -377,37 +348,42 @@ HalDisableSystemInterrupt (ULONG Vector,
 
 BOOLEAN STDCALL
 HalEnableSystemInterrupt (ULONG Vector,
-	ULONG Unknown2,
-	ULONG Unknown3)
+			  KIRQL Irql,
+			  KINTERRUPT_MODE InterruptMode)
 {
   ULONG irq;
 
-  DPRINT ("Vector (0x%X)\n", Vector);
-
   if (Vector < FIRST_DEVICE_VECTOR ||
-    Vector >= FIRST_DEVICE_VECTOR + NUMBER_DEVICE_VECTORS) {
+      Vector >= FIRST_DEVICE_VECTOR + NUMBER_DEVICE_VECTORS) 
+  {
     DPRINT("Not a device interrupt\n");
-	  return FALSE;
+    return FALSE;
   }
 
   irq = VECTOR2IRQ (Vector);
-  IOAPICUnmaskIrq (ThisCPU (), irq);
+  IOAPICUnmaskIrq (irq);
 
   return TRUE;
 }
 
 VOID FASTCALL
-HalRequestSoftwareInterrupt(
-  IN KIRQL Request)
+HalRequestSoftwareInterrupt(IN KIRQL Request)
 {
+  ULONG Flags;
   switch (Request)
   {
     case APC_LEVEL:
-      //ApcRequested = TRUE;
+      Ki386SaveFlags(Flags);
+      Ki386DisableInterrupts();
+      KeGetCurrentKPCR()->HalReserved[0] = 1;
+      Ki386RestoreFlags(Flags);
       break;
 
     case DISPATCH_LEVEL:
-      //DpcRequested = TRUE;
+      Ki386SaveFlags(Flags);
+      Ki386DisableInterrupts();
+      KeGetCurrentKPCR()->HalReserved[1] = 1;
+      Ki386RestoreFlags(Flags);
       break;
       
     default:

@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.10 2004/07/20 21:25:36 hbirr Exp $
+/* $Id: mp.c,v 1.11 2004/11/01 19:01:25 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,21 +14,28 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
 #include <roscfg.h>
+#include <ddk/ntddk.h>
 
-#define NDEBUG
-#include <internal/debug.h>
 
 #ifdef MP
 
 #include <hal.h>
+#include <halirq.h>
 #include <mps.h>
 
 #include <internal/ntoskrnl.h>
 #include <internal/i386/segment.h>
 #include <internal/ke.h>
 #include <internal/ps.h>
+
+#endif
+
+#define NDEBUG
+#include <internal/debug.h>
+
+#ifdef MP
+
 
 /*
    Address of area to be used for communication between Application
@@ -56,6 +63,8 @@ ULONG IOAPICCount;                 /* Number of I/O APICs in the system */
 
 MP_CONFIGURATION_INTSRC IRQMap[MAX_IRQ_SOURCE]; /* Map of all IRQs */
 ULONG IRQVectorMap[MAX_IRQ_SOURCE];             /* IRQ to vector map */
+ULONG IrqPinMap[MAX_IRQ_SOURCE];		/* IRQ to Pin map */
+ULONG IrqApicMap[MAX_IRQ_SOURCE];
 ULONG IRQCount;                                 /* Number of IRQs  */
 
 ULONG APICMode;                     /* APIC mode at startup */
@@ -83,7 +92,6 @@ extern VOID MpsSpuriousInterrupt(VOID);
 })
 
 static BOOLEAN MPSInitialized = FALSE;  /* Is the MP system initialized? */
-static KDPC RescheduleDpc;
 
 VOID APICDisable(VOID);
 static VOID APICSyncArbIDs(VOID);
@@ -105,45 +113,47 @@ static BOOLEAN BSPInitialized = FALSE;  /* Is the BSP initialized? */
 
 /* Functions for handling 8259A PICs */
 
-VOID Disable8259AIrq(
-  ULONG irq)
+VOID Disable8259AIrq(ULONG irq)
 {
-	ULONG tmp;
+    ULONG tmp;
 
-	if (irq & 8) {
-    tmp = READ_PORT_UCHAR((PUCHAR)0xA1);
-    tmp |= (1 << irq);
-    WRITE_PORT_UCHAR((PUCHAR)0xA1, tmp);
-	} else {
-    tmp = READ_PORT_UCHAR((PUCHAR)0x21);
-    tmp |= (1 << irq);
-    WRITE_PORT_UCHAR((PUCHAR)0x21, tmp);
-  }
+    if (irq & 8) 
+    {
+       tmp = READ_PORT_UCHAR((PUCHAR)0xA1);
+       tmp |= (1 << irq);
+       WRITE_PORT_UCHAR((PUCHAR)0xA1, tmp);
+    } 
+    else 
+    {
+       tmp = READ_PORT_UCHAR((PUCHAR)0x21);
+       tmp |= (1 << irq);
+       WRITE_PORT_UCHAR((PUCHAR)0x21, tmp);
+    }
 }
 
 
-VOID Enable8259AIrq(
-  ULONG irq)
+VOID Enable8259AIrq(ULONG irq)
 {
-  ULONG tmp;
+    ULONG tmp;
 
-	if (irq & 8) {
-    tmp = READ_PORT_UCHAR((PUCHAR)0xA1);
-    tmp &= ~(1 << irq);
-    WRITE_PORT_UCHAR((PUCHAR)0xA1, tmp);
-	} else {
-    tmp = READ_PORT_UCHAR((PUCHAR)0x21);
-    tmp &= ~(1 << irq);
-    WRITE_PORT_UCHAR((PUCHAR)0x21, tmp);
-  }
+    if (irq & 8) 
+    {
+       tmp = READ_PORT_UCHAR((PUCHAR)0xA1);
+       tmp &= ~(1 << irq);
+       WRITE_PORT_UCHAR((PUCHAR)0xA1, tmp);
+    } 
+    else 
+    {
+       tmp = READ_PORT_UCHAR((PUCHAR)0x21);
+       tmp &= ~(1 << irq);
+       WRITE_PORT_UCHAR((PUCHAR)0x21, tmp);
+    }
 }
 
 
 /* Functions for handling I/O APICs */
 
-volatile ULONG IOAPICRead(
-   ULONG Apic,
-   ULONG Offset)
+volatile ULONG IOAPICRead(ULONG Apic, ULONG Offset)
 {
   PULONG Base;
 
@@ -152,10 +162,7 @@ volatile ULONG IOAPICRead(
   return *((PULONG)((ULONG)Base + IOAPIC_IOWIN));
 }
 
-VOID IOAPICWrite(
-   ULONG Apic,
-   ULONG Offset,
-   ULONG Value)
+VOID IOAPICWrite(ULONG Apic, ULONG Offset, ULONG Value)
 {
   PULONG Base;
 
@@ -165,65 +172,62 @@ VOID IOAPICWrite(
 }
 
 
-VOID IOAPICClearPin(
-  ULONG Apic,
-  ULONG Pin)
+VOID IOAPICClearPin(ULONG Apic, ULONG Pin)
 {
   IOAPIC_ROUTE_ENTRY Entry;
 
   /*
    * Disable it in the IO-APIC irq-routing table
    */
-	memset(&Entry, 0, sizeof(Entry));
-	Entry.mask = 1;
+  memset(&Entry, 0, sizeof(Entry));
+  Entry.mask = 1;
 
-	IOAPICWrite(Apic, IOAPIC_REDTBL + 2 * Pin, *(((PULONG)&Entry) + 0));
-	IOAPICWrite(Apic, IOAPIC_REDTBL + 1 + 2 * Pin, *(((PULONG)&Entry) + 1));
+  IOAPICWrite(Apic, IOAPIC_REDTBL + 2 * Pin, *(((PULONG)&Entry) + 0));
+  IOAPICWrite(Apic, IOAPIC_REDTBL + 1 + 2 * Pin, *(((PULONG)&Entry) + 1));
 }
 
-static VOID IOAPICClear(
-  ULONG Apic)
+static VOID IOAPICClear(ULONG Apic)
 {
-	ULONG Pin;
+  ULONG Pin;
 
-  for (Pin = 0; Pin < IOAPICMap[Apic].EntryCount; Pin++)
-		IOAPICClearPin(Apic, Pin);
+  for (Pin = 0; Pin < /*IOAPICMap[Apic].EntryCount*/24; Pin++)
+  {
+    IOAPICClearPin(Apic, Pin);
+  }
 }
 
-static VOID IOAPICClearAll(
-  VOID)
+static VOID IOAPICClearAll(VOID)
 {
   ULONG Apic;
 
-	for (Apic = 0; Apic < IOAPICCount; Apic++)
-		IOAPICClear(Apic);
+  for (Apic = 0; Apic < IOAPICCount; Apic++)
+  {
+    IOAPICClear(Apic);
+  }
 }
 
 /* This is performance critical and should probably be done in assembler */
-VOID IOAPICMaskIrq(
-  ULONG Apic,
-  ULONG Irq)
+VOID IOAPICMaskIrq(ULONG Irq)
 {
   IOAPIC_ROUTE_ENTRY Entry;
+  ULONG Apic = IrqApicMap[Irq];
 
-	*((PULONG)&Entry) = IOAPICRead(Apic, IOAPIC_REDTBL+2*Irq);
-  Entry.mask = 1;
-
- 	IOAPICWrite(Apic, IOAPIC_REDTBL+2*Irq, *((PULONG)&Entry));
-}
-
-
-/* This is performance critical and should probably be done in assembler */
-VOID IOAPICUnmaskIrq(
-  ULONG Apic,
-  ULONG Irq)
-{
-  IOAPIC_ROUTE_ENTRY Entry;
 
   *((PULONG)&Entry) = IOAPICRead(Apic, IOAPIC_REDTBL+2*Irq);
-  Entry.mask = 0;
-
+  Entry.mask = 1;
   IOAPICWrite(Apic, IOAPIC_REDTBL+2*Irq, *((PULONG)&Entry));
+}
+
+
+/* This is performance critical and should probably be done in assembler */
+VOID IOAPICUnmaskIrq(ULONG Irq)
+{
+  IOAPIC_ROUTE_ENTRY Entry;
+  ULONG Apic = IrqApicMap[Irq];
+
+  *((PULONG)&Entry) = IOAPICRead(Apic, IOAPIC_REDTBL+2*IrqPinMap[Irq]);
+  Entry.mask = 0;
+  IOAPICWrite(Apic, IOAPIC_REDTBL+2*IrqPinMap[Irq], *((PULONG)&Entry));
 }
 
 static VOID 
@@ -235,14 +239,16 @@ IOAPICSetupIds(VOID)
   /*
    * Set the IOAPIC ID to the value stored in the MPC table.
    */
-  for (apic = 0; apic < IOAPICCount; apic++) {
+  for (apic = 0; apic < IOAPICCount; apic++) 
+  {
     
     /* Read the register 0 value */
     tmp = IOAPICRead(apic, IOAPIC_ID);
     
     old_id = IOAPICMap[apic].ApicId;
     
-    if (IOAPICMap[apic].ApicId >= 0xf) {
+    if (IOAPICMap[apic].ApicId >= 0xf) 
+    {
       DPRINT1("BIOS bug, IO-APIC#%d ID is %d in the MPC table!...\n",
 	      apic, IOAPICMap[apic].ApicId);
       DPRINT1("... fixing up to %d. (tell your hw vendor)\n", 
@@ -255,9 +261,15 @@ IOAPICSetupIds(VOID)
      * if the ID changed.
      */
     if (old_id != IOAPICMap[apic].ApicId)
+    {
       for (i = 0; i < IRQCount; i++)
+      {
 	if (IRQMap[i].DstApicId == old_id)
+	{
 	  IRQMap[i].DstApicId = IOAPICMap[apic].ApicId;
+	}
+      }
+    }
     
     /*
      * Read the right value from the MPC table and
@@ -275,7 +287,8 @@ IOAPICSetupIds(VOID)
      * Sanity check
      */
     tmp = IOAPICRead(apic, 0);
-    if (GET_IOAPIC_ID(tmp) != IOAPICMap[apic].ApicId) {
+    if (GET_IOAPIC_ID(tmp) != IOAPICMap[apic].ApicId) 
+    {
       DPRINT1("Could not set I/O APIC ID!\n");
       KEBUGCHECK(0);
     }
@@ -286,15 +299,15 @@ IOAPICSetupIds(VOID)
 /*
  * EISA Edge/Level control register, ELCR
  */
-static ULONG EISA_ELCR(
-  ULONG irq)
+static ULONG EISA_ELCR(ULONG irq)
 {
-	if (irq < 16) {
-		PUCHAR port = (PUCHAR)(0x4d0 + (irq >> 3));
-		return (READ_PORT_UCHAR(port) >> (irq & 7)) & 1;
-	}
-	DPRINT("Broken MPtable reports ISA irq %d\n", irq);
-	return 0;
+   if (irq < 16) 
+   {
+      PUCHAR port = (PUCHAR)(0x4d0 + (irq >> 3));
+      return (READ_PORT_UCHAR(port) >> (irq & 7)) & 1;
+   }
+   DPRINT("Broken MPtable reports ISA irq %d\n", irq);
+   return 0;
 }
 
 /* EISA interrupts are always polarity zero and can be edge or level
@@ -323,8 +336,7 @@ static ULONG EISA_ELCR(
 #define default_MCA_trigger(idx)	(1)
 #define default_MCA_polarity(idx)	(0)
 
-static ULONG IRQPolarity(
-  ULONG idx)
+static ULONG IRQPolarity(ULONG idx)
 {
 	ULONG bus = IRQMap[idx].SrcBusId;
 	ULONG polarity;
@@ -393,8 +405,7 @@ static ULONG IRQPolarity(
 	return polarity;
 }
 
-static ULONG IRQTrigger(
-  ULONG idx)
+static ULONG IRQTrigger(ULONG idx)
 {
 	ULONG bus = IRQMap[idx].SrcBusId;
 	ULONG trigger;
@@ -464,10 +475,9 @@ static ULONG IRQTrigger(
 }
 
 
-static ULONG Pin2Irq(
-  ULONG idx,
-  ULONG apic,
-  ULONG pin)
+static ULONG Pin2Irq(ULONG idx,
+		     ULONG apic,
+		     ULONG pin)
 {
 	ULONG irq, i;
 	ULONG bus = IRQMap[idx].SrcBusId;
@@ -534,62 +544,68 @@ static struct irq_pin_list {
  * shared ISA-space IRQs, so we have to support them. We are super
  * fast in the common case, and fast for shared ISA-space IRQs.
  */
-static VOID AddPinToIrq(
-  ULONG irq,
-  ULONG apic,
-  ULONG pin)
+static VOID AddPinToIrq(ULONG irq,
+			ULONG apic,
+			ULONG pin)
 {
-	static ULONG first_free_entry = PIC_IRQS;
-	struct irq_pin_list *entry = irq_2_pin + irq;
+   static ULONG first_free_entry = PIC_IRQS;
+   struct irq_pin_list *entry = irq_2_pin + irq;
 
-	while (entry->next)
-		entry = irq_2_pin + entry->next;
-
-	if (entry->pin != -1) {
-		entry->next = first_free_entry;
-		entry = irq_2_pin + entry->next;
-		if (++first_free_entry >= PIN_MAP_SIZE) {
-      DPRINT1("Ohh no!");
-			KEBUGCHECK(0);
-     }
-	}
-	entry->apic = apic;
-	entry->pin = pin;
+   while (entry->next)
+   {
+      entry = irq_2_pin + entry->next;
+   }
+   
+   if (entry->pin != -1) 
+   {
+      entry->next = first_free_entry;
+      entry = irq_2_pin + entry->next;
+      if (++first_free_entry >= PIN_MAP_SIZE) 
+      {
+         DPRINT1("Ohh no!");
+	 KEBUGCHECK(0);
+      }
+   }
+   entry->apic = apic;
+   entry->pin = pin;
 }
 
 
 /*
  * Find the IRQ entry number of a certain pin.
  */
-static ULONG IOAPICGetIrqEntry(
-  ULONG apic,
-  ULONG pin,
-  ULONG type)
+static ULONG IOAPICGetIrqEntry(ULONG apic,
+			       ULONG pin,
+			       ULONG type)
 {
-	ULONG i;
+   ULONG i;
 
-	for (i = 0; i < IRQCount; i++)
-		if (IRQMap[i].IrqType == type &&
-		    (IRQMap[i].DstApicId == IOAPICMap[apic].ApicId ||
-		     IRQMap[i].DstApicId == MP_APIC_ALL) &&
-		     IRQMap[i].DstApicInt == pin)
-			return i;
-
-	return -1;
+   for (i = 0; i < IRQCount; i++)
+   {
+      if (IRQMap[i].IrqType == type &&
+	  (IRQMap[i].DstApicId == IOAPICMap[apic].ApicId || IRQMap[i].DstApicId == MP_APIC_ALL) &&
+	  IRQMap[i].DstApicInt == pin)
+      {
+         return i;
+      }
+   }
+   return -1;
 }
 
 
-static ULONG AssignIrqVector(
-  ULONG irq)
+static ULONG AssignIrqVector(ULONG irq)
 {
+#if 0
   static ULONG current_vector = FIRST_DEVICE_VECTOR, vector_offset = 0;
+#endif
   ULONG vector;
-
   /* There may already have been assigned a vector for this IRQ */
   vector = IRQVectorMap[irq];
   if (vector > 0)
+  {
     return vector;
-
+  }
+#if 0
   if (current_vector > FIRST_SYSTEM_VECTOR) {
       vector_offset++;
 	  current_vector = FIRST_DEVICE_VECTOR + vector_offset;
@@ -602,243 +618,281 @@ static ULONG AssignIrqVector(
   IRQVectorMap[irq] = vector;
   current_vector += 8;
   return vector;
+#else
+  vector = IRQ2VECTOR(irq);
+  IRQVectorMap[irq] = vector;
+  return vector;
+#endif
 }
 
 
-VOID IOAPICSetupIrqs(
-  VOID)
+VOID IOAPICSetupIrqs(VOID)
 {
-	IOAPIC_ROUTE_ENTRY entry;
-	ULONG apic, pin, idx, irq, first_notcon = 1, vector;
+   IOAPIC_ROUTE_ENTRY entry;
+   ULONG apic, pin, idx, irq, first_notcon = 1, vector;
 
-	DPRINT("Init IO_APIC IRQs\n");
+   DPRINT("Init IO_APIC IRQs\n");
 
-	for (apic = 0; apic < IOAPICCount; apic++) {
-	for (pin = 0; pin < IOAPICMap[apic].EntryCount; pin++) {
+   for (apic = 0; apic < IOAPICCount; apic++) 
+   {
+      for (pin = 0; pin < IOAPICMap[apic].EntryCount; pin++) 
+      {
+         /*
+	  * add it to the IO-APIC irq-routing table
+	  */
+	 memset(&entry,0,sizeof(entry));
 
-		/*
-		 * add it to the IO-APIC irq-routing table
-		 */
-		memset(&entry,0,sizeof(entry));
+	 entry.delivery_mode = APIC_DM_LOWEST;
+	 entry.dest_mode = 1;  /* logical delivery */
+	 entry.mask = 1;       /* disable IRQ */
+#if 0
+	 /*
+	  * FIXME:
+	  *   Some drivers are not able to deal with more than one cpu.
+	  */
+	 entry.dest.logical.logical_dest = OnlineCPUs;
+#else
+	 entry.dest.logical.logical_dest = 1 << BootCPU;
+#endif
+	 idx = IOAPICGetIrqEntry(apic,pin,INT_VECTORED);
+	 if (idx == -1) 
+	 {
+	    if (first_notcon) 
+	    {
+	       DPRINT(" IO-APIC (apicid-pin) %d-%d\n", IOAPICMap[apic].ApicId, pin);
+	       first_notcon = 0;
+	    } 
+	    else 
+	    {
+	       DPRINT(", %d-%d\n", IOAPICMap[apic].ApicId, pin);
+            }
+	    continue;
+	 }
 
-		entry.delivery_mode = APIC_DM_LOWEST;
-		entry.dest_mode = 1;  /* logical delivery */
-		entry.mask = 0;       /* enable IRQ */
-		entry.dest.logical.logical_dest = OnlineCPUs;
+         entry.trigger = IRQTrigger(idx);
+	 entry.polarity = IRQPolarity(idx);
 
-		idx = IOAPICGetIrqEntry(apic,pin,INT_VECTORED);
-		if (idx == -1) {
-			if (first_notcon) {
-				DPRINT(" IO-APIC (apicid-pin) %d-%d\n", IOAPICMap[apic].ApicId, pin);
-				first_notcon = 0;
-			} else {
-				DPRINT(", %d-%d\n", IOAPICMap[apic].ApicId, pin);
+	 if (entry.trigger) 
+	 {
+	    entry.trigger = 1;
+	    entry.mask = 1; // disable
+#if 0
+	    entry.dest.logical.logical_dest = OnlineCPUs;
+#else
+	    entry.dest.logical.logical_dest = 1 << BootCPU;
+#endif
+	 }
+
+	 irq = Pin2Irq(idx, apic, pin);
+	 AddPinToIrq(irq, apic, pin);
+
+  	 vector = AssignIrqVector(irq);
+	 entry.vector = vector;
+
+	 DPRINT("vector 0x%.08x assigned to irq 0x%.02x\n", vector, irq);
+
+         if (irq == 0)
+         {
+            /* Mask timer IRQ */
+            entry.mask = 1;
+         }
+
+         if ((apic == 0) && (irq < 16))
+	 {
+	    Disable8259AIrq(irq);
+	 }
+         IOAPICWrite(apic, IOAPIC_REDTBL+2*pin+1, *(((PULONG)&entry)+1));
+	 IOAPICWrite(apic, IOAPIC_REDTBL+2*pin, *(((PULONG)&entry)+0));
+
+	 IrqPinMap[irq] = pin;
+	 IrqApicMap[irq] = apic;
+
+	 DPRINT("Vector %x, Pin %x, Irq %x\n", vector, pin, irq);
       }
-			continue;
-		}
-
-		entry.trigger = IRQTrigger(idx);
-		entry.polarity = IRQPolarity(idx);
-
-		if (entry.trigger) {
-			entry.trigger = 1;
-			entry.mask = 1;
-			entry.dest.logical.logical_dest = OnlineCPUs;
-		}
-
-		irq = Pin2Irq(idx, apic, pin);
-		AddPinToIrq(irq, apic, pin);
-
-  	vector = AssignIrqVector(irq);
-		entry.vector = vector;
-
-	DPRINT("vector 0x%.08x assigned to irq 0x%.02x\n", vector, irq);
-
-    if (irq == 0)
-    {
-      /* Mask timer IRQ */
-      entry.mask = 1;
-    }
-
-    if ((apic == 0) && (irq < 16))
-		  Disable8259AIrq(irq);
-
-    IOAPICWrite(apic, IOAPIC_REDTBL+2*pin+1, *(((PULONG)&entry)+1));
-		IOAPICWrite(apic, IOAPIC_REDTBL+2*pin, *(((PULONG)&entry)+0));
-	}
-	}
+   }
 }
 
 
-static VOID IOAPICEnable(
-  VOID)
+static VOID IOAPICEnable(VOID)
 {
-	ULONG i, tmp;
+   ULONG i, tmp;
 
-	for (i = 0; i < PIN_MAP_SIZE; i++) {
-		irq_2_pin[i].pin = -1;
-		irq_2_pin[i].next = 0;
-	}
+   for (i = 0; i < PIN_MAP_SIZE; i++) 
+   {
+      irq_2_pin[i].pin = -1;
+      irq_2_pin[i].next = 0;
+   }
 
-	/*
-	 * The number of IO-APIC IRQ registers (== #pins):
-	 */
-  for (i = 0; i < IOAPICCount; i++) {
-		tmp = IOAPICRead(i, IOAPIC_VER);
-		IOAPICMap[i].EntryCount = GET_IOAPIC_MRE(tmp) + 1;
-	}
+   /*
+    * The number of IO-APIC IRQ registers (== #pins):
+    */
+   for (i = 0; i < IOAPICCount; i++) 
+   {
+      tmp = IOAPICRead(i, IOAPIC_VER);
+      IOAPICMap[i].EntryCount = GET_IOAPIC_MRE(tmp) + 1;
+   }
 
-	/*
-	 * Do not trust the IO-APIC being empty at bootup
-	 */
-	IOAPICClearAll();
+   /*
+    * Do not trust the IO-APIC being empty at bootup
+    */
+   IOAPICClearAll();
 }
 
 #if 0
-static VOID IOAPICDisable(
-  VOID)
+static VOID IOAPICDisable(VOID)
 {
-	/*
-	 * Clear the IO-APIC before rebooting
-	 */
-	IOAPICClearAll();
-
-	APICDisable();
+   /*
+    * Clear the IO-APIC before rebooting
+    */
+   IOAPICClearAll();
+   APICDisable();
 }
 #endif
 
 
-static VOID IOAPICSetup(
-  VOID)
+static VOID IOAPICSetup(VOID)
 {
   IOAPICEnable();
   IOAPICSetupIds();
-  if (0) {
-    // FIXME: This causes application processors to not boot if asked to
-    APICSyncArbIDs();
-  }
+  APICSyncArbIDs();
   IOAPICSetupIrqs();
 }
 
 
 VOID IOAPICDump(VOID)
 {
-	ULONG apic, i;
-  ULONG reg0, reg1, reg2=0;
+   ULONG apic, i;
+   ULONG reg0, reg1, reg2=0;
 
- 	DbgPrint("Number of MP IRQ sources: %d.\n", IRQCount);
-	for (i = 0; i < IOAPICCount; i++) {
-		DbgPrint("Number of IO-APIC #%d registers: %d.\n",
-		        IOAPICMap[i].ApicId,
-            IOAPICMap[i].EntryCount);
-  }
+   DbgPrint("Number of MP IRQ sources: %d.\n", IRQCount);
+   for (i = 0; i < IOAPICCount; i++) 
+   {
+      DbgPrint("Number of IO-APIC #%d registers: %d.\n",
+	       IOAPICMap[i].ApicId,
+               IOAPICMap[i].EntryCount);
+   }
 
-	/*
-	 * We are a bit conservative about what we expect.  We have to
-	 * know about every hardware change ASAP.
-	 */
-	DbgPrint("Testing the IO APIC.......................\n");
+   /*
+    * We are a bit conservative about what we expect.  We have to
+    * know about every hardware change ASAP.
+    */
+   DbgPrint("Testing the IO APIC.......................\n");
 
-	for (apic = 0; apic < IOAPICCount; apic++) {
+   for (apic = 0; apic < IOAPICCount; apic++) 
+   {
+      reg0 = IOAPICRead(apic, IOAPIC_ID);
+      reg1 = IOAPICRead(apic, IOAPIC_VER);
+      if (GET_IOAPIC_VERSION(reg1) >= 0x10) 
+      {
+         reg2 = IOAPICRead(apic, IOAPIC_ARB);
+      }
 
-  reg0 = IOAPICRead(apic, IOAPIC_ID);
-	reg1 = IOAPICRead(apic, IOAPIC_VER);
-	if (GET_IOAPIC_VERSION(reg1) >= 0x10) {
-    reg2 = IOAPICRead(apic, IOAPIC_ARB);
-  }
-
-	DbgPrint("\n");
-	DbgPrint("IO APIC #%d......\n", IOAPICMap[apic].ApicId);
-	DbgPrint(".... register #00: %08X\n", reg0);
-	DbgPrint(".......    : physical APIC id: %02X\n", GET_IOAPIC_ID(reg0));
-	if (reg0 & 0xF0FFFFFF) {
-    DbgPrint("  WARNING: Unexpected IO-APIC\n");
-  }
-
-	DbgPrint(".... register #01: %08X\n", reg1);
-  i = GET_IOAPIC_MRE(reg1);
-
-	DbgPrint(".......     : max redirection entries: %04X\n", i);
-	if ((i != 0x0f) && /* older (Neptune) boards */
-		(i != 0x17) &&   /* typical ISA+PCI boards */
-		(i != 0x1b) &&   /* Compaq Proliant boards */
-		(i != 0x1f) &&   /* dual Xeon boards */
-		(i != 0x22) &&   /* bigger Xeon boards */
-		(i != 0x2E) &&
-		(i != 0x3F)) {
-    DbgPrint("  WARNING: Unexpected IO-APIC\n");
-  }
-
-  i =	GET_IOAPIC_VERSION(reg1);
-  DbgPrint(".......     : IO APIC version: %04X\n", i);
-	if ((i != 0x01) && /* 82489DX IO-APICs */
-		(i != 0x10) &&   /* oldest IO-APICs */
-		(i != 0x11) &&   /* Pentium/Pro IO-APICs */
-		(i != 0x13)) {   /* Xeon IO-APICs */
-    DbgPrint("  WARNING: Unexpected IO-APIC\n");
-  }
-
-	if (reg1 & 0xFF00FF00) {
-    DbgPrint("  WARNING: Unexpected IO-APIC\n");
-  }
-
-	if (GET_IOAPIC_VERSION(reg1) >= 0x10) {
-		DbgPrint(".... register #02: %08X\n", reg2);
-		DbgPrint(".......     : arbitration: %02X\n",
-      GET_IOAPIC_ARB(reg2));
-  	if (reg2 & 0xF0FFFFFF) {
-      DbgPrint("  WARNING: Unexpected IO-APIC\n");
-    }
-	}
-
-	DbgPrint(".... IRQ redirection table:\n");
-  DbgPrint(" NR Log Phy Mask Trig IRR Pol"
-			  " Stat Dest Deli Vect:   \n");
-
-	for (i = 0; i <= GET_IOAPIC_MRE(reg1); i++) {
-		IOAPIC_ROUTE_ENTRY entry;
-
-		*(((PULONG)&entry)+0) = IOAPICRead(apic, 0x10+i*2);
-		*(((PULONG)&entry)+1) = IOAPICRead(apic, 0x11+i*2);
-
-		DbgPrint(" %02x %03X %02X  ",
-			i,
-			entry.dest.logical.logical_dest,
-			entry.dest.physical.physical_dest
-		);
-
-  DbgPrint("%C    %C    %1d  %C    %C    %C     %03X    %02X\n",
-			(entry.mask == 0) ? 'U' : 'M',            // Unmasked/masked
-			(entry.trigger == 0) ? 'E' : 'L',         // Edge/level sensitive
-			entry.irr,
-			(entry.polarity == 0) ? 'H' : 'L',        // Active high/active low
-			(entry.delivery_status == 0) ? 'I' : 'S', // Idle / send pending
-			(entry.dest_mode == 0) ? 'P' : 'L',       // Physical logical
-			entry.delivery_mode,
-			entry.vector
-		);
-	}
-	}
-	DbgPrint("IRQ to pin mappings:\n");
-	for (i = 0; i < PIC_IRQS; i++) {
-		struct irq_pin_list *entry = irq_2_pin + i;
-		if (entry->pin < 0)
-			continue;
-		DbgPrint("IRQ%d ", i);
-		for (;;) {
-			DbgPrint("-> %d", entry->pin);
-			if (!entry->next)
-				break;
-			entry = irq_2_pin + entry->next;
-		}
-    if (i % 2) {
       DbgPrint("\n");
-    } else {
-      DbgPrint("        ");
-    }
-	}
+      DbgPrint("IO APIC #%d......\n", IOAPICMap[apic].ApicId);
+      DbgPrint(".... register #00: %08X\n", reg0);
+      DbgPrint(".......    : physical APIC id: %02X\n", GET_IOAPIC_ID(reg0));
+      if (reg0 & 0xF0FFFFFF) 
+      {
+         DbgPrint("  WARNING: Unexpected IO-APIC\n");
+      }
 
-	DbgPrint(".................................... done.\n");
+      DbgPrint(".... register #01: %08X\n", reg1);
+      i = GET_IOAPIC_MRE(reg1);
+
+      DbgPrint(".......     : max redirection entries: %04X\n", i);
+      if ((i != 0x0f) &&    /* older (Neptune) boards */
+	  (i != 0x17) &&    /* typical ISA+PCI boards */
+	  (i != 0x1b) &&    /* Compaq Proliant boards */
+	  (i != 0x1f) &&    /* dual Xeon boards */
+          (i != 0x22) &&   /* bigger Xeon boards */
+	  (i != 0x2E) &&
+	  (i != 0x3F)) 
+      {
+         DbgPrint("  WARNING: Unexpected IO-APIC\n");
+      }
+
+      i = GET_IOAPIC_VERSION(reg1);
+      DbgPrint(".......     : IO APIC version: %04X\n", i);
+      if ((i != 0x01) &&    /* 82489DX IO-APICs */
+	  (i != 0x10) &&    /* oldest IO-APICs */
+	  (i != 0x11) &&    /* Pentium/Pro IO-APICs */
+	  (i != 0x13))	    /* Xeon IO-APICs */
+      {
+         DbgPrint("  WARNING: Unexpected IO-APIC\n");
+      }
+
+      if (reg1 & 0xFF00FF00) 
+      {
+         DbgPrint("  WARNING: Unexpected IO-APIC\n");
+      }
+
+      if (GET_IOAPIC_VERSION(reg1) >= 0x10) 
+      {
+	 DbgPrint(".... register #02: %08X\n", reg2);
+	 DbgPrint(".......     : arbitration: %02X\n",
+	          GET_IOAPIC_ARB(reg2));
+  	 if (reg2 & 0xF0FFFFFF) 
+	 {
+            DbgPrint("  WARNING: Unexpected IO-APIC\n");
+         }
+      }
+
+      DbgPrint(".... IRQ redirection table:\n");
+      DbgPrint(" NR Log Phy Mask Trig IRR Pol"
+	       " Stat Dest Deli Vect:   \n");
+
+      for (i = 0; i <= GET_IOAPIC_MRE(reg1); i++) 
+      {
+         IOAPIC_ROUTE_ENTRY entry;
+
+	 *(((PULONG)&entry)+0) = IOAPICRead(apic, 0x10+i*2);
+	 *(((PULONG)&entry)+1) = IOAPICRead(apic, 0x11+i*2);
+
+	 DbgPrint(" %02x %03X %02X  ",
+		  i,
+		  entry.dest.logical.logical_dest,
+		  entry.dest.physical.physical_dest);
+
+         DbgPrint("%C    %C    %1d  %C    %C    %C     %03X    %02X\n",
+		  (entry.mask == 0) ? 'U' : 'M',            // Unmasked/masked
+		  (entry.trigger == 0) ? 'E' : 'L',         // Edge/level sensitive
+		  entry.irr,
+		  (entry.polarity == 0) ? 'H' : 'L',        // Active high/active low
+		  (entry.delivery_status == 0) ? 'I' : 'S', // Idle / send pending
+		  (entry.dest_mode == 0) ? 'P' : 'L',       // Physical logical
+		  entry.delivery_mode,
+		  entry.vector);
+      }
+   }
+   DbgPrint("IRQ to pin mappings:\n");
+   for (i = 0; i < PIC_IRQS; i++) 
+   {
+      struct irq_pin_list *entry = irq_2_pin + i;
+      if (entry->pin < 0)
+      {
+         continue;
+      }
+      DbgPrint("IRQ%d ", i);
+      for (;;) 
+      {
+	 DbgPrint("-> %d", entry->pin);
+	 if (!entry->next)
+	 {
+            break;
+	 }
+	 entry = irq_2_pin + entry->next;
+      }
+      if (i % 2) 
+      {
+         DbgPrint("\n");
+      } 
+      else 
+      {
+         DbgPrint("        ");
+      }
+   }
+
+   DbgPrint(".................................... done.\n");
 }
 
 
@@ -846,8 +900,7 @@ VOID IOAPICDump(VOID)
 /* Functions for handling local APICs */
 
 #if 0
-volatile inline ULONG APICRead(
-   ULONG Offset)
+volatile inline ULONG APICRead(ULONG Offset)
 {
    PULONG p;
 
@@ -855,27 +908,23 @@ volatile inline ULONG APICRead(
    return *p;
 }
 #else
-volatile inline ULONG APICRead(
-   ULONG Offset)
+volatile inline ULONG APICRead(ULONG Offset)
 {
    PULONG p;
 
    lastregr = Offset;
    lastvalr = 0;
 
-   //DPRINT1("R(0x%X)", Offset);
    p = (PULONG)((ULONG)APICBase + Offset);
-   lastvalr = *p;
-   //DPRINT1("(0x%08X)\n", *p);
 
+   lastvalr = *p;
    return lastvalr;
 }
 #endif
 
 #if 0
-inline VOID APICWrite(
-   ULONG Offset,
-   ULONG Value)
+inline VOID APICWrite(ULONG Offset,
+		      ULONG Value)
 {
    PULONG p;
 
@@ -884,16 +933,14 @@ inline VOID APICWrite(
    *p = Value;
 }
 #else
-inline VOID APICWrite(
-   ULONG Offset,
-   ULONG Value)
+inline VOID APICWrite(ULONG Offset,
+		      ULONG Value)
 {
    PULONG p;
 
    lastregw = Offset;
    lastvalw = Value;
 
-   //DPRINT1("W(0x%X, 0x%08X)\n", Offset, Value);
    p = (PULONG)((ULONG)APICBase + Offset);
 
    *p = Value;
@@ -903,8 +950,6 @@ inline VOID APICWrite(
 
 inline VOID APICSendEOI(VOID)
 {
-  // Dummy read
-  APICRead(APIC_SIVR);
   // Send the EOI
   APICWrite(APIC_EOI, 0);
 }
@@ -915,7 +960,9 @@ VOID DumpESR(VOID)
   ULONG tmp;
 
   if (CPUMap[ThisCPU()].MaxLVT > 3)
+  {
     APICWrite(APIC_ESR, 0);
+  }
   tmp = APICRead(APIC_ESR);
   DbgPrint("ESR %08x\n", tmp);
 }
@@ -923,19 +970,18 @@ VOID DumpESR(VOID)
 
 ULONG APICGetMaxLVT(VOID)
 {
-	ULONG tmp, ver, maxlvt;
+  ULONG tmp, ver, maxlvt;
 
   tmp = APICRead(APIC_VER);
-	ver = GET_APIC_VERSION(tmp);
-	/* 82489DXs do not report # of LVT entries. */
-	maxlvt = APIC_INTEGRATED(ver) ? GET_APIC_MAXLVT(tmp) : 2;
+  ver = GET_APIC_VERSION(tmp);
+  /* 82489DXs do not report # of LVT entries. */
+  maxlvt = APIC_INTEGRATED(ver) ? GET_APIC_MAXLVT(tmp) : 2;
 
-	return maxlvt;
+  return maxlvt;
 }
 
 
-static VOID APICClear(
-  VOID)
+static VOID APICClear(VOID)
 {
   ULONG tmp, maxlvt;
 
@@ -954,12 +1000,14 @@ static VOID APICClear(
   tmp = APICRead(APIC_LINT1);
   APICWrite(APIC_LINT1, tmp | APIC_LVT_MASKED);
 
-  if (maxlvt >= 3) {
+  if (maxlvt >= 3) 
+  {
     tmp = APICRead(APIC_LVT3);
     APICWrite(APIC_LVT3, tmp | APIC_LVT3_MASKED);
   }
   
-  if (maxlvt >= 4) {
+  if (maxlvt >= 4) 
+  {
     tmp = APICRead(APIC_LVTPC);
     APICWrite(APIC_LVTPC, tmp | APIC_LVT_MASKED);
   }
@@ -976,12 +1024,14 @@ static VOID APICClear(
   APICRead(APIC_SIVR);    // Dummy read
   APICWrite(APIC_LINT1, APIC_LVT_MASKED);
 
-  if (maxlvt >= 3) {
+  if (maxlvt >= 3) 
+  {
     APICRead(APIC_SIVR);  // Dummy read
     APICWrite(APIC_LVT3, APIC_LVT3_MASKED);
   }
 
-  if (maxlvt >= 4) {
+  if (maxlvt >= 4) 
+  {
     APICRead(APIC_SIVR);  // Dummy read
     APICWrite(APIC_LVTPC, APIC_LVT_MASKED);
   }
@@ -989,8 +1039,7 @@ static VOID APICClear(
 
 /* Enable symetric I/O mode ie. connect the BSP's
    local APIC to INT and NMI lines */
-inline VOID EnableSMPMode(
-   VOID)
+inline VOID EnableSMPMode(VOID)
 {
    /*
     * Do not trust the local APIC being empty at bootup.
@@ -1003,8 +1052,7 @@ inline VOID EnableSMPMode(
 
 
 /* Disable symetric I/O mode ie. go to PIC mode */
-inline VOID DisableSMPMode(
-   VOID)
+inline VOID DisableSMPMode(VOID)
 {
    /*
     * Put the board back into PIC mode (has an effect
@@ -1017,8 +1065,7 @@ inline VOID DisableSMPMode(
 }
 
 
-VOID APICDisable(
-  VOID)
+VOID APICDisable(VOID)
 {
   ULONG tmp;
 
@@ -1033,8 +1080,7 @@ VOID APICDisable(
 }
 
 
-inline ULONG ThisCPU(
-   VOID)
+inline ULONG ThisCPU(VOID)
 {
    return (APICRead(APIC_ID) & APIC_ID_MASK) >> 24;
 }
@@ -1045,9 +1091,11 @@ static VOID APICDumpBit(ULONG base)
 	ULONG v, i, j;
 
 	DbgPrint("0123456789abcdef0123456789abcdef\n");
-	for (i = 0; i < 8; i++) {
+	for (i = 0; i < 8; i++) 
+	{
 		v = APICRead(base + i*0x10);
-		for (j = 0; j < 32; j++) {
+		for (j = 0; j < 32; j++) 
+		{
 			if (v & (1<<j))
 				DbgPrint("1");
 			else
@@ -1071,32 +1119,34 @@ VOID APICDump(VOID)
   w1 = lastregw;
   w2 = lastvalw;
 
-	DbgPrint("\nPrinting local APIC contents on CPU(%d):\n", ThisCPU());
-	v = APICRead(APIC_ID);
-	DbgPrint("... ID     : %08x (%01x) ", v, GET_APIC_ID(v));
-	v = APICRead(APIC_VER);
-	DbgPrint("... VERSION: %08x\n", v);
-	ver = GET_APIC_VERSION(v);
-	maxlvt = CPUMap[ThisCPU()].MaxLVT;
+  DbgPrint("\nPrinting local APIC contents on CPU(%d):\n", ThisCPU());
+  v = APICRead(APIC_ID);
+  DbgPrint("... ID     : %08x (%01x) ", v, GET_APIC_ID(v));
+  v = APICRead(APIC_VER);
+  DbgPrint("... VERSION: %08x\n", v);
+  ver = GET_APIC_VERSION(v);
+  maxlvt = CPUMap[ThisCPU()].MaxLVT;
 
-	v = APICRead(APIC_TPR);
-	DbgPrint("... TPR    : %08x (%02x)", v, v & ~0);
+  v = APICRead(APIC_TPR);
+  DbgPrint("... TPR    : %08x (%02x)", v, v & ~0);
 
-	if (APIC_INTEGRATED(ver)) {			/* !82489DX */
-		v = APICRead(APIC_APR);
-		DbgPrint("... APR    : %08x (%02x)\n", v, v & ~0);
-		v = APICRead(APIC_PPR);
-		DbgPrint("... PPR    : %08x\n", v);
-	}
+  if (APIC_INTEGRATED(ver)) 
+  {
+     /* !82489DX */
+     v = APICRead(APIC_APR);
+     DbgPrint("... APR    : %08x (%02x)\n", v, v & ~0);
+     v = APICRead(APIC_PPR);
+     DbgPrint("... PPR    : %08x\n", v);
+  }
 
-	v = APICRead(APIC_EOI);
-	DbgPrint("... EOI    : %08x  !  ", v);
-	v = APICRead(APIC_LDR);
-	DbgPrint("... LDR    : %08x\n", v);
-	v = APICRead(APIC_DFR);
-	DbgPrint("... DFR    : %08x  !  ", v);
-	v = APICRead(APIC_SIVR);
-	DbgPrint("... SIVR   : %08x\n", v);
+  v = APICRead(APIC_EOI);
+  DbgPrint("... EOI    : %08x  !  ", v);
+  v = APICRead(APIC_LDR);
+  DbgPrint("... LDR    : %08x\n", v);
+  v = APICRead(APIC_DFR);
+  DbgPrint("... DFR    : %08x  !  ", v);
+  v = APICRead(APIC_SIVR);
+  DbgPrint("... SIVR   : %08x\n", v);
 
   if (0)
   {
@@ -1108,42 +1158,50 @@ VOID APICDump(VOID)
   	APICDumpBit(APIC_IRR);
   }
 
-	if (APIC_INTEGRATED(ver)) {		/* !82489DX */
-		if (maxlvt > 3)		/* Due to the Pentium erratum 3AP. */
-			APICWrite(APIC_ESR, 0);
-		v = APICRead(APIC_ESR);
-		DbgPrint("... ESR    : %08x\n", v);
-	}
+  if (APIC_INTEGRATED(ver)) 
+  {
+     /* !82489DX */
+     if (maxlvt > 3)		
+     {
+	/* Due to the Pentium erratum 3AP. */
+	APICWrite(APIC_ESR, 0);
+     }
+     v = APICRead(APIC_ESR);
+     DbgPrint("... ESR    : %08x\n", v);
+  }
+ 
+  v = APICRead(APIC_ICR0);
+  DbgPrint("... ICR0   : %08x  !  ", v);
+  v = APICRead(APIC_ICR1);
+  DbgPrint("... ICR1   : %08x  !  ", v);
 
-	v = APICRead(APIC_ICR0);
-	DbgPrint("... ICR0   : %08x  !  ", v);
-	v = APICRead(APIC_ICR1);
-	DbgPrint("... ICR1   : %08x  !  ", v);
+  v = APICRead(APIC_LVTT);
+  DbgPrint("... LVTT   : %08x\n", v);
 
-	v = APICRead(APIC_LVTT);
-	DbgPrint("... LVTT   : %08x\n", v);
+  if (maxlvt > 3) 
+  {
+     /* PC is LVT#4. */
+     v = APICRead(APIC_LVTPC);
+     DbgPrint("... LVTPC  : %08x  !  ", v);
+  }
+  v = APICRead(APIC_LINT0);
+  DbgPrint("... LINT0  : %08x  !  ", v);
+  v = APICRead(APIC_LINT1);
+  DbgPrint("... LINT1  : %08x\n", v);
 
-	if (maxlvt > 3) {                       /* PC is LVT#4. */
-		v = APICRead(APIC_LVTPC);
-		DbgPrint("... LVTPC  : %08x  !  ", v);
-	}
-	v = APICRead(APIC_LINT0);
-	DbgPrint("... LINT0  : %08x  !  ", v);
-	v = APICRead(APIC_LINT1);
-	DbgPrint("... LINT1  : %08x\n", v);
+  if (maxlvt > 2) 
+  {
+     v = APICRead(APIC_LVT3);
+     DbgPrint("... LVT3   : %08x\n", v);
+  }
 
-	if (maxlvt > 2) {
-		v = APICRead(APIC_LVT3);
-		DbgPrint("... LVT3   : %08x\n", v);
-	}
-
-	v = APICRead(APIC_ICRT);
-	DbgPrint("... ICRT   : %08x  !  ", v);
-	v = APICRead(APIC_CCRT);
-	DbgPrint("... CCCT   : %08x  !  ", v);
-	v = APICRead(APIC_TDCR);
-	DbgPrint("... TDCR   : %08x\n", v);
-	DbgPrint("\n");
+  v = APICRead(APIC_ICRT);
+  DbgPrint("... ICRT   : %08x  !  ", v);
+  v = APICRead(APIC_CCRT);
+  DbgPrint("... CCCT   : %08x  !  ", v);
+  v = APICRead(APIC_TDCR);
+  DbgPrint("... TDCR   : %08x\n", v);
+  DbgPrint("\n");
   DbgPrint("Last register read (offset): 0x%08X\n", r1);
   DbgPrint("Last register read (value): 0x%08X\n", r2);
   DbgPrint("Last register written (offset): 0x%08X\n", w1);
@@ -1166,92 +1224,100 @@ ULONG Read8254Timer(VOID)
 
 VOID WaitFor8254Wraparound(VOID)
 {
-	ULONG CurCount, PrevCount = ~0;
-	LONG Delta;
+   ULONG CurCount, PrevCount = ~0;
+   LONG Delta;
 
-	CurCount = Read8254Timer();
-	do {
-		PrevCount = CurCount;
-		CurCount = Read8254Timer();
-		Delta = CurCount - PrevCount;
+   CurCount = Read8254Timer();
+   do 
+   {
+      PrevCount = CurCount;
+      CurCount = Read8254Timer();
+      Delta = CurCount - PrevCount;
 
-	/*
-	 * This limit for delta seems arbitrary, but it isn't, it's
-	 * slightly above the level of error a buggy Mercury/Neptune
-	 * chipset timer can cause.
-	 */
+      /*
+       * This limit for delta seems arbitrary, but it isn't, it's
+       * slightly above the level of error a buggy Mercury/Neptune
+       * chipset timer can cause.
+       */
 
-	} while (Delta < 300);
+   } 
+   while (Delta < 300);
 }
 
 #define HZ (100)
 #define APIC_DIVISOR (16)
 
-VOID APICSetupLVTT(
-   ULONG ClockTicks)
+VOID APICSetupLVTT(ULONG ClockTicks)
 {
-	ULONG tmp;
+   ULONG tmp;
 
-  /* Periodic timer */
-	tmp = SET_APIC_TIMER_BASE(APIC_TIMER_BASE_DIV) |
-    APIC_LVT_PERIODIC | LOCAL_TIMER_VECTOR;
-	APICWrite(APIC_LVTT, tmp);
+   tmp = GET_APIC_VERSION(APICRead(APIC_VER));
+   if (!APIC_INTEGRATED(tmp))
+   {
+      tmp = SET_APIC_TIMER_BASE(APIC_TIMER_BASE_DIV) | APIC_LVT_PERIODIC | LOCAL_TIMER_VECTOR;;
+   }
+   else
+   {
+      /* Periodic timer */
+      tmp = APIC_LVT_PERIODIC | LOCAL_TIMER_VECTOR;;
+   }
+   APICWrite(APIC_LVTT, tmp);
 
-  tmp = APICRead(APIC_TDCR);
-  tmp &= ~(APIC_TDCR_1 | APIC_TDCR_TMBASE | APIC_TDCR_16);
-	APICWrite(APIC_TDCR, tmp);
-	APICWrite(APIC_ICRT, ClockTicks / APIC_DIVISOR);
+   tmp = APICRead(APIC_TDCR);
+   tmp &= ~(APIC_TDCR_1 | APIC_TIMER_BASE_DIV);
+   tmp |= APIC_TDCR_16;
+   APICWrite(APIC_TDCR, tmp);
+   APICWrite(APIC_ICRT, ClockTicks / APIC_DIVISOR);
 }
 
 
-VOID APICCalibrateTimer(
-   ULONG CPU)
+VOID APICCalibrateTimer(ULONG CPU)
 {
-	ULARGE_INTEGER t1, t2;
-	LONG tt1, tt2;
+   ULARGE_INTEGER t1, t2;
+   LONG tt1, tt2;
 
-	DPRINT("Calibrating APIC timer...\n");
+   DPRINT("Calibrating APIC timer for CPU %d\n", CPU);
 
-	APICSetupLVTT(~0);
+   APICSetupLVTT(1000000000);
 
-	/*
-	 * The timer chip counts down to zero. Let's wait
-	 * for a wraparound to start exact measurement:
-	 * (the current tick might have been already half done)
-	 */
-	WaitFor8254Wraparound();
+   /*
+    * The timer chip counts down to zero. Let's wait
+    * for a wraparound to start exact measurement:
+    * (the current tick might have been already half done)
+    */
+   WaitFor8254Wraparound();
 
-	/*
-	 * We wrapped around just now. Let's start
-	 */
-  ReadPentiumClock(&t1);
-  tt1 = APICRead(APIC_CCRT);
+   /*
+    * We wrapped around just now. Let's start
+    */
+   ReadPentiumClock(&t1);
+   tt1 = APICRead(APIC_CCRT);
 
-	WaitFor8254Wraparound();
+   WaitFor8254Wraparound();
 
-	tt2 = APICRead(APIC_CCRT);
-  ReadPentiumClock(&t2);
 
-	CPUMap[CPU].BusSpeed = (HZ * (tt2 - tt1) * APIC_DIVISOR);
-	CPUMap[CPU].CoreSpeed = (HZ * (t2.QuadPart - t1.QuadPart));
+   tt2 = APICRead(APIC_CCRT);
+   ReadPentiumClock(&t2);
 
-	/* Setup timer for normal operation */
-  //APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 100); // 100ns
-//  APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 15000); // 15ms
-  APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 100000); // 100ms
+   CPUMap[CPU].BusSpeed = (HZ * (long)(tt1 - tt2) * APIC_DIVISOR);
+   CPUMap[CPU].CoreSpeed = (HZ * (t2.QuadPart - t1.QuadPart));
 
-  DPRINT("CPU clock speed is %ld.%04ld MHz.\n",
+   /* Setup timer for normal operation */
+// APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 100);    // 100ns
+   APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 10000);  // 10ms
+// APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 100000); // 100ms
+
+   DPRINT("CPU clock speed is %ld.%04ld MHz.\n",
 	  CPUMap[CPU].CoreSpeed/1000000,
-		CPUMap[CPU].CoreSpeed%1000000);
+	  CPUMap[CPU].CoreSpeed%1000000);
 
-	DPRINT("Host bus clock speed is %ld.%04ld MHz.\n",
-		CPUMap[CPU].BusSpeed/1000000,
-		CPUMap[CPU].BusSpeed%1000000);
+   DPRINT("Host bus clock speed is %ld.%04ld MHz.\n",
+	  CPUMap[CPU].BusSpeed/1000000,
+	  CPUMap[CPU].BusSpeed%1000000);
 }
 
 
-static VOID APICSleep(
-   ULONG Count)
+static VOID APICSleep(ULONG Count)
 /*
    PARAMETERS:
       Count = Number of microseconds to busy wait
@@ -1261,13 +1327,13 @@ static VOID APICSleep(
 }
 
 
-static VOID APICSyncArbIDs(
-  VOID)
+static VOID APICSyncArbIDs(VOID)
 {
-  ULONG i, tmp;
+   ULONG i, tmp;
 
    /* Wait up to 100ms for the APIC to become ready */
-   for (i = 0; i < 10000; i++) {
+   for (i = 0; i < 10000; i++) 
+   {
       tmp = APICRead(APIC_ICR0);
       /* Check Delivery Status */
       if ((tmp & APIC_ICR0_DS) == 0)
@@ -1275,20 +1341,20 @@ static VOID APICSyncArbIDs(
       APICSleep(10);
    }
 
-   if (i == 10000) {
+   if (i == 10000) 
+   {
       DPRINT("CPU(%d) APIC busy for 100ms.\n", ThisCPU());
    }
 
-	DPRINT("Synchronizing Arb IDs.\n");
-	APICWrite(APIC_ICR0, APIC_ICR0_DESTS_ALL | APIC_ICR0_LEVEL | APIC_DM_INIT);
+   DPRINT("Synchronizing Arb IDs.\n");
+   APICWrite(APIC_ICR0, APIC_ICR0_DESTS_ALL | APIC_ICR0_LEVEL | APIC_DM_INIT);
 }
 
 
-VOID APICSendIPI(
-   ULONG Target,
-   ULONG DeliveryMode,
-   ULONG IntNum,
-   ULONG Level)
+VOID APICSendIPI(ULONG Target,
+		 ULONG DeliveryMode,
+		 ULONG IntNum,
+		 ULONG Level)
 {
    ULONG tmp, i, flags;
 
@@ -1297,7 +1363,8 @@ VOID APICSendIPI(
    Ki386DisableInterrupts();
 
    /* Wait up to 100ms for the APIC to become ready */
-   for (i = 0; i < 10000; i++) {
+   for (i = 0; i < 10000; i++) 
+   {
       tmp = APICRead(APIC_ICR0);
       /* Check Delivery Status */
       if ((tmp & APIC_ICR0_DS) == 0)
@@ -1305,7 +1372,8 @@ VOID APICSendIPI(
       APICSleep(10);
    }
 
-   if (i == 10000) {
+   if (i == 10000) 
+   {
       DPRINT("CPU(%d) Previous IPI was not delivered after 100ms.\n", ThisCPU());
    }
 
@@ -1318,13 +1386,20 @@ VOID APICSendIPI(
    tmp &= ~(APIC_ICR0_LEVEL | APIC_ICR0_DESTM | APIC_ICR0_DM | APIC_ICR0_VECTOR);
    tmp |= (DeliveryMode | IntNum | Level);
 
-   if (Target == APIC_TARGET_SELF) {
+   if (Target == APIC_TARGET_SELF) 
+   {
       tmp |= APIC_ICR0_DESTS_SELF;
-   } else if (Target == APIC_TARGET_ALL) {
+   } 
+   else if (Target == APIC_TARGET_ALL) 
+   {
       tmp |= APIC_ICR0_DESTS_ALL;
-   } else if (Target == APIC_TARGET_ALL_BUT_SELF) {
+   } 
+   else if (Target == APIC_TARGET_ALL_BUT_SELF) 
+   {
       tmp |= APIC_ICR0_DESTS_ALL_BUT_SELF;
-   } else {
+   } 
+   else 
+   {
       tmp |= APIC_ICR0_DESTS_FIELD;
    }
 
@@ -1335,281 +1410,362 @@ VOID APICSendIPI(
 }
 
 
-BOOLEAN VerifyLocalAPIC(
-  VOID)
+BOOLEAN VerifyLocalAPIC(VOID)
 {
-	UINT reg0, reg1;
+   UINT reg0, reg1;
   
-  /* The version register is read-only in a real APIC */
-	reg0 = APICRead(APIC_VER);
-	APICWrite(APIC_VER, reg0 ^ APIC_VER_MASK);
-	reg1 = APICRead(APIC_VER);
+   /* The version register is read-only in a real APIC */
+   reg0 = APICRead(APIC_VER);
+   DPRINT("Getting VERSION: %x\n", reg0);
+   APICWrite(APIC_VER, reg0 ^ APIC_VER_MASK);
+   reg1 = APICRead(APIC_VER);
+   DPRINT("Getting VERSION: %x\n", reg1);
 
-	if (reg1 != reg0)
-		return FALSE;
+   /*
+    * The two version reads above should print the same
+    * numbers.  If the second one is different, then we
+    * poke at a non-APIC.
+    */
 
-	/* The ID register is read/write in a real APIC */
-	reg0 = APICRead(APIC_ID);
-	APICWrite(APIC_ID, reg0 ^ APIC_ID_MASK);
-  reg1 = APICRead(APIC_ID);
-	APICWrite(APIC_ID, reg0);
-	if (reg1 != (reg0 ^ APIC_ID_MASK))
-		return FALSE;
+   if (reg1 != reg0)
+   {
+      return FALSE;
+   }
 
-  return TRUE;
+   /*
+    * Check if the version looks reasonably.
+    */
+   reg1 = GET_APIC_VERSION(reg0);
+   if (reg1 == 0x00 || reg1 == 0xff)
+   {
+      return FALSE;
+   }
+   reg1 = APICGetMaxLVT();
+   if (reg1 < 0x02 || reg1 == 0xff)
+   {
+      return FALSE;
+   }
+
+   /*
+    * The ID register is read/write in a real APIC.
+    */
+   reg0 = APICRead(APIC_ID);
+   DPRINT("Getting ID: %x\n", reg0);
+   APICWrite(APIC_ID, reg0 ^ APIC_ID_MASK);
+   reg1 = APICRead(APIC_ID);
+   DPRINT("Getting ID: %x\n", reg1);
+   APICWrite(APIC_ID, reg0);
+   if (reg1 != (reg0 ^ APIC_ID_MASK))
+   {
+      return FALSE;
+   }
+
+   return TRUE;
 }
 
 
-static VOID SetInterruptGate(
-  ULONG index,
-  ULONG address)
+static VOID 
+SetInterruptGate(ULONG index, ULONG address)
 {
   IDT_DESCRIPTOR *idt;
 
   idt = (IDT_DESCRIPTOR*)((ULONG)KeGetCurrentKPCR()->IDT + index * sizeof(IDT_DESCRIPTOR));
   idt->a = (((ULONG)address)&0xffff) + (KERNEL_CS << 16);
-  idt->b = 0x8f00 + (((ULONG)address)&0xffff0000);
+  idt->b = 0x8e00 + (((ULONG)address)&0xffff0000);
 }
 
+VOID KeSetCurrentIrql (KIRQL NewIrql);
+VOID HalpLowerIrql(KIRQL NewIrql);
 
-VOID MpsTimerHandler(
-  VOID)
+
+
+VOID
+MpsIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
+			   PKTRAP_FRAME TrapFrame)
 {
-#if 0
-  KIRQL OldIrql;
-
-  DPRINT("T:\n");
-
-  /*
-   * Notify the rest of the kernel of the raised irq level
-   */
-  //OldIrql = KeRaiseIrqlToSynchLevel();
-  KeRaiseIrql(PROFILE_LEVEL, &OldIrql);
-
-  /*
-   * Enable interrupts
-   * NOTE: Only higher priority interrupts will get through
-   */
-  Ki386EnableInterrupts();
-
-  if (KeGetCurrentProcessorNumber() == 0)
-    {
-      //KIRQL OldIrql2;
-      //KeLowerIrql(PROFILE_LEVEL);
-      KiInterruptDispatch2(OldIrql, 0);
-      //KeRaiseIrql(CLOCK2_LEVEL, &OldIrql2);
-    }
-
-  DbgPrint("MpsTimerHandler() called at IRQL 0x%.08x\n", OldIrql);
-  //(BOOLEAN) KeInsertQueueDpc(&RescheduleDpc, NULL, NULL);
-
-	DbgPrint("MpsTimerHandler() -1 IRQL 0x%.08x\n", OldIrql);
-
-  /*
-   * Disable interrupts
-   */
-  Ki386DisableInterrupts();
-
-  DbgPrint("MpsTimerHandler() 0 IRQL 0x%.08x\n", OldIrql);
-
-  /*
-   * Acknowledge the interrupt
-   */
-  APICSendEOI();
-
-  /*
-   * Lower irq level
-   */
-  DbgPrint("MpsTimerHandler() 1 IRQL 0x%.08x\n", OldIrql);
-  KeLowerIrql(OldIrql);
-  DbgPrint("MpsTimerHandler() 2 IRQL 0x%.08x\n", OldIrql);
-#endif
+   TrapFrame->Gs     = (USHORT)IrqTrapFrame->Gs;
+   TrapFrame->Fs     = (USHORT)IrqTrapFrame->Fs;
+   TrapFrame->Es     = (USHORT)IrqTrapFrame->Es;
+   TrapFrame->Ds     = (USHORT)IrqTrapFrame->Ds;
+   TrapFrame->Eax    = IrqTrapFrame->Eax;
+   TrapFrame->Ecx    = IrqTrapFrame->Ecx;
+   TrapFrame->Edx    = IrqTrapFrame->Edx;
+   TrapFrame->Ebx    = IrqTrapFrame->Ebx;
+   TrapFrame->Esp    = IrqTrapFrame->Esp;
+   TrapFrame->Ebp    = IrqTrapFrame->Ebp;
+   TrapFrame->Esi    = IrqTrapFrame->Esi;
+   TrapFrame->Edi    = IrqTrapFrame->Edi;
+   TrapFrame->Eip    = IrqTrapFrame->Eip;
+   TrapFrame->Cs     = IrqTrapFrame->Cs;
+   TrapFrame->Eflags = IrqTrapFrame->Eflags;
 }
 
 
-VOID MpsErrorHandler(
-  VOID)
+VOID
+MpsTimerHandler(ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
+{
+   KIRQL oldIrql;
+   ULONG CPU;
+   KTRAP_FRAME KernelTrapFrame;
+#if 0
+   static ULONG Count[MAX_CPU] = {0,};
+#endif
+   APICWrite (APIC_TPR, 0xff & APIC_TPR_PRI);
+   APICSendEOI();
+
+   oldIrql = KeGetCurrentIrql ();
+   KeSetCurrentIrql (PROFILE_LEVEL);
+
+   Ki386EnableInterrupts();
+
+   CPU = ThisCPU();
+
+#if 0
+   if ((Count[CPU] % 100) == 0)
+   {
+     DPRINT1("MpsTimerHandler(), CPU = %d, irql = %d, Eip = %x\n", CPU, oldIrql,Trapframe->Eip);
+   }
+   Count[CPU]++;
+#endif
+
+   MpsIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
+   if (CPU == BootCPU)
+   {
+      KeUpdateSystemTime(&KernelTrapFrame, oldIrql);
+   }
+   else
+   {
+      KeUpdateRunTime(&KernelTrapFrame, oldIrql);
+   }
+   
+   Ki386DisableInterrupts();
+   HalpLowerIrql (oldIrql);
+   APICWrite (APIC_TPR, IRQL2TPR (oldIrql) & APIC_TPR_PRI);
+}
+
+VOID MpsErrorHandler(VOID)
 {
   ULONG tmp1, tmp2;
 
   APICDump();
 
   tmp1 = APICRead(APIC_ESR);
-	APICWrite(APIC_ESR, 0);
-	tmp2 = APICRead(APIC_ESR);
+  APICWrite(APIC_ESR, 0);
+  tmp2 = APICRead(APIC_ESR);
+  DPRINT1("APIC error on CPU(%d) ESR(%x)(%x)\n", ThisCPU(), tmp1, tmp2);
 
   /*
    * Acknowledge the interrupt
    */
   APICSendEOI();
 
-	/* Here is what the APIC error bits mean:
-	   0: Send CS error
-	   1: Receive CS error
-	   2: Send accept error
-	   3: Receive accept error
-	   4: Reserved
-	   5: Send illegal vector
-	   6: Received illegal vector
-	   7: Illegal register address
-	*/
-	DPRINT1("APIC error on CPU(%d) ESR(%x)(%x)\n", ThisCPU(), tmp1, tmp2);
+  /* Here is what the APIC error bits mean:
+   *   0: Send CS error
+   *   1: Receive CS error
+   *   2: Send accept error
+   *   3: Receive accept error
+   *   4: Reserved
+   *   5: Send illegal vector
+   *   6: Received illegal vector
+   *   7: Illegal register address
+   */
+  DPRINT1("APIC error on CPU(%d) ESR(%x)(%x)\n", ThisCPU(), tmp1, tmp2);
   for (;;);
 }
 
 
-VOID MpsSpuriousHandler(
-  VOID)
+VOID MpsSpuriousHandler(VOID)
 {
   DPRINT1("Spurious interrupt on CPU(%d)\n", ThisCPU());
 
   /* No need to send EOI here */
 
   APICDump();
-  for (;;);
 }
 
 
-VOID APICSetup(
-  VOID)
+VOID APICSetup(VOID)
 {
-  ULONG CPU, tmp;
+   ULONG CPU, tmp;
 
-  CPU = ThisCPU();
+   CPU = ThisCPU();
 
-  /*
-	 * Intel recommends to set DFR, LDR and TPR before enabling
-	 * an APIC.  See e.g. "AP-388 82489DX User's Manual" (Intel
-	 * document number 292116).  So here it goes...
-	 */
+   /*
+    * Intel recommends to set DFR, LDR and TPR before enabling
+    * an APIC.  See e.g. "AP-388 82489DX User's Manual" (Intel
+    * document number 292116).  So here it goes...
+    */
 
-	/*
-	 * Put the APIC into flat delivery mode.
-	 * Must be "all ones" explicitly for 82489DX.
-	 */
-	APICWrite(APIC_DFR, 0xFFFFFFFF);
+   /*
+    * Put the APIC into flat delivery mode.
+    * Must be "all ones" explicitly for 82489DX.
+    */
+   APICWrite(APIC_DFR, 0xFFFFFFFF);
 
-  /*
-	 * Set up the logical destination ID.
-	 */
-	tmp = APICRead(APIC_LDR);
-	tmp &= ~APIC_LDR_MASK;
-	tmp |= (1 << (CPU + 24));
-	APICWrite(APIC_LDR, tmp);
+   /*
+    * Set up the logical destination ID.
+    */
+   tmp = APICRead(APIC_LDR);
+   tmp &= ~APIC_LDR_MASK;
+   tmp |= (1 << (CPU + 24));
+   APICWrite(APIC_LDR, tmp);
 
-	/* Accept all interrupts */
-	tmp = (APICRead(APIC_TPR) & ~APIC_TPR_PRI);
-	APICWrite(APIC_TPR, tmp);
+   /* Accept all interrupts */
+   tmp = APICRead(APIC_TPR) & ~APIC_TPR_PRI;
+   APICWrite(APIC_TPR, tmp);
 
-	/* Enable local APIC */
-	tmp = APICRead(APIC_SIVR) | APIC_SIVR_ENABLE | APIC_SIVR_FOCUS;	// No focus processor
+   /* Enable local APIC */
+   tmp = APICRead(APIC_SIVR);
+   tmp &= ~0xff;
+   tmp |= APIC_SIVR_ENABLE;
+
+#if 1
+   tmp &= ~APIC_SIVR_FOCUS;
+#else
+   tmp |= APIC_SIVR_FOCUS;
+#endif
 
   /* Set spurious interrupt vector */
-	tmp |= SPURIOUS_VECTOR;
+  tmp |= SPURIOUS_VECTOR;
+  APICWrite(APIC_SIVR, tmp);
 
-	APICWrite(APIC_SIVR, tmp);
+  /*
+   * Set up LVT0, LVT1:
+   *
+   * set up through-local-APIC on the BP's LINT0. This is not
+   * strictly necessery in pure symmetric-IO mode, but sometimes
+   * we delegate interrupts to the 8259A.
+   */
+  tmp = APICRead(APIC_LINT0) & APIC_LVT_MASKED;
+  if (CPU == BootCPU && (APICMode == amPIC || !tmp)) 
+  {
+     tmp = APIC_DM_EXTINT;
+     DPRINT("enabled ExtINT on CPU#%d\n", CPU);
+  } 
+  else 
+  {
+     tmp = APIC_DM_EXTINT | APIC_LVT_MASKED;
+     DPRINT("masked ExtINT on CPU#%d\n", CPU);
+  }
+  APICWrite(APIC_LINT0, tmp);
+
 
   /*
    * Only the BSP should see the LINT1 NMI signal, obviously.
    */
-  if (CPU == 0)
-		tmp = APIC_DM_NMI;
-	else
-		tmp = APIC_DM_NMI | APIC_LVT_MASKED;
-	if (!APIC_INTEGRATED(CPUMap[CPU].APICVersion)) /* 82489DX */
-		tmp |= APIC_LVT_LEVEL_TRIGGER;
-	APICWrite(APIC_LINT1, tmp);
+  if (CPU == BootCPU)
+  {
+     tmp = APIC_DM_NMI;
+  }
+  else
+  {
+     tmp = APIC_DM_NMI | APIC_LVT_MASKED;
+  }
+  if (!APIC_INTEGRATED(CPUMap[CPU].APICVersion)) 
+  {
+     /* 82489DX */
+     tmp |= APIC_LVT_LEVEL_TRIGGER;
+  }
+  APICWrite(APIC_LINT1, tmp);
 
-	if (APIC_INTEGRATED(CPUMap[CPU].APICVersion)) {	/* !82489DX */
-    if (CPUMap[CPU].MaxLVT > 3) {		/* Due to the Pentium erratum 3AP */
-			APICWrite(APIC_ESR, 0);
-    }
+  if (APIC_INTEGRATED(CPUMap[CPU].APICVersion)) 
+  {	
+     /* !82489DX */
+     if (CPUMap[CPU].MaxLVT > 3) 
+     {
+	/* Due to the Pentium erratum 3AP */
+	APICWrite(APIC_ESR, 0);
+     }
 
-    tmp = APICRead(APIC_ESR);
-    DPRINT("ESR value before enabling vector: 0x%X\n", tmp);
+     tmp = APICRead(APIC_ESR);
+     DPRINT("ESR value before enabling vector: 0x%X\n", tmp);
 
-    /* Enable sending errors */
-	  tmp = ERROR_VECTOR;
-	  APICWrite(APIC_LVT3, tmp);
+     /* Enable sending errors */
+     tmp = ERROR_VECTOR;
+     APICWrite(APIC_LVT3, tmp);
 
-    /*
-     * Spec says clear errors after enabling vector
-     */
-    if (CPUMap[CPU].MaxLVT > 3)
-      APICWrite(APIC_ESR, 0);
-    tmp = APICRead(APIC_ESR);
-    DPRINT("ESR value after enabling vector: 0x%X\n", tmp);
-	}
+     /*
+      * Spec says clear errors after enabling vector
+      */
+     if (CPUMap[CPU].MaxLVT > 3)
+     {
+        APICWrite(APIC_ESR, 0);
+     }
+     tmp = APICRead(APIC_ESR);
+     DPRINT("ESR value after enabling vector: 0x%X\n", tmp);
+  }
 }
 
 VOID
-HaliInitBSP(
-   VOID)
+HaliInitBSP(VOID)
 {
-	PUSHORT ps;
+   PUSHORT ps;
 
-	/* Only initialize the BSP once */
-	if (BSPInitialized)
-		return;
+   /* Only initialize the BSP once */
+   if (BSPInitialized)
+   {
+      return;
+   }
 
-	BSPInitialized = TRUE;
+   BSPInitialized = TRUE;
 
-	DPRINT("APIC is mapped at 0x%X\n", APICBase);
+   DPRINT("APIC is mapped at 0x%X\n", APICBase);
 
-	if (VerifyLocalAPIC()) {
-		DPRINT("APIC found\n");
-	} else {
-		DPRINT1("No APIC found\n");
-		KEBUGCHECK(0);
-	}
+   if (VerifyLocalAPIC()) 
+   {
+      DPRINT("APIC found\n");
+   } 
+   else 
+   {
+      DPRINT1("No APIC found\n");
+      KEBUGCHECK(0);
+   }
 
-  CPUMap[BootCPU].MaxLVT = APICGetMaxLVT();
+   CPUMap[BootCPU].MaxLVT = APICGetMaxLVT();
 
-  SetInterruptGate(LOCAL_TIMER_VECTOR, (ULONG)MpsTimerInterrupt);
-  SetInterruptGate(ERROR_VECTOR, (ULONG)MpsErrorInterrupt);
-  SetInterruptGate(SPURIOUS_VECTOR, (ULONG)MpsSpuriousInterrupt);
+   SetInterruptGate(LOCAL_TIMER_VECTOR, (ULONG)MpsTimerInterrupt);
+   SetInterruptGate(ERROR_VECTOR, (ULONG)MpsErrorInterrupt);
+   SetInterruptGate(SPURIOUS_VECTOR, (ULONG)MpsSpuriousInterrupt);
 
-  if (APICMode == amPIC) {
-    EnableSMPMode();
-  }
+   if (APICMode == amPIC) 
+   {
+      EnableSMPMode();
+   }
 
-  APICSetup();
+   APICSetup();
 
-	/* BIOS data segment */
-	BIOSBase = (PULONG)BIOS_AREA;
+   /* BIOS data segment */
+   BIOSBase = (PULONG)BIOS_AREA;
+   
+   /* Area for communicating with the APs */
+   CommonBase = (PULONG)COMMON_AREA;
+ 
+   /* Copy bootstrap code to common area */
+   memcpy((PVOID)((ULONG)CommonBase + PAGE_SIZE),
+	  &APstart,
+	  (ULONG)&APend - (ULONG)&APstart + 1);
 
-	/* Area for communicating with the APs */
-	CommonBase = (PULONG)COMMON_AREA;
+   /* Set shutdown code */
+   CMOS_WRITE(0xF, 0xA);
 
-  /* Copy bootstrap code to common area */
-	memcpy((PVOID)((ULONG)CommonBase + PAGE_SIZE),
-		    &APstart,
-		    (ULONG)&APend - (ULONG)&APstart + 1);
+   /* Set warm reset vector */
+   ps = (PUSHORT)((ULONG)BIOSBase + 0x467);
+   *ps = (COMMON_AREA + PAGE_SIZE) & 0xF;
+ 
+   ps = (PUSHORT)((ULONG)BIOSBase + 0x469);
+   *ps = (COMMON_AREA + PAGE_SIZE) >> 4;
 
-	/* Set shutdown code */
-	CMOS_WRITE(0xF, 0xA);
+   /* Calibrate APIC timer */
+   APICCalibrateTimer(BootCPU);
 
-	/* Set warm reset vector */
-	ps = (PUSHORT)((ULONG)BIOSBase + 0x467);
-	*ps = (COMMON_AREA + PAGE_SIZE) & 0xF;
-
-	ps = (PUSHORT)((ULONG)BIOSBase + 0x469);
-	*ps = (COMMON_AREA + PAGE_SIZE) >> 4;
-
-  /* Calibrate APIC timer */
-	APICCalibrateTimer(0);
-
-  /* The boot processor is online */
-  OnlineCPUs = (1 << 0);
+   /* The boot processor is online */
+   OnlineCPUs = (1 << BootCPU);
 }
 
 #endif /* MP */
 
-VOID
-STDCALL
-HalInitializeProcessor (
-  ULONG ProcessorNumber,
-  PVOID ProcessorStack)
+VOID STDCALL HalInitializeProcessor(ULONG ProcessorNumber,
+				    PVOID ProcessorStack)
 {
 
 #ifdef MP
@@ -1618,30 +1774,47 @@ HalInitializeProcessor (
    ULONG StartupCount;
    ULONG DeliveryStatus = 0;
    ULONG AcceptStatus = 0;
-	 ULONG CPU, i, j;
-	 ULONG tmp, maxlvt;
+   ULONG CPU, i, j;
+   ULONG tmp, maxlvt;
 
-   if (ProcessorNumber == 0) {
+   DPRINT("HalInitializeProcessor(%x %x)\n", ProcessorNumber, ProcessorStack);
+
+   if (ProcessorNumber == 0) 
+   {
        /* Boot processor is already initialized */
        NextCPU = 1;
        return;
    }
 
-   if (NextCPU < CPUCount) {
-      CPU = NextCPU;
+   if (NextCPU < CPUCount) 
+   {
+      for (CPU = 0; CPU < CPUCount; CPU++)
+      {
+        if (!(OnlineCPUs & (1<<CPU)))
+	{
+	   break;
+	}
+      }
 
+      if (CPU >= CPUCount)
+      {
+        KEBUGCHECK(0);
+      }
+
+  
       DPRINT("Attempting to boot CPU %d\n", CPU);
 
- 	    /* Send INIT IPI */
-	    APICSendIPI(CPUMap[CPU].APICId, APIC_DM_INIT, 0, APIC_ICR0_LEVEL_ASSERT);
+      /* Send INIT IPI */
+      APICSendIPI(CPUMap[CPU].APICId, APIC_DM_INIT, 0, APIC_ICR0_LEVEL_ASSERT);
+ 
+      APICSleep(200);
 
-	    APICSleep(200);
-
-	    /* Deassert INIT */
+      /* Deassert INIT */
       APICSendIPI(CPUMap[CPU].APICId, APIC_DM_INIT, 0, APIC_ICR0_LEVEL_DEASSERT);
 
-      if (APIC_INTEGRATED(CPUMap[CPU].APICVersion)) {
-			   /* Clear APIC errors */
+      if (APIC_INTEGRATED(CPUMap[CPU].APICVersion)) 
+      {
+	 /* Clear APIC errors */
          APICWrite(APIC_ESR, 0);
          tmp = (APICRead(APIC_ESR) & APIC_ESR_MASK);
       }
@@ -1653,32 +1826,34 @@ HalInitializeProcessor (
 
       DPRINT("CPU %d got stack at 0x%X\n", CPU, Common->Stack);
 #if 0
-      for (j = 0; j < 16; j++) {
+      for (j = 0; j < 16; j++) 
+      {
          Common->Debug[j] = 0;
       }
 #endif
 
       maxlvt = APICGetMaxLVT();
 
-		  /* Is this a local APIC or an 82489DX? */
+      /* Is this a local APIC or an 82489DX? */
       StartupCount = (APIC_INTEGRATED(CPUMap[CPU].APICVersion)) ? 2 : 0;
 
-		  for (i = 1; i <= StartupCount; i++)
-		  {
+      for (i = 1; i <= StartupCount; i++)
+      {
          /* It's a local APIC, so send STARTUP IPI */
          DPRINT("Sending startup signal %d\n", i);
          /* Clear errors */
          APICWrite(APIC_ESR, 0);
          APICRead(APIC_ESR);
 
-         APICSendIPI(CPUMap[CPU].APICId,
-            0,
-            APIC_DM_STARTUP | ((COMMON_AREA + PAGE_SIZE) >> 12),
-            APIC_ICR0_LEVEL_DEASSERT);
+         APICSendIPI(CPUMap[CPU].APICId, 
+	             0, 
+		     APIC_DM_STARTUP | ((COMMON_AREA + PAGE_SIZE) >> 12),
+                     APIC_ICR0_LEVEL_DEASSERT);
 
          /* Wait up to 10ms for IPI to be delivered */
          j = 0;
-         do {
+         do 
+	 {
             APICSleep(10);
 
             /* Check Delivery Status */
@@ -1689,54 +1864,64 @@ HalInitializeProcessor (
 
          APICSleep(200);
 
-		     /*
-		      * Due to the Pentium erratum 3AP.
-		      */
-		     if (maxlvt > 3) {
-			     APICRead(APIC_SIVR);
-			     APICWrite(APIC_ESR, 0);
-		     }
+	 /*
+	  * Due to the Pentium erratum 3AP.
+	  */
+	 if (maxlvt > 3) 
+	 {
+	    APICRead(APIC_SIVR);
+	    APICWrite(APIC_ESR, 0);
+	 }
 
          AcceptStatus = APICRead(APIC_ESR) & APIC_ESR_MASK;
 
-         if (DeliveryStatus || AcceptStatus) {
+         if (DeliveryStatus || AcceptStatus) 
+	 {
             break;
          }
       }
 
-      if (DeliveryStatus) {
+      if (DeliveryStatus) 
+      {
          DPRINT("STARTUP IPI for CPU %d was never delivered.\n", CPU);
       }
 
-      if (AcceptStatus) {
+      if (AcceptStatus) 
+      {
          DPRINT("STARTUP IPI for CPU %d was never accepted.\n", CPU);
       }
 
-      if (!(DeliveryStatus || AcceptStatus)) {
+      if (!(DeliveryStatus || AcceptStatus)) 
+      {
 
          /* Wait no more than 5 seconds for processor to boot */
          DPRINT("Waiting for 5 seconds for CPU %d to boot\n", CPU);
 
          /* Wait no more than 5 seconds */
-         for (j = 0; j < 50000; j++) {
-
+         for (j = 0; j < 50000; j++) 
+	 {
             if (CPUMap[CPU].Flags & CPU_ENABLED)
+	    {
                break;
-
+	    }
             APICSleep(100);
          }
       }
 
-      if (CPUMap[CPU].Flags & CPU_ENABLED) {
+      if (CPUMap[CPU].Flags & CPU_ENABLED) 
+      {
          DbgPrint("CPU %d is now running\n", CPU);
-      } else {
+      } 
+      else 
+      {
          DbgPrint("Initialization of CPU %d failed\n", CPU);
       }
 
 #if 0
       DPRINT("Debug bytes are:\n");
 
-      for (j = 0; j < 4; j++) {
+      for (j = 0; j < 4; j++) 
+      {
          DPRINT("0x%08X 0x%08X 0x%08X 0x%08X.\n",
             Common->Debug[j*4+0],
             Common->Debug[j*4+1],
@@ -1748,50 +1933,51 @@ HalInitializeProcessor (
    }
 
 #endif /* MP */
-
 }
 
-BOOLEAN
-STDCALL
-HalAllProcessorsStarted (
-	VOID
-	)
+BOOLEAN STDCALL
+HalAllProcessorsStarted (VOID)
 {
 
 #ifdef MP
 
-  //return (NextCPU >= CPUCount);
-  return (NextCPU >= 1);
+    if (NextCPU >= CPUCount)
+    {
+       IOAPICSetup();
+       return TRUE;
+    }
+    return FALSE;
 
 #else /* MP */
 
-	if (BSPInitialized) {
-		return TRUE;
-	} else {
-		BSPInitialized = TRUE;
-		return FALSE;
-	}
+    if (BSPInitialized) 
+    {
+	return TRUE;
+    } 
+    else 
+    {
+        BSPInitialized = TRUE;
+	return FALSE;
+    }
 
 #endif /* MP */
 
 }
 
-BOOLEAN
-STDCALL
-HalStartNextProcessor (
-	ULONG	Unknown1,
-	ULONG	Unknown2
-	)
+BOOLEAN STDCALL
+HalStartNextProcessor (ULONG	Unknown1,
+		       ULONG	Unknown2)
 {
 #ifdef MP
 
   /* Display the APIC registers for debugging */
-  switch (Unknown1) {
-  case 0:
-    APICDump();
-    break;
-  case 1:
-    IOAPICDump();
+  switch (Unknown1) 
+  {
+    case 0:
+      APICDump();
+      break;
+    case 1:
+      IOAPICDump();
   }
   for(;;);
 
@@ -1805,9 +1991,8 @@ HalStartNextProcessor (
 
 #ifdef MP
 
-ULONG MPChecksum(
-   PUCHAR Base,
-   ULONG Size)
+ULONG MPChecksum(PUCHAR Base,
+                 ULONG Size)
 /*
  *	Checksum an MP configuration block
  */
@@ -1821,9 +2006,8 @@ ULONG MPChecksum(
 }
 
 
-PCHAR HaliMPFamily(
-   ULONG Family,
-   ULONG Model)
+PCHAR HaliMPFamily(ULONG Family,
+		   ULONG Model)
 {
    static CHAR str[32];
    static PCHAR CPUs[] =
@@ -1912,7 +2096,8 @@ static VOID HaliMPProcessorInfo(PMP_CONFIGURATION_PROCESSOR m)
 
   CPUMap[CPUCount].Flags = CPU_USABLE;
 
-  if (m->CpuFlags & CPU_FLAG_BSP) {
+  if (m->CpuFlags & CPU_FLAG_BSP) 
+  {
     DPRINT("    Bootup CPU\n");
     CPUMap[CPUCount].Flags |= CPU_BSP;
     BootCPU = m->ApicId;
@@ -1939,25 +2124,34 @@ static VOID HaliMPProcessorInfo(PMP_CONFIGURATION_PROCESSOR m)
 static VOID HaliMPBusInfo(PMP_CONFIGURATION_BUS m)
 {
   static ULONG CurrentPCIBusId = 0;
-	CHAR str[7];
+  CHAR str[7];
 
-	memcpy(str, m->BusType, 6);
-	str[6] = 0;
-	DPRINT("Bus #%d is %s\n", m->BusId, str);
+  memcpy(str, m->BusType, 6);
+  str[6] = 0;
+  DPRINT("Bus #%d is %s\n", m->BusId, str);
 
-	if (strncmp(str, BUSTYPE_ISA, sizeof(BUSTYPE_ISA)-1) == 0) {
-		BUSMap[m->BusId] = MP_BUS_ISA;
-	} else if (strncmp(str, BUSTYPE_EISA, sizeof(BUSTYPE_EISA)-1) == 0) {
-		BUSMap[m->BusId] = MP_BUS_EISA;
-	} else if (strncmp(str, BUSTYPE_PCI, sizeof(BUSTYPE_PCI)-1) == 0) {
-		BUSMap[m->BusId] = MP_BUS_PCI;
-		PCIBUSMap[m->BusId] = CurrentPCIBusId;
-		CurrentPCIBusId++;
-	} else if (strncmp(str, BUSTYPE_MCA, sizeof(BUSTYPE_MCA)-1) == 0) {
-		BUSMap[m->BusId] = MP_BUS_MCA;
-	} else {
-		DPRINT("Unknown bustype %s - ignoring\n", str);
-	}
+  if (strncmp(str, BUSTYPE_ISA, sizeof(BUSTYPE_ISA)-1) == 0) 
+  {
+     BUSMap[m->BusId] = MP_BUS_ISA;
+  } 
+  else if (strncmp(str, BUSTYPE_EISA, sizeof(BUSTYPE_EISA)-1) == 0) 
+  {
+     BUSMap[m->BusId] = MP_BUS_EISA;
+  } 
+  else if (strncmp(str, BUSTYPE_PCI, sizeof(BUSTYPE_PCI)-1) == 0) 
+  {
+     BUSMap[m->BusId] = MP_BUS_PCI;
+     PCIBUSMap[m->BusId] = CurrentPCIBusId;
+     CurrentPCIBusId++;
+  } 
+  else if (strncmp(str, BUSTYPE_MCA, sizeof(BUSTYPE_MCA)-1) == 0) 
+  {
+     BUSMap[m->BusId] = MP_BUS_MCA;
+  } 
+  else 
+  {
+     DPRINT("Unknown bustype %s - ignoring\n", str);
+  }
 }
 
 static VOID HaliMPIOApicInfo(PMP_CONFIGURATION_IOAPIC m)
@@ -1966,10 +2160,11 @@ static VOID HaliMPIOApicInfo(PMP_CONFIGURATION_IOAPIC m)
     return;
 
   DPRINT("I/O APIC #%d Version %d at 0x%lX.\n",
-    m->ApicId, m->ApicVersion, m->ApicAddress);
-  if (IOAPICCount > MAX_IOAPIC) {
+         m->ApicId, m->ApicVersion, m->ApicAddress);
+  if (IOAPICCount > MAX_IOAPIC) 
+  {
     DPRINT("Max # of I/O APICs (%d) exceeded (found %d).\n",
-      MAX_IOAPIC, IOAPICCount);
+           MAX_IOAPIC, IOAPICCount);
     DPRINT1("Recompile with bigger MAX_IOAPIC!.\n");
     KEBUGCHECK(0);
   }
@@ -1982,11 +2177,12 @@ static VOID HaliMPIOApicInfo(PMP_CONFIGURATION_IOAPIC m)
 static VOID HaliMPIntSrcInfo(PMP_CONFIGURATION_INTSRC m)
 {
   DPRINT("Int: type %d, pol %d, trig %d, bus %d,"
-    " IRQ %02x, APIC ID %x, APIC INT %02x\n",
-    m->IrqType, m->IrqFlag & 3,
-    (m->IrqFlag >> 2) & 3, m->SrcBusId,
-    m->SrcBusIrq, m->DstApicId, m->DstApicInt);
-  if (IRQCount > MAX_IRQ_SOURCE) {
+         " IRQ %02x, APIC ID %x, APIC INT %02x\n",
+         m->IrqType, m->IrqFlag & 3,
+         (m->IrqFlag >> 2) & 3, m->SrcBusId,
+         m->SrcBusIrq, m->DstApicId, m->DstApicInt);
+  if (IRQCount > MAX_IRQ_SOURCE) 
+  {
     DPRINT1("Max # of irq sources exceeded!!\n");
     KEBUGCHECK(0);
   }
@@ -1998,10 +2194,10 @@ static VOID HaliMPIntSrcInfo(PMP_CONFIGURATION_INTSRC m)
 static VOID HaliMPIntLocalInfo(PMP_CONFIGURATION_INTLOCAL m)
 {
   DPRINT("Lint: type %d, pol %d, trig %d, bus %d,"
-    " IRQ %02x, APIC ID %x, APIC LINT %02x\n",
-    m->IrqType, m->IrqFlag & 3,
-    (m->IrqFlag >> 2) & 3, m->SrcBusId,
-    m->SrcBusIrq, m->DstApicId, m->DstApicLInt);
+         " IRQ %02x, APIC ID %x, APIC LINT %02x\n",
+         m->IrqType, m->IrqFlag & 3,
+         (m->IrqFlag >> 2) & 3, m->SrcBusId,
+          m->SrcBusIrq, m->DstApicId, m->DstApicLInt);
   /*
    * Well it seems all SMP boards in existence
    * use ExtINT/LVT1 == LINT0 and
@@ -2009,11 +2205,13 @@ static VOID HaliMPIntLocalInfo(PMP_CONFIGURATION_INTLOCAL m)
    * will show us if this assumptions is false.
    * Until then we do not have to add baggage.
    */
-  if ((m->IrqType == INT_EXTINT) && (m->DstApicLInt != 0)) {
+  if ((m->IrqType == INT_EXTINT) && (m->DstApicLInt != 0)) 
+  {
     DPRINT1("Invalid MP table!\n");
     KEBUGCHECK(0);
   }
-  if ((m->IrqType == INT_NMI) && (m->DstApicLInt != 1)) {
+  if ((m->IrqType == INT_NMI) && (m->DstApicLInt != 1)) 
+  {
     DPRINT1("Invalid MP table!\n");
     KEBUGCHECK(0);
   }
@@ -2021,8 +2219,7 @@ static VOID HaliMPIntLocalInfo(PMP_CONFIGURATION_INTLOCAL m)
 
 
 VOID
-HaliReadMPConfigTable(
-   PMP_CONFIGURATION_TABLE Table)
+HaliReadMPConfigTable(PMP_CONFIGURATION_TABLE Table)
 /*
    PARAMETERS:
       Table = Pointer to MP configuration table
@@ -2114,8 +2311,7 @@ HaliReadMPConfigTable(
 }
 
 
-static VOID HaliConstructDefaultIOIrqMPTable(
-  ULONG Type)
+static VOID HaliConstructDefaultIOIrqMPTable(ULONG Type)
 {
 	MP_CONFIGURATION_INTSRC intsrc;
 	ULONG i;
@@ -2149,15 +2345,14 @@ static VOID HaliConstructDefaultIOIrqMPTable(
 }
 
 
-static VOID HaliConstructDefaultISAMPTable(
-  ULONG Type)
+static VOID HaliConstructDefaultISAMPTable(ULONG Type)
 {
-	MP_CONFIGURATION_PROCESSOR processor;
-	MP_CONFIGURATION_BUS bus;
-	MP_CONFIGURATION_IOAPIC ioapic;
-	MP_CONFIGURATION_INTLOCAL lintsrc;
-	ULONG linttypes[2] = { INT_EXTINT, INT_NMI };
-	ULONG i;
+  MP_CONFIGURATION_PROCESSOR processor;
+  MP_CONFIGURATION_BUS bus;
+  MP_CONFIGURATION_IOAPIC ioapic;
+  MP_CONFIGURATION_INTLOCAL lintsrc;
+  ULONG linttypes[2] = { INT_EXTINT, INT_NMI };
+  ULONG i;
 
   APICBase = (PULONG)APIC_DEFAULT_BASE;
 
@@ -2173,7 +2368,8 @@ static VOID HaliConstructDefaultISAMPTable(
   processor.FeatureFlags = 0;
   processor.Reserved[0] = 0;
   processor.Reserved[1] = 0;
-  for (i = 0; i < 2; i++) {
+  for (i = 0; i < 2; i++) 
+  {
     processor.ApicId = i;
     HaliMPProcessorInfo(&processor);
     processor.CpuFlags &= ~CPU_FLAG_BSP;
@@ -2181,7 +2377,8 @@ static VOID HaliConstructDefaultISAMPTable(
 
   bus.Type = MPCTE_BUS;
   bus.BusId = 0;
-  switch (Type) {
+  switch (Type) 
+  {
     default:
     DPRINT("Unknown standard configuration %d\n", Type);
       /* Fall through */
@@ -2199,7 +2396,8 @@ static VOID HaliConstructDefaultISAMPTable(
       memcpy(bus.BusType, "MCA   ", 6);
   }
   HaliMPBusInfo(&bus);
-  if (Type > 4) {
+  if (Type > 4) 
+  {
     bus.Type = MPCTE_BUS;
     bus.BusId = 1;
     memcpy(bus.BusType, "PCI   ", 6);
@@ -2224,7 +2422,8 @@ static VOID HaliConstructDefaultISAMPTable(
   lintsrc.SrcBusId = 0;
   lintsrc.SrcBusIrq = 0;
   lintsrc.DstApicId = MP_APIC_ALL;
-  for (i = 0; i < 2; i++) {
+  for (i = 0; i < 2; i++) 
+  {
     lintsrc.IrqType = linttypes[i];
     lintsrc.DstApicLInt = i;
     HaliMPIntLocalInfo(&lintsrc);
@@ -2233,9 +2432,8 @@ static VOID HaliConstructDefaultISAMPTable(
 
 
 BOOLEAN
-HaliScanForMPConfigTable(
-   ULONG Base,
-   ULONG Size)
+HaliScanForMPConfigTable(ULONG Base,
+			 ULONG Size)
 /*
    PARAMETERS:
       Base = Base address of region
@@ -2244,8 +2442,8 @@ HaliScanForMPConfigTable(
       TRUE if a valid MP configuration table was found
  */
 {
-	 PULONG bp = (PULONG)Base;
-	 MP_FLOATING_POINTER* mpf;
+   PULONG bp = (PULONG)Base;
+   MP_FLOATING_POINTER* mpf;
 
    while (Size > 0)
    {
@@ -2319,25 +2517,8 @@ HaliScanForMPConfigTable(
 }
 
 
-static VOID STDCALL
-RescheduleDpcRoutine(PKDPC Dpc, PVOID DeferredContext,
-  PVOID SystemArgument1, PVOID SystemArgument2)
-{
-  KIRQL OldIrql;
-  KIRQL NewIrql;
-
-  DbgPrint("RDR()");
-  NewIrql = KeGetCurrentIrql();
-  KeLowerIrql(APC_LEVEL);
-  KeRescheduleThread();
-  KeRaiseIrql(NewIrql, &OldIrql);
-  DbgPrint("...\n");
-}
-
-
 VOID
-HalpInitMPS(
-   VOID)
+HalpInitMPS(VOID)
 {
    USHORT EBDA;
    ULONG CPU;
@@ -2345,24 +2526,28 @@ HalpInitMPS(
    /* Only initialize MP system once. Once called the first time,
       each subsequent call is part of the initialization sequence
 			for an application processor. */
-  if (MPSInitialized) {
-    CPU = ThisCPU();
 
-    DPRINT("CPU %d says it is now booted.\n", CPU);
+   DPRINT("HalpInitMPS()\n");
+   if (MPSInitialized) 
+   {
+      CPU = ThisCPU();
 
-    APICSetup();
-    APICCalibrateTimer(CPU);
+      DPRINT("CPU %d says it is now booted.\n", CPU);
 
-    /* This processor is now booted */
-    CPUMap[CPU].Flags |= CPU_ENABLED;
-    OnlineCPUs |= (1 << CPU);
+      APICSetup();
 
-    return;
+      DPRINT("CPU %d says it is now booted.\n", CPU);
+ 
+      APICCalibrateTimer(CPU);
+
+      /* This processor is now booted */
+      CPUMap[CPU].Flags |= CPU_ENABLED;
+      OnlineCPUs |= (1 << CPU);
+
+      return;
   }
 
   MPSInitialized = TRUE;
-
-  KeInitializeDpc(&RescheduleDpc, RescheduleDpcRoutine, NULL);
 
   /*
      Scan the system memory for an MP configuration table
@@ -2388,19 +2573,39 @@ HalpInitMPS(
   /* Setup IRQ to vector translation map */
   memset(&IRQVectorMap, 0, sizeof(IRQVectorMap));
 
+  DPRINT1("CPI0:\n");
+  DPRINT1("  Physical APIC id: %d\n", GET_APIC_ID(APICRead(APIC_ID)));
+  DPRINT1("  Logical APIC id:  %d\n", GET_APIC_LOGICAL_ID(APICRead(APIC_LDR)));
+
   /* Initialize the bootstrap processor */
   HaliInitBSP();
-
-  /* Setup I/O APIC */
-  IOAPICSetup();
 
   /* Setup busy waiting */
   HalpCalibrateStallExecution();
 
-  /* We can now enable interrupts */
-  Ki386EnableInterrupts();
+  NextCPU = 1;
+}
 
-  NextCPU = 0;
+VOID
+HaliReconfigurePciInterrupts(VOID)
+{
+   ULONG i;
+
+   for (i = 0; i < IRQCount; i++)
+   {
+      if (BUSMap[IRQMap[i].SrcBusId] == MP_BUS_PCI)
+      {
+         DPRINT("%02x: IrqType %02x, IrqFlag %02x, SrcBusId %02x, SrcBusIrq %02x, DstApicId %02x, DstApicInt %02x\n",
+	        i, IRQMap[i].IrqType, IRQMap[i].IrqFlag, IRQMap[i].SrcBusId, 
+	        IRQMap[i].SrcBusIrq, IRQMap[i].DstApicId, IRQMap[i].DstApicInt);
+
+	 if(1 != HalSetBusDataByOffset(PCIConfiguration, IRQMap[i].SrcBusId, (IRQMap[i].SrcBusIrq >> 2) & 0x1f, &IRQMap[i].DstApicInt, 0x3c /*PCI_INTERRUPT_LINE*/, 1))
+	 {
+	    CHECKPOINT;
+	 }
+      }
+   }
+
 }
 
 #endif /* MP */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.52 2004/11/01 14:37:19 hbirr Exp $
+/* $Id: irq.c,v 1.53 2004/11/01 19:01:25 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -126,11 +126,10 @@ B16(F)
 	L(x,8), L(x,9), L(x,A), L(x,B), \
 	L(x,C), L(x,D), L(x,E), L(x,F)
 
-static ULONG irq_handler[NR_IRQS] = {
+static ULONG irq_handler[ROUND_UP(NR_IRQS, 16)] = {
   L16(3), L16(4), L16(5), L16(6),
   L16(7), L16(8), L16(9), L16(A),
-  L16(B), L16(C), L16(D), L16(E),
-  L16(F)
+  L16(B), L16(C), L16(D), L16(E)
 };
 
 #undef L

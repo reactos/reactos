@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.6 2004/10/31 19:45:16 ekohl Exp $
+/* $Id: misc.c,v 1.7 2004/11/01 19:01:25 hbirr Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS kernel
@@ -9,10 +9,18 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <roscfg.h>
 #include <ddk/ntddk.h>
 #include <hal.h>
 
 /* FUNCTIONS ****************************************************************/
+
+#ifdef MP
+
+VOID
+HaliReconfigurePciInterrupts(VOID);
+
+#endif
 
 VOID STDCALL
 HalHandleNMI(ULONG Unused)
@@ -82,8 +90,11 @@ HalReportResourceUsage(VOID)
 
   /* Initialize PCI bus. */
   HalpInitPciBus ();
+#ifdef MP
 
-  return;
+  HaliReconfigurePciInterrupts();
+#endif
+
 }
 
 /* EOF */
