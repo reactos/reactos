@@ -1,28 +1,23 @@
-# $Id: Makefile,v 1.144 2004/09/28 15:02:28 weiden Exp $
-#
-# ReactOS Operating System
-#
+preall: all
 
-#
-# Path to the directory containing the root makefile
-#
 PATH_TO_TOP := ..
 
-#
-# Include details of the host OS configuration
-#
 include $(PATH_TO_TOP)/config
+
+TARGET_TYPE = kernel
+
+TARGET_NAME = ntoskrnl
+
+TARGET_BASE = 0xc0000000
+
+TARGET_BOOTSTRAP = yes
 
 CONFIG :=
 
 ifeq ($(DBG), 1)
 CFLAGS_DBG := -g
-LINKER_SCRIPT := ntoskrnl.lnk
-STRIP_FLAGS := -Wl,-s
 else
 CFLAGS_DBG :=
-LINKER_SCRIPT := ntoskrnl.lnk
-STRIP_FLAGS := -Wl,-s
 endif
 
 ifeq ($(OPTIMIZED), 1)
@@ -52,9 +47,6 @@ ASFLAGS += -I./include -I$(SDK_PATH_INC)
 CFLAGS += -I./include -I$(SDK_PATH_INC) -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror $(CFLAGS_OPT)
 endif
 
-# ASFLAGS += -D__USE_W32API -D_NTOSKRNL_
-# CFLAGS += -D__USE_W32API -D_NTOSKRNL_
-
 # require os code to explicitly request A/W version of structs/functions
 CFLAGS += -D_DISABLE_TIDENTS
 
@@ -68,25 +60,15 @@ CFLAGS += $(STD_CFLAGS)
 ASFLAGS += $(STD_ASFLAGS)
 RCFLAGS += $(STD_RCFLAGS)
 
-#
-# Build configuration
-#
-include $(PATH_TO_TOP)/rules.mak
+TARGET_CFLAGS = $(CFLAGS)
+TARGET_ASFLAGS = $(ASFLAGS)
+TARGET_RCFLAGS = $(RCFLAGS)
 
 #
 # Javascript extension for kdb
 #
 
-TARGETNAME := ntoskrnl
-
 OBJECTS_PATH = objects
-
-all: $(OBJECTS_PATH) \
-	bugcodes.rc $(PATH_TO_TOP)/include/reactos/bugcodes.h \
-	$(TARGETNAME).nostrip.exe \
-	$(TARGETNAME).exe \
-	$(TARGETNAME).sym \
-	ntoskrnl.map
 
 #
 # Architecture specific Makefile
@@ -387,44 +369,21 @@ DEP_OBJECTS := $(OBJECTS_NT) $(OBJECTS_MM) $(OBJECTS_ARCH) \
 	$(OBJECTS_IO) $(OBJECTS_KE) $(OBJECTS_OB) \
 	$(OBJECTS_PS) $(OBJECTS_EX) $(OBJECTS_CC) $(OBJECTS_FS) $(OBJECTS_SE) \
 	$(OBJECTS_DBG) $(OBJECTS_CM) $(OBJECTS_LDR) $(OBJECTS_LPC) \
-	$(OBJECTS_PO) $(OBJECTS_KD) $(OBJECTS_RTL)
+	$(OBJECTS_PO) $(OBJECTS_KD) $(OBJECTS_RTL) $(OBJECTS_INBV)
 
 TAG_OBJECTS := $(join $(dir $(DEP_OBJECTS)),$(patsubst %.o, .%.TAG, $(notdir $(DEP_OBJECTS))))
 
 TARGET_PCH = include/ntoskrnl.h
 
-# Precompiled header support
-# When using PCHs, use dependency tracking to keep the .gch files up-to-date.
-
-MK_PCHNAME =
-ifeq ($(ROS_USE_PCH),yes)
-MK_PCHNAME = $(TARGET_PCH).gch
-
-PCH_CC := $(CC)
-
-
-endif # ROS_USE_PCH
-
-#
-# Include automatic dependancy tracking
-#
-DEP_EXCLUDE_FILTER := ex/napi.% nt/zw.%
-GENERATED_HEADER_FILES := $(PATH_TO_TOP)/include/reactos/bugcodes.h
-include $(PATH_TO_TOP)/tools/depend.mk
-
 
 # Resources
 OBJECTS_RESOURCE = \
-	$(TARGETNAME).coff
-
-# IMPORTS/EXPORTS
-IE_DATA = \
-	$(TARGETNAME).def
+	$(TARGET_NAME).coff
 
 $(OBJECTS_PATH):
 	mkdir $(OBJECTS_PATH)
 
-$(OBJECTS_RESOURCE): $(TARGETNAME).rc bugcodes.rc $(PATH_TO_TOP)/include/reactos/resource.h
+$(OBJECTS_RESOURCE): $(TARGET_NAME).rc bugcodes.rc $(PATH_TO_TOP)/include/reactos/resource.h
 
 #
 # Build subsystem intermediate objects
@@ -563,211 +522,43 @@ OBJECTS := \
 	$(OBJECTS_PATH)/inbv.o \
 	$(OBJECTS_RESOURCE)
 
-NTOSKRNL_LIBS := \
+EXTRA_OBJECTS = $(PATH_TO_TOP)/include/reactos/bugcodes.h
+
+TARGET_OBJECTS = $(EXTRA_OBJECTS) $(OBJECTS)
+
+TARGET_LIBS = \
 	$(DDK_PATH_LIB)/hal.a \
 	$(SDK_PATH_LIB)/rtl.a \
 	$(SDK_PATH_LIB)/string.a \
 	$(SDK_PATH_LIB)/rosrtl.a \
 	$(SDK_PATH_LIB)/pseh.a
 
-NTOSKRNL_LD_FLAGS := \
+TARGET_LFLAGS = \
+	-Wl,-T,ntoskrnl.lnk \
 	-Wl,--subsystem,native \
 	-Wl,--image-base,0xc0000000 \
 	-Wl,--file-alignment,0x1000 \
 	-Wl,--section-alignment,0x1000 \
 	-Wl,--entry,_NtProcessStartup
 
-$(TARGETNAME).nostrip.exe: $(TARGETNAME).all.o $(IE_DATA) $(NTOSKRNL_LIBS)
-	$(CC) \
-		-Wl,-T,ntoskrnl.lnk \
-		-nostartfiles \
-		-nostdlib \
-		-mdll \
-		-o junk.tmp \
-		$(NTOSKRNL_LD_FLAGS) \
-		-Wl,--base-file,base.tmp \
-		$(TARGETNAME).all.o -lgcc \
-		$(NTOSKRNL_LIBS)
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGETNAME).exe \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--def $(TARGETNAME).def \
-		--kill-at
-	- $(RM) base.tmp
-	$(CC) \
-		-nostartfiles \
-		-nostdlib \
-		-Wl,-T,ntoskrnl.lnk \
-		-mdll \
-		-o $(TARGETNAME).nostrip.exe \
-		$(NTOSKRNL_LD_FLAGS) \
-		-Wl,temp.exp \
-		$(TARGETNAME).all.o -lgcc \
-		$(NTOSKRNL_LIBS)
-	- $(RM) temp.exp
-
-$(TARGETNAME).exe: $(TARGETNAME).all.o $(LINKER_SCRIPT) $(NTOSKRNL_LIBS)
-	- $(CC) \
-		-Wl,-T,$(LINKER_SCRIPT) \
-		-nostartfiles \
-		-nostdlib \
-		-mdll \
-		-o junk.tmp \
-		$(NTOSKRNL_LD_FLAGS) \
-		-Wl,--base-file,base.tmp \
-		$(TARGETNAME).all.o -lgcc \
-		$(NTOSKRNL_LIBS)
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGETNAME).exe \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--def $(TARGETNAME).def \
-		--kill-at
-	- $(RM) base.tmp
-	$(CC) \
-		-Wl,-T,$(LINKER_SCRIPT) $(STRIP_FLAGS)\
-		-nostartfiles \
-		-nostdlib \
-		-mdll \
-		-o $(TARGETNAME).exe \
-		$(NTOSKRNL_LD_FLAGS) \
-		-Wl,temp.exp \
-		$(TARGETNAME).all.o -lgcc \
-		$(NTOSKRNL_LIBS)
-	- $(RM) temp.exp
-
-$(TARGETNAME).dbg.o: $(TARGETNAME).all.o
-	$(STRIP) --strip-debug -o $(TARGETNAME).dbg.o $(TARGETNAME).all.o
-
-$(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk $(NTOSKRNL_LIBS)
-	$(CC) \
-		-Wl,-T,$(TARGETNAME).dbg.lnk \
-		-nostartfiles \
-		-nostdlib \
-		-mdll \
-		-o junk.tmp \
-		$(NTOSKRNL_LD_FLAGS) \
-		-Wl,--base-file,base.tmp \
-		$(TARGETNAME).dbg.o -lgcc \
-		$(NTOSKRNL_LIBS)
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGETNAME).dbg \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--def $(TARGETNAME).def \
-		--kill-at
-	- $(RM) base.tmp
-	$(CC) \
-		-Wl,-T,$(TARGETNAME).dbg.lnk \
-		-nostartfiles \
-		-nostdlib \
-		-mdll \
-		-o $(TARGETNAME).dbg \
-		$(NTOSKRNL_LD_FLAGS) \
-		-Wl,temp.exp \
-		$(TARGETNAME).dbg.o -lgcc \
-		$(NTOSKRNL_LIBS)
-	- $(RM) temp.exp
-
-$(TARGETNAME).sym: $(TARGETNAME).nostrip.exe
-	$(RSYM) $(TARGETNAME).nostrip.exe $(TARGETNAME).sym
-
 TAGS: $(TAG_OBJECTS)
 	etags $(addprefix -i , $(TAG_OBJECTS))
-
-$(TARGETNAME).map: $(TARGETNAME).nostrip.exe
-ifeq ($(FULL_MAP),yes)
-	$(OBJDUMP) -d -S $(TARGETNAME).nostrip.exe > $(TARGETNAME).map
-else
-	$(NM) --numeric-sort $(TARGETNAME).nostrip.exe > $(TARGETNAME).map
-endif
-
-$(TARGETNAME).all.o: $(OBJECTS)
-	$(LD) \
-		-r \
-		-o $(TARGETNAME).all.o \
-		$(OBJECTS)
 
 $(PATH_TO_TOP)/include/reactos/bugcodes.h bugcodes.rc: ntoskrnl.mc
 	$(MC) \
 		-H $(PATH_TO_TOP)/include/reactos/bugcodes.h \
 		-o bugcodes.rc \
-		$(TARGETNAME).mc
+		$(TARGET_NAME).mc
 
-$(DDK_PATH_LIB)/$(TARGETNAME).a: $(TARGETNAME).def
-	- $(DLLTOOL) \
-		--dllname $(TARGETNAME).exe \
-		--def $(TARGETNAME).def \
-		--output-lib $(DDK_PATH_LIB)/$(TARGETNAME).a \
-		--kill-at
-
-implib: $(DDK_PATH_LIB)/$(TARGETNAME).a
-
-test:
-	-
-
-clean:
-	- $(RM) depend.d $(MK_PCHNAME) $(MK_PCHFAKE) $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o \
-              ex/i386/*.o inbv/*.o io/*.o ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o \
-              ps/*.o ps/i386/*.o rtl/*.o rtl/i386/*.o se/*.o ke/i386/*.o \
-              mm/i386/*.o fs/*.o po/*.o lpc/*.o kd/*.o $(TARGETNAME).all.o \
-              junk.tmp base.tmp temp.exp $(TARGETNAME).exe \
-              $(TARGETNAME).nostrip.exe $(TARGETNAME).sym ntoskrnl.map \
-              $(TARGETNAME).coff bugcodes.rc msg?????.bin $(DEP_FILES) \
-	      $(TAG_OBJECTS) $(PATH_TO_TOP)/include/reactos/bugcodes.h
-
-
-.PHONY: clean
-
-ifneq ($(BOOTCD_INSTALL),)
-
-install:
-	- $(CP) $(TARGETNAME).exe $(INSTALL_DIR)/$(TARGETNAME).exe
-
-else # BOOTCD_INSTALL
-
-install:
-	- $(CP) $(TARGETNAME).exe $(INSTALL_DIR)/system32/$(TARGETNAME).exe
-	- $(CP) $(TARGETNAME).sym $(INSTALL_DIR)/symbols/$(TARGETNAME).sym
-
-endif # BOOTCD_INSTALL
-
-
-.PHONY: install
-
-bootcd:
-	- $(CP) $(TARGETNAME).exe $(BOOTCD_DIR)/reactos/$(TARGETNAME).exe
-
-.PHONY: bootcd
-
+TARGET_CLEAN = \
+  $(PATH_TO_TOP)/include/reactos/bugcodes.h \
+  $(DEP_OBJECTS)
 
 ex/napi.o: ex/napi.c $(PATH_TO_TOP)/include/ntdll/napi.h
 
 ke/main.o: ke/main.c $(PATH_TO_TOP)/include/reactos/buildno.h
 
-%.o: %.cc $(MK_PCHNAME)
-	$(CC) $(CFLAGS) -c $< -o $@
-%.o: %.c $(MK_PCHNAME)
-	$(CC) $(CFLAGS) -c $< -o $@
-%.o: %.S
-	$(AS) $(ASFLAGS) -c $< -o $@
-%.o: %.s
-	$(AS) $(ASFLAGS) -c $< -o $@
-%.o: %.asm
-	$(NASM_CMD) $(NFLAGS) $< -o $@
-%.coff: %.rc
-	$(RC) $(RCFLAGS) $< -o $@
-%.h.gch: %.h
-	$(PCH_CC) $(CFLAGS) $<
 
-
-#
-#
-#
 .%.TAG: %.S
 	etags -o $@ $<
 
@@ -783,5 +574,8 @@ docu:
 
 .PHONY: docu
 
+include $(PATH_TO_TOP)/rules.mak
 
-# EOF
+include $(TOOLS_PATH)/helper.mk
+
+include $(TOOLS_PATH)/depend.mk
