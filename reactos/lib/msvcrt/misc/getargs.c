@@ -15,6 +15,7 @@ char *xargv[1024];
 char  **__argv = xargv;
 int   __argc = 0;
 
+extern HANDLE hHeap;
 
 int __getmainargs(int *argc,char ***argv,char ***env,int flag)
 {
@@ -51,7 +52,7 @@ int __getmainargs(int *argc,char ***argv,char ***env,int flag)
 	_acmdln[i]='\0';
 	__argv[__argc-1] = strdup(_acmdln+afterlastspace);
      }
-   HeapValidate(GetProcessHeap(),0,NULL);
+   HeapValidate(hHeap,0,NULL);
    
    *argc = __argc;
    *argv = __argv;
