@@ -19,3 +19,5 @@ typedef struct _GDI_HANDLE {
 
 GDI_HANDLE GDIHandles[MAX_GDI_HANDLES];
 ULONG HandleCounter = 1;
+
+

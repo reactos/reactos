@@ -13,7 +13,8 @@
 PVOID BRUSHOBJ_pvAllocRbrush(IN PBRUSHOBJ  BrushObj,
                              IN ULONG  ObjSize)
 {
-   BrushObj->pvRbrush=EngAllocMem(NULL, ObjSize, 0);
+   BrushObj->pvRbrush=EngAllocMem(0, ObjSize, 0);
+   return BrushObj->pvRbrush;
 }
 
 PVOID BRUSHOBJ_pvGetRbrush(IN PBRUSHOBJ  BrushObj)

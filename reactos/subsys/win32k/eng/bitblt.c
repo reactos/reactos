@@ -78,7 +78,7 @@ BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
    // If we don't have to do anything special, we can punt to DrvCopyBits
    // if it exists
    if( (Mask == NULL)        && (MaskRect == NULL) && (Brush == NULL) &&
-       (BrushOrigin == NULL) && (rop4 == NULL) )
+       (BrushOrigin == NULL) && (rop4 == 0) )
    {
      canCopyBits = TRUE;
    } else
