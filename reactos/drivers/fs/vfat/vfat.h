@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.52 2003/01/24 13:42:43 ekohl Exp $ */
+/* $Id: vfat.h,v 1.53 2003/01/25 15:55:08 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -199,6 +199,7 @@ typedef struct _VFATFCB
   SHARE_ACCESS FCBShareAccess;
   HASHENTRY Hash;
   HASHENTRY ShortHash;
+  FILE_LOCK FileLock;
 
   /* Structure members used only for paging files. */
   ULONG FatChainSize;

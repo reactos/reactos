@@ -1,4 +1,4 @@
-/* $Id: cleanup.c,v 1.9 2003/01/11 15:52:54 hbirr Exp $
+/* $Id: cleanup.c,v 1.10 2003/01/25 15:55:07 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,14 +19,15 @@
 /* FUNCTIONS ****************************************************************/
 
 static NTSTATUS
-VfatCleanupFile(PDEVICE_EXTENSION DeviceExt,
-		PFILE_OBJECT FileObject)
+VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: Cleans up after a file has been closed.
  */
 {
   PVFATCCB pCcb;
   PVFATFCB pFcb;
+  PDEVICE_EXTENSION DeviceExt = IrpContext->DeviceExt;
+  PFILE_OBJECT FileObject = IrpContext->FileObject;
   
   DPRINT("VfatCleanupFile(DeviceExt %x, FileObject %x)\n",
 	 DeviceExt, FileObject);
@@ -38,6 +39,17 @@ VfatCleanupFile(PDEVICE_EXTENSION DeviceExt,
       return  STATUS_SUCCESS;
     }
   pFcb = pCcb->pFcb;
+
+  if (!(pFcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY) &&
+     FsRtlAreThereCurrentFileLocks(&pFcb->FileLock))
+  {
+    /* remove all locks this process have on this file */
+    FsRtlFastUnlockAll(&pFcb->FileLock,
+                       FileObject,
+                       IoGetRequestorProcess(IrpContext->Irp),
+                       NULL
+                       );
+  }
 
   /* Uninitialize file cache if initialized for this file object. */
   if (pFcb->RFCB.Bcb != NULL)
@@ -68,7 +80,7 @@ NTSTATUS VfatCleanup (PVFAT_IRP_CONTEXT IrpContext)
      return VfatQueueRequest (IrpContext);
    }
 
-   Status = VfatCleanupFile(IrpContext->DeviceExt, IrpContext->FileObject);
+   Status = VfatCleanupFile(IrpContext);
 
    ExReleaseResourceLite (&IrpContext->DeviceExt->DirResource);
 

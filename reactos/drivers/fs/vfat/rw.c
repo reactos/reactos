@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.53 2003/01/11 16:01:28 hbirr Exp $
+/* $Id: rw.c,v 1.54 2003/01/25 15:55:07 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -672,6 +672,17 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       Status = STATUS_PENDING;
       goto ByeBye;
    }
+
+   if (!(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
+      FsRtlAreThereCurrentFileLocks(&Fcb->FileLock))
+   {
+      if (!FsRtlCheckLockForReadAccess(&Fcb->FileLock, IrpContext->Irp)) 
+      {
+         Status = STATUS_FILE_LOCK_CONFLICT;
+         goto ByeBye;
+      }
+   }
+
    if (!(IrpContext->Irp->Flags & (IRP_NOCACHE|IRP_PAGING_IO)) &&
      !(Fcb->Flags & (FCB_IS_PAGE_FILE|FCB_IS_VOLUME)))
    {
@@ -917,6 +928,16 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
          goto ByeBye;
       }
    }
+
+   if (!(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
+      FsRtlAreThereCurrentFileLocks(&Fcb->FileLock))
+   {
+      if (!FsRtlCheckLockForWriteAccess(&Fcb->FileLock, IrpContext->Irp)) 
+      {
+         Status = STATUS_FILE_LOCK_CONFLICT;
+         goto ByeBye;
+       }
+    }
 
    if (!(IrpContext->Flags & IRPCONTEXT_CANWAIT) && !(Fcb->Flags & FCB_IS_VOLUME))
    {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iface.c,v 1.66 2002/11/11 21:49:18 hbirr Exp $
+/* $Id: iface.c,v 1.67 2003/01/25 15:55:07 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/iface.c
@@ -84,6 +84,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] = 
      VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = VfatShutdown;
+   DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = VfatBuildRequest;
 
    DriverObject->DriverUnload = NULL;

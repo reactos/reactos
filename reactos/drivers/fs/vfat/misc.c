@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.4 2002/11/11 21:49:18 hbirr Exp $
+/* $Id: misc.c,v 1.5 2003/01/25 15:55:07 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -51,6 +51,8 @@ NTSTATUS VfatDispatchRequest (
          return VfatQueryVolumeInformation(IrpContext);
       case IRP_MJ_SET_VOLUME_INFORMATION:
          return VfatSetVolumeInformation(IrpContext);
+      case IRP_MJ_LOCK_CONTROL:
+         return VfatLockControl(IrpContext);
       case IRP_MJ_CLEANUP:
          return VfatCleanup(IrpContext);
       default:
@@ -62,6 +64,47 @@ NTSTATUS VfatDispatchRequest (
    }
 }
 
+NTSTATUS VfatLockControl(
+   IN PVFAT_IRP_CONTEXT IrpContext
+   )
+{
+   PVFATFCB Fcb;
+   PVFATCCB Ccb;
+   NTSTATUS Status;
+
+   DPRINT("VfatLockControl(IrpContext %x)\n", IrpContext);
+ 
+   assert(IrpContext);
+
+   Ccb = (PVFATCCB)IrpContext->FileObject->FsContext2;
+   Fcb = Ccb->pFcb;
+
+   if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
+   {
+      Status = STATUS_INVALID_DEVICE_REQUEST;
+      goto Fail;
+   }
+
+   if (Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
+   {
+      Status = STATUS_INVALID_PARAMETER;
+      goto Fail;
+   }
+
+   Status = FsRtlProcessFileLock(&Fcb->FileLock,
+                                 IrpContext->Irp,
+                                 NULL
+                                 );
+
+   VfatFreeIrpContext(IrpContext);
+   return Status;
+
+Fail:;
+   IrpContext->Irp->IoStatus.Status = Status;
+   IofCompleteRequest(IrpContext->Irp, NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);
+   VfatFreeIrpContext(IrpContext);
+   return Status;
+}
 
 NTSTATUS STDCALL VfatBuildRequest (
         IN PDEVICE_OBJECT DeviceObject,

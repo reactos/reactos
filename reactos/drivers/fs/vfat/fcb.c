@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.25 2003/01/11 15:59:07 hbirr Exp $
+/* $Id: fcb.c,v 1.26 2003/01/25 15:55:07 hbirr Exp $
  *
  *
  * FILE:             fcb.c
@@ -62,6 +62,7 @@ vfatNewFCB(PWCHAR pFileName)
   rcFCB->ShortHash.self = rcFCB;
   ExInitializeResourceLite(&rcFCB->PagingIoResource);
   ExInitializeResourceLite(&rcFCB->MainResource);
+  FsRtlInitializeFileLock(&rcFCB->FileLock, NULL, NULL); 
   return  rcFCB;
 }
 
@@ -78,6 +79,7 @@ vfatDestroyCCB(PVFATCCB pCcb)
 VOID
 vfatDestroyFCB(PVFATFCB  pFCB)
 {
+  FsRtlUninitializeFileLock(&pFCB->FileLock); 
   ExDeleteResourceLite(&pFCB->PagingIoResource);
   ExDeleteResourceLite(&pFCB->MainResource);
   if ((pFCB->Flags & FCB_IS_PAGE_FILE) && pFCB->FatChainSize)
