@@ -361,6 +361,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
    KPROCESSOR_MODE Mode;
    PFN_TYPE Page;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
+   PMADDRESS_SPACE AddressSpace;
 
    DPRINT("MmProbeAndLockPages(Mdl %x)\n", Mdl);
 
@@ -394,19 +395,21 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
       //FIXME: why isn't AccessMode used?
       Mode = KernelMode;
       Mdl->Process = NULL;
+      AddressSpace = MmGetKernelAddressSpace();
    }
    else
    {
       //FIXME: why isn't AccessMode used?
       Mode = UserMode;
       Mdl->Process = CurrentProcess;      
+      AddressSpace = &CurrentProcess->AddressSpace;
    }
 
 
    /*
     * Lock the pages
     */
-   MmLockAddressSpace(&CurrentProcess->AddressSpace);
+   MmLockAddressSpace(AddressSpace);
 
    for (i = 0; i < NrPages; i++)
    {
@@ -430,6 +433,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
                MmUnlockPage(Page);
                MmDereferencePage(Page);
             }
+            MmUnlockAddressSpace(AddressSpace);
             ExRaiseStatus(Status);
          }
       }
@@ -450,6 +454,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
                MmUnlockPage(Page);
                MmDereferencePage(Page);
             }
+            MmUnlockAddressSpace(AddressSpace);
             ExRaiseStatus(Status);
          }
       }
@@ -458,7 +463,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
       MmReferencePage(Page);
    }
    
-   MmUnlockAddressSpace(&CurrentProcess->AddressSpace);
+   MmUnlockAddressSpace(AddressSpace);
    Mdl->MdlFlags |= MDL_PAGES_LOCKED;
 }
 
