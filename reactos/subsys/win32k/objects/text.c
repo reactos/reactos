@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.70 2004/01/29 22:17:54 rcampbell Exp $ */
+/* $Id: text.c,v 1.71 2004/01/29 22:23:27 rcampbell Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -253,80 +253,72 @@ BOOL FASTCALL InitFontSupport(VOID)
 	PVOID   pBuff;
 	BOOLEAN bRestartScan = TRUE;
 	
+	InitializeListHead(&FontListHead);
+    ExInitializeFastMutex(&FontListLock);
+    ExInitializeFastMutex(&FreeTypeLock);
 	
-	
-	if(pBuff)
-	{
-	    InitializeListHead(&FontListHead);
-        ExInitializeFastMutex(&FontListLock);
-        ExInitializeFastMutex(&FreeTypeLock);
-	
-        ulError = FT_Init_FreeType(&library);
+    ulError = FT_Init_FreeType(&library);
     
-        if(!ulError)
-        {
-    	    RtlInitUnicodeString(&cchDir, L"\\SystemRoot\\Media\\Fonts\\");
+    if(!ulError)
+    {
+        RtlInitUnicodeString(&cchDir, L"\\SystemRoot\\Media\\Fonts\\");
 
-		    //RtlInitUnicodeString(&cchFilename, (PWCHAR)ExAllocatePool(NonPagedPool,0x4000));
-		    RtlInitUnicodeString(&cchSearchPattern,L"*.ttf");
-    
-		    InitializeObjectAttributes( &obAttr,
-			    			   			&cchDir,
-				    		   			OBJ_CASE_INSENSITIVE, 
-					    	   			NULL,
-						       			NULL );
+		RtlInitUnicodeString(&cchSearchPattern,L"*.ttf");
+        InitializeObjectAttributes( &obAttr,
+		    			   			&cchDir,
+			    		   			OBJ_CASE_INSENSITIVE, 
+				    	   			NULL,
+					       			NULL );
 						   			
-            Status = ZwOpenFile( &hDirectory,
-                                 SYNCHRONIZE | FILE_LIST_DIRECTORY,
-                                 &obAttr,
-                                 &Iosb,
-                                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                                 FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE );         
-            if( NT_SUCCESS(Status) )
-            {          
-                while(1)
-                {   
-                    iFileData = NULL;
-                    pBuff = ExAllocatePool(NonPagedPool,0x4000);
-                    RtlInitUnicodeString(&cchFilename,0);
-                    cchFilename.MaximumLength = 0x1000;
-                    cchFilename.Buffer = ExAllocatePool(PagedPool,cchFilename.MaximumLength);
+        Status = ZwOpenFile( &hDirectory,
+                             SYNCHRONIZE | FILE_LIST_DIRECTORY,
+                             &obAttr,
+                             &Iosb,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                             FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE );         
+        if( NT_SUCCESS(Status) )
+        {          
+            while(1)
+            {   
+                iFileData = NULL;
+                pBuff = ExAllocatePool(NonPagedPool,0x4000);
+                RtlInitUnicodeString(&cchFilename,0);
+                cchFilename.MaximumLength = 0x1000;
+                cchFilename.Buffer = ExAllocatePool(PagedPool,cchFilename.MaximumLength);
  
-                    cchFilename.Length = 0;
+                cchFilename.Length = 0;
 				    
-				    Status = NtQueryDirectoryFile( hDirectory,
-				                                   NULL,
-				                                   NULL,
-				                                   NULL,
-				                                   &Iosb,
-				                                   pBuff,
-				                                   0x4000,
-				                                   FileDirectoryInformation,
-				                                   TRUE,
-				                                   &cchSearchPattern,
-				                                   bRestartScan );
+				Status = NtQueryDirectoryFile( hDirectory,
+				                               NULL,
+				                               NULL,
+				                               NULL,
+				                               &Iosb,
+				                               pBuff,
+				                               0x4000,
+				                               FileDirectoryInformation,
+				                               TRUE,
+				                               &cchSearchPattern,
+				                               bRestartScan );
 				   
-                    iFileData = (PFILE_DIRECTORY_INFORMATION)pBuff;
-                   
-                    RtlAppendUnicodeToString(&cchFilename, cchDir.Buffer);
-                    RtlAppendUnicodeToString(&cchFilename, iFileData->FileName);
-				    RtlAppendUnicodeToString(&cchFilename, L"\0");
+                iFileData = (PFILE_DIRECTORY_INFORMATION)pBuff;
+                 
+                RtlAppendUnicodeToString(&cchFilename, cchDir.Buffer);
+                RtlAppendUnicodeToString(&cchFilename, iFileData->FileName);
+				RtlAppendUnicodeToString(&cchFilename, L"\0");
 				    
-				    if( !NT_SUCCESS(Status) || Status == STATUS_NO_MORE_FILES )
-				        break;
-				   
-				    DbgPrint("Adding Font:  \"%S\"\n", cchFilename.Buffer);
-				    //NtGdiAddFontResource(&cchFilename, 0);
-				    IntGdiAddFontResource(&cchFilename, 0);
-				    ExFreePool(pBuff);
-				    ExFreePool(cchFilename.Buffer);
-				    bRestartScan = FALSE;
-				}
+				if( !NT_SUCCESS(Status) || Status == STATUS_NO_MORE_FILES )
+				    break;
+
+				IntGdiAddFontResource(&cchFilename, 0);
 				ExFreePool(pBuff);
-				return TRUE;
-            }
+				ExFreePool(cchFilename.Buffer);
+				bRestartScan = FALSE;
+			}
+			ExFreePool(cchFilename.Buffer);
+			ExFreePool(pBuff);
+			return TRUE;
         }
-	}
+    }
 	return FALSE;
 }
 
