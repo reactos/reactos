@@ -220,6 +220,7 @@ ARCH_OBJS	=	fathelp.o	\
 			xboxcons.o	\
 			xboxdisk.o	\
 			xboxfont.o	\
+			xboxhw.o	\
 			xboxmem.o	\
 			xboxrtc.o	\
 			xboxvideo.o	\

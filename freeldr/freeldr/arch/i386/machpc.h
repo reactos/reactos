@@ -1,4 +1,4 @@
-/* $Id: machpc.h,v 1.6 2004/11/23 11:28:02 gvg Exp $
+/* $Id: machpc.h,v 1.7 2004/11/28 22:42:40 gvg Exp $
  *
  *  FreeLoader
  *
@@ -54,6 +54,8 @@ BOOL PcDiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY DriveGeometry);
 U32 PcDiskGetCacheableBlockCount(U32 DriveNumber);
 
 VOID PcRTCGetCurrentDateTime(PU32 Year, PU32 Month, PU32 Day, PU32 Hour, PU32 Minute, PU32 Second);
+
+VOID PcHwDetect(VOID);
 
 #endif /* __I386_MACHPC_H_ */
 

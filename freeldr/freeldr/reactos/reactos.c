@@ -739,7 +739,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Detect hardware
 	 */
-	DetectHardware();
+	MachHwDetect();
 
 
 	UiDrawStatusText("Loading...");

@@ -1,4 +1,4 @@
-/* $Id: machine.h,v 1.6 2004/11/23 11:28:02 gvg Exp $
+/* $Id: machine.h,v 1.7 2004/11/28 22:42:40 gvg Exp $
  *
  *  FreeLoader
  *
@@ -62,6 +62,8 @@ typedef struct tagMACHVTBL
   U32 (*DiskGetCacheableBlockCount)(U32 DriveNumber);
 
   VOID (*RTCGetCurrentDateTime)(PU32 Year, PU32 Month, PU32 Day, PU32 Hour, PU32 Minute, PU32 Second);
+
+  VOID (*HwDetect)(VOID);
 } MACHVTBL, *PMACHVTBL;
 
 VOID MachInit(VOID);
@@ -90,6 +92,7 @@ extern MACHVTBL MachVtbl;
 #define MachDiskGetDriveGeometry(Drive, Geom)	MachVtbl.DiskGetDriveGeometry((Drive), (Geom))
 #define MachDiskGetCacheableBlockCount(Drive)	MachVtbl.DiskGetCacheableBlockCount(Drive)
 #define MachRTCGetCurrentDateTime(Y, Mo, D, H, Mi, S)	MachVtbl.RTCGetCurrentDateTime((Y), (Mo), (D), (H), (Mi), (S));
+#define MachHwDetect()				MachVtbl.HwDetect()
 
 #endif /* __MACHINE_H_ */
 

@@ -1,4 +1,4 @@
-/* $Id: machine.c,v 1.6 2004/11/23 11:28:02 gvg Exp $
+/* $Id: machine.c,v 1.7 2004/11/28 22:42:39 gvg Exp $
  *
  *  FreeLoader
  *
@@ -42,6 +42,7 @@
 #undef MachDiskGetDriveGeometry
 #undef MachDiskGetCacheableBlockCount
 #undef MachRTCGetCurrentDateTime
+#undef MachHwDetect
 
 MACHVTBL MachVtbl;
 
@@ -175,6 +176,12 @@ VOID
 MachRTCGetCurrentDateTime(PU32 Year, PU32 Month, PU32 Day, PU32 Hour, PU32 Minute, PU32 Second)
 {
   MachVtbl.RTCGetCurrentDateTime(Year, Month, Day, Hour, Minute, Second);
+}
+
+VOID
+MachHwDetect(VOID)
+{
+  MachVtbl.HwDetect();
 }
 
 /* EOF */

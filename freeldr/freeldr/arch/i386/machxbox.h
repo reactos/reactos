@@ -1,4 +1,4 @@
-/* $Id: machxbox.h,v 1.6 2004/11/23 11:28:02 gvg Exp $
+/* $Id: machxbox.h,v 1.7 2004/11/28 22:42:40 gvg Exp $
  *
  *  FreeLoader
  *
@@ -57,6 +57,9 @@ BOOL XboxDiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY DriveGeometry);
 U32 XboxDiskGetCacheableBlockCount(U32 DriveNumber);
 
 VOID XboxRTCGetCurrentDateTime(PU32 Year, PU32 Month, PU32 Day, PU32 Hour, PU32 Minute, PU32 Second);
+
+VOID XboxHwDetect(VOID);
+
 #endif /* __I386_HWXBOX_H_ */
 
 /* EOF */

@@ -302,7 +302,7 @@ VOID RunLoader(VOID)
 #else
   printf("Detecting hardware...\n\n");
 #endif
-  DetectHardware();
+  MachHwDetect();
 #ifdef USE_UI
   UiDrawStatusText("");
 #endif

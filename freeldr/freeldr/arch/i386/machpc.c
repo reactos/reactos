@@ -1,4 +1,4 @@
-/* $Id: machpc.c,v 1.6 2004/11/23 11:28:02 gvg Exp $
+/* $Id: machpc.c,v 1.7 2004/11/28 22:42:40 gvg Exp $
  *
  *  FreeLoader
  *
@@ -53,6 +53,7 @@ PcMachInit(VOID)
   MachVtbl.DiskGetDriveGeometry = PcDiskGetDriveGeometry;
   MachVtbl.DiskGetCacheableBlockCount = PcDiskGetCacheableBlockCount;
   MachVtbl.RTCGetCurrentDateTime = PcRTCGetCurrentDateTime;
+  MachVtbl.HwDetect = PcHwDetect;
 }
 
 /* EOF */

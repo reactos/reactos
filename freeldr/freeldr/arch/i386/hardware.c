@@ -2231,7 +2231,7 @@ DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
 
 
 VOID
-DetectHardware(VOID)
+PcHwDetect(VOID)
 {
   HKEY SystemKey;
   U32 BusNumber = 0;

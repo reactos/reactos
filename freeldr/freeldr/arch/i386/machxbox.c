@@ -1,4 +1,4 @@
-/* $Id: machxbox.c,v 1.6 2004/11/23 11:28:02 gvg Exp $
+/* $Id: machxbox.c,v 1.7 2004/11/28 22:42:40 gvg Exp $
  *
  *  FreeLoader
  *
@@ -51,4 +51,5 @@ XboxMachInit(VOID)
   MachVtbl.DiskGetDriveGeometry = XboxDiskGetDriveGeometry;
   MachVtbl.DiskGetCacheableBlockCount = XboxDiskGetCacheableBlockCount;
   MachVtbl.RTCGetCurrentDateTime = XboxRTCGetCurrentDateTime;
+  MachVtbl.HwDetect = XboxHwDetect;
 }
