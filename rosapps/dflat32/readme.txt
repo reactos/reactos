@@ -14,8 +14,6 @@ What must be changed in D-Flat/32?
 Things that have to be fixed (incomplete list):
   - key handling (replace dos keycodes by win32 console keycodes)
   - message queue should become a double linked list (it's an array now)
-  - establish consitent naming conventions ('Df'/'DF' prefix) to avoid
-    collisions (e.g. CreateWindow() --> DfCreateWindow())
   - fix short dos filename buffers
   - add code to register external window classes
   - implement recognition of current console screen size (done)
