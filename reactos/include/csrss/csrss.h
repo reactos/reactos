@@ -13,6 +13,8 @@
 
 #define CSR_CSRSS_SECTION_SIZE          (65536)
 
+typedef __declspec(noreturn) VOID CALLBACK(*PCONTROLDISPATCHER)(DWORD);
+
 typedef struct
 {
 } CSRSS_CONNECT_PROCESS_REQUEST, PCSRSS_CONNECT_PROCESS_REQUEST;
@@ -58,6 +60,11 @@ typedef struct
    ULONG NrCharactersRead;
    BYTE Buffer[1];
 } CSRSS_READ_CONSOLE_REPLY, *PCSRSS_READ_CONSOLE_REPLY;
+
+typedef struct
+{
+   PCONTROLDISPATCHER CtrlDispatcher;
+} CSRSS_ALLOC_CONSOLE_REQUEST, *PCSRSS_ALLOC_CONSOLE_REQUEST;
 
 typedef struct
 {
@@ -463,6 +470,7 @@ typedef struct
     CSRSS_CONNECT_PROCESS_REQUEST ConnectRequest;
     CSRSS_WRITE_CONSOLE_REQUEST WriteConsoleRequest;
     CSRSS_READ_CONSOLE_REQUEST ReadConsoleRequest;
+    CSRSS_ALLOC_CONSOLE_REQUEST AllocConsoleRequest;
     CSRSS_SCREEN_BUFFER_INFO_REQUEST ScreenBufferInfoRequest;
     CSRSS_SET_CURSOR_REQUEST SetCursorRequest;
     CSRSS_FILL_OUTPUT_REQUEST FillOutputRequest;
