@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.39 2001/03/13 21:39:47 dwelch Exp $
+/* $Id: npool.c,v 1.40 2001/03/13 21:46:43 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -26,7 +26,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#define ENABLE_VALIDATE_POOL
+//#define ENABLE_VALIDATE_POOL
 
 #ifdef ENABLE_VALIDATE_POOL
 #define VALIDATE_POOL validate_kernel_pool()
@@ -173,7 +173,7 @@ VOID ExInitNonPagedPool(ULONG BaseAddress)
    InitializeListHead(&UsedBlockListHead);
 }
 
-VOID static
+VOID STATIC
 MiDumpTagStats(ULONG CurrentTag, ULONG CurrentNrBlocks, ULONG CurrentSize)
 {
   CHAR c1, c2, c3, c4;
@@ -802,10 +802,8 @@ VOID STDCALL ExFreePool (PVOID block)
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
 }
 
-PVOID STDCALL ExAllocateNonPagedPoolWithTag(ULONG Type, 
-					    ULONG Size, 
-					    ULONG Tag,
-					    PVOID Caller)
+PVOID STDCALL 
+ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
 {
    BLOCK_HDR* current = NULL;
    PLIST_ENTRY current_entry;
