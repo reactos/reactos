@@ -279,6 +279,8 @@ NtRemoveIoCompletion(
 {
    PKQUEUE  Queue;
    NTSTATUS Status;
+   PIO_COMPLETION_PACKET   Packet;
+   PLIST_ENTRY             ListEntry;
       
    Status = ObReferenceObjectByHandle( IoCompletionHandle,
                                        IO_COMPLETION_MODIFY_STATE,
@@ -286,29 +288,45 @@ NtRemoveIoCompletion(
                                        UserMode,
                                        (PVOID*)&Queue,
                                        NULL);
-   if (NT_SUCCESS(Status))
+   if (!NT_SUCCESS(Status))
    {
-      PIO_COMPLETION_PACKET   Packet;
-      PLIST_ENTRY             ListEntry;
-
-      /*
-      Try 2 remove packet from queue. Wait (optionaly) if
-      no packet in queue or max num of threads allready running.
-      */
-      ListEntry = KeRemoveQueue(Queue, UserMode, Timeout );
-
-      ObDereferenceObject(Queue);
-
-      Packet = CONTAINING_RECORD(ListEntry, IO_COMPLETION_PACKET, ListEntry);
-
-      if (CompletionKey) *CompletionKey = Packet->Key;
-      if (CompletionContext) *CompletionContext = Packet->Context;
-      if (IoStatusBlock) *IoStatusBlock = Packet->IoStatus;
-
-      ExFreeToNPagedLookasideList(&IoCompletionPacketLookaside, Packet);
+      return Status;
    }
 
-   return Status;
+   /*
+   Try 2 remove packet from queue. Wait (optionaly) if
+   no packet in queue or max num of threads allready running.
+   */
+      
+   do {
+      
+      ListEntry = KeRemoveQueue(Queue, UserMode, Timeout );
+
+      /* Nebbets book says nothing about NtRemoveIoCompletion returning STATUS_USER_APC,
+      and the umode equivalent GetQueuedCompletionStatus says nothing about this either,
+      so my guess it we should restart the operation. Need further investigation. -Gunnar
+      */
+
+   } while((NTSTATUS)ListEntry == STATUS_USER_APC);
+
+   ObDereferenceObject(Queue);
+   
+   if ((NTSTATUS)ListEntry == STATUS_TIMEOUT)
+   {
+      return STATUS_TIMEOUT;
+   }
+   
+   ASSERT(ListEntry);
+   
+   Packet = CONTAINING_RECORD(ListEntry, IO_COMPLETION_PACKET, ListEntry);
+
+   if (CompletionKey) *CompletionKey = Packet->Key;
+   if (CompletionContext) *CompletionContext = Packet->Context;
+   if (IoStatusBlock) *IoStatusBlock = Packet->IoStatus;
+
+   ExFreeToNPagedLookasideList(&IoCompletionPacketLookaside, Packet);
+
+   return STATUS_SUCCESS;
 }
 
 
