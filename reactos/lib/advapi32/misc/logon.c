@@ -1,4 +1,4 @@
-/* $Id: logon.c,v 1.4 2004/02/25 14:25:10 ekohl Exp $
+/* $Id: logon.c,v 1.5 2004/03/09 15:04:28 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -7,12 +7,14 @@
  * PROGRAMMER:  Eric Kohl
  */
 
-#include <windows.h>
-
 #define NTOS_MODE_USER
 #include <ntos.h>
-
+#include <windows.h>
 #include <string.h>
+
+#define NDEBUG
+#include <debug.h>
+
 
 /* FUNCTIONS ***************************************************************/
 
@@ -145,27 +147,25 @@ SamGetUserSid (LPCWSTR UserName,
 {
   PSID lpSid;
   DWORD dwLength;
-  HKEY hAccountKey;
+  HKEY hUsersKey;
   HKEY hUserKey;
 
   if (Sid != NULL)
     *Sid = NULL;
 
-  /* Open the Account key */
+  /* Open the Users key */
   if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		     L"SAM\\SAM\\Domains\\Account",
+		     L"SAM\\SAM\\Domains\\Account\\Users",
 		     0,
 		     KEY_READ,
-		     &hAccountKey))
+		     &hUsersKey))
     {
-//#if 0
-//      DebugPrint ("Failed to open Account key! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to open Users key! (Error %lu)\n", GetLastError());
       return FALSE;
     }
 
   /* Open the user key */
-  if (RegOpenKeyExW (hAccountKey,
+  if (RegOpenKeyExW (hUsersKey,
 		     UserName,
 		     0,
 		     KEY_READ,
@@ -173,23 +173,19 @@ SamGetUserSid (LPCWSTR UserName,
     {
       if (GetLastError () == ERROR_FILE_NOT_FOUND)
 	{
-//#if 0
-//	  DebugPrint ("Invalid user name!\n");
-//#endif
+	  DPRINT1 ("Invalid user name!\n");
 	  SetLastError (ERROR_NO_SUCH_USER);
 	}
       else
 	{
-//#if 0
-//	  DebugPrint ("Failed to open user key! (Error %lu)\n", GetLastError());
-//#endif
+	  DPRINT1 ("Failed to open user key! (Error %lu)\n", GetLastError());
 	}
 
-      RegCloseKey (hAccountKey);
+      RegCloseKey (hUsersKey);
       return FALSE;
     }
 
-  RegCloseKey (hAccountKey);
+  RegCloseKey (hUsersKey);
 
   /* Get SID size */
   dwLength = 0;
@@ -200,26 +196,19 @@ SamGetUserSid (LPCWSTR UserName,
 			NULL,
 			&dwLength))
     {
-//#if 0
-//      DebugPrint ("Failed to read the SID size! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to read the SID size! (Error %lu)\n", GetLastError());
       RegCloseKey (hUserKey);
       return FALSE;
     }
 
-  /* FIXME: Allocate sid buffer */
-//#if 0
-//  DebugPrint ("Required SID buffer size: %lu\n", dwLength);
-//#endif
-
+  /* Allocate sid buffer */
+  DPRINT ("Required SID buffer size: %lu\n", dwLength);
   lpSid = (PSID)RtlAllocateHeap (RtlGetProcessHeap (),
 				 0,
 				 dwLength);
   if (lpSid == NULL)
     {
-//#if 0
-//      DebugPrint ("Failed to allocate SID buffer!\n");
-//#endif
+      DPRINT1 ("Failed to allocate SID buffer!\n");
       RegCloseKey (hUserKey);
       return FALSE;
     }
@@ -232,9 +221,7 @@ SamGetUserSid (LPCWSTR UserName,
 			(LPBYTE)lpSid,
 			&dwLength))
     {
-//#if 0
-//      DebugPrint ("Failed to read the SID! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to read the SID! (Error %lu)\n", GetLastError());
       RtlFreeHeap (RtlGetProcessHeap (),
 		   0,
 		   lpSid);
@@ -300,17 +287,18 @@ LogonUserW (LPCWSTR lpszUsername,
   /* Get the user SID from the registry */
   if (!SamGetUserSid (lpszUsername, &UserSid))
     {
-  RtlAllocateAndInitializeSid (&SystemAuthority,
-			       5,
-			       SECURITY_NT_NON_UNIQUE_RID,
-			       0x12345678,
-			       0x12345678,
-			       0x12345678,
-			       DOMAIN_USER_RID_ADMIN,
-			       SECURITY_NULL_RID,
-			       SECURITY_NULL_RID,
-			       SECURITY_NULL_RID,
-			       &UserSid);
+      DPRINT ("SamGetUserSid() failed\n");
+      RtlAllocateAndInitializeSid (&SystemAuthority,
+				   5,
+				   SECURITY_NT_NON_UNIQUE_RID,
+				   0x12345678,
+				   0x12345678,
+				   0x12345678,
+				   DOMAIN_USER_RID_ADMIN,
+				   SECURITY_NULL_RID,
+				   SECURITY_NULL_RID,
+				   SECURITY_NULL_RID,
+				   &UserSid);
     }
 
   TokenUser.User.Sid = UserSid;
