@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.37 2004/03/31 03:39:12 jimtabor Exp $
+/* $Id: disk.c,v 1.38 2004/03/31 05:25:36 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -108,7 +108,7 @@ ScsiDiskCalcMbrCheckSum(IN PDEVICE_EXTENSION DeviceExtension,
 
 
 static NTSTATUS
-DiskBuildPartionTable(IN PDEVICE_OBJECT DiskDeviceObject,
+DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
 		      IN PIRP Irp);
 
 
@@ -838,7 +838,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 
 
 static NTSTATUS
-DiskBuildPartionTable(IN PDEVICE_OBJECT DiskDeviceObject,
+DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
 		      IN PIRP Irp)
 {
   PDRIVE_LAYOUT_INFORMATION PartitionList = NULL;
@@ -873,9 +873,6 @@ DiskBuildPartionTable(IN PDEVICE_OBJECT DiskDeviceObject,
       /* Drive is not ready. */
       DPRINT("Drive not ready\n");
       DiskData->DriveNotReady = TRUE;
-
-      if (PartitionList != NULL)
-          ExFreePool(PartitionList);
       return Status;
     }
 
@@ -910,8 +907,6 @@ DiskBuildPartionTable(IN PDEVICE_OBJECT DiskDeviceObject,
 		 DiskDeviceExtension->PartitionLength.QuadPart / 512 /* DrvParms.BytesPerSector*/);
 	}    
     }
-  if (PartitionList != NULL)
-    ExFreePool(PartitionList);
 
   DPRINT("DiskBuildPartitionTable() done\n");
 
@@ -1005,7 +1000,7 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	(DeviceExtension->DiskGeometry->MediaType == RemovableMedia))
 	{
 		/* Allocate a partition list for a single entry. */
-		Status = DiskBuildPartionTable(DeviceObject,Irp);
+		Status = DiskBuildPartitionTable(DeviceObject,Irp);
 	}
 	
 	if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength <
