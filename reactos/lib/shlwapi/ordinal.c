@@ -43,9 +43,9 @@
 #include "ddeml.h"
 #include "docobj.h"
 #include "exdisp.h"
-#include "shlguid.h"
 #include "wingdi.h"
 #include "shlobj.h"
+#include "shlguid.h"
 #include "olectl.h"
 #include "shellapi.h"
 #include "commdlg.h"
@@ -56,7 +56,9 @@
 #include "wine/debug.h"
 #include "shlwapi.h"
 #ifdef __REACTOS__
-#include "shlobj.h"
+#ifndef CMIC_MASK_ASYNCOK
+#define CMIC_MASK_ASYNCOK        0x00100000
+#endif
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -698,7 +700,11 @@ INT WINAPI SHStringFromGUIDW(REFGUID guid, LPWSTR lpszDest, INT cchMax)
  */
 BOOL WINAPI IsCharAlphaWrapW(WCHAR wc)
 {
+#ifndef __REACTOS__
     return (get_char_typeW(wc) & C1_ALPHA) != 0;
+#else
+    return iswalpha(wc);
+#endif
 }
 
 /*************************************************************************
@@ -715,7 +721,11 @@ BOOL WINAPI IsCharAlphaWrapW(WCHAR wc)
  */
 BOOL WINAPI IsCharUpperWrapW(WCHAR wc)
 {
+#ifndef __REACTOS__
     return (get_char_typeW(wc) & C1_UPPER) != 0;
+#else
+    return iswupper(wc);
+#endif
 }
 
 /*************************************************************************
@@ -732,7 +742,11 @@ BOOL WINAPI IsCharUpperWrapW(WCHAR wc)
  */
 BOOL WINAPI IsCharLowerWrapW(WCHAR wc)
 {
+#ifndef __REACTOS__
     return (get_char_typeW(wc) & C1_LOWER) != 0;
+#else
+    return iswlower(wc);
+#endif
 }
 
 /*************************************************************************
@@ -749,7 +763,11 @@ BOOL WINAPI IsCharLowerWrapW(WCHAR wc)
  */
 BOOL WINAPI IsCharAlphaNumericWrapW(WCHAR wc)
 {
+#ifndef __REACTOS__
     return (get_char_typeW(wc) & (C1_ALPHA|C1_DIGIT)) != 0;
+#else
+    return iswalnum(wc);
+#endif
 }
 
 /*************************************************************************
@@ -766,7 +784,11 @@ BOOL WINAPI IsCharAlphaNumericWrapW(WCHAR wc)
  */
 BOOL WINAPI IsCharSpaceW(WCHAR wc)
 {
+#ifndef __REACTOS__
     return (get_char_typeW(wc) & C1_SPACE) != 0;
+#else
+    return iswspace(wc);
+#endif
 }
 
 /*************************************************************************
@@ -784,7 +806,11 @@ BOOL WINAPI IsCharSpaceW(WCHAR wc)
  */
 BOOL WINAPI IsCharBlankW(WCHAR wc)
 {
+#ifndef __REACTOS__
     return (get_char_typeW(wc) & C1_BLANK) != 0;
+#else
+    return iswctype(wc, _BLANK);
+#endif
 }
 
 /*************************************************************************
@@ -801,7 +827,11 @@ BOOL WINAPI IsCharBlankW(WCHAR wc)
  */
 BOOL WINAPI IsCharPunctW(WCHAR wc)
 {
+#ifndef __REACTOS__
     return (get_char_typeW(wc) & C1_PUNCT) != 0;
+#else
+    return iswpunct(wc);
+#endif
 }
 
 /*************************************************************************
@@ -818,7 +848,11 @@ BOOL WINAPI IsCharPunctW(WCHAR wc)
  */
 BOOL WINAPI IsCharCntrlW(WCHAR wc)
 {
+#ifndef __REACTOS__
     return (get_char_typeW(wc) & C1_CNTRL) != 0;
+#else
+    return iswcntrl(wc);
+#endif
 }
 
 /*************************************************************************
@@ -835,7 +869,11 @@ BOOL WINAPI IsCharCntrlW(WCHAR wc)
  */
 BOOL WINAPI IsCharDigitW(WCHAR wc)
 {
+#ifndef __REACTOS__
     return (get_char_typeW(wc) & C1_DIGIT) != 0;
+#else
+    return iswdigit(wc);
+#endif
 }
 
 /*************************************************************************
@@ -852,7 +890,11 @@ BOOL WINAPI IsCharDigitW(WCHAR wc)
  */
 BOOL WINAPI IsCharXDigitW(WCHAR wc)
 {
+#ifndef __REACTOS__
     return (get_char_typeW(wc) & C1_XDIGIT) != 0;
+#else
+    return isxdigit(wc);
+#endif
 }
 
 /*************************************************************************
@@ -1387,13 +1429,23 @@ HRESULT WINAPI ConnectToConnectionPoint(IUnknown* lpUnkSink, REFIID riid, BOOL b
                                  (void**)&lpContainer);
   if (SUCCEEDED(hRet))
   {
+#ifndef __REACTOS__
     hRet = IConnectionPointContainer_FindConnectionPoint(lpContainer, riid, &lpCP);
+#else
+    hRet = lpContainer->lpVtbl->FindConnectionPoint(lpContainer, riid, &lpCP);
+#endif
 
     if (SUCCEEDED(hRet))
     {
+#ifndef __REACTOS__
       if(!bAdviseOnly)
         hRet = IConnectionPoint_Unadvise(lpCP, *lpCookie);
       hRet = IConnectionPoint_Advise(lpCP, lpUnkSink, lpCookie);
+#else
+      if(!bAdviseOnly)
+        hRet = lpCP->lpVtbl->Unadvise(lpCP, *lpCookie);
+      hRet = lpCP->lpVtbl->Advise(lpCP, lpUnkSink, lpCookie);
+#endif
 
       if (FAILED(hRet))
         *lpCookie = 0;
@@ -1401,7 +1453,11 @@ HRESULT WINAPI ConnectToConnectionPoint(IUnknown* lpUnkSink, REFIID riid, BOOL b
       if (lppCP && SUCCEEDED(hRet))
         *lppCP = lpCP; /* Caller keeps the interface */
       else
+#ifndef __REACTOS__
         IConnectionPoint_Release(lpCP); /* Release it */
+#else
+        lpCP->lpVtbl->Release(lpCP); /* Release it */
+#endif
     }
 
     IUnknown_Release(lpContainer);
@@ -1541,7 +1597,11 @@ HRESULT WINAPI IUnknown_GetWindow(IUnknown *lpUnknown, HWND *lphWnd)
     /* Lazyness here - Since GetWindow() is the first method for the above 3
      * interfaces, we use the same call for them all.
      */
+#ifndef __REACTOS__
     hRet = IOleWindow_GetWindow((IOleWindow*)lpOle, lphWnd);
+#else
+    hRet = ((IOleWindow*)lpOle)->lpVtbl->GetWindow((IOleWindow*)lpOle, lphWnd);
+#endif
     IUnknown_Release(lpOle);
     if (lphWnd)
       TRACE("Returning HWND=%p\n", *lphWnd);
@@ -1616,14 +1676,22 @@ DWORD WINAPI IUnknown_SetSite(
 	if (ret) return ret;
 
 	/* fake a GetClassId call */
+#ifndef __REACTOS__
 	ret = IOleWindow_GetWindow((IOleWindow *)aa, (HWND*)p2);
+#else
+	ret = ((IOleWindow *)aa)->lpVtbl->GetWindow((IOleWindow *)aa, (HWND*)p2);
+#endif
 	TRACE("second IU_QI doing 0x0c ret=%08lx, *p2=%08lx\n", ret,
 	      *(LPDWORD)p2);
 	IUnknown_Release((IUnknown *)aa);
     }
     else {
 	/* fake a SetSite call */
+#ifndef __REACTOS__
 	ret = IOleWindow_GetWindow((IOleWindow *)p1, (HWND*)p2);
+#else
+	ret = ((IOleWindow *)p1)->lpVtbl->GetWindow((IOleWindow *)p1, (HWND*)p2);
+#endif
 	TRACE("first IU_QI doing 0x0c ret=%08lx, *p2=%08lx\n", ret,
 	      *(LPDWORD)p2);
 	IUnknown_Release((IUnknown *)p1);
@@ -1706,7 +1774,11 @@ HRESULT WINAPI IUnknown_QueryService(IUnknown* lpUnknown, REFGUID sid, REFIID ri
     TRACE("QueryInterface returned (IServiceProvider*)%p\n", pService);
 
     /* Get a Service interface from the object */
+#ifndef __REACTOS__
     hRet = IServiceProvider_QueryService(pService, sid, riid, lppOut);
+#else
+    hRet = pService->lpVtbl->QueryService(pService, sid, riid, lppOut);
+#endif
 
     TRACE("(IServiceProvider*)%p returned (IUnknown*)%p\n", pService, *lppOut);
 
@@ -1907,8 +1979,13 @@ DWORD WINAPI SHLoadFromPropertyBag(IUnknown *lpUnknown, IPropertyBag* lpPropBag)
                                    (void**)&lpPPBag);
     if (SUCCEEDED(hRet) && lpPPBag)
     {
+#ifndef __REACTOS__
       hRet = IPersistPropertyBag_Load(lpPPBag, lpPropBag, NULL);
       IPersistPropertyBag_Release(lpPPBag);
+#else
+      hRet = lpPPBag->lpVtbl->Load(lpPPBag, lpPropBag, NULL);
+      lpPPBag->lpVtbl->Release(lpPPBag);
+#endif
     }
   }
   return hRet;
@@ -1939,8 +2016,13 @@ DWORD WINAPI IUnknown_OnFocusOCS(IUnknown *lpUnknown, IDispatch** lppDisp)
                                    (void**)&lpCSite);
     if (SUCCEEDED(hRet) && lpCSite)
     {
+#ifndef __REACTOS__
       hRet = IOleControlSite_GetExtendedControl(lpCSite, lppDisp);
       IOleControlSite_Release(lpCSite);
+#else
+      hRet = lpCSite->lpVtbl->GetExtendedControl(lpCSite, lppDisp);
+      lpCSite->lpVtbl->Release(lpCSite);
+#endif
     }
   }
   return hRet;
@@ -2953,7 +3035,11 @@ HRESULT WINAPI IConnectionPoint_OnChanged(IConnectionPoint* lpCP, DISPID dispID)
 
   /* Get an enumerator for the connections */
   if (lpCP)
+#ifndef __REACTOS__
     hRet = IConnectionPoint_EnumConnections(lpCP, &lpEnum);
+#else
+    hRet = lpCP->lpVtbl->EnumConnections(lpCP, &lpEnum);
+#endif
 
   if (SUCCEEDED(hRet))
   {
@@ -2962,6 +3048,7 @@ HRESULT WINAPI IConnectionPoint_OnChanged(IConnectionPoint* lpCP, DISPID dispID)
     ULONG ulFetched;
 
     /* Call OnChanged() for every notify sink in the connection point */
+#ifndef __REACTOS__
     while (IEnumConnections_Next(lpEnum, 1, &connData, &ulFetched) == S_OK)
     {
       if (SUCCEEDED(IUnknown_QueryInterface(connData.pUnk, &IID_IPropertyNotifySink, (void**)&lpSink)) &&
@@ -2974,6 +3061,20 @@ HRESULT WINAPI IConnectionPoint_OnChanged(IConnectionPoint* lpCP, DISPID dispID)
     }
 
     IEnumConnections_Release(lpEnum);
+#else
+    while (lpEnum->lpVtbl->Next(lpEnum, 1, &connData, &ulFetched) == S_OK)
+    {
+      if (SUCCEEDED(IUnknown_QueryInterface(connData.pUnk, &IID_IPropertyNotifySink, (void**)&lpSink)) &&
+          lpSink)
+      {
+        lpSink->lpVtbl->OnChanged(lpSink, dispID);
+        lpSink->lpVtbl->Release(lpSink);
+      }
+      IUnknown_Release(connData.pUnk);
+    }
+
+    lpEnum->lpVtbl->Release(lpEnum);
+#endif
   }
   return hRet;
 }
@@ -3006,11 +3107,20 @@ HRESULT WINAPI IUnknown_CPContainerOnChanged(IUnknown *lpUnknown, DISPID dispID)
   {
     IConnectionPoint* lpCP;
 
+#ifndef __REACTOS__
     hRet = IConnectionPointContainer_FindConnectionPoint(lpCPC, &IID_IPropertyNotifySink, &lpCP);
     IConnectionPointContainer_Release(lpCPC);
+#else
+    hRet = lpCPC->lpVtbl->FindConnectionPoint(lpCPC, &IID_IPropertyNotifySink, &lpCP);
+    lpCPC->lpVtbl->Release(lpCPC);
+#endif
 
     hRet = IConnectionPoint_OnChanged(lpCP, dispID);
+#ifndef __REACTOS__
     IConnectionPoint_Release(lpCP);
+#else
+    lpCP->lpVtbl->Release(lpCP);
+#endif
   }
   return hRet;
 }
@@ -3227,8 +3337,12 @@ WORD WINAPI VerQueryValueWrapW(
 }
 
 #define IsIface(type) SUCCEEDED((hRet = IUnknown_QueryInterface(lpUnknown, &IID_##type, (void**)&lpObj)))
+#ifndef __REACTOS__
 #define IShellBrowser_EnableModeless IShellBrowser_EnableModelessSB
 #define EnableModeless(type) type##_EnableModeless((type*)lpObj, bModeless)
+#else
+#define EnableModeless(type) ((type*)lpObj)->lpVtbl->EnableModeless((type*)lpObj, bModeless)
+#endif
 
 /*************************************************************************
  *      @	[SHLWAPI.355]
@@ -3261,7 +3375,11 @@ HRESULT WINAPI IUnknown_EnableModeless(IUnknown *lpUnknown, BOOL bModeless)
   if (IsIface(IOleInPlaceFrame))
     EnableModeless(IOleInPlaceFrame);
   else if (IsIface(IShellBrowser))
+#ifndef __REACTOS__
     EnableModeless(IShellBrowser);
+#else
+    ((IShellBrowser*)lpObj)->lpVtbl->EnableModelessSB((IShellBrowser*)lpObj, bModeless);
+#endif
 #if 0
   /* FIXME: Wine has no headers for these objects yet */
   else if (IsIface(IInternetSecurityMgrSite))
@@ -3327,8 +3445,13 @@ HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST 
     return hRet;
 
   /* Get the context menu from the shell folder */
+#ifndef __REACTOS__
   hRet = IShellFolder_GetUIObjectOf(lpFolder, hWnd, 1, &lpApidl,
                                     &IID_IContextMenu, 0, (void**)&iContext);
+#else
+  hRet = lpFolder->lpVtbl->GetUIObjectOf(lpFolder, hWnd, 1, &lpApidl,
+                                    &IID_IContextMenu, 0, (void**)&iContext);
+#endif
   if (SUCCEEDED(hRet))
   {
     HMENU hMenu;
@@ -3338,8 +3461,13 @@ HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST 
       DWORD dwDefaultId = 0;
 
       /* Add the context menu entries to the popup */
+#ifndef __REACTOS__
       hQuery = IContextMenu_QueryContextMenu(iContext, hMenu, 0, 1, 0x7FFF,
                                              bInvokeDefault ? CMF_NORMAL : CMF_DEFAULTONLY);
+#else
+      hQuery = iContext->lpVtbl->QueryContextMenu(iContext, hMenu, 0, 1, 0x7FFF,
+          bInvokeDefault ? CMF_NORMAL : CMF_DEFAULTONLY);
+#endif
 
       if (SUCCEEDED(hQuery))
       {
@@ -3355,12 +3483,20 @@ HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST 
           cmIci.lpVerb = MAKEINTRESOURCEA(dwDefaultId);
           cmIci.nShow = SW_SCROLLCHILDREN;
 
+#ifndef __REACTOS__
           hRet = IContextMenu_InvokeCommand(iContext, &cmIci);
+#else
+          hRet = iContext->lpVtbl->InvokeCommand(iContext, &cmIci);
+#endif
         }
       }
       DestroyMenu(hMenu);
     }
+#ifndef __REACTOS__
     IContextMenu_Release(iContext);
+#else
+    iContext->lpVtbl->Release(iContext);
+#endif
   }
   return hRet;
 }
