@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.76 2003/08/31 14:25:28 rcampbell Exp $
+/* $Id: defwnd.c,v 1.77 2003/09/06 14:30:21 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -861,6 +861,71 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
   return(HTNOWHERE);
 }
 
+VOID STATIC
+DefWndDoButtonHandle(HWND hWnd, WPARAM wParam)
+{
+  MSG Msg;
+  BOOL InBtn = TRUE, HasBtn = FALSE;
+  ULONG Btn;
+  WPARAM SCMsg, CurBtn = wParam, OrigBtn = wParam;
+  
+  switch(wParam)
+  {
+    case HTCLOSE:
+      Btn = DFCS_CAPTIONCLOSE;
+      SCMsg = SC_CLOSE;
+      HasBtn = IsCloseBoxActive(hWnd);
+      break;
+    case HTMINBUTTON:
+      Btn = DFCS_CAPTIONMIN;
+      SCMsg = SC_MINIMIZE;
+      HasBtn = IsMinBoxActive(hWnd);
+      break;
+    case HTMAXBUTTON:
+      Btn = DFCS_CAPTIONMAX;
+      SCMsg = SC_MAXIMIZE;
+      HasBtn = IsMaxBoxActive(hWnd);
+      break;
+    default:
+      return;
+  }
+  
+  SetCapture(hWnd);
+  UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), HasBtn , Btn);
+  
+  while(1)
+  {
+    GetMessageW(&Msg, 0, 0, 0);
+    switch(Msg.message)
+    {
+      case WM_NCLBUTTONUP:
+      case WM_LBUTTONUP:
+        if(InBtn)
+          goto done;
+        else
+        {
+          ReleaseCapture();
+          return;
+        }
+      case WM_NCMOUSEMOVE:
+      case WM_MOUSEMOVE:
+        CurBtn = DefWndHitTestNC(hWnd, Msg.pt);
+        if(InBtn != (CurBtn == OrigBtn))
+        {
+          UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), (CurBtn == OrigBtn) , Btn);
+        }
+        InBtn = CurBtn == OrigBtn;
+        break;
+    }
+  }
+  
+done:
+  UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), FALSE , Btn);
+  ReleaseCapture();
+  SendMessageA(hWnd, WM_SYSCOMMAND, SCMsg, 0);
+  return;
+}
+
 LRESULT
 DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
@@ -892,7 +957,7 @@ DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
         case HTMENU:
         {
-            SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU, lParam);
+            SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTMENU, lParam);
             break;
         }
         case HTHSCROLL:
@@ -906,19 +971,11 @@ DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
             break;
         }
         case HTMINBUTTON:
-        {
-            UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), IsMinBoxActive(hWnd), DFCS_CAPTIONMIN);
-            break;
-        }
         case HTMAXBUTTON:
-        {
-            UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), IsMaxBoxActive(hWnd), DFCS_CAPTIONMAX);
-            break;
-        }
         case HTCLOSE:
         {
-            UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), TRUE, DFCS_CAPTIONCLOSE);
-            break;
+          DefWndDoButtonHandle(hWnd, wParam);
+          break;
         }
         case HTLEFT:
         case HTRIGHT:
@@ -948,27 +1005,7 @@ DefWndHandleLButtonDblClkNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 LRESULT
 DefWndHandleLButtonUpNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-    UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), FALSE, DFCS_CAPTIONMIN);
-    UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), FALSE, DFCS_CAPTIONMAX);
-    UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), FALSE, DFCS_CAPTIONCLOSE);
-    switch (wParam)
-    {
-        case HTMINBUTTON:
-        {
-            SendMessageA(hWnd, WM_SYSCOMMAND, SC_MINIMIZE, 0);
-            break;
-        }
-        case HTMAXBUTTON:
-        {
-            SendMessageA(hWnd, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
-            break;
-        }
-        case HTCLOSE:
-        {
-            SendMessageA(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
-            break;
-        }
-    }
+  UNIMPLEMENTED;
   return(0);
 }
 
