@@ -149,7 +149,8 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread)
    Thread->ProcessThreadListEntry.Blink = NULL;   
    KeInitializeDpc(&Thread->TimerDpc, (PKDEFERRED_ROUTINE)PiTimeoutThread, 
 		   Thread);
-
+   Thread->LastEip = 0;
+   
    /*
     * Do x86 specific part
     */

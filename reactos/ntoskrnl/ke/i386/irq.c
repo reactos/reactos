@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.2 2000/07/24 23:51:46 ekohl Exp $
+/* $Id: irq.c,v 1.3 2000/12/10 23:42:00 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -103,8 +103,27 @@ VOID KeInitInterrupts (VOID)
      }
 }
 
+typedef struct _KIRQ_TRAPFRAME
+{
+   ULONG Magic;
+   ULONG Fs;
+   ULONG Es;
+   ULONG Ds;
+   ULONG Eax;
+   ULONG Ecx;
+   ULONG Edx;
+   ULONG Ebx;
+   ULONG Esp;
+   ULONG Ebp;
+   ULONG Esi;
+   ULONG Edi;
+   ULONG Eip;
+   ULONG Cs;
+   ULONG Eflags;
+} KIRQ_TRAPFRAME, *PKIRQ_TRAPFRAME;
 
-VOID KiInterruptDispatch (ULONG irq)
+VOID 
+KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
 /*
  * FUNCTION: Calls the irq specific handler for an irq
  * ARGUMENTS:
@@ -175,6 +194,10 @@ VOID KiInterruptDispatch (ULONG irq)
 	  {
 	     KeExpireTimers();
 	  }
+	if (KeGetCurrentThread() != NULL)
+	  {
+	     KeGetCurrentThread()->LastEip = Trapframe->Eip;
+	  }
 	KiDispatchInterrupt();
 	PsDispatchThread(THREAD_STATE_RUNNABLE);
      }
@@ -188,7 +211,8 @@ VOID KiInterruptDispatch (ULONG irq)
 }
 
 
-static VOID KeDumpIrqList(VOID)
+static VOID 
+KeDumpIrqList(VOID)
 {
    PKINTERRUPT current;
    PLIST_ENTRY current_entry;
@@ -210,8 +234,7 @@ static VOID KeDumpIrqList(VOID)
 }
 
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 KeConnectInterrupt(PKINTERRUPT InterruptObject)
 {
    KIRQL oldlvl;
@@ -266,8 +289,7 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
 }
 
 
-VOID
-STDCALL
+VOID STDCALL
 KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
 /*
  * FUNCTION: Releases a drivers isr

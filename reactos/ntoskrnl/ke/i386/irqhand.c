@@ -23,9 +23,11 @@
         "movw  %ax,%es\n\t"             \
         "inb   $0x21,%al\n\t"               \
         "orb   $1<<"##x",%al\n\t"       \
-        "outb     %al,$0x21\n\t"               \
+        "outb  %al,$0x21\n\t"               \
+        "pushl %esp\n\t"                \
         "pushl $"##x"\n\t"              \
         "call  _KiInterruptDispatch\n\t"\
+        "popl  %eax\n\t"                \
         "popl  %eax\n\t"                \
         "popl  %eax\n\t"                \
         "popl  %fs\n\t"                 \
@@ -49,8 +51,10 @@
         "inb   $0xa1,%al\n\t"               \
         "orb   $1<<("##x"-8),%al\n\t"       \
         "outb     %al,$0xa1\n\t"               \
+        "pushl %esp\n\t"                \
         "pushl $"##x"\n\t"              \
         "call  _KiInterruptDispatch\n\t"\
+        "popl  %eax\n\t"                \
         "popl  %eax\n\t"                \
         "popl  %eax\n\t"                \
         "popl  %fs\n\t"                 \

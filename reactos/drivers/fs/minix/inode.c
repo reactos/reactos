@@ -11,7 +11,7 @@
 
 #include <ddk/ntddk.h>
 #include <string.h>
-#include "../../../ntoskrnl/include/internal/bitops.h"
+#include "bitops.h"
 #include <ddk/ntifs.h>
 
 #define NDEBUG

@@ -1,4 +1,24 @@
-/* $Id: dpc.c,v 1.18 2000/07/10 21:54:19 ekohl Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 2000, 1999, 1998 David Welch <welch@cwcom.net>, 
+ *                                 Philip Susi <phreak@iag.net>,
+ *                                 Eric Kohl <ekohl@abo.rhein-zeitung.de>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: dpc.c,v 1.19 2000/12/10 23:42:00 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,15 +46,21 @@
 
 /* GLOBALS ******************************************************************/
 
-static LIST_ENTRY DpcQueueHead;
-static KSPIN_LOCK DpcQueueLock;
-ULONG DpcQueueSize = 0;
+static LIST_ENTRY DpcQueueHead; /* Head of the list of pending DPCs */
+static KSPIN_LOCK DpcQueueLock; /* Lock for the above list */
+/* 
+ * Number of pending DPCs. This is inspected by
+ * the idle thread to determine if the queue needs to
+ * be run down
+ */
+ULONG DpcQueueSize = 0; 
 
 /* FUNCTIONS ****************************************************************/
 
-VOID STDCALL KeInitializeDpc (PKDPC			Dpc,
-			      PKDEFERRED_ROUTINE	DeferredRoutine,
-			      PVOID			DeferredContext)
+VOID STDCALL 
+KeInitializeDpc (PKDPC			Dpc,
+		 PKDEFERRED_ROUTINE	DeferredRoutine,
+		 PVOID			DeferredContext)
 /*
  * FUNCTION: Initalizes a DPC
  * ARGUMENTS:
@@ -44,13 +70,14 @@ VOID STDCALL KeInitializeDpc (PKDPC			Dpc,
  * NOTE: Callers must be running at IRQL PASSIVE_LEVEL
  */
 {
-   Dpc->Type=0;
-   Dpc->DeferredRoutine=DeferredRoutine;
-   Dpc->DeferredContext=DeferredContext;
-   Dpc->Lock=0;
+   Dpc->Type = 0;
+   Dpc->DeferredRoutine = DeferredRoutine;
+   Dpc->DeferredContext = DeferredContext;
+   Dpc->Lock = 0;
 }
 
-VOID STDCALL KiDispatchInterrupt(VOID)
+VOID STDCALL 
+KiDispatchInterrupt(VOID)
 /*
  * FUNCTION: Called to execute queued dpcs
  */
@@ -65,38 +92,32 @@ VOID STDCALL KiDispatchInterrupt(VOID)
      {
 	return;
      }
-   DPRINT("KiDispatchInterrupt()\n");
    
    KeRaiseIrql(HIGH_LEVEL, &oldlvl);
    KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
    current_entry = RemoveHeadList(&DpcQueueHead);
+   DpcQueueSize--;
    KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
    KeLowerIrql(oldlvl);
    current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
    while (current_entry!=(&DpcQueueHead))
      {
-	CHECKPOINT;
-	DPRINT("DpcQueueSize %d current %x current->DeferredContext %x\n", 
-	       DpcQueueSize, current, current->DeferredContext);
-	DPRINT("current->Flink %x\n", current->DpcListEntry.Flink);
 	current->DeferredRoutine(current,current->DeferredContext,
 				 current->SystemArgument1,
 				 current->SystemArgument2);
-	CHECKPOINT;
 	current->Lock=FALSE;
 	KeRaiseIrql(HIGH_LEVEL, &oldlvl);
 	KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
 	current_entry = RemoveHeadList(&DpcQueueHead);
-	DPRINT("current_entry %x\n", current_entry);
 	DpcQueueSize--;
 	KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
 	KeLowerIrql(oldlvl);
 	current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
-	DPRINT("current %x\n", current);
      }
 }
 
-BOOLEAN STDCALL KeRemoveQueueDpc (PKDPC	Dpc)
+BOOLEAN STDCALL 
+KeRemoveQueueDpc (PKDPC	Dpc)
 /*
  * FUNCTION: Removes DPC object from the system dpc queue
  * ARGUMENTS:
@@ -121,9 +142,10 @@ BOOLEAN STDCALL KeRemoveQueueDpc (PKDPC	Dpc)
    return(TRUE);
 }
 
-BOOLEAN STDCALL KeInsertQueueDpc (PKDPC	Dpc,
-				  PVOID	SystemArgument1,
-				  PVOID	SystemArgument2)
+BOOLEAN STDCALL 
+KeInsertQueueDpc (PKDPC	Dpc,
+		  PVOID	SystemArgument1,
+		  PVOID	SystemArgument2)
 /*
  * FUNCTION: Queues a DPC for execution when the IRQL of a processor
  * drops below DISPATCH_LEVEL
@@ -167,12 +189,9 @@ BOOLEAN STDCALL KeInsertQueueDpc (PKDPC	Dpc,
  *          Importance = DPC importance
  * RETURNS: None
  */
-VOID
-STDCALL
-KeSetImportanceDpc (
-	IN	PKDPC		Dpc,
-	IN	KDPC_IMPORTANCE	Importance
-	)
+VOID STDCALL
+KeSetImportanceDpc (IN	PKDPC		Dpc,
+		    IN	KDPC_IMPORTANCE	Importance)
 {
 	Dpc->Importance = Importance;
 }
@@ -184,17 +203,15 @@ KeSetImportanceDpc (
  *          Number = Processor number
  * RETURNS: None
  */
-VOID
-STDCALL
-KeSetTargetProcessorDpc (
-	IN	PKDPC	Dpc,
-	IN	CCHAR	Number
-	)
+VOID STDCALL
+KeSetTargetProcessorDpc (IN	PKDPC	Dpc,
+			 IN	CCHAR	Number)
 {
 	UNIMPLEMENTED;
 }
 
-VOID KeInitDpc(VOID)
+VOID 
+KeInitDpc(VOID)
 /*
  * FUNCTION: Initialize DPC handling
  */

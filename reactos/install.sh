@@ -4,7 +4,7 @@ mkdir -p $1/reactos/system32/drivers
 mkdir -p $1/reactos/bin
 ./install-system.sh $1
 cp services/dd/floppy/floppy.sys $1/reactos/system32/drivers/
-cp services/dd/keyboard/keyboard.sys $1/reactos/system32/drivers
+cp services/input/keyboard/keyboard.sys $1/reactos/system32/drivers
 cp services/dd/blue/blue.sys $1/reactos/system32/drivers
 cp services/dd/vga/miniport/vgamp.sys $1/reactos/system32/drivers
 cp services/dd/vga/display/vgaddi.dll $1/reactos/system32/drivers
@@ -37,3 +37,5 @@ cp apps/consume/consume.exe $1/reactos/bin
 cp apps/float/float.exe $1/reactos/bin
 cp apps/dump_shared_data/dump_shared_data.exe $1/reactos/bin
 cp apps/vmtest/vmtest.exe $1/reactos/bin
+cp apps/uitest/uitest.exe $1/reactos/bin/
+cp apps/gditest/gditest.exe $1/reactos/bin/

@@ -69,7 +69,9 @@ VOID KeAcquireDispatcherDatabaseLock(BOOLEAN Wait);
 VOID KeReleaseDispatcherDatabaseLock(BOOLEAN Wait);
 BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr);
 
+#if 0
 VOID KiInterruptDispatch(ULONG irq);
+#endif
 VOID KeExpireTimers(VOID);
 NTSTATUS KeAddThreadTimeout(struct _KTHREAD* Thread, 
 			    PLARGE_INTEGER Interval);
@@ -82,6 +84,8 @@ VOID KeFreeGdtSelector(ULONG Entry);
 BOOLEAN KiTestAlert(VOID);
 VOID KeRemoveAllWaitsThread(struct _ETHREAD* Thread, NTSTATUS WaitStatus);
 PULONG KeGetStackTopThread(struct _ETHREAD* Thread);
+VOID KeContextToTrapFrame(PCONTEXT Context,
+			  PKTRAP_FRAME TrapFrame);
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

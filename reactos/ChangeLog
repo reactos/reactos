@@ -1,45 +1,52 @@
-2000-08-30     David Welch <welch@cwcom.net>
+2000-12-04  David Welch  <welch@cwcom.net>
 
-               * Added calibration of KeStallExecutionProcessor timing
-	       (code from linux 2.2.16).
+	* ntoskrnl/ke/i386/irq.c (KiInterruptDispatch): Record the last PC 
+	value for a rescheduled thread.
+	* ntoskrnl/ke/i386/irqhand.s: Construct a primitive trap frame
+	in interrupt handlers.	
+	
+2000-08-30  David Welch  <welch@cwcom.net>
+
+	* Added calibration of KeStallExecutionProcessor timing
+	  (code from linux 2.2.16).
 	       
-	       * Corrected compilation bugs in user32 library.
+	* Corrected compilation bugs in user32 library.
 
-	       * Corrected compilation bugs related to anonymous structs
-	       in ndis code.
+	* Corrected compilation bugs related to anonymous structs
+	  in ndis code.
 	       
-	       * Pass command line to kernel from loadros.
+	* Pass command line to kernel from loadros.
 	       
-	       * Corrected PIC mask calculation.
+	* Corrected PIC mask calculation.
 	       
-2000-05-27     David Welch <welch@cwcom.net>
+2000-05-27  David Welch <welch@cwcom.net>
 
-               * Fixed issue with closing non-existent or already closed
-               handle.
+        * Fixed issue with closing non-existent or already closed
+          handle.
 
-2000-01-26     David Welch <welch@cwcom.net>
+2000-01-26  David Welch <welch@cwcom.net>
 
-               * ZwCreateProcess now maps ntdll rather than the user-mode
-               code.
+        * ZwCreateProcess now maps ntdll rather than the user-mode
+          code.
 
-1999-09-06     David Welch <welch@cwcom.net>
+1999-09-06  David Welch <welch@cwcom.net>
 
-               * Implemented ZwOpenProcess.
+        * Implemented ZwOpenProcess.
                
-	       * Partially implemented killing other threads (possible memory
-               leaks).
+	* Partially implemented killing other threads (possible memory
+          leaks).
 	       
-	       * Made a start on a proper implemention of APCs (based on 
-	       article in NT insider).
+	* Made a start on a proper implemention of APCs (based on 
+	  article in NT insider).
 
-1998-12-08     David Welch <welch@cwcom.net>
+1998-12-08  David Welch <welch@cwcom.net>
 
-               * Corrected bug in shell (Read two keypresses and assumed they
-               where the key going up and down respectively).
+        * Corrected bug in shell (Read two keypresses and assumed they
+          where the key going up and down respectively).
 	       
-	       * Corrected race in dpc handling.
+	* Corrected race in dpc handling.
 	       
-	       * Took out cleanup sections in ZwReadFile (now handled by the 
-	       APC).
+	* Took out cleanup sections in ZwReadFile (now handled by the 
+	  APC).
 	       
-	       * Disabled broken code in kernel32.
+	* Disabled broken code in kernel32.

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2000/10/22 16:36:48 ekohl Exp $
+# $Id: Makefile,v 1.4 2000/12/10 23:41:59 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -92,7 +92,9 @@ OBJECTS_KE_I386 = \
 	ke/i386/irqhand.o \
 	ke/i386/thread.o \
 	ke/i386/usercall.o \
-	ke/i386/trap.o
+	ke/i386/trap.o \
+	ke/i386/bthread.o \
+	ke/i386/syscall.o
  
 # Memory Manager (Mm)
 OBJECTS_MM = \
@@ -178,7 +180,8 @@ OBJECTS_PS = \
 	ps/process.o \
 	ps/psmgr.o \
 	ps/thread.o \
-	ps/tinfo.o
+	ps/tinfo.o \
+	ps/debug.o
 
 # Executive Subsystem (Ex)
 OBJECTS_EX = \

@@ -37,7 +37,7 @@ DEVICE_DRIVERS = vidport vga blue ide null floppy
 
 INPUT_DRIVERS = keyboard
 
-FS_DRIVERS = vfat
+FS_DRIVERS = vfat minix
 # FS_DRIVERS = minix ext2 template
 
 # ndis tdi tcpip tditest wshtcpip
@@ -53,6 +53,7 @@ SYS_APPS = shell winlogon services
 
 APPS = args hello test cat bench apc shm lpc thread event file gditest \
        pteb consume dump_shared_data vmtest regtest
+
 #       objdir
 
 # ping

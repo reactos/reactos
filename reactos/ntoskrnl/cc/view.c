@@ -1,4 +1,22 @@
-/* $Id: view.c,v 1.10 2000/08/20 17:02:07 dwelch Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 2000, 1999, 1998 David Welch <welch@cwcom.net>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: view.c,v 1.11 2000/12/10 23:42:00 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,7 +27,29 @@
  *                  Created 22/05/98
  */
 
-/* INCLUDES *****************************************************************/
+/* NOTES **********************************************************************
+ *
+ * This is not the NT implementation of a file cache nor anything much like 
+ * it. 
+ * 
+ * The general procedure for a filesystem to implement a read or write 
+ * dispatch routine is as follows
+ * 
+ * (1) If caching for the FCB hasn't been initiated then so do by calling
+ * CcInitializeFileCache.
+ * 
+ * (2) For each 4k region which is being read or written obtain a cache page
+ * by calling CcRequestCachePage. 
+ *
+ * (3) If either the page is being read or not completely written, and it is 
+ * not up to date then read its data from the underlying medium. If the read
+ * fails then call CcReleaseCachePage with VALID as FALSE and return a error.  
+ * 
+ * (4) Copy the data into or out of the page as necessary.
+ * 
+ * (5) Release the cache page
+ */
+/* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
@@ -21,7 +61,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL CcFlushCachePage(PCACHE_SEGMENT CacheSeg)
+NTSTATUS STDCALL 
+CcFlushCachePage(PCACHE_SEGMENT CacheSeg)
 /*
  * FUNCTION: Asks the FSD to flush the contents of the page back to disk
  */
@@ -36,9 +77,10 @@ NTSTATUS STDCALL CcFlushCachePage(PCACHE_SEGMENT CacheSeg)
    return(STATUS_NOT_IMPLEMENTED);
 }
 
-NTSTATUS STDCALL CcReleaseCachePage(PBCB Bcb,
-			    PCACHE_SEGMENT CacheSeg,
-			    BOOLEAN Valid)
+NTSTATUS STDCALL 
+CcReleaseCachePage(PBCB Bcb,
+		   PCACHE_SEGMENT CacheSeg,
+		   BOOLEAN Valid)
 {
    DPRINT("CcReleaseCachePage(Bcb %x, CacheSeg %x, Valid %d)\n",
 	  Bcb, CacheSeg, Valid);
@@ -52,11 +94,15 @@ NTSTATUS STDCALL CcReleaseCachePage(PBCB Bcb,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL CcRequestCachePage(PBCB Bcb,
-			    ULONG FileOffset,
-			    PVOID* BaseAddress,
-			    PBOOLEAN UptoDate,
-			    PCACHE_SEGMENT* CacheSeg)
+NTSTATUS STDCALL 
+CcRequestCachePage(PBCB Bcb,
+		   ULONG FileOffset,
+		   PVOID* BaseAddress,
+		   PBOOLEAN UptoDate,
+		   PCACHE_SEGMENT* CacheSeg)
+/*
+ * FUNCTION: Request a page mapping for a BCB
+ */
 {
    KIRQL oldirql;
    PLIST_ENTRY current_entry;
@@ -105,20 +151,15 @@ NTSTATUS STDCALL CcRequestCachePage(PBCB Bcb,
 		      CACHE_SEGMENT_SIZE,
 		      PAGE_READWRITE,
 		      (PMEMORY_AREA*)&current->MemoryArea);
-   CHECKPOINT;
    current->Valid = FALSE;
    current->FileOffset = PAGE_ROUND_DOWN(FileOffset);
    current->Bcb = Bcb;
-   CHECKPOINT;
    KeInitializeEvent(&current->Lock, SynchronizationEvent, FALSE);
    current->ReferenceCount = 1;
-   CHECKPOINT;
    InsertTailList(&Bcb->CacheSegmentListHead, &current->ListEntry);
-   CHECKPOINT;
    *UptoDate = current->Valid;
    *BaseAddress = current->BaseAddress;
    *CacheSeg = current;
-   CHECKPOINT;
    MmCreateVirtualMapping(NULL,
 			  current->BaseAddress,
 			  PAGE_READWRITE,
@@ -130,9 +171,12 @@ NTSTATUS STDCALL CcRequestCachePage(PBCB Bcb,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL CcFreeCacheSegment(PFILE_OBJECT FileObject,
-			    PBCB Bcb,
-			    PCACHE_SEGMENT CacheSeg)
+NTSTATUS STDCALL 
+CcFreeCacheSegment(PBCB Bcb,
+		   PCACHE_SEGMENT CacheSeg)
+/*
+ * FUNCTION: Releases a cache segment associated with a BCB
+ */
 {
    MmFreeMemoryArea(NULL,
 		    CacheSeg->BaseAddress,
@@ -142,8 +186,12 @@ NTSTATUS STDCALL CcFreeCacheSegment(PFILE_OBJECT FileObject,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL CcReleaseFileCache(PFILE_OBJECT FileObject,
-			    PBCB Bcb)
+NTSTATUS STDCALL 
+CcReleaseFileCache(PFILE_OBJECT FileObject,
+		   PBCB Bcb)
+/*
+ * FUNCTION: Releases the BCB associated with a file object
+ */
 {
    PLIST_ENTRY current_entry;
    PCACHE_SEGMENT current;
@@ -156,8 +204,7 @@ NTSTATUS STDCALL CcReleaseFileCache(PFILE_OBJECT FileObject,
      {
 	current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, ListEntry);
 	current_entry = current_entry->Flink;
-	CcFreeCacheSegment(FileObject,
-			   Bcb,
+	CcFreeCacheSegment(Bcb,
 			   current);
      }
    
@@ -168,8 +215,12 @@ NTSTATUS STDCALL CcReleaseFileCache(PFILE_OBJECT FileObject,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL CcInitializeFileCache(PFILE_OBJECT FileObject,
-			       PBCB* Bcb)
+NTSTATUS STDCALL 
+CcInitializeFileCache(PFILE_OBJECT FileObject,
+		      PBCB* Bcb)
+/*
+ * FUNCTION: Initializes a BCB for a file object
+ */
 {
    DPRINT("CcInitializeFileCache(FileObject %x)\n",FileObject);
    

@@ -78,14 +78,23 @@ typedef struct _KAPC_STATE
 
 typedef struct _KTHREAD
 {
+   /* For waiting on thread exit */
    DISPATCHER_HEADER DispatcherHeader;    /* 00 */
+   
+   /* List of mutants owned by the thread */
    LIST_ENTRY        MutantListHead;      /* 10 */
    PVOID             InitialStack;        /* 18 */
    ULONG             StackLimit;          /* 1C */
+   
+   /* Pointer to the thread's environment block in user memory */
    NT_TEB*           Teb;                 /* 20 */
-   PVOID             TlsArray;            /* 24 */
+   
+   /* Pointer to the thread's TLS array */
+   PVOID             TlsArray;            /* 24 */      
    PVOID             KernelStack;         /* 28 */
    UCHAR             DebugActive;         /* 2C */
+   
+   /* Thread state (one of THREAD_STATE_xxx constants below) */
    UCHAR             State;               /* 2D */
    UCHAR             Alerted[2];          /* 2E */
    UCHAR             Iopl;                /* 30 */
@@ -150,12 +159,16 @@ typedef struct _KTHREAD
     */
    
    /* Added by Phillip Susi for list of threads in a process */
-   LIST_ENTRY        ProcessThreadListEntry;
+   LIST_ENTRY        ProcessThreadListEntry;         
+
 
    /* Provisionally added by David Welch */
    hal_thread_state                   Context;
    /* Added by Phillip Susi for internal KeAddThreadTimeout() implementation */
-   KDPC              TimerDpc;
+
+   KDPC              TimerDpc;		       
+   /* Record the last EIP value when the thread is suspended */
+   ULONG             LastEip;
 } __attribute__((packed)) KTHREAD, *PKTHREAD;
 
 // According to documentation the stack should have a commited [ 1 page ] and
@@ -400,12 +413,11 @@ ULONG PsResumeThread(PETHREAD Thread,
  * Functions the HAL must provide
  */
 
-VOID 
-KeInitializeThread(PKPROCESS Process, PKTHREAD Thread);
+VOID KeInitializeThread(PKPROCESS Process, PKTHREAD Thread);
 
-void HalInitFirstTask(PETHREAD thread);
+VOID HalInitFirstTask(PETHREAD thread);
 NTSTATUS HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext);
-void HalTaskSwitch(PKTHREAD thread);
+VOID HalTaskSwitch(PKTHREAD thread);
 NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context);
 NTSTATUS HalReleaseTask(PETHREAD Thread);
 VOID PiDeleteProcess(PVOID ObjectBody);
