@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.4 2001/01/07 02:58:31 ekohl Exp $
+; $Id: msvcrt.def,v 1.5 2001/01/11 02:38:34 phreak Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -208,7 +208,7 @@ _ctype DATA
 ; _ecvt
 _endthread
 _endthreadex
-_environ DATA
+_environ_dll DATA
 ; _eof
 _errno
 ; _except_handler2

@@ -1,11 +1,11 @@
-/* $Id: dllmain.c,v 1.3 2001/01/07 02:58:32 ekohl Exp $
+/* $Id: dllmain.c,v 1.4 2001/01/11 02:38:34 phreak Exp $
  * 
  * ReactOS MSVCRT.DLL Compatibility Library
  */
 #include <windows.h>
 
 #include <msvcrt/internal/tls.h>
-
+#include <msvcrt/stdlib.h>
 
 static int nAttachCount = 0;
 
