@@ -23,6 +23,8 @@
  *          NDIS_MINIPORT_DRIVER - Define only for NDIS miniport drivers
  *          NDIS40               - Use NDIS 4.0 structures by default
  *          NDIS50               - Use NDIS 5.0 structures by default
+ *          NDIS51               - Use NDIS 5.1 structures by default
+ *          NDIS40_MINIPORT      - Building NDIS 4.0 miniport driver
  *          NDIS50_MINIPORT      - Building NDIS 5.0 miniport driver
  *          NDIS51_MINIPORT      - Building NDIS 5.1 miniport driver
  */
@@ -49,22 +51,25 @@ extern "C" {
   #define NDISAPI DECLSPEC_IMPORT
 #endif
 
-#if defined(NDIS50_MINIPORT)
-#ifndef NDIS50
-#define NDIS50
+#if defined(NDIS50_MINIPORT) && !defined(NDIS_MINIPORT_MAJOR_VERSION) && !defined(NDIS_MINIPORT_MINOR_VERSION)
+#define NDIS_MINIPORT_MAJOR_VERSION 5
+#define NDIS_MINIPORT_MINOR_VERSION 0
 #endif
-#endif /* NDIS50_MINIPORT */
 
-#if defined(NDIS51_MINIPORT)
-#ifndef NDIS51
-#define NDIS51
+#if defined(NDIS51_MINIPORT) && !defined(NDIS_MINIPORT_MAJOR_VERSION) && !defined(NDIS_MINIPORT_MINOR_VERSION)
+#define NDIS_MINIPORT_MAJOR_VERSION 5
+#define NDIS_MINIPORT_MINOR_VERSION 1
 #endif
-#endif /* NDIS51_MINIPORT */
 
-/* NDIS 3.0 is default */
-#if !defined(NDIS30) || !defined(NDIS40) || !defined(NDIS50) || !defined(NDIS51)
-#define NDIS30
-#endif /* !NDIS30 || !NDIS40 || !NDIS50 || !NDIS51 */
+#if defined(NDIS50) && !defined(NDIS_PROTOCOL_MAJOR_VERSION) && !defined(NDIS_PROTOCOL_MINOR_VERSION)
+#define NDIS_PROTOCOL_MAJOR_VERSION 5
+#define NDIS_PROTOCOL_MINOR_VERSION 0
+#endif
+
+#if defined(NDIS51) && !defined(NDIS_PROTOCOL_MAJOR_VERSION) && !defined(NDIS_PROTOCOL_MINOR_VERSION)
+#define NDIS_PROTOCOL_MAJOR_VERSION 5
+#define NDIS_PROTOCOL_MINOR_VERSION 1
+#endif
 
 #if 1
 /* FIXME: */
@@ -1501,13 +1506,11 @@ typedef struct _NDIS_PROTOCOL_CHARACTERISTICS {
 typedef struct _NDIS_PROTOCOL_CHARACTERISTICS {
   NDIS40_PROTOCOL_CHARACTERISTICS_S;
 } NDIS_PROTOCOL_CHARACTERISTICS, *PNDIS_PROTOCOL_CHARACTERISTICS;
-#elif defined(NDIS30)
+#else /* NDIS30 */
 typedef struct _NDIS_PROTOCOL_CHARACTERISTICS {
   NDIS30_PROTOCOL_CHARACTERISTICS_S
 } NDIS_PROTOCOL_CHARACTERISTICS, *PNDIS_PROTOCOL_CHARACTERISTICS;
-#else
-#error Define an NDIS version
-#endif /* NDIS30 */
+#endif
 
 
 
@@ -3656,7 +3659,6 @@ NdisQueryBufferSafe(
   OUT PUINT  Length,
   IN UINT  Priority);
 
-
 /* Prototypes for NDIS_MINIPORT_CHARACTERISTICS */
 
 typedef BOOLEAN DDKAPI
@@ -3895,23 +3897,23 @@ typedef VOID DDKAPI
   IN PVOID  CancelId);
 
 
-#if defined(NDIS51)
+#if defined(NDIS51_MINIPORT)
 typedef struct _NDIS_MINIPORT_CHARACTERISTICS {
   NDIS50_MINIPORT_CHARACTERISTICS_S
 } NDIS_MINIPORT_CHARACTERISTICS, *PNDIS_MINIPORT_CHARACTERISTICS;
-#elif defined(NDIS50)
+#elif defined(NDIS50_MINIPORT)
 typedef struct _NDIS_MINIPORT_CHARACTERISTICS {
   NDIS50_MINIPORT_CHARACTERISTICS_S
 } NDIS_MINIPORT_CHARACTERISTICS, *PNDIS_MINIPORT_CHARACTERISTICS;
-#elif defined(NDIS40)
+#elif defined(NDIS40_MINIPORT)
 typedef struct _NDIS_MINIPORT_CHARACTERISTICS {
   NDIS40_MINIPORT_CHARACTERISTICS_S
 } NDIS_MINIPORT_CHARACTERISTICS, *PNDIS_MINIPORT_CHARACTERISTICS;
-#elif defined(NDIS30)
+#else /* NDIS30 */
 typedef struct _NDIS_MINIPORT_CHARACTERISTICS {
   NDIS30_MINIPORT_CHARACTERISTICS_S
 } NDIS_MINIPORT_CHARACTERISTICS, *PNDIS_MINIPORT_CHARACTERISTICS;
-#endif /* NDIS30 */
+#endif
 
 
 typedef NDIS_STATUS DDKAPI
@@ -4723,7 +4725,7 @@ NdisMFreeMapRegisters(
 
 #define NdisMIndicateStatus(MiniportAdapterHandle,  \
    GeneralStatus, StatusBuffer, StatusBufferSize)   \
-  (*((PNDIS_MINIPORT_BLOCK)(_M))->StatusHandler)(   \
+  (*((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->StatusHandler)(   \
   MiniportAdapterHandle, GeneralStatus, StatusBuffer, StatusBufferSize)
 
 /*
@@ -4807,6 +4809,35 @@ NdisMRegisterMiniport(
   IN PNDIS_MINIPORT_CHARACTERISTICS  MiniportCharacteristics,
   IN UINT  CharacteristicsLength);
 
+NDISAPI
+VOID
+DDKAPI
+NdisMSetTimer(
+  IN PNDIS_MINIPORT_TIMER  Timer,
+  IN UINT  MillisecondsToDelay);
+
+NDISAPI
+VOID
+DDKAPI
+NdisMInitializeTimer(
+  IN OUT PNDIS_MINIPORT_TIMER Timer,
+  IN NDIS_HANDLE MiniportAdapterHandle,
+  IN PNDIS_TIMER_FUNCTION TimerFunction,
+  IN PVOID FunctionContext);
+
+NDISAPI
+VOID
+DDKAPI
+NdisMSetPeriodicTimer(
+  IN PNDIS_MINIPORT_TIMER  Timer,
+  IN UINT  MillisecondPeriod);
+
+NDISAPI
+VOID
+DDKAPI
+NdisMCancelTimer(
+  IN PNDIS_MINIPORT_TIMER  Timer,
+  OUT PBOOLEAN  TimerCancelled);
 
 #if !defined(_NDIS_)
 
