@@ -295,7 +295,13 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			if (wparam & OWM_PIDL) {
 				 // take over PIDL from lparam
 				shell_path.assign((LPCITEMIDLIST)lparam);	// create as "rooted" window
-				path = FileSysShellPath(shell_path);
+				FileSysShellPath fsp(shell_path);
+				path = fsp;
+
+				if (path) {
+					lstrcpy(buffer, path);
+					path = buffer;
+				}
 			} else {
 				 // take over path from lparam
 				path = (LPCTSTR)lparam;
@@ -303,27 +309,30 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			}
 		} else {
 			///@todo read paths and window placements from registry
-			GetCurrentDirectory(MAX_PATH, buffer);
+			if (!GetCurrentDirectory(MAX_PATH, buffer))
+				*buffer = '\0';
+
 			path = buffer;
 		}
 
 		{
-		OBJ_CONTEXT("create ShellChildWndInfo", path);
+			OBJ_CONTEXT("create ShellChildWndInfo", path);
 
-		 // Shell Namespace as default view
-		ShellChildWndInfo create_info(path, shell_path);
+			 // Shell Namespace as default view
+			ShellChildWndInfo create_info(path, shell_path);
 
-		create_info._pos.showCmd = SW_SHOWMAXIMIZED;
-		create_info._pos.rcNormalPosition.left = 0;
-		create_info._pos.rcNormalPosition.top = 0;
-		create_info._pos.rcNormalPosition.right = 600;
-		create_info._pos.rcNormalPosition.bottom = 280;
+			create_info._pos.showCmd = SW_SHOWMAXIMIZED;
+			create_info._pos.rcNormalPosition.left = 0;
+			create_info._pos.rcNormalPosition.top = 0;
+			create_info._pos.rcNormalPosition.right = 600;
+			create_info._pos.rcNormalPosition.bottom = 280;
 
-		create_info._open_mode = (OPEN_WINDOW_MODE)wparam;
+			create_info._open_mode = (OPEN_WINDOW_MODE)wparam;
 
-	//	FileChildWindow::create(_hmdiclient, create_info);
-		return (LRESULT)ShellBrowserChild::create(_hmdiclient, create_info);
-		}}
+		//	FileChildWindow::create(_hmdiclient, create_info);
+			return (LRESULT)ShellBrowserChild::create(_hmdiclient, create_info);
+		}
+		break;}
 
 	  case PM_GET_CONTROLWINDOW:
 		if (wparam == FCW_STATUS)
