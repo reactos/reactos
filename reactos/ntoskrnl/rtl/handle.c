@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.3 2002/09/08 10:23:41 chorns Exp $
+/* $Id: handle.c,v 1.4 2003/06/14 09:52:57 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -112,7 +112,7 @@ RtlpFreeHandle(PRTL_HANDLE_TABLE HandleTable,
    PRTL_HANDLE Handle;
 
    /* check if handle is valid */
-   if (RtlpIsValidIndexHandle(HandleTable,
+   if (! RtlpIsValidIndexHandle(HandleTable,
 			 &Handle,
 			 Index))
      return FALSE;
