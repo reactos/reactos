@@ -126,22 +126,71 @@ const FileTypeInfo& FileTypeManager::operator[](String ext)
 Icon::Icon()
  :	_id(ICID_UNKNOWN),
 	_itype(IT_STATIC),
-	_hIcon(0)
+	_hicon(0)
 {
 }
 
 Icon::Icon(ICON_ID id, UINT nid)
  :	_id(id),
 	_itype(IT_STATIC),
-	_hIcon(SmallIcon(nid))
+	_hicon(SmallIcon(nid))
 {
 }
 
 Icon::Icon(ICON_TYPE itype, int id, HICON hIcon)
  :	_id((ICON_ID)id),
 	_itype(itype),
-	_hIcon(hIcon)
+	_hicon(hIcon)
 {
+}
+
+Icon::Icon(ICON_TYPE itype, int id, int sys_idx)
+ :	_id((ICON_ID)id),
+	_itype(itype),
+	_sys_idx(sys_idx)
+{
+}
+
+void Icon::draw(HDC hdc, int x, int y, int cx, int cy, COLORREF bk_color, HBRUSH bk_brush) const
+{
+	if (_itype == IT_SYSCACHE)
+		ImageList_DrawEx(g_Globals._icon_cache.get_sys_imagelist(), _sys_idx, hdc, x, y, cx, cy, bk_color, CLR_DEFAULT, ILD_NORMAL);
+	else
+		DrawIconEx(hdc, x, y, _hicon, cx, cy, 0, bk_brush, DI_NORMAL);
+}
+
+HBITMAP	Icon::create_bitmap(COLORREF bk_color, HBRUSH hbrBkgnd, HDC hdc_wnd) const
+{
+	if (_itype == IT_SYSCACHE) {
+		HIMAGELIST himl = g_Globals._icon_cache.get_sys_imagelist();
+
+		int cx, cy;
+		ImageList_GetIconSize(himl, &cx, &cy);
+
+		HBITMAP hbmp = CreateCompatibleBitmap(hdc_wnd, cx, cy);
+		HDC hdc = CreateCompatibleDC(hdc_wnd);
+		HBITMAP hbmp_old = SelectBitmap(hdc, hbmp);
+		ImageList_DrawEx(himl, _sys_idx, hdc, 0, 0, cx, cy, bk_color, CLR_DEFAULT, ILD_NORMAL);
+		SelectBitmap(hdc, hbmp_old);
+		DeleteDC(hdc);
+		return hbmp;
+	} else
+		return create_bitmap_from_icon(_hicon, hbrBkgnd, hdc_wnd);
+}
+
+HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd)
+{
+	HBITMAP hbmp = CreateCompatibleBitmap(hdc_wnd, 16, 16);
+
+	MemCanvas canvas;
+	BitmapSelection sel(canvas, hbmp);
+
+	RECT rect = {0, 0, 16, 16};
+	FillRect(canvas, &rect, hbrush_bkgnd);
+
+	DrawIconEx(canvas, 0, 0, hIcon, 16, 16, 0, hbrush_bkgnd, DI_NORMAL);
+
+	return hbmp;
 }
 
 
@@ -150,7 +199,7 @@ int IconCache::s_next_id = ICID_DYNAMIC;
 
 void IconCache::init()
 {
-	_icons[ICID_NONE]		= Icon(IT_STATIC, ICID_NONE, 0);
+	_icons[ICID_NONE]		= Icon(IT_STATIC, ICID_NONE, (HICON)0);
 
 	_icons[ICID_FOLDER]		= Icon(ICID_FOLDER,		IDI_FOLDER);
 	//_icons[ICID_DOCUMENT] = Icon(ICID_DOCUMENT,	IDI_DOCUMENT);
@@ -181,11 +230,20 @@ const Icon& IconCache::extract(const String& path)
 
 	SHFILEINFO sfi;
 
-	if (SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_ICON|SHGFI_SMALLICON)) {	//@@ besser SHGFI_SYSICONINDEX ?
+#if 1	// use system image list
+	HIMAGELIST himlSys = (HIMAGELIST) SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX|SHGFI_SMALLICON);
+
+	if (himlSys) {
+		_himlSys = himlSys;
+
+		const Icon& icon = add(sfi.iIcon/*, IT_SYSCACHE*/);
+#else
+	if (SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_ICON|SHGFI_SMALLICON)) {
 		const Icon& icon = add(sfi.hIcon, IT_CACHED);
+#endif
 
 		///@todo limit cache size
-		_pathMap[path] = icon._id;
+		_pathMap[path] = icon;
 
 		return icon;
 	} else
@@ -210,7 +268,7 @@ const Icon& IconCache::extract(LPCTSTR path, int idx)
 	if ((int)ExtractIconEx(path, idx, NULL, &hIcon, 1) > 0) {
 		const Icon& icon = add(hIcon, IT_CACHED);
 
-		_pathIdxMap[key] = icon._id;
+		_pathIdxMap[key] = icon;
 
 		return icon;
 	} else
@@ -242,14 +300,16 @@ const Icon& IconCache::add(HICON hIcon, ICON_TYPE type)
 	return _icons[id] = Icon(type, id, hIcon);
 }
 
+const Icon&	IconCache::add(int sys_idx/*, ICON_TYPE type=IT_SYSCACHE*/)
+{
+	int id = ++s_next_id;
+
+	return _icons[id] = SysCacheIcon(id, sys_idx);
+}
+
 const Icon& IconCache::get_icon(int id)
 {
 	return _icons[id];
-}
-
-HBITMAP	IconCache::get_icon_bitmap(int id, HBRUSH hbrBkgnd, HDC hdc)
-{
-	return create_bitmap_from_icon(_icons[id]._hIcon, hbrBkgnd, hdc);
 }
 
 void IconCache::free_icon(int icon_id)
@@ -259,27 +319,9 @@ void IconCache::free_icon(int icon_id)
 	if (found != _icons.end()) {
 		Icon& icon = found->second;
 
-		if (icon._itype == IT_DYNAMIC) {
-			DestroyIcon(icon._hIcon);
+		if (icon.destroy())
 			_icons.erase(found);
-		}
 	}
-}
-
-
-HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd)
-{
-	HBITMAP hbmp = CreateCompatibleBitmap(hdc_wnd, 16, 16);
-
-	MemCanvas canvas;
-	BitmapSelection sel(canvas, hbmp);
-
-	RECT rect = {0, 0, 16, 16};
-	FillRect(canvas, &rect, hbrush_bkgnd);
-
-	DrawIconEx(canvas, 0, 0, hIcon, 16, 16, 0, hbrush_bkgnd, DI_NORMAL);
-
-	return hbmp;
 }
 
 
@@ -295,17 +337,17 @@ ResString::ResString(UINT nid)
 
 ResIcon::ResIcon(UINT nid)
 {
-	_hIcon = LoadIcon(g_Globals._hInstance, MAKEINTRESOURCE(nid));
+	_hicon = LoadIcon(g_Globals._hInstance, MAKEINTRESOURCE(nid));
 }
 
 SmallIcon::SmallIcon(UINT nid)
 {
-	_hIcon = (HICON)LoadImage(g_Globals._hInstance, MAKEINTRESOURCE(nid), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
+	_hicon = (HICON)LoadImage(g_Globals._hInstance, MAKEINTRESOURCE(nid), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
 }
 
 ResIconEx::ResIconEx(UINT nid, int w, int h)
 {
-	_hIcon = (HICON)LoadImage(g_Globals._hInstance, MAKEINTRESOURCE(nid), IMAGE_ICON, w, h, LR_SHARED);
+	_hicon = (HICON)LoadImage(g_Globals._hInstance, MAKEINTRESOURCE(nid), IMAGE_ICON, w, h, LR_SHARED);
 }
 
 

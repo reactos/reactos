@@ -315,7 +315,7 @@ void Entry::extract_icon()
 	ICON_ID icon_id = ICID_NONE;
 
 	if (get_path(path))
-		icon_id = g_Globals._icon_cache.extract(path)._id;
+		icon_id = g_Globals._icon_cache.extract(path);
 
 	if (icon_id == ICID_NONE) {
 		IExtractIcon* pExtract;
@@ -325,12 +325,12 @@ void Entry::extract_icon()
 
 			if (SUCCEEDED(pExtract->GetIconLocation(GIL_FORSHELL, path, MAX_PATH, &idx, &flags))) {
 				if (flags & GIL_NOTFILENAME)
-					icon_id = g_Globals._icon_cache.extract(pExtract, path, idx)._id;
+					icon_id = g_Globals._icon_cache.extract(pExtract, path, idx);
 				else {
 					if (idx == -1)
 						idx = 0;	// special case for some control panel applications ("System")
 
-					icon_id = g_Globals._icon_cache.extract(path, idx)._id;
+					icon_id = g_Globals._icon_cache.extract(path, idx);
 				}
 
 			/* using create_absolute_pidl() [see below] results in more correct icons for some control panel applets ("NVidia").
@@ -363,8 +363,13 @@ void Entry::extract_icon()
 			const ShellPath& pidl_abs = create_absolute_pidl();
 			LPCITEMIDLIST pidl = pidl_abs;
 
-			if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|SHGFI_SMALLICON))	//@@ besser SHGFI_SYSICONINDEX ?
+			HIMAGELIST himlSys = (HIMAGELIST) SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX|SHGFI_PIDL|SHGFI_SMALLICON);
+			if (himlSys)
+				icon_id = g_Globals._icon_cache.add(sfi.iIcon);
+			/*
+			if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|SHGFI_SMALLICON))
 				icon_id = g_Globals._icon_cache.add(sfi.hIcon)._id;
+			*/
 		}
 	}
 

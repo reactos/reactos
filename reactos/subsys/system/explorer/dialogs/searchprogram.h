@@ -88,8 +88,8 @@ protected:
 	CommonControlInit _usingCmnCtrl;
 	HWND	_list_ctrl;
 	HACCEL	_haccel;
-	HIMAGELIST _himl;
-	int		_idxNoIcon;	// replacement icon
+	//HIMAGELIST _himl;
+	 //int	_idxNoIcon;	// replacement icon
 	String	_lwr_filter;
 
 	CollectProgramsThread _thread;

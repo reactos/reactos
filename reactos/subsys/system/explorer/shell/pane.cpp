@@ -502,7 +502,7 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 				cx = IMAGE_WIDTH;
 
 			if (entry->_icon_id > ICID_NONE)
-				DrawIconEx(dis->hDC, img_pos, dis->rcItem.top, g_Globals._icon_cache.get_icon(entry->_icon_id)._hIcon, cx, GetSystemMetrics(SM_CYSMICON), 0, 0, DI_NORMAL);
+				g_Globals._icon_cache.get_icon(entry->_icon_id).draw(dis->hDC, img_pos, dis->rcItem.top, cx, GetSystemMetrics(SM_CYSMICON), bkcolor, 0);
 			else
 				ImageList_DrawEx(_himl, img, dis->hDC,
 								 img_pos, dis->rcItem.top, cx,

@@ -1117,21 +1117,22 @@ void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, HICON hIcon,
 		++textRect.right;	++textRect.bottom;
 	}
 
-	int bk_color = COLOR_BTNFACE;
-	int text_color = COLOR_BTNTEXT;
+	int bk_color_idx = COLOR_BTNFACE;
+	int text_color_idx = COLOR_BTNTEXT;
 
 	if (has_focus) {
-		bk_color = COLOR_HIGHLIGHT;
-		text_color = COLOR_HIGHLIGHTTEXT;
+		bk_color_idx = COLOR_HIGHLIGHT;
+		text_color_idx = COLOR_HIGHLIGHTTEXT;
 	}
 
-	HBRUSH bk_brush = GetSysColorBrush(bk_color);
+	COLORREF bk_color = GetSysColor(bk_color_idx);
+	HBRUSH bk_brush = GetSysColorBrush(bk_color_idx);
 
 	if (title)
 		FillRect(hdc, &rect, bk_brush);
 
 	if (btn._icon_id > ICID_NONE)
-		DrawIconEx(hdc, iconPos.x, iconPos.y, g_Globals._icon_cache.get_icon(btn._icon_id)._hIcon, 16, 16, 0, bk_brush, DI_NORMAL);
+		g_Globals._icon_cache.get_icon(btn._icon_id).draw(hdc, iconPos.x, iconPos.y, 16, 16, bk_color, bk_brush);
 
 	 // draw submenu arrow at the right
 	if (btn._hasSubmenu) {
@@ -1149,7 +1150,7 @@ void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, HICON hIcon,
 		if (!btn._enabled)	// dis->itemState & (ODS_DISABLED|ODS_GRAYED)
 			DrawGrayText(hdc, &textRect, title, DT_SINGLELINE|DT_NOPREFIX|DT_VCENTER);
 		else {
-			TextColor lcColor(hdc, GetSysColor(text_color));
+			TextColor lcColor(hdc, GetSysColor(text_color_idx));
 			DrawText(hdc, title, -1, &textRect, DT_SINGLELINE|DT_NOPREFIX|DT_VCENTER);
 		}
 	}

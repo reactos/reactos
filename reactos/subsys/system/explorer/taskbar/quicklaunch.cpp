@@ -113,6 +113,9 @@ void QuickLaunchBar::AddShortcuts()
 	ShellFolder desktop_folder;
 	WindowCanvas canvas(_hwnd);
 
+	COLORREF bk_color = GetSysColor(COLOR_BTNFACE);
+	HBRUSH bk_brush = GetSysColorBrush(COLOR_BTNFACE);
+
 	TBBUTTON btn = {0, 0, TBSTATE_ENABLED, BTNS_BUTTON|BTNS_NOPREFIX, {0, 0}, 0, 0};
 
 	for(Entry*entry=_dir->_down; entry; entry=entry->_next) {
@@ -122,7 +125,7 @@ void QuickLaunchBar::AddShortcuts()
 
 			 // hide subfolders
 			if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-				HBITMAP hbmp = g_Globals._icon_cache.get_icon_bitmap(entry->_icon_id, GetSysColorBrush(COLOR_BTNFACE), canvas);
+				HBITMAP hbmp = g_Globals._icon_cache.get_icon(entry->_icon_id).create_bitmap(bk_color, bk_brush, canvas);
 
 				TBADDBITMAP ab = {0, (UINT_PTR)hbmp};
 				int bmp_idx = SendMessage(_hwnd, TB_ADDBITMAP, 1, (LPARAM)&ab);
