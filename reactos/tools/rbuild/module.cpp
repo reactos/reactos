@@ -133,7 +133,9 @@ Module::Module ( const Project& project,
 	  host (HostDefault)
 {
 	if ( node.name != "module" )
-		throw Exception ( "internal tool error: Module created with non-<module> node" );
+		throw InvalidOperationException ( __FILE__,
+		                                  __LINE__,
+		                                  "Module created with non-<module> node" );
 
 	path = FixSeparator ( modulePath );
 
@@ -202,6 +204,18 @@ Module::Module ( const Project& project,
 	att = moduleNode.GetAttribute ( "prefix", false );
 	if ( att != NULL )
 		prefix = att->value;
+
+	att = moduleNode.GetAttribute ( "installbase", false );
+	if ( att != NULL )
+		installBase = att->value;
+	else
+		installBase = "";
+
+	att = moduleNode.GetAttribute ( "installname", false );
+	if ( att != NULL )
+		installName = att->value;
+	else
+		installName = "";
 }
 
 Module::~Module ()

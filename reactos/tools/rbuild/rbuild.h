@@ -171,6 +171,8 @@ public:
 	bool cplusplus;
 	std::string prefix;
 	HostType host;
+	std::string installBase;
+	std::string installName;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,

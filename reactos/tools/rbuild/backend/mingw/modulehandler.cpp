@@ -97,7 +97,7 @@ MingwModuleHandler::RemoveVariables ( string path)
 	}
 	return path;
 }
-	
+
 /*static*/ string
 MingwModuleHandler::PassThruCacheDirectory (
 	const string &file, bool out )

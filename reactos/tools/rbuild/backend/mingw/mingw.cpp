@@ -614,47 +614,6 @@ MingwBackend::DetectPCHSupport ()
 	// allow that to override use_pch if true
 }
 
-string
-MingwBackend::GetNonModuleInstallDirectories ( const string& installDirectory )
-{
-	string directories;
-	for ( size_t i = 0; i < ProjectNode.installfiles.size (); i++ )
-	{
-		const InstallFile& installfile = *ProjectNode.installfiles[i];
-		string targetDirectory ( installDirectory + SSEP + installfile.base );
-		if ( directories.size () > 0 )
-			directories += " ";
-		directories += MingwModuleHandler::PassThruCacheDirectory (
-			FixupTargetFilename ( targetDirectory ),
-			true );
-	}
-	return directories;
-}
-
-string
-MingwBackend::GetInstallDirectories ( const string& installDirectory )
-{
-	return GetNonModuleInstallDirectories ( installDirectory );
-}
-
-void
-MingwBackend::GetNonModuleInstallFiles (
-	vector<string>& out ) const
-{
-	for ( size_t i = 0; i < ProjectNode.installfiles.size (); i++ )
-	{
-		const InstallFile& installfile = *ProjectNode.installfiles[i];
-		out.push_back ( NormalizeFilename ( installfile.GetPath () ) );
-	}
-}
-
-void
-MingwBackend::GetInstallFiles (
-	vector<string>& out ) const
-{
-	GetNonModuleInstallFiles ( out );
-}
-
 void
 MingwBackend::GetNonModuleInstallTargetFiles (
 	string installDirectory,
@@ -665,9 +624,28 @@ MingwBackend::GetNonModuleInstallTargetFiles (
 		const InstallFile& installfile = *ProjectNode.installfiles[i];
 		string targetFilenameNoFixup = installDirectory + SSEP + installfile.base + SSEP + installfile.newname;
 		string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
-			FixupTargetFilename ( targetFilenameNoFixup ),
+			NormalizeFilename ( targetFilenameNoFixup ),
 			true );
 		out.push_back ( targetFilename );
+	}
+}
+
+void
+MingwBackend::GetModuleInstallTargetFiles (
+	string installDirectory,
+	vector<string>& out ) const
+{
+	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
+	{
+		const Module& module = *ProjectNode.modules[i];
+		if ( module.installName.length () > 0 )
+		{
+			string targetFilenameNoFixup = installDirectory + SSEP + module.installBase + SSEP + module.installName;
+			string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
+				NormalizeFilename ( targetFilenameNoFixup ),
+				true );
+			out.push_back ( targetFilename );
+		}
 	}
 }
 
@@ -678,32 +656,64 @@ MingwBackend::GetInstallTargetFiles (
 {
 	GetNonModuleInstallTargetFiles ( installDirectory,
 	                                 out );
+	GetModuleInstallTargetFiles ( installDirectory,
+	                              out );
 }
 
 void
-MingwBackend::OutputInstallfileTargets ( const string& installDirectory )
+MingwBackend::OutputInstallTarget ( const string& installDirectory,
+	                                const string& sourceFilename,
+	                                const string& targetFilename,
+	                                const string& targetDirectory )
+{
+	string normalizedTargetFilename = MingwModuleHandler::PassThruCacheDirectory (
+		NormalizeFilename ( installDirectory + SSEP + targetDirectory + SSEP + targetFilename ),
+		true );
+	string normalizedTargetDirectory = MingwModuleHandler::PassThruCacheDirectory (
+		NormalizeFilename ( installDirectory + SSEP + targetDirectory ),
+		true );
+	fprintf ( fMakefile,
+	          "%s: %s %s\n",
+	          normalizedTargetFilename.c_str (),
+	          sourceFilename.c_str (),
+	          normalizedTargetDirectory.c_str () );
+	fprintf ( fMakefile,
+	          "\t$(ECHO_CP)\n" );
+	fprintf ( fMakefile,
+	          "\t${cp} %s %s\n",
+	          sourceFilename.c_str (),
+	          normalizedTargetFilename.c_str () );
+}
+
+void
+MingwBackend::OutputNonModuleInstallTargets ( const string& installDirectory )
 {
 	for ( size_t i = 0; i < ProjectNode.installfiles.size (); i++ )
 	{
 		const InstallFile& installfile = *ProjectNode.installfiles[i];
-		string targetFilenameNoFixup = installDirectory + SSEP + installfile.base + SSEP + installfile.newname;
-		string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
-			FixupTargetFilename ( targetFilenameNoFixup ),
-			true );
-		string targetDirectory = MingwModuleHandler::PassThruCacheDirectory (
-			FixupTargetFilename ( installDirectory + SSEP + installfile.base ),
-			true );
-		fprintf ( fMakefile,
-		          "%s: %s %s\n",
-		          targetFilename.c_str (),
-		          installfile.GetPath ().c_str (),
-		          targetDirectory.c_str () );
-		fprintf ( fMakefile,
-		          "\t$(ECHO_CP)\n" );
-		fprintf ( fMakefile,
-		          "\t${cp} %s %s\n",
-		          installfile.GetPath ().c_str (),
-		          targetFilename.c_str () );
+		OutputInstallTarget ( installDirectory,
+	                          installfile.GetPath (),
+	                          installfile.newname,
+	                          installfile.base );
+	}
+}
+
+void
+MingwBackend::OutputModuleInstallTargets ( const string& installDirectory )
+{
+	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
+	{
+		const Module& module = *ProjectNode.modules[i];
+		if ( module.installName.length () > 0 )
+		{
+			string sourceFilename = MingwModuleHandler::PassThruCacheDirectory (
+				NormalizeFilename ( module.GetPath () ),
+				true );
+			OutputInstallTarget ( installDirectory,
+		                          sourceFilename,
+		                          module.installName,
+		                          module.installBase );
+		}
 	}
 }
 
@@ -723,7 +733,8 @@ MingwBackend::GenerateInstallTarget ()
 	          "install: %s %s\n",
 	          installDirectory.c_str (),
 	          installTargetFiles.c_str () );
-	OutputInstallfileTargets ( installDirectoryNoFixup );
+	OutputNonModuleInstallTargets ( installDirectoryNoFixup );
+	OutputModuleInstallTargets ( installDirectoryNoFixup );
 	fprintf ( fMakefile,
 	          "\n" );
 }
