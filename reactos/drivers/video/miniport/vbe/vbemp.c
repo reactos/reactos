@@ -327,17 +327,17 @@ VBEInitialize(PVOID HwDeviceExtension)
    {
       BiosRegisters.Eax = 0x4F01;
       BiosRegisters.Ecx = ModeList[CurrentMode];
-      BiosRegisters.Edi = VBEDeviceExtension->PhysicalAddress.QuadPart & 0xF;
-      BiosRegisters.Es = VBEDeviceExtension->PhysicalAddress.QuadPart >> 4;
+      BiosRegisters.Edi = (VBEDeviceExtension->PhysicalAddress.QuadPart + 0x200) & 0xF;
+      BiosRegisters.Es = (VBEDeviceExtension->PhysicalAddress.QuadPart + 0x200) >> 4;
       Ke386CallBios(0x10, &BiosRegisters);
-      VbeModeInfo = (PVBE_MODEINFO)VBEDeviceExtension->TrampolineMemory;
+      VbeModeInfo = (PVBE_MODEINFO)(VBEDeviceExtension->TrampolineMemory + 0x200);
       if (BiosRegisters.Eax == 0x4F &&
           VbeModeInfo->XResolution >= 640 &&
           VbeModeInfo->YResolution >= 480 &&
           (VbeModeInfo->ModeAttributes & VBE_MODEATTR_LINEAR))
       {
          VideoPortMoveMemory(VBEDeviceExtension->ModeInfo + ModeCount, 
-                             VBEDeviceExtension->TrampolineMemory,
+                             VBEDeviceExtension->TrampolineMemory + 0x200,
                              sizeof(VBE_MODEINFO));
          VBEDeviceExtension->ModeNumbers[ModeCount] = ModeList[CurrentMode] | 0x4000;
          if (VbeModeInfo->XResolution == 640 &&
