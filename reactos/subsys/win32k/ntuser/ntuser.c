@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.4.6 2004/08/31 14:34:39 weiden Exp $
+/* $Id: ntuser.c,v 1.1.4.7 2004/09/01 14:14:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -45,7 +45,7 @@
   } \
   return Result; \
 error: \
-  return ErrorResult;
+  return ErrorResult
 
 #define END_NTUSER_NOERR() \
   return Result;
@@ -533,6 +533,19 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 }
 
 BOOL STDCALL
+NtUserDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data)
+{
+  BEGIN_NTUSER_NOERR(BOOL);
+  
+  ENTER_CRITICAL();
+  /* FIXME - probe the buffer Data points to */
+  Result = IntDereferenceWndProcHandle(wpHandle, Data);
+  LEAVE_CRITICAL();
+  
+  END_NTUSER_NOERR();
+}
+
+BOOL STDCALL
 NtUserDestroyCursorIcon(HANDLE Handle,
                         DWORD Unknown)
 {
@@ -586,7 +599,7 @@ NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
   
   NTUSER_COPY_BUFFER_NTERROR(&MsgInfo, UnsafeMsgInfo, sizeof(NTUSERDISPATCHMESSAGEINFO));
   
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   if(MsgInfo.Msg.hwnd != NULL)
   {
     /* win doesn't set a last error in this case */
@@ -645,7 +658,7 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* lPs)
      back the buffer */
   NTUSER_COPY_BUFFER_W32ERROR(&SafePs, lPs, sizeof(PAINTSTRUCT), ERROR_NOACCESS);
   
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   if(hWnd != NULL)
   {
     VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
@@ -716,7 +729,7 @@ NtUserGetAncestor(HWND hWnd, UINT Type)
     case GA_ROOT:
     case GA_ROOTOWNER:
     {
-      ENTER_CRITICAL();
+      ENTER_CRITICAL_SHARED();
       VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
       Ancestor = IntGetAncestor(Window, Type);
       Result = (Ancestor != NULL ? Ancestor->Handle : NULL);
@@ -864,7 +877,7 @@ NtUserGetCursorIconInfo(HANDLE Handle,
   
   NTUSER_FAIL_INVALID_PARAMETER(IconInfo, NULL);
   
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   VALIDATE_USER_OBJECT(CURSOR, Handle, Cursor);
   IntGetCursorIconInfo(Cursor, &SafeInfo);
   LEAVE_CRITICAL();
@@ -891,7 +904,7 @@ NtUserGetCursorIconSize(HANDLE Handle,
   NTUSER_FAIL_INVALID_PARAMETER(fIcon, NULL);
   NTUSER_FAIL_INVALID_PARAMETER(Size, NULL);
   
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   VALIDATE_USER_OBJECT(CURSOR, Handle, Cursor);
   Result = IntGetCursorIconSize(Cursor, &SafeIsIcon, &SafeSize);
   LEAVE_CRITICAL();
@@ -1031,7 +1044,7 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
   
   GotMessage = FALSE;
   
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   if(Wnd != NULL)
   {
     VALIDATE_USER_OBJECT(WINDOW, Wnd, Window);
@@ -1121,6 +1134,22 @@ NtUserGetParent(HWND hWnd)
   END_NTUSER();
 }
 
+HANDLE STDCALL
+NtUserGetProp(HWND hWnd, ATOM Atom)
+{
+  PPROPERTY Property;
+  NTUSER_USER_OBJECT(WINDOW, Window);
+  BEGIN_NTUSER(HANDLE, NULL);
+
+  ENTER_CRITICAL_SHARED();
+  VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
+  Property = IntGetProp(Window, Atom);
+  Result = (Property != NULL ? Property->Data : NULL);
+  LEAVE_CRITICAL();
+
+  END_NTUSER();
+}
+
 HWND STDCALL
 NtUserGetShellWindow()
 {
@@ -1146,7 +1175,7 @@ NtUserGetSystemMetrics(INT Index)
     NTUSER_FAIL();
   }
   
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   Result = IntGetSystemMetrics(Index);
   LEAVE_CRITICAL();
    
@@ -1162,7 +1191,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT lpRect, BOOL bErase)
   BEGIN_NTUSER(BOOL, FALSE);
   
   /* FIXME - if bErase == FALSE, should we do ENTER_CRITICAL_SHARED() instead? */
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
   Result = IntGetUpdateRect(Window, &SafeRect, bErase);
   LEAVE_CRITICAL();
@@ -1182,7 +1211,7 @@ NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
   BEGIN_NTUSER(INT, ERROR);
   
   /* FIXME - if bErase == FALSE, should we do ENTER_CRITICAL_SHARED() instead? */
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
   Result = IntGetUpdateRgn(Window, hRgn, bErase);
   LEAVE_CRITICAL();
@@ -1212,7 +1241,7 @@ NtUserGetWindowDC(HWND hWnd)
   NTUSER_USER_OBJECT(WINDOW, Window);
   BEGIN_NTUSER(HDC, NULL);
   
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   if(hWnd != NULL)
   {
     VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
@@ -1357,7 +1386,7 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
     MsgFilterMax = 0;
   }
   
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   if(hWnd != NULL)
   {
     VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
@@ -1513,6 +1542,35 @@ NtUserPostThreadMessage(DWORD idThread,
   END_NTUSER();
 }
 
+BOOL STDCALL
+NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate,
+   UINT flags)
+{
+  NTUSER_USER_OBJECT(WINDOW, Window);
+  BEGIN_NTUSER(BOOL, FALSE);
+  
+  /* FIXME - probe lprcUpdate! */
+  
+  ENTER_CRITICAL_SHARED();
+  if(hWnd != NULL)
+  {
+    VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
+  }
+  else
+  {
+    if(!(Window = IntGetDesktopWindow()))
+    {
+      LEAVE_CRITICAL();
+      DPRINT1("RedrawWindow(): Unable to get desktop window!\n");
+      NTUSER_FAIL_ERROR(ERROR_ACCESS_DENIED);
+    }
+  }
+  Result = IntRedrawWindow(Window, (LPRECT)lprcUpdate, hrgnUpdate, flags);
+  LEAVE_CRITICAL();
+  
+  END_NTUSER();
+}
+
 RTL_ATOM STDCALL
 NtUserRegisterClassExWOW(CONST WNDCLASSEXW* lpwcx,
                          PUNICODE_STRING ClassName,
@@ -1594,7 +1652,7 @@ NtUserReleaseDC(HWND hWnd, HDC hDc)
   NTUSER_USER_OBJECT(WINDOW, Window);
   BEGIN_NTUSER(INT, 0);
   
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   if(hWnd != NULL)
   {
     VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
@@ -1613,6 +1671,23 @@ NtUserReleaseDC(HWND hWnd, HDC hDc)
   
   LEAVE_CRITICAL();
   
+  END_NTUSER();
+}
+
+HANDLE STDCALL
+NtUserRemoveProp(HWND hWnd, ATOM Atom)
+{
+  NTUSER_USER_OBJECT(WINDOW, Window);
+  BEGIN_NTUSER(HANDLE, NULL);
+
+  ENTER_CRITICAL();
+  VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
+  if(!IntRemoveProp(Window, Atom, &Result))
+  {
+    Result = NULL;
+  }
+  LEAVE_CRITICAL();
+
   END_NTUSER();
 }
 
@@ -1873,6 +1948,20 @@ NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
   PreviousParentWindow = IntSetParent(ChildWindow, NewParentWindow);
   Result = (PreviousParentWindow != NULL ? PreviousParentWindow->Handle : NULL);
   
+  LEAVE_CRITICAL();
+  
+  END_NTUSER();
+}
+
+BOOL STDCALL
+NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
+{
+  NTUSER_USER_OBJECT(WINDOW, Window);
+  BEGIN_NTUSER(BOOL, FALSE);
+  
+  ENTER_CRITICAL();
+  VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
+  Result = IntSetProp(Window, Atom, Data);
   LEAVE_CRITICAL();
   
   END_NTUSER();

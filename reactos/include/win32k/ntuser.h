@@ -1728,7 +1728,7 @@ typedef struct _WndProcHandle
   HANDLE ProcessID;
 } WndProcHandle;
                                     
-DWORD STDCALL
+BOOL STDCALL
 NtUserDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data);
 
 VOID STDCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.11.12.1 2004/07/15 20:07:18 weiden Exp $
+/* $Id: prop.c,v 1.11.12.2 2004/09/01 14:14:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -30,7 +30,7 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 typedef struct _PROPLISTITEM
@@ -48,39 +48,63 @@ IntGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom)
   PPROPERTY Property;
   
   ListEntry = WindowObject->PropListHead.Flink;
-  while (ListEntry != &WindowObject->PropListHead)
+  while(ListEntry != &WindowObject->PropListHead)
+  {
+    Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
+    if(Property->Atom == Atom)
     {
-      Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
-      if (Property->Atom == Atom)
-	{
-	  return(Property);
-	}
-      ListEntry = ListEntry->Flink;
+      return Property;
     }
-  return(NULL);
+    ListEntry = ListEntry->Flink;
+  }
+  
+  return NULL;
 }
 
 BOOL FASTCALL
-IntSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data)
+IntRemoveProp(PWINDOW_OBJECT WindowObject, ATOM Atom, HANDLE *Data)
 {
-  PPROPERTY Prop;
+  PLIST_ENTRY ListEntry;
+  PPROPERTY Property;
+  
+  ASSERT(Data);
 
-  Prop = IntGetProp(Wnd, Atom);
+  ListEntry = WindowObject->PropListHead.Flink;
+  while(ListEntry != &WindowObject->PropListHead)
+  {
+    Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
+    if(Property->Atom == Atom)
+    {
+      *Data = Property->Data;
+      RemoveEntryList(&Property->PropListEntry);
+      ExFreePool(Property);
+      return TRUE;
+    }
+    ListEntry = ListEntry->Flink;
+  }
+  
+  return FALSE;
+}
 
-  if (Prop == NULL)
+BOOL FASTCALL
+IntSetProp(PWINDOW_OBJECT WindowObject, ATOM Atom, HANDLE Data)
+{
+  PPROPERTY Prop = IntGetProp(WindowObject, Atom);
+  if(Prop == NULL)
   {
     Prop = ExAllocatePoolWithTag(PagedPool, sizeof(PROPERTY), TAG_WNDPROP);
-    if (Prop == NULL)
+    if(Prop != NULL)
     {
-      return FALSE;
+      Prop->Atom = Atom;
+      Prop->Data = Data;
+      InsertTailList(&WindowObject->PropListHead, &Prop->PropListEntry);
+      WindowObject->PropListItems++;
+
+      return TRUE;
     }
-    Prop->Atom = Atom;
-    InsertTailList(&Wnd->PropListHead, &Prop->PropListEntry);
-    Wnd->PropListItems++;
   }
 
-  Prop->Data = Data;
-  return TRUE;
+  return FALSE;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.45.12.3 2004/08/31 11:38:56 weiden Exp $
+/* $Id: stubs.c,v 1.45.12.4 2004/09/01 14:14:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -750,15 +750,6 @@ NtUserUpdateWindow(HWND hWnd)
    return FALSE;
 }
 
-
-BOOL STDCALL
-NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate,
-   UINT flags)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
 /*
  * Scroll
  */
@@ -849,27 +840,6 @@ NtUserBuildPropList(HWND hWnd,
 		    LPVOID Buffer,
 		    DWORD BufferSize,
 		    DWORD *Count)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
-HANDLE STDCALL
-NtUserRemoveProp(HWND hWnd, ATOM Atom)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
-HANDLE STDCALL
-NtUserGetProp(HWND hWnd, ATOM Atom)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
-BOOL STDCALL
-NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
 {
    UNIMPLEMENTED;
    return FALSE;
@@ -1318,13 +1288,6 @@ NtUserInternalGetWindowText(HWND hWnd, LPWSTR lpString, INT nMaxCount)
    return 0;
 }
 
-
-DWORD STDCALL
-NtUserDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data)
-{
-   UNIMPLEMENTED;
-   return 0;
-}
 
 /*
  * Miscellaneous

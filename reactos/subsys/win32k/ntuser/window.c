@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.244.2.3 2004/08/31 11:38:56 weiden Exp $
+/* $Id: window.c,v 1.244.2.4 2004/09/01 14:14:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2026,7 +2026,7 @@ IntInternalGetWindowText(PWINDOW_OBJECT WindowObject, WCHAR *Buffer, INT nMaxCou
 
 /* WINPROC ********************************************************************/
 
-DWORD FASTCALL
+BOOL FASTCALL
 IntDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data)
 {
 	WndProcHandle Entry;
@@ -2043,7 +2043,7 @@ IntDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data)
 	return FALSE;
 }
 
-DWORD
+DWORD FASTCALL
 IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode)
 {
 	WORD i;
@@ -2076,7 +2076,7 @@ IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode)
 	return FreeSpot + 0xFFFF0000;
 }
 
-DWORD
+DWORD FASTCALL
 IntRemoveWndProcHandle(WNDPROC Handle)
 {
 	WORD position;
@@ -2091,7 +2091,7 @@ IntRemoveWndProcHandle(WNDPROC Handle)
 	return TRUE;
 }
 
-DWORD
+DWORD FASTCALL
 IntRemoveProcessWndProcHandles(HANDLE ProcessID)
 {
 	WORD i;

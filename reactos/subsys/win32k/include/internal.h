@@ -695,7 +695,8 @@ typedef struct _PROPERTY
   ATOM Atom;
 } PROPERTY;
 
-BOOL      FASTCALL IntSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data);
+BOOL      FASTCALL IntSetProp(PWINDOW_OBJECT WindowObject, ATOM Atom, HANDLE Data);
+BOOL      FASTCALL IntRemoveProp(PWINDOW_OBJECT WindowObject, ATOM Atom, HANDLE *Data);
 PPROPERTY FASTCALL IntGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom);
 
 /* SCROLL BARS ****************************************************************/
@@ -925,9 +926,10 @@ BOOL           FASTCALL IntSetShellWindowEx(PWINDOW_OBJECT Shell, PWINDOW_OBJECT
 WORD           FASTCALL IntSetWindowWord(PWINDOW_OBJECT WindowObject, INT Index, WORD NewValue);
 ULONG          FASTCALL IntGetWindowThreadProcessId(PWINDOW_OBJECT Window, ULONG *Pid);
 PWINDOW_OBJECT FASTCALL IntGetWindow(PWINDOW_OBJECT Window, UINT uCmd);
-DWORD                   IntRemoveWndProcHandle(WNDPROC Handle);
-DWORD                   IntRemoveProcessWndProcHandles(HANDLE ProcessID);
-DWORD                   IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode);
+BOOL           FASTCALL IntDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data);
+DWORD          FASTCALL IntRemoveWndProcHandle(WNDPROC Handle);
+DWORD          FASTCALL IntRemoveProcessWndProcHandles(HANDLE ProcessID);
+DWORD          FASTCALL IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode);
 
 /* WINPOS *********************************************************************/
 
