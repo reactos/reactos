@@ -742,7 +742,7 @@ static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, RECT *rc)
 static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
 {
     RECT     rc, focus_rect, r;
-    UINT     dtFlags;
+    UINT     dtFlags, uState;
     HRGN     hRgn;
     HPEN     hOldPen;
     HBRUSH   hOldBrush;
@@ -758,27 +758,13 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     /* Send WM_CTLCOLOR to allow changing the font (the colors are fixed) */
     if ((hFont = get_button_font( hwnd ))) SelectObject( hDC, hFont );
     SendMessageW( GetParent(hwnd), WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)hwnd );
-#ifndef __REACTOS__
-    hOldPen = (HPEN)SelectObject(hDC, SYSCOLOR_GetPen(COLOR_WINDOWFRAME));
-#else
+#ifdef __REACTOS__
     hOldPen = (HPEN)SelectObject(hDC, GetSysColorPen(COLOR_WINDOWFRAME));
+#else
+    hOldPen = (HPEN)SelectObject(hDC, SYSCOLOR_GetPen(COLOR_WINDOWFRAME));
 #endif
     hOldBrush =(HBRUSH)SelectObject(hDC,GetSysColorBrush(COLOR_BTNFACE));
     oldBkMode = SetBkMode(hDC, TRANSPARENT);
-
-#ifndef __REACTOS__
-    if ( TWEAK_WineLook == WIN31_LOOK)
-    {
-        COLORREF clr_wnd = GetSysColor(COLOR_WINDOW);
-        Rectangle(hDC, rc.left, rc.top, rc.right, rc.bottom);
-
-        SetPixel( hDC, rc.left, rc.top, clr_wnd);
-        SetPixel( hDC, rc.left, rc.bottom-1, clr_wnd);
-        SetPixel( hDC, rc.right-1, rc.top, clr_wnd);
-        SetPixel( hDC, rc.right-1, rc.bottom-1, clr_wnd);
-	InflateRect( &rc, -1, -1 );
-    }
-#endif
 
     if (get_button_type(style) == BS_DEFPUSHBUTTON)
     {
@@ -786,43 +772,24 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
 	InflateRect( &rc, -1, -1 );
     }
 
-#ifndef __REACTOS__
-    if (TWEAK_WineLook == WIN31_LOOK)
+    uState = DFCS_BUTTONPUSH | DFCS_ADJUSTRECT;
+
+    if (style & BS_FLAT)
+        uState |= DFCS_MONO;
+    else if (pushedState)
     {
-        if (pushedState)
-	{
-	    /* draw button shadow: */
-	    SelectObject(hDC, GetSysColorBrush(COLOR_BTNSHADOW));
-	    PatBlt(hDC, rc.left, rc.top, 1, rc.bottom-rc.top, PATCOPY );
-	    PatBlt(hDC, rc.left, rc.top, rc.right-rc.left, 1, PATCOPY );
-	} else {
-	   rc.right++, rc.bottom++;
-	   DrawEdge( hDC, &rc, EDGE_RAISED, BF_RECT );
-	   rc.right--, rc.bottom--;
-	}
+	if (get_button_type(style) == BS_DEFPUSHBUTTON )
+	    uState |= DFCS_FLAT;
+	else
+	    uState |= DFCS_PUSHED;
     }
-    else
-#endif
-    {
-        UINT uState = DFCS_BUTTONPUSH | DFCS_ADJUSTRECT;
 
-        if (style & BS_FLAT)
-            uState |= DFCS_MONO;
-        else if (pushedState)
-	{
-	    if (get_button_type(style) == BS_DEFPUSHBUTTON )
-	        uState |= DFCS_FLAT;
-	    else
-	        uState |= DFCS_PUSHED;
-	}
+    if (state & (BUTTON_CHECKED | BUTTON_3STATE))
+        uState |= DFCS_CHECKED;
 
-        if (state & (BUTTON_CHECKED | BUTTON_3STATE))
-            uState |= DFCS_CHECKED;
+    DrawFrameControl( hDC, &rc, DFC_BUTTON, uState );
 
-	DrawFrameControl( hDC, &rc, DFC_BUTTON, uState );
-
-	focus_rect = rc;
-    }
+    focus_rect = rc;
 
     /* draw button label */
     r = rc;
@@ -833,14 +800,6 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
 
     if (pushedState)
        OffsetRect(&r, 1, 1);
-
-#ifndef __REACTOS__
-    if(TWEAK_WineLook == WIN31_LOOK)
-    {
-       focus_rect = r;
-       InflateRect(&focus_rect, 2, 0);
-    }
-#endif
 
     hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
     SelectClipRgn(hDC, hRgn);
@@ -910,7 +869,7 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
         rtext.left += checkBoxWidth + 4;
         rbox.right = checkBoxWidth;
     }
- 
+
     /* Since WM_ERASEBKGND does nothing, first prepare background */
     if (action == ODA_SELECT) FillRect( hDC, &rbox, hBrush );
     if (action == ODA_DRAWENTIRE) FillRect( hDC, &client, hBrush );
@@ -918,88 +877,54 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
     /* Draw label */
     client = rtext;
     dtFlags = BUTTON_CalcLabelRect(hwnd, hDC, &rtext);
-    
+
     rbox.top = rtext.top;
     rbox.bottom = rtext.bottom;
     /* Draw the check-box bitmap */
     if (action == ODA_DRAWENTIRE || action == ODA_SELECT)
     {
-#ifndef __REACTOS__
-        if( TWEAK_WineLook == WIN31_LOOK )
-        {
-	    HDC hMemDC = CreateCompatibleDC( hDC );
-	    int x = 0, y = 0;
-	    delta = (rbox.bottom - rbox.top - checkBoxHeight) / 2;
-	    
-	    /* Check in case the client area is smaller than the checkbox bitmap */
-	    if (delta < 0) delta = 0;
-	    
-	    if (state & BUTTON_HIGHLIGHTED) x += 2 * checkBoxWidth;
-	    if (state & (BUTTON_CHECKED | BUTTON_3STATE)) x += checkBoxWidth;
-	    if ((get_button_type(style) == BS_RADIOBUTTON) ||
-		(get_button_type(style) == BS_AUTORADIOBUTTON)) y += checkBoxHeight;
-	    else if (state & BUTTON_3STATE) y += 2 * checkBoxHeight;
-	    
-	    /* The bitmap for the radio button is not aligned with the
-	     * left of the window, it is 1 pixel off. */
-	    if ((get_button_type(style) == BS_RADIOBUTTON) ||
-		(get_button_type(style) == BS_AUTORADIOBUTTON))
-	      rbox.left += 1;
-	    
-	    SelectObject( hMemDC, hbitmapCheckBoxes );
-	    BitBlt( hDC, rbox.left, rbox.top + delta, checkBoxWidth,
-		    checkBoxHeight, hMemDC, x, y, SRCCOPY );
-	    DeleteDC( hMemDC );
-        }
-        else
-#endif
-        {
-            UINT flags;
+	UINT flags;
 
-            if ((get_button_type(style) == BS_RADIOBUTTON) ||
-                (get_button_type(style) == BS_AUTORADIOBUTTON)) flags = DFCS_BUTTONRADIO;
-            else if (state & BUTTON_3STATE) flags = DFCS_BUTTON3STATE;
-	    else flags = DFCS_BUTTONCHECK;
+	if ((get_button_type(style) == BS_RADIOBUTTON) ||
+	    (get_button_type(style) == BS_AUTORADIOBUTTON)) flags = DFCS_BUTTONRADIO;
+	else if (state & BUTTON_3STATE) flags = DFCS_BUTTON3STATE;
+	else flags = DFCS_BUTTONCHECK;
 
-            if (state & (BUTTON_CHECKED | BUTTON_3STATE)) flags |= DFCS_CHECKED;
-	    if (state & BUTTON_HIGHLIGHTED) flags |= DFCS_PUSHED;
+	if (state & (BUTTON_CHECKED | BUTTON_3STATE)) flags |= DFCS_CHECKED;
+	if (state & BUTTON_HIGHLIGHTED) flags |= DFCS_PUSHED;
 
-	    if (style & WS_DISABLED) flags |= DFCS_INACTIVE;
+	if (style & WS_DISABLED) flags |= DFCS_INACTIVE;
 
-	    /* rbox must have the correct height */
-	    delta = rbox.bottom - rbox.top - checkBoxHeight;
-	    
-	    if (style & BS_TOP) {
-	      if (delta > 0) {
+	/* rbox must have the correct height */
+	delta = rbox.bottom - rbox.top - checkBoxHeight;
+
+	if (style & BS_TOP) {
+	    if (delta > 0) {
 		rbox.bottom = rbox.top + checkBoxHeight;
-	      } else {
+	    } else {
 		rbox.top -= -delta/2 + 1;
 		rbox.bottom += rbox.top + checkBoxHeight;
-	      }
-	    } else if (style & BS_BOTTOM) {
-	      if (delta > 0) {
+	    }
+	} else if (style & BS_BOTTOM) {
+	    if (delta > 0) {
 		rbox.top = rbox.bottom - checkBoxHeight;
-	      } else {
+	    } else {
 		rbox.bottom += -delta/2 + 1;
 		rbox.top = rbox.bottom -= checkBoxHeight;
-	      }
-	    } else { /* Default */
-	      if (delta > 0)
-		{
-		  int ofs = (delta / 2);
-		  rbox.bottom -= ofs + 1;
-		  rbox.top = rbox.bottom - checkBoxHeight;
-		}
-	      else if (delta < 0)
-		{
-		  int ofs = (-delta / 2);
-		  rbox.top -= ofs + 1;
-		  rbox.bottom = rbox.top + checkBoxHeight;
-		}
 	    }
+	} else { /* Default */
+	    if (delta > 0) {
+		int ofs = (delta / 2);
+		rbox.bottom -= ofs + 1;
+		rbox.top = rbox.bottom - checkBoxHeight;
+	    } else if (delta < 0) {
+		int ofs = (-delta / 2);
+		rbox.top -= ofs + 1;
+		rbox.bottom = rbox.top + checkBoxHeight;
+	    }
+	}
 
-	    DrawFrameControl( hDC, &rbox, DFC_BUTTON, flags );
-        }
+	DrawFrameControl( hDC, &rbox, DFC_BUTTON, flags );
     }
 
     if (dtFlags == (UINT)-1L) /* Noting to draw */
@@ -1057,6 +982,7 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action )
     HBRUSH hbr;
     HFONT hFont;
     UINT dtFlags;
+    TEXTMETRICW tm;
     LONG style = GetWindowLongA( hwnd, GWL_STYLE );
 
     if (action != ODA_DRAWENTIRE) return;
@@ -1069,26 +995,11 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action )
 				     (WPARAM)hDC, (LPARAM)hwnd);
 
     GetClientRect( hwnd, &rc);
-#ifndef __REACTOS__
-    if (TWEAK_WineLook == WIN31_LOOK) {
-        HPEN hPrevPen = SelectObject( hDC,
-					  SYSCOLOR_GetPen(COLOR_WINDOWFRAME));
-	HBRUSH hPrevBrush = SelectObject( hDC,
-					      GetStockObject(NULL_BRUSH) );
+    rcFrame = rc;
 
-	Rectangle( hDC, rc.left, rc.top + 2, rc.right - 1, rc.bottom - 1 );
-	SelectObject( hDC, hPrevBrush );
-	SelectObject( hDC, hPrevPen );
-    } else
-#endif
-    {
-	TEXTMETRICW tm;
-	rcFrame = rc;
-
-	GetTextMetricsW (hDC, &tm);
-	rcFrame.top += (tm.tmHeight / 2) - 1;
-	DrawEdge (hDC, &rcFrame, EDGE_ETCHED, BF_RECT | ((style & BS_FLAT) ? BF_FLAT : 0));
-    }
+    GetTextMetricsW (hDC, &tm);
+    rcFrame.top += (tm.tmHeight / 2) - 1;
+    DrawEdge (hDC, &rcFrame, EDGE_ETCHED, BF_RECT | ((style & BS_FLAT) ? BF_FLAT : 0));
 
     InflateRect(&rc, -7, 1);
     dtFlags = BUTTON_CalcLabelRect(hwnd, hDC, &rc);
