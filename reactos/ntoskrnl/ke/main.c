@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.204 2004/11/07 22:55:38 navaraf Exp $
+/* $Id: main.c,v 1.205 2004/11/13 22:30:18 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -349,7 +349,7 @@ ExpInitializeExecutive(VOID)
      }
      else if (!_strnicmp(p2, "NOGUIBOOT", 9))
      {
-       p2 += 12;
+       p2 += 9;
        NoGuiBoot = TRUE;
      }
      else if (!_strnicmp(p2, "CRASHDUMP", 9))
