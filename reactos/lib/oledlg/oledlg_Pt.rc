@@ -1,0 +1,55 @@
+/*
+ * Copyright 2004 Marcelo Duarte
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_DEFAULT
+
+UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 294, 151
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Inserir objeto"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LISTBOX         IDC_OBJTYPELIST,82,19,131,66,LBS_SORT |
+                    LBS_NOINTEGRALHEIGHT | WS_VISIBLE | WS_VSCROLL |
+                    WS_TABSTOP
+    LTEXT           "Tipo de objeto:",IDC_OBJTYPELBL,82,7,53,8,WS_VISIBLE
+    DEFPUSHBUTTON   "OK",IDOK,221,7,66,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,221,24,66,14
+    GROUPBOX        "Resultado",IDC_RESULT,7,103,208,41
+    CONTROL         "Criar novo",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,7,20,62,10
+    CONTROL         "Criar controle",IDC_CREATECONTROL,"Button",
+                    BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,62,10
+    CONTROL         "Criar do arquivo",IDC_CREATEFROMFILE,"Button",
+                    BS_AUTORADIOBUTTON,7,37,67,10
+    LTEXT           "",IDC_RESULTDESC,49,112,159,23
+    PUSHBUTTON      "&Adicionar Controle...",IDC_ADDCONTROL,81,88,63,14,NOT WS_VISIBLE
+    CONTROL         "Mostrar como ícone",IDC_ASICON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP | NOT WS_VISIBLE,223,58,64,10
+    PUSHBUTTON      "Procurar...",IDC_BROWSE,83,53,50,14,NOT WS_VISIBLE
+    LTEXT           "Arquivo:",IDC_FILELBL,83,27,20,8, NOT WS_VISIBLE
+    EDITTEXT        IDC_FILE,83,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
+END
+
+STRINGTABLE DISCARDABLE
+{
+  IDS_RESULTOBJDESC	"Inserir um novo objeto %s no documento"
+  IDS_RESULTFILEOBJDESC	"Inserir o conteúdo do arquivo como um objeto no documento de modo que possa ativá-lo usando o programa que o criou."
+  IDS_BROWSE            "Procurar"
+  IDS_NOTOLEMOD         "O arquivo não parece ser um módulo OLE válido. Impossível registrar o controle OLE."
+  IDS_NOTOLEMODCAPTION  "Adicionar Controle"
+}
