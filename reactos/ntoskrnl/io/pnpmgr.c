@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.45 2004/10/23 14:48:16 ekohl Exp $
+/* $Id: pnpmgr.c,v 1.46 2004/10/23 14:52:51 blight Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -18,7 +18,7 @@ DEFINE_GUID(GUID_CLASS_COMPORT,          0x86e0d1e0L, 0x8089, 0x11d0, 0x9c, 0xe4
 DEFINE_GUID(GUID_SERENUM_BUS_ENUMERATOR, 0x4D36E978L, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18);
 #endif // DEFINE_GUID
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 

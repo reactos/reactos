@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.39 2004/10/22 20:30:47 ekohl Exp $
+/* $Id: dpc.c,v 1.40 2004/10/23 14:52:51 blight Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -234,7 +234,7 @@ KeInsertQueueDpc (PKDPC	Dpc,
      }
    KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
    KeLowerIrql(oldlvl);
-   DPRINT("DpcQueueHead.Flink %x\n",DpcQueueHead.Flink);
+   DPRINT("DpcQueueHead.Flink %x\n", Pcr->PrcbData.DpcData[0].DpcListHead.Flink);
    DPRINT("Leaving KeInsertQueueDpc()\n",0);
    return(TRUE);
 }

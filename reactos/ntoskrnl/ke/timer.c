@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.82 2004/10/22 20:30:48 ekohl Exp $
+/* $Id: timer.c,v 1.83 2004/10/23 14:52:51 blight Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -732,7 +732,7 @@ KiUpdateProcessThreadTime(KIRQL oldIrql, PKIRQ_TRAPFRAME Tf)
        return;
      }
 
-   DPRINT("KernelTime  %u, UserTime %u \n", Kpcr->PrcbData.KernelTime, Kpcr->PrcbData.UserTime);
+   DPRINT("KernelTime  %u, UserTime %u \n", Pcr->PrcbData.KernelTime, Pcr->PrcbData.UserTime);
 
    if (oldIrql > DISPATCH_LEVEL)
    {
