@@ -93,7 +93,7 @@ PVOID MmMapIoSpace(PHYSICAL_ADDRESS PhysicalAddress,
 	MmSetPage(NULL,
 		  Result + (i * PAGESIZE),
 		  PAGE_READWRITE,
-		  GET_LARGE_INTEGER_LOW_PART(PhysicalAddress) + 
+                  PhysicalAddress.LowPart +
 		  (i * PAGESIZE));
      }
    return((PVOID)Result);

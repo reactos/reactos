@@ -162,7 +162,7 @@ NTSTATUS STDCALL ZwCreateSection(OUT PHANDLE SectionHandle,
      }
    else
      {
-        LARGE_INTEGER_QUAD_PART(Section->MaximumSize) = 0xffffffff;
+        Section->MaximumSize.QuadPart = 0xffffffff;
      }
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocateAttributes = AllocationAttributes;
@@ -332,9 +332,9 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
      }
    
    DPRINT("ViewSize %x\n",ViewSize);
-   if ((*ViewSize) > GET_LARGE_INTEGER_LOW_PART(Section->MaximumSize))
+   if ((*ViewSize) > Section->MaximumSize.LowPart)
      {
-	(*ViewSize) = GET_LARGE_INTEGER_LOW_PART(Section->MaximumSize);
+        (*ViewSize) = Section->MaximumSize.LowPart;
      }
    
    Status = MmCreateMemoryArea(UserMode,
@@ -361,8 +361,7 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
      }
    else
      {
-	Result->Data.SectionData.ViewOffset =
-     GET_LARGE_INTEGER_LOW_PART(*SectionOffset);
+        Result->Data.SectionData.ViewOffset = SectionOffset->LowPart;
      }
    
    DPRINT("*BaseAddress %x\n",*BaseAddress);

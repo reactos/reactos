@@ -32,24 +32,32 @@
 #ifndef _GNU_H_WINDOWS32_STRUCTURES
 #define _GNU_H_WINDOWS32_STRUCTURES
 
-#ifdef COMPILER_LARGE_INTEGERS
+typedef long long int LONGLONG, *PLONGLONG;
+typedef unsigned long long int ULONGLONG, *PULONGLONG;
 
-typedef long long int LARGE_INTEGER, *PLARGE_INTEGER;
-typedef unsigned long long int ULARGE_INTEGER, *PULARGE_INTEGER;
+typedef union _LARGE_INTEGER
+{
+  struct
+  {
+    DWORD ULowPart;
+    LONG  UHighPart;
+  } u;
+  LONGLONG QuadPart;
+} LARGE_INTEGER, *PLARGE_INTEGER;
 
-#else
+typedef union
+{
+  struct
+  {
+    DWORD ULowPart;
+    DWORD UHighPart;
+  } u;
+  ULONGLONG QuadPart;
+} ULARGE_INTEGER, *PULARGE_INTEGER;
 
-typedef struct _LARGE_INTEGER { 
-  DWORD LowPart; 
-  LONG  HighPart; 
-} LARGE_INTEGER, *PLARGE_INTEGER; 
+#define LowPart  u.ULowPart
+#define HighPart u.UHighPart
 
-typedef struct _ULARGE_INTEGER { 
-  DWORD LowPart; 
-  DWORD HighPart; 
-} ULARGE_INTEGER, *PULARGE_INTEGER; 
-
-#endif
 
 typedef struct _LIST_ENTRY { 
   struct _LIST_ENTRY *Flink; 

@@ -278,7 +278,7 @@ LARGE_INTEGER KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
 {
   if (PerformanceFreq != NULL)
     {
-      LARGE_INTEGER_QUAD_PART(*PerformanceFreq) = 0;
+      PerformanceFreq->QuadPart = 0;
     }
 
   return *PerformanceFreq;
@@ -303,7 +303,7 @@ VOID KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
  * 1st of January, 1601.
  */
 {
-  LARGE_INTEGER_QUAD_PART(*CurrentTime) = system_time;
+  CurrentTime->QuadPart = system_time;
 }
 
 NTSTATUS STDCALL NtGetTickCount(PULONG UpTime)
@@ -449,7 +449,7 @@ VOID KeQueryTickCount(PLARGE_INTEGER TickCount)
  *         TickCount (OUT) = Points to storage for the number of ticks
  */
 {
-  LARGE_INTEGER_QUAD_PART(*TickCount) = KiTimerTicks;
+  TickCount->QuadPart = KiTimerTicks;
 }
 
 static void HandleExpiredTimer(PKTIMER current)

@@ -123,10 +123,6 @@
 
 #include "cmd.h"
 
-#ifdef __REACTOS__
-#include <kernel32/li.h>
-#endif
-
 
 
 /* flag definitions */
@@ -584,11 +580,7 @@ ConvertULargeInteger (ULARGE_INTEGER num, LPTSTR des, INT len)
 	INT c = 0;
 	INT n = 0;
 
-#ifndef __REACTOS__
 	if (num.QuadPart == 0)
-#else
-        if (num == 0)
-#endif
 	{
 		des[0] = _T('0');
 		des[1] = _T('\0');
@@ -597,21 +589,12 @@ ConvertULargeInteger (ULARGE_INTEGER num, LPTSTR des, INT len)
 	else
 	{
 		temp[31] = 0;
-#ifndef __REACTOS__
 		while (num.QuadPart > 0)
-#else
-                while (num > 0)
-#endif
 		{
 			if (((c + 1) % (nNumberGroups + 1)) == 0)
 				temp[30 - c++] = cThousandSeparator;
-#ifndef __REACTOS__
 			temp[30 - c++] = (TCHAR)(num.QuadPart % 10) + _T('0');
 			num.QuadPart /= 10;
-#else
-                        temp[30 - c++] = (TCHAR)(num % 10) + _T('0');
-                        num /= 10;
-#endif
 		}
 
 		for (n = 0; n <= c; n++)
@@ -685,13 +668,8 @@ PrintSummary (LPTSTR szPath, ULONG ulFiles, ULONG ulDirs, ULARGE_INTEGER bytes,
                       buffer, ulFiles == 1 ? _T(' ') : _T('s'));
 
 	ConvertULargeInteger (bytes, buffer, sizeof(buffer));
-#ifndef __REACTOS__
 	ConOutPrintf (_T("  %15s byte%c\n"),
                       buffer, bytes.QuadPart == 1 ? _T(' ') : _T('s'));
-#else
-	ConOutPrintf (_T("  %15s byte%c\n"),
-                      buffer, bytes == 1 ? _T(' ') : _T('s'));
-#endif
 
 	if (IncLine (pLine, dwFlags))
 		return 1;
@@ -713,11 +691,7 @@ PrintSummary (LPTSTR szPath, ULONG ulFiles, ULONG ulDirs, ULARGE_INTEGER bytes,
 
 		szRoot[0] = szPath[0];
 		GetDiskFreeSpace (szRoot, &dwSecPerCl, &dwBytPerSec, &dwFreeCl, &dwTotCl);
-#ifndef __REACTOS__
                 uliFree.QuadPart = dwSecPerCl * dwBytPerSec * dwFreeCl;
-#else
-                uliFree = dwSecPerCl * dwBytPerSec * dwFreeCl;
-#endif
 		ConvertULargeInteger (uliFree, buffer, sizeof(buffer));
 		ConOutPrintf (_T("   %15s bytes free\n"), buffer);
 	}
@@ -748,11 +722,7 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 	ULONG dircount = 0;
 	INT count;
 
-#ifndef __REACTOS__
 	bytecount.QuadPart = 0;
-#else
-        bytecount = 0;
-#endif
 
 	_tcscpy (szFullPath, szPath);
 	if (szFullPath[_tcslen(szFullPath) - 1] != _T('\\'))
@@ -840,15 +810,9 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 				count = 0;
 			}
 
-#ifndef __REACTOS__
-			uliSize.u.LowPart = file.nFileSizeLow;
-			uliSize.u.HighPart = file.nFileSizeHigh;
+                        uliSize.LowPart = file.nFileSizeLow;
+                        uliSize.HighPart = file.nFileSizeHigh;
 			bytecount.QuadPart += uliSize.QuadPart;
-#else
-                        SET_LARGE_INTEGER_LOW_PART(uliSize, file.nFileSizeLow);
-                        SET_LARGE_INTEGER_HIGH_PART(uliSize, file.nFileSizeHigh);
-                        bytecount += uliSize;
-#endif
 		}
 		else if (dwFlags & DIR_BARE)
 		{
@@ -877,15 +841,9 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 			if (IncLine (pLine, dwFlags))
 				return 1;
 
-#ifndef __REACTOS__
-			uliSize.u.LowPart = file.nFileSizeLow;
-			uliSize.u.HighPart = file.nFileSizeHigh;
+                        uliSize.LowPart = file.nFileSizeLow;
+                        uliSize.HighPart = file.nFileSizeHigh;
 			bytecount.QuadPart += uliSize.QuadPart;
-#else
-                        SET_LARGE_INTEGER_LOW_PART(uliSize, file.nFileSizeLow);
-                        SET_LARGE_INTEGER_HIGH_PART(uliSize, file.nFileSizeHigh);
-                        bytecount += uliSize;
-#endif
 		}
 		else
 		{
@@ -908,22 +866,13 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 				{
 					ULARGE_INTEGER uliSize;
 
-#ifndef __REACTOS__
-					uliSize.u.LowPart = file.nFileSizeLow;
-					uliSize.u.HighPart = file.nFileSizeHigh;
-#else
-                                        SET_LARGE_INTEGER_LOW_PART(uliSize, file.nFileSizeLow);
-                                        SET_LARGE_INTEGER_HIGH_PART(uliSize, file.nFileSizeHigh);
-#endif
+                                        uliSize.LowPart = file.nFileSizeLow;
+                                        uliSize.HighPart = file.nFileSizeHigh;
 
 					ConvertULargeInteger (uliSize, buffer, sizeof(buffer));
 					ConOutPrintf (_T("   %20s"), buffer);
 
-#ifndef __REACTOS__
 					bytecount.QuadPart += uliSize.QuadPart;
-#else
-                                        bytecount += uliSize;
-#endif
                                         filecount++;
 				}
 
@@ -969,21 +918,11 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 				{
 					ULARGE_INTEGER uliSize;
 
-#ifndef __REACTOS__
-					uliSize.u.LowPart = file.nFileSizeLow;
-					uliSize.u.HighPart = file.nFileSizeHigh;
-#else
-                                        SET_LARGE_INTEGER_LOW_PART(uliSize, file.nFileSizeLow);
-                                        SET_LARGE_INTEGER_HIGH_PART(uliSize, file.nFileSizeHigh);
-#endif
-
-					ConvertULargeInteger (uliSize, buffer, sizeof(buffer));
+                                        uliSize.LowPart = file.nFileSizeLow;
+                                        uliSize.HighPart = file.nFileSizeHigh;
+                                        ConvertULargeInteger (uliSize, buffer, sizeof(buffer));
 					ConOutPrintf (_T("   %10s "), buffer);
-#ifndef __REACTOS__
 					bytecount.QuadPart += uliSize.QuadPart;
-#else
-                                        bytecount += uliSize;
-#endif
 					filecount++;
 				}
 
@@ -1018,11 +957,7 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 	{
 		recurse_dir_cnt += dircount;
 		recurse_file_cnt += filecount;
-#ifndef __REACTOS__
 		recurse_bytes.QuadPart += bytecount.QuadPart;
-#else
-                recurse_bytes += bytecount;
-#endif
 
 		/* print_summary */
 		if (PrintSummary (szPath, filecount, dircount, bytecount, pLine, dwFlags))
@@ -1101,14 +1036,6 @@ DirRead (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 static INT
 DirRecurse (LPTSTR szPath, LPTSTR szSpec, LPINT pLine, DWORD dwFlags)
 {
-	recurse_dir_cnt = 0L;
-	recurse_file_cnt = 0L;
-#ifdef __REACTOS__
-        recurse_bytes = 0;
-#else
-	recurse_bytes.QuadPart = 0;
-#endif
-
 	if (!PrintDirectoryHeader (szPath, pLine, dwFlags))
 		return 1;
 
@@ -1131,7 +1058,7 @@ DirRecurse (LPTSTR szPath, LPTSTR szSpec, LPINT pLine, DWORD dwFlags)
 	dwFlags &= ~DIR_RECURSE;
 
 	if (PrintSummary (szPath, recurse_file_cnt,
-					  recurse_dir_cnt, recurse_bytes, pLine, dwFlags))
+                          recurse_dir_cnt, recurse_bytes, pLine, dwFlags))
 		return 1;
 
 	if ((dwFlags & DIR_BARE) == 0)
@@ -1159,6 +1086,10 @@ INT cmd_dir (LPTSTR first, LPTSTR rest)
 	LPTSTR param;
 	INT    nLine = 0;
 
+
+	recurse_dir_cnt = 0L;
+	recurse_file_cnt = 0L;
+	recurse_bytes.QuadPart = 0;
 
 	/* read the parameters from the DIRCMD environment variable */
 	if (GetEnvironmentVariable (_T("DIRCMD"), dircmd, 256))

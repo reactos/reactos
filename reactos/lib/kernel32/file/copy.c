@@ -87,8 +87,7 @@ WINBOOL STDCALL CopyFileExW(LPCWSTR lpExistingFileName,
 	return(FALSE);
      }
 
-   SET_LARGE_INTEGER_LOW_PART(FilePosition.CurrentByteOffset, 0);
-   SET_LARGE_INTEGER_HIGH_PART(FilePosition.CurrentByteOffset, 0);
+   FilePosition.CurrentByteOffset.QuadPart = 0;
    
    errCode = NtSetInformationFile(FileHandleSource,
 				  &IoStatusBlock,

@@ -107,9 +107,13 @@ typedef ULONG WAIT_TYPE;
 typedef USHORT CSHORT;
 
 
+#if 0
 typedef struct _TIME {
 	DWORD LowPart;
 	LONG HighPart;
 } TIME;
+#endif
+
+typedef ULARGE_INTEGER TIME;
 
 #endif

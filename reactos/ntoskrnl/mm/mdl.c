@@ -147,7 +147,7 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
    for (i=0;i<(PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGESIZE);i++)
      {
 	Address = Mdl->StartVa + (i*PAGESIZE);
-	mdl_pages[i] = GET_LARGE_INTEGER_LOW_PART(MmGetPhysicalAddress(Address));
+        mdl_pages[i] = (MmGetPhysicalAddress(Address)).LowPart;
 	DPRINT("mdl_pages[i] %x\n",mdl_pages[i]);
      }
 }
@@ -224,8 +224,8 @@ VOID MmBuildMdlForNonPagedPool(PMDL Mdl)
    Mdl->MdlFlags = Mdl->MdlFlags | MDL_SOURCE_IS_NONPAGED_POOL;
    for (va=0; va<Mdl->Size; va++)
      {
-	((PULONG)(Mdl + 1))[va] = GET_LARGE_INTEGER_LOW_PART(
-          MmGetPhysicalAddress(Mdl->StartVa + (va * PAGESIZE)));
+        ((PULONG)(Mdl + 1))[va] =
+            (MmGetPhysicalAddress(Mdl->StartVa + (va * PAGESIZE))).LowPart;
      }
    Mdl->MappedSystemVa = Mdl->StartVa;
 }

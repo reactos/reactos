@@ -73,7 +73,7 @@ PVOID Ext2ProcessDirEntry(PDEVICE_EXTENSION DeviceExt,
 //	FDI->LastAccessTime = 0;
 //	FDI->LastWriteTime = 0;
 //	FDI->ChangeTime = 0;
-	FDI->AllocationSize = FDI->EndOfFile = inode.i_size;
+        FDI->AllocationSize.QuadPart = FDI->EndOfFile.QuadPart = inode.i_size;
 	FDI->FileAttributes = 0;
 	FDI->FileNameLength = dir_entry->name_len;
 	Ext2ConvertName(FDI->FileName, dir_entry->name, dir_entry->name_len);
@@ -85,7 +85,7 @@ PVOID Ext2ProcessDirEntry(PDEVICE_EXTENSION DeviceExt,
 	FBI->NextEntryOffset = sizeof(FileBothDirectoryInformation) +
 	  dir_entry->name_len + 1;
 	FBI->FileIndex = FileIndex;
-	FBI->AllocationSize = FBI->EndOfFile = inode.i_size;
+        FBI->AllocationSize.QuadPart = FBI->EndOfFile.QuadPart = inode.i_size;
 	FBI->FileAttributes = 0;
 	FBI->FileNameLength = dir_entry->name_len;
 	Ext2ConvertName(FBI->FileName, dir_entry->name, dir_entry->name_len);

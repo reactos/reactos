@@ -187,7 +187,7 @@ DWORD STDCALL WaitForSingleObjectEx(HANDLE  hHandle,
      }
    else
      {
-	SET_LARGE_INTEGER_LOW_PART(Time,dwMilliseconds);
+        Time.LowPart = dwMilliseconds;
 	TimePtr = &Time;
      }
 
@@ -226,7 +226,7 @@ WaitForMultipleObjectsEx(
 	LARGE_INTEGER Time;
 	DWORD retCode;
 
-	SET_LARGE_INTEGER_LOW_PART(Time,dwMilliseconds);
+        Time.LowPart = dwMilliseconds;
 
 	
 	errCode = NtWaitForMultipleObjects (
@@ -240,6 +240,4 @@ WaitForMultipleObjectsEx(
 	retCode = RtlNtStatusToDosError(errCode);
 	SetLastError(retCode);
 	return retCode;
-	
-
 }

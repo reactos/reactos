@@ -197,8 +197,8 @@ NTSTATUS LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
 	
 	Sections = (PIMAGE_SECTION_HEADER)SECHDROFFSET(BlockBuffer);
 	Base = Sections[i].VirtualAddress + ImageBase;
-	SET_LARGE_INTEGER_HIGH_PART(Offset,0);
-	SET_LARGE_INTEGER_LOW_PART(Offset,Sections[i].PointerToRawData);
+        Offset.HighPart = 0;
+        Offset.LowPart = Sections[i].PointerToRawData;
 	Status = ZwMapViewOfSection(NTDllSectionHandle,
 				    ProcessHandle,
 				    (PVOID *)&Base,

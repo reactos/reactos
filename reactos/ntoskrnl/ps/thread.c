@@ -181,7 +181,7 @@ VOID PsDispatchThread(VOID)
 	  {
              DPRINT("Scheduling current thread\n");
              KeQueryTickCount(&TickCount);
-             CurrentThread->Tcb.LastTick = GET_LARGE_INTEGER_LOW_PART(TickCount);
+             CurrentThread->Tcb.LastTick = TickCount.LowPart;
 	     CurrentThread->Tcb.ThreadState = THREAD_STATE_RUNNING;
 	     KeReleaseSpinLock(&ThreadListLock,irql);
 	     return;
@@ -193,7 +193,7 @@ VOID PsDispatchThread(VOID)
 	     Candidate->Tcb.ThreadState = THREAD_STATE_RUNNING;
 	     
 	     KeQueryTickCount(&TickCount);
-	     CurrentThread->Tcb.LastTick = GET_LARGE_INTEGER_LOW_PART(TickCount);
+             CurrentThread->Tcb.LastTick = TickCount.LowPart;
 	     
 	     CurrentThread = Candidate;
 	     

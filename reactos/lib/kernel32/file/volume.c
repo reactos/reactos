@@ -178,8 +178,8 @@ GetDiskFreeSpaceW(
 
 	*lpBytesPerSector = FileFsSize.BytesPerSector;
 	*lpSectorsPerCluster = FileFsSize.SectorsPerAllocationUnit;
-	*lpNumberOfFreeClusters = GET_LARGE_INTEGER_LOW_PART(FileFsSize.AvailableAllocationUnits);
-   	*lpTotalNumberOfClusters = GET_LARGE_INTEGER_LOW_PART(FileFsSize.TotalAllocationUnits);
+        *lpNumberOfFreeClusters = FileFsSize.AvailableAllocationUnits.LowPart;
+        *lpTotalNumberOfClusters = FileFsSize.TotalAllocationUnits.LowPart;
 	CloseHandle(hFile);
 	return TRUE;
 }
@@ -322,7 +322,6 @@ GetVolumeInformationW(
         DPRINT("FileFsVolume %p\n", FileFsVolume);
         DPRINT("FileFsAttribute %p\n", FileFsAttribute);
 
-CHECKPOINT;
         hFile = CreateFileW(lpRootPathName,
                             FILE_READ_ATTRIBUTES,
                             FILE_SHARE_READ|FILE_SHARE_WRITE,
@@ -337,42 +336,34 @@ CHECKPOINT;
                                                FileFsVolume,
                                                FS_VOLUME_BUFFER_SIZE,
                                                FileFsVolumeInformation);
-CHECKPOINT;
 	if ( !NT_SUCCESS(errCode) ) {
                 DPRINT("Status: %x\n", errCode);
                 CloseHandle(hFile);
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
 	}
-CHECKPOINT;
+
         if (lpVolumeSerialNumber)
                 *lpVolumeSerialNumber = FileFsVolume->VolumeSerialNumber;
-CHECKPOINT;
+
         if (lpVolumeNameBuffer)
                 wcsncpy(lpVolumeNameBuffer, FileFsVolume->VolumeLabel,min(nVolumeNameSize,MAX_PATH));
-//        memcpy(lpVolumeNameBuffer, FileFsVolume->VolumeLabel,min(nVolumeNameSize,MAX_PATH));
-CHECKPOINT;
+
 	errCode = NtQueryVolumeInformationFile(hFile,&IoStatusBlock,FileFsAttribute, FS_ATTRIBUTE_BUFFER_SIZE,FileFsAttributeInformation);
-CHECKPOINT;
 	if ( !NT_SUCCESS(errCode) ) {
                 DPRINT("Status: %x\n", errCode);
 		CloseHandle(hFile);
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
 	}
-CHECKPOINT;
+
         if (lpFileSystemFlags)
                 *lpFileSystemFlags = FileFsAttribute->FileSystemAttributes;
-//        memcpy(lpFileSystemFlags,&FileFsAttribute->FileSystemAttributes,sizeof(DWORD));
-CHECKPOINT;
         if (lpMaximumComponentLength)
                 *lpMaximumComponentLength = FileFsAttribute->MaximumComponentNameLength;
-//        memcpy(lpMaximumComponentLength, &FileFsAttribute->MaximumComponentNameLength, sizeof(DWORD));
-CHECKPOINT;
         if (lpFileSystemNameBuffer)
                 wcsncpy(lpFileSystemNameBuffer, FileFsAttribute->FileSystemName,min(nFileSystemNameSize,MAX_PATH));
-//        memcpy(lpFileSystemNameBuffer, FileFsAttribute->FileSystemName,min(nFileSystemNameSize,MAX_PATH));
-CHECKPOINT;
+
 	CloseHandle(hFile);
 	return TRUE;
 }

@@ -191,8 +191,7 @@ PIRP IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
 	  }
 	else
 	  {
-	     SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Write.ByteOffset, 0);
-	     SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Write.ByteOffset, 0);
+             StackPtr->Parameters.Write.ByteOffset.QuadPart = 0;
 	  }     
      }
 	
@@ -424,10 +423,7 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
 	 }
        else
 	 {
-	    SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Read.ByteOffset, 
-				       0);
-	    SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Read.ByteOffset, 
-					0);
+            StackPtr->Parameters.Read.ByteOffset.QuadPart = 0;
 	 }
 	StackPtr->Parameters.Read.Length = Length;
      }
@@ -439,10 +435,7 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
 	 }
        else
 	 {
-	    SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Write.ByteOffset, 
-				       0);
-	    SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Write.ByteOffset,
-					0);
+            StackPtr->Parameters.Write.ByteOffset.QuadPart = 0;
 	 }
 	StackPtr->Parameters.Write.Length = Length;
      }

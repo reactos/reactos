@@ -32,11 +32,11 @@ BOOLEAN MinixReadSector(IN PDEVICE_OBJECT pDeviceObject,
     ULONG           sectorSize;
     PULONG          mbr;
    
-   DPRINT("MinixReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
-	  pDeviceObject,DiskSector,Buffer);
+    DPRINT("MinixReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
+           pDeviceObject,DiskSector,Buffer);
    
-   SET_LARGE_INTEGER_HIGH_PART(sectorNumber, 0);
-   SET_LARGE_INTEGER_LOW_PART(sectorNumber, DiskSector * BLOCKSIZE);
+    sectorNumber.HighPart = 0;
+    sectorNumber.LowPart = DiskSector * BLOCKSIZE;
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 
@@ -79,7 +79,7 @@ BOOLEAN MinixReadSector(IN PDEVICE_OBJECT pDeviceObject,
         return FALSE;
     }
 
-   RtlCopyMemory(Buffer,mbr,sectorSize);
+    RtlCopyMemory(Buffer,mbr,sectorSize);
 
     ExFreePool(mbr);
     return TRUE;
@@ -95,12 +95,12 @@ BOOLEAN MinixWriteSector(IN PDEVICE_OBJECT pDeviceObject,
     KEVENT          event;
     NTSTATUS        status;
     ULONG           sectorSize;
+    
+    DPRINT("MinixWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
+           pDeviceObject,DiskSector,Buffer);
    
-   DPRINT("MinixWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
-	  pDeviceObject,DiskSector,Buffer);
-   
-   SET_LARGE_INTEGER_HIGH_PART(sectorNumber, 0);
-   SET_LARGE_INTEGER_LOW_PART(sectorNumber, DiskSector * BLOCKSIZE);
+    sectorNumber.HighPart = 0;
+    sectorNumber.LowPart = DiskSector * BLOCKSIZE;
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 

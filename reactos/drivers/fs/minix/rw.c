@@ -10,6 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -44,7 +45,7 @@ NTSTATUS MinixRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    
    Length = Stack->Parameters.Read.Length;
    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-   Offset = GET_LARGE_INTEGER_LOW_PART(Stack->Parameters.Read.ByteOffset);
+   Offset = Stack->Parameters.Read.ByteOffset.LowPart;
    
    DPRINT("Length %d Buffer %x Offset %x\n",Length,Buffer,Offset);
    

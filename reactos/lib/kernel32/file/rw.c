@@ -37,8 +37,8 @@ WINBOOL STDCALL WriteFile(HANDLE hFile,
    
    if (lpOverLapped != NULL ) 
      {
-	SET_LARGE_INTEGER_LOW_PART(Offset, lpOverLapped->Offset);
-	SET_LARGE_INTEGER_HIGH_PART(Offset, lpOverLapped->OffsetHigh);
+        Offset.LowPart = lpOverLapped->Offset;
+        Offset.HighPart = lpOverLapped->OffsetHigh;
 	lpOverLapped->Internal = STATUS_PENDING;
 	hEvent= lpOverLapped->hEvent;
    	IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
@@ -46,7 +46,7 @@ WINBOOL STDCALL WriteFile(HANDLE hFile,
    else
      {
 	IoStatusBlock = &IIosb;
-	Offset = NULL;
+        Offset.QuadPart = 0;
      }
    errCode = NtWriteFile(hFile,
 			 hEvent,
@@ -88,8 +88,8 @@ WINBOOL STDCALL KERNEL32_ReadFile(HANDLE hFile,
    
    if (lpOverLapped != NULL) 
      {
-	SET_LARGE_INTEGER_LOW_PART(Offset, lpOverLapped->Offset);
-	SET_LARGE_INTEGER_HIGH_PART(Offset, lpOverLapped->OffsetHigh);
+        Offset.LowPart = lpOverLapped->Offset;
+        Offset.HighPart = lpOverLapped->OffsetHigh;
 	lpOverLapped->Internal = STATUS_PENDING;
 	hEvent = lpOverLapped->hEvent;
 	IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;

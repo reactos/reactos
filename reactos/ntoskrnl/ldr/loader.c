@@ -165,8 +165,8 @@ LdrLoadDriver(PUNICODE_STRING Filename)
   CHECKPOINT;
 
   /*  Allocate nonpageable memory for driver  */
-  ModuleLoadBase = ExAllocatePool(NonPagedPool, 
-                 GET_LARGE_INTEGER_LOW_PART(FileStdInfo.EndOfFile));
+  ModuleLoadBase = ExAllocatePool(NonPagedPool,
+                                  FileStdInfo.EndOfFile.LowPart);
   if (ModuleLoadBase == NULL)
     {
       return STATUS_INSUFFICIENT_RESOURCES;
@@ -177,7 +177,7 @@ LdrLoadDriver(PUNICODE_STRING Filename)
   Status = ZwReadFile(FileHandle, 
                       0, 0, 0, 0, 
                       ModuleLoadBase, 
-                      GET_LARGE_INTEGER_LOW_PART(FileStdInfo.EndOfFile), 
+                      FileStdInfo.EndOfFile.LowPart, 
                       0, 0);
   if (!NT_SUCCESS(Status))
     {

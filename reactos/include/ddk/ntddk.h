@@ -20,8 +20,6 @@ extern "C"
 
 #include <windows.h>
 
-#include <ddk/li.h>
-
 #include <internal/id.h>
 #include <ddk/status.h>
 #include <ddk/ntdef.h>

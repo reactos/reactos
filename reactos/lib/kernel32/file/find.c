@@ -96,8 +96,8 @@ static FileDataToWin32Data(LPWIN32_FIND_DATA lpFindFileData, PKERNEL32_FIND_FILE
 //   memcpy(&lpFindFileData->ftCreationTime,&IData->FileInfo.CreationTime,sizeof(FILETIME));
 //   memcpy(&lpFindFileData->ftLastAccessTime,&IData->FileInfo.LastAccessTime,sizeof(FILETIME));
 //   memcpy(&lpFindFileData->ftLastWriteTime,&IData->FileInfo.LastWriteTime,sizeof(FILETIME));
-   lpFindFileData->nFileSizeHigh = IData->FileInfo.EndOfFile>>32;
-   lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile;
+   lpFindFileData->nFileSizeHigh = IData->FileInfo.EndOfFile.HighPart;
+   lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile.LowPart;
 
 }
 
@@ -112,7 +112,6 @@ HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName,
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING DirectoryNameStr;
    IO_STATUS_BLOCK IoStatusBlock;
-//   DWORD Len = 0;
 
    DPRINT("FindFirstFileW(lpFileName %w, lpFindFileData %x)\n",
        lpFileName, lpFindFileData);

@@ -30,8 +30,9 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
     NTSTATUS        status;
     ULONG           sectorSize;
    
-    SET_LARGE_INTEGER_LOW_PART(sectorNumber, DiskSector << 9);
-    SET_LARGE_INTEGER_HIGH_PART(sectorNumber, DiskSector >> 23);
+    sectorNumber.LowPart = DiskSector << 9;
+    sectorNumber.HighPart = DiskSector >> 23;
+
     KeInitializeEvent(&event, NotificationEvent, FALSE);
     sectorSize = BLOCKSIZE * SectorCount;
 
@@ -41,8 +42,8 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
            DiskSector,
            Buffer);
     DPRINT("sectorNumber %08lx:%08lx sectorSize %ld\n", 
-           (unsigned long int)GET_LARGE_INTEGER_HIGH_PART(sectorNumber),
-           (unsigned long int)GET_LARGE_INTEGER_LOW_PART(sectorNumber),
+           (unsigned long int)sectorNumber.LowPart,
+           (unsigned long int)sectorNumber.HighPart,
            sectorSize);
 
 
@@ -81,8 +82,8 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
                  pDeviceObject,
                  DiskSector,
                  Buffer,
-                 GET_LARGE_INTEGER_HIGH_PART(sectorNumber),
-                 GET_LARGE_INTEGER_LOW_PART(sectorNumber));
+                 sectorNumber.HighPart,
+                 sectorNumber.LowPart);
         return FALSE;
     }
     DPRINT("Block request succeeded\n");
@@ -101,11 +102,11 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
     NTSTATUS        status;
     ULONG           sectorSize;
    
-   DPRINT("VFATWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
-   	    pDeviceObject,DiskSector,Buffer);
+    DPRINT("VFATWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
+           pDeviceObject,DiskSector,Buffer);
 
-    SET_LARGE_INTEGER_LOW_PART(sectorNumber, DiskSector << 9);
-    SET_LARGE_INTEGER_HIGH_PART(sectorNumber, DiskSector >> 23);
+    sectorNumber.LowPart = DiskSector << 9;
+    sectorNumber.HighPart = DiskSector >> 23;
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 

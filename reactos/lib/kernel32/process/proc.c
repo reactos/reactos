@@ -235,8 +235,9 @@ SleepEx(
 	TIME Interval;
 	NTSTATUS errCode;	
 
-	Interval.LowPart = dwMilliseconds * 1000;
-	Interval.HighPart = 0;
+        Interval.LowPart = dwMilliseconds * 1000;
+        Interval.HighPart = 0;
+
 	errCode = NtDelayExecution(bAlertable,&Interval);
 	if ( !NT_SUCCESS(errCode) ) {
 		SetLastError(RtlNtStatusToDosError(errCode));

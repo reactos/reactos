@@ -18,6 +18,7 @@
 #include <internal/ntoskrnl.h>
 #include <internal/bitops.h>
 #include <internal/string.h>
+#include <internal/io.h>
 
 #include <internal/mmhal.h>
 
@@ -130,7 +131,7 @@ NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
 	     MemoryArea->Attributes,
 	     (ULONG)MmAllocPage());
    
-   LARGE_INTEGER_QUAD_PART(Offset) = (Address - MemoryArea->BaseAddress) + 
+   Offset.QuadPart = (Address - MemoryArea->BaseAddress) + 
      MemoryArea->Data.SectionData.ViewOffset;
    
    DPRINT("MemoryArea->Data.SectionData.Section->FileObject %x\n",

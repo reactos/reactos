@@ -1185,28 +1185,28 @@ IDEDispatchReadWrite(IN PDEVICE_OBJECT pDO,
 DPRINT("Offset:%ld * BytesPerSector:%ld  = AdjOffset:%ld:%ld\n",
        DeviceExtension->Offset, 
        DeviceExtension->BytesPerSector,
-       (unsigned long) GET_LARGE_INTEGER_HIGH_PART(AdjustedOffset),
-       (unsigned long) GET_LARGE_INTEGER_LOW_PART(AdjustedOffset));
+       (unsigned long) AdjustedOffset.HighPart,
+       (unsigned long) AdjustedOffset.LowPart);
 DPRINT("AdjOffset:%ld:%ld + ByteOffset:%ld:%ld = ",
-       (unsigned long) GET_LARGE_INTEGER_HIGH_PART(AdjustedOffset),
-       (unsigned long) GET_LARGE_INTEGER_LOW_PART(AdjustedOffset),
-       (unsigned long) GET_LARGE_INTEGER_HIGH_PART(IrpStack->Parameters.Read.ByteOffset),
-       (unsigned long) GET_LARGE_INTEGER_LOW_PART(IrpStack->Parameters.Read.ByteOffset));
+       (unsigned long) AdjustedOffset.HighPart,
+       (unsigned long) AdjustedOffset.LowPart,
+       (unsigned long) IrpStack->Parameters.Read.ByteOffset.HighPart,
+       (unsigned long) IrpStack->Parameters.Read.ByteOffset.LowPart);
   AdjustedOffset = RtlLargeIntegerAdd(AdjustedOffset, 
                                       IrpStack->Parameters.Read.ByteOffset);
 DPRINT("AdjOffset:%ld:%ld\n",
-       (unsigned long) GET_LARGE_INTEGER_HIGH_PART(AdjustedOffset),
-       (unsigned long) GET_LARGE_INTEGER_LOW_PART(AdjustedOffset));
+       (unsigned long) AdjustedOffset.HighPart,
+       (unsigned long) AdjustedOffset.LowPart);
   AdjustedExtent = RtlLargeIntegerAdd(AdjustedOffset, 
                                       RtlConvertLongToLargeInteger(IrpStack->Parameters.Read.Length));
 DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
-       (unsigned long) GET_LARGE_INTEGER_HIGH_PART(AdjustedOffset),
-       (unsigned long) GET_LARGE_INTEGER_LOW_PART(AdjustedOffset),
+       (unsigned long) AdjustedOffset.HighPart,
+       (unsigned long) AdjustedOffset.LowPart,
        IrpStack->Parameters.Read.Length,
-       (unsigned long) GET_LARGE_INTEGER_HIGH_PART(AdjustedExtent),
-       (unsigned long) GET_LARGE_INTEGER_LOW_PART(AdjustedExtent));
+       (unsigned long) AdjustedExtent.HighPart,
+       (unsigned long) AdjustedExtent.LowPart);
     /* FIXME: this assumption will fail on drives bigger than 1TB */
-  LARGE_INTEGER_QUAD_PART(PartitionExtent) = DeviceExtension->Offset + DeviceExtension->Size;
+  PartitionExtent.QuadPart = DeviceExtension->Offset + DeviceExtension->Size;
   PartitionExtent = RtlExtendedIntegerMultiply(PartitionExtent, 
                                                DeviceExtension->BytesPerSector);
   if (RtlLargeIntegerGreaterThan(AdjustedExtent, PartitionExtent) ||
@@ -1214,10 +1214,10 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
     {
       DPRINT("Request failed on bad parameters\n",0);
       DPRINT("AdjustedExtent=%d:%d PartitionExtent=%d:%d ReadLength=%d\n", 
-             (unsigned int) GET_LARGE_INTEGER_HIGH_PART(AdjustedExtent),
-             (unsigned int) GET_LARGE_INTEGER_LOW_PART(AdjustedExtent),
-             (unsigned int) GET_LARGE_INTEGER_HIGH_PART(PartitionExtent),
-             (unsigned int) GET_LARGE_INTEGER_LOW_PART(PartitionExtent),
+             (unsigned int) AdjustedExtent.HighPart,
+             (unsigned int) AdjustedExtent.LowPart,
+             (unsigned int) PartitionExtent.HighPart,
+             (unsigned int) PartitionExtent.LowPart,
              IrpStack->Parameters.Read.Length);
       Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -1230,7 +1230,7 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
     //  Start the packet and insert the request in order of sector offset
   assert(DeviceExtension->BytesPerSector == 512);
   InsertKeyLI = RtlLargeIntegerShiftRight(IrpStack->Parameters.Read.ByteOffset, 9); 
-  IrpInsertKey = GET_LARGE_INTEGER_LOW_PART(InsertKeyLI);
+  IrpInsertKey = InsertKeyLI.LowPart;
   IoStartPacket(DeviceExtension->DeviceObject, Irp, &IrpInsertKey, NULL);
 
   return  STATUS_PENDING;
@@ -1282,7 +1282,7 @@ IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
           Geometry = (PDISK_GEOMETRY) Irp->AssociatedIrp.SystemBuffer;
           Geometry->MediaType = FixedMedia;
               // FIXME: should report for RawDevice even on partition
-          QUAD_PART(Geometry->Cylinders) = DeviceExtension->Size / 
+          Geometry->Cylinders.QuadPart = DeviceExtension->Size / 
               DeviceExtension->SectorsPerLogCyl;
           Geometry->TracksPerCylinder = DeviceExtension->SectorsPerLogTrk /
               DeviceExtension->SectorsPerLogCyl;
@@ -1360,7 +1360,7 @@ IDEStartIo(IN PDEVICE_OBJECT DeviceObject,
       DeviceExtension->BytesRequested = IrpStack->Parameters.Read.Length;
       assert(DeviceExtension->BytesPerSector == 512);
       SectorLI = RtlLargeIntegerShiftRight(IrpStack->Parameters.Read.ByteOffset, 9);
-      DeviceExtension->StartingSector = GET_LARGE_INTEGER_LOW_PART(SectorLI);
+      DeviceExtension->StartingSector = SectorLI.LowPart;
       if (DeviceExtension->BytesRequested > DeviceExtension->BytesPerSector * 
           IDE_MAX_SECTORS_PER_XFER) 
         {

@@ -57,7 +57,7 @@ NTSTATUS Ext2Read(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    ULONG Length;
    PVOID Buffer;
-   ULONG Offset;
+   LARGE_INTEGER Offset;
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
    PFILE_OBJECT FileObject = Stack->FileObject;
    PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;

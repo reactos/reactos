@@ -79,7 +79,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    
    DPRINT("ByteOffset %x FileObject->CurrentByteOffset %d\n",
 	  ByteOffset,
-	  GET_LARGE_INTEGER_LOW_PART(FileObject->CurrentByteOffset));
+	  FileObject->CurrentByteOffset.LowPart);
    if (ByteOffset==NULL)
      {
 	ByteOffset = &(FileObject->CurrentByteOffset);

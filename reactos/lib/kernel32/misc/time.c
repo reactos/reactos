@@ -10,6 +10,7 @@
  */
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <string.h>
 
 typedef struct __DOSTIME
 {
@@ -138,13 +139,13 @@ CompareFileTime(
   if ( lpFileTime2 == NULL )
 	return 0;
  /*
-  if ((GET_LARGE_INTEGER_HIGH_PART(lpFileTime1)) > (GET_LARGE_INTEGER_HIGH_PART(lpFileTime2)) )
+  if (lpFileTime1.HighPart > lpFileTime2.HighPart)
 	return 1;
-  else if ((GET_LARGE_INTEGER_HIGH_PART(lpFileTime1)) < (GET_LARGE_INTEGER_HIGH_PART(lpFileTime2)))
+  else if (lpFileTime1.HighPart < lpFileTime2.HighPart)
    	return -1;
-  else if ((GET_LARGE_INTEGER_LOW_PART(lpFileTime1)) > (GET_LARGE_INTEGER_LOW_PART(lpFileTime2)))
+  else if (lpFileTime1.LowPart > lpFileTime2.LowPart)
 	return 1;
-  else if ((GET_LARGE_INTEGER_LOW_PART(lpFileTime1)) < (GET_LARGE_INTEGER_LOW_PART(lpFileTime2)))
+  else if (lpFileTime1.LowPart < lpFileTime2.LowPart)
    	return -1;
   else
 	return 0;
@@ -172,8 +173,6 @@ SystemTimeToFileTime(
    )
 
 {
-
-	
 	LARGE_INTEGER FileTime;
 	LARGE_INTEGER Year;
 	LARGE_INTEGER Month;
@@ -225,16 +224,16 @@ SystemTimeToFileTime(
 
 	Milliseconds =  RtlEnlargedIntegerMultiply(lpSystemTime->wMilliseconds,10000);
 
-	FileTime += RtlLargeIntegerAdd(FileTime,Year);
-	FileTime += RtlLargeIntegerAdd(FileTime,Month);
-	FileTime += RtlLargeIntegerAdd(FileTime,Day);
-	FileTime += RtlLargeIntegerAdd(FileTime,Hour);
-	FileTime += RtlLargeIntegerAdd(FileTime,Minute);
-	FileTime += RtlLargeIntegerAdd(FileTime,Second);
+        FileTime = RtlLargeIntegerAdd(FileTime,Year);
+        FileTime = RtlLargeIntegerAdd(FileTime,Month);
+        FileTime = RtlLargeIntegerAdd(FileTime,Day);
+        FileTime = RtlLargeIntegerAdd(FileTime,Hour);
+        FileTime = RtlLargeIntegerAdd(FileTime,Minute);
+        FileTime = RtlLargeIntegerAdd(FileTime,Second);
 
-	FileTime = RtlExtendedIntegerMultiply(FileTime,NSPERSEC);
+        FileTime = RtlExtendedIntegerMultiply(FileTime,NSPERSEC);
 
-	FileTime = RtlLargeIntegerAdd(FileTime,Milliseconds);
+        FileTime = RtlLargeIntegerAdd(FileTime,Milliseconds);
 
 	memcpy(lpFileTime,&FileTime,sizeof(FILETIME));
 
@@ -296,10 +295,10 @@ FileTimeToSystemTime(
    dwMinute = RtlLargeIntegerDivide(dwRemHour,LIMINUTE,&dwRemMinute);
    dwSecond = RtlLargeIntegerDivide(dwRemMinute,LISECOND,&dwRemSecond);
    
-   lpSystemTime->wHour=  (WORD) GET_LARGE_INTEGER_LOW_PART(dwHour);  
-   lpSystemTime->wMinute= (WORD)GET_LARGE_INTEGER_LOW_PART(dwMinute); 
-   lpSystemTime->wSecond= (WORD)GET_LARGE_INTEGER_LOW_PART(dwSecond); 
-   lpSystemTime->wMilliseconds = (WORD)(GET_LARGE_INTEGER_LOW_PART(dwRemSecond)/10000);
+   lpSystemTime->wHour=   (WORD)(dwHour.LowPart);  
+   lpSystemTime->wMinute= (WORD)(dwMinute.LowPart); 
+   lpSystemTime->wSecond= (WORD)(dwSecond.LowPart); 
+   lpSystemTime->wMilliseconds = (WORD)(dwRemSecond.LowPart/10000);
   
 
    if ( lpSystemTime->wSecond > 60 ) {
@@ -314,13 +313,13 @@ FileTimeToSystemTime(
 
    if (lpSystemTime->wHour > 24 ) {
 	lpSystemTime->wHour-= 24;
-	SET_LARGE_INTEGER_LOW_PART(dwDay,GET_LARGE_INTEGER_LOW_PART(dwDay)+1); 
+        dwDay.LowPart = dwDay.LowPart + 1; 
    }
  
   //FIXME since 1972 some years have a leap second [ aprox 15 out of 20 ]
 
   // if leap year  
-  lpSystemTime->wYear= 1601 + 1000* (LONG)GET_LARGE_INTEGER_LOW_PART(dwMillenium) + 100 * (LONG)GET_LARGE_INTEGER_LOW_PART(dwCentury) + 4*(LONG)GET_LARGE_INTEGER_LOW_PART(dwFourYear) + (LONG)GET_LARGE_INTEGER_LOW_PART(dwYear); 
+  lpSystemTime->wYear = 1601 + 1000* (LONG)dwMillenium.LowPart + 100 * (LONG)dwCentury.LowPart + 4 * (LONG)dwFourYear.LowPart + (LONG)dwYear.LowPart; 
 
   if ( (lpSystemTime->wYear % 4 == 0 && lpSystemTime->wYear % 100 != 0) || lpSystemTime->wYear % 400 == 0)
 	LeapDay = 1;
@@ -329,58 +328,58 @@ FileTimeToSystemTime(
 
   
 
-  if ( GET_LARGE_INTEGER_LOW_PART(dwDay) >= 0 && GET_LARGE_INTEGER_LOW_PART(dwDay) < 31 ) {
+  if ( dwDay.LowPart >= 0 && dwDay.LowPart < 31 ) {
 	lpSystemTime->wMonth = 1;
-   	lpSystemTime->wDay = GET_LARGE_INTEGER_LOW_PART(dwDay) + 1;
+        lpSystemTime->wDay = dwDay.LowPart + 1;
   }
-  else if ( GET_LARGE_INTEGER_LOW_PART(dwDay) >= 31 && GET_LARGE_INTEGER_LOW_PART(dwDay) < ( 59 + LeapDay )) {
+  else if ( dwDay.LowPart >= 31 && dwDay.LowPart < ( 59 + LeapDay )) {
 	lpSystemTime->wMonth = 2;
-   	lpSystemTime->wDay = GET_LARGE_INTEGER_LOW_PART(dwDay) + 1 - 31;
+        lpSystemTime->wDay = dwDay.LowPart + 1 - 31;
   }  
-  else if ( GET_LARGE_INTEGER_LOW_PART(dwDay) >= ( 59 + LeapDay ) && GET_LARGE_INTEGER_LOW_PART(dwDay) < ( 90 + LeapDay ) ) {
+  else if ( dwDay.LowPart >= ( 59 + LeapDay ) && dwDay.LowPart < ( 90 + LeapDay ) ) {
 	lpSystemTime->wMonth = 3;
-   	lpSystemTime->wDay = GET_LARGE_INTEGER_LOW_PART(dwDay) + 1 - ( 59 + LeapDay);
+        lpSystemTime->wDay = dwDay.LowPart + 1 - ( 59 + LeapDay);
   }  
-  else if ( GET_LARGE_INTEGER_LOW_PART(dwDay) >= 90+ LeapDay && GET_LARGE_INTEGER_LOW_PART(dwDay) < 120 + LeapDay) {
+  else if ( dwDay.LowPart >= 90+ LeapDay && dwDay.LowPart < 120 + LeapDay) {
 	lpSystemTime->wMonth = 4;
-   	lpSystemTime->wDay = GET_LARGE_INTEGER_LOW_PART(dwDay) + 1 - (31 + LeapDay );
+        lpSystemTime->wDay = dwDay.LowPart + 1 - (31 + LeapDay );
   }  
-  else if ( GET_LARGE_INTEGER_LOW_PART(dwDay) >= 120 + LeapDay && GET_LARGE_INTEGER_LOW_PART(dwDay) < 151 + LeapDay ) {
+  else if ( dwDay.LowPart >= 120 + LeapDay && dwDay.LowPart < 151 + LeapDay ) {
 	lpSystemTime->wMonth = 5;
-   	lpSystemTime->wDay = GET_LARGE_INTEGER_LOW_PART(dwDay) + 1 - (120 + LeapDay);
+        lpSystemTime->wDay = dwDay.LowPart + 1 - (120 + LeapDay);
   }  
-  else if ( GET_LARGE_INTEGER_LOW_PART(dwDay) >= ( 151 + LeapDay) && GET_LARGE_INTEGER_LOW_PART(dwDay) < ( 181 + LeapDay ) ) {
+  else if ( dwDay.LowPart >= ( 151 + LeapDay) && dwDay.LowPart < ( 181 + LeapDay ) ) {
 	lpSystemTime->wMonth = 6;
-   	lpSystemTime->wDay = GET_LARGE_INTEGER_LOW_PART(dwDay) + 1 - ( 151 + LeapDay );
+        lpSystemTime->wDay = dwDay.LowPart + 1 - ( 151 + LeapDay );
   }  
-  else if ( GET_LARGE_INTEGER_LOW_PART(dwDay) >= ( 181 + LeapDay ) && GET_LARGE_INTEGER_LOW_PART(dwDay) <  ( 212 + LeapDay ) ) {
+  else if ( dwDay.LowPart >= ( 181 + LeapDay ) && dwDay.LowPart <  ( 212 + LeapDay ) ) {
 	lpSystemTime->wMonth = 7;
-   	lpSystemTime->wDay = GET_LARGE_INTEGER_LOW_PART(dwDay) + 1 - ( 181 + LeapDay );
+        lpSystemTime->wDay = dwDay.LowPart + 1 - ( 181 + LeapDay );
   }  
-   else if ( GET_LARGE_INTEGER_LOW_PART(dwDay) >= ( 212 + LeapDay ) && GET_LARGE_INTEGER_LOW_PART(dwDay) < ( 243 + LeapDay ) ) {
+   else if ( dwDay.LowPart >= ( 212 + LeapDay ) && dwDay.LowPart < ( 243 + LeapDay ) ) {
 	lpSystemTime->wMonth = 8;
-   	lpSystemTime->wDay = GET_LARGE_INTEGER_LOW_PART(dwDay) + 1 -  (212 + LeapDay );
+        lpSystemTime->wDay = dwDay.LowPart + 1 -  (212 + LeapDay );
   }  
-  else if ( GET_LARGE_INTEGER_LOW_PART(dwDay) >= ( 243+ LeapDay ) && GET_LARGE_INTEGER_LOW_PART(dwDay) < ( 273 + LeapDay ) ) {
+  else if ( dwDay.LowPart >= ( 243+ LeapDay ) && dwDay.LowPart < ( 273 + LeapDay ) ) {
 	lpSystemTime->wMonth = 9;
-   	lpSystemTime->wDay = GET_LARGE_INTEGER_LOW_PART(dwDay) + 1 - ( 243 + LeapDay );
+        lpSystemTime->wDay = dwDay.LowPart + 1 - ( 243 + LeapDay );
   }  
-  else if ( GET_LARGE_INTEGER_LOW_PART(dwDay) >= ( 273 + LeapDay ) && GET_LARGE_INTEGER_LOW_PART(dwDay) < ( 304 + LeapDay ) ) {
+  else if ( dwDay.LowPart >= ( 273 + LeapDay ) && dwDay.LowPart < ( 304 + LeapDay ) ) {
 	lpSystemTime->wMonth = 10;
-   	lpSystemTime->wDay = GET_LARGE_INTEGER_LOW_PART(dwDay) + 1 - ( 273 + LeapDay);
+        lpSystemTime->wDay = dwDay.LowPart + 1 - ( 273 + LeapDay);
   }  
-  else if ( GET_LARGE_INTEGER_LOW_PART(dwDay) >= ( 304 + LeapDay ) && GET_LARGE_INTEGER_LOW_PART(dwDay) < ( 334 + LeapDay ) ) {
+  else if ( dwDay.LowPart >= ( 304 + LeapDay ) && dwDay.LowPart < ( 334 + LeapDay ) ) {
 	lpSystemTime->wMonth = 11;
-   	lpSystemTime->wDay = GET_LARGE_INTEGER_LOW_PART(dwDay) + 1 - ( 304 + LeapDay );
+        lpSystemTime->wDay = dwDay.LowPart + 1 - ( 304 + LeapDay );
   }  
-  else if ( GET_LARGE_INTEGER_LOW_PART(dwDay) >= ( 334 + LeapDay ) && GET_LARGE_INTEGER_LOW_PART(dwDay) < ( 365 + LeapDay )) {
+  else if ( dwDay.LowPart >= ( 334 + LeapDay ) && dwDay.LowPart < ( 365 + LeapDay )) {
 	lpSystemTime->wMonth = 12;
-   	lpSystemTime->wDay = GET_LARGE_INTEGER_LOW_PART(dwDay) + 1 - ( 334 + LeapDay );
+        lpSystemTime->wDay = dwDay.LowPart + 1 - ( 334 + LeapDay );
   }  
  
 
    dwDayOfWeek = RtlLargeIntegerDivide(FileTime,LIDAY,&dwRemDay);
-   lpSystemTime->wDayOfWeek = 1 + GET_LARGE_INTEGER_LOW_PART(dwDayOfWeek) % 7;
+   lpSystemTime->wDayOfWeek = 1 + dwDayOfWeek.LowPart % 7;
 
   
 

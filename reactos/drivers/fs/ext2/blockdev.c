@@ -33,17 +33,17 @@ BOOLEAN Ext2ReadSectors(IN PDEVICE_OBJECT pDeviceObject,
     ULONG           sectorSize;
     int j;
    
-   DPRINT("VFATReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
-   	    pDeviceObject,DiskSector,Buffer);
+    DPRINT("VFATReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
+           pDeviceObject,DiskSector,Buffer);
 
-    SET_LARGE_INTEGER_HIGH_PART(sectorNumber, 0);
-    SET_LARGE_INTEGER_LOW_PART(sectorNumber, DiskSector * BLOCKSIZE);
+    sectorNumber.HighPart = 0;
+    sectorNumber.LowPart = DiskSector * BLOCKSIZE;
 
-DPRINT("DiskSector:%ld BLKSZ:%ld sectorNumber:%ld:%ld\n", 
-       (unsigned long) DiskSector,
-       (unsigned long) BLOCKSIZE,
-       (unsigned long) GET_LARGE_INTEGER_HIGH_PART(sectorNumber),
-       (unsigned long) GET_LARGE_INTEGER_LOW_PART(sectorNumber));
+    DPRINT("DiskSector:%ld BLKSZ:%ld sectorNumber:%ld:%ld\n", 
+           (unsigned long) DiskSector,
+           (unsigned long) BLOCKSIZE,
+           (unsigned long) sectorNumber.HighPart,
+           (unsigned long) sectorNumber.LowPart);
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 
@@ -101,11 +101,11 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
     PULONG          mbr;
     int j;
    
-   DPRINT("VFATWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
-   	    pDeviceObject,DiskSector,Buffer);
+    DPRINT("VFATWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
+           pDeviceObject,DiskSector,Buffer);
 
-    SET_LARGE_INTEGER_HIGH_PART(sectorNumber, 0);
-    SET_LARGE_INTEGER_LOW_PART(sectorNumber, DiskSector * BLOCKSIZE);
+    sectorNumber.HighPart = 0;
+    sectorNumber.LowPart = DiskSector * BLOCKSIZE;
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 
@@ -151,5 +151,4 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
     DPRINT("Block request succeeded\n");
     return TRUE;
 }
-
 

@@ -84,8 +84,7 @@ NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   PhysPageDirectory = (PULONG)
-     GET_LARGE_INTEGER_LOW_PART(MmGetPhysicalAddress(PageDirectory));
+   PhysPageDirectory = (PULONG)(MmGetPhysicalAddress(PageDirectory)).LowPart;
    KProcess->PageTableDirectory = PhysPageDirectory;   
    CurrentPageDirectory = (PULONG)PAGEDIRECTORY_MAP;
    
@@ -158,7 +157,7 @@ VOID MmDeletePageEntry(PEPROCESS Process, PVOID Address, BOOL FreePage)
    page_tlb = ADDR_TO_PTE(Address);
    if (FreePage && PAGE_MASK(*page_tlb) != 0)
      {
-	MmFreePage(PAGE_MASK(*page_tlb),1);
+        MmFreePage((PVOID)PAGE_MASK(*page_tlb),1);
      }
    *page_tlb = 0;
    if (Process != NULL && Process != CurrentProcess)
@@ -251,12 +250,14 @@ PHYSICAL_ADDRESS MmGetPhysicalAddress(PVOID vaddr)
  * FUNCTION: Returns the physical address corresponding to a virtual address
  */
 {
-  PHYSICAL_ADDRESS p = INITIALIZE_LARGE_INTEGER;
+  PHYSICAL_ADDRESS p;
+
+  p.QuadPart = 0;
 
   DPRINT("MmGetPhysicalAddress(vaddr %x)\n", vaddr);
    
-  SET_LARGE_INTEGER_HIGH_PART(p, 0);
-  SET_LARGE_INTEGER_LOW_PART(p, PAGE_MASK(*MmGetPageEntry(vaddr)));
+  p.LowPart = PAGE_MASK(*MmGetPageEntry(vaddr));
+  p.HighPart = 0;
    
   return p;
 }

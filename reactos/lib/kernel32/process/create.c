@@ -303,8 +303,8 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
 	return(NULL);	
      }
    
-   SET_LARGE_INTEGER_HIGH_PART(FileOffset, 0);
-   SET_LARGE_INTEGER_LOW_PART(FileOffset, DosHeader->e_lfanew);
+   FileOffset.HighPart = 0;
+   FileOffset.LowPart = DosHeader->e_lfanew;
 
    Status = NtReadFile(hFile,
 		       NULL,
@@ -461,7 +461,7 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
      + sizeof(IMAGE_SECTION_HEADER) * Headers.FileHeader.NumberOfSections;
    
    BaseAddress = (PVOID)Headers.OptionalHeader.ImageBase;
-   LARGE_INTEGER_QUAD_PART(SectionOffset) = 0;
+   SectionOffset.QuadPart = 0;
    Status = NtMapViewOfSection(hSection,
 			       hProcess,
 			       &BaseAddress,
@@ -509,5 +509,4 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
 
    return TRUE;				
 }
-
 

@@ -27,8 +27,8 @@ HANDLE CreationFileMappingA(HANDLE hFile,
    ANSI_STRING AnsiName;
    UNICODE_STRING UnicodeName;
    
-   SET_LARGE_INTEGER_LOW_PART(MaximumSize, dwMaximumSizeLow);
-   SET_LARGE_INTEGER_HIGH_PART(MaximumSize, dwMaximumSizeHigh);
+   MaximumSize.LowPart = dwMaximumSizeLow;
+   MaximumSize.HighPart = dwMaximumSizeHigh;
    RtlInitAnsiString(&AnsiString, lpName);
    RtlAnsiStringToUnicodeString(&UnicodeName, &AnsiName, TRUE);
    InitializeObjectAttributes(&ObjectAttributes,
@@ -63,8 +63,8 @@ HANDLE CreationFileMappingW(HANDLE hFile,
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING UnicodeName;
    
-   SET_LARGE_INTEGER_LOW_PART(MaximumSize, dwMaximumSizeLow);
-   SET_LARGE_INTEGER_HIGH_PART(MaximumSize, dwMaximumSizeHigh);
+   MaximumSize.LowPart = dwMaximumSizeLow;
+   MaximumSize.HighPart = dwMaximumSizeHigh;
    RtlInitUnicodeString(&UnicodeString, lpName);
    InitializeObjectAttributes(&ObjectAttributes,
 			      &UnicodeName,

@@ -1435,7 +1435,7 @@ NTSTATUS FsdWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
    Length = Stack->Parameters.Write.Length;
    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-   Offset = GET_LARGE_INTEGER_LOW_PART(Stack->Parameters.Write.ByteOffset);
+   Offset = Stack->Parameters.Write.ByteOffset.LowPart;
 
    Status = FsdWriteFile(DeviceExt,FileObject,Buffer,Length,Offset);
 
@@ -1473,7 +1473,7 @@ NTSTATUS FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
    Length = Stack->Parameters.Read.Length;
    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-   Offset = GET_LARGE_INTEGER_LOW_PART(Stack->Parameters.Read.ByteOffset);
+   Offset = Stack->Parameters.Read.ByteOffset.LowPart;
    
    Status = FsdReadFile(DeviceExt,FileObject,Buffer,Length,Offset,
 			&LengthRead);
@@ -1588,8 +1588,7 @@ NTSTATUS FsdSetPositionInformation(PFILE_OBJECT FileObject,
     DPRINT("FsdSetPositionInformation()\n");
     
     DPRINT("PositionInfo %x\n", PositionInfo);
-    DPRINT("Setting position %d\n",GET_LARGE_INTEGER_LOW_PART(
-				   PositionInfo->CurrentByteOffset));
+    DPRINT("Setting position %d\n", PositionInfo->CurrentByteOffset.LowPart);
     memcpy(&FileObject->CurrentByteOffset,&PositionInfo->CurrentByteOffset,
 	   sizeof(LARGE_INTEGER));
     
@@ -1605,8 +1604,7 @@ NTSTATUS FsdGetPositionInformation(PFILE_OBJECT FileObject,
     
     memcpy(&PositionInfo->CurrentByteOffset, &FileObject->CurrentByteOffset,
 	   sizeof(LARGE_INTEGER));
-    DPRINT("Getting position %x\n",GET_LARGE_INTEGER_LOW_PART(
-				   PositionInfo->CurrentByteOffset));
+    DPRINT("Getting position %x\n", PositionInfo->CurrentByteOffset.LowPart);
     return(STATUS_SUCCESS);
  }
 
@@ -1760,8 +1758,7 @@ NTSTATUS FsdGetFsVolumeInformation(PFILE_OBJECT FileObject,
         return(STATUS_SUCCESS);
 
     /* dummy entries */
-    FsVolumeInfo->VolumeCreationTime.LowPart = 0;
-    FsVolumeInfo->VolumeCreationTime.HighPart = 0;
+    FsVolumeInfo->VolumeCreationTime.QuadPart = 0;
     FsVolumeInfo->VolumeSerialNumber = 0x01234567;
     FsVolumeInfo->SupportsObjects = FALSE;
     FsVolumeInfo->VolumeLabelLength  = 5;
