@@ -1,10 +1,33 @@
-; $Id: psxdll.def,v 1.6 2002/03/11 20:49:09 hyperion Exp $
+; $Id: psxdll.def,v 1.7 2002/03/21 22:47:05 hyperion Exp $
 ;
 ; ReactOS POSIX+ Client Library
 ;
 
 LIBRARY PSXDLL.DLL
 EXPORTS
+
+;ctype
+isalnum
+isalpha
+iscntrl
+isdigit
+isgraph
+islower
+isprint
+ispunct
+isspace
+isupper
+iswalpha
+iswctype
+iswdigit
+iswlower
+iswspace
+iswxdigit
+isxdigit
+tolower
+toupper
+towlower
+towupper
 
 ;dirent
 opendir
@@ -27,6 +50,18 @@ fcntl
 
 ;libgen
 basename
+
+;math
+atan
+ceil
+cos
+fabs
+floor
+log
+pow
+sin
+sqrt
+tan
 
 ;misc
 ;misc/fdtable
@@ -91,8 +126,12 @@ printf
 gets
 
 ;stdlib
+abs
 abort
+atoi
+atol
 malloc
+mbstowcs
 realloc
 free
 calloc
@@ -133,6 +172,9 @@ dup2
 getcwd
 getpid
 getppid
+pread
+read
+write
 
 ;wchar
 ;forward-exports to NTDLL

@@ -1,10 +1,33 @@
-; $Id: psxdll.edf,v 1.5 2002/03/10 17:10:30 hyperion Exp $
+; $Id: psxdll.edf,v 1.6 2002/03/21 22:47:05 hyperion Exp $
 ;
 ; ReactOS POSIX+ Client Library
 ;
 
 LIBRARY PSXDLL.DLL
 EXPORTS
+
+;ctype
+isalnum=NTDLL.isalnum
+isalpha=NTDLL.isalpha
+iscntrl=NTDLL.iscntrl
+isdigit=NTDLL.isdigit
+isgraph=NTDLL.isgraph
+islower=NTDLL.islower
+isprint=NTDLL.isprint
+ispunct=NTDLL.ispunct
+isspace=NTDLL.isspace
+isupper=NTDLL.isupper
+iswalpha=NTDLL.iswalpha
+iswctype=NTDLL.iswctype
+iswdigit=NTDLL.iswdigit
+iswlower=NTDLL.iswlower
+iswspace=NTDLL.iswspace
+iswxdigit=NTDLL.iswxdigit
+isxdigit=NTDLL.isxdigit
+tolower=NTDLL.tolower
+toupper=NTDLL.toupper
+towlower=NTDLL.towlower
+towupper=NTDLL.towupper
 
 ;dirent
 opendir=opendir
@@ -27,6 +50,18 @@ fcntl=fcntl
 
 ;libgen
 basename=basename
+
+;math
+atan=NTDLL.atan
+ceil=NTDLL.ceil
+cos=NTDLL.cos
+fabs=NTDLL.fabs
+floor=NTDLL.floor
+log=NTDLL.log
+pow=NTDLL.pow
+sin=NTDLL.sin
+sqrt=NTDLL.sqrt
+tan=NTDLL.tan
 
 ;misc
 ;misc/fdtable
@@ -91,8 +126,12 @@ printf=MSVCRT.printf
 gets=MSVCRT.gets
 
 ;stdlib
+abs=NTDLL.abs
 abort=abort
+atoi=NTDLL.atoi
+atol=NTDLL.atol
 malloc=malloc
+mbstowcs=NTDLL.mbstowcs
 realloc=realloc
 free=free
 calloc=calloc
@@ -133,6 +172,9 @@ dup2=dup2
 getcwd=getcwd
 getpid=getpid
 getppid=getppid
+pread=pread
+read=read
+write=write
 
 ;wchar
 ;forward-exports to NTDLL
