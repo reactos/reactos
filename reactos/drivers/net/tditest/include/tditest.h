@@ -8,9 +8,7 @@
 #define __TDITEST_H
 
 #ifdef _MSC_VER
-#include <basetsd.h>
 #include <ntddk.h>
-#include <windef.h>
 #include <tdikrnl.h>
 #include <tdiinfo.h>
 #else
@@ -18,14 +16,11 @@
 #include <net/tdikrnl.h>
 #include <net/tdiinfo.h>
 #endif
-
-#include <debug.h>
+#include "debug.h"
 
 
 /* Name of UDP device */
 #define UDP_DEVICE_NAME L"\\Device\\Udp"
-//#define UDP_DEVICE_NAME L"\\Device\\NTUdp"
-
 
 #ifdef i386
 
@@ -129,3 +124,4 @@ typedef struct IPADDR_ENTRY {
 #endif /*__TDITEST_H */
 
 /* EOF */
+
