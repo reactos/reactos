@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.42 2003/09/23 18:04:42 gvg Exp $
+ * $Id: gdiobj.c,v 1.43 2003/09/24 16:01:32 weiden Exp $
  *
  */
 
@@ -223,8 +223,16 @@ HGDIOBJ FASTCALL
 GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
 {
   PGDIOBJHDR  newObject;
+  WORD Index;
+  
+  Index = GDIOBJ_iGetNextOpenHandleIndex ();
+  if (0 == Index)
+    {
+      DPRINT1("Out of GDI handles\n");
+      return NULL;
+    }
 
-  DPRINT("GDIOBJ_AllocObj: size: %d, type: 0x%08x\n", Size, ObjectType);
+  DPRINT("GDIOBJ_AllocObj: handle: %d, size: %d, type: 0x%08x\n", Index, Size, ObjectType);
   newObject = ExAllocatePool(PagedPool, Size + sizeof (GDIOBJHDR));
   if (newObject == NULL)
   {
@@ -233,14 +241,7 @@ GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
   }
   RtlZeroMemory (newObject, Size + sizeof(GDIOBJHDR));
 
-  newObject->wTableIndex = GDIOBJ_iGetNextOpenHandleIndex ();
-  DPRINT("GDIOBJ_AllocObj: object handle %d\n", newObject->wTableIndex );
-  if (0 == newObject->wTableIndex)
-    {
-      DPRINT1("Out of GDI handles\n");
-      ExFreePool(newObject);
-      return NULL;
-    }
+  newObject->wTableIndex = Index;
 
   newObject->dwCount = 0;
   newObject->hProcessId = PsGetCurrentProcessId ();
@@ -248,9 +249,9 @@ GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
   newObject->Magic = GDI_TYPE_TO_MAGIC(ObjectType);
   newObject->lockfile = NULL;
   newObject->lockline = 0;
-  HandleTable->Handles[newObject->wTableIndex] = newObject;
+  HandleTable->Handles[Index] = newObject;
 
-  return GDI_HANDLE_CREATE(newObject->wTableIndex, ObjectType);
+  return GDI_HANDLE_CREATE(Index, ObjectType);
 }
 
 /*!

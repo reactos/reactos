@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.51 2003/09/10 23:16:13 gvg Exp $ */
+/* $Id: text.c,v 1.52 2003/09/24 16:01:32 weiden Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -1032,7 +1032,7 @@ NtGdiTextOut(HDC  hDC,
 {
   // Fixme: Call EngTextOut, which does the real work (calling DrvTextOut where appropriate)
 
-  DC *dc = DC_LockDc(hDC);
+  DC *dc;
   SURFOBJ *SurfObj;
   int error, glyph_index, n, i;
   FT_Face face;
@@ -1057,6 +1057,7 @@ NtGdiTextOut(HDC  hDC,
   PXLATEOBJ XlateObj;
   ULONG Mode;
 
+  dc = DC_LockDc(hDC);
   if( !dc )
 	return FALSE;
   SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
@@ -1116,7 +1117,15 @@ NtGdiTextOut(HDC  hDC,
   if (OPAQUE == dc->w.backgroundMode)
     {
       hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.backgroundColor));
-      BrushBg = BRUSHOBJ_LockBrush(hBrushBg);
+      if(hBrushBg)
+      {
+        BrushBg = BRUSHOBJ_LockBrush(hBrushBg);
+      }
+      else
+      {
+        EngDeleteXlate(XlateObj);
+        goto fail;
+      }
     }
   EngDeleteXlate(XlateObj);
 

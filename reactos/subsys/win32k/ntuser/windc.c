@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.23 2003/09/09 09:39:21 gvg Exp $
+/* $Id: windc.c,v 1.24 2003/09/24 16:01:32 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -132,6 +132,9 @@ PDCE FASTCALL DceAllocDCE(HWND hWnd, DCE_TYPE Type)
   DCE* Dce;
 
   DceHandle = DCEOBJ_AllocDCE();
+  if(!DceHandle)
+    return NULL;
+  
   Dce = DCEOBJ_LockDCE(DceHandle);
   Dce->hDC = NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
   Dce->hwndCurrent = hWnd;
@@ -171,6 +174,9 @@ DceSetDrawable(PWINDOW_OBJECT WindowObject, HDC hDC, ULONG Flags,
 	       BOOL SetClipOrigin)
 {
   DC *dc = DC_LockDc(hDC);
+  if(!dc)
+    return;
+  
   if (WindowObject == NULL)
     {
       dc->w.DCOrgX = 0;
@@ -342,9 +348,10 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       DbgBreakPoint();
     }
 
-  if (NULL == Dce && NULL != Window)
+  if (NULL == Dce)
     {
-      IntReleaseWindowObject(Window);
+      if(NULL != Window)
+        IntReleaseWindowObject(Window);
       return(NULL);
     }
 
@@ -366,7 +373,8 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
   if (NULL != ClipRegion)
     {
       Dce->hClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-      NtGdiCombineRgn(Dce->hClipRgn, ClipRegion, NULL, RGN_COPY);
+      if(Dce->hClipRgn)
+        NtGdiCombineRgn(Dce->hClipRgn, ClipRegion, NULL, RGN_COPY);
       NtGdiDeleteObject(ClipRegion);
     }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.24 2003/09/09 09:39:21 gvg Exp $ */
+/* $Id: cliprgn.c,v 1.25 2003/09/24 16:01:32 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -58,7 +58,10 @@ CLIPPING_UpdateGCRegion(DC* Dc)
 #endif
 
   Combined = NtGdiCreateRectRgn(0, 0, 0, 0);
-  ASSERT(NULL != Combined);
+  if(!Combined)
+  {
+    return;
+  }
 
   if (Dc->w.hClipRgn == NULL)
     {
