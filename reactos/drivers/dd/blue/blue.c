@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.18 2000/01/09 23:16:41 ekohl Exp $
+/* $Id: blue.c,v 1.19 2000/01/11 17:33:44 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -120,10 +120,10 @@ ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     DeviceExtension->Rows =
         DeviceExtension->Rows / DeviceExtension->ScanLines;
 
-    DbgPrint ("%d Columns  %d Rows %d Scanlines\n",
-              DeviceExtension->Columns,
-              DeviceExtension->Rows,
-              DeviceExtension->ScanLines);
+    DPRINT ("%d Columns  %d Rows %d Scanlines\n",
+            DeviceExtension->Columns,
+            DeviceExtension->Rows,
+            DeviceExtension->ScanLines);
 
     DeviceExtension->CursorSize    = 5; /* FIXME: value correct?? */
     DeviceExtension->CursorVisible = TRUE;
