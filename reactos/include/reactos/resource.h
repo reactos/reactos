@@ -1,9 +1,23 @@
 #ifndef _INC_REACTOS_RESOURCE_H
 #define _INC_REACTOS_RESOURCE_H
 
-/* Build number as YYYYMMDD */
+/* Global File Version UINTs */
 
-#define RES_UINT_FILE_VERSION	19990421
+#define RES_UINT_FV_MAJOR	0
+#define RES_UINT_FV_MINOR	0
+#define RES_UINT_FV_REVISION	13
+/* Build number as YYYYMMDD */
+#define RES_UINT_FV_BUILD	19990516
+/* TO be removed */
+#define RES_UINT_FILE_VERSION	RES_UINT_FV_BUILD
+
+/* ReactOS Product Version UINTs */
+
+#define RES_UINT_PV_MAJOR	0
+#define RES_UINT_PV_MINOR	0
+#define RES_UINT_PV_REVISION	13
+/* Build number as YYYYMMDD */
+#define RES_UINT_PV_BUILD	19990516
 
 /* Common version strings for rc scripts */
 
