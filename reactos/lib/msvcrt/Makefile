@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2001/01/07 02:58:31 ekohl Exp $
+# $Id: Makefile,v 1.10 2001/01/07 18:45:21 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -236,10 +236,17 @@ ifeq ($(DOSCLI), yes)
 CLEAN_FILES = \
 	ctype\*.o \
 	direct\*.o \
+	float\*.o \
+	io\*.o \
+	math\*.o \
 	misc\*.o \
 	process\*.o \
+	signal\*.o \
+	stdio\*.o \
 	stdlib\*.o \
 	string\*.o \
+	sys_stat\*.o \
+	time\*.o \
 	wstring\*.o \
 	$(TARGET_NAME).a \
 	$(TARGET_NAME).coff \
@@ -251,10 +258,17 @@ else
 CLEAN_FILES = \
 	ctype/*.o \
 	direct/*.o \
+	float/*.o \
+	io/*.o \
+	math/*.o \
 	misc/*.o \
 	process/*.o \
+	signal/*.o \
+	stdio/*.o \
 	stdlib/*.o \
 	string/*.o \
+	sys_stat/*.o \
+	time/*.o \
 	wstring/*.o \
 	$(TARGET_NAME).a \
 	$(TARGET_NAME).coff \
