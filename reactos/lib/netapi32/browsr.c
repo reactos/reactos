@@ -32,7 +32,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 /************************************************************
  *                I_BrowserSetNetlogonState  (NETAPI32.@)
  */
-NET_API_STATUS I_BrowserSetNetlogonState(
+NET_API_STATUS WINAPI I_BrowserSetNetlogonState(
     LPWSTR ServerName, LPWSTR DomainName, LPWSTR EmulatedServerName,
     DWORD Role)
 {
@@ -42,7 +42,7 @@ NET_API_STATUS I_BrowserSetNetlogonState(
 /************************************************************
  *                I_BrowserQueryEmulatedDomains  (NETAPI32.@)
  */
-NET_API_STATUS I_BrowserQueryEmulatedDomains(LPWSTR ServerName,PBYTE* blah,PDWORD EntriesRead)
+NET_API_STATUS WINAPI I_BrowserQueryEmulatedDomains(LPWSTR ServerName,PBYTE* blah,PDWORD EntriesRead)
 //NET_API_STATUS I_BrowserQueryEmulatedDomains(
 //    LPWSTR ServerName, PBYTE *EmulatedDomains
 //    PDWORD EntriesRead)
