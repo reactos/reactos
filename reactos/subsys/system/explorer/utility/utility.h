@@ -578,7 +578,9 @@ struct ANS
 	{
 		int l = wcslen(s) + 1;
 		_str = (LPSTR) malloc(2*l);
-		WideCharToMultiByte(CP_ACP, 0, s, -1, _str, 2*l, 0, 0);
+
+		if (WideCharToMultiByte(CP_ACP, 0, s, -1, _str, 2*l, 0, 0) <= 0)
+			*_str = '\0';
 	}
 
 	~ANS()
@@ -604,7 +606,9 @@ struct UNC
 	{
 		int l = strlen(s) + 1;
 		_str = (LPWSTR) malloc(2*l);
-		MultiByteToWideChar(CP_ACP, 0, s, -1, _str, l);
+
+		if (MultiByteToWideChar(CP_ACP, 0, s, -1, _str, l) <= 0)
+			*_str = '\0';
 	}
 
 	~UNC()

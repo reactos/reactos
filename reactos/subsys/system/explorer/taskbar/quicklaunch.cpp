@@ -51,6 +51,8 @@ QuickLaunchMap::~QuickLaunchMap()
 QuickLaunchBar::QuickLaunchBar(HWND hwnd)
  :	super(hwnd)
 {
+	CONTEXT("QuickLaunchBar::QuickLaunchBar()");
+
 	_dir = NULL;
 
 	_next_id = IDC_FIRST_QUICK_ID;
@@ -70,6 +72,8 @@ QuickLaunchBar::~QuickLaunchBar()
 
 HWND QuickLaunchBar::Create(HWND hwndParent)
 {
+	CONTEXT("QuickLaunchBar::Create()");
+
 	ClientRect clnt(hwndParent);
 
 	HWND hwnd = CreateToolbarEx(hwndParent,
@@ -85,12 +89,14 @@ HWND QuickLaunchBar::Create(HWND hwndParent)
 
 void QuickLaunchBar::AddShortcuts()
 {
+	CONTEXT("QuickLaunchBar::AddShortcuts()");
+
 	WaitCursor wait;
 
 	try {
 		TCHAR path[_MAX_PATH];
 
-		SpecialFolderFSPath app_data(CSIDL_APPDATA, _hwnd);
+		SpecialFolderFSPath app_data(CSIDL_APPDATA, _hwnd);	// perhaps also look into CSIDL_COMMON_APPDATA ?
 
 		_stprintf(path, TEXT("%s\\")QUICKLAUNCH_FOLDER, (LPCTSTR)app_data);
 
@@ -157,6 +163,8 @@ LRESULT QuickLaunchBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 int QuickLaunchBar::Command(int id, int code)
 {
+	CONTEXT("QuickLaunchBar::Command()");
+
 	_entries[id]._entry->launch_entry(_hwnd);
 
 	return 0;
