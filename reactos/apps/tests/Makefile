@@ -8,13 +8,14 @@ include $(PATH_TO_TOP)/rules.mak
 
 
 # Test applications
-# alive apc args atomtest bench consume copymove count dump_shared_data
-# event file gditest hello isotest lpc mstest mutex nptest
-# pteb regtest sectest shm simple thread vmtest winhello
-TEST_APPS = alive apc args atomtest bench consume copymove count dump_shared_data \
-            event file gditest hello isotest lpc mstest mutex nptest \
-            pteb regtest sectest shm simple thread tokentest vmtest winhello dibtest \
-            lock hivetest
+# alive apc args atomtest bench bitblt consume copymove count dump_shared_data
+# event file gditest hello isotest lpc messagebox mstest mutex nptest
+# patblt pteb regtest sectest shm thread vmtest winhello
+TEST_APPS = alive apc args atomtest bench consume copymove count \
+            dump_shared_data event file gditest hello isotest lpc messagebox \
+            mstest mutex event file gditest hello isotest lpc messagebox mstest \
+            mutex nptest pteb regtest sectest shm thread tokentest vmtest \
+            winhello dibtest lock hivetest
 
 TEST_MISC = 
 
