@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.57 2003/04/26 23:13:33 hyperion Exp $
+/* $Id: create.c,v 1.58 2003/04/30 15:11:31 gvg Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -447,6 +447,7 @@ PsCreateTeb(HANDLE ProcessHandle,
 
    DPRINT ("TebBase %p TebSize %lu\n", TebBase, TebSize);
 
+   RtlZeroMemory(&Teb, sizeof(TEB));
    /* set all pointers to and from the TEB */
    Teb.Tib.Self = TebBase;
    if (Thread->ThreadsProcess)
