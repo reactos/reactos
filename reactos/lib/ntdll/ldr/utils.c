@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.22 1999/12/26 15:50:46 dwelch Exp $
+/* $Id: utils.c,v 1.23 2000/01/18 12:04:31 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -138,7 +138,7 @@ NTSTATUS LdrLoadDll (PDLL* Dll,
 			);
 	if (!NT_SUCCESS(Status))
 	{
-		dprintf("Dll open of %s failed: Status = 0x%08x\n", 
+		DbgPrint("Dll open of %s failed: Status = 0x%08x\n", 
 		       fqname, Status);
 		return Status;
 	}
@@ -230,7 +230,7 @@ NTSTATUS LdrLoadDll (PDLL* Dll,
 			);
 	if (!NT_SUCCESS(Status))
 	{
-		dprintf("NTDLL.LDR: map view of section failed (Status %x)\n",
+		DbgPrint("NTDLL.LDR: map view of section failed (Status %x)\n",
 		       Status);
 		ZwClose(FileHandle);
 		return(Status);
@@ -458,7 +458,7 @@ LdrGetExportByOrdinal (
 			Module->BaseAddress,
 			ExportDir->AddressOfFunctions
 			);
-	dprintf(
+	DbgPrint(
 		"LdrGetExportByOrdinal(Ordinal %d) = %x\n",
 		Ordinal,
 		ExFunctions[ExOrdinals[Ordinal - ExportDir->Base]]
@@ -549,7 +549,7 @@ LdrGetExportByName (
 		}
 	}
 
-	dprintf("LdrGetExportByName() = failed to find %s\n",SymbolName);
+	DbgPrint("LdrGetExportByName() = failed to find %s\n",SymbolName);
 
 	return NULL;
 }
@@ -777,7 +777,7 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 				       );
 		  if ((*ImportAddressList) == NULL)
 		    {
-				   dprintf("Failed to import %s\n", pName);
+				   DbgPrint("Failed to import %s\n", pName);
 		       return STATUS_UNSUCCESSFUL;
 		    }
 	       }
@@ -852,7 +852,7 @@ PEPFUNC LdrPEStartup (PVOID	ImageBase,
 	Status = LdrPerformRelocations(NTHeaders, ImageBase);
 	if (!NT_SUCCESS(Status))
 	  {
-	     dprintf("LdrPerformRelocations() failed\n");
+	     DbgPrint("LdrPerformRelocations() failed\n");
 	     return NULL;
 	  }
      }
@@ -868,7 +868,7 @@ PEPFUNC LdrPEStartup (PVOID	ImageBase,
 	Status = LdrFixupImports(NTHeaders, ImageBase);
 	if (!NT_SUCCESS(Status))
 	  {
-	     dprintf("LdrFixupImports() failed\n");
+	     DbgPrint("LdrFixupImports() failed\n");
 	     return NULL;
 	  }
      }

@@ -1,6 +1,12 @@
-/* $Id: print.c,v 1.1 2000/01/10 20:31:23 ekohl Exp $
+/* $Id: print.c,v 1.2 2000/01/18 12:04:16 ekohl Exp $
  *
-
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            lib/ntdll/dbg/print.c
+ * PURPOSE:         Debug output
+ * PROGRAMMER:      Eric Kohl
+ * UPDATE HISTORY:
+ *                  Created 28/12/1999
  */
 
 #include <ddk/ntddk.h>
@@ -8,30 +14,36 @@
 #include <stdio.h>
 #include <string.h>
 
+
+/* FUNCTIONS ***************************************************************/
+
+ULONG DbgService (ULONG Service, PVOID Context1, PVOID Context2);
+__asm__ ("\n\t.global _DbgService\n\t"
+         "_DbgService:\n\t"
+         "mov 4(%esp), %eax\n\t"
+         "mov 8(%esp), %ecx\n\t"
+         "mov 12(%esp), %edx\n\t"
+         "int $0x2D\n\t"
+         "ret\n\t");
+
 ULONG
-DbgPrint (PCH Format, ...)
+DbgPrint(PCH Format, ...)
 {
-	CHAR Buffer[512];
-	va_list ap;
-	UNICODE_STRING UnicodeString;
-	ANSI_STRING AnsiString;
+   ANSI_STRING DebugString;
+   CHAR Buffer[512];
+   va_list ap;
 
-	va_start (ap, Format);
-	vsprintf (Buffer, Format, ap);
-	va_end (ap);
+   /* init ansi string */
+   DebugString.Buffer = Buffer;
+   DebugString.MaximumLength = 512;
 
-	RtlInitAnsiString (&AnsiString,
-	                   Buffer);
-	RtlAnsiStringToUnicodeString (&UnicodeString,
-	                              &AnsiString,
-	                              TRUE);
+   va_start (ap, Format);
+   DebugString.Length = _vsnprintf (Buffer, 512, Format, ap);
+   va_end (ap);
 
-	/* FIXME: send string to debugging subsystem */
-	NtDisplayString (&UnicodeString);
+   DbgService (1, &DebugString, NULL);
 
-	RtlFreeUnicodeString (&UnicodeString);
-
-	return (strlen (Buffer));
+   return (ULONG)DebugString.Length;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.14 1999/12/30 01:51:38 dwelch Exp $
+/* $Id: startup.c,v 1.15 2000/01/18 12:04:31 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -109,7 +109,7 @@ VOID LdrStartup(PPEB Peb,
       PEDosHeader->e_lfanew == 0L ||
       *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_PE_MAGIC)
      {
-	dprintf("Image has bad header\n");
+	DbgPrint("Image has bad header\n");
 	ZwTerminateProcess(NULL,STATUS_UNSUCCESSFUL);
      }
 
@@ -124,7 +124,7 @@ VOID LdrStartup(PPEB Peb,
 
    if (EntryPoint == NULL)
      {
-	dprintf("Failed to initialize image\n");
+	DbgPrint("Failed to initialize image\n");
 	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
    
@@ -134,10 +134,10 @@ VOID LdrStartup(PPEB Peb,
    Status = CsrConnectToServer();
    if (!NT_SUCCESS(Status))
      {
-	dprintf("Failed to connect to csrss.exe: expect trouble\n");
+	DbgPrint("Failed to connect to csrss.exe: expect trouble\n");
      }
    
-//   dprintf("Transferring control to image at %x\n",EntryPoint);
+//   DbgPrint("Transferring control to image at %x\n",EntryPoint);
    Status = EntryPoint(Peb);
    ZwTerminateProcess(NtCurrentProcess(),Status);
 }

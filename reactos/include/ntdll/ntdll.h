@@ -1,14 +1,13 @@
-extern void dprintf(char* fmt,...);
 
-#define UNIMPLEMENTED dprintf("%s in %s:%d is unimplemented\n",__FUNCTION__,__FILE__,__LINE__);
+#define UNIMPLEMENTED DbgPrint("%s in %s:%d is unimplemented\n",__FUNCTION__,__FILE__,__LINE__);
 
 #ifdef NDEBUG
 #define DPRINT(args...) 
 #else
-#define DPRINT(args...) do { dprintf("(NTDLL:%s:%d) ",__FILE__,__LINE__); dprintf(args); } while(0);
+#define DPRINT(args...) do { DbgPrint("(NTDLL:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
 #endif
 
-#define DPRINT1(args...) do { dprintf("(NTDLL:%s:%d) ",__FILE__,__LINE__); dprintf(args); } while(0);
+#define DPRINT1(args...) do { DbgPrint("(NTDLL:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
 
 #define ROUNDUP(a,b)	((((a)+(b)-1)/(b))*(b))
 #define ROUNDDOWN(a,b)	(((a)/(b))*(b))
