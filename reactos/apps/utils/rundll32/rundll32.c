@@ -16,11 +16,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rundll32.c,v 1.1 2003/11/07 09:12:44 gvg Exp $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS rundll32.exe
- * FILE:            rundll32/rundll32.c
+ * FILE:            apps/utils/rundll32/rundll32.c
  * PURPOSE:         Run a DLL as a program
  * PROGRAMMER:      ShadowFlare (blakflare@hotmail.com)
  */
@@ -58,8 +57,8 @@ typedef int (WINAPI *DllWinMainA)(
   int nCmdShow
 );
 
-LPCTSTR DllNotLoaded = _T("LoadLibrary failed to load \"%ls\"");
-LPCTSTR MissingEntry = _T("Missing entry point:%ls\nIn %ls");
+LPCTSTR DllNotLoaded = _T("LoadLibrary failed to load \"%s\"");
+LPCTSTR MissingEntry = _T("Missing entry point:%s\nIn %s");
 LPCTSTR rundll32_wtitle = _T("rundll32");
 LPCTSTR rundll32_wclass = _T("rundll32_window");
 TCHAR ModuleFileName[MAX_PATH+1];
@@ -287,7 +286,7 @@ int WINAPI WinMain(
 		}
 		else {
 			GetModuleTitle();
-			lptMsgBuffer = (LPTSTR)malloc((_tcslen(MissingEntry) - 6 + _tcslen(lptFuncName) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
+			lptMsgBuffer = (LPTSTR)malloc((_tcslen(MissingEntry) - 4 + _tcslen(lptFuncName) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
 			_stprintf(lptMsgBuffer,MissingEntry,lptFuncName,lptDllName);
 			MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONERROR);
 			free(lptMsgBuffer);
@@ -300,7 +299,7 @@ int WINAPI WinMain(
 	}
 	else {
 		GetModuleTitle();
-		lptMsgBuffer = (LPTSTR)malloc((_tcslen(DllNotLoaded) - 3 + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
+		lptMsgBuffer = (LPTSTR)malloc((_tcslen(DllNotLoaded) - 2 + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
 		_stprintf(lptMsgBuffer,DllNotLoaded,lptDllName);
 		MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONERROR);
 		free(lptMsgBuffer);

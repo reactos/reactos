@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2003/11/07 09:12:44 gvg Exp $
+# $Id: Makefile,v 1.2 2003/11/07 23:16:22 gvg Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -7,6 +7,8 @@ TARGET_TYPE = program
 TARGET_APPTYPE = windows
 
 TARGET_NAME = rundll32
+
+TARGET_INSTALLDIR = system32
 
 TARGET_SDKLIBS = kernel32.a user32.a
 
