@@ -19,7 +19,7 @@
  *
  * NOTES
  *   Nearly complete informations about the binary formats 
- *   of .lnk files avaiable at http://www.wotsit.org
+ *   of .lnk files available at http://www.wotsit.org
  *
  */
 
