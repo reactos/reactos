@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.35 2004/10/11 21:08:05 weiden Exp $
+/* $Id: winlogon.c,v 1.36 2004/11/20 15:55:45 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -461,6 +461,12 @@ DoLogonUser (PWCHAR Name,
       return FALSE;
     }
 
+  if (ImpersonateLoggedOnUser(hToken))
+    {
+      UpdatePerUserSystemParameters(0, TRUE);
+      RevertToSelf();
+    }
+
   GetWindowsDirectoryW (CurrentDirectory, MAX_PATH);
 
   StartupInfo.cb = sizeof(StartupInfo);
@@ -485,6 +491,11 @@ DoLogonUser (PWCHAR Name,
   if (!Result)
     {
       DbgPrint ("WL: Failed to execute user shell %s\n", CommandLine);
+      if (ImpersonateLoggedOnUser(hToken))
+        {
+          UpdatePerUserSystemParameters(0, FALSE);
+          RevertToSelf();
+        }
       UnloadUserProfile (hToken,
 			 ProfileInfo.hProfile);
       CloseHandle (hToken);
@@ -509,6 +520,12 @@ DoLogonUser (PWCHAR Name,
 
   CloseHandle (ProcessInformation.hProcess);
   CloseHandle (ProcessInformation.hThread);
+
+  if (ImpersonateLoggedOnUser(hToken))
+    {
+      UpdatePerUserSystemParameters(0, FALSE);
+      RevertToSelf();
+    }
 
   /* Unload user profile */
   UnloadUserProfile (hToken,

@@ -707,7 +707,7 @@ UnregisterHotKey@8
 UnregisterMessagePumpHook@0
 UnregisterUserApiHook@0
 UpdateLayeredWindow@36
-;UpdatePerUserSystemParameters
+UpdatePerUserSystemParameters@8
 UpdateWindow@4
 ;User32InitializeImmEntryTable
 UserClientDllInitialize=DllMain@12
