@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.23 2002/09/08 10:23:42 chorns Exp $
+/* $Id: unicode.c,v 1.24 2002/10/20 03:13:51 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -990,7 +990,7 @@ RtlUnicodeStringToAnsiSize(IN PUNICODE_STRING UnicodeString)
 			    UnicodeString->Buffer,
 			    UnicodeString->Length);
 
-  return(Size);
+  return(Size+1);
 }
 
 
@@ -1002,8 +1002,9 @@ RtlUnicodeStringToAnsiString(IN OUT PANSI_STRING DestinationString,
   NTSTATUS Status;
   ULONG Length;
   
-  if (NlsMbCodePageTag == TRUE)
-    Length = RtlUnicodeStringToAnsiSize (SourceString);
+  if (NlsMbCodePageTag == TRUE){
+    Length = RtlUnicodeStringToAnsiSize (SourceString); Length--;
+  }
   else
     Length = SourceString->Length / sizeof(WCHAR);
   
@@ -1055,7 +1056,7 @@ RtlUnicodeStringToCountedOemString(IN OUT POEM_STRING DestinationString,
   ULONG Size;
   
   if (NlsMbOemCodePageTag == TRUE)
-    Length = RtlUnicodeStringToAnsiSize (SourceString) + 1;
+    Length = RtlUnicodeStringToAnsiSize (SourceString)/* + 1*/;
   else
     Length = SourceString->Length / sizeof(WCHAR) + 1;
   
@@ -1202,7 +1203,7 @@ RtlUnicodeStringToOemSize(IN PUNICODE_STRING UnicodeString)
   RtlUnicodeToMultiByteSize(&Size,
 			    UnicodeString->Buffer,
 			    UnicodeString->Length);
-  return(Size);
+  return(Size+1);
 }
 
 
@@ -1214,8 +1215,9 @@ RtlUnicodeStringToOemString(IN OUT POEM_STRING DestinationString,
   NTSTATUS Status;
   ULONG Length;
   
-  if (NlsMbOemCodePageTag == TRUE)
-    Length = RtlUnicodeStringToAnsiSize (SourceString);
+  if (NlsMbOemCodePageTag == TRUE){
+    Length = RtlUnicodeStringToAnsiSize (SourceString); Length--;
+  }
   else
     Length = SourceString->Length / sizeof(WCHAR);
   
@@ -1319,8 +1321,9 @@ RtlUpcaseUnicodeStringToAnsiString(IN OUT PANSI_STRING DestinationString,
   NTSTATUS Status;
   ULONG Length;
   
-  if (NlsMbCodePageTag == TRUE)
-    Length = RtlUnicodeStringToAnsiSize(SourceString);
+  if (NlsMbCodePageTag == TRUE){
+    Length = RtlUnicodeStringToAnsiSize(SourceString); Length--;
+  }
   else
     Length = SourceString->Length / sizeof(WCHAR);
   
@@ -1372,7 +1375,7 @@ RtlUpcaseUnicodeStringToCountedOemString(IN OUT POEM_STRING DestinationString,
   ULONG Size;
 
   if (NlsMbCodePageTag == TRUE)
-    Length = RtlUnicodeStringToAnsiSize (SourceString) + 1;
+    Length = RtlUnicodeStringToAnsiSize (SourceString)/* + 1*/;
   else
     Length = SourceString->Length / sizeof(WCHAR) + 1;
 
@@ -1431,8 +1434,9 @@ RtlUpcaseUnicodeStringToOemString(IN OUT POEM_STRING DestinationString,
   NTSTATUS Status;
   ULONG Length;
 
-  if (NlsMbOemCodePageTag == TRUE)
-    Length = RtlUnicodeStringToOemSize(SourceString);
+  if (NlsMbOemCodePageTag == TRUE) {
+    Length = RtlUnicodeStringToOemSize(SourceString); Length--;
+  }
   else
     Length = SourceString->Length / sizeof(WCHAR);
 
