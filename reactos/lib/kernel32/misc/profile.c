@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.12 2004/06/13 20:04:56 navaraf Exp $
+/* $Id: profile.c,v 1.13 2004/10/09 18:46:41 gvg Exp $
  *
  * Imported from Wine
  * Copyright 1993 Miguel de Icaza
@@ -186,7 +186,7 @@ PROFILE_Load(HANDLE File)
   LARGE_INTEGER FileSize;
   HANDLE Mapping;
   PVOID BaseAddress;
-  char *Input, *End;
+  char *Input, *End, *EndLine, *LastNonSpace;
 
   FileSize.u.LowPart = GetFileSize(File, &FileSize.u.HighPart);
   if (INVALID_FILE_SIZE == FileSize.u.LowPart && 0 != GetLastError())
@@ -228,7 +228,21 @@ PROFILE_Load(HANDLE File)
   End = Input + FileSize.QuadPart;
   while (Input < End)
     {
-      while (Input < End && PROFILE_isspace(*Input))
+      EndLine = Input;
+      LastNonSpace = NULL;
+      while (EndLine < End && '\n' != *EndLine && ';' != *EndLine)
+        {
+          if (! PROFILE_isspace(*EndLine))
+            {
+              LastNonSpace = EndLine;
+            }
+          EndLine++;
+        }
+      if (NULL != LastNonSpace)
+        {
+          EndLine = LastNonSpace + 1;
+        }
+      while (Input < EndLine && PROFILE_isspace(*Input))
         {
           Input++;
         }
@@ -239,11 +253,11 @@ PROFILE_Load(HANDLE File)
       if ('[' == *Input)  /* section start */
         {
           p = ++Input;
-          while (p < End && ']' != *p && '\n' != *p)
+          while (p < EndLine && ']' != *p)
             {
               p++;
             }
-          if (p < End && ']' == *p)
+          if (p < EndLine && ']' == *p)
             {
               Len = p - Input;
               if (NULL == (Section = HeapAlloc(GetProcessHeap(), 0,
@@ -274,7 +288,7 @@ PROFILE_Load(HANDLE File)
 
       p = Input;
       p2 = p;
-      while (p < End && '=' != *p && '\n' != *p)
+      while (p < EndLine && '=' != *p)
         {
           if (! PROFILE_isspace(*p))
             {
@@ -283,7 +297,7 @@ PROFILE_Load(HANDLE File)
           p++;
         }
 
-      if (p < End && '=' == *p)
+      if (p2 != Input)
         {
           Len = p2 - Input + 1;
           if (NULL == (Key = HeapAlloc(GetProcessHeap(), 0,
@@ -294,11 +308,11 @@ PROFILE_Load(HANDLE File)
           MultiByteToWideChar(CP_ACP, 0, Input, Len, Key->Name, Len);
           Key->Name[Len] = L'\0';
           Input = p + 1;
-          while (Input < End && '\n' != *Input && PROFILE_isspace(*Input))
+          while (Input < EndLine && PROFILE_isspace(*Input))
             {
               Input++;
             }
-          if (End <= Input || '\n' == *Input)
+          if (EndLine <= Input)
             {
               Key->Value = NULL;
             }
@@ -306,7 +320,7 @@ PROFILE_Load(HANDLE File)
             {
               p2 = Input;
               p = Input + 1;
-              while (p < End && '\n' != *p)
+              while (p < EndLine)
                 {
                   if (! PROFILE_isspace(*p))
                     {
@@ -322,17 +336,17 @@ PROFILE_Load(HANDLE File)
                 }
               MultiByteToWideChar(CP_ACP, 0, Input, Len, Key->Value, Len);
               Key->Value[Len] = L'\0';
+           }  
 
-              Key->Next  = NULL;
-              *NextKey  = Key;
-              NextKey   = &Key->Next;
-              PrevKey   = Key;
+          Key->Next  = NULL;
+          *NextKey  = Key;
+          NextKey   = &Key->Next;
+          PrevKey   = Key;
 
-              DPRINT("New key: name=%S, value=%S\n",
-                     Key->Name, NULL != Key->Value ? Key->Value : L"(none)");
+          DPRINT("New key: name=%S, value=%S\n",
+                 Key->Name, NULL != Key->Value ? Key->Value : L"(none)");
 
-              Input = p;
-            }
+          Input = p;
         }
       while (Input < End && '\n' != *Input)
         {
@@ -1058,8 +1072,9 @@ PROFILE_Init()
 BOOL STDCALL
 CloseProfileUserMapping(VOID)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  DPRINT1("CloseProfileUserMapping not implemented\n");
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
 
@@ -1159,34 +1174,96 @@ GetPrivateProfileIntA(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 GetPrivateProfileSectionW (
-	LPCWSTR	lpAppName,
-	LPWSTR	lpReturnedString,
-	DWORD	nSize,
-	LPCWSTR	lpFileName
+	LPCWSTR	Section,
+	LPWSTR	Buffer,
+	DWORD	Len,
+	LPCWSTR	FileName
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  int Ret = 0;
+
+  DPRINT("(%S, %p, %ld, %S)\n", Section, Buffer, Len, FileName);
+
+  RtlEnterCriticalSection(&ProfileLock);
+
+  if (PROFILE_Open(FileName))
+    {
+      Ret = PROFILE_GetSection(CurProfile->Section, Section, Buffer, Len, TRUE);
+    }
+
+  RtlLeaveCriticalSection(&ProfileLock);
+
+  return Ret;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 GetPrivateProfileSectionA (
-	LPCSTR	lpAppName,
-	LPSTR	lpReturnedString,
-	DWORD	nSize,
-	LPCSTR	lpFileName
+	LPCSTR	Section,
+	LPSTR	Buffer,
+	DWORD	Len,
+	LPCSTR	FileName
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  UNICODE_STRING SectionW, FileNameW;
+  LPWSTR BufferW;
+  INT RetW, Ret = 0;
+
+  BufferW = NULL != Buffer ? HeapAlloc(GetProcessHeap(), 0, Len * sizeof(WCHAR)) : NULL;
+  if (NULL != Section)
+    {
+      RtlCreateUnicodeStringFromAsciiz(&SectionW, Section);
+    }
+  else
+    {
+      SectionW.Buffer = NULL;
+    }
+  if (NULL != FileName)
+    {
+      RtlCreateUnicodeStringFromAsciiz(&FileNameW, FileName);
+    }
+  else
+    {
+      FileNameW.Buffer = NULL;
+    }
+
+  RetW = GetPrivateProfileSectionW(SectionW.Buffer, BufferW, Len, FileNameW.Buffer);
+
+  if (2 < Len)
+    {
+      Ret = WideCharToMultiByte(CP_ACP, 0, BufferW, RetW + 2, Buffer, Len, NULL, NULL);
+      if (2 < Ret)
+        {
+          Ret -= 2;
+        }
+      else
+        {
+          Ret = 0;
+          Buffer[Len-2] = '\0';
+          Buffer[Len-1] = '\0';
+        }
+    }
+  else
+    {
+      Buffer[0] = '\0';
+      Buffer[1] = '\0';
+    }
+
+  RtlFreeUnicodeString(&SectionW);
+  RtlFreeUnicodeString(&FileNameW);
+  if (NULL != BufferW)
+    {
+      HeapFree(GetProcessHeap(), 0, BufferW);
+    }
+
+  return Ret;
 }
 
 
@@ -1393,8 +1470,9 @@ GetPrivateProfileStructW (
 	IN LPCWSTR File
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  DPRINT1("GetPrivateProfileStructW not implemented\n");
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
 
@@ -1410,8 +1488,9 @@ GetPrivateProfileStructA (
 	IN LPCSTR File
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  DPRINT1("GetPrivateProfileStructA not implemented\n");
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
 
@@ -1519,8 +1598,9 @@ GetProfileStringA(LPCSTR lpAppName,
 BOOL STDCALL
 OpenProfileUserMapping (VOID)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  DPRINT1("OpenProfileUserMapping not implemented\n");
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
 
@@ -1535,8 +1615,9 @@ QueryWin31IniFilesMappedToRegistry (
 	DWORD	Unknown3
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  DPRINT1("QueryWin31IniFilesMappedToRegistry not implemented\n");
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
 
@@ -1550,7 +1631,8 @@ WritePrivateProfileSectionA (
 	LPCSTR	lpFileName
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  DPRINT1("WritePrivateProfileSectionA not implemented\n");
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
 
@@ -1565,8 +1647,9 @@ WritePrivateProfileSectionW (
 	LPCWSTR	lpFileName
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  DPRINT1("WritePrivateProfileSectionW not implemented\n");
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
 
@@ -1679,8 +1762,9 @@ WritePrivateProfileStructA (
 	IN LPCSTR File
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  DPRINT1("WritePrivateProfileStructA not implemented\n");
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
 
@@ -1696,8 +1780,9 @@ WritePrivateProfileStructW (
 	IN LPCWSTR File
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  DPRINT1("WritePrivateProfileStructW not implemented\n");
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
 
