@@ -147,8 +147,7 @@ WGL_SetContextCallBack( const ICDTable *table )
 	memcpy( tebTable, table->dispatch_table,
 	        sizeof (PROC) * table->num_funcs );
 	memset( tebTable + sizeof (PROC) * table->num_funcs, 0,
-	        (sizeof (table->dispatch_table) / sizeof (PROC)) -
-	        (sizeof (PROC) * table->num_funcs) );
+	        sizeof (table->dispatch_table) - (sizeof (PROC) * table->num_funcs) );
 
 	/* FIXME: pull in software fallbacks -- need mesa */
 #if 0 /* unused atm */
@@ -196,7 +195,7 @@ rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
 	GLDRIVERDATA *icd;
 	PIXELFORMATDESCRIPTOR icdPfd;
 	int i;
-	int best = -1;
+	int best = 0;
 	int score, bestScore = 0x7fff; /* used to choose a pfd if no exact match */
 	int icdNumFormats;
 	const DWORD compareFlags = PFD_DRAW_TO_WINDOW | PFD_DRAW_TO_BITMAP |
@@ -215,13 +214,14 @@ rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
 	}
 
 	/* get number of formats -- FIXME: use 1 or 0 as index? */
-	icdNumFormats = icd->DrvDescribePixelFormat( hdc, 1,
+	icdNumFormats = icd->DrvDescribePixelFormat( hdc, 0,
 	                                  sizeof (PIXELFORMATDESCRIPTOR), NULL );
 	if (icdNumFormats == 0)
 	{
-		DBGPRINT( "DrvDescribePixelFormat failed (%d)", GetLastError() );
+		DBGPRINT( "Error: DrvDescribePixelFormat failed (%d)", GetLastError() );
 		return 0;
 	}
+	DBGPRINT( "Info: Enumerating %d pixelformats", icdNumFormats );
 
 	/* try to find best format */
 	for (i = 0; i < icdNumFormats; i++)
@@ -267,12 +267,10 @@ rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
 		}
 	}
 
-	if (best == -1)
-	{
+	if (best == 0)
 		SetLastError( 0 ); /* FIXME: set appropriate error */
-		return 0;
-	}
 
+	DBGPRINT( "Info: Suggesting pixelformat %d", best );
 	return best;
 }
 
@@ -504,7 +502,7 @@ rosglDescribePixelFormat( HDC hdc, int iFormat, UINT nBytes,
 	{
 		ret = icd->DrvDescribePixelFormat( hdc, iFormat, nBytes, pfd );
 		if (ret == 0)
-			DBGPRINT( "Error: DrvDescribePixelFormat failed (%d)", GetLastError() );
+			DBGPRINT( "Error: DrvDescribePixelFormat(format=%d) failed (%d)", iFormat, GetLastError() );
 	}
 
 	/* FIXME: implement own functionality? */
@@ -613,6 +611,7 @@ APIENTRY
 rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 {
 	GLRC *glrc = (GLRC *)hglrc;
+	ICDTable *icdTable = NULL;
 
 	/* flush current context */
 	if (OPENGL32_threaddata->glrc != NULL)
@@ -644,8 +643,9 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 	/* call the ICD */
 	if (glrc->hglrc != NULL)
 	{
-		if (!glrc->icd->DrvSetContext( hdc, glrc->hglrc,
-		                               WGL_SetContextCallBack ))
+		icdTable = glrc->icd->DrvSetContext( hdc, glrc->hglrc,
+		                                     WGL_SetContextCallBack );
+		if (icdTable == NULL)
 		{
 			DBGPRINT( "Error: DrvSetContext failed (%d)\n", GetLastError() );
 			return FALSE;
@@ -660,6 +660,12 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 	glrc->thread_id = GetCurrentThreadId();
 	glrc->hdc = hdc;
 	OPENGL32_threaddata->glrc = glrc;
+
+	if (icdTable != NULL)
+		if (WGL_SetContextCallBack( icdTable ) != ERROR_SUCCESS)
+		{
+			DBGPRINT( "Warning: WGL_SetContextCallBack failed!" );
+		}
 
 	return TRUE;
 }
@@ -696,7 +702,8 @@ rosglSetPixelFormat( HDC hdc, int iFormat, CONST PIXELFORMATDESCRIPTOR *pfd )
 
 	if (!icd->DrvSetPixelFormat( hdc, iFormat, pfd ))
 	{
-		DBGPRINT( "Warning: DrvSetPixelFormat failed (%d)", GetLastError() );
+		DBGPRINT( "Warning: DrvSetPixelFormat(format=%d) failed (%d)",
+		          iFormat, GetLastError() );
 		return FALSE;
 	}
 
@@ -751,27 +758,6 @@ BOOL
 APIENTRY
 rosglSwapBuffers( HDC hdc )
 {
-#if 0
-	/* check if there is a current GLRC */
-	if (OPENGL32_threaddata->glrc == NULL)
-	{
-		DBGPRINT( "Error: No current GL context!" );
-		return FALSE;
-	}
-
-	/* ask ICD to swap buffers */
-	/* FIXME: also ask ICD when we didnt use it to create the context/it couldnt? */
-	if (OPENGL32_threaddata->glrc->hglrc != NULL)
-	{
-		if (!OPENGL32_threaddata->glrc->icd->DrvSwapBuffers( hdc ))
-		{
-			DBGPRINT( "Error: DrvSwapBuffers failed (%d)", GetLastError() );
-			return FALSE;
-		}
-		return TRUE;
-	}
-#endif
-
 	GLDRIVERDATA *icd = OPENGL32_LoadICDForHDC( hdc );
 	if (icd != NULL)
 	{

@@ -1,4 +1,4 @@
-/* $Id: opengl32.h,v 1.12 2004/02/09 08:00:15 vizzini Exp $
+/* $Id: opengl32.h,v 1.13 2004/02/11 17:39:24 vizzini Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -75,21 +75,6 @@ ULONG DbgPrint(PCH Format,...);
 /* gl function list */
 #include "glfuncs.h"
 
-/* table indices for funcnames and function pointers */
-#if 0
-enum glfunc_indices
-{
-	GLIDX_INVALID = -1,
-#define X(func, ret, typeargs, args) GLIDX_##func,
-	GLFUNCS_MACRO
-#undef X
-	GLIDX_COUNT
-};
-
-/* function name table */
-extern const char* OPENGL32_funcnames[GLIDX_COUNT];
-#endif//0
-
 /* GL data types - x86 typedefs */
 typedef unsigned int GLenum;
 typedef unsigned char GLboolean;
@@ -109,7 +94,7 @@ typedef double GLclampd;
 typedef void GLvoid;
 
 /* Called by the driver to set the dispatch table */
-typedef DWORD (CALLBACK * SetContextCallBack)( const ICDTable * );
+typedef DWORD APIENTRY (*SetContextCallBack)( const ICDTable * );
 
 /* OpenGL ICD data */
 typedef struct tagGLDRIVERDATA
@@ -123,23 +108,23 @@ typedef struct tagGLDRIVERDATA
 	DWORD   driver_version;         /* DriverVersion value from registry */
 	DWORD   flags;                  /* Flags value from registry */
 
-	BOOL    (*DrvCopyContext)( HGLRC, HGLRC, UINT );
-	HGLRC   (*DrvCreateContext)( HDC );
-	HGLRC   (*DrvCreateLayerContext)( HDC, int );
-	BOOL    (*DrvDeleteContext)( HGLRC );
-	BOOL    (*DrvDescribeLayerPlane)( HDC, int, int, UINT, LPLAYERPLANEDESCRIPTOR );
-	int     (*DrvDescribePixelFormat)( IN HDC, IN int, IN UINT, OUT LPPIXELFORMATDESCRIPTOR );
-	int     (*DrvGetLayerPaletteEntries)( HDC, int, int, int, COLORREF * );
-	FARPROC (*DrvGetProcAddress)( LPCSTR lpProcName );
-	void    (*DrvReleaseContext)();
-	BOOL    (*DrvRealizeLayerPalette)( HDC, int, BOOL );
-	int     (*DrvSetContext)( HDC hdc, HGLRC hglrc, SetContextCallBack callback );
-	int     (*DrvSetLayerPaletteEntries)( HDC, int, int, int, CONST COLORREF * );
-	BOOL    (*DrvSetPixelFormat)( IN HDC, IN int, IN CONST PIXELFORMATDESCRIPTOR * );
-	BOOL    (*DrvShareLists)( HGLRC, HGLRC );
-	BOOL    (*DrvSwapBuffers)( HDC );
-	BOOL    (*DrvSwapLayerBuffers)( HDC, UINT );
-	BOOL    (*DrvValidateVersion)( DWORD );
+	BOOL      APIENTRY (*DrvCopyContext)( HGLRC, HGLRC, UINT );
+	HGLRC     APIENTRY (*DrvCreateContext)( HDC );
+	HGLRC     APIENTRY (*DrvCreateLayerContext)( HDC, int );
+	BOOL      APIENTRY (*DrvDeleteContext)( HGLRC );
+	BOOL      APIENTRY (*DrvDescribeLayerPlane)( HDC, int, int, UINT, LPLAYERPLANEDESCRIPTOR );
+	int       APIENTRY (*DrvDescribePixelFormat)( IN HDC, IN int, IN UINT, OUT LPPIXELFORMATDESCRIPTOR );
+	int       APIENTRY (*DrvGetLayerPaletteEntries)( HDC, int, int, int, COLORREF * );
+	FARPROC   APIENTRY (*DrvGetProcAddress)( LPCSTR lpProcName );
+	void      APIENTRY (*DrvReleaseContext)();
+	BOOL      APIENTRY (*DrvRealizeLayerPalette)( HDC, int, BOOL );
+	PICDTable APIENTRY (*DrvSetContext)( HDC hdc, HGLRC hglrc, SetContextCallBack callback );
+	int       APIENTRY (*DrvSetLayerPaletteEntries)( HDC, int, int, int, CONST COLORREF * );
+	BOOL      APIENTRY (*DrvSetPixelFormat)( IN HDC, IN int, IN CONST PIXELFORMATDESCRIPTOR * );
+	BOOL      APIENTRY (*DrvShareLists)( HGLRC, HGLRC );
+	BOOL      APIENTRY (*DrvSwapBuffers)( HDC );
+	BOOL      APIENTRY (*DrvSwapLayerBuffers)( HDC, UINT );
+	BOOL      APIENTRY (*DrvValidateVersion)( DWORD );
 
 	struct tagGLDRIVERDATA *next;   /* next ICD -- linked list */
 } GLDRIVERDATA;

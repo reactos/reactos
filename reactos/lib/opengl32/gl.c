@@ -58,7 +58,7 @@ int STDCALL glEmptyFunc56( long l1, long l2, long l3, long l4, long l5,
                            long l11, long l12, long l13, long l14 )
                            { return 0; }
 
-#if !defined(_M_IX86)
+#if 1//!defined(_M_IX86)
 # define X(func, ret, typeargs, args, icdidx, tebidx, stack)          \
 ret STDCALL func typeargs                                             \
 {                                                                     \
