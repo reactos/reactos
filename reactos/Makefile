@@ -68,7 +68,17 @@ rcopy$(EXE_POSTFIX): rcopy.c
 	$(NATIVE_CC) -g -DDOS_PATHS rcopy.c -o rcopy$(EXE_POSTFIX)
 endif
 
-install: rcopy$(EXE_POSTFIX) make_install_dirs autoexec_install $(COMPONENTS:%=%_install) \
+ifeq ($(HOST),mingw32-linux)
+rmkdir$(EXE_POSTFIX): rmkdir.c
+	$(NATIVE_CC) -g -DUNIX_PATHS rmkdir.c -o rmkdir$(EXE_POSTFIX)
+endif
+ifeq ($(HOST),mingw32-windows)
+rmkdir$(EXE_POSTFIX): rmkdir.c
+	$(NATIVE_CC) -g -DDOS_PATHS rmkdir.c -o rmkdir$(EXE_POSTFIX)
+endif
+
+
+install: rcopy$(EXE_POSTFIX) rmkdir$(EXE_POSTFIX) make_install_dirs autoexec_install $(COMPONENTS:%=%_install) \
         $(DLLS:%=%_install) $(LOADERS:%=%_install) \
         $(KERNEL_SERVICES:%=%_install) $(SUBSYS:%=%_install) \
         $(APPS:%=%_install)
@@ -277,33 +287,19 @@ $(SUBSYS:%=%_dist): %_dist:
 #
 # Make an install floppy
 #
-
-install: all
-	./install.sh /mnt/hda1
-	./install.sh /mnt/hda4
-	./install.bochs
-
 make_install_dirs:
-ifeq ($(DOSCLI),yes)
-	mkdir $(FLOPPY_DIR)\dlls
-	mkdir $(FLOPPY_DIR)\apps
-	mkdir $(FLOPPY_DIR)\drivers
-	mkdir $(FLOPPY_DIR)\subsys
-else
-	mkdir $(FLOPPY_DIR)/dlls $(FLOPPY_DIR)/apps $(FLOPPY_DIR)/drivers
-	mkdir $(FLOPPY_DIR)/subsys
-endif
+	./rmkdir $(FLOPPY_DIR)/dlls
+	./rmkdir $(FLOPPY_DIR)/apps
+	./rmkdir $(FLOPPY_DIR)/drivers
+	./rmkdir $(FLOPPY_DIR)/subsys
+
 
 .PHONY: make_install_dirs
 
 autoexec_install: $(FLOPPY_DIR)/autoexec.bat
 
 $(FLOPPY_DIR)/autoexec.bat: bootflop.bat
-ifeq ($(DOSCLI),yes)
-	$(CP) bootflop.bat $(FLOPPY_DIR)\autoexec.bat
-else
 	$(CP) bootflop.bat $(FLOPPY_DIR)/autoexec.bat
-endif
 
 #
 # Make a distribution saveset
@@ -324,18 +320,13 @@ else
 	$(RM) -r $(DIST_DIR)
 endif
 
-make_dist_dirs:
-ifeq ($(DOSCLI),yes)
-	mkdir $(DIST_DIR)
-	mkdir $(DIST_DIR)\dlls
-	mkdir $(DIST_DIR)\apps
-	mkdir $(DIST_DIR)\drivers
-	mkdir $(DIST_DIR)\dlls
-	mkdir $(DIST_DIR)\subsys
-else
-	mkdir $(DIST_DIR) $(DIST_DIR)/dlls $(DIST_DIR)/apps $(DIST_DIR)/drivers
-	mkdir $(DIST_DIR)/subsys
-endif
+make_dist_dirs: ./rmkdir
+	./rmkdir $(DIST_DIR)
+	./rmkdir $(DIST_DIR)/dlls
+	./rmkdir $(DIST_DIR)/apps
+	./rmkdir $(DIST_DIR)/drivers
+	./rmkdir $(DIST_DIR)/dlls
+	./rmkdir $(DIST_DIR)/subsys
 
 .PHONY: clean_dist_dir make_dist_dirs
 
