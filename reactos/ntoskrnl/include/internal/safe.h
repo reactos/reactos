@@ -17,8 +17,8 @@ RtlCaptureUnicodeString(OUT PUNICODE_STRING Dest,
 			IN PUNICODE_STRING UnsafeSrc);
 
 VOID
-RtlRelaseCapturedUnicodeString(IN PUNICODE_STRING CapturedString,
-	                       IN KPROCESSOR_MODE CurrentMode,
-	                       IN BOOLEAN CaptureIfKernel);
+RtlReleaseCapturedUnicodeString(IN PUNICODE_STRING CapturedString,
+	                        IN KPROCESSOR_MODE CurrentMode,
+	                        IN BOOLEAN CaptureIfKernel);
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_SAFE_Hb */

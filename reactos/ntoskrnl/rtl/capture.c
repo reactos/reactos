@@ -133,9 +133,9 @@ RtlCaptureUnicodeString(OUT PUNICODE_STRING Dest,
 }
 
 VOID
-RtlRelaseCapturedUnicodeString(IN PUNICODE_STRING CapturedString,
-	                       IN KPROCESSOR_MODE CurrentMode,
-	                       IN BOOLEAN CaptureIfKernel)
+RtlReleaseCapturedUnicodeString(IN PUNICODE_STRING CapturedString,
+	                        IN KPROCESSOR_MODE CurrentMode,
+	                        IN BOOLEAN CaptureIfKernel)
 {
   if(CurrentMode != KernelMode || CaptureIfKernel )
   {

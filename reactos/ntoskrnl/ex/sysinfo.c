@@ -151,7 +151,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
     if(!SeSinglePrivilegeCheck(SeSystemEnvironmentPrivilege,
                                PreviousMode))
     {
-      RtlRelaseCapturedUnicodeString(&WName,
+      RtlReleaseCapturedUnicodeString(&WName,
                                      PreviousMode,
                                      FALSE);
       return STATUS_PRIVILEGE_NOT_HELD;
@@ -161,7 +161,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
      * convert the value name to ansi
      */
     Status = RtlUnicodeStringToAnsiString(&AName, &WName, TRUE);
-    RtlRelaseCapturedUnicodeString(&WName,
+    RtlReleaseCapturedUnicodeString(&WName,
                                    PreviousMode,
                                    FALSE);
     if(!NT_SUCCESS(Status))
@@ -298,12 +298,12 @@ NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
         Status = STATUS_PRIVILEGE_NOT_HELD;
       }
       
-      RtlRelaseCapturedUnicodeString(&CapturedValue,
+      RtlReleaseCapturedUnicodeString(&CapturedValue,
                                      PreviousMode,
                                      FALSE);
     }
 
-    RtlRelaseCapturedUnicodeString(&CapturedName,
+    RtlReleaseCapturedUnicodeString(&CapturedName,
                                    PreviousMode,
                                    FALSE);
   }
