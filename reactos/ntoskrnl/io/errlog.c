@@ -1,4 +1,4 @@
-/* $Id: errlog.c,v 1.12 2003/11/18 20:08:30 ekohl Exp $
+/* $Id: errlog.c,v 1.13 2003/11/19 12:53:14 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,30 +20,22 @@
 
 /* TYPES *********************************************************************/
 
-#ifndef __USE_W32API
-typedef struct _IO_ERROR_LOG_PACKET
-{
-   UCHAR MajorFunctionCode;
-   UCHAR RetryCount;
-   USHORT DumpDataSize;
-   USHORT NumberOfStrings;
-   USHORT StringOffset;
-   USHORT EventCategory;
-   NTSTATUS ErrorCode;
-   ULONG UniqueErrorValue;
-   NTSTATUS FinalStatus;
-   ULONG SequenceNumber;
-   ULONG IoControlCode;
-   LARGE_INTEGER DeviceOffset;
-   ULONG DumpData[1];
-} IO_ERROR_LOG_PACKET, *PIO_ERROR_LOG_PACKET;
-#endif
-
 typedef struct _ERROR_LOG_ENTRY
 {
   LIST_ENTRY Entry;
+  LARGE_INTEGER TimeStamp;
   ULONG EntrySize;
 } ERROR_LOG_ENTRY, *PERROR_LOG_ENTRY;
+
+typedef struct _LOG_WORKER_DPC
+{
+  KDPC Dpc;
+  KTIMER Timer;
+} LOG_WORKER_DPC, *PLOG_WORKER_DPC;
+
+
+static VOID STDCALL
+IopLogWorker (PVOID Parameter);
 
 
 /* GLOBALS *******************************************************************/
@@ -55,6 +47,8 @@ static KSPIN_LOCK IopLogListLock;
 static LIST_ENTRY IopLogListHead;
 
 static BOOLEAN IopLogWorkerRunning = FALSE;
+static BOOLEAN IopLogPortConnected = FALSE;
+static HANDLE IopLogPort;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -73,6 +67,98 @@ IopInitErrorLog (VOID)
 
 
 static VOID STDCALL
+IopLogDpcRoutine (PKDPC Dpc,
+		  PVOID DeferredContext,
+		  PVOID SystemArgument1,
+		  PVOID SystemArgument2)
+{
+  PWORK_QUEUE_ITEM LogWorkItem;
+
+  DPRINT1 ("\nIopLogDpcRoutine() called\n");
+
+  /* Release the WorkerDpc struct */
+  ExFreePool (DeferredContext);
+
+  /* Allocate, initialize and reissue a work item */
+  LogWorkItem = ExAllocatePool (NonPagedPool,
+				sizeof(WORK_QUEUE_ITEM));
+  if (LogWorkItem == NULL)
+    {
+      IopLogWorkerRunning = FALSE;
+      return;
+    }
+
+  ExInitializeWorkItem (LogWorkItem,
+			IopLogWorker,
+			LogWorkItem);
+
+  ExQueueWorkItem (LogWorkItem,
+		   DelayedWorkQueue);
+}
+
+
+static VOID
+IopRestartLogWorker (VOID)
+{
+  PLOG_WORKER_DPC WorkerDpc;
+  LARGE_INTEGER Timeout;
+
+  DPRINT1 ("IopRestartWorker() called\n");
+
+  WorkerDpc = ExAllocatePool (NonPagedPool,
+			      sizeof(LOG_WORKER_DPC));
+  if (WorkerDpc == NULL)
+    {
+      IopLogWorkerRunning = FALSE;
+      return;
+    }
+
+  KeInitializeDpc (&WorkerDpc->Dpc,
+		   IopLogDpcRoutine,
+		   WorkerDpc);
+  KeInitializeTimer (&WorkerDpc->Timer);
+
+  /* 30 seconds */
+  Timeout.QuadPart = -300000000LL;
+  KeSetTimer (&WorkerDpc->Timer,
+	      Timeout,
+	      &WorkerDpc->Dpc);
+}
+
+
+static BOOLEAN
+IopConnectLogPort (VOID)
+{
+  UNICODE_STRING PortName;
+  ULONG MaxMessageSize;
+  NTSTATUS Status;
+
+  RtlInitUnicodeString (&PortName,
+			L"\\ErrorLogPort");
+
+  Status = NtConnectPort (&IopLogPort,
+			  &PortName,
+			  NULL,
+			  NULL,
+			  NULL,
+			  &MaxMessageSize,
+			  NULL,
+			  0);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("NtConnectPort() failed (Status %lx)\n", Status);
+      return FALSE;
+    }
+
+  DPRINT1 ("Maximum message size %lu\n", MaxMessageSize);
+
+  IopLogPortConnected = TRUE;
+
+  return TRUE;
+}
+
+
+static VOID STDCALL
 IopLogWorker (PVOID Parameter)
 {
   PERROR_LOG_ENTRY LogEntry;
@@ -84,8 +170,17 @@ IopLogWorker (PVOID Parameter)
   ExFreePool (Parameter);
 
 
-  /* FIXME: Open the error log port */
+  /* Connect to the error log port */
+  if (IopLogPortConnected == FALSE)
+    {
+      if (IopConnectLogPort () == FALSE)
+	{
+	  IopRestartLogWorker ();
+	  return;
+	}
+    }
 
+  IopLogWorkerRunning = FALSE;
 
   while (TRUE)
     {
@@ -93,7 +188,7 @@ IopLogWorker (PVOID Parameter)
       KeAcquireSpinLock (&IopLogListLock,
 			 &Irql);
 
-      if (!IsListEmpty(&IopLogListHead))
+      if (!IsListEmpty (&IopLogListHead))
 	{
 	  LogEntry = CONTAINING_RECORD (IopLogListHead.Blink,
 					ERROR_LOG_ENTRY,
@@ -119,6 +214,12 @@ IopLogWorker (PVOID Parameter)
       /* FIXME: Send the error message to the log port */
 
 
+#if 0
+      Status = NtRequestPort (IopLogPort,
+			      Message);
+
+
+#endif
 
       /* Release error log entry */
       KeAcquireSpinLock (&IopAllocationLock,
