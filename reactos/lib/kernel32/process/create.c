@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.33 2001/01/23 09:58:12 ekohl Exp $
+/* $Id: create.c,v 1.34 2001/02/10 22:30:21 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -456,7 +456,7 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
 			      &CommandLine_U,
 			      NULL,
 			      (lpCurrentDirectory == NULL) ? NULL : &CurrentDirectoryW,
-			      NULL,
+			      &CommandLine_U,
 			      lpEnvironment,
 			      NULL,
 			      NULL,
