@@ -187,11 +187,3 @@ BOOL WINAPI SetupCopyOEMInfA(PCSTR sourceinffile, PCSTR sourcemedialoc,
   FIXME("stub: source %s location %s ...\n",sourceinffile, sourcemedialoc);
   return FALSE;
 }
-
-/***********************************************************************
- *		InstallHinfSection  (SETUPAPI.@)
- */
-void WINAPI InstallHinfSection(HWND hwnd, HINSTANCE handle, LPCSTR cmdline, INT show)
-{
-    FIXME("stub, hwnd %p, handle %p, cmdline %s\n", hwnd, handle, debugstr_a(cmdline));
-}
