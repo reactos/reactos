@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.10 2003/08/27 20:56:26 dwelch Exp $
+/* $Id: display.c,v 1.11 2003/09/02 20:11:43 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -193,9 +193,9 @@ static UCHAR SavedTextSeqReg[VGA_SEQ_NUM_REGISTERS];
 static UCHAR SavedTextFont[2][FONT_AMOUNT];
 static BOOL TextPaletteEnabled = FALSE;
 
-/* STATIC FUNCTIONS *********************************************************/
+/* PRIVATE FUNCTIONS *********************************************************/
 
-VOID
+VOID FASTCALL
 HalClearDisplay (UCHAR CharAttribute)
 {
    WORD *ptr = (WORD*)VideoBuffer;
@@ -209,7 +209,9 @@ HalClearDisplay (UCHAR CharAttribute)
 }
 
 
-VOID
+/* STATIC FUNCTIONS *********************************************************/
+
+VOID STATIC
 HalScrollDisplay (VOID)
 {
   WORD *ptr;
@@ -227,8 +229,7 @@ HalScrollDisplay (VOID)
     }
 }
 
-
-static VOID
+VOID STATIC FASTCALL
 HalPutCharacter (CHAR Character)
 {
   WORD *ptr;
@@ -253,35 +254,35 @@ HalEnablePalette(VOID)
   TextPaletteEnabled = TRUE;
 }
 
-UCHAR STATIC
+UCHAR STATIC FASTCALL
 HalReadGc(ULONG Index)
 {
   WRITE_PORT_UCHAR((PUCHAR)VGA_GC_INDEX, Index);
   return(READ_PORT_UCHAR((PUCHAR)VGA_GC_DATA));
 }
 
-VOID STATIC
+VOID STATIC FASTCALL
 HalWriteGc(ULONG Index, UCHAR Value)
 {
   WRITE_PORT_UCHAR((PUCHAR)VGA_GC_INDEX, Index);
   WRITE_PORT_UCHAR((PUCHAR)VGA_GC_DATA, Value);
 }
 
-UCHAR STATIC
+UCHAR STATIC FASTCALL
 HalReadSeq(ULONG Index)
 {
   WRITE_PORT_UCHAR((PUCHAR)VGA_SEQ_INDEX, Index);
   return(READ_PORT_UCHAR((PUCHAR)VGA_SEQ_DATA));
 }
 
-VOID STATIC
+VOID STATIC FASTCALL
 HalWriteSeq(ULONG Index, UCHAR Value)
 {
   WRITE_PORT_UCHAR((PUCHAR)VGA_SEQ_INDEX, Index);
   WRITE_PORT_UCHAR((PUCHAR)VGA_SEQ_DATA, Value);
 }
 
-VOID STATIC
+VOID STATIC FASTCALL
 HalWriteAc(ULONG Index, UCHAR Value)
 {
   if (TextPaletteEnabled)
@@ -297,7 +298,7 @@ HalWriteAc(ULONG Index, UCHAR Value)
   WRITE_PORT_UCHAR((PUCHAR)VGA_AC_WRITE, Value);
 }
 
-UCHAR STATIC
+UCHAR STATIC FASTCALL
 HalReadAc(ULONG Index)
 {
   if (TextPaletteEnabled)
@@ -313,21 +314,21 @@ HalReadAc(ULONG Index)
   return(READ_PORT_UCHAR((PUCHAR)VGA_AC_READ));
 }
 
-VOID STATIC
+VOID STATIC FASTCALL
 HalWriteCrtc(ULONG Index, UCHAR Value)
 {
   WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, Index);
   WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, Value);
 }
 
-UCHAR STATIC
+UCHAR STATIC FASTCALL
 HalReadCrtc(ULONG Index)
 {
   WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, Index);
   return(READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA));
 }
 
-VOID STATIC
+VOID STATIC FASTCALL
 HalResetSeq(BOOL Start)
 {
   if (Start)
@@ -340,7 +341,7 @@ HalResetSeq(BOOL Start)
     }
 }
 
-VOID STATIC
+VOID STATIC FASTCALL
 HalBlankScreen(BOOL On)
 {
   UCHAR Scrn;
@@ -563,7 +564,7 @@ HalRestorePalette(VOID)
 
 /* PRIVATE FUNCTIONS ********************************************************/
 
-VOID
+VOID FASTCALL
 HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
 /*
  * FUNCTION: Initalize the display

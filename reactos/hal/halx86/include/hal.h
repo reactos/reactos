@@ -15,8 +15,9 @@ VOID Hal_bios32_probe(VOID);
  */
 BOOLEAN Hal_bios32_is_service_present(ULONG service);
 
-VOID HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock);
-VOID HalResetDisplay (VOID);
+/* display.c */
+VOID FASTCALL HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock);
+VOID FASTCALL HalClearDisplay (UCHAR CharAttribute);
 
 VOID HalpInitBusHandlers (VOID);
 

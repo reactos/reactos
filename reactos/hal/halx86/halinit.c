@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.5 2003/08/11 18:50:12 chorns Exp $
+/* $Id: halinit.c,v 1.6 2003/09/02 20:11:43 ea Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -23,9 +23,6 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS ***************************************************************/
-
-extern VOID
-HalClearDisplay (UCHAR CharAttribute);
 
 NTSTATUS
 STDCALL
