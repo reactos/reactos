@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.24 2003/09/08 09:56:56 weiden Exp $
+; $Id: msvcrt.def,v 1.25 2003/10/05 18:13:27 navaraf Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -59,7 +59,7 @@ EXPORTS
 ;?set_new_handler@@YAP6AXXZP6AXXZ@Z
 ;?set_terminate@@YAP6AXXZP6AXXZ@Z
 ;?set_unexpected@@YAP6AXXZP6AXXZ@Z
-;?terminate@@YAXXZ
+?terminate@@YAXXZ=MSVCRT_terminate
 ;?unexpected@@YAXXZ
 ;?what@exception@@UBEPBDXZ
 ;----------------------------------------------------------------------

@@ -1,4 +1,4 @@
-/* $Id: cpp.c,v 1.3 2003/08/20 21:41:22 gvg Exp $
+/* $Id: cpp.c,v 1.4 2003/10/05 18:13:26 navaraf Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS C runtime
@@ -535,4 +535,9 @@ void _CxxThrowException( void *object, cxx_exception_type *type )
     args[1] = (DWORD)object;
     args[2] = (DWORD)type;
     RaiseException( CXX_EXCEPTION, EH_NONCONTINUABLE, 3, args );
+}
+
+void MSVCRT_terminate(void)
+{
+    abort();
 }
