@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.27 2001/04/05 01:54:42 ekohl Exp $
+/* $Id: stubs.c,v 1.28 2001/05/03 06:13:05 ekohl Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -760,89 +760,6 @@ GetVDMCurrentDirectories (
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-DWORD
-STDCALL
-HeapCreateTagsW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-HeapExtend (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-HeapQueryTagW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-HeapSummary (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-HeapUsage (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-WINBOOL
-STDCALL
-HeapWalk (
-	HANDLE			hHeap,
-	LPPROCESS_HEAP_ENTRY	lpEntry
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
 }
 
 

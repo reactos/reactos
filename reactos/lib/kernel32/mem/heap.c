@@ -1,4 +1,4 @@
-/* $Id: heap.c,v 1.18 2001/02/17 17:42:46 ekohl Exp $
+/* $Id: heap.c,v 1.19 2001/05/03 06:12:50 ekohl Exp $
  *
  * kernel/heap.c
  * Copyright (C) 1996, Onno Hovers, All rights reserved
@@ -101,6 +101,101 @@ UINT WINAPI HeapCompact(HANDLE hheap, DWORD flags)
 BOOL WINAPI HeapValidate(HANDLE hheap, DWORD flags, LPCVOID pmem)
 {
    return(RtlValidateHeap(hheap, flags, (PVOID)pmem));
+}
+
+
+DWORD
+STDCALL
+HeapCreateTagsW (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+DWORD
+STDCALL
+HeapExtend (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+	)
+{
+#if 0
+   NTSTATUS Status;
+
+   Status = RtlExtendHeap(Unknown1, Unknown2, Unknown3, Unknown4);
+   if (!NT_SUCCESS(Status))
+     {
+	SetLastErrorByStatus(Status);
+	return FALSE;
+     }
+   return TRUE;
+#endif
+
+   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+   return 0;
+}
+
+
+DWORD
+STDCALL
+HeapQueryTagW (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+DWORD
+STDCALL
+HeapSummary (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+DWORD
+STDCALL
+HeapUsage (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+WINBOOL
+STDCALL
+HeapWalk (
+	HANDLE			hHeap,
+	LPPROCESS_HEAP_ENTRY	lpEntry
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
 }
 
 
