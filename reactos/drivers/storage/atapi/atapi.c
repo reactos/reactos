@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.33 2002/12/13 19:35:12 ekohl Exp $
+/* $Id: atapi.c,v 1.34 2002/12/15 00:23:31 sedwards Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -1209,7 +1209,7 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	      if (DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0x8000 && 
 		  DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0xff)
 	      {
-		 DeviceExtension->TransferSize[UnitNumber] *= (DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0xff);
+		 DeviceExtension->TransferSize[UnitNumber] *= (DeviceExtension->DeviceParams[UnitNumber].RWMultCurrent & 0xff);
 		 DeviceExtension->MultiSectorCommand[UnitNumber] = TRUE;
 	      }
 	      else
