@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.7 2003/12/25 14:06:14 chorns Exp $
+# $Id: makefile,v 1.8 2004/02/23 20:56:50 navaraf Exp $
 
 PATH_TO_TOP = ../../../..
 
@@ -10,7 +10,7 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = roshttpd
 
-TARGET_CPPFLAGS = -I./include -DUNICODE -D_UNICODE -DDBG -Wno-deprecated
+TARGET_CPPFLAGS = -I./include -DUNICODE -D_UNICODE -DDBG -D__USE_W32API -Wno-deprecated
 
 TARGET_GCCLIBS = stdc++
 

@@ -8,7 +8,7 @@
 
 #include <windows.h>
 
-#define TS(x) (LPTSTR)_T(x)
+#define TS(x) (LPTSTR)TEXT(x)
 
 void ReportErrorStr(LPTSTR lpsText);
 
