@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.61 2001/09/25 19:41:38 dwelch Exp $
+/* $Id: section.c,v 1.62 2001/09/25 19:52:28 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -313,7 +313,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 			      &SegOffset,
 			      &IoStatus,
 			      TRUE);
-	  if (!NT_SUCCESS(Status))
+	  if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
 	    {
 	      CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, FALSE);
 	      return(Status);
