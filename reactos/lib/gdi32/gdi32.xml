@@ -1,0 +1,35 @@
+<module name="gdi32" type="win32dll">
+	<dependency>addsys</dependency>
+	<importlibrary definition="gdi32.def" />
+	<include base="gdi32">include</include>
+	<define name="_DISABLE_TIDENTS" />
+	<define name="UNICODE" />
+	<define name="__USE_W32API" />
+	<define name="WINVER">0x0600</define>
+	<define name="_WIN32_WINNT">0x0501</define>
+	<library>ntdll</library>
+	<library>rosrtl</library>
+	<library>kernel32</library>
+	<library>advapi32</library>
+	<directory name="main">
+		<file>dllmain.c</file>
+	</directory>
+	<directory name="misc">
+		<file>heap.c</file>
+		<file>misc.c</file>
+		<file>stubs.c</file>
+		<file>stubsa.c</file>
+		<file>stubsw.c</file>
+		<file>win32k.c</file>
+		<file>wingl.c</file>
+	</directory>
+	<directory name="objects">
+		<file>bitblt.c</file>
+		<file>dc.c</file>
+		<file>font.c</file>
+		<file>linedda.c</file>
+		<file>metafile.c</file>
+		<file>region.c</file>
+		<file>text.c</file>
+	</directory>
+</module>

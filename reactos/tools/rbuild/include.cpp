@@ -40,7 +40,8 @@ void
 Include::ProcessXML()
 {
 	const XMLAttribute* att;
-	att = node.GetAttribute("base",false);
+	att = node.GetAttribute ( "base",
+	                          false );
 	if ( att )
 	{
 		if ( !module )

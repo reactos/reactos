@@ -30,8 +30,11 @@
 		<xi:include href="hal/directory.xml" />
 	</directory>
 	<directory name="iface">
+		<directory name="addsys">
+			<xi:include href="iface/addsys/addsys.xml" />
+		</directory>
 		<directory name="native">
-			<xi:include href="iface/native/module.xml" />
+			<xi:include href="iface/native/genntdll.xml" />
 		</directory>
 	</directory>
 	<directory name="lib">
@@ -39,5 +42,8 @@
 	</directory>
 	<directory name="ntoskrnl">
 		<xi:include href="ntoskrnl/ntoskrnl.xml" />
+	</directory>
+	<directory name="subsys">
+		<xi:include href="subsys/directory.xml" />
 	</directory>
 </project>

@@ -13,7 +13,9 @@ using std::vector;
 }*/
 
 Project::Project ( const string& filename )
-	: xmlfile(filename), node(NULL), head(NULL)
+	: xmlfile(filename),
+	  node(NULL),
+	  head(NULL)
 {
 	ReadXml();
 }
@@ -27,6 +29,8 @@ Project::~Project ()
 		delete includes[i];
 	for ( i = 0; i < defines.size(); i++ )
 		delete defines[i];
+	for ( i = 0; i < linkerFlags.size(); i++ )
+		delete linkerFlags[i];
 	for ( i = 0; i < properties.size(); i++ )
 		delete properties[i];
 	for ( i = 0; i < ifs.size(); i++ )
@@ -81,6 +85,8 @@ Project::ProcessXML ( const string& path )
 		includes[i]->ProcessXML();
 	for ( i = 0; i < defines.size(); i++ )
 		defines[i]->ProcessXML();
+	for ( i = 0; i < linkerFlags.size(); i++ )
+		linkerFlags[i]->ProcessXML();
 	for ( i = 0; i < properties.size(); i++ )
 		properties[i]->ProcessXML();
 	for ( i = 0; i < ifs.size(); i++ )
@@ -132,6 +138,11 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 			pIf->defines.push_back ( define );
 		else
 			defines.push_back ( define );
+		subs_invalid = true;
+	}
+	else if ( e.name == "linkerflag" )
+	{
+		linkerFlags.push_back ( new LinkerFlag ( *this, e ) );
 		subs_invalid = true;
 	}
 	else if ( e.name == "if" )

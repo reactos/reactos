@@ -91,8 +91,8 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
             return FALSE;
         }
 
-        _acmdln = strdup(GetCommandLineA());
-        _wcmdln = wcsdup(GetCommandLineW());
+        _acmdln = _strdup(GetCommandLineA());
+        _wcmdln = _wcsdup(GetCommandLineW());
 
         /* FIXME: more initializations... */
 

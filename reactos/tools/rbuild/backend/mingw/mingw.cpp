@@ -129,6 +129,20 @@ MingwBackend::GenerateGlobalCFlagsAndProperties (
 	}
 }
 
+string
+MingwBackend::GenerateProjectLFLAGS ()
+{
+	string lflags;
+	for ( size_t i = 0; i < ProjectNode.linkerFlags.size (); i++ )
+	{
+		LinkerFlag& linkerFlag = *ProjectNode.linkerFlags[i];
+		if ( lflags.length () > 0 )
+			lflags += " ";
+		lflags += linkerFlag.flag;
+	}
+	return lflags;
+}
+
 void
 MingwBackend::GenerateGlobalVariables ()
 {
@@ -146,6 +160,7 @@ MingwBackend::GenerateGlobalVariables ()
 		ProjectNode.includes,
 		ProjectNode.defines,
 		ProjectNode.ifs );
+	fprintf ( fMakefile, "PROJECT_LFLAGS = %s\n", GenerateProjectLFLAGS ().c_str () );
 	fprintf ( fMakefile, "\n" );
 
 	fprintf ( fMakefile, ".PHONY: clean\n\n" );

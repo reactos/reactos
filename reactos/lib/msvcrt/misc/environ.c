@@ -165,9 +165,9 @@ char **DuplicateEnvironment(char **original_environment, int wide)
    for (envptr = original_environment; count > 1; newenvptr++, count--)
    {
       if (wide)
-         *newenvptr = (char*)wcsdup((wchar_t*)*envptr++);
+         *newenvptr = (char*)_wcsdup((wchar_t*)*envptr++);
       else
-         *newenvptr = strdup(*envptr++);
+         *newenvptr = _strdup(*envptr++);
       if (*newenvptr == NULL)
       {
          for (newenvptr--; newenvptr >= newenv; newenvptr--);
@@ -243,7 +243,7 @@ int SetEnv(const wchar_t *option)
    /* Find the option we're trying to modify. */
    for (index = 0, wenvptr = _wenviron; *wenvptr != NULL; wenvptr++, index++)
    {
-      if (!wcsnicmp(*wenvptr, option, epos - option))
+      if (!_wcsnicmp(*wenvptr, option, epos - option))
       {
          found = 1;
          break;
@@ -277,7 +277,7 @@ int SetEnv(const wchar_t *option)
    else
    {
       /* Make a copy of the option that we will store in the environment block. */
-      woption = wcsdup((wchar_t*)option);
+      woption = _wcsdup((wchar_t*)option);
       if (woption == NULL)
       {
          free(name);

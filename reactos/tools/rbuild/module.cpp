@@ -65,6 +65,8 @@ Module::~Module ()
 		delete dependencies[i];
 	for ( i = 0; i < ifs.size(); i++ )
 		delete ifs[i];
+	for ( i = 0; i < linkerFlags.size(); i++ )
+		delete linkerFlags[i];
 }
 
 void
@@ -87,6 +89,8 @@ Module::ProcessXML()
 		dependencies[i]->ProcessXML ();
 	for ( i = 0; i < ifs.size(); i++ )
 		ifs[i]->ProcessXML();
+	for ( i = 0; i < linkerFlags.size(); i++ )
+		linkerFlags[i]->ProcessXML();
 }
 
 void
@@ -179,6 +183,11 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			ifs.push_back ( pIf );
 		subs_invalid = false;
 	}
+	else if ( e.name == "linkerflag" )
+	{
+		linkerFlags.push_back ( new LinkerFlag ( project, this, e ) );
+		subs_invalid = true;
+	}
 	else if ( e.name == "property" )
 	{
 		throw InvalidBuildFileException (
@@ -209,6 +218,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return NativeDLL;
 	if ( attribute.value == "win32dll" )
 		return Win32DLL;
+	if ( attribute.value == "win32gui" )
+		return Win32GUI;
 	throw InvalidAttributeValueException ( location,
 	                                       attribute.name,
 	                                       attribute.value );
@@ -224,6 +235,7 @@ Module::GetDefaultModuleExtension () const
 		case StaticLibrary:
 			return ".a";
 		case Kernel:
+		case Win32GUI:
 			return ".exe";
 		case KernelModeDLL:
 		case NativeDLL:

@@ -1,0 +1,3 @@
+<directory name="welcome">
+	<xi:include href="welcome/welcome.xml" />
+</directory>

@@ -32,6 +32,7 @@ class InvokeFile;
 class Dependency;
 class ImportLibrary;
 class If;
+class LinkerFlag;
 class Property;
 
 class Project
@@ -44,6 +45,7 @@ public:
 	std::vector<Module*> modules;
 	std::vector<Include*> includes;
 	std::vector<Define*> defines;
+	std::vector<LinkerFlag*> linkerFlags;
 	std::vector<Property*> properties;
 	std::vector<If*> ifs;
 
@@ -72,7 +74,8 @@ enum ModuleType
 	Kernel,
 	KernelModeDLL,
 	NativeDLL,
-	Win32DLL
+	Win32DLL,
+	Win32GUI
 };
 
 
@@ -93,6 +96,7 @@ public:
 	std::vector<Invoke*> invocations;
 	std::vector<Dependency*> dependencies;
 	std::vector<If*> ifs;
+	std::vector<LinkerFlag*> linkerFlags;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,
@@ -248,6 +252,7 @@ public:
 	void ProcessXML ();
 };
 
+
 class If
 {
 public:
@@ -268,6 +273,27 @@ public:
 
 	void ProcessXML();
 };
+
+
+class LinkerFlag
+{
+public:
+	const Project& project;
+	const Module* module;
+	const XMLElement& node;
+	std::string flag;
+
+	LinkerFlag ( const Project& project,
+	             const XMLElement& linkerFlagNode );
+	LinkerFlag ( const Project& project,
+	             const Module* module,
+	             const XMLElement& linkerFlagNode );
+	~LinkerFlag ();
+	void ProcessXML();
+private:
+	void Initialize();
+};
+
 
 class Property
 {

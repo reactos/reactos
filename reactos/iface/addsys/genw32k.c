@@ -299,11 +299,11 @@ process(
 void usage(char * argv0)
 {
 	printf("Usage: %s w32ksvc.db w32k.lst ssdt.h win32k.c win32k.c\n"
-	       "  w32ksvc.db    input file(system calls database)\n"
 	       "  w32k.lst      system functions database\n"
 	       "  ssdt.h        WIN32K service table\n"
 	       "  win32k.c      GDI32 stubs\n"
-	       "  win32k.c      USER32 stubs\n",
+	       "  win32k.c      USER32 stubs\n"
+	       "  w32ksvc.db    input file(system calls database)\n",
 		argv0
 		);
 }
@@ -322,31 +322,31 @@ int main(int argc, char* argv[])
 		return(1);
 	}
 
-	in = fopen(argv[1],"rb");
-	if (in == NULL)
-	{
-		perror("Failed to open input file (system calls database)");
-		return(1);
-	}
-
-	out1 = fopen(argv[2],"wb");
+	out1 = fopen(argv[1],"wb");
 	if (out1 == NULL)
 	{
 		perror("Failed to open output file (WIN32K service table)");
 		return(1);
 	}
 
-	out2 = fopen(argv[3],"wb");
+	out2 = fopen(argv[2],"wb");
 	if (out2 == NULL)
 	{
 		perror("Failed to open output file (GDI32 stubs)");
 		return(1);
 	}
 
-	out3 = fopen(argv[4],"wb");
+	out3 = fopen(argv[3],"wb");
 	if (out3 == NULL)
 	{
 		perror("Failed to open output file (USER32 stubs)");
+		return(1);
+	}
+
+	in = fopen(argv[4],"rb");
+	if (in == NULL)
+	{
+		perror("Failed to open input file (system calls database)");
 		return(1);
 	}
 

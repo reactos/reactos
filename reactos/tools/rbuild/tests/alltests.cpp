@@ -174,6 +174,7 @@ private:
 		tests.push_back(new DefineTest());
 		tests.push_back(new IncludeTest());
 		tests.push_back(new InvokeTest());
+		tests.push_back(new LinkerFlagTest());
 	}
 };
 

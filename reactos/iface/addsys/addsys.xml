@@ -1,0 +1,14 @@
+<module name="addsys" type="buildtool">
+	<include base="addsys">.</include>
+	<file>genw32k.c</file>
+	<invoke>
+		<input>
+			<inputfile>w32ksvc.db</inputfile>
+		</input>
+		<output>
+			<outputfile>../../subsys/win32k/main/svctab.c</outputfile>
+			<outputfile>../../lib/gdi32/misc/win32k.c</outputfile>
+			<outputfile>../../lib/user32/misc/win32k.c</outputfile>
+		</output>
+	</invoke>
+</module>

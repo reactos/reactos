@@ -17,6 +17,7 @@ BASE_OBJECTS = \
 	define.o \
 	exception.o \
 	include.o \
+	linkerflag.o \
 	module.o \
 	project.o \
 	ssprintf.o \
@@ -28,6 +29,7 @@ TESTS = \
 	tests/definetest.o \
 	tests/includetest.o \
 	tests/invoketest.o \
+	tests/linkerflagtest.o \
 	tests/moduletest.o \
 	tests/projecttest.o
 

@@ -21,6 +21,7 @@ private:
 		const std::vector<Include*>& includes,
 		const std::vector<Define*>& defines,
 		const std::vector<If*>& ifs );
+	std::string GenerateProjectLFLAGS ();
 	void GenerateGlobalVariables ();
 	void GenerateAllTarget ();
 	FILE* fMakefile;

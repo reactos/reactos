@@ -81,4 +81,10 @@ public:
 	void Run();
 };
 
+class LinkerFlagTest : public BaseTest
+{
+public:
+	void Run();
+};
+
 #endif /* __TEST_H */

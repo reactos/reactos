@@ -1,8 +1,20 @@
+<directory name="advapi32">
+	<xi:include href="advapi32/advapi32.xml" />
+</directory>
+<directory name="gdi32">
+	<xi:include href="gdi32/gdi32.xml" />
+</directory>
 <directory name="kernel32">
 	<xi:include href="kernel32/kernel32.xml" />
 </directory>
 <directory name="kjs">
 	<xi:include href="kjs/kjs.xml" />
+</directory>
+<directory name="libwine">
+	<xi:include href="libwine/libwine.xml" />
+</directory>
+<directory name="msvcrt">
+	<xi:include href="msvcrt/msvcrt.xml" />
 </directory>
 <directory name="ntdll">
 	<xi:include href="ntdll/ntdll.xml" />
@@ -18,4 +30,7 @@
 </directory>
 <directory name="string">
 	<xi:include href="string/string.xml" />
+</directory>
+<directory name="user32">
+	<xi:include href="user32/user32.xml" />
 </directory>

@@ -36,9 +36,14 @@ protected:
 	std::string GetInvocationParameters ( const Invoke& invoke ) const;
 	void GenerateInvocations ( const Module& module ) const;
 	void GeneratePreconditionDependencies ( const Module& module ) const;
+	std::string GetLinkerMacro ( const Module& module ) const;
 	std::string GenerateMacros ( const Module& module,
 	                             const std::string& cflags_macro,
 	                             const std::string& objs_macro ) const;
+	std::string GenerateLinkerCommand ( const Module& module,
+	                                    const std::string& linker,
+	                                    const std::string& linkerParameters,
+	                                    const std::string& objectFilenames ) const;
 	static FILE* fMakefile;
 private:
 	std::string ConcatenatePaths ( const std::string& path1,
@@ -46,17 +51,22 @@ private:
 	std::string GenerateGccDefineParametersFromVector ( const std::vector<Define*>& defines ) const;
 	std::string GenerateGccDefineParameters ( const Module& module ) const;
 	std::string GenerateGccIncludeParametersFromVector ( const std::vector<Include*>& includes ) const;
+	std::string GenerateLinkerParametersFromVector ( const std::vector<LinkerFlag*>& linkerFlags ) const;
+	std::string GenerateLinkerParameters ( const Module& module ) const;
 	void GenerateMacros ( const char* op,
 	                      const std::vector<File*>& files,
 	                      const std::vector<Include*>& includes,
 	                      const std::vector<Define*>& defines,
+	                      const std::vector<LinkerFlag*>* linkerFlags,
 	                      const std::vector<If*>& ifs,
 	                      const std::string& cflags_macro,
 	                      const std::string& nasmflags_macro,
+	                      const std::string& linkerflags_macro,
 	                      const std::string& objs_macro) const;
 	void GenerateMacros ( const Module& module,
 	                      const std::string& cflags_macro,
 	                      const std::string& nasmflags_macro,
+	                      const std::string& linkerflags_macro,
 	                      const std::string& objs_macro) const;
 	void GenerateGccModuleIncludeVariable ( const Module& module ) const;
 	std::string GenerateGccIncludeParameters ( const Module& module ) const;
@@ -158,6 +168,16 @@ public:
 	virtual void Process ( const Module& module );
 private:
 	void GenerateWin32DLLModuleTarget ( const Module& module );
+};
+
+
+class MingwWin32GUIModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwWin32GUIModuleHandler ();
+	virtual void Process ( const Module& module );
+private:
+	void GenerateWin32GUIModuleTarget ( const Module& module );
 };
 
 #endif /* MINGW_MODULEHANDLER_H */
