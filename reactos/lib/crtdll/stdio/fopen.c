@@ -6,6 +6,7 @@
 #include <crtdll/fcntl.h>
 #include <crtdll/internal/file.h>
 
+//might change fopen(file,mode) -> fsopen(file,mode,_SH_DENYNO);
 
 FILE *	__alloc_file(void);
 
