@@ -1,4 +1,4 @@
-/* $Id: psxdll.rc,v 1.4 2002/10/29 04:45:35 rex Exp $
+/* $Id: psxdll.rc,v 1.5 2003/09/27 21:23:23 ea Exp $
 */
 #include <defines.h>
 #include <reactos/resource.h>
@@ -23,7 +23,7 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName",	RES_STR_COMPANY_NAME
-            VALUE "FileDescription",	"POSIX+ Client DLL\0"
+            VALUE "FileDescription",	"POSIX+ Subsystem Client Library\0"
             VALUE "FileVersion",	RES_STR_FILE_VERSION
             VALUE "InternalName",	"psxdll\0"
             VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
