@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.56 2004/09/13 11:41:26 ekohl Exp $
+/* $Id: reg.c,v 1.57 2004/09/13 14:42:37 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2103,8 +2103,26 @@ RegQueryInfoKeyW (HKEY hKey,
 
   if (lpcbSecurityDescriptor != NULL)
     {
-      /* FIXME */
-      *lpcbSecurityDescriptor = 0;
+      Status = NtQuerySecurityObject(KeyHandle,
+				     OWNER_SECURITY_INFORMATION |
+				     GROUP_SECURITY_INFORMATION |
+				     DACL_SECURITY_INFORMATION,
+				     NULL,
+				     0,
+				     lpcbSecurityDescriptor);
+      if (!NT_SUCCESS(Status))
+	{
+	  if (lpClass != NULL)
+	    {
+	      RtlFreeHeap(ProcessHeap,
+			  0,
+			  FullInfo);
+	    }
+
+	  ErrorCode = RtlNtStatusToDosError(Status);
+	  SetLastError(ErrorCode);
+	  return ErrorCode;
+	}
     }
 
   if (lpftLastWriteTime != NULL)
