@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.127 2003/02/27 20:29:55 ekohl Exp $
+/* $Id: loader.c,v 1.128 2003/03/31 09:30:00 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1068,15 +1068,22 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
           LibraryModuleObject = LdrGetModuleObject(&ModuleName);
           if (LibraryModuleObject == NULL)
             {
-              CPRINT("Module '%wZ' not loaded yet\n", &ModuleName);
+              DPRINT("Module '%wZ' not loaded yet\n", &ModuleName);
               wcscpy(NameBuffer, L"\\SystemRoot\\system32\\drivers\\");
               wcscat(NameBuffer, ModuleName.Buffer);
               RtlInitUnicodeString(&NameString, NameBuffer);
               Status = LdrLoadModule(&NameString, &LibraryModuleObject);
               if (!NT_SUCCESS(Status))
                 {
-                  CPRINT("Unknown import module: %wZ (Status %lx)\n", &ModuleName, Status);
-                  return(Status);
+                  wcscpy(NameBuffer, L"\\SystemRoot\\system32\\");
+                  wcscat(NameBuffer, ModuleName.Buffer);
+                  RtlInitUnicodeString(&NameString, NameBuffer);
+                  Status = LdrLoadModule(&NameString, &LibraryModuleObject);
+                  if (!NT_SUCCESS(Status))
+                    {
+                      DPRINT1("Unknown import module: %wZ (Status %lx)\n", &ModuleName, Status);
+                      return(Status);
+                    }
                 }
             }
           /*  Get the import address list  */
