@@ -35,6 +35,16 @@ extern "C" {
 #include "regproc.h"
 
 
+#define STATUS_WINDOW   2001
+#define TREE_WINDOW     2002
+#define LIST_WINDOW     2003
+#define SPLIT_WINDOW    2004
+
+#define MAX_LOADSTRING  100
+#define	SPLIT_WIDTH		3
+#define MAX_NAME_LEN    500
+
+
 typedef struct _Entry {
 	struct _Entry*	next;
 	struct _Entry*	down;
@@ -46,6 +56,7 @@ typedef struct _Entry {
     HKEY    hKey;
 //    BOOL    bRoot;
     HTREEITEM hTreeItem;
+    TCHAR   szName[MAX_NAME_LEN];
 } Entry;
 
 
@@ -65,14 +76,6 @@ typedef struct {
 	Root	root;
 } ChildWnd;
 
-
-#define STATUS_WINDOW   2001
-#define TREE_WINDOW     2002
-#define LIST_WINDOW     2003
-#define SPLIT_WINDOW    2004
-
-#define MAX_LOADSTRING  100
-#define	SPLIT_WIDTH		3
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global Variables:

@@ -43,18 +43,6 @@
 #include "treeview.h"
 #include "listview.h"
 
-//HWND hLeftWnd;                   // Tree Control Window
-//HWND hRightWnd;                   // List Control Window
-
-#define hLeftWnd hTreeWnd
-#define hRightWnd hListWnd
-
-
-//HWND hTreeWnd;                   // Tree Control Window
-//HWND hListWnd;                   // List Control Window
-
-//static int nSplitPos = 250;
-//static int nFocusPanel;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -146,28 +134,9 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
     switch (message) {
     case WM_CREATE:
-        //HWND CreateListView(HWND hwndParent/*, Pane* pane*/, int id, LPTSTR lpszPathName);
-/*
-typedef struct tagCREATESTRUCT {
-    LPVOID    lpCreateParams; 
-    HINSTANCE hInstance; 
-    HMENU     hMenu; 
-    HWND      hwndParent; 
-    int       cy; 
-    int       cx; 
-    int       y; 
-    int       x; 
-    LONG      style; 
-    LPCTSTR   lpszName; 
-    LPCTSTR   lpszClass; 
-    DWORD     dwExStyle; 
-} CREATESTRUCT, *LPCREATESTRUCT; 
- */
         pChildWnd = (ChildWnd*)((LPCREATESTRUCT)lParam)->lpCreateParams;
         ASSERT(pChildWnd);
-
         pChildWnd->nSplitPos = 250;
-
         pChildWnd->hTreeWnd = CreateTreeView(hWnd, TREE_WINDOW, &pChildWnd->root);
         pChildWnd->hListWnd = CreateListView(hWnd, LIST_WINDOW, &pChildWnd->root);
         break;
@@ -269,9 +238,9 @@ typedef struct tagCREATESTRUCT {
 				rt.left = x-SPLIT_WIDTH/2;
 				rt.right = x+SPLIT_WIDTH/2+1;
 				InvalidateRect(hWnd, &rt, FALSE);
-				UpdateWindow(hLeftWnd);
+				UpdateWindow(hTreeWnd);
 				UpdateWindow(hWnd);
-				UpdateWindow(hRightWnd);
+				UpdateWindow(hListWnd);
 			}
 #endif
 		}
@@ -289,7 +258,7 @@ typedef struct tagCREATESTRUCT {
 	case WM_SETFOCUS:
 //		SetCurrentDirectory(szPath);
         if (pChildWnd != NULL) {
-		    SetFocus(pChildWnd->nFocusPanel? pChildWnd->hRightWnd: pChildWnd->hLeftWnd);
+		    SetFocus(pChildWnd->nFocusPanel? pChildWnd->hListWnd: pChildWnd->hTreeWnd);
         }
 		break;
 
@@ -301,9 +270,13 @@ typedef struct tagCREATESTRUCT {
             if ((((LPNMHDR)lParam)->code) == TVN_SELCHANGED) {
                 Entry* entry = (Entry*)((NMTREEVIEW*)lParam)->itemNew.lParam;
                 if (entry != NULL) {
-                    //RefreshList(pChildWnd->right.hWnd, entry);
-                    //void set_curdir(ChildWnd* child, Entry* entry)
-                    //set_curdir(pChildWnd, entry);
+                    if (!entry->scanned) {
+                        //scan_entry(pChildWnd, entry);
+                    } else {
+                        //RefreshList(pChildWnd->hListWnd, entry);
+                    }
+                    //RefreshList(pChildWnd->hListWnd, entry->down);
+                    RefreshList(pChildWnd->hListWnd, entry);
                 }
             }
             if (!SendMessage(pChildWnd->hTreeWnd, message, wParam, lParam)) {

@@ -129,7 +129,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     hInst = hInstance; // Store instance handle in our global variable
 //    hFrameWnd = CreateWindow(szFrameClass, szTitle, WS_OVERLAPPEDWINDOW,
 //                            CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
-    hFrameWnd = CreateWindowEx(0, (LPCTSTR)(int)hFrameWndClass, _T("regedit application"),
+    hFrameWnd = CreateWindowEx(0, (LPCTSTR)(int)hFrameWndClass, szTitle,
                     WS_OVERLAPPEDWINDOW,
                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                     NULL, hMenuFrame, hInstance, NULL/*lpParam*/);

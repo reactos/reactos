@@ -1,5 +1,6 @@
 //Microsoft Developer Studio generated resource script.
 //
+#include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -33,10 +34,14 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 IDI_REGEDIT             ICON    DISCARDABLE     "res/regedit.ico"
 IDI_SMALL               ICON    DISCARDABLE     "res/small.ico"
 
-IDB_OPEN_FILE           BITMAP	DISCARDABLE     "res/folder1.bmp"
-IDB_CLOSED_FILE         BITMAP	DISCARDABLE     "res/folder2.bmp"
-IDB_ROOT                BITMAP	DISCARDABLE     "res/folder3.bmp"
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
 
+IDB_OPEN_FILE           BITMAP  DISCARDABLE     "res/folder1.bmp"
+IDB_CLOSED_FILE         BITMAP  DISCARDABLE     "res/folder2.bmp"
+IDB_ROOT                BITMAP  DISCARDABLE     "res/folder3.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -59,16 +64,17 @@ IDR_REGEDIT_MENU MENU DISCARDABLE
 BEGIN
     POPUP "&Registry"
     BEGIN
-        MENUITEM "&Import Registry File...",    ID_REGISTRY_IMPORTREGISTRYFILE, GRAYED
-
-        MENUITEM "&Export Registry File...",    ID_REGISTRY_EXPORTREGISTRYFILE, GRAYED
-
+        MENUITEM "&Import Registry File...",    ID_REGISTRY_IMPORTREGISTRYFILE
+        , GRAYED
+        MENUITEM "&Export Registry File...",    ID_REGISTRY_EXPORTREGISTRYFILE
+        , GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Connect Network Registry...", 
-                                                ID_REGISTRY_CONNECTNETWORKREGISTRY, GRAYED
-
+                                                ID_REGISTRY_CONNECTNETWORKREGISTRY
+        , GRAYED
         MENUITEM "&Disconnect Network Registry...", 
-                                                ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+                                                ID_REGISTRY_DISCONNECTNETWORKREGISTRY
+        , GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Print\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -105,7 +111,8 @@ BEGIN
     END
     POPUP "&Favourites"
     BEGIN
-        MENUITEM "&Add to Favourites",          ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "&Add to Favourites",          ID_FAVOURITES_ADDTOFAVOURITES
+        , GRAYED
         MENUITEM "&Remove Favourite",           ID_FAVOURITES_REMOVEFAVOURITE
         , GRAYED
     END
@@ -115,13 +122,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&About Registry Editor",      ID_HELP_ABOUT
     END
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_LIST_COLUMN_NAME    "Name"
-    IDS_LIST_COLUMN_TYPE    "Type"
-    IDS_LIST_COLUMN_DATA    "Data"
 END
 
 
@@ -174,46 +174,60 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_APP_TITLE           "ReactOS Registry Editor"
+    IDS_LIST_COLUMN_NAME    "Name"
+    IDS_LIST_COLUMN_TYPE    "Type"
+    IDS_LIST_COLUMN_DATA    "Data"
+END
 
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APP_TITLE           "ReactOS Registry Editor"
+    IDC_REGEDIT             "REGEDIT"
+    IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     ID_REGISTRY_MENU        "Contains commands for working with the whole registry"
     ID_EDIT_MENU            "Contains commands for editing values or keys"
-    ID_EDIT_NEW_MENU        "Contains commands for creating new keys or values"
     ID_VIEW_MENU            "Contains commands for customising the registry window"
     ID_FAVOURITES_MENU      "Contains commands for accessing frequently used keys"
     ID_HELP_MENU            "Contains commands for displaying help and information about registry editor"
+    ID_EDIT_NEW_MENU        "Contains commands for creating new keys or values"
+END
 
-    ID_REGISTRY_IMPORTREGISTRYFILE        "Imports a text file into the registry"
-    ID_REGISTRY_EXPORTREGISTRYFILE        "Exports all or part of the registry to a text file"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY	  "Connects to a remote computer's registry"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Disconnects from a remote computer's registry"
-    ID_REGISTRY_PRINT       "Prints all or part of the registry"
-    ID_REGISTRY_EXIT        "Quits the registry editor"
-
-	ID_EDIT_MODIFY          "Modifies the value's data"
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_EDIT_MODIFY          "Modifies the value's data"
     ID_EDIT_NEW_KEY         "Adds a new key"
     ID_EDIT_NEW_STRINGVALUE "Adds a new string value"
     ID_EDIT_NEW_BINARYVALUE "Adds a new binary value"
     ID_EDIT_NEW_DWORDVALUE  "Adds a new double word value"
+    ID_REGISTRY_IMPORTREGISTRYFILE "Imports a text file into the registry"
+    ID_REGISTRY_EXPORTREGISTRYFILE 
+                            "Exports all or part of the registry to a text file"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY 
+                            "Connects to a remote computer's registry"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY 
+                            "Disconnects from a remote computer's registry"
+    ID_REGISTRY_PRINT       "Prints all or part of the registry"
+    ID_HELP_ABOUT           "Displays program information, version number and copyright"
+END
 
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_REGISTRY_EXIT        "Quits the registry editor"
+    ID_HELP_HELPTOPICS      "Opens registry editor help"
+    ID_FAVOURITES_ADDTOFAVOURITES "Adds keys to the favourites list"
+    ID_FAVOURITES_REMOVEFAVOURITE "Removes keys from the favourites list"
+    ID_VIEW_STATUSBAR       "Shows or hides the status bar"
+    ID_VIEW_SPLIT           "Change position of split between two panes"
+    ID_VIEW_REFRESH         "Refreshes the window"
     ID_EDIT_DELETE          "Deletes the selection"
     ID_EDIT_RENAME          "Renames the selection"
     ID_EDIT_COPYKEYNAME     "Copies the name of the selected key to the clipboard"
     ID_EDIT_FIND            "Finds a text string in a key, value or data"
     ID_EDIT_FINDNEXT        "Finds next occurrence of text specified in previous search"
-
-    ID_VIEW_STATUSBAR       "Shows or hides the status bar"
-    ID_VIEW_SPLIT           "Change position of split between two panes"
-    ID_VIEW_REFRESH         "Refreshes the window"
-
-    ID_FAVOURITES_ADDTOFAVOURITES "Adds keys to the favourites list"
-    ID_FAVOURITES_REMOVEFAVOURITE "Removes keys from the favourites list"
-
-	ID_HELP_HELPTOPICS      "Opens registry editor help"
-    ID_HELP_ABOUT           "Displays program information, version number and copyright"
-
-    IDC_REGEDIT             "REGEDIT"
-    IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
 END
 
 #endif    // English (U.S.) resources

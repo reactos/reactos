@@ -40,6 +40,8 @@
 #include "main.h"
 #include "listview.h"
 
+#include "trace.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global Variables:
@@ -52,7 +54,48 @@ static WNDPROC g_orgListWndProc;
 // Local module support methods
 //
 
+static void AddEntryToList(HWND hwndLV, int idx, Entry* entry)
+{ 
+    LVITEM item;
 
+    item.mask = LVIF_TEXT | LVIF_PARAM; 
+    item.iItem = 0;//idx; 
+    item.iSubItem = 0; 
+    item.state = 0; 
+    item.stateMask = 0; 
+//    item.pszText = entry->data.cFileName; 
+    item.pszText = LPSTR_TEXTCALLBACK; 
+//    item.cchTextMax = strlen(entry->data.cFileName); 
+    item.cchTextMax = 0; 
+    item.iImage = 0; 
+//    item.iImage = I_IMAGECALLBACK; 
+    item.lParam = (LPARAM)entry;
+#if (_WIN32_IE >= 0x0300)
+    item.iIndent = 0;
+#endif
+    ListView_InsertItem(hwndLV, &item);
+}
+
+// insert listctrl entries after index idx
+static void InsertListEntries(HWND hWnd, Entry* entry, int idx)
+{
+  	ShowWindow(hWnd, SW_HIDE);
+
+    if (idx == -1) {
+    }
+    idx = 0;
+
+	for (; entry; entry = entry->next) {
+#ifndef _LEFT_FILES
+//    	if (entry->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+//	    	continue;
+#endif
+        //ListBox_InsertItemData(hWnd, idx, entry);
+        AddEntryToList(hWnd, idx, entry); 
+        ++idx;
+    }
+    ShowWindow(hWnd, SW_SHOW);
+}
 
 #define MAX_LIST_COLUMNS (IDS_LIST_COLUMN_LAST - IDS_LIST_COLUMN_FIRST + 1)
 static int default_column_widths[MAX_LIST_COLUMNS] = { 200, 175, 400 };
@@ -88,25 +131,61 @@ static void CreateListColumns(HWND hWndListView)
 static void OnGetDispInfo(NMLVDISPINFO* plvdi)
 {
     static TCHAR buffer[200];
-//    Entry* entry = (Entry*)plvdi->item.lParam;
-//    ASSERT(entry);
+
+//    FILETIME LastWriteTime;
+//    TCHAR Class[MAX_NAME_LEN];
+//    DWORD cClass = MAX_NAME_LEN;
+//    TCHAR Name[MAX_NAME_LEN];
+//    DWORD cName = MAX_NAME_LEN;
+//    DWORD dwIndex = 0L;
+
+    Entry* pEntry = (Entry*)plvdi->item.lParam;
+    ASSERT(pEntry);
+
     plvdi->item.pszText = NULL;
+    plvdi->item.cchTextMax = 0; 
 
     switch (plvdi->item.iSubItem) {
     case 0:
-//        plvdi->item.pszText = entry->data.cFileName; 
+/*
+        plvdi->item.pszText = _T("(Default)");
+        plvdi->item.cchTextMax = _tcslen(plvdi->item.pszText); 
+        if (pEntry->bKey == TRUE) {
+            DWORD nSubKeys;
+            DWORD MaxSubKeyLen;
+            DWORD MaxClassLen;
+            DWORD ValueCount;
+            DWORD MaxValueNameLen;
+            DWORD MaxValueLen;
+            DWORD SecurityDescriptorLen;
+
+            HKEY hKey = pEntry->hKey;
+            LONG result = RegQueryInfoKey(pEntry->hKey, Class, &cClass, 0, 
+                &nSubKeys, &MaxSubKeyLen, &MaxClassLen, &ValueCount, 
+                &MaxValueNameLen, &MaxValueLen, &SecurityDescriptorLen, 
+                &LastWriteTime);
+            if (result == ERROR_SUCCESS) {
+                plvdi->item.pszText = Class; 
+                plvdi->item.cchTextMax = cClass; 
+            }
+        }
+ */
+        plvdi->item.pszText = pEntry->szName; 
+        plvdi->item.cchTextMax = lstrlen(pEntry->szName); 
+
         break;
     case 1:
+        plvdi->item.pszText = _T("REG_SZ");
         break;
     case 2:
+        plvdi->item.pszText = _T("(value not set)");
         break;
     case 3:
-        break;
-    case 4:
+        plvdi->item.pszText = _T("");
         break;
     default:
-        _tcscpy(buffer, _T(" "));
-        plvdi->item.pszText = buffer;
+//        _tcscpy(buffer, _T(" "));
+//        plvdi->item.pszText = buffer;
         break;
     }
 } 
@@ -121,6 +200,9 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return TRUE;
 }
 ////////////////////////////////////////////////////////////////////////////////
+void ListViewPopUpMenu(HWND hWnd, POINT pt)
+{
+}
 
 static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -178,19 +260,36 @@ static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
             }
             break;
 
+        case NM_RCLICK:
+            {
+            int idx;
+            LV_HITTESTINFO lvH;
+            NM_LISTVIEW *pNm = (NM_LISTVIEW *)lParam;
+            lvH.pt.x = pNm->ptAction.x;
+            lvH.pt.y = pNm->ptAction.y;     
+            idx = ListView_HitTest(hWnd, &lvH);
+            if (idx != -1) {
+                POINT pt;
+                GetCursorPos(&pt);
+                ListViewPopUpMenu(hWnd, pt);
+                return idx;
+            }
+            }
+            break;
+
         default:
             return CallWindowProc(g_orgListWndProc, hWnd, message, wParam, lParam);
         }
 		break;
-		case WM_KEYDOWN:
-			if (wParam == VK_TAB) {
-				//TODO: SetFocus(Globals.hDriveBar)
-				//SetFocus(child->nFocusPanel? child->left.hWnd: child->right.hWnd);
-			}
-            break;
-        default:
-            return CallWindowProc(g_orgListWndProc, hWnd, message, wParam, lParam);
-            break;
+	case WM_KEYDOWN:
+		if (wParam == VK_TAB) {
+			//TODO: SetFocus(Globals.hDriveBar)
+			//SetFocus(child->nFocusPanel? child->left.hWnd: child->right.hWnd);
+		}
+        break;
+    default:
+        return CallWindowProc(g_orgListWndProc, hWnd, message, wParam, lParam);
+        break;
 	}
 	return 0;
 }
@@ -237,12 +336,10 @@ void RefreshList(HWND hWnd, Entry* entry)
 {
     if (hWnd != NULL) {
         ListView_DeleteAllItems(hWnd);
-/*
         if (entry != NULL) {
-            TRACE("RefreshList(...) entry name: %s\n", entry->data.cFileName);
+            TRACE("RefreshList(...) entry name: %p\n", entry);
     	    InsertListEntries(hWnd, entry, -1);
         }
- */
     }
 }
 
