@@ -19,7 +19,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  * DEFINES: i386                 - Target platform is i386
- *          _NDIS_               - Define only for NDIS library
+ *          NDIS_WRAPPER         - Define only for NDIS library
  *          NDIS_MINIPORT_DRIVER - Define only for NDIS miniport drivers
  *          NDIS40               - Use NDIS 4.0 structures by default
  *          NDIS50               - Use NDIS 5.0 structures by default
@@ -45,7 +45,7 @@ extern "C" {
 #include "netevent.h"
 #include <winsock2.h>
 
-#if defined(_NDIS_)
+#if defined(NDIS_WRAPPER)
   #define NDISAPI DECLSPEC_EXPORT
 #else
   #define NDISAPI DECLSPEC_IMPORT
@@ -3975,7 +3975,7 @@ typedef struct _NDIS_MINIPORT_INTERRUPT {
   BOOLEAN  Filler1;
   KEVENT  DpcsCompletedEvent;
   BOOLEAN  SharedInterrupt;
-  BOOLEAN	 IsrRequested;
+  BOOLEAN  IsrRequested;
 } NDIS_MINIPORT_INTERRUPT, *PNDIS_MINIPORT_INTERRUPT;
 
 typedef struct _NDIS_MINIPORT_TIMER {
@@ -4065,7 +4065,7 @@ typedef struct _ETH_FILTER {
   PETH_BINDING_INFO  DirectedList;
   PETH_BINDING_INFO  BMList;
   PETH_BINDING_INFO  MCastSet;
-#if defined(_NDIS_)
+#if defined(NDIS_WRAPPER)
   UINT  NumOpens;
   PVOID  BindListLock;
 #endif
@@ -4252,7 +4252,7 @@ struct _NDIS_MINIPORT_BLOCK {
   UNICODE_STRING  MiniportName;
   PNDIS_BIND_PATHS  BindPaths;
   NDIS_HANDLE  OpenQueue;
-  REFERENCE  Ref;
+  REFERENCE  ShortRef;
   NDIS_HANDLE  DeviceContext;
   UCHAR  Padding1;
   UCHAR  LockAcquired;
@@ -4328,7 +4328,7 @@ struct _NDIS_MINIPORT_BLOCK {
   NDIS_WM_SEND_COMPLETE_HANDLER  WanSendCompleteHandler;
   WAN_RCV_HANDLER  WanRcvHandler;
   WAN_RCV_COMPLETE_HANDLER  WanRcvCompleteHandler;
-#if defined(_NDIS_)
+#if defined(NDIS_WRAPPER)
   PNDIS_MINIPORT_BLOCK  NextGlobalMiniport;
   SINGLE_LIST_ENTRY  WorkQueue[NUMBER_OF_WORK_ITEM_TYPES];
   SINGLE_LIST_ENTRY  SingleWorkItems[NUMBER_OF_SINGLE_WORK_ITEMS];
@@ -4478,7 +4478,7 @@ typedef struct _NDIS_COMMON_OPEN_BLOCK {
   RESET_COMPLETE_HANDLER  ResetCompleteHandler;
   STATUS_HANDLER  StatusHandler;
   STATUS_COMPLETE_HANDLER  StatusCompleteHandler;
-#if defined(_NDIS_)
+#if defined(NDIS_WRAPPER)
   ULONG  Flags;
   ULONG  References;
   KSPIN_LOCK  SpinLock;
@@ -4502,7 +4502,7 @@ typedef struct _NDIS_COMMON_OPEN_BLOCK {
 struct _NDIS_OPEN_BLOCK
 {
     NDIS_COMMON_OPEN_BLOCK NdisCommonOpenBlock;
-#if defined(_NDIS_)
+#if defined(NDIS_WRAPPER)
     struct _NDIS_OPEN_CO
     {
         struct _NDIS_CO_AF_BLOCK *  NextAf;
@@ -4839,7 +4839,7 @@ NdisMCancelTimer(
   IN PNDIS_MINIPORT_TIMER  Timer,
   OUT PBOOLEAN  TimerCancelled);
 
-#if !defined(_NDIS_)
+#if !defined(NDIS_WRAPPER)
 
 /*
  * VOID
