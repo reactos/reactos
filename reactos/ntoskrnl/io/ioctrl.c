@@ -1,4 +1,4 @@
-/* $Id: ioctrl.c,v 1.20 2003/11/08 16:43:02 ekohl Exp $
+/* $Id: ioctrl.c,v 1.21 2003/11/16 21:03:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -37,6 +37,7 @@ NtDeviceIoControlFile (IN HANDLE DeviceHandle,
 		       OUT PVOID OutputBuffer,
 		       IN ULONG OutputBufferLength OPTIONAL)
 {
+  IO_STATUS_BLOCK SafeIoStatusBlock;
   NTSTATUS Status;
   PFILE_OBJECT FileObject;
   PDEVICE_OBJECT DeviceObject;
@@ -96,7 +97,7 @@ NtDeviceIoControlFile (IN HANDLE DeviceHandle,
 				       OutputBufferLength,
 				       FALSE,
 				       EventObject,
-				       IoStatusBlock);
+				       &SafeIoStatusBlock);
 
   /* Trigger FileObject/Event dereferencing */
   Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -127,10 +128,13 @@ NtDeviceIoControlFile (IN HANDLE DeviceHandle,
 	  return Status;
 	}
 
-      Status = IoStatusBlock->Status;
+      Status = SafeIoStatusBlock.Status;
     }
 
-   return Status;
+  IoStatusBlock->Status = SafeIoStatusBlock.Status;
+  IoStatusBlock->Information = SafeIoStatusBlock.Information;
+
+  return Status;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.48 2003/11/08 16:48:36 ekohl Exp $
+/* $Id: rw.c,v 1.49 2003/11/16 21:03:59 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -46,6 +46,7 @@ NtReadFile (IN HANDLE FileHandle,
 	    IN PLARGE_INTEGER ByteOffset OPTIONAL,
 	    IN PULONG Key OPTIONAL)
 {
+  IO_STATUS_BLOCK SafeIoStatusBlock;
   NTSTATUS Status;
   PFILE_OBJECT FileObject;
   PIRP Irp;
@@ -101,7 +102,7 @@ NtReadFile (IN HANDLE FileHandle,
 				     Length,
 				     ByteOffset,
 				     EventObject,
-				     IoStatusBlock);
+				     &SafeIoStatusBlock);
 
   /* Trigger FileObject/Event dereferencing */
   Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -137,8 +138,11 @@ NtReadFile (IN HANDLE FileHandle,
 	  return(Status);
 	}
 
-      Status = IoStatusBlock->Status;
+      Status = SafeIoStatusBlock.Status;
     }
+
+  IoStatusBlock->Status = SafeIoStatusBlock.Status;
+  IoStatusBlock->Information = SafeIoStatusBlock.Information;
 
   return Status;
 }
@@ -169,6 +173,7 @@ NtWriteFile (IN HANDLE FileHandle,
 	     IN PLARGE_INTEGER ByteOffset OPTIONAL,
 	     IN PULONG Key OPTIONAL)
 {
+  IO_STATUS_BLOCK SafeIoStatusBlock;
   NTSTATUS Status;
   PFILE_OBJECT FileObject;
   PIRP Irp;
@@ -183,7 +188,7 @@ NtWriteFile (IN HANDLE FileHandle,
     return STATUS_ACCESS_VIOLATION;
 
   Status = ObReferenceObjectByHandle(FileHandle,
-				     FILE_READ_DATA,
+				     FILE_WRITE_DATA,
 				     IoFileObjectType,
 				     UserMode,
 				     (PVOID*)&FileObject,
@@ -224,14 +229,14 @@ NtWriteFile (IN HANDLE FileHandle,
 				     Length,
 				     ByteOffset,
 				     EventObject,
-				     IoStatusBlock);
+				     &SafeIoStatusBlock);
 
    /* Trigger FileObject/Event dereferencing */
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
 
   Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
   Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
-  
+
   StackPtr = IoGetNextIrpStackLocation(Irp);
   StackPtr->FileObject = FileObject;
   if (Key != NULL)
@@ -260,8 +265,11 @@ NtWriteFile (IN HANDLE FileHandle,
 	  return(Status);
 	}
 
-      Status = IoStatusBlock->Status;
+      Status = SafeIoStatusBlock.Status;
     }
+
+  IoStatusBlock->Status = SafeIoStatusBlock.Status;
+  IoStatusBlock->Information = SafeIoStatusBlock.Information;
 
   return Status;
 }
