@@ -1,4 +1,4 @@
-/* $Id: notevil.rc,v 1.9 2003/01/04 15:21:18 ea Exp $ */
+/* $Id: notevil.rc,v 1.10 2003/06/02 12:30:05 ea Exp $ */
 #include <windows.h>
 #include "../../reactos/include/reactos/resource.h"
 
@@ -45,6 +45,10 @@ END
  * Order is the same as in the status report published weekly in
  * the "ros-kernel" mailing list by Rex Jolliff.
  *
+ * 20030602.EA: new coders are added scanning the cvs-commit mailing
+ * list, in no particular order. Current order is kept for historical
+ * reason.
+ *
  */
 STRINGTABLE MOVEABLE
 BEGIN
@@ -78,6 +82,8 @@ BEGIN
  28, "Jurgen van Gael"
  29, "Marty Dill"
  30, "Ge van Geldorp"
+ 31, "Richard Campbell"
+ 32, "Gunnar Andre' Dalsnes"
 END
 
 /* EOF */
