@@ -1,4 +1,4 @@
-/* $Id: database.c,v 1.13 2004/04/11 16:09:11 jfilby Exp $
+/* $Id: database.c,v 1.14 2004/04/11 16:10:05 jfilby Exp $
  *
  * service control manager
  * 
@@ -34,7 +34,7 @@
 
 #include "services.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 
