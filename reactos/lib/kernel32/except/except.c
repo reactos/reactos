@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.16 2004/08/22 18:49:11 tamlin Exp $
+/* $Id: except.c,v 1.17 2004/09/26 16:54:53 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -69,6 +69,20 @@ _module_name_from_addr(const void* addr, char* psz, size_t nChars)
    return psz;
 }
 
+static VOID
+_dump_context(PCONTEXT pc)
+{
+   /*
+    * Print out the CPU registers
+    */
+   DbgPrint("CS:EIP %x:%x\n", pc->SegCs&0xffff, pc->Eip );
+   DbgPrint("DS %x ES %x FS %x GS %x\n", pc->SegDs&0xffff, pc->SegEs&0xffff,
+	    pc->SegFs&0xffff, pc->SegGs&0xfff);
+   DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", pc->Eax, pc->Ebx, pc->Ecx);
+   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x   ESP: %.8x\n", pc->Edx,
+	    pc->Ebp, pc->Esi, pc->Esp);
+   DbgPrint("EDI: %.8x   EFLAGS: %.8x\n", pc->Edi, pc->EFlags);
+}
 
 /*
  * @unimplemented
@@ -134,7 +148,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
       DPRINT1("   %8x   %s\n",
          ExceptionInfo->ExceptionRecord->ExceptionAddress,
          _module_name_from_addr(ExceptionInfo->ExceptionRecord->ExceptionAddress, szMod, sizeof(szMod)));
-
+      _dump_context ( ExceptionInfo->ContextRecord );
 #ifdef _X86_
       DPRINT1("Frames:\n");
       Frame = (PULONG)ExceptionInfo->ContextRecord->Ebp;
