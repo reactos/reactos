@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.38 2003/10/28 13:43:56 navaraf Exp $
+/* $Id: winpos.c,v 1.39 2003/10/29 10:04:55 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -563,6 +563,17 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
   return TRUE;
 }
 
+/*
+ * Fix Z order taking into account owned popups -
+ * basically we need to maintain them above the window that owns them
+ */
+HWND FASTCALL
+WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
+{
+   /* FIXME */
+   return hWndInsertAfter;
+}
+
 /***********************************************************************
  *	     WinPosInternalMoveWindow
  *
@@ -721,8 +732,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       NtUserGetAncestor(WinPos.hwnd, GA_PARENT) ==
       PsGetWin32Thread()->Desktop->DesktopWindow)
     {
-/* FIXME */
-/*      WinPos.hwndInsertAfter = WinPosDoOwnedPopups(WinPos.hwnd, WinPos.hwndInsertAfter);*/
+      WinPos.hwndInsertAfter = WinPosDoOwnedPopups(WinPos.hwnd, WinPos.hwndInsertAfter);
     }
   
   /* FIXME: Adjust flags based on WndInsertAfter */

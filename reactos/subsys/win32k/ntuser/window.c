@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.124 2003/10/29 08:49:56 navaraf Exp $
+/* $Id: window.c,v 1.125 2003/10/29 10:04:55 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -353,6 +353,7 @@ IntCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   WindowObject->Height = Height;
   WindowObject->ParentHandle = NULL;
   WindowObject->Parent = NULL;
+  WindowObject->hWndOwner = NULL;
   WindowObject->IDMenu = 0;
   WindowObject->Instance = NULL;
   WindowObject->Parameters = NULL;
@@ -658,6 +659,7 @@ IntLinkWindow(
   )
 {
   Wnd->Parent = WndParent; 
+  Wnd->ParentHandle = WndParent->Self; 
 
   if ((Wnd->PrevSibling = WndPrevSibling))
   {
@@ -2256,10 +2258,7 @@ NtUserGetWindow(HWND hWnd, UINT Relationship)
       }
       break;
     case GW_OWNER:
-      if (Wnd->Parent)
-      {
-        hWndResult = Wnd->hWndOwner;
-      }
+      hWndResult = Wnd->hWndOwner;
       break;
     case GW_CHILD:
       if (Wnd->FirstChild)
@@ -2350,11 +2349,13 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 	case GWL_HWNDPARENT:
 	  if (WindowObject->ParentHandle == IntGetDesktopWindow())
 	  {
-		Result = (LONG) WindowObject->hWndOwner;
+		Result = (LONG) NtUserGetWindow(WindowObject->Self, GW_OWNER);
+		/*WindowObject->hWndOwner*/
 	  }
 	  else
 	  {
-		Result = (LONG) WindowObject->ParentHandle;
+		Result = (LONG) NtUserGetAncestor(WindowObject->Self, GA_PARENT);
+		/*WindowObject->ParentHandle*/
 	  }
 	  break;
 
