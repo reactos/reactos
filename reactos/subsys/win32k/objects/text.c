@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.36 2003/07/24 16:56:59 rcampbell Exp $ */
+/* $Id: text.c,v 1.37 2003/07/24 21:23:37 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -534,6 +534,9 @@ FASTCALL
 TextIntGetTextExtentPoint(PDC dc,
                           LPCWSTR String,
                           int Count,
+                          int MaxExtent,
+                          LPINT Fit,
+                          LPINT Dx,
                           LPSIZE Size)
 {
   PTEXTOBJ TextObj;
@@ -548,6 +551,10 @@ TextIntGetTextExtentPoint(PDC dc,
   TextObj = TEXTOBJ_LockText(dc->w.hFont);
   GetFontObjectsFromTextObj(TextObj, NULL, NULL, &FontGDI);
   face = FontGDI->face;
+  if (NULL != Fit)
+    {
+      *Fit = 0;
+    }
 
   if (face->charmap == NULL)
     {
@@ -624,6 +631,15 @@ TextIntGetTextExtentPoint(PDC dc,
 	    }
     	}
 
+      if (TotalWidth <= MaxExtent && NULL != Fit)
+	{
+	  *Fit = i;
+	}
+      if (NULL != Dx)
+	{
+	  Dx[i] = TotalWidth;
+	}
+
       previous = glyph_index;
       String++;
     }
@@ -638,29 +654,21 @@ TextIntGetTextExtentPoint(PDC dc,
 
 BOOL
 STDCALL
-W32kGetTextExtentExPoint(HDC  hDC,
-                               LPCWSTR String,
-                               int  Count,
-                               int  MaxExtent,
-                               LPINT  Fit,
-                               LPINT  Dx,
-                               LPSIZE  Size)
-{
-  return W32kGetTextExtentPoint(hDC, String, Count, Size);
-}
-
-BOOL
-STDCALL
-W32kGetTextExtentPoint(HDC hDC,
-                       LPCWSTR UnsafeString,
-                       int Count,
-                       LPSIZE UnsafeSize)
+W32kGetTextExtentExPoint(HDC hDC,
+                         LPCWSTR UnsafeString,
+                         int Count,
+                         int MaxExtent,
+                         LPINT UnsafeFit,
+                         LPINT UnsafeDx,
+                         LPSIZE UnsafeSize)
 {
   PDC dc;
   LPWSTR String;
   SIZE Size;
   NTSTATUS Status;
   BOOLEAN Result;
+  INT Fit;
+  LPINT Dx;
 
   dc = DC_HandleToPtr(hDC);
 
@@ -682,20 +690,76 @@ W32kGetTextExtentPoint(HDC hDC,
       return FALSE;
     }
 
+  if (NULL != UnsafeDx)
+    {
+      Dx = ExAllocatePool(PagedPool, Count * sizeof(INT));
+      if (NULL == Dx)
+	{
+	  ExFreePool(String);
+	  SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+	  return FALSE;
+	}
+    }
+  else
+    {
+      Dx = NULL;
+    }
+
   Status = MmCopyFromCaller(String, UnsafeString, Count * sizeof(WCHAR));
   if (! NT_SUCCESS(Status))
     {
+      if (NULL != Dx)
+	{
+	  ExFreePool(Dx);
+	}
       ExFreePool(String);
       SetLastNtError(Status);
       return FALSE;
     }
 
-  Result = TextIntGetTextExtentPoint(dc, String, Count, &Size);
+  Result = TextIntGetTextExtentPoint(dc, String, Count, MaxExtent,
+                                     NULL == UnsafeFit ? NULL : &Fit, Dx, &Size);
 
   ExFreePool(String);
   if (! Result)
     {
+      if (NULL != Dx)
+	{
+	  ExFreePool(Dx);
+	}
       return FALSE;
+    }
+
+  if (NULL != UnsafeFit)
+    {
+      Status = MmCopyToCaller(UnsafeFit, &Fit, sizeof(INT));
+      if (! NT_SUCCESS(Status))
+	{
+	  if (NULL != Dx)
+	    {
+	      ExFreePool(Dx);
+	    }
+	  SetLastNtError(Status);
+	  return FALSE;
+	}
+    }
+
+  if (NULL != UnsafeDx)
+    {
+      Status = MmCopyToCaller(UnsafeDx, Dx, Count * sizeof(INT));
+      if (! NT_SUCCESS(Status))
+	{
+	  if (NULL != Dx)
+	    {
+	      ExFreePool(Dx);
+	    }
+	  SetLastNtError(Status);
+	  return FALSE;
+	}
+    }
+  if (NULL != Dx)
+    {
+      ExFreePool(Dx);
     }
 
   Status = MmCopyToCaller(UnsafeSize, &Size, sizeof(SIZE));
@@ -706,6 +770,16 @@ W32kGetTextExtentPoint(HDC hDC,
     }
 
   return TRUE;
+}
+
+BOOL
+STDCALL
+W32kGetTextExtentPoint(HDC hDC,
+                       LPCWSTR String,
+                       int Count,
+                       LPSIZE Size)
+{
+  return W32kGetTextExtentExPoint(hDC, String, Count, 0, NULL, NULL, Size);
 }
 
 BOOL
@@ -749,7 +823,7 @@ W32kGetTextExtentPoint32(HDC hDC,
       return FALSE;
     }
 
-  Result = TextIntGetTextExtentPoint(dc, String, Count, &Size);
+  Result = TextIntGetTextExtentPoint(dc, String, Count, 0, NULL, NULL, &Size);
 
   ExFreePool(String);
   if (! Result)
