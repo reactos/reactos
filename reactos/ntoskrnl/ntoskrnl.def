@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.175 2004/03/02 17:20:36 navaraf Exp $
+; $Id: ntoskrnl.def,v 1.176 2004/03/06 22:21:20 dwelch Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -502,6 +502,7 @@ MmAllocateContiguousAlignedMemory@36
 MmAllocateContiguousMemory@12
 MmAllocateContiguousMemorySpecifyCache@32
 MmAllocateNonCachedMemory@4
+MmAllocatePagesForMdl@28
 MmBuildMdlForNonPagedPool@4
 MmCanFileBeTruncated@8
 MmCopyFromCaller@12
@@ -515,6 +516,7 @@ MmForceSectionClosed@8
 MmFreeContiguousMemory@4
 MmFreeContiguousMemorySpecifyCache@12
 MmFreeNonCachedMemory@8
+MmFreePagesFromMdl@4
 MmGetPhysicalAddress@4
 MmGrowKernelStack@4
 MmHighestUserAddress DATA
@@ -527,6 +529,7 @@ MmLockPagableImageSection@4=MmLockPagableDataSection@4
 MmLockPagableSectionByHandle@4
 MmMapIoSpace@16
 MmMapLockedPages@8
+MmMapLockedPagesSpecifyCache@24
 MmMapMemoryDumpMdl@4
 MmMapVideoDisplay@16
 MmMapViewInSystemSpace@12

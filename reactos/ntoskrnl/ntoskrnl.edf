@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.161 2004/02/03 14:23:29 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.162 2004/03/06 22:21:20 dwelch Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -503,6 +503,7 @@ MmAllocateContiguousAlignedMemory=MmAllocateContiguousAlignedMemory@36
 MmAllocateContiguousMemory=MmAllocateContiguousMemory@12
 MmAllocateContiguousMemorySpecifyCache=MmAllocateContiguousMemorySpecifyCache@32
 MmAllocateNonCachedMemory=MmAllocateNonCachedMemory@4
+MmAllocatePagesForMdl=MmAllocatePagesForMdl@28
 MmBuildMdlForNonPagedPool=MmBuildMdlForNonPagedPool@4
 MmCanFileBeTruncated=MmCanFileBeTruncated@8
 MmCopyFromCaller=MmCopyFromCaller@12
@@ -516,6 +517,7 @@ MmForceSectionClosed=MmForceSectionClosed@8
 MmFreeContiguousMemory=MmFreeContiguousMemory@4
 MmFreeContiguousMemorySpecifyCache=MmFreeContiguousMemorySpecifyCache@12
 MmFreeNonCachedMemory=MmFreeNonCachedMemory@8
+MmFreePagesFromMdl=MmFreePagesFromMdl@4
 MmGetPhysicalAddress=MmGetPhysicalAddress@4
 MmGrowKernelStack=MmGrowKernelStack@4
 MmHighestUserAddress DATA
@@ -528,6 +530,7 @@ MmLockPagableImageSection=MmLockPagableDataSection@4
 MmLockPagableSectionByHandle=MmLockPagableSectionByHandle@4
 MmMapIoSpace=MmMapIoSpace@16
 MmMapLockedPages=MmMapLockedPages@8
+MmMapLockedPagesSpecifyCache=MmMapLockedPagesSpecifyCache@24
 MmMapMemoryDumpMdl=MmMapMemoryDumpMdl@4
 MmMapVideoDisplay=MmMapVideoDisplay@16
 MmMapViewInSystemSpace=MmMapViewInSystemSpace@12

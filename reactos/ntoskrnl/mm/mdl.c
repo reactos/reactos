@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.58 2004/02/15 17:04:52 hbirr Exp $
+/* $Id: mdl.c,v 1.59 2004/03/06 22:21:20 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -521,6 +521,34 @@ MmMapMemoryDumpMdl (PVOID	Unknown0)
  */
 {
    UNIMPLEMENTED;
+}
+
+PMDL STDCALL
+MmAllocatePagesForMdl ( IN PHYSICAL_ADDRESS LowAddress,
+			IN PHYSICAL_ADDRESS HighAddress,
+			IN PHYSICAL_ADDRESS SkipBytes,
+			IN SIZE_T Totalbytes )
+{
+  DPRINT1("MmAllocatePagesForMdl(): Unimplemented.\n");
+  return(NULL);
+}
+
+VOID STDCALL
+MmFreePagesFromMdl ( IN PMDL Mdl )
+{
+  DPRINT1("MmFreePagesFromMdl(): Unimplemented.\n");
+}
+
+PVOID STDCALL
+MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
+			       IN KPROCESSOR_MODE AccessMode,
+			       IN MEMORY_CACHING_TYPE CacheType,
+			       IN PVOID BaseAddress,
+			       IN ULONG BugCheckOnFailure,
+			       IN ULONG Priority )
+{
+  DPRINT1("MmMapLockedPagesSpecifyCache(): Ignoring extra parameters.\n");
+  return MmMapLockedPages (Mdl, AccessMode);
 }
 
 /* EOF */
