@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2003/12/14 16:11:40 weiden Exp $
+# $Id: makefile,v 1.2 2004/03/11 14:44:48 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,7 +10,7 @@ TARGET_APPTYPE = windows
 
 TARGET_NAME = multithrdwin
 
-TARGET_SDKLIBS = kernel32.a gdi32.a
+TARGET_SDKLIBS = kernel32.a gdi32.a ntdll.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 

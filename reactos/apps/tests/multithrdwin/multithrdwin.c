@@ -15,6 +15,7 @@ typedef struct _THRDCREATEWIN
 
 static HINSTANCE hAppInstance;
 static HANDLE WinCreatedEvent;
+static THRDCREATEWIN wnds[3];
 
 LRESULT WINAPI MultiWndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -47,7 +48,10 @@ WindowThreadProc(LPVOID lpParameter)
             GetLastError());
     return 1;
   }
-  
+  CreateWindow("BUTTON","Sleep",WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_GROUP|BS_PUSHBUTTON, 10, 10, 70, 23, cw->Window, (PVOID)1, hAppInstance, NULL);
+  CreateWindow("BUTTON","1",WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_GROUP|BS_PUSHBUTTON, 83, 10, 20, 23, cw->Window, (PVOID)2, hAppInstance, NULL);
+  CreateWindow("BUTTON","2",WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_GROUP|BS_PUSHBUTTON, 105, 10, 20, 23, cw->Window, (PVOID)3, hAppInstance, NULL);
+  CreateWindow("BUTTON","3",WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_GROUP|BS_PUSHBUTTON, 127, 10, 20, 23, cw->Window, (PVOID)4, hAppInstance, NULL);
   while(GetMessage(&msg, NULL, 0, 0))
   {
     TranslateMessage(&msg);
@@ -65,7 +69,6 @@ WinMain(HINSTANCE hInstance,
 {
   WNDCLASS wc;
   int i;
-  static THRDCREATEWIN wnds[3];
   HANDLE Threads[3];
   
   hAppInstance = hInstance;
@@ -152,6 +155,8 @@ LRESULT CALLBACK MultiWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   HDC hDC;
   RECT Client;
   HBRUSH Brush;
+  DWORD Ret;
+  
   static COLORREF Colors[] =
     {
       RGB(0x00, 0x00, 0x00),
@@ -187,7 +192,38 @@ LRESULT CALLBACK MultiWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  }
 	EndPaint(hWnd, &ps);
 	break;
-
+      
+      case WM_COMMAND:
+        switch(LOWORD(wParam))
+        {
+          case 1:
+            Sleep(20000);
+            break;
+          case 2:
+          case 3:
+          case 4:
+            if(SendMessageTimeout(wnds[LOWORD(wParam) - 2].Window, WM_NULL, 0, 0, SMTO_ABORTIFHUNG, 1000, &Ret))
+            {
+              DbgPrint("SendMessageTimeout() OK");
+              MessageBox(hWnd, "SendMessageTimeout() OK", NULL, 0);
+            }
+            else
+            {
+              if(GetLastError() == ERROR_TIMEOUT)
+              {
+                DbgPrint("SendMessageTimeout() Timeout");
+                MessageBox(hWnd, "SendMessageTimeout() Timeout", NULL, 0);
+              }
+              else
+              {
+                DbgPrint("SendMessageTimeout() Failed");
+                MessageBox(hWnd, "SendMessageTimeout() Failed", NULL, 0);
+              }
+            }
+            break;
+        }
+        break;
+      
       case WM_DESTROY:
 	PostQuitMessage(0);
 	break;
