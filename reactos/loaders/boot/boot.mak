@@ -1,11 +1,11 @@
 #
 # makefile for DOS-C boot
 #
-# $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/loaders/boot/Attic/boot.mak,v 1.1 1996/01/23 01:02:19 rosmgr Exp $
+# $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/loaders/boot/Attic/boot.mak,v 1.2 1998/08/12 22:43:38 rosmgr Exp $
 #
 # $Log: boot.mak,v $
-# Revision 1.1  1996/01/23 01:02:19  rosmgr
-# Initial revision
+# Revision 1.2  1998/08/12 22:43:38  rosmgr
+# Update from the kernel team
 #
 #
 #   Rev 1.3   10 Jan 1997  4:51:54   patv
