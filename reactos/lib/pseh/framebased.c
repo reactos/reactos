@@ -33,6 +33,10 @@ extern void __cdecl _SEHRegisterFrame(_SEHRegistration_t *);
 extern void __cdecl _SEHUnregisterFrame(const _SEHRegistration_t *);
 extern void __cdecl _SEHUnwind(_SEHPortableFrame_t *);
 
+/* Borland C++ uses a different decoration (i.e. none) for stdcall functions */
+extern void __stdcall RtlUnwind(void *, void *, void *, void *);
+void const * _SEHRtlUnwind = RtlUnwind;
+
 __declspec(noreturn) void __cdecl _SEHCallHandler(_SEHPortableFrame_t * frame)
 {
  frame->SPF_Handling = 1;

@@ -21,6 +21,8 @@
 cpu 486
 segment .text use32
 
+; Note: the undecorated names are for Borland C++ (and possibly other compilers
+; using the OMF format)
 global SEHSetJmp
 global __SEHSetJmp
 SEHSetJmp:

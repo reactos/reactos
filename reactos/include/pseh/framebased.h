@@ -99,7 +99,7 @@ static __declspec(noreturn) void __stdcall _SEHCompilerSpecificHandler
   };                                                                           \
                                                                                \
   _SEHFrame_t _SEHFrame;                                                       \
-  _SEHPortableFrame_t * _SEHPortableFrame;                                     \
+  volatile _SEHPortableFrame_t * _SEHPortableFrame;                            \
                                                                                \
   _SEHFrame.SEH_Header.SPF_Handlers = &_SEHHandlers;                           \
                                                                                \
