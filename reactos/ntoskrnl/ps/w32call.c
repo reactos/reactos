@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.20 2004/11/27 23:50:27 hbirr Exp $
+/* $Id: w32call.c,v 1.21 2004/11/28 18:14:02 blight Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -140,7 +140,6 @@ NtCallbackReturn (PVOID		Result,
   Thread->Tcb.TrapFrame = SavedTrapFrame;
   Thread->Tcb.CallbackStack = SavedCallbackStack;
   KeGetCurrentKPCR()->TSS->Esp0 = (ULONG)SavedExceptionStack;
-  Ke386SetCr0(Ke386GetCr0() | X86_CR0_TS); /* set TS */
   KeStackSwitchAndRet((PVOID)(OldStack + 1));
 
   /* Should never return. */
