@@ -1,4 +1,4 @@
-/* $Id: RegistryExplorer.cpp,v 1.4 2001/01/13 23:54:40 narnaoud Exp $
+/* $Id: RegistryExplorer.cpp,v 1.5 2001/04/15 22:17:50 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -154,7 +154,7 @@ int main ()
 	if (!Console.GetTextAttribute(wOldConsoleAttribute)) goto Abort;
 
 	Console.SetTitle(_T("Registry Explorer"));
-	Console.SetTextAttribute(FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED|FOREGROUND_INTENSITY);
+	Console.SetTextAttribute(FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED/*|FOREGROUND_INTENSITY*/);
 
 	VERIFY(SetConsoleCtrlHandler((PHANDLER_ROUTINE)HandlerRoutine,TRUE));
 
