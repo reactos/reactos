@@ -19,9 +19,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
- * $Author: ariadne $
- * $Date: 1999/04/02 21:42:06 $
+ * $Revision: 1.4 $
+ * $Author: ekohl $
+ * $Date: 2001/06/15 18:32:25 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -40,6 +40,7 @@
  * This variable determines the default file mode.
  * TODO: Which flags work?
  */
+#if 0
 #if __MSVCRT__
 extern unsigned int* __imp__fmode;
 #define	_fmode	(*__imp__fmode)
@@ -48,6 +49,15 @@ extern unsigned int* __imp__fmode;
 extern unsigned int* _fmode_dll;
 #define	_fmode	(*_fmode_dll)
 #endif
+#endif /* 0 */
+
+/*
+ * NOTE: This is the correct definition to build crtdll.
+ *       It is NOT valid outside of crtdll.
+ */
+extern unsigned int* _fmode_dll;
+extern unsigned int _fmode;
+
 
 /* Specifiy one of these flags to define the access mode. */
 #define	_O_RDONLY	0
