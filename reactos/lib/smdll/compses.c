@@ -10,12 +10,37 @@
 #include <sm/api.h>
 #include <sm/helper.h>
 
+#define NDEBUG
+#include <debug.h>
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	SmCompleteSession/3
+ *
+ * DESCRIPTION
+ * 	This function is called by an environment subsystem server to
+ * 	tell the SM it finished initialization phase and is ready to
+ * 	manage processes it registered for (SmConnectApiPort).
+ *
+ * ARGUMENTS
+ * 	hSmApiPort: port handle returned by SmConnectApiPort;
+ * 	hSbApiPort: call back API port of the subsystem (handle);
+ * 	hApiPort  : API port of the subsystem (handle).
+ *
+ * RETURN VALUE
+ * 	Success status as handed by the SM reply; otherwise a failure
+ * 	status code.
+ */
 NTSTATUS STDCALL
-SmCompleteSession (HANDLE hSmApiPort, HANDLE hSbApiPort, HANDLE hApiPort)
+SmCompleteSession (IN HANDLE hSmApiPort,
+		   IN HANDLE hSbApiPort,
+		   IN HANDLE hApiPort)
 {
   NTSTATUS         Status;
   SM_PORT_MESSAGE  SmReqMsg;
     
+  DPRINT("SMDLL: %s called\n", __FUNCTION__);
+
   /* Marshal Ses in the LPC message */
   SmReqMsg.CompSes.hApiPort   = hApiPort;
   SmReqMsg.CompSes.hSbApiPort = hSbApiPort;
@@ -32,7 +57,7 @@ SmCompleteSession (HANDLE hSmApiPort, HANDLE hSbApiPort, HANDLE hApiPort)
   {
     return SmReqMsg.Status;
   }
-  DbgPrint ("%s failed (Status=0x%08lx)\n", __FUNCTION__, Status);
+  DPRINT("SMDLL: %s failed (Status=0x%08lx)\n", __FUNCTION__, Status);
   return Status;
 }
 

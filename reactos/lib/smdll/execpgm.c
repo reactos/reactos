@@ -11,12 +11,37 @@
 #include <sm/helper.h>
 #include <string.h>
 
+#define NDEBUG
+#include <debug.h>
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	SmExecuteProgram/2
+ *
+ * DESCRIPTION
+ *	This function is used to make the SM start an environment
+ *	subsystem server process.
+ *
+ * ARGUMENTS
+ * 	hSmApiPort: port handle returned by SmConnectApiPort;
+ * 	Pgm       : name of the subsystem (to be used by the SM to
+ * 	            lookup the image name from the registry).
+ * 	            Valid names are: DEBUG, WINDOWS, POSIX, OS2,
+ * 	            and VMS.
+ *	
+ * RETURN VALUE
+ * 	Success status as handed by the SM reply; otherwise a failure
+ * 	status code.
+ */
 NTSTATUS STDCALL
-SmExecuteProgram (HANDLE hSmApiPort, PUNICODE_STRING Pgm)
+SmExecuteProgram (IN HANDLE          hSmApiPort,
+		  IN PUNICODE_STRING Pgm)
 {
   NTSTATUS         Status;
   SM_PORT_MESSAGE  SmReqMsg;
 
+
+  DPRINT("SMDLL: %s called\n", __FUNCTION__);
 
   /* Check Pgm's length */
   if (Pgm->Length > (sizeof (Pgm->Buffer[0]) * SM_EXEXPGM_MAX_LENGTH))
@@ -26,7 +51,9 @@ SmExecuteProgram (HANDLE hSmApiPort, PUNICODE_STRING Pgm)
   /* Marshal Pgm in the LPC message */
   RtlZeroMemory (& SmReqMsg, sizeof SmReqMsg);
   SmReqMsg.ExecPgm.NameLength = Pgm->Length;
-  RtlCopyMemory (SmReqMsg.ExecPgm.Name, Pgm->Buffer, Pgm->Length);
+  RtlCopyMemory (SmReqMsg.ExecPgm.Name,
+		 Pgm->Buffer,
+		 Pgm->Length);
 		
   /* SM API to invoke */
   SmReqMsg.ApiIndex = SM_API_EXECUTE_PROGRAMME;
@@ -42,7 +69,7 @@ SmExecuteProgram (HANDLE hSmApiPort, PUNICODE_STRING Pgm)
   {
     return SmReqMsg.Status;
   }
-  DbgPrint ("%s failed (Status=0x%08lx)\n", __FUNCTION__, Status);
+  DPRINT("SMDLL: %s failed (Status=0x%08lx)\n", __FUNCTION__, Status);
   return Status;
 }
 
