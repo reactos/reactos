@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.49 2003/05/08 05:26:36 gvg Exp $
+/* $Id: page.c,v 1.50 2003/05/17 13:45:04 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -135,9 +135,7 @@ NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
 {
    PHYSICAL_ADDRESS PhysPageDirectory;
    PULONG PageDirectory;
-   PULONG CurrentPageDirectory;
    PKPROCESS KProcess = &Dest->Pcb;
-   ULONG i;
    
    DPRINT("MmCopyMmInfo(Src %x, Dest %x)\n", Src, Dest);
    
@@ -148,17 +146,12 @@ NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
      }
    PhysPageDirectory = MmGetPhysicalAddress(PageDirectory);
    KProcess->DirectoryTableBase = PhysPageDirectory;   
-   CurrentPageDirectory = (PULONG)PAGEDIRECTORY_MAP;
    
-   memset(PageDirectory,0,PAGE_SIZE);
-   for (i=768; i<896; i++)
-     {
-	PageDirectory[i] = CurrentPageDirectory[i];
-     }
-   for (i=961; i<1024; i++)
-     {
-	PageDirectory[i] = CurrentPageDirectory[i];
-     }
+   memset(PageDirectory,0, ADDR_TO_PDE_OFFSET(KERNEL_BASE) * sizeof(ULONG));
+   memcpy(PageDirectory + ADDR_TO_PDE_OFFSET(KERNEL_BASE), 
+          MmGlobalKernelPageDirectory + ADDR_TO_PDE_OFFSET(KERNEL_BASE), 
+	  (1024 - ADDR_TO_PDE_OFFSET(KERNEL_BASE)) * sizeof(ULONG));
+
    DPRINT("Addr %x\n",PAGETABLE_MAP / (4*1024*1024));
    PageDirectory[PAGETABLE_MAP / (4*1024*1024)] = 
      PhysPageDirectory.u.LowPart | PA_PRESENT | PA_READWRITE;
@@ -805,13 +798,27 @@ BOOLEAN
 MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
 {
    PULONG PageEntry;
-   PEPROCESS CurrentProcess = PsGetCurrentProcess();
+   PEPROCESS CurrentProcess;
    BOOLEAN Accessed;
 
-   if (Process != CurrentProcess)
+   if (Process)
      {
-	KeAttachProcess(Process);
+       CurrentProcess = PsGetCurrentProcess();
+       if (Process != CurrentProcess)
+         {
+	   KeAttachProcess(Process);
+         }
      }
+   else 
+     {
+       if (((ULONG)Address & ~0xFFF) < KERNEL_BASE)
+         {
+           DPRINT1("MmIsAccessedAndResetAccessPage is called for user space without a process.\n");
+           KeBugCheck(0);
+	 }
+       CurrentProcess = NULL;
+     }
+
    PageEntry = MmGetPageEntry(Address);
    Accessed = (*PageEntry) & PA_ACCESSED;
    if (Accessed)
@@ -830,11 +837,24 @@ MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
 VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
 {
    PULONG PageEntry;
-   PEPROCESS CurrentProcess = PsGetCurrentProcess();
-   
-   if (Process != CurrentProcess)
+   PEPROCESS CurrentProcess;
+
+   if (Process)
      {
-	KeAttachProcess(Process);
+       CurrentProcess = PsGetCurrentProcess();
+       if (Process != CurrentProcess)
+         {
+	   KeAttachProcess(Process);
+         }
+     }
+   else 
+     {
+       if (((ULONG)Address & ~0xFFF) < KERNEL_BASE)
+         {
+           DPRINT1("MmSetCleanPage is called for user space without a process.\n");
+           KeBugCheck(0);
+	 }
+       CurrentProcess = NULL;
      }
    PageEntry = MmGetPageEntry(Address);
    (*PageEntry) = (*PageEntry) & (~PA_DIRTY);
@@ -848,11 +868,24 @@ VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
 VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address)
 {
    PULONG PageEntry;
-   PEPROCESS CurrentProcess = PsGetCurrentProcess();
-   
-   if (Process != CurrentProcess)
+   PEPROCESS CurrentProcess = NULL;
+
+   if (Process)
      {
-	KeAttachProcess(Process);
+       CurrentProcess = PsGetCurrentProcess();
+       if (Process != CurrentProcess)
+         {
+	   KeAttachProcess(Process);
+         }
+     }
+   else 
+     {
+       if (((ULONG)Address & ~0xFFF) < KERNEL_BASE)
+         {
+           DPRINT1("MmSetDirtyPage is called for user space without a process.\n");
+           KeBugCheck(0);
+	 }
+       CurrentProcess = NULL;
      }
    PageEntry = MmGetPageEntry(Address);
    (*PageEntry) = (*PageEntry) | PA_DIRTY;
@@ -950,7 +983,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
    *Pte = PhysicalAddress.QuadPart | Attributes;
    if (Process != NULL && 
        Process->AddressSpace.PageTableRefCountTable != NULL &&
-       ADDR_TO_PAGE_TABLE(Address) < 768 &&
+       Address < (PVOID)KERNEL_BASE &&
        Attributes & PA_PRESENT)
      {
 	PUSHORT Ptrc;
@@ -1021,7 +1054,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
   *Pte = SwapEntry << 1;
   if (Process != NULL && 
       Process->AddressSpace.PageTableRefCountTable != NULL &&
-      ADDR_TO_PAGE_TABLE(Address) < 768)
+      Address < (PVOID)KERNEL_BASE)
     {
       PUSHORT Ptrc;
       
@@ -1104,7 +1137,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
    *Pte = PhysicalAddress.QuadPart | Attributes;
    if (Process != NULL && 
        Process->AddressSpace.PageTableRefCountTable != NULL &&
-       ADDR_TO_PAGE_TABLE(Address) < 768 &&
+       Address < (PVOID)KERNEL_BASE &&
        Attributes & PA_PRESENT)
      {
 	PUSHORT Ptrc;
@@ -1221,6 +1254,22 @@ MmUpdatePageDir(PULONG LocalPageDir, PVOID Address)
   if (0 == LocalPageDir[Entry])
     {
       LocalPageDir[Entry] = MmGlobalKernelPageDirectory[Entry];
+    }
+}
+
+VOID 
+MmInitGlobalKernelPageDirectory(VOID)
+{
+  ULONG i;
+  PULONG CurrentPageDirectory = (PULONG)PAGEDIRECTORY_MAP;
+
+  for (i = ADDR_TO_PDE_OFFSET(KERNEL_BASE); i < 1024; i++)
+    {
+      if (i != ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) && 
+	  0 == MmGlobalKernelPageDirectory[i] && 0 != CurrentPageDirectory[i])
+        {
+          MmGlobalKernelPageDirectory[i] = CurrentPageDirectory[i];
+        }
     }
 }
 

@@ -293,7 +293,6 @@ PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length);
 VOID ExUnmapPage(PVOID Addr);
 PVOID ExAllocatePage(VOID);
 
-VOID MmInitPagingFile(VOID);
 BOOLEAN MmReserveSwapPages(ULONG Nr);
 VOID MmDereserveSwapPages(ULONG Nr);
 SWAPENTRY MmAllocSwapPage(VOID);
@@ -466,6 +465,8 @@ VOID MmSetPageProtect(struct _EPROCESS* Process,
 		      ULONG flProtect);
 BOOLEAN MmIsPagePresent(struct _EPROCESS* Process, 
 			PVOID Address);
+
+VOID MmInitGlobalKernelPageDirectory(VOID);
 
 /* Memory balancing. */
 VOID

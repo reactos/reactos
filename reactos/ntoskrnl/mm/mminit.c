@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.43 2003/01/11 15:26:59 hbirr Exp $
+/* $Id: mminit.c,v 1.44 2003/05/17 13:45:04 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -218,6 +218,8 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
 		  FirstKrnlPhysAddr,
 		  LastKrnlPhysAddr,
 		  LastKernelAddress);
+
+   MmInitGlobalKernelPageDirectory();
 
    if ((BIOSMemoryMap != NULL) && (AddressRangeCount > 0))
      {
