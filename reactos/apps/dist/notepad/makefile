@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2003/12/30 14:28:48 weiden Exp $
+# $Id: makefile,v 1.4 2004/01/13 00:01:52 sedwards Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,11 +10,15 @@ TARGET_APPTYPE = windows
 
 TARGET_NAME = notepad
 
-TARGET_SDKLIBS = user32.a
+TARGET_CFLAGS = -Wall -Werror -D__USE_W32API
 
-TARGET_OBJECTS = $(TARGET_NAME).o
+TARGET_SDKLIBS = comdlg32.a shell32.a user32.a gdi32.a
 
-TARGET_CFLAGS = -Wall -Werror
+TARGET_OBJECTS = \
+	License_En.o \
+	dialog.o \
+	license.o \
+	main.o
 
 include $(PATH_TO_TOP)/rules.mak
 

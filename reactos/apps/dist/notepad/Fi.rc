@@ -1,0 +1,126 @@
+/*
+ *  Notepad (Finnish resources)
+ *
+ *  Copyright 1999 by Jukka Iivonen <iivonen@iki.fi>
+ *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
+
+MAIN_MENU MENU
+{
+ POPUP "&Tiedosto" {
+  MENUITEM "&Uusi...",		CMD_NEW
+  MENUITEM "&Avaa",		CMD_OPEN
+  MENUITEM "Ta&lleta",		CMD_SAVE
+  MENUITEM "Talleta &nimellä...",	CMD_SAVE_AS
+  MENUITEM "T&ulosta",		CMD_PRINT
+  MENUITEM "&Sivun asetukset...",	CMD_PAGE_SETUP
+  MENUITEM "&Kirjoittimen asetukset...",	CMD_PRINTER_SETUP
+  MENUITEM SEPARATOR
+  MENUITEM "&Poistu",		CMD_EXIT
+ }
+POPUP "&Muokkaa" {
+  MENUITEM "&Palauta\tCtrl+Z",	CMD_UNDO
+  MENUITEM SEPARATOR
+  MENUITEM "&Leikkaa\tCtrl+X",	CMD_CUT
+  MENUITEM "&Kopioi\tCtrl+C",	CMD_COPY
+  MENUITEM "L&iitä\tCtrl+V",	CMD_PASTE
+  MENUITEM "P&oista\tDel",	CMD_DELETE
+  MENUITEM SEPARATOR
+  MENUITEM "&Valitse kaikki",	CMD_SELECT_ALL
+  MENUITEM "&Aika/Päivämäärä\tF5",	CMD_TIME_DATE
+  MENUITEM SEPARATOR
+  MENUITEM "Ka&tkaise pitkä rivi",	CMD_WRAP
+ }
+POPUP "&Etsi" {
+  MENUITEM "Etsi...",		CMD_SEARCH
+  MENUITEM "Etsi &seuraava\tF3",	CMD_SEARCH_NEXT
+ }
+POPUP "&Apua" {
+  MENUITEM "&Sisältö",		CMD_HELP_CONTENTS
+  MENUITEM "&Etsi...",		CMD_HELP_SEARCH
+  MENUITEM "Apua &Opastuksesta",	CMD_HELP_ON_HELP
+  MENUITEM SEPARATOR
+  POPUP "Inf&o..." {
+   MENUITEM "&Lisenssi",	CMD_LICENSE
+   MENUITEM "&EI TAKUUTA",	CMD_NO_WARRANTY
+   MENUITEM "&Tietoja Wine:ista",	CMD_ABOUT_WINE
+  }
+ }
+}
+
+/* Dialog `Page setup' */
+
+DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "Helv"
+CAPTION "Sivun asetukset"
+{
+LTEXT    "&Yläotsikko:",  0x140,   10, 07, 40, 15
+EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
+LTEXT    "Alao&tsikko:",  0x142,   10, 24, 40, 15
+EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
+
+GROUPBOX "&Marginaali:",      0x144,     10, 43,160, 45
+LTEXT    "&Vasen:",        0x145,   20, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "Y&lä:",         0x148,    20, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Oikea:",       0x14B, 100, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Ala:",      0x14E,100, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+
+DEFPUSHBUTTON "OK",         0x151,                   180,  3, 40, 15, WS_TABSTOP
+PUSHBUTTON    "Peruuta",     0x152,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "&Apua",       0x153,                180, 39, 40, 15, WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE
+{
+STRING_PAGESETUP_HEADERVALUE,	"&n"        /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,	"Sivu &s"   /* FIXME */
+STRING_PAGESETUP_LEFTVALUE,		"20 mm"     /* FIXME */
+STRING_PAGESETUP_RIGHTVALUE,	"20 mm"     /* FIXME */
+STRING_PAGESETUP_TOPVALUE,		"25 mm"     /* FIXME */
+STRING_PAGESETUP_BOTTOMVALUE,	"25 mm"     /* FIXME */
+
+STRING_NOTEPAD,					"Notepad"
+STRING_ERROR,					"VIRHE"
+STRING_WARNING,					"VAROITUS"
+STRING_INFO,					"Tiedoitus"
+
+STRING_UNTITLED,				"(otsikoimaton)"
+
+STRING_ALL_FILES,				"Kaikki tiedostot (*.*)"
+STRING_TEXT_FILES_TXT,			"Teksti tiedostot (*.txt)"
+
+STRING_TOOLARGE,				"Tiedosto '%s' on liian suuri.\n \
+Please use a different editor."
+STRING_NOTEXT,					"Et syöttänyt lainkaan tekstiä. \
+\nKirjoita jotain ja yritä uudelleen"
+STRING_DOESNOTEXIST,				"File '%s'\ndoes not exist\n\n \
+Do you want to create a new file ?"
+STRING_NOTSAVED,				"File '%s'\nhas been modified\n\n \
+Would you like to save the changes ?"
+STRING_NOTFOUND,					"'%s' ei löydy."
+STRING_OUT_OF_MEMORY,			"Muistia ei ole riittävästi tämän \
+\ntehtävän tekemiseksi. Sulje jokin sovellus vapauttaaksesi\n \
+muistia."
+
+}
