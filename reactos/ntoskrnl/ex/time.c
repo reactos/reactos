@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.21 2004/08/15 16:39:01 chorns Exp $
+/* $Id: time.c,v 1.22 2004/11/05 11:46:02 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -37,8 +37,8 @@ ExInitTimeZoneInfo (VOID)
 
 
 NTSTATUS STDCALL
-NtSetSystemTime (IN	PLARGE_INTEGER	UnsafeNewSystemTime,
-		 OUT	PLARGE_INTEGER	UnsafeOldSystemTime	OPTIONAL)
+NtSetSystemTime(IN PLARGE_INTEGER UnsafeNewSystemTime,
+		OUT PLARGE_INTEGER UnsafeOldSystemTime OPTIONAL)
      /*
       * FUNCTION: Sets the system time.
       * PARAMETERS:
@@ -55,6 +55,13 @@ NtSetSystemTime (IN	PLARGE_INTEGER	UnsafeNewSystemTime,
   TIME_FIELDS TimeFields;
 
   /* FIXME: Check for SeSystemTimePrivilege */
+
+  if (UnsafeNewSystemTime == NULL)
+    {
+      /* FIXME: update time zone settings */
+
+      return STATUS_SUCCESS;
+    }
 
   Status = MmCopyFromCaller(&NewSystemTime, UnsafeNewSystemTime,
 			    sizeof(NewSystemTime));
