@@ -147,8 +147,8 @@ VGAtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
   dx = DestRect->right  - DestRect->left;
   dy = DestRect->bottom - DestRect->top;
 
-  alterx = abs(SourcePoint->x - DestRect->left);
-  altery = abs(SourcePoint->y - DestRect->top);
+  alterx = DestRect->left - SourcePoint->x;
+  altery = DestRect->top - SourcePoint->y;
 
   // Determine bltting direction
   // FIXME: should we perhaps make this an EngXxx function? Determining
