@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.66 2004/05/13 20:21:27 navaraf Exp $
+/* $Id: menu.c,v 1.67 2004/05/15 08:53:06 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -1628,10 +1628,7 @@ UINT MenuDrawMenuBar(HDC DC, LPRECT Rect, HWND Wnd, BOOL SuppressDraw)
     {
       FontOld = SelectObject(DC, hMenuFont);
 
-      if (0 == MenuInfo.Height)
-        {
-          MenuMenuBarCalcSize(DC, Rect, &MenuInfo, Wnd);
-        }
+      MenuMenuBarCalcSize(DC, Rect, &MenuInfo, Wnd);
 
       Rect->bottom = Rect->top + MenuInfo.Height;
 
