@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.24 2003/12/28 17:06:37 navaraf Exp $
+/* $Id: scrollbar.c,v 1.25 2004/01/13 17:14:38 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,6 +40,7 @@
 #include <include/winpos.h>
 #include <include/rect.h>
 #include <include/scroll.h>
+#include <include/painting.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -244,6 +245,7 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
     */
 
    LPSCROLLINFO Info;
+   PSCROLLBARINFO psbi;
 /*   UINT new_flags;*/
    BOOL bChangeParams = FALSE; /* don't show/hide scrollbar if params don't change */
 
@@ -266,6 +268,7 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
             return 0;
          }
+         psbi = Window->pHScroll;
          Info = (LPSCROLLINFO)(Window->pHScroll + 1);
          break;
       case SB_VERT:
@@ -274,6 +277,7 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
             return 0;
          }
+         psbi = Window->pVScroll;
          Info = (LPSCROLLINFO)(Window->pVScroll + 1);
          break;
       case SB_CTL:
@@ -400,7 +404,14 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
    }
 
    if (bRedraw)
-      IntSendMessage(Window->Self, WM_NCPAINT, 1, 0);
+   {
+      RECT UpdateRect = psbi->rcScrollBar;
+      UpdateRect.left -= Window->ClientRect.left - Window->WindowRect.left;
+      UpdateRect.right -= Window->ClientRect.left - Window->WindowRect.left;
+      UpdateRect.top -= Window->ClientRect.top - Window->WindowRect.top;
+      UpdateRect.bottom -= Window->ClientRect.top - Window->WindowRect.top;
+      IntRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
+   }
 
    /* Return current position */
    return Info->nPos;
