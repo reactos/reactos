@@ -95,6 +95,11 @@ Pane::Pane(HWND hparent, int id, int id_header, Entry* root, bool treePane, int 
 	create_header(hparent, id_header);
 }
 
+Pane::~Pane()
+{
+	ImageList_Destroy(_himl);
+}
+
 
 LRESULT Pane::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {

@@ -35,7 +35,3 @@
   Yes, ROS explorer doesn't read many settings from the registry currently,
   as it doesn't have a way to configure them. (missing configuration dialogs)
 
-- Es scheint ein paar GDI-Leaks in deinem Programm zu geben.
-  Wenn man ein neues MDI Fenster öffnet und dann wieder schließt, werden
-  einige GDI-Objekte nicht wieder gelöscht.
-

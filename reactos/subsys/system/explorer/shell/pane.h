@@ -68,6 +68,7 @@ struct Pane : public SubclassedWindow
 	typedef SubclassedWindow super;
 
 	Pane(HWND hparent, int id, int id_header, Entry* rool, bool treePane, int visible_cols);
+	~Pane();
 
 #define COLUMNS 12
 	int 	_widths[COLUMNS];
