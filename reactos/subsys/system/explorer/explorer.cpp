@@ -180,11 +180,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	if (!lstrcmp(lpCmdLine,TEXT("-noautostart")))
 		autostart = false;
 
-//REMOTE DBG
-startup_desktop = TRUE;
-nShowCmd = SW_HIDE;
-
-
 	g_Globals._hInstance = hInstance;
 
 	HWND hwndDesktop = 0;
