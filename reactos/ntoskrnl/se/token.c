@@ -1663,7 +1663,7 @@ NtAdjustPrivilegesToken (IN HANDLE TokenHandle,
 //				  &Length);
 
   Status = ObReferenceObjectByHandle (TokenHandle,
-				      TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
+				      TOKEN_ADJUST_PRIVILEGES | (PreviousState != NULL ? TOKEN_QUERY : 0),
 				      SepTokenObjectType,
 				      PreviousMode,
 				      (PVOID*)&Token,

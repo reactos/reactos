@@ -448,9 +448,6 @@ IoCreateFile(OUT PHANDLE		FileHandle,
 	return Status;
      }
 
-   RtlMapGenericMask(&DesiredAccess,
-                     BODY_TO_HEADER(FileObject)->ObjectType->Mapping);
-
    Status = ObInsertObject ((PVOID)FileObject,
 			    NULL,
 			    DesiredAccess,

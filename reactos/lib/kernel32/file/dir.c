@@ -221,7 +221,7 @@ RemoveDirectoryW (
         DPRINT("NtPathU '%S'\n", NtPathU.Buffer);
 
         Status = NtCreateFile (&DirectoryHandle,
-                               FILE_WRITE_ATTRIBUTES,    /* 0x110080 */
+                               DELETE,
                                &ObjectAttributes,
                                &IoStatusBlock,
                                NULL,

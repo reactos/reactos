@@ -290,8 +290,8 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
    }
 
    /* don't keep the directory handle open on removable media */
-   if (!NtQueryVolumeInformationFile( handle, &iosb, &device_info,
-                                    sizeof(device_info), FileFsDeviceInformation ) &&
+   if (NT_SUCCESS(NtQueryVolumeInformationFile( handle, &iosb, &device_info,
+                                                sizeof(device_info), FileFsDeviceInformation )) &&
      (device_info.Characteristics & FILE_REMOVABLE_MEDIA))
    {
       DPRINT1("don't keep the directory handle open on removable media\n");

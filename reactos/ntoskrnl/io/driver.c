@@ -960,7 +960,7 @@ IoCreateDriverList(VOID)
 			     NULL);
 
   Status = ZwOpenKey(&KeyHandle,
-		     0x10001,
+		     KEY_ENUMERATE_SUB_KEYS,
 		     &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {

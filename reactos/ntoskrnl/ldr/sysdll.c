@@ -144,7 +144,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 			    SECTION_ALL_ACCESS,
 			    NULL,
 			    NULL,
-			    PAGE_READWRITE,
+			    PAGE_READONLY,
 			    SEC_IMAGE | SEC_COMMIT,
 			    FileHandle);
    if (!NT_SUCCESS(Status))

@@ -1133,7 +1133,7 @@ SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
    */
   
   if(OpenProcessToken(GetCurrentProcess(),
-                      TOKEN_ADJUST_PRIVILEGES,
+                      TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
                       &hToken))
   {
     priv.PrivilegeCount = 1;

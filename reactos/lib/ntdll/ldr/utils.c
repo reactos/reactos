@@ -682,7 +682,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                            SECTION_ALL_ACCESS,
                            NULL,
                            NULL,
-                           PAGE_READWRITE,
+                           PAGE_READONLY,
                            SEC_COMMIT | (MapAsDataFile ? 0 : SEC_IMAGE),
                            FileHandle);
   NtClose(FileHandle);
@@ -2048,7 +2048,7 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
                                     &ViewSize,
                                     0,
                                     MEM_COMMIT,
-                                    PAGE_READWRITE);
+                                    PAGE_READONLY);
         if (!NT_SUCCESS(Status))
           {
             DPRINT1("map view of section failed (Status %x)\n", Status);
@@ -2875,10 +2875,10 @@ LdrVerifyImageMatchesChecksum (IN HANDLE FileHandle,
   DPRINT ("LdrVerifyImageMatchesChecksum() called\n");
 
   Status = NtCreateSection (&SectionHandle,
-                            SECTION_MAP_EXECUTE,
+                            SECTION_MAP_READ,
                             NULL,
                             NULL,
-                            PAGE_EXECUTE,
+                            PAGE_READONLY,
                             SEC_COMMIT,
                             FileHandle);
   if (!NT_SUCCESS(Status))
@@ -2898,7 +2898,7 @@ LdrVerifyImageMatchesChecksum (IN HANDLE FileHandle,
                                &ViewSize,
                                ViewShare,
                                0,
-                               PAGE_EXECUTE);
+                               PAGE_READONLY);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1 ("NtMapViewOfSection() failed (Status %lx)\n", Status);

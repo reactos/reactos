@@ -1,9 +1,9 @@
-/* 
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/exp.c
  * PURPOSE:         Handling exceptions
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  *                  Skywing (skywing@valhallalegends.com)
  */
@@ -120,24 +120,31 @@ KeRosPrintAddress(PVOID address)
    MODULE_TEXT_SECTION* current;
    extern LIST_ENTRY ModuleTextListHead;
    ULONG_PTR RelativeAddress;
+   ULONG i = 0;
 
-   current_entry = ModuleTextListHead.Flink;
+   do
+   {
+     current_entry = ModuleTextListHead.Flink;
 
-   while (current_entry != &ModuleTextListHead &&
-	  current_entry != NULL)
-     {
-	current =
-	  CONTAINING_RECORD(current_entry, MODULE_TEXT_SECTION, ListEntry);
+     while (current_entry != &ModuleTextListHead &&
+            current_entry != NULL)
+       {
+          current =
+            CONTAINING_RECORD(current_entry, MODULE_TEXT_SECTION, ListEntry);
 
-	if (address >= (PVOID)current->Base &&
-	    address < (PVOID)(current->Base + current->Length))
-	  {
-            RelativeAddress = (ULONG_PTR) address - current->Base;
-	    DbgPrint("<%ws: %x>", current->Name, RelativeAddress);
-	    return(TRUE);
-	  }
-	current_entry = current_entry->Flink;
-     }
+          if (address >= (PVOID)current->Base &&
+              address < (PVOID)(current->Base + current->Length))
+            {
+              RelativeAddress = (ULONG_PTR) address - current->Base;
+              DbgPrint("<%ws: %x>", current->Name, RelativeAddress);
+              return(TRUE);
+            }
+          current_entry = current_entry->Flink;
+       }
+
+     address = (PVOID)((ULONG_PTR)address & ~0xC0000000);
+   } while(++i <= 1);
+
    return(FALSE);
 }
 #endif /* KDBG */
@@ -511,9 +518,9 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 
    if (ExceptionNr == 15)
      {
-       /* 
+       /*
         * FIXME:
-        *   This exception should never occur. The P6 has a bug, which does sometimes deliver 
+        *   This exception should never occur. The P6 has a bug, which does sometimes deliver
         *   the apic spurious interrupt as exception 15. On an athlon64, I get one exception
         *   in the early boot phase in apic mode (using the smp build). I've looked to the linux
         *   sources. Linux does ignore this exception.
@@ -941,7 +948,7 @@ KeRaiseUserException(IN NTSTATUS ExceptionCode)
     } _SEH_HANDLE {
         return(ExceptionCode);
     } _SEH_END;
-            
+
    OldEip = Thread->TrapFrame->Eip;
    Thread->TrapFrame->Eip = (ULONG_PTR)LdrpGetSystemDllRaiseExceptionDispatcher();
    return((NTSTATUS)OldEip);
@@ -972,7 +979,7 @@ NtRaiseException (
     /* Restore the user context */
     Thread->TrapFrame = PrevTrapFrame;
     __asm__("mov %%ebx, %%esp;\n" "jmp _KiServiceExit": : "b" (TrapFrame));
-    
+
     /* We never get here */
     return(STATUS_SUCCESS);
 }

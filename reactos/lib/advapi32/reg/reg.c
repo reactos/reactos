@@ -222,7 +222,7 @@ OpenUsersKey (PHANDLE KeyHandle)
 			      NULL,
 			      NULL);
   return NtOpenKey (KeyHandle,
-		    KEY_ALL_ACCESS,
+		    MAXIMUM_ALLOWED,
 		    &Attributes);
 }
 

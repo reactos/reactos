@@ -50,7 +50,7 @@ NtQueryInformationFile(HANDLE FileHandle,
    PreviousMode = ExGetPreviousMode();
 
    Status = ObReferenceObjectByHandle(FileHandle,
-				      FILE_READ_ATTRIBUTES,
+				      0, /* FIXME - access depends on the information class! */
 				      IoFileObjectType,
 				      PreviousMode,
 				      (PVOID *)&FileObject,
@@ -402,7 +402,7 @@ NtSetInformationFile(HANDLE FileHandle,
 
    /*  Get the file object from the file handle  */
    Status = ObReferenceObjectByHandle(FileHandle,
-				      FILE_WRITE_ATTRIBUTES,
+				      0, /* FIXME - depends on the information class */
 				      IoFileObjectType,
 				      PreviousMode,
 				      (PVOID *)&FileObject,

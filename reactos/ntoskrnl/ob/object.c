@@ -412,7 +412,7 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
   else
     {
       Status = ObReferenceObjectByHandle(ObjectAttributes->RootDirectory,
-					 DIRECTORY_TRAVERSE,
+					 0,
 					 NULL,
 					 UserMode,
 					 &CurrentObject,

@@ -40,6 +40,8 @@
   ~(EX_HANDLE_ENTRY_PROTECTFROMCLOSE | EX_HANDLE_ENTRY_INHERITABLE |           \
   EX_HANDLE_ENTRY_AUDITONCLOSE)))
 
+#define GENERIC_ANY (GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE | GENERIC_ALL)
+
 /* FUNCTIONS ***************************************************************/
 
 VOID
@@ -548,6 +550,18 @@ ObCreateHandle(PEPROCESS Process,
    ObjectHeader = BODY_TO_HEADER(ObjectBody);
 
    ASSERT((ULONG_PTR)ObjectHeader & EX_HANDLE_ENTRY_LOCKED);
+   
+   if (GrantedAccess & MAXIMUM_ALLOWED)
+     {
+        GrantedAccess &= ~MAXIMUM_ALLOWED;
+        GrantedAccess |= GENERIC_ALL;
+     }
+
+   if (GrantedAccess & GENERIC_ANY)
+     {
+       RtlMapGenericMask(&GrantedAccess,
+		         ObjectHeader->ObjectType->Mapping);
+     }
 
    NewEntry.u1.Object = ObjectHeader;
    if(Inherit)
@@ -644,7 +658,6 @@ ObReferenceObjectByHandle(HANDLE Handle,
    POBJECT_HEADER ObjectHeader;
    PVOID ObjectBody;
    ACCESS_MASK GrantedAccess;
-   PGENERIC_MAPPING GenericMapping;
    ULONG Attributes;
    NTSTATUS Status;
    LONG ExHandle = HANDLE_TO_EX_HANDLE(Handle);
@@ -714,6 +727,13 @@ ObReferenceObjectByHandle(HANDLE Handle,
 	return(STATUS_OBJECT_TYPE_MISMATCH);
      }
    
+   /* desire as much access rights as possible */
+   if (DesiredAccess & MAXIMUM_ALLOWED)
+     {
+        DesiredAccess &= ~MAXIMUM_ALLOWED;
+        DesiredAccess |= GENERIC_ALL;
+     }
+   
    KeEnterCriticalRegion();
    
    HandleEntry = ExMapHandleToPointer(PsGetCurrentProcess()->ObjectTable,
@@ -729,6 +749,39 @@ ObReferenceObjectByHandle(HANDLE Handle,
    ObjectBody = HEADER_TO_BODY(ObjectHeader);
    
    DPRINT("locked1: ObjectHeader: 0x%x [HT:0x%x]\n", ObjectHeader, PsGetCurrentProcess()->ObjectTable);
+   
+   if (ObjectType != NULL && ObjectType != ObjectHeader->ObjectType)
+     {
+        DPRINT("ObjectType mismatch: %wZ vs %wZ (handle 0x%x)\n", &ObjectType->TypeName, ObjectHeader->ObjectType ? &ObjectHeader->ObjectType->TypeName : NULL, Handle);
+
+        ExUnlockHandleTableEntry(PsGetCurrentProcess()->ObjectTable,
+                                 HandleEntry);
+
+        KeLeaveCriticalRegion();
+
+        return(STATUS_OBJECT_TYPE_MISMATCH);
+     }
+
+   /* map the generic access masks if the caller asks for generic access */
+   if (DesiredAccess & GENERIC_ANY)
+     {
+        RtlMapGenericMask(&DesiredAccess,
+                          BODY_TO_HEADER(ObjectBody)->ObjectType->Mapping);
+     }
+   
+   GrantedAccess = HandleEntry->u2.GrantedAccess;
+   
+   /* Unless running as KernelMode, deny access if caller desires more access
+      rights than the handle can grant */
+   if(AccessMode != KernelMode && (~GrantedAccess & DesiredAccess))
+     {
+        ExUnlockHandleTableEntry(PsGetCurrentProcess()->ObjectTable,
+                                 HandleEntry);
+
+        KeLeaveCriticalRegion();
+
+        return(STATUS_ACCESS_DENIED);
+     }
 
    ObReferenceObjectByPointer(ObjectBody,
 			      0,
@@ -737,39 +790,11 @@ ObReferenceObjectByHandle(HANDLE Handle,
    Attributes = HandleEntry->u1.ObAttributes & (EX_HANDLE_ENTRY_PROTECTFROMCLOSE |
                                                 EX_HANDLE_ENTRY_INHERITABLE |
                                                 EX_HANDLE_ENTRY_AUDITONCLOSE);
-   GrantedAccess = HandleEntry->u2.GrantedAccess;
-   GenericMapping = ObjectHeader->ObjectType->Mapping;
-
-   if (ObjectType != NULL && ObjectType != ObjectHeader->ObjectType)
-     {
-        DPRINT("ObjectType mismatch: %wZ vs %wZ (handle 0x%x)\n", &ObjectType->TypeName, ObjectHeader->ObjectType ? &ObjectHeader->ObjectType->TypeName : NULL, Handle);
-        
-        ExUnlockHandleTableEntry(PsGetCurrentProcess()->ObjectTable,
-                                 HandleEntry);
-
-        KeLeaveCriticalRegion();
-        ObDereferenceObject(ObjectBody);
-        
-        return(STATUS_OBJECT_TYPE_MISMATCH);
-     }
 
    ExUnlockHandleTableEntry(PsGetCurrentProcess()->ObjectTable,
                             HandleEntry);
    
    KeLeaveCriticalRegion();
-   
-   if (DesiredAccess && AccessMode != KernelMode)
-     {
-	RtlMapGenericMask(&DesiredAccess, GenericMapping);
-
-	if (!(GrantedAccess & DesiredAccess) &&
-	    !((~GrantedAccess) & DesiredAccess))
-	  {
-             ObDereferenceObject(ObjectBody);
-	     CHECKPOINT;
-	     return(STATUS_ACCESS_DENIED);
-	  }
-     }
 
    if (HandleInformation != NULL)
      {
@@ -837,9 +862,6 @@ ObInsertObject(IN PVOID Object,
 
   Access = DesiredAccess;
   ObjectHeader = BODY_TO_HEADER(Object);
-
-  RtlMapGenericMask(&Access,
-		    ObjectHeader->ObjectType->Mapping);
 
   return(ObCreateHandle(PsGetCurrentProcess(),
 			Object,

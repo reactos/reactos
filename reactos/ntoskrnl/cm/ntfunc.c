@@ -460,9 +460,12 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   PKEY_FULL_INFORMATION  FullInformation;
   PDATA_CELL ClassCell;
   ULONG NameSize, ClassSize;
+  KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status;
   
   PAGED_CODE();
+  
+  PreviousMode = ExGetPreviousMode();
 
   DPRINT("KH %x  I %d  KIC %x KI %x  L %d  RL %x\n",
 	 KeyHandle,
@@ -476,7 +479,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   Status = ObReferenceObjectByHandle(KeyHandle,
 		KEY_ENUMERATE_SUB_KEYS,
 		CmiKeyType,
-		UserMode,
+		PreviousMode,
 		(PVOID *) &KeyObject,
 		NULL);
   if (!NT_SUCCESS(Status))
@@ -1056,7 +1059,7 @@ NtFlushKey(IN HANDLE KeyHandle)
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
-				     KEY_QUERY_VALUE,
+				     0,
 				     CmiKeyType,
 				     PreviousMode,
 				     (PVOID *)&KeyObject,
@@ -1218,7 +1221,7 @@ NtQueryKey(IN HANDLE KeyHandle,
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
-		KEY_READ,
+		(KeyInformationClass != KeyNameInformation ? KEY_QUERY_VALUE : 0),
 		CmiKeyType,
 		UserMode,
 		(PVOID *) &KeyObject,
@@ -1376,6 +1379,13 @@ NtQueryKey(IN HANDLE KeyHandle,
 	      }
 	  }
 	break;
+
+      case KeyNameInformation:
+      case KeyCachedInformation:
+      case KeyFlagsInformation:
+        DPRINT1("Key information class 0x%x not yet implemented!\n", KeyInformationClass);
+        Status = STATUS_NOT_IMPLEMENTED;
+        break;
 
       default:
 	DPRINT1("Not handling 0x%x\n", KeyInformationClass);
@@ -1658,14 +1668,12 @@ NtSetValueKey(IN HANDLE KeyHandle,
 	 KeyHandle, ValueName, Type);
 
   DesiredAccess = KEY_SET_VALUE;
-  if (Type == REG_LINK)
-    DesiredAccess |= KEY_CREATE_LINK;
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
 				     DesiredAccess,
 				     CmiKeyType,
-				     UserMode,
+				     ExGetPreviousMode(),
 				     (PVOID *)&KeyObject,
 				     NULL);
   if (!NT_SUCCESS(Status))
