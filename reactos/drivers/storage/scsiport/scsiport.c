@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.51 2004/03/24 16:21:59 navaraf Exp $
+/* $Id: scsiport.c,v 1.52 2004/04/02 15:43:01 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1281,7 +1281,7 @@ SpiGetPciConfigData (IN struct _HW_INITIALIZATION_DATA *HwInitializationData,
 						 sizeof(ULONG));
 			  if (RangeLength != 0)
 			    {
-			      PortConfig->AccessRanges[0].RangeLength =
+			      PortConfig->AccessRanges[i].RangeLength =
 			        -(RangeLength & PCI_ADDRESS_IO_ADDRESS_MASK);
 			      PortConfig->AccessRanges[i].RangeInMemory =
 				!(PciConfig.u.type0.BaseAddresses[i] & PCI_ADDRESS_IO_SPACE);
