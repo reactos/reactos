@@ -1,4 +1,4 @@
-/* $Id: conio.h,v 1.3 2004/03/14 17:53:27 weiden Exp $
+/* $Id: conio.h,v 1.4 2004/08/22 20:52:28 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -84,6 +84,8 @@ typedef struct tagCSRSS_CONSOLE
   HICON hWindowIcon;
   COORD Size;
   PVOID PrivateData;
+  UINT CodePage;
+  UINT OutputCodePage;
   PCSRSS_CONSOLE_VTBL Vtbl;
   LIST_ENTRY ProcessList;
 } CSRSS_CONSOLE;
@@ -132,6 +134,10 @@ CSR_API(CsrWriteConsoleInput);
 CSR_API(CsrHardwareStateProperty);
 CSR_API(CsrGetConsoleWindow);
 CSR_API(CsrSetConsoleIcon);
+CSR_API(CsrGetConsoleCodePage);
+CSR_API(CsrSetConsoleCodePage);
+CSR_API(CsrGetConsoleOutputCodePage);
+CSR_API(CsrSetConsoleOutputCodePage);
 
 #define ConioInitScreenBuffer(Console, Buff) (Console)->Vtbl->InitScreenBuffer((Console), (Buff))
 #define ConioDrawRegion(Console, Region) (Console)->Vtbl->DrawRegion((Console), (Region))

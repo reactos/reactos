@@ -137,6 +137,7 @@ typedef struct
 typedef struct
 {
    HANDLE ConsoleHandle;
+   BOOL Unicode;
 } CSRSS_READ_INPUT_REQUEST, *PCSRSS_READ_INPUT_REQUEST;
 
 typedef struct
@@ -277,6 +278,7 @@ typedef struct
 typedef struct
 {
   HANDLE ConsoleHandle;
+  BOOL Unicode;
   COORD BufferSize;
   COORD BufferCoord;
   SMALL_RECT WriteRegion;
@@ -389,6 +391,7 @@ typedef struct
 typedef struct
 {
   HANDLE ConsoleHandle;
+  BOOL Unicode;
   DWORD Length;
   INPUT_RECORD* InputRecord;
 } CSRSS_PEEK_CONSOLE_INPUT_REQUEST, *PCSRSS_PEEK_CONSOLE_INPUT_REQUEST;
@@ -401,6 +404,7 @@ typedef struct
 typedef struct
 {
   HANDLE ConsoleHandle;
+  BOOL Unicode;
   COORD BufferSize;
   COORD BufferCoord;
   SMALL_RECT ReadRegion;
@@ -493,15 +497,21 @@ typedef struct
 
 typedef struct
 {
-  HANDLE ConsoleHandle;
-  HWND   WindowHandle;
-} CSRSS_CONSOLE_WINDOW, *PCSRSS_CONSOLE_WINDOW;
+} CSRSS_GET_CONSOLE_WINDOW_REQUEST, *PCSRSS_GET_CONSOLE_WINDOW_REQUEST;
 
 typedef struct
 {
-  HANDLE ConsoleHandle;
+  HWND   WindowHandle;
+} CSRSS_GET_CONSOLE_WINDOW_REPLY, *PCSRSS_GET_CONSOLE_WINDOW_REPLY;
+
+typedef struct
+{
   HICON  WindowIcon;
-} CSRSS_CONSOLE_SET_WINDOW_ICON, *PCSRSS_CONSOLE_SET_WINDOW_ICON;
+} CSRSS_SET_CONSOLE_ICON_REQUEST, *PCSRSS_SET_CONSOLE_ICON_REQUEST;
+
+typedef struct
+{
+} CSRSS_SET_CONSOLE_ICON_REPLY, *PCSRSS_SET_CONSOLE_ICON_REPLY;
 
 typedef struct
 {
@@ -550,6 +560,42 @@ typedef struct
 typedef struct
 {
 } CSRSS_REGISTER_LOGON_PROCESS_REPLY, *PCSRSS_REGISTER_LOGON_PROCESS_REPLY;
+
+typedef struct
+{
+} CSRSS_GET_CONSOLE_CP_REQUEST, *PCSRSS_GET_CONSOLE_CP_REQUEST;
+
+typedef struct
+{
+  UINT CodePage;
+} CSRSS_GET_CONSOLE_CP_REPLY, *PCSRSS_GET_CONSOLE_CP_REPLY;
+
+typedef struct
+{
+  UINT CodePage;
+} CSRSS_SET_CONSOLE_CP_REQUEST, *PCSRSS_SET_CONSOLE_CP_REQUEST;
+
+typedef struct
+{
+} CSRSS_SET_CONSOLE_CP_REPLY, *PCSRSS_SET_CONSOLE_CP_REPLY;
+
+typedef struct
+{
+} CSRSS_GET_CONSOLE_OUTPUT_CP_REQUEST, *PCSRSS_GET_CONSOLE_OUTPUT_CP_REQUEST;
+
+typedef struct
+{
+  UINT CodePage;
+} CSRSS_GET_CONSOLE_OUTPUT_CP_REPLY, *PCSRSS_GET_CONSOLE_OUTPUT_CP_REPLY;
+
+typedef struct
+{
+  UINT CodePage;
+} CSRSS_SET_CONSOLE_OUTPUT_CP_REQUEST, *PCSRSS_SET_CONSOLE_OUTPUT_CP_REQUEST;
+
+typedef struct
+{
+} CSRSS_SET_CONSOLE_OUTPUT_CP_REPLY, *PCSRSS_SET_CONSOLE_OUTPUT_CP_REPLY;
 
 #define CSRSS_MAX_WRITE_CONSOLE_REQUEST       \
       (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE_REQUEST))
@@ -618,6 +664,10 @@ typedef struct
 #define CSRSS_SET_CONSOLE_ICON              (0x2E)
 #define CSRSS_SET_LOGON_NOTIFY_WINDOW       (0x2F)
 #define CSRSS_REGISTER_LOGON_PROCESS        (0x30)
+#define CSRSS_GET_CONSOLE_CP                (0x31)
+#define CSRSS_SET_CONSOLE_CP                (0x32)
+#define CSRSS_GET_CONSOLE_OUTPUT_CP         (0x33)
+#define CSRSS_SET_CONSOLE_OUTPUT_CP         (0x34)
 
 /* Keep in sync with definition below. */
 #define CSRSS_REQUEST_HEADER_SIZE (LPC_MESSAGE_BASE_SIZE + sizeof(ULONG))
@@ -672,13 +722,17 @@ typedef struct
         CSRSS_VERIFY_HANDLE_REQUEST VerifyHandleRequest;
         CSRSS_DUPLICATE_HANDLE_REQUEST DuplicateHandleRequest;
         CSRSS_SETGET_CONSOLE_HW_STATE_REQUEST ConsoleHardwareStateRequest;
-        CSRSS_CONSOLE_WINDOW ConsoleWindowRequest;
+        CSRSS_GET_CONSOLE_WINDOW_REQUEST GetConsoleWindowRequest;
         CSRSS_CREATE_DESKTOP_REQUEST CreateDesktopRequest;
         CSRSS_SHOW_DESKTOP_REQUEST ShowDesktopRequest;
         CSRSS_HIDE_DESKTOP_REQUEST HideDesktopRequest;
-        CSRSS_CONSOLE_SET_WINDOW_ICON ConsoleSetWindowIconRequest;
+        CSRSS_SET_CONSOLE_ICON_REQUEST SetConsoleIconRequest;
         CSRSS_SET_LOGON_NOTIFY_WINDOW_REQUEST SetLogonNotifyWindowRequest;
         CSRSS_REGISTER_LOGON_PROCESS_REQUEST RegisterLogonProcessRequest;
+        CSRSS_GET_CONSOLE_CP_REQUEST GetConsoleCodePage;
+        CSRSS_SET_CONSOLE_CP_REQUEST SetConsoleCodePage;
+        CSRSS_GET_CONSOLE_OUTPUT_CP_REQUEST GetConsoleOutputCodePage;
+        CSRSS_SET_CONSOLE_OUTPUT_CP_REQUEST SetConsoleOutputCodePage;
       } Data;
     };
   };
@@ -721,13 +775,17 @@ typedef struct
         CSRSS_GET_OUTPUT_HANDLE_REPLY GetOutputHandleReply;
         CSRSS_DUPLICATE_HANDLE_REPLY DuplicateHandleReply;
         CSRSS_SETGET_CONSOLE_HW_STATE_REPLY ConsoleHardwareStateReply;
-        CSRSS_CONSOLE_WINDOW ConsoleWindowReply;
+        CSRSS_GET_CONSOLE_WINDOW_REPLY GetConsoleWindowReply;
         CSRSS_CREATE_DESKTOP_REPLY CreateDesktopReply;
         CSRSS_SHOW_DESKTOP_REPLY ShowDesktopReply;
         CSRSS_HIDE_DESKTOP_REPLY HideDesktopReply;
-        CSRSS_CONSOLE_SET_WINDOW_ICON ConsoleSetWindowIconReply;
+        CSRSS_SET_CONSOLE_ICON_REPLY SetConsoleIconReply;
         CSRSS_SET_LOGON_NOTIFY_WINDOW_REPLY SetLogonNotifyWindowReply;
         CSRSS_REGISTER_LOGON_PROCESS_REPLY RegisterLogonProcessReply;
+        CSRSS_GET_CONSOLE_CP_REPLY GetConsoleCodePage;
+        CSRSS_SET_CONSOLE_CP_REPLY SetConsoleCodePage;
+        CSRSS_GET_CONSOLE_OUTPUT_CP_REPLY GetConsoleOutputCodePage;
+        CSRSS_SET_CONSOLE_OUTPUT_CP_REPLY SetConsoleOutputCodePage;
       } Data;
     };
   };

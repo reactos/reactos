@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.76 2004/06/13 20:04:56 navaraf Exp $
+/* $Id: console.c,v 1.77 2004/08/22 20:52:28 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1394,22 +1394,24 @@ FillConsoleOutputCharacterW(
 	)
 {
 /* TO DO */
+	DbgPrint("%s unimplemented\n", __FUNCTION__);
 	return FALSE;
 }
 
 
 /*--------------------------------------------------------------
- * 	PeekConsoleInputA
+ * 	IntPeekConsoleInput
  *
- * @implemented
+ * INTERNAL
  */
 BOOL
 WINAPI
-PeekConsoleInputA(
+IntPeekConsoleInput(
 	HANDLE			hConsoleInput,
 	PINPUT_RECORD		lpBuffer,
 	DWORD			nLength,
-	LPDWORD			lpNumberOfEventsRead
+	LPDWORD			lpNumberOfEventsRead,
+	BOOL			bUnicode
 	)
 {
   PCSRSS_API_REQUEST Request;
@@ -1444,6 +1446,7 @@ PeekConsoleInputA(
   
   Request->Type = CSRSS_PEEK_CONSOLE_INPUT;
   Request->Data.PeekConsoleInputRequest.ConsoleHandle = hConsoleInput;
+  Request->Data.PeekConsoleInputRequest.Unicode = bUnicode;
   Request->Data.PeekConsoleInputRequest.Length = nLength;
   Request->Data.PeekConsoleInputRequest.InputRecord = (INPUT_RECORD*)BufferTargetBase;
   
@@ -1464,14 +1467,32 @@ PeekConsoleInputA(
   RtlFreeHeap(GetProcessHeap(), 0, Request);
   CsrReleaseParameterBuffer(BufferBase);  
   
-	return TRUE;
+  return TRUE;
+}
+
+/*--------------------------------------------------------------
+ * 	PeekConsoleInputA
+ *
+ * @implemented
+ */
+BOOL
+WINAPI
+PeekConsoleInputA(
+	HANDLE			hConsoleInput,
+	PINPUT_RECORD		lpBuffer,
+	DWORD			nLength,
+	LPDWORD			lpNumberOfEventsRead
+	)
+{
+  return IntPeekConsoleInput(hConsoleInput, lpBuffer, nLength,
+                             lpNumberOfEventsRead, FALSE);
 }
 
 
 /*--------------------------------------------------------------
  * 	PeekConsoleInputW
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -1482,21 +1503,22 @@ PeekConsoleInputW(
 	LPDWORD			lpNumberOfEventsRead
 	)    
 {
-/* TO DO */
-	return FALSE;
+  return IntPeekConsoleInput(hConsoleInput, lpBuffer, nLength,
+                             lpNumberOfEventsRead, TRUE);
 }
 
 
 /*--------------------------------------------------------------
- * 	ReadConsoleInputA
+ * 	IntReadConsoleInput
  *
- * @implemented
+ * INTERNAL
  */
 BOOL WINAPI
-ReadConsoleInputA(HANDLE hConsoleInput,
-		  PINPUT_RECORD	lpBuffer,
-		  DWORD	nLength,
-		  LPDWORD lpNumberOfEventsRead)
+IntReadConsoleInput(HANDLE hConsoleInput,
+                    PINPUT_RECORD lpBuffer,
+                    DWORD nLength,
+                    LPDWORD lpNumberOfEventsRead,
+                    BOOL bUnicode)
 {
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
@@ -1525,6 +1547,7 @@ ReadConsoleInputA(HANDLE hConsoleInput,
       
       Request.Type = CSRSS_READ_INPUT;
       Request.Data.ReadInputRequest.ConsoleHandle = hConsoleInput;
+      Request.Data.ReadInputRequest.Unicode = bUnicode;
       Status = CsrClientCallServer(&Request, &Reply, sizeof(CSRSS_API_REQUEST),
 				   sizeof(CSRSS_API_REPLY));
       if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
@@ -1534,10 +1557,9 @@ ReadConsoleInputA(HANDLE hConsoleInput,
 	}
     }
   
-  NumEventsRead = 0;
+  NumEventsRead = 1;
   *lpBuffer = Reply.Data.ReadInputReply.Input;
   lpBuffer++;
-  NumEventsRead++;
   
   while ((NumEventsRead < nLength) && (Reply.Data.ReadInputReply.MoreEvents))
     {
@@ -1566,9 +1588,25 @@ ReadConsoleInputA(HANDLE hConsoleInput,
 
 
 /*--------------------------------------------------------------
+ * 	ReadConsoleInputA
+ *
+ * @implemented
+ */
+BOOL WINAPI
+ReadConsoleInputA(HANDLE hConsoleInput,
+		  PINPUT_RECORD	lpBuffer,
+		  DWORD	nLength,
+		  LPDWORD lpNumberOfEventsRead)
+{
+  return IntReadConsoleInput(hConsoleInput, lpBuffer, nLength,
+                             lpNumberOfEventsRead, FALSE);
+}
+
+
+/*--------------------------------------------------------------
  * 	ReadConsoleInputW
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -1579,8 +1617,8 @@ ReadConsoleInputW(
 	LPDWORD			lpNumberOfEventsRead
 	)
 {
-/* TO DO */
-	return FALSE;
+  return IntReadConsoleInput(hConsoleInput, lpBuffer, nLength,
+                             lpNumberOfEventsRead, TRUE);
 }
 
 
@@ -1665,23 +1703,25 @@ WriteConsoleInputW(
 	)
 {
 /* TO DO */
+	DbgPrint("%s unimplemented\n", __FUNCTION__);
 	return FALSE;
 }
 
 
 /*--------------------------------------------------------------
- * 	ReadConsoleOutputA
+ * 	IntReadConsoleOutput
  *
- * @implemented
+ * INTERNAL
  */
 BOOL
 WINAPI
-ReadConsoleOutputA(
-	HANDLE		hConsoleOutput,
-	PCHAR_INFO	lpBuffer,
-	COORD		dwBufferSize,
-	COORD		dwBufferCoord,
-	PSMALL_RECT	lpReadRegion
+IntReadConsoleOutput(
+	HANDLE          hConsoleOutput,
+	PCHAR_INFO      lpBuffer,
+	COORD           dwBufferSize,
+	COORD           dwBufferCoord,
+	PSMALL_RECT     lpReadRegion,
+	BOOL            bUnicode
 	)
 {
   PCSRSS_API_REQUEST Request;
@@ -1716,6 +1756,7 @@ ReadConsoleOutputA(
    
   Request->Type = CSRSS_READ_CONSOLE_OUTPUT;
   Request->Data.ReadConsoleOutputRequest.ConsoleHandle = hConsoleOutput;
+  Request->Data.ReadConsoleOutputRequest.Unicode = bUnicode;
   Request->Data.ReadConsoleOutputRequest.BufferSize = dwBufferSize;
   Request->Data.ReadConsoleOutputRequest.BufferCoord = dwBufferCoord;
   Request->Data.ReadConsoleOutputRequest.ReadRegion = *lpReadRegion;
@@ -1742,11 +1783,30 @@ ReadConsoleOutputA(
   return TRUE;
 }
 
+/*--------------------------------------------------------------
+ * 	ReadConsoleOutputA
+ *
+ * @implemented
+ */
+BOOL
+WINAPI
+ReadConsoleOutputA(
+	HANDLE		hConsoleOutput,
+	PCHAR_INFO	lpBuffer,
+	COORD		dwBufferSize,
+	COORD		dwBufferCoord,
+	PSMALL_RECT	lpReadRegion
+	)
+{
+  return IntReadConsoleOutput(hConsoleOutput, lpBuffer, dwBufferSize,
+	                      dwBufferCoord, lpReadRegion, FALSE);
+}
+
 
 /*--------------------------------------------------------------
  * 	ReadConsoleOutputW
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -1758,21 +1818,23 @@ ReadConsoleOutputW(
 	PSMALL_RECT	lpReadRegion
 	)
 {
-/* TO DO */
-	return FALSE;
+  return IntReadConsoleOutput(hConsoleOutput, lpBuffer, dwBufferSize,
+	                      dwBufferCoord, lpReadRegion, TRUE);
 }
 
+
 /*--------------------------------------------------------------
- * 	WriteConsoleOutputA
+ * 	IntWriteConsoleOutput
  *
- * @implemented
+ * INTERNAL
  */
 BOOL WINAPI
-WriteConsoleOutputA(HANDLE		 hConsoleOutput,
-		    CONST CHAR_INFO	*lpBuffer,
-		    COORD		 dwBufferSize,
-		    COORD		 dwBufferCoord,
-		    PSMALL_RECT	 lpWriteRegion)
+IntWriteConsoleOutput(HANDLE           hConsoleOutput,
+                      CONST CHAR_INFO *lpBuffer,
+                      COORD            dwBufferSize,
+                      COORD            dwBufferCoord,
+                      PSMALL_RECT      lpWriteRegion,
+                      BOOL             bUnicode)
 {
   PCSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
@@ -1803,6 +1865,7 @@ WriteConsoleOutputA(HANDLE		 hConsoleOutput,
     }
   Request->Type = CSRSS_WRITE_CONSOLE_OUTPUT;
   Request->Data.WriteConsoleOutputRequest.ConsoleHandle = hConsoleOutput;
+  Request->Data.WriteConsoleOutputRequest.Unicode = bUnicode;
   Request->Data.WriteConsoleOutputRequest.BufferSize = dwBufferSize;
   Request->Data.WriteConsoleOutputRequest.BufferCoord = dwBufferCoord;
   Request->Data.WriteConsoleOutputRequest.WriteRegion = *lpWriteRegion;
@@ -1826,11 +1889,27 @@ WriteConsoleOutputA(HANDLE		 hConsoleOutput,
   return(TRUE);
 }
 
+/*--------------------------------------------------------------
+ * 	WriteConsoleOutputA
+ *
+ * @implemented
+ */
+BOOL WINAPI
+WriteConsoleOutputA(HANDLE		 hConsoleOutput,
+		    CONST CHAR_INFO	*lpBuffer,
+		    COORD		 dwBufferSize,
+		    COORD		 dwBufferCoord,
+		    PSMALL_RECT	 lpWriteRegion)
+{
+  return IntWriteConsoleOutput(hConsoleOutput, lpBuffer, dwBufferSize,
+                               dwBufferCoord, lpWriteRegion, FALSE);
+}
+
 
 /*--------------------------------------------------------------
  * 	WriteConsoleOutputW
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -1842,8 +1921,8 @@ WriteConsoleOutputW(
 	PSMALL_RECT	 lpWriteRegion
 	)
 {
-/* TO DO */
-	return FALSE;
+  return IntWriteConsoleOutput(hConsoleOutput, lpBuffer, dwBufferSize,
+                               dwBufferCoord, lpWriteRegion, TRUE);
 }
 
 
@@ -1931,6 +2010,7 @@ ReadConsoleOutputCharacterW(
 	)
 {
 /* TO DO */
+	DbgPrint("%s unimplemented\n", __FUNCTION__);
 	return FALSE;
 }
 
@@ -2443,6 +2523,7 @@ SetConsoleScreenBufferSize(
 	)
 {
 /* TO DO */
+	DbgPrint("%s unimplemented\n", __FUNCTION__);
 	return FALSE;
 }
 
@@ -2538,6 +2619,7 @@ ScrollConsoleScreenBufferW(
 	)
 {
 /* TO DO */
+	DbgPrint("%s unimplemented\n", __FUNCTION__);
 	return FALSE;
 }
 
@@ -2556,6 +2638,7 @@ SetConsoleWindowInfo(
 	)
 {
 /* TO DO */
+	DbgPrint("%s unimplemented\n", __FUNCTION__);
 	return FALSE;
 }
 
@@ -2923,6 +3006,7 @@ ReadConsoleW(
 	)
 {
 /* --- TO DO --- */
+	DbgPrint("%s unimplemented\n", __FUNCTION__);
 	return FALSE;
 }
 
@@ -2942,6 +3026,7 @@ WriteConsoleW(
 	LPVOID		 lpReserved
 	)
 {
+	DbgPrint("%s unimplemented\n", __FUNCTION__);
 #if 0
   PCSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
@@ -3026,14 +3111,25 @@ CreateConsoleScreenBuffer(
 /*--------------------------------------------------------------
  *	GetConsoleCP
  *
- * @unimplemented
+ * @implemented
  */
 UINT
 WINAPI
 GetConsoleCP( VOID )
 {
-/* --- TO DO --- */
-	return CP_OEMCP; /* FIXME */
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY   Reply;
+  NTSTATUS          Status;
+   
+  Request.Type = CSRSS_GET_CONSOLE_CP;
+  Status = CsrClientCallServer(&Request, &Reply, sizeof(CSRSS_API_REQUEST),
+                               sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+  {
+    SetLastErrorByStatus (Status);
+    return 0;
+  }
+  return Reply.Data.GetConsoleCodePage.CodePage;
 }
 
 
@@ -3048,29 +3144,51 @@ SetConsoleCP(
 	UINT		wCodePageID
 	)
 {
-/* --- TO DO --- */
-	return FALSE;
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY   Reply;
+  NTSTATUS          Status;
+   
+  Request.Type = CSRSS_SET_CONSOLE_CP;
+  Request.Data.SetConsoleCodePage.CodePage = wCodePageID;
+  Status = CsrClientCallServer(&Request, &Reply, sizeof(CSRSS_API_REQUEST),
+                               sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+  {
+    SetLastErrorByStatus (Status);
+  }
+  return NT_SUCCESS(Status);
 }
 
 
 /*--------------------------------------------------------------
  *	GetConsoleOutputCP
  *
- * @unimplemented
+ * @implemented
  */
 UINT
 WINAPI
 GetConsoleOutputCP( VOID )
 {
-/* --- TO DO --- */
-	return 0; /* FIXME */
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY   Reply;
+  NTSTATUS          Status;
+   
+  Request.Type = CSRSS_GET_CONSOLE_OUTPUT_CP;
+  Status = CsrClientCallServer(&Request, &Reply, sizeof(CSRSS_API_REQUEST),
+                               sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+  {
+    SetLastErrorByStatus (Status);
+    return 0;
+  }
+  return Reply.Data.GetConsoleOutputCodePage.CodePage;
 }
 
 
 /*--------------------------------------------------------------
  *	SetConsoleOutputCP
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -3078,8 +3196,19 @@ SetConsoleOutputCP(
 	UINT		wCodePageID
 	)
 {
-/* --- TO DO --- */
-	return FALSE;
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY   Reply;
+  NTSTATUS          Status;
+   
+  Request.Type = CSRSS_SET_CONSOLE_OUTPUT_CP;
+  Request.Data.SetConsoleOutputCodePage.CodePage = wCodePageID;
+  Status = CsrClientCallServer(&Request, &Reply, sizeof(CSRSS_API_REQUEST),
+                               sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+  {
+    SetLastErrorByStatus (Status);
+  }
+  return NT_SUCCESS(Status);
 }
 
 
@@ -3136,12 +3265,6 @@ GetConsoleWindow (VOID)
   CSRSS_API_REPLY   Reply;
   NTSTATUS          Status;
    
-  Request.Data.ConsoleWindowRequest.ConsoleHandle =
-    OpenConsoleW (L"CONOUT$", (GENERIC_READ|GENERIC_WRITE), FALSE, OPEN_EXISTING);
-  if (INVALID_HANDLE_VALUE == Request.Data.ConsoleWindowRequest.ConsoleHandle)
-  {
-    return (HWND) NULL;
-  }
   Request.Type = CSRSS_GET_CONSOLE_WINDOW;
   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
   if (!NT_SUCCESS(Status ) || !NT_SUCCESS(Status = Reply.Status))
@@ -3149,12 +3272,13 @@ GetConsoleWindow (VOID)
     SetLastErrorByStatus (Status);
     return (HWND) NULL;
   }
-  return Reply.Data.ConsoleWindowReply.WindowHandle;
+  return Reply.Data.GetConsoleWindowReply.WindowHandle;
 }
 
 
 /*--------------------------------------------------------------
- * 	GetConsoleWindow
+ * 	SetConsoleIcon
+ *
  * @implemented
  */
 BOOL STDCALL SetConsoleIcon(HICON hicon)
@@ -3163,14 +3287,8 @@ BOOL STDCALL SetConsoleIcon(HICON hicon)
   CSRSS_API_REPLY   Reply;
   NTSTATUS          Status;
   
-  Request.Data.ConsoleSetWindowIconRequest.ConsoleHandle =
-    OpenConsoleW (L"CONOUT$", (GENERIC_READ|GENERIC_WRITE), FALSE, OPEN_EXISTING);
-  if (INVALID_HANDLE_VALUE == Request.Data.ConsoleSetWindowIconRequest.ConsoleHandle)
-  {
-    return FALSE;
-  }
   Request.Type = CSRSS_SET_CONSOLE_ICON;
-  Request.Data.ConsoleSetWindowIconRequest.WindowIcon = hicon;
+  Request.Data.SetConsoleIconRequest.WindowIcon = hicon;
   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
   {
