@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.15 2003/04/04 14:05:29 ekohl Exp $
+/* $Id: import.c,v 1.16 2003/04/12 18:41:43 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -613,9 +613,10 @@ CmImportTextHive(PCHAR  ChunkBase,
 
 
 static BOOLEAN
-CmImportBinarySystemHive(PCHAR ChunkBase,
-			 ULONG ChunkSize,
-			 PREGISTRY_HIVE *RegistryHive)
+CmImportBinaryHive (PCHAR ChunkBase,
+		    ULONG ChunkSize,
+		    ULONG Flags,
+		    PREGISTRY_HIVE *RegistryHive)
 {
   PREGISTRY_HIVE Hive;
   PCELL_HEADER FreeBlock;
@@ -644,6 +645,10 @@ CmImportBinarySystemHive(PCHAR ChunkBase,
   RtlZeroMemory (Hive,
 		 sizeof(REGISTRY_HIVE));
 
+  /* Set hive flags */
+  Hive->Flags = Flags;
+
+  /* Allocate hive header */
   Hive->HiveHeader = (PHIVE_HEADER)ExAllocatePool (NonPagedPool,
 						   sizeof(HIVE_HEADER));
   if (Hive->HiveHeader == NULL)
@@ -670,8 +675,8 @@ CmImportBinarySystemHive(PCHAR ChunkBase,
   /* Allocate block list */
   DPRINT("Space needed for block list describing hive: 0x%x\n",
 	 sizeof(PHBIN *) * Hive->BlockListSize);
-  Hive->BlockList = ExAllocatePool(NonPagedPool,
-				   sizeof(PHBIN *) * Hive->BlockListSize);
+  Hive->BlockList = ExAllocatePool (NonPagedPool,
+				    sizeof(PHBIN *) * Hive->BlockListSize);
   if (Hive->BlockList == NULL)
     {
       DPRINT1 ("Allocating block list failed\n");
@@ -681,8 +686,8 @@ CmImportBinarySystemHive(PCHAR ChunkBase,
     }
 
   /* Allocate the hive block */
-  Hive->BlockList[0] = ExAllocatePool(PagedPool,
-				      Hive->FileSize - 4096);
+  Hive->BlockList[0] = ExAllocatePool (PagedPool,
+				       Hive->FileSize - 4096);
   if (Hive->BlockList[0] == NULL)
     {
       DPRINT1 ("Allocating the first hive block failed\n");
@@ -709,7 +714,7 @@ CmImportBinarySystemHive(PCHAR ChunkBase,
       Bin = (PHBIN) (((ULONG_PTR)Hive->BlockList[i]));
       if (Bin->BlockId != REG_BIN_ID)
 	{
-	  DPRINT1("Bad BlockId %x, offset %x\n", Bin->BlockId, BlockOffset);
+	  DPRINT1 ("Bad BlockId %x, offset %x\n", Bin->BlockId, BlockOffset);
 	  /* FIXME: */
 	  assert(FALSE);
 //	  return STATUS_INSUFFICIENT_RESOURCES;
@@ -753,31 +758,33 @@ CmImportBinarySystemHive(PCHAR ChunkBase,
       BlockOffset += Bin->BlockSize;
     }
 
-  /* Calculate bitmap size in bytes (always a multiple of 32 bits) */
-  BitmapSize = ROUND_UP(Hive->BlockListSize, sizeof(ULONG) * 8) / 8;
-  DPRINT("Hive->BlockListSize: %lu\n", Hive->BlockListSize);
-  DPRINT("BitmapSize:  %lu Bytes  %lu Bits\n", BitmapSize, BitmapSize * 8);
-
-  /* Allocate bitmap */
-  Hive->BitmapBuffer = (PULONG)ExAllocatePool(PagedPool,
-					      BitmapSize);
-  if (Hive->BitmapBuffer == NULL)
+  if (!(Hive->Flags & HIVE_VOLATILE))
     {
-      DPRINT1 ("Allocating the hive bitmap failed\n");
-      ExFreePool (Hive->BlockList[0]);
-      ExFreePool (Hive->BlockList);
-      ExFreePool (Hive->HiveHeader);
-      ExFreePool (Hive);
-      return FALSE;
+      /* Calculate bitmap size in bytes (always a multiple of 32 bits) */
+      BitmapSize = ROUND_UP (Hive->BlockListSize, sizeof(ULONG) * 8) / 8;
+      DPRINT ("Hive->BlockListSize: %lu\n", Hive->BlockListSize);
+      DPRINT ("BitmapSize:  %lu Bytes  %lu Bits\n", BitmapSize, BitmapSize * 8);
+
+      /* Allocate bitmap */
+      Hive->BitmapBuffer = (PULONG)ExAllocatePool (PagedPool,
+						   BitmapSize);
+      if (Hive->BitmapBuffer == NULL)
+	{
+	  DPRINT1 ("Allocating the hive bitmap failed\n");
+	  ExFreePool (Hive->BlockList[0]);
+	  ExFreePool (Hive->BlockList);
+	  ExFreePool (Hive->HiveHeader);
+	  ExFreePool (Hive);
+	  return FALSE;
+	}
+
+      /* Initialize bitmap */
+      RtlInitializeBitMap (&Hive->DirtyBitMap,
+			   Hive->BitmapBuffer,
+			   BitmapSize * 8);
+      RtlClearAllBits (&Hive->DirtyBitMap);
+      Hive->HiveDirty = FALSE;
     }
-
-  /* Initialize bitmap */
-  RtlInitializeBitMap(&Hive->DirtyBitMap,
-		      Hive->BitmapBuffer,
-		      BitmapSize * 8);
-  RtlClearAllBits(&Hive->DirtyBitMap);
-  Hive->HiveDirty = FALSE;
-
 
   /* Initialize the hive's executive resource */
   ExInitializeResourceLite(&Hive->HiveResource);
@@ -805,46 +812,50 @@ CmImportSystemHive(PCHAR ChunkBase,
   UNICODE_STRING KeyName;
   NTSTATUS Status;
 
+  DPRINT ("CmImportSystemHive() called\n");
+
   if (strncmp (ChunkBase, "REGEDIT4", 8) == 0)
     {
       DPRINT ("Found 'REGEDIT4' magic\n");
       CmImportTextHive (ChunkBase, ChunkSize);
       return TRUE;
     }
-  else if (strncmp (ChunkBase, "regf", 4) == 0)
+  else if (strncmp (ChunkBase, "regf", 4) != 0)
     {
-      DPRINT ("Found '%.*s' magic\n", 4, ChunkBase);
-
-      /* Import the binary system hive */
-      if (!CmImportBinarySystemHive (ChunkBase, ChunkSize, &RegistryHive))
-	{
-	  return FALSE;
-	}
-
-      /* Attach it to the machine key */
-      RtlInitUnicodeString (&KeyName,
-			    L"\\Registry\\Machine\\System");
-      Status = CmiConnectHive (RegistryHive,
-			       &KeyName);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("CmiConnectHive() failed (Status %lx)\n", Status);
-//	  CmiRemoveRegistryHive(RegistryHive);
-	  return FALSE;
-	}
-
-      /* Set the hive filename */
-      RtlCreateUnicodeString (&RegistryHive->HiveFileName,
-			      SYSTEM_REG_FILE);
-
-      /* Set the log filename */
-      RtlCreateUnicodeString (&RegistryHive->LogFileName,
-			      SYSTEM_LOG_FILE);
-
-      return TRUE;
+      DPRINT1 ("Found invalid '%.*s' magic\n", 4, ChunkBase);
+      return FALSE;
     }
 
-  return FALSE;
+  DPRINT ("Found '%.*s' magic\n", 4, ChunkBase);
+
+  /* Import the binary system hive (non-volatile, offset-based, permanent) */
+  if (!CmImportBinaryHive (ChunkBase, ChunkSize, 0, &RegistryHive))
+    {
+      DPRINT1 ("CmiImportBinaryHive() failed\n", Status);
+      return FALSE;
+    }
+
+  /* Attach it to the machine key */
+  RtlInitUnicodeString (&KeyName,
+			L"\\Registry\\Machine\\System");
+  Status = CmiConnectHive (RegistryHive,
+			   &KeyName);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("CmiConnectHive() failed (Status %lx)\n", Status);
+//      CmiRemoveRegistryHive(RegistryHive);
+      return FALSE;
+    }
+
+  /* Set the hive filename */
+  RtlCreateUnicodeString (&RegistryHive->HiveFileName,
+			  SYSTEM_REG_FILE);
+
+  /* Set the log filename */
+  RtlCreateUnicodeString (&RegistryHive->LogFileName,
+			  SYSTEM_LOG_FILE);
+
+  return TRUE;
 }
 
 
@@ -852,7 +863,50 @@ BOOLEAN
 CmImportHardwareHive(PCHAR ChunkBase,
 		     ULONG ChunkSize)
 {
-  DPRINT1("CmImportHardwareHive() called\n");
+#if 0
+  PREGISTRY_HIVE RegistryHive;
+  UNICODE_STRING KeyName;
+  NTSTATUS Status;
+#endif
+
+  DPRINT ("CmImportHardwareHive() called\n");
+
+#if 0
+  if (strncmp (ChunkBase, "regf", 4) != 0)
+    {
+      DPRINT1 ("Found invalid '%.*s' magic\n", 4, ChunkBase);
+      return FALSE;
+    }
+
+  DPRINT ("Found '%.*s' magic\n", 4, ChunkBase);
+
+  /* Import the binary system hive (volatile, offset-based, permanent) */
+  if (!CmImportBinaryHive (ChunkBase, ChunkSize, HIVE_VOLATILE, &RegistryHive))
+    {
+      DPRINT1 ("CmiImportBinaryHive() failed\n", Status);
+      return FALSE;
+    }
+
+  /* Attach it to the machine key */
+  RtlInitUnicodeString (&KeyName,
+			L"\\Registry\\Machine\\HARDWARE");
+  Status = CmiConnectHive (RegistryHive,
+			   &KeyName);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("CmiConnectHive() failed (Status %lx)\n", Status);
+//      CmiRemoveRegistryHive(RegistryHive);
+      return FALSE;
+    }
+
+  /* Set the hive filename */
+  RtlCreateUnicodeString (&RegistryHive->HiveFileName,
+			  NULL);
+
+  /* Set the log filename */
+  RtlCreateUnicodeString (&RegistryHive->LogFileName,
+			  NULL);
+#endif
 
   return TRUE;
 }
