@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * Module Name: bn.c
- *   $Revision: 1.1 $
+ *   $Revision: 1.2 $
  *
  *****************************************************************************/
 
@@ -360,6 +360,9 @@ bn_initialize (void)
 	 */
 	MEMCPY(criteria.hid, BN_HID_LID_SWITCH, sizeof(BN_HID_LID_SWITCH));
 	status = bm_register_driver(&criteria, &driver);
+	
+	if (status == AE_NOT_FOUND)
+		status = AE_OK;
 
 	return_ACPI_STATUS(status);
 }

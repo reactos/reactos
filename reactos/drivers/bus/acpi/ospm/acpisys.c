@@ -1,4 +1,4 @@
-/* $Id: acpisys.c,v 1.5 2002/05/05 14:57:44 chorns Exp $
+/* $Id: acpisys.c,v 1.6 2004/12/25 00:44:49 greatlrd Exp $
  *
  * PROJECT:         ReactOS ACPI bus driver
  * FILE:            acpi/ospm/acpisys.c
@@ -83,7 +83,7 @@ ACPIPnpControl(
   if (DeviceExtension->IsFDO) {
     Status = FdoPnpControl(DeviceObject, Irp);
   } else {
-    Status = FdoPnpControl(DeviceObject, Irp);
+    Status = PdoPnpControl(DeviceObject, Irp);
   }
 
   return Status;
@@ -135,6 +135,7 @@ ACPIAddDevice(
   DeviceExtension = (PFDO_DEVICE_EXTENSION)Fdo->DeviceExtension;
 
   DeviceExtension->Pdo = PhysicalDeviceObject;
+  DeviceExtension->Common.IsFDO = TRUE;
 
   DeviceExtension->Common.Ldo =
     IoAttachDeviceToDeviceStack(Fdo, PhysicalDeviceObject);
