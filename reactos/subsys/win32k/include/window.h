@@ -108,6 +108,9 @@ inline BOOL IntIsDesktopWindow(PWINDOW_OBJECT WindowObject);
 
 inline BOOL IntIsBroadcastHwnd( HWND hwnd );
 
+BOOLEAN FASTCALL
+IntWndBelongsToThread(PWINDOW_OBJECT Window, PW32THREAD ThreadData);
+
 NTSTATUS FASTCALL
 InitWindowImpl (VOID);
 
@@ -153,7 +156,10 @@ PPROPERTY FASTCALL
 IntGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom);
 
 DWORD FASTCALL
-IOntGetWindowThreadProcessId(PWINDOW_OBJECT Wnd, PDWORD pid);
+IntGetWindowThreadProcessId(PWINDOW_OBJECT Wnd, PDWORD pid);
+
+VOID FASTCALL
+IntUnlinkWindow(PWINDOW_OBJECT Wnd);
 
 ULONG
 UserHasDlgFrameStyle(ULONG Style, ULONG ExStyle);
