@@ -111,9 +111,18 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	string subpath ( path );
 	if ( e.name == "file" && e.value.size () > 0 )
 	{
+		bool first = false;
 		const XMLAttribute* att = e.GetAttribute ( "first", false );
-		File* pFile = new File ( FixSeparator ( path + CSEP + e.value ),
-		                         att && atoi(att->value.c_str()) != 0 );
+		if ( att )
+		{
+			if ( !stricmp ( att->value.c_str(), "true" ) )
+				first = true;
+			else if ( stricmp ( att->value.c_str(), "false" ) )
+				throw InvalidBuildFileException (
+					e.location,
+					"attribute 'first' of <file> element can only be 'true' or 'false'" );
+		}
+		File* pFile = new File ( FixSeparator ( path + CSEP + e.value ), first );
 		if ( pIf )
 			pIf->files.push_back ( pFile );
 		else

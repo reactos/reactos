@@ -628,7 +628,6 @@ XMLReadFile ( XMLFile& f, XMLElement& head, XMLIncludes& includes, const Path& p
 XMLElement*
 XMLLoadInclude ( XMLElement* e, const Path& path, XMLIncludes& includes )
 {
-	// TODO FIXME
 	XMLAttribute* att;
 	att = e->GetAttribute("href",true);
 	assert(att);
