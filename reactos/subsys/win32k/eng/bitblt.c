@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.28 2003/10/29 08:38:55 gvg Exp $
+/* $Id: bitblt.c,v 1.29 2003/11/18 20:49:39 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,7 +40,6 @@
 #include <include/object.h>
 #include <include/dib.h>
 #include <include/surface.h>
-#include <include/copybits.h>
 #include <include/inteng.h>
 
 //#define NDEBUG

@@ -1,3 +1,6 @@
+#ifndef _WIN32K_WINPOS_H
+#define _WIN32K_WINPOS_H
+
 /* Undocumented flags. */
 #define SWP_NOCLIENTMOVE          0x0800
 #define SWP_NOCLIENTSIZE          0x1000
@@ -18,3 +21,5 @@ USHORT STDCALL
 WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint, 
 		      PWINDOW_OBJECT* Window);
 VOID FASTCALL WinPosActivateOtherWindow(PWINDOW_OBJECT Window);
+
+#endif /* _WIN32K_WINPOS_H */

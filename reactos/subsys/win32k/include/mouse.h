@@ -1,5 +1,5 @@
-#ifndef __WIN32K_MOUSE_H
-#define __WIN32K_MOUSE_H
+#ifndef _WIN32K_MOUSE_H
+#define _WIN32K_MOUSE_H
 
 #include "../eng/misc.h"
 #include <include/winsta.h>
@@ -14,4 +14,4 @@ VOID FASTCALL EnableMouse(HDC hDisplayDC);
 VOID          MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount);
 
 
-#endif /* __WIN32K_MOUSE_H */
+#endif /* _WIN32K_MOUSE_H */

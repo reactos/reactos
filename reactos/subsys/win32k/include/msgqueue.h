@@ -1,5 +1,5 @@
-#ifndef __WIN32K_MSGQUEUE_H
-#define __WIN32K_MSGQUEUE_H
+#ifndef _WIN32K_MSGQUEUE_H
+#define _WIN32K_MSGQUEUE_H
 
 #include <windows.h>
 
@@ -138,6 +138,6 @@ inline VOID MsqClearQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
 
 #define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))
 
-#endif /* __WIN32K_MSGQUEUE_H */
+#endif /* _WIN32K_MSGQUEUE_H */
 
 /* EOF */

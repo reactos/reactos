@@ -1,3 +1,6 @@
+#ifndef _WIN32K_RECT_H
+#define _WIN32K_RECT_H
+
 BOOL STDCALL
 NtGdiUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2);
 BOOL STDCALL
@@ -10,3 +13,5 @@ BOOL STDCALL
 NtGdiIntersectRect(PRECT Dest, const RECT* Src1, const RECT* Src2);
 BOOL STDCALL
 NtGdiOffsetRect(LPRECT Rect, int x, int y);
+
+#endif /* _WIN32K_RECT_H */

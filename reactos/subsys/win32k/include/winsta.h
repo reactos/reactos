@@ -1,5 +1,5 @@
-#ifndef __WIN32K_WINSTA_H
-#define __WIN32K_WINSTA_H
+#ifndef _WIN32K_WINSTA_H
+#define _WIN32K_WINSTA_H
 
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -61,6 +61,6 @@ IntSetCaptureWindow(struct _WINDOW_OBJECT* Window);
 BOOL FASTCALL
 IntGetWindowStationObject(PWINSTATION_OBJECT Object);
 
-#endif /* __WIN32K_WINSTA_H */
+#endif /* _WIN32K_WINSTA_H */
 
 /* EOF */

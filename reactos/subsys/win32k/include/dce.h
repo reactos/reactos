@@ -1,5 +1,5 @@
-#ifndef __WIN32K_DCE_H
-#define __WIN32K_DCE_H
+#ifndef _WIN32K_DCE_H
+#define _WIN32K_DCE_H
 
 /* Ported from WINE by Jason Filby */
 
@@ -54,4 +54,4 @@ HWND FASTCALL IntWindowFromDC(HDC hDc);
 PDCE FASTCALL DceFreeDCE(PDCE dce);
 void FASTCALL DceFreeWindowDCE(PWINDOW_OBJECT Window);
 
-#endif
+#endif /* _WIN32K_DCE_H */

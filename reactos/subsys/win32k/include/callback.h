@@ -1,5 +1,5 @@
-#ifndef __SUBSYS_WIN32K_INCLUDE_CALLBACK_H
-#define __SUBSYS_WIN32K_INCLUDE_CALLBACK_H
+#ifndef _WIN32K_CALLBACK_H
+#define _WIN32K_CALLBACK_H
 
 LRESULT STDCALL
 IntCallWindowProc(WNDPROC Proc,
@@ -23,9 +23,11 @@ IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 			    UINT Msg,
 			    ULONG_PTR CompletionCallbackContext,
 			    LRESULT Result);
+
 LRESULT STDCALL
 IntSendNCCALCSIZEMessage(HWND Wnd, BOOL Validate, PRECT Rect,
 			  NCCALCSIZE_PARAMS* Params);
+
 LRESULT STDCALL
 IntSendGETMINMAXINFOMessage(HWND Wnd, MINMAXINFO* MinMaxInfo);
 
@@ -47,4 +49,4 @@ IntLoadSysMenuTemplate();
 BOOL STDCALL
 IntLoadDefaultCursors();
 
-#endif /* __SUBSYS_WIN32K_INCLUDE_CALLBACK_H */
+#endif /* _WIN32K_CALLBACK_H */

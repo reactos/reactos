@@ -1,5 +1,5 @@
-#ifndef __WIN32K_WINDOW_H
-#define __WIN32K_WINDOW_H
+#ifndef _WIN32K_WINDOW_H
+#define _WIN32K_WINDOW_H
 
 struct _PROPERTY;
 struct _WINDOW_OBJECT;
@@ -94,15 +94,20 @@ typedef struct _WINDOW_OBJECT
 
 /* Window flags. */
 #define WINDOWOBJECT_NEED_SIZE            (0x00000001)
-/* Not used anymore: define WINDOWOBJECT_NEED_BEGINPAINT      (0x00000002) */
-#define WINDOWOBJECT_NEED_ERASEBACKGRD    (0x00000004)
-#define WINDOWOBJECT_NEED_NCPAINT         (0x00000008)
-#define WINDOWOBJECT_NEED_INTERNALPAINT   (0x00000010)
+#define WINDOWOBJECT_NEED_ERASEBKGND      (0x00000002)
+#define WINDOWOBJECT_NEED_NCPAINT         (0x00000004)
+#define WINDOWOBJECT_NEED_INTERNALPAINT   (0x00000008)
 #define WINDOWOBJECT_RESTOREMAX           (0x00000020)
 
 inline BOOL IntIsDesktopWindow(PWINDOW_OBJECT WindowObject);
 
-inline BOOL IntIsBroadcastHwnd( HWND hwnd );
+inline BOOL IntIsBroadcastHwnd(HWND hwnd);
+
+BOOL FASTCALL
+IntIsWindow(HWND hWnd);
+
+HWND* FASTCALL
+IntWinListChildren(PWINDOW_OBJECT Window);
 
 BOOLEAN FASTCALL
 IntWndBelongsToThread(PWINDOW_OBJECT Window, PW32THREAD ThreadData);
@@ -160,12 +165,6 @@ IntUnlinkWindow(PWINDOW_OBJECT Wnd);
 VOID FASTCALL
 IntLinkWindow(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndParent, PWINDOW_OBJECT WndPrevSibling);
 
-ULONG
-UserHasDlgFrameStyle(ULONG Style, ULONG ExStyle);
-
-ULONG
-UserHasThickFrameStyle(ULONG Style, ULONG ExStyle);
-
 PWINDOW_OBJECT FASTCALL
 IntGetAncestor(PWINDOW_OBJECT Wnd, UINT Type);
 
@@ -194,6 +193,6 @@ DWORD IntRemoveWndProcHandle(WNDPROC Handle);
 DWORD IntRemoveProcessWndProcHandles(HANDLE ProcessID);
 DWORD IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode);
 
-#endif /* __WIN32K_WINDOW_H */
+#endif /* _WIN32K_WINDOW_H */
 
 /* EOF */

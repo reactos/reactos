@@ -10,7 +10,6 @@ NtUserGetClassLong(HWND hWnd, DWORD Offset, BOOL Ansi);
 LONG STDCALL
 NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi);
 
-
 INT STDCALL
 NtUserReleaseDC(HWND hWnd, HDC hDc);
 
@@ -861,12 +860,8 @@ NtUserGetTitleBarInfo(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
-STDCALL
-NtUserGetUpdateRect(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+BOOL STDCALL
+NtUserGetUpdateRect(HWND hWnd, LPRECT lpRect, BOOL fErase);
 
 int
 STDCALL

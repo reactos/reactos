@@ -1,3 +1,6 @@
+#ifndef _WIN32K_PATH_H
+#define _WIN32K_PATH_H
+
 BOOL FASTCALL PATH_Arc (PDC dc, INT x1, INT y1, INT x2, INT y2, INT xStart, INT yStart, INT xEnd, INT yEnd);
 BOOL FASTCALL PATH_AssignGdiPath (GdiPath *pPathDest, const GdiPath *pPathSrc);
 VOID FASTCALL PATH_DestroyGdiPath (GdiPath *pPath);
@@ -27,3 +30,5 @@ BOOL FASTCALL PATH_PathToRegion(const GdiPath *pPath, INT nPolyFillMode, HRGN *p
 BOOL FASTCALL PATH_ReserveEntries (GdiPath *pPath, INT numEntries);
 VOID FASTCALL PATH_ScaleNormalizedPoint (FLOAT_POINT corners[], double x, double y, POINT *pPoint);
 #endif
+
+#endif /* _WIN32K_PATH_H */

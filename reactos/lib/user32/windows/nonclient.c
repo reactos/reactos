@@ -323,14 +323,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
       return 0;
    }
 
-/* FIXME: This works on Windows, but not on ReactOS! */
-#ifdef __REACTOS__
-   hDC = GetDCEx(hWnd, (hRgn > (HRGN)1) ? hRgn : 0, 
-                /*DCX_USESTYLE*/0x10000 | DCX_WINDOW |
-		((hRgn > (HRGN)1) ? (DCX_INTERSECTRGN | DCX_KEEPCLIPRGN) : 0));
-#else
    hDC = GetDCEx(hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | 0x10000);
-#endif
    if (hDC == 0)
    {
       return 0;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.40 2003/10/29 16:24:59 navaraf Exp $
+/* $Id: winpos.c,v 1.41 2003/11/18 20:49:39 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -900,7 +900,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	      HRGN ClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
 	      NtGdiCombineRgn(ClipRgn, CopyRgn, NULL, RGN_COPY);
 	      Dc = NtUserGetDCEx(Wnd, ClipRgn, DCX_WINDOW | DCX_CACHE |
-			    DCX_KEEPCLIPRGN | DCX_INTERSECTRGN | DCX_CLIPSIBLINGS );
+			    DCX_INTERSECTRGN | DCX_CLIPSIBLINGS );
 	      NtGdiBitBlt(Dc, CopyRect.left, CopyRect.top, CopyRect.right - CopyRect.left,
 	                  CopyRect.bottom - CopyRect.top, Dc,
 	                  CopyRect.left + (OldWindowRect.left - NewWindowRect.left),
@@ -922,19 +922,17 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	      RgnType = NtGdiCombineRgn(DirtyRgn, VisAfter, CopyRgn, RGN_DIFF);
 	      if (ERROR != RgnType && NULLREGION != RgnType)
 		{
-		  PaintRedrawWindow(Window, NULL, DirtyRgn,
-		                    RDW_ERASE | RDW_FRAME | RDW_INVALIDATE |
-		                    RDW_ALLCHILDREN | RDW_ERASENOW, 
-		                    RDW_EX_XYWINDOW | RDW_EX_USEHRGN);
+		  IntRedrawWindow(Window, NULL, DirtyRgn,
+		                  RDW_ERASE | RDW_FRAME | RDW_INVALIDATE |
+		                  RDW_ALLCHILDREN | RDW_ERASENOW);
 		}
 	      NtGdiDeleteObject(DirtyRgn);
 	    }
 	  else
 	    {
-	      PaintRedrawWindow(Window, NULL, NULL,
-	                        RDW_ERASE | RDW_FRAME | RDW_INVALIDATE |
-	                        RDW_ALLCHILDREN | RDW_ERASENOW, 
-	                        RDW_EX_XYWINDOW | RDW_EX_USEHRGN);
+	      IntRedrawWindow(Window, NULL, NULL,
+	                      RDW_ERASE | RDW_FRAME | RDW_INVALIDATE |
+	                      RDW_ALLCHILDREN | RDW_ERASENOW);
 	    }
 	}
 
@@ -999,18 +997,13 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
 {
   BOOLEAN WasVisible;
   PWINDOW_OBJECT Window;
-  NTSTATUS Status;
   UINT Swp = 0;
-  RECT NewPos;
+  RECT NewPos = {0, 0, 0, 0};
   BOOLEAN ShowFlag;
-  HRGN VisibleRgn;
+/*  HRGN VisibleRgn;*/
 
-  Status = 
-    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
-			       Wnd,
-			       otWindow,
-			       (PVOID*)&Window);
-  if (!NT_SUCCESS(Status))
+  Window = IntGetWindowObject(Wnd);
+  if (!Window)
     {
       return(FALSE);
     }
@@ -1101,60 +1094,50 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
        */
     }
 
-  if (Window->Style & WS_CHILD &&
-      !IntIsWindowVisible(Window->Parent->Self) &&
-      (Swp & (SWP_NOSIZE | SWP_NOMOVE)) == (SWP_NOSIZE | SWP_NOMOVE))
+  /* We can't activate a child window */
+  if ((Window->Style & WS_CHILD) &&
+      !(Window->ExStyle & WS_EX_MDICHILD))
     {
-      if (Cmd == SW_HIDE)
+      Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
+    }
+
+  WinPosSetWindowPos(Wnd, HWND_TOP, NewPos.left, NewPos.top,
+    NewPos.right, NewPos.bottom, LOWORD(Swp));
+
+  if (Cmd == SW_HIDE)
+    {
+      /* FIXME: This will cause the window to be activated irrespective
+       * of whether it is owned by the same thread. Has to be done
+       * asynchronously.
+       */
+
+      if (Wnd == IntGetActiveWindow())
+        {
+          WinPosActivateOtherWindow(Window);
+        }
+
+      /* Revert focus to parent */
+      if (Wnd == IntGetFocusWindow() ||
+	  IntIsChildWindow(Wnd, IntGetFocusWindow()))
 	{
-	  VisibleRgn = VIS_ComputeVisibleRegion(PsGetWin32Thread()->Desktop, Window,
-	                                        FALSE, FALSE, FALSE);
-	  Window->Style &= ~WS_VISIBLE;
-	  VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, Window, VisibleRgn);
-	  NtGdiDeleteObject(VisibleRgn);
-	}
-      else
-	{
-	  Window->Style |= WS_VISIBLE;
+	  IntSetFocusWindow(Window->Parent->Self);
 	}
     }
-  else
+
+  if (!IntIsWindow(Wnd))
     {
-      if (Window->Style & WS_CHILD &&
-	  !(Window->ExStyle & WS_EX_MDICHILD))
-	{
-	  Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
-	}
-      if (!(Swp & MINMAX_NOSWP))
-	{
-	  WinPosSetWindowPos(Wnd, HWND_TOP, NewPos.left, NewPos.top,
-			     NewPos.right, NewPos.bottom, LOWORD(Swp));
-	  if (Cmd == SW_HIDE)
-	    {
-	      /* Hide the window. */
-	      if (Wnd == IntGetActiveWindow())
-		{
-		  WinPosActivateOtherWindow(Window);
-		}
-	      /* Revert focus to parent. */
-	      if (Wnd == IntGetFocusWindow() ||
-		  IntIsChildWindow(Wnd, IntGetFocusWindow()))
-		{
-		  IntSetFocusWindow(Window->Parent->Self);
-		}
-	    }
-	}
-      /* FIXME: Check for window destruction. */
-      /* Show title for minimized windows. */
-      if (Window->Style & WS_MINIMIZE)
-	{
-	  WinPosShowIconTitle(Window, TRUE);
-	}
+      IntReleaseWindowObject(Window);
+      return WasVisible;
+    }
+  else if (Window->Style & WS_MINIMIZE)
+    {
+      WinPosShowIconTitle(Window, TRUE);
     }
 
   if (Window->Flags & WINDOWOBJECT_NEED_SIZE)
     {
-      WPARAM wParam = SIZE_RESTORED;
+      /* should happen only in CreateWindowEx() */
+      int wParam = SIZE_RESTORED;
 
       Window->Flags &= ~WINDOWOBJECT_NEED_SIZE;
       if (Window->Style & WS_MAXIMIZE)
@@ -1182,8 +1165,8 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
       WinPosChangeActiveWindow(Wnd, FALSE);
     }
 
-  ObmDereferenceObject(Window);
-  return(WasVisible);
+  IntReleaseWindowObject(Window);
+  return WasVisible;
 }
 
 BOOL STATIC FASTCALL

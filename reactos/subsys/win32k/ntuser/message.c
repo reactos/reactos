@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.31 2003/11/11 20:28:21 gvg Exp $
+/* $Id: message.c,v 1.32 2003/11/18 20:49:39 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -205,39 +205,10 @@ IntPeekMessage(LPMSG Msg,
   /* Check for paint messages. */
   if (ThreadQueue->PaintPosted)
     {
-      PWINDOW_OBJECT WindowObject;
-
-      Msg->hwnd = PaintingFindWinToRepaint(Wnd, PsGetWin32Thread());
-      Msg->message = WM_PAINT;
-      Msg->wParam = Msg->lParam = 0;
-
-      WindowObject = IntGetWindowObject(Msg->hwnd);
-      if (WindowObject != NULL)
-	{
-	  if (WindowObject->Style & WS_MINIMIZE &&
-	      (HICON)NtUserGetClassLong(Msg->hwnd, GCL_HICON, FALSE) != NULL)
-	    {
-	      Msg->message = WM_PAINTICON;
-	      Msg->wParam = 1;
-	    }
-
-	  if (Msg->hwnd == NULL || Msg->hwnd == Wnd ||
-	      IntIsChildWindow(Wnd, Msg->hwnd))
-	    {
-	      if (WindowObject->Flags & WINDOWOBJECT_NEED_INTERNALPAINT &&
-		  WindowObject->UpdateRegion == NULL)
-		{
-		  WindowObject->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
-		  if (RemoveMessages)
-		    {
-		      MsqDecPaintCountQueue(WindowObject->MessageQueue);
-		    }
-		}
-	    }
-	  IntReleaseWindowObject(WindowObject);
-	}
-
-      return TRUE;
+      if (IntGetPaintMessage(Wnd, PsGetWin32Thread(), Msg))
+        {
+          return TRUE;
+        }
     }
 
   return FALSE;

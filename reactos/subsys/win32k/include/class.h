@@ -1,5 +1,5 @@
-#ifndef __WIN32K_CLASS_H
-#define __WIN32K_CLASS_H
+#ifndef _WIN32K_CLASS_H
+#define _WIN32K_CLASS_H
 
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -54,6 +54,6 @@ struct _WINDOW_OBJECT;
 ULONG FASTCALL
 IntGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi);
 
-#endif /* __WIN32K_CLASS_H */
+#endif /* _WIN32K_CLASS_H */
 
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.7 2003/09/09 09:39:21 gvg Exp $
+ * $Id: vis.c,v 1.8 2003/11/18 20:49:39 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -221,7 +221,6 @@ VIS_RepaintDesktop(HWND Desktop, HRGN RepaintRgn)
   NtUserReleaseDC(Desktop, dc);
 }
 
-
 static VOID FASTCALL
 GetUncoveredArea(HRGN Uncovered, PWINDOW_OBJECT Parent, PWINDOW_OBJECT TargetChild,
                  BOOL IncludeTarget)
@@ -249,7 +248,6 @@ GetUncoveredArea(HRGN Uncovered, PWINDOW_OBJECT Parent, PWINDOW_OBJECT TargetChi
     }
   ExReleaseFastMutexUnsafe(&Parent->ChildrenListLock);
 }
- 
 
 VOID FASTCALL
 VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
@@ -303,9 +301,10 @@ VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
 	  RgnType = NtGdiCombineRgn(DirtyRgn, DirtyRgn, ExposedWindow, RGN_AND);
 	  if (NULLREGION != RgnType && ERROR != RgnType)
 	    {
-	      PaintRedrawWindow(Sibling, NULL, DirtyRgn,
-	                        RDW_INVALIDATE | RDW_FRAME | RDW_ERASE
-	                        | RDW_ALLCHILDREN, RDW_EX_XYWINDOW);
+              NtGdiOffsetRgn(DirtyRgn, -Sibling->ClientRect.left, -Sibling->ClientRect.top);
+	      IntRedrawWindow(Sibling, NULL, DirtyRgn,
+	                      RDW_INVALIDATE | RDW_FRAME | RDW_ERASE
+	                      | RDW_ALLCHILDREN);
 	    }
 	  Covered = UnsafeIntCreateRectRgnIndirect(&Sibling->WindowRect);
 	  NtGdiCombineRgn(Uncovered, Uncovered, Covered, RGN_DIFF);
@@ -329,9 +328,11 @@ VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
       RgnType = NtGdiCombineRgn(DirtyRgn, DirtyRgn, ExposedWindow, RGN_AND);
       if (NULLREGION != RgnType && ERROR != RgnType)
 	{
-	  PaintRedrawWindow(Parent, NULL, DirtyRgn,
-	                    RDW_INVALIDATE | RDW_FRAME | RDW_ERASE
-	                    | RDW_NOCHILDREN, RDW_EX_XYWINDOW);
+          NtGdiOffsetRgn(DirtyRgn, -Parent->ClientRect.left,
+            -Parent->ClientRect.top);
+	  IntRedrawWindow(Parent, NULL, DirtyRgn,
+	                  RDW_INVALIDATE | RDW_FRAME | RDW_ERASE
+	                  | RDW_NOCHILDREN);
 	}
       NtGdiDeleteObject(ExposedWindow);
       NtGdiDeleteObject(DirtyRgn);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.38 2003/11/08 22:54:26 navaraf Exp $ */
+/* $Id: region.c,v 1.39 2003/11/18 20:49:39 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -100,6 +100,33 @@ typedef struct _POINTBLOCK {
   POINT pts[NUMPTSTOBUFFER];
   struct _POINTBLOCK *next;
 } POINTBLOCK;
+
+/*
+ * This function is left there for debugging purposes.
+ */
+
+VOID FASTCALL
+IntDumpRegion(HRGN hRgn)
+{
+   ROSRGNDATA *Data;
+
+   Data = RGNDATA_LockRgn(hRgn);
+   if (Data == NULL)
+   {
+      DbgPrint("IntDumpRegion called with invalid region!\n");
+      return;
+   }
+
+   DbgPrint("IntDumpRegion(%x): %d,%d-%d,%d %d\n",
+      hRgn,
+      Data->rdh.rcBound.left,
+      Data->rdh.rcBound.top,
+      Data->rdh.rcBound.right,
+      Data->rdh.rcBound.bottom,
+      Data->rdh.iType);
+
+   RGNDATA_UnlockRgn(hRgn);
+}
 
 static BOOL FASTCALL REGION_CopyRegion(PROSRGNDATA dst, PROSRGNDATA src)
 {

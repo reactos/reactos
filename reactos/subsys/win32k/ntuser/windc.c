@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.34 2003/10/22 13:34:25 gvg Exp $
+/* $Id: windc.c,v 1.35 2003/11/18 20:49:39 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -431,6 +431,20 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
     {
       DceDeleteClipRgn(Dce);
       Dce->hClipRgn = NULL;
+    }
+
+  if (0 != (Flags & DCX_INTERSECTUPDATE) && NULL == ClipRegion)
+    {
+      Dce->hClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+      if (Dce->hClipRgn)
+      {
+        if (Window->UpdateRegion)
+          NtGdiCombineRgn(Dce->hClipRgn, Window->UpdateRegion, NULL, RGN_COPY);
+        NtGdiOffsetRgn(Dce->hClipRgn,
+          Window->WindowRect.left - Window->ClientRect.left,
+          Window->WindowRect.top - Window->ClientRect.top);
+      }
+      Flags &= DCX_INTERSECTRGN;
     }
 
   if (NULL != ClipRegion)

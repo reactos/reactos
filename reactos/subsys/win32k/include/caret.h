@@ -1,5 +1,5 @@
-#ifndef __WIN32K_CARET_H
-#define __WIN32K_CARET_H
+#ifndef _WIN32K_CARET_H
+#define _WIN32K_CARET_H
 
 #include <ddk/ntddk.h>
 #include <napi/win32.h>
@@ -33,6 +33,6 @@ IntSwitchCaretShowing(PVOID Info);
 VOID FASTCALL
 IntDrawCaret(HWND hWnd);
 
-#endif /* __WIN32K_CARET_H */
+#endif /* _WIN32K_CARET_H */
 
 /* EOF */

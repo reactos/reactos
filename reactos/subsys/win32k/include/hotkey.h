@@ -1,5 +1,5 @@
-#ifndef __WIN32K_HOTKEY_H
-#define __WIN32K_HOTKEY_H
+#ifndef _WIN32K_HOTKEY_H
+#define _WIN32K_HOTKEY_H
 
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -36,6 +36,6 @@ UnregisterWindowHotKeys(PWINDOW_OBJECT Window);
 VOID
 UnregisterThreadHotKeys(struct _ETHREAD *Thread);
 
-#endif /* __WIN32K_HOTKEY_H */
+#endif /* _WIN32K_HOTKEY_H */
 
 /* EOF */

@@ -3,5 +3,3 @@
 
 #endif /* _WIN32K_PROP_H */
 
-/* EOF */
-

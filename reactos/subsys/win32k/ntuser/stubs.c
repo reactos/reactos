@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.34 2003/11/10 17:44:49 weiden Exp $
+/* $Id: stubs.c,v 1.35 2003/11/18 20:49:39 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -631,18 +631,6 @@ STDCALL
 NtUserGetTitleBarInfo(
   DWORD Unknown0,
   DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetUpdateRect(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
 {
   UNIMPLEMENTED
 

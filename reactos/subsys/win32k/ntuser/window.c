@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.135 2003/11/12 05:40:59 royce Exp $
+/* $Id: window.c,v 1.136 2003/11/18 20:49:39 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -245,45 +245,37 @@ IntReleaseWindowObject(PWINDOW_OBJECT Window)
 }
 
 /*
- * IntBuildChildWindowArray
+ * IntWinListChildren
  *
  * Compile a list of all child window handles from given window.
  *
  * Remarks
- *    This function is similar to Wine WIN_ListChildren, but has different
- *    syntax.
+ *    This function is similar to Wine WIN_ListChildren. The caller
+ *    must free the returned list with ExFreePool.
  */
 
-BOOL FASTCALL
-IntBuildChildWindowArray(PWINDOW_OBJECT Window, HWND **Children, unsigned *NumChildren)
+HWND* FASTCALL
+IntWinListChildren(PWINDOW_OBJECT Window)
 {
    PWINDOW_OBJECT Child;
-   UINT Index;
-
-   *Children = NULL;
-   *NumChildren = 0;
+   HWND *List;
+   UINT Index, NumChildren = 0;
 
    ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
 
-   Child = Window->FirstChild;
-   while (Child)
-   {
-      (*NumChildren)++;
-      Child = Child->NextSibling;
-   }
+   for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
+      ++NumChildren;
   
-   if (*NumChildren != 0)
+   if (NumChildren != 0)
    {
-      *Children = ExAllocatePoolWithTag(PagedPool, *NumChildren * sizeof(HWND), TAG_WNAM);
-      if (*Children != NULL)
+      List = ExAllocatePool(PagedPool, (NumChildren + 1) * sizeof(HWND));
+      if (List != NULL)
       {
          for (Child = Window->FirstChild, Index = 0;
               Child != NULL;
               Child = Child->NextSibling, ++Index)
-         {
-            (*Children)[Index] = Child->Self;
-         }
-         ASSERT(Index == *NumChildren);
+            List[Index] = Child->Self;
+         List[Index] = NULL;
       }
       else
       {
@@ -293,9 +285,8 @@ IntBuildChildWindowArray(PWINDOW_OBJECT Window, HWND **Children, unsigned *NumCh
 
    ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
 
-   return ((*NumChildren != 0) && (*Children != NULL));
+   return (NumChildren > 0) ? List : NULL;
 }
-
 
 /***********************************************************************
  *           IntDestroyWindow
@@ -308,8 +299,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
                                  BOOLEAN SendMessages)
 {
   HWND *Children;
-  unsigned NumChildren;
-  unsigned Index;
+  HWND *ChildHandle;
   PWINDOW_OBJECT Child;
 
   if (! IntWndBelongsToThread(Window, ThreadData))
@@ -319,33 +309,23 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
     }
 
   /* free child windows */
-  if (IntBuildChildWindowArray(Window, &Children, &NumChildren))
+  Children = IntWinListChildren(Window);
+  if (Children)
     {
-      DbgPrint("NumChildren: %d\n", NumChildren);
-      for (Index = NumChildren; 0 < Index; Index--)
+      for (ChildHandle = Children; *ChildHandle; ++ChildHandle)
         {
-          Child = IntGetProcessWindowObject(ProcessData, Children[Index - 1]);
-          DbgPrint("Child %d: %x\n", Index - 1, Child);
+          Child = IntGetProcessWindowObject(ProcessData, *ChildHandle);
           if (NULL != Child)
-	{
-	  if (IntWndBelongsToThread(Child, ThreadData))
-	    {
-	      DbgPrint("Destroying\n");
-	      IntDestroyWindow(Child, ProcessData, ThreadData, SendMessages);
-	      DbgPrint("End Destroying\n");
-	    }
+            {
+              if (IntWndBelongsToThread(Child, ThreadData))
+                  IntDestroyWindow(Child, ProcessData, ThreadData, SendMessages);
 #if 0 /* FIXME */
-	  else
-	    {
-	      SendMessageW( list[i], WM_WINE_DESTROYWINDOW, 0, 0 );
-	    }
+              else
+                  SendMessageW( list[i], WM_WINE_DESTROYWINDOW, 0, 0 );
 #endif
-	}
+            }
         }
-      if (0 != NumChildren)
-        {
-          ExFreePool(Children);
-        }
+      ExFreePool(Children);
     }
 
   if (SendMessages)
@@ -354,9 +334,9 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
        * Clear the update region to make sure no WM_PAINT messages will be
        * generated for this window while processing the WM_NCDESTROY.
        */
-      PaintRedrawWindow(Window, NULL, 0,
-                        RDW_VALIDATE | RDW_NOFRAME | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_NOCHILDREN,
-                        0);
+      IntRedrawWindow(Window, NULL, 0,
+                      RDW_VALIDATE | RDW_NOFRAME | RDW_NOERASE |
+                      RDW_NOINTERNALPAINT | RDW_NOCHILDREN);
 
       /*
        * Send the WM_NCDESTROY to the window being destroyed.
@@ -486,7 +466,7 @@ IntCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   WindowObject->Class = DesktopClass;
   WindowObject->ExStyle = 0;
   WindowObject->Style = WS_VISIBLE;
-  WindowObject->Flags |= WINDOWOBJECT_NEED_ERASEBACKGRD;
+  WindowObject->Flags = 0;
   WindowObject->x = 0;
   WindowObject->y = 0;
   WindowObject->Width = Width;
@@ -1838,16 +1818,16 @@ NtUserDestroyWindow(HWND Wnd)
 	{
 	  int i;
 	  BOOL GotOne = FALSE;
-	  HWND *list;
-	  UINT NumChildren;
+	  HWND *Children;
+	  HWND *ChildHandle;
 	  PWINDOW_OBJECT Child;
 
-	  if (IntBuildChildWindowArray(IntGetWindowObject(IntGetDesktopWindow()),
-	          &list, &NumChildren))
+	  Children = IntWinListChildren(IntGetWindowObject(IntGetDesktopWindow());
+	  if (Children)
 	    {
-	      for (i = 0; i < NumChildren; i++)
+	      for (ChildHandle = Children; *ChildHandle; ++ChildHandle)
 		{
-		  Child = IntGetWindowObject(list[i]);
+		  Child = IntGetWindowObject(*ChildHandle);
 		  if (Child->Owner != Window)
 		    {
 		      continue;
@@ -1855,7 +1835,7 @@ NtUserDestroyWindow(HWND Wnd)
 		  if (IntWndBelongsToThread(Child, PsGetWin32Thread()))
 		    {
 		      IntReleaseWindowObject(Child);
-		      NtUserDestroyWindow(list[i]);
+		      NtUserDestroyWindow(*ChildHandle);
 		      GotOne = TRUE;		      
 		      continue;
 		    }
@@ -1866,7 +1846,7 @@ NtUserDestroyWindow(HWND Wnd)
 		    }
 		  IntReleaseWindowObject(Child);
 		}
-	      ExFreePool(list);
+	      ExFreePool(Children);
 	    }
 	  if (! GotOne)
 	    {
@@ -3067,61 +3047,6 @@ NtUserRealChildWindowFromPoint(DWORD Unknown0,
 /*
  * @implemented
  */
-BOOL
-STDCALL
-NtUserRedrawWindow
-(
- HWND hWnd,
- CONST RECT *lprcUpdate,
- HRGN hrgnUpdate,
- UINT flags
-)
-{
- RECT SafeUpdateRect;
- NTSTATUS Status;
- PWINDOW_OBJECT Wnd;
-
- if (!(Wnd = IntGetWindowObject(hWnd)))
- {
-   SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-   return FALSE;
- }
-
- if(NULL != lprcUpdate)
- {
-  Status = MmCopyFromCaller(&SafeUpdateRect, (PRECT)lprcUpdate, sizeof(RECT));
-
-  if(!NT_SUCCESS(Status))
-  {
-   /* FIXME: set last error */
-   return FALSE;
-  }
- }
-
-
- Status = PaintRedrawWindow
- (
-  Wnd,
-  NULL == lprcUpdate ? NULL : &SafeUpdateRect,
-  hrgnUpdate,
-  flags,
-  0
- );
-
-
- if(!NT_SUCCESS(Status))
- {
-  /* FIXME: set last error */
-  return FALSE;
- }
- 
- return TRUE;
-}
-
-
-/*
- * @implemented
- */
 UINT STDCALL
 NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
 {
@@ -3451,23 +3376,6 @@ NtUserShowWindowAsync(DWORD Unknown0,
   UNIMPLEMENTED
 
   return 0;
-}
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
-NtUserUpdateWindow(HWND hWnd)
-{
-    PWINDOW_OBJECT pWindow = IntGetWindowObject( hWnd);
-
-    if (!pWindow)
-        return FALSE;
-    if (pWindow->UpdateRegion)
-        NtUserSendMessage( hWnd, WM_PAINT,0,0);
-    IntReleaseWindowObject(pWindow);
-    return TRUE;
 }
 
 

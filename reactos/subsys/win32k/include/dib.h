@@ -1,5 +1,5 @@
-#ifndef __WIN32K_DIB_H
-#define __WIN32K_DIB_H
+#ifndef _WIN32K_DIB_H
+#define _WIN32K_DIB_H
 
 #include <win32k/dc.h>
 
@@ -21,4 +21,4 @@ DIBColorTableToPaletteEntries(PPALETTEENTRY palEntries, const RGBQUAD *DIBColorT
 HPALETTE FASTCALL
 BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType);
 
-#endif /* __WIN32K_DIB_H */
+#endif /* _WIN32K_DIB_H */

@@ -1,5 +1,5 @@
-#ifndef __WIN32K_INTENG_H
-#define __WIN32K_INTENG_H
+#ifndef _WIN32K_INTENG_H
+#define _WIN32K_INTENG_H
 
 /* Definitions of IntEngXxx functions */
 
@@ -38,4 +38,4 @@ BOOL STDCALL IntEngPolyline(SURFOBJ *DestSurf,
 CLIPOBJ* STDCALL IntEngCreateClipRegion(ULONG count,
 					 PRECTL pRect,
 					 RECTL rcBounds);
-#endif
+#endif /* _WIN32K_INTENG_H */

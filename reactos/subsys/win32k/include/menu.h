@@ -1,5 +1,5 @@
-#ifndef __WIN32K_MENU_H
-#define __WIN32K_MENU_H
+#ifndef _WIN32K_MENU_H
+#define _WIN32K_MENU_H
 
 #include <ddk/ntddk.h>
 #include <napi/win32.h>
@@ -285,6 +285,4 @@ NtUserTrackPopupMenuEx(
   HWND hwnd,
   LPTPMPARAMS lptpm);
 
-#endif /* __WIN32K_MENU_H */
-
-/* EOF */
+#endif /* _WIN32K_MENU_H */
