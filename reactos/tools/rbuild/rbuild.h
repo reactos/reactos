@@ -108,7 +108,7 @@ public:
 	bool HasImportLibrary () const;
 	std::string GetTargetName () const;
 	std::string GetDependencyPath () const;
-	std::string GetBasePath() const;
+	std::string GetBasePath () const;
 	std::string GetPath () const;
 	std::string GetPathWithPrefix ( const std::string& prefix ) const;
 	std::string GetTargets () const;

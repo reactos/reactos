@@ -362,7 +362,6 @@
 		<file>swab.c</file>
 		<file>wcstod.c</file>
 		<file>wcstol.c</file>
-		<file>wcstom.c</file>
 		<file>wcstomb.c</file>
 		<file>wcstombs.c</file>
 		<file>wcstoul.c</file>

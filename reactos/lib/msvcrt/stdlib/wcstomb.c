@@ -46,32 +46,6 @@ static const unsigned char encoding_byte[] =
 size_t
 __wcrtomb (char *s, wchar_t wc);
 
-/*
- * Convert WCHAR into its multibyte character representation,
- * putting this in S and returning its length.
- *
- * Attention: this function should NEVER be intentionally used.
- * The interface is completely stupid.  The state is shared between
- * all conversion functions.  You should use instead the restartable
- * version `wcrtomb'.
- *
- * @implemented
- */
-int
-wctomb (char *s, wchar_t wchar)
-{
-  /* If S is NULL the function has to return null or not null
-     depending on the encoding having a state depending encoding or
-     not.  This is nonsense because any multibyte encoding has a
-     state.  The ISO C amendment 1 corrects this while introducing the
-     restartable functions.  We simply say here all encodings have a
-     state.  */
-  if (s == NULL)
-    return 1;
-
-  return __wcrtomb (s, wchar);
-}
-
 
 size_t
 __wcrtomb (char *s, wchar_t wc)

@@ -1,0 +1,13 @@
+<module name="winebuild" type="buildtool">
+	<include base="winebuild">.</include>
+	<include base="ReactOS">include/wine</include>
+	<define name="__USE_W32API" />
+	<file>import.c</file>
+	<file>main.c</file>
+	<file>mkstemps.c</file>
+	<file>parser.c</file>
+	<file>res16.c</file>
+	<file>res32.c</file>
+	<file>spec32.c</file>
+	<file>utils.c</file>
+</module>

@@ -1,8 +1,17 @@
+<directory name="adns">
+	<xi:include href="adns/adns.xml" />
+</directory>
 <directory name="advapi32">
 	<xi:include href="advapi32/advapi32.xml" />
 </directory>
+<directory name="dnsapi">
+	<xi:include href="dnsapi/dnsapi.xml" />
+</directory>
 <directory name="gdi32">
 	<xi:include href="gdi32/gdi32.xml" />
+</directory>
+<directory name="iphlpapi">
+	<xi:include href="iphlpapi/iphlpapi.xml" />
 </directory>
 <directory name="kernel32">
 	<xi:include href="kernel32/kernel32.xml" />
@@ -33,4 +42,7 @@
 </directory>
 <directory name="user32">
 	<xi:include href="user32/user32.xml" />
+</directory>
+<directory name="ws2_32">
+	<xi:include href="ws2_32/ws2_32.xml" />
 </directory>

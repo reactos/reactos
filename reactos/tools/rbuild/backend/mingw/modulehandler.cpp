@@ -71,6 +71,15 @@ MingwModuleHandler::GetExtension ( const string& filename ) const
 }
 
 string
+MingwModuleHandler::GetBasename ( const string& filename ) const
+{
+	size_t index = filename.find_last_of ( '.' );
+	if (index != string::npos)
+		return filename.substr ( 0, index );
+	return "";
+}
+
+string
 MingwModuleHandler::ReplaceExtension ( const string& filename,
 	                                   const string& newExtension ) const
 {
@@ -78,6 +87,19 @@ MingwModuleHandler::ReplaceExtension ( const string& filename,
 	if (index != string::npos)
 		return filename.substr ( 0, index ) + newExtension;
 	return filename;
+}
+
+string
+MingwModuleHandler::GetActualSourceFilename ( const string& filename ) const
+{
+	string extension = GetExtension ( filename );
+	if ( extension == ".spec" || extension == "SPEC" )
+	{
+		string basename = GetBasename( filename );
+		return basename + ".stubs.c";
+	}
+	else
+		return filename;
 }
 
 string
@@ -120,6 +142,11 @@ MingwModuleHandler::GetModuleDependencies ( const Module& module ) const
 		const Module* dependencyModule = dependency->dependencyModule;
 		dependencies += dependencyModule->GetTargets ();
 	}
+	string definitionDependencies = GetDefinitionDependencies ( module );
+	if ( dependencies.length () > 0 && definitionDependencies.length () > 0 )
+		dependencies += " " + definitionDependencies;
+	else if ( definitionDependencies.length () > 0 )
+		dependencies = definitionDependencies;
 	return dependencies;
 }
 
@@ -143,7 +170,7 @@ MingwModuleHandler::GetSourceFilenames ( const Module& module ) const
 
 	string sourceFilenames ( "" );
 	for ( i = 0; i < module.files.size (); i++ )
-		sourceFilenames += " " + module.files[i]->name;
+		sourceFilenames += " " + GetActualSourceFilename ( module.files[i]->name );
 	vector<If*> ifs = module.ifs;
 	for ( i = 0; i < ifs.size(); i++ )
 	{
@@ -152,7 +179,7 @@ MingwModuleHandler::GetSourceFilenames ( const Module& module ) const
 		for ( j = 0; j < rIf.ifs.size(); j++ )
 			ifs.push_back ( rIf.ifs[j] );
 		for ( j = 0; j < rIf.files.size(); j++ )
-			sourceFilenames += " " + rIf.files[j]->name;
+			sourceFilenames += " " + GetActualSourceFilename ( rIf.files[j]->name );
 	}
 	return sourceFilenames;
 }
@@ -164,6 +191,8 @@ MingwModuleHandler::GetObjectFilename ( const string& sourceFilename ) const
 	string extension = GetExtension ( sourceFilename );
 	if ( extension == ".rc" || extension == ".RC" )
 		newExtension = ".coff";
+	else if ( extension == ".spec" || extension == ".SPEC" )
+		newExtension = ".stubs.o";
 	else
 		newExtension = ".o";
 	return FixupTargetFilename ( ReplaceExtension ( sourceFilename,
@@ -314,7 +343,7 @@ MingwModuleHandler::GenerateMacro ( const char* assignmentOperation,
 	}
 	fprintf ( fMakefile, "\n" );
 }
-	
+
 void
 MingwModuleHandler::GenerateMacros (
 	const char* assignmentOperation,
@@ -366,11 +395,15 @@ MingwModuleHandler::GenerateMacros (
 			assignmentOperation );
 		for ( i = 0; i < files.size(); i++ )
 		{
-			fprintf (
-				fMakefile,
-				"%s%s",
-				( i%10 == 9 ? "\\\n\t" : " " ),
-				GetObjectFilename(files[i]->name).c_str() );
+			string extension = GetExtension ( files[i]->name );
+			if ( extension != ".spec" && extension != ".SPEC" )
+			{
+				fprintf (
+					fMakefile,
+					"%s%s",
+					( i%10 == 9 ? "\\\n\t" : " " ),
+					GetObjectFilename(files[i]->name).c_str() );
+			}
 		}
 		fprintf ( fMakefile, "\n" );
 	}
@@ -443,87 +476,155 @@ MingwModuleHandler::GenerateMacros (
 		module.name.c_str () );
 }
 
-string
+void
 MingwModuleHandler::GenerateGccCommand ( const Module& module,
                                          const string& sourceFilename,
                                          const string& cc,
                                          const string& cflagsMacro ) const
 {
 	string objectFilename = GetObjectFilename ( sourceFilename );
-	return ssprintf ( "%s -c %s -o %s %s\n",
-		              cc.c_str (),
-		              sourceFilename.c_str (),
-		              objectFilename.c_str (),
-		              cflagsMacro.c_str () );
+	fprintf ( fMakefile,
+	          "%s: %s\n",
+	          objectFilename.c_str (),
+	          sourceFilename.c_str () );
+	fprintf ( fMakefile,
+	         "\t%s -c %s -o %s %s\n",
+	         cc.c_str (),
+	         sourceFilename.c_str (),
+	         objectFilename.c_str (),
+	         cflagsMacro.c_str () );
 }
 
-string
+void
 MingwModuleHandler::GenerateGccAssemblerCommand ( const Module& module,
                                                   const string& sourceFilename,
                                                   const string& cc,
                                                   const string& cflagsMacro ) const
 {
 	string objectFilename = GetObjectFilename ( sourceFilename );
-	return ssprintf ( "%s -x assembler-with-cpp -c %s -o %s -D__ASM__ %s\n",
-	                  cc.c_str (),
-	                  sourceFilename.c_str (),
-	                  objectFilename.c_str (),
-	                  cflagsMacro.c_str () );
+	fprintf ( fMakefile,
+	          "%s: %s\n",
+	          objectFilename.c_str (),
+	          sourceFilename.c_str () );
+	fprintf ( fMakefile,
+	          "\t%s -x assembler-with-cpp -c %s -o %s -D__ASM__ %s\n",
+	          cc.c_str (),
+	          sourceFilename.c_str (),
+	          objectFilename.c_str (),
+	          cflagsMacro.c_str () );
 }
 
-string
+void
 MingwModuleHandler::GenerateNasmCommand ( const Module& module,
                                           const string& sourceFilename,
                                           const string& nasmflagsMacro ) const
 {
 	string objectFilename = GetObjectFilename ( sourceFilename );
-	return ssprintf ( "%s -f win32 %s -o %s %s\n",
-		              "nasm",
-		              sourceFilename.c_str (),
-		              objectFilename.c_str (),
-		              nasmflagsMacro.c_str () );
+	fprintf ( fMakefile,
+	          "%s: %s\n",
+	          objectFilename.c_str (),
+	          sourceFilename.c_str () );
+	fprintf ( fMakefile,
+	          "\t%s -f win32 %s -o %s %s\n",
+	          "nasm",
+	          sourceFilename.c_str (),
+	          objectFilename.c_str (),
+	          nasmflagsMacro.c_str () );
 }
 
-string
+void
 MingwModuleHandler::GenerateWindresCommand ( const Module& module,
                                              const string& sourceFilename,
                                              const string& windresflagsMacro ) const
 {
 	string objectFilename = GetObjectFilename ( sourceFilename );
-	return ssprintf ( "%s %s -o %s ${%s}\n",
-		              "${windres}",
-		              sourceFilename.c_str (),
-		              objectFilename.c_str (),
-		              windresflagsMacro.c_str () );
+	fprintf ( fMakefile,
+	          "%s: %s\n",
+	          objectFilename.c_str (),
+	          sourceFilename.c_str () );
+	fprintf ( fMakefile,
+	         "\t%s %s -o %s ${%s}\n",
+	         "${windres}",
+	         sourceFilename.c_str (),
+	         objectFilename.c_str (),
+	         windresflagsMacro.c_str () );
 }
 
-string
-MingwModuleHandler::GenerateCommand ( const Module& module,
-                                      const string& sourceFilename,
-                                      const string& cc,
-                                      const string& cflagsMacro,
-                                      const string& nasmflagsMacro,
-                                      const string& windresflagsMacro ) const
+void
+MingwModuleHandler::GenerateWinebuildCommands ( const Module& module,
+                                                const string& sourceFilename ) const
+{
+	string basename = GetBasename ( sourceFilename );
+	fprintf ( fMakefile,
+	          "%s.def: %s\n",
+	          basename.c_str (),
+	          sourceFilename.c_str () );
+	fprintf ( fMakefile,
+	          "\t%s --def=%s -o %s.def\n",
+	          "${winebuild}",
+	          sourceFilename.c_str (),
+	          basename.c_str () );
+
+	fprintf ( fMakefile,
+	          "%s.stubs.c: %s\n",
+	          basename.c_str (),
+	          sourceFilename.c_str () );
+	fprintf ( fMakefile,
+	          "\t%s --pedll=%s -o %s.stubs.c\n",
+	          "${winebuild}",
+	          sourceFilename.c_str (),
+	          basename.c_str () );
+}
+
+void
+MingwModuleHandler::GenerateCommands ( const Module& module,
+                                       const string& sourceFilename,
+                                       const string& cc,
+                                       const string& cflagsMacro,
+                                       const string& nasmflagsMacro,
+                                       const string& windresflagsMacro ) const
 {
 	string extension = GetExtension ( sourceFilename );
 	if ( extension == ".c" || extension == ".C" )
-		return GenerateGccCommand ( module,
-		                            sourceFilename,
-		                            cc,
-		                            cflagsMacro );
+	{
+		GenerateGccCommand ( module,
+		                     sourceFilename,
+		                     cc,
+		                     cflagsMacro );
+		return;
+	}
 	else if ( extension == ".s" || extension == ".S" )
-		return GenerateGccAssemblerCommand ( module,
-		                                     sourceFilename,
-		                                     cc,
-		                                     cflagsMacro );
+	{
+		GenerateGccAssemblerCommand ( module,
+		                              sourceFilename,
+		                              cc,
+		                              cflagsMacro );
+		return;
+	}
 	else if ( extension == ".asm" || extension == ".ASM" )
-		return GenerateNasmCommand ( module,
-		                             sourceFilename,
-		                             nasmflagsMacro );
+	{
+		GenerateNasmCommand ( module,
+		                      sourceFilename,
+		                      nasmflagsMacro );
+		return;
+	}
 	else if ( extension == ".rc" || extension == ".RC" )
-		return GenerateWindresCommand ( module,
-		                                sourceFilename,
-		                                windresflagsMacro );
+	{
+		GenerateWindresCommand ( module,
+		                         sourceFilename,
+		                         windresflagsMacro );
+		return;
+	}
+	else if ( extension == ".spec" || extension == ".SPEC" )
+	{
+		GenerateWinebuildCommands ( module,
+		                            sourceFilename );
+		GenerateGccCommand ( module,
+		                     GetActualSourceFilename ( sourceFilename ),
+		                     cc,
+		                     cflagsMacro );
+		return;
+	}
 
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__,
@@ -614,19 +715,14 @@ MingwModuleHandler::GenerateObjectFileTargets ( const Module& module,
 	for ( i = 0; i < files.size (); i++ )
 	{
 		string sourceFilename = files[i]->name;
-		string objectFilename = GetObjectFilename ( sourceFilename );
+		GenerateCommands ( module,
+		                   sourceFilename,
+		                   cc,
+		                   cflagsMacro,
+		                   nasmflagsMacro,
+		                   windresflagsMacro );
 		fprintf ( fMakefile,
-		          "%s: %s\n",
-		          objectFilename.c_str (),
-		          sourceFilename.c_str () );
-		fprintf ( fMakefile,
-		          "\t%s\n",
-		          GenerateCommand ( module,
-		                            sourceFilename,
-		                            cc,
-		                            cflagsMacro,
-		                            nasmflagsMacro,
-		                            windresflagsMacro ).c_str () );
+		          "\n" );
 	}
 
 	for ( i = 0; i < ifs.size(); i++ )
@@ -937,8 +1033,10 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ( const Module& module )
 {
 	if ( module.importLibrary != NULL )
 	{
-		fprintf ( fMakefile, "%s:\n",
-		          module.GetDependencyPath ().c_str () );
+		string definitionDependencies = GetDefinitionDependencies ( module );
+		fprintf ( fMakefile, "%s: %s\n",
+		          module.GetDependencyPath ().c_str (),
+		          definitionDependencies.c_str () );
 
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --def %s --output-lib %s --kill-at\n\n",
@@ -946,6 +1044,44 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ( const Module& module )
 		          FixupTargetFilename ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
 		          FixupTargetFilename ( module.GetDependencyPath () ).c_str () );
 	}
+}
+
+string
+MingwModuleHandler::GetSpecObjectDependencies ( const string& filename ) const
+{
+	string basename = GetBasename ( filename );
+	return basename + ".def" + " " + basename + ".stubs.c";
+}
+
+string
+MingwModuleHandler::GetDefinitionDependencies ( const Module& module ) const
+{
+	string dependencies;
+	for ( size_t i = 0; i < module.files.size (); i++ )
+	{
+		File& file = *module.files[i];
+		string extension = GetExtension ( file.name );
+		if ( extension == ".spec" || extension == ".SPEC" )
+		{
+			if ( dependencies.length () > 0 )
+				dependencies += " ";
+			dependencies += GetSpecObjectDependencies ( file.name );
+		}
+	}
+	return dependencies;
+}
+
+string
+MingwModuleHandler::GetLinkingDependencies ( const Module& module ) const
+{
+	string dependencies = GetImportLibraryDependencies ( module );
+	string s = GetDefinitionDependencies ( module );
+	if ( s.length () > 0 )
+	{
+		dependencies += " ";
+		dependencies += s;
+	}
+	return dependencies;
 }
 
 
@@ -1141,6 +1277,7 @@ MingwKernelModeDriverModuleHandler::Process ( const Module& module )
 	GenerateInvocations ( module );
 }
 
+
 void
 MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ( const Module& module )
 {
@@ -1253,8 +1390,8 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module 
 	static string ros_junk ( "$(ROS_TEMPORARY)" );
 	string target ( FixupTargetFilename ( module.GetPath () ) );
 	string workingDirectory = GetWorkingDirectory ( );
-	string archiveFilename = GetModuleArchiveFilename ( module );
-	string importLibraryDependencies = GetImportLibraryDependencies ( module );
+	string objectFilenames = GetObjectFilenames ( module );
+	string linkingDependencies = GetLinkingDependencies ( module );
 
 	GenerateImportLibraryTargetIfNeeded ( module );
 
@@ -1264,14 +1401,14 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module 
 
 		fprintf ( fMakefile, "%s: %s %s\n",
 		          target.c_str (),
-		          archiveFilename.c_str (),
-		          importLibraryDependencies.c_str () );
+		          objectFilenames.c_str (),
+		          linkingDependencies.c_str () );
 
 		string linkerParameters ( "-Wl,--subsystem,console -Wl,--entry,_DllMain@12 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -mdll" );
 		GenerateLinkerCommand ( module,
                                 "${gcc}",
                                 linkerParameters,
-                                archiveFilename );
+                                objectFilenames );
 	}
 	else
 	{

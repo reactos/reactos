@@ -20,8 +20,10 @@ public:
 protected:
 	std::string GetWorkingDirectory () const;
 	std::string GetExtension ( const std::string& filename ) const;
+	std::string GetBasename ( const std::string& filename ) const;
 	std::string ReplaceExtension ( const std::string& filename,
 	                               const std::string& newExtension ) const;
+	std::string GetActualSourceFilename ( const std::string& filename ) const;
 	std::string GetModuleArchiveFilename ( const Module& module ) const;
 	std::string GetImportLibraryDependencies ( const Module& module ) const;
 	std::string GetModuleDependencies ( const Module& module ) const;
@@ -46,6 +48,8 @@ protected:
 	                             const std::string& linkerParameters,
 	                             const std::string& objectFilenames ) const;
 	void GenerateImportLibraryTargetIfNeeded ( const Module& module ) const;
+	std::string GetDefinitionDependencies ( const Module& module ) const;
+	std::string GetLinkingDependencies ( const Module& module ) const;
 	static FILE* fMakefile;
 private:
 	std::string ConcatenatePaths ( const std::string& path1,
@@ -79,26 +83,28 @@ private:
 	std::string GenerateGccIncludeParameters ( const Module& module ) const;
 	std::string GenerateGccParameters ( const Module& module ) const;
 	std::string GenerateNasmParameters ( const Module& module ) const;
-	std::string GenerateGccCommand ( const Module& module,
-	                                 const std::string& sourceFilename,
-	                                 const std::string& cc,
-	                                 const std::string& cflagsMacro ) const;
-	std::string GenerateGccAssemblerCommand ( const Module& module,
-	                                          const std::string& sourceFilename,
-	                                          const std::string& cc,
-	                                          const std::string& cflagsMacro ) const;
-	std::string GenerateNasmCommand ( const Module& module,
-	                                  const std::string& sourceFilename,
-	                                  const std::string& nasmflagsMacro ) const;
-	std::string GenerateWindresCommand ( const Module& module,
-	                                     const std::string& sourceFilename,
-	                                     const std::string& windresflagsMacro ) const;
-	std::string GenerateCommand ( const Module& module,
+	void GenerateGccCommand ( const Module& module,
+	                          const std::string& sourceFilename,
+	                          const std::string& cc,
+	                          const std::string& cflagsMacro ) const;
+	void GenerateGccAssemblerCommand ( const Module& module,
+	                                   const std::string& sourceFilename,
+	                                   const std::string& cc,
+	                                   const std::string& cflagsMacro ) const;
+	void GenerateNasmCommand ( const Module& module,
+	                           const std::string& sourceFilename,
+	                           const std::string& nasmflagsMacro ) const;
+	void GenerateWindresCommand ( const Module& module,
 	                              const std::string& sourceFilename,
-	                              const std::string& cc,
-	                              const std::string& cflagsMacro,
-	                              const std::string& nasmflagsMacro,
 	                              const std::string& windresflagsMacro ) const;
+	void GenerateWinebuildCommands ( const Module& module,
+	                                 const std::string& sourceFilename ) const;
+	void GenerateCommands ( const Module& module,
+	                        const std::string& sourceFilename,
+	                        const std::string& cc,
+	                        const std::string& cflagsMacro,
+	                        const std::string& nasmflagsMacro,
+	                        const std::string& windresflagsMacro ) const;
 	void GenerateObjectFileTargets ( const Module& module,
 	                                 const std::vector<File*>& files,
 	                                 const std::vector<If*>& ifs,
@@ -122,6 +128,7 @@ private:
 	                                const std::string& ar,
 	                                const std::string* clags ) const;
 	std::string GetPreconditionDependenciesName ( const Module& module ) const;
+	std::string GetSpecObjectDependencies ( const std::string& filename ) const;
 };
 
 

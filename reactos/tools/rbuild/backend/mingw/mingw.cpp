@@ -166,8 +166,10 @@ MingwBackend::GenerateGlobalVariables ()
 	fprintf ( fMakefile, "gcc = gcc\n" );
 	fprintf ( fMakefile, "ld = ld\n" );
 	fprintf ( fMakefile, "ar = ar\n" );
-	fprintf ( fMakefile, "dlltool = dlltool\n\n" );
-	fprintf ( fMakefile, "windres = windres\n\n" );
+	fprintf ( fMakefile, "dlltool = dlltool\n" );
+	fprintf ( fMakefile, "windres = windres\n" );
+	fprintf ( fMakefile, "winebuild = tools" SSEP "winebuild" SSEP "winebuild\n" );
+	fprintf ( fMakefile, "\n" );
 	GenerateGlobalCFlagsAndProperties (
 		"=",
 		ProjectNode.properties,

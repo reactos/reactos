@@ -10,3 +10,6 @@
 <directory name="wmc">
 	<xi:include href="wmc/wmc.xml" />
 </directory>
+<directory name="winebuild">
+	<xi:include href="winebuild/winebuild.xml" />
+</directory>

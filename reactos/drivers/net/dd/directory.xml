@@ -1,0 +1,6 @@
+<directory name="ne2000">
+	<xi:include href="ne2000/ne2000.xml" />
+</directory>
+<directory name="pcnet">
+	<xi:include href="pcnet/pcnet.xml" />
+</directory>
