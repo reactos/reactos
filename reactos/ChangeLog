@@ -1,5 +1,14 @@
 2002-08-17  David Welch  <welch@computer2.darkstar.org>
 
+	* ntoskrnl/mm/rmap.c (MmWritePagePhysicalAddress): Ensure the
+	process isn't freed in the middle of our operations.
+
+2002-08-17  David Welch  <welch@computer2.darkstar.org>
+
+	* drivers/fs/vfat/finfo.c (VfatSetAllocationSizeInformation): Fixed.
+
+2002-08-17  David Welch  <welch@computer2.darkstar.org>
+
 	* ntoskrnl/ps/create.c (PiDeleteThread): Don't dereference
 	the thread's process while holding the thread list lock.
 

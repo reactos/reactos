@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.15 2002/08/14 20:58:31 dwelch Exp $
+/* $Id: finfo.c,v 1.16 2002/08/17 14:14:19 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -351,14 +351,15 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
 				 PLARGE_INTEGER AllocationSize)
 {
   ULONG OldSize;
+  ULONG FirstCluster;
   ULONG Cluster;
-  ULONG Offset;
+  ULONG i;
   NTSTATUS Status;
   PDEVICE_EXTENSION DeviceExt = 
     (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
   ULONG ClusterSize = DeviceExt->FatInfo.BytesPerCluster;
   ULONG NewSize = AllocationSize->u.LowPart;
-  ULONG NextCluster;
+  ULONG PreviousCluster;
 
   OldSize = Fcb->entry.FileSize;
   if (OldSize == AllocationSize->u.LowPart)
@@ -373,30 +374,36 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
 
   if (DeviceExt->FatInfo.FatType == FAT32)
     {
-      Cluster = Fcb->entry.FirstCluster + Fcb->entry.FirstClusterHigh * 65536;
+      FirstCluster = Fcb->entry.FirstCluster + 
+	Fcb->entry.FirstClusterHigh * 65536;
     }
   else
     {
-      Cluster = Fcb->entry.FirstCluster;
+      FirstCluster = Fcb->entry.FirstCluster;
     }
+  Cluster = FirstCluster;
 
   if (OldSize > NewSize &&
       ROUND_UP(OldSize, ClusterSize) > ROUND_DOWN(NewSize, ClusterSize))
     {            
       /* Seek to the new end of the file. */
-      Offset = 0;
-      while (Cluster != 0xffffffff && Cluster > 1 && Offset <= NewSize)
+      for (i = 0; i < (NewSize / ClusterSize); i++)
 	{
-	  Status = GetNextCluster (DeviceExt, Cluster, &NextCluster, FALSE);
-	  Cluster = NextCluster;
-	  Offset += ClusterSize;
+	  Status = NextCluster (DeviceExt, Fcb, FirstCluster, &Cluster, FALSE);
+	}
+      /* Terminate the FAT chain at this point. */
+      if (NewSize > 0)
+	{
+	  PreviousCluster = Cluster;
+	  Status = NextCluster (DeviceExt, Fcb, FirstCluster, &Cluster, FALSE);
+	  WriteCluster (DeviceExt, PreviousCluster, 0xFFFFFFFF);
 	}
       /* Free everything beyond this point. */
       while (Cluster != 0xffffffff && Cluster > 1)
 	{
-	  Status = GetNextCluster (DeviceExt, Cluster, &NextCluster, FALSE);
-	  WriteCluster (DeviceExt, Cluster, 0xFFFFFFFF);
-	  Cluster = NextCluster;	  
+	  PreviousCluster = Cluster;
+	  Status = NextCluster (DeviceExt, Fcb, FirstCluster, &Cluster, FALSE);
+	  WriteCluster (DeviceExt, PreviousCluster, 0);
 	}
       if (NewSize == 0)
 	{
@@ -408,21 +415,17 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
 	   ROUND_UP(NewSize, ClusterSize) > ROUND_DOWN(OldSize, ClusterSize))
     {
       /* Seek to the new end of the file. */
-      Offset = 0;
       if (OldSize == 0)
 	{
-	  assert(Cluster == 0);
-	  Status = GetNextCluster (DeviceExt, 0, &NextCluster, TRUE);
-	  Fcb->entry.FirstCluster = (NextCluster & 0x0000FFFF) >> 0;
-	  Fcb->entry.FirstClusterHigh = (NextCluster & 0xFFFF0000) >> 16;
-	  Cluster = NextCluster;
-	  Offset += ClusterSize;
+	  assert(FirstCluster == 0);
+	  Status = NextCluster (DeviceExt, Fcb, FirstCluster, &Cluster, TRUE);
+	  FirstCluster = Cluster;
+	  Fcb->entry.FirstCluster = (FirstCluster & 0x0000FFFF) >> 0;
+	  Fcb->entry.FirstClusterHigh = (FirstCluster & 0xFFFF0000) >> 16;
 	}
-      while (Cluster != 0xffffffff && Cluster > 1 && Offset <= NewSize)
+      for (i = 0; i < (NewSize / ClusterSize); i++)
 	{
-	  Status = GetNextCluster (DeviceExt, Cluster, &NextCluster, TRUE);
-	  Cluster = NextCluster;
-	  Offset += ClusterSize;
+	  Status = NextCluster (DeviceExt, Fcb, FirstCluster, &Cluster, TRUE);
 	}      
     }	   
 

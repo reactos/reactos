@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.8 2002/08/14 20:58:36 dwelch Exp $
+/* $Id: rmap.c,v 1.9 2002/08/17 14:14:20 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -69,6 +69,10 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
   LARGE_INTEGER Offset;
   NTSTATUS Status;
 
+  /*
+   * Check that the address still has a valid rmap; then reference the
+   * process so it isn't freed while we are working.
+   */
   ExAcquireFastMutex(&RmapListLock);
   entry = MmGetRmapListHeadPage(PhysicalAddress);
   if (entry == NULL)
@@ -82,10 +86,22 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
     {
       KeBugCheck(0);
     }
-
+  ObReferenceObjectByPointer(Process, PROCESS_ALL_ACCESS, NULL, KernelMode);
   ExReleaseFastMutex(&RmapListLock);
+
+  /*
+   * Lock the address space; then check that the address we are using
+   * still corresponds to a valid memory area (the page might have been
+   * freed or paged out after we read the rmap entry.) 
+   */
   MmLockAddressSpace(&Process->AddressSpace);
   MemoryArea = MmOpenMemoryAreaByAddress(&Process->AddressSpace, Address);
+  if (MemoryArea == NULL)
+    {
+      ObDereferenceObject(Process);
+      return(STATUS_UNSUCCESSFUL);
+    }
+
   Type = MemoryArea->Type;
   if (Type == MEMORY_AREA_SECTION_VIEW)
     {
@@ -103,6 +119,8 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
 	  DPRINT1("MmGetPageOp failed\n");
 	  KeBugCheck(0);
 	}
+
+      ObDereferenceObject(Process);
 
       if (PageOp->Thread != PsGetCurrentThread())
 	{
@@ -126,6 +144,9 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
     {
       PageOp = MmGetPageOp(MemoryArea, Process->UniqueProcessId,
 			   Address, NULL, 0, MM_PAGEOP_PAGEOUT);
+      
+      ObDereferenceObject(Process);
+
       if (PageOp->Thread != PsGetCurrentThread())
 	{
 	  MmReleasePageOp(PageOp);
@@ -147,7 +168,7 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
   else
     {
       KeBugCheck(0);
-    }
+    }  
   return(Status);
 }
 
