@@ -140,11 +140,11 @@ int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, int cmdshow)
 		g_Globals._desktop_mode = true;
 
 	if (cmdshow != SW_HIDE) {
-#ifndef _ROS_	// don't maximize if being called from the ROS desktop
+/*	// don't maximize if being called from the ROS desktop
 		if (cmdshow == SW_SHOWNORMAL)
-				/*TODO: read window placement from registry */
+				//TODO: read window placement from registry
 			cmdshow = SW_MAXIMIZE;
-#endif
+*/
 
 		explorer_show_frame(hwndDesktop, cmdshow);
 	}
