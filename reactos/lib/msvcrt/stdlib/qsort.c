@@ -1,5 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <msvcrt/stdlib.h>
+#include <msvcrt/internal/tls.h>
 
 /*-
  * Copyright (c) 1980, 1983 The Regents of the University of California.
@@ -32,11 +33,6 @@
 #define		THRESH		4		/* threshold for insertion */
 #define		MTHRESH		6		/* threshold for median */
 
-static  int		(*qcmp)(const void *, const void *);		/* the comparison routine */
-static  int		qsz;			/* size of each record */
-static  int		thresh;			/* THRESHold in chars */
-static  int		mthresh;		/* MTHRESHold in chars */
-
 /*
  * qst:
  * Do a quicksort
@@ -53,7 +49,7 @@ static  int		mthresh;		/* MTHRESHold in chars */
  */
 
 static void
-qst(char *base, char *max)
+qst(PTHREADDATA pThreadData, char *base, char *max)
 {
   char c, *i, *j, *jj;
   int ii;
@@ -71,20 +67,20 @@ qst(char *base, char *max)
    */
   lo = max - base;		/* number of elements as chars */
   do	{
-    mid = i = base + qsz * ((lo / qsz) >> 1);
-    if (lo >= mthresh)
+    mid = i = base + pThreadData->qsz * ((lo / pThreadData->qsz) >> 1);
+    if (lo >= pThreadData->mthresh)
     {
-      j = (qcmp((jj = base), i) > 0 ? jj : i);
-      if (qcmp(j, (tmp = max - qsz)) > 0)
+      j = (pThreadData->qcmp((jj = base), i) > 0 ? jj : i);
+      if (pThreadData->qcmp(j, (tmp = max - pThreadData->qsz)) > 0)
       {
 	/* switch to first loser */
 	j = (j == jj ? i : jj);
-	if (qcmp(j, tmp) < 0)
+	if (pThreadData->qcmp(j, tmp) < 0)
 	  j = tmp;
       }
       if (j != i)
       {
-	ii = qsz;
+	ii = pThreadData->qsz;
 	do	{
 	  c = *i;
 	  *i++ = *j;
@@ -95,18 +91,18 @@ qst(char *base, char *max)
     /*
      * Semi-standard quicksort partitioning/swapping
      */
-    for (i = base, j = max - qsz; ; )
+    for (i = base, j = max - pThreadData->qsz; ; )
     {
-      while (i < mid && qcmp(i, mid) <= 0)
-	i += qsz;
+      while (i < mid && pThreadData->qcmp(i, mid) <= 0)
+	i += pThreadData->qsz;
       while (j > mid)
       {
-	if (qcmp(mid, j) <= 0)
+	if (pThreadData->qcmp(mid, j) <= 0)
 	{
-	  j -= qsz;
+	  j -= pThreadData->qsz;
 	  continue;
 	}
-	tmp = i + qsz;		/* value of i after swap */
+	tmp = i + pThreadData->qsz;	/* value of i after swap */
 	if (i == mid)
 	{
 	  /* j <-> mid, new mid is j */
@@ -116,7 +112,7 @@ qst(char *base, char *max)
 	{
 	  /* i <-> j */
 	  jj = j;
-	  j -= qsz;
+	  j -= pThreadData->qsz;
 	}
 	goto swap;
       }
@@ -129,10 +125,10 @@ qst(char *base, char *max)
 	/* i <-> mid, new mid is i */
 	jj = mid;
 	tmp = mid = i;		/* value of i after swap */
-	j -= qsz;
+	j -= pThreadData->qsz;
       }
     swap:
-      ii = qsz;
+      ii = pThreadData->qsz;
       do	{
 	c = *i;
 	*i++ = *jj;
@@ -148,21 +144,21 @@ qst(char *base, char *max)
      * (recursively or by branching) if the partition is
      * of at least size THRESH.
      */
-    i = (j = mid) + qsz;
+    i = (j = mid) + pThreadData->qsz;
     if ((lo = j - base) <= (hi = max - i))
     {
-      if (lo >= thresh)
-	qst(base, j);
+      if (lo >= pThreadData->thresh)
+	qst(pThreadData, base, j);
       base = i;
       lo = hi;
     }
     else
     {
-      if (hi >= thresh)
-	qst(i, max);
+      if (hi >= pThreadData->thresh)
+	qst(pThreadData, i, max);
       max = j;
     }
-  } while (lo >= thresh);
+  } while (lo >= pThreadData->thresh);
 }
 
 /*
@@ -174,21 +170,25 @@ qst(char *base, char *max)
 void
 qsort(const void *base0, size_t n, size_t size, _pfunccmp_t compar)
 {
+  PTHREADDATA pThreadData;
   char *base = (char *)base0;
   char c, *i, *j, *lo, *hi;
   char *min, *max;
 
   if (n <= 1)
     return;
-  qsz = size;
-  qcmp = compar;
-  thresh = qsz * THRESH;
-  mthresh = qsz * MTHRESH;
-  max = base + n * qsz;
+
+  pThreadData = GetThreadData();
+
+  pThreadData->qsz = size;
+  pThreadData->qcmp = compar;
+  pThreadData->thresh = pThreadData->qsz * THRESH;
+  pThreadData->mthresh = pThreadData->qsz * MTHRESH;
+  max = base + n * pThreadData->qsz;
   if (n >= THRESH)
   {
-    qst(base, max);
-    hi = base + thresh;
+    qst(pThreadData, base, max);
+    hi = base + pThreadData->thresh;
   }
   else
   {
@@ -200,13 +200,13 @@ qsort(const void *base0, size_t n, size_t size, _pfunccmp_t compar)
    * the first THRESH elements (or the first n if n < THRESH), finding
    * the min, and swapping it into the first position.
    */
-  for (j = lo = base; (lo += qsz) < hi; )
-    if (qcmp(j, lo) > 0)
+  for (j = lo = base; (lo += pThreadData->qsz) < hi; )
+    if (pThreadData->qcmp(j, lo) > 0)
       j = lo;
   if (j != base)
   {
     /* swap j into place */
-    for (i = base, hi = base + qsz; i < hi; )
+    for (i = base, hi = base + pThreadData->qsz; i < hi; )
     {
       c = *j;
       *j++ = *i;
@@ -220,15 +220,15 @@ qsort(const void *base0, size_t n, size_t size, _pfunccmp_t compar)
    * Then, do the standard insertion sort shift on a character at a time
    * basis for each element in the frob.
    */
-  for (min = base; (hi = min += qsz) < max; )
+  for (min = base; (hi = min += pThreadData->qsz) < max; )
   {
-    while (qcmp(hi -= qsz, min) > 0)
+    while (pThreadData->qcmp(hi -= pThreadData->qsz, min) > 0)
       /* void */;
-    if ((hi += qsz) != min) {
-      for (lo = min + qsz; --lo >= min; )
+    if ((hi += pThreadData->qsz) != min) {
+      for (lo = min + pThreadData->qsz; --lo >= min; )
       {
 	c = *lo;
-	for (i = j = lo; (j -= qsz) >= hi; i = j)
+	for (i = j = lo; (j -= pThreadData->qsz) >= hi; i = j)
 	  *i = *j;
 	*i = c;
       }
