@@ -94,7 +94,7 @@ RCINC = --include-dir ../reactos/include --include-dir ../../reactos/include --i
 %.o: %.asm
 	$(NASM_CMD) $(NFLAGS) $< -o $@
 %.coff: %.rc
-	$(RC) $(RCINC) $< $@
+	$(RC) $(RCFLAGS) $(RCINC) $< $@
 
 
 
