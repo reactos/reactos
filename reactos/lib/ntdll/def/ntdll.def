@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.26 1999/12/01 15:16:04 ekohl Exp $
+; $Id: ntdll.def,v 1.27 1999/12/04 21:03:22 ea Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -487,6 +487,7 @@ RtlLockHeap@4
 RtlMoveMemory@12
 RtlMultiByteToUnicodeN@20
 RtlNtStatusToDosError
+RtlNtStatusToPsxErrno@4
 RtlOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString@12
 RtlOemToUnicodeN@20
