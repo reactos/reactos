@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: setup.c,v 1.10 2004/10/08 11:52:30 ekohl Exp $ 
+/* $Id: setup.c,v 1.11 2004/10/10 18:28:05 ekohl Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -48,7 +48,7 @@ UserShellFolders[] =
   {L"My Pictures", L"My Documents\\My Pictures", IDS_MYPICTURES, FALSE, TRUE, TRUE},
   {L"My Music", L"My Documents\\My Music", IDS_MYMUSIC, FALSE, TRUE, TRUE},
   {L"My Video", L"My Documents\\My Videos", IDS_MYVIDEOS, FALSE, TRUE, TRUE},
-  {L"NetHood", L"NetHood", IDS_NETHOOD, TRUE, TRUE, TRUE}, /* hidden ??*/
+  {L"NetHood", L"NetHood", IDS_NETHOOD, TRUE, TRUE, TRUE},
   {L"PrintHood", L"PrintHood", IDS_PRINTHOOD, TRUE, TRUE, TRUE},
   {L"Recent", L"Recent", IDS_RECENT, TRUE, TRUE, TRUE},
   {L"SendTo", L"SendTo", IDS_SENDTO, FALSE, TRUE, TRUE},
@@ -59,9 +59,9 @@ UserShellFolders[] =
   {L"Local Settings", L"Local Settings", IDS_LOCALSETTINGS, TRUE, TRUE, TRUE},
   {L"Local AppData", L"Local Settings\\Application Data", IDS_LOCALAPPDATA, TRUE, TRUE, TRUE},
   {L"Temp", L"Local Settings\\Temp", IDS_TEMP, FALSE, FALSE, FALSE},
-  {L"Cache", L"Local Settings\\Temporary Internet Files", IDS_CACHE, FALSE, TRUE, TRUE},  /* hidden ??*/
-  {L"History", L"Local Settings\\History", IDS_HISTORY, FALSE, TRUE, TRUE},  /* hidden ??*/
-  {L"Cookies", L"Cookies", IDS_COOKIES, FALSE, TRUE, TRUE},  /* hidden ??*/
+  {L"Cache", L"Local Settings\\Temporary Internet Files", IDS_CACHE, FALSE, TRUE, TRUE},
+  {L"History", L"Local Settings\\History", IDS_HISTORY, FALSE, TRUE, TRUE},
+  {L"Cookies", L"Cookies", IDS_COOKIES, FALSE, TRUE, TRUE},
   {NULL, NULL, -1, FALSE, FALSE, FALSE}
 };
 
