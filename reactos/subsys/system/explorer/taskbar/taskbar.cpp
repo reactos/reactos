@@ -53,29 +53,20 @@ TaskBarMap::~TaskBarMap()
 
 
 TaskBar::TaskBar(HWND hwnd)
- :	super(hwnd)
+ :	super(hwnd),
+	WM_SHELLHOOK(RegisterWindowMessage(TEXT("SHELLHOOK")))
 {
-	HMODULE Module;
 	_last_btn_width = 0;
-
-	Module = LoadLibraryA("User32.dll");
-	if (Module && GetProcAddress(Module, "RegisterShellHookWindow")) {
-		_HasShellHook = TRUE;
-	} else {
-		_HasShellHook = FALSE;
-		if (Module)
-			FreeLibrary(Module);
-	}
-	LOG (_HasShellHook ? L"Has shell hooks.\n" : L"Does not have shell hooks.\n");
-
 }
 
 TaskBar::~TaskBar()
 {
-	if (!_HasShellHook)
-		KillTimer(_hwnd, 0);
+	DynamicFct<BOOL (WINAPI*)(HWND hwnd)> DeregisterShellHookWindow(TEXT("user32"), "DeregisterShellHookWindow");
 
-	//DeinstallShellHook();
+	if (DeregisterShellHookWindow)
+		(*DeregisterShellHookWindow)(_hwnd);
+	else
+		KillTimer(_hwnd, 0);
 }
 
 HWND TaskBar::Create(HWND hwndParent)
@@ -108,26 +99,23 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 
 	_next_id = IDC_FIRST_APP;
 
-	//InstallShellHook(_hwnd, PM_SHELLHOOK_NOTIFY);
+	DynamicFct<BOOL (WINAPI*)(HWND hwnd)> RegisterShellHookWindow(TEXT("user32"), "RegisterShellHookWindow");
+
+	if (RegisterShellHookWindow) {
+		LOG(TEXT("Using shell hooks for notification of shell events."));
+		(*RegisterShellHookWindow)(_hwnd);
+	} else {
+		LOG(TEXT("Shell hooks not available."));
+		SetTimer(_hwnd, 0, 200, NULL);
+	}
 
 	Refresh();
-
-	if (_HasShellHook)
-		RegisterShellHookWindow(_hwnd);
-	else
-		SetTimer(_hwnd, 0, 200, NULL);
 
 	return 0;
 }
 
 LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-	static UINT ShellHookNmsg = 0;
-
-	if (!ShellHookNmsg) {
-		ShellHookNmsg = RegisterWindowMessage(TEXT("SHELLHOOK"));
-		LOG (FmtString(TEXT("Nmsg == %#x"), ShellHookNmsg));
-	}
 	switch(nmsg) {
 	  case WM_SIZE:
 		SendMessage(_htoolbar, WM_SIZE, 0, 0);
@@ -167,9 +155,10 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		return (LRESULT)(HWND)_last_foreground_wnd;
 
 	  default: def:
-		if (nmsg == RegisterWindowMessage(TEXT("SHELLHOOK"))) {
+		if (nmsg == WM_SHELLHOOK) {
 			LOG(FmtString(TEXT("SHELLHOOK %x"), wparam));
-			switch (wparam) {
+
+			switch(wparam) {
 			  case HSHELL_WINDOWCREATED:
 			  case HSHELL_WINDOWDESTROYED:
 			  case HSHELL_WINDOWACTIVATED:
