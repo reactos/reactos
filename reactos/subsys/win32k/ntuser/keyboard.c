@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.13 2003/10/18 21:48:18 weiden Exp $
+/* $Id: keyboard.c,v 1.14 2003/11/07 19:58:43 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -687,8 +687,8 @@ NtUserTranslateMessage(LPMSG lpMsg,
 		  wp[0] = accent_chars[i].ac_result;
 		  break;
                 }
-	      dead_char = 0;
 	    }
+	      dead_char = 0;
         }
       NewMsg.hwnd = InMsg.hwnd;
       NewMsg.wParam = wp[0];
