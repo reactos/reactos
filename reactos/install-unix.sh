@@ -109,6 +109,7 @@ cp apps/utils/pice/module/pice.sys $ROS_INSTALL/system32/drivers
 cp apps/utils/pice/module/pice.sym $ROS_INSTALL/symbols
 cp apps/utils/pice/pice.cfg $ROS_INSTALL/symbols
 cp apps/utils/sc/sc.exe $ROS_INSTALL/bin
+cp apps/utils/rundll32/rundll32.exe $ROS_INSTALL/bin
 cp apps/tests/hello/hello.exe $ROS_INSTALL/bin
 cp apps/tests/args/args.exe $ROS_INSTALL/bin
 cp apps/tests/apc/apc.exe $ROS_INSTALL/bin

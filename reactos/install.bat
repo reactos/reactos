@@ -158,6 +158,7 @@ copy apps\utils\partinfo\partinfo.exe %ROS_INSTALL%\bin
 copy apps\utils\objdir\objdir.exe %ROS_INSTALL%\bin
 copy apps\utils\pice\pice.cfg %ROS_INSTALL%\symbols
 copy apps\utils\sc\sc.exe %ROS_INSTALL%\bin
+copy apps\utils\rundll32\rundll32.exe %ROS_INSTALL%\bin
 
 rem copy apps\utils\pice\module\pice.sys %ROS_INSTALL%\system32\drivers
 rem copy apps\utils\pice\module\pice.sym %ROS_INSTALL%\symbols
