@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.35 2003/12/10 22:47:11 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.36 2003/12/13 13:45:17 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -37,6 +37,7 @@
 #include <include/surface.h>
 #include <include/palette.h>
 #include <include/eng.h>
+#include <include/intgdi.h>
 #include <include/callback.h>
 #include "include/object.h"
 #include <internal/safe.h>
@@ -1054,10 +1055,10 @@ NtUserDrawIconEx(
     if(istepIfAniCur)
       DbgPrint("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
     
-    if(!hbmMask || !NtGdiGetObject(hbmMask, sizeof(BITMAP), &bmpMask))
+    if(!hbmMask || !IntGdiGetObject(hbmMask, sizeof(BITMAP), &bmpMask))
       goto done;
     
-    if(hbmColor && !NtGdiGetObject(hbmColor, sizeof(BITMAP), &bmpColor))
+    if(hbmColor && !IntGdiGetObject(hbmColor, sizeof(BITMAP), &bmpColor))
       goto done;
     
     if(hbmColor)

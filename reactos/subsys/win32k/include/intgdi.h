@@ -100,5 +100,13 @@ int FASTCALL
 IntGdiGetClipBox(HDC    hDC,
 			     LPRECT rc);
 
+/* DC functions */
+
+BOOL FASTCALL
+IntGdiGetDCOrgEx(DC *dc, LPPOINT  Point);
+
+INT FASTCALL
+IntGdiGetObject(HANDLE handle, INT count, LPVOID buffer);
+
 #endif /* _WIN32K_INTGDI_H */
 

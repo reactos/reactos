@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.109 2003/12/12 12:53:10 gvg Exp $
+/* $Id: dc.c,v 1.110 2003/12/13 13:45:18 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -27,6 +27,7 @@
 #include <ddk/ntddk.h>
 #include <ddk/ntddvid.h>
 
+#include <internal/safe.h>
 #include <win32k/bitmaps.h>
 #include <win32k/brush.h>
 #include <win32k/cliprgn.h>
@@ -853,27 +854,48 @@ NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
 
 DC_GET_VAL_EX ( NtGdiGetCurrentPositionEx, IntGetCurrentPositionEx, w.CursPosX, w.CursPosY, POINT )
 
+BOOL FASTCALL
+IntGdiGetDCOrgEx(DC *dc, LPPOINT  Point)
+{
+  Point->x = dc->w.DCOrgX;
+  Point->y = dc->w.DCOrgY;
+  
+  return  TRUE;
+}
+
 BOOL STDCALL
 NtGdiGetDCOrgEx(HDC  hDC, LPPOINT  Point)
 {
-  PDC dc;
-
-  if (!Point)
+  BOOL Ret;
+  DC *dc;
+  POINT SafePoint;
+  NTSTATUS Status;
+  
+  if(!Point)
   {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
+  
   dc = DC_LockDc(hDC);
-  if (dc == NULL)
+  if(!dc)
   {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-
-  Point->x = Point->y = 0;
-
-  Point->x += dc->w.DCOrgX;
-  Point->y += dc->w.DCOrgY;
-  DC_UnlockDc( hDC );
-  return  TRUE;
+  
+  Ret = IntGdiGetDCOrgEx(dc, &SafePoint);
+  
+  Status = MmCopyToCaller(Point, &SafePoint, sizeof(POINT));
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    DC_UnlockDc(hDC);
+    return FALSE;
+  }
+  
+  DC_UnlockDc(hDC);
+  return Ret;
 }
 
 COLORREF STDCALL
@@ -1315,74 +1337,17 @@ NtGdiGetDeviceCaps(HDC  hDC,
 DC_GET_VAL( INT, NtGdiGetMapMode, w.MapMode )
 DC_GET_VAL( INT, NtGdiGetPolyFillMode, w.polyFillMode )
 
-INT STDCALL
-NtGdiGetObjectA(HANDLE handle, INT count, LPVOID buffer)
-{
-  PGDIOBJ  gdiObject;
-  INT  result = 0;
-  DWORD objectType;
-
-  if (!count)
-    return  0;
-  gdiObject = GDIOBJ_LockObj (handle, GDI_OBJECT_TYPE_DONTCARE);
-  if (gdiObject == 0)
-    return  0;
-
-  objectType = GDIOBJ_GetObjectType(handle);
-  switch(objectType)
-  {
-/*    case GDI_OBJECT_TYPE_PEN:
-      result = PEN_GetObject((PENOBJ *)gdiObject, count, buffer);
-      break;
-    case GDI_OBJECT_TYPE_BRUSH:
-      result = BRUSH_GetObject((BRUSHOBJ *)gdiObject, count, buffer);
-      break; */
-    case GDI_OBJECT_TYPE_BITMAP:
-      result = BITMAP_GetObject((BITMAPOBJ *)gdiObject, count, buffer);
-      break;
-/*    case GDI_OBJECT_TYPE_FONT:
-      result = FONT_GetObjectA((FONTOBJ *)gdiObject, count, buffer);
-
-      // FIXME: Fix the LOGFONT structure for the stock fonts
-
-      if ( (handle >= FIRST_STOCK_HANDLE) && (handle <= LAST_STOCK_HANDLE) )
-        FixStockFontSizeA(handle, count, buffer);
-      break;
-    case GDI_OBJECT_TYPE_PALETTE:
-      result = PALETTE_GetObject((PALETTEOBJ *)gdiObject, count, buffer);
-      break; */
-
-    case GDI_OBJECT_TYPE_REGION:
-    case GDI_OBJECT_TYPE_DC:
-    case GDI_OBJECT_TYPE_METADC:
-    case GDI_OBJECT_TYPE_METAFILE:
-    case GDI_OBJECT_TYPE_ENHMETADC:
-    case GDI_OBJECT_TYPE_EMF:
-      DPRINT1("GDI object type 0x%08x not implemented\n", objectType);
-      break;
-
-    default:
-      DPRINT1("Invalid GDI object type 0x%08x\n", objectType);
-      break;
-  }
-  GDIOBJ_UnlockObj(handle, GDI_OBJECT_TYPE_DONTCARE);
-
-  return result;
-}
-
-INT STDCALL
-NtGdiGetObjectW(HANDLE handle, INT count, LPVOID buffer)
+INT FASTCALL
+IntGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
 {
   PGDIOBJHDR  gdiObject;
   INT  result = 0;
   DWORD objectType;
 
-  if (!count)
-    return 0;
   gdiObject = GDIOBJ_LockObj(handle, GDI_OBJECT_TYPE_DONTCARE);
   if (gdiObject == 0)
     return 0;
-
+  
   objectType = GDIOBJ_GetObjectType(handle);
   switch(objectType)
   {
@@ -1419,7 +1384,33 @@ NtGdiGetObjectW(HANDLE handle, INT count, LPVOID buffer)
 INT STDCALL
 NtGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
 {
-  return NtGdiGetObjectW(handle, count, buffer);
+  INT Ret;
+  LPVOID SafeBuf;
+  NTSTATUS Status;
+
+  if (count <= 0)
+  {
+    return 0;
+  }
+  
+  SafeBuf = ExAllocatePool(NonPagedPool, count);
+  if(!SafeBuf)
+  {
+    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+    return 0;
+  }
+  
+  Ret = IntGdiGetObject(handle, count, SafeBuf);
+  
+  Status = MmCopyToCaller(buffer, SafeBuf, count);
+  ExFreePool(SafeBuf);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return 0;
+  }
+
+  return Ret;
 }
 
 DWORD STDCALL
