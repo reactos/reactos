@@ -156,7 +156,7 @@ NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
 
    if(status != STATUS_SUCCESS)
    {
-      DbgPrint("MOUCLASS: Could not connect to mouse port driver\n");
+      DPRINT1("MOUCLASS: Could not connect to mouse port driver\n");
       return status;
    }
 
@@ -222,7 +222,7 @@ NTSTATUS STDCALL_FUNC MouseClassDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	break;
 
       default:
-        DbgPrint("NOT IMPLEMENTED\n");
+        DPRINT1("NOT IMPLEMENTED\n");
         Status = STATUS_NOT_IMPLEMENTED;
 	break;
      }
@@ -285,7 +285,7 @@ NTSTATUS STDCALL_FUNC MouseClassInternalDeviceControl(IN PDEVICE_OBJECT DeviceOb
          DeviceExtension->GDIInformation =
             *((PGDI_INFORMATION)Stack->Parameters.DeviceIoControl.Type3InputBuffer);
 
-         DbgPrint("MouseClassInternalDeviceControl() installed GDI callback at %p\n", DeviceExtension->GDIInformation.CallBack);
+         DPRINT("MouseClassInternalDeviceControl() installed GDI callback at %p\n", DeviceExtension->GDIInformation.CallBack);
 
          status = STATUS_SUCCESS;
          break;
