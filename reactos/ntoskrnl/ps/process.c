@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.68 2001/09/07 21:35:45 ea Exp $
+/* $Id: process.c,v 1.69 2001/10/31 00:03:07 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -88,15 +88,22 @@ PsGetNextProcess(PEPROCESS OldProcess)
    return(NextProcess);
 }
 
-
 NTSTATUS STDCALL 
 NtOpenProcessToken(IN	HANDLE		ProcessHandle,
 		   IN	ACCESS_MASK	DesiredAccess,
 		   OUT	PHANDLE		TokenHandle)
 {
+  return(STATUS_UNSUCCESSFUL);
+}
+
+NTSTATUS STDCALL 
+_NtOpenProcessToken(IN	HANDLE		ProcessHandle,
+		   IN	ACCESS_MASK	DesiredAccess,
+		   OUT	PHANDLE		TokenHandle)
+{
    PACCESS_TOKEN Token;
    NTSTATUS Status;
-   
+  
    Status = PsOpenTokenOfProcess(ProcessHandle,
 				 &Token);
    if (!NT_SUCCESS(Status))
