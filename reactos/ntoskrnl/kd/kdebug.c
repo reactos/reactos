@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.51 2004/02/24 21:25:41 weiden Exp $
+/* $Id: kdebug.c,v 1.52 2004/06/23 00:49:43 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,6 +15,7 @@
 #include <internal/mm.h>
 #include <roscfg.h>
 #include "../dbg/kdb.h"
+#include <internal/debug.h>
 
 /* serial debug connection */
 #define DEFAULT_DEBUG_PORT      2	/* COM2 */
@@ -33,9 +34,21 @@ KdDebuggerEnabled = FALSE;		/* EXPORTED */
 
 BOOLEAN
 __declspec(dllexport)
+KdEnteredDebugger = FALSE;		/* EXPORTED */
+
+BOOLEAN
+__declspec(dllexport)
 KdDebuggerNotPresent = TRUE;		/* EXPORTED */
 
+ULONG
+__declspec(dllexport)
+KiBugCheckData;		/* EXPORTED */
 
+BOOLEAN
+__declspec(dllexport)
+KiEnableTimerWatchdog = FALSE;		/* EXPORTED */
+
+ 
 static BOOLEAN KdpBreakPending = FALSE;
 ULONG KdDebugState = KD_DEBUG_DISABLED;
 ULONG KdpPortIrq = 0;
@@ -373,6 +386,43 @@ KdpPrintString(PANSI_STRING String)
 /* NTOSKRNL.KdPollBreakIn */
 
 /*
+ * @unimplemented
+ */
+VOID
+STDCALL
+KdDisableDebugger(
+	VOID
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+KdEnableDebugger (
+	VOID
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+KeIsAttachedProcess(
+	VOID
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
+/*
  * @implemented
  */
 BOOLEAN STDCALL
@@ -472,6 +522,18 @@ KdSystemDebugControl(ULONG Code)
     }
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+KdPowerTransition(
+	ULONG PowerState
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
 
 /* Support routines for the GDB stubs */
 
@@ -492,4 +554,4 @@ KdGetChar(VOID)
   return Value;
 }
 
-/* EOF */
+ /* EOF */
