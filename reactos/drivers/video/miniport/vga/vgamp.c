@@ -82,6 +82,7 @@ DriverEntry(IN PVOID Context1,
 
   VideoPortZeroMemory(&InitData, sizeof InitData);
   
+  InitData.HwInitDataSize = sizeof(InitData);
   /* FIXME: Fill in InitData members  */
   InitData.StartingDeviceNumber = 0;
   
