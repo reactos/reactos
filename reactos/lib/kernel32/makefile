@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.66 2003/05/29 00:36:41 hyperion Exp $
+# $Id: makefile,v 1.67 2003/06/08 21:00:04 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -22,19 +22,19 @@ SYNCH_OBJECTS = synch/critical.o synch/event.o synch/intrlck.o synch/mutex.o \
                 synch/sem.o synch/timer.o synch/wait.o
 
 MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o \
-	       misc/dllmain.o misc/comm.o misc/errormsg.o \
-	       misc/console.o misc/time.o misc/toolhelp.o \
-	       misc/stubs.o misc/ldr.o misc/res.o \
-	       misc/sysinfo.o misc/profile.o \
-	       misc/mbchars.o misc/muldiv.o misc/getname.o \
-	       misc/perfcnt.o
+               misc/dllmain.o misc/comm.o misc/errormsg.o \
+               misc/console.o misc/time.o misc/toolhelp.o \
+               misc/stubs.o misc/ldr.o misc/res.o \
+               misc/sysinfo.o misc/profile.o \
+               misc/mbchars.o misc/muldiv.o misc/computername.o \
+               misc/perfcnt.o
 
 FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
                file/iocompl.o file/volume.o file/deviceio.o file/dosdev.o \
-	       file/create.o file/find.o file/copy.o file/pipe.o \
-	       file/move.o file/lock.o file/rw.o file/delete.o \
-	       file/npipe.o file/tape.o file/mailslot.o file/backup.o \
-	       file/cnotify.o
+               file/create.o file/find.o file/copy.o file/pipe.o \
+               file/move.o file/lock.o file/rw.o file/delete.o \
+               file/npipe.o file/tape.o file/mailslot.o file/backup.o \
+               file/cnotify.o
 
 MEM_OBJECTS = mem/global.o mem/heap.o mem/isbad.o mem/local.o \
               mem/procmem.o mem/section.o mem/virtual.o

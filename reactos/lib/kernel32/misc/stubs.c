@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.49 2003/04/20 19:42:11 gvg Exp $
+/* $Id: stubs.c,v 1.50 2003/06/08 20:59:30 ekohl Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -798,28 +798,6 @@ WINBOOL
 STDCALL
 RegisterWowExec (
     DWORD   Unknown0
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetComputerNameA (
-    LPCSTR  lpComputerName
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetComputerNameW (
-    LPCWSTR lpComputerName
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
