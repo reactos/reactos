@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.117 2001/10/10 22:07:15 hbirr Exp $
+; $Id: ntoskrnl.def,v 1.118 2001/11/04 00:16:13 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -6,16 +6,16 @@
 ;
 EXPORTS
 CcRosInitializeFileCache@12
-CcMdlReadComplete@8
 ;CcRosRequestCacheSegment@20
 ;CcRosReleaseCacheSegment@12
 CcRosReleaseFileCache@8
 CcCopyRead@24
 CcCopyWrite@20
 CcMapData@24
+CcMdlReadComplete@8
 CcSetDirtyPinnedData@8
-CcUnpinData@4
 CcSetFileSizes@8
+CcUnpinData@4
 DbgBreakPoint@0
 DbgBreakPointWithStatus@4
 ;DbgLoadImageSymbols@12
@@ -352,7 +352,7 @@ KeInitializeDeviceQueue@4
 KeInitializeDpc@12
 KeInitializeEvent@12
 KeInitializeInterrupt@44
-;KeInitializeMutant@8
+KeInitializeMutant@8
 KeInitializeMutex@8
 ;KeInitializeQueue
 KeInitializeSemaphore@12
@@ -377,13 +377,13 @@ KeQueryTickCount@4
 KeQueryTimeIncrement@0
 ;KeRaiseUserException
 KeReadStateEvent@4
-;KeReadStateMutant
+KeReadStateMutant@4
 KeReadStateMutex@4
 ;KeReadStateQueue
 KeReadStateSemaphore@4
 KeReadStateTimer@4
 KeRegisterBugCheckCallback@20
-;KeReleaseMutant
+KeReleaseMutant@16
 KeReleaseMutex@8
 KeReleaseSemaphore@16
 KeReleaseSpinLockFromDpcLevel@4

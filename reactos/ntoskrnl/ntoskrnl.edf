@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.103 2001/10/10 22:07:15 hbirr Exp $
+; $Id: ntoskrnl.edf,v 1.104 2001/11/04 00:16:13 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -352,7 +352,7 @@ KeInitializeDeviceQueue=KeInitializeDeviceQueue@4
 KeInitializeDpc=KeInitializeDpc@12
 KeInitializeEvent=KeInitializeEvent@12
 KeInitializeInterrupt=KeInitializeInterrupt@44
-;KeInitializeMutant
+KeInitializeMutant=KeInitializeMutant@8
 KeInitializeMutex=KeInitializeMutex@8
 ;KeInitializeQueue
 KeInitializeSemaphore=KeInitializeSemaphore@12
@@ -377,13 +377,13 @@ KeQueryTickCount=KeQueryTickCount@4
 KeQueryTimeIncrement=KeQueryTimeIncrement@0
 ;KeRaiseUserException
 KeReadStateEvent=KeReadStateEvent@4
-;KeReadStateMutant
+KeReadStateMutant=KeReadStateMutant@4
 KeReadStateMutex=KeReadStateMutex@4
 ;KeReadStateQueue
 KeReadStateSemaphore=KeReadStateSemaphore@4
 KeReadStateTimer=KeReadStateTimer@4
 KeRegisterBugCheckCallback=KeRegisterBugCheckCallback@20
-;KeReleaseMutant
+KeReleaseMutant=KeReleaseMutant@16
 KeReleaseMutex=KeReleaseMutex@8
 KeReleaseSemaphore=KeReleaseSemaphore@16
 KeReleaseSpinLockFromDpcLevel=KeReleaseSpinLockFromDpcLevel@4

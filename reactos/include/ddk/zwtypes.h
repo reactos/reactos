@@ -143,6 +143,21 @@ typedef struct _ATOM_TABLE_INFORMATION
 } ATOM_TABLE_INFORMATION, *PATOM_TABLE_INFORMATION;
 
 
+// mutant information
+
+typedef enum _MUTANT_INFORMATION_CLASS
+{
+  MutantBasicInformation = 0
+} MUTANT_INFORMATION_CLASS;
+
+typedef struct _MUTANT_BASIC_INFORMATION
+{
+  LONG Count;
+  BOOLEAN Owned;
+  BOOLEAN Abandoned;
+} MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
+
+
 // semaphore information
 
 typedef enum _SEMAPHORE_INFORMATION_CLASS

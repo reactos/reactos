@@ -125,6 +125,9 @@ NTSTATUS STDCALL KeInitializeInterrupt(PKINTERRUPT InterruptObject,
 				       KAFFINITY ProcessorEnableMask,
 				       BOOLEAN FloatingSave);
 
+VOID STDCALL KeInitializeMutant(IN PKMUTANT Mutant,
+				IN BOOLEAN InitialOwner);
+
 VOID STDCALL KeInitializeMutex (PKMUTEX	Mutex,
 				ULONG	Level);
 
@@ -228,6 +231,9 @@ KeReadStateEvent (
 	PKEVENT	Event
 	);
 
+LONG STDCALL
+KeReadStateMutant(IN PKMUTANT Mutant);
+
 LONG
 STDCALL
 KeReadStateMutex (
@@ -254,6 +260,15 @@ KeRegisterBugCheckCallback (
 	PVOID				Buffer,
 	ULONG				Length,
 	PUCHAR				Component
+	);
+
+LONG
+STDCALL
+KeReleaseMutant(
+	IN PKMUTANT Mutant,
+	ULONG Param2,
+	ULONG Param3,
+	IN BOOLEAN Wait
 	);
 
 LONG
