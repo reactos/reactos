@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.42 2001/01/20 12:17:51 ekohl Exp $
+# $Id: makefile,v 1.43 2001/02/17 00:02:32 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -18,7 +18,7 @@ SYNCH_OBJECTS = synch/critical.o synch/event.o synch/intrlck.o synch/mutex.o \
                 synch/sem.o synch/timer.o synch/wait.o
 
 MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o misc/dllmain.o \
-		misc/console.o misc/time.o misc/stubs.o misc/rtl.o misc/ldr.o misc/res.o \
+		misc/console.o misc/time.o misc/stubs.o misc/ldr.o misc/res.o \
 		misc/debug.o misc/sysinfo.o
 
 FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \

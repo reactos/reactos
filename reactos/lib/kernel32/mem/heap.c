@@ -1,4 +1,4 @@
-/* $Id: heap.c,v 1.16 1999/09/12 22:09:34 ea Exp $
+/* $Id: heap.c,v 1.17 2001/02/17 00:01:26 ekohl Exp $
  *
  * kernel/heap.c
  * Copyright (C) 1996, Onno Hovers, All rights reserved
@@ -52,30 +52,6 @@ BOOL WINAPI HeapDestroy(HANDLE hheap)
 }
 
 /*********************************************************************
-*                     HeapAlloc -- KERNEL32                          *
-*********************************************************************/
-LPVOID STDCALL HeapAlloc(HANDLE hheap, DWORD flags, DWORD size)
-{
-   return(RtlAllocateHeap(hheap, flags, size));
-}
-
-/*********************************************************************
-*                     HeapReAlloc -- KERNEL32                        *
-*********************************************************************/
-LPVOID STDCALL HeapReAlloc(HANDLE hheap, DWORD flags, LPVOID ptr, DWORD size)
-{
-   return(RtlReAllocateHeap(hheap, flags, ptr, size));
-}
-
-/*********************************************************************
-*                     HeapFree -- KERNEL32                           *
-*********************************************************************/
-WINBOOL STDCALL HeapFree(HANDLE hheap, DWORD flags, LPVOID ptr)
-{
-   return(RtlFreeHeap(hheap, flags, ptr));
-}
-
-/*********************************************************************
 *                   GetProcessHeap  --  KERNEL32                     *
 *********************************************************************/
 HANDLE WINAPI GetProcessHeap(VOID)
@@ -118,25 +94,11 @@ BOOL WINAPI HeapUnlock(HANDLE hheap)
 * NT uses this function to compact moveable blocks and other things  *
 * Here it does not compact, but it finds the largest free region     *
 *********************************************************************/
-UINT
-STDCALL
-HeapCompact (
-	HANDLE	hheap,
-	DWORD	flags
-	)
+UINT STDCALL
+HeapCompact(HANDLE hheap,
+	    DWORD flags)
 {
-	return RtlCompactHeap(
-			hheap,
-			flags
-			);
-}
-
-/*********************************************************************
-*                    HeapSize  --  KERNEL32                          *
-*********************************************************************/
-DWORD WINAPI HeapSize(HANDLE hheap, DWORD flags, LPCVOID pmem)
-{
-   return(RtlSizeHeap(hheap, flags, (PVOID)pmem));
+   return RtlCompactHeap(hheap, flags);
 }
 
 /*********************************************************************
