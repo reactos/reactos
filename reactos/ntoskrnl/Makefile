@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.74 2002/07/18 00:25:30 dwelch Exp $
+# $Id: Makefile,v 1.75 2002/07/18 18:15:09 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -94,6 +94,7 @@ OBJECTS_RTL = \
 	rtl/memset.o \
 	rtl/message.o \
 	rtl/nls.o \
+	rtl/purecall.o \
 	rtl/qsort.o \
 	rtl/regio.o \
 	rtl/seh.o \

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.135 2002/06/10 21:11:56 hbirr Exp $
+; $Id: ntoskrnl.def,v 1.136 2002/07/18 18:15:09 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -972,7 +972,7 @@ _except_handler3
 _global_unwind2
 _itoa
 _local_unwind2
-;_purecall
+_purecall
 _snprintf
 _snwprintf
 _stricmp
