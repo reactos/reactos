@@ -412,16 +412,10 @@ typedef enum _SID_NAME_USE {
 
 #ifndef _DISABLE_TIDENTS
 #  ifdef UNICODE
-#    ifndef _T
-#      define _T(quote)   L##quote 
-#    endif /* _T */
 #    ifndef _TEXT
 #      define TEXT(quote) L##quote 
 #    endif /* _TEXT */
 #  else /* UNICODE */
-#    ifndef _T
-#      define _T(quote)   quote 
-#    endif /* _T */
 #    ifndef _TEXT
 #      define TEXT(quote) quote
 #    endif /* _TEXT */
