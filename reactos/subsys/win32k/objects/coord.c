@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: coord.c,v 1.23 2004/05/10 17:07:20 weiden Exp $
+/* $Id: coord.c,v 1.24 2004/06/14 20:58:51 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -649,6 +649,7 @@ NtGdiSetViewportOrgEx(HDC  hDC,
   dc->vportOrgX = X;
   dc->vportOrgY = Y;
 
+  DC_UpdateXforms(dc);
   DC_UnlockDc(hDC);
 
   return TRUE;
