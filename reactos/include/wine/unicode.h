@@ -8,6 +8,7 @@
 #define strtolW(s,e,b) wcstol((const wchar_t *)s,(wchar_t **)e,b)
 #define strchrW(s,c) wcschr((const wchar_t *)s,(wchar_t)c)
 #define strncmpW(s1,s2,n) wcsncmp((const wchar_t *)s1,(const wchar_t *)s2,n)
+#define strncpyW(s1,s2,n) wcsncpy((wchar_t *)s1,(const wchar_t *)s2,n)
 #define tolowerW(n) towlower((wint_t)n)
 #define atoiW(s) _wtoi((const wchar_t *)s)
 #define atolW(s) _wtol((const wchar_t *)s)

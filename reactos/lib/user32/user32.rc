@@ -78,6 +78,7 @@ END
 //
 
 OBM_CLOSE BITMAP "resources/obm_close.bmp"
+OBM_CHECKBOXES BITMAP "resources/obm_checkboxes.bmp"
 DF_HATCH BITMAP "resources/df_hatch.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
