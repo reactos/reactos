@@ -47,10 +47,12 @@
 # include <nspapi.h>
 # include <iptypes.h>
 # include "iphlpapiextra.h"
+# include "wine/debug.h"
 #else
 # include "windef.h"
 # include "winbase.h"
 # include "winreg.h"
+# include "debug.h"
 #endif
 
 #include <stdio.h>
@@ -58,7 +60,6 @@
 #include "ifenum.h"
 #include "ipstats.h"
 #include "iphlp_res.h"
-#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
@@ -842,9 +843,9 @@ DWORD WINAPI GetIfEntry(PMIB_IFROW pIfRow)
 
   name = getInterfaceNameByIndex(pIfRow->dwIndex);
   if (name) {
-    ret = getInterfaceEntryByName(name, pIfRow);
+    ret = getInterfaceEntryByIndex(pIfRow->dwIndex, pIfRow);
     if (ret == NO_ERROR)
-      ret = getInterfaceStatsByName(name, pIfRow);
+      ret = getInterfaceStatsByName(pIfRow->dwIndex, pIfRow);
   }
   else
     ret = ERROR_INVALID_DATA;

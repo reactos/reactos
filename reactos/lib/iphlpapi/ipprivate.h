@@ -41,6 +41,9 @@
 #include "iphlp_res.h"
 #include "wine/debug.h"
 
+#undef TRACE
+#define TRACE(fmt,args...) DbgPrint("(%s:%d - %s) " fmt, __FILE__, __LINE__, __FUNCTION__, ## args)
+
 #include "net/tdiinfo.h"
 #include "tcpioctl.h"
 
