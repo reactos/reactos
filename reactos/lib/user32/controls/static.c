@@ -1,4 +1,4 @@
-/* $Id: static.c,v 1.5 2003/08/16 21:34:18 gvg Exp $
+/* $Id: static.c,v 1.6 2003/09/11 08:32:42 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -350,9 +350,10 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
     RECT rc;
     HBRUSH hBrush;
     HFONT hFont;
-    WORD wFormat;
+    UINT wFormat;
     INT len;
     WCHAR *text;
+    HPEN ShadowPen, HighlightPen;
 
     GetClientRect( hwnd, &rc);
 
@@ -384,6 +385,8 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
 
     if (style & SS_NOPREFIX)
 	wFormat |= DT_NOPREFIX;
+    if (SS_WORDELLIPSIS == (style & SS_WORDELLIPSIS))
+	wFormat |= DT_WORD_ELLIPSIS | DT_SINGLELINE;
 
     if ((hFont = (HFONT)GetWindowLongA( hwnd, HFONT_GWL_OFFSET ))) SelectObject( hdc, hFont );
 
@@ -397,6 +400,27 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
         FillRect( hdc, &rc, hBrush );
     }
     if (!IsWindowEnabled(hwnd)) SetTextColor(hdc, GetSysColor(COLOR_GRAYTEXT));
+    SetBkMode(hdc, TRANSPARENT);
+
+    if (style & SS_SUNKEN)
+    {
+	ShadowPen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNSHADOW));
+	SelectObject(hdc, ShadowPen);
+	MoveToEx(hdc, 0, rc.bottom - 2, NULL);
+	LineTo(hdc, 0, 0);
+	LineTo(hdc, rc.right - 1, 0);
+	HighlightPen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNHIGHLIGHT));
+	SelectObject(hdc, HighlightPen);
+	LineTo(hdc, rc.right - 1, rc.bottom - 1);
+	LineTo(hdc, -1, rc.bottom - 1);
+	SelectObject(hdc, GetStockObject(WHITE_PEN));
+	DeleteObject(HighlightPen);
+	DeleteObject(ShadowPen);
+	rc.left++;
+	rc.right--;
+	rc.top++;
+	rc.bottom--;
+    }
 
     if (!(len = SendMessageW( hwnd, WM_GETTEXTLENGTH, 0, 0 ))) return;
     if (!(text = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) ))) return;
