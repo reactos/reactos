@@ -11,20 +11,20 @@ include rules.mak
 APPS = 	calc \
 	cmdutils \
 	cmdutils$(SEP)mode \
-    cmdutils$(SEP)touch \
+    	cmdutils$(SEP)touch \
 	demos$(SEP)maze \
-    devutils$(SEP)genguid \
-    devutils$(SEP)zoomin \
+    	devutils$(SEP)genguid \
+    	devutils$(SEP)zoomin \
 	dflat32 \
-    games$(SEP)winemine \
+    	games$(SEP)winemine \
 	hcalc \
 	mc \
 	notepad \
 	notevil \
 	sysutils \
 	sysutils$(SEP)ctm \
-    sysutils$(SEP)kill \
-    sysutils$(SEP)tcat \
+    	sysutils$(SEP)kill \
+    	sysutils$(SEP)tcat \
 	sysutils$(SEP)tlist \
 	net$(SEP)ping \
 	net$(SEP)finger \
@@ -37,17 +37,10 @@ APPS = 	calc \
 	net$(SEP)ipconfig \
 	regedt32 \
 	regsvr32 \
+	sysutils$(SEP)regexpl \
+	tests \
 	welcome \
 	winfile
-
-# Removed due to dependance on C++ compiler
-#
-#	taskmgr \
-#	sysutils$(SEP)regexpl \
-#
-# Removed because it doesn't build correctly
-#
-#
 
 all: $(APPS)
 .PHONY: all
