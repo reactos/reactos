@@ -221,20 +221,16 @@ typedef struct
 extern PCDFS_GLOBAL_DATA CdfsGlobalData;
 
 
-NTSTATUS
-CdfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
-		IN ULONG DiskSector,
-		IN ULONG SectorCount,
-		IN OUT PUCHAR Buffer);
-
 int CdfsStrcmpi( wchar_t *str1, wchar_t *str2 );
 void CdfsWstrcpy( wchar_t *str1, wchar_t *str2, int max );
+
 
 /* cleanup.c */
 
 NTSTATUS STDCALL
 CdfsCleanup(PDEVICE_OBJECT DeviceObject,
 	    PIRP Irp);
+
 
 /* close.c */
 
@@ -246,27 +242,25 @@ NTSTATUS
 CdfsCloseFile(PDEVICE_EXTENSION DeviceExt,
 	      PFILE_OBJECT FileObject);
 
+
 /* common.c */
 
 NTSTATUS
 CdfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
 		IN ULONG DiskSector,
 		IN ULONG SectorCount,
-		IN OUT PUCHAR Buffer);
-
-NTSTATUS
-CdfsReadRawSectors(IN PDEVICE_OBJECT DeviceObject,
-		   IN ULONG DiskSector,
-		   IN ULONG SectorCount,
-		   IN OUT PUCHAR Buffer);
+		IN OUT PUCHAR Buffer,
+		IN BOOLEAN Override);
 
 NTSTATUS
 CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 		     IN ULONG CtlCode,
 		     IN PVOID InputBuffer,
 		     IN ULONG InputBufferSize,
-		     IN OUT PVOID OutputBuffer, 
-		     IN OUT PULONG pOutputBufferSize);
+		     IN OUT PVOID OutputBuffer,
+		     IN OUT PULONG pOutputBufferSize,
+		     IN BOOLEAN Override);
+
 
 /* create.c */
 
@@ -349,11 +343,17 @@ NTSTATUS STDCALL
 CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
 		   PIRP Irp);
 
+
 /* fsctl.c */
+
+NTSTATUS
+CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
+		  PCDINFO CdInfo);
 
 NTSTATUS STDCALL
 CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp);
+
 
 /* misc.c */
 
@@ -372,6 +372,7 @@ CdfsDateTimeToFileTime(PFCB Fcb,
 VOID
 CdfsFileFlagsToAttributes(PFCB Fcb,
 			  PULONG FileAttributes);
+
 
 /* rw.c */
 

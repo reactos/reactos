@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2002, 2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,14 +16,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.8 2003/02/13 22:24:15 hbirr Exp $
+/* $Id: create.c,v 1.9 2003/11/09 11:20:28 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/cdfs/cdfs.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
- * UPDATE HISTORY: 
+ *                   Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
@@ -34,6 +34,8 @@
 #include <debug.h>
 
 #include "cdfs.h"
+
+//#define MEDIA_CHANGE_SUPPORT
 
 
 /* FUNCTIONS ****************************************************************/
@@ -89,6 +91,10 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
   PFCB Fcb;
   NTSTATUS Status;
   PWSTR AbsFileName = NULL;
+#ifdef MEDIA_CHANGE_SUPPORT
+  ULONG MediaChangeCount = 0;
+  ULONG BufferSize;
+#endif
 
   DPRINT("CdfsOpenFile(%08lx, %08lx, %S)\n", DeviceExt, FileObject, FileName);
 
@@ -106,6 +112,50 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
 	}
       return(STATUS_UNSUCCESSFUL);
     }
+
+#ifdef MEDIA_CHANGE_SUPPORT
+  BufferSize = sizeof(ULONG);
+  Status = CdfsDeviceIoControl (DeviceExt->StorageDevice,
+				IOCTL_CDROM_CHECK_VERIFY,
+				NULL,
+				0,
+				(PVOID)&MediaChangeCount,
+				&BufferSize,
+				TRUE);
+  DPRINT ("Status %lx\n", Status);
+  if (Status == STATUS_VERIFY_REQUIRED)
+    {
+      CDINFO CdInfo;
+      DPRINT1 ("Media change detected!\n");
+
+      Status = CdfsGetVolumeData (DeviceExt->StorageDevice,
+				  &CdInfo);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT1 ("CdfsGetVolumeData() failed (Status %lx)\n", Status);
+	  return Status;
+	}
+
+      /* FIXME: Comparing the serial numbers is not enough */
+      if (DeviceExt->CdInfo.SerialNumber == CdInfo.SerialNumber)
+	{
+	  DPRINT1 ("Same CD\n");
+	}
+      else
+	{
+	  DPRINT1 ("Different CD\n");
+	}
+    }
+  else if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("Status %lx\n", Status);
+      return Status;
+    }
+  else
+    {
+      DPRINT ("MediaChangeCount %lu\n", MediaChangeCount);
+    }
+#endif
 
   //FIXME: Get cannonical path name (remove .'s, ..'s and extra separators)
 

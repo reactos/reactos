@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2002, 2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,14 +16,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rw.c,v 1.10 2003/02/13 22:24:15 hbirr Exp $
+/* $Id: rw.c,v 1.11 2003/11/09 11:20:28 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/cdfs/rw.c
+ * FILE:             drivers/fs/cdfs/rw.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
- * UPDATE HISTORY: 
+ *                   Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
@@ -112,7 +112,8 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
   Status = CdfsReadSectors(DeviceExt->StorageDevice,
 			   Fcb->Entry.ExtentLocationL + (ReadOffset / BLOCKSIZE),
 			   Length / BLOCKSIZE,
-			   Buffer);
+			   Buffer,
+			   FALSE);
   if (NT_SUCCESS(Status))
     {
       *LengthRead = Length;

@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2002, 2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,13 +16,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: common.c,v 1.5 2002/09/15 22:25:05 hbirr Exp $
+/* $Id: common.c,v 1.6 2003/11/09 11:20:28 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/vfat/volume.c
+ * FILE:             drivers/fs/cdfs/common.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
+ *                   Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
@@ -41,8 +42,10 @@ NTSTATUS
 CdfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
 		IN ULONG DiskSector,
 		IN ULONG SectorCount,
-		IN OUT PUCHAR Buffer)
+		IN OUT PUCHAR Buffer,
+		IN BOOLEAN Override)
 {
+  PIO_STACK_LOCATION Stack;
   IO_STATUS_BLOCK IoStatus;
   LARGE_INTEGER Offset;
   ULONG BlockSize;
@@ -77,6 +80,12 @@ CdfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
     {
       DPRINT("IoBuildSynchronousFsdRequest failed\n");
       return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+  if (Override)
+    {
+      Stack = IoGetNextIrpStackLocation(Irp);
+      Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
     }
 
   DPRINT("Calling IO Driver... with irp %x\n", Irp);
@@ -120,89 +129,19 @@ CdfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
 
 
 NTSTATUS
-CdfsReadRawSectors(IN PDEVICE_OBJECT DeviceObject,
-		   IN ULONG DiskSector,
-		   IN ULONG SectorCount,
-		   IN OUT PUCHAR Buffer)
-{
-  PIO_STACK_LOCATION Stack;
-  IO_STATUS_BLOCK IoStatus;
-  LARGE_INTEGER Offset;
-  ULONG BlockSize;
-  KEVENT Event;
-  PIRP Irp;
-  NTSTATUS Status;
-
-  KeInitializeEvent(&Event,
-		    NotificationEvent,
-		    FALSE);
-
-  Offset.u.LowPart = DiskSector << 11;
-  Offset.u.HighPart = DiskSector >> 21;
-
-  BlockSize = BLOCKSIZE * SectorCount;
-
-  DPRINT("CdfsReadSectors(DeviceObject %x, DiskSector %d, Buffer %x)\n",
-	 DeviceObject, DiskSector, Buffer);
-  DPRINT("Offset %I64x BlockSize %ld\n",
-	 Offset.QuadPart,
-	 BlockSize);
-
-  DPRINT("Building synchronous FSD Request...\n");
-  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
-				     DeviceObject,
-				     Buffer,
-				     BlockSize,
-				     &Offset,
-				     &Event,
-				     &IoStatus);
-  if (Irp == NULL)
-    {
-      DPRINT("IoBuildSynchronousFsdRequest failed\n");
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-
-//  Stack = IoGetCurrentIrpStackLocation(Irp);
-//  Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
-
-  DPRINT("Calling IO Driver... with irp %x\n", Irp);
-  Status = IoCallDriver(DeviceObject, Irp);
-
-  DPRINT("Waiting for IO Operation for %x\n", Irp);
-  if (Status == STATUS_PENDING)
-    {
-      DPRINT("Operation pending\n");
-      KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-      DPRINT("Getting IO Status... for %x\n", Irp);
-      Status = IoStatus.Status;
-    }
-
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("CdfsReadSectors() failed (Status %x)\n", Status);
-      DPRINT("(DeviceObject %x, DiskSector %x, Buffer %x, Offset 0x%I64x)\n",
-	     DeviceObject, DiskSector, Buffer,
-	     Offset.QuadPart);
-      return(Status);
-    }
-
-  DPRINT("Block request succeeded for %x\n", Irp);
-
-  return(STATUS_SUCCESS);
-}
-
-NTSTATUS
 CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 		     IN ULONG CtlCode,
 		     IN PVOID InputBuffer,
 		     IN ULONG InputBufferSize,
-		     IN OUT PVOID OutputBuffer, 
-		     IN OUT PULONG pOutputBufferSize)
+		     IN OUT PVOID OutputBuffer,
+		     IN OUT PULONG pOutputBufferSize,
+		     IN BOOLEAN Override)
 {
+  PIO_STACK_LOCATION Stack;
+  IO_STATUS_BLOCK IoStatus;
   ULONG OutputBufferSize = 0;
   KEVENT Event;
   PIRP Irp;
-  IO_STATUS_BLOCK IoStatus;
   NTSTATUS Status;
 
   DPRINT("CdfsDeviceIoControl(DeviceObject %x, CtlCode %x, "
@@ -212,45 +151,54 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 	 pOutputBufferSize ? *pOutputBufferSize : 0);
 
   if (pOutputBufferSize)
-  {
-     OutputBufferSize = *pOutputBufferSize;
-  }
+    {
+      OutputBufferSize = *pOutputBufferSize;
+    }
 
   KeInitializeEvent (&Event, NotificationEvent, FALSE);
 
   DPRINT("Building device I/O control request ...\n");
-  Irp = IoBuildDeviceIoControlRequest(CtlCode, 
-				      DeviceObject, 
-				      InputBuffer, 
-				      InputBufferSize, 
+  Irp = IoBuildDeviceIoControlRequest(CtlCode,
+				      DeviceObject,
+				      InputBuffer,
+				      InputBufferSize,
 				      OutputBuffer,
-				      OutputBufferSize, 
-				      FALSE, 
-				      &Event, 
+				      OutputBufferSize,
+				      FALSE,
+				      &Event,
 				      &IoStatus);
   if (Irp == NULL)
-  {
-     DPRINT("IoBuildDeviceIoControlRequest failed\n");
-     return STATUS_INSUFFICIENT_RESOURCES;
-  }
+    {
+      DPRINT("IoBuildDeviceIoControlRequest failed\n");
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  if (Override)
+    {
+      Stack = IoGetNextIrpStackLocation(Irp);
+      Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
+    }
 
   DPRINT ("Calling IO Driver... with irp %x\n", Irp);
   Status = IoCallDriver(DeviceObject, Irp);
 
   DPRINT ("Waiting for IO Operation for %x\n", Irp);
   if (Status == STATUS_PENDING)
-  {
-     DPRINT ("Operation pending\n");
-     KeWaitForSingleObject (&Event, Suspended, KernelMode, FALSE, NULL);
-     DPRINT ("Getting IO Status... for %x\n", Irp);
+    {
+      DPRINT ("Operation pending\n");
+      KeWaitForSingleObject (&Event, Suspended, KernelMode, FALSE, NULL);
+      DPRINT ("Getting IO Status... for %x\n", Irp);
 
-     Status = IoStatus.Status;
-  }
-  if (OutputBufferSize)
-  {
+      Status = IoStatus.Status;
+    }
+
+  if (pOutputBufferSize)
+    {
      *pOutputBufferSize = OutputBufferSize;
-  }
+    }
+
   DPRINT("Returning Status %x\n", Status);
+
   return Status;
 }
 
