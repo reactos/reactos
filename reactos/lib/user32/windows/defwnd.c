@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.23 2003/03/01 08:56:34 rcampbell Exp $
+/* $Id: defwnd.c,v 1.24 2003/03/01 09:01:51 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -313,7 +313,7 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
     /* Fill the caption with COLOR_(IN)ACTIVECAPTION.
        In the future this will be GradientFill() */
        
-    SelectObject( hDC, GetSysColorBrush(active ? COLOR_ACTIVECAPTION : COLOR_ACTIVECAPTION) );
+    SelectObject( hDC, GetSysColorBrush(active ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
     PatBlt(hDC,rect->left + 3, rect->top + 3, rect->right - 6, rect->bottom - 1, PATCOPY );
     
   if (style & WS_SYSMENU)
