@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.20 1999/12/26 16:36:44 ea Exp $
+; $Id: ntoskrnl.edf,v 1.21 1999/12/26 20:21:02 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -106,6 +106,7 @@ IoCompleteRequest
 IoConnectInterrupt
 IoCreateController
 IoCreateDevice
+IoCreateFile=IoCreateFile@56
 IoCreateStreamFileObject
 IoCreateSymbolicLink=IoCreateSymbolicLink@8
 IoDeleteController

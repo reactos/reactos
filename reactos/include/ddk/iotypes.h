@@ -1,4 +1,4 @@
-/*
+/* $Id: iotypes.h,v 1.9 1999/12/26 20:21:02 ea Exp $
  * 
  */
 
@@ -21,6 +21,15 @@ enum
    DeallocateObject,
    KeepObject,
 };
+
+
+typedef enum _CREATE_FILE_TYPE
+{
+	CreateFileTypeNone,
+	CreateFileTypeNamedPipe,
+	CreateFileTypeMailslot
+} CREATE_FILE_TYPE;
+
 
 typedef ULONG INTERFACE_TYPE;
 typedef INTERFACE_TYPE* PINTERFACE_TYPE;

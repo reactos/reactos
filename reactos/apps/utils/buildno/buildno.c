@@ -1,4 +1,4 @@
-/* $Id: buildno.c,v 1.1 1999/11/07 08:03:21 ea Exp $
+/* $Id: buildno.c,v 1.2 1999/12/26 20:21:02 ea Exp $
  *
  * buildno - Generate the build number for ReactOS
  *
@@ -10,7 +10,7 @@
  *
  * KERNEL_RELEASE_DATE
  *
- * as a 32-bit unsigned long YYYYDDMM (UTC).
+ * as a 32-bit unsigned long YYYYMMDD (UTC).
  *
  * The build number is the number of full days
  * elapsed since the last release date (UTC).
