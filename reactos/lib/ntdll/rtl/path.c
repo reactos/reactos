@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.8 2001/03/08 22:48:42 dwelch Exp $
+/* $Id: path.c,v 1.9 2001/04/29 21:09:20 cnettel Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,6 +15,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <ddk/obfuncs.h>
 
 #define NDEBUG
 #include <ntdll/ntdll.h>
@@ -283,7 +284,10 @@ NTSTATUS STDCALL RtlSetCurrentDirectory_U (PUNICODE_STRING name)
    HANDLE handle = NULL;
    PWSTR wcs;
    PWSTR buf = 0;
-   
+   PFILE_NAME_INFORMATION filenameinfo;
+   ULONG backslashcount = 0;
+   PWSTR cntr;
+
    DPRINT ("RtlSetCurrentDirectory %wZ\n", name);
 
    RtlAcquirePebLock ();
@@ -344,7 +348,49 @@ NTSTATUS STDCALL RtlSetCurrentDirectory_U (PUNICODE_STRING name)
 	RtlReleasePebLock ();
 	return Status;
      }
+
+  filenameinfo = RtlAllocateHeap (RtlGetProcessHeap(),
+			  0,
+			  MAX_PATH*sizeof(WCHAR)+sizeof(ULONG));
+
+  NtQueryInformationFile(handle,NULL, filenameinfo,MAX_PATH*sizeof(WCHAR)+sizeof(ULONG),FileNameInformation);
+
+   if (filenameinfo->FileName[1]) // If it's just "\", we need special handling
+    {
+	wcs = buf + size / sizeof(WCHAR) - 1;
+	if (*wcs == L'\\')
+	  {
+	    *(wcs) = 0;
+	    wcs--;
+	    size -= sizeof(WCHAR);
+  	  }
+ 
+   	for (cntr=filenameinfo->FileName;*cntr!=0;cntr++)
+	   {
+ 	     if (*cntr=='\\') backslashcount++;
+	   }
+
    
+
+	   DPRINT("%d \n",backslashcount);
+	   for (;backslashcount;wcs--)
+	   {
+	     if (*wcs=='\\') backslashcount--;
+	   }
+	   wcs++;
+
+
+	   wcscpy(wcs,filenameinfo->FileName);
+
+	   size=((wcs-buf)+wcslen(filenameinfo->FileName))*sizeof(WCHAR);
+    }
+
+   RtlFreeHeap (RtlGetProcessHeap (),
+		0,
+		filenameinfo);
+
+   
+
    /* append backslash if missing */
    wcs = buf + size / sizeof(WCHAR) - 1;
    if (*wcs != L'\\')
@@ -353,7 +399,7 @@ NTSTATUS STDCALL RtlSetCurrentDirectory_U (PUNICODE_STRING name)
 	*(++wcs) = 0;
 	size += sizeof(WCHAR);
      }
-   
+
    memmove (cd->DosPath.Buffer,
 	    buf,
 	    size + sizeof(WCHAR));
