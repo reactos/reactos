@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.26 2003/07/11 01:23:14 royce Exp $
+/* $Id: file.c,v 1.27 2003/11/08 07:42:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -42,7 +42,6 @@ NtQueryInformationFile(HANDLE FileHandle,
    PDEVICE_OBJECT DeviceObject;
    PIO_STACK_LOCATION StackPtr;
    PVOID SystemBuffer;
-   IO_STATUS_BLOCK IoSB;
    
    assert(IoStatusBlock != NULL);
    assert(FileInformation != NULL);
@@ -83,11 +82,11 @@ NtQueryInformationFile(HANDLE FileHandle,
 	return(STATUS_INSUFFICIENT_RESOURCES);
      }
    
-   //trigger FileObject/Event dereferencing
+   /* Trigger FileObject/Event dereferencing */
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
 
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
-   Irp->UserIosb = &IoSB;
+   Irp->UserIosb = IoStatusBlock;
    Irp->UserEvent = &FileObject->Event;
    KeResetEvent( &FileObject->Event );
    
@@ -105,19 +104,15 @@ NtQueryInformationFile(HANDLE FileHandle,
    
    Status = IoCallDriver(FileObject->DeviceObject,
 			 Irp);
-   if (Status==STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
+   if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
 	KeWaitForSingleObject(&FileObject->Event,
 			      Executive,
 			      KernelMode,
 			      FALSE,
 			      NULL);
-	Status = IoSB.Status;
+	Status = IoStatusBlock->Status;
      }
-  if (IoStatusBlock)
-    {
-      *IoStatusBlock = IoSB;
-    }
 
   if (NT_SUCCESS(Status))
     {
@@ -126,9 +121,10 @@ NtQueryInformationFile(HANDLE FileHandle,
 		       SystemBuffer,
 		       IoStatusBlock->Information);
     }
-   
-   ExFreePool(SystemBuffer);   
-   return(Status);
+
+   ExFreePool(SystemBuffer);
+
+   return Status;
 }
 
 
@@ -171,7 +167,7 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
 	return STATUS_INSUFFICIENT_RESOURCES;
      }
 
-   //trigger FileObject/Event dereferencing
+   /* Trigger FileObject/Event dereferencing */
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
    
    Irp->AssociatedIrp.SystemBuffer = FileInformation;
@@ -193,7 +189,7 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
    
    Status = IoCallDriver(FileObject->DeviceObject,
 			 Irp);
-   if (Status==STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
+   if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
 	KeWaitForSingleObject(&FileObject->Event,
 			      Executive,
@@ -229,7 +225,6 @@ NtSetInformationFile(HANDLE FileHandle,
    PIRP Irp;
    NTSTATUS Status;
    PVOID SystemBuffer;
-   IO_STATUS_BLOCK IoSB;
    
    assert(IoStatusBlock != NULL)
    assert(FileInformation != NULL)
@@ -252,7 +247,7 @@ NtSetInformationFile(HANDLE FileHandle,
    
    DPRINT("FileObject %x\n", FileObject);
 
-   //io completion port?
+   /* io completion port? */
    if (FileInformationClass == FileCompletionInformation)
    {
       PKQUEUE Queue;
@@ -271,7 +266,7 @@ NtSetInformationFile(HANDLE FileHandle,
                                             NULL);
          if (NT_SUCCESS(Status))
          {   
-            //FIXME: maybe use lookaside list
+            /* FIXME: maybe use lookaside list */
             FileObject->CompletionContext = ExAllocatePool(NonPagedPool, sizeof(IO_COMPLETION_CONTEXT));
             FileObject->CompletionContext->Key = ((PFILE_COMPLETION_INFORMATION)FileInformation)->CompletionKey;
             FileObject->CompletionContext->Port = Queue;
@@ -308,11 +303,11 @@ NtSetInformationFile(HANDLE FileHandle,
 		      FileInformation,
 		      Length);
    
-   //trigger FileObject/Event dereferencing
+   /* Trigger FileObject/Event dereferencing */
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
 
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
-   Irp->UserIosb = &IoSB;
+   Irp->UserIosb = IoStatusBlock;
    Irp->UserEvent = &FileObject->Event;
    KeResetEvent( &FileObject->Event );
    
@@ -335,21 +330,18 @@ NtSetInformationFile(HANDLE FileHandle,
    DPRINT("FileObject->DeviceObject %x\n", FileObject->DeviceObject);
    Status = IoCallDriver(FileObject->DeviceObject,
 			 Irp);
-   if (Status == STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
+   if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
 	KeWaitForSingleObject(&FileObject->Event,
 			      Executive,
 			      KernelMode,
 			      FALSE,
 			      NULL);
-	Status = IoSB.Status;
+	Status = IoStatusBlock->Status;
      }
-   if (IoStatusBlock)
-     {
-       *IoStatusBlock = IoSB;
-     }
+
    ExFreePool(SystemBuffer);
- 
+
    return Status;
 }
 
