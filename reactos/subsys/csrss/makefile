@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.23 2003/10/20 18:02:04 gvg Exp $
+# $Id: makefile,v 1.24 2003/11/24 16:42:53 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -56,9 +56,6 @@ include $(TOOLS_PATH)/depend.mk
 #
 #install::
 #	$(MAKE) -C usercsr install
-#
-#dist::
-#	$(MAKE) -C usercsr dist
 #
 #bootcd::
 #	$(MAKE) -C usercsr bootcd

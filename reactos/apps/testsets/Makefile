@@ -45,14 +45,7 @@ install: $(TEST_SETS:%=%_install) \
 	 $(TEST_SEH:%=%_install) \
 	 $(TEST_REGRESSIONS:%=%_install)
 
-dist:	$(TEST_SETS:%=%_dist) \
-	$(TEST_KERNEL32:%=%_dist) \
-	$(TEST_MSVCRT:%=%_dist) \
-	$(TEST_COM:%=%_dist) \
-	$(TEST_SEH:%=%_dist) \
-	$(TEST_REGRESSIONS:%=%_dist)
-
-.PHONY: all depends implib clean install dist
+.PHONY: all depends implib clean install
 
 
 #
@@ -67,13 +60,10 @@ $(TEST_SETS:%=%_implib): %_implib:
 $(TEST_SETS:%=%_clean): %_clean:
 	$(MAKE) -C $* clean
 
-$(TEST_SETS:%=%_dist): %_dist:
-	$(MAKE) -C $* dist
-
 $(TEST_SETS:%=%_install): %_install:
 	$(MAKE) -C $* install
 
-.PHONY: $(TEST_SETS) $(TEST_SETS:%=%_implib) $(TEST_SETS:%=%_clean) $(TEST_SETS:%=%_install) $(TEST_SETS:%=%_dist)
+.PHONY: $(TEST_SETS) $(TEST_SETS:%=%_implib) $(TEST_SETS:%=%_clean) $(TEST_SETS:%=%_install)
 
 
 #
@@ -88,13 +78,10 @@ $(TEST_KERNEL32:%=%_implib): %_implib:
 $(TEST_KERNEL32:%=%_clean): %_clean:
 	$(MAKE) -C kernel32/$* clean
 
-$(TEST_KERNEL32:%=%_dist): %_dist:
-	$(MAKE) -C kernel32/$* dist
-
 $(TEST_KERNEL32:%=%_install): %_install:
 	$(MAKE) -C kernel32/$* install
 
-.PHONY: $(TEST_KERNEL32) $(TEST_KERNEL32:%=%_implib) $(TEST_KERNEL32:%=%_clean) $(TEST_KERNEL32:%=%_install) $(TEST_KERNEL32:%=%_dist)
+.PHONY: $(TEST_KERNEL32) $(TEST_KERNEL32:%=%_implib) $(TEST_KERNEL32:%=%_clean) $(TEST_KERNEL32:%=%_install)
 
 
 #
@@ -109,13 +96,10 @@ $(TEST_MSVCRT:%=%_implib): %_implib:
 $(TEST_MSVCRT:%=%_clean): %_clean:
 	$(MAKE) -C msvcrt/$* clean
 
-$(TEST_MSVCRT:%=%_dist): %_dist:
-	$(MAKE) -C msvcrt/$* dist
-
 $(TEST_MSVCRT:%=%_install): %_install:
 	$(MAKE) -C msvcrt/$* install
 
-.PHONY: $(TEST_MSVCRT) $(TEST_MSVCRT:%=%_implib) $(TEST_MSVCRT:%=%_clean) $(TEST_MSVCRT:%=%_install) $(TEST_MSVCRT:%=%_dist)
+.PHONY: $(TEST_MSVCRT) $(TEST_MSVCRT:%=%_implib) $(TEST_MSVCRT:%=%_clean) $(TEST_MSVCRT:%=%_install)
 
 
 #
@@ -130,13 +114,10 @@ $(TEST_COM:%=%_implib): %_implib:
 $(TEST_COM:%=%_clean): %_clean:
 	$(MAKE) -C com/$* clean
 
-$(TEST_COM:%=%_dist): %_dist:
-	$(MAKE) -C com/$* dist
-
 $(TEST_COM:%=%_install): %_install:
 	$(MAKE) -C com/$* install
 
-.PHONY: $(TEST_COM) $(TEST_COM:%=%_implib) $(TEST_COM:%=%_clean) $(TEST_COM:%=%_install) $(TEST_COM:%=%_dist)
+.PHONY: $(TEST_COM) $(TEST_COM:%=%_implib) $(TEST_COM:%=%_clean) $(TEST_COM:%=%_install)
 
 
 #
@@ -151,13 +132,10 @@ $(TEST_SEH:%=%_implib): %_implib:
 $(TEST_SEH:%=%_clean): %_clean:
 	$(MAKE) -C seh/$* clean
 
-$(TEST_SEH:%=%_dist): %_dist:
-	$(MAKE) -C seh/$* dist
-
 $(TEST_SEH:%=%_install): %_install:
 	$(MAKE) -C seh/$* install
 
-.PHONY: $(TEST_SEH) $(TEST_SEH:%=%_implib) $(TEST_SEH:%=%_clean) $(TEST_SEH:%=%_install) $(TEST_SEH:%=%_dist)
+.PHONY: $(TEST_SEH) $(TEST_SEH:%=%_implib) $(TEST_SEH:%=%_clean) $(TEST_SEH:%=%_install)
 
 
 #
@@ -172,17 +150,13 @@ $(TEST_REGRESSIONS:%=%_implib): %_implib:
 $(TEST_REGRESSIONS:%=%_clean): %_clean:
 	$(MAKE) -C regres/$* clean
 
-$(TEST_REGRESSIONS:%=%_dist): %_dist:
-	$(MAKE) -C regres/$* dist
-
 $(TEST_REGRESSIONS:%=%_install): %_install:
 	$(MAKE) -C regres/$* install
 
-.PHONY: $(TEST_REGRESSIONS) $(TEST_REGRESSIONS:%=%_implib) $(TEST_REGRESSIONS:%=%_clean) $(TEST_REGRESSIONS:%=%_install) $(TEST_REGRESSIONS:%=%_dist)
+.PHONY: $(TEST_REGRESSIONS) $(TEST_REGRESSIONS:%=%_implib) $(TEST_REGRESSIONS:%=%_clean) $(TEST_REGRESSIONS:%=%_install)
 
 
 etags:
 	find . -name "*.[ch]" -print | etags --language=c -
 
 # EOF
-

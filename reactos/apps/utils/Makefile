@@ -27,10 +27,7 @@ clean: 	$(UTIL_APPS:%=%_clean) \
 install: $(UTIL_APPS:%=%_install) \
 	 $(UTIL_NET_APPS:%=%_install)
 
-dist:	$(UTIL_APPS:%=%_dist) \
-	$(UTIL_NET_APPS:%=%_dist)
-
-.PHONY: all depends implib clean install dist
+.PHONY: all depends implib clean install
 
 
 #
@@ -45,14 +42,10 @@ $(UTIL_APPS:%=%_implib): %_implib:
 $(UTIL_APPS:%=%_clean): %_clean:
 	$(MAKE) -C $* clean
 
-$(UTIL_APPS:%=%_dist): %_dist:
-	$(MAKE) -C $* dist
-
 $(UTIL_APPS:%=%_install): %_install:
 	$(MAKE) -C $* install
 
-.PHONY: $(UTIL_APPS) $(UTIL_APPS:%=%_implib) $(UTIL_APPS:%=%_clean) $(UTIL_APPS:%=%_install) $(UTIL_APPS:%=%_dist)
-
+.PHONY: $(UTIL_APPS) $(UTIL_APPS:%=%_implib) $(UTIL_APPS:%=%_clean) $(UTIL_APPS:%=%_install)
 
 #
 # GUI Utility Applications
@@ -66,17 +59,13 @@ $(UTIL_NET_APPS:%=%_implib): %_implib:
 $(UTIL_NET_APPS:%=%_clean): %_clean:
 	$(MAKE) -C net/$* clean
 
-$(UTIL_NET_APPS:%=%_dist): %_dist:
-	$(MAKE) -C net/$* dist
-
 $(UTIL_NET_APPS:%=%_install): %_install:
 	$(MAKE) -C net/$* install
 
-.PHONY: $(UTIL_NET_APPS) $(UTIL_NET_APPS:%=%_implib) $(UTIL_NET_APPS:%=%_clean) $(UTIL_NET_APPS:%=%_install) $(UTIL_NET_APPS:%=%_dist)
+.PHONY: $(UTIL_NET_APPS) $(UTIL_NET_APPS:%=%_implib) $(UTIL_NET_APPS:%=%_clean) $(UTIL_NET_APPS:%=%_install)
 
 
 etags:
 	find . -name "*.[ch]" -print | etags --language=c -
 
 # EOF
-

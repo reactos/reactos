@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.108 2003/11/24 14:37:11 ekohl Exp $
+# $Id: Makefile,v 1.109 2003/11/24 16:43:36 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -710,11 +710,6 @@ endif # BOOTCD_INSTALL
 
 
 .PHONY: install
-
-dist:
-	- $(CP) $(TARGETNAME).exe $(DIST_DIR)/$(TARGETNAME).exe
-
-.PHONY: dist
 
 bootcd:
 	- $(CP) $(TARGETNAME).exe $(BOOTCD_DIR)/reactos/$(TARGETNAME).exe

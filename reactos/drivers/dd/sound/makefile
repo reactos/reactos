@@ -23,11 +23,6 @@ install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 $(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
-
-$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
-
 $(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS) $(LIBS)
 
 include $(PATH_TO_TOP)/rules.mak

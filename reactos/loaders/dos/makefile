@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.8 2001/08/21 20:13:08 chorns Exp $
+# $Id: makefile,v 1.9 2003/11/24 16:44:10 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -20,12 +20,5 @@ $(INSTALL_DIR)/loadros.com: loadros.com
 	$(CP) loadros.com $(INSTALL_DIR)/loadros.com
 
 .PHONY: install
-
-dist: $(DIST_DIR)/loadros.com
-
-$(DIST_DIR)/loadros.com: loadros.com
-	$(CP) loadros.com $(DIST_DIR)/loadros.com
-
-.PHONY: dist
 
 # EOF

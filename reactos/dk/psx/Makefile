@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2002/08/23 12:41:55 ea Exp $
+# $Id: Makefile,v 1.4 2003/11/24 16:45:57 ekohl Exp $
 #
 # PROJECT    : ReactOS Operating System
 # FILE       : reactos/dk/w32/Makefile
@@ -52,8 +52,6 @@ clean:
 	- $(RM) $(TARGET_FOLDER_INC)/*.h
 
 install:
-
-dist:
 
 #EOF
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.12 2003/04/05 09:37:42 chorns Exp $
+# $Id: makefile,v 1.13 2003/11/24 16:45:16 ekohl Exp $
 #
 #
 all:
@@ -12,10 +12,6 @@ implib:
 clean:
 	$(MAKE) -C display clean
 	$(MAKE) -C miniport clean
-
-dist:
-	$(MAKE) -C display dist
-	$(MAKE) -C miniport dist
 
 install:
 	$(MAKE) -C display install
