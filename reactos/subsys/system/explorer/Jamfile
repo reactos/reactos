@@ -51,7 +51,7 @@ exe explorer :
 	<find-shared-library>uuid
 	<find-shared-library>wsock32
 	<find-shared-library>oleaut32
+	<find-shared-library>libexpat
 	<linkflags>notifyhook.dll
-	<linkflags>libexpat.dll
  ;
 

@@ -104,7 +104,7 @@ OBJECTS = \
 	i386-stub-win32.o \
 	xmlstorage.o
 
-LIBS = gdi32 comctl32 ole32 uuid
+LIBS = gdi32 comctl32 ole32 uuid expat
 DELAYIMPORTS = oleaut32 wsock32
 
 .PHONY: all depends implib clean install dist bootcd depends
@@ -129,8 +129,8 @@ ever:
 buildno.h: ../../../include/reactos/buildno.h
 	$(CD_PREFIX)updatebuildno
 
-$(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) notifyhook.dll ..\..\..\lib\expat\libexpat.dll
-	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS)) $(addprefix -l,$(DELAYIMPORTS))
+$(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) notifyhook.dll
+	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS)) $(addprefix -l,$(DELAYIMPORTS)) -L$(PATH_TO_TOP)/dk/w32/lib
 
 explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc res/*.bmp res/*.ico
 	$(RC) $(RCFLAGS) -o $@ $(PROGRAM)_intres.rc
