@@ -2,7 +2,7 @@
  * Italian resources for SETUPAPI
  *
  * Copyright 2001 Andreas Mohr
- * Copyright 2003 Ivan Leo Murray-Smith
+ * Copyright 2003 Ivan Leo Puoti
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,7 @@ LANGUAGE LANG_ITALIAN, SUBLANG_DEFAULT
 COPYFILEDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 20, 20, 208, 105
 STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
 CAPTION "Copia dei file in corso..."
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
 	PUSHBUTTON "Anulla", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 	LTEXT "Origine:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP

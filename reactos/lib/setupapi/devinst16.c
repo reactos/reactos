@@ -68,7 +68,7 @@ RETERR16 WINAPI DiBuildClassDrvList16(LPDEVICE_INFO16 lpdi)
 /***********************************************************************
  *		DiCallClassInstaller (SETUPX.308)
  */
-RETERR16 WINAPI DiCallClassInstaller16(/*DI_FUNCTIONS*/WORD diFctn, LPDEVICE_INFO16 lpdi)
+RETERR16 WINAPI DiCallClassInstaller16(DI_FUNCTION16 diFctn, LPDEVICE_INFO16 lpdi)
 {
     FIXME("(%x, %p): stub\n", diFctn, lpdi);
     return FALSE;
