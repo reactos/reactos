@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.14 2003/03/14 22:48:32 ei Exp $
+/* $Id: stubs.c,v 1.15 2003/03/20 03:04:02 mtempel Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -665,17 +665,6 @@ GetPixelFormat(
 
 
 
-int
-STDCALL
-GetPolyFillMode(
-	HDC	a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
 
 BOOL
 STDCALL
@@ -1253,18 +1242,6 @@ SetPixelFormat(
 	return FALSE;
 }
 
-
-
-int
-STDCALL
-SetPolyFillMode(
-	HDC	a0,
-	int	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
 
@@ -2087,19 +2064,6 @@ DPtoLP(
 	return FALSE;
 }
 
-
-
-BOOL
-STDCALL
-Polygon(
-	HDC		a0,
-	CONST POINT	*a1,
-	int		a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 
