@@ -93,25 +93,27 @@ TEST_APPS = alive apc args atomtest bench consume count dump_shared_data \
 UTIL_APPS = cat objdir partinfo stats
 
 #
-# Wine userspace win32 subsystem plus other stuff. This will all be moved
-# to helper makefile down the road and there will be peace on earth.
+# Win32 Subsystem support (Based on WINE)
+# FIXME: Move to this its own Makefile
 #
 
-WINE_OTHER = unicode
+WINE_OTHER = unicode library
 
-WINE_TOOLS = wrc winebuild
+WINE_TOOLS = bin2res wrc winebuild
 
-WINE_DLLS = mapi32 ole32 oleaut32 oledlg olepro32 olecli olesvr \
-            shell32 shlwapi comctl32 shfolder shdocvw commdlg \
-            ddraw dinput dplay dplayx \
-            psapi richedit serialui tapi32 urlmon winspool wintrust
-            #lzexpand (missing imports)
-            #dsound (missing winmm.dll)
+WINE_DLLS = comcat crtdll dsound dplayx richedit shlwapi twain
 
+#mapi32 ole32 oleaut32 oledlg olepro32 olecli olesvr \
+#shell32 comctl32 shfolder shdocvw commdlg winmm
+#ddraw dinput dplay serialui tapi32 urlmon winspool wintrust
+#winspool msinfo comcat
+#lzexpand (missing imports)
 
-WINE_PROGS = clock cmdlgtst control notepad osversioncheck \
-             progman uninstaller view wcmd winefile winemine \
-             winver
+WINE_PROGS = control expand osversioncheck regedit regsvr32 winver
+# (waiting on wrc fix for the rest of these)
+# clock cmdlgtst  notepad  progman wcmd  
+# uninstaller winefile winemine winetest 
+
 
 ifeq ($(ROS_BUILD_WINE),yes)
 WINE_MODULES = $(WINE_OTHER) $(WINE_TOOLS) $(WINE_DLLS) $(WINE_PROGS)
