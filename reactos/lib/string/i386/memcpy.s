@@ -1,5 +1,5 @@
 /* 
- * $Id: memcpy.s,v 1.1 2003/05/27 18:58:15 hbirr Exp $
+ * $Id: memcpy.s,v 1.2 2003/06/01 17:10:42 hbirr Exp $
  */
 
 /*
@@ -17,23 +17,22 @@ _memcpy:
 	mov	0xc(%ebp),%esi
 	mov	0x10(%ebp),%ecx
 	cld
-	cmp	$4,%ecx
+	cmp	$16,%ecx
 	jb	.L1
+	mov	%ecx,%edx
 	test	$3,%edi
 	je	.L2
 /*
- * Should we make the source or the destination dword aligned?
+ *  Make the destination dword aligned
  */
-	mov	%ecx,%edx
-	mov	%edi,%ecx
-	and	$3,%ecx
-	sub	%ecx,%edx
-	rep	movsb
-	mov	%edx,%ecx
+        mov	%edi,%ecx
+        and	$3,%ecx
+        sub	$5,%ecx
+        not	%ecx
+        sub	%ecx,%edx
+        rep	movsb
+        mov	%edx,%ecx	
 .L2:
-	cmp	$4,%ecx
-	jb	.L1
-	mov	%ecx,%edx
 	shr	$2,%ecx
 	rep	movsl
 	mov	%edx,%ecx
