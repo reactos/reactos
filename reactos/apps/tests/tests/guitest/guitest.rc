@@ -1,0 +1,17 @@
+/****************************************************************************
+
+
+guitest.rh
+
+produced by Borland Resource Workshop
+
+
+*****************************************************************************/
+
+#define IDC_CHECKBOX1	104
+#define IDC_CHECKBOX2	105
+#define IDC_CHECKBOX3	106
+#define DIALOG_2	2
+#define IDC_GROUPBOX1	10
+#define DIALOG_1	1
+#define ICON_1	1
