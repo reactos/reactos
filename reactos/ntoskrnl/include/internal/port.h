@@ -5,21 +5,21 @@
 
 typedef struct _EPORT
 {
-	KSPIN_LOCK	Lock;
-	KEVENT		Event;
-
-	ULONG		State;
-
-	struct _EPORT	* OtherPort;
-   
-	ULONG		QueueLength;
-	LIST_ENTRY	QueueListHead;
-   
-	ULONG		ConnectQueueLength;
-	LIST_ENTRY	ConnectQueueListHead;
-
-	ULONG		MaxDataLength;
-	ULONG		MaxConnectInfoLength;
+  KSPIN_LOCK	Lock;
+  KSEMAPHORE    Semaphore;
+  
+  ULONG		State;
+  
+  struct _EPORT	* OtherPort;
+  
+  ULONG		QueueLength;
+  LIST_ENTRY	QueueListHead;
+  
+  ULONG		ConnectQueueLength;
+  LIST_ENTRY	ConnectQueueListHead;
+  
+  ULONG		MaxDataLength;
+  ULONG		MaxConnectInfoLength;
 } EPORT, * PEPORT;
 
 

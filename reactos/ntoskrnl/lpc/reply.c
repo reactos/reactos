@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.6 2001/03/07 16:48:43 dwelch Exp $
+/* $Id: reply.c,v 1.7 2001/06/23 19:13:33 phreak Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -111,7 +111,7 @@ NtReplyPort (IN	HANDLE		PortHandle,
 				 LpcReply, 
 				 LPC_REPLY,
 				 Port);
-   KeSetEvent(&Port->OtherPort->Event, IO_NO_INCREMENT, FALSE);
+   KeReleaseSemaphore( &Port->OtherPort->Semaphore, IO_NO_INCREMENT, 1, FALSE );
    
    ObDereferenceObject(Port);
    
@@ -150,6 +150,8 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
    PEPORT Port;
    KIRQL oldIrql;
    PQUEUEDMESSAGE Request;
+   BOOLEAN Disconnected;
+   LARGE_INTEGER to;
    
    DPRINT("NtReplyWaitReceivePortEx(PortHandle %x, LpcReply %x, "
 	  "LpcMessage %x)\n", PortHandle, LpcReply, LpcMessage);
@@ -165,26 +167,27 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
 	DPRINT1("NtReplyWaitReceivePortEx() = %x\n", Status);
 	return(Status);
      }
-   
-   if (Port->State != EPORT_CONNECTED_CLIENT &&
-       Port->State != EPORT_CONNECTED_SERVER &&
-       LpcReply != NULL)
+   if( Port->State == EPORT_DISCONNECTED )
      {
-       DPRINT1("NtReplyWaitReceivePortEx() = %x (State was %x)\n", 
-	       STATUS_PORT_DISCONNECTED, Port->State);
-       return(STATUS_PORT_DISCONNECTED);
+       // if the port is disconnected, force the timeout to be 0
+       // so we don't wait for new messages, because there won't be
+       // any, only try to remove any existing messages
+       Disconnected = TRUE;
+       to.QuadPart = 0;
+       Timeout = &to;
      }
-
+   else Disconnected = FALSE;
+   
    /*
-    * Send the reply
+    * Send the reply, only if port is connected
     */
-   if (LpcReply != NULL)
+   if (LpcReply != NULL && !Disconnected)
      {
 	Status = EiReplyOrRequestPort(Port->OtherPort, 
 				      LpcReply,
 				      LPC_REPLY,
 				      Port);
-	KeSetEvent(&Port->OtherPort->Event, IO_NO_INCREMENT, FALSE);
+	KeReleaseSemaphore( &Port->OtherPort->Semaphore, IO_NO_INCREMENT, 1, FALSE);
 	
 	if (!NT_SUCCESS(Status))
 	  {
@@ -197,36 +200,33 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
    /*
     * Want for a message to be received
     */
-   do
+   Status = KeWaitForSingleObject(&Port->Semaphore,
+				  UserRequest,
+				  UserMode,
+				  FALSE,
+				  Timeout);
+   if( Status == STATUS_TIMEOUT )
      {
-       Status = KeWaitForSingleObject(&Port->Event,
-				      UserRequest,
-				      UserMode,
-				      FALSE,
-				      NULL);
-       if (!NT_SUCCESS(Status))
-	 {
-	   DPRINT1("NtReplyWaitReceivePortEx() = %x\n", Status);
-	   return(Status);
-	 }
-
-       /*
-	* Dequeue the message
-	*/
-       KeAcquireSpinLock(&Port->Lock, &oldIrql);
-       Request = EiDequeueMessagePort(Port);
-       
-       /*
-	* There is a race between the event being set and the port lock being
-	* taken in which another thread may dequeue the same request so
-	* we may need to loop.
-	*/
-       if (Request == NULL)
-	 {
-	   KeReleaseSpinLock(&Port->Lock, oldIrql);
-	 }
-     } while(Request == NULL);
+       // if the port is disconnected, and there are no remaining messages,
+       // return STATUS_PORT_DISCONNECTED
+       ObDereferenceObject( Port );
+       return Disconnected ? STATUS_PORT_DISCONNECTED : STATUS_TIMEOUT;
+     }
    
+   if (!NT_SUCCESS(Status))
+     {
+       DPRINT1("NtReplyWaitReceivePortEx() = %x\n", Status);
+       ObDereferenceObject( Port );
+       return(Status);
+     }
+
+   /*
+    * Dequeue the message
+    */
+   KeAcquireSpinLock(&Port->Lock, &oldIrql);
+   Request = EiDequeueMessagePort(Port);
+   
+   assert( Request );
    memcpy(LpcMessage, &Request->Message, Request->Message.MessageSize);
    if (Request->Message.MessageType == LPC_CONNECTION_REQUEST)
      {

@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.6 2001/06/16 14:08:57 ekohl Exp $
+/* $Id: connect.c,v 1.7 2001/06/23 19:13:33 phreak Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -130,14 +130,14 @@ NtConnectPort (PHANDLE				ConnectedPort,
 			Request,
 			LPC_CONNECTION_REQUEST,
 			OurPort);
-  KeSetEvent (&NamedPort->Event, IO_NO_INCREMENT, FALSE);
+  KeReleaseSemaphore( &NamedPort->Semaphore, IO_NO_INCREMENT, 1, FALSE );
    
   DPRINT("Waiting for connection completion\n");
   
   /*
    * Wait for them to accept our connection
    */
-  KeWaitForSingleObject (&OurPort->Event,
+  KeWaitForSingleObject (&OurPort->Semaphore,
 			 UserRequest,
 			 UserMode,
 			 FALSE,
@@ -242,9 +242,10 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 			    LpcMessage,
 			    LPC_CONNECTION_REFUSED,
 			    NamedPort);
-      KeSetEvent (&ConnectionRequest->Sender->Event,
-		  IO_NO_INCREMENT,
-		  FALSE);
+      KeReleaseSemaphore( &ConnectionRequest->Sender->Semaphore,
+			  IO_NO_INCREMENT,
+			  1,
+			  FALSE);
       ObDereferenceObject (ConnectionRequest->Sender);
       ExFreePool (ConnectionRequest);	
       ObDereferenceObject (NamedPort);

@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.5 2001/03/07 16:48:43 dwelch Exp $
+/* $Id: port.c,v 1.6 2001/06/23 19:13:33 phreak Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -93,7 +93,7 @@ NiInitializePort (
 {
 	memset (Port, 0, sizeof(EPORT));
 	KeInitializeSpinLock (& Port->Lock);
-	KeInitializeEvent (& Port->Event, SynchronizationEvent, FALSE);
+	KeInitializeSemaphore( &Port->Semaphore, 0, LONG_MAX );
 	Port->OtherPort = NULL;
 	Port->QueueLength = 0;
 	Port->ConnectQueueLength = 0;

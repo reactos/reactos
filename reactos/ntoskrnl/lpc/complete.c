@@ -1,4 +1,4 @@
-/* $Id: complete.c,v 1.3 2001/01/18 15:00:08 dwelch Exp $
+/* $Id: complete.c,v 1.4 2001/06/23 19:13:33 phreak Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -45,10 +45,10 @@ NtCompleteConnectPort (HANDLE PortHandle)
       return (Status);
     }
   
-  KeSetEvent (&OurPort->OtherPort->Event, IO_NO_INCREMENT, FALSE);
-   
   OurPort->State = EPORT_CONNECTED_SERVER;
   
+  KeReleaseSemaphore( &OurPort->OtherPort->Semaphore, IO_NO_INCREMENT, 1, FALSE );
+   
   ObDereferenceObject (OurPort);
   
   return (STATUS_SUCCESS);

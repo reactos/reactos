@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.4 2001/03/13 16:25:54 dwelch Exp $
+/* $Id: close.c,v 1.5 2001/06/23 19:13:33 phreak Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -47,17 +47,16 @@ NiClosePort (PVOID	ObjectBody, ULONG	HandleCount)
     {
       Message.MessageSize = sizeof(LPC_MESSAGE);
       Message.DataSize = 0;
-      
       EiReplyOrRequestPort (Port->OtherPort,
 			    &Message,
 			    LPC_PORT_CLOSED,
 			    Port);
-      KeSetEvent (&Port->OtherPort->Event,
-		  IO_NO_INCREMENT,
-		  FALSE);
-      
       Port->OtherPort->OtherPort = NULL;
       Port->OtherPort->State = EPORT_DISCONNECTED;
+      KeReleaseSemaphore( &Port->OtherPort->Semaphore,
+			  IO_NO_INCREMENT,
+			  1,
+			  FALSE );
       ObDereferenceObject (Port);
     }
 

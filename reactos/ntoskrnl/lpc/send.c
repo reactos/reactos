@@ -1,4 +1,4 @@
-/* $Id: send.c,v 1.4 2001/03/18 19:35:13 dwelch Exp $
+/* $Id: send.c,v 1.5 2001/06/23 19:13:33 phreak Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -75,12 +75,12 @@ LpcSendDebugMessagePort (IN PEPORT Port,
 	ObDereferenceObject(Port);
 	return(Status);
      }
-   KeSetEvent(&Port->OtherPort->Event, IO_NO_INCREMENT, FALSE);   
+   KeReleaseSemaphore( &Port->OtherPort->Semaphore, IO_NO_INCREMENT, 1, FALSE );   
    
    /*
     * Wait for a reply
     */
-   KeWaitForSingleObject(&Port->Event,
+   KeWaitForSingleObject(&Port->Semaphore,
 			 UserRequest,
 			 UserMode,
 			 FALSE,
@@ -122,7 +122,7 @@ NTSTATUS STDCALL LpcRequestPort (IN	PEPORT		Port,
 				 LpcMessage, 
 				 LPC_DATAGRAM,
 				 Port);
-   KeSetEvent(&Port->Event, IO_NO_INCREMENT, FALSE);
+   KeReleaseSemaphore( &Port->Semaphore, IO_NO_INCREMENT, 1, FALSE );
 
    return(Status);
 }
@@ -216,12 +216,12 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
 	ObDereferenceObject(Port);
 	return(Status);
      }
-   KeSetEvent(&Port->OtherPort->Event, IO_NO_INCREMENT, FALSE);   
+   KeReleaseSemaphore( &Port->OtherPort->Semaphore, IO_NO_INCREMENT, 1, FALSE);   
    
    /*
     * Wait for a reply
     */
-   KeWaitForSingleObject(&Port->Event,
+   KeWaitForSingleObject(&Port->Semaphore,
 			 UserRequest,
 			 UserMode,
 			 FALSE,
