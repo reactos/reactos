@@ -1,4 +1,4 @@
-; $Id: scsiport.edf,v 1.3 2001/08/23 15:26:57 ekohl Exp $
+; $Id: scsiport.edf,v 1.4 2002/01/14 01:45:03 ekohl Exp $
 ;
 ; scsiport.def - export definition file for scsiport driver
 ;
@@ -38,7 +38,7 @@ ScsiPortSetDataBusByOffset=ScsiPortSetBusDataByOffset@28
 ScsiPortStallExecution=HAL.KeStallExecutionProcessor
 ScsiPortValidateRange=ScsiPortValidateRange@28
 ScsiPortWritePortUchar=HAL.WRITE_PORT_UCHAR
-ScsiPortWritePortUshort=HA.WRITE_PORT_USHORT
+ScsiPortWritePortUshort=HAL.WRITE_PORT_USHORT
 ScsiPortWritePortUlong=HAL.WRITE_PORT_ULONG
 ScsiPortWritePortBufferUchar=HAL.WRITE_PORT_BUFFER_UCHAR
 ScsiPortWritePortBufferUshort=HAL.WRITE_PORT_BUFFER_USHORT

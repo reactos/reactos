@@ -1,4 +1,4 @@
-/* $Id: disk.c,v 1.1 2001/07/24 10:21:15 ekohl Exp $
+/* $Id: disk.c,v 1.2 2002/01/14 01:44:03 ekohl Exp $
  *
  */
 
@@ -6,82 +6,37 @@
 
 #include <ddk/ntddk.h>
 
+#include "../include/scsi.h"
+#include "../include/class2.h"
+#include "../include/ntddscsi.h"
+
 //#define NDEBUG
 #include <debug.h>
-
-//#include "ide.h"
-//#include "partitio.h"
 
 #define VERSION "V0.0.1"
 
 
-static NTSTATUS DiskCreateDevices(VOID);
-static BOOLEAN DiskFindDiskDrives(PDEVICE_OBJECT PortDeviceObject, ULONG PortNumber);
+//static NTSTATUS
+//DiskCreateDevices(VOID);
 
 
-/*
- *  DiskOpenClose
- *
- *  DESCRIPTION:
- *    Answer requests for Open/Close calls: a null operation
- *
- *  RUN LEVEL:
- *    PASSIVE_LEVEL
- *
- *  ARGUMENTS:
- *    Standard dispatch arguments
- *
- *  RETURNS:
- *    NTSTATUS
-*/
-#if 0
-static NTSTATUS STDCALL
-DiskOpenClose(IN PDEVICE_OBJECT pDO,
-	      IN PIRP Irp)
-{
-   Irp->IoStatus.Status = STATUS_SUCCESS;
-   Irp->IoStatus.Information = FILE_OPENED;
-   IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-   return STATUS_SUCCESS;
-}
-#endif
+BOOLEAN STDCALL
+DiskClassFindDevices(PDRIVER_OBJECT DriverObject,
+		     PUNICODE_STRING RegistryPath,
+		     PCLASS_INIT_DATA InitializationData,
+		     PDEVICE_OBJECT PortDeviceObject,
+		     ULONG PortNumber);
 
 
-static NTSTATUS STDCALL
-DiskClassReadWrite(IN PDEVICE_OBJECT pDO,
-		   IN PIRP Irp)
-{
-   Irp->IoStatus.Status = STATUS_SUCCESS;
-   Irp->IoStatus.Information = 0;
-   IoCompleteRequest(Irp, IO_NO_INCREMENT);
+NTSTATUS STDCALL
+DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
+		       IN PIRP Irp);
 
-   return STATUS_SUCCESS;
-}
+NTSTATUS STDCALL
+DiskClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
+		       IN PIRP Irp);
 
 
-static NTSTATUS STDCALL
-DiskClassDeviceControl(IN PDEVICE_OBJECT pDO,
-		       IN PIRP Irp)
-{
-   Irp->IoStatus.Status = STATUS_SUCCESS;
-   Irp->IoStatus.Information = 0;
-   IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-   return STATUS_SUCCESS;
-}
-
-
-static NTSTATUS STDCALL
-DiskClassShutdownFlush(IN PDEVICE_OBJECT pDO,
-		       IN PIRP Irp)
-{
-   Irp->IoStatus.Status = STATUS_SUCCESS;
-   Irp->IoStatus.Information = 0;
-   IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-   return STATUS_SUCCESS;
-}
 
 
 //    DriverEntry
@@ -107,84 +62,112 @@ NTSTATUS STDCALL
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
 	    IN PUNICODE_STRING RegistryPath)
 {
-   NTSTATUS Status;
+  CLASS_INIT_DATA InitData;
 
-   DbgPrint("Disk Class Driver %s\n", VERSION);
+  DbgPrint("Disk Class Driver %s\n", VERSION);
 
-   /* Export other driver entry points... */
-//   DriverObject->DriverStartIo = IDEStartIo;
-//   DriverObject->MajorFunction[IRP_MJ_CREATE] = DiskClassOpenClose;
-//   DriverObject->MajorFunction[IRP_MJ_CLOSE] = DiskClassOpenClose;
-   DriverObject->MajorFunction[IRP_MJ_READ] = DiskClassReadWrite;
-   DriverObject->MajorFunction[IRP_MJ_WRITE] = DiskClassReadWrite;
-   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DiskClassDeviceControl;
-   DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = DiskClassShutdownFlush;
-   DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = DiskClassShutdownFlush;
+  InitData.InitializationDataSize = sizeof(CLASS_INIT_DATA);
+  InitData.DeviceExtensionSize = sizeof(DEVICE_EXTENSION);	// + sizeof(DISK_DATA)
+  InitData.DeviceType = FILE_DEVICE_DISK;
+  InitData.DeviceCharacteristics = 0;
 
-   Status = DiskCreateDevices();
-   DPRINT("Status 0x%08X\n", Status);
+  InitData.ClassError = NULL;				// DiskClassProcessError;
+  InitData.ClassReadWriteVerification = NULL;		// DiskClassReadWriteVerification;
+  InitData.ClassFindDeviceCallBack = NULL;		// DiskClassDeviceVerification;
+  InitData.ClassFindDevices = DiskClassFindDevices;
+  InitData.ClassDeviceControl = DiskClassDeviceControl;
+  InitData.ClassShutdownFlush = DiskClassShutdownFlush;
+  InitData.ClassCreateClose = NULL;
+  InitData.ClassStartIo = NULL;
 
-   DPRINT("Returning from DriverEntry\n");
-   return STATUS_SUCCESS;
+  return(ScsiClassInitialize(DriverObject,
+			     RegistryPath,
+			     &InitData));
 }
 
 
+//    DiskClassFindDevices
+//
+//  DESCRIPTION:
+//    This function searches for device that are attached to the given scsi port.
+//
+//  RUN LEVEL:
+//    PASSIVE_LEVEL
+//
+//  ARGUMENTS:
+//    IN  PDRIVER_OBJECT   DriverObject        System allocated Driver Object for this driver
+//    IN  PUNICODE_STRING  RegistryPath        Name of registry driver service key
+//    IN  PCLASS_INIT_DATA InitializationData  Pointer to the main initialization data
+//    IN PDEVICE_OBJECT    PortDeviceObject    Scsi port device object
+//    IN ULONG             PortNumber          Port number
+//
+//  RETURNS:
+//    TRUE: At least one disk drive was found
+//    FALSE: No disk drive found
+//
 
-static NTSTATUS
-DiskCreateDevices(VOID)
+BOOLEAN STDCALL
+DiskClassFindDevices(PDRIVER_OBJECT DriverObject,
+		     PUNICODE_STRING RegistryPath,
+		     PCLASS_INIT_DATA InitializationData,
+		     PDEVICE_OBJECT PortDeviceObject,
+		     ULONG PortNumber)
 {
-   WCHAR NameBuffer[80];
-   UNICODE_STRING PortName;
-   ULONG PortNumber = 0;
-   PDEVICE_OBJECT PortDeviceObject;
-   PFILE_OBJECT FileObject;
-   BOOLEAN DiskFound = FALSE;
-   NTSTATUS Status;
-   
-   DPRINT1("DiskCreateDevices() called.\n");
-   
-   /* look for ScsiPortX scsi port devices */
-   do
-     {
-	swprintf(NameBuffer,
-		 L"\\Device\\ScsiPort%ld",
-		 PortNumber);
-	RtlInitUnicodeString(&PortName,
-			     NameBuffer);
-	DPRINT1("Checking scsi port %ld\n", PortNumber);
-	Status = IoGetDeviceObjectPointer(&PortName,
-					  FILE_READ_ATTRIBUTES,
-					  &FileObject,
-					  &PortDeviceObject);
-	DPRINT1("Status 0x%08lX\n", Status);
-	if (NT_SUCCESS(Status))
-	  {
-	     DPRINT1("ScsiPort%ld found.\n", PortNumber);
+  PIO_SCSI_CAPABILITIES PortCapabilities = NULL;
+  PSCSI_ADAPTER_BUS_INFO AdapterBusInfo;
+  PCHAR Buffer;
+  ULONG DeviceCount;
+  NTSTATUS Status;
+//  PCONFIGURATION_INFORMATION ConfigInfo;
 
-	     /* Check scsi port for attached disk drives */
-	     DiskFound = DiskFindDiskDrives(PortDeviceObject, PortNumber);
-	  }
-	PortNumber++;
-     }
-   while (NT_SUCCESS(Status));
+  DPRINT1("DiskClassFindDevices() called.\n");
 
-   return(STATUS_SUCCESS);
+  /* Get port capabilities */
+  Status = ScsiClassGetCapabilities(PortDeviceObject,
+				    &PortCapabilities);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("ScsiClassGetCapabilities() failed! (Status 0x%lX)\n", Status);
+      return(FALSE);
+    }
+
+//  DPRINT1("MaximumTransferLength: %lu\n", Capabilities.MaximumTransferLength);
+
+  /* Get inquiry data */
+  Status = ScsiClassGetInquiryData(PortDeviceObject,
+				   (PSCSI_ADAPTER_BUS_INFO *)&Buffer);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("ScsiClassGetInquiryData() failed! (Status 0x%lX)\n", Status);
+      return(FALSE);
+    }
+
+  /* Get number of unclaimed devices */
+  AdapterBusInfo = (PSCSI_ADAPTER_BUS_INFO)Buffer;
+  DeviceCount = ScsiClassFindUnclaimedDevices(InitializationData,
+					      AdapterBusInfo);
+  if (DeviceCount == 0)
+    {
+      DPRINT("ScsiClassFindUnclaimedDevices() returned 0!");
+      return(FALSE);
+    }
+
+//  ConfigInfo = IoGetConfigurationInformation();
+//  DPRINT1("Number of SCSI ports: %lu\n", ConfigInfo->ScsiPortCount);
+
+
+
+
+  ExFreePool(Buffer);
+
+  return(TRUE);
 }
 
-
-static BOOLEAN
-DiskFindDiskDrives(PDEVICE_OBJECT PortDeviceObject,
-		   ULONG PortNumber)
-{
-   DPRINT1("DiskFindDiskDevices() called.\n");
-
-   return TRUE;
-}
 
 //    IDECreateDevice
 //
 //  DESCRIPTION:
-//    Creates a device by calling IoCreateDevice and a sylbolic link for Win32
+//    Creates a device by calling IoCreateDevice and a symbolic link for Win32
 //
 //  RUN LEVEL:
 //    PASSIVE_LEVEL
@@ -306,7 +289,7 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
 
 
 
-//    IDEDispatchDeviceControl
+//    DiskClassDeviceControl
 //
 //  DESCRIPTION:
 //    Answer requests for device control calls
@@ -320,11 +303,14 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
 //  RETURNS:
 //    NTSTATUS
 //
-#if 0
-static  NTSTATUS  STDCALL
-IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
-                         IN PIRP Irp) 
+
+NTSTATUS STDCALL
+DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
+		       IN PIRP Irp)
 {
+  DPRINT("DiskClassDeviceControl() called!\n");
+
+#if 0
   NTSTATUS  RC;
   ULONG     ControlCode, InputLength, OutputLength;
   PIO_STACK_LOCATION     IrpStack;
@@ -391,8 +377,43 @@ IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
   return  RC;
-}
 #endif
+
+  Irp->IoStatus.Status = STATUS_SUCCESS;
+  Irp->IoStatus.Information = 0;
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+  return(STATUS_SUCCESS);
+}
+
+
+//    DiskClassShutdownFlush
+//
+//  DESCRIPTION:
+//    Answer requests for shutdown and flush calls
+//
+//  RUN LEVEL:
+//    PASSIVE_LEVEL
+//
+//  ARGUMENTS:
+//    Standard dispatch arguments
+//
+//  RETURNS:
+//    NTSTATUS
+//
+
+NTSTATUS STDCALL
+DiskClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
+		       IN PIRP Irp)
+{
+  DPRINT("DiskClassShutdownFlush() called!\n");
+
+  Irp->IoStatus.Status = STATUS_SUCCESS;
+  Irp->IoStatus.Information = 0;
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+  return(STATUS_SUCCESS);
+}
 
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: scsiport.c,v 1.1 2001/07/21 07:30:26 ekohl Exp $
+/* $Id: scsiport.c,v 1.2 2002/01/14 01:45:03 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,6 +14,13 @@
 #define UNIMPLEMENTED do {DbgPrint("%s:%d: Function not implemented", __FILE__, __LINE__); for(;;);} while (0)
 
 #define VERSION "0.0.1"
+
+
+static NTSTATUS STDCALL
+ScsiPortCreateClose(IN PDEVICE_OBJECT DeviceObject,
+		    IN PIRP Irp);
+
+
 
 //  -------------------------------------------------------  Public Interface
 
@@ -105,7 +112,11 @@ ScsiPortGetBusData(IN PVOID DeviceExtension,
 		   IN PVOID Buffer,
 		   IN ULONG Length)
 {
-  UNIMPLEMENTED;
+  return(HalGetBusData(BusDataType,
+		       SystemIoBusNumber,
+		       SlotNumber,
+		       Buffer,
+		       Length));
 }
 
 
@@ -202,6 +213,29 @@ ScsiPortInitialize(IN PVOID Argument1,
 		   IN struct _HW_INITIALIZATION_DATA *HwInitializationData,
 		   IN PVOID HwContext)
 {
+  PDRIVER_OBJECT DriverObject = (PDRIVER_OBJECT)Argument1;
+  PUNICODE_STRING RegistryPath = (PUNICODE_STRING)Argument2;
+
+  if ((HwInitializationData->HwInitialize == NULL) ||
+      (HwInitializationData->HwStartIo == NULL) ||
+      (HwInitializationData->HwInterrupt == NULL) ||
+      (HwInitializationData->HwFindAdapter == NULL) ||
+      (HwInitializationData->HwResetBus == NULL))
+    return(STATUS_INVALID_PARAMETER);
+
+//  DriverObject->DriverStartIo = HwInitializationData->HwStartIo;
+
+//  DriverObject->DriverStartIo = ScsiPortStartIo;
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = ScsiPortCreateClose;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = ScsiPortCreateClose;
+//  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ScsiPortDeviceControl;
+//  DriverObject->MajorFunction[IRP_MJ_SCSI] = ScsiPortDispatch;
+
+//  DriverObject->MajorFunction[IRP_MJ_READ] = IDEDispatchReadWrite;
+//  DriverObject->MajorFunction[IRP_MJ_WRITE] = IDEDispatchReadWrite;
+//  DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = IDEDispatchQueryInformation;
+//  DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = IDEDispatchSetInformation;
+
   UNIMPLEMENTED;
   return(STATUS_SUCCESS);
 }
@@ -278,5 +312,21 @@ ScsiPortValidateRange(IN PVOID HwDeviceExtension,
 {
   return(TRUE);
 }
+
+
+/* internal functions ******/
+
+
+static NTSTATUS STDCALL
+ScsiPortCreateClose(IN PDEVICE_OBJECT DeviceObject,
+		    IN PIRP Irp)
+{
+  Irp->IoStatus.Status = STATUS_SUCCESS;
+  Irp->IoStatus.Information = FILE_OPENED;
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+  return STATUS_SUCCESS;
+}
+
 
 /* EOF */

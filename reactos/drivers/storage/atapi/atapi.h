@@ -72,49 +72,49 @@ extern "C" {
 //  Each macro takes an address of the command port block, and data
 //
 #define IDEReadError(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_ERROR)))
+  (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_ERROR)))
 #define IDEWritePrecomp(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_PRECOMP), (Data)))
+  (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_PRECOMP), (Data)))
 #define IDEReadSectorCount(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_SECTOR_CNT)))
+  (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_SECTOR_CNT)))
 #define IDEWriteSectorCount(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_SECTOR_CNT), (Data)))
+  (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_SECTOR_CNT), (Data)))
 #define IDEReadSectorNum(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_SECTOR_NUM)))
+  (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_SECTOR_NUM)))
 #define IDEWriteSectorNum(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_SECTOR_NUM), (Data)))
+  (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_SECTOR_NUM), (Data)))
 #define IDEReadCylinderLow(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_CYL_LOW)))
+  (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_CYL_LOW)))
 #define IDEWriteCylinderLow(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_CYL_LOW), (Data)))
+  (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_CYL_LOW), (Data)))
 #define IDEReadCylinderHigh(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_CYL_HIGH)))
+  (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_CYL_HIGH)))
 #define IDEWriteCylinderHigh(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_CYL_HIGH), (Data)))
+  (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_CYL_HIGH), (Data)))
 #define IDEReadDriveHead(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_DRV_HEAD)))
+  (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_DRV_HEAD)))
 #define IDEWriteDriveHead(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_DRV_HEAD), (Data)))
+  (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_DRV_HEAD), (Data)))
 #define IDEReadStatus(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_STATUS)))
+  (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_STATUS)))
 #define IDEWriteCommand(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_COMMAND), (Data)))
+  (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_COMMAND), (Data)))
 
 
 //
 //  Data block read and write commands
 //
 #define IDEReadBlock(Address, Buffer, Count) \
-  (READ_PORT_BUFFER_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
+  (ScsiPortReadPortBufferUshort((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
 #define IDEWriteBlock(Address, Buffer, Count) \
-  (WRITE_PORT_BUFFER_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
+  (ScsiPortWritePortBufferUshort((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
 
 //
 //  Access macros for control registers
 //  Each macro takes an address of the control port blank and data
 //
 #define IDEWriteDriveControl(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_DEV_CNTRL), (Data)))
+  (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_DEV_CNTRL), (Data)))
 
 //    IDE_DEVICE_EXTENSION
 //

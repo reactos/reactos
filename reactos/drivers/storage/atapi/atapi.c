@@ -1,4 +1,4 @@
-/* $Id: atapi.c,v 1.2 2001/11/01 00:30:29 ekohl Exp $
+/* $Id: atapi.c,v 1.3 2002/01/14 01:43:02 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -29,6 +29,7 @@
 #include <debug.h>
 
 #include "../include/srb.h"
+#include "../include/ntddscsi.h"
 
 #include "atapi.h"
 #include "partitio.h"
@@ -141,11 +142,14 @@ static int IDEPolledRead(IN WORD Address,
                          OUT BYTE *Buffer);
 static NTSTATUS STDCALL IDEDispatchOpenClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
 static NTSTATUS STDCALL IDEDispatchReadWrite(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
-static NTSTATUS STDCALL IDEDispatchDeviceControl(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
 
 static NTSTATUS STDCALL
-AtapiDispatchScsi(IN PDEVICE_OBJECT pDO,
+AtapiDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 		  IN PIRP Irp);
+
+static NTSTATUS STDCALL
+AtapiDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
+			   IN PIRP Irp);
 
 static VOID STDCALL
 IDEStartIo(IN PDEVICE_OBJECT DeviceObject,
@@ -246,7 +250,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
   DriverObject->MajorFunction[IRP_MJ_CLOSE] = IDEDispatchOpenClose;
   DriverObject->MajorFunction[IRP_MJ_READ] = IDEDispatchReadWrite;
   DriverObject->MajorFunction[IRP_MJ_WRITE] = IDEDispatchReadWrite;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IDEDispatchDeviceControl;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = AtapiDispatchDeviceControl;
   DriverObject->MajorFunction[IRP_MJ_SCSI] = AtapiDispatchScsi;
 
   Status = AtapiFindControllers(DriverObject);
@@ -281,11 +285,12 @@ AtapiFindControllers(IN PDRIVER_OBJECT DriverObject)
     {
       for (Slot = 0; Slot < 256; Slot++)
 	{
-	  Size = HalGetBusData(PCIConfiguration,
-			       Bus,
-			       Slot,
-			       &PciConfig,
-			       sizeof(PCI_COMMON_CONFIG));
+	  Size = ScsiPortGetBusData(NULL,
+				    PCIConfiguration,
+				    Bus,
+				    Slot,
+				    &PciConfig,
+				    sizeof(PCI_COMMON_CONFIG));
 	  if (Size != 0)
 	    {
 	      if ((PciConfig.BaseClass == 0x01) &&
@@ -446,7 +451,7 @@ AtapiFindControllers(IN PDRIVER_OBJECT DriverObject)
     }
 
   DPRINT1("AtapiFindControllers() done!\n");
-for(;;);
+//for(;;);
   return(ReturnedStatus);
 }
 
@@ -538,7 +543,7 @@ AtapiCreateController(IN PDRIVER_OBJECT DriverObject,
       return(Status);
    }
 
-  AtapiFindDrives(ControllerExtension);
+//  AtapiFindDrives(ControllerExtension);
 
   return(STATUS_SUCCESS);
 }
@@ -563,17 +568,20 @@ AtapiCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
   RtlInitUnicodeString(&DeviceName,
 		       NameBuffer);
 
+  DPRINT1("Creating device: %wZ\n", &DeviceName);
+
   /* Create the port device */
   Status = IoCreateDevice(DriverObject,
 			  sizeof(ATAPI_PORT_EXTENSION),
 			  &DeviceName,
-			  FILE_DEVICE_DISK,
+			  FILE_DEVICE_CONTROLLER,
 			  0,
 			  TRUE,
 			  &PortDeviceObject);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("IoCreateDevice call failed\n");
+      DPRINT1("IoCreateDevice call failed! (Status 0x%lX)\n", Status);
+//      DbgPrint("IoCreateDevice call failed\n");
       return(Status);
     }
   DPRINT1("Created device: %wZ\n", &DeviceName);
@@ -628,11 +636,11 @@ AtapiFindDrives(PIDE_CONTROLLER_EXTENSION ControllerExtension)
       /* select drive */
       IDEWriteDriveHead(ControllerExtension->CommandPortBase,
 			IDE_DH_FIXED | (DriveIndex ? IDE_DH_DRV1 : 0));
-      KeStallExecutionProcessor(500);
+      ScsiPortStallExecution(500);
       IDEWriteCylinderHigh(ControllerExtension->CommandPortBase, 0);
       IDEWriteCylinderLow(ControllerExtension->CommandPortBase, 0);
       IDEWriteCommand(ControllerExtension->CommandPortBase, 0x08); /* IDE_COMMAND_ATAPI_RESET */
-//      KeStallExecutionProcessor(1000*1000);
+//      ScsiPortStallExecution(1000*1000);
 //      IDEWriteDriveHead(ControllerExtension->CommandPortBase,
 //			IDE_DH_FIXED | (DriveIndex ? IDE_DH_DRV1 : 0));
 //			IDE_DH_FIXED);
@@ -643,7 +651,7 @@ AtapiFindDrives(PIDE_CONTROLLER_EXTENSION ControllerExtension)
 	    {
 	      break;
 	    }
-	  KeStallExecutionProcessor(150);
+	  ScsiPortStallExecution(150);
 	}
       if (Retries >= IDE_RESET_BUSY_TIMEOUT * 1000)
 	{
@@ -716,7 +724,7 @@ IDEResetController(IN WORD CommandPort,
   IDEWriteDriveControl(ControlPort, IDE_DC_SRST);
 
     //  Wait for min. 25 microseconds
-  KeStallExecutionProcessor(IDE_RESET_PULSE_LENGTH);
+  ScsiPortStallExecution(IDE_RESET_PULSE_LENGTH);
 
     //  Negate drive reset line
   IDEWriteDriveControl(ControlPort, 0);
@@ -728,7 +736,7 @@ IDEResetController(IN WORD CommandPort,
         {
           break;
         }
-      KeStallExecutionProcessor(10);
+      ScsiPortStallExecution(10);
     }
    CHECKPOINT;
   if (Retries >= IDE_RESET_BUSY_TIMEOUT * 1000)
@@ -1201,7 +1209,7 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
 //    int  0 is success, non 0 is an error code
 //
 
-static int 
+static int
 IDEPolledRead(IN WORD Address,
               IN BYTE PreComp,
               IN BYTE SectorCnt,
@@ -1215,16 +1223,15 @@ IDEPolledRead(IN WORD Address,
   BYTE   Status;
   int    RetryCount;
 
-  /*  Wait for STATUS.BUSY to clear  */
+  /*  Wait for STATUS.BUSY and STATUS.DRQ to clear  */
   for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
     {
       Status = IDEReadStatus(Address);
       if (!(Status & IDE_SR_BUSY) && !(Status & IDE_SR_DRQ))
-//      if (!(Status & IDE_SR_BUSY))
         {
           break;
         }
-      KeStallExecutionProcessor(10);
+      ScsiPortStallExecution(10);
     }
   if (RetryCount == IDE_MAX_BUSY_RETRIES)
     {
@@ -1235,16 +1242,15 @@ IDEPolledRead(IN WORD Address,
   /*  Write Drive/Head to select drive  */
   IDEWriteDriveHead(Address, IDE_DH_FIXED | DrvHead);
 
-  /*  Wait for STATUS.BUSY to clear and STATUS.DRQ to clear  */
+  /*  Wait for STATUS.BUSY and STATUS.DRQ to clear  */
   for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
     {
       Status = IDEReadStatus(Address);
-//      if (!(Status & IDE_SR_BUSY) && (Status & IDE_SR_DRDY))
       if (!(Status & IDE_SR_BUSY) && !(Status & IDE_SR_DRQ))
         {
           break;
         }
-      KeStallExecutionProcessor(10);
+      ScsiPortStallExecution(10);
     }
   if (RetryCount >= IDE_MAX_BUSY_RETRIES)
     {
@@ -1283,7 +1289,7 @@ IDEPolledRead(IN WORD Address,
 
   /*  Issue the command  */
   IDEWriteCommand(Address, Command);
-  KeStallExecutionProcessor(50);
+  ScsiPortStallExecution(50);
 
   while (1)
     {
@@ -1293,18 +1299,11 @@ IDEPolledRead(IN WORD Address,
           Status = IDEReadStatus(Address);
           if (!(Status & IDE_SR_BUSY))
             {
-/*
               if (Status & IDE_SR_ERR)
                 {
-                  BYTE  Err = IDEReadError(Address);
                   CHECKPOINT1;
-                  return Err;
+                  return IDE_ER_ABRT;
                 }
-              else if (Status & IDE_SR_DRQ)
-                {
-                  break;
-                }
-*/
               if (Status & IDE_SR_DRQ)
                 {
                   break;
@@ -1315,7 +1314,7 @@ IDEPolledRead(IN WORD Address,
                   return IDE_ER_ABRT;
                 }
             }
-          KeStallExecutionProcessor(10);
+          ScsiPortStallExecution(10);
         }
       if (RetryCount >= IDE_MAX_POLL_RETRIES)
         {
@@ -1470,7 +1469,38 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
   return  STATUS_PENDING;
 }
 
-//    IDEDispatchDeviceControl
+
+//    AtapiDispatchScsi
+//
+//  DESCRIPTION:
+//    Answer requests for SCSI calls
+//
+//  RUN LEVEL:
+//    PASSIVE_LEVEL
+//
+//  ARGUMENTS:
+//    Standard dispatch arguments
+//
+//  RETURNS:
+//    NTSTATUS
+//
+
+static NTSTATUS STDCALL
+AtapiDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
+		  IN PIRP Irp)
+{
+  DPRINT1("AtapiDispatchScsi()\n");
+
+  Irp->IoStatus.Status = STATUS_SUCCESS;
+  Irp->IoStatus.Information = 0;
+
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+  return(STATUS_SUCCESS);
+}
+
+
+//    AtapiDispatchDeviceControl
 //
 //  DESCRIPTION:
 //    Answer requests for device control calls
@@ -1485,185 +1515,56 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
 //    NTSTATUS
 //
 
-static  NTSTATUS STDCALL
-IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
-                         IN PIRP Irp)
-{
-  NTSTATUS  RC;
-  ULONG     ControlCode, InputLength, OutputLength;
-  PIO_STACK_LOCATION     IrpStack;
-  PIDE_DEVICE_EXTENSION  DeviceExtension;
-  PIDE_DEVICE_EXTENSION  DiskDeviceExtension;
-  CCHAR Increment;
-
-  RC = STATUS_SUCCESS;
-  IrpStack = IoGetCurrentIrpStackLocation(Irp);
-  ControlCode = IrpStack->Parameters.DeviceIoControl.IoControlCode;
-  InputLength = IrpStack->Parameters.DeviceIoControl.InputBufferLength;
-  OutputLength = IrpStack->Parameters.DeviceIoControl.OutputBufferLength;
-  DeviceExtension = (PIDE_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-  DiskDeviceExtension = (PIDE_DEVICE_EXTENSION)DeviceExtension->DiskExtension;
-  Increment = IO_NO_INCREMENT;
-
-    //  A huge switch statement in a Windows program?! who would have thought?
-  switch (ControlCode)
-    {
-    case IOCTL_DISK_GET_DRIVE_GEOMETRY:
-      if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength <
-          sizeof(DISK_GEOMETRY))
-        {
-          Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-        }
-      else
-        {
-          PDISK_GEOMETRY Geometry;
-
-          Geometry = (PDISK_GEOMETRY) Irp->AssociatedIrp.SystemBuffer;
-
-          Geometry->MediaType = FixedMedia;
-          Geometry->Cylinders.QuadPart = DiskDeviceExtension->LogicalCylinders;
-          Geometry->TracksPerCylinder = DiskDeviceExtension->SectorsPerLogTrk /
-              DiskDeviceExtension->SectorsPerLogCyl;
-          Geometry->SectorsPerTrack = DiskDeviceExtension->SectorsPerLogTrk;
-          Geometry->BytesPerSector = DiskDeviceExtension->BytesPerSector;
-
-          Irp->IoStatus.Status = STATUS_SUCCESS;
-          Irp->IoStatus.Information = sizeof(DISK_GEOMETRY);
-        }
-      break;
-
-    case IOCTL_DISK_GET_PARTITION_INFO:
-      if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength <
-          sizeof(PARTITION_INFORMATION))
-        {
-          Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-        }
-      else if (DeviceExtension != DiskDeviceExtension)
-        {
-          Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
-        }
-      else
-        {
-          PPARTITION_INFORMATION Buffer;
-
-          Buffer = (PPARTITION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
-          Buffer->PartitionType = DeviceExtension->PartitionInfo.PartitionType;
-          Buffer->BootIndicator = DeviceExtension->PartitionInfo.BootIndicator;
-          Buffer->PartitionNumber = DeviceExtension->PartitionInfo.PartitionNumber;
-          Buffer->StartingOffset = DeviceExtension->PartitionInfo.StartingOffset;
-          Buffer->PartitionLength = DeviceExtension->PartitionInfo.PartitionLength;
-          Buffer->HiddenSectors = DeviceExtension->PartitionInfo.HiddenSectors;
-          Buffer->RecognizedPartition = TRUE;
-          Buffer->RewritePartition = FALSE;
-
-          Irp->IoStatus.Status = STATUS_SUCCESS;
-          Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION);
-        }
-
-    case IOCTL_DISK_SET_PARTITION_INFO:
-      RC = STATUS_INVALID_DEVICE_REQUEST;
-      Irp->IoStatus.Status = RC;
-      Irp->IoStatus.Information = 0;
-      break;
-
-    case IOCTL_DISK_GET_DRIVE_LAYOUT:
-      if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength <
-          sizeof(DRIVE_LAYOUT_INFORMATION))
-        {
-          Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-        }
-      else
-        {
-          PDRIVE_LAYOUT_INFORMATION PartitionList;
-
-          RC = IoReadPartitionTable(DiskDeviceExtension->DeviceObject,
-                                    DiskDeviceExtension->BytesPerSector,
-                                    FALSE,
-                                    &PartitionList);
-          if (!NT_SUCCESS(RC))
-            {
-              Irp->IoStatus.Status = RC;
-            }
-          else
-            {
-              ULONG BufferSize;
-
-              BufferSize = FIELD_OFFSET(DRIVE_LAYOUT_INFORMATION,
-                                        PartitionEntry[0]);
-              BufferSize += PartitionList->PartitionCount * sizeof(PARTITION_INFORMATION);
-
-              if (BufferSize > IrpStack->Parameters.DeviceIoControl.OutputBufferLength)
-                {
-                  Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-                }
-              else
-                {
-                  RtlMoveMemory(Irp->AssociatedIrp.SystemBuffer,
-                                PartitionList,
-                                BufferSize);
-                  Irp->IoStatus.Status = STATUS_SUCCESS;
-                  Irp->IoStatus.Information = BufferSize;
-                }
-              ExFreePool(PartitionList);
-            }
-        }
-        Increment = IO_DISK_INCREMENT;
-        break;
-
-
-    case IOCTL_DISK_SET_DRIVE_LAYOUT:
-    case IOCTL_DISK_VERIFY:
-    case IOCTL_DISK_FORMAT_TRACKS:
-    case IOCTL_DISK_PERFORMANCE:
-    case IOCTL_DISK_IS_WRITABLE:
-    case IOCTL_DISK_LOGGING:
-    case IOCTL_DISK_FORMAT_TRACKS_EX:
-    case IOCTL_DISK_HISTOGRAM_STRUCTURE:
-    case IOCTL_DISK_HISTOGRAM_DATA:
-    case IOCTL_DISK_HISTOGRAM_RESET:
-    case IOCTL_DISK_REQUEST_STRUCTURE:
-    case IOCTL_DISK_REQUEST_DATA:
-
-      //  If we get here, something went wrong.  inform the requestor
-    default:
-      RC = STATUS_INVALID_DEVICE_REQUEST;
-      Irp->IoStatus.Status = RC;
-      Irp->IoStatus.Information = 0;
-      break;
-    }
-
-  IoCompleteRequest(Irp, Increment);
-
-  return  RC;
-}
-
-//    AtapiDispatchScsi
-//
-//  DESCRIPTION:
-//    Answer requests for Scsi calls
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    Standard dispatch arguments
-//
-//  RETURNS:
-//    NTSTATUS
-//
-
 static NTSTATUS STDCALL
-AtapiDispatchScsi(IN PDEVICE_OBJECT pDO,
-		  IN PIRP Irp)
+AtapiDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
+			   IN PIRP Irp)
 {
-  DPRINT1("AtapiDispatchScsi()\n");
+  PIO_STACK_LOCATION Stack;
+
+  DPRINT1("AtapiDispatchDeviceControl()\n");
 
   Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = FILE_OPENED;
+  Irp->IoStatus.Information = 0;
+
+  Stack = IoGetCurrentIrpStackLocation(Irp);
+
+  switch (Stack->Parameters.DeviceIoControl.IoControlCode)
+    {
+      case IOCTL_SCSI_GET_CAPABILITIES:
+	{
+	  PIO_SCSI_CAPABILITIES Capabilities;
+
+	  DPRINT1("  IOCTL_SCSI_GET_CAPABILITIES\n");
+
+	  Capabilities = (PIO_SCSI_CAPABILITIES)(*((PIO_SCSI_CAPABILITIES*)Irp->AssociatedIrp.SystemBuffer));
+	  Capabilities->Length = sizeof(IO_SCSI_CAPABILITIES);
+	  Capabilities->MaximumTransferLength = 65536; /* FIXME: preliminary values!!! */
+	  Capabilities->MaximumPhysicalPages = 1;
+	  Capabilities->SupportedAsynchronousEvents = 0;
+	  Capabilities->AlignmentMask = 0;
+	  Capabilities->TaggedQueuing = FALSE;
+	  Capabilities->AdapterScansDown = FALSE;
+	  Capabilities->AdapterUsesPio = TRUE;
+
+	  Irp->IoStatus.Information = sizeof(IO_SCSI_CAPABILITIES);
+	}
+	break;
+
+      case IOCTL_SCSI_GET_INQUIRY_DATA:
+	DPRINT1("  IOCTL_SCSI_GET_INQUIRY_DATA\n");
+	break;
+
+      default:
+	DPRINT1("  unknown ioctl code: 0x%lX\n",
+		Stack->Parameters.DeviceIoControl.IoControlCode);
+	break;
+    }
+
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-  return STATUS_SUCCESS;
+  return(STATUS_SUCCESS);
 }
+
 
 //    IDEStartIo
 //
@@ -1837,7 +1738,7 @@ IDEStartController(IN OUT PVOID Context)
         {
           break;
         }
-      KeStallExecutionProcessor(10);
+      ScsiPortStallExecution(10);
     }
   DPRINT ("status=%02x\n", Status);
   DPRINT ("waited %ld usecs for busy to clear\n", Retries * 10);
@@ -1873,7 +1774,7 @@ IDEStartController(IN OUT PVOID Context)
         {
           break;
         }
-      KeStallExecutionProcessor(10);
+      ScsiPortStallExecution(10);
     }
   DPRINT ("waited %ld usecs for busy to clear after drive select\n", Retries * 10);
   if (Retries >= IDE_MAX_BUSY_RETRIES)
@@ -1921,7 +1822,7 @@ IDEStartController(IN OUT PVOID Context)
             {
               break;
             }
-          KeStallExecutionProcessor(10);
+          ScsiPortStallExecution(10);
         }
       if (Retries >= IDE_MAX_BUSY_RETRIES)
         {
@@ -1977,7 +1878,7 @@ IDEBeginControllerReset(PIDE_CONTROLLER_EXTENSION ControllerExtension)
         {
           break;
         }
-      KeStallExecutionProcessor(10);
+      ScsiPortStallExecution(10);
     }
   if (Retries == IDE_MAX_RESET_RETRIES)
     {
@@ -2105,7 +2006,7 @@ IDEIsr(IN PKINTERRUPT Interrupt,
               !(IDEReadStatus(ControllerExtension->CommandPortBase) & IDE_SR_DRQ);
               Retries++) 
             {
-              KeStallExecutionProcessor(10);
+              ScsiPortStallExecution(10);
             }
 
             //  Copy the block of data
@@ -2120,7 +2021,7 @@ IDEIsr(IN PKINTERRUPT Interrupt,
                   (IDEReadStatus(ControllerExtension->CommandPortBase) & IDE_SR_BUSY);
                   Retries++) 
                 {
-                  KeStallExecutionProcessor(10);
+                  ScsiPortStallExecution(10);
                 }
 
                 //  Check for data overrun
@@ -2167,7 +2068,7 @@ IDEIsr(IN PKINTERRUPT Interrupt,
                   (IDEReadStatus(ControllerExtension->CommandPortBase) & IDE_SR_BUSY);
                    Retries++) 
                 {
-                  KeStallExecutionProcessor(10);
+                  ScsiPortStallExecution(10);
                 }
 
                 //  Check for data overrun
@@ -2415,4 +2316,4 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
     }
 }
 
-
+/* EOF */
