@@ -1,4 +1,4 @@
-/* $Id: job.c,v 1.2 2004/09/23 18:31:51 weiden Exp $
+/* $Id: job.c,v 1.3 2004/09/23 18:46:10 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -102,6 +102,87 @@ CreateJobObjectW(LPSECURITY_ATTRIBUTES lpJobAttributes,
     return NULL;
   }
   
+  return hJob;
+}
+
+
+/*
+ * @implemented
+ */
+HANDLE
+STDCALL
+OpenJobObjectW(DWORD dwDesiredAccess,
+               BOOL bInheritHandle,
+               LPCWSTR lpName)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING JobName;
+  HANDLE hJob;
+  NTSTATUS Status;
+  
+  if(lpName == NULL)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return NULL;
+  }
+  
+  RtlInitUnicodeString(&JobName, lpName);
+  
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &JobName,
+                             (bInheritHandle ? OBJ_INHERIT : 0),
+                             NULL,
+                             NULL);
+  
+  Status = NtOpenJobObject(&hJob,
+                           dwDesiredAccess,
+                           &ObjectAttributes);
+
+  RtlFreeUnicodeString(&JobName);
+
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return NULL;
+  }
+
+  return hJob;
+}
+
+
+/*
+ * @implemented
+ */
+HANDLE
+STDCALL
+OpenJobObjectA(DWORD dwDesiredAccess,
+               BOOL bInheritHandle,
+               LPCSTR lpName)
+{
+  ANSI_STRING AnsiName;
+  UNICODE_STRING UnicodeName;
+  HANDLE hJob;
+  NTSTATUS Status;
+
+  if(lpName == NULL)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return NULL;
+  }
+  
+  RtlInitAnsiString(&AnsiName, lpName);
+  Status = RtlAnsiStringToUnicodeString(&UnicodeName, &AnsiName, TRUE);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+  
+  hJob = OpenJobObjectW(dwDesiredAccess,
+                        bInheritHandle,
+                        UnicodeName.Buffer);
+
+  RtlFreeUnicodeString(&UnicodeName);
   return hJob;
 }
 
