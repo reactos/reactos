@@ -1881,7 +1881,13 @@ GetDlgItemTextA(
     int nIDDlgItem,
     LPSTR lpString,
     int nMaxCount);
- 
+
+WINBOOL
+STDCALL
+IsDialogMessageA(
+    HWND hDlg,
+    LPMSG lpMsg);
+
 LRESULT
 STDCALL
 SendDlgItemMessageA(
