@@ -551,6 +551,7 @@ MingwModuleHandler::GenerateMacrosAndTargets (
 	GenerateObjectFileTargets ( module, cc, cflagsMacro, nasmflagsMacro );
 
 	vector<string> clean_files;
+	clean_files.push_back ( FixupTargetFilename(module.GetPath()) );
 	clean_files.push_back ( ar_target );
 	GetCleanTargets ( clean_files, module.files, module.ifs );
 
