@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.212 2004/04/13 16:48:45 weiden Exp $
+/* $Id: window.c,v 1.213 2004/04/13 16:55:54 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -426,10 +426,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
     NtGdiDeleteObject(Window->WindowRegion);
   }
   
-  if(Window->WindowName.Buffer)
-  {
-    ExFreePool(Window->WindowName.Buffer);
-  }
+  RtlFreeUnicodeString(&Window->WindowName);
   
   IntReleaseWindowObject(Window);
 
@@ -3752,10 +3749,7 @@ NtUserDefSetText(HWND WindowHandle, PUNICODE_STRING WindowText)
   }
   
   /* FIXME - do this thread-safe! otherwise one could crash here! */
-  if(WindowObject->WindowName.Buffer)
-  {
-    ExFreePool(WindowObject->WindowName.Buffer);
-  }
+  RtlFreeUnicodeString(&WindowObject->WindowName);
   
   WindowObject->WindowName = SafeText;
   
