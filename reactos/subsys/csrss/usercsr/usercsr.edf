@@ -1,9 +1,0 @@
-; $Id: usercsr.edf,v 1.1 2003/10/20 18:02:04 gvg Exp $
-;
-;
-
-LIBRARY usercsr.dll
-
-EXPORTS
-
-UserCsrInitialization=UserCsrInitialization@12
