@@ -1,4 +1,4 @@
-/* $Id: devices.cpp,v 1.4 2003/01/07 16:23:11 robd Exp $
+/* $Id: devices.cpp,v 1.5 2004/01/31 01:29:11 robertk Exp $
 */
 /*
  *
@@ -55,7 +55,7 @@
       165       ERROR_MONITORS_NOT_SUPPORTED 
  
 */
-APIRET STDCALL Dos32DevIOCtl(HFILE hDevice, ULONG category, ULONG function,
+APIRET STDCALL DosDevIOCtl(HFILE hDevice, ULONG category, ULONG function,
         PVOID pParams,ULONG cbParmLenMax,PULONG pcbParmLen,
         PVOID pData,ULONG cbDataLenMax,PULONG pcbDataLen)
 {

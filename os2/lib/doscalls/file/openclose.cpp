@@ -1,4 +1,4 @@
-/* $Id: openclose.cpp,v 1.4 2003/01/07 16:23:11 robd Exp $
+/* $Id: openclose.cpp,v 1.5 2004/01/31 01:29:11 robertk Exp $
 */
 /*
  *
@@ -20,7 +20,12 @@
 #include "ros2.h"
 
 
+<<<<<<< openclose.cpp
+
+APIRET STDCALL  DosOpen(PSZ    pszFileName,  PHFILE pHf,
+=======
 APIRET STDCALL  Dos32Open(PSZ    pszFileName,  PHFILE pHf,
+>>>>>>> 1.4
                             PULONG pulAction,  ULONG  cbFile,
                             ULONG  ulAttribute,  ULONG  fsOpenFlags,
                             ULONG  fsOpenMode,  PVOID reserved )  //ULONGPEAOP2 peaop2)
@@ -123,7 +128,7 @@ IN ULONG EaLength
 
 
 /* close a Handle. seems finished */
-APIRET STDCALL  Dos32Close(HFILE hFile)
+APIRET STDCALL  DosClose(HFILE hFile)
 {
 	NT::NTSTATUS   nErrCode;
 	nErrCode = NT::ZwClose( (NT::HANDLE)hFile );
@@ -143,7 +148,7 @@ APIRET STDCALL  Dos32Close(HFILE hFile)
 
 
 
-APIRET STDCALL  Dos32Read(HFILE hFile, PVOID pBuffer,
+APIRET STDCALL  DosRead(HFILE hFile, PVOID pBuffer,
                             ULONG cbRead, PULONG pcbActual)
 {
 	NT::NTSTATUS        nErrCode;
@@ -166,7 +171,7 @@ APIRET STDCALL  Dos32Read(HFILE hFile, PVOID pBuffer,
 }
 
 /* Generic write to a stream given by hFile */
-APIRET STDCALL  Dos32Write(HFILE hFile, PVOID pBuffer,
+APIRET STDCALL  DosWrite(HFILE hFile, PVOID pBuffer,
                              ULONG cbWrite, PULONG pcbActual)
 { 
 	NT::NTSTATUS         nErrCode;

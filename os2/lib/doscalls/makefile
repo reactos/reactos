@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 2003/01/07 16:23:11 robd Exp $
+# $Id: makefile,v 1.7 2004/01/31 01:29:11 robertk Exp $
 
 PATH_TO_TOP = ../../../reactos
 
@@ -10,7 +10,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = doscalls
 
-TARGET_BASE = 0x60000000
+TARGET_BASE = 0x68E00000
 
 TARGET_CPPFLAGS =\
 	-Wall \
@@ -20,6 +20,8 @@ TARGET_CPPFLAGS =\
 #	-fno-builtin \
 #	-nostdinc \
 #	-nostdlib \
+
+TARGET_ENTRY = _DllMain@12
 
 TARGET_LFLAGS = -nostartfiles
 

@@ -1,4 +1,4 @@
-/* $Id: ioctl_async.cpp,v 1.1 2002/09/04 22:19:47 robertk Exp $
+/* $Id: ioctl_async.cpp,v 1.2 2004/01/31 01:29:11 robertk Exp $
 */
 /*
  *
@@ -20,8 +20,10 @@
 	function implies that it is only called, if the
 	cathegory was 0x01. 
 	All other parameters are the same as DosIoCtl. 
+
+	FIXME: implement me
 */
-void EvaluateAsyncIoCtl( HFILE hDevice, ULONG function,
+APIRET EvaluateAsyncIoCtl( HFILE hDevice, ULONG function,
 		PVOID pParams,  ULONG cbParmLenMax, PULONG pcbParmLen,
 		PVOID pData, ULONG cbDataLenMax, PULONG pcbDataLen)
 {
@@ -36,60 +38,55 @@ void EvaluateAsyncIoCtl( HFILE hDevice, ULONG function,
 		break;
 		
 	case 0x42: // Set Line Characteristics (stop, parity, data bits)
+		return ERROR_INVALID_PARAMETER;	// example
 		break;
-/**
-pppp
-|----------+--------------------------------------------------|
-|   43h    |Extended Set Bit Rate                             |
-|----------+--------------------------------------------------|
-|   44h    |Transmit Byte Immediate                           |
-|----------+--------------------------------------------------|
-|   45h    |Set Break OFF                                     |
-|----------+--------------------------------------------------|
-|   46h    |Set Modem Control Signals                         |
-|----------+--------------------------------------------------|
-|   47h    |Behave as if XOFF Received (stop transmit)        |
-|----------+--------------------------------------------------|
-|   48h    |Behave as if XON Received (start transmit)        |
-|----------+--------------------------------------------------|
-|   49h    |Reserved                                          |
-|----------+--------------------------------------------------|
-|   4Bh    |Set Break ON                                      |
-|----------+--------------------------------------------------|
-|   53h    |Set Device Control Block (DCB) Parameters         |
-|----------+--------------------------------------------------|
-|   54h    |Set Enhanced Mode Parameters                      |
-|----------+--------------------------------------------------|
-|   61h    |Query Current Bit Rate                            |
-|----------+--------------------------------------------------|
-|   62h    |Query Line Characteristics                        |
-|----------+--------------------------------------------------|
-|   63h    |Extended Query Bit Rate                           |
-|----------+--------------------------------------------------|
-|   64h    |Query COM Status                                  |
-|----------+--------------------------------------------------|
-|   65h    |Query Transmit Data Status                        |
-|----------+--------------------------------------------------|
-|   66h    |Query Modem Control Output Signals                |
-|----------+--------------------------------------------------|
-|   67h    |Query Current Modem Input Signals                 |
-|----------+--------------------------------------------------|
-|   68h    |Query Number of Characters in Receive Queue       |
-|----------+--------------------------------------------------|
-|   69h    |Query Number of Characters in Transmit Queue      |
-|----------+--------------------------------------------------|
-|   6Dh    |Query COM Error                                   |
-|----------+--------------------------------------------------|
-|   72h    |Query COM Event Information                       |
-|----------+--------------------------------------------------|
-|   73h    |Query Device Control Block (DCB) Parameters       |
-|----------+--------------------------------------------------|
-|   74h    |Query Enhanced Mode Parameters                    |
-+-------------------------------------------------------------+
-pppp */
-
-
+	case 0x43: // Extended Set Bit Rate                           .
+		break;
+	case 0x44: // Transmit Byte Immediate                         .
+		break;
+	case 0x45: // Set Break OFF                                   .
+		break;
+	case 0x46: // Set Modem Control Signals                       .
+		break;
+	case 0x47: // Behave as if XOFF Received (stop transmit)      .
+		break;
+	case 0x48: // Behave as if XON Received (start transmit)      .
+		break;
+	case 0x49: // Reserved                                        .
+		break;
+	case 0x53: // Set Device Control Block (DCB) Parameters       .
+		break;
+	case 0x54: // Set Enhanced Mode Parameters                    .
+		break;
+	case 0x61: // Query Current Bit Rate                          .
+		break;
+	case 0x62: // Query Line Characteristics                      .
+		break;
+	case 0x63: // Extended Query Bit Rate                         .
+		break;
+	case 0x64: // Query COM Status                                .
+		break;
+	case 0x65: // Query Transmit Data Status                      .
+		break;
+	case 0x66: // Query Modem Control Output Signals              .
+		break;
+	case 0x67: // Query Current Modem Input Signals               .
+		break;
+	case 0x68: // Query Number of Characters in Receive Queue     .
+		break;
+	case 0x69: // Query Number of Characters in Transmit Queue    .
+		break;
+	case 0x72: // Query COM Event Information                     .
+		break;
+	case 0x73: // Query Device Control Block (DCB) Parameters     .
+		break;
+	case 0x74: // Query Enhanced Mode Parameters                  .
+		break;
+	default:
+		return ERROR_INVALID_FUNCTION;
+		break;
 	}
+	return ERROR_INVALID_FUNCTION;
 }
 
 
