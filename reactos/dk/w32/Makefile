@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2003/01/07 18:20:34 robd Exp $
+# $Id: Makefile,v 1.6 2003/09/15 02:48:15 vizzini Exp $
 #
 # PROJECT    : ReactOS Operating System
 # FILE       : reactos/dk/w32/Makefile
@@ -54,7 +54,8 @@ MODULES_CRT=\
 	$(TARGET_FOLDER_LIB)/msvcrt.a
 
 MODULES_MISC=\
-	$(TARGET_FOLDER_LIB)/version.a
+	$(TARGET_FOLDER_LIB)/version.a\
+	$(TARGET_FOLDER_LIB)/winmm.a
 
 MODULES_WINE=\
 	$(TARGET_FOLDER_LIB)/libwine.a\
@@ -129,11 +130,11 @@ $(TARGET_FOLDER_LIB)/shell32.a: $(PATH_TO_TOP)/lib/shell32/shell32.def
 		-D shell32.dll\
 		-d $(PATH_TO_TOP)/lib/shell32/shell32.def
 
-$(TARGET_FOLDER_LIB)/comctl32.a: $(PATH_TO_TOP)/../wine/dlls/comctl32/comctl32.def
+$(TARGET_FOLDER_LIB)/comctl32.a: $(PATH_TO_TOP)/lib/comctl32/comctl32.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D comctl32.dll\
-		-d $(PATH_TO_TOP)/../wine/dlls/comctl32/comctl32.def
+		-d $(PATH_TO_TOP)/lib/comctl32/comctl32.def
 
 
 $(TARGET_FOLDER_LIB)/$(SHELL32_ALIAS).a: $(PATH_TO_TOP)/lib/shell32/shell32.def
@@ -230,6 +231,12 @@ $(TARGET_FOLDER_LIB)/version.a: $(PATH_TO_TOP)/lib/version/version.def
 		$(DTFLAGS)\
 		-D version.dll\
 		-d $(PATH_TO_TOP)/lib/version/version.def
+
+$(TARGET_FOLDER_LIB)/winmm.a: $(PATH_TO_TOP)/lib/winmm/winmm.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D winmm.dll\
+		-d $(PATH_TO_TOP)/lib/winmm/winmm.def
 
 # --- WINE ---
 

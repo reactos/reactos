@@ -13,7 +13,4 @@ typedef short     INT16;
 #define snprintf _snprintf
 #define strcasecmp _stricmp
 
-/* Wine debugging porting */
-#include "debugtools.h"
-
 #endif /* _ROS_WINE_PORT */

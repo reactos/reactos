@@ -1,17 +1,8 @@
 #ifndef __WINE_DEBUGTOOLS_H
 #define __WINE_DEBUGTOOLS_H
 
-#ifndef __NTDLL__
-
 #include <stdarg.h>
-#include "config.h"
-#include "windef.h"
-
-#else
-
-#include <windows.h>
-
-#endif /* __NTDLL__ */
+#include <wchar.h>
 
 struct _GUID;
 
@@ -107,10 +98,6 @@ inline static const char *debugres_w( const WCHAR *s ) { return wine_dbgstr_wn( 
     char __wine_dbch_##ch[1];
 #define DEFAULT_DEBUG_CHANNEL(ch) \
     char __wine_dbch_##ch[1]; static char * const __wine_dbch___default = __wine_dbch_##ch
-
-#define WINE_DEFAULT_DEBUG_CHANNEL(ch) DEFAULT_DEBUG_CHANNEL(ch)
-
-#define WINE_DEFAULT_DEBUG_CHANNEL(ch) DEFAULT_DEBUG_CHANNEL(ch)
 
 #define WINE_DEFAULT_DEBUG_CHANNEL(ch) DEFAULT_DEBUG_CHANNEL(ch)
 

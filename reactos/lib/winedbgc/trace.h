@@ -47,9 +47,6 @@ void Assert(void* assert, TCHAR* file, int line, void* msg);
 void Trace(TCHAR* lpszFormat, ...);
 void Trace1(int code, TCHAR* lpszFormat, ...);
 
-#define TRACE  Trace
-#define TRACE0 Trace
-
 #else   // _DEBUG
 
 #ifndef ASSERT
@@ -57,14 +54,8 @@ void Trace1(int code, TCHAR* lpszFormat, ...);
 #define ASSERTMSG(exp, msg)
 #endif
 
-//#define TRACE0 TRACE
-//#define TRACE1 TRACE
-
 void Assert(void* assert, TCHAR* file, int line, void* msg);
 void Trace(TCHAR* lpszFormat, ...);
-
-#define TRACE 0 ? (void)0 : Trace
-
 
 #endif // !_DEBUG
 

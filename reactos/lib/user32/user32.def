@@ -183,7 +183,7 @@ DrawCaptionTempW@28
 DrawEdge@16
 DrawFocusRect@8
 DrawFrame@16
-DrawFrameControl
+DrawFrameControl@16
 DrawIcon@16
 DrawIconEx@36
 DrawMenuBar@4

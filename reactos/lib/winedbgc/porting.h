@@ -42,7 +42,9 @@ long interlocked_xchg_add(long *dest, long incr);
 #define snprintf _snprintf
 #define strcasecmp _stricmp
 
+#ifdef __USE_W32API
 #define SLOWORD(l) ((SHORT)(LONG)(l))
 #define SHIWORD(l) ((SHORT)((LONG)(l) >> 16))
+#endif
 
 #endif  /* __PORTING_WINE2ROS_H */
