@@ -240,7 +240,7 @@ FONT 8, "Ms Sans Serif"
     LTEXT           "Емульовано",     stc11, 60, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Місце:",         stc10, 16, 60,  36,10, SS_NOPREFIX
     LTEXT           "Емульовано", stc14, 60, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Примітка:",       stc13,  16, 72,  36,10, SS_NOPREFIX
+    LTEXT           "Примітка:",    stc9,  16, 72,  36,10, SS_NOPREFIX
     LTEXT           "Емульовано",   stc13, 60, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "Копії",         grp2, 160, 92, 120,64, WS_GROUP

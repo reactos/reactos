@@ -1622,11 +1622,22 @@ static LRESULT PRINTDLG_WMCommandW(HWND hDlg, WPARAM wParam,
         if(HIWORD(wParam) == EN_CHANGE) {
 	    INT copies = GetDlgItemInt(hDlg, edt3, NULL, FALSE);
 	    if(copies <= 1)
+            {
+                CheckDlgButton(hDlg, chx2, BST_UNCHECKED);
+                SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, 
+				    (WPARAM) IMAGE_ICON, 0);
 	        EnableWindow(GetDlgItem(hDlg, chx2), FALSE);
+            }
 	    else
-	        EnableWindow(GetDlgItem(hDlg, chx2), TRUE);
-	}
-	break;
+            {
+                EnableWindow(GetDlgItem(hDlg, chx2), TRUE);
+                
+                SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, 
+                                    (WPARAM) IMAGE_ICON,
+                                    (LPARAM)PrintStructures->hNoCollateIcon);
+             }
+        }
+        break;
 
      case psh1:                       /* Print Setup */
 	{
@@ -1638,7 +1649,7 @@ static LRESULT PRINTDLG_WMCommandW(HWND hDlg, WPARAM wParam,
          HANDLE hPrinter;
          WCHAR  PrinterName[256];
 
-         GetDlgItemTextW(hDlg, PrinterComboID, PrinterName, 255);
+         if (!GetDlgItemTextW(hDlg, PrinterComboID, PrinterName, 255)) break;
          if (!OpenPrinterW(PrinterName, &hPrinter, NULL)) {
 	     FIXME(" Call to OpenPrinter did not succeed!\n");
 	     break;
