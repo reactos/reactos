@@ -1,4 +1,4 @@
-/* $Id: fiber.S,v 1.2 2003/06/09 22:39:48 hyperion Exp $
+/* $Id: fiber.S,v 1.3 2004/03/07 04:00:39 hyperion Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS system libraries
@@ -78,7 +78,7 @@ l_NoFloatSave:
  movl 0x2C(%eax),  %edi        /* edi = Fiber->Edi */
 
  testb $1, 0x14(%eax)
- jz l_NoFloatSave
+ jz l_NoFloatRestore
  
  /* restore the floating point context */
  /* TODO */
