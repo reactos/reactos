@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.60 2003/03/17 23:05:07 gdalsnes Exp $
+/* $Id: utils.c,v 1.61 2003/04/18 08:28:31 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -417,7 +417,8 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
                                   DLL_PROCESS_ATTACH,
                                   NULL))
             {
-              DPRINT("NTDLL.LDR: DLL \"%wZ\" failed to initialize\n",
+	      /* Do this as a DPRINT1 for now, until clean up and fail implemented */
+              DPRINT1("NTDLL.LDR: DLL \"%wZ\" failed to initialize\n",
                      &Module->BaseDllName);
               /* FIXME: should clean up and fail */
             }
