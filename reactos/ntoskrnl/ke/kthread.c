@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.60 2004/12/12 17:36:00 hbirr Exp $
+/* $Id: kthread.c,v 1.61 2004/12/12 23:18:55 navaraf Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -312,6 +312,8 @@ KeRevertToUserAffinityThread(VOID)
 {
 	PKTHREAD CurrentThread;
 	KIRQL oldIrql;
+
+        oldIrql = KeAcquireDispatcherDatabaseLock();
 
 	CurrentThread = KeGetCurrentThread();
 
