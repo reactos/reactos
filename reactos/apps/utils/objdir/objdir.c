@@ -1,4 +1,4 @@
-/* $Id: objdir.c,v 1.3 2000/05/13 14:56:46 ea Exp $
+/* $Id: objdir.c,v 1.4 2000/08/08 17:42:33 ekohl Exp $
  *
  * DESCRIPTION: Object Manager Simple Explorer
  * PROGRAMMER:  David Welch
@@ -48,7 +48,7 @@ StatusToName (NTSTATUS Status)
 		case STATUS_PATH_SYNTAX_BAD:
 			return "STATUS_PATH_SYNTAX_BAD";
 	}
-	wsprintf (RawValue, "0x%08x", Status);
+	sprintf (RawValue, "0x%08lx", Status);
 	return (const char *) RawValue;
 }
 
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
 	 */
 	Status = NtQueryDirectoryObject (
 			DirectoryHandle,
-			& DirectoryEntry,
+			(POBJDIR_INFORMATION)& DirectoryEntry,
 			sizeof DirectoryEntry,
 			TRUE,
 			TRUE,
@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
 			);
 		Status = NtQueryDirectoryObject (
 				DirectoryHandle,
-				& DirectoryEntry,
+				(POBJDIR_INFORMATION)& DirectoryEntry,
 				sizeof DirectoryEntry,
 				TRUE,
 				FALSE,
