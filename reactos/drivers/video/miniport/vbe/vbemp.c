@@ -819,7 +819,7 @@ VBEQueryMode(
    VideoMode->ScreenStride = VBEMode->BytesPerScanLine;
    VideoMode->NumberOfPlanes = VBEMode->NumberOfPlanes;
    VideoMode->BitsPerPlane = VBEMode->BitsPerPixel / VBEMode->NumberOfPlanes;
-   VideoMode->Frequency = 0; /* FIXME */
+   VideoMode->Frequency = 1;
    VideoMode->XMillimeter = 0; /* FIXME */
    VideoMode->YMillimeter = 0; /* FIXME */
    if (VBEMode->BitsPerPixel > 8)
