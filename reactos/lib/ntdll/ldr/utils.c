@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.13 1999/11/02 08:55:38 dwelch Exp $
+/* $Id: utils.c,v 1.14 1999/11/14 12:59:53 ariadne Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -927,6 +927,166 @@ NTSTATUS LdrUnloadDll(PDLL Dll)
 	ZwClose(Dll->SectionHandle);
    
 	return Status;
+}
+
+static IMAGE_RESOURCE_DIRECTORY_ENTRY * LdrGetNextEntry(IMAGE_RESOURCE_DIRECTORY *ResourceDir, LPWSTR ResourceName, ULONG Offset)
+{
+
+
+	WORD    NumberOfNamedEntries;
+    	WORD    NumberOfIdEntries;
+	WORD    Entries;
+	ULONG   Length;
+
+	if ( (((ULONG)ResourceDir) & 0xF0000000) != 0 ) {
+		return (IMAGE_RESOURCE_DIRECTORY_ENTRY *)NULL;
+	}
+
+
+	NumberOfIdEntries = ResourceDir->NumberOfIdEntries;
+	NumberOfNamedEntries = ResourceDir->NumberOfNamedEntries;
+	if ( (	NumberOfIdEntries + NumberOfNamedEntries) == 0) {
+		return &ResourceDir->DirectoryEntries[0];
+	}
+
+	if ( HIWORD(ResourceName) != 0 ) {
+		Length = wcslen(ResourceName);
+		Entries = ResourceDir->NumberOfNamedEntries;
+		do {
+		        IMAGE_RESOURCE_DIR_STRING_U *DirString;
+
+			Entries--;
+			DirString =  (IMAGE_RESOURCE_DIR_STRING_U *)(((ULONG)ResourceDir->DirectoryEntries[Entries].Name &  (~0xF0000000)) + Offset);
+			
+			if ( DirString->Length == Length && wcscmp(DirString->NameString, ResourceName ) == 0 ) {
+				return  &ResourceDir->DirectoryEntries[Entries];
+			}
+		} while (Entries > 0);
+	}
+	else {
+			Entries = ResourceDir->NumberOfIdEntries + ResourceDir->NumberOfNamedEntries;
+			do {
+				Entries--;
+
+				if ( (LPWSTR)ResourceDir->DirectoryEntries[Entries].Name == ResourceName ) {
+					return &ResourceDir->DirectoryEntries[Entries];
+				}
+			} while (Entries > ResourceDir->NumberOfNamedEntries);
+		
+	}
+
+	
+
+	return NULL;
+		
+}
+
+
+
+NTSTATUS LdrFindResource_U(DLL *Dll, IMAGE_RESOURCE_DATA_ENTRY **ResourceDataEntry,LPWSTR ResourceName, ULONG ResourceType,ULONG Language)
+{
+	IMAGE_RESOURCE_DIRECTORY *ResourceTypeDir;
+	IMAGE_RESOURCE_DIRECTORY *ResourceNameDir;
+	IMAGE_RESOURCE_DIRECTORY *ResourceLangDir;
+
+	IMAGE_RESOURCE_DIRECTORY_ENTRY *ResourceTypeDirEntry;
+	IMAGE_RESOURCE_DIRECTORY_ENTRY *ResourceNameDirEntry;
+	IMAGE_RESOURCE_DIRECTORY_ENTRY *ResourceLangDirEntry;
+
+	PIMAGE_OPTIONAL_HEADER	OptionalHeader;
+
+
+
+	ULONG Offset;
+		
+	OptionalHeader = & Dll->Headers->OptionalHeader;
+	ResourceTypeDir = (PIMAGE_RESOURCE_DIRECTORY)
+		OptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress;
+	ResourceTypeDir = (PIMAGE_RESOURCE_DIRECTORY)
+		((ULONG)ResourceTypeDir + (ULONG)Dll->BaseAddress);
+
+
+	Offset = (ULONG)ResourceTypeDir;
+
+	ResourceTypeDirEntry = LdrGetNextEntry(ResourceTypeDir, (LPWSTR)ResourceType, Offset);
+	
+	if ( ResourceTypeDirEntry != NULL ) {
+		ResourceNameDir = (IMAGE_RESOURCE_DIRECTORY*)((ResourceTypeDirEntry->OffsetToData & (~0xF0000000)) + Offset);
+
+		ResourceNameDirEntry = LdrGetNextEntry(ResourceNameDir, ResourceName, Offset);
+
+		if ( ResourceNameDirEntry != NULL ) {
+		
+			ResourceLangDir = (IMAGE_RESOURCE_DIRECTORY*)((ResourceNameDirEntry->OffsetToData & (~0xF0000000)) + Offset);
+
+			ResourceLangDirEntry = LdrGetNextEntry(ResourceLangDir, (LPWSTR)Language, Offset);
+			if ( ResourceLangDirEntry != NULL ) {
+
+				*ResourceDataEntry = (IMAGE_RESOURCE_DATA_ENTRY *)(ResourceLangDirEntry->OffsetToData +
+									(ULONG)ResourceTypeDir);
+				return STATUS_SUCCESS;
+			}
+			else {
+				return -1;
+			}
+		}	
+		else {
+				return -1;	
+		}
+			
+	}
+
+	return -1;
+
+}
+
+NTSTATUS LdrAccessResource(DLL *Dll, IMAGE_RESOURCE_DATA_ENTRY *ResourceDataEntry, void **Data)
+{
+
+
+
+
+	PIMAGE_SECTION_HEADER	Sections;
+	int i;
+
+	if ( Data == NULL )
+		return -1;
+
+	if ( ResourceDataEntry == NULL )
+		return -1;
+
+	if ( Dll == NULL )
+		return -1;
+
+
+	Sections = (PIMAGE_SECTION_HEADER) SECHDROFFSET(Dll->BaseAddress);
+
+	for (	i = 0;
+		(i < Dll->Headers->FileHeader.NumberOfSections);
+		i++
+		)
+	{
+		
+					
+	        if (Sections[i].VirtualAddress <= ResourceDataEntry->OffsetToData 
+			&& Sections[i].VirtualAddress + Sections[i].Misc.VirtualSize > ResourceDataEntry->OffsetToData )
+			break;
+
+
+	}
+	if ( i == Dll->Headers->FileHeader.NumberOfSections ) {
+		*Data = NULL;
+		return -1;
+	}
+
+
+
+	*Data = (void *)(((ULONG)Dll->BaseAddress + ResourceDataEntry->OffsetToData - (ULONG)Sections[i].VirtualAddress) +
+				   (ULONG)Sections[i].PointerToRawData);
+
+
+	return STATUS_SUCCESS;
+
 }
 
 /* EOF */

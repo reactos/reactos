@@ -221,6 +221,16 @@ typedef struct _IMAGE_IMPORT_BY_NAME {
 #define IMAGE_ORDINAL(Ordinal) (Ordinal & 0xffff)
 
 
+// Predefined resource types ... there may be some more, but I don't have
+//                               the information yet.  .....sang cho.....
+
+#define    RT_NEWRESOURCE   0x2000
+#define    RT_ERROR         0x7fff
+#define    NEWBITMAP        (RT_BITMAP|RT_NEWRESOURCE)
+#define    NEWMENU          (RT_MENU|RT_NEWRESOURCE)
+#define    NEWDIALOG        (RT_DIALOG|RT_NEWRESOURCE)
+
+
 //
 // Resource Format.
 //
@@ -239,28 +249,6 @@ typedef struct _IMAGE_IMPORT_BY_NAME {
 // This is consistant with the syntax of the .RC file and the .RES file.
 //
 
-// Predefined resource types ... there may be some more, but I don't have
-//                               the information yet.  .....sang cho.....
-
-#define    RT_NEWRESOURCE   0x2000
-#define    RT_ERROR         0x7fff
-#define    NEWBITMAP        (RT_BITMAP|RT_NEWRESOURCE)
-#define    NEWMENU          (RT_MENU|RT_NEWRESOURCE)
-#define    NEWDIALOG        (RT_DIALOG|RT_NEWRESOURCE)
-
-
-typedef struct _IMAGE_RESOURCE_DIRECTORY {
-    DWORD   Characteristics;
-    DWORD   TimeDateStamp;
-    WORD    MajorVersion;
-    WORD    MinorVersion;
-    WORD    NumberOfNamedEntries;
-    WORD    NumberOfIdEntries;
-//  IMAGE_RESOURCE_DIRECTORY_ENTRY DirectoryEntries[1];
-} IMAGE_RESOURCE_DIRECTORY, *PIMAGE_RESOURCE_DIRECTORY;
-
-#define IMAGE_RESOURCE_NAME_IS_STRING        0x80000000
-#define IMAGE_RESOURCE_DATA_IS_DIRECTORY     0x80000000
 
 //
 // Each directory contains the 32-bit Name of the entry and an offset,
@@ -279,8 +267,24 @@ typedef struct _IMAGE_RESOURCE_DIRECTORY {
 
 typedef struct _IMAGE_RESOURCE_DIRECTORY_ENTRY {
     DWORD    Name;
-	DWORD    OffsetToData;
+    DWORD    OffsetToData;
 } IMAGE_RESOURCE_DIRECTORY_ENTRY, *PIMAGE_RESOURCE_DIRECTORY_ENTRY;
+
+
+typedef struct _IMAGE_RESOURCE_DIRECTORY {
+    DWORD   Characteristics;
+    DWORD   TimeDateStamp;
+    WORD    MajorVersion;
+    WORD    MinorVersion;
+    WORD    NumberOfNamedEntries;
+    WORD    NumberOfIdEntries;
+    IMAGE_RESOURCE_DIRECTORY_ENTRY DirectoryEntries[0];
+} IMAGE_RESOURCE_DIRECTORY, *PIMAGE_RESOURCE_DIRECTORY;
+
+#define IMAGE_RESOURCE_NAME_IS_STRING        0x80000000
+#define IMAGE_RESOURCE_DATA_IS_DIRECTORY     0x80000000
+
+
 
 //
 // For resource directory entries that have actual string names, the Name

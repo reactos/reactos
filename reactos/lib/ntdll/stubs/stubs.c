@@ -1,9 +1,11 @@
 #include <ddk/ntddk.h>
 
-#define STUB(x) void x(void) { UNICODE_STRING UnicodeString; \
-                               RtlInitUnicodeString(&UnicodeString,\
-                               L"NTDLL: Stub for "#x"\n"); \
-                               NtDisplayString(&UnicodeString); }
+#define STUB(x) void x(void) { \
+				UNICODE_STRING UnicodeString; \
+                                RtlInitUnicodeString(&UnicodeString,\
+                                L"NTDLL: Stub for "#x"\n"); \
+                                NtDisplayString(&UnicodeString); }
+
 
 // ?Allocate@CBufferAllocator@@UAEPAXK@Z
 STUB(PropertyLengthAsVariant)
@@ -36,12 +38,12 @@ STUB(KiRaiseUserExceptionDispatcher)
 STUB(KiUserApcDispatcher)
 STUB(KiUserCallbackDispatcher)
 STUB(KiUserExceptionDispatcher)
-STUB(LdrAccessResource)
+
 STUB(LdrDisableThreadCalloutsForDll)
 STUB(LdrEnumResources)
 STUB(LdrFindEntryForAddress)
 STUB(LdrFindResourceDirectory_U)
-STUB(LdrFindResource_U)
+
 STUB(LdrGetDllHandle)
 STUB(LdrGetProcedureAddress)
 STUB(LdrInitializeThunk)
