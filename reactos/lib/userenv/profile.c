@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: profile.c,v 1.15 2004/10/05 13:39:42 ekohl Exp $
+/* $Id: profile.c,v 1.16 2004/11/08 21:23:34 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -604,9 +604,9 @@ GetProfilesDirectoryW (LPWSTR lpProfilesDir,
   dwLength = wcslen (szProfilesPath);
   if (lpProfilesDir != NULL)
     {
-      if (*lpcchSize < dwLength)
+      if (*lpcchSize < dwLength / sizeof(WCHAR))
 	{
-	  *lpcchSize = dwLength;
+	  *lpcchSize = dwLength / sizeof(WCHAR);
 	  SetLastError (ERROR_INSUFFICIENT_BUFFER);
 	  return FALSE;
 	}
@@ -789,7 +789,7 @@ LoadUserProfileW (HANDLE hToken,
 {
   WCHAR szUserHivePath[MAX_PATH];
   UNICODE_STRING SidString;
-  DWORD dwLength;
+  DWORD dwLength = sizeof(szUserHivePath) / sizeof(szUserHivePath[0]);
 
   DPRINT ("LoadUserProfileW() called\n");
 
