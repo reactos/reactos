@@ -34,6 +34,7 @@
 #include "column.h"
 #include "proclist.h"
 #include "dbgchnl.h"
+#include "endproc.h"
 #include <ctype.h>
 
 HWND hProcessPage;                        /* Process List Property Page */
@@ -110,6 +111,12 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_COMMAND:
+        /* Handle the button clicks */
+        switch (LOWORD(wParam))
+        {
+                case IDC_ENDPROCESS:
+                        ProcessPage_OnEndProcess();
+        }
         break;
 
     case WM_SIZE:
