@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Messages
@@ -342,16 +341,23 @@ int STDCALL ToUnicodeEx( UINT wVirtKey,
 			 HKL dwhkl ) {
   int ToUnicodeResult = 0;
 
-  IntLockQueueState;
-  ToUnicodeResult = ToUnicodeInner( wVirtKey,
-				    wScanCode,
-				    lpKeyState,
-				    pwszBuff,
-				    cchBuff,
-				    wFlags,
-				    PsGetWin32Thread() ? 
-				    PsGetWin32Thread()->KeyboardLayout : 0 );
-  IntUnLockQueueState;
+  if (0 == (lpKeyState[wVirtKey] & KS_DOWN_BIT))
+    {
+      ToUnicodeResult = 0;
+    }
+  else
+    {
+      IntLockQueueState;
+      ToUnicodeResult = ToUnicodeInner( wVirtKey,
+				        wScanCode,
+				        lpKeyState,
+				        pwszBuff,
+				        cchBuff,
+				        wFlags,
+				        PsGetWin32Thread() ? 
+				        PsGetWin32Thread()->KeyboardLayout : 0 );
+      IntUnLockQueueState;
+    }
 
   return ToUnicodeResult;
 }

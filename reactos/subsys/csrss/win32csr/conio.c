@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * reactos/subsys/csrss/win32csr/conio.c
  *
  * Console I/O functions
@@ -1127,7 +1126,7 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
   if (0 == (Console->Mode & ENABLE_LINE_INPUT)
       || Console->EarlyReturn
       || ('\n' == KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar
-          && ! KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown))
+          && KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown))
     {
       if ('\n' == KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar)
         {
