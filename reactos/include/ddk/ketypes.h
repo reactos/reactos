@@ -21,6 +21,8 @@ struct _KMUTANT;
 
 typedef LONG KPRIORITY;
 
+typedef LONG FLONG;
+
 typedef VOID STDCALL_FUNC
 (*PKBUGCHECK_CALLBACK_ROUTINE)(PVOID Buffer, ULONG Length);
 
@@ -222,5 +224,7 @@ typedef struct _KSYSTEM_TIME
 typedef struct _EPROCESS EPROCESS, *PEPROCESS;
 
 typedef HANDLE HSEMAPHORE;
+
+typedef HANDLE HDRVOBJ;
 
 #endif /* __INCLUDE_DDK_KETYPES_H */
