@@ -329,8 +329,8 @@ LPITEMIDLIST ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwn
 {
 	static DynamicFct<LPITEMIDLIST(WINAPI*)(LPCITEMIDLIST, LPCITEMIDLIST)> ILCombine(_T("SHELL32"), 25);
 
-	if (ILCombine.found())
-		return ILCombine(parent_pidl, _p);
+	if (ILCombine)
+		return (*ILCombine)(parent_pidl, _p);
 
 	 // create a new item id list with _p append behind parent_pidl
 	int l1 = _malloc->GetSize((void*)parent_pidl) - sizeof(USHORT/*SHITEMID::cb*/);
