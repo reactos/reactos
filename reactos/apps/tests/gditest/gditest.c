@@ -97,7 +97,7 @@ int main (void)
   LineTo(DC24, 100, 110);
   BitBlt(Desktop, 200, 200, 110, 120, DC24, 0, 0, SRCCOPY);
 
-  Sleep( 10000 );
+  Sleep( 990000 ); // fixme delay only 10000 (for 10 seconds)
   // Free up everything
   DeleteDC(Desktop);
   DeleteDC(MyDC);
