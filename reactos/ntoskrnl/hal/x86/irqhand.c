@@ -2,7 +2,6 @@
 #include <ddk/ntddk.h>
 #include <internal/ntoskrnl.h>
 #include <internal/ke.h>
-#include <internal/symbol.h>
 #include <internal/i386/segment.h>
 #include <internal/mmhal.h>
 
