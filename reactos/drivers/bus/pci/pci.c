@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.6 2004/02/10 16:22:55 navaraf Exp $
+/* $Id: pci.c,v 1.7 2004/06/09 14:22:53 ekohl Exp $
  *
  * PROJECT:         ReactOS PCI Bus driver
  * FILE:            pci.c
@@ -185,7 +185,7 @@ DriverEntry(
 
 BOOLEAN
 PciCreateUnicodeString(
-  PUNICODE_STRING	Destination,
+  PUNICODE_STRING Destination,
   PWSTR Source,
   POOL_TYPE PoolType)
 {
@@ -211,6 +211,200 @@ PciCreateUnicodeString(
   Destination->MaximumLength = Length;
 
   Destination->Length = Length - sizeof(WCHAR);
+
+  return TRUE;
+}
+
+
+NTSTATUS
+PciDuplicateUnicodeString(
+  PUNICODE_STRING Destination,
+  PUNICODE_STRING Source,
+  POOL_TYPE PoolType)
+{
+  if (Source == NULL)
+  {
+    RtlInitUnicodeString(Destination, NULL);
+    return STATUS_SUCCESS;
+  }
+
+  Destination->Buffer = ExAllocatePool(PoolType, Source->MaximumLength);
+  if (Destination->Buffer == NULL)
+  {
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+
+  Destination->MaximumLength = Source->MaximumLength;
+  Destination->Length = Source->Length;
+  RtlCopyMemory(Destination->Buffer, Source->Buffer, Source->MaximumLength);
+
+  return STATUS_SUCCESS;
+}
+
+
+BOOLEAN
+PciCreateDeviceIDString(PUNICODE_STRING DeviceID,
+                        PPCI_DEVICE Device)
+{
+  WCHAR Buffer[256];
+
+  swprintf(Buffer,
+           L"PCI\\VEN_%04X&DEV_%04X&SUBSYS_%08X&REV_%02X",
+           Device->PciConfig.VendorID,
+           Device->PciConfig.DeviceID,
+           (Device->PciConfig.u.type0.SubSystemID << 16) +
+           Device->PciConfig.u.type0.SubVendorID,
+           Device->PciConfig.RevisionID);
+
+  if (!PciCreateUnicodeString(DeviceID, Buffer, PagedPool))
+  {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+
+BOOLEAN
+PciCreateInstanceIDString(PUNICODE_STRING DeviceID,
+                          PPCI_DEVICE Device)
+{
+  /* FIXME */
+
+#if 0
+  swprintf(Buffer,
+           L"%02lx&%04lx",
+           Device->BusNumber,
+           Device->SlotNumber.SlotNumber.u.AsULONG);
+#endif
+
+  return PciCreateUnicodeString(DeviceID, L"0000", PagedPool);
+}
+
+
+BOOLEAN
+PciCreateHardwareIDsString(PUNICODE_STRING HardwareIDs,
+                           PPCI_DEVICE Device)
+{
+  WCHAR Buffer[256];
+  ULONG Length;
+  ULONG Index;
+
+  Index = 0;
+  Index += swprintf(&Buffer[Index],
+           L"PCI\\VEN_%04X&DEV_%04X&SUBSYS_%08X&REV_%02X",
+           Device->PciConfig.VendorID,
+           Device->PciConfig.DeviceID,
+           (Device->PciConfig.u.type0.SubSystemID << 16) +
+           Device->PciConfig.u.type0.SubVendorID,
+           Device->PciConfig.RevisionID);
+  Index++;
+
+  Index += swprintf(&Buffer[Index],
+           L"PCI\\VEN_%04X&DEV_%04X&SUBSYS_%08X",
+           Device->PciConfig.VendorID,
+           Device->PciConfig.DeviceID,
+           (Device->PciConfig.u.type0.SubSystemID << 16) +
+           Device->PciConfig.u.type0.SubVendorID);
+  Index++;
+
+  Buffer[Index] = UNICODE_NULL;
+
+  Length = (Index + 1) * sizeof(WCHAR);
+  HardwareIDs->Buffer = ExAllocatePool(PagedPool, Length);
+  if (Buffer == NULL)
+  {
+    return FALSE;
+  }
+
+  HardwareIDs->Length = Length - sizeof(WCHAR);
+  HardwareIDs->MaximumLength = Length;
+  RtlCopyMemory(HardwareIDs->Buffer, Buffer, Length);
+
+  return TRUE;
+}
+
+
+BOOLEAN
+PciCreateCompatibleIDsString(PUNICODE_STRING HardwareIDs,
+                             PPCI_DEVICE Device)
+{
+  WCHAR Buffer[256];
+  ULONG Length;
+  ULONG Index;
+
+  Index = 0;
+  Index += swprintf(&Buffer[Index],
+           L"PCI\\VEN_%04X&DEV_%04X&REV_%02X&CC_%02X%02X",
+           Device->PciConfig.VendorID,
+           Device->PciConfig.DeviceID,
+           Device->PciConfig.RevisionID,
+           Device->PciConfig.BaseClass,
+           Device->PciConfig.SubClass);
+  Index++;
+
+  Index += swprintf(&Buffer[Index],
+           L"PCI\\VEN_%04X&DEV_%04X&CC_%02X%02X%02X",
+           Device->PciConfig.VendorID,
+           Device->PciConfig.DeviceID,
+           Device->PciConfig.BaseClass,
+           Device->PciConfig.SubClass,
+           Device->PciConfig.ProgIf);
+  Index++;
+
+  Index += swprintf(&Buffer[Index],
+           L"PCI\\VEN_%04X&DEV_%04X&CC_%02X%02X",
+           Device->PciConfig.VendorID,
+           Device->PciConfig.DeviceID,
+           Device->PciConfig.BaseClass,
+           Device->PciConfig.SubClass);
+  Index++;
+
+  Index += swprintf(&Buffer[Index],
+           L"PCI\\VEN_%04X&CC_%02X%02X%02X",
+           Device->PciConfig.VendorID,
+           Device->PciConfig.BaseClass,
+           Device->PciConfig.SubClass,
+           Device->PciConfig.ProgIf);
+  Index++;
+
+  Index += swprintf(&Buffer[Index],
+           L"PCI\\VEN_%04X&CC_%02X%02X",
+           Device->PciConfig.VendorID,
+           Device->PciConfig.BaseClass,
+           Device->PciConfig.SubClass);
+  Index++;
+
+  Index += swprintf(&Buffer[Index],
+           L"PCI\\VEN_%04X",
+           Device->PciConfig.VendorID);
+  Index++;
+
+  Index += swprintf(&Buffer[Index],
+           L"PCI\\CC_%02X%02X%02X",
+           Device->PciConfig.BaseClass,
+           Device->PciConfig.SubClass,
+           Device->PciConfig.ProgIf);
+  Index++;
+
+  Index += swprintf(&Buffer[Index],
+           L"PCI\\CC_%02X%02X",
+           Device->PciConfig.BaseClass,
+           Device->PciConfig.SubClass);
+  Index++;
+
+  Buffer[Index] = UNICODE_NULL;
+
+  Length = (Index + 1) * sizeof(WCHAR);
+  HardwareIDs->Buffer = ExAllocatePool(PagedPool, Length);
+  if (Buffer == NULL)
+  {
+    return FALSE;
+  }
+
+  HardwareIDs->Length = Length - sizeof(WCHAR);
+  HardwareIDs->MaximumLength = Length;
+  RtlCopyMemory(HardwareIDs->Buffer, Buffer, Length);
 
   return TRUE;
 }

@@ -1,4 +1,4 @@
-/* $Id: pci.h,v 1.6 2004/03/14 17:10:43 navaraf Exp $ */
+/* $Id: pci.h,v 1.7 2004/06/09 14:22:53 ekohl Exp $ */
 
 #ifndef __PCI_H
 #define __PCI_H
@@ -111,6 +111,32 @@ PciCreateUnicodeString(
   PUNICODE_STRING Destination,
   PWSTR Source,
   POOL_TYPE PoolType);
+
+NTSTATUS
+PciDuplicateUnicodeString(
+  PUNICODE_STRING Destination,
+  PUNICODE_STRING Source,
+  POOL_TYPE PoolType);
+
+BOOLEAN
+PciCreateDeviceIDString(
+  PUNICODE_STRING DeviceID,
+  PPCI_DEVICE Device);
+
+BOOLEAN
+PciCreateInstanceIDString(
+  PUNICODE_STRING InstanceID,
+  PPCI_DEVICE Device);
+
+BOOLEAN
+PciCreateHardwareIDsString(
+  PUNICODE_STRING HardwareIDs,
+  PPCI_DEVICE Device);
+
+BOOLEAN
+PciCreateCompatibleIDsString(
+  PUNICODE_STRING HardwareIDs,
+  PPCI_DEVICE Device);
 
 /* pdo.c */
 

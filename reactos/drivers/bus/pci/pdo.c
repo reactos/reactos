@@ -1,4 +1,4 @@
-/* $Id: pdo.c,v 1.4 2004/03/14 17:10:43 navaraf Exp $
+/* $Id: pdo.c,v 1.5 2004/06/09 14:22:53 ekohl Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            pdo.c
@@ -42,9 +42,9 @@ PdoQueryId(
 
   switch (IrpSp->Parameters.QueryId.IdType) {
     case BusQueryDeviceID:
-      Status = PciCreateUnicodeString(
+      Status = PciDuplicateUnicodeString(
         &String,
-        DeviceExtension->DeviceID.Buffer,
+        &DeviceExtension->DeviceID,
         PagedPool);
 
       DPRINT("DeviceID: %S\n", String.Buffer);
@@ -53,14 +53,27 @@ PdoQueryId(
       break;
 
     case BusQueryHardwareIDs:
+      Status = PciDuplicateUnicodeString(
+        &String,
+        &DeviceExtension->HardwareIDs,
+        PagedPool);
+
+      Irp->IoStatus.Information = (ULONG_PTR)String.Buffer;
+      break;
+
     case BusQueryCompatibleIDs:
-      Status = STATUS_NOT_IMPLEMENTED;
+      Status = PciDuplicateUnicodeString(
+        &String,
+        &DeviceExtension->CompatibleIDs,
+        PagedPool);
+
+      Irp->IoStatus.Information = (ULONG_PTR)String.Buffer;
       break;
 
     case BusQueryInstanceID:
-      Status = PciCreateUnicodeString(
+      Status = PciDuplicateUnicodeString(
         &String,
-        L"0000",
+        &DeviceExtension->InstanceID,
         PagedPool);
 
       DPRINT("InstanceID: %S\n", String.Buffer);

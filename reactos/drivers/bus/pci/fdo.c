@@ -1,4 +1,4 @@
-/* $Id: fdo.c,v 1.7 2004/03/14 17:10:43 navaraf Exp $
+/* $Id: fdo.c,v 1.8 2004/06/09 14:22:53 ekohl Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            fdo.c
@@ -128,18 +128,18 @@ FdoEnumerateDevices(
             return STATUS_INSUFFICIENT_RESOURCES;
           }
 
-          RtlZeroMemory (Device,
-  		       sizeof(PCI_DEVICE));
+          RtlZeroMemory(Device,
+                        sizeof(PCI_DEVICE));
 
-  	  Device->BusNumber = BusNumber;
+          Device->BusNumber = BusNumber;
 
-          RtlCopyMemory (&Device->SlotNumber,
-  		       &SlotNumber,
-  		       sizeof(PCI_SLOT_NUMBER));
+          RtlCopyMemory(&Device->SlotNumber,
+                        &SlotNumber,
+                        sizeof(PCI_SLOT_NUMBER));
 
-          RtlCopyMemory (&Device->PciConfig,
-  		       &PciConfig,
-  		       sizeof(PCI_COMMON_CONFIG));
+          RtlCopyMemory(&Device->PciConfig,
+                        &PciConfig,
+                        sizeof(PCI_COMMON_CONFIG));
 
           ExInterlockedInsertTailList(
             &DeviceExtension->DeviceListHead,
@@ -175,7 +175,6 @@ FdoQueryBusRelations(
   NTSTATUS Status;
   BOOLEAN ErrorOccurred;
   NTSTATUS ErrorStatus;
-  WCHAR Buffer[MAX_PATH];
   ULONG Size;
   ULONG i;
 
@@ -254,26 +253,43 @@ FdoQueryBusRelations(
         &Device->SlotNumber,
         sizeof(PCI_SLOT_NUMBER));
 
-      /* FIXME: Get device properties (Hardware IDs, etc.) */
-
-      swprintf(
-        Buffer,
-        L"PCI\\VEN_%04X&DEV_%04X&SUBSYS_%08X&REV_%02X",
-        Device->PciConfig.VendorID,
-        Device->PciConfig.DeviceID,
-        (Device->PciConfig.u.type0.SubSystemID << 16) +
-        Device->PciConfig.u.type0.SubVendorID,
-        Device->PciConfig.RevisionID);
-
-      if (!PciCreateUnicodeString(
-        &PdoDeviceExtension->DeviceID,
-        Buffer,
-        PagedPool)) {
+      /* Add Device ID string */
+      if (!PciCreateDeviceIDString(&PdoDeviceExtension->DeviceID,
+                                   Device))
+      {
+        ErrorStatus = STATUS_INSUFFICIENT_RESOURCES;
         ErrorOccurred = TRUE;
         break;
       }
 
       DPRINT("DeviceID: %S\n", PdoDeviceExtension->DeviceID.Buffer);
+
+      /* Add Instance ID string */
+      if (!PciCreateInstanceIDString(&PdoDeviceExtension->InstanceID,
+                                     Device))
+      {
+        ErrorStatus = STATUS_INSUFFICIENT_RESOURCES;
+        ErrorOccurred = TRUE;
+        break;
+      }
+
+      /* Add Hardware IDs string */
+      if (!PciCreateHardwareIDsString(&PdoDeviceExtension->HardwareIDs,
+                                      Device))
+      {
+        ErrorStatus = STATUS_INSUFFICIENT_RESOURCES;
+        ErrorOccurred = TRUE;
+        break;
+      }
+
+      /* Add Compatible IDs string */
+      if (!PciCreateCompatibleIDsString(&PdoDeviceExtension->CompatibleIDs,
+                                        Device))
+      {
+        ErrorStatus = STATUS_INSUFFICIENT_RESOURCES;
+        ErrorOccurred = TRUE;
+        break;
+      }
     }
 
     if (!Device->RemovePending) {
