@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.20 2001/03/07 08:57:08 dwelch Exp $
+/* $Id: kdebug.c,v 1.21 2001/03/07 16:48:42 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -342,11 +342,23 @@ KdSystemDebugControl(ULONG Code)
 {
   if (Code == 0)
     {
-      MiDebugDumpNonPagedPool();
+      MiDebugDumpNonPagedPool(FALSE);
     }
-  if (Code == 1)
+  else if (Code == 1)
     {
       KeBugCheck(0);
+    }
+  else if (Code == 2)
+    {
+      MiDebugDumpNonPagedPoolStats(FALSE);
+    }
+  else if (Code == 3)
+    {
+      MiDebugDumpNonPagedPool(TRUE);
+    }
+  else if (Code == 4)
+    {
+      MiDebugDumpNonPagedPoolStats(TRUE);
     }
 }
 

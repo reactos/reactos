@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.36 2001/02/10 22:51:09 dwelch Exp $
+/* $Id: create.c,v 1.37 2001/03/07 16:48:41 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,9 +15,14 @@
 #include <internal/ob.h>
 #include <internal/io.h>
 #include <internal/id.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
+/* GLOBALS *******************************************************************/
+
+#define TAG_FILE_NAME     TAG('F', 'N', 'A', 'M')
 
 /* FUNCTIONS *************************************************************/
 
@@ -98,8 +103,10 @@ IopCreateFile (PVOID			ObjectBody,
    if (NULL == RemainingPath)
      {
 	FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
-	FileObject->FileName.Buffer = ExAllocatePool(NonPagedPool,
-						     (ObjectAttributes->ObjectName->Length+1)*2);
+	FileObject->FileName.Buffer = 
+	  ExAllocatePoolWithTag(NonPagedPool,
+				(ObjectAttributes->ObjectName->Length+1)*2,
+				TAG_FILE_NAME);
 	FileObject->FileName.Length = ObjectAttributes->ObjectName->Length;
 	FileObject->FileName.MaximumLength = 
           ObjectAttributes->ObjectName->MaximumLength;

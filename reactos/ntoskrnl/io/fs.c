@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.15 2000/12/29 13:43:13 ekohl Exp $
+/* $Id: fs.c,v 1.16 2001/03/07 16:48:41 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/io.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -29,6 +30,8 @@ typedef struct
 
 static KSPIN_LOCK FileSystemListLock;
 static LIST_ENTRY FileSystemListHead;
+
+#define TAG_FILE_SYSTEM     TAG('F', 'S', 'Y', 'S')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -243,7 +246,8 @@ VOID STDCALL IoRegisterFileSystem(PDEVICE_OBJECT DeviceObject)
    
    DPRINT("IoRegisterFileSystem(DeviceObject %x)\n",DeviceObject);
    
-   fs=ExAllocatePool(NonPagedPool,sizeof(FILE_SYSTEM_OBJECT));
+   fs = ExAllocatePoolWithTag(NonPagedPool, sizeof(FILE_SYSTEM_OBJECT),
+			      TAG_FILE_SYSTEM);
    assert(fs!=NULL);
    
    fs->DeviceObject = DeviceObject;   

@@ -1,4 +1,4 @@
-/* $Id: bus.c,v 1.5 2000/04/09 15:58:13 ekohl Exp $
+/* $Id: bus.c,v 1.6 2001/03/07 16:48:41 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,10 +17,14 @@
 
 #include <ddk/ntddk.h>
 #include <internal/hal.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
+/* GLOBALS *******************************************************************/
+
+#define TAG_BUS  TAG('B', 'U', 'S', 'H')
 
 /* TYPE DEFINITIONS *********************************************************/
 
@@ -215,7 +219,8 @@ HalpAllocateBusHandler (
 
 	DPRINT("HalpAllocateBusHandler()\n");
 
-	BusHandler = ExAllocatePool (NonPagedPool, sizeof(BUS_HANDLER));
+	BusHandler = 
+	  ExAllocatePoolWithTag(NonPagedPool, sizeof(BUS_HANDLER), TAG_BUS);
 	if (BusHandler == NULL)
 		return NULL;
 

@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.5 2000/03/26 19:38:26 ea Exp $
+/* $Id: timer.c,v 1.6 2001/03/07 16:48:42 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,9 +12,14 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
+/* GLBOALS *******************************************************************/
+
+#define TAG_IO_TIMER      TAG('I', 'O', 'T', 'M')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -34,7 +39,8 @@ IoInitializeTimer(PDEVICE_OBJECT DeviceObject,
  * RETURNS: Status
  */
 {
-   DeviceObject->Timer = ExAllocatePool(NonPagedPool,sizeof(IO_TIMER));
+   DeviceObject->Timer = ExAllocatePoolWithTag(NonPagedPool, sizeof(IO_TIMER),
+					       TAG_IO_TIMER);
    KeInitializeTimer(&(DeviceObject->Timer->timer));
    KeInitializeDpc(&(DeviceObject->Timer->dpc),
 		   (PKDEFERRED_ROUTINE)TimerRoutine,Context);

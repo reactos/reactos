@@ -1,4 +1,4 @@
-/* $Id: cntrller.c,v 1.4 2000/03/26 19:38:21 ea Exp $
+/* $Id: cntrller.c,v 1.5 2001/03/07 16:48:41 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,8 +12,15 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/pool.h>
 
 #include <internal/debug.h>
+
+/* GLOBALS *******************************************************************/
+
+#define TAG_CQE                    TAG('C', 'Q', 'E', ' ')
+#define TAG_CONTROLLER             TAG('C', 'N', 'T', 'R')
+#define TAG_CONTROLLER_EXTENSION   TAG('C', 'E', 'X', 'T')
 
 /* TYPES ********************************************************************/
 
@@ -54,7 +61,9 @@ IoAllocateController(PCONTROLLER_OBJECT ControllerObject,
    
    assert_irql(DISPATCH_LEVEL);
    
-   entry=ExAllocatePool(NonPagedPool,sizeof(CONTROLLER_QUEUE_ENTRY));
+   entry = 
+     ExAllocatePoolWithTag(NonPagedPool, sizeof(CONTROLLER_QUEUE_ENTRY),
+			   TAG_CQE);
    assert(entry!=NULL);
    
    entry->DeviceObject = DeviceObject;
@@ -88,13 +97,16 @@ IoCreateController(ULONG Size)
    
    assert_irql(PASSIVE_LEVEL);
    
-   controller = ExAllocatePool(NonPagedPool,sizeof(CONTROLLER_OBJECT));
+   controller = 
+     ExAllocatePoolWithTag(NonPagedPool, sizeof(CONTROLLER_OBJECT),
+			   TAG_CONTROLLER);
    if (controller==NULL)
      {
 	return(NULL);
      }
    
-   controller->ControllerExtension=ExAllocatePool(NonPagedPool,Size);
+   controller->ControllerExtension = 
+     ExAllocatePoolWithTag(NonPagedPool, Size, TAG_CONTROLLER_EXTENSION);
    if (controller->ControllerExtension==NULL)
      {
 	ExFreePool(controller);

@@ -1,3 +1,4 @@
+
 /*
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -14,6 +15,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <internal/io.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -308,6 +310,7 @@ VOID ObInit(VOID)
    
    ObDirectoryType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
+   ObDirectoryType->Tag = TAG('D', 'I', 'R', 'T');
    ObDirectoryType->TotalObjects = 0;
    ObDirectoryType->TotalHandles = 0;
    ObDirectoryType->MaxObjects = ULONG_MAX;

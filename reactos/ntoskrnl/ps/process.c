@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.57 2001/02/02 20:47:14 ekohl Exp $
+/* $Id: process.c,v 1.58 2001/03/07 16:48:45 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -24,6 +24,7 @@
 #include <napi/dbg.h>
 #include <internal/dbg.h>
 #include <napi/shared_data.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -174,7 +175,8 @@ VOID PsInitProcessManagment(VOID)
     */   
    
    PsProcessType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-   
+
+   PsProcessType->Tag = TAG('P', 'R', 'O', 'C');
    PsProcessType->TotalObjects = 0;
    PsProcessType->TotalHandles = 0;
    PsProcessType->MaxObjects = ULONG_MAX;

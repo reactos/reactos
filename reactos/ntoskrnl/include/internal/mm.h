@@ -413,6 +413,8 @@ typedef struct _MM_PAGEOP
 } MM_PAGEOP, *PMM_PAGEOP;
 
 VOID
-MiDebugDumpNonPagedPool(VOID);
+MiDebugDumpNonPagedPool(BOOLEAN NewOnly);
+VOID
+MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly);
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.39 2001/02/14 02:53:53 dwelch Exp $
+/* $Id: virtual.c,v 1.40 2001/03/07 16:48:44 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -19,6 +19,7 @@
 #include <internal/ob.h>
 #include <internal/io.h>
 #include <internal/ps.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -32,6 +33,10 @@ typedef struct _MM_SEGMENT
    ULONG Length;
    LIST_ENTRY SegmentListEntry;
 } MM_SEGMENT, *PMM_SEGMENT;
+
+/* GLOBALS *******************************************************************/
+
+#define TAG_MM_SEGMENT    TAG('M', 'S', 'E', 'G')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -452,7 +457,8 @@ MmSplitSegment(PMADDRESS_SPACE AddressSpace,
     * Allocate the segment we might need here because if the allocation
     * fails below it will be difficult to undo what we've done already.
     */
-   NewTopSegment = ExAllocatePool(NonPagedPool, sizeof(MM_SEGMENT));
+   NewTopSegment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SEGMENT),
+					 TAG_MM_SEGMENT);
    if (NewTopSegment == NULL)
      {
 	return(STATUS_NO_MEMORY);
@@ -465,7 +471,8 @@ MmSplitSegment(PMADDRESS_SPACE AddressSpace,
 	 * the current segment then create a new segment for the
 	 * affected portion
 	 */	
-	RegionSegment = ExAllocatePool(NonPagedPool, sizeof(MM_SEGMENT));
+	RegionSegment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SEGMENT),
+					      TAG_MM_SEGMENT);
 	if (RegionSegment == NULL)
 	  {
 	     ExFreePool(NewTopSegment);
@@ -566,7 +573,8 @@ NTSTATUS MmGatherSegment(PMADDRESS_SPACE AddressSpace,
 	 * we need to split it into two segments
 	 */
 	
-	RegionSegment = ExAllocatePool(NonPagedPool, sizeof(MM_SEGMENT));
+	RegionSegment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SEGMENT),
+					      TAG_MM_SEGMENT);
 	if (RegionSegment == NULL)
 	  {
 	     return(STATUS_NO_MEMORY);
@@ -870,7 +878,8 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 	  }
      }
 
-   Segment = ExAllocatePool(NonPagedPool, sizeof(MM_SEGMENT));
+   Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SEGMENT),
+				   TAG_MM_SEGMENT);
    if (Segment == NULL)
      {
 	MmUnlockAddressSpace(AddressSpace);

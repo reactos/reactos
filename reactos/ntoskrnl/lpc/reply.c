@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.5 2001/01/29 00:13:22 ea Exp $
+/* $Id: reply.c,v 1.6 2001/03/07 16:48:43 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,9 +15,14 @@
 #include <internal/ob.h>
 #include <internal/port.h>
 #include <internal/dbg.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
+/* GLOBALS *******************************************************************/
+
+#define TAG_LPC_MESSAGE   TAG('L', 'P', 'C', 'M')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -47,7 +52,8 @@ EiReplyOrRequestPort (IN	PEPORT		Port,
        KeBugCheck(0);
      }
 
-   MessageReply = ExAllocatePool(NonPagedPool, sizeof(QUEUEDMESSAGE));
+   MessageReply = ExAllocatePoolWithTag(NonPagedPool, sizeof(QUEUEDMESSAGE),
+					TAG_LPC_MESSAGE);
    MessageReply->Sender = Sender;
    
    if (LpcReply != NULL)

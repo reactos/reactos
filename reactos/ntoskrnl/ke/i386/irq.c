@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.5 2001/02/06 00:11:19 dwelch Exp $
+/* $Id: irq.c,v 1.6 2001/03/07 16:48:43 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,6 +23,7 @@
 #include <internal/ke.h>
 #include <internal/ps.h>
 #include <internal/i386/segment.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -79,6 +80,8 @@ static LIST_ENTRY isr_table[NR_IRQS]={{NULL,NULL},};
 static PKSPIN_LOCK isr_lock[NR_IRQS] = {NULL,};
 static KSPIN_LOCK isr_table_lock = {0,};
 
+#define TAG_ISR_LOCK     TAG('I', 'S', 'R', 'L')
+#define TAG_KINTERRUPT   TAG('K', 'I', 'S', 'R')
 
 /* FUNCTIONS ****************************************************************/
 
@@ -264,7 +267,9 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
      }
    else
      {
-	isr_lock[Vector]=ExAllocatePool(NonPagedPool,sizeof(KSPIN_LOCK));
+	isr_lock[Vector] =
+	  ExAllocatePoolWithTag(NonPagedPool, sizeof(KSPIN_LOCK),
+				TAG_ISR_LOCK);
 	KeInitializeSpinLock(isr_lock[Vector]);
      }
 
@@ -397,7 +402,8 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
    /*
     * Initialize interrupt object
     */
-   Interrupt=ExAllocatePool(NonPagedPool,sizeof(KINTERRUPT));
+   Interrupt=ExAllocatePoolWithTag(NonPagedPool,sizeof(KINTERRUPT),
+				   TAG_KINTERRUPT);
    if (Interrupt==NULL)
      {
 	return(STATUS_INSUFFICIENT_RESOURCES);

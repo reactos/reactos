@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.25 2000/12/23 02:37:39 dwelch Exp $
+/* $Id: device.c,v 1.26 2001/03/07 16:48:41 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -17,10 +17,15 @@
 #include <internal/ldr.h>
 #include <internal/id.h>
 #include <internal/ps.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
+/* GLOBALS *******************************************************************/
+
+#define TAG_DRIVER             TAG('D', 'R', 'V', 'R')
+#define TAG_DEVICE_EXTENSION   TAG('D', 'E', 'X', 'T')
 
 /* FUNCTIONS ***************************************************************/
 
@@ -252,7 +257,8 @@ IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry)
    PDRIVER_OBJECT DriverObject;
    ULONG i;
    
-   DriverObject = ExAllocatePool(NonPagedPool,sizeof(DRIVER_OBJECT));
+   DriverObject = 
+     ExAllocatePoolWithTag(NonPagedPool, sizeof(DRIVER_OBJECT), TAG_DRIVER);
    if (DriverObject == NULL)
      {
 	return STATUS_INSUFFICIENT_RESOURCES;
@@ -397,8 +403,9 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
    CreatedDeviceObject->CurrentIrp = NULL;
    CreatedDeviceObject->Flags = 0;
 
-   CreatedDeviceObject->DeviceExtension = ExAllocatePool(NonPagedPool,
-							 DeviceExtensionSize);
+   CreatedDeviceObject->DeviceExtension = 
+     ExAllocatePoolWithTag(NonPagedPool, DeviceExtensionSize, 
+			   TAG_DEVICE_EXTENSION);
    if (DeviceExtensionSize > 0 && CreatedDeviceObject->DeviceExtension == NULL)
      {
 	ExFreePool(CreatedDeviceObject);

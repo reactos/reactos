@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.33 2000/12/23 02:37:39 dwelch Exp $
+/* $Id: irp.c,v 1.34 2001/03/07 16:48:42 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,9 +33,14 @@
 #include <ddk/ntddk.h>
 #include <internal/io.h>
 #include <internal/ps.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
+/* GLOBALS *******************************************************************/
+
+#define TAG_IRP     TAG('I', 'R', 'P', ' ')
 
 /* FUNCTIONS ****************************************************************/
 
@@ -150,11 +155,13 @@ IoAllocateIrp (CCHAR StackSize, BOOLEAN ChargeQuota)
    if (ChargeQuota)
      {
 //	Irp = ExAllocatePoolWithQuota(NonPagedPool,IoSizeOfIrp(StackSize));
-	Irp = ExAllocatePool(NonPagedPool,IoSizeOfIrp(StackSize));
+	Irp = ExAllocatePoolWithTag(NonPagedPool, IoSizeOfIrp(StackSize), 
+				    TAG_IRP);
      }
    else
      {	
-	Irp = ExAllocatePool(NonPagedPool,IoSizeOfIrp(StackSize));
+	Irp = ExAllocatePoolWithTag(NonPagedPool,IoSizeOfIrp(StackSize),
+				    TAG_IRP);
      }
       
    if (Irp==NULL)

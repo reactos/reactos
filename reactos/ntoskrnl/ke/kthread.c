@@ -30,6 +30,7 @@
 #include <internal/ke.h>
 #include <internal/ps.h>
 #include <internal/id.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -51,6 +52,10 @@ PiSuspendThreadNormalRoutine(PVOID NormalContext,
 			     PVOID SystemArgument1,
 			     PVOID SystemArgument2);
 
+/* GLOBALS *******************************************************************/
+
+#define TAG_THREAD_STACK    TAG('T', 'S', 'T', 'K')
+
 /* FUNCTIONS *****************************************************************/
 
 VOID 
@@ -70,7 +75,8 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
    InitializeListHead(&Thread->MutantListHead);
    if (!First)
      {
-       KernelStack = ExAllocatePool(NonPagedPool, MM_STACK_SIZE);
+       KernelStack = ExAllocatePoolWithTag(NonPagedPool, MM_STACK_SIZE,
+					   TAG_THREAD_STACK);
        Thread->InitialStack = KernelStack + MM_STACK_SIZE;
        Thread->StackBase = KernelStack + MM_STACK_SIZE;
        Thread->StackLimit = (ULONG)KernelStack;

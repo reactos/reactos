@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.5 2000/03/26 19:38:25 ea Exp $
+/* $Id: mdl.c,v 1.6 2001/03/07 16:48:42 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,8 +13,13 @@
 
 #include <ddk/ntddk.h>
 #include <internal/mmhal.h>
+#include <internal/pool.h>
 
 #include <internal/debug.h>
+
+/* GLOBALS *******************************************************************/
+
+#define TAG_MDL    TAG('M', 'D', 'L', ' ')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -32,11 +37,15 @@ IoAllocateMdl(PVOID VirtualAddress,
      {
 //	Mdl = ExAllocatePoolWithQuota(NonPagedPool,
 //				      MmSizeOfMdl(VirtualAddress,Length));
-	Mdl = ExAllocatePool(NonPagedPool,MmSizeOfMdl(VirtualAddress,Length));
+	Mdl = ExAllocatePoolWithTag(NonPagedPool,
+				    MmSizeOfMdl(VirtualAddress,Length),
+				    TAG_MDL);
      }
    else
      {
-	Mdl = ExAllocatePool(NonPagedPool,MmSizeOfMdl(VirtualAddress,Length));
+	Mdl = ExAllocatePoolWithTag(NonPagedPool,
+				    MmSizeOfMdl(VirtualAddress,Length),
+				    TAG_MDL);
      }
    MmInitializeMdl(Mdl,VirtualAddress,Length);
    if (Irp!=NULL && !SecondaryBuffer)

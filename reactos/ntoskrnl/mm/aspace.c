@@ -1,4 +1,4 @@
-/* $Id: aspace.c,v 1.5 2001/01/08 02:14:05 dwelch Exp $
+/* $Id: aspace.c,v 1.6 2001/03/07 16:48:43 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,12 +14,15 @@
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
 #include <internal/ps.h>
+#include <internal/pool.h>
 
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/
 
 STATIC MADDRESS_SPACE KernelAddressSpace;
+
+#define TAG_PTRC      TAG('P', 'T', 'R', 'C')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -77,7 +80,8 @@ MmInitializeAddressSpace(PEPROCESS Process,
    if (Process != NULL)
      {
 	AddressSpace->PageTableRefCountTable = 
-	  ExAllocatePool(NonPagedPool, 768 * sizeof(USHORT));
+	  ExAllocatePoolWithTag(NonPagedPool, 768 * sizeof(USHORT),
+				TAG_PTRC);
 	AddressSpace->PageTableRefCountTableSize = 768;
      }
    else
@@ -91,5 +95,9 @@ MmInitializeAddressSpace(PEPROCESS Process,
 NTSTATUS 
 MmDestroyAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
+  if (AddressSpace->PageTableRefCountTable != NULL)
+    {
+      ExFreePool(AddressSpace->PageTableRefCountTable);
+    }
    return(STATUS_SUCCESS);
 }

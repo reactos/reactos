@@ -15,6 +15,7 @@
 #include <internal/ob.h>
 #include <internal/id.h>
 #include <ntos/synch.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -61,6 +62,7 @@ NtInitializeEventImplementation(VOID)
    
    RtlCreateUnicodeString(&ExEventObjectType->TypeName, L"Event");
    
+   ExEventObjectType->Tag = TAG('E', 'V', 'T', 'T');
    ExEventObjectType->MaxObjects = ULONG_MAX;
    ExEventObjectType->MaxHandles = ULONG_MAX;
    ExEventObjectType->TotalObjects = 0;

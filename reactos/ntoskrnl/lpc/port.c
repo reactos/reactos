@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.4 2001/01/28 17:38:12 ekohl Exp $
+/* $Id: port.c,v 1.5 2001/03/07 16:48:43 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,6 +20,7 @@
 #include <internal/ob.h>
 #include <internal/port.h>
 #include <internal/dbg.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -45,6 +46,7 @@ NTSTATUS NiInitPort (VOID)
    
    RtlInitUnicodeString(&ExPortType->TypeName,L"Port");
    
+   ExPortType->Tag = TAG('L', 'P', 'R', 'T');
    ExPortType->MaxObjects = ULONG_MAX;
    ExPortType->MaxHandles = ULONG_MAX;
    ExPortType->TotalObjects = 0;

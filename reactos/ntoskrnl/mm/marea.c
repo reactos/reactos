@@ -14,9 +14,14 @@
 #include <internal/mm.h>
 #include <internal/mmhal.h>
 #include <internal/ps.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
+/* GLOBALS *******************************************************************/
+
+#define TAG_MAREA   TAG('M', 'A', 'R', 'E')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -333,7 +338,8 @@ PMEMORY_AREA MmSplitMemoryArea(PEPROCESS Process,
    PMEMORY_AREA Result;
    PMEMORY_AREA Split;
    
-   Result = ExAllocatePool(NonPagedPool,sizeof(MEMORY_AREA));
+   Result = ExAllocatePoolWithTag(NonPagedPool, sizeof(MEMORY_AREA), 
+				  TAG_MAREA);
    RtlZeroMemory(Result,sizeof(MEMORY_AREA));
    Result->Type = NewType;
    Result->BaseAddress = BaseAddress;
@@ -358,7 +364,8 @@ PMEMORY_AREA MmSplitMemoryArea(PEPROCESS Process,
 	return(Result);
      }
       
-   Split = ExAllocatePool(NonPagedPool,sizeof(MEMORY_AREA));
+   Split = ExAllocatePoolWithTag(NonPagedPool, sizeof(MEMORY_AREA),
+				 TAG_MAREA);
    RtlCopyMemory(Split,OriginalMemoryArea,sizeof(MEMORY_AREA));
    Split->BaseAddress = BaseAddress + Length;
    Split->Length = OriginalMemoryArea->Length - (((ULONG)BaseAddress) 
@@ -416,7 +423,8 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
 	  }
      }
    
-   *Result = ExAllocatePool(NonPagedPool,sizeof(MEMORY_AREA));
+   *Result = ExAllocatePoolWithTag(NonPagedPool, sizeof(MEMORY_AREA),
+				   TAG_MAREA);
    RtlZeroMemory(*Result,sizeof(MEMORY_AREA));
    (*Result)->Type = Type;
    (*Result)->BaseAddress = *BaseAddress;

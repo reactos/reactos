@@ -16,6 +16,7 @@
 #include <internal/mm.h>
 #include <internal/ob.h>
 #include <internal/port.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -29,6 +30,8 @@ extern LIST_ENTRY PiThreadListHead;
 extern KSPIN_LOCK PiApcLock;
 
 VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
+
+#define TAG_TERMINATE_APC   TAG('T', 'A', 'P', 'C')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -177,7 +180,7 @@ PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
   
   Thread->DeadThread = 1;
   Thread->ExitStatus = ExitStatus;
-  Apc = ExAllocatePool(NonPagedPool, sizeof(KAPC));
+  Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_TERMINATE_APC);
   KeInitializeApc(Apc,
 		  &Thread->Tcb,
 		  0,

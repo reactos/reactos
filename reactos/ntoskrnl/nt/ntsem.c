@@ -1,4 +1,4 @@
-/* $Id: ntsem.c,v 1.9 2001/01/28 15:15:07 ekohl Exp $
+/* $Id: ntsem.c,v 1.10 2001/03/07 16:48:44 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,6 +15,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <ntos/synch.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -58,6 +59,7 @@ VOID NtInitializeSemaphoreImplementation(VOID)
    
    RtlCreateUnicodeString(&ExSemaphoreType->TypeName, L"Semaphore");
    
+   ExSemaphoreType->Tag = TAG('S', 'E', 'M', 'T');
    ExSemaphoreType->MaxObjects = ULONG_MAX;
    ExSemaphoreType->MaxHandles = ULONG_MAX;
    ExSemaphoreType->TotalObjects = 0;

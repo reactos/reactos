@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_OBTYPES_H
 #define _INCLUDE_DDK_OBTYPES_H
-/* $Id: obtypes.h,v 1.10 2001/01/28 15:13:11 ekohl Exp $ */
+/* $Id: obtypes.h,v 1.11 2001/03/07 16:48:40 dwelch Exp $ */
 struct _DIRECTORY_OBJECT;
 struct _OBJECT_ATTRIBUTES;
 
@@ -13,103 +13,107 @@ typedef struct _OBJECT_HANDLE_INFORMATION {
 
 typedef struct _OBJECT_TYPE
 {
-   /*
-    * PURPOSE: Name of the type
-    */
-   UNICODE_STRING TypeName;
-   
-   /*
-    * PURPOSE: Total number of objects of this type
-    */
-   ULONG TotalObjects;
-   
-   /*
-    * PURPOSE: Total number of handles of this type
-    */
-   ULONG TotalHandles;
-   
-   /*
-    * PURPOSE: Maximum objects of this type
-    */
-   ULONG MaxObjects;
-   
+  /*
+   * PURPOSE: Tag to be used when allocating objects of this type
+   */
+  ULONG Tag;
+
+  /*
+   * PURPOSE: Name of the type
+   */
+  UNICODE_STRING TypeName;
+  
+  /*
+   * PURPOSE: Total number of objects of this type
+   */
+  ULONG TotalObjects;
+  
+  /*
+   * PURPOSE: Total number of handles of this type
+   */
+  ULONG TotalHandles;
+  
+  /*
+   * PURPOSE: Maximum objects of this type
+   */
+  ULONG MaxObjects;
+  
    /*
     * PURPOSE: Maximum handles of this type
     */
-   ULONG MaxHandles;
-   
-   /*
-    * PURPOSE: Paged pool charge
-    */
+  ULONG MaxHandles;
+  
+  /*
+   * PURPOSE: Paged pool charge
+   */
    ULONG PagedPoolCharge;
-   
-   /*
-    * PURPOSE: Nonpaged pool charge
-    */
-   ULONG NonpagedPoolCharge;
-   
-   /*
-    * PURPOSE: Mapping of generic access rights
-    */
-   PGENERIC_MAPPING Mapping;
-   
-   /*
-    * PURPOSE: Dumps the object
-    * NOTE: To be defined
-    */
-   VOID (*Dump)(VOID);
-   
-   /*
-    * PURPOSE: Opens the object
-    * NOTE: To be defined
-    */
-   VOID (*Open)(VOID);
-   
+  
+  /*
+   * PURPOSE: Nonpaged pool charge
+   */
+  ULONG NonpagedPoolCharge;
+  
+  /*
+   * PURPOSE: Mapping of generic access rights
+   */
+  PGENERIC_MAPPING Mapping;
+  
+  /*
+   * PURPOSE: Dumps the object
+   * NOTE: To be defined
+   */
+  VOID (*Dump)(VOID);
+  
+  /*
+   * PURPOSE: Opens the object
+   * NOTE: To be defined
+   */
+  VOID (*Open)(VOID);
+  
    /*
     * PURPOSE: Called to close an object if OkayToClose returns true
     */
-   VOID (*Close)(PVOID ObjectBody, ULONG HandleCount);
-   
-   /*
-    * PURPOSE: Called to delete an object when the last reference is removed
-    */
-   VOID (*Delete)(PVOID ObjectBody);
-   
-   /*
-    * PURPOSE: Called when an open attempts to open a file apparently
-    * residing within the object
-    * RETURNS
-    *     STATUS_SUCCESS       NextObject was found
-    *     STATUS_UNSUCCESSFUL  NextObject not found
-    *     STATUS_REPARSE       Path changed, restart parsing the path
-    */
+  VOID (*Close)(PVOID ObjectBody, ULONG HandleCount);
+  
+  /*
+   * PURPOSE: Called to delete an object when the last reference is removed
+   */
+  VOID (*Delete)(PVOID ObjectBody);
+  
+  /*
+   * PURPOSE: Called when an open attempts to open a file apparently
+   * residing within the object
+   * RETURNS
+   *     STATUS_SUCCESS       NextObject was found
+   *     STATUS_UNSUCCESSFUL  NextObject not found
+   *     STATUS_REPARSE       Path changed, restart parsing the path
+   */
    NTSTATUS (*Parse)(PVOID ParsedObject,
 		     PVOID *NextObject,
 		     PUNICODE_STRING FullPath,
 		     PWSTR *Path,
 		     struct _OBJECT_TYPE* ObjectType);
-   
+  
    /*
     */
-   NTSTATUS (*Security)(PVOID Object,
-			ULONG InfoClass,
-			PVOID Info,
-			PULONG InfoLength);
+  NTSTATUS (*Security)(PVOID Object,
+		       ULONG InfoClass,
+		       PVOID Info,
+		       PULONG InfoLength);
+  
+  /*
+   */
+  VOID (*QueryName)(VOID);
    
-   /*
-    */
-   VOID (*QueryName)(VOID);
-   
-   /*
-    * PURPOSE: Called when a process asks to close the object
-    */
-   VOID (*OkayToClose)(VOID);
-   
-   NTSTATUS (*Create)(PVOID ObjectBody,
-		      PVOID Parent,
-		      PWSTR RemainingPath,
-		      struct _OBJECT_ATTRIBUTES* ObjectAttributes);
-   
+  /*
+   * PURPOSE: Called when a process asks to close the object
+   */
+  VOID (*OkayToClose)(VOID);
+  
+  NTSTATUS (*Create)(PVOID ObjectBody,
+		     PVOID Parent,
+		     PWSTR RemainingPath,
+		     struct _OBJECT_ATTRIBUTES* ObjectAttributes);  
 } OBJECT_TYPE, *POBJECT_TYPE;
 
 

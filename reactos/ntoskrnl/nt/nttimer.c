@@ -1,4 +1,4 @@
-/* $Id: nttimer.c,v 1.8 2001/02/18 19:43:15 phreak Exp $
+/* $Id: nttimer.c,v 1.9 2001/03/07 16:48:44 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,7 +16,7 @@
 #include <internal/ob.h>
 #include <internal/ke.h>
 #include <limits.h>
-
+#include <internal/pool.h>
 
 #include <internal/debug.h>
 
@@ -107,6 +107,7 @@ VOID NtInitializeTimerImplementation(VOID)
    
    RtlCreateUnicodeString(&ExTimerType->TypeName, L"Timer");
    
+   ExTimerType->Tag = TAG('T', 'I', 'M', 'T');
    ExTimerType->MaxObjects = ULONG_MAX;
    ExTimerType->MaxHandles = ULONG_MAX;
    ExTimerType->TotalObjects = 0;

@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.15 2000/10/22 16:36:49 ekohl Exp $
+/* $Id: resource.c,v 1.16 2001/03/07 16:48:40 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -40,9 +40,16 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
+/* GLOBALS *******************************************************************/
+
+#define TAG_OWNER_TABLE     TAG('R', 'O', 'W', 'N')
+#define TAG_EXCLUSIVE_LOCK  TAG('E', 'R', 'E', 'L')
+#define TAG_SHARED_SEM      TAG('E', 'R', 'S', 'S')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -230,8 +237,9 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
 	DPRINT("Creating owner table\n");
 	
 	/* allocate ownertable,memset to 0, initialize first entry */
-	Resource->OwnerTable = ExAllocatePool(NonPagedPool,
-					      sizeof(OWNER_ENTRY)*3);
+	Resource->OwnerTable = 
+	  ExAllocatePoolWithTag(NonPagedPool, sizeof(OWNER_ENTRY)*3, 
+				TAG_OWNER_TABLE);
 	if (Resource->OwnerTable == NULL)
 	  {
 	     KeBugCheck(0);
@@ -277,9 +285,11 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
 	DPRINT("Allocating new entry\n");
 	
 	/* reallocate ownertable with one more entry */
-	freeEntry = ExAllocatePool(NonPagedPool,
-				   sizeof(OWNER_ENTRY)*
-				   (Resource->OwnerThreads[1].a.TableSize+1));
+	freeEntry = 
+	  ExAllocatePoolWithTag(NonPagedPool,
+				sizeof(OWNER_ENTRY)*
+				(Resource->OwnerThreads[1].a.TableSize+1),
+				TAG_OWNER_TABLE);
 	if (freeEntry == NULL)
 	  {
 	     KeBugCheck(0);
@@ -563,11 +573,8 @@ ExInitializeResource (
    return(ExInitializeResourceLite(Resource));
 }
 
-NTSTATUS
-STDCALL
-ExInitializeResourceLite (
-	PERESOURCE	Resource
-	)
+NTSTATUS STDCALL
+ExInitializeResourceLite (PERESOURCE	Resource)
 {
    DPRINT("ExInitializeResourceLite(Resource %x)\n", Resource);
    memset(Resource,0,sizeof(ERESOURCE));
@@ -575,11 +582,13 @@ ExInitializeResourceLite (
    Resource->NumberOfExclusiveWaiters = 0;
    KeInitializeSpinLock(&Resource->SpinLock);
    Resource->Flag = 0;
-   Resource->ExclusiveWaiters = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
+   Resource->ExclusiveWaiters = 
+     ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_EXCLUSIVE_LOCK);
    KeInitializeEvent(Resource->ExclusiveWaiters,
 		     SynchronizationEvent,
 		     FALSE);
-   Resource->SharedWaiters = ExAllocatePool(NonPagedPool ,sizeof(KSEMAPHORE));
+   Resource->SharedWaiters = 
+     ExAllocatePoolWithTag(NonPagedPool ,sizeof(KSEMAPHORE), TAG_SHARED_SEM);
    KeInitializeSemaphore(Resource->SharedWaiters,0,0x7fffffff);
    Resource->ActiveCount = 0;
    return(0);

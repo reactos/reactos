@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.15 2001/03/06 14:41:18 dwelch Exp $
+/* $Id: view.c,v 1.16 2001/03/07 16:48:40 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -55,6 +55,7 @@
 #include <ddk/ntifs.h>
 #include <internal/mm.h>
 #include <internal/cc.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -63,6 +64,9 @@
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define ROUND_DOWN(N, S) (ROUND_UP(N, S) - S)
+
+#define TAG_CSEG  TAG('C', 'S', 'E', 'G')
+#define TAG_BCB   TAG('B', 'C', 'B', ' ')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -153,7 +157,8 @@ CcRequestCacheSegment(PBCB Bcb,
    
    KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
 
-   current = ExAllocatePool(NonPagedPool, sizeof(CACHE_SEGMENT));
+   current = ExAllocatePoolWithTag(NonPagedPool, sizeof(CACHE_SEGMENT), 
+				   TAG_CSEG);
    current->BaseAddress = NULL;
    MmCreateMemoryArea(KernelMode,
 		      MmGetKernelAddressSpace(),
@@ -252,7 +257,7 @@ CcInitializeFileCache(PFILE_OBJECT FileObject,
 {
    DPRINT("CcInitializeFileCache(FileObject %x)\n",FileObject);
    
-   (*Bcb) = ExAllocatePool(NonPagedPool, sizeof(BCB));
+   (*Bcb) = ExAllocatePoolWithTag(NonPagedPool, sizeof(BCB), TAG_BCB);
    if ((*Bcb) == NULL)
      {
 	return(STATUS_UNSUCCESSFUL);

@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.4 2001/01/29 00:13:21 ea Exp $
+/* $Id: connect.c,v 1.5 2001/03/07 16:48:43 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,10 +15,16 @@
 #include <internal/ob.h>
 #include <internal/port.h>
 #include <internal/dbg.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
+/* GLOBALS *******************************************************************/
+
+#define TAG_LPC_CONNECT_MESSAGE   TAG('L', 'P', 'C', 'C')
+
+/* FUNCTIONS *****************************************************************/
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -98,8 +104,9 @@ NtConnectPort (PHANDLE				ConnectedPort,
    */
   DPRINT("Creating request message\n");
   
-  Request = ExAllocatePool (NonPagedPool,
-			    (sizeof (LPC_MESSAGE) + ConnectInfoLength));
+  Request = ExAllocatePoolWithTag (NonPagedPool,
+				   (sizeof (LPC_MESSAGE) + ConnectInfoLength),
+				   TAG_LPC_CONNECT_MESSAGE);
    
   Request->DataSize = ConnectInfoLength;
   Request->MessageSize = sizeof(LPC_MESSAGE) + ConnectInfoLength;

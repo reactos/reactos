@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.28 2001/02/06 00:11:19 dwelch Exp $
+/* $Id: handle.c,v 1.29 2001/03/07 16:48:45 dwelch Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <internal/ps.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -30,6 +31,10 @@ typedef struct
    LIST_ENTRY entry;
    HANDLE_REP handles[HANDLE_BLOCK_ENTRIES];
 } HANDLE_BLOCK, *PHANDLE_BLOCK;
+
+/* GLOBALS *******************************************************************/
+
+#define TAG_HANDLE_TABLE    TAG('H', 'T', 'B', 'L')
 
 /* FUNCTIONS ***************************************************************/
 
@@ -433,7 +438,9 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
    /*
     * Add a new handle block to the end of the list
     */
-   new_blk = (HANDLE_BLOCK *)ExAllocatePool(NonPagedPool,sizeof(HANDLE_BLOCK));
+   new_blk = 
+     (HANDLE_BLOCK *)ExAllocatePoolWithTag(NonPagedPool,sizeof(HANDLE_BLOCK),
+					   TAG_HANDLE_TABLE);
    memset(new_blk,0,sizeof(HANDLE_BLOCK));
    InsertTailList(&(Process->HandleTable.ListHead),
 		  &new_blk->entry);

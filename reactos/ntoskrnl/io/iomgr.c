@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.17 2001/01/28 17:37:48 ekohl Exp $
+/* $Id: iomgr.c,v 1.18 2001/03/07 16:48:42 dwelch Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -15,11 +15,15 @@
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <internal/io.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
+
+#define TAG_DEVICE_TYPE     TAG('D', 'E', 'V', 'T')
+#define TAG_FILE_TYPE       TAG('F', 'I', 'L', 'E')
 
 /* DATA ********************************************************************/
 
@@ -115,11 +119,10 @@ VOID IoInit (VOID)
 	/*
 	 * Register iomgr types: DeviceObjectType
 	 */
-	IoDeviceObjectType = ExAllocatePool (
-				NonPagedPool,
-				sizeof (OBJECT_TYPE)
-				);
+	IoDeviceObjectType = ExAllocatePool (NonPagedPool, 
+					     sizeof (OBJECT_TYPE));
 
+	IoDeviceObjectType->Tag = TAG_DEVICE_TYPE;
 	IoDeviceObjectType->TotalObjects = 0;
 	IoDeviceObjectType->TotalHandles = 0;
 	IoDeviceObjectType->MaxObjects = ULONG_MAX;
@@ -151,6 +154,7 @@ VOID IoInit (VOID)
 				sizeof (OBJECT_TYPE)
 				);
 
+	IoFileObjectType->Tag = TAG_FILE_TYPE;
 	IoFileObjectType->TotalObjects = 0;
 	IoFileObjectType->TotalHandles = 0;
 	IoFileObjectType->MaxObjects = ULONG_MAX;

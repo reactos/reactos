@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.10 2000/07/07 02:10:50 ekohl Exp $
+/* $Id: vpb.c,v 1.11 2001/03/07 16:48:42 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/io.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -20,6 +21,8 @@
 /* GLOBALS *******************************************************************/
 
 static KSPIN_LOCK IoVpbLock;
+
+#define TAG_VPB    TAG('V', 'P', 'B', ' ')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -35,7 +38,7 @@ NTSTATUS IoAttachVpb(PDEVICE_OBJECT DeviceObject)
 {
    PVPB Vpb;
    
-   Vpb = ExAllocatePool(NonPagedPool,sizeof(VPB));
+   Vpb = ExAllocatePoolWithTag(NonPagedPool, sizeof(VPB), TAG_VPB);
    if (Vpb==NULL)
      {
 	return(STATUS_UNSUCCESSFUL);

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.69 2001/02/10 22:51:11 dwelch Exp $
+/* $Id: thread.c,v 1.70 2001/03/07 16:48:45 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -26,6 +26,7 @@
 #include <internal/hal.h>
 #include <internal/ps.h>
 #include <internal/ob.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -272,6 +273,7 @@ PsInitThreadManagment(VOID)
    
    RtlInitUnicodeString(&PsThreadType->TypeName, L"Thread");
    
+   PsThreadType->Tag = TAG('T', 'H', 'R', 'T');
    PsThreadType->TotalObjects = 0;
    PsThreadType->TotalHandles = 0;
    PsThreadType->MaxObjects = 0;

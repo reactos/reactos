@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.10 2001/02/02 20:47:43 ekohl Exp $
+/* $Id: token.c,v 1.11 2001/03/07 16:48:45 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -14,6 +14,7 @@
 #include <limits.h>
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
+#include <internal/pool.h>
 
 #include <internal/debug.h>
 
@@ -226,6 +227,7 @@ VOID SeInitializeTokenManager(VOID)
    
    SeTokenType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
    
+   SeTokenType->Tag = TAG('T', 'O', 'K', 'T');
    SeTokenType->MaxObjects = ULONG_MAX;
    SeTokenType->MaxHandles = ULONG_MAX;
    SeTokenType->TotalObjects = 0;

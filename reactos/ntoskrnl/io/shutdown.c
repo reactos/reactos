@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.3 2000/09/10 13:54:01 ekohl Exp $
+/* $Id: shutdown.c,v 1.4 2001/03/07 16:48:42 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,9 +12,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/pool.h>
 
 #include <internal/debug.h>
-
 
 /* LOCAL DATA ***************************************************************/
 
@@ -27,6 +27,7 @@ typedef struct _SHUTDOWN_ENTRY
 static LIST_ENTRY ShutdownListHead;
 static KSPIN_LOCK ShutdownListLock;
 
+#define TAG_SHUTDOWN_ENTRY    TAG('S', 'H', 'U', 'T')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -81,7 +82,8 @@ NTSTATUS STDCALL IoRegisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 {
    PSHUTDOWN_ENTRY Entry;
 
-   Entry = ExAllocatePool(NonPagedPool, sizeof(SHUTDOWN_ENTRY));
+   Entry = ExAllocatePoolWithTag(NonPagedPool, sizeof(SHUTDOWN_ENTRY),
+				 TAG_SHUTDOWN_ENTRY);
    if (Entry == NULL)
      return STATUS_INSUFFICIENT_RESOURCES;
 

@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.42 2001/02/14 02:53:53 dwelch Exp $
+/* $Id: mm.c,v 1.43 2001/03/07 16:48:43 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -88,6 +88,7 @@ NTSTATUS MmReleaseMmInfo(PEPROCESS Process)
    Mmi386ReleaseMmInfo(Process);
    
    MmUnlockAddressSpace(&Process->AddressSpace);
+   MmDestroyAddressSpace(&Process->AddressSpace);
    
    DPRINT("Finished MmReleaseMmInfo()\n");
    return(STATUS_SUCCESS);

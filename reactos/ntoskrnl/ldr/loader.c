@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.67 2001/02/21 18:18:31 ekohl Exp $
+/* $Id: loader.c,v 1.68 2001/03/07 16:48:43 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,6 +29,7 @@
 #include <internal/ob.h>
 #include <internal/ps.h>
 #include <internal/ldr.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -45,6 +46,9 @@ NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry);
 
 LIST_ENTRY ModuleListHead;
 POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
+
+#define TAG_DRIVER_MEM  TAG('D', 'R', 'V', 'M')
+#define TAG_SYM_BUF     TAG('S', 'Y', 'M', 'B')
 
 /* FORWARD DECLARATIONS ******************************************************/
 
@@ -82,6 +86,7 @@ VOID LdrInitModuleManagement(VOID)
 
   /*  Register the process object type  */
   IoDriverObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
+  IoDriverObjectType->Tag = TAG('D', 'R', 'V', 'T');
   IoDriverObjectType->TotalObjects = 0;
   IoDriverObjectType->TotalHandles = 0;
   IoDriverObjectType->MaxObjects = ULONG_MAX;
@@ -340,8 +345,9 @@ LdrLoadModule(PUNICODE_STRING Filename)
   CHECKPOINT;
 
   /*  Allocate nonpageable memory for driver  */
-  ModuleLoadBase = ExAllocatePool(NonPagedPool,
-                                  FileStdInfo.EndOfFile.u.LowPart);
+  ModuleLoadBase = ExAllocatePoolWithTag(NonPagedPool,
+					 FileStdInfo.EndOfFile.u.LowPart,
+					 TAG_DRIVER_MEM);
 
   if (ModuleLoadBase == NULL)
     {
@@ -789,7 +795,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
     {
       PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
 
-      SymbolNameBuf = ExAllocatePool(NonPagedPool, 512);
+      SymbolNameBuf = ExAllocatePoolWithTag(NonPagedPool, 512, TAG_SYM_BUF);
 
       /*  Process each import module  */
       ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)

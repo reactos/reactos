@@ -1,4 +1,4 @@
-/* $Id: pageop.c,v 1.1 2001/02/16 18:32:20 dwelch Exp $
+/* $Id: pageop.c,v 1.2 2001/03/07 16:48:44 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -24,6 +24,8 @@
 
 KSPIN_LOCK MmPageOpHashTableLock;
 PMM_PAGEOP MmPageOpHashTable[PAGEOP_HASH_TABLE_SIZE];
+
+#define TAG_MM_PAGEOP   TAG('M', 'P', 'O', 'P')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -138,7 +140,8 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
   /*
    * Otherwise add a new pageop.
    */
-  PageOp = ExAllocatePool(NonPagedPool, sizeof(MM_PAGEOP));
+  PageOp = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_PAGEOP),
+				 TAG_MM_PAGEOP);
   if (PageOp == NULL)
     {
       KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);

@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.47 2001/02/18 17:43:32 dwelch Exp $
+/* $Id: section.c,v 1.48 2001/03/07 16:48:44 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,6 +17,7 @@
 #include <internal/ob.h>
 #include <internal/io.h>
 #include <internal/ps.h>
+#include <internal/pool.h>
 #include <ddk/ntifs.h>
 
 #define NDEBUG
@@ -31,6 +32,9 @@ static GENERIC_MAPPING MmpSectionMapping = {
 	STANDARD_RIGHTS_WRITE | SECTION_MAP_WRITE,
 	STANDARD_RIGHTS_EXECUTE | SECTION_MAP_EXECUTE,
 	SECTION_ALL_ACCESS};
+
+#define TAG_MM_SECTION_SEGMENT   TAG('M', 'M', 'S', 'S')
+#define TAG_SECTION_PAGE_TABLE   TAG('M', 'S', 'P', 'T')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -89,7 +93,8 @@ MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
      {
 	Table = 
 	  Segment->PageDirectory.PageTables[DirectoryOffset] =
-	  ExAllocatePool(NonPagedPool, sizeof(SECTION_PAGE_TABLE));
+	  ExAllocatePoolWithTag(NonPagedPool, sizeof(SECTION_PAGE_TABLE),
+				TAG_SECTION_PAGE_TABLE);
 	memset(Table, 0, sizeof(SECTION_PAGE_TABLE));
 	DPRINT("Table %x\n", Table);
      }
@@ -666,6 +671,7 @@ MmpCloseSection(PVOID ObjectBody,
 {
    DPRINT("MmpCloseSection(OB %x, HC %d) RC %d\n",
 	   ObjectBody, HandleCount, ObGetReferenceCount(ObjectBody));
+   
 }
 
 NTSTATUS MmpCreateSection(PVOID ObjectBody,
@@ -759,6 +765,7 @@ MmInitSectionImplementation(VOID)
    
    RtlInitUnicodeString(&MmSectionObjectType->TypeName, L"Section");
    
+   MmSectionObjectType->Tag = TAG('S', 'E', 'C', 'T');
    MmSectionObjectType->TotalObjects = 0;
    MmSectionObjectType->TotalHandles = 0;
    MmSectionObjectType->MaxObjects = ULONG_MAX;
@@ -832,7 +839,8 @@ MmCreatePageFileSection(PHANDLE SectionHandle,
   Section->Flags = 0;
   Section->FileObject = NULL;
   Section->MaximumSize = MaximumSize;
-  Segment = ExAllocatePool(NonPagedPool, sizeof(MM_SECTION_SEGMENT));
+  Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
+				  TAG_MM_SECTION_SEGMENT);
   if (Segment == NULL)
     {
       ZwClose(*SectionHandle);
@@ -989,7 +997,8 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
    */
   if (FileObject->SectionObjectPointers->DataSectionObject == NULL)
     {
-      Segment = ExAllocatePool(NonPagedPool, sizeof(MM_SECTION_SEGMENT));
+      Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
+				      TAG_MM_SECTION_SEGMENT);
       if (Segment == NULL)
 	{
 	  KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
@@ -1309,7 +1318,9 @@ MmCreateImageSection(PHANDLE SectionHandle,
       ULONG i;
       
       SectionSegments = 
-	ExAllocatePool(NonPagedPool, sizeof(MM_SECTION_SEGMENT) * NrSegments);
+	ExAllocatePoolWithTag(NonPagedPool, 
+			     sizeof(MM_SECTION_SEGMENT) * NrSegments,
+			     TAG_MM_SECTION_SEGMENT);
       if (SectionSegments == NULL)
 	{
 	  KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
@@ -1365,6 +1376,7 @@ MmCreateImageSection(PHANDLE SectionHandle,
 
       FileObject->SectionObjectPointers->ImageSectionObject = 
 	(PVOID)SectionSegments;       
+      ExFreePool(ImageSections);
     }
   else
     {

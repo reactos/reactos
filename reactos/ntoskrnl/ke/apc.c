@@ -16,6 +16,7 @@
 #include <internal/ps.h>
 #include <internal/ke.h>
 #include <internal/ldr.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -30,6 +31,8 @@ KSPIN_LOCK PiApcLock;
 extern KSPIN_LOCK PiThreadListLock;
 
 VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
+
+#define TAG_KAPC     TAG('K', 'A', 'P', 'C')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -467,7 +470,7 @@ NTSTATUS STDCALL NtQueueApcThread(HANDLE			ThreadHandle,
 	return(Status);
      }
    
-   Apc = ExAllocatePool(NonPagedPool, sizeof(KAPC));
+   Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_KAPC);
    if (Apc == NULL)
      {
 	ObDereferenceObject(Thread);

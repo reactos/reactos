@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.18 2001/01/28 17:37:48 ekohl Exp $
+/* $Id: symlink.c,v 1.19 2001/03/07 16:48:42 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,6 +14,7 @@
 #include <limits.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -35,6 +36,9 @@ static GENERIC_MAPPING IopSymbolicLinkMapping = {
 	STANDARD_RIGHTS_WRITE,
 	STANDARD_RIGHTS_EXECUTE|SYMBOLIC_LINK_QUERY,
 	SYMBOLIC_LINK_ALL_ACCESS};
+
+#define TAG_SYMLINK_TTARGET     TAG('S', 'Y', 'T', 'T')
+#define TAG_SYMLINK_TARGET      TAG('S', 'Y', 'M', 'T')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -134,8 +138,9 @@ IopParseSymbolicLink (
 	if (RemainingPath && *RemainingPath)
 		TargetPath.MaximumLength += (wcslen (*RemainingPath) * sizeof(WCHAR));
 	TargetPath.Length = TargetPath.MaximumLength - sizeof(WCHAR);
-	TargetPath.Buffer = ExAllocatePool (NonPagedPool,
-					    TargetPath.MaximumLength);
+	TargetPath.Buffer = ExAllocatePoolWithTag (NonPagedPool,
+						   TargetPath.MaximumLength,
+						   TAG_SYMLINK_TTARGET);
 	wcscpy (TargetPath.Buffer, SymlinkObject->TargetName.Buffer);
 	if (RemainingPath && *RemainingPath)
 		wcscat (TargetPath.Buffer, *RemainingPath);
@@ -171,6 +176,7 @@ VOID IoInitSymbolicLinkImplementation (VOID)
 {
    IoSymbolicLinkType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
    
+   IoSymbolicLinkType->Tag = TAG('S', 'Y', 'M', 'T');
    IoSymbolicLinkType->TotalObjects = 0;
    IoSymbolicLinkType->TotalHandles = 0;
    IoSymbolicLinkType->MaxObjects = ULONG_MAX;
@@ -381,10 +387,9 @@ IoCreateSymbolicLink (
 	SymbolicLink->TargetName.MaximumLength = 
 		((wcslen(DeviceName->Buffer) + 1) * sizeof(WCHAR));
 	SymbolicLink->TargetName.Buffer =
-		ExAllocatePool(
-			NonPagedPool,
-			SymbolicLink->TargetName.MaximumLength
-			);
+		ExAllocatePoolWithTag(NonPagedPool,
+			       SymbolicLink->TargetName.MaximumLength,
+			       TAG_SYMLINK_TARGET);
 	RtlCopyUnicodeString(
 		& (SymbolicLink->TargetName),
 		DeviceName
@@ -501,11 +506,10 @@ NtCreateSymbolicLinkObject (
 	SymbolicLink->TargetName.Length = 0;
 	SymbolicLink->TargetName.MaximumLength = 
 		((wcslen(DeviceName->Buffer) + 1) * sizeof(WCHAR));
-	SymbolicLink->TargetName.Buffer =
-		ExAllocatePool(
-			NonPagedPool,
-			SymbolicLink->TargetName.MaximumLength
-			);
+	SymbolicLink->TargetName.Buffer = 
+	  ExAllocatePoolWithTag(NonPagedPool,
+				SymbolicLink->TargetName.MaximumLength,
+				TAG_SYMLINK_TARGET);
 	RtlCopyUnicodeString(
 		& (SymbolicLink->TargetName),
 		DeviceName

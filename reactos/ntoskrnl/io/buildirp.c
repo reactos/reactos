@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.23 2001/01/13 18:38:09 dwelch Exp $
+/* $Id: buildirp.c,v 1.24 2001/03/07 16:48:41 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,9 +13,14 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
+/* GLOBALS ******************************************************************/
+
+#define TAG_SYS_BUF  TAG('S', 'B', 'U', 'F')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -32,8 +37,8 @@ NTSTATUS IoPrepareIrpBuffer(PIRP Irp,
    if (DeviceObject->Flags & DO_BUFFERED_IO)
      {
 	DPRINT("Doing buffer i/o\n");
-	Irp->AssociatedIrp.SystemBuffer = (PVOID)
-			   ExAllocatePool(NonPagedPool,Length);
+	Irp->AssociatedIrp.SystemBuffer = 
+	  (PVOID)ExAllocatePoolWithTag(NonPagedPool,Length, TAG_SYS_BUF);
 	if (Irp->AssociatedIrp.SystemBuffer==NULL)
 	  {
 	     IoFreeIrp(Irp);
@@ -290,7 +295,7 @@ PIRP STDCALL IoBuildDeviceIoControlRequest(ULONG IoControlCode,
 	if (BufferLength)
 	  {
 	     Irp->AssociatedIrp.SystemBuffer = (PVOID)
-	       ExAllocatePool(NonPagedPool,BufferLength);
+	       ExAllocatePoolWithTag(NonPagedPool,BufferLength, TAG_SYS_BUF);
 	    
 	     if (Irp->AssociatedIrp.SystemBuffer == NULL)
 	       {
@@ -315,7 +320,8 @@ PIRP STDCALL IoBuildDeviceIoControlRequest(ULONG IoControlCode,
 	if (InputBuffer && InputBufferLength)
 	  {
 	     Irp->AssociatedIrp.SystemBuffer = (PVOID)
-               ExAllocatePool(NonPagedPool,InputBufferLength);
+               ExAllocatePoolWithTag(NonPagedPool,InputBufferLength, 
+				     TAG_SYS_BUF);
 	     
 	     if (Irp->AssociatedIrp.SystemBuffer == NULL)
 	       {
@@ -347,7 +353,8 @@ PIRP STDCALL IoBuildDeviceIoControlRequest(ULONG IoControlCode,
 	if (InputBuffer && InputBufferLength)
 	  {
             Irp->AssociatedIrp.SystemBuffer = (PVOID)
-               ExAllocatePool(NonPagedPool,InputBufferLength);
+               ExAllocatePoolWithTag(NonPagedPool,InputBufferLength, 
+				     TAG_SYS_BUF);
 	     
 	     if (Irp->AssociatedIrp.SystemBuffer==NULL)
 	       {
