@@ -44,7 +44,7 @@ _Ki386ContextSwitch:
 	movl	%esp, %ebp
 
 	/*
-	 * Save callee save register
+	 * Save callee save registers.
 	 */
 	pushl	%ebx
 	pushl	%esi
@@ -56,7 +56,7 @@ _Ki386ContextSwitch:
 	cli
 
 	/*
-	 * Get the pointer to the new thread
+	 * Get the pointer to the new thread.
 	 */
 	movl	8(%ebp), %ebx
 		
@@ -72,13 +72,13 @@ _Ki386ContextSwitch:
 	popl	%ebx
 
 	/*
-	 * Load the PCR selector
+	 * Load the PCR selector.
 	 */
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 
 	/*
-	 * Set the current thread information in the PCR
+	 * Set the current thread information in the PCR.
 	 */
 	 movl	%ebx, %fs:KPCR_CURRENT_THREAD
 

@@ -39,6 +39,9 @@
 /* TYPES ********************************************************************/
 
 typedef struct _KPROCESS_PROFILE
+/*
+ * List of the profile data structures associated with a process.
+ */
 {
   LIST_ENTRY ProfileListHead;
   LIST_ENTRY ListEntry;
@@ -46,18 +49,44 @@ typedef struct _KPROCESS_PROFILE
 } KPROCESS_PROFILE, *PKPROCESS_PROFILE;
 
 typedef struct _KPROFILE
+/*
+ * Describes a contiguous region of process memory that is being profiled.
+ */
 {
   CSHORT Type;
   CSHORT Name;
-  LIST_ENTRY ListEntry;
+
+  /* Entry in the list of profile data structures for this process. */
+  LIST_ENTRY ListEntry; 
+
+  /* Base of the region being profiled. */
   PVOID Base;
+
+  /* Size of the region being profiled. */
   ULONG Size;
+
+  /* Shift of offsets from the region to buckets in the profiling buffer. */
   ULONG BucketShift;
+
+  /* MDL which described the buffer that receives profiling data. */
   PMDL BufferMdl;
+
+  /* System alias for the profiling buffer. */
   PULONG Buffer;
+
+  /* Size of the buffer for profiling data. */
   ULONG BufferSize;
+
+  /* 
+   * Mask of processors for which profiling data should be collected. 
+   * Currently unused.
+   */
   ULONG ProcessorMask;
+
+  /* TRUE if profiling has been started for this region. */
   BOOLEAN Started;
+
+  /* Pointer (and reference) to the process which is being profiled. */
   PEPROCESS Process;
 } KPROFILE, *PKPROFILE;
 
@@ -72,7 +101,7 @@ static GENERIC_MAPPING ExpProfileMapping = {
 	STANDARD_RIGHTS_ALL};
 
 /*
- * Size of the profile hash table
+ * Size of the profile hash table.
  */
 #define PROFILE_HASH_TABLE_SIZE      (32)
 
@@ -82,15 +111,19 @@ static GENERIC_MAPPING ExpProfileMapping = {
 static LIST_ENTRY ProcessProfileListHashTable[PROFILE_HASH_TABLE_SIZE];
 
 /*
- * Head of the list of profile data structures for the kernel
+ * Head of the list of profile data structures for the kernel.
  */
 static LIST_ENTRY SystemProfileList;
 
 /*
- * Lock that protects the profiling data structures
+ * Lock that protects the profiling data structures.
  */
 static KSPIN_LOCK ProfileListLock;
 
+/*
+ * Timer interrupts happen before we have initialized the profiling
+ * data structures so just ignore them before that.
+ */
 static BOOLEAN ProfileInitDone = FALSE;
 
 /* FUNCTIONS *****************************************************************/
@@ -397,6 +430,7 @@ NtCreateProfile(OUT PHANDLE UnsafeProfileHandle,
   else
     {
       Process = NULL;
+      /* FIXME: Check privilege. */
     }
 
   /*
