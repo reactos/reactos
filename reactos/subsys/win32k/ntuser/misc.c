@@ -17,13 +17,15 @@
 /* registered Logon process */
 PW32PROCESS LogonProcess = NULL;
 
-void W32kRegisterPrimitiveMessageQueue() {
+VOID W32kRegisterPrimitiveMessageQueue(VOID)
+{
   extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
   if( !pmPrimitiveMessageQueue ) {
     PW32THREAD pThread;
     pThread = PsGetWin32Thread();
     if( pThread && pThread->MessageQueue ) {
       pmPrimitiveMessageQueue = pThread->MessageQueue;
+      IntReferenceMessageQueue(pmPrimitiveMessageQueue);
       DPRINT( "Installed primitive input queue.\n" );
     }    
   } else {
@@ -31,7 +33,15 @@ void W32kRegisterPrimitiveMessageQueue() {
   }
 }
 
-PUSER_MESSAGE_QUEUE W32kGetPrimitiveMessageQueue() {
+VOID W32kUnregisterPrimitiveMessageQueue(VOID)
+{
+  extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
+  IntDereferenceMessageQueue(pmPrimitiveMessageQueue);
+  pmPrimitiveMessageQueue = NULL;
+}
+
+PUSER_MESSAGE_QUEUE W32kGetPrimitiveMessageQueue()
+{
   extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
   return pmPrimitiveMessageQueue;
 }
