@@ -3,19 +3,25 @@
 #
 PATH_TO_TOP = ../..
 
-ZLIB_OBJECTS    = zlib/adler32.o zlib/deflate.o zlib/infblock.o zlib/infcodes.o \
-                  zlib/inflate.o zlib/inftrees.o zlib/infutil.o zlib/inffast.o \
-                  zlib/trees.o zlib/zutil.o
+#FIXME: why doesn't this work?
+#ZLIB_OBJECTS    = $(PATH_TO_TOP)/lib/zlib/zlib.a
+ZLIB_PATH = $(PATH_TO_TOP)/lib/zlib
+
+ZLIB_OBJECTS    = $(ZLIB_PATH)/adler32.o $(ZLIB_PATH)/deflate.o \
+                  $(ZLIB_PATH)/infblock.o $(ZLIB_PATH)/infcodes.o \
+                  $(ZLIB_PATH)/inflate.o $(ZLIB_PATH)/inftrees.o \
+                  $(ZLIB_PATH)/infutil.o $(ZLIB_PATH)/inffast.o \
+                  $(ZLIB_PATH)/trees.o $(ZLIB_PATH)/zutil.o
 ENGINE_OBJECTS  = $(ZLIB_OBJECTS) cabinet.o mszip.o raw.o
 TEST_OBJECTS    = $(ENGINE_OBJECTS) test.o
 OBJECTS         = $(ENGINE_OBJECTS) main.o dfp.o
 TARGET          = cabman
 PROGS           = $(TARGET).exe test.exe
 
-CFLAGS 		+= -O3
+#FIXME: zlib should be compiled and installed in the SDK by the master makefile
+CFLAGS 		+= -O3 -I$(ZLIB_PATH)
 
-CLEAN_FILES = *.o zlib/*.o $(TARGET).exe $(TARGET).sym test.exe test.sym
-
+CLEAN_FILES = *.o $(TARGET).exe $(TARGET).sym test.exe test.sym
 
 all: $(PROGS)
 
@@ -42,7 +48,11 @@ else
 	$(CP) $* ../../$(DIST_DIR)/apps/$*
 endif
 
-$(TARGET).exe: $(OBJECTS)
+#FIXME: zlib should be compiled and installed in the SDK by the master makefile
+$(ZLIB_PATH)/zlib.a:
+	make -C $(ZLIB_PATH) -f makefile.reactos
+
+$(TARGET).exe: $(OBJECTS) $(ZLIB_PATH)/zlib.a
 	$(CC) $(OBJECTS) -o $(TARGET).exe
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
 	

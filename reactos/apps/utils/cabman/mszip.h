@@ -8,7 +8,7 @@
 #define __MSZIP_H
 
 #include "cabinet.h"
-#include "zlib/zlib.h"
+#include <zlib.h>
 
 #define MSZIP_MAGIC 0x4B43
 
