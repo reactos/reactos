@@ -637,7 +637,11 @@ KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount )
 	DbgPrint("Frames: ");
 	if ( !Frame )
 	{
+#if defined __GNUC__
 		__asm__("mov %%ebp, %%ebx" : "=b" (Frame) : );
+#elif defined(_MSC_VER)
+		__asm mov [Frame], ebp
+#endif
 		Frame = (PULONG)Frame[0]; // step out of KeRosDumpStackFrames
 	}
 	while ( MmIsAddressValid(Frame) && i++ < FrameCount )
