@@ -1720,7 +1720,15 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                        process so we're sure we're in the right context! */
 
                     KeAttachProcess(&Process->Pcb);
-                    Process->Peb->BeingDebugged = TRUE;
+                    _SEH_TRY
+                    {
+                      Process->Peb->BeingDebugged = TRUE;
+                    }
+                    _SEH_HANDLE
+                    {
+                      DPRINT1("Trying to set the Peb->BeingDebugged field of process 0x%x failed, exception: 0x%x\n", Process, _SEH_GetExceptionCode());
+                    }
+                    _SEH_END;
                     KeDetachProcess();
                   }
                   Status = STATUS_SUCCESS;
