@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.17 2003/12/29 23:04:08 sedwards Exp $
+/* $Id: global.c,v 1.18 2003/12/30 23:16:43 sedwards Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -10,6 +10,7 @@
  */
 
 #include <k32.h>
+#include <time.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
@@ -353,39 +354,50 @@ GlobalLock(HGLOBAL hMem)
 VOID STDCALL
 GlobalMemoryStatus(LPMEMORYSTATUS lpBuffer)
 {
-	NTSTATUS		Status;
-	SYSTEM_PERFORMANCE_INFORMATION	Spi;
-	QUOTA_LIMITS		Ql;
-	VM_COUNTERS		Vmc;
-	PIMAGE_NT_HEADERS	ImageNtHeader;
+    static MEMORYSTATUS	cached_memstatus;
+//    static int cache_lastchecked = 0;
+    SYSTEM_INFO si;
 
-	RtlZeroMemory (lpBuffer, sizeof (MEMORYSTATUS));
-	lpBuffer->dwLength = sizeof (MEMORYSTATUS);
-	Status = NtQuerySystemInformation (
-			SystemPerformanceInformation,
-			& Spi,
-			sizeof Spi,
-			NULL
-			);
-	/* FIXME: perform computations and fill lpBuffer fields */
-	Status = NtQueryInformationProcess (
-			GetCurrentProcess(),
-			ProcessQuotaLimits,
-			& Ql,
-			sizeof Ql,
-			NULL
-			);
-	/* FIXME: perform computations and fill lpBuffer fields */
-	Status = NtQueryInformationProcess (
-			GetCurrentProcess(),
-			ProcessVmCounters,
-			& Vmc,
-			sizeof Vmc,
-			NULL
-			);
-	/* FIXME: perform computations and fill lpBuffer fields */
-	ImageNtHeader = RtlImageNtHeader ((PVOID)NtCurrentPeb()->ImageBaseAddress);
-	/* FIXME: perform computations and fill lpBuffer fields */
+//    if (GetSystemTimeAsFileTime(NULL)==cache_lastchecked) {
+//	memcpy(lpBuffer,&cached_memstatus,sizeof(MEMORYSTATUS));
+//	return;
+//    }
+//    cache_lastchecked = GetSystemTimeAsFileTime(NULL);
+
+    lpBuffer->dwMemoryLoad    = 0;
+    lpBuffer->dwTotalPhys     = 16*1024*1024;
+    lpBuffer->dwAvailPhys     = 16*1024*1024;
+    lpBuffer->dwTotalPageFile = 16*1024*1024;
+    lpBuffer->dwAvailPageFile = 16*1024*1024;
+
+    /* Some applications (e.g. QuickTime 6) crash if we tell them there
+     * is more than 2GB of physical memory.
+     */
+    if (lpBuffer->dwTotalPhys>2U*1024*1024*1024)
+    {
+        lpBuffer->dwTotalPhys=2U*1024*1024*1024;
+        lpBuffer->dwAvailPhys=2U*1024*1024*1024;
+    }
+
+    /* FIXME: should do something for other systems */
+    GetSystemInfo(&si);
+    lpBuffer->dwTotalVirtual  = (char*)si.lpMaximumApplicationAddress-(char*)si.lpMinimumApplicationAddress;
+    /* FIXME: we should track down all the already allocated VM pages and substract them, for now arbitrarily remove 64KB so that it matches NT */
+    lpBuffer->dwAvailVirtual  = lpBuffer->dwTotalVirtual-64*1024;
+    memcpy(&cached_memstatus,lpBuffer,sizeof(MEMORYSTATUS));
+
+    /* it appears some memory display programs want to divide by these values */
+    if(lpBuffer->dwTotalPageFile==0)
+        lpBuffer->dwTotalPageFile++;
+
+    if(lpBuffer->dwAvailPageFile==0)
+        lpBuffer->dwAvailPageFile++;
+
+    DPRINT1("<-- LPMEMORYSTATUS: dwLength %ld, dwMemoryLoad %ld, dwTotalPhys %ld, dwAvailPhys %ld,"
+          " dwTotalPageFile %ld, dwAvailPageFile %ld, dwTotalVirtual %ld, dwAvailVirtual %ld\n",
+          lpBuffer->dwLength, lpBuffer->dwMemoryLoad, lpBuffer->dwTotalPhys, lpBuffer->dwAvailPhys,
+          lpBuffer->dwTotalPageFile, lpBuffer->dwAvailPageFile, lpBuffer->dwTotalVirtual,
+          lpBuffer->dwAvailVirtual);
 }
 
 
