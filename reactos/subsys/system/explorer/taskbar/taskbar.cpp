@@ -201,19 +201,22 @@ int TaskBar::Notify(int id, NMHDR* pnmh)
 void TaskBar::ActivateApp(TaskBarMap::iterator it, bool can_minimize)
 {
 	HWND hwnd = it->first;
+	bool minimize_it = can_minimize && (hwnd==GetForegroundWindow() || hwnd==_last_foreground_wnd);
 
-	if (can_minimize && (hwnd==GetForegroundWindow() || hwnd==_last_foreground_wnd)) {
-		PostMessage(hwnd, WM_SYSCOMMAND, SC_MINIMIZE, 0);
-		_last_foreground_wnd = 0;
-	} else {
-		 // switch to selected application window
+	 // switch to selected application window
+	if (!minimize_it)
 		if (IsIconic(hwnd))
 			PostMessage(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
 
-		SetForegroundWindow(hwnd);
+	 // In case minimize_it is true, we _have_ to switch to the app before
+	 // posting SW_MINIMIZE to be compatible with some applications (e.g. "Sleipnir")
+	SetForegroundWindow(hwnd);
 
+	if (minimize_it) {
+		PostMessage(hwnd, WM_SYSCOMMAND, SC_MINIMIZE, 0);
+		_last_foreground_wnd = 0;
+	} else
 		_last_foreground_wnd = hwnd;
-	}
 
 	Refresh();
 }
