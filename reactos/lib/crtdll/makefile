@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.55 2003/05/27 20:01:30 hbirr Exp $
+# $Id: makefile,v 1.56 2003/06/09 20:23:06 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -398,7 +398,6 @@ STDLIB_OBJECTS = \
 STRING_OBJECTS = \
 	$(PATH_TO_MSVCRT)/string/memicmp.o \
 	$(PATH_TO_MSVCRT)/string/strcoll.o \
-	$(PATH_TO_MSVCRT)/string/strcspn.o \
 	$(PATH_TO_MSVCRT)/string/strdup.o \
 	string/strerror.o \
 	$(PATH_TO_MSVCRT)/string/stricmp.o \
@@ -407,7 +406,6 @@ STRING_OBJECTS = \
 	$(PATH_TO_MSVCRT)/string/strpbrk.o \
 	$(PATH_TO_MSVCRT)/string/strrev.o \
 	$(PATH_TO_MSVCRT)/string/strset.o \
-	$(PATH_TO_MSVCRT)/string/strspn.o \
 	$(PATH_TO_MSVCRT)/string/strstr.o \
 	string/strtok.o \
 	$(PATH_TO_MSVCRT)/string/strupr.o \

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.85 2003/06/07 11:33:13 ekohl Exp $
+# $Id: makefile,v 1.86 2003/06/09 20:23:06 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -55,11 +55,10 @@ STDLIB_OBJECTS = stdlib/abs.o stdlib/atoi.o stdlib/atoi64.o stdlib/atol.o \
 
 STRING_OBJECTS = string/ctype.o  \
                  string/memicmp.o\
-                 string/strcspn.o \
                  string/stricmp.o \
                  string/strlwr.o  \
                  string/strnicmp.o \
-                 string/strpbrk.o  string/strspn.o \
+                 string/strpbrk.o  \
                  string/strstr.o string/strupr.o string/wstring.o
 
 ARCH_OBJECTS = \

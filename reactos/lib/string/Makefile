@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2003/06/01 19:23:18 hbirr Exp $
+# $Id: Makefile,v 1.4 2003/06/09 20:23:06 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -29,12 +29,14 @@ TARGET_OBJECTS = \
 	strchr.o \
 	strcmp.o \
 	strcpy.o \
+	strcspn.o \
 	strlen.o \
 	strncat.o \
 	strncmp.o \
 	strncpy.o \
 	strnlen.o \
 	strrchr.o \
+	strspn.o \
 	wcscat.o \
 	wcschr.o \
 	wcscmp.o \
