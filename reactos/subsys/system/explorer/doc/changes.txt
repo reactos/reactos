@@ -75,3 +75,4 @@ If you search for more information, look into the CVS repository.
 						XML storage for configuration options
 28.03.2004	m. fuchs	configuration options for showing/hiding clock, ...
 04.04.2004	m. fuchs	import of IE bookmarks; explorer sidebar with bookmark display
+09.04.2004	m. fuchs	changed favorites start menu implementation to work with internal bookmarks
