@@ -1,4 +1,4 @@
-/* $Id: pin.c,v 1.9 2002/12/15 17:01:52 chorns Exp $
+/* $Id: pin.c,v 1.10 2003/01/11 15:22:31 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,14 +26,9 @@
 
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
-/* FUNCTIONS *****************************************************************/
+extern NPAGED_LOOKASIDE_LIST iBcbLookasideList;
 
-typedef struct _INTERNAL_BCB
-{
-  PUBLIC_BCB PFCB;
-  PCACHE_SEGMENT CacheSegment;
-  BOOLEAN Dirty;
-} INTERNAL_BCB, *PINTERNAL_BCB;
+/* FUNCTIONS *****************************************************************/
 
 BOOLEAN STDCALL
 CcMapData (IN PFILE_OBJECT FileObject,
@@ -91,12 +86,13 @@ CcMapData (IN PFILE_OBJECT FileObject,
 	}
     }
   *pBuffer += ReadOffset % Bcb->CacheSegmentSize;
-  iBcb = ExAllocatePool (NonPagedPool, sizeof(INTERNAL_BCB));
+  iBcb = ExAllocateFromNPagedLookasideList(&iBcbLookasideList);
   if (iBcb == NULL)
     {
       CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
       return FALSE;
     }
+  memset(iBcb, 0, sizeof(INTERNAL_BCB));
   iBcb->CacheSegment = CacheSeg;
   iBcb->Dirty = FALSE;
   iBcb->PFCB.MappedLength = Length;
@@ -111,7 +107,7 @@ CcUnpinData (IN PVOID Bcb)
   PINTERNAL_BCB iBcb = Bcb;
   CcRosReleaseCacheSegment(iBcb->CacheSegment->Bcb, iBcb->CacheSegment, TRUE, 
 			   iBcb->Dirty, FALSE);
-  ExFreePool(iBcb);
+  ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
 }
 
 VOID STDCALL
@@ -119,10 +115,6 @@ CcSetDirtyPinnedData (IN PVOID Bcb,
 		      IN PLARGE_INTEGER Lsn)
 {
    PINTERNAL_BCB iBcb = Bcb;
-#if 0
    iBcb->Dirty = TRUE;
-#else
-   WriteCacheSegment(iBcb->CacheSegment);
-#endif
 }
 
