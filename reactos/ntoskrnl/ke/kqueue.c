@@ -17,55 +17,54 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID 
-InsertBeforeEntryInList(PLIST_ENTRY Head, PLIST_ENTRY After, PLIST_ENTRY Entry)
-{
-   InsertHeadList(After, Entry);
-}
-
 /*
  * @implemented
  */
 BOOLEAN STDCALL
-KeInsertByKeyDeviceQueue (PKDEVICE_QUEUE		DeviceQueue,
-			  PKDEVICE_QUEUE_ENTRY	DeviceQueueEntry,
-			  ULONG			SortKey)
+KeInsertByKeyDeviceQueue (
+  IN PKDEVICE_QUEUE		DeviceQueue,
+  IN PKDEVICE_QUEUE_ENTRY	DeviceQueueEntry,
+  IN ULONG			SortKey)
 {
-   KIRQL oldlvl;
-   PLIST_ENTRY current;
-   PKDEVICE_QUEUE_ENTRY entry;
+  PLIST_ENTRY current;
+  PKDEVICE_QUEUE_ENTRY entry;
    
-   DPRINT("KeInsertByKeyDeviceQueue()\n");
+  DPRINT("KeInsertByKeyDeviceQueue()\n");
+  assert(KeGetCurrentIrql() == DISPATCH_LEVEL);   
    
-   DeviceQueueEntry->SortKey=SortKey;
+  DeviceQueueEntry->SortKey=SortKey;
 
-   KeAcquireSpinLock(&DeviceQueue->Lock,&oldlvl);
+  KeAcquireSpinLockAtDpcLevel(&DeviceQueue->Lock);
    
-   if (!DeviceQueue->Busy)
-     {
-	DeviceQueue->Busy=TRUE;
-	KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
-	return(FALSE);
-     }
+  if (!DeviceQueue->Busy)
+  {
+    DeviceQueue->Busy=TRUE;
+    KeReleaseSpinLockFromDpcLevel(&DeviceQueue->Lock);
+    return(FALSE);
+  }
       
-   current=DeviceQueue->DeviceListHead.Flink;
-   while (current!=(&DeviceQueue->DeviceListHead))
-     {
-	entry = CONTAINING_RECORD(current,KDEVICE_QUEUE_ENTRY,DeviceListEntry);
-	if (entry->SortKey < SortKey)
-	  {
-	     InsertBeforeEntryInList(&DeviceQueue->DeviceListHead,
-				     &DeviceQueueEntry->DeviceListEntry,
-				     current);
-	     KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
-	     return(TRUE);
-	  }
-	current = current->Flink;
-     }   
-   InsertTailList(&DeviceQueue->DeviceListHead,&DeviceQueueEntry->DeviceListEntry);
+  /*
+  Insert new entry after the last entry with SortKey less or equal to passed-in SortKey. 
+  NOTE: walking list in reverse order.
+  */
+  current=DeviceQueue->DeviceListHead.Blink;
+  while (current!=(&DeviceQueue->DeviceListHead))
+  {
+    entry = CONTAINING_RECORD(current,KDEVICE_QUEUE_ENTRY,DeviceListEntry);
+    if (entry->SortKey <= SortKey)
+    {
+      /* insert new entry after current entry */
+      InsertTailList(current, &DeviceQueueEntry->DeviceListEntry); 
+      KeReleaseSpinLockFromDpcLevel(&DeviceQueue->Lock);
+      return(TRUE);
+    }
+    current = current->Blink;
+  } 
+     
+  InsertHeadList(&DeviceQueue->DeviceListHead,&DeviceQueueEntry->DeviceListEntry);
    
-   KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
-   return(TRUE);
+  KeReleaseSpinLockFromDpcLevel(&DeviceQueue->Lock);
+  return(TRUE);
 }
 
 /*
@@ -74,36 +73,46 @@ KeInsertByKeyDeviceQueue (PKDEVICE_QUEUE		DeviceQueue,
 PKDEVICE_QUEUE_ENTRY
 STDCALL
 KeRemoveByKeyDeviceQueue (
-	PKDEVICE_QUEUE	DeviceQueue,
-	ULONG		SortKey
+	IN PKDEVICE_QUEUE	DeviceQueue,
+	IN ULONG		SortKey
 	)
 {
-   KIRQL oldlvl;
-   PLIST_ENTRY current;
-   PKDEVICE_QUEUE_ENTRY entry;   
+  PLIST_ENTRY current;
+  PKDEVICE_QUEUE_ENTRY entry;   
    
-   assert_irql(DISPATCH_LEVEL);
-   assert(DeviceQueue!=NULL);
-   assert(DeviceQueue->Busy);
+  assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
+  assert(DeviceQueue!=NULL);
+  assert(DeviceQueue->Busy);
    
-   KeAcquireSpinLock(&DeviceQueue->Lock,&oldlvl);
+  KeAcquireSpinLockAtDpcLevel(&DeviceQueue->Lock);
    
-   current = DeviceQueue->DeviceListHead.Flink;
-   while (current != &DeviceQueue->DeviceListHead)
-     {
-	entry = CONTAINING_RECORD(current,KDEVICE_QUEUE_ENTRY,DeviceListEntry);
-	if (entry->SortKey < SortKey ||
-	    current->Flink == &DeviceQueue->DeviceListHead)
-	  {
-	     RemoveEntryList(current);
-	     KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
-	     return(entry);
-	  }
-	current = current->Flink;
-     }
-   DeviceQueue->Busy = FALSE;
-   KeReleaseSpinLock(&DeviceQueue->Lock, oldlvl);
-   return(NULL);
+  /* an attempt to remove an entry from an empty (and busy) queue sets the queue to idle */
+  if (IsListEmpty(&DeviceQueue->DeviceListHead))
+  {
+    DeviceQueue->Busy = FALSE;
+    KeReleaseSpinLockFromDpcLevel(&DeviceQueue->Lock);
+    return NULL;
+  }
+   
+  /* find entry with SortKey greater than or equal to the passed-in SortKey */
+  current = DeviceQueue->DeviceListHead.Flink;
+  while (current != &DeviceQueue->DeviceListHead)
+  {
+    entry = CONTAINING_RECORD(current,KDEVICE_QUEUE_ENTRY,DeviceListEntry);
+    if (entry->SortKey >= SortKey)
+    {
+       RemoveEntryList(current);
+       KeReleaseSpinLockFromDpcLevel(&DeviceQueue->Lock);
+       return entry;
+    }
+    current = current->Flink;
+  }
+  
+  /* if we didn't find a match, return the first entry */
+  current = RemoveHeadList(&DeviceQueue->DeviceListHead);
+  KeReleaseSpinLockFromDpcLevel(&DeviceQueue->Lock);
+
+  return CONTAINING_RECORD(current,KDEVICE_QUEUE_ENTRY,DeviceListEntry);
 }
 
 /*
@@ -112,8 +121,7 @@ KeRemoveByKeyDeviceQueue (
 PKDEVICE_QUEUE_ENTRY
 STDCALL
 KeRemoveDeviceQueue (
-	PKDEVICE_QUEUE	DeviceQueue
-	)
+  IN PKDEVICE_QUEUE	DeviceQueue)
 /*
  * FUNCTION: Removes an entry from a device queue
  * ARGUMENTS:
@@ -121,29 +129,28 @@ KeRemoveDeviceQueue (
  * RETURNS: The removed entry
  */
 {
-   KIRQL oldlvl;
    PLIST_ENTRY list_entry;
-   PKDEVICE_QUEUE_ENTRY entry;
    
    DPRINT("KeRemoveDeviceQueue(DeviceQueue %x)\n",DeviceQueue);
    
-   assert_irql(DISPATCH_LEVEL);
+   assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
    assert(DeviceQueue!=NULL);
    assert(DeviceQueue->Busy);
    
-   KeAcquireSpinLock(&DeviceQueue->Lock,&oldlvl);
+   KeAcquireSpinLockAtDpcLevel(&DeviceQueue->Lock);
+   
+   /* an attempt to remove an entry from an empty (and busy) queue sets the queue idle */
+   if (IsListEmpty(&DeviceQueue->DeviceListHead))
+   {
+     DeviceQueue->Busy = FALSE;
+     KeReleaseSpinLockFromDpcLevel(&DeviceQueue->Lock);
+     return NULL;
+   }
    
    list_entry = RemoveHeadList(&DeviceQueue->DeviceListHead);
-   if (list_entry==(&DeviceQueue->DeviceListHead))
-     {
-	DeviceQueue->Busy=FALSE;
-	KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
-	return(NULL);
-     }
-   KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
+   KeReleaseSpinLockFromDpcLevel(&DeviceQueue->Lock);
    
-   entry = CONTAINING_RECORD(list_entry,KDEVICE_QUEUE_ENTRY,DeviceListEntry);
-   return(entry);
+   return CONTAINING_RECORD(list_entry,KDEVICE_QUEUE_ENTRY,DeviceListEntry);
 }
 
 /*
@@ -152,7 +159,7 @@ KeRemoveDeviceQueue (
 VOID
 STDCALL
 KeInitializeDeviceQueue (
-	PKDEVICE_QUEUE	DeviceQueue
+  IN PKDEVICE_QUEUE	DeviceQueue
 	)
 /*
  * FUNCTION: Intializes a device queue
@@ -172,8 +179,8 @@ KeInitializeDeviceQueue (
 BOOLEAN
 STDCALL
 KeInsertDeviceQueue (
-	PKDEVICE_QUEUE		DeviceQueue,
-	PKDEVICE_QUEUE_ENTRY	DeviceQueueEntry
+  IN PKDEVICE_QUEUE		DeviceQueue,
+  IN PKDEVICE_QUEUE_ENTRY	DeviceQueueEntry
 	)
 /*
  * FUNCTION: Inserts an entry in a device queue
@@ -184,33 +191,57 @@ KeInsertDeviceQueue (
  *          True otherwise
  */
 {
-   KIRQL oldlvl;
+  assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
    
-   KeAcquireSpinLock(&DeviceQueue->Lock,&oldlvl);
+  KeAcquireSpinLockAtDpcLevel(&DeviceQueue->Lock);
    
-   if (!DeviceQueue->Busy)
-     {
-	DeviceQueue->Busy=TRUE;
-	KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
-	return(FALSE);
-     }
+  if (!DeviceQueue->Busy)
+  {
+    DeviceQueue->Busy=TRUE;
+    KeReleaseSpinLockFromDpcLevel(&DeviceQueue->Lock);
+    return(FALSE);
+  }
    
-   InsertTailList(&DeviceQueue->DeviceListHead,
-		  &DeviceQueueEntry->DeviceListEntry);
-   DeviceQueueEntry->SortKey=0;
+  DeviceQueueEntry->SortKey=0;
+  InsertTailList(&DeviceQueue->DeviceListHead, &DeviceQueueEntry->DeviceListEntry);
    
-   KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
-   return(TRUE);
+  KeReleaseSpinLockFromDpcLevel(&DeviceQueue->Lock);
+  return(TRUE);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN STDCALL
-KeRemoveEntryDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
-			 PKDEVICE_QUEUE_ENTRY DeviceQueueEntry)
+KeRemoveEntryDeviceQueue(
+  IN PKDEVICE_QUEUE DeviceQueue,
+  IN PKDEVICE_QUEUE_ENTRY DeviceQueueEntry)
 {
-  UNIMPLEMENTED;
-  return(FALSE);
+  PLIST_ENTRY current;
+  KIRQL oldIrql;
+  PKDEVICE_QUEUE_ENTRY entry;
+  
+  assert(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+  
+  KeAcquireSpinLock(&DeviceQueue->Lock, &oldIrql);
+  
+  current = DeviceQueue->DeviceListHead.Flink;
+  while (current != &DeviceQueue->DeviceListHead)
+  {
+    entry = CONTAINING_RECORD(current, KDEVICE_QUEUE_ENTRY, DeviceListEntry);
+    if (DeviceQueueEntry == entry)
+    {
+       RemoveEntryList(current);
+       KeReleaseSpinLock(&DeviceQueue->Lock, oldIrql);
+       /* entry was in the queue (but not anymore) */
+       return TRUE;
+    }
+    current = current->Flink;
+  }
+  
+  KeReleaseSpinLock(&DeviceQueue->Lock, oldIrql);
+  
+  /* entry wasn't in the queue */
+  return FALSE;
 }
