@@ -29,6 +29,7 @@
 #include <internal/v86m.h>
 #include <internal/trap.h>
 #include <internal/mm.h>
+#include <internal/ps.h>
 #include <internal/i386/segment.h>
 #include <string.h>
 
@@ -679,6 +680,12 @@ KeV86Exception(ULONG ExceptionNr, PKTRAP_FRAME Tf, ULONG address)
 
   VTf = (PKV86M_TRAP_FRAME)Tf;
 
+  if(KeGetCurrentProcess()->NtVdmFlag)
+  {
+    VTf->regs->PStatus = (PNTSTATUS) ExceptionNr;
+    if(ExceptionNr != 14) return 1;
+  }
+
   /*
    * Check if we have reached the recovery instruction
    */
@@ -784,7 +791,13 @@ KeV86Exception(ULONG ExceptionNr, PKTRAP_FRAME Tf, ULONG address)
 			     Tf->ErrorCode);
 	if (!NT_SUCCESS(Status))
 	  {
-	    DPRINT("V86Exception, halting due to page fault\n");
+            if(KeGetCurrentProcess()->NtVdmFlag)
+            {
+              VTf->regs->PStatus = (PNTSTATUS) STATUS_NONCONTINUABLE_EXCEPTION;
+              return 1;
+            }
+
+            DPRINT("V86Exception, halting due to page fault\n");
 	    *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
 	    return(1);
 	  }

@@ -178,6 +178,31 @@ KeSetBaseGdtSelector(ULONG Entry,
 }
 
 VOID 
+KeSetGdtSelector(ULONG Entry,
+                 ULONG Value1,
+                 ULONG Value2)
+{
+   KIRQL oldIrql;
+   PULONG Gdt = (PULONG) KeGetCurrentKPCR()->GDT;
+   
+   DPRINT("KeSetGdtSelector(Entry %x, Value1 %x, Value2 %x)\n",
+	   Entry, Value1, Value2);
+   
+   KeAcquireSpinLock(&GdtLock, &oldIrql);
+   
+   Entry = (Entry & (~0x3)) / 4;
+
+   Gdt[Entry] = Value1;
+   Gdt[Entry + 1] = Value2;
+
+   DPRINT("%x %x\n", 
+	   Gdt[Entry + 0],
+	   Gdt[Entry + 1]);
+   
+   KeReleaseSpinLock(&GdtLock, oldIrql);
+}
+
+VOID 
 KeDumpGdtSelector(ULONG Entry)
 {
    USHORT a, b, c, d;

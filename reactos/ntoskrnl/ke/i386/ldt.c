@@ -37,19 +37,134 @@
 
 /* GLOBALS *******************************************************************/
 
-/*
- * Empty LDT shared by every process that doesn't have its own.
- */
-STATIC UCHAR KiNullLdt[8];
+static KSPIN_LOCK LdtLock;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL
-NtSetLdtEntries (HANDLE	Thread,
-		 ULONG FirstEntry,
-		 PULONG	Entries)
+BOOL PspIsDescriptorValid(PLDT_ENTRY ldt_entry)
 {
-  return(STATUS_NOT_IMPLEMENTED);
+  /* 
+     Allow invalid descriptors.
+  */
+  if(!ldt_entry->HighWord.Bits.Type &&
+     !ldt_entry->HighWord.Bits.Dpl)
+       return TRUE;
+
+  /* eliminate system descriptors and code segments other than
+     execute and execute/read and DPL<3 descriptors */
+  if(!(ldt_entry->HighWord.Bits.Type & 0x10) ||
+     (ldt_entry->HighWord.Bits.Type & 0x8 &&
+      ldt_entry->HighWord.Bits.Type & 0x4) ||
+     ldt_entry->HighWord.Bits.Dpl != 3 ||
+     ldt_entry->HighWord.Bits.Reserved_0) return FALSE;
+
+  if(!ldt_entry->HighWord.Bits.Pres) return TRUE;
+
+  ULONG Base=ldt_entry->BaseLow | (ldt_entry->HighWord.Bytes.BaseMid << 16) |
+             (ldt_entry->HighWord.Bytes.BaseHi << 24);
+
+  ULONG SegLimit=ldt_entry->LimitLow |
+                 (ldt_entry->HighWord.Bits.LimitHi << 16);
+
+  if(ldt_entry->HighWord.Bits.Type & 0x4)
+  {
+    SegLimit=(ldt_entry->HighWord.Bits.Default_Big) ? -1 : (USHORT)-1;
+
+  } else if(ldt_entry->HighWord.Bits.Granularity)
+  {
+    SegLimit=(SegLimit << 12) | 0xfff;
+  }
+
+  return ((Base + SegLimit > (ULONG) MmHighestUserAddress) ||
+          (Base > Base+SegLimit) ? FALSE : TRUE);
+}
+
+NTSTATUS STDCALL
+NtSetLdtEntries (ULONG Selector1,
+		 LDT_ENTRY LdtEntry1,
+		 ULONG Selector2,
+		 LDT_ENTRY LdtEntry2)
+{
+  KIRQL oldIrql;
+  ULONG NewLdtSize = sizeof(LDT_ENTRY);
+
+  if((Selector1 & ~0xffff) || (Selector2 & ~0xffff)) return STATUS_INVALID_LDT_DESCRIPTOR;
+
+  Selector1 &= ~0x7;
+  Selector2 &= ~0x7;
+
+  if((Selector1 && !PspIsDescriptorValid(&LdtEntry1)) ||
+     (Selector2 && !PspIsDescriptorValid(&LdtEntry2))) return STATUS_INVALID_LDT_DESCRIPTOR;
+  if(!(Selector1 || Selector2)) return STATUS_SUCCESS;
+
+  NewLdtSize += (Selector1 >= Selector2) ? Selector1 : Selector2;
+
+  KeAcquireSpinLock(&LdtLock, &oldIrql);
+
+  PUSHORT LdtDescriptor = (PUSHORT) &KeGetCurrentProcess()->LdtDescriptor[0];
+  ULONG LdtBase = LdtDescriptor[1] |
+                  ((LdtDescriptor[2] & 0xff) << 16) |
+                  ((LdtDescriptor[3] & ~0xff) << 16);
+  ULONG LdtLimit = LdtDescriptor[0] |
+                   ((LdtDescriptor[3] & 0xf) << 16);
+
+  if(LdtLimit < (NewLdtSize - 1))
+  {
+    /* allocate new ldt, copy old one there, set gdt ldt entry to new
+       values and load ldtr register and free old ldt */
+
+    ULONG NewLdtBase = (ULONG) ExAllocatePool(NonPagedPool,
+                                              NewLdtSize);
+
+    if(!NewLdtBase)
+    {
+      KeReleaseSpinLock(&LdtLock, oldIrql);
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    if(LdtBase)
+    {
+      memcpy((PVOID) NewLdtBase, (PVOID) LdtBase, LdtLimit+1);
+    }
+
+    LdtDescriptor[0] = (--NewLdtSize) & 0xffff;
+    LdtDescriptor[1] = NewLdtBase & 0xffff;
+    LdtDescriptor[2] = ((NewLdtBase & 0xff0000) >> 16) | 0x8200;
+    LdtDescriptor[3] = ((NewLdtSize & 0xf0000) >> 16) |
+                       ((NewLdtBase & 0xff000000) >> 16);
+
+    KeSetGdtSelector(LDT_SELECTOR,
+                     ((PULONG) LdtDescriptor)[0],
+                     ((PULONG) LdtDescriptor)[1]);
+
+    __asm__("lldtw %%ax" 
+            : /* no output */
+            : "a" (LDT_SELECTOR));
+
+    if(LdtBase)
+    {
+      ExFreePool((PVOID) LdtBase);
+    }
+
+    LdtBase = NewLdtBase;
+  }
+
+  if(Selector1)
+  {
+    memcpy((PVOID) LdtBase + Selector1,
+           &LdtEntry1,
+           sizeof(LDT_ENTRY));
+  }
+
+  if(Selector2)
+  {
+    memcpy((PVOID) LdtBase + Selector2,
+           &LdtEntry2,
+           sizeof(LDT_ENTRY));
+  }
+
+  KeReleaseSpinLock(&LdtLock, oldIrql);
+  return STATUS_SUCCESS;
 }
 
 VOID
@@ -61,8 +176,7 @@ Ki386InitializeLdt(VOID)
   /*
    * Set up an a descriptor for the LDT
    */
-  base = (unsigned int)&KiNullLdt;
-  length = sizeof(KiNullLdt) - 1;
+  base = length = 0;
   
   Gdt[(LDT_SELECTOR / 2) + 0] = (length & 0xFFFF);
   Gdt[(LDT_SELECTOR / 2) + 1] = (base & 0xFFFF);

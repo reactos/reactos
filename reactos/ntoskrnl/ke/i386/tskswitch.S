@@ -83,6 +83,31 @@ _Ki386ContextSwitch:
 	 */
 	movl	%ebx, %fs:KPCR_CURRENT_THREAD
 
+        /*
+	 * Set the current LDT
+	 */
+        xorl	%eax, %eax
+	movl	ETHREAD_THREADS_PROCESS(%ebx), %edi
+	testw	$0xFFFF, KPROCESS_LDT_DESCRIPTOR0(%edi)
+	jz	.L4
+
+	pushl	KPROCESS_LDT_DESCRIPTOR1(%edi)
+	pushl	KPROCESS_LDT_DESCRIPTOR0(%edi)
+	pushl	$LDT_SELECTOR
+	call	_KeSetGdtSelector
+	addl	$12, %esp
+
+	movl	$LDT_SELECTOR, %eax
+
+.L4:
+	lldtw	%ax
+
+	/*
+	 * Load up the iomap offset for this thread in
+	 * preparation for setting it below.
+	 */
+        movl	KPROCESS_IOPM_OFFSET(%edi), %eax
+
 	/*
 	 * FIXME: Save debugging state.
 	 */
@@ -103,8 +128,14 @@ _Ki386ContextSwitch:
 	/*
 	 * Set the stack pointer in this processors TSS
 	 */
-	movl	KTHREAD_INITIAL_STACK(%ebx), %eax
 	movl	%fs:KPCR_TSS, %esi
+
+        /*
+         * Set current IOPM offset in the TSS
+         */
+        movw	%ax, KTSS_IOMAPBASE(%esi)
+
+	movl	KTHREAD_INITIAL_STACK(%ebx), %eax
 	movl	%eax, KTSS_ESP0(%esi)
 
 	/*

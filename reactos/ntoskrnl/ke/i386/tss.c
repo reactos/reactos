@@ -39,11 +39,11 @@
 
 static KTSS* Ki386TssArray[MAXIMUM_PROCESSORS];
 PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
-static KTSS* Ki386TrapTssArray[MAXIMUM_PROCESSORS];
+static KTSSNOIOPM* Ki386TrapTssArray[MAXIMUM_PROCESSORS];
 static PVOID Ki386TrapStackArray[MAXIMUM_PROCESSORS];
 
 KTSS KiBootTss;
-static KTSS KiBootTrapTss;
+static KTSSNOIOPM KiBootTrapTss;
 
 extern USHORT KiBootGdt[];
 
@@ -51,12 +51,73 @@ extern VOID KiTrap8(VOID);
 
 /* FUNCTIONS *****************************************************************/
 
+BOOL STDCALL
+Ke386IoSetAccessProcess(PEPROCESS Process, BOOL EnableDisable)
+{
+  KIRQL oldIrql;
+  USHORT Offset;
+
+  if(EnableDisable > 1) return FALSE;
+  Offset = (EnableDisable) ? (USHORT) FIELD_OFFSET(KTSS, IoBitmap) : 0xffff;
+
+  oldIrql = KeRaiseIrqlToSynchLevel();
+  Process->Pcb.IopmOffset = Offset;
+
+  if(PsGetCurrentProcess() == Process)
+  {
+    KeGetCurrentKPCR()->TSS->IoMapBase = Offset;
+  }
+
+  KeLowerIrql(oldIrql);
+  return TRUE;
+}
+
+
+BOOL STDCALL
+Ke386SetIoAccessMap(DWORD MapNumber, PULONG IOMapStart)
+{
+  KIRQL oldIrql;
+
+  if(MapNumber != 1) return FALSE;
+
+  oldIrql = KeRaiseIrqlToSynchLevel();
+
+  memcpy(&KeGetCurrentKPCR()->TSS->IoBitmap[0],
+         IOMapStart,
+         0x2000);
+
+  KeGetCurrentKPCR()->TSS->IoMapBase = KeGetCurrentProcess()->IopmOffset;
+  KeLowerIrql(oldIrql);
+  return TRUE;
+}
+
+BOOL STDCALL
+Ke386QueryIoAccessMap(DWORD MapNumber, PULONG IOMapStart)
+{
+  KIRQL oldIrql;
+
+  if(MapNumber == 0x0)
+  {
+    memset(IOMapStart, 0xff, 0x2000);
+    return TRUE;
+  } else if(MapNumber != 1) return FALSE;
+
+  oldIrql = KeRaiseIrqlToSynchLevel();
+
+  memcpy(IOMapStart,
+         &KeGetCurrentKPCR()->TSS->IoBitmap[0],
+         0x2000);
+
+  KeLowerIrql(oldIrql);
+  return TRUE;
+}
+
 VOID
 Ki386ApplicationProcessorInitializeTSS(VOID)
 {
   ULONG cr3;
   KTSS* Tss;
-  KTSS* TrapTss;
+  KTSSNOIOPM* TrapTss;
   PVOID TrapStack;
   ULONG Id;
   PUSHORT Gdt;
@@ -68,7 +129,7 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   __asm__("movl %%cr3,%0\n\t" : "=d" (cr3));
 
   Tss = ExAllocatePool(NonPagedPool, sizeof(KTSS));
-  TrapTss = ExAllocatePool(NonPagedPool, sizeof(KTSS));
+  TrapTss = ExAllocatePool(NonPagedPool, sizeof(KTSSNOIOPM));
   TrapStack = ExAllocatePool(NonPagedPool, MM_STACK_SIZE);
 
   Ki386TssArray[Id] = Tss;
@@ -80,8 +141,8 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   Tss->Esp0 = (ULONG)Ki386InitialStackArray[Id];
   Tss->Ss0 = KERNEL_DS;
   Tss->IoMapBase = 0xFFFF; /* No i/o bitmap */
-  Tss->IoBitmap[0] = 0xFF;   
-  Tss->Ldt = LDT_SELECTOR;
+  Tss->IoBitmap[8192] = 0xFF;   
+  Tss->Ldt = 0;
 
   /*
    * Initialize a descriptor for the TSS
@@ -108,14 +169,14 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   TrapTss->Fs = PCR_SELECTOR;
   TrapTss->IoMapBase = 0xFFFF; /* No i/o bitmap */
   TrapTss->IoBitmap[0] = 0xFF;   
-  TrapTss->Ldt = LDT_SELECTOR;
+  TrapTss->Ldt = 0;
   TrapTss->Cr3 = cr3;  
 
   /*
    * Initialize a descriptor for the trap TSS.
    */
   base = (ULONG)TrapTss;
-  length = sizeof(KTSS) - 1;
+  length = sizeof(KTSSNOIOPM) - 1;
 
   Gdt[(TRAP_TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
   Gdt[(TRAP_TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
@@ -151,7 +212,7 @@ Ki386BootInitializeTSS(VOID)
   KiBootTss.Ss0 = KERNEL_DS;
   //   KiBootTss.IoMapBase = FIELD_OFFSET(KTSS, IoBitmap);
   KiBootTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
-  KiBootTss.IoBitmap[0] = 0xFF;   
+  KiBootTss.IoBitmap[8192] = 0xFF;   
   KiBootTss.Ldt = LDT_SELECTOR;
 
   /*
@@ -179,7 +240,7 @@ Ki386BootInitializeTSS(VOID)
   KiBootTrapTss.Fs = PCR_SELECTOR;
   KiBootTrapTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
   KiBootTrapTss.IoBitmap[0] = 0xFF;   
-  KiBootTrapTss.Ldt = LDT_SELECTOR;
+  KiBootTrapTss.Ldt = 0x0;
   KiBootTrapTss.Cr3 = cr3;
   
   /*

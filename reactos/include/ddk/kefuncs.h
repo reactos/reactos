@@ -433,7 +433,8 @@ typedef struct _IOPM
  *	is initialized to allow IO at any port. [ all bits set ]. The IOPL determines
  *	the minium privilege level required to perform IO prior to checking the permission map.
  */
-VOID Ke386SetIoAccessMap(ULONG NewMap, PIOPM *IoPermissionMap);
+BOOL STDCALL
+Ke386SetIoAccessMap(ULONG NewMap, PULONG IoPermissionMap);
 
 /*
  * FUNCTION: Queries the io permission  map.
@@ -446,7 +447,8 @@ VOID Ke386SetIoAccessMap(ULONG NewMap, PIOPM *IoPermissionMap);
  *	is initialized to allow IO at any port. [ all bits set ]. The IOPL determines
  *	the minium privilege level required to perform IO prior to checking the permission map.
  */
-VOID Ke386QueryIoAccessMap(BOOLEAN NewMap, PIOPM *IoPermissionMap);
+BOOL STDCALL
+Ke386QueryIoAccessMap(ULONG NewMap, PULONG IoPermissionMap);
 
 /*
  * FUNCTION: Set the process IOPL
@@ -454,7 +456,18 @@ VOID Ke386QueryIoAccessMap(BOOLEAN NewMap, PIOPM *IoPermissionMap);
  *	Eprocess = Pointer to a executive process object
  *	EnableIo = Specify TRUE to enable IO and FALSE to disable 
  */
-NTSTATUS Ke386IoSetAccessProcess(struct _EPROCESS* Eprocess, BOOLEAN EnableIo);
+BOOL STDCALL
+Ke386IoSetAccessProcess(struct _EPROCESS* Eprocess, BOOL EnableIo);
+
+/*
+ * FUNCTION: Sets the contents of a gdt descriptor.
+ * ARGUMENTS:
+ *     Entry = The selector to set.
+ *     Value1 = The value of the low dword of the descriptor.
+ *     Value2 = The value of the high dword of the descriptor.
+ */
+VOID
+KeSetGdtSelector(ULONG Entry, ULONG Value1, ULONG Value2);
 
 /*
  * FUNCTION: Releases a set of Global Descriptor Table Selectors

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.149 2003/08/14 10:41:36 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.150 2003/08/19 23:59:08 dwelch Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -361,9 +361,9 @@ KdDebuggerNotPresent DATA
 KdPollBreakIn=KdPollBreakIn@0
 KdSystemDebugControl=KdSystemDebugControl@4
 Ke386CallBios=Ke386CallBios@8
-;Ke386IoSetAccessProcess
-;Ke386QueryIoAccessMap
-;Ke386SetIoAccessMap
+Ke386IoSetAccessProcess=Ke386IoSetAccessProcess@8
+Ke386QueryIoAccessMap=Ke386QueryIoAccessMap@8
+Ke386SetIoAccessMap=Ke386SetIoAccessMap@8
 KeAcquireSpinLockAtDpcLevel=KeAcquireSpinLockAtDpcLevel@4
 KeAddSystemServiceTable=KeAddSystemServiceTable@20
 KeAttachProcess=KeAttachProcess@4

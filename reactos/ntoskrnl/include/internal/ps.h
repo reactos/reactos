@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.51 2003/07/23 19:13:37 dwelch Exp $
+/* $Id: ps.h,v 1.52 2003/08/19 23:59:08 dwelch Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -254,11 +254,11 @@ typedef struct _KPROCESS
    */
   ULONG                 LdtDescriptor[2];             /* 020 */
   /*
-   * Presumably for processing int 0x21 from V86 mode DOS, currently
-   * unused.
+   * Virtual Dos Machine flag.
    */
-  ULONG                 Int21Descriptor[2];           /* 028 */
-  /* Don't know. */
+  ULONG                 NtVdmFlag;                    /* 028 */
+  ULONG                 VdmUnused;                    /* 02C */
+  /* Is the i/o permission map enabled for the process. */
   USHORT                IopmOffset;                   /* 030 */
   /* 
    * Presumably I/O privilege level to be used for this process, currently

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.113 2003/08/18 10:20:57 hbirr Exp $
+/* $Id: process.c,v 1.114 2003/08/19 23:59:08 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -259,6 +259,9 @@ PsInitProcessManagment(VOID)
    
    /* System threads may run on any processor. */
    PsInitialSystemProcess->Pcb.Affinity = 0xFFFFFFFF;
+   PsInitialSystemProcess->Pcb.IopmOffset = 0xffff;
+   PsInitialSystemProcess->Pcb.LdtDescriptor[0] = 0;
+   PsInitialSystemProcess->Pcb.LdtDescriptor[1] = 0;
    PsInitialSystemProcess->Pcb.BasePriority = PROCESS_PRIO_NORMAL;
    KeInitializeDispatcherHeader(&PsInitialSystemProcess->Pcb.DispatcherHeader,
 				InternalProcessType,
@@ -588,6 +591,9 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    /* Inherit parent process's affinity. */
    KProcess->Affinity = ParentProcess->Pcb.Affinity;
    KProcess->BasePriority = PROCESS_PRIO_NORMAL;
+   KProcess->IopmOffset = 0xffff;
+   KProcess->LdtDescriptor[0] = 0;
+   KProcess->LdtDescriptor[1] = 0;
    MmInitializeAddressSpace(Process,
 			    &Process->AddressSpace);
    Process->UniqueProcessId = InterlockedIncrement((LONG *)&PiNextProcessUniqueId);

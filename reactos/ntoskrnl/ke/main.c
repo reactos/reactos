@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.167 2003/08/11 18:50:12 chorns Exp $
+/* $Id: main.c,v 1.168 2003/08/19 23:59:08 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -336,6 +336,8 @@ ExpInitializeExecutive(VOID)
   assert(FIELD_OFFSET(ETHREAD, ThreadsProcess) == ETHREAD_THREADS_PROCESS);
   assert(FIELD_OFFSET(KPROCESS, DirectoryTableBase) == 
 	 KPROCESS_DIRECTORY_TABLE_BASE);
+  assert(FIELD_OFFSET(KPROCESS, IopmOffset) == KPROCESS_IOPM_OFFSET);
+  assert(FIELD_OFFSET(KPROCESS, LdtDescriptor) == KPROCESS_LDT_DESCRIPTOR0);
   assert(FIELD_OFFSET(KTRAP_FRAME, Reserved9) == KTRAP_FRAME_RESERVED9);
   assert(FIELD_OFFSET(KV86M_TRAP_FRAME, regs) == TF_REGS);
   assert(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
@@ -344,7 +346,7 @@ ExpInitializeExecutive(VOID)
   assert(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
   assert(FIELD_OFFSET(IKPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
   assert(FIELD_OFFSET(IKPCR, Self) == KPCR_SELF);
-  assert(FIELD_OFFSET(IKPCR, CurrentThread) == KPCR_CURRENT_THREAD);
+  assert(FIELD_OFFSET(IKPCR, CurrentThread) == KPCR_CURRENT_THREAD);  
 
   LdrInit1();
 
