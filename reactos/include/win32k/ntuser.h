@@ -162,13 +162,11 @@ NtUserCheckMenuItem(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
-STDCALL
-NtUserChildWindowFromPointEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+DWORD STDCALL
+NtUserChildWindowFromPointEx(HWND Parent,
+			     LONG x,
+			     LONG y,
+			     UINT Flags);
 
 DWORD
 STDCALL
@@ -287,18 +285,15 @@ NtUserDdeSetQualityOfService(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
-STDCALL
-NtUserDeferWindowPos(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6,
-  DWORD Unknown7);
-
+DWORD STDCALL
+NtUserDeferWindowPos(HDWP WinPosInfo,
+		     HWND Wnd,
+		     HWND WndInsertAfter,
+		     LONG x,
+		     LONG y,
+		     LONG cx,
+		     LONG cy,
+		     UINT Flags);
 DWORD
 STDCALL
 NtUserDefSetText(
@@ -328,10 +323,8 @@ STDCALL
 NtUserDestroyMenu(
   DWORD Unknown0);
 
-DWORD
-STDCALL
-NtUserDestroyWindow(
-  DWORD Unknown0);
+BOOLEAN STDCALL
+NtUserDestroyWindow(HWND Wnd);
 
 LRESULT
 STDCALL
@@ -1126,10 +1119,8 @@ STDCALL
 NtUserRegisterTasklist(
   DWORD Unknown0);
 
-DWORD
-STDCALL
-NtUserRegisterWindowMessage(
-  DWORD Unknown0);
+UINT STDCALL
+NtUserRegisterWindowMessage(LPCWSTR MessageName);
 
 DWORD
 STDCALL

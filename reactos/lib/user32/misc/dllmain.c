@@ -25,6 +25,10 @@ Init(VOID)
   /* Set up the kernel callbacks. */
   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_WINDOWPROC] =
     (PVOID)User32CallWindowProcFromKernel;
+  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDASYNCPROC] =
+    (PVOID)User32CallSendAsyncProcForKernel;
+  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDNCCREATE] =
+    (PVOID)User32SendNCCREATEMessageForKernel;
 
   //ProcessWindowStation = CreateWindowStationW(L"WinStaName",0,GENERIC_ALL,NULL);
   //Desktop = CreateDesktopA(NULL,NULL,NULL,0,0,NULL);

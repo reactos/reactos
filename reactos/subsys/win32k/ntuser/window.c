@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.5 2002/01/27 01:11:24 dwelch Exp $
+/* $Id: window.c,v 1.6 2002/05/06 22:20:32 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -18,11 +18,34 @@
 #include <include/class.h>
 #include <include/error.h>
 #include <include/winsta.h>
+#include <include/winpos.h>
+#include <include/callback.h>
+#include <include/msgqueue.h>
 
 #define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+BOOL
+W32kOffsetRect(LPRECT Rect, INT x, INT y)
+{
+  Rect->left += x;
+  Rect->right += x;
+  Rect->top += y;
+  Rect->bottom += y;
+  return(TRUE);
+}
+
+HWND
+W32kGetActiveWindow(VOID)
+{
+}
+
+WNDPROC
+W32kGetWindowProc(HWND Wnd)
+{
+}
 
 NTSTATUS
 InitWindowImpl(VOID)
@@ -48,10 +71,10 @@ NtUserAlterWindowStyle(DWORD Unknown0,
 }
 
 DWORD STDCALL
-NtUserChildWindowFromPointEx(DWORD Unknown0,
-			     DWORD Unknown1,
-			     DWORD Unknown2,
-			     DWORD Unknown3)
+NtUserChildWindowFromPointEx(HWND Parent,
+			     LONG x,
+			     LONG y,
+			     UINT Flags)
 {
   UNIMPLEMENTED
 
@@ -71,7 +94,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 		     HMENU hMenu,
 		     HINSTANCE hInstance,
 		     LPVOID lpParam,
-		     DWORD Unknown12)
+		     DWORD dwShowMode)
 {
   PWINSTATION_OBJECT WinStaObject;
   PWNDCLASS_OBJECT ClassObject;
@@ -79,22 +102,29 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   UNICODE_STRING WindowName;
   NTSTATUS Status;
   HANDLE Handle;
+  POINT MaxSize, MaxPos, MinTrack, MaxTrack;
+  CREATESTRUCT Cs;
+  LRESULT Result;
 
   W32kGuiCheck();
 
+  if (!RtlCreateUnicodeString(&WindowName, lpWindowName->Buffer))
+    {
+      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+      return((HWND)0);
+    }
+
+  /* FIXME: Validate the parent window. */
+
+  /* Check the class. */
   Status = ClassReferenceClassByNameOrAtom(&ClassObject, lpClassName->Buffer);
   if (!NT_SUCCESS(Status))
     {
-      return (HWND)0;
-    }
-  
-  if (!RtlCreateUnicodeString(&WindowName, lpWindowName->Buffer))
-    {
-      ObmDereferenceObject(ClassObject);
-      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-      return (HWND)0;
+      RtlFreeUnicodeString(&WindowName);
+      return((HWND)0);
     }
 
+  /* Check the window station. */
   Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				       KernelMode,
 				       0,
@@ -108,6 +138,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       return (HWND)0;
     }
 
+  /* Create the window object. */
   WindowObject = (PWINDOW_OBJECT) 
     ObmCreateObject(PsGetWin32Process()->HandleTable, &Handle, otWindow, 
 		    sizeof(WINDOW_OBJECT));
@@ -119,9 +150,11 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return (HWND)0;
     }
-
   ObDereferenceObject(WinStaObject);
-  
+
+  /*
+   * Fill out the structure describing it.
+   */
   WindowObject->Class = ClassObject;
   WindowObject->ExStyle = dwExStyle;
   WindowObject->Style = dwStyle;
@@ -133,34 +166,181 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Menu = hMenu;
   WindowObject->Instance = hInstance;
   WindowObject->Parameters = lpParam;
+  WindowObject->Self = Handle;
+
+  /* FIXME: Add the window parent. */
 
   RtlInitUnicodeString(&WindowObject->WindowName, WindowName.Buffer);
+  RtlFreeUnicodeString(&WindowName);
+  
+  if (ClassObject->Class.cbWndExtra != 0)
+    {
+      WindowObject->ExtraData = 
+	ExAllocatePool(PagedPool, 
+		       ClassObject->Class.cbWndExtra * sizeof(DWORD));
+      WindowObject->ExtraDataSize = ClassObject->Class.cbWndExtra;
+    }
+  else
+    {
+      WindowObject->ExtraData = NULL;
+      WindowObject->ExtraDataSize = 0;
+    }
 
+  /* Correct the window style. */
+  if (!(dwStyle & WS_CHILD))
+    {
+      WindowObject->Style |= WS_CLIPSIBLINGS;
+      if (!(dwStyle & WS_POPUP))
+	{
+	  WindowObject->Style |= WS_CAPTION;
+	  /* FIXME: Note the window needs a size. */ 
+	}
+    }
+
+  /* Insert the window into the process's window list. */
   ExAcquireFastMutexUnsafe (&PsGetWin32Process()->WindowListLock);
   InsertTailList (&PsGetWin32Process()->WindowListHead, 
 		  &WindowObject->ListEntry);
   ExReleaseFastMutexUnsafe (&PsGetWin32Process()->WindowListLock);
 
-  return (HWND)Handle;
+  /* FIXME: Maybe allocate a DCE for this window. */
+
+  /* Initialize the window dimensions. */
+  WindowObject->WindowRect.left = x;
+  WindowObject->WindowRect.top = y;
+  WindowObject->WindowRect.right = x + nWidth;
+  WindowObject->WindowRect.bottom = y + nHeight;
+  WindowObject->ClientRect = WindowObject->WindowRect;
+
+  /*
+   * Get the size and position of the window.
+   */
+  if ((dwStyle & WS_THICKFRAME) || !(dwStyle & (WS_POPUP | WS_CHILD)))
+    {
+      WinPosGetMinMaxInfo(WindowObject, &MaxSize, &MaxPos, &MinTrack,
+			  &MaxTrack);
+      x = min(MaxSize.x, y);
+      y = min(MaxSize.y, y);
+      x = max(MinTrack.x, x);
+      y = max(MinTrack.y, y);
+    }
+
+  WindowObject->WindowRect.left = x;
+  WindowObject->WindowRect.top = y;
+  WindowObject->WindowRect.right = x + nWidth;
+  WindowObject->WindowRect.bottom = y + nHeight;
+  WindowObject->ClientRect = WindowObject->WindowRect;
+
+  /* FIXME: Initialize the window menu. */
+
+  /* Send a NCCREATE message. */
+  Cs.lpCreateParams = lpParam;
+  Cs.hInstance = hInstance;
+  Cs.hMenu = hMenu;
+  Cs.hwndParent = hWndParent;
+  Cs.cx = nWidth;
+  Cs.cy = nHeight;
+  Cs.x = x;
+  Cs.y = y;
+  Cs.style = dwStyle;
+  Cs.lpszName = lpWindowName->Buffer;
+  Cs.lpszClass = lpClassName->Buffer;
+  Cs.dwExStyle = dwExStyle;
+  Result = W32kSendNCCREATEMessage(WindowObject->Self, &Cs);
+  if (!Result)
+    {
+      /* FIXME: Cleanup. */
+      return(NULL);
+    }
+ 
+  /* Calculate the non-client size. */
+  MaxPos.x = WindowObject->WindowRect.left;
+  MaxPos.y = WindowObject->WindowRect.top;
+  Result = WinPosGetNonClientSize(WindowObject->Self, 
+				  &WindowObject->WindowRect,
+				  &WindowObject->ClientRect);
+  W32kOffsetRect(&WindowObject->WindowRect, 
+		 MaxPos.x - WindowObject->WindowRect.left,
+		 MaxPos.y - WindowObject->WindowRect.top);
+
+  /* Send the CREATE message. */
+  Result = W32kSendCREATEMessage(WindowObject->Self, &Cs);
+  if (!Result)
+    {
+      /* FIXME: Cleanup. */
+      return(NULL);
+    } 
+
+  /* Send move and size messages. */
+  if (!(WindowObject->Flags & WINDOWOBJECT_NEED_SIZE))
+    {
+      LONG lParam;
+      
+      lParam = 
+	MAKE_LONG(WindowObject->ClientRect.right - 
+		  WindowObject->ClientRect.left,
+		  WindowObject->ClientRect.bottom - 
+		  WindowObject->ClientRect.top);
+      W32kCallWindowProc(NULL, WindowObject->Self, WM_SIZE, SIZE_RESTORED, 
+			 lParam);
+      lParam = 
+	MAKE_LONG(WindowObject->ClientRect.left,
+		  WindowObject->ClientRect.top);
+      W32kCallWindowProc(NULL, WindowObject->Self, WM_MOVE, 0, lParam);
+    }
+
+  /* Show or maybe minimize or maximize the window. */
+  if (WindowObject->Style & (WS_MINIMIZE | WS_MAXIMIZE))
+    {
+      RECT NewPos;
+      UINT16 SwFlag;
+
+      SwFlag = (WindowObject->Style & WS_MINIMIZE) ? SW_MINIMIZE : 
+	SW_MAXIMIZE;
+      WinPosMinMaximize(WindowObject, SwFlag, &NewPos);
+      SwFlag = 
+	((WindowObject->Style & WS_CHILD) || W32kGetActiveWindow()) ?
+	SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED :
+	SWP_NOZORDER | SWP_FRAMECHANGED;
+      WinPosSetWindowPos(WindowObject->Self, 0, NewPos.left, NewPos.top,
+			 NewPos.right, NewPos.bottom, SwFlag);
+    }
+
+  /* Notify the parent window of a new child. */
+  if ((WindowObject->Style & WS_CHILD) ||
+      (!(WindowObject->ExStyle & WS_EX_NOPARENTNOTIFY)))
+    {
+      W32kCallWindowProc(NULL, WindowObject->Parent->Self,
+			 WM_PARENTNOTIFY, 
+			 MAKEWPARAM(WM_CREATE, WindowObject->IDMenu),
+			 (LPARAM)WindowObject->Self);
+    }
+
+  if (dwStyle & WS_VISIBLE)
+    {
+      WinPosShowWindow(WindowObject->Self, dwShowMode);
+    }
+
+  return((HWND)Handle);
 }
 
 DWORD STDCALL
-NtUserDeferWindowPos(DWORD Unknown0,
-		     DWORD Unknown1,
-		     DWORD Unknown2,
-		     DWORD Unknown3,
-		     DWORD Unknown4,
-		     DWORD Unknown5,
-		     DWORD Unknown6,
-		     DWORD Unknown7)
+NtUserDeferWindowPos(HDWP WinPosInfo,
+		     HWND Wnd,
+		     HWND WndInsertAfter,
+		     LONG x,
+		     LONG y,
+		     LONG cx,
+		     LONG cy,
+		     UINT Flags)
 {
   UNIMPLEMENTED
 
   return 0;
 }
 
-DWORD STDCALL
-NtUserDestroyWindow(DWORD Unknown0)
+BOOLEAN STDCALL
+NtUserDestroyWindow(HWND Wnd)
 {
   UNIMPLEMENTED
 
@@ -348,12 +528,12 @@ NtUserRedrawWindow(DWORD Unknown0,
   return 0;
 }
 
-DWORD STDCALL
-NtUserRegisterWindowMessage(DWORD Unknown0)
+UINT STDCALL
+NtUserRegisterWindowMessage(LPCWSTR MessageName)
 {
   UNIMPLEMENTED
 
-  return 0;
+  return(0);
 }
 
 DWORD STDCALL

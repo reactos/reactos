@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.4 2001/06/12 17:50:27 chorns Exp $
+/* $Id: message.c,v 1.5 2002/05/06 22:20:31 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -265,5 +265,29 @@ WaitMessage(VOID)
 {
   return FALSE;
 }
+
+UINT STDCALL
+RegisterWindowMessageA(LPCSTR lpString)
+{
+  UNICODE_STRING String;
+  BOOLEAN Result;
+  UINT Atom;
+
+  Result = RtlCreateUnicodeStringFromAsciiz(&String, lpString);
+  if (!Result)
+    {
+      return(0);
+    }
+  Atom = RegisterWindowMessageW(String.Buffer);
+  RtlFreeUnicodeString(&String);
+  return(Atom);
+}
+
+UINT STDCALL
+RegisterWindowMessageW(LPCWSTR lpString)
+{
+  return(NtUserRegisterWindowMessage(lpString));
+}
+
 
 /* EOF */

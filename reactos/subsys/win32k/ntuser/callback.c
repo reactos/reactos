@@ -1,4 +1,4 @@
-/* $Id: callback.c,v 1.1 2002/01/27 14:47:44 dwelch Exp $
+/* $Id: callback.c,v 1.2 2002/05/06 22:20:32 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -24,6 +24,51 @@
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+VOID STDCALL
+W32kCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
+			    HWND hWnd,
+			    UINT Msg,
+			    ULONG_PTR CompletionCallbackContext,
+			    LRESULT Result)
+{
+}
+
+LRESULT STDCALL
+W32kSendNCCALCSIZEMessage(HWND Wnd, BOOL Validate, RECT Rect1,
+			  RECT Rect2, RECT Rect3, PWINDOWPOS Pos)
+{
+}
+
+LRESULT STDCALL
+W32kSendCREATEMessage(HWND Wnd, CREATESTRUCT* CreateStruct)
+{
+}
+
+LRESULT STDCALL
+W32kSendNCCREATEMessage(HWND Wnd, CREATESTRUCT* CreateStruct)
+{
+  SENDNCCREATEMESSAGE_CALLBACK_ARGUMENTS Arguments;
+  LRESULT Result;
+  NTSTATUS Status;
+  PVOID ResultPointer;
+  DWORD ResultLength;
+
+  Arguments.Wnd = Wnd;
+  Arguments.CreateStruct = *CreateStruct;
+  ResultPointer = &Result;
+  ResultLength = sizeof(LRESULT);
+  Status = NtW32Call(USER32_CALLBACK_WINDOWPROC,
+		     &Arguments,
+		     sizeof(WINDOWPROC_CALLBACK_ARGUMENTS),
+		     &ResultPointer,
+		     &ResultLength);
+  if (!NT_SUCCESS(Status))
+    {
+      return(0);
+    }
+  return(Result);
+}				
 
 LRESULT STDCALL
 W32kCallWindowProc(WNDPROC Proc,

@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.4 2002/01/27 01:11:24 dwelch Exp $
+/* $Id: message.c,v 1.5 2002/05/06 22:20:32 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -219,6 +219,14 @@ NtUserQuerySendMessage(DWORD Unknown0)
   UNIMPLEMENTED;
 
   return 0;
+}
+
+BOOL STDCALL
+NtUserSendMessage(HWND hWnd,
+		  UINT Msg,
+		  WPARAM Wparam,
+		  LPARAM lParam)
+{
 }
 
 BOOL STDCALL

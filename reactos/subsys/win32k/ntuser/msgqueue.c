@@ -1,4 +1,4 @@
-/* $Id: msgqueue.c,v 1.2 2002/01/13 22:52:08 dwelch Exp $
+/* $Id: msgqueue.c,v 1.3 2002/05/06 22:20:32 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -74,6 +74,103 @@ VOID
 MsqDestroyMessage(PUSER_MESSAGE Message)
 {
   ExFreePool(Message);
+}
+
+VOID
+MsqDispatchSentNotifyMessages(PUSER_MESSAGE_QUEUE MessageQueue)
+{
+  PLIST_ENTRY ListEntry;
+  PUSER_SENT_MESSAGE_NOTIFY Message;
+
+  while (!IsListEmpty(&MessageQueue->SentMessagesListHead))
+  {
+    ExAcquireFastMutex(&MessageQueue->Lock);
+    ListEntry = RemoveHeadList(&MessageQueue->SentMessagesListHead);
+    Message = CONTAINING_RECORD(ListEntry, USER_SENT_MESSAGE_NOTIFY, 
+				ListEntry);
+    ExReleaseFastMutex(&MessageQueue->Lock);
+
+    W32kCallSentMessageCallback(Message->CompletionCallback,
+				Message->hWnd,
+				Message->Msg,
+				Message->CompletionCallbackContext,
+				Message->Result);
+  }
+}
+
+BOOLEAN
+MsqPeekSentMessages(PUSER_MESSAGE_QUEUE MessageQueue)
+{
+  return(!IsListEmpty(&MessageQueue->SentMessagesListHead));
+}
+
+VOID
+MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
+{
+  PUSER_SENT_MESSAGE Message;
+  PLIST_ENTRY Entry;
+  LRESULT Result;
+  PUSER_SENT_MESSAGE_NOTIFY NotifyMessage;
+
+  ExAcquireFastMutex(&MessageQueue->Lock);
+  Entry = RemoveHeadList(&MessageQueue->SentMessagesListHead);
+  Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
+  ExReleaseFastMutex(&MessageQueue->Lock);
+
+  /* Call the window procedure. */
+  Result = W32kCallWindowProc(W32kGetWindowProc(Message->Msg.hwnd),
+			      Message->Msg.hwnd,
+			      Message->Msg.message,
+			      Message->Msg.wParam,
+			      Message->Msg.lParam);
+
+  /* Let the sender know the result. */
+  if (Message->Result != NULL)
+    {
+      *Message->Result = Result;
+    }
+
+  /* Notify the sender. */
+  if (Message->CompletionEvent != NULL)
+    {
+      KeSetEvent(Message->CompletionEvent, IO_NO_INCREMENT, FALSE);
+    }
+
+  /* Notify the sender if they specified a callback. */
+  if (Message->CompletionCallback != NULL)
+    {
+      NotifyMessage = ExAllocatePool(NonPagedPool, 
+				     sizeof(USER_SENT_MESSAGE_NOTIFY));
+      NotifyMessage->CompletionCallback = 
+	Message->CompletionCallback;
+      NotifyMessage->CompletionCallbackContext =
+	Message->CompletionCallbackContext;
+      NotifyMessage->Result = Result;
+      NotifyMessage->hWnd = Message->Msg.hwnd;
+      NotifyMessage->Msg = Message->Msg.message;
+      MsqSendNotifyMessage(Message->CompletionQueue);
+    }
+
+  ExFreePool(Message);
+}
+
+VOID
+MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
+		     PUSER_SENT_MESSAGE_NOTIFY NotifyMessage)
+{
+  ExAcquireFastMutex(&MessageQueue->Lock);
+  InsertTailList(&MessageQueue->NotifyMessagesListHead, 
+		 &NotifyMessage->ListEntry);
+  ExReleaseFastMutex(&MessageQueue->Lock);
+}
+
+VOID
+MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
+	       PUSER_SENT_MESSAGE Message)
+{
+  ExAcquireFastMutex(&MessageQueue->Lock);
+  InsertTailList(&MessageQueue->SentMessagesListHead, &Message->ListEntry);
+  ExReleaseFastMutex(&MessageQueue->Lock);
 }
 
 VOID

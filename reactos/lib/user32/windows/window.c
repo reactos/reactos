@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.4 2002/01/27 01:11:23 dwelch Exp $
+/* $Id: window.c,v 1.5 2002/05/06 22:20:31 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -20,6 +20,40 @@
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS STDCALL
+User32SendNCCREATEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+  PSENDNCCREATEMESSAGE_CALLBACK_ARGUMENTS CallbackArgs;
+  WNDPROC Proc;
+  LRESULT Result;
+
+  CallbackArgs = (PSENDNCCREATEMESSAGE_CALLBACK_ARGUMENTS)Arguments;
+  if (ArgumentLength != sizeof(SENDNCCREATEMESSAGE_CALLBACK_ARGUMENTS))
+    {
+      return(STATUS_INFO_LENGTH_MISMATCH);
+    }
+  Proc = (WNDPROC)GetWindowLong(CallbackArgs->Wnd, GWL_WNDPROC);
+  Result = CallWindowProc(Proc, CallbackArgs->Wnd, WM_NCCREATE, 0, 
+			  (LPARAM)&CallbackArgs->CreateStruct);
+  ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS);
+  /* Doesn't return. */
+}
+
+NTSTATUS STDCALL
+User32CallSendAsyncProcForKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+  PSENDASYNCPROC_CALLBACK_ARGUMENTS CallbackArgs;
+  
+  CallbackArgs = (PSENDASYNCPROC_CALLBACK_ARGUMENTS)Arguments;
+  if (ArgumentLength != sizeof(WINDOWPROC_CALLBACK_ARGUMENTS))
+    {
+      return(STATUS_INFO_LENGTH_MISMATCH);
+    }
+  CallbackArgs->Proc(CallbackArgs->Wnd, CallbackArgs->Msg,
+		     CallbackArgs->Data, CallbackArgs->Result);
+  return(STATUS_SUCCESS);
+}
+
+NTSTATUS STDCALL
 User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   PWINDOWPROC_CALLBACK_ARGUMENTS CallbackArgs;
@@ -30,8 +64,14 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     {
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  Result = CallbackArgs->Proc(CallbackArgs->Wnd, CallbackArgs->Msg,
-			      CallbackArgs->wParam, CallbackArgs->lParam);
+  if (CallbackArgs->Proc == NULL)
+    {
+      CallbackArgs->Proc = (WNDPROC)GetWindowLong(CallbackArgs->Wnd, 
+						  GWL_WNDPROC);
+    }
+  Result = CallWindowProc(CallbackArgs->Proc, CallbackArgs->Wnd, 
+			  CallbackArgs->Msg, CallbackArgs->wParam, 
+			  CallbackArgs->lParam);
   ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS);
   /* Doesn't return. */
 }
@@ -133,6 +173,7 @@ CreateWindowExA(DWORD dwExStyle,
   UNICODE_STRING WindowName;
   UNICODE_STRING ClassName;
   HWND Handle;
+  INT sw;
   
   if (IS_ATOM(lpClassName)) 
     {
@@ -158,6 +199,56 @@ CreateWindowExA(DWORD dwExStyle,
       return (HWND)0;
     }
 
+  /* Fixup default coordinates. */
+  sw = SW_SHOW;
+  if (x == CW_USEDEFAULT || nWidth == CW_USEDEFAULT)
+    {
+      if (dwStyle & (WS_CHILD | WS_POPUP))
+	{
+	  if (x == CW_USEDEFAULT)
+	    {
+	      x = y = 0;
+	    }
+	  if (nWidth == CW_USEDEFAULT)
+	    {
+	      nWidth = nHeight = 0;
+	    }
+	}
+      else
+	{
+	  STARTUPINFOA info;
+
+	  GetStartupInfoA(&info);
+
+	  if (x == CW_USEDEFAULT)
+	    {
+	      if (y != CW_USEDEFAULT)
+		{
+		  sw = y;
+		}
+	      x = (info.dwFlags & STARTF_USEPOSITION) ? info.dwX : 0;
+	      y = (info.dwFlags & STARTF_USEPOSITION) ? info.dwY : 0;
+	    }
+	  
+	  if (nWidth == CW_USEDEFAULT)
+	    {
+	      if (info.dwFlags & STARTF_USESIZE)
+		{
+		  nWidth = info.dwXSize;
+		  nHeight = info.dwYSize;
+		}
+	      else
+		{
+		  RECT r;
+
+		  SystemParametersInfoA(SPI_GETWORKAREA, 0, &r, 0);
+		  nWidth = (((r.right - r.left) * 3) / 4) - x;
+		  nHeight = (((r.bottom - r.top) * 3) / 4) - y;
+		}
+	    }
+	}
+    }
+
   Handle = NtUserCreateWindowEx(dwExStyle,
 				&ClassName,
 				&WindowName,
@@ -170,7 +261,7 @@ CreateWindowExA(DWORD dwExStyle,
 				hMenu,
 				hInstance,
 				lpParam,
-				0);
+				sw);
 
   RtlFreeUnicodeString(&WindowName);
 
@@ -199,6 +290,7 @@ CreateWindowExW(DWORD dwExStyle,
   UNICODE_STRING WindowName;
   UNICODE_STRING ClassName;
   HANDLE Handle;
+  UINT sw;
 
   if (IS_ATOM(lpClassName)) 
     {
@@ -211,6 +303,56 @@ CreateWindowExW(DWORD dwExStyle,
     }
 
   RtlInitUnicodeString(&WindowName, lpWindowName);
+
+  /* Fixup default coordinates. */
+  sw = SW_SHOW;
+  if (x == CW_USEDEFAULT || nWidth == CW_USEDEFAULT)
+    {
+      if (dwStyle & (WS_CHILD | WS_POPUP))
+	{
+	  if (x == CW_USEDEFAULT)
+	    {
+	      x = y = 0;
+	    }
+	  if (nWidth == CW_USEDEFAULT)
+	    {
+	      nWidth = nHeight = 0;
+	    }
+	}
+      else
+	{
+	  STARTUPINFOW info;
+
+	  GetStartupInfoW(&info);
+
+	  if (x == CW_USEDEFAULT)
+	    {
+	      if (y != CW_USEDEFAULT)
+		{
+		  sw = y;
+		}
+	      x = (info.dwFlags & STARTF_USEPOSITION) ? info.dwX : 0;
+	      y = (info.dwFlags & STARTF_USEPOSITION) ? info.dwY : 0;
+	    }
+	  
+	  if (nWidth == CW_USEDEFAULT)
+	    {
+	      if (info.dwFlags & STARTF_USESIZE)
+		{
+		  nWidth = info.dwXSize;
+		  nHeight = info.dwYSize;
+		}
+	      else
+		{
+		  RECT r;
+
+		  SystemParametersInfoW(SPI_GETWORKAREA, 0, &r, 0);
+		  nWidth = (((r.right - r.left) * 3) / 4) - x;
+		  nHeight = (((r.bottom - r.top) * 3) / 4) - y;
+		}
+	    }
+	}
+    }
 
   Handle = NtUserCreateWindowEx(dwExStyle,
 				&ClassName,

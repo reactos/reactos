@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.6 2001/11/03 16:48:06 chorns Exp $
+/* $Id: stubs.c,v 1.7 2002/05/06 22:20:31 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -3358,21 +3358,6 @@ RegisterHotKey(
   return FALSE;
 }
 
-UINT
-STDCALL
-RegisterWindowMessageA(
-  LPCSTR lpString)
-{
-  return 0;
-}
-
-UINT
-STDCALL
-RegisterWindowMessageW(
-  LPCWSTR lpString)
-{
-  return 0;
-}
 
 WINBOOL
 STDCALL
