@@ -7,211 +7,422 @@
 #ifndef __AFD_SHARED_H
 #define __AFD_SHARED_H
 
-#include <pshpack1.h>
+#define AFD_PACKET_COMMAND_LENGTH	15
+#define AfdCommand "AfdOpenPacketXX"
 
+/* Extra definition of WSABUF for AFD so that I don't have to include any
+ * userland winsock headers. */
+typedef struct _AFD_WSABUF {
+    UINT  len;
+    PCHAR buf;
+} AFD_WSABUF, *PAFD_WSABUF;
 
-#define AfdSocket           "AfdSocket"
-#define AFD_SOCKET_LENGTH   (sizeof(AfdSocket) - 1)
+typedef struct _AFD_CREATE_PACKET {
+    DWORD				EndpointFlags;
+    DWORD				GroupID;
+    DWORD				SizeOfTransportName;
+    WCHAR				TransportName[1];
+} AFD_CREATE_PACKET, *PAFD_CREATE_PACKET;
 
-typedef struct _AFD_SOCKET_INFORMATION {
-  BOOL CommandChannel;
-  INT AddressFamily;
-  INT SocketType;
-  INT Protocol;
-  PVOID HelperContext;
-  DWORD NotificationEvents;
-  UNICODE_STRING TdiDeviceName;
-  SOCKADDR Name;
-} AFD_SOCKET_INFORMATION, *PAFD_SOCKET_INFORMATION;
+typedef struct _AFD_INFO {
+    ULONG			        InformationClass;
+    union {
+        ULONG			        Ulong;
+        LARGE_INTEGER	                LargeInteger;
+    }					Information;
+    ULONG				Padding;
+} AFD_INFO, *PAFD_INFO;
 
+typedef struct _AFD_BIND_DATA {
+    ULONG				ShareType;
+    TRANSPORT_ADDRESS	Address;
+} AFD_BIND_DATA, *PAFD_BIND_DATA;
 
-/* AFD IOCTL code definitions */
+typedef struct _AFD_LISTEN_DATA {
+    BOOLEAN				UseSAN;
+    ULONG				Backlog;
+    BOOLEAN				UseDelayedAcceptance;
+} AFD_LISTEN_DATA, *PAFD_LISTEN_DATA;
 
-#define FSCTL_AFD_BASE     FILE_DEVICE_NAMED_PIPE /* ??? */
+typedef struct _AFD_HANDLE_ {
+    SOCKET				Handle;
+    ULONG				Events;
+    NTSTATUS			        Status;
+} AFD_HANDLE, *PAFD_HANDLE;
 
-#define AFD_CTL_CODE(Function, Method, Access) \
-  CTL_CODE(FSCTL_AFD_BASE, Function, Method, Access)
+typedef struct _AFD_POLL_INFO {
+    LARGE_INTEGER		        Timeout;
+    ULONG				HandleCount;
+    ULONG				Unknown;
+    AFD_HANDLE			        Handles[1];
+} AFD_POLL_INFO, *PAFD_POLL_INFO;
+
+typedef struct _AFD_ACCEPT_DATA {
+    ULONG				UseSAN;
+    ULONG				SequenceNumber;
+    ULONG				ListenHandle;
+} AFD_ACCEPT_DATA, *PAFD_ACCEPT_DATA;
+
+typedef struct _AFD_RECEIVED_ACCEPT_DATA {
+    ULONG				SequenceNumber;
+    TRANSPORT_ADDRESS			Address;
+} AFD_RECEIVED_ACCEPT_DATA, *PAFD_RECEIVED_ACCEPT_DATA;
+
+typedef struct _AFD_PENDING_ACCEPT_DATA {
+    ULONG				SequenceNumber;
+    ULONG				SizeOfData;
+    ULONG				ReturnSize;
+} AFD_PENDING_ACCEPT_DATA, *PAFD_PENDING_ACCEPT_DATA;
+
+typedef struct _AFD_DEFER_ACCEPT_DATA {
+    ULONG				SequenceNumber;
+    BOOLEAN				RejectConnection;
+} AFD_DEFER_ACCEPT_DATA, *PAFD_DEFER_ACCEPT_DATA;
+
+typedef struct  _AFD_RECV_INFO {
+    PAFD_WSABUF				BufferArray;
+    ULONG				BufferCount;
+    ULONG				AfdFlags;
+    ULONG				TdiFlags;
+} AFD_RECV_INFO , *PAFD_RECV_INFO ;
+
+typedef struct _AFD_RECV_INFO_UDP {
+    PAFD_WSABUF				BufferArray;
+    ULONG				BufferCount;
+    ULONG				AfdFlags;
+    ULONG				TdiFlags;
+    PVOID				Address;
+    PINT				AddressLength;
+} AFD_RECV_INFO_UDP, *PAFD_RECV_INFO_UDP;
+
+typedef struct  _AFD_SEND_INFO {
+    PAFD_WSABUF				BufferArray;
+    ULONG				BufferCount;
+    ULONG				AfdFlags;
+    ULONG				TdiFlags;
+} AFD_SEND_INFO , *PAFD_SEND_INFO ;
+
+typedef struct _AFD_SEND_INFO_UDP {
+    PAFD_WSABUF				BufferArray;
+    ULONG				BufferCount;
+    ULONG				AfdFlags;
+    ULONG				Padding[9];
+    ULONG				SizeOfRemoteAddress;
+    PVOID				RemoteAddress;
+} AFD_SEND_INFO_UDP, *PAFD_SEND_INFO_UDP;
+
+typedef struct  _AFD_CONNECT_INFO {
+    BOOLEAN				UseSAN;
+    ULONG				Root;
+    ULONG				Unknown;
+    TRANSPORT_ADDRESS			RemoteAddress;
+} AFD_CONNECT_INFO , *PAFD_CONNECT_INFO ;
+
+typedef struct _AFD_EVENT_SELECT_INFO {
+    HANDLE				EventObject;
+    ULONG				Events;
+} AFD_EVENT_SELECT_INFO, *PAFD_EVENT_SELECT_INFO;
+
+typedef struct _AFD_DISCONNECT_INFO {
+    ULONG				DisconnectType;
+    LARGE_INTEGER			Timeout;
+} AFD_DISCONNECT_INFO, *PAFD_DISCONNECT_INFO;
+
+/* AFD Packet Endpoint Flags */
+#define AFD_ENDPOINT_CONNECTIONLESS	0x1
+#define AFD_ENDPOINT_MESSAGE_ORIENTED	0x10
+#define AFD_ENDPOINT_RAW		0x100
+#define AFD_ENDPOINT_MULTIPOINT		0x1000
+#define AFD_ENDPOINT_C_ROOT		0x10000
+#define AFD_ENDPOINT_D_ROOT	        0x100000
+
+/* AFD Info Flags */
+#define AFD_INFO_BLOCKING_MODE		0x02L
+#define AFD_INFO_RECEIVE_WINDOW_SIZE	0x06L
+#define AFD_INFO_SEND_WINDOW_SIZE	0x07L
+#define AFD_INFO_GROUP_ID_TYPE	        0x10L
+
+/* AFD Share Flags */
+#define AFD_SHARE_UNIQUE		0x0L
+#define AFD_SHARE_REUSE			0x1L
+#define AFD_SHARE_WILDCARD		0x2L
+#define AFD_SHARE_EXCLUSIVE		0x3L
+
+/* AFD Disconnect Flags */
+#define AFD_DISCONNECT_SEND		0x01L
+#define AFD_DISCONNECT_RECV		0x02L
+
+/* AFD Event Flags */
+#define AFD_EVENT_RECEIVE		0x1L
+#define AFD_EVENT_OOB_RECEIVE		0x2L
+#define AFD_EVENT_SEND			0x4L
+#define AFD_EVENT_DISCONNECT		0x8L
+#define AFD_EVENT_ABORT			0x10L
+#define AFD_EVENT_CLOSE			0x20L
+#define AFD_EVENT_CONNECT		0x40L
+#define AFD_EVENT_ACCEPT		0x80L
+#define AFD_EVENT_CONNECT_FAIL		0x100L
+#define AFD_EVENT_QOS			0x200L
+#define AFD_EVENT_GROUP_QOS		0x400L
+
+/* AFD SEND/RECV Flags */
+#define AFD_SKIP_FIO			0x1L
+#define AFD_OVERLAPPED			0x2L
+
+/* IOCTL Generation */
+#define FSCTL_AFD_BASE                  FILE_DEVICE_NETWORK
+#define _AFD_CONTROL_CODE(Operation,Method) \
+  ((FSCTL_AFD_BASE)<<12 | (Operation<<2) | Method)
+
+/* AFD Commands */
+#define AFD_BIND			0
+#define AFD_CONNECT			1
+#define AFD_START_LISTEN		2
+#define AFD_WAIT_FOR_LISTEN		3
+#define AFD_ACCEPT			4
+#define AFD_RECV			5
+#define AFD_RECV_DATAGRAM		6
+#define AFD_SEND			7
+#define AFD_SEND_DATAGRAM		8
+#define AFD_SELECT			9
+#define AFD_DISCONNECT			10
+#define AFD_GET_TDI_HANDLES		13
+#define AFD_SET_INFO			14
+#define AFD_GET_CONTEXT			16
+#define AFD_SET_CONTEXT			17
+#define AFD_SET_CONNECT_DATA		18
+#define AFD_SET_CONNECT_OPTIONS		19
+#define AFD_SET_DISCONNECT_DATA		20
+#define AFD_SET_DISCONNECT_OPTIONS	21
+#define AFD_GET_CONNECT_DATA		22
+#define AFD_GET_CONNECT_OPTIONS		23
+#define AFD_GET_DISCONNECT_DATA		24
+#define AFD_GET_DISCONNECT_OPTIONS	25
+#define AFD_SET_CONNECT_DATA_SIZE       26
+#define AFD_SET_CONNECT_OPTIONS_SIZE    27
+#define AFD_SET_DISCONNECT_DATA_SIZE    28
+#define AFD_SET_DISCONNECT_OPTIONS_SIZE 29
+#define AFD_GET_INFO			30
+#define AFD_EVENT_SELECT		33
+#define AFD_DEFER_ACCEPT		35
+#define AFD_GET_PENDING_CONNECT_DATA	41
+
+/* AFD IOCTLs */
 
 #define IOCTL_AFD_BIND \
-  AFD_CTL_CODE(0, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
-#define IOCTL_AFD_LISTEN \
-  AFD_CTL_CODE(1, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
-#define IOCTL_AFD_SENDTO \
-  AFD_CTL_CODE(2, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
-#define IOCTL_AFD_RECVFROM \
-  AFD_CTL_CODE(3, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
-#define IOCTL_AFD_SELECT \
-  AFD_CTL_CODE(4, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
-#define IOCTL_AFD_EVENTSELECT \
-  AFD_CTL_CODE(5, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
-#define IOCTL_AFD_ENUMNETWORKEVENTS \
-  AFD_CTL_CODE(6, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
-#define IOCTL_AFD_RECV \
-  AFD_CTL_CODE(7, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
-#define IOCTL_AFD_SEND \
-  AFD_CTL_CODE(8, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
-#define IOCTL_AFD_ACCEPT \
-  AFD_CTL_CODE(9, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
+  _AFD_CONTROL_CODE(AFD_BIND, METHOD_NEITHER)
 #define IOCTL_AFD_CONNECT \
-  AFD_CTL_CODE(10, METHOD_BUFFERED, FILE_ANY_ACCESS)
+  _AFD_CONTROL_CODE(AFD_CONNECT, METHOD_NEITHER)
+#define IOCTL_AFD_START_LISTEN \
+  _AFD_CONTROL_CODE(AFD_START_LISTEN, METHOD_NEITHER)
+#define IOCTL_AFD_WAIT_FOR_LISTEN \
+  _AFD_CONTROL_CODE(AFD_WAIT_FOR_LISTEN, METHOD_BUFFERED )
+#define IOCTL_AFD_ACCEPT \
+  _AFD_CONTROL_CODE(AFD_ACCEPT, METHOD_BUFFERED )
+#define IOCTL_AFD_RECV \
+  _AFD_CONTROL_CODE(AFD_RECV, METHOD_NEITHER)
+#define IOCTL_AFD_RECV_DATAGRAM \
+  _AFD_CONTROL_CODE(AFD_RECV_DATAGRAM, METHOD_NEITHER)
+#define IOCTL_AFD_SEND \
+  _AFD_CONTROL_CODE(AFD_SEND, METHOD_NEITHER)
+#define IOCTL_AFD_SEND_DATAGRAM \
+  _AFD_CONTROL_CODE(AFD_SEND_DATAGRAM, METHOD_NEITHER)
+#define IOCTL_AFD_SELECT \
+  _AFD_CONTROL_CODE(AFD_SELECT, METHOD_BUFFERED )
+#define IOCTL_AFD_DISCONNECT \
+  _AFD_CONTROL_CODE(AFD_DISCONNECT, METHOD_NEITHER)
+#define IOCTL_AFD_GET_TDI_HANDLES \
+  _AFD_CONTROL_CODE(AFD_GET_TDI_HANDLES, METHOD_NEITHER)
+#define IOCTL_AFD_SET_INFO \
+  _AFD_CONTROL_CODE(AFD_SET_INFO, METHOD_NEITHER)
+#define IOCTL_AFD_GET_CONTEXT \
+  _AFD_CONTROL_CODE(AFD_GET_CONTEXT, METHOD_NEITHER)
+#define IOCTL_AFD_SET_CONTEXT \
+  _AFD_CONTROL_CODE(AFD_SET_CONTEXT, METHOD_NEITHER)
+#define IOCTL_AFD_SET_CONNECT_DATA \
+  _AFD_CONTROL_CODE(AFD_SET_CONNECT_DATA, METHOD_NEITHER)
+#define IOCTL_AFD_SET_CONNECT_OPTIONS \
+  _AFD_CONTROL_CODE(AFD_SET_CONNECT_OPTIONS, METHOD_NEITHER)
+#define IOCTL_AFD_SET_DISCONNECT_DATA \
+  _AFD_CONTROL_CODE(AFD_SET_DISCONNECT_DATA, METHOD_NEITHER)
+#define IOCTL_AFD_SET_DISCONNECT_OPTIONS \
+  _AFD_CONTROL_CODE(AFD_SET_DISCONNECT_OPTIONS, METHOD_NEITHER)
+#define IOCTL_AFD_GET_CONNECT_DATA \
+  _AFD_CONTROL_CODE(AFD_GET_CONNECT_DATA, METHOD_NEITHER)
+#define IOCTL_AFD_GET_CONNECT_OPTIONS \
+  _AFD_CONTROL_CODE(AFD_GET_CONNECT_OPTIONS, METHOD_NEITHER)
+#define IOCTL_AFD_GET_DISCONNECT_DATA \
+  _AFD_CONTROL_CODE(AFD_GET_DISCONNECT_DATA, METHOD_NEITHER)
+#define IOCTL_AFD_GET_DISCONNECT_OPTIONS \
+  _AFD_CONTROL_CODE(AFD_GET_DISCONNECT_OPTIONS, METHOD_NEITHER)
+#define IOCTL_AFD_SET_CONNECT_DATA_SIZE \
+  _AFD_CONTROL_CODE(AFD_SET_CONNECT_DATA_SIZE, METHOD_NEITHER)
+#define IOCTL_AFD_SET_CONNECT_OPTIONS_SIZE \
+  _AFD_CONTROL_CODE(AFD_SET_CONNECT_OPTIONS_SIZE, METHOD_NEITHER)
+#define IOCTL_AFD_SET_DISCONNECT_DATA_SIZE \
+  _AFD_CONTROL_CODE(AFD_SET_DISCONNECT_DATA_SIZE, METHOD_NEITHER)
+#define IOCTL_AFD_SET_DISCONNECT_OPTIONS_SIZE \
+  _AFD_CONTROL_CODE(AFD_SET_DISCONNECT_OPTIONS_SIZE, METHOD_NEITHER)
+#define IOCTL_AFD_GET_INFO \
+  _AFD_CONTROL_CODE(AFD_GET_INFO, METHOD_NEITHER)
+#define IOCTL_AFD_EVENT_SELECT \
+  _AFD_CONTROL_CODE(AFD_EVENT_SELECT, METHOD_NEITHER)
+#define IOCTL_AFD_DEFER_ACCEPT \
+  _AFD_CONTROL_CODE(AFD_DEFER_ACCEPT, METHOD_NEITHER)
+#define IOCTL_AFD_GET_PENDING_CONNECT_DATA \
+  _AFD_CONTROL_CODE(AFD_GET_PENDING_CONNECT_DATA, METHOD_NEITHER)
 
-#define IOCTL_AFD_GETNAME \
-  AFD_CTL_CODE(11, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
+typedef struct _AFD_SOCKET_INFORMATION {
+    BOOL CommandChannel;
+    INT AddressFamily;
+    INT SocketType;
+    INT Protocol;
+    PVOID HelperContext;
+    DWORD NotificationEvents;
+    UNICODE_STRING TdiDeviceName;
+    SOCKADDR Name;
+} AFD_SOCKET_INFORMATION, *PAFD_SOCKET_INFORMATION;
 
 typedef struct _FILE_REQUEST_BIND {
-  SOCKADDR Name;
+    SOCKADDR Name;
 } FILE_REQUEST_BIND, *PFILE_REQUEST_BIND;
 
 typedef struct _FILE_REPLY_BIND {
-  INT Status;
-  HANDLE TdiAddressObjectHandle;
-  HANDLE TdiConnectionObjectHandle;
+    INT Status;
+    HANDLE TdiAddressObjectHandle;
+    HANDLE TdiConnectionObjectHandle;
 } FILE_REPLY_BIND, *PFILE_REPLY_BIND;
 
 typedef struct _FILE_REQUEST_LISTEN {
-  INT Backlog;
+    INT Backlog;
 } FILE_REQUEST_LISTEN, *PFILE_REQUEST_LISTEN;
 
 typedef struct _FILE_REPLY_LISTEN {
-  INT Status;
+    INT Status;
 } FILE_REPLY_LISTEN, *PFILE_REPLY_LISTEN;
 
-
 typedef struct _FILE_REQUEST_SENDTO {
-  LPWSABUF Buffers;
-  DWORD BufferCount;
-  DWORD Flags;
-  SOCKADDR To;
-  INT ToLen;
+    LPWSABUF Buffers;
+    DWORD BufferCount;
+    DWORD Flags;
+    SOCKADDR To;
+    INT ToLen;
 } FILE_REQUEST_SENDTO, *PFILE_REQUEST_SENDTO;
 
 typedef struct _FILE_REPLY_SENDTO {
-  INT Status;
-  DWORD NumberOfBytesSent;
+    INT Status;
+    DWORD NumberOfBytesSent;
 } FILE_REPLY_SENDTO, *PFILE_REPLY_SENDTO;
 
 
 typedef struct _FILE_REQUEST_RECVFROM {
-  LPWSABUF Buffers;
-  DWORD BufferCount;
-  LPDWORD Flags;
-  LPSOCKADDR From;
-  LPINT FromLen;
+    LPWSABUF Buffers;
+    DWORD BufferCount;
+    LPDWORD Flags;
+    LPSOCKADDR From;
+    LPINT FromLen;
 } FILE_REQUEST_RECVFROM, *PFILE_REQUEST_RECVFROM;
 
 typedef struct _FILE_REPLY_RECVFROM {
-  INT Status;
-  DWORD NumberOfBytesRecvd;
+    INT Status;
+    DWORD NumberOfBytesRecvd;
 } FILE_REPLY_RECVFROM, *PFILE_REPLY_RECVFROM;
 
 
 typedef struct _FILE_REQUEST_SELECT {
-  LPFD_SET ReadFDSet;
-  LPFD_SET WriteFDSet;
-  LPFD_SET ExceptFDSet;
-  TIMEVAL Timeout;
+    LPFD_SET ReadFDSet;
+    LPFD_SET WriteFDSet;
+    LPFD_SET ExceptFDSet;
+    TIMEVAL Timeout;
 } FILE_REQUEST_SELECT, *PFILE_REQUEST_SELECT;
 
 typedef struct _FILE_REPLY_SELECT {
-  INT Status;
-  DWORD SocketCount;
+    INT Status;
+    DWORD SocketCount;
 } FILE_REPLY_SELECT, *PFILE_REPLY_SELECT;
 
 
 typedef struct _FILE_REQUEST_EVENTSELECT {
-  WSAEVENT hEventObject;
-  LONG lNetworkEvents;
+    WSAEVENT hEventObject;
+    LONG lNetworkEvents;
 } FILE_REQUEST_EVENTSELECT, *PFILE_REQUEST_EVENTSELECT;
 
 typedef struct _FILE_REPLY_EVENTSELECT {
-  INT Status;
+    INT Status;
 } FILE_REPLY_EVENTSELECT, *PFILE_REPLY_EVENTSELECT;
 
 
 typedef struct _FILE_REQUEST_ENUMNETWORKEVENTS {
-  WSAEVENT hEventObject;
+    WSAEVENT hEventObject;
 } FILE_REQUEST_ENUMNETWORKEVENTS, *PFILE_REQUEST_ENUMNETWORKEVENTS;
 
 typedef struct _FILE_REPLY_ENUMNETWORKEVENTS {
-  INT Status;
-  WSANETWORKEVENTS NetworkEvents;
+    INT Status;
+    WSANETWORKEVENTS NetworkEvents;
 } FILE_REPLY_ENUMNETWORKEVENTS, *PFILE_REPLY_ENUMNETWORKEVENTS;
 
 
 typedef struct _FILE_REQUEST_RECV {
-  LPWSABUF Buffers;
-  DWORD BufferCount;
-  LPDWORD Flags;
+    LPWSABUF Buffers;
+    DWORD BufferCount;
+    LPDWORD Flags;
 } FILE_REQUEST_RECV, *PFILE_REQUEST_RECV;
 
 typedef struct _FILE_REPLY_RECV {
-  INT Status;
-  DWORD NumberOfBytesRecvd;
+    INT Status;
+    DWORD NumberOfBytesRecvd;
 } FILE_REPLY_RECV, *PFILE_REPLY_RECV;
 
 
 typedef struct _FILE_REQUEST_SEND {
-  LPWSABUF Buffers;
-  DWORD BufferCount;
-  DWORD Flags;
+    LPWSABUF Buffers;
+    DWORD BufferCount;
+    DWORD Flags;
 } FILE_REQUEST_SEND, *PFILE_REQUEST_SEND;
 
 typedef struct _FILE_REPLY_SEND {
-  INT Status;
-  DWORD NumberOfBytesSent;
+    INT Status;
+    DWORD NumberOfBytesSent;
 } FILE_REPLY_SEND, *PFILE_REPLY_SEND;
 
 
 typedef struct _FILE_REQUEST_ACCEPT {
-  LPSOCKADDR addr;
-  INT addrlen;
-  LPCONDITIONPROC lpfnCondition;
-  DWORD dwCallbackData;
+    LPSOCKADDR addr;
+    INT addrlen;
+    LPCONDITIONPROC lpfnCondition;
+    DWORD dwCallbackData;
 } FILE_REQUEST_ACCEPT, *PFILE_REQUEST_ACCEPT;
 
 typedef struct _FILE_REPLY_ACCEPT {
-  INT Status;
-  INT addrlen;
-  SOCKET Socket;
+    INT Status;
+    INT addrlen;
+    SOCKET Socket;
 } FILE_REPLY_ACCEPT, *PFILE_REPLY_ACCEPT;
 
 
 typedef struct _FILE_REQUEST_CONNECT {
-  LPSOCKADDR name;
-  INT namelen;
-  LPWSABUF lpCallerData;
-  LPWSABUF lpCalleeData;
-  LPQOS lpSQOS;
-  LPQOS lpGQOS;
+    LPSOCKADDR name;
+    INT namelen;
+    LPWSABUF lpCallerData;
+    LPWSABUF lpCalleeData;
+    LPQOS lpSQOS;
+    LPQOS lpGQOS;
 } FILE_REQUEST_CONNECT, *PFILE_REQUEST_CONNECT;
 
 typedef struct _FILE_REPLY_CONNECT {
-  INT Status;
+    INT Status;
 } FILE_REPLY_CONNECT, *PFILE_REPLY_CONNECT;
 
 
 typedef struct _FILE_REQUEST_GETNAME {
-  BOOL Peer;
+    BOOL Peer;
 } FILE_REQUEST_GETNAME, *PFILE_REQUEST_GETNAME;
 
 typedef struct _FILE_REPLY_GETNAME {
-  INT Status;
-  SOCKADDR Name;
-  INT NameSize;
+    INT Status;
+    SOCKADDR Name;
+    INT NameSize;
 } FILE_REPLY_GETNAME, *PFILE_REPLY_GETNAME;
-
-#include <poppack.h>
 
 #endif /*__AFD_SHARED_H */
 
