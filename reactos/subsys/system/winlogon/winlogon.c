@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.3 2000/12/08 00:45:04 ekohl Exp $
+/* $Id: winlogon.c,v 1.4 2001/01/20 18:40:27 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,6 +23,19 @@
 
 /* FUNCTIONS *****************************************************************/
 
+void PrintString (char* fmt,...)
+{
+   char buffer[512];
+   va_list ap;
+
+   va_start(ap, fmt);
+   vsprintf(buffer, fmt, ap);
+   va_end(ap);
+
+   OutputDebugString(buffer);
+}
+
+
 BOOLEAN StartServices(VOID)
 {
    HANDLE ServicesInitEvent;
@@ -31,17 +44,14 @@ BOOLEAN StartServices(VOID)
    PROCESS_INFORMATION ProcessInformation;
    CHAR CommandLine[MAX_PATH];
    DWORD Count;
-   
+
    /* Start the service control manager (services.exe) */
-   OutputDebugString("WL: Running services.exe\n");
-//   DbgPrint("WL: Running services.exe\n");
+   PrintString("WL: Running services.exe\n");
    
    GetSystemDirectory(CommandLine, MAX_PATH);
    strcat(CommandLine, "\\services.exe");
    
-   DbgPrint("WL: ");
-   DbgPrint(CommandLine);
-   DbgPrint("\n");
+   PrintString("WL: %s\n", CommandLine);
    
    StartupInfo.cb = sizeof(StartupInfo);
    StartupInfo.lpReserved = NULL;
@@ -56,28 +66,32 @@ BOOLEAN StartServices(VOID)
 			  NULL,
 			  NULL,
 			  FALSE,
-			  0, //DETACHED_PROCESS,
+			  DETACHED_PROCESS,
 			  NULL,
 			  NULL,
 			  &StartupInfo,
 			  &ProcessInformation);
    if (!Result)
      {
-	DbgPrint("WL: Failed to execute services\n");
-	return(FALSE);
+	PrintString("WL: Failed to execute services\n");
+	return FALSE;
      }
    
    /* wait for event creation (by SCM) for max. 20 seconds */
-   DbgPrint("WL: Waiting for services\n");
+   PrintString("WL: Waiting for services\n");
    for (Count = 0; Count < 20; Count++)
      {
 	Sleep(1000);
    
 	ServicesInitEvent = OpenEvent(EVENT_ALL_ACCESS, //SYNCHRONIZE,
 				      FALSE,
-				      "\\SvcctrlStartEvent_A3725DX");
-	if (ServicesInitEvent)
-	  break;
+				      "SvcctrlStartEvent_A3725DX");
+	if (ServicesInitEvent != NULL)
+	  {
+	     PrintString("WL: Opened start event\n");
+	     break;
+	  }
+	PrintString("WL: Waiting for %ld seconds\n", Count+1);
      }
    
    /* wait for event signalization */
@@ -86,7 +100,8 @@ BOOLEAN StartServices(VOID)
    CloseHandle(ServicesInitEvent);
    
    DbgPrint("WL: Finished waiting for services\n");
-   return(TRUE);
+   
+   return TRUE;
 }
 
 BOOLEAN StartLsass(VOID)
@@ -213,8 +228,8 @@ WinMain(HINSTANCE hInstance,
    AllocConsole();
    
    /* start system processes (services.exe & lsass.exe) */
-#if 0
    StartServices();
+#if 0
    StartLsass();
 #endif
    

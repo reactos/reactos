@@ -1,4 +1,4 @@
-/* $Id: services.c,v 1.1 2000/12/05 02:38:08 ekohl Exp $
+/* $Id: services.c,v 1.2 2001/01/20 18:39:35 ekohl Exp $
  *
  * service control manager
  * 
@@ -37,7 +37,6 @@
 
 /* GLOBALS ******************************************************************/
 
-HANDLE OutputHandle;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -51,7 +50,7 @@ void PrintString (char* fmt,...)
    vsprintf(buffer, fmt, ap);
    va_end(ap);
 
-   WriteConsoleA(OutputHandle, buffer, strlen(buffer), NULL, NULL);
+   OutputDebugString(buffer);
 }
 
 
@@ -69,7 +68,7 @@ BOOL ScmCreateStartEvent(PHANDLE StartEvent)
 	  {
 	     hEvent = OpenEvent(EVENT_ALL_ACCESS,
 				FALSE,
-				_T("SvcctrlStartEvent_A3725DX"));
+				"SvcctrlStartEvent_A3725DX");
 	     if (hEvent == NULL)
 	       {
 		  return FALSE;
@@ -87,7 +86,6 @@ BOOL ScmCreateStartEvent(PHANDLE StartEvent)
 }
 
 
-//int main (int argc, char *argv[])
 int STDCALL
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
@@ -95,9 +93,6 @@ WinMain(HINSTANCE hInstance,
 	int nShowCmd)
 {
    HANDLE hScmStartEvent;
-   
-   AllocConsole();
-   OutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
    
    PrintString("Service Control Manager\n");
    
@@ -113,19 +108,42 @@ WinMain(HINSTANCE hInstance,
 
    /* FIXME: more initialization */
 
+   /* FIXME: create service database */
+//   ScmCreateServiceDB();
 
+   /* FIXME: update service database */
+//   ScmGetBootAndSystemDriverState();
 
-   
+   /* FIXME: create pipe "\Pipe\Ntsvcs" */
+
+   /* FIXME: create listener thread for pipe */
+
+   /* FIXME: register process as service process */
+//   RegisterServiceProcess();
+
    PrintString("SERVICES: Initialized.\n");
 
    /* Signal start event */
    SetEvent(hScmStartEvent);
 
+   /* FIXME: register event handler (used for system shutdown) */
+//   SetConsoleCtrlHandler(...);
+
+
+   /* FIXME: start auto-start services */
+//   ScmAutoStartServices();
 
    /* FIXME: more to do ? */
 
 
    PrintString("SERVICES: Running.\n");
+
+    for (;;)
+      {
+	NtYieldExecution();
+      }
+
+   PrintString("SERVICES: Finished.\n");
 
    ExitThread (0);
    return 0;
