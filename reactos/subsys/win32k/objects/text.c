@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.94 2004/05/30 14:01:13 weiden Exp $ */
+/* $Id: text.c,v 1.95 2004/05/30 14:51:45 jfilby Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -1502,7 +1502,7 @@ NtGdiExtTextOut(
       return FALSE;
    }
    
-   if (NULL != UnsafeDx)
+   if (NULL != UnsafeDx && Count > 0)
    {
       Dx = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_GDITEXT);
       if (NULL == Dx)
