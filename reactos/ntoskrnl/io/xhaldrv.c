@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.38 2003/08/18 17:34:18 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.39 2003/08/24 18:07:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -873,7 +873,8 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 		}
 	      LayoutBuffer->PartitionEntry[Count].PartitionLength.QuadPart =
 		(ULONGLONG)PartitionSector->Partition[i].SectorCount * (ULONGLONG)SectorSize;
-	      LayoutBuffer->PartitionEntry[Count].HiddenSectors = 0;
+	      LayoutBuffer->PartitionEntry[Count].HiddenSectors =
+		PartitionSector->Partition[i].StartingBlock;
 
 	      if (IsRecognizedPartition(PartitionSector->Partition[i].PartitionType))
 		{
@@ -1209,7 +1210,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 				    PartitionSector);
 	  if (!NT_SUCCESS(Status))
 	    {
-	      DPRINT1 ("xHalpReadSector2() failed (Status %lx)\n", Status);
+	      DPRINT1 ("xHalpReadSector() failed (Status %lx)\n", Status);
 	      break;
 	    }
 
@@ -1270,8 +1271,8 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 		      StartCylinder = (x / NumberOfHeads) %1024;
 		      StartHead = x % NumberOfHeads;
 		      StartSector = (lba % SectorsPerTrack) + 1;
-		      DPRINT1 ("StartingOffset (LBA:%d  C:%d  H:%d  S:%d)\n",
-			       lba, StartCylinder, StartHead, StartSector);
+		      DPRINT ("StartingOffset (LBA:%d  C:%d  H:%d  S:%d)\n",
+			      lba, StartCylinder, StartHead, StartSector);
 
 		      /* Compute ending CHS values */
 		      lba = (PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart +
@@ -1280,8 +1281,8 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 		      EndCylinder = (x / NumberOfHeads) % 1024;
 		      EndHead = x % NumberOfHeads;
 		      EndSector = (lba % SectorsPerTrack) + 1;
-		      DPRINT1 ("EndingOffset (LBA:%d  C:%d  H:%d  S:%d)\n",
-			       lba, EndCylinder, EndHead, EndSector);
+		      DPRINT ("EndingOffset (LBA:%d  C:%d  H:%d  S:%d)\n",
+			      lba, EndCylinder, EndHead, EndSector);
 
 		      /* Set starting CHS values */
 		      PartitionSector->Partition[j].StartingCylinder = StartCylinder & 0xff;
@@ -1300,8 +1301,8 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 			(PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart - ContainerOffset) / SectorSize;
 		      SectorCount =
 			PartitionBuffer->PartitionEntry[i + j].PartitionLength.QuadPart / SectorSize;
-		      DPRINT1 ("LBA (StartBlock:%lu  SectorCount:%lu)\n",
-			       StartBlock, SectorCount);
+		      DPRINT ("LBA (StartBlock:%lu  SectorCount:%lu)\n",
+			      StartBlock, SectorCount);
 
 		      /* Set start sector and sector count */
 		      PartitionSector->Partition[j].StartingBlock = StartBlock;
