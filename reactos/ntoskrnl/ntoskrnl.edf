@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.4 1999/08/29 06:59:05 ea Exp $
+; $Id: ntoskrnl.edf,v 1.5 1999/10/16 12:40:57 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -75,24 +75,10 @@ ExReleaseResourceForThreadLite
 ExSystemTimeToLocalTime
 ExTryToAcquireFastMutex
 ExTryToAcquireResourceExclusiveLite
-HalGetInterruptVector
-HalRegisterServiceTable
-KeBugCheck
-KeBugCheckEx
-KeFlushIoBuffers
-KeGetCurrentIrql
-KeGetPreviousMode
-KeInitializeDpc
-KeInitializeEvent
-KeInitializeSpinLock
-KeInsertQueueDpc
-KeLowerIrql
-KeQuerySystemTime
-KeStallExecutionProcessor
-KeSynchronizeExecution
-KeRaiseIrql
-KeWaitForSingleObject
 HalGetBusDataByOffset
+HalGetInterruptVector
+HalMakeBeep
+HalRegisterServiceTable
 HalSetBusDataByOffset
 InitializeObjectAttributes
 IoAllocateController
@@ -120,6 +106,27 @@ IoStartNextPacket
 IoStartNextPacketByKey
 IoStartTimer
 IoStopTimer
+KeBugCheck
+KeBugCheckEx
+KeClearEvent
+KeFlushIoBuffers
+KeGetCurrentIrql
+KeGetPreviousMode
+KeInitializeDpc
+KeInitializeEvent
+KeInitializeSpinLock
+KeInitializeTimer
+KeInsertQueueDpc
+KeLowerIrql
+KeQuerySystemTime
+KeReadStateEvent
+KeResetEvent
+KeSetEvent
+KeSetTimer
+KeStallExecutionProcessor
+KeSynchronizeExecution
+KeRaiseIrql
+KeWaitForSingleObject
 MmGetSystemAddressForMdl
 MmMapIoSpace
 NtAddAtom=NtAddAtom@8
