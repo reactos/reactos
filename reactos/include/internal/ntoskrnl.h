@@ -72,11 +72,6 @@ typedef struct
 extern IDT_DESCRIPTOR KiIdt[256];
 //extern GDT_DESCRIPTOR KiGdt[256];
 
-/*
- * printf style functions
- */
-int vsprintf(char *buf, const char *fmt, va_list args);
-int sprintf(char* buf, const char* fmt, ...);
 
 VOID NtInitializeEventImplementation(VOID);
 VOID NtInit(VOID);
@@ -84,7 +79,7 @@ VOID NtInit(VOID);
 /*
  * Initalization functions (called once by main())
  */
-VOID MmInitialize(boot_param* bp, ULONG LastKernelAddress);
+VOID MmInitSystem(ULONG Phase, boot_param* bp, ULONG LastKernelAddress);
 VOID IoInit(VOID);
 VOID ObInit(VOID);
 VOID PsInit(VOID);

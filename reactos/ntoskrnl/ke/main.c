@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.40 2000/03/16 18:44:56 dwelch Exp $
+/* $Id: main.c,v 1.41 2000/03/20 18:00:24 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -178,7 +178,7 @@ asmlinkage void _main(boot_param* _bp)
    strcpy (bp.kernel_parameters, "/DEBUGPORT=SCREEN");
 
    /*
-    * Initalize the hal (Phase 0)
+    * Initialization phase 0
     */
    HalInitSystem (0, &bp);
 
@@ -203,6 +203,9 @@ asmlinkage void _main(boot_param* _bp)
 	  PAGE_ROUND_UP(bp.module_length[i]);
      }
 
+   DPRINT("MmInitSystem()\n");
+   MmInitSystem(0, &bp, last_kernel_address);
+
    /*
     * Initialize the kernel debugger
     */
@@ -213,12 +216,16 @@ asmlinkage void _main(boot_param* _bp)
 //     }
 
    /*
+    * Initialization phase 1
     * Initalize various critical subsystems
     */
+   DPRINT("Kernel Initialization Phase 1\n");
+
    DPRINT("HalInitSystem()\n");
    HalInitSystem (1, &bp);
-   DPRINT("MmInitialize()\n");
-   MmInitialize(&bp, last_kernel_address);
+   DPRINT("MmInitSystem()\n");
+   MmInitSystem(1, &bp, 0);
+
    DPRINT("KeInit()\n");
    KeInit();
    DPRINT("ExInit()\n");

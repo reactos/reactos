@@ -1,4 +1,5 @@
-/*
+/* $Id: bus.c,v 1.4 2000/03/20 17:59:41 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/hal/x86/bus.c
@@ -8,14 +9,7 @@
  *                  Created 22/05/98
  *
  *
- * NOTE: The bus handler code is under contruction!
- *       It does NOT work yet!
- *
  * TODO:
- *   - Add missing default bus handler functions
- *   - Change ntoskrnl's initialization sequence
- *     (non-paged pool and spin locks must be available before HalInitSystem()
- *      is called in system initialization phase 0)
  *   - Add bus handler functions for all busses
  */
 
@@ -32,8 +26,35 @@
 
 struct _BUS_HANDLER;
 
+typedef NTSTATUS (STDCALL *pAdjustResourceList) (
+	IN struct _BUS_HANDLER *BusHandler,
+	IN ULONG BusNumber,
+	IN OUT PCM_RESOURCE_LIST Resources
+	);
+
+typedef NTSTATUS (STDCALL *pAssignSlotResources) (
+	IN struct _BUS_HANDLER *BusHandler,
+	IN ULONG BusNumber,
+	IN PUNICODE_STRING RegistryPath,
+	IN PUNICODE_STRING DriverClassName,
+	IN PDRIVER_OBJECT DriverObject,
+	IN PDEVICE_OBJECT DeviceObject,
+	IN ULONG SlotNumber,
+	IN OUT PCM_RESOURCE_LIST *AllocatedResources
+	);
+
+typedef ULONG (STDCALL *pGetSetBusData) (
+	IN struct _BUS_HANDLER *BusHandler,
+	IN ULONG BusNumber,
+	IN ULONG SlotNumber,
+	OUT PVOID Buffer,
+	IN ULONG Offset,
+	IN ULONG Length
+	);
+
 typedef ULONG (STDCALL *pGetInterruptVector) (
 	IN struct _BUS_HANDLER *BusHandler,
+	IN ULONG BusNumber,
 	IN ULONG BusInterruptLevel,
 	IN ULONG BusInterruptVector,
 	OUT PKIRQL Irql,
@@ -42,12 +63,11 @@ typedef ULONG (STDCALL *pGetInterruptVector) (
 
 typedef ULONG (STDCALL *pTranslateBusAddress) (
 	IN struct _BUS_HANDLER *BusHandler,
+	IN ULONG BusNumber,
 	IN PHYSICAL_ADDRESS BusAddress,
-	IN ULONG Length,
 	IN OUT PULONG AddressSpace,
 	OUT PPHYSICAL_ADDRESS TranslatedAddress
 	);
-
 
 typedef struct _BUS_HANDLER
 {
@@ -57,9 +77,10 @@ typedef struct _BUS_HANDLER
 	ULONG BusNumber;
 	ULONG RefCount;
 
-	PVOID GetBusData;
-	PVOID SetBusData;
-	PVOID AssignSlotResources;
+	pGetSetBusData		GetBusData;
+	pGetSetBusData		SetBusData;
+	pAdjustResourceList	AdjustResourceList;
+	pAssignSlotResources	AssignSlotResources;
 	pGetInterruptVector	GetInterruptVector;
 	pTranslateBusAddress	TranslateBusAddress;
 
@@ -68,20 +89,80 @@ typedef struct _BUS_HANDLER
 
 /* GLOBAL VARIABLES **********************************************************/
 
-//KSPIN_LOCK HalpBusHandlerSpinLock = {0,};
+KSPIN_LOCK HalpBusHandlerSpinLock = {0,};
 LIST_ENTRY HalpBusHandlerList;
 
 
 /* FUNCTIONS *****************************************************************/
 
 static
+NTSTATUS
+STDCALL
+HalpNoAdjustResourceList (
+	PBUS_HANDLER		BusHandler,
+	ULONG			BusNumber,
+	PCM_RESOURCE_LIST	Resources
+	)
+{
+	return STATUS_UNSUCCESSFUL;
+}
+
+static
+NTSTATUS
+STDCALL
+HalpNoAssignSlotResources (
+	PBUS_HANDLER		BusHandler,
+	ULONG			BusNumber,
+	PUNICODE_STRING		RegistryPath,
+	PUNICODE_STRING		DriverClassName,
+	PDRIVER_OBJECT		DriverObject,
+	PDEVICE_OBJECT		DeviceObject,
+	ULONG			SlotNumber,
+	PCM_RESOURCE_LIST	*AllocatedResources
+	)
+{
+	return STATUS_NOT_SUPPORTED;
+}
+
+static
 ULONG
+STDCALL
 HalpNoBusData (
 	PBUS_HANDLER	BusHandler,
+	ULONG		BusNumber,
 	ULONG		SlotNumber,
 	PVOID		Buffer,
 	ULONG		Offset,
 	ULONG		Length
+	)
+{
+	return 0;
+}
+
+static
+ULONG
+STDCALL
+HalpNoGetInterruptVector (
+	PBUS_HANDLER	BusHandler,
+	ULONG		BusNumber,
+	ULONG		BusInterruptLevel,
+	ULONG		BusInterruptVector,
+	PKIRQL		Irql,
+	PKAFFINITY	Affinity
+	)
+{
+	return 0;
+}
+
+static
+ULONG
+STDCALL
+HalpNoTranslateBusAddress (
+	PBUS_HANDLER		BusHandler,
+	ULONG			BusNumber,
+	PHYSICAL_ADDRESS	BusAddress,
+	PULONG			AddressSpace,
+	PPHYSICAL_ADDRESS	TranslatedAddress
 	)
 {
 	return 0;
@@ -97,7 +178,9 @@ HalpAllocateBusHandler (
 {
 	PBUS_HANDLER BusHandler = NULL;
 
-//	BusHandler = ExAllocatePool (NonPagedPool, sizeof(BUS_HANDLER));
+	DPRINT("HalpAllocateBusHandler()\n");
+
+	BusHandler = ExAllocatePool (NonPagedPool, sizeof(BUS_HANDLER));
 	if (BusHandler == NULL)
 		return NULL;
 
@@ -110,18 +193,20 @@ HalpAllocateBusHandler (
 	BusHandler->BusDataType = BusDataType;
 	BusHandler->BusNumber = BusNumber;
 
-	/* initialize handler function table */
+	/* initialize default bus handler functions */
 	BusHandler->GetBusData = HalpNoBusData;
 	BusHandler->SetBusData = HalpNoBusData;
-//	BusHandler->AdjustResourceList = HalpNoAdjustResourceList;
-//	BusHandler->AssignSlotResources = HalpNoAssignSlotResources;
-//	BusHandler->GetInterruptVector = HalpNoGetInterruptVector;
-//	BusHandler->TranslateBusAddress = HalpNoTranslateBusAddress;
+	BusHandler->AdjustResourceList = HalpNoAdjustResourceList;
+	BusHandler->AssignSlotResources = HalpNoAssignSlotResources;
+	BusHandler->GetInterruptVector = HalpNoGetInterruptVector;
+	BusHandler->TranslateBusAddress = HalpNoTranslateBusAddress;
 
+	/* any more ?? */
+
+	DPRINT("HalpAllocateBusHandler() done\n");
 
 	return BusHandler;
 }
-
 
 
 VOID
@@ -130,7 +215,7 @@ HalpInitBusHandlers (VOID)
 	PBUS_HANDLER BusHandler;
 
 	/* general preparations */
-//	KeInitializeSpinLock (&HalpBusHandlerSpinLock);
+	KeInitializeSpinLock (&HalpBusHandlerSpinLock);
 	InitializeListHead (&HalpBusHandlerList);
 
 	/* initialize hal dispatch tables */
@@ -148,8 +233,8 @@ HalpInitBusHandlers (VOID)
 	BusHandler = HalpAllocateBusHandler (Internal,
 	                                     ConfigurationSpaceUndefined,
 	                                     0);
-//	BusHandler->GetInterruptVector =
-//		(pGetInterruptVector)HalpGetSystemInterruptVector;
+	BusHandler->GetInterruptVector =
+		(pGetInterruptVector)HalpGetSystemInterruptVector;
 //	BusHandler->TranslateBusAddress =
 //		(pTranslateBusAddress)HalpTranslateSystemBusAddress;
 
@@ -157,17 +242,32 @@ HalpInitBusHandlers (VOID)
 	BusHandler = HalpAllocateBusHandler (InterfaceTypeUndefined,
 	                                     Cmos,
 	                                     0);
+//	BusHandler->GetBusData =
+//		(pGetSetBusData)HalpGetCmosData;
+//	BusHandler->SetBusData =
+//		(pGetSetBusData)HalpSetCmosData;
 
 	/* pci bus handler */
 	BusHandler = HalpAllocateBusHandler (PCIBus,
 	                                     PCIConfiguration,
 	                                     0);
+//	BusHandler->GetBusData =
+//		(pGetSetBusData)HalpGetPciData;
+//	BusHandler->SetBusData =
+//		(pGetSetBusData)HalpSetPciData;
+//	BusHandler->GetInterruptVector =
+//		(pGetInterruptVector)HalpGetPciInterruptVector;
+//	BusHandler->AdjustResourceList =
+//		(pGetSetBusData)HalpAdjustPciResourceList;
+//	BusHandler->AssignSlotResources =
+//		(pGetSetBusData)HalpAssignPciSlotResources;
 
 	/* isa bus handler */
 	BusHandler = HalpAllocateBusHandler (Isa,
 	                                     ConfigurationSpaceUndefined,
 	                                     0);
-
+//	BusHandler->TranslateBusAddress =
+//		(pTranslateBusAddress)HalpTranslateIsaBusAddress;
 }
 
 
@@ -180,9 +280,9 @@ HaliHandlerForBus (
 {
 	PBUS_HANDLER BusHandler;
 	PLIST_ENTRY CurrentEntry;
-//	KIRQL OldIrql;
+	KIRQL OldIrql;
 
-//	KeAcquireSpinLock (&HalpBusHandlerSpinLock, &OldIrql);
+	KeAcquireSpinLock (&HalpBusHandlerSpinLock, &OldIrql);
 
 	CurrentEntry = HalpBusHandlerList.Flink;
 	while (CurrentEntry != &HalpBusHandlerList)
@@ -191,12 +291,12 @@ HaliHandlerForBus (
 		if (BusHandler->InterfaceType == InterfaceType &&
 		    BusHandler->BusNumber == BusNumber)
 		{
-//			KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
+			KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
 			return BusHandler;
 		}
 		CurrentEntry = CurrentEntry->Flink;
 	}
-//	KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
+	KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
 
 	return NULL;
 }
@@ -211,9 +311,9 @@ HaliHandlerForConfigSpace (
 {
 	PBUS_HANDLER BusHandler;
 	PLIST_ENTRY CurrentEntry;
-//	KIRQL OldIrql;
+	KIRQL OldIrql;
 
-//	KeAcquireSpinLock (&HalpBusHandlerSpinLock, &OldIrql);
+	KeAcquireSpinLock (&HalpBusHandlerSpinLock, &OldIrql);
 
 	CurrentEntry = HalpBusHandlerList.Flink;
 	while (CurrentEntry != &HalpBusHandlerList)
@@ -222,12 +322,12 @@ HaliHandlerForConfigSpace (
 		if (BusHandler->BusDataType == BusDataType &&
 		    BusHandler->BusNumber == BusNumber)
 		{
-//			KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
+			KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
 			return BusHandler;
 		}
 		CurrentEntry = CurrentEntry->Flink;
 	}
-//	KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
+	KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
 
 	return NULL;
 }
@@ -242,9 +342,9 @@ HaliReferenceHandlerForBus (
 {
 	PBUS_HANDLER BusHandler;
 	PLIST_ENTRY CurrentEntry;
-//	KIRQL OldIrql;
+	KIRQL OldIrql;
 
-//	KeAcquireSpinLock (&HalpBusHandlerSpinLock, &OldIrql);
+	KeAcquireSpinLock (&HalpBusHandlerSpinLock, &OldIrql);
 
 	CurrentEntry = HalpBusHandlerList.Flink;
 	while (CurrentEntry != &HalpBusHandlerList)
@@ -254,12 +354,12 @@ HaliReferenceHandlerForBus (
 		    BusHandler->BusNumber == BusNumber)
 		{
 			BusHandler->RefCount++;
-//			KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
+			KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
 			return BusHandler;
 		}
 		CurrentEntry = CurrentEntry->Flink;
 	}
-//	KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
+	KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
 
 	return NULL;
 }
@@ -274,9 +374,9 @@ HaliReferenceHandlerForConfigSpace (
 {
 	PBUS_HANDLER BusHandler;
 	PLIST_ENTRY CurrentEntry;
-//	KIRQL OldIrql;
+	KIRQL OldIrql;
 
-//	KeAcquireSpinLock (&HalpBusHandlerSpinLock, &OldIrql);
+	KeAcquireSpinLock (&HalpBusHandlerSpinLock, &OldIrql);
 
 	CurrentEntry = HalpBusHandlerList.Flink;
 	while (CurrentEntry != &HalpBusHandlerList)
@@ -286,12 +386,12 @@ HaliReferenceHandlerForConfigSpace (
 		    BusHandler->BusNumber == BusNumber)
 		{
 			BusHandler->RefCount++;
-//			KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
+			KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
 			return BusHandler;
 		}
 		CurrentEntry = CurrentEntry->Flink;
 	}
-//	KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
+	KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
 
 	return NULL;
 }
@@ -303,13 +403,13 @@ HaliDereferenceBusHandler (
 	PBUS_HANDLER	BusHandler
 	)
 {
-//	KIRQL OldIrql;
+	KIRQL OldIrql;
 
-//	KeAcquireSpinLock (&HalpBusHandlerSpinLock, &OldIrql);
+	KeAcquireSpinLock (&HalpBusHandlerSpinLock, &OldIrql);
 
 	BusHandler->RefCount--;
 
-//	KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
+	KeReleaseSpinLock (&HalpBusHandlerSpinLock, OldIrql);
 }
 
 
@@ -319,7 +419,6 @@ HalAdjustResourceList (
 	PCM_RESOURCE_LIST	Resources
 	)
 {
-#if 0
 	PBUS_HANDLER BusHandler;
 	NTSTATUS Status;
 
@@ -329,14 +428,12 @@ HalAdjustResourceList (
 		return STATUS_SUCCESS;
 
 	Status = BusHandler->AdjustResourceList (BusHandler,
-	                                         BusHandler,
+	                                         Resources->List[0].BusNumber,
 	                                         Resources);
 
 	HaliDereferenceBusHandler (BusHandler);
 
 	return Status;
-#endif
-   UNIMPLEMENTED;
 }
 
 
@@ -353,17 +450,16 @@ HalAssignSlotResources (
 	PCM_RESOURCE_LIST	*AllocatedResources
 	)
 {
-#if 0
 	PBUS_HANDLER BusHandler;
 	NTSTATUS Status;
 
-	BusHandler = HaliReferenceHandlerForBus (InterfaceType,
+	BusHandler = HaliReferenceHandlerForBus (BusType,
 	                                         BusNumber);
 	if (BusHandler == NULL)
 		return STATUS_NOT_FOUND;
 
 	Status = BusHandler->AssignSlotResources (BusHandler,
-	                                          BusHandler,
+	                                          BusNumber,
 	                                          RegistryPath,
 	                                          DriverClassName,
 	                                          DriverObject,
@@ -374,8 +470,6 @@ HalAssignSlotResources (
 	HaliDereferenceBusHandler (BusHandler);
 
 	return Status;
-#endif
-   UNIMPLEMENTED;
 }
 
 
@@ -409,7 +503,6 @@ HalGetBusDataByOffset (
 	ULONG		Length
 	)
 {
-#if 0
 	PBUS_HANDLER BusHandler;
 	ULONG Result;
 
@@ -419,6 +512,7 @@ HalGetBusDataByOffset (
 		return 0;
 
 	Result = BusHandler->GetBusData (BusHandler,
+	                                 BusNumber,
 	                                 SlotNumber,
 	                                 Buffer,
 	                                 Offset,
@@ -427,8 +521,6 @@ HalGetBusDataByOffset (
 	HaliDereferenceBusHandler (BusHandler);
 
 	return Result;
-#endif
-   UNIMPLEMENTED;
 }
 
 
@@ -443,7 +535,6 @@ HalGetInterruptVector (
 	PKAFFINITY	Affinity
 	)
 {
-#if 0
 	PBUS_HANDLER BusHandler;
 	ULONG Result;
 
@@ -453,6 +544,7 @@ HalGetInterruptVector (
 		return 0;
 
 	Result = BusHandler->GetInterruptVector (BusHandler,
+	                                         BusNumber,
 	                                         BusInterruptLevel,
 	                                         BusInterruptVector,
 	                                         Irql,
@@ -461,12 +553,6 @@ HalGetInterruptVector (
 	HaliDereferenceBusHandler (BusHandler);
 
 	return Result;
-#endif
-	return (HalpGetSystemInterruptVector (NULL,
-	                                      BusInterruptLevel,
-	                                      BusInterruptVector,
-	                                      Irql,
-	                                      Affinity));
 }
 
 
@@ -500,7 +586,6 @@ HalSetBusDataByOffset (
 	ULONG		Length
 	)
 {
-#if 0
 	PBUS_HANDLER BusHandler;
 	ULONG Result;
 
@@ -510,7 +595,7 @@ HalSetBusDataByOffset (
 		return 0;
 
 	Result = BusHandler->SetBusData (BusHandler,
-	                                 BusHandler,
+	                                 BusNumber,
 	                                 SlotNumber,
 	                                 Buffer,
 	                                 Offset,
@@ -519,8 +604,6 @@ HalSetBusDataByOffset (
 	HaliDereferenceBusHandler (BusHandler);
 
 	return Result;
-#endif
-   UNIMPLEMENTED;
 }
 
 
@@ -534,7 +617,6 @@ HalTranslateBusAddress (
 	PPHYSICAL_ADDRESS	TranslatedAddress
 	)
 {
-#if 0
 	PBUS_HANDLER BusHandler;
 	BOOLEAN Result;
 
@@ -544,7 +626,7 @@ HalTranslateBusAddress (
 		return FALSE;
 
 	Result = BusHandler->TranslateBusAddress (BusHandler,
-	                                          BusHandler,
+	                                          BusNumber,
 	                                          BusAddress,
 	                                          AddressSpace,
 	                                          TranslatedAddress);
@@ -552,8 +634,6 @@ HalTranslateBusAddress (
 	HaliDereferenceBusHandler (BusHandler);
 
 	return Result;
-#endif
-   UNIMPLEMENTED;
 }
 
 /* EOF */

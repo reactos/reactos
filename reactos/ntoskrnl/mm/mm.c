@@ -1,4 +1,5 @@
-/*
+/* $Id: mm.c,v 1.24 2000/03/20 18:00:55 ekohl Exp $
+ *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/mm.c
@@ -109,19 +110,14 @@ VOID MmInitVirtualMemory(boot_param* bp)
    Length = ParamLength;
    MmCreateMemoryArea(KernelMode,NULL,MEMORY_AREA_SYSTEM,&BaseAddress,
 		      Length,0,&kernel_param_desc);
-   
+
    BaseAddress = (PVOID)(KERNEL_BASE + PAGE_ROUND_UP(kernel_len) + PAGESIZE);
    Length = NONPAGED_POOL_SIZE;
    MmCreateMemoryArea(KernelMode,NULL,MEMORY_AREA_SYSTEM,&BaseAddress,
 		      Length,0,&kernel_pool_desc);
-   
+
 //   MmDumpMemoryAreas();
-   CHECKPOINT;
-   
-//  while (inb_p(0x60)!=0x1); inb_p(0x60);
-   
-   MmInitSectionImplementation();
-   MmInitPagingFile();
+   DPRINT("MmInitVirtualMemory() done\n");
 }
 
 NTSTATUS MmCommitedSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
@@ -406,3 +402,21 @@ void MmInitialize(boot_param* bp, ULONG LastKernelAddress)
     */
    MmInitVirtualMemory(bp);
 }
+
+VOID
+MmInitSystem (ULONG Phase, boot_param* bp, ULONG LastKernelAddress)
+{
+	if (Phase == 0)
+	{
+		/* Phase 0 Initialization */
+		MmInitialize (bp, LastKernelAddress);
+	}
+	else
+	{
+		/* Phase 1 Initialization */
+		MmInitSectionImplementation();
+		MmInitPagingFile();
+	}
+}
+
+/* EOF */

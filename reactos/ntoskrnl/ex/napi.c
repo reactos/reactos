@@ -21,7 +21,9 @@
 
 
 
-KE_SERVICE_DESCRIPTOR_TABLE_ENTRY KeServiceDescriptorTable[SSDT_MAX_ENTRIES] =
+KE_SERVICE_DESCRIPTOR_TABLE_ENTRY
+__declspec(dllexport)
+KeServiceDescriptorTable[SSDT_MAX_ENTRIES] =
 {
 	{ MainSSDT, NULL, NUMBER_OF_SYSCALLS, MainSSPT },
 	{ NULL,    NULL,   0,   NULL   },

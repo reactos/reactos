@@ -83,7 +83,8 @@ HalpInitBusHandlers (VOID);
 ULONG
 STDCALL
 HalpGetSystemInterruptVector (
-	PVOID	BusHandler,
+	PVOID BusHandler,
+	ULONG BusNumber,
 	ULONG BusInterruptLevel,
 	ULONG BusInterruptVector,
 	PKIRQL Irql,

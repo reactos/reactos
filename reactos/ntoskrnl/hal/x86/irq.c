@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.8 2000/03/19 13:34:47 ekohl Exp $
+/* $Id: irq.c,v 1.9 2000/03/20 17:59:42 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -369,6 +369,7 @@ VOID IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
 ULONG
 STDCALL
 HalpGetSystemInterruptVector(PVOID BusHandler,
+			    ULONG BusNumber,
 			    ULONG BusInterruptLevel,
 			    ULONG BusInterruptVector,
 			    PKIRQL Irql,
