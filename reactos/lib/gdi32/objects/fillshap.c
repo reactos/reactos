@@ -81,3 +81,23 @@ Ellipse(HDC hDc,
 {
   return NtGdiEllipse(hDc, Left, Top, Right, Bottom);
 }
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+Pie(HDC hDc,
+    int Left,
+    int Top,
+    int Right,
+    int Bottom,
+    int XRadialStart,
+    int YRadialStart,
+    int XRadialEnd,
+    int YRadialEnd)
+{
+  return NtGdiPie(hDc, Left, Top, Right, Bottom, XRadialStart, YRadialStart,
+                  XRadialEnd, YRadialEnd);
+}

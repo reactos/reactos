@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.40 2003/11/16 22:44:39 sedwards Exp $
+/* $Id: stubs.c,v 1.41 2003/12/12 14:22:36 gvg Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -512,28 +512,6 @@ InvertRgn(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-Pie(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4,
-	int	a5,
-	int	a6,
-	int	a7,
-	int	a8
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
 
 /*
  * @unimplemented

@@ -2,7 +2,7 @@
 #define __WINE_DEBUG_H
 
 #include "../roscfg.h"
-#ifndef DBG
+#if ! defined(DBG) || ! defined(YDEBUG)
 #define NDEBUG
 #endif
 #include "../debug.h"

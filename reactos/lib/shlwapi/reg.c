@@ -19,6 +19,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifdef DBG
+#undef DBG
+#define DBG 1
+#endif
+
 #include <stdarg.h>
 #include <string.h>
 #ifdef __REACTOS__

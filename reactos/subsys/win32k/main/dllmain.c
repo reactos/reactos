@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.59 2003/12/07 23:02:57 gvg Exp $
+/* $Id: dllmain.c,v 1.60 2003/12/12 14:22:37 gvg Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -43,6 +43,7 @@
 #include <include/hotkey.h>
 #include <include/accelerator.h>
 #include <include/guicheck.h>
+#include <include/hook.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -161,6 +162,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
       DbgPrint ("  Destroy thread\n");
 #endif
 
+      HOOK_DestroyThreadHooks(Thread);
       RemoveTimersThread(Thread->Cid.UniqueThread);
       UnregisterThreadHotKeys(Thread);
       DestroyThreadWindows(Thread);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c,v 1.6 2003/05/18 17:16:17 ea Exp $
+/* $Id: object.c,v 1.7 2003/12/12 14:22:37 gvg Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -66,13 +66,13 @@ ObmpPerformRetentionChecks(PUSER_OBJECT_HEADER ObjectHeader)
 {
   if (ObjectHeader->RefCount < 0)
     {
-      DbgPrint("ObjectHeader 0x%X has invalid reference count (%d)\n",
+      DPRINT1("ObjectHeader 0x%X has invalid reference count (%d)\n",
 	       ObjectHeader, ObjectHeader->RefCount);
     }
   
   if (ObjectHeader->HandleCount < 0)
     {
-      DbgPrint("Object 0x%X has invalid handle count (%d)\n",
+      DPRINT1("Object 0x%X has invalid handle count (%d)\n",
 	       ObjectHeader, ObjectHeader->HandleCount);
     }
   
@@ -101,6 +101,11 @@ ObmpGetObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
   PLIST_ENTRY Current;
   ULONG i;
   
+  if (NULL == Handle)
+    {
+      return NULL;
+    }
+
   Current = HandleTable->ListHead.Flink;
   
   for (i = 0; i < Count; i++)
@@ -108,6 +113,7 @@ ObmpGetObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
       Current = Current->Flink;
       if (Current == &(HandleTable->ListHead))
 	{
+          DPRINT1("Invalid handle\n");
 	  return NULL;
 	}
     }
@@ -195,6 +201,7 @@ ObmpDeleteHandle(PUSER_HANDLE_TABLE HandleTable,
   Entry = ObmpGetObjectByHandle(HandleTable, Handle);
   if (Entry == NULL)
     {
+      DPRINT1("Invalid handle\n");
       ObmpUnlockHandleTable(HandleTable);
       return NULL;
     }
@@ -404,7 +411,7 @@ ObmCreateHandle(PUSER_HANDLE_TABLE HandleTable,
 	      Block->Handles[i].ObjectBody = ObjectBody;
 	      ObmpUnlockHandleTable(HandleTable);
 	      *HandleReturn = (HANDLE)((Handle + i) << 2);
-	      return ERROR_SUCCESS;
+	      return STATUS_SUCCESS;
 	    }
 	}
 
@@ -419,6 +426,7 @@ ObmCreateHandle(PUSER_HANDLE_TABLE HandleTable,
 						sizeof(USER_HANDLE_BLOCK));
   if (!NewBlock)
     {
+      DPRINT1("Unable to allocate new handle block\n");
       *HandleReturn = (PHANDLE)NULL;
       return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -471,6 +479,7 @@ ObmReferenceObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
   
   if ((ObjectType != otUnknown) && (ObjectHeader->Type != ObjectType))
     {
+      DPRINT1("Object type mismatch\n");
       return STATUS_UNSUCCESSFUL;
     }
   
@@ -518,6 +527,7 @@ ObmCreateHandleTable(VOID)
 						   sizeof(USER_HANDLE_TABLE));
   if (!HandleTable)
     {
+      DPRINT1("Unable to create handle table\n");
       return NULL;
     }
   

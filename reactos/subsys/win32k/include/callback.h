@@ -49,4 +49,13 @@ IntLoadSysMenuTemplate();
 BOOL STDCALL
 IntLoadDefaultCursors(BOOL SetDefault);
 
+LRESULT STDCALL
+IntCallHookProc(INT HookId,
+                INT Code,
+                WPARAM wParam,
+                LPARAM lParam,
+                HOOKPROC Proc,
+                BOOLEAN Ansi,
+                PUNICODE_STRING ModuleName);
+
 #endif /* _WIN32K_CALLBACK_H */

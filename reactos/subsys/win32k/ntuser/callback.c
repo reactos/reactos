@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.18 2003/12/07 23:02:57 gvg Exp $
+/* $Id: callback.c,v 1.19 2003/12/12 14:22:37 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -42,6 +42,8 @@
 
 #define NDEBUG
 #include <debug.h>
+
+#define TAG_CALLBACK TAG('C', 'B', 'C', 'K')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -415,6 +417,113 @@ IntLoadDefaultCursors(BOOL SetDefault)
       return(0);
     }
   return (BOOL)Result;
+}
+
+LRESULT STDCALL
+IntCallHookProc(INT HookId,
+                INT Code,
+                WPARAM wParam,
+                LPARAM lParam,
+                HOOKPROC Proc,
+                BOOLEAN Ansi,
+                PUNICODE_STRING ModuleName)
+{
+  ULONG ArgumentLength;
+  PVOID Argument;
+  LRESULT Result;
+  NTSTATUS Status;
+  PVOID ResultPointer;
+  ULONG ResultLength;
+  PHOOKPROC_CALLBACK_ARGUMENTS Common;
+  CBT_CREATEWNDW *CbtCreateWnd;
+  PCHAR Extra;
+  PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra;
+
+  ArgumentLength = sizeof(HOOKPROC_CALLBACK_ARGUMENTS) - sizeof(WCHAR)
+                   + ModuleName->Length;
+  switch(HookId)
+    {
+    case WH_CBT:
+      switch(Code)
+        {
+        case HCBT_CREATEWND:
+          CbtCreateWnd = (CBT_CREATEWNDW *) lParam;
+          ArgumentLength += sizeof(HOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS)
+                            + (wcslen(CbtCreateWnd->lpcs->lpszName)
+                               + 1) * sizeof(WCHAR);
+          if (0 != HIWORD(CbtCreateWnd->lpcs->lpszClass))
+            {
+              ArgumentLength += (wcslen(CbtCreateWnd->lpcs->lpszClass)
+                                 + 1) * sizeof(WCHAR);
+            }
+          break;
+        default:
+          DPRINT1("Trying to call unsupported CBT hook %d\n", Code);
+          return 0;
+        }
+      break;
+    default:
+      DPRINT1("Trying to call unsupported window hook %d\n", HookId);
+      return 0;
+    }
+
+  Argument = ExAllocatePoolWithTag(PagedPool, ArgumentLength, TAG_CALLBACK);
+  if (NULL == Argument)
+    {
+      DPRINT1("HookProc callback failed: out of memory\n");
+      return 0;
+    }
+  Common = (PHOOKPROC_CALLBACK_ARGUMENTS) Argument;
+  Common->HookId = HookId;
+  Common->Code = Code;
+  Common->wParam = wParam;
+  Common->lParam = lParam;
+  Common->Proc = Proc;
+  Common->Ansi = Ansi;
+  Common->ModuleNameLength = ModuleName->Length;
+  memcpy(Common->ModuleName, ModuleName->Buffer, ModuleName->Length);
+  Extra = (PCHAR) Common->ModuleName + Common->ModuleNameLength;
+
+  switch(HookId)
+    {
+    case WH_CBT:
+      switch(Code)
+        {
+        case HCBT_CREATEWND:
+          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
+          CbtCreatewndExtra = (PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS) Extra;
+          CbtCreatewndExtra->Cs = *(CbtCreateWnd->lpcs);
+          CbtCreatewndExtra->WndInsertAfter = CbtCreateWnd->hwndInsertAfter;
+          Extra = (PCHAR) (CbtCreatewndExtra + 1);
+          memcpy(Extra, CbtCreateWnd->lpcs->lpszName,
+                 (wcslen(CbtCreateWnd->lpcs->lpszName) + 1) * sizeof(WCHAR));
+          CbtCreatewndExtra->Cs.lpszName = (LPCWSTR) (Extra - (PCHAR) CbtCreatewndExtra);
+          Extra += (wcslen(CbtCreateWnd->lpcs->lpszName) + 1) * sizeof(WCHAR);
+          if (0 != HIWORD(CbtCreateWnd->lpcs->lpszClass))
+            {
+              memcpy(Extra, CbtCreateWnd->lpcs->lpszClass,
+                     (wcslen(CbtCreateWnd->lpcs->lpszClass) + 1) * sizeof(WCHAR));
+              CbtCreatewndExtra->Cs.lpszClass =
+                (LPCWSTR) MAKELONG(Extra - (PCHAR) CbtCreatewndExtra, 1);
+            }
+          break;
+        }
+      break;
+    }
+  
+  ResultPointer = &Result;
+  ResultLength = sizeof(LRESULT);
+  Status = NtW32Call(USER32_CALLBACK_HOOKPROC,
+		     Argument,
+		     ArgumentLength,
+		     &ResultPointer,
+		     &ResultLength);
+  if (!NT_SUCCESS(Status))
+    {
+      return 0;
+    }
+
+  return Result;
 }
 
 /* EOF */

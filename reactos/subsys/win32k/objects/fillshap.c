@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.35 2003/10/04 20:04:10 gvg Exp $ */
+/* $Id: fillshap.c,v 1.36 2003/12/12 14:22:37 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -136,7 +136,7 @@ NtGdiEllipse(HDC hDC,
       BRUSHOBJ_UnlockBrush(dc->w.hBrush);
       DC_UnlockDc(hDC);
 
-      return TRUE;
+      return ret;
     }
 
   Radius = (Right - Left) / 2;
@@ -231,22 +231,415 @@ NtGdiEllipse(HDC hDC,
   BRUSHOBJ_UnlockBrush(dc->w.hBrush);
   DC_UnlockDc(hDC);
 
-  return TRUE;
+  return ret;
 }
+
+typedef struct tagSHAPEPOINT
+{
+  int X;
+  int Y;
+  int Type;
+} SHAPEPOINT, *PSHAPEPOINT;
+
+#define SHAPEPOINT_TYPE_CIRCLE     'C'
+#define SHAPEPOINT_TYPE_LINE_RIGHT 'R' /* Fill at right side of line */
+#define SHAPEPOINT_TYPE_LINE_LEFT  'L' /* Fill at left side of line */
+
+#define SETPOINT(x, y, type) \
+  ShapePoints[*PointCount].X = (x); \
+  ShapePoints[*PointCount].Y = (y); \
+  ShapePoints[*PointCount].Type = (type); \
+  (*PointCount)++
+
+#define SETCIRCLEPOINT(x, y) \
+  SETPOINT(x, y, SHAPEPOINT_TYPE_CIRCLE)
+
+#ifdef TODO
+STATIC VOID
+FASTCALL
+CirclePoints(UINT *PointCount, PSHAPEPOINT ShapePoints, int Left, int Top,
+             int Right, int Bottom)
+{
+  int X, X18, X27, X36, X45;
+  int Y, Y14, Y23, Y58, Y67;
+  int d, Radius;
+  BOOL Even;
+
+  Even = (0 == (Right - Left) % 2);
+  Right--;
+  Bottom--;
+  Radius = (Right - Left) / 2;
+
+  if (Even)
+    {
+      X = 0;
+      Y = Radius;
+      d = 2 - Radius;
+      X18 = Right;
+      X27 = (Left + Right) / 2 + 1;
+      X36 = (Left + Right) / 2;
+      X45 = Left;
+      Y14 = Top + Radius;
+      Y23 = Top;
+      Y58 = Top + Radius + 1;
+      Y67 = Top + (Right - Left);
+      ShapePoints[*PointCount].X = X27;
+      SETCIRCLEPOINT(X27, Y23);
+      SETCIRCLEPOINT(X36, Y23);
+      SETCIRCLEPOINT(X18, Y14);
+      SETCIRCLEPOINT(X45, Y14);
+      SETCIRCLEPOINT(X18, Y58);
+      SETCIRCLEPOINT(X45, Y58);
+      SETCIRCLEPOINT(X27, Y67);
+      SETCIRCLEPOINT(X36, Y67);
+    }
+  else
+    {
+      X = 0;
+      Y = Radius;
+      d = 1 - Radius;
+      X18 = Right;
+      X27 = (Left + Right) / 2;
+      X36 = (Left + Right) / 2;
+      X45 = Left;
+      Y14 = Top + Radius;
+      Y23 = Top;
+      Y58 = Top + Radius;
+      Y67 = Top + (Right - Left);
+      SETCIRCLEPOINT(X27, Y23);
+      SETCIRCLEPOINT(X45, Y14);
+      SETCIRCLEPOINT(X18, Y58);
+      SETCIRCLEPOINT(X27, Y67);
+    }
+
+  while (X < Y)
+    {
+      if (d < 0)
+	{
+	  d += 2 * X + (Even ? 4 : 3);
+
+	  X27++;
+	  X36--;
+	  Y14--;
+	  Y58++;
+	}
+      else
+	{
+	  d += 2 * (X - Y) + 5;
+	  Y--;
+
+	  Y23++;
+	  Y67--;
+	  X18--;
+	  X45++;
+	  X27++;
+	  X36--;
+	  Y14--;
+	  Y58++;
+	}
+      X++;
+
+      SETCIRCLEPOINT(X27, Y23);
+      SETCIRCLEPOINT(X36, Y23);
+      SETCIRCLEPOINT(X18, Y14);
+      SETCIRCLEPOINT(X45, Y14);
+      SETCIRCLEPOINT(X18, Y58);
+      SETCIRCLEPOINT(X45, Y58);
+      SETCIRCLEPOINT(X27, Y67);
+      SETCIRCLEPOINT(X36, Y67);
+    }
+}
+
+STATIC VOID
+LinePoints(UINT *PointCount, PSHAPEPOINT ShapePoints, int Left, int Top,
+           int Right, int Bottom, int XTo, int YTo, BOOL Start)
+{
+  LONG x, y, deltax, deltay, i, xchange, ychange, error;
+  int Type;
+
+  x = (Right + Left) / 2;
+  y = (Bottom + Top) / 2;
+  deltax = XTo - x;
+  deltay = YTo - y;
+
+  if (deltax < 0)
+    {
+      xchange = -1;
+      deltax = - deltax;
+      x--;
+    }
+  else
+    {
+      xchange = 1;
+    }
+
+  if (deltay < 0)
+    {
+      ychange = -1;
+      deltay = - deltay;
+      y--;
+      Type = (Start ? SHAPEPOINT_TYPE_LINE_LEFT : SHAPEPOINT_TYPE_LINE_RIGHT);
+    }
+  else
+    {
+      ychange = 1;
+      Type = (Start ? SHAPEPOINT_TYPE_LINE_RIGHT : SHAPEPOINT_TYPE_LINE_LEFT);
+    }
+
+  if (y == YTo)
+    {
+      for (i = x; i <= XTo; i++)
+	{
+	  SETPOINT(i, y, Type);
+	}
+    }
+  else if (x == XTo)
+    {
+      for (i = y; i <= YTo; i++)
+	{
+	  SETPOINT(x, i, Type);
+	}
+    }
+  else
+    {
+      error = 0;
+
+      if (deltax < deltay)
+	{
+	  for (i = 0; i < deltay; i++)
+	    {
+	      SETPOINT(x, y, Type);
+	      y = y + ychange;
+	      error = error + deltax;
+
+	      if (deltay <= error)
+		{
+		  x = x + xchange;
+		  error = error - deltay;
+		}
+	    }
+	}
+      else
+ 	{
+	  for (i = 0; i < deltax; i++)
+	    {
+	      SETPOINT(x, y, Type);
+	      x = x + xchange;
+	      error = error + deltay;
+	      if (deltax <= error)
+		{
+		  y = y + ychange;
+		  error = error - deltax;
+		}
+	    }
+	}
+    }
+}
+
+STATIC int
+CDECL
+CompareShapePoints(const void *pv1, const void *pv2)
+{
+  if (((const PSHAPEPOINT) pv1)->Y < ((const PSHAPEPOINT) pv2)->Y)
+    {
+      return -1;
+    }
+  else if (((const PSHAPEPOINT) pv2)->Y < ((const PSHAPEPOINT) pv1)->Y)
+    {
+      return +1;
+    }
+  else if (((const PSHAPEPOINT) pv1)->X < ((const PSHAPEPOINT) pv2)->X)
+    {
+      return -1;
+    }
+  else if (((const PSHAPEPOINT) pv2)->X < ((const PSHAPEPOINT) pv1)->X)
+    {
+      return +1;
+    }
+  else
+    {
+      return 0;
+    }
+}
+#endif
+
 
 BOOL
 STDCALL
 NtGdiPie(HDC  hDC,
-              int  LeftRect,
-              int  TopRect,
-              int  RightRect,
-              int  BottomRect,
-              int  XRadial1,
-              int  YRadial1,
-              int  XRadial2,
-              int  YRadial2)
+              int  Left,
+              int  Top,
+              int  Right,
+              int  Bottom,
+              int  XRadialStart,
+              int  YRadialStart,
+              int  XRadialEnd,
+              int  YRadialEnd)
 {
-  UNIMPLEMENTED;
+#ifdef TODO
+  PDC dc;
+  RECTL RectBounds;
+  PSURFOBJ SurfObj;
+  BRUSHOBJ PenBrushObj;
+  PBRUSHOBJ FillBrushObj;
+  PSHAPEPOINT ShapePoints;
+  UINT Point, PointCount;
+  BOOL ret = TRUE;
+  int Y, CircleStart, CircleEnd, LineStart, LineEnd;
+  BOOL FullFill;
+
+  if (Right <= Left || Bottom <= Top)
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
+
+  if (Right - Left != Bottom - Top)
+    {
+      UNIMPLEMENTED;
+    }
+
+  dc = DC_LockDc ( hDC );
+  if (NULL == dc)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
+
+  FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
+  if (NULL == FillBrushObj)
+    {
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_INTERNAL_ERROR);
+      return FALSE;
+    }
+
+  Left += dc->w.DCOrgX;
+  Right += dc->w.DCOrgX;
+  Top += dc->w.DCOrgY;
+  Bottom += dc->w.DCOrgY;
+  XRadialStart += dc->w.DCOrgX;
+  YRadialStart += dc->w.DCOrgY;
+  XRadialEnd += dc->w.DCOrgX;
+  YRadialEnd += dc->w.DCOrgY;
+
+  RectBounds.left = Left;
+  RectBounds.right = Right;
+  RectBounds.top = Top;
+  RectBounds.bottom = Bottom;
+
+  SurfObj = (PSURFOBJ) AccessUserObject((ULONG)dc->Surface);
+  HPenToBrushObj(&PenBrushObj, dc->w.hPen);
+
+  /* Number of points for the circle is 4 * sqrt(2) * Radius, start
+     and end line have at most Radius points, so allocate at least
+     that much */
+  ShapePoints = ExAllocatePool(PagedPool, 8 * (Right - Left + 1) / 2 * sizeof(SHAPEPOINT));
+  if (NULL == ShapePoints)
+    {
+      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+      DC_UnlockDc(hDC);
+
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+
+  if (Left == Right)
+    {
+      PUTPIXEL(Left, Top, &PenBrushObj);
+      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+      DC_UnlockDc(hDC);
+
+      return ret;
+    }
+
+  PointCount = 0;
+  CirclePoints(&PointCount, ShapePoints, Left, Top, Right, Bottom);
+  LinePoints(&PointCount, ShapePoints, Left, Top, Right, Bottom,
+             XRadialStart, YRadialStart, TRUE);
+  LinePoints(&PointCount, ShapePoints, Left, Top, Right, Bottom,
+             XRadialEnd, YRadialEnd, FALSE);
+  ASSERT(PointCount <= 8 * (Right - Left + 1) / 2);
+  EngSort((PBYTE) ShapePoints, sizeof(SHAPEPOINT), PointCount, CompareShapePoints);
+
+  FullFill = TRUE;
+  Point = 0;
+  while (Point < PointCount)
+    {
+      Y = ShapePoints[Point].Y;
+
+      /* Skip any line pixels before circle */
+      while (Point < PointCount && ShapePoints[Point].Y == Y
+             && SHAPEPOINT_TYPE_CIRCLE != ShapePoints[Point].Type)
+	{
+	  Point++;
+	}
+
+      /* Handle left side of circle */
+      if (Point < PointCount && ShapePoints[Point].Y == Y)
+	{
+	  CircleStart = ShapePoints[Point].X;
+	  Point++;
+	  while (Point < PointCount && ShapePoints[Point].Y == Y
+	         && ShapePoints[Point].X == ShapePoints[Point - 1].X + 1
+	         && SHAPEPOINT_TYPE_CIRCLE == ShapePoints[Point].Type)
+	    {
+	      Point++;
+	    }
+	  CircleEnd = ShapePoints[Point - 1].X;
+
+	  PUTLINE(CircleStart, Y, CircleEnd + 1, Y, &PenBrushObj);
+	}
+
+      /* Handle line(s) (max 2) inside the circle */
+      while (Point < PointCount && ShapePoints[Point].Y == Y
+             && SHAPEPOINT_TYPE_CIRCLE != ShapePoints[Point].Type)
+	{
+	  LineStart = ShapePoints[Point].X;
+	  Point++;
+	  while (Point < PointCount && ShapePoints[Point].Y == Y
+	         && ShapePoints[Point].X == ShapePoints[Point - 1].X + 1
+	         && ShapePoints[Point].Type == ShapePoints[Point - 1].Type)
+	    {
+	      Point++;
+	    }
+	  LineEnd = ShapePoints[Point - 1].X;
+
+	  PUTLINE(LineStart, Y, LineEnd + 1, Y, &PenBrushObj);
+	}
+
+      /* Handle right side of circle */
+      while (Point < PointCount && ShapePoints[Point].Y == Y
+             && SHAPEPOINT_TYPE_CIRCLE == ShapePoints[Point].Type)
+	{
+	  CircleStart = ShapePoints[Point].X;
+	  Point++;
+	  while (Point < PointCount && ShapePoints[Point].Y == Y
+	         && ShapePoints[Point].X == ShapePoints[Point - 1].X + 1
+	         && SHAPEPOINT_TYPE_CIRCLE == ShapePoints[Point].Type)
+	    {
+	      Point++;
+	    }
+	  CircleEnd = ShapePoints[Point - 1].X;
+
+	  PUTLINE(CircleStart, Y, CircleEnd + 1, Y, &PenBrushObj);
+	}
+
+      /* Skip any line pixels after circle */
+      while (Point < PointCount && ShapePoints[Point].Y == Y)
+	{
+	  Point++;
+	}
+    }
+
+  ExFreePool(ShapePoints);
+  BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+  DC_UnlockDc(hDC);
+
+  return ret;
+#else
+return TRUE;
+#endif
 }
 
 #if 0

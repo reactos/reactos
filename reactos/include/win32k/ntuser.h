@@ -152,13 +152,13 @@ NtUserCallMsgFilter(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+LRESULT
 STDCALL
 NtUserCallNextHookEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HHOOK Hook,
+  int Code,
+  WPARAM wParam,
+  LPARAM lParam);
 
 #define NOPARAM_ROUTINE_REGISTER_PRIMITIVE 0xffff0001 /* Private ROS */
 #define NOPARAM_ROUTINE_DESTROY_CARET      0xffff0002
@@ -1566,15 +1566,15 @@ NtUserSetWindowsHookAW(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
+HHOOK
 STDCALL
 NtUserSetWindowsHookEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5);
+  HINSTANCE Mod,
+  PUNICODE_STRING ModuleName,
+  DWORD ThreadId,
+  int HookId,
+  HOOKPROC HookProc,
+  BOOL Ansi);
 
 DWORD
 STDCALL
@@ -1688,10 +1688,10 @@ NtUserTranslateMessage(
   LPMSG lpMsg,
   HKL dwhkl );
 
-DWORD
+BOOL
 STDCALL
 NtUserUnhookWindowsHookEx(
-  DWORD Unknown0);
+  HHOOK Hook);
 
 DWORD
 STDCALL

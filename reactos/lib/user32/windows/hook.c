@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hook.c,v 1.11 2003/11/09 13:50:04 navaraf Exp $
+/* $Id: hook.c,v 1.12 2003/12/12 14:22:37 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -30,20 +30,22 @@
 
 #include <windows.h>
 #include <user32.h>
+#include <user32/callback.h>
+
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
 UnhookWindowsHookEx(
-  HHOOK hhk)
+  HHOOK Hook)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserUnhookWindowsHookEx(Hook);
 }
 #if 0
 WINBOOL
@@ -92,13 +94,41 @@ CallMsgFilterW(
 LRESULT
 STDCALL
 CallNextHookEx(
-  HHOOK hhk,
-  int nCode,
+  HHOOK Hook,
+  int Code,
   WPARAM wParam,
   LPARAM lParam)
 {
-  UNIMPLEMENTED;
-  return (LRESULT)0;
+  return NtUserCallNextHookEx(Hook, Code, wParam, lParam);
+}
+
+STATIC
+HHOOK
+FASTCALL
+IntSetWindowsHook(
+    int idHook,
+    HOOKPROC lpfn,
+    HINSTANCE hMod,
+    DWORD dwThreadId,
+    BOOL bAnsi)
+{
+  WCHAR ModuleName[MAX_PATH];
+  UNICODE_STRING USModuleName;
+
+  if (NULL != hMod)
+    {
+      if (0 == GetModuleFileNameW(hMod, ModuleName, MAX_PATH))
+        {
+          return NULL;
+        }
+      RtlInitUnicodeString(&USModuleName, ModuleName);
+    }
+  else
+    {
+      RtlInitUnicodeString(&USModuleName, NULL);
+    }
+
+  return NtUserSetWindowsHookEx(hMod, &USModuleName, dwThreadId, idHook, lpfn, bAnsi);
 }
 
 /*
@@ -106,10 +136,9 @@ CallNextHookEx(
  */
 HHOOK
 STDCALL
-SetWindowsHookW ( int idHook, HOOKPROC lpfn )
+SetWindowsHookW(int idHook, HOOKPROC lpfn)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return IntSetWindowsHook(idHook, lpfn, NULL, 0, FALSE);
 }
 
 /*
@@ -117,10 +146,9 @@ SetWindowsHookW ( int idHook, HOOKPROC lpfn )
  */
 HHOOK
 STDCALL
-SetWindowsHookA ( int idHook, HOOKPROC lpfn )
+SetWindowsHookA(int idHook, HOOKPROC lpfn)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return IntSetWindowsHook(idHook, lpfn, NULL, 0, TRUE);
 }
 
 /*
@@ -225,8 +253,7 @@ SetWindowsHookExA(
     HINSTANCE hMod,
     DWORD dwThreadId)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return IntSetWindowsHook(idHook, lpfn, hMod, dwThreadId, TRUE);
 }
 
 
@@ -241,7 +268,89 @@ SetWindowsHookExW(
     HINSTANCE hMod,
     DWORD dwThreadId)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return IntSetWindowsHook(idHook, lpfn, hMod, dwThreadId, FALSE);
 }
 
+NTSTATUS STDCALL
+User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+  PHOOKPROC_CALLBACK_ARGUMENTS Common;
+  LRESULT Result;
+  CREATESTRUCTW Csw;
+  CBT_CREATEWNDW CbtCreatewndw;
+  UNICODE_STRING UString;
+  CREATESTRUCTA Csa;
+  CBT_CREATEWNDA CbtCreatewnda;
+  ANSI_STRING AString;
+  PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra;
+  WPARAM wParam;
+  LPARAM lParam;
+
+  Common = (PHOOKPROC_CALLBACK_ARGUMENTS) Arguments;
+
+  switch(Common->HookId)
+    {
+    case WH_CBT:
+      switch(Common->Code)
+        {
+        case HCBT_CREATEWND:
+          CbtCreatewndExtra = (PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS)
+                              ((PCHAR) Common + Common->lParam);
+          Csw = CbtCreatewndExtra->Cs;
+          Csw.lpszName = (LPCWSTR)((PCHAR) CbtCreatewndExtra
+                                   + (ULONG) CbtCreatewndExtra->Cs.lpszName);
+          if (0 != HIWORD(CbtCreatewndExtra->Cs.lpszClass))
+            {
+              Csw.lpszClass = (LPCWSTR)((PCHAR) CbtCreatewndExtra
+                                         + LOWORD((ULONG) CbtCreatewndExtra->Cs.lpszClass));
+            }
+          wParam = Common->wParam;
+          if (Common->Ansi)
+            {
+              memcpy(&Csa, &Csw, sizeof(CREATESTRUCTW));
+              RtlInitUnicodeString(&UString, Csw.lpszName);
+              RtlUnicodeStringToAnsiString(&AString, &UString, TRUE);
+              Csa.lpszName = AString.Buffer;
+              if (0 != HIWORD(Csw.lpszClass))
+                {
+                  RtlInitUnicodeString(&UString, Csw.lpszClass);
+                  RtlUnicodeStringToAnsiString(&AString, &UString, TRUE);
+                  Csa.lpszClass = AString.Buffer;
+                }
+              CbtCreatewnda.lpcs = &Csa;
+              CbtCreatewnda.hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
+              lParam = (LPARAM) &CbtCreatewnda;
+            }
+          else
+            {
+              CbtCreatewndw.lpcs = &Csw;
+              CbtCreatewndw.hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
+              lParam = (LPARAM) &CbtCreatewndw;
+            }
+          break;
+        default:
+          return ZwCallbackReturn(NULL, 0, STATUS_NOT_SUPPORTED);
+        }
+
+      Result = Common->Proc(Common->Code, wParam, lParam);
+
+      switch(Common->Code)
+        {
+        case HCBT_CREATEWND:
+          if (Common->Ansi)
+            {
+              if (0 != HIWORD(Csa.lpszClass))
+                {
+                  RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR) Csa.lpszClass);
+                }
+              RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR) Csa.lpszName);
+            }
+          break;
+        }
+      break;
+    default:
+      return ZwCallbackReturn(NULL, 0, STATUS_NOT_SUPPORTED);
+    }
+
+  return ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS);
+}

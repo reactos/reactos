@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.156 2003/12/10 22:09:56 weiden Exp $
+/* $Id: window.c,v 1.157 2003/12/12 14:22:37 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -50,6 +50,7 @@
 #include <include/menu.h>
 #include <include/hotkey.h>
 #include <include/focus.h>
+#include <include/hook.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -1033,8 +1034,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   POINT MaxPos;
 #endif
   CREATESTRUCTW Cs;
+  CBT_CREATEWNDW CbtCreate;
   LRESULT Result;
-  DPRINT("NtUserCreateWindowEx\n");
 
   DPRINT("NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
 
@@ -1240,6 +1241,30 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     }
   WindowObject->ClientRect = WindowObject->WindowRect;
 
+  Cs.lpCreateParams = lpParam;
+  Cs.hInstance = hInstance;
+  Cs.hMenu = hMenu;
+  Cs.hwndParent = ParentWindowHandle;
+  Cs.cx = nWidth;
+  Cs.cy = nHeight;
+  Cs.x = x;
+  Cs.y = y;
+  Cs.style = dwStyle;
+  Cs.lpszName = lpWindowName->Buffer;
+  Cs.lpszClass = lpClassName->Buffer;
+  Cs.dwExStyle = dwExStyle;
+  CbtCreate.lpcs = &Cs;
+  CbtCreate.hwndInsertAfter = HWND_TOP;
+  if (HOOK_CallHooks(WH_CBT, HCBT_CREATEWND, (WPARAM) Handle, (LPARAM) &CbtCreate))
+    {
+      if (NULL != ParentWindow)
+        {
+          IntReleaseWindowObject(ParentWindow);
+        }
+      DPRINT1("CBT-hook returned !0\n");
+      return (HWND) NULL;
+    }
+
   /*
    * Get the size and position of the window.
    */
@@ -1276,28 +1301,13 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       IntCreateScrollBar(WindowObject, SB_HORZ);
 
   /* Send a NCCREATE message. */
-  Cs.lpCreateParams = lpParam;
-  Cs.hInstance = hInstance;
-  Cs.hMenu = hMenu;
-  Cs.hwndParent = ParentWindowHandle;
   Cs.cx = nWidth;
   Cs.cy = nHeight;
   Cs.x = x;
   Cs.y = y;
-  Cs.style = dwStyle;
-  Cs.lpszName = lpWindowName->Buffer;
-  Cs.lpszClass = lpClassName->Buffer;
-  Cs.dwExStyle = dwExStyle;
 
-    // AG: For some reason these don't get set already. This might need moving
-    // elsewhere... What is actually done with WindowObject anyway, to retain
-    // its data?
   DPRINT("[win32k.window] NtUserCreateWindowEx style %d, exstyle %d, parent %d\n", Cs.style, Cs.dwExStyle, Cs.hwndParent);
-//  NtUserSetWindowLong(Handle, GWL_STYLE, WindowObject->Style, TRUE);
-//  NtUserSetWindowLong(Handle, GWL_EXSTYLE, WindowObject->ExStyle, TRUE);
   DPRINT("NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
-  // Any more?
-
   DPRINT("NtUserCreateWindowEx(): About to send NCCREATE message.\n");
   Result = IntSendNCCREATEMessage(WindowObject->Self, &Cs);
   if (!Result)

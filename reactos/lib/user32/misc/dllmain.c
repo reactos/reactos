@@ -78,6 +78,8 @@ Init(VOID)
     (PVOID)User32LoadSysMenuTemplateForKernel;
   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_LOADDEFAULTCURSORS] =
     (PVOID)User32SetupDefaultCursors;
+  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_HOOKPROC] =
+    (PVOID)User32CallHookProcFromKernel;
 
   /* Allocate an index for user32 thread local data. */
   User32TlsIndex = TlsAlloc();

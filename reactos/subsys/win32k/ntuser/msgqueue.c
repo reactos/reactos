@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.41 2003/12/08 20:40:41 gvg Exp $
+/* $Id: msgqueue.c,v 1.42 2003/12/12 14:22:37 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -859,6 +859,18 @@ MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   MsqFreeMessageQueue(MessageQueue);
   ExFreePool(MessageQueue);
+}
+
+PHOOKTABLE FASTCALL
+MsqGetHooks(PUSER_MESSAGE_QUEUE Queue)
+{
+  return Queue->Hooks;
+}
+
+VOID FASTCALL
+MsqSetHooks(PUSER_MESSAGE_QUEUE Queue, PHOOKTABLE Hooks)
+{
+  Queue->Hooks = Hooks;
 }
 
 /* EOF */

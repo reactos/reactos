@@ -3,6 +3,7 @@
 
 #include <internal/ex.h>
 #include <windows.h>
+#include "hook.h"
 
 typedef struct _USER_MESSAGE
 {
@@ -73,6 +74,8 @@ typedef struct _USER_MESSAGE_QUEUE
   HWND MenuOwner;
   /* Identifes the menu state */
   BYTE MenuState;
+  /* Window hooks */
+  PHOOKTABLE Hooks;
 
   /* queue state tracking */
   WORD WakeBits;
@@ -149,6 +152,9 @@ inline VOID MsqClearQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
 BOOL IntInitMessagePumpHook();
 BOOL IntUninitMessagePumpHook();
 #define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))
+
+PHOOKTABLE FASTCALL MsqGetHooks(PUSER_MESSAGE_QUEUE Queue);
+VOID FASTCALL MsqSetHooks(PUSER_MESSAGE_QUEUE Queue, PHOOKTABLE Hooks);
 
 #endif /* _WIN32K_MSGQUEUE_H */
 
