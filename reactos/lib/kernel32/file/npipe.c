@@ -1,4 +1,4 @@
-/* $Id: npipe.c,v 1.17 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: npipe.c,v 1.18 2004/03/17 15:00:39 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -110,9 +110,9 @@ CreateNamedPipeW(LPCWSTR lpName,
      {
 	CreateOptions = CreateOptions | FILE_WRITE_THROUGH;
      }
-   if (dwOpenMode & FILE_FLAG_OVERLAPPED)
+   if (!(dwOpenMode & FILE_FLAG_OVERLAPPED))
      {
-	CreateOptions = CreateOptions | FILE_SYNCHRONOUS_IO_ALERT;
+	CreateOptions = CreateOptions | FILE_SYNCHRONOUS_IO_NONALERT;
      }
    if (dwOpenMode & PIPE_ACCESS_DUPLEX)
      {
