@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.102 2001/08/21 20:13:09 chorns Exp $
+/* $Id: main.c,v 1.103 2001/09/01 11:55:37 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -167,14 +167,14 @@ CreateSystemRootLink (PCSZ ParameterLine)
 	                                   &ObjectAttributes);
 	if (!NT_SUCCESS(Status))
 	{
-		RtlFreeUnicodeString (&BootPath);
-		RtlFreeUnicodeString (&DeviceName);
-		DPRINT("NtOpenSymbolicLinkObject() '%wZ' failed (Status %x)\n",
+	  RtlFreeUnicodeString (&BootPath);
+	  RtlFreeUnicodeString (&DeviceName);
+	  DPRINT1("NtOpenSymbolicLinkObject() '%wZ' failed (Status %x)\n",
 		         &ArcName,
 		         Status);
-		RtlFreeUnicodeString (&ArcName);
+	  RtlFreeUnicodeString (&ArcName);
 
-		KeBugCheck (0x0);
+	  KeBugCheck (0x0);
 	}
 	RtlFreeUnicodeString (&ArcName);
 

@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.6 2001/09/01 10:38:49 chorns Exp $
+# $Id: helper.mk,v 1.7 2001/09/01 11:55:38 dwelch Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -57,6 +57,7 @@ ifeq ($(TARGET_TYPE),program)
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
+  MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := bin
   MK_DISTDIR := apps
   MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
@@ -74,6 +75,7 @@ ifeq ($(TARGET_TYPE),proglib)
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(SDK_PATH_LIB)
+  MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := bin
   MK_DISTDIR := apps
   MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
@@ -91,6 +93,7 @@ ifeq ($(TARGET_TYPE),dynlink)
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(SDK_PATH_LIB)
+  MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32
   MK_DISTDIR := dlls
   MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
@@ -108,6 +111,7 @@ ifeq ($(TARGET_TYPE),library)
   MK_IMPLIB := no
   MK_IMPLIBONLY := yes
   MK_IMPLIBDEFPATH := $(SDK_PATH_LIB)
+  MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := $(SDK_PATH_INC)
   MK_DISTDIR := # FIXME
   MK_RESOURCE := 
@@ -125,6 +129,7 @@ ifeq ($(TARGET_TYPE),driver_library)
   MK_IMPLIB := no
   MK_IMPLIBONLY := yes
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
+  MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := $(DDK_PATH_INC)
   MK_DISTDIR := # FIXME
   MK_RESOURCE :=
@@ -142,6 +147,7 @@ ifeq ($(TARGET_TYPE),driver)
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
+  MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32/drivers
   MK_DISTDIR := drivers
   MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
@@ -159,6 +165,7 @@ ifeq ($(TARGET_TYPE),export_driver)
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
+  MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32/drivers
   MK_DISTDIR := drivers
   MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
@@ -176,6 +183,7 @@ ifeq ($(TARGET_TYPE),hal)
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
+  MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32
   MK_DISTDIR := dlls
   MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
@@ -193,6 +201,7 @@ ifeq ($(TARGET_TYPE),bootpgm)
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
+  MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32
   MK_DISTDIR := # FIXME
   MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
@@ -210,6 +219,7 @@ ifeq ($(TARGET_TYPE),miniport)
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
+  MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32/drivers
   MK_DISTDIR := drivers
   MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
@@ -228,6 +238,7 @@ ifeq ($(TARGET_TYPE),gdi_driver)
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
+  MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32/drivers
   MK_DISTDIR := drivers
   MK_RESOURCE := $(TARGET_PATH)/$(TARGET_NAME).coff
@@ -342,6 +353,7 @@ TARGET_NFLAGS += $(MK_NFLAGS)
 MK_GCCLIBS := $(addprefix -l, $(TARGET_GCCLIBS))
 
 MK_FULLNAME := $(MK_BASENAME)$(MK_EXT)
+MK_IMPLIB_FULLNAME := $(MK_BASENAME)$(MK_IMPLIB_EXT)
 
 MK_NOSTRIPNAME := $(MK_BASENAME).nostrip$(MK_EXT)
 
@@ -350,11 +362,11 @@ MK_OBJECTS := $(filter-out %.h,$(TARGET_OBJECTS))
 
 ifeq ($(MK_IMPLIBONLY),yes)
 
-TARGET_CLEAN += $(MK_IMPLIBPATH)/$(MK_FULLNAME)
+TARGET_CLEAN += $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
 
-all: $(MK_IMPLIBPATH)/$(MK_FULLNAME)
+all: $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
 
-$(MK_IMPLIBPATH)/$(MK_FULLNAME): $(TARGET_OBJECTS)
+$(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(TARGET_OBJECTS)
 	$(DLLTOOL) \
 		--dllname $(MK_FULLNAME) \
 		--def $(MK_DEFNAME) \
