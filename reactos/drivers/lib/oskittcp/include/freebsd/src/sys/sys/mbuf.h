@@ -301,6 +301,19 @@ union mcluster {
 	  } \
 	)
 
+#ifdef __REACTOS__
+#define MCLGET(m, how) { \
+          OS_DbgPrint(OSK_MID_TRACE,("(MCLGET) m = %x\n", m)); \
+          (m)->m_data = malloc(MCLBYTES); \
+          (m)->m_flags |= M_EXT; \
+          (m)->m_ext.ext_size = MCLBYTES; \
+        }
+
+#define MCLFREE(p) { \
+          OS_DbgPrint(OSK_MID_TRACE,("(MCLFREE) p = %x\n", p)); \
+          free( (m)->m_data ); \
+        }
+#else
 #define	MCLGET(m, how) \
 	{ MCLALLOC((m)->m_ext.ext_buf, (how)); \
           OS_DbgPrint(OSK_MID_TRACE,("(MCLGET) m = %x\n", m)); \
@@ -320,6 +333,7 @@ union mcluster {
 		mbstat.m_clfree++; \
 	  } \
 	)
+#endif
 #else
 #define	MCLGET(m, how) \
 	{ (m)->m_ext.ext_bufio = oskit_bufio_create(MCLBYTES); \
@@ -332,7 +346,6 @@ union mcluster {
 		(m)->m_ext.ext_size = MCLBYTES;  \
 	  } \
 	}
-
 #endif /* !OSKIT */
 
 /*
