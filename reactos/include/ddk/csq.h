@@ -34,8 +34,8 @@
  *
  * USAGE
  *
- * This library follows exactly the same interface as the Microsoft Cancel-Safe Queue
- * routines (IoCsqXxx()).  As such, the authoritative reference is the
+ * This library follows exactly the same interface as the Microsoft Cancel-Safe
+ * Queue routines (IoCsqXxx()).  As such, the authoritative reference is the
  * current DDK.  There is also a DDK sample called "cancel" that has an
  * example of how to use this code.  I have also provided a sample driver
  * that makes use of this queue. Finally, please do read the header and the
