@@ -1,3 +1,5 @@
+/* $Id: SecurityDescriptor.h,v 1.3 2001/01/13 23:54:41 narnaoud Exp $ */
+
 // SecurityDescriptor.h: interface for the CSecurityDescriptor class.
 //
 //////////////////////////////////////////////////////////////////////

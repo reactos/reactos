@@ -1,8 +1,9 @@
+/* $Id: RegistryExplorer.h,v 1.5 2001/01/13 23:53:23 narnaoud Exp $ */
 
 #ifndef _REGISTRY_EXPLORER_H__INCLUDED
 #define _REGISTRY_EXPLORER_H__INCLUDED
 
-#define CURRENT_VERSION		_T("0.20")
+#define CURRENT_VERSION		_T("0.20+")
 #define EMAIL				_T("registryexplorer@yahoo.com")
 
 //#define __L(x)      L ## x

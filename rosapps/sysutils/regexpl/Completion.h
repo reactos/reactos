@@ -1,9 +1,9 @@
-/* $Id: Completion.h,v 1.1 2001/01/10 01:25:29 narnaoud Exp $ */
+/* $Id: Completion.h,v 1.2 2001/01/13 23:54:07 narnaoud Exp $ */
 
 // Completion.h - declaration for completion related functions
 
-#if !defined(PATTERN_H__INCLUDED_)
-#define PATTERN_H__INCLUDED_
+#if !defined(COMLPETION_H__INCLUDED_)
+#define COMPLETION_H__INCLUDED_
 
 typedef const TCHAR * (*ReplaceCompletionCallback)(unsigned __int64& rnIndex, const BOOL *pblnForward,
 												   const TCHAR *pchContext, const TCHAR *pchBegin);

@@ -1,3 +1,5 @@
+/* $Id: ShellCommandDOKA.h,v 1.2 2001/01/13 23:55:37 narnaoud Exp $ */
+
 // ShellCommandDOKA.h: interface for the CShellCommandDOKA class.
 //
 //////////////////////////////////////////////////////////////////////

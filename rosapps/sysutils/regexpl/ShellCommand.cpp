@@ -1,8 +1,8 @@
-/* $Id: ShellCommand.cpp,v 1.2 2000/10/24 20:17:41 narnaoud Exp $
+/* $Id: ShellCommand.cpp,v 1.3 2001/01/13 23:55:36 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
- * Copyright (C) 2000 Nedko Arnaoudov <nedkohome@atia.com>
+ * Copyright (C) 2000,2001 Nedko Arnaoudov <nedkohome@atia.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

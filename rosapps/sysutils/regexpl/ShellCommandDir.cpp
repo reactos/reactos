@@ -1,8 +1,8 @@
-/* $Id: ShellCommandDir.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
+/* $Id: ShellCommandDir.cpp,v 1.4 2001/01/13 23:55:37 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
- * Copyright (C) 2000 Nedko Arnaoudov <nedkohome@atia.com>
+ * Copyright (C) 2000,2001 Nedko Arnaoudov <nedkohome@atia.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 #include "ShellCommandDir.h"
 #include "RegistryTree.h"
 #include "RegistryKey.h"
+#include "Pattern.h"
 
 // *** THIS SHOULD GO IN A MINGW/ROS HEADER (tchar.h ???) - Begin
 #if 1	// #ifndef _ui64tot ???
@@ -74,9 +75,9 @@ int CShellCommandDir::Execute(CConsole &rConsole, CArgumentParser& rArguments)
 	rArguments.ResetArgumentIteration();
 
 	BOOL blnDo = TRUE,blnBadParameter, blnHelp = FALSE;
-	const TCHAR *pszParameter;
-	const TCHAR *pszCommandItself = rArguments.GetNextArgument();
-  const TCHAR *pszKey = NULL;
+	TCHAR *pszParameter;
+	TCHAR *pszCommandItself = rArguments.GetNextArgument();
+  TCHAR *pszKey = NULL;
 
 	if ((_tcsnicmp(pszCommandItself,DIR_CMD _T(".."),DIR_CMD_LENGTH+2*sizeof(TCHAR)) == 0)||
 		(_tcsnicmp(pszCommandItself,DIR_CMD _T("\\"),DIR_CMD_LENGTH+1*sizeof(TCHAR)) == 0))
@@ -116,9 +117,50 @@ CheckDirArgument:
 		}
 	}
 	
+  const TCHAR *pszPattern = PATTERN_MATCH_ALL;
+  const TCHAR *pszPath = _T(".");
+
+  if (pszKey)
+  {
+    pszPath = pszKey;
+    
+    TCHAR *pch = pszKey;
+    while(*pch) // search end of string
+      pch++;
+
+    if (pch > pszKey) // last non-null char
+      pch--;
+
+    if (*pch != _T('\\'))
+    {
+      while ((pch > pszKey) && (*pch != _T('\\')))
+        pch--;
+    
+      if (*pch == _T('\\'))
+      {
+        pszPattern = pch+1;
+        
+        if (pch > pszKey)
+        {
+          ASSERT(*pch == _T('\\'));
+          *pch = 0;
+        }
+        else if (*pch == _T('\\'))
+        {
+          pszPath = _T("\\");
+        }
+      }
+      else
+      {
+        pszPattern = pszKey;
+        pszPath = _T(".");
+      }
+    }
+  }
+
 	CRegistryKey Key;
 
-  if (!m_rTree.GetKey(pszKey?pszKey:_T("."),KEY_ENUMERATE_SUB_KEYS|KEY_QUERY_VALUE,Key))
+  if (!m_rTree.GetKey(pszPath,KEY_ENUMERATE_SUB_KEYS|KEY_QUERY_VALUE,Key))
   {
     const TCHAR *pszErrorMsg = m_rTree.GetLastErrorDescription();
     rConsole.Write(pszErrorMsg);
@@ -165,10 +207,13 @@ CheckDirArgument:
     Key.InitSubkeyEnumeration(pszSubkeyNameBuffer,dwMaxSubkeyNameLength);
     while ((nError = Key.GetNextSubkeyName()) == ERROR_SUCCESS)
     {
-      rConsole.Write(_T("\t(KEY)\t\t\t\t"));
-      rConsole.Write(pszSubkeyNameBuffer);
-      rConsole.Write(_T("\\\n"));
-      nTotalItems++;
+      if (PatternMatch(pszPattern,pszSubkeyNameBuffer))
+      {
+        rConsole.Write(_T("\t(KEY)\t\t\t\t"));
+        rConsole.Write(pszSubkeyNameBuffer);
+        rConsole.Write(_T("\\\n"));
+        nTotalItems++;
+      }
     }
 
     delete pszSubkeyNameBuffer;
@@ -199,16 +244,19 @@ CheckDirArgument:
     unsigned int nTabs;
     while((nError = Key.GetNextValue(&dwValueNameActualLength)) == ERROR_SUCCESS)
     {
-      rConsole.Write(_T("\t"));
-      pszValueTypeName = CRegistryKey::GetValueTypeName(Type);
-      nTabs = _tcslen(pszValueTypeName)/nTabSize;
-      nTabs = (nTabs < 4)?(4-nTabs):1;
-      rConsole.Write(pszValueTypeName);
-      while(nTabs--)
+      if (PatternMatch(pszPattern,pchValueNameBuffer))
+      {
         rConsole.Write(_T("\t"));
-      rConsole.Write((dwValueNameActualLength == 0)?_T("(Default)"):pchValueNameBuffer);
-      rConsole.Write(_T("\n"));
-      nTotalItems++;
+        pszValueTypeName = CRegistryKey::GetValueTypeName(Type);
+        nTabs = _tcslen(pszValueTypeName)/nTabSize;
+        nTabs = (nTabs < 4)?(4-nTabs):1;
+        rConsole.Write(pszValueTypeName);
+        while(nTabs--)
+          rConsole.Write(_T("\t"));
+        rConsole.Write((dwValueNameActualLength == 0)?_T("(Default)"):pchValueNameBuffer);
+        rConsole.Write(_T("\n"));
+        nTotalItems++;
+      }
     }
     
     delete pchValueNameBuffer;
@@ -236,8 +284,9 @@ CheckDirArgument:
 const TCHAR * CShellCommandDir::GetHelpString()
 {
 	return DIR_CMD_SHORT_DESC
-			_T("Syntax: ") DIR_CMD _T(" [<KEY>] [/?]\n\n")
-			_T("    <KEY> - Optional relative path to the key on which command will be executed\n")
+			_T("Syntax: ") DIR_CMD _T(" [<PATH>\\][<PATTERN>] [/?]\n\n")
+			_T("    <PATH> - Optional relative path to the key on which command will be executed\n")
+      _T("    <PATTERN> - Optional pattern. Default is the all matching pattern.")
 			_T("    /?    - This help.\n\n")
 			_T("Without parameters, command lists keys and values of current key.\n");
 }

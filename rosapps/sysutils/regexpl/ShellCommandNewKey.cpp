@@ -1,8 +1,8 @@
-/* $Id: ShellCommandNewKey.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
+/* $Id: ShellCommandNewKey.cpp,v 1.4 2001/01/13 23:55:37 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
- * Copyright (C) 2000 Nedko Arnaoudov <nedkohome@atia.com>
+ * Copyright (C) 2000,2001 Nedko Arnaoudov <nedkohome@atia.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -116,7 +116,10 @@ int CShellCommandNewKey::Execute(CConsole &rConsole, CArgumentParser& rArguments
   ASSERT(pch >= pszNewKey);
 
   const TCHAR *pszPath;
-  TCHAR *pszSubkeyName = pch+1;
+  TCHAR *pszSubkeyName = pch;
+  if (*pch == _T('\\'))
+    pszSubkeyName++;
+  
   if (pch == pszNewKey)
   {
     pszPath = _T(".");

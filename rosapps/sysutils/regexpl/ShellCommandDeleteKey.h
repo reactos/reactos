@@ -1,3 +1,5 @@
+/* $Id: ShellCommandDeleteKey.h,v 1.2 2001/01/13 23:55:37 narnaoud Exp $ */
+
 // ShellCommandDeleteKey.h: interface for the CShellCommandDeleteKey class.
 //
 //////////////////////////////////////////////////////////////////////

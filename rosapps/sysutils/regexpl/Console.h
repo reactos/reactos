@@ -1,3 +1,5 @@
+/* $Id: Console.h,v 1.4 2001/01/13 23:54:07 narnaoud Exp $ */
+ 
 // Console.h: interface for the CConsole class.
 //
 //////////////////////////////////////////////////////////////////////

@@ -1,8 +1,8 @@
-/* $Id: RegistryKey.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
+/* $Id: RegistryKey.cpp,v 1.4 2001/01/13 23:54:40 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
- * Copyright (C) 2000 Nedko Arnaoudov <nedkohome@atia.com>
+ * Copyright (C) 2000,2001 Nedko Arnaoudov <nedkohome@atia.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

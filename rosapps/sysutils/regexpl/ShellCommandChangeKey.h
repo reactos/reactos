@@ -1,3 +1,5 @@
+/* $Id: ShellCommandChangeKey.h,v 1.2 2001/01/13 23:55:36 narnaoud Exp $ */
+
 // ShellCommandChangeKey.h: interface for the CShellCommandChangeKey class.
 //
 //////////////////////////////////////////////////////////////////////

@@ -1,8 +1,8 @@
-/* $Id: Pattern.cpp,v 1.1 2001/01/10 01:25:29 narnaoud Exp $
+/* $Id: Pattern.cpp,v 1.2 2001/01/13 23:54:40 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
- * Copyright (C) 2000 Nedko Arnaoudov <nedkohome@atia.com>
+ * Copyright (C) 2000,2001 Nedko Arnaoudov <nedkohome@atia.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,11 +32,15 @@ BOOL PatternMatch(const TCHAR *pszPattern, const TCHAR *pszTry)
   {
     if (((*pszTry) == 0) && ((*pszPattern) == 0))
       return TRUE;
+
+    if (((*pszTry) == 0) || ((*pszPattern) == 0))
+      return FALSE;
+    
     pszTry++;
     pszPattern++;	
   }
    
-  if(*pszPattern == _T('*'))
+  if (*pszPattern == _T('*'))
   {
     pszPattern++;
     while (*pszTry)

@@ -1,8 +1,8 @@
-/* $Id: RegistryTree.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
+/* $Id: RegistryTree.cpp,v 1.4 2001/01/13 23:54:41 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
- * Copyright (C) 2000 Nedko Arnaoudov <nedkohome@atia.com>
+ * Copyright (C) 2000,2001 Nedko Arnaoudov <nedkohome@atia.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -287,21 +287,21 @@ BOOL CRegistryTree::DeleteSubkeys(CRegistryKey& rKey, const TCHAR *pszKeyPattern
   BOOL blnKeyDeleted = FALSE;
   while ((nError = rKey.GetNextSubkeyName()) == ERROR_SUCCESS)
   {
-    if (blnRecursive)
-    { // deltion is recursive, delete subkey subkeys
-      CRegistryKey Subkey;
-      // open subkey
-      nError = rKey.OpenSubkey(DELETE,pszSubkeyName,Subkey);
-      // delete subkey subkeys
-      if (DeleteSubkeys(Subkey, PATTERN_MATCH_ALL, TRUE))
-      {
-        AddErrorDescription(_T("Cannot delete subkey(s) of key %s. Subkey deletion failed.\n"),Subkey.GetKeyName());
-        return FALSE;
-      }
-    }
-
     if (PatternMatch(pszKeyPattern,pszSubkeyName))
     {
+      if (blnRecursive)
+      { // deltion is recursive, delete subkey subkeys
+        CRegistryKey Subkey;
+        // open subkey
+        nError = rKey.OpenSubkey(DELETE,pszSubkeyName,Subkey);
+        // delete subkey subkeys
+        if (DeleteSubkeys(Subkey, PATTERN_MATCH_ALL, TRUE))
+        {
+          AddErrorDescription(_T("Cannot delete subkey(s) of key %s. Subkey deletion failed.\n"),Subkey.GetKeyName());
+          return FALSE;
+        }
+      }
+
       nError = rKey.DeleteSubkey(pszSubkeyName);
       if (nError != ERROR_SUCCESS)
       {
@@ -311,6 +311,7 @@ BOOL CRegistryTree::DeleteSubkeys(CRegistryKey& rKey, const TCHAR *pszKeyPattern
         return FALSE;
       }
       blnKeyDeleted = TRUE;
+      rKey.InitSubkeyEnumeration(pszSubkeyName, dwMaxSubkeyNameLength); // reset iteration
     }
   }
 

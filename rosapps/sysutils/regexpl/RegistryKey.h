@@ -1,3 +1,5 @@
+/* $Id: RegistryKey.h,v 1.4 2001/01/13 23:54:41 narnaoud Exp $ */
+
 // RegistryKey.h: interface for the CRegistryKey class.
 //
 //////////////////////////////////////////////////////////////////////

@@ -1,3 +1,5 @@
+/* $Id: ShellCommandDACL.h,v 1.2 2001/01/13 23:55:37 narnaoud Exp $ */
+
 // ShellCommandDACL.h: interface for the CShellCommandDACL class.
 //
 //////////////////////////////////////////////////////////////////////
