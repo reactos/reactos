@@ -261,7 +261,7 @@ void depend ( const string& ident, vector<string>& dependencies )
 
 int parse_variable ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies )
 {
-	// FIXME - handle bitfields properly
+	// NOTE - Test with bitfields, I think this code will actually handle them properly...
 	depend ( tokens[off++], dependencies );
 	int done = tokens.size();
 	while ( off < done && tokens[off] != ";" )

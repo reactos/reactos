@@ -1,4 +1,4 @@
-/* $Id: test.h,v 1.1 2003/11/05 20:24:23 royce Exp $
+/* $Id: test.h,v 1.2 2003/11/06 02:50:12 royce Exp $
 */
 /*
  * test.h
@@ -22,11 +22,11 @@
 #ifndef __INTERNAL_PSAPI_H_INCLUDED__
 #define __INTERNAL_PSAPI_H_INCLUDED__
 
-typedef struct foo_
+typedef struct tagFOO
 {
-	int lonibble : 4;
-	int hinibble : 4;
-} foo;
+	INT lonibble : 4;
+	INT hinibble : 4;
+} FOO, *PFOO, FAR *LPFOO;
 
 /* INCLUDES */
 #define NTOS_MODE_USER

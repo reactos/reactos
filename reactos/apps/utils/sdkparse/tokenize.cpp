@@ -122,6 +122,19 @@ void tokenize ( const string& text, vector<string>& tokens )
 			tokens.push_back ( ";" );
 			p++;
 			break;
+		case ':':
+			switch ( p[1] )
+			{
+			case ':':
+				tokens.push_back ( string ( p, 2 ) );
+				p += 2;
+				break;
+			default:
+				tokens.push_back ( ":" );
+				p++;
+				break;
+			}
+			break;
 		case '*':
 			switch ( p[1] )
 			{
