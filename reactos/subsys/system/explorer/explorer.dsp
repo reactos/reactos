@@ -250,6 +250,10 @@ SOURCE=.\utility\window.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\res\appicon.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\arrow.ico
 # End Source File
 # Begin Source File
@@ -339,6 +343,10 @@ SOURCE=.\explorer_intres.h
 # Begin Source File
 
 SOURCE=.\explorer_intres.rc
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\floating.ico
 # End Source File
 # Begin Source File
 
@@ -561,10 +569,6 @@ SOURCE=.\dialogs\searchprogram.h
 # End Group
 # Begin Source File
 
-SOURCE=.\res\appicon.ico
-# End Source File
-# Begin Source File
-
 SOURCE=.\buildno.h
 # End Source File
 # Begin Source File
@@ -578,10 +582,6 @@ SOURCE=.\explorer.h
 # Begin Source File
 
 SOURCE=.\externals.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\floating.ico
 # End Source File
 # Begin Source File
 
