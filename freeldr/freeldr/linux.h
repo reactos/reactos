@@ -36,6 +36,9 @@
 
 #define LINUX_KERNEL_LOAD_ADDRESS		0x100000
 
+#define LINUX_FLAG_LOAD_HIGH			0x01
+#define LINUX_FLAG_CAN_USE_HEAP			0x80
+
 typedef struct
 {
 	BYTE	BootCode1[0x20];
@@ -114,7 +117,8 @@ typedef struct
 
 } PACKED LINUX_SETUPSECTOR, *PLINUX_SETUPSECTOR;
 
-void	JumpToLinuxBootCode(void);	// Implemented in boot.S
+VOID	BootNewLinuxKernel(VOID);				// Implemented in linux.S
+VOID	BootOldLinuxKernel(ULONG KernelSize);	// Implemented in linux.S
 
 VOID	LoadAndBootLinux(PUCHAR OperatingSystemName);
 
@@ -122,5 +126,7 @@ BOOL	LinuxParseIniSection(PUCHAR OperatingSystemName);
 BOOL	LinuxReadBootSector(PFILE LinuxKernelFile);
 BOOL	LinuxReadSetupSector(PFILE LinuxKernelFile);
 BOOL	LinuxReadKernel(PFILE LinuxKernelFile);
+BOOL	LinuxCheckKernelVersion(VOID);
+BOOL	LinuxReadInitrd(VOID);
 
 #endif // defined __LINUX_H

@@ -16,14 +16,23 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+	
+#include <freeldr.h>
+#include <version.h>
+#include <rtl.h>
 
-#ifndef __BOOT_H
-#define __BOOT_H
+UCHAR	FreeLoaderVersionString[80];
 
-VOID	ChainLoadBiosBootSectorCode(VOID);	// Implemented in boot.S
+PUCHAR GetFreeLoaderVersionString(VOID)
+{
+	if (FREELOADER_PATCH_VERSION == 0)
+	{
+		sprintf(FreeLoaderVersionString, "FreeLoader v%d.%d", FREELOADER_MAJOR_VERSION, FREELOADER_MINOR_VERSION);
+	}
+	else
+	{
+		sprintf(FreeLoaderVersionString, "FreeLoader v%d.%d.%d", FREELOADER_MAJOR_VERSION, FREELOADER_MINOR_VERSION, FREELOADER_PATCH_VERSION);
+	}
 
-VOID	LoadAndBootBootSector(PUCHAR OperatingSystemName);
-VOID	LoadAndBootPartition(PUCHAR OperatingSystemName);
-VOID	LoadAndBootDrive(PUCHAR OperatingSystemName);
-
-#endif // defined __BOOT_H
+	return FreeLoaderVersionString;
+}

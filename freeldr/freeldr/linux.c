@@ -33,7 +33,7 @@
 PLINUX_BOOTSECTOR	LinuxBootSector = NULL;
 PLINUX_SETUPSECTOR	LinuxSetupSector = NULL;
 ULONG				SetupSectorSize = 0;
-BOOL				BigZImageKernel = TRUE;
+BOOL				NewStyleLinuxKernel = FALSE;
 ULONG				LinuxKernelSize = 0;
 UCHAR				LinuxKernelName[260];
 UCHAR				LinuxInitrdName[260];
@@ -88,10 +88,32 @@ VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 		goto LinuxBootFailed;
 	}
 
+	// Read the initrd (if necessary)
+	if (LinuxHasInitrd)
+	{
+		if (!LinuxReadInitrd())
+		{
+			goto LinuxBootFailed;
+		}
+	}
+
+	// If the default root device is set to FLOPPY (0000h), change to /dev/fd0 (0200h)
+	if (LinuxBootSector->RootDevice == 0x0000)
+	{
+		LinuxBootSector->RootDevice = 0x0200;
+	}
+
 	LinuxBootSector->CommandLineMagic = LINUX_COMMAND_LINE_MAGIC;
 	LinuxBootSector->CommandLineOffset = 0x9000;
 
-	LinuxSetupSector->TypeOfLoader = LINUX_LOADER_TYPE_FREELOADER;
+	if (NewStyleLinuxKernel)
+	{
+		LinuxSetupSector->TypeOfLoader = LINUX_LOADER_TYPE_FREELOADER;
+	}
+	else
+	{
+		LinuxSetupSector->LoadFlags = 0;
+	}
 
 	RtlCopyMemory((PVOID)0x90000, LinuxBootSector, 512);
 	RtlCopyMemory((PVOID)0x90200, LinuxSetupSector, SetupSectorSize);
@@ -101,7 +123,15 @@ VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 	clrscr();
 
 	stop_floppy();
-	JumpToLinuxBootCode();
+
+	if (LinuxSetupSector->LoadFlags & LINUX_FLAG_LOAD_HIGH)
+	{
+		BootNewLinuxKernel();
+	}
+	else
+	{
+		BootOldLinuxKernel(LinuxKernelSize);
+	}
 
 
 LinuxBootFailed:
@@ -123,7 +153,7 @@ LinuxBootFailed:
 	LinuxBootSector = NULL;
 	LinuxSetupSector = NULL;
 	SetupSectorSize = 0;
-	BigZImageKernel = TRUE;
+	NewStyleLinuxKernel = FALSE;
 	LinuxKernelSize = 0;
 	LinuxHasInitrd = FALSE;
 	strcpy(LinuxCommandLine, "");
@@ -223,7 +253,31 @@ BOOL LinuxReadBootSector(PFILE LinuxKernelFile)
 
 BOOL LinuxReadSetupSector(PFILE LinuxKernelFile)
 {
-	SetupSectorSize = 512 * LinuxBootSector->SetupSectors;
+	BYTE	TempLinuxSetupSector[512];
+
+	LinuxSetupSector = (PLINUX_SETUPSECTOR)TempLinuxSetupSector;
+
+	// Read first linux setup sector
+	SetFilePointer(LinuxKernelFile, 512);
+	if (!ReadFile(LinuxKernelFile, 512, NULL, TempLinuxSetupSector))
+	{
+		return FALSE;
+	}
+
+	// Check the kernel version
+	if (!LinuxCheckKernelVersion())
+	{
+		return FALSE;
+	}
+
+	if (NewStyleLinuxKernel)
+	{
+		SetupSectorSize = 512 * LinuxBootSector->SetupSectors;
+	}
+	else
+	{
+		SetupSectorSize = 4 * 512; // Always 4 setup sectors
+	}
 
 	// Allocate memory for setup sectors
 	LinuxSetupSector = (PLINUX_SETUPSECTOR)AllocateMemory(SetupSectorSize);
@@ -232,17 +286,13 @@ BOOL LinuxReadSetupSector(PFILE LinuxKernelFile)
 		return FALSE;
 	}
 
-	// Read linux setup sectors
-	SetFilePointer(LinuxKernelFile, 512);
-	if (!ReadFile(LinuxKernelFile, SetupSectorSize, NULL, LinuxSetupSector))
-	{
-		return FALSE;
-	}
+	// Copy over first setup sector
+	RtlCopyMemory(LinuxSetupSector, TempLinuxSetupSector, 512);
 
-	// Check for validity
-	if (LinuxSetupSector->SetupHeaderSignature != LINUX_SETUP_HEADER_ID)
+	// Read in the rest of the linux setup sectors
+	SetFilePointer(LinuxKernelFile, 1024);
+	if (!ReadFile(LinuxKernelFile, SetupSectorSize - 512, NULL, ((PVOID)LinuxSetupSector) + 512))
 	{
-		MessageBox("Invalid setup magic (HdrS)");
 		return FALSE;
 	}
 
@@ -293,6 +343,100 @@ BOOL LinuxReadKernel(PFILE LinuxKernelFile)
 		LoadAddress += 0x4000;
 
 		DrawProgressBar( (BytesLoaded * 100) / LinuxKernelSize );
+	}
+
+	return TRUE;
+}
+
+BOOL LinuxCheckKernelVersion(VOID)
+{
+	// Just assume old kernel until we find otherwise
+	NewStyleLinuxKernel = FALSE;
+
+	// Check for new style setup header
+	if (LinuxSetupSector->SetupHeaderSignature != LINUX_SETUP_HEADER_ID)
+	{
+		NewStyleLinuxKernel = FALSE;
+	}
+	// Check for version below 2.0
+	else if (LinuxSetupSector->Version < 0x0200)
+	{
+		NewStyleLinuxKernel = FALSE;
+	}
+	// Check for version 2.0
+	else if (LinuxSetupSector->Version == 0x0200)
+	{
+		NewStyleLinuxKernel = TRUE;
+	}
+	// Check for version 2.01+
+	else if (LinuxSetupSector->Version >= 0x0201)
+	{
+		NewStyleLinuxKernel = TRUE;
+		LinuxSetupSector->HeapEnd = 0x9000;
+		LinuxSetupSector->LoadFlags |= LINUX_FLAG_CAN_USE_HEAP;
+	}
+
+	if ((NewStyleLinuxKernel == FALSE) && (LinuxHasInitrd == TRUE))
+	{
+		MessageBox("Error: Cannot load a ramdisk (initrd) with an old kernel image.");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+BOOL LinuxReadInitrd(VOID)
+{
+	PFILE	LinuxInitrdFile;
+	UCHAR	TempString[260];
+	ULONG	LinuxInitrdSize;
+	ULONG	LinuxInitrdLoadAddress;
+	ULONG	BytesLoaded;
+	UCHAR	StatusText[260];
+
+	sprintf(StatusText, " Loading %s", LinuxInitrdName);
+	DrawStatusText(StatusText);
+	DrawProgressBar(0);
+
+	// Open the initrd file image
+	LinuxInitrdFile = OpenFile(LinuxInitrdName);
+	if (LinuxInitrdFile == NULL)
+	{
+		sprintf(TempString, "Linux initrd image \'%s\' not found.", LinuxInitrdName);
+		MessageBox(TempString);
+		return FALSE;
+	}
+
+	// Get the file size
+	LinuxInitrdSize = GetFileSize(LinuxInitrdFile);
+
+	// Calculate the load address
+	if (GetExtendedMemorySize() < 0x4000)
+	{
+		LinuxInitrdLoadAddress = GetExtendedMemorySize() * 1024; // Load at end of memory
+	}
+	else
+	{
+		LinuxInitrdLoadAddress = 0x4000 * 1024; // Load at end of 16mb
+	}
+	LinuxInitrdLoadAddress -= ROUND_UP(LinuxInitrdSize, 4096);
+
+	// Set the information in the setup struct
+	LinuxSetupSector->RamdiskAddress = LinuxInitrdLoadAddress;
+	LinuxSetupSector->RamdiskSize = LinuxInitrdSize;
+
+	// Read in the ramdisk
+	for (BytesLoaded=0; BytesLoaded<LinuxInitrdSize; )
+	{
+		if (!ReadFile(LinuxInitrdFile, 0x4000, NULL, (PVOID)LinuxInitrdLoadAddress))
+		{
+			return FALSE;
+		}
+
+		BytesLoaded += 0x4000;
+		LinuxInitrdLoadAddress += 0x4000;
+
+		DrawProgressBar( (BytesLoaded * 100) / LinuxInitrdSize );
 	}
 
 	return TRUE;

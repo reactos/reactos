@@ -24,7 +24,7 @@ include rules.mk
 #	reactos.o tui.o menu.o miscboot.o options.o linux.o multiboot.o arcname.o \
 #	mem.o memory.o debug.o parseini.o registry.o import.o
 #ASM_OBJS = asmcode.o mb.o boot.o mem.o
-OBJS = freeldr.o miscboot.o options.o linux.o multiboot.o debug.o oslist.o
+OBJS = freeldr.o miscboot.o options.o linux.o multiboot.o debug.o oslist.o version.o
 LIBS = arch rtl fs ui reactos comm disk mm cache inifile
 LIB_FILES = arch/arch.a rtl/rtl.a fs/fs.a ui/ui.a reactos/reactos.a
 LIB_FILES2 = comm/comm.a disk/disk.a mm/mm.a cache/cache.a inifile/inifile.a
@@ -34,7 +34,9 @@ LIB_FILES2 = comm/comm.a disk/disk.a mm/mm.a cache/cache.a inifile/inifile.a
 all:	freeldr.sys
 
 freeldr.sys:	c_code.a end.o
-	$(LD) -N -Ttext=0x8000 --oformat=binary -s -o freeldr.sys c_code.a end.o
+#	$(LD) -N -Ttext=0x8000 --oformat=binary -s -o freeldr.sys c_code.a end.o
+	$(LD) -N -Ttext=0x8000 -s -o freeldr.exe c_code.a end.o
+	$(OBJCOPY) -O binary freeldr.exe freeldr.sys
 
 freeldr.exe:	asmcode.a c_code.a
 	$(LD) -o freeldr.exe asmcode.a c_code.a
@@ -68,6 +70,9 @@ debug.o:	debug.c debug.h
 
 oslist.o:	oslist.c oslist.h
 	$(CC) $(FLAGS) -o oslist.o -c oslist.c
+
+version.o:	version.c version.h
+	$(CC) $(FLAGS) -o version.o -c version.c
 
 end.o:	end.S
 	$(CC) $(FLAGS) -o end.o -c end.S
@@ -107,6 +112,7 @@ inifile:
 clean:
 	- $(RM) *.o
 	- $(RM) *.a
+	- $(RM) *.exe
 	- $(RM) *.sys
 	$(MAKE) -C arch clean
 	$(MAKE) -C reactos clean

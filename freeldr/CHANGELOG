@@ -1,3 +1,10 @@
+Changes in v1.2 (4/30/2002)
+
+- All Linux kernels are supported (zImage & bzImage, loaded high & low)
+- Initrd support
+- FreeLoader now compiles under Mingw32 instead of just DJGPP, but
+  the Mingw32 linker seems to output a corrupt binary.
+
 Changes in v1.01 (4/28/2002)
 
 - Fixed FAT short file name buffer overflow that was causing

@@ -23,6 +23,7 @@
 #include <mm.h>
 #include <debug.h>
 #include <inifile.h>
+#include <version.h>
 
 ULONG	nScreenWidth = 80;		// Screen Width
 ULONG	nScreenHeight = 25;		// Screen Height
@@ -171,7 +172,7 @@ void DrawBackdrop(void)
 	//
 	DrawText(3,
 			2,
-			VERSION,
+			GetFreeLoaderVersionString(),
 			ATTR(cTitleBoxFgColor, cTitleBoxBgColor));
 
 	//

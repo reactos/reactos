@@ -25,6 +25,7 @@
 #include "multiboot.h"
 #include "ui.h"
 #include "inifile.h"
+#include "mm.h"
 
 unsigned long				next_module_load_base = 0;
 module_t*	pOpenModule = NULL;
@@ -32,7 +33,7 @@ module_t*	pOpenModule = NULL;
 
 BOOL MultiBootLoadKernel(FILE *KernelImage)
 {
-	DWORD				ImageHeaders[2048];
+	PDWORD				ImageHeaders;
 	int					Idx;
 	DWORD				dwHeaderChecksum;
 	DWORD				dwFileLoadOffset;
@@ -40,11 +41,22 @@ BOOL MultiBootLoadKernel(FILE *KernelImage)
 	DWORD				dwBssSize;
 	ULONG				BytesRead;
 
+	// Allocate 8192 bytes for multiboot header
+	ImageHeaders = (PDWORD)AllocateMemory(8192);
+	if (ImageHeaders == NULL)
+	{
+		return FALSE;
+	}
+
 	/*
 	 * Load the first 8192 bytes of the kernel image
 	 * so we can search for the multiboot header
 	 */
-	ReadFile(KernelImage, 8192, NULL, ImageHeaders);
+	if (!ReadFile(KernelImage, 8192, NULL, ImageHeaders))
+	{
+		FreeMemory(ImageHeaders);
+		return FALSE;
+	}
 
 	/*
 	 * Now find the multiboot header and copy it
@@ -60,6 +72,8 @@ BOOL MultiBootLoadKernel(FILE *KernelImage)
 			break;
 		}
 	}
+
+	FreeMemory(ImageHeaders);
 
 	/*
 	 * If we reached the end of the 8192 bytes without

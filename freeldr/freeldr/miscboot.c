@@ -88,7 +88,7 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 	}
 
 	// Check for validity
-	if (*((WORD*)(0x7c00 + 0x1fe)) != 0xaa55)
+	if (*((PWORD)(0x7c00 + 0x1fe)) != 0xaa55)
 	{
 		MessageBox("Invalid boot sector magic (0xaa55)");
 		return;
@@ -97,7 +97,7 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 	clrscr();
 	showcursor();
 	stop_floppy();
-	JumpToBootCode();
+	ChainLoadBiosBootSectorCode();
 }
 
 VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
@@ -150,7 +150,7 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 	}
 
 	// Check for validity
-	if (*((WORD*)(0x7c00 + 0x1fe)) != 0xaa55)
+	if (*((PWORD)(0x7c00 + 0x1fe)) != 0xaa55)
 	{
 		MessageBox("Invalid boot sector magic (0xaa55)");
 		return;
@@ -159,7 +159,7 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 	clrscr();
 	showcursor();
 	stop_floppy();
-	JumpToBootCode();
+	ChainLoadBiosBootSectorCode();
 }
 
 VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
@@ -195,7 +195,7 @@ VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
 	}
 
 	// Check for validity
-	if (*((WORD*)(0x7c00 + 0x1fe)) != 0xaa55)
+	if (*((PWORD)(0x7c00 + 0x1fe)) != 0xaa55)
 	{
 		MessageBox("Invalid boot sector magic (0xaa55)");
 		return;
@@ -204,5 +204,5 @@ VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
 	clrscr();
 	showcursor();
 	stop_floppy();
-	JumpToBootCode();
+	ChainLoadBiosBootSectorCode();
 }

@@ -17,13 +17,27 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __BOOT_H
-#define __BOOT_H
+#ifndef __VERSION_H
+#define __VERSION_H
 
-VOID	ChainLoadBiosBootSectorCode(VOID);	// Implemented in boot.S
 
-VOID	LoadAndBootBootSector(PUCHAR OperatingSystemName);
-VOID	LoadAndBootPartition(PUCHAR OperatingSystemName);
-VOID	LoadAndBootDrive(PUCHAR OperatingSystemName);
+/* just some stuff */
+#define VERSION		"FreeLoader v1.2"
+#define COPYRIGHT	"Copyright (C) 1998-2002 Brian Palmer <brianp@sginet.com>"
 
-#endif // defined __BOOT_H
+// FreeLoader version defines
+//
+// NOTE:
+// If you fix bugs then you increment the patch version
+// If you add features then you increment the minor version
+// If you add major functionality then you increment the major version
+//
+#define FREELOADER_MAJOR_VERSION	1
+#define FREELOADER_MINOR_VERSION	2
+#define FREELOADER_PATCH_VERSION	0
+
+
+PUCHAR	GetFreeLoaderVersionString(VOID);
+
+
+#endif  // defined __VERSION_H

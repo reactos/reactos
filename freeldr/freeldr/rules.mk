@@ -25,6 +25,7 @@ RM			= cmd /C del
 CP			= cmd /C copy
 MAKE		= make
 NASM_CMD	= nasm
+OBJCOPY		= objcopy
 
 # For a release build uncomment this line
 #FLAGS = -Wall -nostdlib -nostdinc -fno-builtin -I./ -I../ -I../../ -O3

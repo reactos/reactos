@@ -19,7 +19,7 @@
 	
 include ../../rules.mk
 
-OBJS = fathelp.o arch.o boot.o mb.o mem.o disk.o
+OBJS = fathelp.o arch.o boot.o linux.o mb.o mem.o disk.o
 
 .PHONY : clean
 
@@ -38,6 +38,9 @@ arch.o:	arch.S
 
 boot.o:	boot.S
 	$(CC) $(FLAGS) -o boot.o -c boot.S
+
+linux.o:	linux.S
+	$(CC) $(FLAGS) -o linux.o -c linux.S
 
 mb.o:	mb.S
 	$(CC) $(FLAGS) -o mb.o -c mb.S
