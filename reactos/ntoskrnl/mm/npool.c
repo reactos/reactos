@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.46 2001/05/05 19:13:10 chorns Exp $
+/* $Id: npool.c,v 1.47 2001/09/29 19:40:49 phreak Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -823,7 +823,8 @@ VOID STDCALL ExFreePool (PVOID block)
    BLOCK_HDR* blk=address_to_block(block);
    KIRQL oldIrql;
 
-   assert(block);
+   if( !block )
+     return;
 
    DPRINT("freeing block %x\n",blk);
    
