@@ -27,7 +27,7 @@ DIRECT_OBJECTS = direct/chdir.o direct/chdrive.o direct/getcwd.o direct/getdrive
 
 EXCEPT_OBJECTS = except/unwind.o except/abnorter.o except/exhand2.o except/matherr.o
 
-LOCALE_OBJECTS = locale/locale.o 
+LOCALE_OBJECTS = # locale/locale.o 
 
 MALLOC_OBJECTS = malloc/expand.o malloc/heap.o
 

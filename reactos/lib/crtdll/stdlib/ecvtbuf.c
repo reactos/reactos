@@ -3,7 +3,7 @@
 #include <crtdll/stdio.h>
 #include <crtdll/string.h>
 #include <crtdll/float.h>
-#include <crtdll/locale.h>
+// #include <crtdll/locale.h>
 
 void __ecvround (char *, char *, const char *, int *);
 
@@ -39,7 +39,7 @@ char *
 ecvtbuf (double value, int ndigits, int *decpt, int *sign, char *buf)
 {
   static char INFINITY[] = "Infinity";
-  char decimal = localeconv()->decimal_point[0];
+  char decimal = '.' /* localeconv()->decimal_point[0] */;
   char *cvtbuf = (char *)alloca (ndigits + 20); /* +3 for sign, dot, null; */
 					        /* two extra for rounding */
 						/* 15 extra for alignment */
