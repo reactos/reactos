@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.93 2003/10/04 16:04:01 weiden Exp $
+/* $Id: defwnd.c,v 1.94 2003/10/04 21:18:17 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -80,24 +80,6 @@ static ATOM AtomInternalPos;
 #define KEYDATA_ALT   0x2000
 
 /* FUNCTIONS *****************************************************************/
-
-INT
-UIGetFrameSizeX(ULONG uStyle)
-{
-    if ( uStyle & WS_THICKFRAME )
-        return GetSystemMetrics(SM_CXSIZEFRAME);
-    else
-        return GetSystemMetrics(SM_CXFRAME);
-}
-
-INT
-UIGetFrameSizeY(ULONG uStyle)
-{
-    if (uStyle & WS_THICKFRAME)
-        return GetSystemMetrics(SM_CYSIZEFRAME);
-    else
-        return GetSystemMetrics(SM_CYFRAME);
-}
 
 VOID
 UserSetupInternalPos(VOID)
@@ -258,6 +240,33 @@ UserHasBigFrameStyle(ULONG Style, ULONG ExStyle)
 }
 
 void
+UserGetFrameSize(ULONG Style, ULONG ExStyle, SIZE *Size)
+{
+  if (UserHasThickFrameStyle(Style, ExStyle))
+  {
+    Size->cx = GetSystemMetrics(SM_CXFRAME);
+    Size->cy = GetSystemMetrics(SM_CYFRAME);
+    return;
+  }
+  else if (UserHasDlgFrameStyle(Style, ExStyle))
+  {
+    Size->cx = GetSystemMetrics(SM_CXDLGFRAME);
+    Size->cy = GetSystemMetrics(SM_CYDLGFRAME);
+    return;
+  }
+  else if (UserHasThinFrameStyle(Style, ExStyle))
+  {
+    Size->cx = GetSystemMetrics(SM_CXBORDER);
+    Size->cy = GetSystemMetrics(SM_CYBORDER);
+    return;
+  }
+  else
+  {
+    Size->cx = Size->cy = 0;
+  }
+}
+
+void
 UserGetInsideRectNC(HWND hWnd, RECT *rect)
 {
     RECT WindowRect;
@@ -347,8 +356,7 @@ UserDrawCaptionButton(HWND hWnd, HDC hDC, BOOL bDown, ULONG Type)
     ULONG Style = GetWindowLongW(hWnd, GWL_STYLE);
     INT iBmpWidth = GetSystemMetrics(SM_CXSIZE) - 2;
     INT iBmpHeight = GetSystemMetrics(SM_CYSIZE) - 4;
-    INT OffsetX = UIGetFrameSizeX(Style);
-    INT OffsetY = UIGetFrameSizeY(Style);
+    SIZE FrameSize;
     
     if (!(Style & WS_SYSMENU))
     {
@@ -356,6 +364,7 @@ UserDrawCaptionButton(HWND hWnd, HDC hDC, BOOL bDown, ULONG Type)
     }
     
     ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
+    UserGetFrameSize(Style, ExStyle, &FrameSize);
 
     GetWindowRect(hWnd, &rect);
 
@@ -370,9 +379,9 @@ UserDrawCaptionButton(HWND hWnd, HDC hDC, BOOL bDown, ULONG Type)
             if ((ExStyle & WS_EX_TOOLWINDOW) == TRUE)
                 return; /* ToolWindows don't have min/max buttons */
 
-            SetRect(&rect, rect.right - OffsetX - (iBmpWidth * 3) - 4,
-                    OffsetY + 2, rect.right - (iBmpWidth * 2) - OffsetX - 4,
-                    rect.top + iBmpHeight + OffsetY + 2);
+            SetRect(&rect, rect.right - FrameSize.cx - (iBmpWidth * 3) - 4,
+                    FrameSize.cy + 2, rect.right - (iBmpWidth * 2) - FrameSize.cx - 4,
+                    rect.top + iBmpHeight + FrameSize.cy + 2);
             DrawFrameControl(hDC, &rect, DFC_CAPTION,
                              DFCS_CAPTIONMIN | (bDown ? DFCS_PUSHED : 0) |
                              ((Style & WS_MINIMIZEBOX) ? 0 : DFCS_INACTIVE));
@@ -383,9 +392,9 @@ UserDrawCaptionButton(HWND hWnd, HDC hDC, BOOL bDown, ULONG Type)
             if ((ExStyle & WS_EX_TOOLWINDOW) == TRUE)
                 return; /* ToolWindows don't have min/max buttons */
 
-            SetRect(&rect, rect.right - OffsetX - (iBmpWidth * 2) - 4,
-                    OffsetY + 2, rect.right - iBmpWidth - OffsetX - 4,
-                    rect.top + iBmpHeight + OffsetY + 2);
+            SetRect(&rect, rect.right - FrameSize.cx - (iBmpWidth * 2) - 4,
+                    FrameSize.cy + 2, rect.right - iBmpWidth - FrameSize.cx - 4,
+                    rect.top + iBmpHeight + FrameSize.cy + 2);
             DrawFrameControl(hDC, &rect, DFC_CAPTION,
                              (IsZoomed(hWnd) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMAX) |
                              (bDown ? DFCS_PUSHED : 0) |
@@ -394,9 +403,9 @@ UserDrawCaptionButton(HWND hWnd, HDC hDC, BOOL bDown, ULONG Type)
         }
         case DFCS_CAPTIONCLOSE:
         {
-            SetRect(&rect, rect.right - OffsetX - iBmpWidth - 2,
-                    OffsetY + 2,	rect.right - OffsetX - 2,
-                    rect.top + iBmpHeight + OffsetY + 2 );      
+            SetRect(&rect, rect.right - FrameSize.cx - iBmpWidth - 2,
+                    FrameSize.cy + 2,	rect.right - FrameSize.cx - 2,
+                    rect.top + iBmpHeight + FrameSize.cy + 2 );      
             DrawFrameControl(hDC, &rect, DFC_CAPTION,
                              (DFCS_CAPTIONCLOSE | (bDown ? DFCS_PUSHED : 0) |
                              ((Style & WS_SYSMENU) ? 0 : DFCS_INACTIVE)));
@@ -567,8 +576,6 @@ DrawCaption(
         return result;
 }
 
-
-
 static void
 UserDrawCaptionNC (
 	HDC hDC,
@@ -580,29 +587,28 @@ UserDrawCaptionNC (
   POINT OldPos;
   HPEN lPen, oPen;
   RECT r = *rect;
-  UINT Style, capflags = 0;
-
-    Style = GetWindowLongW(hWnd, GWL_STYLE);
-    
-    capflags = DC_ICON | DC_TEXT;
-    capflags |= (active & DC_ACTIVE);
-
-    if (Style & WS_EX_TOOLWINDOW)
-        capflags |= DC_SMALLCAP;
-
-//  Old code:
-//  PatBlt(hDC,rect->left + GetSystemMetrics(SM_CXFRAME), rect->top +
-//     GetSystemMetrics(SM_CYFRAME), rect->right - (GetSystemMetrics(SM_CXFRAME) * 2), (rect->top + 
-//     GetSystemMetrics(SM_CYCAPTION)) - 1, PATCOPY );
-
-    r.left += GetSystemMetrics(SM_CXFRAME);
-    r.top += GetSystemMetrics(SM_CYFRAME);
-    r.right -= GetSystemMetrics(SM_CXFRAME);
-    r.bottom = r.top + GetSystemMetrics(SM_CYCAPTION) - 1;
-//     GetSystemMetrics(SM_CYCAPTION)) - 1, PATCOPY );
-
-    DrawCaption(hWnd, hDC, &r, capflags);
-    
+  ULONG Style, ExStyle;
+  UINT capflags = 0;
+  SIZE FrameSize;
+  
+  Style = GetWindowLongW(hWnd, GWL_STYLE);
+  ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
+  
+  capflags = DC_ICON | DC_TEXT;
+  capflags |= (active & DC_ACTIVE);
+  
+  if(Style & WS_EX_TOOLWINDOW)
+    capflags |= DC_SMALLCAP;
+  
+  UserGetFrameSize(Style, ExStyle, &FrameSize);
+  
+  r.left += FrameSize.cx;
+  r.top += FrameSize.cy;
+  r.right -= FrameSize.cx;
+  r.bottom = r.top + GetSystemMetrics(SM_CYCAPTION) - 1;
+  
+  DrawCaption(hWnd, hDC, &r, capflags);
+  
   /* draw line below caption */
   lPen = GetSysColorPen(COLOR_MENU);
   oPen = SelectObject(hDC, lPen);
@@ -614,7 +620,6 @@ UserDrawCaptionNC (
   
   if (style & WS_SYSMENU)
   {
-//    UserDrawSysMenuButton( hWnd, hDC, FALSE);
     r.left += GetSystemMetrics(SM_CXSIZE) + 1;
     UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONCLOSE);
     r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
@@ -630,7 +635,7 @@ UserDrawCaptionNC (
 static VOID
 UserDrawFrameNC(HDC hDC, RECT* rect, BOOL dlgFrame, BOOL active)
 {
-  DrawEdge(hDC, rect,EDGE_RAISED, BF_RECT | BF_MIDDLE);
+  DrawEdge(hDC, rect, EDGE_RAISED, BF_RECT | BF_MIDDLE);
 }
 
 
@@ -645,11 +650,10 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   RECT rect, clientrect;
   ULONG Style;
   ULONG ExStyle;
-  int wFrame = 0;
+  SIZE FrameSize;
+  HGDIOBJ OldObj;
 
   if (GetActiveWindow() == hWnd) Active = TRUE;
-  Style = GetWindowLongW(hWnd, GWL_STYLE);
-  ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
 
   hDC = GetDCEx(hWnd, (clip > (HRGN)1) ? clip : 0, DCX_USESTYLE | DCX_WINDOW |
 		((clip > (HRGN)1) ? (DCX_INTERSECTRGN | DCX_KEEPCLIPRGN) : 0));
@@ -657,31 +661,33 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
     {
       return;
     }
+    
+  Style = GetWindowLongW(hWnd, GWL_STYLE);
+  ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
 
   /* FIXME: Test whether we need to draw anything at all. */
 
   GetWindowRect(hWnd, &rect);
-  rect.right = rect.right - rect.left;
-  rect.bottom = rect.bottom - rect.top;
+  GetClientRect(hWnd, &clientrect);
+  
+  rect.right -= rect.left;
+  rect.bottom -= rect.top;
   rect.top = rect.left = 0;
-  clientrect = rect;
-  SelectObject(hDC, GetSysColorPen(COLOR_WINDOWFRAME));
-  if (UserHasThickFrameStyle(Style, ExStyle))
-    {
-      UserDrawFrameNC(hDC, &rect, FALSE, Active);
-      wFrame = GetSystemMetrics(SM_CXSIZEFRAME);
-    }
+  
+  UserGetFrameSize(Style, ExStyle, &FrameSize);
+
+  OldObj = SelectObject(hDC, GetSysColorPen(COLOR_WINDOWFRAME));
+  
+  if(UserHasThickFrameStyle(Style, ExStyle))
+    UserDrawFrameNC(hDC, &rect, FALSE, Active);
   else if (UserHasDlgFrameStyle(Style, ExStyle))
-    {
-      UserDrawFrameNC(hDC, &rect, TRUE, Active);
-      wFrame = GetSystemMetrics(SM_CXDLGFRAME);
-    }
+    UserDrawFrameNC(hDC, &rect, TRUE, Active);
+    
   if (Style & WS_CAPTION)
     {
       RECT r = rect;
       r.bottom = rect.top + GetSystemMetrics(SM_CYSIZE);
-      rect.top += GetSystemMetrics(SM_CYSIZE) +
-	GetSystemMetrics(SM_CYBORDER);
+      rect.top += GetSystemMetrics(SM_CYSIZE) + FrameSize.cy;
       UserDrawCaptionNC(hDC, &r, hWnd, Style, Active);
     }
 
@@ -690,18 +696,19 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
     {
       RECT r = rect;
       r.bottom = rect.top + GetSystemMetrics(SM_CYMENU);
-      r.left += wFrame;
-      r.right -= wFrame;
+      r.left += FrameSize.cx;
+      r.right -= FrameSize.cx;
       rect.top += MenuDrawMenuBar(hDC, &r, hWnd, FALSE);
     }
 
   /*  Draw scrollbars */
-  if (Style & WS_VSCROLL && (clientrect.right - clientrect.left > GetSystemMetrics(SM_CXVSCROLL)))
-      SCROLL_DrawScrollBar(hWnd, hDC, SB_VERT, TRUE, TRUE);
-  if (Style & WS_HSCROLL && (clientrect.bottom - clientrect.top > GetSystemMetrics(SM_CYHSCROLL)))
-      SCROLL_DrawScrollBar(hWnd, hDC, SB_HORZ, TRUE, TRUE);
+  if((Style & WS_VSCROLL) && (clientrect.right < rect.right - (2 * FrameSize.cx)))
+    SCROLL_DrawScrollBar(hWnd, hDC, SB_VERT, TRUE, TRUE);
+  if((Style & WS_HSCROLL) && (clientrect.bottom < rect.bottom - rect.top - (2 * FrameSize.cy)))
+    SCROLL_DrawScrollBar(hWnd, hDC, SB_HORZ, TRUE, TRUE);
 
   /* FIXME: Draw size box.*/
+  SelectObject(hDC, OldObj);
 
   ReleaseDC(hWnd, hDC);
 }
@@ -728,12 +735,14 @@ DefWndPaintNC(HWND hWnd, HRGN clip)
 LRESULT
 DefWndHitTestNC(HWND hWnd, POINT Point)
 {
-  RECT WindowRect;
+  RECT WindowRect, ClientRect, WndRect;
   LONG ScrollXY;
+  SIZE FrameSize;
   ULONG Style = GetWindowLongW(hWnd, GWL_STYLE);
   ULONG ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
 
   GetWindowRect(hWnd, &WindowRect);
+  WndRect = WindowRect;
   if (!PtInRect(&WindowRect, Point))
     {      
       return(HTNOWHERE);
@@ -744,8 +753,9 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
     }
   if (UserHasThickFrameStyle(Style, ExStyle))
     {
-      InflateRect(&WindowRect, -GetSystemMetrics(SM_CXFRAME),
-		  -GetSystemMetrics(SM_CYFRAME));
+      FrameSize.cx = GetSystemMetrics(SM_CXFRAME);
+      FrameSize.cy = GetSystemMetrics(SM_CYFRAME);
+      InflateRect(&WindowRect, -FrameSize.cx, -FrameSize.cy);
       if (!PtInRect(&WindowRect, Point))
 	{
 	  if (Point.y < WindowRect.top)
@@ -802,13 +812,15 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
     {
       if (UserHasDlgFrameStyle(Style, ExStyle))
 	{
-	  InflateRect(&WindowRect, -GetSystemMetrics(SM_CXDLGFRAME),
-		      -GetSystemMetrics(SM_CYDLGFRAME));
+      FrameSize.cx = GetSystemMetrics(SM_CXDLGFRAME);
+      FrameSize.cy = GetSystemMetrics(SM_CYDLGFRAME);
+	  InflateRect(&WindowRect, -FrameSize.cx, -FrameSize.cy);
 	}
       else if (UserHasThinFrameStyle(Style, ExStyle))
 	{
-	  InflateRect(&WindowRect, -GetSystemMetrics(SM_CXBORDER),
-		      -GetSystemMetrics(SM_CYBORDER));
+      FrameSize.cx = GetSystemMetrics(SM_CXBORDER);
+      FrameSize.cy = GetSystemMetrics(SM_CYBORDER);
+	  InflateRect(&WindowRect, -FrameSize.cx, -FrameSize.cy);
 	}
       if (!PtInRect(&WindowRect, Point))
 	{
@@ -818,14 +830,13 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 
   if ((Style & WS_CAPTION) == WS_CAPTION)
     {
-      WindowRect.top += (GetSystemMetrics(SM_CYCAPTION) -
-	GetSystemMetrics(SM_CYBORDER));
+      WindowRect.top += (GetSystemMetrics(SM_CYCAPTION));
       if (!PtInRect(&WindowRect, Point))
 	{
 	  if ((Style & WS_SYSMENU) && !(ExStyle & WS_EX_TOOLWINDOW))
 	    {
 	      WindowRect.left += GetSystemMetrics(SM_CXSIZE);
-	      WindowRect.right -= GetSystemMetrics(SM_CXSIZE) + 1;
+	      WindowRect.right -= GetSystemMetrics(SM_CXSIZE);
 	    }
 	  if (Point.x <= WindowRect.left)
 	    {
@@ -858,53 +869,57 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
     }
 
   ScreenToClient(hWnd, &Point);
-  GetClientRect(hWnd, &WindowRect);
+  GetClientRect(hWnd, &ClientRect);
+  WndRect.right -= WndRect.left;
+  WndRect.bottom -= WndRect.top;
+  WndRect.left = WndRect.top = 0;
 
-  if (PtInRect(&WindowRect, Point))
+  if (PtInRect(&ClientRect, Point))
     {
       return(HTCLIENT);
     }
-
-  if (Style & WS_VSCROLL)
-    {
-      ScrollXY = GetSystemMetrics(SM_CXVSCROLL);
-      if(WindowRect.right - WindowRect.left > ScrollXY)
-      {
-        WindowRect.right += ScrollXY;
-        if (PtInRect(&WindowRect, Point))
-        {
-          return(HTVSCROLL);
-        }
-      }
-    }
-
-  if (Style & WS_HSCROLL)
-    {
-      ScrollXY = GetSystemMetrics(SM_CYHSCROLL);
-      if(WindowRect.bottom - WindowRect.top > ScrollXY)
-      {
-        WindowRect.bottom += ScrollXY;
-        if (PtInRect(&WindowRect, Point))
-        {
-          ScrollXY = GetSystemMetrics(SM_CXVSCROLL);
-          if ((Style & WS_VSCROLL) && (WindowRect.right - WindowRect.left > ScrollXY) &&
-            (Point.x >= (WindowRect.right - ScrollXY)))
-          {
-            return(HTBOTTOMRIGHT);
-          }
-          return(HTHSCROLL);
-        }
-      }
-    }
-
+    
   if (UserHasMenu(hWnd, Style))
-    {
-      if (Point.y < 0 && Point.x >= 0 && Point.x <= WindowRect.right)
+  {
+    if (Point.y < 0 && Point.x >= 0 && Point.x <= WindowRect.right)
 	{
 	  return(HTMENU);
 	}
-    }
+  }
 
+  if (Style & WS_VSCROLL)
+  {
+    ScrollXY = GetSystemMetrics(SM_CXVSCROLL);
+    ClientRect.left = ClientRect.right;
+    ClientRect.right += ScrollXY;
+    if (PtInRect(&ClientRect, Point) && PtInRect(&WndRect, Point))
+    {
+      return(HTVSCROLL);
+    }
+  }
+  else
+    ScrollXY = 0;
+  
+  if (Style & WS_HSCROLL)
+  {
+    GetClientRect(hWnd, &ClientRect);
+    ClientRect.top = ClientRect.bottom;
+    ClientRect.bottom = ClientRect.top + GetSystemMetrics(SM_CXVSCROLL);
+    if (PtInRect(&ClientRect, Point) && PtInRect(&WndRect, Point))
+    {
+      return(HTHSCROLL);
+    }
+    if (ScrollXY)
+    {
+      ClientRect.left = ClientRect.right;
+      ClientRect.right += ScrollXY;
+      if(PtInRect(&WndRect, Point) && PtInRect(&ClientRect, Point))
+      {
+        return(HTBOTTOMRIGHT);
+      }
+    }
+  }
+  
   return(HTNOWHERE);
 }
 
