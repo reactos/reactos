@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.48 2003/08/29 09:29:11 gvg Exp $ */
+/* $Id: text.c,v 1.49 2003/08/29 21:53:50 rcampbell Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -57,9 +57,9 @@ BOOL FASTCALL InitFontSupport(VOID)
   UINT File;
   static WCHAR *FontFiles[] =
   {
+  L"\\SystemRoot\\media\\fonts\\Vera.ttf",
   L"\\SystemRoot\\media\\fonts\\helb____.ttf",
   L"\\SystemRoot\\media\\fonts\\timr____.ttf",
-  L"\\SystemRoot\\media\\fonts\\Vera.ttf",
   L"\\SystemRoot\\media\\fonts\\VeraBd.ttf",
   L"\\SystemRoot\\media\\fonts\\VeraBI.ttf",
   L"\\SystemRoot\\media\\fonts\\VeraIt.ttf",
