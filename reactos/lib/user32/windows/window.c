@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.1 2001/06/12 17:50:27 chorns Exp $
+/* $Id: window.c,v 1.2 2001/07/06 00:05:05 rex Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -321,11 +321,11 @@ EnumWindows(
 
 HWND
 STDCALL
-FindWindowA(
-  LPCSTR lpClassName,
-  LPCSTR lpWindowName)
+FindWindowA(LPCSTR lpClassName, LPCSTR lpWindowName)
 {
-  return (HWND)0;
+  //FIXME: FindWindow does not search children, but FindWindowEx does.
+  //       what should we do about this?
+  return FindWindowExA (NULL, NULL, lpClassName, lpWindowName);
 }
 
 HWND
@@ -341,20 +341,20 @@ FindWindowExA(
 
 HWND
 STDCALL
+FindWindowW(LPCWSTR lpClassName, LPCWSTR lpWindowName)
+{
+  //FIXME: FindWindow does not search children, but FindWindowEx does.
+  //       what should we do about this?
+  return FindWindowExW (NULL, NULL, lpClassName, lpWindowName);
+}
+
+HWND
+STDCALL
 FindWindowExW(
   HWND hwndParent,
   HWND hwndChildAfter,
   LPCWSTR lpszClass,
   LPCWSTR lpszWindow)
-{
-  return (HWND)0;
-}
-
-HWND
-STDCALL
-FindWindowW(
-  LPCWSTR lpClassName,
-  LPCWSTR lpWindowName)
 {
   return (HWND)0;
 }

@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.1 2001/06/12 17:50:29 chorns Exp $
+/* $Id: class.c,v 1.2 2001/07/06 00:05:05 rex Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -10,35 +10,31 @@
  */
 #include <ddk/ntddk.h>
 #include <win32k/win32k.h>
+#include <win32k/userobj.h>
 #include <include/class.h>
 #include <include/error.h>
-#include <include/object.h>
 #include <include/winsta.h>
 
 #define NDEBUG
 #include <debug.h>
 
-
 /* List of system classes */
-LIST_ENTRY SystemClassListHead;
-FAST_MUTEX SystemClassListLock;
-
+static  LIST_ENTRY  SystemClassListHead;
+static  FAST_MUTEX  SystemClassListLock;
 
 NTSTATUS
 InitClassImpl(VOID)
 {
+  ExInitializeFastMutex(&SystemClassListLock);
   InitializeListHead(&SystemClassListHead);
-  //ExInitializeFastMutex(&SystemClassListLock);
 
-  return STATUS_SUCCESS;
+  return  STATUS_SUCCESS;
 }
 
 NTSTATUS
 CleanupClassImpl(VOID)
 {
-  //ExReleaseFastMutex(&SystemClassListLock);
-
-  return STATUS_SUCCESS;
+  return  STATUS_SUCCESS;
 }
 
 
@@ -51,6 +47,7 @@ CliFindClassByName(
   PWNDCLASS_OBJECT Current;
   PLIST_ENTRY CurrentEntry;
 
+  ExAcquireFastMutexUnsafe (&SystemClassListLock);
   CurrentEntry = ListHead->Flink;
   while (CurrentEntry != ListHead)
   {
@@ -59,14 +56,15 @@ CliFindClassByName(
     if (_wcsicmp(ClassName, Current->Class.lpszClassName) == 0)
     {
       *Class = Current;
-      ObmReferenceObject(Current);
-      return STATUS_SUCCESS;
+      ExReleaseFastMutexUnsafe (&SystemClassListLock);
+      return  STATUS_SUCCESS;
     }
 
     CurrentEntry = CurrentEntry->Flink;
   }
+  ExReleaseFastMutexUnsafe (&SystemClassListLock);
 
-  return STATUS_NOT_FOUND;
+  return  STATUS_NOT_FOUND;
 }
 
 NTSTATUS
@@ -256,6 +254,8 @@ NtUserRegisterClassExWOW(
   PWNDCLASS_OBJECT ClassObject;
   NTSTATUS Status;
   RTL_ATOM Atom;
+  WORD  objectSize;
+  LPTSTR  namePtr;
 
   DPRINT("About to open window station handle (0x%X)\n", PROCESS_WINDOW_STATION());
 
@@ -281,26 +281,38 @@ NtUserRegisterClassExWOW(
     DPRINT("Failed adding class name (%wS) to atom table\n",
       lpwcx->lpszClassName);
     SetLastNtError(Status);
-    return (RTL_ATOM)0;
+
+    return  (RTL_ATOM) 0;
   }
 
-  ClassObject = ObmCreateObject(
-    WinStaObject->HandleTable,
-    NULL,
-    otClass,
-    sizeof(WNDCLASS_OBJECT));
-  if (!ClassObject)
+  objectSize = sizeof(WNDCLASS_OBJECT) +
+      (lpwcx->lpszMenuName != 0 ? wcslen (lpwcx->lpszMenuName) + 1 : 0) +
+      wcslen (lpwcx->lpszClassName) + 1;
+  ClassObject = USEROBJ_AllocObject (objectSize, UO_CLASS_MAGIC);
+  if (ClassObject == 0)
   {
     RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
     ObDereferenceObject(WinStaObject);
     DPRINT("Failed creating window class object\n");
     SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-    return (ATOM)0;
+
+    return  (RTL_ATOM) 0;
   }
 
-  if (ClassObject->Class.style & CS_GLOBALCLASS)
+  ClassObject->Class = *lpwcx;
+  ClassObject->Unicode = bUnicodeClass;
+  namePtr = (LPTSTR)(((PCHAR)ClassObject) + sizeof (WNDCLASS_OBJECT));
+  if (lpwcx->lpszMenuName != 0)
   {
-    /* FIXME: Put on global list */
+    ClassObject->Class.lpszMenuName = namePtr;
+    wcscpy (namePtr, lpwcx->lpszMenuName);
+    namePtr += wcslen (lpwcx->lpszMenuName + 1);
+  }
+  ClassObject->Class.lpszClassName = namePtr;
+    wcscpy (namePtr, lpwcx->lpszClassName);
+  
+  if (lpwcx->style & CS_GLOBALCLASS)
+  {
     InsertTailList(&SystemClassListHead, &ClassObject->ListEntry);
   }
   else
@@ -311,7 +323,7 @@ NtUserRegisterClassExWOW(
 
   ObDereferenceObject(WinStaObject);
 
-  return (RTL_ATOM)0;
+  return  Atom;
 }
 
 DWORD

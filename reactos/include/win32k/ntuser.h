@@ -484,13 +484,13 @@ NtUserFindExistingCursorIcon(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
+HWND
 STDCALL
 NtUserFindWindowEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
+  HWND  hwndParent,
+  HWND  hwndChildAfter,
+  PUNICODE_STRING  ucClassName,
+  PUNICODE_STRING  ucWindowName,
   DWORD Unknown4);
 
 DWORD

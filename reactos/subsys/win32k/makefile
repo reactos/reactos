@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.35 2001/07/04 20:40:24 chorns Exp $
+# $Id: makefile,v 1.36 2001/07/06 00:05:05 rex Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -21,7 +21,7 @@ MISC_OBJECTS = misc/driver.o misc/error.o misc/math.o misc/object.o
 LDR_OBJECTS = ldr/loader.o
 NTUSER_OBJECTS = ntuser/class.o ntuser/guicheck.o ntuser/hook.o \
                  ntuser/message.o ntuser/msgqueue.o ntuser/stubs.o \
-                 ntuser/window.o ntuser/winsta.o
+                 ntuser/userobj.o ntuser/window.o ntuser/winsta.o
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/color.o objects/coord.o objects/dc.o  \
                   objects/fillshap.o objects/gdiobj.o objects/icm.o  \

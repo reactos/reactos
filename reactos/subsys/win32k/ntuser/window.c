@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.1 2001/06/12 17:50:29 chorns Exp $
+/* $Id: window.c,v 1.2 2001/07/06 00:05:05 rex Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -10,11 +10,11 @@
  */
 #include <ddk/ntddk.h>
 #include <win32k/win32k.h>
+#include <win32k/userobj.h>
 #include <include/guicheck.h>
 #include <include/window.h>
 #include <include/class.h>
 #include <include/error.h>
-#include <include/object.h>
 #include <include/winsta.h>
 
 #define NDEBUG
@@ -22,15 +22,15 @@
 
 
 /* List of windows created by the process */
-LIST_ENTRY WindowListHead;
-FAST_MUTEX WindowListLock;
+static LIST_ENTRY WindowListHead;
+static FAST_MUTEX WindowListLock;
 
 
 NTSTATUS
 InitWindowImpl(VOID)
 {
+  ExInitializeFastMutex(&WindowListLock);
   InitializeListHead(&WindowListHead);
-  //ExInitializeFastMutex(&WindowListLock);
 
   return STATUS_SUCCESS;
 }
@@ -122,12 +122,10 @@ NtUserCreateWindowEx(
     return (HWND)0;
   }
 
-  WindowObject = ObmCreateObject(
-    WinStaObject->HandleTable,
-    &Handle,
-    otWindow,
-    sizeof(WINDOW_OBJECT));
-  if (!WindowObject) {
+  WindowObject = (PWINDOW_OBJECT) USEROBJ_AllocObject (sizeof (WINDOW_OBJECT), 
+                                                       UO_WINDOW_MAGIC);
+  if (!WindowObject) 
+  {
     ObDereferenceObject(WinStaObject);
     ObmDereferenceObject(ClassObject);
     RtlFreeUnicodeString(&WindowName);
@@ -151,8 +149,9 @@ NtUserCreateWindowEx(
 
   RtlInitUnicodeString(&WindowObject->WindowName, WindowName.Buffer);
 
-  //FIXME: Grab lock
-  InsertTailList(&WindowListHead, &WindowObject->ListEntry);
+  ExAcquireFastMutexUnsafe (&WindowListLock);
+  InsertTailList (&WindowListHead, &WindowObject->ListEntry);
+  ExReleaseFastMutexUnsafe (&WindowListLock);
 
   return (HWND)Handle;
 }
@@ -208,18 +207,52 @@ NtUserFillWindow(
   return 0;
 }
 
-DWORD
+HWND
 STDCALL
 NtUserFindWindowEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
+  HWND  hwndParent,
+  HWND  hwndChildAfter,
+  PUNICODE_STRING  ucClassName,
+  PUNICODE_STRING  ucWindowName,
   DWORD Unknown4)
 {
-  UNIMPLEMENTED
+  NTSTATUS  status;
+  HWND  windowHandle;
+  PWINDOW_OBJECT  windowObject;
+  PLIST_ENTRY  currentEntry;
+  PWNDCLASS_OBJECT  classObject;
+  
+  GuiCheck();
 
-  return 0;
+  status = ClassReferenceClassByNameOrAtom(&classObject, ucClassName->Buffer);
+  if (!NT_SUCCESS(status))
+  {
+    return (HWND)0;
+  }
+
+  ExAcquireFastMutexUnsafe (&WindowListLock);
+  currentEntry = WindowListHead.Flink;
+  while (currentEntry != &WindowListHead)
+  {
+    windowObject = CONTAINING_RECORD (currentEntry, WINDOW_OBJECT, ListEntry);
+
+    if (classObject == windowObject->Class &&
+        RtlCompareUnicodeString (ucWindowName, &windowObject->WindowName, TRUE) == 0)
+    {
+      windowHandle = (HWND) UserObjectHeaderToHandle (
+          UserObjectBodyToHeader (windowObject));
+      ExReleaseFastMutexUnsafe (&WindowListLock);
+      ObDereferenceObject (classObject);
+
+      return  windowHandle;
+    }
+    currentEntry = currentEntry->Flink;
+  }
+  ExReleaseFastMutexUnsafe (&WindowListLock);
+
+  ObDereferenceObject (classObject);
+
+  return  (HWND)0;
 }
 
 DWORD
