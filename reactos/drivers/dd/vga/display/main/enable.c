@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.17 $
- * $Author: chorns $
- * $Date: 2002/02/08 02:57:09 $
+ * $Revision: 1.18 $
+ * $Author: ekohl $
+ * $Date: 2002/06/15 14:57:26 $
  *
  */
 
@@ -13,62 +13,23 @@
 
 #define  DBG_PREFIX  "VGADDI: "
 
-VOID VGADDIAssertMode(IN DHPDEV  DPev, 
-                      IN BOOL  Enable); 
-VOID VGADDICompletePDEV(IN DHPDEV  PDev,
-                        IN HDEV  Dev);
-VOID VGADDIDisablePDEV(IN DHPDEV PDev); 
-VOID VGADDIDisableSurface(IN DHPDEV PDev); 
-DHPDEV VGADDIEnablePDEV(IN DEVMODEW  *DM,
-                        IN LPWSTR  LogAddress,
-                        IN ULONG  PatternCount,
-                        OUT HSURF  *SurfPatterns,
-                        IN ULONG  CapsSize,
-                        OUT ULONG  *DevCaps,
-                        IN ULONG  DevInfoSize,
-                        OUT DEVINFO  *DI,
-                        IN LPWSTR  DevDataFile,
-                        IN LPWSTR  DeviceName,
-                        IN HANDLE  Driver);
-HSURF VGADDIEnableSurface(IN DHPDEV  PDev);
-ULONG VGADDIGetModes(IN HANDLE Driver,
-                     IN ULONG DataSize,
-                     OUT PDEVMODEW DM);
-BOOL VGADDILineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
-                  LONG x1, LONG y1, LONG x2, LONG y2,
-                  RECTL *RectBounds, MIX mix);
-BOOL VGADDIPaint(IN SURFOBJ *Surface, IN CLIPOBJ *ClipRegion,
-                 IN BRUSHOBJ *Brush,  IN POINTL *BrushOrigin,
-                 IN MIX  Mix);
-BOOL VGADDIBitBlt(SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask,
-                  CLIPOBJ *Clip, XLATEOBJ *ColorTranslation,
-                  RECTL *DestRect, POINTL *SourcePoint, POINTL *MaskPoint,
-                  BRUSHOBJ *Brush, POINTL *BrushPoint, ROP4 rop4);
-VOID VGADDIMovePointer(PSURFOBJ pso, LONG x, LONG y, PRECTL prcl);
-ULONG VGADDISetPointerShape(PSURFOBJ pso, PSURFOBJ psoMask, PSURFOBJ psoColor, PXLATEOBJ pxlo,
-			    LONG xHot, LONG yHot, LONG x, LONG y,
-			    PRECTL prcl, ULONG fl);
-BOOL VGADDITransparentBlt(PSURFOBJ Dest, PSURFOBJ Source,
-                       PCLIPOBJ Clip, PXLATEOBJ ColorTranslation,
-                       PRECTL DestRect, PRECTL SourceRect,
-                       ULONG TransparentColor, ULONG Reserved);
 
 DRVFN FuncList[] =
 {
   /*  Required Display driver fuctions  */
-  {INDEX_DrvAssertMode, (PFN) VGADDIAssertMode},
-  {INDEX_DrvCompletePDEV, (PFN) VGADDICompletePDEV},
-  {INDEX_DrvDisablePDEV, (PFN) VGADDIDisablePDEV},
-  {INDEX_DrvDisableSurface, (PFN) VGADDIDisableSurface},
-  {INDEX_DrvEnablePDEV, (PFN) VGADDIEnablePDEV},
-  {INDEX_DrvEnableSurface, (PFN) VGADDIEnableSurface},
-  {INDEX_DrvGetModes, (PFN) VGADDIGetModes},
-  {INDEX_DrvLineTo, (PFN) VGADDILineTo},
-  {INDEX_DrvPaint, (PFN) VGADDIPaint},
-  {INDEX_DrvBitBlt, (PFN) VGADDIBitBlt},
-  {INDEX_DrvTransparentBlt, (PFN) VGADDITransparentBlt},
-  {INDEX_DrvMovePointer, (PFN) VGADDIMovePointer},
-  {INDEX_DrvSetPointerShape, (PFN) VGADDISetPointerShape},
+  {INDEX_DrvAssertMode, (PFN) DrvAssertMode},
+  {INDEX_DrvCompletePDEV, (PFN) DrvCompletePDEV},
+  {INDEX_DrvDisablePDEV, (PFN) DrvDisablePDEV},
+  {INDEX_DrvDisableSurface, (PFN) DrvDisableSurface},
+  {INDEX_DrvEnablePDEV, (PFN) DrvEnablePDEV},
+  {INDEX_DrvEnableSurface, (PFN) DrvEnableSurface},
+  {INDEX_DrvGetModes, (PFN) DrvGetModes},
+  {INDEX_DrvLineTo, (PFN) DrvLineTo},
+  {INDEX_DrvPaint, (PFN) DrvPaint},
+  {INDEX_DrvBitBlt, (PFN) DrvBitBlt},
+  {INDEX_DrvTransparentBlt, (PFN) DrvTransparentBlt},
+  {INDEX_DrvMovePointer, (PFN) DrvMovePointer},
+  {INDEX_DrvSetPointerShape, (PFN) DrvSetPointerShape},
 
 #if 0
   /*  Optional Display driver functions  */
@@ -98,10 +59,10 @@ DRVFN FuncList[] =
 };
 
 
-BOOL
-DrvEnableDriver(IN ULONG  EngineVersion, 
-                IN ULONG  SizeOfDED, 
-                OUT PDRVENABLEDATA  DriveEnableData)
+BOOL STDCALL
+DrvEnableDriver(IN ULONG EngineVersion,
+		IN ULONG SizeOfDED,
+		OUT PDRVENABLEDATA DriveEnableData)
 {
   EngDebugPrint("VGADDI", "DrvEnableDriver called...\n", 0);
 
@@ -125,7 +86,8 @@ DrvEnableDriver(IN ULONG  EngineVersion,
 //  RETURNS:
 //    NONE
 
-VOID DrvDisableDriver(VOID)
+VOID STDCALL
+DrvDisableDriver(VOID)
 {
   return;
 }
@@ -153,26 +115,27 @@ VOID DrvDisableDriver(VOID)
 //  RETURNS:
 //    DHPDEV  a handle to a DPev object
 
-DHPDEV VGADDIEnablePDEV(IN DEVMODEW  *DM,
-                        IN LPWSTR  LogAddress,
-                        IN ULONG  PatternCount,
-                        OUT HSURF  *SurfPatterns,
-                        IN ULONG  CapsSize,
-                        OUT ULONG  *DevCaps,
-                        IN ULONG  DevInfoSize,
-                        OUT DEVINFO  *DI,
-                        IN LPWSTR  DevDataFile,
-                        IN LPWSTR  DeviceName,
-                        IN HANDLE  Driver)
+DHPDEV STDCALL
+DrvEnablePDEV(IN DEVMODEW *DM,
+	      IN LPWSTR LogAddress,
+	      IN ULONG PatternCount,
+	      OUT HSURF *SurfPatterns,
+	      IN ULONG CapsSize,
+	      OUT ULONG *DevCaps,
+	      IN ULONG DevInfoSize,
+	      OUT DEVINFO *DI,
+	      IN LPWSTR DevDataFile,
+	      IN LPWSTR DeviceName,
+	      IN HANDLE Driver)
 {
   PPDEV  PDev;
 
   PDev = EngAllocMem(FL_ZERO_MEMORY, sizeof(PDEV), ALLOC_TAG);
   if (PDev == NULL)
-  {
-    EngDebugPrint(DBG_PREFIX, "EngAllocMem failed for PDEV\n", 0);
-    return  NULL;
-  }
+    {
+      EngDebugPrint(DBG_PREFIX, "EngAllocMem failed for PDEV\n", 0);
+      return(NULL);
+    }
   PDev->KMDriver = Driver;
   DPRINT( "PDev: %x, Driver: %x\n", PDev, PDev->KMDriver );
   PDev->xyCursor.x = 320;
@@ -184,28 +147,31 @@ DHPDEV VGADDIEnablePDEV(IN DEVMODEW  *DM,
   // FIXME: fill out DevCaps
   // FIXME: full out DevInfo
 
-  devinfoVGA.hpalDefault = EngCreatePalette(PAL_INDEXED, 16, (PULONG)(VGApalette.PaletteEntry), 0, 0, 0);
+  devinfoVGA.hpalDefault = EngCreatePalette(PAL_INDEXED, 16, (PULONG *)VGApalette.PaletteEntry, 0, 0, 0);
 DPRINT("Palette from Driver: %u\n", devinfoVGA.hpalDefault);
   *DI = devinfoVGA;
 DPRINT("Palette from Driver 2: %u and DI is %08x\n", DI->hpalDefault, DI);
 
-  return  PDev;
+  return(PDev);
 }
 
-//    DrvEnablePDEV
+
+//    DrvCompletePDEV
 //  DESCRIPTION
 //    Called after initialization of PDEV is complete.  Supplies
 //    a reference to the GDI handle for the PDEV.
 
-VOID VGADDICompletePDEV(IN DHPDEV  PDev,
-                        IN HDEV  Dev)
+VOID STDCALL
+DrvCompletePDEV(IN DHPDEV PDev,
+		IN HDEV Dev)
 {
   ((PPDEV) PDev)->GDIDevHandle = Dev; // Handle to the DC
 }
 
 
-VOID VGADDIAssertMode(IN DHPDEV  DPev, 
-                      IN BOOL  Enable)
+BOOL STDCALL
+DrvAssertMode(IN DHPDEV DPev,
+	      IN BOOL Enable)
 {
   PPDEV ppdev = (PPDEV)DPev;
   ULONG returnedDataLength;
@@ -238,7 +204,9 @@ VOID VGADDIAssertMode(IN DHPDEV  DPev,
   }
 }
 
-VOID VGADDIDisablePDEV(IN DHPDEV PDev)
+
+VOID STDCALL
+DrvDisablePDEV(IN DHPDEV PDev)
 {
   PPDEV ppdev = (PPDEV)PDev;
 
@@ -256,7 +224,9 @@ VOID VGADDIDisablePDEV(IN DHPDEV PDev)
   EngFreeMem(PDev);
 }
 
-VOID VGADDIDisableSurface(IN DHPDEV PDev)
+
+VOID STDCALL
+DrvDisableSurface(IN DHPDEV PDev)
 {
   PPDEV ppdev = (PPDEV)PDev;
   PDEVSURF pdsurf = ppdev->AssociatedSurf;
@@ -296,7 +266,9 @@ VOID VGADDIDisableSurface(IN DHPDEV PDev)
   //  EngFreeMem(pdsurf); // free the surface
 }
 
-VOID InitSavedBits(PPDEV ppdev)
+
+static VOID
+InitSavedBits(PPDEV ppdev)
 {
   if (!(ppdev->fl & DRIVER_OFFSCREEN_REFRESHED))
   {
@@ -338,18 +310,23 @@ VOID InitSavedBits(PPDEV ppdev)
   return;
 }
 
-HSURF VGADDIEnableSurface(IN DHPDEV  PDev)
+
+HSURF STDCALL
+DrvEnableSurface(IN DHPDEV PDev)
 {
   PPDEV ppdev = (PPDEV)PDev;
   PDEVSURF pdsurf;
   DHSURF dhsurf;
   HSURF hsurf;
 
+  DPRINT1("DrvEnableSurface() called\n");
+
   // Initialize the VGA
   if (!InitVGA(ppdev, TRUE))
   {
     goto error_done;
   }
+CHECKPOINT1;
 
   // dhsurf is of type DEVSURF, which is the drivers specialized surface type
   dhsurf = (DHSURF)EngAllocMem(0, sizeof(DEVSURF), ALLOC_TAG);
@@ -416,9 +393,11 @@ error_done:
    return((HSURF)0);
 }
 
-ULONG VGADDIGetModes(IN HANDLE Driver,
-                     IN ULONG DataSize,
-                     OUT PDEVMODEW DM)
+
+ULONG STDCALL
+DrvGetModes(IN HANDLE Driver,
+	    IN ULONG DataSize,
+	    OUT PDEVMODEW DM)
 {
   DWORD NumModes;
   DWORD ModeSize;
@@ -487,4 +466,3 @@ ULONG VGADDIGetModes(IN HANDLE Driver,
 }
 
 /* EOF */
-

@@ -200,10 +200,19 @@ BOOL VGAtoVGA(
   return TRUE;
 }
 
-BOOL VGADDIBitBlt(SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask,
-                  CLIPOBJ *Clip, XLATEOBJ *ColorTranslation,
-                  RECTL *DestRect, POINTL *SourcePoint, POINTL *MaskPoint,
-                  BRUSHOBJ *Brush, POINTL *BrushPoint, ROP4 rop4)
+
+BOOL STDCALL
+DrvBitBlt(SURFOBJ *Dest,
+	  SURFOBJ *Source,
+	  SURFOBJ *Mask,
+	  CLIPOBJ *Clip,
+	  XLATEOBJ *ColorTranslation,
+	  RECTL *DestRect,
+	  POINTL *SourcePoint,
+	  POINTL *MaskPoint,
+	  BRUSHOBJ *Brush,
+	  POINTL *BrushPoint,
+	  ROP4 rop4)
 {
    RECT_ENUM RectEnum;
    BOOL EnumMore;

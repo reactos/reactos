@@ -1,4 +1,4 @@
-; $Id: vgaddi.edf,v 1.1 2000/03/10 12:45:44 jfilby Exp $
+; $Id: vgaddi.edf,v 1.2 2002/06/15 14:56:53 ekohl Exp $
 ;
 ; vgaddi.def
 ;
@@ -8,4 +8,4 @@
 ;
 LIBRARY vgaddi.dll
 EXPORTS
-DrvEnableDriver=DrvEnableDriver
+DrvEnableDriver=DrvEnableDriver@12

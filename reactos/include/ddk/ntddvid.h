@@ -40,85 +40,92 @@ typedef LONG VP_STATUS, *PVP_STATUS;
 #define VIDEO_MEMORY_SPACE_DENSE     0x04
 #define VIDEO_MEMORY_SPACE_P6CACHE   0x08
 
-typedef struct _VIDEO_POINTER_CAPABILITIES {
-   ULONG Flags;
-   ULONG MaxWidth;
-   ULONG MaxHeight;
-   ULONG HWPtrBitmapStart;
-   ULONG HWPtrBitmapEnd;
+typedef struct _VIDEO_POINTER_CAPABILITIES
+{
+  ULONG  Flags;
+  ULONG  MaxWidth;
+  ULONG  MaxHeight;
+  ULONG  HWPtrBitmapStart;
+  ULONG  HWPtrBitmapEnd;
 } VIDEO_POINTER_CAPABILITIES, *PVIDEO_POINTER_CAPABILITIES;
 
-typedef struct _VIDEO_POINTER_ATTRIBUTES {
-   ULONG Flags;
-   ULONG Width;
-   ULONG Height;
-   ULONG WidthInBytes;
-   ULONG Enable;
-   SHORT Column;
-   SHORT Row;
-   UCHAR Pixels[1];
+typedef struct _VIDEO_POINTER_ATTRIBUTES
+{
+  ULONG  Flags;
+  ULONG  Width;
+  ULONG  Height;
+  ULONG  WidthInBytes;
+  ULONG  Enable;
+  SHORT  Column;
+  SHORT  Row;
+  UCHAR  Pixels[1];
 } VIDEO_POINTER_ATTRIBUTES, *PVIDEO_POINTER_ATTRIBUTES;
 
-typedef enum _VIDEO_BANK_TYPE {
-   VideoNotBanked = 0,
-   VideoBanked1RW,
-   VideoBanked1R1W,
-   VideoBanked2RW,
-   NumVideoBankTypes
+typedef enum _VIDEO_BANK_TYPE
+{
+  VideoNotBanked = 0,
+  VideoBanked1RW,
+  VideoBanked1R1W,
+  VideoBanked2RW,
+  NumVideoBankTypes
 } VIDEO_BANK_TYPE, *PVIDEO_BANK_TYPE;
 
-typedef struct _VIDEO_BANK_SELECT {
-   ULONG Length;
-   ULONG Size;
-   ULONG BankingFlags;
-   ULONG BankingType;
-   ULONG PlanarHCBankingType;
-   ULONG BitmapWidthInBytes;
-   ULONG BitmapSize;
-   ULONG Granularity;
-   ULONG PlanarHCGranularity;
-   ULONG CodeOffset;
-   ULONG PlanarHCBankCodeOffset;
-   ULONG PlanarHCEnableCodeOffset;
-   ULONG PlanarHCDisableCodeOffset;
+typedef struct _VIDEO_BANK_SELECT
+{
+  ULONG  Length;
+  ULONG  Size;
+  ULONG  BankingFlags;
+  ULONG  BankingType;
+  ULONG  PlanarHCBankingType;
+  ULONG  BitmapWidthInBytes;
+  ULONG  BitmapSize;
+  ULONG  Granularity;
+  ULONG  PlanarHCGranularity;
+  ULONG  CodeOffset;
+  ULONG  PlanarHCBankCodeOffset;
+  ULONG  PlanarHCEnableCodeOffset;
+  ULONG  PlanarHCDisableCodeOffset;
 } VIDEO_BANK_SELECT, *PVIDEO_BANK_SELECT;
 
-typedef struct _VIDEO_CLUTDATA {
-    UCHAR Red;
-    UCHAR Green;
-    UCHAR Blue;
-    UCHAR Unused;
+typedef struct _VIDEO_CLUTDATA
+{
+  UCHAR  Red;
+  UCHAR  Green;
+  UCHAR  Blue;
+  UCHAR  Unused;
 } VIDEO_CLUTDATA, *PVIDEO_CLUTDATA;
 
-typedef struct _VIDEO_NUM_MODES {
-    ULONG NumModes;
-    ULONG ModeInformationLength;
+typedef struct _VIDEO_NUM_MODES
+{
+  ULONG  NumModes;
+  ULONG  ModeInformationLength;
 } VIDEO_NUM_MODES, *PVIDEO_NUM_MODES;
 
-typedef struct _VIDEO_MODE_INFORMATION {
-    ULONG Length;
-    ULONG ModeIndex;
-    ULONG VisScreenWidth;
-    ULONG VisScreenHeight;
-    ULONG ScreenStride;
-    ULONG NumberOfPlanes;
-    ULONG BitsPerPlane;
-    ULONG Frequency;
-    ULONG XMillimeter;
-    ULONG YMillimeter;
-    ULONG NumberRedBits;
-    ULONG NumberGreenBits;
-    ULONG NumberBlueBits;
-    ULONG RedMask;
-    ULONG GreenMask;
-    ULONG BlueMask;
-    ULONG AttributeFlags;
-    ULONG VideoMemoryBitmapWidth;
-    ULONG VideoMemoryBitmapHeight;
-    ULONG DriverSpecificAttributeFlags;
+typedef struct _VIDEO_MODE_INFORMATION
+{
+  ULONG  Length;
+  ULONG  ModeIndex;
+  ULONG  VisScreenWidth;
+  ULONG  VisScreenHeight;
+  ULONG  ScreenStride;
+  ULONG  NumberOfPlanes;
+  ULONG  BitsPerPlane;
+  ULONG  Frequency;
+  ULONG  XMillimeter;
+  ULONG  YMillimeter;
+  ULONG  NumberRedBits;
+  ULONG  NumberGreenBits;
+  ULONG  NumberBlueBits;
+  ULONG  RedMask;
+  ULONG  GreenMask;
+  ULONG  BlueMask;
+  ULONG  AttributeFlags;
+  ULONG  VideoMemoryBitmapWidth;
+  ULONG  VideoMemoryBitmapHeight;
+  ULONG  DriverSpecificAttributeFlags;
 } VIDEO_MODE_INFORMATION, *PVIDEO_MODE_INFORMATION;
 
-typedef enum _VIDEO_DEVICE_DATA_TYPE 
+typedef enum _VIDEO_DEVICE_DATA_TYPE
 {
   VpMachineData,
   VpCmosData,
@@ -127,20 +134,20 @@ typedef enum _VIDEO_DEVICE_DATA_TYPE
   VpMonitorData
 } VIDEO_DEVICE_DATA_TYPE, *PVIDEO_DEVICE_DATA_TYPE;
 
-typedef enum _VIDEO_SYNCHRONIZE_PRIORITY 
+typedef enum _VIDEO_SYNCHRONIZE_PRIORITY
 {
   VpLowPriority,
   VpMediumPriority,
   VpHighPriority
 } VIDEO_SYNCHRONIZE_PRIORITY, *PVIDEO_SYNCHRONIZE_PRIORITY;
 
-typedef struct _STATUS_BLOCK 
+typedef struct _STATUS_BLOCK
 {
   VP_STATUS  Status;
   ULONG  Information;
 } STATUS_BLOCK, *PSTATUS_BLOCK;
 
-typedef struct _VIDEO_REQUEST_PACKET 
+typedef struct _VIDEO_REQUEST_PACKET
 {
   ULONG  IoControlCode;
   PSTATUS_BLOCK  StatusBlock;
@@ -184,7 +191,7 @@ typedef struct _VIDEO_REQUEST_PACKET
 #define IOCTL_VIDEO_SET_PALETTE_REGISTERS       CTL_CODE(FILE_DEVICE_VIDEO,  31, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_VIDEO_LOAD_AND_SET_FONT           CTL_CODE(FILE_DEVICE_VIDEO,  32, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
-typedef struct _VIDEO_PORT_CONFIG_INFO 
+typedef struct _VIDEO_PORT_CONFIG_INFO
 {
   ULONG  Length;
   ULONG  SystemIoBusNumber;
@@ -204,21 +211,32 @@ typedef struct _VIDEO_PORT_CONFIG_INFO
   UCHAR  InterruptShareable;
 } VIDEO_PORT_CONFIG_INFO, *PVIDEO_PORT_CONFIG_INFO;
 
-typedef VP_STATUS  (*PVIDEO_HW_FIND_ADAPTER) (PVOID  HwDeviceExtension,
-                                              PVOID  HwContext,
-                                              PWSTR  ArgumentString,
-                                              PVIDEO_PORT_CONFIG_INFO  ConfigInfo,
-                                              PUCHAR  Again);
-typedef BOOLEAN  (*PVIDEO_HW_INITIALIZE)(PVOID  HwDeviceExtension);
-typedef BOOLEAN  (*PVIDEO_HW_INTERRUPT)(PVOID  HwDeviceExtension);
-typedef BOOLEAN  (*PVIDEO_HW_START_IO)(PVOID  HwDeviceExtension,
-                                       PVIDEO_REQUEST_PACKET  RequestPacket);
-typedef BOOLEAN  (*PVIDEO_HW_RESET_HW)(PVOID  HwDeviceExtension,
-                                       ULONG  Columns,
-                                       ULONG  Rows);
-typedef VOID  (*PVIDEO_HW_TIMER)(PVOID  HwDeviceExtension);
+typedef VP_STATUS STDCALL
+(*PVIDEO_HW_FIND_ADAPTER)(PVOID  HwDeviceExtension,
+			  PVOID  HwContext,
+			  PWSTR  ArgumentString,
+			  PVIDEO_PORT_CONFIG_INFO  ConfigInfo,
+			  PUCHAR  Again);
 
-typedef struct _VIDEO_HW_INITIALIZATION_DATA 
+typedef BOOLEAN STDCALL
+(*PVIDEO_HW_INITIALIZE)(PVOID  HwDeviceExtension);
+
+typedef BOOLEAN STDCALL
+(*PVIDEO_HW_INTERRUPT)(PVOID  HwDeviceExtension);
+
+typedef BOOLEAN STDCALL
+(*PVIDEO_HW_START_IO)(PVOID  HwDeviceExtension,
+		      PVIDEO_REQUEST_PACKET  RequestPacket);
+
+typedef BOOLEAN STDCALL
+(*PVIDEO_HW_RESET_HW)(PVOID  HwDeviceExtension,
+		      ULONG  Columns,
+		      ULONG  Rows);
+
+typedef VOID STDCALL
+(*PVIDEO_HW_TIMER)(PVOID  HwDeviceExtension);
+
+typedef struct _VIDEO_HW_INITIALIZATION_DATA
 {
   ULONG  HwInitDataSize;
   INTERFACE_TYPE  AdapterInterfaceType;
@@ -232,23 +250,28 @@ typedef struct _VIDEO_HW_INITIALIZATION_DATA
   PVIDEO_HW_TIMER  HwTimer;
 } VIDEO_HW_INITIALIZATION_DATA, *PVIDEO_HW_INITIALIZATION_DATA;
 
-typedef VP_STATUS (*PMINIPORT_GET_REGISTRY_ROUTINE)(PVOID  HwDeviceExtension,
-                                                    PVOID  Context,
-                                                    PWSTR  ValueName,
-                                                    PVOID  ValueData,
-                                                    ULONG  ValueLength);
-typedef VP_STATUS (*PMINIPORT_QUERY_DEVICE_ROUTINE)(PVOID  HwDeviceExtension,
-                                                    PVOID  Context,
-                                                    VIDEO_DEVICE_DATA_TYPE  DeviceDataType,
-                                                    PVOID  Identifier,
-                                                    ULONG  IdentiferLength,
-                                                    PVOID  ConfigurationData,
-                                                    ULONG  ConfigurationDataLength,
-                                                    PVOID  ComponentInformation,
-                                                    ULONG  ComponentInformationLength);
-typedef BOOLEAN (*PMINIPORT_SYNCHRONIZE_ROUTINE)(PVOID  Context);
+typedef VP_STATUS STDCALL
+(*PMINIPORT_GET_REGISTRY_ROUTINE)(PVOID  HwDeviceExtension,
+				  PVOID  Context,
+				  PWSTR  ValueName,
+				  PVOID  ValueData,
+				  ULONG  ValueLength);
 
-typedef struct _VIDEO_ACCESS_RANGE 
+typedef VP_STATUS STDCALL
+(*PMINIPORT_QUERY_DEVICE_ROUTINE)(PVOID  HwDeviceExtension,
+				  PVOID  Context,
+				  VIDEO_DEVICE_DATA_TYPE  DeviceDataType,
+				  PVOID  Identifier,
+				  ULONG  IdentiferLength,
+				  PVOID  ConfigurationData,
+				  ULONG  ConfigurationDataLength,
+				  PVOID  ComponentInformation,
+				  ULONG  ComponentInformationLength);
+
+typedef BOOLEAN STDCALL
+(*PMINIPORT_SYNCHRONIZE_ROUTINE)(PVOID Context);
+
+typedef struct _VIDEO_ACCESS_RANGE
 {
   PHYSICAL_ADDRESS  RangeStart;
   ULONG  RangeLength;
@@ -257,7 +280,7 @@ typedef struct _VIDEO_ACCESS_RANGE
   UCHAR  RangeShareable;
 } VIDEO_ACCESS_RANGE, *PVIDEO_ACCESS_RANGE;
 
-typedef struct _VIDEO_X86_BIOS_ARGUMENTS 
+typedef struct _VIDEO_X86_BIOS_ARGUMENTS
 {
   ULONG  Eax;
   ULONG  Ebx;
@@ -268,23 +291,28 @@ typedef struct _VIDEO_X86_BIOS_ARGUMENTS
   ULONG  Ebp;
 } VIDEO_X86_BIOS_ARGUMENTS, *PVIDEO_X86_BIOS_ARGUMENTS;
 
-typedef VOID (*PBANKED_SECTION_ROUTINE)(IN ULONG  ReadBank, IN ULONG  WriteBank, IN PVOID  Context);
+typedef VOID STDCALL
+(*PBANKED_SECTION_ROUTINE)(IN ULONG  ReadBank,
+			   IN ULONG  WriteBank,
+			   IN PVOID  Context);
 
-typedef struct {
-    USHORT   NumEntries;
-    USHORT   FirstEntry;
-    union {
-        VIDEO_CLUTDATA RgbArray;
-        ULONG RgbLong;
+typedef struct
+{
+  USHORT  NumEntries;
+  USHORT  FirstEntry;
+  union
+    {
+      VIDEO_CLUTDATA  RgbArray;
+      ULONG  RgbLong;
     } LookupTable[1];
 } VIDEO_CLUT, *PVIDEO_CLUT;
 
-typedef struct _VIDEO_MEMORY 
+typedef struct _VIDEO_MEMORY
 {
-  PVOID  RequestedVirtualAddress;
+  PVOID RequestedVirtualAddress;
 } VIDEO_MEMORY, *PVIDEO_MEMORY;
 
-typedef struct _VIDEO_MEMORY_INFORMATION 
+typedef struct _VIDEO_MEMORY_INFORMATION
 {
   PVOID  VideoRamBase;
   ULONG  VideoRamLength;
@@ -292,12 +320,12 @@ typedef struct _VIDEO_MEMORY_INFORMATION
   ULONG  FrameBufferLength;
 } VIDEO_MEMORY_INFORMATION, *PVIDEO_MEMORY_INFORMATION;
 
-typedef struct _VIDEO_MODE 
+typedef struct _VIDEO_MODE
 {
   ULONG  RequestedMode;
 } VIDEO_MODE, *PVIDEO_MODE;
 
-typedef struct _VIDEO_SHARE_MEMORY 
+typedef struct _VIDEO_SHARE_MEMORY
 {
   HANDLE  ProcessHandle;
   ULONG  ViewOffset;

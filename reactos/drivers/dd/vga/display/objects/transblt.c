@@ -6,10 +6,15 @@
 #include "brush.h"
 #include "bitblt.h"
 
-BOOL VGADDITransparentBlt(PSURFOBJ Dest, PSURFOBJ Source,
-                          PCLIPOBJ Clip, PXLATEOBJ ColorTranslation,
-                          PRECTL DestRect, PRECTL SourceRect,
-                          ULONG TransparentColor, ULONG Reserved)
+BOOL STDCALL
+DrvTransparentBlt(PSURFOBJ Dest,
+		  PSURFOBJ Source,
+		  PCLIPOBJ Clip,
+		  PXLATEOBJ ColorTranslation,
+		  PRECTL DestRect,
+		  PRECTL SourceRect,
+		  ULONG TransparentColor,
+		  ULONG Reserved)
 {
   LONG dx, dy, sx, sy;
 

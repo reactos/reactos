@@ -11,20 +11,26 @@
 #define VERSION "0.0.0"
 
 //  ----------------------------------------------------  Forward Declarations
-static VP_STATUS VGAFindAdapter(PVOID  DeviceExtension, 
-                                PVOID  Context, 
-                                PWSTR  ArgumentString, 
-                                PVIDEO_PORT_CONFIG_INFO  ConfigInfo, 
-                                PUCHAR  Again);
-static BOOLEAN VGAInitialize(PVOID  DeviceExtension);
-static BOOLEAN VGAStartIO(PVOID  DeviceExtension, 
-                          PVIDEO_REQUEST_PACKET  RequestPacket); 
+static VP_STATUS STDCALL
+VGAFindAdapter(PVOID DeviceExtension,
+	       PVOID Context,
+	       PWSTR ArgumentString,
+	       PVIDEO_PORT_CONFIG_INFO ConfigInfo,
+	       PUCHAR Again);
+static BOOLEAN STDCALL
+VGAInitialize(PVOID DeviceExtension);
+static BOOLEAN STDCALL
+VGAStartIO(PVOID DeviceExtension,
+	   PVIDEO_REQUEST_PACKET RequestPacket);
 /*
-static BOOLEAN VGAInterrupt(PVOID  DeviceExtension); 
-static BOOLEAN VGAResetHw(PVOID  DeviceExtension, 
-                          ULONG  Columns, 
-                          ULONG  Rows); 
-static VOID VGATimer(PVOID  DeviceExtension);
+static BOOLEAN STDCALL
+VGAInterrupt(PVOID DeviceExtension);
+static BOOLEAN STDCALL
+VGAResetHw(PVOID DeviceExtension,
+	   ULONG Columns,
+	   ULONG Rows);
+static VOID STDCALL
+VGATimer(PVOID DeviceExtension);
 */
 
 /*  Mandatory IoControl routines  */
@@ -69,8 +75,8 @@ VOID  VGAUnshareVideoMemory(IN PVIDEO_MEMORY  MemoryToUnshare,
 //    VP_STATUS
 
 VP_STATUS STDCALL
-DriverEntry(IN PVOID Context1, 
-            IN PVOID Context2) 
+DriverEntry(IN PVOID Context1,
+            IN PVOID Context2)
 {
   VIDEO_HW_INITIALIZATION_DATA  InitData;
 
@@ -116,12 +122,12 @@ DriverEntry(IN PVOID Context1,
 //  RETURNS:
 //    VP_STATUS
 
-static VP_STATUS 
-VGAFindAdapter(PVOID  DeviceExtension, 
-               PVOID  Context, 
-               PWSTR  ArgumentString, 
-               PVIDEO_PORT_CONFIG_INFO  ConfigInfo, 
-               PUCHAR  Again)
+static VP_STATUS STDCALL
+VGAFindAdapter(PVOID DeviceExtension,
+               PVOID Context,
+               PWSTR ArgumentString,
+               PVIDEO_PORT_CONFIG_INFO ConfigInfo,
+               PUCHAR Again)
 {
   /* FIXME: Determine if the adapter is present  */
   *Again = FALSE;
@@ -148,8 +154,8 @@ VGAFindAdapter(PVOID  DeviceExtension,
 //    PVOID  DeviceExtension
 //  RETURNS:
 //    BOOLEAN  Success or failure
-static BOOLEAN 
-VGAInitialize(PVOID  DeviceExtension)
+static BOOLEAN STDCALL
+VGAInitialize(PVOID DeviceExtension)
 {
   return  FALSE;
 }
@@ -205,9 +211,9 @@ VGAInitialize(PVOID  DeviceExtension)
 //    BOOLEAN  This function must return TRUE, and complete the work or
 //             set an error status in the VRP.
 
-static BOOLEAN 
-VGAStartIO(PVOID  DeviceExtension, 
-           PVIDEO_REQUEST_PACKET  RequestPacket)
+static BOOLEAN STDCALL
+VGAStartIO(PVOID DeviceExtension,
+           PVIDEO_REQUEST_PACKET RequestPacket)
 {
   switch (RequestPacket->IoControlCode)
     {
@@ -328,7 +334,11 @@ VGAStartIO(PVOID  DeviceExtension,
 //  RETURNS:
 //    BOOLEAN  TRUE if the interrupt was handled by the routine
 
-static BOOLEAN VGAInterrupt(PVOID  DeviceExtension); 
+static BOOLEAN STDCALL
+VGAInterrupt(PVOID DeviceExtension)
+{
+  return(TRUE);
+}
 
 //    VGAResetHw
 //
@@ -347,9 +357,13 @@ static BOOLEAN VGAInterrupt(PVOID  DeviceExtension);
 //    BOOLEAN  TRUE if no further action is necessary, FALSE if the system
 //             needs to still do a BOIS int 10 reset.
 
-static BOOLEAN VGAResetHw(PVOID  DeviceExtension, 
-                          ULONG  Columns, 
-                          ULONG  Rows);
+static BOOLEAN STDCALL
+VGAResetHw(PVOID DeviceExtension,
+	   ULONG Columns,
+	   ULONG Rows)
+{
+  return(TRUE);
+}
 
 //    VGATimer
 //
@@ -364,7 +378,10 @@ static BOOLEAN VGAResetHw(PVOID  DeviceExtension,
 //  RETURNS:
 //    VOID
 
-static VOID VGATimer(PVOID  DeviceExtension);
+static VOID STDCALL
+VGATimer(PVOID DeviceExtension)
+{
+}
 
 #endif
 

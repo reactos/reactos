@@ -679,207 +679,257 @@ typedef struct _XFORMOBJ
  */
 
 /*  GDI --> DDI calls  */
-BOOL DrvAssertMode(IN DHPDEV  PDev, 
-                   IN BOOL  ShouldEnable);
-BOOL DrvBitBlt(IN PSURFOBJ  DestSurface, 
-               IN PSURFOBJ  SrcSurface, 
-               IN PSURFOBJ  MaskSurface, 
-               IN PCLIPOBJ  ClipObj, 
-               IN PXLATEOBJ  XLateObj, 
-               IN PRECTL  DestRectL, 
-               IN PPOINTL  SrcPointL, 
-               IN PPOINTL  MaskPointL, 
-               IN PBRUSHOBJ  BrushObj, 
-               IN PPOINTL  BrushPointL, 
-               IN ROP4  RasterOp); 
-VOID DrvCompletePDEV(IN DHPDEV  PDev,
-                     IN HDEV  Dev);
-BOOL DrvCopyBits(OUT PSURFOBJ  DestSurface, 
-                 IN PSURFOBJ  SrcSurface, 
-                 IN PCLIPOBJ  ClipObj, 
-                 IN PXLATEOBJ  XLateObj, 
-                 IN PRECTL  DestRectL, 
-                 IN PPOINTL  SrcPointL); 
-HBITMAP DrvCreateDeviceBitmap(IN DHPDEV  DPev, 
-                              IN SIZEL  SizeL, 
-                              IN ULONG  Format); 
-VOID DrvDeleteDeviceBitmap(IN DHSURF  Surface); 
-LONG DrvDescribePixelFormat(IN DHPDEV  DPev, 
-                            IN LONG  PixelFormat, 
-                            IN ULONG  DescriptorSize, 
-                            OUT PPIXELFORMATDESCRIPTOR  PFD); 
-VOID DrvDestroyFont(IN PFONTOBJ FontObj); 
-VOID DrvDisableDirectDraw(IN DHPDEV  PDev);
-VOID DrvDisableDriver(VOID);
-VOID DrvDisablePDEV(IN DHPDEV PDev); 
-VOID DrvDisableSurface(IN DHPDEV PDev); 
-ULONG DrvDitherColor(IN DHPDEV  DPev, 
-                     IN ULONG  Mode, 
-                     IN ULONG  RGB, 
-                     OUT PULONG  DitherBits); 
-ULONG DrvDrawEscape(IN PSURFOBJ  SurfObj, 
-                    IN ULONG  EscCode, 
-                    IN PCLIPOBJ  ClipObj, 
-                    IN PRECTL  RectL, 
-                    IN ULONG  InputSize, 
-                    IN PVOID  *InputData); 
-BOOL DrvEnableDirectDraw(IN DHPDEV  PDev,
-                         IN PDD_CALLBACKS Callbacks,
-                         IN PDD_SURFACECALLBACKS  SurfaceCallbacks,
-                         IN PDD_PALETTECALLBACKS  PaletteCallbacks);
-BOOL DrvEnableDriver(IN ULONG Version, 
-                     IN ULONG DEDSize, 
-                     OUT PDRVENABLEDATA DED);
-DHPDEV DrvEnablePDEV(IN DEVMODEW  *DM,
-                     IN LPWSTR  LogAddress,
-                     IN ULONG  PatternCount,
-                     OUT HSURF  *SurfPatterns,
-                     IN ULONG  CapsSize,
-                     OUT ULONG  *DevCaps,
-                     IN ULONG  DevInfoSize,
-                     OUT DEVINFO  *DI,
-                     IN LPWSTR  DevDataFile,
-                     IN LPWSTR  DeviceName,
-                     IN HANDLE  Driver);
-HSURF DrvEnableSurface(IN DHPDEV  PDev);
-BOOL DrvEndDoc(IN PSURFOBJ  SurfObj, 
-               IN ULONG  Flags); 
-ULONG DrvEscape(IN PSURFOBJ  SurfObj, 
-                IN ULONG  EscCode, 
-                IN ULONG  InputSize, 
-                IN PVOID  *InputData, 
-                IN ULONG  OutputSize, 
-                OUT PVOID  *OutputData); 
-BOOL DrvFillPath(IN PSURFOBJ  SurfObj, 
-                 IN PPATHOBJ  PathObj, 
-                 IN PCLIPOBJ  ClipObj, 
-                 IN PBRUSHOBJ  BrushObj, 
-                 IN PPOINTL  BrushOrg, 
-                 IN MIX  Mix, 
-                 IN ULONG  Options); 
-ULONG DrvFontManagement(IN PSURFOBJ  SurfObj, 
-                        IN PFONTOBJ  FontObj, 
-                        IN ULONG  Mode, 
-                        IN ULONG  InputSize, 
-                        IN PVOID  InputData, 
-                        IN ULONG  OutputSize, 
-                        OUT PVOID  OutputData); 
-VOID DrvFree(IN PVOID  Obj, 
-             IN ULONG  ID); 
-BOOL DrvGetDirectDrawInfo(IN DHPDEV  PDev,
-                          IN PDD_HALINFO  HalInfo,
-                          IN PDWORD  NumHeaps,
-                          IN PVIDEOMEMORY  List,
-                          IN PDWORD  NumFourCCCodes,
-                          IN PDWORD  FourCC);
-ULONG DrvGetGlyphMode(IN DHPDEV  DPev,
-                      IN PFONTOBJ  FontObj); 
-ULONG DrvGetModes(IN HANDLE Driver,
-                  IN ULONG DataSize,
-                  OUT PDEVMODEW DM);
-PVOID DrvGetTrueTypeFile(IN ULONG  FileNumber, 
-                         IN PULONG  Size); 
-BOOL DrvLineTo(IN PSURFOBJ SurfObj, 
-               IN PCLIPOBJ ClipObj, 
-               IN PBRUSHOBJ  BrushObj, 
-               IN LONG  x1, 
-               IN LONG  y1, 
-               IN LONG  x2, 
-               IN LONG  y2, 
-               IN PRECTL  Bounds, 
-               IN MIX  Mix); 
-ULONG DrvLoadFontFile(IN ULONG  FileNumber, 
-                      IN PVOID  ViewData, 
-                      IN ULONG  ViewSize, 
-                      IN ULONG  LangID); 
-VOID DrvMovePointer(IN PSURFOBJ  SurfObj, 
-                    IN LONG  x, 
-                    IN LONG  y, 
-                    IN PRECTL  RectL); 
-BOOL DrvNextBand(IN PSURFOBJ  SurfObj, 
-                 OUT PPOINTL  PointL); 
-BOOL DrvPaint(IN PSURFOBJ  SurfObj, 
-              IN PCLIPOBJ  ClipObj, 
-              IN PBRUSHOBJ  BrushObj, 
-              IN PPOINTL  BrushOrg, 
-              IN MIX  Mix); 
-BOOL DrvQueryAdvanceWidths(IN DHPDEV  DPev, 
-                           IN PFONTOBJ  FontObj, 
-                           IN ULONG  Mode, 
-                           IN HGLYPH  Glyph, 
-                           OUT PVOID  *Widths, 
-                           IN ULONG  NumGlyphs); 
-PIFIMETRICS DrvQueryFont(IN DHPDEV  PDev, 
-                         IN ULONG  FileNumber, 
-                         IN ULONG  FaceIndex, 
-                         IN PULONG  Identifier); 
-LONG DrvQueryFontCaps(IN ULONG  CapsSize, 
-                      OUT PULONG  CapsData); 
-LONG DrvQueryFontData(IN DHPDEV  DPev, 
-                      IN PFONTOBJ  FontObj, 
-                      IN ULONG  Mode, 
-                      IN HGLYPH  Glyph, 
-                      IN PGLYPHDATA  GlyphData, 
-                      IN PVOID  DataBuffer, 
-                      IN ULONG  BufferSize); 
-LONG DrvQueryFontFile(IN ULONG  FileNumber,
-                      IN ULONG  Mode,
-                      IN ULONG  BufSize,
-                      OUT PULONG  Buf);
-PVOID DrvQueryFontTree(IN DHPDEV  PDev,
-                       IN ULONG  FileNumber,
-                       IN ULONG  FaceIndex,
-                       IN ULONG  Mode,
-                       OUT ULONG  *ID);
-BOOL DrvQuerySpoolType(DHPDEV PDev, 
-                       LPWSTR SpoolType);
-LONG DrvQueryTrueTypeOutline(IN DHPDEV  PDev,
-                             IN PFONTOBJ  FontObj,
-                             IN HGLYPH  Glyph,
-                             IN BOOL  MetricsOnly,
-                             IN PGLYPHDATA  GlyphData,
-                             IN ULONG  BufSize,
-                             OUT PTTPOLYGONHEADER Polygons);
-LONG DrvQueryTrueTypeTable(IN ULONG  FileNumber,
-                           IN ULONG  Font,
-                           IN ULONG  Tag,
-                           IN PTRDIFF  Start,
-                           IN ULONG  BufSize,
-                           OUT BYTE  *Buf);
-BOOL DrvRealizeBrush(IN PBRUSHOBJ  BrushObj,
-                     IN PSURFOBJ  TargetSurface,
-                     IN PSURFOBJ  PatternSurface,
-                     IN PSURFOBJ  MaskSurface,
-                     IN PXLATEOBJ  XLateObj,
-                     IN ULONG  iHatch);
-BOOL DrvResetPDEV(IN DHPDEV  PDevOld, 
-                  IN DHPDEV  PDevNew);
-ULONG DrvSaveScreenBits(IN PSURFOBJ SurfObj,
-                        IN ULONG Mode,
-                        IN ULONG ID,
-                        IN PRECTL RectL);
-BOOL DrvSendPage(IN PSURFOBJ SurfObj);
-BOOL DrvSetPalette(IN DHPDEV  PDev,
-                   IN PPALOBJ  PaletteObj,
-                   IN ULONG  Flags,
-                   IN ULONG  Start,
-                   IN ULONG  NumColors);
-ULONG DrvSetPointerShape(IN PSURFOBJ  SurfObj,
-                         IN PSURFOBJ  MaskSurface,
-                         IN PSURFOBJ  ColorSurface,
-                         IN PXLATEOBJ  XLateObj,
-                         IN LONG  xHot,
-                         IN LONG  yHot,
-                         IN LONG  x,
-                         IN LONG  y,
-                         IN PRECTL  RectL,
-                         IN ULONG  Flags);
-BOOL DrvStartBanding(IN PSURFOBJ  SurfObj, 
-                     IN PPOINTL  PointL);
-BOOL DrvStartDoc(IN PSURFOBJ  SurfObj,
-                 IN LPWSTR  DocName,
-                 IN DWORD  JobID);
-BOOL DrvStartPage(IN PSURFOBJ  SurfObj);
+BOOL STDCALL
+DrvAssertMode(IN DHPDEV PDev,
+	      IN BOOL ShouldEnable);
+BOOL STDCALL
+DrvBitBlt(IN PSURFOBJ DestSurface,
+	  IN PSURFOBJ SrcSurface,
+	  IN PSURFOBJ MaskSurface,
+	  IN PCLIPOBJ ClipObj,
+	  IN PXLATEOBJ XLateObj,
+	  IN PRECTL DestRectL,
+	  IN PPOINTL SrcPointL,
+	  IN PPOINTL MaskPointL,
+	  IN PBRUSHOBJ BrushObj,
+	  IN PPOINTL BrushPointL,
+	  IN ROP4 RasterOp);
+VOID STDCALL
+DrvCompletePDEV(IN DHPDEV PDev,
+		IN HDEV Dev);
+BOOL STDCALL
+DrvCopyBits(OUT PSURFOBJ DestSurface,
+	    IN PSURFOBJ SrcSurface,
+	    IN PCLIPOBJ ClipObj,
+	    IN PXLATEOBJ XLateObj,
+	    IN PRECTL DestRectL,
+	    IN PPOINTL SrcPointL);
+HBITMAP STDCALL
+DrvCreateDeviceBitmap(IN DHPDEV DPev,
+		      IN SIZEL SizeL,
+		      IN ULONG Format);
+VOID STDCALL
+DrvDeleteDeviceBitmap(IN DHSURF Surface);
+LONG STDCALL
+DrvDescribePixelFormat(IN DHPDEV DPev,
+		       IN LONG PixelFormat,
+		       IN ULONG DescriptorSize,
+		       OUT PPIXELFORMATDESCRIPTOR PFD);
+VOID STDCALL
+DrvDestroyFont(IN PFONTOBJ FontObj);
+VOID STDCALL
+DrvDisableDirectDraw(IN DHPDEV PDev);
+VOID STDCALL
+DrvDisableDriver(VOID);
+VOID STDCALL
+DrvDisablePDEV(IN DHPDEV PDev);
+VOID STDCALL
+DrvDisableSurface(IN DHPDEV PDev);
+ULONG STDCALL
+DrvDitherColor(IN DHPDEV DPev,
+	       IN ULONG Mode,
+	       IN ULONG RGB,
+	       OUT PULONG DitherBits);
+ULONG STDCALL
+DrvDrawEscape(IN PSURFOBJ SurfObj,
+	      IN ULONG EscCode,
+	      IN PCLIPOBJ ClipObj,
+	      IN PRECTL RectL,
+	      IN ULONG InputSize,
+	      IN PVOID *InputData);
+BOOL STDCALL
+DrvEnableDirectDraw(IN DHPDEV PDev,
+		    IN PDD_CALLBACKS Callbacks,
+		    IN PDD_SURFACECALLBACKS SurfaceCallbacks,
+		    IN PDD_PALETTECALLBACKS PaletteCallbacks);
+BOOL STDCALL
+DrvEnableDriver(IN ULONG Version,
+		IN ULONG DEDSize,
+		OUT PDRVENABLEDATA DED);
+DHPDEV STDCALL
+DrvEnablePDEV(IN DEVMODEW *DM,
+	      IN LPWSTR LogAddress,
+	      IN ULONG PatternCount,
+	      OUT HSURF *SurfPatterns,
+	      IN ULONG CapsSize,
+	      OUT ULONG *DevCaps,
+	      IN ULONG DevInfoSize,
+	      OUT DEVINFO *DI,
+	      IN LPWSTR DevDataFile,
+	      IN LPWSTR DeviceName,
+	      IN HANDLE Driver);
+HSURF STDCALL
+DrvEnableSurface(IN DHPDEV PDev);
+BOOL STDCALL
+DrvEndDoc(IN PSURFOBJ SurfObj,
+	  IN ULONG Flags);
+ULONG STDCALL
+DrvEscape(IN PSURFOBJ SurfObj,
+	  IN ULONG EscCode,
+	  IN ULONG InputSize,
+	  IN PVOID *InputData,
+	  IN ULONG OutputSize,
+	  OUT PVOID *OutputData);
+BOOL STDCALL
+DrvFillPath(IN PSURFOBJ SurfObj,
+	    IN PPATHOBJ PathObj,
+	    IN PCLIPOBJ ClipObj,
+	    IN PBRUSHOBJ BrushObj,
+	    IN PPOINTL BrushOrg,
+	    IN MIX Mix,
+	    IN ULONG Options);
+ULONG STDCALL
+DrvFontManagement(IN PSURFOBJ SurfObj,
+		  IN PFONTOBJ FontObj,
+		  IN ULONG Mode,
+		  IN ULONG InputSize,
+		  IN PVOID InputData,
+		  IN ULONG OutputSize,
+		  OUT PVOID OutputData);
+VOID STDCALL
+DrvFree(IN PVOID Obj,
+	IN ULONG ID);
+BOOL STDCALL
+DrvGetDirectDrawInfo(IN DHPDEV PDev,
+		     IN PDD_HALINFO HalInfo,
+		     IN PDWORD NumHeaps,
+		     IN PVIDEOMEMORY List,
+		     IN PDWORD NumFourCCCodes,
+		     IN PDWORD FourCC);
+ULONG STDCALL
+DrvGetGlyphMode(IN DHPDEV DPev,
+		IN PFONTOBJ FontObj);
+ULONG STDCALL
+DrvGetModes(IN HANDLE Driver,
+	    IN ULONG DataSize,
+	    OUT PDEVMODEW DM);
+PVOID STDCALL
+DrvGetTrueTypeFile(IN ULONG FileNumber,
+		   IN PULONG Size);
+BOOL STDCALL
+DrvLineTo(IN PSURFOBJ SurfObj,
+	  IN PCLIPOBJ ClipObj,
+	  IN PBRUSHOBJ BrushObj,
+	  IN LONG x1,
+	  IN LONG y1,
+	  IN LONG x2,
+	  IN LONG y2,
+	  IN PRECTL Bounds,
+	  IN MIX Mix);
+ULONG STDCALL
+DrvLoadFontFile(IN ULONG FileNumber,
+		IN PVOID ViewData,
+		IN ULONG ViewSize,
+		IN ULONG LangID);
+VOID STDCALL
+DrvMovePointer(IN PSURFOBJ SurfObj,
+	       IN LONG x,
+	       IN LONG y,
+	       IN PRECTL RectL);
+BOOL STDCALL
+DrvNextBand(IN PSURFOBJ SurfObj,
+	    OUT PPOINTL PointL);
+BOOL STDCALL
+DrvPaint(IN PSURFOBJ SurfObj,
+	 IN PCLIPOBJ ClipObj,
+	 IN PBRUSHOBJ BrushObj,
+	 IN PPOINTL BrushOrg,
+	 IN MIX Mix);
+BOOL STDCALL
+DrvQueryAdvanceWidths(IN DHPDEV DPev,
+		      IN PFONTOBJ FontObj,
+		      IN ULONG Mode,
+		      IN HGLYPH Glyph,
+		      OUT PVOID *Widths,
+		      IN ULONG NumGlyphs);
+PIFIMETRICS STDCALL
+DrvQueryFont(IN DHPDEV PDev,
+	     IN ULONG FileNumber,
+	     IN ULONG FaceIndex,
+	     IN PULONG Identifier);
+LONG STDCALL
+DrvQueryFontCaps(IN ULONG CapsSize,
+		 OUT PULONG CapsData);
+LONG STDCALL
+DrvQueryFontData(IN DHPDEV DPev,
+		 IN PFONTOBJ FontObj,
+		 IN ULONG Mode,
+		 IN HGLYPH Glyph,
+		 IN PGLYPHDATA GlyphData,
+		 IN PVOID DataBuffer,
+		 IN ULONG BufferSize);
+LONG STDCALL
+DrvQueryFontFile(IN ULONG FileNumber,
+		 IN ULONG Mode,
+		 IN ULONG BufSize,
+		 OUT PULONG Buf);
+PVOID STDCALL
+DrvQueryFontTree(IN DHPDEV PDev,
+		 IN ULONG FileNumber,
+		 IN ULONG FaceIndex,
+		 IN ULONG Mode,
+		 OUT ULONG *ID);
+BOOL STDCALL
+DrvQuerySpoolType(DHPDEV PDev,
+		  LPWSTR SpoolType);
+LONG STDCALL
+DrvQueryTrueTypeOutline(IN DHPDEV PDev,
+			IN PFONTOBJ FontObj,
+			IN HGLYPH Glyph,
+			IN BOOL MetricsOnly,
+			IN PGLYPHDATA GlyphData,
+			IN ULONG BufSize,
+			OUT PTTPOLYGONHEADER Polygons);
+LONG STDCALL
+DrvQueryTrueTypeTable(IN ULONG FileNumber,
+		      IN ULONG Font,
+		      IN ULONG Tag,
+		      IN PTRDIFF Start,
+		      IN ULONG BufSize,
+		      OUT BYTE *Buf);
+BOOL STDCALL
+DrvRealizeBrush(IN PBRUSHOBJ BrushObj,
+		IN PSURFOBJ TargetSurface,
+		IN PSURFOBJ PatternSurface,
+		IN PSURFOBJ MaskSurface,
+		IN PXLATEOBJ XLateObj,
+		IN ULONG iHatch);
+BOOL STDCALL
+DrvResetPDEV(IN DHPDEV PDevOld,
+	     IN DHPDEV PDevNew);
+ULONG STDCALL
+DrvSaveScreenBits(IN PSURFOBJ SurfObj,
+		  IN ULONG Mode,
+		  IN ULONG ID,
+		  IN PRECTL RectL);
+BOOL STDCALL
+DrvSendPage(IN PSURFOBJ SurfObj);
+BOOL STDCALL
+DrvSetPalette(IN DHPDEV PDev,
+	      IN PPALOBJ PaletteObj,
+	      IN ULONG Flags,
+	      IN ULONG Start,
+	      IN ULONG NumColors);
+ULONG STDCALL
+DrvSetPointerShape(IN PSURFOBJ SurfObj,
+		   IN PSURFOBJ MaskSurface,
+		   IN PSURFOBJ ColorSurface,
+		   IN PXLATEOBJ XLateObj,
+		   IN LONG xHot,
+		   IN LONG yHot,
+		   IN LONG x,
+		   IN LONG y,
+		   IN PRECTL RectL,
+		   IN ULONG Flags);
+BOOL STDCALL
+DrvStartBanding(IN PSURFOBJ SurfObj,
+		IN PPOINTL PointL);
+BOOL STDCALL
+DrvStartDoc(IN PSURFOBJ SurfObj,
+	    IN LPWSTR DocName,
+	    IN DWORD JobID);
+BOOL STDCALL
+DrvStartPage(IN PSURFOBJ SurfObj);
 BOOL DrvStretchBlt(IN PSURFOBJ  DestSurface,
                    IN PSURFOBJ  SrcSurface,
                    IN PSURFOBJ  MaskSurface,
@@ -891,37 +941,51 @@ BOOL DrvStretchBlt(IN PSURFOBJ  DestSurface,
                    IN PRECTL  Src,
                    IN PPOINTL  Mask,
                    IN ULONG  Mode);
-BOOL DrvStrokeAndFillPath(IN PSURFOBJ  SurfObj,
-                          IN PPATHOBJ  PathObj,
-                          IN PCLIPOBJ  ClipObj,
-                          IN PXFORMOBJ  XFormObj,
-                          IN PBRUSHOBJ  StrokeBrush,
-                          IN PLINEATTRS  LineAttrs,
-                          IN PBRUSHOBJ  FillBrush,
-                          IN PPOINTL  BrushOrg,
-                          IN MIX  MixFill,
-                          IN ULONG  Options);
-BOOL DrvStrokePath(IN PSURFOBJ  SurfObj,
-                   IN PPATHOBJ  PathObj,
-                   IN PCLIPOBJ  PClipObj,
-                   IN PXFORMOBJ  XFormObj,
-                   IN PBRUSHOBJ  BrushObj,
-                   IN PPOINTL  BrushOrg,
-                   IN PLINEATTRS  LineAttrs,
-                   IN MIX  Mix);
-VOID DrvSynchronize(IN DHPDEV PDev,
-                    IN PRECTL RectL);
-BOOL DrvTextOut(IN PSURFOBJ  SurfObj,
-                IN PSTROBJ  StrObj,
-                IN PFONTOBJ  FontObj,
-                IN PCLIPOBJ  ClipObj,
-                IN PRECTL    ExtraRect,
-                IN PRECTL    OpaqueRect,
-                IN PBRUSHOBJ  ForegroundBrush,
-                IN PBRUSHOBJ  OpaqueBrush,
-                IN PPOINTL  OrgPoint,
-                IN MIX  Mix);
-BOOL DrvUnloadFontFile(IN ULONG  FileNumber);
+BOOL STDCALL
+DrvStrokeAndFillPath(IN PSURFOBJ SurfObj,
+		     IN PPATHOBJ PathObj,
+		     IN PCLIPOBJ ClipObj,
+		     IN PXFORMOBJ XFormObj,
+		     IN PBRUSHOBJ StrokeBrush,
+		     IN PLINEATTRS LineAttrs,
+		     IN PBRUSHOBJ FillBrush,
+		     IN PPOINTL BrushOrg,
+		     IN MIX MixFill,
+		     IN ULONG Options);
+BOOL STDCALL
+DrvStrokePath(IN PSURFOBJ SurfObj,
+	      IN PPATHOBJ PathObj,
+	      IN PCLIPOBJ PClipObj,
+	      IN PXFORMOBJ XFormObj,
+	      IN PBRUSHOBJ BrushObj,
+	      IN PPOINTL BrushOrg,
+	      IN PLINEATTRS LineAttrs,
+	      IN MIX Mix);
+VOID STDCALL
+DrvSynchronize(IN DHPDEV PDev,
+	       IN PRECTL RectL);
+BOOL STDCALL
+DrvTextOut(IN PSURFOBJ SurfObj,
+	   IN PSTROBJ StrObj,
+	   IN PFONTOBJ FontObj,
+	   IN PCLIPOBJ ClipObj,
+	   IN PRECTL ExtraRect,
+	   IN PRECTL OpaqueRect,
+	   IN PBRUSHOBJ ForegroundBrush,
+	   IN PBRUSHOBJ OpaqueBrush,
+	   IN PPOINTL OrgPoint,
+	   IN MIX Mix);
+BOOL STDCALL
+DrvTransparentBlt(PSURFOBJ Dest,
+		  PSURFOBJ Source,
+		  PCLIPOBJ Clip,
+		  PXLATEOBJ ColorTranslation,
+		  PRECTL DestRect,
+		  PRECTL SourceRect,
+		  ULONG TransparentColor,
+		  ULONG Reserved);
+BOOL STDCALL
+DrvUnloadFontFile(IN ULONG FileNumber);
 
 /*  DDI --> GDI calls  */
 PVOID BRUSHOBJ_pvAllocRbrush(IN PBRUSHOBJ  BrushObj, 
@@ -944,16 +1008,19 @@ EngAcquireSemaphore
 /* FIXME: find correct defines for following symbols  */
 #define  FL_ZERO_MEMORY  1
 
-PVOID  APIENTRY  EngAllocMem(ULONG  Flags,
-                             ULONG  MemSize,
-                             ULONG  Tag);
+PVOID STDCALL
+EngAllocMem(ULONG Flags,
+	    ULONG MemSize,
+	    ULONG Tag);
 
-PVOID STDCALL EngAllocUserMem(ULONG cj,
-                              ULONG tag);
+PVOID STDCALL
+EngAllocUserMem(ULONG cj,
+		ULONG tag);
 
-BOOL EngAssociateSurface(IN HSURF  Surface,
-                         IN HDEV  Dev,
-                         IN ULONG  Hooks);
+BOOL
+EngAssociateSurface(IN HSURF Surface,
+		    IN HDEV Dev,
+		    IN ULONG Hooks);
 
 /*
 EngBitBlt
@@ -962,32 +1029,36 @@ EngComputeGlyphSet
 EngCopyBits
 */
 
-HBITMAP EngCreateBitmap(IN SIZEL  Size,
-                        IN LONG  Width,
-                        IN ULONG  Format,
-                        IN ULONG  Flags,
-                        IN PVOID  Bits);
+HBITMAP
+EngCreateBitmap(IN SIZEL Size,
+		IN LONG Width,
+		IN ULONG Format,
+		IN ULONG Flags,
+		IN PVOID Bits);
 
 /*
 EngCreateClip
 EngCreateDeviceBitmap
 */
 
-HSURF EngCreateDeviceSurface(IN DHSURF  Surface,
-                             IN SIZEL  Size,
-                             IN ULONG  FormatVersion);
+HSURF
+EngCreateDeviceSurface(IN DHSURF Surface,
+		       IN SIZEL Size,
+		       IN ULONG FormatVersion);
 
 /*
 EngCreateDriverObj
 EngCreateEvent
 */
 
-HPALETTE EngCreatePalette(IN ULONG  Mode,
-                          IN ULONG  NumColors,
-                          IN PULONG  *Colors, 
-                          IN ULONG  Red, 
-                          IN ULONG  Green, 
-                          IN ULONG  Blue); 
+HPALETTE
+EngCreatePalette(IN ULONG Mode,
+		 IN ULONG NumColors,
+		 IN PULONG *Colors,
+		 IN ULONG Red,
+		 IN ULONG Green,
+		 IN ULONG Blue);
+
 /*
 EngCreatePath
 EngCreateSemaphore
@@ -995,24 +1066,10 @@ EngCreateWnd
 EngDebugBreak = NTOSKRNL.DbgBreakPoint
 */
 
-VOID  APIENTRY  EngDebugPrint(PCHAR  StandardPrefix,
-                              PCHAR  DebugMessage,
-                              va_list  ArgList);
-
-HANDLE STDCALL EngLoadImage(LPWSTR DriverName);
-
-DWORD APIENTRY EngDeviceIoControl(
-   HANDLE  hDevice,
-   DWORD   dwIoControlCode,
-   LPVOID  lpInBuffer,
-   DWORD   nInBufferSize,
-   LPVOID  lpOutBuffer,
-   DWORD   nOutBufferSize,
-   DWORD *lpBytesReturned);
-
-VOID STDCALL EngFreeMem(PVOID Mem);
-
-VOID STDCALL EngFreeUserMem(PVOID pv);
+VOID APIENTRY
+EngDebugPrint(PCHAR StandardPrefix,
+	      PCHAR DebugMessage,
+	      va_list ArgList);
 
 /*
 EngDeleteClip
@@ -1023,11 +1080,33 @@ EngDeletePath
 EngDeleteSemaphore
 EngDeleteSurface
 EngDeleteWnd
+*/
+
+
+DWORD APIENTRY
+EngDeviceIoControl(HANDLE hDevice,
+		   DWORD dwIoControlCode,
+		   LPVOID lpInBuffer,
+		   DWORD nInBufferSize,
+		   LPVOID lpOutBuffer,
+		   DWORD nOutBufferSize,
+		   DWORD *lpBytesReturned);
+
+/*
 EngEnumForms
 EngEraseSurface
 EngFillPath
 EngFindImageProcAddress
 EngFindResource
+*/
+
+VOID STDCALL
+EngFreeMem(PVOID Mem);
+
+VOID STDCALL
+EngFreeUserMem(PVOID pv);
+
+/*
 EngFreeModule
 EngGetCurrentCodePage
 EngGetDriverName
@@ -1041,7 +1120,12 @@ EngGetPrinterDataFileName
 EngGetProcessHandle
 EngGetType1FontList
 EngLineTo
-EngLoadImage
+*/
+
+HANDLE STDCALL
+EngLoadImage(LPWSTR DriverName);
+
+/*
 EngLoadModule
 EngLoadModuleForWrite
 EngLockDriverObj

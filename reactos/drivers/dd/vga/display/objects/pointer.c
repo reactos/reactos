@@ -33,7 +33,12 @@ BOOL InitPointer(PPDEV ppdev)
   return TRUE;
 }
 
-VOID VGADDIMovePointer(PSURFOBJ pso, LONG x, LONG y, PRECTL prcl)
+
+VOID STDCALL
+DrvMovePointer(IN PSURFOBJ pso,
+	       IN LONG x,
+	       IN LONG y,
+	       IN PRECTL prcl)
 {
   PPDEV ppdev = (PPDEV)pso->dhpdev;
 
@@ -53,9 +58,18 @@ VOID VGADDIMovePointer(PSURFOBJ pso, LONG x, LONG y, PRECTL prcl)
 //  if (prcl != NULL) ComputePointerRect(ppdev, prcl);
 }
 
-ULONG VGADDISetPointerShape(PSURFOBJ pso, PSURFOBJ psoMask, PSURFOBJ psoColor, PXLATEOBJ pxlo,
-			    LONG xHot, LONG yHot, LONG x, LONG y,
-			    PRECTL prcl, ULONG fl)
+
+ULONG STDCALL
+DrvSetPointerShape(PSURFOBJ pso,
+		   PSURFOBJ psoMask,
+		   PSURFOBJ psoColor,
+		   PXLATEOBJ pxlo,
+		   LONG xHot,
+		   LONG yHot,
+		   LONG x,
+		   LONG y,
+		   PRECTL prcl,
+		   ULONG fl)
 {
   PPDEV ppdev = (PPDEV)pso->dhpdev;
   PCHAR DFBTmp;

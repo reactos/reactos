@@ -2,9 +2,16 @@
 #include "../vgavideo/vgavideo.h"
 
 
-BOOL VGADDILineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
-                  LONG x1, LONG y1, LONG x2, LONG y2,
-                  RECTL *RectBounds, MIX mix)
+BOOL STDCALL
+DrvLineTo(SURFOBJ *Surface,
+	  CLIPOBJ *Clip,
+	  BRUSHOBJ *Brush,
+	  LONG x1,
+	  LONG y1,
+	  LONG x2,
+	  LONG y2,
+	  RECTL *RectBounds,
+	  MIX mix)
 
 // FIXME: Use ClipObj and RectBounds to clip the line where required
 // FIXME: Use Mix to perform ROPs

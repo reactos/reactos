@@ -102,9 +102,13 @@ BOOL VGADDIPaintRgn(SURFOBJ *Surface, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix
    }
 }
 
-BOOL VGADDIPaint(IN SURFOBJ *Surface, IN CLIPOBJ *ClipRegion,
-                 IN BRUSHOBJ *Brush,  IN POINTL *BrushOrigin,
-                 IN MIX  Mix)
+
+BOOL STDCALL
+DrvPaint(IN SURFOBJ *Surface,
+	 IN CLIPOBJ *ClipRegion,
+	 IN BRUSHOBJ *Brush,
+	 IN POINTL *BrushOrigin,
+	 IN MIX Mix)
 {
    ULONG iSolidColor;
 
