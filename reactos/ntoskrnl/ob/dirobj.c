@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.20 2003/09/25 20:07:46 ekohl Exp $
+/* $Id: dirobj.c,v 1.21 2003/10/04 07:48:11 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -147,7 +147,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
     PUCHAR              FirstFree = (PUCHAR) Buffer;
 
 
-    DPRINT("NtQueryDirectoryObject(DirObjHandle %x)\n", DirObjHandle);
+    DPRINT("NtQueryDirectoryObject(DirectoryHandle %x)\n", DirectoryHandle);
 
     /* FIXME: if previous mode == user, use ProbeForWrite
      * on user params. */
