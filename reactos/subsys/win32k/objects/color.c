@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.21 2003/08/20 07:45:02 gvg Exp $ */
+/* $Id: color.c,v 1.22 2003/08/24 21:45:40 fireball Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -335,9 +335,9 @@ UINT STDCALL NtGdiRealizePalette(HDC  hDC)
   	return 0;
 
   palPtr = (PPALOBJ)AccessUserObject((ULONG)dc->w.hPalette);
-  SurfGDI = (PSURFGDI)AccessInternalObjectFromUserObject(dc->Surface);
+  SurfGDI = (PSURFGDI)AccessInternalObject((ULONG)dc->Surface);
   systemPalette = NtGdiGetStockObject((INT)DEFAULT_PALETTE);
-  sysPtr = (PPALOBJ)AccessInternalObject((ULONG)systemPalette);
+  sysPtr = (PPALOBJ)AccessUserObject((ULONG)systemPalette);
   palGDI = (PPALGDI)AccessInternalObject((ULONG)dc->w.hPalette);
   sysGDI = (PPALGDI)AccessInternalObject((ULONG)systemPalette);
 
@@ -369,7 +369,7 @@ UINT STDCALL NtGdiRealizePalette(HDC  hDC)
   }
 
 //  GDI_ReleaseObj(dc->w.hPalette);
-//  GDI_ReleaseObj(hdc);
+  DC_UnlockDc(hDC);
 
   return realized;
 }
