@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.56 2004/11/02 21:51:25 weiden Exp $
+/* $Id: thread.c,v 1.57 2004/12/04 19:30:09 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -769,6 +769,29 @@ VOID STDCALL
 SetThreadUILanguage(DWORD Unknown1)
 {
   DPRINT1("SetThreadUILanguage(0x%x) unimplemented!\n", Unknown1);
+}
+
+static void CALLBACK
+IntCallUserApc(PVOID Function, PVOID dwData, PVOID Argument3)
+{
+   PAPCFUNC pfnAPC = (PAPCFUNC)Function;
+   pfnAPC((ULONG_PTR)dwData);
+}
+
+/*
+ * @implemented
+ */
+DWORD STDCALL
+QueueUserAPC(PAPCFUNC pfnAPC, HANDLE hThread, ULONG_PTR dwData)
+{
+  NTSTATUS Status;
+
+  Status = NtQueueApcThread(hThread, IntCallUserApc, pfnAPC,
+                            (PVOID)dwData, NULL);
+  if (Status)
+    SetLastErrorByStatus(Status);
+
+  return NT_SUCCESS(Status);
 }
 
 /* EOF */
