@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.65 2004/03/28 21:46:26 weiden Exp $ */
+/* $Id: bitmaps.c,v 1.66 2004/04/03 21:25:20 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -28,6 +28,7 @@
 //#include <win32k/debug.h>
 #include "../eng/handle.h"
 #include <include/inteng.h>
+#include <include/intgdi.h>
 #include <include/eng.h>
 #include <include/error.h>
 #include <include/surface.h>
@@ -280,11 +281,12 @@ NtGdiTransparentBlt(
   PDC DCDest, DCSrc;
   RECT rcDest, rcSrc;
   PSURFOBJ SurfDest, SurfSrc;
-  PSURFGDI SurfGDIDest, SurfGDISrc;
   PXLATEOBJ XlateObj;
   HPALETTE SourcePalette, DestPalette;
   PPALGDI PalDestGDI, PalSourceGDI;
   USHORT PalDestMode, PalSrcMode;
+  ULONG TransparentColor;
+  BOOL Ret;
   
   if(!(DCDest = DC_LockDc(hdcDst)))
   {
@@ -342,32 +344,42 @@ NtGdiTransparentBlt(
   }
   PALETTE_UnlockPalette(SourcePalette);
   
-  XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalDestMode, PalSrcMode, DestPalette, SourcePalette);
+  if((XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalDestMode, PalSrcMode, DestPalette, SourcePalette)))
+  {
+    /* FIXME - is color translation right? */
+    TransparentColor = XLATEOBJ_iXlate(XlateObj, (ULONG)TransColor);
+  }
+  else
+  {
+    /* FIXME - what should be done here? */
+    TransparentColor = (ULONG)TransColor;
+  }
   
   SurfDest = (PSURFOBJ)AccessUserObject((ULONG)DCDest->Surface);
   ASSERT(SurfDest);
-  SurfGDIDest = (PSURFGDI)AccessInternalObjectFromUserObject(SurfDest);
-  ASSERT(SurfGDIDest);
   SurfSrc = (PSURFOBJ)AccessUserObject((ULONG)DCSrc->Surface);
   ASSERT(SurfSrc);
-  SurfGDISrc = (PSURFGDI)AccessInternalObjectFromUserObject(SurfSrc);
-  ASSERT(SurfGDISrc);
   
   rcDest.left = xDst;
   rcDest.top = yDst;
   rcDest.right = rcDest.left + cxDst;
-  rcDest.bottom = rcDest.bottom + cyDst;
+  rcDest.bottom = rcDest.top + cyDst;
   rcSrc.left = xSrc;
   rcSrc.top = ySrc;
-  rcSrc.right = rcDest.left + cxSrc;
-  rcSrc.bottom = rcDest.bottom + cySrc;
+  rcSrc.right = rcSrc.left + cxSrc;
+  rcSrc.bottom = rcSrc.top + cySrc;
   
   if((cxDst != cxSrc) || (cyDst != cySrc))
   {
     /* FIXME - Create a temporary bitmap and stretchblt it */
+    DPRINT1("TransparentBlt() does not support stretching!\n");
+    goto done;
   }
   
+  Ret = IntTransparentBlt(SurfDest, SurfSrc, DCDest->CombinedClip, XlateObj, &rcDest, &rcSrc, 
+                          TransparentColor, 0);
   
+done:
   DC_UnlockDc(hdcSrc);
   if(hdcDst != hdcSrc)
   {
@@ -377,7 +389,7 @@ NtGdiTransparentBlt(
   {
     EngDeleteXlate(XlateObj);
   }
-  return TRUE;
+  return Ret;
 }
 
 HBITMAP STDCALL

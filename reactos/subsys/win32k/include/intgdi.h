@@ -121,5 +121,17 @@ IntGdiCombineTransform(LPXFORM XFormResult,
                        LPXFORM xform1,
                        LPXFORM xform2);
 
+/* Bitmap functions */
+
+BOOL FASTCALL
+IntTransparentBlt(PSURFOBJ Dest,
+                  PSURFOBJ Source,
+                  PCLIPOBJ Clip,
+                  PXLATEOBJ ColorTranslation,
+                  PRECTL DestRect,
+                  PRECTL SourceRect,
+                  ULONG TransparentColor,
+                  ULONG Reserved);
+
 #endif /* _WIN32K_INTGDI_H */
 

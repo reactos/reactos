@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: transblt.c,v 1.12 2004/03/05 09:02:42 hbirr Exp $
+/* $Id: transblt.c,v 1.13 2004/04/03 21:25:20 weiden Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -35,12 +35,16 @@
 #include <include/eng.h>
 #include <include/object.h>
 #include <include/surface.h>
+#include <include/mouse.h>
+#include <include/inteng.h>
 
 #include "brush.h"
 #include "clip.h"
 #include "objects.h"
 
-#include <include/mouse.h>
+#define NDEBUG
+#include <win32k/debug1.h>
+
 
 BOOL STDCALL
 EngTransparentBlt(PSURFOBJ Dest,
@@ -52,73 +56,84 @@ EngTransparentBlt(PSURFOBJ Dest,
 		  ULONG TransparentColor,
 		  ULONG Reserved)
 {
-  PSURFGDI DestGDI   = (PSURFGDI)AccessInternalObjectFromUserObject(Dest),
-           SourceGDI = (PSURFGDI)AccessInternalObjectFromUserObject(Source);
-  HSURF     hTemp;
-  PSURFOBJ  TempSurf;
-  POINTL    TempPoint, SourcePoint;
-  RECTL     TempRect;
-  SIZEL     TempSize;
-  BOOLEAN   ret;
-  LONG dx, dy, sx, sy;
+  DPRINT1("EngTransparentBlt() unimplemented!\n");
+  return FALSE;
+}
 
-  dx = abs(DestRect->right  - DestRect->left);
-  dy = abs(DestRect->bottom - DestRect->top);
-
-  sx = abs(SourceRect->right  - SourceRect->left);
-  sy = abs(SourceRect->bottom - SourceRect->top);
-
-  if(sx<dx) dx = sx;
-  if(sy<dy) dy = sy;
-
-  MouseSafetyOnDrawStart(Source, SourceGDI, SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom);
-  MouseSafetyOnDrawStart(Dest, DestGDI, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
-
-  if(DestGDI->TransparentBlt != NULL)
+BOOL FASTCALL
+IntTransparentBlt(PSURFOBJ Dest,
+                  PSURFOBJ Source,
+                  PCLIPOBJ Clip,
+                  PXLATEOBJ ColorTranslation,
+                  PRECTL DestRect,
+                  PRECTL SourceRect,
+                  ULONG TransparentColor,
+                  ULONG Reserved)
+{
+  BOOL Ret;
+  RECTL OutputRect, InputClippedRect;
+  PSURFGDI SurfGDIDest, SurfGDISrc;
+  
+  InputClippedRect = *DestRect;
+  if(InputClippedRect.right < InputClippedRect.left)
   {
-    // The destination is device managed, therefore get the source into a format compatible surface
-    TempPoint.x = 0;
-    TempPoint.y = 0;
-    TempRect.top    = 0;
-    TempRect.left   = 0;
-    TempRect.bottom = dy;
-    TempRect.right  = dx;
-    TempSize.cx = TempRect.right;
-    TempSize.cy = TempRect.bottom;
-
-    hTemp = EngCreateBitmap(TempSize,
-			    DIB_GetDIBWidthBytes(dx, BitsPerFormat(Dest->iBitmapFormat)),
-			    Dest->iBitmapFormat, 0, NULL);
-    TempSurf = (PSURFOBJ)AccessUserObject((ULONG)hTemp);
-
-    SourcePoint.x = SourceRect->left;
-    SourcePoint.y = SourceRect->top;
-
-    // FIXME: Skip creating a TempSurf if we have the same BPP and palette
-    EngBitBlt(TempSurf, Source, NULL, NULL, ColorTranslation, &TempRect, &SourcePoint, NULL, NULL, NULL, 0);
-
-    IntLockGDIDriver(DestGDI);
-    ret = DestGDI->TransparentBlt(Dest, TempSurf, Clip, NULL, DestRect, SourceRect,
-                                  TransparentColor, Reserved);
-    IntUnLockGDIDriver(DestGDI);
-
-    MouseSafetyOnDrawEnd(Dest, DestGDI);
-    MouseSafetyOnDrawEnd(Source, SourceGDI);
-
-    if(EngDeleteSurface(hTemp) == FALSE)
+    InputClippedRect.left = DestRect->right;
+    InputClippedRect.right = DestRect->left;
+  }
+  if(InputClippedRect.bottom < InputClippedRect.top)
+  {
+    InputClippedRect.top = DestRect->bottom;
+    InputClippedRect.bottom = DestRect->top;
+  }
+  
+  /* Clip against the bounds of the clipping region so we won't try to write
+   * outside the surface */
+  if(Clip)
+  {
+    if(!EngIntersectRect(&OutputRect, &InputClippedRect, &Clip->rclBounds))
     {
-      DbgPrint("Win32k: Failed to delete surface: %d\n", hTemp);	
-      return FALSE;
+      return TRUE;
     }
-
-    return ret;
+  }
+  else
+  {
+    OutputRect = *DestRect;
+  }
+  
+  if(Source != Dest)
+  {
+    SurfGDISrc = (PSURFGDI)AccessInternalObjectFromUserObject(Source);
+    ASSERT(SurfGDISrc);
+    MouseSafetyOnDrawStart(Source, SurfGDISrc, SourceRect->left, SourceRect->top, 
+                           (SourceRect->left + abs(SourceRect->right - SourceRect->left)),
+                           (SourceRect->top + abs(SourceRect->bottom - SourceRect->top)));
+  }
+  SurfGDIDest = (PSURFGDI)AccessInternalObjectFromUserObject(Dest);
+  ASSERT(SurfGDIDest);
+  MouseSafetyOnDrawStart(Dest, SurfGDIDest, OutputRect.left, OutputRect.top,
+                         OutputRect.right, OutputRect.bottom);
+  
+  if(SurfGDIDest->TransparentBlt)
+  {
+    Ret = SurfGDIDest->TransparentBlt(Dest, Source, Clip, ColorTranslation, &OutputRect, 
+                                      SourceRect, TransparentColor, Reserved);
+  }
+  else
+    Ret = FALSE;
+  
+  if(!Ret)
+  {
+    Ret = EngTransparentBlt(Dest, Source, Clip, ColorTranslation, &OutputRect, 
+                            SourceRect, TransparentColor, Reserved);
+  }
+  
+  MouseSafetyOnDrawEnd(Dest, SurfGDIDest);
+  if(Source != Dest)
+  {
+    MouseSafetyOnDrawEnd(Source, SurfGDISrc);
   }
 
-  // Simulate a transparent blt
-
-  MouseSafetyOnDrawEnd(Dest, DestGDI);
-  MouseSafetyOnDrawEnd(Source, SourceGDI);
-
-  return TRUE;
+  return Ret;
 }
+
 /* EOF */
