@@ -3,6 +3,10 @@ Signature = "$ReactOS$"
 
 [AddReg]
 
+; Default computer name settings
+HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName",,0x00000012
+HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName","ComputerName",0x00000002,"COMPUTERNAME"
+
 ; NLS Codepage settings
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","10000",0x00000000,"c_10000.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","1252",0x00000000,"c_1252.nls"
