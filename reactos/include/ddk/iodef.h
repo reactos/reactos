@@ -225,11 +225,12 @@ enum
 /*
  * File disposition values
  */
-#define  FILE_CREATED         0x0000
+#define  FILE_SUPERSEDED      0x0000
 #define  FILE_OPENED          0x0001
-#define  FILE_OVERWRITTEN     0x0002
-#define  FILE_SUPERSEDED      0x0003
-#define  FILE_DOES_NOT_EXIST  0x0004
+#define  FILE_CREATED         0x0002
+#define  FILE_OVERWRITTEN     0x0003
+#define  FILE_EXISTS          0x0004
+#define  FILE_DOES_NOT_EXIST  0x0005
 
 
 /*
