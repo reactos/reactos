@@ -270,4 +270,9 @@ RtlFreeUserThreadStack(HANDLE ProcessHandle,
   return(Status);
 }
 
+NTSTATUS STDCALL RtlExitUserThread(NTSTATUS Status)
+{
+ return NtTerminateThread(NtCurrentThread(), Status);
+}
+
 /* EOF */

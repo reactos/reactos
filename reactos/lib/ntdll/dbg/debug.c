@@ -1,4 +1,4 @@
-/* $Id: debug.c,v 1.7 2002/11/03 20:01:06 chorns Exp $
+/* $Id: debug.c,v 1.8 2003/03/31 22:32:18 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -167,6 +167,42 @@ DbgUiWaitStateChange(ULONG Unknown1,
 		     ULONG Unknown2)
 {
   return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS STDCALL DbgUiRemoteBreakin(VOID)
+{
+ DbgBreakPoint();
+
+ RtlExitUserThread(0);
+
+ DbgBreakPoint();
+}
+
+NTSTATUS STDCALL DbgUiIssueRemoteBreakin(HANDLE Process)
+{
+ HANDLE hThread;
+ CLIENT_ID cidClientId;
+ NTSTATUS nErrCode;
+
+ nErrCode = RtlCreateUserThread
+ (
+  Process,
+  NULL,
+  FALSE,
+  0,
+  NULL,
+  NULL,
+  (PTHREAD_START_ROUTINE)DbgUiRemoteBreakin,
+  NULL,
+  &hThread,
+  &cidClientId
+ );
+
+ if(!NT_SUCCESS(nErrCode)) return nErrCode;
+
+ NtClose(hThread);
+
+ return STATUS_SUCCESS;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.83 2003/03/26 15:19:28 ekohl Exp $
+; $Id: ntdll.edf,v 1.84 2003/03/31 22:32:18 hyperion Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -28,6 +28,8 @@ DbgSsHandleKmApiMsg=DbgSsHandleKmApiMsg@8
 DbgSsInitialize=DbgSsInitialize@16
 DbgUiConnectToDbg=DbgUiConnectToDbg@0
 DbgUiContinue=DbgUiContinue@8
+DbgUiIssueRemoteBreakin=DbgUiIssueRemoteBreakin@4
+DbgUiRemoteBreakin=DbgUiRemoteBreakin@0
 DbgUiWaitStateChange=DbgUiWaitStateChange@8
 DbgUserBreakPoint=DbgUserBreakPoint@0
 ;KiRaiseUserExceptionDispatcher
@@ -388,6 +390,7 @@ RtlEqualSid=RtlEqualSid@8
 RtlEqualString=RtlEqualString@12
 RtlEqualUnicodeString=RtlEqualUnicodeString@12
 RtlEraseUnicodeString=RtlEraseUnicodeString@4
+RtlExitUserThread=RtlExitUserThread@4
 RtlExpandEnvironmentStrings_U=RtlExpandEnvironmentStrings_U@16
 ;RtlExtendHeap
 RtlExtendedIntegerMultiply=RtlExtendedIntegerMultiply@12
