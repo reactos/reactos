@@ -606,8 +606,13 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
       YSize = GetSystemMetrics(SM_CYSIZE) * GetSystemMetrics(SM_CYBORDER);
       if (!PtInRect(&WindowRect, Point))
       {
+         BOOL ThickFrame;
+         
+         ThickFrame = (Style & WS_THICKFRAME);
          if (Point.y < WindowRect.top)
          {
+            if(!ThickFrame)
+              return HTBORDER;
             if (Point.x < (WindowRect.left + XSize))
                return HTTOPLEFT;
             if (Point.x >= (WindowRect.right - XSize))
@@ -616,6 +621,8 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
          }
          if (Point.y >= WindowRect.bottom)
          {
+            if(!ThickFrame)
+              return HTBORDER;
             if (Point.x < (WindowRect.left + XSize))
                return HTBOTTOMLEFT;
             if (Point.x >= (WindowRect.right - XSize))
@@ -624,6 +631,8 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
          }
          if (Point.x < WindowRect.left)
          {
+            if(!ThickFrame)
+              return HTBORDER;
             if (Point.y < (WindowRect.top + YSize))
                return HTTOPLEFT;
             if (Point.y >= (WindowRect.bottom - YSize))
@@ -632,6 +641,8 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
          }
          if (Point.x >= WindowRect.right)
          {
+            if(!ThickFrame)
+              return HTBORDER;
             if (Point.y < (WindowRect.top + YSize))
                return HTTOPRIGHT;
             if (Point.y >= (WindowRect.bottom - YSize))
