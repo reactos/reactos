@@ -54,8 +54,8 @@ DLLS_CPL = cpl
 DLLS_SHELLEXT = shellext
 
 # User mode libraries
-# advpack libpcap packet epsapi
-DLLS = acledit aclui advapi32 cabinet cards comctl32 crtdll comdlg32 d3d8thk dbghelp expat fmifs freetype \
+# libpcap packet epsapi
+DLLS = acledit aclui advapi32 advpack cabinet cards comctl32 crtdll comdlg32 d3d8thk dbghelp expat fmifs freetype \
 	gdi32 gdiplus glu32 hid imagehlp imm32 iphlpapi kernel32 lzexpand mesa32 midimap mmdrv mpr msacm msafd \
 	msgina msi msimg32 msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg olepro32 opengl32 \
 	packet psapi riched20 richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi snmpapi syssetup twain \
