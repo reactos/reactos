@@ -20,6 +20,7 @@
  */
 
 #include <stdarg.h>
+#include <malloc.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -28,17 +29,11 @@
 
 
  /* copy data structure for tray notifications */
-typedef struct TrayNotifyCDSA {
+typedef struct TrayNotifyCDS_Dummy {
 	DWORD	cookie;
 	DWORD	notify_code;
-	NOTIFYICONDATAA	nicon_data;
-} TrayNotifyCDSA;
-
-typedef struct TrayNotifyCDSW {
-	DWORD	cookie;
-	DWORD	notify_code;
-	NOTIFYICONDATAW	nicon_data;
-} TrayNotifyCDSW;
+	DWORD	nicon_data[1];	// placeholder for NOTIFYICONDATA structure
+} TrayNotifyCDS_Dummy;
 
 
 /*************************************************************************
@@ -49,17 +44,19 @@ BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
 {
 	HWND hwnd;
 	COPYDATASTRUCT data;
-	TrayNotifyCDSA notify_data;
+	TrayNotifyCDS_Dummy* pnotify_data;
 
 	BOOL ret = FALSE;
 
-	notify_data.cookie = 1;
-	notify_data.notify_code = dwMessage;
-	memcpy(&notify_data.nicon_data, pnid, sizeof(NOTIFYICONDATAA));
+	pnotify_data = (TrayNotifyCDS_Dummy*) alloca(sizeof(TrayNotifyCDS_Dummy)-sizeof(DWORD)+pnid->cbSize);
+
+	pnotify_data->cookie = 1;
+	pnotify_data->notify_code = dwMessage;
+	memcpy(&pnotify_data->nicon_data, pnid, pnid->cbSize);
 
 	data.dwData = 1;
-	data.cbData = sizeof(notify_data);
-	data.lpData = &notify_data;
+	data.cbData = pnid->cbSize;
+	data.lpData = pnotify_data;
 
 	for(hwnd=0; hwnd=FindWindowExA(0, hwnd, "Shell_TrayWnd", NULL); ) {
 		if (SendMessageA(hwnd, WM_COPYDATA, (WPARAM)pnid->hWnd, (LPARAM)&data))
@@ -76,17 +73,19 @@ BOOL WINAPI Shell_NotifyIconW(DWORD dwMessage, PNOTIFYICONDATAW pnid)
 {
 	HWND hwnd;
 	COPYDATASTRUCT data;
-	TrayNotifyCDSW notify_data;
+	TrayNotifyCDS_Dummy* pnotify_data;
 
 	BOOL ret = FALSE;
 
-	notify_data.cookie = 1;
-	notify_data.notify_code = dwMessage;
-	memcpy(&notify_data.nicon_data, pnid, sizeof(NOTIFYICONDATAW));
+	pnotify_data = (TrayNotifyCDS_Dummy*) alloca(sizeof(TrayNotifyCDS_Dummy)-sizeof(DWORD)+pnid->cbSize);
+
+	pnotify_data->cookie = 1;
+	pnotify_data->notify_code = dwMessage;
+	memcpy(&pnotify_data->nicon_data, pnid, pnid->cbSize);
 
 	data.dwData = 1;
-	data.cbData = sizeof(notify_data);
-	data.lpData = &notify_data;
+	data.cbData = pnid->cbSize;
+	data.lpData = pnotify_data;
 
 	for(hwnd=0; hwnd=FindWindowExW(0, hwnd, L"Shell_TrayWnd", NULL); ) {
 		if (SendMessageW(hwnd, WM_COPYDATA, (WPARAM)pnid->hWnd, (LPARAM)&data))
