@@ -167,9 +167,9 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
     }
     } _SEH_HANDLE {
     
-        DPRINT1("BOO!\n");
-        return 0;
+        DPRINT1("Exception caught in MsgMemorySize()! Status: 0x%x\n", _SEH_GetExceptionCode());
     } _SEH_END;
+    return 0;
 }
 
 static FASTCALL NTSTATUS

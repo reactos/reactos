@@ -117,9 +117,7 @@ IntWinStaObjectCreate(PVOID ObjectBody,
 
   InitializeListHead(&WinSta->DesktopListHead);
 
-#if 1
   WinSta->AtomTable = NULL;
-#endif
 
   Status = RtlCreateAtomTable(37, &WinSta->AtomTable);
   if (!NT_SUCCESS(Status))
