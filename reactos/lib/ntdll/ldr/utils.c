@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.78 2004/01/11 00:25:17 hbirr Exp $
+/* $Id: utils.c,v 1.79 2004/01/24 23:44:26 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1120,7 +1120,7 @@ LdrGetExportByName(PVOID BaseAddress,
     * Try a binary search first
     */
    minn = 0;
-   maxn = ExportDir->NumberOfNames;
+   maxn = ExportDir->NumberOfNames - 1;
    while (minn <= maxn)
      {
         ULONG mid;
@@ -2079,7 +2079,8 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
          * relocation. */
         if (ImageBase != (PVOID) NtHeaders->OptionalHeader.ImageBase)
           {
-            DPRINT1("Performing relocations\n");
+            DPRINT1("Performing relocations (%x -> %x)\n",
+              NtHeaders->OptionalHeader.ImageBase, ImageBase);
             Status = LdrPerformRelocations(NtHeaders, ImageBase);
             if (!NT_SUCCESS(Status))
               {
@@ -2594,7 +2595,7 @@ LdrShutdownThread (VOID)
    PLDR_MODULE Module;
 
    DPRINT("LdrShutdownThread() called for %wZ\n",
-          &ExeModlue->BaseDllName);
+          &ExeModule->BaseDllName);
 
    RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
 
