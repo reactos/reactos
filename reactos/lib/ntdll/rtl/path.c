@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.26 2003/11/30 20:48:07 gdalsnes Exp $
+/* $Id: path.c,v 1.27 2004/03/13 22:23:14 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -575,7 +575,8 @@ RtlGetFullPathName_U(PWSTR DosName,
 		len--;
 	if (FilePart)
 		*FilePart = NULL;
-	*buf = 0;
+	if (buf)
+		*buf = 0;
 
 CHECKPOINT;
 	/* check for DOS device name */
@@ -586,8 +587,11 @@ CHECKPOINT;
 		sz &= 0x0000FFFF;
 		if (sz + 8 >= size)
 		    return sz + 10;
-		wcscpy (buf, L"\\\\.\\");
-		wcsncat (buf, DosName + offs, sz / sizeof(WCHAR));
+		if (buf)
+		{
+			wcscpy (buf, L"\\\\.\\");
+			wcsncat (buf, DosName + offs, sz / sizeof(WCHAR));
+		}
 		return sz + 8;
 	}
 
@@ -721,10 +725,11 @@ CHECKPOINT;
 
 	if (len < (size / sizeof(WCHAR)))
 	{
-		memcpy (buf, TempFullPathName, (len + 1) * sizeof(WCHAR));
+		if (buf)
+			memcpy (buf, TempFullPathName, (len + 1) * sizeof(WCHAR));
 
 		/* find file part */
-		if (FilePart)
+		if (FilePart && buf)
 		{
 #if 0
 			*FilePart = wcsrchr(buf, L'\\');
