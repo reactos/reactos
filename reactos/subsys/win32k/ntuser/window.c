@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.27 2003/03/08 13:16:51 gvg Exp $
+/* $Id: window.c,v 1.28 2003/03/12 05:18:21 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -797,9 +797,42 @@ NtUserMoveWindow(
     int nHeight,
     BOOL bRepaint)
 {
-    int flags = SWP_NOZORDER | SWP_NOACTIVATE;
-    if (!bRepaint) flags |= SWP_NOREDRAW;
-    return NtUserSetWindowPos( hWnd, 0, X, Y, nWidth, nHeight, flags );
+    PWINDOW_OBJECT Window;
+    NTSTATUS Status;
+    INT OffsetY, OffsetX;
+    Status = 
+    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
+			       hWnd,
+			       otWindow,
+			       (PVOID*)&Window);
+    if (!NT_SUCCESS(Status))
+    {
+      return(FALSE);
+    }
+    OffsetX = Window->ClientRect.left - Window->WindowRect.left;
+    OffsetY = Window->ClientRect.top - Window->WindowRect.top;
+    if (X)
+    {
+        Window->WindowRect.left = X;
+        Window->ClientRect.left = X;
+    }
+    if (Y)
+    {
+        Window->WindowRect.top = Y;
+        Window->ClientRect.top = Y;
+    }
+    if (nWidth)
+    {
+        Window->WindowRect.right = Window->WindowRect.left + nWidth;
+        Window->ClientRect.right = Window->ClientRect.left + nWidth - OffsetX - NtUserGetSystemMetrics(SM_CXFRAME);
+    }
+    if (nHeight)
+    {
+        Window->WindowRect.bottom = Window->WindowRect.top + nHeight;
+        Window->ClientRect.bottom = Window->ClientRect.top + nHeight - OffsetY - NtUserGetSystemMetrics(SM_CYFRAME);
+    }
+    ObmDereferenceObject(Window);
+    /* if (bRepaint) NtUserUpdateWindow(hWnd); doesn't exist? */
 }
 
 DWORD STDCALL
