@@ -5,10 +5,16 @@
  * @implemented
  */
 double _scalb( double __x, long e )
-{
-	double_t *x = (double_t *)&__x;
+{	
+	union
+	{
+		double*   __x;
+                double_t*   x;
+	} x;
 	
-	x->exponent += e;
+	x.__x = &__x;
+	
+	x.x->exponent += e;
 
 	return __x;
 }

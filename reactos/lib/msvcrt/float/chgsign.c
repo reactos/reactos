@@ -7,12 +7,17 @@
  */
 double _chgsign( double __x )
 {
-	double_t *x = (double_t *)&x;
+	union
+	{
+	    double* __x;
+	    double_t *x;
+	} u;
+	u.__x = &__x;
 
-	if ( x->sign == 1 )
-		x->sign = 0;
+	if ( u.x->sign == 1 )
+		u.x->sign = 0;
 	else 
-		x->sign = 1;
+		u.x->sign = 1;
 
 	return __x;
 }

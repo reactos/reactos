@@ -6,10 +6,20 @@
  */
 double _copysign (double __d, double __s)
 {
-  double_t *d = (double_t *)&__d;
-  double_t *s = (double_t *)&__s;
+  union
+  {
+      double*	__d;
+      double_t*	  d;
+  } d;
+  union 
+  {
+      double*	__s;
+      double_t*   s;
+  } s;
+  d.__d = &__d;
+  s.__s = &__s;
 
-  d->sign = s->sign;
+  d.d->sign = s.s->sign;
 
   return __d;
 }

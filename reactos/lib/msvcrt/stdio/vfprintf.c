@@ -219,10 +219,16 @@ static int numberf(FILE * f, double __n, char exp_sign,  int size, int precision
 	char ro = 0;
 	int result, done = 0;
 
-	double_t *n = (double_t *)&__n;
+	union
+	{
+		double*  __n;
+		double_t*  n;
+	} n;
+	
+	n.__n = &__n;
 
 	if ( exp_sign == 'g' || exp_sign == 'G' || exp_sign == 'e' || exp_sign == 'E' ) {
-		ie = ((unsigned int)n->exponent - (unsigned int)0x3ff);
+		ie = ((unsigned int)n.n->exponent - (unsigned int)0x3ff);
 		exponent = ie/3.321928;
 	}
 
@@ -422,10 +428,16 @@ static int numberfl(FILE * f, long double __n, char exp_sign,  int size, int pre
 
 	int result, done = 0;
 
-	long_double_t *n = (long_double_t *)&__n;
+	union
+	{
+	    long double*   __n;
+	    long_double_t*   n;
+	} n;
+
+	n.__n = &__n;
 
 	if ( exp_sign == 'g' || exp_sign == 'G' || exp_sign == 'e' || exp_sign == 'E' ) {
-		ie = ((unsigned int)n->exponent - (unsigned int)0x3fff);
+		ie = ((unsigned int)n.n->exponent - (unsigned int)0x3fff);
 		exponent = ie/3.321928;
 	}
 
