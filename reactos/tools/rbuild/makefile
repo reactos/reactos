@@ -7,9 +7,12 @@ all: $(TARGET)
 BACKEND_MINGW_BASE_OBJECTS = \
 	backend/mingw/mingw.o \
 	backend/mingw/modulehandler.o
-	
+
+BACKEND_DEVCPP_BASE_OBJECTS = backend/devcpp/devcpp.o
+							  
 BACKEND_BASE_OBJECTS = \
 	$(BACKEND_MINGW_BASE_OBJECTS) \
+	$(BACKEND_DEVCPP_BASE_OBJECTS) \
 	backend/backend.o
 
 BASE_OBJECTS = \
