@@ -1597,6 +1597,36 @@ NdisCopyFromPacketToPacket(
   IN UINT  SourceOffset,
   OUT PUINT  BytesCopied);
 
+/*
+ * VOID
+ * NdisCopyLookaheadData(
+ *   IN PVOID Destination,
+ *   IN PVOID Source,
+ *   IN ULONG Length,
+ *   IN ULONG ReceiveFlags);
+ */
+
+#ifdef _M_IX86
+#define NdisCopyLookaheadData(Destination, Source, Length, MacOptions) \
+  RtlCopyMemory(Destination, Source, Length)
+#else
+#define NdisCopyLookaheadData(Destination, Source, Length, MacOptions) \
+  { \
+    if ((MacOptions) & NDIS_MAC_OPTION_COPY_LOOKAHEAD_DATA) \
+    { \
+      RtlCopyMemory(_Destination, _Source, _Length); \
+    } \
+    else \
+    { \
+      PUCHAR _Src = (PUCHAR)(Source); \
+      PUCHAR _Dest = (PUCHAR)(Destination); \
+      PUCHAR _End = _Dest + (Length); \
+      while (_Dest < _End) \
+        *_Dest++ = *_Src++; \
+    } \
+  }
+#endif
+
 NDISAPI
 VOID
 DDKAPI
