@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.119 2004/05/24 12:08:55 ekohl Exp $
+# $Id: Makefile,v 1.120 2004/05/31 19:39:53 gdalsnes Exp $
 #
 # ReactOS Operating System
 #
@@ -103,28 +103,18 @@ OBJECTS_RTL = \
 	rtl/bit.o \
 	rtl/bitmap.o \
 	rtl/capture.o \
-	rtl/compress.o \
 	rtl/ctype.o \
-	rtl/dos8dot3.o \
-	rtl/error.o \
 	rtl/handle.o \
-	rtl/largeint.o \
-	rtl/mem.o \
 	rtl/message.o \
-	rtl/nls.o \
 	rtl/purecall.o \
-	rtl/random.o \
-	rtl/rangelist.o \
 	rtl/regio.o \
 	rtl/sprintf.o \
 	rtl/stdlib.o \
 	rtl/string.o \
 	rtl/swprintf.o \
-	rtl/time.o \
-	rtl/timezone.o \
-	rtl/unicode.o \
-	rtl/version.o \
-	rtl/wstring.o
+	rtl/wstring.o \
+	rtl/nls.o \
+	rtl/libsupp.o
 
 OBJECTS_RTL := $(filter-out $(RTL_EXCLUDE_FILTER), $(OBJECTS_RTL))
 
@@ -534,7 +524,7 @@ OBJECTS := \
 	$(OBJECTS_RESOURCE)
 
 
-$(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(SDK_PATH_LIB)/string.a $(SDK_PATH_LIB)/rosrtl.a
+$(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(SDK_PATH_LIB)/rtl.a $(SDK_PATH_LIB)/string.a $(SDK_PATH_LIB)/rosrtl.a
 	$(CC) \
 		-Wl,-T,ntoskrnl.lnk \
 		-nostartfiles \
@@ -548,6 +538,7 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(SDK_PATH_LIB)/string.a $
 		-Wl,--entry,_NtProcessStartup \
 		-Wl,--base-file,base.tmp \
 		$(TARGETNAME).o -lgcc \
+		$(SDK_PATH_LIB)/rtl.a \
 		$(SDK_PATH_LIB)/string.a \
 		$(SDK_PATH_LIB)/rosrtl.a \
 		$(DDK_PATH_LIB)/hal.a
@@ -572,12 +563,13 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(SDK_PATH_LIB)/string.a $
 		-Wl,--entry,_NtProcessStartup \
 		-Wl,temp.exp \
 		$(TARGETNAME).o -lgcc \
+		$(SDK_PATH_LIB)/rtl.a \
 		$(SDK_PATH_LIB)/string.a \
 		$(SDK_PATH_LIB)/rosrtl.a \
 		$(DDK_PATH_LIB)/hal.a
 	- $(RM) temp.exp
 
-$(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a $(SDK_PATH_LIB)/string.a $(SDK_PATH_LIB)/rosrtl.a
+$(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a $(SDK_PATH_LIB)/rtl.a $(SDK_PATH_LIB)/string.a $(SDK_PATH_LIB)/rosrtl.a
 	- $(CC) \
 		-Wl,-T,$(LINKER_SCRIPT) \
 		-nostartfiles \
@@ -591,6 +583,7 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a $(SDK_
 		-Wl,--entry,_NtProcessStartup \
 		-Wl,--base-file,base.tmp \
 		$(TARGETNAME).o -lgcc \
+		$(SDK_PATH_LIB)/rtl.a \
 		$(SDK_PATH_LIB)/string.a \
 		$(SDK_PATH_LIB)/rosrtl.a \
 		$(DDK_PATH_LIB)/hal.a
@@ -615,6 +608,7 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a $(SDK_
 		-Wl,--entry,_NtProcessStartup \
 		-Wl,temp.exp \
 		$(TARGETNAME).o -lgcc \
+		$(SDK_PATH_LIB)/rtl.a \
 		$(SDK_PATH_LIB)/string.a \
 		$(SDK_PATH_LIB)/rosrtl.a \
 		$(DDK_PATH_LIB)/hal.a
@@ -623,7 +617,7 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a $(SDK_
 $(TARGETNAME).dbg.o: $(TARGETNAME).o
 	$(STRIP) --strip-debug -o $(TARGETNAME).dbg.o $(TARGETNAME).o
 
-$(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk $(DDK_PATH_LIB)/hal.a $(SDK_PATH_LIB)/string.a $(SDK_PATH_LIB)/rosrtl.a
+$(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk $(DDK_PATH_LIB)/hal.a $(SDK_PATH_LIB)/rtl.a $(SDK_PATH_LIB)/string.a $(SDK_PATH_LIB)/rosrtl.a
 	$(CC) \
 		-Wl,-T,$(TARGETNAME).dbg.lnk \
 		-nostartfiles \
@@ -637,6 +631,7 @@ $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk $(D
 		-Wl,--entry,_NtProcessStartup \
 		-Wl,--base-file,base.tmp \
 		$(TARGETNAME).dbg.o -lgcc \
+		$(SDK_PATH_LIB)/rtl.a \
 		$(SDK_PATH_LIB)/string.a \
 		$(SDK_PATH_LIB)/rosrtl.a \
 		$(DDK_PATH_LIB)/hal.a
@@ -661,6 +656,7 @@ $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk $(D
 		-Wl,--entry,_NtProcessStartup \
 		-Wl,temp.exp \
 		$(TARGETNAME).dbg.o -lgcc \
+		$(SDK_PATH_LIB)/rtl.a \
 		$(SDK_PATH_LIB)/string.a \
 		$(SDK_PATH_LIB)/rosrtl.a \
 		$(DDK_PATH_LIB)/hal.a
