@@ -23,10 +23,10 @@ typedef struct ifaddr {
     struct	sockaddr *ifa_dstaddr;	/* other end of p-to-p link */
 #define	ifa_broadaddr	ifa_dstaddr	/* broadcast address interface */
     struct	sockaddr *ifa_netmask;	/* used to determine subnet */
-    u_short	ifa_flags;		/* mostly rt_flags for cloning */
+    unsigned short	ifa_flags;		/* mostly rt_flags for cloning */
     short	ifa_refcnt;		/* extra to malloc for link info */
     int	        ifa_metric;		/* cost of going out this interface */
-    u_short     ifa_mtu;                /* MTU */
+    unsigned short     ifa_mtu;                /* MTU */
 } OSK_IFADDR, *POSK_IFADDR;
 
 #define	IFA_ROUTE	RTF_UP		/* route installed */

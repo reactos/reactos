@@ -1,6 +1,5 @@
 #include <oskittcp.h>
 #include <oskitdebug.h>
-#include <ntddk.h>
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/socket.h>
@@ -28,14 +27,16 @@ unsigned volatile ipending;
 struct timeval boottime;
 
 void *fbsd_malloc( unsigned int bytes, const char *file, int line, ... ) {
-    void *v = ExAllocatePool( NonPagedPool, bytes );
-    if( v ) TrackWithTag( 'fbsd', v, file, line );
-    return v;
+    if( !OtcpEvent.TCPMalloc ) panic("no malloc");
+    return OtcpEvent.TCPMalloc
+	( OtcpEvent.ClientData,
+	  (OSK_UINT)bytes, (OSK_PCHAR)file, (OSK_UINT)line );
 }
 
 void fbsd_free( void *data, const char *file, int line, ... ) {
-    UntrackFL( file, line, data );
-    ExFreePool( data );
+    if( !OtcpEvent.TCPFree ) panic("no free");
+    OtcpEvent.TCPFree( OtcpEvent.ClientData,
+		    data, (OSK_PCHAR)file, (OSK_UINT)line );
 }
 
 void InitOskitTCP() {
@@ -80,7 +81,7 @@ void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len ) {
     
     for( i = 0; i < Len; i++ ) {
 	if( i && !(i & 0xf) ) DbgPrint( "\n" );
-	if( !(i & 0xf) ) DbgPrint( "%08x: ", (UINT)(Data + i) );
+	if( !(i & 0xf) ) DbgPrint( "%08x: ", (OSK_UINT)(Data + i) );
 	DbgPrint( " %02x", Data[i] );
     }
     DbgPrint("\n");
@@ -163,8 +164,8 @@ size_t len;
     return error;
 }
 
-int OskitTCPBind( PVOID socket, PVOID connection,
-		  PVOID nam, OSK_UINT namelen ) {
+int OskitTCPBind( void *socket, void *connection,
+		  void *nam, OSK_UINT namelen ) {
     int error = EFAULT;
     struct socket *so = socket;
     struct mbuf sabuf = { 0 };
@@ -181,7 +182,7 @@ int OskitTCPBind( PVOID socket, PVOID connection,
     addr.sa_family = addr.sa_len;
     addr.sa_len = sizeof(struct sockaddr);
 
-    OskitDumpBuffer( (PCHAR)&addr, sizeof(addr) );
+    OskitDumpBuffer( (OSK_PCHAR)&addr, sizeof(addr) );
 
     error = sobind(so, &sabuf);
 
@@ -189,8 +190,8 @@ int OskitTCPBind( PVOID socket, PVOID connection,
     return (error);    
 }
 
-int OskitTCPConnect( PVOID socket, PVOID connection, 
-		     PVOID nam, OSK_UINT namelen ) {
+int OskitTCPConnect( void *socket, void *connection, 
+		     void *nam, OSK_UINT namelen ) {
     struct socket *so = socket;
     struct connect_args _uap = {
 	0, nam, namelen
@@ -312,10 +313,10 @@ int OskitTCPListen( void *socket, int backlog ) {
 }
 
 void OskitTCPSetAddress( void *socket, 
-			 ULONG LocalAddress,
-			 USHORT LocalPort,
-			 ULONG RemoteAddress,
-			 USHORT RemotePort ) {
+			 OSK_UINT LocalAddress,
+			 OSK_UI16 LocalPort,
+			 OSK_UINT RemoteAddress,
+			 OSK_UI16 RemotePort ) {
     struct socket *so = socket;
     struct inpcb *inp = so->so_pcb;
     inp->inp_laddr.s_addr = LocalAddress;
@@ -358,7 +359,7 @@ struct ifaddr *ifa_iffind(struct sockaddr *addr, int type)
 
 void oskittcp_die( const char *file, int line ) {
     DbgPrint("\n\n*** OSKITTCP: Panic Called at %s:%d ***\n", file, line);
-    KeBugCheck(0);
+    *((int *)0) = 0;
 }
 
 /* Stuff supporting the BSD network-interface interface */

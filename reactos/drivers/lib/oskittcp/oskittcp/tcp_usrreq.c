@@ -278,8 +278,6 @@ tcp_usrreq(so, req, m, nam, control)
 	case PRU_SEND_EOF:
 	case PRU_SEND:
 		sbappend(&so->so_snd, m);
-		OS_DbgPrint(OSK_MID_TRACE,("%d Bytes to send:\n", m->m_len));
-		OskitDumpBuffer(m->m_data, m->m_len);
 		if (nam && tp->t_state < TCPS_SYN_SENT) {
 			/*
 			 * Do implied connect if not yet connected,

@@ -14,6 +14,8 @@
 LONG TCP_IPIdentification = 0;
 static BOOLEAN TCPInitialized = FALSE;
 static NPAGED_LOOKASIDE_LIST TCPSegmentList;
+LIST_ENTRY SleepingThreadsList;
+FAST_MUTEX SleepingThreadsLock;
 
 VOID TCPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
 /*
@@ -49,11 +51,25 @@ POSK_IFADDR TCPFindInterface( void *ClientData,
 			      OSK_UINT FindType,
 			      OSK_SOCKADDR *ReqAddr );
 
+void *TCPMalloc( void *ClientData,
+		 OSK_UINT bytes, OSK_PCHAR file, OSK_UINT line );
+void TCPFree( void *ClientData,
+	      void *data, OSK_PCHAR file, OSK_UINT line );
+
+int TCPSleep( void *ClientData, void *token, int priority, char *msg,
+	      int tmio );
+
+void TCPWakeup( void *ClientData, void *token );
+
 OSKITTCP_EVENT_HANDLERS EventHandlers = {
-    NULL, /* Client Data */
-    TCPSocketState, /* SocketState */
-    TCPPacketSend,  /* PacketSend */
+    NULL,             /* Client Data */
+    TCPSocketState,   /* SocketState */
+    TCPPacketSend,    /* PacketSend */
     TCPFindInterface, /* FindInterface */
+    TCPMalloc,        /* Malloc */
+    TCPFree,          /* Free */
+    TCPSleep,         /* Sleep */
+    TCPWakeup         /* Wakeup */
 };
 
 NTSTATUS TCPStartup(VOID)
@@ -63,6 +79,9 @@ NTSTATUS TCPStartup(VOID)
  *     Status of operation
  */
 {
+    ExInitializeFastMutex( &SleepingThreadsLock );
+    InitializeListHead( &SleepingThreadsList );    
+
     InitOskitTCP();
     RegisterOskitTCPEventHandlers( &EventHandlers );
     
@@ -224,10 +243,16 @@ NTSTATUS TCPConnect
 NTSTATUS TCPClose
 ( PTDI_REQUEST Request ) {
     PCONNECTION_ENDPOINT Connection;
-
+    NTSTATUS Status;
     Connection = Request->Handle.ConnectionContext;
     
-    return TCPTranslateError( OskitTCPClose( Connection->SocketContext ) );
+    TI_DbgPrint(MID_TRACE,("TCPClose started\n"));
+
+    Status = TCPTranslateError( OskitTCPClose( Connection->SocketContext ) );
+    
+    TI_DbgPrint(MID_TRACE,("TCPClose finished %x\n", Status));
+
+    return Status;
 }
 
 NTSTATUS TCPListen

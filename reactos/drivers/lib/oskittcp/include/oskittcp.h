@@ -67,11 +67,32 @@ typedef struct ifaddr *(*OSKITTCP_FIND_INTERFACE)
       OSK_UINT FindType,
       struct sockaddr *ReqAddr );
 
+typedef void *(*OSKITTCP_MALLOC)
+    ( void *ClientData,
+      OSK_UINT Bytes,
+      OSK_PCHAR File,
+      OSK_UINT Line );
+
+typedef void (*OSKITTCP_FREE)
+    ( void *ClientData,
+      void *data,
+      OSK_PCHAR File,
+      OSK_UINT Line );
+
+typedef int (*OSKITTCP_SLEEP)
+    ( void *ClientData, void *token, int priority, char *msg, int tmio );
+
+typedef void (*OSKITTCP_WAKEUP)( void *ClientData, void *token );
+
 typedef struct _OSKITTCP_EVENT_HANDLERS {
     void *ClientData;
     OSKITTCP_SOCKET_STATE SocketState;
     OSKITTCP_SEND_PACKET PacketSend;
     OSKITTCP_FIND_INTERFACE FindInterface;
+    OSKITTCP_MALLOC TCPMalloc;
+    OSKITTCP_FREE TCPFree;
+    OSKITTCP_SLEEP Sleep;
+    OSKITTCP_WAKEUP Wakeup;
 } OSKITTCP_EVENT_HANDLERS, *POSKITTCP_EVENT_HANDLERS;
 
 extern OSKITTCP_EVENT_HANDLERS OtcpEvent;

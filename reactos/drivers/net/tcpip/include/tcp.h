@@ -51,6 +51,11 @@ typedef struct TCPv4_PSEUDO_HEADER {
   USHORT TCPLength;         /* Size of TCP segment */
 } __attribute__((packed)) TCPv4_PSEUDO_HEADER, *PTCPv4_PSEUDO_HEADER;
 
+typedef struct _SLEEPING_THREAD {
+    LIST_ENTRY Entry;
+    PVOID SleepToken;
+    KEVENT Event;
+} SLEEPING_THREAD, *PSLEEPING_THREAD;
 
 /* Retransmission timeout constants */
 
