@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.47 2003/05/23 17:07:12 rcampbell Exp $
+/* $Id: window.c,v 1.48 2003/05/23 23:08:03 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -759,7 +759,6 @@ NtUserFindWindowEx(HWND hwndParent,
 		   LPCWSTR ucClassName,
 		   LPCWSTR ucWindowName)
 {
-#if 0
   NTSTATUS status;
   HWND windowHandle;
   PWINDOW_OBJECT windowObject;
@@ -798,7 +797,6 @@ NtUserFindWindowEx(HWND hwndParent,
   ExReleaseFastMutexUnsafe (&PsGetWin32Process()->WindowListLock);
   
   ObmDereferenceObject (classObject);
-#endif
 
   return  (HWND)0;
 }
