@@ -1,4 +1,4 @@
-/* $Id: audit.c,v 1.4 2004/05/20 12:42:11 ekohl Exp $
+/* $Id: audit.c,v 1.5 2004/08/03 19:20:39 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -104,6 +104,107 @@ NtPrivilegeObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
 /*
  * @unimplemented
  */
+VOID
+STDCALL
+SeAuditHardLinkCreation(
+	IN PUNICODE_STRING FileName,
+	IN PUNICODE_STRING LinkName,
+	IN BOOLEAN bSuccess
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+SeAuditingFileEvents(
+	IN BOOLEAN AccessGranted,
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+SeAuditingFileEventsWithContext(
+	IN BOOLEAN AccessGranted,
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+SeAuditingHardLinkEvents(
+	IN BOOLEAN AccessGranted,
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+SeAuditingHardLinkEventsWithContext(
+	IN BOOLEAN AccessGranted,
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+SeAuditingFileOrGlobalEvents(
+	IN BOOLEAN AccessGranted,
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+SeCloseObjectAuditAlarm(
+	IN PVOID Object,
+	IN HANDLE Handle,
+	IN BOOLEAN PerformAction
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 SeDeleteObjectAuditAlarm(IN PVOID Object,
 			 IN HANDLE Handle)
@@ -145,6 +246,23 @@ SeOpenObjectForDeleteAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
 				OUT PBOOLEAN GenerateOnClose)
 {
   UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+SePrivilegeObjectAuditAlarm(
+	IN HANDLE Handle,
+	IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
+	IN ACCESS_MASK DesiredAccess,
+	IN PPRIVILEGE_SET Privileges,
+	IN BOOLEAN AccessGranted,
+	IN KPROCESSOR_MODE CurrentMode
+	)
+{
+	UNIMPLEMENTED;
 }
 
 /* EOF */

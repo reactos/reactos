@@ -1,6 +1,10 @@
-/* $Id: lsa.c,v 1.3 2002/09/08 10:23:43 chorns Exp $
+/* $Id: lsa.c,v 1.4 2004/08/03 19:20:39 ion Exp $
  */
 #include <ddk/ntddk.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
 
 /* LsaCallAuthenticationPackage@28 */
 NTSTATUS STDCALL LsaCallAuthenticationPackage (
@@ -77,6 +81,45 @@ NTSTATUS STDCALL LsaRegisterLogonProcess (
     )
 {
     return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+SeMarkLogonSessionForTerminationNotification(
+	IN PLUID LogonId
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+SeRegisterLogonSessionTerminatedRoutine(
+	IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+SeUnregisterLogonSessionTerminatedRoutine(
+	IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 

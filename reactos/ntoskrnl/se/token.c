@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.37 2004/07/13 08:43:35 ekohl Exp $
+/* $Id: token.c,v 1.38 2004/08/03 19:20:39 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -294,6 +294,19 @@ SepInitializeNewProcess(struct _EPROCESS* NewProcess,
   return(STATUS_SUCCESS);
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+SeAppendPrivileges(
+	PACCESS_STATE AccessState,
+	PPRIVILEGE_SET Privileges
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
 
 NTSTATUS SeCopyClientToken(PACCESS_TOKEN Token,
 			   SECURITY_IMPERSONATION_LEVEL Level,
@@ -410,6 +423,66 @@ SeCreateClientSecurity(IN struct _ETHREAD *Thread,
   return(STATUS_SUCCESS);
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+SeCreateClientSecurityFromSubjectContext(
+	IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
+	IN PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,
+	IN BOOLEAN ServerIsRemote,
+	OUT PSECURITY_CLIENT_CONTEXT ClientContext
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+SeFilterToken(
+	IN PACCESS_TOKEN ExistingToken,
+	IN ULONG Flags,
+	IN PTOKEN_GROUPS SidsToDisable OPTIONAL,
+	IN PTOKEN_PRIVILEGES PrivilegesToDelete OPTIONAL,
+	IN PTOKEN_GROUPS RestrictedSids OPTIONAL,
+	OUT PACCESS_TOKEN * FilteredToken
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+SeFreePrivileges(
+	IN PPRIVILEGE_SET Privileges
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+SeImpersonateClientEx(
+	IN PSECURITY_CLIENT_CONTEXT ClientContext,
+	IN PETHREAD ServerThread OPTIONAL
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
 
 /*
  * @implemented
@@ -739,6 +812,35 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
   ObDereferenceObject(Token);
 
   return(Status);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+SeQueryInformationToken(
+	IN PACCESS_TOKEN Token,
+	IN TOKEN_INFORMATION_CLASS TokenInformationClass,
+	OUT PVOID *TokenInformation
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+SeQuerySessionIdToken(
+	IN PACCESS_TOKEN Token,
+	IN PULONG pSessionId
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 /*
@@ -1558,6 +1660,45 @@ SeTokenType(IN PACCESS_TOKEN Token)
   return Token->TokenType;
 }
 
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+SeTokenIsAdmin(
+	IN PACCESS_TOKEN Token
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+SeTokenIsRestricted(
+	IN PACCESS_TOKEN Token
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+SeTokenIsWriteRestricted(
+	IN PACCESS_TOKEN Token
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
 
 
 /* EOF */

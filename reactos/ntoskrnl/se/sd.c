@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.17 2004/07/31 12:21:19 ekohl Exp $
+/* $Id: sd.c,v 1.18 2004/08/03 19:20:39 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -111,6 +111,22 @@ SepInitSDs(VOID)
   return TRUE;
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+SeCaptureSecurityDescriptor(
+	IN PSECURITY_DESCRIPTOR OriginalSecurityDescriptor,
+	IN KPROCESSOR_MODE CurrentMode,
+	IN POOL_TYPE PoolType,
+	IN BOOLEAN CaptureIfKernel,
+	OUT PSECURITY_DESCRIPTOR *CapturedSecurityDescriptor
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
 
 /*
  * @implemented
@@ -247,6 +263,20 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
   return STATUS_SUCCESS;
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+SeReleaseSecurityDescriptor(
+	IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
+	IN KPROCESSOR_MODE CurrentMode,
+	IN BOOLEAN CaptureIfKernelMode
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
 
 /*
  * @unimplemented
@@ -261,6 +291,25 @@ SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
 {
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+SeSetSecurityDescriptorInfoEx(
+	IN PVOID Object OPTIONAL,
+	IN PSECURITY_INFORMATION SecurityInformation,
+	IN PSECURITY_DESCRIPTOR ModificationDescriptor,
+	IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+	IN ULONG AutoInheritFlags,
+	IN POOL_TYPE PoolType,
+	IN PGENERIC_MAPPING GenericMapping
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 

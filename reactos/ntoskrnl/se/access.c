@@ -1,4 +1,4 @@
-/* $Id: access.c,v 1.4 2003/07/11 01:23:16 royce Exp $
+/* $Id: access.c,v 1.5 2004/08/03 19:20:39 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -13,6 +13,8 @@
 
 #include <ddk/ntddk.h>
 
+#define NDEBUG
+#include <internal/debug.h>
 
 /* FUNCTIONS ***************************************************************/
 
@@ -64,6 +66,47 @@ RtlMapGenericMask (
 		*AccessMask |= GenericMapping->GenericAll;
 
 	*AccessMask &= 0x0FFFFFFF;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+SeCreateAccessState(
+	PACCESS_STATE AccessState,
+	PVOID AuxData,
+	ACCESS_MASK Access,
+	PGENERIC_MAPPING GenericMapping
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+SeDeleteAccessState(
+	IN PACCESS_STATE AccessState
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+SeSetAccessStateGenericMapping(
+	PACCESS_STATE AccessState,
+	PGENERIC_MAPPING GenericMapping
+	)
+{
+	UNIMPLEMENTED;
 }
 
 /* EOF */
