@@ -4,7 +4,7 @@
 
 PATH_TO_TOP=..
 
-TARGET=more.exe tee.exe y.exe
+TARGET=more.exe sort.exe tee.exe y.exe
 
 all: $(TARGET)
 
@@ -14,6 +14,10 @@ CLEAN_FILES = *.o *.exe *.sym *.coff
 more.exe: more.o more.coff
 	$(CC) more.o -lkernel32 -lmsvcrt -o more.exe more.coff
 	$(NM) --numeric-sort more.exe > more.sym
+
+sort.exe: sort.o sort.coff
+	$(CC) sort.o -lkernel32 -lmsvcrt -o sort.exe sort.coff
+	$(NM) --numeric-sort sort.exe > sort.sym
 
 tee.exe: tee.o tee.coff
 	$(CC) tee.o -lkernel32 -lmsvcrt -o tee.exe tee.coff
