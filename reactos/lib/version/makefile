@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.13 2003/09/12 17:51:48 vizzini Exp $
+# $Id: makefile,v 1.14 2003/12/29 22:50:59 sedwards Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,18 +8,33 @@ TARGET_NAME = version
 
 TARGET_BASE = 0x77a90000
 
-TARGET_CFLAGS = -fno-builtin -Werror -Wall
+TARGET_CFLAGS = -fno-builtin -Wall
 
 # require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS
+DEFINES = \
+	-D_DISABLE_TIDENTS \
+	-D__USE_W32API \
+	-D__REACTOS__ \
+	-D_WIN32_IE=0x600 \
+	-D_WIN32_WINNT=0x501 \
+	-DWINVER=0x501 
+	
+TARGET_CFLAGS += \
+	$(DEFINES) \
+	-I$(PATH_TO_TOP)/include/wine
+
+TARGET_RCFLAGS += -D__REACTOS__	-D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501
 
 TARGET_LFLAGS = -nostdlib -nostartfiles
 
-TARGET_SDKLIBS = kernel32.a ntdll.a
+TARGET_SDKLIBS = libwine.a kernel32.a ntdll.a 
 
-TARGET_OBJECTS =  misc/libmain.o misc/stubs.o
-
-TARGET_CLEAN = misc/*.o
+TARGET_OBJECTS = \
+	misc/libmain.o \
+	misc/stubs.o \
+	info.o \
+	install.o \
+	resource.o
 
 include $(PATH_TO_TOP)/rules.mak
 
