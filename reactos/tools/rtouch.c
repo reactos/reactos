@@ -6,6 +6,7 @@
 #include <time.h>
 #else
 #include <sys/time.h>
+#include <unistd.h>
 #endif
 #include <stdlib.h>
 #include <string.h>
@@ -18,7 +19,9 @@ char* convert_path(char* origpath)
   char* newpath;
   int i;
    
-  newpath = (char *)strdup(origpath);
+  //newpath = (char *)strdup(origpath);
+	newpath=malloc(strlen(origpath)+1);
+	strcpy(newpath,origpath);
    
   i = 0;
   while (newpath[i] != 0)

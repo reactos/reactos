@@ -2,7 +2,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#ifdef _MSC_VER
 #include <direct.h>
+#else
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#endif
 
 #ifdef UNIX_PATHS
 #define DIR_SEPARATOR_CHAR '/'
@@ -19,7 +25,9 @@ char* convert_path(char* origpath)
    char* newpath;
    int i;
    
-   newpath = strdup(origpath);
+   //newpath = strdup(origpath);
+	 newpath=malloc(strlen(origpath)+1);
+	 strcpy(newpath,origpath);
    
    i = 0;
    while (newpath[i] != 0)

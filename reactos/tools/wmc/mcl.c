@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <assert.h>
+#include <string.h>
 
 #include "config.h"
 

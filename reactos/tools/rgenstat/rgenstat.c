@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <unistd.h>
 #endif
 #include <ctype.h>
 #ifndef WIN32

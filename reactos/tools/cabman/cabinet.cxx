@@ -139,13 +139,16 @@ unsigned long CCFDATAStorage::Create(char* FileName)
         return CAB_STATUS_CANNOT_CREATE;
     }
 #else /* !WIN32 */
-    if (tmpnam(FullName) == NULL)
+    /*if (tmpnam(FullName) == NULL)*/
+    if ((FileHandle = tmpfile()) == NULL)
         return CAB_STATUS_CANNOT_CREATE;
+		/*
     FileHandle = fopen(FullName, "w+b"); 
     if (FileHandle == NULL) {
         DPRINT(MID_TRACE, ("ERROR '%d'.\n", (unsigned int)errno));
         return CAB_STATUS_CANNOT_CREATE;
     }
+		*/
 #endif
 
     FileCreated = true;
@@ -1021,7 +1024,7 @@ unsigned long CCabinet::ExtractFile(char* FileName)
                     BytesToRead = CFData.CompSize;
 
 					DPRINT(MAX_TRACE, ("Read: (0x%lX,0x%lX).\n",
-						(DWORD)CurrentBuffer, (DWORD)Buffer));
+						(unsigned)CurrentBuffer, (unsigned)Buffer));
 
                     if (((Status = ReadBlock(CurrentBuffer, BytesToRead, &BytesRead)) != 
                         CAB_STATUS_SUCCESS) || (BytesToRead != BytesRead)) {

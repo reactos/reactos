@@ -348,7 +348,7 @@ static char *make_string(WCHAR *uc, int len, int codepage)
 					case '\\': *cptr++ = '\\'; *cptr++ = '\\'; b += 2; break;
 					case '"':  *cptr++ = '\\'; *cptr++ = '"'; b += 2; break;
 					default:
-						n = sprintf(cptr, "\\x%04x", *uc & 0xffff);
+						n = sprintf(cptr, "\\x%04x", (unsigned)*uc & 0xffff);
 						cptr += n;
 						b += n;
 					}
@@ -356,7 +356,7 @@ static char *make_string(WCHAR *uc, int len, int codepage)
 			}
 			else
 			{
-				n = sprintf(cptr, "\\x%04x", *uc & 0xffff);
+				n = sprintf(cptr, "\\x%04x", (unsigned)*uc & 0xffff);
 				cptr += n;
 				b += n;
 			}

@@ -1,4 +1,4 @@
-/* $Id: cdmake.c,v 1.8 2003/11/18 17:40:46 ekohl Exp $ */
+/* $Id: cdmake.c,v 1.9 2003/11/19 05:43:14 vizzini Exp $ */
 /* CD-ROM Maker
    by Philip J. Erdelsky
    pje@acm.org
@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <unistd.h>
 #endif
 #include <ctype.h>
 #include <setjmp.h>
@@ -559,9 +560,11 @@ new_directory_record (struct dirent *entry,
 		      PDIR_RECORD parent)
 {
   PDIR_RECORD d;
+	/*
   char *s;
   char *t;
   char *n;
+	*/
 
   d = malloc(sizeof(DIR_RECORD));
   if (d == NULL)

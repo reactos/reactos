@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <unistd.h>
 #endif
 #include <ctype.h>
 #ifndef WIN32
@@ -40,7 +41,10 @@ char* convert_path(char* origpath)
    char* newpath;
    int i;
    
-   newpath = strdup(origpath);
+	 /* for no good reason, i'm having trouble getting gcc to link strdup */
+   //newpath = strdup(origpath);
+	 newpath = malloc(strlen(origpath)+1);
+	 strcpy(newpath, origpath);
    
    i = 0;
    while (newpath[i] != 0)

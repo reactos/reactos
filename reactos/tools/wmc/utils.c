@@ -130,7 +130,11 @@ char *dup_basename(const char *name, const char *ext)
 	/* +4 for later extension and +1 for '\0' */
 	base = (char *)xmalloc(namelen +4 +1);
 	strcpy(base, name);
+#ifdef _MSC_VER
 	if(!stricmp(name + namelen-extlen, ext))
+#else
+	if(!strcasecmp(name + namelen-extlen, ext))
+#endif
 	{
 		base[namelen - extlen] = '\0';
 	}

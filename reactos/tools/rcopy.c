@@ -10,6 +10,8 @@
 #include <errno.h>
 #include <sys/types.h> 
 #include <dirent.h>
+#include <unistd.h>
+#include <string.h>
 #endif
 #ifndef WIN32
 #ifndef MAX_PATH
@@ -48,7 +50,9 @@ char* convert_path(char* origpath)
    char* newpath;
    int i;
    
-   newpath = strdup(origpath);
+   //newpath = strdup(origpath);
+	 newpath = malloc(strlen(origpath)+1);
+	 strcpy(newpath, origpath);
    
    i = 0;
    while (newpath[i] != 0)
@@ -173,10 +177,10 @@ copy_directory (char *path1, char *path2)
 {
   DIR *dirp;
   struct dirent *entry;
-  char *old_end_source;
   struct stat stbuf;
   char buf[MAX_PATH];
   char tobuf[MAX_PATH];
+  char err[400];
 
   dirp = opendir(path1); 
 
