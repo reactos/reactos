@@ -1,5 +1,4 @@
-
-/* $Id: zw.h,v 1.38 2004/12/14 00:41:23 gdalsnes Exp $
+/* $Id: zw.h,v 1.39 2004/12/23 20:12:51 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -830,9 +829,9 @@ NtCreateNamedPipeFile (OUT PHANDLE NamedPipeFileHandle,
 		       IN ULONG ShareAccess,
 		       IN ULONG CreateDisposition,
 		       IN ULONG CreateOptions,
-		       IN BOOLEAN WriteModeMessage,
-		       IN BOOLEAN ReadModeMessage,
-		       IN BOOLEAN NonBlocking,
+		       IN ULONG NamedPipeType,
+		       IN ULONG ReadMode,
+		       IN ULONG CompletionMode,
 		       IN ULONG MaxInstances,
 		       IN ULONG InBufferSize,
 		       IN ULONG OutBufferSize,
@@ -846,9 +845,9 @@ ZwCreateNamedPipeFile (OUT PHANDLE NamedPipeFileHandle,
 		       IN ULONG ShareAccess,
 		       IN ULONG CreateDisposition,
 		       IN ULONG CreateOptions,
-		       IN BOOLEAN WriteModeMessage,
-		       IN BOOLEAN ReadModeMessage,
-		       IN BOOLEAN NonBlocking,
+		       IN ULONG NamedPipeType,
+		       IN ULONG ReadMode,
+		       IN ULONG CompletionMode,
 		       IN ULONG MaxInstances,
 		       IN ULONG InBufferSize,
 		       IN ULONG OutBufferSize,

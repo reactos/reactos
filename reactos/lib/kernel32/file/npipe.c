@@ -1,4 +1,4 @@
-/* $Id: npipe.c,v 1.20 2004/10/08 23:24:01 weiden Exp $
+/* $Id: npipe.c,v 1.21 2004/12/23 20:13:19 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -73,14 +73,14 @@ CreateNamedPipeW(LPCWSTR lpName,
    ACCESS_MASK DesiredAccess;
    ULONG CreateOptions;
    ULONG CreateDisposition;
-   BOOLEAN WriteModeMessage;
-   BOOLEAN ReadModeMessage;
-   BOOLEAN NonBlocking;
+   ULONG WriteModeMessage;
+   ULONG ReadModeMessage;
+   ULONG NonBlocking;
    IO_STATUS_BLOCK Iosb;
    ULONG ShareAccess, Attributes;
    LARGE_INTEGER DefaultTimeOut;
    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
-   
+
    Result = RtlDosPathNameToNtPathName_U((LPWSTR)lpName,
 					 &NamedPipeName,
 					 NULL,
@@ -90,10 +90,10 @@ CreateNamedPipeW(LPCWSTR lpName,
 	SetLastError(ERROR_PATH_NOT_FOUND);
 	return(INVALID_HANDLE_VALUE);
      }
-   
+
    DPRINT("Pipe name: %wZ\n", &NamedPipeName);
    DPRINT("Pipe name: %S\n", NamedPipeName.Buffer);
-   
+
    Attributes = OBJ_CASE_INSENSITIVE;
    if(lpSecurityAttributes)
      {
@@ -107,13 +107,10 @@ CreateNamedPipeW(LPCWSTR lpName,
 			      Attributes,
 			      NULL,
 			      SecurityDescriptor);
-   
+
    DesiredAccess = 0;
-   
    ShareAccess = 0;
-   
    CreateDisposition = FILE_OPEN_IF;
-   
    CreateOptions = 0;
    if (dwOpenMode & FILE_FLAG_WRITE_THROUGH)
      {
@@ -135,53 +132,53 @@ CreateNamedPipeW(LPCWSTR lpName,
      {
 	CreateOptions = CreateOptions | FILE_PIPE_OUTBOUND;
      }
-   
+
    if (dwPipeMode & PIPE_TYPE_BYTE)
      {
-	WriteModeMessage = FALSE;
+	WriteModeMessage = FILE_PIPE_BYTE_STREAM_MODE;
      }
    else if (dwPipeMode & PIPE_TYPE_MESSAGE)
      {
-	WriteModeMessage = TRUE;
+	WriteModeMessage = FILE_PIPE_MESSAGE_MODE;
      }
    else
      {
-	WriteModeMessage = FALSE;
+	WriteModeMessage = FILE_PIPE_BYTE_STREAM_MODE;
      }
-   
+
    if (dwPipeMode & PIPE_READMODE_BYTE)
      {
-	ReadModeMessage = FALSE;
+	ReadModeMessage = FILE_PIPE_BYTE_STREAM_MODE;
      }
    else if (dwPipeMode & PIPE_READMODE_MESSAGE)
      {
-	ReadModeMessage = TRUE;
+	ReadModeMessage = FILE_PIPE_MESSAGE_MODE;
      }
    else
      {
-	ReadModeMessage = FALSE;
+	ReadModeMessage = FILE_PIPE_BYTE_STREAM_MODE;
      }
-   
+
    if (dwPipeMode & PIPE_WAIT)
      {
-	NonBlocking = FALSE;
+	NonBlocking = FILE_PIPE_QUEUE_OPERATION;
      }
    else if (dwPipeMode & PIPE_NOWAIT)
      {
-	NonBlocking = TRUE;
+	NonBlocking = FILE_PIPE_COMPLETE_OPERATION;
      }
    else
      {
-	NonBlocking = FALSE;
+	NonBlocking = FILE_PIPE_QUEUE_OPERATION;
      }
-   
+
    if (nMaxInstances >= PIPE_UNLIMITED_INSTANCES)
      {
 	nMaxInstances = ULONG_MAX;
      }
-   
+
    DefaultTimeOut.QuadPart = nDefaultTimeOut * -10000;
-   
+
    Status = NtCreateNamedPipeFile(&PipeHandle,
 				  DesiredAccess,
 				  &ObjectAttributes,
@@ -196,17 +193,17 @@ CreateNamedPipeW(LPCWSTR lpName,
 				  nInBufferSize,
 				  nOutBufferSize,
 				  &DefaultTimeOut);
-   
+
    RtlFreeUnicodeString(&NamedPipeName);
-   
+
    if (!NT_SUCCESS(Status))
      {
 	DPRINT("NtCreateNamedPipe failed (Status %x)!\n", Status);
 	SetLastErrorByStatus (Status);
-	return(INVALID_HANDLE_VALUE);
+	return INVALID_HANDLE_VALUE;
      }
-   
-   return(PipeHandle);
+
+   return PipeHandle;
 }
 
 
@@ -251,7 +248,6 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
 				    &NamedPipeName,
 				    NULL,
 				    NULL);
-   
    if (!r)
      {
 	return(FALSE);
@@ -611,7 +607,7 @@ GetNamedPipeHandleStateW(HANDLE hNamedPipe,
   IO_STATUS_BLOCK StatusBlock;
   NTSTATUS Status;
 
-  if(lpState != NULL)
+  if (lpState != NULL)
   {
     FILE_PIPE_INFORMATION PipeInfo;
     
@@ -620,7 +616,7 @@ GetNamedPipeHandleStateW(HANDLE hNamedPipe,
                                     &PipeInfo,
                                     sizeof(FILE_PIPE_INFORMATION),
                                     FilePipeInformation);
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
       return FALSE;
