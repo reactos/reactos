@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.23 2002/10/01 19:27:18 chorns Exp $
+/* $Id: scsiport.c,v 1.24 2002/11/28 16:07:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -139,7 +139,8 @@ ScsiPortStartPacket(IN OUT PVOID Context);
 static NTSTATUS
 ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
 			 IN PSCSI_PORT_DEVICE_EXTENSION PseudoDeviceExtension,
-			 IN ULONG PortCount);
+			 IN ULONG PortCount,
+			 IN OUT PSCSI_PORT_DEVICE_EXTENSION *RealDeviceExtension);
 
 static VOID
 ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
@@ -161,6 +162,11 @@ ScsiPortIoTimer(PDEVICE_OBJECT DeviceObject,
 static PSCSI_REQUEST_BLOCK
 ScsiPortInitSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 			    PSCSI_REQUEST_BLOCK OriginalSrb);
+
+static NTSTATUS
+ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+		       PUNICODE_STRING RegistryPath);
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -411,6 +417,7 @@ ScsiPortInitialize(IN PVOID Argument1,
   PDRIVER_OBJECT DriverObject = (PDRIVER_OBJECT)Argument1;
   PUNICODE_STRING RegistryPath = (PUNICODE_STRING)Argument2;
   PSCSI_PORT_DEVICE_EXTENSION PseudoDeviceExtension;
+  PSCSI_PORT_DEVICE_EXTENSION RealDeviceExtension;
   PCONFIGURATION_INFORMATION SystemConfig;
   PPORT_CONFIGURATION_INFORMATION PortConfig;
   BOOLEAN Again;
@@ -464,6 +471,8 @@ ScsiPortInitialize(IN PVOID Argument1,
     ExAllocatePool(PagedPool,
 		   sizeof(ACCESS_RANGE) * PortConfig->NumberOfAccessRanges);
 
+  for (i = 0; i < SCSI_MAXIMUM_BUSES; i++)
+    PortConfig->InitiatorBusId[i] = 255;
 
   PortConfig->SystemIoBusNumber = 0;
   PortConfig->SlotNumber = 0;
@@ -497,7 +506,8 @@ ScsiPortInitialize(IN PVOID Argument1,
 
 	  Status = ScsiPortCreatePortDevice(DriverObject,
 					    PseudoDeviceExtension,
-					    SystemConfig->ScsiPortCount);
+					    SystemConfig->ScsiPortCount,
+					    &RealDeviceExtension);
 
 	  if (!NT_SUCCESS(Status))
 	    {
@@ -508,6 +518,10 @@ ScsiPortInitialize(IN PVOID Argument1,
 
 	      return(Status);
 	    }
+
+	  /* Build the registry device map */
+	  ScsiPortBuildDeviceMap(RealDeviceExtension,
+				 (PUNICODE_STRING)Argument2);
 
 	  /* Update the configuration info */
 	  SystemConfig->AtDiskPrimaryAddressClaimed = PortConfig->AtdiskPrimaryClaimed;
@@ -1050,7 +1064,8 @@ ScsiPortStartPacket(IN OUT PVOID Context)
 static NTSTATUS
 ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
 			 IN PSCSI_PORT_DEVICE_EXTENSION PseudoDeviceExtension,
-			 IN ULONG PortNumber)
+			 IN ULONG PortNumber,
+			 IN OUT PSCSI_PORT_DEVICE_EXTENSION *RealDeviceExtension)
 {
   PSCSI_PORT_DEVICE_EXTENSION PortDeviceExtension;
   PIO_SCSI_CAPABILITIES PortCapabilities;
@@ -1069,6 +1084,8 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
 #endif
 
   DPRINT("ScsiPortCreatePortDevice() called\n");
+
+  *RealDeviceExtension = NULL;
 
 #if 0
   MappedIrq = HalGetInterruptVector(PseudoDeviceExtension->PortConfig.AdapterInterfaceType,
@@ -1189,6 +1206,7 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
 
   /* FIXME: Copy more configuration data? */
 
+
   /* Create the dos device link */
   swprintf(DosNameBuffer,
 	   L"\\??\\Scsi%lu:",
@@ -1198,6 +1216,8 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
 
   IoCreateSymbolicLink(&DosDeviceName,
 		       &DeviceName);
+
+  *RealDeviceExtension = PortDeviceExtension;
 
   DPRINT("ScsiPortCreatePortDevice() done\n");
 
@@ -1241,9 +1261,10 @@ ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
     {
       Srb.PathId = Bus;
 
-      AdapterInfo->BusData[Bus].InitiatorBusId = 0;	/* ? */
+      AdapterInfo->BusData[Bus].InitiatorBusId =
+	DeviceExtension->PortConfig.InitiatorBusId[Bus];
       AdapterInfo->BusData[Bus].InquiryDataOffset =
-        (ULONG)((PUCHAR)UnitInfo - (PUCHAR)AdapterInfo);
+	(ULONG)((PUCHAR)UnitInfo - (PUCHAR)AdapterInfo);
 
       PrevUnit = NULL;
       UnitCount = 0;
@@ -1499,12 +1520,36 @@ ScsiPortFreeSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 }
 
 
-#if 0
+/**********************************************************************
+ * NAME							INTERNAL
+ *	ScsiPortBuildDeviceMap
+ *
+ * DESCRIPTION
+ *	Builds the registry device map of all device which are attached
+ *	to the given SCSI HBA port. The device map is located at:
+ *	  \Registry\Machine\DeviceMap\Scsi
+ *
+ * RUN LEVEL
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS
+ *	DeviceExtension
+ *		...
+ *
+ *	RegistryPath
+ *		Name of registry driver service key.
+ *
+ * RETURNS
+ *	NTSTATUS
+ */
+
 static NTSTATUS
-ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
+ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+		       PUNICODE_STRING RegistryPath)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName;
+  UNICODE_STRING ValueName;
   WCHAR NameBuffer[32];
   ULONG Disposition;
   HANDLE ScsiKey;
@@ -1515,15 +1560,31 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
   ULONG BusNumber;
   NTSTATUS Status;
 
+  PSCSI_ADAPTER_BUS_INFO AdapterInfo;
+  PSCSI_INQUIRY_DATA UnitInfo;
+  PINQUIRYDATA InquiryData;
+
+  PWCHAR DriverName;
+  ULONG UlongData;
+
+
+  DPRINT1("ScsiPortBuildDeviceMap() called\n");
+
+  if (DeviceExtension == NULL || RegistryPath == NULL)
+    {
+      DPRINT1("Invalid parameter\n");
+      return(STATUS_INVALID_PARAMETER);
+    }
+
   /* Open or create the 'Scsi' subkey */
   RtlInitUnicodeStringFromLiteral(&KeyName,
-	L"\\Registry\\Machine\\Hardware\\DeviceMap\\Scsi");
+				  L"\\Registry\\Machine\\Hardware\\DeviceMap\\Scsi");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
-			     OBJ_OPENIF,
+			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
 			     0,
 			     NULL);
-  Status = NtCreateKey(&ScsiKey,
+  Status = ZwCreateKey(&ScsiKey,
 		       KEY_ALL_ACCESS,
 		       &ObjectAttributes,
 		       0,
@@ -1531,9 +1592,15 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 		       REG_OPTION_VOLATILE,
 		       &Disposition);
   if (!NT_SUCCESS(Status))
-    return(Status);
+    {
+      DPRINT1("ZwCreateKey() failed (Status %lx)\n", Status);
+      return(Status);
+    }
 
   /* Create new 'Scsi Port X' subkey */
+  DPRINT1("Scsi Port %lu\n",
+	  DeviceExtension->PortNumber);
+
   swprintf(NameBuffer,
 	   L"Scsi Port %lu",
 	   DeviceExtension->PortNumber);
@@ -1544,41 +1611,104 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 			     0,
 			     ScsiKey,
 			     NULL);
-  Status = NtCreateKey(&ScsiPortKey,
+  Status = ZwCreateKey(&ScsiPortKey,
 		       KEY_ALL_ACCESS,
 		       &ObjectAttributes,
 		       0,
 		       NULL,
 		       REG_OPTION_VOLATILE,
 		       &Disposition);
+  ZwClose(ScsiKey);
   if (!NT_SUCCESS(Status))
     {
-      NtClose(ScsiKey);
+      DPRINT1("ZwCreateKey() failed (Status %lx)\n", Status);
       return(Status);
     }
 
-  /* Add port-specific values */
+  /*
+   * Create port-specific values
+   */
 
-  /* 'DMA Enabled' (REG_DWORD) */
-  DPRINT1("DMA Enabled = %s\n",
-	  (DeviceExtension->PortCapabilities->AdapterUsesPio)?"TRUE":"FALSE");
+  /* Set 'DMA Enabled' (REG_DWORD) value */
+  UlongData = (ULONG)!DeviceExtension->PortCapabilities->AdapterUsesPio;
+  DPRINT1("  DMA Enabled = %s\n", (UlongData) ? "TRUE" : "FALSE");
+  RtlInitUnicodeString(&ValueName,
+		       L"DMA Enabled");
+  Status = ZwSetValueKey(ScsiPortKey,
+			 &ValueName,
+			 0,
+			 REG_DWORD,
+			 &UlongData,
+			 sizeof(ULONG));
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("ZwSetValueKey('DMA Enabled') failed (Status %lx)\n", Status);
+      ZwClose(ScsiPortKey);
+      return(Status);
+    }
 
-  /* 'Driver' (REG_SZ) */
+  /* Set 'Driver' (REG_SZ) value */
+  DriverName = wcsrchr(RegistryPath->Buffer, L'\\') + 1;
+  DPRINT1("  Driver = %S\n", DriverName);
+  RtlInitUnicodeString(&ValueName,
+		       L"Driver");
+  Status = ZwSetValueKey(ScsiPortKey,
+			 &ValueName,
+			 0,
+			 REG_SZ,
+			 DriverName,
+			 wcslen(DriverName) * sizeof(WCHAR));
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("ZwSetValueKey('Driver') failed (Status %lx)\n", Status);
+      ZwClose(ScsiPortKey);
+      return(Status);
+    }
 
-  /* 'Interrupt' (REG_DWORD) (NT4 only) */
-  DPRINT1("Interrupt = %lx\n", DeviceExtension->PortConfig.BusInterruptLevel);
+  /* Set 'Interrupt' (REG_DWORD) value (NT4 only) */
+  UlongData = (ULONG)DeviceExtension->PortConfig.BusInterruptLevel;
+  DPRINT1("  Interrupt = %lx\n", UlongData);
+  RtlInitUnicodeString(&ValueName,
+		       L"Interrupt");
+  Status = ZwSetValueKey(ScsiPortKey,
+			 &ValueName,
+			 0,
+			 REG_DWORD,
+			 &UlongData,
+			 sizeof(ULONG));
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("ZwSetValueKey('Interrupt') failed (Status %lx)\n", Status);
+      ZwClose(ScsiPortKey);
+      return(Status);
+    }
 
-  /* 'IOAddress' (REG_DWORD) (NT4 only) */
-  DPRINT1("IOAddress = %lx\n",
-	  ScsiPortConvertPhysicalAddressToUlong(DeviceExtension->PortConfig.AccessRanges[0].RangeStart));
-
+  /* Set 'IOAddress' (REG_DWORD) value (NT4 only) */
+  UlongData = ScsiPortConvertPhysicalAddressToUlong(DeviceExtension->PortConfig.AccessRanges[0].RangeStart);
+  DPRINT1("  IOAddress = %lx\n", UlongData);
+  RtlInitUnicodeString(&ValueName,
+		       L"IOAddress");
+  Status = ZwSetValueKey(ScsiPortKey,
+			 &ValueName,
+			 0,
+			 REG_DWORD,
+			 &UlongData,
+			 sizeof(ULONG));
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("ZwSetValueKey('IOAddress') failed (Status %lx)\n", Status);
+      ZwClose(ScsiPortKey);
+      return(Status);
+    }
 
   /* Create 'Scsi Bus X' keys */
   for (BusNumber = 0; BusNumber < DeviceExtension->PortConfig.NumberOfBuses; BusNumber++)
      {
+	DPRINT1("    Scsi Bus %lu\n", BusNumber);
+
 	swprintf(NameBuffer,
 		 L"Scsi Bus %lu",
-		 DeviceExtension->PortNumber);
+		 BusNumber);
 	RtlInitUnicodeString(&KeyName,
 			     NameBuffer);
 	InitializeObjectAttributes(&ObjectAttributes,
@@ -1586,7 +1716,7 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 				   0,
 				   ScsiPortKey,
 				   NULL);
-	Status = NtCreateKey(&ScsiBusKey,
+	Status = ZwCreateKey(&ScsiBusKey,
 			     KEY_ALL_ACCESS,
 			     &ObjectAttributes,
 			     0,
@@ -1595,22 +1725,84 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 			     &Disposition);
 	if (!NT_SUCCESS(Status))
 	  {
-	    NtClose(ScsiPortKey);
-	    NtClose(ScsiKey);
+	    DPRINT1("ZwCreateKey() failed (Status %lx)\n", Status);
+	    ZwClose(ScsiPortKey);
 	    return(Status);
 	  }
 
-	/* Create target keys */
+	/* Create 'Initiator Id X' key */
+	DPRINT1("      Initiator Id %u\n",
+		DeviceExtension->PortConfig.InitiatorBusId[BusNumber]);
 
+#if 0
+	swprintf(NameBuffer,
+		 L"Initiator Id %hu",
+		 DeviceExtension->PortConfig.InitiatorBusId[BusNumber]);
+	RtlInitUnicodeString(&KeyName,
+			     NameBuffer);
+	InitializeObjectAttributes(&ObjectAttributes,
+				   &KeyName,
+				   0,
+				   ScsiPortKey,
+				   NULL);
+	Status = ZwCreateKey(&ScsiTargetKey,
+			     KEY_ALL_ACCESS,
+			     &ObjectAttributes,
+			     0,
+			     NULL,
+			     REG_OPTION_VOLATILE,
+			     &Disposition);
+	if (!NT_SUCCESS(Status))
+	  {
+	    CHECKPOINT1;
+	    ZwClose(ScsiBusKey);
+	    ZwClose(ScsiPortKey);
+	    return(Status);
+	  }
 
-	NtClose(ScsiBusKey);
+	ZwClose(ScsiTargetKey);
+#endif
+#if 0
+	/* Create 'Target Id X' keys */
+
+	AdapterInfo = (PSCSI_ADAPTER_BUS_INFO)DeviceExtension->PortBusInfo;
+
+	DPRINT1("      Initiator Id %hu\n",
+		AdapterInfo->BusData[BusNumber].InitiatorBusId);
+
+	DPRINT1("      Logical units %hu\n",
+		AdapterInfo->BusData[BusNumber].NumberOfLogicalUnits);
+#endif
+#if 0
+	      if (AdapterInfo->BusData[BusNumber].NumberOfLogicalUnits == 0)
+		break;
+
+	      UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)AdapterInfo +
+		AdapterInfo->BusData[Srb->PathId].InquiryDataOffset);
+
+	      while (AdapterInfo->BusData[Srb->PathId].InquiryDataOffset)
+		{
+		  InquiryData = (PINQUIRYDATA)UnitInfo->InquiryData;
+
+		  DPRINT("Target Id %hu  Logical Unit Id %hu\n",
+			 UnitInfo->TargetId, UnitInfo->Lun);
+
+		  if (UnitInfo->NextInquiryDataOffset == 0)
+		    break;
+
+		  UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)AdapterInfo + UnitInfo->NextInquiryDataOffset);
+		}
+	    }
+#endif
+
+	ZwClose(ScsiBusKey);
      }
 
-  NtClose(ScsiPortKey);
-  NtClose(ScsiKey);
+  ZwClose(ScsiPortKey);
+
+  DPRINT1("ScsiPortBuildDeviceMap() done\n");
 
   return(Status);
 }
-#endif
 
 /* EOF */
