@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.21 2003/08/29 21:23:06 dwelch Exp $
+/* $Id: anonmem.c,v 1.22 2003/11/30 17:24:22 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -374,7 +374,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
        SWAPENTRY SwapEntry;
        PMDL Mdl;
 
-       MmDeletePageFileMapping(NULL, Address, &SwapEntry);
+       MmDeletePageFileMapping(MemoryArea->Process, Address, &SwapEntry);
        Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
        MmBuildMdlFromPages(Mdl, (PULONG)&Page);
        Status = MmReadFromSwapPage(SwapEntry, Mdl);
@@ -465,10 +465,9 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
 	    }
 	  else
 	    {
-	      PhysicalAddr = MmGetPhysicalAddress(BaseAddress + (i*PAGE_SIZE));
 	      MmDeleteVirtualMapping(AddressSpace->Process,
 				     BaseAddress + (i*PAGE_SIZE),
-				     FALSE, NULL, NULL);
+				     FALSE, NULL, &PhysicalAddr);
 	      if (PhysicalAddr.QuadPart != 0)
 		{
 		  SWAPENTRY SavedSwapEntry;
