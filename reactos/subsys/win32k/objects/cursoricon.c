@@ -9,6 +9,8 @@
 #include <include/winsta.h>
 #include <include/error.h>
 #include <include/mouse.h>
+#include <include/window.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -229,12 +231,14 @@ NtUserGetCursorInfo(
 BOOL
 STDCALL
 NtUserClipCursor(
-  RECT *lpRect)
+  RECT *UnsafeRect)
 {
   /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
   
   PWINSTATION_OBJECT WinStaObject;
   PSYSTEM_CURSORINFO CurInfo;
+  PWINDOW_OBJECT DesktopWindow;
+  RECT Rect;
 
   NTSTATUS Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				       KernelMode,
@@ -242,23 +246,32 @@ NtUserClipCursor(
 				       &WinStaObject);
   if (!NT_SUCCESS(Status))
   {
-    DPRINT("Validation of window station handle (0x%X) failed\n",
+    DPRINT1("Validation of window station handle (0x%X) failed\n",
       PROCESS_WINDOW_STATION());
     SetLastWin32Error(Status);
     return FALSE;
   }
+
+  if (NULL != UnsafeRect && ! NT_SUCCESS(MmCopyFromCaller(&Rect, UnsafeRect, sizeof(RECT))))
+  {
+    ObDereferenceObject(WinStaObject);
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
   
   CurInfo = &WinStaObject->SystemCursor;
-  if(lpRect)
+  if(UnsafeRect)
   {
-    if((lpRect->right >= lpRect->left) &&
-       (lpRect->bottom >= lpRect->top))
+    if((Rect.right >= Rect.left) &&
+       (Rect.bottom >= Rect.top))
     {
+      DesktopWindow = IntGetWindowObject(WinStaObject->ActiveDesktop->DesktopWindow);
       CurInfo->CursorClipInfo.IsClipped = TRUE;
-      CurInfo->CursorClipInfo.Left = lpRect->left;
-      CurInfo->CursorClipInfo.Top = lpRect->top;
-      CurInfo->CursorClipInfo.Right = lpRect->right;
-      CurInfo->CursorClipInfo.Bottom = lpRect->bottom;
+      CurInfo->CursorClipInfo.Left = max(Rect.left, DesktopWindow->WindowRect.left);
+      CurInfo->CursorClipInfo.Top = max(Rect.top, DesktopWindow->WindowRect.top);
+      CurInfo->CursorClipInfo.Right = min(Rect.right, DesktopWindow->WindowRect.right);
+      CurInfo->CursorClipInfo.Bottom = min(Rect.bottom, DesktopWindow->WindowRect.bottom);
+      IntReleaseWindowObject(DesktopWindow);
     
       MouseMoveCursor(CurInfo->x, CurInfo->y);  
     }
