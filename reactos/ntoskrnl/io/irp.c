@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.63 2004/08/10 06:26:42 ion Exp $
+/* $Id: irp.c,v 1.64 2004/08/12 16:43:12 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -129,20 +129,24 @@ IoMakeAssociatedIrp(PIRP Irp,
  * RETURNS: The irp allocated
  */
 {
-  PIRP AssocIrp;
+   PIRP AssocIrp;
 
-    /* Allocate the IRP */
-    AssocIrp = IoAllocateIrp(StackSize,FALSE);
+   /* Allocate the IRP */
+   AssocIrp = IoAllocateIrp(StackSize,FALSE);
+   if (AssocIrp == NULL)
+      return NULL;
 
-    /* Set the Flags */
-    AssocIrp->Flags |= IRP_ASSOCIATED_IRP;
+   /* Set the Flags */
+   AssocIrp->Flags |= IRP_ASSOCIATED_IRP;
 
-    /* Set the Thread */
-    AssocIrp->Tail.Overlay.Thread = Irp->Tail.Overlay.Thread;
+   /* Set the Thread */
+   AssocIrp->Tail.Overlay.Thread = Irp->Tail.Overlay.Thread;
 
-    /* Associate them */
-    AssocIrp->AssociatedIrp.MasterIrp = Irp;
-    return AssocIrp;
+   /* Associate them */
+   AssocIrp->AssociatedIrp.MasterIrp = Irp;
+   InterlockedIncrement(&Irp->AssociatedIrp.IrpCount);
+ 
+   return AssocIrp;
 }
 
 
@@ -292,8 +296,8 @@ IofCompleteRequest(PIRP Irp,
 {
    ULONG             i;
    NTSTATUS          Status;
-   PDEVICE_OBJECT    DeviceObject;
    PFILE_OBJECT      OriginalFileObject;
+   PDEVICE_OBJECT    DeviceObject;
    KIRQL             oldIrql;
    PMDL              Mdl;
 
@@ -308,6 +312,10 @@ IofCompleteRequest(PIRP Irp,
    {
       Irp->PendingReturned = TRUE;
    }
+
+   /*
+    * Run the completion routines.
+    */
 
    for (i=Irp->CurrentLocation;i<(ULONG)Irp->StackCount;i++)
    {
@@ -348,6 +356,27 @@ IofCompleteRequest(PIRP Irp,
       {
          Irp->PendingReturned = TRUE;
       }
+   }
+
+   /* Windows NT File System Internals, page 165 */
+   if (Irp->Flags & IRP_ASSOCIATED_IRP)
+   {
+      ULONG MasterIrpCount;
+      PIRP MasterIrp = Irp->AssociatedIrp.MasterIrp;
+
+      MasterIrpCount = InterlockedDecrement(&MasterIrp->AssociatedIrp.IrpCount);
+      while ((Mdl = Irp->MdlAddress))
+      {
+         Irp->MdlAddress = Mdl->Next;
+         MmUnlockPages(Mdl);
+         IoFreeMdl(Mdl);
+      }
+      IoFreeIrp(Irp);
+      if (MasterIrpCount == 0)
+      {
+         IofCompleteRequest(MasterIrp, IO_NO_INCREMENT);
+      }
+      return;
    }
 
    /*
@@ -409,17 +438,14 @@ IofCompleteRequest(PIRP Irp,
    
 */
    
-   //Windows NT File System Internals, page 166/167
-   if (!(Irp->Flags & IRP_ASSOCIATED_IRP))
+
+   for (Mdl = Irp->MdlAddress; Mdl; Mdl = Mdl->Next)
    {
-      for (Mdl = Irp->MdlAddress; Mdl; Mdl = Mdl->Next)
-      {
-         /* 
-          * Undo the MmProbeAndLockPages. If MmGetSystemAddressForMdl was called
-          * on this mdl, this mapping (if any) is also undone by MmUnlockPages.
-          */
-         MmUnlockPages(Irp->MdlAddress);
-      }
+      /* 
+       * Undo the MmProbeAndLockPages. If MmGetSystemAddressForMdl was called
+       * on this mdl, this mapping (if any) is also undone by MmUnlockPages.
+       */
+      MmUnlockPages(Mdl);
    }
     
    //Windows NT File System Internals, page 154
@@ -459,8 +485,6 @@ IofCompleteRequest(PIRP Irp,
       KeLowerIrql(oldIrql);
       DPRINT("Finished completition routine\n");
    }
-
-
 }
 
 

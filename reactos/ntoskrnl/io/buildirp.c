@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.42 2004/08/10 06:26:42 ion Exp $
+/* $Id: buildirp.c,v 1.43 2004/08/12 16:43:11 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -159,8 +159,6 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
 	    StackPtr->Parameters.Write.ByteOffset.QuadPart = 0;
 	  }
      }
-
-   Irp->UserIosb = IoStatusBlock;
 
    return(Irp);
 }

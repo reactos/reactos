@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.71 2004/06/23 21:42:49 ion Exp $
+/* $Id: device.c,v 1.72 2004/08/12 16:43:12 ion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -647,7 +647,8 @@ IoCreateDevice(
        CreatedDeviceObject->DeviceType == FILE_DEVICE_CD_ROM ||
        CreatedDeviceObject->DeviceType == FILE_DEVICE_TAPE)
    {
-      IoAttachVpb(CreatedDeviceObject);
+      IoAttachVpb(CreatedDeviceObject);      
+      CreatedDeviceObject->SectorSize = 512; /* FIXME */
    }
   
    DeviceObjectExtension =
