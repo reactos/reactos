@@ -18,29 +18,45 @@ include rules.mak
 COMPONENTS = kernel lib
 
 #
+# Select the server(s) you want to build
+#
+SERVERS = win32 posix linux os2
+
+#
 # Select the loader(s) you want to build
 #
 LOADERS = dos
 
 #
-# Select the modules you want
+# Select the device drivers and filesystems you want
 #
-MODULES = parallel keyboard
+KERNEL_SERVICES = parallel keyboard null mouse serial sound ide
 
-all: $(COMPONENTS) $(LOADERS) $(MODULES)
+all: $(COMPONENTS) $(LOADERS) $(KERNEL_SERVICES)
 
 #
 # Device driver rules
 #
+ide: dummy
+	make -C services/ide	
+
+null: dummy
+	make -C services/null
 
 parallel: dummy
-	make -C modules/parallel
+	make -C services/parallel
 
 keyboard: dummy
-	make -C modules/keyboard
+	make -C services/keyboard
 
 mouse: dummy
-	make -C modules/mouse
+	make -C services/mouse
+	
+serial: dummy
+	make -C services/serial
+
+sound: dummy
+	make -C services/sound
 
 #
 # Kernel loaders
@@ -54,7 +70,7 @@ dos: dummy
 #
 
 kernel: dummy
-	make -C kernel
+	make -C ntoskrnl
 
 lib: dummy
 	make -C lib
