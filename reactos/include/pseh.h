@@ -23,6 +23,50 @@
 #ifndef KJK_PSEH_H_
 #define KJK_PSEH_H_
 
+/* Some useful macros */
+#if defined(__cplusplus)
+# define _SEH_PVOID_CAST(TYPE_, P_) ((TYPE_)(P_))
+#else
+# define _SEH_PVOID_CAST(TYPE_, P_) (P_)
+#endif
+
+#if defined(FIELD_OFFSET)
+# define _SEH_FIELD_OFFSET FIELD_OFFSET
+#else
+# include <stddef.h>
+# define _SEH_FIELD_OFFSET offsetof
+#endif
+
+#if defined(CONTAINING_RECORD)
+# define _SEH_CONTAINING_RECORD CONTAINING_RECORD
+#else
+# define _SEH_CONTAINING_RECORD(ADDR_, TYPE_, FIELD_) \
+ ((TYPE_ *)(((char *)(ADDR_)) - _SEH_FIELD_OFFSET(TYPE_, FIELD_)))
+#endif
+
+#if defined(__CONCAT)
+# define _SEH_CONCAT __CONCAT
+#else
+# define _SEH_CONCAT1(X_, Y_) X_ ## Y_
+# define _SEH_CONCAT(X_, Y_) _SEH_CONCAT1(X_, Y_)
+#endif
+
+/* Locals sharing support */
+#define _SEH_LOCALS_TYPENAME(BASENAME_) \
+ struct _SEH_CONCAT(_SEHLocalsTag, BASENAME_)
+
+#define _SEH_DEFINE_LOCALS(BASENAME_) \
+ _SEH_LOCALS_TYPENAME(BASENAME_)
+
+#define _SEH_DECLARE_LOCALS(BASENAME_) \
+ _SEH_LOCALS_TYPENAME(BASENAME_) _SEHLocals; \
+ _SEH_LOCALS_TYPENAME(BASENAME_) * _SEHPLocals; \
+ _SEHPLocals = &_SEHLocals;
+
+/* Dummy locals */
+static _SEH_LOCALS_TYPENAME(_SEHDummyLocals) { int Dummy_; } _SEHLocals;
+static void __inline _SEHDummyLocalsUser(void) { (void)_SEHLocals; }
+
 /* TODO: <pseh/native.h> to wrap native SEH implementations */
 #include <pseh/framebased.h>
 

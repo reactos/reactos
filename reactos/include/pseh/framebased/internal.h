@@ -44,7 +44,7 @@ _SEHRegistration_t;
 
 struct __SEHPortableFrame;
 
-typedef int (__stdcall * _SEHFilter_t)
+typedef long (__stdcall * _SEHFilter_t)
 (
  struct _EXCEPTION_POINTERS *,
  struct __SEHPortableFrame *

@@ -18,9 +18,10 @@
 typedef NTSTATUS (NTAPI * PEXEFMT_CB_READ_FILE)
 (
  IN PFILE_OBJECT FileObject,
- OUT PVOID Buffer,
- IN ULONG BufferSize,
  IN PLARGE_INTEGER Offset,
+ IN ULONG Length,
+ OUT PVOID * Data,
+ OUT PVOID * AllocBase,
  OUT PULONG ReadSize
 );
 

@@ -72,21 +72,66 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
  _SEHLongJmp(myframe->SEH_JmpBuf, 1);
 }
 
+/* SHARED LOCALS */
+/* Access the locals for the current frame */
+#define _SEH_ACCESS_LOCALS(LOCALS_) \
+ _SEH_LOCALS_TYPENAME(LOCALS_) * _SEHPLocals; \
+ _SEHPLocals = \
+  _SEH_PVOID_CAST \
+  ( \
+   _SEH_LOCALS_TYPENAME(LOCALS_) *, \
+   _SEH_CONTAINING_RECORD(_SEHPortableFrame, _SEHFrame_t, SEH_Header) \
+    ->SEH_Locals \
+  );
+
+/* Access local variable VAR_ */
+#define _SEH_VAR(VAR_) _SEHPLocals->VAR_
+
+/* FILTER FUNCTIONS */
+/* Declares a filter function's prototype */
 #define _SEH_FILTER(NAME_) \
- int __stdcall NAME_ \
+ long __stdcall NAME_ \
  ( \
   struct _EXCEPTION_POINTERS * _SEHExceptionPointers, \
   struct __SEHPortableFrame * _SEHPortableFrame \
  )
 
+/* Declares a static filter */
 #define _SEH_STATIC_FILTER(ACTION_) ((_SEHFilter_t)((ACTION_) + 2))
 
+/* Declares a PSEH filter wrapping a regular filter function */
+#define _SEH_WRAP_FILTER(WRAPPER_, NAME_) \
+ static __inline _SEH_FILTER(WRAPPER_) \
+ { \
+  return (NAME_)(_SEHExceptionPointers); \
+ }
+
+/* FINALLY FUNCTIONS */
+/* Declares a finally function's prototype */
 #define _SEH_FINALLY(NAME_) \
  void __stdcall NAME_ \
  ( \
   struct __SEHPortableFrame * _SEHPortableFrame \
  )
 
+/* Declares a PSEH finally function wrapping a regular function */
+#define _SEH_WRAP_FINALLY(WRAPPER_, NAME_) \
+ _SEH_WRAP_FINALLY_ARGS(WRAPPER_, NAME_, ())
+
+#define _SEH_WRAP_FINALLY_ARGS(WRAPPER_, NAME_, ARGS_) \
+ static __inline _SEH_FINALLY(WRAPPER_) \
+ { \
+  NAME_ ARGS_; \
+ }
+
+#define _SEH_WRAP_FINALLY_LOCALS_ARGS(WRAPPER_, LOCALS_, NAME_, ARGS_) \
+ static __inline _SEH_FINALLY(WRAPPER_) \
+ { \
+  _SEH_ACCESS_LOCALS(LOCALS_); \
+  NAME_ ARGS_; \
+ }
+
+/* SAFE BLOCKS */
 #define _SEH_TRY_FINALLY(FINALLY_) \
  _SEH_TRY_FILTER_FINALLY \
  ( \
@@ -109,22 +154,36 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
 #define _SEH_TRY \
  _SEH_TRY_HANDLE_FINALLY(NULL)
 
+#ifdef __cplusplus
+# define _SEH_DECLARE_HANDLERS(FILTER_, FINALLY_) \
+  const _SEHHandlers_t _SEHHandlers =                                          \
+  {                                                                            \
+   (FILTER_),                                                                  \
+   _SEHCompilerSpecificHandler,                                                \
+   (FINALLY_)                                                                  \
+  };
+#else
+# define _SEH_DECLARE_HANDLERS(FILTER_, FINALLY_) \
+  _SEHHandlers_t _SEHHandlers =                                                \
+  {                                                                            \
+   (0),                                                                        \
+   _SEHCompilerSpecificHandler,                                                \
+   (0)                                                                         \
+  };                                                                           \
+  _SEHHandlers.SH_Filter = (FILTER_);                                          \
+  _SEHHandlers.SH_Finally = (FINALLY_);
+#endif
+
 #define _SEH_TRY_FILTER_FINALLY(FILTER_, FINALLY_) \
  {                                                                             \
-  static _SEHHandlers_t _SEHHandlers =                                         \
-  {                                                                            \
-   (NULL),                                                                     \
-   _SEHCompilerSpecificHandler,                                                \
-   (NULL)                                                                      \
-  };                                                                           \
-  _SEHHandlers.SH_Filter = FILTER_;                                            \
-  _SEHHandlers.SH_Finally = FINALLY_;                                          \
+  _SEH_DECLARE_HANDLERS(FILTER_, FINALLY_);                                    \
                                                                                \
   _SEHFrame_t * _SEHFrame;                                                     \
   volatile _SEHPortableFrame_t * _SEHPortableFrame;                            \
                                                                                \
   _SEHFrame = _alloca(sizeof(_SEHFrame_t));                                    \
   _SEHFrame->SEH_Header.SPF_Handlers = &_SEHHandlers;                          \
+  _SEHFrame->SEH_Locals = &_SEHLocals;                                         \
                                                                                \
   _SEHPortableFrame = &_SEHFrame->SEH_Header;                                  \
   (void)_SEHPortableFrame;                                                     \
