@@ -397,6 +397,9 @@ DECL_WINELIB_SETUPAPI_TYPE_AW(PFILEPATHS)
 #define FLG_REGSVR_DLLREGISTER           0x00000001
 #define FLG_REGSVR_DLLINSTALL            0x00000002
 
+/* */
+#define DI_NOVCP 0x00000008
+
 /* Class installer function codes */
 #define DIF_SELECTDEVICE                    0x01
 #define DIF_INSTALLDEVICE                   0x02
@@ -556,12 +559,20 @@ DECL_WINELIB_SETUPAPI_TYPE_AW(PFILEPATHS)
 #define ERROR_NO_SUCH_INTERFACE_DEVICE    ERROR_NO_SUCH_DEVICE_INTERFACE
 #define ERROR_NOT_INSTALLED               (APPLICATION_ERROR_MASK|ERROR_SEVERITY_ERROR|0x1000)
 
-/* flags for SetupDiGetClassDevs */
+/* Flags for SetupDiGetClassDevs */
 #define DIGCF_DEFAULT         0x00000001
 #define DIGCF_PRESENT         0x00000002
 #define DIGCF_ALLCLASSES      0x00000004
 #define DIGCF_PROFILE         0x00000008
 #define DIGCF_DEVICEINTERFACE 0x00000010
+
+/* Flags for SetupDiOpenClassRegKeyEx */
+#define DIOCR_INSTALLER       0x00000001
+#define DIOCR_INTERFACE       0x00000002
+
+/* Flags for SetupDiBuildClassInfoList(Ex) */
+#define DIBCI_NOINSTALLCLASS  0x00000001
+#define DIBCI_NODISPLAYCLASS  0x00000002
 
 /* setup device registry property codes */
 #define SPDRP_DEVICEDESC                  0x00000000
@@ -601,6 +612,13 @@ DECL_WINELIB_SETUPAPI_TYPE_AW(PFILEPATHS)
 #define SPDRP_INSTALL_STATE               0x00000022
 #define SPDRP_MAXIMUM_PROPERTY            0x00000023
 
+
+VOID     WINAPI MyFree( LPVOID lpMem );
+LPVOID   WINAPI MyMalloc( DWORD dwSize );
+LPVOID   WINAPI MyRealloc( LPVOID lpSrc, DWORD dwSize );
+
+LONG     WINAPI QueryRegistryValue( HKEY, LPCWSTR, LPBYTE *, LPDWORD, LPDWORD );
+
 void     WINAPI InstallHinfSectionA( HWND hwnd, HINSTANCE handle, LPCSTR cmdline, INT show );
 void     WINAPI InstallHinfSectionW( HWND hwnd, HINSTANCE handle, LPCWSTR cmdline, INT show );
 #define         InstallHinfSection WINELIB_NAME_AW(InstallHinfSection)
@@ -610,6 +628,7 @@ HINF     WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR pszclass, DWORD style, UI
 BOOL     WINAPI SetupOpenAppendInfFileA( PCSTR, HINF, UINT * );
 BOOL     WINAPI SetupOpenAppendInfFileW( PCWSTR, HINF, UINT * );
 #define         SetupOpenAppendInfFile WINELIB_NAME_AW(SetupOpenAppendInfFile)
+HINF     WINAPI SetupOpenMasterInf( VOID );
 void     WINAPI SetupCloseInfFile( HINF hinf );
 BOOL     WINAPI SetupGetLineByIndexA( HINF, PCSTR, DWORD, INFCONTEXT * );
 BOOL     WINAPI SetupGetLineByIndexW( HINF, PCWSTR, DWORD, INFCONTEXT * );
@@ -683,17 +702,56 @@ void     WINAPI SetupTermDefaultQueueCallback( PVOID );
 UINT     WINAPI SetupDefaultQueueCallbackA( PVOID, UINT, UINT_PTR, UINT_PTR );
 UINT     WINAPI SetupDefaultQueueCallbackW( PVOID, UINT, UINT_PTR, UINT_PTR );
 #define         SetupDefaultQueueCallback WINELIB_NAME_AW(SetupDefaultQueueCallback)
+
+BOOL     WINAPI SetupDiBuildClassInfoList(DWORD, LPGUID, DWORD, PDWORD);
+BOOL     WINAPI SetupDiBuildClassInfoListExA(DWORD, LPGUID, DWORD, PDWORD, PCSTR, PVOID);
+BOOL     WINAPI SetupDiBuildClassInfoListExW(DWORD, LPGUID, DWORD, PDWORD, PCWSTR, PVOID);
+#define         SetupDiBuildClassInfoListEx WINELIB_NAME_AW(SetupDiBuildClassInfoListEx)
+BOOL     WINAPI SetupDiClassGuidsFromNameA(LPCSTR, LPGUID, DWORD, PDWORD);
+BOOL     WINAPI SetupDiClassGuidsFromNameW(LPCWSTR, LPGUID, DWORD, PDWORD);
+#define         SetupDiClassGuidsFromName WINELIB_NAME_AW(SetupDiClassGuidsFromName)
+BOOL     WINAPI SetupDiClassGuidsFromNameExA(LPCSTR, LPGUID, DWORD, PDWORD, LPCSTR, PVOID);
+BOOL     WINAPI SetupDiClassGuidsFromNameExW(LPCWSTR, LPGUID, DWORD, PDWORD, LPCWSTR, PVOID);
+#define         SetupDiClassGuidsFromNameEx WINELIB_NAME_AW(SetupDiClassGuidsFromNameEx)
+BOOL     WINAPI SetupDiClassNameFromGuidA(const GUID*, PSTR, DWORD, PDWORD);
+BOOL     WINAPI SetupDiClassNameFromGuidW(const GUID*, PWSTR, DWORD, PDWORD);
+#define         SetupDiClassNameFromGuid WINELIB_NAME_AW(SetupDiClassNameFromGuid)
+BOOL     WINAPI SetupDiClassNameFromGuidExA(const GUID*, PSTR, DWORD, PDWORD, PCSTR, PVOID);
+BOOL     WINAPI SetupDiClassNameFromGuidExW(const GUID*, PWSTR, DWORD, PDWORD, PCWSTR, PVOID);
+#define         SetupDiClassNameFromGuidEx WINELIB_NAME_AW(SetupDiClassNameFromGuidEx)
+HDEVINFO WINAPI SetupDiCreateDeviceInfoList(const GUID *, HWND);
+HDEVINFO WINAPI SetupDiCreateDeviceInfoListExA(const GUID *, HWND, PCSTR, PVOID);
+HDEVINFO WINAPI SetupDiCreateDeviceInfoListExW(const GUID *, HWND, PCWSTR, PVOID);
+#define         SetupDiCreateDeviceInfoListEx WINELIB_NAME_AW(SetupDiCreateDeviceInfoListEx)
 BOOL     WINAPI SetupDiDestroyDeviceInfoList(HDEVINFO);
 BOOL     WINAPI SetupDiEnumDeviceInterfaces(HDEVINFO, PSP_DEVINFO_DATA, const GUID *, DWORD, PSP_DEVICE_INTERFACE_DATA);
+BOOL     WINAPI SetupDiGetActualSectionToInstallA(HINF, PCSTR, PSTR, DWORD, PDWORD, PSTR *);
+BOOL     WINAPI SetupDiGetActualSectionToInstallW(HINF, PCWSTR, PWSTR, DWORD, PDWORD, PWSTR *);
+#define         SetupDiGetActualSectionToInstall WINELIB_NAME_AW(SetupDiGetActualSectionToInstall)
+BOOL     WINAPI SetupDiGetClassDescriptionA(const GUID*, PSTR, DWORD, PDWORD);
+BOOL     WINAPI SetupDiGetClassDescriptionW(const GUID*, PWSTR, DWORD, PDWORD);
+#define         SetupDiGetClassDescription WINELIB_NAME_AW(SetupDiGetClassDescription)
+BOOL     WINAPI SetupDiGetClassDescriptionExA(const GUID*, PSTR, DWORD, PDWORD, PCSTR, PVOID);
+BOOL     WINAPI SetupDiGetClassDescriptionExW(const GUID*, PWSTR, DWORD, PDWORD, PCWSTR, PVOID);
+#define         SetupDiGetClassDescriptionEx WINELIB_NAME_AW(SetupDiGetClassDescriptionEx)
 HDEVINFO WINAPI SetupDiGetClassDevsA(CONST GUID *,LPCSTR,HWND,DWORD);
 HDEVINFO WINAPI SetupDiGetClassDevsW(CONST GUID *,LPCWSTR,HWND,DWORD);
 #define         SetupDiGetClassDevs WINELIB_NAME_AW(SetupDiGetClassDevs)
+
 BOOL     WINAPI SetupDiGetDeviceInterfaceDetailA(HDEVINFO, PSP_DEVICE_INTERFACE_DATA, PSP_DEVICE_INTERFACE_DETAIL_DATA_A,
                                                  DWORD, PDWORD, PSP_DEVINFO_DATA);
 BOOL     WINAPI SetupDiGetDeviceInterfaceDetailW(HDEVINFO, PSP_DEVICE_INTERFACE_DATA, PSP_DEVICE_INTERFACE_DETAIL_DATA_W,
                                                  DWORD, PDWORD, PSP_DEVINFO_DATA);
 #define         SetupDiGetDeviceInterfaceDetail WINELIB_NAME_AW(SetupDiGetDeviceInterfaceDetail)
 BOOL     WINAPI SetupDiGetDeviceRegistryPropertyA(HDEVINFO, PSP_DEVINFO_DATA, DWORD, PDWORD, PBYTE, DWORD, PDWORD);
+BOOL     WINAPI SetupDiInstallClassA(HWND, PCSTR, DWORD, HSPFILEQ);
+BOOL     WINAPI SetupDiInstallClassW(HWND, PCWSTR, DWORD, HSPFILEQ);
+#define         SetupDiInstallClass WINELIB_NAME_AW(SetupDiInstallClass)
+HKEY     WINAPI SetupDiOpenClassRegKey(const GUID*, REGSAM);
+HKEY     WINAPI SetupDiOpenClassRegKeyExA(const GUID*, REGSAM, DWORD, PCSTR, PVOID);
+HKEY     WINAPI SetupDiOpenClassRegKeyExW(const GUID*, REGSAM, DWORD, PCWSTR, PVOID);
+#define         SetupDiOpenClassRegKeyEx WINELIB_NAME_AW(SetupDiOpenClassRegKeyEx)
+
 BOOL     WINAPI SetupInstallFilesFromInfSectionA( HINF, HINF, HSPFILEQ, PCSTR, PCSTR, UINT );
 BOOL     WINAPI SetupInstallFilesFromInfSectionW( HINF, HINF, HSPFILEQ, PCWSTR, PCWSTR, UINT );
 #define         SetupInstallFilesFromInfSection WINELIB_NAME_AW(SetupInstallFilesFromInfSection)
