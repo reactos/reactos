@@ -15,6 +15,9 @@
 #include "../include/mouse.h"
 #include "mouclass.h"
 
+#define NDEBUG
+#include <debug.h>
+
 BOOLEAN AlreadyOpened = FALSE;
 
 BOOLEAN MouseClassCallBack(PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA MouseDataStart,
@@ -73,18 +76,18 @@ BOOLEAN MouseClassCallBack(PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA M
 
     // Throw data up to GDI callback
     if(*(PGDI_SERVICE_CALLBACK_ROUTINE)ClassDeviceExtension->GDIInformation.CallBack != NULL) {
-	  DbgPrint("MouseClassCallBack() Calling GDI callback at %p\n", ClassDeviceExtension->GDIInformation.CallBack);
+	  DPRINT("MouseClassCallBack() Calling GDI callback at %p\n", ClassDeviceExtension->GDIInformation.CallBack);
       (*(PGDI_SERVICE_CALLBACK_ROUTINE)ClassDeviceExtension->GDIInformation.CallBack)
         (ClassDeviceExtension->PortData - ReadSize, ReadSize);
     } else {
-	  DbgPrint("MouseClassCallBack() NO GDI callback installed\n");
+	  DPRINT("MouseClassCallBack() NO GDI callback installed\n");
 	}
 
     ClassDeviceExtension->PortData -= ReadSize;
     ClassDeviceExtension->InputCount -= ReadSize;
     ClassDeviceExtension->ReadIsPending = FALSE;
   } else {
-    DbgPrint("MouseClassCallBack() entered, InputCount = %d - DOING NOTHING\n", *InputCount);
+    DPRINT("MouseClassCallBack() entered, InputCount = %d - DOING NOTHING\n", *InputCount);
   }
 
   return TRUE;
