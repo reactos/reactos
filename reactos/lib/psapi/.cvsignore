@@ -1,0 +1,9 @@
+base.tmp
+junk.tmp
+psapi.sym
+psapi.coff
+psapi.dll
+psapi.nostrip.dll
+temp.exp
+*.o
+.*.d
