@@ -45,6 +45,35 @@ GetClipRgn(
 
 
 /*
+ * @unimplemented
+ */
+HRGN
+STDCALL
+CreateEllipticRgn(
+	int			a0,
+	int			a1,
+	int			a2,
+	int			a3
+	)
+{
+	return NtGdiCreateEllipticRgn(a0,a1,a2,a3);
+}
+
+
+/*
+ * @unimplemented
+ */
+HRGN
+STDCALL
+CreateEllipticRgnIndirect(
+	CONST RECT		*a0
+	)
+{
+	return NtGdiCreateEllipticRgnIndirect((RECT *)a0);
+}
+
+
+/*
  * @implemented
  */
 HRGN

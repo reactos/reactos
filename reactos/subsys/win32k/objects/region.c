@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.37 2003/09/23 19:33:29 weiden Exp $ */
+/* $Id: region.c,v 1.38 2003/11/08 22:54:26 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -1543,19 +1543,21 @@ NtGdiCombineRgn(HRGN  hDest,
 
 HRGN
 STDCALL
-NtGdiCreateEllipticRgn(INT  LeftRect,
-                            INT  TopRect,
-                            INT  RightRect,
-                            INT  BottomRect)
+NtGdiCreateEllipticRgn(INT Left,
+                       INT Top,
+                       INT Right,
+                       INT Bottom)
 {
-  UNIMPLEMENTED;
+   return NtGdiCreateRoundRectRgn(Left, Top, Right, Bottom,
+      Right - Left, Bottom - Top);
 }
 
 HRGN
 STDCALL
-NtGdiCreateEllipticRgnIndirect(CONST PRECT  rc)
+NtGdiCreateEllipticRgnIndirect(CONST PRECT Rect)
 {
-  UNIMPLEMENTED;
+   return NtGdiCreateRoundRectRgn(Rect->left, Rect->top, Rect->right, Rect->bottom,
+      Rect->right - Rect->left, Rect->bottom - Rect->top );
 }
 
 HRGN
@@ -1642,14 +1644,105 @@ UnsafeIntCreateRectRgnIndirect(CONST PRECT  rc)
 
 HRGN
 STDCALL
-NtGdiCreateRoundRectRgn(INT  LeftRect,
-                             INT  TopRect,
-                             INT  RightRect,
-                             INT  BottomRect,
-                             INT  WidthEllipse,
-                             INT  HeightEllipse)
+NtGdiCreateRoundRectRgn(INT left, INT top, INT right, INT bottom,
+   INT ellipse_width, INT ellipse_height)
 {
-  UNIMPLEMENTED;
+    PROSRGNDATA obj;
+    HRGN hrgn;
+    int asq, bsq, d, xd, yd;
+    RECT rect;
+
+      /* Make the dimensions sensible */
+
+    if (left > right) { INT tmp = left; left = right; right = tmp; }
+    if (top > bottom) { INT tmp = top; top = bottom; bottom = tmp; }
+
+    ellipse_width = abs(ellipse_width);
+    ellipse_height = abs(ellipse_height);
+
+      /* Check parameters */
+
+    if (ellipse_width > right-left) ellipse_width = right-left;
+    if (ellipse_height > bottom-top) ellipse_height = bottom-top;
+
+      /* Check if we can do a normal rectangle instead */
+
+    if ((ellipse_width < 2) || (ellipse_height < 2))
+        return NtGdiCreateRectRgn( left, top, right, bottom );
+
+      /* Create region */
+
+    d = (ellipse_height < 128) ? ((3 * ellipse_height) >> 2) : 64;
+    if (!(hrgn = RGNDATA_AllocRgn(d))) return 0;
+    if (!(obj = RGNDATA_LockRgn(hrgn))) return 0;
+
+      /* Ellipse algorithm, based on an article by K. Porter */
+      /* in DDJ Graphics Programming Column, 8/89 */
+
+    asq = ellipse_width * ellipse_width / 4;        /* a^2 */
+    bsq = ellipse_height * ellipse_height / 4;      /* b^2 */
+    d = bsq - asq * ellipse_height / 2 + asq / 4;   /* b^2 - a^2b + a^2/4 */
+    xd = 0;
+    yd = asq * ellipse_height;                      /* 2a^2b */
+
+    rect.left   = left + ellipse_width / 2;
+    rect.right  = right - ellipse_width / 2;
+
+      /* Loop to draw first half of quadrant */
+
+    while (xd < yd)
+    {
+	if (d > 0)  /* if nearest pixel is toward the center */
+	{
+	      /* move toward center */
+	    rect.top = top++;
+	    rect.bottom = rect.top + 1;
+	    UnsafeIntUnionRectWithRgn( hrgn, &rect );
+	    rect.top = --bottom;
+	    rect.bottom = rect.top + 1;
+	    UnsafeIntUnionRectWithRgn( hrgn, &rect );
+	    yd -= 2*asq;
+	    d  -= yd;
+	}
+	rect.left--;        /* next horiz point */
+	rect.right++;
+	xd += 2*bsq;
+	d  += bsq + xd;
+    }
+
+      /* Loop to draw second half of quadrant */
+
+    d += (3 * (asq-bsq) / 2 - (xd+yd)) / 2;
+    while (yd >= 0)
+    {
+	  /* next vertical point */
+	rect.top = top++;
+	rect.bottom = rect.top + 1;
+	UnsafeIntUnionRectWithRgn( hrgn, &rect );
+	rect.top = --bottom;
+	rect.bottom = rect.top + 1;
+	UnsafeIntUnionRectWithRgn( hrgn, &rect );
+	if (d < 0)   /* if nearest pixel is outside ellipse */
+	{
+	    rect.left--;     /* move away from center */
+	    rect.right++;
+	    xd += 2*bsq;
+	    d  += xd;
+	}
+	yd -= 2*asq;
+	d  += asq - yd;
+    }
+
+      /* Add the inside rectangle */
+
+    if (top <= bottom)
+    {
+	rect.top = top;
+	rect.bottom = bottom;
+	UnsafeIntUnionRectWithRgn( hrgn, &rect );
+    }
+    RGNDATA_UnlockRgn( hrgn );
+    return hrgn;
 }
 
 BOOL

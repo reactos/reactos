@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.38 2003/10/28 19:30:08 gvg Exp $
+/* $Id: stubs.c,v 1.39 2003/11/08 22:54:26 navaraf Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -89,37 +89,6 @@ STDCALL
 CreateDIBPatternBrush(
 	HGLOBAL			a0,
 	UINT			a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-HRGN
-STDCALL
-CreateEllipticRgn(
-	int			a0,
-	int			a1,
-	int			a2,
-	int			a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-HRGN
-STDCALL
-CreateEllipticRgnIndirect(
-	CONST RECT		*a0
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
