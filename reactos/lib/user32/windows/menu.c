@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.38 2003/12/24 21:10:16 navaraf Exp $
+/* $Id: menu.c,v 1.39 2003/12/28 00:19:24 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -65,6 +65,8 @@
 #define POPUPMENU_CLASS_ATOMA   MAKEINTATOMA(32768)  /* PopupMenu */
 #define POPUPMENU_CLASS_ATOMW   MAKEINTATOMW(32768)  /* PopupMenu */
 
+static LRESULT WINAPI PopupMenuWndProcW(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+
 /*********************************************************************
  * PopupMenu class descriptor
  */
@@ -72,11 +74,11 @@ const struct builtin_class_descr POPUPMENU_builtin_class =
 {
     POPUPMENU_CLASS_ATOMW,                     /* name */
     CS_GLOBALCLASS | CS_SAVEBITS | CS_DBLCLKS, /* style  */
-    (WNDPROC) NULL,                            /* FIXME - procW */
+    (WNDPROC) PopupMenuWndProcW,               /* FIXME - procW */
     (WNDPROC) NULL,                            /* FIXME - procA */
     sizeof(MENUINFO *),                        /* extra */
     (LPCWSTR) IDC_ARROW,                        /* cursor */
-    (HBRUSH)COLOR_MENU                         /* brush */
+    (HBRUSH)(COLOR_MENU + 1)                    /* brush */
 };
 
 
@@ -96,6 +98,16 @@ const struct builtin_class_descr POPUPMENU_builtin_class =
 
 HFONT hMenuFont = NULL;
 HFONT hMenuFontBold = NULL;
+
+static LRESULT WINAPI PopupMenuWndProcW(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+  switch(message)
+  {
+    default:
+      return DefWindowProcW(hwnd, message, wParam, lParam);
+  }
+  return 0;
+}
 
 /**********************************************************************
  *         MENUEX_ParseResource
@@ -593,14 +605,18 @@ EnableMenuItem(HMENU hMenu,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 EndMenu(VOID)
 {
-  UNIMPLEMENTED;
-  /* FIXME - return NtUserEndMenu(); */
-  return FALSE;
+  GUITHREADINFO guii;
+  guii.cbSize = sizeof(GUITHREADINFO);
+  if(GetGUIThreadInfo(GetCurrentThreadId(), &guii) && guii.hwndMenuOwner)
+  {
+    PostMessageW(guii.hwndMenuOwner, WM_CANCELMODE, 0, 0);
+  }
+  return TRUE;
 }
 
 
@@ -1293,7 +1309,7 @@ SetMenuItemInfoW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -1306,13 +1322,21 @@ TrackPopupMenu(
   HWND hWnd,
   CONST RECT *prcRect)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  TPMPARAMS tpm;
+  
+  if(prcRect)
+  {
+    tpm.cbSize = sizeof(TPMPARAMS);
+    tpm.rcExclude = *prcRect;
+  }
+  
+  return (WINBOOL)NtUserTrackPopupMenuEx(hMenu, uFlags, x, y, hWnd, 
+                                         (prcRect ? &tpm : NULL));
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -1324,8 +1348,7 @@ TrackPopupMenuEx(
   HWND hwnd,
   LPTPMPARAMS lptpm)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (WINBOOL)NtUserTrackPopupMenuEx(hmenu, fuFlags, x, y, hwnd, lptpm);
 }
 
 

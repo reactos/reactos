@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.36 2003/12/22 15:30:21 navaraf Exp $
+/* $Id: menu.c,v 1.37 2003/12/28 00:19:24 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -38,6 +38,7 @@
 #include <include/guicheck.h>
 #include <include/window.h>
 #include <include/color.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1035,6 +1036,16 @@ IntGetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT fByPos, UINT gmdiFlags,
   return res;
 }
 
+
+BOOL FASTCALL
+IntTrackPopupMenu(PMENU_OBJECT MenuObject, PWINDOW_OBJECT WindowObject,
+                  UINT Flags, POINT *Pos, UINT MenuPos, RECT *ExcludeRect)
+{
+
+  return FALSE;
+}
+
+
 /*!
  * Internal function. Called when the process is destroyed to free the remaining menu handles.
 */
@@ -1607,7 +1618,7 @@ NtUserThunkedMenuItemInfo(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 NtUserTrackPopupMenuEx(
@@ -1618,9 +1629,57 @@ NtUserTrackPopupMenuEx(
   HWND hwnd,
   LPTPMPARAMS lptpm)
 {
-  UNIMPLEMENTED
-
-  return 0;
+  PMENU_OBJECT MenuObject;
+  PWINDOW_OBJECT WindowObject;
+  TPMPARAMS Safetpm;
+  NTSTATUS Status;
+  POINT Pos;
+  BOOL Ret;
+  
+  MenuObject = IntGetMenuObject(hmenu);
+  if(!MenuObject)
+  {
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+    return FALSE;
+  }
+  
+  WindowObject = IntGetWindowObject(hwnd);
+  if(!WindowObject)
+  {
+    IntReleaseMenuObject(MenuObject);
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  
+  if(lptpm)
+  {
+    Status = MmCopyFromCaller(&Safetpm, lptpm, sizeof(TPMPARAMS));
+    if(!NT_SUCCESS(Status))
+    {
+      IntReleaseWindowObject(WindowObject);
+      IntReleaseMenuObject(MenuObject);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+    if(Safetpm.cbSize != sizeof(TPMPARAMS))
+    {
+      IntReleaseWindowObject(WindowObject);
+      IntReleaseMenuObject(MenuObject);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
+  }
+  
+  Pos.x = x;
+  Pos.y = y;
+  
+  Ret = IntTrackPopupMenu(MenuObject, WindowObject, fuFlags, &Pos, 0, 
+                          (lptpm ? &Safetpm.rcExclude : NULL));
+  
+  IntReleaseWindowObject(WindowObject);
+  IntReleaseMenuObject(MenuObject);
+  
+  return Ret;
 }
 
 
