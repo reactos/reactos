@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cplsample.c,v 1.4 2004/10/11 21:08:04 weiden Exp $
+/* $Id: cplsample.c,v 1.5 2004/10/30 19:14:22 ekohl Exp $
  *
  * PROJECT:         ReactOS Sample Control Panel
  * FILE:            lib/cpl/cplsample/cplsample.c
@@ -26,13 +26,15 @@
  *      05-01-2004  Created
  */
 #include <windows.h>
-#include <stdlib.h>
+#include <commctrl.h>
+#include <cpl.h>
+
 #include "resource.h"
 #include "cplsample.h"
 
 #define NUM_APPLETS	(1)
 
-LONG CALLBACK Applet1(VOID);
+LONG APIENTRY Applet1(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
 HINSTANCE hApplet = 0;
 
 /* Applets */
@@ -48,7 +50,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
   psp->dwSize = sizeof(PROPSHEETPAGE);
   psp->dwFlags = PSP_DEFAULT;
   psp->hInstance = hApplet;
-  psp->u1.pszTemplate = MAKEINTRESOURCE(idDlg);
+  psp->pszTemplate = MAKEINTRESOURCE(idDlg);
   psp->pfnDlgProc = DlgProc;
 }
 
@@ -137,8 +139,8 @@ PropSheetProc(
 
 /* First Applet */
 
-LONG CALLBACK
-Applet1(VOID)
+LONG APIENTRY
+Applet1(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 {
   PROPSHEETPAGE psp[3];
   PROPSHEETHEADER psh;
@@ -151,11 +153,11 @@ Applet1(VOID)
   psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USECALLBACK | PSH_PROPTITLE;
   psh.hwndParent = NULL;
   psh.hInstance = hApplet;
-  psh.u1.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON_1));
+  psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON_1));
   psh.pszCaption = Caption;
   psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
-  psh.u2.nStartPage = 0;
-  psh.u3.ppsp = psp;
+  psh.nStartPage = 0;
+  psh.ppsp = psp;
   psh.pfnCallback = PropSheetProc;
   
   InitPropSheetPage(&psp[0], IDD_PROPPAGE1, Page1Proc);
@@ -196,7 +198,7 @@ CPlApplet(
     }
     case CPL_DBLCLK:
     {
-      Applets[i].AppletProc();
+      Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
       break;
     }
   }
