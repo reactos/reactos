@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.78 2002/02/27 01:12:26 dwelch Exp $
+/* $Id: section.c,v 1.79 2002/03/03 19:47:58 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1519,7 +1519,7 @@ MmpCloseSection(PVOID ObjectBody,
 		ULONG HandleCount)
 {
    DPRINT("MmpCloseSection(OB %x, HC %d) RC %d\n",
-	   ObjectBody, HandleCount, ObGetReferenceCount(ObjectBody));
+	   ObjectBody, HandleCount, ObGetObjectPointerCount(ObjectBody));
    
 }
 
