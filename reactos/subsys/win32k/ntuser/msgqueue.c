@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.34 2003/11/21 23:05:28 weiden Exp $
+/* $Id: msgqueue.c,v 1.35 2003/11/22 12:22:07 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -177,7 +177,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 			 PPOINT ScreenPoint, PBOOL MouseClick)
 {
   USHORT Msg = Message->Msg.message;
-  PWINDOW_OBJECT Window = NULL;
+  PWINDOW_OBJECT CaptureWin, Window = NULL;
   HWND Wnd;
   POINT Point;
 
@@ -254,8 +254,10 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     }
 
   }
+  
+  CaptureWin = IntGetCaptureWindow();
 
-  if ((Window = IntGetCaptureWindow()) == NULL)
+  if ((Window = CaptureWin) == NULL)
   {
     *HitTest = WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window);
   }
@@ -267,7 +269,8 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   if (Window == NULL)
   {
     /* set default cursor */
-    IntSendSetCursorMessage(NULL, Msg, HTNOWHERE);
+    if(CaptureWin == NULL)
+      IntSendSetCursorMessage(NULL, Msg, HTNOWHERE);
     
     ExFreePool(Message);
     return(FALSE);
@@ -308,7 +311,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   *ScreenPoint = Message->Msg.pt;
   Point = Message->Msg.pt;
   
-  if(!IntSendSetCursorMessage(Window, Msg, *HitTest))
+  if(!CaptureWin && !IntSendSetCursorMessage(Window, Msg, *HitTest))
   {
     /* FIXME - what should we do here? */
   }
