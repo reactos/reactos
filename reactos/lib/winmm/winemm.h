@@ -87,7 +87,7 @@ typedef struct tagWINE_MM_DRIVER_PART {
 typedef struct tagWINE_MM_DRIVER {
     HDRVR			hDriver;
     LPSTR			drvname;	/* name of the driver */
-    BOOL			bIs32 : 1,	/* TRUE if 32 bit driver, FALSE for 16 */
+    unsigned			bIs32 : 1,	/* TRUE if 32 bit driver, FALSE for 16 */
 	                        bIsMapper : 1;	/* TRUE if mapper */
     WINE_MM_DRIVER_PART		parts[MMDRV_MAX];/* Information for all known types */
 } WINE_MM_DRIVER, *LPWINE_MM_DRIVER;
@@ -139,9 +139,9 @@ typedef struct {
 typedef struct tagWINE_MCIDRIVER {
         UINT			wDeviceID;
         UINT			wType;
-	LPSTR			lpstrElementName;
-        LPSTR			lpstrDeviceType;
-        LPSTR			lpstrAlias;
+	LPWSTR			lpstrElementName;
+        LPWSTR			lpstrDeviceType;
+        LPWSTR			lpstrAlias;
         HDRVR			hDriver;
 	DWORD			dwPrivate;
         YIELDPROC		lpfnYieldProc;
@@ -181,14 +181,14 @@ typedef struct tagWINE_MMIO {
     MMIOINFO			info;
     struct tagWINE_MMIO*	lpNext;
     struct IOProcList*		ioProc;
-    BOOL			bTmpIOProc : 1,
+    unsigned			bTmpIOProc : 1,
                                 bBufferLoaded : 1;
     DWORD                       segBuffer16;
     DWORD                       dwFileSize;
 } WINE_MMIO, *LPWINE_MMIO;
 
 typedef struct tagWINE_PLAYSOUND {
-    BOOL                        bLoop : 1,
+    unsigned                    bLoop : 1,
                                 bAlloc : 1;
     LPCWSTR		        pszSound;
     HMODULE		        hMod;
@@ -224,8 +224,8 @@ typedef	WINMM_MapType	        (*MMDRV_UNMAPFUNC)(UINT wMsg, LPDWORD lpdwUser, LP
 
 HDRVR WINAPI	OpenDriverA(LPCSTR lpDriverName, LPCSTR lpSectionName, LPARAM lParam2);
 LPWINE_DRIVER	DRIVER_FindFromHDrvr(HDRVR hDrvr);
-BOOL		DRIVER_GetLibName(LPCSTR keyName, LPCSTR sectName, LPSTR buf, int sz);
-LPWINE_DRIVER	DRIVER_TryOpenDriver32(LPCSTR fn, LPARAM lParam2);
+BOOL		DRIVER_GetLibName(LPCWSTR keyName, LPCWSTR sectName, LPWSTR buf, int sz);
+LPWINE_DRIVER	DRIVER_TryOpenDriver32(LPCWSTR fn, LPARAM lParam2);
 void            DRIVER_UnloadAll(void);
 
 BOOL		MMDRV_Init(void);
@@ -245,15 +245,18 @@ void            MMDRV_InstallMap(unsigned int, MMDRV_MAPFUNC, MMDRV_UNMAPFUNC,
                                  MMDRV_MAPFUNC, MMDRV_UNMAPFUNC, LPDRVCALLBACK);
 
 WINE_MCIDRIVER* MCI_GetDriver(UINT16 uDevID);
-UINT		MCI_GetDriverFromString(LPCSTR str);
-DWORD		MCI_WriteString(LPSTR lpDstStr, DWORD dstSize, LPCSTR lpSrcStr);
-const char* 	MCI_MessageToString(UINT16 wMsg);
+UINT		MCI_GetDriverFromString(LPCWSTR str);
+DWORD		MCI_WriteString(LPWSTR lpDstStr, DWORD dstSize, LPCWSTR lpSrcStr);
+const char* 	MCI_MessageToString(UINT wMsg);
 UINT	WINAPI	MCI_DefYieldProc(MCIDEVICEID wDevID, DWORD data);
 LRESULT		MCI_CleanUp(LRESULT dwRet, UINT wMsg, DWORD dwParam2);
 DWORD		MCI_SendCommand(UINT wDevID, UINT16 wMsg, DWORD dwParam1, DWORD dwParam2, BOOL bFrom32);
 DWORD		MCI_SendCommandFrom32(UINT wDevID, UINT16 wMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
 DWORD		MCI_SendCommandFrom16(UINT wDevID, UINT16 wMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
 UINT		MCI_SetCommandTable(void *table, UINT uDevType);
+BOOL	        MCI_DeleteCommandTable(UINT uTbl, BOOL delete);
+LPWSTR          MCI_strdupAtoW(LPCSTR str);
+LPSTR           MCI_strdupWtoA(LPCWSTR str);
 
 BOOL            WINMM_CheckForMMSystem(void);
 const char*     WINMM_ErrorToString(MMRESULT error);
@@ -291,13 +294,13 @@ extern LPWINE_MM_IDATA  WINMM_IData;
  * NULL otherwise
  */
 extern  WINE_MMTHREAD*  (*pFnGetMMThread16)(UINT16);
-extern  LPWINE_DRIVER   (*pFnOpenDriver16)(LPCSTR,LPCSTR,LPARAM);
+extern  LPWINE_DRIVER   (*pFnOpenDriver16)(LPCWSTR,LPCWSTR,LPARAM);
 extern  LRESULT         (*pFnCloseDriver16)(UINT16,LPARAM,LPARAM);
 extern  LRESULT         (*pFnSendMessage16)(UINT16,UINT,LPARAM,LPARAM);
-extern  WINMM_MapType   (*pFnMciMapMsg16To32A)(WORD,WORD,DWORD*);
-extern  WINMM_MapType   (*pFnMciUnMapMsg16To32A)(WORD,WORD,DWORD);
-extern  WINMM_MapType   (*pFnMciMapMsg32ATo16)(WORD,WORD,DWORD,DWORD*);
-extern  WINMM_MapType   (*pFnMciUnMapMsg32ATo16)(WORD,WORD,DWORD,DWORD);
+extern  WINMM_MapType   (*pFnMciMapMsg16To32W)(WORD,WORD,DWORD*);
+extern  WINMM_MapType   (*pFnMciUnMapMsg16To32W)(WORD,WORD,DWORD);
+extern  WINMM_MapType   (*pFnMciMapMsg32WTo16)(WORD,WORD,DWORD,DWORD*);
+extern  WINMM_MapType   (*pFnMciUnMapMsg32WTo16)(WORD,WORD,DWORD,DWORD);
 extern  LRESULT         (*pFnCallMMDrvFunc16)(DWORD /* in fact FARPROC16 */,WORD,WORD,LONG,LONG,LONG);
 extern  unsigned        (*pFnLoadMMDrvFunc16)(LPCSTR,LPWINE_DRIVER, LPWINE_MM_DRIVER);
 extern  LRESULT         (*pFnMmioCallback16)(DWORD,LPMMIOINFO,UINT,LPARAM,LPARAM);

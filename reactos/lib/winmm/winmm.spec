@@ -10,12 +10,12 @@
 @ stdcall DrvClose(long long long) CloseDriver
 @ stdcall DrvDefDriverProc(long long long long long) DefDriverProc
 @ stdcall DrvGetModuleHandle(long) GetDriverModuleHandle
-@ stdcall DrvOpen(wstr wstr long) OpenDriverW
+@ stdcall DrvOpen(wstr wstr long) OpenDriver
 @ stdcall DrvOpenA(str str long) OpenDriverA
 @ stdcall DrvSendMessage(long long long long) SendDriverMessage
 @ stdcall GetDriverFlags(long)
 @ stdcall GetDriverModuleHandle(long)
-@ stdcall OpenDriver(wstr wstr long) OpenDriverW
+@ stdcall OpenDriver(wstr wstr long)
 @ stdcall OpenDriverA(str str long)
 @ stdcall PlaySound(ptr long long) PlaySoundA
 @ stdcall PlaySoundW(ptr long long)
@@ -42,8 +42,9 @@
 @ stdcall mciFreeCommandResource(long)
 @ stdcall mciGetCreatorTask(long)
 @ stdcall mciGetDeviceIDA(str)
-@ stdcall mciGetDeviceIDFromElementIDW(long str)
-@ stdcall mciGetDeviceIDW(str)
+@ stdcall mciGetDeviceIDW(wstr)
+@ stdcall mciGetDeviceIDFromElementIDA(long str)
+@ stdcall mciGetDeviceIDFromElementIDW(long wstr)
 @ stdcall mciGetDriverData(long)
 @ stdcall mciGetErrorStringA(long ptr long)
 @ stdcall mciGetErrorStringW(long ptr long)
@@ -61,8 +62,8 @@
 @ stdcall midiInClose(long)
 @ stdcall midiInGetDevCapsA(long ptr long)
 @ stdcall midiInGetDevCapsW(long ptr long)
-@ stdcall midiInGetErrorTextA(long ptr long)
-@ stdcall midiInGetErrorTextW(long ptr long)
+@ stdcall midiInGetErrorTextA(long ptr long) midiOutGetErrorTextA
+@ stdcall midiInGetErrorTextW(long ptr long) midiOutGetErrorTextW
 @ stdcall midiInGetID(long ptr)
 @ stdcall midiInGetNumDevs()
 @ stdcall midiInMessage(long long long long)
@@ -153,8 +154,8 @@
 @ stdcall waveInClose(long)
 @ stdcall waveInGetDevCapsA(long ptr long)
 @ stdcall waveInGetDevCapsW(long ptr long)
-@ stdcall waveInGetErrorTextA(long ptr long)
-@ stdcall waveInGetErrorTextW(long ptr long)
+@ stdcall waveInGetErrorTextA(long ptr long) waveOutGetErrorTextA
+@ stdcall waveInGetErrorTextW(long ptr long) waveOutGetErrorTextW
 @ stdcall waveInGetID(long ptr)
 @ stdcall waveInGetNumDevs()
 @ stdcall waveInGetPosition(long ptr long)
@@ -188,3 +189,23 @@
 @ stdcall waveOutSetVolume(long long)
 @ stdcall waveOutUnprepareHeader(long ptr long)
 @ stdcall waveOutWrite(long ptr long)
+# MigrateAllDrivers
+# MigrateSoundEvents
+# NotifyCallbackData
+# WOW32DriverCallback
+# WOW32ResolveMultiMediaHandle
+# WOWAppExit
+# WinmmLogoff
+# WinmmLogon
+# mid32Message
+# mmDrvInstall
+# aux32Message
+# joy32Message
+# mci32Message
+# mod32Message
+# mxd32Message
+# tid32Message
+# wid32Message
+# winmmDbgOut
+# winmmSetDebugLevel
+# wod32Message
