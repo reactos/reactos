@@ -28,7 +28,7 @@
 #include <sys/stat.h>
 
 #define NDEBUG
-#include <internal/msvcrtdbg.h>
+#include <internal/debug.h>
 
 
 /* EXTERNAL PROTOTYPES ********************************************************/
