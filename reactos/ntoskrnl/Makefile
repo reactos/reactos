@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.128 2004/06/23 22:32:45 ion Exp $
+# $Id: Makefile,v 1.129 2004/07/02 21:02:54 royce Exp $
 #
 # ReactOS Operating System
 #
@@ -535,25 +535,31 @@ OBJECTS := \
 	$(OBJECTS_PATH)/inbv.o \
 	$(OBJECTS_RESOURCE)
 
+NTOSKRNL_LIBS := \
+	$(DDK_PATH_LIB)/hal.a \
+	$(SDK_PATH_LIB)/rtl.a \
+	$(SDK_PATH_LIB)/string.a \
+	$(SDK_PATH_LIB)/rosrtl.a \
+	$(SDK_PATH_LIB)/pseh.a
 
-$(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(SDK_PATH_LIB)/rtl.a $(SDK_PATH_LIB)/string.a $(SDK_PATH_LIB)/rosrtl.a
+NTOSKRNL_LD_FLAGS := \
+	-Wl,--subsystem,native \
+	-Wl,--image-base,0xc0000000 \
+	-Wl,--file-alignment,0x1000 \
+	-Wl,--section-alignment,0x1000 \
+	-Wl,--entry,_NtProcessStartup
+
+$(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(NTOSKRNL_LIBS)
 	$(CC) \
 		-Wl,-T,ntoskrnl.lnk \
 		-nostartfiles \
 		-nostdlib \
 		-mdll \
 		-o junk.tmp \
-		-Wl,--subsystem,native \
-		-Wl,--image-base,0xc0000000 \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,--entry,_NtProcessStartup \
+		$(NTOSKRNL_LD_FLAGS) \
 		-Wl,--base-file,base.tmp \
 		$(TARGETNAME).o -lgcc \
-		$(SDK_PATH_LIB)/rtl.a \
-		$(SDK_PATH_LIB)/string.a \
-		$(SDK_PATH_LIB)/rosrtl.a \
-		$(DDK_PATH_LIB)/hal.a
+		$(NTOSKRNL_LIBS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGETNAME).exe \
@@ -568,37 +574,23 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(SDK_PATH_LIB)/rtl.a $(SD
 		-Wl,-T,ntoskrnl.lnk \
 		-mdll \
 		-o $(TARGETNAME).nostrip.exe \
-		-Wl,--subsystem,native \
-		-Wl,--image-base,0xc0000000 \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,--entry,_NtProcessStartup \
+		$(NTOSKRNL_LD_FLAGS) \
 		-Wl,temp.exp \
 		$(TARGETNAME).o -lgcc \
-		$(SDK_PATH_LIB)/rtl.a \
-		$(SDK_PATH_LIB)/string.a \
-		$(SDK_PATH_LIB)/rosrtl.a \
-		$(DDK_PATH_LIB)/hal.a
+		$(NTOSKRNL_LIBS)
 	- $(RM) temp.exp
 
-$(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a $(SDK_PATH_LIB)/rtl.a $(SDK_PATH_LIB)/string.a $(SDK_PATH_LIB)/rosrtl.a
+$(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(NTOSKRNL_LIBS)
 	- $(CC) \
 		-Wl,-T,$(LINKER_SCRIPT) \
 		-nostartfiles \
 		-nostdlib \
 		-mdll \
 		-o junk.tmp \
-		-Wl,--subsystem,native \
-		-Wl,--image-base,0xc0000000 \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,--entry,_NtProcessStartup \
+		$(NTOSKRNL_LD_FLAGS) \
 		-Wl,--base-file,base.tmp \
 		$(TARGETNAME).o -lgcc \
-		$(SDK_PATH_LIB)/rtl.a \
-		$(SDK_PATH_LIB)/string.a \
-		$(SDK_PATH_LIB)/rosrtl.a \
-		$(DDK_PATH_LIB)/hal.a
+		$(NTOSKRNL_LIBS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGETNAME).exe \
@@ -613,40 +605,26 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a $(SDK_
 		-nostdlib \
 		-mdll \
 		-o $(TARGETNAME).exe \
-		-Wl,--subsystem,native \
-		-Wl,--image-base,0xc0000000 \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,--entry,_NtProcessStartup \
+		$(NTOSKRNL_LD_FLAGS) \
 		-Wl,temp.exp \
 		$(TARGETNAME).o -lgcc \
-		$(SDK_PATH_LIB)/rtl.a \
-		$(SDK_PATH_LIB)/string.a \
-		$(SDK_PATH_LIB)/rosrtl.a \
-		$(DDK_PATH_LIB)/hal.a
+		$(NTOSKRNL_LIBS)
 	- $(RM) temp.exp
 
 $(TARGETNAME).dbg.o: $(TARGETNAME).o
 	$(STRIP) --strip-debug -o $(TARGETNAME).dbg.o $(TARGETNAME).o
 
-$(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk $(DDK_PATH_LIB)/hal.a $(SDK_PATH_LIB)/rtl.a $(SDK_PATH_LIB)/string.a $(SDK_PATH_LIB)/rosrtl.a
+$(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk $(NTOSKRNL_LIBS)
 	$(CC) \
 		-Wl,-T,$(TARGETNAME).dbg.lnk \
 		-nostartfiles \
 		-nostdlib \
 		-mdll \
 		-o junk.tmp \
-		-Wl,--subsystem,native \
-		-Wl,--image-base,0xc0000000 \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,--entry,_NtProcessStartup \
+		$(NTOSKRNL_LD_FLAGS) \
 		-Wl,--base-file,base.tmp \
 		$(TARGETNAME).dbg.o -lgcc \
-		$(SDK_PATH_LIB)/rtl.a \
-		$(SDK_PATH_LIB)/string.a \
-		$(SDK_PATH_LIB)/rosrtl.a \
-		$(DDK_PATH_LIB)/hal.a
+		$(NTOSKRNL_LIBS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGETNAME).dbg \
@@ -661,17 +639,10 @@ $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk $(D
 		-nostdlib \
 		-mdll \
 		-o $(TARGETNAME).dbg \
-		-Wl,--subsystem,native \
-		-Wl,--image-base,0xc0000000 \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,--entry,_NtProcessStartup \
+		$(NTOSKRNL_LD_FLAGS) \
 		-Wl,temp.exp \
 		$(TARGETNAME).dbg.o -lgcc \
-		$(SDK_PATH_LIB)/rtl.a \
-		$(SDK_PATH_LIB)/string.a \
-		$(SDK_PATH_LIB)/rosrtl.a \
-		$(DDK_PATH_LIB)/hal.a
+		$(NTOSKRNL_LIBS)
 	- $(RM) temp.exp
 
 $(TARGETNAME).sym: $(TARGETNAME).nostrip.exe
