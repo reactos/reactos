@@ -1,4 +1,4 @@
-/* $Id: dma.c,v 1.6 2003/09/04 06:45:38 vizzini Exp $
+/* $Id: dma.c,v 1.7 2003/09/11 11:45:28 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,11 +16,14 @@
 #include <internal/debug.h>
 #include <hal.h>
 
-ADAPTER_OBJECT AdapterObjects[] = {
-  { 0, (PVOID)0x87, (PVOID)0x1, (PVOID)0x0, 0, NULL },
-  { 1, (PVOID)0x83, (PVOID)0x3, (PVOID)0x2, 0, NULL },
-  { 2, (PVOID)0x81, (PVOID)0x5, (PVOID)0x4, 0, NULL },
-  { 3, (PVOID)0x82, (PVOID)0x7, (PVOID)0x6, 0, NULL } };
+ADAPTER_OBJECT IsaSlaveAdapterObjects[] = {
+  { Isa, FALSE, 0, (PVOID)0x87, (PVOID)0x1, (PVOID)0x0, 0, NULL },
+  { Isa, FALSE, 1, (PVOID)0x83, (PVOID)0x3, (PVOID)0x2, 0, NULL },
+  { Isa, FALSE, 2, (PVOID)0x81, (PVOID)0x5, (PVOID)0x4, 0, NULL },
+  { Isa, FALSE, 3, (PVOID)0x82, (PVOID)0x7, (PVOID)0x6, 0, NULL } };
+
+ADAPTER_OBJECT PciBusMasterAdapterObjects[] = {
+  { PCIBus, TRUE, 0, (PVOID)0, (PVOID)0, (PVOID)0x0, 0, NULL } };
 
 
 /* FUNCTIONS *****************************************************************/
@@ -48,17 +51,23 @@ HalAllocateCommonBuffer (PADAPTER_OBJECT    AdapterObject,
 {
   PHYSICAL_ADDRESS HighestAddress;
   PVOID BaseAddress;
- 
+
   HighestAddress.u.HighPart = 0;
-  HighestAddress.u.LowPart = -1;
+  if (AdapterObject->InterfaceType == Isa ||
+      (AdapterObject->InterfaceType == MicroChannel && AdapterObject->Master == FALSE))
+    {
+      HighestAddress.u.LowPart = 0x00FFFFFF; /* 24Bit: 16MB address range */
+    }
+  else
+    {
+      HighestAddress.u.LowPart = 0xFFFFFFFF; /* 32Bit: 4GB address range */
+    }
 
   BaseAddress = MmAllocateContiguousMemory(Length, HighestAddress);
   if (!BaseAddress)
     return 0;
 
   *LogicalAddress = MmGetPhysicalAddress(BaseAddress);
-
-  /* is this supposed to be tracked in the adapter object? */
 
   return BaseAddress;
 }
@@ -107,6 +116,15 @@ HalGetAdapter (PDEVICE_DESCRIPTION	DeviceDescription,
      the adapter object for the requested dma channel */
   if( DeviceDescription->Version != DEVICE_DESCRIPTION_VERSION )
     return NULL;
+
+  if (DeviceDescription->InterfaceType == PCIBus)
+    {
+      if (DeviceDescription->Master == FALSE)
+	return NULL;
+
+      return &PciBusMasterAdapterObjects[0];
+    }
+
   /*
   if( DeviceDescription->Master )
     return NULL;
@@ -122,8 +140,8 @@ HalGetAdapter (PDEVICE_DESCRIPTION	DeviceDescription,
   /*  if( DeviceDescription->DmaWidth != Width8Bits )
       return NULL;*/
   *NumberOfMapRegisters = 0x10;
-  AdapterObjects[DeviceDescription->DmaChannel].Buffer = 0;
-  return &AdapterObjects[DeviceDescription->DmaChannel];
+  IsaSlaveAdapterObjects[DeviceDescription->DmaChannel].Buffer = 0;
+  return &IsaSlaveAdapterObjects[DeviceDescription->DmaChannel];
 }
 
 ULONG STDCALL

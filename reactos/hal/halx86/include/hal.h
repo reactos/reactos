@@ -34,6 +34,8 @@ VOID HalpInitPciBus (VOID);
 VOID HalpStartEnumerator (VOID);
 
 struct _ADAPTER_OBJECT {
+  INTERFACE_TYPE InterfaceType;
+  BOOLEAN Master;
   int Channel;
   PVOID PagePort;
   PVOID CountPort;
