@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.19 2000/02/18 00:53:11 ekohl Exp $
+/* $Id: cmd.c,v 1.20 2000/04/08 14:50:47 ekohl Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -128,7 +128,7 @@
 #include "batch.h"
 
 
-#define CMDLINE_LENGTH  1024
+#define CMDLINE_LENGTH  2048    //1024
 
 
 BOOL bExit = FALSE;       /* indicates EXIT was typed */

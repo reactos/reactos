@@ -22,7 +22,7 @@
 
 
 /* Define to enable debugging code */
-/* #define _DEBUG */
+//#define _DEBUG
 
 
 /* Define to enable the alias command, and aliases.*/

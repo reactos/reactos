@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.6 1999/12/24 17:20:54 ekohl Exp $
+/* $Id: copy.c,v 1.7 2000/04/08 14:50:47 ekohl Exp $
  *
  *  COPY.C -- copy internal command.
  *
@@ -484,9 +484,10 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 }
 
 
-int setup_copy (LPFILES sources, char **p, BOOL bMultiple,
-               char *drive_d, char *dir_d, char *file_d,
-               char *ext_d, int *append, LPDWORD lpdwFlags)
+static INT
+SetupCopy (LPFILES sources, char **p, BOOL bMultiple,
+           char *drive_d, char *dir_d, char *file_d,
+           char *ext_d, int *append, LPDWORD lpdwFlags)
 {
 	WIN32_FIND_DATA find;
 
@@ -503,6 +504,10 @@ int setup_copy (LPFILES sources, char **p, BOOL bMultiple,
 	BOOL bAll = FALSE;
 	BOOL bDone;
 	HANDLE hFind;
+
+#ifdef _DEBUG
+	DebugPrintf (_T("SetupCopy\n"));
+#endif
 
 	real_source = (LPTSTR)malloc (MAX_PATH);
 	real_dest = (LPTSTR)malloc (MAX_PATH);
@@ -524,7 +529,6 @@ int setup_copy (LPFILES sources, char **p, BOOL bMultiple,
 		if (hFind == INVALID_HANDLE_VALUE)
 		{
 			error_file_not_found();
-			DeleteFileList (sources);
 			freep(p);
 			free(real_source);
 			free(real_dest);
@@ -703,7 +707,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 
 	if (bDestFound && !bWildcards)
 	{
-		copied = setup_copy (sources, p, bMultiple, drive_d, dir_d, file_d, ext_d, &append, &dwFlags);
+		copied = SetupCopy (sources, p, bMultiple, drive_d, dir_d, file_d, ext_d, &append, &dwFlags);
 	}
 	else if (bDestFound && bWildcards)
 	{
@@ -722,7 +726,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 			file_d[0] = _T('\0');
 			ext_d[0] = _T('\0');
 		}
-		copied = setup_copy (sources, p, FALSE, "", "", file_d, ext_d, &append, &dwFlags);
+		copied = SetupCopy (sources, p, FALSE, "", "", file_d, ext_d, &append, &dwFlags);
 	}
 	else
 	{
@@ -737,7 +741,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 
 		ConOutPuts (sources->szFile);
 		append = 1;
-		copied = setup_copy (sources->next, p, bMultiple, drive_d, dir_d, file_d, ext_d, &append, &dwFlags) + 1;
+		copied = SetupCopy (sources->next, p, bMultiple, drive_d, dir_d, file_d, ext_d, &append, &dwFlags) + 1;
 	}
 
 	DeleteFileList (sources);

@@ -357,3 +357,7 @@ o Added and fixed missing help texts.
 o Fixed bugs in MD and RD that crashed cmd when no directory was specified.
 o Improved history support.
 o Improved COLOR command.
+
+09-Apr-2000 ReactOS CMD version 0.1 (EricKohl <ekohl@rz-online.de>
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+o Fixed bug in COPY command. CMD crashed if source file didn't exist.

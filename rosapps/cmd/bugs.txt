@@ -1,6 +1,6 @@
-         ****  Please report bugs to ekohl@abo.rhein-zeitung.de!  ****
+         ****  Please report bugs to ekohl@rz-online.de!  ****
 
-Known bugs in CMD version 0.0.4
+Known bugs in CMD version 0.1
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 o  let set work with or without the '=' sign.  People like it that way.
@@ -12,4 +12,4 @@ o  command.com ignores control-c and control-break, which makes it difficult
 o  "alias v = dir" doesn't work because of the spaces.
 
 
-         ****  Please report bugs to ekohl@abo.rhein-zeitung.de!  ****
+         ****  Please report bugs to ekohl@rz-online.de!  ****
