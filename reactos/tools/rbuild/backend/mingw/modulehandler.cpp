@@ -724,7 +724,7 @@ MingwModuleHandler::GenerateCommands ( const Module& module,
 		                     cflagsMacro );
 		return;
 	}
-	else if ( extension == ".cxx" || extension == ".CXX" )
+	else if ( extension == ".cc" || extension == ".CC" || extension == ".cxx" || extension == ".CXX" )
 	{
 		GenerateGccCommand ( module,
 		                     sourceFilename,
@@ -1651,10 +1651,16 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module 
 		          objectFilenames.c_str (),
 		          linkingDependencies.c_str () );
 
+		string linker;
+		if ( module.HasFileWithExtensions ( ".cc", ".CC" ) || module.HasFileWithExtensions ( ".cxx", ".CXX" ) )
+			linker = "${gpp}";
+		else
+			linker = "${gcc}";
+
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -mdll",
 		                                    module.entrypoint.c_str () );
 		GenerateLinkerCommand ( module,
-		                        "${gcc}",
+		                        linker,
 		                        linkerParameters,
 		                        objectFilenames );
 	}

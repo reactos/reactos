@@ -1,0 +1,5 @@
+<module name="dxguid" type="staticlibrary">
+	<define name="_DISABLE_TIDENTS" />
+	<define name="__REACTOS__" />
+	<file>dxguid-mingw.c</file>
+</module>

@@ -1,7 +1,7 @@
-<module name="winmm" type="win32dll">
+<module name="dinput8" type="win32dll">
 	<dependency>winebuild</dependency>
-	<importlibrary definition="winmm.spec.def" />
-	<include base="winmm">.</include>
+	<importlibrary definition="dinput8.spec.def" />
+	<include base="dinput8">.</include>
 	<include base="ReactOS">include/wine</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
@@ -11,18 +11,15 @@
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>
 	<library>wine</library>
+	<library>uuid</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
-	<library>advapi32</library>
 	<library>user32</library>
-	<file>driver.c</file>
-	<file>joystick.c</file>
-	<file>lolvldrv.c</file>
-	<file>mci.c</file>
-	<file>mmio.c</file>
-	<file>playsound.c</file>
-	<file>time.c</file>
-	<file>winmm.c</file>
-	<file>winmm_res.rc</file>
-	<file>winmm.spec</file>
+	<library>advapi32</library>
+	<library>ole32</library>
+	<library>winmm</library>
+	<library>dxguid</library>
+	<library>dinput</library>
+	<file>dinput8_main.c</file>
+	<file>dinput8.spec</file>
 </module>

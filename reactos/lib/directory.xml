@@ -31,14 +31,59 @@
 <directory name="crtdll">
 	<xi:include href="crtdll/crtdll.xml" />
 </directory>
+<directory name="dbghelp">
+	<xi:include href="dbghelp/dbghelp.xml" />
+</directory>
+<directory name="devenum">
+	<xi:include href="devenum/devenum.xml" />
+</directory>
+<directory name="dinput">
+	<xi:include href="dinput/dinput.xml" />
+</directory>
+<directory name="dinput8">
+	<xi:include href="dinput8/dinput8.xml" />
+</directory>
 <directory name="dnsapi">
 	<xi:include href="dnsapi/dnsapi.xml" />
+</directory>
+<directory name="dsound">
+	<xi:include href="dsound/dsound.xml" />
+</directory>
+<directory name="dxdiagn">
+	<xi:include href="dxdiagn/dxdiagn.xml" />
+</directory>
+<directory name="dxguid">
+	<xi:include href="dxguid/dxguid.xml" />
+</directory>
+<directory name="epsapi">
+	<xi:include href="epsapi/epsapi.xml" />
+</directory>
+<directory name="expat">
+	<xi:include href="expat/expat.xml" />
+</directory>
+<directory name="fmifs">
+	<xi:include href="fmifs/fmifs.xml" />
 </directory>
 <directory name="freetype">
 	<xi:include href="freetype/freetype.xml" />
 </directory>
+<directory name="fslib">
+	<xi:include href="fslib/directory.xml" />
+</directory>
 <directory name="gdi32">
 	<xi:include href="gdi32/gdi32.xml" />
+</directory>
+<directory name="gdiplus">
+	<xi:include href="gdiplus/gdiplus.xml" />
+</directory>
+<directory name="glu32">
+	<xi:include href="glu32/glu32.xml" />
+</directory>
+<directory name="imagehlp">
+	<xi:include href="imagehlp/imagehlp.xml" />
+</directory>
+<directory name="imm32">
+	<xi:include href="imm32/imm32.xml" />
 </directory>
 <directory name="iphlpapi">
 	<xi:include href="iphlpapi/iphlpapi.xml" />
@@ -65,6 +110,9 @@
 <directory name="oleaut32">
 	<xi:include href="oleaut32/oleaut32.xml" />
 </directory>
+<directory name="psapi">
+	<xi:include href="psapi/psapi.xml" />
+</directory>
 <directory name="pseh">
 	<xi:include href="pseh/pseh.xml" />
 </directory>
@@ -85,6 +133,9 @@
 </directory>
 <directory name="string">
 	<xi:include href="string/string.xml" />
+</directory>
+<directory name="strmiids">
+	<xi:include href="strmiids/strmiids.xml" />
 </directory>
 <directory name="unicode">
 	<xi:include href="unicode/unicode.xml" />
