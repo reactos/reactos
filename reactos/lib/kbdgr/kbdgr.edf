@@ -1,5 +1,0 @@
-LIBRARY kbdgr.dll
-
-EXPORTS
-KbdLayerDescriptor=KbdLayerDescriptor@0
-; EOF

@@ -1,5 +1,0 @@
-LIBRARY kbdse.dll
-
-EXPORTS
-KbdLayerDescriptor=KbdLayerDescriptor@0
-; EOF

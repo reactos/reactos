@@ -1,7 +1,0 @@
-consw.exe
-consw.nostrip.exe
-consw.sym
-consw.coff
-*.d
-*.o
-*.map

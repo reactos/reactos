@@ -16,12 +16,20 @@ typedef struct _WINSTATION_OBJECT
   UNICODE_STRING Name;
   LIST_ENTRY DesktopListHead;
   PRTL_ATOM_TABLE AtomTable;
-  PVOID HandleTable;
-  HANDLE SystemMenuTemplate;
-  PVOID SystemCursor;
   UINT CaretBlinkRate;
-  HANDLE ShellWindow;
-  HANDLE ShellListView;
+#ifdef __WIN32K__
+  PSYSTEM_CURSORINFO SystemCursor;
+  PUSER_HANDLE_TABLE HandleTable;
+  PWINDOW_OBJECT ShellWindow;
+  PWINDOW_OBJECT ShellListView;
+  PMENU_OBJECT SystemMenuTemplate;
+#else
+  PVOID SystemCursor;
+  PVOID HandleTable;
+  PVOID ShellWindow;
+  PVOID ShellListView;
+  PVOID SystemMenuTemplate;
+#endif
   ULONG Flags;
   struct _DESKTOP_OBJECT* ActiveDesktop;
   /* FIXME: Clipboard */
@@ -38,17 +46,23 @@ typedef struct _DESKTOP_OBJECT
   UNICODE_STRING Name;
   /* Pointer to the associated window station. */
   struct _WINSTATION_OBJECT *WindowStation;
+#ifdef __WIN32K__
+  /* Pointer to the active queue. */
+  PUSER_MESSAGE_QUEUE ActiveMessageQueue;
+  /* Rectangle of the work area */
+  RECT WorkArea;
+  /* Handle of the desktop window. */
+  PWINDOW_OBJECT DesktopWindow;
+  PWINDOW_OBJECT PrevActiveWindow;
+#else
   /* Pointer to the active queue. */
   PVOID ActiveMessageQueue;
   /* Rectangle of the work area */
-#ifdef __WIN32K__
-  RECT WorkArea;
-#else
   LONG WorkArea[4];
+  /* Pointer to the desktop window. */
+  PVOID DesktopWindow;
+  PVOID PrevActiveWindow;
 #endif
-  /* Handle of the desktop window. */
-  HANDLE DesktopWindow;
-  HANDLE PrevActiveWindow;
   /* Thread blocking input */
   PVOID BlockInputThread;
 } DESKTOP_OBJECT, *PDESKTOP_OBJECT;
