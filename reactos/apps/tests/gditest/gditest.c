@@ -4,7 +4,7 @@
 
 #include <windows.h>
 
-extern VOID STDCALL GdiDllInitialize(PVOID hInstance, ULONG Event, PVOID Reserved);
+extern BOOL STDCALL GdiDllInitialize(PVOID hInstance, ULONG Event, PVOID Reserved);
 
 int main (void)
 {
