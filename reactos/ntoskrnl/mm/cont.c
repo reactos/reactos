@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.4 2000/03/29 13:11:54 dwelch Exp $
+/* $Id: cont.c,v 1.5 2000/12/29 23:17:12 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,6 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/mm.h>
 
 #include <internal/debug.h>
 
@@ -44,11 +45,38 @@
  * REVISIONS
  *
  */
-PVOID STDCALL MmAllocateContiguousMemory (
-	IN ULONG NumberOfBytes,
-	IN PHYSICAL_ADDRESS HighestAcceptableAddress)
+PVOID STDCALL 
+MmAllocateContiguousMemory (IN ULONG NumberOfBytes,
+			    IN PHYSICAL_ADDRESS HighestAcceptableAddress)
 {
-   UNIMPLEMENTED;
+   PMEMORY_AREA MArea;
+   NTSTATUS Status;
+   PVOID BaseAddress;
+   PVOID PBase;
+   ULONG i;
+
+   Status = MmCreateMemoryArea(NULL,
+			       MmGetKernelAddressSpace(),
+			       MEMORY_AREA_CONTINUOUS_MEMORY,
+			       &BaseAddress,
+			       NumberOfBytes,
+			       0,
+			       &MArea);
+   if (!NT_SUCCESS(Status))
+     {
+	return(NULL);
+     }
+   
+   PBase = MmGetContinuousPages(NumberOfBytes,
+				HighestAcceptableAddress);
+   for (i = 0; i < (PAGE_ROUND_UP(NumberOfBytes) / 4096); i++)
+     {
+	MmCreateVirtualMapping(NULL,
+			       BaseAddress + (i * 4096),
+			       PAGE_EXECUTE_READWRITE,
+			       (ULONG)(PBase + (i * 4096)));
+     }
+   return(BaseAddress);
 }
 
 
@@ -74,9 +102,13 @@ PVOID STDCALL MmAllocateContiguousMemory (
  * REVISIONS
  *
  */
-VOID STDCALL MmFreeContiguousMemory(IN PVOID BaseAddress)
+VOID STDCALL 
+MmFreeContiguousMemory(IN PVOID BaseAddress)
 {
-   UNIMPLEMENTED;
+   MmFreeMemoryArea(MmGetKernelAddressSpace(),
+		    BaseAddress,
+		    0,
+		    TRUE);
 }
 
 

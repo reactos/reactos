@@ -18,137 +18,121 @@
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
-                        IN ULONG    DiskSector,
-                        IN ULONG        SectorCount,
-			IN UCHAR*	Buffer)
+BOOLEAN
+VFATReadSectors (IN PDEVICE_OBJECT pDeviceObject,
+		 IN ULONG DiskSector, IN ULONG SectorCount, IN UCHAR * Buffer)
 {
-    LARGE_INTEGER   sectorNumber;
-    PIRP            irp;
-    IO_STATUS_BLOCK ioStatus;
-    KEVENT          event;
-    NTSTATUS        status;
-    ULONG           sectorSize;
-   
-    sectorNumber.u.LowPart = DiskSector << 9;
-    sectorNumber.u.HighPart = DiskSector >> 23;
+  LARGE_INTEGER sectorNumber;
+  PIRP irp;
+  IO_STATUS_BLOCK ioStatus;
+  KEVENT event;
+  NTSTATUS status;
+  ULONG sectorSize;
 
-    KeInitializeEvent(&event, NotificationEvent, FALSE);
-    sectorSize = BLOCKSIZE * SectorCount;
+  sectorNumber.u.LowPart = DiskSector << 9;
+  sectorNumber.u.HighPart = DiskSector >> 23;
 
-
-    DPRINT("VFATReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
-           pDeviceObject,
-           DiskSector,
-           Buffer);
-    DPRINT("sectorNumber %08lx:%08lx sectorSize %ld\n", 
-           (unsigned long int)sectorNumber.u.LowPart,
-           (unsigned long int)sectorNumber.u.HighPart,
-           sectorSize);
+  KeInitializeEvent (&event, NotificationEvent, FALSE);
+  sectorSize = BLOCKSIZE * SectorCount;
 
 
-    DPRINT("Building synchronous FSD Request...\n");
-    irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
-                                       pDeviceObject,
-                                       Buffer,
-                                       sectorSize,
-                                       &sectorNumber,
-                                       &event,
-                                       &ioStatus );
+  DPRINT ("VFATReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
+	  pDeviceObject, DiskSector, Buffer);
+  DPRINT ("sectorNumber %08lx:%08lx sectorSize %ld\n",
+	  (unsigned long int) sectorNumber.u.LowPart,
+	  (unsigned long int) sectorNumber.u.HighPart, sectorSize);
 
-    if (!irp) {
-        DbgPrint("READ failed!!!\n");
-        return FALSE;
+
+  DPRINT ("Building synchronous FSD Request...\n");
+  irp = IoBuildSynchronousFsdRequest (IRP_MJ_READ,
+				      pDeviceObject,
+				      Buffer,
+				      sectorSize,
+				      &sectorNumber, &event, &ioStatus);
+
+  if (!irp)
+    {
+      DbgPrint ("READ failed!!!\n");
+      return FALSE;
     }
 
-    DPRINT("Calling IO Driver... with irp %x\n", irp);
-    status = IoCallDriver(pDeviceObject,
-                          irp);
+  DPRINT ("Calling IO Driver... with irp %x\n", irp);
+  status = IoCallDriver (pDeviceObject, irp);
 
-    DPRINT("Waiting for IO Operation for %x\n", irp);
-    if (status == STATUS_PENDING) 
-     {
-	DPRINT("Operation pending\n");
-        KeWaitForSingleObject(&event,
-                              Suspended,
-                              KernelMode,
-                              FALSE,
-                              NULL);
-        DPRINT("Getting IO Status... for %x\n", irp);
-        status = ioStatus.Status;
+  DPRINT ("Waiting for IO Operation for %x\n", irp);
+  if (status == STATUS_PENDING)
+    {
+      DPRINT ("Operation pending\n");
+      KeWaitForSingleObject (&event, Suspended, KernelMode, FALSE, NULL);
+      DPRINT ("Getting IO Status... for %x\n", irp);
+      status = ioStatus.Status;
     }
 
-    if (!NT_SUCCESS(status)) {
-        DbgPrint("IO failed!!! VFATREadSectors : Error code: %x\n", status);
-        DbgPrint("(pDeviceObject %x, DiskSector %x, Buffer %x, offset 0x%x%x)\n",
-                 pDeviceObject,
-                 DiskSector,
-                 Buffer,
-                 sectorNumber.u.HighPart,
-                 sectorNumber.u.LowPart);
-        return FALSE;
+  if (!NT_SUCCESS (status))
+    {
+      DbgPrint ("IO failed!!! VFATREadSectors : Error code: %x\n", status);
+      DbgPrint
+	("(pDeviceObject %x, DiskSector %x, Buffer %x, offset 0x%x%x)\n",
+	 pDeviceObject, DiskSector, Buffer, sectorNumber.u.HighPart,
+	 sectorNumber.u.LowPart);
+      return FALSE;
     }
-    DPRINT("Block request succeeded for %x\n", irp);
-    return TRUE;
+  DPRINT ("Block request succeeded for %x\n", irp);
+  return TRUE;
 }
 
-BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
-                 IN ULONG   DiskSector,
-                         IN ULONG       SectorCount,
-			 IN UCHAR*	Buffer)
+BOOLEAN
+VFATWriteSectors (IN PDEVICE_OBJECT pDeviceObject,
+		  IN ULONG DiskSector,
+		  IN ULONG SectorCount, IN UCHAR * Buffer)
 {
-    LARGE_INTEGER   sectorNumber;
-    PIRP            irp;
-    IO_STATUS_BLOCK ioStatus;
-    KEVENT          event;
-    NTSTATUS        status;
-    ULONG           sectorSize;
-   
-    DPRINT("VFATWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
-           pDeviceObject,DiskSector,Buffer);
+  LARGE_INTEGER sectorNumber;
+  PIRP irp;
+  IO_STATUS_BLOCK ioStatus;
+  KEVENT event;
+  NTSTATUS status;
+  ULONG sectorSize;
 
-    sectorNumber.u.LowPart = DiskSector << 9;
-    sectorNumber.u.HighPart = DiskSector >> 23;
+  DPRINT ("VFATWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
+	  pDeviceObject, DiskSector, Buffer);
 
-    KeInitializeEvent(&event, NotificationEvent, FALSE);
+  sectorNumber.u.LowPart = DiskSector << 9;
+  sectorNumber.u.HighPart = DiskSector >> 23;
 
-    sectorSize = BLOCKSIZE*SectorCount;
+  KeInitializeEvent (&event, NotificationEvent, FALSE);
 
-    DPRINT("Building synchronous FSD Request...\n");
-    irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
-                                       pDeviceObject,
-                                       Buffer,
-                                       sectorSize,
-                                       &sectorNumber,
-                                       &event,
-                                       &ioStatus );
+  sectorSize = BLOCKSIZE * SectorCount;
 
-    if (!irp) {
-        DbgPrint("WRITE failed!!!\n");
-        return FALSE;
+  DPRINT ("Building synchronous FSD Request...\n");
+  irp = IoBuildSynchronousFsdRequest (IRP_MJ_WRITE,
+				      pDeviceObject,
+				      Buffer,
+				      sectorSize,
+				      &sectorNumber, &event, &ioStatus);
+
+  if (!irp)
+    {
+      DbgPrint ("WRITE failed!!!\n");
+      return FALSE;
     }
 
-    DPRINT("Calling IO Driver...\n");
-    status = IoCallDriver(pDeviceObject,
-                          irp);
+  DPRINT ("Calling IO Driver...\n");
+  status = IoCallDriver (pDeviceObject, irp);
 
-    DPRINT("Waiting for IO Operation...\n");
-    if (status == STATUS_PENDING) {
-        KeWaitForSingleObject(&event,
-                              Suspended,
-                              KernelMode,
-                              FALSE,
-                              NULL);
-        DPRINT("Getting IO Status...\n");
-        status = ioStatus.Status;
+  DPRINT ("Waiting for IO Operation...\n");
+  if (status == STATUS_PENDING)
+    {
+      KeWaitForSingleObject (&event, Suspended, KernelMode, FALSE, NULL);
+      DPRINT ("Getting IO Status...\n");
+      status = ioStatus.Status;
     }
 
-    if (!NT_SUCCESS(status)) {
-        DbgPrint("IO failed!!! VFATWriteSectors : Error code: %x\n", status);
-        return FALSE;
+  if (!NT_SUCCESS (status))
+    {
+      DbgPrint ("IO failed!!! VFATWriteSectors : Error code: %x\n", status);
+      return FALSE;
     }
 
-    DPRINT("Block request succeeded\n");
-    return TRUE;
+  DPRINT ("Block request succeeded\n");
+  return TRUE;
 }
-

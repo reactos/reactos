@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.20 2000/10/06 22:53:21 ekohl Exp $
+/* $Id: iotypes.h,v 1.21 2000/12/29 23:17:11 dwelch Exp $
  * 
  */
 
@@ -266,6 +266,11 @@ typedef struct _IO_COMPLETION_CONTEXT
 #define FO_OPENED_CASE_SENSITIVE        0x00020000
 #define FO_HANDLE_CREATED               0x00040000
 #define FO_FILE_FAST_IO_READ            0x00080000
+
+#define FO_DIRECT_CACHE_READ            0x72000001 
+#define FO_DIRECT_CACHE_WRITE           0x72000002
+#define FO_DIRECT_CACHE_PAGING_READ     0x72000004
+#define FO_DIRECT_CACHE_PAGING_WRITE    0x72000008
 
 typedef struct _FILE_OBJECT
 {

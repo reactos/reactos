@@ -304,6 +304,9 @@ NTSTATUS MmSafeCopyFromUser(PVOID Dest, PVOID Src, ULONG Count);
 NTSTATUS MmSafeCopyToUser(PVOID Dest, PVOID Src, ULONG Count);
 NTSTATUS 
 MmCreatePhysicalMemorySection(VOID);
+PVOID
+MmGetContinuousPages(ULONG NumberOfBytes,
+		     PHYSICAL_ADDRESS HighestAcceptableAddress);
 
 #define MM_PHYSICAL_PAGE_MPW_PENDING     (0x8)
 

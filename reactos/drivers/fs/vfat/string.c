@@ -1,4 +1,4 @@
-/* $Id: string.c,v 1.3 2000/06/29 23:35:51 dwelch Exp $
+/* $Id: string.c,v 1.4 2000/12/29 23:17:12 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -12,7 +12,6 @@
 
 #include <ddk/ntddk.h>
 #include <wchar.h>
-#include <ddk/cctypes.h>
 
 #define NDEBUG
 #include <debug.h>

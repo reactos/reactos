@@ -48,6 +48,62 @@ static LIST_ENTRY BiosPageListHead;
 
 /* FUNCTIONS *************************************************************/
 
+PVOID
+MmGetContinuousPages(ULONG NumberOfBytes,
+		     PHYSICAL_ADDRESS HighestAcceptableAddress)
+{
+   ULONG NrPages;
+   ULONG i;
+   ULONG start;
+   ULONG length;
+   KIRQL oldIrql;
+   
+   NrPages = PAGE_ROUND_UP(NumberOfBytes) / PAGESIZE;
+   
+   KeAcquireSpinLock(&PageListLock, &oldIrql);
+   
+   start = -1;
+   length = 0;
+   for (i = 0; i < (HighestAcceptableAddress.QuadPart / PAGESIZE); i++)
+     {
+	if (MmPageArray[i].Flags & MM_PHYSICAL_PAGE_FREE)
+	  {
+	     if (start == -1)
+	       {
+		  start = i;
+		  length = 1;
+	       }
+	     else
+	       {
+		  length++;
+	       }
+	     if (length == NrPages)
+	       {
+		  break;
+	       }	     
+	  }
+	else if (start != -1)
+	  {
+	     start = -1;
+	  }
+     }
+   if (start == -1)
+     {
+	KeReleaseSpinLock(&PageListLock, oldIrql);
+	return(NULL);
+     }  
+   for (i = start; i < (start + length); i++)
+     {
+	RemoveEntryList(&MmPageArray[i].ListEntry);
+	MmPageArray[i].Flags = MM_PHYSICAL_PAGE_USED;
+	MmPageArray[i].ReferenceCount = 1;
+	MmPageArray[i].LockCount = 0;
+	MmPageArray[i].SavedSwapEntry = 0;
+	InsertTailList(&UsedPageListHead, &MmPageArray[i].ListEntry);
+     }
+   return((PVOID)(start * 4096));
+}
+
 PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 			   PVOID LastPhysKernelAddress,
 			   ULONG MemorySizeInPages,
