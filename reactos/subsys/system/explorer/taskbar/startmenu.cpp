@@ -975,7 +975,7 @@ void StartMenuRoot::ShowLaunchDialog(HWND hwndDesktopBar)
 	static LPCSTR szTitle = "Create New Task";
 	static LPCSTR szText = "Type the name of a program, folder, document, or Internet resource, and Task Manager will open it for you.";
 
-	static DynamicFct<RUNFILEDLG> RunFileDlg(TEXT("WSHELL32"), 61);
+	static DynamicFct<RUNFILEDLG> RunFileDlg(TEXT("SHELL32"), 61);
 
 	 // Show "Run..." dialog
 	if (RunFileDlg) {
