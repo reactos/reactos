@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2004/09/30 05:41:09 arty Exp $
+# $Id: makefile,v 1.3 2004/09/30 22:04:13 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -15,8 +15,7 @@ TARGET_CFLAGS = \
 	-Iinclude \
 	-I../../net/tcpip/include \
 	-I../undis/include \
-	-I../oskittcp/include \
-	-I$(PATH_TO_TOP)/include
+	-I../oskittcp/include
 
 TARGET_CLEAN = network/*.o
 
