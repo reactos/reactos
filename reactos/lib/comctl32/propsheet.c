@@ -1529,29 +1529,19 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
 	    (DWORD)hwndPage, rc.left, rc.top, rc.right, rc.bottom,
 	    pageWidth, pageHeight, padding.x, padding.y);
 
-      /* If there is a watermark, offset the dialog items */     
-      if ( (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_NEW | PSH_WIZARD97_OLD)) &&
-           (psInfo->ppshheader.dwFlags & PSH_WATERMARK) &&
-	   ((index == 0) || (index == psInfo->nPages - 1)) )
-      {
-	  /* if PSH_USEHBMWATERMARK is not set, load the resource from pszbmWatermark 
-	     and put the HBITMAP in hbmWatermark. Thus all the rest of the code always 
-	     considers hbmWatermark as valid. */
-	  if (!(psInfo->ppshheader.dwFlags & PSH_USEHBMWATERMARK)) 
-	  {
-	      ((PropSheetInfo *)psInfo)->ppshheader.u4.hbmWatermark = 
-		  CreateMappedBitmap(ppshpage->hInstance, (INT)psInfo->ppshheader.u4.pszbmWatermark, 0, NULL, 0);
-	  }
-      }
-
       if (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_NEW | PSH_WIZARD97_OLD) &&
           psInfo->ppshheader.dwFlags & PSH_HEADER)
       {
-	  /* Same behavior as for watermarks */
-	  if (!(psInfo->ppshheader.dwFlags & PSH_USEHBMHEADER))
+	  if ((ppshpage->dwFlags & PSP_USEHEADERTITLE) &&
+	      (HIWORD(ppshpage->pszHeaderTitle) == 0))
 	  {
-	      ((PropSheetInfo *)psInfo)->ppshheader.u5.hbmHeader = 
-		  CreateMappedBitmap(ppshpage->hInstance, (INT)psInfo->ppshheader.u5.pszbmHeader, 0, NULL, 0);
+	    /* FIXME: load title string into ppshpage->pszHeaderTitle */
+	  }
+
+	  if ((ppshpage->dwFlags & PSP_USEHEADERSUBTITLE) &&
+	      (HIWORD(ppshpage->pszHeaderSubTitle) == 0))
+	  {
+	    /* FIXME: load title string into ppshpage->pszHeaderSubTitle */
 	  }
 
 	  hwndChild = GetDlgItem(hwndParent, IDC_SUNKEN_LINEHEADER);
@@ -1586,6 +1576,36 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
 }
 
 /******************************************************************************
+ *            PROPSHEET_LoadWizardBitmaps
+ *
+ * Loads the watermark and header bitmaps for a wizard.
+ */
+static VOID PROPSHEET_LoadWizardBitmaps(PropSheetInfo *psInfo)
+{
+  if (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_NEW | PSH_WIZARD97_OLD))
+  {
+    /* if PSH_USEHBMWATERMARK is not set, load the resource from pszbmWatermark 
+       and put the HBITMAP in hbmWatermark. Thus all the rest of the code always 
+       considers hbmWatermark as valid. */
+    if ((psInfo->ppshheader.dwFlags & PSH_WATERMARK) &&
+        !(psInfo->ppshheader.dwFlags & PSH_USEHBMWATERMARK))
+    {
+      ((PropSheetInfo *)psInfo)->ppshheader.u4.hbmWatermark = 
+        CreateMappedBitmap(psInfo->ppshheader.hInstance, (INT)psInfo->ppshheader.u4.pszbmWatermark, 0, NULL, 0);
+    }
+
+    /* Same behavior as for watermarks */
+    if ((psInfo->ppshheader.dwFlags & PSH_HEADER) &&
+        !(psInfo->ppshheader.dwFlags & PSH_USEHBMHEADER))
+    {
+      ((PropSheetInfo *)psInfo)->ppshheader.u5.hbmHeader = 
+        CreateMappedBitmap(psInfo->ppshheader.hInstance, (INT)psInfo->ppshheader.u5.pszbmHeader, 0, NULL, 0);
+    }
+  }
+}
+
+
+/******************************************************************************
  *            PROPSHEET_ShowPage
  *
  * Displays or creates the specified page.
@@ -1610,8 +1630,11 @@ static BOOL PROPSHEET_ShowPage(HWND hwndDlg, int index, PropSheetInfo * psInfo)
      PROPSHEET_CreatePage(hwndDlg, index, psInfo, ppshpage);
   }
 
-  PROPSHEET_SetTitleW(hwndDlg, psInfo->ppshheader.dwFlags,
-                      psInfo->proppage[index].pszText);
+  if ((psInfo->ppshheader.dwFlags & (PSH_WIZARD97_OLD | PSH_WIZARD97_NEW)) == 0)
+  {
+     PROPSHEET_SetTitleW(hwndDlg, psInfo->ppshheader.dwFlags,
+                         psInfo->proppage[index].pszText);
+  }
 
   if (psInfo->active_page != -1)
      ShowWindow(psInfo->proppage[psInfo->active_page].hwndPage, SW_HIDE);
@@ -3055,12 +3078,39 @@ static LRESULT PROPSHEET_Paint(HWND hwnd)
 	GetClientRect(hwndLineHeader, &r);
 	MapWindowPoints(hwndLineHeader, hwnd, (LPPOINT) &r, 2);
 	SetRect(&rzone, 0, 0, r.right, r.top - 1);
-	hbr = CreateSolidBrush(GetPixel(hdcSrc, 0, 0));
-	FillRect(hdc, &rzone, hbr);
-	DeleteObject(hbr);
 
 	GetObjectA(psInfo->ppshheader.u5.hbmHeader, sizeof(BITMAP), (LPVOID)&bm);		
 
+ 	if (psInfo->ppshheader.dwFlags & PSH_WIZARD97_OLD)
+ 	{
+ 	    /* Fill the unoccupied part of the header with color of the
+ 	     * left-top pixel, but do it only when needed.
+ 	     */
+ 	    if (bm.bmWidth < r.right || bm.bmHeight < r.bottom)
+ 	    {
+ 	        hbr = CreateSolidBrush(GetPixel(hdcSrc, 0, 0));
+ 	        CopyRect(&r, &rzone);
+ 	        if (bm.bmWidth < r.right)
+ 	        {
+ 	            r.left = bm.bmWidth;
+ 	            FillRect(hdc, &r, hbr);
+ 	        }
+ 	        if (bm.bmHeight < r.bottom)
+ 	        {
+ 	            r.left = 0;
+ 	            r.top = bm.bmHeight;
+ 	            FillRect(hdc, &r, hbr);
+ 	        }
+ 	        DeleteObject(hbr);
+ 	    }
+ 	}
+ 	else
+ 	{
+ 	    hbr = CreateSolidBrush(GetSysColor(COLOR_WINDOW));
+ 	    FillRect(hdc, &rzone, hbr);
+ 	    DeleteObject(hbr);
+ 	}
+ 
 	clrOld = SetTextColor (hdc, 0x00000000);
 	oldBkMode = SetBkMode (hdc, TRANSPARENT); 
 
@@ -3085,9 +3135,20 @@ static LRESULT PROPSHEET_Paint(HWND hwnd)
 		      -1, &r, DT_LEFT | DT_SINGLELINE);	
 	}
 
-	BitBlt(hdc, rzone.right - bm.bmWidth, (rzone.bottom - bm.bmHeight)/2,
-	       bm.bmWidth, bm.bmHeight, 
-	       hdcSrc, 0, 0, SRCCOPY);
+ 	if (psInfo->ppshheader.dwFlags & PSH_WIZARD97_OLD)
+ 	{
+ 	    BitBlt(hdc, 0, 0,
+ 	           bm.bmWidth, min(bm.bmHeight, rzone.bottom),
+ 	           hdcSrc, 0, 0, SRCCOPY);
+ 	}
+ 	else
+ 	{
+ 	    BitBlt(hdc, rzone.right - bm.bmWidth,
+ 	           (rzone.bottom - bm.bmHeight) / 2,
+ 	           bm.bmWidth, bm.bmHeight,
+ 	           hdcSrc, 0, 0, SRCCOPY);
+ 	}
+
 	offsety = rzone.bottom + 2;
 
 	SetTextColor(hdc, clrOld);
@@ -3209,6 +3270,8 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       GetWindowTextW(hwnd, psInfo->strPropertiesFor, MAX_CAPTION_LENGTH);
 
       PROPSHEET_CreateTabControl(hwnd, psInfo);
+
+      PROPSHEET_LoadWizardBitmaps(psInfo);
 
       if (psInfo->ppshheader.dwFlags & INTRNL_ANY_WIZARD)
       {

@@ -4,7 +4,7 @@ RCS file: /home/wine/wine/dlls/comctl32/comctl32.spec,v
 retrieving revision 1.44
 diff -u -r1.44 comctl32.spec
 --- comctl32.spec	17 May 2004 20:51:27 -0000	1.44
-+++ comctl32.spec	8 Aug 2004 13:10:59 -0000
++++ comctl32.spec	14 Aug 2004 19:24:23 -0000
 @@ -106,13 +106,13 @@
  412 stdcall RemoveWindowSubclass(long ptr long)
  413 stdcall DefSubclassProc(long long long long)
@@ -29,11 +29,11 @@ diff -u -r1.44 comctl32.spec
 Index: listview.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/comctl32/listview.c,v
-retrieving revision 1.390
-diff -u -r1.390 listview.c
---- listview.c	6 Jul 2004 21:27:34 -0000	1.390
-+++ listview.c	8 Aug 2004 13:11:03 -0000
-@@ -147,6 +147,7 @@
+retrieving revision 1.392
+diff -u -r1.392 listview.c
+--- listview.c	12 Aug 2004 20:01:55 -0000	1.392
++++ listview.c	14 Aug 2004 19:24:27 -0000
+@@ -146,6 +146,7 @@
  #include <assert.h>
  #include <ctype.h>
  #include <string.h>
@@ -41,7 +41,7 @@ diff -u -r1.390 listview.c
  #include <stdlib.h>
  #include <stdarg.h>
  #include <stdio.h>
-@@ -2023,7 +2024,8 @@
+@@ -2022,7 +2023,8 @@
  		         infoPtr->iconSize.cy + ICON_BOTTOM_PADDING;
  	    Label.right = Label.left + labelSize.cx;
  	    Label.bottom = Label.top + infoPtr->nItemHeight;
@@ -51,7 +51,7 @@ diff -u -r1.390 listview.c
  	    {
  		labelSize.cy = min(Box.bottom - Label.top, labelSize.cy);
  		labelSize.cy /= infoPtr->ntmHeight;
-@@ -9517,7 +9519,8 @@
+@@ -9511,7 +9513,8 @@
          hOldFont = SelectObject(hdc, infoPtr->hFont);
  
      /*Get String Length in pixels */
@@ -67,7 +67,7 @@ RCS file: /home/wine/wine/dlls/comctl32/string.c,v
 retrieving revision 1.4
 diff -u -r1.4 string.c
 --- string.c	17 May 2004 20:51:27 -0000	1.4
-+++ string.c	8 Aug 2004 13:11:03 -0000
++++ string.c	14 Aug 2004 19:24:27 -0000
 @@ -254,7 +254,7 @@
  {
    TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));

@@ -554,10 +554,10 @@ ImageList_Create (INT cx, INT cy, UINT flags,
     INT      nCount;
     HBITMAP  hbmTemp;
     UINT     ilc = (flags & 0xFE);
-    static WORD aBitBlend25[] =
+    static const WORD aBitBlend25[] =
         {0xAA, 0x00, 0x55, 0x00, 0xAA, 0x00, 0x55, 0x00};
 
-    static WORD aBitBlend50[] =
+    static const WORD aBitBlend50[] =
         {0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA};
 
     TRACE("(%d %d 0x%x %d %d)\n", cx, cy, flags, cInitial, cGrow);

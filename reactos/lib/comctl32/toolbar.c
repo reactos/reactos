@@ -654,8 +654,7 @@ static void TOOLBAR_DrawMasked(HIMAGELIST himl, int index, HDC hdc, INT x, INT y
 
     /* Create src image */
     hdcImage = CreateCompatibleDC(hdc);
-    hbmImage = CreateBitmap(cx, cy, GetDeviceCaps(hdc,PLANES),
-                            GetDeviceCaps(hdc,BITSPIXEL), NULL);
+    hbmImage = CreateCompatibleBitmap(hdc, cx, cy);
     SelectObject(hdcImage, hbmImage);
     ImageList_DrawEx(himl, index, hdcImage, 0, 0, cx, cy,
                      RGB(0xff, 0xff, 0xff), RGB(0,0,0), draw_flags);
@@ -666,8 +665,8 @@ static void TOOLBAR_DrawMasked(HIMAGELIST himl, int index, HDC hdc, INT x, INT y
     SelectObject(hdcMask, hbmMask);
 
     /* Remove the background and all white pixels */
-    SetBkColor(hdcImage, ImageList_GetBkColor(himl));
-    BitBlt(hdcMask, 0, 0, cx, cy, hdcImage, 0, 0, SRCCOPY);
+    ImageList_DrawEx(himl, index, hdcMask, 0, 0, cx, cy,
+                     RGB(0xff, 0xff, 0xff), RGB(0,0,0), ILD_MASK);
     SetBkColor(hdcImage, RGB(0xff, 0xff, 0xff));
     BitBlt(hdcMask, 0, 0, cx, cy, hdcImage, 0, 0, NOTSRCERASE);
 

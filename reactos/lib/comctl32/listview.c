@@ -117,7 +117,6 @@
  *   -- LVM_GETISEARCHSTRINGW, LVM_GETISEARCHSTRINGA
  *   -- LVM_GETTILEINFO, LVM_SETTILEINFO
  *   -- LVM_GETTILEVIEWINFO, LVM_SETTILEVIEWINFO
- *   -- LVM_GETTOOLTIPS, LVM_SETTOOLTIPS
  *   -- LVM_GETUNICODEFORMAT, LVM_SETUNICODEFORMAT
  *   -- LVM_GETVIEW, LVM_SETVIEW
  *   -- LVM_GETWORKAREAS, LVM_SETWORKAREAS
@@ -3487,7 +3486,6 @@ static BOOL LISTVIEW_SetItemT(LISTVIEW_INFO *infoPtr, const LVITEMW *lpLVItem, B
  */
 static INT LISTVIEW_GetTopIndex(LISTVIEW_INFO *infoPtr)
 {
-    LONG lStyle = infoPtr->dwStyle;
     UINT uView = infoPtr->dwStyle & LVS_TYPEMASK;
     INT nItem = 0;
     SCROLLINFO scrollInfo;
@@ -3497,17 +3495,17 @@ static INT LISTVIEW_GetTopIndex(LISTVIEW_INFO *infoPtr)
 
     if (uView == LVS_LIST)
     {
-	if ((lStyle & WS_HSCROLL) && GetScrollInfo(infoPtr->hwndSelf, SB_HORZ, &scrollInfo))
+	if (GetScrollInfo(infoPtr->hwndSelf, SB_HORZ, &scrollInfo))
 	    nItem = scrollInfo.nPos * LISTVIEW_GetCountPerColumn(infoPtr);
     }
     else if (uView == LVS_REPORT)
     {
-	if ((lStyle & WS_VSCROLL) && GetScrollInfo(infoPtr->hwndSelf, SB_VERT, &scrollInfo))
+	if (GetScrollInfo(infoPtr->hwndSelf, SB_VERT, &scrollInfo))
 	    nItem = scrollInfo.nPos;
     } 
     else
     {
-	if ((lStyle & WS_VSCROLL) && GetScrollInfo(infoPtr->hwndSelf, SB_VERT, &scrollInfo))
+	if (GetScrollInfo(infoPtr->hwndSelf, SB_VERT, &scrollInfo))
 	    nItem = LISTVIEW_GetCountPerRow(infoPtr) * (scrollInfo.nPos / infoPtr->nItemHeight);
     }
 
@@ -5831,9 +5829,9 @@ static void LISTVIEW_GetOrigin(LISTVIEW_INFO *infoPtr, LPPOINT lpptOrigin)
     scrollInfo.cbSize = sizeof(SCROLLINFO);    
     scrollInfo.fMask = SIF_POS;
     
-    if ((infoPtr->dwStyle & WS_HSCROLL) && GetScrollInfo(infoPtr->hwndSelf, SB_HORZ, &scrollInfo))
+    if (GetScrollInfo(infoPtr->hwndSelf, SB_HORZ, &scrollInfo))
 	nHorzPos = scrollInfo.nPos;
-    if ((infoPtr->dwStyle & WS_VSCROLL) && GetScrollInfo(infoPtr->hwndSelf, SB_VERT, &scrollInfo))
+    if (GetScrollInfo(infoPtr->hwndSelf, SB_VERT, &scrollInfo))
 	nVertPos = scrollInfo.nPos;
 
     TRACE("nHorzPos=%d, nVertPos=%d\n", nHorzPos, nVertPos);
@@ -7276,6 +7274,7 @@ static BOOL LISTVIEW_SortItems(LISTVIEW_INFO *infoPtr, PFNLVCOMPARE pfnCompare, 
 
     if (infoPtr->dwStyle & LVS_OWNERDATA) return FALSE;
 
+    if (!pfnCompare) return FALSE;
     if (!infoPtr->hdpaItems) return FALSE;
 
     /* if there are 0 or 1 items, there is no need to sort */
@@ -8652,7 +8651,7 @@ static void LISTVIEW_UpdateSize(LISTVIEW_INFO *infoPtr)
 	 * The "2" is there to mimic the native control. I think it may be
 	 * related to either padding or edges.  (GLA 7/2002)
 	 */
-    	if (!(infoPtr->dwStyle & WS_HSCROLL))
+    	if (!(GetWindowLongW(infoPtr->hwndSelf, GWL_STYLE) & WS_HSCROLL))
 	    infoPtr->rcList.bottom -= GetSystemMetrics(SM_CYHSCROLL);
         infoPtr->rcList.bottom = max (infoPtr->rcList.bottom - 2, 0);
     }
@@ -8781,11 +8780,6 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
   if (!infoPtr && (uMsg != WM_CREATE))
     return DefWindowProcW(hwnd, uMsg, wParam, lParam);
-
-  if (infoPtr)
-  {
-    infoPtr->dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
-  }
 
   switch (uMsg)
   {

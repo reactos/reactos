@@ -119,6 +119,7 @@ typedef struct
     INT      nAutoPopTime;
     INT      nInitialTime;
     RECT     rcMargin;
+    BOOL     bToolBelow;
 
     TTTOOL_INFO *tools;
 } TOOLTIPS_INFO;
@@ -132,10 +133,13 @@ typedef struct
 
 /* offsets from window edge to start of text */
 #define NORMAL_TEXT_MARGIN 2
-#define BALLOON_TEXT_MARGIN (NORMAL_TEXT_MARGIN+10)
+#define BALLOON_TEXT_MARGIN (NORMAL_TEXT_MARGIN+8)
 /* value used for CreateRoundRectRgn that specifies how much
  * each corner is curved */
 #define BALLOON_ROUNDEDNESS 20
+#define BALLOON_STEMHEIGHT 13
+#define BALLOON_STEMWIDTH 10
+#define BALLOON_STEMINDENT 20
 
 LRESULT CALLBACK
 TOOLTIPS_SubclassProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uId, DWORD_PTR dwRef);
@@ -178,6 +182,7 @@ TOOLTIPS_Refresh (HWND hwnd, HDC hdc)
         rc.top    += (BALLOON_TEXT_MARGIN + infoPtr->rcMargin.top);
         rc.right  -= (BALLOON_TEXT_MARGIN + infoPtr->rcMargin.right);
         rc.bottom -= (BALLOON_TEXT_MARGIN + infoPtr->rcMargin.bottom);
+        if(infoPtr->bToolBelow) rc.top += BALLOON_STEMHEIGHT;
     }
     else
     {
@@ -351,6 +356,7 @@ TOOLTIPS_CalcTipSize (HWND hwnd, TOOLTIPS_INFO *infoPtr, LPSIZE lpSize)
 {
     HDC hdc;
     HFONT hOldFont;
+    DWORD style = GetWindowLongW(hwnd, GWL_STYLE);
     UINT uFlags = DT_EXTERNALLEADING | DT_CALCRECT;
     RECT rc = {0, 0, 0, 0};
 
@@ -358,7 +364,7 @@ TOOLTIPS_CalcTipSize (HWND hwnd, TOOLTIPS_INFO *infoPtr, LPSIZE lpSize)
 	rc.right = infoPtr->nMaxTipWidth;
 	uFlags |= DT_WORDBREAK;
     }
-    if (GetWindowLongA (hwnd, GWL_STYLE) & TTS_NOPREFIX)
+    if (style & TTS_NOPREFIX)
 	uFlags |= DT_NOPREFIX;
     TRACE("%s\n", debugstr_w(infoPtr->szTipText));
 
@@ -368,12 +374,13 @@ TOOLTIPS_CalcTipSize (HWND hwnd, TOOLTIPS_INFO *infoPtr, LPSIZE lpSize)
     SelectObject (hdc, hOldFont);
     ReleaseDC (hwnd, hdc);
 
-    if (GetWindowLongW(hwnd, GWL_STYLE) & TTS_BALLOON)
+    if (style & TTS_BALLOON)
     {
         lpSize->cx = rc.right - rc.left + 2*BALLOON_TEXT_MARGIN +
                        infoPtr->rcMargin.left + infoPtr->rcMargin.right;
         lpSize->cy = rc.bottom - rc.top + 2*BALLOON_TEXT_MARGIN +
-                       infoPtr->rcMargin.bottom + infoPtr->rcMargin.top;
+                       infoPtr->rcMargin.bottom + infoPtr->rcMargin.top +
+                       BALLOON_STEMHEIGHT;
     }
     else
     {
@@ -392,6 +399,8 @@ TOOLTIPS_Show (HWND hwnd, TOOLTIPS_INFO *infoPtr)
     RECT rect, wndrect;
     SIZE size;
     NMHDR  hdr;
+    int ptfx = 0;
+    DWORD style = GetWindowLongW(hwnd, GWL_STYLE);
 
     if (infoPtr->nTool == -1) {
 	TRACE("invalid tool (-1)!\n");
@@ -433,11 +442,49 @@ TOOLTIPS_Show (HWND hwnd, TOOLTIPS_INFO *infoPtr)
 	    MapWindowPoints (toolPtr->hwnd, NULL, (LPPOINT)&rc, 2);
 	}
 	rect.left = (rc.left + rc.right - size.cx) / 2;
-	rect.top  = rc.bottom + 2;
+	if (style & TTS_BALLOON)
+	{
+          ptfx = rc.left + ((rc.right - rc.left) / 2);
+          if(rect.top - size.cy >= 0)
+          {
+            rect.top -= size.cy;
+            infoPtr->bToolBelow = FALSE;
+          }
+          else
+          {
+            infoPtr->bToolBelow = TRUE;
+            rect.top += 20;
+          }
+          rect.left = max(0, rect.left - BALLOON_STEMINDENT);
+        }
+        else
+        {
+          rect.top  = rc.bottom + 2;
+          infoPtr->bToolBelow = TRUE;
+        }
     }
     else {
 	GetCursorPos ((LPPOINT)&rect);
-	rect.top += 20;
+	if (style & TTS_BALLOON)
+	{
+            ptfx = rect.left;
+            if(rect.top - size.cy >= 0)
+            {
+              rect.top -= size.cy;
+              infoPtr->bToolBelow = FALSE;
+            }
+            else
+            {
+              infoPtr->bToolBelow = TRUE;
+              rect.top += 20;
+            }
+            rect.left = max(0, rect.left - BALLOON_STEMINDENT);
+        }
+        else
+        {
+	    rect.top += 20;
+	    infoPtr->bToolBelow = TRUE;
+        }
     }
 
     TRACE("pos %ld - %ld\n", rect.left, rect.top);
@@ -468,12 +515,53 @@ TOOLTIPS_Show (HWND hwnd, TOOLTIPS_INFO *infoPtr)
     AdjustWindowRectEx (&rect, GetWindowLongA (hwnd, GWL_STYLE),
 			FALSE, GetWindowLongA (hwnd, GWL_EXSTYLE));
 
-    if (GetWindowLongW(hwnd, GWL_STYLE) & TTS_BALLOON)
+    if (style & TTS_BALLOON)
     {
         HRGN hRgn;
+        HRGN hrStem;
+        POINT pts[3];
 
-        /* FIXME: need to add pointy bit using CreatePolyRgn & CombinRgn */
-        hRgn = CreateRoundRectRgn(0, 0, rect.right - rect.left, rect.bottom - rect.top, BALLOON_ROUNDEDNESS, BALLOON_ROUNDEDNESS);
+        ptfx -= rect.left;
+
+        if(infoPtr->bToolBelow)
+        {
+          pts[0].x = ptfx;
+          pts[0].y = 0;
+          pts[1].x = max(BALLOON_STEMINDENT, ptfx - (BALLOON_STEMWIDTH / 2));
+          pts[1].y = BALLOON_STEMHEIGHT;
+          pts[2].x = pts[1].x + BALLOON_STEMWIDTH;
+          pts[2].y = pts[1].y;
+          if(pts[2].x > (rect.right - rect.left) - BALLOON_STEMINDENT)
+          {
+            pts[2].x = (rect.right - rect.left) - BALLOON_STEMINDENT;
+            pts[1].x = pts[2].x - BALLOON_STEMWIDTH;
+          }
+        }
+        else
+        {
+          pts[0].x = max(BALLOON_STEMINDENT, ptfx - (BALLOON_STEMWIDTH / 2));
+          pts[0].y = (rect.bottom - rect.top) - BALLOON_STEMHEIGHT;
+          pts[1].x = pts[0].x + BALLOON_STEMWIDTH;
+          pts[1].y = pts[0].y;
+          pts[2].x = ptfx;
+          pts[2].y = (rect.bottom - rect.top);
+          if(pts[1].x > (rect.right - rect.left) - BALLOON_STEMINDENT)
+          {
+            pts[1].x = (rect.right - rect.left) - BALLOON_STEMINDENT;
+            pts[0].x = pts[1].x - BALLOON_STEMWIDTH;
+          }
+        }
+
+        hrStem = CreatePolygonRgn(pts, sizeof(pts) / sizeof(pts[0]), ALTERNATE);
+        
+        hRgn = CreateRoundRectRgn(0,
+                                  (infoPtr->bToolBelow ? BALLOON_STEMHEIGHT : 0),
+                                  rect.right - rect.left,
+                                  (infoPtr->bToolBelow ? rect.bottom - rect.top : rect.bottom - rect.top - BALLOON_STEMHEIGHT),
+                                  BALLOON_ROUNDEDNESS, BALLOON_ROUNDEDNESS);
+
+        CombineRgn(hRgn, hRgn, hrStem, RGN_OR);
+        DeleteObject(hrStem);
 
         SetWindowRgn(hwnd, hRgn, FALSE);
         /* we don't free the region handle as the system deletes it when 
