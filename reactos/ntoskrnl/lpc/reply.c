@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.14 2003/05/01 22:00:31 gvg Exp $
+/* $Id: reply.c,v 1.15 2003/06/16 19:17:08 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -233,7 +233,8 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
     */
    KeAcquireSpinLock(&Port->Lock, &oldIrql);
    Request = EiDequeueMessagePort(Port);
-   
+   KeReleaseSpinLock(&Port->Lock, oldIrql);
+
    if (Request->Message.MessageType == LPC_CONNECTION_REQUEST)
      {
        LPC_MESSAGE Header;
@@ -244,7 +245,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
        Header.DataSize = CRequest->ConnectDataLength;
        Header.MessageSize = Header.DataSize + sizeof(LPC_MESSAGE);
        Status = MmCopyToCaller(LpcMessage, &Header, sizeof(LPC_MESSAGE));
-       if (!NT_SUCCESS(Status))
+       if (NT_SUCCESS(Status))
 	 {
 	   Status = MmCopyToCaller((PVOID)(LpcMessage + 1),
 				   CRequest->ConnectData,
@@ -263,6 +264,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
 	* undo what we did and return.
 	* FIXME: Also increment semaphore.
 	*/
+       KeAcquireSpinLock(&Port->Lock, &oldIrql);
        EiEnqueueMessageAtHeadPort(Port, Request);
        KeReleaseSpinLock(&Port->Lock, oldIrql);
        ObDereferenceObject(Port);
@@ -270,12 +272,12 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
      }
    if (Request->Message.MessageType == LPC_CONNECTION_REQUEST)
      {
+       KeAcquireSpinLock(&Port->Lock, &oldIrql);
        EiEnqueueConnectMessagePort(Port, Request);
        KeReleaseSpinLock(&Port->Lock, oldIrql);
      }
    else
      {
-       KeReleaseSpinLock(&Port->Lock, oldIrql);
        ExFreePool(Request);
      }
    
@@ -335,6 +337,7 @@ NtReplyWaitReplyPort (HANDLE		PortHandle,
 		      PLPC_MESSAGE	ReplyMessage)
 {
    UNIMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
 }
 
 
