@@ -185,10 +185,19 @@ int winetest_ok( int condition, const char *msg, ... )
                      data->current_file, data->current_line );
             if (msg && msg[0])
             {
+                char string[1024];
                 va_start(valist, msg);
                 fprintf( stdout,": ");
                 vfprintf(stdout, msg, valist);
+                vsprintf(string, msg, valist);
+                DbgPrint( "%s:%d: Test failed: %s\n",
+                          data->current_file, data->current_line, string );
                 va_end(valist);
+            }
+            else
+            {
+                DbgPrint( "%s:%d: Test failed\n",
+                          data->current_file, data->current_line );
             }
             fputc( '\n', stdout );
             InterlockedIncrement(&failures);
@@ -212,9 +221,12 @@ void winetest_trace( const char *msg, ... )
 
     if (winetest_debug > 0)
     {
+        char string[1024];
         fprintf( stdout, "%s:%d:", data->current_file, data->current_line );
         va_start(valist, msg);
         vfprintf(stdout, msg, valist);
+        vsprintf(string, msg, valist);
+        DbgPrint( "%s:%d: %s", data->current_file, data->current_line, string);
         va_end(valist);
     }
 }
