@@ -51,6 +51,8 @@ NET_DRIVERS = ndis tcpip tditest wshtcpip afd
 #NET_DEVICE_DRIVERS = ne2000
 NET_DEVICE_DRIVERS = ne2000
 
+STORAGE_DRIVERS = class2 scsiport
+
 #
 # system applications (required for startup)
 #
@@ -65,7 +67,7 @@ APPS = args hello test cat bench apc shm lpc thread event file gditest \
 NET_APPS = ping
 
 
-KERNEL_SERVICES = $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS) $(NET_DEVICE_DRIVERS)
+KERNEL_SERVICES = $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS) $(NET_DEVICE_DRIVERS) $(STORAGE_DRIVERS)
 
 all: buildno $(COMPONENTS) $(BUS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(SYS_APPS) $(APPS) $(NET_APPS)
 
@@ -270,8 +272,8 @@ $(FS_DRIVERS:%=%_install): %_install:
 $(FS_DRIVERS:%=%_dist): %_dist:
 	make -C services/fs/$* dist
 
-.PHONY: $(FS_DRIVERS) $(FS_DRIVERS:%=%_clean) $(FS_DRIVERS:%=%_install) \
-        $(FS_DRIVERS:%=%_dist)
+.PHONY: $(FS_DRIVERS) $(FS_DRIVERS:%=%_clean) \
+        $(FS_DRIVERS:%=%_install) $(FS_DRIVERS:%=%_dist)
 
 #
 # Network driver rules
@@ -288,8 +290,8 @@ $(NET_DRIVERS:%=%_install): %_install:
 $(NET_DRIVERS:%=%_dist): %_dist:
 	make -C services/net/$* dist
 
-.PHONY: $(NET_DRIVERS) $(NET_DRIVERS:%=%_clean) $(NET_DRIVERS:%=%_install) \
-        $(NET_DRIVERS:%=%_dist)
+.PHONY: $(NET_DRIVERS) $(NET_DRIVERS:%=%_clean) \
+        $(NET_DRIVERS:%=%_install) $(NET_DRIVERS:%=%_dist)
 
 $(NET_DEVICE_DRIVERS): %:
 	make -C services/net/dd/$*
@@ -305,6 +307,24 @@ $(NET_DEVICE_DRIVERS:%=%_dist): %_dist:
 
 .PHONY: $(NET_DEVICE_DRIVERS) $(NET_DEVICE_DRIVERS:%=%_clean) \
         $(NET_DEVICE_DRIVERS:%=%_install) $(NET_DEVICE_DRIVERS:%=%_dist)
+
+#
+# storage driver rules
+#
+$(STORAGE_DRIVERS): %:
+	make -C services/storage/$*
+
+$(STORAGE_DRIVERS:%=%_clean): %_clean:
+	make -C services/storage/$* clean
+
+$(STORAGE_DRIVERS:%=%_install): %_install:
+	make -C services/storage/$* install
+
+$(STORAGE_DRIVERS:%=%_dist): %_dist:
+	make -C services/storage/$* dist
+
+.PHONY: $(STORAGE_DRIVERS) $(STORAGE_DRIVERS:%=%_clean) \
+        $(STORAGE_DRIVERS:%=%_install) $(STORAGE_DRIVERS:%=%_dist)
 
 #
 # Kernel loaders
