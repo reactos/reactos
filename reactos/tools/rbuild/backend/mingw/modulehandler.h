@@ -51,6 +51,7 @@ private:
 	                      const std::vector<File*>& files,
 	                      const std::vector<Include*>* includes,
 	                      const std::vector<Define*>& defines,
+	                      const std::vector<If*>* ifs,
 	                      const std::string& cflags_macro,
 	                      const std::string& nasmflags_macro,
 	                      const std::string& objs_macro) const;

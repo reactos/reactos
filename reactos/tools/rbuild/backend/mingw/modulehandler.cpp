@@ -267,6 +267,7 @@ MingwModuleHandler::GenerateMacros (
 	const vector<File*>& files,
 	const vector<Include*>* includes,
 	const vector<Define*>& defines,
+	const vector<If*>* ifs,
 	const string& cflags_macro,
 	const string& nasmflags_macro,
 	const string& objs_macro) const
@@ -319,6 +320,35 @@ MingwModuleHandler::GenerateMacros (
 		}
 		fprintf ( fMakefile, "\n" );
 	}
+
+	if ( ifs && ifs->size() )
+	{
+		for ( size_t i = 0; i < module.ifs.size(); i++ )
+		{
+			If& rIf = *(*ifs)[i];
+			if ( rIf.defines.size() || rIf.files.size() || rIf.ifs.size() )
+			{
+				fprintf (
+					fMakefile,
+					"ifeq ($(%s),\"%s\")\n",
+					rIf.property.c_str(),
+					rIf.value.c_str() );
+				GenerateMacros (
+					module,
+					"+=",
+					rIf.files,
+					NULL,
+					rIf.defines,
+					&rIf.ifs,
+					cflags_macro,
+					nasmflags_macro,
+					objs_macro );
+				fprintf ( 
+					fMakefile,
+					"endif\n\n" );
+			}
+		}
+	}
 }
 
 void
@@ -334,6 +364,7 @@ MingwModuleHandler::GenerateMacros (
 		module.files,
 		&module.includes,
 		module.defines,
+		NULL,
 		cflags_macro,
 		nasmflags_macro,
 		objs_macro );
@@ -342,7 +373,7 @@ MingwModuleHandler::GenerateMacros (
 	for ( size_t i = 0; i < module.ifs.size(); i++ )
 	{
 		If& rIf = *module.ifs[i];
-		if ( rIf.defines.size() || rIf.files.size() )
+		if ( rIf.defines.size() || rIf.files.size() || rIf.ifs.size() )
 		{
 			fprintf (
 				fMakefile,
@@ -355,6 +386,7 @@ MingwModuleHandler::GenerateMacros (
 				rIf.files,
 				NULL,
 				rIf.defines,
+				&rIf.ifs,
 				cflags_macro,
 				nasmflags_macro,
 				objs_macro );
