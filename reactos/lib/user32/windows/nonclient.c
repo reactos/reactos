@@ -923,7 +923,10 @@ DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam)
     case HTCAPTION:
     {
       /* Maximize/Restore the window */
-      SendMessageW(hWnd, WM_SYSCOMMAND, ((Style & (WS_MINIMIZE | WS_MAXIMIZE)) ? SC_RESTORE : SC_MAXIMIZE), 0);
+      if((Style & WS_CAPTION) && (Style & WS_MAXIMIZEBOX))
+      {
+        SendMessageW(hWnd, WM_SYSCOMMAND, ((Style & (WS_MINIMIZE | WS_MAXIMIZE)) ? SC_RESTORE : SC_MAXIMIZE), 0);
+      }
       break;
     }
     case HTSYSMENU:
