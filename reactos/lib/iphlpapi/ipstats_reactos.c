@@ -19,6 +19,8 @@
  * tcpip.sys
  */
 
+#include <stdio.h>
+
 #include "iphlpapi_private.h"
 #include "ipstats.h"
 #include "ifenum.h"
