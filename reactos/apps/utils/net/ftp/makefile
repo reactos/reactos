@@ -8,7 +8,8 @@ TARGET_NAME = ftp
 
 TARGET_INSTALLDIR = system32
 
-TARGET_SDKLIBS = ws2_32.a iphlpapi.a ntdll.a
+TARGET_SDKLIBS = ws2_32.a iphlpapi.a
+# ntdll.a
 
 TARGET_OBJECTS = \
 	cmds.o \
