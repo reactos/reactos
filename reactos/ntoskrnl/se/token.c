@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.14 2002/02/22 13:36:24 ekohl Exp $
+/* $Id: token.c,v 1.15 2002/06/04 13:44:06 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -216,10 +216,10 @@ SeImpersonateClient(IN PSECURITY_CLIENT_CONTEXT ClientContext,
 
 
 VOID
-SeInitializeTokenManager(VOID)
+SepInitializeTokenImplementation(VOID)
 {
   SepTokenObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-  
+
   SepTokenObjectType->Tag = TAG('T', 'O', 'K', 'T');
   SepTokenObjectType->MaxObjects = ULONG_MAX;
   SepTokenObjectType->MaxHandles = ULONG_MAX;
@@ -238,9 +238,11 @@ SeInitializeTokenManager(VOID)
   SepTokenObjectType->OkayToClose = NULL;
   SepTokenObjectType->Create = NULL;
   SepTokenObjectType->DuplicationNotify = NULL;
+
   RtlCreateUnicodeString(&SepTokenObjectType->TypeName,
 			 L"Token");
 }
+
 
 NTSTATUS
 RtlCopySidAndAttributesArray(ULONG Count,             // ebp + 8
@@ -606,25 +608,29 @@ NtCreateToken(OUT PHANDLE TokenHandle,
 	      IN PTOKEN_DEFAULT_DACL TokenDefaultDacl,
 	      IN PTOKEN_SOURCE TokenSource)
 {
+  PACCESS_TOKEN AccessToken;
+  NTSTATUS Status;
+
+  Status = ObCreateObject(TokenHandle,
+			  DesiredAccess,
+			  ObjectAttributes,
+			  SepTokenObjectType,
+			  (PVOID*)&AccessToken);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("ObCreateObject() failed (Status %lx)\n");
+      return(Status);
+    }
+
 #if 0
-   PACCESS_TOKEN AccessToken;
-   NTSTATUS Status;
-   
-   Status = ObCreateObject(TokenHandle,
-			   DesiredAccess,
-			   ObjectAttributes,
-			   SeTokenType);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-   
    AccessToken->TokenType = TokenType;
    RtlCopyLuid(&AccessToken->AuthenticationId, AuthenticationId);
    AccessToken->ExpirationTime = *ExpirationTime;
    AccessToken->
 #endif
-     UNIMPLEMENTED;
+//     UNIMPLEMENTED;
+
+  return(STATUS_SUCCESS);
 }
 
 

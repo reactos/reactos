@@ -101,6 +101,8 @@ BOOLEAN SepInitSecurityIDs(VOID);
 BOOLEAN SepInitDACLs(VOID);
 BOOLEAN SepInitSDs(VOID);
 
+VOID SepInitializeTokenImplementation(VOID);
+
 
 NTSTATUS SeExchangePrimaryToken(struct _EPROCESS* Process,
 				PACCESS_TOKEN NewToken,
