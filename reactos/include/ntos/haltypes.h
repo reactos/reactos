@@ -1,4 +1,4 @@
-/* $Id: haltypes.h,v 1.7 2004/08/19 21:42:44 ekohl Exp $
+/* $Id: haltypes.h,v 1.8 2004/08/20 13:29:14 ekohl Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -253,6 +253,12 @@ typedef struct _PCI_COMMON_CONFIG
 #define PCI_CLASS_SERIAL_BUS_CTLR           0x0c
 
 
+/* PCI device subclasses for class 0 */
+
+#define PCI_SUBCLASS_PRE_20_NON_VGA         0x00
+#define PCI_SUBCLASS_PRE_20_VGA             0x01
+
+
 /* PCI device subclasses for class 1 (mass storage controllers)*/
 
 #define PCI_SUBCLASS_MSC_SCSI_BUS_CTLR      0x00
@@ -272,6 +278,29 @@ typedef struct _PCI_COMMON_CONFIG
 #define PCI_SUBCLASS_NET_OTHER              0x80
 
 
+/* PCI device subclasses for class 3 (display controllers)*/
+
+#define PCI_SUBCLASS_VID_VGA_CTLR           0x00
+#define PCI_SUBCLASS_VID_XGA_CTLR           0x01
+#define PCI_SUBLCASS_VID_3D_CTLR            0x02
+#define PCI_SUBCLASS_VID_OTHER              0x80
+
+
+/* PCI device subclasses for class 4 (multimedia device)*/
+
+#define PCI_SUBCLASS_MM_VIDEO_DEV           0x00
+#define PCI_SUBCLASS_MM_AUDIO_DEV           0x01
+#define PCI_SUBCLASS_MM_TELEPHONY_DEV       0x02
+#define PCI_SUBCLASS_MM_OTHER               0x80
+
+
+/* PCI device subclasses for class 5 (memory controller)*/
+
+#define PCI_SUBCLASS_MEM_RAM                0x00
+#define PCI_SUBCLASS_MEM_FLASH              0x01
+#define PCI_SUBCLASS_MEM_OTHER              0x80
+
+
 /* PCI device subclasses for class 6 (bridge device)*/
 
 #define PCI_SUBCLASS_BR_HOST                0x00
@@ -285,7 +314,7 @@ typedef struct _PCI_COMMON_CONFIG
 #define PCI_SUBCLASS_BR_OTHER               0x80
 
 
-/* PCI device subclasses for class 0C (serial bus controller)*/
+/* PCI device subclasses for class C (serial bus controller)*/
 
 #define PCI_SUBCLASS_SB_IEEE1394            0x00
 #define PCI_SUBCLASS_SB_ACCESS              0x01
