@@ -418,7 +418,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 {
   HRGN DesktopRgn;
   MSG msg;
-  RECT sizingRect, mouseRect, origRect, clipRect;
+  RECT sizingRect, mouseRect, origRect, clipRect, unmodRect;
   HDC hdc;
   LONG hittest = (LONG)(wParam & 0x0f);
   HCURSOR hDragCursor = 0, hOldCursor = 0;
@@ -487,6 +487,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   
   WinPosGetMinMaxInfo(hwnd, NULL, NULL, &minTrack, &maxTrack);
   GetWindowRect(hwnd, &sizingRect);
+  GetWindowRect(hwnd, &unmodRect);  
   if (Style & WS_CHILD)
     {
       MapWindowPoints( 0, hWndParent, (LPPOINT)&sizingRect, 2 );
@@ -623,7 +624,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 	  if (msg.message == WM_KEYDOWN) SetCursorPos( pt.x, pt.y );
 	  else
 	    {
-	      RECT newRect = sizingRect;
+	      RECT newRect = unmodRect;
 	      WPARAM wpSizingHit = 0;
 	      
 	      if (hittest == HTCAPTION) OffsetRect( &newRect, dx, dy );
@@ -637,6 +638,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 	      /* determine the hit location */
 	      if (hittest >= HTLEFT && hittest <= HTBOTTOMRIGHT)
 		wpSizingHit = WMSZ_LEFT + (hittest - HTLEFT);
+	      unmodRect	= newRect;
 	      SendMessageA( hwnd, WM_SIZING, wpSizingHit, (LPARAM)&newRect );
 	      
 	      if (!iconic)
