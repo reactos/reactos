@@ -1,4 +1,4 @@
-/* $Id: lsass.c,v 1.1 2001/07/24 10:18:05 ekohl Exp $
+/* $Id: lsass.c,v 1.2 2004/02/25 22:36:53 sedwards Exp $
  *
  * reactos/services/lsass/lsass.c
  * 
@@ -46,8 +46,8 @@ DisplayString( LPCWSTR lpwString )
 
 /* Native image's entry point */
 
-void
-NtProcessStartup( PSTARTUP_ARGUMENT StartupArgument )
+VOID STDCALL
+NtProcessStartup(PPEB Peb)
 {
 	DisplayString( L"Local Security Authority Subsystem:\n" );
 	DisplayString( L"\tInitializing...\n" );
