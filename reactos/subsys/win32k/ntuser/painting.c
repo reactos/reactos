@@ -1,4 +1,4 @@
-/* $Id: painting.c,v 1.2 2002/07/18 21:59:18 ei Exp $
+/* $Id: painting.c,v 1.3 2002/08/26 23:20:54 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -124,10 +124,291 @@ PaintDoPaint(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags, ULONG ExFlags)
 }
 
 VOID STATIC
+PaintUpdateInternalPaint(PWINDOW_OBJECT Window, ULONG Flags)
+{
+  if (Flags & RDW_INTERNALPAINT)
+    {
+      if (Window->UpdateRegion == NULL &&
+	  !(Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT))
+	{
+	  MsqIncPaintCountQueue(Window->MessageQueue);
+	}
+      Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
+    }
+  else if (Flags & RDW_NOINTERNALPAINT)
+    {
+      if (Window->UpdateRegion == NULL &&
+	  (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT))
+	{
+	  MsqDecPaintCountQueue(Window->MessageQueue);
+	}
+      Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
+    }
+}
+
+VOID STATIC
+PaintValidateParent(PWINDOW_OBJECT Child)
+{
+  HWND DesktopHandle = W32kGetDesktopWindow();
+  PWINDOW_OBJECT Parent = Child->Parent;
+  PWINDOW_OBJECT Desktop = W32kGetWindowObject(DesktopHandle);
+  HRGN hRgn;
+
+  if (Child->UpdateRegion == (HANDLE)1)
+    {
+      RECT Rect;
+
+      Rect.left = Rect.top = 0;
+      Rect.right = Child->WindowRect.right - Child->WindowRect.left;
+      Rect.bottom = Child->WindowRect.bottom - Child->WindowRect.top;
+
+      hRgn = W32kCreateRectRgnIndirect(&Rect);
+    }
+  else
+    {
+      hRgn = Child->UpdateRegion;
+    }
+
+  while (Parent != NULL && Parent != Desktop)
+    {
+      if (!(Parent->Style & WS_CLIPCHILDREN))
+	{
+	  if (Parent->UpdateRegion != (HANDLE)0)
+	    {
+	      POINT Offset;
+
+	      if (Parent->UpdateRegion == (HANDLE)1)
+		{
+		  RECT Rect1;
+
+		  Rect1.left = Rect1.top = 0;
+		  Rect1.right = Parent->WindowRect.right - 
+		    Parent->WindowRect.left;
+		  Rect1.bottom = Parent->WindowRect.bottom -
+		    Parent->WindowRect.top;
+
+		  Parent->UpdateRegion = W32kCreateRectRgnIndirect(&Rect1);
+		}
+	      Offset.x = Child->WindowRect.left - Parent->WindowRect.left;
+	      Offset.y = Child->WindowRect.top - Parent->WindowRect.top;
+	      W32kOffsetRgn(hRgn, Offset.x, Offset.y);
+	      W32kCombineRgn(Parent->UpdateRegion, Parent->UpdateRegion, hRgn,
+			     RGN_DIFF);
+	      W32kOffsetRgn(hRgn, -Offset.x, -Offset.y);
+	    }
+	}
+      Parent = Parent->Parent;
+    }
+  if (hRgn != Child->UpdateRegion)
+    {
+      W32kDeleteObject(Child->UpdateRegion);
+    }
+  W32kReleaseWindowObject(Desktop);
+}
+
+VOID STATIC
 PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 		BOOL First)
 {
+  BOOL HadOne = Window->UpdateRegion != NULL && hRgn;
+  BOOL HasChildren = !IsListEmpty(&Window->ChildrenListHead) &&
+    !(Flags & RDW_NOCHILDREN) && !(Window->Style & WS_MINIMIZE) &&
+    ((Flags & RDW_ALLCHILDREN) || !(Window->Style & WS_CLIPCHILDREN));
+  RECT Rect;
 
+  Rect.left = Rect.top = 0;
+  Rect.right = Window->WindowRect.right - Window->WindowRect.left;
+  Rect.bottom = Window->WindowRect.bottom - Window->WindowRect.top;
+
+  if (Flags & RDW_INVALIDATE)
+    {
+      if (hRgn > (HANDLE)1)
+	{
+	  if (Window->UpdateRegion > (HANDLE)1)
+	    {
+	      W32kCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
+			     hRgn, RGN_OR);
+	      Window->UpdateRegion = 
+		REGION_CropRgn(Window->UpdateRegion,
+			       Window->UpdateRegion, &Rect, NULL);
+	      if (!HadOne)
+		{
+		  W32kGetRgnBox(Window->UpdateRegion, &Rect);
+		  if (W32kIsEmptyRect(&Rect))
+		    {
+		      W32kDeleteObject(Window->UpdateRegion);
+		      Window->UpdateRegion = NULL;
+		      PaintUpdateInternalPaint(Window, Flags);
+		      return;
+		    }
+		}
+	    }
+	  else if (Window->UpdateRegion == 0)
+	    {
+	      Window->UpdateRegion = 
+		REGION_CropRgn(Window->UpdateRegion, hRgn, &Rect, NULL);
+	      if (!HadOne)
+		{
+		  W32kGetRgnBox(Window->UpdateRegion, &Rect);
+		  if (W32kIsEmptyRect(&Rect))
+		    {
+		      W32kDeleteObject(Window->UpdateRegion);
+		      Window->UpdateRegion = NULL;
+		      PaintUpdateInternalPaint(Window, Flags);
+		      return;
+		    }
+		}
+	    }
+	}
+      else if (hRgn == (HANDLE)1)
+	{
+	  if (Window->UpdateRegion > (HANDLE)1)
+	    {
+	      W32kDeleteObject(Window->UpdateRegion);
+	    }
+	  Window->UpdateRegion = (HANDLE)1;
+	}
+      else
+	{
+	  hRgn = Window->UpdateRegion;
+	}
+
+      if (!HadOne && !(Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT))
+	{
+	  MsqIncPaintCountQueue(Window->MessageQueue);
+	}
+
+      if (Flags & RDW_FRAME)
+	{
+	  Window->Flags |= WINDOWOBJECT_NEED_NCPAINT;
+	}
+      if (Flags & RDW_ERASE)
+	{
+	  Window->Flags |= WINDOWOBJECT_NEED_ERASEBACKGRD;
+	}
+      Flags |= RDW_FRAME;
+    }
+  else if (Flags & RDW_VALIDATE)
+    {
+      if (Window->UpdateRegion != NULL)
+	{
+	  if (hRgn > (HANDLE)1)
+	    {
+	      if (Window->UpdateRegion == (HANDLE)1)
+		{
+		  Window->UpdateRegion = 
+		    W32kCreateRectRgnIndirect(&Rect);
+		}
+	      if (W32kCombineRgn(Window->UpdateRegion, 
+				 Window->UpdateRegion, hRgn, 
+				 RGN_DIFF) == NULLREGION)
+		{
+		  if (Window->UpdateRegion > (HANDLE)1)
+		    {
+		      W32kDeleteObject(Window->UpdateRegion);
+		    }
+		  Window->UpdateRegion = NULL;
+		}
+	    }
+	  else
+	    {
+	      if (Window->UpdateRegion > (HANDLE)1)
+		{
+		  W32kDeleteObject(Window->UpdateRegion);
+		}
+	      Window->UpdateRegion = NULL;
+	    }
+
+	  if (Window->UpdateRegion == NULL)
+	    {
+	      Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBACKGRD;
+	      if (!(Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT))
+		{
+		  MsqIncPaintCountQueue(Window->MessageQueue);
+		}
+	    }
+	}
+
+      if (Flags & RDW_NOFRAME)
+	{
+	  Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
+	}
+      if (Flags & RDW_NOERASE)
+	{
+	  Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBACKGRD;
+	}
+    }
+
+  if (First && Window->UpdateRegion != NULL && (Flags & RDW_UPDATENOW))
+    {
+      PaintValidateParent(Window);
+    }
+
+  if (Flags & (RDW_INVALIDATE | RDW_VALIDATE))
+    {
+      if (hRgn > (HANDLE)1 && HasChildren)
+	{
+	  POINT Total = {0, 0};
+	  POINT PrevOrign = {0, 0};
+	  POINT Client;
+	  PWINDOW_OBJECT Child;
+	  PLIST_ENTRY ChildListEntry;
+
+	  Client.x = Window->ClientRect.left - Window->WindowRect.left;
+	  Client.y = Window->ClientRect.top - Window->WindowRect.top;	  
+
+	  ChildListEntry = Window->ChildrenListHead.Flink;
+	  while (ChildListEntry != &Window->ChildrenListHead)
+	    {
+	      Child = CONTAINING_RECORD(ChildListEntry, WINDOW_OBJECT, 
+					SiblingListEntry);
+	      if (Child->Style & WS_VISIBLE)
+		{
+		  POINT Offset;
+
+		  Rect.left = Window->WindowRect.left + Client.x;
+		  Rect.right = Window->WindowRect.right + Client.x;
+		  Rect.top = Window->WindowRect.top + Client.y;
+		  Rect.bottom = Window->WindowRect.bottom + Client.y;
+
+		  Offset.x = Rect.left - PrevOrign.x;
+		  Offset.y = Rect.top - PrevOrign.y;
+		  W32kOffsetRect(&Rect, -Total.x, -Total.y);
+
+		  if (W32kRectInRegion(hRgn, &Rect))
+		    {
+		      W32kOffsetRgn(hRgn, -Total.x, -Total.y);
+		      PaintUpdateRgns(Child, hRgn, Flags, FALSE);
+		      PrevOrign.x = Rect.left + Total.x;
+		      PrevOrign.y = Rect.right + Total.y;
+		      Total.x += Offset.x;
+		      Total.y += Offset.y;
+		    }
+		}
+	    }
+	  W32kOffsetRgn(hRgn, Total.x, Total.y);
+	  HasChildren = FALSE;
+	}
+    }
+
+  if (HasChildren)
+    {
+      PWINDOW_OBJECT Child;
+      PLIST_ENTRY ChildListEntry;
+
+      ChildListEntry = Window->ChildrenListHead.Flink;
+      while (ChildListEntry != &Window->ChildrenListHead)
+	{
+	  Child = CONTAINING_RECORD(ChildListEntry, WINDOW_OBJECT, 
+				    SiblingListEntry);
+	  if (Child->Style & WS_VISIBLE)
+	    {
+	      PaintUpdateRgns(Child, hRgn, Flags, FALSE);
+	    }
+	}
+    }
+
+  PaintUpdateInternalPaint(Window, Flags);
 }
 
 BOOL
@@ -214,10 +495,14 @@ PaintRedrawWindow(HWND hWnd, const RECT* UpdateRect, HRGN UpdateRgn,
 	    }
 	}
     }
+  else if (Flags & RDW_VALIDATE)
+    {
+      /* FIXME: Implement this. */
+    }
 
   PaintUpdateRgns(Window, hRgn, Flags, TRUE);
 
-  hRgn = PaintDoPaint(Window, hRgn == 1 ? 0 : hRgn, Flags, ExFlags);
+  hRgn = PaintDoPaint(Window, hRgn == (HANDLE)1 ? 0 : hRgn, Flags, ExFlags);
 
   if (hRgn != (HANDLE)1 && hRgn != UpdateRgn)
     {
@@ -271,30 +556,30 @@ PaintingFindWinToRepaint(HWND hWnd, PW32THREAD Thread)
 				     ThreadListEntry);
 	  if (Window->Style & WS_VISIBLE)
 	    {
-	      hFoundWnd = PaintingFindWinToRepaint(hWnd, Thread);
+	      hFoundWnd = 
+		PaintingFindWinToRepaint(Window->Self, Thread);
 	      if (hFoundWnd != NULL)
 		{
-		  break;
+		  ExReleaseFastMutex(&Thread->WindowListLock);
+		  return(hFoundWnd);
 		}
 	    }
 	  current_entry = current_entry->Flink;
 	}
       ExReleaseFastMutex(&Thread->WindowListLock);
-      return(hFoundWnd);
+      return(NULL);
     }
 
-  Status =
-    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
-			       hWnd,
-			       otWindow,
-			       (PVOID*)&BaseWindow);
-  if (!NT_SUCCESS(Status))
+  BaseWindow = W32kGetWindowObject(hWnd);
+  if (BaseWindow == NULL)
     {
       return(NULL);
     }
-  if (BaseWindow->Style & WS_VISIBLE && BaseWindow->UpdateRegion != NULL)
+  if (BaseWindow->UpdateRegion != NULL ||
+      BaseWindow->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
     {
-      return(BaseWindow->Self);
+      W32kReleaseWindowObject(BaseWindow);
+      return(hWnd);
     }
 
   ExAcquireFastMutex(&BaseWindow->ChildrenListLock);
@@ -305,7 +590,7 @@ PaintingFindWinToRepaint(HWND hWnd, PW32THREAD Thread)
 				 ThreadListEntry);
       if (Window->Style & WS_VISIBLE)
 	{
-	  hFoundWnd = PaintingFindWinToRepaint(hWnd, Thread);
+	  hFoundWnd = PaintingFindWinToRepaint(Window->Self, Thread);
 	  if (hFoundWnd != NULL)
 	    {
 	      break;
@@ -314,6 +599,7 @@ PaintingFindWinToRepaint(HWND hWnd, PW32THREAD Thread)
       current_entry = current_entry->Flink;
     }
   ExReleaseFastMutex(&BaseWindow->ChildrenListLock);
+  W32kReleaseWindowObject(BaseWindow);
   return(hFoundWnd);
 }
 
@@ -480,10 +766,13 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
 
   /* FIXME: Check the window is still valid. */
 
-  /* FIXME: Decrement the paint count if the update region is non-zero. */
-
   UpdateRegion = Window->UpdateRegion;
   Window->UpdateRegion = 0;
+  if (UpdateRegion != NULL || Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
+    {
+      MsqDecPaintCountQueue(&Window->MessageQueue);
+    }
+  Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
 
   /* FIXME: Hide claret. */
 

@@ -107,6 +107,7 @@ BOOL
 W32kIsWindowVisible(HWND Wnd);
 BOOL
 W32kIsChildWindow(HWND Parent, HWND Child);
+HWND W32kGetDesktopWindow();
 
 #endif /* __WIN32K_WINDOW_H */
 

@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.8 2002/07/17 21:04:57 dwelch Exp $
+/* $Id: message.c,v 1.9 2002/08/26 23:20:54 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -181,9 +181,35 @@ NtUserGetMessage(LPMSG lpMsg,
       /* Check for paint messages. */
       if (ThreadQueue->PaintPosted)
 	{
+	  PWINDOW_OBJECT WindowObject;
+
 	  lpMsg->hwnd = PaintingFindWinToRepaint(hWnd, PsGetWin32Thread());
 	  lpMsg->message = WM_PAINT;
 	  lpMsg->wParam = lpMsg->lParam = 0;
+
+	  WindowObject = W32kGetWindowObject(lpMsg->hwnd);
+	  if (WindowObject != NULL)
+	    {
+	      if (WindowObject->Style & WS_MINIMIZE &&
+		  (HICON)NtUserGetClassLong(lpMsg->hwnd, GCL_HICON) != NULL)
+		{
+		  lpMsg->message = WM_PAINTICON;
+		  lpMsg->wParam = 1;
+		}
+
+	      if (lpMsg->hwnd == NULL || lpMsg->hwnd == hWnd ||
+		  W32kIsChildWindow(hWnd, lpMsg->hwnd))
+		{
+		  if (WindowObject->Flags & WINDOWOBJECT_NEED_INTERNALPAINT &&
+		      WindowObject->UpdateRegion == NULL)
+		    {
+		      WindowObject->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
+		      MsqDecPaintCountQueue(WindowObject->MessageQueue);
+		    }
+		}
+	      W32kReleaseWindowObject(WindowObject);
+	    }
+
 	  return(TRUE); 
 	}
 

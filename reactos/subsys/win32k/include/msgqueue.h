@@ -107,6 +107,10 @@ MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue);
 VOID
 MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 		     PUSER_SENT_MESSAGE_NOTIFY NotifyMessage);
+VOID
+MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
+VOID
+MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
 LRESULT STDCALL
 W32kSendMessage(HWND hWnd,
 		UINT Msg,

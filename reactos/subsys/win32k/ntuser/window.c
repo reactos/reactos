@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.10 2002/08/24 11:09:17 jfilby Exp $
+/* $Id: window.c,v 1.11 2002/08/26 23:20:54 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -247,6 +247,7 @@ W32kCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   WindowObject->WindowRect.right = Width;
   WindowObject->WindowRect.bottom = Height;
   WindowObject->ClientRect = WindowObject->WindowRect;
+  InitializeListHead(&WindowObject->ChildrenListHead);
 
   WindowName = ExAllocatePool(NonPagedPool, sizeof(L"DESKTOP"));
   wcscpy(WindowName, L"DESKTOP");
@@ -358,6 +359,9 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Self = Handle;
   WindowObject->MessageQueue = PsGetWin32Thread()->MessageQueue;
   WindowObject->Parent = ParentWindow;
+  InsertHeadList(&ParentWindow->ChildrenListHead, 
+		 &WindowObject->SiblingListEntry);
+  InitializeListHead(&WindowObject->ChildrenListHead);
 
   RtlInitUnicodeString(&WindowObject->WindowName, WindowName.Buffer);
   RtlFreeUnicodeString(&WindowName);
@@ -389,7 +393,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   /* Insert the window into the process's window list. */
   ExAcquireFastMutexUnsafe (&PsGetWin32Thread()->WindowListLock);
   InsertTailList (&PsGetWin32Thread()->WindowListHead, 
-		  &WindowObject->ListEntry);
+		  &WindowObject->ThreadListEntry);
   ExReleaseFastMutexUnsafe (&PsGetWin32Thread()->WindowListLock);
 
   /* 
