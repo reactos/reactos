@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.82 2003/02/09 11:57:14 ekohl Exp $
+/* $Id: registry.c,v 1.83 2003/02/10 21:24:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -35,7 +35,7 @@ PREGISTRY_HIVE  CmiVolatileHive = NULL;
 KSPIN_LOCK  CmiKeyListLock;
 
 LIST_ENTRY CmiHiveListHead;
-KSPIN_LOCK CmiHiveListLock;
+ERESOURCE CmiHiveListLock;
 
 volatile BOOLEAN CmiHiveSyncEnabled = FALSE;
 volatile BOOLEAN CmiHiveSyncPending = FALSE;
@@ -157,37 +157,37 @@ CmiCheckValues(BOOLEAN Verbose,
   Index = 0;
   while (TRUE)
     {
-  	  BufferSize = sizeof(KEY_NODE_INFORMATION) + 4096;
-	    ValueInfo = ExAllocatePool(PagedPool, BufferSize);
+      BufferSize = sizeof(KEY_NODE_INFORMATION) + 4096;
+      ValueInfo = ExAllocatePool(PagedPool, BufferSize);
 
-	    Status = NtEnumerateValueKey(Key,
-			  Index,
-				KeyNodeInformation,
-				ValueInfo,
-				BufferSize,
-				&ResultSize);
+      Status = NtEnumerateValueKey(Key,
+				   Index,
+				   KeyNodeInformation,
+				   ValueInfo,
+				   BufferSize,
+				   &ResultSize);
       if (!NT_SUCCESS(Status))
-		    {
-          ExFreePool(ValueInfo);
-		      if (Status == STATUS_NO_MORE_ENTRIES)
-			      Status = STATUS_SUCCESS;
-		      break;
-		    }
+	{
+	  ExFreePool(ValueInfo);
+	  if (Status == STATUS_NO_MORE_ENTRIES)
+	    Status = STATUS_SUCCESS;
+	  break;
+	}
 
       wcsncpy(Name,
-        ValueInfo->Name,
-        ValueInfo->NameLength / sizeof(WCHAR));
+	      ValueInfo->Name,
+	      ValueInfo->NameLength / sizeof(WCHAR));
 
       if (Verbose)
-				{
-          DbgPrint("Value: %S\n", Name);
-				}
+	{
+	  DbgPrint("Value: %S\n", Name);
+	}
 
       /* FIXME: Check info. */
 
       ExFreePool(ValueInfo);
 
-		  Index++;
+      Index++;
     }
 
   assert(NT_SUCCESS(Status));
@@ -264,7 +264,7 @@ CmInitializeRegistry(VOID)
   PKEY_OBJECT NewKey;
   HANDLE KeyHandle;
   NTSTATUS Status;
-  
+
   /*  Initialize the Key object type  */
   CmiKeyType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
   assert(CmiKeyType);
@@ -289,7 +289,7 @@ CmInitializeRegistry(VOID)
 
   /* Initialize the hive list */
   InitializeListHead(&CmiHiveListHead);
-  KeInitializeSpinLock(&CmiHiveListLock);
+  ExInitializeResourceLite(&CmiHiveListLock);
 
   /*  Build volatile registry store  */
   Status = CmiCreateRegistryHive(NULL, &CmiVolatileHive, FALSE);
@@ -845,7 +845,7 @@ CmiInitHives(BOOLEAN SetUpBoot)
   }
   wcscat(ConfigPath, L"\\system32\\config");
 
-  DPRINT1("ConfigPath: %S\n", ConfigPath);
+  DPRINT("ConfigPath: %S\n", ConfigPath);
 
   EndPtr = ConfigPath + wcslen(ConfigPath);
 
@@ -944,14 +944,15 @@ CmShutdownRegistry(VOID)
 {
   PREGISTRY_HIVE Hive;
   PLIST_ENTRY Entry;
-//  KIRQL oldlvl;
 
   DPRINT1("CmShutdownRegistry() called\n");
 
   /* Stop automatic hive synchronization */
   CmiHiveSyncEnabled = FALSE;
 
-//  KeAcquireSpinLock(&CmiHiveListLock,&oldlvl);
+  /* Acquire hive list lock exclusively */
+  ExAcquireResourceExclusiveLite(&CmiHiveListLock, TRUE);
+
   Entry = CmiHiveListHead.Flink;
   while (Entry != &CmiHiveListHead)
     {
@@ -976,27 +977,27 @@ CmShutdownRegistry(VOID)
 
       Entry = Entry->Flink;
     }
-//  KeReleaseSpinLock(&CmiHiveListLock,oldlvl);
 
-  DPRINT1("CmShutdownRegistry() called\n");
+  /* Release hive list lock */
+  ExReleaseResourceLite(&CmiHiveListLock);
+
+  DPRINT1("CmShutdownRegistry() done\n");
 }
 
 
-static VOID STDCALL
-CmiHiveSyncDpcRoutine(PKDPC Dpc,
-		      PVOID DeferredContext,
-		      PVOID SystemArgument1,
-		      PVOID SystemArgument2)
+VOID STDCALL
+CmiHiveSyncRoutine(PVOID DeferredContext)
 {
   PREGISTRY_HIVE Hive;
   PLIST_ENTRY Entry;
-  KIRQL oldlvl;
 
-  DPRINT1("CmiHiveSyncDpcRoutine() called\n");
+  DPRINT1("CmiHiveSyncRoutine() called\n");
 
   CmiHiveSyncPending = FALSE;
 
-  KeAcquireSpinLock(&CmiHiveListLock,&oldlvl);
+  /* Acquire hive list lock exclusively */
+  ExAcquireResourceExclusiveLite(&CmiHiveListLock, TRUE);
+
   Entry = CmiHiveListHead.Flink;
   while (Entry != &CmiHiveListHead)
     {
@@ -1017,7 +1018,38 @@ CmiHiveSyncDpcRoutine(PKDPC Dpc,
 
       Entry = Entry->Flink;
     }
-  KeReleaseSpinLock(&CmiHiveListLock,oldlvl);
+
+  /* Release hive list lock */
+  ExReleaseResourceLite(&CmiHiveListLock);
+
+  DPRINT("DeferredContext %x\n", DeferredContext);
+  ExFreePool(DeferredContext);
+}
+
+
+static VOID STDCALL
+CmiHiveSyncDpcRoutine(PKDPC Dpc,
+		      PVOID DeferredContext,
+		      PVOID SystemArgument1,
+		      PVOID SystemArgument2)
+{
+  PWORK_QUEUE_ITEM WorkQueueItem;
+
+  WorkQueueItem = ExAllocatePool(NonPagedPool,
+				 sizeof(WORK_QUEUE_ITEM));
+  if (WorkQueueItem == NULL)
+    {
+      DbgPrint("Failed to allocate work item\n");
+      return;
+    }
+
+  ExInitializeWorkItem(WorkQueueItem,
+		       CmiHiveSyncRoutine,
+		       WorkQueueItem);
+
+  DPRINT("DeferredContext %x\n", WorkQueueItem);
+  ExQueueWorkItem(WorkQueueItem,
+		  CriticalWorkQueue);
 }
 
 

@@ -143,6 +143,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 			CreateOptions);
   if (!NT_SUCCESS(Status))
     {
+      /* Release hive lock */
       ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
       ObDereferenceObject(KeyObject);
       ObDereferenceObject(Object);
@@ -171,6 +172,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
   CmiAddKeyToList(KeyObject->ParentKey, KeyObject);
 
+  VERIFY_KEY_OBJECT(KeyObject);
+
   /* Release hive lock */
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
 
@@ -179,8 +182,6 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
   if (Disposition)
     *Disposition = REG_CREATED_NEW_KEY;
-
-  VERIFY_KEY_OBJECT(KeyObject);
 
   CmiSyncHives();
 
@@ -197,6 +198,7 @@ NtDeleteKey(IN HANDLE KeyHandle)
   DPRINT("KeyHandle %x\n", KeyHandle);
 
   /* Verify that the handle is valid and is a registry key */
+CHECKPOINT1;
   Status = ObReferenceObjectByHandle(KeyHandle,
 				     KEY_WRITE,
 				     CmiKeyType,
@@ -205,28 +207,32 @@ NtDeleteKey(IN HANDLE KeyHandle)
 				     NULL);
   if (!NT_SUCCESS(Status))
     {
+CHECKPOINT1;
       return(Status);
     }
 
+CHECKPOINT1;
   /* Acquire hive lock */
   ExAcquireResourceExclusiveLite(&KeyObject->RegistryHive->HiveResource, TRUE);
+CHECKPOINT1;
 
   VERIFY_KEY_OBJECT(KeyObject);
 
   /*  Set the marked for delete bit in the key object  */
   KeyObject->Flags |= KO_MARKED_FOR_DELETE;
+CHECKPOINT1;
 
   /* Release hive lock */
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
 
-  DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
+  DPRINT1("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
 
   /* Dereference the object */
   ObDereferenceObject(KeyObject);
   if(KeyObject->RegistryHive != KeyObject->ParentKey->RegistryHive)
     ObDereferenceObject(KeyObject);
 
-  DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
+  DPRINT1("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
 
   /*
    * Note:

@@ -332,7 +332,7 @@ extern POBJECT_TYPE CmiKeyType;
 extern KSPIN_LOCK CmiKeyListLock;
 
 extern LIST_ENTRY CmiHiveListHead;
-extern KSPIN_LOCK CmiHiveListLock;
+extern ERESOURCE CmiHiveListLock;
 
 
 VOID

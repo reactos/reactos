@@ -809,7 +809,6 @@ CmiCreateRegistryHive(PWSTR Filename,
   BOOLEAN CreateNew)
 {
   PREGISTRY_HIVE Hive;
-  KIRQL oldlvl;
   NTSTATUS Status;
 
   DPRINT("CmiCreateRegistryHive(Filename %S)\n", Filename);
@@ -851,10 +850,14 @@ CmiCreateRegistryHive(PWSTR Filename,
 
   ExInitializeResourceLite(&Hive->HiveResource);
 
+  /* Acquire hive list lock exclusively */
+  ExAcquireResourceExclusiveLite(&CmiHiveListLock, TRUE);
+
   /* Add the new hive to the hive list */
-  KeAcquireSpinLock(&CmiHiveListLock,&oldlvl);
   InsertHeadList(&CmiHiveListHead, &Hive->HiveList);
-  KeReleaseSpinLock(&CmiHiveListLock,oldlvl);
+
+  /* Release hive list lock */
+  ExReleaseResourceLite(&CmiHiveListLock);
 
   VERIFY_REGISTRY_HIVE(Hive);
 
@@ -869,12 +872,14 @@ CmiCreateRegistryHive(PWSTR Filename,
 NTSTATUS
 CmiRemoveRegistryHive(PREGISTRY_HIVE RegistryHive)
 {
-  KIRQL oldlvl;
+  /* Acquire hive list lock exclusively */
+  ExAcquireResourceExclusiveLite(&CmiHiveListLock, TRUE);
 
   /* Remove hive from hive list */
-  KeAcquireSpinLock(&CmiHiveListLock,&oldlvl);
   RemoveEntryList(&RegistryHive->HiveList);
-  KeReleaseSpinLock(&CmiHiveListLock,oldlvl);
+
+  /* Release hive list lock */
+  ExReleaseResourceLite(&CmiHiveListLock);
 
 
   /* FIXME: Remove attached keys and values */
@@ -1385,46 +1390,56 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
   DPRINT1("CmiRemoveSubKey() called\n");
 
   /* Remove the key from the parent key's hash block */
-  HashBlock = CmiGetBlock(RegistryHive,
-			  ParentKey->KeyCell->HashTableOffset,
-			  NULL);
-  if (HashBlock != NULL)
+  if (ParentKey->KeyCell->HashTableOffset != -1)
     {
-      CmiRemoveKeyFromHashTable(RegistryHive,
-				HashBlock,
-				SubKey->BlockOffset);
-      CmiMarkBlockDirty(RegistryHive,
-			ParentKey->KeyCell->HashTableOffset);
+      DPRINT1("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset)
+      HashBlock = CmiGetBlock(RegistryHive,
+			      ParentKey->KeyCell->HashTableOffset,
+			      NULL);
+      DPRINT1("ParentKey HashBlock %p\n", HashBlock)
+      if (HashBlock != NULL)
+	{
+	  CmiRemoveKeyFromHashTable(RegistryHive,
+				    HashBlock,
+				    SubKey->BlockOffset);
+	  CmiMarkBlockDirty(RegistryHive,
+			    ParentKey->KeyCell->HashTableOffset);
+	}
     }
 
   /* Remove the key's hash block */
-  DPRINT1("HashTableOffset %lx\n", SubKey->KeyCell->HashTableOffset)
-  if (SubKey->KeyCell->HashTableOffset != 0)
+  if (SubKey->KeyCell->HashTableOffset != -1)
     {
+      DPRINT1("SubKey HashTableOffset %lx\n", SubKey->KeyCell->HashTableOffset)
       HashBlock = CmiGetBlock(RegistryHive,
 			      SubKey->KeyCell->HashTableOffset,
 			      NULL);
-      DPRINT1("HashBlock %p\n", HashBlock)
+      DPRINT1("SubKey HashBlock %p\n", HashBlock)
       if (HashBlock != NULL)
 	{
 	  CmiDestroyBlock(RegistryHive,
 			  HashBlock,
 			  SubKey->KeyCell->HashTableOffset);
+	  SubKey->KeyCell->HashTableOffset = -1;
 	}
-      SubKey->KeyCell->HashTableOffset = 0;
     }
 
-CHECKPOINT1;
-  /* Remove the key from the parent key's hash block */
-  ParentKey->KeyCell->NumberOfSubKeys--;
-  CmiMarkBlockDirty(RegistryHive,
-		    ParentKey->BlockOffset);
+  /* Decrement the number of the parent key's sub keys */
+  if (ParentKey != NULL)
+    {
+      DPRINT1("ParentKey %p\n", ParentKey)
+      ParentKey->KeyCell->NumberOfSubKeys--;
+      NtQuerySystemTime((PTIME)&ParentKey->KeyCell->LastWriteTime);
+      CmiMarkBlockDirty(RegistryHive,
+			ParentKey->BlockOffset);
+    }
 
-CHECKPOINT1;
   /* Destroy key cell */
   CmiDestroyBlock(RegistryHive,
 		  SubKey->KeyCell,
 		  SubKey->BlockOffset);
+  SubKey->BlockOffset = -1;
+  SubKey->KeyCell = NULL;
 
   return(STATUS_SUCCESS);
 }
