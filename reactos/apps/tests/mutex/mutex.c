@@ -50,6 +50,8 @@ DWORD WINAPI thread1(LPVOID crap)
       ReleaseMutex(hMutex);
     }
 
+  dprintf("Thread 1 done!\n");
+
   return 1;
 }
 
@@ -77,6 +79,8 @@ DWORD WINAPI thread2(LPVOID crap)
       dprintf(" %lu\n", dwCounter);
       ReleaseMutex(hMutex);
     }
+
+  dprintf("Thread 2 done!\n");
 
   return 1;
 }
