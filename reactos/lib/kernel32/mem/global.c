@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.24 2004/05/31 16:54:04 jimtabor Exp $
+/* $Id: global.c,v 1.25 2004/06/13 20:04:55 navaraf Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -144,7 +144,7 @@ GlobalAlloc(UINT uFlags,
 /*
  * @implemented
  */
-UINT STDCALL
+SIZE_T STDCALL
 GlobalCompact(DWORD dwMinFree)
 {
    return RtlCompactHeap(hProcessHeap, 0);

@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.15 2004/01/23 21:16:04 ekohl Exp $
+/* $Id: timer.c,v 1.16 2004/06/13 20:04:56 navaraf Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -23,7 +23,7 @@
 HANDLE STDCALL
 CreateWaitableTimerW(LPSECURITY_ATTRIBUTES lpTimerAttributes,
 		     BOOL bManualReset,
-		     LPWSTR lpTimerName)
+		     LPCWSTR lpTimerName)
 {
    NTSTATUS Status;
    HANDLE TimerHandle;

@@ -1,3 +1,5 @@
+#define _WIN32_WINNT 0x0501
+#define __USE_W32API
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <stdarg.h>
@@ -24,5 +26,7 @@
 #include <reactos/buildno.h>
 #include <rosrtl/thread.h>
 #include <rosrtl/string.h>
+#include <ntos/ldrtypes.h>
+#include <ddk/ldrfuncs.h>
 
 #include "include/kernel32.h"

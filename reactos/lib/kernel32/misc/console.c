@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.75 2004/05/28 13:17:32 weiden Exp $
+/* $Id: console.c,v 1.76 2004/06/13 20:04:56 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1016,7 +1016,7 @@ GetStdHandle(DWORD nStdHandle)
 /*
  * @implemented
  */
-WINBASEAPI BOOL WINAPI
+BOOL WINAPI
 SetStdHandle(DWORD nStdHandle,
 	     HANDLE hHandle)
      /*
@@ -1234,7 +1234,7 @@ BOOL STDCALL AllocConsole(VOID)
    if(NtCurrentPeb()->ProcessParameters->hConsole)
    {
 	DPRINT("AllocConsole: Allocate duplicate console to the same Process\n");
-	SetLastErrorByStatus (STATUS_OBJECT_EXISTS); 
+	SetLastErrorByStatus (STATUS_OBJECT_NAME_EXISTS); 
 	return FALSE;	 
    }
 
@@ -1403,7 +1403,6 @@ FillConsoleOutputCharacterW(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 PeekConsoleInputA(
@@ -1474,7 +1473,6 @@ PeekConsoleInputA(
  *
  * @unimplemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 PeekConsoleInputW(
@@ -1494,7 +1492,7 @@ PeekConsoleInputW(
  *
  * @implemented
  */
-WINBASEAPI BOOL WINAPI
+BOOL WINAPI
 ReadConsoleInputA(HANDLE hConsoleInput,
 		  PINPUT_RECORD	lpBuffer,
 		  DWORD	nLength,
@@ -1572,7 +1570,6 @@ ReadConsoleInputA(HANDLE hConsoleInput,
  *
  * @unimplemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 ReadConsoleInputW(
@@ -1592,7 +1589,6 @@ ReadConsoleInputW(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 WriteConsoleInputA(
@@ -1659,7 +1655,6 @@ WriteConsoleInputA(
  *
  * @unimplemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 WriteConsoleInputW(
@@ -1679,7 +1674,6 @@ WriteConsoleInputW(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 ReadConsoleOutputA(
@@ -1754,7 +1748,6 @@ ReadConsoleOutputA(
  *
  * @unimplemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 ReadConsoleOutputW(
@@ -1774,7 +1767,7 @@ ReadConsoleOutputW(
  *
  * @implemented
  */
-WINBASEAPI BOOL WINAPI
+BOOL WINAPI
 WriteConsoleOutputA(HANDLE		 hConsoleOutput,
 		    CONST CHAR_INFO	*lpBuffer,
 		    COORD		 dwBufferSize,
@@ -1839,7 +1832,6 @@ WriteConsoleOutputA(HANDLE		 hConsoleOutput,
  *
  * @unimplemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 WriteConsoleOutputW(
@@ -1860,7 +1852,6 @@ WriteConsoleOutputW(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 ReadConsoleOutputCharacterA(
@@ -1929,7 +1920,6 @@ ReadConsoleOutputCharacterA(
  *
  * @unimplemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 ReadConsoleOutputCharacterW(
@@ -1950,7 +1940,6 @@ ReadConsoleOutputCharacterW(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 ReadConsoleOutputAttribute(
@@ -2021,7 +2010,7 @@ ReadConsoleOutputAttribute(
  *
  * @implemented
  */
-WINBASEAPI BOOL WINAPI
+BOOL WINAPI
 WriteConsoleOutputCharacterA(HANDLE		hConsoleOutput,
 			     LPCSTR		lpCharacter,
 			     DWORD		nLength,
@@ -2075,7 +2064,7 @@ WriteConsoleOutputCharacterA(HANDLE		hConsoleOutput,
  *
  * @implemented
  */
-WINBASEAPI BOOL WINAPI
+BOOL WINAPI
 WriteConsoleOutputCharacterW(HANDLE		hConsoleOutput,
 			     LPCWSTR		lpCharacter,
 			     DWORD		nLength,
@@ -2138,7 +2127,6 @@ WriteConsoleOutputCharacterW(HANDLE		hConsoleOutput,
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 WriteConsoleOutputAttribute(
@@ -2196,7 +2184,6 @@ WriteConsoleOutputAttribute(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 FillConsoleOutputAttribute(
@@ -2233,7 +2220,6 @@ FillConsoleOutputAttribute(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 GetConsoleMode(
@@ -2263,7 +2249,6 @@ GetConsoleMode(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 GetNumberOfConsoleInputEvents(
@@ -2301,7 +2286,6 @@ GetNumberOfConsoleInputEvents(
  *
  * @unimplemented
  */
-WINBASEAPI
 COORD
 WINAPI
 GetLargestConsoleWindowSize(
@@ -2322,7 +2306,6 @@ GetLargestConsoleWindowSize(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 GetConsoleCursorInfo(
@@ -2353,7 +2336,6 @@ GetConsoleCursorInfo(
  *
  * @unimplemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 GetNumberOfConsoleMouseButtons(
@@ -2370,7 +2352,6 @@ GetNumberOfConsoleMouseButtons(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 SetConsoleMode(
@@ -2400,7 +2381,6 @@ SetConsoleMode(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 SetConsoleActiveScreenBuffer(
@@ -2428,7 +2408,6 @@ SetConsoleActiveScreenBuffer(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 FlushConsoleInputBuffer(
@@ -2456,7 +2435,6 @@ FlushConsoleInputBuffer(
  *
  * @unimplemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 SetConsoleScreenBufferSize(
@@ -2473,7 +2451,6 @@ SetConsoleScreenBufferSize(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 SetConsoleCursorInfo(
@@ -2504,7 +2481,6 @@ SetConsoleCursorInfo(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 ScrollConsoleScreenBufferA(
@@ -2551,7 +2527,6 @@ ScrollConsoleScreenBufferA(
  *
  * @unimplemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 ScrollConsoleScreenBufferW(
@@ -2572,7 +2547,6 @@ ScrollConsoleScreenBufferW(
  *
  * @unimplemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 SetConsoleWindowInfo(
@@ -2591,7 +2565,6 @@ SetConsoleWindowInfo(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 SetConsoleTextAttribute(
@@ -2679,7 +2652,7 @@ RemoveConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
 /*
  * @implemented
  */
-WINBASEAPI BOOL WINAPI
+BOOL WINAPI
 SetConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine,
 		      BOOL Add)
 {
@@ -2704,7 +2677,7 @@ SetConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine,
  *
  * @unimplemented
  */
-WINBASEAPI BOOL WINAPI
+BOOL WINAPI
 GenerateConsoleCtrlEvent(
 	DWORD		dwCtrlEvent,
 	DWORD		dwProcessGroupId
@@ -2720,7 +2693,6 @@ GenerateConsoleCtrlEvent(
  *
  * @implemented
  */
-WINBASEAPI
 DWORD
 WINAPI
 GetConsoleTitleW(
@@ -2783,7 +2755,6 @@ GetConsoleTitleW(
  *
  * @implemented
  */
-WINBASEAPI
 DWORD
 WINAPI
 GetConsoleTitleA(
@@ -2823,7 +2794,6 @@ GetConsoleTitleA(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 SetConsoleTitleW(
@@ -2884,7 +2854,6 @@ SetConsoleTitleW(
  *
  * @implemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 SetConsoleTitleA(
@@ -2943,7 +2912,6 @@ SetConsoleTitleA(
  *
  * @unimplemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 ReadConsoleW(
@@ -2964,7 +2932,6 @@ ReadConsoleW(
  *
  * @unimplemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 WriteConsoleW(
@@ -3030,7 +2997,6 @@ WriteConsoleW(
  *
  * @implemented
  */
-WINBASEAPI
 HANDLE
 WINAPI
 CreateConsoleScreenBuffer(
@@ -3062,7 +3028,6 @@ CreateConsoleScreenBuffer(
  *
  * @unimplemented
  */
-WINBASEAPI
 UINT
 WINAPI
 GetConsoleCP( VOID )
@@ -3077,7 +3042,6 @@ GetConsoleCP( VOID )
  *
  * @unimplemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 SetConsoleCP(
@@ -3094,7 +3058,6 @@ SetConsoleCP(
  *
  * @unimplemented
  */
-WINBASEAPI
 UINT
 WINAPI
 GetConsoleOutputCP( VOID )
@@ -3109,7 +3072,6 @@ GetConsoleOutputCP( VOID )
  *
  * @unimplemented
  */
-WINBASEAPI
 BOOL
 WINAPI
 SetConsoleOutputCP(

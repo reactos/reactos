@@ -1,4 +1,4 @@
-/* $Id: iocompl.c,v 1.13 2004/01/23 16:37:11 ekohl Exp $
+/* $Id: iocompl.c,v 1.14 2004/06/13 20:04:55 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -57,8 +57,13 @@ CreateIoCompletionPort(
    
    if ( FileHandle != INVALID_HANDLE_VALUE ) 
    {
+#ifdef __USE_W32API
+      CompletionInformation.Port = CompletionPort;
+      CompletionInformation.Key  = CompletionKey;
+#else
       CompletionInformation.IoCompletionHandle = CompletionPort;
       CompletionInformation.CompletionKey  = CompletionKey;
+#endif
 
       errCode = NtSetInformationFile(FileHandle, 
                                      &IoStatusBlock,

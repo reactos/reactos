@@ -1,4 +1,4 @@
-/* $Id: move.c,v 1.13 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: move.c,v 1.14 2004/06/13 20:04:55 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -21,138 +21,6 @@
 
 
 /* FUNCTIONS ****************************************************************/
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-MoveFileA (
-	LPCSTR	lpExistingFileName,
-	LPCSTR	lpNewFileName
-	)
-{
-	return MoveFileExA (lpExistingFileName,
-	                    lpNewFileName,
-	                    MOVEFILE_COPY_ALLOWED);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-MoveFileExA (
-	LPCSTR	lpExistingFileName,
-	LPCSTR	lpNewFileName,
-	DWORD	dwFlags
-	)
-{
-	return MoveFileWithProgressA (lpExistingFileName,
-	                              lpNewFileName,
-	                              NULL,
-	                              NULL,
-	                              dwFlags);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-MoveFileWithProgressA (
-	LPCSTR			lpExistingFileName,
-	LPCSTR			lpNewFileName,
-	LPPROGRESS_ROUTINE	lpProgressRoutine,
-	LPVOID			lpData,
-	DWORD			dwFlags
-	)
-{
-	UNICODE_STRING ExistingFileNameU;
-	UNICODE_STRING NewFileNameU;
-	ANSI_STRING ExistingFileName;
-	ANSI_STRING NewFileName;
-	BOOL Result;
-
-	RtlInitAnsiString (&ExistingFileName,
-	                   (LPSTR)lpExistingFileName);
-
-	RtlInitAnsiString (&NewFileName,
-	                   (LPSTR)lpNewFileName);
-
-	/* convert ansi (or oem) string to unicode */
-	if (bIsFileApiAnsi)
-	{
-		RtlAnsiStringToUnicodeString (&ExistingFileNameU,
-		                              &ExistingFileName,
-		                              TRUE);
-		RtlAnsiStringToUnicodeString (&NewFileNameU,
-		                              &NewFileName,
-		                              TRUE);
-	}
-	else
-	{
-		RtlOemStringToUnicodeString (&ExistingFileNameU,
-		                             &ExistingFileName,
-		                             TRUE);
-		RtlOemStringToUnicodeString (&NewFileNameU,
-		                             &NewFileName,
-		                             TRUE);
-	}
-
-	Result = MoveFileWithProgressW (ExistingFileNameU.Buffer,
-	                                NewFileNameU.Buffer,
-	                                lpProgressRoutine,
-	                                lpData,
-	                                dwFlags);
-
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             ExistingFileNameU.Buffer);
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             NewFileNameU.Buffer);
-
-	return Result;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-MoveFileW (
-	LPCWSTR	lpExistingFileName,
-	LPCWSTR	lpNewFileName
-	)
-{
-	return MoveFileExW (lpExistingFileName,
-	                    lpNewFileName,
-	                    MOVEFILE_COPY_ALLOWED);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-MoveFileExW (
-	LPCWSTR	lpExistingFileName,
-	LPCWSTR	lpNewFileName,
-	DWORD	dwFlags
-	)
-{
-	return MoveFileWithProgressW (lpExistingFileName,
-	                              lpNewFileName,
-	                              NULL,
-	                              NULL,
-	                              dwFlags);
-}
-
 
 static BOOL
 AdjustFileAttributes (
@@ -312,10 +180,9 @@ MoveFileWithProgressW (
 
 	FileRename = (FILE_RENAME_INFORMATION *)Buffer;
 	if ((dwFlags & MOVEFILE_REPLACE_EXISTING) == MOVEFILE_REPLACE_EXISTING)
-		FileRename->Replace = TRUE;
+		FileRename->ReplaceIfExists = TRUE;
 	else
-		FileRename->Replace = FALSE;
-
+		FileRename->ReplaceIfExists = FALSE;
 	FileRename->FileNameLength = wcslen (lpNewFileName);
 	memcpy (FileRename->FileName,
 	        lpNewFileName,
@@ -346,7 +213,7 @@ MoveFileWithProgressW (
 		                      lpProgressRoutine,
 		                      lpData,
 		                      NULL,
-		                      FileRename->Replace ? 0 : COPY_FILE_FAIL_IF_EXISTS) &&
+		                      FileRename->ReplaceIfExists ? 0 : COPY_FILE_FAIL_IF_EXISTS) &&
 		         AdjustFileAttributes(lpExistingFileName, lpNewFileName) &&
 		         DeleteFileW (lpExistingFileName);
 		if (! Result)
@@ -377,6 +244,138 @@ MoveFileWithProgressW (
 #endif
 
 	return Result;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+MoveFileWithProgressA (
+	LPCSTR			lpExistingFileName,
+	LPCSTR			lpNewFileName,
+	LPPROGRESS_ROUTINE	lpProgressRoutine,
+	LPVOID			lpData,
+	DWORD			dwFlags
+	)
+{
+	UNICODE_STRING ExistingFileNameU;
+	UNICODE_STRING NewFileNameU;
+	ANSI_STRING ExistingFileName;
+	ANSI_STRING NewFileName;
+	BOOL Result;
+
+	RtlInitAnsiString (&ExistingFileName,
+	                   (LPSTR)lpExistingFileName);
+
+	RtlInitAnsiString (&NewFileName,
+	                   (LPSTR)lpNewFileName);
+
+	/* convert ansi (or oem) string to unicode */
+	if (bIsFileApiAnsi)
+	{
+		RtlAnsiStringToUnicodeString (&ExistingFileNameU,
+		                              &ExistingFileName,
+		                              TRUE);
+		RtlAnsiStringToUnicodeString (&NewFileNameU,
+		                              &NewFileName,
+		                              TRUE);
+	}
+	else
+	{
+		RtlOemStringToUnicodeString (&ExistingFileNameU,
+		                             &ExistingFileName,
+		                             TRUE);
+		RtlOemStringToUnicodeString (&NewFileNameU,
+		                             &NewFileName,
+		                             TRUE);
+	}
+
+	Result = MoveFileWithProgressW (ExistingFileNameU.Buffer,
+	                                NewFileNameU.Buffer,
+	                                lpProgressRoutine,
+	                                lpData,
+	                                dwFlags);
+
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             ExistingFileNameU.Buffer);
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             NewFileNameU.Buffer);
+
+	return Result;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+MoveFileW (
+	LPCWSTR	lpExistingFileName,
+	LPCWSTR	lpNewFileName
+	)
+{
+	return MoveFileExW (lpExistingFileName,
+	                    lpNewFileName,
+	                    MOVEFILE_COPY_ALLOWED);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+MoveFileExW (
+	LPCWSTR	lpExistingFileName,
+	LPCWSTR	lpNewFileName,
+	DWORD	dwFlags
+	)
+{
+	return MoveFileWithProgressW (lpExistingFileName,
+	                              lpNewFileName,
+	                              NULL,
+	                              NULL,
+	                              dwFlags);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+MoveFileA (
+	LPCSTR	lpExistingFileName,
+	LPCSTR	lpNewFileName
+	)
+{
+	return MoveFileExA (lpExistingFileName,
+	                    lpNewFileName,
+	                    MOVEFILE_COPY_ALLOWED);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+MoveFileExA (
+	LPCSTR	lpExistingFileName,
+	LPCSTR	lpNewFileName,
+	DWORD	dwFlags
+	)
+{
+	return MoveFileWithProgressA (lpExistingFileName,
+	                              lpNewFileName,
+	                              NULL,
+	                              NULL,
+	                              dwFlags);
 }
 
 /* EOF */

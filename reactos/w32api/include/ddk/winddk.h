@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 /*
 ** Definitions specific to this Device Driver Kit
 */
@@ -1094,6 +1092,7 @@ typedef struct _EISA_MEMORY_TYPE {
   UCHAR  MoreEntries : 1;
 } EISA_MEMORY_TYPE, *PEISA_MEMORY_TYPE;
 
+#include <pshpack1.h>
 typedef struct _EISA_MEMORY_CONFIGURATION {
   EISA_MEMORY_TYPE  ConfigurationByte;
   UCHAR  DataSize;
@@ -1101,6 +1100,7 @@ typedef struct _EISA_MEMORY_CONFIGURATION {
   UCHAR  AddressHighByte;
   USHORT  MemorySize;
 } EISA_MEMORY_CONFIGURATION, *PEISA_MEMORY_CONFIGURATION;
+#include <poppack.h>
 
 typedef struct _EISA_IRQ_DESCRIPTOR {
   UCHAR  Interrupt : 4;
@@ -1134,6 +1134,7 @@ typedef struct _EISA_DMA_CONFIGURATION {
   DMA_CONFIGURATION_BYTE1  ConfigurationByte1;
 } EISA_DMA_CONFIGURATION, *PEISA_DMA_CONFIGURATION;
 
+#include <pshpack1.h>
 typedef struct _EISA_PORT_DESCRIPTOR {
   UCHAR  NumberPorts : 5;
   UCHAR  Reserved : 1;
@@ -1145,6 +1146,7 @@ typedef struct _EISA_PORT_CONFIGURATION {
   EISA_PORT_DESCRIPTOR  Configuration;
   USHORT  PortAddress;
 } EISA_PORT_CONFIGURATION, *PEISA_PORT_CONFIGURATION;
+#include <poppack.h>
 
 typedef struct _CM_EISA_FUNCTION_INFORMATION {
   ULONG  CompressedId;
@@ -1243,6 +1245,7 @@ typedef struct _PNP_BUS_INFORMATION {
   ULONG  BusNumber;
 } PNP_BUS_INFORMATION, *PPNP_BUS_INFORMATION;
 
+#include <pshpack1.h>
 typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
   UCHAR Type;
   UCHAR ShareDisposition;
@@ -1373,6 +1376,7 @@ typedef struct _CM_INT13_DRIVE_PARAMETER {
   USHORT  MaxHeads;
   USHORT  NumberDrives;
 } CM_INT13_DRIVE_PARAMETER, *PCM_INT13_DRIVE_PARAMETER;
+#include <poppack.h>
 
 typedef struct _CM_KEYBOARD_DEVICE_DATA {
   USHORT  Version;
@@ -1966,7 +1970,7 @@ typedef struct _FILE_NAME_INFORMATION {
   WCHAR  FileName[1];                                      
 } FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;           
 
-typedef struct FILE_BASIC_INFORMATION {
+typedef struct _FILE_BASIC_INFORMATION {
   LARGE_INTEGER  CreationTime;
   LARGE_INTEGER  LastAccessTime;
   LARGE_INTEGER  LastWriteTime;
@@ -2442,6 +2446,7 @@ typedef struct _SECURITY_SUBJECT_CONTEXT {
   PVOID  ProcessAuditId;
 } SECURITY_SUBJECT_CONTEXT, *PSECURITY_SUBJECT_CONTEXT;
 
+#include <pshpack4.h>
 typedef struct _ACCESS_STATE {
   LUID  OperationID;
   BOOLEAN  SecurityEvaluated;
@@ -2464,6 +2469,7 @@ typedef struct _ACCESS_STATE {
   UNICODE_STRING  ObjectName;
   UNICODE_STRING  ObjectTypeName;
 } ACCESS_STATE, *PACCESS_STATE;
+#include <poppack.h>
 
 typedef struct _IO_SECURITY_CONTEXT {
   PSECURITY_QUALITY_OF_SERVICE  SecurityQos;
@@ -2522,6 +2528,7 @@ typedef struct _IO_CSQ {
   PVOID  ReservePointer;
 } IO_CSQ, *PIO_CSQ;
 
+#include <pshpack4.h>
 typedef struct _IO_STACK_LOCATION {
   UCHAR  MajorFunction;
   UCHAR  MinorFunction;
@@ -2662,6 +2669,7 @@ typedef struct _IO_STACK_LOCATION {
   PIO_COMPLETION_ROUTINE  CompletionRoutine;
   PVOID  Context;
 } IO_STACK_LOCATION, *PIO_STACK_LOCATION;
+#include <poppack.h>
 
 /* IO_STACK_LOCATION.Control */
 
@@ -3720,31 +3728,31 @@ typedef struct _KPCR_TIB {
     DWORD  Version;             /* 10 */
   } DUMMYUNIONNAME;
   PVOID  ArbitraryUserPointer;  /* 14 */
-} KPCR_TIB, *PKPCR_TIB;         /* 18 */
+  struct _NT_TIB *Self;         /* 18 */
+} KPCR_TIB, *PKPCR_TIB;         /* 1C */
 
 #define PCR_MINOR_VERSION 1
 #define PCR_MAJOR_VERSION 1
 
 typedef struct _KPCR {
   KPCR_TIB  Tib;                /* 00 */
-  struct _KPCR  *Self;          /* 18 */
-  struct _KPRCB  *PCRCB;        /* 1C */
-  KIRQL  Irql;                  /* 20 */
-  ULONG  IRR;                   /* 24 */
-  ULONG  IrrActive;             /* 28 */
-  ULONG  IDR;                   /* 2C */
-  PVOID  KdVersionBlock;        /* 30 */
-  PUSHORT  IDT;                 /* 34 */
-  PUSHORT  GDT;                 /* 38 */
-  struct _KTSS  *TSS;           /* 3C */
-  USHORT  MajorVersion;         /* 40 */
-  USHORT  MinorVersion;         /* 42 */
-  KAFFINITY  SetMember;         /* 44 */
-  ULONG  StallScaleFactor;      /* 48 */
-  UCHAR  DebugActive;           /* 4C */
-  UCHAR  ProcessorNumber;       /* 4D */
-  UCHAR  Reserved[2];           /* 4E */
-} KPCR, *PKPCR;                 /* 50 */
+  struct _KPCR  *Self;          /* 1C */
+  struct _KPRCB  *PCRCB;        /* 20 */
+  KIRQL  Irql;                  /* 24 */
+  ULONG  IRR;                   /* 28 */
+  ULONG  IrrActive;             /* 2C */
+  ULONG  IDR;                   /* 30 */
+  PVOID  KdVersionBlock;        /* 34 */
+  PUSHORT  IDT;                 /* 38 */
+  PUSHORT  GDT;                 /* 3C */
+  struct _KTSS  *TSS;           /* 40 */
+  USHORT  MajorVersion;         /* 44 */
+  USHORT  MinorVersion;         /* 46 */
+  KAFFINITY  SetMember;         /* 48 */
+  ULONG  StallScaleFactor;      /* 4C */
+  UCHAR  SpareUnused;           /* 50 */
+  UCHAR  Number;                /* 51 */
+} KPCR, *PKPCR;                 /* 54 */
 
 typedef struct _KFLOATING_SAVE {
   ULONG  ControlWord;
@@ -9098,7 +9106,6 @@ VOID
 DDKAPI
 KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount );
 
-
 #ifdef DBG
 
 #define KdPrint(_x_) DbgPrint _x_
@@ -9119,8 +9126,6 @@ extern NTOSAPI PBOOLEAN KdDebuggerNotPresent;
 extern NTOSAPI PBOOLEAN KdDebuggerEnabled;
 #define KD_DEBUGGER_ENABLED     *KdDebuggerEnabled
 #define KD_DEBUGGER_NOT_PRESENT *KdDebuggerNotPresent
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

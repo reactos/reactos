@@ -1,4 +1,4 @@
-/* $Id: procmem.c,v 1.7 2004/01/23 17:13:36 ekohl Exp $
+/* $Id: procmem.c,v 1.8 2004/06/13 20:04:55 navaraf Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -48,16 +48,16 @@ ReadProcessMemory (
 BOOL
 STDCALL
 WriteProcessMemory (
-	HANDLE	hProcess,
-	LPVOID	lpBaseAddress,
-	LPVOID	lpBuffer,
-	DWORD	nSize,
-	LPDWORD	lpNumberOfBytesWritten
+	HANDLE hProcess,
+	LPVOID lpBaseAddress,
+	LPCVOID lpBuffer,
+	SIZE_T nSize,
+	SIZE_T *lpNumberOfBytesWritten
 	)
 {
 	NTSTATUS Status;
 
-	Status = NtWriteVirtualMemory( hProcess, lpBaseAddress,lpBuffer, nSize,
+	Status = NtWriteVirtualMemory( hProcess, lpBaseAddress, (LPVOID)lpBuffer, nSize,
 		(PULONG)lpNumberOfBytesWritten
 		);
 

@@ -690,7 +690,10 @@ typedef DWORD FLONG;
 #define PROCESSOR_MIPS_R4000 4000
 #define PROCESSOR_ALPHA_21064 21064
 #define PROCESSOR_INTEL_IA64 2200
-
+#define PROCESSOR_PPC_601 601
+#define PROCESSOR_PPC_603 603
+#define PROCESSOR_PPC_604 604
+#define PROCESSOR_PPC_620 620
 #define PROCESSOR_ARCHITECTURE_INTEL 0
 #define PROCESSOR_ARCHITECTURE_MIPS 1
 #define PROCESSOR_ARCHITECTURE_ALPHA 2
@@ -2160,8 +2163,7 @@ typedef struct _TAPE_GET_MEDIA_PARAMETERS {
 typedef struct _TAPE_GET_POSITION {
 	ULONG Type;
 	ULONG Partition;
-	ULONG OffsetLow;
-	ULONG OffsetHigh;
+	LARGE_INTEGER Offset;
 } TAPE_GET_POSITION,*PTAPE_GET_POSITION;
 typedef struct _TAPE_PREPARE {
 	DWORD Operation;
@@ -3280,8 +3282,7 @@ ULONGLONG WINAPI VerSetConditionMask(ULONGLONG,DWORD,BYTE);
 
 #if defined(__GNUC__)
 
-PVOID GetCurrentFiber(void);
-extern __inline__ PVOID GetCurrentFiber(void)
+static __inline__ PVOID GetCurrentFiber(void)
 {
     void* ret;
     __asm__ __volatile__ (
@@ -3291,8 +3292,7 @@ extern __inline__ PVOID GetCurrentFiber(void)
     return ret;
 }
 
-PVOID GetFiberData(void);
-extern __inline__ PVOID GetFiberData(void)
+static __inline__ PVOID GetFiberData(void)
 {
     void* ret;
     __asm__ __volatile__ (

@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.11 2004/01/31 23:52:42 gvg Exp $
+/* $Id: profile.c,v 1.12 2004/06/13 20:04:56 navaraf Exp $
  *
  * Imported from Wine
  * Copyright 1993 Miguel de Icaza
@@ -1384,13 +1384,13 @@ GetPrivateProfileStringA(
 /*
  * @unimplemented
  */
-DWORD STDCALL
+BOOL STDCALL
 GetPrivateProfileStructW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
+	IN LPCWSTR Section,
+	IN LPCWSTR Key,
+	OUT LPVOID Struct,
+	IN UINT StructSize,
+	IN LPCWSTR File
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1401,13 +1401,13 @@ GetPrivateProfileStructW (
 /*
  * @unimplemented
  */
-DWORD STDCALL
+BOOL STDCALL
 GetPrivateProfileStructA (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
+	IN LPCSTR Section,
+	IN LPCSTR Key,
+	OUT LPVOID Struct,
+	IN UINT StructSize,
+	IN LPCSTR File
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1672,11 +1672,11 @@ WritePrivateProfileStringW(LPCWSTR AppName,
  */
 BOOL STDCALL
 WritePrivateProfileStructA (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
+	IN LPCSTR Section,
+	IN LPCSTR Key,
+	IN LPVOID Struct,
+	IN UINT StructSize,
+	IN LPCSTR File
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1689,11 +1689,11 @@ WritePrivateProfileStructA (
  */
 BOOL STDCALL
 WritePrivateProfileStructW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
+	IN LPCWSTR Section,
+	IN LPCWSTR Key,
+	IN LPVOID Struct,
+	IN UINT StructSize,
+	IN LPCWSTR File
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

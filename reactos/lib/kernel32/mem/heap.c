@@ -1,4 +1,4 @@
-/* $Id: heap.c,v 1.26 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: heap.c,v 1.27 2004/06/13 20:04:55 navaraf Exp $
  *
  * kernel/heap.c
  * Copyright (C) 1996, Onno Hovers, All rights reserved
@@ -110,7 +110,7 @@ BOOL WINAPI HeapUnlock(HANDLE hheap)
 /*
  * @implemented
  */
-UINT WINAPI HeapCompact(HANDLE hheap, DWORD flags)
+SIZE_T WINAPI HeapCompact(HANDLE hheap, DWORD flags)
 {
    return RtlCompactHeap(hheap, flags);
 }

@@ -72,9 +72,8 @@ typedef struct _KUSER_SHARED_DATA
 #endif
 #define SharedUserData		((KUSER_SHARED_DATA * const)KI_USER_SHARED_DATA)
 #else
-#ifndef __USE_W32API
+#undef SharedUserData
 #define SharedUserData		((KUSER_SHARED_DATA * const)USER_SHARED_DATA)
-#endif /* !__USE_W32API */
 #endif
 
 

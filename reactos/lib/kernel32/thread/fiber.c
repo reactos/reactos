@@ -1,4 +1,4 @@
-/* $Id: fiber.c,v 1.10 2004/03/07 20:07:05 hyperion Exp $
+/* $Id: fiber.c,v 1.11 2004/06/13 20:04:56 navaraf Exp $
  *
  * FILE: lib/kernel32/thread/fiber.c
  *
@@ -71,15 +71,6 @@ BOOL WINAPI ConvertFiberToThread(void)
 /*
  * @implemented
  */
-LPVOID WINAPI ConvertThreadToFiber(LPVOID lpParameter)
-{
- return ConvertThreadToFiberEx(lpParameter, 0);
-}
-
-
-/*
- * @implemented
- */
 LPVOID WINAPI ConvertThreadToFiberEx(LPVOID lpParameter, DWORD dwFlags)
 {
  PTEB pTeb = NtCurrentTeb();
@@ -113,6 +104,15 @@ LPVOID WINAPI ConvertThreadToFiberEx(LPVOID lpParameter, DWORD dwFlags)
 
  /* success */
  return (LPVOID)pfCurFiber;
+}
+
+
+/*
+ * @implemented
+ */
+LPVOID WINAPI ConvertThreadToFiber(LPVOID lpParameter)
+{
+ return ConvertThreadToFiberEx(lpParameter, 0);
 }
 
 

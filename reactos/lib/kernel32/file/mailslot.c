@@ -1,4 +1,4 @@
-/* $Id: mailslot.c,v 1.10 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: mailslot.c,v 1.11 2004/06/13 20:04:55 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -131,19 +131,19 @@ GetMailslotInfo(HANDLE hMailslot,
    
    if (lpMaxMessageSize != NULL)
      {
-	*lpMaxMessageSize = Buffer.MaxMessageSize;
+	*lpMaxMessageSize = Buffer.MaximumMessageSize;
      }
    if (lpNextSize != NULL)
      {
-	*lpNextSize = Buffer.NextSize;
+	*lpNextSize = Buffer.NextMessageSize;
      }
    if (lpMessageCount != NULL)
      {
-	*lpMessageCount = Buffer.MessageCount;
+	*lpMessageCount = Buffer.MessagesAvailable;
      }
    if (lpReadTimeout != NULL)
      {
-	*lpReadTimeout = (DWORD)(Buffer.Timeout.QuadPart / -10000);
+	*lpReadTimeout = (DWORD)(Buffer.ReadTimeout.QuadPart / -10000);
      }
    
    return(TRUE);
@@ -161,7 +161,7 @@ SetMailslotInfo(HANDLE hMailslot,
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
    
-   Buffer.Timeout.QuadPart = lReadTimeout * -10000;
+   Buffer.ReadTimeout.QuadPart = lReadTimeout * -10000;
    
    Status = NtSetInformationFile(hMailslot,
 				 &Iosb,

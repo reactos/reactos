@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.12 2004/05/31 11:41:14 ekohl Exp $
+/* $Id: sysinfo.c,v 1.13 2004/06/13 20:04:56 navaraf Exp $
  *
  * reactos/lib/kernel32/misc/sysinfo.c
  *
@@ -55,9 +55,9 @@ GetSystemInfo (
 	 *	PROCESSOR_ARCHITECTURE_PPC   3
 	 *	PROCESSOR_ARCHITECTURE_UNKNOWN 0xFFFF
 	 */
-	Si->u.s.wProcessorArchitecture	= Spi.ProcessorArchitecture;
+	Si->wProcessorArchitecture	= Spi.ProcessorArchitecture;
 	/* For future use: always zero */
-	Si->u.s.wReserved		= 0;
+	Si->wReserved			= 0;
 	Si->dwPageSize			= Sbi.PhysicalPageSize;
 	Si->lpMinimumApplicationAddress	= (PVOID)Sbi.LowestUserAddress;
 	Si->lpMaximumApplicationAddress	= (PVOID)Sbi.HighestUserAddress;

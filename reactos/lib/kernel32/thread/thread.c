@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.49 2004/01/23 21:16:04 ekohl Exp $
+/* $Id: thread.c,v 1.50 2004/06/13 20:04:56 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -640,26 +640,23 @@ GetThreadSelectorEntry(IN HANDLE hThread,
 /*
  * @implemented
  */
-BOOL STDCALL
+DWORD STDCALL
 SetThreadIdealProcessor(HANDLE hThread,
 			DWORD dwIdealProcessor)
 {
-  ULONG IdealProcessor;
   NTSTATUS Status;
-
-  IdealProcessor = (ULONG)dwIdealProcessor;
 
   Status = NtSetInformationThread(hThread,
 				  ThreadIdealProcessor,
-				  &IdealProcessor,
+				  &dwIdealProcessor,
 				  sizeof(ULONG));
   if (!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
-      return(FALSE);
+      return -1;
     }
 
-  return(TRUE);
+  return dwIdealProcessor;
 }
 
 /* EOF */

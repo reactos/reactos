@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.26 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: time.c,v 1.27 2004/06/13 20:04:56 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -363,16 +363,6 @@ SetTimeZoneInformation(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
    NtSetSystemTime(0,0);
 
    return TRUE;
-}
-
-
-/*
- * @implemented
- */
-DWORD STDCALL
-GetCurrentTime(VOID)
-{
-  return GetTickCount();
 }
 
 

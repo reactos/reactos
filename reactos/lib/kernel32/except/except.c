@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.13 2004/05/29 11:51:33 navaraf Exp $
+/* $Id: except.c,v 1.14 2004/06/13 20:04:55 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,17 +12,8 @@
 
 #include <k32.h>
 
-
-typedef LONG (STDCALL *LPTOP_LEVEL_EXCEPTION_FILTER)(
-	struct _EXCEPTION_POINTERS *ExceptionInfo
-	);
-
 UINT GlobalErrMode;
 LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter;
-
-UINT GetErrorMode(void);
-
-
 
 UINT GetErrorMode(void)
 {

@@ -1,4 +1,4 @@
-/* $Id: ldr.c,v 1.20 2004/05/03 14:34:44 weiden Exp $
+/* $Id: ldr.c,v 1.21 2004/06/13 20:04:56 navaraf Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -12,6 +12,12 @@
 #define NDEBUG
 #include "../include/debug.h"
 
+typedef struct tagLOADPARMS32 {
+  LPSTR lpEnvAddress;
+  LPSTR lpCmdLine;
+  LPSTR lpCmdShow;
+  DWORD dwReserved;
+} LOADPARMS32;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -202,7 +208,8 @@ FreeLibraryAndExitThread (
 {
 	if ( FreeLibrary(hLibModule) )
 		ExitThread(dwExitCode);
-	return;
+	for (;;)
+		;
 }
 
 

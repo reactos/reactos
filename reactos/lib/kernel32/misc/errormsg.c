@@ -1,4 +1,4 @@
-/* $Id: errormsg.c,v 1.16 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: errormsg.c,v 1.17 2004/06/13 20:04:56 navaraf Exp $
  *
  * reactos/lib/kernel32/misc/errormsg.c
  *
@@ -45,35 +45,6 @@ inline static LPSTR HEAP_strdupWtoA( HANDLE heap, DWORD flags, LPCWSTR str )
     return ret;
 }
 
-/* INTERNAL */
-
-
-typedef struct tagMESSAGE_RESOURCE_ENTRY {
-        WORD    Length;
-        WORD    Flags;
-        BYTE    Text[1];
-} MESSAGE_RESOURCE_ENTRY,*PMESSAGE_RESOURCE_ENTRY;
-#define MESSAGE_RESOURCE_UNICODE        0x0001
-
-typedef struct tagMESSAGE_RESOURCE_BLOCK {
-        DWORD   LowId;
-        DWORD   HighId;
-        DWORD   OffsetToEntries;
-} MESSAGE_RESOURCE_BLOCK,*PMESSAGE_RESOURCE_BLOCK;
-
-typedef struct tagMESSAGE_RESOURCE_DATA {
-        DWORD                   NumberOfBlocks;
-        MESSAGE_RESOURCE_BLOCK  Blocks[ 1 ];
-} MESSAGE_RESOURCE_DATA,*PMESSAGE_RESOURCE_DATA;
-
-
-//#define RT_RCDATAA         MAKEINTRESOURCEA(10)
-//#define RT_RCDATAW         MAKEINTRESOURCEW(10)
-////#define RT_RCDATA            WINELIB_NAME_AW(RT_RCDATA)
-//#define RT_MESSAGETABLEA   MAKEINTRESOURCEA(11)
-//#define RT_MESSAGETABLEW   MAKEINTRESOURCEW(11)
-////#define RT_MESSAGETABLE       WINELIB_NAME_AW(RT_MESSAGETABLE)
-
 /* Messages...used by FormatMessage32* (KERNEL32.something)
  *
  * They can be specified either directly or using a message ID and
@@ -112,7 +83,7 @@ static INT load_messageA( HMODULE instance, UINT id, WORD lang,
     //TRACE("instance = %08lx, id = %08lx, buffer = %p, length = %ld\n", (DWORD)instance, (DWORD)id, buffer, (DWORD)buflen);
 
     /*FIXME: I am not sure about the '1' ... But I've only seen those entries*/
-    hrsrc = FindResourceExW(instance,RT_MESSAGETABLEW,(LPWSTR)1,lang);
+    hrsrc = FindResourceExW(instance,(LPWSTR)RT_MESSAGETABLE,(LPWSTR)1,lang);
     if (!hrsrc) return 0;
     hmem = LoadResource( instance, hrsrc );
     if (!hmem) return 0;

@@ -44,6 +44,8 @@ extern CRITICAL_SECTION DllLock;
 
 BOOL STDCALL IsConsoleHandle(HANDLE Handle);
 
+BOOL STDCALL VerifyConsoleIoHandle(HANDLE Handle);
+
 BOOL STDCALL CloseConsoleHandle(HANDLE Handle);
 
 HANDLE STDCALL OpenConsoleW (LPWSTR wsName,

@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.18 2004/05/03 17:12:27 weiden Exp $
+/* $Id: lang.c,v 1.19 2004/06/13 20:04:56 navaraf Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -20,8 +20,6 @@
 #define LOCALE_RETURN_NUMBER 0x20000000
 #define LOCALE_USE_CP_ACP 0x40000000
 #define LOCALE_LOCALEINFOFLAGSMASK (LOCALE_NOUSEROVERRIDE|LOCALE_USE_CP_ACP|LOCALE_RETURN_NUMBER)
-#define LOCALE_NEUTRAL		(MAKELCID(MAKELANGID(LANG_NEUTRAL,SUBLANG_NEUTRAL),SORT_DEFAULT))
-#define LOCALE_FONTSIGNATURE 0x00000058
 
 static LCID SystemLocale = MAKELCID(LANG_ENGLISH, SORT_DEFAULT);
 
@@ -674,7 +672,7 @@ HKEY RosCreateRegistryKey(void)
 {
     OBJECT_ATTRIBUTES objAttr;
     UNICODE_STRING nameW;
-    HKEY hKey;
+    HANDLE hKey;
 
     if (RtlOpenCurrentUser( KEY_ALL_ACCESS, &hKey ) != STATUS_SUCCESS) return 0;
 
@@ -796,7 +794,7 @@ GetLocaleInfoW (
         liLangID = MAKELANGID(PRIMARYLANGID(liLangID), SUBLANG_DEFAULT);
 
     hModule = GetModuleHandleW( L"kernel32.dll" );
-    if (!(hRsrc = FindResourceExW( hModule, RT_STRINGW, (LPCWSTR)((LCType >> 4) + 1), liLangID )))
+    if (!(hRsrc = FindResourceExW( hModule, (LPWSTR)RT_STRING, (LPCWSTR)((LCType >> 4) + 1), liLangID )))
     {
         SetLastError( ERROR_INVALID_FLAGS );
         return 0;

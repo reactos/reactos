@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.20 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: res.c,v 1.21 2004/06/13 20:04:56 navaraf Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -149,7 +149,7 @@ FindResourceExW (
 		return NULL;
 	}
 
-	return ResourceDataEntry;
+	return (HRSRC)ResourceDataEntry;
 }
 
 
@@ -165,13 +165,14 @@ LoadResource (
 {
 	NTSTATUS Status;
 	PVOID Data;
+	PIMAGE_RESOURCE_DATA_ENTRY ResInfo = (PIMAGE_RESOURCE_DATA_ENTRY)hResInfo;
 
-   if (hModule == NULL)
-   {
-     hModule = (HINSTANCE)GetModuleHandleW(NULL);
-   }
+	if (hModule == NULL)
+	{
+		hModule = (HINSTANCE)GetModuleHandleW(NULL);
+	}
 
-	Status = LdrAccessResource (hModule, hResInfo, &Data, NULL);
+	Status = LdrAccessResource (hModule, ResInfo, &Data, NULL);
 	if (!NT_SUCCESS(Status))
 	{
 		SetLastErrorByStatus (Status);

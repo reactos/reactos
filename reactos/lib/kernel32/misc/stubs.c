@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.76 2004/05/13 20:42:28 navaraf Exp $
+/* $Id: stubs.c,v 1.77 2004/06/13 20:04:56 navaraf Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -305,7 +305,7 @@ GetStringTypeA (
 BOOL
 STDCALL
 GetSystemPowerStatus (
-    DWORD   Unknown0
+    LPSYSTEM_POWER_STATUS PowerStatus
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1632,7 +1632,7 @@ FindActCtxSectionStringW(
 HANDLE
 STDCALL
 FindFirstVolumeW(
-    LPWSTR lpszVolumeName,
+    LPCWSTR lpszVolumeName,
     DWORD cchBufferLength
     )
 {
@@ -1646,7 +1646,7 @@ FindFirstVolumeW(
 HANDLE
 STDCALL
 FindFirstVolumeMountPointW(
-    LPCWSTR lpszRootPathName,
+    LPWSTR lpszRootPathName,
     LPWSTR lpszVolumeMountPoint,
     DWORD cchBufferLength
     )
@@ -1992,7 +1992,7 @@ FindActCtxSectionStringA(
 HANDLE
 STDCALL
 FindFirstVolumeA(
-    LPSTR lpszVolumeName,
+    LPCSTR lpszVolumeName,
     DWORD cchBufferLength
     )
 {
@@ -2006,7 +2006,7 @@ FindFirstVolumeA(
 HANDLE
 STDCALL
 FindFirstVolumeMountPointA(
-    LPCSTR lpszRootPathName,
+    LPSTR lpszRootPathName,
     LPSTR lpszVolumeMountPoint,
     DWORD cchBufferLength
     )
@@ -2022,7 +2022,7 @@ BOOL
 STDCALL
 FindNextVolumeA(
     HANDLE hFindVolume,
-    LPSTR lpszVolumeName,
+    LPCSTR lpszVolumeName,
     DWORD cchBufferLength
     )
 {
@@ -2385,7 +2385,11 @@ VOID STDCALL UTUnRegister( HMODULE hModule )
 /*
  * @unimplemented
  */
+#if 0
 FARPROC STDCALL DelayLoadFailureHook(unsigned int dliNotify, PDelayLoadInfo pdli)
+#else
+FARPROC STDCALL DelayLoadFailureHook(unsigned int dliNotify, PVOID pdli)
+#endif
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
