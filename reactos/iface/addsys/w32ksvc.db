@@ -288,6 +288,7 @@ NtUserBeginPaint                        2
 NtUserBitBltSysBmp                      8
 NtUserBlockInput                        1
 NtUserBuildHwndList                     7
+NtUserBuildMenuItemList			4
 NtUserBuildNameList                     4
 NtUserBuildPropList                     4
 NtUserCallHwnd                          2
@@ -419,6 +420,7 @@ NtUserHiliteMenuItem                    4
 NtUserImpersonateDdeClientWindow        2
 NtUserInitializeClientPfnArrays         4
 NtUserInitTask                          11
+NtUserInsertMenuItem			4
 NtUserInternalGetWindowText             3
 NtUserInvalidateRect                    3
 NtUserInvalidateRgn                     3
@@ -429,7 +431,9 @@ NtUserLockWindowStation                 1
 NtUserLockWindowUpdate                  1
 NtUserLockWorkStation                   0
 NtUserMapVirtualKeyEx                   4
+NtUserMenuInfo				3
 NtUserMenuItemFromPoint                 4
+NtUserMenuItemInfo			5
 NtUserMessageCall                       7
 NtUserMinMaximize                       3
 NtUserMNDragLeave                       0

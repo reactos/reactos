@@ -78,6 +78,15 @@ NtUserBuildHwndList(
 
 DWORD
 STDCALL
+NtUserBuildMenuItemList(
+ HMENU hMenu,
+ LPCMENUITEMINFO* lpmiil,
+ ULONG nBufSize,
+ DWORD Reserved);
+
+
+DWORD
+STDCALL
 NtUserBuildNameList(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -433,13 +442,13 @@ NtUserEnableMenuItem(
   UINT uIDEnableItem,
   UINT uEnable);
   
-/*DWORD
+DWORD
 STDCALL
 NtUserInsertMenuItem(
   HMENU hMenu,
   UINT uItem,
   WINBOOL fByPosition,
-  LPCMENUITEMINFO lpmii);*/
+  LPCMENUITEMINFO lpmii);
 
 DWORD
 STDCALL
@@ -958,6 +967,14 @@ NtUserMapVirtualKeyEx(
   DWORD Unknown2,
   DWORD Unknown3);
 
+BOOL
+STDCALL
+NtUserMenuInfo(
+ HMENU hmenu,
+ LPCMENUINFO lpcmi,
+ BOOL fsog
+);
+
 int
 STDCALL
 NtUserMenuItemFromPoint(
@@ -965,6 +982,16 @@ NtUserMenuItemFromPoint(
   HMENU hMenu,
   DWORD X,
   DWORD Y);
+
+BOOL
+STDCALL
+NtUserMenuItemInfo(
+ HMENU hMenu,
+ UINT uItem,
+ BOOL fByPosition,
+ LPMENUITEMINFO lpmii,
+ BOOL fsog
+);
 
 DWORD
 STDCALL
