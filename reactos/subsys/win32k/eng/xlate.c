@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.29 2003/12/20 14:51:41 navaraf Exp $
+/* $Id: xlate.c,v 1.30 2003/12/20 16:51:40 navaraf Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -504,7 +504,7 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
       if (XlateObj->iSrcType == PAL_RGB || XlateObj->iSrcType == PAL_BGR ||
           XlateObj->iSrcType == PAL_BITFIELDS)
       {
-         /* FIXME: should we cache colors used often? *
+         /* FIXME: should we cache colors used often? */
          /* FIXME: won't work if destination isn't indexed */
 
          /* Extract the destination palette. */
@@ -534,7 +534,6 @@ XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj, ULONG PalOutType, ULONG cPal,
    HPALETTE hPalette;
    XLATEGDI *XlateGDI;
    PALGDI *PalGDI;
-   ULONG i;
 
    XlateGDI = (XLATEGDI*)AccessInternalObjectFromUserObject(XlateObj);
    if (PalOutType == XO_SRCPALETTE)
