@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.41 2001/05/05 09:32:36 ekohl Exp $
+/* $Id: create.c,v 1.42 2001/05/13 13:35:37 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -87,7 +87,6 @@ IopCreateFile (PVOID			ObjectBody,
      {
 	CPRINT("Parent is a %S which not a device type\n",
 	       BODY_TO_HEADER(Parent)->ObjectType->TypeName.Buffer);
-	assert(FALSE);
 	return (STATUS_UNSUCCESSFUL);
      }
    Status = ObReferenceObjectByPointer (DeviceObject,
