@@ -295,3 +295,32 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 
 	return TRUE;
 }
+
+#ifndef __REACTOS__
+/*
+ * GetConsoleWindow - returns the handle to the current console window
+ */
+HWND GetConsoleWindow(VOID)
+{
+	TCHAR original[256];	/* stores original title*/
+	TCHAR temp[256];		/* stores temp title*/
+
+	HWND h=0;
+
+	GetConsoleTitle(original,sizeof(original));
+
+	_tcscpy(temp,original);
+	_tcscat(temp,_T("-xxx   "));
+
+	if((h = FindWindow("tty",temp)) == NULL )
+	{
+		SetConsoleTitle(temp);
+		h=FindWindow("tty",temp);
+		SetConsoleTitle(original);
+	}
+
+	return h;
+}
+#endif
+
+/* EOF */

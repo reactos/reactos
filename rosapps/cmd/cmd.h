@@ -287,6 +287,9 @@ BOOL   IsValidPathName (LPCTSTR);
 BOOL   IsValidFileName (LPCTSTR);
 BOOL   IsValidDirectory (LPCTSTR);
 BOOL   FileGetString (HANDLE, LPTSTR, INT);
+#ifndef __REACTOS__
+HWND   GetConsoleWindow(VOID);
+#endif
 
 
 /* Prototypes for MOVE.C */
@@ -363,7 +366,8 @@ INT cmd_vol (LPTSTR, LPTSTR);
 /* Prototypes for WHERE.C */
 BOOL SearchForExecutable (LPCTSTR, LPTSTR);
 
-
+/* Prototypes for WINDOW.C */
+INT CommandWindow (LPTSTR, LPTSTR);
 
 
 /* The MSDOS Batch Commands [MS-DOS 5.0 User's Guide and Reference p359] */

@@ -12,7 +12,7 @@ OBJECTS = cmd.o attrib.o alias.o batch.o beep.o call.o chcp.o choice.o \
           goto.o history.o if.o internal.o label.o locale.o memory.o misc.o \
           move.o msgbox.o path.o pause.o prompt.o redir.o ren.o screen.o \
           set.o shift.o start.o time.o timer.o title.o type.o ver.o \
-          verify.o vol.o where.o cmd.coff
+          verify.o vol.o where.o window.o cmd.coff
 
 CLEAN_FILES = *.o cmd.exe cmd.sym cmd.coff
 
@@ -46,7 +46,7 @@ $(TARGET:%=../$(DIST_DIR)/apps/%): ../$(DIST_DIR)/apps/%: %
 ifeq ($(DOSCLI),yes)
 	$(CP) $* ..\$(DIST_DIR)\apps\$*
 else
-	$(CP) $* ../$(DIST_DIR)/apps/$*
+	$(CP) $* ../$(DIST_DIR)/apps\$*
 endif
 
 include ../rules.mak

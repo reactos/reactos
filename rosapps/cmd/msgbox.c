@@ -27,30 +27,6 @@
 #define _SYNTAX_CHECK
 
 
-
-HWND GetConsoleWindow(VOID)
-{
-	TCHAR original[256];	/*holds original title*/
-	TCHAR temp[256];	/*holds temp title*/
-
-	HWND h=0;
-
-	GetConsoleTitle(original,sizeof(original));
-
-	_tcscpy(temp,original);
-	_tcscat(temp,_T("-xxx   "));
-
-	if( FindWindow(0,temp) == NULL )
-	{
-		SetConsoleTitle(temp);
-		h=FindWindow(0,temp);
-		SetConsoleTitle(original);
-	}
-
-	return h;
-}
-
-
 INT CommandMsgbox (LPTSTR cmd, LPTSTR param)
 {
 	//used to parse command line
@@ -171,7 +147,8 @@ INT CommandMsgbox (LPTSTR cmd, LPTSTR param)
 	prompt = param;
 
 	hWnd=GetConsoleWindow ();
-	//DebugPrintf("FindWindow hWnd = %d\n",hWnd);	
+//        DebugPrintf("FindWindow hWnd = %d\n",hWnd); 
+        ConErrPrintf("FindWindow hWnd = %d\n",hWnd); 
 
 	switch (
 		MessageBox(hWnd,prompt,title,uType)

@@ -217,6 +217,10 @@ COMMAND cmds[] =
 	{_T("vol"), 0, cmd_vol},
 #endif
 
+#ifdef INCLUDE_CMD_WINDOW
+        {_T("window"), 0, CommandWindow},
+#endif
+
 	{NULL, 0, NULL}
 };
 

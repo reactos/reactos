@@ -95,6 +95,9 @@
 #define INCLUDE_CMD_BEEP
 #define INCLUDE_CMD_VERIFY
 #define INCLUDE_CMD_VOL
+#ifndef __REACTOS__
+#define INCLUDE_CMD_WINDOW
+#endif
 
 /*
 commands that do not have a define:
