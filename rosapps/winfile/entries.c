@@ -166,11 +166,9 @@ void free_entries(Entry* parent)
 
 	if (next) {
 		parent->down = 0;
-
 		do {
 			entry = next;
 			next = entry->next;
-
 			free_entries(entry);
 			free(entry);
 		} while(next);
@@ -180,6 +178,7 @@ void free_entries(Entry* parent)
 // insert listbox entries after index idx
 void insert_entries(Pane* pane, Entry* parent, int idx)
 {
+/*
 	Entry* entry = parent;
 
 	if (!entry)
@@ -206,12 +205,14 @@ void insert_entries(Pane* pane, Entry* parent, int idx)
 			insert_entries(pane, entry->down, idx);
 	}
 	ShowWindow(pane->hWnd, SW_SHOW);
+ */
 }
 
 
 void scan_entry(ChildWnd* child, Entry* entry)
 {
 	TCHAR path[MAX_PATH];
+/*
 	int idx = ListBox_GetCurSel(child->left.hWnd);
 	HCURSOR crsrOld = SetCursor(LoadCursor(0, IDC_WAIT));
 
@@ -228,14 +229,14 @@ void scan_entry(ChildWnd* child, Entry* entry)
 
 	 // empty right pane
 	ListBox_ResetContent(child->right.hWnd);
-
+ */
 	 // release memory
 	free_entries(entry);
 
 	 // read contents from disk
 	get_path(entry, path);
 	read_directory(entry, path, child->sortOrder);
-
+/*
 	 // insert found entries in right pane
 	insert_entries(&child->right, entry->down, -1);
 	calc_widths(&child->right, FALSE);
@@ -246,6 +247,7 @@ void scan_entry(ChildWnd* child, Entry* entry)
 	child->header_wdths_ok = FALSE;
 
 	SetCursor(crsrOld);
+ */
 }
 
 
@@ -271,14 +273,14 @@ BOOL expand_entry(ChildWnd* child, Entry* dir)
 	 // no subdirectories ?
 	if (!(p->data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
 		return FALSE;
-
+/*
 	idx = ListBox_FindItemData(child->left.hWnd, 0, dir);
-
+ */
 	dir->expanded = TRUE;
 
 	 // insert entries in left pane
 	insert_entries(&child->left, p, idx);
-
+/*
 	if (!child->header_wdths_ok) {
 		if (calc_widths(&child->left, FALSE)) {
 #ifndef _NO_EXTENSIONS
@@ -288,7 +290,7 @@ BOOL expand_entry(ChildWnd* child, Entry* dir)
 			child->header_wdths_ok = TRUE;
 		}
 	}
-
+ */
 	return TRUE;
 }
 

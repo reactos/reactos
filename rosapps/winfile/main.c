@@ -35,6 +35,7 @@
 #endif
     
 #include "main.h"
+#include "settings.h"
 #include "framewnd.h"
 #include "childwnd.h"
 
@@ -459,6 +460,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     // Store instance handle in our global variable
     hInst = hInstance;
 
+    LoadSettings();
+
     // Perform application initialization:
     if (!InitInstance(hInstance, nCmdShow)) {
         return FALSE;
@@ -477,6 +480,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
             DispatchMessage(&msg); 
 		} 
 	} 
+
+    SaveSettings();
 	ExitInstance();
     return msg.wParam;
 }

@@ -54,6 +54,8 @@ extern DWORD ViewType;
 extern TCHAR ViewTypeMaskStr[MAX_TYPE_MASK_LEN];
 //extern LPCTSTR lpViewTypeMaskStr;
 
+void LoadSettings(void);
+void SaveSettings(void);
 
 
 #ifdef __cplusplus

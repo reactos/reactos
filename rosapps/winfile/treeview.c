@@ -472,6 +472,14 @@ static LRESULT CALLBACK TreeWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 		child->nFocusPanel = pane == &child->right? 1: 0;
 		//ListBox_SetSel(hWnd, TRUE, 1);
 		//TODO: check menu items
+        if (!child->nFocusPanel) {
+            int file_count = 50;
+            int files_size = 1115467;
+            TCHAR suffix[10];
+            TCHAR Text[260];
+			wsprintf(Text, _T("Total %d file(s) (%d%s)"), file_count, files_size, suffix);
+			SendMessage(Globals.hStatusBar, SB_SETTEXT, 2, (LPARAM)Text);
+        }
 		break;
 	case WM_KEYDOWN:
 		if (wParam == VK_TAB) {

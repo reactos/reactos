@@ -20,8 +20,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __CHILD_WND_H__
-#define __CHILD_WND_H__
+#ifndef __CHILDWND_H__
+#define __CHILDWND_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,4 +39,4 @@ LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
 };
 #endif
 
-#endif // __CHILD_WND_H__
+#endif // __CHILDWND_H__

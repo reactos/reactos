@@ -34,27 +34,19 @@
 #include <stdio.h>
 #endif
     
-#include <shellapi.h>
-//#include <winspool.h>
 #include <windowsx.h>
-#include <shellapi.h>
-#include <ctype.h>
-#include <assert.h>
-#define ASSERT assert
+//#include <assert.h>
+//#define ASSERT assert
 
 #include "main.h"
 #include "listview.h"
-#include "dialogs.h"
-#include "utils.h"
 #include "run.h"
 #include "trace.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Global Variables:
+// Global and Local Variables:
 //
-
-extern HINSTANCE hInst;
 
 static WNDPROC g_orgListWndProc;
 
@@ -62,23 +54,6 @@ static WNDPROC g_orgListWndProc;
 ////////////////////////////////////////////////////////////////////////////////
 // Local module support methods
 //
-
-static void init_output(HWND hWnd)
-{
-	TCHAR b[16];
-	HFONT old_font;
-	HDC hdc = GetDC(hWnd);
-
-	if (GetNumberFormat(LOCALE_USER_DEFAULT, 0, _T("1000"), 0, b, 16) > 4)
-		Globals.num_sep = b[1];
-	else
-		Globals.num_sep = _T('.');
-
-	old_font = SelectFont(hdc, Globals.hFont);
-	GetTextExtentPoint32(hdc, _T(" "), 1, &Globals.spaceSize);
-	SelectFont(hdc, old_font);
-	ReleaseDC(hWnd, hdc);
-}
 
 static void AddEntryToList(HWND hwndLV, int idx, Entry* entry)
 { 
@@ -116,7 +91,6 @@ static void InsertListEntries(HWND hWnd, Entry* entry, int idx)
     	if (entry->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 	    	continue;
 #endif
-        //ListBox_InsertItemData(hWnd, idx, entry);
         AddEntryToList(hWnd, idx, entry); 
         ++idx;
     }
@@ -150,99 +124,16 @@ static void CreateListColumns(HWND hWndListView)
     }
 }
 
-static HWND CreateListView(HWND hwndParent, int id) 
-{ 
-    RECT rcClient;  // dimensions of client area 
-    HWND hwndLV;    // handle to list view control 
-
-    // Get the dimensions of the parent window's client area, and create the list view control. 
-    GetClientRect(hwndParent, &rcClient); 
-    hwndLV = CreateWindowEx(0, WC_LISTVIEW, _T("List View"), 
-//        WS_VISIBLE | WS_CHILD | WS_BORDER | LVS_REPORT | LVS_NOCOLUMNHEADER, 
-        WS_VISIBLE | WS_CHILD | WS_BORDER | LVS_REPORT, 
-        0, 0, rcClient.right, rcClient.bottom, 
-        hwndParent, (HMENU)id, hInst, NULL); 
-
-    // Initialize the image list, and add items to the control. 
-/*
-    if (!InitListViewImageLists(hwndLV) || 
-            !InitListViewItems(hwndLV, lpszPathName)) { 
-        DestroyWindow(hwndLV); 
-        return FALSE; 
-    } 
- */
-    ListView_SetExtendedListViewStyle(hwndLV,  LVS_EX_FULLROWSELECT);
-    CreateListColumns(hwndLV);
-
-    return hwndLV;
-} 
-
-/*
-int GetNumberFormat(
-  LCID Locale,                // locale
-  DWORD dwFlags,              // options
-  LPCTSTR lpValue,            // input number string
-  CONST NUMBERFMT *lpFormat,  // formatting information
-  LPTSTR lpNumberStr,         // output buffer
-  int cchNumber               // size of output buffer
-);
- */
-/*
-typedef struct _numberfmt { 
-  UINT      NumDigits; 
-  UINT      LeadingZero; 
-  UINT      Grouping; 
-  LPTSTR    lpDecimalSep; 
-  LPTSTR    lpThousandSep; 
-  UINT      NegativeOrder; 
-} NUMBERFMT, *LPNUMBERFMT; 
- */
-/*
-typedef struct _BY_HANDLE_FILE_INFORMATION {
-  DWORD    dwFileAttributes; 
-  FILETIME ftCreationTime; 
-  FILETIME ftLastAccessTime; 
-  FILETIME ftLastWriteTime; 
-  DWORD    dwVolumeSerialNumber; 
-  DWORD    nFileSizeHigh; 
-  DWORD    nFileSizeLow; 
-  DWORD    nNumberOfLinks; 
-  DWORD    nFileIndexHigh; 
-  DWORD    nFileIndexLow; 
-} BY_HANDLE_FILE_INFORMATION, *PBY_HANDLE_FILE_INFORMATION;  
-
-GetDriveTypeW
-GetFileType
-GetLocaleInfoW
-GetNumberFormatW
-
-BOOL FileTimeToLocalFileTime(
-  CONST FILETIME *lpFileTime,  // UTC file time to convert
-  LPFILETIME lpLocalFileTime   // converted file time
-);
-
-BOOL FileTimeToSystemTime(
-  CONST FILETIME *lpFileTime,  // file time to convert
-  LPSYSTEMTIME lpSystemTime    // receives system time
-);
- */ 
-
-// OnGetDispInfo - processes the LVN_GETDISPINFO 
-// notification message. 
- 
+// OnGetDispInfo - processes the LVN_GETDISPINFO notification message. 
 static void OnGetDispInfo(NMLVDISPINFO* plvdi)
 {
     SYSTEMTIME SystemTime;
     FILETIME LocalFileTime;
     static TCHAR buffer[200];
-
-//    LVITEM* pItem = &(plvdi->item);
-//    Entry* entry = (Entry*)pItem->lParam;
     Entry* entry = (Entry*)plvdi->item.lParam;
     ASSERT(entry);
 
     plvdi->item.pszText = NULL;
-
     switch (plvdi->item.iSubItem) {
     case 0:
         plvdi->item.pszText = entry->data.cFileName; 
@@ -353,35 +244,6 @@ static BOOL OnEndLabelEdit(NMLVDISPINFO* plvdi)
     // many characters in the field. 
 } 
 
-/*
-typedef struct _BY_HANDLE_FILE_INFORMATION {
-  DWORD    dwFileAttributes; 
-  FILETIME ftCreationTime; 
-  FILETIME ftLastAccessTime; 
-  FILETIME ftLastWriteTime; 
-  DWORD    dwVolumeSerialNumber; 
-  DWORD    nFileSizeHigh; 
-  DWORD    nFileSizeLow; 
-  DWORD    nNumberOfLinks; 
-  DWORD    nFileIndexHigh; 
-  DWORD    nFileIndexLow; 
-} BY_HANDLE_FILE_INFORMATION, *PBY_HANDLE_FILE_INFORMATION;  
- */
-/*
-typedef struct _WIN32_FIND_DATA {
-  DWORD    dwFileAttributes; 
-  FILETIME ftCreationTime; 
-  FILETIME ftLastAccessTime; 
-  FILETIME ftLastWriteTime; 
-  DWORD    nFileSizeHigh; 
-  DWORD    nFileSizeLow; 
-  DWORD    dwReserved0; 
-  DWORD    dwReserved1; 
-  TCHAR    cFileName[ MAX_PATH ]; 
-  TCHAR    cAlternateFileName[ 14 ]; 
-} WIN32_FIND_DATA, *PWIN32_FIND_DATA; 
- */
-
 static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
     Entry* pItem1 = (Entry*)lParam1;
@@ -420,6 +282,17 @@ static void CmdSortItems(HWND hWnd, UINT cmd)
     CheckMenuItem(Globals.hMenuView, cmd, MF_BYCOMMAND | MF_CHECKED);
 }
 
+void RefreshList(HWND hWnd, Entry* entry)
+{
+    if (hWnd != NULL) {
+        ListView_DeleteAllItems(hWnd);
+        if (entry != NULL) {
+            //TRACE("RefreshList(...) entry name: %s\n", entry->data.cFileName);
+    	    InsertListEntries(hWnd, entry, -1);
+        }
+    }
+}
+
 static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	UINT cmd = LOWORD(wParam);
@@ -432,7 +305,6 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             LVITEM item;
             item.mask = LVIF_PARAM;
 //            UINT selected_count = ListView_GetSelectedCount(hWnd);
-
             item.iItem = ListView_GetNextItem(hWnd, -1, LVNI_SELECTED);
             if (item.iItem != -1) {
                 if (ListView_GetItem(hWnd, &item)) {
@@ -467,6 +339,9 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_VIEW_SORT_BY_DATE:
             CmdSortItems(hWnd, cmd);
             break;
+        case ID_WINDOW_REFRESH:
+            RefreshList(hWnd, NULL/*entry*/);
+            break;
 		default:
             return FALSE;
 		}
@@ -483,24 +358,18 @@ static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 	ASSERT(child);
 
 	switch (message) {
-/*
-    case WM_CREATE:
-        //CreateListView(hWnd);
-        return 0;
- */
 	case WM_COMMAND:
-        if (!_CmdWndProc(hWnd, message, wParam, lParam)) {
-            return CallWindowProc(g_orgListWndProc, hWnd, message, wParam, lParam);
+        if (_CmdWndProc(hWnd, message, wParam, lParam)) {
+            return 0;
         }
 		break;
 	case WM_DISPATCH_COMMAND:
 		return _CmdWndProc(hWnd, message, wParam, lParam);
-		break;
     case WM_NOTIFY:
         switch (((LPNMHDR)lParam)->code) { 
         case LVN_GETDISPINFO: 
             OnGetDispInfo((NMLVDISPINFO*)lParam); 
-            break; 
+            return 0;
         case NM_DBLCLK:
             {
             NMITEMACTIVATE* nmitem = (LPNMITEMACTIVATE)lParam;
@@ -531,86 +400,57 @@ static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
                 }
             }
             }
-            break;
-
+            return 0;
         case LVN_ENDLABELEDIT: 
             return OnEndLabelEdit((NMLVDISPINFO*)lParam);
-            break;
-        default:
-            return CallWindowProc(g_orgListWndProc, hWnd, message, wParam, lParam);
         }
-//        return 0;
 		break;
-/*
-		case WM_SETFOCUS:
-			child->nFocusPanel = pane==&child->right? 1: 0;
-			ListBox_SetSel(hWnd, TRUE, 1);
-			//TODO: check menu items
-			break;
-		case WM_KEYDOWN:
-			if (wParam == VK_TAB) {
-				//TODO: SetFocus(Globals.hDriveBar)
-				SetFocus(child->nFocusPanel? child->left.hWnd: child->right.hWnd);
-			}
-            break;
- */
-        default:
-            return CallWindowProc(g_orgListWndProc, hWnd, message, wParam, lParam);
-            break;
-	}
-	return 0;
-}
 
+	case WM_SETFOCUS:
+		child->nFocusPanel = pane==&child->right? 1: 0;
+		//ListView_SetSelectionMark(hWnd, 0);
+		//TODO: check menu items
+		break;
+
+	case WM_KEYDOWN:
+		if (wParam == VK_TAB) {
+			//TODO: SetFocus(Globals.hDriveBar)
+			SetFocus(child->nFocusPanel ? child->left.hWnd: child->right.hWnd);
+		}
+        break;
+	}
+    return CallWindowProc(g_orgListWndProc, hWnd, message, wParam, lParam);
+}
 
 void CreateListWnd(HWND parent, Pane* pane, int id, LPTSTR lpszPathName)
 {
-//	static int s_init = 0;
+    RECT rcClient;  // dimensions of client area 
 	Entry* entry = pane->root;
 
 	pane->treePane = 0;
-#if 1
-    pane->hWnd = CreateListView(parent, id);
-#else
-	pane->hWnd = CreateWindow(_T("ListBox"), _T(""), WS_CHILD|WS_VISIBLE|WS_HSCROLL|WS_VSCROLL|
-								LBS_DISABLENOSCROLL|LBS_NOINTEGRALHEIGHT|LBS_OWNERDRAWFIXED|LBS_NOTIFY,
-								0, 0, 0, 0, parent, (HMENU)id, Globals.hInstance, 0);
-#endif
+
+    GetClientRect(parent, &rcClient); 
+    pane->hWnd = CreateWindowEx(0, WC_LISTVIEW, _T("List View"), 
+        WS_VISIBLE | WS_CHILD | WS_BORDER | LVS_REPORT/* | LVS_NOCOLUMNHEADER*/, 
+        0, 0, rcClient.right, rcClient.bottom, 
+        parent, (HMENU)id, hInst, NULL); 
+    // Initialize the image list, and add items to the control. 
+/*
+    if (!InitListViewImageLists(pane->hWnd) || 
+            !InitListViewItems(pane->hWnd, lpszPathName)) { 
+        DestroyWindow(pane->hWnd); 
+        return FALSE; 
+    } 
+ */
+    ListView_SetExtendedListViewStyle(pane->hWnd,  LVS_EX_FULLROWSELECT);
+    CreateListColumns(pane->hWnd);
+
 	SetWindowLong(pane->hWnd, GWL_USERDATA, (LPARAM)pane);
 	g_orgListWndProc = SubclassWindow(pane->hWnd, ListWndProc);
 	SendMessage(pane->hWnd, WM_SETFONT, (WPARAM)Globals.hFont, FALSE);
 
-	 // insert entries into listbox
+    // insert entries into listbox
     if (entry) {
 		InsertListEntries(pane->hWnd, entry, -1);
     }
-
-	 // calculate column widths
-//	if (!s_init) {
-//		s_init = 1;
-//		init_output(pane->hWnd);
-//	}
-//	calc_widths(pane, TRUE);
 }
-
-void RefreshList(HWND hWnd, Entry* entry)
-{
-    if (hWnd != NULL) {
-        ListView_DeleteAllItems(hWnd);
-        if (entry != NULL) {
-            //TRACE("RefreshList(...) entry name: %s\n", entry->data.cFileName);
-    	    InsertListEntries(hWnd, entry, -1);
-        }
-    }
-}
-
-/*
-	Pane* pane = (Pane*)GetWindowLong(hWnd, GWL_USERDATA);
-    if (pane != NULL) {
-//        ListBox_RemoveAll(hWnd, TRUE, 1);
-        ListView_DeleteAllItems(pane->hWnd);
-        if (entry) {
-	    	InsertListEntries(pane->hWnd, entry, -1);
-        }
-    }
- */
-
