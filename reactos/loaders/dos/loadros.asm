@@ -843,7 +843,7 @@ pe_load_module:
 	mov	dx, _cpe_doshdr
 	int	0x21
 	jnc	.header_read
-	mov	dx, error_file_read_failed
+	mov	di, error_file_read_failed
 	jmp	error
 .header_read
 
@@ -853,7 +853,7 @@ pe_load_module:
 	mov	ax, word [_cpe_doshdr + e_magic]
 	cmp	ax, 'MZ'
 	je	.mz_hdr_good
-	mov	dx, error_bad_mz
+	mov	di, error_bad_mz
 	jmp	error
 .mz_hdr_good
 
@@ -871,7 +871,7 @@ pe_load_module:
 	mov	bx, [_current_filehandle]
 	int	0x21
 	jnc	.start_seek1
-	mov	dx, error_file_seek_failed
+	mov	di, error_file_seek_failed
 	jmp	error
 .start_seek1:
 	mov	ah, 0x3F
@@ -880,7 +880,7 @@ pe_load_module:
 	mov	dx, _mb_magic
 	int	0x21
 	jnc	.mb_header_read
-	mov	dx, error_file_read_failed
+	mov	di, error_file_read_failed
 	jmp	error
 .mb_header_read:
 	jmp	.first
@@ -900,7 +900,7 @@ load_module1:
 	mov	ax, 0x3d00
 	int	0x21
 	jnc	.file_opened
-	mov	dx, error_file_open_failed
+	mov	di, error_file_open_failed
 	jmp	error
 .file_opened:
 
@@ -925,7 +925,7 @@ load_module1:
 	mov	dx, 0
 	int	0x21
 	jnc	.seek_start
-	mov	dx, error_file_seek_failed
+	mov	di, error_file_seek_failed
 	jmp	error
 .seek_start:
 	ret
@@ -941,7 +941,7 @@ load_module2:
 	mov	bx, [_current_filehandle]
 	int	0x21
 	jnc	.start_end
-	mov	dx, error_file_seek_failed
+	mov	di, error_file_seek_failed
 	jmp	error
 .start_end
 	shl	edx, 16
@@ -956,7 +956,7 @@ load_module2:
 	mov	bx, [_current_filehandle]
 	int	0x21
 	jnc	.start_seek
-	mov	dx, error_file_seek_failed
+	mov	di, error_file_seek_failed
 	jmp	error
 .start_seek
 	
@@ -979,7 +979,7 @@ load_module2:
 	int	0x21
 	jnc	.read_data_succeeded
 	pop	ds
-	mov	dx, error_file_read_failed
+	mov	di, error_file_read_failed
 	jmp	error
 .read_data_succeeded:
 %ifndef NDEBUG
@@ -1023,7 +1023,7 @@ load_module2:
 	int	0x21
 	jnc	.read_last_data_succeeded
 	pop	ds
-	mov	dx, error_file_read_failed
+	mov	di, error_file_read_failed
 	jmp	error
 .read_last_data_succeeded:
 	;;
@@ -1088,10 +1088,9 @@ load_module3:
 	;; On error print a message and return zero
 	;;
 error:
-	mov	ah, 0x9
-	int	0x21
-	mov	eax, 0
-	ret
+	call	print_string
+	mov	ax,04c00h
+	int	21h
 
 	;;
 	;; Copy to high memory
@@ -1283,20 +1282,22 @@ _loader_data_base_16_23:
 	dw	0x0000
 
 error_pmode_already:
+	db	0xa, 0xd
 	db	'Error: The processor is already in protected mode'
-	db	0xa, 0xd, '$'
+	db	0xa, 0xd, 0
 error_file_open_failed:
-	db	'Error: Failed to open file'
-	db	0xa, 0xd, '$'
+	db	0xa, 0xd
+	db	'Error: Failed to open file (code 0x%a)'
+	db	0xa, 0xd, 0
 error_file_seek_failed:
-	db	'Error: File seek failed'
-	db	0xa, 0xd, '$'
+	db	0xa, 0xd
+	db	'Error: File seek failed (code 0x%a)'
+	db	0xa, 0xd, 0
 error_file_read_failed:
-	db	'Error: File read failed'
-	db	0xa, 0xd, '$'
-error_coff_load_failed:
-	db	'Error: Failed to load COFF file'
-	db	0xa, 0xd, '$'
+	db	0xa, 0xd
+	db	'Error: File read failed (code 0x%a)'
+	db	0xa, 0xd, 0
 error_bad_mz:
+	db	0xa, 0xd
 	db	'Error: Bad DOS EXE magic'
-	db	0xa, 0xd, '$'
+	db	0xa, 0xd, 0
