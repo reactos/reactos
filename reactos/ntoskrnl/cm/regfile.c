@@ -696,9 +696,7 @@ CmiImportHiveBins(PREGISTRY_HIVE Hive,
       if (Bin->BlockId != REG_BIN_ID)
 	{
 	  DPRINT1 ("Bad BlockId %x, offset %x\n", Bin->BlockId, BlockOffset);
-	  /* FIXME: */
-	  assert(FALSE);
-//	  return STATUS_INSUFFICIENT_RESOURCES;
+	  return STATUS_REGISTRY_CORRUPT;
 	}
 
       assertmsg((Bin->BlockSize % 4096) == 0,
@@ -861,15 +859,13 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
 			       BOOLEAN CreateNew)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  FILE_STANDARD_INFORMATION fsi;
-  LARGE_INTEGER FileOffset;
-  BLOCK_OFFSET BlockOffset;
   ULONG CreateDisposition;
   IO_STATUS_BLOCK IoSB;
   HANDLE FileHandle;
+  HANDLE SectionHandle;
+  PUCHAR ViewBase;
+  ULONG ViewSize;
   NTSTATUS Status;
-  PHBIN tmpBin;
-  ULONG i, j;
 
   DPRINT("CmiInitNonVolatileRegistryHive(%p, %S, %d) called\n",
 	 RegistryHive, Filename, CreateNew);
@@ -968,141 +964,108 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
 	}
     }
 
-  /* Read hive header */
-  FileOffset.u.HighPart = 0;
-  FileOffset.u.LowPart = 0;
-  DPRINT("    Attempting to NtReadFile(%d) for %d bytes into %p\n", FileHandle, sizeof(HIVE_HEADER), RegistryHive->HiveHeader);
-  Status = NtReadFile(FileHandle,
-		      0,
-		      0,
-		      0,
-		      &IoSB,
-		      RegistryHive->HiveHeader,
-		      sizeof(HIVE_HEADER),
-		      &FileOffset,
-		      0);
-  assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
+  /* Create the hive section */
+  Status = NtCreateSection(&SectionHandle,
+			   SECTION_ALL_ACCESS,
+			   NULL,
+			   NULL,
+			   PAGE_READWRITE,
+			   SEC_COMMIT,
+			   FileHandle);
+  NtClose(FileHandle);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtReadFile() failed (Status %lx)\n", Status);
-      NtClose(FileHandle);
+      DPRINT1("NtCreateSection() failed (Status %lx)\n", Status);
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
-      return Status;
+      return(Status);
     }
 
-  /* Read update counter */
+  /* Map the hive file */
+  ViewBase = NULL;
+  ViewSize = 0;
+  Status = NtMapViewOfSection(SectionHandle,
+			      NtCurrentProcess(),
+			      (PVOID*)&ViewBase,
+			      0,
+			      ViewSize,
+			      NULL,
+			      &ViewSize,
+			      0,
+			      MEM_COMMIT,
+			      PAGE_READWRITE);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("MmMapViewInSystemSpace() failed (Status %lx)\n", Status);
+      NtClose(SectionHandle);
+      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
+      RtlFreeUnicodeString(&RegistryHive->LogFileName);
+      return(Status);
+    }
+  DPRINT("ViewBase %p  ViewSize %lx\n", ViewBase, ViewSize);
+
+  /* Copy hive header and initalize hive */
+  RtlCopyMemory (RegistryHive->HiveHeader,
+		 ViewBase,
+		 sizeof(HIVE_HEADER));
+  RegistryHive->FileSize = ViewSize;
+  RegistryHive->BlockListSize = (RegistryHive->FileSize / 4096) - 1;
   RegistryHive->UpdateCounter = RegistryHive->HiveHeader->UpdateCounter1;
 
-  Status = NtQueryInformationFile(FileHandle,
-				  &IoSB,
-				  &fsi,
-				  sizeof(fsi),
-				  FileStandardInformation);
-  assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
-  if (!NT_SUCCESS(Status) || fsi.EndOfFile.u.LowPart == 0)
+  /* Allocate hive block list */
+  RegistryHive->BlockList = ExAllocatePool(NonPagedPool,
+	  sizeof(PHBIN *) * RegistryHive->BlockListSize);
+  if (RegistryHive->BlockList == NULL)
     {
-      DPRINT("NtQueryInformationFile() failed (Status %lx)\n", Status);
-      NtClose(FileHandle);
+      DPRINT1("Failed to allocate the hive block list\n");
+      NtUnmapViewOfSection(NtCurrentProcess(),
+			   ViewBase);
+      NtClose(SectionHandle);
+      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
+      RtlFreeUnicodeString(&RegistryHive->LogFileName);
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  /* Import the hive bins */
+  Status = CmiImportHiveBins (RegistryHive,
+			      ViewBase + 4096);
+  if (!NT_SUCCESS(Status))
+    {
+      ExFreePool(RegistryHive->BlockList);
+      NtUnmapViewOfSection(NtCurrentProcess(),
+			   ViewBase);
+      NtClose(SectionHandle);
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
       return Status;
     }
 
-  RegistryHive->FileSize = fsi.EndOfFile.u.LowPart;
-  RegistryHive->BlockListSize = (RegistryHive->FileSize / 4096) - 1;
-
-  DPRINT("Space needed for block list describing hive: 0x%x\n",
-    sizeof(PHBIN *) * RegistryHive->BlockListSize);
-
-  RegistryHive->BlockList = ExAllocatePool(NonPagedPool,
-	  sizeof(PHBIN *) * RegistryHive->BlockListSize);
-
-  if (RegistryHive->BlockList == NULL)
-    {
-      ExFreePool(RegistryHive->BlockList);
-      NtClose(FileHandle);
-      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
-      RtlFreeUnicodeString(&RegistryHive->LogFileName);
-      DPRINT("CmiInitNonVolatileRegistryHive() - Failed 6.\n");
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-  RegistryHive->BlockList[0] = ExAllocatePool(PagedPool,
-	  RegistryHive->FileSize - 4096);
-  if (RegistryHive->BlockList[0] == NULL)
-    {
-      ExFreePool(RegistryHive->BlockList);
-      NtClose(FileHandle);
-      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
-      RtlFreeUnicodeString(&RegistryHive->LogFileName);
-      DPRINT("CmiInitNonVolatileRegistryHive() - Failed 8.\n");
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-  FileOffset.u.HighPart = 0;
-  FileOffset.u.LowPart = 4096;
-
-  DPRINT("    Attempting to NtReadFile(%d) for %d bytes into %p\n",
-	 FileHandle, RegistryHive->FileSize - 4096, (PVOID)RegistryHive->BlockList[0]);
-  Status = NtReadFile(FileHandle,
-		      0,
-		      0,
-		      0,
-		      &IoSB,
-		      (PVOID) RegistryHive->BlockList[0],
-		      RegistryHive->FileSize - 4096,
-		      &FileOffset,
-		      0);
-
-  assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
-
-  NtClose(FileHandle);
-
-  BlockOffset = 0;
-  for (i = 0; i < RegistryHive->BlockListSize; i++)
-    {
-      RegistryHive->BlockList[i] = (PHBIN) (((ULONG_PTR) RegistryHive->BlockList[0]) + BlockOffset);
-      tmpBin = (PHBIN) (((ULONG_PTR) RegistryHive->BlockList[i]));
-      if (tmpBin->BlockId != REG_BIN_ID)
-	{
-	  DPRINT("Bad BlockId %x, offset %x\n", tmpBin->BlockId, BlockOffset);
-	  //KeBugCheck(0);
-	  return STATUS_INSUFFICIENT_RESOURCES;
-	}
-
-      assertmsg((tmpBin->BlockSize % 4096) == 0, ("BlockSize (0x%.08x) must be multiplum of 4K\n", tmpBin->BlockSize));
-
-      if (tmpBin->BlockSize > 4096)
-	{
-	  for (j = 1; j < tmpBin->BlockSize / 4096; j++)
-	    {
-	      RegistryHive->BlockList[i + j] = RegistryHive->BlockList[i];
-	    }
-	  i = i + j - 1;
-	}
-
-//      BlockIndex += Bin->BlockSize / 4096;
-      BlockOffset += tmpBin->BlockSize;
-    }
-
+  /* Unmap and dereference the hive section */
+  NtUnmapViewOfSection(NtCurrentProcess(),
+		       ViewBase);
+  NtClose(SectionHandle);
 
   /* Initialize the free cell list */
   Status = CmiCreateHiveFreeCellList (RegistryHive);
   if (!NT_SUCCESS(Status))
     {
-      /* FIXME: */
-      assert (FALSE);
+      CmiFreeHiveBins(RegistryHive);
+      ExFreePool(RegistryHive->BlockList);
+      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
+      RtlFreeUnicodeString(&RegistryHive->LogFileName);
+      return Status;
     }
 
-  /*
-   * Create block bitmap and clear all bits
-   */
+  /* Create the block bitmap */
   Status = CmiCreateHiveBitmap (RegistryHive);
   if (!NT_SUCCESS(Status))
     {
-      /* FIXME: */
-      assert (FALSE);
+      CmiFreeHiveFreeCellList(RegistryHive);
+      CmiFreeHiveBins(RegistryHive);
+      ExFreePool(RegistryHive->BlockList);
+      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
+      RtlFreeUnicodeString(&RegistryHive->LogFileName);
+      return Status;
     }
 
   DPRINT("CmiInitNonVolatileRegistryHive(%p, %S, %d) - Finished.\n",
@@ -2766,7 +2729,9 @@ CmiAddKeyToHashTable(PREGISTRY_HIVE RegistryHive,
       if (HashBlock->Table[i].KeyOffset == 0)
 	{
 	  HashBlock->Table[i].KeyOffset = NKBOffset;
-	  RtlCopyMemory(&HashBlock->Table[i].HashValue, NewKeyCell->Name, 4);
+	  RtlCopyMemory(&HashBlock->Table[i].HashValue,
+			NewKeyCell->Name,
+			4);
 	  return STATUS_SUCCESS;
 	}
     }
@@ -2787,7 +2752,8 @@ CmiRemoveKeyFromHashTable(PREGISTRY_HIVE RegistryHive,
       if (HashBlock->Table[i].KeyOffset == NKBOffset)
 	{
 	  HashBlock->Table[i].KeyOffset = 0;
-	  RtlZeroMemory(&HashBlock->Table[i].HashValue, 4);
+	  RtlZeroMemory(&HashBlock->Table[i].HashValue,
+			4);
 	  return STATUS_SUCCESS;
 	}
     }
