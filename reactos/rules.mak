@@ -57,10 +57,12 @@ PIPE := -pipe
 endif
 
 
-# Set INSTALL_DIR to default value if not already set
-# ifeq ($(INSTALL_DIR),)
+# Use environment var ROS_INSTALL to override default install dir
+ifeq ($(ROS_INSTALL),)
 INSTALL_DIR = $(PATH_TO_TOP)/reactos
-# endif
+else
+INSTALL_DIR = $(ROS_INSTALL)
+endif
 
 # Set DIST_DIR to default value if not already set
 # ifeq ($(DIST_DIR),)

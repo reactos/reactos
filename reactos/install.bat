@@ -3,6 +3,9 @@ if "%1" == "" goto NoParameter
 set ROS_INSTALL=%1
 goto Install
 :NoParameter
+if "%ROS_INSTALL%" == "" goto UseDefault
+goto Install
+:UseDefault
 set ROS_INSTALL=c:\reactos
 :Install
 echo Installing to %ROS_INSTALL%
