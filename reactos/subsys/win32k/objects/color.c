@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.39 2004/05/10 17:07:20 weiden Exp $ */
+/* $Id: color.c,v 1.40 2004/05/14 22:20:46 navaraf Exp $ */
 #include <w32k.h>
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
@@ -138,31 +138,57 @@ BOOL STDCALL NtGdiGetColorAdjustment(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-COLORREF STDCALL NtGdiGetNearestColor(HDC  hDC,
-                              COLORREF  Color)
+unsigned short GetNumberOfBits(unsigned int dwMask)
 {
-  COLORREF nearest = CLR_INVALID;
-  PDC dc;
-  PPALGDI palGDI;
+   unsigned short wBits;
+   for (wBits = 0; dwMask; dwMask = dwMask & (dwMask - 1))
+      wBits++;
+   return wBits;
+}
 
-  dc = DC_LockDc(hDC);
-  if (NULL != dc)
-    {
+COLORREF STDCALL NtGdiGetNearestColor(HDC hDC, COLORREF Color)
+{
+   COLORREF nearest = CLR_INVALID;
+   PDC dc;
+   PPALGDI palGDI;
+   LONG RBits, GBits, BBits;
+
+   dc = DC_LockDc(hDC);
+   if (NULL != dc)
+   {
       HPALETTE hpal = dc->w.hPalette;
       palGDI = (PPALGDI) PALETTE_LockPalette(hpal);
       if (!palGDI)
-	{
-	  DC_UnlockDc(hDC);
-	  return nearest;
-	}
+      {
+         DC_UnlockDc(hDC);
+         return nearest;
+      }
 
-      nearest = COLOR_LookupNearestColor(palGDI->IndexedColors,
-                                         palGDI->NumColors, Color);
+      switch (palGDI->Mode)
+      {
+         case PAL_INDEXED:
+            nearest = COLOR_LookupNearestColor(palGDI->IndexedColors,
+               palGDI->NumColors, Color);
+            break;
+         case PAL_BGR:
+         case PAL_RGB:
+            nearest = Color;
+            break;
+         case PAL_BITFIELDS:
+            RBits = 8 - GetNumberOfBits(palGDI->RedMask);
+            GBits = 8 - GetNumberOfBits(palGDI->GreenMask);
+            BBits = 8 - GetNumberOfBits(palGDI->BlueMask);
+            nearest = RGB(
+              (GetRValue(Color) >> RBits) << RBits,
+              (GetGValue(Color) >> GBits) << GBits,
+              (GetBValue(Color) >> BBits) << BBits);
+            break;
+      }
       PALETTE_UnlockPalette(hpal);
-      DC_UnlockDc( hDC );
-    }
+      DC_UnlockDc(hDC);
+   }
 
-  return nearest;
+   return nearest;
 }
 
 UINT STDCALL NtGdiGetNearestPaletteIndex(HPALETTE  hpal,
