@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.220 2004/05/01 19:05:29 weiden Exp $
+# $Id: Makefile,v 1.221 2004/05/03 15:29:01 sedwards Exp $
 #
 # Global makefile
 #
@@ -101,9 +101,9 @@ SYS_SVC = rpcss eventlog
 APPS = tests testsets utils
 
 
-# External (sub)systems for ReactOS
-# rosapps wine posix os2 (requires c++) java (non-existant)
-EXTERNALS = rosapps wine posix os2
+# External modules and (sub)systems for ReactOS
+# rosapps posix os2 (requires c++) java (non-existant)
+EXTERNALS = rosapps
 
 ifeq ($(ROS_BUILD_EXT),yes)
 EXT_MODULES = $(EXTERNALS)
