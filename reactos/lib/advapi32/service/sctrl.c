@@ -1,4 +1,4 @@
-/* $Id: sctrl.c,v 1.3 2001/10/21 19:06:42 chorns Exp $
+/* $Id: sctrl.c,v 1.4 2002/07/20 13:31:34 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,14 +15,19 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 
+#define NDEBUG
+#include <debug.h>
+
+
 /* TYPES *********************************************************************/
 
 typedef struct
 {
   DWORD ThreadId;
   UNICODE_STRING ServiceName;
+  LPSERVICE_MAIN_FUNCTION MainFunction;
+  LPHANDLER_FUNCTION HandlerFunction;
   SERVICE_STATUS ServiceStatus;
-  LPHANDLER_FUNCTION	Handler;
 } ACTIVE_SERVICE, *PACTIVE_SERVICE;
 
 /* GLOBALS *******************************************************************/
@@ -33,28 +38,103 @@ static PHANDLE ActiveServicesThreadHandles;
 
 /* FUNCTIONS *****************************************************************/
 
-PACTIVE_SERVICE
-ScLookupServiceByThreadId(
-  DWORD ThreadId)
+
+static PACTIVE_SERVICE
+ScLookupServiceByServiceName(LPWSTR lpServiceName)
 {
   DWORD i;
 
   for (i = 0; i < ActiveServiceCount; i++)
-  {
-    if (ActiveServices[i].ThreadId == ThreadId)
     {
-      return &ActiveServices[i];
+      if (wcsicmp(ActiveServices[i].ServiceName.Buffer, lpServiceName) == 0)
+	{
+	  return(&ActiveServices[i]);
+	}
     }
-  }
 
-  return NULL;
+  SetLastError(ERROR_SERVICE_DOES_NOT_EXIST);
+
+  return(NULL);
 }
 
 
-DWORD
-WINAPI
-ScServiceMainStub(
-  LPVOID Context)
+static PACTIVE_SERVICE
+ScLookupServiceByThreadId(DWORD ThreadId)
+{
+  DWORD i;
+
+  for (i = 0; i < ActiveServiceCount; i++)
+    {
+      if (ActiveServices[i].ThreadId == ThreadId)
+	{
+	  return(&ActiveServices[i]);
+	}
+    }
+
+  SetLastError(ERROR_SERVICE_DOES_NOT_EXIST);
+
+  return(NULL);
+}
+
+
+static DWORD
+ScConnectControlPipe(HANDLE *hPipe)
+{
+  DWORD dwBytesWritten;
+  DWORD dwProcessId;
+  DWORD dwState;
+
+  WaitNamedPipeW(L"\\\\.\\pipe\\net\\NtControlPipe",
+		 15000);
+
+  *hPipe = CreateFileW(L"\\\\.\\pipe\\net\\NtControlPipe",
+		       GENERIC_READ | GENERIC_WRITE,
+		       FILE_SHARE_READ | FILE_SHARE_WRITE,
+		       NULL,
+		       OPEN_EXISTING,
+		       FILE_ATTRIBUTE_NORMAL,
+		       NULL);
+  if (*hPipe == INVALID_HANDLE_VALUE)
+    return(ERROR_FAILED_SERVICE_CONTROLLER_CONNECT);
+
+  dwState = PIPE_READMODE_MESSAGE;
+  if (!SetNamedPipeHandleState(*hPipe, &dwState, NULL, NULL))
+    {
+      CloseHandle(hPipe);
+      *hPipe = INVALID_HANDLE_VALUE;
+      return(ERROR_FAILED_SERVICE_CONTROLLER_CONNECT);
+    }
+
+  dwProcessId = GetCurrentProcessId();
+  WriteFile(*hPipe,
+	    &dwProcessId,
+	    sizeof(DWORD),
+	    &dwBytesWritten,
+	    NULL);
+
+  return(ERROR_SUCCESS);
+}
+
+
+static VOID
+ScServiceDispatcher(HANDLE hPipe, PVOID p1, PVOID p2)
+{
+  DPRINT1("ScDispatcherLoop() called\n");
+
+#if 0
+  while (TRUE)
+    {
+      /* Read command from the control pipe */
+
+      /* Execute command */
+
+    }
+#endif
+}
+
+
+DWORD WINAPI
+ScServiceMainStub(LPVOID Context)
 {
   LPSERVICE_MAIN_FUNCTION lpServiceProc = (LPSERVICE_MAIN_FUNCTION)Context;
 
@@ -69,110 +149,107 @@ ScServiceMainStub(
 /**********************************************************************
  *	RegisterServiceCtrlHandlerA
  */
-SERVICE_STATUS_HANDLE STDCALL RegisterServiceCtrlHandlerA(
-	LPCSTR			lpServiceName,
-	LPHANDLER_FUNCTION	lpHandlerProc)
+SERVICE_STATUS_HANDLE STDCALL
+RegisterServiceCtrlHandlerA(LPCSTR lpServiceName,
+			    LPHANDLER_FUNCTION lpHandlerProc)
 {
-   
-   ANSI_STRING ServiceNameA;
-   UNICODE_STRING ServiceNameU;
-   SERVICE_STATUS_HANDLE SHandle;
-   
-   RtlInitAnsiString(&ServiceNameA, (LPSTR)lpServiceName);
-   if (!NT_SUCCESS(RtlAnsiStringToUnicodeString(&ServiceNameU, &ServiceNameA, TRUE)))
-   {
-	  SetLastError(ERROR_OUTOFMEMORY);
-  	return (SERVICE_STATUS_HANDLE)0;
-   }
+  ANSI_STRING ServiceNameA;
+  UNICODE_STRING ServiceNameU;
+  SERVICE_STATUS_HANDLE SHandle;
 
-   SHandle = RegisterServiceCtrlHandlerW(ServiceNameU.Buffer,
-					 lpHandlerProc);
+  RtlInitAnsiString(&ServiceNameA, (LPSTR)lpServiceName);
+  if (!NT_SUCCESS(RtlAnsiStringToUnicodeString(&ServiceNameU, &ServiceNameA, TRUE)))
+    {
+      SetLastError(ERROR_OUTOFMEMORY);
+      return((SERVICE_STATUS_HANDLE)0);
+    }
 
-   RtlFreeUnicodeString(&ServiceNameU);
-   
-   return(SHandle);
+  SHandle = RegisterServiceCtrlHandlerW(ServiceNameU.Buffer,
+					lpHandlerProc);
+
+  RtlFreeUnicodeString(&ServiceNameU);
+
+  return(SHandle);
 }
 
 
 /**********************************************************************
  *	RegisterServiceCtrlHandlerW
  */
-SERVICE_STATUS_HANDLE STDCALL RegisterServiceCtrlHandlerW(
-	LPCWSTR			lpServiceName,
-	LPHANDLER_FUNCTION	lpHandlerProc)
+SERVICE_STATUS_HANDLE STDCALL
+RegisterServiceCtrlHandlerW(LPCWSTR lpServiceName,
+			    LPHANDLER_FUNCTION lpHandlerProc)
 {
   PACTIVE_SERVICE Service;
 
-  /* FIXME: Locate active service entry from name */
+  Service = ScLookupServiceByServiceName((LPWSTR)lpServiceName);
+  if (Service == NULL)
+    {
+      return((SERVICE_STATUS_HANDLE)NULL);
+    }
 
-  Service = &ActiveServices[0];
+  Service->HandlerFunction = lpHandlerProc;
 
-  Service->Handler = lpHandlerProc;
-
-	return (SERVICE_STATUS_HANDLE)Service->ThreadId;
+  return((SERVICE_STATUS_HANDLE)Service->ThreadId);
 }
 
 
 /**********************************************************************
  *	SetServiceBits
  */
-BOOL STDCALL SetServiceBits(SERVICE_STATUS_HANDLE hServiceStatus,
-			    DWORD dwServiceBits,
-			    BOOL bSetBitsOn,
-			    BOOL bUpdateImmediately)
+BOOL STDCALL
+SetServiceBits(SERVICE_STATUS_HANDLE hServiceStatus,
+	       DWORD dwServiceBits,
+	       BOOL bSetBitsOn,
+	       BOOL bUpdateImmediately)
 {
-   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-   return(FALSE);
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return(FALSE);
 }
 
 
 /**********************************************************************
  *	SetServiceObjectSecurity
  */
-WINBOOL
-STDCALL
-SetServiceObjectSecurity(
-	SC_HANDLE		hService,
-	SECURITY_INFORMATION	dwSecurityInformation,
-	PSECURITY_DESCRIPTOR	lpSecurityDescriptor
-	)
+WINBOOL STDCALL
+SetServiceObjectSecurity(SC_HANDLE hService,
+			 SECURITY_INFORMATION dwSecurityInformation,
+			 PSECURITY_DESCRIPTOR lpSecurityDescriptor)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
 
 /**********************************************************************
  *	SetServiceStatus
  */
-BOOL
-STDCALL
-SetServiceStatus(
-	SERVICE_STATUS_HANDLE	hServiceStatus,
-	LPSERVICE_STATUS	lpServiceStatus)
+BOOL STDCALL
+SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
+		 LPSERVICE_STATUS lpServiceStatus)
 {
   PACTIVE_SERVICE Service;
 
   Service = ScLookupServiceByThreadId((DWORD)hServiceStatus);
   if (!Service)
-  {
-    SetLastError(ERROR_INVALID_HANDLE);
-    return FALSE;
-  }
+    {
+      SetLastError(ERROR_INVALID_HANDLE);
+      return(FALSE);
+    }
 
-  RtlCopyMemory(
-    &Service->ServiceStatus,
-    lpServiceStatus, 
-    sizeof(SERVICE_STATUS));
+  RtlCopyMemory(&Service->ServiceStatus,
+		lpServiceStatus,
+		sizeof(SERVICE_STATUS));
 
-	return TRUE;
+  return(TRUE);
 }
+
 
 /**********************************************************************
  *	StartServiceCtrlDispatcherA
  */
-BOOL STDCALL StartServiceCtrlDispatcherA(
-  LPSERVICE_TABLE_ENTRYA	lpServiceStartTable)
+BOOL STDCALL
+StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
 {
   LPSERVICE_TABLE_ENTRYW ServiceStartTableW;
   ANSI_STRING ServiceNameA;
@@ -183,15 +260,14 @@ BOOL STDCALL StartServiceCtrlDispatcherA(
 
   i = 0;
   while (lpServiceStartTable[i].lpServiceProc != NULL)
-  {
-    i++;
-  }
+    {
+      i++;
+    }
   Count = i;
 
-  ServiceStartTableW = RtlAllocateHeap(
-    RtlGetProcessHeap(),
-    HEAP_ZERO_MEMORY,
-    sizeof(SERVICE_TABLE_ENTRYW) * Count);
+  ServiceStartTableW = RtlAllocateHeap(RtlGetProcessHeap(),
+				       HEAP_ZERO_MEMORY,
+				       sizeof(SERVICE_TABLE_ENTRYW) * Count);
   for (i = 0; i < Count; i++)
   {
     RtlInitAnsiString(
@@ -221,9 +297,9 @@ BOOL STDCALL StartServiceCtrlDispatcherA(
   b = StartServiceCtrlDispatcherW(ServiceStartTableW);
 
   for (i = 0; i < Count; i++)
-  {
-    RtlFreeHeap(RtlGetProcessHeap(), 0, ServiceStartTableW[i].lpServiceName);
-  }
+    {
+      RtlFreeHeap(RtlGetProcessHeap(), 0, ServiceStartTableW[i].lpServiceName);
+    }
 
   RtlFreeHeap(RtlGetProcessHeap(), 0, ServiceStartTableW);
 
@@ -234,42 +310,65 @@ BOOL STDCALL StartServiceCtrlDispatcherA(
 /**********************************************************************
  *	StartServiceCtrlDispatcherW
  */
-BOOL STDCALL StartServiceCtrlDispatcherW(
-	LPSERVICE_TABLE_ENTRYW	lpServiceStartTable)
+BOOL STDCALL
+StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
 {
   ULONG i;
   HANDLE h;
   DWORD Tid;
   DWORD r;
+  HANDLE hPipe;
+  DWORD dwError;
+
+  DPRINT1("StartServiceCtrlDispatcherW() called\n");
 
   i = 0;
   while (lpServiceStartTable[i].lpServiceProc != NULL)
-  {
-    i++;
-  }
+    {
+      i++;
+    }
 
   ActiveServiceCount = i;
-  ActiveServices = RtlAllocateHeap(
-    RtlGetProcessHeap(),
-   	HEAP_ZERO_MEMORY,
-   	ActiveServiceCount * 
-   	sizeof(ACTIVE_SERVICE));
-  if (!ActiveServices)
-  {
-    return FALSE;
-  }
+  ActiveServices = RtlAllocateHeap(RtlGetProcessHeap(),
+				   HEAP_ZERO_MEMORY,
+				   ActiveServiceCount * sizeof(ACTIVE_SERVICE));
+  if (ActiveServices == NULL)
+    {
+      return(FALSE);
+    }
 
-  ActiveServicesThreadHandles = RtlAllocateHeap(
-    RtlGetProcessHeap(),
-   	HEAP_ZERO_MEMORY,
-   	(ActiveServiceCount + 1) *
-   	sizeof(HANDLE));
+  /* Copy service names and start procedure */
+  for (i = 0; i < ActiveServiceCount; i++)
+    {
+      RtlCreateUnicodeString(&ActiveServices[i].ServiceName,
+			     lpServiceStartTable[i].lpServiceName);
+      ActiveServices[i].MainFunction = lpServiceStartTable[i].lpServiceProc;
+    }
+
+  dwError = ScConnectControlPipe(&hPipe);
+  if (dwError = ERROR_SUCCESS)
+    {
+      /* FIXME: free the service table */
+      return(FALSE);
+    }
+
+  ScServiceDispatcher(hPipe, NULL, NULL);
+  CloseHandle(hPipe);
+
+  /* FIXME: free the service table */
+
+  return(TRUE);
+
+#if 0
+  ActiveServicesThreadHandles = RtlAllocateHeap(RtlGetProcessHeap(),
+						HEAP_ZERO_MEMORY,
+						(ActiveServiceCount + 1) * sizeof(HANDLE));
   if (!ActiveServicesThreadHandles)
-  {
-    RtlFreeHeap(RtlGetProcessHeap(), 0, ActiveServices);
-    ActiveServices = NULL;
-    return FALSE;
-  }
+    {
+      RtlFreeHeap(RtlGetProcessHeap(), 0, ActiveServices);
+      ActiveServices = NULL;
+      return(FALSE);
+    }
 
   for (i = 0; i<ActiveServiceCount; i++)
   {
@@ -321,6 +420,7 @@ BOOL STDCALL StartServiceCtrlDispatcherW(
     }
   }
   return TRUE;
+#endif
 }
 
-
+/* EOF */

@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.8 2001/10/21 19:06:42 chorns Exp $
+/* $Id: scm.c,v 1.9 2002/07/20 13:31:34 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -369,46 +369,48 @@ LockServiceDatabase(
 /**********************************************************************
  *	OpenSCManagerA
  */
-SC_HANDLE STDCALL OpenSCManagerA(LPCSTR	lpMachineName,
-				 LPCSTR	lpDatabaseName,
-				 DWORD	dwDesiredAccess)
+SC_HANDLE STDCALL
+OpenSCManagerA(LPCSTR lpMachineName,
+	       LPCSTR lpDatabaseName,
+	       DWORD dwDesiredAccess)
 {
-   SC_HANDLE h;
-   UNICODE_STRING MachineNameW;
-   UNICODE_STRING DatabaseNameW;
-   ANSI_STRING MachineNameA;
-   ANSI_STRING DatabaseNameA;
-   
-   RtlInitAnsiString(&MachineNameA, (LPSTR)lpMachineName);
-   RtlAnsiStringToUnicodeString(&MachineNameW,
+  SC_HANDLE Handle;
+  UNICODE_STRING MachineNameW;
+  UNICODE_STRING DatabaseNameW;
+  ANSI_STRING MachineNameA;
+  ANSI_STRING DatabaseNameA;
+
+  RtlInitAnsiString(&MachineNameA, (LPSTR)lpMachineName);
+  RtlAnsiStringToUnicodeString(&MachineNameW,
 				&MachineNameA,
 				TRUE);
-   RtlInitAnsiString(&DatabaseNameA, (LPSTR)lpDatabaseName);
-   RtlAnsiStringToUnicodeString(&DatabaseNameW,
+  RtlInitAnsiString(&DatabaseNameA, (LPSTR)lpDatabaseName);
+  RtlAnsiStringToUnicodeString(&DatabaseNameW,
 				&DatabaseNameA,
 				TRUE);
-   
-   h = OpenSCManagerW(MachineNameW.Buffer,
-		      DatabaseNameW.Buffer,
-		      dwDesiredAccess);
-   
-   RtlFreeHeap(GetProcessHeap(),
-	       0,
-	       MachineNameW.Buffer);
-   RtlFreeHeap(GetProcessHeap(),
-	       0,
-	       DatabaseNameW.Buffer);
-   
-   return(h);
+
+  Handle = OpenSCManagerW(MachineNameW.Buffer,
+			  DatabaseNameW.Buffer,
+			  dwDesiredAccess);
+
+  RtlFreeHeap(GetProcessHeap(),
+	      0,
+	      MachineNameW.Buffer);
+  RtlFreeHeap(GetProcessHeap(),
+	      0,
+	      DatabaseNameW.Buffer);
+
+  return(Handle);
 }
 
 
 /**********************************************************************
  *	OpenSCManagerW
  */
-SC_HANDLE STDCALL OpenSCManagerW(LPCWSTR	lpMachineName,
-				 LPCWSTR	lpDatabaseName,			
-				 DWORD	dwDesiredAccess)
+SC_HANDLE STDCALL
+OpenSCManagerW(LPCWSTR lpMachineName,
+	       LPCWSTR lpDatabaseName,
+	       DWORD dwDesiredAccess)
 {
   HANDLE hPipe;
   DWORD dwMode;
@@ -522,16 +524,13 @@ SC_HANDLE STDCALL OpenSCManagerW(LPCWSTR	lpMachineName,
 /**********************************************************************
  *	OpenServiceA
  */
-SC_HANDLE
-STDCALL
-OpenServiceA(
-	SC_HANDLE	hSCManager,
-	LPCSTR		lpServiceName,
-	DWORD		dwDesiredAccess
-	)
+SC_HANDLE STDCALL
+OpenServiceA(SC_HANDLE hSCManager,
+	     LPCSTR  lpServiceName,
+	     DWORD dwDesiredAccess)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return NULL;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return(NULL);
 }
 
 
