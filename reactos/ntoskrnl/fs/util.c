@@ -1,4 +1,4 @@
-/* $Id: util.c,v 1.8 2002/01/13 22:02:31 ea Exp $
+/* $Id: util.c,v 1.9 2002/01/17 23:17:39 ea Exp $
  *
  * reactos/ntoskrnl/fs/util.c
  *
@@ -43,7 +43,8 @@ FsRtlIsTotalDeviceFailure (
 
 /**********************************************************************
  * NAME							EXPORTED
- *	FsRtlIsNtstatusExpected@4
+ *	FsRtlIsNtstatusExpected/1
+ *	stack32 = 4
  *
  * DESCRIPTION
  *	Check an NTSTATUS value is expected by the FS kernel
@@ -54,14 +55,18 @@ FsRtlIsTotalDeviceFailure (
  *		NTSTATUS to test.
  *
  * RETURN VALUE
- *	TRUE if NtStatus is either STATUS_ACCESS_VIOLATION,
- *	STATUS_ILLEGAL_INSTRUCTION, STATUS_DATATYPE_MISALIGNMENT,
- *	0xC00000AA; FALSE otherwise.
+ *	TRUE if NtStatus is NOT one out of:
+ *	- STATUS_ACCESS_VIOLATION
+ *	- STATUS_ILLEGAL_INSTRUCTION
+ *	- STATUS_DATATYPE_MISALIGNMENT
+ *	- STATUS_INSTRUCTION_MISALIGNMENT
+ *	which are the forbidden return stati in the FsRtl
+ *	subsystem; FALSE otherwise.
  *
- * NOTES
- *	By calling the function with all possible values,
- *	one unknown NTSTATUS value makes the function
- *	return 0x00 (0xC00000AA).
+ * REVISIONS
+ *	2002-01-17 Fixed a bad bug reported by Bo Brantén.
+ *	Up to version 1.8, this function's semantics was
+ *	exactly the opposite! Thank you Bo.
  */
 BOOLEAN
 STDCALL
@@ -75,8 +80,8 @@ FsRtlIsNtstatusExpected (
 		|| (STATUS_ILLEGAL_INSTRUCTION == NtStatus)
 		|| (STATUS_INSTRUCTION_MISALIGNMENT == NtStatus)
 		)
-		? TRUE
-		: FALSE;
+		? FALSE
+		: TRUE;
 }
 	
 
