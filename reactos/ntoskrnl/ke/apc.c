@@ -548,14 +548,14 @@ NtQueueApcThread(HANDLE			ThreadHandle,
 		return(STATUS_NO_MEMORY);
 	}
    
-	/* Initialize and Queue */
+	/* Initialize and Queue a user mode apc (always!) */
 	KeInitializeApc(Apc,
 			&Thread->Tcb,
 			OriginalApcEnvironment,
 			KiFreeApcRoutine,
 			NULL,
 			ApcRoutine,
-			PreviousMode,
+			UserMode,
 			NormalContext);
 	if (!KeInsertQueueApc(Apc, SystemArgument1, SystemArgument2, IO_NO_INCREMENT)) {
 		Status = STATUS_UNSUCCESSFUL;
