@@ -1,4 +1,4 @@
-/* $Id: scrollbar.c,v 1.10 2003/07/26 15:48:47 dwelch Exp $
+/* $Id: scrollbar.c,v 1.11 2003/08/07 04:03:23 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -282,7 +282,7 @@ SCROLL_DrawScrollBar (HWND hwnd, HDC hdc, INT nBar,
     vertical = TRUE;
     break;
   case SB_CTL:
-    vertical = (GetWindowLong(hwnd,GWL_STYLE)&SBS_VERT) != 0;
+    vertical = (GetWindowLongW(hwnd,GWL_STYLE)&SBS_VERT) != 0;
     break;
 #ifdef DBG
   default:

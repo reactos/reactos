@@ -35,10 +35,10 @@ BOOL STDCALL _InternalLoadString
   (actual resource ids) start from 1. See (1) and (2)
  */
  /* TODO: some sort of cache, here, would be great */
- hrsStringTable = FindResource
+ hrsStringTable = FindResourceW
  (
   (HMODULE)hInstance,
-  MAKEINTRESOURCE((uID / 16) + 1), /* (2) */
+  MAKEINTRESOURCEW((uID / 16) + 1), /* (2) */
   RT_STRING
  );
 

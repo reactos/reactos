@@ -60,8 +60,8 @@ void NC_GetInsideRect( HWND hwnd, RECT *rect )
     DWORD Style, ExStyle;
 
     GetWindowRect(hwnd, rect);
-    Style = GetWindowLong(hwnd, GWL_STYLE);
-    ExStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+    Style = GetWindowLongW(hwnd, GWL_STYLE);
+    ExStyle = GetWindowLongW(hwnd, GWL_EXSTYLE);
 
     rect->top    = rect->left = 0;
     rect->right  = rect->right - rect->left;
@@ -353,8 +353,8 @@ static void  NC_DoNCPaint95(
     int has_menu;
 
     /* FIXME: Determine has_menu */
-    Style = GetWindowLong(hwnd, GWL_STYLE);
-    ExStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+    Style = GetWindowLongW(hwnd, GWL_STYLE);
+    ExStyle = GetWindowLongW(hwnd, GWL_EXSTYLE);
     GetWindowRect(hwnd, &WindowRect);
     GetClientRect(hwnd, &ClientRect);
 

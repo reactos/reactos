@@ -46,10 +46,10 @@
 #include <ntos/disk.h>
 #include <ntos/gditypes.h>
 
-// NOTE - change the following to an #if 0 to verify you aren't
-// accidentally using generic struct pointers in your A/W-specific
-// structs
-#if 1
+// NOTE - _DISABLE_TIDENTS exists to keep ReactOS's source from
+// accidentally utilitizing ANSI/UNICODE-generic structs, defines
+// or functions.
+#ifndef _DISABLE_TIDENTS
 #  ifdef UNICODE
 #    define typedef_tident(ident) typedef ident##W ident;
 #  else
@@ -58,6 +58,7 @@
 #else
 #  define typedef_tident(ident)
 #endif
+
 
 typedef struct _VALENT_A {
    LPSTR ve_valuename;
@@ -1452,8 +1453,8 @@ typedef struct tagPANOSE {
 
 typedef struct tagEXTLOGFONTA {
     LOGFONTA elfLogFont;
-    BCHAR    elfFullName[LF_FULLFACESIZE];
-    BCHAR    elfStyle[LF_FACESIZE];
+    CHAR     elfFullName[LF_FULLFACESIZE];
+    CHAR     elfStyle[LF_FACESIZE];
     DWORD    elfVersion;
     DWORD    elfStyleSize;
     DWORD    elfMatch;
@@ -2044,8 +2045,8 @@ typedef_tident(LPENUM_SERVICE_STATUS)
 
 typedef struct tagENUMLOGFONTA {
   LOGFONTA elfLogFont;
-  BCHAR    elfFullName[LF_FULLFACESIZE];
-  BCHAR    elfStyle[LF_FACESIZE];
+  CHAR     elfFullName[LF_FULLFACESIZE];
+  CHAR     elfStyle[LF_FACESIZE];
 } ENUMLOGFONTA, *LPENUMLOGFONTA;
 
 typedef struct tagENUMLOGFONTW {
@@ -2059,9 +2060,9 @@ typedef_tident(LPENUMLOGFONT)
 
 typedef struct tagENUMLOGFONTEXA {
   LOGFONTA elfLogFont;
-  BCHAR    elfFullName[LF_FULLFACESIZE];
-  BCHAR    elfStyle[LF_FACESIZE];
-  BCHAR    elfScript[LF_FACESIZE];
+  CHAR     elfFullName[LF_FULLFACESIZE];
+  CHAR     elfStyle[LF_FACESIZE];
+  CHAR     elfScript[LF_FACESIZE];
 } ENUMLOGFONTEXA, *LPENUMLOGFONTEXA;
 
 typedef struct tagENUMLOGFONTEXW {
@@ -3215,10 +3216,10 @@ typedef struct tagNEWTEXTMETRICA {
   LONG   tmOverhang;
   LONG   tmDigitizedAspectX;
   LONG   tmDigitizedAspectY;
-  BCHAR  tmFirstChar;
-  BCHAR  tmLastChar;
-  BCHAR  tmDefaultChar;
-  BCHAR  tmBreakChar;
+  CHAR   tmFirstChar;
+  CHAR   tmLastChar;
+  CHAR   tmDefaultChar;
+  CHAR   tmBreakChar;
   BYTE   tmItalic;
   BYTE   tmUnderlined;
   BYTE   tmStruckOut;
@@ -3331,6 +3332,7 @@ typedef struct _NM_TREEVIEWW {
 
 typedef_tident(NM_TREEVIEW)
 typedef_tident(LPNM_TREEVIEW)
+
 
 typedef struct _NM_UPDOWN {
   NMHDR    hdr;
@@ -3616,10 +3618,10 @@ typedef struct tagTEXTMETRICA {
   LONG tmOverhang;
   LONG tmDigitizedAspectX;
   LONG tmDigitizedAspectY;
-  BCHAR tmFirstChar;
-  BCHAR tmLastChar;
-  BCHAR tmDefaultChar;
-  BCHAR tmBreakChar;
+  CHAR tmFirstChar;
+  CHAR tmLastChar;
+  CHAR tmDefaultChar;
+  CHAR tmBreakChar;
   BYTE tmItalic;
   BYTE tmUnderlined;
   BYTE tmStruckOut;
@@ -4610,12 +4612,12 @@ typedef struct tagSERIALKEYS {
 
 typedef struct _SERVICE_TABLE_ENTRYA {
   LPSTR lpServiceName;
-  LPSERVICE_MAIN_FUNCTION lpServiceProc;
+  LPSERVICE_MAIN_FUNCTIONA lpServiceProc;
 } SERVICE_TABLE_ENTRYA, *LPSERVICE_TABLE_ENTRYA;
 
 typedef struct _SERVICE_TABLE_ENTRYW {
   LPWSTR lpServiceName;
-  LPSERVICE_MAIN_FUNCTION lpServiceProc;
+  LPSERVICE_MAIN_FUNCTIONW lpServiceProc;
 } SERVICE_TABLE_ENTRYW, *LPSERVICE_TABLE_ENTRYW;
 
 typedef_tident(SERVICE_TABLE_ENTRY)
@@ -5841,4 +5843,3 @@ typedef struct _WIN32_FILE_ATTRIBUTES_DATA {
 #endif /* WIN32_LEAN_AND_MEAN */
 
 #endif /* _GNU_H_WINDOWS32_STRUCTURES */
-

@@ -1,4 +1,4 @@
-/* $Id: mbchars.c,v 1.3 2003/07/10 18:50:51 chorns Exp $
+/* $Id: mbchars.c,v 1.4 2003/08/07 04:03:23 royce Exp $
  *
  */
 #include <windows.h>
@@ -104,7 +104,7 @@ MultiByteToWideChar(
     //if (-1 == cchMultiByte)
     if (cchMultiByte < 0)
     {
-        InStringLength = lstrlen(lpMultiByteStr) + 1;
+        InStringLength = lstrlenA(lpMultiByteStr) + 1;
     }
     else
     {

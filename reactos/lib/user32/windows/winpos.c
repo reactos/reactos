@@ -1,4 +1,4 @@
-/* $Id: winpos.c,v 1.7 2003/07/27 11:54:41 dwelch Exp $
+/* $Id: winpos.c,v 1.8 2003/08/07 04:03:24 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -37,7 +37,7 @@ WinPosShowIconTitle(HWND hWnd, BOOL bShow)
 	  lpPos->IconTitle = hWnd = NULL; /*ICONTITLE_Create( pWnd );*/
 	if( bShow )
 	{
-	  ULONG Style = GetWindowLong(hWnd, GWL_STYLE);
+	  ULONG Style = GetWindowLongW(hWnd, GWL_STYLE);
 	  if( !(Style & WS_VISIBLE) )
 	    {
 	      SendMessageA( hWnd, WM_SHOWWINDOW, TRUE, 0 );
@@ -57,8 +57,8 @@ WinPosGetMinMaxInfo(HWND hWnd, POINT* MaxSize, POINT* MaxPos,
   MINMAXINFO MinMax;
   INT XInc, YInc;
   INTERNALPOS* Pos;
-  ULONG Style = GetWindowLong(hWnd, GWL_STYLE);
-  ULONG ExStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+  ULONG Style = GetWindowLongW(hWnd, GWL_STYLE);
+  ULONG ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
 
   /* Get default values. */
   MinMax.ptMaxSize.x = GetSystemMetrics(SM_CXSCREEN);
@@ -101,7 +101,7 @@ WinPosGetMinMaxInfo(HWND hWnd, POINT* MaxSize, POINT* MaxPos,
       MinMax.ptMaxPosition.y -= YInc;
     }
 
-  SendMessage(hWnd, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax);
+  SendMessageW(hWnd, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax);
 
   MinMax.ptMaxTrackSize.x = max(MinMax.ptMaxTrackSize.x,
 				MinMax.ptMinTrackSize.x);

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.9 2003/04/14 01:19:07 hyperion Exp $
+# $Id: makefile,v 1.10 2003/08/07 04:03:23 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -7,6 +7,9 @@ TARGET_TYPE = dynlink
 TARGET_NAME = msafd
 
 TARGET_BASE = 0x777a0000
+
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 

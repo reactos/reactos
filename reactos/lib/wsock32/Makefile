@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2003/04/03 22:44:19 gvg Exp $
+# $Id: Makefile,v 1.2 2003/08/07 04:03:24 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -16,6 +16,9 @@ TARGET_CFLAGS = \
  -DUNICODE \
  -DLE \
  -DDBG
+
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.9 2003/07/28 23:23:17 ekohl Exp $
+/* $Id: messagebox.c,v 1.10 2003/08/07 04:03:24 royce Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -47,8 +47,6 @@
 #define MSGBOX_IDTEXT 100
 #define IDS_ERROR     2
 
-#define RT_DIALOGA         MAKEINTRESOURCEA(5)
-#define RT_DIALOGW         MAKEINTRESOURCEW(5)
 #define IDI_HANDA          MAKEINTRESOURCEA(32513)
 #define IDI_HANDW          MAKEINTRESOURCEW(32513)
 #define IDI_QUESTIONA      MAKEINTRESOURCEA(32514)
@@ -389,8 +387,8 @@ static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMS lpmb)
     if(lpmb->dwStyle & MB_RIGHT)
     {
         hItem = GetDlgItem(hwnd, MSGBOX_IDTEXT);
-        SetWindowLong(hItem, GWL_STYLE, 
-                      GetWindowLong(hItem, GWL_STYLE) | SS_RIGHT);
+        SetWindowLongW(hItem, GWL_STYLE, 
+                      GetWindowLongW(hItem, GWL_STYLE) | SS_RIGHT);
     }
 
     /* handle modal MessageBoxes */

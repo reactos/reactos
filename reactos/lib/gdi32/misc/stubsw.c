@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.18 2003/08/05 15:41:02 weiden Exp $
+/* $Id: stubsw.c,v 1.19 2003/08/07 04:03:22 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -587,13 +587,22 @@ SetICMProfileW(
 int
 STDCALL
 EnumICMProfilesW(
-	HDC		a0,
-	ICMENUMPROC	a1,
-	LPARAM		a2
+	HDC		hDC,
+	ICMENUMPROCW	lpEnumICMProfilesFunc,
+	LPARAM		lParam
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  /*
+   * FIXME - call W32kEnumICMProfiles with NULL for lpstrBuffer
+   * to find out how big a buffer we need. Then allocate that buffer
+   * and call W32kEnumICMProfiles again to have the buffer filled.
+   *
+   * Finally, step through the buffer ( MULTI-SZ recommended for format ),
+   * and call the user's callback function until we run out of strings or
+   * the user returns FALSE
+   */
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
 

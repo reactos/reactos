@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.8 2003/07/10 21:04:32 chorns Exp $
+/* $Id: prop.c,v 1.9 2003/08/07 04:03:24 royce Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -39,7 +39,7 @@
  * @unimplemented
  */
 int STDCALL
-EnumPropsA(HWND hWnd, PROPENUMPROC lpEnumFunc)
+EnumPropsA(HWND hWnd, PROPENUMPROCA lpEnumFunc)
 {
   UNIMPLEMENTED;
   return 0;
@@ -50,7 +50,7 @@ EnumPropsA(HWND hWnd, PROPENUMPROC lpEnumFunc)
  * @unimplemented
  */
 int STDCALL
-EnumPropsExA(HWND hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam)
+EnumPropsExA(HWND hWnd, PROPENUMPROCEXA lpEnumFunc, LPARAM lParam)
 {
   UNIMPLEMENTED;
   return 0;
@@ -61,7 +61,7 @@ EnumPropsExA(HWND hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam)
  * @unimplemented
  */
 int STDCALL
-EnumPropsExW(HWND hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam)
+EnumPropsExW(HWND hWnd, PROPENUMPROCEXW lpEnumFunc, LPARAM lParam)
 {
   UNIMPLEMENTED;
   return 0;
@@ -72,7 +72,7 @@ EnumPropsExW(HWND hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam)
  * @unimplemented
  */
 int STDCALL
-EnumPropsW(HWND hWnd, PROPENUMPROC lpEnumFunc)
+EnumPropsW(HWND hWnd, PROPENUMPROCW lpEnumFunc)
 {
   UNIMPLEMENTED;
   return 0;

@@ -79,7 +79,7 @@ SetTextColor(HDC hDC, COLORREF color)
 
 
 static BOOL
-MetricsCharConvert(WCHAR w, BCHAR *b)
+MetricsCharConvert(WCHAR w, CHAR *b)
   {
   UNICODE_STRING WString;
   WCHAR WBuf[2];

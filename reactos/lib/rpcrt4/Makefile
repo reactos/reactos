@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2001/07/15 21:18:55 rex Exp $
+# $Id: Makefile,v 1.6 2003/08/07 04:03:23 royce Exp $
 #
 # ReactOS Operating System
 #
@@ -9,6 +9,9 @@ TARGET = midl rpcrt4 rpcss
 BASE_CFLAGS = -I../../include
 
 CFLAGS = $(CFLAGS) 
+
+# require os code to explicitly request A/W version of structs/functions
+CFLAGS += -D_DISABLE_TIDENTS
 
 midl:
 	

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.20 2003/08/06 18:43:57 weiden Exp $
+/* $Id: menu.c,v 1.21 2003/08/07 04:03:24 royce Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -255,18 +255,18 @@ MenuInit(VOID)
       return FALSE;
     }
     
-    hMenuFont = CreateFontIndirect(&ncm.lfMenuFont);
+    hMenuFont = CreateFontIndirectW(&ncm.lfMenuFont);
     if(hMenuFont == NULL)
     {
-      DbgPrint("MenuInit(): CreateFontIndirect(hMenuFont) failed!\n");
+      DbgPrint("MenuInit(): CreateFontIndirectW(hMenuFont) failed!\n");
       return FALSE;
     }
     
     ncm.lfMenuFont.lfWeight = max(ncm.lfMenuFont.lfWeight + 300, 1000);
-    hMenuFontBold = CreateFontIndirect(&ncm.lfMenuFont);
+    hMenuFontBold = CreateFontIndirectW(&ncm.lfMenuFont);
     if(hMenuFontBold == NULL)
     {
-      DbgPrint("MenuInit(): CreateFontIndirect(hMenuFontBold) failed!\n");
+      DbgPrint("MenuInit(): CreateFontIndirectW(hMenuFontBold) failed!\n");
       return FALSE;
     }
   }
@@ -697,7 +697,7 @@ GetSubMenu(
   int nPos)
 {
   MENUITEMINFOW mi;
-  mi.cbSize = sizeof(MENUITEMINFO);
+  mi.cbSize = sizeof(mi);
   mi.fMask = MIIM_SUBMENU;
   if(NtUserMenuItemInfo(hMenu, (UINT)nPos, MF_BYPOSITION, &mi, FALSE))
   {
@@ -756,8 +756,8 @@ InsertMenuItemA(
   NTSTATUS Status;
   HANDLE hHeap = RtlGetProcessHeap();
 
-  if((lpmii->cbSize == sizeof(MENUITEMINFO)) || 
-     (lpmii->cbSize == sizeof(MENUITEMINFO) - sizeof(HBITMAP)))
+  if((lpmii->cbSize == sizeof(MENUITEMINFOA)) || 
+     (lpmii->cbSize == sizeof(MENUITEMINFOA) - sizeof(HBITMAP)))
   {
     memcpy(&mi, lpmii, lpmii->cbSize);
     
@@ -799,8 +799,12 @@ InsertMenuItemW(
   ULONG len = 0;
   HANDLE hHeap = RtlGetProcessHeap();
 
-  if((lpmii->cbSize == sizeof(MENUITEMINFO)) || 
-     (lpmii->cbSize == sizeof(MENUITEMINFO) - sizeof(HBITMAP)))
+  // while we could just pass 'lpmii' to win32k, we make a copy so that
+  // if a bad user passes bad data, we crash his process instead of the
+  // entire kernel
+
+  if((lpmii->cbSize == sizeof(MENUITEMINFOW)) || 
+     (lpmii->cbSize == sizeof(MENUITEMINFOW) - sizeof(HBITMAP)))
   {
     memcpy(&mi, lpmii, lpmii->cbSize);
     
@@ -854,8 +858,9 @@ STDCALL
 IsMenu(
   HMENU hMenu)
 {
+  DWORD ret;
   SetLastError(ERROR_SUCCESS);
-  DWORD ret = NtUserBuildMenuItemList(hMenu, NULL, 0, 0);
+  ret = NtUserBuildMenuItemList(hMenu, NULL, 0, 0);
   return ((ret == -1) || (GetLastError() == ERROR_INVALID_MENU_HANDLE));
 }
 

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.2 2003/07/10 21:41:56 chorns Exp $
+/* $Id: stubs.c,v 1.3 2003/08/07 04:03:24 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock DLL
@@ -25,7 +25,7 @@ AcceptEx(SOCKET ListenSocket,
          LPDWORD BytesReceived,
          LPOVERLAPPED Overlapped)
 {
-  OutputDebugString(L"w32sock AcceptEx stub called\n");
+  OutputDebugStringW(L"w32sock AcceptEx stub called\n");
 
   return FALSE;
 }
@@ -40,7 +40,7 @@ EnumProtocolsA(LPINT ProtocolCount,
                LPVOID ProtocolBuffer,
                LPDWORD BufferLength)
 {
-  OutputDebugString(L"w32sock EnumProtocolsA stub called\n");
+  OutputDebugStringW(L"w32sock EnumProtocolsA stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -55,7 +55,7 @@ EnumProtocolsW(LPINT ProtocolCount,
                LPVOID ProtocolBuffer,
                LPDWORD BufferLength)
 {
-  OutputDebugString(L"w32sock EnumProtocolsW stub called\n");
+  OutputDebugStringW(L"w32sock EnumProtocolsW stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -75,7 +75,7 @@ GetAcceptExSockaddrs(PVOID OutputBuffer,
                      LPSOCKADDR* RemoteSockaddr,
                      LPINT RemoteSockaddrLength)
 {
-  OutputDebugString(L"w32sock GetAcceptExSockaddrs stub called\n");
+  OutputDebugStringW(L"w32sock GetAcceptExSockaddrs stub called\n");
 }
 
 
@@ -95,7 +95,7 @@ GetAddressByNameA(DWORD NameSpace,
                   LPSTR AliasBuffer,
                   LPDWORD AliasBufferLength)
 {
-  OutputDebugString(L"w32sock GetAddressByNameA stub called\n");
+  OutputDebugStringW(L"w32sock GetAddressByNameA stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -117,7 +117,7 @@ GetAddressByNameW(DWORD NameSpace,
                   LPWSTR AliasBuffer,
                   LPDWORD AliasBufferLength)
 {
-  OutputDebugString(L"w32sock GetAddressByNameW stub called\n");
+  OutputDebugStringW(L"w32sock GetAddressByNameW stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -132,7 +132,7 @@ GetNameByTypeA(LPGUID ServiceType,
                LPSTR ServiceName,
                DWORD NameLength)
 {
-  OutputDebugString(L"w32sock GetNameByTypeA stub called\n");
+  OutputDebugStringW(L"w32sock GetNameByTypeA stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -147,7 +147,7 @@ GetNameByTypeW(LPGUID ServiceType,
                LPWSTR ServiceName,
                DWORD NameLength)
 {
-  OutputDebugString(L"w32sock GetNameByTypeW stub called\n");
+  OutputDebugStringW(L"w32sock GetNameByTypeW stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -166,7 +166,7 @@ GetServiceA(DWORD NameSpace,
             LPDWORD BufferSize,
             LPVOID /* Really LPSERVICE_ASYNC_INFO */ ServiceAsyncInfo)
 {
-  OutputDebugString(L"w32sock GetServiceA stub called\n");
+  OutputDebugStringW(L"w32sock GetServiceA stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -185,7 +185,7 @@ GetServiceW(DWORD NameSpace,
             LPDWORD BufferSize,
             LPVOID /* Really LPSERVICE_ASYNC_INFO */ ServiceAsyncInfo)
 {
-  OutputDebugString(L"w32sock GetServiceW stub called\n");
+  OutputDebugStringW(L"w32sock GetServiceW stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -199,7 +199,7 @@ STDCALL
 GetTypeByNameA(LPSTR ServiceName,
                LPGUID ServiceType)
 {
-  OutputDebugString(L"w32sock GetTypeByNameA stub called\n");
+  OutputDebugStringW(L"w32sock GetTypeByNameA stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -213,7 +213,7 @@ STDCALL
 GetTypeByNameW(LPWSTR ServiceName,
                LPGUID ServiceType)
 {
-  OutputDebugString(L"w32sock GetTypeByNameW stub called\n");
+  OutputDebugStringW(L"w32sock GetTypeByNameW stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -231,7 +231,7 @@ SetServiceA(DWORD NameSpace,
             LPVOID /* Really LPSERVICE_ASYNC_INFOA */ ServiceAsyncInfo,
             LPDWORD dwStatusFlags)
 {
-  OutputDebugString(L"w32sock SetServiceA stub called\n");
+  OutputDebugStringW(L"w32sock SetServiceA stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -249,7 +249,7 @@ SetServiceW(DWORD NameSpace,
             LPVOID /* Really LPSERVICE_ASYNC_INFOW */ ServiceAsyncInfo,
             LPDWORD dwStatusFlags)
 {
-  OutputDebugString(L"w32sock SetServiceW stub called\n");
+  OutputDebugStringW(L"w32sock SetServiceW stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -268,7 +268,7 @@ TransmitFile(SOCKET Socket,
              LPVOID /* really LPTRANSMIT_FILE_BUFFERS */ TransmitBuffers,
              DWORD Flags)
 {
-  OutputDebugString(L"w32sock TransmitFile stub called\n");
+  OutputDebugStringW(L"w32sock TransmitFile stub called\n");
 
   return FALSE;
 }
@@ -287,7 +287,7 @@ WSAAsyncGetHostByAddr(HWND Wnd,
                       char *Buf,
                       int BufLen)
 {
-  OutputDebugString(L"w32sock WSAAsyncGetHostByAddr stub called\n");
+  OutputDebugStringW(L"w32sock WSAAsyncGetHostByAddr stub called\n");
 
   return NULL;
 }
@@ -304,7 +304,7 @@ WSAAsyncGetHostByName(HWND Wnd,
                       char *Buf,
                       int BufLen)
 {
-  OutputDebugString(L"w32sock WSAAsyncGetHostByName stub called\n");
+  OutputDebugStringW(L"w32sock WSAAsyncGetHostByName stub called\n");
 
   return NULL;
 }
@@ -321,7 +321,7 @@ WSAAsyncGetProtoByName(HWND Wnd,
                        char *Buf,
                        int Buflen)
 {
-  OutputDebugString(L"w32sock WSAAsyncGetProtoByName stub called\n");
+  OutputDebugStringW(L"w32sock WSAAsyncGetProtoByName stub called\n");
 
   return NULL;
 }
@@ -338,7 +338,7 @@ WSAAsyncGetProtoByNumber(HWND Wnd,
                          char *Buf,
                          int BufLen)
 {
-  OutputDebugString(L"w32sock WSAAsyncGetProtoByNumber stub called\n");
+  OutputDebugStringW(L"w32sock WSAAsyncGetProtoByNumber stub called\n");
 
   return NULL;
 }
@@ -356,7 +356,7 @@ WSAAsyncGetServByName(HWND Wnd,
                       char *Buf,
                       int BufLen)
 {
-  OutputDebugString(L"w32sock WSAAsyncGetServByName stub called\n");
+  OutputDebugStringW(L"w32sock WSAAsyncGetServByName stub called\n");
 
   return NULL;
 }
@@ -374,7 +374,7 @@ WSAAsyncGetServByPort(HWND Wnd,
                       char *Buf,
                       int BufLen)
 {
-  OutputDebugString(L"w32sock WSAAsyncGetServByPort stub called\n");
+  OutputDebugStringW(L"w32sock WSAAsyncGetServByPort stub called\n");
 
   return NULL;
 }
@@ -390,7 +390,7 @@ WSAAsyncSelect(SOCKET Sock,
                UINT Msg,
                LONG Event)
 {
-  OutputDebugString(L"w32sock WSAAsyncSelect stub called\n");
+  OutputDebugStringW(L"w32sock WSAAsyncSelect stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -403,7 +403,7 @@ int
 STDCALL
 WSACancelAsyncRequest(HANDLE AsyncTaskHandle)
 {
-  OutputDebugString(L"w32sock WSACancelAsyncRequest stub called\n");
+  OutputDebugStringW(L"w32sock WSACancelAsyncRequest stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -416,7 +416,7 @@ int
 STDCALL
 WSACancelBlockingCall()
 {
-  OutputDebugString(L"w32sock WSACancelBlockingCall stub called\n");
+  OutputDebugStringW(L"w32sock WSACancelBlockingCall stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -429,7 +429,7 @@ int
 STDCALL
 WSACleanup()
 {
-  OutputDebugString(L"w32sock WSACleanup stub called\n");
+  OutputDebugStringW(L"w32sock WSACleanup stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -442,7 +442,7 @@ int
 STDCALL
 WSAGetLastError(void)
 {
-  OutputDebugString(L"w32sock WSAGetLastError stub called\n");
+  OutputDebugStringW(L"w32sock WSAGetLastError stub called\n");
 
   return WSANOTINITIALISED;
 }
@@ -455,7 +455,7 @@ BOOL
 STDCALL
 WSAIsBlocking(VOID)
 {
-  OutputDebugString(L"w32sock WSAIsBlocking stub called\n");
+  OutputDebugStringW(L"w32sock WSAIsBlocking stub called\n");
 
   return FALSE;
 }
@@ -471,7 +471,7 @@ WSARecvEx(SOCKET Sock,
           int Len,
           int *Flags)
 {
-  OutputDebugString(L"w32sock WSARecvEx stub called\n");
+  OutputDebugStringW(L"w32sock WSARecvEx stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -484,7 +484,7 @@ FARPROC
 STDCALL
 WSASetBlockingHook(FARPROC BlockFunc)
 {
-  OutputDebugString(L"w32sock WSASetBlockingHook stub called\n");
+  OutputDebugStringW(L"w32sock WSASetBlockingHook stub called\n");
 
   return NULL;
 }
@@ -496,7 +496,7 @@ WSASetBlockingHook(FARPROC BlockFunc)
 void
 STDCALL WSASetLastError(int Error)
 {
-  OutputDebugString(L"w32sock WSASetLastError stub called\n");
+  OutputDebugStringW(L"w32sock WSASetLastError stub called\n");
 }
 
 
@@ -508,7 +508,7 @@ STDCALL
 WSAStartup(WORD VersionRequested,
            LPWSADATA WSAData)
 {
-  OutputDebugString(L"w32sock WSAStartup stub called\n");
+  OutputDebugStringW(L"w32sock WSAStartup stub called\n");
 
   return WSASYSNOTREADY;
 }
@@ -521,7 +521,7 @@ int
 STDCALL
 WSAUnhookBlockingHook(void)
 {
-  OutputDebugString(L"w32sock WSAUnhookBlockingHook stub called\n");
+  OutputDebugStringW(L"w32sock WSAUnhookBlockingHook stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -534,7 +534,7 @@ int
 STDCALL
 WSApSetPostRoutine(LPVOID /* really LPWPUPOSTMESSAGE */ PostRoutine)
 {
-  OutputDebugString(L"w32sock WSApSetPostRoutine stub called\n");
+  OutputDebugStringW(L"w32sock WSApSetPostRoutine stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -548,7 +548,7 @@ STDCALL
 __WSAFDIsSet(SOCKET Sock,
              fd_set *Set)
 {
-  OutputDebugString(L"w32sock __WSAFDIsSet stub called\n");
+  OutputDebugStringW(L"w32sock __WSAFDIsSet stub called\n");
 
   return 0;
 }
@@ -563,7 +563,7 @@ accept(SOCKET Sock,
        struct sockaddr *Addr,
        int *AddrLen)
 {
-  OutputDebugString(L"w32sock accept stub called\n");
+  OutputDebugStringW(L"w32sock accept stub called\n");
 
   return INVALID_SOCKET;
 }
@@ -578,7 +578,7 @@ bind(SOCKET Sock,
      CONST LPSOCKADDR Name,
      INT NameLen)
 {
-  OutputDebugString(L"w32sock bind stub called\n");
+  OutputDebugStringW(L"w32sock bind stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -591,7 +591,7 @@ int
 STDCALL
 closesocket(SOCKET Sock)
 {
-  OutputDebugString(L"w32sock closesocket stub called\n");
+  OutputDebugStringW(L"w32sock closesocket stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -606,7 +606,7 @@ connect(SOCKET Sock,
         CONST LPSOCKADDR Name,
         INT NameLen)
 {
-  OutputDebugString(L"w32sock connect stub called\n");
+  OutputDebugStringW(L"w32sock connect stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -623,7 +623,7 @@ dn_expand(unsigned char *MessagePtr,
           unsigned char *ExpandDomNam,
           int Length)
 {
-  OutputDebugString(L"w32sock dn_expand stub called\n");
+  OutputDebugStringW(L"w32sock dn_expand stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -638,7 +638,7 @@ gethostbyaddr(CONST CHAR *Addr,
               INT Len,
               INT Type)
 {
-  OutputDebugString(L"w32sock gethostbyaddr stub called\n");
+  OutputDebugStringW(L"w32sock gethostbyaddr stub called\n");
 
   return NULL;
 }
@@ -651,7 +651,7 @@ struct hostent *
 STDCALL
 gethostbyname(const char *Name)
 {
-  OutputDebugString(L"w32sock gethostbyname stub called\n");
+  OutputDebugStringW(L"w32sock gethostbyname stub called\n");
 
   return NULL;
 }
@@ -665,7 +665,7 @@ STDCALL
 gethostname(char *Name,
             int NameLen)
 {
-  OutputDebugString(L"w32sock gethostname stub called\n");
+  OutputDebugStringW(L"w32sock gethostname stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -678,7 +678,7 @@ struct netent *
 STDCALL
 getnetbyname(char *Name)
 {
-  OutputDebugString(L"w32sock getnetbyname stub called\n");
+  OutputDebugStringW(L"w32sock getnetbyname stub called\n");
 
   return NULL;
 }
@@ -693,7 +693,7 @@ getpeername(SOCKET Sock,
             struct sockaddr *Name,
             int *NameLen)
 {
-  OutputDebugString(L"w32sock getpeername stub called\n");
+  OutputDebugStringW(L"w32sock getpeername stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -706,7 +706,7 @@ LPPROTOENT
 STDCALL
 getprotobyname(CONST CHAR *Name)
 {
-  OutputDebugString(L"w32sock getprotobyname stub called\n");
+  OutputDebugStringW(L"w32sock getprotobyname stub called\n");
 
   return NULL;
 }
@@ -719,7 +719,7 @@ LPPROTOENT
 STDCALL
 getprotobynumber(INT Number)
 {
-  OutputDebugString(L"w32sock getprotobynumber stub called\n");
+  OutputDebugStringW(L"w32sock getprotobynumber stub called\n");
 
   return NULL;
 }
@@ -733,7 +733,7 @@ STDCALL
 getservbyname(const char *Name,
               const char *Proto)
 {
-  OutputDebugString(L"w32sock getservbyname stub called\n");
+  OutputDebugStringW(L"w32sock getservbyname stub called\n");
 
   return NULL;
 }
@@ -747,7 +747,7 @@ STDCALL
 getservbyport(int Port,
               const char *Proto)
 {
-  OutputDebugString(L"w32sock getservbyport stub called\n");
+  OutputDebugStringW(L"w32sock getservbyport stub called\n");
 
   return NULL;
 }
@@ -762,7 +762,7 @@ getsockname(SOCKET Sock,
             struct sockaddr *Name,
             int *NameLen)
 {
-  OutputDebugString(L"w32sock getsockname stub called\n");
+  OutputDebugStringW(L"w32sock getsockname stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -779,7 +779,7 @@ getsockopt(SOCKET Sock,
            char *OptVal,
            int *OptLen)
 {
-  OutputDebugString(L"w32sock getsockopt stub called\n");
+  OutputDebugStringW(L"w32sock getsockopt stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -818,7 +818,7 @@ ULONG
 STDCALL
 inet_addr(CONST CHAR *cp)
 {
-  OutputDebugString(L"w32sock inet_addr stub called\n");
+  OutputDebugStringW(L"w32sock inet_addr stub called\n");
 
   return INADDR_NONE;
 }
@@ -831,7 +831,7 @@ unsigned long
 STDCALL
 inet_network(const char *cp)
 {
-  OutputDebugString(L"w32sock inet_network stub called\n");
+  OutputDebugStringW(L"w32sock inet_network stub called\n");
 
   return INADDR_NONE;
 }
@@ -844,7 +844,7 @@ char *
 STDCALL
 inet_ntoa(struct in_addr in)
 {
-  OutputDebugString(L"w32sock inet_ntoa stub called\n");
+  OutputDebugStringW(L"w32sock inet_ntoa stub called\n");
 
   return NULL;
 }
@@ -859,7 +859,7 @@ ioctlsocket(SOCKET Sock,
             LONG Cmd,
             ULONG *Argp)
 {
-  OutputDebugString(L"w32sock ioctlsocket stub called\n");
+  OutputDebugStringW(L"w32sock ioctlsocket stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -873,7 +873,7 @@ STDCALL
 listen(SOCKET Sock,
        int BackLog)
 {
-  OutputDebugString(L"w32sock listen stub called\n");
+  OutputDebugStringW(L"w32sock listen stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -917,7 +917,7 @@ rcmd(char **AHost,
      char *Cmd,
      int *Fd2p)
 {
-  OutputDebugString(L"w32sock rcmd stub called\n");
+  OutputDebugStringW(L"w32sock rcmd stub called\n");
 
   return INVALID_SOCKET;
 }
@@ -933,7 +933,7 @@ recv(SOCKET Sock,
      int Len,
      int Flags)
 {
-  OutputDebugString(L"w32sock recv stub called\n");
+  OutputDebugStringW(L"w32sock recv stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -951,7 +951,7 @@ recvfrom(SOCKET Sock,
          struct sockaddr *From,
          int *FromLen)
 {
-  OutputDebugString(L"w32sock recvfrom stub called\n");
+  OutputDebugStringW(L"w32sock recvfrom stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -969,7 +969,7 @@ rexec(char **AHost,
       char *Cmd,
       int *Fd2p)
 {
-  OutputDebugString(L"w32sock rexec stub called\n");
+  OutputDebugStringW(L"w32sock rexec stub called\n");
 
   return INVALID_SOCKET;
 }
@@ -982,7 +982,7 @@ SOCKET
 STDCALL
 rresvport(int *port)
 {
-  OutputDebugString(L"w32sock rresvport stub called\n");
+  OutputDebugStringW(L"w32sock rresvport stub called\n");
 
   return INVALID_SOCKET;
 }
@@ -995,7 +995,7 @@ void
 STDCALL
 s_perror(const char *str)
 {
-  OutputDebugString(L"w32sock s_perror stub called\n");
+  OutputDebugStringW(L"w32sock s_perror stub called\n");
 }
 
 
@@ -1010,7 +1010,7 @@ select(INT NumFds,
        LPFD_SET ExceptFds, 
        CONST LPTIMEVAL TimeOut)
 {
-  OutputDebugString(L"w32sock select stub called\n");
+  OutputDebugStringW(L"w32sock select stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -1026,7 +1026,7 @@ send(SOCKET Sock,
      int Len,
      int Flags)
 {
-  OutputDebugString(L"w32sock send stub called\n");
+  OutputDebugStringW(L"w32sock send stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -1044,7 +1044,7 @@ sendto(SOCKET Sock,
        CONST LPSOCKADDR To, 
        INT ToLen)
 {
-  OutputDebugString(L"w32sock sendto stub called\n");
+  OutputDebugStringW(L"w32sock sendto stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -1057,7 +1057,7 @@ int
 STDCALL
 sethostname(char *Name, int NameLen)
 {
-  OutputDebugString(L"w32sock sethostname stub called\n");
+  OutputDebugStringW(L"w32sock sethostname stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -1074,7 +1074,7 @@ setsockopt(SOCKET Sock,
            const char *OptVal,
            int OptLen)
 {
-  OutputDebugString(L"w32sock setsockopt stub called\n");
+  OutputDebugStringW(L"w32sock setsockopt stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -1088,7 +1088,7 @@ STDCALL
 shutdown(SOCKET Sock,
          int How)
 {
-  OutputDebugString(L"w32sock shutdown stub called\n");
+  OutputDebugStringW(L"w32sock shutdown stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -1103,7 +1103,7 @@ socket(int AF,
        int Type,
        int Protocol)
 {
-  OutputDebugString(L"w32sock socket stub called\n");
+  OutputDebugStringW(L"w32sock socket stub called\n");
 
   return INVALID_SOCKET;
 }

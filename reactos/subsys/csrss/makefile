@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.21 2003/01/07 17:37:22 robd Exp $
+# $Id: makefile,v 1.22 2003/08/07 04:03:24 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -12,6 +12,9 @@ TARGET_NAME = csrss
 TARGET_INSTALLDIR = system32
 
 TARGET_CFLAGS = -D__NTAPP__
+
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 OBJECTS_API = \
   api/process.o \

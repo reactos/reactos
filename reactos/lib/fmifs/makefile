@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.18 2003/04/14 01:19:06 hyperion Exp $
+# $Id: makefile,v 1.19 2003/08/07 04:03:22 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -9,6 +9,9 @@ TARGET_NAME = fmifs
 TARGET_BASE = 0x76df0000
 
 TARGET_CFLAGS = -fno-builtin
+
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_LFLAGS = -nostdlib -nostartfiles
 

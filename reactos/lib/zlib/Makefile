@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2003/04/14 01:19:08 hyperion Exp $
+# $Id: Makefile,v 1.5 2003/08/07 04:03:24 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -9,6 +9,9 @@ TARGET_NAME = zlib
 TARGET_CFLAGS = \
  -MMD -O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
  -Wstrict-prototypes -Wmissing-prototypes
+
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_OBJECTS = \
  adler32.o compress.o crc32.o gzio.o uncompr.o deflate.o trees.o zutil.o \

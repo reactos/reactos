@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.1 2003/05/02 18:07:55 ekohl Exp $
+/* $Id: install.c,v 1.2 2003/08/07 04:03:23 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -36,11 +36,11 @@
 DWORD STDCALL
 InstallReactOS (HINSTANCE hInstance)
 {
-  OutputDebugString ("InstallReactOS() called\n");
+  OutputDebugStringA ("InstallReactOS() called\n");
 
   if (!InitializeSetupActionLog (FALSE))
     {
-      OutputDebugString ("InitializeSetupActionLog() failed\n");
+      OutputDebugStringA ("InitializeSetupActionLog() failed\n");
     }
 
   LogItem (SEVERITY_INFORMATION,

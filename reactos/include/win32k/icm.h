@@ -25,9 +25,9 @@ W32kDeleteColorSpace(HCOLORSPACE  hColorSpace);
 
 INT
 STDCALL
-W32kEnumICMProfiles(HDC  hDC,
-                         ICMENUMPROC  EnumICMProfilesFunc,
-                         LPARAM lParam);
+W32kEnumICMProfiles(HDC    hDC,
+                    LPWSTR lpstrBuffer,
+                    UINT   cch );
 
 HCOLORSPACE
 STDCALL

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.10 2003/02/02 19:24:15 hyperion Exp $
+# $Id: Makefile,v 1.11 2003/08/07 04:03:23 royce Exp $
 
 
 PATH_TO_TOP = ../..
@@ -17,6 +17,9 @@ TARGET_CFLAGS = \
  -Werror \
  -fno-builtin \
  -D__SECUR32__
+
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 

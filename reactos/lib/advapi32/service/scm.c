@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.18 2003/07/21 03:40:58 royce Exp $
+/* $Id: scm.c,v 1.19 2003/08/07 04:03:22 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -458,157 +458,175 @@ SC_HANDLE STDCALL OpenSCManagerW(LPCWSTR lpMachineName,
                                  LPCWSTR lpDatabaseName,
                                  DWORD dwDesiredAccess)
 {
-    HANDLE hPipe;
-    DWORD dwMode;
-    DWORD dwWait;
-    BOOL fSuccess;
-    HANDLE hStartEvent;
-    LPWSTR lpszPipeName = L"\\\\.\\pipe\\Ntsvcs";
-    
-    DPRINT("OpenSCManagerW(%x, %x, %d)\n", lpMachineName, lpDatabaseName, dwDesiredAccess);
+  HANDLE hPipe;
+  DWORD dwMode;
+  DWORD dwWait;
+  BOOL fSuccess;
+  HANDLE hStartEvent;
+  LPWSTR lpszPipeName = L"\\\\.\\pipe\\Ntsvcs";
 
-    if (lpMachineName == NULL || wcslen(lpMachineName) == 0) {
-        if (lpDatabaseName != NULL && wcscmp(lpDatabaseName, SERVICES_ACTIVE_DATABASEW) != 0) { 
-            DPRINT("OpenSCManagerW() - Invalid parameters.\n");
-            return NULL; 
-        }
+  DPRINT("OpenSCManagerW(%x, %x, %d)\n", lpMachineName, lpDatabaseName, dwDesiredAccess);
 
-        DPRINT("OpenSCManagerW() - OpenEvent(\"SvcctrlStartEvent_A3725DX\")\n");
+  if (lpMachineName == NULL || wcslen(lpMachineName) == 0)
+    {
+      if (lpDatabaseName != NULL && wcscmp(lpDatabaseName, SERVICES_ACTIVE_DATABASEW) != 0)
+	{
+	  DPRINT("OpenSCManagerW() - Invalid parameters.\n");
+	  return NULL; 
+	}
 
-        // Only connect to scm when event "SvcctrlStartEvent_A3725DX" is signaled
-        hStartEvent = OpenEvent(SYNCHRONIZE, FALSE, _T("SvcctrlStartEvent_A3725DX"));
-        if (hStartEvent == NULL) {
-            SetLastError(ERROR_DATABASE_DOES_NOT_EXIST);
-            DPRINT("OpenSCManagerW() - Failed to Open Event \"SvcctrlStartEvent_A3725DX\".\n");
-            return NULL;
-        }
+      DPRINT("OpenSCManagerW() - OpenEvent(\"SvcctrlStartEvent_A3725DX\")\n");
 
-        DPRINT("OpenSCManagerW() - Waiting forever on event handle: %x\n", hStartEvent);
+      // Only connect to scm when event "SvcctrlStartEvent_A3725DX" is signaled
+      hStartEvent = OpenEventW(SYNCHRONIZE, FALSE, L"SvcctrlStartEvent_A3725DX");
+      if (hStartEvent == NULL)
+	{
+	  SetLastError(ERROR_DATABASE_DOES_NOT_EXIST);
+	  DPRINT("OpenSCManagerW() - Failed to Open Event \"SvcctrlStartEvent_A3725DX\".\n");
+	  return NULL;
+	}
+
+      DPRINT("OpenSCManagerW() - Waiting forever on event handle: %x\n", hStartEvent);
 
 #if 1
-        dwWait = WaitForSingleObject(hStartEvent, INFINITE);
-        if (dwWait == WAIT_FAILED) {
-            DPRINT("OpenSCManagerW() - Wait For Start Event failed.\n");
-            SetLastError(ERROR_ACCESS_DENIED);
-            return NULL;
-        }
+      dwWait = WaitForSingleObject(hStartEvent, INFINITE);
+      if (dwWait == WAIT_FAILED)
+	{
+	  DPRINT("OpenSCManagerW() - Wait For Start Event failed.\n");
+	  SetLastError(ERROR_ACCESS_DENIED);
+	  return NULL;
+	}
 #else
-        {
-            DWORD Count;
+	{
+          DWORD Count;
 
-   /* wait for event creation (by SCM) for max. 20 seconds */
-   for (Count = 0; Count < 20; Count++)
-     {
-        dwWait = WaitForSingleObject(hStartEvent, 1000);
-        if (dwWait == WAIT_FAILED) {
-            DPRINT("OpenSCManagerW() - Wait For Start Event failed.\n");
-            Sleep(1000);
-        } else {
-            break;
-        }
-     }
-   
-   if (dwWait == WAIT_FAILED)
-     {
-       DbgPrint("WL: Failed to wait on event \"SvcctrlStartEvent_A3725DX\"\n");
-     }
+	  /* wait for event creation (by SCM) for max. 20 seconds */
+	  for (Count = 0; Count < 20; Count++)
+	    {
+	      dwWait = WaitForSingleObject(hStartEvent, 1000);
+	      if (dwWait == WAIT_FAILED)
+		{
+		  DPRINT("OpenSCManagerW() - Wait For Start Event failed.\n");
+		  Sleep(1000);
+		}
+	      else
+		{
+		  break;
+		}
+	    }
 
-        }
+	  if (dwWait == WAIT_FAILED)
+	    {
+	      DbgPrint("WL: Failed to wait on event \"SvcctrlStartEvent_A3725DX\"\n");
+	    }
+
+	}
 #endif
 
-        DPRINT("OpenSCManagerW() - Closing handle to event...\n");
-        
-        CloseHandle(hStartEvent);
-        
-        // Try to open a named pipe; wait for it, if necessary
-        while (1) {
-            DWORD dwLastError;
-            DPRINT("OpenSCManagerW() - attempting to open named pipe to SCM.\n");
-            hPipe = CreateFileW(lpszPipeName,     // pipe name
-                dwDesiredAccess,
-                0,                // no sharing
-                NULL,             // no security attributes
-                OPEN_EXISTING,    // opens existing pipe
-                0,                // default attributes
-                NULL);            // no template file
-            
-            DPRINT("OpenSCManagerW() - handle to named pipe: %x\n", hPipe);
-            // Break if the pipe handle is valid
-            if (hPipe != INVALID_HANDLE_VALUE) {
-                break;
-            }
-            
-            // Exit if an error other than ERROR_PIPE_BUSY occurs
-            dwLastError = GetLastError();
-            if (dwLastError != ERROR_PIPE_BUSY) { 
-                DPRINT("OpenSCManagerW() - returning at 4, dwLastError %d\n", dwLastError);
-                return NULL;
-            }
-            
-            // All pipe instances are busy, so wait for 20 seconds
-            if (!WaitNamedPipeW(lpszPipeName, 20000)) { 
-                DPRINT("OpenSCManagerW() - Failed on WaitNamedPipeW(...).\n");
-                return NULL;
-            }
-        }
-        
-        // The pipe connected; change to message-read mode
-        dwMode = PIPE_READMODE_MESSAGE;
-        fSuccess = SetNamedPipeHandleState(
-            hPipe,    // pipe handle
-            &dwMode,  // new pipe mode
-            NULL,     // don't set maximum bytes
-            NULL);    // don't set maximum time
-        if (!fSuccess) {
-            CloseHandle(hPipe);
-            DPRINT("OpenSCManagerW() - Failed on SetNamedPipeHandleState(...).\n");
-            return NULL;
-        }
+      DPRINT("OpenSCManagerW() - Closing handle to event...\n");
+      
+      CloseHandle(hStartEvent);
+      
+      // Try to open a named pipe; wait for it, if necessary
+      while (1)
+      {
+	DWORD dwLastError;
+	DPRINT("OpenSCManagerW() - attempting to open named pipe to SCM.\n");
+	hPipe = CreateFileW(lpszPipeName,     // pipe name
+	    dwDesiredAccess,
+	    0,                // no sharing
+	    NULL,             // no security attributes
+	    OPEN_EXISTING,    // opens existing pipe
+	    0,                // default attributes
+	    NULL);            // no template file
+	
+	DPRINT("OpenSCManagerW() - handle to named pipe: %x\n", hPipe);
+	// Break if the pipe handle is valid
+	if (hPipe != INVALID_HANDLE_VALUE)
+	  {
+	    break;
+	  }
+	
+	// Exit if an error other than ERROR_PIPE_BUSY occurs
+	dwLastError = GetLastError();
+	if (dwLastError != ERROR_PIPE_BUSY)
+	  {
+	    DPRINT("OpenSCManagerW() - returning at 4, dwLastError %d\n", dwLastError);
+	    return NULL;
+	  }
+	
+	// All pipe instances are busy, so wait for 20 seconds
+	if (!WaitNamedPipeW(lpszPipeName, 20000))
+	  {
+	    DPRINT("OpenSCManagerW() - Failed on WaitNamedPipeW(...).\n");
+	    return NULL;
+	  }
+      }
+    
+      // The pipe connected; change to message-read mode
+      dwMode = PIPE_READMODE_MESSAGE;
+      fSuccess = SetNamedPipeHandleState(
+	  hPipe,    // pipe handle
+	  &dwMode,  // new pipe mode
+	  NULL,     // don't set maximum bytes
+	  NULL);    // don't set maximum time
+      if (!fSuccess)
+	{
+	  CloseHandle(hPipe);
+	  DPRINT("OpenSCManagerW() - Failed on SetNamedPipeHandleState(...).\n");
+	  return NULL;
+	}
 #if 0
-        // Send a message to the pipe server
-        lpvMessage = (argc > 1) ? argv[1] : "default message";
-        
-        fSuccess = WriteFile(
-            hPipe,                  // pipe handle
-            lpvMessage,             // message
-            strlen(lpvMessage) + 1, // message length
-            &cbWritten,             // bytes written
-            NULL);                  // not overlapped
-        if (!fSuccess) {
-            CloseHandle(hPipe);
-            DPRINT("OpenSCManagerW() - Failed to write to pipe.\n");
-            return NULL;
-        }
-        
-        do {
-            DPRINT("OpenSCManagerW() - in I/O loop to SCM...\n");
-            // Read from the pipe
-            fSuccess = ReadFile(
-                hPipe,    // pipe handle
-                chBuf,    // buffer to receive reply
-                512,      // size of buffer
-                &cbRead,  // number of bytes read
-                NULL);    // not overlapped
-            
-            if (!fSuccess && GetLastError() != ERROR_MORE_DATA) {
-                break;
-            }
-            
-            // Reply from the pipe is written to STDOUT.
-            if (!WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), chBuf, cbRead, &cbWritten, NULL)) {
-                break;
-            }
-        } while(!fSuccess);  // repeat loop if ERROR_MORE_DATA
-        
-        DPRINT("OpenSCManagerW() - I/O loop completed.\n");
-        //CloseHandle(hPipe);
+      // Send a message to the pipe server
+      lpvMessage = (argc > 1) ? argv[1] : "default message";
+      
+      fSuccess = WriteFile(
+	  hPipe,                  // pipe handle
+	  lpvMessage,             // message
+	  strlen(lpvMessage) + 1, // message length
+	  &cbWritten,             // bytes written
+	  NULL);                  // not overlapped
+      if (!fSuccess)
+	{
+	  CloseHandle(hPipe);
+	  DPRINT("OpenSCManagerW() - Failed to write to pipe.\n");
+	  return NULL;
+	}
+      
+      do
+	{
+	  DPRINT("OpenSCManagerW() - in I/O loop to SCM...\n");
+	  // Read from the pipe
+	  fSuccess = ReadFile(
+	      hPipe,    // pipe handle
+	      chBuf,    // buffer to receive reply
+	      512,      // size of buffer
+	      &cbRead,  // number of bytes read
+	      NULL);    // not overlapped
+	  
+	  if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
+	    {
+	      break;
+	    }
+	  
+	  // Reply from the pipe is written to STDOUT.
+	  if (!WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), chBuf, cbRead, &cbWritten, NULL))
+	    {
+	      break;
+	    }
+	} while(!fSuccess);  // repeat loop if ERROR_MORE_DATA
+      
+      DPRINT("OpenSCManagerW() - I/O loop completed.\n");
+      //CloseHandle(hPipe);
 #endif
-        DPRINT("OpenSCManagerW() - success, returning handle to pipe %x\n", hPipe);
-        return hPipe;
-    } else {
-        /* FIXME: Connect to remote SCM */
-        DPRINT("OpenSCManagerW() - FIXME: Connect to remote SCM not implemented.\n");
-        return NULL;
+      DPRINT("OpenSCManagerW() - success, returning handle to pipe %x\n", hPipe);
+      return hPipe;
+    }
+  else
+    {
+      /* FIXME: Connect to remote SCM */
+      DPRINT("OpenSCManagerW() - FIXME: Connect to remote SCM not implemented.\n");
+      return NULL;
     }
 }
 

@@ -14,7 +14,7 @@ int _stat(const char* path, struct stat* buffer)
     HANDLE fh;
     WIN32_FIND_DATAA wfd;
 
-    fh = FindFirstFile(path, &wfd);
+    fh = FindFirstFileA(path, &wfd);
     if (fh == INVALID_HANDLE_VALUE) {
         __set_errno(ENOFILE);
         return -1;
@@ -45,7 +45,7 @@ int _stat(const char* path, struct stat* buffer)
 
     buffer->st_size = wfd.nFileSizeLow; 
     buffer->st_nlink = 1;
-    if (FindNextFile(fh, &wfd)) {
+    if (FindNextFileA(fh, &wfd)) {
         __set_errno(ENOFILE);
         FindClose(fh);
         return -1;

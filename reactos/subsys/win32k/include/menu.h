@@ -260,4 +260,3 @@ NtUserTrackPopupMenuEx(
 #endif /* __WIN32K_MENU_H */
 
 /* EOF */
-

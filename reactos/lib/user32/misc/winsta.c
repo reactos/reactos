@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.8 2003/07/10 21:04:31 chorns Exp $
+/* $Id: winsta.c,v 1.9 2003/08/07 04:03:24 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -81,7 +81,7 @@ CreateWindowStationW(LPWSTR lpwinsta,
  * @unimplemented
  */
 WINBOOL STDCALL
-EnumWindowStationsA(ENUMWINDOWSTATIONPROC lpEnumFunc,
+EnumWindowStationsA(ENUMWINDOWSTATIONPROCA lpEnumFunc,
 		    LPARAM lParam)
 {
   UNIMPLEMENTED;
@@ -93,7 +93,7 @@ EnumWindowStationsA(ENUMWINDOWSTATIONPROC lpEnumFunc,
  * @unimplemented
  */
 WINBOOL STDCALL
-EnumWindowStationsW(ENUMWINDOWSTATIONPROC lpEnumFunc,
+EnumWindowStationsW(ENUMWINDOWSTATIONPROCW lpEnumFunc,
 		    LPARAM lParam)
 {
   UNIMPLEMENTED;

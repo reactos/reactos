@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.11 2003/07/10 21:04:31 chorns Exp $
+/* $Id: bitmap.c,v 1.12 2003/08/07 04:03:24 royce Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -107,7 +107,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
   {
       if (hinst == NULL)
 	  {
-	    hinst = GetModuleHandle(L"USER32");		
+	    hinst = GetModuleHandleW(L"USER32");
 	  }
       hResource = FindResourceW(hinst, lpszName, RT_GROUP_ICON);
       if (hResource == NULL)
@@ -130,9 +130,9 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
       id = LookupIconIdFromDirectoryEx((PBYTE) IconResDir, TRUE,
                 width, height, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
 
-	  h2Resource = FindResource(hinst,
-                     MAKEINTRESOURCE(id),
-                     MAKEINTRESOURCE(RT_ICON));
+	  h2Resource = FindResourceW(hinst,
+                     MAKEINTRESOURCEW(id),
+                     MAKEINTRESOURCEW(RT_ICON));
 
       hResource = LoadResource(hinst, h2Resource);
       if (hResource == NULL)
@@ -151,7 +151,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
   }
   else
   {
-      hFile = CreateFile(lpszName,
+      hFile = CreateFileW(lpszName,
 			 GENERIC_READ,
 			 FILE_SHARE_READ,
 			 NULL,
@@ -163,7 +163,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 	    return(NULL);
 	  }
 
-      hSection = CreateFileMapping(hFile,
+      hSection = CreateFileMappingW(hFile,
 				   NULL,
 				   PAGE_READONLY,
 				   0,
@@ -265,7 +265,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
     {
       if (hInstance == NULL)
 	{
-	  hInstance = GetModuleHandle(L"USER32");		
+	  hInstance = GetModuleHandleW(L"USER32");
 	}
       hResource = FindResourceW(hInstance, lpszName, RT_BITMAP);
       if (hResource == NULL)
@@ -285,7 +285,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
     }
   else
     {
-      hFile = CreateFile(lpszName,
+      hFile = CreateFileW(lpszName,
 			 GENERIC_READ,
 			 FILE_SHARE_READ,
 			 NULL,
@@ -296,7 +296,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
 	{
 	  return(NULL);
 	}
-      hSection = CreateFileMapping(hFile,
+      hSection = CreateFileMappingW(hFile,
 				   NULL,
 				   PAGE_READONLY,
 				   0,

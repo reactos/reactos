@@ -56,7 +56,7 @@ int expand(char* name, int flag)
 
     s = strpbrk(name, "*?");
     if (s && flag) {
-        hFile = FindFirstFile(name, &fd);
+        hFile = FindFirstFileA(name, &fd);
         if (hFile != INVALID_HANDLE_VALUE) {
             while(s != name && *s != '/' && *s != '\\')
                 s--;
@@ -74,7 +74,7 @@ int expand(char* name, int flag)
                     first = FALSE;
                 }
             }
-            while(FindNextFile(hFile, &fd));
+            while(FindNextFileA(hFile, &fd));
             FindClose(hFile);
         }
     }

@@ -1,4 +1,4 @@
-/* $Id: errormsg.c,v 1.6 2003/07/10 18:50:51 chorns Exp $
+/* $Id: errormsg.c,v 1.7 2003/08/07 04:03:23 royce Exp $
  *
  * reactos/lib/kernel32/misc/errormsg.c
  *
@@ -42,9 +42,6 @@
 //#define WARN DPRINT
 #define TRACE DPRINT
 #define FIXME DPRINT
-
-#define strlenW lstrlen
-#define strlen  lstrlen
 
 //#define MAKEINTRESOURCE(i)  (LPTSTR) ((DWORD) ((WORD) (i)))
 //#define MAKEINTRESOURCEA(i)  (LPTSTR) ((DWORD) ((WORD) (i)))
@@ -206,7 +203,7 @@ static INT load_messageW( HMODULE instance, UINT id, WORD lang,
     {
         if (retval) {
             lstrcpynAtoW( buffer, buffer2, buflen );
-            retval = strlenW( buffer );
+            retval = lstrlenW( buffer );
         }
         HeapFree( GetProcessHeap(), 0, buffer2 );
     }
@@ -250,7 +247,7 @@ DWORD WINAPI FormatMessageA(
     from = NULL;
     if (dwFlags & FORMAT_MESSAGE_FROM_STRING)
     {
-        from = RtlAllocateHeap(RtlGetProcessHeap(), 0, strlen((LPSTR)lpSource)+1 );
+        from = RtlAllocateHeap(RtlGetProcessHeap(), 0, lstrlenA((LPSTR)lpSource)+1 );
         strcpy( from, (LPSTR)lpSource );
     }
     else {
@@ -351,13 +348,13 @@ DWORD WINAPI FormatMessageA(
                             f++;
                             if (NULL!=(x=strchr(f,'!'))) {
                                 *x='\0';
-                                fmtstr=RtlAllocateHeap(RtlGetProcessHeap(),0,strlen(f)+2);
+                                fmtstr=RtlAllocateHeap(RtlGetProcessHeap(),0,lstrlenA(f)+2);
                                 sprintf(fmtstr,"%%%s",f);
                                 f=x+1;
                             } else {
-                                fmtstr=RtlAllocateHeap(RtlGetProcessHeap(),0,strlen(f)+2);
+                                fmtstr=RtlAllocateHeap(RtlGetProcessHeap(),0,lstrlenA(f)+2);
                                 sprintf(fmtstr,"%%%s",f);
-                                f+=strlen(f); /*at \0*/
+                                f+=lstrlenA(f); /*at \0*/
                             }
                         } else {
                             if(!args) break;
@@ -442,7 +439,7 @@ DWORD WINAPI FormatMessageA(
         }
         *t='\0';
     }
-    talloced = strlen(target)+1;
+    talloced = lstrlenA(target)+1;
     if (nSize && talloced<nSize) {
         target = (char*)RtlReAllocateHeap(RtlGetProcessHeap(),HEAP_ZERO_MEMORY,target,nSize);
     }
@@ -455,10 +452,10 @@ DWORD WINAPI FormatMessageA(
     }
     RtlFreeHeap(RtlGetProcessHeap(),0,target);
     if (from) RtlFreeHeap(RtlGetProcessHeap(),0,from);
-    //TRACE("-- returning %d\n", (dwFlags & FORMAT_MESSAGE_ALLOCATE_BUFFER) ?  strlen(*(LPSTR*)lpBuffer):strlen(lpBuffer));
+    //TRACE("-- returning %d\n", (dwFlags & FORMAT_MESSAGE_ALLOCATE_BUFFER) ?  lstrlenA(*(LPSTR*)lpBuffer):lstrlenA(lpBuffer));
     return (dwFlags & FORMAT_MESSAGE_ALLOCATE_BUFFER) ?
-        strlen(*(LPSTR*)lpBuffer):
-            strlen(lpBuffer);
+        lstrlenA(*(LPSTR*)lpBuffer):
+            lstrlenA(lpBuffer);
 #else
     return 0;
 #endif /* __i386__ */
@@ -600,13 +597,13 @@ DWORD WINAPI FormatMessageW(
                             f++;
                             if (NULL!=(x=strchr(f,'!'))) {
                                 *x='\0';
-                                fmtstr=RtlAllocateHeap(RtlGetProcessHeap(), 0, strlen(f)+2);
+                                fmtstr=RtlAllocateHeap(RtlGetProcessHeap(), 0, lstrlenA(f)+2);
                                 sprintf(fmtstr,"%%%s",f);
                                 f=x+1;
                             } else {
-                                fmtstr=RtlAllocateHeap(RtlGetProcessHeap(),0,strlen(f));
+                                fmtstr=RtlAllocateHeap(RtlGetProcessHeap(),0,lstrlenA(f));
                                 sprintf(fmtstr,"%%%s",f);
-                                f+=strlen(f); /*at \0*/
+                                f+=lstrlenA(f); /*at \0*/
                             }
                         } else {
                             if(!args) break;
@@ -618,14 +615,14 @@ DWORD WINAPI FormatMessageW(
                         else
                             argliststart=(*(DWORD**)args)+insertnr-1;
 
-                        if (fmtstr[strlen(fmtstr)-1]=='s' && argliststart[0]) {
+                        if (fmtstr[lstrlenA(fmtstr)-1]=='s' && argliststart[0]) {
                             DWORD xarr[3];
 
                             xarr[0]=(DWORD)HEAP_strdupWtoA(RtlGetProcessHeap(),0,(LPWSTR)(*(argliststart+0)));
                             /* possible invalid pointers */
                             xarr[1]=*(argliststart+1);
                             xarr[2]=*(argliststart+2);
-                            sprintfbuf=RtlAllocateHeap(RtlGetProcessHeap(),0,strlenW((LPWSTR)argliststart[0])*2+1);
+                            sprintfbuf=RtlAllocateHeap(RtlGetProcessHeap(),0,lstrlenW((LPWSTR)argliststart[0])*2+1);
 
                             /* CMF - This makes a BIG assumption about va_list */
                             vsprintf(sprintfbuf, fmtstr, (va_list) xarr);
@@ -688,7 +685,7 @@ DWORD WINAPI FormatMessageW(
         }
         *t='\0';
     }
-    talloced = strlen(target)+1;
+    talloced = lstrlenA(target)+1;
     if (nSize && talloced<nSize)
         target = (char*)RtlReAllocateHeap(RtlGetProcessHeap(),HEAP_ZERO_MEMORY,target,nSize);
     if (dwFlags & FORMAT_MESSAGE_ALLOCATE_BUFFER) {
@@ -705,8 +702,8 @@ DWORD WINAPI FormatMessageW(
     RtlFreeHeap(RtlGetProcessHeap(),0,target);
     if (from) RtlFreeHeap(RtlGetProcessHeap(),0,from);
     return (dwFlags & FORMAT_MESSAGE_ALLOCATE_BUFFER) ?
-        strlenW(*(LPWSTR*)lpBuffer):
-            strlenW(lpBuffer);
+        lstrlenW(*(LPWSTR*)lpBuffer):
+            lstrlenW(lpBuffer);
 #else
     return 0;
 #endif /* __i386__ */

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2003/05/18 21:17:33 guido Exp $
+# $Id: Makefile,v 1.5 2003/08/07 04:03:22 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -19,6 +19,9 @@ CFLAGS_DBG :=
 endif
 
 TARGET_CFLAGS = $(CFLAGS_DBG) -Iinclude -Wall
+
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 ROS_OBJECTS = rosglue.o i386/setjmplongjmp.o
 

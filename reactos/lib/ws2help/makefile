@@ -15,6 +15,9 @@ TARGET_CFLAGS = \
  -fno-builtin \
  -DUNICODE
 
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
+
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_SDKLIBS = ntdll.a kernel32.a ws2_32.a

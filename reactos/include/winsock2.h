@@ -494,6 +494,7 @@ typedef struct _WSAPROTOCOL_INFOW {
     WCHAR szProtocol[WSAPROTOCOL_LEN + 1];
 } WSAPROTOCOL_INFOW, FAR * LPWSAPROTOCOL_INFOW;
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 typedef WSAPROTOCOL_INFOW WSAPROTOCOL_INFO;
 typedef LPWSAPROTOCOL_INFOW LPWSAPROTOCOL_INFO;
@@ -501,6 +502,7 @@ typedef LPWSAPROTOCOL_INFOW LPWSAPROTOCOL_INFO;
 typedef WSAPROTOCOL_INFOA WSAPROTOCOL_INFO;
 typedef LPWSAPROTOCOL_INFOA LPWSAPROTOCOL_INFO;
 #endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 
 /* WinSock 2 extended commands for WSAIoctl() */
@@ -696,6 +698,7 @@ typedef struct _WSANAMESPACE_INFOW {
     LPWSTR lpszIdentifier;
 } WSANAMESPACE_INFOW, *PWSANAMESPACE_INFOW, *LPWSANAMESPACE_INFOW;
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 typedef WSANAMESPACE_INFOW WSANAMESPACE_INFO;
 typedef PWSANAMESPACE_INFOW PWSANAMESPACE_INFO;
@@ -705,6 +708,7 @@ typedef WSANAMESPACE_INFOA WSANAMESPACE_INFO;
 typedef PWSANAMESPACE_INFOA PWSANAMESPACE_INFO;
 typedef LPWSANAMESPACE_INFOA LPWSANAMESPACE_INFO;
 #endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 
 typedef enum _WSAEcomparator
@@ -762,6 +766,7 @@ typedef struct _WSAQuerySetW {
     LPBLOB lpBlob;
 } WSAQUERYSETW, *PWSAQUERYSETW, *LPWSAQUERYSETW;
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 typedef WSAQUERYSETW WSAQUERYSET;
 typedef PWSAQUERYSETW PWSAQUERYSET;
@@ -771,6 +776,7 @@ typedef WSAQUERYSETA WSAQUERYSET;
 typedef PWSAQUERYSETA PWSAQUERYSET;
 typedef LPWSAQUERYSETA LPWSAQUERYSET;
 #endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 
 typedef enum _WSAESETSERVICEOP {
@@ -796,6 +802,7 @@ typedef struct _WSANSClassInfoW {
     LPVOID lpValue;
 } WSANSCLASSINFOW, *PWSANSCLASSINFOW, *LPWSANSCLASSINFOW;
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 typedef WSANSCLASSINFOW WSANSCLASSINFO;
 typedef PWSANSCLASSINFOW PWSANSCLASSINFO;
@@ -805,6 +812,7 @@ typedef WSANSCLASSINFOA WSANSCLASSINFO;
 typedef PWSANSCLASSINFOA PWSANSCLASSINFO;
 typedef LPWSANSCLASSINFOA LPWSANSCLASSINFO;
 #endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 typedef struct _WSAServiceClassInfoA {
     LPGUID lpServiceClassId;
@@ -820,6 +828,7 @@ typedef struct _WSAServiceClassInfoW {
     LPWSANSCLASSINFOW lpClassInfos;
 } WSASERVICECLASSINFOW, *PWSASERVICECLASSINFOW, *LPWSASERVICECLASSINFOW;
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 typedef WSASERVICECLASSINFOW WSASERVICECLASSINFO;
 typedef PWSASERVICECLASSINFOW PWSASERVICECLASSINFO;
@@ -829,6 +838,7 @@ typedef WSASERVICECLASSINFOA WSASERVICECLASSINFO;
 typedef PWSASERVICECLASSINFOA PWSASERVICECLASSINFO;
 typedef LPWSASERVICECLASSINFOA LPWSASERVICECLASSINFO;
 #endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 
 /* WinSock 2 DLL prototypes */
@@ -1041,11 +1051,13 @@ WSADuplicateSocketW(
     IN  DWORD dwProcessId,
     OUT LPWSAPROTOCOL_INFOW lpProtocolInfo);
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 #define WSADuplicateSocket WSADuplicateSocketA
 #else /* UNICODE */
 #define WSADuplicateSocket WSADuplicateSocketW
 #endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 INT
 WSAAPI
@@ -1068,11 +1080,13 @@ WSAEnumProtocolsW(
     OUT     LPWSAPROTOCOL_INFOW lpProtocolBuffer,
     IN OUT  LPDWORD lpdwBufferLength);
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 #define WSAEnumProtocols WSAEnumProtocolsA
 #else /* UNICODE */
 #define WSAEnumProtocols WSAEnumProtocolsW
 #endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 INT
 WSAAPI
@@ -1258,11 +1272,13 @@ WSASocketW(
     IN  GROUP g,
     IN  DWORD dwFlags);
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 #define WSASocket WSASocketW
 #else /* UNICODE */
 #define WSASocket WSASocketA
 #endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 INT
 WSAAPI
@@ -1310,11 +1326,13 @@ WSAAddressToStringW(
     OUT     LPWSTR lpszAddressString,
     IN OUT  LPDWORD lpdwAddressStringLength);
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 #define WSAAddressToString WSAAddressToStringW
 #else /* UNICODE */
 #define WSAAddressToString WSAAddressToStringA
 #endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 INT
 WSAAPI
@@ -1328,11 +1346,13 @@ WSAEnumNameSpaceProvidersW(
     IN OUT  LPDWORD lpdwBufferLength,
     OUT     LPWSANAMESPACE_INFOW lpnspBuffer);
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 #define WSAEnumNameSpaceProviders WSAEnumNameSpaceProvidersW
 #else /* UNICODE */
 #define WSAEnumNameSpaceProviders WSAEnumNameSpaceProvidersA
 #endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 INT
 WSAAPI
@@ -1350,11 +1370,13 @@ WSAGetServiceClassInfoW(
     IN OUT  LPDWORD lpdwBufferLength,
     OUT     LPWSASERVICECLASSINFOW lpServiceClassInfo);
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 #define WSAGetServiceClassInfo WSAGetServiceClassInfoW
 #else /* UNICODE */
 #define WSAGetServiceClassInfo WSAGetServiceClassInfoA
 #endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 INT
 WSAAPI
@@ -1370,11 +1392,13 @@ WSAGetServiceClassNameByClassIdW(
     OUT     LPWSTR  lpszServiceClassName,
     IN OUT  LPDWORD lpdwBufferLength);
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 #define WSAGetServiceClassNameByClassId WSAGetServiceClassNameByClassIdW
 #else /* UNICODE */
 #define WSAGetServiceClassNameByClassId WSAGetServiceClassNameByClassIdA
 #endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 INT
 WSAAPI
@@ -1386,18 +1410,35 @@ WSAAPI
 WSAInstallServiceClassW(
     IN  LPWSASERVICECLASSINFOW lpServiceClassInfo);
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 #define WSAInstallServiceClass WSAInstallServiceClassW
 #else /* UNICODE */
 #define WSAInstallServiceClass WSAInstallServiceClassA
 #endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 INT
 WSAAPI
-WSALookupServiceBegin(
-    IN  LPWSAQUERYSET lpqsRestrictions,
+WSALookupServiceBeginA(
+    IN  LPWSAQUERYSETA lpqsRestrictions,
     IN  DWORD dwControlFlags,
     OUT LPHANDLE lphLookup);
+
+INT
+WSAAPI
+WSALookupServiceBeginW(
+    IN  LPWSAQUERYSETW lpqsRestrictions,
+    IN  DWORD dwControlFlags,
+    OUT LPHANDLE lphLookup);
+
+#ifndef _DISABLE_TIDENTS
+#ifdef UNICODE
+#define WSALookupServiceBegin WSALookupServiceBeginW
+#else /* UNICODE */
+#define WSALookupServiceBegin WSALookupServiceBeginA
+#endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 INT
 WSAAPI
@@ -1406,11 +1447,27 @@ WSALookupServiceEnd(
 
 INT
 WSAAPI
-WSALookupServiceNext(
-    IN      HANDLE hLookup,
-    IN      DWORD dwControlFlags,
-    IN OUT  LPDWORD lpdwBufferLength,
-    OUT     LPWSAQUERYSET lpqsResults);
+WSALookupServiceNextA(
+    IN      HANDLE         hLookup,
+    IN      DWORD          dwControlFlags,
+    IN OUT  LPDWORD        lpdwBufferLength,
+    OUT     LPWSAQUERYSETA lpqsResults);
+
+INT
+WSAAPI
+WSALookupServiceNextW(
+    IN      HANDLE         hLookup,
+    IN      DWORD          dwControlFlags,
+    IN OUT  LPDWORD        lpdwBufferLength,
+    OUT     LPWSAQUERYSETW lpqsResults);
+
+#ifndef _DISABLE_TIDENTS
+#ifdef UNICODE
+#define WSALookupServiceNext WSALookupServiceNextW
+#else /* UNICODE */
+#define WSALookupServiceNext WSALookupServiceNextA
+#endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 INT
 WSAAPI
@@ -1419,10 +1476,25 @@ WSARemoveServiceClass(
 
 INT
 WSAAPI
-WSASetService(
-    IN  LPWSAQUERYSET lpqsRegInfo,
+WSASetServiceA(
+    IN  LPWSAQUERYSETA   lpqsRegInfo,
     IN  WSAESETSERVICEOP essOperation,
-    IN  DWORD dwControlFlags);
+    IN  DWORD            dwControlFlags);
+
+INT
+WSAAPI
+WSASetServiceW(
+    IN  LPWSAQUERYSETW   lpqsRegInfo,
+    IN  WSAESETSERVICEOP essOperation,
+    IN  DWORD            dwControlFlags);
+
+#ifndef _DISABLE_TIDENTS
+#ifdef UNICODE
+#define WSASetService WSASetServiceW
+#else /* UNICODE */
+#define WSASetService WSASetServiceA
+#endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 INT
 WSAAPI
@@ -1442,11 +1514,13 @@ WSAStringToAddressW(
     OUT     LPSOCKADDR lpAddress,
     IN OUT  LPINT lpAddressLength);
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 #define WSAStringToAddress WSAStringToAddressW
 #else /* UNICODE */
 #define WSAStringToAddress WSAStringToAddressA
 #endif /* UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 /* WinSock 1.1 compatible name resolution APIs */
 

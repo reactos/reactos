@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.102 2003/07/20 22:10:38 ekohl Exp $
+# $Id: Makefile,v 1.103 2003/08/07 04:03:24 royce Exp $
 #
 # ReactOS Operating System
 #
@@ -42,6 +42,9 @@ endif
 
 # ASFLAGS += -D__USE_W32API -D_NTOSKRNL_
 # CFLAGS += -D__USE_W32API -D_NTOSKRNL_
+
+# require os code to explicitly request A/W version of structs/functions
+CFLAGS += -D_DISABLE_TIDENTS
 
 #
 # Build configuration

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icm.c,v 1.7 2003/08/05 15:41:03 weiden Exp $ */
+/* $Id: icm.c,v 1.8 2003/08/07 04:03:25 royce Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -61,11 +61,17 @@ W32kDeleteColorSpace(HCOLORSPACE  hColorSpace)
 
 INT
 STDCALL
-W32kEnumICMProfiles(HDC  hDC,  
-                         ICMENUMPROC  EnumICMProfilesFunc,
-                         LPARAM lParam)
+W32kEnumICMProfiles(HDC    hDC,
+                    LPWSTR lpstrBuffer,
+                    UINT   cch )
 {
+  /*
+   * FIXME - build list of file names into lpstrBuffer.
+   * (MULTI-SZ would probably be best format)
+   * return (needed) length of buffer in bytes
+   */
   UNIMPLEMENTED;
+  return 0;
 }
 
 HCOLORSPACE

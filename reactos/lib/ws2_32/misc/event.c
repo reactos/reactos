@@ -49,11 +49,11 @@ WSACreateEvent(VOID)
     return FALSE;
   }
 
-  Event = CreateEvent(NULL, TRUE, FALSE, NULL);
+  Event = CreateEventW(NULL, TRUE, FALSE, NULL);
 
   if (Event == INVALID_HANDLE_VALUE)
     WSASetLastError(WSA_INVALID_HANDLE);
-  
+
   return (WSAEVENT)Event;
 }
 

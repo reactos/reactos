@@ -1,4 +1,4 @@
-/* $Id: cpp.c,v 1.1 2003/04/30 22:07:30 gvg Exp $
+/* $Id: cpp.c,v 1.2 2003/08/07 04:03:23 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS C runtime
@@ -295,7 +295,7 @@ static void cxx_local_unwind( cxx_exception_frame* frame, cxx_function_descr *de
     {
         if (trylevel < 0 || trylevel >= descr->unwind_count)
         {
-            OutputDebugString( "invalid trylevel\n" );
+            OutputDebugStringA ( "invalid trylevel\n" );
             _exit(1);
         }
         handler = descr->unwind_table[trylevel].handler;
@@ -461,7 +461,7 @@ static DWORD cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* fram
 
     if (descr->magic != CXX_FRAME_MAGIC)
     {
-        OutputDebugString( "invalid frame magic\n" );
+        OutputDebugStringA ( "invalid frame magic\n" );
         return ExceptionContinueSearch;
     }
     if (rec->ExceptionFlags & (EH_UNWINDING|EH_EXIT_UNWIND))

@@ -225,7 +225,6 @@ FlashWindowEx@4
 FrameRect@12
 FreeDDElParam@8
 GetActiveWindow@0
-GetAltTabInfo@20
 GetAltTabInfoA@20
 GetAltTabInfoW@20
 GetAncestor@8

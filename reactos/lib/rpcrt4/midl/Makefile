@@ -1,10 +1,13 @@
-# $Id: Makefile,v 1.2 2000/10/11 20:50:33 dwelch Exp $
+# $Id: Makefile,v 1.3 2003/08/07 04:03:23 royce Exp $
 #
 # ReactOS Operating System
 #
 TARGET=midl
 
 CFLAGS = 
+
+# require os code to explicitly request A/W version of structs/functions
+CFLAGS += -D_DISABLE_TIDENTS
 
 all: midl$(EXE_POSTFIX)
 

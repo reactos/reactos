@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2003/06/09 20:23:06 hbirr Exp $
+# $Id: Makefile,v 1.5 2003/08/07 04:03:23 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -11,6 +11,9 @@ include $(PATH_TO_TOP)/config
 include Makefile.$(ARCH)
 
 TARGET_CFLAGS = -Wall -Werror
+
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 ifeq ($(DBG), 1)
   TARGET_CFLAGS += -g

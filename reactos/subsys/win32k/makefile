@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.71 2003/07/31 23:15:07 weiden Exp $
+# $Id: makefile,v 1.72 2003/08/07 04:03:25 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -28,6 +28,9 @@ TARGET_CFLAGS =\
  -I$(FREETYPE_DIR)/include \
  -DUNICODE \
  -Wall
+
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_LFLAGS =\
  $(PATH_TO_TOP)/dk/nkm/lib/freetype.a \
@@ -90,7 +93,7 @@ include $(TOOLS_PATH)/helper.mk
 # Automatic dependency tracking
 DEP_OBJECTS := $(TARGET_OBJECTS)
 DEP_EXCLUDE_FILTER := main/svctabm.d
-#include $(PATH_TO_TOP)/tools/depend.mk
+include $(PATH_TO_TOP)/tools/depend.mk
 
 main/svctabm.o: main/svctab.c
 

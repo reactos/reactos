@@ -293,7 +293,7 @@ WINBOOL
 STDCALL
 EnumResourceTypesW(
     HINSTANCE hModule,
-    ENUMRESTYPEPROC lpEnumFunc,
+    ENUMRESTYPEPROCW lpEnumFunc,
     LONG lParam
     );
 
@@ -302,7 +302,7 @@ STDCALL
 EnumResourceNamesW(
     HINSTANCE hModule,
     LPCWSTR lpType,
-    ENUMRESNAMEPROC lpEnumFunc,
+    ENUMRESNAMEPROCW lpEnumFunc,
     LONG lParam
     );
 
@@ -312,7 +312,7 @@ EnumResourceLanguagesW(
     HINSTANCE hModule,
     LPCWSTR lpType,
     LPCWSTR lpName,
-    ENUMRESLANGPROC lpEnumFunc,
+    ENUMRESLANGPROCW lpEnumFunc,
     LONG lParam
     );
 
@@ -1078,7 +1078,7 @@ OpenWindowStationW(
 WINBOOL
 STDCALL
 EnumWindowStationsW(
-    ENUMWINDOWSTATIONPROC lpEnumFunc,
+    ENUMWINDOWSTATIONPROCW lpEnumFunc,
     LPARAM lParam);
 
 WINBOOL
@@ -1614,14 +1614,14 @@ int
 STDCALL
 EnumPropsExW(
     HWND hWnd,
-    PROPENUMPROCEX lpEnumFunc,
+    PROPENUMPROCEXW lpEnumFunc,
     LPARAM lParam);
 
 int
 STDCALL
 EnumPropsW(
     HWND hWnd,
-    PROPENUMPROC lpEnumFunc);
+    PROPENUMPROCW lpEnumFunc);
 
 WINBOOL
 STDCALL
@@ -2050,7 +2050,7 @@ UpdateICMRegKeyW(DWORD, DWORD, LPWSTR, UINT);
 
 int
 STDCALL
-EnumICMProfilesW(HDC,ICMENUMPROC,LPARAM);
+EnumICMProfilesW(HDC,ICMENUMPROCW,LPARAM);
 
 HPROPSHEETPAGE
 STDCALL
@@ -2553,7 +2553,7 @@ GetCurrencyFormatW(
 WINBOOL
 STDCALL
 EnumCalendarInfoW(
-    CALINFO_ENUMPROC lpCalInfoEnumProc,
+    CALINFO_ENUMPROCW lpCalInfoEnumProc,
     LCID              Locale,
     CALID             Calendar,
     CALTYPE           CalType);
@@ -2561,14 +2561,14 @@ EnumCalendarInfoW(
 WINBOOL
 STDCALL
 EnumTimeFormatsW(
-    TIMEFMT_ENUMPROC lpTimeFmtEnumProc,
+    TIMEFMT_ENUMPROCW lpTimeFmtEnumProc,
     LCID              Locale,
     DWORD             dwFlags);
 
 WINBOOL
 STDCALL
 EnumDateFormatsW(
-    DATEFMT_ENUMPROC lpDateFmtEnumProc,
+    DATEFMT_ENUMPROCW lpDateFmtEnumProc,
     LCID              Locale,
     DWORD             dwFlags);
 
@@ -2601,13 +2601,13 @@ FoldStringW(
 WINBOOL
 STDCALL
 EnumSystemLocalesW(
-    LOCALE_ENUMPROC lpLocaleEnumProc,
+    LOCALE_ENUMPROCW lpLocaleEnumProc,
     DWORD            dwFlags);
 
 WINBOOL
 STDCALL
 EnumSystemCodePagesW(
-    CODEPAGE_ENUMPROC lpCodePageEnumProc,
+    CODEPAGE_ENUMPROCW lpCodePageEnumProc,
     DWORD              dwFlags);
 
 WINBOOL
@@ -3055,6 +3055,12 @@ WINBOOL STDCALL CreateProcessAsUserW (HANDLE, LPCWSTR, LPWSTR,
 			SECURITY_ATTRIBUTES*, SECURITY_ATTRIBUTES*, WINBOOL,
                         DWORD, LPVOID, LPCWSTR, STARTUPINFOW*,
 			PROCESS_INFORMATION*);
+
+DWORD WINAPI
+SHGetFileInfoW (LPCWSTR, DWORD, SHFILEINFO FAR *, UINT, UINT);
+
+WINBOOL WINAPI
+SHGetPathFromIDListW (LPCITEMIDLIST, LPWSTR);
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.10 2003/06/19 16:00:03 gvg Exp $
+# $Id: Makefile,v 1.11 2003/08/07 04:03:22 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -27,6 +27,9 @@ TARGET_LIBPATH = .
 TARGET_ASFLAGS = -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/ntoskrnl/include -D__ASM__
 
 TARGET_CFLAGS = -I./include -I$(PATH_TO_TOP)/ntoskrnl/include -g
+
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 
 TARGET_NAME_UP = halx86up

@@ -10,6 +10,7 @@ NtUserGetClassLong(HWND hWnd, DWORD Offset, BOOL Ansi);
 LONG STDCALL
 NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi);
 
+
 INT STDCALL
 NtUserReleaseDC(HWND hWnd, HDC hDc);
 
@@ -1163,6 +1164,7 @@ NtUserRegisterClassExWOW(CONST WNDCLASSEXW* lpwcx,
 			 DWORD Unknown3,
 			 DWORD Unknown4,
 			 DWORD Unknown5);
+
 
 DWORD
 STDCALL

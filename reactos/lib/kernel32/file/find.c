@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.37 2003/07/10 18:50:51 chorns Exp $
+/* $Id: find.c,v 1.38 2003/08/07 04:03:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -249,7 +249,7 @@ InternalFindFirstFile (
 HANDLE
 STDCALL
 FindFirstFileA (
-	LPCTSTR			lpFileName,
+	LPCSTR			lpFileName,
 	LPWIN32_FIND_DATAA	lpFindFileData
 	)
 {

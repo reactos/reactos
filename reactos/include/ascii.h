@@ -292,7 +292,7 @@ WINBOOL
 STDCALL
 EnumResourceTypesA(
 		   HINSTANCE hModule,
-		   ENUMRESTYPEPROC lpEnumFunc,
+		   ENUMRESTYPEPROCA lpEnumFunc,
 		   LONG lParam
 		   );
 
@@ -301,7 +301,7 @@ STDCALL
 EnumResourceNamesA(
 		   HINSTANCE hModule,
 		   LPCSTR lpType,
-		   ENUMRESNAMEPROC lpEnumFunc,
+		   ENUMRESNAMEPROCA lpEnumFunc,
 		   LONG lParam
 		   );
 
@@ -311,7 +311,7 @@ EnumResourceLanguagesA(
 		       HINSTANCE hModule,
 		       LPCSTR lpType,
 		       LPCSTR lpName,
-		       ENUMRESLANGPROC lpEnumFunc,
+		       ENUMRESLANGPROCA lpEnumFunc,
 		       LONG lParam
 		       );
 
@@ -1069,7 +1069,7 @@ CreateWindowStationA(
 
 HANDLE STDCALL CreateWaitableTimerA( LPSECURITY_ATTRIBUTES Attributes,
 				     BOOL ManualReset,
-				     LPCTSTR Name );
+				     LPCSTR Name );
   
 HWINSTA
 STDCALL
@@ -1081,7 +1081,7 @@ OpenWindowStationA(
 WINBOOL
 STDCALL
 EnumWindowStationsA(
-    ENUMWINDOWSTATIONPROC lpEnumFunc,
+    ENUMWINDOWSTATIONPROCA lpEnumFunc,
     LPARAM lParam);
  
 WINBOOL
@@ -1619,14 +1619,14 @@ int
 STDCALL
 EnumPropsExA(
     HWND hWnd,
-    PROPENUMPROCEX lpEnumFunc,
+    PROPENUMPROCEXA lpEnumFunc,
     LPARAM lParam);
  
 int
 STDCALL
 EnumPropsA(
     HWND hWnd,
-    PROPENUMPROC lpEnumFunc);
+    PROPENUMPROCA lpEnumFunc);
  
 WINBOOL
 STDCALL
@@ -2039,7 +2039,7 @@ UpdateICMRegKeyA(DWORD, DWORD, LPSTR, UINT);
 
 int
 STDCALL
-EnumICMProfilesA(HDC,ICMENUMPROC,LPARAM);
+EnumICMProfilesA(HDC,ICMENUMPROCA,LPARAM);
 
 int
 STDCALL
@@ -2525,7 +2525,7 @@ GetCurrencyFormatA(
 WINBOOL
 STDCALL
 EnumCalendarInfoA(
-    CALINFO_ENUMPROC lpCalInfoEnumProc,
+    CALINFO_ENUMPROCA lpCalInfoEnumProc,
     LCID              Locale,
     CALID             Calendar,
     CALTYPE           CalType);
@@ -2533,14 +2533,14 @@ EnumCalendarInfoA(
 WINBOOL
 STDCALL
 EnumTimeFormatsA(
-    TIMEFMT_ENUMPROC lpTimeFmtEnumProc,
+    TIMEFMT_ENUMPROCA lpTimeFmtEnumProc,
     LCID              Locale,
     DWORD             dwFlags);
 
 WINBOOL
 STDCALL
 EnumDateFormatsA(
-    DATEFMT_ENUMPROC lpDateFmtEnumProc,
+    DATEFMT_ENUMPROCA lpDateFmtEnumProc,
     LCID              Locale,
     DWORD             dwFlags);
 
@@ -2575,13 +2575,13 @@ FoldStringA(
 WINBOOL
 STDCALL
 EnumSystemLocalesA(
-    LOCALE_ENUMPROC lpLocaleEnumProc,
+    LOCALE_ENUMPROCA lpLocaleEnumProc,
     DWORD            dwFlags);
 
 WINBOOL
 STDCALL
 EnumSystemCodePagesA(
-    CODEPAGE_ENUMPROC lpCodePageEnumProc,
+    CODEPAGE_ENUMPROCA lpCodePageEnumProc,
     DWORD              dwFlags);
 
 WINBOOL
@@ -3015,9 +3015,15 @@ DdeQueryStringA (DWORD, HSZ, char *, DWORD, int);
 /* ----------------------------------------------- */
 
 WINBOOL STDCALL LogonUserA (LPSTR, LPSTR, LPSTR, DWORD, DWORD, HANDLE *);
-WINBOOL STDCALL CreateProcessAsUserA (HANDLE, LPCTSTR, LPTSTR,
+WINBOOL STDCALL CreateProcessAsUserA (HANDLE, LPCSTR, LPSTR,
 	SECURITY_ATTRIBUTES*, SECURITY_ATTRIBUTES*, WINBOOL, DWORD, LPVOID,
-        LPCTSTR, STARTUPINFOA*, PROCESS_INFORMATION*);
+        LPCSTR, STARTUPINFOA*, PROCESS_INFORMATION*);
+
+DWORD WINAPI
+SHGetFileInfoA (LPCSTR, DWORD, SHFILEINFO FAR *, UINT, UINT);
+
+WINBOOL WINAPI
+SHGetPathFromIDListA (LPCITEMIDLIST, LPSTR);
 
 #ifdef __cplusplus
 }

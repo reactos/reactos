@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.15 2003/07/10 18:50:51 chorns Exp $
+/* $Id: res.c,v 1.16 2003/08/07 04:03:23 royce Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -120,7 +120,7 @@ FindResourceExW (
 	NTSTATUS Status;
 
 	if ( hModule == NULL )
-		hModule = GetModuleHandle(NULL);
+		hModule = (HINSTANCE)GetModuleHandleW(NULL);
 
 	if ( !IS_INTRESOURCE(lpName) && lpName[0] == L'#' ) {
 		lpName = MAKEINTRESOURCEW(wcstoul(lpName + 1, NULL, 10));
@@ -162,7 +162,7 @@ LoadResource (
 
    if (hModule == NULL)
    {
-     hModule = GetModuleHandle(NULL);
+     hModule = (HINSTANCE)GetModuleHandleW(NULL);
    }
 
 	Status = LdrAccessResource (hModule, hResInfo, &Data, NULL);
@@ -284,11 +284,11 @@ EndUpdateResourceA (
 WINBOOL
 STDCALL
 EnumResourceLanguagesW (
-	HINSTANCE	hModule,
-	LPCWSTR		lpType,
-	LPCWSTR		lpName,
-	ENUMRESLANGPROC	lpEnumFunc,
-	LONG		lParam
+	HINSTANCE		hModule,
+	LPCWSTR			lpType,
+	LPCWSTR			lpName,
+	ENUMRESLANGPROCW	lpEnumFunc,
+	LONG			lParam
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -299,11 +299,11 @@ EnumResourceLanguagesW (
 WINBOOL
 STDCALL
 EnumResourceLanguagesA (
-	HINSTANCE	hModule,
-	LPCSTR		lpType,
-	LPCSTR		lpName,
-	ENUMRESLANGPROC	lpEnumFunc,
-	LONG		lParam
+	HINSTANCE		hModule,
+	LPCSTR			lpType,
+	LPCSTR			lpName,
+	ENUMRESLANGPROCA	lpEnumFunc,
+	LONG			lParam
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -317,10 +317,10 @@ EnumResourceLanguagesA (
 WINBOOL
 STDCALL
 EnumResourceNamesW (
-	HINSTANCE	hModule,
-	LPCWSTR		lpType,
-	ENUMRESNAMEPROC	lpEnumFunc,
-	LONG		lParam
+	HINSTANCE		hModule,
+	LPCWSTR			lpType,
+	ENUMRESNAMEPROCW	lpEnumFunc,
+	LONG			lParam
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -334,10 +334,10 @@ EnumResourceNamesW (
 WINBOOL
 STDCALL
 EnumResourceNamesA (
-	HINSTANCE	hModule,
-	LPCSTR		lpType,
-	ENUMRESNAMEPROC	lpEnumFunc,
-	LONG		lParam
+	HINSTANCE		hModule,
+	LPCSTR			lpType,
+	ENUMRESNAMEPROCA	lpEnumFunc,
+	LONG			lParam
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -351,9 +351,9 @@ EnumResourceNamesA (
 WINBOOL
 STDCALL
 EnumResourceTypesW (
-	HINSTANCE	hModule,
-	ENUMRESTYPEPROC	lpEnumFunc,
-	LONG		lParam
+	HINSTANCE		hModule,
+	ENUMRESTYPEPROCW	lpEnumFunc,
+	LONG			lParam
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -367,9 +367,9 @@ EnumResourceTypesW (
 WINBOOL
 STDCALL
 EnumResourceTypesA (
-	HINSTANCE	hModule,
-	ENUMRESTYPEPROC	lpEnumFunc,
-	LONG		lParam
+	HINSTANCE		hModule,
+	ENUMRESTYPEPROCA	lpEnumFunc,
+	LONG			lParam
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

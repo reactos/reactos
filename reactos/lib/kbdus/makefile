@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2003/07/31 16:47:08 royce Exp $
+# $Id: makefile,v 1.2 2003/08/07 04:03:23 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -9,6 +9,9 @@ TARGET_NAME = kbdus
 TARGET_BASE = 0x5500000
 
 TARGET_CFLAGS = -I$(PATH_TO_TOP)/ntoskrnl/include
+
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 

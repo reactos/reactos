@@ -63,6 +63,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 
 /* Define the approprate declaration based upon UNICODE or ASCII */
 
+#ifndef _DISABLE_TIDENTS
 /* UNICODE */
 #ifdef UNICODE
 
@@ -468,6 +469,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define DdeQueryString DdeQueryStringW
 #define LogonUser LogonUserW
 #define CreateProcessAsUser CreateProcessAsUserW
+#define SHGetFileInfo SHGetFileInfoW
+#define SHGetPathFromIDList SHGetPathFromIDListW
 
 /* ASCII */
 #else
@@ -875,8 +878,11 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define DdeQueryString DdeQueryStringA
 #define LogonUser LogonUserA
 #define CreateProcessAsUser CreateProcessAsUserA
+#define SHGetFileInfo SHGetFileInfoA
+#define SHGetPathFromIDList SHGetPathFromIDListA
 
 #endif /* UNICODE and ASCII defines */
+#endif /* _DISABLE_TIDENTS */
 
   HWND STDCALL GetAncestor(HWND hWnd, UINT GaFlags);
 WINBOOL STDCALL AbnormalTermination(VOID);
@@ -894,20 +900,6 @@ WINBOOL STDCALL AccessCheck(
 		    LPDWORD  GrantedAccess,
 		    LPBOOL  AccessStatus
 		    );
-
-WINBOOL STDCALL AccessCheckAndAuditAlarm(
-				 LPCTSTR  SubsystemName,
-				 LPVOID  HandleId,
-				 LPTSTR  ObjectTypeName,
-				 LPTSTR  ObjectName,
-				 PSECURITY_DESCRIPTOR  SecurityDescriptor,
-				 DWORD  DesiredAccess,
-				 PGENERIC_MAPPING  GenericMapping,
-				 WINBOOL  ObjectCreation,
-				 LPDWORD  GrantedAccess,
-				 LPBOOL  AccessStatus,
-				 LPBOOL  pfGenerateOnClose
-				 );
 
 #ifndef __NTDRIVER__
 LONG
@@ -6937,31 +6929,37 @@ CommDlgExtendedError(VOID);
 
 #define CommDlg_OpenSave_GetSpecW(_hdlg, _psz, _cbmax) SNDMSG(_hdlg, CDM_GETSPEC, (WPARAM)_cbmax, (LPARAM)(LPWSTR)_psz)
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 #define CommDlg_OpenSave_GetSpec  CommDlg_OpenSave_GetSpecW
 #else
 #define CommDlg_OpenSave_GetSpec  CommDlg_OpenSave_GetSpecA
 #endif /* !UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 #define CommDlg_OpenSave_GetFilePathA(_hdlg, _psz, _cbmax) SNDMSG(_hdlg, CDM_GETFILEPATH, (WPARAM)_cbmax, (LPARAM)(LPSTR)_psz)
 
 #define CommDlg_OpenSave_GetFilePathW(_hdlg, _psz, _cbmax) SNDMSG(_hdlg, CDM_GETFILEPATH, (WPARAM)_cbmax, (LPARAM)(LPWSTR)_psz)
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 #define CommDlg_OpenSave_GetFilePath  CommDlg_OpenSave_GetFilePathW
 #else
 #define CommDlg_OpenSave_GetFilePath  CommDlg_OpenSave_GetFilePathA
 #endif /* !UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 #define CommDlg_OpenSave_GetFolderPathA(_hdlg, _psz, _cbmax) SNDMSG(_hdlg, CDM_GETFOLDERPATH, (WPARAM)_cbmax, (LPARAM)(LPSTR)_psz)
 
 #define CommDlg_OpenSave_GetFolderPathW(_hdlg, _psz, _cbmax) SNDMSG(_hdlg, CDM_GETFOLDERPATH, (WPARAM)_cbmax, (LPARAM)(LPWSTR)_psz)
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 #define CommDlg_OpenSave_GetFolderPath  CommDlg_OpenSave_GetFolderPathW
 #else
 #define CommDlg_OpenSave_GetFolderPath  CommDlg_OpenSave_GetFolderPathA
 #endif /* !UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 #define CommDlg_OpenSave_GetFolderIDList(_hdlg, _pidl, _cbmax) SNDMSG(_hdlg, CDM_GETFOLDERIDLIST, (WPARAM)_cbmax, (LPARAM)(LPVOID)_pidl)
 
@@ -7479,6 +7477,7 @@ wglSwapLayerBuffers(HDC, UINT);
   There doesn't seem to be any difference.
   */
 
+#ifndef _DISABLE_TIDENTS
 #ifdef UNICODE
 #define wglUseFontBitmaps  wglUseFontBitmapsW
 #define wglUseFontOutlines  wglUseFontOutlinesW
@@ -7486,6 +7485,7 @@ wglSwapLayerBuffers(HDC, UINT);
 #define wglUseFontBitmaps  wglUseFontBitmapsA
 #define wglUseFontOutlines  wglUseFontOutlinesA
 #endif /* !UNICODE */
+#endif /* _DISABLE_TIDENTS */
 
 /* ------------------------------------- */
 /* From shellapi.h in old Cygnus headers */
@@ -7563,9 +7563,6 @@ HRESULT WINAPI
 SHGetDesktopFolder (LPSHELLFOLDER);
 */
 
-DWORD WINAPI
-SHGetFileInfo (LPCTSTR, DWORD, SHFILEINFO FAR *, UINT, UINT);
-
 /* Define when IUnknown is defined.
 HRESULT WINAPI
 SHGetInstanceExplorer (IUnknown **);
@@ -7575,9 +7572,6 @@ SHGetInstanceExplorer (IUnknown **);
 HRESULT WINAPI
 SHGetMalloc (LPMALLOC *);
 */
-
-WINBOOL WINAPI
-SHGetPathFromIDList (LPCITEMIDLIST, LPTSTR);
 
 HRESULT WINAPI
 SHGetSpecialFolderLocation (HWND, int, LPITEMIDLIST *);

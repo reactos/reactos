@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.7 2003/04/14 01:19:07 hyperion Exp $
+# $Id: makefile,v 1.8 2003/08/07 04:03:23 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -9,6 +9,9 @@ TARGET_NAME = psapi
 TARGET_SDKLIBS = epsapi.a ntdll.a kernel32.a
 
 TARGET_CFLAGS = -I./include
+
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 

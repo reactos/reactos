@@ -1,10 +1,13 @@
-# $Id: makefile,v 1.1 2003/04/13 03:24:27 hyperion Exp $
+# $Id: makefile,v 1.2 2003/08/07 04:03:22 royce Exp $
 
 PATH_TO_TOP = ../..
 
 TARGET_TYPE = library
 
 TARGET_NAME = epsapi
+
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_OBJECTS = \
  enum/drivers.o \

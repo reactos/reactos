@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.51 2003/08/05 15:41:03 weiden Exp $
+/* $Id: window.c,v 1.52 2003/08/07 04:03:24 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -274,7 +274,7 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   if (CallbackArgs->Proc == NULL)
     {
       /* FIXME: handle ANSI windows vs Unicode windows */
-      CallbackArgs->Proc = (WNDPROC)GetWindowLong(CallbackArgs->Wnd, 
+      CallbackArgs->Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, 
 						  GWL_WNDPROC);
     }
   Result = CallWindowProcW(CallbackArgs->Proc, CallbackArgs->Wnd, 
@@ -964,21 +964,6 @@ FindWindowExW(HWND hwndParent,
  * @unimplemented
  */
 WINBOOL STDCALL
-GetAltTabInfo(HWND hwnd,
-	      int iItem,
-	      PALTTABINFO pati,
-	      LPTSTR pszItemText,
-	      UINT cchItemText)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL STDCALL
 GetAltTabInfoA(HWND hwnd,
 	       int iItem,
 	       PALTTABINFO pati,
@@ -1229,15 +1214,15 @@ GetWindowTextLengthW(HWND hWnd)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int STDCALL
-GetWindowTextW(HWND hWnd,
-	       LPWSTR lpString,
-	       int nMaxCount)
+GetWindowTextW(
+	HWND hWnd,
+	LPWSTR lpString,
+	int nMaxCount)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return(SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString));
 }
 
 DWORD STDCALL
@@ -1300,15 +1285,15 @@ IsWindowUnicode(HWND hWnd)
 WINBOOL STDCALL
 IsWindowVisible(HWND hWnd)
 {
-  while (GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD)
+  while (GetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD)
     {
-      if (!(GetWindowLong(hWnd, GWL_STYLE) & WS_VISIBLE))
+      if (!(GetWindowLongW(hWnd, GWL_STYLE) & WS_VISIBLE))
 	{
 	  return(FALSE);
 	}
       hWnd = GetAncestor(hWnd, GA_PARENT);
     }
-  return(GetWindowLong(hWnd, GWL_STYLE) & WS_VISIBLE);
+  return(GetWindowLongW(hWnd, GWL_STYLE) & WS_VISIBLE);
 }
 
 
@@ -1318,7 +1303,7 @@ IsWindowVisible(HWND hWnd)
 WINBOOL STDCALL
 IsZoomed(HWND hWnd)
 {
-  ULONG uStyle = GetWindowLong(hWnd, GWL_STYLE);
+  ULONG uStyle = GetWindowLongW(hWnd, GWL_STYLE);
   
   return (uStyle & WS_MAXIMIZE);
 }
@@ -1378,9 +1363,13 @@ RealChildWindowFromPoint(HWND hwndParent,
  */
 UINT
 RealGetWindowClass(HWND  hwnd,
-		   LPTSTR pszType,
+		   PVOID pszType,
 		   UINT  cchType)
 {
+  /*
+   * FIXME - I don't think this function should exist...
+   * see RealGetWindowClassA & RealGetWindowClassW
+   */
   UNIMPLEMENTED;
   return 0;
 }

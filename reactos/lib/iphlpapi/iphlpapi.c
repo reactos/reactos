@@ -144,13 +144,13 @@ GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
 		return lErr;
 
 	//	Determine the size of the largest name of any adapter and the number of adapters.
-	lErr = RegQueryInfoKey(hAdapters, NULL, NULL, NULL, NULL, &dwAdapterLen, NULL, NULL, NULL, NULL, NULL, NULL);
+	lErr = RegQueryInfoKeyW(hAdapters, NULL, NULL, NULL, NULL, &dwAdapterLen, NULL, NULL, NULL, NULL, NULL, NULL);
     if(lErr != ERROR_SUCCESS)
 	{
 		RegCloseKey(hAdapters);
 		return lErr;
 	}
-	dwAdapterLen++;			//	RegQueryInfoKey return value does not include terminating null.
+	dwAdapterLen++; // RegQueryInfoKeyW return value does not include terminating null.
 
 	strAdapter = (wchar_t*) malloc(dwAdapterLen * sizeof(wchar_t));
 
@@ -220,17 +220,17 @@ GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
 			//	TODO	UINT DhcpEnabled
 			//	TODO	PIP_ADDR_STRING CurrentIpAddress
 			//	IP_ADDR_STRING IpAddressList
-		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, _T("IPAddress"), NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpAddress, &dwSize);
-		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, _T("SubnetMask"), NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpMask, &dwSize);
+		dwSize = 16; lErr = RegQueryValueExW(hIpConfig, L"IPAddress", NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpAddress, &dwSize);
+		dwSize = 16; lErr = RegQueryValueExW(hIpConfig, L"SubnetMask", NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpMask, &dwSize);
 		if(strstr(pCurrentAdapter->IpAddressList.IpAddress.String, "0.0.0.0") != 0)
 		{	
-			dwSize = 16; lErr = RegQueryValueEx(hIpConfig, _T("DhcpIPAddress"), NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpAddress, &dwSize);
-			dwSize = 16; lErr = RegQueryValueEx(hIpConfig, _T("DhcpSubnetMask"), NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpMask, &dwSize);
+			dwSize = 16; lErr = RegQueryValueExW(hIpConfig, L"DhcpIPAddress", NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpAddress, &dwSize);
+			dwSize = 16; lErr = RegQueryValueExW(hIpConfig, L"DhcpSubnetMask", NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpMask, &dwSize);
 		}
 			//	TODO	IP_ADDR_STRING GatewayList
 			//	IP_ADDR_STRING DhcpServer
-		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, _T("DhcpServer"), NULL, NULL, (BYTE*) &pCurrentAdapter->DhcpServer.IpAddress, &dwSize);
-		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, _T("DhcpSubnetMask"), NULL, NULL, (BYTE*) &pCurrentAdapter->DhcpServer.IpMask, &dwSize);
+		dwSize = 16; lErr = RegQueryValueExW(hIpConfig, L"DhcpServer", NULL, NULL, (BYTE*) &pCurrentAdapter->DhcpServer.IpAddress, &dwSize);
+		dwSize = 16; lErr = RegQueryValueExW(hIpConfig, L"DhcpSubnetMask", NULL, NULL, (BYTE*) &pCurrentAdapter->DhcpServer.IpMask, &dwSize);
 			//	TODO	BOOL HaveWins
 			//	TODO	IP_ADDR_STRING PrimaryWinsServer
 			//	TODO	IP_ADDR_STRING SecondaryWinsServer
@@ -351,60 +351,70 @@ DWORD
 WINAPI
 GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
 {
-    DWORD result = ERROR_SUCCESS;
-    DWORD dwSize;
-    HKEY hKey;
-    LONG errCode;
+  DWORD result = ERROR_SUCCESS;
+  DWORD dwSize;
+  HKEY hKey;
+  LONG errCode;
 
-    if (pFixedInfo == NULL || pOutBufLen == NULL) return ERROR_INVALID_PARAMETER;
+  if (pFixedInfo == NULL || pOutBufLen == NULL) return ERROR_INVALID_PARAMETER;
 
-    if (*pOutBufLen < sizeof(FIXED_INFO)) {
-        *pOutBufLen = sizeof(FIXED_INFO);
-        return ERROR_BUFFER_OVERFLOW;
+  if (*pOutBufLen < sizeof(FIXED_INFO))
+  {
+    *pOutBufLen = sizeof(FIXED_INFO);
+    return ERROR_BUFFER_OVERFLOW;
+  }
+  memset(pFixedInfo, 0, sizeof(FIXED_INFO));
+
+  errCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", 0, KEY_READ, &hKey);
+  if (errCode == ERROR_SUCCESS)
+  {
+    dwSize = sizeof(pFixedInfo->HostName);
+    errCode = RegQueryValueExA(hKey, "Hostname", NULL, NULL, (LPBYTE)&pFixedInfo->HostName, &dwSize);
+    dwSize = sizeof(pFixedInfo->DomainName);
+    errCode = RegQueryValueExA(hKey, "Domain", NULL, NULL, (LPBYTE)&pFixedInfo->DomainName, &dwSize);
+    if (errCode != ERROR_SUCCESS)
+    {
+      dwSize = sizeof(pFixedInfo->DomainName);
+      errCode = RegQueryValueExA(hKey, "DhcpDomain", NULL, NULL, (LPBYTE)&pFixedInfo->DomainName, &dwSize);
     }
-    memset(pFixedInfo, 0, sizeof(FIXED_INFO));
+    dwSize = sizeof(pFixedInfo->EnableRouting);
+    errCode = RegQueryValueExW(hKey, L"IPEnableRouter", NULL, NULL, (LPBYTE)&pFixedInfo->EnableRouting, &dwSize);
+    RegCloseKey(hKey);
+  }
+  else
+  {
+    result = ERROR_NO_DATA; // No adapter information exists for the local computer
+  }
 
-        errCode = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"), 0, KEY_READ, &hKey);
-        if (errCode == ERROR_SUCCESS) {
-            dwSize = sizeof(pFixedInfo->HostName);
-            errCode = RegQueryValueExA(hKey, "Hostname", NULL, NULL, (LPBYTE)&pFixedInfo->HostName, &dwSize);
-            dwSize = sizeof(pFixedInfo->DomainName);
-            errCode = RegQueryValueExA(hKey, "Domain", NULL, NULL, (LPBYTE)&pFixedInfo->DomainName, &dwSize);
-            if (errCode != ERROR_SUCCESS) {
-                dwSize = sizeof(pFixedInfo->DomainName);
-                errCode = RegQueryValueExA(hKey, "DhcpDomain", NULL, NULL, (LPBYTE)&pFixedInfo->DomainName, &dwSize);
-            }
-            dwSize = sizeof(pFixedInfo->EnableRouting);
-            errCode = RegQueryValueEx(hKey, _T("IPEnableRouter"), NULL, NULL, (LPBYTE)&pFixedInfo->EnableRouting, &dwSize);
-            RegCloseKey(hKey);
-        } else {
-            result = ERROR_NO_DATA; // No adapter information exists for the local computer
-        }
+  errCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\NetBT\\Parameters", 0, KEY_READ, &hKey);
+  if (errCode == ERROR_SUCCESS)
+  {
+    dwSize = sizeof(pFixedInfo->ScopeId);
+    errCode = RegQueryValueExA(hKey, "ScopeId", NULL, NULL, (LPBYTE)&pFixedInfo->ScopeId, &dwSize);
+    if (errCode != ERROR_SUCCESS)
+    {
+      dwSize = sizeof(pFixedInfo->ScopeId);
+      errCode = RegQueryValueExA(hKey, "DhcpScopeId", NULL, NULL, (LPBYTE)&pFixedInfo->ScopeId, &dwSize);
+    }
+    dwSize = sizeof(pFixedInfo->NodeType);
+    errCode = RegQueryValueExW(hKey, L"NodeType", NULL, NULL, (LPBYTE)&pFixedInfo->NodeType, &dwSize);
+    if (errCode != ERROR_SUCCESS)
+    {
+      dwSize = sizeof(pFixedInfo->NodeType);
+      errCode = RegQueryValueExA(hKey, "DhcpNodeType", NULL, NULL, (LPBYTE)&pFixedInfo->NodeType, &dwSize);
+    }
+    dwSize = sizeof(pFixedInfo->EnableProxy);
+    errCode = RegQueryValueExW(hKey, L"EnableProxy", NULL, NULL, (LPBYTE)&pFixedInfo->EnableProxy, &dwSize);
+    dwSize = sizeof(pFixedInfo->EnableDns);
+    errCode = RegQueryValueExW(hKey, L"EnableDNS", NULL, NULL, (LPBYTE)&pFixedInfo->EnableDns, &dwSize);
+    RegCloseKey(hKey);
+  }
+  else
+  {
+    result = ERROR_NO_DATA; // No adapter information exists for the local computer
+  }
 
-        errCode = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Services\\NetBT\\Parameters"), 0, KEY_READ, &hKey);
-        if (errCode == ERROR_SUCCESS) {
-            dwSize = sizeof(pFixedInfo->ScopeId);
-            errCode = RegQueryValueExA(hKey, "ScopeId", NULL, NULL, (LPBYTE)&pFixedInfo->ScopeId, &dwSize);
-            if (errCode != ERROR_SUCCESS) {
-                dwSize = sizeof(pFixedInfo->ScopeId);
-                errCode = RegQueryValueExA(hKey, "DhcpScopeId", NULL, NULL, (LPBYTE)&pFixedInfo->ScopeId, &dwSize);
-            }
-            dwSize = sizeof(pFixedInfo->NodeType);
-            errCode = RegQueryValueEx(hKey, _T("NodeType"), NULL, NULL, (LPBYTE)&pFixedInfo->NodeType, &dwSize);
-            if (errCode != ERROR_SUCCESS) {
-                dwSize = sizeof(pFixedInfo->NodeType);
-                errCode = RegQueryValueExA(hKey, "DhcpNodeType", NULL, NULL, (LPBYTE)&pFixedInfo->NodeType, &dwSize);
-            }
-            dwSize = sizeof(pFixedInfo->EnableProxy);
-            errCode = RegQueryValueEx(hKey, _T("EnableProxy"), NULL, NULL, (LPBYTE)&pFixedInfo->EnableProxy, &dwSize);
-            dwSize = sizeof(pFixedInfo->EnableDns);
-            errCode = RegQueryValueEx(hKey, _T("EnableDNS"), NULL, NULL, (LPBYTE)&pFixedInfo->EnableDns, &dwSize);
-            RegCloseKey(hKey);
-        } else {
-            result = ERROR_NO_DATA; // No adapter information exists for the local computer
-        }
-
-    return result;
+  return result;
 }
 
 

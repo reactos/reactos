@@ -444,7 +444,7 @@ typedef INT (WSPAPI * LPNSPLOOKUPSERVICENEXT)(
     IN      HANDLE hLookup,
     IN      DWORD dwControlFlags,
     IN OUT  LPDWORD lpdwBufferLength,
-    OUT     LPWSAQUERYSET lpqsResults);
+    OUT     LPWSAQUERYSETW lpqsResults);
 
 typedef INT (WSPAPI * LPNSPREMOVESERVICECLASS)(
     IN  LPGUID lpProviderId,

@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.22 2003/08/05 15:41:02 weiden Exp $
+/* $Id: stubsa.c,v 1.23 2003/08/07 04:03:22 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -850,12 +850,22 @@ int
 STDCALL
 EnumICMProfilesA(
 	HDC		a0,
-	ICMENUMPROC	a1,
+	ICMENUMPROCA	a1,
 	LPARAM		a2
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  /*
+   * FIXME - call W32kEnumICMProfiles with NULL for lpstrBuffer
+   * to find out how big a buffer we need. Then allocate that buffer
+   * and call W32kEnumICMProfiles again to have the buffer filled.
+   *
+   * Finally, step through the buffer ( MULTI-SZ recommended for format ),
+   * and convert each string to ANSI, calling the user's callback function
+   * until we run out of strings or the user returns FALSE
+   */
+
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
 

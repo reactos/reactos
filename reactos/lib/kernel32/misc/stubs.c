@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.53 2003/08/05 15:41:02 weiden Exp $
+/* $Id: stubs.c,v 1.54 2003/08/07 04:03:23 royce Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -107,7 +107,7 @@ CreateVirtualBuffer (
 WINBOOL
 STDCALL
 EnumCalendarInfoW (
-    CALINFO_ENUMPROC lpCalInfoEnumProc,
+    CALINFO_ENUMPROCW lpCalInfoEnumProc,
     LCID              Locale,
     CALID             Calendar,
     CALTYPE           CalType
@@ -124,10 +124,10 @@ EnumCalendarInfoW (
 WINBOOL
 STDCALL
 EnumCalendarInfoA (
-    CALINFO_ENUMPROC    lpCalInfoEnumProc,
-    LCID            Locale,
-    CALID           Calendar,
-    CALTYPE         CalType
+    CALINFO_ENUMPROCA lpCalInfoEnumProc,
+    LCID              Locale,
+    CALID             Calendar,
+    CALTYPE           CalType
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -141,9 +141,9 @@ EnumCalendarInfoA (
 WINBOOL
 STDCALL
 EnumDateFormatsW (
-    DATEFMT_ENUMPROC    lpDateFmtEnumProc,
-    LCID            Locale,
-    DWORD           dwFlags
+    DATEFMT_ENUMPROCW  lpDateFmtEnumProc,
+    LCID               Locale,
+    DWORD              dwFlags
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -157,9 +157,9 @@ EnumDateFormatsW (
 WINBOOL
 STDCALL
 EnumDateFormatsA (
-    DATEFMT_ENUMPROC    lpDateFmtEnumProc,
-    LCID            Locale,
-    DWORD           dwFlags
+    DATEFMT_ENUMPROCA  lpDateFmtEnumProc,
+    LCID               Locale,
+    DWORD              dwFlags
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -173,8 +173,8 @@ EnumDateFormatsA (
 WINBOOL
 STDCALL
 EnumSystemCodePagesW (
-    CODEPAGE_ENUMPROC   lpCodePageEnumProc,
-    DWORD           dwFlags
+    CODEPAGE_ENUMPROCW  lpCodePageEnumProc,
+    DWORD               dwFlags
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -188,8 +188,8 @@ EnumSystemCodePagesW (
 WINBOOL
 STDCALL
 EnumSystemCodePagesA (
-    CODEPAGE_ENUMPROC   lpCodePageEnumProc,
-    DWORD           dwFlags
+    CODEPAGE_ENUMPROCA lpCodePageEnumProc,
+    DWORD              dwFlags
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -204,8 +204,8 @@ EnumSystemCodePagesA (
 WINBOOL
 STDCALL
 EnumSystemLocalesW (
-    LOCALE_ENUMPROC lpLocaleEnumProc,
-    DWORD       dwFlags
+    LOCALE_ENUMPROCW lpLocaleEnumProc,
+    DWORD            dwFlags
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -219,8 +219,8 @@ EnumSystemLocalesW (
 WINBOOL
 STDCALL
 EnumSystemLocalesA (
-    LOCALE_ENUMPROC lpLocaleEnumProc,
-    DWORD       dwFlags
+    LOCALE_ENUMPROCA lpLocaleEnumProc,
+    DWORD            dwFlags
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -235,7 +235,7 @@ EnumSystemLocalesA (
 WINBOOL
 STDCALL
 EnumTimeFormatsW (
-    TIMEFMT_ENUMPROC    lpTimeFmtEnumProc,
+    TIMEFMT_ENUMPROCW    lpTimeFmtEnumProc,
     LCID            Locale,
     DWORD           dwFlags
     )
@@ -251,9 +251,9 @@ EnumTimeFormatsW (
 WINBOOL
 STDCALL
 EnumTimeFormatsA (
-    TIMEFMT_ENUMPROC    lpTimeFmtEnumProc,
-    LCID            Locale,
-    DWORD           dwFlags
+    TIMEFMT_ENUMPROCA  lpTimeFmtEnumProc,
+    LCID               Locale,
+    DWORD              dwFlags
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

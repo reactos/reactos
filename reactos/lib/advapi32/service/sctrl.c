@@ -1,4 +1,4 @@
-/* $Id: sctrl.c,v 1.10 2003/07/10 15:05:55 chorns Exp $
+/* $Id: sctrl.c,v 1.11 2003/08/07 04:03:22 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -28,7 +28,7 @@ typedef struct
 {
   DWORD ThreadId;
   UNICODE_STRING ServiceName;
-  LPSERVICE_MAIN_FUNCTION MainFunction;
+  LPSERVICE_MAIN_FUNCTIONW MainFunction;
   LPHANDLER_FUNCTION HandlerFunction;
   SERVICE_STATUS ServiceStatus;
 } ACTIVE_SERVICE, *PACTIVE_SERVICE;
@@ -139,7 +139,7 @@ ScServiceDispatcher(HANDLE hPipe, PVOID p1, PVOID p2)
 DWORD WINAPI
 ScServiceMainStub(LPVOID Context)
 {
-  LPSERVICE_MAIN_FUNCTION lpServiceProc = (LPSERVICE_MAIN_FUNCTION)Context;
+  LPSERVICE_MAIN_FUNCTIONW lpServiceProc = (LPSERVICE_MAIN_FUNCTIONW)Context;
 
   /* FIXME: Send argc and argv (from command line) as arguments */
 
@@ -266,6 +266,8 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
 BOOL STDCALL
 StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
 {
+  // FIXME how to deal with diffs between ANSI/UNICODE
+#if 0
   LPSERVICE_TABLE_ENTRYW ServiceStartTableW;
   ANSI_STRING ServiceNameA;
   UNICODE_STRING ServiceNameW;
@@ -319,6 +321,10 @@ StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
   RtlFreeHeap(RtlGetProcessHeap(), 0, ServiceStartTableW);
 
   return b;
+#else
+  UNIMPLEMENTED;
+  return 0;
+#endif
 }
 
 

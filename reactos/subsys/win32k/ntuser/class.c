@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.23 2003/08/06 16:47:35 weiden Exp $
+/* $Id: class.c,v 1.24 2003/08/07 04:03:25 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -263,73 +263,75 @@ W32kCreateClass(CONST WNDCLASSEXW *lpwcx,
 }
 
 RTL_ATOM STDCALL
-NtUserRegisterClassExWOW(CONST WNDCLASSEXW *lpwcx,
-			 BOOL bUnicodeClass,
-			 DWORD Unknown3,
-			 DWORD Unknown4,
-			 DWORD Unknown5)
+NtUserRegisterClassExWOW(
+	CONST WNDCLASSEXW *lpwcx,
+	BOOL bUnicodeClass,
+	DWORD Unknown3,
+	DWORD Unknown4,
+	DWORD Unknown5)
+
 /*
  * FUNCTION:
  *   Registers a new class with the window manager
  * ARGUMENTS:
- *   lpcxw          = Win32 extended window class structure (unicode)
- *   bUnicodeClass = Wether to send ANSI or unicode strings
+ *   lpwcx          = Win32 extended window class structure
+ *   bUnicodeClass = Whether to send ANSI or unicode strings
  *                   to window procedures
  * RETURNS:
  *   Atom identifying the new class
  */
 {
-	PWINSTATION_OBJECT WinStaObject;
-	PWNDCLASS_OBJECT ClassObject;
-	NTSTATUS Status;
-	RTL_ATOM Atom;
-	DPRINT("About to open window station handle (0x%X)\n", 
-	PROCESS_WINDOW_STATION());
-	Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-						KernelMode,
-						0,
-						&WinStaObject);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("Validation of window station handle (0x%X) failed\n",
-		PROCESS_WINDOW_STATION());
-		return((RTL_ATOM)0);
-	}
-	if (!IS_ATOM(lpwcx->lpszClassName))
+  PWINSTATION_OBJECT WinStaObject;
+  PWNDCLASS_OBJECT ClassObject;
+  NTSTATUS Status;
+  RTL_ATOM Atom;
+  DPRINT("About to open window station handle (0x%X)\n", 
+    PROCESS_WINDOW_STATION());
+  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+    KernelMode,
+    0,
+    &WinStaObject);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT("Validation of window station handle (0x%X) failed\n",
+      PROCESS_WINDOW_STATION());
+    return((RTL_ATOM)0);
+  }
+  if (!IS_ATOM(lpwcx->lpszClassName))
+  {
+    Status = RtlAddAtomToAtomTable(WinStaObject->AtomTable,
+      (LPWSTR)lpwcx->lpszClassName,
+      &Atom);
+    if (!NT_SUCCESS(Status))
     {
-		Status = RtlAddAtomToAtomTable(WinStaObject->AtomTable,
-					(LPWSTR)lpwcx->lpszClassName,
-					&Atom);
-		if (!NT_SUCCESS(Status))
-		{
-			ObDereferenceObject(WinStaObject);
-			DPRINT("Failed adding class name (%wS) to atom table\n",
-				lpwcx->lpszClassName);
-			SetLastNtError(Status);      
-			return((RTL_ATOM)0);
-		}
-	}
-	else
-	{
-		Atom = (RTL_ATOM)(ULONG)lpwcx->lpszClassName;
-	}
-	ClassObject = W32kCreateClass(lpwcx, bUnicodeClass, Atom);
-	if (ClassObject == NULL)
+      ObDereferenceObject(WinStaObject);
+      DPRINT("Failed adding class name (%wS) to atom table\n",
+	lpwcx->lpszClassName);
+      SetLastNtError(Status);
+      return((RTL_ATOM)0);
+    }
+  }
+  else
+  {
+    Atom = (RTL_ATOM)(ULONG)lpwcx->lpszClassName;
+  }
+  ClassObject = W32kCreateClass(lpwcx, bUnicodeClass, Atom);
+  if (ClassObject == NULL)
+  {
+    if (!IS_ATOM(lpwcx->lpszClassName))
     {
-		if (!IS_ATOM(lpwcx->lpszClassName))
-		{
-			RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
-		}
-		ObDereferenceObject(WinStaObject);
-		DPRINT("Failed creating window class object\n");
-		SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-		return((RTL_ATOM)0);
-	}
-	ExAcquireFastMutex(&PsGetWin32Process()->ClassListLock);
-	InsertTailList(&PsGetWin32Process()->ClassListHead, &ClassObject->ListEntry);
-	ExReleaseFastMutex(&PsGetWin32Process()->ClassListLock);
-	ObDereferenceObject(WinStaObject);
-	return(Atom);
+      RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
+    }
+    ObDereferenceObject(WinStaObject);
+    DPRINT("Failed creating window class object\n");
+    SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+    return((RTL_ATOM)0);
+  }
+  ExAcquireFastMutex(&PsGetWin32Process()->ClassListLock);
+  InsertTailList(&PsGetWin32Process()->ClassListHead, &ClassObject->ListEntry);
+  ExReleaseFastMutex(&PsGetWin32Process()->ClassListLock);
+  ObDereferenceObject(WinStaObject);
+  return(Atom);
 }
 
 ULONG FASTCALL

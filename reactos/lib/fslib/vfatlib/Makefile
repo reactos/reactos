@@ -1,10 +1,13 @@
-# $Id: Makefile,v 1.1 2003/04/05 19:40:41 chorns Exp $
+# $Id: Makefile,v 1.2 2003/08/07 04:03:22 royce Exp $
 
 PATH_TO_TOP = ../../..
 
 TARGET_TYPE = library
 
 TARGET_NAME = vfatlib
+
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_OBJECTS = \
  vfatlib.o

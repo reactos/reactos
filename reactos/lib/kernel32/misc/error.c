@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.19 2003/07/10 18:50:51 chorns Exp $
+/* $Id: error.c,v 1.20 2003/08/07 04:03:23 royce Exp $
  *
  * reactos/lib/kernel32/misc/error.c
  *
@@ -45,7 +45,7 @@ Beep (DWORD dwFreq, DWORD dwDuration)
     BEEP_SET_PARAMETERS BeepSetParameters;
     DWORD dwReturned;
 
-    hBeep = CreateFile("\\\\.\\Beep",
+    hBeep = CreateFileA("\\\\.\\Beep",
                        FILE_GENERIC_READ | FILE_GENERIC_WRITE,
                        0,
                        NULL,

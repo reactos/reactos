@@ -1,10 +1,13 @@
-# $Id: Makefile,v 1.1 2003/04/22 03:20:25 hyperion Exp $
+# $Id: Makefile,v 1.2 2003/08/07 04:03:23 royce Exp $
 
 PATH_TO_TOP = ../..
 
 TARGET_TYPE = library
 
 TARGET_NAME = tgetopt
+
+# require os code to explicitly request A/W version of structs/functions
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_OBJECTS = getopt.o _wgetopt.o
  
