@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.96 2003/12/07 12:06:45 mf Exp $
+# $Id: makefile,v 1.97 2004/01/30 20:31:35 mf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -23,7 +23,7 @@ TARGET_SDKLIBS = string.a rosrtl.a
 
 TARGET_GCCLIBS = gcc
 
-TARGET_BASE = 0x77f60000
+TARGET_BASE = 0x77f80000
 
 TARGET_PATH = def
 
