@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: reginf.c,v 1.2 2003/04/17 10:41:02 chorns Exp $
+/* $Id: reginf.c,v 1.3 2003/05/18 12:12:07 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/reginf.h
@@ -382,6 +382,8 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
 
 
   Ok = InfFindFirstLine (hInf, Section, NULL, &Context);
+  if (!Ok)
+    return FALSE;
 
   for (;Ok; Ok = InfFindNextLine (&Context, &Context))
     {

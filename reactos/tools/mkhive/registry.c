@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: registry.c,v 1.3 2003/04/17 10:41:02 chorns Exp $
+/* $Id: registry.c,v 1.4 2003/05/18 12:12:07 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/registry.c
@@ -27,7 +27,6 @@
 /*
  * TODO:
  *	- Implement RegDeleteKey().
- *	- Implement RegQueryMultipleValue().
  *	- Fix RegEnumValue().
  */
 
@@ -699,16 +698,5 @@ RegGetValueCount (HKEY Key)
 
   return Key->ValueCount;
 }
-
-
-
-#if 0
-LONG
-RegQueryMultipleValue(HKEY Key,
-		      ...)
-{
-  return(ERROR_SUCCESS);
-}
-#endif
 
 /* EOF */
