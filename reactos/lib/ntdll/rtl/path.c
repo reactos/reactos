@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.30 2004/11/29 00:05:31 gdalsnes Exp $
+/* $Id: path.c,v 1.31 2004/11/29 01:42:03 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -170,29 +170,6 @@ ULONG STDCALL RtlGetLongestNtPathLength (VOID)
    return (MAX_PATH + 9);
 }
 
-
-
-
-/***********************************************************************
- *             RtlDetermineDosPathNameType_U   (NTDLL.@)
- */
-DOS_PATHNAME_TYPE WINAPI RtlDetermineDosPathNameType_U( PCWSTR path )
-{
-    if (IS_SEPARATOR(path[0]))
-    {
-        if (!IS_SEPARATOR(path[1])) return ABSOLUTE_PATH;       /* "/foo" */
-        if (path[2] != '.') return UNC_PATH;                    /* "//foo" */
-        if (IS_SEPARATOR(path[3])) return DEVICE_PATH;          /* "//./foo" */
-        if (path[3]) return UNC_PATH;                           /* "//.foo" */
-        return UNC_DOT_PATH;                                    /* "//." */
-    }
-    else
-    {
-        if (!path[0] || path[1] != ':') return RELATIVE_PATH;   /* "foo" */
-        if (IS_SEPARATOR(path[2])) return ABSOLUTE_DRIVE_PATH;  /* "c:/foo" */
-        return RELATIVE_DRIVE_PATH;                             /* "c:foo" */
-    }
-}
 
 /*
  * @implemented
