@@ -1,0 +1,18 @@
+FreeLoader notes
+
+To build FreeLoader you will need DJGPP because Mingw32 doesn't support 16-bit code
+FreeLoader does not currently work with extended partitions.
+Linux booting support needs to be added.
+ext2 filesystem support needs to be added.
+
+Current memory layout:
+
+0000:0000 - 0000:0FFF: Interrupt vector table & BIOS data
+0000:1000 - 0000:6FFF: Real mode stack area
+0000:7000 - xxxx:xxxx: FreeLoader program & data area
+xxxx:xxxx - 6000:0000: Protected mode stack area & heap
+6000:0000 - 6000:C000: Filesystem data buffer
+6000:C000 - 7000:0000: FREELDR.INI loaded here
+7000:0000 - 7000:FFFF: scratch area for any function's use (ie sector buffer for biosdisk()) - can be overwritten by any function
+8000:0000 - 9000:FFFF: fat table entry buffer
+A000:0000 - FFFF:FFFF: reserved
