@@ -6,9 +6,19 @@ if "%1" == "" goto NoParameter
 set WINE_INSTALL=%1
 goto Install
 :NoParameter
-set WINE_INSTALL=c:\reactos\system32
+
 set ROS_INSTALL=c:\reactos
+set WINE_INSTALL=%ROS_INSTALL%\system32
+set WINE_APP_INSTALL=%ROS_INSTALL%\bin
+set WINE_TESTS_INSTALL=%ROS_INSTALL%\tests
+
+
 :Install
+echo Installing libwine and wine_unicode to %WINE_INSTALL%
+copy ..\wine\library\libwine.dll %WINE_INSTALL%
+copy ..\wine\unicode\wine_unicode.dll %WINE_INSTALL%
+
+
 echo Installing dlls to %WINE_INSTALL%
 @echo off
 copy ..\wine\dlls\comctl32\comctl32.dll %WINE_INSTALL%
@@ -18,6 +28,8 @@ copy ..\wine\dlls\dinput\dinput.dll 	%WINE_INSTALL%
 copy ..\wine\dlls\dplay\dplay.dll 	%WINE_INSTALL%
 copy ..\wine\dlls\dplayx\dplayx.dll 	%WINE_INSTALL%
 copy ..\wine\dlls\mapi32\mapi32.dll 	%WINE_INSTALL%
+copy ..\wine\dlls\mpr\mpr.dll 		%WINE_INSTALL%
+copy ..\wine\dlls\netapi32\netapi32.dll %WINE_INSTALL%
 copy ..\wine\dlls\ole32\ole32.dll 	%WINE_INSTALL%
 copy ..\wine\dlls\oleaut32\oleaut32.dll %WINE_INSTALL%
 copy ..\wine\dlls\olecli\olecli32.dll   %WINE_INSTALL%
@@ -34,28 +46,34 @@ copy ..\wine\dlls\shfolder\shfolder.dll	%WINE_INSTALL%
 copy ..\wine\dlls\shlwapi\shlwapi.dll	%WINE_INSTALL%
 copy ..\wine\dlls\tapi32\tapi32.dll	%WINE_INSTALL%
 copy ..\wine\dlls\urlmon\urlmon.dll	%WINE_INSTALL%
+copy ..\wine\dlls\version\version.dll	%WINE_INSTALL%
 copy ..\wine\dlls\wintrust\wintrust.dll	%WINE_INSTALL%
+copy ..\wine\dlls\winspool\winspool.drv	%WINE_INSTALL%
 REM
-echo Installing winelib programs to %ROS_INSTALL%\bin
+echo Installing winelib programs to %WINE_APP_INSTALL%
 REM
-copy ..\wine\programs\clock\winclock.exe		%ROS_INSTALL%\bin
-copy ..\wine\programs\cmdlgtst\cmdlgtst.exe		%ROS_INSTALL%\bin
-copy ..\wine\programs\control\control.exe		%ROS_INSTALL%\bin
-copy ..\wine\programs\notepad\notepad.exe		%ROS_INSTALL%\bin
-copy ..\wine\programs\progman\progman.exe		%ROS_INSTALL%\bin
-copy ..\wine\programs\uninstaller\uninstaller.exe	%ROS_INSTALL%\bin
-copy ..\wine\programs\view\view.exe			%ROS_INSTALL%\bin
-copy ..\wine\programs\wcmd\wcmd.exe			%ROS_INSTALL%\bin
-copy ..\wine\programs\winefile\winefile.exe		%ROS_INSTALL%\bin
-copy ..\wine\programs\winemine\winmine.exe		%ROS_INSTALL%\bin
-copy ..\wine\programs\winver\winver.exe			%ROS_INSTALL%\bin
+copy ..\wine\programs\clock\winclock.exe		%WINE_APP_INSTALL%
+copy ..\wine\programs\cmdlgtst\cmdlgtst.exe		%WINE_APP_INSTALL%
+copy ..\wine\programs\control\control.exe		%WINE_APP_INSTALL%
+copy ..\wine\programs\notepad\notepad.exe		%WINE_APP_INSTALL%
+copy ..\wine\programs\progman\progman.exe		%WINE_APP_INSTALL%
+copy ..\wine\programs\uninstaller\uninstaller.exe	%WINE_APP_INSTALL%
+copy ..\wine\programs\view\view.exe			%WINE_APP_INSTALL%
+copy ..\wine\programs\wcmd\wcmd.exe			%WINE_APP_INSTALL%
+copy ..\wine\programs\winefile\winefile.exe		%WINE_APP_INSTALL%
+copy ..\wine\programs\winemine\winmine.exe		%WINE_APP_INSTALL%
+copy ..\wine\programs\winver\winver.exe			%WINE_APP_INSTALL%
 REM
-echo Installing Regression tests to %ROS_INSTALL%\bin
-copy ..\wine\dlls\advapi32\tests\advapi32_test.exe	%WINE_INSTALL%
-copy ..\wine\dlls\kernel\tests\kernel32_test.exe	%WINE_INSTALL%
-copy ..\wine\dlls\ntdll\tests\ntdll_test.exe		%WINE_INSTALL%
-copy ..\wine\dlls\user32\tests\user32_test.exe		%WINE_INSTALL%
+echo Installing wine tools to %WINE_APP_INSTALL%
 REM
+copy ..\wine\tools\winedump\winedump.exe		%WINE_APP_INSTALL%
 
-
-
+REM
+echo Installing Regression tests to %WINE_TESTS_INSTALL%
+REM
+copy ..\wine\dlls\advapi32\tests\advapi32_test.exe	%WINE_TESTS_INSTALL%
+copy ..\wine\dlls\kernel\tests\kernel32_test.exe	%WINE_TESTS_INSTALL%
+copy ..\wine\dlls\ntdll\tests\ntdll_test.exe		%WINE_TESTS_INSTALL%
+copy ..\wine\dlls\user32\tests\user32_test.exe		%WINE_TESTS_INSTALL%
+REM
+pause
