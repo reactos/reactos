@@ -1,0 +1,11 @@
+*.coff
+*.dll
+*.d
+*.a
+*.o
+*.sym
+*.map
+*.tmp
+Makefile.ros
+riched20.spec.def
+riched20.stubs.c
