@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.120 2004/12/18 17:50:22 royce Exp $ */
+/* $Id: text.c,v 1.121 2004/12/18 18:21:02 royce Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -1529,8 +1529,10 @@ NtGdiExtTextOut(
    }
  
    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-   ASSERT(BitmapObj);
+   if ( !BitmapObj )
+      goto fail;
    SurfObj = &BitmapObj->SurfObj;
+   ASSERT(SurfObj);
 
    Start.x = XStart; Start.y = YStart;
    IntLPtoDP(dc, &Start, 1);
@@ -1548,26 +1550,29 @@ NtGdiExtTextOut(
 	   PALETTE_UnlockPalette(dc->w.hPalette);
    }
    XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
+   if ( !XlateObj )
+      goto fail;
    hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor));
+   if ( !hBrushFg )
+      goto fail;
    BrushFg = BRUSHOBJ_LockBrush(hBrushFg);
+   if ( !BrushFg )
+      goto fail;
    IntGdiInitBrushInstance(&BrushFgInst, BrushFg, NULL);
    if ((fuOptions & ETO_OPAQUE) || dc->w.backgroundMode == OPAQUE)
    {
       hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.backgroundColor));
-      if (hBrushBg)
-      {
-         BrushBg = BRUSHOBJ_LockBrush(hBrushBg);
-         /* FIXME - Handle BrushBg == NULL !!!!! */
-         IntGdiInitBrushInstance(&BrushBgInst, BrushBg, NULL);
-      }
-      else
-      {
-         EngDeleteXlate(XlateObj);
+      if ( !hBrushBg )
          goto fail;
-      }
+      BrushBg = BRUSHOBJ_LockBrush(hBrushBg);
+      if ( !BrushBg )
+         goto fail;
+      IntGdiInitBrushInstance(&BrushBgInst, BrushBg, NULL);
    }
    XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, dc->w.hPalette);
-  
+   if ( !XlateObj2 )
+      goto fail;
+
    SourcePoint.x = 0;
    SourcePoint.y = 0;
    MaskRect.left = 0;
@@ -1611,7 +1616,9 @@ NtGdiExtTextOut(
    }
 
    FontObj = TextObj->Font;
+   ASSERT(FontObj);
    FontGDI = ObjToGDI(FontObj, FONT);
+   ASSERT(FontGDI);
 
    face = FontGDI->face;
    if (face->charmap == NULL)
@@ -1901,6 +1908,10 @@ NtGdiExtTextOut(
    return TRUE;
 
 fail:
+   if ( XlateObj2 != NULL )
+      EngDeleteXlate(XlateObj2);
+   if ( XlateObj != NULL )
+      EngDeleteXlate(XlateObj);
    if(TextObj != NULL)
      TEXTOBJ_UnlockText(dc->w.hFont);
    BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
