@@ -310,4 +310,3 @@ VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
 	IoSecondStageCompletion(Irp,PriorityBoost);
      }
 }
-

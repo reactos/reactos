@@ -386,7 +386,8 @@ typedef struct _FILE_NAME_INFORMATION {
 	WCHAR FileName[0];
 } FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
 
-typedef struct _FILE_NAMES_INFORMATION {
+typedef struct _FILE_NAMES_INFORMATION 
+{
 	ULONG NextEntryOffset;
 	ULONG FileIndex;
 	ULONG FileNameLength;

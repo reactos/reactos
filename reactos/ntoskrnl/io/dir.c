@@ -135,6 +135,8 @@ NTSTATUS STDCALL ZwQueryDirectoryFile(
    KEVENT Event;
    PIO_STACK_LOCATION IoStack;
    
+   DPRINT("ZwQueryDirectoryFile()\n");
+   
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_LIST_DIRECTORY,
 				      IoFileType,
@@ -167,13 +169,26 @@ NTSTATUS STDCALL ZwQueryDirectoryFile(
    IoStack->DeviceObject = DeviceObject;
    IoStack->FileObject = FileObject;
    
+   if (RestartScan)
+     {
+	IoStack->Flags = IoStack->Flags | SL_RESTART_SCAN;
+     }
+   if (ReturnSingleEntry)
+     {
+	DPRINT("Setting ReturingSingleEntry flag\n");
+	IoStack->Flags = IoStack->Flags | SL_RETURN_SINGLE_ENTRY;
+	DPRINT("SL_RETURN_SINGLE_ENTRY %x\n",SL_RETURN_SINGLE_ENTRY);
+	DPRINT("IoStack->Flags %x\n",IoStack->Flags);
+     }
+   if (((PFILE_DIRECTORY_INFORMATION)FileInformation)->FileIndex != 0)
+     {
+	IoStack->Flags = IoStack->Flags | SL_INDEX_SPECIFIED;
+     }
+   
    IoStack->Parameters.QueryDirectory.FileInformationClass = 
      FileInformationClass;
-   IoStack->Parameters.QueryDirectory.ReturnSingleEntry = 
-     ReturnSingleEntry;
    IoStack->Parameters.QueryDirectory.FileName = FileName;
-   IoStack->Parameters.QueryDirectory.RestartScan = RestartScan;
-   IoStack->Parameters.QueryDirectory.BufferLength = Length;
+   IoStack->Parameters.QueryDirectory.Length = Length;
    
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
    if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))

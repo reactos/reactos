@@ -255,7 +255,10 @@ NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header)
    if (Header->RefCount == 0 && Header->HandleCount == 0 &&
        !Header->Permanent)
      {
-	ObRemoveEntry(Header);
+	if (Header->Name.Buffer != NULL)
+	  {
+	     ObRemoveEntry(Header);
+	  }
 	ExFreePool(Header);
      }
    return(STATUS_SUCCESS);
@@ -270,6 +273,10 @@ VOID ObDereferenceObject(PVOID ObjectBody)
  */
 {
    POBJECT_HEADER Header = BODY_TO_HEADER(ObjectBody);
+   
+   DPRINT("ObDeferenceObject(ObjectBody %x) RefCount %d\n",ObjectBody,
+	  Header->RefCount);
+   
    Header->RefCount--;
    ObPerformRetentionChecks(Header);
 }
@@ -317,8 +324,7 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
 				   KPROCESSOR_MODE AccessMode,
 				   PVOID* Object,
 				   POBJECT_HANDLE_INFORMATION 
-				           HandleInformationPtr
-				   )
+				           HandleInformationPtr)
 /*
  * FUNCTION: Increments the reference count for an object and returns a 
  * pointer to its body

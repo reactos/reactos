@@ -158,12 +158,10 @@ typedef struct _IO_STACK_LOCATION
 	 */
 	struct
 	  {
-	     FILE_INFORMATION_CLASS FileInformationClass;
-	     BOOLEAN ReturnSingleEntry;
+	     ULONG Length;
 	     PUNICODE_STRING FileName;
-	     BOOLEAN RestartScan;
-         ULONG BufferLength;
-         ULONG FileIndex;
+	     FILE_INFORMATION_CLASS FileInformationClass;
+	     ULONG FileIndex;
 	  } QueryDirectory;
      } Parameters;
    

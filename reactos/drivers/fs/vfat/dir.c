@@ -82,15 +82,19 @@ NTSTATUS FsdGetFileDirectoryInformation(PFCB pFcb,
           PDEVICE_EXTENSION DeviceExt,
           PFILE_DIRECTORY_INFORMATION pInfo,ULONG BufferLength)
 {
- unsigned long long AllocSize;
- ULONG Length;
-  Length=vfat_wstrlen(pFcb->ObjectName);
-  if( (sizeof(FILE_DIRECTORY_INFORMATION)+Length) >BufferLength)
+   unsigned long long AllocSize;
+   ULONG Length;
+   
+   DPRINT("BufferLength %d\n",BufferLength);
+   
+   Length=vfat_wstrlen(pFcb->ObjectName);
+   if( (sizeof(FILE_DIRECTORY_INFORMATION)+Length) >BufferLength)
      return STATUS_BUFFER_OVERFLOW;
-  pInfo->FileNameLength=Length;
-  pInfo->NextEntryOffset=DWORD_ROUND_UP(sizeof(FILE_DIRECTORY_INFORMATION)+Length);
-  memcpy(pInfo->FileName,pFcb->ObjectName
-     ,sizeof(WCHAR)*(pInfo->FileNameLength));
+   pInfo->FileNameLength=Length;
+   pInfo->NextEntryOffset=DWORD_ROUND_UP(sizeof(FILE_DIRECTORY_INFORMATION)+Length);
+   memcpy(pInfo->FileName,pFcb->ObjectName
+	  ,sizeof(WCHAR)*(pInfo->FileNameLength));
+   DPRINT("pInfo->FileName %w\n",pInfo->FileName);
 //      pInfo->FileIndex=;
   DosDateTimeToFileTime(pFcb->entry.CreationDate,pFcb->entry.CreationTime
       ,&pInfo->CreationTime);
@@ -188,74 +192,90 @@ DPRINT("sizeof %d,Length %d, BufLength %d, Next %d\n"
   return STATUS_SUCCESS;
 }
 
-NTSTATUS DoQuery(PDEVICE_OBJECT DeviceObject, PIRP Irp,PIO_STACK_LOCATION Stack)
+NTSTATUS DoQuery(PDEVICE_OBJECT DeviceObject, 
+		 PIRP Irp,
+		 PIO_STACK_LOCATION Stack)
 {
- NTSTATUS RC=STATUS_SUCCESS;
- long BufferLength = 0;
- PUNICODE_STRING pSearchPattern = NULL;
- FILE_INFORMATION_CLASS FileInformationClass;
- unsigned long FileIndex = 0;
- unsigned char *Buffer = NULL;
- PFILE_NAMES_INFORMATION Buffer0 = NULL;
- PFILE_OBJECT pFileObject = NULL;
- PFCB pFcb;
- FCB tmpFcb;
- PDEVICE_EXTENSION DeviceExt;
- WCHAR star[5],*pCharPattern;
- unsigned long OldEntry,OldSector;
-  DeviceExt = DeviceObject->DeviceExtension;
-  // Obtain the callers parameters
-  BufferLength = Stack->Parameters.QueryDirectory.BufferLength;
-  pSearchPattern = Stack->Parameters.QueryDirectory.FileName;
-  FileInformationClass = Stack->Parameters.QueryDirectory.FileInformationClass;
-  FileIndex = Stack->Parameters.QueryDirectory.FileIndex;
-  pFileObject = Stack->FileObject;
-  pFcb=(PFCB)(pFileObject->FsContext);
-  if(Stack->Parameters.QueryDirectory.RestartScan)
-  {
-    pFcb->StartEntry=pFcb->StartSector=0;
-  }
-  // determine Buffer for result :
-  if (Irp->MdlAddress) 
-    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-  else
-    Buffer = Irp->UserBuffer;
-  if (pSearchPattern==NULL)
-  {
-    star[0]='*';
-    star[1]=0;
-    pCharPattern=star;
-  }
-  else pCharPattern=pSearchPattern->Buffer;
+   NTSTATUS RC=STATUS_SUCCESS;
+   long BufferLength = 0;
+   PUNICODE_STRING pSearchPattern = NULL;
+   FILE_INFORMATION_CLASS FileInformationClass;
+   unsigned long FileIndex = 0;
+   unsigned char *Buffer = NULL;
+   PFILE_NAMES_INFORMATION Buffer0 = NULL;
+   PFILE_OBJECT pFileObject = NULL;
+   PFCB pFcb;
+   FCB tmpFcb;
+   PDEVICE_EXTENSION DeviceExt;
+   WCHAR star[5],*pCharPattern;
+   unsigned long OldEntry,OldSector;
+   BOOLEAN RestartScan;
+   
+   DeviceExt = DeviceObject->DeviceExtension;
+   // Obtain the callers parameters
+   BufferLength = Stack->Parameters.QueryDirectory.Length;
+   pSearchPattern = Stack->Parameters.QueryDirectory.FileName;
+   FileInformationClass = Stack->Parameters.QueryDirectory.FileInformationClass;
+   FileIndex = Stack->Parameters.QueryDirectory.FileIndex;
+   pFileObject = Stack->FileObject;
+   pFcb=(PFCB)(pFileObject->FsContext);
+  
+   
+   if(Stack->Flags & SL_RESTART_SCAN)
+     {
+	pFcb->StartEntry=pFcb->StartSector=0;
+     }
+   
+   // determine Buffer for result :
+   if (Irp->MdlAddress) 
+     Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+   else
+     Buffer = Irp->UserBuffer;
+   
+   if (pSearchPattern==NULL)
+     {
+	star[0]='*';
+	star[1]=0;
+	pCharPattern=star;
+     }
+   else pCharPattern=pSearchPattern->Buffer;
+   
   while(RC==STATUS_SUCCESS && BufferLength >0)
   {
-    OldSector=pFcb->StartSector;
-    OldEntry=pFcb->StartEntry;
-    if(OldSector)pFcb->StartEntry++;
-    RC=FindFile(DeviceExt,&tmpFcb,pFcb,pCharPattern,&pFcb->StartSector,&pFcb->StartEntry);
-DPRINT("Found %w\n",tmpFcb.ObjectName);
-    if (NT_SUCCESS(RC))
-    {
-      switch(FileInformationClass)
-      {
-       case FileNameInformation:
-        RC=FsdGetFileNameInformation(&tmpFcb
-              ,(PFILE_NAMES_INFORMATION)Buffer,BufferLength);
-        break;
-       case FileDirectoryInformation:
-        RC= FsdGetFileDirectoryInformation(&tmpFcb
-              ,DeviceExt,(PFILE_DIRECTORY_INFORMATION)Buffer,BufferLength);
-        break;
-       case FileFullDirectoryInformation :
-        RC= FsdGetFileFullDirectoryInformation(&tmpFcb
-              ,DeviceExt,(PFILE_FULL_DIRECTORY_INFORMATION)Buffer,BufferLength);
-        break;
-       case FileBothDirectoryInformation :
-        RC=FsdGetFileBothInformation(&tmpFcb
-              ,DeviceExt,(PFILE_BOTH_DIRECTORY_INFORMATION)Buffer,BufferLength);
-        break;
-       default:
-        RC=STATUS_INVALID_INFO_CLASS;
+     OldSector=pFcb->StartSector;
+     OldEntry=pFcb->StartEntry;
+     if(OldSector)pFcb->StartEntry++;
+     RC=FindFile(DeviceExt,
+		 &tmpFcb,
+		 pFcb,
+		 pCharPattern,
+		 &pFcb->StartSector,
+		 &pFcb->StartEntry);
+     DPRINT("Found %w\n",tmpFcb.ObjectName);
+     if (NT_SUCCESS(RC))
+       {
+	  switch(FileInformationClass)
+	    {
+	     case FileNameInformation:
+	       RC=FsdGetFileNameInformation(&tmpFcb
+			       ,(PFILE_NAMES_INFORMATION)Buffer,BufferLength);
+	       break;
+	     case FileDirectoryInformation:
+	       RC= FsdGetFileDirectoryInformation(&tmpFcb,
+						  DeviceExt,
+				       (PFILE_DIRECTORY_INFORMATION)Buffer,
+						  BufferLength);
+	       break;
+	     case FileFullDirectoryInformation :
+	       RC= FsdGetFileFullDirectoryInformation(&tmpFcb
+	     ,DeviceExt,(PFILE_FULL_DIRECTORY_INFORMATION)Buffer,BufferLength);
+	       break;
+	     case FileBothDirectoryInformation :
+	       RC=FsdGetFileBothInformation(&tmpFcb
+	     ,DeviceExt,(PFILE_BOTH_DIRECTORY_INFORMATION)Buffer,BufferLength);
+	       break;
+	     default:
+	       RC=STATUS_INVALID_INFO_CLASS;
       }
     }
     else
@@ -272,7 +292,8 @@ DPRINT("Found %w\n",tmpFcb.ObjectName);
     }
     Buffer0=(PFILE_NAMES_INFORMATION)Buffer;
     Buffer0->FileIndex=FileIndex++;
-    if(Stack->Parameters.QueryDirectory.ReturnSingleEntry) break;
+     DPRINT("Stack->Flags %x\n",Stack->Flags);
+    if(Stack->Flags & SL_RETURN_SINGLE_ENTRY) break;
     BufferLength -= Buffer0->NextEntryOffset;
     Buffer += Buffer0->NextEntryOffset;
   }
@@ -287,12 +308,16 @@ NTSTATUS FsdDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
  * FUNCTION: directory control : read/write directory informations
  */
 {
- NTSTATUS RC = STATUS_SUCCESS;
- PFILE_OBJECT FileObject = NULL;
- PIO_STACK_LOCATION Stack;
+   NTSTATUS RC = STATUS_SUCCESS;
+   PFILE_OBJECT FileObject = NULL;
+   PIO_STACK_LOCATION Stack;
+   
+   DPRINT("FsdDirectoryControl(DeviceObject %x, Irp %x)\n",
+	  DeviceObject,Irp);
+   
    Stack = IoGetCurrentIrpStackLocation(Irp);
-   CHECKPOINT;
    FileObject = Stack->FileObject;
+   
    switch (Stack->MinorFunction)
    {
     case IRP_MN_QUERY_DIRECTORY:

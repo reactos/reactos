@@ -28,7 +28,7 @@
 #include <ddk/ntddk.h>
 
 
-#if 0
+#if 1
 #define VALIDATE_POOL validate_kernel_pool()
 #else
 #define VALIDATE_POOL

@@ -13,7 +13,7 @@
 #include <internal/string.h>
 #include <wstring.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #include "ext2fs.h"
@@ -180,7 +180,13 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
    DriverObject->MajorFunction[IRP_MJ_WRITE] = Ext2Write;
    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
                       Ext2FileSystemControl;
+   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL]=
+                      Ext2DirectoryControl;
    DriverObject->DriverUnload = NULL;
+   
+   DPRINT("DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] %x\n",
+	  DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL]);
+   DPRINT("IRP_MJ_DIRECTORY_CONTROL %d\n",IRP_MJ_DIRECTORY_CONTROL);
    
    IoRegisterFileSystem(DeviceObject);
    

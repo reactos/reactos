@@ -99,13 +99,13 @@ static PETHREAD PsScanThreadList(KPRIORITY Priority)
    while (current_entry != &PriorityListHead[THREAD_PRIORITY_MAX+Priority])
      {
 	current = CONTAINING_RECORD(current_entry,ETHREAD,Tcb.Entry);
-	#if 0
+
 	if (current->Tcb.ThreadState == THREAD_STATE_TERMINATED &&
 	    current != CurrentThread)
 	  {
-	     PsReleaseThread(CurrentThread);
+	     PsReleaseThread(current);
 	  }
-	#endif
+
 	if (current->Tcb.ThreadState == THREAD_STATE_RUNNABLE)
 	  {
 	     if (oldest == NULL || oldest_time > current->Tcb.LastTick)
@@ -225,6 +225,10 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
    InitializeListHead(Thread->Tcb.ApcList);
    InitializeListHead(&(Thread->IrpList));
    Thread->Cid.UniqueThread=InterlockedIncrement(&NextThreadUniqueId);
+   ObReferenceObjectByPointer(Thread,
+			      THREAD_ALL_ACCESS,
+			      PsThreadType,
+			      UserMode);
    PsInsertIntoThreadList(Thread->Tcb.CurrentPriority,Thread);
    
    *ThreadPtr = Thread;
@@ -344,7 +348,7 @@ NTSTATUS ZwCreateThread(PHANDLE ThreadHandle,
    PETHREAD Thread;
    NTSTATUS Status;
    
-   DbgPrint("ZwCreateThread(ThreadHandle %x, PCONTEXT %x)\n",
+   DPRINT("ZwCreateThread(ThreadHandle %x, PCONTEXT %x)\n",
 	  ThreadHandle,ThreadContext);
    
    Status = PsInitializeThread(ProcessHandle,&Thread,ThreadHandle,

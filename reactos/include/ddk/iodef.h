@@ -82,12 +82,13 @@ enum
    SL_FT_SEQUENTIAL_WRITE = 0x80,     
    SL_FAIL_IMMEDIATELY = 0x100,     
    SL_EXCLUSIVE_LOCK = 0x200,     
-   SL_RESTART_SCAN = 0x400,     
-   SL_RETURN_SINGLE_ENTRY = 0x800,     
-   SL_INDEX_SPECIFIED = 0x1000,     
    SL_WATCH_TREE = 0x2000,     
    SL_ALLOW_RAW_MOUNT = 0x4000,     
 };
+
+#define SL_RESTART_SCAN        (0x1)
+#define SL_RETURN_SINGLE_ENTRY (0x2)
+#define SL_INDEX_SPECIFIED     (0x3)
 
 #define SL_PENDING_RETURNED             0x01
 #define SL_INVOKE_ON_CANCEL             0x20

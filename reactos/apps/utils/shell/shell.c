@@ -53,7 +53,7 @@ void ExecuteDir(char* cmdline)
         HANDLE shandle;
         WIN32_FIND_DATA FindData;
 
-        shandle = FindFirstFile("*.*",&FindData);
+        shandle = FindFirstFile("*",&FindData);
 
         if (shandle==INVALID_HANDLE_VALUE)
         {
@@ -94,12 +94,13 @@ int ExecuteProcess(char* name, char* cmdline)
    PROCESS_INFORMATION ProcessInformation;
    STARTUPINFO StartupInfo;
    char arguments;
+   BOOL ret;
    
    memset(&StartupInfo,0,sizeof(StartupInfo));
    StartupInfo.cb = sizeof(STARTUPINFO);
    StartupInfo.lpTitle = name;
   
-   return(CreateProcessA(name,
+   ret = CreateProcessA(name,
 			 cmdline,
 			 NULL,
 			 NULL,
@@ -108,7 +109,12 @@ int ExecuteProcess(char* name, char* cmdline)
 			 NULL,
 			 NULL,
 			 &StartupInfo,
-			 &ProcessInformation));
+			 &ProcessInformation);
+   if (ret)
+     {
+	WaitForSingleObject(ProcessInformation.hProcess,INFINITE);
+     }
+   return(ret);
 }
 
 void ExecuteCommand(char* line)

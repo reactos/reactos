@@ -15,7 +15,7 @@
 #include <internal/mm.h>
 #include <internal/string.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/
@@ -176,6 +176,10 @@ NTSTATUS STDCALL ZwCreateProcess(
                                    DesiredAccess,
 				   ObjectAttributes,
                                    PsProcessType);
+   KeInitializeDispatcherHeader(&Process->Pcb.DispatcherHeader,
+				0,
+				sizeof(EPROCESS),
+				FALSE);
    KProcess = &(Process->Pcb);
    
    InitializeListHead(&(KProcess->MemoryAreaList));

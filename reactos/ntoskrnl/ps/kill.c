@@ -13,7 +13,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLBOALS *******************************************************************/
@@ -60,7 +60,7 @@ VOID PsReleaseThread(PETHREAD Thread)
    DPRINT("PsReleaseThread(Thread %x)\n",Thread);
    
    RemoveEntryList(&Thread->Tcb.Entry);
-   ExFreePool(Thread);
+   ObDereferenceObject(Thread);
 }
 
 
@@ -82,6 +82,7 @@ NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus)
    CurrentThread->ExitStatus = ExitStatus;
    
    DPRINT("terminating %x\n",CurrentThread);
+   ObDereferenceObject(CurrentThread->ThreadsProcess);
    KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
    CurrentThread->Tcb.ThreadState = THREAD_STATE_TERMINATED;
    ZwYieldExecution();

@@ -273,6 +273,11 @@ ULONG ClusterToSector(PDEVICE_EXTENSION DeviceExt,
  *           device
  */
 {
+   DPRINT("ClusterToSector(Cluster %d)\n",Cluster);
+   DPRINT("DeviceExt->Boot->SectorsPerCluster %d\n",
+	  DeviceExt->Boot->SectorsPerCluster);
+   DPRINT("Returning %d\n",DeviceExt->dataStart+
+	    ((Cluster-2)*DeviceExt->Boot->SectorsPerCluster));
   return DeviceExt->dataStart+((Cluster-2)*DeviceExt->Boot->SectorsPerCluster);
 }
 
@@ -537,7 +542,7 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PFCB Fcb,
  ULONG NextCluster;
    DPRINT("FindFile(Parent %x, FileToFind %w)\n",Parent,FileToFind);
    
-   if (Parent == NULL)
+   if (Parent == NULL || Parent->entry.FirstCluster == 1)
    {
      Size = DeviceExt->rootDirectorySectors;//FIXME : in fat32, no limit
      StartingSector = DeviceExt->rootStart;
@@ -545,6 +550,7 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PFCB Fcb,
      {// it's root !
        memset(Fcb,0,sizeof(FCB));
        memset(Fcb->entry.Filename,' ',11);
+       Fcb->entry.FileSize = DeviceExt->rootDirectorySectors * BLOCKSIZE;
        if (DeviceExt->FatType == FAT32)
          Fcb->entry.FirstCluster=2;
        else Fcb->entry.FirstCluster=1;
@@ -559,15 +565,20 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PFCB Fcb,
 	
      Size = ULONG_MAX;
      if (DeviceExt->FatType == FAT32)
-       NextCluster = Parent->entry.FirstCluster+Parent->entry.FirstClusterHigh*65536;
+       NextCluster = Parent->entry.FirstCluster
+	             +Parent->entry.FirstClusterHigh*65536;
      else
        NextCluster = Parent->entry.FirstCluster;
      StartingSector = ClusterToSector(DeviceExt, NextCluster);
    }
+   if (Parent != NULL)
+ {
+   DPRINT("Parent->entry.FirstCluster %x\n",Parent->entry.FirstCluster);
+ }
    block = ExAllocatePool(NonPagedPool,BLOCKSIZE);
    if (StartSector && (*StartSector)) StartingSector=*StartSector;
    i=(Entry)?(*Entry):0;
-   DPRINT("FindFile : start at sector %lx, entry %ld\n",StartingSector,i);
+   DbgPrint("FindFile : start at sector %lx, entry %ld\n",StartingSector,i);
    for (j=0; j<Size; j++)
    {
      VFATReadSectors(DeviceExt->StorageDevice,StartingSector,1,block);
@@ -576,12 +587,13 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PFCB Fcb,
      {
        if (IsLastEntry((PVOID)block,i))
        {
+	  DPRINT("Is last entry\n");
          ExFreePool(block);
          return(STATUS_UNSUCCESSFUL);
        }
        if (GetEntryName((PVOID)block,&i,name,&j,DeviceExt,&StartingSector))
        {
-//		  DPRINT("Comparing %w %w\n",name,FileToFind);
+	  DPRINT("Comparing %w %w\n",name,FileToFind);
          if (wstrcmpjoki(name,FileToFind))
          {
            /* In the case of a long filename, the firstcluster is stored in
@@ -604,6 +616,7 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PFCB Fcb,
            memcpy(&Fcb->entry,&((FATDirEntry *)block)[i],
                           sizeof(FATDirEntry));
            vfat_wcsncpy(Fcb->ObjectName,name,251);
+	    DPRINT("Fcb->ObjectName %w name %w\n",Fcb->ObjectName,name);
            ExFreePool(block);
            if(StartSector) *StartSector=StartingSector;
            if(Entry) *Entry=i;
@@ -686,7 +699,7 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	     *next=0;
 	  }
 	
-      Status = FindFile(DeviceExt,Fcb,ParentFcb,current,NULL,NULL);
+	Status = FindFile(DeviceExt,Fcb,ParentFcb,current,NULL,NULL);
 	if (Status != STATUS_SUCCESS)
 	  {
              /* FIXME: should the FCB be freed here?  */
@@ -716,8 +729,8 @@ BOOLEAN FsdHasFileSystem(PDEVICE_OBJECT DeviceToMount)
  *           by this fsd
  */
 {
-   BootSector *Boot;
-
+   DPRINT("FsdHasFileSystem(DeviceToMount %x)\n",DeviceToMount);
+   
    Boot = ExAllocatePool(NonPagedPool,512);
 
    VFATReadSectors(DeviceToMount, 0, 1, (UCHAR *)Boot);

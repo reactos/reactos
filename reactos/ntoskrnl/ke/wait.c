@@ -231,7 +231,32 @@ NTSTATUS STDCALL ZwWaitForSingleObject (IN HANDLE Object,
 					IN BOOLEAN Alertable,
 					IN PLARGE_INTEGER Time)
 {
-   UNIMPLEMENTED;
+   PVOID ObjectPtr;
+   NTSTATUS Status;
+   
+   DPRINT("ZwWaitForSingleObject(Object %x, Alertable %d, Time %x)\n",
+	  Object,Alertable,Time);
+   
+   Status = ObReferenceObjectByHandle(Object,
+				      SYNCHRONIZE,
+				      NULL,
+				      UserMode,
+				      &ObjectPtr,
+				      NULL);
+   if (Status != STATUS_SUCCESS)
+     {
+	return(Status);
+     }
+   
+   Status = KeWaitForSingleObject(ObjectPtr,
+				  UserMode,
+				  UserMode,
+				  Alertable,
+				  Time);
+   
+   ObDereferenceObject(ObjectPtr);
+   
+   return(Status);
 }
 
 

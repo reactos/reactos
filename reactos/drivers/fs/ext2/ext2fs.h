@@ -239,4 +239,4 @@ NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt,
 		      ULONG Length, 
                       LARGE_INTEGER Offset);
 NTSTATUS Ext2Create(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-
+NTSTATUS Ext2DirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);

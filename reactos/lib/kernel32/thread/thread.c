@@ -110,27 +110,20 @@ NT_TEB *GetTeb(VOID)
 	return NULL;
 }
 
-WINBOOL STDCALL
-SwitchToThread(VOID )
+WINBOOL STDCALL SwitchToThread(VOID )
 {
 	NTSTATUS errCode;
 	errCode = NtYieldExecution();
 	return TRUE;
 }
 
-DWORD
-STDCALL
-GetCurrentThreadId()
+DWORD STDCALL GetCurrentThreadId()
 {
 
 	return (DWORD)(GetTeb()->Cid).UniqueThread; 
 }
 
-VOID
-STDCALL
-ExitThread(
-	    UINT uExitCode
-	    ) 
+VOID STDCALL ExitThread(UINT uExitCode) 
 {
 	NTSTATUS errCode;	 
 

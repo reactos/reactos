@@ -5,6 +5,6 @@
 
 void main()
 {  
-   NtDisplayString("Shell Starting...\n");
+   NtDisplayString("Hello world\n");
    ExitThread(0);
 }

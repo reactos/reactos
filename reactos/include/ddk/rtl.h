@@ -17,19 +17,8 @@ typedef struct _CONTROLLER_OBJECT
    
 typedef struct _STRING
 {
-   /*
-    * Length in bytes of the string stored in buffer
-    */
    USHORT Length;
-   
-   /*
-    * Maximum length of the string 
-    */
    USHORT MaximumLength;
-   
-   /*
-    * String
-    */
    PCHAR Buffer;
 } STRING, *PSTRING;
 
