@@ -95,6 +95,7 @@
 #include "ip.h"
 #include "ip_icmp.h"
 
+
 WINE_DEFAULT_DEBUG_CHANNEL(icmp);
 
 
@@ -134,6 +135,8 @@ static int in_cksum(u_short *addr, int len)
     answer = ~sum;
     return(answer);
 }
+
+
 
 /*
  * Exported Routines.
