@@ -1,4 +1,4 @@
-/* $Id: videoprt.c,v 1.10 2003/08/24 11:30:02 dwelch Exp $
+/* $Id: videoprt.c,v 1.11 2003/10/24 21:39:59 gvg Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -358,6 +358,31 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
   return STATUS_SUCCESS;
 }
 
+typedef struct QueryRegistryCallbackContext
+{
+  PVOID HwDeviceExtension;
+  PVOID HwContext;
+  PMINIPORT_GET_REGISTRY_ROUTINE HwGetRegistryRoutine;
+} QUERY_REGISTRY_CALLBACK_CONTEXT, *PQUERY_REGISTRY_CALLBACK_CONTEXT;
+
+static NTSTATUS STDCALL
+QueryRegistryCallback(IN PWSTR ValueName,
+                      IN ULONG ValueType,
+                      IN PVOID ValueData,
+                      IN ULONG ValueLength,
+                      IN PVOID Context,
+                      IN PVOID EntryContext)
+{
+  PQUERY_REGISTRY_CALLBACK_CONTEXT CallbackContext = (PQUERY_REGISTRY_CALLBACK_CONTEXT) Context;
+
+  DPRINT("Found registry value for name %S: type %d, length %d\n",
+         ValueName, ValueType, ValueLength);
+  return (*(CallbackContext->HwGetRegistryRoutine))(CallbackContext->HwDeviceExtension,
+                                                    CallbackContext->HwContext,
+                                                    ValueName,
+                                                    ValueData,
+                                                    ValueLength);
+}
 
 /*
  * @unimplemented
@@ -368,14 +393,44 @@ VideoPortGetRegistryParameters(IN PVOID  HwDeviceExtension,
                                IN PWSTR  ParameterName,
                                IN UCHAR  IsParameterFileName,
                                IN PMINIPORT_GET_REGISTRY_ROUTINE  GetRegistryRoutine,
-                               IN PVOID  Context)
+                               IN PVOID  HwContext)
 {
-  DPRINT("VideoPortGetRegistryParameters\n");
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  QUERY_REGISTRY_CALLBACK_CONTEXT Context;
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+  DPRINT("VideoPortGetRegistryParameters ParameterName %S\n", ParameterName);
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      VIDEO_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+
+  if (IsParameterFileName)
+    {
+      UNIMPLEMENTED;
+    }
+
   DPRINT("ParameterName %S\n", ParameterName);
-  return STATUS_OBJECT_NAME_NOT_FOUND;
-/*
-  return NO_ERROR;
-*/
+
+  Context.HwDeviceExtension = HwDeviceExtension;
+  Context.HwContext = HwContext;
+  Context.HwGetRegistryRoutine = GetRegistryRoutine;
+
+  QueryTable[0].QueryRoutine = QueryRegistryCallback;
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED;
+  QueryTable[0].Name = ParameterName;
+  QueryTable[0].EntryContext = NULL;
+  QueryTable[0].DefaultType = REG_NONE;
+  QueryTable[0].DefaultData = NULL;
+  QueryTable[0].DefaultLength = 0;
+
+  QueryTable[1].QueryRoutine = NULL;
+  QueryTable[1].Name = NULL;
+
+  return NT_SUCCESS(RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                           DeviceExtension->RegistryPath.Buffer,
+                                           QueryTable, &Context, NULL))
+         ? ERROR_SUCCESS : ERROR_INVALID_PARAMETER;
 }
 
 
