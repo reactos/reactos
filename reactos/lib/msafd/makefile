@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.15 2004/07/18 22:49:17 arty Exp $
+# $Id: makefile,v 1.16 2004/09/23 20:05:32 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -16,7 +16,6 @@ TARGET_CFLAGS = \
  -Werror \
  -fno-builtin \
  -DUNICODE \
- -DDBG \
  -D__USE_W32API
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
