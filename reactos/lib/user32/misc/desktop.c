@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.29 2004/02/16 07:25:01 rcampbell Exp $
+/* $Id: desktop.c,v 1.30 2004/02/28 03:02:08 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -15,7 +15,7 @@
 #include <rosrtl/devmode.h>
 #include <rosrtl/logfont.h>
 #include <malloc.h>
-
+#include <math.h>
 
 /*
  * @implemented
@@ -99,6 +99,12 @@ BOOL IntGetFontMetricSetting(LPCWSTR lpKey, PLOGFONTW font)
      { 
           if ( RegQueryValueExW(hKey, lpKey, NULL, &dwType, (LPBYTE)font, &dwSize) == ERROR_SUCCESS )
               bRet = TRUE;
+              
+          if (font->lfHeight < 0)
+          {
+            DbgPrint("WARNING! WARNING! WARNING! Ugly hack alert:  ROS doesn't handle pixel sizes for fonts correctly.  As a result we must convert to point sizes.\n");
+            font->lfHeight = abs(font->lfHeight);
+          }
 	 } 
 		  
      RegCloseKey(hKey);
@@ -127,7 +133,7 @@ SystemParametersInfoW(UINT uiAction,
     IntGetFontMetricSetting(L"SmCaptionFont", &pMetrics.lfSmCaptionFont);
     IntGetFontMetricSetting(L"MenuFont", &pMetrics.lfMenuFont);
     IntGetFontMetricSetting(L"StatusFont", &pMetrics.lfStatusFont);
-    IntGetFontMetricSetting(L"MessageFont", &pMetrics.lfStatusFont);
+    IntGetFontMetricSetting(L"MessageFont", &pMetrics.lfMessageFont);
     IntGetFontMetricSetting(L"IconFont", &IconFont);
     
     pMetrics.iBorderWidth = 1;
@@ -160,6 +166,7 @@ SystemParametersInfoW(UINT uiAction,
         {
             return FALSE;
         }
+        DbgPrint("FontName: %S, Size:  %i\n",pMetrics.lfMessageFont.lfFaceName, pMetrics.lfMessageFont.lfHeight);
         memcpy(pvParam, (PVOID)&pMetrics, sizeof(NONCLIENTMETRICSW));
         return TRUE;
     }
