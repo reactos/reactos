@@ -1,5 +1,10 @@
 2003-07-18  Royce Mitchell III  <royce3@ev1.net>
 
+	* drivers/fs/vfat/volume.c: fixed bug lines 88, 92 - wasn't copying
+	null-terminator.
+
+2003-07-18  Royce Mitchell III  <royce3@ev1.net>
+
 	* include/defines.h: added missing DISP_CHANGE_BADPARAM
 	* include/ntos/gditypes.h: fixed DEVMODEA/W structures
 	(had to move POINTL structure from structs.h)

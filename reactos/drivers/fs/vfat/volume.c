@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.17 2002/09/08 10:22:13 chorns Exp $
+/* $Id: volume.c,v 1.18 2003/07/20 01:48:46 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -85,11 +85,11 @@ FsdGetFsAttributeInformation(PDEVICE_EXTENSION DeviceExt,
   FsAttributeInfo->FileSystemNameLength = Length;
   if (DeviceExt->FatInfo.FatType == FAT32)
   {
-    memcpy(FsAttributeInfo->FileSystemName, L"FAT32", 10);
+    memcpy(FsAttributeInfo->FileSystemName, L"FAT32\0", 12);
   }
   else
   {
-    memcpy(FsAttributeInfo->FileSystemName, L"FAT", 6);
+    memcpy(FsAttributeInfo->FileSystemName, L"FAT\0", 8);
   }
 
   DPRINT("Finished FsdGetFsAttributeInformation()\n");
