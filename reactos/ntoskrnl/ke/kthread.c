@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.51 2004/08/21 21:09:39 tamlin Exp $
+/* $Id: kthread.c,v 1.52 2004/08/27 10:24:04 hbirr Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -188,8 +188,16 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
       Thread->StackLimit = (ULONG)&init_stack;
       Thread->KernelStack = (PVOID)&init_stack_top;
     }
+
+  /* 
+   * Establish the pde's for the new stack and the thread structure within the 
+   * address space of the new process. They are accessed while taskswitching or
+   * while handling page faults. At this point it isn't possible to call the 
+   * page fault handler for the missing pde's. 
+   */
   
   MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread->StackLimit, MM_STACK_SIZE);
+  MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
 
   /* 
    * The Native API function will initialize the TEB field later 
