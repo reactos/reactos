@@ -209,6 +209,8 @@ static bool get_hide_clock_from_registry()
 
 void NotifyArea::read_config()
 {
+	bool clock_visible = true;
+
 	 // read notification icon settings from XML configuration
 	XMLPos pos = g_Globals.get_cfg();
 
@@ -217,8 +219,7 @@ void NotifyArea::read_config()
 #endif
 	{
 		if (pos.go_down("desktopbar")) {
-			bool show = XMLBoolRef(pos, "options", "show-clock", !get_hide_clock_from_registry());
-			show_clock(show);
+			clock_visible = XMLBoolRef(pos, "options", "show-clock", !get_hide_clock_from_registry());
 			pos.back();
 		}
 	}
@@ -252,6 +253,8 @@ void NotifyArea::read_config()
 
 		pos.back();
 	}
+
+	show_clock(clock_visible);
 }
 
 void NotifyArea::write_config()

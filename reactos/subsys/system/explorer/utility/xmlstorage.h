@@ -587,7 +587,7 @@ protected:
 	void append_trailing(const char* s, int l)
 	{
 		if (_children.empty())
-			_trailing.append(s, l);
+			_content.append(s, l);
 		else
 			_children.back()->_trailing.append(s, l);
 	}

@@ -151,13 +151,8 @@ void XMLCALL XMLReader::XML_EndElementHandler(void* userData, const XML_Char* na
 	if (p != s)
 		pThis->_pos->append_content(s, p-s);
 
-	std::string leading;
-
 	if (p != e)
-		leading.assign(p, e-p);
-
-	if (leading.empty())
-		pThis->_pos->_end_leading = leading;
+		pThis->_pos->_end_leading.assign(p, e-p);
 
 	pThis->_pos.back();
 
