@@ -1,4 +1,4 @@
-/* $Id: continue.c,v 1.2 2004/07/02 01:23:26 royce Exp $
+/* $Id: continue.c,v 1.3 2004/07/07 08:39:53 gvg Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -42,10 +42,10 @@ NtContinue (
 	PKTRAP_FRAME TrapFrame = KeGetCurrentThread()->TrapFrame;
 	PKTRAP_FRAME PrevTrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;
 
-	DPRINT1("NtContinue: Context: Eip=0x%x, Esp=0x%x\n", Context->Eip, Context->Esp );
+	DPRINT("NtContinue: Context: Eip=0x%x, Esp=0x%x\n", Context->Eip, Context->Esp );
 	PULONG Frame = 0;
 	__asm__("mov %%ebp, %%ebx" : "=b" (Frame) : );
-	DbgPrint ( "NtContinue(): Ebp=%x, prev/TF=%x/%x\n", Frame, Frame[0], TrapFrame );
+	DPRINT( "NtContinue(): Ebp=%x, prev/TF=%x/%x\n", Frame, Frame[0], TrapFrame );
 	KeRosDumpStackFrames(NULL,5);
 
 	if ( Context == NULL )

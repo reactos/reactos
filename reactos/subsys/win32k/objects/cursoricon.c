@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.61 2004/07/04 11:18:56 navaraf Exp $ */
+/* $Id: cursoricon.c,v 1.62 2004/07/07 08:39:54 gvg Exp $ */
 #include <w32k.h>
 
 PCURICON_OBJECT FASTCALL
@@ -118,7 +118,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
       BITMAPOBJ_UnlockBitmap(NewCursor->IconInfo.hbmMask);
       if (maskBpp != 1)
       {
-         DbgPrint("SetCursor: The Mask bitmap must have 1BPP!\n");
+         DPRINT1("SetCursor: The Mask bitmap must have 1BPP!\n");
          BITMAPOBJ_UnlockBitmap(SurfObj->hsurf);
          return Ret;
       }
@@ -131,7 +131,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
         /* FIXME - Create a color pointer, only 32bit bitmap, set alpha bits!
                    Do not pass a mask bitmap to DrvSetPointerShape()!
                    Create a XLATEOBJ that describes the colors of the bitmap. */
-        DbgPrint("SetCursor: (Colored) alpha cursors are not supported!\n");
+        DPRINT1("SetCursor: (Colored) alpha cursors are not supported!\n");
       }
       else
       {
@@ -142,7 +142,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
                      Do not pass a mask bitmap to DrvSetPointerShape()!
                      Create a XLATEOBJ that describes the colors of the bitmap.
                      (16bit bitmaps are propably allowed) */
-          DbgPrint("SetCursor: Cursors with colors are not supported!\n");
+          DPRINT1("SetCursor: Cursors with colors are not supported!\n");
         }
         else
         {
@@ -232,7 +232,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
     }
     
     if(GDIDEV(SurfObj)->PointerStatus == SPS_ERROR)
-      DbgPrint("SetCursor: DrvSetPointerShape() returned SPS_ERROR\n");
+      DPRINT1("SetCursor: DrvSetPointerShape() returned SPS_ERROR\n");
   
   return Ret;
 }
@@ -1124,7 +1124,7 @@ NtUserDrawIconEx(
     IntReleaseCurIconObject(CurIconObject);
     
     if(istepIfAniCur)
-      DbgPrint("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
+      DPRINT1("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
     
     if(!hbmMask || !IntGdiGetObject(hbmMask, sizeof(BITMAP), &bmpMask))
       goto done;

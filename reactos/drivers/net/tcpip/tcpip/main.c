@@ -25,7 +25,7 @@
 #ifndef NDEBUG
 DWORD DebugTraceLevel = 0x7fffffff;
 #else
-DWORD DebugTraceLevel = MIN_TRACE;
+DWORD DebugTraceLevel = 0;
 #endif /* NDEBUG */
 
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
