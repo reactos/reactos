@@ -1,9 +1,0 @@
-LIBRARY KERNEL32.DLL
-EXPORTS
-LsaRegisterLogonProcess=LsaRegisterLogonProcess@12
-LsaLogonUser=LsaLogonUser@56
-LsaDeregisterLogonProcess=LsaDeregisterLogonProcess@4
-LsaConnectUntrusted=LsaConnectUntrusted@4
-LsaLookupAuthenticationPackage=LsaLookupAuthenticationPackage@12
-LsaFreeReturnBuffer=LsaFreeReturnBuffer@4
-LsaCallAuthenticationPackage=LsaCallAuthenticationPackage@28

@@ -1,5 +1,0 @@
-DIRS= datagram \
-      rawip \
-      tcp \
-      udp
-

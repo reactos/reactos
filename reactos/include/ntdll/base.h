@@ -1,1 +1,0 @@
-#define NTDLL_BASE (0x77f60000)

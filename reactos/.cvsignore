@@ -1,9 +1,0 @@
-dist
-reactos
-*.sys
-*.exe
-*.dll
-*.a
-*.o
-*.d
-*.coff
