@@ -192,6 +192,13 @@ VOID KeFreeGdtSelector(ULONG Entry);
 VOID
 NtEarlyInitVdm(VOID);
 
+#ifdef MP
+#define LOCK "lock ; "
+#else
+#define LOCK ""
+#endif
+
+
 #if defined(__GNUC__)
 #define Ke386DisableInterrupts() __asm__("cli\n\t");
 #define Ke386EnableInterrupts()  __asm__("sti\n\t");
@@ -218,6 +225,33 @@ NtEarlyInitVdm(VOID);
 #define Ke386SetCr2(X)           _Ke386SetCr(2,X)
 #define Ke386GetCr4()            _Ke386GetCr(4)
 #define Ke386SetCr4(X)           _Ke386SetCr(4,X)
+
+static inline LONG Ke386TestAndClearBit(ULONG BitPos, volatile PULONG Addr)
+{
+	LONG OldBit;
+
+	__asm__ __volatile__(LOCK 
+	                     "btrl %2,%1\n\t"
+	                     "sbbl %0,%0\n\t"
+		             :"=r" (OldBit),"=m" (*Addr)
+		             :"Ir" (BitPos) 
+			     : "memory");
+	return OldBit;
+}
+
+static inline LONG Ke386TestAndSetBit(ULONG BitPos, volatile PULONG Addr)
+{
+	LONG OldBit;
+
+	__asm__ __volatile__(LOCK
+	                     "btsl %2,%1\n\t"
+	                     "sbbl %0,%0\n\t"
+		             :"=r" (OldBit),"=m" (*Addr)
+		             :"Ir" (BitPos) 
+			     : "memory");
+	return OldBit;
+}
+
 
 static inline void Ki386Cpuid(ULONG Op, PULONG Eax, PULONG Ebx, PULONG Ecx, PULONG Edx)
 {
