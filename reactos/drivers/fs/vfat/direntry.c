@@ -1,4 +1,4 @@
-/* $Id: direntry.c,v 1.4 2001/08/01 15:59:24 hbirr Exp $
+/* $Id: direntry.c,v 1.5 2001/10/10 22:14:34 hbirr Exp $
  *
  *
  * FILE:             DirEntry.c
@@ -83,14 +83,14 @@ vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
                      PWSTR pLongFileName,
                      PFAT_DIR_ENTRY pDirEntry)
 {
-  NTSTATUS  status;
   ULONG  indexInPage = *pDirectoryIndex % ENTRIES_PER_CACHEPAGE(pDeviceExt);
   ULONG  pageNumber = *pDirectoryIndex / ENTRIES_PER_CACHEPAGE(pDeviceExt);
   PVOID  currentPage = NULL;
-  PCACHE_SEGMENT  cacheSegment = NULL; 
   FATDirEntry * fatDirEntry;
   slot * longNameEntry;
   ULONG  cpos;
+  LARGE_INTEGER FileOffset;
+  PVOID Context;
 
   DPRINT ("vfatGetNextDirEntry (%x,%x,%d,%x,%x)\n",
           pDeviceExt,
@@ -101,16 +101,11 @@ vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
 
   *pLongFileName = 0;
 
-  DPRINT ("Validating current directory page\n");
-  status = vfatRequestAndValidateRegion (pDeviceExt, 
-                                         pDirectoryFCB, 
-                                         pageNumber * CACHEPAGESIZE(pDeviceExt),
-                                         (PVOID *) &currentPage,
-                                         &cacheSegment,
-                                         FALSE);
-  if (!NT_SUCCESS (status))
+  FileOffset.QuadPart = pageNumber * CACHEPAGESIZE(pDeviceExt);
+  if (!CcMapData(pDirectoryFCB->FileObject, &FileOffset, 
+         CACHEPAGESIZE(pDeviceExt), TRUE, &Context, &currentPage))
   {
-    return  status;
+    return STATUS_UNSUCCESSFUL;
   }
 
   while (TRUE)
@@ -120,9 +115,7 @@ vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
     if (vfatIsDirEntryEndMarker (&fatDirEntry [indexInPage]))
     {
       DPRINT ("end of directory, returning no more entries\n");
-      status = vfatReleaseRegion (pDeviceExt,
-                                  pDirectoryFCB,
-                                  cacheSegment);
+      CcUnpinData(Context);
       return  STATUS_NO_MORE_ENTRIES;
     }
     else if (vfatIsDirEntryLongName (&fatDirEntry [indexInPage])
@@ -155,22 +148,12 @@ vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
           indexInPage = 0;
           pageNumber++;
 
-          status = vfatReleaseRegion (pDeviceExt,
-                                      pDirectoryFCB,
-                                      cacheSegment);
-          if (!NT_SUCCESS (status))
+          CcUnpinData(Context);
+          FileOffset.QuadPart = pageNumber * CACHEPAGESIZE(pDeviceExt);
+          if (!CcMapData(pDirectoryFCB->FileObject, &FileOffset, 
+                 CACHEPAGESIZE(pDeviceExt), TRUE, &Context, &currentPage))
           {
-            return  status;
-          }
-          status = vfatRequestAndValidateRegion (pDeviceExt,
-                                                 pDirectoryFCB,
-                                                 pageNumber * CACHEPAGESIZE(pDeviceExt),
-                                                 (PVOID *) &currentPage,
-                                                 &cacheSegment,
-                                                 FALSE);
-          if (!NT_SUCCESS (status))
-          {
-            return  status;
+            return  STATUS_UNSUCCESSFUL;
           }
           longNameEntry = (slot *) currentPage;
         }
@@ -197,22 +180,12 @@ vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
         indexInPage = 0;
         pageNumber++;
 
-        status = vfatReleaseRegion (pDeviceExt,
-                                    pDirectoryFCB,
-                                    cacheSegment);
-        if (!NT_SUCCESS (status))
-        {
-          return  status;
-        }
-        status = vfatRequestAndValidateRegion (pDeviceExt,
-                                               pDirectoryFCB,
-                                               pageNumber * CACHEPAGESIZE(pDeviceExt),
-                                               (PVOID *) &currentPage,
-                                               &cacheSegment,
-                                               FALSE);
-        if (!NT_SUCCESS (status))
-        {
-          return  status;
+        CcUnpinData(Context);
+        FileOffset.QuadPart = pageNumber * CACHEPAGESIZE(pDeviceExt);
+        if (!CcMapData(pDirectoryFCB->FileObject, &FileOffset, 
+               CACHEPAGESIZE(pDeviceExt), TRUE, &Context, &currentPage))
+         {
+          return STATUS_UNSUCCESSFUL;
         }
       }
     }
@@ -223,13 +196,8 @@ vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
       break;
     }
   }
-
-  DPRINT ("Releasing current directory page\n");
-  status = vfatReleaseRegion (pDeviceExt,
-                              pDirectoryFCB,
-                              cacheSegment);
-
-  return  status;
+  CcUnpinData(Context);
+  return STATUS_SUCCESS;
 }
 
 
