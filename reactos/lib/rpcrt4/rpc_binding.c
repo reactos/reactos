@@ -46,17 +46,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-static RpcConnection* conn_cache;
-
-static CRITICAL_SECTION conn_cache_cs;
-static CRITICAL_SECTION_DEBUG critsect_debug =
-{
-    0, 0, &conn_cache_cs,
-    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-      0, 0, { 0, (DWORD)(__FILE__ ": conn_cache_cs") }
-};
-static CRITICAL_SECTION conn_cache_cs = { &critsect_debug, -1, 0, 0, 0, 0 };
-
 LPSTR RPCRT4_strndupA(LPCSTR src, INT slen)
 {
   DWORD len;
@@ -122,11 +111,6 @@ RPC_STATUS RPCRT4_CreateConnection(RpcConnection** Connection, BOOL server, LPST
   NewConnection->Used = Binding;
   NewConnection->MaxTransmissionSize = RPC_MAX_PACKET_SIZE;
 
-  EnterCriticalSection(&conn_cache_cs);
-  NewConnection->Next = conn_cache;
-  conn_cache = NewConnection;
-  LeaveCriticalSection(&conn_cache_cs);
-
   TRACE("connection: %p\n", NewConnection);
   *Connection = NewConnection;
 
@@ -135,21 +119,7 @@ RPC_STATUS RPCRT4_CreateConnection(RpcConnection** Connection, BOOL server, LPST
 
 RPC_STATUS RPCRT4_DestroyConnection(RpcConnection* Connection)
 {
-  RpcConnection* PrevConnection;
-
   TRACE("connection: %p\n", Connection);
-  if (Connection->Used) ERR("connection is still in use\n");
-
-  EnterCriticalSection(&conn_cache_cs);
-  PrevConnection = conn_cache;
-  if (PrevConnection == Connection) {
-    conn_cache = Connection->Next;
-  } else {
-    while (PrevConnection && PrevConnection->Next != Connection)
-      PrevConnection = PrevConnection->Next;
-    if (PrevConnection) PrevConnection->Next = Connection->Next;
-  }
-  LeaveCriticalSection(&conn_cache_cs);
 
   RPCRT4_CloseConnection(Connection);
   RPCRT4_strfree(Connection->Endpoint);
@@ -157,44 +127,6 @@ RPC_STATUS RPCRT4_DestroyConnection(RpcConnection* Connection)
   RPCRT4_strfree(Connection->Protseq);
   HeapFree(GetProcessHeap(), 0, Connection);
   return RPC_S_OK;
-}
-
-RPC_STATUS RPCRT4_GetConnection(RpcConnection** Connection, BOOL server, LPSTR Protseq, LPSTR NetworkAddr, LPSTR Endpoint, LPSTR NetworkOptions, RpcBinding* Binding)
-{
-  RpcConnection* NewConnection;
-
-  if (!server) {
-    EnterCriticalSection(&conn_cache_cs);
-    for (NewConnection = conn_cache; NewConnection; NewConnection = NewConnection->Next) {
-      if (NewConnection->Used) continue;
-      if (NewConnection->server != server) continue;
-      if (Protseq && strcmp(NewConnection->Protseq, Protseq)) continue;
-      if (NetworkAddr && strcmp(NewConnection->NetworkAddr, NetworkAddr)) continue;
-      if (Endpoint && strcmp(NewConnection->Endpoint, Endpoint)) continue;
-      /* this connection fits the bill */
-      NewConnection->Used = Binding;
-      break;
-    }
-    LeaveCriticalSection(&conn_cache_cs);
-    if (NewConnection) {
-      TRACE("cached connection: %p\n", NewConnection);
-      *Connection = NewConnection;
-      return RPC_S_OK;
-    }
-  }
-  return RPCRT4_CreateConnection(Connection, server, Protseq, NetworkAddr, Endpoint, NetworkOptions, Binding);
-}
-
-RPC_STATUS RPCRT4_ReleaseConnection(RpcConnection* Connection)
-{
-  TRACE("connection: %p\n", Connection);
-  Connection->Used = NULL;
-  if (!Connection->server) {
-    /* cache the open connection for reuse later */
-    /* FIXME: we should probably clean the cache someday */
-    return RPC_S_OK;
-  }
-  return RPCRT4_DestroyConnection(Connection);
 }
 
 RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
@@ -514,7 +446,9 @@ RPC_STATUS RPCRT4_OpenBinding(RpcBinding* Binding, RpcConnection** Connection,
   if (!Binding->server && Binding->FromConn &&
       memcmp(&Binding->FromConn->ActiveInterface, InterfaceId,
              sizeof(RPC_SYNTAX_IDENTIFIER))) {
-    RPCRT4_ReleaseConnection(Binding->FromConn);
+
+    TRACE("releasing pre-existing connection\n");
+    RPCRT4_DestroyConnection(Binding->FromConn);
     Binding->FromConn = NULL;
   } else {
     /* we already have an connection with acceptable binding, so use it */
@@ -525,7 +459,7 @@ RPC_STATUS RPCRT4_OpenBinding(RpcBinding* Binding, RpcConnection** Connection,
   }
   
   /* create a new connection */
-  RPCRT4_GetConnection(&NewConnection, Binding->server, Binding->Protseq, Binding->NetworkAddr, Binding->Endpoint, NULL, Binding);
+  RPCRT4_CreateConnection(&NewConnection, Binding->server, Binding->Protseq, Binding->NetworkAddr, Binding->Endpoint, NULL, Binding);
   *Connection = NewConnection;
   status = RPCRT4_OpenConnection(NewConnection);
   if (status != RPC_S_OK) {
@@ -547,27 +481,27 @@ RPC_STATUS RPCRT4_OpenBinding(RpcBinding* Binding, RpcConnection** Connection,
 
     status = RPCRT4_Send(*Connection, hdr, NULL, 0);
     if (status != RPC_S_OK) {
-      RPCRT4_ReleaseConnection(*Connection);
+      RPCRT4_DestroyConnection(*Connection);
       return status;
     }
 
     response = HeapAlloc(GetProcessHeap(), 0, RPC_MAX_PACKET_SIZE);
     if (response == NULL) {
       WARN("Can't allocate memory for binding response\n");
-      RPCRT4_ReleaseConnection(*Connection);
+      RPCRT4_DestroyConnection(*Connection);
       return E_OUTOFMEMORY;
     }
 
     /* get a reply */
     if (!ReadFile(NewConnection->conn, response, RPC_MAX_PACKET_SIZE, &count, NULL)) {
       WARN("ReadFile failed with error %ld\n", GetLastError());
-      RPCRT4_ReleaseConnection(*Connection);
+      RPCRT4_DestroyConnection(*Connection);
       return RPC_S_PROTOCOL_ERROR;
     }
 
     if (count < sizeof(response_hdr->common)) {
       WARN("received invalid header\n");
-      RPCRT4_ReleaseConnection(*Connection);
+      RPCRT4_DestroyConnection(*Connection);
       return RPC_S_PROTOCOL_ERROR;
     }
 
@@ -577,13 +511,13 @@ RPC_STATUS RPCRT4_OpenBinding(RpcBinding* Binding, RpcConnection** Connection,
         response_hdr->common.rpc_ver_minor != RPC_VER_MINOR ||
         response_hdr->common.ptype != PKT_BIND_ACK) {
       WARN("invalid protocol version or rejection packet\n");
-      RPCRT4_ReleaseConnection(Binding->FromConn);
+      RPCRT4_DestroyConnection(*Connection);
       return RPC_S_PROTOCOL_ERROR;
     }
 
     if (response_hdr->bind_ack.max_tsize < RPC_MIN_PACKET_SIZE) {
       WARN("server doesn't allow large enough packets\n");
-      RPCRT4_ReleaseConnection(Binding->FromConn);
+      RPCRT4_DestroyConnection(*Connection);
       return RPC_S_PROTOCOL_ERROR;
     }
 
@@ -601,7 +535,7 @@ RPC_STATUS RPCRT4_CloseBinding(RpcBinding* Binding, RpcConnection* Connection)
   TRACE("(Binding == ^%p)\n", Binding);
   if (!Connection) return RPC_S_OK;
   if (Binding->FromConn == Connection) return RPC_S_OK;
-  return RPCRT4_ReleaseConnection(Connection);
+  return RPCRT4_DestroyConnection(Connection);
 }
 
 /* utility functions for string composing and parsing */

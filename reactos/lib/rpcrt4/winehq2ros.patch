@@ -1,6 +1,11 @@
---- rpc_server.c	Tue May  4 17:37:56 2004
-+++ rpc_server.c	Tue May  4 19:54:24 2004
-@@ -184,6 +184,7 @@
+Index: rpc_server.c
+===================================================================
+RCS file: /home/wine/wine/dlls/rpcrt4/rpc_server.c,v
+retrieving revision 1.30
+diff -u -r1.30 rpc_server.c
+--- rpc_server.c	17 Jun 2004 19:54:34 -0000	1.30
++++ rpc_server.c	8 Aug 2004 21:19:01 -0000
+@@ -185,6 +185,7 @@
    return packet;
  }
  
@@ -8,7 +13,7 @@
  typedef struct {
    PRPC_MESSAGE msg;
    void* buf;
-@@ -204,20 +205,25 @@
+@@ -205,20 +206,25 @@
    TRACE("returning failure packet\n");
    return EXCEPTION_EXECUTE_HANDLER;
  }
@@ -34,7 +39,7 @@
  
    switch (hdr->common.ptype) {
      case PKT_BIND:
-@@ -303,11 +309,15 @@
+@@ -305,11 +311,15 @@
                    MAKEWORD(hdr->common.drep[2], hdr->common.drep[3]));
  
        /* dispatch */
@@ -50,7 +55,7 @@
  
        /* send response packet */
        I_RpcSend(msg);
-@@ -331,7 +341,9 @@
+@@ -333,7 +343,9 @@
    I_RpcFreeBuffer(msg);
    msg->Buffer = NULL;
    RPCRT4_FreeHeader(hdr);

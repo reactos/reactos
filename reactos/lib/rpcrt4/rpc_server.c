@@ -153,6 +153,7 @@ static RpcServerInterface* RPCRT4_find_interface(UUID* object,
     cif = cif->Next;
   }
   LeaveCriticalSection(&server_cs);
+  TRACE("returning %p for %s\n", cif, debugstr_guid(object));
   return cif;
 }
 
@@ -232,17 +233,18 @@ static void RPCRT4_process_packet(RpcConnection* conn, RpcPktHdr* hdr, RPC_MESSA
       /* FIXME: do more checks! */
       if (hdr->bind.max_tsize < RPC_MIN_PACKET_SIZE ||
           !UuidIsNil(&conn->ActiveInterface.SyntaxGUID, &status)) {
+        TRACE("packet size less than min size, or active interface syntax guid non-null\n");
         sif = NULL;
       } else {
         sif = RPCRT4_find_interface(NULL, &hdr->bind.abstract, FALSE);
       }
       if (sif == NULL) {
-        TRACE("rejecting bind request\n");
+        TRACE("rejecting bind request on connection %p\n", conn);
         /* Report failure to client. */
         response = RPCRT4_BuildBindNackHeader(NDR_LOCAL_DATA_REPRESENTATION,
                                               RPC_VER_MAJOR, RPC_VER_MINOR);
       } else {
-        TRACE("accepting bind request\n");
+        TRACE("accepting bind request on connection %p\n", conn);
 
         /* accept. */
         response = RPCRT4_BuildBindAckHeader(NDR_LOCAL_DATA_REPRESENTATION,
