@@ -2176,6 +2176,7 @@ HANDLE PICE_open (LPCWSTR	lpPathName,	int	iReadWrite)
 	//BUG BUG check status!!!
 	if( !NT_SUCCESS( status ) ){
 		DPRINT((0,"PICE_open: NtOpenFile error: %x\n", status));
+		return 0;
 	}
 	return hfile;
 }
@@ -2199,6 +2200,7 @@ size_t PICE_len( HANDLE hFile )
   	status = ZwQueryInformationFile( hFile, &iosb, &fs, sizeof fs, FileStandardInformation );
 	if( !NT_SUCCESS( status ) ){
 		DPRINT((0,"PICE_len: ZwQueryInformationFile error: %x\n", status));
+		return 0;
 	}
 	//ASSERT(fs.EndOfFile.u.HighPart == 0);
 	return (size_t)fs.EndOfFile.u.LowPart;
