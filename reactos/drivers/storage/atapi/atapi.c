@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.40 2003/06/24 21:30:08 ekohl Exp $
+/* $Id: atapi.c,v 1.41 2003/07/11 14:10:41 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -850,6 +850,20 @@ AtapiStartIo(IN PVOID DeviceExtension,
 	  }
 	break;
 
+      case SRB_FUNCTION_ABORT_COMMAND:
+	if (DevExt->CurrentSrb != NULL)
+	  {
+	    Result = SRB_STATUS_ABORT_FAILED;
+	  }
+	else
+	  {
+	    Result = SRB_STATUS_SUCCESS;
+	  }
+	break;
+
+      default:
+	Result = SRB_STATUS_INVALID_REQUEST;
+	break;
     }
 
   Srb->SrbStatus = Result;
@@ -1070,7 +1084,7 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	}
       else
 	{
-	  DPRINT1("Unspecified transfer direction!\n");
+	  DPRINT("Unspecified transfer direction!\n");
 	  Srb->SrbStatus = SRB_STATUS_SUCCESS; // SRB_STATUS_ERROR;
 	  IsLastBlock = TRUE;
 	}
@@ -1861,6 +1875,7 @@ AtapiSendIdeCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	break;
 
       case SCSIOP_MODE_SENSE:
+
       case SCSIOP_VERIFY:
       case SCSIOP_START_STOP_UNIT:
       case SCSIOP_REQUEST_SENSE:
