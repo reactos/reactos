@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.1 2003/07/17 07:49:15 gvg Exp $
+ * $Id: vis.c,v 1.2 2003/07/18 20:55:21 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -198,6 +198,7 @@ VIS_ComputeVisibleRegion(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
   return VisRgn;
 }
 
+/* FIXME: to be replaced by a normal window proc in CSRSS */
 VOID STATIC FASTCALL
 VIS_RepaintDesktop(HWND Desktop, HRGN RepaintRgn)
 {
@@ -211,13 +212,14 @@ VIS_RepaintDesktop(HWND Desktop, HRGN RepaintRgn)
 
 VOID FASTCALL
 VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
-                        HRGN UncoveredRgn)
+                        HRGN NewlyExposed)
 {
   PWINDOW_OBJECT DesktopWindow;
   PWINDOW_OBJECT Child;
   PLIST_ENTRY CurrentEntry;
   HRGN Uncovered;
   HRGN Covered;
+  HRGN Repaint;
 
   DesktopWindow = W32kGetWindowObject(Desktop->DesktopWindow);
   Uncovered = UnsafeW32kCreateRectRgnIndirect(&DesktopWindow->WindowRect);
@@ -236,7 +238,12 @@ VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
       CurrentEntry = CurrentEntry->Flink;
     }
   ExReleaseFastMutexUnsafe(&DesktopWindow->ChildrenListLock);
-  VIS_RepaintDesktop(DesktopWindow->Self, Uncovered);
+
+  Repaint = W32kCreateRectRgn(0, 0, 0, 0);
+  W32kCombineRgn(Repaint, NewlyExposed, Uncovered, RGN_AND);
+  VIS_RepaintDesktop(DesktopWindow->Self, Repaint);
+  W32kDeleteObject(Repaint);
+
   W32kDeleteObject(Uncovered);
 }
 
