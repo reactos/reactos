@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.11 2004/04/10 16:20:59 navaraf Exp $
+/* $Id: rw.c,v 1.12 2004/04/12 13:03:29 navaraf Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -16,9 +16,7 @@
 #define NDEBUG
 #include <debug.h>
 
-
 /* FUNCTIONS *****************************************************************/
-
 
 NTSTATUS STDCALL
 NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
@@ -49,7 +47,12 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
   if (ReadFcb == NULL)
     {
       DPRINT("Pipe is NOT connected!\n");
-      Status = STATUS_UNSUCCESSFUL;
+      if (Fcb->PipeState == FILE_PIPE_LISTENING_STATE)
+        Status = STATUS_PIPE_LISTENING;
+      else if (Fcb->PipeState == FILE_PIPE_DISCONNECTED_STATE)
+        Status = STATUS_PIPE_DISCONNECTED;
+      else
+        Status = STATUS_UNSUCCESSFUL;
       Information = 0;
       goto done;
     }
@@ -92,6 +95,7 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	    }
           if (Fcb->PipeState != FILE_PIPE_CONNECTED_STATE)
 	    {
+	      DPRINT("PipeState: %x\n", Fcb->PipeState);
 	      Status = STATUS_PIPE_BROKEN;
 	      goto done;
 	    }
@@ -223,7 +227,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 
   if (Irp->MdlAddress == NULL)
     {
-      DbgPrint ("Irp->MdlAddress == NULL\n");
+      DPRINT("Irp->MdlAddress == NULL\n");
       Status = STATUS_UNSUCCESSFUL;
       Length = 0;
       goto done;
@@ -232,7 +236,12 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
   if (Fcb->OtherSide == NULL)
     {
       DPRINT("Pipe is NOT connected!\n");
-      Status = STATUS_UNSUCCESSFUL;
+      if (Fcb->PipeState == FILE_PIPE_LISTENING_STATE)
+        Status = STATUS_PIPE_LISTENING;
+      else if (Fcb->PipeState == FILE_PIPE_DISCONNECTED_STATE)
+        Status = STATUS_PIPE_DISCONNECTED;
+      else
+        Status = STATUS_UNSUCCESSFUL;
       Length = 0;
       goto done;
     }

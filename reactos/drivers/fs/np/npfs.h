@@ -1,4 +1,4 @@
-/* $Id: npfs.h,v 1.14 2003/06/21 19:55:55 hbirr Exp $ */
+/* $Id: npfs.h,v 1.15 2004/04/12 13:03:29 navaraf Exp $ */
 
 #ifndef __SERVICES_FS_NP_NPFS_H
 #define __SERVICES_FS_NP_NPFS_H
@@ -74,6 +74,8 @@ NTSTATUS STDCALL NpfsClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 NTSTATUS STDCALL NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS STDCALL NpfsWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+NTSTATUS STDCALL NpfsFlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 NTSTATUS STDCALL NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 

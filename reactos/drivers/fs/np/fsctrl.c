@@ -1,4 +1,4 @@
-/* $Id: fsctrl.c,v 1.13 2003/11/13 15:26:07 ekohl Exp $
+/* $Id: fsctrl.c,v 1.14 2004/04/12 13:03:29 navaraf Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -16,7 +16,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
 /* FUNCTIONS *****************************************************************/
 
 static NTSTATUS
@@ -26,6 +25,7 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
    PLIST_ENTRY current_entry;
    PNPFS_FCB ClientFcb;
    NTSTATUS Status;
+   KIRQL oldIrql;
 
    DPRINT("NpfsConnectPipe()\n");
 
@@ -35,19 +35,13 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
    if (Fcb->PipeState == FILE_PIPE_CLOSING_STATE)
      return STATUS_PIPE_CLOSING;
 
-   /*
-    * Acceptable states are: FILE_PIPE_DISCONNECTED_STATE and
-    *                        FILE_PIPE_LISTENING_STATE
-    */
-
    DPRINT("Waiting for connection...\n");
 
    Pipe = Fcb->Pipe;
 
-   Fcb->PipeState = FILE_PIPE_LISTENING_STATE;
-
    /* search for a listening client fcb */
 
+   KeAcquireSpinLock(&Pipe->FcbListLock, &oldIrql);
    current_entry = Pipe->ClientFcbListHead.Flink;
    while (current_entry != &Pipe->ClientFcbListHead)
      {
@@ -55,8 +49,7 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
 				      NPFS_FCB,
 				      FcbListEntry);
 	
-	if ((ClientFcb->PipeState == FILE_PIPE_LISTENING_STATE)
-	    || (ClientFcb->PipeState == FILE_PIPE_DISCONNECTED_STATE))
+	if (ClientFcb->PipeState == FILE_PIPE_LISTENING_STATE)
 	  {
 	     break;
 	  }
@@ -64,8 +57,7 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
 	current_entry = current_entry->Flink;
      }
    
-   if ((current_entry != &Pipe->ClientFcbListHead)
-       && (ClientFcb->PipeState == FILE_PIPE_LISTENING_STATE))
+   if (current_entry != &Pipe->ClientFcbListHead)
      {
 	/* found a listening client fcb */
 	DPRINT("Listening client fcb found -- connecting\n");
@@ -78,25 +70,23 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
 	Fcb->PipeState = FILE_PIPE_CONNECTED_STATE;
 	ClientFcb->PipeState = FILE_PIPE_CONNECTED_STATE;
 
+        KeReleaseSpinLock(&Pipe->FcbListLock, oldIrql);
+
 	/* FIXME: create and initialize data queues */
 
 	/* signal client's connect event */
 	KeSetEvent(&ClientFcb->ConnectEvent, IO_NO_INCREMENT, FALSE);
 
      }
-   else if ((current_entry != &Pipe->ClientFcbListHead)
-	    && (ClientFcb->PipeState == FILE_PIPE_DISCONNECTED_STATE))
-     {
-	/* found a disconnected client fcb */
-	DPRINT("Disconnected client fcb found - notifying client\n");
-
-	/* signal client's connect event */
-	KeSetEvent(&ClientFcb->ConnectEvent, IO_NO_INCREMENT, FALSE);
-     }
    else
      {
 	/* no listening client fcb found */
 	DPRINT("No listening client fcb found -- waiting for client\n");
+
+        KeReleaseSpinLock(&Pipe->FcbListLock, oldIrql);
+
+	Fcb->PipeState = FILE_PIPE_LISTENING_STATE;
+
 	Status = KeWaitForSingleObject(&Fcb->ConnectEvent,
 				       UserRequest,
 				       KernelMode,
@@ -496,7 +486,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 	break;
 
       default:
-	DPRINT("IoControlCode: %x\n", IoStack->Parameters.FileSystemControl.IoControlCode)
+	DPRINT("IoControlCode: %x\n", IoStack->Parameters.FileSystemControl.FsControlCode)
 	Status = STATUS_UNSUCCESSFUL;
     }
 
@@ -506,6 +496,21 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
   return(Status);
+}
+
+
+NTSTATUS STDCALL
+NpfsFlushBuffers(PDEVICE_OBJECT DeviceObject,
+		 PIRP Irp)
+{
+  /* FIXME: Implement */
+
+  Irp->IoStatus.Status = STATUS_SUCCESS;
+  Irp->IoStatus.Information = 0;
+
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+  return STATUS_SUCCESS;
 }
 
 /* EOF */

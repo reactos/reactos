@@ -1,4 +1,4 @@
-/* $Id: npfs.c,v 1.9 2004/03/07 20:33:25 navaraf Exp $
+/* $Id: npfs.c,v 1.10 2004/04/12 13:03:29 navaraf Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -41,7 +41,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = 
      NpfsQueryVolumeInformation;
 //   DriverObject->MajorFunction[IRP_MJ_CLEANUP] = NpfsCleanup;
-//   DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = NpfsFlushBuffers;
+   DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = NpfsFlushBuffers;
 //   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
 //     NpfsDirectoryControl;
    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
