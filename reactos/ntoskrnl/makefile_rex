@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.32 1999/10/16 00:17:40 ekohl Exp $
+# $Id: makefile_rex,v 1.33 1999/10/21 11:10:26 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -61,9 +61,11 @@ LDR_OBJECTS = ldr/loader.o ldr/init.o ldr/syspath.o
 
 CC_OBJECTS = cc/cacheman.o cc/view.o
 
+KD_OBJECTS = kd/kdebug.o
+
 RESOURCE_OBJECT = $(TARGET).coff
 
-objects: 
+objects:
 	mkdir objects
 
 objects/hal.o: $(HAL_OBJECTS)
@@ -108,25 +110,28 @@ objects/nt.o: $(NT_OBJECTS)
 objects/cc.o: $(CC_OBJECTS)
 	$(LD) -r $(CC_OBJECTS) -o objects/cc.o
 
+objects/kd.o: $(KD_OBJECTS)
+	$(LD) -r $(KD_OBJECTS) -o objects/kd.o
+
 $(TARGET).coff: $(TARGET).rc ../include/reactos/resource.h
 
 
 OBJECTS = objects/hal.o objects/ke.o objects/rtl.o objects/mm.o \
           objects/io.o objects/ob.o objects/ps.o objects/ex.o \
-	  objects/se.o objects/cm.o objects/dbg.o \
-	  objects/nt.o objects/cc.o objects/ldr.o \
-	  $(TARGET).coff
-	  
+          objects/se.o objects/cm.o objects/dbg.o objects/nt.o \
+          objects/cc.o objects/kd.o objects/ldr.o \
+          $(TARGET).coff
+
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = objects\*.o cc\*.o cm\*.o dbg\*.o ex\*.o hal\x86\*.o io\*.o \
               ke\*.o ldr\*.o mm\*.o nt\*.o ob\*.o ps\*.o rtl\*.o se\*.o \
-              utils\export\export.exe $(TARGET).o $(TARGET).a junk.tmp \
-	      base.tmp temp.exp $(TARGET).exe $(TARGET).sym $(TARGET).coff
+              kd\*.o utils\export\export.exe $(TARGET).o $(TARGET).a junk.tmp \
+              base.tmp temp.exp $(TARGET).exe $(TARGET).sym $(TARGET).coff
 else
 CLEAN_FILES = objects/*.o cc/*.o cm/*.o dbg/*.o ex/*.o hal/x86/*.o io/*.o \
               ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o rtl/*.o se/*.o \
-              utils/export/export $(TARGET).o $(TARGET).a junk.tmp base.tmp \
-              temp.exp $(TARGET).exe $(TARGET).sym $(TARGET).coff
+              kd/*.o utils/export/export $(TARGET).o $(TARGET).a junk.tmp \
+              base.tmp temp.exp $(TARGET).exe $(TARGET).sym $(TARGET).coff
 endif
 
 $(TARGET).exe: $(OBJECTS) $(TARGET).def

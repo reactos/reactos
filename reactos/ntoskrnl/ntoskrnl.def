@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.18 1999/10/16 21:09:12 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.19 1999/10/21 11:10:26 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -389,7 +389,7 @@ HalSetBusDataByOffset
 HalSetDisplayParameters
 ;HalSetEnvironmentVariable
 ;HalSetProfileInterval
-HalSetRealTimeClock
+;HalSetRealTimeClock
 ;HalSetTimeIncrement
 ;HalStartNextProcessor
 ;HalStartProfileInterrupt
@@ -406,9 +406,9 @@ HalSetRealTimeClock
 ;IoWritePartitionTable
 ;KdComPortInUse
 ;KdPortGetByte
-;KdPortInitialize
+KdPortInitialize
 ;KdPortPollByte
-;KdPortPutByte
+KdPortPutByte
 ;KdPortRestore
 ;KdPortSave
 KeAcquireSpinLock
@@ -426,16 +426,16 @@ KeStallExecutionProcessor
 ;KfLowerIrql
 ;KfRaiseIrql
 ;KfReleaseSpinLock
-;READ_PORT_BUFFER_UCHAR
-;READ_PORT_BUFFER_ULONG
-;READ_PORT_BUFFER_USHORT
-;READ_PORT_UCHAR
-;READ_PORT_ULONG
-;READ_PORT_USHORT
-;WRITE_PORT_BUFFER_UCHAR
-;WRITE_PORT_BUFFER_ULONG
-;WRITE_PORT_BUFFER_USHORT
-;WRITE_PORT_UCHAR
-;WRITE_PORT_ULONG
-;WRITE_PORT_USHORT
+READ_PORT_BUFFER_UCHAR
+READ_PORT_BUFFER_ULONG
+READ_PORT_BUFFER_USHORT
+READ_PORT_UCHAR
+READ_PORT_ULONG
+READ_PORT_USHORT
+WRITE_PORT_BUFFER_UCHAR
+WRITE_PORT_BUFFER_ULONG
+WRITE_PORT_BUFFER_USHORT
+WRITE_PORT_UCHAR
+WRITE_PORT_ULONG
+WRITE_PORT_USHORT
 

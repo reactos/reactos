@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.2 1999/10/16 21:08:23 ekohl Exp $
+/* $Id: print.c,v 1.3 1999/10/21 11:13:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,7 +14,6 @@
 #include <ddk/ntddk.h>
 #include <internal/hal/ddk.h>
 #include <internal/ntoskrnl.h>
-#include <internal/halio.h>
 
 #include <string.h>
 
@@ -43,41 +42,10 @@
 /* #define SERIAL_DEBUG_PORT 0x02f8 */  /* COM 2 */
 #define SERIAL_DEBUG_BAUD_RATE 19200
 
-#define SERIAL_LINE_CONTROL (SR_LCR_CS8 | SR_LCR_ST1 | SR_LCR_PNO)
 
 #ifdef BOCHS_DEBUGGING
 #define BOCHS_LOGGER_PORT (0x3ed)
 #endif
-
-#ifdef SERIAL_DEBUGGING
-#define   SER_RBR   SERIAL_DEBUG_PORT + 0
-#define   SER_THR   SERIAL_DEBUG_PORT + 0
-#define   SER_DLL   SERIAL_DEBUG_PORT + 0
-#define   SER_IER   SERIAL_DEBUG_PORT + 1
-#define   SER_DLM   SERIAL_DEBUG_PORT + 1
-#define   SER_IIR   SERIAL_DEBUG_PORT + 2
-#define   SER_LCR   SERIAL_DEBUG_PORT + 3
-#define     SR_LCR_CS5 0x00
-#define     SR_LCR_CS6 0x01
-#define     SR_LCR_CS7 0x02
-#define     SR_LCR_CS8 0x03
-#define     SR_LCR_ST1 0x00
-#define     SR_LCR_ST2 0x04
-#define     SR_LCR_PNO 0x00
-#define     SR_LCR_POD 0x08
-#define     SR_LCR_PEV 0x18
-#define     SR_LCR_PMK 0x28
-#define     SR_LCR_PSP 0x38
-#define     SR_LCR_BRK 0x40
-#define     SR_LCR_DLAB 0x80
-#define   SER_MCR   SERIAL_DEBUG_PORT + 4
-#define     SR_MCR_DTR 0x01
-#define     SR_MCR_RTS 0x02
-#define   SER_LSR   SERIAL_DEBUG_PORT + 5
-#define     SR_LSR_TBE 0x20
-#define   SER_MSR   SERIAL_DEBUG_PORT + 6
-#endif
-
 
 
 /* FUNCTIONS ****************************************************************/
@@ -86,26 +54,19 @@
 static VOID
 DbgDisplaySerialString(PCH String)
 {
-    PCH pch = String;
+	PCH pch = String;
 
-    while (*pch != 0)
-    {
+	while (*pch != 0)
+	{
+		if (*pch == '\n')
+		{
+			KdPortPutByte ('\r');
+		}
 
-        while ((inb_p(SER_LSR) & SR_LSR_TBE) == 0)
-            ;
+		KdPortPutByte (*pch);
 
-        outb_p(SER_THR, *pch);
-
-        if (*pch == '\n')
-        {
-            while ((inb_p(SER_LSR) & SR_LSR_TBE) == 0)
-                ;
-
-            outb_p(SER_THR, '\r');
-        }
-
-        pch++;
-    }
+		pch++;
+	}
 }
 #endif /* SERIAL_DEBUGGING */
 
@@ -114,35 +75,35 @@ DbgDisplaySerialString(PCH String)
 static VOID
 DbgDisplayBochsString(PCH String)
 {
-    PCH pch = String;
+	PCH pch = String;
 
-    while (*pch != 0)
-    {
-        outb_p(BOCHS_LOGGER_PORT, *pch);
+	while (*pch != 0)
+	{
+		if (*pch == '\n')
+		{
+			WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, '\r');
+		}
 
-        if (*pch == '\n')
-        {
-            outb_p(BOCHS_LOGGER_PORT, '\r');
-        }
+		WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, *pch);
 
-        pch++;
-    }
+		pch++;
+	}
 }
 #endif /* BOCHS_DEBUGGING */
-
 
 
 VOID
 DbgInit (VOID)
 {
 #ifdef SERIAL_DEBUGGING
-        /*  turn on DTR and RTS  */
-        outb_p(SER_MCR, SR_MCR_DTR | SR_MCR_RTS);
-        /*  set baud rate, line control  */
-        outb_p(SER_LCR, SERIAL_LINE_CONTROL | SR_LCR_DLAB);
-        outb_p(SER_DLL, (115200 / SERIAL_DEBUG_BAUD_RATE) & 0xff);
-        outb_p(SER_DLM, ((115200 / SERIAL_DEBUG_BAUD_RATE) >> 8) & 0xff);
-        outb_p(SER_LCR, SERIAL_LINE_CONTROL);
+	KD_PORT_INFORMATION PortInfo;
+
+	PortInfo.BaseAddress = SERIAL_DEBUG_PORT;
+	PortInfo.BaudRate = SERIAL_DEBUG_BAUD_RATE;
+
+	KdPortInitialize (&PortInfo,
+	                  0,
+	                  0);
 #endif
 }
 
