@@ -1122,17 +1122,6 @@ NtUserIsClipboardFormatAvailable(
 
 DWORD
 STDCALL
-NtUserKillTimer(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserLoadKeyboardLayoutEx(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -1561,35 +1550,9 @@ NtUserSetSystemMenu(
 
 DWORD
 STDCALL
-NtUserSetSystemTimer(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserSetThreadState(
   DWORD Unknown0,
   DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetTimer(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
 {
   UNIMPLEMENTED
 
