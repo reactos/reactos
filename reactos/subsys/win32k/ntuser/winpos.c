@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.77 2003/12/28 12:17:15 navaraf Exp $
+/* $Id: winpos.c,v 1.78 2004/01/12 00:07:34 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -773,9 +773,9 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    }
   
    /* Compute the visible region before the window position is changed */
-   if ((!(WinPos.flags & (SWP_NOREDRAW | SWP_SHOWWINDOW)) &&
-       WinPos.flags & (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | 
-                       SWP_HIDEWINDOW | SWP_FRAMECHANGED)) != 
+   if (!(WinPos.flags & (SWP_NOREDRAW | SWP_SHOWWINDOW)) &&
+       (WinPos.flags & (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | 
+                        SWP_HIDEWINDOW | SWP_FRAMECHANGED)) != 
        (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER))
    {
       VisBefore = VIS_ComputeVisibleRegion(

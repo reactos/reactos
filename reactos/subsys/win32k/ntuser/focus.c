@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.6 2003/12/26 22:52:11 gvg Exp $
+ * $Id: focus.c,v 1.7 2004/01/12 00:07:34 navaraf Exp $
  */
 
 #include <win32k/win32k.h>
@@ -76,7 +76,7 @@ IntSendActivateMessages(HWND hWndPrev, HWND hWnd)
       }
 
       WinPosSetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0,
-         SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
+         SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
       /* FIXME: IntIsWindow */
 

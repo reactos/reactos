@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.58 2004/01/10 21:59:05 gvg Exp $
+ *  $Id: painting.c,v 1.59 2004/01/12 00:07:34 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -80,7 +80,7 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
              */
             OffsetX = Child->WindowRect.left - ParentWindow->WindowRect.left;
             OffsetY = Child->WindowRect.top - ParentWindow->WindowRect.top;
-            NtGdiOffsetRgn(ValidRegion, OffsetX, OffsetY );
+            NtGdiOffsetRgn(ValidRegion, OffsetX, OffsetY);
             NtGdiCombineRgn(ParentWindow->UpdateRegion, ParentWindow->UpdateRegion,
                ValidRegion, RGN_DIFF);
             /* FIXME: If the resulting region is empty, remove fake posted paint message */
@@ -401,8 +401,6 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
             }
             if (Child->Style & WS_VISIBLE)
             {
-               RECT TempRect;
-
                /*
                 * Recursive call to update children UpdateRegion
                 */
@@ -414,11 +412,17 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
                IntInvalidateWindows(Child, hRgnTemp, Flags, FALSE);
 
                /*
+                * WINDOWS REALLY DON'T DO THIS!!!
+                */
+#if 0
+               /*
                 * Update our UpdateRegion depending on children
                 */
 
                if (Window->UpdateRegion != NULL)
                {
+                  RECT TempRect;
+
                   UnsafeIntGetRgnBox(Window->UpdateRegion, &TempRect);
                   NtGdiCombineRgn(hRgnTemp, Child->UpdateRegion, 0, RGN_COPY);
                   NtGdiCombineRgn(hRgnTemp, hRgnTemp, Child->NCUpdateRegion, RGN_OR);
@@ -433,6 +437,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
                      Window->UpdateRegion = NULL;
                   }
                }
+#endif
                NtGdiDeleteObject(hRgnTemp);
             }
             IntReleaseWindowObject(Child);
@@ -689,16 +694,16 @@ IntGetPaintMessage(HWND hWnd, PW32THREAD Thread, MSG *Message,
    if (hWnd)
       Message->hwnd = IntFindWindowToRepaint(hWnd, PsGetWin32Thread());
    else
-      Message->hwnd = IntFindWindowToRepaint(NULL, PsGetWin32Thread());
+      Message->hwnd = IntFindWindowToRepaint(IntGetDesktopWindow(), PsGetWin32Thread());
 
    if (Message->hwnd == NULL)
    {
 #if 0
       DPRINT1("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found!\n");
+#endif
       /* FIXME: Lock the queue! */
       MessageQueue->PaintPosted = 0;
       MessageQueue->PaintCount = 0;
-#endif
       return FALSE;
    }
 
