@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.16 2002/04/24 22:20:50 ekohl Exp $
+/* $Id: class2.c,v 1.17 2002/04/27 19:01:24 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -876,6 +876,15 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 	}
     }
 
+  /* Free the IRP's MDL */
+  if (Irp->MdlAddress->MappedSystemVa != NULL)
+    {
+      MmUnmapLockedPages(Irp->MdlAddress->MappedSystemVa,
+			 Irp->MdlAddress);
+    }
+  MmUnlockPages(Irp->MdlAddress);
+  ExFreePool(Irp->MdlAddress);
+
   /* FIXME: use lookaside list instead */
   DPRINT("Freed SRB %p\n", IrpStack->Parameters.Scsi.Srb);
   ExFreePool(IrpStack->Parameters.Scsi.Srb);
@@ -1165,7 +1174,6 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
   PIRP Irp;
   NTSTATUS Status;
 
-
   DPRINT("ScsiClassSendSrbSynchronous() called\n");
 
   RetryCount = MAXIMUM_RETRIES;
@@ -1299,7 +1307,7 @@ ScsiClassSplitRequest(PDEVICE_OBJECT DeviceObject,
   ULONG DataLength;
   ULONG i;
 
-  DPRINT1("ScsiClassSplitRequest(DeviceObject %lx  Irp %lx  MaximumBytes %lu)\n",
+  DPRINT("ScsiClassSplitRequest(DeviceObject %lx  Irp %lx  MaximumBytes %lu)\n",
 	 DeviceObject, Irp, MaximumBytes);
 
   DeviceExtension = DeviceObject->DeviceExtension;
@@ -1316,7 +1324,7 @@ ScsiClassSplitRequest(PDEVICE_OBJECT DeviceObject,
   /* Save request count in the original IRP */
   NextStack->Parameters.Others.Argument1 = (PVOID)RequestCount;
 
-  DPRINT1("RequestCount %lu\n", RequestCount);
+  DPRINT("RequestCount %lu\n", RequestCount);
 
   for (i = 0; i < RequestCount; i++)
     {
@@ -1479,8 +1487,6 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
       return(STATUS_PENDING);
     }
 
-  IoMarkIrpPending(Irp);
-
   /* Adjust partition-relative starting offset to absolute offset */
   IrpStack->Parameters.Read.ByteOffset.QuadPart += DeviceExtension->StartingOffset.QuadPart;
 
@@ -1492,7 +1498,7 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
   if (CurrentTransferLength > MaximumTransferLength ||
       CurrentTransferPages > MaximumTransferPages)
     {
-       DPRINT1("Split current request: MaximumTransferLength %lu  CurrentTransferLength %lu\n",
+       DPRINT("Split current request: MaximumTransferLength %lu  CurrentTransferLength %lu\n",
 	      MaximumTransferLength, CurrentTransferLength);
 
       /* Adjust the maximum transfer length */
