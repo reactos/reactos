@@ -337,7 +337,7 @@ NtIsProcessInJob(IN HANDLE ProcessHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS 
 STDCALL 
@@ -345,8 +345,53 @@ NtOpenJobObject(PHANDLE JobHandle,
                 ACCESS_MASK DesiredAccess,
                 POBJECT_ATTRIBUTES ObjectAttributes)
 {
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
+  KPROCESSOR_MODE PreviousMode;
+  HANDLE hJob;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  PreviousMode = ExGetPreviousMode();
+
+  /* check for valid buffers */
+  if(PreviousMode == UserMode)
+  {
+    _SEH_TRY
+    {
+      /* probe with 32bit alignment */
+      ProbeForWrite(JobHandle,
+                    sizeof(HANDLE),
+                    sizeof(ULONG));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+  }
+  
+  if(NT_SUCCESS(Status))
+  {
+    Status = ObOpenObjectByName(ObjectAttributes,
+                                PsJobType,
+                                NULL,
+                                PreviousMode,
+                                DesiredAccess,
+                                NULL,
+                                &hJob);
+    if(NT_SUCCESS(Status))
+    {
+      _SEH_TRY
+      {
+        *JobHandle = hJob;
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+    }
+  }
+  
+  return Status;
 }
 
 
