@@ -1,4 +1,4 @@
-/* $Id: class2.c,v 1.5 2002/02/03 20:21:29 ekohl Exp $
+/* $Id: class2.c,v 1.6 2002/02/26 23:02:14 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -110,116 +110,53 @@ VOID STDCALL
 ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp)
 {
-  PDEVICE_EXTENSION   deviceExtension = DeviceObject->DeviceExtension;
-  PIO_STACK_LOCATION  currentIrpStack = IoGetCurrentIrpStackLocation(Irp);
-  PIO_STACK_LOCATION  nextIrpStack = IoGetNextIrpStackLocation(Irp);
-  LARGE_INTEGER       startingOffset = currentIrpStack->Parameters.Read.ByteOffset;
-  LARGE_INTEGER       startingBlock;
+  PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
+  PIO_STACK_LOCATION currentIrpStack = IoGetCurrentIrpStackLocation(Irp);
+  PIO_STACK_LOCATION nextIrpStack = IoGetNextIrpStackLocation(Irp);
+  LARGE_INTEGER startingOffset = currentIrpStack->Parameters.Read.ByteOffset;
+  LARGE_INTEGER startingBlock;
   PSCSI_REQUEST_BLOCK Srb;
-  PCDB                Cdb;
-  ULONG               logicalBlockAddress;
-  USHORT              transferBlocks;
+  PCDB Cdb;
+  ULONG LogicalBlockAddress;
+  USHORT transferBlocks;
 
-    //
-    // Calculate relative sector address.
-    //
-
-//  logicalBlockAddress = (ULONG)(Int64ShrlMod32(startingOffset.QuadPart, deviceExtension->SectorShift));
-
+  /* calculate logical block address */
   startingBlock.QuadPart = startingOffset.QuadPart / 512; // >> deviceExtension->SectorShift;
-  logicalBlockAddress = (ULONG)startingBlock.u.LowPart;
+  LogicalBlockAddress = (ULONG)startingBlock.u.LowPart;
 
-  DPRINT1("Logical block address: %lu\n", logicalBlockAddress);
+  DPRINT1("Logical block address: %lu\n", LogicalBlockAddress);
 
-    //
-    // Allocate an Srb.
-    //
-
-//    Srb = ExAllocateFromNPagedLookasideList(&deviceExtension->SrbLookasideListHead);
+  /* allocate and initialize an SRB */
+  /* FIXME: use lookaside list instead */
   Srb = ExAllocatePool(NonPagedPool,
 		       sizeof(SCSI_REQUEST_BLOCK));
 
-
   Srb->SrbFlags = 0;
-
-    //
-    // Write length to SRB.
-    //
-
   Srb->Length = sizeof(SCSI_REQUEST_BLOCK); //SCSI_REQUEST_BLOCK_SIZE;
+  Srb->OriginalRequest = Irp;
+  Srb->PathId = deviceExtension->PathId;
+  Srb->TargetId = deviceExtension->TargetId;
+  Srb->Lun = deviceExtension->Lun;
+  Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+  Srb->DataBuffer = MmGetMdlVirtualAddress(Irp->MdlAddress);
+  Srb->DataTransferLength = currentIrpStack->Parameters.Read.Length;
+  Srb->QueueAction = SRB_SIMPLE_TAG_REQUEST;
+  Srb->QueueSortKey = LogicalBlockAddress;
 
-    //
-    // Set up IRP Address.
-    //
+  Srb->SenseInfoBuffer = deviceExtension->SenseData;
+  Srb->SenseInfoBufferLength = SENSE_BUFFER_SIZE;
 
-    Srb->OriginalRequest = Irp;
+  Srb->TimeOutValue =
+    ((Srb->DataTransferLength + 0xFFFF) >> 16) * deviceExtension->TimeOutValue;
 
-    //
-    // Set up target ID and logical unit number.
-    //
+  Srb->SrbStatus = SRB_STATUS_SUCCESS;
+  Srb->ScsiStatus = 0;
+  Srb->NextSrb = 0;
 
-    Srb->PathId = deviceExtension->PathId;
-    Srb->TargetId = deviceExtension->TargetId;
-    Srb->Lun = deviceExtension->Lun;
-    Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
-    Srb->DataBuffer = MmGetMdlVirtualAddress(Irp->MdlAddress);
+  Srb->CdbLength = 10;
+  Cdb = (PCDB)Srb->Cdb;
 
-    //
-    // Save byte count of transfer in SRB Extension.
-    //
-
-    Srb->DataTransferLength = currentIrpStack->Parameters.Read.Length;
-
-    //
-    // Initialize the queue actions field.
-    //
-
-    Srb->QueueAction = SRB_SIMPLE_TAG_REQUEST;
-
-    //
-    // Queue sort key is Relative Block Address.
-    //
-
-    Srb->QueueSortKey = logicalBlockAddress;
-
-    //
-    // Indicate auto request sense by specifying buffer and size.
-    //
-
-    Srb->SenseInfoBuffer = deviceExtension->SenseData;
-    Srb->SenseInfoBufferLength = SENSE_BUFFER_SIZE;
-
-    //
-    // Set timeout value of one unit per 64k bytes of data.
-    //
-
-    Srb->TimeOutValue = ((Srb->DataTransferLength + 0xFFFF) >> 16) *
-                        deviceExtension->TimeOutValue;
-
-    //
-    // Zero statuses.
-    //
-
-    Srb->SrbStatus = 0;
-    Srb->ScsiStatus = 0;
-    Srb->NextSrb = 0;
-
-    //
-    // Indicate that 10-byte CDB's will be used.
-    //
-
-    Srb->CdbLength = 10;
-
-    //
-    // Fill in CDB fields.
-    //
-
-    Cdb = (PCDB)Srb->Cdb;
-
-    //
-    // Zero 12 bytes for Atapi Packets
-    //
-
+  /* Initialize ATAPI packet (12 bytes) */
   RtlZeroMemory(Cdb,
 		MAXIMUM_CDB_SIZE);
 
@@ -230,10 +167,10 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
     // Move little endian values into CDB in big endian format.
     //
 
-  Cdb->CDB10.LogicalBlockByte0 = ((PFOUR_BYTE)&logicalBlockAddress)->Byte3;
-  Cdb->CDB10.LogicalBlockByte1 = ((PFOUR_BYTE)&logicalBlockAddress)->Byte2;
-  Cdb->CDB10.LogicalBlockByte2 = ((PFOUR_BYTE)&logicalBlockAddress)->Byte1;
-  Cdb->CDB10.LogicalBlockByte3 = ((PFOUR_BYTE)&logicalBlockAddress)->Byte0;
+  Cdb->CDB10.LogicalBlockByte0 = ((PFOUR_BYTE)&LogicalBlockAddress)->Byte3;
+  Cdb->CDB10.LogicalBlockByte1 = ((PFOUR_BYTE)&LogicalBlockAddress)->Byte2;
+  Cdb->CDB10.LogicalBlockByte2 = ((PFOUR_BYTE)&LogicalBlockAddress)->Byte1;
+  Cdb->CDB10.LogicalBlockByte3 = ((PFOUR_BYTE)&LogicalBlockAddress)->Byte0;
 
   Cdb->CDB10.TransferBlocksMsb = ((PFOUR_BYTE)&transferBlocks)->Byte1;
   Cdb->CDB10.TransferBlocksLsb = ((PFOUR_BYTE)&transferBlocks)->Byte0;
@@ -244,17 +181,17 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
 
   if (currentIrpStack->MajorFunction == IRP_MJ_READ)
     {
-        DPRINT1("ScsiClassBuildRequest: Read Command\n");
+      DPRINT1("ScsiClassBuildRequest: Read Command\n");
 
-        Srb->SrbFlags |= SRB_FLAGS_DATA_IN;
-        Cdb->CDB10.OperationCode = SCSIOP_READ;
+      Srb->SrbFlags |= SRB_FLAGS_DATA_IN;
+      Cdb->CDB10.OperationCode = SCSIOP_READ;
     }
   else
     {
-        DPRINT("ScsiClassBuildRequest: Write Command\n");
+      DPRINT1("ScsiClassBuildRequest: Write Command\n");
 
-        Srb->SrbFlags |= SRB_FLAGS_DATA_OUT;
-        Cdb->CDB10.OperationCode = SCSIOP_WRITE;
+      Srb->SrbFlags |= SRB_FLAGS_DATA_OUT;
+      Cdb->CDB10.OperationCode = SCSIOP_WRITE;
     }
 
     //
@@ -264,11 +201,11 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
 #if 0
   if (!(currentIrpStack->Flags & SL_WRITE_THROUGH))
     {
-        Srb->SrbFlags |= SRB_FLAGS_ADAPTER_CACHE_ENABLE;
+      Srb->SrbFlags |= SRB_FLAGS_ADAPTER_CACHE_ENABLE;
     }
   else
     {
-      /* If write caching is enable then force media access in the cdb. */
+      /* if write caching is enable then force media access in the cdb */
       if (deviceExtension->DeviceFlags & DEV_WRITE_CACHE)
 	{
 	  Cdb->CDB10.ForceUnitAccess = TRUE;
@@ -298,7 +235,7 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
   currentIrpStack->Parameters.Others.Argument4 = (PVOID)MAXIMUM_RETRIES;
 #endif
 
-  /* Set up IoCompletion routine address. */
+  /* set up IoCompletion routine address */
   IoSetCompletionRoutine(Irp,
 			 ScsiClassIoComplete,
 			 Srb,
@@ -326,7 +263,7 @@ ScsiClassClaimDevice(PDEVICE_OBJECT PortDeviceObject,
   if (NewPortDeviceObject != NULL)
     *NewPortDeviceObject = NULL;
 
-  /* Initialize an SRB */
+  /* initialize an SRB */
   RtlZeroMemory(&Srb,
 		sizeof(SCSI_REQUEST_BLOCK));
   Srb.Length = SCSI_REQUEST_BLOCK_SIZE;
@@ -752,14 +689,60 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 		    PIRP Irp,
 		    PVOID Context)
 {
-  DPRINT("ScsiClassIoComplete() called\n");
+  PDEVICE_EXTENSION DeviceExtension;
+  PIO_STACK_LOCATION IrpStack;
+  PSCSI_REQUEST_BLOCK Srb;
+  NTSTATUS Status;
+
+  DPRINT1("ScsiClassIoComplete() called\n");
+
+  DeviceExtension = DeviceObject->DeviceExtension;
+  Srb = (PSCSI_REQUEST_BLOCK)Context;
+
+  IrpStack = IoGetCurrentIrpStackLocation(Irp);
+
+  if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_SUCCESS)
+    {
+      Status = STATUS_SUCCESS;
+    }
+  else
+    {
+      /* FIXME: improve error handling */
+      DPRINT1("Srb->SrbStatus %lx\n", Srb->SrbStatus);
+      Status = STATUS_UNSUCCESSFUL;
+    }
+
+  /* FIXME: use lookaside list instead */
+  DPRINT1("Freed SRB %p\n", Srb);
+  ExFreePool(Srb);
+
+
+  Irp->IoStatus.Status = Status;
+  if (!NT_SUCCESS(Status) &&
+      IoIsErrorUserInduced(Status))
+    {
+      IoSetHardErrorOrVerifyDevice(Irp,
+				   DeviceObject);
+      Irp->IoStatus.Information = 0;
+    }
 
   if (Irp->PendingReturned)
     {
       IoMarkIrpPending(Irp);
     }
 
-  return(Irp->IoStatus.Status);
+  if (DeviceExtension->ClassStartIo != NULL)
+    {
+      if (IrpStack->MajorFunction != IRP_MJ_DEVICE_CONTROL)
+	{
+	  IoStartNextPacket(DeviceObject,
+			    FALSE);
+	}
+    }
+
+  DPRINT1("ScsiClassIoComplete() done (Status %lx)\n", Status);
+
+  return(Status);
 }
 
 
@@ -983,7 +966,9 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
 
   if (SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_SUCCESS)
     {
-
+      /* FIXME!! */
+      DPRINT1("Fix return value!\n");
+      Status = STATUS_UNSUCCESSFUL;
     }
   else
     {
