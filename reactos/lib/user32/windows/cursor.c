@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.20 2004/04/09 20:03:14 navaraf Exp $
+/* $Id: cursor.c,v 1.21 2004/05/01 09:31:59 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -260,10 +260,18 @@ BOOL STDCALL
 SetCursorPos(int X,
 	     int Y)
 {
-  POINT pos;
-  pos.x = (LONG)X;
-  pos.y = (LONG)Y;
-  return NtUserSetCursorPos(&pos);
+  INPUT Input;
+  
+  Input.type = INPUT_MOUSE;
+  Input.mi.dx = (LONG)X;
+  Input.mi.dy = (LONG)Y;
+  Input.mi.mouseData = 0;
+  Input.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
+  Input.mi.time = 0;
+  Input.mi.dwExtraInfo = 0;
+  
+  NtUserSendInput(1, &Input, sizeof(INPUT));
+  return TRUE;
 }
 
 

@@ -40,12 +40,6 @@ void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo);
 #define NtUserSetCaretPos(X, Y) \
   (BOOL)NtUserCallTwoParam((DWORD)X, (DWORD)Y, TWOPARAM_ROUTINE_SETCARETPOS)
 
-#define NtUserGetCursorPos(lpPoint) \
-  (BOOL)NtUserCallTwoParam((DWORD)lpPoint, (DWORD)FALSE, TWOPARAM_ROUTINE_CURSORPOSITION)
-
-#define NtUserSetCursorPos(lpPoint) \
-  (BOOL)NtUserCallTwoParam((DWORD)lpPoint, (DWORD)TRUE, TWOPARAM_ROUTINE_CURSORPOSITION)
-
 #define NtUserSetGUIThreadHandle(field, hwnd) \
   (BOOL)NtUserCallTwoParam((DWORD)field, (DWORD)hwnd, TWOPARAM_ROUTINE_SETGUITHRDHANDLE)
 
@@ -87,6 +81,9 @@ void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo);
 
 #define NtUserGetWindowInstance(hwnd) \
   (HINSTANCE)NtUserCallOneParam((DWORD)hwnd, ONEPARAM_ROUTINE_GETWINDOWINSTANCE)
+
+#define NtUserGetCursorPos(lpPoint) \
+  (BOOL)NtUserCallOneParam((DWORD)lpPoint, ONEPARAM_ROUTINE_GETCURSORPOSITION)
 
 LONG WINAPI RegCloseKey(HKEY);
 LONG WINAPI RegOpenKeyExW(HKEY,LPCWSTR,DWORD,REGSAM,PHKEY);

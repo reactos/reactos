@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.64 2004/04/30 22:18:00 weiden Exp $
+/* $Id: misc.c,v 1.65 2004/05/01 09:31:59 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -185,6 +185,36 @@ NtUserCallOneParam(
     
     case ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO:
       return (DWORD)MsqSetMessageExtraInfo((LPARAM)Param);
+    
+    case ONEPARAM_ROUTINE_GETCURSORPOSITION:
+    {
+      POINT Pos;
+      
+      if(!Param)
+        return (DWORD)FALSE;
+      Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+                                              KernelMode,
+                                              0,
+                                              &WinStaObject);
+      if (!NT_SUCCESS(Status))
+        return (DWORD)FALSE;
+      
+      /* FIXME - check if process has WINSTA_READATTRIBUTES */
+      Pos.x = WinStaObject->SystemCursor.x;
+      Pos.y = WinStaObject->SystemCursor.y;
+      
+      Status = MmCopyToCaller((PPOINT)Param, &Pos, sizeof(POINT));
+      if(!NT_SUCCESS(Status))
+      {
+        ObDereferenceObject(WinStaObject);
+        SetLastNtError(Status);
+        return FALSE;
+      }
+      
+      ObDereferenceObject(WinStaObject);
+      
+      return (DWORD)TRUE;
+    }
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam()\n Param=0x%x\n", 
           Routine, Param);
@@ -205,8 +235,6 @@ NtUserCallTwoParam(
 {
   NTSTATUS Status;
   PWINDOW_OBJECT WindowObject;
-  PWINSTATION_OBJECT WinStaObject;
-  POINT Pos;
   
   switch(Routine)
   {
@@ -314,58 +342,6 @@ NtUserCallTwoParam(
       WindowObject->ContextHelpId = Param2;
       
       IntReleaseWindowObject(WindowObject);
-      return (DWORD)TRUE;
-      
-    case TWOPARAM_ROUTINE_CURSORPOSITION:
-      if(!Param1)
-        return (DWORD)FALSE;
-      Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-                                              KernelMode,
-                                              0,
-                                              &WinStaObject);
-      if (!NT_SUCCESS(Status))
-        return (DWORD)FALSE;
-      
-      if(Param2)
-      {
-        /* set cursor position */
-        MOUSEINPUT mi;
-        
-        Status = MmCopyFromCaller(&Pos, (PPOINT)Param1, sizeof(POINT));
-        if(!NT_SUCCESS(Status))
-        {
-          ObDereferenceObject(WinStaObject);
-          SetLastNtError(Status);
-          return FALSE;
-        }
-        
-        mi.dx = Pos.x;
-        mi.dy = Pos.y;
-        mi.mouseData = 0;
-        mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
-        mi.time = 0;
-        mi.dwExtraInfo = 0;
-        IntMouseInput(&mi);
-      }
-      else
-      {
-        /* get cursor position */
-        /* FIXME - check if process has WINSTA_READATTRIBUTES */
-        Pos.x = WinStaObject->SystemCursor.x;
-        Pos.y = WinStaObject->SystemCursor.y;
-        
-        Status = MmCopyToCaller((PPOINT)Param1, &Pos, sizeof(POINT));
-        if(!NT_SUCCESS(Status))
-        {
-          ObDereferenceObject(WinStaObject);
-          SetLastNtError(Status);
-          return FALSE;
-        }
-        
-      }
-      
-      ObDereferenceObject(WinStaObject);
-      
       return (DWORD)TRUE;
     
     case TWOPARAM_ROUTINE_SETCARETPOS:
