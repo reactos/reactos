@@ -1,10 +1,9 @@
-# $Id: makefile,v 1.7 1999/12/04 20:58:39 ea Exp $
+# $Id: makefile,v 1.8 1999/12/18 10:17:42 ea Exp $
 #
 #
 TARGET=keyboard
 
-#OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
-OBJECTS = $(TARGET).o ../../../ntoskrnl/ntoskrnl.a
+OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 
 BASE_CFLAGS = -I../../../include
 

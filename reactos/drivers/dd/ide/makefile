@@ -1,10 +1,9 @@
-# $Id: makefile,v 1.9 1999/12/04 20:58:38 ea Exp $
+# $Id: makefile,v 1.10 1999/12/18 10:17:41 ea Exp $
 #
 #
 TARGET=ide
 
-#OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
-OBJECTS = $(TARGET).o ../../../ntoskrnl/ntoskrnl.a
+OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 
 BASE_CFLAGS = -I../../../include
 

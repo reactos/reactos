@@ -1,4 +1,4 @@
-#
+# $Id: makefile,v 1.5 1999/12/18 10:17:42 ea Exp $
 #
 #
 BASE_CFLAGS = -I../../../include
