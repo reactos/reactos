@@ -1,4 +1,4 @@
-/* $Id: tinfo.c,v 1.24 2003/12/30 18:52:05 fireball Exp $
+/* $Id: tinfo.c,v 1.25 2004/03/19 12:45:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,28 +22,28 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL 
-NtSetInformationThread(HANDLE		ThreadHandle,
-		       THREADINFOCLASS	ThreadInformationClass,
-		       PVOID		ThreadInformation,
-		       ULONG ThreadInformationLength)
+NTSTATUS STDCALL
+NtSetInformationThread (IN HANDLE ThreadHandle,
+			IN THREADINFOCLASS ThreadInformationClass,
+			IN PVOID ThreadInformation,
+			IN ULONG ThreadInformationLength)
 {
-   PETHREAD			Thread;
-   NTSTATUS			Status;
-   
-   Status = ObReferenceObjectByHandle(ThreadHandle,
+  PETHREAD Thread;
+  NTSTATUS Status;
+
+  Status = ObReferenceObjectByHandle (ThreadHandle,
 				      THREAD_SET_INFORMATION,
 				      PsThreadType,
-				      ExGetPreviousMode(),
+				      ExGetPreviousMode (),
 				      (PVOID*)&Thread,
 				      NULL);
    if (!NT_SUCCESS(Status))
      {
 	return Status;
      }
-   
-   switch (ThreadInformationClass)
-     {
+
+  switch (ThreadInformationClass)
+    {
       case ThreadBasicInformation:
 	/* Can only be queried */
 	Status = STATUS_INVALID_INFO_CLASS;
@@ -57,7 +57,7 @@ NtSetInformationThread(HANDLE		ThreadHandle,
       case ThreadPriority:
 	  {
 	    KPRIORITY Priority;
-	    
+
 	    if (ThreadInformationLength != sizeof(KPRIORITY))
 	      {
 		Status = STATUS_INFO_LENGTH_MISMATCH;
@@ -77,17 +77,18 @@ NtSetInformationThread(HANDLE		ThreadHandle,
       case ThreadBasePriority:
 	  {
 	    LONG Increment;
+
 	    if (ThreadInformationLength != sizeof(LONG))
 	      {
 	        Status = STATUS_INFO_LENGTH_MISMATCH;
 	        break;
 	      }
-            Status = MmCopyFromCaller(&Increment,
-                                      ThreadInformation,
-                                      sizeof(ULONG));
-            if (NT_SUCCESS(Status))
-              {
-	        KeSetBasePriorityThread (&Thread->Tcb, Increment); 
+	    Status = MmCopyFromCaller(&Increment,
+				      ThreadInformation,
+				      sizeof(ULONG));
+	    if (NT_SUCCESS(Status))
+	      {
+		KeSetBasePriorityThread (&Thread->Tcb, Increment);
 	      }
 	  }
         break;
@@ -106,7 +107,8 @@ NtSetInformationThread(HANDLE		ThreadHandle,
 	      break;
 	    }
 	  TokenHandle = *((PHANDLE)ThreadInformation);
-	  Status = PsAssignImpersonationToken(Thread, TokenHandle);
+	  Status = PsAssignImpersonationToken (Thread,
+					       TokenHandle);
 	  break;
 	}
 	
@@ -158,49 +160,51 @@ NtSetInformationThread(HANDLE		ThreadHandle,
 	Thread->u2.Win32StartAddress = (PVOID)*((PULONG)ThreadInformation);
 	Status = STATUS_SUCCESS;
 	break;
-		
+
       case ThreadZeroTlsCell:
 	{
 	  Status = STATUS_NOT_IMPLEMENTED;
 	  break;
 	}
-	
+
       case ThreadPerformanceCount:
 	/* Can only be queried */
 	Status = STATUS_INVALID_INFO_CLASS;
 	break;
-	
+
       case ThreadAmILastThread:
 	/* Can only be queried */
 	Status = STATUS_INVALID_INFO_CLASS;
 	break;
-	
-     case ThreadIdealProcessor:
-       Status = STATUS_NOT_IMPLEMENTED;
-       break;
-       
-     case ThreadPriorityBoost:
-       Status = STATUS_NOT_IMPLEMENTED;
-       break;
-	
-     case ThreadSetTlsArrayAddress:
-       Status = STATUS_NOT_IMPLEMENTED;
-       break;
 
-     case ThreadIsIoPending:
-       /* Can only be queried */
-       Status = STATUS_INVALID_INFO_CLASS;
-       break;
+      case ThreadIdealProcessor:
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
 
-     case ThreadHideFromDebugger:
-       Status = STATUS_NOT_IMPLEMENTED;
-       break;
+      case ThreadPriorityBoost:
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+
+      case ThreadSetTlsArrayAddress:
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+
+       case ThreadIsIoPending:
+	/* Can only be queried */
+	Status = STATUS_INVALID_INFO_CLASS;
+	break;
+
+      case ThreadHideFromDebugger:
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
 
       default:
 	Status = STATUS_UNSUCCESSFUL;
-     }
-   ObDereferenceObject(Thread);
-   return Status;
+    }
+
+  ObDereferenceObject (Thread);
+
+  return Status;
 }
 
 
@@ -364,10 +368,13 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
    return(Status);
 }
 
-VOID KeSetPreviousMode(ULONG Mode)
+
+VOID
+KeSetPreviousMode (ULONG Mode)
 {
-   PsGetCurrentThread()->Tcb.PreviousMode = (UCHAR)Mode;
+  PsGetCurrentThread()->Tcb.PreviousMode = (UCHAR)Mode;
 }
+
 
 /*
  * @implemented
@@ -375,8 +382,9 @@ VOID KeSetPreviousMode(ULONG Mode)
 ULONG STDCALL
 KeGetPreviousMode (VOID)
 {
-   return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;
+  return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;
 }
+
 
 /*
  * @implemented
@@ -384,7 +392,7 @@ KeGetPreviousMode (VOID)
 KPROCESSOR_MODE STDCALL
 ExGetPreviousMode (VOID)
 {
-   return (KPROCESSOR_MODE)PsGetCurrentThread()->Tcb.PreviousMode;
+  return (KPROCESSOR_MODE)PsGetCurrentThread()->Tcb.PreviousMode;
 }
 
 /* EOF */
