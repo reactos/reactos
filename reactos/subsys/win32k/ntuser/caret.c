@@ -1,4 +1,4 @@
-/* $Id: caret.c,v 1.6 2003/11/22 05:06:18 rcampbell Exp $
+/* $Id: caret.c,v 1.7 2003/11/22 11:49:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -10,15 +10,23 @@
  */
 
 #include <win32k/win32k.h>
+#include <ddk/ntddk.h>
 #include <internal/safe.h>
 #include <include/error.h>
 #include <include/window.h>
 #include <include/caret.h>
 #include <include/timer.h>
 #include <include/callback.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <debug.h>
+
+#define MIN_CARETBLINKRATE 100
+#define MAX_CARETBLINKRATE 10000
+#define DEFAULT_CARETBLINKRATE 530
+#define CARET_REGKEY L"\\Registry\\User\\.Default\\Control Panel\\Desktop"
+#define CARET_VALUENAME L"CursorBlinkRate"
 
 BOOL FASTCALL
 IntHideCaret(PTHRDCARETINFO CaretInfo)
@@ -44,13 +52,134 @@ IntDestroyCaret(PW32THREAD Win32Thread)
 BOOL FASTCALL
 IntSetCaretBlinkTime(UINT uMSeconds)
 {
-  return FALSE;
+  /* Don't save the new value to the registry! */
+  NTSTATUS Status;
+  PWINSTATION_OBJECT WinStaObject;
+  
+  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+				                               KernelMode,
+				                               0,
+				                               &WinStaObject);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return FALSE;
+  }
+  
+  /* windows doesn't do this check */
+  if((uMSeconds < MIN_CARETBLINKRATE) || (uMSeconds > MAX_CARETBLINKRATE))
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    ObDereferenceObject(WinStaObject);
+    return FALSE;
+  }
+  
+  WinStaObject->CaretBlinkRate = uMSeconds;
+  
+  ObDereferenceObject(WinStaObject);
+  return TRUE;
+}
+
+#define CARET_VALUE_BUFFER_SIZE 32
+UINT FASTCALL
+IntQueryCaretBlinkRate(VOID)
+{
+  UNICODE_STRING KeyName, ValueName;
+  NTSTATUS Status;
+  HANDLE KeyHandle = NULL;
+  OBJECT_ATTRIBUTES KeyAttributes;
+  PKEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInfo;
+  ULONG Length = 0;
+  ULONG ResLength = 0;
+  ULONG Val = 0;
+  
+  RtlRosInitUnicodeStringFromLiteral(&KeyName, CARET_REGKEY);
+  RtlRosInitUnicodeStringFromLiteral(&ValueName, CARET_VALUENAME);
+  
+  InitializeObjectAttributes(&KeyAttributes, &KeyName, OBJ_CASE_INSENSITIVE,
+                             NULL, NULL);
+  
+  Status = ZwOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
+  if(!NT_SUCCESS(Status))
+  {
+    return 0;
+  }
+  
+  Status = ZwQueryValueKey(KeyHandle, &ValueName, KeyValuePartialInformation,
+                           0, 0, &ResLength);
+  if((Status != STATUS_BUFFER_TOO_SMALL))
+  {
+    NtClose(KeyHandle);
+    return 0;
+  }
+  
+  ResLength += sizeof(KEY_VALUE_PARTIAL_INFORMATION);
+  KeyValuePartialInfo = ExAllocatePool(PagedPool, ResLength);
+  Length = ResLength;
+  
+  if(!KeyValuePartialInfo)
+  {
+    NtClose(KeyHandle);
+    return 0;
+  }
+  
+  Status = ZwQueryValueKey(KeyHandle, &ValueName, KeyValuePartialInformation,
+                           (PVOID)KeyValuePartialInfo, Length, &ResLength);
+  if(!NT_SUCCESS(Status) || (KeyValuePartialInfo->Type != REG_SZ))
+  {
+    NtClose(KeyHandle);
+    ExFreePool(KeyValuePartialInfo);
+    return 0;
+  }
+  
+  ValueName.Length = KeyValuePartialInfo->DataLength;
+  ValueName.MaximumLength = KeyValuePartialInfo->DataLength;
+  ValueName.Buffer = (PWSTR)KeyValuePartialInfo->Data;
+  
+  Status = RtlUnicodeStringToInteger(&ValueName, 0, &Val);
+  if(!NT_SUCCESS(Status))
+  {
+    Val = 0;
+  }
+  
+  ExFreePool(KeyValuePartialInfo);
+  NtClose(KeyHandle);
+  
+  return (UINT)Val;
 }
 
 UINT FASTCALL
 IntGetCaretBlinkTime(VOID)
 {
-  return 500;
+  NTSTATUS Status;
+  PWINSTATION_OBJECT WinStaObject;
+  UINT Ret;
+  
+  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+				                               KernelMode,
+				                               0,
+				                               &WinStaObject);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return 0;
+  }
+  
+  Ret = WinStaObject->CaretBlinkRate;
+  if(!Ret)
+  {
+    /* load it from the registry the first call only! */
+    Ret = WinStaObject->CaretBlinkRate = IntQueryCaretBlinkRate();
+  }
+  
+  /* windows doesn't do this check */
+  if((Ret < MIN_CARETBLINKRATE) || (Ret > MAX_CARETBLINKRATE))
+  {
+    Ret = DEFAULT_CARETBLINKRATE;
+  }
+  
+  ObDereferenceObject(WinStaObject);
+  return Ret;
 }
 
 BOOL FASTCALL

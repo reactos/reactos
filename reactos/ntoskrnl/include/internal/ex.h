@@ -58,6 +58,7 @@ typedef struct _WINSTATION_OBJECT
   PVOID HandleTable;
   HANDLE SystemMenuTemplate;
   SYSTEM_CURSORINFO SystemCursor;
+  UINT CaretBlinkRate;
   struct _DESKTOP_OBJECT* ActiveDesktop;
   /* FIXME: Clipboard */
   LIST_ENTRY HotKeyListHead;
