@@ -35,6 +35,7 @@
 #include "../externals.h"
 
 #include "../taskbar/desktopbar.h"
+#include "../taskbar/taskbar.h"	// for PM_GET_LAST_ACTIVE
 
 #include "../explorer_intres.h"
 
@@ -85,6 +86,7 @@ void Desktops::SwitchToDesktop(int idx)
 
 	windows.clear();
 	EnumWindows(SwitchDesktopEnumFct, (LPARAM)&windows);
+	old_desktop._hwndForeground = (HWND)SendMessage(g_Globals._hwndDesktopBar, PM_GET_LAST_ACTIVE, 0, 0);
 
 	 // hide all windows we found
 	for(WindowSet::iterator it=windows.begin(); it!=windows.end(); ++it)
@@ -93,6 +95,9 @@ void Desktops::SwitchToDesktop(int idx)
 	 // show all windows of the new desktop
 	for(WindowSet::iterator it=desktop._windows.begin(); it!=desktop._windows.end(); ++it)
 		ShowWindowAsync(*it, SW_SHOW);
+
+	if (desktop._hwndForeground)
+		SetForegroundWindow(desktop._hwndForeground);
 
 	desktop._windows.clear();
 
