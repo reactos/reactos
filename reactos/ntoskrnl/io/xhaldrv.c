@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.34 2003/07/17 16:57:39 silverblade Exp $
+/* $Id: xhaldrv.c,v 1.35 2003/08/10 16:49:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -850,6 +850,18 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 
       for (i = 0; i < PARTITION_TBL_SIZE; i++)
 	{
+	  if (IsContainerPartition(PartitionSector->Partition[i].PartitionType))
+	    {
+	      ExtendedFound = TRUE;
+	      if ((ULONGLONG) containerOffset.QuadPart == (ULONGLONG) 0)
+		{
+		  containerOffset = PartitionOffset;
+		}
+	      nextPartitionOffset.QuadPart = (ULONGLONG) containerOffset.QuadPart +
+		(ULONGLONG) PartitionSector->Partition[i].StartingBlock *
+		(ULONGLONG) SectorSize;
+	    }
+
 	  if ((ReturnRecognizedPartitions == FALSE) ||
 	       ((ReturnRecognizedPartitions == TRUE) &&
 	        IsRecognizedPartition(PartitionSector->Partition[i].PartitionType)))
@@ -858,6 +870,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 	      DPRINT("Partition %u: Normal Partition\n", i);
 	      Count = LayoutBuffer->PartitionCount;
 	      DPRINT("Logical Partition %u\n", Count);
+
 	      if (PartitionSector->Partition[i].StartingBlock == 0)
 		{
 		  LayoutBuffer->PartitionEntry[Count].StartingOffset.QuadPart = 0;
@@ -865,7 +878,9 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 	      else if (IsContainerPartition(PartitionSector->Partition[i].PartitionType))
 		{
 		  LayoutBuffer->PartitionEntry[Count].StartingOffset.QuadPart =
-		    (ULONGLONG)PartitionOffset.QuadPart;
+		    (ULONGLONG) containerOffset.QuadPart +
+		    (ULONGLONG) PartitionSector->Partition[i].StartingBlock *
+		    (ULONGLONG) SectorSize;
 		}
 	      else
 		{
@@ -905,19 +920,8 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 
 	      LayoutBuffer->PartitionCount++;
 	    }
-
-	  if (IsContainerPartition(PartitionSector->Partition[i].PartitionType))
-	    {
-	      ExtendedFound = TRUE;
-	      if ((ULONGLONG) containerOffset.QuadPart == (ULONGLONG) 0)
-		{
-		  containerOffset = PartitionOffset;
-		}
-	      nextPartitionOffset.QuadPart = (ULONGLONG) containerOffset.QuadPart +
-		(ULONGLONG) PartitionSector->Partition[i].StartingBlock *
-		(ULONGLONG) SectorSize;
-	    }
 	}
+
       PartitionOffset = nextPartitionOffset;
     }
   while (ExtendedFound == TRUE);
@@ -1022,7 +1026,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
   for (i = 0; i < PartitionBuffer->PartitionCount; i++)
     {
       if (PartitionBuffer->PartitionEntry[i].PartitionType != PARTITION_ENTRY_UNUSED)
-        {
+	{
           /*
            * CHS formulas:
            * x = LBA DIV SectorsPerTrack
@@ -1039,7 +1043,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
             {
               PartitionSector->Partition[i].BootFlags &= ~0x80;
             }
-    
+
           PartitionSector->Partition[i].PartitionType = PartitionBuffer->PartitionEntry[i].PartitionType;
 
           /* Compute starting CHS values */
@@ -1074,20 +1078,20 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
           PartitionSector->Partition[i].EndingCylinder = EndCylinder & 0xff;
           PartitionSector->Partition[i].EndingHead = EndHead;
           PartitionSector->Partition[i].EndingSector = ((EndCylinder & 0x0300) >> 2) + (EndSector & 0x3f);
-        }
+	}
       else
-        {
-          PartitionSector->Partition[i].BootFlags = 0;
-          PartitionSector->Partition[i].PartitionType = PARTITION_ENTRY_UNUSED;
-          PartitionSector->Partition[i].StartingHead = 0;
-          PartitionSector->Partition[i].StartingSector = 0;
-          PartitionSector->Partition[i].StartingCylinder = 0;
-          PartitionSector->Partition[i].EndingHead = 0;
-          PartitionSector->Partition[i].EndingSector = 0;
-          PartitionSector->Partition[i].EndingCylinder = 0;
-          PartitionSector->Partition[i].StartingBlock = 0;
-          PartitionSector->Partition[i].SectorCount = 0;
-        }
+	{
+	  PartitionSector->Partition[i].BootFlags = 0;
+	  PartitionSector->Partition[i].PartitionType = PARTITION_ENTRY_UNUSED;
+	  PartitionSector->Partition[i].StartingHead = 0;
+	  PartitionSector->Partition[i].StartingSector = 0;
+	  PartitionSector->Partition[i].StartingCylinder = 0;
+	  PartitionSector->Partition[i].EndingHead = 0;
+	  PartitionSector->Partition[i].EndingSector = 0;
+	  PartitionSector->Partition[i].EndingCylinder = 0;
+	  PartitionSector->Partition[i].StartingBlock = 0;
+	  PartitionSector->Partition[i].SectorCount = 0;
+	}
     }
 
 
@@ -1104,23 +1108,23 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     }
 
 #ifndef NDEBUG
-      for (i = 0; i < PARTITION_TBL_SIZE; i++)
-	{
-	  DPRINT1("  %d: flags:%2x type:%x start:%d:%d:%d end:%d:%d:%d stblk:%d count:%d\n",
-		  i,
-		  PartitionSector->Partition[i].BootFlags,
-		  PartitionSector->Partition[i].PartitionType,
-		  PartitionSector->Partition[i].StartingHead,
-		  PartitionSector->Partition[i].StartingSector & 0x3f,
-		  (((PartitionSector->Partition[i].StartingSector) & 0xc0) << 2) +
-		     PartitionSector->Partition[i].StartingCylinder,
-		  PartitionSector->Partition[i].EndingHead,
-		  PartitionSector->Partition[i].EndingSector & 0x3f,
-		  (((PartitionSector->Partition[i].EndingSector) & 0xc0) << 2) +
-		     PartitionSector->Partition[i].EndingCylinder,
-		  PartitionSector->Partition[i].StartingBlock,
-		  PartitionSector->Partition[i].SectorCount);
-	}
+  for (i = 0; i < PARTITION_TBL_SIZE; i++)
+    {
+      DPRINT1("  %d: flags:%2x type:%x start:%d:%d:%d end:%d:%d:%d stblk:%d count:%d\n",
+	      i,
+	      PartitionSector->Partition[i].BootFlags,
+	      PartitionSector->Partition[i].PartitionType,
+	      PartitionSector->Partition[i].StartingHead,
+	      PartitionSector->Partition[i].StartingSector & 0x3f,
+	      (((PartitionSector->Partition[i].StartingSector) & 0xc0) << 2) +
+		 PartitionSector->Partition[i].StartingCylinder,
+	      PartitionSector->Partition[i].EndingHead,
+	      PartitionSector->Partition[i].EndingSector & 0x3f,
+	      (((PartitionSector->Partition[i].EndingSector) & 0xc0) << 2) +
+		 PartitionSector->Partition[i].EndingCylinder,
+	      PartitionSector->Partition[i].StartingBlock,
+	      PartitionSector->Partition[i].SectorCount);
+    }
 #endif
 
   ExFreePool(PartitionSector);
