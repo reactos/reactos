@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.10 2004/02/27 05:50:56 navaraf Exp $
+/* $Id: error.c,v 1.11 2004/02/28 15:12:49 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -886,7 +886,7 @@ RtlNtStatusToDosErrorNoTeb(IN NTSTATUS Status)
 
 		if ((ULONG)Status < Table->End)
 		{
-			DWORD ret = Table->Table[Status - Table->Start];
+			DWORD ret = Table->Table[(ULONG)Status - Table->Start];
 			if (!ret)
 				ret = Status;  /* 0 means 1:1 mapping */
 			else if (ret == ERROR_MR_MID_NOT_FOUND)
