@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.19 2003/09/12 17:51:46 vizzini Exp $
+/* $Id: rtl.h,v 1.20 2003/11/03 20:30:23 gdalsnes Exp $
  * 
  */
 
@@ -361,6 +361,81 @@ RemoveTailList (
    
 	return(Old);
 }
+
+
+/*
+Macros for sorted inserts. Lists are walked in reverse order to maintain
+FIFO behaviour required by some callers...
+
+VOID InsertXcendingList(
+  PLIST_ENTRY ListHead,
+  PLIST_ENTRY NewEntry,
+  ...
+  
+-Gunnar
+*/
+
+#define InsertDescendingList(ListHead, NewEntry, Type, ListEntryField, SortField)\
+{\
+  PLIST_ENTRY current;\
+  BOOL Inserted = FALSE;\
+\
+  current = (ListHead)->Blink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >=\
+        CONTAINING_RECORD((NewEntry), Type, ListEntryField)->SortField)\
+    {\
+      InsertTailList(current, (NewEntry));\
+      Inserted = TRUE;\
+      break;\
+    }\
+    current = current->Blink;\
+  }\
+\
+  if (!Inserted)\
+  {\
+    InsertHeadList((ListHead), (NewEntry));\
+  }\
+}
+
+
+#define InsertAscendingList(ListHead, NewEntry, Type, ListEntryField, SortField)\
+{\
+  PLIST_ENTRY current;\
+  BOOL Inserted = FALSE;\
+\
+  current = (ListHead)->Blink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField <=\
+        CONTAINING_RECORD((NewEntry), Type, ListEntryField)->SortField)\
+    {\
+      InsertTailList(current, (NewEntry));\
+      Inserted = TRUE;\
+      break;\
+    }\
+    current = current->Blink;\
+  }\
+\
+  if (!Inserted)\
+  {\
+    InsertHeadList((ListHead), (NewEntry));\
+  }\
+}
+
+
+/*
+ * BOOLEAN
+ * IsXstEntry (
+ *  PLIST_ENTRY ListHead,
+ *  PLIST_ENTRY Entry
+ *  );
+*/
+#define IsFirstEntry(ListHead, Entry) ((ListHead)->Flink == Entry)
+  
+#define IsLastEntry(ListHead, Entry) ((ListHead)->Blink == Entry)
+  
 
 NTSTATUS
 STDCALL
