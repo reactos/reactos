@@ -149,5 +149,11 @@ ObpAddSecurityDescriptor(IN PSECURITY_DESCRIPTOR SourceSD,
 NTSTATUS
 ObpRemoveSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
+VOID
+ObpReferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+
+VOID
+ObpDereferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */

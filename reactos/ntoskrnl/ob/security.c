@@ -64,26 +64,83 @@ ObAssignSecurity(IN PACCESS_STATE AccessState,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 ObGetObjectSecurity(IN PVOID Object,
 		    OUT PSECURITY_DESCRIPTOR *SecurityDescriptor,
 		    OUT PBOOLEAN MemoryAllocated)
 {
-  UNIMPLEMENTED;
-  return(STATUS_NOT_IMPLEMENTED);
+  POBJECT_HEADER Header;
+  ULONG Length;
+  NTSTATUS Status;
+
+  Header = BODY_TO_HEADER(Object);
+  if (Header->ObjectType == NULL)
+    return STATUS_UNSUCCESSFUL;
+
+  if (Header->ObjectType->Security == NULL)
+    {
+      ObpReferenceCachedSecurityDescriptor(Header->SecurityDescriptor);
+      *SecurityDescriptor = Header->SecurityDescriptor;
+      *MemoryAllocated = FALSE;
+      return STATUS_SUCCESS;
+    }
+
+  /* Get the security descriptor size */
+  Length = 0;
+  Status = Header->ObjectType->Security(Object,
+					QuerySecurityDescriptor,
+					OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
+					DACL_SECURITY_INFORMATION | SACL_SECURITY_INFORMATION,
+					NULL,
+					&Length);
+  if (Status != STATUS_BUFFER_TOO_SMALL)
+    return Status;
+
+  /* Allocate security descriptor */
+  *SecurityDescriptor = ExAllocatePool(NonPagedPool,
+				       Length);
+  if (*SecurityDescriptor == NULL)
+    return STATUS_INSUFFICIENT_RESOURCES;
+
+  /* Query security descriptor */
+  Status = Header->ObjectType->Security(Object,
+					QuerySecurityDescriptor,
+					OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
+					DACL_SECURITY_INFORMATION | SACL_SECURITY_INFORMATION,
+					*SecurityDescriptor,
+					&Length);
+  if (!NT_SUCCESS(Status))
+    {
+      ExFreePool(*SecurityDescriptor);
+      return Status;
+    }
+
+  *MemoryAllocated = TRUE;
+
+  return STATUS_SUCCESS;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID STDCALL
 ObReleaseObjectSecurity(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 			IN BOOLEAN MemoryAllocated)
 {
-  UNIMPLEMENTED;
+  if (SecurityDescriptor == NULL)
+    return;
+
+  if (MemoryAllocated)
+    {
+      ExFreePool(SecurityDescriptor);
+    }
+  else
+    {
+      ObpDereferenceCachedSecurityDescriptor(SecurityDescriptor);
+    }
 }
 
 
@@ -109,12 +166,14 @@ NtQuerySecurityObject(IN HANDLE Handle,
 				     NULL);
   if (!NT_SUCCESS(Status))
     {
-      return(Status);
+      return Status;
     }
 
   Header = BODY_TO_HEADER(Object);
-  if (Header->ObjectType == NULL &&
-      Header->ObjectType->Security != NULL)
+  if (Header->ObjectType == NULL)
+    return STATUS_UNSUCCESSFUL;
+
+  if (Header->ObjectType->Security != NULL)
     {
       Status = Header->ObjectType->Security(Object,
 					    QuerySecurityDescriptor,

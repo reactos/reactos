@@ -1,4 +1,4 @@
-/* $Id: sdcache.c,v 1.1 2004/07/16 17:19:15 ekohl Exp $
+/* $Id: sdcache.c,v 1.2 2004/07/23 21:44:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -307,6 +307,37 @@ ObpRemoveSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor)
   DPRINT("ObpRemoveSecurityDescriptor() done\n");
 
   return STATUS_SUCCESS;
+}
+
+
+VOID
+ObpReferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor)
+{
+  PSD_CACHE_ENTRY CacheEntry;
+
+  DPRINT("ObpReferenceCachedSecurityDescriptor() called\n");
+
+  ObpSdCacheLock();
+
+  CacheEntry = (PSD_CACHE_ENTRY)((ULONG_PTR)SecurityDescriptor - sizeof(SD_CACHE_ENTRY));
+
+  CacheEntry->RefCount++;
+  DPRINT("RefCount %lu\n", CacheEntry->RefCount);
+
+  ObpSdCacheUnlock();
+
+  DPRINT("ObpReferenceCachedSecurityDescriptor() done\n");
+}
+
+
+VOID
+ObpDereferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor)
+{
+  DPRINT("ObpDereferenceCachedSecurityDescriptor() called\n");
+
+  ObpRemoveSecurityDescriptor(SecurityDescriptor);
+
+  DPRINT("ObpDereferenceCachedSecurityDescriptor() done\n");
 }
 
 /* EOF */
