@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.104 2003/11/30 18:55:57 gvg Exp $
+/* $Id: dc.c,v 1.105 2003/12/03 19:28:23 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -131,26 +131,38 @@ NtGdiCreateCompatableDC(HDC hDC)
 {
   PDC  NewDC, OrigDC;
   HBITMAP  hBitmap;
-  HDC hNewDC;
+  HDC hNewDC, DisplayDC;
   HRGN hVisRgn;
   BITMAPOBJ *pb;
-  PSURFGDI SurfGDI;
 
   if (hDC == NULL)
     {
-      return NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
+      DisplayDC = NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
+      if (NULL == DisplayDC)
+        {
+          return NULL;
+        }
+      hDC = DisplayDC;
     }
 
   /*  Allocate a new DC based on the original DC's device  */
   OrigDC = DC_LockDc(hDC);
   if (NULL == OrigDC)
     {
+      if (NULL != DisplayDC)
+        {
+          NtGdiDeleteDC(DisplayDC);
+        }
       return NULL;
     }
   hNewDC = DC_AllocDC(OrigDC->DriverName);
 
   if (NULL == hNewDC)
     {
+      if (NULL != DisplayDC)
+        {
+          NtGdiDeleteDC(DisplayDC);
+        }
       return  NULL;
     }
   NewDC = DC_LockDc( hNewDC );
@@ -158,55 +170,38 @@ NtGdiCreateCompatableDC(HDC hDC)
   /* Copy information from original DC to new DC  */
   NewDC->hSelf = NewDC;
 
-  /* FIXME: Should this DC request its own PDEV?  */
-  if(OrigDC == NULL)
-  {
-    NewDC->PDev = PrimarySurface.PDev;
-    memcpy(NewDC->FillPatternSurfaces, PrimarySurface.FillPatterns,
-           sizeof(NewDC->FillPatternSurfaces));
-    NewDC->GDIInfo = &PrimarySurface.GDIInfo;
-    NewDC->DevInfo = &PrimarySurface.DevInfo;
-    SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) PrimarySurface.Handle);
-    NewDC->w.bitsPerPixel = SurfGDI->BitsPerPixel;
-  }
-  else
-  {
-    NewDC->PDev = OrigDC->PDev;
-    NewDC->DMW = OrigDC->DMW;
-    memcpy(NewDC->FillPatternSurfaces,
-           OrigDC->FillPatternSurfaces,
-           sizeof OrigDC->FillPatternSurfaces);
-    NewDC->GDIInfo = OrigDC->GDIInfo;
-    NewDC->DevInfo = OrigDC->DevInfo;
-    NewDC->w.bitsPerPixel = OrigDC->w.bitsPerPixel;
-  }
+  NewDC->PDev = OrigDC->PDev;
+  NewDC->DMW = OrigDC->DMW;
+  memcpy(NewDC->FillPatternSurfaces,
+         OrigDC->FillPatternSurfaces,
+         sizeof OrigDC->FillPatternSurfaces);
+  NewDC->GDIInfo = OrigDC->GDIInfo;
+  NewDC->DevInfo = OrigDC->DevInfo;
+  NewDC->w.bitsPerPixel = OrigDC->w.bitsPerPixel;
 
   /* DriverName is copied in the AllocDC routine  */
-  if(OrigDC == NULL)
-  {
-    NewDC->DeviceDriver = (HANDLE) PrimarySurface.VideoDeviceObject;
-  }
-  else
-  {
-    NewDC->DeviceDriver = OrigDC->DeviceDriver;
-    NewDC->wndOrgX = OrigDC->wndOrgX;
-    NewDC->wndOrgY = OrigDC->wndOrgY;
-    NewDC->wndExtX = OrigDC->wndExtX;
-    NewDC->wndExtY = OrigDC->wndExtY;
-    NewDC->vportOrgX = OrigDC->vportOrgX;
-    NewDC->vportOrgY = OrigDC->vportOrgY;
-    NewDC->vportExtX = OrigDC->vportExtX;
-    NewDC->vportExtY = OrigDC->vportExtY;
-  }
+  NewDC->DeviceDriver = OrigDC->DeviceDriver;
+  NewDC->wndOrgX = OrigDC->wndOrgX;
+  NewDC->wndOrgY = OrigDC->wndOrgY;
+  NewDC->wndExtX = OrigDC->wndExtX;
+  NewDC->wndExtY = OrigDC->wndExtY;
+  NewDC->vportOrgX = OrigDC->vportOrgX;
+  NewDC->vportOrgY = OrigDC->vportOrgY;
+  NewDC->vportExtX = OrigDC->vportExtX;
+  NewDC->vportExtY = OrigDC->vportExtY;
 
   /* Create default bitmap */
   if (!(hBitmap = NtGdiCreateBitmap( 1, 1, 1, NewDC->w.bitsPerPixel, NULL )))
-  {
-    DC_UnlockDc( hDC );
-    DC_UnlockDc( hNewDC );
-    DC_FreeDC( hNewDC );
-    return NULL;
-  }
+    {
+      DC_UnlockDc( hDC );
+      DC_UnlockDc( hNewDC );
+      DC_FreeDC( hNewDC );
+      if (NULL != DisplayDC)
+        {
+          NtGdiDeleteDC(DisplayDC);
+        }
+      return NULL;
+    }
   NewDC->w.flags        = DC_MEMORY;
   NewDC->w.hBitmap      = hBitmap;
   NewDC->w.hFirstBitmap = hBitmap;
@@ -214,23 +209,17 @@ NtGdiCreateCompatableDC(HDC hDC)
   NewDC->Surface = BitmapToSurf(pb);
   BITMAPOBJ_UnlockBitmap(hBitmap);
 
-  if(OrigDC == NULL)
-  {
-    NewDC->w.hPalette = NewDC->DevInfo->hpalDefault;
-  }
-  else
-  {
-    NewDC->w.hPalette = OrigDC->w.hPalette;
-    NewDC->w.textColor = OrigDC->w.textColor;
-    NewDC->w.textAlign = OrigDC->w.textAlign;
-    NewDC->w.backgroundColor = OrigDC->w.backgroundColor;
-    NewDC->w.backgroundMode = OrigDC->w.backgroundMode;
-  }
-  if (NULL != hDC)
-  {
-    DC_UnlockDc( hDC );
-  }
-  DC_UnlockDc( hNewDC );
+  NewDC->w.hPalette = OrigDC->w.hPalette;
+  NewDC->w.textColor = OrigDC->w.textColor;
+  NewDC->w.textAlign = OrigDC->w.textAlign;
+  NewDC->w.backgroundColor = OrigDC->w.backgroundColor;
+  NewDC->w.backgroundMode = OrigDC->w.backgroundMode;
+  DC_UnlockDc( hDC );
+  if (NULL != DisplayDC)
+    {
+      NtGdiDeleteDC(DisplayDC);
+    }
+  DC_UnlockDc(hNewDC);
 
   hVisRgn = NtGdiCreateRectRgn(0, 0, 1, 1);
   NtGdiSelectVisRgn(hNewDC, hVisRgn);
@@ -238,7 +227,7 @@ NtGdiCreateCompatableDC(HDC hDC)
 
   DC_InitDC(hNewDC);
 
-  return  hNewDC;
+  return hNewDC;
 }
 
 static BOOL FASTCALL
