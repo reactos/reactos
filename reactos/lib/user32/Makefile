@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.19 2003/07/19 01:35:27 royce Exp $
+# $Id: Makefile,v 1.20 2003/07/20 00:06:27 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -46,6 +46,7 @@ MISC_OBJECTS = \
 	misc/timer.o
 
 WINDOWS_OBJECTS = \
+	windows/caret.o \
 	windows/class.o \
 	windows/message.o \
 	windows/window.o \

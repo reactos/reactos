@@ -16,11 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.7 2003/07/20 00:06:16 ekohl Exp $
+/* $Id: caret.c,v 1.1 2003/07/20 00:06:16 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/cursor.c
- * PURPOSE:         Cursor
+ * FILE:            lib/user32/windows/caret.c
+ * PURPOSE:         Caret
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
  *      09-05-2001  CSH  Created
@@ -34,30 +34,14 @@
 
 /* FUNCTIONS *****************************************************************/
 
-
-/*
- * @unimplemented
- */
-HCURSOR STDCALL
-CreateCursor(HINSTANCE hInst,
-	     int xHotSpot,
-	     int yHotSpot,
-	     int nWidth,
-	     int nHeight,
-	     CONST VOID *pvANDPlane,
-	     CONST VOID *pvXORPlane)
-{
-
-  UNIMPLEMENTED;
-  return (HCURSOR)0;
-}
-
-
 /*
  * @unimplemented
  */
 WINBOOL STDCALL
-DestroyCursor(HCURSOR hCursor)
+CreateCaret(HWND hWnd,
+	    HBITMAP hBitmap,
+	    int nWidth,
+	    int nHeight)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -68,7 +52,7 @@ DestroyCursor(HCURSOR hCursor)
  * @unimplemented
  */
 WINBOOL STDCALL
-GetClipCursor(LPRECT lpRect)
+DestroyCaret(VOID)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -78,128 +62,67 @@ GetClipCursor(LPRECT lpRect)
 /*
  * @unimplemented
  */
-HCURSOR STDCALL
-GetCursor(VOID)
-{
-  UNIMPLEMENTED;
-  return (HCURSOR)0;
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL STDCALL
-GetCursorInfo(PCURSORINFO pci)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL STDCALL
-GetCursorPos(LPPOINT lpPoint)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @implemented
- */
-HCURSOR STDCALL
-LoadCursorA(HINSTANCE hInstance,
-	    LPCSTR lpCursorName)
-{
-  return(LoadImageA(hInstance, lpCursorName, IMAGE_CURSOR, 0, 0,
-		    LR_DEFAULTSIZE));
-}
-
-
-/*
- * @implemented
- */
-HCURSOR STDCALL
-LoadCursorFromFileA(LPCSTR lpFileName)
-{
-  UNICODE_STRING FileName;
-  HCURSOR Result;
-  RtlCreateUnicodeStringFromAsciiz(&FileName, (LPSTR)lpFileName);
-  Result = LoadImageW(0, FileName.Buffer, IMAGE_CURSOR, 0, 0, 
-		      LR_LOADFROMFILE | LR_DEFAULTSIZE);
-  RtlFreeUnicodeString(&FileName);
-  return(Result);
-}
-
-
-/*
- * @implemented
- */
-HCURSOR STDCALL
-LoadCursorFromFileW(LPCWSTR lpFileName)
-{
-  return(LoadImageW(0, lpFileName, IMAGE_CURSOR, 0, 0, 
-		    LR_LOADFROMFILE | LR_DEFAULTSIZE));
-}
-
-
-/*
- * @implemented
- */
-HCURSOR STDCALL
-LoadCursorW(HINSTANCE hInstance,
-	    LPCWSTR lpCursorName)
-{
-  return(LoadImageW(hInstance, lpCursorName, IMAGE_CURSOR, 0, 0,
-		    LR_DEFAULTSIZE));
-}
-
-
-/*
- * @unimplemented
- */
-HCURSOR STDCALL
-SetCursor(HCURSOR hCursor)
-{
-  UNIMPLEMENTED;
-  return (HCURSOR)0;
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL STDCALL
-SetCursorPos(int X,
-	     int Y)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL STDCALL
-SetSystemCursor(HCURSOR hcur,
-		DWORD id)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-int STDCALL
-ShowCursor(WINBOOL bShow)
+UINT STDCALL
+GetCaretBlinkTime(VOID)
 {
   UNIMPLEMENTED;
   return 0;
 }
+
+
+/*
+ * @unimplemented
+ */
+WINBOOL STDCALL
+GetCaretPos(LPPOINT lpPoint)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+WINBOOL STDCALL
+HideCaret(HWND hWnd)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+WINBOOL STDCALL
+SetCaretBlinkTime(UINT uMSeconds)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+WINBOOL STDCALL
+SetCaretPos(int X,
+	    int Y)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+WINBOOL STDCALL
+ShowCaret(HWND hWnd)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/* EOF */
