@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.31 2003/08/27 21:30:37 dwelch Exp $
+/* $Id: scsiport.c,v 1.32 2003/09/04 11:30:42 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -545,6 +545,9 @@ ScsiPortInitialize(IN PVOID Argument1,
 
 	      return(Status);
 	    }
+
+	  /* Get inquiry data */
+	  ScsiPortInquire(RealDeviceExtension);
 
 	  /* Build the registry device map */
 	  ScsiPortBuildDeviceMap(RealDeviceExtension,
@@ -1242,6 +1245,7 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
     {
       DbgPrint("Could not Connect Interrupt %d\n",
 	       PortDeviceExtension->PortConfig.BusInterruptVector);
+      IoDeleteDevice(PortDeviceObject);
       return(Status);
     }
 
@@ -1279,8 +1283,7 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
   PortDeviceExtension->PortBusInfo = NULL;
 
   DPRINT("DeviceExtension %p\n", PortDeviceExtension);
-  ScsiPortInquire(PortDeviceExtension);
-
+//  ScsiPortInquire(PortDeviceExtension);
 
   /* FIXME: Copy more configuration data? */
 
@@ -1311,6 +1314,7 @@ ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
   SCSI_REQUEST_BLOCK Srb;
   ULONG Bus;
   ULONG Target;
+  ULONG Lun;
   ULONG UnitCount;
   ULONG DataSize;
   BOOLEAN Result;
@@ -1350,27 +1354,35 @@ ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
       for (Target = 0; Target < DeviceExtension->PortConfig.MaximumNumberOfTargets; Target++)
 	{
 	  Srb.TargetId = Target;
-	  Srb.Lun = 0;
-	  Srb.SrbStatus = SRB_STATUS_SUCCESS;
 
-	  Result = DeviceExtension->HwStartIo(&DeviceExtension->MiniPortDeviceExtension,
-					      &Srb);
-	  DPRINT("Result: %s  Srb.SrbStatus %lx\n", (Result)?"True":"False", Srb.SrbStatus);
-
-	  if (Result == TRUE && Srb.SrbStatus == SRB_STATUS_SUCCESS)
+	  for (Lun = 0; Lun < SCSI_MAXIMUM_LOGICAL_UNITS; Lun++)
 	    {
-	      UnitInfo->PathId = Bus;
-	      UnitInfo->TargetId = Target;
-	      UnitInfo->Lun = 0;
-	      UnitInfo->InquiryDataLength = INQUIRYDATABUFFERSIZE;
-	      memcpy(&UnitInfo->InquiryData,
-		     Srb.DataBuffer,
-		     INQUIRYDATABUFFERSIZE);
-	      if (PrevUnit != NULL)
-		PrevUnit->NextInquiryDataOffset = (ULONG)((PUCHAR)UnitInfo-(PUCHAR)AdapterInfo);
-	      PrevUnit = UnitInfo;
-	      UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)UnitInfo + sizeof(SCSI_INQUIRY_DATA)+INQUIRYDATABUFFERSIZE-1);
-	      UnitCount++;
+	      Srb.Lun = Lun;
+	      Srb.SrbStatus = SRB_STATUS_SUCCESS;
+
+	      Result = DeviceExtension->HwStartIo(&DeviceExtension->MiniPortDeviceExtension,
+						  &Srb);
+	      DPRINT("Result: %s  Srb.SrbStatus %lx\n", (Result)?"True":"False", Srb.SrbStatus);
+
+	      if (Result == TRUE && Srb.SrbStatus == SRB_STATUS_SUCCESS)
+		{
+		  UnitInfo->PathId = Bus;
+		  UnitInfo->TargetId = Target;
+		  UnitInfo->Lun = Lun;
+		  UnitInfo->InquiryDataLength = INQUIRYDATABUFFERSIZE;
+		  memcpy(&UnitInfo->InquiryData,
+			 Srb.DataBuffer,
+			 INQUIRYDATABUFFERSIZE);
+		  if (PrevUnit != NULL)
+		    PrevUnit->NextInquiryDataOffset = (ULONG)((PUCHAR)UnitInfo-(PUCHAR)AdapterInfo);
+		  PrevUnit = UnitInfo;
+		  UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)UnitInfo + sizeof(SCSI_INQUIRY_DATA)+INQUIRYDATABUFFERSIZE-1);
+		  UnitCount++;
+		}
+	      else if (Lun == 0)
+		{
+		  break;
+		}
 	    }
 	}
       DPRINT("UnitCount: %lu\n", UnitCount);
