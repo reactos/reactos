@@ -296,7 +296,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
     *   Make the detection of the noexecute feature more portable.
     */
    if(KPCR->PrcbData.CpuType == 0xf &&
-      RtlCompareMemory("AuthenticAMD", KPCR->PrcbData.VendorString, 8) == 8)
+      RtlCompareMemory("AuthenticAMD", KPCR->PrcbData.VendorString, 12) == 12)
    {
       if (NoExecute)
       {
