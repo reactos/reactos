@@ -1,4 +1,4 @@
-/* $Id: name.c,v 1.6 2003/07/10 06:27:13 royce Exp $
+/* $Id: name.c,v 1.7 2003/07/10 16:43:10 ekohl Exp $
  *
  * reactos/ntoskrnl/fs/name.c
  *
@@ -75,15 +75,36 @@ FsRtlDissectName (
  * NOTE
  * 	From Bo Branten's ntifs.h v12.
  *
- * @unimplemented
+ * @implemented
  */
-BOOLEAN
-STDCALL
-FsRtlDoesNameContainWildCards (
-	IN	PUNICODE_STRING	Name
-	)
+BOOLEAN STDCALL
+FsRtlDoesNameContainWildCards (IN PUNICODE_STRING Name)
 {
+  PWCHAR Ptr;
+
+  if (Name->Length == 0)
+    return FALSE;
+
+  /* Set pointer to last character of the string */
+  Ptr = (PWCHAR)((ULONG_PTR)Name->Buffer + Name->Length - sizeof(WCHAR));
+
+  while (Ptr > Name->Buffer)
+    {
+      /* Stop at backslash */
+      if (*Ptr == L'\\')
 	return FALSE;
+
+      /* Check for wildcards */
+      if ((*Ptr < '@') &&
+	  (*Ptr == L'\"' || *Ptr == L'*' || *Ptr == L'<' ||
+	   *Ptr == L'>' || *Ptr == L'?'))
+	return TRUE;
+
+      /* Move to previous character */
+      Ptr--;
+    }
+
+  return FALSE;
 }
 
 
