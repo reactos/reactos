@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.14 2002/09/17 23:46:23 dwelch Exp $
+/* $Id: window.c,v 1.15 2002/10/31 00:02:01 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -145,7 +145,6 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   PWINDOWPROC_CALLBACK_ARGUMENTS CallbackArgs;
   LRESULT Result;
 
-  DbgPrint("User32CallWindowProcFromKernel()\n");
   CallbackArgs = (PWINDOWPROC_CALLBACK_ARGUMENTS)Arguments;
   if (ArgumentLength != sizeof(WINDOWPROC_CALLBACK_ARGUMENTS))
     {
@@ -156,7 +155,6 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       CallbackArgs->Proc = (WNDPROC)GetWindowLong(CallbackArgs->Wnd, 
 						  GWL_WNDPROC);
     }
-  DbgPrint("CallbackArgs->Proc %X\n", CallbackArgs->Proc);
   Result = CallWindowProcW(CallbackArgs->Proc, CallbackArgs->Wnd, 
 			   CallbackArgs->Msg, CallbackArgs->wParam, 
 			   CallbackArgs->lParam);

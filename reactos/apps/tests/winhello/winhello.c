@@ -73,19 +73,35 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	
 	switch(msg)
 	{
-	case WM_PAINT:
-		hDC = BeginPaint(hWnd, &ps);
-		SelectObject(hDC, tf);
-		TextOut(hDC, 10, 10, "Hello World from ReactOS!", strlen("Hello World from ReactOS!"));
-		EndPaint(hWnd, &ps);
-		break;
+	case WM_LBUTTONUP:
+	  {
+	    ULONG x, y;
+	    RECT Rect;
+	    hDC = GetDC(hWnd);
+	    x = LOWORD(lParam);
+	    y = HIWORD(lParam);
+	    Rect.left = x - 5;
+	    Rect.top = y - 5;
+	    Rect.right = x + 5;
+	    Rect.bottom = y + 5;
+	    FillRect(hDC, &Rect, CreateSolidBrush(RGB(0xFF, 0x00, 0x00)));
+	    ReleaseDC(hWnd, hDC);
+	    break;
+	  }
 
+	case WM_PAINT:
+	  hDC = BeginPaint(hWnd, &ps);
+	  SelectObject(hDC, tf);
+	  TextOut(hDC, 10, 10, "Hello World from ReactOS!", strlen("Hello World from ReactOS!"));
+	  EndPaint(hWnd, &ps);
+	  break;
+	  
 	case WM_DESTROY:
-		PostQuitMessage(0);
-		break;
-	
+	  PostQuitMessage(0);
+	  break;
+	  
 	default:
-		return DefWindowProc(hWnd, msg, wParam, lParam);
+	  return DefWindowProc(hWnd, msg, wParam, lParam);
 	}
 	return 0;
 }
