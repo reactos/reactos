@@ -34,7 +34,6 @@
 #include "winbase.h"
 #include "winuser.h"
 #include "winnls.h"
-#include "ddeml.h"
 #include "docobj.h"
 #include "exdisp.h"
 #include "shlguid.h"
@@ -70,7 +69,6 @@ extern HMODULE SHLWAPI_hwinmm;
 extern HMODULE SHLWAPI_hcomdlg32;
 extern HMODULE SHLWAPI_hcomctl32;
 extern HMODULE SHLWAPI_hmpr;
-extern HMODULE SHLWAPI_hmlang;
 extern HMODULE SHLWAPI_hurlmon;
 extern HMODULE SHLWAPI_hversion;
 
@@ -86,8 +84,6 @@ static DWORD id2[4] = {0x79eac9ee, 0x11cebaf9, 0xaa00828c, 0x0ba94b00};
 /* Function pointers for GET_FUNC macro; these need to be global because of gcc bug */
 typedef LPITEMIDLIST (WINAPI *fnpSHBrowseForFolderW)(LPBROWSEINFOW);
 static  fnpSHBrowseForFolderW pSHBrowseForFolderW;
-typedef HRESULT (WINAPI *fnpConvertINetUnicodeToMultiByte)(LPDWORD,DWORD,LPCWSTR,LPINT,LPSTR,LPINT);
-static  fnpConvertINetUnicodeToMultiByte pConvertINetUnicodeToMultiByte;
 typedef BOOL    (WINAPI *fnpPlaySoundW)(LPCWSTR, HMODULE, DWORD);
 static  fnpPlaySoundW pPlaySoundW;
 typedef DWORD   (WINAPI *fnpSHGetFileInfoW)(LPCWSTR,DWORD,SHFILEINFOW*,UINT,UINT);
@@ -585,7 +581,7 @@ HRESULT WINAPI GetAcceptLanguagesA(
 /*************************************************************************
  *      @	[SHLWAPI.15]
  *
- * Unicode version of SHLWAPI_14.
+ * Unicode version of GetAcceptLanguagesA.
  */
 HRESULT WINAPI GetAcceptLanguagesW(
 	LPWSTR langbuf,
@@ -670,7 +666,7 @@ INT WINAPI SHStringFromGUIDW(REFGUID guid, LPWSTR lpszDest, INT cchMax)
 {
   char xguid[40];
   INT iLen = SHStringFromGUIDA(guid, xguid, cchMax);
-  
+
   if (iLen)
     MultiByteToWideChar(CP_ACP, 0, xguid, -1, lpszDest, cchMax);
   return iLen;
@@ -1166,38 +1162,6 @@ BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen)
 
   RegCloseKey(hReg);
   return TRUE;
-}
-
-/*************************************************************************
- *      @	[SHLWAPI.162]
- *
- * Remove a hanging lead byte from the end of a string, if present.
- *
- * PARAMS
- *  lpStr [I] String to check for a hanging lead byte
- *  size  [I] Length of lpStr
- *
- * RETURNS
- *  Success: The new length of the string. Any hanging lead bytes are removed.
- *  Failure: 0, if any parameters are invalid.
- */
-DWORD WINAPI SHTruncateString(LPSTR lpStr, DWORD size)
-{
-  if (lpStr && size)
-  {
-    LPSTR lastByte = lpStr + size - 1;
-
-    while(lpStr < lastByte)
-      lpStr += IsDBCSLeadByte(*lpStr) ? 2 : 1;
-
-    if(lpStr == lastByte && IsDBCSLeadByte(*lpStr))
-    {
-      *lpStr = '\0';
-      size--;
-    }
-    return size;
-  }
-  return 0;
 }
 
 /*************************************************************************
@@ -2176,148 +2140,6 @@ DWORD WINAPI FDSA_DeleteItem(
     return 1;
 }
 
-/*************************************************************************
- *      @	[SHLWAPI.215]
- *
- * NOTES
- *  check me!
- */
-DWORD WINAPI SHAnsiToUnicode(
-	LPCSTR lpStrSrc,
-	LPWSTR lpwStrDest,
-	int len)
-{
-	INT len_a, ret;
-
-	len_a = lstrlenA(lpStrSrc);
-	ret = MultiByteToWideChar(0, 0, lpStrSrc, len_a, lpwStrDest, len);
-	TRACE("%s %s %d, ret=%d\n",
-	      debugstr_a(lpStrSrc), debugstr_w(lpwStrDest), len, ret);
-	return ret;
-}
-
-/*************************************************************************
- *      @	[SHLWAPI.218]
- *
- * WideCharToMultiByte with support for multiple codepages.
- *
- * PARAMS
- *  CodePage          [I] Code page to use for the conversion
- *  lpSrcStr          [I] Source Unicode string to convert
- *  lpDstStr          [O] Destination for converted Ascii string
- *  lpnMultiCharCount [O] Input length of lpDstStr/destination for length of lpDstStr
- *
- * RETURNS
- *  Success: The number of characters that result from the conversion.
- *  Failure: 0.
- */
-INT WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr,
-                       LPINT lpnMultiCharCount)
-{
-  WCHAR emptyW[] = { '\0' };
-  int len , reqLen;
-  LPSTR mem;
-
-  if (!lpDstStr || !lpnMultiCharCount)
-    return 0;
-
-  if (!lpSrcStr)
-    lpSrcStr = emptyW;
-
-  *lpDstStr = '\0';
-
-  len = strlenW(lpSrcStr) + 1;
-
-  switch (CodePage)
-  {
-  case CP_WINUNICODE:
-    CodePage = CP_UTF8; /* Fall through... */
-  case 0x0000C350: /* FIXME: CP_ #define */
-  case CP_UTF7:
-  case CP_UTF8:
-    {
-      DWORD dwMode = 0;
-      INT nWideCharCount = len - 1;
-
-      GET_FUNC(pConvertINetUnicodeToMultiByte, mlang, "ConvertINetUnicodeToMultiByte", 0);
-      if (!pConvertINetUnicodeToMultiByte(&dwMode, CodePage, lpSrcStr, &nWideCharCount, lpDstStr,
-                                          lpnMultiCharCount))
-        return 0;
-
-      if (nWideCharCount < len - 1)
-      {
-        mem = (LPSTR)HeapAlloc(GetProcessHeap(), 0, *lpnMultiCharCount);
-        if (!mem)
-          return 0;
-
-        *lpnMultiCharCount = 0;
-
-        if (pConvertINetUnicodeToMultiByte(&dwMode, CodePage, lpSrcStr, &len, mem, lpnMultiCharCount))
-        {
-          SHTruncateString(mem, *lpnMultiCharCount);
-          lstrcpynA(lpDstStr, mem, *lpnMultiCharCount + 1);
-          return *lpnMultiCharCount + 1;
-        }
-        HeapFree(GetProcessHeap(), 0, mem);
-        return *lpnMultiCharCount;
-      }
-      lpDstStr[*lpnMultiCharCount] = '\0';
-      return *lpnMultiCharCount;
-    }
-    break;
-  default:
-    break;
-  }
-
-  reqLen = WideCharToMultiByte(CodePage, 0, lpSrcStr, len, lpDstStr,
-                               *lpnMultiCharCount, NULL, NULL);
-
-  if (!reqLen && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-  {
-    reqLen = WideCharToMultiByte(CodePage, 0, lpSrcStr, len, NULL, 0, NULL, NULL);
-    if (reqLen)
-    {
-      mem = (LPSTR)HeapAlloc(GetProcessHeap(), 0, reqLen);
-      if (mem)
-      {
-        reqLen = WideCharToMultiByte(CodePage, 0, lpSrcStr, len, mem,
-                                     reqLen, NULL, NULL);
-
-        reqLen = SHTruncateString(mem, *lpnMultiCharCount);
-        reqLen++;
-
-        lstrcpynA(lpDstStr, mem, *lpnMultiCharCount);
-
-        HeapFree(GetProcessHeap(), 0, mem);
-      }
-    }
-  }
-  return reqLen;
-}
-
-/*************************************************************************
- *      @	[SHLWAPI.217]
- *
- * WideCharToMultiByte with support for multiple codepages.
- *
- * PARAMS
- *  lpSrcStr          [I] Source Unicode string to convert
- *  lpDstStr          [O] Destination for converted Ascii string
- *  lpnMultiCharCount [O] Input length of lpDstStr/destination for length of lpDstStr
- *
- * RETURNS
- *  See SHUnicodeToAnsiCP
-
- * NOTES
- *  This function simply calls SHUnicodeToAnsiCP with CodePage = CP_ACP.
- */
-INT WINAPI SHUnicodeToAnsi(LPCWSTR lpSrcStr, LPSTR lpDstStr, INT MultiCharCount)
-{
-    INT myint = MultiCharCount;
-
-    return SHUnicodeToAnsiCP(CP_ACP, lpSrcStr, lpDstStr, &myint);
-}
-
 typedef struct {
     REFIID   refid;
     DWORD    indx;
@@ -2512,16 +2334,6 @@ LRESULT CALLBACK SHDefWindowProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM
 	if (IsWindowUnicode(hWnd))
 		return DefWindowProcW(hWnd, uMessage, wParam, lParam);
 	return DefWindowProcA(hWnd, uMessage, wParam, lParam);
-}
-
-/*************************************************************************
- *      @	[SHLWAPI.241]
- *
- */
-DWORD WINAPI StopWatchMode()
-{
-	FIXME("()stub\n");
-	return /* 0xabba1243 */ 0;
 }
 
 /*************************************************************************
@@ -3358,25 +3170,6 @@ HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST 
 }
 
 /*************************************************************************
- *      @	[SHLWAPI.364]
- *
- * Copy one string to another, up to a given length.
- *
- * PARAMS
- *  lpszSrc [I] Source string to copy
- *  lpszDst [O] Destination for copied string
- *  iLen    [I] Number of characters to copy
- *
- * RETURNS
- *  TRUE.
- */
-DWORD WINAPI DoesStringRoundTripA(LPCSTR lpszSrc, LPSTR lpszDst, INT iLen)
-{
-  lstrcpynA(lpszDst, lpszSrc, iLen);
-  return TRUE;
-}
-
-/*************************************************************************
  *      @	[SHLWAPI.370]
  *
  * See ExtractIconW.
@@ -3999,6 +3792,25 @@ INT WINAPI GetMenuPosFromID(HMENU hMenu, UINT wID)
 }
 
 /*************************************************************************
+ *      @	[SHLWAPI.179]
+ *
+ * Same as SHLWAPI.GetMenuPosFromID
+ */
+DWORD WINAPI SHMenuIndexFromID(HMENU hMenu, UINT uID)
+{
+    return GetMenuPosFromID(hMenu, uID);
+}
+
+/*************************************************************************
+ *      @	[SHLWAPI.549]
+ */
+HRESULT WINAPI SHCoCreateInstanceAC(REFCLSID rclsid, LPUNKNOWN pUnkOuter,
+                                    DWORD dwClsContext, REFIID iid, LPVOID *ppv)
+{
+    return CoCreateInstance(rclsid, pUnkOuter, dwClsContext, iid, ppv);
+}
+
+/*************************************************************************
  * SHSkipJunction	[SHLWAPI.@]
  *
  * Determine if a bind context can be bound to an object
@@ -4036,18 +3848,27 @@ BOOL WINAPI SHSkipJunction(IBindCtx *pbc, const CLSID *pclsid)
   return bRet;
 }
 
+/***********************************************************************
+ *		SHGetShellKey (SHLWAPI.@)
+ */
 DWORD WINAPI SHGetShellKey(DWORD a, DWORD b, DWORD c)
 {
     FIXME("(%lx, %lx, %lx): stub\n", a, b, c);
     return 0x50;
 }
 
+/***********************************************************************
+ *		SHQueueUserWorkItem (SHLWAPI.@)
+ */
 HRESULT WINAPI SHQueueUserWorkItem(DWORD a, DWORD b, DWORD c, DWORD d, DWORD e, DWORD f, DWORD g)
 {
     FIXME("(%lx, %lx, %lx, %lx, %lx, %lx, %lx): stub\n", a, b, c, d, e, f, g);
     return E_FAIL;
 }
 
+/***********************************************************************
+ *		IUnknown_OnFocusChangeIS (SHLWAPI.@)
+ */
 DWORD WINAPI IUnknown_OnFocusChangeIS(IUnknown * pUnk, IUnknown * pFocusObject, BOOL bChange)
 {
     FIXME("(%p, %p, %s)\n", pUnk, pFocusObject, bChange ? "TRUE" : "FALSE");
@@ -4061,6 +3882,9 @@ DWORD WINAPI IUnknown_OnFocusChangeIS(IUnknown * pUnk, IUnknown * pFocusObject, 
     return 0;
 }
 
+/***********************************************************************
+ *		SHGetValueW (SHLWAPI.@)
+ */
 HRESULT WINAPI SKGetValueW(DWORD a, LPWSTR b, LPWSTR c, DWORD d, DWORD e, DWORD f)
 {
     FIXME("(%lx, %s, %s, %lx, %lx, %lx): stub\n", a, debugstr_w(b), debugstr_w(c), d, e, f);

@@ -4,7 +4,7 @@ RCS file: /home/wine/wine/dlls/shlwapi/path.c,v
 retrieving revision 1.41
 diff -u -r1.41 path.c
 --- path.c	23 Jan 2004 22:45:25 -0000	1.41
-+++ path.c	28 Jan 2004 22:02:59 -0000
++++ path.c	11 Mar 2004 22:38:00 -0000
 @@ -32,6 +32,7 @@
  #include "wingdi.h"
  #include "winuser.h"
@@ -13,14 +13,43 @@ diff -u -r1.41 path.c
  #define NO_SHLWAPI_STREAM
  #include "shlwapi.h"
  #include "wine/debug.h"
+Index: shlwapi.spec
+===================================================================
+RCS file: /home/wine/wine/dlls/shlwapi/shlwapi.spec,v
+retrieving revision 1.88
+diff -u -r1.88 shlwapi.spec
+--- shlwapi.spec	28 Feb 2004 01:46:56 -0000	1.88
++++ shlwapi.spec	11 Mar 2004 22:38:00 -0000
+@@ -368,9 +368,9 @@
+ 368 stdcall @(wstr wstr ptr long wstr) kernel32.GetPrivateProfileStructW
+ 369 stdcall @(wstr wstr ptr ptr long long ptr wstr ptr ptr) kernel32.CreateProcessW
+ 370 stdcall -noname ExtractIconWrapW(long wstr long)
+-371 stdcall -noname DdeInitializeWrapW(ptr ptr long long) user32.DdeInitializeW
+-372 stdcall -noname DdeCreateStringHandleWrapW(long ptr long) user32.DdeCreateStringHandleW
+-373 stdcall -noname DdeQueryStringWrapW(long ptr wstr long long) user32.DdeQueryStringW
++371 stdcall DdeInitializeWrapW(ptr ptr long long) user32.DdeInitializeW
++372 stdcall DdeCreateStringHandleWrapW(long ptr long) user32.DdeCreateStringHandleW
++373 stdcall DdeQueryStringWrapW(long ptr wstr long long) user32.DdeQueryStringW
+ 374 stub -noname SHCheckDiskForMediaA
+ 375 stub -noname SHCheckDiskForMediaW
+ 376 stdcall -noname MLGetUILanguage()  # kernel32.GetUserDefaultUILanguage
+@@ -389,7 +389,7 @@
+ 389 stdcall -noname GetSaveFileNameWrapW(ptr)
+ 390 stdcall -noname WNetRestoreConnectionWrapW(long wstr)
+ 391 stdcall -noname WNetGetLastErrorWrapW(ptr ptr long ptr long)
+-392 stdcall -noname EndDialogWrap(ptr ptr) user32.EndDialog
++392 stdcall EndDialogWrap(ptr ptr) user32.EndDialog
+ 393 stdcall @(long ptr long ptr long) user32.CreateDialogIndirectParamW
+ 394 stdcall @(long ptr long ptr long) user32.CreateDialogIndirectParamA
+ 395 stub -noname MLWinHelpA
 Index: string.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/shlwapi/string.c,v
-retrieving revision 1.40
-diff -u -r1.40 string.c
---- string.c	23 Jan 2004 22:45:25 -0000	1.40
-+++ string.c	28 Jan 2004 22:03:00 -0000
-@@ -556,7 +556,7 @@
+retrieving revision 1.44
+diff -u -r1.44 string.c
+--- string.c	20 Feb 2004 05:16:37 -0000	1.44
++++ string.c	11 Mar 2004 22:38:01 -0000
+@@ -528,7 +528,7 @@
  {
    TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
  
@@ -29,7 +58,7 @@ diff -u -r1.40 string.c
  }
  
  /*************************************************************************
-@@ -665,7 +665,7 @@
+@@ -637,7 +637,7 @@
  {
    TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
  
@@ -41,11 +70,11 @@ diff -u -r1.40 string.c
 Index: url.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/shlwapi/url.c,v
-retrieving revision 1.27
-diff -u -r1.27 url.c
---- url.c	23 Jan 2004 22:45:25 -0000	1.27
-+++ url.c	28 Jan 2004 22:03:02 -0000
-@@ -1396,8 +1396,8 @@
+retrieving revision 1.29
+diff -u -r1.29 url.c
+--- url.c	3 Mar 2004 20:11:46 -0000	1.29
++++ url.c	11 Mar 2004 22:38:02 -0000
+@@ -1423,8 +1423,8 @@
   *  Success: TRUE. lpDest is filled with the computed hash value.
   *  Failure: FALSE, if any argument is invalid.
   */

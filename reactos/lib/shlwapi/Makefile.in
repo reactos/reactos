@@ -17,6 +17,7 @@ C_SRCS = \
 	reg.c \
 	regstream.c \
 	shlwapi_main.c \
+	stopwatch.c \
 	string.c \
 	thread.c \
 	url.c \

@@ -418,7 +418,7 @@ HRESULT WINAPI AssocQueryStringByKeyA(ASSOCF cfFlags, ASSOCSTR str, HKEY hkAssoc
  * Determine if a file association is dangerous (potentially malware).
  *
  * PARAMS
- *  lpszAssoc [I] Name of file or file extention to check.
+ *  lpszAssoc [I] Name of file or file extension to check.
  *
  * RETURNS
  *  TRUE, if lpszAssoc may potentially be malware (executable),
