@@ -37,14 +37,11 @@ KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
    OldIrql = KeAcquireDispatcherDatabaseLock();
    KiAcquireSpinLock(&Thread->ApcQueueLock);
    
-   /* NOTE: Albert Almeida claims Alerted[1] is never used. Two kind of 
-    * alerts _do_ seem useless. -Gunnar
-    */
-   OldState = Thread->Alerted[0];
+   OldState = Thread->Alerted[AlertMode];
    
    /* If the Thread is Alerted, Clear it */
    if (OldState) {
-      Thread->Alerted[0] = FALSE;  
+      Thread->Alerted[AlertMode] = FALSE;
    } else if ((AlertMode == UserMode) && (!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode]))) {
       /* If the mode is User and the Queue isn't empty, set Pending */
       Thread->ApcState.UserApcPending = TRUE;
@@ -65,19 +62,18 @@ KeAlertThread(PKTHREAD Thread, KPROCESSOR_MODE AlertMode)
    oldIrql = KeAcquireDispatcherDatabaseLock();
       
 
-   /* Return if thread is already alerted.
-    * NOTE: Albert Almeida claims Alerted[1] is never used. Two kind of 
-    * alerts _do_ seem useless. -Gunnar
-    */
-   if (Thread->Alerted[0] == FALSE)
+   /* Return if thread is already alerted. */
+   if (Thread->Alerted[AlertMode] == FALSE)
    {
-      Thread->Alerted[0] = TRUE;
-
       if (Thread->State == THREAD_STATE_BLOCKED &&
-          Thread->WaitMode == AlertMode &&
+          (AlertMode == KernelMode || Thread->WaitMode == AlertMode) &&
           Thread->Alertable)
       {
          KiAbortWaitThread(Thread, STATUS_ALERTED);
+      }
+      else
+      {
+         Thread->Alerted[AlertMode] = TRUE;
       }
    }
    
@@ -124,11 +120,12 @@ NtAlertThread (IN HANDLE ThreadHandle)
    return(Status);
      }
 
-   /* FIXME: should we always use UserMode here, even if the ntoskrnl exported
-    * ZwAlertThread was called?
-    * -Gunnar
-    */ 
-   KeAlertThread((PKTHREAD)Thread, PreviousMode);
+   /* do an alert depending on the processor mode. If some kmode code wants to
+      enforce a umode alert it should call KeAlertThread() directly. If kmode
+      code wants to do a kmode alert it's sufficient to call it with Zw or just
+      use KeAlertThread() directly */
+
+   KeAlertThread(&Thread->Tcb, PreviousMode);
    
    ObDereferenceObject(Thread);
    return(STATUS_SUCCESS);
@@ -142,11 +139,12 @@ NTSTATUS
 STDCALL
 NtTestAlert(VOID)
 {
+   KPROCESSOR_MODE PreviousMode;
+   
+   PreviousMode = ExGetPreviousMode();
+   
    /* Check and Alert Thread if needed */
-   if (KeTestAlertThread(KeGetPreviousMode())) {
-      return STATUS_ALERTED;
-   } else {
-      return STATUS_SUCCESS;
-   }
+   
+   return KeTestAlertThread(PreviousMode) ? STATUS_ALERTED : STATUS_SUCCESS;
 }
 
