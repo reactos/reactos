@@ -102,11 +102,11 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
   DPRINT("Ramdisk driver\n");
   
   /* Export other driver entry points... */
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)RamdrvDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)RamdrvDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)RamdrvDispatchReadWrite;
-  DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)RamdrvDispatchReadWrite;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)RamdrvDispatchDeviceControl;
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = RamdrvDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = RamdrvDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_READ] = RamdrvDispatchReadWrite;
+  DriverObject->MajorFunction[IRP_MJ_WRITE] = RamdrvDispatchReadWrite;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = RamdrvDispatchDeviceControl;
   
   
   // create device and symbolic link

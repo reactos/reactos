@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: template.c,v 1.5 2003/11/17 02:12:49 hyperion Exp $
+/* $Id: template.c,v 1.6 2004/02/10 16:22:56 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -45,7 +45,7 @@ static PDRIVER_OBJECT DriverObject;
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS
+NTSTATUS STDCALL
 FsdCloseFile(PDEVICE_EXTENSION DeviceExt,
 	     PFILE_OBJECT FileObject)
 /*
@@ -56,7 +56,7 @@ FsdCloseFile(PDEVICE_EXTENSION DeviceExt,
 }
 
 
-NTSTATUS
+NTSTATUS STDCALL
 FsdOpenFile(PDEVICE_EXTENSION DeviceExt,
 	    PFILE_OBJECT FileObject,
 	    PWSTR FileName)
@@ -68,7 +68,7 @@ FsdOpenFile(PDEVICE_EXTENSION DeviceExt,
 }
 
 
-BOOLEAN
+BOOLEAN STDCALL
 FsdHasFileSystem(PDEVICE_OBJECT DeviceToMount)
 /*
  * FUNCTION: Tests if the device contains a filesystem that can be mounted 
@@ -79,7 +79,7 @@ FsdHasFileSystem(PDEVICE_OBJECT DeviceToMount)
 }
 
 
-NTSTATUS
+NTSTATUS STDCALL
 FsdMountDevice(PDEVICE_EXTENSION DeviceExt,
 	       PDEVICE_OBJECT DeviceToMount)
 /*
@@ -90,7 +90,7 @@ FsdMountDevice(PDEVICE_EXTENSION DeviceExt,
 }
 
 
-NTSTATUS
+NTSTATUS STDCALL
 FsdReadFile(PDEVICE_EXTENSION DeviceExt,
 	    PFILE_OBJECT FileObject,
 	    PVOID Buffer,

@@ -348,11 +348,10 @@ MPU401DeviceControl(PDEVICE_OBJECT DeviceObject,
 }
 
 
-static NTSTATUS STDCALL
+static VOID STDCALL
 MPU401Unload(PDRIVER_OBJECT DriverObject)
 {
   DPRINT("MPU401Unload() called!\n");
-  return(STATUS_SUCCESS);
 }
 
 
@@ -382,11 +381,11 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 //    DeviceExtension->RegistryPath = RegistryPath;
 
   DriverObject->Flags = 0;
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)MPU401Create;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)MPU401Close;
-  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = (PDRIVER_DISPATCH)MPU401Cleanup;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)MPU401DeviceControl;
-  DriverObject->DriverUnload = (PDRIVER_UNLOAD)MPU401Unload;
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = MPU401Create;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = MPU401Close;
+  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = MPU401Cleanup;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = MPU401DeviceControl;
+  DriverObject->DriverUnload = MPU401Unload;
 
     // Major hack to just get this damn thing working:
     Status = InitDevice(RegistryPath, DriverObject);    // ????

@@ -1,4 +1,4 @@
-/* $Id: bootvid.c,v 1.5 2003/11/17 02:12:48 hyperion Exp $
+/* $Id: bootvid.c,v 1.6 2004/02/10 16:22:55 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -738,7 +738,7 @@ VidInitialize(VOID)
   return TRUE;
 }
 
-NTSTATUS STDCALL_FUNC
+NTSTATUS STDCALL
 VidDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
   PIO_STACK_LOCATION piosStack = IoGetCurrentIrpStackLocation(Irp);
@@ -794,10 +794,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
   BootVidDriverObject = DriverObject;
 
   /* register driver routines */
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)VidDispatch;
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)VidDispatch;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = 
-    (PDRIVER_DISPATCH)VidDispatch;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = VidDispatch;
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = VidDispatch;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = VidDispatch;
   DriverObject->DriverUnload = NULL;
 
   /* create device */

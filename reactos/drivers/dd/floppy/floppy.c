@@ -588,12 +588,11 @@ DriverEntry (IN PDRIVER_OBJECT DriverObject,
   DPRINT ("Floppy driver\n");
 
   /* Export other driver entry points... */
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)FloppyDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)FloppyDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)FloppyDispatchReadWrite;
-  DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)FloppyDispatchReadWrite;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] =
-    (PDRIVER_DISPATCH)FloppyDispatchDeviceControl;
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = FloppyDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = FloppyDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_READ] = FloppyDispatchReadWrite;
+  DriverObject->MajorFunction[IRP_MJ_WRITE] = FloppyDispatchReadWrite;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = FloppyDispatchDeviceControl;
 
   /*  Try to detect controller and abort if it fails */
   if (!FloppyCreateController (DriverObject,

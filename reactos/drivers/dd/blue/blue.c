@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.43 2004/01/28 20:51:44 ekohl Exp $
+/* $Id: blue.c,v 1.44 2004/02/10 16:22:55 navaraf Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -665,11 +665,11 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 
     DPRINT ("Screen Driver 0.0.6\n");
 
-    DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH) ScrCreate;
-    DriverObject->MajorFunction[IRP_MJ_CLOSE]  = (PDRIVER_DISPATCH) ScrDispatch;
-    DriverObject->MajorFunction[IRP_MJ_READ]   = (PDRIVER_DISPATCH) ScrDispatch;
-    DriverObject->MajorFunction[IRP_MJ_WRITE]  = (PDRIVER_DISPATCH) ScrWrite;
-    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL ] = (PDRIVER_DISPATCH) ScrIoControl;
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = ScrCreate;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE]  = ScrDispatch;
+    DriverObject->MajorFunction[IRP_MJ_READ]   = ScrDispatch;
+    DriverObject->MajorFunction[IRP_MJ_WRITE]  = ScrWrite;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL ] = ScrIoControl;
 
     IoCreateDevice (DriverObject,
                     sizeof(DEVICE_EXTENSION),

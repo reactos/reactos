@@ -1,4 +1,4 @@
-/* $Id: npfs.c,v 1.7 2003/09/20 20:31:57 weiden Exp $
+/* $Id: npfs.c,v 1.8 2004/02/10 16:22:56 navaraf Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -28,28 +28,28 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    
    DbgPrint("Named Pipe FSD 0.0.2\n");
    
-   DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)NpfsCreate;
+   DriverObject->MajorFunction[IRP_MJ_CREATE] = NpfsCreate;
    DriverObject->MajorFunction[IRP_MJ_CREATE_NAMED_PIPE] =
-     (PDRIVER_DISPATCH)NpfsCreateNamedPipe;
-   DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)NpfsClose;
-   DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)NpfsRead;
-   DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)NpfsWrite;
+     NpfsCreateNamedPipe;
+   DriverObject->MajorFunction[IRP_MJ_CLOSE] = NpfsClose;
+   DriverObject->MajorFunction[IRP_MJ_READ] = NpfsRead;
+   DriverObject->MajorFunction[IRP_MJ_WRITE] = NpfsWrite;
    DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
-     (PDRIVER_DISPATCH)NpfsQueryInformation;
+     NpfsQueryInformation;
    DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] =
-     (PDRIVER_DISPATCH)NpfsSetInformation;
+     NpfsSetInformation;
    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = 
-     (PDRIVER_DISPATCH)NpfsQueryVolumeInformation;
-//   DriverObject->MajorFunction[IRP_MJ_CLEANUP] = (PDRIVER_DISPATCH)NpfsCleanup;
-//   DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = (PDRIVER_DISPATCH)NpfsFlushBuffers;
+     NpfsQueryVolumeInformation;
+//   DriverObject->MajorFunction[IRP_MJ_CLEANUP] = NpfsCleanup;
+//   DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = NpfsFlushBuffers;
 //   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
-//     (PDRIVER_DISPATCH)NpfsDirectoryControl;
+//     NpfsDirectoryControl;
    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
-     (PDRIVER_DISPATCH)NpfsFileSystemControl;
+     NpfsFileSystemControl;
 //   DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] = 
-//     (PDRIVER_DISPATCH)NpfsQuerySecurity;
+//     NpfsQuerySecurity;
 //   DriverObject->MajorFunction[IRP_MJ_SET_SECURITY] =
-//     (PDRIVER_DISPATCH)NpfsSetSecurity;
+//     NpfsSetSecurity;
    
    DriverObject->DriverUnload = NULL;
    

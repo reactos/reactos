@@ -1,4 +1,4 @@
-/* $Id: debugout.c,v 1.2 2003/11/17 02:12:49 hyperion Exp $
+/* $Id: debugout.c,v 1.3 2004/02/10 16:22:55 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -26,7 +26,7 @@
 #include <rosrtl/string.h>
 
 /* FUNCTIONS */
-NTSTATUS STDCALL_FUNC
+NTSTATUS STDCALL
 DebugOutDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
   PIO_STACK_LOCATION piosStack = IoGetCurrentIrpStackLocation(Irp);
@@ -83,10 +83,9 @@ DebugOutDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
   return nErrCode;
 }
 
-NTSTATUS STDCALL
+VOID STDCALL
 DebugOutUnload(PDRIVER_OBJECT DriverObject)
 {
-  return STATUS_SUCCESS;
 }
 
 NTSTATUS STDCALL 
@@ -98,12 +97,12 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
   NTSTATUS Status;
 
   /* register driver routines */
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH) DebugOutDispatch;
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH) DebugOutDispatch;
-  DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH) DebugOutDispatch;
-  DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH) DebugOutDispatch;
-  /* DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = (PDRIVER_DISPATCH) DebugOutDispatch; */
-  DriverObject->DriverUnload = (PDRIVER_UNLOAD) DebugOutUnload;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = DebugOutDispatch;
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = DebugOutDispatch;
+  DriverObject->MajorFunction[IRP_MJ_WRITE] = DebugOutDispatch;
+  DriverObject->MajorFunction[IRP_MJ_READ] = DebugOutDispatch;
+  /* DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = DebugOutDispatch; */
+  DriverObject->DriverUnload = DebugOutUnload;
 
   /* create device */
   RtlRosInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\DebugOut");

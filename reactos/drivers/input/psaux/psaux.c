@@ -250,9 +250,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
      return STATUS_UNSUCCESSFUL;
    }
 
-   DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)PS2MouseDispatch;
-   DriverObject->MajorFunction[IRP_MJ_CLOSE]  = (PDRIVER_DISPATCH)PS2MouseDispatch;
-   DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = (PDRIVER_DISPATCH)PS2MouseInternalDeviceControl;
+   DriverObject->MajorFunction[IRP_MJ_CREATE] = PS2MouseDispatch;
+   DriverObject->MajorFunction[IRP_MJ_CLOSE]  = PS2MouseDispatch;
+   DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = PS2MouseInternalDeviceControl;
    DriverObject->DriverStartIo                = PS2MouseStartIo;
 
    DeviceObject = AllocatePointerDevice(DriverObject);

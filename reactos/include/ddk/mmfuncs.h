@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.19 2003/12/31 05:33:03 jfilby Exp $ */
+/* $Id: mmfuncs.h,v 1.20 2004/02/10 16:22:56 navaraf Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
 
@@ -56,7 +56,8 @@ extern inline unsigned int ADDRESS_AND_SIZE_TO_SPAN_PAGES(PVOID Va,
  * FUNCTION: Takes a count in bytes and returns the number of pages
  * required to hold it
  */
-#define BYTES_TO_PAGES(size) (?)
+#define BYTES_TO_PAGES(Size) \
+  ((ULONG) ((ULONG_PTR) (Size) >> PAGE_SHIFT) + (((ULONG) (Size) & (PAGE_SIZE - 1)) != 0))
 
 DWORD
 STDCALL

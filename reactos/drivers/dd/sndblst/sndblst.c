@@ -368,11 +368,10 @@ BlasterDeviceControl(PDEVICE_OBJECT DeviceObject,
 }
 
 
-static NTSTATUS STDCALL
+static VOID STDCALL
 BlasterUnload(PDRIVER_OBJECT DriverObject)
 {
   DPRINT("BlasterUnload() called!\n");
-  return(STATUS_SUCCESS);
 }
 
 
@@ -401,14 +400,14 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 //    DeviceExtension->RegistryPath = RegistryPath;
 
   DriverObject->Flags = 0;
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)BlasterCreate;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)BlasterClose;
-  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = (PDRIVER_DISPATCH)BlasterCleanup;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)BlasterDeviceControl;
-  DriverObject->DriverUnload = (PDRIVER_UNLOAD)BlasterUnload;
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = BlasterCreate;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = BlasterClose;
+  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = BlasterCleanup;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = BlasterDeviceControl;
+  DriverObject->DriverUnload = BlasterUnload;
 
     // Major hack to just get this damn thing working:
-    Status = InitDevice(RegistryPath, DriverObject);    // ????
+    Status = InitDevice(RegistryPath->Buffer, DriverObject);    // ????
 
 //    DPRINT("Enumerating devices at %wZ\n", RegistryPath);
 

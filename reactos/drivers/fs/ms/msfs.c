@@ -1,4 +1,4 @@
-/* $Id: msfs.c,v 1.6 2003/09/20 20:31:57 weiden Exp $
+/* $Id: msfs.c,v 1.7 2004/02/10 16:22:56 navaraf Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -30,26 +30,26 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    DbgPrint("Mailslot FSD 0.0.1\n");
    
    DriverObject->Flags = 0;
-   DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)MsfsCreate;
+   DriverObject->MajorFunction[IRP_MJ_CREATE] = MsfsCreate;
    DriverObject->MajorFunction[IRP_MJ_CREATE_MAILSLOT] =
-     (PDRIVER_DISPATCH)MsfsCreateMailslot;
-   DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)MsfsClose;
-   DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)MsfsRead;
-   DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)MsfsWrite;
+     MsfsCreateMailslot;
+   DriverObject->MajorFunction[IRP_MJ_CLOSE] = MsfsClose;
+   DriverObject->MajorFunction[IRP_MJ_READ] = MsfsRead;
+   DriverObject->MajorFunction[IRP_MJ_WRITE] = MsfsWrite;
    DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
-     (PDRIVER_DISPATCH)MsfsQueryInformation;
+     MsfsQueryInformation;
    DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] =
-     (PDRIVER_DISPATCH)MsfsSetInformation;
+     MsfsSetInformation;
 //   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
-//     (PDRIVER_DISPATCH)MsfsDirectoryControl;
-//   DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = (PDRIVER_DISPATCH)MsfsFlushBuffers;
-//   DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = (PDRIVER_DISPATCH)MsfsShutdown;
+//     MsfsDirectoryControl;
+//   DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = MsfsFlushBuffers;
+//   DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = MsfsShutdown;
 //   DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] = 
-//     (PDRIVER_DISPATCH)MsfsQuerySecurity;
+//     MsfsQuerySecurity;
 //   DriverObject->MajorFunction[IRP_MJ_SET_SECURITY] =
-//     (PDRIVER_DISPATCH)MsfsSetSecurity;
+//     MsfsSetSecurity;
    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
-     (PDRIVER_DISPATCH)MsfsFileSystemControl;
+     MsfsFileSystemControl;
    
    DriverObject->DriverUnload = NULL;
    

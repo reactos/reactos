@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mup.c,v 1.2 2003/09/20 22:44:21 weiden Exp $
+/* $Id: mup.c,v 1.3 2004/02/10 16:22:56 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -73,22 +73,22 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
   /* Initialize driver data */
   DeviceObject->Flags = DO_DIRECT_IO;
-//  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)NtfsClose;
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)MupCreate;
-  DriverObject->MajorFunction[IRP_MJ_CREATE_NAMED_PIPE] = (PDRIVER_DISPATCH)MupCreate;
-  DriverObject->MajorFunction[IRP_MJ_CREATE_MAILSLOT] = (PDRIVER_DISPATCH)MupCreate;
-//  DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)NtfsRead;
-//  DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)NtfsWrite;
+//  DriverObject->MajorFunction[IRP_MJ_CLOSE] = NtfsClose;
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = MupCreate;
+  DriverObject->MajorFunction[IRP_MJ_CREATE_NAMED_PIPE] = MupCreate;
+  DriverObject->MajorFunction[IRP_MJ_CREATE_MAILSLOT] = MupCreate;
+//  DriverObject->MajorFunction[IRP_MJ_READ] = NtfsRead;
+//  DriverObject->MajorFunction[IRP_MJ_WRITE] = NtfsWrite;
 //  DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
-//    (PDRIVER_DISPATCH)NtfsFileSystemControl;
+//    NtfsFileSystemControl;
 //  DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
-//    (PDRIVER_DISPATCH)NtfsDirectoryControl;
+//    NtfsDirectoryControl;
 //  DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
-//    (PDRIVER_DISPATCH)NtfsQueryInformation;
+//    NtfsQueryInformation;
 //  DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
-//    (PDRIVER_DISPATCH)NtfsQueryVolumeInformation;
+//    NtfsQueryVolumeInformation;
 //  DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] =
-//    (PDRIVER_DISPATCH)NtfsSetVolumeInformation;
+//    NtfsSetVolumeInformation;
 
   DriverObject->DriverUnload = NULL;
 

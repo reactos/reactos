@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.1 2004/01/19 15:56:53 navaraf Exp $
+ * $Id: videoprt.c,v 1.2 2004/02/10 16:22:56 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -492,9 +492,9 @@ VideoPortInitialize(IN PVOID  Context1,
       MPDriverObject->DeviceObject = MPDeviceObject;
 
       /* Initialize the miniport drivers dispatch table */
-      MPDriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH) VidDispatchOpen;
-      MPDriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH) VidDispatchClose;
-      MPDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH) VidDispatchDeviceControl;
+      MPDriverObject->MajorFunction[IRP_MJ_CREATE] = VidDispatchOpen;
+      MPDriverObject->MajorFunction[IRP_MJ_CLOSE] = VidDispatchClose;
+      MPDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = VidDispatchDeviceControl;
 
       /* Initialize our device extension */
       DeviceExtension = 

@@ -27,7 +27,7 @@ extern KSPIN_LOCK OrphanAdapterListLock;
 extern LIST_ENTRY OrphanAdapterListHead;
 
 
-VOID MainUnload(
+VOID STDCALL MainUnload(
     PDRIVER_OBJECT DriverObject)
 /*
  * FUNCTION: Unloads the driver
@@ -67,7 +67,7 @@ DriverEntry(
   InitializeListHead(&OrphanAdapterListHead);
   KeInitializeSpinLock(&OrphanAdapterListLock);
 
-  DriverObject->DriverUnload = (PDRIVER_UNLOAD)MainUnload;
+  DriverObject->DriverUnload = MainUnload;
 
   /* 
    * until we have PNP support, query the enum key and NdisFindDevice() each one

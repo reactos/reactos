@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fs_rec.c,v 1.7 2003/09/20 20:31:57 weiden Exp $
+/* $Id: fs_rec.c,v 1.8 2004/02/10 16:22:56 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -200,11 +200,11 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
   DeviceCount = 0;
 
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)FsRecCreate;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)FsRecClose;
-  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = (PDRIVER_DISPATCH)FsRecClose;
-  DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = (PDRIVER_DISPATCH)FsRecFsControl;
-  DriverObject->DriverUnload = (PDRIVER_UNLOAD)FsRecUnload;
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = FsRecCreate;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = FsRecClose;
+  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = FsRecClose;
+  DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = FsRecFsControl;
+  DriverObject->DriverUnload = FsRecUnload;
 
   ConfigInfo = IoGetConfigurationInformation();
 

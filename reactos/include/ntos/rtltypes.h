@@ -1,4 +1,4 @@
-/* $Id: rtltypes.h,v 1.12 2004/02/01 20:45:18 ekohl Exp $
+/* $Id: rtltypes.h,v 1.13 2004/02/10 16:22:56 navaraf Exp $
  * 
  */
 
@@ -73,12 +73,9 @@ typedef struct _RTL_BITMAP_RUN
   ULONG NumberOfBits;
 } RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
 
-#ifdef __GNUC__
-#define STDCALL_FUNC STDCALL
-#else
-#define STDCALL_FUNC(a) (__stdcall a )
-#endif /*__GNUC__*/
-
+#ifndef STDCALL_FUNC
+#define STDCALL_FUNC(a)  (STDCALL a)
+#endif
 
 typedef NTSTATUS STDCALL_FUNC
 (*PRTL_QUERY_REGISTRY_ROUTINE) (PWSTR ValueName,

@@ -26,7 +26,7 @@
 SB16 sb16;
 sb_status sb16_getenvironment(void);
 
-NTSTATUS Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Handles user mode requests
  * ARGUMENTS:

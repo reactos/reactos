@@ -19,11 +19,9 @@
 
 #include <basetsd.h>
 
-#ifdef __GNUC__
-#define STDCALL_FUNC STDCALL
-#else
-#define STDCALL_FUNC(a) (__stdcall a )
-#endif /*__GNUC__*/
+#ifndef STDCALL_FUNC
+#define STDCALL_FUNC(a)  (STDCALL a)
+#endif
 
 /* Fixed precision types */
 typedef signed char         INT8, *PINT8;
@@ -51,7 +49,7 @@ typedef short SHORT;
 #define STDCALL __stdcall
 #define CDECL __cdecl
 #endif
-#define CALLBACK    STDCALL_FUNC
+#define CALLBACK    STDCALL
 #define PASCAL      WINAPI
 #else
 

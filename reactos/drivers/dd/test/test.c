@@ -17,7 +17,7 @@
 
 #if 0
 
-NTSTATUS TestWrite(PIRP Irp, PIO_STACK_LOCATION Stk)
+NTSTATUS STDCALL TestWrite(PIRP Irp, PIO_STACK_LOCATION Stk)
 {
    PVOID Address;
    
@@ -26,7 +26,7 @@ NTSTATUS TestWrite(PIRP Irp, PIO_STACK_LOCATION Stk)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS TestDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL TestDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Handles user mode requests
  * ARGUMENTS:

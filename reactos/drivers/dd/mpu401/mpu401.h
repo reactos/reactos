@@ -128,13 +128,13 @@ BOOLEAN InitUARTMode(UINT BasePort);
     Prototypes for functions in settings.c :
 */
 
-NTSTATUS EnumDeviceKeys(
+NTSTATUS STDCALL EnumDeviceKeys(
     IN PUNICODE_STRING RegistryPath,
     IN PWSTR SubKey,
     IN PREGISTRY_CALLBACK_ROUTINE Callback,
     IN PVOID Context);
 
-NTSTATUS LoadSettings(
+NTSTATUS STDCALL LoadSettings(
     IN  PWSTR ValueName,
     IN  ULONG ValueType,
     IN  PVOID ValueData,

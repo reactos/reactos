@@ -1,4 +1,4 @@
-/* $Id: isapnp.c,v 1.8 2003/11/14 17:13:24 weiden Exp $
+/* $Id: isapnp.c,v 1.9 2004/02/10 16:22:54 navaraf Exp $
  *
  * PROJECT:         ReactOS ISA PnP Bus driver
  * FILE:            isapnp.c
@@ -1726,12 +1726,12 @@ DriverEntry(
 {
   DbgPrint("ISA Plug and Play Bus Driver\n");
 
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)ISAPNPDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)ISAPNPDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)ISAPNPDispatchReadWrite;
-  DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)ISAPNPDispatchReadWrite;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)ISAPNPDispatchDeviceControl;
-  DriverObject->MajorFunction[IRP_MJ_PNP] = (PDRIVER_DISPATCH)ISAPNPControl;
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = ISAPNPDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = ISAPNPDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_READ] = ISAPNPDispatchReadWrite;
+  DriverObject->MajorFunction[IRP_MJ_WRITE] = ISAPNPDispatchReadWrite;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ISAPNPDispatchDeviceControl;
+  DriverObject->MajorFunction[IRP_MJ_PNP] = ISAPNPControl;
   DriverObject->DriverExtension->AddDevice = ISAPNPAddDevice;
 
   return STATUS_SUCCESS;

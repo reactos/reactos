@@ -1,4 +1,4 @@
-/* $Id: null.c,v 1.12 2003/11/17 02:12:49 hyperion Exp $
+/* $Id: null.c,v 1.13 2004/02/10 16:22:55 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -91,10 +91,9 @@ NullDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
  return (nErrCode);
 }
 
-NTSTATUS STDCALL
+VOID STDCALL
 NullUnload(PDRIVER_OBJECT DriverObject)
 {
- return(STATUS_SUCCESS);
 }
 
 NTSTATUS STDCALL 
@@ -106,12 +105,12 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
  NTSTATUS nErrCode;
 
  /* register driver routines */
- DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)NullDispatch;
- DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)NullDispatch;
- DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)NullDispatch;
- DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)NullDispatch;
- /* DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = (PDRIVER_DISPATCH)NullDispatch; */
- DriverObject->DriverUnload = (PDRIVER_UNLOAD)NullUnload;
+ DriverObject->MajorFunction[IRP_MJ_CLOSE] = NullDispatch;
+ DriverObject->MajorFunction[IRP_MJ_CREATE] = NullDispatch;
+ DriverObject->MajorFunction[IRP_MJ_WRITE] = NullDispatch;
+ DriverObject->MajorFunction[IRP_MJ_READ] = NullDispatch;
+ /* DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = NullDispatch; */
+ DriverObject->DriverUnload = NullUnload;
 
  /* create null device */
  RtlRosInitUnicodeStringFromLiteral(&wstrDeviceName, L"\\Device\\Null");

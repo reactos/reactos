@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.59 2003/09/20 20:12:43 weiden Exp $
+/* $Id: ide.c,v 1.60 2004/02/10 16:22:55 navaraf Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -268,7 +268,6 @@ IdeFindControllers(IN PDRIVER_OBJECT DriverObject)
   ULONG Bus;
   ULONG Slot;
   ULONG Size;
-  ULONG i;
   NTSTATUS ReturnedStatus = STATUS_NO_SUCH_DEVICE;
   NTSTATUS Status;
   INT ControllerIdx = 0;
@@ -661,7 +660,6 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   IDE_DRIVE_IDENTIFY     DrvParms;
   PDEVICE_OBJECT         DiskDeviceObject;
   PDEVICE_OBJECT         PartitionDeviceObject;
-  PIDE_DEVICE_EXTENSION  DiskDeviceExtension;
   UNICODE_STRING         UnicodeDeviceDirName;
   OBJECT_ATTRIBUTES      DeviceDirAttributes;
   HANDLE                 Handle;
@@ -1578,7 +1576,7 @@ STDCALL IDEStartIo(IN PDEVICE_OBJECT DeviceObject,
     default:
       Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
       Irp->IoStatus.Information = 0;
-      KEBUGCHECK((ULONG)Irp);
+      KeBugCheck((ULONG)Irp);
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
       IoStartNextPacket(DeviceObject, FALSE);
       break;

@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.5 2003/12/12 21:54:42 ekohl Exp $
+/* $Id: pci.c,v 1.6 2004/02/10 16:22:55 navaraf Exp $
  *
  * PROJECT:         ReactOS PCI Bus driver
  * FILE:            pci.c
@@ -174,9 +174,9 @@ DriverEntry(
 {
   DbgPrint("Peripheral Component Interconnect Bus Driver\n");
 
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH) PciDispatchDeviceControl;
-  DriverObject->MajorFunction[IRP_MJ_PNP] = (PDRIVER_DISPATCH) PciPnpControl;
-  DriverObject->MajorFunction[IRP_MJ_POWER] = (PDRIVER_DISPATCH) PciPowerControl;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = PciDispatchDeviceControl;
+  DriverObject->MajorFunction[IRP_MJ_PNP] = PciPnpControl;
+  DriverObject->MajorFunction[IRP_MJ_POWER] = PciPowerControl;
   DriverObject->DriverExtension->AddDevice = PciAddDevice;
 
   return STATUS_SUCCESS;

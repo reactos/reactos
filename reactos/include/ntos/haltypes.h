@@ -1,4 +1,4 @@
-/* $Id: haltypes.h,v 1.5 2003/12/30 18:34:58 fireball Exp $
+/* $Id: haltypes.h,v 1.6 2004/02/10 16:22:56 navaraf Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -13,13 +13,12 @@
 #ifndef __INCLUDE_NTOS_HALTYPES_H
 #define __INCLUDE_NTOS_HALTYPES_H
 
-#ifdef __GNUC__
-#define STDCALL_FUNC  STDCALL
-#define FASTCALL_FUNC FASTCALL
-#else
-#define STDCALL_FUNC(a)  (__stdcall a )
-#define FASTCALL_FUNC(a) (__fastcall a )
-#endif /*__GNUC__*/
+#ifndef STDCALL_FUNC
+#define STDCALL_FUNC(a)  (STDCALL a)
+#endif
+#ifndef FASTCALL_FUNC
+#define FASTCALL_FUNC(a) (FASTCALL a)
+#endif
 
 #include "types.h"
 

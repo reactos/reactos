@@ -730,7 +730,7 @@ VOID STDCALL KbdStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    DPRINT("KeysRequired %d\n",KeysRequired);     
 }
 
-NTSTATUS KbdInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL KbdInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION                  stk;
 	PINTERNAL_I8042_HOOK_KEYBOARD      	hookKeyboard;
@@ -848,11 +848,11 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
    
    DPRINT("Keyboard Driver 0.0.4\n");
 
-   DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)KbdDispatch;
-   DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)KbdDispatch;
-   DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)KbdDispatch;
+   DriverObject->MajorFunction[IRP_MJ_CREATE] = KbdDispatch;
+   DriverObject->MajorFunction[IRP_MJ_CLOSE] = KbdDispatch;
+   DriverObject->MajorFunction[IRP_MJ_READ] = KbdDispatch;
    DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = 
-         (PDRIVER_DISPATCH)KbdInternalDeviceControl;  
+         KbdInternalDeviceControl;  
 
    DriverObject->DriverStartIo = KbdStartIo;
 
