@@ -82,6 +82,7 @@ IntVideoPortMapMemory(
    IN PHYSICAL_ADDRESS IoAddress,
    IN ULONG NumberOfUchars,
    IN UCHAR InIoSpace,
+   IN HANDLE ProcessHandle,
    OUT VP_STATUS *Status)
 {
    PHYSICAL_ADDRESS TranslatedAddress;
@@ -99,6 +100,23 @@ IntVideoPortMapMemory(
    {
       DPRINT("VIDEO_MEMORY_SPACE_P6CACHE not supported, turning off\n");
       InIoSpace &= ~VIDEO_MEMORY_SPACE_P6CACHE;
+   }
+
+   if (ProcessHandle != NULL && (InIoSpace & VIDEO_MEMORY_SPACE_USER_MODE) == 0)
+   {
+      DPRINT("ProcessHandle is not NULL (0x%x) but InIoSpace does not have "
+             "VIDEO_MEMORY_SPACE_USER_MODE set! Setting "
+             "VIDEO_MEMORY_SPACE_USER_MODE.\n",
+             ProcessHandle);
+      InIoSpace |= VIDEO_MEMORY_SPACE_USER_MODE;
+   }
+   else if (ProcessHandle == NULL && (InIoSpace & VIDEO_MEMORY_SPACE_USER_MODE) != 0)
+   {
+      DPRINT("ProcessHandle is NULL (0x%x) but InIoSpace does have "
+             "VIDEO_MEMORY_SPACE_USER_MODE set! Setting ProcessHandle "
+             "to NtCurrentProcess()\n",
+             ProcessHandle);
+      ProcessHandle = NtCurrentProcess();
    }
 
    if ((InIoSpace & VIDEO_MEMORY_SPACE_USER_MODE) == 0 &&
@@ -155,7 +173,7 @@ IntVideoPortMapMemory(
    {
       NTSTATUS NtStatus;
       MappedAddress = NULL;
-      NtStatus = IntVideoPortMapPhysicalMemory(NtCurrentProcess(),
+      NtStatus = IntVideoPortMapPhysicalMemory(ProcessHandle,
                                                TranslatedAddress,
                                                NumberOfUchars,
                                                PAGE_READWRITE/* | PAGE_WRITECOMBINE*/,
@@ -249,6 +267,8 @@ IntVideoPortUnmapMemory(
 
    /* If there was no kernelmode mapping for the given address found we assume
     * that the given address is a usermode mapping and try to unmap it.
+    *
+    * FIXME: Is it ok to use NtCurrentProcess?
     */
    Status = ZwUnmapViewOfSection(NtCurrentProcess(), MappedAddress);
    if (!NT_SUCCESS(Status))
@@ -276,6 +296,7 @@ VideoPortGetDeviceBase(
       IoAddress,
       NumberOfUchars,
       InIoSpace,
+      NULL,
       NULL);
 }
 
@@ -332,6 +353,7 @@ VideoPortMapMemory(
    NTSTATUS Status;
 
    DPRINT("VideoPortMapMemory\n");
+   DPRINT("- *VirtualAddress: 0x%x\n", *VirtualAddress);
 
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
    *VirtualAddress = IntVideoPortMapMemory(
@@ -339,6 +361,7 @@ VideoPortMapMemory(
       PhysicalAddress,
       *Length,
       *InIoSpace,
+      (HANDLE)*VirtualAddress,
       &Status);
 
    return Status;
