@@ -1,8 +1,12 @@
-# Default to verbose mode
+# Default to half-verbose mode
 ifeq ($(VERBOSE),no)
   Q = @
 else
+ifeq ($(VERBOSE),yes)
   Q =
+else
+  Q = @
+endif
 endif
 
 export MAKE := @$(MAKE)

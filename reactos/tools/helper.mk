@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.98 2004/12/05 16:27:45 gvg Exp $
+# $Id: helper.mk,v 1.99 2004/12/11 16:02:22 blight Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -89,12 +89,12 @@ endif
 # MK_CFLAGS        = C compiler command-line flags for this target
 # MK_CPPFLAGS      = C++ compiler command-line flags for this target
 # MK_DDKLIBS       = Import libraries from the ReactOS DDK to link with
-# MK_DEFENTRY      = Module entry point: 
+# MK_DEFENTRY      = Module entry point:
 #                    _WinMain@16 for windows EXE files that are export libraries
-#                    _DriverEntry@8 for .SYS files 
+#                    _DriverEntry@8 for .SYS files
 #                    _DllMain@12 for .DLL files
 #                    _DrvEnableDriver@12 for GDI drivers
-#                    _WinMainCRTStartup for Win32 EXE files 
+#                    _WinMainCRTStartup for Win32 EXE files
 #                    _NtProcessStartup@4 for Native EXE files
 #                    _mainCRTStartup for Console EXE files
 # MK_DEFEXT        = Extension to give compiled modules (.EXE, .DLL, .SYS, .a)
@@ -705,6 +705,16 @@ ifeq ($(MK_INSTALL_FULLNAME),)
   MK_INSTALL_FULLNAME := $(MK_FULLNAME)
 endif
 
+ifeq ($(VERBOSE),no)
+  HALFVERBOSEECHO = :
+else
+ifeq ($(VERBOSE),yes)
+  HALFVERBOSEECHO = :
+else
+  HALFVERBOSEECHO = @echo
+endif
+endif
+
 ifeq ($(MK_IMPLIBONLY),yes)
 
 TARGET_CLEAN += $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
@@ -712,6 +722,7 @@ TARGET_CLEAN += $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
 all: $(REGTEST_TARGETS) $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
 
 $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(MK_OBJECTS) $(MK_DEFNAME)
+	$(HALFVERBOSEECHO) [DLLTOOL] $(MK_IMPLIB_FULLNAME)
 	$(DLLTOOL) \
 		--dllname $(MK_FULLNAME) \
 		--def $(MK_DEFNAME) \
@@ -742,9 +753,11 @@ else
 endif
 
 $(MK_BASENAME).a: $(MK_OBJECTS)
+	$(HALFVERBOSEECHO) [AR]      $(MK_BASENAME).a
 	$(AR) -rc $(MK_BASENAME).a $(MK_OBJECTS)
 
 $(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS) $(MK_STUBS_SRC) $(MK_STUBS_OBJ)
+	$(HALFVERBOSEECHO) [LD]      $(MK_NOSTRIPNAME)
 ifeq ($(MK_EXETYPE),dll)
 	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
@@ -773,14 +786,18 @@ endif
 	  	-o $(MK_NOSTRIPNAME) \
 	  	$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
+	$(HALFVERBOSEECHO) [RSYM]    $(MK_BASENAME).sym
 	- $(RSYM) $(MK_NOSTRIPNAME) $(MK_BASENAME).sym
 ifeq ($(FULL_MAP),yes)
+	$(HALFVERBOSEECHO) [OBJDUMP] $(MK_BASENAME).map
 	$(OBJDUMP) -d -S $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
 else
+	$(HALFVERBOSEECHO) [NM]      $(MK_BASENAME).map
 	$(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
 endif
 
 $(MK_FULLNAME): $(MK_NOSTRIPNAME) $(MK_EXTRADEP)
+	$(HALFVERBOSEECHO) [LD]      $(MK_FULLNAME)
 	-
 ifneq ($(TARGET_CPPAPP),yes)
 	$(LD) --strip-debug -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
@@ -835,9 +852,11 @@ else
 endif
 
 $(MK_BASENAME).a: $(MK_OBJECTS)
+	$(HALFVERBOSEECHO) [AR]      $(MK_BASENAME).a
 	$(AR) -rc $(MK_BASENAME).a $(MK_OBJECTS)
 
 $(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS)
+	$(HALFVERBOSEECHO) [LD]      $(MK_NOSTRIPNAME)
 	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		$(TARGET_LFLAGS) \
@@ -858,15 +877,19 @@ $(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS)
 		-o $(MK_NOSTRIPNAME) \
 	  	$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
+	$(HALFVERBOSEECHO) [RSYM]    $(MK_BASENAME).sym
 	$(RSYM) $(MK_NOSTRIPNAME) $(MK_BASENAME).sym
 ifeq ($(FULL_MAP),yes)
+	$(HALFVERBOSEECHO) [OBJDUMP] $(MK_BASENAME).map
 	$(OBJDUMP) -d -S $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
 else
+	$(HALFVERBOSEECHO) [NM]      $(MK_BASENAME).map
 	$(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
 endif
 
 $(MK_FULLNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS) $(MK_NOSTRIPNAME)
 	-
+	$(HALFVERBOSEECHO) [LD]      $(MK_FULLNAME)
 ifneq ($(TARGET_CPPAPP),yes)
 	$(LD) --strip-debug -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
 endif
@@ -902,6 +925,7 @@ endif # MK_MODE
 ifeq ($(MK_MODE),static)
 
 $(MK_FULLNAME): $(MK_EXTRADEP) $(MK_OBJECTS)
+	$(HALFVERBOSEECHO) [AR]      $(MK_FULLNAME)
 	$(AR) -rc $(MK_FULLNAME) $(MK_OBJECTS)
 ifneq ($(TARGET_TYPE),test)
 	@echo $(MK_FULLNAME) was successfully built.
@@ -928,6 +952,7 @@ endif
 
 ifeq ($(MK_IMPLIB),yes)
 $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(MK_DEFNAME)
+	$(HALFVERBOSEECHO) [DLLTOOL] $(MK_IMPLIB_FULLNAME)
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--def $(MK_DEFNAME) \
 		--output-lib $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME) \
@@ -954,7 +979,7 @@ endif
 
 
 endif # TARGET_PCH
-else  # 
+else  #
 MK_PCHNAME =
 endif # ROS_USE_PCH
 
@@ -994,8 +1019,8 @@ ifeq ($(MK_MODE),static)
 forceinstall:
 
 install:
-	
-bootcd:	
+
+bootcd:
 
 else # MK_MODE
 
@@ -1039,10 +1064,10 @@ bootcd: $(SUBDIRS:%=%_bootcd)
 else # TARGET_BOOTSTRAP
 
 bootcd:
-	
+
 endif # TARGET_BOOTSTRAP
-    
-endif # MK_MODE     
+
+endif # MK_MODE
 
 endif # MK_IMPLIBONLY
 
@@ -1114,35 +1139,48 @@ run: all
 	@$(RM) _runtest.exe
 endif
 
-
 %.o: %.c $(MK_PCHNAME)
+	$(HALFVERBOSEECHO) [CC]      $<
 	$(CC) $(TARGET_CFLAGS) -c $< -o $@
 %.o: %.cc $(MK_PCHNAME)
+	$(HALFVERBOSEECHO) [CXX]     $<
 	$(CXX) $(TARGET_CPPFLAGS) -c $< -o $@
 %.o: %.cxx $(MK_PCHNAME)
+	$(HALFVERBOSEECHO) [CXX]     $<
 	$(CXX) $(TARGET_CPPFLAGS) -c $< -o $@
 %.o: %.cpp $(MK_PCHNANE)
+	$(HALFVERBOSEECHO) [CXX]     $<
 	$(CXX) $(TARGET_CPPFLAGS) -c $< -o $@
 %.o: %.S
+	$(HALFVERBOSEECHO) [AS]      $<
 	$(AS) $(TARGET_ASFLAGS) -c $< -o $@
 %.o: %.s
+	$(HALFVERBOSEECHO) [AS]      $<
 	$(AS) $(TARGET_ASFLAGS) -c $< -o $@
 %.o: %.asm
+	$(HALFVERBOSEECHO) [NASM]    $<
 	$(NASM_CMD) $(TARGET_NFLAGS) $< -o $@
 %.coff: %.rc
+	$(HALFVERBOSEECHO) [RC]      $<
 	$(RC) $(TARGET_RCFLAGS) $< -o $@
 %.spec.def: %.spec
+	$(HALFVERBOSEECHO) [DEF]     $<
 	$(WINEBUILD) $(DEFS) -o $@ --def $<
 %.drv.spec.def: %.spec
+	$(HALFVERBOSEECHO) [DEF]     $<
 	$(WINEBUILD) $(DEFS) -o $@ --def $<
 %.stubs.c: %.spec
+	$(HALFVERBOSEECHO) [STUBS]   $<
 	$(WINEBUILD) $(DEFS) -o $@ --pedll $<
 %.i: %.c
+	$(HALFVERBOSEECHO) [CPP]     $<
 	$(CC) $(TARGET_CFLAGS) -E $< > $@
 %.h.gch: %.h
+	$(HALFVERBOSEECHO) [PCH]     $<
 	$(PCH_CC) $(CFLAGS) $<
 # rule for msvc conversion
 %.c: %_msvc.c
+	$(HALFVERBOSEECHO) [MS2PS]   $<
 	$(subst /,$(SEP),$(MS2PS)) -try try -except except -finally finally < $< > $@
 
 # Kill implicit rule
