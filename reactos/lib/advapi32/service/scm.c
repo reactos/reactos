@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.19 2003/08/07 04:03:22 royce Exp $
+/* $Id: scm.c,v 1.20 2004/04/12 17:14:54 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,8 +17,9 @@
 #include <windows.h>
 #include <wchar.h>
 #include <tchar.h>
+#include <services/scmprot.h>
 
-#define DBG
+//#define DBG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -82,14 +83,14 @@ BOOL
 STDCALL
 CloseServiceHandle(SC_HANDLE hSCObject)
 {
-    HANDLE hPipe;
-    DPRINT("CloseServiceHandle() - called.\n");
-//    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    DPRINT("CloseServiceHandle\n");
 
-    if (!CloseHandle(hPipe)) {
+    if (!CloseHandle(hSCObject))
+    {
         SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
+
     return TRUE;
 }
 
@@ -132,8 +133,48 @@ CreateServiceA(
     LPCSTR      lpServiceStartName,
     LPCSTR      lpPassword)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return NULL;
+    UNICODE_STRING lpServiceNameW;
+    UNICODE_STRING lpDisplayNameW;
+    UNICODE_STRING lpBinaryPathNameW;
+    UNICODE_STRING lpLoadOrderGroupW;
+    UNICODE_STRING lpServiceStartNameW;
+    UNICODE_STRING lpPasswordW;
+    SC_HANDLE hService;
+
+    RtlCreateUnicodeStringFromAsciiz(&lpServiceNameW, (LPSTR)lpServiceName);
+    RtlCreateUnicodeStringFromAsciiz(&lpDisplayNameW, (LPSTR)lpDisplayName);
+    RtlCreateUnicodeStringFromAsciiz(&lpBinaryPathNameW, (LPSTR)lpBinaryPathName);
+    RtlCreateUnicodeStringFromAsciiz(&lpLoadOrderGroupW, (LPSTR)lpLoadOrderGroup);
+    RtlCreateUnicodeStringFromAsciiz(&lpServiceStartNameW, (LPSTR)lpServiceStartName);
+    RtlCreateUnicodeStringFromAsciiz(&lpPasswordW, (LPSTR)lpPassword);
+    if (lpDependencies != NULL)
+    {
+       DPRINT1("Unimplemented case\n");
+    }
+
+    hService = CreateServiceW(
+        hSCManager,
+        lpServiceNameW.Buffer,
+        lpDisplayNameW.Buffer,
+        dwDesiredAccess,
+        dwServiceType,
+        dwStartType,
+        dwErrorControl,
+        lpBinaryPathNameW.Buffer,
+        lpLoadOrderGroupW.Buffer,
+        lpdwTagId,
+        NULL,
+        lpServiceStartNameW.Buffer,
+        lpPasswordW.Buffer);
+
+    RtlFreeUnicodeString(&lpServiceNameW);
+    RtlFreeUnicodeString(&lpDisplayNameW);
+    RtlFreeUnicodeString(&lpBinaryPathNameW);
+    RtlFreeUnicodeString(&lpLoadOrderGroupW);
+    RtlFreeUnicodeString(&lpServiceStartNameW);
+    RtlFreeUnicodeString(&lpPasswordW);
+
+    return hService;
 }
 
 
@@ -159,8 +200,104 @@ CreateServiceW(
     LPCWSTR     lpServiceStartName,
     LPCWSTR     lpPassword)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return NULL;
+    SCM_CREATESERVICE_REQUEST Request;
+    SCM_CREATESERVICE_REPLY Reply;
+    BOOL fSuccess;
+    DWORD cbWritten, cbRead;
+    SC_HANDLE hService;
+
+    DPRINT("CreateServiceW\n");
+
+    if (lpServiceName == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
+    Request.RequestCode = SCM_CREATESERVICE;
+    INIT_SCM_STRING(Request.ServiceName, lpServiceName);
+    INIT_SCM_STRING(Request.DisplayName, lpDisplayName);
+    Request.dwDesiredAccess = dwDesiredAccess;
+    Request.dwServiceType = dwServiceType;
+    Request.dwStartType = dwStartType;
+    Request.dwErrorControl = dwErrorControl;
+#if 0
+    INIT_SCM_STRING(Request.BinaryPathName, lpBinaryPathName);
+#else
+    Request.BinaryPathName.Length = (wcslen(lpBinaryPathName) + 4) * sizeof(WCHAR);
+    swprintf(Request.BinaryPathName.Buffer, L"\\??\\%s", lpBinaryPathName);
+#endif
+    INIT_SCM_STRING(Request.LoadOrderGroup, lpLoadOrderGroup);
+    INIT_SCM_STRING(Request.ServiceStartName, lpServiceStartName);
+    INIT_SCM_STRING(Request.Password, lpPassword);
+    if (lpDependencies != NULL)
+    {
+        DWORD Length;
+        for (Length = 0;
+             lpDependencies[Length++];
+             Length += lstrlenW(&lpDependencies[Length]) + 1)
+            ;
+        Request.Dependencies.Length = Length;
+    }
+    else
+    {
+        Request.Dependencies.Length = 0;
+    }
+    RtlCopyMemory(
+        Request.Dependencies.Buffer,
+        lpDependencies,
+        Request.Dependencies.Length);
+
+    fSuccess = WriteFile(
+        hSCManager,       // pipe handle
+        &Request,         // message
+        sizeof(Request),  // message length
+        &cbWritten,       // bytes written
+        NULL);            // not overlapped
+
+    if (!fSuccess || cbWritten != sizeof(Request))
+    {
+        DPRINT("CreateServiceW - Failed to write to pipe.\n");
+        return NULL;
+    }
+      
+    fSuccess = ReadFile(
+        hSCManager,       // pipe handle
+        &Reply,           // buffer to receive reply
+        sizeof(Reply),    // size of buffer
+        &cbRead,          // number of bytes read
+        NULL);            // not overlapped
+	  
+    if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
+    {
+        DPRINT("CreateServiceW - Error\n");
+        return NULL;
+    }
+	  
+    if (Reply.ReplyStatus != NO_ERROR)
+    {
+        DPRINT("CreateServiceW - Error (%x)\n", Reply.ReplyStatus);
+        SetLastError(Reply.ReplyStatus);
+        return NULL;
+    }
+
+    hService = CreateFileW(
+        Reply.PipeName,   // pipe name
+        FILE_GENERIC_READ | FILE_GENERIC_WRITE,
+        0,                // no sharing
+        NULL,             // no security attributes
+        OPEN_EXISTING,    // opens existing pipe
+        0,                // default attributes
+        NULL);            // no template file
+
+    if (hService == INVALID_HANDLE_VALUE)
+    {
+        /* FIXME: Set last error! */
+        return NULL;
+    }
+
+    DPRINT("CreateServiceW - Success - %x\n", hService);
+    return hService;
 }
 
 
@@ -173,8 +310,51 @@ BOOL
 STDCALL
 DeleteService(SC_HANDLE hService)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    SCM_SERVICE_REQUEST Request;
+    SCM_SERVICE_REPLY Reply;
+    BOOL fSuccess;
+    DWORD cbWritten, cbRead;
+
+    DPRINT("DeleteService\n");
+
+    Request.RequestCode = SCM_DELETESERVICE;
+
+    fSuccess = WriteFile(
+        hService,         // pipe handle
+        &Request,         // message
+        sizeof(DWORD),    // message length
+        &cbWritten,       // bytes written
+        NULL);            // not overlapped
+
+    if (!fSuccess || cbWritten != sizeof(DWORD))
+    {
+        DPRINT("Error: %x . %x\n", GetLastError(), hService);
+        /* FIXME: Set last error */
+        return FALSE;
+    }
+      
+    fSuccess = ReadFile(
+        hService,         // pipe handle
+        &Reply,           // buffer to receive reply
+        sizeof(DWORD),    // size of buffer
+        &cbRead,          // number of bytes read
+        NULL);            // not overlapped
+	  
+    if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
+    {
+        CHECKPOINT;
+        /* FIXME: Set last error */
+        return FALSE;
+    }
+	  
+    if (Reply.ReplyStatus != NO_ERROR)
+    {
+        CHECKPOINT;
+        SetLastError(Reply.ReplyStatus);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -634,22 +814,34 @@ SC_HANDLE STDCALL OpenSCManagerW(LPCWSTR lpMachineName,
 /**********************************************************************
  *  OpenServiceA
  *
- * @unimplemented
+ * @implemented
  */
-SC_HANDLE STDCALL
-OpenServiceA(SC_HANDLE hSCManager,
-         LPCSTR  lpServiceName,
-         DWORD dwDesiredAccess)
+SC_HANDLE
+STDCALL
+OpenServiceA(
+    SC_HANDLE hSCManager,
+    LPCSTR lpServiceName,
+    DWORD dwDesiredAccess
+    )
 {
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return NULL;
+    UNICODE_STRING lpServiceNameW;
+    SC_HANDLE hService;
+
+    RtlCreateUnicodeStringFromAsciiz(&lpServiceNameW, (LPSTR)lpServiceName);
+    hService = OpenServiceW(
+        hSCManager,
+        lpServiceNameW.Buffer,
+        dwDesiredAccess);
+    RtlFreeUnicodeString(&lpServiceNameW);
+
+    return hService;
 }
 
 
 /**********************************************************************
  *  OpenServiceW
  *
- * @unimplemented
+ * @implemented
  */
 SC_HANDLE
 STDCALL
@@ -659,8 +851,74 @@ OpenServiceW(
     DWORD       dwDesiredAccess
     )
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return NULL;
+    SCM_OPENSERVICE_REQUEST Request;
+    SCM_OPENSERVICE_REPLY Reply;
+    BOOL fSuccess;
+    DWORD cbWritten, cbRead;
+    SC_HANDLE hService;
+
+    DPRINT("OpenServiceW\n");
+
+    if (lpServiceName == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
+    Request.RequestCode = SCM_OPENSERVICE;
+    INIT_SCM_STRING(Request.ServiceName, lpServiceName);
+    Request.dwDesiredAccess = dwDesiredAccess;
+
+    fSuccess = WriteFile(
+        hSCManager,       // pipe handle
+        &Request,         // message
+        sizeof(Request),  // message length
+        &cbWritten,       // bytes written
+        NULL);            // not overlapped
+
+    if (!fSuccess || cbWritten != sizeof(Request))
+    {
+        DPRINT("OpenServiceW - Failed to write to pipe.\n");
+        return NULL;
+    }
+      
+    fSuccess = ReadFile(
+        hSCManager,       // pipe handle
+        &Reply,           // buffer to receive reply
+        sizeof(Reply),    // size of buffer
+        &cbRead,          // number of bytes read
+        NULL);            // not overlapped
+	  
+    if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
+    {
+        DPRINT("OpenServiceW - Failed to read from pipe\n");
+        return NULL;
+    }
+	  
+    if (Reply.ReplyStatus != NO_ERROR)
+    {
+        DPRINT("OpenServiceW - Error (%x)\n", Reply.ReplyStatus);
+        SetLastError(Reply.ReplyStatus);
+        return NULL;
+    }
+
+    hService = CreateFileW(
+        Reply.PipeName,   // pipe name
+        FILE_GENERIC_READ | FILE_GENERIC_WRITE,
+        0,                // no sharing
+        NULL,             // no security attributes
+        OPEN_EXISTING,    // opens existing pipe
+        0,                // default attributes
+        NULL);            // no template file
+
+    if (hService == INVALID_HANDLE_VALUE)
+    {
+        DPRINT("OpenServiceW - Failed to connect to pipe\n");
+        return NULL;
+    }
+
+    DPRINT("OpenServiceW - Success - %x\n", hService);
+    return hService;
 }
 
 
@@ -801,8 +1059,63 @@ StartServiceA(
     DWORD       dwNumServiceArgs,
     LPCSTR      *lpServiceArgVectors)
 {
+#if 0
+    DPRINT("StartServiceA\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
+#else
+    SCM_SERVICE_REQUEST Request;
+    SCM_SERVICE_REPLY Reply;
+    BOOL fSuccess;
+    DWORD cbWritten, cbRead;
+
+    DPRINT("StartServiceA\n");
+
+    if (dwNumServiceArgs != 0)
+    {
+       UNIMPLEMENTED;
+    }
+
+    Request.RequestCode = SCM_STARTSERVICE;
+
+    fSuccess = WriteFile(
+        hService,         // pipe handle
+        &Request,         // message
+        sizeof(DWORD),    // message length
+        &cbWritten,       // bytes written
+        NULL);            // not overlapped
+
+    if (!fSuccess || cbWritten != sizeof(DWORD))
+    {
+        DPRINT("Error: %x . %x\n", GetLastError(), hService);
+        /* FIXME: Set last error */
+        return FALSE;
+    }
+      
+    fSuccess = ReadFile(
+        hService,         // pipe handle
+        &Reply,           // buffer to receive reply
+        sizeof(DWORD),    // size of buffer
+        &cbRead,          // number of bytes read
+        NULL);            // not overlapped
+	  
+    if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
+    {
+        CHECKPOINT;
+        /* FIXME: Set last error */
+        return FALSE;
+    }
+	  
+    if (Reply.ReplyStatus != NO_ERROR)
+    {
+        CHECKPOINT;
+        SetLastError(Reply.ReplyStatus);
+        return FALSE;
+    }
+
+    CHECKPOINT;
+    return TRUE;
+#endif
 }
 
 
@@ -820,6 +1133,7 @@ StartServiceW(
     DWORD       dwNumServiceArgs,
     LPCWSTR     *lpServiceArgVectors)
 {
+    DPRINT("StartServiceW\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
