@@ -26,6 +26,7 @@
 #include <asmcode.h>
 #include <mm.h>
 #include <debug.h>
+#include <cache.h>
 
 
 PFAT_BOOTSECTOR		FatVolumeBootSector = NULL;
@@ -37,11 +38,13 @@ ULONG				SectorsPerFat;			// Sectors per FAT table
 ULONG				RootDirSectors;			// Number of sectors of the root directory (fat32)
 
 ULONG				FatType = 0;			// FAT12, FAT16, or FAT32
+ULONG				FatDriveNumber = 0;
 
 
 BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartHead, ULONG VolumeStartTrack, ULONG VolumeStartSector, ULONG FatFileSystemType)
 {
 	FatType = FatFileSystemType;
+	FatDriveNumber = DriveNumber;
 
 	//
 	// Free any memory previously allocated
@@ -153,8 +156,13 @@ BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartHead, ULONG VolumeStartTr
 		return FALSE;
 	}
 
-	DiskSetDriveGeometry(get_cylinders(DriveNumber), get_heads(DriveNumber), get_sectors(DriveNumber), FatVolumeBootSector->BytesPerSector);
-	DiskSetVolumeProperties(FatVolumeBootSector->HiddenSectors);
+	//
+	// Set the drive geometry
+	//
+	if (!DiskSetDriveGeometry(DriveNumber, get_cylinders(DriveNumber), get_heads(DriveNumber), get_sectors(DriveNumber), FatVolumeBootSector->BytesPerSector))
+	{
+		return FALSE;
+	}
 
 	//
 	// Check the FAT cluster size
@@ -202,6 +210,27 @@ BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartHead, ULONG VolumeStartTr
 		if (Fat32VolumeBootSector->FileSystemVersion != 0)
 		{
 			FileSystemError("FreeLoader is too old to work with this FAT32 filesystem.\nPlease update FreeLoader.");
+			return FALSE;
+		}
+	}
+
+	//
+	// Initialize the disk cache for this drive
+	//
+	if (!CacheInitializeDrive(DriveNumber))
+	{
+		return FALSE;
+	}
+
+	//
+	// Force the FAT sectors into the cache
+	// as long as it is FAT12 or FAT16. FAT32 can
+	// have a multi-megabyte FAT so we don't want that.
+	//
+	if (FatType != FAT32)
+	{
+		if (!CacheForceDiskSectorsIntoCache(DriveNumber, FatVolumeBootSector->HiddenSectors + FatVolumeBootSector->ReservedSectors, FatVolumeBootSector->SectorsPerFat))
+		{
 			return FALSE;
 		}
 	}
@@ -268,7 +297,7 @@ PVOID FatBufferDirectory(UINT32 DirectoryStartCluster, PUINT32 EntryCountPointer
 			RootDirectoryStartSector = FatVolumeBootSector->ReservedSectors + (FatVolumeBootSector->NumberOfFats * FatVolumeBootSector->SectorsPerFat);
 			RootDirectorySectorCount = FatVolumeBootSector->RootDirEntries / 32;
 
-			if (!DiskReadMultipleLogicalSectors(RootDirectoryStartSector, RootDirectorySectorCount, DirectoryBuffer))
+			if (!FatReadVolumeSectors(FatDriveNumber, RootDirectoryStartSector, RootDirectorySectorCount, DirectoryBuffer))
 			{
 				FreeMemory(DirectoryBuffer);
 				return NULL;
@@ -449,10 +478,25 @@ BOOL FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, UINT32 EntryCount, P
 			FatFileInfoPointer->FileSize = DirEntry->Size;
 			FatFileInfoPointer->FilePointer = 0;
 
+			DbgPrint((DPRINT_FILESYSTEM, "MSDOS Directory Entry:\n"));
+			DbgPrint((DPRINT_FILESYSTEM, "FileName[11] = %c%c%c%c%c%c%c%c%c%c%c\n", DirEntry->FileName[0], DirEntry->FileName[1], DirEntry->FileName[2], DirEntry->FileName[3], DirEntry->FileName[4], DirEntry->FileName[5], DirEntry->FileName[6], DirEntry->FileName[7], DirEntry->FileName[8], DirEntry->FileName[9], DirEntry->FileName[10]));
+			DbgPrint((DPRINT_FILESYSTEM, "Attr = 0x%x\n", DirEntry->Attr));
+			DbgPrint((DPRINT_FILESYSTEM, "ReservedNT = 0x%x\n", DirEntry->ReservedNT));
+			DbgPrint((DPRINT_FILESYSTEM, "TimeInTenths = %d\n", DirEntry->TimeInTenths));
+			DbgPrint((DPRINT_FILESYSTEM, "CreateTime = %d\n", DirEntry->CreateTime));
+			DbgPrint((DPRINT_FILESYSTEM, "CreateDate = %d\n", DirEntry->CreateDate));
+			DbgPrint((DPRINT_FILESYSTEM, "LastAccessDate = %d\n", DirEntry->LastAccessDate));
+			DbgPrint((DPRINT_FILESYSTEM, "ClusterHigh = 0x%x\n", DirEntry->ClusterHigh));
+			DbgPrint((DPRINT_FILESYSTEM, "Time = %d\n", DirEntry->Time));
+			DbgPrint((DPRINT_FILESYSTEM, "Date = %d\n", DirEntry->Date));
+			DbgPrint((DPRINT_FILESYSTEM, "ClusterLow = 0x%x\n", DirEntry->ClusterLow));
+			DbgPrint((DPRINT_FILESYSTEM, "Size = %d\n", DirEntry->Size));
+
 			//
 			// Get the cluster chain
 			//
 			StartCluster = ((UINT32)DirEntry->ClusterHigh << 16) + DirEntry->ClusterLow;
+			DbgPrint((DPRINT_FILESYSTEM, "StartCluster = 0x%x\n", StartCluster));
 			FatFileInfoPointer->FileFatChain = FatGetClusterChainArray(StartCluster);
 
 			//
@@ -676,20 +720,20 @@ void FatParseShortFileName(PUCHAR Buffer, PDIRENTRY DirEntry)
  * FatGetFatEntry()
  * returns the Fat entry for a given cluster number
  */
-DWORD FatGetFatEntry(DWORD nCluster)
+BOOL FatGetFatEntry(UINT32 Cluster, PUINT32 ClusterPointer)
 {
 	DWORD	fat = 0;
 	int		FatOffset;
 	int		ThisFatSecNum;
 	int		ThisFatEntOffset;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatGetFatEntry() Retrieving FAT entry for cluster %d.\n", nCluster));
+	DbgPrint((DPRINT_FILESYSTEM, "FatGetFatEntry() Retrieving FAT entry for cluster %d.\n", Cluster));
 
 	switch(FatType)
 	{
 	case FAT12:
 
-		FatOffset = nCluster + (nCluster / 2);
+		FatOffset = Cluster + (Cluster / 2);
 		ThisFatSecNum = FatVolumeBootSector->ReservedSectors + (FatOffset / FatVolumeBootSector->BytesPerSector);
 		ThisFatEntOffset = (FatOffset % FatVolumeBootSector->BytesPerSector);
 
@@ -699,21 +743,21 @@ DWORD FatGetFatEntry(DWORD nCluster)
 
 		if (ThisFatEntOffset == (FatVolumeBootSector->BytesPerSector - 1))
 		{
-			if (!DiskReadMultipleLogicalSectors(ThisFatSecNum, 2, (PVOID)DISKREADBUFFER))
+			if (!FatReadVolumeSectors(FatDriveNumber, ThisFatSecNum, 2, (PVOID)DISKREADBUFFER))
 			{
-				return NULL;
+				return FALSE;
 			}
 		}
 		else
 		{
-			if (!DiskReadLogicalSector(ThisFatSecNum, (PVOID)DISKREADBUFFER))
+			if (!FatReadVolumeSectors(FatDriveNumber, ThisFatSecNum, 1, (PVOID)DISKREADBUFFER))
 			{
-				return NULL;
+				return FALSE;
 			}
 		}
 
 		fat = *((WORD *) (DISKREADBUFFER + ThisFatEntOffset));
-		if (nCluster & 0x0001) 
+		if (Cluster & 0x0001) 
 			fat = fat >> 4;	/* Cluster number is ODD */
 		else
 			fat = fat & 0x0FFF;	/* Cluster number is EVEN */
@@ -722,13 +766,13 @@ DWORD FatGetFatEntry(DWORD nCluster)
 
 	case FAT16:
 		
-		FatOffset = (nCluster * 2);
+		FatOffset = (Cluster * 2);
 		ThisFatSecNum = FatVolumeBootSector->ReservedSectors + (FatOffset / FatVolumeBootSector->BytesPerSector);
 		ThisFatEntOffset = (FatOffset % FatVolumeBootSector->BytesPerSector);
 
-		if (!DiskReadLogicalSector(ThisFatSecNum, (PVOID)DISKREADBUFFER))
+		if (!FatReadVolumeSectors(FatDriveNumber, ThisFatSecNum, 1, (PVOID)DISKREADBUFFER))
 		{
-			return NULL;
+			return FALSE;
 		}
 
 		fat = *((WORD *) (DISKREADBUFFER + ThisFatEntOffset));
@@ -737,13 +781,14 @@ DWORD FatGetFatEntry(DWORD nCluster)
 
 	case FAT32:
 
-		FatOffset = (nCluster * 4);
-		ThisFatSecNum = FatVolumeBootSector->ReservedSectors + (FatOffset / FatVolumeBootSector->BytesPerSector);
+		FatOffset = (Cluster * 4);
+		ThisFatSecNum = (Fat32VolumeBootSector->ExtendedFlags & 0x80) ? ((Fat32VolumeBootSector->ExtendedFlags & 0x0f) * Fat32VolumeBootSector->SectorsPerFatBig) : 0; // Get the active fat sector offset
+		ThisFatSecNum += FatVolumeBootSector->ReservedSectors + (FatOffset / FatVolumeBootSector->BytesPerSector);
 		ThisFatEntOffset = (FatOffset % FatVolumeBootSector->BytesPerSector);
 
-		if (!DiskReadLogicalSector(ThisFatSecNum, (PVOID)DISKREADBUFFER))
+		if (!FatReadVolumeSectors(FatDriveNumber, ThisFatSecNum, 1, (PVOID)DISKREADBUFFER))
 		{
-			return NULL;
+			return FALSE;
 		}
 
 		// Get the fat entry
@@ -755,7 +800,9 @@ DWORD FatGetFatEntry(DWORD nCluster)
 
 	DbgPrint((DPRINT_FILESYSTEM, "FAT entry is 0x%x.\n", fat));
 
-	return fat;
+	*ClusterPointer = fat;
+
+	return TRUE;
 }
 
 /*
@@ -813,7 +860,10 @@ UINT32 FatCountClustersInChain(UINT32 StartCluster)
 		//
 		// Get next cluster
 		//
-		StartCluster = FatGetFatEntry(StartCluster);
+		if (!FatGetFatEntry(StartCluster, &StartCluster))
+		{
+			return 0;
+		}
 	}
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatCountClustersInChain() ClusterCount = %d\n", ClusterCount));
@@ -867,7 +917,11 @@ PUINT32 FatGetClusterChainArray(UINT32 StartCluster)
 		//
 		// Get next cluster
 		//
-		StartCluster = FatGetFatEntry(StartCluster);
+		if (!FatGetFatEntry(StartCluster, &StartCluster))
+		{
+			FreeMemory(ArrayPointer);
+			return NULL;
+		}
 	}
 
 	return ArrayPointer;
@@ -886,7 +940,7 @@ BOOL FatReadCluster(ULONG ClusterNumber, PVOID Buffer)
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatReadCluster() ClusterNumber = %d Buffer = 0x%x ClusterStartSector = %d\n", ClusterNumber, Buffer, ClusterStartSector));
 
-	if (!DiskReadMultipleLogicalSectors(ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, (PVOID)DISKREADBUFFER))
+	if (!FatReadVolumeSectors(FatDriveNumber, ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, (PVOID)DISKREADBUFFER))
 	{
 		return FALSE;
 	}
@@ -909,7 +963,7 @@ BOOL FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID
 	while (NumberOfClusters > 0)
 	{
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatReadClusterChain() StartClusterNumber = %d NumberOfClusters = %d Buffer = 0x%x\n", StartClusterNumber, NumberOfClusters, Buffer));
+		DbgPrint((DPRINT_FILESYSTEM, "FatReadClusterChain() StartClusterNumber = %d NumberOfClusters = %d Buffer = 0x%x\n", StartClusterNumber, NumberOfClusters, Buffer));
 		//
 		// Calculate starting sector for cluster
 		//
@@ -918,7 +972,7 @@ BOOL FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID
 		//
 		// Read cluster into memory
 		//
-		if (!DiskReadMultipleLogicalSectors(ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, (PVOID)DISKREADBUFFER))
+		if (!FatReadVolumeSectors(FatDriveNumber, ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, (PVOID)DISKREADBUFFER))
 		{
 			return FALSE;
 		}
@@ -938,7 +992,10 @@ BOOL FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID
 		//
 		// Get next cluster
 		//
-		StartClusterNumber = FatGetFatEntry(StartClusterNumber);
+		if (!FatGetFatEntry(StartClusterNumber, &StartClusterNumber))
+		{
+			return FALSE;
+		}
 
 		//
 		// If end of chain then break out of our cluster reading loop
@@ -966,7 +1023,7 @@ BOOL FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG Leng
 
 	ClusterStartSector = ((ClusterNumber - 2) * FatVolumeBootSector->SectorsPerCluster) + DataSectorStart;
 
-	if (!DiskReadMultipleLogicalSectors(ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, (PVOID)DISKREADBUFFER))
+	if (!FatReadVolumeSectors(FatDriveNumber, ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, (PVOID)DISKREADBUFFER))
 	{
 		return FALSE;
 	}
@@ -1162,3 +1219,8 @@ ULONG FatGetFilePointer(FILE *FileHandle)
 	return FatFileHandle->FilePointer;
 }
 
+BOOL FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer)
+{
+	//return DiskReadMultipleLogicalSectors(DriveNumber, SectorNumber + FatVolumeBootSector->HiddenSectors, SectorCount, Buffer);
+	return CacheReadDiskSectors(DriveNumber, SectorNumber + FatVolumeBootSector->HiddenSectors, SectorCount, Buffer);
+}

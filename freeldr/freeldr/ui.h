@@ -57,6 +57,8 @@ BOOL	IsValidFillStyle(char *fill);
 char	TextToFillStyle(char *fill);
 // Draws the progress bar showing nPos percent filled
 void	DrawProgressBar(int nPos);
+// Displays all the message boxes in a given section
+void	ShowMessageBoxesInSection(PUCHAR SectionName);
 
 /*
  * Combines the foreground and background colors into a single attribute byte

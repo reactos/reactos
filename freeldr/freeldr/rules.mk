@@ -17,32 +17,16 @@
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 	
-include ../rules.mk
 
-OBJS = memory.o print.o stdlib.o string.o list.o
+CC		= gcc
+LD		= ld
+AR		= ar
+RM		= cmd /C del
+CP		= cmd /C copy
+MAKE	= make
 
-.PHONY : clean
+# For a release build uncomment this line
+FLAGS = -Wall -nostdlib -nostdinc -fno-builtin -I./ -I../ -O3
 
-all: rtl.a
-
-rtl.a:	$(OBJS)
-	$(LD) -r -o rtl.a $(OBJS)
-
-memory.o:	memory.c ../rtl.h
-	$(CC) $(FLAGS) -o memory.o -c memory.c
-
-print.o:	print.c ../rtl.h
-	$(CC) $(FLAGS) -o print.o -c print.c
-
-stdlib.o:	stdlib.c ../rtl.h
-	$(CC) $(FLAGS) -o stdlib.o -c stdlib.c
-
-string.o:	string.c ../rtl.h
-	$(CC) $(FLAGS) -o string.o -c string.c
-
-list.o:	list.c ../rtl.h
-	$(CC) $(FLAGS) -o list.o -c list.c
-
-clean:
-	- $(RM) *.o
-	- $(RM) *.a
+# For a debug build uncomment this line
+#FLAGS = -Wall -nostdlib -nostdinc -fno-builtin -I./ -I../ -DDEBUG -O3

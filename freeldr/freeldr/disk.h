@@ -51,9 +51,10 @@ int		get_sectors(int drive);		// Implemented in asmcode.S
 // FreeLoader Disk Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-VOID	DiskSetDriveGeometry(ULONG Cylinders, ULONG Heads, ULONG Sectors, ULONG BytesPerSector);
-VOID	DiskSetVolumeProperties(ULONG HiddenSectors);
-BOOL	DiskReadMultipleLogicalSectors(ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
-BOOL	DiskReadLogicalSector(ULONG SectorNumber, PVOID Buffer);
+VOID	DiskError(PUCHAR ErrorString);
+BOOL	DiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
+BOOL	DiskSetDriveGeometry(ULONG DriveNumber, ULONG Cylinders, ULONG Heads, ULONG Sectors, ULONG BytesPerSector);
+BOOL	DiskReadMultipleLogicalSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
+BOOL	DiskReadLogicalSector(ULONG DriveNumber, ULONG SectorNumber, PVOID Buffer);
 
 #endif  // defined __DISK_H

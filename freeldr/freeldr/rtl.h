@@ -84,6 +84,14 @@ void	showcursor(void);		// Implemented in asmcode.S
 int		wherex(void);			// Implemented in asmcode.S
 int		wherey(void);			// Implemented in asmcode.S
 
+#ifndef max
+#define max(a, b)  (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef min
+#define min(a, b)  (((a) < (b)) ? (a) : (b))
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // Screen Output Functions
@@ -93,14 +101,34 @@ void	print(char *str);
 void	printf(char *fmt, ...);
 void	sprintf(char *buffer, char *format, ...);
 
+///////////////////////////////////////////////////////////////////////////////////////
+//
+// List Functions
+//
+///////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef max
-#define max(a, b)  (((a) > (b)) ? (a) : (b))
-#endif
+typedef struct _LIST_ITEM
+{
+	struct _LIST_ITEM*	ListPrev;
+	struct _LIST_ITEM*	ListNext;
+	
+} LIST_ITEM, *PLIST_ITEM;
 
-#ifndef min
-#define min(a, b)  (((a) < (b)) ? (a) : (b))
-#endif
+VOID		RtlListInitializeHead(PLIST_ITEM ListHead);							// Initializes a doubly linked list
+VOID		RtlListInsertHead(PLIST_ITEM ListHead, PLIST_ITEM Entry);			// Inserts an entry at the head of the list
+VOID		RtlListInsertTail(PLIST_ITEM ListHead, PLIST_ITEM Entry);			// Inserts an entry at the tail of the list
+PLIST_ITEM	RtlListRemoveHead(PLIST_ITEM ListHead);								// Removes the entry at the head of the list
+PLIST_ITEM	RtlListRemoveTail(PLIST_ITEM ListHead);								// Removes the entry at the tail of the list
+PLIST_ITEM	RtlListGetHead(PLIST_ITEM ListHead);								// Returns the entry at the head of the list
+PLIST_ITEM	RtlListGetTail(PLIST_ITEM ListHead);								// Returns the entry at the tail of the list
+BOOL		RtlListIsEmpty(PLIST_ITEM ListHead);								// Indicates whether a doubly linked list is empty
+ULONG		RtlListCountEntries(PLIST_ITEM ListHead);							// Counts the entries in a doubly linked list
+PLIST_ITEM	RtlListGetPrevious(PLIST_ITEM ListEntry);							// Returns the previous item in the list
+PLIST_ITEM	RtlListGetNext(PLIST_ITEM ListEntry);								// Returns the next item in the list
+PLIST_ITEM	RtlListRemoveEntry(PLIST_ITEM ListEntry);							// Removes the entry from the list
+VOID		RtlListInsertEntry(PLIST_ITEM InsertAfter, PLIST_ITEM ListEntry);	// Inserts a new list entry right after the specified one
+VOID		RtlListMoveEntryPrevious(PLIST_ITEM ListEntry);						// Moves the list entry to before the previous entry
+VOID		RtlListMoveEntryNext(PLIST_ITEM ListEntry);							// Moves the list entry to after the next entry
 
 
 #endif  // defined __STDLIB_H

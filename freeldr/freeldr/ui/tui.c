@@ -495,7 +495,7 @@ void MessageBox(char *text)
 
 	if (!UserInterfaceUp)
 	{
-		printf("%s", text);
+		printf("%s%s", szMessageBoxLineText, text);
 		printf("Press any key.\n");
 		getch();
 		return;
@@ -715,4 +715,41 @@ void DrawProgressBar(int nPos)
 		DrawText(left+2+i, top+2, "\xB2", ATTR(cTextColor, cMenuBgColor));
 
 	UpdateDateTime();
+}
+
+void ShowMessageBoxesInSection(PUCHAR SectionName)
+{
+	ULONG	Idx;
+	UCHAR	SettingName[80];
+	UCHAR	SettingValue[80];
+	ULONG	SectionId;
+
+	if (!OpenSection(SectionName, &SectionId))
+	{
+		sprintf(SettingName, "Section %s not found in freeldr.ini.\n", SectionName);
+		MessageBox(SettingName);
+		return;
+	}
+
+	//
+	// Find all the message box settings and run them
+	//
+	for (Idx=0; Idx<GetNumSectionItems(SectionId); Idx++)
+	{
+		ReadSectionSettingByNumber(SectionId, Idx, SettingName, 80, SettingValue, 80);
+		
+		if (stricmp(SettingName, "MessageBox") == 0)
+		{
+			MessageBox(SettingValue);
+		}
+		else if (stricmp(SettingName, "MessageLine") == 0)
+		{
+			MessageLine(SettingValue);
+		}
+	}
+
+	//
+	// Zero out message line text
+	//
+	strcpy(szMessageBoxLineText, "");
 }

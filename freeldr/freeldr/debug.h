@@ -29,6 +29,7 @@
 	#define DPRINT_INIFILE		0x00000008		// OR this with DebugPrintMask to enable .ini file messages
 	#define DPRINT_UI			0x00000010		// OR this with DebugPrintMask to enable user interface messages
 	#define DPRINT_DISK			0x00000020		// OR this with DebugPrintMask to enable disk messages
+	#define DPRINT_CACHE		0x00000040		// OR this with DebugPrintMask to enable cache messages
 
 	VOID	DebugInit(VOID);
 	VOID	DebugPrint(ULONG Mask, char *format, ...);

@@ -24,7 +24,9 @@
 
 #ifdef DEBUG
 
-ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM | DPRINT_UI | DPRINT_DISK;
+ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
+						 DPRINT_UI | DPRINT_DISK | DPRINT_CACHE;
+//ULONG	DebugPrintMask = DPRINT_CACHE;
 
 #define	SCREEN				0
 #define	RS232				1
@@ -43,6 +45,8 @@ ULONG	DebugPort = BOCHS;
 ULONG	ComPort = COM1;
 ULONG	BaudRate = 19200;
 
+BOOL	DebugStartOfLine = TRUE;
+
 VOID DebugInit(VOID)
 {
 	if (DebugPort == RS232)
@@ -53,6 +57,11 @@ VOID DebugInit(VOID)
 
 VOID DebugPrintChar(UCHAR Character)
 {
+	if (Character == '\n')
+	{
+		DebugStartOfLine = TRUE;
+	}
+
 	if (DebugPort == RS232)
 	{
 		Rs232PortPutByte(Character);
@@ -71,6 +80,90 @@ VOID DebugPrintChar(UCHAR Character)
 	}
 }
 
+VOID DebugPrintHeader(ULONG Mask)
+{
+	switch (Mask)
+	{
+	case DPRINT_WARNING:
+		DebugPrintChar('W');
+		DebugPrintChar('A');
+		DebugPrintChar('R');
+		DebugPrintChar('N');
+		DebugPrintChar('I');
+		DebugPrintChar('N');
+		DebugPrintChar('G');
+		DebugPrintChar(':');
+		DebugPrintChar(' ');
+		break;
+	case DPRINT_MEMORY:
+		DebugPrintChar('M');
+		DebugPrintChar('E');
+		DebugPrintChar('M');
+		DebugPrintChar('O');
+		DebugPrintChar('R');
+		DebugPrintChar('Y');
+		DebugPrintChar(':');
+		DebugPrintChar(' ');
+		break;
+	case DPRINT_FILESYSTEM:
+		DebugPrintChar('F');
+		DebugPrintChar('I');
+		DebugPrintChar('L');
+		DebugPrintChar('E');
+		DebugPrintChar('S');
+		DebugPrintChar('Y');
+		DebugPrintChar('S');
+		DebugPrintChar(':');
+		DebugPrintChar(' ');
+		break;
+	case DPRINT_INIFILE:
+		DebugPrintChar('I');
+		DebugPrintChar('N');
+		DebugPrintChar('I');
+		DebugPrintChar('F');
+		DebugPrintChar('I');
+		DebugPrintChar('L');
+		DebugPrintChar('E');
+		DebugPrintChar(':');
+		DebugPrintChar(' ');
+		break;
+	case DPRINT_UI:
+		DebugPrintChar('U');
+		DebugPrintChar('I');
+		DebugPrintChar(':');
+		DebugPrintChar(' ');
+		break;
+	case DPRINT_DISK:
+		DebugPrintChar('D');
+		DebugPrintChar('I');
+		DebugPrintChar('S');
+		DebugPrintChar('K');
+		DebugPrintChar(':');
+		DebugPrintChar(' ');
+		break;
+	case DPRINT_CACHE:
+		DebugPrintChar('C');
+		DebugPrintChar('A');
+		DebugPrintChar('C');
+		DebugPrintChar('H');
+		DebugPrintChar('E');
+		DebugPrintChar(':');
+		DebugPrintChar(' ');
+		break;
+	default:
+		DebugPrintChar('U');
+		DebugPrintChar('N');
+		DebugPrintChar('K');
+		DebugPrintChar('N');
+		DebugPrintChar('O');
+		DebugPrintChar('W');
+		DebugPrintChar('N');
+		DebugPrintChar(':');
+		DebugPrintChar(' ');
+		break;
+	}
+}
+
 VOID DebugPrint(ULONG Mask, char *format, ...)
 {
 	int *dataptr = (int *) &format;
@@ -80,6 +173,13 @@ VOID DebugPrint(ULONG Mask, char *format, ...)
 	if (!(Mask & DebugPrintMask))
 	{
 		return;
+	}
+
+	// Print the header if we have started a new line
+	if (DebugStartOfLine)
+	{
+		DebugPrintHeader(Mask);
+		DebugStartOfLine = FALSE;
 	}
 
 	dataptr++;

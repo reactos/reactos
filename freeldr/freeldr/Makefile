@@ -16,17 +16,8 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
-	
 
-export CC		= gcc
-export LD		= ld
-export AR		= ar
-export RM		= cmd /C del
-export CP		= cmd /C copy
-export MAKE		= make
-
-#FLAGS = -Wall -nostdlib -nostdinc -fno-builtin -I./ -DDEBUG -O3
-FLAGS = -Wall -nostdlib -nostdinc -fno-builtin -I./ -DDEBUG -O3
+include rules.mk	
 
 # asmcode.o has to be first in the link line because it contains the startup code
 #OBJS = asmcode.a asmcode.o mb.o boot.o freeldr.o rtl.o fs.a fs.o fat.o \
@@ -34,8 +25,8 @@ FLAGS = -Wall -nostdlib -nostdinc -fno-builtin -I./ -DDEBUG -O3
 #	mem.o memory.o debug.o parseini.o registry.o import.o
 ASM_OBJS = asmcode.o mb.o boot.o mem.o
 OBJS = freeldr.o miscboot.o options.o linux.o multiboot.o debug.o parseini.o oslist.o
-LIBS = rtl fs ui reactos comm disk mm
-LIB_FILES = rtl/rtl.a fs/fs.a ui/ui.a reactos/reactos.a comm/comm.a disk/disk.a mm/mm.a
+LIBS = rtl fs ui reactos comm disk mm cache
+LIB_FILES = rtl/rtl.a fs/fs.a ui/ui.a reactos/reactos.a comm/comm.a disk/disk.a mm/mm.a cache/cache.a
 
 .PHONY : clean
 
@@ -114,6 +105,9 @@ disk:
 mm:
 	$(MAKE) -C mm
 
+cache:
+	$(MAKE) -C cache
+
 .PHONY : $(LIBS)
 
 clean:
@@ -127,3 +121,4 @@ clean:
 	$(MAKE) -C ui clean
 	$(MAKE) -C fs clean
 	$(MAKE) -C rtl clean
+	$(MAKE) -C cache clean

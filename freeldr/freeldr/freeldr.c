@@ -29,6 +29,7 @@
 #include "parseini.h"
 #include "debug.h"
 #include "oslist.h"
+#include "cache.h"
 
 // Variable BootDrive moved to asmcode.S
 //ULONG			BootDrive = 0;							// BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc.
@@ -104,19 +105,7 @@ VOID BootMain(VOID)
 	//
 	// Find all the message box settings and run them
 	//
-	for (Idx=0; Idx<GetNumSectionItems(SectionId); Idx++)
-	{
-		ReadSectionSettingByNumber(SectionId, Idx, SettingName, 80, SettingValue, 80);
-		
-		if (stricmp(SettingName, "MessageBox") == 0)
-		{
-			MessageBox(SettingValue);
-		}
-		else if (stricmp(SettingName, "MessageLine") == 0)
-		{
-			MessageLine(SettingValue);
-		}
-	}
+	ShowMessageBoxesInSection("FreeLoader");
 
 	for (;;)
 	{

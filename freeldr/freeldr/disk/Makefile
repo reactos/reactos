@@ -17,16 +17,9 @@
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 	
+include ../rules.mk
 
-export CC = gcc
-export LD = ld
-export AR = ar
-export RM = cmd /C del
-export CP = cmd /C copy
-
-FLAGS = -Wall -fno-builtin -I../ -DDEBUG -O3
-
-OBJS = disk.o
+OBJS = disk.o geometry.o
 
 .PHONY : clean
 
@@ -37,6 +30,9 @@ disk.a:	$(OBJS)
 
 disk.o:	disk.c ../disk.h
 	$(CC) $(FLAGS) -o disk.o -c disk.c
+
+geometry.o:	geometry.c ../disk.h
+	$(CC) $(FLAGS) -o geometry.o -c geometry.c
 
 clean:
 	- $(RM) *.o

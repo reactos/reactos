@@ -121,6 +121,7 @@ typedef struct
 	ULONG	FileSize;			// File size
 	ULONG	FilePointer;		// File pointer
 	PUINT32	FileFatChain;		// File fat chain array
+	ULONG	DriveNumber;
 } FAT_FILE_INFO, * PFAT_FILE_INFO;
 
 
@@ -132,7 +133,7 @@ BOOL	FatLookupFile(PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
 ULONG	FatGetNumPathParts(PUCHAR Path);
 VOID	FatGetFirstNameFromPath(PUCHAR Buffer, PUCHAR Path);
 void	FatParseShortFileName(PUCHAR Buffer, PDIRENTRY DirEntry);
-DWORD	FatGetFatEntry(DWORD nCluster);
+BOOL	FatGetFatEntry(UINT32 Cluster, PUINT32 ClusterPointer);
 FILE*	FatOpenFile(PUCHAR FileName);
 UINT32	FatCountClustersInChain(UINT32 StartCluster);
 PUINT32	FatGetClusterChainArray(UINT32 StartCluster);
@@ -143,22 +144,7 @@ BOOL	FatReadFile(FILE *FileHandle, ULONG BytesToRead, PULONG BytesRead, PVOID Bu
 ULONG	FatGetFileSize(FILE *FileHandle);
 VOID	FatSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
 ULONG	FatGetFilePointer(FILE *FileHandle);
-
-
-/*BOOL	FatLookupFile(char *file, PFAT_STRUCT pFatStruct);
-int		FatGetNumPathParts(char *name);
-BOOL	FatGetFirstNameFromPath(char *buffer, char *name);
-void	FatParseFileName(char *buffer, char *name);
-DWORD	FatGetFatEntry(DWORD nCluster);
-int		FatReadCluster(DWORD nCluster, char *cBuffer);
-int		FatRead(PFAT_STRUCT pFatStruct, int nNumBytes, char *cBuffer);
-int		Fatfseek(PFAT_STRUCT pFatStruct, DWORD offset);
-
-FILE*	FatOpenFile(PUCHAR FileName);
-BOOL	FatReadFile(FILE *FileHandle, ULONG BytesToRead, PULONG BytesRead, PVOID Buffer);
-ULONG	FatGetFileSize(FILE *FileHandle);
-VOID	FatSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
-ULONG	FatGetFilePointer(FILE *FileHandle);*/
+BOOL	FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 
 
 #define	EOF	-1

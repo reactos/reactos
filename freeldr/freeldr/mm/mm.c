@@ -270,7 +270,8 @@ VOID DumpMemoryAllocMap(VOID)
 	{
 		if ((Idx % 32) == 0)
 		{
-			DbgPrint((DPRINT_MEMORY, "\n%x:\t", (Idx * 256)));
+			DbgPrint((DPRINT_MEMORY, "\n"));
+			DbgPrint((DPRINT_MEMORY, "%x:\t", (Idx * 256)));
 		}
 		else if ((Idx % 4) == 0)
 		{
@@ -331,3 +332,9 @@ VOID MemAllocTest(VOID)
 	getch();
 }
 #endif // DEBUG
+
+// Returns the amount of total usuable memory available to the memory manager
+ULONG GetSystemMemorySize(VOID)
+{
+	return HeapLengthInBytes;
+}

@@ -28,11 +28,28 @@ VOID	InitMemoryManager(PVOID BaseAddress, ULONG Length);
 
 PVOID	AllocateMemory(ULONG NumberOfBytes);
 VOID	FreeMemory(PVOID MemBlock);
+ULONG	GetSystemMemorySize(VOID);					// Returns the amount of total usuable memory available to the memory manager
 
 // These functions are implemented in mem.S
 int		GetExtendedMemorySize(void);				// Returns extended memory size in KB
 int		GetConventionalMemorySize(void);			// Returns conventional memory size in KB
 int		GetBiosMemoryMap(memory_map_t *mem_map);	// Fills mem_map structure with BIOS memory map and returns length of memory map
 
+
+
+
+
+
+
+
+
+
+
+//BOOL	MmInitializeMemoryManager(ULONG LowMemoryStart, ULONG LowMemoryLength);
+//PVOID	MmAllocateMemory(ULONG MemorySize);
+//VOID	MmFreeMemory(PVOID MemoryPointer);
+//PVOID	MmAllocateLowMemory(ULONG MemorySize);
+//VOID	MmFreeLowMemory(PVOID MemoryPointer);
+//PVOID	MmAllocateMemoryFrom1Mb(ULONG MemorySize);
 
 #endif // defined __MEMORY_H

@@ -27,14 +27,6 @@
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////
-// DATA
-/////////////////////////////////////////////////////////////////////////////////////////////
-
-GEOMETRY	DriveGeometry;
-ULONG		VolumeHiddenSectors;
-ULONG		CurrentlyOpenDriveNumber;
-
-/////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
 /////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -54,122 +46,30 @@ VOID DiskError(PUCHAR ErrorString)
 	}
 }
 
-VOID DiskSetDriveGeometry(ULONG Cylinders, ULONG Heads, ULONG Sectors, ULONG BytesPerSector)
+BOOL DiskReadMultipleLogicalSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
-	DriveGeometry.Cylinders = Cylinders;
-	DriveGeometry.Heads = Heads;
-	DriveGeometry.Sectors = Sectors;
-	DriveGeometry.BytesPerSector = BytesPerSector;
+	ULONG		PhysicalSector;
+	ULONG		PhysicalHead;
+	ULONG		PhysicalTrack;
+	GEOMETRY	DriveGeometry;
+	ULONG		NumberOfSectorsToRead;
 
-	DbgPrint((DPRINT_DISK, "DriveGeometry.Cylinders: %d\n", DriveGeometry.Cylinders));
-	DbgPrint((DPRINT_DISK, "DriveGeometry.Heads: %d\n", DriveGeometry.Heads));
-	DbgPrint((DPRINT_DISK, "DriveGeometry.Sectors: %d\n", DriveGeometry.Sectors));
-	DbgPrint((DPRINT_DISK, "DriveGeometry.BytesPerSector: %d\n", DriveGeometry.BytesPerSector));
-}
-
-VOID DiskSetVolumeProperties(ULONG HiddenSectors)
-{
-	VolumeHiddenSectors = HiddenSectors;
-}
-
-BOOL DiskReadMultipleLogicalSectors(ULONG SectorNumber, ULONG SectorCount, PVOID Buffer)
-{
-	/*BOOL	bRetVal;
-	int		PhysicalSector;
-	int		PhysicalHead;
-	int		PhysicalTrack;
-	int		nNum;
-
-	nSect += nHiddenSectors;
-
-	while (nNumberOfSectors)
-	{
-		PhysicalSector = 1 + (nSect % nSectorsPerTrack);
-		PhysicalHead = (nSect / nSectorsPerTrack) % nNumberOfHeads;
-		PhysicalTrack = nSect / (nSectorsPerTrack * nNumberOfHeads);
-
-		if (PhysicalSector > 1)
-		{
-			if (nNumberOfSectors >= (nSectorsPerTrack - (PhysicalSector - 1)))
-				nNum = (nSectorsPerTrack - (PhysicalSector - 1));
-			else
-				nNum = nNumberOfSectors;
-		}
-		else
-		{
-			if (nNumberOfSectors >= nSectorsPerTrack)
-				nNum = nSectorsPerTrack;
-			else
-				nNum = nNumberOfSectors;
-		}
-
-		bRetVal = biosdisk(CurrentlyOpenDriveNumber, PhysicalHead, PhysicalTrack, PhysicalSector, nNum, pBuffer);
-
-		if (!bRetVal)
-		{
-			FS_DO_ERROR("Disk Error");
-			return FALSE;
-		}
-
-		pBuffer += (nNum * 512);
-		nNumberOfSectors -= nNum;
-		nSect += nNum;
-	}*/
-
-	ULONG	CurrentSector;
-	PVOID	RealBuffer = Buffer;
-
-	for (CurrentSector=SectorNumber; CurrentSector<(SectorNumber + SectorCount); CurrentSector++)
-	{
-		if (!DiskReadLogicalSector(CurrentSector, RealBuffer) )
-		{
-			return FALSE;
-		}
-
-		RealBuffer += DriveGeometry.BytesPerSector;
-	}
-
-	return TRUE;
-}
-
-BOOL DiskReadLogicalSector(ULONG SectorNumber, PVOID Buffer)
-{
-	ULONG	PhysicalSector;
-	ULONG	PhysicalHead;
-	ULONG	PhysicalTrack;
-
-	DbgPrint((DPRINT_DISK, "ReadLogicalSector() SectorNumber: %d Buffer: 0x%x\n", SectorNumber, Buffer));
-
-	SectorNumber += VolumeHiddenSectors;
-	PhysicalSector = 1 + (SectorNumber % DriveGeometry.Sectors);
-	PhysicalHead = (SectorNumber / DriveGeometry.Sectors) % DriveGeometry.Heads;
-	PhysicalTrack = (SectorNumber / DriveGeometry.Sectors) / DriveGeometry.Heads;
-
-	//DbgPrint((DPRINT_FILESYSTEM, "Calling BiosInt13Read() with PhysicalHead: %d\n", PhysicalHead));
-	//DbgPrint((DPRINT_FILESYSTEM, "Calling BiosInt13Read() with PhysicalTrack: %d\n", PhysicalTrack));
-	//DbgPrint((DPRINT_FILESYSTEM, "Calling BiosInt13Read() with PhysicalSector: %d\n", PhysicalSector));
-	if (PhysicalHead >= DriveGeometry.Heads)
-	{
-		BugCheck((DPRINT_DISK, "PhysicalHead >= DriveGeometry.Heads\nPhysicalHead = %d\nDriveGeometry.Heads = %d\n", PhysicalHead, DriveGeometry.Heads));
-	}
-	if (PhysicalTrack >= DriveGeometry.Cylinders)
-	{
-		BugCheck((DPRINT_DISK, "PhysicalTrack >= DriveGeometry.Cylinders\nPhysicalTrack = %d\nDriveGeometry.Cylinders = %d\n", PhysicalTrack, DriveGeometry.Cylinders));
-	}
-	if (PhysicalSector > DriveGeometry.Sectors)
-	{
-		BugCheck((DPRINT_DISK, "PhysicalSector > DriveGeometry.Sectors\nPhysicalSector = %d\nDriveGeometry.Sectors = %d\n", PhysicalSector, DriveGeometry.Sectors));
-	}
+	DbgPrint((DPRINT_DISK, "ReadLogicalSector() DriveNumber: 0x%x SectorNumber: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, Buffer));
 
 	//
 	// Check to see if it is a fixed disk drive
 	// If so then check to see if Int13 extensions work
 	// If they do then use them, otherwise default back to BIOS calls
 	//
-	if ((CurrentlyOpenDriveNumber >= 0x80) && (BiosInt13ExtensionsSupported(CurrentlyOpenDriveNumber)) && (SectorNumber > (DriveGeometry.Cylinders * DriveGeometry.Heads * DriveGeometry.Sectors)))
+	if ((DriveNumber >= 0x80) && (BiosInt13ExtensionsSupported(DriveNumber)))
 	{
-		DbgPrint((DPRINT_DISK, "Using Int 13 Extensions for read. BiosInt13ExtensionsSupported(%d) = %s\n", CurrentlyOpenDriveNumber, BiosInt13ExtensionsSupported(CurrentlyOpenDriveNumber) ? "TRUE" : "FALSE"));
-		if ( !BiosInt13ReadExtended(CurrentlyOpenDriveNumber, SectorNumber, 1, Buffer) )
+		DbgPrint((DPRINT_DISK, "Using Int 13 Extensions for read. BiosInt13ExtensionsSupported(%d) = %s\n", DriveNumber, BiosInt13ExtensionsSupported(DriveNumber) ? "TRUE" : "FALSE"));
+
+		//
+		// LBA is easy, nothing to calculate
+		// Just do the read
+		//
+		if (!BiosInt13ReadExtended(DriveNumber, SectorNumber, 1, Buffer))
 		{
 			DiskError("Disk read error.");
 			return FALSE;
@@ -177,7 +77,141 @@ BOOL DiskReadLogicalSector(ULONG SectorNumber, PVOID Buffer)
 	}
 	else
 	{
-		if ( !BiosInt13Read(CurrentlyOpenDriveNumber, PhysicalHead, PhysicalTrack, PhysicalSector, 1, Buffer) )
+		//
+		// Get the drive geometry
+		//
+		if (!DiskGetDriveGeometry(DriveNumber, &DriveGeometry))
+		{
+			return FALSE;
+		}
+
+		while (SectorCount)
+		{
+
+			//
+			// Calculate the physical disk offsets
+			//
+			PhysicalSector = 1 + (SectorNumber % DriveGeometry.Sectors);
+			PhysicalHead = (SectorNumber / DriveGeometry.Sectors) % DriveGeometry.Heads;
+			PhysicalTrack = (SectorNumber / DriveGeometry.Sectors) / DriveGeometry.Heads;
+
+			//
+			// Calculate how many sectors we are supposed to read
+			//
+			if (PhysicalSector > 1)
+			{
+				if (SectorCount >= (DriveGeometry.Sectors - (PhysicalSector - 1)))
+					NumberOfSectorsToRead = (DriveGeometry.Sectors - (PhysicalSector - 1));
+				else
+					NumberOfSectorsToRead = SectorCount;
+			}
+			else
+			{
+				if (SectorCount >= DriveGeometry.Sectors)
+					NumberOfSectorsToRead = DriveGeometry.Sectors;
+				else
+					NumberOfSectorsToRead = SectorCount;
+			}
+
+			DbgPrint((DPRINT_DISK, "Calling BiosInt13Read() with PhysicalHead: %d\n", PhysicalHead));
+			DbgPrint((DPRINT_DISK, "Calling BiosInt13Read() with PhysicalTrack: %d\n", PhysicalTrack));
+			DbgPrint((DPRINT_DISK, "Calling BiosInt13Read() with PhysicalSector: %d\n", PhysicalSector));
+			DbgPrint((DPRINT_DISK, "Calling BiosInt13Read() with NumberOfSectorsToRead: %d\n", NumberOfSectorsToRead));
+
+			//
+			// Make sure the read is within the geometry boundaries
+			//
+			if ((PhysicalHead >= DriveGeometry.Heads) ||
+				(PhysicalTrack >= DriveGeometry.Cylinders) ||
+				((NumberOfSectorsToRead + PhysicalSector) > (DriveGeometry.Sectors + 1)) ||
+				(PhysicalSector > DriveGeometry.Sectors))
+			{
+				DiskError("Disk read exceeds drive geometry limits.");
+				return FALSE;
+			}
+
+			//
+			// Perform the read
+			//
+			if (!BiosInt13Read(DriveNumber, PhysicalHead, PhysicalTrack, PhysicalSector, NumberOfSectorsToRead, Buffer))
+			{
+				DiskError("Disk read error.");
+				return FALSE;
+			}
+
+			Buffer += (NumberOfSectorsToRead * DriveGeometry.BytesPerSector);
+			SectorCount -= NumberOfSectorsToRead;
+			SectorNumber += NumberOfSectorsToRead;
+		}
+	}
+
+	return TRUE;
+}
+
+BOOL DiskReadLogicalSector(ULONG DriveNumber, ULONG SectorNumber, PVOID Buffer)
+{
+	ULONG		PhysicalSector;
+	ULONG		PhysicalHead;
+	ULONG		PhysicalTrack;
+	GEOMETRY	DriveGeometry;
+
+	DbgPrint((DPRINT_DISK, "ReadLogicalSector() DriveNumber: 0x%x SectorNumber: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, Buffer));
+
+	//
+	// Check to see if it is a fixed disk drive
+	// If so then check to see if Int13 extensions work
+	// If they do then use them, otherwise default back to BIOS calls
+	//
+	if ((DriveNumber >= 0x80) && (BiosInt13ExtensionsSupported(DriveNumber)))
+	{
+		DbgPrint((DPRINT_DISK, "Using Int 13 Extensions for read. BiosInt13ExtensionsSupported(%d) = %s\n", DriveNumber, BiosInt13ExtensionsSupported(DriveNumber) ? "TRUE" : "FALSE"));
+
+		//
+		// LBA is easy, nothing to calculate
+		// Just do the read
+		//
+		if (!BiosInt13ReadExtended(DriveNumber, SectorNumber, 1, Buffer))
+		{
+			DiskError("Disk read error.");
+			return FALSE;
+		}
+	}
+	else
+	{
+		//
+		// Get the drive geometry
+		//
+		if (!DiskGetDriveGeometry(DriveNumber, &DriveGeometry))
+		{
+			return FALSE;
+		}
+
+		//
+		// Calculate the physical disk offsets
+		//
+		PhysicalSector = 1 + (SectorNumber % DriveGeometry.Sectors);
+		PhysicalHead = (SectorNumber / DriveGeometry.Sectors) % DriveGeometry.Heads;
+		PhysicalTrack = (SectorNumber / DriveGeometry.Sectors) / DriveGeometry.Heads;
+
+		DbgPrint((DPRINT_DISK, "Calling BiosInt13Read() with PhysicalHead: %d\n", PhysicalHead));
+		DbgPrint((DPRINT_DISK, "Calling BiosInt13Read() with PhysicalTrack: %d\n", PhysicalTrack));
+		DbgPrint((DPRINT_DISK, "Calling BiosInt13Read() with PhysicalSector: %d\n", PhysicalSector));
+
+		//
+		// Make sure the read is within the geometry boundaries
+		//
+		if ((PhysicalHead >= DriveGeometry.Heads) ||
+			(PhysicalTrack >= DriveGeometry.Cylinders) ||
+			(PhysicalSector > DriveGeometry.Sectors))
+		{
+			DiskError("Disk read exceeds drive geometry limits.");
+			return FALSE;
+		}
+
+		//
+		// Perform the read
+		//
+		if (!BiosInt13Read(DriveNumber, PhysicalHead, PhysicalTrack, PhysicalSector, 1, Buffer))
 		{
 			DiskError("Disk read error.");
 			return FALSE;
