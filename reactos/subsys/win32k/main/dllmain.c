@@ -9,20 +9,20 @@
 #include <internal/service.h>
 #include <internal/hal.h>
 
-#include <win32k/dc.h>
-#include <win32k/bitmaps.h>
-#include <win32k/brush.h>
+#include <win32k/win32k.h>
 
 SERVICE_TABLE W32kServiceTable[] =
 {
 #if 0
   {?, (ULONG) W32kAbortDoc},
   {?, (ULONG) W32kAbortPath},
-  {?, (ULONG) W32kAddFontResource},
-  {?, (ULONG) W32kAngleArc},
-  {?, (ULONG) W32kAnimatePalette},
-  {?, (ULONG) W32kArc},
-  {?, (ULONG) W32kArcTo},
+#endif
+  {4, (ULONG) W32kAddFontResource},
+  {24, (ULONG) W32kAngleArc},
+  {16, (ULONG) W32kAnimatePalette},
+  {36, (ULONG) W32kArc},
+  {36, (ULONG) W32kArcTo},
+#if 0
   {?, (ULONG) W32kBeginPath},
 #endif
   {36, (ULONG) W32kBitBlt},
@@ -30,16 +30,20 @@ SERVICE_TABLE W32kServiceTable[] =
 #if 0
   {?, (ULONG) W32kCheckColorsInGamut},
   {?, (ULONG) W32kChoosePixelFormat},
-  {?, (ULONG) W32kChord},
-  {?, (ULONG) W32kCloseEnhMetaFile},
+#endif
+  {36, (ULONG) W32kChord},
+  {4, (ULONG) W32kCloseEnhMetaFile},
+#if 0
   {?, (ULONG) W32kCloseFigure},
-  {?, (ULONG) W32kCloseMetaFile},
+#endif
+  {4, (ULONG) W32kCloseMetaFile},
+#if 0
   {?, (ULONG) W32kColorMatchToTarget},
   {?, (ULONG) W32kCombineRgn},
-  {?, (ULONG) W32kCombineTransform},
-  {?, (ULONG) W32kCopyEnhMetaFile},
-  {?, (ULONG) W32kCopyMetaFile},
 #endif
+  {12, (ULONG) W32kCombineTransform},
+  {8, (ULONG) W32kCopyEnhMetaFile},
+  {8, (ULONG) W32kCopyMetaFile},
   {20, (ULONG) W32kCreateBitmap},
   {4, (ULONG) W32kCreateBitmapIndirect},
   {4, (ULONG) W32kCreateBrushIndirect},
@@ -57,17 +61,17 @@ SERVICE_TABLE W32kServiceTable[] =
 #if 0
   {?, (ULONG) W32kCreateEllipticRgn},
   {?, (ULONG) W32kCreateEllipticRgnIndirect},
-  {?, (ULONG) W32kCreateEnhMetaFile},
-  {?, (ULONG) W32kCreateFontIndirect},
-  {?, (ULONG) W32kCreateFont},
-  {?, (ULONG) W32kCreateHalftonePalette},
 #endif
+  {16, (ULONG) W32kCreateEnhMetaFile},
+  {56, (ULONG) W32kCreateFont},
+  {4, (ULONG) W32kCreateFontIndirect},
+  {4, (ULONG) W32kCreateHalftonePalette},
   {8, (ULONG) W32kCreateHatchBrush},
 #if 0
   {?, (ULONG) W32kCreateIC},
-  {?, (ULONG) W32kCreateMetaFile},
-  {?, (ULONG) W32kCreatePalette},
 #endif
+  {4, (ULONG) W32kCreateMetaFile},
+  {4, (ULONG) W32kCreatePalette},
   {4, (ULONG) W32kCreatePatternBrush},
 #if 0
   {?, (ULONG) W32kCreatePen},
@@ -77,47 +81,51 @@ SERVICE_TABLE W32kServiceTable[] =
   {?, (ULONG) W32kCreateRectRgn},
   {?, (ULONG) W32kCreateRectRgnIndirect},
   {?, (ULONG) W32kCreateRoundRectRgn},
-  {?, (ULONG) W32kCreateScalableFontResource},
 #endif
+  {16, (ULONG) W32kCreateScalableFontResource},
   {4, (ULONG) W32kCreateSolidBrush},
+  {12, (ULONG) W32kDPtoLP},
 #if 0
-  {?, (ULONG) W32kDPtoLP},
   {?, (ULONG) W32kDeleteColorSpace},
 #endif
   {4, (ULONG) W32kDeleteDC},
+  {4, (ULONG) W32kDeleteEnhMetaFile},
+  {4, (ULONG) W32kDeleteMetaFile},
 #if 0
-  {?, (ULONG) W32kDeleteEnhMetaFile},
-  {?, (ULONG) W32kDeleteMetaFile},
   {?, (ULONG) W32kDeleteObject},
   {?, (ULONG) W32kDescribePixelFormat},
   {?, (ULONG) W32kDeviceCapabilitiesEx},
 #endif
   {16, (ULONG) W32kDrawEscape},
+  {20, (ULONG) W32kEllipse},
 #if 0
-  {?, (ULONG) W32kEllipse},
   {?, (ULONG) W32kEndDoc},
   {?, (ULONG) W32kEndPage},
   {?, (ULONG) W32kEndPath},
-  {?, (ULONG) W32kEnumEnhMetaFile},
-  {?, (ULONG) W32kEnumFontFamiliesEx},
-  {?, (ULONG) W32kEnumFontFamilies},
-  {?, (ULONG) W32kEnumFonts},
-  {?, (ULONG) W32kEnumICMProfiles},
-  {?, (ULONG) W32kEnumMetaFile},
 #endif
+  {20, (ULONG) W32kEnumEnhMetaFile},
+  {16, (ULONG) W32kEnumFontFamilies},
+  {20, (ULONG) W32kEnumFontFamiliesEx},
+  {16, (ULONG) W32kEnumFonts},
+#if 0
+  {?, (ULONG) W32kEnumICMProfiles},
+#endif
+  {16, (ULONG) W32kEnumMetaFile},
   {16, (ULONG) W32kEnumObjects},
 #if 0
   {?, (ULONG) W32kEqualRgn},
   {?, (ULONG) W32kEscape},
-  {?, (ULONG) W32kExcludeClipRect},
+#endif
+  {20, (ULONG) W32kExcludeClipRect},
+#if 0
   {?, (ULONG) W32kExtCreatePen},
   {?, (ULONG) W32kExtCreateRegion},
   {?, (ULONG) W32kExtEscape},
 #endif
   {20, (ULONG) W32kExtFloodFill},
+  {12, (ULONG) W32kExtSelectClipRgn},
+  {32, (ULONG) W32kExtTextOut},
 #if 0
-  {?, (ULONG) W32kExtSelectClipRgn},
-  {?, (ULONG) W32kExtTextOut},
   {?, (ULONG) W32kFillPath},
   {?, (ULONG) W32kFillRgn},
 #endif
@@ -128,16 +136,18 @@ SERVICE_TABLE W32kServiceTable[] =
   {16, (ULONG) W32kFloodFill},
 #if 0
   {?, (ULONG) W32kFrameRgn},
-  {?, (ULONG) W32kGdiComment},
+#endif
+  {12, (ULONG) W32kGdiComment},
+#if 0
   {?, (ULONG) W32kGdiFlush},
   {?, (ULONG) W32kGdiGetBatchLimit},
   {?, (ULONG) W32kGdiPlayDCScript},
   {?, (ULONG) W32kGdiPlayJournal},
   {?, (ULONG) W32kGdiPlayScript},
   {?, (ULONG) W32kGdiSetBatchLimit},
-  {?, (ULONG) W32kGetArcDirection},
-  {?, (ULONG) W32kGetAspectRatioFilterEx},
 #endif
+  {4, (ULONG) W32kGetArcDirection},
+  {8, (ULONG) W32kGetAspectRatioFilterEx},
   {12, (ULONG) W32kGetBitmapBits},
   {8, (ULONG) W32kGetBitmapDimensionEx},
   {4, (ULONG) W32kGetBkColor},
@@ -146,18 +156,16 @@ SERVICE_TABLE W32kServiceTable[] =
   {?, (ULONG) W32kGetBoundsRect},
 #endif
   {8, (ULONG) W32kGetBrushOrgEx},
-#if 0
-  {?, (ULONG) W32kGetCharABCWidthsFloat},
-  {?, (ULONG) W32kGetCharABCWidths},
-  {?, (ULONG) W32kGetCharWidth32},
-  {?, (ULONG) W32kGetCharWidthFloat},
-  {?, (ULONG) W32kGetCharWidth},
-  {?, (ULONG) W32kGetCharacterPlacement},
-  {?, (ULONG) W32kGetClipBox},
-#endif
+  {16, (ULONG) W32kGetCharABCWidths},
+  {16, (ULONG) W32kGetCharABCWidthsFloat},
+  {24, (ULONG) W32kGetCharacterPlacement},
+  {16, (ULONG) W32kGetCharWidth},
+  {16, (ULONG) W32kGetCharWidth32},
+  {16, (ULONG) W32kGetCharWidthFloat},
+  {8, (ULONG) W32kGetClipBox},
   {4, (ULONG) W32kGetClipRgn},
+  {8, (ULONG) W32kGetColorAdjustment},
 #if 0
-  {?, (ULONG) W32kGetColorAdjustment},
   {?, (ULONG) W32kGetColorSpace},
 #endif
   {8, (ULONG) W32kGetCurrentObject},
@@ -168,33 +176,49 @@ SERVICE_TABLE W32kServiceTable[] =
   {8, (ULONG) W32kGetDeviceCaps},
 #if 0
   {?, (ULONG) W32kGetDeviceGammaRamp},
+#endif
+  {4, (ULONG) W32kGetEnhMetaFile},
+#if 0
   {?, (ULONG) W32kGetEnhMetaFileBits},
   {?, (ULONG) W32kGetEnhMetaFileDescription},
   {?, (ULONG) W32kGetEnhMetaFileHeader},
   {?, (ULONG) W32kGetEnhMetaFilePaletteEntries},
   {?, (ULONG) W32kGetEnhMetaFilePixelFormat},
-  {?, (ULONG) W32kGetEnhMetaFile},
-  {?, (ULONG) W32kGetFontLanguageInfo},
+#endif
+  {4, (ULONG) W32kGetFontLanguageInfo},
+#if 0
   {?, (ULONG) W32kGetFontResourceInfo},
-  {?, (ULONG) W32kGetGlyphOutline},
+#endif
+  {28, (ULONG) W32kGetGlyphOutline},
+#if 0
   {?, (ULONG) W32kGetGlyphOutlineWow},
-  {?, (ULONG) W32kGetGraphicsMode},
+#endif
+  {4, (ULONG) W32kGetGraphicsMode},
+#if 0
   {?, (ULONG) W32kGetICMProfile},
-  {?, (ULONG) W32kGetKerningPairs},
+#endif
+  {12, (ULONG) W32kGetKerningPairs},
+#if 0
   {?, (ULONG) W32kGetLogColorSpace},
 #endif
   {4, (ULONG) W32kGetMapMode},
 #if 0
   {?, (ULONG) W32kGetMetaFileBitsEx},
   {?, (ULONG) W32kGetMetaFile},
-  {?, (ULONG) W32kGetMetaRgn},
+#endif
+  {8, (ULONG) W32kGetMetaRgn},
+#if 0
   {?, (ULONG) W32kGetMiterLimit},
-  {?, (ULONG) W32kGetNearestColor},
-  {?, (ULONG) W32kGetNearestPaletteIndex},
+#endif
+  {8, (ULONG) W32kGetNearestColor},
+  {8, (ULONG) W32kGetNearestPaletteIndex},
+#if 0
   {?, (ULONG) W32kGetObject},
   {?, (ULONG) W32kGetObjectType},
-  {?, (ULONG) W32kGetOutlineTextMetrics},
-  {?, (ULONG) W32kGetPaletteEntries},
+#endif
+  {12, (ULONG) W32kGetOutlineTextMetrics},
+  {16, (ULONG) W32kGetPaletteEntries},
+#if 0
   {?, (ULONG) W32kGetPath},
 #endif
   {4, (ULONG) W32kGetPixel},
@@ -205,31 +229,27 @@ SERVICE_TABLE W32kServiceTable[] =
   {4, (ULONG) W32kGetROP2},
 #if 0
   {?, (ULONG) W32kGetRandomRgn},
-  {?, (ULONG) W32kGetRasterizerCaps},
 #endif
+  {8, (ULONG) W32kGetRasterizerCaps},
   {4, (ULONG) W32kGetRelAbs},
 #if 0
   {?, (ULONG) W32kGetRgnBox},
   {?, (ULONG) W32kGetStockObject},
 #endif
   {4, (ULONG) W32kGetStretchBltMode},
-#if 0
-  {?, (ULONG) W32kGetSystemPaletteEntries},
-  {?, (ULONG) W32kGetSystemPaletteUse},
-#endif
+  {16, (ULONG) W32kGetSystemPaletteEntries},
+  {4, (ULONG) W32kGetSystemPaletteUse},
   {4, (ULONG) W32kGetTextAlign},
 #if 0
   {?, (ULONG) W32kGetTextCharset},
   {?, (ULONG) W32kGetTextCharsetInfo},
 #endif
   {4, (ULONG) W32kGetTextColor},
-#if 0
-  {?, (ULONG) W32kGetTextExtentExPoint},
-  {?, (ULONG) W32kGetTextExtentPoint32},
-  {?, (ULONG) W32kGetTextExtentPoint},
-  {?, (ULONG) W32kGetTextFace},
-  {?, (ULONG) W32kGetTextMetrics},
-#endif
+  {28, (ULONG) W32kGetTextExtentExPoint},
+  {16, (ULONG) W32kGetTextExtentPoint},
+  {16, (ULONG) W32kGetTextExtentPoint32},
+  {12, (ULONG) W32kGetTextFace},
+  {8, (ULONG) W32kGetTextMetrics},
   {8, (ULONG) W32kGetViewportExtEx},
   {8, (ULONG) W32kGetViewportOrgEx},
 #if 0
@@ -237,74 +257,78 @@ SERVICE_TABLE W32kServiceTable[] =
 #endif
   {8, (ULONG) W32kGetWindowExtEx},
   {8, (ULONG) W32kGetWindowOrgEx},
+  {8, (ULONG) W32kGetWorldTransform},
+  {20, (ULONG) W32kIntersectClipRect},
 #if 0
-  {?, (ULONG) W32kGetWorldTransform},
-  {?, (ULONG) W32kIntersectClipRect},
   {?, (ULONG) W32kInvertRgn},
-  {?, (ULONG) W32kLPtoDP},
-  {?, (ULONG) W32kLineTo},
 #endif
+  {12, (ULONG) W32kLPtoDP},
+  {12, (ULONG) W32kLineTo},
   {48, (ULONG) W32kMaskBlt},
+  {12, (ULONG) W32kModifyWorldTransform},
+  {16, (ULONG) W32kMoveToEx},
+  {12, (ULONG) W32kOffsetClipRgn},
 #if 0
-  {?, (ULONG) W32kModifyWorldTransform},
-  {?, (ULONG) W32kMoveToEx},
-  {?, (ULONG) W32kOffsetClipRgn},
   {?, (ULONG) W32kOffsetRgn},
-  {?, (ULONG) W32kOffsetViewportOrgEx},
-  {?, (ULONG) W32kOffsetWindowOrgEx},
+#endif
+  {16, (ULONG) W32kOffsetViewportOrgEx},
+  {16, (ULONG) W32kOffsetWindowOrgEx},
+#if 0
   {?, (ULONG) W32kPaintRgn},
 #endif
   {24, (ULONG) W32kPatBlt},
 #if 0
   {?, (ULONG) W32kPathToRegion},
-  {?, (ULONG) W32kPie},
+#endif
+  {36, (ULONG) W32kPie},
+#if 0
   {?, (ULONG) W32kPlayEnhMetaFile},
   {?, (ULONG) W32kPlayEnhMetaFileRecord},
   {?, (ULONG) W32kPlayMetaFile},
   {?, (ULONG) W32kPlayMetaFileRecord},
 #endif
   {40, (ULONG) W32kPlgBlt},
+  {12, (ULONG) W32kPolyBezier},
+  {12, (ULONG) W32kPolyBezierTo},
+  {16, (ULONG) W32kPolyDraw},
+  {12, (ULONG) W32kPolyline},
+  {12, (ULONG) W32kPolylineTo},
+  {16, (ULONG) W32kPolyPolyline},
+  {12, (ULONG) W32kPolyTextOut},
+  {12, (ULONG) W32kPolygon},
+  {16, (ULONG) W32kPolyPolygon},
 #if 0
-  {?, (ULONG) W32kPolyBezier},
-  {?, (ULONG) W32kPolyBezierTo},
-  {?, (ULONG) W32kPolyDraw},
-  {?, (ULONG) W32kPolyPolygon},
-  {?, (ULONG) W32kPolyPolyline},
-  {?, (ULONG) W32kPolyTextOut},
-  {?, (ULONG) W32kPolygon},
-  {?, (ULONG) W32kPolyline},
-  {?, (ULONG) W32kPolylineTo},
   {?, (ULONG) W32kPtInRegion},
-  {?, (ULONG) W32kPtVisible},
-  {?, (ULONG) W32kRealizePalette},
+#endif 
+  {12, (ULONG) W32kPtVisible},
+  {4, (ULONG) W32kRealizePalette},
+#if 0
   {?, (ULONG) W32kRectInRegion},
-  {?, (ULONG) W32kRectVisible},
-  {?, (ULONG) W32kRectangle},
-  {?, (ULONG) W32kRemoveFontResource},
 #endif
+  {8, (ULONG) W32kRectVisible},
+  {20, (ULONG) W32kRectangle},
+  {4, (ULONG) W32kRemoveFontResource},
   {8, (ULONG) W32kResetDC},
-#if 0
-  {?, (ULONG) W32kResizePalette},
-#endif
+  {8, (ULONG) W32kResizePalette},
   {8, (ULONG) W32kRestoreDC},
-#if 0
-  {?, (ULONG) W32kRoundRect},
-#endif
+  {28, (ULONG) W32kRoundRect},
   {4, (ULONG) W32kSaveDC},
+  {24, (ULONG) W32kScaleViewportExtEx},
+  {24, (ULONG) W32kScaleWindowExtEx},
 #if 0
-  {?, (ULONG) W32kScaleViewportExtEx},
-  {?, (ULONG) W32kScaleWindowExtEx},
   {?, (ULONG) W32kSelectBrushLocal},
-  {?, (ULONG) W32kSelectClipPath},
-  {?, (ULONG) W32kSelectClipRgn},
+#endif
+  {8, (ULONG) W32kSelectClipPath},
+  {8, (ULONG) W32kSelectClipRgn},
+#if 0
   {?, (ULONG) W32kSelectFontLocal},
 #endif
   {8, (ULONG) W32kSelectObject},
+  {12, (ULONG) W32kSelectPalette},
 #if 0
-  {?, (ULONG) W32kSelectPalette},
   {?, (ULONG) W32kSetAbortProc},
-  {?, (ULONG) W32kSetArcDirection},
 #endif
+  {8, (ULONG) W32kSetArcDirection},
   {12, (ULONG) W32kSetBitmapBits},
   {16, (ULONG) W32kSetBitmapDimensionEx},
 #if 0
@@ -315,8 +339,8 @@ SERVICE_TABLE W32kServiceTable[] =
   {?, (ULONG) W32kSetBoundsRect},
 #endif
   {16, (ULONG) W32kSetBrushOrgEx},
+  {8, (ULONG) W32kSetColorAdjustment},
 #if 0
-  {?, (ULONG) W32kSetColorAdjustment},
   {?, (ULONG) W32kSetColorSpace},
 #endif
   {16, (ULONG) W32kSetDIBColorTable},
@@ -326,16 +350,22 @@ SERVICE_TABLE W32kServiceTable[] =
   {?, (ULONG) W32kSetDeviceGammaRamp},
   {?, (ULONG) W32kSetEnhMetaFileBits},
   {?, (ULONG) W32kSetFontEnumeration},
-  {?, (ULONG) W32kSetGraphicsMode},
+#endif
+  {8, (ULONG) W32kSetGraphicsMode},
+#if 0
   {?, (ULONG) W32kSetICMMode},
   {?, (ULONG) W32kSetICMProfile},
-  {?, (ULONG) W32kSetMapMode},
-  {?, (ULONG) W32kSetMapperFlags},
-  {?, (ULONG) W32kSetMetaFileBitsEx},
-  {?, (ULONG) W32kSetMetaRgn},
-  {?, (ULONG) W32kSetMiterLimit},
-  {?, (ULONG) W32kSetPaletteEntries},
 #endif
+  {8, (ULONG) W32kSetMapMode},
+  {8, (ULONG) W32kSetMapperFlags},
+#if 0
+  {?, (ULONG) W32kSetMetaFileBitsEx},
+#if 0
+  {4, (ULONG) W32kSetMetaRgn},
+#endif
+  {?, (ULONG) W32kSetMiterLimit},
+#endif
+  {16, (ULONG) W32kSetPaletteEntries},
   {16, (ULONG) W32kSetPixel},
 #if 0
   {?, (ULONG) W32kSetPixelFormat},
@@ -348,17 +378,19 @@ SERVICE_TABLE W32kServiceTable[] =
 #endif
 //  {8, (ULONG) W32kSetRelAbs},
   {8, (ULONG) W32kSetStretchBltMode},
+  {8, (ULONG) W32kSetSystemPaletteUse},
+  {8, (ULONG) W32kSetTextAlign},
+  {8, (ULONG) W32kSetTextColor},
+  {12, (ULONG) W32kSetTextJustification},
+  {16, (ULONG) W32kSetViewportExtEx},
+  {16, (ULONG) W32kSetViewportOrgEx},
 #if 0
-  {?, (ULONG) W32kSetSystemPaletteUse},
-  {?, (ULONG) W32kSetTextAlign},
-  {?, (ULONG) W32kSetTextColor},
-  {?, (ULONG) W32kSetTextJustification},
-  {?, (ULONG) W32kSetViewportExtEx},
-  {?, (ULONG) W32kSetViewportOrgEx},
   {?, (ULONG) W32kSetWinMetaFileBits},
-  {?, (ULONG) W32kSetWindowExtEx},
-  {?, (ULONG) W32kSetWindowOrgEx},
-  {?, (ULONG) W32kSetWorldTransform},
+#endif
+  {16, (ULONG) W32kSetWindowExtEx},
+  {16, (ULONG) W32kSetWindowOrgEx},
+  {8, (ULONG) W32kSetWorldTransform},
+#if 0
   {?, (ULONG) W32kStartDoc},
   {?, (ULONG) W32kStartPage},
 #endif
@@ -368,10 +400,14 @@ SERVICE_TABLE W32kServiceTable[] =
   {?, (ULONG) W32kStrokeAndFillPath},
   {?, (ULONG) W32kStrokePath},
   {?, (ULONG) W32kSwapBuffers},
-  {?, (ULONG) W32kTextOut},
+#endif
+  {20, (ULONG) W32kTextOut},
+#if 0
   {?, (ULONG) W32kTranslateCharsetInfo},
-  {?, (ULONG) W32kUnrealizeObject},
-  {?, (ULONG) W32kUpdateColors},
+#endif
+  {8, (ULONG) W32kUnrealizeObject},
+  {4, (ULONG) W32kUpdateColors},
+#if 0
   {?, (ULONG) W32kUpdateICMRegKey},
   {?, (ULONG) W32kWidenPath},
   {?, (ULONG) W32kgdiPlaySpoolStream},
