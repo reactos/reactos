@@ -432,8 +432,12 @@ VOID ObCreateEntry(PDIRECTORY_OBJECT parent,POBJECT_HEADER Object)
    InsertTailList(&parent->head,&Object->Entry);
 }
 
-NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
-			PWSTR* UnparsedSection, ULONG Attributes)
+NTSTATUS 
+ObLookupObject(HANDLE rootdir, 
+               PWSTR string, 
+               PVOID* Object,
+               PWSTR* UnparsedSection, 
+               ULONG Attributes)
 /*
  * FUNCTION: Lookup an object within the system namespc
  * ARGUMENTS:
@@ -443,112 +447,120 @@ NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
  *          On failure NULL
  */
 {
-   PWSTR current;
-   PWSTR next;
-   PDIRECTORY_OBJECT current_dir = NULL;
-   NTSTATUS Status;
+  PWSTR current;
+  PWSTR next;
+  PDIRECTORY_OBJECT current_dir = NULL;
+  NTSTATUS Status;
    
-   DPRINT("ObLookupObject(rootdir %x, string %x, string %w, Object %x, "
-	  "UnparsedSection %x)\n",rootdir,string,string,Object,
-	  UnparsedSection);
-			  
+  DPRINT("ObLookupObject(rootdir %x, string %x, string %w, Object %x, "
+         "UnparsedSection %x)\n",rootdir,string,string,Object,
+         UnparsedSection);
+  *UnparsedSection = NULL;
+  *Object = NULL;
    
-   *UnparsedSection = NULL;
-   *Object = NULL;
-   
-   if (rootdir==NULL)
-     {
-	current_dir = HEADER_TO_BODY(&(namespc_root.hdr));
-     }
-   else
-     {
-	ObReferenceObjectByHandle(rootdir,DIRECTORY_TRAVERSE,NULL,
-				  UserMode,(PVOID*)&current_dir,NULL);
+  if (rootdir == NULL)
+    {
+      current_dir = HEADER_TO_BODY(&(namespc_root.hdr));
+    }
+  else
+    {
+      ObReferenceObjectByHandle(rootdir,
+                                DIRECTORY_TRAVERSE,
+                                NULL,
+                                UserMode,
+                                (PVOID*)&current_dir,
+                                NULL);
      }
   
-   /*
-    * Bit of a hack this
-    */
-   if (string[0]==0)
-   {
-      *Object=current_dir;
-      return(STATUS_SUCCESS);
-   }
+  /*
+   * Bit of a hack this
+   */
+  if (string[0] == 0)
+    {
+      *Object = current_dir;
+      return STATUS_SUCCESS;
+    }
 
-   if (string[0]!='\\')
-     {
-        DbgPrint("(%s:%d) Non absolute pathname passed to %s\n",__FILE__,
-               __LINE__,__FUNCTION__);
-	return(STATUS_UNSUCCESSFUL);
-     }
+  if (string[0] != '\\')
+    {
+      DbgPrint("Non absolute pathname passed\n");
+      return STATUS_UNSUCCESSFUL;
+    }
       
-   next = &string[0];
-   current = next+1;
+  next = string;
+  current = next + 1;
    
-   while (next!=NULL && 
-	  BODY_TO_HEADER(current_dir)->ObjectType==ObDirectoryType)
-     {		
-	*next = '\\';
-	current = next+1;
-	next = wcschr(next+1,'\\');
-	if (next!=NULL)
-	  {
-	     *next=0;
-	  }
+  while (next != NULL && 
+         BODY_TO_HEADER(current_dir)->ObjectType == ObDirectoryType)
+    {
+      *next = '\\';
+      current = next + 1;
+      next = wcschr(next + 1,'\\');
+      if (next != NULL)
+        {
+          *next = 0;
+        }
 
-	DPRINT("current %w current[5] %x next %x ",current,current[5],next);
-	if (next!=NULL)
-	  {
-	     DPRINT("(next+1) %w",next+1);
-	  }
-	DPRINT("\n",0);
-	
-	current_dir=(PDIRECTORY_OBJECT)ObDirLookup(current_dir,current,
-						   Attributes);
-	if (current_dir==NULL)
-	  {
-             DbgPrint("(%s:%d) Path component %w not found\n",__FILE__,
-                    __LINE__,current);
-	     return(STATUS_UNSUCCESSFUL);	   	     
-	  }
-	
-	if (BODY_TO_HEADER(current_dir)->ObjectType==IoSymbolicLinkType)
-	  {
-	     current_dir = IoOpenSymlink(current_dir);	   
-	  }
-	
-     }
-   DPRINT("next %x\n",next);
-   DPRINT("current %x current %w\n",current,current);
-   if (next==NULL)
-     {
-	if (current_dir==NULL)
-	  {
-	     Status = STATUS_UNSUCCESSFUL;
-	  }
-	else
-	  {
-	     Status = STATUS_SUCCESS;
-	  }
-     }
-   else
-     {
-	CHECKPOINT;
-	*next = '\\';
-	*UnparsedSection = next;
-	if (BODY_TO_HEADER(current_dir)->ObjectType == IoDeviceType)
-	  {
-	     Status = STATUS_FS_QUERY_REQUIRED;
-	  }
-	else
-	  {
-	     Status = STATUS_UNSUCCESSFUL;
-	  }     
-     }
-   CHECKPOINT;
-   *Object = current_dir;
-   DPRINT("(%s:%d) current_dir %x\n",__FILE__,__LINE__,current_dir);
-
-   return(Status);
+      DPRINT("current %w current[5] %x next %x ", current, current[5], next);
+      if (next != NULL)
+        {
+          DPRINT("(next+1) %w", next + 1);
+        }
+      DPRINT("\n",0);
+      
+      current_dir = (PDIRECTORY_OBJECT)ObDirLookup(current_dir,
+                                                   current,
+                                                   Attributes);
+      if (current_dir == NULL)
+        {
+          DbgPrint("Path component %w not found\n", current);
+          return STATUS_UNSUCCESSFUL;
+        }
+      
+      if (BODY_TO_HEADER(current_dir)->ObjectType == IoSymbolicLinkType)
+        {
+          current_dir = IoOpenSymlink(current_dir);
+        }
+      
+    }
+  DPRINT("next %x\n",next);
+  DPRINT("current %x current %w\n",current,current);
+  if (next == NULL)
+    {
+      if (current_dir == NULL)
+        {
+          Status = STATUS_UNSUCCESSFUL;
+        }
+      else
+        {
+          Status = STATUS_SUCCESS;
+        }
+    }
+  else
+    {
+      CHECKPOINT;
+      *next = '\\';
+      *UnparsedSection = next;
+      if (BODY_TO_HEADER(current_dir)->ObjectType == IoDeviceType)
+        {
+          Status = STATUS_FS_QUERY_REQUIRED;
+        }
+      else if (BODY_TO_HEADER(current_dir)->ObjectType->Parse != NULL)
+        {
+          current_dir = BODY_TO_HEADER(current_dir)->ObjectType->
+            Parse(current_dir, 
+                  UnparsedSection);
+          Status = (current_dir != NULL) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+        }
+      else
+        {
+          Status = STATUS_UNSUCCESSFUL;
+        }     
+    }
+  CHECKPOINT;
+  *Object = current_dir;
+  DPRINT("current_dir %x\n", current_dir);
+  
+  return Status;
 }
  
