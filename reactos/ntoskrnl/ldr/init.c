@@ -26,7 +26,6 @@
 #include <internal/ps.h>
 #include <string.h>
 #include <internal/string.h>
-#include <internal/symbol.h>
 #include <internal/teb.h>
 #include <internal/ldr.h>
 
@@ -173,7 +172,7 @@ NTSTATUS LdrLoadInitialProcess (VOID)
    DPRINT("Dereferencing process\n");
 //   ObDereferenceObject(Process);
    
-   DbgPrint ("Stack size %x\n", StackSize);
+   DPRINT("Stack size %x\n", StackSize);
    DPRINT("Allocating virtual memory\n");
    Status = ZwAllocateVirtualMemory(ProcessHandle,
 				    (PVOID*)&StackBase,
@@ -196,9 +195,6 @@ NTSTATUS LdrLoadInitialProcess (VOID)
 	  Peb->ImageBaseAddress);
    KeDetachProcess();
 
-   
-   DbgPrint ("NTOSKRNL: Peb = %x\n", Peb);
-   
    /*
     * Initialize context to point to LdrStartup
     */

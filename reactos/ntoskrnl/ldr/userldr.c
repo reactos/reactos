@@ -20,7 +20,6 @@
 #include <internal/ps.h>
 #include <string.h>
 #include <internal/string.h>
-#include <internal/symbol.h>
 #include <internal/teb.h>
 #include <internal/ldr.h>
 

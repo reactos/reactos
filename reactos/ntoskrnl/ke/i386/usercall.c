@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.8 2000/02/22 20:50:07 ekohl Exp $
+/* $Id: usercall.c,v 1.9 2000/02/25 00:33:30 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,7 +12,6 @@
 #include <ddk/ntddk.h>
 #include <internal/ntoskrnl.h>
 #include <internal/ke.h>
-#include <internal/symbol.h>
 #include <internal/i386/segment.h>
 #include <internal/mmhal.h>
 
