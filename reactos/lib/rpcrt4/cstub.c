@@ -72,7 +72,7 @@ HRESULT WINAPI CStdStubBuffer_QueryInterface(LPRPCSTUBBUFFER iface,
                                             REFIID riid,
                                             LPVOID *obj)
 {
-  ICOM_THIS(CStdStubBuffer,iface);
+  CStdStubBuffer *This = (CStdStubBuffer *)iface;
   TRACE("(%p)->QueryInterface(%s,%p)\n",This,debugstr_guid(riid),obj);
 
   if (IsEqualGUID(&IID_IUnknown,riid) ||
@@ -86,7 +86,7 @@ HRESULT WINAPI CStdStubBuffer_QueryInterface(LPRPCSTUBBUFFER iface,
 
 ULONG WINAPI CStdStubBuffer_AddRef(LPRPCSTUBBUFFER iface)
 {
-  ICOM_THIS(CStdStubBuffer,iface);
+  CStdStubBuffer *This = (CStdStubBuffer *)iface;
   TRACE("(%p)->AddRef()\n",This);
   return ++(This->RefCount);
 }
@@ -94,7 +94,7 @@ ULONG WINAPI CStdStubBuffer_AddRef(LPRPCSTUBBUFFER iface)
 ULONG WINAPI NdrCStdStubBuffer_Release(LPRPCSTUBBUFFER iface,
                                       LPPSFACTORYBUFFER pPSF)
 {
-  ICOM_THIS(CStdStubBuffer,iface);
+  CStdStubBuffer *This = (CStdStubBuffer *)iface;
   TRACE("(%p)->Release()\n",This);
 
   if (!--(This->RefCount)) {
@@ -111,7 +111,7 @@ ULONG WINAPI NdrCStdStubBuffer_Release(LPRPCSTUBBUFFER iface,
 HRESULT WINAPI CStdStubBuffer_Connect(LPRPCSTUBBUFFER iface,
                                      LPUNKNOWN lpUnkServer)
 {
-  ICOM_THIS(CStdStubBuffer,iface);
+  CStdStubBuffer *This = (CStdStubBuffer *)iface;
   TRACE("(%p)->Connect(%p)\n",This,lpUnkServer);
   This->pvServerObject = lpUnkServer;
   return S_OK;
@@ -119,7 +119,7 @@ HRESULT WINAPI CStdStubBuffer_Connect(LPRPCSTUBBUFFER iface,
 
 void WINAPI CStdStubBuffer_Disconnect(LPRPCSTUBBUFFER iface)
 {
-  ICOM_THIS(CStdStubBuffer,iface);
+  CStdStubBuffer *This = (CStdStubBuffer *)iface;
   TRACE("(%p)->Disconnect()\n",This);
   This->pvServerObject = NULL;
 }
@@ -128,7 +128,7 @@ HRESULT WINAPI CStdStubBuffer_Invoke(LPRPCSTUBBUFFER iface,
                                     PRPCOLEMESSAGE pMsg,
                                     LPRPCCHANNELBUFFER pChannel)
 {
-  ICOM_THIS(CStdStubBuffer,iface);
+  CStdStubBuffer *This = (CStdStubBuffer *)iface;
   DWORD dwPhase = STUB_UNMARSHAL;
   TRACE("(%p)->Invoke(%p,%p)\n",This,pMsg,pChannel);
 
@@ -139,14 +139,14 @@ HRESULT WINAPI CStdStubBuffer_Invoke(LPRPCSTUBBUFFER iface,
 LPRPCSTUBBUFFER WINAPI CStdStubBuffer_IsIIDSupported(LPRPCSTUBBUFFER iface,
                                                     REFIID riid)
 {
-  ICOM_THIS(CStdStubBuffer,iface);
+  CStdStubBuffer *This = (CStdStubBuffer *)iface;
   TRACE("(%p)->IsIIDSupported(%s)\n",This,debugstr_guid(riid));
   return IsEqualGUID(STUB_HEADER(This).piid, riid) ? iface : NULL;
 }
 
 ULONG WINAPI CStdStubBuffer_CountRefs(LPRPCSTUBBUFFER iface)
 {
-  ICOM_THIS(CStdStubBuffer,iface);
+  CStdStubBuffer *This = (CStdStubBuffer *)iface;
   TRACE("(%p)->CountRefs()\n",This);
   return This->RefCount;
 }
@@ -154,7 +154,7 @@ ULONG WINAPI CStdStubBuffer_CountRefs(LPRPCSTUBBUFFER iface)
 HRESULT WINAPI CStdStubBuffer_DebugServerQueryInterface(LPRPCSTUBBUFFER iface,
                                                        LPVOID *ppv)
 {
-  ICOM_THIS(CStdStubBuffer,iface);
+  CStdStubBuffer *This = (CStdStubBuffer *)iface;
   TRACE("(%p)->DebugServerQueryInterface(%p)\n",This,ppv);
   return S_OK;
 }
@@ -162,6 +162,6 @@ HRESULT WINAPI CStdStubBuffer_DebugServerQueryInterface(LPRPCSTUBBUFFER iface,
 void WINAPI CStdStubBuffer_DebugServerRelease(LPRPCSTUBBUFFER iface,
                                              LPVOID pv)
 {
-  ICOM_THIS(CStdStubBuffer,iface);
+  CStdStubBuffer *This = (CStdStubBuffer *)iface;
   TRACE("(%p)->DebugServerRelease(%p)\n",This,pv);
 }

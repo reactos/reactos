@@ -55,7 +55,7 @@ static HRESULT WINAPI CStdPSFactory_QueryInterface(LPPSFACTORYBUFFER iface,
                                                   REFIID riid,
                                                   LPVOID *obj)
 {
-  ICOM_THIS(CStdPSFactoryBuffer,iface);
+  CStdPSFactoryBuffer *This = (CStdPSFactoryBuffer *)iface;
   TRACE("(%p)->QueryInterface(%s,%p)\n",iface,debugstr_guid(riid),obj);
   if (IsEqualGUID(&IID_IUnknown,riid) ||
       IsEqualGUID(&IID_IPSFactoryBuffer,riid)) {
@@ -68,14 +68,14 @@ static HRESULT WINAPI CStdPSFactory_QueryInterface(LPPSFACTORYBUFFER iface,
 
 static ULONG WINAPI CStdPSFactory_AddRef(LPPSFACTORYBUFFER iface)
 {
-  ICOM_THIS(CStdPSFactoryBuffer,iface);
+  CStdPSFactoryBuffer *This = (CStdPSFactoryBuffer *)iface;
   TRACE("(%p)->AddRef()\n",iface);
   return ++(This->RefCount);
 }
 
 static ULONG WINAPI CStdPSFactory_Release(LPPSFACTORYBUFFER iface)
 {
-  ICOM_THIS(CStdPSFactoryBuffer,iface);
+  CStdPSFactoryBuffer *This = (CStdPSFactoryBuffer *)iface;
   TRACE("(%p)->Release()\n",iface);
   return --(This->RefCount);
 }
@@ -86,7 +86,7 @@ static HRESULT WINAPI CStdPSFactory_CreateProxy(LPPSFACTORYBUFFER iface,
                                                LPRPCPROXYBUFFER *ppProxy,
                                                LPVOID *ppv)
 {
-  ICOM_THIS(CStdPSFactoryBuffer,iface);
+  CStdPSFactoryBuffer *This = (CStdPSFactoryBuffer *)iface;
   const ProxyFileInfo *ProxyInfo;
   int Index;
   TRACE("(%p)->CreateProxy(%p,%s,%p,%p)\n",iface,pUnkOuter,
@@ -103,7 +103,7 @@ static HRESULT WINAPI CStdPSFactory_CreateStub(LPPSFACTORYBUFFER iface,
                                               LPUNKNOWN pUnkServer,
                                               LPRPCSTUBBUFFER *ppStub)
 {
-  ICOM_THIS(CStdPSFactoryBuffer,iface);
+  CStdPSFactoryBuffer *This = (CStdPSFactoryBuffer *)iface;
   const ProxyFileInfo *ProxyInfo;
   int Index;
   TRACE("(%p)->CreateStub(%s,%p,%p)\n",iface,debugstr_guid(riid),
@@ -116,7 +116,6 @@ static HRESULT WINAPI CStdPSFactory_CreateStub(LPPSFACTORYBUFFER iface,
 
 static IPSFactoryBufferVtbl CStdPSFactory_Vtbl =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   CStdPSFactory_QueryInterface,
   CStdPSFactory_AddRef,
   CStdPSFactory_Release,

@@ -178,7 +178,7 @@ void WINAPI NdrClientInitializeNew( PRPC_MESSAGE pRpcMessage, PMIDL_STUB_MESSAGE
   memset(pRpcMessage, 0, sizeof(RPC_MESSAGE));
 
   /* not everyone allocates stack space for w2kReserved */
-  memset(pStubMsg, 0, sizeof(*pStubMsg) - sizeof(pStubMsg->w2kReserved));
+  memset(pStubMsg, 0, FIELD_OFFSET(MIDL_STUB_MESSAGE,pCSInfo));
 
   pStubMsg->ReuseBuffer = FALSE;
   pStubMsg->IsClient = TRUE;
@@ -202,7 +202,7 @@ unsigned char* WINAPI NdrServerInitializeNew( PRPC_MESSAGE pRpcMsg, PMIDL_STUB_M
   assert( pRpcMsg && pStubMsg && pStubDesc );
 
   /* not everyone allocates stack space for w2kReserved */
-  memset(pStubMsg, 0, sizeof(*pStubMsg) - sizeof(pStubMsg->w2kReserved));
+  memset(pStubMsg, 0, FIELD_OFFSET(MIDL_STUB_MESSAGE,pCSInfo));
 
   pStubMsg->ReuseBuffer = TRUE;
   pStubMsg->IsClient = FALSE;

@@ -1024,7 +1024,7 @@ RPC_STATUS WINAPI RpcBindingToStringBindingA( RPC_BINDING_HANDLE Binding, unsign
 /***********************************************************************
  *             RpcBindingToStringBindingW (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcBindingToStringBindingW( RPC_BINDING_HANDLE Binding, LPWSTR* StringBinding )
+RPC_STATUS WINAPI RpcBindingToStringBindingW( RPC_BINDING_HANDLE Binding, unsigned short** StringBinding )
 {
   RPC_STATUS ret;
   unsigned char *str = NULL;

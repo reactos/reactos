@@ -1004,7 +1004,7 @@ RPC_STATUS WINAPI RpcMgmtStopServerListening ( RPC_BINDING_HANDLE Binding )
 /***********************************************************************
  *             I_RpcServerStartListening (RPCRT4.@)
  */
-RPC_STATUS WINAPI I_RpcServerStartListening( void* hWnd )
+RPC_STATUS WINAPI I_RpcServerStartListening( HWND hWnd )
 {
   FIXME( "(%p): stub\n", hWnd );
 

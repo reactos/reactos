@@ -269,7 +269,6 @@ static VOID WINAPI StdProxy_Disconnect(LPRPCPROXYBUFFER iface)
 
 static IRpcProxyBufferVtbl StdProxy_Vtbl =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   StdProxy_QueryInterface,
   StdProxy_AddRef,
   StdProxy_Release,

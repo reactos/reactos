@@ -89,7 +89,7 @@ static HRESULT WINAPI RpcStream_QueryInterface(LPSTREAM iface,
                                               REFIID riid,
                                               LPVOID *obj)
 {
-  ICOM_THIS(RpcStreamImpl, iface);
+  RpcStreamImpl *This = (RpcStreamImpl *)iface;
   if (IsEqualGUID(&IID_IUnknown, riid) ||
       IsEqualGUID(&IID_ISequentialStream, riid) ||
       IsEqualGUID(&IID_IStream, riid)) {
@@ -102,13 +102,13 @@ static HRESULT WINAPI RpcStream_QueryInterface(LPSTREAM iface,
 
 static ULONG WINAPI RpcStream_AddRef(LPSTREAM iface)
 {
-  ICOM_THIS(RpcStreamImpl, iface);
+  RpcStreamImpl *This = (RpcStreamImpl *)iface;
   return ++(This->RefCount);
 }
 
 static ULONG WINAPI RpcStream_Release(LPSTREAM iface)
 {
-  ICOM_THIS(RpcStreamImpl, iface);
+  RpcStreamImpl *This = (RpcStreamImpl *)iface;
   if (!--(This->RefCount)) {
     TRACE("size=%ld\n", *This->size);
     This->pMsg->Buffer = This->data + *This->size;
@@ -123,7 +123,7 @@ static HRESULT WINAPI RpcStream_Read(LPSTREAM iface,
                                     ULONG cb,
                                     ULONG *pcbRead)
 {
-  ICOM_THIS(RpcStreamImpl, iface);
+  RpcStreamImpl *This = (RpcStreamImpl *)iface;
   if (This->pos + cb > *This->size) cb = *This->size - This->pos;
   if (cb) {
     memcpy(pv, This->data + This->pos, cb);
@@ -138,7 +138,7 @@ static HRESULT WINAPI RpcStream_Write(LPSTREAM iface,
                                      ULONG cb,
                                      ULONG *pcbWritten)
 {
-  ICOM_THIS(RpcStreamImpl, iface);
+  RpcStreamImpl *This = (RpcStreamImpl *)iface;
   memcpy(This->data + This->pos, pv, cb);
   This->pos += cb;
   if (This->pos > *This->size) *This->size = This->pos;
@@ -151,7 +151,7 @@ static HRESULT WINAPI RpcStream_Seek(LPSTREAM iface,
                                     DWORD origin,
                                     ULARGE_INTEGER *newPos)
 {
-  ICOM_THIS(RpcStreamImpl, iface);
+  RpcStreamImpl *This = (RpcStreamImpl *)iface;
   switch (origin) {
   case STREAM_SEEK_SET:
     This->pos = move.u.LowPart;
@@ -175,14 +175,13 @@ static HRESULT WINAPI RpcStream_Seek(LPSTREAM iface,
 static HRESULT WINAPI RpcStream_SetSize(LPSTREAM iface,
                                        ULARGE_INTEGER newSize)
 {
-  ICOM_THIS(RpcStreamImpl, iface);
+  RpcStreamImpl *This = (RpcStreamImpl *)iface;
   *This->size = newSize.u.LowPart;
   return S_OK;
 }
 
 static IStreamVtbl RpcStream_Vtbl =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   RpcStream_QueryInterface,
   RpcStream_AddRef,
   RpcStream_Release,
