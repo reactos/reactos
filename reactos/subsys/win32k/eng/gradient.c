@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: gradient.c,v 1.13 2004/12/14 04:26:49 royce Exp $
+/* $Id: gradient.c,v 1.13.2.1 2004/12/24 06:01:13 royce Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -529,7 +529,8 @@ IntEngGradientFill(
 {
   BOOL Ret;
   SURFOBJ *psoDest;
-  ASSERT(pboDest && psoDest && pco);
+  ASSERT(pboDest);
+  ASSERT(pco);
 
   psoDest = &pboDest->SurfObj;
   ASSERT(psoDest);
