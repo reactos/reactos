@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.85 2004/10/04 19:41:28 chorns Exp $
+# $Id: helper.mk,v 1.86 2004/10/04 20:04:49 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -18,6 +18,7 @@
 #                        subsystem = Kernel subsystem
 #                        kmdll = Kernel mode DLL
 #                        winedll = DLL imported from wine
+#                        kernel = ReactOS kernel
 #   $TARGET_APPTYPE    = Application type (windows,native,console).
 #                        Required only for TARGET_TYPEs program and proglib
 #   $TARGET_NAME       = Base name of output file and .rc, .def, and .edf files
@@ -334,6 +335,24 @@ ifeq ($(TARGET_TYPE),gdi_driver)
   MK_RES_BASE := $(TARGET_NAME)
 endif
 
+ifeq ($(TARGET_TYPE),kernel)
+  MK_MODE := kernel
+  MK_EXETYPE := dll
+  MK_DEFEXT := .exe
+  MK_DEFENTRY := _NtProcessStartup
+  MK_DDKLIBS := hal.a
+  MK_SDKLIBS :=
+  MK_CFLAGS := -D__NTOSKRNL__ -I.
+  MK_CPPFLAGS := -D__NTOSKRNL__ -I.
+  MK_IMPLIB := yes
+  MK_IMPLIBONLY := no
+  MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
+  MK_IMPLIB_EXT := .a
+  MK_INSTALLDIR := system32
+  MK_BOOTCDDIR := .
+  MK_RES_BASE := $(TARGET_NAME)
+endif
+
 
 # can be overidden with $(CXX) for linkage of c++ executables
 LD_CC = $(CC)
@@ -559,6 +578,10 @@ ifeq ($(MK_MODE),kernel)
   MK_LIBS := $(addprefix $(DDK_PATH_LIB)/, $(TARGET_DDKLIBS) $(MK_DDKLIBS))
   MK_CFLAGS += -D_SEH_NO_NATIVE_NLG
   MK_CPPFLAGS += -D_SEH_NO_NATIVE_NLG
+  MK_LFLAGS += -nostartfiles
+ifneq ($(TARGET_TYPE),kernel)
+  MK_LFLAGS += -nostdlib
+endif
 endif
 
 
@@ -597,6 +620,8 @@ TARGET_ASFLAGS += $(MK_ASFLAGS) $(STD_ASFLAGS)
 
 TARGET_NFLAGS += $(MK_NFLAGS) $(STD_NFLAGS)
 
+TARGET_LFLAGS += $(MK_LFLAGS) $(STD_LFLAGS)
+
 
 MK_GCCLIBS := $(addprefix -l, $(TARGET_GCCLIBS))
 
@@ -613,6 +638,8 @@ endif
 MK_IMPLIB_FULLNAME := $(MK_BASENAME)$(MK_IMPLIB_EXT)
 
 MK_NOSTRIPNAME := $(MK_BASENAME).nostrip$(MK_EXT)
+
+MK_EXTRADEP := $(filter %.h,$(TARGET_OBJECTS))
 
 # We don't want to link header files
 MK_OBJECTS := $(filter-out %.h,$(TARGET_OBJECTS))
@@ -651,7 +678,6 @@ $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(MK_OBJECTS) $(MK_DEFNAME)
 		--output-lib $(MK_IMPLIBPATH)/$(MK_BASENAME).a \
 		$(MK_KILLAT)
 
-
 else # MK_IMPLIBONLY
 
 all: $(REGTEST_TARGETS) $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(SUBDIRS:%=%_all)
@@ -663,22 +689,22 @@ else
   MK_EXTRACMD :=
 endif
 
+
 # User mode targets
 ifeq ($(MK_MODE),user)
 
 ifeq ($(MK_EXETYPE),dll)
   TARGET_LFLAGS += -mdll -Wl,--image-base,$(TARGET_BASE)
-  MK_EXTRADEP := $(MK_DEFNAME)
+  MK_EXTRADEP += $(MK_DEFNAME)
   MK_EXTRACMD2 := -Wl,temp.exp
 else
-  MK_EXTRADEP :=
   MK_EXTRACMD2 :=
 endif
 
 $(MK_BASENAME).a: $(MK_OBJECTS)
 	$(AR) -r $(MK_BASENAME).a $(MK_OBJECTS)
 
-$(MK_NOSTRIPNAME): $(MK_FULLRES) $(MK_BASENAME).a $(MK_EXTRADEP) $(MK_LIBS)
+$(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS)
 ifeq ($(MK_EXETYPE),dll)
 	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
@@ -766,14 +792,12 @@ ifeq ($(MK_IMPLIB),yes)
   MK_EXTRACMD := --def $(MK_DEFNAME)
 else
   MK_EXTRACMD :=
-  MK_EXTRADEP :=
 endif
 
-$(MK_NOSTRIPNAME): $(MK_FULLRES) $(MK_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS)
+$(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS)
 	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		$(TARGET_LFLAGS) \
-		-nostartfiles -nostdlib \
 		-o junk.tmp \
 		$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) junk.tmp
@@ -787,8 +811,7 @@ $(MK_NOSTRIPNAME): $(MK_FULLRES) $(MK_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS)
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,--entry,$(TARGET_ENTRY) \
-		-Wl,temp.exp \
-		-mdll -nostartfiles -nostdlib \
+		-Wl,temp.exp -mdll \
 		-o $(MK_NOSTRIPNAME) \
 	  	$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
@@ -799,7 +822,7 @@ else
 	$(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
 endif
 
-$(MK_FULLNAME): $(MK_FULLRES) $(MK_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS) $(MK_NOSTRIPNAME)
+$(MK_FULLNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_NOSTRIPNAME)
 	-
 ifneq ($(TARGET_CPPAPP),yes)
 	$(LD) --strip-debug -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
@@ -807,7 +830,6 @@ endif
 	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		$(TARGET_LFLAGS) \
-		-nostartfiles -nostdlib \
 		-o junk.tmp \
 		$(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) junk.tmp
@@ -821,8 +843,7 @@ endif
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,--entry,$(TARGET_ENTRY) \
-		-Wl,temp.exp \
-		-mdll -nostartfiles -nostdlib \
+		-Wl,temp.exp -mdll \
 		-o $(MK_FULLNAME) \
 	  	$(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
 ifneq ($(TARGET_CPPAPP),yes)
