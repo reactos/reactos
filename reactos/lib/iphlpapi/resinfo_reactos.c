@@ -50,11 +50,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
 PIPHLP_RES_INFO getResInfo() {
     PIPHLP_RES_INFO InfoPtr = 
-	(PIPHLP_RES_INFO)HeapAlloc( GetProcessHeap(), 0, 
-				    sizeof(PIPHLP_RES_INFO) );
+        (PIPHLP_RES_INFO)HeapAlloc( GetProcessHeap(), 0, 
+                                    sizeof(PIPHLP_RES_INFO) );
     if( InfoPtr ) {
-	InfoPtr->riCount = 0;
-	InfoPtr->riAddressList = (LPSOCKADDR)0;
+        InfoPtr->riCount = 0;
+        InfoPtr->riAddressList = (LPSOCKADDR)0;
     }
 
     return InfoPtr;

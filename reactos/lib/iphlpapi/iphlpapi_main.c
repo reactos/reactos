@@ -620,13 +620,13 @@ DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
             for (ndx = 0; ndx < table->numIndexes; ndx++) {
               PIP_ADAPTER_INFO ptr = &pAdapterInfo[ndx];
               DWORD addrLen = sizeof(ptr->Address), type;
-	      const char *ifname = 
-		  getInterfaceNameByIndex(table->indexes[ndx]);
+              const char *ifname = 
+                  getInterfaceNameByIndex(table->indexes[ndx]);
 
               /* on Win98 this is left empty, but whatever */
-	      
+              
               strncpy(ptr->AdapterName,ifname,sizeof(ptr->AdapterName));
-	      consumeInterfaceName(ifname);
+              consumeInterfaceName(ifname);
               ptr->AdapterName[MAX_ADAPTER_NAME_LENGTH] = '\0';
               getInterfacePhysicalByIndex(table->indexes[ndx], &addrLen,
                ptr->Address, &type);
@@ -973,7 +973,7 @@ DWORD WINAPI GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG dwOutBufLen)
              walker++, assigner++)
               *assigner = *walker;
             *assigner = 0;
-	    consumeInterfaceName(name);
+            consumeInterfaceName(name);
             pIfTable->NumAdapters++;
           }
           ret = NO_ERROR;
@@ -1125,7 +1125,7 @@ DWORD WINAPI GetIpForwardTable(PMIB_IPFORWARDTABLE pIpForwardTable, PULONG pdwSi
   DWORD ret;
   
   TRACE("pIpForwardTable %p, pdwSize %p, bOrder %ld\n", pIpForwardTable,
-	pdwSize, (DWORD)bOrder);
+        pdwSize, (DWORD)bOrder);
   if (!pdwSize)
     ret = ERROR_INVALID_PARAMETER;
   else {
@@ -1358,11 +1358,11 @@ DWORD WINAPI GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
 
     for (i = 0, ptr = &pFixedInfo->DnsServerList; i < resInfo->riCount && ptr;
      i++, ptr = ptr->Next) {
-	struct sockaddr_in *addr_v4 = 
-	    (struct sockaddr_in *)&resInfo->riAddressList[i];
-	toIPAddressString
-	    (addr_v4->sin_addr.s_addr,
-	     ptr->IpAddress.String);
+        struct sockaddr_in *addr_v4 = 
+            (struct sockaddr_in *)&resInfo->riAddressList[i];
+        toIPAddressString
+            (addr_v4->sin_addr.s_addr,
+             ptr->IpAddress.String);
       if (i == resInfo->riCount - 1)
         ptr->Next = NULL;
       else if (i == 0)

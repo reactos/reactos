@@ -7,17 +7,17 @@ int GetLongestChildKeyName( HANDLE RegHandle ) {
   DWORD MaxAdapterName;
 
   Status = RegQueryInfoKeyA(RegHandle, 
-			    NULL, 
-			    NULL, 
-			    NULL, 
-			    NULL, 
-			    &MaxAdapterName, 
-			    NULL, 
-			    NULL, 
-			    NULL, 
-			    NULL, 
-			    NULL, 
-			    NULL);
+                            NULL, 
+                            NULL, 
+                            NULL, 
+                            NULL, 
+                            &MaxAdapterName, 
+                            NULL, 
+                            NULL, 
+                            NULL, 
+                            NULL, 
+                            NULL, 
+                            NULL);
   if (Status == ERROR_SUCCESS) 
     return MaxAdapterName + 1;
   else
@@ -25,13 +25,13 @@ int GetLongestChildKeyName( HANDLE RegHandle ) {
 }
 
 LONG OpenChildKeyRead( HANDLE RegHandle, 
-		       PCHAR ChildKeyName, 
-		       PHKEY ReturnHandle ) {
+                       PCHAR ChildKeyName, 
+                       PHKEY ReturnHandle ) {
   return RegOpenKeyExA( RegHandle, 
-			ChildKeyName, 
-			0,
-			KEY_READ,
-			ReturnHandle );
+                        ChildKeyName, 
+                        0,
+                        KEY_READ,
+                        ReturnHandle );
 }
 
 /*
@@ -52,7 +52,7 @@ PCHAR GetNthChildKeyName( HANDLE RegHandle, DWORD n ) {
   ValueLen = MaxAdapterName;
   Value = (PCHAR)HeapAlloc( GetProcessHeap(), 0, MaxAdapterName );
   Status = RegEnumKeyExA( RegHandle, n, Value, &ValueLen, 
-			  NULL, NULL, NULL, NULL );
+                          NULL, NULL, NULL, NULL );
   if (Status != ERROR_SUCCESS)
     return 0;
   else {
@@ -70,12 +70,12 @@ PCHAR QueryRegistryValueString( HANDLE RegHandle, PCHAR ValueName ) {
   DWORD ReturnedSize = 0;
   
   if (RegQueryValueExA( RegHandle, ValueName, NULL, NULL, NULL, 
-			&ReturnedSize ) != 0) 
+                        &ReturnedSize ) != 0) 
     return 0;
   else {
     Name = malloc( (ReturnedSize + 1) * sizeof(WCHAR) );
     RegQueryValueExA( RegHandle, ValueName, NULL, NULL, (PVOID)Name, 
-		      &ReturnedSize );
+                      &ReturnedSize );
     Name[ReturnedSize] = 0;
     return Name;
   }
