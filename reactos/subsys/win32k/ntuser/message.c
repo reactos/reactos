@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.61 2004/05/05 22:13:17 weiden Exp $
+/* $Id: message.c,v 1.62 2004/05/05 22:26:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -450,10 +450,9 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
         {
           if(Wnd != Window)
           {
-            MSG NewMsg = *Msg;
             /* post the message to the other window */
-            NewMsg.hwnd = Wnd->Self;
-            MsqPostMessage(Wnd->MessageQueue, &NewMsg, FALSE);
+            Msg->hwnd = Wnd->Self;
+            MsqPostMessage(Wnd->MessageQueue, Msg, FALSE);
             
             /* eat the message */
             IntReleaseWindowObject(Wnd);

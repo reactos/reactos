@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.223 2004/05/02 17:25:21 weiden Exp $
+/* $Id: window.c,v 1.224 2004/05/05 22:26:04 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1144,121 +1144,137 @@ NtUserBuildHwndList(
   HWND* pWnd,
   ULONG nBufSize)
 {
+  NTSTATUS Status;
   ULONG dwCount = 0;
 
   /* FIXME handle bChildren */
-  if ( hwndParent )
+  
+  if(hwndParent)
+  {
+    PWINDOW_OBJECT Window, Child;
+    if(!(Window = IntGetWindowObject(hwndParent)))
     {
-      PWINDOW_OBJECT WindowObject = NULL;
-      PWINDOW_OBJECT Child;
-
-      WindowObject = IntGetWindowObject ( hwndParent );
-      if ( !WindowObject )
-	{
-	  DPRINT("Bad window handle 0x%x\n", hwndParent);
-	  SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-	  return 0;
-	}
-
-      IntLockRelatives(WindowObject );
-      Child = WindowObject->FirstChild;
-      while (Child)
-	{
-	  if ( pWnd && dwCount < nBufSize )
-	    pWnd[dwCount] = Child->Self;
-	  dwCount++;
-    Child = Child->NextSibling;
-	}
-      IntUnLockRelatives(WindowObject);
-      IntReleaseWindowObject ( WindowObject );
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return 0;
     }
-  else if ( dwThreadId )
+    
+    IntLockRelatives(Window);
+    for(Child = Window->FirstChild; Child != NULL; Child = Child->NextSibling)
     {
-      NTSTATUS Status;
-      struct _ETHREAD* Thread;
-      struct _EPROCESS* ThreadsProcess;
-      struct _W32PROCESS*   Win32Process;
-      struct _WINSTATION_OBJECT* WindowStation;
-      PUSER_HANDLE_TABLE HandleTable;
-      PLIST_ENTRY Current;
-      PUSER_HANDLE_BLOCK Block = NULL;
-      ULONG i;
-
-      Status = PsLookupThreadByThreadId ( (PVOID)dwThreadId, &Thread );
-      if ( !NT_SUCCESS(Status) || !Thread )
-	{
-	  DPRINT("Bad ThreadId 0x%x\n", dwThreadId );
-	  SetLastWin32Error(ERROR_INVALID_HANDLE);
-	  return 0;
-	}
-      ThreadsProcess = Thread->ThreadsProcess;
-      ASSERT(ThreadsProcess);
-      Win32Process = ThreadsProcess->Win32Process;
-      ASSERT(Win32Process);
-      WindowStation = Win32Process->WindowStation;
-      ASSERT(WindowStation);
-      HandleTable = (PUSER_HANDLE_TABLE)(WindowStation->HandleTable);
-      ASSERT(HandleTable);
-
+      if(dwCount++ < nBufSize && pWnd)
+      {
+        Status = MmCopyToCaller(pWnd++, &Child->Self, sizeof(HWND));
+        if(!NT_SUCCESS(Status))
+        {
+          SetLastNtError(Status);
+          break;
+        }
+      }
+    }
+    IntUnLockRelatives(Window);
+    
+    IntReleaseWindowObject(Window);
+  }
+  else if(dwThreadId)
+  {
+    PETHREAD Thread;
+    PW32THREAD W32Thread;
+    PLIST_ENTRY Current;
+    PWINDOW_OBJECT *Window;
+    
+    Status = PsLookupThreadByThreadId((PVOID)dwThreadId, &Thread);
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
+    }
+    if(!(W32Thread = Thread->Win32Thread))
+    {
       ObDereferenceObject(Thread);
-
-      ObmpLockHandleTable(HandleTable);
-
-      Current = HandleTable->ListHead.Flink;
-      while ( Current != &HandleTable->ListHead )
-	{
-	  Block = CONTAINING_RECORD(Current, USER_HANDLE_BLOCK, ListEntry);
-	  for ( i = 0; i < HANDLE_BLOCK_ENTRIES; i++ )
-	    {
-	      PVOID ObjectBody = Block->Handles[i].ObjectBody;
-	      if ( ObjectBody )
-	      {
-		if ( pWnd && dwCount < nBufSize )
-		  {
-		    pWnd[dwCount] =
-		      (HWND)IntReferenceWindowObject(ObjectBody);
-		  }
-		dwCount++;
-	      }
-	    }
-	  Current = Current->Flink;
-	}
-
-      ObmpUnlockHandleTable(HandleTable);
+      DPRINT1("Thread is not a GUI Thread!\n");
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
     }
-  else
+    
+    IntLockThreadWindows(W32Thread);
+    Current = W32Thread->WindowListHead.Flink;
+    while(Current != &(W32Thread->WindowListHead))
     {
-      PDESKTOP_OBJECT DesktopObject = NULL;
-      KIRQL OldIrql;
-      PWINDOW_OBJECT Child, WndDesktop;
-
-#if 0
-      if ( hDesktop )
-	DesktopObject = IntGetDesktopObject ( hDesktop );
-      else
-#endif
-	DesktopObject = IntGetActiveDesktop();
-      if (!DesktopObject)
-	{
-	  DPRINT("Bad desktop handle 0x%x\n", hDesktop );
-	  SetLastWin32Error(ERROR_INVALID_HANDLE);
-	  return 0;
-	}
-
-      KeAcquireSpinLock ( &DesktopObject->Lock, &OldIrql );
-
-      WndDesktop = IntGetWindowObject(DesktopObject->DesktopWindow);
-      Child = (WndDesktop ? WndDesktop->FirstChild : NULL);
-      while (Child)
-	{
-	  if ( pWnd && dwCount < nBufSize )
-	    pWnd[dwCount] = Child->Self;
-	  dwCount++;
-    Child = Child->NextSibling;
-	}
-      KeReleaseSpinLock ( &DesktopObject->Lock, OldIrql );
+      *Window = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
+      ASSERT(*Window);
+      
+      if(dwCount < nBufSize && pWnd && ((*Window)->Style & WS_CHILD))
+      {
+        Status = MmCopyToCaller(pWnd++, &(*Window)->Self, sizeof(HWND));
+        if(!NT_SUCCESS(Status))
+        {
+          SetLastNtError(Status);
+          break;
+        }
+      }
+      
+      if(!((*Window)->Style & WS_CHILD))
+      {
+        dwCount++;
+      }
+      
+      Current = Current->Flink;
     }
-
+    IntUnLockThreadWindows(W32Thread);
+    
+    ObDereferenceObject(Thread);
+  }
+  else
+  {
+    PDESKTOP_OBJECT Desktop;
+    PWINDOW_OBJECT Window, Child;
+    
+    if(hDesktop == NULL && !(Desktop = IntGetActiveDesktop()))
+    {                  
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return 0;
+    }
+    
+    if(hDesktop)
+    {
+      Status = IntValidateDesktopHandle(hDesktop,
+                                        UserMode,
+                                        0,
+                                        &Desktop);
+      if(!NT_SUCCESS(Status))
+      {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return 0;
+      }
+    }
+    if(!(Window = IntGetWindowObject(Desktop->DesktopWindow)))
+    {
+      if(hDesktop)
+        ObDereferenceObject(Desktop);
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return 0;
+    }
+    
+    IntLockRelatives(Window);
+    for(Child = Window->FirstChild; Child != NULL; Child = Child->NextSibling)
+    {
+      if(dwCount++ < nBufSize && pWnd)
+      {
+        Status = MmCopyToCaller(pWnd++, &Child->Self, sizeof(HWND));
+        if(!NT_SUCCESS(Status))
+        {
+          SetLastNtError(Status);
+          break;
+        }
+      }
+    }
+    IntUnLockRelatives(Window);
+    
+    IntReleaseWindowObject(Window);
+    if(hDesktop)
+      ObDereferenceObject(Desktop);
+  }
+  
   return dwCount;
 }
 
