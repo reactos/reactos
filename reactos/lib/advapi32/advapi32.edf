@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.16 2002/08/17 15:57:22 robd Exp $
+; $Id: advapi32.edf,v 1.17 2003/01/07 17:32:58 robd Exp $
 ;
 ; advapi32.edf
 ;
@@ -206,7 +206,7 @@ LookupPrivilegeValueW=LookupPrivilegeValueW@12
 ;LsaAddAccountRights=LsaAddAccountRights@16
 ;LsaAddPrivilegesToAccount=LsaAddPrivilegesToAccount@8
 ;LsaClearAuditLog=LsaClearAuditLog@4
-;LsaClose=LsaClose@4
+LsaClose=LsaClose@4
 ;LsaCreateAccount=LsaCreateAccount@16
 ;LsaCreateSecret=LsaCreateSecret@16
 ;LsaCreateTrustedDomain=LsaCreateTrustedDomain@16
@@ -218,7 +218,7 @@ LookupPrivilegeValueW=LookupPrivilegeValueW@12
 ;LsaEnumeratePrivileges=LsaEnumeratePrivileges@20
 ;LsaEnumeratePrivilegesOfAccount=LsaEnumeratePrivilegesOfAccount@8
 ;LsaEnumerateTrustedDomains=LsaEnumerateTrustedDomains@20
-;LsaFreeMemory=LsaFreeMemory@4
+LsaFreeMemory=LsaFreeMemory@4
 ;LsaGetQuotasForAccount=LsaGetQuotasForAccount@8
 ;LsaGetSystemAccessAccount=LsaGetSystemAccessAccount@8
 ;LsaGetUserName=LsaGetUserName@8
@@ -229,13 +229,13 @@ LookupPrivilegeValueW=LookupPrivilegeValueW@12
 ;LsaLookupPrivilegeName=LsaLookupPrivilegeName@12
 ;LsaLookupPrivilegeValue=LsaLookupPrivilegeValue@12
 ;LsaLookupSids=LsaLookupSids@20
-;LsaNtStatusToWinError=LsaNtStatusToWinError@4
+LsaNtStatusToWinError=LsaNtStatusToWinError@4
 ;LsaOpenAccount=LsaOpenAccount@16
-;LsaOpenPolicy=LsaOpenPolicy@16
+LsaOpenPolicy=LsaOpenPolicy@16
 ;LsaOpenSecret=LsaOpenSecret@16
 ;LsaOpenTrustedDomain=LsaOpenTrustedDomain@16
 ;LsaQueryInfoTrustedDomain=LsaQueryInfoTrustedDomain@12
-;LsaQueryInformationPolicy=LsaQueryInformationPolicy@12
+LsaQueryInformationPolicy=LsaQueryInformationPolicy@12
 ;LsaQuerySecret=LsaQuerySecret@20
 ;LsaQuerySecurityObject=LsaQuerySecurityObject@12
 ;LsaQueryTrustedDomainInfo=LsaQueryTrustedDomainInfo@16
