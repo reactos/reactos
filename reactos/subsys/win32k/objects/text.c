@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.105 2004/07/14 20:48:58 navaraf Exp $ */
+/* $Id: text.c,v 1.106 2004/07/23 20:46:20 jfilby Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -2611,7 +2611,11 @@ NtGdiGetTextMetrics(HDC hDC,
   	SafeTm.tmAscent = (Face->size->metrics.ascender + 32) >> 6; // units above baseline
 	SafeTm.tmDescent = (32 - Face->size->metrics.descender) >> 6; // units below baseline
 	SafeTm.tmHeight = SafeTm.tmAscent + SafeTm.tmDescent;
-        SafeTm.tmMaxCharWidth = (Face->size->metrics.max_advance + 32) >> 6;
+    SafeTm.tmMaxCharWidth = (Face->size->metrics.max_advance + 32) >> 6;
+    if (FT_IS_SFNT(FontGDI->face))
+    {
+      SafeTm.tmPitchAndFamily |= TMPF_TRUETYPE;
+    }
 	Status = MmCopyToCaller(tm, &SafeTm, sizeof(TEXTMETRICW));
 	}
     }
