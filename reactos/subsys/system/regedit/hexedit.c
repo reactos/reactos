@@ -157,22 +157,22 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
     
     for(; First <= Last && current < end; First++)
     {
-      int strlen;
+      int slen;
       
       dx = hed->LeftMargin;
       /* draw address */
       _stprintf(addr, _T("%04X"), linestart);
-      strlen = _tcslen(addr);
-      TextOut(hDC, dx, dy, addr, strlen);
-      dx += (strlen + 2) * hed->CharWidth;
+      slen = _tcslen(addr);
+      TextOut(hDC, dx, dy, addr, slen);
+      dx += (slen + 2) * hed->CharWidth;
       
       /* draw byte map */
       for(x = 0; x < 8 && current < end; x++)
       {
 	_stprintf(hex, _T("%02X"), *(current++));
-	strlen = _tcslen(hex);
-	TextOut(hDC, dx, dy, hex, strlen);
-	dx += ((strlen + 1) * hed->CharWidth);
+	slen = _tcslen(hex);
+	TextOut(hDC, dx, dy, hex, slen);
+	dx += ((slen + 1) * hed->CharWidth);
       }
       
       dy += hed->LineHeight;
