@@ -15,3 +15,5 @@ int getc(FILE *f)
 	  return -1;
   return c;
 }
+
+

@@ -4,5 +4,11 @@
 #undef isgraph
 int isgraph(int c)
 {
-  return 0;
+  return _isctype(c,_GRAPH);
+}
+
+#undef iswgraph
+int iswgraph(int c)
+{
+	return iswctype(c,_GRAPH);
 }

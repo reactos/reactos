@@ -1,16 +1,23 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/conio/putch.c
- * PURPOSE:     Writes a character to stdout
+ * FILE:        lib/crtdll/ctype/isalnum.c
+ * PURPOSE:     Test for a alpha numeric character
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
 #include <ctype.h>
 
+
 #undef isalnum
 int isalnum(int c)
 {
-   return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')  || (c >= '0' && c <= '9'));
+   return _isctype(c,_ALPHA | _DIGIT);
+}
+
+#undef iswalnum
+int iswalnum(wint_t c)
+{
+   return iswctype(c,_ALPHA | _DIGIT);
 }

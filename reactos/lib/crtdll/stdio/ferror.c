@@ -2,7 +2,11 @@
 #include <stdio.h>
 #include <libc/file.h>
 
+#ifdef ferror
 #undef ferror
+ferror(FILE *stream);
+#endif
+
 int
 ferror(FILE *stream)
 {

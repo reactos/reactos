@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-FILE *fdopen(int handle, char *mode)
+FILE *_fdopen(int handle, char *mode)
 {
   FILE *file;
   int rw;

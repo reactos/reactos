@@ -2,7 +2,11 @@
 #include <stdio.h>
 #include <libc/file.h>
 
-#undef	clearerr
+#ifdef clearerr
+#undef clearerr
+void clearerr(FILE *stream);
+#endif
+
 void
 clearerr(FILE *f)
 {

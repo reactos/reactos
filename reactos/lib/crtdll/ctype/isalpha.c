@@ -13,5 +13,11 @@
 #undef isalpha
 int isalpha(int c)
 {
- return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+ 	return _isctype(c,_ALPHA);
+}
+
+#undef iswalpha
+int iswalpha(int c)
+{
+	return iswctype(c,_ALPHA);
 }

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/conio/cputs.c
+ * FILE:        lib/crtdll/io/open.c
  * PURPOSE:     Opens a file and translates handles to fileno
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
@@ -34,10 +34,6 @@ char __is_text_file(FILE *p) {
 	return (!((p)->_flag&_IOSTRG) && (fileno_modes[(p)->_file].mode&O_TEXT));
 }
 
-
-
-
-int __fileno_alloc(HANDLE hFile, int mode);
 
 
 int _open(const char *_path, int _oflag,...)
@@ -133,7 +129,7 @@ __fileno_alloc(HANDLE hFile, int mode)
   for(i=minfno;i<maxfno;i++) {
 	if (fileno_modes[i].fd == -1 ) {
 		fileno_modes[i].fd = i;
-		fileno_modes[i].mode = 666;
+		fileno_modes[i].mode = mode;
 		fileno_modes[i].hFile = hFile;
 		return i;
 	}
@@ -157,7 +153,7 @@ __fileno_alloc(HANDLE hFile, int mode)
 
   /* Fill in the value */
   fileno_modes[i].fd = i;
-  fileno_modes[i].mode = _fmode;
+  fileno_modes[i].mode = mode;
   fileno_modes[i].hFile = hFile;
   return i;
 }

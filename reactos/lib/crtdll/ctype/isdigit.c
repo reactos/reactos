@@ -4,5 +4,11 @@
 #undef isdigit
 int isdigit(int c)
 {
-   return (c >= '0' && c <= '9');
+   return _isctype(c,_DIGIT);
+}
+
+#undef iswdigit
+int iswdigit(int c)
+{
+   return iswctype(c,_DIGIT);
 }

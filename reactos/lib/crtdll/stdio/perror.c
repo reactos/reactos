@@ -4,6 +4,10 @@
 #include <errno.h>
 
 
+#ifdef perror
+#undef perror
+void perror(const char *s);
+#endif
 
 void
 perror(const char *s)

@@ -2,8 +2,11 @@
 #include <stdio.h>
 #include <libc/file.h>
 
+#ifdef feof
 #undef feof
-int
+feof(FILE *stream);
+#endif
+
 feof(FILE *stream)
 {
   return stream->_flag & _IOEOF;

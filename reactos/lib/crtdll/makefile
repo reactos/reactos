@@ -2,15 +2,17 @@
 all: crtdll.a
 
 
-CTYPE_OBJECTS = ctype/ct_flags.o ctype/ct_lower.o ctype/ct_upper.o ctype/isalnum.o \
+CTYPE_OBJECTS = ctype/isalnum.o \
 		ctype/isalpha.o ctype/isascii.o ctype/iscntrl.o ctype/isdigit.o ctype/isgraph.o \
 		ctype/islower.o ctype/isprint.o ctype/ispunct.o ctype/isspace.o ctype/isupper.o \
-		ctype/isxdigit.o ctype/toascii.o ctype/tolower.o ctype/toupper.o
+		ctype/isxdigit.o ctype/toascii.o ctype/tolower.o ctype/toupper.o\
+		ctype/iscsym.o ctype/isctype.o
 
 CONIO_OBJECTS = conio/cputs.o conio/getch.o conio/getche.o conio/putch.o conio/ungetch.o
 
 DIRECT_OBJECTS = direct/chdir.o direct/chdrive.o direct/getcwd.o direct/getdrive.o \
 		 direct/rmdir.o direct/mkdir.o direct/getdfree.o
+
 
 MISC_OBJECTS =  misc/sleep.o  misc/getargs.o misc/crtfmode.o misc/crtglob.o
 
@@ -46,7 +48,9 @@ STDIO_OBJECTS = stdio/getenv.o stdio/doprnt.o stdio/doscan.o stdio/filbuf.o  \
 
 
 IO_OBJECTS = io/access.o io/close.o io/create.o io/dup.o io/dup2.o io/find.o io/isatty.o io/lseek.o \
-		io/open.o io/read.o io/setmode.o io/unlink.o io/write.o io/fmode.o io/mktemp.o
+		io/open.o io/read.o io/setmode.o io/unlink.o io/write.o io/fmode.o io/mktemp.o\
+		io/chmod.o io/chsize.o io/commit.o io/locking.o io/pipe.o io/sopen.o io/filelen.o\
+		io/umask.o io/tell.o io/eof.o
 
 STDLIB_OBJECTS = stdlib/abort.o stdlib/abs.o stdlib/atexit.o stdlib/atof.o stdlib/atoi.o stdlib/atold.o \
 		 stdlib/bsearch.o stdlib/div.o stdlib/errno.o  stdlib/exit.o \
@@ -55,22 +59,30 @@ STDLIB_OBJECTS = stdlib/abort.o stdlib/abs.o stdlib/atexit.o stdlib/atof.o stdli
 		 stdlib/rand.o stdlib/senv.o stdlib/splitp.o stdlib/strtod.o stdlib/strtol.o \
 		 stdlib/strtoul.o stdlib/strtold.o 
 
-PROCESS_OBJECTS = process/spawnl.o process/spawnlp.o process/spawnlpe.o  process/spawnvpe.o process/spawnvp.o \
+SIGNAL_OBJECTS = signal/signal.o
+
+PROCESS_OBJECTS = process/cwait.o process/dll.o process/spawnl.o process/spawnlp.o process/spawnlpe.o  process/spawnvpe.o process/spawnvp.o \
 		process/spawnv.o process/spawnve.o process/spawnle.o process/execl.o process/execlp.o process/execlpe.o  \
 		process/execvpe.o process/execvp.o process/execv.o process/execle.o
 
 TIME_OBJECTS = time/ctime.o time/difftime.o time/strftime.o 
 
-FLOAT_OBJECTS = float/fpreset.o 
+FLOAT_OBJECTS = float/fpreset.o float/clearfp.o float/cntrlfp.o float/statfp.o
 
 SYS_STAT_OBJECTS = sys_stat/fstat.o sys_stat/stat.o 
 
+MATH_OBJECTS = math/acos.o math/acosh.o math/asin.o math/asinh.o math/atan.o math/atan2.o\
+		math/atanh.o math/ceil.o math/cos.o math/cosh.o math/exp.o math/fabs.o\
+		math/floor.o math/fmod.o math/frexp.o math/huge_val.o math/hypot.o\
+		math/ldexp.o math/log.o math/log10.o math/modf.o math/modfl.o math/pow.o\
+		math/pow10.o math/pow2.o math/sin.o math/sinh.o math/sqrt.o math/tan.o\
+		math/tanh.o
 
 
 OBJECTS = $(CTYPE_OBJECTS) $(CONIO_OBJECTS) $(DIRECT_OBJECTS) $(MISC_OBJECTS) \
 	  $(STRING_OBJECTS)  $(STDIO_OBJECTS) $(STDLIB_OBJECTS) \
-	  $(IO_OBJECTS) $(PROCESS_OBJECTS) $(TIME_OBJECTS) $(FLOAT_OBJECTS) \
-	  $(SYS_STAT_OBJECTS)
+	  $(IO_OBJECTS) $(PROCESS_OBJECTS) $(TIME_OBJECTS)  \
+	  $(SYS_STAT_OBJECTS) $(SIGNAL_OBJECTS) $(MATH_OBJECTS) $(FLOAT_OBJECTS)
 
 
 crtdll.a: $(OBJECTS)

@@ -4,5 +4,10 @@
 #undef islower
 int islower(int c)
 {
-  return (c >= 'a' && c <= 'z');
+  return _isctype((unsigned char)c,_LOWER);
+}
+
+int iswlower(int c)
+{
+  return iswctype((unsigned short)c,_LOWER);
 }

@@ -1,24 +1,25 @@
-
+/* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 #include <ctype.h>
 
 
+#define __dj_ISUPPER	_UPPER
+#define __dj_ISLOWER	_LOWER
+#define __dj_ISDIGIT	_DIGIT	
+#define __dj_ISSPACE	_SPACE
+#define __dj_ISPUNCT	_PUNCT
+#define __dj_ISCNTRL	_CONTROL
+#define __dj_ISBLANK	_BLANK	
+#define __dj_ISXDIGIT	_HEX
+#define __dj_ISALPHA	_ALPHA
+#define __dj_ISPRINT	_PRINT
+#define __dj_ISALNUM 	( _ALPHA | _DIGIT )
+#define __dj_ISGRAPH	_GRAPH
 
-#define __dj_ISUPPER	0x1
-#define __dj_ISLOWER	0x2
-#define __dj_ISDIGIT	0x4	
-#define __dj_ISSPACE	0x8
-#define __dj_ISPUNCT	0x10
-#define __dj_ISCNTRL	0x20
-#define __dj_ISBLANK	0x40	
-#define __dj_ISXDIGIT	0x80
-#define __dj_ISPRINT	(__dj_ISBLANK|__dj_ISPUNCT|__dj_ISUPPER|__dj_ISLOWER|__dj_ISDIGIT)
-#define __dj_ISALNUM 	(__dj_ISUPPER|__dj_ISLOWER|__dj_ISDIGIT)
-#define __dj_ISGRAPH	(__dj_ISPUNCT|__dj_ISUPPER|__dj_ISLOWER|__dj_ISDIGIT)
-#define __dj_ISALPHA	(0x0100|__dj_ISUPPER|__dj_ISLOWER)
+int __mb_cur_max = 2;
 
+// removed the first value
 
-unsigned short __dj_ctype_flags[] = {
-  0,												/* CTRL+?, 0xffff */
+unsigned short _pctype_dll[] = {
   __dj_ISCNTRL,											/* CTRL+@, 0x00 */
   __dj_ISCNTRL,											/* CTRL+A, 0x01 */
   __dj_ISCNTRL,											/* CTRL+B, 0x02 */
@@ -277,14 +278,27 @@ unsigned short __dj_ctype_flags[] = {
   0,												/* 0xff */
 };
 
+unsigned short *_ctype = _pctype_dll -1; // unused
+unsigned short *_pwctype_dll = _pctype_dll;
 
 
-int _isctype(int c, int t)
+int _isctype(unsigned char c, int t)
 {		
 
-	return (__dj_ctype_flags[(c & 0xFF)]&t == t );
+	return ((_pctype_dll[(c & 0xFF)]&t) == t );
 }
 
-unsigned short *_pctype = __dj_ctype_flags;
+int iswctype(unsigned short c, int t)
+{		
 
-int __mb_cur_max = 2;
+	return ((_pwctype_dll[(c & 0xFF)]&t) == t );
+}
+
+// obsolete
+int is_wctype(unsigned short c, int t)
+{		
+
+	return ((_pctype_dll[(c & 0xFF)]&t) == t );
+}
+
+

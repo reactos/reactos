@@ -4,5 +4,11 @@
 #undef ispunct
 int ispunct(int c)
 {
-  return (c == '.');
+  return _isctype(c,_PUNCT);
+}
+
+#undef iswpunct
+int iswpunct(int c)
+{
+  return iswctype(c,_PUNCT);
 }

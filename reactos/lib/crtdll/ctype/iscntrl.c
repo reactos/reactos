@@ -4,5 +4,11 @@
 #undef iscntrl
 int iscntrl(int c)
 {
-  return ((c >=0x00 && c <= 0x1f) || c == 0x7f) ;
+  return _isctype(c,_CONTROL);
+}
+
+#undef iswcntrl
+int iswcntrl(int c)
+{
+  return iswctype(c,_CONTROL);
 }

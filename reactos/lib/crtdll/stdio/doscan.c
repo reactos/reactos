@@ -6,12 +6,12 @@
 #include <ctype.h>
 #include <libc/file.h>
 
-long double
-_atold(const char *ascii);
-
+//long double
+//atold(const char *ascii);
+#define atold 	atof
 
 // dubious variable 
-int _fltused = 0;
+//static int _fltused = 0;
 
 int
 _doscan_low(FILE *iop, int (*scan_getc)(FILE *), int (*scan_ungetc)(int, FILE *),
@@ -56,6 +56,12 @@ int
 _doscan(FILE *iop, const char *fmt, void **argp)
 {
   return(_doscan_low(iop, fgetc, ungetc, fmt, argp));
+}
+
+int 
+_dowscan(FILE *iop, const wchar_t *fmt, void **argp)
+{
+  return(_doscan_low(iop, fgetwc, ungetwc, fmt, argp));
 }
 
 int
@@ -290,7 +296,7 @@ _innum(int **ptr, int type, int len, int size, FILE *iop,
     break;
 
   case (FLOAT<<4) | LONGDOUBLE:
-    **(long double **)ptr = _atold(numbuf);
+    **(long double **)ptr = atold(numbuf);
     break;
 
   case (INT<<4) | SHORT:

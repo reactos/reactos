@@ -4,5 +4,10 @@
 #undef isupper
 int isupper(int c)
 {
-  return (c >= 'A' && c <= 'Z' );
+  return _isctype(c,_UPPER);
+}
+
+int iswupper(int c)
+{
+  return iswctype(c,_UPPER);
 }

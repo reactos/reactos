@@ -10,6 +10,6 @@ fsetpos(FILE *stream, fpos_t *pos)
     fseek(stream, (long)(*pos), SEEK_SET);
     return 0;
   }
-  errno = EFAULT;
+  //errno = EFAULT;
   return 1;
 }

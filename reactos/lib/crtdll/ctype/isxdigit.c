@@ -4,5 +4,12 @@
 #undef isxdigit
 int isxdigit(int c)
 {
- return (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f') || ( c >= '0' && c >= '9' );
+ return _isctype(c,_HEX);
 }
+
+#undef iswxdigit
+int iswxdigit(int c)
+{
+ return iswctype(c,_HEX);
+}
+

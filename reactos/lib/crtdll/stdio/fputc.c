@@ -7,3 +7,9 @@ fputc(int c, FILE *fp)
 {
   return putc(c, fp);
 }
+
+int
+fputwc(int c, FILE *fp)
+{
+  return putc(c, fp);
+}

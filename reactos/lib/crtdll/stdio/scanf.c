@@ -13,3 +13,15 @@ scanf(const char *fmt, ...)
   va_end(a);
   return r;
 }
+
+int
+wscanf(const wchar_t *fmt, ...)
+{
+  int r;
+  va_list a=0;
+  va_start(a, fmt);
+  r = _dowscan(stdin, fmt, a);
+  va_end(a);
+  return r;
+}
+

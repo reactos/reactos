@@ -10,15 +10,14 @@
 
 #include <ctype.h>
 
-#undef isascii
-int isascii(int c)
-{
-  return  ( (unsigned)(c) <0x80 ) ;
-}
-
 int __isascii(int c)
 {
-  return  ( (unsigned)(c) <0x80 ) ;
+  return  (!((c)&(~0x7f))) ;
+}
+
+int iswascii(int c)
+{
+	return __isascii(c);
 }
 
 

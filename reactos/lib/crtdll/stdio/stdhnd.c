@@ -4,7 +4,7 @@
 
 
 
-FILE _iob[] = 
+FILE _crtdll_iob[] = 
 {
 	// stdin
 {
@@ -37,3 +37,5 @@ FILE _iob[] =
   4, 0,0,NULL
 }
 };
+
+FILE (*__imp__iob)[] = &_crtdll_iob;

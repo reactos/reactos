@@ -4,7 +4,7 @@
 int
 _chmod(const char *filename, int func)
 {
-	DWROD FileAttributes = 0;
+	DWORD FileAttributes = 0;
 	if ( func == _S_IREAD )
 		FileAttributes &= FILE_ATTRIBUTE_READONLY;
 	if ( ((func & _S_IREAD) == _S_IREAD) && ((func & _S_IWRITE) == _S_IWRITE) )

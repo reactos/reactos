@@ -10,6 +10,6 @@ fgetpos(FILE *stream, fpos_t *pos)
     *pos = (fpos_t)ftell(stream);
     return 0;
   }
-  errno = EFAULT;
+  //errno = EFAULT;
   return 1;
 }

@@ -13,3 +13,14 @@ fscanf(FILE *f, const char *fmt, ...)
   va_end(a);
   return r;
 }
+
+int
+fwscanf(FILE *f, const wchar_t *fmt, ...)
+{
+  int r;
+  va_list a=0;
+  va_start(a, fmt);
+  r = _dowscan(f, fmt,(void *) a);
+  va_end(a);
+  return r;
+}

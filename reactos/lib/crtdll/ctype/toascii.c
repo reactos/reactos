@@ -2,13 +2,8 @@
 
 #include <ctype.h>
 
-#undef toascii
-int toascii(int c)
-{
-  return (c);
-}
 
 int __toascii(int c)
 {
-  return (c);
+  return ((unsigned)(c) & 0x7F );
 }

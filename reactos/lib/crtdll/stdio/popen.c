@@ -4,14 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <unistd.h>
 #include <libc/file.h>
-
-
-
-int __fileno_alloc(HANDLE hFile, int mode);
-
-
 
 FILE *
 _popen (const char *cm, const char *md) /* program name, pipe mode */
@@ -36,10 +29,10 @@ _popen (const char *cm, const char *md) /* program name, pipe mode */
 
 
   if ( *md == 'r' ) {
-	pf =  _fdopen( __fileno_alloc(hReadPipe,  O_RDONLY) , "r" );
+	pf =  _fdopen( __fileno_alloc(hReadPipe,  _fmode) , "r" );
   }
   else {
-	pf =  _fdopen( __fileno_alloc(hWritePipe, _O_WRONLY) , "w" );
+	pf =  _fdopen( __fileno_alloc(hWritePipe, _fmode) , "w" );
   }
 
   pf->name_to_remove = SpawnedProcess; 

@@ -4,5 +4,10 @@
 #undef isprint
 int isprint(int c)
 {
-  return c;
+  return _isctype((unsigned char)c,_PRINT);
+}
+
+int iswprint(int c)
+{
+  return iswctype((unsigned short)c,_PRINT);
 }
