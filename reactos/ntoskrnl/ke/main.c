@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.157 2003/05/19 14:35:48 ekohl Exp $
+/* $Id: main.c,v 1.158 2003/05/20 14:37:05 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -347,8 +347,74 @@ ExpInitializeExecutive(VOID)
 	  (PADDRESS_RANGE)&KeMemoryMap,
 	  KeMemoryMapRangeCount);
 
-  /* Create default nls tables */
-  RtlpCreateDefaultNlsTables();
+  /* Import ANSI code page table */
+  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+    {
+      start = KeLoaderModules[i].ModStart;
+      length = KeLoaderModules[i].ModEnd - start;
+
+      name = strrchr((PCHAR)KeLoaderModules[i].String, '\\');
+      if (name == NULL)
+	{
+	  name = (PCHAR)KeLoaderModules[i].String;
+	}
+      else
+	{
+	  name++;
+	}
+
+      if (!_stricmp (name, "ansi.nls"))
+	{
+	  RtlpImportAnsiCodePage((PUSHORT)start, length);
+	}
+    }
+
+  /* Import OEM code page table */
+  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+    {
+      start = KeLoaderModules[i].ModStart;
+      length = KeLoaderModules[i].ModEnd - start;
+
+      name = strrchr((PCHAR)KeLoaderModules[i].String, '\\');
+      if (name == NULL)
+	{
+	  name = (PCHAR)KeLoaderModules[i].String;
+	}
+      else
+	{
+	  name++;
+	}
+
+      if (!_stricmp (name, "oem.nls"))
+	{
+	  RtlpImportOemCodePage((PUSHORT)start, length);
+	}
+    }
+
+  /* Import Unicode casemap table */
+  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+    {
+      start = KeLoaderModules[i].ModStart;
+      length = KeLoaderModules[i].ModEnd - start;
+
+      name = strrchr((PCHAR)KeLoaderModules[i].String, '\\');
+      if (name == NULL)
+	{
+	  name = (PCHAR)KeLoaderModules[i].String;
+	}
+      else
+	{
+	  name++;
+	}
+
+      if (!_stricmp (name, "casemap.nls"))
+	{
+	  RtlpImportUnicodeCasemap((PUSHORT)start, length);
+	}
+    }
+
+  /* Create initial NLS tables */
+  RtlpCreateInitialNlsTables();
 
   /*
    * Initialize the kernel debugger
@@ -442,10 +508,13 @@ ExpInitializeExecutive(VOID)
   CcInit();
   KdInit2();
   FsRtlpInitFileLockingImplementation();
-  
+
   /* Report all resources used by hal */
   HalReportResourceUsage();
-  
+
+  /* Create the NLS section */
+  RtlpCreateNlsSection();
+
   /*
    * Initalize services loaded at boot time
    */
@@ -458,81 +527,7 @@ ExpInitializeExecutive(VOID)
        KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
     }
 
-
-  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
-    {
-      start = KeLoaderModules[i].ModStart;
-      length = KeLoaderModules[i].ModEnd - start;
-
-      DPRINT("Module: '%s'\n", (PCHAR)KeLoaderModules[i].String);
-      name = strrchr((PCHAR)KeLoaderModules[i].String, '\\');
-      if (name == NULL)
-	{
-	  name = (PCHAR)KeLoaderModules[i].String;
-	}
-      else
-	{
-	  name++;
-	}
-
-      if (!_stricmp (name, "ansi.nls"))
-	{
-	  DPRINT1("Process ANSI code page file at %08lx\n", start);
-	  RtlpImportAnsiCodePage((PUSHORT)start, length);
-	}
-    }
-
-  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
-    {
-      start = KeLoaderModules[i].ModStart;
-      length = KeLoaderModules[i].ModEnd - start;
-
-      DPRINT("Module: '%s'\n", (PCHAR)KeLoaderModules[i].String);
-      name = strrchr((PCHAR)KeLoaderModules[i].String, '\\');
-      if (name == NULL)
-	{
-	  name = (PCHAR)KeLoaderModules[i].String;
-	}
-      else
-	{
-	  name++;
-	}
-
-      if (!_stricmp (name, "oem.nls"))
-	{
-	  DPRINT1("Process OEM code page file at %08lx\n", start);
-	  RtlpImportOemCodePage((PUSHORT)start, length);
-	}
-    }
-
-  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
-    {
-      start = KeLoaderModules[i].ModStart;
-      length = KeLoaderModules[i].ModEnd - start;
-
-      DPRINT("Module: '%s'\n", (PCHAR)KeLoaderModules[i].String);
-      name = strrchr((PCHAR)KeLoaderModules[i].String, '\\');
-      if (name == NULL)
-	{
-	  name = (PCHAR)KeLoaderModules[i].String;
-	}
-      else
-	{
-	  name++;
-	}
-
-      if (!_stricmp (name, "casemap.nls"))
-	{
-	  DPRINT1("Process Unicode casemap file at %08lx\n", start);
-	  RtlpImportUnicodeCasemap((PUSHORT)start, length);
-	}
-    }
-
-  RtlpCreateNlsSection();
-
-
-
-  /*  Pass 2: import system hive registry chunk  */
+  /* Pass 1: import system hive registry chunk */
   SetupBoot = TRUE;
   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
     {
@@ -559,7 +554,7 @@ ExpInitializeExecutive(VOID)
 	}
     }
 
-  /*  Pass 3: import hardware hive registry chunk  */
+  /* Pass 2: import hardware hive registry chunk */
   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
     {
       start = KeLoaderModules[i].ModStart;
@@ -575,7 +570,6 @@ ExpInitializeExecutive(VOID)
 
   /* Create dummy keys if no hardware hive was found */
   CmImportHardwareHive (NULL, 0);
-
 
   /* Initialize volatile registry settings */
   if (SetupBoot == FALSE)
@@ -594,7 +588,7 @@ ExpInitializeExecutive(VOID)
 
   IoInit2();
 
-  /*  Pass 4: process boot loaded drivers  */
+  /* Pass 3: process boot loaded drivers */
   BootDriverCount = 0;
   for (i=1; i < KeLoaderBlock.ModsCount; i++)
     {
@@ -611,12 +605,13 @@ ExpInitializeExecutive(VOID)
       if (RtlpCheckFileNameExtension(name, ".sys"))
 	BootDriverCount++;
     }
-  /*  Pass 5: free memory for all boot files, except ntoskrnl.exe and hal.dll  */
+
+  /* Pass 4: free memory for all boot files, except ntoskrnl.exe and hal.dll */
   for (i = 2; i < KeLoaderBlock.ModsCount; i++)
-  {
-     MiFreeBootDriverMemory((PVOID)KeLoaderModules[i].ModStart, 
-	                    KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
-  }
+    {
+       MiFreeBootDriverMemory((PVOID)KeLoaderModules[i].ModStart,
+			      KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
+    }
 
   if (BootDriverCount == 0)
     {

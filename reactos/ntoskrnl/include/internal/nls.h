@@ -26,17 +26,16 @@ extern ULONG NlsAnsiTableOffset;
 extern ULONG NlsOemTableOffset;
 extern ULONG NlsUnicodeTableOffset;
 
-
 extern PUSHORT NlsUnicodeUpcaseTable;
-PUSHORT NlsUnicodeLowercaseTable;
-
-
-VOID RtlpCreateDefaultNlsTables(VOID);
+extern PUSHORT NlsUnicodeLowercaseTable;
 
 VOID RtlpImportAnsiCodePage(PUSHORT TableBase, ULONG Size);
 VOID RtlpImportOemCodePage(PUSHORT TableBase, ULONG Size);
 VOID RtlpImportUnicodeCasemap(PUSHORT TableBase, ULONG Size);
+VOID RtlpCreateInitialNlsTables(VOID);
 VOID RtlpCreateNlsSection(VOID);
+
+WCHAR RtlDowncaseUnicodeChar (IN WCHAR Source);
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_NLS_H */
 

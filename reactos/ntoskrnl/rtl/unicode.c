@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.26 2002/12/08 16:23:32 robd Exp $
+/* $Id: unicode.c,v 1.27 2003/05/20 14:38:05 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,19 +10,21 @@
  */
 
 #include <ddk/ntddk.h>
-//#include <internal/nls.h>
 #include <ctype.h>
 #include <ntos/minmax.h>
 #include <internal/pool.h>
+#include <internal/nls.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS *******************************************************************/
 
 #define TAG_USTR  TAG('U', 'S', 'T', 'R')
 #define TAG_ASTR  TAG('A', 'S', 'T', 'R')
 #define TAG_OSTR  TAG('O', 'S', 'T', 'R')
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -471,15 +473,14 @@ RtlCreateUnicodeStringFromAsciiz(IN OUT PUNICODE_STRING Destination,
 }
 
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 RtlDowncaseUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 			 IN PUNICODE_STRING SourceString,
 			 IN BOOLEAN AllocateDestinationString)
 {
   ULONG i;
   PWCHAR Src, Dest;
-  
+
   if (AllocateDestinationString == TRUE)
     {
       DestinationString->MaximumLength = SourceString->Length + sizeof(WCHAR);
@@ -496,7 +497,7 @@ RtlDowncaseUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 	return STATUS_BUFFER_TOO_SMALL;
     }
   DestinationString->Length = SourceString->Length;
-  
+
   Src = SourceString->Buffer;
   Dest = DestinationString->Buffer;
   for (i=0; i < SourceString->Length / sizeof(WCHAR); i++)
@@ -511,15 +512,14 @@ RtlDowncaseUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 	}
       else
 	{
-	  /* FIXME: characters above 'Z' */
-	  *Dest = *Src;
+	  *Dest = RtlDowncaseUnicodeChar(*Src);
 	}
-      
+
       Dest++;
       Src++;
     }
   *Dest = 0;
-  
+
   return STATUS_SUCCESS;
 }
 
@@ -1228,8 +1228,7 @@ RtlUnicodeStringToInteger(IN PUNICODE_STRING String,
 }
 
 
-ULONG
-STDCALL
+ULONG STDCALL
 RtlUnicodeStringToOemSize(IN PUNICODE_STRING UnicodeString)
 {
   ULONG Size;
@@ -1294,22 +1293,6 @@ RtlUnicodeStringToOemString(IN OUT POEM_STRING DestinationString,
 }
 
 
-WCHAR
-STDCALL
-RtlUpcaseUnicodeChar(IN WCHAR Source)
-{
-  if (Source < L'a')
-    return(Source);
-
-  if (Source <= L'z')
-    return(Source - (L'a' - L'A'));
-
-  /* FIXME: characters above 'z' */
-
-  return(Source);
-}
-
-
 NTSTATUS STDCALL
 RtlUpcaseUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 		       IN PUNICODE_STRING SourceString,
@@ -1317,7 +1300,7 @@ RtlUpcaseUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 {
   ULONG i;
   PWCHAR Src, Dest;
-  
+
   if (AllocateDestinationString == TRUE)
     {
       DestinationString->MaximumLength = SourceString->Length + sizeof(WCHAR);
@@ -1334,7 +1317,7 @@ RtlUpcaseUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 	return(STATUS_BUFFER_TOO_SMALL);
     }
   DestinationString->Length = SourceString->Length;
-  
+
   Src = SourceString->Buffer;
   Dest = DestinationString->Buffer;
   for (i=0; i < SourceString->Length / sizeof(WCHAR); i++)
@@ -1344,13 +1327,12 @@ RtlUpcaseUnicodeString(IN OUT PUNICODE_STRING DestinationString,
       Src++;
     }
   *Dest = 0;
-  
+
   return(STATUS_SUCCESS);
 }
 
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 RtlUpcaseUnicodeStringToAnsiString(IN OUT PANSI_STRING DestinationString,
 				   IN PUNICODE_STRING SourceString,
 				   IN BOOLEAN AllocateDestinationString)
@@ -1358,9 +1340,11 @@ RtlUpcaseUnicodeStringToAnsiString(IN OUT PANSI_STRING DestinationString,
   NTSTATUS Status;
   ULONG Length;
   
-  if (NlsMbCodePageTag == TRUE){
-    Length = RtlUnicodeStringToAnsiSize(SourceString); Length--;
-  }
+  if (NlsMbCodePageTag == TRUE)
+    {
+      Length = RtlUnicodeStringToAnsiSize(SourceString);
+      Length--;
+    }
   else
     Length = SourceString->Length / sizeof(WCHAR);
   
@@ -1402,8 +1386,7 @@ RtlUpcaseUnicodeStringToAnsiString(IN OUT PANSI_STRING DestinationString,
 }
 
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 RtlUpcaseUnicodeStringToCountedOemString(IN OUT POEM_STRING DestinationString,
 					 IN PUNICODE_STRING SourceString,
 					 IN BOOLEAN AllocateDestinationString)
@@ -1464,8 +1447,7 @@ RtlUpcaseUnicodeStringToCountedOemString(IN OUT POEM_STRING DestinationString,
 }
 
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 RtlUpcaseUnicodeStringToOemString(IN OUT POEM_STRING DestinationString,
 				  IN PUNICODE_STRING SourceString,
 				  IN BOOLEAN AllocateDestinationString)
@@ -1517,44 +1499,7 @@ RtlUpcaseUnicodeStringToOemString(IN OUT POEM_STRING DestinationString,
 }
 
 
-CHAR
-STDCALL
-RtlUpperChar(IN CHAR Source)
-{
-  WCHAR Unicode;
-  CHAR Destination;
-
-	if (NlsMbCodePageTag == FALSE)
-	{
-		/* single-byte code page */
-		/* ansi->unicode */
-		Unicode = (WCHAR)Source;
-#if 0
-		Unicode = NlsAnsiToUnicodeData[Source];
-#endif
-
-		/* upcase conversion */
-		Unicode = RtlUpcaseUnicodeChar (Unicode);
-
-		/* unicode -> ansi */
-		Destination = (CHAR)Unicode;
-#if 0
-		Destination = NlsUnicodeToAnsiData[Unicode];
-#endif
-	}
-	else
-	{
-		/* single-byte code page */
-		/* FIXME: implement the multi-byte stuff!! */
-		Destination = Source;
-	}
-
-  return(Destination);
-}
-
-
-VOID
-STDCALL
+VOID STDCALL
 RtlUpperString(PSTRING DestinationString,
 	       PSTRING SourceString)
 {
@@ -1580,32 +1525,28 @@ RtlUpperString(PSTRING DestinationString,
 }
 
 
-ULONG
-STDCALL
+ULONG STDCALL
 RtlxAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
 {
   return RtlAnsiStringToUnicodeSize(AnsiString);
 }
 
 
-ULONG
-STDCALL
+ULONG STDCALL
 RtlxOemStringToUnicodeSize(IN POEM_STRING OemString)
 {
   return RtlOemStringToUnicodeSize((PANSI_STRING)OemString);
 }
 
 
-ULONG
-STDCALL
+ULONG STDCALL
 RtlxUnicodeStringToAnsiSize(IN PUNICODE_STRING UnicodeString)
 {
   return RtlUnicodeStringToAnsiSize(UnicodeString);
 }
 
 
-ULONG
-STDCALL
+ULONG STDCALL
 RtlxUnicodeStringToOemSize(IN PUNICODE_STRING UnicodeString)
 {
   return RtlUnicodeStringToOemSize(UnicodeString);

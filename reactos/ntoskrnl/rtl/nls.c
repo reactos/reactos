@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.13 2003/05/19 14:39:09 ekohl Exp $
+/* $Id: nls.c,v 1.14 2003/05/20 14:38:05 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -8,16 +8,8 @@
  *                  20/08/99 Created by Emanuele Aliberti
  *                  10/11/99 Added translation functions.
  *
- * NOTE:
- *   Multi-byte code pages are not supported yet. Even single-byte code
- *   pages are not supported properly. Only stupid CHAR->WCHAR and
- *   WCHAR->CHAR (Attention: data loss!!!) translation is done.
- *
  * TODO:
- *   1) Implement code to initialize the translation tables.
- *   2) Use fixed translation table for translation.
- *   3) Add loading of translation tables (NLS files).
- *   4) Add multi-byte translation code.
+ *   1) Add multi-byte translation code.
  */
 
 #include <ddk/ntddk.h>
@@ -30,40 +22,40 @@
 
 /* GLOBALS *******************************************************************/
 
-BOOLEAN NlsMbCodePageTag = FALSE;
-BOOLEAN NlsMbOemCodePageTag = FALSE;
 
-UCHAR NlsLeadByteInfo = 0; /* ? */
+UCHAR NlsLeadByteInfo = 0; /* exported */
 
-USHORT NlsOemLeadByteInfo = 0;
-
-USHORT NlsAnsiCodePage = 0;
-USHORT NlsOemCodePage = 0; /* not exported */
-
-PWCHAR AnsiToUnicodeTable = NULL; /* size: 256*sizeof(WCHAR) */
-PWCHAR OemToUnicodeTable = NULL; /* size: 256*sizeof(WCHAR) */
-
-PCHAR UnicodeToAnsiTable = NULL; /* size: 65536*sizeof(CHAR) */
-PCHAR UnicodeToOemTable =NULL; /* size: 65536*sizeof(CHAR) */
-
-PWCHAR UnicodeUpcaseTable = NULL; /* size: 65536*sizeof(WCHAR) */
-PWCHAR UnicodeLowercaseTable = NULL; /* size: 65536*sizeof(WCHAR) */
+USHORT NlsOemLeadByteInfo = 0; /* exported */
 
 
-/* Experimental */
+USHORT NlsAnsiCodePage = 0; /* exported */
+BOOLEAN NlsMbCodePageTag = FALSE; /* exported */
+PWCHAR NlsAnsiToUnicodeTable = NULL;
+PCHAR NlsUnicodeToAnsiTable = NULL;
 
-PUSHORT NlsAnsiCodePageTable = NULL;
-ULONG NlsAnsiCodePageTableSize = 0;
 
-PUSHORT NlsOemCodePageTable = NULL;
-ULONG NlsOemCodePageTableSize = 0;
+USHORT NlsOemCodePage = 0;
+BOOLEAN NlsMbOemCodePageTag = FALSE; /* exported */
+PWCHAR NlsOemToUnicodeTable = NULL;
+PCHAR NlsUnicodeToOemTable =NULL;
 
-PUSHORT NlsUnicodeCasemapTable = NULL;
-ULONG NlsUnicodeCasemapTableSize = 0;
+
+PUSHORT NlsUnicodeUpcaseTable = NULL;
+PUSHORT NlsUnicodeLowercaseTable = NULL;
+
+
+static PUSHORT NlsAnsiCodePageTable = NULL;
+static ULONG NlsAnsiCodePageTableSize = 0;
+
+static PUSHORT NlsOemCodePageTable = NULL;
+static ULONG NlsOemCodePageTableSize = 0;
+
+static PUSHORT NlsUnicodeCasemapTable = NULL;
+static ULONG NlsUnicodeCasemapTableSize = 0;
 
 PVOID NlsSectionObject = NULL;
-PVOID NlsSectionBase = NULL;
-ULONG NlsSectionViewSize = 0;
+static PVOID NlsSectionBase = NULL;
+static ULONG NlsSectionViewSize = 0;
 
 ULONG NlsAnsiTableOffset = 0;
 ULONG NlsOemTableOffset = 0;
@@ -73,113 +65,11 @@ ULONG NlsUnicodeTableOffset = 0;
 /* FUNCTIONS *****************************************************************/
 
 VOID
-RtlpCreateDefaultNlsTables(VOID)
-{
-  INT i;
-  PCHAR pc;
-  PWCHAR pwc;
-
-  /* allocate and initialize ansi->unicode table */
-  AnsiToUnicodeTable = ExAllocatePool(NonPagedPool, 256 * sizeof(WCHAR));
-  if (AnsiToUnicodeTable == NULL)
-    {
-      DbgPrint("Allocation of 'AnsiToUnicodeTable' failed\n");
-      KeBugCheck(0);
-    }
-
-  pwc = AnsiToUnicodeTable;
-  for (i = 0; i < 256; i++, pwc++)
-    *pwc = (WCHAR)i;
-
-  /* allocate and initialize oem->unicode table */
-  OemToUnicodeTable = ExAllocatePool(NonPagedPool, 256 * sizeof(WCHAR));
-  if (OemToUnicodeTable == NULL)
-    {
-      DbgPrint("Allocation of 'OemToUnicodeTable' failed\n");
-      KeBugCheck(0);
-    }
-
-  pwc = OemToUnicodeTable;
-  for (i = 0; i < 256; i++, pwc++)
-    *pwc = (WCHAR)i;
-
-  /* allocate and initialize unicode->ansi table */
-  UnicodeToAnsiTable = ExAllocatePool(NonPagedPool, 65536 * sizeof(CHAR));
-  if (UnicodeToAnsiTable == NULL)
-    {
-      DbgPrint("Allocation of 'UnicodeToAnsiTable' failed\n");
-      KeBugCheck(0);
-    }
-
-  pc = UnicodeToAnsiTable;
-  for (i = 0; i < 256; i++, pc++)
-    *pc = (CHAR)i;
-  for (; i < 65536; i++, pc++)
-    *pc = 0;
-
-  /* allocate and initialize unicode->oem table */
-  UnicodeToOemTable = ExAllocatePool(NonPagedPool, 65536 * sizeof(CHAR));
-  if (UnicodeToOemTable == NULL)
-    {
-      DbgPrint("Allocation of 'UnicodeToOemTable' failed\n");
-      KeBugCheck(0);
-    }
-
-  pc = UnicodeToOemTable;
-  for (i = 0; i < 256; i++, pc++)
-    *pc = (CHAR)i;
-  for (; i < 65536; i++, pc++)
-    *pc = 0;
-
-  /* allocate and initialize unicode upcase table */
-  UnicodeUpcaseTable = ExAllocatePool(NonPagedPool, 65536 * sizeof(WCHAR));
-  if (UnicodeUpcaseTable == NULL)
-    {
-      DbgPrint("Allocation of 'UnicodeUpcaseTable' failed\n");
-      KeBugCheck(0);
-    }
-
-  pwc = UnicodeUpcaseTable;
-  for (i = 0; i < 65536; i++, pwc++)
-    *pwc = (WCHAR)i;
-  for (i = 'a'; i < ('z'+ 1); i++)
-    UnicodeUpcaseTable[i] = (WCHAR)i + (L'A' - L'a');
-
-
-  /* allocate and initialize unicode lowercase table */
-  UnicodeLowercaseTable = ExAllocatePool(NonPagedPool, 65536 * sizeof(WCHAR));
-  if (UnicodeLowercaseTable == NULL)
-    {
-      DbgPrint("Allocation of 'UnicodeLowercaseTable' failed\n");
-      KeBugCheck(0);
-    }
-
-  pwc = UnicodeLowercaseTable;
-  for (i = 0; i < 65536; i++, pwc++)
-    *pwc = (WCHAR)i;
-  for (i = 'A'; i < ('Z'+ 1); i++)
-    UnicodeLowercaseTable[i] = (WCHAR)i - (L'A' - L'a');
-
-  /* FIXME: initialize codepage info */
-}
-
-
-VOID
 RtlpImportAnsiCodePage(PUSHORT TableBase,
 		       ULONG Size)
 {
-  DPRINT1("RtlpImportAnsiCodePage(TableBase %p  Size %lu) called\n",
-	 TableBase, Size);
-
-  NlsAnsiCodePageTable = ExAllocatePool(NonPagedPool,
-					Size);
-  if (NlsAnsiCodePageTable != NULL)
-    {
-      NlsAnsiCodePageTableSize = Size;
-      RtlCopyMemory(NlsAnsiCodePageTable,
-		    TableBase,
-		    Size);
-    }
+  NlsAnsiCodePageTable = TableBase;
+  NlsAnsiCodePageTableSize = Size;
 }
 
 
@@ -187,18 +77,8 @@ VOID
 RtlpImportOemCodePage(PUSHORT TableBase,
 		      ULONG Size)
 {
-  DPRINT1("RtlpImportOemCodePage(TableBase %p  Size %lu) called\n",
-	 TableBase, Size);
-
-  NlsOemCodePageTable = ExAllocatePool(NonPagedPool,
-				       Size);
-  if (NlsOemCodePageTable != NULL)
-    {
-      NlsOemCodePageTableSize = Size;
-      RtlCopyMemory(NlsOemCodePageTable,
-		    TableBase,
-		    Size);
-    }
+  NlsOemCodePageTable = TableBase;
+  NlsOemCodePageTableSize = Size;
 }
 
 
@@ -206,26 +86,40 @@ VOID
 RtlpImportUnicodeCasemap(PUSHORT TableBase,
 			 ULONG Size)
 {
-  DPRINT1("RtlpImportUnicodeCasemap(TableBase %p  Size %lu) called\n",
-	 TableBase, Size);
-
-  NlsUnicodeCasemapTable = ExAllocatePool(NonPagedPool,
-					  Size);
-  if (NlsUnicodeCasemapTable != NULL)
-    {
-      NlsUnicodeCasemapTableSize = Size;
-      RtlCopyMemory(NlsUnicodeCasemapTable,
-		    TableBase,
-		    Size);
-    }
+  NlsUnicodeCasemapTable = TableBase;
+  NlsUnicodeCasemapTableSize = Size;
 }
+
+
+VOID
+RtlpCreateInitialNlsTables(VOID)
+{
+  NLSTABLEINFO NlsTable;
+
+  if (NlsAnsiCodePageTable == NULL || NlsAnsiCodePageTableSize == 0 ||
+      NlsOemCodePageTable == NULL || NlsOemCodePageTableSize == 0 ||
+      NlsUnicodeCasemapTable == NULL || NlsUnicodeCasemapTableSize == 0)
+    {
+      KeBugCheckEx (0x32, STATUS_UNSUCCESSFUL, 1, 0, 0);
+    }
+
+  RtlInitNlsTables (NlsAnsiCodePageTable,
+		    NlsOemCodePageTable,
+		    NlsUnicodeCasemapTable,
+		    &NlsTable);
+
+  RtlResetRtlTranslations (&NlsTable);
+}
+
+
 
 
 VOID
 RtlpCreateNlsSection(VOID)
 {
-  HANDLE SectionHandle;
+  NLSTABLEINFO NlsTable;
   LARGE_INTEGER SectionSize;
+  HANDLE SectionHandle;
   NTSTATUS Status;
 
   DPRINT("RtlpCreateNlsSection() called\n");
@@ -247,7 +141,7 @@ RtlpCreateNlsSection(VOID)
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("NtCreateSection() failed\n");
-      KeBugCheckEx(0x32, Status, 1, 0, 0);
+      KeBugCheckEx(0x32, Status, 1, 1, 0);
     }
 
   Status = ObReferenceObjectByHandle(SectionHandle,
@@ -260,7 +154,7 @@ RtlpCreateNlsSection(VOID)
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("ObReferenceObjectByHandle() failed\n");
-      KeBugCheckEx(0x32, Status, 1, 1, 0);
+      KeBugCheckEx(0x32, Status, 1, 2, 0);
     }
 
   Status = MmMapViewInSystemSpace(NlsSectionObject,
@@ -270,7 +164,7 @@ RtlpCreateNlsSection(VOID)
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("MmMapViewInSystemSpace() failed\n");
-      KeBugCheckEx(0x32, Status, 1, 2, 0);
+      KeBugCheckEx(0x32, Status, 1, 3, 0);
     }
 
   DPRINT("NlsSection: Base %p  Size %lx\n", 
@@ -291,8 +185,14 @@ RtlpCreateNlsSection(VOID)
   RtlCopyMemory((PVOID)((ULONG)NlsSectionBase + NlsUnicodeTableOffset),
 		NlsUnicodeCasemapTable,
 		NlsUnicodeCasemapTableSize);
-}
 
+  RtlInitNlsTables ((PVOID)((ULONG)NlsSectionBase + NlsAnsiTableOffset),
+		    (PVOID)((ULONG)NlsSectionBase + NlsOemTableOffset),
+		    (PVOID)((ULONG)NlsSectionBase + NlsUnicodeTableOffset),
+		    &NlsTable);
+
+  RtlResetRtlTranslations (&NlsTable);
+}
 
 
 NTSTATUS STDCALL
@@ -331,6 +231,33 @@ RtlCustomCPToUnicodeN(IN PCPTABLEINFO CustomCP,
     }
 
   return(STATUS_SUCCESS);
+}
+
+
+WCHAR
+RtlDowncaseUnicodeChar (IN WCHAR Source)
+{
+  USHORT Offset;
+
+  if (Source < L'A')
+    return Source;
+
+  if (Source <= L'Z')
+    return Source + (L'a' - L'A');
+
+  if (Source < 0x80)
+    return Source;
+
+  Offset = ((USHORT)Source >> 8);
+  Offset = NlsUnicodeLowercaseTable[Offset];
+
+  Offset += (((USHORT)Source & 0x00F0) >> 4);
+  Offset = NlsUnicodeLowercaseTable[Offset];
+
+  Offset += ((USHORT)Source & 0x000F);
+  Offset = NlsUnicodeLowercaseTable[Offset];
+
+  return Source + (SHORT)Offset;
 }
 
 
@@ -404,7 +331,16 @@ RtlInitNlsTables(IN PUSHORT AnsiTableBase,
 		 IN PUSHORT CaseTableBase,
 		 OUT PNLSTABLEINFO NlsTable)
 {
-  UNIMPLEMENTED;
+  DPRINT("RtlInitNlsTables()called\n");
+
+  RtlInitCodePageTable (AnsiTableBase,
+			&NlsTable->AnsiTableInfo);
+
+  RtlInitCodePageTable (OemTableBase,
+			&NlsTable->OemTableInfo);
+
+  NlsTable->UpperCaseTable = (PUSHORT)CaseTableBase + 2;
+  NlsTable->LowerCaseTable = (PUSHORT)CaseTableBase + *((PUSHORT)CaseTableBase + 1) + 2;
 }
 
 
@@ -431,7 +367,7 @@ RtlMultiByteToUnicodeN(PWCHAR UnicodeString,
 
       for (i = 0; i < Size; i++)
 	{
-	  *UnicodeString = AnsiToUnicodeTable[(unsigned int)*MbString];
+	  *UnicodeString = NlsAnsiToUnicodeTable[(unsigned int)*MbString];
 	  UnicodeString++;
 	  MbString++;
 	}
@@ -489,7 +425,7 @@ RtlOemToUnicodeN(PWCHAR UnicodeString,
 
       for (i = 0; i < Size; i++)
 	{
-	  *UnicodeString = OemToUnicodeTable[(unsigned int)*OemString];
+	  *UnicodeString = NlsOemToUnicodeTable[(unsigned int)*OemString];
 	  UnicodeString++;
 	  OemString++;
 	}
@@ -507,7 +443,23 @@ RtlOemToUnicodeN(PWCHAR UnicodeString,
 VOID STDCALL
 RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
 {
-  UNIMPLEMENTED;
+  DPRINT("RtlResetRtlTranslations() called\n");
+
+  /* Set ANSI data */
+  NlsAnsiToUnicodeTable = NlsTable->AnsiTableInfo.MultiByteTable;
+  NlsUnicodeToAnsiTable = NlsTable->AnsiTableInfo.WideCharTable;
+  NlsAnsiCodePage = NlsTable->AnsiTableInfo.CodePage;
+  DPRINT("Ansi codepage %hu\n", NlsAnsiCodePage);
+
+  /* Set OEM data */
+  NlsOemToUnicodeTable = NlsTable->OemTableInfo.MultiByteTable;
+  NlsUnicodeToOemTable = NlsTable->OemTableInfo.WideCharTable;
+  NlsOemCodePage = NlsTable->OemTableInfo.CodePage;
+  DPRINT("Oem codepage %hu\n", NlsOemCodePage);
+
+  /* Set Unicode case map data */
+  NlsUnicodeUpcaseTable = NlsTable->UpperCaseTable;
+  NlsUnicodeLowercaseTable = NlsTable->LowerCaseTable;
 }
 
 
@@ -574,7 +526,7 @@ RtlUnicodeToMultiByteN(PCHAR MbString,
 
       for (i = 0; i < Size; i++)
 	{
-	  *MbString = UnicodeToAnsiTable[(unsigned int)*UnicodeString];
+	  *MbString = NlsUnicodeToAnsiTable[(unsigned int)*UnicodeString];
 	  MbString++;
 	  UnicodeString++;
 	}
@@ -632,7 +584,7 @@ RtlUnicodeToOemN(PCHAR OemString,
 
       for (i = 0; i < Size; i++)
 	{
-	  *OemString = UnicodeToOemTable[(unsigned int)*UnicodeString];
+	  *OemString = NlsUnicodeToOemTable[(unsigned int)*UnicodeString];
 	  OemString++;
 	  UnicodeString++;
 	}
@@ -644,6 +596,30 @@ RtlUnicodeToOemN(PCHAR OemString,
     }
 
   return(STATUS_SUCCESS);
+}
+
+
+WCHAR STDCALL
+RtlUpcaseUnicodeChar(IN WCHAR Source)
+{
+  USHORT Offset;
+
+  if (Source < L'a')
+    return Source;
+
+  if (Source <= L'z')
+    return (Source - (L'a' - L'A'));
+
+  Offset = ((USHORT)Source >> 8);
+  Offset = NlsUnicodeUpcaseTable[Offset];
+
+  Offset += (((USHORT)Source & 0x00F0) >> 4);
+  Offset = NlsUnicodeUpcaseTable[Offset];
+
+  Offset += ((USHORT)Source & 0x000F);
+  Offset = NlsUnicodeUpcaseTable[Offset];
+
+  return Source + (SHORT)Offset;
 }
 
 
@@ -672,7 +648,7 @@ RtlUpcaseUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
 
       for (i = 0; i < Size; i++)
 	{
-	  wc = UnicodeUpcaseTable[(unsigned int)*UnicodeString];
+	  wc = RtlUpcaseUnicodeChar(*UnicodeString);
 	  *CustomString = ((PCHAR)CustomCP->WideCharTable)[(unsigned int)wc];
 	  CustomString++;
 	  UnicodeString++;
@@ -712,8 +688,8 @@ RtlUpcaseUnicodeToMultiByteN(PCHAR MbString,
 
       for (i = 0; i < Size; i++)
 	{
-	  wc = UnicodeUpcaseTable[(unsigned int)*UnicodeString];
-	  *MbString = UnicodeToAnsiTable[(unsigned int)wc];
+	  wc = RtlUpcaseUnicodeChar(*UnicodeString);
+	  *MbString = NlsUnicodeToAnsiTable[(unsigned int)wc];
 	  MbString++;
 	  UnicodeString++;
 	}
@@ -752,8 +728,8 @@ RtlUpcaseUnicodeToOemN(PCHAR OemString,
 
       for (i = 0; i < Size; i++)
 	{
-	  wc = UnicodeUpcaseTable[(unsigned int)*UnicodeString];
-	  *OemString = UnicodeToOemTable[(unsigned int)wc];
+	  wc = RtlUpcaseUnicodeChar(*UnicodeString);
+	  *OemString = NlsUnicodeToOemTable[(unsigned int)wc];
 	  OemString++;
 	  UnicodeString++;
 	}
@@ -765,6 +741,36 @@ RtlUpcaseUnicodeToOemN(PCHAR OemString,
     }
 
   return(STATUS_SUCCESS);
+}
+
+
+CHAR STDCALL
+RtlUpperChar (IN CHAR Source)
+{
+  WCHAR Unicode;
+  CHAR Destination;
+
+  if (NlsMbCodePageTag == FALSE)
+    {
+      /* single-byte code page */
+
+      /* ansi->unicode */
+      Unicode = NlsAnsiToUnicodeTable[(unsigned int)Source];
+
+      /* upcase conversion */
+      Unicode = RtlUpcaseUnicodeChar (Unicode);
+
+      /* unicode -> ansi */
+      Destination = NlsUnicodeToAnsiTable[(unsigned int)Unicode];
+    }
+  else
+    {
+      /* single-byte code page */
+      /* FIXME: implement the multi-byte stuff!! */
+      Destination = Source;
+    }
+
+  return Destination;
 }
 
 /* EOF */
