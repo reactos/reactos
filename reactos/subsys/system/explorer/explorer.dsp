@@ -58,7 +58,7 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
 # ADD LINK32 user32.lib gdi32.lib advapi32.lib ole32.lib shell32.lib comctl32.lib /nologo /subsystem:windows /machine:I386
-# SUBTRACT LINK32 /pdb:none
+# SUBTRACT LINK32 /pdb:none /force
 
 !ELSEIF  "$(CFG)" == "explorer - Win32 Debug"
 
@@ -82,8 +82,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib advapi32.lib ole32.lib shell32.lib comctl32.lib /nologo /subsystem:windows /debug /machine:I386 /force /pdbtype:sept
-# SUBTRACT LINK32 /pdb:none
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib advapi32.lib ole32.lib shell32.lib comctl32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# SUBTRACT LINK32 /pdb:none /force
 
 !ELSEIF  "$(CFG)" == "explorer - Win32 Debug Release"
 
@@ -109,7 +109,7 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib /nologo /subsystem:console /machine:I386
 # ADD LINK32 user32.lib gdi32.lib advapi32.lib ole32.lib shell32.lib comctl32.lib /nologo /subsystem:windows /debug /machine:I386
-# SUBTRACT LINK32 /pdb:none
+# SUBTRACT LINK32 /pdb:none /force
 
 !ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Release"
 
@@ -135,7 +135,7 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib /nologo /subsystem:console /machine:I386
 # ADD LINK32 user32.lib gdi32.lib advapi32.lib ole32.lib shell32.lib comctl32.lib /nologo /subsystem:windows /machine:I386
-# SUBTRACT LINK32 /pdb:none
+# SUBTRACT LINK32 /pdb:none /force
 
 !ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Debug"
 
@@ -161,7 +161,7 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 user32.lib gdi32.lib advapi32.lib ole32.lib shell32.lib comctl32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# SUBTRACT LINK32 /pdb:none
+# SUBTRACT LINK32 /pdb:none /force
 
 !ELSEIF  "$(CFG)" == "explorer - Win32 _NO_COMUTIL"
 
@@ -188,7 +188,7 @@ LINK32=link.exe
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 # SUBTRACT BASE LINK32 /pdb:none
 # ADD LINK32 user32.lib gdi32.lib advapi32.lib ole32.lib shell32.lib comctl32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# SUBTRACT LINK32 /pdb:none
+# SUBTRACT LINK32 /pdb:none /force
 
 !ELSEIF  "$(CFG)" == "explorer - Win32"
 
@@ -215,7 +215,7 @@ LINK32=link.exe
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 # SUBTRACT BASE LINK32 /pdb:none
 # ADD LINK32 gdi32.lib user32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Win32/wexplorer.exe" /pdbtype:sept
-# SUBTRACT LINK32 /pdb:none
+# SUBTRACT LINK32 /pdb:none /force
 
 !ELSEIF  "$(CFG)" == "explorer - Win32 WineRelease"
 
@@ -242,7 +242,7 @@ LINK32=link.exe
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 # SUBTRACT BASE LINK32 /pdb:none
 # ADD LINK32 gdi32.lib user32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /incremental:no /machine:I386 /out:"WineRelease/wexplorer.exe" /pdbtype:sept
-# SUBTRACT LINK32 /pdb:none /debug
+# SUBTRACT LINK32 /pdb:none /debug /force
 
 !ELSEIF  "$(CFG)" == "explorer - Win32 WineDll"
 
@@ -269,7 +269,7 @@ LINK32=link.exe
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /machine:I386 /pdbtype:sept
 # SUBTRACT BASE LINK32 /pdb:none /debug
 # ADD LINK32 gdi32.lib user32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /machine:I386 /out:"WineDll/wexplorer.exe" /pdbtype:sept
-# SUBTRACT LINK32 /pdb:none /debug
+# SUBTRACT LINK32 /pdb:none /debug /force
 
 !ENDIF 
 

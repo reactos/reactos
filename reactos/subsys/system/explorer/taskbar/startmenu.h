@@ -250,10 +250,28 @@ protected:
 };
 
 
- /// Settings sub-startmenu
-struct SettingsMenu : public StartMenu
+ /// Handling of standard start menu commands
+struct StartMenuHandler : public StartMenu
 {
 	typedef StartMenu super;
+
+	StartMenuHandler(HWND hwnd, const StartMenuCreateInfo& create_info)
+	 :	super(hwnd, create_info)
+	{
+	}
+
+protected:
+	int		Command(int id, int code);
+
+	static void	ShowSearchDialog();
+	static void	ShowSearchComputer();
+};
+
+
+ /// Settings sub-startmenu
+struct SettingsMenu : public StartMenuHandler
+{
+	typedef StartMenuHandler super;
 
 	SettingsMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
 	 :	super(hwnd, create_info)
@@ -264,14 +282,13 @@ struct SettingsMenu : public StartMenu
 
 protected:
 	void	AddEntries();
-	int		Command(int id, int code);
 };
 
 
  /// "Browse Files..." sub-start menu
-struct BrowseMenu : public StartMenu
+struct BrowseMenu : public StartMenuHandler
 {
-	typedef StartMenu super;
+	typedef StartMenuHandler super;
 
 	BrowseMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
 	 :	super(hwnd, create_info)
@@ -282,14 +299,13 @@ struct BrowseMenu : public StartMenu
 
 protected:
 	void	AddEntries();
-	int		Command(int id, int code);
 };
 
 
  /// Search sub-startmenu
-struct SearchMenu : public StartMenu
+struct SearchMenu : public StartMenuHandler
 {
-	typedef StartMenu super;
+	typedef StartMenuHandler super;
 
 	SearchMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
 	 :	super(hwnd, create_info)
@@ -300,10 +316,6 @@ struct SearchMenu : public StartMenu
 
 protected:
 	void	AddEntries();
-	int		Command(int id, int code);
-
-	static void	ShowSearchDialog();
-	static void	ShowSearchComputer();
 };
 
 
@@ -312,7 +324,10 @@ struct RecentStartMenu : public StartMenu
 {
 	typedef StartMenu super;
 
-	RecentStartMenu(HWND hwnd, const StartMenuCreateInfo& create_info);
+	RecentStartMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
+	 :	super(hwnd, create_info)
+	{
+	}
 
 protected:
 	virtual void AddEntries();

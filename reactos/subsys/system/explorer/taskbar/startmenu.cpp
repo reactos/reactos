@@ -1012,26 +1012,7 @@ void StartMenuRoot::ShowRestartDialog(HWND hwndOwner, UINT flags)
 }
 
 
-void SettingsMenu::AddEntries()
-{
-	super::AddEntries();
-
-#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
-	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
-#endif
-		AddButton(ResString(IDS_CONTROL_PANEL),	SmallIcon(IDI_CONFIG), false, IDC_CONTROL_PANEL);
-
-	AddButton(ResString(IDS_PRINTERS),		SmallIcon(IDI_PRINTER), true, IDC_PRINTERS);
-	AddButton(ResString(IDS_CONNECTIONS),	SmallIcon(IDI_NETWORK), true, IDC_CONNECTIONS);
-	AddButton(ResString(IDS_ADMIN),			SmallIcon(IDI_CONFIG), true, IDC_ADMIN);
-
-#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
-	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
-#endif
-		AddButton(ResString(IDS_SETTINGS_MENU),	SmallIcon(IDI_CONFIG), true, IDC_SETTINGS_MENU);
-}
-
-int SettingsMenu::Command(int id, int code)
+int StartMenuHandler::Command(int id, int code)
 {
 	switch(id) {
 	  case IDC_SETTINGS_MENU:
@@ -1055,29 +1036,9 @@ int SettingsMenu::Command(int id, int code)
 		CreateSubmenu(id, CSIDL_CONNECTIONS, ResString(IDS_CONNECTIONS));
 		break;
 
-	  default:
-		return super::Command(id, code);
-	}
 
-	return 0;
-}
+	// browse menu
 
-
-void BrowseMenu::AddEntries()
-{
-	super::AddEntries();
-
-#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
-	if (!g_Globals._SHRestricted || !SHRestricted(REST_NONETHOOD))	// or REST_NOENTIRENETWORK ?
-#endif
-		AddButton(ResString(IDS_NETWORK),	SmallIcon(IDI_NETWORK), true, IDC_NETWORK);
-
-	AddButton(ResString(IDS_DRIVES),	SmallIcon(IDI_FOLDER), true, IDC_DRIVES);
-}
-
-int BrowseMenu::Command(int id, int code)
-{
-	switch(id) {
 	  case IDC_NETWORK:
 		CreateSubmenu(id, CSIDL_NETWORK, ResString(IDS_NETWORK));
 		break;
@@ -1087,31 +1048,9 @@ int BrowseMenu::Command(int id, int code)
 		CreateSubmenu(id, CSIDL_DRIVES, ResString(IDS_DRIVES));
 		break;
 
-	  default:
-		return super::Command(id, code);
-	}
 
-	return 0;
-}
+	// search menu
 
-
-void SearchMenu::AddEntries()
-{
-	super::AddEntries();
-
-	AddButton(ResString(IDS_SEARCH_PRG),	SmallIcon(IDI_APPS), false, IDC_SEARCH_PROGRAM);
-
-	AddButton(ResString(IDS_SEARCH_FILES),	SmallIcon(IDI_SEARCH_DOC), false, IDC_SEARCH_FILES);
-
-#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
-	if (!g_Globals._SHRestricted || !SHRestricted(REST_HASFINDCOMPUTERS))
-#endif
-		AddButton(ResString(IDS_SEARCH_COMPUTER),	SmallIcon(IDI_COMPUTER), false, IDC_SEARCH_COMPUTER);
-}
-
-int SearchMenu::Command(int id, int code)
-{
-	switch(id) {
 	  case IDC_SEARCH_PROGRAM:
 		CloseStartMenu(id);
 		Dialog::DoModal(IDD_SEARCH_PROGRAM, WINDOW_CREATOR(FindProgramDlg));
@@ -1127,6 +1066,7 @@ int SearchMenu::Command(int id, int code)
 		ShowSearchComputer();
 		break;
 
+
 	  default:
 		return super::Command(id, code);
 	}
@@ -1134,7 +1074,7 @@ int SearchMenu::Command(int id, int code)
 	return 0;
 }
 
-void SearchMenu::ShowSearchDialog()
+void StartMenuHandler::ShowSearchDialog()
 {
 	static DynamicFct<SHFINDFILES> SHFindFiles(TEXT("SHELL32"), 90);
 
@@ -1142,7 +1082,7 @@ void SearchMenu::ShowSearchDialog()
 		(*SHFindFiles)(NULL, NULL);
 }
 
-void SearchMenu::ShowSearchComputer()
+void StartMenuHandler::ShowSearchComputer()
 {
 	static DynamicFct<SHFINDCOMPUTER> SHFindComputer(TEXT("SHELL32"), 91);
 
@@ -1151,10 +1091,51 @@ void SearchMenu::ShowSearchComputer()
 }
 
 
-RecentStartMenu::RecentStartMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
- :	super(hwnd, create_info)
+void SettingsMenu::AddEntries()
 {
+	super::AddEntries();
+
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
+#endif
+		AddButton(ResString(IDS_CONTROL_PANEL),	SmallIcon(IDI_CONFIG), false, IDC_CONTROL_PANEL);
+
+	AddButton(ResString(IDS_PRINTERS),		SmallIcon(IDI_PRINTER), true, IDC_PRINTERS);
+	AddButton(ResString(IDS_CONNECTIONS),	SmallIcon(IDI_NETWORK), true, IDC_CONNECTIONS);
+	AddButton(ResString(IDS_ADMIN),			SmallIcon(IDI_CONFIG), true, IDC_ADMIN);
+
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
+#endif
+		AddButton(ResString(IDS_SETTINGS_MENU),	SmallIcon(IDI_CONFIG), true, IDC_SETTINGS_MENU);
 }
+
+void BrowseMenu::AddEntries()
+{
+	super::AddEntries();
+
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_NONETHOOD))	// or REST_NOENTIRENETWORK ?
+#endif
+		AddButton(ResString(IDS_NETWORK),	SmallIcon(IDI_NETWORK), true, IDC_NETWORK);
+
+	AddButton(ResString(IDS_DRIVES),	SmallIcon(IDI_FOLDER), true, IDC_DRIVES);
+}
+
+void SearchMenu::AddEntries()
+{
+	super::AddEntries();
+
+	AddButton(ResString(IDS_SEARCH_PRG),	SmallIcon(IDI_APPS), false, IDC_SEARCH_PROGRAM);
+
+	AddButton(ResString(IDS_SEARCH_FILES),	SmallIcon(IDI_SEARCH_DOC), false, IDC_SEARCH_FILES);
+
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_HASFINDCOMPUTERS))
+#endif
+		AddButton(ResString(IDS_SEARCH_COMPUTER),	SmallIcon(IDI_COMPUTER), false, IDC_SEARCH_COMPUTER);
+}
+
 
 void RecentStartMenu::AddEntries()
 {
