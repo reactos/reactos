@@ -19,6 +19,15 @@
  *
  * FIXME: roll up in Netscape 3.01.
  */
+/*
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS User32
+ * PURPOSE:          combobox control
+ * FILE:             lib/user32/controls/combo.c
+ * PROGRAMER:        Steven Edwards
+ * REVISION HISTORY: 2003/06/25 SAE Created
+ * NOTES:            Adapted from Wine
+ */
 
 #include <stdio.h>
 #include <string.h>
@@ -29,8 +38,6 @@
 
 #include "user32/regcontrol.h"
 #include "controls.h"
-
-//WINE_DEFAULT_DEBUG_CHANNEL(combo);
 
   /* bits in the dwKeyData */
 #define KEYDATA_ALT             0x2000
