@@ -1,4 +1,4 @@
-/* $Id: image.c,v 1.6 2003/07/11 13:50:23 royce Exp $
+/* $Id: image.c,v 1.7 2004/01/17 10:30:53 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -56,9 +56,7 @@ RtlImageDirectoryEntryToData (
 	)
 {
 	PIMAGE_NT_HEADERS NtHeader;
-	PIMAGE_SECTION_HEADER SectionHeader;
 	ULONG Va;
-	ULONG Count;
 
 	NtHeader = RtlImageNtHeader (BaseAddress);
 	if (NtHeader == NULL)
@@ -78,16 +76,7 @@ RtlImageDirectoryEntryToData (
 		return (PVOID)(BaseAddress + Va);
 
 	/* image mapped as ordinary file, we must find raw pointer */
-	SectionHeader = (PIMAGE_SECTION_HEADER)(NtHeader + 1);
-	Count = NtHeader->FileHeader.NumberOfSections;
-	while (Count--)
-	{
-		if (SectionHeader->VirtualAddress == Va)
-			return (PVOID)(BaseAddress + SectionHeader->PointerToRawData);
-		SectionHeader++;
-	}
-
-	return NULL;
+	return (PVOID)RtlImageRvaToVa (NtHeader, BaseAddress, Va, NULL);
 }
 
 
