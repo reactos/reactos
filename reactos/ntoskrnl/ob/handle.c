@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.63 2004/10/22 20:57:39 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -353,13 +353,7 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
 	 }
 
        KeReleaseSpinLock(&SourceProcess->HandleTable.ListLock, oldIrql);
-       if (!((ULONG_PTR)SourceHandleEntry->ObjectBody & OB_HANDLE_FLAG_INHERIT))
-         {
-	   ObDereferenceObject(TargetProcess);
-	   ObDereferenceObject(SourceProcess);
-	   ObDereferenceObject(ObjectBody);
-	   return STATUS_INVALID_HANDLE;
-	 }
+
        ObCreateHandle(TargetProcess,
 		      ObjectBody,
 		      DesiredAccess,
