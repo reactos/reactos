@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.43 2003/03/17 22:28:55 gdalsnes Exp $
+/* $Id: handle.c,v 1.44 2003/04/18 09:37:01 gvg Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -217,40 +217,60 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
        ObDereferenceObject(SourceProcess);
        return(Status);
      }
-   KeAcquireSpinLock(&SourceProcess->HandleTable.ListLock, &oldIrql);
-   SourceHandleRep = ObpGetObjectByHandle(&SourceProcess->HandleTable,
-					  SourceHandle);
-   if (SourceHandleRep == NULL)
+
+   /* Check for magic handle first */
+   if (SourceHandle == NtCurrentThread())
      {
-	KeReleaseSpinLock(&SourceProcess->HandleTable.ListLock, oldIrql);
-	ObDereferenceObject(SourceProcess);
-	ObDereferenceObject(TargetProcess);
-	return(STATUS_INVALID_HANDLE);
+       ObReferenceObjectByHandle(SourceHandle,
+                                 PROCESS_DUP_HANDLE,
+                                 NULL,
+                                 UserMode,
+                                 &ObjectBody,
+                                 NULL);
+
+       ObCreateHandle(TargetProcess,
+                      ObjectBody,
+                      THREAD_ALL_ACCESS,
+                      InheritHandle,
+                      &TargetHandle);
      }
-   ObjectBody = SourceHandleRep->ObjectBody;
-   ObReferenceObjectByPointer(ObjectBody,
-			      0,
-			      NULL,
-			      UserMode);
+   else
+     {
+       KeAcquireSpinLock(&SourceProcess->HandleTable.ListLock, &oldIrql);
+       SourceHandleRep = ObpGetObjectByHandle(&SourceProcess->HandleTable,
+					      SourceHandle);
+       if (SourceHandleRep == NULL)
+	 {
+	   KeReleaseSpinLock(&SourceProcess->HandleTable.ListLock, oldIrql);
+	   ObDereferenceObject(SourceProcess);
+	   ObDereferenceObject(TargetProcess);
+	   return(STATUS_INVALID_HANDLE);
+	 }
+       ObjectBody = SourceHandleRep->ObjectBody;
+       ObReferenceObjectByPointer(ObjectBody,
+			          0,
+			          NULL,
+			          UserMode);
    
-   if (Options & DUPLICATE_SAME_ACCESS)
-     {
-	DesiredAccess = SourceHandleRep->GrantedAccess;
-     }
+       if (Options & DUPLICATE_SAME_ACCESS)
+	 {
+	   DesiredAccess = SourceHandleRep->GrantedAccess;
+	 }
    
-   KeReleaseSpinLock(&SourceProcess->HandleTable.ListLock, oldIrql);
-   if (!SourceHandleRep->Inherit)
-     {
-       ObDereferenceObject(TargetProcess);
-       ObDereferenceObject(SourceProcess);
-       ObDereferenceObject(ObjectBody);
-       return STATUS_INVALID_HANDLE;
+       KeReleaseSpinLock(&SourceProcess->HandleTable.ListLock, oldIrql);
+       if (!SourceHandleRep->Inherit)
+         {
+	   ObDereferenceObject(TargetProcess);
+	   ObDereferenceObject(SourceProcess);
+	   ObDereferenceObject(ObjectBody);
+	   return STATUS_INVALID_HANDLE;
+	 }
+       ObCreateHandle(TargetProcess,
+		      ObjectBody,
+		      DesiredAccess,
+		      InheritHandle,
+		      &TargetHandle);
      }
-   ObCreateHandle(TargetProcess,
-		  ObjectBody,
-		  DesiredAccess,
-		  InheritHandle,
-		  &TargetHandle);
    
    if (Options & DUPLICATE_CLOSE_SOURCE)
      {
