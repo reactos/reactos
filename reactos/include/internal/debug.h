@@ -25,16 +25,24 @@
 
 #define UNIMPLEMENTED do {DbgPrint("%s at %s:%d is unimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0);
 
+/*  FIXME: should probably remove this later  */
+#if !defined(CHECKED) && !defined(NDEBUG)
+#define CHECKED
+#endif
+
+#ifdef CHECKED
+#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); for (;;); }
+#else
+#define assert(x)
+#endif
+
 #ifndef NDEBUG
 #define OLD_DPRINT(fmt,args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(fmt,args); } while(0);
 #define DPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); ExAllocatePool(NonPagedPool,0); } while(0);
-//#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); (*((unsigned int *)0))=1; for (;;); }
-#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); for (;;); }
 #define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); ExAllocatePool(NonPagedPool,0); } while(0);
 #else
 #define DPRINT(args...)
 #define OLD_DPRINT(args...)
-#define assert(x)
 #define CHECKPOINT
 #endif /* NDEBUG */
 
