@@ -1,4 +1,4 @@
-/* $Id: list.c,v 1.15 2004/10/17 13:08:26 navaraf Exp $
+/* $Id: list.c,v 1.16 2004/10/18 20:56:22 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -177,7 +177,7 @@ ExInterlockedRemoveTailList(PLIST_ENTRY Head,
  * @implemented
  */
 PSINGLE_LIST_ENTRY
-STDCALL
+FASTCALL
 ExInterlockedPopEntrySList(IN PSLIST_HEADER ListHead,
 			   IN PKSPIN_LOCK Lock)
 /*
@@ -209,7 +209,7 @@ ExInterlockedPopEntrySList(IN PSLIST_HEADER ListHead,
  * @implemented
  */
 PSINGLE_LIST_ENTRY
-STDCALL
+FASTCALL
 ExInterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
 			    IN PSINGLE_LIST_ENTRY ListEntry,
 			    IN PKSPIN_LOCK Lock)

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.195 2004/10/17 15:39:30 hbirr Exp $
+; $Id: ntoskrnl.def,v 1.196 2004/10/18 20:56:22 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -113,9 +113,9 @@ ExInterlockedIncrementLong@8
 ExInterlockedInsertHeadList@12
 ExInterlockedInsertTailList@12
 ExInterlockedPopEntryList@8
-ExInterlockedPopEntrySList@8
+@ExInterlockedPopEntrySList@8
 ExInterlockedPushEntryList@12
-ExInterlockedPushEntrySList@12
+@ExInterlockedPushEntrySList@12
 ExInterlockedRemoveHeadList@8
 ExIsProcessorFeaturePresent@4
 ExIsResourceAcquiredExclusiveLite@4
