@@ -1,4 +1,4 @@
-/* $Id: stdlib.h,v 1.4 2002/10/29 04:45:15 rex Exp $
+/* $Id: stdlib.h,v 1.5 2003/01/05 18:27:20 robd Exp $
  */
 /*
  * psx/stdlib.h
@@ -39,7 +39,11 @@
 
 /* MACROS */
 /* FIXME? Windows NT's ntdll doesn't export RtlGetProcessHeap() */
-#define RtlGetProcessHeap() ((HANDLE)NtCurrentPeb()->ProcessHeap)
+//#define RtlGetProcessHeap() ((HANDLE)NtCurrentPeb()->ProcessHeap)
+#ifndef _RTLGETPROCESSHEAP_DEFINED_
+#define _RTLGETPROCESSHEAP_DEFINED_
+#define RtlGetProcessHeap() (NtCurrentPeb()->ProcessHeap)
+#endif
 
 #define __malloc(SIZE)      (RtlAllocateHeap(RtlGetProcessHeap(), 0, (SIZE)))
 #define __realloc(PTR,SIZE) (RtlReAllocateHeap(RtlGetProcessHeap(), 0, (PTR), (SIZE)))

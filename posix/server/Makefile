@@ -1,8 +1,9 @@
-# $Id: Makefile,v 1.4 2002/10/29 04:45:50 rex Exp $
+# $Id: Makefile,v 1.5 2003/01/05 18:27:19 robd Exp $
 #
 # ReactOS POSIX+ Environment Subsystem
 #
-PATH_TO_TOP=../../reactos
+
+PATH_TO_TOP = ../../reactos
 
 TARGET_TYPE = program
 
@@ -14,7 +15,7 @@ TARGET_APPTYPE = console
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 
-TARGET_CFLAGS=-Iinclude -I../include -D__PSXSS_ON_W32__
+TARGET_CFLAGS = -Iinclude -I../include -D__PSXSS_ON_W32__
 
 PSXSS_MISC_OBJECTS = \
 	misc/main.o \
@@ -38,7 +39,7 @@ PSXSS_CALL_OBJECTS = \
 	call/stubs.o \
 	call/syscall.o
 
-TARGET_OBJECTS=\
+TARGET_OBJECTS = \
 	$(PSXSS_MISC_OBJECTS) \
 	$(PSXSS_OB_OBJECTS) \
 	$(PSXSS_PORT_OBJECTS) \

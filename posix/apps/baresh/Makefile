@@ -1,47 +1,30 @@
-# $Id: Makefile,v 1.8 2002/12/26 18:28:25 robd Exp $
+# $Id: Makefile,v 1.9 2003/01/05 18:27:19 robd Exp $
 #
-# Tu run it in Win32 console mode, undefine __SUBSYSTEM_WINDOWS__
+# To run it in Win32 console mode, undefine __SUBSYSTEM_WINDOWS__
 # and pass "console" in the ld's --subsystem option.
 # 
 #
-PATH_TO_TOP=../../../reactos
 
-PATH_TO_PSX_TOP=../..
+PATH_TO_TOP = ../../../reactos
 
-TARGET_NAME=baresh
+PATH_TO_PSX_TOP = ../..
 
-CFLAGS=-D__SUBSYSTEM_WINDOWS__
+TARGET_TYPE = program
 
-OBJECTS=sh.o $(TARGET_NAME).coff
+#TARGET_APPTYPE = console
+TARGET_APPTYPE = windows
 
-LIBRARIES=\
-	$(PATH_TO_PSX_TOP)/lib/crt0w32.o \
-	$(PATH_TO_PSX_TOP)/lib/psxdll/psxdll.a
+TARGET_NAME = baresh
 
-$(TARGET_NAME): $(OBJECTS) $(LIBRARIES)
-	$(CC) \
-		$(CFLAGS) \
-		$(OBJECTS) \
-		$(LIBRARIES)\
-		-o $@ \
-		-Wl,--subsystem,windows\
-		-nostartfiles \
-		-nostdlib
+TARGET_CFLAGS = -D__SUBSYSTEM_WINDOWS__
 
-$(TARGET_NAME).coff: sh.rc
-	$(RC) \
-		--include-dir $(PATH_TO_TOP)/include \
-		--output-format coff \
-		$< $@ 
+TARGET_LIBS = $(PATH_TO_PSX_TOP)/lib/crt0w32.o \
+	      $(PATH_TO_TOP)/dk/psx/lib/psxdll.a
 
-clean:
-	- $(RM) *.o
-	- $(RM) *.exe
-	- $(RM) *.coff
-	- $(RM) *.sym
-
-
+TARGET_OBJECTS = sh.o
 
 include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
 
 # EOF
