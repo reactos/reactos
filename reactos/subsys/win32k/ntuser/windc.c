@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.55 2004/02/05 23:16:37 gvg Exp $
+/* $Id: windc.c,v 1.56 2004/02/08 22:02:40 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -742,8 +742,14 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window, int DeltaX, int DeltaY)
             {
               dc->w.DCOrgX += DeltaX;
               dc->w.DCOrgY += DeltaY;
-              NtGdiOffsetRgn(dc->w.hClipRgn, DeltaX, DeltaY);
-              NtGdiOffsetRgn(pDCE->hClipRgn, DeltaX, DeltaY);
+              if (NULL != dc->w.hClipRgn)
+                {
+                  NtGdiOffsetRgn(dc->w.hClipRgn, DeltaX, DeltaY);
+                }
+              if (NULL != pDCE->hClipRgn)
+                {
+                  NtGdiOffsetRgn(pDCE->hClipRgn, DeltaX, DeltaY);
+                }
             }
           DC_UnlockDc(pDCE->hDC);
 
