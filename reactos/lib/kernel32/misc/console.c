@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.48 2002/11/12 00:48:25 mdill Exp $
+/* $Id: console.c,v 1.49 2002/12/06 17:31:33 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1161,7 +1161,7 @@ WriteConsoleInputA(
   }
   
   if(lpNumberOfEventsWritten != NULL)
-    lpNumberOfEventsWritten = Reply.Data.WriteConsoleInputReply.Length;
+    *lpNumberOfEventsWritten = Reply.Data.WriteConsoleInputReply.Length;
   
   RtlFreeHeap(GetProcessHeap(), 0, Request);
   CsrReleaseParameterBuffer(BufferBase);
