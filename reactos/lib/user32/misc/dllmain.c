@@ -37,6 +37,10 @@ Init(VOID)
     (PVOID)User32SendWINDOWPOSCHANGINGMessageForKernel;
   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDWINDOWPOSCHANGED] =
     (PVOID)User32SendWINDOWPOSCHANGEDMessageForKernel;
+  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDSTYLECHANGING] =
+    (PVOID)User32SendSTYLECHANGINGMessageForKernel;
+  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDSTYLECHANGED] =
+    (PVOID)User32SendSTYLECHANGEDMessageForKernel;
 
   UserSetupInternalPos();
 

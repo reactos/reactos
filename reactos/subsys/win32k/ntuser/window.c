@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.52 2003/06/03 15:43:57 jvangael Exp $
+/* $Id: window.c,v 1.53 2003/06/05 03:55:36 mdill Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1246,6 +1246,7 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
   PWINDOW_OBJECT WindowObject;
   NTSTATUS Status;
   LONG OldValue;
+  STYLESTRUCT Style;
 
   W32kGuiCheck();
 
@@ -1277,12 +1278,20 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 	{
 	case GWL_EXSTYLE:
 	  OldValue = (LONG) WindowObject->ExStyle;
-	  WindowObject->ExStyle = (DWORD) NewValue;
+	  Style.styleOld = OldValue;
+	  Style.styleNew = NewValue;
+	  W32kSendSTYLECHANGINGMessage(hWnd, GWL_EXSTYLE, &Style);
+	  WindowObject->ExStyle = (DWORD)Style.styleNew;
+	  W32kSendSTYLECHANGEDMessage(hWnd, GWL_EXSTYLE, &Style);
 	  break;
 
 	case GWL_STYLE:
 	  OldValue = (LONG) WindowObject->Style;
-	  WindowObject->Style = (DWORD) NewValue;
+	  Style.styleOld = OldValue;
+	  Style.styleNew = NewValue;
+	  W32kSendSTYLECHANGINGMessage(hWnd, GWL_STYLE, &Style);
+	  WindowObject->Style = (DWORD)Style.styleNew;
+	  W32kSendSTYLECHANGEDMessage(hWnd, GWL_STYLE, &Style);
 	  break;
 
 	case GWL_WNDPROC:

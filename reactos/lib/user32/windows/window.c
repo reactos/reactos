@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.35 2003/05/23 17:07:12 rcampbell Exp $
+/* $Id: window.c,v 1.36 2003/06/05 03:55:36 mdill Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -173,6 +173,52 @@ User32SendWINDOWPOSCHANGEDMessageForKernel(PVOID Arguments, ULONG ArgumentLength
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_WINDOWPOSCHANGED, 0, 
 			   (LPARAM)&CallbackArgs->WindowPos);
+  DPRINT("Returning result %d.\n", Result);
+  return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
+}
+
+NTSTATUS STDCALL
+User32SendSTYLECHANGINGMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+  PSENDSTYLECHANGING_CALLBACK_ARGUMENTS CallbackArgs;
+  WNDPROC Proc;
+  LRESULT Result;
+
+  DPRINT("User32SendSTYLECHANGINGMessageForKernel.\n");
+  CallbackArgs = (PSENDSTYLECHANGING_CALLBACK_ARGUMENTS)Arguments;
+  if (ArgumentLength != sizeof(SENDSTYLECHANGING_CALLBACK_ARGUMENTS))
+    {
+      DPRINT("Wrong length.\n");
+      return(STATUS_INFO_LENGTH_MISMATCH);
+    }
+  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
+  DPRINT("Proc %X\n", Proc);
+  /* Call the window procedure; notice kernel messages are always unicode. */
+  Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_STYLECHANGING, CallbackArgs->WhichStyle,
+			   (LPARAM)&CallbackArgs->Style);
+  DPRINT("Returning result %d.\n", Result);
+  return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
+}
+
+NTSTATUS STDCALL
+User32SendSTYLECHANGEDMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+  PSENDSTYLECHANGED_CALLBACK_ARGUMENTS CallbackArgs;
+  WNDPROC Proc;
+  LRESULT Result;
+
+  DPRINT("User32SendSTYLECHANGEDGMessageForKernel.\n");
+  CallbackArgs = (PSENDSTYLECHANGED_CALLBACK_ARGUMENTS)Arguments;
+  if (ArgumentLength != sizeof(SENDSTYLECHANGED_CALLBACK_ARGUMENTS))
+    {
+      DPRINT("Wrong length.\n");
+      return(STATUS_INFO_LENGTH_MISMATCH);
+    }
+  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
+  DPRINT("Proc %X\n", Proc);
+  /* Call the window procedure; notice kernel messages are always unicode. */
+  Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_STYLECHANGED, CallbackArgs->WhichStyle,
+			   (LPARAM)&CallbackArgs->Style);
   DPRINT("Returning result %d.\n", Result);
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }

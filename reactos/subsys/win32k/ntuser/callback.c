@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.9 2003/05/18 17:16:17 ea Exp $
+/* $Id: callback.c,v 1.10 2003/06/05 03:55:36 mdill Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -277,6 +277,59 @@ W32kSendWINDOWPOSCHANGEDMessage(HWND Wnd, WINDOWPOS* WindowPos)
 }
 
 LRESULT STDCALL
+W32kSendSTYLECHANGINGMessage(HWND Wnd, DWORD WhichStyle, STYLESTRUCT* Style)
+{
+  SENDSTYLECHANGING_CALLBACK_ARGUMENTS Arguments;
+  LRESULT Result;
+  NTSTATUS Status;
+  PVOID ResultPointer;
+  ULONG ResultLength;
+
+  Arguments.Wnd = Wnd;
+  Arguments.Style = *Style;
+  Arguments.WhichStyle = WhichStyle;
+  ResultPointer = &Result;
+  ResultLength = sizeof(LRESULT);
+  Status = NtW32Call(USER32_CALLBACK_SENDSTYLECHANGING,
+		     &Arguments,
+		     sizeof(SENDSTYLECHANGING_CALLBACK_ARGUMENTS),
+		     &ResultPointer,
+		     &ResultLength);
+  if (!NT_SUCCESS(Status))
+    {
+      return(0);
+    }
+  *Style = Arguments.Style;  
+  return(Result);
+}
+
+LRESULT STDCALL
+W32kSendSTYLECHANGEDMessage(HWND Wnd, DWORD WhichStyle, STYLESTRUCT* Style)
+{
+  SENDSTYLECHANGED_CALLBACK_ARGUMENTS Arguments;
+  LRESULT Result;
+  NTSTATUS Status;
+  PVOID ResultPointer;
+  ULONG ResultLength;
+
+  Arguments.Wnd = Wnd;
+  Arguments.Style = *Style;
+  Arguments.WhichStyle = WhichStyle;
+  ResultPointer = &Result;
+  ResultLength = sizeof(LRESULT);
+  Status = NtW32Call(USER32_CALLBACK_SENDSTYLECHANGED,
+		     &Arguments,
+		     sizeof(SENDSTYLECHANGED_CALLBACK_ARGUMENTS),
+		     &ResultPointer,
+		     &ResultLength);
+  if (!NT_SUCCESS(Status))
+    {
+      return(0);
+    }
+  return(Result);
+}
+
+LRESULT STDCALL
 W32kCallTrampolineWindowProc(WNDPROC Proc,
 			     HWND Wnd,
 			     UINT Message,
@@ -306,12 +359,18 @@ W32kCallTrampolineWindowProc(WNDPROC Proc,
 	    return W32kSendNCCALCSIZEMessage(Wnd, FALSE, (RECT*)lParam, NULL);
 	  }
       }
-     
+
     case WM_WINDOWPOSCHANGING:
       return W32kSendWINDOWPOSCHANGINGMessage(Wnd, (WINDOWPOS*) lParam);
 
     case WM_WINDOWPOSCHANGED:
       return W32kSendWINDOWPOSCHANGEDMessage(Wnd, (WINDOWPOS*) lParam);
+
+    case WM_STYLECHANGING:
+      return W32kSendSTYLECHANGINGMessage(Wnd, wParam, (STYLESTRUCT*) lParam);
+
+    case WM_STYLECHANGED:
+	  return W32kSendSTYLECHANGEDMessage(Wnd, wParam, (STYLESTRUCT*) lParam);
 
     default:
       return(W32kCallWindowProc(Proc, Wnd, Message, wParam, lParam));
