@@ -114,7 +114,7 @@ BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, DWORD len, BOOL b
 }
 
 
-BOOL HCR_GetExecuteCommandW(HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len)
+BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len )
 {
         static const WCHAR swShell[] = {'\\','s','h','e','l','l','\\',0};
         static const WCHAR swCommand[] = {'\\','c','o','m','m','a','n','d',0};

@@ -397,7 +397,7 @@ ISF_ControlPanel_fnGetUIObjectOf(IShellFolder2 * iface,
 	    SHFree(pidl);
 	    hr = S_OK;
 	} else if ((IsEqualIID(riid,&IID_IShellLinkW) || IsEqualIID(riid,&IID_IShellLinkA))
-				&&(cidl >= 1)) {
+				&& (cidl == 1)) {
 	    pidl = ILCombine(This->pidlRoot, apidl[0]);
 	    hr = IShellLink_ConstructFromFile(NULL, riid, pidl,(LPVOID*)&pObj);
 	    SHFree(pidl);
