@@ -229,8 +229,8 @@ ReadLine()
     return FALSE;
 
   i = 0;
-  while (((j = CurrentOffset + i) < FileBufferSize) && (i < sizeof (Line)) &&
-    ((ch = FileBuffer[j]) != 0x0D))
+  while ((((j = CurrentOffset + i) < FileBufferSize) && (i < sizeof (Line)) &&
+    ((ch = FileBuffer[j]) != 0x0D && (ch = FileBuffer[j]) != 0x0A)))
   {
     Line[i] = ch;
     i++;
@@ -239,7 +239,7 @@ ReadLine()
   Line[i]    = '\0';
   LineLength = i;
   
-  if (FileBuffer[CurrentOffset + i + 1] == 0x0A)
+  if ((FileBuffer[CurrentOffset + i] == 0x0D) && (FileBuffer[CurrentOffset + i + 1] == 0x0A))
     CurrentOffset++;
 
   CurrentOffset += i + 1;

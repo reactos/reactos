@@ -1,5 +1,9 @@
 2003-08-23  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* apps/utils/stats/stats.c (ReadLine): Handle unix end-of-line characters.
+
+2003-08-23  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* apps/tests/Makefile (TEST_APPS): Remove patblt and stretchblt
 	as they break full make.
 
