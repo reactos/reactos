@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.23 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: messagebox.c,v 1.24 2004/02/05 22:09:15 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -204,6 +204,7 @@ static INT_PTR CALLBACK MessageBoxProc( HWND hwnd, UINT message,
   return 0;
 }
 
+#define SAFETY_MARGIN 32 /* Extra number of bytes to allocate in case we counted wrong */
 static int
 MessageBoxTimeoutIndirectW(
   CONST LPMSGBOXPARAMS lpMsgBoxParams, UINT Timeout)
@@ -324,8 +325,27 @@ MessageBoxTimeoutIndirectW(
         MessageBeep(MB_OK);
         break;
     }
-    
-    bufsize = 0;
+
+    /* Basic space */
+    bufsize = sizeof(DLGTEMPLATE) + 
+              2 * sizeof(WORD) +                         /* menu and class */
+              (caplen + 1) * sizeof(WCHAR);              /* title */
+
+    /* Space for icon */
+    if (NULL != Icon)
+    {
+      bufsize = (bufsize + 3) & ~3;
+      bufsize += sizeof(DLGITEMTEMPLATE) +
+                 4 * sizeof(WORD) +
+                 sizeof(WCHAR);
+    }
+
+    /* Space for text */
+    bufsize = (bufsize + 3) & ~3;
+    bufsize += sizeof(DLGITEMTEMPLATE) +
+               3 * sizeof(WORD) +
+               (textlen + 1) * sizeof(WCHAR);
+
     
     for(i = 0; i < nButtons; i++)
     {
@@ -365,25 +385,16 @@ MessageBoxTimeoutIndirectW(
           ButtonText[i][0] = (WCHAR)0;
           break;
       }
-      if(ButtonText[i][0])
-      {
-        bufsize += ((strlenW(ButtonText[i]) + 1) * sizeof(WCHAR));
-      }
+
+      /* Space for buttons */
+      bufsize = (bufsize + 3) & ~3;
+      bufsize += sizeof(DLGITEMTEMPLATE) +
+                 3 * sizeof(WORD) +
+                 (wcslen(ButtonText[i]) + 1) * sizeof(WCHAR);
     }
     
-    if(Icon)
-    {
-      bufsize += sizeof(DLGITEMTEMPLATE)+3 + (5 * sizeof(WORD)); /* icon */
-    }
-    
-    bufsize += sizeof(DLGTEMPLATE) + 
-               (2 * sizeof(WORD)) +                         /* menu and class */
-               ((caplen + 1) * sizeof(WCHAR)) +             /* title */
-               ((nButtons + 1) * sizeof(DLGITEMTEMPLATE)) + /* text and controls */
-               ((textlen + 1) * sizeof(WCHAR));             /* text */
-    
-    bufsize += 1024; /* FIXME */
-    buf = RtlAllocateHeap(RtlGetProcessHeap(), 0, bufsize);
+    buf = RtlAllocateHeap(RtlGetProcessHeap(), 0, bufsize + SAFETY_MARGIN);
+        /* Just to be safe.... */
     if(!buf)
     {
       return 0;
@@ -415,7 +426,7 @@ MessageBoxTimeoutIndirectW(
     dest += 2 * sizeof(WORD);
     memcpy(dest, caption, caplen * sizeof(WCHAR));
     dest += caplen * sizeof(WCHAR);
-    *(WORD*)dest = 0;
+    *(WCHAR*)dest = L'\0';
     dest += sizeof(WCHAR);
     
     /* Create icon */
@@ -434,8 +445,8 @@ MessageBoxTimeoutIndirectW(
       dest += sizeof(WORD);
       *(WORD*)dest = 0xFFFF;
       dest += sizeof(WORD);
-      *(WORD*)dest = 0;
-      dest += sizeof(WORD);
+      *(WCHAR*)dest = 0;
+      dest += sizeof(WCHAR);
       *(WORD*)dest = 0;
       dest += sizeof(WORD);
     }
@@ -457,8 +468,8 @@ MessageBoxTimeoutIndirectW(
     dest += sizeof(WORD);
     memcpy(dest, text, textlen * sizeof(WCHAR));
     dest += textlen * sizeof(WCHAR);
-    *(WORD*)dest = 0;
-    dest += sizeof(WORD);
+    *(WCHAR*)dest = 0;
+    dest += sizeof(WCHAR);
     *(WORD*)dest = 0;
     dest += sizeof(WORD);
     
@@ -499,9 +510,9 @@ MessageBoxTimeoutIndirectW(
       btnsize.cy = max(btnsize.cy, btnrect.bottom);
     }
 
-	if ( (ULONG_PTR)dest > ((ULONG_PTR)buf + (ULONG_PTR)bufsize) ) 
-    { 
-      DbgPrint ( "buffer overrun in messagebox.c ( bufsize = %lu, but used %lu )\n", bufsize, (ULONG_PTR)dest-(ULONG_PTR)buf );
+    if ((ULONG_PTR) dest != ((ULONG_PTR) buf + (ULONG_PTR) bufsize))
+    {
+      DbgPrint("Tell GvG he can't count: bufsize is %lu, but should be %lu\n", bufsize, (ULONG_PTR) dest - (ULONG_PTR) buf);
     }
     
     /* make first button the default button if no other is */
