@@ -125,8 +125,11 @@ SerialReadWorkItem(
 	Irp = WorkItemData->Irp;
 	
 	ReadBytes(DeviceObject, Irp, WorkItemData);
-	ExFreePoolWithTag(pWorkItemData, SERIAL_TAG);
+	
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	
+	IoFreeWorkItem(WorkItemData->IoWorkItem);
+	ExFreePoolWithTag(pWorkItemData, SERIAL_TAG);
 }
 
 NTSTATUS STDCALL
@@ -215,7 +218,8 @@ SerialRead(
 	WorkItem = IoAllocateWorkItem(DeviceObject);
 	if (WorkItem)
 	{
-		IoQueueWorkItem(WorkItem, SerialReadWorkItem, DelayedWorkQueue, WorkItemData);
+                WorkItemData->IoWorkItem = WorkItem;
+                IoQueueWorkItem(WorkItem, SerialReadWorkItem, DelayedWorkQueue, WorkItemData);
 		IoMarkIrpPending(Irp);
 		return STATUS_PENDING;
 	}

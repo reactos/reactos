@@ -108,6 +108,7 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 typedef struct _WORKITEM_DATA
 {
 	PIRP Irp;
+	PIO_WORKITEM IoWorkItem;
 	
 	BOOLEAN UseIntervalTimeout;
 	BOOLEAN UseTotalTimeout;
