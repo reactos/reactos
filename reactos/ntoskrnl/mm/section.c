@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.77 2002/02/19 00:09:23 ekohl Exp $
+/* $Id: section.c,v 1.78 2002/02/27 01:12:26 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1315,6 +1315,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
     {
       if (!DirectMapped || Private)
 	{
+	  MmSetSavedSwapEntryPage(PhysicalAddress, 0);
 	  MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
 	}
       if (Private)
