@@ -20,6 +20,9 @@
 #include "freeldr.h"
 #include "parseini.h"
 #include "oslist.h"
+#include "stdlib.h"
+#include "memory.h"
+#include "tui.h"
 
 BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNamesPointer, PULONG OperatingSystemCountPointer)
 {
