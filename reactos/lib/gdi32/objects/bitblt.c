@@ -1,4 +1,4 @@
-/* $Id: bitblt.c,v 1.17 2004/02/14 00:31:39 sedwards Exp $
+/* $Id: bitblt.c,v 1.18 2004/03/15 04:21:17 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -349,17 +349,13 @@ SetPixel(HDC  hDC,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 COLORREF
 STDCALL
-GetPixel(
-	HDC	a0,
-	int	a1,
-	int	a2
-	)
+GetPixel(HDC hDC, int X, int Y)
 {
-	return NtGdiGetPixel(a0, a1, a2);
+   return NtGdiGetPixel(hDC, X, Y);
 }
 
 
