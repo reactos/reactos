@@ -1709,6 +1709,7 @@ BOOL WINAPI GetPrivateProfileStructW (LPCWSTR section, LPCWSTR key,
                 DWORD chksum = 0;
 
                 end  = k->value + wcslen(k->value); /* -> '\0' */
+#if 0
                 /* check for invalid chars in ASCII coded hex string */
                 for (p = k->value; p < end; p++)
                 {
@@ -1720,7 +1721,7 @@ BOOL WINAPI GetPrivateProfileStructW (LPCWSTR section, LPCWSTR key,
                         break;
                     }
                 }
-
+#endif
                 if (valid)
                 {
                     BOOL highnibble = TRUE;
