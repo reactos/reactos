@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.43 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: find.c,v 1.44 2004/05/13 20:32:18 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -47,6 +47,14 @@ InternalFindNextFile (
 	PKERNEL32_FIND_FILE_DATA IData;
 	IO_STATUS_BLOCK IoStatusBlock;
 	NTSTATUS Status;
+
+	DPRINT("InternalFindNextFile(%lx)\n", hFindFile);
+
+	if (hFindFile == NULL)
+	{
+	    SetLastError (ERROR_INVALID_HANDLE);
+	    return FALSE;
+	}
 
 	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
 
