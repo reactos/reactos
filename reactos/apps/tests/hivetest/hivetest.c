@@ -57,7 +57,7 @@ void CreateKeyTest(void)
   UNICODE_STRING KeyName;
   NTSTATUS Status;
 
-  dprintf("Create key: '\\Registry\\Machine\\Software\\testkey':\n");
+  dprintf("Create key '\\Registry\\Machine\\Software\\testkey':\n");
   RtlInitUnicodeStringFromLiteral(&KeyName,
 				  L"\\Registry\\Machine\\Software\\testkey");
   InitializeObjectAttributes(&ObjectAttributes,
@@ -65,7 +65,7 @@ void CreateKeyTest(void)
 			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
-  dprintf("NtCreateKey: ");
+  dprintf("NtCreateKey:\n");
   Status = NtCreateKey(&hKey,
 		       KEY_ALL_ACCESS,
 		       &ObjectAttributes,
@@ -73,7 +73,7 @@ void CreateKeyTest(void)
 		       NULL,
 		       REG_OPTION_NON_VOLATILE,
 		       NULL);
-  dprintf("Status = %lx\n",Status);
+  dprintf("  Status = %lx\n",Status);
   if (NT_SUCCESS(Status))
     {
       NtClose(hKey);
@@ -96,17 +96,17 @@ void DeleteKeyTest(void)
 			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
-  dprintf("NtOpenKey: ");
+  dprintf("NtOpenKey:\n");
   Status = NtOpenKey(&hKey,
 		     KEY_ALL_ACCESS,
 		     &ObjectAttributes);
-  dprintf("Status = %lx\n",Status);
+  dprintf("  Status = %lx\n",Status);
   if (!NT_SUCCESS(Status))
     return;
 
-  dprintf("NtDeleteKey: ");
+  dprintf("NtDeleteKey:\n");
   Status = NtDeleteKey(hKey);
-  dprintf("Status = %lx\n",Status);
+  dprintf("  Status = %lx\n",Status);
   NtClose(hKey);
 }
 
@@ -130,21 +130,21 @@ void EnumerateKeyTest(void)
 			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
-  dprintf("NtOpenKey: ");
+  dprintf("NtOpenKey:\n");
   Status = NtOpenKey(&hKey,
 		     KEY_ALL_ACCESS,
 		     &ObjectAttributes);
-  dprintf("Status = %lx\n", Status);
+  dprintf("  Status = %lx\n", Status);
   if (!NT_SUCCESS(Status))
     return;
 
-  dprintf("NtQueryKey: ");
+  dprintf("NtQueryKey:\n");
   Status = NtQueryKey(hKey,
 		      KeyBasicInformation,
 		      &KeyInformation[0],
 		      sizeof(KeyInformation),
 		      &Length);
-  dprintf("Status = %lx\n", Status);
+  dprintf("  Status = %lx\n", Status);
   if (NT_SUCCESS(Status))
     {
       dprintf("\tKey Name = ");
@@ -153,7 +153,7 @@ void EnumerateKeyTest(void)
       dprintf("\n");
     }
 
-  dprintf("NtEnumerateKey: \n");
+  dprintf("NtEnumerateKey:\n");
   Index=0;
   while(NT_SUCCESS(Status))
     {
@@ -173,9 +173,9 @@ void EnumerateKeyTest(void)
       Index++;
     }
 
-  dprintf("NtClose: ");
+  dprintf("NtClose:\n");
   Status = NtClose(hKey);
-  dprintf("Status = %lx\n", Status);
+  dprintf("  Status = %lx\n", Status);
 }
 
 
@@ -187,7 +187,7 @@ void SetValueTest1(void)
   UNICODE_STRING ValueName;
   NTSTATUS Status;
 
-  dprintf("Create key: '\\Registry\\Machine\\Software\\testkey':\n");
+  dprintf("Create key '\\Registry\\Machine\\Software\\testkey':\n");
   RtlInitUnicodeStringFromLiteral(&KeyName,
 				  L"\\Registry\\Machine\\Software\\testkey");
   InitializeObjectAttributes(&ObjectAttributes,
@@ -195,7 +195,7 @@ void SetValueTest1(void)
 			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
 			     NULL,
 			     NULL);
-  dprintf("NtCreateKey: ");
+  dprintf("NtCreateKey:\n");
   Status = NtCreateKey(&hKey,
 		       KEY_ALL_ACCESS,
 		       &ObjectAttributes,
@@ -203,20 +203,20 @@ void SetValueTest1(void)
 		       NULL,
 		       REG_OPTION_NON_VOLATILE,
 		       NULL);
-  dprintf("Status = %lx\n",Status);
+  dprintf("  Status = %lx\n",Status);
   if (!NT_SUCCESS(Status))
     return;
 
   RtlInitUnicodeStringFromLiteral(&ValueName,
 				  L"TestValue");
-  dprintf("NtSetValueKey: ");
+  dprintf("NtSetValueKey:\n");
   Status = NtSetValueKey(hKey,
 			 &ValueName,
 			 0,
 			 REG_SZ,
 			 (PVOID)L"TestString",
 			 24);
-  dprintf("Status = %lx\n",Status);
+  dprintf("  Status = %lx\n",Status);
 
   NtClose(hKey);
 }
@@ -230,7 +230,7 @@ void SetValueTest2(void)
   UNICODE_STRING ValueName;
   NTSTATUS Status;
 
-  dprintf("Create key: '\\Registry\\Machine\\Software\\testkey':\n");
+  dprintf("Create key '\\Registry\\Machine\\Software\\testkey':\n");
   RtlInitUnicodeStringFromLiteral(&KeyName,
 				  L"\\Registry\\Machine\\Software\\testkey");
   InitializeObjectAttributes(&ObjectAttributes,
@@ -238,7 +238,7 @@ void SetValueTest2(void)
 			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
 			     NULL,
 			     NULL);
-  dprintf("NtCreateKey: ");
+  dprintf("NtCreateKey:\n");
   Status = NtCreateKey(&hKey,
 		       KEY_ALL_ACCESS,
 		       &ObjectAttributes,
@@ -273,7 +273,7 @@ void DeleteValueTest(void)
   HKEY KeyHandle;
   NTSTATUS Status;
 
-  dprintf("Open key: '\\Registry\\Machine\\Software\\testkey':\n");
+  dprintf("Open key '\\Registry\\Machine\\Software\\testkey':\n");
   RtlInitUnicodeStringFromLiteral(&KeyName,
 				  L"\\Registry\\Machine\\Software\\testkey");
   InitializeObjectAttributes(&ObjectAttributes,
@@ -311,7 +311,7 @@ void EnumerateValueTest(void)
   HKEY hKey = NULL;
   NTSTATUS Status;
 
-  dprintf("Open key: '\\Registry\\Machine\\Software\\testkey':\n");
+  dprintf("Open key '\\Registry\\Machine\\Software\\testkey':\n");
   RtlInitUnicodeStringFromLiteral(&KeyName,
 				  L"\\Registry\\Machine\\Software\\testkey");
   InitializeObjectAttributes(&ObjectAttributes,
@@ -326,7 +326,7 @@ void EnumerateValueTest(void)
   if (!NT_SUCCESS(Status))
     return;
 
-  dprintf("Enumerate values: \n");
+  dprintf("Enumerate values:\n");
   Index = 0;
   while (Status == STATUS_SUCCESS)
     {
