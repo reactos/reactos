@@ -16,13 +16,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dialog.c,v 1.22 2003/11/19 12:48:48 weiden Exp $
+/* $Id: dialog.c,v 1.23 2003/12/30 19:21:55 sedwards Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/dialog.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Thomas Weidenmueller (w3seek@users.sourceforge.net)
+ *                  Steven Edwards (Steven_Ed4153@yahoo.com)
  * UPDATE HISTORY:
  *      07-26-2003  Code ported from wine
  *      09-05-2001  CSH  Created
@@ -1158,6 +1159,183 @@ static HWND DIALOG_GetNextTabItem( HWND hwndMain, HWND hwndDlg, HWND hwndCtrl, B
     return retWnd;
 }
 
+/**********************************************************************
+ *	    DIALOG_DlgDirList
+ *
+ * Helper function for DlgDirList*
+ */
+static INT DIALOG_DlgDirList( HWND hDlg, LPSTR spec, INT idLBox,
+                                INT idStatic, UINT attrib, BOOL combo )
+{
+    HWND hwnd;
+    LPSTR orig_spec = spec;
+    char any[] = "*.*";
+
+#define SENDMSG(msg,wparam,lparam) \
+    ((attrib & DDL_POSTMSGS) ? PostMessageA( hwnd, msg, wparam, lparam ) \
+                             : SendMessageA( hwnd, msg, wparam, lparam ))
+
+    DPRINT("%p '%s' %d %d %04x\n",
+          hDlg, spec ? spec : "NULL", idLBox, idStatic, attrib );
+
+    /* If the path exists and is a directory, chdir to it */
+    if (!spec || !spec[0] || SetCurrentDirectoryA( spec )) spec = any;
+    else
+    {
+        char *p, *p2;
+        p = spec;
+        if ((p2 = strrchr( p, '\\' ))) p = p2;
+        if ((p2 = strrchr( p, '/' ))) p = p2;
+        if (p != spec)
+        {
+            char sep = *p;
+            *p = 0;
+            if (!SetCurrentDirectoryA( spec ))
+            {
+                *p = sep;  /* Restore the original spec */
+                return FALSE;
+            }
+            spec = p + 1;
+        }
+    }
+
+    DPRINT( "mask=%s\n", spec );
+
+    if (idLBox && ((hwnd = GetDlgItem( hDlg, idLBox )) != 0))
+    {
+        SENDMSG( combo ? CB_RESETCONTENT : LB_RESETCONTENT, 0, 0 );
+        if (attrib & DDL_DIRECTORY)
+        {
+            if (!(attrib & DDL_EXCLUSIVE))
+            {
+                if (SENDMSG( combo ? CB_DIR : LB_DIR,
+                             attrib & ~(DDL_DIRECTORY | DDL_DRIVES),
+                             (LPARAM)spec ) == LB_ERR)
+                    return FALSE;
+            }
+            if (SENDMSG( combo ? CB_DIR : LB_DIR,
+                       (attrib & (DDL_DIRECTORY | DDL_DRIVES)) | DDL_EXCLUSIVE,
+                         (LPARAM)"*.*" ) == LB_ERR)
+                return FALSE;
+        }
+        else
+        {
+            if (SENDMSG( combo ? CB_DIR : LB_DIR, attrib,
+                         (LPARAM)spec ) == LB_ERR)
+                return FALSE;
+        }
+    }
+
+    if (idStatic && ((hwnd = GetDlgItem( hDlg, idStatic )) != 0))
+    {
+        char temp[MAX_PATH];
+        GetCurrentDirectoryA( sizeof(temp), temp );
+        CharLowerA( temp );
+        /* Can't use PostMessage() here, because the string is on the stack */
+        SetDlgItemTextA( hDlg, idStatic, temp );
+    }
+
+    if (orig_spec && (spec != orig_spec))
+    {
+        /* Update the original file spec */
+        char *p = spec;
+        while ((*orig_spec++ = *p++));
+    }
+
+    return TRUE;
+#undef SENDMSG
+}
+
+/* Hack - We dont define this anywhere and we shouldn't
+ * Its only used to port buggy WINE code in to our buggy code.
+ * Make it go away - sedwards
+ */
+/* strdup macros */
+/* DO NOT USE IT!!  it will go away soon */
+inline static LPSTR HEAP_strdupWtoA( HANDLE heap, DWORD flags, LPCWSTR str )
+{
+    LPSTR ret;
+    INT len;
+
+    if (!str) return NULL;
+    len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL );
+    ret = RtlAllocateHeap(RtlGetProcessHeap(), flags, len );
+    if(ret) WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL );
+    return ret;
+}
+
+/**********************************************************************
+ *	    DIALOG_DlgDirListW
+ *
+ * Helper function for DlgDirList*W
+ */
+static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
+                                 INT idStatic, UINT attrib, BOOL combo )
+{
+    if (spec)
+    {
+        LPSTR specA = HEAP_strdupWtoA( GetProcessHeap(), 0, spec );
+        INT ret = DIALOG_DlgDirList( hDlg, specA, idLBox, idStatic,
+                                       attrib, combo );
+        MultiByteToWideChar( CP_ACP, 0, specA, -1, spec, 0x7fffffff );
+        HeapFree( GetProcessHeap(), 0, specA );
+        return ret;
+    }
+    return DIALOG_DlgDirList( hDlg, NULL, idLBox, idStatic, attrib, combo );
+}
+
+/**********************************************************************
+ *           DIALOG_DlgDirSelect
+ *
+ * Helper function for DlgDirSelect*
+ */
+static BOOL DIALOG_DlgDirSelect( HWND hwnd, LPSTR str, INT len,
+                                 INT id, BOOL unicode, BOOL combo )
+{
+    char *buffer, *ptr;
+    INT item, size;
+    BOOL ret;
+    HWND listbox = GetDlgItem( hwnd, id );
+
+    DPRINT("%p '%s' %d\n", hwnd, str, id );
+    if (!listbox) return FALSE;
+
+    item = SendMessageA(listbox, combo ? CB_GETCURSEL : LB_GETCURSEL, 0, 0 );
+    if (item == LB_ERR) return FALSE;
+    size = SendMessageA(listbox, combo ? CB_GETLBTEXTLEN : LB_GETTEXTLEN, 0, 0 );
+    if (size == LB_ERR) return FALSE;
+
+    if (!(buffer = HeapAlloc( GetProcessHeap(), 0, size+1 ))) return FALSE;
+
+    SendMessageA( listbox, combo ? CB_GETLBTEXT : LB_GETTEXT, item, (LPARAM)buffer );
+
+    if ((ret = (buffer[0] == '[')))  /* drive or directory */
+    {
+        if (buffer[1] == '-')  /* drive */
+        {
+            buffer[3] = ':';
+            buffer[4] = 0;
+            ptr = buffer + 2;
+        }
+        else
+        {
+            buffer[strlen(buffer)-1] = '\\';
+            ptr = buffer + 1;
+        }
+    }
+    else ptr = buffer;
+
+    if (unicode)
+    {
+        if (len > 0 && !MultiByteToWideChar( CP_ACP, 0, ptr, -1, (LPWSTR)str, len ))
+            ((LPWSTR)str)[len-1] = 0;
+    }
+    else lstrcpynA( str, ptr, len );
+    HeapFree( GetProcessHeap(), 0, buffer );
+    DPRINT("Returning %d '%s'\n", ret, str );
+    return ret;
+}
+
 /***********************************************************************
  *           GetDlgItemEnumProc
  *
@@ -1500,7 +1678,7 @@ DialogBoxParamW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -1511,8 +1689,7 @@ DlgDirListA(
   int nIDStaticPath,
   UINT uFileType)
 {
-  UNIMPLEMENTED;
-  return 0;
+    return DIALOG_DlgDirList( hDlg, lpPathSpec, nIDListBox, nIDStaticPath, uFileType, FALSE );
 }
 
 
@@ -1551,7 +1728,7 @@ DlgDirListComboBoxW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -1562,8 +1739,7 @@ DlgDirListW(
   int nIDStaticPath,
   UINT uFileType)
 {
-  UNIMPLEMENTED;
-  return 0;
+    return DIALOG_DlgDirListW( hDlg, lpPathSpec, nIDListBox, nIDStaticPath, uFileType, FALSE );
 }
 
 
@@ -1600,7 +1776,7 @@ DlgDirSelectComboBoxExW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -1610,13 +1786,12 @@ DlgDirSelectExA(
   int nCount,
   int nIDListBox)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    return DIALOG_DlgDirSelect( hDlg, lpString, nCount, nIDListBox, FALSE, FALSE );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -1626,8 +1801,7 @@ DlgDirSelectExW(
   int nCount,
   int nIDListBox)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    return DIALOG_DlgDirSelect( hDlg, (LPSTR)lpString, nCount, nIDListBox, TRUE, FALSE );
 }
 
 
