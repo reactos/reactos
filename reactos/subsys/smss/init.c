@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.23 2001/03/25 02:34:30 dwelch Exp $
+/* $Id: init.c,v 1.24 2001/05/01 23:06:25 phreak Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -324,11 +324,12 @@ BOOL InitSessionManager (HANDLE	Children[])
 			 L"\\SystemRoot\\system32\\drivers\\win32k.sys");
    Status = NtLoadDriver (&CmdLineW);
    
+#if 0
    if (!NT_SUCCESS(Status))
      {
 	return FALSE;
      }
-   
+#endif
    /* Run csrss.exe */
    RtlInitUnicodeString(&UnicodeString,
 			L"\\CsrssInitDone");
