@@ -34,6 +34,25 @@ BEGIN
 END
 
 
+IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "The ReactOS developers would like to acknowledge the following Open Source projects, "\
+                    "(parts of) which were used to create ReactOS:",
+                    IDC_STATIC,15,7,286,19
+    LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL
+    LTEXT           "ReactOS is licensed under the GPL, so if you want to reuse or redistribute "\
+                    "(parts of) it you must respect the GPL",
+                    IDC_STATIC,15,110,227,19
+    PUSHBUTTON      "&View GPL...",IDC_VIEWGPL,251,110,50,19
+    LTEXT           "Click Next to continue with Setup.",IDC_STATIC,15,136,
+                    195,17
+END
+
+
 IDD_OWNERPAGE DIALOG DISCARDABLE  0, 0, 317, 143
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Installation de ReactOS"
@@ -148,8 +167,21 @@ BEGIN
 END
 
 
+IDD_GPL DIALOG 0, 0, 333, 230
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "GNU General Public License"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL | 
+                    ES_READONLY | WS_VSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,141,209,50,14
+END
+
+
 STRINGTABLE
 BEGIN
+    IDS_ACKTITLE         "Acknowledgements"
+    IDS_ACKSUBTITLE      "The shoulders ReactOS stands on and license information"
     IDS_OWNERTITLE       "Personalize your Software"
     IDS_OWNERSUBTITLE    "Setup uses this information about yourself to personalize ReactOS."
     IDS_COMPUTERTITLE    "Computer Name and Administrator Password"
