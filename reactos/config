@@ -20,12 +20,12 @@ OARCH := i486
 #
 # Whether to compile in the kernel debugger
 #
-KDBG := 1
+KDBG := 0
 
 #
 # Whether to compile for debugging
 #
-DBG := 1
+DBG := 0
 
 #
 # Whether to compile with optimizations
