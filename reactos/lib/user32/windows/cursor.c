@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.17 2003/12/09 20:58:16 weiden Exp $
+/* $Id: cursor.c,v 1.18 2004/01/23 23:38:26 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -115,17 +115,17 @@ CreateCursor(HINSTANCE hInst,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 DestroyCursor(HCURSOR hCursor)
 {
-  return (WINBOOL)NtUserDestroyCursorIcon((HANDLE)hCursor, 0);
+  return (BOOL)NtUserDestroyCursorIcon((HANDLE)hCursor, 0);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetClipCursor(LPRECT lpRect)
 {
   return NtUserGetClipCursor(lpRect);
@@ -150,20 +150,20 @@ GetCursor(VOID)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetCursorInfo(PCURSORINFO pci)
 {
-  return (WINBOOL)NtUserGetCursorInfo(pci);
+  return (BOOL)NtUserGetCursorInfo(pci);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetCursorPos(LPPOINT lpPoint)
 {
-  WINBOOL res;
+  BOOL res;
   /* Windows doesn't check if lpPoint == NULL, we do */
   if(!lpPoint)
   {
@@ -171,7 +171,7 @@ GetCursorPos(LPPOINT lpPoint)
     return FALSE;
   }
   
-  res = (WINBOOL)NtUserCallTwoParam((DWORD)lpPoint, (DWORD)FALSE, 
+  res = (BOOL)NtUserCallTwoParam((DWORD)lpPoint, (DWORD)FALSE, 
                                     TWOPARAM_ROUTINE_CURSORPOSITION);
 
   return res;
@@ -232,7 +232,7 @@ LoadCursorW(HINSTANCE hInstance,
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 ClipCursor(
   CONST RECT *lpRect)
@@ -254,14 +254,14 @@ SetCursor(HCURSOR hCursor)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetCursorPos(int X,
 	     int Y)
 {
   POINT pos;
   pos.x = (LONG)X;
   pos.y = (LONG)Y;
-  return (WINBOOL)NtUserCallTwoParam((DWORD)&pos, (DWORD)TRUE, 
+  return (BOOL)NtUserCallTwoParam((DWORD)&pos, (DWORD)TRUE, 
                                      TWOPARAM_ROUTINE_CURSORPOSITION);
 }
 
@@ -269,7 +269,7 @@ SetCursorPos(int X,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetSystemCursor(HCURSOR hcur,
 		DWORD id)
 {
@@ -282,7 +282,7 @@ SetSystemCursor(HCURSOR hcur,
  * @unimplemented
  */
 int STDCALL
-ShowCursor(WINBOOL bShow)
+ShowCursor(BOOL bShow)
 {
   UNIMPLEMENTED;
   return 0;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.40 2004/01/02 19:49:47 gvg Exp $
+/* $Id: menu.c,v 1.41 2004/01/23 23:38:26 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -485,7 +485,7 @@ MenuIsStringItem(ULONG TypeData)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 AppendMenuA(HMENU hMenu,
 	    UINT uFlags,
 	    UINT_PTR uIDNewItem,
@@ -499,7 +499,7 @@ AppendMenuA(HMENU hMenu,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 AppendMenuW(HMENU hMenu,
 	    UINT uFlags,
 	    UINT_PTR uIDNewItem,
@@ -525,7 +525,7 @@ CheckMenuItem(HMENU hmenu,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 CheckMenuRadioItem(HMENU hmenu,
 		   UINT idFirst,
 		   UINT idLast,
@@ -561,7 +561,7 @@ CreatePopupMenu(VOID)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 DeleteMenu(HMENU hMenu,
 	   UINT uPosition,
 	   UINT uFlags)
@@ -573,7 +573,7 @@ DeleteMenu(HMENU hMenu,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 DestroyMenu(HMENU hMenu)
 {
     return NtUserDestroyMenu(hMenu);
@@ -583,7 +583,7 @@ DestroyMenu(HMENU hMenu)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 DrawMenuBar(HWND hWnd)
 {
   UNIMPLEMENTED
@@ -606,7 +606,7 @@ EnableMenuItem(HMENU hMenu,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 EndMenu(VOID)
 {
   GUITHREADINFO guii;
@@ -632,7 +632,7 @@ GetMenu(HWND hWnd)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetMenuBarInfo(HWND hwnd,
 	       LONG idObject,
 	       LONG idItem,
@@ -669,7 +669,7 @@ GetMenuDefaultItem(HMENU hMenu,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetMenuInfo(HMENU hmenu,
 	    LPMENUINFO lpcmi)
 {
@@ -727,11 +727,11 @@ GetMenuItemID(HMENU hMenu,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetMenuItemInfoA(
   HMENU hMenu,
   UINT uItem,
-  WINBOOL fByPosition,
+  BOOL fByPosition,
   LPMENUITEMINFOA lpmii)
 {
   UNIMPLEMENTED;
@@ -742,12 +742,12 @@ GetMenuItemInfoA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetMenuItemInfoW(
   HMENU hMenu,
   UINT uItem,
-  WINBOOL fByPosition,
+  BOOL fByPosition,
   LPMENUITEMINFOW lpmii)
 {
   UNIMPLEMENTED;
@@ -758,7 +758,7 @@ GetMenuItemInfoW(
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetMenuItemRect(HWND hWnd,
 		HMENU hMenu,
 		UINT uItem,
@@ -863,7 +863,7 @@ GetSubMenu(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 HiliteMenuItem(
   HWND hwnd,
@@ -878,7 +878,7 @@ HiliteMenuItem(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 InsertMenuA(
   HMENU hMenu,
@@ -911,24 +911,24 @@ InsertMenuA(
     mii.fMask |= MIIM_ID;
     mii.wID = (UINT)uIDNewItem;
   }
-  return InsertMenuItemA(hMenu, uPosition, (WINBOOL)!(MF_BYPOSITION & uFlags), &mii);
+  return InsertMenuItemA(hMenu, uPosition, (BOOL)!(MF_BYPOSITION & uFlags), &mii);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 InsertMenuItemA(
   HMENU hMenu,
   UINT uItem,
-  WINBOOL fByPosition,
+  BOOL fByPosition,
   LPCMENUITEMINFOA lpmii)
 {
   MENUITEMINFOW mi;
   UNICODE_STRING MenuText;
-  WINBOOL res = FALSE;
+  BOOL res = FALSE;
   BOOL CleanHeap = FALSE;
   NTSTATUS Status;
 
@@ -963,17 +963,17 @@ InsertMenuItemA(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 InsertMenuItemW(
   HMENU hMenu,
   UINT uItem,
-  WINBOOL fByPosition,
+  BOOL fByPosition,
   LPCMENUITEMINFOW lpmii)
 {
   MENUITEMINFOW mi;
   UNICODE_STRING MenuText;
-  WINBOOL res = FALSE;
+  BOOL res = FALSE;
   BOOL CleanHeap = FALSE;
   HANDLE hHeap = RtlGetProcessHeap();
   mi.hbmpItem = (HBITMAP)0;
@@ -1015,7 +1015,7 @@ InsertMenuItemW(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 InsertMenuW(
   HMENU hMenu,
@@ -1048,14 +1048,14 @@ InsertMenuW(
     mii.fMask |= MIIM_ID;
     mii.wID = (UINT)uIDNewItem;
   }
-  return InsertMenuItemW(hMenu, uPosition, (WINBOOL)!(MF_BYPOSITION & uFlags), &mii);
+  return InsertMenuItemW(hMenu, uPosition, (BOOL)!(MF_BYPOSITION & uFlags), &mii);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsMenu(
   HMENU hMenu)
@@ -1169,7 +1169,7 @@ MenuItemFromPoint(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ModifyMenuA(
   HMENU hMnu,
@@ -1186,7 +1186,7 @@ ModifyMenuA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ModifyMenuW(
   HMENU hMnu,
@@ -1203,7 +1203,7 @@ ModifyMenuW(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 RemoveMenu(
   HMENU hMenu,
@@ -1217,7 +1217,7 @@ RemoveMenu(
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetMenu(HWND hWnd,
 	HMENU hMenu)
 {
@@ -1228,7 +1228,7 @@ SetMenu(HWND hWnd,
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetMenuDefaultItem(
   HMENU hMenu,
@@ -1242,7 +1242,7 @@ SetMenuDefaultItem(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetMenuInfo(
   HMENU hmenu,
@@ -1261,7 +1261,7 @@ SetMenuInfo(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetMenuItemBitmaps(
   HMENU hMenu,
@@ -1278,12 +1278,12 @@ SetMenuItemBitmaps(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetMenuItemInfoA(
   HMENU hMenu,
   UINT uItem,
-  WINBOOL fByPosition,
+  BOOL fByPosition,
   LPMENUITEMINFOA lpmii)
 {
   UNIMPLEMENTED;
@@ -1294,12 +1294,12 @@ SetMenuItemInfoA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetMenuItemInfoW(
   HMENU hMenu,
   UINT uItem,
-  WINBOOL fByPosition,
+  BOOL fByPosition,
   LPMENUITEMINFOW lpmii)
 {
   UNIMPLEMENTED;
@@ -1310,7 +1310,7 @@ SetMenuItemInfoW(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 TrackPopupMenu(
   HMENU hMenu,
@@ -1329,7 +1329,7 @@ TrackPopupMenu(
     tpm.rcExclude = *prcRect;
   }
   
-  return (WINBOOL)NtUserTrackPopupMenuEx(hMenu, uFlags, x, y, hWnd, 
+  return (BOOL)NtUserTrackPopupMenuEx(hMenu, uFlags, x, y, hWnd, 
                                          (prcRect ? &tpm : NULL));
 }
 
@@ -1337,7 +1337,7 @@ TrackPopupMenu(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 TrackPopupMenuEx(
   HMENU hmenu,
@@ -1347,14 +1347,14 @@ TrackPopupMenuEx(
   HWND hwnd,
   LPTPMPARAMS lptpm)
 {
-  return (WINBOOL)NtUserTrackPopupMenuEx(hmenu, fuFlags, x, y, hwnd, lptpm);
+  return (BOOL)NtUserTrackPopupMenuEx(hmenu, fuFlags, x, y, hwnd, lptpm);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetMenuContextHelpId(HMENU hmenu,
           DWORD dwContextHelpId)
@@ -1433,7 +1433,7 @@ MenuWindowProcW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ChangeMenuW(
     HMENU hMenu,
@@ -1449,7 +1449,7 @@ ChangeMenuW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ChangeMenuA(
     HMENU hMenu,

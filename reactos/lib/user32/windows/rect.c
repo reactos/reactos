@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rect.c,v 1.13 2003/07/10 21:04:32 chorns Exp $
+/* $Id: rect.c,v 1.14 2004/01/23 23:38:26 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -37,7 +37,7 @@
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 CopyRect(LPRECT lprcDst, CONST RECT *lprcSrc)
 {
   if(lprcDst == NULL || lprcSrc == NULL)
@@ -51,7 +51,7 @@ CopyRect(LPRECT lprcDst, CONST RECT *lprcSrc)
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 EqualRect(
   CONST RECT *lprc1,
@@ -73,7 +73,7 @@ EqualRect(
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 InflateRect(LPRECT rect, int dx, int dy)
 {
   rect->left -= dx;
@@ -87,7 +87,7 @@ InflateRect(LPRECT rect, int dx, int dy)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 IntersectRect(LPRECT lprcDst,
 	      CONST RECT *lprcSrc1,
 	      CONST RECT *lprcSrc2)
@@ -112,7 +112,7 @@ IntersectRect(LPRECT lprcDst,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 IsRectEmpty(CONST RECT *lprc)
 {
   return((lprc->left >= lprc->right) || (lprc->top >= lprc->bottom));
@@ -122,7 +122,7 @@ IsRectEmpty(CONST RECT *lprc)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 OffsetRect(LPRECT rect, int dx, int dy)
 {
   if(rect == NULL)
@@ -139,14 +139,14 @@ OffsetRect(LPRECT rect, int dx, int dy)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 PtInRect(CONST RECT *lprc, POINT pt)
 {
   return((pt.x >= lprc->left) && (pt.x < lprc->right) &&
 	 (pt.y >= lprc->top) && (pt.y < lprc->bottom));
 }
 
-WINBOOL STDCALL
+BOOL STDCALL
 SetRect(LPRECT lprc, int xLeft, int yTop, int xRight, int yBottom)
 {
   lprc->left = xLeft;
@@ -171,7 +171,7 @@ SetRectEmpty(LPRECT lprc)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SubtractRect(LPRECT lprcDst, CONST RECT *lprcSrc1, CONST RECT *lprcSrc2)
 {
   RECT tempRect;
@@ -206,7 +206,7 @@ SubtractRect(LPRECT lprcDst, CONST RECT *lprcSrc1, CONST RECT *lprcSrc2)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 UnionRect(LPRECT lprcDst, CONST RECT *lprcSrc1, CONST RECT *lprcSrc2)
 {
   if (IsRectEmpty(lprcSrc1))

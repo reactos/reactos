@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.22 2003/10/31 20:49:45 weiden Exp $
+/* $Id: messagebox.c,v 1.23 2004/01/23 23:38:26 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -896,7 +896,7 @@ SoftModalMessageBox(DWORD Unknown0)
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 MessageBeep(UINT uType)
 {

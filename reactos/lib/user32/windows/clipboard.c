@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clipboard.c,v 1.11 2003/12/28 08:59:24 gvg Exp $
+/* $Id: clipboard.c,v 1.12 2004/01/23 23:38:26 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/clipboard.c
@@ -40,7 +40,7 @@
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 OpenClipboard(HWND hWndNewOwner)
 {
    return NtUserOpenClipboard(hWndNewOwner, 0);
@@ -49,7 +49,7 @@ OpenClipboard(HWND hWndNewOwner)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 CloseClipboard(VOID)
 {
    return NtUserCloseClipboard();
@@ -67,7 +67,7 @@ CountClipboardFormats(VOID)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 EmptyClipboard(VOID)
 {
    return NtUserEmptyClipboard();
@@ -185,7 +185,7 @@ GetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 IsClipboardFormatAvailable(UINT format)
 {
    return NtUserIsClipboardFormatAvailable(format);
@@ -234,7 +234,7 @@ SetClipboardViewer(HWND hWndNewViewer)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 ChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
 {
    return NtUserChangeClipboardChain(hWndRemove, hWndNewNext);

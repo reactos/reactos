@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.20 2003/12/28 17:22:16 weiden Exp $
+/* $Id: paint.c,v 1.21 2004/01/23 23:38:26 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -95,7 +95,7 @@ BeginPaint(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 EndPaint(
   HWND hWnd,
@@ -122,12 +122,12 @@ ExcludeUpdateRgn(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetUpdateRect(
   HWND hWnd,
   LPRECT lpRect,
-  WINBOOL bErase)
+  BOOL bErase)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -142,7 +142,7 @@ STDCALL
 GetUpdateRgn(
   HWND hWnd,
   HRGN hRgn,
-  WINBOOL bErase)
+  BOOL bErase)
 {
   return NtUserGetUpdateRgn(hWnd, hRgn, bErase);
 }
@@ -151,12 +151,12 @@ GetUpdateRgn(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 InvalidateRect(
   HWND hWnd,
   CONST RECT *lpRect,
-  WINBOOL bErase)
+  BOOL bErase)
 {
   return NtUserInvalidateRect( hWnd, lpRect, bErase );
 }
@@ -165,12 +165,12 @@ InvalidateRect(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 InvalidateRgn(
   HWND hWnd,
   HRGN hRgn,
-  WINBOOL bErase)
+  BOOL bErase)
 {
   return NtUserInvalidateRgn( hWnd, hRgn, bErase );
 }
@@ -179,7 +179,7 @@ InvalidateRgn(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 RedrawWindow(
   HWND hWnd,
@@ -194,7 +194,7 @@ RedrawWindow(
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 ScrollDC(HDC hDC, int dx, int dy, CONST RECT *lprcScroll, CONST RECT *lprcClip,
    HRGN hrgnUpdate, LPRECT lprcUpdate)
 {
@@ -211,7 +211,7 @@ STDCALL
 SetWindowRgn(
   HWND hWnd,
   HRGN hRgn,
-  WINBOOL bRedraw)
+  BOOL bRedraw)
 {
   UNIMPLEMENTED;
   return 0;
@@ -221,7 +221,7 @@ SetWindowRgn(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 UpdateWindow(
   HWND hWnd)
@@ -233,7 +233,7 @@ UpdateWindow(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ValidateRect(
   HWND hWnd,
@@ -247,13 +247,13 @@ ValidateRect(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 ValidateRgn(
   HWND hWnd,
   HRGN hRgn)
 {
-  return (WINBOOL) NtUserCallTwoParam((DWORD) hWnd,
+  return (BOOL) NtUserCallTwoParam((DWORD) hWnd,
                                       (DWORD) hRgn,
                                       TWOPARAM_ROUTINE_VALIDATERGN);
 }
@@ -276,7 +276,7 @@ const BYTE MappingTable[33] = {5,9,2,3,5,7,0,0,0,7,5,5,3,2,7,5,3,3,0,5,7,10,5,0,
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 DrawFrame(
 	  HDC    hDc,

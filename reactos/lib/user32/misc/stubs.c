@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.55 2003/12/08 18:21:24 navaraf Exp $
+/* $Id: stubs.c,v 1.56 2004/01/23 23:38:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -20,7 +20,7 @@ typedef UINT *LPUINT;
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AnyPopup(VOID)
 {
@@ -31,12 +31,12 @@ AnyPopup(VOID)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AttachThreadInput(
   DWORD idAttach,
   DWORD idAttachTo,
-  WINBOOL fAttach)
+  BOOL fAttach)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -114,7 +114,7 @@ GetMouseMovePointsEx(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 LockWindowUpdate(
   HWND hWndLock)
@@ -127,7 +127,7 @@ LockWindowUpdate(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 LockWorkStation(VOID)
 {
@@ -186,7 +186,7 @@ STDCALL
 MsgWaitForMultipleObjects(
   DWORD nCount,
   CONST LPHANDLE pHandles,
-  WINBOOL fWaitAll,
+  BOOL fWaitAll,
   DWORD dwMilliseconds,
   DWORD dwWakeMask)
 {
@@ -215,7 +215,7 @@ RealMsgWaitForMultipleObjectsEx(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetSysColors(
   int cElements,
@@ -230,7 +230,7 @@ SetSysColors(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 TrackMouseEvent(
   LPTRACKMOUSEEVENT lpEventTrack)
@@ -243,7 +243,7 @@ TrackMouseEvent(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 UnregisterDeviceNotification(
   HDEVNOTIFY Handle)
@@ -320,12 +320,12 @@ SetDebugErrorLevel( DWORD dwLevel )
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 EndTask(
 	HWND    hWnd,
-	WINBOOL fShutDown,
-	WINBOOL fForce)
+	BOOL fShutDown,
+	BOOL fForce)
 {
     SendMessageW(hWnd, WM_CLOSE, 0, 0);
     
@@ -345,7 +345,7 @@ EndTask(
  */
 VOID
 STDCALL
-SwitchToThisWindow ( HWND hwnd, WINBOOL fUnknown )
+SwitchToThisWindow ( HWND hwnd, BOOL fUnknown )
 {
   UNIMPLEMENTED;
 }
@@ -473,7 +473,7 @@ DragObject(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetUserObjectSecurity(
 		      HANDLE                hObj,
@@ -490,7 +490,7 @@ GetUserObjectSecurity(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetUserObjectSecurity(
 		      HANDLE                hObj,
@@ -564,7 +564,7 @@ GetInputDesktop ( VOID )
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetAccCursorInfo ( PCURSORINFO pci )
 {
@@ -575,7 +575,7 @@ GetAccCursorInfo ( PCURSORINFO pci )
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ClientThreadSetup ( VOID )
 {
@@ -697,7 +697,7 @@ BroadcastSystemMessageExA(
 /*
  * @unimplemented
  */
-WINBOOL 
+BOOL 
 STDCALL
 AlignRects(LPRECT rect, DWORD b, DWORD c, DWORD d)
 {
@@ -732,7 +732,7 @@ DisableProcessWindowsGhosting(VOID)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetLayeredWindowAttributes(
     HWND hwnd,
@@ -818,10 +818,10 @@ GetWindowRgnBox(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsGUIThread(
-    WINBOOL bConvert)
+    BOOL bConvert)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -830,7 +830,7 @@ IsGUIThread(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 PrintWindow(
     HWND hwnd,
@@ -844,7 +844,7 @@ PrintWindow(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 RegisterRawInputDevices(
     PCRAWINPUTDEVICE pRawInputDevices,
@@ -869,7 +869,7 @@ WINNLSGetIMEHotkey( HWND hwnd)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 WINNLSEnableIME( HWND hwnd, BOOL enable)
 {
@@ -880,7 +880,7 @@ WINNLSEnableIME( HWND hwnd, BOOL enable)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 WINNLSGetEnableStatus( HWND hwnd)
 {
@@ -891,7 +891,7 @@ WINNLSGetEnableStatus( HWND hwnd)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IMPSetIMEW( HWND hwnd, LPIMEPROW ime)
 {
@@ -902,7 +902,7 @@ IMPSetIMEW( HWND hwnd, LPIMEPROW ime)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IMPQueryIMEW( LPIMEPROW ime)
 {
@@ -913,7 +913,7 @@ IMPQueryIMEW( LPIMEPROW ime)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IMPGetIMEW( HWND hwnd, LPIMEPROW ime)
 {
@@ -924,7 +924,7 @@ IMPGetIMEW( HWND hwnd, LPIMEPROW ime)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IMPSetIMEA( HWND hwnd, LPIMEPROA ime)
 {
@@ -935,7 +935,7 @@ IMPSetIMEA( HWND hwnd, LPIMEPROA ime)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IMPQueryIMEA( LPIMEPROA ime)
 {
@@ -946,7 +946,7 @@ IMPQueryIMEA( LPIMEPROA ime)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IMPGetIMEA( HWND hwnd, LPIMEPROA ime)
 {

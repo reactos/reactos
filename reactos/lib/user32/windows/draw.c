@@ -31,6 +31,7 @@
 #ifndef __USE_W32API
 #define __USE_W32API
 #define _WIN32_WINNT 0x0500
+#define WINVER 0x0500
 #endif
 
 #include <windows.h>
@@ -1339,7 +1340,7 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
 }
 
 
-WINBOOL
+BOOL
 STDCALL
 IntGrayString(
   HDC hDC,

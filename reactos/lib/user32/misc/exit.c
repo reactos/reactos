@@ -1,4 +1,4 @@
-/* $Id: exit.c,v 1.2 2003/07/10 21:04:31 chorns Exp $
+/* $Id: exit.c,v 1.3 2004/01/23 23:38:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -15,7 +15,7 @@
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 ExitWindowsEx(UINT uFlags,
 	      DWORD dwReserved)
 {
@@ -44,7 +44,7 @@ ExitWindowsEx(UINT uFlags,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 RegisterServicesProcess(DWORD ServicesProcessId)
 {
   CSRSS_API_REQUEST Request;

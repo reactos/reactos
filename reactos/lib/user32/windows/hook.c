@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hook.c,v 1.13 2003/12/15 19:32:31 gvg Exp $
+/* $Id: hook.c,v 1.14 2004/01/23 23:38:26 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -40,7 +40,7 @@
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 UnhookWindowsHookEx(
   HHOOK Hook)
@@ -48,7 +48,7 @@ UnhookWindowsHookEx(
   return NtUserUnhookWindowsHookEx(Hook);
 }
 #if 0
-WINBOOL
+BOOL
 STDCALL
 CallMsgFilter(
   LPMSG lpMsg,
@@ -63,7 +63,7 @@ CallMsgFilter(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 CallMsgFilterA(
   LPMSG lpMsg,
@@ -77,7 +77,7 @@ CallMsgFilterA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 CallMsgFilterW(
   LPMSG lpMsg,
@@ -154,7 +154,7 @@ SetWindowsHookA(int idHook, HOOKPROC lpfn)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DeregisterShellHookWindow(HWND hWnd)
 {
@@ -165,7 +165,7 @@ DeregisterShellHookWindow(HWND hWnd)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 RegisterShellHookWindow(HWND hWnd)
 {
@@ -176,7 +176,7 @@ RegisterShellHookWindow(HWND hWnd)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 UnhookWindowsHook ( int nCode, HOOKPROC pfnFilterProc )
 {
@@ -221,7 +221,7 @@ SetWinEventHook(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 UnhookWinEvent ( HWINEVENTHOOK hWinEventHook )
 {
@@ -232,7 +232,7 @@ UnhookWinEvent ( HWINEVENTHOOK hWinEventHook )
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsWinEventHookInstalled(
     DWORD event)

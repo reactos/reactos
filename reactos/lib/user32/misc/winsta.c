@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.13 2003/12/13 11:34:53 navaraf Exp $
+/* $Id: winsta.c,v 1.14 2004/01/23 23:38:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -16,7 +16,7 @@
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 CloseWindowStation(HWINSTA hWinSta)
 {
   return(NtUserCloseWindowStation(hWinSta));
@@ -80,7 +80,7 @@ CreateWindowStationW(LPWSTR lpwinsta,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 EnumWindowStationsA(ENUMWINDOWSTATIONPROCA lpEnumFunc,
 		    LPARAM lParam)
 {
@@ -92,7 +92,7 @@ EnumWindowStationsA(ENUMWINDOWSTATIONPROCA lpEnumFunc,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 EnumWindowStationsW(ENUMWINDOWSTATIONPROCW lpEnumFunc,
 		    LPARAM lParam)
 {
@@ -147,7 +147,7 @@ GetProcessWindowStation(VOID)
  */
 HWINSTA STDCALL
 OpenWindowStationA(LPSTR lpszWinSta,
-		   WINBOOL fInherit,
+		   BOOL fInherit,
 		   ACCESS_MASK dwDesiredAccess)
 {
   ANSI_STRING WindowStationNameA;
@@ -180,7 +180,7 @@ OpenWindowStationA(LPSTR lpszWinSta,
  */
 HWINSTA STDCALL
 OpenWindowStationW(LPWSTR lpszWinSta,
-		   WINBOOL fInherit,
+		   BOOL fInherit,
 		   ACCESS_MASK dwDesiredAccess)
 {
   UNICODE_STRING WindowStationName;
@@ -194,7 +194,7 @@ OpenWindowStationW(LPWSTR lpszWinSta,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetProcessWindowStation(HWINSTA hWinSta)
 {
   return NtUserSetProcessWindowStation(hWinSta);
@@ -220,7 +220,7 @@ SetWindowStationUser(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 LockWindowStation(HWINSTA hWinSta)
 {
@@ -231,7 +231,7 @@ LockWindowStation(HWINSTA hWinSta)
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 UnlockWindowStation(HWINSTA hWinSta)
 {

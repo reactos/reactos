@@ -876,7 +876,7 @@ ScrollTrackScrollBar(HWND Wnd, INT SBType, POINT Pt)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 EnableScrollBar(HWND hWnd, UINT wSBflags, UINT wArrows)
 {
   return NtUserEnableScrollBar(hWnd, wSBflags, wArrows);

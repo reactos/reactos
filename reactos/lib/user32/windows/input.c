@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.21 2003/12/02 11:38:47 gvg Exp $
+/* $Id: input.c,v 1.22 2004/01/23 23:38:26 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -39,7 +39,7 @@
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 DragDetect(
   HWND hWnd,
@@ -64,8 +64,8 @@ ActivateKeyboardLayout(HKL hkl,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
-BlockInput(WINBOOL fBlockIt)
+BOOL STDCALL
+BlockInput(BOOL fBlockIt)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -75,9 +75,9 @@ BlockInput(WINBOOL fBlockIt)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 EnableWindow(HWND hWnd,
-	     WINBOOL bEnable)
+	     BOOL bEnable)
 {
     LONG Style = NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE);
     Style = bEnable ? Style & ~WS_DISABLED : Style | WS_DISABLED;
@@ -199,7 +199,7 @@ GetKeyboardLayoutList(int nBuff,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetKeyboardLayoutNameA(LPSTR pwszKLID)
 {
   UNIMPLEMENTED;
@@ -210,7 +210,7 @@ GetKeyboardLayoutNameA(LPSTR pwszKLID)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 {
   UNIMPLEMENTED;
@@ -221,11 +221,11 @@ GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetKeyboardState(PBYTE lpKeyState)
 {
   
-  return (WINBOOL) NtUserGetKeyboardState((LPBYTE) lpKeyState);
+  return (BOOL) NtUserGetKeyboardState((LPBYTE) lpKeyState);
 }
 
 
@@ -243,7 +243,7 @@ GetKeyboardType(int nTypeFlag)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetLastInputInfo(PLASTINPUTINFO plii)
 {
   UNIMPLEMENTED;
@@ -335,13 +335,13 @@ OemKeyScan(WORD wOemChar)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 RegisterHotKey(HWND hWnd,
 	       int id,
 	       UINT fsModifiers,
 	       UINT vk)
 {
-  return (WINBOOL)NtUserRegisterHotKey(hWnd,
+  return (BOOL)NtUserRegisterHotKey(hWnd,
                                        id,
                                        fsModifiers,
                                        vk);
@@ -351,10 +351,10 @@ RegisterHotKey(HWND hWnd,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetDoubleClickTime(UINT uInterval)
 {
-  return (WINBOOL)NtUserSystemParametersInfo(SPI_SETDOUBLECLICKTIME,
+  return (BOOL)NtUserSystemParametersInfo(SPI_SETDOUBLECLICKTIME,
                                              uInterval,
                                              NULL,
                                              0);
@@ -374,22 +374,22 @@ SetFocus(HWND hWnd)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetKeyboardState(LPBYTE lpKeyState)
 {
- return (WINBOOL) NtUserSetKeyboardState((LPBYTE)lpKeyState);
+ return (BOOL) NtUserSetKeyboardState((LPBYTE)lpKeyState);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SwapMouseButton(
-  WINBOOL fSwap)
+  BOOL fSwap)
 {
-  return (WINBOOL)NtUserCallOneParam((DWORD)fSwap, 
+  return (BOOL)NtUserCallOneParam((DWORD)fSwap, 
                                      ONEPARAM_ROUTINE_SWAPMOUSEBUTTON);
 }
 
@@ -461,7 +461,7 @@ ToUnicodeEx(UINT wVirtKey,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 UnloadKeyboardLayout(HKL hkl)
 {
   UNIMPLEMENTED;
@@ -472,11 +472,11 @@ UnloadKeyboardLayout(HKL hkl)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 UnregisterHotKey(HWND hWnd,
 		 int id)
 {
-  return (WINBOOL)NtUserUnregisterHotKey(hWnd, id);
+  return (BOOL)NtUserUnregisterHotKey(hWnd, id);
 }
 
 

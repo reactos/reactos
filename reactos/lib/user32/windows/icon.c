@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icon.c,v 1.17 2003/12/31 19:25:51 navaraf Exp $
+/* $Id: icon.c,v 1.18 2004/01/23 23:38:26 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/icon.c
@@ -213,7 +213,7 @@ STDCALL
 CreateIconFromResource(
   PBYTE presbits,
   DWORD dwResSize,
-  WINBOOL fIcon,
+  BOOL fIcon,
   DWORD dwVer)
 {
   return CreateIconFromResourceEx(presbits, dwResSize, fIcon, dwVer, 0, 0, 0);
@@ -228,7 +228,7 @@ STDCALL
 CreateIconFromResourceEx(
   PBYTE pbIconBits,
   DWORD cbIconBits,
-  WINBOOL fIcon,
+  BOOL fIcon,
   DWORD dwVersion,
   int cxDesired,
   int cyDesired,
@@ -352,19 +352,19 @@ CreateIconIndirect(PICONINFO IconInfo)
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 DestroyIcon(
   HICON hIcon)
 {
-  return (WINBOOL)NtUserDestroyCursorIcon((HANDLE)hIcon, 0);
+  return (BOOL)NtUserDestroyCursorIcon((HANDLE)hIcon, 0);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 DrawIcon(
   HDC hDC,
@@ -378,7 +378,7 @@ DrawIcon(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 DrawIconEx(
   HDC hdc,
@@ -391,7 +391,7 @@ DrawIconEx(
   HBRUSH hbrFlickerFreeDraw,
   UINT diFlags)
 {
-  return (WINBOOL)NtUserDrawIconEx(hdc, xLeft, yTop, hIcon, cxWidth, cyWidth, 
+  return (BOOL)NtUserDrawIconEx(hdc, xLeft, yTop, hIcon, cxWidth, cyWidth, 
                                    istepIfAniCur, hbrFlickerFreeDraw, diFlags, 
                                    0, 0);
 }
@@ -400,14 +400,14 @@ DrawIconEx(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetIconInfo(
   HICON hIcon,
   PICONINFO IconInfo)
 {
   /* FIXME - copy bitmaps */
-  return (WINBOOL)NtUserGetCursorIconInfo((HANDLE)hIcon, IconInfo);
+  return (BOOL)NtUserGetCursorIconInfo((HANDLE)hIcon, IconInfo);
 }
 
 
@@ -444,7 +444,7 @@ int
 STDCALL
 LookupIconIdFromDirectory(
   PBYTE presbits,
-  WINBOOL fIcon)
+  BOOL fIcon)
 {
     return LookupIconIdFromDirectoryEx( presbits, fIcon,
 	   fIcon ? GetSystemMetrics(SM_CXICON) : GetSystemMetrics(SM_CXCURSOR),
@@ -562,7 +562,7 @@ CURSORICON_FindBestIcon( GRPCURSORICONDIR *dir, int width, int height, int color
 INT STDCALL
 LookupIconIdFromDirectoryEx(
   PBYTE presbits,
-  WINBOOL fIcon,
+  BOOL fIcon,
   int cxDesired,
   int cyDesired,
   UINT Flags)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.7 2003/07/21 01:59:51 royce Exp $
+/* $Id: display.c,v 1.8 2004/01/23 23:38:26 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -38,14 +38,14 @@
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 EnumDisplayDevicesA(
   LPCSTR lpDevice,
   DWORD iDevNum,
   PDISPLAY_DEVICE lpDisplayDevice,
   DWORD dwFlags)
 {
-  WINBOOL rc;
+  BOOL rc;
   UNICODE_STRING Device;
   if ( !RtlCreateUnicodeStringFromAsciiz ( &Device, (PCSZ)lpDevice ) )
     {
@@ -68,7 +68,7 @@ EnumDisplayDevicesA(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumDisplayDevicesW(
   LPCWSTR lpDevice,
@@ -77,7 +77,7 @@ EnumDisplayDevicesW(
   DWORD dwFlags)
 {
   UNICODE_STRING Device;
-  WINBOOL rc;
+  BOOL rc;
 
   RtlInitUnicodeString ( &Device, lpDevice );
 
@@ -96,7 +96,7 @@ EnumDisplayDevicesW(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumDisplayMonitors(
   HDC hdc,
@@ -111,7 +111,7 @@ EnumDisplayMonitors(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumDisplaySettingsExA(
   LPCSTR lpszDeviceName,
@@ -119,7 +119,7 @@ EnumDisplaySettingsExA(
   LPDEVMODEA lpDevMode,
   DWORD dwFlags)
 {
-  WINBOOL rc;
+  BOOL rc;
   UNICODE_STRING DeviceName;
   DEVMODEW DevModeW;
 
@@ -142,7 +142,7 @@ EnumDisplaySettingsExA(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumDisplaySettingsA(
   LPCSTR lpszDeviceName,
@@ -156,7 +156,7 @@ EnumDisplaySettingsA(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumDisplaySettingsExW(
   LPCWSTR lpszDeviceName,
@@ -164,7 +164,7 @@ EnumDisplaySettingsExW(
   LPDEVMODEW lpDevMode,
   DWORD dwFlags)
 {
-  WINBOOL rc;
+  BOOL rc;
   UNICODE_STRING DeviceName;
 
   RtlInitUnicodeString ( &DeviceName, lpszDeviceName );
@@ -180,7 +180,7 @@ EnumDisplaySettingsExW(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumDisplaySettingsW(
   LPCWSTR lpszDeviceName,
@@ -194,7 +194,7 @@ EnumDisplaySettingsW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetMonitorInfoA(
   HMONITOR hMonitor,
@@ -208,7 +208,7 @@ GetMonitorInfoA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetMonitorInfoW(
   HMONITOR hMonitor,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.7 2003/07/10 21:04:32 chorns Exp $
+/* $Id: text.c,v 1.8 2004/01/23 23:38:26 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -33,7 +33,6 @@
 #include <windows.h>
 #include <user32.h>
 
-//#include <kernel32/winnls.h>
 #include <ntos/rtl.h>
 
 #include <debug.h>
@@ -217,7 +216,7 @@ LPSTR WINAPI CharPrevExA( WORD codepage, LPCSTR start, LPCSTR ptr, DWORD flags )
     return (LPSTR)start;
 }
 
-//WINBOOL STDCALL CharToOemA(LPCSTR lpszSrc, LPSTR lpszDst)
+//BOOL STDCALL CharToOemA(LPCSTR lpszSrc, LPSTR lpszDst)
 /*
  * @implemented
  */
@@ -229,7 +228,7 @@ CharToOemA(LPCSTR s, LPSTR d)
     return CharToOemBuffA(s, d, strlen(s) + 1);
 }
 
-//WINBOOL STDCALL CharToOemBuffA(LPCSTR lpszSrc, LPSTR lpszDst, DWORD cchDstLength)
+//BOOL STDCALL CharToOemBuffA(LPCSTR lpszSrc, LPSTR lpszDst, DWORD cchDstLength)
 /*
  * @implemented
  */
@@ -248,7 +247,7 @@ CharToOemBuffA(LPCSTR s, LPSTR d, DWORD len)
     return TRUE;
 }
 
-//WINBOOL STDCALL CharToOemBuffW(LPCWSTR lpszSrc, LPSTR lpszDst, DWORD cchDstLength)
+//BOOL STDCALL CharToOemBuffW(LPCWSTR lpszSrc, LPSTR lpszDst, DWORD cchDstLength)
 /*
  * @implemented
  */
@@ -262,7 +261,7 @@ CharToOemBuffW(LPCWSTR s, LPSTR d, DWORD len)
     return TRUE;
 }
 
-//WINBOOL STDCALL CharToOemW(LPCWSTR lpszSrc, LPSTR lpszDst)
+//BOOL STDCALL CharToOemW(LPCWSTR lpszSrc, LPSTR lpszDst)
 /*
  * @implemented
  */
@@ -351,7 +350,7 @@ CharUpperW(LPWSTR x)
     else return (LPWSTR)(UINT)towlower((WORD)(((DWORD)(x)) & 0xFFFF));
 }
 
-//WINBOOL STDCALL IsCharAlphaA(CHAR ch)
+//BOOL STDCALL IsCharAlphaA(CHAR ch)
 /*
  * @implemented
  */
@@ -374,7 +373,7 @@ const char IsCharAlphaNumericA_lookup_table[] = {
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsCharAlphaNumericA(CHAR ch)
 {
@@ -389,7 +388,7 @@ IsCharAlphaNumericA(CHAR ch)
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsCharAlphaNumericW(WCHAR ch)
 {
@@ -397,7 +396,7 @@ IsCharAlphaNumericW(WCHAR ch)
 //  return FALSE;
 }
 
-//WINBOOL STDCALL IsCharAlphaW(WCHAR ch)
+//BOOL STDCALL IsCharAlphaW(WCHAR ch)
 /*
  * @implemented
  */
@@ -408,7 +407,7 @@ IsCharAlphaW(WCHAR x)
     return (get_char_typeW(x) & C1_ALPHA) != 0;
 }
 
-//WINBOOL STDCALL IsCharLowerA(CHAR ch)
+//BOOL STDCALL IsCharLowerA(CHAR ch)
 /*
  * @implemented
  */
@@ -421,7 +420,7 @@ IsCharLowerA(CHAR x)
     return IsCharLowerW(wch);
 }
 
-//WINBOOL STDCALL IsCharLowerW(WCHAR ch)
+//BOOL STDCALL IsCharLowerW(WCHAR ch)
 /*
  * @implemented
  */
@@ -432,7 +431,7 @@ IsCharLowerW(WCHAR x)
     return (get_char_typeW(x) & C1_LOWER) != 0;
 }
 
-//WINBOOL STDCALL IsCharUpperA(CHAR ch)
+//BOOL STDCALL IsCharUpperA(CHAR ch)
 /*
  * @implemented
  */
@@ -445,7 +444,7 @@ IsCharUpperA(CHAR x)
     return IsCharUpperW(wch);
 }
 
-//WINBOOL STDCALL IsCharUpperW(WCHAR ch)
+//BOOL STDCALL IsCharUpperW(WCHAR ch)
 /*
  * @implemented
  */
@@ -456,7 +455,7 @@ IsCharUpperW(WCHAR x)
     return (get_char_typeW(x) & C1_UPPER) != 0;
 }
 
-//WINBOOL STDCALL OemToCharA(LPCSTR lpszSrc, LPSTR lpszDst)
+//BOOL STDCALL OemToCharA(LPCSTR lpszSrc, LPSTR lpszDst)
 /*
  * @implemented
  */
@@ -467,7 +466,7 @@ OemToCharA(LPCSTR s, LPSTR d)
     return OemToCharBuffA(s, d, strlen(s) + 1);
 }
 
-//WINBOOL STDCALL OemToCharBuffA(LPCSTR lpszSrc, LPSTR lpszDst, DWORD cchDstLength)
+//BOOL STDCALL OemToCharBuffA(LPCSTR lpszSrc, LPSTR lpszDst, DWORD cchDstLength)
 /*
  * @implemented
  */
@@ -484,7 +483,7 @@ BOOL WINAPI OemToCharBuffA(LPCSTR s, LPSTR d, DWORD len)
     return TRUE;
 }
 
-//WINBOOL STDCALL OemToCharBuffW(LPCSTR lpszSrc, LPWSTR lpszDst, DWORD cchDstLength)
+//BOOL STDCALL OemToCharBuffW(LPCSTR lpszSrc, LPWSTR lpszDst, DWORD cchDstLength)
 /*
  * @implemented
  */
@@ -496,7 +495,7 @@ OemToCharBuffW(LPCSTR s, LPWSTR d, DWORD len)
     return TRUE;
 }
 
-//WINBOOL STDCALL OemToCharW(LPCSTR lpszSrc, LPWSTR lpszDst)
+//BOOL STDCALL OemToCharW(LPCSTR lpszSrc, LPWSTR lpszDst)
 /*
  * @implemented
  */

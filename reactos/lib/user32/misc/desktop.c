@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.27 2003/08/29 09:29:11 gvg Exp $
+/* $Id: desktop.c,v 1.28 2004/01/23 23:38:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -28,14 +28,14 @@ GetSystemMetrics(int nIndex)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL SetDeskWallpaper(LPCSTR filename)
+BOOL STDCALL SetDeskWallpaper(LPCSTR filename)
 {
 	return SystemParametersInfoA(SPI_SETDESKWALLPAPER,0,(PVOID)filename,1);
 }
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SystemParametersInfoA(UINT uiAction,
 		      UINT uiParam,
 		      PVOID pvParam,
@@ -90,7 +90,7 @@ SystemParametersInfoA(UINT uiAction,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SystemParametersInfoW(UINT uiAction,
 		      UINT uiParam,
 		      PVOID pvParam,
@@ -103,7 +103,7 @@ SystemParametersInfoW(UINT uiAction,
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 CloseDesktop(
   HDESK hDesktop)
@@ -184,7 +184,7 @@ CreateDesktopW(LPCWSTR lpszDesktop,
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumDesktopsA(
   HWINSTA hwinsta,
@@ -199,7 +199,7 @@ EnumDesktopsA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumDesktopsW(
   HWINSTA hwinsta,
@@ -231,7 +231,7 @@ STDCALL
 OpenDesktopA(
   LPSTR lpszDesktop,
   DWORD dwFlags,
-  WINBOOL fInherit,
+  BOOL fInherit,
   ACCESS_MASK dwDesiredAccess)
 {
   ANSI_STRING DesktopNameA;
@@ -265,7 +265,7 @@ STDCALL
 OpenDesktopW(
   LPWSTR lpszDesktop,
   DWORD dwFlags,
-  WINBOOL fInherit,
+  BOOL fInherit,
   ACCESS_MASK dwDesiredAccess)
 {
   UNICODE_STRING DesktopName;
@@ -286,7 +286,7 @@ HDESK
 STDCALL
 OpenInputDesktop(
   DWORD dwFlags,
-  WINBOOL fInherit,
+  BOOL fInherit,
   ACCESS_MASK dwDesiredAccess)
 {
   return NtUserOpenInputDesktop(
@@ -299,7 +299,7 @@ OpenInputDesktop(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 PaintDesktop(
   HDC hdc)
@@ -311,7 +311,7 @@ PaintDesktop(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetThreadDesktop(
   HDESK hDesktop)
@@ -323,7 +323,7 @@ SetThreadDesktop(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SwitchDesktop(
   HDESK hDesktop)

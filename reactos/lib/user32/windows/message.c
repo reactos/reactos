@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.32 2003/12/26 22:52:11 gvg Exp $
+/* $Id: message.c,v 1.33 2004/01/23 23:38:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -50,7 +50,7 @@ GetMessageTime(VOID)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 InSendMessage(VOID)
 {
@@ -74,7 +74,7 @@ InSendMessageEx(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ReplyMessage(
   LRESULT lResult)
@@ -534,7 +534,7 @@ DispatchMessageW(CONST MSG *lpmsg)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetMessageA(LPMSG lpMsg,
 	    HWND hWnd,
 	    UINT wMsgFilterMin,
@@ -555,7 +555,7 @@ GetMessageA(LPMSG lpMsg,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetMessageW(LPMSG lpMsg,
 	    HWND hWnd,
 	    UINT wMsgFilterMin,
@@ -576,7 +576,7 @@ GetMessageW(LPMSG lpMsg,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 PeekMessageA(LPMSG lpMsg,
 	     HWND hWnd,
 	     UINT wMsgFilterMin,
@@ -598,7 +598,7 @@ PeekMessageA(LPMSG lpMsg,
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 PeekMessageW(
   LPMSG lpMsg,
@@ -622,7 +622,7 @@ PeekMessageW(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 PostMessageA(
   HWND hWnd,
@@ -637,7 +637,7 @@ PostMessageA(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 PostMessageW(
   HWND hWnd,
@@ -664,7 +664,7 @@ PostQuitMessage(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 PostThreadMessageA(
   DWORD idThread,
@@ -679,7 +679,7 @@ PostThreadMessageA(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 PostThreadMessageW(
   DWORD idThread,
@@ -775,7 +775,7 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SendMessageCallbackA(
   HWND hWnd,
@@ -798,7 +798,7 @@ SendMessageCallbackA(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SendMessageCallbackW(
   HWND hWnd,
@@ -859,7 +859,7 @@ SendMessageTimeoutW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SendNotifyMessageA(
   HWND hWnd,
@@ -875,7 +875,7 @@ SendNotifyMessageA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SendNotifyMessageW(
   HWND hWnd,
@@ -891,7 +891,7 @@ SendNotifyMessageW(
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 TranslateMessage(CONST MSG *lpMsg)
 {
   return(TranslateMessageEx((LPMSG)lpMsg, 0));
@@ -900,7 +900,7 @@ TranslateMessage(CONST MSG *lpMsg)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 TranslateMessageEx(CONST MSG *lpMsg, DWORD unk)
 {
   return(NtUserTranslateMessage((LPMSG)lpMsg, (HKL)unk));
@@ -910,7 +910,7 @@ TranslateMessageEx(CONST MSG *lpMsg, DWORD unk)
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 WaitMessage(VOID)
 {
@@ -972,7 +972,7 @@ GetCapture(VOID)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 ReleaseCapture(VOID)
 {
   NtUserSetCapture(NULL);
@@ -1009,7 +1009,7 @@ RealGetQueueStatus(UINT flags)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL GetInputState(VOID)
+BOOL STDCALL GetInputState(VOID)
 {
    DWORD ret;
    WORD  wake_bits;
@@ -1031,7 +1031,7 @@ WINBOOL STDCALL GetInputState(VOID)
 /*
  * @implemented
  */
-WINBOOL STDCALL SetMessageQueue(int cMessagesMax)
+BOOL STDCALL SetMessageQueue(int cMessagesMax)
 {
   /* Function does nothing on 32 bit windows */
   return TRUE;

@@ -962,10 +962,10 @@ DefWndTrackScrollBar(HWND hWnd, WPARAM wParam, POINT Point)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 AdjustWindowRectEx(LPRECT lpRect, 
 		   DWORD dwStyle, 
-		   WINBOOL bMenu, 
+		   BOOL bMenu, 
 		   DWORD dwExStyle)
 {
    SIZE BorderSize;
@@ -994,10 +994,10 @@ AdjustWindowRectEx(LPRECT lpRect,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 AdjustWindowRect(LPRECT lpRect,
 		 DWORD dwStyle,
-		 WINBOOL bMenu)
+		 BOOL bMenu)
 {
    return AdjustWindowRectEx(lpRect, dwStyle, bMenu, 0);
 }
@@ -1265,7 +1265,7 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DrawCaptionTempW(
 		 HWND        hwnd,
@@ -1284,7 +1284,7 @@ DrawCaptionTempW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DrawCaptionTempA(
 		 HWND        hwnd,

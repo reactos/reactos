@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.94 2004/01/15 20:59:57 gvg Exp $
+/* $Id: window.c,v 1.95 2004/01/23 23:38:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -93,7 +93,7 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 AllowSetForegroundWindow(DWORD dwProcessId)
 {
   UNIMPLEMENTED;
@@ -130,7 +130,7 @@ BeginDeferWindowPos(int nNumWindows)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 BringWindowToTop(HWND hWnd)
 {
   UNIMPLEMENTED;
@@ -185,12 +185,12 @@ ChildWindowFromPointEx(HWND hwndParent,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 CloseWindow(HWND hWnd)
 {
     SendMessageA(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
 
-    return (WINBOOL)(hWnd);
+    return (BOOL)(hWnd);
 }
 
 /*
@@ -495,7 +495,7 @@ DeferWindowPos(HDWP hWinPosInfo,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 DestroyWindow(HWND hWnd)
 {
   return NtUserDestroyWindow(hWnd);
@@ -505,7 +505,7 @@ DestroyWindow(HWND hWnd)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 EndDeferWindowPos(HDWP hWinPosInfo)
 {
 #if 0
@@ -537,7 +537,7 @@ GetForegroundWindow(VOID)
 }
 
 
-WINBOOL
+BOOL
 STATIC
 User32EnumWindows (
 	HDESK hDesktop,
@@ -612,7 +612,7 @@ User32EnumWindows (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumChildWindows(
 	HWND hWndParent,
@@ -628,7 +628,7 @@ EnumChildWindows(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumThreadWindows(DWORD dwThreadId,
 		  ENUMWINDOWSPROC lpfn,
@@ -643,7 +643,7 @@ EnumThreadWindows(DWORD dwThreadId,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 EnumWindows(ENUMWINDOWSPROC lpEnumFunc,
 	    LPARAM lParam)
 {
@@ -654,7 +654,7 @@ EnumWindows(ENUMWINDOWSPROC lpEnumFunc,
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 EnumDesktopWindows(
 	HDESK hDesktop,
@@ -770,7 +770,7 @@ FindWindowW(LPCWSTR lpClassName, LPCWSTR lpWindowName)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetAltTabInfoA(HWND hwnd,
 	       int iItem,
 	       PALTTABINFO pati,
@@ -785,7 +785,7 @@ GetAltTabInfoA(HWND hwnd,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetAltTabInfoW(HWND hwnd,
 	       int iItem,
 	       PALTTABINFO pati,
@@ -810,7 +810,7 @@ GetAncestor(HWND hwnd, UINT gaFlags)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetClientRect(HWND hWnd, LPRECT lpRect)
 {
   return(NtUserGetClientRect(hWnd, lpRect));
@@ -820,11 +820,11 @@ GetClientRect(HWND hWnd, LPRECT lpRect)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetGUIThreadInfo(DWORD idThread,
 		 LPGUITHREADINFO lpgui)
 {
-  return (WINBOOL)NtUserGetGUIThreadInfo(idThread, lpgui);
+  return (BOOL)NtUserGetGUIThreadInfo(idThread, lpgui);
 }
 
 
@@ -851,7 +851,7 @@ GetParent(HWND hWnd)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetProcessDefaultLayout(DWORD *pdwDefaultLayout)
 {
   UNIMPLEMENTED;
@@ -862,7 +862,7 @@ GetProcessDefaultLayout(DWORD *pdwDefaultLayout)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetTitleBarInfo(HWND hwnd,
 		PTITLEBARINFO pti)
 {
@@ -896,7 +896,7 @@ GetTopWindow(HWND hWnd)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetWindowInfo(HWND hwnd,
 	      PWINDOWINFO pwi)
 {
@@ -947,18 +947,18 @@ GetWindowModuleFileNameW(HWND hwnd,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetWindowPlacement(HWND hWnd,
 		   WINDOWPLACEMENT *lpwndpl)
 {
-  return (WINBOOL)NtUserGetWindowPlacement(hWnd, lpwndpl);
+  return (BOOL)NtUserGetWindowPlacement(hWnd, lpwndpl);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetWindowRect(HWND hWnd,
 	      LPRECT lpRect)
 {
@@ -1019,7 +1019,7 @@ GetWindowThreadProcessId(HWND hWnd,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 IsChild(HWND hWndParent,
 	HWND hWnd)
 {
@@ -1036,7 +1036,7 @@ IsChild(HWND hWndParent,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 IsIconic(HWND hWnd)
 {
   return (NtUserGetWindowLong( hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE) != 0;  
@@ -1046,7 +1046,7 @@ IsIconic(HWND hWnd)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 IsWindow(HWND hWnd)
 {
   DWORD WndProc = NtUserGetWindowLong(hWnd, GWL_WNDPROC, FALSE);
@@ -1057,17 +1057,17 @@ IsWindow(HWND hWnd)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 IsWindowUnicode(HWND hWnd)
 {
-	return (WINBOOL)NtUserCallOneParam((DWORD)hWnd,ONEPARAM_ROUTINE_ISWINDOWUNICODE);
+	return (BOOL)NtUserCallOneParam((DWORD)hWnd,ONEPARAM_ROUTINE_ISWINDOWUNICODE);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 IsWindowVisible(HWND hWnd)
 {
   while (NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_CHILD)
@@ -1085,7 +1085,7 @@ IsWindowVisible(HWND hWnd)
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsWindowEnabled(
   HWND hWnd)
@@ -1101,7 +1101,7 @@ IsWindowEnabled(
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 IsZoomed(HWND hWnd)
 {
   return NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MAXIMIZE;
@@ -1111,7 +1111,7 @@ IsZoomed(HWND hWnd)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 LockSetForegroundWindow(UINT uLockCode)
 {
   UNIMPLEMENTED;
@@ -1122,13 +1122,13 @@ LockSetForegroundWindow(UINT uLockCode)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 MoveWindow(HWND hWnd,
 	   int X,
 	   int Y,
 	   int nWidth,
 	   int nHeight,
-	   WINBOOL bRepaint)
+	   BOOL bRepaint)
 {
   return NtUserMoveWindow(hWnd, X, Y, nWidth, nHeight, bRepaint);
 }
@@ -1137,7 +1137,7 @@ MoveWindow(HWND hWnd,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 AnimateWindow(HWND hwnd,
 	      DWORD dwTime,
 	      DWORD dwFlags)
@@ -1167,7 +1167,7 @@ AnimateWindow(HWND hwnd,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 OpenIcon(HWND hWnd)
 {
     if (!(NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE))
@@ -1194,7 +1194,7 @@ RealChildWindowFromPoint(HWND hwndParent,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetForegroundWindow(HWND hWnd)
 {
    return NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW);
@@ -1204,7 +1204,7 @@ SetForegroundWindow(HWND hWnd)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetLayeredWindowAttributes(HWND hwnd,
 			   COLORREF crKey,
 			   BYTE bAlpha,
@@ -1229,7 +1229,7 @@ SetParent(HWND hWndChild,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetProcessDefaultLayout(DWORD dwDefaultLayout)
 {
   UNIMPLEMENTED;
@@ -1240,18 +1240,18 @@ SetProcessDefaultLayout(DWORD dwDefaultLayout)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetWindowPlacement(HWND hWnd,
 		   CONST WINDOWPLACEMENT *lpwndpl)
 {
-  return (WINBOOL)NtUserSetWindowPlacement(hWnd, (WINDOWPLACEMENT *)lpwndpl);
+  return (BOOL)NtUserSetWindowPlacement(hWnd, (WINDOWPLACEMENT *)lpwndpl);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetWindowPos(HWND hWnd,
 	     HWND hWndInsertAfter,
 	     int X,
@@ -1267,7 +1267,7 @@ SetWindowPos(HWND hWnd,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetWindowTextA(HWND hWnd,
 	       LPCSTR lpString)
 {
@@ -1278,7 +1278,7 @@ SetWindowTextA(HWND hWnd,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetWindowTextW(HWND hWnd,
 	       LPCWSTR lpString)
 {
@@ -1289,9 +1289,9 @@ SetWindowTextW(HWND hWnd,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 ShowOwnedPopups(HWND hWnd,
-		WINBOOL fShow)
+		BOOL fShow)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -1301,7 +1301,7 @@ ShowOwnedPopups(HWND hWnd,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 ShowWindow(HWND hWnd,
 	   int nCmdShow)
 {
@@ -1312,7 +1312,7 @@ ShowWindow(HWND hWnd,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 ShowWindowAsync(HWND hWnd,
 		int nCmdShow)
 {
@@ -1341,7 +1341,7 @@ TileWindows(HWND hwndParent,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 UpdateLayeredWindow(HWND hwnd,
 		    HDC hdcDst,
 		    POINT *pptDst,
@@ -1396,7 +1396,7 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
 /*
  * @implemented
  */
-WINBOOL STDCALL 
+BOOL STDCALL 
 ScreenToClient(HWND hWnd, LPPOINT lpPoint)
 {
   return(MapWindowPoints(NULL, hWnd, lpPoint, 1));
@@ -1406,7 +1406,7 @@ ScreenToClient(HWND hWnd, LPPOINT lpPoint)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 ClientToScreen(HWND hWnd, LPPOINT lpPoint)
 {
     return (MapWindowPoints( hWnd, NULL, lpPoint, 1 ));
@@ -1416,12 +1416,12 @@ ClientToScreen(HWND hWnd, LPPOINT lpPoint)
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetWindowContextHelpId(HWND hwnd,
           DWORD dwContextHelpId)
 {
-  return (WINBOOL)NtUserCallTwoParam((DWORD)hwnd, (DWORD)dwContextHelpId, 
+  return (BOOL)NtUserCallTwoParam((DWORD)hwnd, (DWORD)dwContextHelpId, 
                                      TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID);
 }
 
@@ -1449,7 +1449,7 @@ InternalGetWindowText(HWND hWnd, LPWSTR lpString, int nMaxCount)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsHungAppWindow(HWND hwnd)
 {
@@ -1470,7 +1470,7 @@ SetLastErrorEx(DWORD dwErrCode, DWORD dwType)
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetSystemMenu (
   HWND hwnd, 
@@ -1496,7 +1496,7 @@ HMENU
 STDCALL
 GetSystemMenu(
   HWND hWnd,
-  WINBOOL bRevert)
+  BOOL bRevert)
 {
   if(!hWnd)
   {
@@ -1563,7 +1563,7 @@ GetTaskmanWindow(VOID)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 ScrollWindow(HWND hWnd, int dx, int dy, CONST RECT *lpRect,
    CONST RECT *prcClip)
 {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: caret.c,v 1.5 2003/12/14 12:39:32 navaraf Exp $
+/* $Id: caret.c,v 1.6 2004/01/23 23:38:26 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/caret.c
@@ -64,23 +64,23 @@ void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 CreateCaret(HWND hWnd,
 	    HBITMAP hBitmap,
 	    int nWidth,
 	    int nHeight)
 {
-  return (WINBOOL)NtUserCreateCaret(hWnd, hBitmap, nWidth, nHeight);
+  return (BOOL)NtUserCreateCaret(hWnd, hBitmap, nWidth, nHeight);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 DestroyCaret(VOID)
 {
-  return (WINBOOL)NtUserCallNoParam(NOPARAM_ROUTINE_DESTROY_CARET);
+  return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_DESTROY_CARET);
 }
 
 
@@ -97,51 +97,51 @@ GetCaretBlinkTime(VOID)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetCaretPos(LPPOINT lpPoint)
 {
-  return (WINBOOL)NtUserGetCaretPos(lpPoint);
+  return (BOOL)NtUserGetCaretPos(lpPoint);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 HideCaret(HWND hWnd)
 {
-  return (WINBOOL)NtUserHideCaret(hWnd);
+  return (BOOL)NtUserHideCaret(hWnd);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetCaretBlinkTime(UINT uMSeconds)
 {
-  return (WINBOOL)NtUserCallOneParam((DWORD)uMSeconds, ONEPARAM_ROUTINE_SETCARETBLINKTIME);
+  return (BOOL)NtUserCallOneParam((DWORD)uMSeconds, ONEPARAM_ROUTINE_SETCARETBLINKTIME);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetCaretPos(int X,
 	    int Y)
 {
-  return (WINBOOL)NtUserCallTwoParam((DWORD)X, (DWORD)Y, TWOPARAM_ROUTINE_SETCARETPOS);
+  return (BOOL)NtUserCallTwoParam((DWORD)X, (DWORD)Y, TWOPARAM_ROUTINE_SETCARETPOS);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 ShowCaret(HWND hWnd)
 {
-  return (WINBOOL)NtUserShowCaret(hWnd);
+  return (BOOL)NtUserShowCaret(hWnd);
 }
 
 /* EOF */

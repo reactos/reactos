@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.43 2004/01/19 20:19:50 gvg Exp $
+/* $Id: class.c,v 1.44 2004/01/23 23:38:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -18,7 +18,7 @@
 
 
 
-static WINBOOL GetClassInfoExCommon(
+static BOOL GetClassInfoExCommon(
     HINSTANCE hInst,
     LPCWSTR lpszClass,
     LPWNDCLASSEXW lpwcx,
@@ -117,7 +117,7 @@ static WINBOOL GetClassInfoExCommon(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetClassInfoExA(
   HINSTANCE hinst,
@@ -131,7 +131,7 @@ GetClassInfoExA(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetClassInfoExW(
   HINSTANCE hinst,
@@ -145,12 +145,8 @@ GetClassInfoExW(
 
 /*LPWSTR str;
   UNICODE_STRING str2;
-=======
-  LPWSTR str;
-  UNICODE_STRING str2, str3;
->>>>>>> 1.36
   WNDCLASSEXW w;
-  WINBOOL retval;
+  BOOL retval;
 
   if ( !lpszClass || !lpwcx )
   {
@@ -217,7 +213,7 @@ GetClassInfoExW(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetClassInfoA(
   HINSTANCE hInstance,
@@ -225,7 +221,7 @@ GetClassInfoA(
   LPWNDCLASSA lpWndClass)
 {
   WNDCLASSEXA w;
-  WINBOOL retval;
+  BOOL retval;
 
   if ( !lpClassName || !lpWndClass )
   {
@@ -241,7 +237,7 @@ GetClassInfoA(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetClassInfoW(
   HINSTANCE hInstance,
@@ -249,7 +245,7 @@ GetClassInfoW(
   LPWNDCLASSW lpWndClass)
 {
   WNDCLASSEXW w;
-  WINBOOL retval;
+  BOOL retval;
 
   if(!lpClassName || !lpWndClass)
   {
@@ -747,7 +743,7 @@ SetWindowLongW(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 UnregisterClassA(
   LPCSTR lpClassName,
@@ -755,7 +751,7 @@ UnregisterClassA(
 {
   LPWSTR ClassName;
   NTSTATUS Status;
-  WINBOOL Result;
+  BOOL Result;
   
   if(!IS_ATOM(lpClassName))
   {
@@ -769,7 +765,7 @@ UnregisterClassA(
   else
     ClassName = (LPWSTR)lpClassName;
   
-  Result = (WINBOOL)NtUserUnregisterClass((LPCWSTR)ClassName, hInstance, 0);
+  Result = (BOOL)NtUserUnregisterClass((LPCWSTR)ClassName, hInstance, 0);
   
   if(ClassName && !IS_ATOM(lpClassName)) 
     HEAP_free(ClassName);
@@ -781,13 +777,13 @@ UnregisterClassA(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 UnregisterClassW(
   LPCWSTR lpClassName,
   HINSTANCE hInstance)
 {
-  return (WINBOOL)NtUserUnregisterClass(lpClassName, hInstance, 0);
+  return (BOOL)NtUserUnregisterClass(lpClassName, hInstance, 0);
 }
 
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.10 2003/11/20 15:35:32 weiden Exp $
+/* $Id: prop.c,v 1.11 2004/01/23 23:38:26 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -390,7 +390,7 @@ RemovePropW(HWND hWnd,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetPropA(HWND hWnd, LPCSTR lpString, HANDLE hData)
 {
   PWSTR lpWString;
@@ -419,7 +419,7 @@ SetPropA(HWND hWnd, LPCSTR lpString, HANDLE hData)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetPropW(HWND hWnd, LPCWSTR lpString, HANDLE hData)
 {
   ATOM Atom;

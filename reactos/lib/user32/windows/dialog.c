@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dialog.c,v 1.23 2003/12/30 19:21:55 sedwards Exp $
+/* $Id: dialog.c,v 1.24 2004/01/23 23:38:26 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/dialog.c
@@ -1746,7 +1746,7 @@ DlgDirListW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DlgDirSelectComboBoxExA(
   HWND hDlg,
@@ -1762,7 +1762,7 @@ DlgDirSelectComboBoxExA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DlgDirSelectComboBoxExW(
   HWND hDlg,
@@ -1778,7 +1778,7 @@ DlgDirSelectComboBoxExW(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 DlgDirSelectExA(
   HWND hDlg,
@@ -1793,7 +1793,7 @@ DlgDirSelectExA(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 DlgDirSelectExW(
   HWND hDlg,
@@ -1808,7 +1808,7 @@ DlgDirSelectExW(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 EndDialog(
   HWND hDlg,
@@ -1907,8 +1907,8 @@ STDCALL
 GetDlgItemInt(
   HWND hDlg,
   int nIDDlgItem,
-  WINBOOL *lpTranslated,
-  WINBOOL bSigned)
+  BOOL *lpTranslated,
+  BOOL bSigned)
 {
 	char str[30];
     char * endptr;
@@ -1977,7 +1977,7 @@ STDCALL
 GetNextDlgGroupItem(
   HWND hDlg,
   HWND hCtl,
-  WINBOOL bPrevious)
+  BOOL bPrevious)
 {
 	HWND hwnd, retvalue;
 
@@ -2039,13 +2039,13 @@ STDCALL
 GetNextDlgTabItem(
   HWND hDlg,
   HWND hCtl,
-  WINBOOL bPrevious)
+  BOOL bPrevious)
 {
 	return DIALOG_GetNextTabItem(hDlg, hDlg, hCtl, bPrevious);
 }
 
 #if 0
-WINBOOL
+BOOL
 STDCALL
 IsDialogMessage(
   HWND hDlg,
@@ -2059,7 +2059,7 @@ IsDialogMessage(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsDialogMessageA(
   HWND hDlg,
@@ -2151,7 +2151,7 @@ IsDialogMessageA(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsDialogMessageW(
   HWND hDlg,
@@ -2256,7 +2256,7 @@ IsDlgButtonChecked(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 MapDialogRect(
   HWND hDlg,
@@ -2311,13 +2311,13 @@ SendDlgItemMessageW(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetDlgItemInt(
   HWND hDlg,
   int nIDDlgItem,
   UINT uValue,
-  WINBOOL bSigned)
+  BOOL bSigned)
 {
 	char str[20];
 
@@ -2331,7 +2331,7 @@ SetDlgItemInt(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetDlgItemTextA(
   HWND hDlg,
@@ -2345,7 +2345,7 @@ SetDlgItemTextA(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetDlgItemTextW(
   HWND hDlg,
@@ -2359,7 +2359,7 @@ SetDlgItemTextW(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 CheckDlgButton(
   HWND hDlg,
@@ -2394,7 +2394,7 @@ static BOOL CALLBACK CheckRB(HWND hwnd, LPARAM lParam)
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 CheckRadioButton(
   HWND hDlg,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c,v 1.5 2003/07/10 21:04:31 chorns Exp $
+/* $Id: object.c,v 1.6 2004/01/23 23:38:26 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -37,7 +37,7 @@
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetUserObjectInformationA(
   HANDLE hObj,
@@ -53,7 +53,7 @@ SetUserObjectInformationA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetUserObjectInformationW(
   HANDLE hObj,
@@ -69,12 +69,12 @@ SetUserObjectInformationW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 UserHandleGrantAccess(
   HANDLE hUserHandle,
   HANDLE hJob,
-  WINBOOL bGrant)
+  BOOL bGrant)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -84,7 +84,7 @@ UserHandleGrantAccess(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetUserObjectInformationA(
   HANDLE hObj,
@@ -101,7 +101,7 @@ GetUserObjectInformationA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetUserObjectInformationW(
   HANDLE hObj,
