@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.11 1999/12/26 15:50:44 dwelch Exp $
+/* $Id: stubs.c,v 1.12 2000/02/14 22:10:46 ea Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -2878,7 +2878,69 @@ MulDiv (
 }
 
 
-int
+/**********************************************************************
+ * NAME							PRIVATE
+ * 	IsInstalledCP@4
+ *
+ * RETURN VALUE
+ * 	TRUE if CodePage is installed in the system.
+ */
+static
+BOOL
+STDCALL
+IsInstalledCP (
+	UINT	CodePage
+	)
+{
+	/* FIXME */
+	return TRUE;
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	MultiByteToWideChar@24
+ *
+ * ARGUMENTS
+ * 	CodePage
+ *		CP_ACP		ANSI code page
+ *		CP_MACCP	Macintosh code page
+ *		CP_OEMCP	OEM code page
+ *		(UINT)		Any installed code page
+ *
+ * 	dwFlags
+ * 		MB_PRECOMPOSED
+ * 		MB_COMPOSITE
+ *		MB_ERR_INVALID_CHARS
+ *		MB_USEGLYPHCHARS
+ * 		
+ * 	lpMultiByteStr
+ * 		Input buffer;
+ * 		
+ * 	cchMultiByte
+ * 		Size of MultiByteStr, or -1 if MultiByteStr is
+ * 		NULL terminated;
+ * 		
+ * 	lpWideCharStr
+ * 		Output buffer;
+ * 		
+ * 	cchWideChar
+ * 		Size (in WCHAR unit) of WideCharStr, or 0
+ * 		if the caller just wants to know how large
+ * 		WideCharStr should be for a successful
+ * 		conversion.
+ *
+ * RETURN VALUE
+ * 	0 on error; otherwise the number of WCHAR written
+ * 	in the WideCharStr buffer.
+ *
+ * NOTE
+ * 	A raw converter for now. It assumes lpMultiByteStr is
+ * 	NEVER multi-byte (that is each input character is 
+ * 	8-bit ASCII) and is ALWAYS NULL terminated.
+ * 	FIXME-FIXME-FIXME-FIXME
+ */
+INT
 STDCALL
 MultiByteToWideChar (
 	UINT	CodePage,
@@ -2889,8 +2951,94 @@ MultiByteToWideChar (
 	int	cchWideChar
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	int	InStringLength = 0;
+	BOOL	InIsNullTerminated = TRUE;
+	PCHAR	r;
+	PWCHAR	w;
+	int	cchConverted;
+
+	/*
+	 * Check the parameters.
+	 */
+	if (	/* --- CODE PAGE --- */
+		(	(CP_ACP != CodePage)
+			&& (CP_MACCP != CodePage)
+			&& (CP_OEMCP != CodePage)
+			&& (FALSE == IsInstalledCP (CodePage))
+			)
+		/* --- FLAGS --- */
+		|| (dwFlags ^ (	MB_PRECOMPOSED
+				| MB_COMPOSITE
+				| MB_ERR_INVALID_CHARS
+				| MB_USEGLYPHCHARS
+				)
+			)
+		/* --- INPUT BUFFER --- */
+		|| (NULL == lpMultiByteStr)
+		)
+	{
+		SetLastError (ERROR_INVALID_PARAMETER);
+		return 0;
+	}
+	/*
+	 * Compute the input buffer length.
+	 */
+	if (-1 == cchMultiByte)
+	{
+		InStringLength = lstrlen (lpMultiByteStr);
+	}
+	else
+	{
+		InIsNullTerminated = FALSE;
+		InStringLength = cchMultiByte;
+	}
+	/*
+	 * Does caller query for output
+	 * buffer size?
+	 */
+	if (0 == cchWideChar)
+	{
+		SetLastError (ERROR_SUCCESS);
+		return InStringLength;
+	}
+	/*
+	 * Is space provided for the translated
+	 * string enough?
+	 */
+	if (cchWideChar < InStringLength)
+	{
+		SetLastError (ERROR_INSUFFICIENT_BUFFER);
+		return 0;
+	}
+	/*
+	 * Raw 8- to 16-bit conversion.
+	 */
+	for (	cchConverted = 0,
+		r = (PCHAR) lpMultiByteStr,
+		w = (PWCHAR) lpWideCharStr;
+		
+		((*r) && (cchConverted < cchWideChar));
+
+		r++,
+		cchConverted++
+		)
+	{
+		*w = (WCHAR) *r;
+	}
+	/*
+	 * Is the input string NULL terminated?
+	 */
+	if (TRUE == InIsNullTerminated)
+	{
+		*w = L'\0';
+		++cchConverted;
+	}
+	/*
+	 * Return how many characters we
+	 * wrote in the output buffer.
+	 */
+	SetLastError (ERROR_SUCCESS);
+	return cchConverted;
 }
 
 
