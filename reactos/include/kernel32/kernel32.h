@@ -8,9 +8,17 @@
 #ifdef NDEBUG
 #define DPRINT(args...)
 #define CHECKPOINT
+#ifdef assert
+#undef assert
+#endif
+#define assert(x)
 #else
 #define DPRINT(args...) do { DbgPrint("(KERNEL32:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
 #define CHECKPOINT do { DbgPrint("(KERNEL32:%s:%d) Checkpoint\n",__FILE__,__LINE__); } while(0);
+#ifdef assert
+#undef assert
+#endif
+#define assert(x) do { if(!x) RtlAssert(x, __FILE__,__LINE__, ""); } while(0);
 #endif
 
 #define DPRINT1(args...) do { DbgPrint("(KERNEL32:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);

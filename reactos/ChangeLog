@@ -1,3 +1,8 @@
+2003-04-27  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* include/kernel32/kernel32.h (assert): Define.
+	* tools/mkhive/.cvsignore: New file.
+
 2003-04-18  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* subsys/system/usetup/partlist.c (AddPartitionList): Create
