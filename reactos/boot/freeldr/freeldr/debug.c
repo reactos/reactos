@@ -46,9 +46,9 @@ U32		DebugPrintMask = DPRINT_WARNING|DPRINT_FILESYSTEM|DPRINT_MEMORY|DPRINT_LINU
 U32		DebugPrintMask = 0;
 #endif
 
-#define	SCREEN				0
-#define	RS232				1
-#define BOCHS				2
+#define	SCREEN				1
+#define	RS232				2
+#define BOCHS				4
 
 #define	COM1				1
 #define	COM2				2
@@ -60,6 +60,7 @@ U32		DebugPrintMask = 0;
 U32		DebugPort = RS232;
 //U32		DebugPort = SCREEN;
 //U32		DebugPort = BOCHS;
+//U32		DebugPort = SCREEN|BOCHS;
 U32		ComPort = COM1;
 //U32		BaudRate = 19200;
 U32		BaudRate = 115200;
@@ -81,7 +82,7 @@ VOID DebugPrintChar(UCHAR Character)
 		DebugStartOfLine = TRUE;
 	}
 
-	if (DebugPort == RS232)
+	if (DebugPort & RS232)
 	{
 		if (Character == '\n')
 		{
@@ -89,11 +90,11 @@ VOID DebugPrintChar(UCHAR Character)
 		}
 		Rs232PortPutByte(Character);
 	}
-	else if (DebugPort == BOCHS)
+	if (DebugPort & BOCHS)
 	{
 		WRITE_PORT_UCHAR((PUCHAR)BOCHS_OUTPUT_PORT, Character);
 	}
-	else
+	if (DebugPort & SCREEN)
 	{
 		MachConsPutChar(Character);
 	}
@@ -257,7 +258,7 @@ static VOID DebugPrintV(char *format, int *dataptr)
 			switch (c = *(format++))
 			{
 			case 'd': case 'u': case 'x':
-				
+
 				if (ll)
 				{
 					*convert_i64_to_ascii(str, c, *((unsigned long long*) dataptr)) = 0;
@@ -311,7 +312,7 @@ static VOID DebugPrintV(char *format, int *dataptr)
 VOID DebugPrint(U32 Mask, char *format, ...)
 {
 	int *dataptr = (int *) &format;
-	
+
 	// Mask out unwanted debug messages
 	if (!(Mask & DebugPrintMask))
 	{
@@ -340,7 +341,7 @@ VOID DebugDumpBuffer(U32 Mask, PVOID Buffer, U32 Length)
 	PUCHAR	BufPtr = (PUCHAR)Buffer;
 	U32		Idx;
 	U32		Idx2;
-	
+
 	// Mask out unwanted debug messages
 	if (!(Mask & DebugPrintMask))
 	{
