@@ -461,7 +461,7 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
 
    Vector = InterruptObject->Vector;
 
-   if (Vector < IRQ_BASE && Vector >= IRQ_BASE + NR_IRQS)
+   if (Vector < IRQ_BASE || Vector >= IRQ_BASE + NR_IRQS)
       return FALSE;
 
    Vector -= IRQ_BASE;
