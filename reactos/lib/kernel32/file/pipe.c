@@ -1,4 +1,4 @@
-/* $Id: pipe.c,v 1.4 2000/09/27 01:24:37 ekohl Exp $
+/* $Id: pipe.c,v 1.5 2002/05/07 22:22:28 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -56,6 +56,13 @@ BOOL STDCALL CreatePipe(PHANDLE hReadPipe,
 			      OBJ_CASE_INSENSITIVE,
 			      NULL,
 			      SecurityDescriptor);
+   if (lpPipeAttributes)
+   {
+      if(lpPipeAttributes->bInheritHandle)
+         ObjectAttributes.Attributes |= OBJ_INHERIT;
+      if (lpPipeAttributes->lpSecurityDescriptor)
+	 ObjectAttributes.SecurityDescriptor = lpPipeAttributes->lpSecurityDescriptor;
+   }
 
    Status = NtCreateNamedPipeFile(&ReadPipeHandle,
 				  FILE_GENERIC_READ,
