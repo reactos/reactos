@@ -1,3 +1,27 @@
+2003-07-24  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	Move welcome from rosapps to here and beautify it a bit.
+
+	* Makefile: Copy bootdata/autorun.inf, and bootdata/icon.ico to CD.
+	(SYS_APPS) Add welcome.
+	* include/defines.h (BS_FLAT): Define.
+	* bootdata/autorun.inf: New file.
+	* bootdata/icon.ico: Ditto.
+	* subsys/system/welcome: New directory.
+	* subsys/system/welcome/.cvsignore: New file.
+	* subsys/system/welcome/Makefile: Ditto.
+	* subsys/system/welcome/resource.h: Ditto.
+	* subsys/system/welcome/welcome.c: Ditto.
+	* subsys/system/welcome/welcome.rc: Ditto.
+	* subsys/system/welcome/res/: New directory.
+	* subsys/system/welcome/res/background-right.bmp: New file.
+	* subsys/system/welcome/res/background-top.bmp: Ditto.
+	* subsys/system/welcome/res/default.bmp: Ditto.
+	* subsys/system/welcome/res/icon.ico: Ditto.
+	* subsys/system/welcome/res/topic0.bmp: Ditto.
+	* subsys/system/welcome/res/topic1.bmp: Ditto.
+	* subsys/system/welcome/res/topic2.bmp: Ditto.
+
 2003-07-23  James Tabor	<jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net>
 
 	lib/user32/misc/: stubs.c Removed stub for ClientToScreen.

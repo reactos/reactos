@@ -626,6 +626,7 @@ extern "C" {
 #define BS_TOP	(0x400L)
 #define BS_USERBUTTON	(0x8L)
 #define BS_VCENTER	(0xc00L)
+#define BS_FLAT (0x8000L)
 #define CBS_AUTOHSCROLL	(0x40L)
 #define CBS_DISABLENOSCROLL	(0x800L)
 #define CBS_DROPDOWN	(0x2L)

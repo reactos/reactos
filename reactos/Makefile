@@ -81,8 +81,8 @@ NET_DEVICE_DRIVERS = ne2000
 STORAGE_DRIVERS = atapi cdrom class2 disk scsiport
 
 # System applications
-# autochk cmd format gstart services setup usetup winlogon
-SYS_APPS = autochk cmd format gstart services setup usetup winlogon
+# autochk cmd format gstart services setup usetup welcome winlogon
+SYS_APPS = autochk cmd format gstart services setup usetup welcome winlogon
 
 # System services
 # rpcss eventlog
@@ -789,13 +789,14 @@ install_dirs:
 	$(RMKDIR) $(INSTALL_DIR)
 
 install_before:
-#	$(RLINE) bootdata/autorun.inf $(INSTALL_DIR)/../autorun.inf
+	$(RLINE) bootdata/autorun.inf $(INSTALL_DIR)/../autorun.inf
 	$(RLINE) bootdata/readme.txt $(INSTALL_DIR)/../readme.txt
 	$(RLINE) bootdata/hivecls.inf $(INSTALL_DIR)/hivecls.inf
 	$(RLINE) bootdata/hivedef.inf $(INSTALL_DIR)/hivedef.inf
 	$(RLINE) bootdata/hivesft.inf $(INSTALL_DIR)/hivesft.inf
 	$(RLINE) bootdata/hivesys.inf $(INSTALL_DIR)/hivesys.inf
 	$(RLINE) bootdata/txtsetup.sif $(INSTALL_DIR)/txtsetup.sif
+	$(CP) bootdata/icon.ico $(INSTALL_DIR)/../icon.ico
 	$(CP) media/fonts $(INSTALL_DIR)
 	$(CP) media/nls $(INSTALL_DIR)
 
