@@ -792,22 +792,22 @@ static BOOL CALLBACK MyDrawText(HDC hdc, LPARAM data, int cnt)
 	return TRUE;
 }
 
-void OwnerdrawnButton::DrawGrayText(LPDRAWITEMSTRUCT dis, LPRECT pRect, LPCTSTR title, int dt_flags)
+void DrawGrayText(HDC hdc, LPRECT pRect, LPCTSTR title, int dt_flags)
 {
 	COLORREF gray = GetSysColor(COLOR_GRAYTEXT);
 
 	if (gray) {
-		TextColor lcColor(dis->hDC, GetSysColor(COLOR_BTNHIGHLIGHT));
+		TextColor lcColor(hdc, GetSysColor(COLOR_BTNHIGHLIGHT));
 		RECT shadowRect = {pRect->left+1, pRect->top+1, pRect->right+1, pRect->bottom+1};
-		DrawText(dis->hDC, title, -1, &shadowRect, dt_flags);
+		DrawText(hdc, title, -1, &shadowRect, dt_flags);
 
-		SetTextColor(dis->hDC, gray);
-		DrawText(dis->hDC, title, -1, pRect, dt_flags);
+		SetTextColor(hdc, gray);
+		DrawText(hdc, title, -1, pRect, dt_flags);
 	} else {
 		int old_r = pRect->right;
 		int old_b = pRect->bottom;
 
-		DrawText(dis->hDC, title, -1, pRect, dt_flags|DT_CALCRECT);
+		DrawText(hdc, title, -1, pRect, dt_flags|DT_CALCRECT);
 
 		int x = pRect->left + (old_r-pRect->right)/2;
 		int y = pRect->top + (old_b-pRect->bottom)/2;
@@ -816,7 +816,7 @@ void OwnerdrawnButton::DrawGrayText(LPDRAWITEMSTRUCT dis, LPRECT pRect, LPCTSTR 
 		s_MyDrawText_Rect.right = w;
 		s_MyDrawText_Rect.bottom = h;
 
-		GrayString(dis->hDC, GetSysColorBrush(COLOR_GRAYTEXT), MyDrawText, (LPARAM)title, -1, x, y, w, h);
+		GrayString(hdc, GetSysColorBrush(COLOR_GRAYTEXT), MyDrawText, (LPARAM)title, -1, x, y, w, h);
 	}
 }
 
@@ -910,7 +910,7 @@ void PictureButton::DrawItem(LPDRAWITEMSTRUCT dis)
 	BkMode bk_mode(dis->hDC, TRANSPARENT);
 
 	if (dis->itemState & (ODS_DISABLED|ODS_GRAYED))
-		DrawGrayText(dis, &textRect, title, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
+		DrawGrayText(dis->hDC, &textRect, title, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
 	else {
 		TextColor lcColor(dis->hDC, GetSysColor(COLOR_BTNTEXT));
 		DrawText(dis->hDC, title, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);

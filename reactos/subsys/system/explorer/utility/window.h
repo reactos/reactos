@@ -568,10 +568,10 @@ struct OwnerdrawnButton : public SubclassedWindow
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 
-	void	DrawGrayText(LPDRAWITEMSTRUCT dis, LPRECT pRect, LPCTSTR text, int dt_flags);
-
 	virtual void DrawItem(LPDRAWITEMSTRUCT dis) = 0;
 };
+
+extern void DrawGrayText(HDC hdc, LPRECT pRect, LPCTSTR text, int dt_flags);
 
 
  /**

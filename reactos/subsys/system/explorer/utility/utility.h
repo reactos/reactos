@@ -527,7 +527,7 @@ protected:
 	COLORREF _old_color;
 };
 
- /// TextColor locally sets the background mode for drawing.
+ /// BkMode locally sets the background mode for drawing.
 struct BkMode
 {
 	BkMode(HDC hdc, int bkmode)
@@ -540,7 +540,7 @@ protected:
 	COLORREF _old_bkmode;
 };
 
- /// TextColor locally selects a font for drawing.
+ /// FontSelection locally selects a font for drawing.
 struct FontSelection
 {
 	FontSelection(HDC hdc, HFONT hFont)
@@ -553,7 +553,7 @@ protected:
 	HFONT	_old_hFont;
 };
 
- /// TextColor locally selects a bitmap into a device context.
+ /// BitmapSelection locally selects a bitmap into a device context.
 struct BitmapSelection
 {
 	BitmapSelection(HDC hdc, HBITMAP hBmp)
@@ -564,6 +564,19 @@ struct BitmapSelection
 protected:
 	HDC		_hdc;
 	HBITMAP	_old_hBmp;
+};
+
+ /// BrushSelection locally selects a brush into a device context.
+struct BrushSelection
+{
+	BrushSelection(HDC hdc, HBRUSH hBrush)
+	 : _hdc(hdc), _old_hBrush(SelectBrush(hdc, hBrush)) {}
+
+	~BrushSelection() {SelectBrush(_hdc, _old_hBrush);}
+
+protected:
+	HDC		_hdc;
+	HBRUSH	_old_hBrush;
 };
 
 

@@ -26,6 +26,9 @@
  //
 
 
+#define _LIGHT_STARTMENU
+
+
 #define	CLASSNAME_STARTMENU		TEXT("ReactosStartmenuClass")
 #define	TITLE_STARTMENU			TEXT("Start Menu")
 
@@ -38,8 +41,11 @@
 
  // private message constants
 #define	PM_STARTMENU_CLOSED		(WM_APP+0x11)
-#define	PM_STARTENTRY_FOCUSED	(WM_APP+0x12)
-#define	PM_STARTENTRY_LAUNCHED	(WM_APP+0x13)
+#define	PM_STARTENTRY_LAUNCHED	(WM_APP+0x12)
+
+#ifndef _LIGHT_STARTMENU
+#define	PM_STARTENTRY_FOCUSED	(WM_APP+0x13)
+#endif
 
 
  /// StartMenuDirectory is used to store the base directory of start menus.
@@ -73,6 +79,14 @@ struct StartMenuEntry
 };
 
 
+extern int GetStartMenuBtnTextWidth(HDC hdc, LPCTSTR title, HWND hwnd);
+
+extern void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, HICON hIcon,
+								bool hasSubmenu, bool enabled, bool has_focus, bool pushed);
+
+
+#ifndef _LIGHT_STARTMENU
+
  /**
 	StartMenuButton draws the face of a StartMenuCtrl button control.
  */
@@ -82,8 +96,6 @@ struct StartMenuButton : public OwnerdrawnButton
 
 	StartMenuButton(HWND hwnd, HICON hIcon, bool hasSubmenu)
 	 :	super(hwnd), _hIcon(hIcon), _hasSubmenu(hasSubmenu) {}
-
-	static int GetTextWidth(LPCTSTR title, HWND hwnd);
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -119,6 +131,8 @@ struct StartMenuSeparator : public Static
 	}
 };
 
+#endif
+
 
 typedef list<ShellPath> StartMenuFolders;
 
@@ -135,17 +149,59 @@ struct StartMenuCreateInfo
 
 #define STARTMENU_CREATOR(WND_CLASS) WINDOW_CREATOR_INFO(WND_CLASS, StartMenuCreateInfo)
 
-typedef map<UINT, StartMenuEntry> ShellEntryMap;
+typedef map<int, StartMenuEntry> ShellEntryMap;
 
+
+#ifdef _LIGHT_STARTMENU
+
+struct SMBtnInfo
+{
+	SMBtnInfo(const StartMenuEntry& entry, int id, bool hasSubmenu=false, bool enabled=true)
+	 :	_title(entry._title),
+		_hIcon(entry._hIcon),
+		_id(id),
+		_hasSubmenu(hasSubmenu),
+		_enabled(enabled)
+	{
+	}
+
+	SMBtnInfo(LPCTSTR title, HICON hIcon, int id, bool hasSubmenu=false, bool enabled=true)
+	 :	_title(title),
+		_hIcon(hIcon),
+		_id(id),
+		_hasSubmenu(hasSubmenu),
+		_enabled(enabled)
+	{
+	}
+
+	String	_title;
+	HICON	_hIcon;
+	int		_id;
+	bool	_hasSubmenu;
+	bool	_enabled;
+};
+
+typedef list<SMBtnInfo> SMBtnList;
+
+#endif
 
 
  /**
 	Startmenu window.
 	To create a start menu call its Create() function.
  */
-struct StartMenu : public OwnerDrawParent<DialogWindow>
+struct StartMenu :
+#ifdef _LIGHT_STARTMENU
+	public OwnerDrawParent<Window>
+#else
+	public OwnerDrawParent<DialogWindow>
+#endif
 {
+#ifdef _LIGHT_STARTMENU
+	typedef OwnerDrawParent<Window> super;
+#else
 	typedef OwnerDrawParent<DialogWindow> super;
+#endif
 
 	StartMenu(HWND hwnd);
 	StartMenu(HWND hwnd, const StartMenuCreateInfo& create_info);
@@ -178,17 +234,28 @@ protected:
 
 	StartMenuCreateInfo _create_info;	// copy of the original create info
 
+#ifdef _LIGHT_STARTMENU
+	SMBtnList _buttons;
+	int		_selected_id;
+
+	void	ResizeToButtons();
+	int		ButtonHitTest(POINT pt);
+	void	InvalidateSelection();
+	const SMBtnInfo* GetButtonInfo(int id) const;
+	void	SelectButton(int id);
+#endif
+
 	 // member functions
 	void	ResizeButtons(int cx);
 
 	virtual void AddEntries();
 
-	StartMenuEntry& AddEntry(LPCTSTR title, HICON hIcon=0, UINT id=(UINT)-1);
+	StartMenuEntry& AddEntry(LPCTSTR title, HICON hIcon=0, int id=-1);
 	StartMenuEntry& AddEntry(const ShellFolder folder, const ShellEntry* entry);
 
 	void	AddShellEntries(const ShellDirectory& dir, int max=-1, bool subfolders=true);
 
-	void	AddButton(LPCTSTR title, HICON hIcon=0, bool hasSubmenu=false, UINT id=(UINT)-1, DWORD style=WS_VISIBLE|WS_CHILD|BS_OWNERDRAW);
+	void	AddButton(LPCTSTR title, HICON hIcon=0, bool hasSubmenu=false, int id=-1, bool enabled=true);
 	void	AddSeparator();
 
 	bool	CloseSubmenus() {return CloseOtherSubmenus(0);}
@@ -200,8 +267,12 @@ protected:
 	void	ActivateEntry(int id, const ShellEntrySet& entries);
 	void	CloseStartMenu(int id=0);
 
+	bool	GetButtonRect(int id, PRECT prect);
+
 	void	DrawFloatingButton(HDC hdc);
 	void	GetFloatingButonRect(LPRECT prect);
+
+	void	Paint(HDC hdc);
 };
 
 
@@ -268,6 +339,7 @@ protected:
 	SIZE	_logo_size;
 
 	void	AddEntries();
+	void	Paint(HDC hdc);
 };
 
 
