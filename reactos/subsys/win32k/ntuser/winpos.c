@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.34 2003/10/20 14:00:58 weiden Exp $
+/* $Id: winpos.c,v 1.35 2003/10/21 19:40:05 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1246,7 +1246,8 @@ WinPosSetActiveWindow(PWINDOW_OBJECT Window, BOOL Mouse, BOOL ChangeFocus)
       }
       else
       {
-        ActiveQueue->ActiveWindow = NULL;
+        if(ActiveQueue)
+          ActiveQueue->ActiveWindow = NULL;
         PrevActive = NULL;
       }
     }
