@@ -92,7 +92,11 @@ typedef unsigned long COLORREF;
 typedef CTRYID;
 typedef DLGPROC;
 */
-typedef double DWORDLONG, *PDWORDLONG;
+#ifdef __GNUC__
+typedef unsigned long long DWORDLONG, *PDWORDLONG;
+#else
+typedef unsigned __int64 DWORDLONG, *PDWORDLONG;
+#endif
 /*
 typedef EDITWORDBREAKPROC;
 typedef ENHMFENUMPROC;
