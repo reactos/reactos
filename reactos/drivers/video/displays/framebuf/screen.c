@@ -210,6 +210,7 @@ IntInitScreenInfo(
    pGdiInfo->ulLogPixelsX = pDevMode->dmLogPixels;
    pGdiInfo->ulLogPixelsY = pDevMode->dmLogPixels;
    pGdiInfo->flTextCaps = TC_RA_ABLE;
+   pGdiInfo->flRaster = 0;
    pGdiInfo->ulDACRed = SelectedMode->NumberRedBits;
    pGdiInfo->ulDACGreen = SelectedMode->NumberGreenBits;
    pGdiInfo->ulDACBlue = SelectedMode->NumberBlueBits;
