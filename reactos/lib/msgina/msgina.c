@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgina.c,v 1.5 2003/12/01 18:21:04 weiden Exp $
+/* $Id: msgina.c,v 1.6 2003/12/07 00:04:20 weiden Exp $
  *
  * PROJECT:         ReactOS msgina.dll
  * FILE:            lib/msgina/msgina.c
@@ -199,10 +199,11 @@ WlxActivateUserShell(
   BOOL Ret;
   
   /* get the path of userinit */
-  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
+  if(RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
                   L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", 
                   0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
   {
+    /* FIXME - why does this always fail??? */
     VirtualFree(pEnvironment, 0, MEM_RELEASE);
     return FALSE;
   }
@@ -216,9 +217,8 @@ WlxActivateUserShell(
   }
   RegCloseKey(hKey);
   
-  /* FIXME - execute logon script */
-  
   /* start userinit */
+  /* FIXME - allow to start more applications that are comma-separated */
   si.cb = sizeof(STARTUPINFO);
   si.lpReserved = NULL;
   si.lpTitle = L"userinit";

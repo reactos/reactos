@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.21 2003/12/01 18:21:04 weiden Exp $
+/* $Id: winlogon.c,v 1.22 2003/12/07 00:04:20 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -31,9 +31,9 @@
 /* GLOBALS ******************************************************************/
 
 BOOL
-LoadGina(PMSGINAFUNCTIONS Functions);
+LoadGina(PMSGINAFUNCTIONS Functions, DWORD *DllVersion);
 BOOL
-MsGinaInit();
+MsGinaInit(DWORD Version);
 
 HINSTANCE hAppInstance;
 HWINSTA InteractiveWindowStation;   /* WinSta0 */
@@ -59,6 +59,37 @@ static void PrintString (WCHAR* fmt,...)
    va_end(ap);
 
    OutputDebugString(buffer);
+}
+
+BOOL
+CALLBACK
+ShutdownComputerProc(
+  HWND hwndDlg,
+  UINT uMsg,
+  WPARAM wParam,
+  LPARAM lParam
+)
+{
+  switch(uMsg)
+  {
+    case WM_COMMAND:
+    {
+      switch(LOWORD(wParam))
+      {
+        case IDC_BTNSHTDOWNCOMPUTER:
+          EndDialog(hwndDlg, IDC_BTNSHTDOWNCOMPUTER);
+          break;
+      }
+      break;
+    }
+    case WM_INITDIALOG:
+    {
+      RemoveMenu(GetSystemMenu(hwndDlg, FALSE), SC_CLOSE, MF_BYCOMMAND);
+      SetFocus(GetDlgItem(hwndDlg, IDC_BTNSHTDOWNCOMPUTER));
+      break;
+    }
+  }
+  return FALSE;
 }
 
 static BOOLEAN StartServices(VOID)
@@ -220,6 +251,35 @@ static BOOLEAN StartProcess(PWCHAR ValueName)
 
    return StartIt;
 }
+
+/*
+static BOOL RestartShell(void)
+{
+  HANDLE WinLogonKey;
+  DWORD Type, Size, Value;
+  
+  if(OpenRegistryKey(&WinLogonKey))
+  {
+    Size = sizeof(DWORD);
+    if(ERROR_SUCCESS == RegQueryValueEx(WinLogonKey,
+                                        L"AutoRestartShell",
+                                        NULL,
+                                        &Type,
+                                        (LPBYTE)&Value,
+                                        &Size))
+    {
+      if(Type == REG_DWORD)
+      {
+        RegCloseKey(WinLogonKey);
+        return (Value != 0);
+      }
+    }
+    RegCloseKey(WinLogonKey);
+  }  
+  return FALSE;
+}
+*/
+
 #if SUPPORT_CONSOLESTART
 static BOOL StartIntoGUI(void)
 {
@@ -346,6 +406,7 @@ WinMain(HINSTANCE hInstance,
   LSA_OPERATIONAL_MODE Mode;
   ULONG AuthenticationPackage;
 #endif
+  DWORD GinaDllVersion;
   HANDLE hShutdownEvent;
   WCHAR StatusMsg[256];
   BOOL Success;
@@ -444,7 +505,7 @@ WinMain(HINSTANCE hInstance,
  if(!StartConsole)
  {
 #endif
-   if(!LoadGina(&MsGinaFunctions))
+   if(!LoadGina(&MsGinaFunctions, &GinaDllVersion))
    {
      NtShutdownSystem(ShutdownReboot);
      ExitProcess(0);
@@ -465,7 +526,7 @@ WinMain(HINSTANCE hInstance,
      return(0);
    }
    
-   if(!MsGinaInit() || !MsGinaInst)
+   if(!MsGinaInit(GinaDllVersion) || !MsGinaInst)
    {
      DbgPrint("WL: Failed to initialize winlogon!\n");
      NtShutdownSystem(ShutdownNoReboot);
@@ -585,6 +646,9 @@ WinMain(HINSTANCE hInstance,
    if (! DoLoginUser(LoginName, Password))
      {
      }
+   
+   NtShutdownSystem(ShutdownNoReboot);
+   ExitProcess(0);
  }
  else
  {
@@ -598,7 +662,7 @@ WinMain(HINSTANCE hInstance,
                                                   StatusMsg);
    
    /* FIXME */
-   Sleep(250);
+   Sleep(150);
    
    LoadString(hAppInstance, IDS_APPLYINGCOMPUTERSETTINGS, StatusMsg, 256 * sizeof(WCHAR));
    MsGinaInst->Functions->WlxDisplayStatusMessage(MsGinaInst->Context,
@@ -608,14 +672,14 @@ WinMain(HINSTANCE hInstance,
                                                   StatusMsg);
    
    /* FIXME */
-   Sleep(250);
+   Sleep(150);
 
    MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
    MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
    MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
       
    /* FIXME - call WlxLoggedOutSAS() to display the login dialog */
-    Sleep(500);
+    Sleep(250);
    
    LoadString(hAppInstance, IDS_LOADINGYOURPERSONALSETTINGS, StatusMsg, 256 * sizeof(WCHAR));
    MsGinaInst->Functions->WlxDisplayStatusMessage(MsGinaInst->Context,
@@ -625,9 +689,48 @@ WinMain(HINSTANCE hInstance,
                                                   StatusMsg);
    
    /* FIXME */
-   Sleep(250);
+   Sleep(150);
    
    LoadString(hAppInstance, IDS_APPLYINGYOURPERSONALSETTINGS, StatusMsg, 256 * sizeof(WCHAR));
+   MsGinaInst->Functions->WlxDisplayStatusMessage(MsGinaInst->Context,
+                                                  ApplicationDesktop,
+                                                  0,
+                                                  NULL,
+                                                  StatusMsg);
+   
+   /* FIXME */
+   Sleep(150);
+   
+   MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
+   MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
+   
+   if(!MsGinaInst->Functions->WlxActivateUserShell(MsGinaInst->Context,
+                                                   L"WinSta0\\Default",
+                                                   NULL,
+                                                   NULL))
+   {
+     LoadString(hAppInstance, IDS_FAILEDACTIVATEUSERSHELL, StatusMsg, 256 * sizeof(WCHAR));
+     MessageBox(0, StatusMsg, NULL, MB_ICONERROR);
+     SetEvent(hShutdownEvent);
+   }
+   
+   
+   WaitForSingleObject(hShutdownEvent, INFINITE);
+   CloseHandle(hShutdownEvent);
+
+   LoadString(hAppInstance, IDS_SAVEYOURSETTINGS, StatusMsg, 256 * sizeof(WCHAR));
+   MsGinaInst->Functions->WlxDisplayStatusMessage(MsGinaInst->Context,
+                                                  ApplicationDesktop,
+                                                  0,
+                                                  NULL,
+                                                  StatusMsg);
+   
+   /* FIXME */
+   Sleep(150);
+   
+   MsGinaInst->Functions->WlxShutdown(MsGinaInst->Context, WLX_SAS_ACTION_SHUTDOWN);
+   
+   LoadString(hAppInstance, IDS_REACTOSISSHUTTINGDOWN, StatusMsg, 256 * sizeof(WCHAR));
    MsGinaInst->Functions->WlxDisplayStatusMessage(MsGinaInst->Context,
                                                   ApplicationDesktop,
                                                   0,
@@ -640,20 +743,22 @@ WinMain(HINSTANCE hInstance,
    MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
    MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
    
-   /* FIXME - call WlxActivateUserShell() which will start userinit.exe */
-   DoLoginUser(LoginName, Password); /* FIXME - remove */
-   DbgPrint("shell exited! finished\n");
-   MessageBox(0, L"Shell exited", L"", 0);
-
-   WaitForSingleObject(hShutdownEvent, INFINITE);
-   CloseHandle(hShutdownEvent);
+   /* FIXME - Flush disks and registry, ... */
+   
+   /* FIXME - only show this dialog if it's a shutdown and the computer doesn't support APM */
+   switch(DialogBox(hInstance, MAKEINTRESOURCE(IDD_SHUTDOWNCOMPUTER), 0, ShutdownComputerProc))
+   {
+     case IDC_BTNSHTDOWNCOMPUTER:
+       NtShutdownSystem(ShutdownReboot);
+       break;
+     default:
+       NtShutdownSystem(ShutdownNoReboot);
+       break;
+   }
+   ExitProcess(0);
 #if SUPPORT_CONSOLESTART
  }
 #endif
-
-   NtShutdownSystem(ShutdownNoReboot);
-   
-   ExitProcess(0);
    
    return 0;
 }

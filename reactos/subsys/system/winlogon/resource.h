@@ -29,3 +29,4 @@
 #define IDS_SAVEYOURSETTINGS                      1687
 #define IDS_REACTOSISSTARTINGUP                   1690
 
+#define IDS_FAILEDACTIVATEUSERSHELL               1001

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winlogon.h,v 1.1 2003/12/01 18:21:04 weiden Exp $
+/* $Id: winlogon.h,v 1.2 2003/12/07 00:04:20 weiden Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS winlogon
  * FILE:            subsys/system/winlogon/winlogon.h
@@ -66,9 +66,9 @@ typedef struct _MSGINAFUNCTIONS
   PFWLXLOGGEDONSAS          WlxLoggedOnSAS;
   PFWLXDISPLAYLOCKEDNOTICE  WlxDisplayLockedNotice;
   PFWLXWKSTALOCKEDSAS       WlxWkstaLockedSAS;
-  PFWLXISLOCKOK             WlxIsLockOK;
-  PFWLXISLOGOFFOK           WlxIsLogOffOK;
-  PFWLXLOGOFF               WlxLogOff;
+  PFWLXISLOCKOK             WlxIsLockOk;
+  PFWLXISLOGOFFOK           WlxIsLogoffOk;
+  PFWLXLOGOFF               WlxLogoff;
   PFWLXSHUTDOWN             WlxShutdown;
   
   PFWLXSCREENSAVERNOTIFY    WlxScreenSaverNotify;
@@ -85,6 +85,7 @@ typedef struct _MSGINAINSTANCE
   HANDLE hDllInstance;
   PMSGINAFUNCTIONS Functions;
   PVOID Context;
+  DWORD Version;
 } MSGINAINSTANCE, *PMSGINAINSTANCE;
 
 extern HINSTANCE hAppInstance;

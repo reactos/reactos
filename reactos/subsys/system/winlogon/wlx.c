@@ -1,4 +1,4 @@
-/* $Id: wlx.c,v 1.1 2003/12/01 18:21:04 weiden Exp $
+/* $Id: wlx.c,v 1.2 2003/12/07 00:04:20 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -295,7 +295,25 @@ WlxSetOption(
   ULONG_PTR* OldValue
 )
 {
+  PMSGINAINSTANCE Instance = (PMSGINAINSTANCE)hWlx;
   Unimplemented;
+  if(Instance || !Value)
+  {
+    switch(Option)
+    {
+      case WLX_OPTION_USE_CTRL_ALT_DEL:
+        return TRUE;
+      case WLX_OPTION_CONTEXT_POINTER:
+      {
+        *OldValue = (ULONG_PTR)Instance->Context;
+        Instance->Context = (PVOID)Value;
+        return TRUE;
+      }    
+      case WLX_OPTION_USE_SMART_CARD:
+        return FALSE;
+    }
+  }
+  
   return FALSE;
 }
 
@@ -309,7 +327,51 @@ WlxGetOption(
   ULONG_PTR* Value
 )
 {
+  PMSGINAINSTANCE Instance = (PMSGINAINSTANCE)hWlx;
   Unimplemented;
+  if(Instance || !Value)
+  {
+    switch(Option)
+    {
+      case WLX_OPTION_USE_CTRL_ALT_DEL:
+        return TRUE;
+      case WLX_OPTION_CONTEXT_POINTER:
+      {
+        *Value = (ULONG_PTR)Instance->Context;
+        return TRUE;
+      }
+      case WLX_OPTION_USE_SMART_CARD:
+      case WLX_OPTION_SMART_CARD_PRESENT:
+      case WLX_OPTION_SMART_CARD_INFO:
+        *Value = 0;
+        return FALSE;
+      case WLX_OPTION_DISPATCH_TABLE_SIZE:
+      {
+        switch(Instance->Version)
+        {
+          case WLX_VERSION_1_0:
+            *Value = sizeof(WLX_DISPATCH_VERSION_1_0);
+            break;
+          case WLX_VERSION_1_1:
+            *Value = sizeof(WLX_DISPATCH_VERSION_1_1);
+            break;
+          case WLX_VERSION_1_2:
+            *Value = sizeof(WLX_DISPATCH_VERSION_1_2);
+            break;
+          case WLX_VERSION_1_3:
+            *Value = sizeof(WLX_DISPATCH_VERSION_1_3);
+            break;
+          case WLX_VERSION_1_4:
+            *Value = sizeof(WLX_DISPATCH_VERSION_1_4);
+            break;
+          default:
+            return 0;
+        }
+        return TRUE;
+      }
+    }
+  }
+  
   return FALSE;
 }
 
@@ -510,11 +572,10 @@ GinaLoadFailedProc(
 }
 
 BOOL
-LoadGina(PMSGINAFUNCTIONS Functions)
+LoadGina(PMSGINAFUNCTIONS Functions, DWORD *DllVersion)
 {
   HMODULE hGina;
   WCHAR GinaDll[MAX_PATH + 1];
-  DWORD DllVersion = 0;
   
   MsGinaInst = NULL;
   
@@ -532,23 +593,42 @@ LoadGina(PMSGINAFUNCTIONS Functions)
   
   if(Functions->WlxNegotiate)
   {
-    if(!Functions->WlxNegotiate(WLX_VERSION_1_3, &DllVersion))
+    if(!Functions->WlxNegotiate(WLX_VERSION_1_3, DllVersion))
     {
       return FALSE;
     }
     
-    /* FIXME - allow other versions */
-    if(DllVersion != WLX_VERSION_1_3)
+    if(*DllVersion >= WLX_VERSION_1_0)
     {
-      return FALSE;
+      Functions->WlxActivateUserShell = (PFWLXACTIVATEUSERSHELL)GetProcAddress(hGina, "WlxActivateUserShell");
+      Functions->WlxDisplayLockedNotice = (PFWLXDISPLAYLOCKEDNOTICE)GetProcAddress(hGina, "WlxDisplayLockedNotice");
+      Functions->WlxDisplaySASNotice = (PFWLXDISPLAYSASNOTICE)GetProcAddress(hGina, "WlxDisplaySASNotice");
+      Functions->WlxIsLockOk = (PFWLXISLOCKOK)GetProcAddress(hGina, "WlxIsLockOk");
+      Functions->WlxIsLogoffOk = (PFWLXISLOGOFFOK)GetProcAddress(hGina, "WlxIsLogoffOk");
+      Functions->WlxLoggedOnSAS = (PFWLXLOGGEDONSAS)GetProcAddress(hGina, "WlxLoggedOnSAS");
+      Functions->WlxLoggedOutSAS = (PFWLXLOGGEDOUTSAS)GetProcAddress(hGina, "WlxLoggedOutSAS");
+      Functions->WlxLogoff = (PFWLXLOGOFF)GetProcAddress(hGina, "WlxLogoff");
+      Functions->WlxShutdown = (PFWLXSHUTDOWN)GetProcAddress(hGina, "WlxShutdown");
+      Functions->WlxWkstaLockedSAS = (PFWLXWKSTALOCKEDSAS)GetProcAddress(hGina, "WlxWkstaLockedSAS");
     }
     
-    if(DllVersion >= WLX_VERSION_1_3)
+    if(*DllVersion >= WLX_VERSION_1_1)
     {
-      Functions->WlxNetworkProviderLoad = (PFWLXNETWORKPROVIDERLOAD)GetProcAddress(hGina, "WlxNetworkProviderLoad");
+      Functions->WlxScreenSaverNotify = (PFWLXSCREENSAVERNOTIFY)GetProcAddress(hGina, "WlxScreenSaverNotify");
+      Functions->WlxStartApplication = (PFWLXSTARTAPPLICATION)GetProcAddress(hGina, "WlxStartApplication");
+    }
+    
+    if(*DllVersion >= WLX_VERSION_1_3)
+    {
       Functions->WlxDisplayStatusMessage = (PFWLXDISPLAYSTATUSMESSAGE)GetProcAddress(hGina, "WlxDisplayStatusMessage");
       Functions->WlxGetStatusMessage = (PFWLXGETSTATUSMESSAGE)GetProcAddress(hGina, "WlxGetStatusMessage");
+      Functions->WlxNetworkProviderLoad = (PFWLXNETWORKPROVIDERLOAD)GetProcAddress(hGina, "WlxNetworkProviderLoad");
       Functions->WlxRemoveStatusMessage = (PFWLXREMOVESTATUSMESSAGE)GetProcAddress(hGina, "WlxRemoveStatusMessage");
+    }
+    
+    if(*DllVersion >= WLX_VERSION_1_4)
+    {
+      
     }
   }
   
@@ -556,7 +636,7 @@ LoadGina(PMSGINAFUNCTIONS Functions)
 }
 
 BOOL
-MsGinaInit()
+MsGinaInit(DWORD Version)
 {
   PMSGINAINSTANCE Instance;
   
@@ -569,6 +649,7 @@ MsGinaInit()
   Instance->Functions = &MsGinaFunctions;
   Instance->hDllInstance = NULL; /* FIXME */
   Instance->Context = NULL;
+  Instance->Version = Version;
   
   MsGinaInst = Instance;
   

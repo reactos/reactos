@@ -7,6 +7,7 @@ HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","Shell",0x00020000,"%
 ;HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","Shell",0x00020000,"%SystemRoot%\bin\explorer.exe"
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","StartServices",0x00010001,0x00000001
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","StartGUI",0x00010001,0x00000000
+HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","Userinit",0x00020000,"%SystemRoot%\system32\userinit.exe,"
 
 HKCU, "Control Panel\Desktop", "CursorBlinkRate",0x00000000,"530"
 
