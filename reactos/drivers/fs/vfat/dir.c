@@ -21,7 +21,7 @@
 
 // function like DosDateTimeToFileTime
 BOOLEAN
-FsdDosDateTimeToSystemTime (PDEVICE_EXTENSION DeviceExt, WORD wDosDate, WORD wDosTime, PLARGE_INTEGER SystemTime)
+FsdDosDateTimeToSystemTime (PDEVICE_EXTENSION DeviceExt, USHORT wDosDate, WORD wDosTime, PLARGE_INTEGER SystemTime)
 {
   PDOSTIME pdtime = (PDOSTIME) & wDosTime;
   PDOSDATE pddate = (PDOSDATE) & wDosDate;
