@@ -1,4 +1,4 @@
-/* $Id: ioctrl.c,v 1.19 2003/11/06 18:05:54 ekohl Exp $
+/* $Id: ioctrl.c,v 1.20 2003/11/08 16:43:02 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -111,7 +111,7 @@ NtDeviceIoControlFile (IN HANDLE DeviceHandle,
   StackPtr->Parameters.DeviceIoControl.OutputBufferLength = OutputBufferLength;
 
   Status = IoCallDriver(DeviceObject,Irp);
-  if (Status == STATUS_PENDING && FileObject->Flags & FO_SYNCHRONOUS_IO)
+  if (Event == NULL && Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
     {
       BOOLEAN Alertable;
 
