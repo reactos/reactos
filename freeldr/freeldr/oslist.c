@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -40,9 +40,9 @@ BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNames
 	//
 	// Open the [FreeLoader] section
 	//
-	if (!IniOpenSection("FreeLoader", &SectionId))
+	if (!IniOpenSection("Operating Systems", &SectionId))
 	{
-		UiMessageBox("Section [FreeLoader] not found in freeldr.ini.");
+		UiMessageBox("Section [Operating Systems] not found in freeldr.ini.");
 		return FALSE;
 	}
 
@@ -58,42 +58,23 @@ BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNames
 	}
 
 	//
-	// Now loop through and read the operating system section names
+	// Now loop through and read the operating system section and display names
 	//
 	CurrentOperatingSystemIndex = 0;
 	for (Idx=0; Idx<SectionSettingCount; Idx++)
 	{
 		IniReadSettingByNumber(SectionId, Idx, SettingName, 260, SettingValue, 260);
 
-		if (stricmp(SettingName, "OS") == 0 && IniOpenSection(SettingValue, &OperatingSystemSectionId))
+		if (IniOpenSection(SettingName, &OperatingSystemSectionId))
 		{
-			strcpy(OperatingSystemSectionNames[CurrentOperatingSystemIndex], SettingValue);
+			// Copy the section name
+			strcpy(OperatingSystemSectionNames[CurrentOperatingSystemIndex], SettingName);
+
+			// Copy the display name
+			RemoveQuotes(SettingValue);
+			strcpy(OperatingSystemDisplayNames[CurrentOperatingSystemIndex], SettingValue);
 
 			CurrentOperatingSystemIndex++;
-		}
-	}
-	
-	//
-	// Now loop through and read the operating system display names
-	//
-	for (Idx=0; Idx<OperatingSystemCount; Idx++)
-	{
-		if (IniOpenSection(OperatingSystemSectionNames[Idx], &OperatingSystemSectionId))
-		{
-			if (IniReadSettingByName(OperatingSystemSectionId, "Name", SettingValue, 260))
-			{
-				//
-				// Remove any quotes around the string
-				//
-				RemoveQuotes(SettingValue);
-				strcpy(OperatingSystemDisplayNames[Idx], SettingValue);
-			}
-			else
-			{
-				sprintf(SettingName, "Operating System '%s' has no\nName= line in it's [section].", OperatingSystemSectionNames[Idx]);
-				UiMessageBox(SettingName);
-				strcpy(OperatingSystemDisplayNames[Idx], "");
-			}
 		}
 	}
 
@@ -120,17 +101,14 @@ U32 CountOperatingSystems(U32 SectionId)
 	{
 		IniReadSettingByNumber(SectionId, Idx, SettingName, 260, SettingValue, 260);
 
-		if (stricmp(SettingName, "OS") == 0)
+		if (IniOpenSection(SettingName, NULL))
 		{
-			if (IniOpenSection(SettingValue, NULL))
-			{
-				OperatingSystemCount++;
-			}
-			else
-			{
-				sprintf(SettingName, "Operating System '%s' is listed in\nfreeldr.ini but doesn't have a [section].", SettingValue);
-				UiMessageBox(SettingName);
-			}
+			OperatingSystemCount++;
+		}
+		else
+		{
+			sprintf(SettingName, "Operating System '%s' is listed in\nfreeldr.ini but doesn't have a [section].", SettingValue);
+			UiMessageBox(SettingName);
 		}
 	}
 

@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@
 #include <inifile.h>
 #include <oslist.h> // For RemoveQuotes()
 #include <video.h>
+#include <drivemap.h>
 
 
 
@@ -52,7 +53,7 @@ PVOID				LinuxKernelLoadAddress = NULL;
 PVOID				LinuxInitrdLoadAddress = NULL;
 UCHAR				LinuxBootDescription[80];
 
-VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
+VOID LoadAndBootLinux(PUCHAR OperatingSystemName, PUCHAR Description)
 {
 	PFILE	LinuxKernel = NULL;
 	PFILE	LinuxInitrdFile = NULL;
@@ -60,14 +61,23 @@ VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 
 	UiDrawBackdrop();
 
+	if (Description)
+	{
+		sprintf(LinuxBootDescription, "Loading %s...", Description);
+	}
+	else
+	{
+		strcpy(LinuxBootDescription, "Loading Linux...");
+	}
+
+	UiDrawStatusText(LinuxBootDescription);
+	UiDrawProgressBarCenter(0, 100, LinuxBootDescription);
+
 	// Parse the .ini file section
 	if (!LinuxParseIniSection(OperatingSystemName))
 	{
 		goto LinuxBootFailed;
 	}
-
-	UiDrawStatusText(LinuxBootDescription);
-	UiDrawProgressBarCenter(0, 100, LinuxBootDescription);
 
 	// Open the boot volume
 	if (!FsOpenVolume(BootDrive, BootPartition))
@@ -148,13 +158,11 @@ VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 		LinuxSetupSector->LoadFlags = 0;
 	}
 
-	getch();
 	RtlCopyMemory((PVOID)0x90000, LinuxBootSector, 512);
 	RtlCopyMemory((PVOID)0x90200, LinuxSetupSector, SetupSectorSize);
 	RtlCopyMemory((PVOID)0x99000, LinuxCommandLine, LinuxCommandLineSize);
 
 	UiUnInitialize("Booting Linux...");
-	getch();
 
 	DiskStopFloppyMotor();
 
@@ -231,17 +239,7 @@ BOOL LinuxParseIniSection(PUCHAR OperatingSystemName)
 		return FALSE;
 	}
 
-	if (IniReadSettingByName(SectionId, "Name", SettingValue, 260))
-	{
-		RemoveQuotes(SettingValue);
-		sprintf(LinuxBootDescription, "Loading %s...");
-	}
-	else
-	{
-		strcpy(LinuxBootDescription, "Loading Linux...");
-	}
-
-	BootDrive = atoi(SettingValue);
+	BootDrive = DriveMapGetBiosDriveNumber(SettingValue);
 
 	BootPartition = 0;
 	if (IniReadSettingByName(SectionId, "BootPartition", SettingValue, 260))

@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 // Key codes
 #define KEY_EXTENDED	0x00
 #define	KEY_ENTER		0x0D
+#define KEY_BACKSPACE	0x08
 #define KEY_SPACE		0x20
 #define KEY_UP			0x48
 #define KEY_DOWN		0x50

@@ -1,4 +1,4 @@
-/* $Id: portio.c,v 1.3 2002/08/07 05:13:15 bpalmer Exp $
+/* $Id: portio.c,v 1.1 2003/01/19 01:03:58 bpalmer Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

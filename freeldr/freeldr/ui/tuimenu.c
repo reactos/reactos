@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -27,10 +27,11 @@
 #include <video.h>
 
 
-BOOL TuiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem)
+BOOL TuiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
 	TUI_MENU_INFO	MenuInformation;
 	U32				CurrentClockSecond;
+	U32				KeyPress;
 
 	//
 	// The first thing we need to check is the timeout
@@ -78,12 +79,20 @@ BOOL TuiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuIte
 		//
 		// Process key presses
 		//
-		if (TuiProcessMenuKeyboardEvent(&MenuInformation) == KEY_ENTER)
+		KeyPress = TuiProcessMenuKeyboardEvent(&MenuInformation, KeyPressFilter);
+		if (KeyPress == KEY_ENTER)
 		{
 			//
 			// If they pressed enter then exit this loop
 			//
 			break;
+		}
+		else if (CanEscape && KeyPress == KEY_ESC)
+		{
+			//
+			// They pressed escape, so just return FALSE
+			//
+			return FALSE;
 		}
 
 		//
@@ -168,13 +177,23 @@ VOID TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo)
 	//
 	MenuInfo->Left = (UiScreenWidth - Width) / 2;
 	MenuInfo->Right = (MenuInfo->Left) + Width;
-	MenuInfo->Top = (( (UiScreenHeight - TUI_TITLE_BOX_CHAR_HEIGHT) - Height) / 2 + 1) + (TUI_TITLE_BOX_CHAR_HEIGHT / 2);
+	MenuInfo->Top = (((UiScreenHeight - TUI_TITLE_BOX_CHAR_HEIGHT) - Height) / 2) + TUI_TITLE_BOX_CHAR_HEIGHT;
 	MenuInfo->Bottom = (MenuInfo->Top) + Height;
 }
 
 VOID TuiDrawMenu(PTUI_MENU_INFO MenuInfo)
 {
 	U32		Idx;
+
+	//
+	// Draw the backdrop
+	//
+	UiDrawBackdrop();
+
+	//
+	// Update the status bar
+	//
+	UiDrawStatusText("Use \x18\x19 to select, then press ENTER.");
 
 	//
 	// Draw the menu box
@@ -196,11 +215,7 @@ VOID TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
 {
 	UCHAR	MenuLineText[80];
 	UCHAR	TempString[80];
-
-	//
-	// Update the status bar
-	//
-	UiDrawStatusText("Use \x18\x19 to select, ENTER to boot.");
+	U32		Idx;
 
 	//
 	// Draw the menu box
@@ -230,6 +245,18 @@ VOID TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
 			MenuLineText,
 			ATTR(UiMenuFgColor, UiMenuBgColor));
 	}
+
+	//
+	// Now draw the separators
+	//
+	for (Idx=0; Idx<MenuInfo->MenuItemCount; Idx++)
+	{
+		if (stricmp(MenuInfo->MenuItemList[Idx], "SEPARATOR") == 0)
+		{
+			UiDrawText(MenuInfo->Left, MenuInfo->Top + Idx + 1, "\xC7", ATTR(UiMenuFgColor, UiMenuBgColor));
+			UiDrawText(MenuInfo->Right, MenuInfo->Top + Idx + 1, "\xB6", ATTR(UiMenuFgColor, UiMenuBgColor));
+		}
+	}
 }
 
 VOID TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, U32 MenuItemNumber)
@@ -239,6 +266,7 @@ VOID TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, U32 MenuItemNumber)
 	U32		SpaceTotal;
 	U32		SpaceLeft;
 	U32		SpaceRight;
+	UCHAR	Attribute;
 
 	//
 	// We will want the string centered so calculate
@@ -271,6 +299,20 @@ VOID TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, U32 MenuItemNumber)
 	}
 
 	//
+	// If it is a separator then adjust the text accordingly
+	//
+	if (stricmp(MenuInfo->MenuItemList[MenuItemNumber], "SEPARATOR") == 0)
+	{
+		memset(MenuLineText, 0, 80);
+		memset(MenuLineText, 0xC4, (MenuInfo->Right - MenuInfo->Left - 1));
+		Attribute = ATTR(UiMenuFgColor, UiMenuBgColor);
+	}
+	else
+	{
+		Attribute = ATTR(UiTextColor, UiMenuBgColor);
+	}
+
+	//
 	// If this is the selected menu item then draw it as selected
 	// otherwise just draw it using the normal colors
 	//
@@ -286,11 +328,11 @@ VOID TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, U32 MenuItemNumber)
 		UiDrawText(MenuInfo->Left + 1,
 			MenuInfo->Top + 1 + MenuItemNumber,
 			MenuLineText,
-			ATTR(UiTextColor, UiMenuBgColor));
+			Attribute);
 	}
 }
 
-U32 TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo)
+U32 TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
 	U32		KeyEvent = 0;
 
@@ -320,6 +362,21 @@ U32 TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo)
 			KeyEvent = getch(); // Yes - so get the extended key
 
 		//
+		// Call the supplied key filter callback function to see
+		// if it is going to handle this keypress.
+		//
+		if (KeyPressFilter != NULL)
+		{
+			if (KeyPressFilter(KeyEvent))
+			{
+				// It processed the key character
+				TuiDrawMenu(MenuInfo);
+
+				return 0;
+			}
+		}
+
+		//
 		// Process the key
 		//
 		switch (KeyEvent)
@@ -334,6 +391,13 @@ U32 TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo)
 				// Update the menu
 				//
 				TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem + 1);	// Deselect previous item
+
+				// Skip past any separators
+				if (MenuInfo->SelectedMenuItem > 0 && stricmp(MenuInfo->MenuItemList[MenuInfo->SelectedMenuItem], "SEPARATOR") == 0)
+				{
+					MenuInfo->SelectedMenuItem--;
+				}
+
 				TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem);		// Select new item
 			}
 
@@ -349,6 +413,13 @@ U32 TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo)
 				// Update the menu
 				//
 				TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem - 1);	// Deselect previous item
+
+				// Skip past any separators
+				if (MenuInfo->SelectedMenuItem < (MenuInfo->MenuItemCount - 1) && stricmp(MenuInfo->MenuItemList[MenuInfo->SelectedMenuItem], "SEPARATOR") == 0)
+				{
+					MenuInfo->SelectedMenuItem++;
+				}
+
 				TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem);		// Select new item
 			}
 

@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,8 +41,8 @@ VOID	ReactOSRunSetupLoader(VOID);
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 BOOL	DissectArcPath(char *ArcPath, char *BootPath, U32* BootDrive, U32* BootPartition);
-//BOOL	ConvertBiosDriveToArcName(PUCHAR ArcName, U32 BiosDriveNumber);
-//U32		ConvertArcNameToBiosDrive(PUCHAR ArcName);
+void	ConstructArcPath(PUCHAR ArcPath, PUCHAR SystemFolder, U32 Disk, U32 Partition);
+U32		ConvertArcNameToBiosDriveNumber(PUCHAR ArcPath);
 
 
 #endif // defined __REACTOS_H

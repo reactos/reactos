@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -149,7 +149,7 @@ U32 MmGetPageNumberFromAddress(PVOID Address)
 	return ((U32)Address) / MM_PAGE_SIZE;
 }
 
-PVOID MmGetEndAddressOfAnyMemory(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount)
+PVOID MmGetEndAddressOfAnyMemory(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MapCount)
 {
 	U64		MaxStartAddressSoFar;
 	U64		EndAddressOfMemory;
@@ -175,7 +175,7 @@ PVOID MmGetEndAddressOfAnyMemory(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount
 	return (PVOID)(U32)EndAddressOfMemory;
 }
 
-U32 MmGetAddressablePageCountIncludingHoles(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount)
+U32 MmGetAddressablePageCountIncludingHoles(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MapCount)
 {
 	U32		PageCount;
 	U64		EndAddress;
@@ -201,17 +201,17 @@ U32 MmGetAddressablePageCountIncludingHoles(BIOS_MEMORY_MAP BiosMemoryMap[32], U
 	return PageCount;
 }
 
-PVOID MmFindLocationForPageLookupTable(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount)
+PVOID MmFindLocationForPageLookupTable(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MapCount)
 {
 	U32					TotalPageCount;
 	U32					PageLookupTableSize;
-	PVOID				PageLookupTableAddress;
+	PVOID				PageLookupTableMemAddress;
 	int					Index;
 	BIOS_MEMORY_MAP		TempBiosMemoryMap[32];
 
 	TotalPageCount = MmGetAddressablePageCountIncludingHoles(BiosMemoryMap, MapCount);
 	PageLookupTableSize = TotalPageCount * sizeof(PAGE_LOOKUP_TABLE_ITEM);
-	PageLookupTableAddress = 0;
+	PageLookupTableMemAddress = 0;
 
 	RtlCopyMemory(TempBiosMemoryMap, BiosMemoryMap, sizeof(BIOS_MEMORY_MAP) * 32);
 	MmSortBiosMemoryMap(TempBiosMemoryMap, MapCount);
@@ -222,17 +222,17 @@ PVOID MmFindLocationForPageLookupTable(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 Ma
 		// then we'll put our page lookup table here
 		if (TempBiosMemoryMap[Index].Type == MEMTYPE_USABLE && TempBiosMemoryMap[Index].Length >= PageLookupTableSize)
 		{
-			PageLookupTableAddress = (PVOID)(U32)(TempBiosMemoryMap[Index].BaseAddress + (TempBiosMemoryMap[Index].Length - PageLookupTableSize));
+			PageLookupTableMemAddress = (PVOID)(U32)(TempBiosMemoryMap[Index].BaseAddress + (TempBiosMemoryMap[Index].Length - PageLookupTableSize));
 			break;
 		}
 	}
 
-	DbgPrint((DPRINT_MEMORY, "MmFindLocationForPageLookupTable() returning 0x%x\n", PageLookupTableAddress));
+	DbgPrint((DPRINT_MEMORY, "MmFindLocationForPageLookupTable() returning 0x%x\n", PageLookupTableMemAddress));
 
-	return PageLookupTableAddress;
+	return PageLookupTableMemAddress;
 }
 
-VOID MmSortBiosMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount)
+VOID MmSortBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MapCount)
 {
 	U32					Index;
 	U32					LoopCount;
@@ -254,7 +254,7 @@ VOID MmSortBiosMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount)
 	}
 }
 
-VOID MmInitPageLookupTable(PVOID PageLookupTable, U32 TotalPageCount, BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount)
+VOID MmInitPageLookupTable(PVOID PageLookupTable, U32 TotalPageCount, PBIOS_MEMORY_MAP BiosMemoryMap, U32 MapCount)
 {
 	U32		MemoryMapStartPage;
 	U32		MemoryMapEndPage;
@@ -353,7 +353,7 @@ U32 MmFindAvailablePagesFromEnd(PVOID PageLookupTable, U32 TotalPageCount, U32 P
 
 	AvailablePageStart = 0;
 	AvailablePagesSoFar = 0;
-	for (Index=LastFreePageHint-1; Index>=0; Index--)
+	for (Index=LastFreePageHint-1; Index>0; Index--)
 	{
 		if (RealPageLookupTable[Index].PageAllocated != 0)
 		{
@@ -374,7 +374,7 @@ U32 MmFindAvailablePagesFromEnd(PVOID PageLookupTable, U32 TotalPageCount, U32 P
 	return 0;
 }
 
-VOID MmFixupSystemMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32], U32* MapCount)
+VOID MmFixupSystemMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32* MapCount)
 {
 	int		Index;
 	int		Index2;
@@ -403,7 +403,7 @@ VOID MmUpdateLastFreePageHint(PVOID PageLookupTable, U32 TotalPageCount)
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
 	U32							Index;
 
-	for (Index=TotalPageCount-1; Index>=0; Index--)
+	for (Index=TotalPageCount-1; Index>0; Index--)
 	{
 		if (RealPageLookupTable[Index].PageAllocated == 0)
 		{

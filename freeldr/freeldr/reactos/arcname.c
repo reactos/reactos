@@ -72,3 +72,70 @@ BOOL DissectArcPath(char *ArcPath, char *BootPath, U32* BootDrive, U32* BootPart
 
 	return TRUE;
 }
+
+void ConstructArcPath(PUCHAR ArcPath, PUCHAR SystemFolder, U32 Disk, U32 Partition)
+{
+	char	tmp[50];
+
+	strcpy(ArcPath, "multi(0)disk(0)");
+
+	if (Disk < 0x80)
+	{
+		/*
+		 * floppy disk path:
+		 *  multi(0)disk(0)fdisk(x)\path
+		 */
+		sprintf(tmp, "fdisk(%d)", Disk);
+		strcat(ArcPath, tmp);
+	}
+	else
+	{
+		/*
+		 * hard disk path:
+		 *  multi(0)disk(0)rdisk(x)partition(y)\path
+		 */
+		sprintf(tmp, "rdisk(%d)partition(%d)", (Disk - 0x80), Partition);
+		strcat(ArcPath, tmp);
+	}
+
+	if (SystemFolder[0] == '\\' || SystemFolder[0] == '/')
+	{
+		strcat(ArcPath, SystemFolder);
+	}
+	else
+	{
+		strcat(ArcPath, "\\");
+		strcat(ArcPath, SystemFolder);
+	}
+}
+
+U32 ConvertArcNameToBiosDriveNumber(PUCHAR ArcPath)
+{
+	char *	p;
+	U32		DriveNumber = 0;
+
+	if (strnicmp(ArcPath, "multi(0)disk(0)", 15) != 0)
+		return 0;
+
+	p = ArcPath + 15;
+	if (strnicmp(p, "fdisk(", 6) == 0)
+	{
+		/*
+		 * floppy disk path:
+		 *  multi(0)disk(0)fdisk(x)\path
+		 */
+		p = p + 6;
+		DriveNumber = atoi(p);
+	}
+	else if (strnicmp(p, "rdisk(", 6) == 0)
+	{
+		/*
+		 * hard disk path:
+		 *  multi(0)disk(0)rdisk(x)partition(y)\path
+		 */
+		p = p + 6;
+		DriveNumber = atoi(p) + 0x80;
+	}
+
+	return DriveNumber;
+}

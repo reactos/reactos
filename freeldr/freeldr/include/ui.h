@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -38,9 +38,10 @@ extern	UCHAR	UiMenuBgColor;									// Menu background color
 extern	UCHAR	UiTextColor;									// Normal text color
 extern	UCHAR	UiSelectedTextColor;							// Selected text color
 extern	UCHAR	UiSelectedTextBgColor;							// Selected text background color
-extern	UCHAR	UiTitleBoxTitleText[260];						// Title box's title text
+extern	UCHAR	UiEditBoxTextColor;								// Edit box text color
+extern	UCHAR	UiEditBoxBgColor;								// Edit box text background color
 
-extern	PUCHAR	UiMessageBoxLineText;
+extern	UCHAR	UiTitleBoxTitleText[260];						// Title box's title text
 
 extern	BOOL	UserInterfaceUp;								// Tells us if the user interface is displayed
 
@@ -66,10 +67,11 @@ VOID	UiUpdateDateTime(VOID);									// Updates the date and time
 VOID	UiInfoBox(PUCHAR MessageText);							// Displays a info box on the screen
 VOID	UiMessageBox(PUCHAR MessageText);						// Displays a message box on the screen with an ok button
 VOID	UiMessageBoxCritical(PUCHAR MessageText);				// Displays a message box on the screen with an ok button using no system resources
-VOID	UiMessageLine(PUCHAR MessageText);						// Adds a line of text to the message box buffer
 VOID	UiDrawProgressBarCenter(U32 Position, U32 Range, PUCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
 VOID	UiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range, PUCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
 VOID	UiShowMessageBoxesInSection(PUCHAR SectionName);		// Displays all the message boxes in a given section
+VOID	UiEscapeString(PUCHAR String);							// Processes a string and changes all occurances of "\n" to '\n'
+BOOL	UiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, U32 Length);
 
 UCHAR	UiTextToColor(PUCHAR ColorText);						// Converts the text color into it's equivalent color value
 UCHAR	UiTextToFillStyle(PUCHAR FillStyleText);				// Converts the text fill into it's equivalent fill value
@@ -84,7 +86,9 @@ VOID	UiFadeOut(VOID);										// Fades the screen out
 // Menu Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOL	UiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem);
+typedef BOOL	(*UiMenuKeyPressFilterCallback)(U32 KeyPress);
+
+BOOL	UiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 
 
 

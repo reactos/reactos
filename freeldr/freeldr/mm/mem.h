@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -53,16 +53,16 @@ PUCHAR	MmGetSystemMemoryMapTypeString(U32 Type);
 #endif
 
 U32		MmGetPageNumberFromAddress(PVOID Address);	// Returns the page number that contains a linear address
-PVOID	MmGetEndAddressOfAnyMemory(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount);	// Returns the last address of memory from the memory map
-U32		MmGetAddressablePageCountIncludingHoles(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount);	// Returns the count of addressable pages from address zero including any memory holes and reserved memory regions
-PVOID	MmFindLocationForPageLookupTable(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount);	// Returns the address for a memory chunk big enough to hold the page lookup table (starts search from end of memory)
-VOID	MmSortBiosMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount);	// Sorts the BIOS_MEMORY_MAP array so the first element corresponds to the first address in memory
-VOID	MmInitPageLookupTable(PVOID PageLookupTable, U32 TotalPageCount, BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount);	// Inits the page lookup table according to the memory types in the memory map
+PVOID	MmGetEndAddressOfAnyMemory(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MapCount);	// Returns the last address of memory from the memory map
+U32		MmGetAddressablePageCountIncludingHoles(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MapCount);	// Returns the count of addressable pages from address zero including any memory holes and reserved memory regions
+PVOID	MmFindLocationForPageLookupTable(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MapCount);	// Returns the address for a memory chunk big enough to hold the page lookup table (starts search from end of memory)
+VOID	MmSortBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MapCount);	// Sorts the BIOS_MEMORY_MAP array so the first element corresponds to the first address in memory
+VOID	MmInitPageLookupTable(PVOID PageLookupTable, U32 TotalPageCount, PBIOS_MEMORY_MAP BiosMemoryMap, U32 MapCount);	// Inits the page lookup table according to the memory types in the memory map
 VOID	MmMarkPagesInLookupTable(PVOID PageLookupTable, U32 StartPage, U32 PageCount, U32 PageAllocated);	// Marks the specified pages as allocated or free in the lookup table
 VOID	MmAllocatePagesInLookupTable(PVOID PageLookupTable, U32 StartPage, U32 PageCount);	// Allocates the specified pages in the lookup table
 U32		MmCountFreePagesInLookupTable(PVOID PageLookupTable, U32 TotalPageCount);	// Returns the number of free pages in the lookup table
 U32		MmFindAvailablePagesFromEnd(PVOID PageLookupTable, U32 TotalPageCount, U32 PagesNeeded);	// Returns the page number of the first available page range from the end of memory
-VOID	MmFixupSystemMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32], U32* MapCount);	// Removes entries in the memory map that describe memory above 4G
+VOID	MmFixupSystemMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32* MapCount);	// Removes entries in the memory map that describe memory above 4G
 VOID	MmUpdateLastFreePageHint(PVOID PageLookupTable, U32 TotalPageCount);	// Sets the LastFreePageHint to the last usable page of memory
 BOOL	MmAreMemoryPagesAvailable(PVOID PageLookupTable, U32 TotalPageCount, PVOID PageAddress, U32 PageCount);	// Returns TRUE if the specified pages of memory are available, otherwise FALSE
 

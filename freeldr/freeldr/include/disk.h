@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -105,6 +105,7 @@ BOOL	DiskGetDriveParameters(U32 DriveNumber, PGEOMETRY Geometry);
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 VOID	DiskError(PUCHAR ErrorString, U32 ErrorCode);
+PUCHAR	DiskGetErrorCodeString(U32 ErrorCode);
 BOOL	DiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY DriveGeometry);
 BOOL	DiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer); // Implemented in i386disk.c
 BOOL	DiskIsDriveRemovable(U32 DriveNumber);

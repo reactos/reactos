@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -54,7 +54,8 @@ typedef struct
 } INI_SECTION, *PINI_SECTION;
 
 extern	PINI_SECTION		IniFileSectionListHead;
-extern	U32					IniFileSectionListCount;
+extern	U32					IniFileSectionCount;
+extern	U32					IniFileSettingCount;
 
 PFILE	IniOpenIniFile(U8 BootDriveNumber, U8 BootPartitionNumber);
 

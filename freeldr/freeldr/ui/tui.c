@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -111,7 +111,7 @@ VOID TuiDrawBackdrop(VOID)
 	//
 	// Draw help text
 	//
-	//TuiDrawText(UiScreenWidth - 16, 3, /*"F1 for Help"*/"F8 for Options", ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+	TuiDrawText(UiScreenWidth - 16, 3, /*"F1 for Help"*/"F8 for Options", ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
 	//
 	// Draw title text
@@ -477,8 +477,6 @@ VOID TuiUpdateDateTime(VOID)
 
 	// Draw the time
 	TuiDrawText(UiScreenWidth-strlen(TimeString)-2, 2, TimeString, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
-
-	VideoCopyOffScreenBufferToVRAM();
 }
 
 VOID TuiSaveScreen(PUCHAR Buffer)
@@ -768,4 +766,168 @@ VOID TuiFadeOut(VOID)
 		MmFreeMemory(TuiFadePalette);
 	}
 
+}
+
+BOOL TuiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, U32 Length)
+{
+	int		width = 8;
+	int		height = 1;
+	int		curline = 0;
+	int		i , j, k;
+	int		x1, x2, y1, y2;
+	char	temp[260];
+	char	key;
+	int		EditBoxLine;
+	int		EditBoxStartX, EditBoxEndX;
+	int		EditBoxCursorX;
+	int		EditBoxTextCount;
+	int		EditBoxTextDisplayIndex;
+	BOOL	ReturnCode;
+	PVOID	ScreenBuffer;
+
+	// Save the screen contents
+	ScreenBuffer = MmAllocateMemory(UiScreenWidth * UiScreenHeight * 2);
+	TuiSaveScreen(ScreenBuffer);
+
+	// Find the height
+	for (i=0; i<strlen(MessageText); i++)
+	{
+		if (MessageText[i] == '\n')
+			height++;
+	}
+
+	// Find the width
+	for (i=0,j=0,k=0; i<height; i++)
+	{
+		while ((MessageText[j] != '\n') && (MessageText[j] != 0))
+		{
+			j++;
+			k++;
+		}
+
+		if (k > width)
+			width = k;
+
+		k = 0;
+		j++;
+	}
+
+	// Calculate box area
+	x1 = (UiScreenWidth - (width+2))/2;
+	x2 = x1 + width + 3;
+	y1 = ((UiScreenHeight - height - 2)/2) + 1;
+	y2 = y1 + height + 4;
+
+	// Draw the box
+	TuiDrawBox(x1, y1, x2, y2, D_VERT, D_HORZ, TRUE, TRUE, ATTR(UiMessageBoxFgColor, UiMessageBoxBgColor));
+
+	// Draw the text
+	for (i=0,j=0; i<strlen(MessageText)+1; i++)
+	{
+		if ((MessageText[i] == '\n') || (MessageText[i] == 0))
+		{
+			temp[j] = 0;
+			j = 0;
+			UiDrawText(x1+2, y1+1+curline, temp, ATTR(UiMessageBoxFgColor, UiMessageBoxBgColor));
+			curline++;
+		}
+		else
+			temp[j++] = MessageText[i];
+	}
+
+	EditBoxTextCount = 0;
+	EditBoxLine = y2 - 2;
+	EditBoxStartX = x1 + 3;
+	EditBoxEndX = x2 - 3;
+	UiFillArea(EditBoxStartX, EditBoxLine, EditBoxEndX, EditBoxLine, ' ', ATTR(UiEditBoxTextColor, UiEditBoxBgColor));
+
+	// Show the cursor
+	EditBoxCursorX = EditBoxStartX;
+	VideoSetTextCursorPosition(EditBoxCursorX, EditBoxLine);
+	VideoShowTextCursor();
+
+	// Draw status text
+	UiDrawStatusText("Press ENTER to continue, or ESC to cancel");
+
+	VideoCopyOffScreenBufferToVRAM();
+
+	for (;;)
+	{
+		if (kbhit())
+		{
+			key = getch();
+			if(key == KEY_EXTENDED)
+			{
+				key = getch();
+			}
+
+			if(key == KEY_ENTER)
+			{
+				ReturnCode = TRUE;
+				break;
+			}
+			else if(key == KEY_ESC)
+			{
+				ReturnCode = FALSE;
+				break;
+			}
+			else if (key == KEY_BACKSPACE) // Remove a character
+			{
+				if (EditBoxTextCount)
+				{
+					EditBoxTextCount--;
+					EditTextBuffer[EditBoxTextCount] = 0;
+				}
+				else
+				{
+					beep();
+				}
+			}
+			else // Add this key to the buffer
+			{
+				if (EditBoxTextCount < Length - 1)
+				{
+					EditTextBuffer[EditBoxTextCount] = key;
+					EditBoxTextCount++;
+					EditTextBuffer[EditBoxTextCount] = 0;
+				}
+				else
+				{
+					beep();
+				}
+			}
+		}
+
+		// Draw the edit box background
+		UiFillArea(EditBoxStartX, EditBoxLine, EditBoxEndX, EditBoxLine, ' ', ATTR(UiEditBoxTextColor, UiEditBoxBgColor));
+
+		// Fill the text in
+		if (EditBoxTextCount > (EditBoxEndX - EditBoxStartX))
+		{
+			EditBoxTextDisplayIndex = EditBoxTextCount - (EditBoxEndX - EditBoxStartX);
+			EditBoxCursorX = EditBoxEndX;
+		}
+		else
+		{
+			EditBoxTextDisplayIndex = 0;
+			EditBoxCursorX = EditBoxStartX + EditBoxTextCount;
+		}
+		UiDrawText(EditBoxStartX, EditBoxLine, &EditTextBuffer[EditBoxTextDisplayIndex], ATTR(UiEditBoxTextColor, UiEditBoxBgColor));
+
+		// Move the cursor
+		VideoSetTextCursorPosition(EditBoxCursorX, EditBoxLine);
+
+		TuiUpdateDateTime();
+
+		VideoCopyOffScreenBufferToVRAM();
+	}
+
+	// Hide the cursor again
+	VideoHideTextCursor();
+
+	// Restore the screen contents
+	TuiRestoreScreen(ScreenBuffer);
+	MmFreeMemory(ScreenBuffer);
+
+	return ReturnCode;
 }

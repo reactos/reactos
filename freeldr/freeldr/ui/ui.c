@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -48,10 +48,10 @@ UCHAR	UiMenuBgColor				= COLOR_BLUE;			// Menu background color
 UCHAR	UiTextColor					= COLOR_YELLOW;			// Normal text color
 UCHAR	UiSelectedTextColor			= COLOR_BLACK;			// Selected text color
 UCHAR	UiSelectedTextBgColor		= COLOR_GRAY;			// Selected text background color
-UCHAR	UiTitleBoxTitleText[260]	= "Boot Menu";			// Title box's title text
+UCHAR	UiEditBoxTextColor			= COLOR_WHITE;			// Edit box text color
+UCHAR	UiEditBoxBgColor			= COLOR_BLACK;			// Edit box text background color
 
-PUCHAR	UiMessageBoxLineText		= NULL;
-#define UIMESSAGEBOXLINETEXTSIZE	4096
+UCHAR	UiTitleBoxTitleText[260]	= "Boot Menu";			// Title box's title text
 
 BOOL	UserInterfaceUp				= FALSE;				// Tells us if the user interface is displayed
 
@@ -69,15 +69,6 @@ BOOL UiInitialize(VOID)
 	U32		VideoMode = VIDEOMODE_NORMAL_TEXT;
 
 	DbgPrint((DPRINT_UI, "Initializing User Interface.\n"));
-	
-	UiMessageBoxLineText = MmAllocateMemory(UIMESSAGEBOXLINETEXTSIZE);
-	
-	if (UiMessageBoxLineText == NULL)
-	{
-		return FALSE;
-	}
-
-	RtlZeroMemory(UiMessageBoxLineText, UIMESSAGEBOXLINETEXTSIZE);
 
 	DbgPrint((DPRINT_UI, "Reading in UI settings from [Display] section.\n"));
 
@@ -191,6 +182,14 @@ BOOL UiInitialize(VOID)
 		if (IniReadSettingByName(SectionId, "SelectedColor", SettingText, 260))
 		{
 			UiSelectedTextBgColor = UiTextToColor(SettingText);
+		}
+		if (IniReadSettingByName(SectionId, "EditBoxTextColor", SettingText, 260))
+		{
+			UiEditBoxTextColor = UiTextToColor(SettingText);
+		}
+		if (IniReadSettingByName(SectionId, "EditBoxColor", SettingText, 260))
+		{
+			UiEditBoxBgColor = UiTextToColor(SettingText);
 		}
 		if (IniReadSettingByName(SectionId, "SpecialEffects", SettingText, 260))
 		{
@@ -429,19 +428,15 @@ VOID UiMessageBox(PUCHAR MessageText)
 		return;
 	}
 
-	strcat(UiMessageBoxLineText, MessageText);
-
 	if (UiDisplayMode == DISPLAYMODE_TEXT)
 	{
-		TuiMessageBox(UiMessageBoxLineText);
+		TuiMessageBox(MessageText);
 	}
 	else
 	{
 		UNIMPLEMENTED();
-		//GuiMessageBox(UiMessageBoxLineText);
+		//GuiMessageBox(MessageText);
 	}
-
-	RtlZeroMemory(UiMessageBoxLineText, UIMESSAGEBOXLINETEXTSIZE);
 }
 
 VOID UiMessageBoxCritical(PUCHAR MessageText)
@@ -467,12 +462,6 @@ VOID UiMessageBoxCritical(PUCHAR MessageText)
 		UNIMPLEMENTED();
 		//GuiMessageBoxCritical(MessageText);
 	}
-}
-
-VOID UiMessageLine(PUCHAR MessageText)
-{
-	strcat(UiMessageBoxLineText, MessageText);
-	strcat(UiMessageBoxLineText, "\n");
 }
 
 UCHAR UiTextToColor(PUCHAR ColorText)
@@ -534,12 +523,9 @@ VOID UiShowMessageBoxesInSection(PUCHAR SectionName)
 	U32		Idx;
 	UCHAR	SettingName[80];
 	UCHAR	SettingValue[80];
+	PUCHAR	MessageBoxText;
+	U32		MessageBoxTextSize;
 	U32		SectionId;
-
-	//
-	// Zero out message line text
-	//
-	strcpy(UiMessageBoxLineText, "");
 
 	if (!IniOpenSection(SectionName, &SectionId))
 	{
@@ -553,22 +539,53 @@ VOID UiShowMessageBoxesInSection(PUCHAR SectionName)
 	//
 	for (Idx=0; Idx<IniGetNumSectionItems(SectionId); Idx++)
 	{
-		IniReadSettingByNumber(SectionId, Idx, SettingName, 80, SettingValue, 80);
+		IniReadSettingByNumber(SectionId, Idx, SettingName, 79, SettingValue, 79);
 		
 		if (stricmp(SettingName, "MessageBox") == 0)
 		{
-			UiMessageBox(SettingValue);
-		}
-		else if (stricmp(SettingName, "MessageLine") == 0)
-		{
-			UiMessageLine(SettingValue);
+			// Get the real length of the MessageBox text
+			MessageBoxTextSize = IniGetSectionSettingValueSize(SectionId, Idx);
+
+			//if (MessageBoxTextSize > 0)
+			{
+				// Allocate enough memory to hold the text
+				MessageBoxText = (PUCHAR)MmAllocateMemory(MessageBoxTextSize);
+
+				if (MessageBoxText)
+				{
+					// Get the MessageBox text
+					IniReadSettingByNumber(SectionId, Idx, SettingName, 80, MessageBoxText, MessageBoxTextSize);
+
+					// Fix it up
+					UiEscapeString(MessageBoxText);
+
+					// Display it
+					UiMessageBox(MessageBoxText);
+
+					// Free the memory
+					MmFreeMemory(MessageBoxText);
+				}
+			}
 		}
 	}
+}
 
-	//
-	// Zero out message line text
-	//
-	strcpy(UiMessageBoxLineText, "");
+VOID UiEscapeString(PUCHAR String)
+{
+	U32		Idx;
+
+	for (Idx=0; Idx<strlen(String); Idx++)
+	{
+		// Escape the new line characters
+		if (String[Idx] == '\\' && String[Idx+1] == 'n')
+		{
+			// Escape the character
+			String[Idx] = '\n';
+
+			// Move the rest of the string up
+			strcpy(&String[Idx+1], &String[Idx+2]);
+		}
+	}
 }
 
 VOID UiTruncateStringEllipsis(PUCHAR StringText, U32 MaxChars)
@@ -579,17 +596,17 @@ VOID UiTruncateStringEllipsis(PUCHAR StringText, U32 MaxChars)
 	}
 }
 
-BOOL UiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem)
+BOOL UiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
 	if (UiDisplayMode == DISPLAYMODE_TEXT)
 	{
-		return TuiDisplayMenu(MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem);
+		return TuiDisplayMenu(MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem, CanEscape, KeyPressFilter);
 	}
 	else
 	{
 		UNIMPLEMENTED();
 		return FALSE;
-		//return GuiDisplayMenu(MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem);
+		//return GuiDisplayMenu(MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem, CanEscape, KeyPressFilter);
 	}
 }
 
@@ -616,5 +633,19 @@ VOID UiFadeOut(VOID)
 	{
 		UNIMPLEMENTED();
 		//GuiFadeInOut();
+	}
+}
+
+BOOL UiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, U32 Length)
+{
+	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	{
+		return TuiEditBox(MessageText, EditTextBuffer, Length);
+	}
+	else
+	{
+		UNIMPLEMENTED();
+		return FALSE;
+		//return GuiEditBox(MessageText, EditTextBuffer, Length);
 	}
 }

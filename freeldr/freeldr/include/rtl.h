@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -78,6 +78,10 @@ int		getmonth(void);			// Implemented in asmcode.S
 int		gethour(void);			// Implemented in asmcode.S
 int		getminute(void);		// Implemented in asmcode.S
 int		getsecond(void);		// Implemented in asmcode.S
+
+void	beep(void);
+void	delay(unsigned msec);
+void	sound(int freq);
 
 #ifndef max
 #define max(a, b)  (((a) > (b)) ? (a) : (b))

@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@
 
 
 /* just some stuff */
-#define VERSION			"FreeLoader v1.7.12"
-#define COPYRIGHT		"Copyright (C) 1998-2002 Brian Palmer <brianp@sginet.com>"
+#define VERSION			"FreeLoader v1.8"
+#define COPYRIGHT		"Copyright (C) 1998-2003 Brian Palmer <brianp@sginet.com>"
 #define AUTHOR_EMAIL	"<brianp@sginet.com>"
 #define BY_AUTHOR		"by Brian Palmer"
 
@@ -35,8 +35,8 @@
 // If you add major functionality then you increment the major version and zero the minor & patch versions
 //
 #define FREELOADER_MAJOR_VERSION	1
-#define FREELOADER_MINOR_VERSION	7
-#define FREELOADER_PATCH_VERSION	12
+#define FREELOADER_MINOR_VERSION	8
+#define FREELOADER_PATCH_VERSION	0
 
 
 PUCHAR	GetFreeLoaderVersionString(VOID);

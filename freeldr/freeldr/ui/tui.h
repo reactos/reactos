@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ VOID	TuiMessageBox(PUCHAR MessageText);						// Displays a message box on the sc
 VOID	TuiMessageBoxCritical(PUCHAR MessageText);				// Displays a message box on the screen with an ok button using no system resources
 VOID	TuiDrawProgressBarCenter(U32 Position, U32 Range, PUCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
 VOID	TuiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range, PUCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
+BOOL	TuiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, U32 Length);
 
 UCHAR	TuiTextToColor(PUCHAR ColorText);						// Converts the text color into it's equivalent color value
 UCHAR	TuiTextToFillStyle(PUCHAR FillStyleText);				// Converts the text fill into it's equivalent fill value
@@ -76,8 +77,8 @@ VOID	TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo);
 VOID	TuiDrawMenu(PTUI_MENU_INFO MenuInfo);
 VOID	TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo);
 VOID	TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, U32 MenuItemNumber);
-U32		TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo);
-BOOL	TuiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem);
+U32		TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOL	TuiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 
 
 /*

@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include <ui.h>
 #include <inifile.h>
 #include <disk.h>
+#include <drivemap.h>
 
 VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 {
@@ -53,7 +54,7 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 		return;
 	}
 
-	BootDrive = atoi(SettingValue);
+	BootDrive = DriveMapGetBiosDriveNumber(SettingValue);
 
 	BootPartition = 0;
 	if (IniReadSettingByName(SectionId, "BootPartition", SettingValue, 80))
@@ -132,7 +133,7 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 		return;
 	}
 
-	BootDrive = atoi(SettingValue);
+	BootDrive = DriveMapGetBiosDriveNumber(SettingValue);
 
 	// Read the boot partition
 	if (!IniReadSettingByName(SectionId, "BootPartition", SettingValue, 80))
@@ -199,7 +200,7 @@ VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
 		return;
 	}
 
-	BootDrive = atoi(SettingValue);
+	BootDrive = DriveMapGetBiosDriveNumber(SettingValue);
 
 	// Now try to read the boot sector (or mbr)
 	// If this fails then abort

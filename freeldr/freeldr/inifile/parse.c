@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -124,6 +124,8 @@ BOOL IniParseFile(PUCHAR IniFileData, U32 IniFileSize)
 			if (CurrentSection == NULL)
 			{
 				printf("Error: freeldr.ini:%ld: Setting '%s' found outside of a [section].\n", CurrentLineNumber, IniFileLine);
+				printf("Press any key to continue...\n");
+				getch();
 				CurrentLineNumber++;
 				continue;
 			}
@@ -151,6 +153,7 @@ BOOL IniParseFile(PUCHAR IniFileData, U32 IniFileSize)
 			CurrentItem->ItemValue = MmAllocateMemory(IniGetSettingValueSize(IniFileLine, LineLength));
 			if (!CurrentItem->ItemValue)
 			{
+				MmFreeMemory(CurrentItem->ItemName);
 				MmFreeMemory(CurrentItem);
 				MmFreeMemory(IniFileLine);
 				return FALSE;

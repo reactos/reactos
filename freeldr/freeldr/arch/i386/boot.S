@@ -44,3 +44,19 @@ EXTERN(_ChainLoadBiosBootSectorCode)
 	movw	$0x7C00,%sp
 
 	ljmpl	$0x0000,$0x7C00
+
+EXTERN(_SoftReboot)
+	.code32
+
+	call	switch_to_real
+	.code16
+
+	movw	$0x40,%ax
+	movw	%ax,%ds
+	movw	$0x72,%si
+
+	// Set the word at location 40:72 to 1234h
+	movw	$0x1234,(%si)
+
+	// and jump to location FFFF:0 in ROM
+	ljmpl	$0xFFFF,$0x0000

@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
+#include <fs.h>
 
 #ifndef __LINUX_H
 #define __LINUX_H
@@ -120,7 +122,7 @@ typedef struct
 VOID	BootNewLinuxKernel(VOID);				// Implemented in linux.S
 VOID	BootOldLinuxKernel(U32 KernelSize);		// Implemented in linux.S
 
-VOID	LoadAndBootLinux(PUCHAR OperatingSystemName);
+VOID	LoadAndBootLinux(PUCHAR OperatingSystemName, PUCHAR Description);
 
 BOOL	LinuxParseIniSection(PUCHAR OperatingSystemName);
 BOOL	LinuxReadBootSector(PFILE LinuxKernelFile);

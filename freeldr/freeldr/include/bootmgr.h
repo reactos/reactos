@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 
 U32		GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], U32 OperatingSystemCount);
 S32		GetTimeOut(VOID);
+BOOL	MainBootMenuKeyPressFilter(U32 KeyPress);
 
 
 #endif // #defined __BOOTMGR_H

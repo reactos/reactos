@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *  Portions from Linux video.S - Display adapter & video mode setup, version 2.13 (14-May-99)
  *  Copyright (C) 1995 -- 1999 Martin Mares <mj@ucw.cz>
  *  Based on the original setup.S code (C) Linus Torvalds and Mats Anderson
@@ -24,7 +24,7 @@
 #include <freeldr.h>
 #include <arch.h>
 #include <video.h>
-#include <comm.h>
+#include <portio.h>
 #include <rtl.h>
 #include <debug.h>
 
@@ -427,7 +427,7 @@ VOID VideoSetTextCursorPosition(U32 X, U32 Y)
 	// DL = column (00h is left)
 	// Return:
 	// Nothing
-	Regs.b.ah = 0x01;
+	Regs.b.ah = 0x02;
 	Regs.b.bh = 0x00;
 	Regs.b.dh = Y;
 	Regs.b.dl = X;

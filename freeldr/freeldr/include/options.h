@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,12 +20,15 @@
 #ifndef __OPTIONS_H
 #define __OPTIONS_H
 
-void	DoOptionsMenu(void);
-void	DoDiskOptionsMenu(void);
-void	DoBootOptionsMenu(int BootDriveNum, char *BootDriveText);
-void	DoBootPartitionOptionsMenu(int BootDriveNum);
-int		RunOptionsMenu(char OptionsMenuItems[][80], int OptionsMenuItemCount, int nOptionSelected, char *OptionsMenuTitle);
-void	InitOptionsMenu(int *nOptionsMenuBoxLeft, int *nOptionsMenuBoxTop, int *nOptionsMenuBoxRight, int *nOptionsMenuBoxBottom, int OptionsMenuItemCount);
-void	DrawOptionsMenu(char OptionsMenuItems[][80], int OptionsMenuItemCount, int nOptionSelected, char *OptionsMenuTitle, int nOptionsMenuBoxLeft, int nOptionsMenuBoxTop, int nOptionsMenuBoxRight, int nOptionsMenuBoxBottom);
+VOID	DoOptionsMenu(VOID);
+
+VOID	OptionMenuReboot(VOID);
+
+VOID	OptionMenuCustomBoot(VOID);
+VOID	OptionMenuCustomBootDisk(VOID);
+VOID	OptionMenuCustomBootPartition(VOID);
+VOID	OptionMenuCustomBootBootSectorFile(VOID);
+VOID	OptionMenuCustomBootReactOS(VOID);
+VOID	OptionMenuCustomBootLinux(VOID);
 
 #endif // #defined __OPTIONS_H

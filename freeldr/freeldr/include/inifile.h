@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,8 +24,12 @@ BOOL	IniFileInitialize(VOID);
 
 BOOL	IniOpenSection(PUCHAR SectionName, U32* SectionId);
 U32		IniGetNumSectionItems(U32 SectionId);
+U32		IniGetSectionSettingNameSize(U32 SectionId, U32 SettingIndex);
+U32		IniGetSectionSettingValueSize(U32 SectionId, U32 SettingIndex);
 BOOL	IniReadSettingByNumber(U32 SectionId, U32 SettingNumber, PUCHAR SettingName, U32 NameSize, PUCHAR SettingValue, U32 ValueSize);
 BOOL	IniReadSettingByName(U32 SectionId, PUCHAR SettingName, PUCHAR Buffer, U32 BufferSize);
+BOOL	IniAddSection(PUCHAR SectionName, U32* SectionId);
+BOOL	IniAddSettingValueToSection(U32 SectionId, PUCHAR SettingName, PUCHAR SettingValue);
 
 
 #endif // defined __PARSEINI_H
