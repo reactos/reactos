@@ -72,15 +72,17 @@ SCANTOASCII ucScanToAscii_US[]=
 {
 // US keyboard
     {16,'q'},{17,'w'},{18,'e'},{19,'r'},
-	{20,'t'},{21,'y'},{22,'u'},{23,'i'},
-	{24,'o'},{25,'p'},{30,'a'},{31,'s'},
-	{32,'d'},{33,'f'},{34,'g'},{35,'h'},
-	{36,'j'},{37,'k'},{38,'l'},{44,'z'},
-	{45,'x'},{46,'c'},{47,'v'},{48,'b'},
-	{49,'n'},{50,'m'},{2,'1'},{3,'2'},
-	{4,'3'},{5,'4'},{6,'5'},{7,'6'},
-	{8,'7'},{9,'8'},{10,'9'},{11,'0'},{12,'ß'},
-	{0x39,' '},{0x35,'-'},{0x34,'.'},{0x1b,'+'}
+    {20,'t'},{21,'y'},{22,'u'},{23,'i'},
+    {24,'o'},{25,'p'},{30,'a'},{31,'s'},
+    {32,'d'},{33,'f'},{34,'g'},{35,'h'},
+    {36,'j'},{37,'k'},{38,'l'},{44,'z'},
+    {45,'x'},{46,'c'},{47,'v'},{48,'b'},
+    {49,'n'},{50,'m'},{2,'1'},{3,'2'},
+    {4,'3'},{5,'4'},{6,'5'},{7,'6'},
+    {8,'7'},{9,'8'},{10,'9'},{11,'0'},{12,'-'},
+    {0x39,' '},{0x35,'/'},{0x34,'.'},{0x1b,']'},
+    {0x1a,'['},{0x33,','},{0x27,';'},{0x0d,'='},
+    {0x2b,'\\'},{0x28,'\''},{0x29,'`'}
 };
 
 SCANTOASCII ucShiftScanToAscii_GER[]=
@@ -109,10 +111,12 @@ SCANTOASCII ucShiftScanToAscii_US[]=
 	{32,'D'},{33,'F'},{34,'G'},{35,'H'},
 	{36,'J'},{37,'K'},{38,'L'},{44,'Z'},
 	{45,'X'},{46,'C'},{47,'V'},{48,'B'},
-	{49,'N'},{50,'M'},{2,'!'},{3,'\"'},
-	{4,'@'},{5,'$'},{6,'%'},{7,'&'},
-	{8,'/'},{9,'('},{10,')'},{11,'='},{12,'?'},
-	{0x39,' '},{0x35,'?'},{0x34,':'},{0x1b,'*'}
+	{49,'N'},{50,'M'},{2,'!'},{3,'@'},
+	{4,'#'},{5,'$'},{6,'%'},{7,'^'},
+	{8,'&'},{9,'*'},{10,'('},{11,')'},{12,'_'},
+	{0x39,' '},{0x35,'?'},{0x34,'>'},{0x1b,'}'},
+	{0x1a,'{'},{0x33,'<'},{0x27,':'},{0x0d,'+'},
+	{0x2b,'|'},{0x28,'\"'},{0x29,'~'}
 };
 
 ////////////////////////////////////////////////////
@@ -1933,63 +1937,63 @@ int PICE_sprintf(char * buf, const char *fmt, ...)
 //*************************************************************************
 UCHAR AsciiFromScan(UCHAR s)
 {
-    ULONG i;
-
-    ENTER_FUNC();
-
-	if(!bShift)
-	{
-        if(ucKeyboardLayout == GERMANY)
+  ULONG i;
+  
+  ENTER_FUNC();
+  
+  if(!bShift)
+    {
+      if(ucKeyboardLayout == GERMANY)
         {
-		    for(i=0;i<DIM(ucScanToAscii_GER);i++)
-		    {
-			    if(ucScanToAscii_GER[i].s==s)
+	  for(i=0;i<DIM(ucScanToAscii_GER);i++)
+	    {
+	      if(ucScanToAscii_GER[i].s==s)
                 {
-                    LEAVE_FUNC();
-				    return ucScanToAscii_GER[i].a;
+		  LEAVE_FUNC();
+		  return ucScanToAscii_GER[i].a;
                 }
-		    }
+	    }
         }
-        else
+      else
         {
-		    for(i=0;i<DIM(ucScanToAscii_US);i++)
-		    {
-			    if(ucScanToAscii_US[i].s==s)
+	  for(i=0;i<DIM(ucScanToAscii_US);i++)
+	    {
+	      if(ucScanToAscii_US[i].s==s)
                 {
-                    LEAVE_FUNC();
-				    return ucScanToAscii_US[i].a;
+		  LEAVE_FUNC();
+		  return ucScanToAscii_US[i].a;
                 }
-		    }
+	    }
         }
-	}
-	else
-	{
-        if(ucKeyboardLayout == GERMANY)
+    }
+  else
+    {
+      if(ucKeyboardLayout == GERMANY)
         {
-		    for(i=0;i<DIM(ucShiftScanToAscii_GER);i++)
-		    {
-			    if(ucShiftScanToAscii_GER[i].s==s)
+	  for(i=0;i<DIM(ucShiftScanToAscii_GER);i++)
+	    {
+	      if(ucShiftScanToAscii_GER[i].s==s)
                 {
-                    LEAVE_FUNC();
-				    return ucShiftScanToAscii_GER[i].a;
+		  LEAVE_FUNC();
+		  return ucShiftScanToAscii_GER[i].a;
                 }
-		    }
+	    }
         }
-        else
+      else
         {
-		    for(i=0;i<DIM(ucShiftScanToAscii_US);i++)
-		    {
-			    if(ucShiftScanToAscii_GER[i].s==s)
+	  for(i=0;i<DIM(ucShiftScanToAscii_US);i++)
+	    {
+	      if(ucShiftScanToAscii_US[i].s==s)
                 {
-                    LEAVE_FUNC();
-				    return ucShiftScanToAscii_GER[i].a;
+		  LEAVE_FUNC();
+		  return ucShiftScanToAscii_US[i].a;
                 }
-		    }
+	    }
         }
-	}
-    DPRINT((0,"AsciiFromScan(): no translation for key\n"));
-    LEAVE_FUNC();
-	return 0;
+    }
+  DPRINT((0,"AsciiFromScan(): no translation for key\n"));
+  LEAVE_FUNC();
+  return 0;
 }
 
 
