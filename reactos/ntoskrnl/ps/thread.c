@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.116 2003/08/18 11:52:31 hbirr Exp $
+/* $Id: thread.c,v 1.117 2003/08/20 15:02:53 ea Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -648,13 +648,71 @@ NTSTATUS STDCALL NtAlertThread (IN HANDLE ThreadHandle)
    return(STATUS_SUCCESS);
 }
 
+/**********************************************************************
+ *	NtOpenThread/4
+ *
+ *	@implemented
+ */
 NTSTATUS STDCALL 
 NtOpenThread(OUT PHANDLE ThreadHandle,
 	     IN	ACCESS_MASK DesiredAccess,
 	     IN	POBJECT_ATTRIBUTES ObjectAttributes,
 	     IN	PCLIENT_ID ClientId)
 {
-	UNIMPLEMENTED;
+   NTSTATUS Status = STATUS_INVALID_PARAMETER;
+
+   if((NULL != ThreadHandle)&&(NULL != ObjectAttributes))
+   {
+      PETHREAD EThread = NULL;
+
+      if((ClientId)
+	&& (ClientId->UniqueProcess)
+	&& (ClientId->UniqueThread))
+      {
+         // It is an error to specify both
+	 // ObjectAttributes.ObjectName
+         // and ClientId.
+         if((ObjectAttributes)
+	   && (ObjectAttributes->ObjectName)
+	   && (0 < ObjectAttributes->ObjectName->Length))
+	 {
+            return(STATUS_INVALID_PARAMETER_MIX);
+	 }
+	 // Parameters mix OK
+	 Status = PsLookupProcessThreadByCid(ClientId,
+                     NULL,
+                     & EThread);
+      }
+      else if((ObjectAttributes)
+	     && (ObjectAttributes->ObjectName)
+	     && (0 < ObjectAttributes->ObjectName->Length))
+      {
+         // Three Ob attributes are forbidden
+         if(!(ObjectAttributes->Attributes &
+            (OBJ_PERMANENT | OBJ_EXCLUSIVE | OBJ_OPENIF)))
+	 {
+            Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
+                        ObjectAttributes->Attributes,
+                        NULL,
+                        DesiredAccess,
+                        PsThreadType,
+                        UserMode,
+                        NULL,
+                        (PVOID*) & EThread);
+	 }
+      }
+      // EThread may be OK...
+      if(STATUS_SUCCESS == Status)
+      {
+         Status = ObCreateHandle(PsGetCurrentProcess(),
+                     EThread,
+                     DesiredAccess,
+                     FALSE,
+                     ThreadHandle);
+         ObDereferenceObject(EThread); 
+      }
+   }
+   return(Status);  
 }
 
 NTSTATUS STDCALL 
