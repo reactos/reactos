@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.26 2004/01/20 23:40:19 gvg Exp $
+/* $Id: winlogon.c,v 1.27 2004/03/09 15:08:12 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -48,7 +48,8 @@ BOOL StartConsole = TRUE;
 
 /* FUNCTIONS *****************************************************************/
 
-static void PrintString (WCHAR* fmt,...)
+static void
+PrintString (WCHAR* fmt,...)
 {
    WCHAR buffer[512];
    va_list ap;
@@ -60,14 +61,12 @@ static void PrintString (WCHAR* fmt,...)
    OutputDebugString(buffer);
 }
 
-BOOL
-CALLBACK
-ShutdownComputerProc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
+
+BOOL CALLBACK
+ShutdownComputerProc (HWND hwndDlg,
+		      UINT uMsg,
+		      WPARAM wParam,
+		      LPARAM lParam)
 {
   switch(uMsg)
   {
@@ -91,7 +90,8 @@ ShutdownComputerProc(
   return FALSE;
 }
 
-static BOOLEAN StartServices(VOID)
+static BOOLEAN
+StartServices (VOID)
 {
    HANDLE ServicesInitEvent;
    BOOLEAN Result;
@@ -161,7 +161,8 @@ static BOOLEAN StartServices(VOID)
 }
 
 #if START_LSASS
-static BOOLEAN StartLsass(VOID)
+static BOOLEAN
+StartLsass (VOID)
 {
    HANDLE LsassInitEvent;
    BOOLEAN Result;
@@ -212,7 +213,10 @@ static BOOLEAN StartLsass(VOID)
    return(TRUE);
 }
 #endif
-static BOOLEAN OpenRegistryKey(HANDLE *WinLogonKey)
+
+
+static BOOLEAN
+OpenRegistryKey (HANDLE *WinLogonKey)
 {
    return ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                                         L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\WinLogon",
@@ -220,6 +224,7 @@ static BOOLEAN OpenRegistryKey(HANDLE *WinLogonKey)
                                         KEY_QUERY_VALUE,
                                         WinLogonKey);
 }
+
 
 static BOOLEAN StartProcess(PWCHAR ValueName)
 {
@@ -306,7 +311,9 @@ static BOOL StartIntoGUI(void)
   return FALSE;
 }
 
-static PWCHAR GetShell(WCHAR *CommandLine)
+
+static PWCHAR
+GetShell (WCHAR *CommandLine)
 {
    HANDLE WinLogonKey;
    BOOL GotCommandLine;
@@ -348,46 +355,68 @@ static PWCHAR GetShell(WCHAR *CommandLine)
    return CommandLine;
 }
 
-static BOOL DoLoginUser(PWCHAR Name, PWCHAR Password)
+
+static BOOL
+DoLogonUser (PWCHAR Name,
+	     PWCHAR Password)
 {
-   PROCESS_INFORMATION ProcessInformation;
-   STARTUPINFO StartupInfo;
-   BOOLEAN Result;
-   WCHAR CommandLine[MAX_PATH];
-   WCHAR CurrentDirectory[MAX_PATH];
+  PROCESS_INFORMATION ProcessInformation;
+  STARTUPINFO StartupInfo;
+  WCHAR CommandLine[MAX_PATH];
+  WCHAR CurrentDirectory[MAX_PATH];
+  HANDLE hToken;
+  BOOL Result;
 
-   GetWindowsDirectory(CurrentDirectory, MAX_PATH);
+  Result = LogonUserW (Name,
+		       NULL,
+		       Password,
+		       LOGON32_LOGON_INTERACTIVE,
+		       LOGON32_PROVIDER_DEFAULT,
+		       &hToken);
+  if (!Result)
+    {
+      DbgPrint ("WL: LogonUserW failed\n");
+      return FALSE;
+    }
 
-   StartupInfo.cb = sizeof(StartupInfo);
-   StartupInfo.lpReserved = NULL;
-   StartupInfo.lpDesktop = NULL;
-   StartupInfo.lpTitle = NULL;
-   StartupInfo.dwFlags = 0;
-   StartupInfo.cbReserved2 = 0;
-   StartupInfo.lpReserved2 = 0;
-   
-   Result = CreateProcess(NULL,
-                          GetShell(CommandLine),
-                          NULL,
-                          NULL,
-                          FALSE,
-                          CREATE_NEW_CONSOLE,
-                          NULL,
-                          CurrentDirectory,
-                          &StartupInfo,
-                          &ProcessInformation);
+  GetWindowsDirectoryW(CurrentDirectory, MAX_PATH);
+
+  StartupInfo.cb = sizeof(StartupInfo);
+  StartupInfo.lpReserved = NULL;
+  StartupInfo.lpDesktop = NULL;
+  StartupInfo.lpTitle = NULL;
+  StartupInfo.dwFlags = 0;
+  StartupInfo.cbReserved2 = 0;
+  StartupInfo.lpReserved2 = 0;
+
+  Result = CreateProcessAsUserW (hToken,
+				 NULL,
+				 GetShell (CommandLine),
+				 NULL,
+				 NULL,
+				 FALSE,
+				 CREATE_NEW_CONSOLE,
+				 NULL,
+				 CurrentDirectory,
+				 &StartupInfo,
+				 &ProcessInformation);
    if (!Result)
      {
-        DbgPrint("WL: Failed to execute user shell %s\n", CommandLine);
-        return FALSE;
+	DbgPrint ("WL: Failed to execute user shell %s\n", CommandLine);
+	CloseHandle (hToken);
+	return FALSE;
      }
-   WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
-   CloseHandle( ProcessInformation.hProcess );
-   CloseHandle( ProcessInformation.hThread );
 
-   return TRUE;
+   WaitForSingleObject (ProcessInformation.hProcess, INFINITE);
+   CloseHandle (ProcessInformation.hProcess);
+   CloseHandle (ProcessInformation.hThread);
+
+  CloseHandle (hToken);
+
+  return TRUE;
 }
 #endif
+
 
 int STDCALL
 WinMain(HINSTANCE hInstance,
@@ -396,8 +425,8 @@ WinMain(HINSTANCE hInstance,
         int nShowCmd)
 {
 #if SUPPORT_CONSOLESTART
-  WCHAR LoginName[255];
-  WCHAR Password[255];
+//  WCHAR LoginName[255];
+//  WCHAR Password[255];
 #endif
 #if 0
   LSA_STRING ProcessName, PackageName;
@@ -494,11 +523,10 @@ WinMain(HINSTANCE hInstance,
       RunSetup ();
 
       NtShutdownSystem (ShutdownReboot);
-//      NtShutdownSystem (ShutdownNoReboot);
       ExitProcess (0);
       return 0;
     }
-    
+
 #if SUPPORT_CONSOLESTART
  StartConsole = !StartIntoGUI();
  if(!StartConsole)
@@ -510,7 +538,7 @@ WinMain(HINSTANCE hInstance,
      ExitProcess(0);
      return(0);
    }
-   
+
    /* FIXME - better solution needed */
    hShutdownEvent = CreateEvent(NULL,
                                 TRUE,
@@ -642,7 +670,8 @@ WinMain(HINSTANCE hInstance,
 #if SUPPORT_CONSOLESTART
  if(StartConsole)
  {
-   if (! DoLoginUser(LoginName, Password))
+//   if (! DoLogonUser(LoginName, Password))
+   if (! DoLogonUser(L"Administrator", L"Secret"))
      {
      }
    
