@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.21 2001/12/05 01:40:24 dwelch Exp $
+/* $Id: iomgr.c,v 1.22 2002/06/10 08:47:21 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -114,10 +114,12 @@ IopDeleteFile(PVOID ObjectBody)
 
 VOID IoInit (VOID)
 {
-	OBJECT_ATTRIBUTES	attr;
-	HANDLE			handle;
-	UNICODE_STRING		UnicodeString;
-	UNICODE_STRING		DeviceName;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING DirName;
+  UNICODE_STRING LinkName;
+  HANDLE Handle;
+
+  IopInitDriverImplementation();
 
 	/*
 	 * Register iomgr types: DeviceObjectType
@@ -182,83 +184,94 @@ VOID IoInit (VOID)
 		L"File"
 		);
 
-	/*
-	 * Create the '\Device' directory
-	 */
-	RtlInitUnicodeString (
-		& UnicodeString,
-		L"\\Device"
-		);
-	InitializeObjectAttributes (
-		& attr,
-		& UnicodeString,
-		0,
-		NULL,
-		NULL
-		);
-	ZwCreateDirectoryObject (
-		& handle,
-		0,
-		& attr
-		);
+  /*
+   * Create the '\Driver' object directory
+   */
+  RtlInitUnicodeString(&DirName,
+		       L"\\Driver");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &DirName,
+			     0,
+			     NULL,
+			     NULL);
+  NtCreateDirectoryObject(&Handle,
+			  0,
+			  &ObjectAttributes);
 
-	/*
-	 * Create the '\??' directory
-	 */
-	RtlInitUnicodeString (
-		& UnicodeString,
-		L"\\??"
-		);
-	InitializeObjectAttributes (
-		& attr,
-		& UnicodeString,
-		0,
-		NULL,
-		NULL
-		);
-	ZwCreateDirectoryObject (
-		& handle,
-		0,
-		& attr
-		);
+  /*
+   * Create the '\FileSystem' object directory
+   */
+  RtlInitUnicodeString(&DirName,
+		       L"\\FileSystem");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &DirName,
+			     0,
+			     NULL,
+			     NULL);
+  NtCreateDirectoryObject(&Handle,
+			  0,
+			  &ObjectAttributes);
 
-	/*
-	 * Create the '\ArcName' directory
-	 */
-	RtlInitUnicodeString (
-		& UnicodeString,
-		L"\\ArcName");
-	InitializeObjectAttributes (
-		& attr,
-		& UnicodeString,
-		0,
-		NULL,
-		NULL
-		);
-	ZwCreateDirectoryObject (
-		& handle,
-		0,
-		& attr
-		);
+  /*
+   * Create the '\Device' directory
+   */
+  RtlInitUnicodeString(&DirName,
+		       L"\\Device");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &DirName,
+			     0,
+			     NULL,
+			     NULL);
+  ZwCreateDirectoryObject(&Handle,
+			  0,
+			  &ObjectAttributes);
 
-	/*
-	 * Initialize remaining subsubsystem
-	 */
-	IoInitCancelHandling ();
-	IoInitSymbolicLinkImplementation ();
-	IoInitFileSystemImplementation ();
-	IoInitVpbImplementation ();
-	IoInitShutdownNotification ();
+  /*
+   * Create the '\??' directory
+   */
+  RtlInitUnicodeString(&DirName,
+		       L"\\??");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &DirName,
+			     0,
+			     NULL,
+			     NULL);
+  ZwCreateDirectoryObject(&Handle,
+			  0,
+			  &ObjectAttributes);
 
-	/*
-	 * Create link from '\DosDevices' to '\??' directory
-	 */
-	RtlInitUnicodeString (&UnicodeString,
-	                      L"\\DosDevices");
-	RtlInitUnicodeString (&DeviceName,
-	                      L"\\??");
-	IoCreateSymbolicLink (&UnicodeString,
-	                      &DeviceName);
+  /*
+   * Create the '\ArcName' directory
+   */
+  RtlInitUnicodeString(&DirName,
+		       L"\\ArcName");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &DirName,
+			     0,
+			     NULL,
+			     NULL);
+  ZwCreateDirectoryObject(&Handle,
+			  0,
+			  &ObjectAttributes);
+
+  /*
+   * Initialize remaining subsubsystem
+   */
+  IoInitCancelHandling();
+  IoInitSymbolicLinkImplementation();
+  IoInitFileSystemImplementation();
+  IoInitVpbImplementation();
+  IoInitShutdownNotification();
+
+  /*
+   * Create link from '\DosDevices' to '\??' directory
+   */
+  RtlInitUnicodeString(&LinkName,
+		       L"\\DosDevices");
+  RtlInitUnicodeString(&DirName,
+		       L"\\??");
+  IoCreateSymbolicLink(&LinkName,
+		       &DirName);
 
   /*
    * Initialize PnP manager
@@ -270,7 +283,7 @@ VOID IoInit (VOID)
 PGENERIC_MAPPING STDCALL
 IoGetFileObjectGenericMapping(VOID)
 {
-   return &IopFileMapping;
+  return(&IopFileMapping);
 }
 
 /* EOF */

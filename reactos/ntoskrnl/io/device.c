@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.41 2002/05/16 06:40:29 ekohl Exp $
+/* $Id: device.c,v 1.42 2002/06/10 08:47:20 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -34,64 +34,9 @@
 
 /* FUNCTIONS ***************************************************************/
 
-
-NTSTATUS STDCALL NtUnloadDriver(IN PUNICODE_STRING DriverServiceName)
-{
-   UNIMPLEMENTED;
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	NtLoadDriver
- *
- * DESCRIPTION
- * 	Loads a device driver.
- * 	
- * ARGUMENTS
- *	DriverServiceName
- *		Name of the service to load (registry key).
- *		
- * RETURN VALUE
- * 	Status.
- *
- * REVISIONS
- */
-NTSTATUS
-STDCALL
-NtLoadDriver (
-	PUNICODE_STRING	DriverServiceName
-	)
-{
-  PDEVICE_NODE DeviceNode;
-  NTSTATUS Status;
-
-  /* FIXME: this should lookup the filename from the registry and then call LdrLoadDriver  */
-
-  /* Use IopRootDeviceNode for now */
-  Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
-  if (!NT_SUCCESS(Status))
-    {
-  return(Status);
-    }
-
-  Status = LdrLoadDriver (DriverServiceName, DeviceNode, FALSE);
-  if (!NT_SUCCESS(Status))
-    {
-  IopFreeDeviceNode(DeviceNode);
-  DPRINT("Driver load failed, status (%x)\n", Status);
-    }
-
-  return Status;
-}
-
-
-NTSTATUS
-STDCALL
-IoAttachDeviceByPointer (
-	IN	PDEVICE_OBJECT	SourceDevice,
-	IN	PDEVICE_OBJECT	TargetDevice
-	)
+NTSTATUS STDCALL
+IoAttachDeviceByPointer(IN PDEVICE_OBJECT SourceDevice,
+			IN PDEVICE_OBJECT TargetDevice)
 {
 	PDEVICE_OBJECT AttachedDevice;
 
@@ -108,8 +53,7 @@ IoAttachDeviceByPointer (
 }
 
 
-VOID
-STDCALL
+VOID STDCALL
 IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
 {
 	PDEVICE_OBJECT Previous;
@@ -427,8 +371,8 @@ IopInitializeService(
   PMODULE_OBJECT ModuleObject;
   NTSTATUS Status;
 
-  Status = LdrFindModuleObject(&DeviceNode->ServiceName, &ModuleObject);
-  if (!NT_SUCCESS(Status))
+  ModuleObject = LdrGetModuleObject(&DeviceNode->ServiceName);
+  if (ModuleObject == NULL)
   {
     /* The module is currently not loaded, so load it now */
 
@@ -447,9 +391,8 @@ IopInitializeService(
       CPRINT("A driver failed to initialize\n");
       return(Status);
     }
+    ObDereferenceObject(ModuleObject);
   }
-
-  ObDereferenceObject(ModuleObject);
 
   Status = IopInitializeDevice(DeviceNode, TRUE);
 
@@ -483,12 +426,11 @@ IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode)
   QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
   QueryTable[0].EntryContext = &ImagePath;
 
-  Status = RtlQueryRegistryValues(
-    RTL_REGISTRY_HANDLE,
-	 	(PWSTR)KeyHandle,
-	 	QueryTable,
-	 	NULL,
-	 	NULL);
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+				  (PWSTR)KeyHandle,
+				  QueryTable,
+				  NULL,
+				  NULL);
   NtClose(KeyHandle);
 
   DPRINT("RtlQueryRegistryValues() returned status %x\n", Status);

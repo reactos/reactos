@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.69 2002/06/05 16:53:36 ekohl Exp $
+# $Id: Makefile,v 1.70 2002/06/10 08:45:40 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -132,6 +132,7 @@ OBJECTS_KE = \
 OBJECTS_MM = \
 	mm/aspace.o \
 	mm/cont.o \
+	mm/drvlck.o \
 	mm/freelist.o \
 	mm/iospace.o \
 	mm/marea.o \
@@ -159,7 +160,7 @@ OBJECTS_MM = \
 # I/O Subsystem (Io)
 OBJECTS_IO = \
 	io/adapter.o \
-  io/arcname.o \
+	io/arcname.o \
 	io/buildirp.o \
 	io/cancel.o \
 	io/cleanup.o \
@@ -167,7 +168,7 @@ OBJECTS_IO = \
 	io/create.o \
 	io/device.o \
 	io/dir.o \
-	io/drvlck.o \
+	io/driver.o \
 	io/errlog.o \
 	io/error.o \
 	io/event.o \

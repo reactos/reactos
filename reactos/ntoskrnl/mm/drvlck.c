@@ -1,4 +1,4 @@
-/* $Id: drvlck.c,v 1.3 2000/04/02 13:32:41 ea Exp $
+/* $Id: drvlck.c,v 1.1 2002/06/10 08:50:55 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,7 +19,8 @@
 /* FUNCTIONS *****************************************************************/
 
 #if 0
-VOID MmUnlockPagableImageSection(PVOID ImageSectionHandle)
+VOID
+MmUnlockPagableImageSection(IN PVOID ImageSectionHandle)
 /*
  * FUNCTION: Releases a section of driver code or driver data, previously
  * locked into system space with MmLockPagableCodeSection, 
@@ -29,52 +30,57 @@ VOID MmUnlockPagableImageSection(PVOID ImageSectionHandle)
  *                             MmLockPagableDataSection
  */
 {
-//   MmUnlockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
-   UNIMPLEMENTED;
+//  MmUnlockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
+  UNIMPLEMENTED;
 }
 #endif
 
-VOID STDCALL MmLockPagableSectionByHandle(PVOID ImageSectionHandle)
+
+VOID STDCALL
+MmLockPagableSectionByHandle(IN PVOID ImageSectionHandle)
 {
-//   MmLockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
-   UNIMPLEMENTED;
+//  MmLockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
+  UNIMPLEMENTED;
 }
+
 
 #if 0
-PVOID MmLockPagableCodeSection(PVOID AddressWithinSection)
+PVOID
+MmLockPagableCodeSection(IN PVOID AddressWithinSection)
 {
-   PVOID Handle;
-   Handle = MmOpenMemoryAreaByAddress(NULL,AddressWithinSection);
-   MmLockPagableSectionByHandle(Handle);
-   return(Handle);
+  PVOID Handle;
+  Handle = MmOpenMemoryAreaByAddress(NULL,AddressWithinSection);
+  MmLockPagableSectionByHandle(Handle);
+  return(Handle);
 }
 #endif
 
-PVOID STDCALL MmLockPagableDataSection(PVOID AddressWithinSection)
+
+PVOID STDCALL
+MmLockPagableDataSection(IN PVOID AddressWithinSection)
 {
-   PVOID Handle;
-   Handle = MmOpenMemoryAreaByAddress(NULL,AddressWithinSection);
-   MmLockPagableSectionByHandle(Handle);
-   return(Handle);
+  PVOID Handle;
+  Handle = MmOpenMemoryAreaByAddress(NULL,AddressWithinSection);
+  MmLockPagableSectionByHandle(Handle);
+  return(Handle);
 }
 
 
-VOID
-STDCALL
-MmUnlockPagableImageSection (
-	PVOID	ImageSectionHandle
-	)
+VOID STDCALL
+MmUnlockPagableImageSection(IN PVOID ImageSectionHandle)
 {
 }
 
 
-VOID STDCALL MmPageEntireDriver(PVOID AddressWithinSection)
+VOID STDCALL
+MmPageEntireDriver(IN PVOID AddressWithinSection)
 {
 }
 
-VOID STDCALL MmResetDriverPaging(PVOID AddressWithinSection)
+
+VOID STDCALL
+MmResetDriverPaging(IN PVOID AddressWithinSection)
 {
 }
-
 
 /* EOF */

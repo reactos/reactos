@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.19 2002/05/15 09:38:35 ekohl Exp $
+/* $Id: io.h,v 1.20 2002/06/10 08:46:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -232,6 +232,9 @@ extern POBJECT_TYPE IoSymbolicLinkType;
 
 VOID
 PnpInit(VOID);
+
+VOID
+IopInitDriverImplementation(VOID);
 
 NTSTATUS
 IopGetSystemPowerDeviceObject(PDEVICE_OBJECT *DeviceObject);

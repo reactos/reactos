@@ -15,15 +15,10 @@
 
 #define  KERNEL_MODULE_NAME  L"ntoskrnl.exe"
 #define  HAL_MODULE_NAME  L"hal.dll"
-#define  MODULE_ROOT_NAME  L"\\Modules\\"
+#define  DRIVER_ROOT_NAME  L"\\Driver\\"
 #define  FILESYSTEM_ROOT_NAME  L"\\FileSystem\\"
 
-NTSTATUS
-LdrLoadDriver (
-	PUNICODE_STRING Filename,
-  PDEVICE_NODE DeviceNode,
-  BOOLEAN BootDriversOnly
-	);
+
 NTSTATUS
 LdrLoadInitialProcess (
 	VOID
@@ -36,12 +31,12 @@ VOID
 LdrInitModuleManagement (
 	VOID
 	);
+
 NTSTATUS
-LdrProcessDriver (
-	IN	PVOID	ModuleLoadBase,
-	IN	PCHAR	FileName,
-  IN	ULONG ModuleLength
-	);
+LdrInitializeBootStartDriver(IN PVOID ModuleLoadBase,
+			     IN PCHAR FileName,
+			     IN ULONG ModuleLength);
+
 NTSTATUS
 LdrpMapSystemDll (
 	HANDLE	ProcessHandle,
@@ -102,11 +97,8 @@ NTSTATUS
 LdrLoadModule(PUNICODE_STRING Filename,
 	      PMODULE_OBJECT *ModuleObject);
 
-NTSTATUS
-LdrFindModuleObject(PUNICODE_STRING ModuleName,
-		    PMODULE_OBJECT *ModuleObject);
-
-NTSTATUS LdrpOpenModuleDirectory(PHANDLE Handle);
+PMODULE_OBJECT
+LdrGetModuleObject(PUNICODE_STRING ModuleName);
 
 extern ULONG_PTR LdrHalBase;
 

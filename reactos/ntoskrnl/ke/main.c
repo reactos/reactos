@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.121 2002/05/05 14:57:44 chorns Exp $
+/* $Id: main.c,v 1.122 2002/06/10 08:48:14 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -978,9 +978,9 @@ ExpInitializeExecutive(VOID)
       if (RtlpCheckFileNameExtension(name, ".sys") ||
 	  RtlpCheckFileNameExtension(name, ".sym"))
 	{
-	  CPRINT("Processing module '%s' at %08lx, length 0x%08lx\n",
+	  CPRINT("Initializing driver '%s' at %08lx, length 0x%08lx\n",
 	         name, start, length);
-	  LdrProcessDriver((PVOID)start, name, length);
+	  LdrInitializeBootStartDriver((PVOID)start, name, length);
 	}
     }
 
