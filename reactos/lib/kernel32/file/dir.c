@@ -19,7 +19,7 @@
 #include <string.h>
 #include <wchar.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS *****************************************************************/

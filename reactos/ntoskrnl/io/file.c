@@ -37,58 +37,65 @@ NTSTATUS STDCALL ZwQueryInformationFile(HANDLE FileHandle,
 					ULONG Length,
 					FILE_INFORMATION_CLASS FileInformationClass)
 {
-  NTSTATUS Status;
-  PFILE_OBJECT FileObject;
-  PIRP Irp;
-  PIO_STACK_LOCATION StackPtr;
-  KEVENT Event;
+   PIRP Irp;
+   PDEVICE_OBJECT DeviceObject;
+   PFILE_OBJECT FileObject;
+   NTSTATUS Status;
+   KEVENT Event;
+   PIO_STACK_LOCATION StackPtr;
    
-  DPRINT("ZwQueryInformation(Handle %x StatBlk %x FileInfo %x Length %d Class %d)\n",
-         FileHandle,
-         IoStatusBlock,
-         FileInformation,
-         Length,
-         FileInformationClass);
+   DPRINT("ZwQueryInformationFile(Handle %x StatBlk %x FileInfo %x Length %d Class %d)\n",
+          FileHandle,
+          IoStatusBlock,
+          FileInformation,
+          Length,
+          FileInformationClass);
    
-  /*  Get the file object from the file handle  */
-  Status = ObReferenceObjectByHandle(FileHandle,
-                                     FILE_READ_ATTRIBUTES,
-                                     IoFileType,
-                                     UserMode,
-                                     (PVOID *) &FileObject,
-                                     NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-  DPRINT("FileObject %x\n", FileObject);
-   
-  /*  initialize an event object to wait on for the request  */
-  KeInitializeEvent(&Event, NotificationEvent, FALSE);
+   Status = ObReferenceObjectByHandle(FileHandle,
+                                      FILE_READ_ATTRIBUTES,
+                                      IoFileType,
+                                      UserMode,
+				      (PVOID *)&FileObject,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   DPRINT("FileObject %x\n", FileObject);
 
-  /*  build the IRP to be sent to the driver for the request  */
-  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_QUERY_INFORMATION,
-                                     FileObject->DeviceObject,
-                                     FileInformation,
-                                     Length,
-                                     0,
-                                     &Event,
-                                     IoStatusBlock);
-  StackPtr = IoGetNextIrpStackLocation(Irp);
-  StackPtr->FileObject = FileObject;
-  StackPtr->Parameters.QueryFile.Length = Length;
-  StackPtr->Parameters.QueryFile.FileInformationClass = FileInformationClass;
+   KeInitializeEvent(&Event,NotificationEvent,FALSE);
+   DeviceObject = FileObject->DeviceObject;
    
-  /*  Pass the IRP to the FSD (and wait for it if required) */
-  DPRINT("FileObject->DeviceObject %x\n", FileObject->DeviceObject);
-  Status = IoCallDriver(FileObject->DeviceObject, Irp);
-  if (Status == STATUS_PENDING  && (FileObject->Flags & FO_SYNCHRONOUS_IO))
-    {
-      KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-      Status = Irp->IoStatus.Status;
-    } 
+   Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+   if (Irp==NULL)
+     {
+	ObDereferenceObject(FileObject);
+	return STATUS_UNSUCCESSFUL;
+     }
 
-  return Status;
+   Irp->UserIosb = IoStatusBlock;
+   Irp->UserEvent = &Event;
+   Irp->UserBuffer=FileInformation;
+   
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->MajorFunction = IRP_MJ_QUERY_INFORMATION;
+   StackPtr->MinorFunction = 0;
+   StackPtr->Flags = 0;
+   StackPtr->Control = 0;
+   StackPtr->DeviceObject = DeviceObject;
+   StackPtr->FileObject = FileObject;
+   
+   StackPtr->Parameters.QueryFile.FileInformationClass = 
+     FileInformationClass;
+   StackPtr->Parameters.QueryFile.Length = Length;
+   
+   Status = IoCallDriver(FileObject->DeviceObject,Irp);
+   if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+     {
+        KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+        Status = Irp->IoStatus.Status;
+     }
+   return(Status);
 }
 
 NTSTATUS NtSetInformationFile(HANDLE FileHandle,
@@ -116,7 +123,7 @@ NTSTATUS ZwSetInformationFile(HANDLE FileHandle,
   PIO_STACK_LOCATION StackPtr;
   KEVENT Event;
    
-  DPRINT("ZwSetInformation(Handle %x StatBlk %x FileInfo %x Length %d Class %d)\n",
+  DPRINT("ZwSetInformationFile(Handle %x StatBlk %x FileInfo %x Length %d Class %d)\n",
          FileHandle,
          IoStatusBlock,
          FileInformation,

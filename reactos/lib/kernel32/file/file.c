@@ -402,7 +402,7 @@ DWORD STDCALL GetFileAttributesW(LPCWSTR lpFileName)
    NTSTATUS errCode;
 
    hFile = CreateFileW(lpFileName,	
-		       GENERIC_READ,	
+                       FILE_READ_ATTRIBUTES,
 		       FILE_SHARE_READ,	
 		       NULL,	
 		       OPEN_EXISTING,	
@@ -419,7 +419,7 @@ DWORD STDCALL GetFileAttributesW(LPCWSTR lpFileName)
      {
 	CloseHandle(hFile);
 	SetLastError(RtlNtStatusToDosError(errCode));
-        return 0;
+        return 0xFFFFFFFF;
      }
    CloseHandle(hFile);
    return (DWORD)FileBasic.FileAttributes;  

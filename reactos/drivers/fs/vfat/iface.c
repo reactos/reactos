@@ -1609,7 +1609,26 @@ NTSTATUS FsdGetPositionInformation(PFILE_OBJECT FileObject,
 				   PositionInfo->CurrentByteOffset));
     return(STATUS_SUCCESS);
  }
- 
+
+NTSTATUS FsdGetBasicInformation(PFILE_OBJECT FileObject,
+                                PVfatFCB FCB,
+                                PDEVICE_OBJECT DeviceObject,
+                                PFILE_BASIC_INFORMATION BasicInfo)
+{
+    DPRINT("FsdGetBasicInformation()\n");
+    
+//    BasicInfo->CreationTime =
+//    BasicInfo->LastAccessTime =
+//    BasicInfo->LastWriteTime =
+//    BasicInfo->ChangeTime =
+
+    BasicInfo->FileAttributes = FCB->entry.Attrib;
+
+    DPRINT("Getting attributes %x\n", BasicInfo->FileAttributes);
+
+    return(STATUS_SUCCESS);
+}
+
 
 NTSTATUS FsdQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
@@ -1655,9 +1674,19 @@ NTSTATUS FsdQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 					DeviceObject, 
 					SystemBuffer);
       break;
+      case FileBasicInformation:
+         RC = FsdGetBasicInformation(FileObject,
+                                     FCB, 
+                                     DeviceObject, 
+                                     SystemBuffer);
+      break;
       default:
        RC=STATUS_NOT_IMPLEMENTED;
    }
+
+   Irp->IoStatus.Status = RC;
+   Irp->IoStatus.Information = 0;
+   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
    return RC;
 }
@@ -1710,11 +1739,13 @@ NTSTATUS FsdSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	RC = STATUS_NOT_IMPLEMENTED;
      }
    
+   Irp->IoStatus.Status = RC;
+   Irp->IoStatus.Information = 0;
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
    
    return RC;
 }
- 
+
  
 STDCALL NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
 			     PUNICODE_STRING RegistryPath)
