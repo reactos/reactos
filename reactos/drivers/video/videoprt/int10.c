@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: int10.c,v 1.5 2004/03/19 20:58:31 navaraf Exp $
+ * $Id: int10.c,v 1.6 2004/06/18 17:20:49 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -230,6 +230,13 @@ VideoPortInt10(
    DPRINT("- Input register Ebp: %x\n", BiosArguments->Ebp);
    Regs.Ebp = BiosArguments->Ebp;
    Status = Ke386CallBios(0x10, &Regs);
+   BiosArguments->Eax = Regs.Eax;
+   BiosArguments->Ebx = Regs.Ebx;
+   BiosArguments->Ecx = Regs.Ecx;
+   BiosArguments->Edx = Regs.Edx;
+   BiosArguments->Esi = Regs.Esi;
+   BiosArguments->Edi = Regs.Edi;
+   BiosArguments->Ebp = Regs.Ebp;
 
    IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
 
