@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.40 2004/01/17 01:04:45 gvg Exp $
+/* $Id: bitblt.c,v 1.41 2004/02/06 20:36:31 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -433,19 +433,65 @@ IntEngBitBlt(SURFOBJ *DestObj,
   BOOLEAN ret;
   SURFGDI *DestGDI;
   SURFGDI *SourceGDI;
+  RECTL InputClippedRect;
   RECTL OutputRect;
   POINTL InputPoint;
+  BOOLEAN UsesSource;
 
-  if (NULL != SourcePoint)
+  InputClippedRect = *DestRect;
+  if (InputClippedRect.right < InputClippedRect.left)
     {
+      InputClippedRect.left = DestRect->right;
+      InputClippedRect.right = DestRect->left;
+    }
+  if (InputClippedRect.bottom < InputClippedRect.top)
+    {
+      InputClippedRect.top = DestRect->bottom;
+      InputClippedRect.bottom = DestRect->top;
+    }
+  UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
+  if (UsesSource)
+    {
+      if (NULL == SourcePoint || NULL == SourceObj)
+        {
+          return FALSE;
+        }
       InputPoint = *SourcePoint;
+      SourceGDI = (SURFGDI*) AccessInternalObjectFromUserObject(SourceObj);
+
+      /* Make sure we don't try to copy anything outside the valid source region */
+      if (InputPoint.x < 0)
+        {
+          InputClippedRect.left -= InputPoint.x;
+          InputPoint.x = 0;
+        }
+      if (InputPoint.y < 0)
+        {
+          InputClippedRect.top -= InputPoint.y;
+          InputPoint.y = 0;
+        }
+      if (SourceObj->sizlBitmap.cx < InputPoint.x + InputClippedRect.right - InputClippedRect.left)
+        {
+          InputClippedRect.right = InputClippedRect.left + SourceObj->sizlBitmap.cx - InputPoint.x;
+        }
+      if (SourceObj->sizlBitmap.cy < InputPoint.y + InputClippedRect.bottom - InputClippedRect.top)
+        {
+          InputClippedRect.bottom = InputClippedRect.top + SourceObj->sizlBitmap.cy - InputPoint.y;
+        }
+
+      if (InputClippedRect.right < InputClippedRect.left ||
+          InputClippedRect.bottom < InputClippedRect.top)
+        {
+          /* Everything clipped away, nothing to do */
+          return TRUE;
+        }
     }
 
   /* Clip against the bounds of the clipping region so we won't try to write
    * outside the surface */
   if (NULL != ClipRegion)
     {
-      if (! EngIntersectRect(&OutputRect, DestRect, &ClipRegion->rclBounds))
+      if (! EngIntersectRect(&OutputRect, &InputClippedRect, &ClipRegion->rclBounds))
 	{
 	  return TRUE;
 	}
@@ -454,12 +500,11 @@ IntEngBitBlt(SURFOBJ *DestObj,
     }
   else
     {
-      OutputRect = *DestRect;
+      OutputRect = InputClippedRect;
     }
 
-  if (NULL != SourceObj)
+  if (UsesSource)
     {
-    SourceGDI = (SURFGDI*) AccessInternalObjectFromUserObject(SourceObj);
     MouseSafetyOnDrawStart(SourceObj, SourceGDI, InputPoint.x, InputPoint.y,
                            (InputPoint.x + abs(DestRect->right - DestRect->left)),
 			   (InputPoint.y + abs(DestRect->bottom - DestRect->top)));
@@ -489,7 +534,7 @@ IntEngBitBlt(SURFOBJ *DestObj,
     }
 
   MouseSafetyOnDrawEnd(DestObj, DestGDI);
-  if (NULL != SourceObj)
+  if (UsesSource)
     {
     MouseSafetyOnDrawEnd(SourceObj, SourceGDI);
     }
