@@ -88,6 +88,9 @@ static BOOL IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, U32 Directory
 			Record = (PDIR_RECORD)(DirectoryBuffer + Offset);
 		}
 
+		if (Offset >= DirectoryLength)
+			return FALSE;
+
 		if (Record->FileIdLength == 1 && Record->FileId[0] == 0)
 		{
 			DbgPrint((DPRINT_FILESYSTEM, "Name '.'\n"));
@@ -114,9 +117,6 @@ static BOOL IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, U32 Directory
 			}
 
 		}
-
-		if (Offset >= DirectoryLength)
-			return FALSE;
 
 		RtlZeroMemory(Name, 32 * sizeof(UCHAR));
 	}
