@@ -226,13 +226,58 @@ struct String_from_XML_Char : public String
 #endif
 
 
+#ifdef UNICODE
+
+ // optimization for faster UNICODE/ASCII string comparison without temporary A/U conversion
+inline bool operator==(const String& s1, const char* s2)
+{
+	LPCWSTR p = s1;
+	const char* q = s2;
+
+	while(*p && *q)
+		if (*p++ != *q++)
+			return false;
+
+	return *p == *q;
+};
+
+#endif
+
+
  /// in memory representation of an XML node
 struct XMLNode : public String
 {
+#ifdef UNICODE
+	 // optimized read access without temporary A/U conversion when using ASCII attribute names
+	struct AttributeMap : public std::map<String, String>
+	{
+		typedef std::map<String, String> super;
+
+		const_iterator find(const char* x) const
+		{
+			for(const_iterator it=begin(); it!=end(); ++it)
+				if (it->first == x)
+					return it;
+
+			return end();
+		}
+
+		const_iterator find(const key_type& x) const
+		{
+			return super::find(x);
+		}
+
+		iterator find(const key_type& x)
+		{
+			return super::find(x);
+		}
+	};
+#else
 	typedef std::map<String, String> AttributeMap;
+#endif
 	typedef std::list<XMLNode*> Children;
 
-	 // access to protected class members for XMLPos anbd XMLReader
+	 // access to protected class members for XMLPos and XMLReader
 	friend struct XMLPos;
 	friend struct XMLReader;
 
@@ -242,9 +287,9 @@ struct XMLNode : public String
 	}
 
 	XMLNode(const XMLNode& other)
-	 :	_content(other._content),
-		_trailing(other._trailing),
-		_attributes(other._attributes)
+	 :	_attributes(other._attributes),
+		_content(other._content),
+		_trailing(other._trailing)
 	{
 		for(Children::const_iterator it=other._children.begin(); it!=other._children.end(); ++it)
 			_children.push_back(new XMLNode(**it));
@@ -278,7 +323,7 @@ struct XMLNode : public String
 		if (found != _attributes.end())
 			return found->second;
 		else
-			return "";
+			return TEXT("");
 	}
 
 	 /// convenient value access in children node
@@ -289,7 +334,7 @@ struct XMLNode : public String
 		if (node)
 			return (*node)[attr_name];
 		else
-			return "";
+			return TEXT("");
 	}
 
 	 /// convenient storage of distinct values in children node
@@ -304,6 +349,43 @@ struct XMLNode : public String
 
 		return (*node)[attr_name];
 	}
+
+#ifdef UNICODE
+	 /// read only access to an attribute
+	String operator[](const char* attr_name) const
+	{
+		AttributeMap::const_iterator found = _attributes.find(attr_name);
+
+		if (found != _attributes.end())
+			return found->second;
+		else
+			return TEXT("");
+	}
+
+	 /// convenient value access in children node
+	String value(const char* name, const char* attr_name) const
+	{
+		XMLNode* node = find_first(name);
+
+		if (node)
+			return (*node)[attr_name];
+		else
+			return TEXT("");
+	}
+
+	 /// convenient storage of distinct values in children node
+	String& value(const char* name, const String& attr_name)
+	{
+		XMLNode* node = find_first(name);
+
+		if (!node) {
+			node = new XMLNode(name);
+			add_child(node);
+		}
+
+		return (*node)[attr_name];
+	}
+#endif
 
 	const Children& get_children() const
 	{
@@ -375,6 +457,30 @@ protected:
 
 		return NULL;
 	}
+
+#ifdef UNICODE
+	XMLNode* find_first(const char* name) const
+	{
+		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
+			if (**it == name)
+				return *it;
+
+		return NULL;
+	}
+
+	template<typename T, typename U>
+	XMLNode* find_first(const char* name, const T& attr_name, const U& attr_value) const
+	{
+		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it) {
+			const XMLNode& node = **it;
+
+			if (node==name && node[attr_name]==attr_value)
+				return *it;
+		}
+
+		return NULL;
+	}
+#endif
 
 	void append_content(const char* s, int l)
 	{
@@ -594,6 +700,46 @@ struct XMLPos
 			(*node)[attr_name] = attr_value;
 		}
 	}
+
+#ifdef UNICODE
+	 /// search for child and go down
+	bool go_down(const char* name)
+	{
+		XMLNode* node = _cur->find_first(name);
+
+		if (node) {
+			go_to(node);
+			return true;
+		} else
+			return false;
+	}
+
+	 /// create node if not already existing and move to it
+	void create(const char* name)
+	{
+		XMLNode* node = _cur->find_first(name);
+
+		if (node)
+			go_to(node);
+		else
+			add_down(new XMLNode(name));
+	}
+
+	 /// search matching child node identified by key name and an attribute value
+	template<typename T, typename U>
+	void create(const char* name, const T& attr_name, const U& attr_value)
+	{
+		XMLNode* node = _cur->find_first(name, attr_name, attr_value);
+
+		if (node)
+			go_to(node);
+		else {
+			XMLNode* node = new XMLNode(name);
+			add_down(node);
+			(*node)[attr_name] = attr_value;
+		}
+	}
+#endif
 
 protected:
 	XMLNode* _root;
