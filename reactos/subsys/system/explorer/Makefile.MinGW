@@ -77,11 +77,14 @@ DELAYIMPORTS = oleaut32 wsock32
 
 all: $(TARGET)
 
-$(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
+$(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) notifyhook.dll
 	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS)) $(addprefix -l,$(DELAYIMPORTS))
 
 explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc res/*.bmp res/*.ico
 	windres $(RCFLAGS) -o $@ $(PROGRAM)_intres.rc
+
+notifyhook.dll: notifyhook/notifyhook.c notifyhook/notifyhook.h
+	$(CC) -D_WIN32_IE=0x0600 -Wall -D_NOTIFYHOOK_IMPL -Os -s notifyhook/notifyhook.c -shared -o $@
 
 clean:
 	rm -f $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)

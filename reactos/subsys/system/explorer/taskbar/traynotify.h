@@ -37,6 +37,8 @@
 
 #define	PM_GETMODULEPATH_CB		(WM_APP+0x21)
 
+#define	ICON_AUTOHIDE_SECONDS	300
+
 
  /// NotifyIconIndex is used for maintaining the order of notification icons.
 struct NotifyIconIndex
@@ -54,7 +56,34 @@ protected:
 	NotifyIconIndex();
 };
 
- /// structure for maintaining informations of one notification icons
+
+enum NOTIFYICONMODE {
+	NIM_AUTO, NIM_SHOW, NIM_HIDE
+};
+
+ /// properties used to identify a notification icon
+struct NotifyIconProps
+{
+	String	_tipText;
+	String	_windowTitle;	// To look at the window title and at the window module path of the notify icon owner window
+	String	_modulePath;	// to identify notification icons is an extension above XP's behaviour.
+};							// (XP seems to store icon image data in the registry instead.)
+
+ /// configuration for the display mode of a notification icon
+struct NotifyIconConfig : public NotifyIconProps
+{
+	NotifyIconConfig() : _mode(NIM_AUTO) {}
+
+	bool	match(const NotifyIconProps& props) const;
+
+	NOTIFYICONMODE	_mode;
+};
+
+ /// list of NotifyIconConfig structures
+typedef list<NotifyIconConfig> NotifyIconCfgList;
+
+
+ /// structure for maintaining informations about one notification icon
 struct NotifyInfo : public NotifyIconIndex
 {
 	NotifyInfo();
@@ -71,6 +100,9 @@ struct NotifyInfo : public NotifyIconIndex
 	UINT	_uCallbackMessage;
 	UINT	_version;
 	String	_tipText;
+
+	NOTIFYICONMODE _mode;
+	DWORD	_lastChange;	// timer tick value of the last change
 };
 
 typedef map<NotifyIconIndex, NotifyInfo> NotifyIconMap;
@@ -126,6 +158,8 @@ protected:
 
 	NotifyIconSet::iterator IconHitTest(const POINT& pos);
 	bool	DetermineHideState(NotifyInfo& entry);
+
+	NotifyIconCfgList _cfg;
 
 	NotifyHook _hook;
 	map<HWND, String> _window_modules;

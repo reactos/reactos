@@ -89,6 +89,9 @@ NotifyInfo::NotifyInfo()
 	_dwState = 0;
 	_uCallbackMessage = 0;
 	_version = 0;
+
+	_mode = NIM_AUTO;
+	_lastChange = GetTickCount();
 }
 
 
@@ -150,6 +153,9 @@ NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 			_tipText.assign(txt, l);
 		}
 
+	///@todo test for real changes
+	_lastChange = GetTickCount();
+
 	return *this;
 }
 
@@ -162,6 +168,46 @@ NotifyArea::NotifyArea(HWND hwnd)
 	_clock_width = 0;
 	_last_icon_count = 0;
 	_show_hidden = false;
+
+	///@todo read from config file -->
+	NotifyIconConfig cfg;
+
+	cfg._tipText = TEXT("FRITZ!fon");
+	cfg._mode = NIM_HIDE;
+	_cfg.push_back(cfg);
+
+	cfg._tipText = TEXT("FRITZ!fax");
+	cfg._mode = NIM_HIDE;
+	_cfg.push_back(cfg);
+
+	cfg._tipText = TEXT("Volume");
+	cfg._mode = NIM_SHOW;
+	_cfg.push_back(cfg);
+
+	cfg._tipText.erase();
+
+	cfg._windowTitle = TEXT("Task Manager");
+	cfg._mode = NIM_SHOW;
+	_cfg.push_back(cfg);
+
+	cfg._windowTitle = TEXT("AntiVir");
+	cfg._mode = NIM_HIDE;
+	_cfg.push_back(cfg);
+
+	cfg._windowTitle = TEXT("Apache");
+	cfg._mode = NIM_HIDE;
+	_cfg.push_back(cfg);
+
+	cfg._windowTitle = TEXT("FRITZ!web");
+	cfg._mode = NIM_HIDE;
+	_cfg.push_back(cfg);
+
+	cfg._windowTitle.erase();
+
+	cfg._modulePath = TEXT("xyz");	//@@
+	cfg._mode = NIM_HIDE;
+	_cfg.push_back(cfg);
+	/// <--
 }
 
 LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
@@ -257,10 +303,8 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		String path;
 		HWND hwnd;
 
-		if (_hook.ModulePathCopyData(lparam, &hwnd, path)) {
+		if (_hook.ModulePathCopyData(lparam, &hwnd, path))
 			_window_modules[hwnd] = path;
-			//@@ -> trigger DetermineHideState()
-		}
 
 		break;}
 
@@ -357,7 +401,7 @@ LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pni
 				entry._idx = ++_next_idx;
 
 #if NOTIFYICON_VERSION>=3	// as of 21.08.2003 missing in MinGW headers
-			if (DetermineHideState(entry))
+			if (DetermineHideState(entry) && entry._mode==NIM_HIDE)
 				entry._dwState |= NIS_HIDDEN;
 #endif
 
@@ -464,13 +508,47 @@ void NotifyArea::TimerTick()
 	bool do_refresh = false;
 
 	 // Look for task icons without valid owner window.
-	 // This is an advanced feature, which is missing in MS Windows.
+	 // This is an extended feature missing in MS Windows.
 	for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it) {
 		const NotifyInfo& entry = *it;
 
 		if (!IsWindow(entry._hWnd))
 			if (_icon_map.erase(entry))	// delete icons without valid owner window
 				++do_refresh;
+	}
+
+	DWORD now = GetTickCount();
+
+	 // handle icon hiding
+	for(NotifyIconMap::iterator it=_icon_map.begin(); it!=_icon_map.end(); ++it) {
+		NotifyInfo& entry = it->second;
+
+		DetermineHideState(entry);
+
+		switch(entry._mode) {
+		  case NIM_HIDE:
+			if (!(entry._dwState & NIS_HIDDEN)) {
+				entry._dwState |= NIS_HIDDEN;
+				++do_refresh;
+			}
+			break;
+
+		  case NIM_SHOW:
+			if (entry._dwState&NIS_HIDDEN) {
+				entry._dwState &= ~NIS_HIDDEN;
+				++do_refresh;
+			}
+			break;
+
+		  case NIM_AUTO:
+			 // automatically hide icons after long periods of inactivity
+			if (!(entry._dwState & NIS_HIDDEN))
+				if (now-entry._lastChange > ICON_AUTOHIDE_SECONDS*1000) {
+					entry._dwState |= NIS_HIDDEN;
+					++do_refresh;
+				}
+			break;
+		}
 	}
 
 	if (do_refresh)
@@ -499,44 +577,56 @@ NotifyIconSet::iterator NotifyArea::IconHitTest(const POINT& pos)
 	return it;
 }
 
+
 #if NOTIFYICON_VERSION>=3	// as of 21.08.2003 missing in MinGW headers
-bool NotifyArea::DetermineHideState(NotifyInfo& entry)
+
+bool NotifyIconConfig::match(const NotifyIconProps& props) const
 {
-	if (entry._tipText == TEXT("FRITZ!fon"))
-		return true;
-
-	if (entry._tipText == TEXT("FRITZ!fax"))
-		return true;
-
-	TCHAR title[MAX_PATH];
-
-	if (GetWindowText(entry._hWnd, title, MAX_PATH)) {
-		if (_tcsstr(title, TEXT("Task Manager")))
-			return false;
-
-		if (_tcsstr(title, TEXT("AntiVir")))
+	if (!_tipText.empty() && !props._tipText.empty())
+		if (props._tipText == _tipText)
 			return true;
 
-		if (_tcsstr(title, TEXT("Apache")))
+	if (!_windowTitle.empty() && !props._windowTitle.empty())
+		if (_tcsstr(props._windowTitle, _windowTitle))
 			return true;
 
-		if (_tcsstr(title, TEXT("FRITZ!web")))
+	if (!_modulePath.empty() && !props._modulePath.empty())
+		if (!_tcsicmp(props._modulePath, _modulePath))
 			return true;
-	}
-
-	const String& modulePath = _window_modules[entry._hWnd];
-
-	 // request module path for new windows (We will get an asynchronous answer by a WM_COPYDATA message.)
-	if (modulePath.empty()) {
-		_hook.GetModulePath(entry._hWnd, _hwnd);
-		return false;
-	}
-
-	if (modulePath == TEXT("xyz"))	//@@
-		return true;
 
 	return false;
 }
+
+bool NotifyArea::DetermineHideState(NotifyInfo& entry)
+{
+	for(NotifyIconCfgList::const_iterator it=_cfg.begin(); it!=_cfg.end(); ++it) {
+		const NotifyIconConfig& cfg = *it;
+
+		NotifyIconProps props;
+
+		props._tipText = entry._tipText;
+
+		TCHAR title[MAX_PATH];
+		if (GetWindowText(entry._hWnd, title, MAX_PATH))
+			props._windowTitle = title;
+
+		const String& modulePath = _window_modules[entry._hWnd];
+
+		 // request module path for new windows (We will get an asynchronous answer by a WM_COPYDATA message.)
+		if (!modulePath.empty())
+			props._modulePath = modulePath;
+		else
+			_hook.GetModulePath(entry._hWnd, _hwnd);
+
+		if (cfg.match(props)) {
+			entry._mode = cfg._mode;
+			return true;
+		}
+	}
+
+	return false;
+}
+
 #endif
 
 
