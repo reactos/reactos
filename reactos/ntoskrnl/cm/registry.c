@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.125 2004/08/15 16:39:00 chorns Exp $
+/* $Id: registry.c,v 1.126 2004/09/13 11:46:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -245,6 +245,9 @@ CmInitializeRegistry(VOID)
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName;
   PKEY_OBJECT RootKey;
+#if 0
+  PSECURITY_CELL RootSecurityCell;
+#endif
   HANDLE RootKeyHandle;
   HANDLE KeyHandle;
   NTSTATUS Status;
@@ -313,6 +316,18 @@ CmInitializeRegistry(VOID)
   Status = RtlCreateUnicodeString(&RootKey->Name, L"Registry");
   assert(NT_SUCCESS(Status));
 
+#if 0
+  Status = CmiAllocateCell(CmiVolatileHive,
+			   0x10, //LONG CellSize,
+			   (PVOID *)&RootSecurityCell,
+			   &RootKey->KeyCell->SecurityKeyOffset);
+  assert(NT_SUCCESS(Status));
+
+  /* Copy the security descriptor */
+
+  CmiVolatileHive->RootSecurityCell = RootSecurityCell;
+#endif
+
   KeInitializeSpinLock(&CmiKeyListLock);
 
   /* Create '\Registry\Machine' key. */
@@ -355,7 +370,7 @@ VOID INIT_FUNCTION
 CmInit2(PCHAR CommandLine)
 {
   ULONG PiceStart = 4;
-  BOOL MiniNT = FALSE;
+  BOOLEAN MiniNT = FALSE;
   PWCHAR SystemBootDevice;
   PWCHAR SystemStartOptions;
   ULONG Position;
@@ -370,9 +385,13 @@ CmInit2(PCHAR CommandLine)
    * Parse the system boot device.
    */
   Position = 0;
-  SystemBootDevice = ExAllocatePool(PagedPool, (strlen(CommandLine) + 1) * sizeof(WCHAR));
+  SystemBootDevice = ExAllocatePool(PagedPool,
+				    (strlen(CommandLine) + 1) * sizeof(WCHAR));
   if (SystemBootDevice == NULL)
+  {
     KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
+  }
+
   while (*CommandLine != 0 && *CommandLine != ' ')
     SystemBootDevice[Position++] = *(CommandLine++);
   SystemBootDevice[Position++] = 0;
@@ -380,15 +399,16 @@ CmInit2(PCHAR CommandLine)
   /*
    * Write the system boot device to registry.
    */
-  Status = RtlWriteRegistryValue(
-    RTL_REGISTRY_ABSOLUTE,
-    L"\\Registry\\Machine\\System\\CurrentControlSet\\Control",
-    L"SystemBootDevice",
-    REG_SZ,
-    SystemBootDevice,
-    Position * sizeof(WCHAR));
+  Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
+				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Control",
+				 L"SystemBootDevice",
+				 REG_SZ,
+				 SystemBootDevice,
+				 Position * sizeof(WCHAR));
   if (!NT_SUCCESS(Status))
+  {
     KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
+  }
 
   /*
    * Parse the system start options.
@@ -419,15 +439,16 @@ CmInit2(PCHAR CommandLine)
   /*
    * Write the system start options to registry.
    */
-  Status = RtlWriteRegistryValue(
-    RTL_REGISTRY_ABSOLUTE,
-    L"\\Registry\\Machine\\System\\CurrentControlSet\\Control",
-    L"SystemStartOptions",
-    REG_SZ,
-    SystemStartOptions,
-    Position * sizeof(WCHAR));
+  Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
+				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Control",
+				 L"SystemStartOptions",
+				 REG_SZ,
+				 SystemStartOptions,
+				 Position * sizeof(WCHAR));
   if (!NT_SUCCESS(Status))
+  {
     KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
+  }
 
   /*
    * Create a CurrentControlSet\Control\MiniNT key that is used
@@ -1032,7 +1053,7 @@ CmShutdownRegistry(VOID)
   PREGISTRY_HIVE Hive;
   PLIST_ENTRY Entry;
 
-  DPRINT1("CmShutdownRegistry() called\n");
+  DPRINT("CmShutdownRegistry() called\n");
 
   /* Stop automatic hive synchronization */
   CmiHiveSyncEnabled = FALSE;
@@ -1073,7 +1094,7 @@ CmShutdownRegistry(VOID)
   ExReleaseResourceLite(&CmiHiveListLock);
   KeLeaveCriticalRegion();
 
-  DPRINT1("CmShutdownRegistry() done\n");
+  DPRINT("CmShutdownRegistry() done\n");
 }
 
 
