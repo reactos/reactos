@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.19 2004/02/01 20:48:06 ekohl Exp $
+/* $Id: critical.c,v 1.20 2004/03/24 23:43:52 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -28,6 +28,27 @@ RtlDeleteCriticalSection(PCRITICAL_SECTION CriticalSection)
    NtClose(CriticalSection->LockSemaphore);
    CriticalSection->LockCount = -1;
 }
+
+/*
+ * @implemented
+ */
+DWORD STDCALL
+RtlSetCriticalSectionSpinCount(
+   LPCRITICAL_SECTION CriticalSection,
+   DWORD SpinCount
+   )
+{
+   
+#ifdef MP
+   DWORD PrevSpinCount = CriticalSection->SpinCount; 
+   CriticalSection->SpinCount = SpinCount;
+   return PrevSpinCount;
+#else
+   return 0;
+#endif
+
+}
+
 
 /*
  * @implemented
@@ -141,7 +162,11 @@ RtlInitializeCriticalSectionAndSpinCount (PCRITICAL_SECTION CriticalSection,
   CriticalSection->LockCount = -1;
   CriticalSection->RecursionCount = 0;
   CriticalSection->OwningThread = (HANDLE)0;
+#ifdef MP  
   CriticalSection->SpinCount = SpinCount;
+#else
+  CriticalSection->SpinCount = 0;
+#endif
 
   return NtCreateSemaphore (&CriticalSection->LockSemaphore,
 			    SEMAPHORE_ALL_ACCESS,
