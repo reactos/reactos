@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.33 2004/11/20 21:16:38 navaraf Exp $
+/* $Id: ppool.c,v 1.34 2004/12/11 00:13:37 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,28 +22,46 @@
 
 #undef assert
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
-#define ASSERT_SIZE(n) assert ( (n) <= MmPagedPoolSize && (n) >= 0 )
-#define ASSERT_PTR(p) assert ( ((size_t)(p)) >= ((size_t)MmPagedPoolBase) && ((size_t)(p)) < ((size_t)((size_t)MmPagedPoolBase+MmPagedPoolSize)) )
+#define ASSERT_SIZE(n) assert ( (n) <= MmPagedPoolSize && (n) > 0 )
+#define IS_PPOOL_PTR(p) ((size_t)(p)) >= ((size_t)MmPagedPoolBase) && ((size_t)(p)) < ((size_t)((size_t)MmPagedPoolBase+MmPagedPoolSize))
+#define ASSERT_PTR(p) assert ( IS_PPOOL_PTR(p) )
 
 // to disable buffer over/under-run detection, set the following macro to 0
+#if !defined(DBG) && !defined(KDBG)
+#define MM_PPOOL_REDZONE_BYTES 0
+#else
 #define MM_PPOOL_REDZONE_BYTES 4
-#define MM_PPOOL_REDZONE_VALUE 0xCD
+#define MM_PPOOL_REDZONE_LOVALUE 0x87
+#define MM_PPOOL_REDZONE_HIVALUE 0xA5
+#define MM_PPOOL_FREEMAGIC (ULONG)(('F'<<0) + ('r'<<8) + ('E'<<16) + ('e'<<24))
+#define MM_PPOOL_USEDMAGIC (ULONG)(('u'<<0) + ('S'<<8) + ('e'<<16) + ('D'<<24))
+#define MM_PPOOL_LASTOWNER_ENTRIES 3
+#endif
 
 typedef struct _MM_PPOOL_FREE_BLOCK_HEADER
 {
+#if MM_PPOOL_REDZONE_BYTES
+   ULONG FreeMagic;
+#endif//MM_PPOOL_REDZONE_BYTES
    ULONG Size;
    struct _MM_PPOOL_FREE_BLOCK_HEADER* NextFree;
+#if MM_PPOOL_REDZONE_BYTES
+   ULONG LastOwnerStack[MM_PPOOL_LASTOWNER_ENTRIES];
+#endif//MM_PPOOL_REDZONE_BYTES
 }
 MM_PPOOL_FREE_BLOCK_HEADER, *PMM_PPOOL_FREE_BLOCK_HEADER;
 
 typedef struct _MM_PPOOL_USED_BLOCK_HEADER
 {
+#if MM_PPOOL_REDZONE_BYTES
+   ULONG UsedMagic;
+#endif//MM_PPOOL_REDZONE_BYTES
    ULONG Size;
 #if MM_PPOOL_REDZONE_BYTES
-
    ULONG UserSize; // how many bytes the user actually asked for...
-   struct _MM_PPOOL_USED_BLOCK_HEADER* NextUsed;
 #endif//MM_PPOOL_REDZONE_BYTES
+   struct _MM_PPOOL_USED_BLOCK_HEADER* NextUsed;
+   ULONG Tag;
 }
 MM_PPOOL_USED_BLOCK_HEADER, *PMM_PPOOL_USED_BLOCK_HEADER;
 
@@ -52,9 +70,7 @@ ULONG MmPagedPoolSize;
 ULONG MmTotalPagedPoolQuota = 0;
 static FAST_MUTEX MmPagedPoolLock;
 static PMM_PPOOL_FREE_BLOCK_HEADER MmPagedPoolFirstFreeBlock;
-#if MM_PPOOL_REDZONE_BYTES
 static PMM_PPOOL_USED_BLOCK_HEADER MmPagedPoolFirstUsedBlock;
-#endif//MM_PPOOL_REDZONE_BYTES
 
 /* FUNCTIONS *****************************************************************/
 
@@ -86,6 +102,12 @@ MmInitializePagedPool(VOID)
    MmPagedPoolFirstFreeBlock->NextFree = NULL;
 
 #if MM_PPOOL_REDZONE_BYTES
+   MmPagedPoolFirstFreeBlock->FreeMagic = MM_PPOOL_FREEMAGIC;
+   {
+      int i;
+      for ( i = 0; i < MM_PPOOL_LASTOWNER_ENTRIES; i++ )
+         MmPagedPoolFirstFreeBlock->LastOwnerStack[i] = 0;
+   }
 
    MmPagedPoolFirstUsedBlock = NULL;
 #endif//MM_PPOOL_REDZONE_BYTES
@@ -102,6 +124,9 @@ static void VerifyPagedPool ( int line )
    while ( p )
    {
       DPRINT ( "  0x%x: %lu bytes (next 0x%x)\n", p, p->Size, p->NextFree );
+#if MM_PPOOL_REDZONE_BYTES
+      ASSERT ( p->FreeMagic == MM_PPOOL_FREEMAGIC );
+#endif//MM_PPOOL_REDZONE_BYTES
       ASSERT_PTR(p);
       ASSERT_SIZE(p->Size);
       count++;
@@ -114,34 +139,84 @@ static void VerifyPagedPool ( int line )
 #define VerifyPagedPool()
 #endif
 
+BOOLEAN STDCALL
+KeRosPrintAddress(PVOID address);
+
+#if !MM_PPOOL_REDZONE_BYTES
+#define MmpRedZoneCheck(pUsed,Addr,file,line)
+#else//MM_PPOOL_REDZONE_BYTES
+static VOID FASTCALL
+MmpRedZoneCheck ( PMM_PPOOL_USED_BLOCK_HEADER pUsed, PUCHAR Addr, const char* file, int line )
+{
+   int i;
+   PUCHAR AddrEnd = Addr + pUsed->UserSize;
+   BOOL bLow = TRUE;
+   BOOL bHigh = TRUE;
+
+   ASSERT_PTR(Addr);
+   if ( pUsed->UsedMagic == MM_PPOOL_FREEMAGIC )
+   {
+      PMM_PPOOL_FREE_BLOCK_HEADER pFree = (PMM_PPOOL_FREE_BLOCK_HEADER)pUsed;
+      DPRINT1 ( "Double-free detected for Block 0x%x (kthread=0x%x)!\n", Addr, KeGetCurrentThread() );
+      DbgPrint ( "First Free Stack Frames:" );
+      for ( i = 0; i < MM_PPOOL_LASTOWNER_ENTRIES; i++ )
+	  {
+		  if ( pFree->LastOwnerStack[i] != 0xDEADBEEF )
+		  {
+			DbgPrint(" ");
+			if (!KeRosPrintAddress ((PVOID)pFree->LastOwnerStack[i]) )
+			{
+				DbgPrint("<%X>", pFree->LastOwnerStack[i] );
+			}
+		  }
+	  }
+      DbgPrint ( "\n" );
+      KEBUGCHECK(BAD_POOL_HEADER);
+   }
+   if ( pUsed->UsedMagic != MM_PPOOL_USEDMAGIC )
+   {
+      DPRINT1 ( "Bad magic in Block 0x%x!\n", Addr );
+      KEBUGCHECK(BAD_POOL_HEADER);
+   }
+   ASSERT_SIZE(pUsed->Size);
+   ASSERT_SIZE(pUsed->UserSize);
+   ASSERT_PTR(AddrEnd);
+   Addr -= MM_PPOOL_REDZONE_BYTES; // this is to simplify indexing below...
+   for ( i = 0; i < MM_PPOOL_REDZONE_BYTES && bLow && bHigh; i++ )
+   {
+      bLow = bLow && ( Addr[i] == MM_PPOOL_REDZONE_LOVALUE );
+      bHigh = bHigh && ( AddrEnd[i] == MM_PPOOL_REDZONE_HIVALUE );
+   }
+   if ( !bLow || !bHigh )
+   {
+      const char* violation = "High and Low-side";
+      if ( bHigh ) // high is okay, so it was just low failed
+         violation = "Low-side";
+      else if ( bLow ) // low side is okay, so it was just high failed
+         violation = "High-side";
+      DbgPrint("%s(%i): %s redzone violation detected for paged pool address 0x%x\n",
+               file, line, violation, Addr );
+      DbgPrint ( "UsedMagic 0x%x, LoZone ", pUsed->UsedMagic );
+      for ( i = 0; i < MM_PPOOL_REDZONE_BYTES; i++ )
+         DbgPrint ( "%02x", Addr[i] );
+      DbgPrint ( ", HiZone " );
+      for ( i = 0; i < MM_PPOOL_REDZONE_BYTES; i++ )
+         DbgPrint ( "%02x", AddrEnd[i] );
+      DbgPrint ( "\n" );
+      KEBUGCHECK(BAD_POOL_HEADER);
+   }
+}
+#endif//MM_PPOOL_REDZONE_BYTES
+
 VOID STDCALL
 MmDbgPagedPoolRedZoneCheck ( const char* file, int line )
 {
 #if MM_PPOOL_REDZONE_BYTES
    PMM_PPOOL_USED_BLOCK_HEADER pUsed = MmPagedPoolFirstUsedBlock;
-   int i;
-   BOOL bLow = TRUE;
-   BOOL bHigh = TRUE;
 
    while ( pUsed )
    {
-      PUCHAR Addr = (PUCHAR)block_to_address(pUsed);
-      for ( i = 0; i < MM_PPOOL_REDZONE_BYTES; i++ )
-      {
-         bLow = bLow && ( *(Addr-i-1) == MM_PPOOL_REDZONE_VALUE );
-         bHigh = bHigh && ( *(Addr+pUsed->UserSize+i) == MM_PPOOL_REDZONE_VALUE );
-      }
-      if ( !bLow || !bHigh )
-      {
-         const char* violation = "High and Low-side";
-         if ( bHigh ) // high is okay, so it was just low failed
-            violation = "Low-side";
-         else if ( bLow ) // low side is okay, so it was just high failed
-            violation = "High-side";
-         DbgPrint("%s(%i): %s redzone violation detected for paged pool address 0x%x\n",
-                  file, line, violation, Addr );
-         KEBUGCHECK(0);
-      }
+      MmpRedZoneCheck ( pUsed, block_to_address(pUsed), __FILE__, __LINE__ );
       pUsed = pUsed->NextUsed;
    }
 #endif//MM_PPOOL_REDZONE_BYTES
@@ -270,6 +345,9 @@ ExAllocatePagedPoolWithTag (IN POOL_TYPE PoolType,
                (PMM_PPOOL_FREE_BLOCK_HEADER)address_to_block(BestAlignedAddr);
             assert ( BestAlignedAddr > Addr );
             NewFreeBlock->Size = (char*)Addr + BestBlock->Size - (char*)BestAlignedAddr;
+#if MM_PPOOL_REDZONE_BYTES
+            NewFreeBlock->FreeMagic = MM_PPOOL_FREEMAGIC;
+#endif//MM_PPOOL_REDZONE_BYTES
             ASSERT_SIZE(NewFreeBlock->Size);
             BestBlock->Size = (size_t)NewFreeBlock - (size_t)Addr;
             ASSERT_SIZE(BestBlock->Size);
@@ -344,6 +422,9 @@ ExAllocatePagedPoolWithTag (IN POOL_TYPE PoolType,
       NextBlock = (PMM_PPOOL_FREE_BLOCK_HEADER)((char*)BestBlock + BlockSize);
       //DPRINT(".");
       NextBlock->Size = NewSize;
+#if MM_PPOOL_REDZONE_BYTES
+      NextBlock->FreeMagic = MM_PPOOL_FREEMAGIC;
+#endif//MM_PPOOL_REDZONE_BYTES
       ASSERT_SIZE ( NextBlock->Size );
       //DPRINT(".");
       NextBlock->NextFree = BestBlock->NextFree;
@@ -372,6 +453,9 @@ ExAllocatePagedPoolWithTag (IN POOL_TYPE PoolType,
       NewBlock = (PMM_PPOOL_USED_BLOCK_HEADER)BestBlock;
       //DPRINT(".");
       NewBlock->Size = BlockSize;
+#if MM_PPOOL_REDZONE_BYTES
+      NewBlock->UsedMagic = MM_PPOOL_USEDMAGIC;
+#endif//MM_PPOOL_REDZONE_BYTES
       ASSERT_SIZE ( NewBlock->Size );
       //DPRINT(".\n");
    }
@@ -397,14 +481,17 @@ ExAllocatePagedPoolWithTag (IN POOL_TYPE PoolType,
        */
       NewBlock = (PMM_PPOOL_USED_BLOCK_HEADER)BestBlock;
       NewBlock->Size = NewSize;
+#if MM_PPOOL_REDZONE_BYTES
+      NewBlock->UsedMagic = MM_PPOOL_USEDMAGIC;
+#endif//MM_PPOOL_REDZONE_BYTES
       ASSERT_SIZE ( NewBlock->Size );
    }
 
-#if MM_PPOOL_REDZONE_BYTES
    // now add the block to the used block list
    NewBlock->NextUsed = MmPagedPoolFirstUsedBlock;
    MmPagedPoolFirstUsedBlock = NewBlock;
-#endif//MM_PPOOL_REDZONE_BYTES
+
+   NewBlock->Tag = Tag;
 
    VerifyPagedPool();
 
@@ -421,17 +508,9 @@ ExAllocatePagedPoolWithTag (IN POOL_TYPE PoolType,
       PUCHAR Addr = (PUCHAR)BlockAddress;
       //DbgPrint ( "writing buffer-overrun detection bytes" );
       memset ( Addr - MM_PPOOL_REDZONE_BYTES,
-               MM_PPOOL_REDZONE_VALUE, MM_PPOOL_REDZONE_BYTES );
-      memset ( Addr + NewBlock->UserSize, MM_PPOOL_REDZONE_VALUE,
+               MM_PPOOL_REDZONE_LOVALUE, MM_PPOOL_REDZONE_BYTES );
+      memset ( Addr + NewBlock->UserSize, MM_PPOOL_REDZONE_HIVALUE,
                MM_PPOOL_REDZONE_BYTES );
-      /*for ( i = 0; i < MM_PPOOL_REDZONE_BYTES; i++ )
-      {
-        //DbgPrint(".");
-        *(Addr-i-1) = 0xCD;
-        //DbgPrint("o");
-        *(Addr+NewBlock->UserSize+i) = 0xCD;
-      }*/
-      //DbgPrint ( "done!\n" );
    }
 
 #endif//MM_PPOOL_REDZONE_BYTES
@@ -452,33 +531,14 @@ ExFreePagedPool(IN PVOID Block)
 
    ASSERT_IRQL(APC_LEVEL);
 
-#if MM_PPOOL_REDZONE_BYTES
-   // write out buffer-overrun detection bytes
-   {
-      int i;
-      PUCHAR Addr = (PUCHAR)Block;
-      //DbgPrint ( "checking buffer-overrun detection bytes..." );
-      for ( i = 0; i < MM_PPOOL_REDZONE_BYTES; i++ )
-      {
-         if (*(Addr-i-1) != MM_PPOOL_REDZONE_VALUE)
-         {
-            DPRINT1("Attempt to free memory %#08x. Redzone underrun!\n", Block);
-         }
-         if (*(Addr+UsedBlock->UserSize+i) != MM_PPOOL_REDZONE_VALUE)
-         {
-            DPRINT1("Attempt to free memory %#08x. Redzone overrun!\n", Block);
-         }
+   MmpRedZoneCheck ( UsedBlock, Block, __FILE__, __LINE__ );
 
-         assert ( *(Addr-i-1) == MM_PPOOL_REDZONE_VALUE );
-         assert ( *(Addr+UsedBlock->UserSize+i) == MM_PPOOL_REDZONE_VALUE );
-      }
-      //DbgPrint ( "done!\n" );
-   }
-#endif//MM_PPOOL_REDZONE_BYTES
+#if MM_PPOOL_REDZONE_BYTES
+   memset ( Block, 0xCD, UsedBlock->UserSize );
+#endif
 
    ExAcquireFastMutex(&MmPagedPoolLock);
 
-#if MM_PPOOL_REDZONE_BYTES
    // remove from used list...
    {
       PMM_PPOOL_USED_BLOCK_HEADER pPrev = MmPagedPoolFirstUsedBlock;
@@ -497,12 +557,38 @@ ExFreePagedPool(IN PVOID Block)
          pPrev->NextUsed = UsedBlock->NextUsed;
       }
    }
-#endif//MM_PPOOL_REDZONE_BYTES
 
    /*
     * Begin setting up the newly freed block's header.
     */
    FreeBlock->Size = UsedSize;
+#if MM_PPOOL_REDZONE_BYTES
+   FreeBlock->FreeMagic = MM_PPOOL_FREEMAGIC;
+   {
+      PULONG Frame;
+      int i;
+#if defined __GNUC__
+      __asm__("mov %%ebp, %%ebx" : "=b" (Frame) : );
+#elif defined(_MSC_VER)
+      __asm mov [Frame], ebp
+#endif
+      //DbgPrint ( "Stack Frames for Free Block 0x%x:", Block );
+      Frame = (PULONG)Frame[0]; // step out of ExFreePagedPool
+      for ( i = 0; i < MM_PPOOL_LASTOWNER_ENTRIES; i++ )
+      {
+         if ( Frame == 0 || (ULONG)Frame == 0xDEADBEEF )
+            FreeBlock->LastOwnerStack[i] = 0xDEADBEEF;
+         else
+         {
+            //DbgPrint ( " 0x%x", Frame[1] );
+            FreeBlock->LastOwnerStack[i] = Frame[1];
+            Frame = (PULONG)Frame[0];
+         }
+      }
+      //DbgPrint ( "\n" );
+      //KeRosDumpStackFrames ( NULL, 4 );
+   }
+#endif//MM_PPOOL_REDZONE_BYTES
    ASSERT_SIZE ( FreeBlock->Size );
 
    /*
@@ -533,6 +619,7 @@ ExFreePagedPool(IN PVOID Block)
    /*
     * If the next block is immediately adjacent to the newly freed one then
     * merge them.
+    * PLEASE DO NOT WIPE OUT 'MAGIC' OR 'LASTOWNER' DATA FOR MERGED FREE BLOCKS
     */
    if (NextBlock != NULL &&
          ((char*)FreeBlock + FreeBlock->Size) == (char*)NextBlock)
@@ -550,6 +637,7 @@ ExFreePagedPool(IN PVOID Block)
    /*
     * If the previous block is adjacent to the newly freed one then
     * merge them.
+    * PLEASE DO NOT WIPE OUT 'MAGIC' OR 'LASTOWNER' DATA FOR MERGED FREE BLOCKS
     */
    if (PreviousBlock != NULL &&
          ((char*)PreviousBlock + PreviousBlock->Size) == (char*)FreeBlock)
@@ -562,6 +650,42 @@ ExFreePagedPool(IN PVOID Block)
    VerifyPagedPool();
 
    ExReleaseFastMutex(&MmPagedPoolLock);
+}
+
+VOID STDCALL
+ExRosDumpPagedPoolByTag ( ULONG Tag )
+{
+	PMM_PPOOL_USED_BLOCK_HEADER UsedBlock = MmPagedPoolFirstUsedBlock;
+	int count = 0;
+	char tag[5];
+
+	// TODO FIXME - should we validate params or ASSERT_IRQL?
+	*(ULONG*)&tag[0] = Tag;
+	tag[4] = 0;
+	DbgPrint ( "PagedPool Dump by tag '%s'\n", tag );
+	DbgPrint ( "  -BLOCK-- --SIZE--\n" );
+	while ( IS_PPOOL_PTR(UsedBlock) )
+	{
+		if ( UsedBlock->Tag == Tag )
+		{
+			DbgPrint ( "  %08X %08X\n", UsedBlock, UsedBlock->Size );
+			++count;
+		}
+		UsedBlock = UsedBlock->NextUsed;
+	}
+	if ( UsedBlock && !IS_PPOOL_PTR(UsedBlock) )
+	{
+		DPRINT1 ( "!!NextUsed took me to lala land: 0x%08X\n", UsedBlock );
+	}
+	DbgPrint ( "Entries found for tag '%s': %i\n", tag, count );
+}
+
+ULONG STDCALL
+ExRosQueryPagedPoolTag ( PVOID Block )
+{
+	PMM_PPOOL_USED_BLOCK_HEADER UsedBlock = address_to_block(Block);
+	// TODO FIXME - should we validate params or ASSERT_IRQL?
+	return UsedBlock->Tag;
 }
 
 /* EOF */

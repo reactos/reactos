@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.35 2004/10/01 20:51:29 arty Exp $
+/* $Id: pool.c,v 1.36 2004/12/11 00:13:37 royce Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -23,6 +23,9 @@ extern MM_STATS MmStats;
 /* GLOBALS *****************************************************************/
 
 #define TAG_NONE (ULONG)(('N'<<0) + ('o'<<8) + ('n'<<16) + ('e'<<24))
+
+ULONG STDCALL
+ExRosQueryPagedPoolTag ( PVOID Block );
 
 /* FUNCTIONS ***************************************************************/
 
@@ -334,6 +337,22 @@ MiRaisePoolQuota(
         *NewMaxQuota = CurrentMaxQuota + 65536;
         return TRUE;
     }
+}
+
+ULONG STDCALL
+ExRosQueryPoolTag ( PVOID Block )
+{
+   ASSERT_IRQL(DISPATCH_LEVEL);
+
+   if (Block >= MmPagedPoolBase && (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
+   {
+      return ExRosQueryPagedPoolTag(Block);
+   }
+   else
+   {
+      UNIMPLEMENTED;
+      return 0;
+   }
 }
 
 /* EOF */

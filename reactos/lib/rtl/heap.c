@@ -937,7 +937,30 @@ int HEAP_IsInsideHeap(
 }
 
 
+void DumpStackFrames ( PULONG Frame, ULONG FrameCount )
+{
+	ULONG i=0;
 
+	DbgPrint("Frames: ");
+	if ( !Frame )
+	{
+#if defined __GNUC__
+		__asm__("mov %%ebp, %%ebx" : "=b" (Frame) : );
+#elif defined(_MSC_VER)
+		__asm mov [Frame], ebp
+#endif
+		Frame = (PULONG)Frame[0]; // step out of DumpStackFrames
+	}
+	while ( Frame != 0 && (ULONG)Frame != 0xDEADBEEF && (ULONG)Frame != 0xcdcdcdcd && (ULONG)Frame != 0xcccccccc && i++ < FrameCount )
+	{
+		DbgPrint("<%X>", (PVOID)Frame[1]);
+		if (Frame[1] == 0xdeadbeef)
+		    break;
+		Frame = (PULONG)Frame[0];
+		DbgPrint(" ");
+	}
+	DbgPrint("\n");
+}
 
 /***********************************************************************
  *           HEAP_IsRealArena  [Internal]
@@ -985,11 +1008,13 @@ static BOOLEAN HEAP_IsRealArena(
          {
             DPRINT("Heap %p: block %p is not inside heap\n",
                    heap, block );
+			DumpStackFrames(NULL,10);
          }
          else if (WARN_ON(heap))
          {
             DPRINT1("Heap %p: block %p is not inside heap\n",
                     heap, block );
+			DumpStackFrames(NULL,10);
          }
          ret = FALSE;
       }
