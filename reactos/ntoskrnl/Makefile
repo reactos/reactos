@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.115 2004/02/24 23:51:38 dwelch Exp $
+# $Id: Makefile,v 1.116 2004/03/02 22:36:17 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -69,9 +69,8 @@ TARGETNAME := ntoskrnl
 
 OBJECTS_PATH = objects
 
-all: \
-	$(OBJECTS_PATH) \
-	bugcodes.rc \
+all: $(OBJECTS_PATH) \
+	bugcodes.rc $(PATH_TO_TOP)/include/reactos/bugcodes.h \
 	$(TARGETNAME).nostrip.exe \
 	$(TARGETNAME).exe \
 	$(TARGETNAME).sym \
@@ -376,6 +375,7 @@ TAG_OBJECTS := $(join $(dir $(DEP_OBJECTS)),$(patsubst %.o, .%.TAG, $(notdir $(D
 # Include automatic dependancy tracking
 #
 DEP_EXCLUDE_FILTER := ex/napi.% nt/zw.%
+GENERATED_HEADER_FILES := $(PATH_TO_TOP)/include/reactos/bugcodes.h
 include $(PATH_TO_TOP)/tools/depend.mk
 
 
@@ -682,7 +682,7 @@ $(TARGETNAME).o: $(OBJECTS)
 		-o $(TARGETNAME).o \
 		$(OBJECTS)
 
-bugcodes.rc: ntoskrnl.mc
+$(PATH_TO_TOP)/include/reactos/bugcodes.h bugcodes.rc: ntoskrnl.mc
 	$(MC) \
 		-H $(PATH_TO_TOP)/include/reactos/bugcodes.h \
 		-o bugcodes.rc \
@@ -704,7 +704,7 @@ clean:
               lpc/*.o kd/*.o $(TARGETNAME).o junk.tmp base.tmp temp.exp \
               $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym ntoskrnl.map \
 	          $(TARGETNAME).coff bugcodes.rc msg?????.bin $(DEP_FILES) \
-	      $(TAG_OBJECTS)
+	      $(TAG_OBJECTS) $(PATH_TO_TOP)/include/reactos/bugcodes.h
 
 
 .PHONY: clean

@@ -19,20 +19,20 @@ else
 DEPENDS_PATH := $(PATH_TO_TOP)/tools
 endif
 
-.%.d: %.c $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX)
+.%.d: %.c $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
 	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
 
-.%.d: %.cc $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX)
+.%.d: %.cc $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
 	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
 
-.%.d: %.cpp $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX)
+.%.d: %.cpp $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
 	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
 
-.%.d: %.s  $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX)
+.%.d: %.s  $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
 	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
 
-.%.d: %.S  $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX)
+.%.d: %.S  $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
 	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
 
-.%.d: %.asm $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX)
+.%.d: %.asm $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
 	$(NASM_CMD) $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
