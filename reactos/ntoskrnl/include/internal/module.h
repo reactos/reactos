@@ -3,7 +3,6 @@
 #define __MODULE_H
 
 #include <ddk/ntddk.h>
-#include <internal/config.h>
 #include <pe.h>
 
 #ifdef KDBG

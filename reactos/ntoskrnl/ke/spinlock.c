@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.8 2001/04/17 23:39:25 dwelch Exp $
+/* $Id: spinlock.c,v 1.9 2001/04/26 03:58:32 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,7 +17,6 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/config.h>
 
 #include <internal/debug.h>
 

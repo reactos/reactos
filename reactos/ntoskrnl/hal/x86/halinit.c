@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.19 2001/04/16 02:02:04 dwelch Exp $
+/* $Id: halinit.c,v 1.20 2001/04/26 03:58:31 phreak Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -12,7 +12,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/config.h>
 #include <internal/hal/hal.h>
 #include <internal/ntoskrnl.h>
 

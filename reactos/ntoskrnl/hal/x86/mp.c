@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.13 2001/04/20 12:42:23 chorns Exp $
+/* $Id: mp.c,v 1.14 2001/04/26 03:58:31 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,7 +15,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/config.h>
 
 #define NDEBUG
 #include <internal/debug.h>

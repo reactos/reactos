@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.93 2001/04/17 23:39:25 dwelch Exp $
+/* $Id: main.c,v 1.94 2001/04/26 03:58:32 phreak Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -29,7 +29,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/config.h>
 #include <internal/ntoskrnl.h>
 #include <reactos/resource.h>
 #include <internal/mm.h>
@@ -43,7 +42,6 @@
 #include <internal/v86m.h>
 #include <internal/kd.h>
 #include <internal/trap.h>
-#include <internal/config.h>
 #include "../dbg/kdb.h"
 
 #define NDEBUG
