@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib16bpp.c,v 1.13 2003/12/15 23:33:45 fireball Exp $ */
+/* $Id: dib16bpp.c,v 1.14 2003/12/18 18:09:48 fireball Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -351,13 +351,10 @@ DIB_16BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 typedef unsigned short PIXEL;
 
-// DON'T FIX BUGS IN THIS FUNCTION YET
-// BUT EMAIL INFO ABOUT IT TO aleksey at studiocerebral.com
-// THIS IS WORK IN PROGRESS !!
-
 /* 16-bit HiColor (565 format) */
-inline unsigned short average(unsigned short a, unsigned short b)
+inline PIXEL average(PIXEL a, PIXEL b)
 {
+// This one doesn't work
 /*
   if (a == b) {
     return a;
@@ -365,13 +362,33 @@ inline unsigned short average(unsigned short a, unsigned short b)
     unsigned short mask = ~ (((a | b) & 0x0410) << 1);
     return ((a & mask) + (b & mask)) >> 1;
   }*/ /* if */
-  return a; // FIXME: Temp hack to remove "PCB-effect" from the image
+
+// This one should be correct, but it's too long
+/*  
+  unsigned char r1, g1, b1, r2, g2, b2, rr, gr, br;
+  unsigned short res;
+  
+  r1 = (a & 0xF800) >> 11;
+  g1 = (a & 0x7E0) >> 5;
+  b1 = (a & 0x1F);
+  
+  r2 = (b & 0xF800) >> 11;
+  g2 = (b & 0x7E0) >> 5;
+  b2 = (b & 0x1F);
+  
+  rr = (r1+r2) / 2;
+  gr = (g1+g2) / 2;
+  br = (b1+b2) / 2;
+  
+  res = (rr << 11) + (gr << 5) + br;
+
+  return res;
+*/
+  return a; // FIXME: Depend on SetStretchMode
 }
 
-// DON'T FIX BUGS IN THIS FUNCTION YET
-// BUT EMAIL INFO ABOUT IT TO aleksey at studiocerebral.com
-// THIS IS WORK IN PROGRESS !!
-void ScaleLineAvg16(unsigned short *Target, unsigned short *Source, int SrcWidth, int TgtWidth)
+//NOTE: If you change something here, please do the same in other dibXXbpp.c files!
+void ScaleLineAvg16(PIXEL *Target, PIXEL *Source, int SrcWidth, int TgtWidth)
 {
   int NumPixels = TgtWidth;
   int IntPart = SrcWidth / TgtWidth;
@@ -379,7 +396,7 @@ void ScaleLineAvg16(unsigned short *Target, unsigned short *Source, int SrcWidth
   int Mid = TgtWidth / 2;
   int E = 0;
   int skip;
-  WORD p;
+  PIXEL p;
 
   skip = (TgtWidth < SrcWidth) ? 0 : (TgtWidth / (2*SrcWidth) + 1);
   NumPixels -= skip;
@@ -400,15 +417,12 @@ void ScaleLineAvg16(unsigned short *Target, unsigned short *Source, int SrcWidth
     *Target++ = *Source;
 }
 
-// DON'T FIX BUGS IN THIS FUNCTION YET
-// BUT EMAIL INFO ABOUT IT TO aleksey at studiocerebral.com
-// THIS IS WORK IN PROGRESS !!
+//NOTE: If you change something here, please do the same in other dibXXbpp.c files!
 void ScaleRectAvg(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
                   int TgtWidth, int TgtHeight, int srcPitch, int dstPitch)
 {
   int NumPixels = TgtHeight;
   int IntPart = (SrcHeight / TgtHeight) * (SrcWidth+1);
-  //int IntPart = (SrcHeight / TgtHeight) * SrcWidth;
   int FractPart = SrcHeight % TgtHeight;
   int Mid = TgtHeight / 2;
   int E = 0;
@@ -449,7 +463,7 @@ void ScaleRectAvg(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
     
     memcpy(Target, ScanLine, TgtWidth*sizeof(PIXEL));
     Target = (PIXEL *)((BYTE *)Target + dstPitch);
-    Source += IntPart; // <-----
+    Source += IntPart;
     E += FractPart;
     if (E >= TgtHeight) {
       E -= TgtHeight;
@@ -468,9 +482,7 @@ void ScaleRectAvg(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
   ExFreePool(ScanLineAhead);
 }
 
-// DON'T FIX BUGS IN THIS FUNCTION YET
-// BUT EMAIL INFO ABOUT IT TO aleksey at studiocerebral.com
-// THIS IS WORK IN PROGRESS !!
+//NOTE: If you change something here, please do the same in other dibXXbpp.c files!
 BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             SURFGDI *DestGDI, SURFGDI *SourceGDI,
                             RECTL* DestRect, RECTL *SourceRect,
@@ -500,32 +512,7 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       case 16:
 	    SourceLine = SourceSurf->pvScan0 + (SourceRect->top * SourceSurf->lDelta) + 2 * SourceRect->left;
 	    DestLine = DestSurf->pvScan0 + (DestRect->top * DestSurf->lDelta) + 2 * DestRect->left;
-	    /*
-	    y=0;
-	    for (j = SourceRect->top; j < SourceRect->bottom; j++)
-        {
-           dday = -1000;
 
-           while (dday < 0)
-           {
-              dday += izoom;
-              x=0;
-		      DestBits = DestLine;
-		      SourceBits = SourceLine;
-	          for (i = SourceRect->left; i < SourceRect->right; i++)
-		      {
-		         *((WORD *)DestBits) = (WORD)XLATEOBJ_iXlate(ColorTranslation, *((WORD *)SourceBits));
-		         SourceBits += 2;
-		         DestBits += 2;
-		         x++;
-              }
-                     
-		      //SourceLine += SourceSurf->lDelta;
-		      DestLine += DestSurf->lDelta;
-		      lines++;
-           }
-           SourceLine += SourceSurf->lDelta;
-        }*/
         ScaleRectAvg((PIXEL *)DestLine, (PIXEL *)SourceLine,
            SourceRect->right-SourceRect->left, SourceRect->bottom-SourceRect->top, 
            DestRect->right-DestRect->left, DestRect->bottom-DestRect->top, SourceSurf->lDelta, DestSurf->lDelta);
@@ -540,7 +527,7 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       break;
       
       default:
-      //DbgPrint("DIB_16BPP_StretchBlt: Unhandled Source BPP: %u\n", SourceGDI->BitsPerPixel);
+         DbgPrint("DIB_16BPP_StretchBlt: Unhandled Source BPP: %u\n", SourceGDI->BitsPerPixel);
       return FALSE;
     }
 
