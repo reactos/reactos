@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.23 2002/05/26 20:20:39 ekohl Exp $
+/* $Id: atapi.c,v 1.24 2002/05/28 09:34:18 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -1159,6 +1159,26 @@ AtapiPolledRead(IN ULONG CommandPort,
   UCHAR Status;
   UCHAR Control;
 
+//#if 0
+  /* Wait for BUSY to clear */
+  for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
+    {
+      Status = IDEReadStatus(CommandPort);
+      if (!(Status & IDE_SR_BUSY))
+        {
+          break;
+        }
+      ScsiPortStallExecution(10);
+    }
+  DPRINT("status=%02x\n", Status);
+  DPRINT("waited %ld usecs for busy to clear\n", Retries * 10);
+  if (RetryCount >= IDE_MAX_BUSY_RETRIES)
+    {
+      DPRINT("Drive is BUSY for too long\n");
+      return(IDE_ER_ABRT);
+    }
+//#endif
+
   /*  Write Drive/Head to select drive  */
   IDEWriteDriveHead(CommandPort, IDE_DH_FIXED | DrvHead);
   ScsiPortStallExecution(500);
@@ -1168,6 +1188,7 @@ AtapiPolledRead(IN ULONG CommandPort,
   IDEWriteDriveControl(ControlPort, Control | IDE_DC_nIEN);
   ScsiPortStallExecution(500);
 
+#if 0
   /*  Wait for STATUS.BUSY and STATUS.DRQ to clear  */
   for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
     {
@@ -1182,6 +1203,7 @@ AtapiPolledRead(IN ULONG CommandPort,
     {
       return IDE_ER_ABRT;
     }
+#endif
 
   /*  Issue command to drive  */
   if (DrvHead & IDE_DH_LBA)
@@ -1347,7 +1369,7 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
   DeviceExtension->DataBuffer = (PUSHORT)Srb->DataBuffer;
   DeviceExtension->CurrentSrb = Srb;
 
-  /*  wait for BUSY to clear  */
+  /* Wait for BUSY to clear */
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
     {
       Status = IDEReadStatus(DeviceExtension->CommandPortBase);
@@ -1363,31 +1385,17 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
     {
       DPRINT("Drive is BUSY for too long\n");
       return(SRB_STATUS_BUSY);
-#if 0
-      if (++ControllerExtension->Retries > IDE_MAX_CMD_RETRIES)
-        {
-          DbgPrint ("Max Retries on Drive reset reached, returning failure\n");
-          Irp = ControllerExtension->CurrentIrp;
-          Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
-          Irp->IoStatus.Information = 0;
-
-          return FALSE;
-        }
-      else
-        {
-          DPRINT ("Beginning drive reset sequence\n");
-          IDEBeginControllerReset(ControllerExtension);
-
-          return TRUE;
-        }
-#endif
     }
 
-  /*  Select the desired drive  */
+  /* Select the desired drive */
   IDEWriteDriveHead(DeviceExtension->CommandPortBase,
 		    IDE_DH_FIXED | (Srb->TargetId ? IDE_DH_DRV1 : 0));
 
-  /*  wait for BUSY to clear and DRDY to assert */
+  /* Wait a little while */
+  ScsiPortStallExecution(50);
+
+#if 0
+  /* Wait for BUSY to clear and DRDY to assert */
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
     {
       Status = IDEReadStatus(DeviceExtension->CommandPortBase);
@@ -1402,25 +1410,8 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
     {
       DPRINT("Drive is BUSY for too long after drive select\n");
       return(SRB_STATUS_BUSY);
-#if 0
-      if (ControllerExtension->Retries++ > IDE_MAX_CMD_RETRIES)
-	{
-          DbgPrint ("Max Retries on Drive reset reached, returning failure\n");
-          Irp = ControllerExtension->CurrentIrp;
-          Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
-          Irp->IoStatus.Information = 0;
-
-          return FALSE;
-	}
-      else
-        {
-          DPRINT("Beginning drive reset sequence\n");
-          IDEBeginControllerReset(ControllerExtension);
-
-          return TRUE;
-        }
-#endif
     }
+#endif
 
   if (Srb->DataTransferLength < 0x10000)
     {
@@ -1442,7 +1433,6 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 
   /* Issue command to drive */
   IDEWriteCommand(DeviceExtension->CommandPortBase, 0xA0); /* Packet command */
-
 
   /* Wait for DRQ to assert */
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
@@ -1845,6 +1835,8 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   IDEWriteDriveHead(DeviceExtension->CommandPortBase,
 		    IDE_DH_FIXED | DrvHead);
 
+  ScsiPortStallExecution(10);
+#if 0
   /*  wait for BUSY to clear and DRDY to assert */
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
     {
@@ -1879,6 +1871,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
         }
 #endif
     }
+#endif
 
   /* Indicate expecting an interrupt. */
   DeviceExtension->ExpectingInterrupt = TRUE;
