@@ -1,4 +1,4 @@
-; $Id: win32k.edf,v 1.1 2000/03/08 22:39:04 ea Exp $
+; $Id: win32k.edf,v 1.2 2000/03/17 21:56:43 jfilby Exp $
 ;
 ; win32k.def
 ;
@@ -42,7 +42,7 @@ EngDeletePath
 EngDeleteSemaphore
 EngDeleteSurface
 EngDeleteWnd
-EngDeviceIoControl
+EngDeviceIoControl=EngDeviceIoControl@28
 EngEnumForms
 EngEraseSurface
 EngFillPath
