@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.50 2003/05/17 13:45:04 hbirr Exp $
+/* $Id: page.c,v 1.51 2003/06/01 19:50:04 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -115,10 +115,10 @@ ProtectToPTE(ULONG flProtect)
 #define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (4 * 1024 * 1024))
 
 #define ADDR_TO_PDE(v) (PULONG)(PAGEDIRECTORY_MAP + \
-                                (((ULONG)v / (1024 * 1024))&(~0x3)))
+                                ((((ULONG)(v)) / (1024 * 1024))&(~0x3)))
 #define ADDR_TO_PTE(v) (PULONG)(PAGETABLE_MAP + ((((ULONG)v / 1024))&(~0x3)))
 
-#define ADDR_TO_PDE_OFFSET(v) (((ULONG)v / (4 * 1024 * 1024)))
+#define ADDR_TO_PDE_OFFSET(v) ((((ULONG)(v)) / (4 * 1024 * 1024)))
 
 NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
 {
@@ -1247,13 +1247,18 @@ MmGetPhysicalAddress(PVOID vaddr)
 
 
 VOID
-MmUpdatePageDir(PULONG LocalPageDir, PVOID Address)
+MmUpdateStackPageDir(PULONG LocalPageDir, PKTHREAD PThread)
 {
-  unsigned Entry = ADDR_TO_PDE_OFFSET(Address);
+  unsigned EntryBase = ADDR_TO_PDE_OFFSET(PThread->StackLimit);
+  unsigned EntryTop = ADDR_TO_PDE_OFFSET(PThread->InitialStack - PAGE_SIZE);
 
-  if (0 == LocalPageDir[Entry])
+  if (0 == LocalPageDir[EntryBase])
     {
-      LocalPageDir[Entry] = MmGlobalKernelPageDirectory[Entry];
+      LocalPageDir[EntryBase] = MmGlobalKernelPageDirectory[EntryBase];
+    }
+  if (EntryBase != EntryTop && 0 == LocalPageDir[EntryTop])
+    {
+      LocalPageDir[EntryTop] = MmGlobalKernelPageDirectory[EntryTop];
     }
 }
 
