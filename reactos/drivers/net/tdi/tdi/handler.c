@@ -1,8 +1,8 @@
-/* $Id: handler.c,v 1.5 2003/07/10 19:54:13 chorns Exp $
+/* $Id: handler.c,v 1.6 2004/01/28 20:55:50 ekohl Exp $
  *
  * DESCRIPTION: Default TDI event handlers.
  */
-#include <ntos.h>
+#include <ddk/ntddk.h>
 #include <net/tdi.h>
 
 

@@ -1,7 +1,7 @@
-/* $Id: dereg.c,v 1.6 2003/11/14 17:13:29 weiden Exp $
+/* $Id: dereg.c,v 1.7 2004/01/28 20:55:50 ekohl Exp $
  *
  */
-#include <ntos.h>
+#include <ddk/ntddk.h>
 #include <net/tdi.h>
 
 /* De-/Register Action IDs for TdiDeRegister */

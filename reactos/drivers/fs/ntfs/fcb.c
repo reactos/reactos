@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.9 2003/08/07 11:47:32 silverblade Exp $
+/* $Id: fcb.c,v 1.10 2004/01/28 20:53:06 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -28,13 +28,13 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntos/kefuncs.h>
+
+#include "ntfs.h"
 
 //#define NDEBUG
 #include <debug.h>
 
-#include <ntos.h>
-
-#include "ntfs.h"
 
 
 /* MACROS *******************************************************************/

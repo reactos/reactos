@@ -13,6 +13,6 @@
 #ifndef __INCLUDE_ACPI_TYPES_H
 #define __INCLUDE_ACPI_TYPES_H
 
-#include <ntos.h>
+#include <ddk/ntddk.h>
 
 #endif /* __INCLUDE_ACPI_TYPES_H */

@@ -1,7 +1,7 @@
-/* $Id: string.c,v 1.4 2003/07/10 19:54:13 chorns Exp $
+/* $Id: string.c,v 1.5 2004/01/28 20:55:18 ekohl Exp $
  *
  */
-#include <ntos.h>
+#include <ddk/ntddk.h>
 
 /*
  * @unimplemented

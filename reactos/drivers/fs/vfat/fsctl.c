@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.26 2003/11/17 02:12:49 hyperion Exp $
+/* $Id: fsctl.c,v 1.27 2004/01/28 20:53:46 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -27,10 +27,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntos/kefuncs.h>
 #include <rosrtl/string.h>
 #include <wchar.h>
-
-#include <ntos.h>
 
 #define NDEBUG
 #include <debug.h>

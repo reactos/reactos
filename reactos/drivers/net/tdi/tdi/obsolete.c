@@ -1,8 +1,8 @@
-/* $Id: obsolete.c,v 1.6 2003/07/10 19:54:13 chorns Exp $
+/* $Id: obsolete.c,v 1.7 2004/01/28 20:55:50 ekohl Exp $
  *
  */
 
-#include <ntos.h>
+#include <ddk/ntddk.h>
 
 /*
  * @unimplemented

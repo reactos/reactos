@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.42 2004/01/11 17:31:14 gvg Exp $
+/* $Id: blue.c,v 1.43 2004/01/28 20:51:44 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -11,7 +11,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <roskrnl.h>
+#include <ddk/ntddk.h>
+#include <ntos/halfuncs.h>
 #include <ddk/ntddblue.h>
 #include <rosrtl/string.h>
 #include <string.h>

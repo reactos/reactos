@@ -13,7 +13,6 @@
 #include <net/tdikrnl.h>
 #include <net/tdiinfo.h>
 #include <afd/shared.h>
-#include <ntos.h>
 #include <debug.h>
 
 /* Forward declarations */

@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.36 2003/11/17 02:12:49 hyperion Exp $
+/* $Id: fcb.c,v 1.37 2004/01/28 20:53:46 ekohl Exp $
  *
  *
  * FILE:             drivers/fs/vfat/fcb.c
@@ -13,9 +13,9 @@
 /*  -------------------------------------------------------  INCLUDES  */
 
 #include <ddk/ntddk.h>
+#include <ntos/kefuncs.h>
 #include <wchar.h>
 #include <limits.h>
-#include <ntos.h>
 #include <rosrtl/string.h>
 
 #define NDEBUG

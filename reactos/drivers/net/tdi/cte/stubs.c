@@ -1,7 +1,7 @@
-/* $Id: stubs.c,v 1.5 2003/07/10 19:54:13 chorns Exp $
+/* $Id: stubs.c,v 1.6 2004/01/28 20:55:18 ekohl Exp $
  *
  */
-#include <ntos.h>
+#include <ddk/ntddk.h>
 
 
 /*
