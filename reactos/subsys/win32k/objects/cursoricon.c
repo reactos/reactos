@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.30 2003/12/09 19:34:33 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.31 2003/12/09 19:38:47 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -250,6 +250,7 @@ IntFindExistingCurIconObject(PWINSTATION_OBJECT WinStaObject, HMODULE hModule,
       Object = (PCURICON_OBJECT)Current->Handles[i].ObjectBody;
       if(Object && (Object->hModule == hModule) && (Object->hRsrc == hRsrc))
       {
+        ObmReferenceObject(Object);
         ExReleaseFastMutex(&HandleTable->ListLock);
         return Object;
       }
@@ -373,7 +374,6 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
       }
     }
     
-    IntReleaseCurIconObject(CurIconObject);
     ObDereferenceObject(WinStaObject);
     return Ret;
   }
