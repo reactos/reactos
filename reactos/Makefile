@@ -34,8 +34,8 @@ COMPONENTS = ntoskrnl
 HALS = halx86/up halx86/mp
 
 # Bus drivers
-# acpi isapnp pci
-BUS = acpi isapnp pci
+# acpi isapnp pci serenum
+BUS = acpi isapnp pci serenum
 
 # Filesystem libraries
 # vfatlib

@@ -469,6 +469,19 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","ImagePath",0x00020000,"system
 HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","Type",0x00010001,0x00000001
 
+; Serial port enumerator
+HKLM,"SYSTEM\CurrentControlSet\Services\serenum","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\serenum","Group",0x00000000,"PNP Filter"
+HKLM,"SYSTEM\CurrentControlSet\Services\serenum","ImagePath",0x00020000,"system32\drivers\serenum.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\serenum","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\serenum","Type",0x00010001,0x00000001
+;hard coded values
+HKLM,"SYSTEM\CurrentControlSet\Services\serenum\Enum","0",0x00000000,"ACPI\PNP0501"
+HKLM,"SYSTEM\CurrentControlSet\Services\serenum\Enum","Count",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\serenum\Enum","NextInstance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\1","UpperFilters",0x00010000,"serenum"
+HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\2","UpperFilters",0x00010000,"serenum"
+
 ; SB16 driver
 HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Group",0x00000000,"Base"
 HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","ServiceType",0x00010001,0x00000001
