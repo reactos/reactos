@@ -29,6 +29,8 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
 void _amsg_exit (int errnum);
+/* Index to TLS */
+DWORD MSVCRT_tls_index;
 
 /********************************************************************/
 
@@ -50,10 +52,11 @@ MSVCRT_thread_data *msvcrt_get_thread_data(void)
     if (!(ptr = TlsGetValue( MSVCRT_tls_index )))
     {
         if (!(ptr = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ptr) )))
-            //MSVCRT__amsg_exit( _RT_THREAD ); ROS
-		_amsg_exit( _RT_THREAD ); //ROS
-//        if (!TlsSetValue( MSVCRT_tls_index, ptr )) MSVCRT__amsg_exit( _RT_THREAD );
-        if (!TlsSetValue( MSVCRT_tls_index, ptr )) _amsg_exit( _RT_THREAD );
+		    _amsg_exit( _RT_THREAD );
+        if (!TlsSetValue( MSVCRT_tls_index, ptr )) 
+			_amsg_exit( _RT_THREAD );
+        if (!TlsSetValue( MSVCRT_tls_index, ptr )) 
+			_amsg_exit( _RT_THREAD );
     }
     SetLastError( err );
     return ptr;
@@ -102,47 +105,3 @@ unsigned long _beginthread(
   return (unsigned long)CreateThread(NULL, stack_size, _beginthread_trampoline,
 				     trampoline, 0, NULL);
 }
-#if 0 /* __REACTOS__ */
-/*********************************************************************
- *		_beginthreadex (MSVCRT.@)
- */
-unsigned long _beginthreadex(
-  void *security,          /* [in] Security descriptor for new thread; must be NULL for Windows 9x applications */
-  unsigned int stack_size, /* [in] Stack size for new thread or 0 */
-  _beginthreadex_start_routine_t start_address, /* [in] Start address of routine that begins execution of new thread */
-  void *arglist,           /* [in] Argument list to be passed to new thread or NULL */
-  unsigned int initflag,   /* [in] Initial state of new thread (0 for running or CREATE_SUSPEND for suspended) */
-  unsigned int *thrdaddr)  /* [out] Points to a 32-bit variable that receives the thread identifier */
-{
-  TRACE("(%p, %d, %p, %p, %d, %p)\n", security, stack_size, start_address, arglist, initflag, thrdaddr);
-
-  /* FIXME */
-  return (unsigned long)CreateThread(security, stack_size,
-				     (LPTHREAD_START_ROUTINE) start_address,
-				     arglist, initflag, (LPDWORD) thrdaddr);
-}
-
-/*********************************************************************
- *		_endthread (MSVCRT.@)
- */
-void _endthread(void)
-{
-  TRACE("(void)\n");
-
-  /* FIXME */
-  ExitThread(0);
-}
-
-/*********************************************************************
- *		_endthreadex (MSVCRT.@)
- */
-void _endthreadex(
-  unsigned int retval) /* [in] Thread exit code */
-{
-  TRACE("(%d)\n", retval);
-
-  /* FIXME */
-  ExitThread(retval);
-}
-
-#endif /* __REACTOS__ */

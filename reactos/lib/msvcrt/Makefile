@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.49 2004/12/03 23:37:41 blight Exp $
+# $Id: Makefile,v 1.50 2004/12/09 06:10:05 sedwards Exp $
 
 PATH_TO_TOP = ../..
 
@@ -273,6 +273,7 @@ MISC_OBJECTS = \
 	misc/getargs.o \
 	misc/initterm.o \
 	misc/purecall.o \
+	misc/stubs.o \
 	misc/tls.o
 
 PROCESS_OBJECTS = \
@@ -459,7 +460,6 @@ WINE_OBJECTS = \
 	wine/cppexcept.o \
 	wine/heap.o \
 	wine/lock.o \
-	wine/main.o \
 	wine/thread.o
 
 WSTRING_OBJECTS = \

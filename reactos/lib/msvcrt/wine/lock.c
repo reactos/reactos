@@ -16,27 +16,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include "precomp.h"
 
-#include <stdarg.h>
+#define NDEBUG
+#include <msvcrt/msvcrtdbg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wine/winternl.h"
-#include "wine/exception.h"
-#include "winnt.h"
-#include "excpt.h"
-#include "wine/debug.h"
-#include "msvcrt/malloc.h"
-#include "msvcrt/stdlib.h"
-
-#include "msvcrt.h"
-#include "cppexcept.h"
 #include "mtdll.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
 typedef struct
 {
@@ -74,7 +59,7 @@ void msvcrt_init_mt_locks(void)
 {
   int i;
 
-  TRACE( "initializing mtlocks\n" );
+  DPRINT( "initializing mtlocks\n" );
 
   /* Initialize the table */
   for( i=0; i < _TOTAL_LOCKS; i++ )
@@ -97,7 +82,7 @@ void msvcrt_free_mt_locks(void)
 {
   int i;
 
-  TRACE( ": uninitializing all mtlocks\n" );
+  DPRINT(": uninitializing all mtlocks\n" );
 
   /* Uninitialize the table */
   for( i=0; i < _TOTAL_LOCKS; i++ )
@@ -115,7 +100,7 @@ void msvcrt_free_mt_locks(void)
  */
 void _lock( int locknum )
 {
-  TRACE( "(%d)\n", locknum );
+  DPRINT( "(%d)\n", locknum );
 
   /* If the lock doesn't exist yet, create it */
   if( lock_table[ locknum ].bInit == FALSE )
@@ -126,7 +111,7 @@ void _lock( int locknum )
     /* Check again if we've got a bit of a race on lock creation */
     if( lock_table[ locknum ].bInit == FALSE )
     {
-      TRACE( ": creating lock #%d\n", locknum );
+      DPRINT( ": creating lock #%d\n", locknum );
       msvcrt_initialize_mlock( locknum );
     }
 
@@ -144,7 +129,7 @@ void _lock( int locknum )
  */
 void _unlock( int locknum )
 {
-  TRACE( "(%d)\n", locknum );
+  DPRINT( "(%d)\n", locknum );
 
   LeaveCriticalSection( &(lock_table[ locknum ].crit) );
 }
