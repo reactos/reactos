@@ -10,10 +10,9 @@
 
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
+#include <string.h>
 #include <roscfg.h>
 #include <internal/ob.h>
-#include <limits.h>
-#include <string.h>
 #include <internal/se.h>
 #include <internal/registry.h>
 
@@ -167,7 +166,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
   if (KeyObject->RegistryHive == KeyObject->ParentKey->RegistryHive)
     {
-      KeyObject->KeyCell->ParentKeyOffset = KeyObject->ParentKey->BlockOffset;
+      KeyObject->KeyCell->ParentKeyOffset = KeyObject->ParentKey->KeyCellOffset;
       KeyObject->KeyCell->SecurityKeyOffset = KeyObject->ParentKey->KeyCell->SecurityKeyOffset;
     }
   else
@@ -276,7 +275,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   PKEY_BASIC_INFORMATION  BasicInformation;
   PKEY_NODE_INFORMATION  NodeInformation;
   PKEY_FULL_INFORMATION  FullInformation;
-  PDATA_CELL ClassData;
+  PDATA_CELL ClassCell;
   ULONG NameSize;
   NTSTATUS Status;
 
@@ -354,7 +353,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	  return(STATUS_NO_MORE_ENTRIES);
 	}
 
-      HashTableBlock = CmiGetBlock(RegistryHive, KeyCell->HashTableOffset, NULL);
+      HashTableBlock = CmiGetCell (RegistryHive, KeyCell->HashTableOffset, NULL);
       if (HashTableBlock == NULL)
 	{
 	  DPRINT("CmiGetBlock() failed\n");
@@ -458,12 +457,12 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 
 	    if (SubKeyCell->ClassSize != 0)
 	      {
-		ClassData=CmiGetBlock(KeyObject->RegistryHive,
-				      SubKeyCell->ClassNameOffset,
-				      NULL);
-		wcsncpy(NodeInformation->Name + SubKeyCell->NameSize,
-			(PWCHAR)ClassData->Data,
-			SubKeyCell->ClassSize);
+		ClassCell = CmiGetCell (KeyObject->RegistryHive,
+					SubKeyCell->ClassNameOffset,
+					NULL);
+		RtlCopyMemory (NodeInformation->Name + SubKeyCell->NameSize,
+			       ClassCell->Data,
+			       SubKeyCell->ClassSize);
 	      }
 	  }
 	break;
@@ -497,12 +496,12 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	      CmiGetMaxValueDataLength(RegistryHive, SubKeyCell);
 	    if (SubKeyCell->ClassSize != 0)
 	      {
-		ClassData = CmiGetBlock(KeyObject->RegistryHive,
+		ClassCell = CmiGetCell (KeyObject->RegistryHive,
 					SubKeyCell->ClassNameOffset,
 					NULL);
-		wcsncpy(FullInformation->Class,
-			(PWCHAR)ClassData->Data,
-			SubKeyCell->ClassSize);
+		RtlCopyMemory (FullInformation->Class,
+			       ClassCell->Data,
+			       SubKeyCell->ClassSize);
 	      }
 	  }
 	break;
@@ -622,7 +621,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
 
         case KeyValuePartialInformation:
           *ResultLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 
-            (ValueCell->DataSize & LONG_MAX);
+            (ValueCell->DataSize & REG_DATA_SIZE_MASK);
           if (Length < *ResultLength)
             {
               Status = STATUS_BUFFER_OVERFLOW;
@@ -633,21 +632,20 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
                 KeyValueInformation;
               ValuePartialInformation->TitleIndex = 0;
               ValuePartialInformation->Type = ValueCell->DataType;
-              ValuePartialInformation->DataLength = ValueCell->DataSize & LONG_MAX;
-              if(ValueCell->DataSize >0)
+              ValuePartialInformation->DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
+              if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET))
               {
-                DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL);
+                DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
                 RtlCopyMemory(ValuePartialInformation->Data, 
                   DataCell->Data,
-                  ValueCell->DataSize & LONG_MAX);
+                  ValueCell->DataSize & REG_DATA_SIZE_MASK);
               }
               else
               {
                 RtlCopyMemory(ValuePartialInformation->Data, 
                   &ValueCell->DataOffset, 
-                  ValueCell->DataSize & LONG_MAX);
+                  ValueCell->DataSize & REG_DATA_SIZE_MASK);
               }
-              DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL);
             }
           break;
 
@@ -658,7 +656,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
 	      NameSize *= sizeof(WCHAR);
 	    }
           *ResultLength = sizeof(KEY_VALUE_FULL_INFORMATION) + 
-             NameSize + (ValueCell->DataSize & LONG_MAX);
+             NameSize + (ValueCell->DataSize & REG_DATA_SIZE_MASK);
           if (Length < *ResultLength)
             {
               Status = STATUS_BUFFER_OVERFLOW;
@@ -687,21 +685,21 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
                 ValueFullInformation->NameLength;
               ValueFullInformation->DataOffset =
                 (ValueFullInformation->DataOffset + 3) & 0xfffffffc;
-              ValueFullInformation->DataLength = ValueCell->DataSize & LONG_MAX;
-              if (ValueCell->DataSize > 0)
+              ValueFullInformation->DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
+              if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET))
                 {
-                  DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL);
+                  DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
                   RtlCopyMemory((PCHAR) ValueFullInformation
                     + ValueFullInformation->DataOffset,
                     DataCell->Data,
-                    ValueCell->DataSize & LONG_MAX);
+                    ValueCell->DataSize & REG_DATA_SIZE_MASK);
                 }
               else
                 {
                   RtlCopyMemory((PCHAR) ValueFullInformation
                     + ValueFullInformation->DataOffset,
                     &ValueCell->DataOffset,
-                    ValueCell->DataSize & LONG_MAX);
+                    ValueCell->DataSize & REG_DATA_SIZE_MASK);
                 }
             }
           break;
@@ -839,7 +837,7 @@ NtQueryKey(IN HANDLE KeyHandle,
   PKEY_NODE_INFORMATION NodeInformation;
   PKEY_FULL_INFORMATION FullInformation;
   PREGISTRY_HIVE RegistryHive;
-  PDATA_CELL ClassData;
+  PDATA_CELL ClassCell;
   PKEY_OBJECT KeyObject;
   PKEY_CELL KeyCell;
   NTSTATUS Status;
@@ -944,12 +942,12 @@ NtQueryKey(IN HANDLE KeyHandle,
 
 	    if (KeyCell->ClassSize != 0)
 	      {
-		ClassData = CmiGetBlock(KeyObject->RegistryHive,
+		ClassCell = CmiGetCell (KeyObject->RegistryHive,
 					KeyCell->ClassNameOffset,
 					NULL);
-		wcsncpy(NodeInformation->Name + KeyObject->Name.Length,
-			(PWCHAR)ClassData->Data,
-			KeyCell->ClassSize);
+		RtlCopyMemory (NodeInformation->Name + KeyObject->Name.Length,
+			       ClassCell->Data,
+			       KeyCell->ClassSize);
 	      }
 	  }
 	break;
@@ -982,12 +980,12 @@ NtQueryKey(IN HANDLE KeyHandle,
 	      CmiGetMaxValueDataLength(RegistryHive, KeyCell);
 	    if (KeyCell->ClassSize != 0)
 	      {
-		ClassData=CmiGetBlock(KeyObject->RegistryHive,
-				      KeyCell->ClassNameOffset,
-				      NULL);
-		wcsncpy(FullInformation->Class,
-			(PWCHAR)ClassData->Data,
-			KeyCell->ClassSize);
+		ClassCell = CmiGetCell (KeyObject->RegistryHive,
+					KeyCell->ClassNameOffset,
+					NULL);
+		RtlCopyMemory (FullInformation->Class,
+			       ClassCell->Data,
+			       KeyCell->ClassSize);
 	      }
 	  }
 	break;
@@ -1100,7 +1098,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 
         case KeyValuePartialInformation:
           *ResultLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION)
-            + (ValueCell->DataSize & LONG_MAX);
+            + (ValueCell->DataSize & REG_DATA_SIZE_MASK);
           if (Length < *ResultLength)
             {
               Status = STATUS_BUFFER_TOO_SMALL;
@@ -1111,19 +1109,19 @@ NtQueryValueKey(IN HANDLE KeyHandle,
                 KeyValueInformation;
               ValuePartialInformation->TitleIndex = 0;
               ValuePartialInformation->Type = ValueCell->DataType;
-              ValuePartialInformation->DataLength = ValueCell->DataSize & LONG_MAX;
-              if (ValueCell->DataSize > 0)
+              ValuePartialInformation->DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
+              if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET))
                 {
-                  DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL);
+                  DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
                   RtlCopyMemory(ValuePartialInformation->Data,
                     DataCell->Data,
-                    ValueCell->DataSize & LONG_MAX);
+                    ValueCell->DataSize & REG_DATA_SIZE_MASK);
                 }
               else
                 {
                   RtlCopyMemory(ValuePartialInformation->Data,
                     &ValueCell->DataOffset,
-                    ValueCell->DataSize & LONG_MAX);
+                    ValueCell->DataSize & REG_DATA_SIZE_MASK);
                 }
             }
           break;
@@ -1135,7 +1133,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 	      NameSize *= sizeof(WCHAR);
 	    }
           *ResultLength = sizeof(KEY_VALUE_FULL_INFORMATION) + 
-            NameSize + (ValueCell->DataSize & LONG_MAX);
+            NameSize + (ValueCell->DataSize & REG_DATA_SIZE_MASK);
           if (Length < *ResultLength)
             {
               Status = STATUS_BUFFER_TOO_SMALL;
@@ -1164,21 +1162,21 @@ NtQueryValueKey(IN HANDLE KeyHandle,
                 ValueFullInformation->NameLength;
               ValueFullInformation->DataOffset =
                 (ValueFullInformation->DataOffset + 3) & 0xfffffffc;
-              ValueFullInformation->DataLength = ValueCell->DataSize & LONG_MAX;
-              if (ValueCell->DataSize > 0)
+              ValueFullInformation->DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
+              if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET))
                 {
-                  DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL);
+                  DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
                   RtlCopyMemory((PCHAR) ValueFullInformation
                                 + ValueFullInformation->DataOffset,
                                 DataCell->Data,
-                                ValueCell->DataSize & LONG_MAX);
+                                ValueCell->DataSize & REG_DATA_SIZE_MASK);
                 }
               else
                 {
                   RtlCopyMemory((PCHAR) ValueFullInformation
                                 + ValueFullInformation->DataOffset,
                                 &ValueCell->DataOffset,
-                  ValueCell->DataSize & LONG_MAX);
+                  ValueCell->DataSize & REG_DATA_SIZE_MASK);
                 }
             }
           break;
@@ -1212,7 +1210,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
   PREGISTRY_HIVE  RegistryHive;
   PKEY_CELL  KeyCell;
   PVALUE_CELL  ValueCell;
-  BLOCK_OFFSET VBOffset;
+  BLOCK_OFFSET ValueCellOffset;
   PDATA_CELL DataCell;
   PDATA_CELL NewDataCell;
   PHBIN pBin;
@@ -1247,7 +1245,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
 			      KeyCell,
 			      ValueName,
 			      &ValueCell,
-			      &VBOffset);
+			      &ValueCellOffset);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Value not found. Status 0x%X\n", Status);
@@ -1264,10 +1262,10 @@ NtSetValueKey(IN HANDLE KeyHandle,
 				KeyCell,
 				ValueName,
 				&ValueCell,
-				&VBOffset);
+				&ValueCellOffset);
       if (NT_SUCCESS(Status))
 	{
-	  CmiMarkBlockDirty(RegistryHive, VBOffset);
+	  CmiMarkBlockDirty(RegistryHive, ValueCellOffset);
 	}
     }
 
@@ -1284,26 +1282,28 @@ NtSetValueKey(IN HANDLE KeyHandle,
   DPRINT("ValueCell %p\n", ValueCell);
   DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
 
-  if (DataSize <= 4)
+  if (DataSize <= sizeof(BLOCK_OFFSET))
     {
-      /* If datasize <= 4 then write in valueblock directly */
+      /* If data size <= sizeof(BLOCK_OFFSET) then store data in the data offset */
       DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
-      if ((ValueCell->DataSize >= 0) &&
-	  (DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL)))
+      if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET) &&
+	  (ValueCell->DataSize & REG_DATA_SIZE_MASK) != 0)
 	{
-	  CmiDestroyBlock(RegistryHive, DataCell, ValueCell->DataOffset);
+	  DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
+	  CmiDestroyCell(RegistryHive, DataCell, ValueCell->DataOffset);
 	}
 
       RtlCopyMemory(&ValueCell->DataOffset, Data, DataSize);
-      ValueCell->DataSize = DataSize | 0x80000000;
+      ValueCell->DataSize = DataSize | REG_DATA_IN_OFFSET;
       ValueCell->DataType = Type;
       RtlMoveMemory(&ValueCell->DataOffset, Data, DataSize);
-      CmiMarkBlockDirty(RegistryHive, VBOffset);
+      CmiMarkBlockDirty(RegistryHive, ValueCellOffset);
     }
-  else if (DataSize <= (ULONG) (ValueCell->DataSize & 0x7fffffff))
+  else if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET) &&
+	   (DataSize <= (ValueCell->DataSize & REG_DATA_SIZE_MASK)))
     {
       /* If new data size is <= current then overwrite current data */
-      DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset,&pBin);
+      DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset,&pBin);
       RtlZeroMemory(DataCell->Data, ValueCell->DataSize);
       RtlCopyMemory(DataCell->Data, Data, DataSize);
       ValueCell->DataSize = DataSize;
@@ -1326,18 +1326,19 @@ NtSetValueKey(IN HANDLE KeyHandle,
 
       DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
 
-      if ((ValueCell->DataSize >= 0) &&
-	  (DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL)))
+      if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET) &&
+	  (ValueCell->DataSize & REG_DATA_SIZE_MASK) != 0)
 	{
-	  CmiDestroyBlock(RegistryHive, DataCell, ValueCell->DataOffset);
+	  DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
+	  CmiDestroyCell(RegistryHive, DataCell, ValueCell->DataOffset);
 	  ValueCell->DataSize = 0;
 	  ValueCell->DataType = 0;
-	  ValueCell->DataOffset = 0xffffffff;
+	  ValueCell->DataOffset = (BLOCK_OFFSET)-1;
 	}
 
-      Status = CmiAllocateBlock(RegistryHive,
+      Status = CmiAllocateCell (RegistryHive,
+				sizeof(CELL_HEADER) + DataSize,
 				(PVOID *)&NewDataCell,
-				DataSize,
 				&NewOffset);
       if (!NT_SUCCESS(Status))
 	{
@@ -1350,10 +1351,11 @@ NtSetValueKey(IN HANDLE KeyHandle,
 	}
 
       RtlCopyMemory(&NewDataCell->Data[0], Data, DataSize);
-      ValueCell->DataSize = DataSize;
+      ValueCell->DataSize = DataSize & REG_DATA_SIZE_MASK;
       ValueCell->DataType = Type;
       ValueCell->DataOffset = NewOffset;
       CmiMarkBlockDirty(RegistryHive, ValueCell->DataOffset);
+      CmiMarkBlockDirty(RegistryHive, ValueCellOffset);
     }
 
   /* Mark link key */
@@ -1361,11 +1363,11 @@ NtSetValueKey(IN HANDLE KeyHandle,
       (Type == REG_LINK))
     {
       KeyCell->Flags |= REG_KEY_LINK_CELL;
-      CmiMarkBlockDirty(RegistryHive, KeyObject->BlockOffset);
+      CmiMarkBlockDirty(RegistryHive, KeyObject->KeyCellOffset);
     }
 
   /* Update time of heap */
-  if (!IsNoFileHive(RegistryHive) && CmiGetBlock(RegistryHive, VBOffset, &pBin))
+  if (!IsNoFileHive(RegistryHive) && CmiGetCell (RegistryHive, ValueCellOffset, &pBin))
     {
       NtQuerySystemTime(&pBin->DateModified);
     }
@@ -1407,7 +1409,7 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
 
   Status = CmiDeleteValueFromKey(KeyObject->RegistryHive,
 				 KeyObject->KeyCell,
-				 KeyObject->BlockOffset,
+				 KeyObject->KeyCellOffset,
 				 ValueName);
 
   /* Release hive lock */
@@ -1632,38 +1634,38 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
 
       BufferLength = (BufferLength + 3) & 0xfffffffc;
 
-      if (BufferLength + (ValueCell->DataSize & LONG_MAX) <= *Length)
+      if (BufferLength + (ValueCell->DataSize & REG_DATA_SIZE_MASK) <= *Length)
 	{
 	  DataPtr = (PUCHAR)(((ULONG)DataPtr + 3) & 0xfffffffc);
 
 	  ValueList[i].Type = ValueCell->DataType;
-	  ValueList[i].DataLength = ValueCell->DataSize & LONG_MAX;
+	  ValueList[i].DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
 	  ValueList[i].DataOffset = (ULONG) DataPtr - (ULONG) Buffer;
 
-	  if (ValueCell->DataSize > 0)
+	  if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET))
 	    {
-	      DataCell = CmiGetBlock(RegistryHive,
+	      DataCell = CmiGetCell (RegistryHive,
 				     ValueCell->DataOffset,
 				     NULL);
 	      RtlCopyMemory(DataPtr,
 			    DataCell->Data,
-			    ValueCell->DataSize & LONG_MAX);
+			    ValueCell->DataSize & REG_DATA_SIZE_MASK);
 	    }
 	  else
 	    {
 	      RtlCopyMemory(DataPtr,
 			    &ValueCell->DataOffset,
-			    ValueCell->DataSize & LONG_MAX);
+			    ValueCell->DataSize & REG_DATA_SIZE_MASK);
 	    }
 
-	  DataPtr += ValueCell->DataSize & LONG_MAX;
+	  DataPtr += ValueCell->DataSize & REG_DATA_SIZE_MASK;
 	}
       else
 	{
 	  Status = STATUS_BUFFER_TOO_SMALL;
 	}
 
-      BufferLength +=  ValueCell->DataSize & LONG_MAX;
+      BufferLength +=  ValueCell->DataSize & REG_DATA_SIZE_MASK;
     }
 
   if (NT_SUCCESS(Status))

@@ -7,10 +7,9 @@
 */
 
 #include <ddk/ntddk.h>
+#include <string.h>
 #include <roscfg.h>
 #include <internal/ob.h>
-#include <limits.h>
-#include <string.h>
 #include <internal/registry.h>
 #include <ntos/minmax.h>
 #include <reactos/bugcodes.h>
@@ -53,7 +52,7 @@ CmiCreateDefaultHiveHeader(PHIVE_HEADER Header)
   Header->Unused5 = 0;
   Header->Unused6 = 1;
   Header->Unused7 = 1;
-  Header->RootKeyCell = 0;
+  Header->RootKeyOffset = (BLOCK_OFFSET)-1;
   Header->BlockSize = REG_BLOCK_SIZE;
   Header->Unused6 = 1;
   Header->Checksum = 0;
@@ -85,7 +84,7 @@ CmiCreateDefaultRootKeyCell(PKEY_CELL RootKeyCell)
   RootKeyCell->NumberOfSubKeys = 0;
   RootKeyCell->HashTableOffset = -1;
   RootKeyCell->NumberOfValues = 0;
-  RootKeyCell->ValuesOffset = -1;
+  RootKeyCell->ValueListOffset = -1;
   RootKeyCell->SecurityKeyOffset = 0;
   RootKeyCell->ClassNameOffset = -1;
   RootKeyCell->NameSize = 0;
@@ -385,7 +384,7 @@ CmiCreateNewRegFile(HANDLE FileHandle)
   BinCell->BlockOffset = 0;
 
   /* Offset to root key block */
-  HiveHeader->RootKeyCell = REG_HBIN_DATA_OFFSET;
+  HiveHeader->RootKeyOffset = REG_HBIN_DATA_OFFSET;
 
   /* The rest of the block is free */
   FreeCell->CellSize = REG_BLOCK_SIZE - (REG_HBIN_DATA_OFFSET + sizeof(KEY_CELL));
@@ -1089,7 +1088,7 @@ CmiCreateVolatileHive(PREGISTRY_HIVE *RegistryHive)
     }
 
   CmiCreateDefaultRootKeyCell (RootKeyCell);
-  Hive->HiveHeader->RootKeyCell = (BLOCK_OFFSET)RootKeyCell;
+  Hive->HiveHeader->RootKeyOffset = (BLOCK_OFFSET)RootKeyCell;
 
   ExInitializeResourceLite (&Hive->HiveResource);
 
@@ -1195,7 +1194,7 @@ CmiCreateTempHive(PREGISTRY_HIVE *RegistryHive)
   BinCell->BlockOffset = 0;
 
   /* Offset to root key block */
-  Hive->HiveHeader->RootKeyCell = -1;
+  Hive->HiveHeader->RootKeyOffset = (BLOCK_OFFSET)-1;
 
   /* The rest of the block is free */
   FreeCell->CellSize = REG_BLOCK_SIZE - REG_HBIN_DATA_OFFSET;
@@ -2014,8 +2013,8 @@ CmiGetMaxNameLength(PKEY_OBJECT KeyObject)
   VERIFY_KEY_CELL(KeyCell);
 
   MaxName = 0;
-  HashBlock = CmiGetBlock(KeyObject->RegistryHive, 
-                          KeyCell->HashTableOffset, 
+  HashBlock = CmiGetCell (KeyObject->RegistryHive,
+			  KeyCell->HashTableOffset,
 			  NULL);
   if (HashBlock == NULL)
     {
@@ -2027,9 +2026,9 @@ CmiGetMaxNameLength(PKEY_OBJECT KeyObject)
         {
           if (HashBlock->Table[i].KeyOffset != 0)
 	    {
-	      CurSubKeyCell = CmiGetBlock(KeyObject->RegistryHive,
-				          HashBlock->Table[i].KeyOffset,
-				          NULL);
+	      CurSubKeyCell = CmiGetCell (KeyObject->RegistryHive,
+					  HashBlock->Table[i].KeyOffset,
+					   NULL);
 	      if (CurSubKeyCell == NULL)
 	        {
 	          DPRINT("CmiGetBlock() failed\n");
@@ -2094,8 +2093,8 @@ CmiGetMaxClassLength(PKEY_OBJECT  KeyObject)
   VERIFY_KEY_CELL(KeyCell);
 
   MaxClass = 0;
-  HashBlock = CmiGetBlock(KeyObject->RegistryHive, 
-                          KeyCell->HashTableOffset, 
+  HashBlock = CmiGetCell (KeyObject->RegistryHive,
+			  KeyCell->HashTableOffset,
 			  NULL);
   if (HashBlock == NULL)
     {
@@ -2107,9 +2106,9 @@ CmiGetMaxClassLength(PKEY_OBJECT  KeyObject)
         {
           if (HashBlock->Table[i].KeyOffset != 0)
 	    {
-	      CurSubKeyCell = CmiGetBlock(KeyObject->RegistryHive,
-				          HashBlock->Table[i].KeyOffset,
-				          NULL);
+	      CurSubKeyCell = CmiGetCell (KeyObject->RegistryHive,
+					  HashBlock->Table[i].KeyOffset,
+					  NULL);
 	      if (CurSubKeyCell == NULL)
 	        {
 	          DPRINT("CmiGetBlock() failed\n");
@@ -2162,8 +2161,8 @@ CmiGetMaxValueNameLength(PREGISTRY_HIVE RegistryHive,
   VERIFY_KEY_CELL(KeyCell);
 
   MaxValueName = 0;
-  ValueListCell = CmiGetBlock(RegistryHive,
-			      KeyCell->ValuesOffset,
+  ValueListCell = CmiGetCell (RegistryHive,
+			      KeyCell->ValueListOffset,
 			      NULL);
   if (ValueListCell == NULL)
     {
@@ -2173,9 +2172,9 @@ CmiGetMaxValueNameLength(PREGISTRY_HIVE RegistryHive,
 
   for (i = 0; i < KeyCell->NumberOfValues; i++)
     {
-      CurValueCell = CmiGetBlock (RegistryHive,
-				  ValueListCell->Values[i],
-				  NULL);
+      CurValueCell = CmiGetCell (RegistryHive,
+				 ValueListCell->ValueOffset[i],
+				 NULL);
       if (CurValueCell == NULL)
 	{
 	  DPRINT("CmiGetBlock() failed\n");
@@ -2211,7 +2210,7 @@ CmiGetMaxValueDataLength(PREGISTRY_HIVE RegistryHive,
   VERIFY_KEY_CELL(KeyCell);
 
   MaxValueData = 0;
-  ValueListCell = CmiGetBlock(RegistryHive, KeyCell->ValuesOffset, NULL);
+  ValueListCell = CmiGetCell (RegistryHive, KeyCell->ValueListOffset, NULL);
   if (ValueListCell == NULL)
     {
       return 0;
@@ -2219,12 +2218,12 @@ CmiGetMaxValueDataLength(PREGISTRY_HIVE RegistryHive,
 
   for (i = 0; i < KeyCell->NumberOfValues; i++)
     {
-      CurValueCell = CmiGetBlock(RegistryHive,
-                                  ValueListCell->Values[i],NULL);
+      CurValueCell = CmiGetCell (RegistryHive,
+                                 ValueListCell->ValueOffset[i],NULL);
       if ((CurValueCell != NULL) &&
-          (MaxValueData < (CurValueCell->DataSize & LONG_MAX)))
+          (MaxValueData < (CurValueCell->DataSize & REG_DATA_SIZE_MASK)))
         {
-          MaxValueData = CurValueCell->DataSize & LONG_MAX;
+          MaxValueData = CurValueCell->DataSize & REG_DATA_SIZE_MASK;
         }
     }
 
@@ -2260,7 +2259,7 @@ CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
     }
 
   /* Get hash table */
-  HashBlock = CmiGetBlock(RegistryHive, KeyCell->HashTableOffset, NULL);
+  HashBlock = CmiGetCell (RegistryHive, KeyCell->HashTableOffset, NULL);
   if (HashBlock == NULL)
     {
       DPRINT("CmiGetBlock() failed\n");
@@ -2276,7 +2275,7 @@ CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
 	      (HashBlock->Table[i].HashValue == 0 ||
 	       CmiCompareHashI(KeyName, (PCHAR)&HashBlock->Table[i].HashValue)))
 	    {
-	      CurSubKeyCell = CmiGetBlock(RegistryHive,
+	      CurSubKeyCell = CmiGetCell (RegistryHive,
 					  HashBlock->Table[i].KeyOffset,
 					  NULL);
 	      if (CurSubKeyCell == NULL)
@@ -2300,7 +2299,7 @@ CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
 	      (HashBlock->Table[i].HashValue == 0 ||
 	       CmiCompareHash(KeyName, (PCHAR)&HashBlock->Table[i].HashValue)))
 	    {
-	      CurSubKeyCell = CmiGetBlock(RegistryHive,
+	      CurSubKeyCell = CmiGetCell (RegistryHive,
 					  HashBlock->Table[i].KeyOffset,
 					  NULL);
 	      if (CurSubKeyCell == NULL)
@@ -2338,6 +2337,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
   PKEY_CELL NewKeyCell;
   ULONG NewBlockSize;
   PKEY_CELL KeyCell;
+  PDATA_CELL ClassCell;
   NTSTATUS Status;
   USHORT NameSize;
   PWSTR NamePtr;
@@ -2382,9 +2382,9 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
   Status = STATUS_SUCCESS;
 
   NewBlockSize = sizeof(KEY_CELL) + NameSize;
-  Status = CmiAllocateBlock(RegistryHive,
-			    (PVOID) &NewKeyCell,
+  Status = CmiAllocateCell (RegistryHive,
 			    NewBlockSize,
+			    (PVOID) &NewKeyCell,
 			    &NKBOffset);
   if (NewKeyCell == NULL)
     {
@@ -2399,7 +2399,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
       NewKeyCell->NumberOfSubKeys = 0;
       NewKeyCell->HashTableOffset = -1;
       NewKeyCell->NumberOfValues = 0;
-      NewKeyCell->ValuesOffset = -1;
+      NewKeyCell->ValueListOffset = -1;
       NewKeyCell->SecurityKeyOffset = -1;
       NewKeyCell->ClassNameOffset = -1;
 
@@ -2422,19 +2422,16 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
 
       VERIFY_KEY_CELL(NewKeyCell);
 
-      if (Class)
+      if (Class != NULL)
 	{
-	  PDATA_CELL pClass;
-
-	  NewKeyCell->ClassSize = Class->Length + sizeof(WCHAR);
-	  Status = CmiAllocateBlock(RegistryHive,
-				    (PVOID)&pClass,
-				    NewKeyCell->ClassSize,
+	  NewKeyCell->ClassSize = Class->Length;
+	  Status = CmiAllocateCell (RegistryHive,
+				    sizeof(CELL_HEADER) + NewKeyCell->ClassSize,
+				    (PVOID)&ClassCell,
 				    &NewKeyCell->ClassNameOffset);
-	  wcsncpy((PWSTR)pClass->Data,
-		  Class->Buffer,
-		  Class->Length);
-	  ((PWSTR) (pClass->Data))[Class->Length] = 0;
+	  RtlCopyMemory (ClassCell->Data,
+			 Class->Buffer,
+			 Class->Length);
 	}
     }
 
@@ -2444,7 +2441,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
     }
 
   SubKey->KeyCell = NewKeyCell;
-  SubKey->BlockOffset = NKBOffset;
+  SubKey->KeyCellOffset = NKBOffset;
 
   /* Don't modify hash table if key is located in a pointer-based hive and parent key is not */
   if (IsPointerHive(RegistryHive) && (!IsPointerHive(Parent->RegistryHive)))
@@ -2454,7 +2451,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
 
   if (KeyCell->HashTableOffset == (ULONG_PTR) -1)
     {
-      Status = CmiAllocateHashTableBlock(RegistryHive,
+      Status = CmiAllocateHashTableCell (RegistryHive,
 					 &HashBlock,
 					 &KeyCell->HashTableOffset,
 					 REG_INIT_HASH_TABLE_SIZE);
@@ -2465,7 +2462,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
     }
   else
     {
-      HashBlock = CmiGetBlock(RegistryHive,
+      HashBlock = CmiGetCell (RegistryHive,
 			      KeyCell->HashTableOffset,
 			      NULL);
       if (HashBlock == NULL)
@@ -2478,8 +2475,8 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
 	{
 	  BLOCK_OFFSET HTOffset;
 
-	  /* Reallocate the hash table block */
-	  Status = CmiAllocateHashTableBlock(RegistryHive,
+	  /* Reallocate the hash table cell */
+	  Status = CmiAllocateHashTableCell (RegistryHive,
 					     &NewHashBlock,
 					     &HTOffset,
 					     HashBlock->HashTableSize +
@@ -2494,7 +2491,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
 	  RtlCopyMemory(&NewHashBlock->Table[0],
 			&HashBlock->Table[0],
 			sizeof(NewHashBlock->Table[0]) * HashBlock->HashTableSize);
-	  CmiDestroyBlock(RegistryHive,
+	  CmiDestroyCell (RegistryHive,
 			  HashBlock,
 			  KeyCell->HashTableOffset);
 	  KeyCell->HashTableOffset = HTOffset;
@@ -2532,8 +2529,8 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
   if (SubKey->KeyCell->NumberOfValues != 0)
     {
       /* Get pointer to the value list cell */
-      ValueList = CmiGetBlock(RegistryHive,
-			      SubKey->KeyCell->ValuesOffset,
+      ValueList = CmiGetCell (RegistryHive,
+			      SubKey->KeyCell->ValueListOffset,
 			      NULL);
       if (ValueList == NULL)
 	{
@@ -2547,14 +2544,14 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 	  for (i = 0; i < SubKey->KeyCell->NumberOfValues; i++)
 	    {
 	      /* Get pointer to value cell */
-	      ValueCell = CmiGetBlock(RegistryHive,
-				      ValueList->Values[i],
+	      ValueCell = CmiGetCell (RegistryHive,
+				      ValueList->ValueOffset[i],
 				      NULL);
 	      if (ValueCell != NULL)
 		{
-		  if (ValueCell->DataSize > 4)
+		  if (ValueCell->DataSize > sizeof(BLOCK_OFFSET))
 		    {
-		      DataCell = CmiGetBlock(RegistryHive,
+		      DataCell = CmiGetCell (RegistryHive,
 					     ValueCell->DataOffset,
 					     NULL);
 		      if (DataCell == NULL)
@@ -2566,34 +2563,34 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 		      if (DataCell != NULL)
 			{
 			  /* Destroy data cell */
-			  CmiDestroyBlock(RegistryHive,
+			  CmiDestroyCell (RegistryHive,
 					  DataCell,
 					  ValueCell->DataOffset);
 			}
 		    }
 
 		  /* Destroy value cell */
-		  CmiDestroyBlock(RegistryHive,
+		  CmiDestroyCell (RegistryHive,
 				  ValueCell,
-				  ValueList->Values[i]);
+				  ValueList->ValueOffset[i]);
 		}
 	    }
 	}
 
       /* Destroy value list cell */
-      CmiDestroyBlock(RegistryHive,
+      CmiDestroyCell (RegistryHive,
 		      ValueList,
-		      SubKey->KeyCell->ValuesOffset);
+		      SubKey->KeyCell->ValueListOffset);
 
       SubKey->KeyCell->NumberOfValues = 0;
-      SubKey->KeyCell->ValuesOffset = -1;
+      SubKey->KeyCell->ValueListOffset = (BLOCK_OFFSET)-1;
     }
 
   /* Remove the key from the parent key's hash block */
   if (ParentKey->KeyCell->HashTableOffset != (BLOCK_OFFSET) -1)
     {
       DPRINT("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset)
-      HashBlock = CmiGetBlock(ParentKey->RegistryHive,
+      HashBlock = CmiGetCell (ParentKey->RegistryHive,
 			      ParentKey->KeyCell->HashTableOffset,
 			      NULL);
       if (HashBlock == NULL)
@@ -2606,7 +2603,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 	{
 	  CmiRemoveKeyFromHashTable(ParentKey->RegistryHive,
 				    HashBlock,
-				    SubKey->BlockOffset);
+				    SubKey->KeyCellOffset);
 	  CmiMarkBlockDirty(ParentKey->RegistryHive,
 			    ParentKey->KeyCell->HashTableOffset);
 	}
@@ -2616,7 +2613,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
   if (SubKey->KeyCell->HashTableOffset != (BLOCK_OFFSET) -1)
     {
       DPRINT("SubKey HashTableOffset %lx\n", SubKey->KeyCell->HashTableOffset)
-      HashBlock = CmiGetBlock(RegistryHive,
+      HashBlock = CmiGetCell (RegistryHive,
 			      SubKey->KeyCell->HashTableOffset,
 			      NULL);
       if (HashBlock == NULL)
@@ -2627,7 +2624,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
       DPRINT("SubKey HashBlock %p\n", HashBlock)
       if (HashBlock != NULL)
 	{
-	  CmiDestroyBlock(RegistryHive,
+	  CmiDestroyCell (RegistryHive,
 			  HashBlock,
 			  SubKey->KeyCell->HashTableOffset);
 	  SubKey->KeyCell->HashTableOffset = -1;
@@ -2644,7 +2641,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
       if (ParentKey->KeyCell->NumberOfSubKeys == 0)
 	{
 	  DPRINT("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset)
-	  HashBlock = CmiGetBlock(ParentKey->RegistryHive,
+	  HashBlock = CmiGetCell (ParentKey->RegistryHive,
 				  ParentKey->KeyCell->HashTableOffset,
 				  NULL);
 	  if (HashBlock == NULL)
@@ -2655,24 +2652,24 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 	  DPRINT("ParentKey HashBlock %p\n", HashBlock)
 	  if (HashBlock != NULL)
 	    {
-	      CmiDestroyBlock(ParentKey->RegistryHive,
+	      CmiDestroyCell (ParentKey->RegistryHive,
 			      HashBlock,
 			      ParentKey->KeyCell->HashTableOffset);
-	      ParentKey->KeyCell->HashTableOffset = -1;
+	      ParentKey->KeyCell->HashTableOffset = (BLOCK_OFFSET)-1;
 	    }
 	}
 
       NtQuerySystemTime(&ParentKey->KeyCell->LastWriteTime);
       CmiMarkBlockDirty(ParentKey->RegistryHive,
-			ParentKey->BlockOffset);
+			ParentKey->KeyCellOffset);
     }
 
   /* Destroy key cell */
-  CmiDestroyBlock(RegistryHive,
+  CmiDestroyCell (RegistryHive,
 		  SubKey->KeyCell,
-		  SubKey->BlockOffset);
-  SubKey->BlockOffset = -1;
+		  SubKey->KeyCellOffset);
   SubKey->KeyCell = NULL;
+  SubKey->KeyCellOffset = (BLOCK_OFFSET)-1;
 
   return(STATUS_SUCCESS);
 }
@@ -2692,12 +2689,12 @@ CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
   *ValueCell = NULL;
 
   /* The key does not have any values */
-  if (KeyCell->ValuesOffset == (BLOCK_OFFSET)-1)
+  if (KeyCell->ValueListOffset == (BLOCK_OFFSET)-1)
     {
       return STATUS_SUCCESS;
     }
 
-  ValueListCell = CmiGetBlock(RegistryHive, KeyCell->ValuesOffset, NULL);
+  ValueListCell = CmiGetCell (RegistryHive, KeyCell->ValueListOffset, NULL);
   if (ValueListCell == NULL)
     {
       DPRINT("ValueListCell is NULL\n");
@@ -2708,8 +2705,8 @@ CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
 
   for (i = 0; i < KeyCell->NumberOfValues; i++)
     {
-      CurValueCell = CmiGetBlock(RegistryHive,
-				 ValueListCell->Values[i],
+      CurValueCell = CmiGetCell (RegistryHive,
+				 ValueListCell->ValueOffset[i],
 				 NULL);
       if (CurValueCell == NULL)
 	{
@@ -2725,7 +2722,7 @@ CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
 	{
 	  *ValueCell = CurValueCell;
 	  if (VBOffset)
-	    *VBOffset = ValueListCell->Values[i];
+	    *VBOffset = ValueListCell->ValueOffset[i];
 	  //DPRINT("Found value %s\n", ValueName);
 	  break;
 	}
@@ -2746,7 +2743,7 @@ CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE RegistryHive,
 
   *ValueCell = NULL;
 
-  if (KeyCell->ValuesOffset == (BLOCK_OFFSET)-1)
+  if (KeyCell->ValueListOffset == (BLOCK_OFFSET)-1)
     {
       return STATUS_NO_MORE_ENTRIES;
     }
@@ -2757,7 +2754,7 @@ CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE RegistryHive,
     }
 
 
-  ValueListCell = CmiGetBlock(RegistryHive, KeyCell->ValuesOffset, NULL);
+  ValueListCell = CmiGetCell (RegistryHive, KeyCell->ValueListOffset, NULL);
   if (ValueListCell == NULL)
     {
       DPRINT("CmiGetBlock() failed\n");
@@ -2767,8 +2764,8 @@ CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE RegistryHive,
   VERIFY_VALUE_LIST_CELL(ValueListCell);
 
 
-  CurValueCell = CmiGetBlock(RegistryHive,
-			     ValueListCell->Values[Index],
+  CurValueCell = CmiGetCell (RegistryHive,
+			     ValueListCell->ValueOffset[Index],
 			     NULL);
   if (CurValueCell == NULL)
     {
@@ -2794,6 +2791,7 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
   PVALUE_CELL NewValueCell;
   BLOCK_OFFSET VLBOffset;
   BLOCK_OFFSET VBOffset;
+  ULONG CellSize;
   NTSTATUS Status;
 
   Status = CmiAllocateValueCell(RegistryHive,
@@ -2805,31 +2803,34 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
       return Status;
     }
 
-  DPRINT("KeyCell->ValuesOffset %lu\n", (ULONG)KeyCell->ValuesOffset);
+  DPRINT("KeyCell->ValuesOffset %lu\n", (ULONG)KeyCell->ValueListOffset);
 
-  ValueListCell = CmiGetBlock(RegistryHive, KeyCell->ValuesOffset, NULL);
+  ValueListCell = CmiGetCell (RegistryHive, KeyCell->ValueListOffset, NULL);
 
   if (ValueListCell == NULL)
     {
-      Status = CmiAllocateBlock(RegistryHive,
-	      (PVOID) &ValueListCell,
-	      sizeof(BLOCK_OFFSET) * 3,
-	      &VLBOffset);
+      CellSize = sizeof(VALUE_LIST_CELL) +
+		 (3 * sizeof(BLOCK_OFFSET));
+      Status = CmiAllocateCell (RegistryHive,
+				CellSize,
+				(PVOID) &ValueListCell,
+				&VLBOffset);
 
       if (!NT_SUCCESS(Status))
 	{
 	  CmiDestroyValueCell(RegistryHive, NewValueCell, VBOffset);
 	  return Status;
 	}
-      KeyCell->ValuesOffset = VLBOffset;
+      KeyCell->ValueListOffset = VLBOffset;
     }
   else if (KeyCell->NumberOfValues >= 
-	   (((ULONG)ABS_VALUE(ValueListCell->CellSize) - 4) / sizeof(BLOCK_OFFSET)))
+	   (((ULONG)ABS_VALUE(ValueListCell->CellSize) - sizeof(VALUE_LIST_CELL)) / sizeof(BLOCK_OFFSET)))
     {
-      Status = CmiAllocateBlock(RegistryHive,
+      CellSize = sizeof(VALUE_LIST_CELL) +
+		 ((KeyCell->NumberOfValues + REG_VALUE_LIST_CELL_MULTIPLE) * sizeof(BLOCK_OFFSET));
+      Status = CmiAllocateCell (RegistryHive,
+				CellSize,
 				(PVOID) &NewValueListCell,
-				(KeyCell->NumberOfValues + REG_VALUE_LIST_CELL_MULTIPLE) *
-				  sizeof(BLOCK_OFFSET),
 				&VLBOffset);
       if (!NT_SUCCESS(Status))
 	{
@@ -2837,21 +2838,21 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
 	  return Status;
 	}
 
-      RtlCopyMemory(&NewValueListCell->Values[0],
-		    &ValueListCell->Values[0],
+      RtlCopyMemory(&NewValueListCell->ValueOffset[0],
+		    &ValueListCell->ValueOffset[0],
 		    sizeof(BLOCK_OFFSET) * KeyCell->NumberOfValues);
-      CmiDestroyBlock(RegistryHive, ValueListCell, KeyCell->ValuesOffset);
-      KeyCell->ValuesOffset = VLBOffset;
+      CmiDestroyCell (RegistryHive, ValueListCell, KeyCell->ValueListOffset);
+      KeyCell->ValueListOffset = VLBOffset;
       ValueListCell = NewValueListCell;
     }
 
   DPRINT("KeyCell->NumberOfValues %lu, ValueListCell->CellSize %lu (%lu %lx)\n",
 	 KeyCell->NumberOfValues,
 	 (ULONG)ABS_VALUE(ValueListCell->CellSize),
-	 ((ULONG)ABS_VALUE(ValueListCell->CellSize) - 4) / sizeof(BLOCK_OFFSET),
-	 ((ULONG)ABS_VALUE(ValueListCell->CellSize) - 4) / sizeof(BLOCK_OFFSET));
+	 ((ULONG)ABS_VALUE(ValueListCell->CellSize) - sizeof(VALUE_LIST_CELL)) / sizeof(BLOCK_OFFSET),
+	 ((ULONG)ABS_VALUE(ValueListCell->CellSize) - sizeof(VALUE_LIST_CELL)) / sizeof(BLOCK_OFFSET));
 
-  ValueListCell->Values[KeyCell->NumberOfValues] = VBOffset;
+  ValueListCell->ValueOffset[KeyCell->NumberOfValues] = VBOffset;
   KeyCell->NumberOfValues++;
 
   *pValueCell = NewValueCell;
@@ -2871,7 +2872,7 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
   PVALUE_CELL CurValueCell;
   ULONG  i;
 
-  ValueListCell = CmiGetBlock(RegistryHive, KeyCell->ValuesOffset, NULL);
+  ValueListCell = CmiGetCell (RegistryHive, KeyCell->ValueListOffset, NULL);
 
   if (ValueListCell == NULL)
     {
@@ -2883,7 +2884,7 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
 
   for (i = 0; i < KeyCell->NumberOfValues; i++)
     {
-      CurValueCell = CmiGetBlock(RegistryHive, ValueListCell->Values[i], NULL);
+      CurValueCell = CmiGetCell (RegistryHive, ValueListCell->ValueOffset[i], NULL);
       if (CurValueCell == NULL)
 	{
 	  DPRINT("CmiGetBlock() failed\n");
@@ -2896,17 +2897,17 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
 				CurValueCell->NameSize,
 				CurValueCell->Flags & REG_VALUE_NAME_PACKED))
 	{
-	  CmiDestroyValueCell(RegistryHive, CurValueCell, ValueListCell->Values[i]);
+	  CmiDestroyValueCell(RegistryHive, CurValueCell, ValueListCell->ValueOffset[i]);
 
 	  if ((KeyCell->NumberOfValues - 1) < i)
 	    {
-	      RtlCopyMemory(&ValueListCell->Values[i],
-			    &ValueListCell->Values[i + 1],
+	      RtlCopyMemory(&ValueListCell->ValueOffset[i],
+			    &ValueListCell->ValueOffset[i + 1],
 			    sizeof(BLOCK_OFFSET) * (KeyCell->NumberOfValues - 1 - i));
 	    }
 	  else
 	    {
-	      RtlZeroMemory(&ValueListCell->Values[i], sizeof(BLOCK_OFFSET));
+	      RtlZeroMemory(&ValueListCell->ValueOffset[i], sizeof(BLOCK_OFFSET));
 	    }
 
 	  KeyCell->NumberOfValues -= 1;
@@ -2916,14 +2917,14 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
 
   if (KeyCell->NumberOfValues == 0)
     {
-      CmiDestroyBlock(RegistryHive,
+      CmiDestroyCell (RegistryHive,
 		      ValueListCell,
-		      KeyCell->ValuesOffset);
+		      KeyCell->ValueListOffset);
     }
   else
     {
       CmiMarkBlockDirty(RegistryHive,
-			KeyCell->ValuesOffset);
+			KeyCell->ValueListOffset);
     }
 
   CmiMarkBlockDirty(RegistryHive,
@@ -2934,7 +2935,7 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
 
 
 NTSTATUS
-CmiAllocateHashTableBlock(IN PREGISTRY_HIVE RegistryHive,
+CmiAllocateHashTableCell (IN PREGISTRY_HIVE RegistryHive,
 	OUT PHASH_TABLE_CELL *HashBlock,
 	OUT BLOCK_OFFSET *HBOffset,
 	IN ULONG HashTableSize)
@@ -2947,9 +2948,9 @@ CmiAllocateHashTableBlock(IN PREGISTRY_HIVE RegistryHive,
   *HashBlock = NULL;
   NewHashSize = sizeof(HASH_TABLE_CELL) + 
     (HashTableSize - 1) * sizeof(HASH_RECORD);
-  Status = CmiAllocateBlock(RegistryHive,
-			    (PVOID*) &NewHashBlock,
+  Status = CmiAllocateCell (RegistryHive,
 			    NewHashSize,
+			    (PVOID*) &NewHashBlock,
 			    HBOffset);
 
   if ((NewHashBlock == NULL) || (!NT_SUCCESS(Status)))
@@ -2958,7 +2959,7 @@ CmiAllocateHashTableBlock(IN PREGISTRY_HIVE RegistryHive,
     }
   else
     {
-      NewHashBlock->Id = REG_HASH_TABLE_BLOCK_ID;
+      NewHashBlock->Id = REG_HASH_TABLE_CELL_ID;
       NewHashBlock->HashTableSize = HashTableSize;
       *HashBlock = NewHashBlock;
     }
@@ -2985,7 +2986,7 @@ CmiGetKeyFromHashByIndex(PREGISTRY_HIVE RegistryHive,
   else
     {
       KeyOffset =  HashBlock->Table[Index].KeyOffset;
-      KeyCell = CmiGetBlock(RegistryHive, KeyOffset, NULL);
+      KeyCell = CmiGetCell (RegistryHive, KeyOffset, NULL);
     }
 
   return KeyCell;
@@ -3010,7 +3011,7 @@ CmiAddKeyToHashTable(PREGISTRY_HIVE RegistryHive,
 	    {
 	      RtlCopyMemory(&HashBlock->Table[i].HashValue,
 			    NewKeyCell->Name,
-			    min(NewKeyCell->NameSize, 4));
+			    min(NewKeyCell->NameSize, sizeof(ULONG)));
 	    }
 	  return STATUS_SUCCESS;
 	}
@@ -3060,9 +3061,9 @@ CmiAllocateValueCell(PREGISTRY_HIVE RegistryHive,
 
   DPRINT("ValueName->Length %lu  NameSize %lu\n", ValueName->Length, NameSize);
 
-  Status = CmiAllocateBlock(RegistryHive,
-			    (PVOID*) &NewValueCell,
+  Status = CmiAllocateCell (RegistryHive,
 			    sizeof(VALUE_CELL) + NameSize,
+			    (PVOID*) &NewValueCell,
 			    VBOffset);
   if ((NewValueCell == NULL) || (!NT_SUCCESS(Status)))
     {
@@ -3111,16 +3112,16 @@ CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
   VERIFY_VALUE_CELL(ValueCell);
 
   /* Destroy the data cell */
-  if (ValueCell->DataSize > 4)
+  if (ValueCell->DataSize > sizeof(BLOCK_OFFSET))
     {
-      pBlock = CmiGetBlock(RegistryHive, ValueCell->DataOffset, &pBin);
+      pBlock = CmiGetCell (RegistryHive, ValueCell->DataOffset, &pBin);
       if (pBlock == NULL)
 	{
 	  DPRINT("CmiGetBlock() failed\n");
 	  return STATUS_UNSUCCESSFUL;
 	}
 
-      Status = CmiDestroyBlock(RegistryHive, pBlock, ValueCell->DataOffset);
+      Status = CmiDestroyCell (RegistryHive, pBlock, ValueCell->DataOffset);
       if (!NT_SUCCESS(Status))
 	{
 	  return  Status;
@@ -3132,10 +3133,10 @@ CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
     }
 
   /* Destroy the value cell */
-  Status = CmiDestroyBlock(RegistryHive, ValueCell, VBOffset);
+  Status = CmiDestroyCell (RegistryHive, ValueCell, VBOffset);
 
   /* Update time of heap */
-  if (!IsNoFileHive(RegistryHive) && CmiGetBlock(RegistryHive, VBOffset, &pBin))
+  if (!IsNoFileHive(RegistryHive) && CmiGetCell (RegistryHive, VBOffset, &pBin))
     {
       NtQuerySystemTime(&pBin->DateModified);
     }
@@ -3232,12 +3233,12 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
 
 
 NTSTATUS
-CmiAllocateBlock(PREGISTRY_HIVE RegistryHive,
-		 PVOID *Block,
-		 LONG BlockSize,
-		 BLOCK_OFFSET * pBlockOffset)
+CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
+		 LONG CellSize,
+		 PVOID *Cell,
+		 BLOCK_OFFSET *CellOffset)
 {
-  PCELL_HEADER NewBlock;
+  PCELL_HEADER NewCell;
   NTSTATUS Status;
   PHBIN pBin;
   ULONG i;
@@ -3246,40 +3247,40 @@ CmiAllocateBlock(PREGISTRY_HIVE RegistryHive,
   Status = STATUS_SUCCESS;
 
   /* Round to 16 bytes multiple */
-  BlockSize = (BlockSize + sizeof(DWORD) + 15) & 0xfffffff0;
+  CellSize = (CellSize + sizeof(DWORD) + 15) & 0xfffffff0;
 
   /* Handle volatile hives first */
   if (IsPointerHive(RegistryHive))
     {
-      NewBlock = ExAllocatePool(NonPagedPool, BlockSize);
+      NewCell = ExAllocatePool(NonPagedPool, CellSize);
 
-      if (NewBlock == NULL)
+      if (NewCell == NULL)
 	{
 	  Status = STATUS_INSUFFICIENT_RESOURCES;
 	}
       else
 	{
-	  RtlZeroMemory(NewBlock, BlockSize);
-	  NewBlock->CellSize = BlockSize;
-	  *Block = NewBlock;
-	  if (pBlockOffset)
-	    *pBlockOffset = (BLOCK_OFFSET) NewBlock;
+	  RtlZeroMemory(NewCell, CellSize);
+	  NewCell->CellSize = CellSize;
+	  *Cell = NewCell;
+	  if (CellOffset != NULL)
+	    *CellOffset = (BLOCK_OFFSET) NewCell;
 	}
     }
   else
     {
       /* first search in free blocks */
-      NewBlock = NULL;
+      NewCell = NULL;
       for (i = 0; i < RegistryHive->FreeListSize; i++)
 	{
-	  if (RegistryHive->FreeList[i]->CellSize >= BlockSize)
+	  if (RegistryHive->FreeList[i]->CellSize >= CellSize)
 	    {
-	      NewBlock = RegistryHive->FreeList[i];
-	      if (pBlockOffset)
-		*pBlockOffset = RegistryHive->FreeListOffset[i];
+	      NewCell = RegistryHive->FreeList[i];
+	      if (CellOffset != NULL)
+		*CellOffset = RegistryHive->FreeListOffset[i];
 
 	      /* Update time of heap */
-	      Temp = CmiGetBlock(RegistryHive, RegistryHive->FreeListOffset[i], &pBin);
+	      Temp = CmiGetCell (RegistryHive, RegistryHive->FreeListOffset[i], &pBin);
 	      if (Temp == NULL)
 		{
 		  DPRINT("CmiGetBlock() failed\n");
@@ -3309,35 +3310,35 @@ CmiAllocateBlock(PREGISTRY_HIVE RegistryHive,
 	}
 
       /* Need to extend hive file : */
-      if (NewBlock == NULL)
+      if (NewCell == NULL)
 	{
-	  /* Add a new block */
-	  Status = CmiAddBin(RegistryHive, (PVOID *) &NewBlock , pBlockOffset);
+	  /* Add a new bin */
+	  Status = CmiAddBin(RegistryHive, (PVOID *) &NewCell , CellOffset);
 	}
 
       if (NT_SUCCESS(Status))
 	{
-	  *Block = NewBlock;
+	  *Cell = NewCell;
 
 	  /* Split the block in two parts */
-	  if (NewBlock->CellSize > BlockSize)
+	  if (NewCell->CellSize > CellSize)
 	    {
-	      NewBlock = (PCELL_HEADER) ((ULONG_PTR) NewBlock+BlockSize);
-	      NewBlock->CellSize = ((PCELL_HEADER) (*Block))->CellSize - BlockSize;
+	      NewCell = (PCELL_HEADER) ((ULONG_PTR) NewCell + CellSize);
+	      NewCell->CellSize = ((PCELL_HEADER) (*Cell))->CellSize - CellSize;
 	      CmiAddFree(RegistryHive,
-			 NewBlock,
-			 *pBlockOffset + BlockSize,
+			 NewCell,
+			 *CellOffset + CellSize,
 			 TRUE);
 	      CmiMarkBlockDirty(RegistryHive,
-				*pBlockOffset + BlockSize);
+				*CellOffset + CellSize);
 	    }
-	  else if (NewBlock->CellSize < BlockSize)
+	  else if (NewCell->CellSize < CellSize)
 	    {
 	      return(STATUS_UNSUCCESSFUL);
 	    }
 
-	  RtlZeroMemory(*Block, BlockSize);
-	  ((PCELL_HEADER) (*Block))->CellSize = -BlockSize;
+	  RtlZeroMemory(*Cell, CellSize);
+	  ((PCELL_HEADER) (*Cell))->CellSize = -CellSize;
 	}
     }
 
@@ -3346,9 +3347,9 @@ CmiAllocateBlock(PREGISTRY_HIVE RegistryHive,
 
 
 NTSTATUS
-CmiDestroyBlock(PREGISTRY_HIVE RegistryHive,
-		PVOID Block,
-		BLOCK_OFFSET Offset)
+CmiDestroyCell (PREGISTRY_HIVE RegistryHive,
+		PVOID Cell,
+		BLOCK_OFFSET CellOffset)
 {
   NTSTATUS Status;
   PHBIN pBin;
@@ -3357,11 +3358,11 @@ CmiDestroyBlock(PREGISTRY_HIVE RegistryHive,
 
   if (IsPointerHive(RegistryHive))
     {
-      ExFreePool(Block);
+      ExFreePool(Cell);
     }
   else
     {
-      PCELL_HEADER pFree = Block;
+      PCELL_HEADER pFree = Cell;
 
       if (pFree->CellSize < 0)
         pFree->CellSize = -pFree->CellSize;
@@ -3371,16 +3372,60 @@ CmiDestroyBlock(PREGISTRY_HIVE RegistryHive,
 		    pFree->CellSize - sizeof(ULONG));
 
       /* Add block to the list of free blocks */
-      CmiAddFree(RegistryHive, Block, Offset, TRUE);
+      CmiAddFree(RegistryHive, Cell, CellOffset, TRUE);
 
       /* Update time of heap */
-      if (!IsNoFileHive(RegistryHive) && CmiGetBlock(RegistryHive, Offset,&pBin))
+      if (!IsNoFileHive(RegistryHive) && CmiGetCell (RegistryHive, CellOffset,&pBin))
 	NtQuerySystemTime(&pBin->DateModified);
 
-      CmiMarkBlockDirty(RegistryHive, Offset);
+      CmiMarkBlockDirty(RegistryHive, CellOffset);
     }
 
   return Status;
+}
+
+
+PVOID
+CmiGetCell (PREGISTRY_HIVE RegistryHive,
+	    BLOCK_OFFSET CellOffset,
+	    PHBIN * ppBin)
+{
+  PHBIN pBin;
+
+  if (ppBin)
+    {
+      *ppBin = NULL;
+    }
+
+  if (CellOffset == (BLOCK_OFFSET)-1)
+    {
+      return NULL;
+    }
+
+  if (IsPointerHive (RegistryHive))
+    {
+      return (PVOID)CellOffset;
+    }
+
+  if (CellOffset > RegistryHive->BlockListSize * 4096)
+    {
+      DPRINT1("CellOffset exceeds valid range (%lu > %lu)\n",
+	      CellOffset, RegistryHive->BlockListSize * 4096);
+      return NULL;
+    }
+
+  pBin = RegistryHive->BlockList[CellOffset / 4096];
+  if (pBin == NULL)
+    {
+      return NULL;
+    }
+
+  if (ppBin)
+    {
+      *ppBin = pBin;
+    }
+
+  return((PVOID)((ULONG_PTR)pBin + (CellOffset - pBin->BlockOffset)));
 }
 
 
@@ -3399,7 +3444,7 @@ CmiMergeFree(PREGISTRY_HIVE RegistryHive,
   DPRINT("CmiMergeFree(Block %lx  Offset %lx  Size %lx) called\n",
 	 FreeBlock, FreeOffset, FreeBlock->CellSize);
 
-  CmiGetBlock(RegistryHive,
+  CmiGetCell (RegistryHive,
 	      FreeOffset,
 	      &Bin);
   DPRINT("Bin %p\n", Bin);
@@ -3589,41 +3634,6 @@ CmiAddFree(PREGISTRY_HIVE RegistryHive,
 }
 
 
-PVOID
-CmiGetBlock(PREGISTRY_HIVE RegistryHive,
-	    BLOCK_OFFSET BlockOffset,
-	    PHBIN * ppBin)
-{
-  PHBIN pBin;
-
-  if (ppBin)
-    *ppBin = NULL;
-
-  if (BlockOffset == (BLOCK_OFFSET)-1)
-    {
-      return NULL;
-    }
-
-  if (IsPointerHive (RegistryHive))
-    {
-      return (PVOID)BlockOffset;
-    }
-  else
-    {
-      if (BlockOffset > RegistryHive->BlockListSize * 4096)
-	{
-	  DPRINT1("BlockOffset exceeds valid range (%lu > %lu)\n",
-		  BlockOffset, RegistryHive->BlockListSize * 4096);
-	  return NULL;
-	}
-      pBin = RegistryHive->BlockList[BlockOffset / 4096];
-      if (ppBin)
-	*ppBin = pBin;
-      return((PVOID)((ULONG_PTR)pBin + (BlockOffset - pBin->BlockOffset)));
-    }
-}
-
-
 VOID
 CmiMarkBlockDirty(PREGISTRY_HIVE RegistryHive,
 		  BLOCK_OFFSET BlockOffset)
@@ -3640,7 +3650,7 @@ CmiMarkBlockDirty(PREGISTRY_HIVE RegistryHive,
 
   BlockNumber = (ULONG)BlockOffset / 4096;
 
-  Cell = CmiGetBlock(RegistryHive,
+  Cell = CmiGetCell (RegistryHive,
 		     BlockOffset,
 		     NULL);
 
@@ -3894,10 +3904,10 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
     {
       /* Allocate and copy key cell */
       NewKeyCellSize = sizeof(KEY_CELL) + SrcKeyCell->NameSize;
-      Status = CmiAllocateBlock (DstHive,
-				 (PVOID) &NewKeyCell,
-				 NewKeyCellSize,
-				 &NewKeyCellOffset);
+      Status = CmiAllocateCell (DstHive,
+				NewKeyCellSize,
+				(PVOID) &NewKeyCell,
+				&NewKeyCellOffset);
       if (!NT_SUCCESS(Status))
 	{
 	  DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
@@ -3913,7 +3923,7 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
 		     SrcKeyCell,
 		     NewKeyCellSize);
 
-      DstHive->HiveHeader->RootKeyCell = NewKeyCellOffset;
+      DstHive->HiveHeader->RootKeyOffset = NewKeyCellOffset;
 
       /* Copy class name */
       if (SrcKeyCell->ClassNameOffset != (BLOCK_OFFSET) -1)
@@ -3922,13 +3932,13 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
 	  PDATA_CELL NewClassNameCell;
 	  BLOCK_OFFSET NewClassNameOffset;
 
-	  SrcClassNameCell = CmiGetBlock (SrcHive, SrcKeyCell->ClassNameOffset, NULL),
+	  SrcClassNameCell = CmiGetCell (SrcHive, SrcKeyCell->ClassNameOffset, NULL),
 
 	  NewKeyCell->ClassSize = SrcKeyCell->ClassSize;
-	  Status = CmiAllocateBlock (DstHive,
-				     (PVOID)&NewClassNameCell,
-				     NewKeyCell->ClassSize,
-				     &NewClassNameOffset);
+	  Status = CmiAllocateCell (DstHive,
+				    NewKeyCell->ClassSize,
+				    (PVOID)&NewClassNameCell,
+				    &NewClassNameOffset);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
@@ -3950,10 +3960,10 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
   if (SrcKeyCell->NumberOfSubKeys > 0)
     {
       NewHashTableSize = ROUND_UP(SrcKeyCell->NumberOfSubKeys + 1, 4) - 1;
-      Status = CmiAllocateHashTableBlock (DstHive,
-					  &NewHashTableCell,
-					  &NewHashTableOffset,
-					  NewHashTableSize);
+      Status = CmiAllocateHashTableCell (DstHive,
+					 &NewHashTableCell,
+					 &NewHashTableOffset,
+					 NewHashTableSize);
       if (!NT_SUCCESS(Status))
 	{
 	  DPRINT1 ("CmiAllocateHashTableBlock() failed (Status %lx)\n", Status);
@@ -3979,10 +3989,10 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
 
       NewValueListCellSize =
 	ROUND_UP(SrcKeyCell->NumberOfValues, 4) * sizeof(BLOCK_OFFSET);
-      Status = CmiAllocateBlock (DstHive,
-				 (PVOID)&NewValueListCell,
-				 NewValueListCellSize,
-				 &NewKeyCell->ValuesOffset);
+      Status = CmiAllocateCell (DstHive,
+				NewValueListCellSize,
+				(PVOID)&NewValueListCell,
+				&NewKeyCell->ValueListOffset);
       if (!NT_SUCCESS(Status))
 	{
 	  DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
@@ -3993,24 +4003,24 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
 		     NewValueListCellSize);
 
       /* Copy values */
-      SrcValueListCell = CmiGetBlock (SrcHive, SrcKeyCell->ValuesOffset, NULL);
+      SrcValueListCell = CmiGetCell (SrcHive, SrcKeyCell->ValueListOffset, NULL);
       for (i = 0; i < SrcKeyCell->NumberOfValues; i++)
 	{
 	  /* Copy value cell */
-	  SrcValueCell = CmiGetBlock (SrcHive, SrcValueListCell->Values[i], NULL);
+	  SrcValueCell = CmiGetCell (SrcHive, SrcValueListCell->ValueOffset[i], NULL);
 
 	  NewValueCellSize = sizeof(VALUE_CELL) + SrcValueCell->NameSize;
-	  Status = CmiAllocateBlock (DstHive,
-				     (PVOID*) &NewValueCell,
-				     NewValueCellSize,
-				     &ValueCellOffset);
+	  Status = CmiAllocateCell (DstHive,
+				    NewValueCellSize,
+				    (PVOID*) &NewValueCell,
+				    &ValueCellOffset);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
 	      return Status;
 	    }
 
-	  NewValueListCell->Values[i] = ValueCellOffset;
+	  NewValueListCell->ValueOffset[i] = ValueCellOffset;
 	  RtlCopyMemory (NewValueCell,
 			 SrcValueCell,
 			 NewValueCellSize);
@@ -4018,12 +4028,12 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
 	  /* Copy value data cell */
 	  if (SrcValueCell->DataSize > (LONG) sizeof(PVOID))
 	    {
-	      SrcValueDataCell = CmiGetBlock (SrcHive, SrcValueCell->DataOffset, NULL);
+	      SrcValueDataCell = CmiGetCell (SrcHive, SrcValueCell->DataOffset, NULL);
 
-	      Status = CmiAllocateBlock (DstHive,
-					 (PVOID*) &NewValueDataCell,
-					 SrcValueCell->DataSize,
-					 &ValueDataCellOffset);
+	      Status = CmiAllocateCell (DstHive,
+					SrcValueCell->DataSize,
+					(PVOID*) &NewValueDataCell,
+					&ValueDataCellOffset);
 	      if (!NT_SUCCESS(Status))
 		{
 		  DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
@@ -4047,21 +4057,21 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
       BLOCK_OFFSET NewSubKeyCellOffset;
       PHASH_RECORD SrcHashRecord;
 
-      SrcHashTableCell = CmiGetBlock (SrcHive,
-				      SrcKeyCell->HashTableOffset,
-				      NULL);
+      SrcHashTableCell = CmiGetCell (SrcHive,
+				     SrcKeyCell->HashTableOffset,
+				     NULL);
 
       for (i = 0; i < SrcKeyCell->NumberOfSubKeys; i++)
 	{
 	  SrcHashRecord = &SrcHashTableCell->Table[i];
-	  SrcSubKeyCell = CmiGetBlock (SrcHive, SrcHashRecord->KeyOffset, NULL);
+	  SrcSubKeyCell = CmiGetCell (SrcHive, SrcHashRecord->KeyOffset, NULL);
 
 	  /* Allocate and copy key cell */
 	  NewSubKeyCellSize = sizeof(KEY_CELL) + SrcSubKeyCell->NameSize;
-	  Status = CmiAllocateBlock (DstHive,
-				     (PVOID)&NewSubKeyCell,
-				     NewSubKeyCellSize,
-				     &NewSubKeyCellOffset);
+	  Status = CmiAllocateCell (DstHive,
+				    NewSubKeyCellSize,
+				    (PVOID)&NewSubKeyCell,
+				    &NewSubKeyCellOffset);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
@@ -4087,15 +4097,15 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
 	      PDATA_CELL NewClassNameCell;
 	      BLOCK_OFFSET NewClassNameOffset;
 
-	      SrcClassNameCell = CmiGetBlock (SrcHive,
-					      SrcSubKeyCell->ClassNameOffset,
-					      NULL),
+	      SrcClassNameCell = CmiGetCell (SrcHive,
+					     SrcSubKeyCell->ClassNameOffset,
+					     NULL),
 
 	      NewSubKeyCell->ClassSize = SrcSubKeyCell->ClassSize;
-	      Status = CmiAllocateBlock (DstHive,
-					 (PVOID)&NewClassNameCell,
-					 NewSubKeyCell->ClassSize,
-					 &NewClassNameOffset);
+	      Status = CmiAllocateCell (DstHive,
+					NewSubKeyCell->ClassSize,
+					(PVOID)&NewClassNameCell,
+					&NewClassNameOffset);
 	      if (!NT_SUCCESS(Status))
 		{
 		  DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: binhive.c,v 1.5 2003/07/30 21:22:51 royce Exp $
+/* $Id: binhive.c,v 1.6 2003/10/10 21:53:47 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/binhive.c
@@ -38,7 +38,7 @@
 #define  REG_HIVE_ID                   0x66676572
 #define  REG_BIN_ID                    0x6e696268
 #define  REG_KEY_CELL_ID               0x6b6e
-#define  REG_HASH_TABLE_BLOCK_ID       0x666c
+#define  REG_HASH_TABLE_CELL_ID        0x666c
 #define  REG_VALUE_CELL_ID             0x6b76
 
 #define  REG_BLOCK_SIZE                4096
@@ -88,7 +88,7 @@ typedef struct _HIVE_HEADER
 
   /* Offset into file from the byte after the end of the base block.
      If the hive is volatile, this is the actual pointer to the KEY_CELL */
-  BLOCK_OFFSET  RootKeyCell;
+  BLOCK_OFFSET  RootKeyOffset;
 
   /* Size of each hive block ? */
   ULONG  BlockSize;
@@ -169,7 +169,7 @@ typedef struct _KEY_CELL
   ULONG  NumberOfValues;
 
   /* Block offset of VALUE_LIST_CELL */
-  BLOCK_OFFSET  ValuesOffset;
+  BLOCK_OFFSET  ValueListOffset;
 
   /* Block offset of security cell */
   BLOCK_OFFSET  SecurityKeyOffset;
@@ -215,7 +215,7 @@ typedef struct _HASH_TABLE_CELL
 typedef struct _VALUE_LIST_CELL
 {
   LONG  CellSize;
-  BLOCK_OFFSET  Values[0];
+  BLOCK_OFFSET  ValueOffset[0];
 } __attribute__((packed)) VALUE_LIST_CELL, *PVALUE_LIST_CELL;
 
 typedef struct _VALUE_CELL
@@ -223,7 +223,7 @@ typedef struct _VALUE_CELL
   LONG  CellSize;
   USHORT  Id;	// "kv"
   USHORT  NameSize;	// length of Name
-  LONG  DataSize;	// length of datas in the cell pointed by DataOffset
+  ULONG  DataSize;	// length of datas in the cell pointed by DataOffset
   BLOCK_OFFSET  DataOffset;// datas are here if high bit of DataSize is set
   ULONG  DataType;
   USHORT  Flags;
@@ -234,6 +234,9 @@ typedef struct _VALUE_CELL
 /* VALUE_CELL.Flags constants */
 #define REG_VALUE_NAME_PACKED             0x0001
 
+/* VALUE_CELL.DataSize mask constants */
+#define REG_DATA_SIZE_MASK 0x7FFFFFFF
+#define REG_DATA_IN_OFFSET 0x80000000
 
 typedef struct _DATA_CELL
 {
@@ -269,7 +272,7 @@ CmiCreateDefaultHiveHeader(PHIVE_HEADER Header)
   Header->Unused5 = 0;
   Header->Unused6 = 1;
   Header->Unused7 = 1;
-  Header->RootKeyCell = 0;
+  Header->RootKeyOffset = -1;
   Header->BlockSize = REG_BLOCK_SIZE;
   Header->Unused6 = 1;
   Header->Checksum = 0;
@@ -300,7 +303,7 @@ CmiCreateDefaultRootKeyCell(PKEY_CELL RootKeyCell)
   RootKeyCell->NumberOfSubKeys = 0;
   RootKeyCell->HashTableOffset = -1;
   RootKeyCell->NumberOfValues = 0;
-  RootKeyCell->ValuesOffset = -1;
+  RootKeyCell->ValueListOffset = -1;
   RootKeyCell->SecurityKeyOffset = 0;
   RootKeyCell->ClassNameOffset = -1;
   RootKeyCell->NameSize = 0;
@@ -386,7 +389,7 @@ CmiCreateRegistryHive (VOID)
   /* Init root key cell */
   RootKeyCell = (PKEY_CELL)((ULONG_PTR)BinCell + REG_HBIN_DATA_OFFSET);
   CmiCreateDefaultRootKeyCell(RootKeyCell);
-  Hive->HiveHeader->RootKeyCell = REG_HBIN_DATA_OFFSET;
+  Hive->HiveHeader->RootKeyOffset = REG_HBIN_DATA_OFFSET;
 
   /* Init free cell */
   FreeCell = (PCELL_HEADER)((ULONG_PTR)RootKeyCell + sizeof(KEY_CELL));
@@ -449,7 +452,7 @@ CmiDestroyRegistryHive (PREGISTRY_HIVE Hive)
 
 
 static PVOID
-CmiGetBlock(PREGISTRY_HIVE Hive,
+CmiGetCell (PREGISTRY_HIVE Hive,
 	    BLOCK_OFFSET BlockOffset,
 	    PHBIN * ppBin)
 {
@@ -489,7 +492,7 @@ CmiMergeFree(PREGISTRY_HIVE RegistryHive,
   DPRINT("CmiMergeFree(Block %lx  Offset %lx  Size %lx) called\n",
 	 FreeBlock, FreeOffset, FreeBlock->CellSize);
 
-  CmiGetBlock(RegistryHive,
+  CmiGetCell (RegistryHive,
 	      FreeOffset,
 	      &Bin);
   DPRINT("Bin %p\n", Bin);
@@ -729,7 +732,7 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
 
 
 static BOOL
-CmiAllocateBlock(PREGISTRY_HIVE RegistryHive,
+CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
 		 PVOID *Block,
 		 LONG BlockSize,
 		 PBLOCK_OFFSET pBlockOffset)
@@ -813,16 +816,16 @@ CmiAllocateHashTableCell (PREGISTRY_HIVE Hive,
   NewHashSize = ROUND_UP(sizeof(HASH_TABLE_CELL) + 
 			 (SubKeyCount - 1) * sizeof(HASH_RECORD),
 			 0x10);
-  Status = CmiAllocateBlock (Hive,
-			     (PVOID*) &HashCell,
-			     NewHashSize,
-			     HBOffset);
+  Status = CmiAllocateCell (Hive,
+			    (PVOID*) &HashCell,
+			    NewHashSize,
+			    HBOffset);
   if ((HashCell == NULL) || (Status == FALSE))
     {
       return FALSE;
     }
 
-  HashCell->Id = REG_HASH_TABLE_BLOCK_ID;
+  HashCell->Id = REG_HASH_TABLE_CELL_ID;
   HashCell->HashTableSize = SubKeyCount;
 
   return TRUE;
@@ -839,18 +842,18 @@ CmiAddKeyToParentHashTable (PREGISTRY_HIVE Hive,
   PKEY_CELL ParentKeyCell;
   ULONG i;
 
-  ParentKeyCell = CmiGetBlock (Hive,
-			       ParentKeyOffset,
-			       NULL);
+  ParentKeyCell = CmiGetCell (Hive,
+			      ParentKeyOffset,
+			      NULL);
   if (ParentKeyCell == NULL)
     {
       DPRINT1 ("CmiGetBlock() failed\n");
       return FALSE;
     }
 
-  HashBlock =CmiGetBlock (Hive,
-			  ParentKeyCell->HashTableOffset,
-			  NULL);
+  HashBlock =CmiGetCell (Hive,
+			 ParentKeyCell->HashTableOffset,
+			 NULL);
   if (HashBlock == NULL)
     {
       DPRINT1 ("CmiGetBlock() failed\n");
@@ -885,10 +888,10 @@ CmiAllocateValueListCell (PREGISTRY_HIVE Hive,
 
   ValueListSize = ROUND_UP (ValueCount * sizeof(BLOCK_OFFSET),
 			    0x10);
-  Status = CmiAllocateBlock (Hive,
-			     (PVOID)&ValueListCell,
-			     ValueListSize,
-			     ValueListOffset);
+  Status = CmiAllocateCell (Hive,
+			    (PVOID)&ValueListCell,
+			    ValueListSize,
+			    ValueListOffset);
   if ((ValueListCell == NULL) || (Status == FALSE))
     {
       DPRINT1 ("CmiAllocateBlock() failed\n");
@@ -910,7 +913,7 @@ CmiAllocateValueCell(PREGISTRY_HIVE Hive,
   BOOL Status;
 
   NameSize = (ValueName == NULL) ? 0 : strlen (ValueName);
-  Status = CmiAllocateBlock(Hive,
+  Status = CmiAllocateCell (Hive,
 			    (PVOID*)&NewValueCell,
 			    sizeof(VALUE_CELL) + NameSize,
 			    ValueCellOffset);
@@ -947,21 +950,21 @@ CmiAddValueToKeyValueList(PREGISTRY_HIVE Hive,
   PVALUE_LIST_CELL ValueListCell;
   PKEY_CELL KeyCell;
 
-  KeyCell = CmiGetBlock (Hive, KeyCellOffset, NULL);
+  KeyCell = CmiGetCell (Hive, KeyCellOffset, NULL);
   if (KeyCell == NULL)
     {
       DPRINT1 ("CmiGetBlock() failed\n");
       return FALSE;
     }
 
-  ValueListCell = CmiGetBlock (Hive, KeyCell->ValuesOffset, NULL);
+  ValueListCell = CmiGetCell (Hive, KeyCell->ValueListOffset, NULL);
   if (ValueListCell == NULL)
     {
       DPRINT1 ("CmiGetBlock() failed\n");
       return FALSE;
     }
 
-  ValueListCell->Values[KeyCell->NumberOfValues] = ValueCellOffset;
+  ValueListCell->ValueOffset[KeyCell->NumberOfValues] = ValueCellOffset;
   KeyCell->NumberOfValues++;
 
   return TRUE;
@@ -1032,9 +1035,9 @@ CmiExportValue (PREGISTRY_HIVE Hive,
       Expand = TRUE;
     }
 
-  if (DstDataSize <= sizeof(BLOCK_OFFSET))
+  if ((DstDataSize & REG_DATA_SIZE_MASK) <= sizeof(BLOCK_OFFSET))
     {
-      ValueCell->DataSize = DstDataSize | 0x80000000;
+      ValueCell->DataSize = DstDataSize | REG_DATA_IN_OFFSET;
       ValueCell->DataType = DataType;
       if (Expand)
 	{
@@ -1051,16 +1054,16 @@ CmiExportValue (PREGISTRY_HIVE Hive,
     }
   else
     {
-      if (!CmiAllocateBlock (Hive,
-			     (PVOID *)&DataCell,
-			     DstDataSize,
-			     &DataCellOffset))
+      if (!CmiAllocateCell (Hive,
+			    (PVOID *)&DataCell,
+			    DstDataSize,
+			    &DataCellOffset))
 	{
 	  return FALSE;
 	}
 
       ValueCell->DataOffset = DataCellOffset;
-      ValueCell->DataSize = DstDataSize;
+      ValueCell->DataSize = DstDataSize & REG_DATA_SIZE_MASK;
       ValueCell->DataType = DataType;
 
       if (Expand)
@@ -1113,7 +1116,7 @@ CmiExportSubKey (PREGISTRY_HIVE Hive,
 
   /* Allocate key cell */
   KeyCellSize = sizeof(KEY_CELL) + Key->NameSize - 1;
-  if (!CmiAllocateBlock (Hive, (PVOID)&NewKeyCell, KeyCellSize, &NKBOffset))
+  if (!CmiAllocateCell (Hive, (PVOID)&NewKeyCell, KeyCellSize, &NKBOffset))
     {
       DPRINT1 ("CmiAllocateBlock() failed\n");
       return FALSE;
@@ -1127,7 +1130,7 @@ CmiExportSubKey (PREGISTRY_HIVE Hive,
   NewKeyCell->NumberOfSubKeys = 0;
   NewKeyCell->HashTableOffset = -1;
   NewKeyCell->NumberOfValues = 0;
-  NewKeyCell->ValuesOffset = -1;
+  NewKeyCell->ValueListOffset = -1;
   NewKeyCell->SecurityKeyOffset = -1;
   NewKeyCell->NameSize = Key->NameSize - 1;
   NewKeyCell->ClassNameOffset = -1;
@@ -1151,7 +1154,7 @@ CmiExportSubKey (PREGISTRY_HIVE Hive,
     {
       /* Allocate value list cell */
       CmiAllocateValueListCell (Hive,
-				&NewKeyCell->ValuesOffset,
+				&NewKeyCell->ValueListOffset,
 				ValueCount);
 
       if (Key->DataSize != 0)
@@ -1242,9 +1245,9 @@ CmiExportHive (PREGISTRY_HIVE Hive,
 
   DPRINT ("Name: %s\n", KeyName);
 
-  KeyCell = CmiGetBlock (Hive,
-			 Hive->HiveHeader->RootKeyCell,
-			 NULL);
+  KeyCell = CmiGetCell (Hive,
+			Hive->HiveHeader->RootKeyOffset,
+			NULL);
   if (KeyCell == NULL)
     {
       DPRINT1 ("CmiGetBlock() failed\n");
@@ -1257,12 +1260,12 @@ CmiExportHive (PREGISTRY_HIVE Hive,
     {
       /* Allocate value list cell */
       CmiAllocateValueListCell (Hive,
-				&KeyCell->ValuesOffset,
+				&KeyCell->ValueListOffset,
 				ValueCount);
 
       if (Key->DataSize != 0)
 	{
-	  if (!CmiExportValue (Hive, Hive->HiveHeader->RootKeyCell, Key, NULL))
+	  if (!CmiExportValue (Hive, Hive->HiveHeader->RootKeyOffset, Key, NULL))
 	    return FALSE;
 	}
 
@@ -1274,7 +1277,7 @@ CmiExportHive (PREGISTRY_HIVE Hive,
 				    VALUE,
 				    ValueList);
 
-	  if (!CmiExportValue (Hive, Hive->HiveHeader->RootKeyCell, Key, Value))
+	  if (!CmiExportValue (Hive, Hive->HiveHeader->RootKeyOffset, Key, Value))
 	    return FALSE;
 
 	  Entry = Entry->Flink;
@@ -1298,7 +1301,7 @@ CmiExportHive (PREGISTRY_HIVE Hive,
 				     KEY,
 				     KeyList);
 
-	  if (!CmiExportSubKey (Hive, Hive->HiveHeader->RootKeyCell, Key, SubKey))
+	  if (!CmiExportSubKey (Hive, Hive->HiveHeader->RootKeyOffset, Key, SubKey))
 	    return FALSE;
 
 	  Entry = Entry->Flink;

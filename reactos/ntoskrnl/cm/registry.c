@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.109 2003/10/07 14:08:43 ekohl Exp $
+/* $Id: registry.c,v 1.110 2003/10/10 21:55:16 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,9 +13,9 @@
 
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
-#include <roscfg.h>
 #include <limits.h>
 #include <string.h>
+#include <roscfg.h>
 #include <internal/ob.h>
 #include <internal/registry.h>
 #include <reactos/bugcodes.h>
@@ -310,8 +310,8 @@ CmInitializeRegistry(VOID)
 			  &RootKeyHandle);
   assert(NT_SUCCESS(Status));
   RootKey->RegistryHive = CmiVolatileHive;
-  RootKey->BlockOffset = CmiVolatileHive->HiveHeader->RootKeyCell;
-  RootKey->KeyCell = CmiGetBlock(CmiVolatileHive, RootKey->BlockOffset, NULL);
+  RootKey->KeyCellOffset = CmiVolatileHive->HiveHeader->RootKeyOffset;
+  RootKey->KeyCell = CmiGetCell (CmiVolatileHive, RootKey->KeyCellOffset, NULL);
   RootKey->ParentKey = RootKey;
   RootKey->Flags = 0;
   RootKey->NumberOfSubKeys = 0;
@@ -567,8 +567,8 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     }
 
   NewKey->RegistryHive = RegistryHive;
-  NewKey->BlockOffset = RegistryHive->HiveHeader->RootKeyCell;
-  NewKey->KeyCell = CmiGetBlock(RegistryHive, NewKey->BlockOffset, NULL);
+  NewKey->KeyCellOffset = RegistryHive->HiveHeader->RootKeyOffset;
+  NewKey->KeyCell = CmiGetCell (RegistryHive, NewKey->KeyCellOffset, NULL);
   NewKey->Flags = 0;
   NewKey->NumberOfSubKeys = 0;
   NewKey->SubKeys = ExAllocatePool(PagedPool,

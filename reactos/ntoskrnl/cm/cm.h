@@ -37,15 +37,16 @@
 
 #define  REG_BLOCK_SIZE                4096
 #define  REG_HBIN_DATA_OFFSET          32
-#define  REG_BIN_ID                    0x6e696268
 #define  REG_INIT_BLOCK_LIST_SIZE      32
 #define  REG_INIT_HASH_TABLE_SIZE      3
 #define  REG_EXTEND_HASH_TABLE_SIZE    4
 #define  REG_VALUE_LIST_CELL_MULTIPLE  4
-#define  REG_KEY_CELL_ID               0x6b6e
-#define  REG_HASH_TABLE_BLOCK_ID       0x666c
-#define  REG_VALUE_CELL_ID             0x6b76
+
 #define  REG_HIVE_ID                   0x66676572
+#define  REG_BIN_ID                    0x6e696268
+#define  REG_KEY_CELL_ID               0x6b6e
+#define  REG_HASH_TABLE_CELL_ID        0x666c
+#define  REG_VALUE_CELL_ID             0x6b76
 
 
 // BLOCK_OFFSET = offset in file after header block
@@ -80,7 +81,7 @@ typedef struct _HIVE_HEADER
 
   /* Offset into file from the byte after the end of the base block.
      If the hive is volatile, this is the actual pointer to the KEY_CELL */
-  BLOCK_OFFSET  RootKeyCell;
+  BLOCK_OFFSET  RootKeyOffset;
 
   /* Size of each hive block ? */
   ULONG  BlockSize;
@@ -161,7 +162,7 @@ typedef struct _KEY_CELL
   ULONG  NumberOfValues;
 
   /* Block offset of VALUE_LIST_CELL */
-  BLOCK_OFFSET  ValuesOffset;
+  BLOCK_OFFSET  ValueListOffset;
 
   /* Block offset of security cell */
   BLOCK_OFFSET  SecurityKeyOffset;
@@ -186,7 +187,6 @@ typedef struct _KEY_CELL
 #define  REG_KEY_ROOT_CELL                 0x0C
 #define  REG_KEY_LINK_CELL                 0x10
 #define  REG_KEY_NAME_PACKED               0x20
-
 
 /*
  * Hash record
@@ -213,7 +213,7 @@ typedef struct _HASH_TABLE_CELL
 typedef struct _VALUE_LIST_CELL
 {
   LONG  CellSize;
-  BLOCK_OFFSET  Values[0];
+  BLOCK_OFFSET  ValueOffset[0];
 } __attribute__((packed)) VALUE_LIST_CELL, *PVALUE_LIST_CELL;
 
 typedef struct _VALUE_CELL
@@ -221,7 +221,7 @@ typedef struct _VALUE_CELL
   LONG  CellSize;
   USHORT Id;	// "kv"
   USHORT NameSize;	// length of Name
-  LONG  DataSize;	// length of datas in the cell pointed by DataOffset
+  ULONG  DataSize;	// length of datas in the cell pointed by DataOffset
   BLOCK_OFFSET  DataOffset;// datas are here if high bit of DataSize is set
   ULONG  DataType;
   USHORT Flags;
@@ -231,6 +231,10 @@ typedef struct _VALUE_CELL
 
 /* VALUE_CELL.Flags constants */
 #define REG_VALUE_NAME_PACKED             0x0001
+
+/* VALUE_CELL.DataSize mask constants */
+#define REG_DATA_SIZE_MASK                 0x7FFFFFFF
+#define REG_DATA_IN_OFFSET                 0x80000000
 
 
 typedef struct _DATA_CELL
@@ -306,7 +310,7 @@ typedef struct _KEY_OBJECT
   PREGISTRY_HIVE RegistryHive;
 
   /* Block offset of the key cell this key belongs in */
-  BLOCK_OFFSET BlockOffset;
+  BLOCK_OFFSET KeyCellOffset;
 
   /* KEY_CELL this key belong in */
   PKEY_CELL KeyCell;
@@ -506,7 +510,7 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE  RegistryHive,
 		      IN PUNICODE_STRING ValueName);
 
 NTSTATUS
-CmiAllocateHashTableBlock(IN PREGISTRY_HIVE  RegistryHive,
+CmiAllocateHashTableCell(IN PREGISTRY_HIVE  RegistryHive,
   OUT PHASH_TABLE_CELL  *HashBlock,
   OUT BLOCK_OFFSET  *HBOffset,
   IN ULONG  HashTableSize);
@@ -539,19 +543,19 @@ CmiDestroyValueCell(PREGISTRY_HIVE  RegistryHive,
   BLOCK_OFFSET  VBOffset);
 
 NTSTATUS
-CmiAllocateBlock(PREGISTRY_HIVE  RegistryHive,
-  PVOID  *Block,
-  LONG  BlockSize,
-	BLOCK_OFFSET * pBlockOffset);
+CmiAllocateCell(PREGISTRY_HIVE  RegistryHive,
+		LONG  CellSize,
+		PVOID  *Cell,
+		BLOCK_OFFSET *CellOffset);
 
 NTSTATUS
-CmiDestroyBlock(PREGISTRY_HIVE  RegistryHive,
-  PVOID  Block,
-  BLOCK_OFFSET Offset);
+CmiDestroyCell(PREGISTRY_HIVE  RegistryHive,
+  PVOID  Cell,
+  BLOCK_OFFSET CellOffset);
 
 PVOID
-CmiGetBlock(PREGISTRY_HIVE  RegistryHive,
-	    BLOCK_OFFSET  BlockOffset,
+CmiGetCell (PREGISTRY_HIVE  RegistryHive,
+	    BLOCK_OFFSET  CellOffset,
 	    OUT PHBIN * ppBin);
 
 VOID
