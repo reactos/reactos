@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iospace.c,v 1.11 2001/05/01 23:08:20 chorns Exp $
+/* $Id: iospace.c,v 1.12 2001/08/03 09:36:18 ei Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/iospace.c
@@ -74,7 +74,8 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
    NTSTATUS Status;
    ULONG i;
    ULONG Attributes;
-   
+
+   MmLockAddressSpace(MmGetKernelAddressSpace());
    Result = NULL;
    Status = MmCreateMemoryArea (NULL,
 				MmGetKernelAddressSpace(),
@@ -84,6 +85,8 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
 				0,
 				&marea,
 				FALSE);
+   MmUnlockAddressSpace(MmGetKernelAddressSpace());
+
    if (!NT_SUCCESS(STATUS_SUCCESS))
      {
 	return (NULL);

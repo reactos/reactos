@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.58 2001/06/16 14:09:21 ekohl Exp $
+/* $Id: section.c,v 1.59 2001/08/03 09:36:18 ei Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -262,7 +262,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 
   FileObject = MemoryArea->Data.SectionData.Section->FileObject;
   Fcb = (PREACTOS_COMMON_FCB_HEADER)FileObject->FsContext;
-
+  
   if (FileObject->Flags & FO_DIRECT_CACHE_PAGING_READ &&
       (Offset->QuadPart % PAGESIZE) == 0)
     {
@@ -272,7 +272,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       PCACHE_SEGMENT CacheSeg;
       LARGE_INTEGER SegOffset;
       PHYSICAL_ADDRESS Addr;
-
       Status = CcRosGetCacheSegment(Fcb->Bcb,
 				 (ULONG)Offset->QuadPart,
 				 &BaseOffset,
@@ -283,12 +282,10 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 	{
 	  return(Status);
 	}
-
       if (!UptoDate)
 	{
 	  Mdl = MmCreateMdl(NULL, BaseAddress, Fcb->Bcb->CacheSegmentSize);
 	  MmBuildMdlForNonPagedPool(Mdl);
-
 	  SegOffset.QuadPart = BaseOffset;
 	  Status = IoPageRead(FileObject,
 			      Mdl,
@@ -301,7 +298,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 	      return(Status);
 	    }
 	}
-
       Addr = MmGetPhysicalAddress(BaseAddress + 
 				  Offset->QuadPart - BaseOffset);
       (*Page) = (PVOID)(ULONG)Addr.QuadPart;
@@ -312,7 +308,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
     }
   else
     {
-      
       /*
        * Allocate a page, this is rather complicated by the possibility
        * we might have to move other things out of memory
@@ -329,7 +324,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
        */
       Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
       MmBuildMdlFromPages(Mdl, (PULONG)Page);
-  
       /*
        * Call the FSD to read the page
        */
@@ -1687,7 +1681,7 @@ MmMapViewOfSegment(PEPROCESS Process,
   PMEMORY_AREA MArea;
   NTSTATUS Status;
   KIRQL oldIrql;
-
+  MmLockAddressSpace(&Process->AddressSpace);
   Status = MmCreateMemoryArea(Process,
 			      &Process->AddressSpace,
 			      MEMORY_AREA_SECTION_VIEW_COMMIT,
@@ -1696,6 +1690,7 @@ MmMapViewOfSegment(PEPROCESS Process,
 			      Protect,
 			      &MArea,
 			      FALSE);
+   MmUnlockAddressSpace(&Process->AddressSpace);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
@@ -2104,7 +2099,7 @@ NtQuerySection (IN	HANDLE	SectionHandle,
 	      ObDereferenceObject(Section);
 	      return(STATUS_INFO_LENGTH_MISMATCH);
 	    }
-
+	  Sii = (PSECTION_IMAGE_INFORMATION)SectionInformation; 
 	  Sii->EntryPoint = Section->EntryPoint;
 	  Sii->Unknown1 = 0;
 	  Sii->StackReserve = Section->StackReserve;
@@ -2182,6 +2177,7 @@ MmAllocateSection (IN ULONG Length)
 				FALSE);
    if (!NT_SUCCESS(STATUS_SUCCESS))
      {
+	MmUnlockAddressSpace(AddressSpace);
 	return (NULL);
      }
    DPRINT("Result %p\n",Result);
@@ -2194,7 +2190,8 @@ MmAllocateSection (IN ULONG Length)
 	if (!NT_SUCCESS(Status))
 	  {
 	     DbgPrint("Unable to create virtual mapping\n");
-	     KeBugCheck(0);
+	     MmUnlockAddressSpace(AddressSpace);
+		 KeBugCheck(0);
 	  }
      }
    MmUnlockAddressSpace(AddressSpace);

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.22 2001/05/03 17:23:59 chorns Exp $
+/* $Id: mminit.c,v 1.23 2001/08/03 09:36:18 ei Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -96,6 +96,8 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
    BaseAddress = (PVOID)KERNEL_BASE;
    Length = PAGE_ROUND_UP(((ULONG)&_text_end__)) - KERNEL_BASE;
    ParamLength = ParamLength - Length;
+   
+   MmLockAddressSpace(MmGetKernelAddressSpace());
    MmCreateMemoryArea(NULL,
 		      MmGetKernelAddressSpace(),
 		      MEMORY_AREA_SYSTEM,
@@ -104,12 +106,15 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_text_desc,
 		      FALSE);
+   MmUnlockAddressSpace(MmGetKernelAddressSpace());
+
    Length = PAGE_ROUND_UP(((ULONG)&_bss_end__)) - 
             PAGE_ROUND_UP(((ULONG)&_text_end__));
    ParamLength = ParamLength - Length;
    DPRINT("Length %x\n",Length);
    BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_text_end__));
    DPRINT("BaseAddress %x\n",BaseAddress);
+   MmLockAddressSpace(MmGetKernelAddressSpace());
    MmCreateMemoryArea(NULL,
 		      MmGetKernelAddressSpace(),		      
 		      MEMORY_AREA_SYSTEM,
@@ -152,7 +157,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_shared_data_desc,
 		      FALSE);
-
+   MmUnlockAddressSpace(MmGetKernelAddressSpace());
    MmSharedDataPagePhysicalAddress = MmAllocPage(0);
    Status = MmCreateVirtualMapping(NULL,
 				   (PVOID)KERNEL_SHARED_DATA_BASE,

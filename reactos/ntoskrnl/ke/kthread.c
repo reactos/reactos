@@ -109,7 +109,9 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
    if (!First)
      {
        KernelStack = NULL;
-       Status = MmCreateMemoryArea(NULL,
+       
+	   MmLockAddressSpace(MmGetKernelAddressSpace());
+	   Status = MmCreateMemoryArea(NULL,
 				   MmGetKernelAddressSpace(),
 				   MEMORY_AREA_KERNEL_STACK,
 				   &KernelStack,
@@ -117,6 +119,8 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
 				   0,
 				   &StackArea,
 				   FALSE);
+	   MmUnlockAddressSpace(MmGetKernelAddressSpace());	   
+
        if (!NT_SUCCESS(Status))
 	 {
 	   DPRINT1("Failed to create thread stack\n");
@@ -141,6 +145,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
        Thread->StackLimit = (ULONG)&init_stack;
        Thread->KernelStack = (PVOID)&init_stack_top;
      }
+   
    /* 
     * The Native API function will initialize the TEB field later 
     */

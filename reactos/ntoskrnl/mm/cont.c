@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.12 2001/05/05 19:13:10 chorns Exp $
+/* $Id: cont.c,v 1.13 2001/08/03 09:36:18 ei Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -38,7 +38,8 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
    PVOID BaseAddress = 0;
    PVOID PBase;
    ULONG i;
-
+   
+   MmLockAddressSpace(MmGetKernelAddressSpace());
    Status = MmCreateMemoryArea(NULL,
 			       MmGetKernelAddressSpace(),
 			       MEMORY_AREA_CONTINUOUS_MEMORY,
@@ -47,6 +48,8 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
 			       0,
 			       &MArea,
 			       FALSE);
+   MmUnlockAddressSpace(MmGetKernelAddressSpace());
+
    if (!NT_SUCCESS(Status))
      {
 	return(NULL);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wset.c,v 1.9 2001/03/25 02:34:29 dwelch Exp $
+/* $Id: wset.c,v 1.10 2001/08/03 09:36:19 ei Exp $
  * 
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/wset.c
@@ -143,7 +143,8 @@ MmInitializeWorkingSet(PEPROCESS Process, PMADDRESS_SPACE AddressSpace)
       KeBugCheck(0);
     }
   
-  BaseAddress = 0;
+  MmLockAddressSpace(MmGetKernelAddressSpace());
+  BaseAddress = NULL;
   Status = MmCreateMemoryArea(NULL,
 			      MmGetKernelAddressSpace(),
 			      MEMORY_AREA_WORKING_SET,
@@ -152,6 +153,7 @@ MmInitializeWorkingSet(PEPROCESS Process, PMADDRESS_SPACE AddressSpace)
 			      0,
 			      &AddressSpace->WorkingSetArea,
 			      FALSE);
+  MmUnlockAddressSpace(MmGetKernelAddressSpace());
   if (!NT_SUCCESS(Status))
     {
       KeBugCheck(0);

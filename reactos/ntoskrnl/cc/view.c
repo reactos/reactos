@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.26 2001/05/04 01:21:43 rex Exp $
+/* $Id: view.c,v 1.27 2001/08/03 09:36:18 ei Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -119,7 +119,8 @@ CcRosGetCacheSegment(PBCB Bcb,
    PLIST_ENTRY current_entry;
    PCACHE_SEGMENT current;
    ULONG i;
-   
+   NTSTATUS Status;
+
    KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
    
    current_entry = Bcb->CacheSegmentListHead.Flink;
@@ -145,14 +146,17 @@ CcRosGetCacheSegment(PBCB Bcb,
 	current_entry = current_entry->Flink;
      }
 
-   DPRINT("Creating new segment\n");
+   DPRINT("Creating new segment\n"); 
    
    KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
 
    current = ExAllocatePoolWithTag(NonPagedPool, sizeof(CACHE_SEGMENT), 
 				   TAG_CSEG);
+
+   MmLockAddressSpace(MmGetKernelAddressSpace());
    current->BaseAddress = NULL;
-   MmCreateMemoryArea(KernelMode,
+
+   Status = MmCreateMemoryArea(KernelMode,
 		      MmGetKernelAddressSpace(),
 		      MEMORY_AREA_CACHE_SEGMENT,
 		      &current->BaseAddress,
@@ -160,6 +164,12 @@ CcRosGetCacheSegment(PBCB Bcb,
 		      PAGE_READWRITE,
 		      (PMEMORY_AREA*)&current->MemoryArea,
 		      FALSE);
+   if (!NT_SUCCESS(Status))
+     {
+	MmUnlockAddressSpace(MmGetKernelAddressSpace());
+	KeBugCheck(0);
+     }
+   		
    current->Valid = FALSE;
    current->FileOffset = ROUND_DOWN(FileOffset, Bcb->CacheSegmentSize);
    current->Bcb = Bcb;
@@ -172,14 +182,17 @@ CcRosGetCacheSegment(PBCB Bcb,
    *BaseOffset = current->FileOffset;
    for (i = 0; i < (Bcb->CacheSegmentSize / PAGESIZE); i++)
      {
-       MmCreateVirtualMapping(NULL,
+       Status = MmCreateVirtualMapping(NULL,
 			      current->BaseAddress + (i * PAGESIZE),
 			      PAGE_READWRITE,
 			      (ULONG)MmAllocPage(0));
-     }
-   
-   
-   
+   		
+		if (!NT_SUCCESS(Status)){
+			MmUnlockAddressSpace(MmGetKernelAddressSpace());
+			KeBugCheck(0);
+   		}
+	 }
+   MmUnlockAddressSpace(MmGetKernelAddressSpace());
    return(STATUS_SUCCESS);
 }
 
