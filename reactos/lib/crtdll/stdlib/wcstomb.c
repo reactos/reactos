@@ -22,8 +22,6 @@
 #include <msvcrt/errno.h>
 #include <msvcrt/wchar.h>
 
-#include "libc/file.h"
-
 #ifndef EILSEQ
 #define EILSEQ EINVAL
 #endif
