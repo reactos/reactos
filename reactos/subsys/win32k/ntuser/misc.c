@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.63 2004/04/25 20:05:30 weiden Exp $
+/* $Id: misc.c,v 1.64 2004/04/30 22:18:00 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,6 +19,7 @@
 #include <include/painting.h>
 #include <include/dce.h>
 #include <include/inteng.h>
+#include <include/input.h>
 #include <include/intgdi.h>
 #include <include/mouse.h>
 #include <include/winsta.h>
@@ -204,7 +205,6 @@ NtUserCallTwoParam(
 {
   NTSTATUS Status;
   PWINDOW_OBJECT WindowObject;
-  PSYSTEM_CURSORINFO CurInfo;
   PWINSTATION_OBJECT WinStaObject;
   POINT Pos;
   
@@ -329,6 +329,7 @@ NtUserCallTwoParam(
       if(Param2)
       {
         /* set cursor position */
+        MOUSEINPUT mi;
         
         Status = MmCopyFromCaller(&Pos, (PPOINT)Param1, sizeof(POINT));
         if(!NT_SUCCESS(Status))
@@ -338,15 +339,13 @@ NtUserCallTwoParam(
           return FALSE;
         }
         
-        CurInfo = &WinStaObject->SystemCursor;
-        /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
-        
-        //CheckClipCursor(&Pos->x, &Pos->y, CurInfo);  
-        if((Pos.x != CurInfo->x) || (Pos.y != CurInfo->y))
-        {
-          MouseMoveCursor(Pos.x, Pos.y);
-        }
-
+        mi.dx = Pos.x;
+        mi.dy = Pos.y;
+        mi.mouseData = 0;
+        mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
+        mi.time = 0;
+        mi.dwExtraInfo = 0;
+        IntMouseInput(&mi);
       }
       else
       {

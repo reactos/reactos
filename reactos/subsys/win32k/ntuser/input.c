@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.29 2004/04/29 20:41:03 weiden Exp $
+/* $Id: input.c,v 1.30 2004/04/30 22:18:00 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -41,6 +41,7 @@
 #include <include/mouse.h>
 #include <include/input.h>
 #include <include/hotkey.h>
+#include <include/eng.h>
 #include <rosrtl/string.h>
 
 #define NDEBUG
@@ -523,9 +524,227 @@ NtUserBlockInput(
 }
 
 BOOL FASTCALL
+IntSwapMouseButton(PWINSTATION_OBJECT WinStaObject, BOOL Swap)
+{
+  BOOL res = WinStaObject->SystemCursor.SwapButtons;
+  WinStaObject->SystemCursor.SwapButtons = Swap;
+  return res;
+}
+
+BOOL FASTCALL
 IntMouseInput(MOUSEINPUT *mi)
 {
-  return FALSE;
+  const UINT SwapBtnMsg[2][2] = {{WM_LBUTTONDOWN, WM_RBUTTONDOWN},
+                                 {WM_LBUTTONUP, WM_RBUTTONUP}};
+  const WPARAM SwapBtn[2] = {MK_LBUTTON, MK_RBUTTON};
+  POINT MousePos;
+  PSYSTEM_CURSORINFO CurInfo;
+  PWINSTATION_OBJECT WinSta;
+  BOOL DoMove, SwapButtons;
+  MSG Msg;
+  SURFOBJ *SurfObj;
+  PSURFGDI SurfGDI;
+  PDC dc;
+  RECTL PointerRect;
+  
+#if 1
+  HDC hDC;
+  
+  /* FIXME - get the screen dc from the window station or desktop */
+  if(!(hDC = IntGetScreenDC()))
+  {
+    return FALSE;
+  }
+#endif
+  
+  ASSERT(mi);
+#if 0
+  WinSta = PsGetWin32Process()->WindowStation;
+#else
+  /* FIXME - ugly hack but as long as we're using this dumb callback from the
+             mouse class driver, we can't access the window station from the calling
+             process */
+  WinSta = InputWindowStation;
+#endif
+  ASSERT(WinSta);
+  
+  CurInfo = &WinSta->SystemCursor;
+  
+  dc = DC_LockDc(hDC);
+  SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
+  SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
+  DC_UnlockDc(hDC);
+  ASSERT(SurfObj);
+  ASSERT(SurfGDI);
+  
+  if(!mi->time)
+  {
+    LARGE_INTEGER LargeTickCount;
+    KeQueryTickCount(&LargeTickCount);
+    mi->time = LargeTickCount.u.LowPart;
+  }
+  
+  SwapButtons = WinSta->SystemCursor.SwapButtons;
+  DoMove = FALSE;
+  ExAcquireFastMutex(&CurInfo->CursorMutex);
+  MousePos.x = CurInfo->x;
+  MousePos.y = CurInfo->y;
+  if(mi->dwFlags & MOUSEEVENTF_MOVE)
+  {
+    if(mi->dwFlags & MOUSEEVENTF_ABSOLUTE)
+    {
+      MousePos.x = mi->dx;
+      MousePos.y = mi->dy;
+    }
+    else
+    {
+      MousePos.x += mi->dx;
+      MousePos.y += mi->dy;
+    }
+    
+    if(CurInfo->CursorClipInfo.IsClipped)
+    {
+      /* The mouse cursor needs to be clipped */
+      
+      if(MousePos.x > CurInfo->CursorClipInfo.Right)
+        MousePos.x = CurInfo->CursorClipInfo.Right;
+      if(MousePos.x <= CurInfo->CursorClipInfo.Left)
+        MousePos.x = CurInfo->CursorClipInfo.Left;
+      if(MousePos.y > CurInfo->CursorClipInfo.Bottom)
+        MousePos.y = CurInfo->CursorClipInfo.Bottom;
+      if(MousePos.y <= CurInfo->CursorClipInfo.Top)
+        MousePos.y = CurInfo->CursorClipInfo.Top;
+    }
+    
+    if(MousePos.x < 0)
+      MousePos.x = 0;
+    if(MousePos.y < 0)
+      MousePos.y = 0;
+    if(MousePos.x >= SurfObj->sizlBitmap.cx)
+      MousePos.x = SurfObj->sizlBitmap.cx - 1;
+    if(MousePos.y >= SurfObj->sizlBitmap.cy)
+      MousePos.y = SurfObj->sizlBitmap.cy - 1;
+    
+    if((DoMove = (MousePos.x != CurInfo->x || MousePos.y != CurInfo->y)))
+    {
+      CurInfo->x = MousePos.x;
+      CurInfo->y = MousePos.y;
+      if(SurfGDI->MovePointer)
+      {
+        IntLockGDIDriver(SurfGDI);
+        SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
+        IntUnLockGDIDriver(SurfGDI);
+      }
+      else
+      {
+        IntLockGDIDriver(SurfGDI);
+        EngMovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
+        IntUnLockGDIDriver(SurfGDI);
+      }
+      SetPointerRect(CurInfo, &PointerRect);
+    }
+  }
+
+  ExReleaseFastMutex(&CurInfo->CursorMutex);
+  
+  /*
+   * Insert the messages into the system queue
+   */
+  
+  Msg.wParam = CurInfo->ButtonsDown;
+  Msg.lParam = MAKELPARAM(MousePos.x, MousePos.y);
+  Msg.pt = MousePos;
+  if(DoMove)
+  {
+    Msg.message = WM_MOUSEMOVE;
+    MsqInsertSystemMessage(&Msg);
+  }
+  
+  Msg.message = 0;
+  if(mi->dwFlags & MOUSEEVENTF_LEFTDOWN)
+  {
+    Msg.message = SwapBtnMsg[0][SwapButtons];
+    CurInfo->ButtonsDown |= SwapBtn[SwapButtons];
+    MsqInsertSystemMessage(&Msg);
+  }
+  else if(mi->dwFlags & MOUSEEVENTF_LEFTUP)
+  {
+    Msg.message = SwapBtnMsg[1][SwapButtons];
+    CurInfo->ButtonsDown &= ~SwapBtn[SwapButtons];
+    MsqInsertSystemMessage(&Msg);
+  }
+  if(mi->dwFlags & MOUSEEVENTF_MIDDLEDOWN)
+  {
+    Msg.message = WM_MBUTTONDOWN;
+    CurInfo->ButtonsDown |= MK_MBUTTON;
+    MsqInsertSystemMessage(&Msg);
+  }
+  else if(mi->dwFlags & MOUSEEVENTF_MIDDLEUP)
+  {
+    Msg.message = WM_MBUTTONUP;
+    CurInfo->ButtonsDown &= ~MK_MBUTTON;
+    MsqInsertSystemMessage(&Msg);
+  }
+  if(mi->dwFlags & MOUSEEVENTF_RIGHTDOWN)
+  {
+    Msg.message = SwapBtnMsg[0][!SwapButtons];
+    CurInfo->ButtonsDown |= SwapBtn[!SwapButtons];
+    MsqInsertSystemMessage(&Msg);
+  }
+  else if(mi->dwFlags & MOUSEEVENTF_RIGHTUP)
+  {
+    Msg.message = SwapBtnMsg[1][!SwapButtons];
+    CurInfo->ButtonsDown &= ~SwapBtn[!SwapButtons];
+    MsqInsertSystemMessage(&Msg);
+  }
+  
+  if((mi->dwFlags & (MOUSEEVENTF_XDOWN | MOUSEEVENTF_XUP)) &&
+     (mi->dwFlags & MOUSEEVENTF_WHEEL))
+  {
+    /* fail because both types of events use the mouseData field */
+    return FALSE;
+  }
+  
+  if(mi->dwFlags & MOUSEEVENTF_XDOWN)
+  {
+    Msg.message = WM_XBUTTONDOWN;
+    if(mi->mouseData & XBUTTON1)
+    {
+      Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
+      CurInfo->ButtonsDown |= XBUTTON1;
+      MsqInsertSystemMessage(&Msg);
+    }
+    if(mi->mouseData & XBUTTON2)
+    {
+      Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
+      CurInfo->ButtonsDown |= XBUTTON2;
+      MsqInsertSystemMessage(&Msg);
+    }
+  }
+  else if(mi->dwFlags & MOUSEEVENTF_XUP)
+  {
+    Msg.message = WM_XBUTTONUP;
+    if(mi->mouseData & XBUTTON1)
+    {
+      Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
+      CurInfo->ButtonsDown &= ~XBUTTON1;
+      MsqInsertSystemMessage(&Msg);
+    }
+    if(mi->mouseData & XBUTTON2)
+    {
+      Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
+      CurInfo->ButtonsDown &= ~XBUTTON2;
+      MsqInsertSystemMessage(&Msg);
+    }
+  }
+  if(mi->dwFlags & MOUSEEVENTF_WHEEL)
+  {
+    Msg.message = WM_MOUSEWHEEL;
+    Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, mi->mouseData);
+    MsqInsertSystemMessage(&Msg);
+  }
+  
+  return TRUE;
 }
 
 BOOL FASTCALL

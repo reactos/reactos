@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.53 2004/04/09 20:03:20 navaraf Exp $ */
+/* $Id: cursoricon.c,v 1.54 2004/04/30 22:18:00 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -32,6 +32,7 @@
 #include <include/error.h>
 #include <include/mouse.h>
 #include <include/window.h>
+#include <include/input.h>
 #include <include/cursoricon.h>
 #include <include/inteng.h>
 #include <include/surface.h>
@@ -79,15 +80,6 @@ IntCopyBitmap(HBITMAP bmp)
   }
   
   return ret;
-}
-
-STATIC VOID FASTCALL
-SetPointerRect(PSYSTEM_CURSORINFO CurInfo, PRECTL PointerRect)
-{
-  CurInfo->PointerRectLeft = PointerRect->left;
-  CurInfo->PointerRectRight = PointerRect->right;
-  CurInfo->PointerRectTop = PointerRect->top;
-  CurInfo->PointerRectBottom = PointerRect->bottom;
 }
 
 #define COLORCURSORS_ALLOWED FALSE
@@ -740,6 +732,8 @@ NtUserClipCursor(
   if((Rect.right > Rect.left) && (Rect.bottom > Rect.top)
      && DesktopWindow)
   {
+    MOUSEINPUT mi;
+    
     CurInfo->CursorClipInfo.IsClipped = TRUE;
     CurInfo->CursorClipInfo.Left = max(Rect.left, DesktopWindow->WindowRect.left);
     CurInfo->CursorClipInfo.Top = max(Rect.top, DesktopWindow->WindowRect.top);
@@ -747,11 +741,18 @@ NtUserClipCursor(
     CurInfo->CursorClipInfo.Bottom = min(Rect.bottom - 1, DesktopWindow->WindowRect.bottom - 1);
     IntReleaseWindowObject(DesktopWindow);
     
-    MouseMoveCursor(CurInfo->x, CurInfo->y);  
-  }
-  else
-    WinStaObject->SystemCursor.CursorClipInfo.IsClipped = FALSE;
+    mi.dx = CurInfo->x;
+    mi.dy = CurInfo->y;
+    mi.mouseData = 0;
+    mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
+    mi.time = 0;
+    mi.dwExtraInfo = 0;
+    IntMouseInput(&mi);
     
+    return TRUE;
+  }
+  
+  WinStaObject->SystemCursor.CursorClipInfo.IsClipped = FALSE;
   ObDereferenceObject(WinStaObject);
   
   return TRUE;

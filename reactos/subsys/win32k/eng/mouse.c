@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.66 2004/04/16 18:53:53 weiden Exp $
+/* $Id: mouse.c,v 1.67 2004/04/30 22:17:59 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -45,45 +45,65 @@
 #include "include/eng.h"
 #include "include/tags.h"
 #include <include/mouse.h>
+#include <include/input.h>
 
 #define NDEBUG
 #include <debug.h>
-
-#define GETSYSCURSOR(x) ((x) - OCR_NORMAL)
 
 /* FUNCTIONS *****************************************************************/
 
 BOOL FASTCALL
 IntIsPrimarySurface(PSURFGDI SurfGDI);
 
-
-BOOL FASTCALL
-IntCheckClipCursor(LONG *x, LONG *y, PSYSTEM_CURSORINFO CurInfo)
+VOID FASTCALL
+EnableMouse(HDC hDisplayDC)
 {
-  if(CurInfo->CursorClipInfo.IsClipped)
+  PDC dc;
+  SURFOBJ *SurfObj;
+  PSURFGDI SurfGDI;
+
+  if( hDisplayDC && InputWindowStation)
   {
-    if(*x > CurInfo->CursorClipInfo.Right)
-      *x = CurInfo->CursorClipInfo.Right;
-    if(*x < CurInfo->CursorClipInfo.Left)
-      *x = CurInfo->CursorClipInfo.Left;
-    if(*y > CurInfo->CursorClipInfo.Bottom)
-      *y = CurInfo->CursorClipInfo.Bottom;
-    if(*y < CurInfo->CursorClipInfo.Top)
-      *y = CurInfo->CursorClipInfo.Top;
-    return TRUE;
+    if(!IntGetWindowStationObject(InputWindowStation))
+    {
+       InputWindowStation->SystemCursor.Enabled = FALSE;
+       return;
+    }
+    
+    dc = DC_LockDc(hDisplayDC);
+    SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
+    SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
+    DC_UnlockDc( hDisplayDC );
+    
+    IntSetCursor(InputWindowStation, NULL, TRUE);
+    
+    InputWindowStation->SystemCursor.Enabled = (SPS_ACCEPT_EXCLUDE == SurfGDI->PointerStatus ||
+                                                SPS_ACCEPT_NOEXCLUDE == SurfGDI->PointerStatus);
+    
+    /* Move the cursor to the screen center */
+    DPRINT("Setting Cursor up at 0x%x, 0x%x\n", SurfObj->sizlBitmap.cx / 2, SurfObj->sizlBitmap.cy / 2);
+    #if 0
+    ExAcquireFastMutex(&CurInfo->CursorMutex);
+    MouseMoveCursor(SurfObj->sizlBitmap.cx / 2, SurfObj->sizlBitmap.cy / 2);
+    ExReleaseFastMutex(&CurInfo->CursorMutex);
+    #endif
+
+    ObDereferenceObject(InputWindowStation);
   }
-  return TRUE;
+  else
+  {
+    if(IntGetWindowStationObject(InputWindowStation))
+    {
+       IntSetCursor(InputWindowStation, NULL, TRUE);
+       InputWindowStation->SystemCursor.Enabled = FALSE;
+       InputWindowStation->SystemCursor.CursorClipInfo.IsClipped = FALSE;
+	   ObDereferenceObject(InputWindowStation);
+       return;
+    }
+  }
 }
 
-BOOL FASTCALL
-IntSwapMouseButton(PWINSTATION_OBJECT WinStaObject, BOOL Swap)
-{
-  BOOL res = WinStaObject->SystemCursor.SwapButtons;
-  WinStaObject->SystemCursor.SwapButtons = Swap;
-  return res;
-}
-
-INT STDCALL
+INT FASTCALL
 MouseSafetyOnDrawStart(SURFOBJ *SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
 		       LONG HazardY1, LONG HazardX2, LONG HazardY2)
 /*
@@ -166,7 +186,7 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
   return(TRUE);
 }
 
-STATIC VOID FASTCALL
+VOID FASTCALL
 SetPointerRect(PSYSTEM_CURSORINFO CurInfo, PRECTL PointerRect)
 {
   CurInfo->PointerRectLeft = PointerRect->left;
@@ -237,306 +257,101 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj, SURFGDI *SurfGDI)
   return(TRUE);
 }
 
-BOOL FASTCALL
-MouseMoveCursor(LONG X, LONG Y)
-{
-  HDC hDC;
-  PDC dc;
-  BOOL res = FALSE;
-  SURFOBJ *SurfObj;
-  PSURFGDI SurfGDI;
-  PSYSTEM_CURSORINFO CurInfo;
-  MSG Msg;
-  LARGE_INTEGER LargeTickCount;
-  ULONG TickCount;
-  RECTL PointerRect;
-  
-  if(!InputWindowStation)
-    return FALSE;
-  
-  if(IntGetWindowStationObject(InputWindowStation))
-  {
-    CurInfo = &InputWindowStation->SystemCursor;
-    if(!CurInfo->Enabled)
-    {
-      ObDereferenceObject(InputWindowStation);
-      return FALSE;
-    }
-    hDC = IntGetScreenDC();
-    if(!hDC)
-    {
-      ObDereferenceObject(InputWindowStation);
-      return FALSE;
-    }
-    dc = DC_LockDc(hDC);
-    SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
-    SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
-    DC_UnlockDc( hDC );
-    IntCheckClipCursor(&X, &Y, CurInfo);
-    if((X != CurInfo->x) || (Y != CurInfo->y))
-    {
-      /* move cursor */
-      CurInfo->x = X;
-      CurInfo->y = Y;
-      if(CurInfo->Enabled)
-      {
-        ExAcquireFastMutex(&CurInfo->CursorMutex);
-        IntLockGDIDriver(SurfGDI);
-        if (SurfGDI->MovePointer != NULL)
-          SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
-        IntUnLockGDIDriver(SurfGDI);
-        SetPointerRect(CurInfo, &PointerRect);
-        ExReleaseFastMutex(&CurInfo->CursorMutex);
-      }
-      /* send MOUSEMOVE message */
-      KeQueryTickCount(&LargeTickCount);
-      TickCount = LargeTickCount.u.LowPart;
-      Msg.wParam = CurInfo->ButtonsDown;
-      Msg.lParam = MAKELPARAM(X, Y);
-      Msg.message = WM_MOUSEMOVE;
-      Msg.time = TickCount;
-      Msg.pt.x = X;
-      Msg.pt.y = Y;
-      MsqInsertSystemMessage(&Msg);
-      res = TRUE;
-    }
-        
-    ObDereferenceObject(InputWindowStation);
-    return res;
-  }
-  else
-    return FALSE;
-}
+#define ClearMouseInput(mi) \
+  mi.dx = 0; \
+  mi.dy = 0; \
+  mi.mouseData = 0; \
+  mi.dwFlags = 0;
+
+#define SendMouseEvent(mi) \
+  if(mi.dx != 0 || mi.dy != 0) \
+    mi.dwFlags |= MOUSEEVENTF_MOVE; \
+  if(mi.dwFlags) \
+    IntMouseInput(&mi); \
+  ClearMouseInput(mi);
 
 VOID /* STDCALL */
 MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
-/*
- * FUNCTION: Call by the mouse driver when input events occur.
- */
 {
+  PMOUSE_INPUT_DATA mid;
+  MOUSEINPUT mi;
   ULONG i;
-  PSYSTEM_CURSORINFO CurInfo;
-  BOOL MouseEnabled = FALSE;
-  BOOL Moved = FALSE;
-  LONG mouse_ox, mouse_oy;
-  LONG mouse_cx = 0, mouse_cy = 0;
-  LONG dScroll = 0;
-  HDC hDC;
-  PDC dc;
-  SURFOBJ *SurfObj;
-  PSURFGDI SurfGDI;
-  MSG Msg;
-  RECTL PointerRect;
   
-  hDC = IntGetScreenDC();
-  
-  if(!hDC || !InputWindowStation)
-    return;
-
-  if(IntGetWindowStationObject(InputWindowStation))
+  ClearMouseInput(mi);
+  mi.time = 0;
+  mi.dwExtraInfo = 0;
+  for(i = 0; i < InputCount; i++)
   {
-    CurInfo = &InputWindowStation->SystemCursor;
-    MouseEnabled = CurInfo->Enabled;
-    if(!MouseEnabled)
+    mid = (Data + i);
+    mi.dx += mid->LastX;
+    mi.dy += mid->LastY;
+    
+    if(mid->ButtonFlags)
     {
-      ObDereferenceObject(InputWindowStation);
-      return;
-    }
-    mouse_ox = CurInfo->x;
-    mouse_oy = CurInfo->y;
-  }
-  else
-    return;
-
-  dc = DC_LockDc(hDC);
-  SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
-  SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
-  DC_UnlockDc( hDC );
-
-  /* Compile the total mouse movement change and dispatch button events. */
-  for (i = 0; i < InputCount; i++)
-  {
-    mouse_cx += Data[i].LastX;
-    mouse_cy += Data[i].LastY;
-    
-    CurInfo->x += Data[i].LastX;
-    CurInfo->y += Data[i].LastY;
-    
-    CurInfo->x = max(CurInfo->x, 0);
-    CurInfo->y = max(CurInfo->y, 0);
-    CurInfo->x = min(CurInfo->x, SurfObj->sizlBitmap.cx - 1);
-    CurInfo->y = min(CurInfo->y, SurfObj->sizlBitmap.cy - 1);
-    
-    IntCheckClipCursor(&CurInfo->x, &CurInfo->y, CurInfo);
-
-    Msg.wParam = CurInfo->ButtonsDown;
-    Msg.lParam = MAKELPARAM(CurInfo->x, CurInfo->y);
-    Msg.message = WM_MOUSEMOVE;
-    Msg.pt.x = CurInfo->x;
-    Msg.pt.y = CurInfo->y;
-    
-    if (Data[i].ButtonFlags != 0)
-    {
-      if ((Data[i].ButtonFlags & MOUSE_LEFT_BUTTON_DOWN) > 0)
+      if(mid->ButtonFlags & MOUSE_LEFT_BUTTON_DOWN)
       {
-      	CurInfo->ButtonsDown |= (CurInfo->SwapButtons ? MK_RBUTTON : MK_LBUTTON);
-        Msg.message = (CurInfo->SwapButtons ? WM_RBUTTONDOWN : WM_LBUTTONDOWN);
+        mi.dwFlags |= MOUSEEVENTF_LEFTDOWN;
+        SendMouseEvent(mi);
       }
-      if ((Data[i].ButtonFlags & MOUSE_MIDDLE_BUTTON_DOWN) > 0)
+      if(mid->ButtonFlags & MOUSE_LEFT_BUTTON_UP)
       {
-      	CurInfo->ButtonsDown |= MK_MBUTTON;
-        Msg.message = WM_MBUTTONDOWN;
+        mi.dwFlags |= MOUSEEVENTF_LEFTUP;
+        SendMouseEvent(mi);
       }
-      if ((Data[i].ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN) > 0)
+      if(mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_DOWN)
       {
-      	CurInfo->ButtonsDown |= (CurInfo->SwapButtons ? MK_LBUTTON : MK_RBUTTON);
-        Msg.message = (CurInfo->SwapButtons ? WM_LBUTTONDOWN : WM_RBUTTONDOWN);
+        mi.dwFlags |= MOUSEEVENTF_MIDDLEDOWN;
+        SendMouseEvent(mi);
       }
-      
-      if ((Data[i].ButtonFlags & MOUSE_BUTTON_4_DOWN) > 0)
+      if(mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_UP)
       {
-      	CurInfo->ButtonsDown |= MK_XBUTTON1;
-        Msg.message = WM_XBUTTONDOWN;
+        mi.dwFlags |= MOUSEEVENTF_MIDDLEUP;
+        SendMouseEvent(mi);
       }
-      if ((Data[i].ButtonFlags & MOUSE_BUTTON_5_DOWN) > 0)
+      if(mid->ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN)
       {
-      	CurInfo->ButtonsDown |= MK_XBUTTON2;
-        Msg.message = WM_XBUTTONDOWN;
+        mi.dwFlags |= MOUSEEVENTF_RIGHTDOWN;
+        SendMouseEvent(mi);
       }
-
-      if ((Data[i].ButtonFlags & MOUSE_LEFT_BUTTON_UP) > 0)
+      if(mid->ButtonFlags & MOUSE_RIGHT_BUTTON_UP)
       {
-      	CurInfo->ButtonsDown &= (CurInfo->SwapButtons ? ~MK_RBUTTON : ~MK_LBUTTON);
-        Msg.message = (CurInfo->SwapButtons ? WM_RBUTTONUP : WM_LBUTTONUP);
+        mi.dwFlags |= MOUSEEVENTF_RIGHTUP;
+        SendMouseEvent(mi);
       }
-      if ((Data[i].ButtonFlags & MOUSE_MIDDLE_BUTTON_UP) > 0)
+      if(mid->ButtonFlags & MOUSE_BUTTON_4_DOWN)
       {
-      	CurInfo->ButtonsDown &= ~MK_MBUTTON;
-        Msg.message = WM_MBUTTONUP;
+        mi.mouseData |= XBUTTON1;
+        mi.dwFlags |= MOUSEEVENTF_XDOWN;
+        SendMouseEvent(mi);
       }
-      if ((Data[i].ButtonFlags & MOUSE_RIGHT_BUTTON_UP) > 0)
+      if(mid->ButtonFlags & MOUSE_BUTTON_4_UP)
       {
-      	CurInfo->ButtonsDown &= (CurInfo->SwapButtons ? ~MK_LBUTTON : ~MK_RBUTTON);
-        Msg.message = (CurInfo->SwapButtons ? WM_LBUTTONUP : WM_RBUTTONUP);
+        mi.mouseData |= XBUTTON1;
+        mi.dwFlags |= MOUSEEVENTF_XUP;
+        SendMouseEvent(mi);
       }
-      if ((Data[i].ButtonFlags & MOUSE_BUTTON_4_UP) > 0)
+      if(mid->ButtonFlags & MOUSE_BUTTON_5_DOWN)
       {
-      	CurInfo->ButtonsDown &= ~MK_XBUTTON1;
-        Msg.message = WM_XBUTTONUP;
+        mi.mouseData |= XBUTTON2;
+        mi.dwFlags |= MOUSEEVENTF_XDOWN;
+        SendMouseEvent(mi);
       }
-      if ((Data[i].ButtonFlags & MOUSE_BUTTON_5_UP) > 0)
+      if(mid->ButtonFlags & MOUSE_BUTTON_5_UP)
       {
-      	CurInfo->ButtonsDown &= ~MK_XBUTTON2;
-        Msg.message = WM_XBUTTONUP;
+        mi.mouseData |= XBUTTON2;
+        mi.dwFlags |= MOUSEEVENTF_XUP;
+        SendMouseEvent(mi);
       }
-      if ((Data[i].ButtonFlags & MOUSE_WHEEL) > 0)
+      if(mid->ButtonFlags & MOUSE_WHEEL)
       {
-        dScroll += (LONG)Data[i].ButtonData;
+        mi.mouseData = mid->ButtonData;
+        mi.dwFlags |= MOUSEEVENTF_WHEEL;
+        SendMouseEvent(mi);
       }
-      
-      if (Data[i].ButtonFlags != MOUSE_WHEEL)
-      {
-        Moved = (0 != mouse_cx) || (0 != mouse_cy);
-        if(Moved && MouseEnabled)
-        {
-          if (!CurInfo->SafetySwitch && 0 == CurInfo->SafetyRemoveCount &&
-              ((mouse_ox != CurInfo->x) || (mouse_oy != CurInfo->y)))
-          {
-            ExAcquireFastMutex(&CurInfo->CursorMutex);
-            IntLockGDIDriver(SurfGDI);
-            SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
-            IntUnLockGDIDriver(SurfGDI);
-            SetPointerRect(CurInfo, &PointerRect);
-            ExReleaseFastMutex(&CurInfo->CursorMutex);
-            mouse_cx = 0;
-            mouse_cy = 0;
-          }
-        }
-        
-        Msg.wParam = CurInfo->ButtonsDown;
-        MsqInsertSystemMessage(&Msg);
-      }
-    }
-  }
-
-  /* If the mouse moved then move the pointer. */
-  if ((mouse_cx != 0 || mouse_cy != 0) && MouseEnabled)
-  {
-    Msg.wParam = CurInfo->ButtonsDown;
-    Msg.message = WM_MOUSEMOVE;
-    Msg.pt.x = CurInfo->x;
-    Msg.pt.y = CurInfo->y;
-    Msg.lParam = MAKELPARAM(CurInfo->x, CurInfo->y);
-    MsqInsertSystemMessage(&Msg);
-    
-    if (!CurInfo->SafetySwitch && 0 == CurInfo->SafetyRemoveCount &&
-        ((mouse_ox != CurInfo->x) || (mouse_oy != CurInfo->y)))
-    {
-      ExAcquireFastMutex(&CurInfo->CursorMutex);
-      IntLockGDIDriver(SurfGDI);
-      SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
-      IntUnLockGDIDriver(SurfGDI);
-      SetPointerRect(CurInfo, &PointerRect);
-      ExReleaseFastMutex(&CurInfo->CursorMutex);
     }
   }
   
-  /* send WM_MOUSEWHEEL message */
-  if(dScroll && MouseEnabled)
-  {
-    Msg.message = WM_MOUSEWHEEL;
-    Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, dScroll);
-    Msg.lParam = MAKELPARAM(CurInfo->x, CurInfo->y);
-    Msg.pt.x = CurInfo->x;
-    Msg.pt.y = CurInfo->y;
-    MsqInsertSystemMessage(&Msg);
-  }
-
-  ObDereferenceObject(InputWindowStation);
-}
-
-VOID FASTCALL
-EnableMouse(HDC hDisplayDC)
-{
-  PDC dc;
-  SURFOBJ *SurfObj;
-  PSURFGDI SurfGDI;
-
-  if( hDisplayDC && InputWindowStation)
-  {
-    if(!IntGetWindowStationObject(InputWindowStation))
-    {
-       InputWindowStation->SystemCursor.Enabled = FALSE;
-       return;
-    }
-    
-    dc = DC_LockDc(hDisplayDC);
-    SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
-    SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
-    DC_UnlockDc( hDisplayDC );
-    
-    IntSetCursor(InputWindowStation, NULL, TRUE);
-    
-    InputWindowStation->SystemCursor.Enabled = (SPS_ACCEPT_EXCLUDE == SurfGDI->PointerStatus ||
-                                                SPS_ACCEPT_NOEXCLUDE == SurfGDI->PointerStatus);
-    
-    /* Move the cursor to the screen center */
-    DPRINT("Setting Cursor up at 0x%x, 0x%x\n", SurfObj->sizlBitmap.cx / 2, SurfObj->sizlBitmap.cy / 2);
-    MouseMoveCursor(SurfObj->sizlBitmap.cx / 2, SurfObj->sizlBitmap.cy / 2);
-
-    ObDereferenceObject(InputWindowStation);
-  }
-  else
-  {
-    if(IntGetWindowStationObject(InputWindowStation))
-    {
-       IntSetCursor(InputWindowStation, NULL, TRUE);
-       InputWindowStation->SystemCursor.Enabled = FALSE;
-       InputWindowStation->SystemCursor.CursorClipInfo.IsClipped = FALSE;
-	   ObDereferenceObject(InputWindowStation);
-       return;
-    }
-  }
+  SendMouseEvent(mi);
 }
 
 /* SOFTWARE MOUSE POINTER IMPLEMENTATION **************************************/
