@@ -37,6 +37,7 @@ GetCurrentDirectoryA (
 {
 	ANSI_STRING AnsiString;
 	UNICODE_STRING UnicodeString;
+	ULONG Length;
 
 	/* allocate buffer for unicode string */
 	UnicodeString.Length = 0;
@@ -56,33 +57,48 @@ GetCurrentDirectoryA (
 	{
 		UnicodeString.Buffer = NULL;
 	}
+
 	/* get current directory */
 	UnicodeString.Length = RtlGetCurrentDirectory_U (UnicodeString.MaximumLength,
 	                                                 UnicodeString.Buffer);
-	if (nBufferLength > 0)
+	DPRINT("UnicodeString.Buffer %wZ\n", &UnicodeString);
+
+	/* convert unicode string to ansi (or oem) */
+	if (bIsFileApiAnsi)
 	{
-		DPRINT("UnicodeString.Buffer %wZ\n", &UnicodeString);
-
-		/* convert unicode string to ansi (or oem) */
-		if (bIsFileApiAnsi)
-			RtlUnicodeStringToAnsiString (&AnsiString,
-			                              &UnicodeString,
-			                              FALSE);
-		else
-			RtlUnicodeStringToOemString (&AnsiString,
-			                             &UnicodeString,
-			                             FALSE);
-		DPRINT("AnsiString.Buffer %s\n", AnsiString.Buffer);
-
-		/* free unicode string */
-		RtlFreeHeap (RtlGetProcessHeap (),
-		             0,
-		             UnicodeString.Buffer);
+		Length = RtlUnicodeStringToAnsiSize (&UnicodeString);
+		if (Length > nBufferLength)
+		{
+			RtlFreeHeap (RtlGetProcessHeap (),
+			             0,
+			             UnicodeString.Buffer);
+			return Length-1;
+		}
+		RtlUnicodeStringToAnsiString (&AnsiString,
+		                              &UnicodeString,
+		                              FALSE);
 	}
 	else
 	{
-		AnsiString.Length = UnicodeString.Length / sizeof(WCHAR);
+		Length = RtlUnicodeStringToOemSize (&UnicodeString);
+		if (Length > nBufferLength)
+		{
+			RtlFreeHeap (RtlGetProcessHeap (),
+			             0,
+			             UnicodeString.Buffer);
+			return Length-1;
+		}
+		RtlUnicodeStringToOemString (&AnsiString,
+		                             &UnicodeString,
+		                             FALSE);
 	}
+	DPRINT("AnsiString.Buffer %s\n", AnsiString.Buffer);
+
+	/* free unicode string */
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             UnicodeString.Buffer);
+
 	return AnsiString.Length;
 }
 
@@ -184,6 +200,7 @@ GetTempPathA (
 {
 	UNICODE_STRING UnicodeString;
 	ANSI_STRING AnsiString;
+	DWORD Length;
 
 	AnsiString.Length = 0;
 	AnsiString.MaximumLength = nBufferLength;
@@ -191,30 +208,50 @@ GetTempPathA (
 
 	/* initialize allocate unicode string */
 	UnicodeString.Length = 0;
-	UnicodeString.MaximumLength = nBufferLength * sizeof(WCHAR);
-	UnicodeString.Buffer = RtlAllocateHeap (RtlGetProcessHeap(),
-	                                        0,
-	                                        UnicodeString.MaximumLength);
-
-	UnicodeString.Length = GetTempPathW (nBufferLength,
-	                                     UnicodeString.Buffer) * sizeof(WCHAR);
-
-	/* convert unicode string to ansi (or oem) */
-	if (bIsFileApiAnsi)
-		RtlUnicodeStringToAnsiString (&AnsiString,
-		                              &UnicodeString,
-		                              FALSE);
+	if(nBufferLength > 0)
+	{
+	  UnicodeString.MaximumLength = (nBufferLength + 1) * sizeof(WCHAR);
+	  UnicodeString.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
+	                                          0,
+	                                          UnicodeString.MaximumLength);
+	  if (UnicodeString.Buffer == NULL)
+	  {
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return 0;
+	  }
+	}
 	else
-		RtlUnicodeStringToOemString (&AnsiString,
-		                             &UnicodeString,
-		                             FALSE);
+	{
+          UnicodeString.MaximumLength = 0;
+          UnicodeString.Buffer = NULL;
+	}
+
+	Length = GetTempPathW (nBufferLength,
+	                       UnicodeString.Buffer);
+
+	if (nBufferLength >= Length)
+	{
+                /* only touch the buffer if the supplied buffer length is at least
+                   the length that GetTempPathW returned! */
+		UnicodeString.Length = Length * sizeof(WCHAR);
+
+		/* convert unicode string to ansi (or oem) */
+		if (bIsFileApiAnsi)
+			RtlUnicodeStringToAnsiString (&AnsiString,
+			                              &UnicodeString,
+			                              FALSE);
+		else
+			RtlUnicodeStringToOemString (&AnsiString,
+			                             &UnicodeString,
+			                             FALSE);
+	}
 
 	/* free unicode string buffer */
 	RtlFreeHeap (RtlGetProcessHeap (),
 	             0,
 	             UnicodeString.Buffer);
 
-	return AnsiString.Length;
+	return Length;
 }
 
 
@@ -229,42 +266,67 @@ GetTempPathW (
 	)
 {
 	UNICODE_STRING Name;
-	UNICODE_STRING Value;
+	PUNICODE_STRING Value;
+	PTEB Teb;
+	DWORD Length;
 	NTSTATUS Status;
 
-	Value.Length = 0;
-	Value.MaximumLength = (nBufferLength - 1) * sizeof(WCHAR);
-	Value.Buffer = lpBuffer;
+	Teb = NtCurrentTeb();
+	Teb->StaticUnicodeString.Length = 0;
+	Teb->StaticUnicodeString.MaximumLength = MAX_PATH * sizeof(WCHAR);
+	Teb->StaticUnicodeString.Buffer = Teb->StaticUnicodeBuffer;
+	Value = &Teb->StaticUnicodeString;
 
 	RtlRosInitUnicodeStringFromLiteral (&Name,
-	                      L"TMP");
+	                                    L"TMP");
 
 	Status = RtlQueryEnvironmentVariable_U (NULL,
 	                                        &Name,
-	                                        &Value);
+	                                        Value);
 	if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
 	{
 		RtlRosInitUnicodeStringFromLiteral (&Name,
-		                      L"TEMP");
+		                                    L"TEMP");
 
 		Status = RtlQueryEnvironmentVariable_U (NULL,
 		                                        &Name,
-		                                        &Value);
-
+		                                        Value);
 		if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
 		{
-			Value.Length = RtlGetCurrentDirectory_U (Value.MaximumLength,
-			                                         Value.Buffer);
+			Value->Length = RtlGetCurrentDirectory_U(Value->MaximumLength,
+			                                         Value->Buffer);
 		}
 	}
 
-	if (NT_SUCCESS(Status))
+	if (!NT_SUCCESS(Status))
 	{
-		lpBuffer[Value.Length / sizeof(WCHAR)] = L'\\';
-		lpBuffer[Value.Length / sizeof(WCHAR) + 1] = 0;
+		SetLastError(RtlNtStatusToDosError(Status));
+		return 0;
 	}
 
-	return Value.Length / sizeof(WCHAR) + 1;
+	Length = Value->Length / sizeof(WCHAR) + 1;
+	if (nBufferLength < Value->Length / sizeof(WCHAR) + 2)
+		Length++;
+
+	if (lpBuffer != NULL)
+	{
+		if (nBufferLength < Value->Length / sizeof(WCHAR) + 2)
+		{
+			memcpy (lpBuffer,
+			        Value->Buffer,
+			        nBufferLength * sizeof(WCHAR));
+		}
+		else
+		{
+			memcpy (lpBuffer,
+			        Value->Buffer,
+			        Value->Length);
+			lpBuffer[Value->Length / sizeof(WCHAR)] = L'\\';
+			lpBuffer[Value->Length / sizeof(WCHAR) + 1] = 0;
+		}
+	}
+
+	return Length;
 }
 
 
