@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2000/01/22 14:25:48 ea Exp $
+# $Id: Makefile,v 1.5 2000/01/29 20:32:12 phreak Exp $
 #
 
 BASE_CFLAGS = -I../../include
@@ -15,9 +15,9 @@ $(TARGETNAME)$(EXE_POSTFIX): $(TARGETNAME).c ../../include/reactos/version.h
 
 
 clean:
-	$(RM) $(TARGETNAME).o
-	$(RM) $(TARGETNAME).sym
-	$(RM) $(TARGETNAME)$(EXE_POSTFIX)
+	- $(RM) $(TARGETNAME).o
+	- $(RM) $(TARGETNAME).sym
+	- $(RM) $(TARGETNAME)$(EXE_POSTFIX)
 
 .phony: clean 
 
