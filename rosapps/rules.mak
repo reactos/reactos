@@ -22,6 +22,9 @@ PREFIX = i586-mingw32-
 EXE_POSTFIX = 
 CP = cp
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
+FLOPPY_DIR = A/
+# DIST_DIR should be relative from the top of the tree
+DIST_DIR = dist
 endif
 
 ifeq ($(HOST),mingw32-windows)
@@ -31,6 +34,9 @@ CP = copy
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 RM = del
 DOSCLI = yes
+FLOPPY_DIR = A:
+# DIST_DIR should be relative from the top of the tree
+DIST_DIR = dist
 endif
 
 #
@@ -71,6 +77,8 @@ RC = $(PREFIX)windres
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
+%.coff: %.rc
+	$(RC) $< $@
 
 
 RULES_MAK_INCLUDED = 1
