@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.21 2004/08/15 23:12:32 chorns Exp $
+# $Id: Makefile,v 1.22 2004/10/09 18:17:08 navaraf Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -20,7 +20,6 @@ TARGET_OBJECTS = \
   ndis/co.o \
   ndis/config.o \
   ndis/control.o \
-  ndis/enum.o \
   ndis/hardware.o \
   ndis/io.o \
   ndis/memory.o \

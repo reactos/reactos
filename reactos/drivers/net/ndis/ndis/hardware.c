@@ -14,6 +14,7 @@
  *    - Fix HalGetBusDataByOffset() param 2 in most calls below
  */
 
+#include <roscfg.h>
 #include "ndissys.h"
 
 
@@ -182,7 +183,11 @@ NdisReadPciSlotInformation(
     IN  PVOID       Buffer,
     IN  ULONG       Length)
 {
-  return HalGetBusDataByOffset (PCIConfiguration, 0, SlotNumber, Buffer, Offset, Length);
+  PLOGICAL_ADAPTER AdapterObject = (PLOGICAL_ADAPTER)NdisAdapterHandle;
+  /* Slot number is ignored since W2K for all NDIS drivers. */
+  NDIS_DbgPrint(MAX_TRACE, ("Slot: %d\n", AdapterObject->SlotNumber));
+  return HalGetBusDataByOffset (PCIConfiguration, 0, AdapterObject->SlotNumber,
+                                Buffer, Offset, Length);
 }
 
 
@@ -198,7 +203,11 @@ NdisWritePciSlotInformation(
     IN  PVOID       Buffer,
     IN  ULONG       Length)
 {
-  return HalSetBusDataByOffset (PCIConfiguration, 0, SlotNumber, Buffer, Offset, Length);
+  PLOGICAL_ADAPTER AdapterObject = (PLOGICAL_ADAPTER)NdisAdapterHandle;
+  /* Slot number is ignored since W2K for all NDIS drivers. */
+  NDIS_DbgPrint(MAX_TRACE, ("Slot: %d\n", AdapterObject->SlotNumber));
+  return HalSetBusDataByOffset (PCIConfiguration, 0, AdapterObject->SlotNumber,
+                                Buffer, Offset, Length);
 }
 
 /* EOF */

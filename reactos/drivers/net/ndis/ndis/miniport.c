@@ -20,9 +20,6 @@
 /* Root of the scm database */
 #define SERVICES_ROOT L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"
 
-/* prefix for device object registration */
-#define DEVICE_ROOT L"\\Device\\"
-
 /*
  * Define to 1 to get a debugger breakpoint at the end of NdisInitializeWrapper
  * for each new miniport starting up
@@ -64,11 +61,6 @@ KSPIN_LOCK MiniportListLock;
 /* global list and lock of adapters NDIS has registered */
 LIST_ENTRY AdapterListHead;
 KSPIN_LOCK AdapterListLock;
-
-/* global list and lock of orphan adapters waiting to be claimed by a miniport */
-LIST_ENTRY OrphanAdapterListHead;
-KSPIN_LOCK OrphanAdapterListLock;
-
 
 VOID
 MiniDisplayPacket(
@@ -1335,26 +1327,22 @@ DoQueries(
 
 VOID
 NdisIStartAdapter(
-    WCHAR *DeviceNameStr,
-    UINT DeviceNameStrLength,
+    UNICODE_STRING *DeviceName,
+    PDEVICE_OBJECT PhysicalDeviceObject,
     PMINIPORT_DRIVER Miniport
 )
 /*
  * FUNCTION: Start an adapter
  * ARGUMENTS:
- *     DeviceNameStr: 0-terminated wide char string of name of device to start
- *     DeviceNameStrLength: length of DeviceNameStr *IN WCHARs*
+ *     DeviceName: Name of device to start
+ *     PhysicalDeviceObject: PDO for our adapter
  * NOTES:
  * TODO:
  *     - verify that all resources are properly freed on success & failure
  *     - break up this 250-line function
  */
 {
-  WCHAR *DeviceName;
   HANDLE RegKeyHandle;
-  WCHAR *RegKeyPath;
-  UNICODE_STRING RegKeyPathU;
-  OBJECT_ATTRIBUTES RegKeyAttributes;
   NDIS_STATUS NdisStatus;
   NDIS_STATUS OpenErrorStatus;
   NTSTATUS Status;
@@ -1363,9 +1351,8 @@ NdisIStartAdapter(
   NDIS_OID AddressOID;
   BOOLEAN MemError = FALSE;
   KIRQL OldIrql;
-  PORPHAN_ADAPTER OrphanAdapter = 0;
+  ULONG Size;
 
-  NDIS_DbgPrint(MAX_TRACE, ("Called with %ws\n", DeviceNameStr));
   Adapter = ExAllocatePool(NonPagedPool, sizeof(LOGICAL_ADAPTER));
   if (!Adapter) 
     {
@@ -1376,22 +1363,17 @@ NdisIStartAdapter(
   /* This is very important */
   RtlZeroMemory(Adapter, sizeof(LOGICAL_ADAPTER));
 
-  DeviceName = ExAllocatePool(NonPagedPool, sizeof(DEVICE_ROOT) + DeviceNameStrLength * sizeof(WCHAR));
-  if(!DeviceName)
+  Adapter->DeviceName.Buffer = ExAllocatePool(NonPagedPool, DeviceName->Length);
+  if(!Adapter->DeviceName.Buffer)
     {
       NDIS_DbgPrint(MIN_TRACE,("Insufficient memory\n"));
       ExFreePool(Adapter);
       return;
     }
+  Adapter->DeviceName.MaximumLength = DeviceName->Length;
+  RtlCopyUnicodeString(&Adapter->DeviceName, DeviceName);
 
-  /* DEVICE_ROOT is a constant string defined above, incl. 0-term */
-  wcscpy(DeviceName, DEVICE_ROOT);
-
-  /* reg_sz is 0-term by def */
-  wcsncat(DeviceName, DeviceNameStr, DeviceNameStrLength); 
-  RtlInitUnicodeString(&Adapter->DeviceName, DeviceName);
-
-  NDIS_DbgPrint(MAX_TRACE, ("creating device %ws\n", DeviceName));
+  NDIS_DbgPrint(MAX_TRACE, ("creating device %wZ\n", DeviceName));
 
   Status = IoCreateDevice(Miniport->DriverObject, 0, &Adapter->DeviceName, FILE_DEVICE_PHYSICAL_NETCARD,
       0, FALSE, &Adapter->NdisMiniportBlock.DeviceObject);
@@ -1402,105 +1384,8 @@ NdisIStartAdapter(
       return;
     }
 
-  /* find out if there are any adapters in the orphans list and reserve resources */
-  KeAcquireSpinLock(&OrphanAdapterListLock, &OldIrql);
-  OrphanAdapter = (PORPHAN_ADAPTER)OrphanAdapterListHead.Flink;
-  while(&OrphanAdapter->ListEntry != &OrphanAdapterListHead)
-    {
-      PORPHAN_ADAPTER TempAdapter;
-      PCM_RESOURCE_LIST ResourceList;
-      UINT i;
-
-      if(!RtlCompareUnicodeString(&OrphanAdapter->RegistryPath, Miniport->RegistryPath, TRUE))
-        {
-          OrphanAdapter = (PORPHAN_ADAPTER)OrphanAdapter->ListEntry.Flink;
-          continue;
-        }
-
-      NDIS_DbgPrint(MAX_TRACE, ("Found an orphan adapter for RegistryPath %wZ\n", Miniport->RegistryPath));
-
-      /* there is an orphan adapter for us */
-      Adapter->SlotNumber = OrphanAdapter->SlotNumber;
-      Adapter->BusNumber  = OrphanAdapter->BusNumber;
-      Adapter->BusType    = OrphanAdapter->BusType;
-
-      Status = HalAssignSlotResources(Miniport->RegistryPath, 0, Miniport->DriverObject,
-          Adapter->NdisMiniportBlock.DeviceObject, Adapter->BusType, Adapter->BusNumber, 
-          Adapter->SlotNumber, &ResourceList);
-
-      if(!NT_SUCCESS(Status))
-        {
-          NDIS_DbgPrint(MIN_TRACE, ("HalAssignSlotResources broke: 0x%x\n", Status));
-          ASSERT(0);
-
-          /* i guess we should just give up on this adapter */
-          break;
-        }
-
-      /* go through the returned resource list and populate the Adapter */
-      for(i = 0; i<ResourceList->Count; i++)
-        {
-          int j;
-
-          PCM_FULL_RESOURCE_DESCRIPTOR ResourceDescriptor = &ResourceList->List[i];
-
-          for(j=0; j<ResourceDescriptor->PartialResourceList.Count; j++)
-            {
-              PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialResourceDescriptor = 
-                  &ResourceDescriptor->PartialResourceList.PartialDescriptors[i];
-
-              switch(PartialResourceDescriptor->Type)
-                {
-                case CmResourceTypeInterrupt:
-                  Adapter->Irql = PartialResourceDescriptor->u.Interrupt.Level;
-                  Adapter->Vector = PartialResourceDescriptor->u.Interrupt.Vector;
-                  Adapter->Affinity = PartialResourceDescriptor->u.Interrupt.Affinity;
-                  break;
-
-                case CmResourceTypePort:
-                  Adapter->BaseIoAddress = PartialResourceDescriptor->u.Port.Start;
-                  break;
-
-                case CmResourceTypeMemory:
-                  Adapter->BaseMemoryAddress = PartialResourceDescriptor->u.Memory.Start;
-                  break;
-
-                case CmResourceTypeDma:
-                  Adapter->DmaPort = PartialResourceDescriptor->u.Dma.Port;
-                  Adapter->DmaChannel = PartialResourceDescriptor->u.Dma.Channel;
-                  break;
-
-                case CmResourceTypeDeviceSpecific:
-                default:
-                  break;
-                }
-            }
-        }
-
-      /* remove the adapter from the list */
-      TempAdapter = (PORPHAN_ADAPTER)OrphanAdapter->ListEntry.Flink;
-      RemoveEntryList(&OrphanAdapter->ListEntry);
-      OrphanAdapter = TempAdapter;
-    }
-  KeReleaseSpinLock(&OrphanAdapterListLock, OldIrql);
-
-  /* includes room for a 0-term */
-  RegKeyPath = ExAllocatePool(PagedPool, (wcslen(SERVICES_ROOT) + wcslen(DeviceNameStr) + 1) * sizeof(WCHAR));
-  if(!RegKeyPath)
-    {
-      NDIS_DbgPrint(MIN_TRACE,("Insufficient resources\n"));
-      ExFreePool(Adapter);
-      return; 
-    }
-
-  wcscpy(RegKeyPath, SERVICES_ROOT);
-  wcscat(RegKeyPath, DeviceNameStr);
-  RegKeyPath[wcslen(SERVICES_ROOT) + wcslen(DeviceNameStr)] = 0;
-
-  RtlInitUnicodeString(&RegKeyPathU, RegKeyPath);
-  InitializeObjectAttributes(&RegKeyAttributes, &RegKeyPathU, OBJ_CASE_INSENSITIVE, NULL, NULL);
-
-  Status = ZwOpenKey(&RegKeyHandle, KEY_ALL_ACCESS, &RegKeyAttributes);
+  Status = IoOpenDeviceRegistryKey(PhysicalDeviceObject, PLUGPLAY_REGKEY_DRIVER,
+                                   KEY_ALL_ACCESS, &RegKeyHandle);
   if(Status != STATUS_SUCCESS)
     {
       NDIS_DbgPrint(MIN_TRACE,("failed to open adapter-specific reg key %wZ\n", &RegKeyPathU));
@@ -1508,13 +1393,22 @@ NdisIStartAdapter(
       return;
     }
 
-  NDIS_DbgPrint(MAX_TRACE, ("opened device reg key: %wZ\n", &RegKeyPathU));
+  NDIS_DbgPrint(MAX_TRACE, ("opened device reg key\n"));
 
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
   KeInitializeSpinLock(&Adapter->NdisMiniportBlock.Lock);
   InitializeListHead(&Adapter->ProtocolListHead);
   Adapter->RefCount = 1;
   Adapter->Miniport = Miniport;
+
+  /* FIXME: Check return values. */
+  Size = sizeof(ULONG);
+  IoGetDeviceProperty(PhysicalDeviceObject, DevicePropertyLegacyBusType,
+                      Size, &Adapter->BusType, &Size);
+  IoGetDeviceProperty(PhysicalDeviceObject, DevicePropertyBusNumber,
+                      Size, &Adapter->BusNumber, &Size);
+  IoGetDeviceProperty(PhysicalDeviceObject, DevicePropertyAddress,
+                      Size, &Adapter->SlotNumber, &Size);
 
   /* Set handlers (some NDIS macros require these) */
 
@@ -1527,7 +1421,7 @@ NdisIStartAdapter(
   Adapter->NdisMiniportBlock.PacketIndicateHandler= MiniIndicateReceivePacket;
 
   KeInitializeDpc(&Adapter->MiniportDpc, MiniportDpc, (PVOID)Adapter);
-
+  
   /* Put adapter in adapter list for this miniport */
   ExInterlockedInsertTailList(&Miniport->AdapterListHead, &Adapter->MiniportListEntry, &Miniport->Lock);
 
@@ -1599,6 +1493,116 @@ NdisIStartAdapter(
       ExFreePool(Adapter);
       NDIS_DbgPrint(MIN_TRACE, ("MiniportInitialize() failed for an adapter.\n"));
     }
+  else
+    {
+      IoAttachDeviceToDeviceStack(Adapter->NdisMiniportBlock.DeviceObject,
+                                  PhysicalDeviceObject);
+    }
+}
+
+
+NTSTATUS
+STDCALL
+NdisIAddDevice(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDEVICE_OBJECT PhysicalDeviceObject
+)
+/*
+ * FUNCTION: Start an adapter found using PnP
+ * ARGUMENTS:
+ *     DriverObject         = Pointer to the miniport driver object
+ *     PhysicalDeviceObject = Pointer to the PDO for our adapter
+ */
+{
+  static const WCHAR ClassKeyName[] = {'C','l','a','s','s','\\'};
+  static const WCHAR LinkageKeyName[] = {'\\','L','i','n','k','a','g','e',0};
+  PMINIPORT_DRIVER Miniport;
+  PMINIPORT_DRIVER *MiniportPtr;
+  WCHAR *LinkageKeyBuffer;
+  ULONG DriverKeyLength;
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  UNICODE_STRING ExportName;
+  NTSTATUS Status;
+
+  /*
+   * Gain the access to the miniport data structure first.
+   */
+
+  MiniportPtr = IoGetDriverObjectExtension(DriverObject, (PVOID)TAG('D','I','M','N'));
+  if (MiniportPtr == NULL)
+    {
+      NDIS_DbgPrint(DEBUG_MINIPORT, ("Can't get driver object extension.\n"));
+      return STATUS_UNSUCCESSFUL;
+    }
+  Miniport = *MiniportPtr;
+
+  /*
+   * Get name of the Linkage registry key for our adapter. It's located under
+   * the driver key for our driver and so we have basicly two ways to do it.
+   * Either we can use IoOpenDriverRegistryKey or compose it using information
+   * gathered by IoGetDeviceProperty. I choosed the second because
+   * IoOpenDriverRegistryKey wasn't implemented at the time of writing.
+   */
+  
+  Status = IoGetDeviceProperty(PhysicalDeviceObject, DevicePropertyDriverKeyName,
+                               0, NULL, &DriverKeyLength);
+  if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+      NDIS_DbgPrint(DEBUG_MINIPORT, ("Can't get miniport driver key length.\n"));
+      return Status;
+    }
+
+  LinkageKeyBuffer = ExAllocatePool(PagedPool, DriverKeyLength +
+                                    sizeof(ClassKeyName) + sizeof(LinkageKeyName));
+  if (LinkageKeyBuffer == NULL)
+    {
+      NDIS_DbgPrint(DEBUG_MINIPORT, ("Can't allocate memory for driver key name.\n"));
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  Status = IoGetDeviceProperty(PhysicalDeviceObject, DevicePropertyDriverKeyName,
+                               DriverKeyLength, LinkageKeyBuffer +
+                               (sizeof(ClassKeyName) / sizeof(WCHAR)),
+                               &DriverKeyLength);
+  if (!NT_SUCCESS(Status))
+    {
+      NDIS_DbgPrint(DEBUG_MINIPORT, ("Can't get miniport driver key.\n"));
+      ExFreePool(LinkageKeyBuffer);
+      return Status;
+    }
+
+  /* Compose the linkage key name. */
+  RtlCopyMemory(LinkageKeyBuffer, ClassKeyName, sizeof(ClassKeyName));
+  RtlCopyMemory(LinkageKeyBuffer + ((sizeof(ClassKeyName) + DriverKeyLength) /
+                sizeof(WCHAR)) - 1, LinkageKeyName, sizeof(LinkageKeyName));
+
+  NDIS_DbgPrint(DEBUG_MINIPORT, ("LinkageKey: %S.\n", LinkageKeyBuffer));
+
+  /*
+   * Now open the linkage key and read the "Export" and "RootDevice" values
+   * which contains device name and root service respectively.
+   */
+
+  RtlZeroMemory(QueryTable, sizeof(QueryTable));
+  RtlInitUnicodeString(&ExportName, NULL);
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[0].Name = L"Export";
+  QueryTable[0].EntryContext = &ExportName;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL, LinkageKeyBuffer,
+                                  QueryTable, NULL, NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      NDIS_DbgPrint(DEBUG_MINIPORT, ("Can't get miniport device name. (%x)\n", Status));
+      ExFreePool(LinkageKeyBuffer);
+      return Status;
+    }
+  ExFreePool(LinkageKeyBuffer);
+
+  NdisIStartAdapter(&ExportName, PhysicalDeviceObject, Miniport);
+  RtlFreeUnicodeString(&ExportName);
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -1619,25 +1623,12 @@ NdisMRegisterMiniport(
  *     CharacteristicsLength   = Number of bytes in characteristics buffer
  * RETURNS:
  *     Status of operation	 
- * NOTES:
- *     - To create device objects for the miniport, the Route value under Linkage is
- *       parsed.  I don't know if this is the way Microsoft does it or not.
- * TODO: 
- *     verify this algorithm by playing with nt
  */
 {
   UINT MinSize;
-  NTSTATUS Status;
   PMINIPORT_DRIVER Miniport = GET_MINIPORT_DRIVER(NdisWrapperHandle);
-  OBJECT_ATTRIBUTES DeviceKeyAttributes;
-  OBJECT_ATTRIBUTES LinkageKeyAttributes;
-  HANDLE DeviceKeyHandle;
-  HANDLE LinkageKeyHandle;
-  UNICODE_STRING RouteVal;
-  UNICODE_STRING LinkageKeyName;
-  KEY_VALUE_PARTIAL_INFORMATION *RouteData;
-  ULONG RouteDataLength;
-  UINT NextRouteOffset = 0;
+  PMINIPORT_DRIVER *MiniportPtr;
+  NTSTATUS Status;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -1701,72 +1692,21 @@ NdisMRegisterMiniport(
   RtlCopyMemory(&Miniport->Chars, MiniportCharacteristics, MinSize);
 
   /*
-   * extract the list of bound adapters from the registry's Route value
-   * for this adapter.  It seems under WinNT that the Route value in the
-   * Linkage subkey holds an entry for each miniport instance we know about.
-   * This surely isn't how Windows does it, but it's better than nothing.
-   *
-   * FIXME: this is documented in the ddk, believe it or not - read & do
+   * NOTE: This is VERY unoptimal! Should we store the MINIPORT_DRIVER
+   * struture in the driver extension or what?
    */
 
-  /* Read the miniport config from the registry */
-  InitializeObjectAttributes(&DeviceKeyAttributes, Miniport->RegistryPath, OBJ_CASE_INSENSITIVE, NULL, NULL);
-
-  Status = ZwOpenKey(&DeviceKeyHandle, KEY_READ, &DeviceKeyAttributes);
-  if(!NT_SUCCESS(Status))
+  Status = IoAllocateDriverObjectExtension(Miniport->DriverObject, (PVOID)TAG('D','I','M','N'),
+                                           sizeof(PMINIPORT_DRIVER), (PVOID*)&MiniportPtr);
+  if (!NT_SUCCESS(Status))
     {
-      NDIS_DbgPrint(MIN_TRACE,("Failed to open driver key: 0x%x\n", Status));
-      return NDIS_STATUS_FAILURE;
-    }
-
-  RtlInitUnicodeString(&LinkageKeyName, L"Linkage");
-  InitializeObjectAttributes(&LinkageKeyAttributes, &LinkageKeyName, OBJ_CASE_INSENSITIVE, DeviceKeyHandle, NULL);
-
-  Status = ZwOpenKey(&LinkageKeyHandle, KEY_READ, &LinkageKeyAttributes);
-  if(!NT_SUCCESS(Status))
-    {
-      NDIS_DbgPrint(MIN_TRACE,("Failed to open Linkage key: 0x%x\n", Status));
-      ZwClose(DeviceKeyHandle);
-      return NDIS_STATUS_FAILURE;
-    }
-
-  RouteData = ExAllocatePool(PagedPool, ROUTE_DATA_SIZE);
-  if(!RouteData)
-    {
-      NDIS_DbgPrint(MIN_TRACE,("Insufficient resources\n"));
-      ZwClose(LinkageKeyHandle);
-      ZwClose(DeviceKeyHandle);
+      NDIS_DbgPrint(DEBUG_MINIPORT, ("Can't allocate driver object extension.\n"));
       return NDIS_STATUS_RESOURCES;
     }
 
-  RtlInitUnicodeString(&RouteVal, L"Route");
+  *MiniportPtr = Miniport;
+  Miniport->DriverObject->DriverExtension->AddDevice = NdisIAddDevice;
 
-  Status = ZwQueryValueKey(LinkageKeyHandle, &RouteVal, KeyValuePartialInformation, RouteData, ROUTE_DATA_SIZE, &RouteDataLength);
-  if(!NT_SUCCESS(Status))
-    {
-      NDIS_DbgPrint(MIN_TRACE,("Failed to query Route value\n"));
-      ZwClose(LinkageKeyHandle);
-      ZwClose(DeviceKeyHandle);
-      ExFreePool(RouteData);
-      return NDIS_STATUS_FAILURE;
-    }
-
-  ZwClose(LinkageKeyHandle);
-  ZwClose(DeviceKeyHandle);
-
-  /* route is a REG_MULTI_SZ with each nic object created by NDI - create an adapter for each */
-  while(*(RouteData->Data + NextRouteOffset))
-    {
-      NDIS_DbgPrint(MID_TRACE, ("Starting adapter %ws\n", (WCHAR *)(RouteData->Data + NextRouteOffset)));
-
-      NdisIStartAdapter((WCHAR *)(RouteData->Data + NextRouteOffset), 
-          wcslen((WCHAR *)(RouteData->Data + NextRouteOffset)), Miniport);
-
-      /* NextRouteOffset is in bytes, not WCHARs */
-      NextRouteOffset += wcslen((WCHAR *)(RouteData->Data + NextRouteOffset)) * sizeof(WCHAR); 
-    }
-
-  ExFreePool(RouteData);
   return NDIS_STATUS_SUCCESS;
 }
 
@@ -1914,15 +1854,14 @@ NdisMSetAttributesEx(
 
   PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(MiniportAdapterHandle);
 
-  NDIS_DbgPrint(MAX_TRACE, ("Called - NdisMSetAttributesEx() is partly-implemented.\n"));
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   Adapter->NdisMiniportBlock.MiniportAdapterContext = MiniportAdapterContext;
-
-  /* don't know why this is here - anybody? */
-  Adapter->NdisMiniportBlock.Flags  = AttributeFlags;
-
+  Adapter->NdisMiniportBlock.Flags = AttributeFlags;
   Adapter->NdisMiniportBlock.AdapterType = AdapterType;
   Adapter->AttributesSet = TRUE;
+  if (AttributeFlags & NDIS_ATTRIBUTE_INTERMEDIATE_DRIVER)
+    NDIS_DbgPrint(MAX_TRACE, ("Intermediate drivers not supported yet.\n"));
 }
 
 
