@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib24bpp.c,v 1.15 2003/12/08 18:05:30 fireball Exp $ */
+/* $Id: dib24bpp.c,v 1.16 2004/01/08 20:59:42 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -30,31 +30,30 @@
 VOID
 DIB_24BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
 {
-  PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;
-  PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x;
-
-  *(PULONG)(addr) = c;
+  PBYTE addr = SurfObj->pvScan0 + (y * SurfObj->lDelta) + (x << 1) + x;
+  *(PUSHORT)(addr) = c & 0xFFFF;
+  *(addr + 2) = (c >> 16) & 0xFF;
 }
 
 ULONG
 DIB_24BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
 {
-  PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;
-  PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x;
-
-  return *(PULONG)(addr) & 0x00ffffff;
+  PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x << 1) + x;
+  return *(PUSHORT)(addr) + (*(addr + 2) << 16);
 }
 
 VOID
 DIB_24BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
-  PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;
-  PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x1;
+  PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x1 << 1) + x1;
   LONG cx = x1;
 
+  c &= 0xFFFFFF;
   while(cx < x2) {
-    *(PULONG)(addr) = c;
-    ++addr;
+    *(PUSHORT)(addr) = c & 0xFFFF;
+    addr += 2;
+    *(addr) = c >> 16;
+    addr += 1;
     ++cx;
   }
 }
@@ -62,16 +61,15 @@ DIB_24BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 VOID
 DIB_24BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
-  PBYTE byteaddr = SurfObj->pvScan0 + y1 * SurfObj->lDelta;
-  PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x;
+  PBYTE addr = SurfObj->pvScan0 + y1 * SurfObj->lDelta + (x << 1) + x;
   LONG lDelta = SurfObj->lDelta;
 
-  byteaddr = (PBYTE)addr;
+  c &= 0xFFFFFF;
   while(y1++ < y2) {
-    *(PULONG)(addr) = c;
+    *(PUSHORT)(addr) = c & 0xFFFF;
+    *(addr + 2) = c >> 16;
 
-    byteaddr += lDelta;
-    addr = (PRGBTRIPLE)byteaddr;
+    addr += lDelta;
   }
 }
 
@@ -255,7 +253,7 @@ DIB_24BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 {
   LONG     i, j, sx, sy;
   ULONG    Dest, Source, Pattern;
-  PULONG   DestBits;
+  PBYTE    DestBits;
   BOOL     UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
   BOOL     UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);  
 
@@ -270,10 +268,10 @@ DIB_24BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       for (j = DestRect->top; j < DestRect->bottom; j++)
       {
         sx = SourcePoint->x;
-	DestBits = (PULONG)(DestSurf->pvScan0 + 3 * DestRect->left + j * DestSurf->lDelta);
-        for (i=DestRect->left; i<DestRect->right; i++, DestBits++)
+	DestBits = (PBYTE)(DestSurf->pvScan0 + 3 * DestRect->left + j * DestSurf->lDelta);
+        for (i=DestRect->left; i<DestRect->right; i++, DestBits+=3)
 	  {
-	    Dest = *DestBits & 0x00ffffff;
+	    Dest = *(PUSHORT)(DestBits) + (*(DestBits + 2) << 16);
 	    if (UsesSource)
 	      {
 		Source = DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left), sy, ColorTranslation) & 0x00ffffff;
@@ -284,8 +282,8 @@ DIB_24BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		Pattern = Brush->iSolidColor;
 	      }
 	    Dest = DIB_DoRop(Rop4, Dest, Source, Pattern);	    
-	    *(PBYTE)DestBits = Dest & 0xff;
-            *(PWORD)(DestBits + 1) = Dest >> 8;
+            *(PUSHORT)(DestBits) = Dest & 0xFFFF;
+            *(DestBits + 2) = Dest >> 16;
 	  }
         sy++;
       }
