@@ -1,4 +1,4 @@
-/* $Id: ntddk.h,v 1.21 2001/05/01 23:08:17 chorns Exp $
+/* $Id: ntddk.h,v 1.22 2001/05/30 19:57:29 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -26,6 +26,7 @@ extern "C"
 #define STATIC static
 
 #include <ntos/types.h>
+#include <ntos/time.h>
 #include <ntos/disk.h>
 #include <ntos/registry.h>
 #include <ntos/port.h>

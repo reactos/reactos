@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.72 2001/05/26 16:49:09 ekohl Exp $
+; $Id: ntdll.def,v 1.73 2001/05/30 20:01:58 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -395,7 +395,7 @@ RtlFindClearBits@12
 RtlFindClearBitsAndSet@12
 RtlFindLongestRunClear@8
 RtlFindLongestRunSet@8
-;RtlFindMessage@20
+RtlFindMessage@20
 RtlFindSetBits@12
 RtlFindSetBitsAndClear@12
 RtlFirstFreeAce@8
@@ -510,7 +510,7 @@ RtlQueryInformationAcl@16
 RtlQueryRegistryValues@20
 ;RtlQuerySecutityObject
 ;RtlQueryTagHeap
-;RtlQueryTimeZoneInformation
+RtlQueryTimeZoneInformation@4
 RtlRaiseException@4
 RtlRaiseStatus@4
 ;RtlRandom
@@ -541,7 +541,7 @@ RtlSetOwnerSecurityDescriptor@12
 ;RtlSetPropertySetClassId
 RtlSetSaclSecurityDescriptor@16
 ;RtlSetSecurityObject
-;RtlSetTimeZoneInformation
+RtlSetTimeZoneInformation@4
 ;RtlSetUnicodeCallouts
 ;RtlSetUserFlagsHeap
 ;RtlSetUserValueHeap

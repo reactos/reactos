@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.61 2001/05/26 16:49:09 ekohl Exp $
+; $Id: ntdll.edf,v 1.62 2001/05/30 20:01:58 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -396,7 +396,7 @@ RtlFindClearBitsAndSet=RtlFindClearBitsAndSet@12
 RtlFirstFreeAce=RtlFirstFreeAce@8
 RtlFindLongestRunClear=RtlFindLongestRunClear@8
 RtlFindLongestRunSet=RtlFindLongestRunSet@8
-;RtlFindMessage
+RtlFindMessage=RtlFindMessage@20
 RtlFindSetBits=RtlFindSetBits@12
 RtlFindSetBitsAndClear=RtlFindSetBitsAndClear@12
 ;RtlFlushPropertySet
@@ -509,7 +509,7 @@ RtlQueryInformationAcl=RtlQueryInformationAcl@16
 RtlQueryRegistryValues=RtlQueryRegistryValues@20
 ;RtlQuerySecutityObject
 ;RtlQueryTagHeap
-;RtlQueryTimeZoneInformation
+RtlQueryTimeZoneInformation=RtlQueryTimeZoneInformation@4
 RtlRaiseException=RtlRaiseException@4
 RtlRaiseStatus=RtlRaiseStatus@4
 ;RtlRandom
@@ -540,7 +540,7 @@ RtlSetOwnerSecurityDescriptor=RtlSetOwnerSecurityDescriptor@12
 ;RtlSetPropertySetClassId
 RtlSetSaclSecurityDescriptor=RtlSetSaclSecurityDescriptor@16
 ;RtlSetSecurityObject
-;RtlSetTimeZoneInformation
+RtlSetTimeZoneInformation=RtlSetTimeZoneInformation@4
 ;RtlSetUnicodeCallouts
 ;RtlSetUserFlagsHeap
 ;RtlSetUserValueHeap

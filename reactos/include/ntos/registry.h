@@ -1,4 +1,4 @@
-/* $Id: registry.h,v 1.1 2001/01/28 21:32:37 ekohl Exp $
+/* $Id: registry.h,v 1.2 2001/05/30 19:58:48 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -10,8 +10,8 @@
  *               25/01/2001: Created
  */
 
-#ifndef __INCLUDE_REGISTRY_H
-#define __INCLUDE_REGISTRY_H
+#ifndef __INCLUDE_NTOS_REGISTRY_H
+#define __INCLUDE_NTOS_REGISTRY_H
 
 /* Key access rights */
 #define KEY_QUERY_VALUE	(1)
@@ -34,4 +34,19 @@
 #define REG_OPENED_EXISTING_KEY	(0x2L)
 
 
-#endif /* __INCLUDE_REGISTRY_H */
+/* RegEnumValue */
+#define REG_NONE			(0)
+#define REG_SZ				(1)
+#define REG_EXPAND_SZ			(2)
+#define REG_BINARY			(3)
+#define REG_DWORD			(4)
+#define REG_DWORD_LITTLE_ENDIAN		(4)
+#define REG_DWORD_BIG_ENDIAN		(5)
+#define REG_LINK			(6)
+#define REG_MULTI_SZ			(7)
+#define REG_RESOURCE_LIST		(8)
+#define REG_FULL_RESOURCE_DESCRIPTOR	(9)
+#define REG_RESOURCE_REQUIREMENTS_LIST	(10)
+
+
+#endif /* __INCLUDE_NTOS_REGISTRY_H */

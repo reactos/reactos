@@ -2175,18 +2175,6 @@ extern "C" {
 /* RegCreateKeyEx */
 
 /* RegEnumValue */
-#define REG_BINARY	(3)
-#define REG_DWORD	(4)
-#define REG_DWORD_LITTLE_ENDIAN	(4)
-#define REG_DWORD_BIG_ENDIAN	(5)
-#define REG_EXPAND_SZ	(2)
-#define REG_FULL_RESOURCE_DESCRIPTOR (9)
-#define REG_LINK	(6)
-#define REG_MULTI_SZ	(7)
-#define REG_NONE	(0)
-#define REG_RESOURCE_LIST	(8)
-#define REG_RESOURCE_REQUIREMENTS_LIST (10)
-#define REG_SZ	(1)
 
 /* RegisterHotKey */
 #define MOD_ALT	(1)

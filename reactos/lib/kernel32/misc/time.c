@@ -1,4 +1,5 @@
-/*
+/* $Id: time.c,v 1.13 2001/05/30 20:03:28 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/time.c
@@ -13,7 +14,9 @@
 
 #include <ddk/ntddk.h>
 #include <windows.h>
-#include <string.h>
+#include <napi/shared_data.h>
+#include <kernel32/error.h>
+//#include <string.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
@@ -352,11 +355,9 @@ LocalFileTimeToFileTime(
   return TRUE;
 }
 
-VOID
-STDCALL
-GetLocalTime(
-	     LPSYSTEMTIME lpSystemTime
-	     )
+
+VOID STDCALL
+GetLocalTime(LPSYSTEMTIME lpSystemTime)
 {
   FILETIME FileTime;
   FILETIME LocalFileTime;
@@ -366,11 +367,9 @@ GetLocalTime(
   FileTimeToSystemTime (&LocalFileTime, lpSystemTime);
 }
 
-VOID
-STDCALL
-GetSystemTime(
-	      LPSYSTEMTIME lpSystemTime
-	      )
+
+VOID STDCALL
+GetSystemTime(LPSYSTEMTIME lpSystemTime)
 {
   FILETIME FileTime;
 
@@ -378,11 +377,9 @@ GetSystemTime(
   FileTimeToSystemTime (&FileTime, lpSystemTime);
 }
 
-WINBOOL
-STDCALL
-SetLocalTime(
-	     CONST SYSTEMTIME *lpSystemTime
-	     )
+
+WINBOOL STDCALL
+SetLocalTime(CONST SYSTEMTIME *lpSystemTime)
 {
   FILETIME LocalFileTime;
   LARGE_INTEGER FileTime;
@@ -396,11 +393,9 @@ SetLocalTime(
   return TRUE;
 }
 
-WINBOOL
-STDCALL
-SetSystemTime(
-	      CONST SYSTEMTIME *lpSystemTime
-	      )
+
+WINBOOL STDCALL
+SetSystemTime(CONST SYSTEMTIME *lpSystemTime)
 {
   LARGE_INTEGER NewSystemTime;
   NTSTATUS errCode;
@@ -412,55 +407,73 @@ SetSystemTime(
   return TRUE;
 }
 
-/*
-typedef struct _TIME_ZONE_INFORMATION { // tzi 
-    LONG       Bias; 
-    WCHAR      StandardName[ 32 ]; 
-    SYSTEMTIME StandardDate; 
-    LONG       StandardBias; 
-    WCHAR      DaylightName[ 32 ]; 
-    SYSTEMTIME DaylightDate; 
-    LONG       DaylightBias; 
-} TIME_ZONE_INFORMATION; 
-TIME_ZONE_INFORMATION TimeZoneInformation = {60,"CET",;
 
-*/
-DWORD
-STDCALL
-GetTimeZoneInformation(
-		       LPTIME_ZONE_INFORMATION lpTimeZoneInformation
-		       )
+DWORD STDCALL
+GetTimeZoneInformation(LPTIME_ZONE_INFORMATION lpTimeZoneInformation)
 {
- // DPRINT("GetTimeZoneInformation()\n");
-   
- // memset(lpTimeZoneInformation, 0, sizeof(TIME_ZONE_INFORMATION));
-  
-  return TIME_ZONE_ID_UNKNOWN;
+   TIME_ZONE_INFORMATION TimeZoneInformation;
+   NTSTATUS Status;
+
+   DPRINT("GetTimeZoneInformation()\n");
+
+   Status = NtQuerySystemInformation(SystemCurrentTimeZoneInformation,
+				     &TimeZoneInformation,
+				     sizeof(TIME_ZONE_INFORMATION),
+				     NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	SetLastErrorByStatus(Status);
+	return TIME_ZONE_ID_INVALID;
+     }
+
+   memcpy(lpTimeZoneInformation,
+	  &TimeZoneInformation,
+	  sizeof(TIME_ZONE_INFORMATION));
+
+   return ((PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE)->TimeZoneId;
 }
 
-BOOL
-STDCALL
-SetTimeZoneInformation(
-                       CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation
-		       )
+
+BOOL STDCALL
+SetTimeZoneInformation(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
 {
-  
-  return FALSE;
+   TIME_ZONE_INFORMATION TimeZoneInformation;
+   NTSTATUS Status;
+
+   DPRINT("SetTimeZoneInformation()\n");
+
+   memcpy(&TimeZoneInformation,
+	  lpTimeZoneInformation,
+	  sizeof(TIME_ZONE_INFORMATION));
+
+   Status = RtlSetTimeZoneInformation(&TimeZoneInformation);
+   if (!NT_SUCCESS(Status))
+     {
+	SetLastErrorByStatus(Status);
+	return FALSE;
+     }
+
+   NtSetSystemTime(0,0);
+
+   return TRUE;
 }
 
-DWORD STDCALL GetCurrentTime(VOID)
+
+DWORD STDCALL
+GetCurrentTime(VOID)
 {
-  return GetTickCount ();
+  return GetTickCount();
 }
 
-DWORD
-STDCALL
+
+DWORD STDCALL
 GetTickCount(VOID)
 {
   ULONG UpTime;
-  NtGetTickCount (&UpTime);
+  NtGetTickCount(&UpTime);
   return UpTime;
 }
+
 
 WINBOOL STDCALL
 SystemTimeToTzSpecificLocalTime(
@@ -494,29 +507,53 @@ SystemTimeToTzSpecificLocalTime(
   return TRUE;
 }
 
-WINBOOL
-STDCALL
-GetSystemTimeAdjustment(
-                        PDWORD lpTimeAdjustment,
-                        PDWORD lpTimeIncrement,
-                        PWINBOOL lpTimeAdjustmentDisabled
-                       )
-{
-  // FIXME: Preliminary default settings.
-  *lpTimeAdjustment = 0;
-  *lpTimeIncrement = 0;
-  *lpTimeAdjustmentDisabled = TRUE;
 
-  return TRUE;
+WINBOOL STDCALL
+GetSystemTimeAdjustment(PDWORD lpTimeAdjustment,
+			PDWORD lpTimeIncrement,
+			PWINBOOL lpTimeAdjustmentDisabled)
+{
+   SYSTEM_QUERY_TIME_ADJUSTMENT Buffer;
+   NTSTATUS Status;
+   
+   Status = NtQuerySystemInformation(SystemTimeAdjustmentInformation,
+				     &Buffer,
+				     sizeof(SYSTEM_QUERY_TIME_ADJUSTMENT),
+				     NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	SetLastErrorByStatus(Status);
+	return FALSE;
+     }
+   
+   *lpTimeAdjustment = (DWORD)Buffer.TimeAdjustment;
+   *lpTimeIncrement = (DWORD)Buffer.MaximumIncrement;
+   *lpTimeAdjustmentDisabled = (WINBOOL)Buffer.TimeSynchronization;
+   
+   return TRUE;
 }
 
-WINBOOL
-STDCALL
-SetSystemTimeAdjustment(
-                        DWORD   dwTimeAdjustment,
-                        WINBOOL bTimeAdjustmentDisabled
-                       )
-{
 
-  return TRUE;
+WINBOOL STDCALL
+SetSystemTimeAdjustment(DWORD dwTimeAdjustment,
+			WINBOOL bTimeAdjustmentDisabled)
+{
+   NTSTATUS Status;
+   SYSTEM_TIME_ADJUSTMENT_INFO Buffer;
+   
+   Buffer.TimeAdjustment = (ULONG)dwTimeAdjustment;
+   Buffer.TimeSynchronization = (BOOLEAN)bTimeAdjustmentDisabled;
+   
+   Status = NtSetSystemInformation(SystemTimeAdjustmentInformation,
+				   &Buffer,
+				   sizeof(SYSTEM_TIME_ADJUSTMENT_INFO));
+   if (!NT_SUCCESS(Status))
+     {
+	SetLastErrorByStatus(Status);
+	return FALSE;
+     }
+   
+   return TRUE;
 }
+
+/* EOF */

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.2 2001/05/02 22:23:21 ekohl Exp $
+/* $Id: registry.c,v 1.3 2001/05/30 20:00:34 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -9,18 +9,23 @@
  *                    2000/08/11: Created
  */
 
+/*
+ * TODO:
+ *   - finish RtlQueryRegistryValues()
+ *   - finish RtlFormatCurrentUserKeyPath()
+ *   - implement RtlOpenCurrentUser()
+ *   - implement RtlNtXxxx() functions
+ */
+
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntdll/registry.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <ntdll/ntdll.h>
 
-
-static NTSTATUS RtlpGetRegistryHandle(ULONG RelativeTo,
-				      PWSTR Path,
-				      BOOLEAN Create,
-				      PHANDLE KeyHandle);
 
 /* FUNCTIONS ***************************************************************/
 
@@ -75,7 +80,7 @@ RtlDeleteRegistryValue(IN ULONG RelativeTo,
 
    Status = RtlpGetRegistryHandle(RelativeTo,
 				  Path,
-				  TRUE,
+				  FALSE,
 				  &KeyHandle);
    if (!NT_SUCCESS(Status))
      return Status;
@@ -101,19 +106,153 @@ RtlFormatCurrentUserKeyPath(PUNICODE_STRING KeyPath)
 /*
 NTSTATUS STDCALL
 RtlOpenCurrentUser(...)
+{
+
+}
 */
 
 NTSTATUS STDCALL
-RtlQueryRegistryValues (
-	IN	ULONG				RelativeTo,
-	IN	PWSTR				Path,
-	IN	PRTL_QUERY_REGISTRY_TABLE	QueryTable,
-	IN	PVOID				Context,
-	IN	PVOID				Environment
-	)
+RtlQueryRegistryValues(IN ULONG RelativeTo,
+		       IN PWSTR Path,
+		       IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
+		       IN PVOID Context,
+		       IN PVOID Environment)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+   NTSTATUS Status;
+   HANDLE BaseKeyHandle;
+   HANDLE CurrentKeyHandle;
+   PRTL_QUERY_REGISTRY_TABLE QueryEntry;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING KeyName;
+   PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+   ULONG BufferSize;
+   ULONG ResultSize;
+   
+   DPRINT1("RtlQueryRegistryValues()\n");
+   
+   Status = RtlpGetRegistryHandle(RelativeTo,
+				  Path,
+				  FALSE,
+				  &BaseKeyHandle);
+   if (!NT_SUCCESS(Status))
+     return Status;
+
+   CurrentKeyHandle = BaseKeyHandle;
+   QueryEntry = QueryTable;
+   while ((QueryEntry->QueryRoutine != NULL) ||
+	  (QueryEntry->Name != NULL))
+     {
+	if ((QueryEntry->QueryRoutine == NULL) &&
+	    (QueryEntry->Flags & (RTL_QUERY_REGISTRY_SUBKEY | RTL_QUERY_REGISTRY_DIRECT) != 0))
+	  {
+	     Status = STATUS_INVALID_PARAMETER;
+	     break;
+	  }
+
+	DPRINT1("Name: %S\n", QueryEntry->Name);
+
+	if (((QueryEntry->Flags & (RTL_QUERY_REGISTRY_SUBKEY | RTL_QUERY_REGISTRY_TOPKEY)) != 0) &&
+	    (BaseKeyHandle != CurrentKeyHandle))
+	  {
+	     NtClose(CurrentKeyHandle);
+	     CurrentKeyHandle = BaseKeyHandle;
+	  }
+
+	if (QueryEntry->Flags & RTL_QUERY_REGISTRY_SUBKEY)
+	  {
+	     DPRINT1("Open new subkey: %S\n", QueryEntry->Name);
+	  
+	     RtlInitUnicodeString(&KeyName,
+				  QueryEntry->Name);
+	     InitializeObjectAttributes(&ObjectAttributes,
+					&KeyName,
+					OBJ_CASE_INSENSITIVE,
+					BaseKeyHandle,
+					NULL);
+	     Status = NtOpenKey(&CurrentKeyHandle,
+				KEY_ALL_ACCESS,
+				&ObjectAttributes);
+	     if (!NT_SUCCESS(Status))
+	       break;
+	  }
+	else if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DIRECT)
+	  {
+	     DPRINT1("Query value directly: %S\n", QueryEntry->Name);
+	  
+	     RtlInitUnicodeString(&KeyName,
+				  QueryEntry->Name);
+	  
+	     BufferSize = sizeof (KEY_VALUE_PARTIAL_INFORMATION) + 4096;
+	     ValueInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+					 0,
+					 BufferSize);
+	     if (ValueInfo == NULL)
+	       {
+		  Status = STATUS_NO_MEMORY;
+		  break;
+	       }
+
+	     Status = NtQueryValueKey(CurrentKeyHandle,
+				      &KeyName,
+				      KeyValuePartialInformation,
+				      ValueInfo,
+				      BufferSize,
+				      &ResultSize);
+	     if (!NT_SUCCESS(Status))
+	       {
+		  RtlFreeHeap(RtlGetProcessHeap(), 0, ValueInfo);
+		  break;
+	       }
+	     else
+	       {
+		  if (ValueInfo->Type == REG_SZ)
+		    {
+		       PUNICODE_STRING ValueString;
+		       ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
+		       if (ValueString->Buffer == 0)
+			 {
+			    /* FIXME: allocate buffer !!! */
+//			    ValueString->MaximumLength =
+//			    ValueString->Buffer =
+			 }
+		       ValueString->Length = min(ValueInfo->DataLength,
+						 ValueString->MaximumLength - sizeof(WCHAR));
+		       memcpy(ValueString->Buffer,
+			      ValueInfo->Data,
+			      ValueInfo->DataLength);
+			((PWSTR)ValueString->Buffer)[ValueString->Length / sizeof(WCHAR)] = 0;
+		    }
+		  else
+		    {
+		       memcpy(QueryEntry->EntryContext,
+			      ValueInfo->Data,
+			      ValueInfo->DataLength);
+		    }
+	       }
+
+	     RtlFreeHeap (RtlGetProcessHeap(), 0, ValueInfo);
+	  }
+	else
+	  {
+	     DPRINT1("Query value via query routine: %S\n", QueryEntry->Name);
+	     
+	  }
+
+	if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DELETE)
+	  {
+	     DPRINT1("Delete value: %S\n", QueryEntry->Name);
+	     
+	  }
+
+	QueryEntry++;
+     }
+
+   if (CurrentKeyHandle != BaseKeyHandle)
+     NtClose(CurrentKeyHandle);
+
+   NtClose(BaseKeyHandle);
+
+   return Status;
 }
 
 
@@ -161,7 +300,7 @@ RtlpNtMakeTemporaryKey(HANDLE KeyHandle)
 
 /* INTERNAL FUNCTIONS ******************************************************/
 
-static NTSTATUS
+NTSTATUS
 RtlpGetRegistryHandle(ULONG RelativeTo,
 		      PWSTR Path,
 		      BOOLEAN Create,
@@ -171,7 +310,9 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
    WCHAR KeyBuffer[MAX_PATH];
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
-
+   
+   DPRINT("RtlpGetRegistryHandle()\n");
+   
    if (RelativeTo & RTL_REGISTRY_HANDLE)
      {
 	*KeyHandle = (HANDLE)Path;
@@ -191,6 +332,11 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 
    switch (RelativeTo)
      {
+	case RTL_REGISTRY_ABSOLUTE:
+	  RtlAppendUnicodeToString(&KeyName,
+				   L"\\");
+	  break;
+
 	case RTL_REGISTRY_SERVICES:
 	  RtlAppendUnicodeToString(&KeyName,
 				   L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
@@ -219,12 +365,19 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
      }
 
    if (Path[0] != L'\\')
-     RtlAppendUnicodeToString(&KeyName,
-			      L"\\");
-
-   RtlAppendUnicodeToString(&KeyName,
-			    Path);
-
+     {
+	RtlAppendUnicodeToString(&KeyName,
+				 Path);
+     }
+   else
+     {
+	Path++;
+	RtlAppendUnicodeToString(&KeyName,
+				 Path);
+     }
+   
+   DPRINT("KeyName %wZ\n", &KeyName);
+   
    InitializeObjectAttributes(&ObjectAttributes,
 			      &KeyName,
 			      OBJ_CASE_INSENSITIVE,

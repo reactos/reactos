@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.51 2001/05/27 11:09:35 ekohl Exp $
+/* $Id: rtl.h,v 1.52 2001/05/30 19:57:29 ekohl Exp $
  * 
  */
 
@@ -124,19 +124,38 @@ typedef struct _RTL_GENERIC_TABLE
 } RTL_GENERIC_TABLE, *PRTL_GENERIC_TABLE;
 
 
+typedef struct _RTL_MESSAGE_RESOURCE_ENTRY
+{
+   USHORT Length;
+   USHORT Flags;
+   UCHAR Text[1];
+} RTL_MESSAGE_RESOURCE_ENTRY, *PRTL_MESSAGE_RESOURCE_ENTRY;
+
+typedef struct _RTL_MESSAGE_RESOURCE_BLOCK
+{
+   ULONG LowId;
+   ULONG HighId;
+   ULONG OffsetToEntries;
+} RTL_MESSAGE_RESOURCE_BLOCK, *PRTL_MESSAGE_RESOURCE_BLOCK;
+
+typedef struct _RTL_MESSAGE_RESOURCE_DATA
+{
+   ULONG NumberOfBlocks;
+   RTL_MESSAGE_RESOURCE_BLOCK Blocks[1];
+} RTL_MESSAGE_RESOURCE_DATA, *PRTL_MESSAGE_RESOURCE_DATA;
+
+
 /*
  * PURPOSE: Flags for RtlQueryRegistryValues
  */
-enum
-{
-   RTL_QUERY_REGISTRY_SUBKEY,
-   RTL_QUERY_REGISTRY_TOPKEY,
-   RTL_QUERY_REGISTRY_REQUIRED,
-   RTL_QUERY_REGISTRY_NOVALUE,
-   RTL_QUERY_REGISTRY_NOEXPAND,
-   RTL_QUERY_REGISTRY_DIRECT,
-   RTL_QUERY_REGISTRY_DELETE,
-};
+#define RTL_QUERY_REGISTRY_SUBKEY	(0x00000001)
+#define RTL_QUERY_REGISTRY_TOPKEY	(0x00000002)
+#define RTL_QUERY_REGISTRY_REQUIRED	(0x00000004)
+#define RTL_QUERY_REGISTRY_NOVALUE	(0x00000008)
+#define RTL_QUERY_REGISTRY_NOEXPAND	(0x00000010)
+#define RTL_QUERY_REGISTRY_DIRECT	(0x00000020)
+#define RTL_QUERY_REGISTRY_DELETE	(0x00000040)
+
 
 typedef NTSTATUS (*PRTL_QUERY_REGISTRY_ROUTINE)(PWSTR ValueName,
 						ULONG ValueType,
@@ -898,8 +917,13 @@ RtlExtendedMagicDivide (
 	CCHAR		ShiftCount
 	);
 
-VOID STDCALL
-RtlFillMemory (PVOID	Destination, ULONG	Length, UCHAR	Fill);
+VOID
+STDCALL
+RtlFillMemory (
+	PVOID	Destination,
+	ULONG	Length,
+	UCHAR	Fill
+	);
 
 VOID
 STDCALL
@@ -951,6 +975,16 @@ STDCALL
 RtlFindLongestRunSet (
 	PRTL_BITMAP	BitMapHeader,
 	PULONG		StartingIndex
+	);
+
+NTSTATUS
+STDCALL
+RtlFindMessage (
+	IN	PVOID				BaseAddress,
+	IN	ULONG				Type,
+	IN	ULONG				Language,
+	IN	ULONG				MessageId,
+	OUT	PRTL_MESSAGE_RESOURCE_ENTRY	*MessageResourceEntry
 	);
 
 ULONG
@@ -1466,11 +1500,17 @@ RtlQueryAtomInAtomTable (
 NTSTATUS
 STDCALL
 RtlQueryRegistryValues (
-	ULONG				RelativeTo,
-	PWSTR				Path,
-	PRTL_QUERY_REGISTRY_TABLE	QueryTable,
-	PVOID				Context,
-	PVOID				Environment
+	IN	ULONG				RelativeTo,
+	IN	PWSTR				Path,
+	IN	PRTL_QUERY_REGISTRY_TABLE	QueryTable,
+	IN	PVOID				Context,
+	IN	PVOID				Environment
+	);
+
+NTSTATUS
+STDCALL
+RtlQueryTimeZoneInformation (
+	IN OUT	PTIME_ZONE_INFORMATION	TimeZoneInformation
 	);
 
 VOID
@@ -1561,6 +1601,12 @@ RtlSetDaclSecurityDescriptor (
 	BOOLEAN			DaclPresent,
 	PACL			Dacl,
 	BOOLEAN			DaclDefaulted
+	);
+
+NTSTATUS
+STDCALL
+RtlSetTimeZoneInformation (
+	IN OUT	PTIME_ZONE_INFORMATION	TimeZoneInformation
 	);
 
 DWORD
