@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.72 2004/08/26 12:29:37 gvg Exp $
+/* $Id: message.c,v 1.73 2004/09/12 19:29:22 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -855,7 +855,7 @@ IntWaitMessage(HWND Wnd,
       /* Nothing found. Wait for new messages. */
       Status = MsqWaitForNewMessages(ThreadQueue);
     }
-  while (STATUS_WAIT_0 <= STATUS_WAIT_0 && Status <= STATUS_WAIT_63);
+  while (STATUS_WAIT_0 <= Status && Status <= STATUS_WAIT_63);
 
   SetLastNtError(Status);
 
@@ -953,9 +953,9 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
 	      return (BOOL) -1;
 	    }
 	}
-      else
-	{
-	  IntWaitMessage(Wnd, MsgFilterMin, MsgFilterMax);
+      else if (! IntWaitMessage(Wnd, MsgFilterMin, MsgFilterMax))
+        {
+          return (BOOL) -1;
 	}
     }
   while (! GotMessage);
