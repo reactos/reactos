@@ -73,7 +73,7 @@ typedef struct CSRSS_CONSOLE_t
    BOOL EarlyReturn;                   /* wake client and return data, even if we are in line buffered mode, and we don't have a complete line */
 } CSRSS_CONSOLE, *PCSRSS_CONSOLE;
 
-typedef struct
+typedef struct _CSRSS_PROCESS_DATA
 {
   PCSRSS_CONSOLE Console;
   ULONG HandleTableSize;
@@ -84,6 +84,7 @@ typedef struct
   HANDLE ConsoleEvent;
   PVOID CsrSectionViewBase;
   ULONG CsrSectionViewSize;
+  struct _CSRSS_PROCESS_DATA * next;
 } CSRSS_PROCESS_DATA, *PCSRSS_PROCESS_DATA;
 
 #define CSR_API(n) NTSTATUS n (\

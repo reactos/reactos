@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.22 2002/11/03 20:01:07 chorns Exp $
+/* $Id: process.c,v 1.23 2003/01/11 15:51:48 hbirr Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -31,13 +31,6 @@ CRITICAL_SECTION ProcessDataLock;
 
 VOID STDCALL CsrInitProcessData(VOID)
 {
-/*   ULONG i;
-
-   for (i=0; i<256; i++)
-     {
-	ProcessData[i] = NULL;
-     }
-*/
    RtlZeroMemory (ProcessData, sizeof ProcessData);
    NrProcess = sizeof ProcessData / sizeof ProcessData[0];
    RtlInitializeCriticalSection( &ProcessDataLock );
@@ -46,68 +39,96 @@ VOID STDCALL CsrInitProcessData(VOID)
 PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(ULONG ProcessId)
 {
    ULONG i;
+   ULONG hash;
+   PCSRSS_PROCESS_DATA pProcessData;
 
+   hash = ProcessId % (sizeof(ProcessData) / sizeof(*ProcessData));
+   
    LOCK;
-   for (i=0; i<NrProcess; i++)
-     {
-	if (ProcessData[i] &&
-	    ProcessData[i]->ProcessId == ProcessId)
-	  {
-	     UNLOCK;
-	     return(ProcessData[i]);
-	  }
-     }
-   for (i=0; i<NrProcess; i++)
-     {
-	if (ProcessData[i] == NULL)
-	  {
-	     ProcessData[i] = RtlAllocateHeap(CsrssApiHeap,
-					      HEAP_ZERO_MEMORY,
-					      sizeof(CSRSS_PROCESS_DATA));
-	     if (ProcessData[i] == NULL)
-	       {
-		  UNLOCK;
-		  return(NULL);
-	       }
-	     ProcessData[i]->ProcessId = ProcessId;
-	     UNLOCK;
-	     return(ProcessData[i]);
-	  }
-     }
-//   DbgPrint("CSR: CsrGetProcessData() failed\n");
+
+   pProcessData = ProcessData[hash];
+
+   while (pProcessData && pProcessData->ProcessId != ProcessId)
+   {
+      pProcessData = pProcessData->next;
+   }
+   if (pProcessData == NULL)
+   {
+      pProcessData = RtlAllocateHeap(CsrssApiHeap,
+	                             HEAP_ZERO_MEMORY,
+				     sizeof(CSRSS_PROCESS_DATA));
+      if (pProcessData)
+      {
+	 pProcessData->ProcessId = ProcessId;
+	 pProcessData->next = ProcessData[hash];
+	 ProcessData[hash] = pProcessData;
+      }
+   }
    UNLOCK;
-   return(NULL);
+   if (pProcessData == NULL)
+   {
+      DbgPrint("CSR: CsrGetProcessData() failed\n");
+   }
+   return pProcessData;
 }
 
 NTSTATUS STDCALL CsrFreeProcessData(ULONG Pid)
 {
-   int i;
+   ULONG hash;
+   int c;
+   PCSRSS_PROCESS_DATA pProcessData, pPrevProcessData = NULL;
+   
+   hash = Pid % (sizeof(ProcessData) / sizeof(*ProcessData));
+   
    LOCK;
-   for( i = 0; i < NrProcess; i++ )
+
+   pProcessData = ProcessData[hash];
+
+   while (pProcessData && pProcessData->ProcessId != Pid)
+   {
+      pPrevProcessData = pProcessData;
+      pProcessData = pProcessData->next;
+   }
+
+   if (pProcessData)
+   {
+      //DbgPrint("CsrFreeProcessData pid: %d\n", Pid);
+      W32kCleanupForProcess(Pid);  //should check if win32k process
+      if (pProcessData->HandleTable)
       {
-	 if( ProcessData[i] && ProcessData[i]->ProcessId == Pid )
+	 for( c = 0; c < pProcessData->HandleTableSize; c++ )
+	 {
+	    if( pProcessData->HandleTable[c] )
 	    {
-		   //DbgPrint("CsrFreeProcessData pid: %d\n", Pid);
-   		   W32kCleanupForProcess( Pid );  //should check if win32k process
-	       if( ProcessData[i]->HandleTable )
-		  {
-		     int c;
-		     for( c = 0; c < ProcessData[i]->HandleTableSize; c++ )
-			if( ProcessData[i]->HandleTable[c] )
-			  CsrReleaseObject( ProcessData[i], (HANDLE)((c + 1) << 2) );
-		     RtlFreeHeap( CsrssApiHeap, 0, ProcessData[i]->HandleTable );
-		  }
-	       if( ProcessData[i]->Console )
-		  {
-		     if( InterlockedDecrement( &(ProcessData[i]->Console->Header.ReferenceCount) ) == 0 )
-			CsrDeleteConsole( ProcessData[i]->Console );
-		  }
-	       RtlFreeHeap( CsrssApiHeap, 0, ProcessData[i] );
-	       ProcessData[i] = 0;
-	       UNLOCK;
-	       return STATUS_SUCCESS;
+               CsrReleaseObject( pProcessData, (HANDLE)((c + 1) << 2) );
 	    }
+	 }
+	 RtlFreeHeap( CsrssApiHeap, 0, pProcessData->HandleTable );
       }
+      if( pProcessData->Console )
+      {
+         if( InterlockedDecrement( &(pProcessData->Console->Header.ReferenceCount) ) == 0 )
+	 {
+            CsrDeleteConsole( pProcessData->Console );
+	 }
+      }
+      if (pProcessData->CsrSectionViewBase)
+      {
+         NtUnmapViewOfSection(NtCurrentProcess(), pProcessData->CsrSectionViewBase);
+      }
+      if (pPrevProcessData)
+      {
+	 pPrevProcessData->next = pProcessData->next;
+      }
+      else
+      {
+	 ProcessData[hash] = pProcessData->next;
+      }
+
+      RtlFreeHeap( CsrssApiHeap, 0, pProcessData );
+      UNLOCK;
+      return STATUS_SUCCESS;
+   }
    UNLOCK;
    return STATUS_INVALID_PARAMETER;
 }
@@ -201,6 +222,7 @@ CSR_API(CsrCreateProcess)
      }
    else Reply->Data.CreateProcessReply.OutputHandle = Reply->Data.CreateProcessReply.InputHandle = INVALID_HANDLE_VALUE;
 
+   Reply->Status = STATUS_SUCCESS;
    return(STATUS_SUCCESS);
 }
 
