@@ -41,12 +41,19 @@ HalMakeBeep (
    UCHAR b;
    
     /* save flags and disable interrupts */
+#if defined(__GNUC__)
     __asm__("pushf\n\t" \
             "cli\n\t");
+#elif defined(_MSC_VER)
+    __asm	pushfd
+    __asm	cli
+#else
+#error Unknown compiler for inline assembler
+#endif
 
     /* speaker off */
     b = READ_PORT_UCHAR((PUCHAR)PORT_B);
-    WRITE_PORT_UCHAR((PUCHAR)PORT_B, b & 0xFC);
+    WRITE_PORT_UCHAR((PUCHAR)PORT_B, (UCHAR)(b & 0xFC));
 
     if (Frequency)
     {
@@ -55,7 +62,13 @@ HalMakeBeep (
         if (Divider > 0x10000)
         {
             /* restore flags */
+#if defined(__GNUC__)
             __asm__("popf\n\t");
+#elif defined(_MSC_VER)
+            __asm	popfd
+#else
+#error Unknown compiler for inline assembler
+#endif
 
             return FALSE;
         }
@@ -66,11 +79,17 @@ HalMakeBeep (
         WRITE_PORT_UCHAR((PUCHAR)TIMER2, (UCHAR)((Divider>>8) & 0xFF));
 
         /* speaker on */
-        WRITE_PORT_UCHAR((PUCHAR)PORT_B, READ_PORT_UCHAR((PUCHAR)PORT_B) | 0x03);
+        WRITE_PORT_UCHAR((PUCHAR)PORT_B, (UCHAR)(READ_PORT_UCHAR((PUCHAR)PORT_B) | 0x03));
     }
 
     /* restore flags */
+#if defined(__GNUC__)
     __asm__("popf\n\t");
+#elif defined(_MSC_VER)
+    __asm	popfd
+#else
+#error Unknown compiler for inline assembler
+#endif
 
     return TRUE;
 }

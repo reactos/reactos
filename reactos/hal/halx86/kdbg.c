@@ -1,4 +1,4 @@
-/* $Id: kdbg.c,v 1.6 2002/09/08 10:22:24 chorns Exp $
+/* $Id: kdbg.c,v 1.7 2003/12/28 22:38:09 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -233,8 +233,8 @@ KdPortInitialize (
 
         /* set baud rate */
         divisor = 115200 / BaudRate;
-        WRITE_PORT_UCHAR (SER_DLL(PortBase), divisor & 0xff);
-        WRITE_PORT_UCHAR (SER_DLM(PortBase), (divisor >> 8) & 0xff);
+        WRITE_PORT_UCHAR (SER_DLL(PortBase), (UCHAR)(divisor & 0xff));
+        WRITE_PORT_UCHAR (SER_DLM(PortBase), (UCHAR)((divisor >> 8) & 0xff));
 
         /* reset DLAB and set 8N1 format */
         WRITE_PORT_UCHAR (SER_LCR(PortBase),
@@ -323,8 +323,8 @@ KdPortInitializeEx (
 
         /* set baud rate */
         divisor = 115200 / PortInformation->BaudRate;
-        WRITE_PORT_UCHAR (SER_DLL(ComPortBase), divisor & 0xff);
-        WRITE_PORT_UCHAR (SER_DLM(ComPortBase), (divisor >> 8) & 0xff);
+        WRITE_PORT_UCHAR (SER_DLL(ComPortBase), (UCHAR)(divisor & 0xff));
+        WRITE_PORT_UCHAR (SER_DLM(ComPortBase), (UCHAR)((divisor >> 8) & 0xff));
 
         /* reset DLAB and set 8N1 format */
         WRITE_PORT_UCHAR (SER_LCR(ComPortBase),

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.3 2002/09/08 10:22:24 chorns Exp $
+/* $Id: misc.c,v 1.4 2003/12/28 22:38:09 fireball Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS kernel
@@ -38,8 +38,21 @@ VOID STDCALL
 HalProcessorIdle (VOID)
 {
 #if 1
+
+#if defined(__GNUC__)
+
 	__asm__("sti\n\t" \
 	        "hlt\n\t");
+
+#elif defined(_MSC_VER)
+
+	__asm	sti
+	__asm	hlt
+
+#else
+#error Unknown compiler for inline assembler
+#endif
+
 #else
    
 #endif

@@ -47,7 +47,13 @@ HalpQueryCMOS(UCHAR Reg)
 
   Reg |= 0x80;
   pushfl(Flags);
+#if defined(__GNUC__)
   __asm__("cli\n");  // AP unsure as to whether to do this here
+#elif defined(_MSC_VER)
+  __asm	cli
+#else
+#error Unknown compiler for inline assembler
+#endif
   WRITE_PORT_UCHAR((PUCHAR)0x70, Reg);
   Val = READ_PORT_UCHAR((PUCHAR)0x71);
   WRITE_PORT_UCHAR((PUCHAR)0x70, 0);
@@ -65,7 +71,13 @@ HalpSetCMOS(UCHAR Reg,
 
   Reg |= 0x80;
   pushfl(Flags);
+#if defined(__GNUC__)
   __asm__("cli\n");  // AP unsure as to whether to do this here
+#elif defined(_MSC_VER)
+  __asm	cli
+#else
+#error Unknown compiler for inline assembler
+#endif
   WRITE_PORT_UCHAR((PUCHAR)0x70, Reg);
   WRITE_PORT_UCHAR((PUCHAR)0x71, Val);
   WRITE_PORT_UCHAR((PUCHAR)0x70, 0);
@@ -80,7 +92,13 @@ HalpQueryECMOS(USHORT Reg)
   ULONG Flags;
 
   pushfl(Flags);
+#if defined(__GNUC__)
   __asm__("cli\n");  // AP unsure as to whether to do this here
+#elif defined(_MSC_VER)
+  __asm	cli
+#else
+#error Unknown compiler for inline assembler
+#endif
   WRITE_PORT_UCHAR((PUCHAR)0x74, (UCHAR)(Reg & 0x00FF));
   WRITE_PORT_UCHAR((PUCHAR)0x75, (UCHAR)(Reg>>8));
   Val = READ_PORT_UCHAR((PUCHAR)0x76);
@@ -97,7 +115,13 @@ HalpSetECMOS(USHORT Reg,
   ULONG Flags;
 
   pushfl(Flags);
+#if defined(__GNUC__)
   __asm__("cli\n");  // AP unsure as to whether to do this here
+#elif defined(_MSC_VER)
+  __asm	cli
+#else
+#error Unknown compiler for inline assembler
+#endif
   WRITE_PORT_UCHAR((PUCHAR)0x74, (UCHAR)(Reg & 0x00FF));
   WRITE_PORT_UCHAR((PUCHAR)0x75, (UCHAR)(Reg>>8));
   WRITE_PORT_UCHAR((PUCHAR)0x76, Val);
@@ -160,13 +184,13 @@ HalSetRealTimeClock(PTIME_FIELDS Time)
     /* check 'Update In Progress' bit */
     while (HalpQueryCMOS (RTC_REGISTER_A) & RTC_REG_A_UIP);
 
-    HalpSetCMOS (0, INT_BCD(Time->Second));
-    HalpSetCMOS (2, INT_BCD(Time->Minute));
-    HalpSetCMOS (4, INT_BCD(Time->Hour));
-    HalpSetCMOS (6, INT_BCD(Time->Weekday));
-    HalpSetCMOS (7, INT_BCD(Time->Day));
-    HalpSetCMOS (8, INT_BCD(Time->Month));
-    HalpSetCMOS (9, INT_BCD(Time->Year % 100));
+    HalpSetCMOS (0, (UCHAR)INT_BCD(Time->Second));
+    HalpSetCMOS (2, (UCHAR)INT_BCD(Time->Minute));
+    HalpSetCMOS (4, (UCHAR)INT_BCD(Time->Hour));
+    HalpSetCMOS (6, (UCHAR)INT_BCD(Time->Weekday));
+    HalpSetCMOS (7, (UCHAR)INT_BCD(Time->Day));
+    HalpSetCMOS (8, (UCHAR)INT_BCD(Time->Month));
+    HalpSetCMOS (9, (UCHAR)INT_BCD(Time->Year % 100));
 
 #if 0
     /* Century */
@@ -221,9 +245,9 @@ HalSetEnvironmentVariable(PCH Name,
   Val = HalpQueryCMOS(RTC_REGISTER_B);
 
   if (_stricmp(Value, "TRUE") == 0)
-    HalpSetCMOS(RTC_REGISTER_B, Val | 0x01);
+    HalpSetCMOS(RTC_REGISTER_B, (UCHAR)(Val | 0x01));
   else if (_stricmp(Value, "FALSE") == 0)
-    HalpSetCMOS(RTC_REGISTER_B, Val & ~0x01);
+    HalpSetCMOS(RTC_REGISTER_B, (UCHAR)(Val & ~0x01));
   else
     result = FALSE;
 

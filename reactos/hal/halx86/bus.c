@@ -1,4 +1,4 @@
-/* $Id: bus.c,v 1.6 2003/02/26 14:14:03 ekohl Exp $
+/* $Id: bus.c,v 1.7 2003/12/28 22:38:09 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -518,7 +518,7 @@ HalTranslateBusAddress(INTERFACE_TYPE InterfaceType,
    if (BusHandler == NULL)
      return FALSE;
 
-   Result = BusHandler->TranslateBusAddress(BusHandler,
+   Result = (BOOLEAN)BusHandler->TranslateBusAddress(BusHandler,
 					    BusNumber,
 					    BusAddress,
 					    AddressSpace,

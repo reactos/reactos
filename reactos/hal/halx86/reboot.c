@@ -1,4 +1,4 @@
-/* $Id: reboot.c,v 1.4 2003/06/21 14:25:30 gvg Exp $
+/* $Id: reboot.c,v 1.5 2003/12/28 22:38:09 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,17 +27,24 @@ HalReboot (VOID)
     mem[0x473] = 0x12;
 
     /* disable interrupts */
+#if defined(__GNUC__)
     __asm__("cli\n");
+#elif defined(_MSC_VER)
+    __asm	cli
+#else
+#error Unknown compiler for inline assembler
+#endif
+
 
     /* disable periodic interrupt (RTC) */
     WRITE_PORT_UCHAR((PUCHAR)0x70, 0x0b);
     data = READ_PORT_UCHAR((PUCHAR)0x71);
-    WRITE_PORT_UCHAR((PUCHAR)0x71, data & 0xbf);
+    WRITE_PORT_UCHAR((PUCHAR)0x71, (UCHAR)(data & 0xbf));
 
     /* */
     WRITE_PORT_UCHAR((PUCHAR)0x70, 0x0a);
     data = READ_PORT_UCHAR((PUCHAR)0x71);
-    WRITE_PORT_UCHAR((PUCHAR)0x71, (data & 0xf0) | 0x06);
+    WRITE_PORT_UCHAR((PUCHAR)0x71, (UCHAR)((data & 0xf0) | 0x06));
 
     /* */
     WRITE_PORT_UCHAR((PUCHAR)0x70, 0x15);
@@ -47,7 +54,13 @@ HalReboot (VOID)
 
     /* stop the processor */
 #if 1
+#if defined(__GNUC__)
     __asm__("hlt\n");
+#elif defined(_MSC_VER)
+    __asm	hlt
+#else
+#error Unknown compiler for inline assembler
+#endif
 #else
    for(;;);
 #endif   

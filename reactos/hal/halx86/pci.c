@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.10 2003/11/05 22:39:01 gvg Exp $
+/* $Id: pci.c,v 1.11 2003/12/28 22:38:09 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -86,7 +86,7 @@ ReadPciConfigUchar(UCHAR Bus,
 
      case 2:
         KeAcquireSpinLock(&PciLock, &oldIrql);
-	WRITE_PORT_UCHAR((PUCHAR)0xCF8, FUNC(Slot));
+	WRITE_PORT_UCHAR((PUCHAR)0xCF8, (UCHAR)FUNC(Slot));
 	WRITE_PORT_UCHAR((PUCHAR)0xCFA, Bus);
 	*Value = READ_PORT_UCHAR((PUCHAR)(IOADDR(Slot, Offset)));
 	WRITE_PORT_UCHAR((PUCHAR)0xCF8, 0);
@@ -121,7 +121,7 @@ ReadPciConfigUshort(UCHAR Bus,
 
      case 2:
         KeAcquireSpinLock(&PciLock, &oldIrql);
-	WRITE_PORT_UCHAR((PUCHAR)0xCF8, FUNC(Slot));
+	WRITE_PORT_UCHAR((PUCHAR)0xCF8, (UCHAR)FUNC(Slot));
 	WRITE_PORT_UCHAR((PUCHAR)0xCFA, Bus);
 	*Value = READ_PORT_USHORT((PUSHORT)(IOADDR(Slot, Offset)));
 	WRITE_PORT_UCHAR((PUCHAR)0xCF8, 0);
@@ -156,7 +156,7 @@ ReadPciConfigUlong(UCHAR Bus,
 
      case 2:
         KeAcquireSpinLock(&PciLock, &oldIrql);
-	WRITE_PORT_UCHAR((PUCHAR)0xCF8, FUNC(Slot));
+	WRITE_PORT_UCHAR((PUCHAR)0xCF8, (UCHAR)FUNC(Slot));
 	WRITE_PORT_UCHAR((PUCHAR)0xCFA, Bus);
 	*Value = READ_PORT_ULONG((PULONG)(IOADDR(Slot, Offset)));
 	WRITE_PORT_UCHAR((PUCHAR)0xCF8, 0);
@@ -186,7 +186,7 @@ WritePciConfigUchar(UCHAR Bus,
 
      case 2:
         KeAcquireSpinLock(&PciLock, &oldIrql);
-	WRITE_PORT_UCHAR((PUCHAR)0xCF8, FUNC(Slot));
+	WRITE_PORT_UCHAR((PUCHAR)0xCF8, (UCHAR)FUNC(Slot));
 	WRITE_PORT_UCHAR((PUCHAR)0xCFA, Bus);
 	WRITE_PORT_UCHAR((PUCHAR)(IOADDR(Slot,Offset)), Value);
 	WRITE_PORT_UCHAR((PUCHAR)0xCF8, 0);
@@ -221,7 +221,7 @@ WritePciConfigUshort(UCHAR Bus,
 
      case 2:
         KeAcquireSpinLock(&PciLock, &oldIrql);
-	WRITE_PORT_UCHAR((PUCHAR)0xCF8, FUNC(Slot));
+	WRITE_PORT_UCHAR((PUCHAR)0xCF8, (UCHAR)FUNC(Slot));
 	WRITE_PORT_UCHAR((PUCHAR)0xCFA, Bus);
 	WRITE_PORT_USHORT((PUSHORT)(IOADDR(Slot, Offset)), Value);
 	WRITE_PORT_UCHAR((PUCHAR)0xCF8, 0);
@@ -256,7 +256,7 @@ WritePciConfigUlong(UCHAR Bus,
 
      case 2:
         KeAcquireSpinLock(&PciLock, &oldIrql);
-	WRITE_PORT_UCHAR((PUCHAR)0xCF8, FUNC(Slot));
+	WRITE_PORT_UCHAR((PUCHAR)0xCF8, (UCHAR)FUNC(Slot));
 	WRITE_PORT_UCHAR((PUCHAR)0xCFA, Bus);
 	WRITE_PORT_ULONG((PULONG)(IOADDR(Slot, Offset)), Value);
 	WRITE_PORT_UCHAR((PUCHAR)0xCF8, 0);
@@ -290,8 +290,8 @@ HalpGetPciData(PBUS_HANDLER BusHandler,
    if ((Length == 0) || (BusConfigType == 0))
      return 0;
 
-   ReadPciConfigUlong(BusNumber,
-		      SlotNumber & 0x1F,
+   ReadPciConfigUlong((UCHAR)BusNumber,
+		      (UCHAR)(SlotNumber & 0x1F),
 		      0x00,
 		      &Vendor);
    /* some broken boards return 0 if a slot is empty: */
@@ -306,8 +306,8 @@ HalpGetPciData(PBUS_HANDLER BusHandler,
    }
 
    /* 0E=PCI_HEADER_TYPE */
-   ReadPciConfigUchar(BusNumber,
-		      SlotNumber & 0x1F,
+   ReadPciConfigUchar((UCHAR)BusNumber,
+		      (UCHAR)(SlotNumber & 0x1F),
 		      0x0E,
 		      &HeaderType);
    if (((HeaderType & PCI_MULTIFUNCTION) == 0) && ((SlotNumber & 0xE0) != 0))
@@ -319,8 +319,8 @@ HalpGetPciData(PBUS_HANDLER BusHandler,
      }
      return 0;
    }
-   ReadPciConfigUlong(BusNumber,
-		      SlotNumber,
+   ReadPciConfigUlong((UCHAR)BusNumber,
+		      (UCHAR)SlotNumber,
 		      0x00,
 		      &Vendor);
    /* some broken boards return 0 if a slot is empty: */
@@ -336,55 +336,55 @@ HalpGetPciData(PBUS_HANDLER BusHandler,
 
    if ((Address & 1) && (Len >= 1))
      {
-	ReadPciConfigUchar(BusNumber,
-			   SlotNumber,
-			   Address,
+	ReadPciConfigUchar((UCHAR)BusNumber,
+			   (UCHAR)SlotNumber,
+			   (UCHAR)Address,
 			   Ptr);
-	Ptr = Ptr + 1;
+	Ptr = (char*)Ptr + 1;
 	Address++;
 	Len--;
      }
 
    if ((Address & 2) && (Len >= 2))
      {
-	ReadPciConfigUshort(BusNumber,
-			    SlotNumber,
-			    Address,
+	ReadPciConfigUshort((UCHAR)BusNumber,
+			    (UCHAR)SlotNumber,
+			    (UCHAR)Address,
 			    Ptr);
-	Ptr = Ptr + 2;
+	Ptr = (char*)Ptr + 2;
 	Address += 2;
 	Len -= 2;
      }
 
    while (Len >= 4)
      {
-	ReadPciConfigUlong(BusNumber,
-			   SlotNumber,
-			   Address,
+	ReadPciConfigUlong((UCHAR)BusNumber,
+			   (UCHAR)SlotNumber,
+			   (UCHAR)Address,
 			   Ptr);
-	Ptr = Ptr + 4;
+	Ptr = (char*)Ptr + 4;
 	Address += 4;
 	Len -= 4;
      }
 
    if (Len >= 2)
      {
-	ReadPciConfigUshort(BusNumber,
-			    SlotNumber,
-			    Address,
+	ReadPciConfigUshort((UCHAR)BusNumber,
+			    (UCHAR)SlotNumber,
+			    (UCHAR)Address,
 			    Ptr);
-	Ptr = Ptr + 2;
+	Ptr = (char*)Ptr + 2;
 	Address += 2;
 	Len -= 2;
      }
 
    if (Len >= 1)
      {
-	ReadPciConfigUchar(BusNumber,
-			   SlotNumber,
-			   Address,
+	ReadPciConfigUchar((UCHAR)BusNumber,
+			   (UCHAR)SlotNumber,
+			   (UCHAR)Address,
 			   Ptr);
-	Ptr = Ptr + 1;
+	Ptr = (char*)Ptr + 1;
 	Address++;
 	Len--;
      }
@@ -416,8 +416,8 @@ HalpSetPciData(PBUS_HANDLER BusHandler,
    if ((Length == 0) || (BusConfigType == 0))
      return 0;
 
-   ReadPciConfigUlong(BusNumber,
-		      SlotNumber & 0x1F,
+   ReadPciConfigUlong((UCHAR)BusNumber,
+		      (UCHAR)(SlotNumber & 0x1F),
 		      0x00,
 		      &Vendor);
    /* some broken boards return 0 if a slot is empty: */
@@ -426,15 +426,15 @@ HalpSetPciData(PBUS_HANDLER BusHandler,
 
 
    /* 0E=PCI_HEADER_TYPE */
-   ReadPciConfigUchar(BusNumber,
-		      SlotNumber & 0x1F,
+   ReadPciConfigUchar((UCHAR)BusNumber,
+		      (UCHAR)(SlotNumber & 0x1F),
 		      0x0E,
 		      &HeaderType);
    if (((HeaderType & PCI_MULTIFUNCTION) == 0) && ((SlotNumber & 0xE0) != 0))
      return 0;
 
-   ReadPciConfigUlong(BusNumber,
-		      SlotNumber,
+   ReadPciConfigUlong((UCHAR)BusNumber,
+		      (UCHAR)SlotNumber,
 		      0x00,
 		      &Vendor);
    /* some broken boards return 0 if a slot is empty: */
@@ -443,55 +443,55 @@ HalpSetPciData(PBUS_HANDLER BusHandler,
 
    if ((Address & 1) && (Len >= 1))
      {
-	WritePciConfigUchar(BusNumber,
-			    SlotNumber,
-			    Address,
+	WritePciConfigUchar((UCHAR)BusNumber,
+			    (UCHAR)SlotNumber,
+			    (UCHAR)Address,
 			    *(PUCHAR)Ptr);
-	Ptr = Ptr + 1;
+	Ptr = (char*)Ptr + 1;
 	Address++;
 	Len--;
      }
 
    if ((Address & 2) && (Len >= 2))
      {
-	WritePciConfigUshort(BusNumber,
-			     SlotNumber,
-			     Address,
+	WritePciConfigUshort((UCHAR)BusNumber,
+			     (UCHAR)SlotNumber,
+			     (UCHAR)Address,
 			     *(PUSHORT)Ptr);
-	Ptr = Ptr + 2;
+	Ptr = (char*)Ptr + 2;
 	Address += 2;
 	Len -= 2;
      }
 
    while (Len >= 4)
      {
-	WritePciConfigUlong(BusNumber,
-			    SlotNumber,
-			    Address,
+	WritePciConfigUlong((UCHAR)BusNumber,
+			    (UCHAR)SlotNumber,
+			    (UCHAR)Address,
 			    *(PULONG)Ptr);
-	Ptr = Ptr + 4;
+	Ptr = (char*)Ptr + 4;
 	Address += 4;
 	Len -= 4;
      }
 
    if (Len >= 2)
      {
-	WritePciConfigUshort(BusNumber,
-			     SlotNumber,
-			     Address,
+	WritePciConfigUshort((UCHAR)BusNumber,
+			     (UCHAR)SlotNumber,
+			     (UCHAR)Address,
 			     *(PUSHORT)Ptr);
-	Ptr = Ptr + 2;
+	Ptr = (char*)Ptr + 2;
 	Address += 2;
 	Len -= 2;
      }
 
    if (Len >= 1)
      {
-	WritePciConfigUchar(BusNumber,
-			    SlotNumber,
-			    Address,
+	WritePciConfigUchar((UCHAR)BusNumber,
+			    (UCHAR)SlotNumber,
+			    (UCHAR)Address,
 			    *(PUCHAR)Ptr);
-	Ptr = Ptr + 1;
+	Ptr = (char*)Ptr + 1;
 	Address++;
 	Len--;
      }
@@ -552,11 +552,11 @@ HalpGetPciInterruptVector(PVOID BusHandler,
 			  PKAFFINITY Affinity)
 {
 #ifdef MP
-  *Irql = PROFILE_LEVEL - BusInterruptVector;
+  *Irql = (KIRQL)(PROFILE_LEVEL - BusInterruptVector);
   *Affinity = 0xFFFFFFFF;
   return IRQ2VECTOR(BusInterruptVector);
 #else
-  *Irql = PROFILE_LEVEL - BusInterruptVector;
+  *Irql = (KIRQL)(PROFILE_LEVEL - BusInterruptVector);
   *Affinity = 0xFFFFFFFF;
   return BusInterruptVector;
 #endif
@@ -646,22 +646,22 @@ HalpAssignPciSlotResources(IN PBUS_HANDLER BusHandler,
 	{
 	  ResourceCount++;
           Offset = offsetof(PCI_COMMON_CONFIG, u.type0.BaseAddresses[Address]);
-	  Status = WritePciConfigUlong(BusNumber, SlotNumber, Offset, 0xffffffff);
+	  Status = WritePciConfigUlong((UCHAR)BusNumber, (UCHAR)SlotNumber, Offset, 0xffffffff);
 	  if (! NT_SUCCESS(Status))
 	    {
-	      WritePciConfigUlong(BusNumber, SlotNumber, Offset,
+	      WritePciConfigUlong((UCHAR)BusNumber, (UCHAR)SlotNumber, Offset,
                                   PciConfig.u.type0.BaseAddresses[Address]);
 	      return Status;
 	    }
-	  Status = ReadPciConfigUlong(BusNumber, SlotNumber,
+	  Status = ReadPciConfigUlong((UCHAR)BusNumber, (UCHAR)SlotNumber,
 	                              Offset, Size + Address);
 	  if (! NT_SUCCESS(Status))
 	    {
-	      WritePciConfigUlong(BusNumber, SlotNumber, Offset,
+	      WritePciConfigUlong((UCHAR)BusNumber, (UCHAR)SlotNumber, Offset,
                                   PciConfig.u.type0.BaseAddresses[Address]);
 	      return Status;
 	    }
-	  Status = WritePciConfigUlong(BusNumber, SlotNumber, Offset,
+	  Status = WritePciConfigUlong((UCHAR)BusNumber, (UCHAR)SlotNumber, Offset,
                                        PciConfig.u.type0.BaseAddresses[Address]);
 	  if (! NT_SUCCESS(Status))
 	    {

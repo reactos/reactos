@@ -20,7 +20,7 @@
  * MA 02139, USA.  
  *
  */
-/* $Id: timer.c,v 1.1 2003/06/19 16:00:03 gvg Exp $
+/* $Id: timer.c,v 1.2 2003/12/28 22:38:09 fireball Exp $
  *
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/hal/x86/udelay.c
@@ -99,15 +99,28 @@ static ULONG Read8254Timer(VOID)
   ULONG Count;
 
   /* save flags and disable interrupts */
+#if defined(__GNUC__)
   __asm__("pushf\n\t" \
           "cli\n\t");
+#elif defined(_MSC_VER)
+  __asm	pushfd
+  __asm	cli
+#else
+#error Unknown compiler for inline assembler
+#endif
 
   WRITE_PORT_UCHAR((PUCHAR) TMR_CTRL, TMR_SC0 | TMR_LATCH);
   Count = READ_PORT_UCHAR((PUCHAR) TMR_CNT0);
   Count |= READ_PORT_UCHAR((PUCHAR) TMR_CNT0) << 8;
 
   /* restore flags */
+#if defined(__GNUC__)
   __asm__("popf\n\t");
+#elif defined(_MSC_VER)
+  __asm	popfd
+#else
+#error Unknown compiler for inline assembler
+#endif
 
   return Count;
 }
@@ -228,13 +241,26 @@ HalCalibratePerformanceCounter(ULONG Count)
    ULONG i;
 
    /* save flags and disable interrupts */
+#if defined(__GNUC__)
    __asm__("pushf\n\t" \
 	   "cli\n\t");
+#elif defined(_MSC_VER)
+  __asm	pushfd
+  __asm	cli
+#else
+#error Unknown compiler for inline assembler
+#endif
 
    for (i = 0; i < Count; i++);
 
    /* restore flags */
+#if defined(__GNUC__)
    __asm__("popf\n\t");
+#elif defined(_MSC_VER)
+   __asm	popfd
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 

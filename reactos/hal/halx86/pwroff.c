@@ -1,4 +1,4 @@
-/* $Id: pwroff.c,v 1.3 2002/09/08 10:22:24 chorns Exp $
+/* $Id: pwroff.c,v 1.4 2003/12/28 22:38:09 fireball Exp $
  *
  * FILE       : reactos/hal/x86/apm.c
  * DESCRIPTION: Turn CPU off...
@@ -22,6 +22,8 @@
 #define APM_MODE_ENABLE		1
 
 
+
+#if defined(__GNUC__)
 
 nopm	db	'No power management functionality',10,13,'$'
 errmsg	db	'Power management error',10,13,'$'
@@ -88,6 +90,11 @@ ApmCall (
 	/* CX <== Mode */
 	__asm__("int 21\n"); /* 0x15 */
 }
+
+#elif defined(_MSC_VER)
+#else
+#error Unknown compiler for inline assembler
+#endif
 
 
 BOOLEAN

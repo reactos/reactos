@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.8 2003/07/21 21:53:51 royce Exp $
+/* $Id: mp.c,v 1.9 2003/12/28 22:38:09 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1293,7 +1293,13 @@ VOID APICSendIPI(
    ULONG tmp, i, flags;
 
    pushfl(flags);
+#if defined(__GNUC__)
    __asm__ ("\n\tcli\n\t");
+#elif defined(_MSC_VER)
+   __asm	cli
+#else
+#error Unknown compiler for inline assembler
+#endif
 
    /* Wait up to 100ms for the APIC to become ready */
    for (i = 0; i < 10000; i++) {
@@ -1389,7 +1395,13 @@ VOID MpsTimerHandler(
    * Enable interrupts
    * NOTE: Only higher priority interrupts will get through
    */
+#if defined(__GNUC__)
   __asm__("sti\n\t");
+#elif defined(_MSC_VER)
+  __asm	sti
+#else
+#error Unknown compiler for inline assembler
+#endif
 
   if (KeGetCurrentProcessorNumber() == 0)
     {
@@ -1407,7 +1419,13 @@ VOID MpsTimerHandler(
   /*
    * Disable interrupts
    */
+#if defined(__GNUC__)
   __asm__("cli\n\t");
+#elif defined(_MSC_VER)
+  __asm	cli
+#else
+#error Unknown compiler for inline assembler
+#endif
 
   DbgPrint("MpsTimerHandler() 0 IRQL 0x%.08x\n", OldIrql);
 
@@ -2397,7 +2415,13 @@ HalpInitMPS(
   HalpCalibrateStallExecution();
 
   /* We can now enable interrupts */
+#if defined(__GNUC__)
   __asm__ __volatile__ ("sti\n\t");
+#elif defined(_MSC_VER)
+  __asm	sti
+#else
+#error Unknown compiler for inline assembler
+#endif
 
   NextCPU = 0;
 }

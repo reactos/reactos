@@ -6,12 +6,12 @@
 #define __INTERNAL_HAL_BUS_H
 
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*pAdjustResourceList)(IN PBUS_HANDLER BusHandler,
 		       IN ULONG BusNumber,
 		       IN OUT PCM_RESOURCE_LIST Resources);
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*pAssignSlotResources)(IN PBUS_HANDLER BusHandler,
 			IN ULONG BusNumber,
 			IN PUNICODE_STRING RegistryPath,
@@ -21,7 +21,7 @@ typedef NTSTATUS STDCALL
 			IN ULONG SlotNumber,
 			IN OUT PCM_RESOURCE_LIST *AllocatedResources);
 
-typedef ULONG STDCALL
+typedef ULONG STDCALL_FUNC
 (*pGetSetBusData)(IN PBUS_HANDLER BusHandler,
 		  IN ULONG BusNumber,
 		  IN ULONG SlotNumber,
@@ -29,7 +29,7 @@ typedef ULONG STDCALL
 		  IN ULONG Offset,
 		  IN ULONG Length);
 
-typedef ULONG STDCALL
+typedef ULONG STDCALL_FUNC
 (*pGetInterruptVector)(IN PBUS_HANDLER BusHandler,
 		       IN ULONG BusNumber,
 		       IN ULONG BusInterruptLevel,
@@ -37,7 +37,7 @@ typedef ULONG STDCALL
 		       OUT PKIRQL Irql,
 		       OUT PKAFFINITY Affinity);
 
-typedef ULONG STDCALL
+typedef ULONG STDCALL_FUNC
 (*pTranslateBusAddress)(IN PBUS_HANDLER BusHandler,
 			IN ULONG BusNumber,
 			IN PHYSICAL_ADDRESS BusAddress,

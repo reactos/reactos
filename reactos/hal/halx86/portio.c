@@ -1,4 +1,4 @@
-/* $Id: portio.c,v 1.3 2002/09/08 10:22:24 chorns Exp $
+/* $Id: portio.c,v 1.4 2003/12/28 22:38:09 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -38,11 +38,26 @@
  *		Linus
  */
 
+#if defined(__GNUC__)
+
 #ifdef SLOW_IO_BY_JUMPING
 #define __SLOW_DOWN_IO __asm__ __volatile__("jmp 1f\n1:\tjmp 1f\n1:")
 #else
 #define __SLOW_DOWN_IO __asm__ __volatile__("outb %al,$0x80")
 #endif
+
+#elif defined(_MSC_VER)
+
+#ifdef SLOW_IO_BY_JUMPING
+#define __SLOW_DOWN_IO __asm jmp 1f  __asm jmp 1f  1f:
+#else
+#define __SLOW_DOWN_IO __asm out 0x80, al
+#endif
+
+#else
+#error Unknown compiler for inline assembler
+#endif
+
 
 #ifdef REALLY_SLOW_IO
 #define SLOW_DOWN_IO { __SLOW_DOWN_IO; __SLOW_DOWN_IO; __SLOW_DOWN_IO; __SLOW_DOWN_IO; }
@@ -55,9 +70,22 @@ READ_PORT_BUFFER_UCHAR (PUCHAR Port,
                         PUCHAR Buffer,
                         ULONG Count)
 {
+#if defined(__GNUC__)
    __asm__ __volatile__ ("cld ; rep ; insb\n\t" 
 			 : "=D" (Buffer), "=c" (Count) 
 			 : "d" (Port),"0" (Buffer),"1" (Count));
+#elif defined(_MSC_VER)
+	__asm
+	{
+		mov edx, Port
+		mov edi, Buffer
+		mov ecx, Count
+		cld
+		rep ins byte ptr[edi], dx
+	}
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 VOID STDCALL
@@ -65,9 +93,22 @@ READ_PORT_BUFFER_USHORT (PUSHORT Port,
                          PUSHORT Buffer,
                          ULONG Count)
 {
+#if defined(__GNUC__)
    __asm__ __volatile__ ("cld ; rep ; insw"
 			 : "=D" (Buffer), "=c" (Count) 
 			 : "d" (Port),"0" (Buffer),"1" (Count));
+#elif defined(_MSC_VER)
+	__asm
+	{
+		mov edx, Port
+		mov edi, Buffer
+		mov ecx, Count
+		cld
+		rep ins word ptr[edi], dx
+	}
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 VOID STDCALL
@@ -75,19 +116,44 @@ READ_PORT_BUFFER_ULONG (PULONG Port,
                         PULONG Buffer,
                         ULONG Count)
 {
+#if defined(__GNUC__)
    __asm__ __volatile__ ("cld ; rep ; insl"
 			 : "=D" (Buffer), "=c" (Count) 
 			 : "d" (Port),"0" (Buffer),"1" (Count));
+#elif defined(_MSC_VER)
+	__asm
+	{
+		mov edx, Port
+		mov edi, Buffer
+		mov ecx, Count
+		cld
+		rep ins dword ptr[edi], dx
+	}
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 UCHAR STDCALL
 READ_PORT_UCHAR (PUCHAR Port)
 {
    UCHAR Value;
-   
+
+#if defined(__GNUC__)
    __asm__("inb %w1, %0\n\t"
 	   : "=a" (Value)
 	   : "d" (Port));
+#elif defined(_MSC_VER)
+	__asm
+	{
+		mov edx, Port
+		in al, dx
+		mov Value, al
+	}
+#else
+#error Unknown compiler for inline assembler
+#endif
+
    SLOW_DOWN_IO;
    return(Value);
 }
@@ -96,10 +162,21 @@ USHORT STDCALL
 READ_PORT_USHORT (PUSHORT Port)
 {
    USHORT Value;
-   
+
+#if defined(__GNUC__)
    __asm__("inw %w1, %0\n\t"
 	   : "=a" (Value)
 	   : "d" (Port));
+#elif defined(_MSC_VER)
+	__asm
+	{
+		mov edx, Port
+		in ax, dx
+		mov Value, ax
+	}
+#else
+#error Unknown compiler for inline assembler
+#endif
    SLOW_DOWN_IO;
    return(Value);
 }
@@ -108,10 +185,21 @@ ULONG STDCALL
 READ_PORT_ULONG (PULONG Port)
 {
    ULONG Value;
-   
+
+#if defined(__GNUC__)
    __asm__("inl %w1, %0\n\t"
 	   : "=a" (Value)
 	   : "d" (Port));
+#elif defined(_MSC_VER)
+	__asm
+	{
+		mov edx, Port
+		in eax, dx
+		mov Value, eax
+	}
+#else
+#error Unknown compiler for inline assembler
+#endif
    SLOW_DOWN_IO;
    return(Value);
 }
@@ -121,9 +209,22 @@ WRITE_PORT_BUFFER_UCHAR (PUCHAR Port,
                          PUCHAR Buffer,
                          ULONG Count)
 {
+#if defined(__GNUC__)
    __asm__ __volatile__ ("cld ; rep ; outsb" 
 			 : "=S" (Buffer), "=c" (Count) 
 			 : "d" (Port),"0" (Buffer),"1" (Count));
+#elif defined(_MSC_VER)
+	__asm
+	{
+		mov edx, Port
+		mov esi, Buffer
+		mov ecx, Count
+		cld
+		rep outs
+	}
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 VOID STDCALL
@@ -131,9 +232,22 @@ WRITE_PORT_BUFFER_USHORT (PUSHORT Port,
                           PUSHORT Buffer,
                           ULONG Count)
 {
+#if defined(__GNUC__)
    __asm__ __volatile__ ("cld ; rep ; outsw"
 			 : "=S" (Buffer), "=c" (Count) 
 			 : "d" (Port),"0" (Buffer),"1" (Count));
+#elif defined(_MSC_VER)
+	__asm
+	{
+		mov edx, Port
+		mov esi, Buffer
+		mov ecx, Count
+		cld
+		rep outsw
+	}
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 VOID STDCALL
@@ -141,19 +255,43 @@ WRITE_PORT_BUFFER_ULONG (PULONG Port,
                          PULONG Buffer,
                          ULONG Count)
 {
+#if defined(__GNUC__)
    __asm__ __volatile__ ("cld ; rep ; outsl" 
 			 : "=S" (Buffer), "=c" (Count) 
 			 : "d" (Port),"0" (Buffer),"1" (Count));
+#elif defined(_MSC_VER)
+	__asm
+	{
+		mov edx, Port
+		mov esi, Buffer
+		mov ecx, Count
+		cld
+		rep outsd
+	}
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 VOID STDCALL
 WRITE_PORT_UCHAR (PUCHAR Port,
                   UCHAR Value)
 {
+#if defined(__GNUC__)
    __asm__("outb %0, %w1\n\t"
 	   : 
 	   : "a" (Value),
 	     "d" (Port));
+#elif defined(_MSC_VER)
+	__asm
+	{
+		mov edx, Port
+		mov al, Value
+		out dx,al
+	}
+#else
+#error Unknown compiler for inline assembler
+#endif
    SLOW_DOWN_IO;
 }
 
@@ -161,10 +299,21 @@ VOID STDCALL
 WRITE_PORT_USHORT (PUSHORT Port,
                    USHORT Value)
 {
+#if defined(__GNUC__)
    __asm__("outw %0, %w1\n\t"
 	   : 
 	   : "a" (Value),
 	     "d" (Port));
+#elif defined(_MSC_VER)
+	__asm
+	{
+		mov edx, Port
+		mov ax, Value
+		out dx,ax
+	}
+#else
+#error Unknown compiler for inline assembler
+#endif
    SLOW_DOWN_IO;
 }
 
@@ -172,10 +321,21 @@ VOID STDCALL
 WRITE_PORT_ULONG (PULONG Port,
                   ULONG Value)
 {
+#if defined(__GNUC__)
    __asm__("outl %0, %w1\n\t"
 	   : 
 	   : "a" (Value),
 	     "d" (Port));
+#elif defined(_MSC_VER)
+	__asm
+	{
+		mov edx, Port
+		mov eax, Value
+		out dx,eax
+	}
+#else
+#error Unknown compiler for inline assembler
+#endif
    SLOW_DOWN_IO;
 }
 

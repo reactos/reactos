@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mca.c,v 1.2 2002/10/03 09:11:00 ekohl Exp $
+/* $Id: mca.c,v 1.3 2003/12/28 22:38:09 fireball Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS kernel
@@ -63,7 +63,7 @@ HalpGetMicroChannelData(PBUS_HANDLER BusHandler,
     return(0);
 
   /* Enter Setup-Mode for given slot */
-  WRITE_PORT_UCHAR((PUCHAR)0x96, ((UCHAR)(SlotNumber - 1) & 0x07) | 0x08);
+  WRITE_PORT_UCHAR((PUCHAR)0x96, (UCHAR)(((UCHAR)(SlotNumber - 1) & 0x07) | 0x08));
 
   /* Read POS data */
   PosData->AdapterId = (READ_PORT_UCHAR((PUCHAR)0x101) << 8) +
@@ -74,7 +74,7 @@ HalpGetMicroChannelData(PBUS_HANDLER BusHandler,
   PosData->PosData4 = READ_PORT_UCHAR((PUCHAR)0x105);
 
   /* Leave Setup-Mode for given slot */
-  WRITE_PORT_UCHAR((PUCHAR)0x96, (UCHAR)(SlotNumber - 1) & 0x07);
+  WRITE_PORT_UCHAR((PUCHAR)0x96, (UCHAR)((UCHAR)(SlotNumber - 1) & 0x07));
 
   return(sizeof(CM_MCA_POS_DATA));
 }

@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.8 2003/10/31 01:08:00 gdalsnes Exp $
+/* $Id: adapter.c,v 1.9 2003/12/28 22:38:09 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -286,10 +286,14 @@ IoMapTransfer (
  *     - If the controller supports scatter/gather, the copyover should not happen
  */
 {
-  PHYSICAL_ADDRESS Address;
-  
-  
-  /* Isa System (slave) DMA? */
+	PHYSICAL_ADDRESS Address;
+#if defined(__GNUC__)
+	Address.QuadPart = 0ULL;
+#else
+	Address.QuadPart = 0;
+#endif
+
+	/* Isa System (slave) DMA? */
   if (AdapterObject && AdapterObject->InterfaceType == Isa && !AdapterObject->Master)
   {
 #if 0
@@ -309,18 +313,18 @@ IoMapTransfer (
     if( WriteToDevice )
     {
       memcpy(MapRegisterBase,
-             MmGetSystemAddressForMdl(Mdl) + ((ULONG)CurrentVa - (ULONG)MmGetMdlVirtualAddress(Mdl)),
+             (char*)MmGetSystemAddressForMdl(Mdl) + ((ULONG)CurrentVa - (ULONG)MmGetMdlVirtualAddress(Mdl)),
 	           *Length );
     }
              
     // program up the dma controller, and return
     Address = MmGetPhysicalAddress( MapRegisterBase );
     // port 0xA is the dma mask register, or a 0x10 on to the channel number to mask it
-    WRITE_PORT_UCHAR( (PVOID)0x0A, AdapterObject->Channel | 0x10 );
+    WRITE_PORT_UCHAR( (PVOID)0x0A, (UCHAR)(AdapterObject->Channel | 0x10));
     // write zero to the reset register
     WRITE_PORT_UCHAR( (PVOID)0x0C, 0 );
     // mode register, or channel with 0x4 for write memory, 0x8 for read memory, 0x10 for non auto initialize
-    WRITE_PORT_UCHAR( (PVOID)0x0B, AdapterObject->Channel | ( WriteToDevice ? 0x8 : 0x4 ) );
+    WRITE_PORT_UCHAR( (PVOID)0x0B, (UCHAR)(AdapterObject->Channel | ( WriteToDevice ? 0x8 : 0x4 )) );
     // set the 64k page register for the channel
     WRITE_PORT_UCHAR( AdapterObject->PagePort, (UCHAR)(((ULONG)Address.QuadPart)>>16) );
     // low, then high address byte, which is always 0 for us, because we have a 64k alligned address
@@ -330,7 +334,7 @@ IoMapTransfer (
     WRITE_PORT_UCHAR( AdapterObject->CountPort, (UCHAR)(*Length - 1) );
     WRITE_PORT_UCHAR( AdapterObject->CountPort, (UCHAR)((*Length - 1)>>8) );
     // unmask the channel to let it rip
-    WRITE_PORT_UCHAR( (PVOID)0x0A, AdapterObject->Channel );
+    WRITE_PORT_UCHAR( (PVOID)0x0A, (UCHAR)AdapterObject->Channel );
 
     /* 
     NOTE: Return value should be ignored when doing System DMA.
@@ -408,7 +412,7 @@ IoMapTransfer (
     if( WriteToDevice )
     {
       memcpy(MapRegisterBase,
-             MmGetSystemAddressForMdl(Mdl) + ((ULONG)CurrentVa - (ULONG)MmGetMdlVirtualAddress(Mdl)),
+             (char*)MmGetSystemAddressForMdl(Mdl) + ((ULONG)CurrentVa - (ULONG)MmGetMdlVirtualAddress(Mdl)),
              *Length );
     }
 

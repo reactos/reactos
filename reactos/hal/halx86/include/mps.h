@@ -382,7 +382,15 @@ static inline VOID ReadPentiumClock(PULARGE_INTEGER Count)
    register ULONG nLow;
    register ULONG nHigh;
   
+#if defined(__GNUC__)
    __asm__ __volatile__ ("rdtsc" : "=a" (nLow), "=d" (nHigh));
+#elif defined(_MSC_VER)
+   __asm rdtsc
+   __asm mov nLow, eax
+   __asm mov nHigh, edx
+#else
+#error Unknown compiler for inline assembler
+#endif
 
    Count->u.LowPart = nLow;
    Count->u.HighPart = nHigh;
@@ -415,8 +423,15 @@ typedef enum {
 } APIC_MODE;
 
 
+#if defined(__GNUC__)
 #define pushfl(x) __asm__ __volatile__("pushfl ; popl %0":"=g" (x): /* no input */)
 #define popfl(x) __asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"g" (x):"memory")
+#elif defined(_MSC_VER)
+#define pushfl(x) __asm pushfd  __asm pop x;
+#define popfl(x)  __asm push x  __asm popfd;
+#else
+#error Unknown compiler for inline assembler
+#endif
 
 
 #define PIC_IRQS  16

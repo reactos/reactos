@@ -1,4 +1,4 @@
-/* $Id: isa.c,v 1.5 2003/04/06 10:45:15 chorns Exp $
+/* $Id: isa.c,v 1.6 2003/12/28 22:38:09 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -72,11 +72,11 @@ HalpGetIsaInterruptVector(PVOID BusHandler,
 			  PKAFFINITY Affinity)
 {
 #ifdef MP
-  *Irql = PROFILE_LEVEL - BusInterruptVector;
+  *Irql = (KIRQL)(PROFILE_LEVEL - BusInterruptVector);
   *Affinity = 0xFFFFFFFF;
   return IRQ2VECTOR(BusInterruptVector);
 #else
-  *Irql = PROFILE_LEVEL - BusInterruptVector;
+  *Irql = (KIRQL)(PROFILE_LEVEL - BusInterruptVector);
   *Affinity = 0xFFFFFFFF;
   return BusInterruptVector;
 #endif

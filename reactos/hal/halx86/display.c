@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.11 2003/09/02 20:11:43 ea Exp $
+/* $Id: display.c,v 1.12 2003/12/28 22:38:09 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -223,7 +223,7 @@ HalScrollDisplay (VOID)
 		SizeX * (SizeY - 1) * 2);
 
   ptr = VideoBuffer  + (SizeX * (SizeY - 1));
-  for (i = 0; i < SizeX; i++, ptr++)
+  for (i = 0; i < (int)SizeX; i++, ptr++)
     {
       *ptr = (CHAR_ATTRIBUTE << 8) + ' ';
     }
@@ -257,28 +257,28 @@ HalEnablePalette(VOID)
 UCHAR STATIC FASTCALL
 HalReadGc(ULONG Index)
 {
-  WRITE_PORT_UCHAR((PUCHAR)VGA_GC_INDEX, Index);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_GC_INDEX, (UCHAR)Index);
   return(READ_PORT_UCHAR((PUCHAR)VGA_GC_DATA));
 }
 
 VOID STATIC FASTCALL
 HalWriteGc(ULONG Index, UCHAR Value)
 {
-  WRITE_PORT_UCHAR((PUCHAR)VGA_GC_INDEX, Index);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_GC_INDEX, (UCHAR)Index);
   WRITE_PORT_UCHAR((PUCHAR)VGA_GC_DATA, Value);
 }
 
 UCHAR STATIC FASTCALL
 HalReadSeq(ULONG Index)
 {
-  WRITE_PORT_UCHAR((PUCHAR)VGA_SEQ_INDEX, Index);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_SEQ_INDEX, (UCHAR)Index);
   return(READ_PORT_UCHAR((PUCHAR)VGA_SEQ_DATA));
 }
 
 VOID STATIC FASTCALL
 HalWriteSeq(ULONG Index, UCHAR Value)
 {
-  WRITE_PORT_UCHAR((PUCHAR)VGA_SEQ_INDEX, Index);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_SEQ_INDEX, (UCHAR)Index);
   WRITE_PORT_UCHAR((PUCHAR)VGA_SEQ_DATA, Value);
 }
 
@@ -294,7 +294,7 @@ HalWriteAc(ULONG Index, UCHAR Value)
       Index |= 0x20;
     }
   (VOID)READ_PORT_UCHAR((PUCHAR)VGA_INSTAT_READ);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_AC_INDEX, Index);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_AC_INDEX, (UCHAR)Index);
   WRITE_PORT_UCHAR((PUCHAR)VGA_AC_WRITE, Value);
 }
 
@@ -310,21 +310,21 @@ HalReadAc(ULONG Index)
       Index |= 0x20;
     }
   (VOID)READ_PORT_UCHAR((PUCHAR)VGA_INSTAT_READ);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_AC_INDEX, Index);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_AC_INDEX, (UCHAR)Index);
   return(READ_PORT_UCHAR((PUCHAR)VGA_AC_READ));
 }
 
 VOID STATIC FASTCALL
 HalWriteCrtc(ULONG Index, UCHAR Value)
 {
-  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, Index);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, (UCHAR)Index);
   WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, Value);
 }
 
 UCHAR STATIC FASTCALL
 HalReadCrtc(ULONG Index)
 {
-  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, Index);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, (UCHAR)Index);
   return(READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA));
 }
 
@@ -385,16 +385,16 @@ HalSaveFont(VOID)
   Seq4 = HalReadSeq(0x04);
 
   /* Force colour mode. */
-  WRITE_PORT_UCHAR((PUCHAR)VGA_MISC_WRITE, MiscOut | 0x01);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_MISC_WRITE, (UCHAR)(MiscOut | 0x01));
 
   HalBlankScreen(FALSE);
 
   for (i = 0; i < 2; i++)
     {
       /* Save font 1 */
-      HalWriteSeq(0x02, 0x04 << i); /* Write to plane 2 or 3 */
+      HalWriteSeq(0x02, (UCHAR)(0x04 << i)); /* Write to plane 2 or 3 */
       HalWriteSeq(0x04, 0x06); /* Enable plane graphics. */
-      HalWriteGc(0x04, 0x02 + i); /* Read plane 2 or 3 */
+      HalWriteGc(0x04, (UCHAR)(0x02 + i)); /* Read plane 2 or 3 */
       HalWriteGc(0x05, 0x00); /* Write mode 0; read mode 0 */
       HalWriteGc(0x06, 0x05); /* Set graphics. */
       memcpy(SavedTextFont[i], GraphVideoBuffer, FONT_AMOUNT);
@@ -482,7 +482,7 @@ HalRestoreFont(VOID)
   Seq4 = HalReadSeq(0x04);
 
   /* Force into colour mode. */
-  WRITE_PORT_UCHAR((PUCHAR)VGA_MISC_WRITE, MiscOut | 0x10);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_MISC_WRITE, (UCHAR)(MiscOut | 0x10));
 
   HalBlankScreen(FALSE);
 
@@ -492,9 +492,9 @@ HalRestoreFont(VOID)
 
   for (i = 0; i < 2; i++)
     {
-      HalWriteSeq(0x02, 0x04 << i); /* Write to plane 2 or 3 */
+      HalWriteSeq(0x02, (UCHAR)(0x04 << i)); /* Write to plane 2 or 3 */
       HalWriteSeq(0x04, 0x06); /* Enable plane graphics. */
-      HalWriteGc(0x04, 0x02 + i); /* Read plane 2 or 3 */
+      HalWriteGc(0x04, (UCHAR)(0x02 + i)); /* Read plane 2 or 3 */
       HalWriteGc(0x05, 0x00); /* Write mode 0; read mode 0. */
       HalWriteGc(0x06, 0x05); /* Set graphics. */
       memcpy(GraphVideoBuffer, SavedTextFont[i], FONT_AMOUNT);
@@ -528,7 +528,7 @@ HalRestoreMode(VOID)
     }
 
   /* Unlock CRTC registers 0-7 */
-  HalWriteCrtc(17, SavedTextCrtcReg[17] & ~0x80);
+  HalWriteCrtc(17, (UCHAR)(SavedTextCrtcReg[17] & ~0x80));
 
   for (i = 0; i < VGA_CRTC_NUM_REGISTERS; i++)
     {
@@ -683,7 +683,15 @@ HalDisplayString(IN PCH String)
   pch = String;
 
   pushfl(Flags);
+
+#if defined(__GNUC__)
   __asm__ ("cli\n\t");
+#elif defined(_MSC_VER)
+  __asm cli
+#else
+#error Unknown compiler for inline assembler
+#endif
+
   KeAcquireSpinLockAtDpcLevel(&Lock);
 
 #if 0  
@@ -742,9 +750,9 @@ HalDisplayString(IN PCH String)
   offset = (CursorY * SizeX) + CursorX;
   
   WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_CURLO);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, offset & 0xff);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, (UCHAR)(offset & 0xff));
   WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_CURHI);
-  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, (offset >> 8) & 0xff);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, (UCHAR)((offset >> 8) & 0xff));
 #endif
   KeReleaseSpinLockFromDpcLevel(&Lock);
   popfl(Flags);

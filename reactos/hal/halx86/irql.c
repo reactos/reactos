@@ -1,4 +1,4 @@
-/* $Id: irql.c,v 1.13 2003/11/19 21:04:10 gdalsnes Exp $
+/* $Id: irql.c,v 1.14 2003/12/28 22:38:09 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,13 +44,21 @@ PIC_MASK;
  * PURPOSE: - Mask for HalEnableSystemInterrupt and HalDisableSystemInterrupt
  *          - At startup enable timer and cascade 
  */
+#if defined(__GNUC__)
 static PIC_MASK pic_mask = {.both = 0xFFFA};
+#else
+static PIC_MASK pic_mask = { 0xFFFA };
+#endif
 
 
 /*
  * PURPOSE: Mask for disabling of acknowledged interrupts 
  */
+#if defined(__GNUC__)
 static PIC_MASK pic_mask_intr = {.both = 0x0000};
+#else
+static PIC_MASK pic_mask_intr = { 0 };
+#endif
 
 extern IMPORTED ULONG DpcQueueSize;
 
@@ -95,7 +103,13 @@ VOID HalpInitPICs(VOID)
   WRITE_PORT_UCHAR((PUCHAR)0xa1, pic_mask.slave);
   
   /* We can now enable interrupts */
+#if defined(__GNUC__)
   __asm__ __volatile__ ("sti\n\t");
+#elif defined(_MSC_VER)
+    __asm	sti
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 VOID HalpEndSystemInterrupt(KIRQL Irql)
@@ -112,12 +126,26 @@ VOID HalpEndSystemInterrupt(KIRQL Irql)
   };     
 
   /* Interrupts should be disable while enabling irqs of both pics */
+#if defined(__GNUC__)
   __asm__("pushf\n\t");
   __asm__("cli\n\t");
+#elif defined(_MSC_VER)
+  __asm pushfd
+  __asm cli
+#else
+#error Unknown compiler for inline assembler
+#endif
+
   pic_mask_intr.both &= mask[Irql];
-  WRITE_PORT_UCHAR((PUCHAR)0x21, pic_mask.master|pic_mask_intr.master);
-  WRITE_PORT_UCHAR((PUCHAR)0xa1, pic_mask.slave|pic_mask_intr.slave);
+  WRITE_PORT_UCHAR((PUCHAR)0x21, (UCHAR)(pic_mask.master|pic_mask_intr.master));
+  WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)(pic_mask.slave|pic_mask_intr.slave));
+#if defined(__GNUC__)
   __asm__("popf\n\t");
+#elif defined(_MSC_VER)
+  __asm	popfd
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 VOID STATIC
@@ -135,7 +163,7 @@ HalpExecuteIrqs(KIRQL NewIrql)
     {
       if (HalpPendingInterruptCount[i] > 0)
 	{
-	   CurrentIrql = IRQ_TO_DIRQL(i);
+	   CurrentIrql = (KIRQL)IRQ_TO_DIRQL(i);
 
            while (HalpPendingInterruptCount[i] > 0)
 	     {
@@ -366,12 +394,12 @@ HalBeginSystemInterrupt (ULONG Vector,
 
   if (irq < 8)
   {
-     WRITE_PORT_UCHAR((PUCHAR)0x21, pic_mask.master|pic_mask_intr.master);
+     WRITE_PORT_UCHAR((PUCHAR)0x21, (UCHAR)(pic_mask.master|pic_mask_intr.master));
      WRITE_PORT_UCHAR((PUCHAR)0x20, 0x20);
   }
   else
   {
-     WRITE_PORT_UCHAR((PUCHAR)0xa1, pic_mask.slave|pic_mask_intr.slave);
+     WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)(pic_mask.slave|pic_mask_intr.slave));
      /* Send EOI to the PICs */
      WRITE_PORT_UCHAR((PUCHAR)0x20,0x20);
      WRITE_PORT_UCHAR((PUCHAR)0xa0,0x20);
@@ -410,11 +438,11 @@ BOOLEAN STDCALL HalDisableSystemInterrupt (ULONG Vector,
   pic_mask.both |= (1 << irq);
   if (irq < 8)
      {
-      WRITE_PORT_UCHAR((PUCHAR)0x21, pic_mask.master|pic_mask_intr.slave);
+      WRITE_PORT_UCHAR((PUCHAR)0x21, (UCHAR)(pic_mask.master|pic_mask_intr.slave));
      }
   else
     {
-      WRITE_PORT_UCHAR((PUCHAR)0xa1, pic_mask.slave|pic_mask_intr.slave);
+      WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)(pic_mask.slave|pic_mask_intr.slave));
     }
   
   return TRUE;
@@ -434,11 +462,11 @@ BOOLEAN STDCALL HalEnableSystemInterrupt (ULONG Vector,
   pic_mask.both &= ~(1 << irq);
   if (irq < 8)
     {
-      WRITE_PORT_UCHAR((PUCHAR)0x21, pic_mask.master|pic_mask_intr.master);
+      WRITE_PORT_UCHAR((PUCHAR)0x21, (UCHAR)(pic_mask.master|pic_mask_intr.master));
     }
   else
      {
-       WRITE_PORT_UCHAR((PUCHAR)0xa1, pic_mask.slave|pic_mask_intr.slave);
+       WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)(pic_mask.slave|pic_mask_intr.slave));
      }
 
   return TRUE;
