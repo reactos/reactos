@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.20 2003/12/22 19:55:39 navaraf Exp $
+/* $Id: scrollbar.c,v 1.21 2003/12/22 20:44:02 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -912,6 +912,71 @@ NtUserEnableScrollBar(
   //if(Chg && (Window->Style & WS_VISIBLE))
     /* FIXME - repaint scrollbars */
 
+  IntReleaseWindowObject(Window);
+  return TRUE;
+}
+
+BOOL
+STDCALL
+NtUserSetScrollBarInfo(
+  HWND hwnd,
+  LONG idObject,
+  SETSCROLLBARINFO *info)
+{
+  PWINDOW_OBJECT Window;
+  SETSCROLLBARINFO Safeinfo;
+  PSCROLLBARINFO sbi = NULL;
+  LPSCROLLINFO psi;
+  NTSTATUS Status;
+  
+  Window = IntGetWindowObject(hwnd);
+
+  if(!Window)
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
+  
+  Status = MmCopyFromCaller(&Safeinfo, info, sizeof(SETSCROLLBARINFO));
+  if(!NT_SUCCESS(Status))
+  {
+    IntReleaseWindowObject(Window);
+    SetLastNtError(Status);
+    return FALSE;
+  }
+  
+  switch(idObject)
+  {
+    case OBJID_HSCROLL:
+      sbi = Window->pHScroll;
+      break;
+    case OBJID_VSCROLL:
+      sbi = Window->pVScroll;
+      break;
+    case OBJID_CLIENT:
+      /* FIXME */
+      IntReleaseWindowObject(Window);
+      return FALSE;
+
+    default:
+      IntReleaseWindowObject(Window);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return FALSE;
+  }
+  
+  if(!sbi)
+  {
+    DPRINT1("SCROLLBARINFO structure not allocated!\n");
+    IntReleaseWindowObject(Window);
+    return FALSE;
+  }
+  
+  psi = (LPSCROLLINFO)((PSCROLLBARINFO)(sbi + 1));
+  
+  psi->nTrackPos = Safeinfo.nTrackPos;
+  sbi->reserved = Safeinfo.reserved;
+  RtlCopyMemory(&sbi->rgstate, &Safeinfo.rgstate, sizeof(Safeinfo.rgstate));
+  
   IntReleaseWindowObject(Window);
   return TRUE;
 }

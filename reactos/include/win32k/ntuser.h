@@ -1852,6 +1852,21 @@ NtUserDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data);
 
 VOID STDCALL
 NtUserManualGuiCheck(LONG Check);
+
+typedef struct _SETSCROLLBARINFO
+{
+  int nTrackPos; 
+  int reserved;
+  DWORD rgstate[CCHILDREN_SCROLLBAR+1];
+} SETSCROLLBARINFO, *PSETSCROLLBARINFO;
+
+BOOL
+STDCALL
+NtUserSetScrollBarInfo(
+  HWND hwnd,
+  LONG idObject,
+  SETSCROLLBARINFO *info);
+
 #endif /* __WIN32K_NTUSER_H */
 
 /* EOF */

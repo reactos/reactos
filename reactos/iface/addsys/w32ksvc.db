@@ -500,6 +500,7 @@ NtUserSetParent                         2
 NtUserSetProcessWindowStation           1
 NtUserSetProp                           3
 NtUserSetRipFlags                       2
+NtUserSetScrollBarInfo                  3
 NtUserSetScrollInfo                     4
 NtUserSetShellWindowEx                  2
 NtUserSetSysColors                      4
