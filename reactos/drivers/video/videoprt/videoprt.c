@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.17 2004/03/09 17:28:49 navaraf Exp $
+ * $Id: videoprt.c,v 1.18 2004/03/10 16:10:13 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -847,9 +847,16 @@ VideoPortSetBusData(IN PVOID  HwDeviceExtension,
                     IN ULONG  Offset,
                     IN ULONG  Length)
 {
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
   DPRINT("VideoPortSetBusData\n");
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      VIDEO_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+
   return  HalSetBusDataByOffset(BusDataType,
-                                0,
+                                DeviceExtension->SystemIoBusNumber,
                                 SlotNumber,
                                 Buffer,
                                 Offset,
