@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.1 2001/05/05 15:11:57 ekohl Exp $
+/* $Id: create.c,v 1.2 2001/06/12 12:33:42 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -12,7 +12,7 @@
 #include <ddk/ntddk.h>
 #include "msfs.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 
@@ -31,13 +31,13 @@ MsfsCreate(PDEVICE_OBJECT DeviceObject,
    PLIST_ENTRY current_entry;
    KIRQL oldIrql;
 
-   DPRINT1("MsfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+   DPRINT("MsfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    DeviceExtension = DeviceObject->DeviceExtension;
    FileObject = IoStack->FileObject;
 
-   DPRINT1("Mailslot name: %wZ\n", &FileObject->FileName);
+   DPRINT("Mailslot name: %wZ\n", &FileObject->FileName);
 
    Fcb = ExAllocatePool(NonPagedPool, sizeof(MSFS_FCB));
    if (Fcb == NULL)
@@ -116,14 +116,14 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
    PMSFS_MAILSLOT current;
    PIO_MAILSLOT_CREATE_BUFFER Buffer;
 
-   DPRINT1("MsfsCreateMailslot(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+   DPRINT("MsfsCreateMailslot(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    DeviceExtension = DeviceObject->DeviceExtension;
    FileObject = IoStack->FileObject;
    Buffer = (PIO_MAILSLOT_CREATE_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
 
-   DPRINT1("Mailslot name: %wZ\n", &FileObject->FileName);
+   DPRINT("Mailslot name: %wZ\n", &FileObject->FileName);
 
    Mailslot = ExAllocatePool(NonPagedPool, sizeof(MSFS_MAILSLOT));
    if (Mailslot == NULL)
@@ -237,42 +237,38 @@ MsfsClose(PDEVICE_OBJECT DeviceObject,
    PMSFS_FCB Fcb;
    PMSFS_MESSAGE Message;
    KIRQL oldIrql;
-
-   DPRINT1("MsfsClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
-
+   
+   DPRINT("MsfsClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+   
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    DeviceExtension = DeviceObject->DeviceExtension;
    FileObject = IoStack->FileObject;
-
+   
    KeLockMutex(&DeviceExtension->MailslotListLock);
-
+   
    if (DeviceExtension->MailslotListHead.Flink == &DeviceExtension->MailslotListHead)
      {
 	KeUnlockMutex(&DeviceExtension->MailslotListLock);
-CHECKPOINT1;
-
+	
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;
-
+	
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
-CHECKPOINT1;
-
+	
 	return(STATUS_SUCCESS);
      }
-
+   
    Fcb = FileObject->FsContext;
    Mailslot = Fcb->Mailslot;
-
-   DPRINT1("Mailslot name: %wZ\n", &Mailslot->Name);
-
+   
+   DPRINT("Mailslot name: %wZ\n", &Mailslot->Name);
+   
    Mailslot->ReferenceCount--;
-CHECKPOINT1;
    if (Mailslot->ServerFcb == Fcb)
      {
-CHECKPOINT1;
 	/* delete all messages from message-list */
 	KeAcquireSpinLock(&Mailslot->MessageListLock, &oldIrql);
-
+	
 	while (Mailslot->MessageListHead.Flink != &Mailslot->MessageListHead)
 	  {
 	     Message = CONTAINING_RECORD(Mailslot->MessageListHead.Flink,
@@ -282,19 +278,17 @@ CHECKPOINT1;
 	     ExFreePool(Message);
 	  }
 	Mailslot->MessageCount = 0;
-
+	
 	KeReleaseSpinLock(&Mailslot->MessageListLock, oldIrql);
 	Mailslot->ServerFcb = NULL;
      }
-CHECKPOINT1;
-
+   
    KeAcquireSpinLock(&Mailslot->FcbListLock, &oldIrql);
    RemoveEntryList(&Fcb->FcbListEntry);
    KeReleaseSpinLock(&Mailslot->FcbListLock, oldIrql);
    ExFreePool(Fcb);
    FileObject->FsContext = NULL;
-CHECKPOINT1;
-
+   
    if (Mailslot->ReferenceCount == 0)
      {
 	DPRINT1("ReferenceCount == 0: Deleting mailslot data\n");
@@ -302,17 +296,14 @@ CHECKPOINT1;
 	RemoveEntryList(&Mailslot->MailslotListEntry);
 	ExFreePool(Mailslot);
      }
-CHECKPOINT1;
-
+   
    KeUnlockMutex(&DeviceExtension->MailslotListLock);
-CHECKPOINT1;
-
+   
    Irp->IoStatus.Status = STATUS_SUCCESS;
    Irp->IoStatus.Information = 0;
-
+   
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-CHECKPOINT1;
-
+   
    return(STATUS_SUCCESS);
 }
 

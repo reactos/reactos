@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.23 2001/05/05 09:33:16 ekohl Exp $
+/* $Id: namespc.c,v 1.24 2001/06/12 12:32:11 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -308,8 +308,6 @@ VOID ObInit(VOID)
  * FUNCTION: Initialize the object manager namespace
  */
 {
-   ANSI_STRING AnsiString;
-   
    ObDirectoryType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
    ObDirectoryType->Tag = TAG('D', 'I', 'R', 'T');
@@ -330,9 +328,8 @@ VOID ObInit(VOID)
    ObDirectoryType->OkayToClose = NULL;
    ObDirectoryType->Create = ObpCreateDirectory;
    
-   RtlInitAnsiString(&AnsiString,"Directory");
-   RtlAnsiStringToUnicodeString(&ObDirectoryType->TypeName,
-				&AnsiString,TRUE);
+   RtlInitUnicodeString(&ObDirectoryType->TypeName,
+			L"Directory");
    
    NameSpaceRoot = ObCreateObject(NULL,
 				  STANDARD_RIGHTS_REQUIRED,

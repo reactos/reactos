@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2000/12/23 02:37:41 dwelch Exp $
+# $Id: Makefile,v 1.3 2001/06/12 12:33:10 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -14,7 +14,7 @@ all: $(TARGET).sys
 .phony: all
 
 clean:
-	- $(RM) $(TARGET).o
+	- $(RM) *.o
 	- $(RM) $(TARGET).coff
 	- $(RM) junk.tmp
 	- $(RM) base.tmp

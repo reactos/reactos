@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.6 2001/05/10 23:38:31 ekohl Exp $
+/* $Id: create.c,v 1.7 2001/06/12 12:35:04 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -31,6 +31,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    NTSTATUS Status;
    PNPFS_PIPE Pipe;
    PNPFS_FCB Fcb;
+   PNPFS_FCB ServerFcb;
    PNPFS_PIPE current;
    PLIST_ENTRY current_entry;
    PNPFS_DEVICE_EXTENSION DeviceExt;
@@ -41,6 +42,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    FileObject = IoStack->FileObject;
+   DPRINT("FileObject %p\n", FileObject);
    
    Fcb = ExAllocatePool(NonPagedPool, sizeof(NPFS_FCB));
    if (Fcb == NULL)
@@ -86,9 +88,6 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    
    Pipe = current;
    
-   KeAcquireSpinLock(&Pipe->FcbListLock, &oldIrql);
-   InsertTailList(&Pipe->FcbListHead, &Fcb->FcbListEntry);
-   KeReleaseSpinLock(&Pipe->FcbListLock, oldIrql);
    Fcb->WriteModeMessage = FALSE;
    Fcb->ReadModeMessage = FALSE;
    Fcb->NonBlocking = FALSE;
@@ -97,11 +96,53 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    Fcb->Pipe = Pipe;
    Fcb->IsServer = FALSE;
    Fcb->OtherSide = NULL;
+
+   /* search for disconnected server fcb */
+
+   current_entry = Pipe->FcbListHead.Flink;
+   while (current_entry != &Pipe->FcbListHead)
+     {
+	ServerFcb = CONTAINING_RECORD(current_entry,
+				      NPFS_FCB,
+				      FcbListEntry);
+	
+	DPRINT("ServerFcb->IsServer: %x\n", ServerFcb->IsServer);
+	DPRINT("ServerFcb->OtherSide: %p\n", ServerFcb->OtherSide);
+	if ((ServerFcb->IsServer == TRUE) && (ServerFcb->OtherSide == NULL))
+	  {
+	     DPRINT("Server found! Fcb %p\n", ServerFcb);
+	     break;
+	  }
+	
+	current_entry = current_entry->Flink;
+     }
+   
+   if (current_entry == &Pipe->FcbListHead)
+     {
+	DPRINT("No server fcb found!\n");
+	
+	ExFreePool(Fcb);
+	KeUnlockMutex(&DeviceExt->PipeListLock);
+	
+	Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+	Irp->IoStatus.Information = 0;
+	
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	
+	return(STATUS_UNSUCCESSFUL);
+     }
+
+   KeAcquireSpinLock(&Pipe->FcbListLock, &oldIrql);
+   InsertTailList(&Pipe->FcbListHead, &Fcb->FcbListEntry);
+   KeReleaseSpinLock(&Pipe->FcbListLock, oldIrql);
    
    Pipe->ReferenceCount++;
    
-   /* search for unconnected server fcb */
    
+   Fcb->OtherSide = ServerFcb;
+   ServerFcb->OtherSide = Fcb;
+   
+   KeSetEvent(&ServerFcb->ConnectEvent, 0, FALSE);
    
    KeUnlockMutex(&DeviceExt->PipeListLock);
    
@@ -136,6 +177,8 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    FileObject = IoStack->FileObject;
+   DPRINT("FileObject %p\n", FileObject);
+   DPRINT("Pipe name %wZ\n", &FileObject->FileName);
    
    Buffer = (PIO_PIPE_CREATE_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
    

@@ -1,4 +1,4 @@
-/* $Id: fsctrl.c,v 1.3 2001/05/10 23:38:31 ekohl Exp $
+/* $Id: fsctrl.c,v 1.4 2001/06/12 12:35:04 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -24,6 +24,8 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
 {
    NTSTATUS Status;
 
+   DPRINT("Waiting for connection...\n");
+
    Status = KeWaitForSingleObject(&Fcb->ConnectEvent,
 				  UserRequest,
 				  KernelMode,
@@ -31,6 +33,8 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
 				  NULL);
 
    DPRINT("Finished waiting! Status: %x\n", Status);
+
+   DPRINT("Client Fcb: %p\n", Fcb->OtherSide);
 
 
    return STATUS_SUCCESS;
@@ -43,6 +47,15 @@ NpfsDisconnectPipe(PNPFS_FCB Fcb)
 
    return STATUS_SUCCESS;
 }
+
+
+static NTSTATUS
+NpfsWaitPipe(PNPFS_FCB Fcb)
+{
+
+   return STATUS_SUCCESS;
+}
+
 
 NTSTATUS STDCALL
 NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
@@ -60,6 +73,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    FileObject = IoStack->FileObject;
+   DPRINT("FileObject: %p\n", FileObject);
    Fcb = FileObject->FsContext;
    Pipe = Fcb->Pipe;
    
@@ -75,21 +89,11 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 	Status = NpfsDisconnectPipe(Fcb);
 	break;
 
-#if 0
-      case FSCTL_WAIT_PIPE:
+      case FSCTL_PIPE_WAIT:
+	DPRINT("Waiting for pipe %wZ\n", &Pipe->PipeName);
+	Status = NpfsWaitPipe(Fcb);
 	break;
-	
-      case FSCTL_SET_STATE:
-	break;
-	
-      case FSCTL_GET_STATE:
-	  {
-	     
-	     
-	     break;
-	  }
-	
-#endif
+
       default:
         DPRINT("IoControlCode: %x\n", IoStack->Parameters.FileSystemControl.IoControlCode)
         Status = STATUS_UNSUCCESSFUL;

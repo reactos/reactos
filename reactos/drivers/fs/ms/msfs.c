@@ -1,4 +1,4 @@
-/* $Id: msfs.c,v 1.1 2001/05/05 15:11:57 ekohl Exp $
+/* $Id: msfs.c,v 1.2 2001/06/12 12:33:42 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -25,24 +25,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    PMSFS_DEVICE_EXTENSION DeviceExtension;
    PDEVICE_OBJECT DeviceObject;
    UNICODE_STRING DeviceName;
-   UNICODE_STRING LinkName;
    NTSTATUS Status;
    
    DbgPrint("Mailslot FSD 0.0.1\n");
-   
-   RtlInitUnicodeString(&DeviceName,
-			L"\\Device\\MailSlot");
-   Status = IoCreateDevice(DriverObject,
-			   sizeof(MSFS_DEVICE_EXTENSION),
-			   &DeviceName,
-			   FILE_DEVICE_MAILSLOT,
-			   0,
-			   FALSE,
-			   &DeviceObject);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
    
    DeviceObject->Flags = 0;
    DriverObject->MajorFunction[IRP_MJ_CREATE] = MsfsCreate;
@@ -68,17 +53,19 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    
    DriverObject->DriverUnload = NULL;
    
-//#if 0
-   RtlInitUnicodeString(&LinkName,
-			L"\\??\\MAILSLOT");
-   Status = IoCreateSymbolicLink(&LinkName,
-				 &DeviceName);
+   RtlInitUnicodeString(&DeviceName,
+			L"\\Device\\MailSlot");
+   Status = IoCreateDevice(DriverObject,
+			   sizeof(MSFS_DEVICE_EXTENSION),
+			   &DeviceName,
+			   FILE_DEVICE_MAILSLOT,
+			   0,
+			   FALSE,
+			   &DeviceObject);
    if (!NT_SUCCESS(Status))
      {
-//	IoDeleteDevice();
 	return(Status);
      }
-//#endif
    
    /* initialize device extension */
    DeviceExtension = DeviceObject->DeviceExtension;

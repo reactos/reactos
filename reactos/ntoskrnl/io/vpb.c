@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.12 2001/06/11 19:48:58 ekohl Exp $
+/* $Id: vpb.c,v 1.13 2001/06/12 12:30:36 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -68,19 +68,19 @@ IoAttachVpb(PDEVICE_OBJECT DeviceObject)
 NTSTATUS STDCALL
 NtQueryVolumeInformationFile(IN HANDLE FileHandle,
 			     OUT PIO_STATUS_BLOCK IoStatusBlock,
-			     OUT PVOID FSInformation,
+			     OUT PVOID FsInformation,
 			     IN ULONG Length,
-			     IN FS_INFORMATION_CLASS FSInformationClass)
+			     IN FS_INFORMATION_CLASS FsInformationClass)
 
 /*
  * FUNCTION: Queries the volume information
  * ARGUMENTS: 
  *	  FileHandle  = Handle to a file object on the target volume
  *	  ReturnLength = DataWritten
- *	  FSInformation = Caller should supply storage for the information 
+ *	  FsInformation = Caller should supply storage for the information 
  *	                  structure.
  *	  Length = Size of the information structure
- *	  FSInformationClass = Index to a information structure
+ *	  FsInformationClass = Index to a information structure
  *
  *		FileFsVolumeInformation		FILE_FS_VOLUME_INFORMATION
  *		FileFsLabelInformation		FILE_FS_LABEL_INFORMATION
@@ -102,9 +102,12 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
    NTSTATUS Status;
    PIO_STACK_LOCATION StackPtr;
    PVOID SystemBuffer;
-
-   DPRINT("FSInformation %p\n", FSInformation);
-
+   
+   assert(IoStatusBlock != NULL);
+   assert(FsInformation != NULL);
+   
+   DPRINT("FsInformation %p\n", FsInformation);
+   
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_READ_ATTRIBUTES,
 				      NULL,
@@ -153,7 +156,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
    StackPtr->FileObject = FileObject;
    StackPtr->Parameters.QueryVolume.Length = Length;
    StackPtr->Parameters.QueryVolume.FsInformationClass =
-	FSInformationClass;
+	FsInformationClass;
    
    Status = IoCallDriver(DeviceObject,
 			 Irp);
@@ -166,11 +169,17 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
 			      NULL);
 	Status = IoStatusBlock->Status;
      }
+   DPRINT("Status %x\n", Status);
    
-   MmSafeCopyToUser(FSInformation,
-		    SystemBuffer,
-		    Length);
+   if (NT_SUCCESS(Status))
+     {
+	DPRINT("Information %lu\n", IoStatusBlock->Information);
+	MmSafeCopyToUser(FsInformation,
+			 SystemBuffer,
+			 IoStatusBlock->Information);
+    }
    ExFreePool(SystemBuffer);
+   ObDereferenceObject(FileObject);
    
    return(Status);
 }
@@ -183,8 +192,75 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
 			 OUT PVOID FsInformation,
 			 OUT PULONG ReturnedLength)
 {
-   UNIMPLEMENTED;
-   return(STATUS_NOT_IMPLEMENTED);
+   IO_STATUS_BLOCK IoStatusBlock;
+   PIO_STACK_LOCATION StackPtr;
+   PDEVICE_OBJECT DeviceObject;
+   PIRP Irp;
+   KEVENT Event;
+   NTSTATUS Status;
+   
+   assert(FsInformation != NULL);
+   
+   DPRINT("FsInformation %p\n", FsInformation);
+   
+   Status = ObReferenceObjectByPointer(FileObject,
+				       FILE_READ_ATTRIBUTES,
+				       IoFileObjectType,
+				       KernelMode);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
+   DeviceObject = FileObject->DeviceObject;
+   
+   KeInitializeEvent(&Event,
+		     NotificationEvent,
+		     FALSE);
+   
+   Irp = IoAllocateIrp(DeviceObject->StackSize,
+		       TRUE);
+   if (Irp == NULL)
+     {
+	ObDereferenceObject(FileObject);
+	return(STATUS_INSUFFICIENT_RESOURCES);
+     }
+   
+   Irp->AssociatedIrp.SystemBuffer = FsInformation;
+   Irp->UserEvent = &Event;
+   Irp->UserIosb = &IoStatusBlock;
+   
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->MajorFunction = IRP_MJ_QUERY_VOLUME_INFORMATION;
+   StackPtr->MinorFunction = 0;
+   StackPtr->Flags = 0;
+   StackPtr->Control = 0;
+   StackPtr->DeviceObject = DeviceObject;
+   StackPtr->FileObject = FileObject;
+   StackPtr->Parameters.QueryVolume.Length = Length;
+   StackPtr->Parameters.QueryVolume.FsInformationClass =
+	FsInformationClass;
+   
+   Status = IoCallDriver(DeviceObject,
+			 Irp);
+   if (Status == STATUS_PENDING)
+     {
+	KeWaitForSingleObject(&Event,
+			      UserRequest,
+			      KernelMode,
+			      FALSE,
+			      NULL);
+	Status = IoStatusBlock.Status;
+     }
+   DPRINT("Status %x\n", Status);
+   
+   if (ReturnedLength != NULL)
+     {
+	*ReturnedLength = IoStatusBlock.Information;
+     }
+   ObDereferenceObject(FileObject);
+   
+   return(Status);
 }
 
 

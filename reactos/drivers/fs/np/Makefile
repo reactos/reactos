@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2001/05/10 23:38:31 ekohl Exp $
+# $Id: Makefile,v 1.7 2001/06/12 12:35:04 ekohl Exp $
 #
 # Named Pipes File System
 #
@@ -8,7 +8,7 @@ TARGETNAME=npfs
 
 #BASE_CFLAGS = -I../../../include
 
-OBJECTS = create.o fsctrl.o mount.o rw.o npfs.coff
+OBJECTS = create.o finfo.o fsctrl.o mount.o rw.o volume.o npfs.coff
 
 LIBS = ../../../ntoskrnl/ntoskrnl.a
 

@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.7 2001/03/07 13:44:40 ekohl Exp $
+/* $Id: finfo.c,v 1.8 2001/06/12 12:35:42 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -23,13 +23,17 @@
 static NTSTATUS
 VfatGetStandardInformation(PVFATFCB FCB,
 			   PDEVICE_OBJECT DeviceObject,
-			   PFILE_STANDARD_INFORMATION StandardInfo)
+			   PFILE_STANDARD_INFORMATION StandardInfo,
+			   PULONG BufferLength)
 /*
  * FUNCTION: Retrieve the standard file information
  */
 {
   PDEVICE_EXTENSION DeviceExtension;
   unsigned long AllocSize;
+
+  if (*BufferLength < sizeof(FILE_STANDARD_INFORMATION))
+    return STATUS_BUFFER_OVERFLOW;
 
   DeviceExtension = DeviceObject->DeviceExtension;
   /* PRECONDITION */
@@ -38,7 +42,8 @@ VfatGetStandardInformation(PVFATFCB FCB,
   assert (StandardInfo != NULL);
   assert (FCB != NULL);
 
-  RtlZeroMemory (StandardInfo, sizeof (FILE_STANDARD_INFORMATION));
+  RtlZeroMemory(StandardInfo,
+		sizeof(FILE_STANDARD_INFORMATION));
 
   /* Make allocsize a rounded up multiple of BytesPerCluster */
   AllocSize = ((FCB->entry.FileSize + DeviceExtension->BytesPerCluster - 1) /
@@ -58,8 +63,9 @@ VfatGetStandardInformation(PVFATFCB FCB,
     {
       StandardInfo->Directory = FALSE;
     }
-
-  return STATUS_SUCCESS;
+  
+  *BufferLength -= sizeof(FILE_STANDARD_INFORMATION);
+  return(STATUS_SUCCESS);
 }
 
 static NTSTATUS
@@ -82,38 +88,54 @@ static NTSTATUS
 VfatGetPositionInformation(PFILE_OBJECT FileObject,
 			   PVFATFCB FCB,
 			   PDEVICE_OBJECT DeviceObject,
-			   PFILE_POSITION_INFORMATION PositionInfo)
+			   PFILE_POSITION_INFORMATION PositionInfo,
+			   PULONG BufferLength)
 {
   DPRINT ("VfatGetPositionInformation()\n");
 
-  memcpy (&PositionInfo->CurrentByteOffset, &FileObject->CurrentByteOffset,
-	  sizeof (LARGE_INTEGER));
-  DPRINT ("Getting position %x\n", PositionInfo->CurrentByteOffset.u.LowPart);
-  return (STATUS_SUCCESS);
+  if (*BufferLength < sizeof(FILE_POSITION_INFORMATION))
+    return STATUS_BUFFER_OVERFLOW;
+
+  PositionInfo->CurrentByteOffset.QuadPart =
+    FileObject->CurrentByteOffset.QuadPart;
+
+  DPRINT("Getting position %I64x\n",
+	 PositionInfo->CurrentByteOffset.QuadPart);
+
+  *BufferLength -= sizeof(FILE_POSITION_INFORMATION);
+  return(STATUS_SUCCESS);
 }
 
 static NTSTATUS
 VfatGetBasicInformation(PFILE_OBJECT FileObject,
 			PVFATFCB FCB,
 			PDEVICE_OBJECT DeviceObject,
-			PFILE_BASIC_INFORMATION BasicInfo)
+			PFILE_BASIC_INFORMATION BasicInfo,
+			PULONG BufferLength)
 {
-  DPRINT ("VfatGetBasicInformation()\n");
+  DPRINT("VfatGetBasicInformation()\n");
 
-  FsdDosDateTimeToFileTime (FCB->entry.CreationDate, FCB->entry.CreationTime,
-			    &BasicInfo->CreationTime);
-  FsdDosDateTimeToFileTime (FCB->entry.AccessDate, 0,
-			    &BasicInfo->LastAccessTime);
-  FsdDosDateTimeToFileTime (FCB->entry.UpdateDate, FCB->entry.UpdateTime,
-			    &BasicInfo->LastWriteTime);
-  FsdDosDateTimeToFileTime (FCB->entry.UpdateDate, FCB->entry.UpdateTime,
-			    &BasicInfo->ChangeTime);
+  if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
+    return STATUS_BUFFER_OVERFLOW;
+
+  FsdDosDateTimeToFileTime(FCB->entry.CreationDate,
+			   FCB->entry.CreationTime,
+			   &BasicInfo->CreationTime);
+  FsdDosDateTimeToFileTime(FCB->entry.AccessDate,
+			   0,
+			   &BasicInfo->LastAccessTime);
+  FsdDosDateTimeToFileTime(FCB->entry.UpdateDate,
+			   FCB->entry.UpdateTime,
+			   &BasicInfo->LastWriteTime);
+  FsdDosDateTimeToFileTime(FCB->entry.UpdateDate,
+			   FCB->entry.UpdateTime,
+			   &BasicInfo->ChangeTime);
 
   BasicInfo->FileAttributes = FCB->entry.Attrib;
+  DPRINT("Getting attributes %x\n", BasicInfo->FileAttributes);
 
-  DPRINT ("Getting attributes %x\n", BasicInfo->FileAttributes);
-
-  return (STATUS_SUCCESS);
+  *BufferLength -= sizeof(FILE_BASIC_INFORMATION);
+  return(STATUS_SUCCESS);
 }
 
 
@@ -130,19 +152,32 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
   return (STATUS_SUCCESS);
 }
 
-NTSTATUS
-VfatGetNameInformation (PFILE_OBJECT FileObject, PVFATFCB FCB, PDEVICE_OBJECT DeviceObject,
-			PFILE_NAME_INFORMATION NameInfo)
+static NTSTATUS
+VfatGetNameInformation(PFILE_OBJECT FileObject,
+		       PVFATFCB FCB,
+		       PDEVICE_OBJECT DeviceObject,
+		       PFILE_NAME_INFORMATION NameInfo,
+		       PULONG BufferLength)
 /*
  * FUNCTION: Retrieve the file name information
- * FIXME: We would need the IRP to check the length of the passed buffer. Now, it can cause overflows.
  */
 {
+  ULONG NameLength;
+
   assert (NameInfo != NULL);
   assert (FCB != NULL);
 
-  NameInfo->FileNameLength = wcslen(FCB->PathName);
-  memcpy(NameInfo->FileName, FCB->PathName, sizeof(WCHAR)*(NameInfo->FileNameLength+1));
+  NameLength = wcslen(FCB->PathName) * sizeof(WCHAR);
+  if (*BufferLength < sizeof(FILE_NAME_INFORMATION) + NameLength)
+    return STATUS_BUFFER_OVERFLOW;
+
+  NameInfo->FileNameLength = NameLength;
+  memcpy(NameInfo->FileName,
+	 FCB->PathName,
+	 NameLength + sizeof(WCHAR));
+
+  *BufferLength -=
+    (sizeof(FILE_NAME_INFORMATION) + NameLength + sizeof(WCHAR));
 
   return STATUS_SUCCESS;
 }
@@ -150,20 +185,21 @@ VfatGetNameInformation (PFILE_OBJECT FileObject, PVFATFCB FCB, PDEVICE_OBJECT De
 
 
 NTSTATUS STDCALL
-VfatQueryInformation (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+VfatQueryInformation(PDEVICE_OBJECT DeviceObject,
+		     PIRP Irp)
 /*
  * FUNCTION: Retrieve the specified file information
  */
 {
-  PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation (Irp);
-  FILE_INFORMATION_CLASS FileInformationClass =
-    Stack->Parameters.QueryFile.FileInformationClass;
+  PIO_STACK_LOCATION Stack;
+  FILE_INFORMATION_CLASS FileInformationClass;
   PFILE_OBJECT FileObject = NULL;
   PVFATFCB FCB = NULL;
 //   PVFATCCB CCB = NULL;
 
   NTSTATUS RC = STATUS_SUCCESS;
-  void *SystemBuffer;
+  PVOID SystemBuffer;
+  ULONG BufferLength;
 
   /* PRECONDITION */
   assert (DeviceObject != NULL);
@@ -177,99 +213,120 @@ VfatQueryInformation (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 //   FCB = CCB->Buffer; // Should be CCB->FCB???
   FCB = ((PVFATCCB) (FileObject->FsContext2))->pFcb;
 
-  // FIXME : determine Buffer for result :
-  if (Irp->MdlAddress)
-    SystemBuffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
-  else
-    SystemBuffer = Irp->UserBuffer;
-//   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
-
+  SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
+  BufferLength = Stack->Parameters.QueryFile.Length;
+  
   switch (FileInformationClass)
     {
     case FileStandardInformation:
-      RC = VfatGetStandardInformation (FCB, DeviceObject, SystemBuffer);
+      RC = VfatGetStandardInformation(FCB,
+				      DeviceObject,
+				      SystemBuffer,
+				      &BufferLength);
       break;
     case FilePositionInformation:
-      RC = VfatGetPositionInformation (FileObject,
-				      FCB, DeviceObject, SystemBuffer);
+      RC = VfatGetPositionInformation(FileObject,
+				      FCB,
+				      DeviceObject,
+				      SystemBuffer,
+				      &BufferLength);
       break;
     case FileBasicInformation:
-      RC = VfatGetBasicInformation (FileObject,
-				   FCB, DeviceObject, SystemBuffer);
+      RC = VfatGetBasicInformation(FileObject,
+				   FCB,
+				   DeviceObject,
+				   SystemBuffer,
+				   &BufferLength);
       break;
     case FileNameInformation:
-      RC = VfatGetNameInformation (FileObject,
-				   FCB, DeviceObject, SystemBuffer);
+      RC = VfatGetNameInformation(FileObject,
+				  FCB,
+				  DeviceObject,
+				  SystemBuffer,
+				  &BufferLength);
+      break;
+    case FileInternalInformation:
+    case FileAlternateNameInformation:
+    case FileAllInformation:
+      RC = STATUS_NOT_IMPLEMENTED;
       break;
     default:
-      RC = STATUS_NOT_IMPLEMENTED;
+      RC = STATUS_NOT_SUPPORTED;
     }
 
   Irp->IoStatus.Status = RC;
-  Irp->IoStatus.Information = 0;
-  IoCompleteRequest (Irp, IO_NO_INCREMENT);
+  if (NT_SUCCESS(RC))
+    Irp->IoStatus.Information =
+      Stack->Parameters.QueryFile.Length - BufferLength;
+  else
+    Irp->IoStatus.Information = 0;
+  IoCompleteRequest(Irp,
+		    IO_NO_INCREMENT);
 
   return RC;
 }
 
 NTSTATUS STDCALL
-VfatSetInformation (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+VfatSetInformation(PDEVICE_OBJECT DeviceObject,
+		   PIRP Irp)
 /*
  * FUNCTION: Retrieve the specified file information
  */
 {
-  PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation (Irp);
+  PIO_STACK_LOCATION Stack;
   FILE_INFORMATION_CLASS FileInformationClass;
   PFILE_OBJECT FileObject = NULL;
   PVFATFCB FCB = NULL;
-//   PVFATCCB CCB = NULL;   
+//   PVFATCCB CCB = NULL;
   NTSTATUS RC = STATUS_SUCCESS;
   PVOID SystemBuffer;
 
   /* PRECONDITION */
-  assert (DeviceObject != NULL);
-  assert (Irp != NULL);
+  assert(DeviceObject != NULL);
+  assert(Irp != NULL);
 
-  DPRINT ("VfatSetInformation(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
+  DPRINT("VfatSetInformation(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
 
   /* INITIALIZATION */
   Stack = IoGetCurrentIrpStackLocation (Irp);
   FileInformationClass = Stack->Parameters.SetFile.FileInformationClass;
   FileObject = Stack->FileObject;
   FCB = ((PVFATCCB) (FileObject->FsContext2))->pFcb;
+  SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
 
-  // FIXME : determine Buffer for result :
-  if (Irp->MdlAddress)
-    SystemBuffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
-  else
-    SystemBuffer = Irp->UserBuffer;
-  //   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
-
-  DPRINT ("FileInformationClass %d\n", FileInformationClass);
-  DPRINT ("SystemBuffer %x\n", SystemBuffer);
+  DPRINT("FileInformationClass %d\n", FileInformationClass);
+  DPRINT("SystemBuffer %x\n", SystemBuffer);
 
   switch (FileInformationClass)
     {
     case FilePositionInformation:
-      RC = VfatSetPositionInformation (FileObject,
-				      FCB, DeviceObject, SystemBuffer);
+      RC = VfatSetPositionInformation(FileObject,
+				      FCB,
+				      DeviceObject,
+				      SystemBuffer);
       break;
     case FileDispositionInformation:
-      RC = VfatSetDispositionInformation (FileObject,
-					 FCB, DeviceObject, SystemBuffer);
+      RC = VfatSetDispositionInformation(FileObject,
+					 FCB,
+					 DeviceObject,
+					 SystemBuffer);
       break;
-//    case FileBasicInformation:
-//    case FileAllocationInformation:
-//    case FileEndOfFileInformation:
-//    case FileRenameInformation:
-//    case FileLinkInformation:
-    default:
+    case FileBasicInformation:
+    case FileAllocationInformation:
+    case FileEndOfFileInformation:
+    case FileRenameInformation:
       RC = STATUS_NOT_IMPLEMENTED;
+      break;
+    default:
+      RC = STATUS_NOT_SUPPORTED;
     }
 
   Irp->IoStatus.Status = RC;
   Irp->IoStatus.Information = 0;
-  IoCompleteRequest (Irp, IO_NO_INCREMENT);
+  IoCompleteRequest(Irp,
+		    IO_NO_INCREMENT);
 
   return RC;
 }
+
+/* EOF */

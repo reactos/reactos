@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.8 2001/06/11 19:52:22 ekohl Exp $
+/* $Id: volume.c,v 1.9 2001/06/12 12:35:42 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -23,62 +23,86 @@ static NTSTATUS
 FsdGetFsVolumeInformation(PFILE_OBJECT FileObject,
 			  PVFATFCB FCB,
 			  PDEVICE_OBJECT DeviceObject,
-			  PFILE_FS_VOLUME_INFORMATION FsVolumeInfo)
+			  PFILE_FS_VOLUME_INFORMATION FsVolumeInfo,
+			  PULONG BufferLength)
 {
+  ULONG LabelLength;
+  
   DPRINT("FsdGetFsVolumeInformation()\n");
   DPRINT("FsVolumeInfo = %p\n", FsVolumeInfo);
-
-  if (!FsVolumeInfo)
-    return (STATUS_SUCCESS);
-
+  DPRINT("BufferLength %lu\n", *BufferLength);
+  DPRINT("Required length %lu\n", (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength));
+  
+  LabelLength = DeviceObject->Vpb->VolumeLabelLength;
+  DPRINT("LabelLength %lu\n", LabelLength);
+  
+  /* FIXME: This does not work correctly! Why?? */
+//  if (*BufferLength < (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength));
+//    return(STATUS_BUFFER_OVERFLOW);
 
   /* valid entries */
   FsVolumeInfo->VolumeSerialNumber = DeviceObject->Vpb->SerialNumber;
-  FsVolumeInfo->VolumeLabelLength = DeviceObject->Vpb->VolumeLabelLength;
+  FsVolumeInfo->VolumeLabelLength = LabelLength;
   wcscpy(FsVolumeInfo->VolumeLabel, DeviceObject->Vpb->VolumeLabel);
-
+  
   /* dummy entries */
   FsVolumeInfo->VolumeCreationTime.QuadPart = 0;
   FsVolumeInfo->SupportsObjects = FALSE;
-
+  
   DPRINT("Finished FsdGetFsVolumeInformation()\n");
-
+  
+  *BufferLength -= (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength);
+  
+  DPRINT("BufferLength %lu\n", *BufferLength);
+  
   return(STATUS_SUCCESS);
 }
 
 
 static NTSTATUS
-FsdGetFsAttributeInformation(PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo)
+FsdGetFsAttributeInformation(PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
+			     PULONG BufferLength)
 {
   DPRINT("FsdGetFsAttributeInformation()\n");
   DPRINT("FsAttributeInfo = %p\n", FsAttributeInfo);
-
-  if (!FsAttributeInfo)
-    return (STATUS_SUCCESS);
-
+  DPRINT("BufferLength %lu\n", *BufferLength);
+  DPRINT("Required length %lu\n", (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 6));
+  
+  /* FIXME: This does not work correctly! Why?? */
+//  if (*BufferLength < (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 6));
+//    return(STATUS_BUFFER_OVERFLOW);
+  
   FsAttributeInfo->FileSystemAttributes =
-    FILE_CASE_PRESERVED_NAMES || FILE_UNICODE_ON_DISK;
+    FILE_CASE_PRESERVED_NAMES | FILE_UNICODE_ON_DISK;
   FsAttributeInfo->MaximumComponentNameLength = 255;
   FsAttributeInfo->FileSystemNameLength = 6;
   wcscpy(FsAttributeInfo->FileSystemName, L"FAT");
-
+  
   DPRINT("Finished FsdGetFsAttributeInformation()\n");
-
+  
+  *BufferLength -= (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 6);
+  DPRINT("BufferLength %lu\n", *BufferLength);
+  
   return(STATUS_SUCCESS);
 }
 
+
 static NTSTATUS
 FsdGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
-			PFILE_FS_SIZE_INFORMATION FsSizeInfo)
+			PFILE_FS_SIZE_INFORMATION FsSizeInfo,
+			PULONG BufferLength)
 {
-  PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
-
+  PDEVICE_EXTENSION DeviceExt;
+  
   DPRINT("FsdGetFsSizeInformation()\n");
   DPRINT("FsSizeInfo = %p\n", FsSizeInfo);
-
-  if (!FsSizeInfo)
-    return(STATUS_SUCCESS);
-
+  
+  /* FIXME: This does not work correctly! Why?? */
+//  if (*BufferLength < sizeof(FILE_FS_SIZE_INFORMATION));
+//    return(STATUS_BUFFER_OVERFLOW);
+  
+  DeviceExt = DeviceObject->DeviceExtension;
+  
   if (DeviceExt->FatType == FAT32)
     {
       struct _BootSector32 *BootSect =
@@ -112,9 +136,36 @@ FsdGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
       FsSizeInfo->SectorsPerAllocationUnit = BootSect->SectorsPerCluster;
       FsSizeInfo->BytesPerSector = BootSect->BytesPerSector;
     }
-
+  
   DPRINT("Finished FsdGetFsSizeInformation()\n");
+  
+  *BufferLength -= sizeof(FILE_FS_SIZE_INFORMATION);
+  
+  return(STATUS_SUCCESS);
+}
 
+
+static NTSTATUS
+FsdGetFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
+			  PULONG BufferLength)
+{
+  DPRINT("FsdGetFsDeviceInformation()\n");
+  DPRINT("FsDeviceInfo = %p\n", FsDeviceInfo);
+  DPRINT("BufferLength %lu\n", *BufferLength);
+  DPRINT("Required length %lu\n", sizeof(FILE_FS_DEVICE_INFORMATION));
+  
+  /* FIXME: This does not work correctly! Why?? */
+//  if (*BufferLength < sizeof(FILE_FS_DEVICE_INFORMATION));
+//    return(STATUS_BUFFER_OVERFLOW);
+  
+  FsDeviceInfo->DeviceType = FILE_DEVICE_DISK;
+  FsDeviceInfo->Characteristics = 0; /* FIXME: fix this !! */
+  
+  DPRINT("FsdGetFsDeviceInformation() finished.\n");
+  
+  *BufferLength -= sizeof(FILE_FS_DEVICE_INFORMATION);
+  DPRINT("BufferLength %lu\n", *BufferLength);
+  
   return(STATUS_SUCCESS);
 }
 
@@ -123,7 +174,7 @@ static NTSTATUS
 FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
 			 PFILE_FS_LABEL_INFORMATION FsLabelInfo)
 {
-   DPRINT1("FsdSetFsLabelInformation()\n");
+   DPRINT("FsdSetFsLabelInformation()\n");
    
    return STATUS_NOT_IMPLEMENTED;
 }
@@ -140,7 +191,6 @@ VfatQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
   FS_INFORMATION_CLASS FsInformationClass;
   PFILE_OBJECT FileObject = NULL;
   PVFATFCB FCB = NULL;
-
   NTSTATUS RC = STATUS_SUCCESS;
   PVOID SystemBuffer;
   ULONG BufferLength;
@@ -162,7 +212,6 @@ VfatQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
 //   FCB = CCB->Buffer; // Should be CCB->FCB???
   FCB = ((PVFATCCB) (FileObject->FsContext2))->pFcb;
 
-
   DPRINT ("FsInformationClass %d\n", FsInformationClass);
   DPRINT ("SystemBuffer %x\n", SystemBuffer);
 
@@ -172,24 +221,38 @@ VfatQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
       RC = FsdGetFsVolumeInformation(FileObject,
 				     FCB,
 				     DeviceObject,
-				     SystemBuffer);
+				     SystemBuffer,
+				     &BufferLength);
       break;
 
     case FileFsAttributeInformation:
-      RC = FsdGetFsAttributeInformation(SystemBuffer);
+      RC = FsdGetFsAttributeInformation(SystemBuffer,
+					&BufferLength);
       break;
 
     case FileFsSizeInformation:
-      RC = FsdGetFsSizeInformation (DeviceObject, SystemBuffer);
+      RC = FsdGetFsSizeInformation(DeviceObject,
+				   SystemBuffer,
+				   &BufferLength);
+      break;
+
+    case FileFsDeviceInformation:
+      RC = FsdGetFsDeviceInformation(SystemBuffer,
+				     &BufferLength);
       break;
 
     default:
-      RC = STATUS_NOT_IMPLEMENTED;
+      RC = STATUS_NOT_SUPPORTED;
     }
 
   Irp->IoStatus.Status = RC;
-  Irp->IoStatus.Information = 0;
-  IoCompleteRequest (Irp, IO_NO_INCREMENT);
+  if (NT_SUCCESS(RC))
+    Irp->IoStatus.Information =
+      Stack->Parameters.QueryVolume.Length - BufferLength;
+  else
+    Irp->IoStatus.Information = 0;
+  IoCompleteRequest(Irp,
+		    IO_NO_INCREMENT);
 
   return RC;
 }
@@ -206,7 +269,6 @@ VfatSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
    FS_INFORMATION_CLASS FsInformationClass;
 //   PFILE_OBJECT FileObject = NULL;
 //   PVFATFCB FCB = NULL;
-
    NTSTATUS Status = STATUS_SUCCESS;
    PVOID SystemBuffer;
    ULONG BufferLength;

@@ -26,6 +26,9 @@ NTSTATUS Ext2SetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    
    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
    Irp->IoStatus.Information = 0;
+   IoCompleteRequest(Irp,
+		     IO_NO_INCREMENT);
+   
    return(STATUS_UNSUCCESSFUL);
 }
 
@@ -51,7 +54,7 @@ NTSTATUS Ext2QueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    FileObject = Param->FileObject;
    DeviceExt = DeviceObject->DeviceExtension;
    Length = Param->Parameters.QueryFile.Length;
-   Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+   Buffer = Param->AssociatedIrp.SystemBuffer;
    
    switch (Param->Parameters.QueryFile.FileInformationClass)
      {
@@ -112,14 +115,20 @@ NTSTATUS Ext2QueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	break;
 	
       default:
-	Status = STATUS_NOT_IMPLEMENTED;
+	Status = STATUS_NOT_SUPPORTED;
      }
    
    
    
    
    Irp->IoStatus.Status = Status;
-   Irp->IoStatus.Information = 0;
-   return(STATUS_UNSUCCESSFUL);
+   if (NT_SUCCESS(Status)
+     Irp->IoStatus.Information =
+       Param->Parameters.QueryFile.Length - Length;
+   else
+     Irp->IoStatus.Information = 0;
+   IoCompleteRequest(Irp,
+		     IO_NO_INCREMENT);
+   
+   return(Status);
 }
-

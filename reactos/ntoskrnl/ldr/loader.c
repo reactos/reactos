@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.81 2001/06/04 11:26:12 chorns Exp $
+/* $Id: loader.c,v 1.82 2001/06/12 12:31:28 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -533,8 +533,8 @@ VOID LdrpLoadUserModuleSymbolsFromBuffer(
     }
 }
 
-VOID LdrpLoadModuleSymbols(
-  PMODULE_OBJECT ModuleObject)
+VOID
+LdrpLoadModuleSymbols(PMODULE_OBJECT ModuleObject)
 {
   FILE_STANDARD_INFORMATION FileStdInfo;
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -545,6 +545,7 @@ VOID LdrpLoadModuleSymbols(
   PVOID FileBuffer;
   NTSTATUS Status;
   ULONG Length;
+  IO_STATUS_BLOCK IoStatusBlock;
 
   /*  Get the path to the symbol store  */
   wcscpy(TmpFileName, L"\\SystemRoot\\symbols\\");
@@ -576,7 +577,9 @@ VOID LdrpLoadModuleSymbols(
   Status = ZwOpenFile(&FileHandle,
                       FILE_ALL_ACCESS,
                       &ObjectAttributes,
-                      NULL, 0, 0);
+                      &IoStatusBlock,
+                      0,
+                      0);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Could not open symbol file: %wZ\n", &Filename);
@@ -587,7 +590,7 @@ VOID LdrpLoadModuleSymbols(
 
   /*  Get the size of the file  */
   Status = ZwQueryInformationFile(FileHandle,
-                                  NULL,
+                                  &IoStatusBlock,
                                   &FileStdInfo,
                                   sizeof(FileStdInfo),
                                   FileStandardInformation);
@@ -608,10 +611,11 @@ VOID LdrpLoadModuleSymbols(
     }
    
   /*  Load file into memory chunk  */
-  Status = ZwReadFile(FileHandle, 
-                      0, 0, 0, 0, 
-                      FileBuffer, 
-                      FileStdInfo.EndOfFile.u.LowPart, 
+  Status = ZwReadFile(FileHandle,
+                      0, 0, 0,
+                      &IoStatusBlock,
+                      FileBuffer,
+                      FileStdInfo.EndOfFile.u.LowPart,
                       0, 0);
   if (!NT_SUCCESS(Status))
     {
@@ -640,6 +644,7 @@ VOID LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject)
   PVOID FileBuffer;
   NTSTATUS Status;
   ULONG Length;
+  IO_STATUS_BLOCK IoStatusBlock;
 
   /*  Get the path to the symbol store  */
   wcscpy(TmpFileName, L"\\SystemRoot\\symbols\\");
@@ -671,7 +676,9 @@ VOID LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject)
   Status = ZwOpenFile(&FileHandle,
                       FILE_ALL_ACCESS,
                       &ObjectAttributes,
-                      NULL, 0, 0);
+                      &IoStatusBlock,
+                      0,
+                      0);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Could not open symbol file: %wZ\n", &Filename);
@@ -682,7 +689,7 @@ VOID LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject)
 
   /*  Get the size of the file  */
   Status = ZwQueryInformationFile(FileHandle,
-                                  NULL,
+                                  &IoStatusBlock,
                                   &FileStdInfo,
                                   sizeof(FileStdInfo),
                                   FileStandardInformation);
@@ -703,10 +710,11 @@ VOID LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject)
     }
    
   /*  Load file into memory chunk  */
-  Status = ZwReadFile(FileHandle, 
-                      0, 0, 0, 0, 
-                      FileBuffer, 
-                      FileStdInfo.EndOfFile.u.LowPart, 
+  Status = ZwReadFile(FileHandle,
+                      0, 0, 0,
+                      &IoStatusBlock,
+                      FileBuffer,
+                      FileStdInfo.EndOfFile.u.LowPart,
                       0, 0);
   if (!NT_SUCCESS(Status))
     {
@@ -950,6 +958,7 @@ LdrLoadModule(PUNICODE_STRING Filename)
   OBJECT_ATTRIBUTES ObjectAttributes;
   PMODULE_OBJECT  ModuleObject;
   FILE_STANDARD_INFORMATION FileStdInfo;
+  IO_STATUS_BLOCK IoStatusBlock;
 
   /*  Check for module already loaded  */
   if ((ModuleObject = LdrOpenModule(Filename)) != NULL)
@@ -969,7 +978,9 @@ LdrLoadModule(PUNICODE_STRING Filename)
   Status = NtOpenFile(&FileHandle,
                       FILE_ALL_ACCESS,
                       &ObjectAttributes,
-                      NULL, 0, 0);
+                      &IoStatusBlock,
+                      0,
+                      0);
   CHECKPOINT;
   if (!NT_SUCCESS(Status))
     {
@@ -980,7 +991,7 @@ LdrLoadModule(PUNICODE_STRING Filename)
 
   /*  Get the size of the file  */
   Status = NtQueryInformationFile(FileHandle,
-                                  NULL,
+                                  &IoStatusBlock,
                                   &FileStdInfo,
                                   sizeof(FileStdInfo),
                                   FileStandardInformation);
@@ -1004,10 +1015,11 @@ LdrLoadModule(PUNICODE_STRING Filename)
   CHECKPOINT;
    
   /*  Load driver into memory chunk  */
-  Status = NtReadFile(FileHandle, 
-                      0, 0, 0, 0, 
-                      ModuleLoadBase, 
-                      FileStdInfo.EndOfFile.u.LowPart, 
+  Status = NtReadFile(FileHandle,
+                      0, 0, 0,
+                      &IoStatusBlock,
+                      ModuleLoadBase,
+                      FileStdInfo.EndOfFile.u.LowPart,
                       0, 0);
   if (!NT_SUCCESS(Status))
     {

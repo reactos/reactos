@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.8 2000/04/01 14:19:07 ea Exp $
+# $Id: makefile,v 1.9 2001/06/12 12:32:46 ekohl Exp $
 #
 # Linux Ext2 IFS Driver
 #
@@ -14,12 +14,7 @@ all: $(TARGETNAME).sys
 .phony: all
 
 clean:
-	- $(RM) super.o 
-	- $(RM) blockdev.o
-	- $(RM) inode.o
-	- $(RM) file.o
-	- $(RM) dir.o
-	- $(RM) rw.o
+	- $(RM) *.o 
 	- $(RM) ext2.coff
 	- $(RM) junk.tmp
 	- $(RM) base.tmp
