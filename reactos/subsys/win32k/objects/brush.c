@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: brush.c,v 1.28 2003/11/24 21:20:35 gvg Exp $
+/* $Id: brush.c,v 1.29 2003/12/11 15:14:40 weiden Exp $
  */
 
 
@@ -25,6 +25,7 @@
 #include <ddk/ntddk.h>
 #include <win32k/bitmaps.h>
 #include <win32k/brush.h>
+#include <internal/safe.h>
 //#include <win32k/debug.h>
 #include <include/object.h>
 #include <include/inteng.h>
@@ -35,8 +36,17 @@
 
 HBRUSH STDCALL NtGdiCreateBrushIndirect(CONST LOGBRUSH  *lb)
 {
-  PBRUSHOBJ  brushPtr;
-  HBRUSH  hBrush;
+  PBRUSHOBJ brushPtr;
+  LOGBRUSH  Safelb;
+  HBRUSH    hBrush;
+  NTSTATUS  Status;
+  
+  Status = MmCopyFromCaller(&Safelb, lb, sizeof(LOGBRUSH));
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return 0;
+  }
 
   hBrush = BRUSHOBJ_AllocBrush();
   if (hBrush == NULL)
@@ -49,10 +59,10 @@ HBRUSH STDCALL NtGdiCreateBrushIndirect(CONST LOGBRUSH  *lb)
 /*  ASSERT( brushPtr ); *///I want to know if this ever occurs
 
   if( brushPtr ){
-  	brushPtr->iSolidColor = lb->lbColor;
-  	brushPtr->logbrush.lbStyle = lb->lbStyle;
-  	brushPtr->logbrush.lbColor = lb->lbColor;
-  	brushPtr->logbrush.lbHatch = lb->lbHatch;
+  	brushPtr->iSolidColor = Safelb.lbColor;
+  	brushPtr->logbrush.lbStyle = Safelb.lbStyle;
+  	brushPtr->logbrush.lbColor = Safelb.lbColor;
+  	brushPtr->logbrush.lbHatch = Safelb.lbHatch;
 
   	BRUSHOBJ_UnlockBrush( hBrush );
   	return  hBrush;
@@ -263,23 +273,48 @@ BOOL STDCALL NtGdiPolyPatBlt(HDC hDC,
 			ULONG Reserved)
 {
 	int i;
-	PATRECT r;
+	PPATRECT r, rb;
 	PBRUSHOBJ BrushObj;
-	DC *dc = DC_LockDc(hDC);
+	DC *dc;
+	NTSTATUS Status;
+    
+	if(cRects > 0)
+	{
+	  rb = ExAllocatePool(PagedPool, sizeof(PATRECT) * cRects);
+	  if(!rb)
+	  {
+	    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+	    return FALSE;
+	  }
+      Status = MmCopyFromCaller(rb, pRects, sizeof(PATRECT) * cRects);
+      if(!NT_SUCCESS(Status))
+      {
+        ExFreePool(rb);
+        SetLastNtError(Status);
+        return FALSE;
+      }
+    }
+    
+    dc = DC_LockDc(hDC);
 	if (dc == NULL)
 	{
+	    if(cRects > 0)
+	      ExFreePool(rb);
 		SetLastWin32Error(ERROR_INVALID_HANDLE);
 		return(FALSE);
 	}
-	for (i = 0;i<cRects;i++)
+	
+	for (r = rb, i = 0; i < cRects; i++)
 	{
-		r = *pRects;
-		BrushObj = BRUSHOBJ_LockBrush(r.hBrush);
-		IntPatBlt(dc,r.r.left,r.r.top,r.r.right,r.r.bottom,dwRop,BrushObj);
-		BRUSHOBJ_UnlockBrush(r.hBrush);
-		pRects++;
+		BrushObj = BRUSHOBJ_LockBrush(r->hBrush);
+		IntPatBlt(dc,r->r.left,r->r.top,r->r.right,r->r.bottom,dwRop,BrushObj);
+		BRUSHOBJ_UnlockBrush(r->hBrush);
+		r++;
 	}
 	DC_UnlockDc( hDC );
+	
+	if(cRects > 0)
+	  ExFreePool(rb);
 	return TRUE;
 }
 
