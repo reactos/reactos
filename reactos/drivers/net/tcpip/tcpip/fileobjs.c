@@ -471,8 +471,10 @@ NTSTATUS FileCloseConnection(
 
   Connection = Request->Handle.ConnectionContext;
 
+  TcpipRecursiveMutexEnter( &TCPLock, TRUE );
   TCPClose(Connection);
   DeleteConnectionEndpoint(Connection);
+  TcpipRecursiveMutexLeave( &TCPLock );
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
