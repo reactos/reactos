@@ -52,11 +52,11 @@ object-dirs: $(OBJS_DIR) $(SLANG_OBJS_DIR) $(MCEDIT_OBJS_DIR)
 mc: $(MC_EXE)
 
 clean: 
-	"../../reactos/tools/rdel" "slang/*.o"
-	"../../reactos/tools/rdel" "edit/*.o"
-	"../../reactos/tools/rdel" "src/*.o"
-	"../../reactos/tools/rdel" "pc/*.o"
-	"../../reactos/tools/rdel" "release"
+	"../../reactos/tools/rdel" slang/*.o
+	"../../reactos/tools/rdel" edit/*.o
+	"../../reactos/tools/rdel" src/*.o
+	"../../reactos/tools/rdel" pc/*.o
+	"../../reactos/tools/rdel" release/*.o
 
 $(OBJS_DIR):
 	mkdir "$@"
