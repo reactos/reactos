@@ -13,7 +13,7 @@ include rules.mak
 #
 # Available applications
 #
-APPS = cmd cmdutils notevil sysutils dflat32
+APPS = cmd cmdutils notevil sysutils dflat32 net\ping net\ncftp
 
 all: $(APPS)
 .PHONY: all
