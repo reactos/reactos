@@ -2,10 +2,7 @@
 #include <reactos/resource.h>
 #include "resource.h"
 
-#include "De.rc"
-#include "Es.rc"
-
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
 VS_VERSION_INFO VERSIONINFO
 	FILEVERSION	RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
@@ -25,7 +22,7 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName",	RES_STR_COMPANY_NAME
-            VALUE "FileDescription",	"ReactOS-Welcome\0"
+            VALUE "FileDescription",	"ReactOS-Willkommen\0"
             VALUE "FileVersion",	RES_STR_FILE_VERSION
             VALUE "InternalName",	"welcome\0"
             VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
@@ -36,7 +33,7 @@ BEGIN
     END
     BLOCK "VarFileInfo"
     BEGIN
-        VALUE "Translation", 0x409, 1200
+        VALUE "Translation", 0x407, 1200
     END
 END
 
@@ -64,19 +61,19 @@ IDB_TITLEBITMAP         BITMAP  DISCARDABLE     "res/title.bmp"
 /* Default settings */
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_APPTITLE            "ReactOS - Welcome"
+    IDS_APPTITLE            "ReactOS - Willkommen"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
-    IDS_DEFAULTTOPICDESC    "Welcome to React Operating System.\n\nClick a topic on the left."
-//    IDS_CHECKTEXT           "Show this dialog again"
-//    IDS_CLOSETEXT           "Exit"
+    IDS_DEFAULTTOPICDESC    "Willkommen in ReactOS.\n\nKlicken Sie auf ein Thema links."
+//    IDS_CHECKTEXT           "Dialog beim nächsen Start wieder anzeigen"
+//    IDS_CLOSETEXT           "Beenden"
 END
 
 /* Topic buttons */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICBUTTON0        "Install ReactOS"
-    IDS_TOPICBUTTON1        "Browse this CD"
-    IDS_TOPICBUTTON2        "Exit"
+    IDS_TOPICBUTTON0        "ReactOS installieren"
+    IDS_TOPICBUTTON1        "CD durchsuchen"
+    IDS_TOPICBUTTON2        "Beenden"
 //    IDS_TOPICBUTTON3        "Empty Topic 3"
 //    IDS_TOPICBUTTON4        "Empty Topic 4"
 //    IDS_TOPICBUTTON5        "Empty Topic 5"
@@ -89,9 +86,9 @@ END
 /* Topic titles */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICTITLE0         "Install ReactOS"
-    IDS_TOPICTITLE1         "Browse this CD"
-    IDS_TOPICTITLE2         "Exit"
+    IDS_TOPICTITLE0         "ReactOS installieren"
+    IDS_TOPICTITLE1         "CD durchsuchen"
+    IDS_TOPICTITLE2         "Beenden"
 //    IDS_TOPICTITLE3         "Empty Topic Title 3"
 //    IDS_TOPICTITLE4         "Empty Topic Title 4"
 //    IDS_TOPICTITLE5         "Empty Topic Title 5"
@@ -104,9 +101,9 @@ END
 /* Topic descriptions */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICDESC0          "Create a new ReactOS installation on your computer or upgrade an existing installation."
-    IDS_TOPICDESC1          "Browse the CD."
-    IDS_TOPICDESC2          "Click to exit this application."
+    IDS_TOPICDESC0          "Erstellt eine neue ReactOS Installation auf ihrem PC oder aktualisiert eine bestehende Installation."
+    IDS_TOPICDESC1          "Die ReactOS-CD durchsuchen."
+    IDS_TOPICDESC2          "Klicken Sie um dieses Programm zu beenden."
 //    IDS_TOPICDESC3          "Topic description 3.\n\nDescribe topic 3 here."
 //    IDS_TOPICDESC4          "Topic description 4.\n\nDescribe topic 4 here."
 //    IDS_TOPICDESC5          "Topic description 5.\n\nDescribe topic 5 here."
@@ -130,4 +127,7 @@ BEGIN
 //    IDS_TOPICACTION8        "..."
 //    IDS_TOPICACTION9        "..."
 END
+
+// German (Austria) resources by Klemens Friedl (frik85 at hotmail dot com)
 /* EOF */
+
