@@ -284,7 +284,7 @@ DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
 INT
 WSPAPI
 WSPCloseSocket(
-  IN  SOCKET s,
+  IN  SOCKET Handle,
   OUT	LPINT lpErrno)
 /*
  * FUNCTION: Closes an open socket
@@ -295,9 +295,127 @@ WSPCloseSocket(
  *     NO_ERROR, or SOCKET_ERROR if the socket could not be closed
  */
 {
-	return 0;
-}
+    IO_STATUS_BLOCK IoStatusBlock;
+    PSOCKET_INFORMATION Socket = NULL;
+    NTSTATUS Status;
+    HANDLE SockEvent;
+    AFD_DISCONNECT_INFO DisconnectInfo;
+    SOCKET_STATE OldState;
 
+    /* Create the Wait Event */
+    Status = NtCreateEvent(&SockEvent,
+                           GENERIC_READ | GENERIC_WRITE,
+                           NULL,
+                           1,
+                           FALSE);    
+
+    if(!NT_SUCCESS(Status)) return SOCKET_ERROR;
+
+    /* Get the Socket Structure associate to this Socket*/
+    Socket = GetSocketStructure(Handle);
+
+    /* If a Close is already in Process, give up */
+    if (Socket->SharedData.State == SocketClosed) {
+        *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
+
+    /* Set the state to close */
+    OldState = Socket->SharedData.State;
+    Socket->SharedData.State = SocketClosed;
+    
+    /* If SO_LINGER is ON and the Socket is connected, we need to disconnect */
+    /* FIXME: Should we do this on Datagram Sockets too? */
+    if ((OldState == SocketConnected) && (Socket->SharedData.LingerData.l_onoff)) {
+        ULONG LingerWait;
+        ULONG SendsInProgress;
+        ULONG SleepWait;
+        
+        /* We need to respect the timeout */
+        SleepWait = 100;
+        LingerWait = Socket->SharedData.LingerData.l_linger * 1000;
+        
+        /* Loop until no more sends are pending, within the timeout */
+        while (LingerWait) {
+            
+            /* Find out how many Sends are in Progress */
+            if (GetSocketInformation(Socket, 
+                                     AFD_INFO_SENDS_IN_PROGRESS,
+                                     &SendsInProgress,
+                                     NULL)) {
+                /* Bail out if anything but NO_ERROR */
+                LingerWait = 0;
+                break;
+            }
+
+            /* Bail out if no more sends are pending */
+            if (!SendsInProgress) break;
+            
+            /* 
+             * We have to execute a sleep, so it's kind of like
+             * a block. If the socket is Nonblock, we cannot
+             * go on since asyncronous operation is expected
+             * and we cannot offer it
+             */
+            if (Socket->SharedData.NonBlocking) {
+                Socket->SharedData.State = OldState;
+                *lpErrno = WSAEWOULDBLOCK;
+                return SOCKET_ERROR;
+            }
+            
+            /* Now we can sleep, and decrement the linger wait */
+            /* 
+             * FIXME: It seems Windows does some funky acceleration
+             * since the waiting seems to be longer and longer. I
+             * don't think this improves performance so much, so we
+             * wait a fixed time instead.
+             */
+            Sleep(SleepWait);
+            LingerWait -= SleepWait;
+        }
+        
+        /*
+         * We have reached the timeout or sends are over.
+         * Disconnect if the timeout has been reached. 
+         */
+        if (LingerWait <= 0) {
+        
+            DisconnectInfo.Timeout = RtlConvertLongToLargeInteger(0);
+            DisconnectInfo.DisconnectType = AFD_DISCONNECT_ABORT;
+            
+            /* Send IOCTL */
+            Status = NtDeviceIoControlFile((HANDLE)Handle,
+                                           SockEvent,
+                                           NULL,
+                                           NULL,
+                                           &IoStatusBlock,
+                                           IOCTL_AFD_DISCONNECT,
+                                           &DisconnectInfo,
+                                           sizeof(DisconnectInfo),
+                                           NULL,
+                                           0);
+        
+            /* Wait for return */
+            if (Status == STATUS_PENDING) {
+                WaitForSingleObject(SockEvent, INFINITE);
+            }         
+        }
+    }
+    
+    /* FIXME: We should notify the Helper DLL of WSH_NOTIFY_CLOSE */
+    
+    /* Cleanup Time! */
+    Socket->HelperContext = NULL;
+    Socket->SharedData.AsyncDisabledEvents = -1;
+    NtClose(Socket->TdiAddressHandle);
+    Socket->TdiAddressHandle = NULL;
+    NtClose(Socket->TdiConnectionHandle);
+    Socket->TdiConnectionHandle = NULL;
+
+    /* Close the handle */
+    NtClose((HANDLE)Handle);
+    return NO_ERROR;
+}
 
 INT
 WSPAPI

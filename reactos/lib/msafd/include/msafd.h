@@ -49,7 +49,7 @@ typedef struct _SOCK_SHARED_INFO {
     INT							Protocol;
     INT							SizeOfLocalAddress;
     INT							SizeOfRemoteAddress;
-    ULONG						LingerData;
+    struct linger				LingerData;
     ULONG						SendTimeout;
     ULONG						RecvTimeout;
     ULONG						SizeOfRecvBuffer;
