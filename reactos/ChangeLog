@@ -1,3 +1,17 @@
+2001-03-18  David Welch  <welch@cwcom>
+
+	* ntoskrnl/ke/apc.c (KiDeliverApc): Bug fix.
+	* ntoskrnl/ke/apc.c (KeInsertQueueApc): More comments.
+	* ntoskrnl/ke/catch.c (KiDispatchException): Bug fix.
+	* ntoskrnl/ke/timer.c (KeDelayExecutionThread): Don't use removed 
+	function KeAddTimeoutThread.
+	* ntoskrnl/ke/timer.c (KeAddTimeoutThread): Removed.
+	* ntoskrnl/ke/wait.c (KeWaitForSingleObject, KeWaitForMultipleObjects):
+	Don't use KeAddTimeoutThread.
+	* ntoskrnl/mm/freelist.c (MmAllocateContiguousAlignedMemory): Bug fix
+	* ntoskrnl/mm/freelist.c (MmAllocatePage): Allocate from the top
+	memory.
+
 2001-03-17  David Welch  <welch@cwcom.net>
 
 	* ntoskrnl/ke/catch.c (KiDispatchException): Implementation of
