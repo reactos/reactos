@@ -142,7 +142,7 @@ INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
                     HWND htxt = NULL ;
                     if ((ic = GetWindowTextLengthA (htxt = GetDlgItem (hwnd, 12298))))
                         {
-                        psz = HeapAlloc( GetProcessHeap, 0, (ic + 2) );
+                        psz = HeapAlloc( GetProcessHeap(), 0, (ic + 2) );
                         GetWindowTextA (htxt, psz, ic + 1) ;
 
                         if (ShellExecuteA(NULL, "open", psz, NULL, NULL, SW_SHOWNORMAL) < (HINSTANCE)33)
