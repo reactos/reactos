@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.14 2004/05/08 09:19:53 gvg Exp $
+/* $Id: guiconsole.c,v 1.15 2004/07/03 17:17:05 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -477,7 +477,38 @@ GuiConsoleHandleTimer(HWND hWnd)
 static VOID FASTCALL
 GuiConsoleHandleClose(HWND hWnd)
 {
-  /* FIXME for now, just ignore close requests */
+  PCSRSS_CONSOLE Console;
+  PGUI_CONSOLE_DATA GuiData;
+  PLIST_ENTRY current_entry;
+  PCSRSS_PROCESS_DATA current;
+  HANDLE Process;
+  BOOL Result;
+
+  GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
+
+  EnterCriticalSection(&Console->Header.Lock);
+
+  current_entry = Console->ProcessList.Flink;
+  while (current_entry != &Console->ProcessList)
+    {
+      current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
+      current_entry = current_entry->Flink;
+
+      Process = OpenProcess(PROCESS_DUP_HANDLE, FALSE, current->ProcessId);
+      if (NULL == Process)
+        {
+          DPRINT1("Failed for handle duplication\n");
+	  continue;
+        }
+      Result = TerminateProcess(Process, 0);
+      CloseHandle(Process);
+      if (!Result)
+        {
+	  DPRINT1("Failed to terminate process %d\n", current->ProcessId);
+	}
+    }
+
+  LeaveCriticalSection(&Console->Header.Lock);
 }
 
 static VOID FASTCALL
