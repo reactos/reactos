@@ -25,7 +25,8 @@ VOID SendICMPComplete(
  *     This routine is called by IP when a ICMP send completes
  */
 {
-    PIP_PACKET IPPacket = (PIP_PACKET)Context;
+    PIP_PACKET IPPacket = NULL;
+    IPPacket =(PIP_PACKET)Context;
 
     TI_DbgPrint(DEBUG_ICMP, ("Freeing NDIS packet (%X).\n", Packet));
 
