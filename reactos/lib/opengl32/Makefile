@@ -17,7 +17,8 @@ TARGET_LFLAGS =
 TARGET_SDKLIBS = opengl32.a
 
 TARGET_OBJECTS = \
-	opengl32.o stubs.o
+	opengl32.o \
+	wgl.o
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 
