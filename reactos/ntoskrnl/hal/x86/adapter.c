@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.5 2001/03/31 16:46:59 jfilby Exp $
+/* $Id: adapter.c,v 1.6 2001/04/02 23:54:37 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -118,13 +118,14 @@ IoMapTransfer (PADAPTER_OBJECT	AdapterObject,
 	       PULONG		Length,
 	       BOOLEAN		WriteToDevice)
 {
-  LARGE_INTEGER Address;
+  PHYSICAL_ADDRESS Address;
   // program up the dma controller, and return
   // if it is a write to the device, copy the caller buffer to the low buffer
   if( WriteToDevice )
     memcpy( MapRegisterBase,
 	    MmGetSystemAddressForMdl( Mdl ) + ( (DWORD)CurrentVa - (DWORD)MmGetMdlVirtualAddress( Mdl ) ),
 	    *Length );
+  Address = MmGetPhysicalAddress( MapRegisterBase );
   // port 0xA is the dma mask register, or a 0x10 on to the channel number to mask it
   WRITE_PORT_UCHAR( (PVOID)0x0A, AdapterObject->Channel | 0x10 );
   // write zero to the reset register
@@ -132,7 +133,7 @@ IoMapTransfer (PADAPTER_OBJECT	AdapterObject,
   // mode register, or channel with 0x4 for write memory, 0x8 for read memory, 0x10 for non auto initialize
   WRITE_PORT_UCHAR( (PVOID)0x0B, AdapterObject->Channel | ( WriteToDevice ? 0x8 : 0x4 ) );
   // set the 64k page register for the channel
-  WRITE_PORT_UCHAR( AdapterObject->PagePort, (UCHAR)(((ULONG)MapRegisterBase)>>16) );
+  WRITE_PORT_UCHAR( AdapterObject->PagePort, (UCHAR)(((ULONG)Address.QuadPart)>>16) );
   // low, then high address byte, which is always 0 for us, because we have a 64k alligned address
   WRITE_PORT_UCHAR( AdapterObject->OffsetPort, 0 );
   WRITE_PORT_UCHAR( AdapterObject->OffsetPort, 0 );
