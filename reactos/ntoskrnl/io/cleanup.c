@@ -38,7 +38,8 @@ VOID IoDeviceControlCompletion(PDEVICE_OBJECT DeviceObject,
    else
      {
        IoControlCode = IoStack->Parameters.DeviceIoControl.IoControlCode;
-       OutputBufferLength = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+       OutputBufferLength = NT_SUCCESS(Irp->IoStatus.Status)
+                            ? Irp->IoStatus.Information : 0;
      }
    
    switch (IO_METHOD_FROM_CTL_CODE(IoControlCode))
