@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.30 2003/07/11 01:23:16 royce Exp $
+/* $Id: unicode.c,v 1.31 2003/08/20 04:18:31 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1252,9 +1252,16 @@ RtlUnicodeStringToInteger(IN PUNICODE_STRING String,
 		{
 			return STATUS_INVALID_PARAMETER;
 		}
+		/*
 		else if ((((*Str > L'9') || (*Str < L'0')) ||
 		          ((towupper (*Str) > L'F') ||
 		           (towupper (*Str) < L'A'))) && (Base == 16))
+		*/
+		else if ((*Str < '0' || 
+				 (*Str > '9' && *Str < 'A') || 
+				 (*Str > 'F' && *Str < 'a') || 
+				 *Str > 'f') && 
+			  (Base == 16))
 		{
 			return STATUS_INVALID_PARAMETER;
 		}

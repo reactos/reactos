@@ -1,4 +1,4 @@
-/* $Id: dma.c,v 1.4 2003/06/07 12:25:53 chorns Exp $
+/* $Id: dma.c,v 1.5 2003/08/20 04:18:31 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -95,7 +95,7 @@ HalGetAdapter (PDEVICE_DESCRIPTION	DeviceDescription,
     return NULL;
   if( DeviceDescription->AutoInitialize )
     return NULL;
-  if( DeviceDescription->Dma32BitAddress )
+  if( DeviceDescription->Dma32BitAddresses )
     return NULL;
   if( DeviceDescription->InterfaceType != Isa )
      return NULL;

@@ -1,4 +1,4 @@
-/* $Id: haltypes.h,v 1.2 2003/08/14 18:30:27 silverblade Exp $
+/* $Id: haltypes.h,v 1.3 2003/08/20 04:18:31 royce Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -64,7 +64,7 @@ typedef struct _DEVICE_DESCRIPTION
   BOOLEAN ScatterGather;
   BOOLEAN DemandMode;
   BOOLEAN AutoInitialize;
-  BOOLEAN Dma32BitAddress;
+  BOOLEAN Dma32BitAddresses;
   BOOLEAN IgnoreCount;
   BOOLEAN Reserved1;
   BOOLEAN Reserved2;

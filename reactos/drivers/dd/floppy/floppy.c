@@ -109,7 +109,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    DeviceDescription.Master = FALSE;
    DeviceDescription.ScatterGather = FALSE;
    DeviceDescription.AutoInitialize = FALSE;
-   DeviceDescription.Dma32BitAddress = FALSE;
+   DeviceDescription.Dma32BitAddresses = FALSE;
    DeviceDescription.DmaChannel = ControllerParameters->DmaChannel;
    DeviceDescription.InterfaceType = Isa;
    //   DeviceDescription.DmaWidth = Width8Bits;
