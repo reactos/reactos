@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.71 2004/01/29 22:23:27 rcampbell Exp $ */
+/* $Id: text.c,v 1.72 2004/01/29 22:24:51 rcampbell Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -316,9 +316,12 @@ BOOL FASTCALL InitFontSupport(VOID)
 			}
 			ExFreePool(cchFilename.Buffer);
 			ExFreePool(pBuff);
+			ZwClose(hDirectory);
+			
 			return TRUE;
         }
     }
+    ZwClose(hDirectory);
 	return FALSE;
 }
 
