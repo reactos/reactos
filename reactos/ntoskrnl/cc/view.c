@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.71 2003/12/31 05:33:03 jfilby Exp $
+/* $Id: view.c,v 1.72 2004/02/26 19:29:55 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -270,13 +270,14 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
       }
       else
       {
-         if (last != current && current->MappedCount > 0 && !current->Dirty)
+         if (last != current && current->MappedCount > 0 && !current->Dirty && !current->PageOut)
 	   {
 	     ULONG i;
 	     NTSTATUS Status;
 	        
              current->ReferenceCount++;
 	     last = current;
+	     current->PageOut = TRUE;
              KeReleaseSpinLock(&current->Bcb->BcbLock, oldIrql);
 	     ExReleaseFastMutex(&ViewLock);
 	     for (i = 0; i < current->Bcb->CacheSegmentSize / PAGE_SIZE; i++)
@@ -292,6 +293,7 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
              ExAcquireFastMutex(&ViewLock);
              KeAcquireSpinLock(&current->Bcb->BcbLock, &oldIrql);
 	     current->ReferenceCount--;
+	     current->PageOut = FALSE;
              KeReleaseSpinLock(&current->Bcb->BcbLock, oldIrql);
              current_entry = &current->CacheSegmentLRUListEntry;
 	     continue;
@@ -505,6 +507,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
   current = ExAllocateFromNPagedLookasideList(&CacheSegLookasideList);
   current->Valid = FALSE;
   current->Dirty = FALSE;
+  current->PageOut = FALSE;
   current->FileOffset = ROUND_DOWN(FileOffset, Bcb->CacheSegmentSize);
   current->Bcb = Bcb;
   current->MappedCount = 0;

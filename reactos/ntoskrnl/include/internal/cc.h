@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
-/* $Id: cc.h,v 1.18 2003/06/27 21:28:30 hbirr Exp $ */
+/* $Id: cc.h,v 1.19 2004/02/26 19:29:55 hbirr Exp $ */
 #include <ddk/ntifs.h>
 
 
@@ -31,6 +31,8 @@ typedef struct _CACHE_SEGMENT
   BOOLEAN Valid;
   /* Are the contents of the cache segment data newer than those on disk. */
   BOOLEAN Dirty;
+  /* Page out in progress */ 
+  BOOLEAN PageOut;
   ULONG MappedCount;
   /* Entry in the list of segments for this BCB. */
   LIST_ENTRY BcbSegmentListEntry;
