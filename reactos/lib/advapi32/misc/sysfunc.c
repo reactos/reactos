@@ -1,4 +1,4 @@
-/* $Id: sysfunc.c,v 1.8 2004/08/15 17:03:14 chorns Exp $
+/* $Id: sysfunc.c,v 1.9 2004/12/11 00:21:33 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -76,20 +76,6 @@ SystemFunction005(INT a, INT b, INT c)
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 5;
 }
-
-
-/**********************************************************************
- *
- * @unimplemented
- */
-INT
-STDCALL
-SystemFunction006(INT a, INT b)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 6;
-}
-
 
 /**********************************************************************
  *

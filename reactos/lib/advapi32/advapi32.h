@@ -8,3 +8,4 @@
 #include <windows.h>
 #include <sddl.h>
 #include <rosrtl/string.h>
+#include <accctrl.h>

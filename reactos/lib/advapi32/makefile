@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.42 2004/08/15 17:03:14 chorns Exp $
+# $Id: makefile,v 1.43 2004/12/11 00:21:33 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -13,9 +13,17 @@ TARGET_CFLAGS = -Wall -Werror -fno-builtin -D__USE_W32API
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = ntdll.a kernel32.a
+TARGET_SDKLIBS = wine.a ntdll.a kernel32.a
 
 TARGET_BASE = $(TARGET_BASE_LIB_ADVAPI32)
+
+CRYPT_OBJECTS = \
+	crypt/crypt_des.o \
+	crypt/crypt_lmhash.o \
+	crypt/crypt_md4.o \
+	crypt/crypt_md5.o \
+	crypt/crypt_sha.o \
+	crypt/crypt.o
 
 MISC_OBJECTS = \
 	misc/dllmain.o \
@@ -33,7 +41,8 @@ SECURITY_OBJECTS = \
 	sec/lsa.o \
 	sec/misc.o \
 	sec/sec.o \
-	sec/sid.o
+	sec/sid.o \
+	sec/trustee.o
 
 SERVICE_OBJECTS = \
 	service/eventlog.o \
@@ -46,6 +55,7 @@ TOKEN_OBJECTS = \
 	token/token.o
 
 TARGET_OBJECTS = \
+	$(CRYPT_OBJECTS) \
 	$(MISC_OBJECTS) \
 	$(REGISTRY_OBJECTS) \
 	$(SECURITY_OBJECTS) \
