@@ -776,7 +776,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   NTSTATUS Status;
   PVOID Object;
 
-  DPRINT("NtOpenFile(KH %x  DA %x  OA %x  OA->ON '%wZ'\n",
+  DPRINT("NtOpenKey(KH %x  DA %x  OA %x  OA->ON '%wZ'\n",
 	 KeyHandle,
 	 DesiredAccess,
 	 ObjectAttributes,
