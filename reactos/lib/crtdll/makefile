@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.54 2003/04/24 22:21:13 gvg Exp $
+# $Id: makefile,v 1.55 2003/05/27 20:01:30 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -16,7 +16,7 @@ TARGET_LFLAGS = -nostartfiles
 
 TARGET_CFLAGS = -D_MSVCRT_LIB_
 
-TARGET_SDKLIBS = kernel32.a ntdll.a
+TARGET_SDKLIBS = string.a kernel32.a ntdll.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
@@ -396,31 +396,15 @@ STDLIB_OBJECTS = \
 	$(PATH_TO_MSVCRT)/stdlib/wcstomb.o \
 
 STRING_OBJECTS = \
-	$(PATH_TO_MSVCRT)/string/memccpy.o \
-	$(PATH_TO_MSVCRT)/string/memchr.o \
-	$(PATH_TO_MSVCRT)/string/memcmp.o \
-	$(PATH_TO_MSVCRT)/string/memcpy.o \
 	$(PATH_TO_MSVCRT)/string/memicmp.o \
-	$(PATH_TO_MSVCRT)/string/memmove.o \
-	$(PATH_TO_MSVCRT)/string/memset.o \
-	$(PATH_TO_MSVCRT)/string/strcat.o \
-	$(PATH_TO_MSVCRT)/string/strchr.o \
-	$(PATH_TO_MSVCRT)/string/strcmp.o \
 	$(PATH_TO_MSVCRT)/string/strcoll.o \
-	$(PATH_TO_MSVCRT)/string/strcpy.o \
 	$(PATH_TO_MSVCRT)/string/strcspn.o \
 	$(PATH_TO_MSVCRT)/string/strdup.o \
 	string/strerror.o \
 	$(PATH_TO_MSVCRT)/string/stricmp.o \
-	$(PATH_TO_MSVCRT)/string/strlen.o \
 	$(PATH_TO_MSVCRT)/string/strlwr.o \
-	$(PATH_TO_MSVCRT)/string/strncat.o \
-	$(PATH_TO_MSVCRT)/string/strncmp.o \
-	$(PATH_TO_MSVCRT)/string/strncpy.o \
 	$(PATH_TO_MSVCRT)/string/strnicmp.o \
-	$(PATH_TO_MSVCRT)/string/strnlen.o \
 	$(PATH_TO_MSVCRT)/string/strpbrk.o \
-	$(PATH_TO_MSVCRT)/string/strrchr.o \
 	$(PATH_TO_MSVCRT)/string/strrev.o \
 	$(PATH_TO_MSVCRT)/string/strset.o \
 	$(PATH_TO_MSVCRT)/string/strspn.o \
@@ -456,22 +440,12 @@ TIME_OBJECTS = \
 	time/tz_vars.o \
 
 WSTRING_OBJECTS = \
-	$(PATH_TO_MSVCRT)/wstring/wcscat.o \
-	$(PATH_TO_MSVCRT)/wstring/wcschr.o \
-	$(PATH_TO_MSVCRT)/wstring/wcscmp.o \
 	wchar/wcscoll.o \
-	$(PATH_TO_MSVCRT)/wstring/wcscpy.o \
 	$(PATH_TO_MSVCRT)/wstring/wcscspn.o \
 	$(PATH_TO_MSVCRT)/wstring/wcsdup.o \
 	$(PATH_TO_MSVCRT)/wstring/wcsicmp.o \
-	wchar/wcslen.o \
 	$(PATH_TO_MSVCRT)/wstring/wcslwr.o \
-	$(PATH_TO_MSVCRT)/wstring/wcsncat.o \
-	$(PATH_TO_MSVCRT)/wstring/wcsncmp.o \
-	$(PATH_TO_MSVCRT)/wstring/wcsncpy.o \
-	$(PATH_TO_MSVCRT)/wstring/wcsnlen.o \
 	$(PATH_TO_MSVCRT)/wstring/wcspbrk.o \
-	$(PATH_TO_MSVCRT)/wstring/wcsrchr.o \
 	$(PATH_TO_MSVCRT)/wstring/wcsrev.o \
 	$(PATH_TO_MSVCRT)/wstring/wcsset.o \
 	$(PATH_TO_MSVCRT)/wstring/wcsspn.o \
