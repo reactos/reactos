@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.88 2003/12/10 05:41:21 rcampbell Exp $
+/* $Id: window.c,v 1.89 2003/12/10 16:08:49 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1333,7 +1333,7 @@ AnimateWindow(HWND hwnd,
 WINBOOL STDCALL
 OpenIcon(HWND hWnd)
 {
-    if (! NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE)
+    if (!(NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE))
     {
         return FALSE;
     }
