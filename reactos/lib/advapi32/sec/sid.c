@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.10 2004/02/25 14:25:11 ekohl Exp $
+/* $Id: sid.c,v 1.11 2004/03/10 21:34:42 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -6,6 +6,7 @@
  * PURPOSE:         Security ID functions
  */
 
+#include <debug.h>
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <windows.h>
@@ -235,6 +236,37 @@ BOOL STDCALL
 IsValidSid(PSID pSid)
 {
   return((BOOL)RtlValidSid(pSid));
+}
+
+/******************************************************************************
+ * LookupAccountSidA [ADVAPI32.@]
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+LookupAccountSidA(LPCSTR lpSystemName, PSID lpSid, LPSTR lpName,
+                 LPDWORD cchName, LPSTR lpReferencedDomainName,
+                 LPDWORD cchReferencedDomainName, PSID_NAME_USE peUse)
+
+
+{
+    DPRINT1("LookupAccountSidA is unimplemented, but returns success\n");
+    return TRUE;
+}
+
+
+/******************************************************************************
+ * LookupAccountSidW [ADVAPI32.@]
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+LookupAccountSidW(LPCWSTR lpSystemName, PSID lpSid, LPWSTR lpName,
+                 LPDWORD cchName, LPWSTR lpReferencedDomainName,
+                 LPDWORD cchReferencedDomainName, PSID_NAME_USE peUse)
+{
+    DPRINT1("LookupAccountSidW is unimplemented, but returns success\n");
+    return TRUE;
 }
 
 /* EOF */
