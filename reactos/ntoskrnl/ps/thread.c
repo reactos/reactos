@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.110 2003/04/28 14:32:36 fireball Exp $
+/* $Id: thread.c,v 1.111 2003/05/01 22:00:31 gvg Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -71,9 +71,10 @@ HANDLE STDCALL PsGetCurrentThreadId(VOID)
    return(PsGetCurrentThread()->Cid.UniqueThread);
 }
 
-VOID 
+static VOID 
 PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
 {
+   assert(THREAD_STATE_READY == Thread->Tcb.State);
    if (Priority >= MAXIMUM_PRIORITY || Priority < 0)
      {
 	DPRINT1("Invalid thread priority\n");
@@ -269,12 +270,19 @@ PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus)
   KIRQL oldIrql;
 
   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-  if (WaitStatus != NULL)
+  if (THREAD_STATE_TERMINATED_1 != Thread->Tcb.State)
     {
-      Thread->Tcb.WaitStatus = *WaitStatus;
+      if (WaitStatus != NULL)
+	{
+	  Thread->Tcb.WaitStatus = *WaitStatus;
+	}
+      Thread->Tcb.State = THREAD_STATE_READY;
+      PsInsertIntoThreadList(Thread->Tcb.Priority, Thread);
     }
-  Thread->Tcb.State = THREAD_STATE_READY;
-  PsInsertIntoThreadList(Thread->Tcb.Priority, Thread);
+  else
+    {
+    DPRINT("Can't unblock thread 0x%08x because it's terminating\n", Thread);
+    }
   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 }
 

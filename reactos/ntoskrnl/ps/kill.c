@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.58 2002/11/27 20:54:37 hbirr Exp $
+/* $Id: kill.c,v 1.59 2003/05/01 22:00:31 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -159,7 +159,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    PKMUTANT Mutant;
    
    CurrentThread = PsGetCurrentThread();
-   
+
    DPRINT("terminating %x\n",CurrentThread);
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
    
@@ -188,6 +188,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);   
    PsDispatchThreadNoLock(THREAD_STATE_TERMINATED_1);
+DPRINT1("Unexpected return, CurrentThread %x PsGetCurrentThread() %x\n", CurrentThread, PsGetCurrentThread());
    KeBugCheck(0);
 }
 
@@ -224,6 +225,7 @@ PsTerminateOtherThread(PETHREAD Thread,
  */
 {
   PKAPC Apc;
+  NTSTATUS Status;
 
   DPRINT("PsTerminateOtherThread(Thread %x, ExitStatus %x)\n",
 	 Thread, ExitStatus);
@@ -243,6 +245,12 @@ PsTerminateOtherThread(PETHREAD Thread,
 		   NULL,
 		   NULL,
 		   KernelMode);
+  if (THREAD_STATE_BLOCKED == Thread->Tcb.State && UserMode == Thread->Tcb.WaitMode)
+    {
+      DPRINT("Unblocking thread\n");
+      Status = STATUS_THREAD_IS_TERMINATING;
+      PsUnblockThread(Thread, &Status);
+    }
 }
 
 NTSTATUS STDCALL

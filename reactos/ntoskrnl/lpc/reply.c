@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.13 2003/04/26 23:13:32 hyperion Exp $
+/* $Id: reply.c,v 1.14 2003/05/01 22:00:31 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -220,7 +220,10 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
    
    if (!NT_SUCCESS(Status))
      {
-       DPRINT1("NtReplyWaitReceivePortEx() = %x\n", Status);
+       if (STATUS_THREAD_IS_TERMINATING != Status)
+	 {
+	   DPRINT1("NtReplyWaitReceivePortEx() = %x\n", Status);
+	 }
        ObDereferenceObject(Port);
        return(Status);
      }

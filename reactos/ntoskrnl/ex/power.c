@@ -52,6 +52,11 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
         HalReturnToFirmware (FIRMWARE_OFF);
 #else
         PopSetSystemPowerState(PowerSystemShutdown);
+        __asm__("cli\n");
+	while (TRUE)
+	  {
+	    ;
+	  }
 #endif
      }
    else if (Action == ShutdownReboot)
