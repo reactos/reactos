@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.142 2002/11/14 18:21:07 chorns Exp $
+/* $Id: main.c,v 1.143 2002/12/04 20:36:22 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -591,7 +591,7 @@ ExpInitializeExecutive(VOID)
   /*
    * Crash the system if the initial process terminates within 5 seconds.
    */
-  Timeout.QuadPart = 50000000;
+  Timeout.QuadPart = -50000000LL;
   Status = NtWaitForSingleObject(ProcessHandle,
 				 FALSE,
 				 &Timeout);
