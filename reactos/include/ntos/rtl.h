@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.17 2003/08/25 01:37:47 sedwards Exp $
+/* $Id: rtl.h,v 1.18 2003/09/02 11:14:15 ekohl Exp $
  * 
  */
 
@@ -2120,6 +2120,12 @@ VOID STDCALL RtlMapGenericMask (PACCESS_MASK AccessMask, PGENERIC_MAPPING Generi
 
 ULONG STDCALL
 RtlRandom (PULONG Seed);
+
+PRTL_SPLAY_LINKS STDCALL
+RtlSubtreePredecessor (IN PRTL_SPLAY_LINKS Links);
+
+PRTL_SPLAY_LINKS STDCALL
+RtlSubtreeSuccessor (IN PRTL_SPLAY_LINKS Links);
 
 ULONG STDCALL
 RtlUniform (PULONG Seed);
