@@ -1,11 +1,11 @@
-/* $Id:$
- * 
+/* 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/nt/event.c
  * PURPOSE:         Named event support
  * 
- * PROGRAMMERS:     Philip Susi and David Welch
+ * PROGRAMMERS:     Alex Ionescu(alex@relsoft.net) - Fixed bugs/commented
+ *                  Philip Susi and David Welch
  */
 
 /* INCLUDES *****************************************************************/
@@ -38,7 +38,7 @@ ExpInitializeEventImplementation(VOID)
 {
     /* Create the Event Object Type */
     ExEventObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
-    RtlpCreateUnicodeString(&ExEventObjectType->TypeName, L"Event", NonPagedPool);
+    RtlInitUnicodeString(&ExEventObjectType->TypeName, L"Event");
     ExEventObjectType->Tag = TAG('E', 'V', 'T', 'T');
     ExEventObjectType->PeakObjects = 0;
     ExEventObjectType->PeakHandles = 0;
@@ -73,14 +73,14 @@ NtClearEvent(IN HANDLE EventHandle)
     PAGED_CODE();
    
     /* Reference the Object */
-   Status = ObReferenceObjectByHandle(EventHandle,
-                                      EVENT_MODIFY_STATE,
-                                      ExEventObjectType,
-                                      ExGetPreviousMode(),
-                                      (PVOID*)&Event,
-                                      NULL);
+    Status = ObReferenceObjectByHandle(EventHandle,
+                                       EVENT_MODIFY_STATE,
+                                       ExEventObjectType,
+                                       ExGetPreviousMode(),
+                                       (PVOID*)&Event,
+                                       NULL);
    
-   /* Check for Success */
+    /* Check for Success */
     if(NT_SUCCESS(Status)) {
         
         /* Clear the Event and Dereference */
@@ -110,9 +110,10 @@ NtCreateEvent(OUT PHANDLE EventHandle,
     NTSTATUS Status = STATUS_SUCCESS;
    
     PAGED_CODE();
+    DPRINT("NtCreateEvent(0x%x, 0x%x, 0x%x)\n", EventHandle, DesiredAccess, ObjectAttributes);
  
     /* Check Output Safety */
-    if(PreviousMode == UserMode) {
+    if(PreviousMode != KernelMode) {
         
         _SEH_TRY {
             
@@ -188,11 +189,11 @@ NtOpenEvent(OUT PHANDLE EventHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
    
-    PAGED_CODE();
+    PAGED_CODE();    
     DPRINT("NtOpenEvent(0x%x, 0x%x, 0x%x)\n", EventHandle, DesiredAccess, ObjectAttributes);
 
     /* Check Output Safety */
-    if(PreviousMode == UserMode) {
+    if(PreviousMode != KernelMode) {
         
         _SEH_TRY {
             
@@ -315,9 +316,12 @@ NtQueryEvent(IN HANDLE EventHandle,
              OUT PULONG ReturnLength  OPTIONAL)
 {
     PKEVENT Event;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    KPROCESSOR_MODE PreviousMode  = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
     PEVENT_BASIC_INFORMATION BasicInfo = (PEVENT_BASIC_INFORMATION)EventInformation;
+    
+    PAGED_CODE();
+    DPRINT("NtQueryEvent(0x%x, 0x%x, 0x%x)\n", EventHandle, EventInformationClass);
     
     /* Check buffers and class validity */
     DefaultQueryInfoBufferCheck(EventInformationClass,
@@ -381,7 +385,6 @@ NtResetEvent(IN HANDLE EventHandle,
     NTSTATUS Status = STATUS_SUCCESS;
    
     PAGED_CODE();
-
     DPRINT("NtResetEvent(EventHandle 0%x PreviousState 0%x)\n",
             EventHandle, PreviousState);
 
@@ -449,9 +452,8 @@ NtSetEvent(IN HANDLE EventHandle,
     NTSTATUS Status = STATUS_SUCCESS;
    
     PAGED_CODE();
-
-    DPRINT1("NtSetEvent(EventHandle 0%x PreviousState 0%x)\n",
-            EventHandle, PreviousState);
+    DPRINT("NtSetEvent(EventHandle 0%x PreviousState 0%x)\n",
+           EventHandle, PreviousState);
 
     /* Check buffer validity */
     if(PreviousState != NULL && PreviousMode == UserMode) {

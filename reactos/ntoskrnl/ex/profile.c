@@ -80,7 +80,7 @@ ExpInitializeProfileImplementation(VOID)
     
     /* Create the Object Type */
     ExProfileObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
-    RtlpCreateUnicodeString(&ExProfileObjectType->TypeName, L"Profile", NonPagedPool);  
+    RtlInitUnicodeString(&ExProfileObjectType->TypeName, L"Profile");
     ExProfileObjectType->Tag = TAG('P', 'R', 'O', 'F');
     ExProfileObjectType->PeakObjects = 0;
     ExProfileObjectType->PeakHandles = 0;
@@ -121,7 +121,7 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
     NTSTATUS Status = STATUS_SUCCESS;
   
     PAGED_CODE();
-  
+
     /* Easy way out */
     if(BufferSize == 0) return STATUS_INVALID_PARAMETER_7;
 
@@ -234,9 +234,9 @@ NtQueryPerformanceCounter(OUT PLARGE_INTEGER PerformanceCounter,
                           OUT PLARGE_INTEGER PerformanceFrequency OPTIONAL)
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
     LARGE_INTEGER PerfFrequency;
-  
+    NTSTATUS Status = STATUS_SUCCESS;
+    
     /* Check the Parameters for validity */
     if(PreviousMode != KernelMode) {
         
@@ -287,7 +287,7 @@ NtStartProfile(IN HANDLE ProfileHandle)
     NTSTATUS Status;
   
     PAGED_CODE();
-  
+
     /* Get the Object */
     Status = ObReferenceObjectByHandle(ProfileHandle,
                                        PROFILE_CONTROL,
@@ -405,9 +405,9 @@ STDCALL
 NtQueryIntervalProfile(IN  KPROFILE_SOURCE ProfileSource,
                        OUT PULONG Interval)
 {
-    KPROCESSOR_MODE PreviousMode= ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     ULONG ReturnInterval;
+    NTSTATUS Status = STATUS_SUCCESS;
   
     PAGED_CODE();
     

@@ -326,7 +326,7 @@ typedef struct _CAPTURED_OBJECT_ATTRIBUTES
   HANDLE RootDirectory;
   ULONG Attributes;
   PSECURITY_DESCRIPTOR SecurityDescriptor;
-  /* PVOID SecurityQualityOfService; */
+  PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;
 } CAPTURED_OBJECT_ATTRIBUTES, *PCAPTURED_OBJECT_ATTRIBUTES;
 
 NTSTATUS

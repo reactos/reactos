@@ -986,63 +986,95 @@ KeSetAffinityThread(PKTHREAD	Thread,
 NTSTATUS STDCALL
 NtOpenThread(OUT PHANDLE ThreadHandle,
 	     IN	ACCESS_MASK DesiredAccess,
-	     IN	POBJECT_ATTRIBUTES ObjectAttributes,
-	     IN	PCLIENT_ID ClientId)
+	     IN	POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+	     IN	PCLIENT_ID ClientId  OPTIONAL)
 {
-   NTSTATUS Status = STATUS_INVALID_PARAMETER;
-   
+   KPROCESSOR_MODE PreviousMode;
+   CLIENT_ID SafeClientId;
+   HANDLE hThread;
+   NTSTATUS Status = STATUS_SUCCESS;
+
    PAGED_CODE();
 
-   if((NULL != ThreadHandle)&&(NULL != ObjectAttributes))
-   {
-      PETHREAD EThread = NULL;
+   PreviousMode = ExGetPreviousMode();
 
-      if((ClientId)
-	&& (ClientId->UniqueThread))
-      {
-         // It is an error to specify both
-	 // ObjectAttributes.ObjectName
-         // and ClientId.
-         if((ObjectAttributes)
-	   && (ObjectAttributes->ObjectName)
-	   && (0 < ObjectAttributes->ObjectName->Length))
-	 {
-            return(STATUS_INVALID_PARAMETER_MIX);
-	 }
-	 // Parameters mix OK
-         Status = PsLookupThreadByThreadId(ClientId->UniqueThread,
-                     & EThread);
-      }
-      else if((ObjectAttributes)
-	     && (ObjectAttributes->ObjectName)
-	     && (0 < ObjectAttributes->ObjectName->Length))
-      {
-         // Three Ob attributes are forbidden
-         if(!(ObjectAttributes->Attributes &
-            (OBJ_PERMANENT | OBJ_EXCLUSIVE | OBJ_OPENIF)))
-	 {
-            Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
-                        ObjectAttributes->Attributes,
-                        NULL,
-                        DesiredAccess,
-                        PsThreadType,
-                        UserMode,
-                        NULL,
-                        (PVOID*) & EThread);
-	 }
-      }
-      // EThread may be OK...
-      if(STATUS_SUCCESS == Status)
-      {
-         Status = ObCreateHandle(PsGetCurrentProcess(),
-                     EThread,
-                     DesiredAccess,
-                     FALSE,
-                     ThreadHandle);
-         ObDereferenceObject(EThread);
-      }
+   if(PreviousMode != KernelMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(ThreadHandle,
+                     sizeof(HANDLE),
+                     sizeof(ULONG));
+       if(ClientId != NULL)
+       {
+         ProbeForRead(ClientId,
+                      sizeof(CLIENT_ID),
+                      sizeof(ULONG));
+         SafeClientId = *ClientId;
+         ClientId = &SafeClientId;
+       }
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
    }
-   return(Status);
+
+   if(!((ObjectAttributes == NULL) ^ (ClientId == NULL)))
+   {
+     DPRINT("NtOpenThread should be called with either ObjectAttributes or ClientId!\n");
+     return STATUS_INVALID_PARAMETER;
+   }
+
+   if(ClientId != NULL)
+   {
+     PETHREAD Thread;
+
+     Status = PsLookupThreadByThreadId(ClientId->UniqueThread,
+                                       &Thread);
+     if(NT_SUCCESS(Status))
+     {
+       Status = ObInsertObject(Thread,
+                               NULL,
+                               DesiredAccess,
+                               0,
+                               NULL,
+                               &hThread);
+
+       ObDereferenceObject(Thread);
+     }
+   }
+   else
+   {
+     Status = ObOpenObjectByName(ObjectAttributes,
+                                 PsThreadType,
+                                 NULL,
+                                 PreviousMode,
+                                 DesiredAccess,
+                                 NULL,
+                                 &hThread);
+   }
+
+   if(NT_SUCCESS(Status))
+   {
+     _SEH_TRY
+     {
+       *ThreadHandle = hThread;
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
+
+   return Status;
 }
 
 NTSTATUS STDCALL

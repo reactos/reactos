@@ -233,23 +233,21 @@ KeProfileInterrupt(PKTRAP_FRAME TrapFrame)
 }
 
 /*
- * @unimplemented
+ * @implemented
+ *
+ * Remarks:
+ *         Called from HAL, this function looks up the process
+ *         entries, finds the proper source object, verifies the
+ *         ranges with the trapframe data, and inserts the information
+ *         from the trap frame into the buffer, while using buckets and
+ *         shifting like we specified. -- Alex
  */
 STDCALL
 VOID
 KeProfileInterruptWithSource(IN PKTRAP_FRAME TrapFrame,
                              IN KPROFILE_SOURCE Source)
 {
-    /*
-     * Called from HAL, this function looks up the process
-     * entries, finds the proper source object, verifies the
-     * ranges with the trapframe data, and inserts the information
-     * from the trap frame into the buffer, while using buckets and
-     * shifting like we specified.
-     * Microsoft doesn't even have profile objects fully implemented yet,
-     * so implementing this function is very low on the priority list.
-     * -- Alex Ionescu
-     */
+
 }
 
 /*

@@ -212,11 +212,6 @@ CmiObjectParse(PVOID ParsedObject,
 	      return(STATUS_REPARSE);
 	    }
 	}
-
-      ObReferenceObjectByPointer(FoundObject,
-				 STANDARD_RIGHTS_REQUIRED,
-				 NULL,
-				 UserMode);
     }
 
   DPRINT("CmiObjectParse: %s\n", FoundObject->Name);

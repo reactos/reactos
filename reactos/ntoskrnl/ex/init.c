@@ -27,6 +27,9 @@ extern ULONG_PTR LastKrnlPhysAddr;
 extern ULONG_PTR LastKernelAddress;
 extern LOADER_MODULE KeLoaderModules[64];
 extern PRTL_MESSAGE_RESOURCE_DATA KiBugCodeMessages;
+extern LIST_ENTRY KiProfileListHead;
+extern LIST_ENTRY KiProfileSourceListHead;
+extern KSPIN_LOCK KiProfileLock;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -408,12 +411,17 @@ ExpInitializeExecutive(VOID)
     
     /* Initialize the kernel debugger */
     KdInitSystem (1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
-
+    
     /* Initialize the Dispatcher, Clock and Bug Check Mechanisms. */
     KeInit2();
 
     /* Bring back the IRQL to Passive */
     KeLowerIrql(PASSIVE_LEVEL);
+    
+    /* Initialize Profiling */
+    InitializeListHead(&KiProfileListHead);
+    InitializeListHead(&KiProfileSourceListHead);
+    KeInitializeSpinLock(&KiProfileLock);
     
     /* Cache the Bugcheck Message Strings. Prepare the Lookup Data */
     ResourceInfo.Type = 11;

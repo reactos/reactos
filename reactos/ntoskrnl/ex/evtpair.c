@@ -4,7 +4,8 @@
  * FILE:            ntoskrnl/ex/evtpair.c
  * PURPOSE:         Support for event pairs
  *
- * PROGRAMMERS:     Alex Ionescu (Commented, reorganized, removed Thread Pair, used KeInitializeEventPair, added SEH)
+ * PROGRAMMERS:     Alex Ionescu (Commented, reorganized, removed Thread Pair, used
+ *                                KeInitializeEventPair, added SEH)
  *                  David Welch (welch@mcmail.com)
  *                  Skywing (skywing@valhallalegends.com)
  */
@@ -34,7 +35,7 @@ ExpInitializeEventPairImplementation(VOID)
 {
     /* Create the Event Pair Object Type */
     ExEventPairObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
-    RtlpCreateUnicodeString(&ExEventPairObjectType->TypeName, L"EventPair", NonPagedPool);
+    RtlInitUnicodeString(&ExEventPairObjectType->TypeName, L"EventPair");
     ExEventPairObjectType->Tag = TAG('E', 'v', 'P', 'a');
     ExEventPairObjectType->PeakObjects = 0;
     ExEventPairObjectType->PeakHandles = 0;
@@ -67,7 +68,8 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
     
-    DPRINT1("NtCreateEventPair: %x\n", EventPairHandle);
+    PAGED_CODE();
+    DPRINT("NtCreateEventPair: %x\n", EventPairHandle);
    
     /* Check Output Safety */
     if(PreviousMode == UserMode) {
@@ -87,7 +89,7 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
     }
     
     /* Create the Object */
-    DPRINT1("Creating EventPair\n");
+    DPRINT("Creating EventPair\n");
     Status = ObCreateObject(PreviousMode,
                             ExEventPairObjectType,
                             ObjectAttributes,
@@ -102,7 +104,7 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
     if(NT_SUCCESS(Status)) {
         
         /* Initalize the Event */
-        DPRINT1("Initializing EventPair\n");
+        DPRINT("Initializing EventPair\n");
         KeInitializeEventPair(EventPair);
         
         /* Insert it */
@@ -133,7 +135,6 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
     return Status;
 }
 
-
 NTSTATUS 
 STDCALL
 NtOpenEventPair(OUT PHANDLE EventPairHandle,
@@ -143,6 +144,8 @@ NtOpenEventPair(OUT PHANDLE EventPairHandle,
     HANDLE hEventPair;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
+    
+    PAGED_CODE();
    
     /* Check Output Safety */
     if(PreviousMode == UserMode) {
@@ -196,8 +199,9 @@ NtSetHighEventPair(IN HANDLE EventPairHandle)
     PKEVENT_PAIR EventPair;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
-
-    DPRINT1("NtSetHighEventPair(EventPairHandle %x)\n", EventPairHandle);
+    
+    PAGED_CODE();
+    DPRINT("NtSetHighEventPair(EventPairHandle %x)\n", EventPairHandle);
    
     /* Open the Object */
     Status = ObReferenceObjectByHandle(EventPairHandle,
@@ -221,7 +225,6 @@ NtSetHighEventPair(IN HANDLE EventPairHandle)
     return Status;
 }
 
-
 NTSTATUS
 STDCALL
 NtSetHighWaitLowEventPair(IN HANDLE EventPairHandle)
@@ -229,8 +232,9 @@ NtSetHighWaitLowEventPair(IN HANDLE EventPairHandle)
     PKEVENT_PAIR EventPair;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
-
-    DPRINT1("NtSetHighWaitLowEventPair(EventPairHandle %x)\n", EventPairHandle);
+    
+    PAGED_CODE();
+    DPRINT("NtSetHighWaitLowEventPair(EventPairHandle %x)\n", EventPairHandle);
     
     /* Open the Object */
     Status = ObReferenceObjectByHandle(EventPairHandle,
@@ -266,8 +270,12 @@ STDCALL
 NtSetLowEventPair(IN HANDLE EventPairHandle)
 {
     PKEVENT_PAIR EventPair;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    KPROCESSOR_MODE PreviousMode;
     NTSTATUS Status;
+    
+    PAGED_CODE();
+    
+    PreviousMode = ExGetPreviousMode();
 
     DPRINT1("NtSetHighEventPair(EventPairHandle %x)\n", EventPairHandle);
    
@@ -300,8 +308,9 @@ NtSetLowWaitHighEventPair(IN HANDLE EventPairHandle)
     PKEVENT_PAIR EventPair;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
-
-    DPRINT1("NtSetHighWaitLowEventPair(EventPairHandle %x)\n", EventPairHandle);
+    
+    PAGED_CODE();
+    DPRINT("NtSetHighWaitLowEventPair(EventPairHandle %x)\n", EventPairHandle);
     
     /* Open the Object */
     Status = ObReferenceObjectByHandle(EventPairHandle,
@@ -340,8 +349,9 @@ NtWaitLowEventPair(IN HANDLE EventPairHandle)
     PKEVENT_PAIR EventPair;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
-
-    DPRINT1("NtSetHighWaitLowEventPair(EventPairHandle %x)\n", EventPairHandle);
+    
+    PAGED_CODE();
+    DPRINT("NtSetHighWaitLowEventPair(EventPairHandle %x)\n", EventPairHandle);
     
     /* Open the Object */
     Status = ObReferenceObjectByHandle(EventPairHandle,
@@ -376,8 +386,9 @@ NtWaitHighEventPair(IN HANDLE EventPairHandle)
     PKEVENT_PAIR EventPair;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
-
-    DPRINT1("NtSetHighWaitLowEventPair(EventPairHandle %x)\n", EventPairHandle);
+    
+    PAGED_CODE();
+    DPRINT("NtSetHighWaitLowEventPair(EventPairHandle %x)\n", EventPairHandle);
     
     /* Open the Object */
     Status = ObReferenceObjectByHandle(EventPairHandle,
@@ -386,7 +397,7 @@ NtWaitHighEventPair(IN HANDLE EventPairHandle)
                                        PreviousMode,
                                        (PVOID*)&EventPair,
                                        NULL);
-    
+
     /* Check for Success */
     if(NT_SUCCESS(Status)) {
                

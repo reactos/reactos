@@ -108,6 +108,159 @@ SepInitSDs(VOID)
   return TRUE;
 }
 
+
+NTSTATUS
+SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+                                   IN KPROCESSOR_MODE AccessMode,
+                                   IN POOL_TYPE PoolType,
+                                   IN BOOLEAN CaptureIfKernel,
+                                   OUT PSECURITY_QUALITY_OF_SERVICE *CapturedSecurityQualityOfService,
+                                   OUT PBOOLEAN Present)
+{
+  PSECURITY_QUALITY_OF_SERVICE CapturedQos;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+  PAGED_CODE();
+
+  ASSERT(CapturedSecurityQualityOfService);
+  ASSERT(Present);
+
+  if(ObjectAttributes != NULL)
+  {
+    if(AccessMode != KernelMode)
+    {
+      SECURITY_QUALITY_OF_SERVICE SafeQos;
+
+      _SEH_TRY
+      {
+        ProbeForRead(ObjectAttributes,
+                     sizeof(ObjectAttributes),
+                     sizeof(ULONG));
+        if(ObjectAttributes->Length == sizeof(OBJECT_ATTRIBUTES))
+        {
+          if(ObjectAttributes->SecurityQualityOfService != NULL)
+          {
+            ProbeForRead(ObjectAttributes->SecurityQualityOfService,
+                         sizeof(SECURITY_QUALITY_OF_SERVICE),
+                         sizeof(ULONG));
+
+            /* don't allocate memory here because ExAllocate should bugcheck
+               the system if it's buggy, SEH would catch that! So make a local
+               copy of the qos structure.*/
+            SafeQos = *(PSECURITY_QUALITY_OF_SERVICE)ObjectAttributes->SecurityQualityOfService;
+            *Present = TRUE;
+          }
+          else
+          {
+            *CapturedSecurityQualityOfService = NULL;
+            *Present = FALSE;
+          }
+        }
+        else
+        {
+          Status = STATUS_INVALID_PARAMETER;
+        }
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+
+      if(NT_SUCCESS(Status) && *Present)
+      {
+        if(SafeQos.Length == sizeof(SECURITY_QUALITY_OF_SERVICE))
+        {
+          CapturedQos = ExAllocatePool(PoolType,
+                                       sizeof(SECURITY_QUALITY_OF_SERVICE));
+          if(CapturedQos != NULL)
+          {
+            *CapturedQos = SafeQos;
+          }
+          else
+          {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+          }
+        }
+        else
+        {
+          Status = STATUS_INVALID_PARAMETER;
+        }
+      }
+    }
+    else
+    {
+      if(ObjectAttributes->Length == sizeof(OBJECT_ATTRIBUTES))
+      {
+        if(CaptureIfKernel)
+        {
+          if(ObjectAttributes->SecurityQualityOfService != NULL)
+          {
+            if(((PSECURITY_QUALITY_OF_SERVICE)ObjectAttributes->SecurityQualityOfService)->Length ==
+               sizeof(SECURITY_QUALITY_OF_SERVICE))
+            {
+              CapturedQos = ExAllocatePool(PoolType,
+                                           sizeof(SECURITY_QUALITY_OF_SERVICE));
+              if(CapturedQos != NULL)
+              {
+                *CapturedQos = *(PSECURITY_QUALITY_OF_SERVICE)ObjectAttributes->SecurityQualityOfService;
+                *CapturedSecurityQualityOfService = CapturedQos;
+                *Present = TRUE;
+              }
+              else
+              {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+              }
+            }
+            else
+            {
+              Status = STATUS_INVALID_PARAMETER;
+            }
+          }
+          else
+          {
+            *CapturedSecurityQualityOfService = NULL;
+            *Present = FALSE;
+          }
+        }
+        else
+        {
+          *CapturedSecurityQualityOfService = (PSECURITY_QUALITY_OF_SERVICE)ObjectAttributes->SecurityQualityOfService;
+          *Present = (ObjectAttributes->SecurityQualityOfService) != NULL;
+        }
+      }
+      else
+      {
+        Status = STATUS_INVALID_PARAMETER;
+      }
+    }
+  }
+  else
+  {
+    *CapturedSecurityQualityOfService = NULL;
+    *Present = FALSE;
+  }
+
+  return Status;
+}
+
+
+VOID
+SepReleaseSecurityQualityOfService(IN PSECURITY_QUALITY_OF_SERVICE CapturedSecurityQualityOfService  OPTIONAL,
+                                   IN KPROCESSOR_MODE AccessMode,
+                                   IN BOOLEAN CaptureIfKernel)
+{
+  PAGED_CODE();
+  
+  if(CapturedSecurityQualityOfService != NULL &&
+     (AccessMode == UserMode ||
+      (AccessMode == KernelMode && CaptureIfKernel)))
+  {
+    ExFreePool(CapturedSecurityQualityOfService);
+  }
+}
+
+
 /*
  * @implemented
  */
@@ -129,6 +282,8 @@ SeCaptureSecurityDescriptor(
   ULONG DescriptorSize = 0;
   NTSTATUS Status = STATUS_SUCCESS;
   
+  PAGED_CODE();
+  
   if(OriginalSecurityDescriptor != NULL)
   {
     if(CurrentMode != KernelMode)
@@ -144,39 +299,40 @@ SeCaptureSecurityDescriptor(
                      DescriptorSize,
                      sizeof(ULONG));
 
-        if(OriginalSecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
+        if(OriginalSecurityDescriptor->Revision == SECURITY_DESCRIPTOR_REVISION1)
         {
-          Status = STATUS_UNKNOWN_REVISION;
-          _SEH_LEAVE;
-        }
-        
-        /* make a copy on the stack */
-        DescriptorCopy.Revision = OriginalSecurityDescriptor->Revision;
-        DescriptorCopy.Sbz1 = OriginalSecurityDescriptor->Sbz1;
-        DescriptorCopy.Control = OriginalSecurityDescriptor->Control;
-        DescriptorSize = ((DescriptorCopy.Control & SE_SELF_RELATIVE) ?
-                          sizeof(SECURITY_DESCRIPTOR_RELATIVE) : sizeof(SECURITY_DESCRIPTOR));
+          /* make a copy on the stack */
+          DescriptorCopy.Revision = OriginalSecurityDescriptor->Revision;
+          DescriptorCopy.Sbz1 = OriginalSecurityDescriptor->Sbz1;
+          DescriptorCopy.Control = OriginalSecurityDescriptor->Control;
+          DescriptorSize = ((DescriptorCopy.Control & SE_SELF_RELATIVE) ?
+                            sizeof(SECURITY_DESCRIPTOR_RELATIVE) : sizeof(SECURITY_DESCRIPTOR));
 
-        /* probe and copy the entire security descriptor structure. The SIDs
-           and ACLs will be probed and copied later though */
-        ProbeForRead(OriginalSecurityDescriptor,
-                     DescriptorSize,
-                     sizeof(ULONG));
-        if(DescriptorCopy.Control & SE_SELF_RELATIVE)
-        {
-          PSECURITY_DESCRIPTOR_RELATIVE RelSD = (PSECURITY_DESCRIPTOR_RELATIVE)OriginalSecurityDescriptor;
-          
-          DescriptorCopy.Owner = (PSID)RelSD->Owner;
-          DescriptorCopy.Group = (PSID)RelSD->Group;
-          DescriptorCopy.Sacl = (PACL)RelSD->Sacl;
-          DescriptorCopy.Dacl = (PACL)RelSD->Dacl;
+          /* probe and copy the entire security descriptor structure. The SIDs
+             and ACLs will be probed and copied later though */
+          ProbeForRead(OriginalSecurityDescriptor,
+                       DescriptorSize,
+                       sizeof(ULONG));
+          if(DescriptorCopy.Control & SE_SELF_RELATIVE)
+          {
+            PSECURITY_DESCRIPTOR_RELATIVE RelSD = (PSECURITY_DESCRIPTOR_RELATIVE)OriginalSecurityDescriptor;
+
+            DescriptorCopy.Owner = (PSID)RelSD->Owner;
+            DescriptorCopy.Group = (PSID)RelSD->Group;
+            DescriptorCopy.Sacl = (PACL)RelSD->Sacl;
+            DescriptorCopy.Dacl = (PACL)RelSD->Dacl;
+          }
+          else
+          {
+            DescriptorCopy.Owner = OriginalSecurityDescriptor->Owner;
+            DescriptorCopy.Group = OriginalSecurityDescriptor->Group;
+            DescriptorCopy.Sacl = OriginalSecurityDescriptor->Sacl;
+            DescriptorCopy.Dacl = OriginalSecurityDescriptor->Dacl;
+          }
         }
         else
         {
-          DescriptorCopy.Owner = OriginalSecurityDescriptor->Owner;
-          DescriptorCopy.Group = OriginalSecurityDescriptor->Group;
-          DescriptorCopy.Sacl = OriginalSecurityDescriptor->Sacl;
-          DescriptorCopy.Dacl = OriginalSecurityDescriptor->Dacl;
+          Status = STATUS_UNKNOWN_REVISION;
         }
       }
       _SEH_HANDLE
@@ -572,6 +728,8 @@ SeReleaseSecurityDescriptor(
 	IN BOOLEAN CaptureIfKernelMode
 	)
 {
+  PAGED_CODE();
+  
   /* WARNING! You need to call this function with the same value for CurrentMode
               and CaptureIfKernelMode that you previously passed to
               SeCaptureSecurityDescriptor() in order to avoid memory leaks! */

@@ -37,7 +37,7 @@ ExpInitializeSemaphoreImplementation(VOID)
     
     /* Create the Semaphore Object */
     ExSemaphoreObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-    RtlpCreateUnicodeString(&ExSemaphoreObjectType->TypeName, L"Semaphore", NonPagedPool);
+    RtlInitUnicodeString(&ExSemaphoreObjectType->TypeName, L"Semaphore");
     ExSemaphoreObjectType->Tag = TAG('S', 'E', 'M', 'T');
     ExSemaphoreObjectType->PeakObjects = 0;
     ExSemaphoreObjectType->PeakHandles = 0;
@@ -78,7 +78,7 @@ NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
     PAGED_CODE();
 
     /* Check Output Safety */
-    if(PreviousMode == UserMode) {
+    if(PreviousMode != KernelMode) {
         
         _SEH_TRY {
             
@@ -147,7 +147,6 @@ NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
     /* Return Status */
     return Status;
 }
-
 
 /*
  * @implemented
@@ -221,11 +220,10 @@ NtQuerySemaphore(IN HANDLE SemaphoreHandle,
 {
     PKSEMAPHORE Semaphore;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    PSEMAPHORE_BASIC_INFORMATION BasicInfo = (PSEMAPHORE_BASIC_INFORMATION)SemaphoreInformation;
     NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
-               
+
     /* Check buffers and class validity */
     DefaultQueryInfoBufferCheck(SemaphoreInformationClass,
                                 ExSemaphoreInfoClass,
@@ -254,7 +252,9 @@ NtQuerySemaphore(IN HANDLE SemaphoreHandle,
    
         _SEH_TRY {
             
-             /* Return the basic information */             
+            PSEMAPHORE_BASIC_INFORMATION BasicInfo = (PSEMAPHORE_BASIC_INFORMATION)SemaphoreInformation;
+            
+            /* Return the basic information */
             BasicInfo->CurrentCount = KeReadStateSemaphore(Semaphore);
             BasicInfo->MaximumCount = Semaphore->Limit;
 
@@ -284,12 +284,12 @@ NtReleaseSemaphore(IN HANDLE SemaphoreHandle,
                    IN LONG ReleaseCount,
                    OUT PLONG PreviousCount  OPTIONAL)
 {
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PKSEMAPHORE Semaphore;
     NTSTATUS Status = STATUS_SUCCESS; 
    
     PAGED_CODE();
-
+    
     /* Check buffer validity */
     if(PreviousCount != NULL && PreviousMode == UserMode) {
         

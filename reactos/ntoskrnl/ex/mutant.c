@@ -4,8 +4,7 @@
  * FILE:            ntoskrnl/ex/mutant.c
  * PURPOSE:         Executive Management of Mutants
  * 
- * PROGRAMMERS:     
- *                  Alex Ionescu - Fix tab/space mismatching, tiny fixes to query function and
+ * PROGRAMMERS:     Alex Ionescu - Fix tab/space mismatching, tiny fixes to query function and
  *                                 add more debug output.
  *                  David Welch (welch@cwcom.net)
  */
@@ -55,7 +54,7 @@ ExpInitializeMutantImplementation(VOID)
     ExMutantObjectType = ExAllocatePoolWithTag(NonPagedPool, sizeof(OBJECT_TYPE), TAG('M', 't', 'n', 't'));
 
     /* Create the Object Type */
-    RtlpCreateUnicodeString(&ExMutantObjectType->TypeName, L"Mutant", NonPagedPool);
+    RtlInitUnicodeString(&ExMutantObjectType->TypeName, L"Mutant");
     ExMutantObjectType->Tag = TAG('M', 't', 'n', 't');
     ExMutantObjectType->PeakObjects = 0;
     ExMutantObjectType->PeakHandles = 0;
@@ -92,6 +91,7 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
     PKMUTANT Mutant;
     NTSTATUS Status = STATUS_SUCCESS;
     
+    PAGED_CODE();
     DPRINT("NtCreateMutant(0x%x, 0x%x, 0x%x)\n", MutantHandle, DesiredAccess, ObjectAttributes);
   
     /* Check Output Safety */
@@ -157,7 +157,6 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
     return Status;
 }
 
-
 /*
  * @implemented
  */
@@ -171,8 +170,7 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
   
-   PAGED_CODE();
-
+    PAGED_CODE();
     DPRINT("NtOpenMutant(0x%x, 0x%x, 0x%x)\n", MutantHandle, DesiredAccess, ObjectAttributes);
 
     /* Check Output Safety */
@@ -235,6 +233,8 @@ NtQueryMutant(IN HANDLE MutantHandle,
     NTSTATUS Status = STATUS_SUCCESS;
     PMUTANT_BASIC_INFORMATION BasicInfo = (PMUTANT_BASIC_INFORMATION)MutantInformation;
     
+    PAGED_CODE();
+    
     /* Check buffers and parameters */
     DefaultQueryInfoBufferCheck(MutantInformationClass,
                                 ExMutantInfoClass,
@@ -245,11 +245,9 @@ NtQueryMutant(IN HANDLE MutantHandle,
                                 &Status);
     if(!NT_SUCCESS(Status)) {
         
-        DPRINT1("NtQueryMutant() failed, Status: 0x%x\n", Status);
+        DPRINT("NtQueryMutant() failed, Status: 0x%x\n", Status);
         return Status;
     }
-   
-   PAGED_CODE();
 
     /* Open the Object */
     Status = ObReferenceObjectByHandle(MutantHandle,
@@ -264,7 +262,7 @@ NtQueryMutant(IN HANDLE MutantHandle,
          _SEH_TRY {
              
             /* Fill out the Basic Information Requested */
-            DPRINT1("Returning Mutant Information\n");
+            DPRINT("Returning Mutant Information\n");
             BasicInfo->CurrentCount = KeReadStateMutant(Mutant);
             BasicInfo->OwnedByCaller = (Mutant->OwnerThread == KeGetCurrentThread());
             BasicInfo->AbandonedState = Mutant->Abandoned;
@@ -300,7 +298,6 @@ NtReleaseMutant(IN HANDLE MutantHandle,
     NTSTATUS Status = STATUS_SUCCESS;
    
     PAGED_CODE();
-
     DPRINT("NtReleaseMutant(MutantHandle 0%x PreviousCount 0%x)\n", 
             MutantHandle, 
             PreviousCount);
@@ -333,9 +330,11 @@ NtReleaseMutant(IN HANDLE MutantHandle,
     /* Check for Success and release if such */
     if(NT_SUCCESS(Status)) {
         
+        LONG Prev;
+        
         /* Save the Old State */
-        DPRINT1("Releasing Mutant\n");
-        LONG Prev = KeReleaseMutant(Mutant, MUTANT_INCREMENT, FALSE, FALSE);
+        DPRINT("Releasing Mutant\n");
+        Prev = KeReleaseMutant(Mutant, MUTANT_INCREMENT, FALSE, FALSE);
         ObDereferenceObject(Mutant);
 
         /* Return it */        
