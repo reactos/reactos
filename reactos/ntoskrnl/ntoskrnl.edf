@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.99 2001/08/21 20:13:08 chorns Exp $
+; $Id: ntoskrnl.edf,v 1.100 2001/09/03 20:41:52 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -434,12 +434,12 @@ LdrAccessResource=LdrAccessResource@16
 ;LdrFindResourceDirectory_U@16
 LdrFindResource_U=LdrFindResource_U@16
 ;LpcRequestPort@8
-;LsaCallAuthenticationPackage
-;LsaDeregisterLogonProcess
-;LsaFreeReturnBuffer
-;LsaLogonUser
-;LsaLookupAuthenticationPackage
-;LsaRegisterLogonProcess
+LsaCallAuthenticationPackage=LsaCallAuthenticationPackage@28
+LsaDeregisterLogonProcess=LsaDeregisterLogonProcess@8
+LsaFreeReturnBuffer=LsaFreeReturnBuffer@4
+LsaLogonUser=LsaLogonUser@56
+LsaLookupAuthenticationPackage=LsaLookupAuthenticationPackage@12
+LsaRegisterLogonProcess=LsaRegisterLogonProcess@12
 MmAdjustWorkingSetSize=MmAdjustWorkingSetSize@12
 MmAllocateContiguousAlignedMemory=MmAllocateContiguousAlignedMemory@16
 MmAllocateContiguousMemory=MmAllocateContiguousMemory@12

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.52 2001/09/02 17:31:00 dwelch Exp $
+# $Id: Makefile,v 1.53 2001/09/03 20:41:52 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -244,6 +244,7 @@ OBJECTS_FS = \
 OBJECTS_SE = \
 	se/access.o \
 	se/acl.o \
+	se/lsa.o \
 	se/luid.o \
 	se/priv.o \
 	se/sd.o \

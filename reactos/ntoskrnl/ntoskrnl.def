@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.113 2001/08/21 20:13:08 chorns Exp $
+; $Id: ntoskrnl.def,v 1.114 2001/09/03 20:41:52 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -434,12 +434,12 @@ LdrAccessResource@16
 ;LdrFindResourceDirectory_U@16
 LdrFindResource_U@16
 ;LpcRequestPort@8
-;LsaCallAuthenticationPackage
-;LsaDeregisterLogonProcess
-;LsaFreeReturnBuffer
-;LsaLogonUser
-;LsaLookupAuthenticationPackage
-;LsaRegisterLogonProcess
+LsaCallAuthenticationPackage@28
+LsaDeregisterLogonProcess@8
+LsaFreeReturnBuffer@4
+LsaLogonUser@56
+LsaLookupAuthenticationPackage@12
+LsaRegisterLogonProcess@12
 MmAdjustWorkingSetSize@12
 MmAllocateContiguousAlignedMemory@16
 MmAllocateContiguousMemory@12
