@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.106 2002/09/08 10:23:40 chorns Exp $
+/* $Id: thread.c,v 1.107 2003/03/19 23:08:46 gdalsnes Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -286,7 +286,7 @@ PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus)
 
 VOID
 PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode, 
-	      BOOLEAN DispatcherLock, KIRQL WaitIrql)
+	      BOOLEAN DispatcherLock, KIRQL WaitIrql, UCHAR WaitReason)
 {
   KIRQL oldIrql;
   PKTHREAD KThread = KeGetCurrentKPCR()->CurrentThread;
@@ -324,7 +324,9 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
       Thread->Tcb.Alertable = Alertable;
       Thread->Tcb.WaitMode = WaitMode;
       Thread->Tcb.WaitIrql = WaitIrql;
+      Thread->Tcb.WaitReason = WaitReason;
       PsDispatchThreadNoLock(THREAD_STATE_BLOCKED);
+
       if (Status != NULL)
 	{
 	  *Status = Thread->Tcb.WaitStatus;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.43 2002/09/08 10:23:23 chorns Exp $
+/* $Id: ps.h,v 1.44 2003/03/19 23:12:41 gdalsnes Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -474,7 +474,7 @@ VOID PsUnfreezeProcessThreads(PEPROCESS Process);
 PEPROCESS PsGetNextProcess(PEPROCESS OldProcess);
 VOID
 PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode, 
-	      BOOLEAN DispatcherLock, KIRQL WaitIrql);
+	      BOOLEAN DispatcherLock, KIRQL WaitIrql, UCHAR WaitReason);
 VOID
 PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus);
 VOID
