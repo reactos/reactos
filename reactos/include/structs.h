@@ -443,7 +443,24 @@ typedef struct tagLOGFONT {
   BYTE lfPitchAndFamily; 
   TCHAR lfFaceName[LF_FACESIZE]; 
 } LOGFONT, *LPLOGFONT, *PLOGFONT; 
- 
+
+typedef struct tagLOGFONTW { 
+  LONG lfHeight; 
+  LONG lfWidth; 
+  LONG lfEscapement; 
+  LONG lfOrientation; 
+  LONG lfWeight; 
+  BYTE lfItalic; 
+  BYTE lfUnderline; 
+  BYTE lfStrikeOut; 
+  BYTE lfCharSet; 
+  BYTE lfOutPrecision; 
+  BYTE lfClipPrecision; 
+  BYTE lfQuality; 
+  BYTE lfPitchAndFamily; 
+  LPWSTR lfFaceName; 
+} LOGFONTW, *LPLOGFONTW, *PLOGFONTW;
+
 typedef struct { 
   DWORD        lStructSize; 
   HWND         hwndOwner; 

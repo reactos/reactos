@@ -465,9 +465,9 @@ typedef struct _COLORINFO
 typedef struct _DEVINFO 
 {
   ULONG  flGraphicsCaps;
-  LOGFONT  lfDefaultFont;
-  LOGFONT  lfAnsiVarFont;
-  LOGFONT  lfAnsiFixFont;
+  LOGFONTW  lfDefaultFont;
+  LOGFONTW  lfAnsiVarFont;
+  LOGFONTW  lfAnsiFixFont;
   ULONG  cFonts;
   ULONG  iDitherFormat;
   USHORT  cxDither;
