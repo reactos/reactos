@@ -1,5 +1,9 @@
 2003-04-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* tools/.cvsignore: Ignore rline.
+
+2003-04-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* bootcd.bat: Install dosmbr.bin.
 	* drivers/storage/disk/disk.c (DiskClassDeviceControl): Pass physical
 	device object to IoWritePartitionTable().

@@ -2,6 +2,7 @@
 buildno
 depends
 rcopy
+rline
 rmkdir
 rrmdir
 mkconfig
