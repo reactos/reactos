@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.27 2003/08/28 18:04:59 weiden Exp $
+/* $Id: stubs.c,v 1.28 2003/09/12 12:54:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -581,15 +581,6 @@ NtUserGetCPD(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetDoubleClickTime(VOID)
 {
   UNIMPLEMENTED
 

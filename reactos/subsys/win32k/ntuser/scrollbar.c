@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.13 2003/09/08 18:50:00 weiden Exp $
+/* $Id: scrollbar.c,v 1.14 2003/09/12 12:54:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -120,17 +120,15 @@ IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
   switch (nBar)
     {
     case SB_HORZ:
-      lprect->left = ClientRect.left - WindowRect.left;
+      lprect->left = ClientRect.left - WindowRect.left + 1;
       lprect->top = ClientRect.bottom - WindowRect.top;
-      lprect->right = ClientRect.right - WindowRect.left;
+      lprect->right = ClientRect.right - WindowRect.left - 1;
       lprect->bottom = lprect->top + NtUserGetSystemMetrics (SM_CYHSCROLL);
       if (Window->Style & WS_BORDER)
 	{
 	  lprect->left--;
 	  lprect->right++;
 	}
-      else if (Window->Style & WS_VSCROLL)
-	lprect->right++;
       vertical = FALSE;
       break;
 
@@ -166,76 +164,63 @@ IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
 BOOL FASTCALL
 IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPSCROLLINFO psi)
 {
-  INT xThumb, yThumb, ThumbBox, cxy;
+  INT Thumb, ThumbBox, ThumbPos, cxy, mx;
   switch(idObject)
   {
     case SB_HORZ:
-      xThumb = NtUserGetSystemMetrics(SM_CXHSCROLL);
+      Thumb = NtUserGetSystemMetrics(SM_CXHSCROLL);
       cxy = psbi->rcScrollBar.right - psbi->rcScrollBar.left;
-      if(cxy < (2 * xThumb))
-      {
-        xThumb = cxy / 2;
-        psbi->xyThumbTop = 0;
-        psbi->xyThumbBottom = 0;
-      }
-      else
-      {
-        ThumbBox = psi->nPage ? MINTRACKTHUMB : NtUserGetSystemMetrics(SM_CXHTHUMB);
-        cxy -= (2 * xThumb);
-        if(cxy >= ThumbBox)
-        {
-          if(psi->nPage)
-          {
-            ThumbBox = max(IntMulDiv(cxy, psi->nPage, psi->nMax - psi->nMin + 1), ThumbBox);
-          }
-          psbi->xyThumbTop = xThumb;
-          psbi->xyThumbBottom = xThumb + ThumbBox;
-        }
-        else
-        {
-          psbi->xyThumbTop = 0;
-          psbi->xyThumbBottom = 0;
-        }
-      }
-      psbi->dxyLineButton = xThumb;
-      return TRUE;
+      break;
     case SB_VERT:
-      yThumb = NtUserGetSystemMetrics(SM_CYVSCROLL);
+      Thumb = NtUserGetSystemMetrics(SM_CYVSCROLL);
       cxy = psbi->rcScrollBar.bottom - psbi->rcScrollBar.top;
-      if(cxy < (2 * yThumb))
-      {
-        yThumb = cxy / 2;
-        psbi->xyThumbTop = 0;
-        psbi->xyThumbBottom = 0;
-      }
-      else
-      {
-        ThumbBox = psi->nPage ? MINTRACKTHUMB : NtUserGetSystemMetrics(SM_CYVTHUMB);
-        cxy -= (2 * yThumb);
-        if(cxy >= ThumbBox)
-        {
-          if(psi->nPage)
-          {
-            ThumbBox = max(IntMulDiv(cxy, psi->nPage, psi->nMax - psi->nMin + 1), ThumbBox);
-          }
-          psbi->xyThumbTop = yThumb;
-          psbi->xyThumbBottom = yThumb + ThumbBox;
-        }
-        else
-        {
-          psbi->xyThumbTop = 0;
-          psbi->xyThumbBottom = 0;
-        }
-      }
-      psbi->dxyLineButton = yThumb;
-      return TRUE;
+      break;
     case SB_CTL:
       /* FIXME */
       return FALSE;
     default:
       return FALSE;
   }
-  return FALSE;
+
+  ThumbPos = Thumb;
+  /* calculate Thumb */
+  if(cxy <= (2 * Thumb))
+  {
+    Thumb = cxy / 2;
+    psbi->xyThumbTop = 0;
+    psbi->xyThumbBottom = 0;
+    ThumbPos = Thumb;
+  }
+  else
+  {
+    ThumbBox = psi->nPage ? MINTRACKTHUMB : NtUserGetSystemMetrics(SM_CXHTHUMB);
+    cxy -= (2 * Thumb);
+    if(cxy >= ThumbBox)
+    {
+      if(psi->nPage)
+      {
+        ThumbBox = max(IntMulDiv(cxy, psi->nPage, psi->nMax - psi->nMin + 1), ThumbBox);
+      }
+      
+      if(cxy > ThumbBox)
+      {
+        mx = psi->nMax - max(psi->nPage - 1, 0);
+        if(psi->nMin < mx)
+          ThumbPos = Thumb + IntMulDiv(cxy, psi->nPos - psi->nMin, psi->nMax - psi->nMin + 1);
+      }
+      
+      psbi->xyThumbTop = ThumbPos;
+      psbi->xyThumbBottom = ThumbPos + ThumbBox;
+    }
+    else
+    {
+      psbi->xyThumbTop = 0;
+      psbi->xyThumbBottom = 0;
+    }
+  }
+  psbi->dxyLineButton = Thumb;
+
+  return TRUE;
 }
 
 DWORD FASTCALL 
@@ -443,7 +428,16 @@ STDCALL
 NtUserGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
 {
   PWINDOW_OBJECT Window;
+  LPSCROLLINFO psi;
+  UINT Mask;
   PSCROLLBARINFO Info = NULL;
+  
+  if(!lpsi || ((lpsi->cbSize != sizeof(SCROLLINFO)) && 
+               (lpsi->cbSize != sizeof(SCROLLINFO) - sizeof(lpsi->nTrackPos))))
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
   
   Window = IntGetWindowObject(hwnd);
 
@@ -457,20 +451,49 @@ NtUserGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
   {
     case SB_HORZ:
       Info = Window->pHScroll;
-      break;
+      if(Info)
+        break;
+      /* fall through */
     case SB_VERT:
       Info = Window->pVScroll;
-      break;
+      if(Info)
+        break;
+      /* fall through */
     case SB_CTL:
       Info = Window->wExtra;
-      break;
+      if(Info)
+        break;
+      /* fall through */
     default:
       IntReleaseWindowObject(Window);
       return FALSE;
   }
   
+  psi = (LPSCROLLINFO)((PSCROLLBARINFO)(Info + 1));
+  
+  if(lpsi->fMask == SIF_ALL)
+    Mask = SIF_PAGE | SIF_POS | SIF_RANGE | SIF_TRACKPOS;
+  else
+    Mask = lpsi->fMask;
+
+  if(Mask & SIF_PAGE)
+  {
+    lpsi->nPage = psi->nPage;
+  }
+  
+  if(Mask & SIF_POS)
+  {
+    lpsi->nPos = psi->nPos;
+  }
+  
+  if(Mask & SIF_RANGE)
+  {
+    lpsi->nMin = psi->nMin;
+    lpsi->nMax = psi->nMax;
+  }
+  
   IntReleaseWindowObject(Window);
-  return FALSE;
+  return TRUE;
 }
 
 
@@ -547,7 +570,7 @@ STDCALL
 NtUserSetScrollInfo(
   HWND hwnd, 
   int fnBar, 
-  LPCSCROLLINFO lpsi, 
+  LPSCROLLINFO lpsi, 
   WINBOOL fRedraw)
 {
   PWINDOW_OBJECT Window;
@@ -605,24 +628,47 @@ NtUserSetScrollInfo(
   {
     /* FIXME */
   }
-
+  
+  if((Mask & SIF_RANGE) && ((psi->nMin != lpsi->nMin) || (psi->nMax != lpsi->nMax)))
+  {
+    /* Invalid range -> range is set to (0,0) */
+    if((lpsi->nMin > lpsi->nMax) ||
+       ((UINT)(lpsi->nMax - lpsi->nMin) >= 0x80000000))
+    {
+      psi->nMin = 0;
+      psi->nMax = 0;
+      Chg = TRUE;
+    }
+    else
+    {
+      if(psi->nMin != lpsi->nMin ||
+         psi->nMax != lpsi->nMax )
+      {
+        //*action |= SA_SSI_REFRESH;
+        psi->nMin = lpsi->nMin;
+        psi->nMax = lpsi->nMax;
+        Chg = TRUE;
+      }
+    }
+  }
+  
   if((Mask & SIF_PAGE) && (psi->nPage != lpsi->nPage))
   {
     psi->nPage = lpsi->nPage;
     Chg = TRUE;
+    if(psi->nPage < 0) psi->nPage = 0;
+    else if(psi->nPage > psi->nMax - psi->nMin + 1)
+      psi->nPage = psi->nMax - psi->nMin + 1;
   }
   
   if((Mask & SIF_POS) && (psi->nPos != lpsi->nPos))
   {
     psi->nPos = lpsi->nPos;
     Chg = TRUE;
-  }
-  
-  if((Mask & SIF_RANGE) && ((psi->nMin != lpsi->nMin) || (psi->nMax != lpsi->nMax)))
-  {
-    psi->nMin = lpsi->nMin;
-    psi->nMax = lpsi->nMax;
-    Chg = TRUE;
+    if(psi->nPos < psi->nMin)
+      psi->nPos = psi->nMin;
+    else if(psi->nPos > psi->nMax - max(psi->nPage - 1, 0))
+      psi->nPos = psi->nMax - max(psi->nPage - 1, 0);
   }
   
   /* FIXME check assigned values */

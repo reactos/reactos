@@ -156,7 +156,6 @@ NtUserCallNextHookEx(
   DWORD Unknown2,
   DWORD Unknown3);
 
-#define NOPARAM_ROUTINE_GETDOUBLECLICKTIME  0x01
 DWORD
 STDCALL
 NtUserCallNoParam(
@@ -675,7 +674,7 @@ NtUserGetDC(HWND hWnd);
 
 HDC STDCALL NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags);
 
-DWORD
+UINT
 STDCALL
 NtUserGetDoubleClickTime(VOID);
 
@@ -1453,7 +1452,7 @@ STDCALL
 NtUserSetScrollInfo(
   HWND hwnd, 
   int fnBar, 
-  LPCSCROLLINFO lpsi, 
+  LPSCROLLINFO lpsi, 
   WINBOOL fRedraw);
 
 DWORD

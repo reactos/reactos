@@ -1,10 +1,11 @@
-/* $Id: scrollbar.c,v 1.14 2003/09/08 15:08:56 weiden Exp $
+/* $Id: scrollbar.c,v 1.15 2003/09/12 12:54:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Windows
  * FILE:             subsys/win32k/ntuser/window.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                   Thomas Weidenmueller (w3seek@users.sourceforge.net)
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
  */
@@ -41,7 +42,6 @@ static HBITMAP hRgArrowI;
 #define RIGHT_ARROW(flags,pressed) \
    (((flags)&ESB_DISABLE_RIGHT) ? hRgArrowI : ((pressed) ? hRgArrowD:hRgArrow))
 
-#define SCROLL_ARROW_THUMB_OVERLAP 0     /* Overlap between arrows and thumb */
 #define SCROLL_MIN_THUMB 6               /* Minimum size of the thumb in pixels */
 #define SCROLL_FIRST_DELAY   200         /* Delay (in ms) before first repetition when holding the button down */
 #define SCROLL_REPEAT_DELAY  50          /* Delay (in ms) between scroll repetitions */
@@ -82,6 +82,7 @@ SCROLL_DrawInterior (HWND hwnd, HDC hdc, INT nBar, BOOL vertical, INT
 arrowSize, PSCROLLBARINFO psbi)
 {
   INT thumbSize = psbi->xyThumbBottom - psbi->xyThumbTop;
+  RECT rc;
   HPEN hSavePen;
   HBRUSH hSaveBrush, hBrush;
   BOOLEAN top_selected = FALSE, bottom_selected = FALSE;
@@ -118,23 +119,27 @@ DbgPrint("[SCROLL_DrawInterior:%d]\n", nBar);
   /* Calculate the scroll rectangle */
   if (vertical)
   {
-    psbi->rcScrollBar.top += arrowSize - SCROLL_ARROW_THUMB_OVERLAP;
-    psbi->rcScrollBar.bottom -= (arrowSize - SCROLL_ARROW_THUMB_OVERLAP);
+    rc.top = psbi->rcScrollBar.top + arrowSize;
+    rc.bottom = psbi->rcScrollBar.bottom - arrowSize;
+    rc.left = psbi->rcScrollBar.left;
+    rc.right = psbi->rcScrollBar.right;
   }
   else
   {
-    psbi->rcScrollBar.left += arrowSize - SCROLL_ARROW_THUMB_OVERLAP;
-    psbi->rcScrollBar.right -= (arrowSize - SCROLL_ARROW_THUMB_OVERLAP);
+    rc.top = psbi->rcScrollBar.top;
+    rc.bottom = psbi->rcScrollBar.bottom;
+    rc.left = psbi->rcScrollBar.left + arrowSize;
+    rc.right = psbi->rcScrollBar.right - arrowSize;
   }
 
   /* Draw the scroll rectangles and thumb */
-  if (!psbi->dxyLineButton)		/* No thumb to draw */
+  if (!psbi->xyThumbBottom)		/* No thumb to draw */
   {
     PatBlt (hdc,
-            psbi->rcScrollBar.left,
-            psbi->rcScrollBar.top,
-            psbi->rcScrollBar.right - psbi->rcScrollBar.left,
-            psbi->rcScrollBar.bottom - psbi->rcScrollBar.top,
+            rc.left,
+            rc.top,
+            rc.right - rc.left,
+            rc.bottom - rc.top,
             PATCOPY);
 
     /* cleanup and return */
@@ -142,44 +147,46 @@ DbgPrint("[SCROLL_DrawInterior:%d]\n", nBar);
     SelectObject (hdc, hSaveBrush);
     return;
   }
+  
+  psbi->xyThumbTop -= arrowSize;
 
   if (vertical)
   {
     PatBlt (hdc,
-            psbi->rcScrollBar.left,
-            psbi->rcScrollBar.top,
-            psbi->rcScrollBar.right - psbi->rcScrollBar.left,
-            psbi->dxyLineButton - (arrowSize - SCROLL_ARROW_THUMB_OVERLAP),
+            rc.left,
+            rc.top,
+            rc.right - rc.left,
+            psbi->dxyLineButton,
             top_selected ? 0x0f0000 : PATCOPY);
-    psbi->rcScrollBar.top += psbi->dxyLineButton - (arrowSize - SCROLL_ARROW_THUMB_OVERLAP);
+    rc.top += psbi->xyThumbTop;
     PatBlt (hdc,
-            psbi->rcScrollBar.left,
-            psbi->rcScrollBar.top + thumbSize,
-            psbi->rcScrollBar.right - psbi->rcScrollBar.left,
-            psbi->rcScrollBar.bottom - psbi->rcScrollBar.top - thumbSize,
+            rc.left,
+            rc.top + thumbSize,
+            rc.right - rc.left,
+            rc.bottom - rc.top - thumbSize,
             bottom_selected ? 0x0f0000 : PATCOPY);
-    psbi->rcScrollBar.bottom = psbi->rcScrollBar.top + thumbSize;
+    rc.bottom = rc.top + thumbSize;
   }
   else
   {
     PatBlt (hdc,
-            psbi->rcScrollBar.left,
-            psbi->rcScrollBar.top,
-            psbi->dxyLineButton - (arrowSize - SCROLL_ARROW_THUMB_OVERLAP),
-            psbi->rcScrollBar.bottom - psbi->rcScrollBar.top,
+            rc.left,
+            rc.top,
+            psbi->xyThumbTop,
+            rc.bottom - rc.top,
             top_selected ? 0x0f0000 : PATCOPY);
-    psbi->rcScrollBar.left += psbi->dxyLineButton - (arrowSize - SCROLL_ARROW_THUMB_OVERLAP);
+    rc.left += psbi->xyThumbTop;
     PatBlt (hdc,
-            psbi->rcScrollBar.left + thumbSize,
-            psbi->rcScrollBar.top,
-            psbi->rcScrollBar.right - psbi->rcScrollBar.left - thumbSize,
-            psbi->rcScrollBar.bottom - psbi->rcScrollBar.top,
+            rc.left + thumbSize,
+            rc.top,
+            rc.right - rc.left - thumbSize,
+            rc.bottom - rc.top,
             bottom_selected ? 0x0f0000 : PATCOPY);
-    psbi->rcScrollBar.right = psbi->rcScrollBar.left + thumbSize;
+    rc.right = rc.left + thumbSize;
   }
 
   /* Draw the thumb */
-  DrawEdge (hdc, &psbi->rcScrollBar, EDGE_RAISED, BF_RECT | BF_MIDDLE);
+  DrawEdge (hdc, &rc, EDGE_RAISED, BF_RECT | BF_MIDDLE);
 
   /* cleanup */
   SelectObject (hdc, hSavePen);
@@ -198,10 +205,10 @@ SCROLL_DrawMovingThumb (HDC hdc, RECT * rect, BOOL vertical, int arrowSize, int 
   else
     max_size = psbi->rcScrollBar.right - psbi->rcScrollBar.left;
 
-  max_size -= (arrowSize - SCROLL_ARROW_THUMB_OVERLAP) + thumbSize;
+  max_size -= arrowSize + thumbSize;
 
-  if (pos < (arrowSize - SCROLL_ARROW_THUMB_OVERLAP))
-    pos = (arrowSize - SCROLL_ARROW_THUMB_OVERLAP);
+  if (pos < arrowSize)
+    pos = arrowSize;
   else if (pos > max_size)
     pos = max_size;
 
@@ -365,7 +372,7 @@ SCROLL_HitTest( HWND hwnd, INT nBar, POINT pt, BOOL bDragging )
   
   sbi.cbSize = sizeof(SCROLLBARINFO);
   NtUserGetScrollBarInfo(hwnd, vertical ? OBJID_VSCROLL : OBJID_HSCROLL, &sbi);
-
+  
   OffsetRect(&sbi.rcScrollBar, wndrect.left, wndrect.top);
 
   if ( (bDragging && !SCROLL_PtInRectEx( &sbi.rcScrollBar, pt, vertical )) ||
@@ -437,35 +444,80 @@ GetScrollBarInfo(HWND hwnd, LONG idObject, PSCROLLBARINFO psbi)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 GetScrollInfo (HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  WINBOOL res;
+  SCROLLINFO si;
+  
+  if(!lpsi || 
+     ((lpsi->cbSize != sizeof(SCROLLINFO)) && (lpsi->cbSize != sizeof(SCROLLINFO))))
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
+  
+  RtlZeroMemory(&si, sizeof(SCROLLINFO));
+  si.cbSize = lpsi->cbSize;
+  si.fMask = lpsi->fMask;
+  
+  res = (WINBOOL)NtUserGetScrollInfo(hwnd, fnBar, &si);
+  
+  if(res)
+  {
+    RtlCopyMemory(lpsi, &si, lpsi->cbSize);
+  }
+  
+  return res;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int STDCALL
 GetScrollPos (HWND hWnd, int nBar)
 {
-  UNIMPLEMENTED;
-  return 0;
+  SCROLLINFO si;
+  BOOL ret;
+  int res = 0;
+  
+  si.cbSize = sizeof(SCROLLINFO);
+  si.fMask = SIF_POS;
+  ret = NtUserGetScrollInfo(hWnd, nBar, &si);
+  if(ret)
+    res = si.nPos;
+  return res;  
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 GetScrollRange (HWND hWnd, int nBar, LPINT lpMinPos, LPINT lpMaxPos)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  WINBOOL ret;
+  SCROLLINFO si;
+  
+  if(!lpMinPos || !lpMaxPos)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  si.cbSize = sizeof(SCROLLINFO);
+  si.fMask = SIF_RANGE;
+  ret = NtUserGetScrollInfo(hWnd, nBar, &si);
+  if(ret)
+  {
+    *lpMinPos = si.nMin;
+    *lpMaxPos = si.nMax;
+  }
+  
+  return ret;
 }
 
 
@@ -488,25 +540,55 @@ SetScrollInfo (HWND hwnd, int fnBar, LPCSCROLLINFO lpsi, WINBOOL fRedraw)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int STDCALL
 SetScrollPos (HWND hWnd, int nBar, int nPos, WINBOOL bRedraw)
 {
-  UNIMPLEMENTED;
-  return 0;
+  int Res = 0;
+  BOOL ret;
+  SCROLLINFO si;
+  
+  si.cbSize = sizeof(SCROLLINFO);
+  si.fMask = SIF_POS;
+  
+  /* call NtUserGetScrollInfo() because we need to return the previous position */
+  ret = NtUserGetScrollInfo(hWnd, nBar, &si);
+  
+  if(ret)
+  {
+    Res = si.nPos;
+    
+    if(Res != nPos)
+    {
+      si.nPos = nPos;
+      /* finally set the new position */
+      NtUserSetScrollInfo(hWnd, nBar, &si, bRedraw);
+    }
+  }
+  
+  return Res;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 SetScrollRange (HWND hWnd,
 		int nBar, int nMinPos, int nMaxPos, WINBOOL bRedraw)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  SCROLLINFO si;
+  
+  si.cbSize = sizeof(SCROLLINFO);
+  si.fMask = SIF_RANGE;
+  si.nMin = nMinPos;
+  si.nMax = nMaxPos;
+  
+  NtUserSetScrollInfo(hWnd, nBar, &si, bRedraw);
+  /* FIXME - check if called successfully */
+  
+  return TRUE;
 }
 
 

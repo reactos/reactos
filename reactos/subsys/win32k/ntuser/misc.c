@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.15 2003/08/29 09:29:11 gvg Exp $
+/* $Id: misc.c,v 1.16 2003/09/12 12:54:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -24,32 +24,20 @@
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 DWORD
 STDCALL
 NtUserCallNoParam(
   DWORD Routine)
 {
-  NTSTATUS Status;
-  DWORD Result = 0;
-  PWINSTATION_OBJECT WinStaObject;
-
+/*
   switch(Routine)
   {
-    case NOPARAM_ROUTINE_GETDOUBLECLICKTIME:
-      Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-                                           KernelMode,
-                                           0,
-                                           &WinStaObject);
-      if (!NT_SUCCESS(Status))
-        return (DWORD)FALSE;
-
-      Result = WinStaObject->SystemCursor.DblClickSpeed;
-      
-      ObDereferenceObject(WinStaObject);
-      return Result;
+    case 0:
+      break;
   }
+*/
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallNoParam()\n", Routine);
   SetLastWin32Error(ERROR_INVALID_PARAMETER);
   return 0;
@@ -328,3 +316,25 @@ NtUserSystemParametersInfo(
   }
   return FALSE;
 }
+
+UINT
+STDCALL
+NtUserGetDoubleClickTime(VOID)
+{
+  UINT Result;
+  NTSTATUS Status;
+  PWINSTATION_OBJECT WinStaObject;
+  
+  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+                                       KernelMode,
+                                       0,
+                                       &WinStaObject);
+  if (!NT_SUCCESS(Status))
+    return (DWORD)FALSE;
+
+  Result = WinStaObject->SystemCursor.DblClickSpeed;
+      
+  ObDereferenceObject(WinStaObject);
+  return Result;
+}
+

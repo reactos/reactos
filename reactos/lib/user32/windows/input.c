@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.17 2003/08/28 18:04:59 weiden Exp $
+/* $Id: input.c,v 1.18 2003/09/12 12:54:26 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -107,7 +107,7 @@ UINT
 STDCALL
 GetDoubleClickTime(VOID)
 {
-  return (UINT)NtUserCallNoParam(NOPARAM_ROUTINE_GETDOUBLECLICKTIME);
+  return NtUserGetDoubleClickTime();
 }
 
 
