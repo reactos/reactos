@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.25 2003/03/05 22:50:24 ekohl Exp $
+/* $Id: process.c,v 1.26 2003/03/09 21:41:35 hbirr Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -14,6 +14,9 @@
 #include <csrss/csrss.h>
 #include <ntdll/rtl.h>
 #include "api.h"
+
+#define NDEBUG
+#include <debug.h>
 
 BOOL STDCALL W32kCleanupForProcess( INT Process );
 
@@ -52,6 +55,26 @@ PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(ULONG ProcessId)
    {
       pProcessData = pProcessData->next;
    }
+   UNLOCK;
+   return pProcessData;
+}
+
+PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(ULONG ProcessId)
+{
+   ULONG i;
+   ULONG hash;
+   PCSRSS_PROCESS_DATA pProcessData;
+
+   hash = ProcessId % (sizeof(ProcessData) / sizeof(*ProcessData));
+   
+   LOCK;
+
+   pProcessData = ProcessData[hash];
+
+   while (pProcessData && pProcessData->ProcessId != ProcessId)
+   {
+      pProcessData = pProcessData->next;
+   }
    if (pProcessData == NULL)
    {
       pProcessData = RtlAllocateHeap(CsrssApiHeap,
@@ -63,6 +86,10 @@ PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(ULONG ProcessId)
 	 pProcessData->next = ProcessData[hash];
 	 ProcessData[hash] = pProcessData;
       }
+   }
+   else
+   {
+      DPRINT("Process data for pid %d already exist\n", ProcessId);
    }
    UNLOCK;
    if (pProcessData == NULL)
@@ -148,7 +175,7 @@ CSR_API(CsrCreateProcess)
      sizeof(LPC_MESSAGE);
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
 
-   NewProcessData = CsrGetProcessData(Request->Data.CreateProcessRequest.NewProcessId);
+   NewProcessData = CsrCreateProcessData(Request->Data.CreateProcessRequest.NewProcessId);
    if (NewProcessData == NULL)
      {
 	Reply->Status = STATUS_NO_MEMORY;
@@ -234,6 +261,11 @@ CSR_API(CsrTerminateProcess)
       - sizeof(LPC_MESSAGE);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY);
 
+   if (ProcessData == NULL)
+   {
+      return(Reply->Status = STATUS_INVALID_PARAMETER);
+   }
+
    Status = CsrFreeProcessData(ProcessData->ProcessId);
 
    Reply->Status = Status;
@@ -257,6 +289,11 @@ CSR_API(CsrGetShutdownParameters)
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
     sizeof(LPC_MESSAGE);
 
+  if (ProcessData == NULL)
+  {
+     return(Reply->Status = STATUS_INVALID_PARAMETER);
+  }
+  
   Reply->Data.GetShutdownParametersReply.Level = ProcessData->ShutdownLevel;
   Reply->Data.GetShutdownParametersReply.Flags = ProcessData->ShutdownFlags;
 
@@ -271,6 +308,11 @@ CSR_API(CsrSetShutdownParameters)
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
     sizeof(LPC_MESSAGE);
 
+  if (ProcessData == NULL)
+  {
+     return(Reply->Status = STATUS_INVALID_PARAMETER);
+  }
+  
   ProcessData->ShutdownLevel = Request->Data.SetShutdownParametersRequest.Level;
   ProcessData->ShutdownFlags = Request->Data.SetShutdownParametersRequest.Flags;
 
@@ -352,13 +394,48 @@ CSR_API(CsrVerifyHandle)
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
 
-   if (ProcessData == NULL)
+   Reply->Status = CsrVerifyObject(ProcessData, Request->Data.VerifyHandleRequest.Handle);
+   if (!NT_SUCCESS(Reply->Status))
    {
-      Reply->Status = STATUS_INVALID_PARAMETER;
+      DPRINT("CsrVerifyObject failed, status=%x\n", Reply->Status);
+   }
+
+   return Reply->Status;
+}
+
+CSR_API(CsrDuplicateHandle)
+{
+   Object_t *Object;
+
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+
+   ProcessData = CsrGetProcessData(Request->Data.DuplicateHandleRequest.ProcessId);
+   Reply->Status = CsrGetObject(ProcessData, Request->Data.DuplicateHandleRequest.Handle, &Object);
+   if (!NT_SUCCESS(Reply->Status))
+   {
+      DPRINT("CsrGetObject failed, status=%x\n", Reply->Status);
    }
    else
    {
-      Reply->Status = CsrVerifyObject(ProcessData, Request->Data.VerifyHandleRequest.Handle);
+      if (Object->Type == CSRSS_CONSOLE_MAGIC)
+      {
+         Reply->Status = CsrInsertObject(ProcessData,
+		                         &Reply->Data.DuplicateHandleReply.Handle,
+		                         (Object_t *)ProcessData->Console);
+      }
+      else if (Object->Type == CSRSS_SCREEN_BUFFER_MAGIC)
+      {
+         RtlEnterCriticalSection( &ActiveConsoleLock );
+         Reply->Status = CsrInsertObject(ProcessData,
+                                         &Reply->Data.DuplicateHandleReply.Handle,
+                                         &(ProcessData->Console->ActiveBuffer->Header));
+         RtlLeaveCriticalSection( &ActiveConsoleLock );
+      }
+      else
+      {
+         Reply->Status = STATUS_INVALID_PARAMETER;
+      }
    }
    return Reply->Status;
 }
