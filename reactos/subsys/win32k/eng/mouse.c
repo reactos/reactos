@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.76 2004/07/14 20:48:57 navaraf Exp $
+/* $Id: mouse.c,v 1.77 2004/07/30 09:42:11 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -241,103 +241,6 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
   ExReleaseFastMutex(&CurInfo->CursorMutex);
   ObDereferenceObject(InputWindowStation);
   return(TRUE);
-}
-
-#define ClearMouseInput(mi) \
-  mi.dx = 0; \
-  mi.dy = 0; \
-  mi.mouseData = 0; \
-  mi.dwFlags = 0;
-
-#define SendMouseEvent(mi) \
-  if(mi.dx != 0 || mi.dy != 0) \
-    mi.dwFlags |= MOUSEEVENTF_MOVE; \
-  if(mi.dwFlags) \
-    IntMouseInput(&mi); \
-  ClearMouseInput(mi);
-
-VOID /* STDCALL */
-MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
-{
-  PMOUSE_INPUT_DATA mid;
-  MOUSEINPUT mi;
-  ULONG i;
-  
-  ClearMouseInput(mi);
-  mi.time = 0;
-  mi.dwExtraInfo = 0;
-  for(i = 0; i < InputCount; i++)
-  {
-    mid = (Data + i);
-    mi.dx += mid->LastX;
-    mi.dy += mid->LastY;
-    
-    if(mid->ButtonFlags)
-    {
-      if(mid->ButtonFlags & MOUSE_LEFT_BUTTON_DOWN)
-      {
-        mi.dwFlags |= MOUSEEVENTF_LEFTDOWN;
-        SendMouseEvent(mi);
-      }
-      if(mid->ButtonFlags & MOUSE_LEFT_BUTTON_UP)
-      {
-        mi.dwFlags |= MOUSEEVENTF_LEFTUP;
-        SendMouseEvent(mi);
-      }
-      if(mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_DOWN)
-      {
-        mi.dwFlags |= MOUSEEVENTF_MIDDLEDOWN;
-        SendMouseEvent(mi);
-      }
-      if(mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_UP)
-      {
-        mi.dwFlags |= MOUSEEVENTF_MIDDLEUP;
-        SendMouseEvent(mi);
-      }
-      if(mid->ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN)
-      {
-        mi.dwFlags |= MOUSEEVENTF_RIGHTDOWN;
-        SendMouseEvent(mi);
-      }
-      if(mid->ButtonFlags & MOUSE_RIGHT_BUTTON_UP)
-      {
-        mi.dwFlags |= MOUSEEVENTF_RIGHTUP;
-        SendMouseEvent(mi);
-      }
-      if(mid->ButtonFlags & MOUSE_BUTTON_4_DOWN)
-      {
-        mi.mouseData |= XBUTTON1;
-        mi.dwFlags |= MOUSEEVENTF_XDOWN;
-        SendMouseEvent(mi);
-      }
-      if(mid->ButtonFlags & MOUSE_BUTTON_4_UP)
-      {
-        mi.mouseData |= XBUTTON1;
-        mi.dwFlags |= MOUSEEVENTF_XUP;
-        SendMouseEvent(mi);
-      }
-      if(mid->ButtonFlags & MOUSE_BUTTON_5_DOWN)
-      {
-        mi.mouseData |= XBUTTON2;
-        mi.dwFlags |= MOUSEEVENTF_XDOWN;
-        SendMouseEvent(mi);
-      }
-      if(mid->ButtonFlags & MOUSE_BUTTON_5_UP)
-      {
-        mi.mouseData |= XBUTTON2;
-        mi.dwFlags |= MOUSEEVENTF_XUP;
-        SendMouseEvent(mi);
-      }
-      if(mid->ButtonFlags & MOUSE_WHEEL)
-      {
-        mi.mouseData = mid->ButtonData;
-        mi.dwFlags |= MOUSEEVENTF_WHEEL;
-        SendMouseEvent(mi);
-      }
-    }
-  }
-  
-  SendMouseEvent(mi);
 }
 
 /* SOFTWARE MOUSE POINTER IMPLEMENTATION **************************************/
