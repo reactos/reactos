@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.188 2004/02/22 14:26:35 navaraf Exp $
+/* $Id: window.c,v 1.189 2004/02/22 15:14:27 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -721,7 +721,7 @@ IntLinkWindow(
   PWINDOW_OBJECT WndPrevSibling /* set to NULL if top sibling */
   )
 {
-  Wnd->Parent = WndParent; 
+  Wnd->Parent = WndParent;
 
   if ((Wnd->PrevSibling = WndPrevSibling))
   {
@@ -1722,6 +1722,7 @@ NtUserDestroyWindow(HWND Wnd)
   Parent = Window->Parent;
   ExAcquireFastMutexUnsafe(&Parent->ChildrenListLock);
   IntUnlinkWindow(Window);
+  Window->Parent = NULL;
   ExReleaseFastMutexUnsafe(&Parent->ChildrenListLock);
 
   /* Destroy the window storage */
