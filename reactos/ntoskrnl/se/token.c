@@ -1588,7 +1588,7 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
 
 
 NTSTATUS STDCALL
-NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
+NtCreateToken(OUT PHANDLE TokenHandle,
 	      IN ACCESS_MASK DesiredAccess,
 	      IN POBJECT_ATTRIBUTES ObjectAttributes,
 	      IN TOKEN_TYPE TokenType,
@@ -1602,14 +1602,64 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
 	      IN PTOKEN_DEFAULT_DACL TokenDefaultDacl,
 	      IN PTOKEN_SOURCE TokenSource)
 {
-  HANDLE TokenHandle;
+  HANDLE hToken;
   PTOKEN AccessToken;
-  NTSTATUS Status;
   LUID TokenId;
   LUID ModifiedId;
   PVOID EndMem;
   ULONG uLength;
   ULONG i;
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+  PreviousMode = ExGetPreviousMode();
+  
+  if(PreviousMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(TokenHandle,
+                    sizeof(HANDLE),
+                    sizeof(ULONG));
+      ProbeForRead(AuthenticationId,
+                   sizeof(LUID),
+                   sizeof(ULONG));
+      ProbeForRead(ExpirationTime,
+                   sizeof(LARGE_INTEGER),
+                   sizeof(ULONG));
+      ProbeForRead(TokenUser,
+                   sizeof(TOKEN_USER),
+                   sizeof(ULONG));
+      ProbeForRead(TokenGroups,
+                   sizeof(TOKEN_GROUPS),
+                   sizeof(ULONG));
+      ProbeForRead(TokenPrivileges,
+                   sizeof(TOKEN_PRIVILEGES),
+                   sizeof(ULONG));
+      ProbeForRead(TokenOwner,
+                   sizeof(TOKEN_OWNER),
+                   sizeof(ULONG));
+      ProbeForRead(TokenPrimaryGroup,
+                   sizeof(TOKEN_PRIMARY_GROUP),
+                   sizeof(ULONG));
+      ProbeForRead(TokenDefaultDacl,
+                   sizeof(TOKEN_DEFAULT_DACL),
+                   sizeof(ULONG));
+      ProbeForRead(TokenSource,
+                   sizeof(TOKEN_SOURCE),
+                   sizeof(ULONG));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
 
   Status = ZwAllocateLocallyUniqueId(&TokenId);
   if (!NT_SUCCESS(Status))
@@ -1619,10 +1669,10 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
   if (!NT_SUCCESS(Status))
     return(Status);
 
-  Status = ObCreateObject(ExGetPreviousMode(),
+  Status = ObCreateObject(PreviousMode,
 			  SepTokenObjectType,
 			  ObjectAttributes,
-			  ExGetPreviousMode(),
+			  PreviousMode,
 			  NULL,
 			  sizeof(TOKEN),
 			  0,
@@ -1632,19 +1682,6 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
     {
       DPRINT1("ObCreateObject() failed (Status %lx)\n");
       return(Status);
-    }
-
-  Status = ObInsertObject ((PVOID)AccessToken,
-			   NULL,
-			   DesiredAccess,
-			   0,
-			   NULL,
-			   &TokenHandle);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("ObInsertObject() failed (Status %lx)\n");
-      ObDereferenceObject (AccessToken);
-      return Status;
     }
 
   RtlCopyLuid(&AccessToken->TokenSource.SourceIdentifier,
@@ -1740,22 +1777,33 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
 	     TokenDefaultDacl->DefaultDacl->AclSize);
     }
 
+  Status = ObInsertObject ((PVOID)AccessToken,
+			   NULL,
+			   DesiredAccess,
+			   0,
+			   NULL,
+			   &hToken);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("ObInsertObject() failed (Status %lx)\n", Status);
+    }
+
   ObDereferenceObject(AccessToken);
 
   if (NT_SUCCESS(Status))
     {
-      Status = MmCopyToCaller(UnsafeTokenHandle,
-			      &TokenHandle,
-			      sizeof(HANDLE));
+      _SEH_TRY
+      {
+        *TokenHandle = hToken;
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
     }
 
-  if (!NT_SUCCESS(Status))
-    {
-      ZwClose(TokenHandle);
-      return(Status);
-    }
-
-  return(STATUS_SUCCESS);
+  return Status;
 }
 
 
