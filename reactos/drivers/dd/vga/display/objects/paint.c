@@ -10,9 +10,11 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
   int x, y, x2, y2, w, h;
   ULONG offset, i, j, pre1;
   ULONG orgpre1, orgx, midpre1, tmppre1;
-  ULONG long leftpixs, midpixs, rightpixs, temp;
+  ULONG ileftpix, imidpix, irightpix;
+  double leftpix, midpix, rightpix, temp;
   UCHAR a;
 
+  DPRINT("VGADDIFillSolid: x:%d, y:%d, w:%d, h:%d\n", x, y, w, h);
 
   // Swap dimensions so that x, y are at topmost left
   if(Dimensions.right < Dimensions.left) {
@@ -33,7 +35,6 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
   // Calculate the width and height
   w = x2 - x;
   h = y2 - y;
-  DPRINT("VGADDIFillSolid: x:%d, y:%d, w:%d, h:%d, color: %d\n", x, y, w, h, iColor);
 
   // Calculate the starting offset
   offset = xconv[x]+y80[y];
@@ -50,33 +51,23 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
   // Otherwise, use the optimized code
   } else {
 
-    leftpixs=x;
-    while(leftpixs>8) leftpixs-=8;
-    temp = w;
-    midpixs = 0;
+    // Calculate the left mask pixels, middle bytes and right mask pixel
+    leftpix = 8-mod(x, 8);
+    rightpix = mod(x+w, 8);
+    midpix = (w-leftpix-rightpix) / 8;
 
-    // Determine the number of bytes we can write (all 8 bits of the byte mask)
-    while(temp>7)
-    {
-      temp-=8;
-      midpixs++;
-    }
-    if((temp>=0) && (midpixs>0)) midpixs--;
+    ileftpix = leftpix;
+    irightpix = rightpix;
+    imidpix = midpix;
 
-    pre1=xconv[x]+y80[y];
+    pre1=xconv[x-(8-ileftpix)]+y80[y];
     orgpre1=pre1;
 
-    // Left
-    if(leftpixs==8) {
-      // Left edge should be an entire middle bar
-      x=orgx;
-      leftpixs=0;
-    }
-    else if(leftpixs>0)
+    if(ileftpix>0)
     {
       // Write left pixels
       WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);     // set the mask
-      WRITE_PORT_UCHAR((PUCHAR)0x3cf,startmasks[leftpixs]);
+      WRITE_PORT_UCHAR((PUCHAR)0x3cf,startmasks[ileftpix]);
 
       tmppre1 = pre1;
       for (j=y; j<y+h; j++)
@@ -86,63 +77,38 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
         tmppre1+=80;
       }
 
-      // Middle
-
-      x=orgx+(8-leftpixs)+leftpixs;
-
-    } else {
-      // leftpixs == 0
-      midpixs+=1;
+      // Prepare new x for the middle
+      x=orgx+8;
     }
 
-    if(midpixs>0)
+    if(imidpix>0)
     {
       midpre1=xconv[x]+y80[y];
 
       // Set mask to all pixels in byte
       WRITE_PORT_UCHAR((PUCHAR)0x3ce, 0x08);
+
       WRITE_PORT_UCHAR((PUCHAR)0x3cf, 0xff);
 
       for (j=y; j<y+h; j++)
       {
-        memset(vidmem+midpre1, iColor, midpixs); // write middle pixels, no need to read in latch because of the width
+        memset(vidmem+midpre1, iColor, imidpix); // write middle pixels, no need to read in latch because of the width
         midpre1+=80;
       }
     }
 
-    rightpixs = w - ((midpixs*8) + leftpixs);
+    x=orgx+w-irightpix;
+    pre1=xconv[x]+y80[y];
 
-    if((rightpixs>0))
+    // Write right pixels
+    WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);     // set the mask bits
+    WRITE_PORT_UCHAR((PUCHAR)0x3cf,endmasks[irightpix]);
+
+    for (j=y; j<y+h; j++)
     {
-      x=(orgx+w)-rightpixs;
-
-      // Go backwards till we reach the 8-byte boundary
-      while(mod(x, 8)!=0) { x--; rightpixs++; }
-
-      while(rightpixs>7)
-      {
-        // This is a BAD case as this should have been a midpixs
-
-        for (j=y; j<y+h; j++)
-        {
-          vgaPutByte(x, j, iColor);
-        }
-        rightpixs-=8;
-        x+=8;
-      }
-
-      pre1=xconv[x]+y80[y];
-
-      // Write right pixels
-      WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);     // set the mask bits
-      WRITE_PORT_UCHAR((PUCHAR)0x3cf,endmasks[rightpixs]);
-
-      for (j=y; j<y+h; j++)
-      {
-        a = READ_REGISTER_UCHAR(vidmem + pre1);
-        WRITE_REGISTER_UCHAR(vidmem + pre1, iColor);
-        pre1+=80;
-      }
+      a = READ_REGISTER_UCHAR(vidmem + pre1);
+      WRITE_REGISTER_UCHAR(vidmem + pre1, iColor);
+      pre1+=80;
     }
   }
 

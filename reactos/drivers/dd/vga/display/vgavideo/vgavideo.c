@@ -80,13 +80,14 @@ VOID vgaPreCalc()
 {
   ULONG j;
 
-  startmasks[1] = 127;
-  startmasks[2] = 63;
-  startmasks[3] = 31;
+  startmasks[0] = 255;
+  startmasks[1] = 1;
+  startmasks[2] = 3;
+  startmasks[3] = 7;
   startmasks[4] = 15;
-  startmasks[5] = 7;
-  startmasks[6] = 3;
-  startmasks[7] = 1;
+  startmasks[5] = 31;
+  startmasks[6] = 63;
+  startmasks[7] = 127;
   startmasks[8] = 255;
 
   endmasks[0] = 128;
@@ -226,7 +227,8 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
   UCHAR a;
   ULONG pre1, i;
   ULONG orgpre1, orgx, midpre1;
-  ULONG long leftpixs, midpixs, rightpixs, temp;
+  ULONG ileftpix, imidpix, irightpix;
+  double leftpix, midpix, rightpix, temp;
 
   orgx=x;
 
@@ -236,81 +238,51 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
       vgaPutPixel(i, y, c);
   } else {
 
-    leftpixs=x;
-    while(leftpixs>8) leftpixs-=8;
-    temp = len;
-    midpixs = 0;
+    // Calculate the left mask pixels, middle bytes and right mask pixel
+    leftpix = 8-mod(x, 8);
+    rightpix = mod(x+len, 8);
+    midpix = (len-leftpix-rightpix) / 8;
 
-    while(temp>7)
-    {
-      temp-=8;
-      midpixs++;
-    }
-    if((temp>=0) && (midpixs>0)) midpixs--;
+    ileftpix = leftpix;
+    irightpix = rightpix;
+    imidpix = midpix;
 
-    pre1=xconv[x]+y80[y];
+    pre1=xconv[x-(8-ileftpix)]+y80[y];
     orgpre1=pre1;
 
     // Left
-    if(leftpixs==8) {
-      // Left edge should be an entire middle bar
-      x=orgx;
-      leftpixs=0;
-    }
-    else if(leftpixs>0)
+    if(ileftpix>0)
     {
       // Write left pixels
       WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);     // set the mask
-      WRITE_PORT_UCHAR((PUCHAR)0x3cf,startmasks[leftpixs]);
+      WRITE_PORT_UCHAR((PUCHAR)0x3cf,startmasks[ileftpix]);
 
       a = READ_REGISTER_UCHAR(vidmem + pre1);
       WRITE_REGISTER_UCHAR(vidmem + pre1, c);
 
-      // Middle
-      x=orgx+(8-leftpixs)+leftpixs;
-
-    } else {
-      // leftpixs == 0
-      midpixs+=1;
+      // Prepare new x for the middle
+      x=orgx+8;
     }
 
-    if(midpixs>0)
+    if(imidpix>0)
     {
       midpre1=xconv[x]+y80[y];
 
       // Set mask to all pixels in byte
       WRITE_PORT_UCHAR((PUCHAR)0x3ce, 0x08);
       WRITE_PORT_UCHAR((PUCHAR)0x3cf, 0xff);
-      memset(vidmem+midpre1, c, midpixs); // write middle pixels, no need to read in latch because of the width
+      memset(vidmem+midpre1, c, imidpix); // write middle pixels, no need to read in latch because of the width
     }
 
-    rightpixs = len - ((midpixs*8) + leftpixs);
+    x=orgx+len-irightpix;
+    pre1=xconv[x]+y80[y];
 
-    if((rightpixs>0))
-    {
-      x=(orgx+len)-rightpixs;
+    // Write right pixels
+    WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);     // set the mask bits
+    WRITE_PORT_UCHAR((PUCHAR)0x3cf, endmasks[irightpix]);
 
-      // Go backwards till we reach the 8-byte boundary
-      while(mod(x, 8)!=0) { x--; rightpixs++; }
-
-      while(rightpixs>7)
-      {
-        // This is a BAD case as this should have been a midpixs
-
-        vgaPutByte(x, y, c);
-        rightpixs-=8;
-        x+=8;
-      }
-
-      pre1=xconv[x]+y80[y];
-
-      // Write right pixels
-      WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);     // set the mask bits
-      WRITE_PORT_UCHAR((PUCHAR)0x3cf,endmasks[rightpixs]);
-
-      a = READ_REGISTER_UCHAR(vidmem + pre1);
-      WRITE_REGISTER_UCHAR(vidmem + pre1, c);
-    }
+    a = READ_REGISTER_UCHAR(vidmem + pre1);
+    WRITE_REGISTER_UCHAR(vidmem + pre1, c);
   }
 
   return TRUE;
@@ -439,6 +411,7 @@ void DIB_BltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta)
     }
 
     opb += Source_lDelta;
+
     pb = opb;
 
   }
@@ -685,6 +658,7 @@ void DFB_BltToDIB(int x, int y, int w, int h, void *b, int bw, void *bdib, int d
     if(dib_shift == 0) dib++;
   }
 }
+
 
 void DIB_BltToDFB(int x, int y, int w, int h, void *b, int bw, void *bdib, int dibw)
 

@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.18 $
- * $Author: ekohl $
- * $Date: 2002/06/15 14:57:26 $
+ * $Revision: 1.19 $
+ * $Author: jfilby $
+ * $Date: 2002/08/19 22:01:11 $
  *
  */
 
@@ -202,6 +202,7 @@ DrvAssertMode(IN DHPDEV DPev,
     }
 
   }
+
 }
 
 
