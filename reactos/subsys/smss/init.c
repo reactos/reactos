@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.19 2000/10/09 00:18:00 ekohl Exp $
+/* $Id: init.c,v 1.20 2000/12/05 18:14:07 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -167,10 +167,13 @@ BOOL InitSessionManager (HANDLE	Children[])
    UNICODE_STRING UnicodeString;
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING CmdLineW;
-   UNICODE_STRING CurrentDirectoryW;
    PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
    RTL_USER_PROCESS_INFO ProcessInfo;
    HANDLE CsrssInitEvent;
+
+   WCHAR UnicodeBuffer[MAX_PATH];
+   PKUSER_SHARED_DATA SharedUserData = 
+	(PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE;
    
    /* Create the "\SmApiPort" object (LPC) */
    RtlInitUnicodeString (&UnicodeString,
@@ -275,20 +278,22 @@ BOOL InitSessionManager (HANDLE	Children[])
 	DbgPrint("Failed to create csrss notification event\n");
      }
    
-   /* Start the Win32 subsystem (csrss.exe) */
-   DisplayString (L"SM: Executing csrss.exe\n");
+   /*
+    * Start the Win32 subsystem (csrss.exe)
+    */
+   DisplayString (L"SM: Running csrss.exe\n");
    
+   /* initialize executable path */
+   wcscpy(UnicodeBuffer, L"\\??\\");
+   wcscat(UnicodeBuffer, SharedUserData->NtSystemRoot);
+   wcscat(UnicodeBuffer, L"\\system32\\csrss.exe");
    RtlInitUnicodeString (&UnicodeString,
-			 L"\\??\\C:\\reactos\\system32\\csrss.exe");
-   
-   /* initialize current directory */
-   RtlInitUnicodeString (&CurrentDirectoryW,
-			 L"C:\\reactos\\system32\\");
+			 UnicodeBuffer);
    
    RtlCreateProcessParameters (&ProcessParameters,
 			       &UnicodeString,
 			       NULL,
-			       &CurrentDirectoryW,
+			       NULL,
 			       NULL,
 			       SmSystemEnvironment,
 			       NULL,
@@ -322,59 +327,52 @@ BOOL InitSessionManager (HANDLE	Children[])
    DbgPrint("SM: Finished waiting for csrss\n");
    
    Children[CHILD_CSRSS] = ProcessInfo.ProcessHandle;
-
-
-	/* Start the simple shell (shell.exe) */
-	DisplayString (L"SM: Executing shell\n");
-	RtlInitUnicodeString (&UnicodeString,
-	                      L"\\??\\C:\\reactos\\system32\\shell.exe");
-#if 0
-	/* Start the logon process (winlogon.exe) */
-	DisplayString (L"SM: Running winlogon\n");
-	RtlInitUnicodeString (&UnicodeString,
-	                      L"\\??\\C:\\reactos\\system32\\winlogon.exe");
-#endif
-
-	/* initialize current directory (trailing backslash!!)*/
-	RtlInitUnicodeString (&CurrentDirectoryW,
-	                      L"C:\\reactos\\");
-
-	RtlCreateProcessParameters (&ProcessParameters,
-	                            &UnicodeString,
-	                            NULL,
-	                            &CurrentDirectoryW,
-	                            NULL,
-	                            SmSystemEnvironment,
-	                            NULL,
-	                            NULL,
-	                            NULL,
-	                            NULL);
-
-
-	Status = RtlCreateUserProcess (&UnicodeString,
-	                               0,
-	                               ProcessParameters,
-	                               NULL,
-	                               NULL,
-	                               FALSE,
-	                               0,
-	                               0,
-	                               0,
-	                               &ProcessInfo);
-
-	RtlDestroyProcessParameters (ProcessParameters);
-
-	if (!NT_SUCCESS(Status))
-	{
-		DisplayString (L"SM: Loading shell.exe failed!\n");
-#if 0
-		NtTerminateProcess (Children[CHILD_CSRSS],
-		                    0);
-#endif
-		return FALSE;
-	}
-	Children[CHILD_WINLOGON] = ProcessInfo.ProcessHandle;
-
+   
+   /*
+    * Start the logon process (winlogon.exe)
+    */
+   DisplayString(L"SM: Running winlogon.exe\n");
+   
+   /* initialize executable path */
+   wcscpy(UnicodeBuffer, L"\\??\\");
+   wcscat(UnicodeBuffer, SharedUserData->NtSystemRoot);
+   wcscat(UnicodeBuffer, L"\\system32\\winlogon.exe");
+   RtlInitUnicodeString (&UnicodeString,
+			 UnicodeBuffer);
+   
+   RtlCreateProcessParameters(&ProcessParameters,
+			      &UnicodeString,
+			      NULL,
+			      NULL,
+			      NULL,
+			      SmSystemEnvironment,
+			      NULL,
+			      NULL,
+			      NULL,
+			      NULL);
+   
+   Status = RtlCreateUserProcess(&UnicodeString,
+				 0,
+				 ProcessParameters,
+				 NULL,
+				 NULL,
+				 FALSE,
+				 0,
+				 0,
+				 0,
+				 &ProcessInfo);
+   
+   RtlDestroyProcessParameters(ProcessParameters);
+   
+   if (!NT_SUCCESS(Status))
+     {
+	DisplayString(L"SM: Loading winlogon.exe failed!\n");
+	NtTerminateProcess(Children[CHILD_CSRSS],
+			   0);
+	return FALSE;
+     }
+   Children[CHILD_WINLOGON] = ProcessInfo.ProcessHandle;
+   
 	/* Create the \DbgSsApiPort object (LPC) */
 	RtlInitUnicodeString (&UnicodeString,
 	                      L"\\DbgSsApiPort");
