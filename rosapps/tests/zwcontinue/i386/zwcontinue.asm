@@ -1,4 +1,4 @@
-cpu 486
+; cpu 486
 segment .text use32
 
 extern _check
@@ -9,7 +9,7 @@ _continuePoint:
  push dword 0
  pushfd
  push cs
- push _continuePoint
+ push dword _continuePoint
  push ebp
 
  push eax
