@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.24 2002/10/01 19:27:22 chorns Exp $
+/* $Id: cont.c,v 1.25 2002/11/05 20:35:33 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -63,11 +63,13 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
 				Alignment);
    if (PBase.QuadPart == 0LL)
      {
+       MmLockAddressSpace(MmGetKernelAddressSpace());
        MmFreeMemoryArea(MmGetKernelAddressSpace(),
 			BaseAddress,
 			0,
 			NULL,
 			NULL);
+       MmUnlockAddressSpace(MmGetKernelAddressSpace());
        return(NULL);
      }
    for (i = 0; i < (PAGE_ROUND_UP(NumberOfBytes) / 4096); i++)
@@ -142,11 +144,13 @@ MmAllocateContiguousMemory (IN ULONG NumberOfBytes,
 VOID STDCALL 
 MmFreeContiguousMemory(IN PVOID BaseAddress)
 {
+   MmLockAddressSpace(MmGetKernelAddressSpace());
    MmFreeMemoryArea(MmGetKernelAddressSpace(),
 		    BaseAddress,
 		    0,
 		    MmFreeContinuousPage,
 		    NULL);
+   MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
 
 

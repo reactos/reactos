@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iospace.c,v 1.16 2002/10/01 19:27:22 chorns Exp $
+/* $Id: iospace.c,v 1.17 2002/11/05 20:35:33 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/iospace.c
@@ -96,7 +96,7 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
      {
 	Attributes |= (PAGE_NOCACHE | PAGE_WRITETHROUGH);
      }
-   for (i = 0; (i < ((NumberOfBytes + PAGE_SIZE - 1) / PAGE_SIZE)); i++)
+   for (i = 0; (i < (PAGE_ROUND_UP(NumberOfBytes) / PAGE_SIZE)); i++)
      {
 	Status = 
 	  MmCreateVirtualMappingForKernel(Result + (i * PAGE_SIZE),
@@ -141,11 +141,13 @@ VOID STDCALL
 MmUnmapIoSpace (IN PVOID BaseAddress,
 		IN ULONG NumberOfBytes)
 {
-   (VOID)MmFreeMemoryArea(&PsGetCurrentProcess()->AddressSpace,
-			  (PVOID)(((ULONG)BaseAddress / PAGE_SIZE) * PAGE_SIZE),
-			  NumberOfBytes,
-			  NULL,
-			  NULL);
+   MmLockAddressSpace(MmGetKernelAddressSpace());
+   MmFreeMemoryArea(MmGetKernelAddressSpace(),
+		    (PVOID)(((ULONG)BaseAddress / PAGE_SIZE) * PAGE_SIZE),
+		    NumberOfBytes,
+		    NULL,
+		    NULL);
+   MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
 
 
