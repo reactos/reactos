@@ -1,6 +1,6 @@
 /*
  *	Edit control
- *
+ *12/14/03
  *	Copyright  David W. Metcalfe, 1994
  *	Copyright  William Magro, 1995, 1996
  *	Copyright  Frans van Dorsselaer, 1996, 1997
@@ -143,7 +143,7 @@ typedef struct
 #define EDIT_NOTIFY_PARENT(es, wNotifyCode, str) \
 	do \
 	{ /* Notify parent which has created this edit control */ \
-	    DPRINT1("[edit]notification " str " sent to hwnd=%p\n", es->hwndParent); \
+	    TRACE("[edit]notification " str " sent to hwnd=%p\n", es->hwndParent); \
 	    SendMessageW(es->hwndParent, WM_COMMAND, \
 		     MAKEWPARAM(GetWindowLongW((es->hwndSelf),GWL_ID), wNotifyCode), \
 		     (LPARAM)(es->hwndSelf)); \
@@ -300,7 +300,6 @@ static inline BOOL EDIT_EM_CanUndo(EDITSTATE *es)
  */
 static inline void EDIT_EM_EmptyUndoBuffer(EDITSTATE *es)
 {
-    DPRINT1("[edit] EDIT_EM_EmptyUndoBuffer\n");
 	es->undo_insert_count = 0;
     if (es->undo_text)
     {
@@ -414,7 +413,7 @@ static LRESULT CALLBACK EditWndProc_common( HWND hwnd, UINT msg,
 	EDITSTATE *es = (EDITSTATE *)GetWindowLongW( hwnd, 0 );
 	LRESULT result = 0;
 
-    DPRINT1("[edit]EditWndProc_common hwnd=0x%p msg=0x%x wparam=0x%x lparam=0x%lx\n", hwnd, msg, wParam, lParam);
+    	TRACE("[edit]EditWndProc_common hwnd=0x%p msg=0x%x wparam=0x%x lparam=0x%lx\n", hwnd, msg, wParam, lParam);
 	
 	if (!es && msg != WM_NCCREATE)
 		return DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
@@ -506,7 +505,7 @@ static LRESULT CALLBACK EditWndProc_common( HWND hwnd, UINT msg,
 	case 0x00c3:
 	case WM_USER+26:
 	case 0x00ca:
-		DPRINT1("[edit]undocumented message 0x%x, please report\n", msg);
+		FIXME("[edit]undocumented message 0x%x, please report\n", msg);
 		result = DefWindowProcW(hwnd, msg, wParam, lParam);
 		break;
 		
@@ -885,7 +884,7 @@ static LRESULT CALLBACK EditWndProc_common( HWND hwnd, UINT msg,
 	}
 	
 	if (es) EDIT_UnlockBuffer(es, FALSE);
-	DPRINT1("[edit]result from message %d is 0x%X\n", msg, result);
+
 	return result;
 }
 
@@ -954,7 +953,7 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 
 	if (!current_line) /* Error occurred start is not inside previous buffer */
 	{
-		DPRINT1(" modification occurred outside buffer\n");
+		FIXME(" modification occurred outside buffer\n");
 		ReleaseDC(es->hwndSelf, dc);
 		return;
 	}
@@ -1424,13 +1423,13 @@ static void EDIT_LockBuffer(EDITSTATE *es)
 	    {
 		if(es->hloc32A)
 		{
-		    DPRINT1("Synchronizing with 32-bit ANSI buffer\n");
+		    TRACE("Synchronizing with 32-bit ANSI buffer\n");
 		    textA = LocalLock(es->hloc32A);
 		    countA = strlen(textA) + 1;
 		}
 	    }
 	    else {
-		DPRINT1("no buffer ... please report\n");
+		ERR("no buffer ... please report\n");
 		return;
 	    }
 
@@ -1438,20 +1437,20 @@ static void EDIT_LockBuffer(EDITSTATE *es)
 	    {
 		HLOCAL hloc32W_new;
 		UINT countW_new = MultiByteToWideChar(CP_ACP, 0, textA, countA, NULL, 0);
-		DPRINT1("[edit]%d bytes translated to %d WCHARs\n", countA, countW_new);
+		TRACE("[edit]%d bytes translated to %d WCHARs\n", countA, countW_new);
 		if(countW_new > es->buffer_size + 1)
 		{
 		    UINT alloc_size = ROUND_TO_GROW(countW_new * sizeof(WCHAR));
-		    DPRINT1("[edit]Resizing 32-bit UNICODE buffer from %d+1 to %d WCHARs\n", es->buffer_size, countW_new);
+		    TRACE("[edit]Resizing 32-bit UNICODE buffer from %d+1 to %d WCHARs\n", es->buffer_size, countW_new);
 		    hloc32W_new = LocalReAlloc(es->hloc32W, alloc_size, LMEM_MOVEABLE | LMEM_ZEROINIT);
 		    if(hloc32W_new)
 		    {
 			es->hloc32W = hloc32W_new;
 			es->buffer_size = LocalSize(hloc32W_new)/sizeof(WCHAR) - 1;
-			DPRINT1("[edit]Real new size %d+1 WCHARs\n", es->buffer_size);
+			TRACE("[edit]Real new size %d+1 WCHARs\n", es->buffer_size);
 		    }
 		    else
-			DPRINT1("FAILED! Will synchronize partially\n");
+			WARN("FAILED! Will synchronize partially\n");
 		}
 	    }
 
@@ -1600,7 +1599,7 @@ static BOOL EDIT_MakeFit(EDITSTATE *es, UINT size, BOOL honor_limit)
 	if (size <= es->buffer_size)
 		return TRUE;
 
-	DPRINT1("[edit]trying to ReAlloc to %d+1 characters\n", size);
+	TRACE("[edit]trying to ReAlloc to %d+1 characters\n", size);
 
 	/* Force edit to unlock it's buffer. es->text now NULL */
 	EDIT_UnlockBuffer(es, TRUE);
@@ -1608,7 +1607,7 @@ static BOOL EDIT_MakeFit(EDITSTATE *es, UINT size, BOOL honor_limit)
 	if (es->hloc32W) {
 	    UINT alloc_size = ROUND_TO_GROW((size + 1) * sizeof(WCHAR));
 	    if ((hNew32W = LocalReAlloc(es->hloc32W, alloc_size, LMEM_MOVEABLE | LMEM_ZEROINIT))) {
-		DPRINT1("[edit]Old 32 bit handle %p, new handle %p\n", es->hloc32W, hNew32W);
+		TRACE("[edit]Old 32 bit handle %p, new handle %p\n", es->hloc32W, hNew32W);
 		es->hloc32W = hNew32W;
 		es->buffer_size = LocalSize(hNew32W)/sizeof(WCHAR) - 1;
 	    }
@@ -1617,11 +1616,11 @@ static BOOL EDIT_MakeFit(EDITSTATE *es, UINT size, BOOL honor_limit)
 	EDIT_LockBuffer(es);
 
 	if (es->buffer_size < size) {
-		DPRINT1("[edit]FAILED !  We now have %d+1\n", es->buffer_size);
+		WARN("[edit]FAILED !  We now have %d+1\n", es->buffer_size);
 		EDIT_NOTIFY_PARENT(es, EN_ERRSPACE, "EN_ERRSPACE");
 		return FALSE;
 	} else {
-		DPRINT1("[edit]We now have %d+1\n", es->buffer_size);
+		TRACE("[edit]We now have %d+1\n", es->buffer_size);
 		return TRUE;
 	}
 }
@@ -2083,18 +2082,16 @@ static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
     /* Edit window might be already destroyed */
     if(!IsWindow(es->hwndSelf))
     {
-        DPRINT1("[edit]edit hwnd %p already destroyed\n", es->hwndSelf);
+        WARN("[edit]edit hwnd %p already destroyed\n", es->hwndSelf);
         return;
     }
 
     if (!es->lock_count) {
-        DPRINT1("lock_count == 0 ... please report\n");
-        DPRINT1("lock_count == 0 ... please report\n");
+        ERR("lock_count == 0 ... please report\n");
         return;
     }
     if (!es->text) {
-        DPRINT1("es->text == 0 ... please report\n");
-        DPRINT1("es->text == 0 ... please report\n");
+        ERR("es->text == 0 ... please report\n");
         return;
     }
 
@@ -2109,9 +2106,9 @@ static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
             if(es->hloc32A)
             {
                 UINT countA_new = WideCharToMultiByte(CP_ACP, 0, es->text, countW, NULL, 0, NULL, NULL);
-                DPRINT1("Synchronizing with 32-bit ANSI buffer\n");
+                TRACE("Synchronizing with 32-bit ANSI buffer\n");
 
-                DPRINT1("[edit]%d WCHARs translated to %d bytes\n", countW, countA_new);
+                TRACE("[edit]%d WCHARs translated to %d bytes\n", countW, countA_new);
 
                 countA = LocalSize(es->hloc32A);
                 if(countA_new > countA)
@@ -2141,7 +2138,7 @@ static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
         }
         else 
         {
-            DPRINT1("no buffer ... please report\n");
+            ERR("no buffer ... please report\n");
             return;
         }
     }
@@ -2246,7 +2243,7 @@ static INT CALLBACK EDIT_WordBreakProc(LPWSTR s, INT index, INT count, INT actio
 		ret = (s[index] == ' ');
 		break;
 	default:
-		DPRINT1("unknown action code, please report !\n");
+		ERR("unknown action code, please report !\n");
 		break;
 	}
 	return ret;
@@ -2294,11 +2291,10 @@ static LRESULT EDIT_EM_CharFromPos(EDITSTATE *es, INT x, INT y)
  */
 static BOOL EDIT_EM_FmtLines(EDITSTATE *es, BOOL add_eol)
 {
-    DPRINT1("[edit] In EDIT_EM_FmtLines\n");
 	es->flags &= ~EF_USE_SOFTBRK;
 	if (add_eol) {
 		es->flags |= EF_USE_SOFTBRK;
-		DPRINT1("soft break enabled, not implemented\n");
+		FIXME("soft break enabled, not implemented\n");
 	}
 	return add_eol;
 }
@@ -2330,12 +2326,12 @@ static HLOCAL EDIT_EM_GetHandle(EDITSTATE *es)
 	    {
 		CHAR *textA;
 		UINT countA, alloc_size;
-		DPRINT1("[edit]Allocating 32-bit ANSI alias buffer\n");
+		TRACE("[edit]Allocating 32-bit ANSI alias buffer\n");
 		countA = WideCharToMultiByte(CP_ACP, 0, es->text, -1, NULL, 0, NULL, NULL);
 		alloc_size = ROUND_TO_GROW(countA);
 		if(!(es->hloc32A = LocalAlloc(LMEM_MOVEABLE | LMEM_ZEROINIT, alloc_size)))
 		{
-		    DPRINT1("[edit]Could not allocate %d bytes for 32-bit ANSI alias buffer\n", alloc_size);
+		    ERR("[edit]Could not allocate %d bytes for 32-bit ANSI alias buffer\n", alloc_size);
 		    return 0;
 		}
 		textA = LocalLock(es->hloc32A);
@@ -2345,7 +2341,7 @@ static HLOCAL EDIT_EM_GetHandle(EDITSTATE *es)
 	    hLocal = es->hloc32A;
 	}
 
-	DPRINT1("[edit]Returning %p, LocalSize() = %ld\n", hLocal, LocalSize(hLocal));
+	TRACE("[edit]Returning %p, LocalSize() = %ld\n", hLocal, LocalSize(hLocal));
 	return hLocal;
 }
 
@@ -3348,7 +3344,7 @@ static void EDIT_WM_Command(EDITSTATE *es, INT code, INT id, HWND control)
 			EDIT_EM_ScrollCaret(es);
 			break;
 		default:
-			DPRINT1("unknown menu item, please report\n");
+			ERR("unknown menu item, please report\n");
 			break;
 	}
 }
@@ -3669,12 +3665,12 @@ static LRESULT EDIT_WM_HScroll(EDITSTATE *es, INT action, INT pos)
 		    INT fw = es->format_rect.right - es->format_rect.left;
 		    ret = es->text_width ? es->x_offset * 100 / (es->text_width - fw) : 0;
 		}
-		DPRINT1("[edit]EM_GETTHUMB: returning %ld\n", ret);
+		TRACE("[edit]EM_GETTHUMB: returning %ld\n", ret);
 		return ret;
 	}
 
 	default:
-		DPRINT1("[edit]undocumented WM_HSCROLL action %d (0x%04x), please report\n",
+		ERR("[edit]undocumented WM_HSCROLL action %d (0x%04x), please report\n",
                     action, action);
 		return 0;
 	}
