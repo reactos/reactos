@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.1 2004/07/07 22:29:37 gvg Exp $
+/* $Id: shutdown.c,v 1.2 2004/09/16 12:46:43 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS shutdown/logoff utility
@@ -37,7 +37,10 @@ _tmain(int argc, TCHAR *argv[])
       { _T("reboot"), EWX_REBOOT, 0 },
       { _T("restart"), EWX_REBOOT, 0 },
       { _T("shutdown"), EWX_SHUTDOWN, 0 },
-      { _T("force"), 0, EWX_FORCE }
+      { _T("force"), 0, EWX_FORCE },
+      { _T("forceifhung"), 0, EWX_FORCEIFHUNG },
+      { _T("ifhung"), 0, EWX_FORCEIFHUNG },
+      { _T("hung"), 0, EWX_FORCEIFHUNG },
     };
   UINT ExitType, ExitFlags;
   HANDLE hToken;
@@ -70,7 +73,7 @@ _tmain(int argc, TCHAR *argv[])
           /* Match if arg starts the same as the option name */
           if (0 == _tcsnicmp(Options[j].Name, Arg, _tcslen(Arg)))
             {
-              if (0 != Options[j].ExitType)
+              if (0 == Options[j].ExitFlags)
                 {
                   /* Can have only 1 type */
                   if (HaveType)
@@ -108,7 +111,7 @@ _tmain(int argc, TCHAR *argv[])
     {
       for (j = 0; j < sizeof(Options) / sizeof(Options[0]); j++)
         {
-          if (0 == _tcsicmp(Options[j].Name, BaseName) && 0 != Options[j].ExitType)
+          if (0 == _tcsicmp(Options[j].Name, BaseName) && 0 == Options[j].ExitFlags)
             {
               ExitType = Options[j].ExitType;
               HaveType = TRUE;
