@@ -40,6 +40,8 @@ VOID  VGAQueryNumAvailModes(OUT PVIDEO_NUM_MODES  NumberOfModes,
 VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock);
 VOID  VGASetColorRegisters(IN PVIDEO_CLUT  ColorLookUpTable,
                            OUT PSTATUS_BLOCK  StatusBlock);
+VOID  VGASetPaletteRegisters(IN PWORD  PaletteRegisters,
+                             OUT PSTATUS_BLOCK  StatusBlock);
 VOID  VGASetCurrentMode(IN PVIDEO_MODE  RequestedMode,
                         OUT PSTATUS_BLOCK  StatusBlock);
 VOID  VGAShareVideoMemory(IN PVIDEO_SHARE_MEMORY  RequestedMemory,
@@ -125,6 +127,7 @@ VGAFindAdapter(PVOID  DeviceExtension,
 {
   /* FIXME: Determine if the adapter is present  */
   *Again = FALSE;
+
   return  STATUS_SUCCESS;
   
   /* FIXME: Claim any necessary memory/IO resources for the adapter  */
@@ -261,6 +264,10 @@ VGAStartIO(PVOID  DeviceExtension,
       VGAUnshareVideoMemory((PVIDEO_MEMORY) RequestPacket->InputBuffer,
                             &RequestPacket->StatusBlock);
       break;
+    case  IOCTL_VIDEO_SET_PALETTE_REGISTERS:
+      VGASetPaletteRegisters((PVIDEO_CLUT) RequestPacket->InputBuffer,
+                           &RequestPacket->StatusBlock);
+      break;
 
 #if 0
     case  IOCTL_VIDEO_DISABLE_CURSOR:
@@ -294,7 +301,6 @@ VGAStartIO(PVOID  DeviceExtension,
     case  IOCTL_VIDEO_SAVE_HARDWARE_STATE:
     case  IOCTL_VIDEO_SET_CURSOR_ATTR:
     case  IOCTL_VIDEO_SET_CURSOR_POSITION:
-    case  IOCTL_VIDEO_SET_PALETTE_REGISTERS:
     case  IOCTL_VIDEO_SET_POINTER_ATTR:
     case  IOCTL_VIDEO_SET_POINTER_POSITION:
     case  IOCTL_VIDEO_SET_POWER_MANAGEMENT:
@@ -389,15 +395,42 @@ VOID  VGAQueryNumAvailModes(OUT PVIDEO_NUM_MODES  NumberOfModes,
   UNIMPLEMENTED;
 }
 
+VOID  VGASetPaletteRegisters(IN PWORD  PaletteRegisters,
+                             OUT PSTATUS_BLOCK  StatusBlock)
+{
+  UNIMPLEMENTED;
+
+/*
+  We don't need the following code because the palette registers are set correctly on VGA initialization.
+  Still, we may include\test this is in the future.
+
+  int i, j = 2;
+  char tmp, v;
+
+  tmp = VideoPortReadPortUchar(0x03da);
+  v = VideoPortReadPortUchar(0x03c0);
+
+  // Set the first 16 palette registers to map to the first 16 palette colors
+  for (i=PaletteRegisters[1]; i<PaletteRegisters[0]; i++)
+  {
+    tmp = VideoPortReadPortUchar(0x03da);
+    VideoPortWritePortUchar(0x03c0, i);
+    VideoPortWritePortUchar(0x03c0, PaletteRegisters[j++]);
+  }
+
+  tmp = VideoPortReadPortUchar(0x03da);
+  VideoPortWritePortUchar(0x03d0, v | 0x20);
+*/
+}
+
 VOID  VGASetColorRegisters(IN PVIDEO_CLUT  ColorLookUpTable,
                            OUT PSTATUS_BLOCK  StatusBlock)
 {
   int i;
 
-  VideoPortWritePortUchar(0x03c8, ColorLookUpTable->FirstEntry);
-
-  for (i=0; i<ColorLookUpTable->NumEntries; i++)
+  for (i=ColorLookUpTable->FirstEntry; i<ColorLookUpTable->NumEntries; i++)
   {
+    VideoPortWritePortUchar(0x03c8, i);
     VideoPortWritePortUchar(0x03c9, ColorLookUpTable->LookupTable[i].RgbArray.Red);
     VideoPortWritePortUchar(0x03c9, ColorLookUpTable->LookupTable[i].RgbArray.Green);
     VideoPortWritePortUchar(0x03c9, ColorLookUpTable->LookupTable[i].RgbArray.Blue);
