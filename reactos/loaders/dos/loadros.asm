@@ -268,13 +268,13 @@ entry:
 	
 	;;
 	;; Hide the kernel's entry in the list of modules
-	;; 
+	;;
 	mov	[_multiboot_mods_addr], eax
 	mov	ebx, _multiboot_modules
 	add	ebx, multiboot_module_size
 	add	dword [_multiboot_mods_addr], ebx
 	dec	dword [_multiboot_mods_count]
-		
+
 	;;
 	;; get extended memory size in KB
 	;;
@@ -282,34 +282,36 @@ entry:
 	xor	ebx,ebx
 	mov	[_multiboot_mem_upper],ebx
 	mov	[_multiboot_mem_lower],ebx
-        mov	ax, 0xe801
-        int	015h
+
+	mov	ax, 0xe801
+	int	015h
 	jc	.oldstylemem
+
 	cmp	ax, 0
 	je	.cmem
 
-        and	ebx, 0xffff
+	and	ebx, 0xffff
 	shl	ebx,6
 	mov	[_multiboot_mem_upper],ebx
-        and	eax,0xffff
-        add	dword [_multiboot_mem_upper],eax
+	and	eax,0xffff
+	add	dword [_multiboot_mem_upper],eax
 	jmp	.done_mem
 
-.cmem
+.cmem:
 	cmp	cx, 0
 	je	.oldstylemem
 
-	add	edx, 0xFFFF
+	and	edx, 0xFFFF
 	shl	edx, 6
 	mov	[_multiboot_mem_upper], edx
 	and	ecx, 0xFFFF
 	add	dword [_multiboot_mem_upper], ecx
 	jmp	.done_mem
-	
+
 .oldstylemem:
 	;; int 15h opt e801 don't work , try int 15h, option 88h
-        mov	ah, 088h
-        int	015h
+	mov	ah, 088h
+	int	015h
 	cmp	ax, 0
 	je	.cmosmem
 	mov	[_multiboot_mem_upper],ax
@@ -320,7 +322,7 @@ entry:
 	mov	al, 0x31
 	out	0x70, al
 	in	al, 0x71
-        and	eax, 0xffff	; clear carry
+	and	eax, 0xffff	; clear carry
 	shl	eax,8
 	mov	[_multiboot_mem_upper],eax
 	xor	eax,eax
@@ -600,9 +602,9 @@ e_lfanew:	resd	1
 ENDSTRUC
 
 
-_mb_magic:	
+_mb_magic:
 	dd 0
-_mb_flags:	
+_mb_flags:
 	dd 0
 _mb_checksum:
 	dd 0
@@ -616,14 +618,14 @@ _mb_bss_end_addr:
 	dd 0
 _mb_entry_addr:
 	dd 0
-		
+
 _cpe_doshdr:
 	times pe_doshdr_size db 0
 _current_filehandle:
 	dw 0
 _current_size:
 	dd 0
-	
+
 	;;
 	;; Load a PE file
 	;;	DS:DX = Filename
@@ -715,9 +717,9 @@ pe_load_module:
 .mb_header_read:
 	jmp	.first
 	
-.not_first:	
+.not_first:
 	mov	dword [_mb_bss_end_addr], 0
-.first:	
+.first:
 	
 	;;
 	;; Seek to the end of the file to get the file size
@@ -836,7 +838,7 @@ pe_load_module:
 	int	021h
 %endif
 
-	mov     edx, [_mb_bss_end_addr]
+	mov	edx, [_mb_bss_end_addr]
 	cmp	edx, 0
 	je	.no_bss
 	mov	edi, edx	
