@@ -27,6 +27,7 @@ extern "C"
 #include <ddk/defines.h>
 #include <ddk/types.h>
 #include <ddk/cfgtypes.h>
+#include <ddk/cmtypes.h>
 #include <ddk/ketypes.h>
 #include <ddk/obtypes.h>
 #include <ddk/mmtypes.h>
@@ -40,6 +41,7 @@ extern "C"
    
 #include <ddk/rtl.h>
 #include <ddk/zw.h>
+#include <ddk/cmfuncs.h>
 #include <ddk/exfuncs.h>
 #include <ddk/mmfuncs.h>
 #include <ddk/kefuncs.h>

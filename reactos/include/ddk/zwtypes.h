@@ -69,22 +69,6 @@
 #define ThreadPriorityBoost			14
 #define MaxThreadInfoClass			15
 
-// key query information class
-
-#define KeyBasicInformation			0
-#define KeyNodeInformation			1
-#define KeyFullInformation			2
-
-// key set information class
-
-#define KeyWriteTimeInformation			0
-
-// key value information class
-
-#define KeyValueBasicInformation		0
-#define	KeyValueFullInformation			1
-#define	KeyValuePartialInformation		2
-
 // object handle information
 
 #define ObjectBasicInformation			0
