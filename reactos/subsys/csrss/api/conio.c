@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.39 2003/01/15 00:36:10 hbirr Exp $
+/* $Id: conio.c,v 1.40 2003/02/24 21:58:46 sedwards Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -1305,6 +1305,27 @@ CSR_API(CsrReadInputEvent)
 	   Console->WaitingChars--;
 	 }
        RtlFreeHeap( CsrssApiHeap, 0, Input );
+
+       if (Console->InputEvents.Flink != &Console->InputEvents &&
+	   Reply->Data.ReadInputReply.Input.EventType == KEY_EVENT &&
+	   Reply->Data.ReadInputReply.Input.Event.KeyEvent.uChar.AsciiChar == '\r')
+       {
+          Input = CONTAINING_RECORD(Console->InputEvents.Flink, ConsoleInput, ListEntry);
+	  if (Input->InputEvent.EventType == KEY_EVENT &&
+              Input->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\n' && 
+              ((Input->InputEvent.Event.KeyEvent.bKeyDown && Reply->Data.ReadInputReply.Input.Event.KeyEvent.bKeyDown) ||
+              (Input->InputEvent.Event.KeyEvent.bKeyDown==FALSE && Reply->Data.ReadInputReply.Input.Event.KeyEvent.bKeyDown==FALSE)))
+	  {
+	    if(Console->Mode & ENABLE_LINE_INPUT &&
+	       Input->InputEvent.Event.KeyEvent.bKeyDown == FALSE &&
+	       Input->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\n' )
+	     Console->WaitingLines--;
+	    Console->WaitingChars--;
+	    RemoveHeadList(&Console->InputEvents);
+            RtlFreeHeap( CsrssApiHeap, 0, Input );
+	  }
+       }
+
        Reply->Data.ReadInputReply.MoreEvents = (Console->InputEvents.Flink != &Console->InputEvents) ? TRUE : FALSE;
        Status = STATUS_SUCCESS;
        Console->EarlyReturn = FALSE; // clear early return
