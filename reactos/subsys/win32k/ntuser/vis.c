@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.9 2003/11/19 09:10:36 navaraf Exp $
+ * $Id: vis.c,v 1.10 2003/11/20 09:18:49 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -251,7 +251,7 @@ GetUncoveredArea(HRGN Uncovered, PWINDOW_OBJECT Parent, PWINDOW_OBJECT TargetChi
 
 VOID FASTCALL
 VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
-                        HRGN NewlyExposed, BOOL Redraw)
+                        HRGN NewlyExposed)
 {
   PWINDOW_OBJECT DesktopWindow;
   PWINDOW_OBJECT Parent;
@@ -304,8 +304,7 @@ VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
               NtGdiOffsetRgn(DirtyRgn, -Sibling->ClientRect.left, -Sibling->ClientRect.top);
 	      IntRedrawWindow(Sibling, NULL, DirtyRgn,
 	                      RDW_INVALIDATE | RDW_FRAME | RDW_ERASE |
-	                      RDW_ALLCHILDREN |
-	                      (Redraw ? RDW_ERASENOW | RDW_UPDATENOW : 0));
+	                      RDW_ALLCHILDREN);
 	    }
 	  Covered = UnsafeIntCreateRectRgnIndirect(&Sibling->WindowRect);
 	  NtGdiCombineRgn(Uncovered, Uncovered, Covered, RGN_DIFF);
@@ -333,8 +332,7 @@ VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
             -Parent->ClientRect.top);
 	  IntRedrawWindow(Parent, NULL, DirtyRgn,
 	                  RDW_INVALIDATE | RDW_FRAME | RDW_ERASE |
-	                  RDW_NOCHILDREN |
-	                  (Redraw ? RDW_ERASENOW | RDW_UPDATENOW : 0));
+	                  RDW_NOCHILDREN);
 	}
       NtGdiDeleteObject(ExposedWindow);
       NtGdiDeleteObject(DirtyRgn);

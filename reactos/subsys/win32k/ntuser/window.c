@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.137 2003/11/19 09:10:36 navaraf Exp $
+/* $Id: window.c,v 1.138 2003/11/20 09:18:49 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -675,7 +675,7 @@ IntInitDesktopWindow(ULONG Width, ULONG Height)
   DesktopWindow->ClientRect = DesktopWindow->WindowRect;
 
   DesktopRgn = UnsafeIntCreateRectRgnIndirect(&(DesktopWindow->WindowRect));
-  VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, DesktopWindow, DesktopRgn, TRUE);
+  VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, DesktopWindow, DesktopRgn);
   NtGdiDeleteObject(DesktopRgn);
   IntReleaseWindowObject(DesktopWindow);
 }
@@ -817,7 +817,7 @@ IntSetFocusWindow(HWND hWnd)
   if (hWnd != (HWND)0)
     {
       WindowObject = IntGetWindowObject(hWnd);
-      if (!WindowObject)
+      if (!WindowObject || IntIsDesktopWindow(WindowObject))
         {
           DPRINT("Bad window handle 0x%x\n", hWnd);
           SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
@@ -1811,18 +1811,19 @@ NtUserDestroyWindow(HWND Wnd)
     }
 
   /* Recursively destroy owned windows */
-#if 0 /* FIXME */
+#if 1 /* FIXME */
   if (! isChild)
     {
       for (;;)
 	{
-	  int i;
 	  BOOL GotOne = FALSE;
 	  HWND *Children;
 	  HWND *ChildHandle;
-	  PWINDOW_OBJECT Child;
+	  PWINDOW_OBJECT Child, Desktop;
 
-	  Children = IntWinListChildren(IntGetWindowObject(IntGetDesktopWindow());
+	  Desktop = IntGetWindowObject(IntGetDesktopWindow());
+	  Children = IntWinListChildren(Desktop);
+	  IntReleaseWindowObject(Desktop);
 	  if (Children)
 	    {
 	      for (ChildHandle = Children; *ChildHandle; ++ChildHandle)

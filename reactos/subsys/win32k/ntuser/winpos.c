@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.42 2003/11/19 09:10:36 navaraf Exp $
+/* $Id: winpos.c,v 1.43 2003/11/20 09:18:49 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -605,390 +605,429 @@ WinPosInternalMoveWindow(PWINDOW_OBJECT Window, INT MoveX, INT MoveY)
   ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
 }
 
+/*
+ * WinPosFixupSWPFlags
+ *
+ * Fix redundant flags and values in the WINDOWPOS structure.
+ */
+
+BOOL FASTCALL
+WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
+{
+   if (Window->Style & WS_VISIBLE)
+   {
+      WinPos->flags &= ~SWP_SHOWWINDOW;
+   }
+   else
+   {
+      WinPos->flags &= ~SWP_HIDEWINDOW;
+      if (!(WinPos->flags & SWP_SHOWWINDOW))
+         WinPos->flags |= SWP_NOREDRAW;
+   }
+
+   WinPos->cx = max(WinPos->cx, 0);
+   WinPos->cy = max(WinPos->cy, 0);
+
+   /* Check for right size */
+   if (Window->WindowRect.right - Window->WindowRect.left == WinPos->cx &&
+       Window->WindowRect.bottom - Window->WindowRect.top == WinPos->cy)
+   {
+      WinPos->flags |= SWP_NOSIZE;    
+   }
+
+   /* Check for right position */
+   if (Window->WindowRect.left == WinPos->x &&
+       Window->WindowRect.top == WinPos->y)
+   {
+      WinPos->flags |= SWP_NOMOVE;    
+   }
+
+   /* FIXME: We don't have NtUserGetForegroundWindow yet. */
+#if 0
+   if (WinPos->hwnd == NtUserGetForegroundWindow())
+   {
+      WinPos->flags |= SWP_NOACTIVATE;   /* Already active */
+   }
+   else
+#endif
+   if ((Window->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
+   {
+      /* Bring to the top when activating */
+      if (!(WinPos->flags & SWP_NOACTIVATE)) 
+      {
+         WinPos->flags &= ~SWP_NOZORDER;
+         WinPos->hwndInsertAfter = HWND_TOP;
+         return TRUE;
+      }
+   }
+
+   /* Check hwndInsertAfter */
+   if (!(WinPos->flags & SWP_NOZORDER))
+   {
+      /* Fix sign extension */
+      if (WinPos->hwndInsertAfter == (HWND)0xffff)
+      {
+         WinPos->hwndInsertAfter = HWND_TOPMOST;
+      }
+      else if (WinPos->hwndInsertAfter == (HWND)0xfffe)
+      {
+         WinPos->hwndInsertAfter = HWND_NOTOPMOST;
+      }
+
+      /* FIXME: TOPMOST not supported yet */
+      if ((WinPos->hwndInsertAfter == HWND_TOPMOST) ||
+          (WinPos->hwndInsertAfter == HWND_NOTOPMOST))
+      {
+         WinPos->hwndInsertAfter = HWND_TOP;
+      }
+
+      /* hwndInsertAfter must be a sibling of the window */
+      if ((WinPos->hwndInsertAfter != HWND_TOP) &&
+          (WinPos->hwndInsertAfter != HWND_BOTTOM))
+      {
+         if (NtUserGetAncestor(WinPos->hwndInsertAfter, GA_PARENT) !=
+             Window->Parent)
+         {
+            return FALSE;
+         }
+         else
+         {
+            /*
+             * We don't need to change the Z order of hwnd if it's already
+             * inserted after hwndInsertAfter or when inserting hwnd after
+             * itself.
+             */
+            if ((WinPos->hwnd == WinPos->hwndInsertAfter) ||
+                (WinPos->hwnd == NtUserGetWindow(WinPos->hwndInsertAfter, GW_HWNDNEXT)))
+            {
+               WinPos->flags |= SWP_NOZORDER;
+            }
+         }
+      }
+   }
+
+   return TRUE;
+}
 
 /* x and y are always screen relative */
 BOOLEAN STDCALL
 WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 		   INT cy, UINT flags)
 {
-  PWINDOW_OBJECT Window;
-  NTSTATUS Status;
-  WINDOWPOS WinPos;
-  RECT NewWindowRect;
-  RECT NewClientRect;
-  HRGN VisBefore = NULL;
-  HRGN VisAfter = NULL;
-  HRGN DirtyRgn = NULL;
-  HRGN ExposedRgn = NULL;
-  HRGN CopyRgn = NULL;
-  ULONG WvrFlags = 0;
-  RECT OldWindowRect, OldClientRect;
-  UINT FlagsEx = 0;
-  int RgnType;
-  HDC Dc;
-  RECT CopyRect;
-  RECT TempRect;
+   PWINDOW_OBJECT Window;
+   WINDOWPOS WinPos;
+   RECT NewWindowRect;
+   RECT NewClientRect;
+   HRGN VisBefore = NULL;
+   HRGN VisAfter = NULL;
+   HRGN DirtyRgn = NULL;
+   HRGN ExposedRgn = NULL;
+   HRGN CopyRgn = NULL;
+   ULONG WvrFlags = 0;
+   RECT OldWindowRect, OldClientRect;
+   int RgnType;
+   HDC Dc;
+   RECT CopyRect;
+   RECT TempRect;
 
-  /* FIXME: Get current active window from active queue. */
+   /* FIXME: Get current active window from active queue. */
 
-  /* Check if the window is for a desktop. */
-  if (Wnd == PsGetWin32Thread()->Desktop->DesktopWindow)
-    {
-      return(FALSE);
-    }
+   /* Check if the window is for a desktop. */
+   if (Wnd == IntGetDesktopWindow())
+   {
+      return FALSE;
+   }
 
-  Status = 
-    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
-			       Wnd,
-			       otWindow,
-			       (PVOID*)&Window);
-  if (!NT_SUCCESS(Status))
-    {
-      return(FALSE);
-    }
+   Window = IntGetWindowObject(Wnd);
+   if (!Window)
+   {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return FALSE;
+   }
   
-  /* Fix up the flags. */
-  if (Window->Style & WS_VISIBLE)
-    {
-      flags &= ~SWP_SHOWWINDOW;
-    }
-  else 
-    {
-      if (!(flags & SWP_SHOWWINDOW))
-	{
-	  flags |= SWP_NOREDRAW;
-	}
-      flags &= ~SWP_HIDEWINDOW;
-    }
-
-  cx = max(cx, 0);
-  cy = max(cy, 0);
-
-  if ((Window->WindowRect.right - Window->WindowRect.left) == cx &&
-      (Window->WindowRect.bottom - Window->WindowRect.top) == cy)
-    {
-      flags |= SWP_NOSIZE;
-    }
-  if (Window->WindowRect.left == x && Window->WindowRect.top == y)
-    {
-      flags |= SWP_NOMOVE;
-    }
-  if (Window->Flags & WIN_NCACTIVATED)
-    {
-      flags |= SWP_NOACTIVATE;
-    }
-  else if ((Window->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
-    {
-      if (!(flags & SWP_NOACTIVATE))
-	{
-	  flags &= ~SWP_NOZORDER;
-	  WndInsertAfter = HWND_TOP;
-	}
-    }
-
-  if (WndInsertAfter == HWND_TOPMOST || WndInsertAfter == HWND_NOTOPMOST)
-    {
-      WndInsertAfter = HWND_TOP;
-    }
-
-  if (WndInsertAfter != HWND_TOP && WndInsertAfter != HWND_BOTTOM)
-    {
-      if (NtUserGetAncestor(WndInsertAfter, GA_PARENT) != Window->Parent)
-        {
-          SetLastWin32Error(ERROR_INVALID_PARAMETER);
-          return FALSE;
-        }
-      else
-        {
-          /*
-           * Don't need to change the Zorder of hwnd if it's already inserted
-           * after hwndInsertAfter or when inserting hwnd after itself.
-           */
-           if (Wnd == WndInsertAfter ||
-               Wnd == NtUserGetWindow(WndInsertAfter, GW_HWNDNEXT))
-             {
-               flags |= SWP_NOZORDER;
-             }
-        }
-    }
-
-  WinPos.hwnd = Wnd;
-  WinPos.hwndInsertAfter = WndInsertAfter;
-  WinPos.x = x;
-  WinPos.y = y;
-  WinPos.cx = cx;
-  WinPos.cy = cy;
-  WinPos.flags = flags;
-  if (0 != (Window->Style & WS_CHILD))
-    {
+   WinPos.hwnd = Wnd;
+   WinPos.hwndInsertAfter = WndInsertAfter;
+   WinPos.x = x;
+   WinPos.y = y;
+   WinPos.cx = cx;
+   WinPos.cy = cy;
+   WinPos.flags = flags;
+   if (Window->Style & WS_CHILD)
+   {
       WinPos.x -= Window->Parent->ClientRect.left;
       WinPos.y -= Window->Parent->ClientRect.top;
-    }
+   }
 
-  WinPosDoWinPosChanging(Window, &WinPos, &NewWindowRect, &NewClientRect);
+   /* Fix up the flags. */
+   if (!WinPosFixupFlags(&WinPos, Window))
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      IntReleaseWindowObject(Window);
+      return FALSE;
+   }
 
-  if ((WinPos.flags & (SWP_NOZORDER | SWP_HIDEWINDOW | SWP_SHOWWINDOW)) !=
-      SWP_NOZORDER &&
-      NtUserGetAncestor(WinPos.hwnd, GA_PARENT) ==
-      PsGetWin32Thread()->Desktop->DesktopWindow)
-    {
+   WinPosDoWinPosChanging(Window, &WinPos, &NewWindowRect, &NewClientRect);
+
+   /* Does the window still exist? */
+   if (!IntIsWindow(WinPos.hwnd))
+   {
+      /* FIXME: SetLastWin32Error */
+      return FALSE;
+   }
+
+   if ((WinPos.flags & (SWP_NOZORDER | SWP_HIDEWINDOW | SWP_SHOWWINDOW)) !=
+       SWP_NOZORDER &&
+       NtUserGetAncestor(WinPos.hwnd, GA_PARENT) == IntGetDesktopWindow())
+   {
       WinPos.hwndInsertAfter = WinPosDoOwnedPopups(WinPos.hwnd, WinPos.hwndInsertAfter);
-    }
+   }
   
-  /* FIXME: Adjust flags based on WndInsertAfter */
-
-  /* Compute the visible region before the window position is changed */
-  if ((!(WinPos.flags & (SWP_NOREDRAW | SWP_SHOWWINDOW)) &&
+   /* Compute the visible region before the window position is changed */
+   if ((!(WinPos.flags & (SWP_NOREDRAW | SWP_SHOWWINDOW)) &&
        WinPos.flags & (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | 
-		       SWP_HIDEWINDOW | SWP_FRAMECHANGED)) != 
-      (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER))
-    {
-      if (Window->Style & WS_CLIPCHILDREN)
-	{
-	  VisBefore = VIS_ComputeVisibleRegion(PsGetWin32Thread()->Desktop,
-	                                       Window, FALSE, FALSE, TRUE);
-	}
-      else
-	{
-	  VisBefore = VIS_ComputeVisibleRegion(PsGetWin32Thread()->Desktop,
-	                                       Window, FALSE, FALSE, FALSE);
-	}
-      if (NULLREGION == UnsafeIntGetRgnBox(VisBefore, &TempRect))
-	{
-	  NtGdiDeleteObject(VisBefore);
-	  VisBefore = NULL;
-	}
-    }
+                       SWP_HIDEWINDOW | SWP_FRAMECHANGED)) != 
+       (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER))
+   {
+      VisBefore = VIS_ComputeVisibleRegion(
+         PsGetWin32Thread()->Desktop, Window, FALSE,
+         Window->Style & WS_CLIPCHILDREN, Window->Style & WS_CLIPSIBLINGS);
 
-  WvrFlags = WinPosDoNCCALCSize(Window, &WinPos, &NewWindowRect,
-				&NewClientRect);
+      if (UnsafeIntGetRgnBox(VisBefore, &TempRect) == NULLREGION)
+      {
+         NtGdiDeleteObject(VisBefore);
+         VisBefore = NULL;
+      }
+   }
 
-  /*
-   * FIXME: Relink windows. (also take into account shell window in hwndShellWindow)
-   */
-  if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwndInsertAfter != WinPos.hwnd &&
-      WinPos.hwnd != NtUserGetShellWindow())
-    {
+   WvrFlags = WinPosDoNCCALCSize(Window, &WinPos, &NewWindowRect, &NewClientRect);
+
+   /* Relink windows. (also take into account shell window in hwndShellWindow) */
+   if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwnd != NtUserGetShellWindow())
+   {
       PWINDOW_OBJECT ParentWindow;
       PWINDOW_OBJECT InsertAfterWindow;
 
       ParentWindow = Window->Parent;
       if (ParentWindow)
-        {
-          if (WndInsertAfter == HWND_TOP)
+      {
+         if (WndInsertAfter == HWND_TOP)
             InsertAfterWindow = NULL;
-          else if (WndInsertAfter == HWND_BOTTOM)
+         else if (WndInsertAfter == HWND_BOTTOM)
             InsertAfterWindow = ParentWindow->LastChild;
-          else
+         else
             InsertAfterWindow = IntGetWindowObject(WinPos.hwndInsertAfter);
-          ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
-          IntUnlinkWindow(Window);
-          IntLinkWindow(Window, ParentWindow, InsertAfterWindow);
-          ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
-          if (InsertAfterWindow != NULL)
+         ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+         IntUnlinkWindow(Window);
+         IntLinkWindow(Window, ParentWindow, InsertAfterWindow);
+         ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+         if (InsertAfterWindow != NULL)
             IntReleaseWindowObject(InsertAfterWindow);
-        }
-    }
+      }
+   }
 
-  /* FIXME: Reset active DCEs */
+   /* FIXME: Reset active DCEs */
 
-  OldWindowRect = Window->WindowRect;
-  OldClientRect = Window->ClientRect;
+   OldWindowRect = Window->WindowRect;
+   OldClientRect = Window->ClientRect;
 
-  /* FIXME: Check for redrawing the whole client rect. */
+   if (OldClientRect.bottom - OldClientRect.top ==
+       NewClientRect.bottom - NewClientRect.top)
+   {
+      WvrFlags &= ~WVR_VREDRAW;
+   }
 
-  if (! (WinPos.flags & SWP_NOMOVE))
-    {
+   if (OldClientRect.right - OldClientRect.left ==
+       NewClientRect.right - NewClientRect.left)
+   {
+      WvrFlags &= ~WVR_HREDRAW;
+   }
+
+   /* FIXME: Actually do something with WVR_VALIDRECTS */
+
+   if (!(WinPos.flags & SWP_NOMOVE))
+   {
       WinPosInternalMoveWindow(Window,
                                NewWindowRect.left - OldWindowRect.left,
                                NewWindowRect.top - OldWindowRect.top);
-    }
-  Window->WindowRect = NewWindowRect;
-  Window->ClientRect = NewClientRect;
+   }
 
-  if (WinPos.flags & SWP_SHOWWINDOW)
-    {
-      Window->Style |= WS_VISIBLE;
-      FlagsEx |= SWP_EX_PAINTSELF;
-    }
-  else if (WinPos.flags & SWP_HIDEWINDOW)
-    {
+   Window->WindowRect = NewWindowRect;
+   Window->ClientRect = NewClientRect;
+
+   if (!(WinPos.flags & SWP_SHOWWINDOW) && (WinPos.flags & SWP_HIDEWINDOW))
+   {
+      /* Clear the update region */
+      IntRedrawWindow(Window, NULL, 0, RDW_VALIDATE | RDW_NOFRAME |
+                      RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ALLCHILDREN);
       Window->Style &= ~WS_VISIBLE;
-    }
+   }
+   else
+   {
+      Window->Style |= WS_VISIBLE;
+   }
 
-  if (!(WinPos.flags & SWP_NOREDRAW))
-    {
-      /* Determine the new visible region */
-      if (Window->Style & WS_CLIPCHILDREN)
-	{
-	  VisAfter = VIS_ComputeVisibleRegion(PsGetWin32Thread()->Desktop,
-	                                      Window, FALSE, FALSE, TRUE);
-	}
-      else
-	{
-	  VisAfter = VIS_ComputeVisibleRegion(PsGetWin32Thread()->Desktop,
-	                                      Window, FALSE, FALSE, FALSE);
-	}
-      if (NULLREGION == UnsafeIntGetRgnBox(VisAfter, &TempRect))
-	{
-	  NtGdiDeleteObject(VisAfter);
-	  VisAfter = NULL;
-	}
+#if 0
+   if (WvrFlags & WVR_REDRAW)
+   {
+      IntRedrawWindow(Window, NULL, 0, RDW_INVALIDATE | RDW_ERASE | RDW_FRAME);
+   }
+#endif
 
-      /* Determine which pixels can be copied from the old window position
-         to the new. Those pixels must be visible in both the old and new
-         position. Also, check the class style to see if the windows of this
-         class need to be completely repainted on (horizontal/vertical) size
-         change */
-      if (NULL != VisBefore && NULL != VisAfter && ! (WinPos.flags & SWP_NOCOPYBITS)
-          && ((WinPos.flags & SWP_NOSIZE)
-              || ! (Window->Class->style & (CS_HREDRAW | CS_VREDRAW))))
-	{
-	  CopyRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-	  RgnType = NtGdiCombineRgn(CopyRgn, VisAfter, VisBefore, RGN_AND);
+   if (!(WinPos.flags & SWP_NOACTIVATE))
+   {
+      WinPosChangeActiveWindow(WinPos.hwnd, FALSE);
+   }
 
-	  /* If this is (also) a window resize, the whole nonclient area
-             needs to be repainted. So we limit the copy to the client area,
-	     'cause there is no use in copying it (would possibly cause
-	     "flashing" too). However, if the copy region is already empty,
-	     we don't have to crop (can't take anything away from an empty
-	     region...) */
-	  if (! (WinPos.flags & SWP_NOSIZE)
-	      && ERROR != RgnType && NULLREGION != RgnType)
-	    {
-	      RECT ORect = OldClientRect;
-	      RECT NRect = NewClientRect;
-	      NtGdiOffsetRect(&ORect, - OldWindowRect.left, - OldWindowRect.top);
-	      NtGdiOffsetRect(&NRect, - NewWindowRect.left, - NewWindowRect.top);
-	      NtGdiIntersectRect(&CopyRect, &ORect, &NRect);
-	      REGION_CropRgn(CopyRgn, CopyRgn, &CopyRect, NULL);
-	    }
+   /* FIXME: Check some conditions before doing this. */
+   IntSendWINDOWPOSCHANGEDMessage(WinPos.hwnd, &WinPos);
 
-	  /* No use in copying bits which are in the update region. */
-	  if ((HRGN) 1 == Window->UpdateRegion)
-	    {
-	      /* The whole window is in the update region. No use
-	         copying anything, so set the copy region empty */
-	      NtGdiSetRectRgn(CopyRgn, 0, 0, 0, 0);
-	    }
-	  else if (1 < (DWORD) Window->UpdateRegion)
-	    {
-	      NtGdiCombineRgn(CopyRgn, CopyRgn, Window->UpdateRegion, RGN_DIFF);
-	    }
+   /* Determine the new visible region */
+   VisAfter = VIS_ComputeVisibleRegion(
+      PsGetWin32Thread()->Desktop, Window, FALSE,
+      Window->Style & WS_CLIPCHILDREN, Window->Style & WS_CLIPSIBLINGS);
+
+   if (UnsafeIntGetRgnBox(VisAfter, &TempRect) == NULLREGION)
+   {
+      NtGdiDeleteObject(VisAfter);
+      VisAfter = NULL;
+   }
+
+   /*
+    * Determine which pixels can be copied from the old window position
+    * to the new. Those pixels must be visible in both the old and new
+    * position. Also, check the class style to see if the windows of this
+    * class need to be completely repainted on (horizontal/vertical) size
+    * change.
+    */
+   if (VisBefore != NULL && VisAfter != NULL && !(WinPos.flags & SWP_NOCOPYBITS) &&
+       ((WinPos.flags & SWP_NOSIZE) || !(Window->Class->style & (CS_HREDRAW | CS_VREDRAW))))
+   {
+      CopyRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+      RgnType = NtGdiCombineRgn(CopyRgn, VisAfter, VisBefore, RGN_AND);
+
+      /*
+       * If this is (also) a window resize, the whole nonclient area
+       * needs to be repainted. So we limit the copy to the client area,
+       * 'cause there is no use in copying it (would possibly cause
+       * "flashing" too). However, if the copy region is already empty,
+       * we don't have to crop (can't take anything away from an empty
+       * region...)
+       */
+      if (!(WinPos.flags & SWP_NOSIZE) && RgnType != ERROR &&
+          RgnType != NULLREGION)
+      {
+         RECT ORect = OldClientRect;
+         RECT NRect = NewClientRect;
+         NtGdiOffsetRect(&ORect, - OldWindowRect.left, - OldWindowRect.top);
+         NtGdiOffsetRect(&NRect, - NewWindowRect.left, - NewWindowRect.top);
+         NtGdiIntersectRect(&CopyRect, &ORect, &NRect);
+         REGION_CropRgn(CopyRgn, CopyRgn, &CopyRect, NULL);
+      }
+
+      /* No use in copying bits which are in the update region. */
+      if (Window->UpdateRegion != NULL)
+      {
+         NtGdiCombineRgn(CopyRgn, CopyRgn, Window->UpdateRegion, RGN_DIFF);
+      }
 		  
+      /*
+       * Now, get the bounding box of the copy region. If it's empty
+       * there's nothing to copy. Also, it's no use copying bits onto
+       * themselves.
+       */
+      if (UnsafeIntGetRgnBox(CopyRgn, &CopyRect) == NULLREGION)
+      {
+         /* Nothing to copy, clean up */
+         NtGdiDeleteObject(CopyRgn);
+         CopyRgn = NULL;
+      }
+      else if (OldWindowRect.left != NewWindowRect.left ||
+               OldWindowRect.top != NewWindowRect.top)
+      {
+         /*
+          * Small trick here: there is no function to bitblt a region. So
+          * we set the region as the clipping region, take the bounding box
+          * of the region and bitblt that. Since nothing outside the clipping
+          * region is copied, this has the effect of bitblt'ing the region.
+          *
+          * Since NtUserGetDCEx takes ownership of the clip region, we need
+          * to create a copy of CopyRgn and pass that. We need CopyRgn later 
+          */
+         HRGN ClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+         NtGdiCombineRgn(ClipRgn, CopyRgn, NULL, RGN_COPY);
+         Dc = NtUserGetDCEx(Wnd, ClipRgn, DCX_WINDOW | DCX_CACHE |
+            DCX_INTERSECTRGN | DCX_CLIPSIBLINGS);
+         NtGdiBitBlt(Dc,
+            CopyRect.left, CopyRect.top, CopyRect.right - CopyRect.left,
+            CopyRect.bottom - CopyRect.top, Dc,
+            CopyRect.left + (OldWindowRect.left - NewWindowRect.left),
+            CopyRect.top + (OldWindowRect.top - NewWindowRect.top), SRCCOPY);
+         NtUserReleaseDC(Wnd, Dc);
+      }
+   }
+   else
+   {
+      CopyRgn = NULL;
+   }
 
-	  /* Now, get the bounding box of the copy region. If it's empty
-	     there's nothing to copy. Also, it's no use copying bits onto
-	     themselves */
-	  UnsafeIntGetRgnBox(CopyRgn, &CopyRect);
-	  if (NtGdiIsEmptyRect(&CopyRect))
-	    {
-	      /* Nothing to copy, clean up */
-	      NtGdiDeleteObject(CopyRgn);
-	      CopyRgn = NULL;
-	    }
-	  else if (OldWindowRect.left != NewWindowRect.left
-	           || OldWindowRect.top != NewWindowRect.top)
-	    {
-	      /* Small trick here: there is no function to bitblt a region. So
-                 we set the region as the clipping region, take the bounding box
-	         of the region and bitblt that. Since nothing outside the clipping
-	         region is copied, this has the effect of bitblt'ing the region.
-
-	         Since NtUserGetDCEx takes ownership of the clip region, we need
-	         to create a copy of CopyRgn and pass that. We need CopyRgn later */
-	      HRGN ClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-	      NtGdiCombineRgn(ClipRgn, CopyRgn, NULL, RGN_COPY);
-	      Dc = NtUserGetDCEx(Wnd, ClipRgn, DCX_WINDOW | DCX_CACHE |
-			    DCX_INTERSECTRGN | DCX_CLIPSIBLINGS );
-	      NtGdiBitBlt(Dc, CopyRect.left, CopyRect.top, CopyRect.right - CopyRect.left,
-	                  CopyRect.bottom - CopyRect.top, Dc,
-	                  CopyRect.left + (OldWindowRect.left - NewWindowRect.left),
-	                  CopyRect.top + (OldWindowRect.top - NewWindowRect.top), SRCCOPY);
-	      NtUserReleaseDC(Wnd, Dc);
-	    }
-	}
+   /* We need to redraw what wasn't visible before */
+   if (VisAfter != NULL)
+   {
+      if (CopyRgn != NULL)
+      {
+         DirtyRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+         RgnType = NtGdiCombineRgn(DirtyRgn, VisAfter, CopyRgn, RGN_DIFF);
+         if (RgnType != ERROR && RgnType != NULLREGION)
+         {
+            NtGdiOffsetRgn(DirtyRgn,
+               Window->WindowRect.left - Window->ClientRect.left,
+               Window->WindowRect.top - Window->ClientRect.top);
+            IntRedrawWindow(Window, NULL, DirtyRgn,
+               RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+         }
+         NtGdiDeleteObject(DirtyRgn);
+      }
       else
-	{
-	  CopyRgn = NULL;
-	}
+      {
+         IntRedrawWindow(Window, NULL, NULL,
+            RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+      }
+   }
 
-      /* We need to redraw what wasn't visible before */
-      if (NULL != VisAfter)
-	{
-	  if (NULL != CopyRgn)
-	    {
-	      DirtyRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-	      RgnType = NtGdiCombineRgn(DirtyRgn, VisAfter, CopyRgn, RGN_DIFF);
-	      if (ERROR != RgnType && NULLREGION != RgnType)
-		{
-		  NtGdiOffsetRgn(DirtyRgn,
-		     Window->WindowRect.left - Window->ClientRect.left,
-		     Window->WindowRect.top - Window->ClientRect.top);
-		  IntRedrawWindow(Window, NULL, DirtyRgn,
-		                  RDW_ERASE | RDW_FRAME | RDW_INVALIDATE |
-		                  RDW_ALLCHILDREN |
-		                  ((flags & SWP_NOREDRAW) ? 0 : RDW_ERASENOW | RDW_UPDATENOW));
-		}
-	      NtGdiDeleteObject(DirtyRgn);
-	    }
-	  else
-	    {
-	      IntRedrawWindow(Window, NULL, NULL,
-	                      RDW_ERASE | RDW_FRAME | RDW_INVALIDATE |
-	                      RDW_ALLCHILDREN |
-	                      ((flags & SWP_NOREDRAW) ? 0 : RDW_ERASENOW | RDW_UPDATENOW));
-	    }
-	}
+   if (CopyRgn != NULL)
+   {
+      NtGdiDeleteObject(CopyRgn);
+   }
 
-      if (NULL != CopyRgn)
-	{
-	  NtGdiDeleteObject(CopyRgn);
-	}
-    }
-
-  /* Expose what was covered before but not covered anymore */
-  if (NULL != VisBefore)
-    {
+   /* Expose what was covered before but not covered anymore */
+   if (VisBefore != NULL)
+   {
       ExposedRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
       NtGdiCombineRgn(ExposedRgn, VisBefore, NULL, RGN_COPY);
       NtGdiOffsetRgn(ExposedRgn, OldWindowRect.left - NewWindowRect.left,
                      OldWindowRect.top - NewWindowRect.top);
-      if (NULL != VisAfter)
-	{
-	  RgnType = NtGdiCombineRgn(ExposedRgn, ExposedRgn, VisAfter, RGN_DIFF);
-	}
+      if (VisAfter != NULL)
+         RgnType = NtGdiCombineRgn(ExposedRgn, ExposedRgn, VisAfter, RGN_DIFF);
       else
-	{
-	  RgnType = SIMPLEREGION;
-	}
-      if (ERROR != RgnType && NULLREGION != RgnType)
-        {
-          VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, Window,
-            ExposedRgn, !(flags & SWP_NOREDRAW));
-        }
+         RgnType = SIMPLEREGION;
+
+      if (RgnType != ERROR && RgnType != NULLREGION)
+      {
+         VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, Window,
+            ExposedRgn);
+      }
       NtGdiDeleteObject(ExposedRgn);
-
       NtGdiDeleteObject(VisBefore);
-    }
+   }
 
-  if (NULL != VisAfter)
-    {
+   if (VisAfter != NULL)
+   {
       NtGdiDeleteObject(VisAfter);
-    }
+   }
 
-  /* FIXME: Hide or show the claret */
+   IntReleaseWindowObject(Window);
 
-  if (!(flags & SWP_NOACTIVATE))
-    {
-      WinPosChangeActiveWindow(WinPos.hwnd, FALSE);
-    }
-
-  /* FIXME: Check some conditions before doing this. */
-  IntSendWINDOWPOSCHANGEDMessage(WinPos.hwnd, &WinPos);
-
-  IntReleaseWindowObject(Window);
-  return(TRUE);
+   return TRUE;
 }
 
 LRESULT STDCALL
