@@ -183,14 +183,14 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
     * FIXME: Why this?
     */
    Thread->KernelApcDisable = 1;
-   Thread->UserAffinity = 0;
+   Thread->UserAffinity = Process->Affinity;
    Thread->SystemAffinityActive = 0;
    Thread->Queue = NULL;
    KeInitializeSpinLock(&Thread->ApcQueueLock);
    memset(&Thread->Timer, 0, sizeof(KTIMER));
    Thread->QueueListEntry.Flink = NULL;
    Thread->QueueListEntry.Blink = NULL;
-   Thread->Affinity = 0;
+   Thread->Affinity = Process->Affinity;
    Thread->Preempted = 0;
    Thread->ProcessReadyQueue = 0;
    Thread->KernelStackResident = 1;

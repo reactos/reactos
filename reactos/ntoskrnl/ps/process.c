@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.61 2001/04/16 02:02:06 dwelch Exp $
+/* $Id: process.c,v 1.62 2001/04/16 16:29:03 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -48,7 +48,8 @@ static GENERIC_MAPPING PiProcessMapping = {PROCESS_READ,
 /* FUNCTIONS *****************************************************************/
 
 
-PEPROCESS PsGetNextProcess(PEPROCESS OldProcess)
+PEPROCESS 
+PsGetNextProcess(PEPROCESS OldProcess)
 {
    KIRQL oldIrql;
    PEPROCESS NextProcess;
@@ -87,9 +88,10 @@ PEPROCESS PsGetNextProcess(PEPROCESS OldProcess)
    return(NextProcess);
 }
 
-NTSTATUS STDCALL NtOpenProcessToken(IN	HANDLE		ProcessHandle,
-				    IN	ACCESS_MASK	DesiredAccess,  
-				    OUT	PHANDLE		TokenHandle)
+NTSTATUS STDCALL 
+NtOpenProcessToken(IN	HANDLE		ProcessHandle,
+		   IN	ACCESS_MASK	DesiredAccess,  
+		   OUT	PHANDLE		TokenHandle)
 {
    PACCESS_TOKEN Token;
    NTSTATUS Status;
@@ -109,7 +111,8 @@ NTSTATUS STDCALL NtOpenProcessToken(IN	HANDLE		ProcessHandle,
    return(Status);
 }
 
-PACCESS_TOKEN STDCALL PsReferencePrimaryToken(PEPROCESS Process)
+PACCESS_TOKEN STDCALL 
+PsReferencePrimaryToken(PEPROCESS Process)
 {
    ObReferenceObjectByPointer(Process->Token,
 			      TOKEN_ALL_ACCESS,
@@ -118,8 +121,9 @@ PACCESS_TOKEN STDCALL PsReferencePrimaryToken(PEPROCESS Process)
    return(Process->Token);
 }
 
-NTSTATUS PsOpenTokenOfProcess(HANDLE ProcessHandle,
-			      PACCESS_TOKEN* Token)
+NTSTATUS 
+PsOpenTokenOfProcess(HANDLE ProcessHandle,
+		     PACCESS_TOKEN* Token)
 {
    PEPROCESS Process;
    NTSTATUS Status;
@@ -139,7 +143,8 @@ NTSTATUS PsOpenTokenOfProcess(HANDLE ProcessHandle,
    return(STATUS_SUCCESS);
 }
 
-VOID PiKillMostProcesses(VOID)
+VOID 
+PiKillMostProcesses(VOID)
 {
    KIRQL oldIrql;
    PLIST_ENTRY current_entry;
@@ -206,6 +211,8 @@ VOID PsInitProcessManagment(VOID)
 					   PROCESS_ALL_ACCESS,
 					   NULL,
 					   PsProcessType);
+   /* System threads may run on any processor. */
+   PsInitialSystemProcess->Pcb.Affinity = 0xFFFFFFFF;
    PsInitialSystemProcess->Pcb.BasePriority = PROCESS_PRIO_NORMAL;
    KeInitializeDispatcherHeader(&PsInitialSystemProcess->Pcb.DispatcherHeader,
 				InternalProcessType,
@@ -391,7 +398,8 @@ NtCreateProcess (OUT PHANDLE ProcessHandle,
 				sizeof(EPROCESS),
 				FALSE);
    KProcess = &Process->Pcb;
-   
+   /* Inherit parent process's affinity. */
+   KProcess->Affinity = ParentProcess->Pcb.Affinity;
    KProcess->BasePriority = PROCESS_PRIO_NORMAL;
    MmInitializeAddressSpace(Process,
 			    &Process->AddressSpace);

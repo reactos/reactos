@@ -89,9 +89,7 @@ static inline PKPCR KeGetCurrentKPCR(VOID)
   return((PKPCR)value);
 }
 
-#define CURRENT_KPCR KeGetCurrentKPCR()
-
-#define KeGetCurrentProcessorNumber (KeGetCurrentKPCR()->ProcessorNumber)
+#define KeGetCurrentProcessorNumber() (KeGetCurrentKPCR()->ProcessorNumber)
 
 extern HANDLE SystemProcessHandle;
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.89 2001/04/16 02:02:04 dwelch Exp $
+/* $Id: main.c,v 1.90 2001/04/16 16:29:02 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -469,13 +469,6 @@ ExpInitializeExecutive(VOID)
       strcpy(str, "Found 1 system processor.\n");
     }
   HalDisplayString(str);
-
-#ifdef MP
-
-  DbgPrint("BSP halted\n");
-  for (;;);
-
-#endif /* MP */
 
   /*
    * Initialize various critical subsystems

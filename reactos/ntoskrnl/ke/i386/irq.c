@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.10 2001/04/16 02:02:05 dwelch Exp $
+/* $Id: irq.c,v 1.11 2001/04/16 16:29:02 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -100,14 +100,14 @@ B16(7) B16(8) B16(9) B16(A)
 B16(B) B16(C) B16(D) B16(E)
 B16(F)
 
-#undef B;
-#undef B16;
+#undef B
+#undef B16
 
 
 /* Interrupt handler list */
 
 #define L(x,y) \
-  (ULONG)&##INT_NAME2(x##y)
+  (ULONG)& INT_NAME2(x##y)
 
 #define L16(x) \
 	L(x,0), L(x,1), L(x,2), L(x,3), \
@@ -122,8 +122,8 @@ static ULONG irq_handler[NR_IRQS] = {
   L16(F)
 };
 
-#undef L;
-#undef L16;
+#undef L
+#undef L16
 
 #else /* MP */
 

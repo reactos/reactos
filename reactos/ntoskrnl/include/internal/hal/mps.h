@@ -239,20 +239,20 @@ typedef struct __attribute__((packed)) _MP_FLOATING_POINTER
 
 typedef struct __attribute__((packed)) _MP_CONFIGURATION_TABLE
 {
-	ULONG Signature;     /* PCMP */
-	USHORT Length;	        /* Size of configuration table */
-	CHAR  Specification;    /* Specification Revision */
-	CHAR Checksum;          /* Checksum */
-	CHAR Oem[8];            /* OEM ID */
-	CHAR ProductId[12];     /* Product ID */
-	ULONG OemTable;         /* 0 if not present */
-	USHORT OemTableSize;    /* 0 if not present */
-	USHORT EntryCount;      /* Number of entries */
-	ULONG LocalAPICAddress; /* Local APIC address */
+  ULONG Signature;     /* PCMP */
+  USHORT Length;	        /* Size of configuration table */
+  CHAR  Specification;    /* Specification Revision */
+  CHAR Checksum;          /* Checksum */
+  CHAR Oem[8];            /* OEM ID */
+  CHAR ProductId[12];     /* Product ID */
+  ULONG OemTable;         /* 0 if not present */
+  USHORT OemTableSize;    /* 0 if not present */
+  USHORT EntryCount;      /* Number of entries */
+  ULONG LocalAPICAddress; /* Local APIC address */
   USHORT ExtTableLength;  /* Extended Table Length */
   UCHAR ExtTableChecksum; /* Extended Table Checksum */
-	UCHAR Reserved;         /* Reserved */
-} MP_CONFIGURATION_TABLE, *PMP_CONFIGURATION_TABLE;
+  UCHAR Reserved;         /* Reserved */
+} __attribute__((packed)) MP_CONFIGURATION_TABLE, *PMP_CONFIGURATION_TABLE;
 
 /* MP Configuration Table Entries */
 #define MPCTE_PROCESSOR 0   /* One entry per processor */
@@ -264,14 +264,15 @@ typedef struct __attribute__((packed)) _MP_CONFIGURATION_TABLE
 
 typedef struct __attribute__((packed)) _MP_CONFIGURATION_PROCESSOR
 {
-	UCHAR Type;         /* 0 */
-	UCHAR ApicId;       /* Local APIC ID for the processor */
-	UCHAR ApicVersion;  /* Local APIC version */
-	UCHAR CpuFlags;     /* CPU flags */
-	ULONG CpuSignature; /* CPU signature */
+  UCHAR Type;         /* 0 */
+  UCHAR ApicId;       /* Local APIC ID for the processor */
+  UCHAR ApicVersion;  /* Local APIC version */
+  UCHAR CpuFlags;     /* CPU flags */
+  ULONG CpuSignature; /* CPU signature */
   ULONG FeatureFlags; /* CPUID feature value */
-	ULONG Reserved[2];  /* Reserved (0) */
-} MP_CONFIGURATION_PROCESSOR, *PMP_CONFIGURATION_PROCESSOR;
+  ULONG Reserved[2];  /* Reserved (0) */
+} __attribute__((packed)) MP_CONFIGURATION_PROCESSOR, 
+  *PMP_CONFIGURATION_PROCESSOR;
 
 #define CPU_FLAG_ENABLED         1  /* Processor is available */
 #define CPU_FLAG_BSP             2  /* Processor is the bootstrap processor */
@@ -286,7 +287,7 @@ typedef struct __attribute__((packed)) _MP_CONFIGURATION_BUS
 	UCHAR Type;         /* 1 */
 	UCHAR BusId;        /* Bus ID */
 	UCHAR BusType[6];   /* Bus type */
-} MP_CONFIGURATION_BUS, *PMP_CONFIGURATION_BUS;
+} __attribute__((packed)) MP_CONFIGURATION_BUS, *PMP_CONFIGURATION_BUS;
 
 #define MAX_BUS 32
 
@@ -322,7 +323,7 @@ typedef struct __attribute__((packed)) _MP_CONFIGURATION_IOAPIC
 	UCHAR ApicVersion;  /* I/O APIC version */
 	UCHAR ApicFlags;    /* I/O APIC flags */
 	ULONG ApicAddress;  /* I/O APIC base address */
-} MP_CONFIGURATION_IOAPIC, *PMP_CONFIGURATION_IOAPIC;
+} __attribute__((packed)) MP_CONFIGURATION_IOAPIC, *PMP_CONFIGURATION_IOAPIC;
 
 #define MAX_IOAPIC  2
 
@@ -338,7 +339,7 @@ typedef struct __attribute__((packed)) _MP_CONFIGURATION_INTSRC
 	UCHAR SrcBusIrq;    /* Source bus interrupt */
 	UCHAR DstApicId;    /* Destination APIC ID */
 	UCHAR DstApicInt;   /* Destination interrupt */
-} MP_CONFIGURATION_INTSRC, *PMP_CONFIGURATION_INTSRC;
+} __attribute__((packed)) MP_CONFIGURATION_INTSRC, *PMP_CONFIGURATION_INTSRC;
 
 #define MAX_IRQ_SOURCE  128
 

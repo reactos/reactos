@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.74 2001/04/16 02:02:07 dwelch Exp $
+/* $Id: thread.c,v 1.75 2001/04/16 16:29:03 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -71,7 +71,8 @@ HANDLE STDCALL PsGetCurrentThreadId(VOID)
    return(PsGetCurrentThread()->Cid.UniqueThread);
 }
 
-VOID PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
+VOID 
+PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
 {
    if (Priority >= MAXIMUM_PRIORITY || Priority < 0)
      {
@@ -115,8 +116,9 @@ VOID PsDumpThreads(VOID)
      }
 }
 
-static PETHREAD PsScanThreadList (KPRIORITY Priority)
+static PETHREAD PsScanThreadList (KPRIORITY Priority, ULONG Affinity)
 {
+#if 0
    PLIST_ENTRY current_entry;
    PETHREAD current;
    
@@ -132,6 +134,23 @@ static PETHREAD PsScanThreadList (KPRIORITY Priority)
      }
    
    return(current);
+#else
+   PLIST_ENTRY current_entry;
+   PETHREAD current;
+
+   current_entry = PriorityListHead[Priority].Flink;
+   while (current_entry != &PriorityListHead[Priority])
+     {
+       current = CONTAINING_RECORD(current_entry, ETHREAD,
+				   Tcb.QueueListEntry);
+       if (current->Tcb.UserAffinity & Affinity)
+	 {
+	   return(current);
+	 }
+       current_entry = current_entry->Flink;
+     }
+   return(NULL);
+#endif
 }
 
 
@@ -139,6 +158,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 {
    KPRIORITY CurrentPriority;
    PETHREAD Candidate;
+   ULONG Affinity;
    
    CurrentThread->Tcb.State = NewThreadStatus;
    if (CurrentThread->Tcb.State == THREAD_STATE_RUNNABLE)
@@ -148,11 +168,12 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 			       CurrentThread);
      }
    
+   Affinity = 1 << KeGetCurrentProcessorNumber();
    for (CurrentPriority = HIGH_PRIORITY;
 	CurrentPriority >= LOW_PRIORITY;
 	CurrentPriority--)
      {
-	Candidate = PsScanThreadList(CurrentPriority);
+	Candidate = PsScanThreadList(CurrentPriority, Affinity);
 	if (Candidate == CurrentThread)
 	  {
 	     KeReleaseSpinLockFromDpcLevel(&PiThreadListLock);
@@ -313,7 +334,7 @@ PsInitThreadManagment(VOID)
    FirstThread->Tcb.State = THREAD_STATE_RUNNING;
    FirstThread->Tcb.FreezeCount = 0;
    CurrentThread = FirstThread;
-   CURRENT_KPCR->CurrentThread = (PVOID)FirstThread;
+   KeGetCurrentKPCR()->CurrentThread = (PVOID)FirstThread;
    NtClose(FirstThreadHandle);
    
    DPRINT("FirstThread %x\n",FirstThread);

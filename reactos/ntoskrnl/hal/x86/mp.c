@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.8 2001/04/16 02:02:04 dwelch Exp $
+/* $Id: mp.c,v 1.9 2001/04/16 16:29:01 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1362,7 +1362,7 @@ static VOID SetInterruptGate(
 {
   IDT_DESCRIPTOR *idt;
 
-  idt = (IDT_DESCRIPTOR*)((ULONG)CURRENT_KPCR->IDT + index * sizeof(IDT_DESCRIPTOR));
+  idt = (IDT_DESCRIPTOR*)((ULONG)KeGetCurrentKPCR()->IDT + index * sizeof(IDT_DESCRIPTOR));
   idt->a = (((ULONG)address)&0xffff) + (KERNEL_CS << 16);
   idt->b = 0x8f00 + (((ULONG)address)&0xffff0000);
 }
@@ -2017,82 +2017,87 @@ HaliReadMPConfigTable(
    ULONG Count;
 
    if (Table->Signature != MPC_SIGNATURE)
-   {
-      PUCHAR pc = (PUCHAR)&Table->Signature;
-
-      DbgPrint("Bad MP configuration block signature: %c%c%c%c/%x/%x\n", pc[0],
-	       pc[1], pc[2], pc[3], MPC_SIGNATURE, (ULONG)Table->Signature);
-      KeBugCheck(0);
-      return;
-   }
+     {
+       PUCHAR pc = (PUCHAR)&Table->Signature;
+       
+       DbgPrint("Bad MP configuration block signature: %c%c%c%c/%x/%x\n", 
+		pc[0], pc[1], pc[2], pc[3], MPC_SIGNATURE, 
+		(ULONG)Table->Signature);
+       KeBugCheck(0);
+       return;
+     }
 
    if (MPChecksum((PUCHAR)Table, Table->Length))
-   {
-      DbgPrint("Bad MP configuration block checksum\n");
-      KeBugCheck(0);
-      return;
-   }
+     {
+       DbgPrint("Bad MP configuration block checksum\n");
+       KeBugCheck(0);
+       return;
+     }
 
-	if (Table->Specification < 0x04)
-   {
-      DbgPrint("Bad MP configuration table version (%d)\n",
-        Table->Specification);
-      KeBugCheck(0);
-      return;
-   }
+   if (Table->Specification < 0x04)
+     {
+       DbgPrint("Bad MP configuration table version (%d)\n",
+		Table->Specification);
+       KeBugCheck(0);
+       return;
+     }
 
    APICBase = (PULONG)Table->LocalAPICAddress;
    if (APICBase != (PULONG)APIC_DEFAULT_BASE)
-   {
-      DbgPrint("APIC base address is at 0x%X. " \
-        "I cannot handle non-standard adresses\n", APICBase);
-      KeBugCheck(0);
-   }
+     {
+       DbgPrint("APIC base address is at 0x%X. " \
+		"I cannot handle non-standard adresses\n", APICBase);
+       KeBugCheck(0);
+     }
 
-   Entry = (PUCHAR)(Table + sizeof(MP_CONFIGURATION_TABLE));
+   Entry = (PUCHAR)((PVOID)Table + sizeof(MP_CONFIGURATION_TABLE));
    Count = 0;
-   while (Count < Table->Length)
+   while (Count < (Table->Length - sizeof(MP_CONFIGURATION_TABLE)))
    {
-      /* Switch on type */
-      switch (*Entry)
-      {
-         case MPCTE_PROCESSOR:
+     DbgPrint("Scanning entry %x/%x Count %x\n", Entry, *Entry, Count);
+     /* Switch on type */
+     switch (*Entry)
+       {
+       case MPCTE_PROCESSOR:
          {
-            HaliMPProcessorInfo((PMP_CONFIGURATION_PROCESSOR)Entry);
-            Entry += sizeof(MP_CONFIGURATION_PROCESSOR);
-			      Count += sizeof(MP_CONFIGURATION_PROCESSOR);
-			      break;
-		     }
-		     case MPCTE_BUS:
-		     {
-  			    HaliMPBusInfo((PMP_CONFIGURATION_BUS)Entry);
-			      Entry += sizeof(MP_CONFIGURATION_BUS);
-		  	    Count += sizeof(MP_CONFIGURATION_BUS);
-	  		    break;
-  		   }
-	  	   case MPCTE_IOAPIC:
-  		   {
-  			    HaliMPIOApicInfo((PMP_CONFIGURATION_IOAPIC)Entry);
-			      Entry += sizeof(MP_CONFIGURATION_IOAPIC);
-			      Count += sizeof(MP_CONFIGURATION_IOAPIC);
-  			    break;
-		     }
-		     case MPCTE_INTSRC:
-		     {
-  		  	  HaliMPIntSrcInfo((PMP_CONFIGURATION_INTSRC)Entry);
-			      Entry += sizeof(MP_CONFIGURATION_INTSRC);
-			      Count += sizeof(MP_CONFIGURATION_INTSRC);
-  			    break;
-		     }
-		     case MPCTE_LINTSRC:
-		     {
-            HaliMPIntLocalInfo((PMP_CONFIGURATION_INTLOCAL)Entry);
-			      Entry += sizeof(MP_CONFIGURATION_INTLOCAL);
-			      Count += sizeof(MP_CONFIGURATION_INTLOCAL);
-			      break;
-		     }
-		  }
+	   HaliMPProcessorInfo((PMP_CONFIGURATION_PROCESSOR)Entry);
+	   Entry += sizeof(MP_CONFIGURATION_PROCESSOR);
+	   Count += sizeof(MP_CONFIGURATION_PROCESSOR);
+	   break;
 	 }
+       case MPCTE_BUS:
+	 {
+	   HaliMPBusInfo((PMP_CONFIGURATION_BUS)Entry);
+	   Entry += sizeof(MP_CONFIGURATION_BUS);
+	   Count += sizeof(MP_CONFIGURATION_BUS);
+	   break;
+	 }
+       case MPCTE_IOAPIC:
+	 {
+	   HaliMPIOApicInfo((PMP_CONFIGURATION_IOAPIC)Entry);
+	   Entry += sizeof(MP_CONFIGURATION_IOAPIC);
+	   Count += sizeof(MP_CONFIGURATION_IOAPIC);
+	   break;
+	 }
+       case MPCTE_INTSRC:
+	 {
+	   HaliMPIntSrcInfo((PMP_CONFIGURATION_INTSRC)Entry);
+	   Entry += sizeof(MP_CONFIGURATION_INTSRC);
+	   Count += sizeof(MP_CONFIGURATION_INTSRC);
+	   break;
+	 }
+       case MPCTE_LINTSRC:
+	 {
+	   HaliMPIntLocalInfo((PMP_CONFIGURATION_INTLOCAL)Entry);
+	   Entry += sizeof(MP_CONFIGURATION_INTLOCAL);
+	   Count += sizeof(MP_CONFIGURATION_INTLOCAL);
+	   break;
+	 }
+       default:
+	 DbgPrint("Unknown entry in MPC table\n");
+	 KeBugCheck(0);
+       }
+   }
 }
 
 
