@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.15 2003/08/19 11:48:49 weiden Exp $
+/* $Id: msgqueue.c,v 1.16 2003/08/25 14:26:30 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -124,21 +124,60 @@ MsqInitializeImpl(VOID)
   return(STATUS_SUCCESS);
 }
 
+LPMSG FASTCALL
+MsgFindSystemMessage(UINT message)
+{
+  ULONG QueuePos;
+  LPMSG Result = NULL;
+  MSG Msg;
+  
+  if(SystemMessageQueueCount > 0)
+  {
+    QueuePos = SystemMessageQueueTail;
+    while(QueuePos >= SystemMessageQueueHead)
+    {
+      Msg = SystemMessageQueue[QueuePos];
+      if(Msg.message == message)
+      {
+        Result = &Msg;
+        break;
+      }
+      QueuePos--;
+    }
+  }
+  
+  return Result;
+}
+
 VOID FASTCALL
 MsqInsertSystemMessage(MSG* Msg)
-{
+{  
   KIRQL OldIrql;
+  LPMSG mmov = NULL;
 
   KeAcquireSpinLock(&SystemMessageQueueLock, &OldIrql);
-  if (SystemMessageQueueCount == SYSTEM_MESSAGE_QUEUE_SIZE)
+  
+  /* only insert WM_MOUSEMOVE messages if not already in system message queue */
+  if(Msg->message == WM_MOUSEMOVE)
+    mmov = MsgFindSystemMessage(WM_MOUSEMOVE);
+    
+  if(mmov)
+  {
+    /* overwrite the existing WM_MOUSEMOVE message */
+    *mmov = *Msg;
+  }
+  else
+  {
+    if (SystemMessageQueueCount == SYSTEM_MESSAGE_QUEUE_SIZE)
     {
       KeReleaseSpinLock(&SystemMessageQueueLock, OldIrql);
       return;
     }
-  SystemMessageQueue[SystemMessageQueueTail] = *Msg;
-  SystemMessageQueueTail = 
-    (SystemMessageQueueTail + 1) % SYSTEM_MESSAGE_QUEUE_SIZE;
-  SystemMessageQueueCount++;
+    SystemMessageQueue[SystemMessageQueueTail] = *Msg;
+    SystemMessageQueueTail = 
+      (SystemMessageQueueTail + 1) % SYSTEM_MESSAGE_QUEUE_SIZE;
+    SystemMessageQueueCount++;
+  }
   KeReleaseSpinLock(&SystemMessageQueueLock, OldIrql);
   KeSetEvent(&HardwareMessageEvent, IO_NO_INCREMENT, FALSE);
 }
