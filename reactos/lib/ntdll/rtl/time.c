@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.15 2003/07/11 13:50:23 royce Exp $
+/* $Id: time.c,v 1.16 2003/07/11 23:58:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,8 +30,8 @@
 #define DAYSPERLEAPYEAR    366
 #define MONSPERYEAR        12
 
-#define TICKSTO1970         0x019db1ded53e8000
-#define TICKSTO1980         0x01a8e79fe1d58000
+#define TICKSTO1970         0x019db1ded53e8000LL
+#define TICKSTO1980         0x01a8e79fe1d58000LL
 
 static const int YearLengths[2] = {DAYSPERNORMALYEAR, DAYSPERLEAPYEAR};
 static const int MonthLengths[2][MONSPERYEAR] =
@@ -219,11 +219,7 @@ RtlSecondsSince1970ToTime(
 	ULONG SecondsSince1970,
 	PLARGE_INTEGER Time)
 {
-  LONGLONG llTime;
-
-  llTime = (SecondsSince1970 * TICKSPERSEC) + TICKSTO1970;
-
-  *Time = *(LARGE_INTEGER *)&llTime;
+  Time->QuadPart = (SecondsSince1970 * TICKSPERSEC) + TICKSTO1970;
 }
 
 
@@ -236,11 +232,7 @@ RtlSecondsSince1980ToTime(
 	ULONG SecondsSince1980,
 	PLARGE_INTEGER Time)
 {
-  LONGLONG llTime;
-
-  llTime = (SecondsSince1980 * TICKSPERSEC) + TICKSTO1980;
-
-  *Time = *(LARGE_INTEGER *)&llTime;
+  Time->QuadPart = (SecondsSince1980 * TICKSPERSEC) + TICKSTO1980;
 }
 
 

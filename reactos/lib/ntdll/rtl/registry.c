@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.21 2003/07/11 13:50:23 royce Exp $
+/* $Id: registry.c,v 1.22 2003/07/11 23:58:45 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -89,7 +89,7 @@ RtlDeleteRegistryValue(IN ULONG RelativeTo,
   UNICODE_STRING Name;
 
   Status = RtlpGetRegistryHandle(RelativeTo,
-				 Path,
+				 (PWSTR)Path,
 				 FALSE,
 				 &KeyHandle);
   if (!NT_SUCCESS(Status))
@@ -192,7 +192,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   DPRINT("RtlQueryRegistryValues() called\n");
 
   Status = RtlpGetRegistryHandle(RelativeTo,
-				 Path,
+				 (PWSTR)Path,
 				 FALSE,
 				 &BaseKeyHandle);
   if (!NT_SUCCESS(Status))
@@ -690,7 +690,7 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
   UNICODE_STRING Name;
 
   Status = RtlpGetRegistryHandle(RelativeTo,
-				 Path,
+				 (PWSTR)Path,
 				 TRUE,
 				 &KeyHandle);
   if (!NT_SUCCESS(Status))
