@@ -396,13 +396,20 @@ ULONG PICE_fnncmp(char* s1,char* s2, ULONG len)
 	return result;
 }
 
+wchar_t PICE_towlower(wchar_t c)
+{
+   if ( c>=L'A' && c<=L'Z' )
+       return (c - (L'A' - L'a'));
+   return(c);
+}
+
 ULONG PICE_wcsicmp(WCHAR* s1, WCHAR* s2)
 {
     ULONG result=1;
 
     while(IsAddressValid((ULONG)s1) && *s1 && // not end of string
           IsAddressValid((ULONG)s2) && *s2 && // not end of string
-          towlower(*s1)==towlower(*s2) ) // char are the same except case
+          PICE_towlower(*s1)==PICE_towlower(*s2) ) // char are the same except case
     {
         s1++;
         s2++;
@@ -1976,9 +1983,9 @@ int PICE_sprintf(char * buf, const char *fmt, ...)
 UCHAR AsciiFromScan(UCHAR s)
 {
   ULONG i;
-  
+
   ENTER_FUNC();
-  
+
   if(!bShift)
     {
       if(ucKeyboardLayout == GERMANY)

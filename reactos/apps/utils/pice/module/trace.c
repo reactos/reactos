@@ -39,23 +39,6 @@ void DeInstallTraceHook(void);
 
 volatile ULONG OldInt1Handler=0;
 
-__asm__("
-NewInt1Handler:
-        pushl %eax
-		movl %dr6,%eax
-		testl $(1<<14),%eax
-		jz exceptionnotsinglestep
-
-        popl %eax
-        pushl $" STR(REASON_SINGLESTEP) "
-        jmp NewInt31Handler
-
-exceptionnotsinglestep:
-        popl %eax
-        pushl $" STR(REASON_HARDWARE_BP) "
-        jmp NewInt31Handler
-");
-
 BOOLEAN InstallTraceHook(void)
 {
 	ULONG LocalInt1Handler;
@@ -74,6 +57,26 @@ BOOLEAN InstallTraceHook(void)
 	UnmaskIrqs();
 	return TRUE;
 }
+
+//this asm function must be at least second in the file. otherwise gcc does not
+//generate correct code.
+__asm__("
+NewInt1Handler:
+       pushl %eax
+	 	movl %dr6,%eax
+	 	testl $(1<<14),%eax
+	 	jz exceptionnotsinglestep
+
+        popl %eax
+        pushl $" STR(REASON_SINGLESTEP) "
+		//call _ping1
+        jmp NewInt31Handler
+
+exceptionnotsinglestep:
+        popl %eax
+        pushl $" STR(REASON_HARDWARE_BP) "
+        jmp NewInt31Handler
+");
 
 void DeInstallTraceHook(void)
 {
