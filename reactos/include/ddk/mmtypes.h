@@ -1,11 +1,10 @@
-/* $Id: mmtypes.h,v 1.18 2003/12/31 05:33:03 jfilby Exp $ */
+/* $Id: mmtypes.h,v 1.19 2004/07/17 03:04:45 ion Exp $ */
 
 #ifndef _INCLUDE_DDK_MMTYPES_H
 #define _INCLUDE_DDK_MMTYPES_H
 
 #include <ddk/i386/pagesize.h>
 #include <ntos/mm.h>
-
 
 /*
  * FUNCTION: Determines if the given virtual address is page aligned
@@ -64,6 +63,24 @@ typedef struct _MDL
    ULONG ByteCount;
    ULONG ByteOffset;
 } MDL, *PMDL;
+
+typedef struct _PHYSICAL_MEMORY_RANGE {
+	PHYSICAL_ADDRESS BaseAddress;
+	LARGE_INTEGER NumberOfBytes;
+} PHYSICAL_MEMORY_RANGE, *PPHYSICAL_MEMORY_RANGE; 
+
+// read file scatter / write file scatter
+typedef union _FILE_SEGMENT_ELEMENT {
+	PVOID Buffer;
+	ULONG Alignment;
+}FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT;
+
+typedef struct _READ_LIST {
+	struct FILE_OBJECT* FileObject;
+    ULONG NumberOfEntries;
+    ULONG IsImage;
+    FILE_SEGMENT_ELEMENT List[];
+} READ_LIST, *PREAD_LIST;
 
 #define MmSmallSystem (0)
 #define MmMediumSystem (1)

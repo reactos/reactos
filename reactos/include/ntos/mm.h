@@ -54,6 +54,7 @@
 #define FILE_MAP_READ	(4)
 #define FILE_MAP_WRITE	(2)
 #define FILE_MAP_COPY	(1)
+
 #else /* __USE_W32API */
 
 #include <ddk/ntifs.h>
