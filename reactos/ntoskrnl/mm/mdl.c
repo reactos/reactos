@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.50 2003/06/19 19:01:01 gvg Exp $
+/* $Id: mdl.c,v 1.51 2003/07/06 10:50:21 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -284,7 +284,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
    ULONG NrPages;
    NTSTATUS Status;
    KPROCESSOR_MODE Mode;
-   PEPROCESS CurrentProcess;
+   PEPROCESS CurrentProcess = NULL;
 
    DPRINT("MmProbeAndLockPages(Mdl %x)\n", Mdl);
    
@@ -296,12 +296,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 	return;
      }
    
-   CurrentProcess = PsGetCurrentProcess();
 
-   if (Mdl->Process != CurrentProcess)
-     {
-       KeAttachProcess(Mdl->Process);
-     }
 
    if (Mdl->StartVa >= (PVOID)KERNEL_BASE)
      {
@@ -310,6 +305,11 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
    else
      {
        Mode = UserMode;
+       CurrentProcess = PsGetCurrentProcess();
+       if (Mdl->Process != CurrentProcess)
+	 {
+            KeAttachProcess(Mdl->Process);
+	 }
      }
 
    /*
@@ -361,7 +361,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 	MmReferencePage((LARGE_INTEGER)(LONGLONG)MdlPages[i]);
      }
    MmUnlockAddressSpace(&Mdl->Process->AddressSpace);
-   if (Mdl->Process != CurrentProcess)
+   if (Mode == UserMode && Mdl->Process != CurrentProcess)
      {
        KeDetachProcess();
      }
