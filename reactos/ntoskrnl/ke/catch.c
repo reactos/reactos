@@ -257,17 +257,4 @@ ExRaiseHardError (
 	UNIMPLEMENTED;
 }
 
-/*
- * @unimplemented
- */
-ULONG
-STDCALL
-KeGetRecommendedSharedDataAlignment(
-	VOID
-	)
-{
-	UNIMPLEMENTED;
-	return 0;
-}
-
 /* EOF */

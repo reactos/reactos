@@ -11,6 +11,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
+#include "../dbg/kdb.h"
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -562,14 +563,17 @@ IoInit (VOID)
 }
 
 
-VOID INIT_FUNCTION
-IoInit2(VOID)
+VOID 
+INIT_FUNCTION
+IoInit2(BOOLEAN BootLog)
 {
   PDEVICE_NODE DeviceNode;
   PDRIVER_OBJECT DriverObject;
   MODULE_OBJECT ModuleObject;
   NTSTATUS Status;
 
+  IoCreateDriverList();
+          
   KeInitializeSpinLock (&IoStatisticsLock);
 
   /* Initialize raw filesystem driver */
@@ -614,6 +618,56 @@ IoInit2(VOID)
   IopInvalidateDeviceRelations(
     IopRootDeviceNode,
     BusRelations);
+  
+     /* Start boot logging */
+    IopInitBootLog(BootLog);
+  
+    /* Load boot start drivers */
+    IopInitializeBootDrivers();
+}
+
+VOID
+STDCALL
+INIT_FUNCTION
+IoInit3(VOID)
+{
+    NTSTATUS Status;
+    
+    /* Create ARC names for boot devices */
+    IoCreateArcNames();
+
+    /* Create the SystemRoot symbolic link */
+    CPRINT("CommandLine: %s\n", (PCHAR)KeLoaderBlock.CommandLine);
+    Status = IoCreateSystemRootLink((PCHAR)KeLoaderBlock.CommandLine);
+    if (!NT_SUCCESS(Status)) {
+        DbgPrint("IoCreateSystemRootLink FAILED: (0x%x) - ", Status);
+        DbgPrintErrorMessage (Status);
+        KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);
+    }
+
+    /* Start Profiling on a Debug Build */
+#if defined(KDBG)
+    KdbInit();
+#endif /* KDBG */
+
+    /* I/O is now setup for disk access, so start the debugging logger thread. */
+    if (KdDebugState & KD_DEBUG_FILELOG) DebugLogInit2();
+
+    /* Load services for devices found by PnP manager */
+    IopInitializePnpServices(IopRootDeviceNode, FALSE);
+
+    /* Load system start drivers */
+    IopInitializeSystemDrivers();
+    IoDestroyDriverList();
+
+    /* Stop boot logging */
+    IopStopBootLog();
+
+    /* Assign drive letters */
+    IoAssignDriveLetters((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock,
+                         NULL,
+                         NULL,
+                         NULL);    
 }
 
 /*

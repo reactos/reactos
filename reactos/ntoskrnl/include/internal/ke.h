@@ -116,6 +116,17 @@ typedef struct _KPROFILE
   struct _EPROCESS *Process;
 } KPROFILE, *PKPROFILE;
 
+/* Cached modules from the loader block */
+typedef enum _CACHED_MODULE_TYPE {
+    AnsiCodepage,
+    OemCodepage,
+    UnicodeCasemap,
+    SystemRegistry,
+    HardwareRegistry,
+    MaximumCachedModuleType,
+} CACHED_MODULE_TYPE, *PCACHED_MODULE_TYPE;
+extern PLOADER_MODULE CachedModules[MaximumCachedModuleType];
+
 VOID STDCALL 
 DbgBreakPointNoBugCheck(VOID);
 
