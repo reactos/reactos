@@ -8,11 +8,13 @@ ifeq ($(HOST),mingw32-linux)
 CC = mingw32-gcc
 CXX = mingw32-g++
 LINK = mingw32-g++
+RC = mingw32-windres
 CD_PREFIX := ./
 else
 CC = gcc
 CXX = g++
 LINK = g++
+RC = windres
 CD_PREFIX := 
 endif
 
@@ -101,7 +103,7 @@ $(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
 	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS))
 
 explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc
-	windres $(RCFLAGS) -o $@ $^
+	$(RC) $(RCFLAGS) -o $@ $^
 
 clean:
 	$(TOOLS_PATH)/rdel $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
