@@ -38,7 +38,7 @@ endif
 # detect Windows host environment
 ifeq ($(HOST),)
 ifeq ($(word 1,$(shell gcc -dumpmachine)),mingw32)
-HOST=mingw32-windows
+export HOST=mingw32-windows
 else
 export HOST=mingw32-linux
 endif
