@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.4 2004/06/05 08:28:37 navaraf Exp $
+/* $Id: create.c,v 1.5 2004/11/24 11:02:15 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -47,7 +47,7 @@ NtfsMakeAbsoluteFilename(PFILE_OBJECT pFileObject,
 
   DPRINT("try related for %S\n", pRelativeFileName);
   Fcb = pFileObject->FsContext;
-  assert(Fcb);
+  ASSERT(Fcb);
 
   /* verify related object is a directory and target name
      don't start with \. */
@@ -58,7 +58,7 @@ NtfsMakeAbsoluteFilename(PFILE_OBJECT pFileObject,
     }
 
   /* construct absolute path name */
-  assert(wcslen (Fcb->PathName) + 1 + wcslen (pRelativeFileName) + 1
+  ASSERT(wcslen (Fcb->PathName) + 1 + wcslen (pRelativeFileName) + 1
           <= MAX_PATH);
   rcName = ExAllocatePool(NonPagedPool, MAX_PATH * sizeof(WCHAR));
   if (!rcName)
@@ -169,9 +169,9 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
   DPRINT("NtfsCreateFile() called\n");
 
   DeviceExt = DeviceObject->DeviceExtension;
-  assert (DeviceExt);
+  ASSERT(DeviceExt);
   Stack = IoGetCurrentIrpStackLocation (Irp);
-  assert (Stack);
+  ASSERT(Stack);
 
   RequestedDisposition = ((Stack->Parameters.Create.Options >> 24) & 0xff);
 //  RequestedOptions =

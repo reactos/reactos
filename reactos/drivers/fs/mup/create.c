@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.1 2002/06/25 22:21:41 ekohl Exp $
+/* $Id: create.c,v 1.2 2004/11/24 11:01:58 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -49,9 +49,9 @@ MupCreate(PDEVICE_OBJECT DeviceObject,
   DPRINT("MupCreate() called\n");
 
   DeviceExt = DeviceObject->DeviceExtension;
-  assert (DeviceExt);
+  ASSERT(DeviceExt);
   Stack = IoGetCurrentIrpStackLocation (Irp);
-  assert (Stack);
+  ASSERT(Stack);
 
   FileObject = Stack->FileObject;
 

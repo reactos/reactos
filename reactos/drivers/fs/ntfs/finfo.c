@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: finfo.c,v 1.3 2004/06/05 08:28:37 navaraf Exp $
+/* $Id: finfo.c,v 1.4 2004/11/24 11:02:15 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -52,8 +52,8 @@ NtfsGetStandardInformation(PFCB Fcb,
     return(STATUS_BUFFER_OVERFLOW);
 
   /* PRECONDITION */
-  assert(StandardInfo != NULL);
-  assert(Fcb != NULL);
+  ASSERT(StandardInfo != NULL);
+  ASSERT(Fcb != NULL);
 
   RtlZeroMemory(StandardInfo,
 		sizeof(FILE_STANDARD_INFORMATION));
@@ -137,8 +137,8 @@ NtfsGetNameInformation(PFILE_OBJECT FileObject,
 
   DPRINT("NtfsGetNameInformation() called\n");
 
-  assert(NameInfo != NULL);
-  assert(Fcb != NULL);
+  ASSERT(NameInfo != NULL);
+  ASSERT(Fcb != NULL);
 
   NameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
 //  NameLength = 2;
@@ -165,8 +165,8 @@ NtfsGetInternalInformation(PFCB Fcb,
 {
   DPRINT("NtfsGetInternalInformation() called\n");
 
-  assert(InternalInfo);
-  assert(Fcb);
+  ASSERT(InternalInfo);
+  ASSERT(Fcb);
 
   if (*BufferLength < sizeof(FILE_INTERNAL_INFORMATION))
     return(STATUS_BUFFER_OVERFLOW);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.11 2004/06/05 08:28:37 navaraf Exp $
+/* $Id: fcb.c,v 1.12 2004/11/24 11:02:15 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -452,9 +452,9 @@ NtfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
   LARGE_INTEGER StreamOffset;
   PVOID Context;
 
-  assert(DeviceExt);
-  assert(DirectoryFcb);
-  assert(FileToFind);
+  ASSERT(DeviceExt);
+  ASSERT(DirectoryFcb);
+  ASSERT(FileToFind);
 
   DPRINT("NtfsDirFindFile(VCB:%08x, dirFCB:%08x, File:%S)\n",
 	 DeviceExt,
