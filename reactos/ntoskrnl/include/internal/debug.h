@@ -52,6 +52,7 @@
 
 #define CPRINT(args...)
 #define assert(x)
+#define assertmsg(_c_, _m_)
 
 #endif /* DBG */
 
