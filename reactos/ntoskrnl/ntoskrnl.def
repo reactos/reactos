@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.79 2000/07/02 10:47:28 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.80 2000/07/02 17:31:32 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -21,7 +21,6 @@ ExAcquireResourceExclusiveLite@8
 ExAcquireResourceSharedLite@8
 ExAcquireSharedStarveExclusive@8
 ExAcquireSharedWaitForExclusive@8
-ExAllocateFromNPagedLookasideList@4
 ExAllocateFromPagedLookasideList@4
 ExAllocatePool@8
 ExAllocatePoolWithQuota@8
@@ -38,7 +37,6 @@ ExDesktopObjectType DATA
 ExEventObjectType DATA
 ExExtendZone@12
 ExFreePool@4
-ExFreeToNPagedLookasideList@8
 ExFreeToPagedLookasideList@8
 ExGetExclusiveWaiterCount@4
 ;ExGetPreviousMode
@@ -1001,16 +999,6 @@ wcsspn
 wcsstr
 wcstombs
 wctomb
-;
-;	ReactOS Extensions (these should be macros!)
-;
-ExAllocateFromZone@4
-ExFreeToZone@8
-ExInterlockedAllocateFromZone@8
-ExInterlockedFreeToZone@12
-ExIsFullZone@4
-ExIsObjectInFirstZoneSegment@8
-MmGetSystemAddressForMdl
 ;
 ;
 ; exports from hal.dll

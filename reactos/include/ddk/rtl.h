@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.37 2000/07/02 10:46:35 ekohl Exp $
+/* $Id: rtl.h,v 1.38 2000/07/02 17:30:31 ekohl Exp $
  * 
  */
 
@@ -138,6 +138,27 @@ enum
    RTL_REGISTRY_OPTIONAL,
    RTL_REGISTRY_VALUE,
 };
+
+#define SHORT_SIZE	(sizeof(USHORT))
+#define SHORT_MASK	(SHORT_SIZE-1)
+#define LONG_SIZE	(sizeof(ULONG))
+#define LONG_MASK	(LONG_SIZE-1)
+#define LOWBYTE_MASK	0x00FF
+
+#define FIRSTBYTE(Value)	((Value) & LOWBYTE_MASK)
+#define SECONDBYTE(Value)	(((Value) >> 8) & LOWBYTE_MASK)
+#define THIRDBYTE(Value)	(((Value) >> 16) & LOWBYTE_MASK)
+#define FOURTHBYTE(Value)	(((Value) >> 24) & LOWBYTE_MASK)
+
+/* FIXME: reverse byte-order on big-endian machines (e.g. MIPS) */
+#define SHORT_LEAST_SIGNIFICANT_BIT	0
+#define SHORT_MOST_SIGNIFICANT_BIT	1
+
+#define LONG_LEAST_SIGNIFICANT_BIT	0
+#define LONG_3RD_MOST_SIGNIFICANT_BIT	1
+#define LONG_2RD_MOST_SIGNIFICANT_BIT	2
+#define LONG_MOST_SIGNIFICANT_BIT	3
+
 
 
 #if defined(__NTOSKRNL__) || defined(__NTDLL__)
@@ -1301,17 +1322,43 @@ RtlReAllocateHeap (
 	DWORD	size
 	);
 
-VOID
-RtlRetrieveUlong (
-	PULONG	DestinationAddress,
-	PULONG	SourceAddress
-	);
+/*
+ * VOID
+ * RtlRetrieveUlong (
+ *	PULONG	DestinationAddress,
+ *	PULONG	SourceAddress
+ *	);
+ */
+#define RtlRetrieveUlong(DestAddress,SrcAddress) \
+	if ((ULONG)(SrcAddress) & LONG_MASK) \
+	{ \
+		((PUCHAR)(DestAddress))[0]=((PUCHAR)(SrcAddress))[0]; \
+		((PUCHAR)(DestAddress))[1]=((PUCHAR)(SrcAddress))[1]; \
+		((PUCHAR)(DestAddress))[2]=((PUCHAR)(SrcAddress))[2]; \
+		((PUCHAR)(DestAddress))[3]=((PUCHAR)(SrcAddress))[3]; \
+	} \
+	else \
+	{ \
+		*((PULONG)(DestAddress))=*((PULONG)(SrcAddress)); \
+	}
 
-VOID
-RtlRetrieveUshort (
-	PUSHORT	DestinationAddress,
-	PUSHORT	SourceAddress
-	);
+/*
+ * VOID
+ * RtlRetrieveUshort (
+ *	PUSHORT	DestinationAddress,
+ *	PUSHORT	SourceAddress
+ *	);
+ */
+#define RtlRetrieveUshort(DestAddress,SrcAddress) \
+	if ((ULONG)(SrcAddress) & SHORT_MASK) \
+	{ \
+		((PUCHAR)(DestAddress))[0]=((PUCHAR)(SrcAddress))[0]; \
+		((PUCHAR)(DestAddress))[1]=((PUCHAR)(SrcAddress))[1]; \
+	} \
+	else \
+	{ \
+		*((PUSHORT)(DestAddress))=*((PUSHORT)(SrcAddress)); \
+	}
 
 VOID
 STDCALL
@@ -1358,23 +1405,43 @@ RtlSizeHeap (
 	PVOID	pmem
 	);
 
-VOID
-RtlStoreLong (
-	PULONG	Address,
-	ULONG	Value
-	);
+/*
+ * VOID
+ * RtlStoreUlong (
+ *	PULONG	Address,
+ *	ULONG	Value
+ *	);
+ */
+#define RtlStoreUlong(Address,Value) \
+	if ((ULONG)(Address) & LONG_MASK) \
+	{ \
+		((PUCHAR)(Address))[LONG_LEAST_SIGNIFICANT_BIT]=(UCHAR)(FIRSTBYTE(Value)); \
+		((PUCHAR)(Address))[LONG_3RD_MOST_SIGNIFICANT_BIT]=(UCHAR)(FIRSTBYTE(Value)); \
+		((PUCHAR)(Address))[LONG_2ND_MOST_SIGNIFICANT_BIT]=(UCHAR)(THIRDBYTE(Value)); \
+		((PUCHAR)(Address))[LONG_MOST_SIGNIFICANT_BIT]=(UCHAR)(FOURTHBYTE(Value)); \
+	} \
+	else \
+	{ \
+		*((PULONG)(Address))=(ULONG)(Value); \
+	}
 
-VOID
-RtlStoreUlong (
-	PULONG	Address,
-	ULONG	Value
-	);
-
-VOID
-RtlStoreUshort (
-	PUSHORT	Address,
-	USHORT	Value
-	);
+/*
+ * VOID
+ * RtlStoreUshort (
+ *	PUSHORT	Address,
+ *	USHORT	Value
+ *	);
+ */
+#define RtlStoreUshort(Address,Value) \
+	if ((ULONG)(Address) & SHORT_MASK) \
+	{ \
+		((PUCHAR)(Address))[SHORT_LEAST_SIGNIFICANT_BIT]=(UCHAR)(FIRSTBYTE(Value)); \
+		((PUCHAR)(Address))[SHORT_MOST_SIGNIFICANT_BIT]=(UCHAR)(SECONDBYTE(Value)); \
+	} \
+	else \
+	{ \
+		*((PUSHORT)(Address))=(USHORT)(Value); \
+	}
 
 BOOLEAN
 STDCALL

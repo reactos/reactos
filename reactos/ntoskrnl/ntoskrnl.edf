@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.66 2000/07/02 10:47:28 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.67 2000/07/02 17:31:32 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -21,7 +21,6 @@ ExAcquireResourceExclusiveLite=ExAcquireResourceExclusiveLite@8
 ExAcquireResourceSharedLite=ExAcquireResourceSharedLite@8
 ExAcquireSharedStarveExclusive=ExAcquireSharedStarveExclusive@8
 ExAcquireSharedWaitForExclusive=ExAcquireSharedWaitForExclusive@8
-ExAllocateFromNPagedLookasideList=ExAllocateFromNPagedLookasideList@4
 ExAllocateFromPagedLookasideList=ExAllocateFromPagedLookasideList@4
 ExAllocatePool=ExAllocatePool@8
 ExAllocatePoolWithQuota=ExAllocatePoolWithQuota@8
@@ -38,7 +37,6 @@ ExDesktopObjectType DATA
 ExEventObjectType DATA
 ExExtendZone=ExExtendZone@12
 ExFreePool=ExFreePool@4
-ExFreeToNPagedLookasideList=ExFreeToNPagedLookasideList@8
 ExFreeToPagedLookasideList=ExFreeToPagedLookasideList@8
 ExGetExclusiveWaiterCount=ExGetExclusiveWaiterCount@4
 ;ExGetPreviousMode
@@ -937,16 +935,6 @@ wcsspn
 wcsstr
 wcstombs
 wctomb
-;
-;	ReactOS Extensions
-;
-ExAllocateFromZone=ExAllocateFromZone@4
-ExFreeToZone=ExFreeToZone@8
-ExInterlockedAllocateFromZone=ExInterlockedAllocateFromZone@8
-ExInterlockedFreeToZone=ExInterlockedFreeToZone@12
-ExIsFullZone=ExIsFullZone@4
-ExIsObjectInFirstZoneSegment=ExIsObjectInFirstZoneSegment@8
-MmGetSystemAddressForMdl
 ;
 ;
 ; exports from hal.dll

@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.77 2000/07/02 10:47:28 ekohl Exp $
+# $Id: makefile_rex,v 1.78 2000/07/02 17:31:31 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -54,7 +54,6 @@ OBJECTS_RTL = \
 	rtl/string.o \
 	rtl/swprintf.o \
 	rtl/time.o \
-	rtl/unalign.o \
 	rtl/unicode.o \
 	rtl/wstring.o
 
@@ -423,14 +422,14 @@ ifeq ($(DOSCLI),yes)
 CLEAN_FILES = $(OBJECTS_PATH)\*.o cc\*.o cm\*.o dbg\*.o ex\*.o hal\x86\*.o io\*.o \
               ke\*.o ldr\*.o mm\*.o nt\*.o ob\*.o ps\*.o rtl\*.o se\*.o \
               ke\i386\*.o mm\i386\*.o fs\*.o po\*.o nls\*.o lpc\*.o \
-              kd\*.o utils\export\export.exe $(TARGETNAME).o $(TARGETNAME).a junk.tmp \
-              base.tmp temp.exp $(TARGETNAME).exe $(TARGETNAME).sym $(TARGETNAME).coff
+              kd\*.o $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
+              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym $(TARGETNAME).coff
 else
 CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o ex/*.o hal/x86/*.o io/*.o \
               ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o rtl/*.o se/*.o \
               ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o lpc/*.o \
-              kd/*.o utils/export/export $(TARGETNAME).o $(TARGETNAME).a junk.tmp \
-              base.tmp temp.exp $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym $(TARGETNAME).coff
+              kd/*.o $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
+              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym $(TARGETNAME).coff
 endif
 
 

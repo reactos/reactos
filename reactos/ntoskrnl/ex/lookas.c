@@ -1,4 +1,4 @@
-/* $Id: lookas.c,v 1.1 2000/07/02 10:48:31 ekohl Exp $
+/* $Id: lookas.c,v 1.2 2000/07/02 17:31:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,15 +16,6 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
-
-PVOID
-STDCALL
-ExAllocateFromNPagedLookasideList (
-	PNPAGED_LOOKASIDE_LIST	Lookaside
-	)
-{
-   UNIMPLEMENTED;
-}
 
 PVOID
 STDCALL
@@ -48,16 +39,6 @@ VOID
 STDCALL
 ExDeletePagedLookasideList (
 	PPAGED_LOOKASIDE_LIST	Lookaside
-	)
-{
-   UNIMPLEMENTED;
-}
-
-VOID
-STDCALL
-ExFreeToNPagedLookasideList (
-	PNPAGED_LOOKASIDE_LIST	Lookaside,
-	PVOID			Entry
 	)
 {
    UNIMPLEMENTED;

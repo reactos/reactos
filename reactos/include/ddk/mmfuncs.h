@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.6 2000/06/29 23:35:12 dwelch Exp $ */
+/* $Id: mmfuncs.h,v 1.7 2000/07/02 17:30:31 ekohl Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
 #include <ddk/i386/pagesize.h>
@@ -176,7 +176,8 @@ MmFreeNonCachedMemory (
  *         Mdl = the mdl
  * RETURNS: The offset in bytes
  */
-#define MmGetMdlByteOffset(Mdl)  ((Mdl)->ByteOffset)
+#define MmGetMdlByteOffset(Mdl) \
+	((Mdl)->ByteOffset)
 
 /*
  * FUNCTION: Returns the initial virtual address for a buffer described
@@ -185,7 +186,7 @@ MmFreeNonCachedMemory (
  *        Mdl = the mdl
  * RETURNS: The initial virtual address
  */
-#define MmGetMdlVirtualAddress(Mdl)  \
+#define MmGetMdlVirtualAddress(Mdl) \
 	((PVOID) ((PCHAR) (Mdl)->StartVa + (Mdl)->ByteOffset))
 
 /*
@@ -200,33 +201,67 @@ STDCALL
 MmGetPhysicalAddress (
 	IN	PVOID	BaseAddress
 	);
+
 #define MmGetProcedureAddress(Address) (Address)
 
 /*
- * FUNCTION: Maps the physical pages described by an MDL into system space
+ * PVOID
+ * MmGetSystemAddressForMdl (
+ *	PMDL Mdl
+ *	);
+ *
+ * FUNCTION:
+ *	Maps the physical pages described by an MDL into system space
+ *
  * ARGUMENTS:
- *      Mdl = mdl
- * RETURNS: The base system address for the mapped buffer
+ *	Mdl = mdl
+ *
+ * RETURNS:
+ *	The base system address for the mapped buffer
  */
-PVOID MmGetSystemAddressForMdl(PMDL Mdl);
+#define MmGetSystemAddressForMdl(Mdl) \
+	(((Mdl)->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA | MDL_SOURCE_IS_NONPAGED_POOL)) ? \
+		((Mdl)->MappedSystemVa):(MmMapLockedPages((Mdl),KernelMode)))
+
 NTSTATUS
 STDCALL
 MmGrowKernelStack (
 	DWORD	Unknown0
 	);
+
 #ifdef __NTOSKRNL__
 extern PVOID EXPORTED MmHighestUserAddress;
 #else
 extern PVOID IMPORTED MmHighestUserAddress;
 #endif
+
 /*
- * FUNCTION: Initalizes an mdl
- * ARGUMENTS: 
- *       MemoryDescriptorList = MDL to be initalized
- *       BaseVa = Base virtual address of the buffer 
- *       Length = Length in bytes of the buffer
+ * VOID
+ * MmInitializeMdl (
+ *	PMDL	MemoryDescriptorList,
+ *	PVOID	BaseVa,
+ *	ULONG	Length
+ *	);
+ *
+ * FUNCTION:
+ *	Initalizes an MDL
+ *
+ * ARGUMENTS:
+ *	MemoryDescriptorList = MDL to be initalized
+ *	BaseVa = Base virtual address of the buffer
+ *	Length = Length in bytes of the buffer
  */
-VOID MmInitializeMdl(PMDL MemoryDescriptorList, PVOID BaseVa, ULONG Length);
+#define MmInitializeMdl(MemoryDescriptorList,BaseVa,Length) \
+{ \
+	(MemoryDescriptorList)->Next = (PMDL)NULL; \
+	(MemoryDescriptorList)->Size = (CSHORT)(sizeof(MDL) + \
+		(ADDRESS_AND_SIZE_TO_SPAN_PAGES((BaseVa),(Length)) * sizeof(ULONG))); \
+	(MemoryDescriptorList)->MdlFlags = 0; \
+	(MemoryDescriptorList)->StartVa = (PVOID)PAGE_ROUND_DOWN((BaseVa)); \
+	(MemoryDescriptorList)->ByteOffset = (ULONG)((BaseVa) - PAGE_ROUND_DOWN((BaseVa))); \
+	(MemoryDescriptorList)->ByteCount = (Length); \
+	(MemoryDescriptorList)->Process = PsGetCurrentProcess(); \
+}
 
 /*
  * FUNCTION: Checks whether an address is valid for read/write
@@ -266,7 +301,8 @@ MmIsThisAnNtAsSystem (
  *        AddressWithinSection = Any address in the region
  * RETURNS: A handle to the region
  */
-#define MmLockPagableCodeSection(Address) MmLockPagableDataSection(Address)
+#define MmLockPagableCodeSection(Address) \
+	MmLockPagableDataSection(Address)
 
 /*
  * FUNCTION: Locks a section of the driver's data into memory
@@ -359,6 +395,58 @@ STDCALL
 MmPageEntireDriver (
 	PVOID	AddressWithinSection
 	);
+
+/*
+ * VOID
+ * MmPrepareMdlForReuse (
+ *	PMDL	Mdl
+ *	);
+ *
+ * FUNCTION:
+ *	Reinitializes a caller-allocated MDL
+ *
+ * ARGUMENTS:
+ *	Mdl = Points to the MDL that will be reused
+ */
+#define MmPrepareMdlForReuse(Mdl) \
+	if (((Mdl)->MdlFlags & MDL_PARTIAL_HAS_BEEN_MAPPED) != 0) \
+	{ \
+		assert(((Mdl)->MdlFlags & MDL_PARTIAL) != 0); \
+		MmUnmapLockedPages ((Mdl)->MappedSystemVa, (Mdl)); \
+	} \
+	else if (((Mdl)->MdlFlags & MDL_PARTIAL) == 0) \
+	{ \
+		assert(((Mdl)->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA) == 0); \
+	}
+
+/*
+ * FUNCTION: Probes the specified pages, makes them resident and locks
+ * the physical pages mapped by the virtual address range 
+ * ARGUMENTS:
+ *         MemoryDescriptorList = MDL which supplies the virtual address,
+ *                                byte offset and length
+ *         AccessMode = Access mode with which to probe the arguments
+ *         Operation = Types of operation for which the pages should be
+ *                     probed
+ */
+VOID
+STDCALL
+MmProbeAndLockPages (
+	PMDL		MemoryDescriptorList,
+	KPROCESSOR_MODE	AccessMode,
+	LOCK_OPERATION	Operation
+	);
+
+/*
+ * FUNCTION: Returns an estimate of the amount of memory in the system
+ * RETURNS: Either MmSmallSystem, MmMediumSystem or MmLargeSystem
+ */
+MM_SYSTEM_SIZE
+STDCALL
+MmQuerySystemSize (
+	VOID
+	);
+
 /*
  * FUNCTION: Resets the pageable status of a driver's sections to their
  * compile time settings
@@ -370,6 +458,7 @@ STDCALL
 MmResetDriverPaging (
 	PVOID	AddressWithinSection
 	);
+
 DWORD
 STDCALL
 MmSecureVirtualMemory (
@@ -393,39 +482,7 @@ MmSetBankedSection (
 	DWORD	Unknown4,
 	DWORD	Unknown5
 	);
-/*
- * FUNCTION: Reinitializes a caller-allocated MDL
- * ARGUMENTS:
- *         Mdl = Points to the MDL that will be reused
- */
-VOID MmPrepareMdlForReuse(PMDL Mdl);
-   
-/*
- * FUNCTION: Probes the specified pages, makes them resident and locks
- * the physical pages mapped by the virtual address range 
- * ARGUMENTS:
- *         MemoryDescriptorList = MDL which supplies the virtual address,
- *                                byte offset and length
- *         AccessMode = Access mode with which to probe the arguments
- *         Operation = Types of operation for which the pages should be
- *                     probed
- */
-VOID
-STDCALL
-MmProbeAndLockPages (
-	PMDL		MemoryDescriptorList, 
-	KPROCESSOR_MODE	AccessMode, 
-	LOCK_OPERATION	Operation
-	);
-/*
- * FUNCTION: Returns an estimate of the amount of memory in the system
- * RETURNS: Either MmSmallSystem, MmMediumSystem or MmLargeSystem
- */
-MM_SYSTEM_SIZE
-STDCALL
-MmQuerySystemSize (
-	VOID
-	);
+
 /*
  * FUNCTION: Returns the number of bytes to allocate for an MDL 
  * describing a given address range

@@ -43,11 +43,49 @@ ExAcquireSharedWaitForExclusive (
 	PERESOURCE	Resource,
 	BOOLEAN		Wait
 	);
+
+/*
+ * PVOID
+ * ExAllocateFromNPagedLookasideList (
+ *	PNPAGED_LOOKASIDE_LIST	LookSide
+ *	);
+ *
+ * FUNCTION:
+ *	Removes (pops) the first entry from the specified nonpaged
+ *	lookaside list.
+ *
+ * ARGUMENTS:
+ *	Lookaside = Pointer to a nonpaged lookaside list
+ *
+ * RETURNS:
+ *	Address of the allocated list entry
+ */
+static
+inline
 PVOID
-STDCALL
 ExAllocateFromNPagedLookasideList (
-	PNPAGED_LOOKASIDE_LIST	LookSide
-	);
+	IN	PNPAGED_LOOKASIDE_LIST	Lookaside
+	)
+{
+#if 0
+	PVOID Entry;
+
+	Lookaside->TotalAllocates++;
+	Entry = ExInterlockedPopEntrySList (&Lookaside->ListHead,
+	                                    &Lookaside->Lock);
+	if (Entry == NULL)
+	{
+		Lookaside->AllocateMisses++;
+		Entry = (Lookaside->Allocate)(Lookaside->Type,
+		                              Lookaside->Size,
+		                              Lookaside->Tag);
+	}
+
+	return Entry;
+#endif
+	return NULL;
+}
+
 PVOID
 STDCALL
 ExAllocateFromPagedLookasideList (
@@ -58,6 +96,27 @@ STDCALL
 ExAllocateFromZone (
 	PZONE_HEADER	Zone
 	);
+
+/*
+ * PVOID
+ * ExAllocateFromZone (
+ *	PZONE_HEADER	Zone
+ *	);
+ *
+ * FUNCTION:
+ *	Allocate a block from a zone
+ *
+ * ARGUMENTS:
+ *	Zone = Zone to allocate from
+ *
+ * RETURNS:
+ *	The base address of the block allocated
+ */
+#define ExAllocateFromZone(Zone) \
+	(PVOID)((Zone)->FreeList.Next); \
+	if ((Zone)->FreeList.Next) \
+		(Zone)->FreeList.Next = (Zone)->FreeList.Next->Next
+
 /*
  * FUNCTION: Allocates memory from the nonpaged pool
  * ARGUMENTS:
@@ -137,35 +196,79 @@ ExFreePool (
 	PVOID	block
 	);
 
+/*
+ * VOID
+ * ExFreeToNPagedLookasideList (
+ *	PNPAGED_LOOKASIDE_LIST	Lookaside,
+ *	PVOID			Entry
+ *	);
+ *
+ * FUNCTION:
+ *	Inserts (pushes) the specified entry into the specified
+ *	nonpaged lookaside list.
+ *
+ * ARGUMENTS:
+ *	Lookaside = Pointer to the nonpaged lookaside list
+ *	Entry = Pointer to the entry that is inserted in the lookaside list
+ */
+static
+inline
 VOID
-STDCALL
 ExFreeToNPagedLookasideList (
-	PNPAGED_LOOKASIDE_LIST	Lookaside,
-	PVOID			Entry
-	);
+	IN	PNPAGED_LOOKASIDE_LIST	Lookaside,
+	IN	PVOID			Entry
+	)
+{
+#if 0
+	Lookaside->TotalFrees++;
+	if (ExQueryDepthSList (&Lookaside->ListHead) >= Lookaside->Depth)
+	{
+		Lookaside->FreeMisses++;
+		(Lookaside->Free)(Entry);
+	}
+	else
+	{
+		ExInterlockedPushEntrySList (&Lookaside->ListHead,
+		                             (PSINGLE_LIST_ENTRY)Entry,
+		                             &Lookaside->Lock);
+	}
+#endif
+}
+
 VOID
 STDCALL
 ExFreeToPagedLookasideList (
 	PPAGED_LOOKASIDE_LIST	Lookaside,
 	PVOID			Entry
 	);
-PVOID
-STDCALL
-ExFreeToZone (
-	PZONE_HEADER	Zone,
-	PVOID		Block
-	);
 
 /*
-ERESOURCE_THREAD
-STDCALL
-ExGetCurrentResourceThread (
-	VOID
-	);
-*/
+ * PVOID
+ * ExFreeToZone (
+ *	PZONE_HEADER	Zone,
+ *	PVOID		Block
+ *	);
+ *
+ * FUNCTION:
+ *	Frees a block from a zone
+ *
+ * ARGUMENTS:
+ *	Zone = Zone the block was allocated from
+ *	Block = Block to free
+ */
+#define ExFreeToZone(Zone,Block) \
+	(((PSINGLE_LIST_ENTRY)(Block))->Next = (Zone)->FreeList.Next, \
+	 (Zone)->FreeList.Next = ((PSINGLE_LIST_ENTRY)(Block)), \
+	 ((PSINGLE_LIST_ENTRY)(Block))->Next)
+
+/*
+ * ERESOURCE_THREAD
+ * ExGetCurrentResourceThread (
+ *	VOID
+ *	);
+ */
 #define ExGetCurrentResourceThread() \
 	((ERESOURCE_THREAD)PsGetCurrentThread())
-
 
 ULONG
 STDCALL
@@ -182,8 +285,8 @@ ExGetSharedWaiterCount (
 /*
  * VOID
  * ExInitializeFastMutex (
- * 	PFAST_MUTEX	FastMutex
- * 	);
+ *	PFAST_MUTEX	FastMutex
+ *	);
  */
 #define ExInitializeFastMutex(_FastMutex) \
 	(_FastMutex)->Count = 1; \
@@ -231,7 +334,7 @@ ExInitializeResourceLite (
  * ExInitializeSListHead (
  *	PSLIST_HEADER	SListHead
  *	);
-*/
+ */
 #define ExInitializeSListHead(ListHead) \
 	(ListHead)->Alignment = 0
 
@@ -281,12 +384,18 @@ ExInterlockedAddUlong (
 	ULONG		Increment,
 	PKSPIN_LOCK	Lock
 	);
-PVOID
-STDCALL
-ExInterlockedAllocateFromZone (
-	PZONE_HEADER	Zone,
-	PKSPIN_LOCK	Lock
-	);
+
+/*
+ * PVOID
+ * STDCALL
+ * ExInterlockedAllocateFromZone (
+ *	PZONE_HEADER	Zone,
+ *	PKSPIN_LOCK	Lock
+ *	);
+ */
+#define ExInterlockedAllocateFromZone(Zone,Lock) \
+	(PVOID)ExInterlockedPopEntryList(&(Zone)->FreeList,Lock)
+
 INTERLOCKED_RESULT
 STDCALL
 ExInterlockedDecrementLong (
@@ -308,13 +417,18 @@ ExInterlockedExtendZone (
 	ULONG		SegmentSize,
 	PKSPIN_LOCK	Lock
 	);
-PVOID
-STDCALL
-ExInterlockedFreeToZone (
-	PZONE_HEADER	Zone,
-	PVOID		Block,
-	PKSPIN_LOCK	Lock
-	);
+
+/*
+ * PVOID
+ * ExInterlockedFreeToZone (
+ *	PZONE_HEADER	Zone,
+ *	PVOID		Block,
+ *	PKSPIN_LOCK	Lock
+ *	);
+ */
+#define ExInterlockedFreeToZone(Zone,Block,Lock) \
+	ExInterlockedPushEntryList(&(Zone)->FreeList,((PSINGLE_LIST_ENTRY)(Block)),(Lock))
+
 INTERLOCKED_RESULT
 STDCALL
 ExInterlockedIncrementLong (
@@ -375,17 +489,27 @@ ExInterlockedRemoveHeadList (
 	PLIST_ENTRY	Head,
 	PKSPIN_LOCK	Lock
 	);
-BOOLEAN
-STDCALL
-ExIsFullZone (
-	PZONE_HEADER	Zone
-	);
-BOOLEAN
-STDCALL
-ExIsObjectInFirstZoneSegment (
-	PZONE_HEADER	Zone,
-	PVOID		Object
-	);
+
+/*
+ * BOOLEAN
+ * ExIsFullZone (
+ *	PZONE_HEADER	Zone
+ *	);
+ */
+#define ExIsFullZone(Zone) \
+	((Zone)->FreeList.Next==(PSINGLE_LIST_ENTRY)NULL)
+
+/*
+ * BOOLEAN
+ * ExIsObjectInFirstZoneSegment (
+ *	PZONE_HEADER	Zone,
+ *	PVOID		Object
+ *	);
+ */
+#define ExIsObjectInFirstZoneSegment(Zone,Object) \
+	(((PUCHAR)(Object)>=(PUCHAR)(Zone)->SegmentList.Next) && \
+	 ((PUCHAR)(Object)<(PUCHAR)(Zone)->SegmentList.Next+(Zone)->TotalSegmentSize))
+
 BOOLEAN
 STDCALL
 ExIsResourceAcquiredExclusiveLite (
