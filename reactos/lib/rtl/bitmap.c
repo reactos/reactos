@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.1 2004/08/10 12:00:09 ekohl Exp $
+/* $Id: bitmap.c,v 1.2 2004/09/25 03:20:16 arty Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -140,13 +140,18 @@ RtlAreBitsSet(PRTL_BITMAP BitMapHeader,
 
 /*
  * @implemented
+ *
+ * Note: According to the documentation, SizeOfBitmap is in bits, so the
+ * ALIGN(...) must be divided by the number of bits per byte here.
+ * This function is exercised by the whole page allocator in npool.c
+ * which is how i came across this error.
  */
 VOID STDCALL
 RtlClearAllBits(IN OUT PRTL_BITMAP BitMapHeader)
 {
-  memset(BitMapHeader->Buffer,
-	 0x00,
-	 ALIGN(BitMapHeader->SizeOfBitMap, 8));
+    memset(BitMapHeader->Buffer,
+	   0x00,
+	   ALIGN(BitMapHeader->SizeOfBitMap, 8) / 8);
 }
 
 
@@ -736,13 +741,18 @@ RtlNumberOfSetBits(PRTL_BITMAP BitMapHeader)
 
 /*
  * @implemented
+ *
+ * Note: According to the documentation, SizeOfBitmap is in bits, so the
+ * ALIGN(...) must be divided by the number of bits per byte here.
+ * The companion function, RtlClearAllBits, is exercised by the whole page
+ * allocator in npool.c which is how i came across this error.
  */
 VOID STDCALL
 RtlSetAllBits(IN OUT PRTL_BITMAP BitMapHeader)
 {
   memset(BitMapHeader->Buffer,
 	 0xFF,
-	 ALIGN(BitMapHeader->SizeOfBitMap, 8));
+	 ALIGN(BitMapHeader->SizeOfBitMap, 8) / 8);
 }
 
 
