@@ -1,4 +1,4 @@
-/* $Id: fsctrl.c,v 1.18 2004/12/30 12:34:27 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -58,7 +58,6 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
 	  KeSetEvent(&ClientFcb->ConnectEvent, IO_NO_INCREMENT, FALSE);
 	  break;
 	}
-
 
 #if 0
       if (ClientFcb->PipeState == FILE_PIPE_LISTENING_STATE)

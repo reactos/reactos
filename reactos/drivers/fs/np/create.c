@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.28 2004/12/30 16:15:10 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -157,6 +157,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
       return STATUS_NO_MEMORY;
     }
 
+  ClientFcb->Thread = (struct ETHREAD *)Irp->Tail.Overlay.Thread;
   ClientFcb->Pipe = Pipe;
   ClientFcb->PipeEnd = FILE_PIPE_CLIENT_END;
   ClientFcb->OtherSide = NULL;
@@ -197,7 +198,8 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   /* Add the client FCB to the pipe FCB list. */
   InsertTailList(&Pipe->ClientFcbListHead, &ClientFcb->FcbListEntry);
 
-  if (ServerFcb)
+  /* Connect pipes if they were created by the same thread */
+  if (ServerFcb && ServerFcb->Thread == ClientFcb->Thread)
     {
       ClientFcb->OtherSide = ServerFcb;
       ServerFcb->OtherSide = ClientFcb;
@@ -254,6 +256,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 	return STATUS_NO_MEMORY;
      }
 
+   Fcb->Thread = (struct ETHREAD *)Irp->Tail.Overlay.Thread;
    KeLockMutex(&DeviceExt->PipeListLock);
 
    /*

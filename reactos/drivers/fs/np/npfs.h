@@ -1,4 +1,4 @@
-/* $Id: npfs.h,v 1.17 2004/05/10 19:58:10 navaraf Exp $ */
+/* $Id$ */
 
 #ifndef __SERVICES_FS_NP_NPFS_H
 #define __SERVICES_FS_NP_NPFS_H
@@ -9,7 +9,7 @@
  */
 #define FIN_WORKAROUND_READCLOSE
 
-typedef struct
+typedef struct _NPFS_DEVICE_EXTENSION
 {
   LIST_ENTRY PipeListHead;
   KMUTEX PipeListLock;
@@ -18,7 +18,7 @@ typedef struct
   ULONG MaxQuota;
 } NPFS_DEVICE_EXTENSION, *PNPFS_DEVICE_EXTENSION;
 
-typedef struct
+typedef struct _NPFS_PIPE
 {
   UNICODE_STRING PipeName;
   LIST_ENTRY PipeListEntry;
@@ -41,6 +41,7 @@ typedef struct _NPFS_FCB
 {
   LIST_ENTRY FcbListEntry;
   struct _NPFS_FCB* OtherSide;
+  struct ETHREAD *Thread;
   PNPFS_PIPE Pipe;
   KEVENT ConnectEvent;
   KEVENT Event;
