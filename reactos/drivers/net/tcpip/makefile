@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.20 2004/08/19 21:38:58 arty Exp $
+# $Id: makefile,v 1.21 2004/09/25 20:23:59 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -21,7 +21,9 @@ TARGET_CFLAGS = \
 	-I$(PATH_TO_TOP)/w32api/include \
 	-I$(PATH_TO_TOP)/include
 
-TARGET_DDKLIBS = ndis.a $(PATH_TO_TOP)/dk/w32/lib/oskittcp.a
+TARGET_DDKLIBS = ndis.a \
+	$(PATH_TO_TOP)/dk/w32/lib/oskittcp.a \
+	$(PATH_TO_TOP)/dk/w32/lib/rosrtl.a 
 
 TARGET_CLEAN = \
   tcpip/*.o \

@@ -10,10 +10,22 @@
 
 #include "precomp.h"
 
+typedef struct _LAN_WQ_ITEM {
+    LIST_ENTRY ListEntry;
+    PNDIS_PACKET Packet;
+    PLAN_ADAPTER Adapter;
+    UINT BytesTransferred;
+} LAN_WQ_ITEM, *PLAN_WQ_ITEM;
+
 NDIS_HANDLE NdisProtocolHandle = (NDIS_HANDLE)NULL;
 BOOLEAN ProtocolRegistered     = FALSE;
 LIST_ENTRY AdapterListHead;
 KSPIN_LOCK AdapterListLock;
+
+/* Work around being called back into afd at Dpc level */
+KSPIN_LOCK LanWorkLock;
+LIST_ENTRY LanWorkList;
+WORK_QUEUE_ITEM LanWorkItem;
 
 NDIS_STATUS NDISCall(
     PLAN_ADAPTER Adapter,
@@ -178,35 +190,31 @@ VOID STDCALL ProtocolSendComplete(
     TI_DbgPrint(DEBUG_DATALINK, ("Finished\n"));
 }
 
-
-VOID STDCALL ProtocolTransferDataComplete(
-    NDIS_HANDLE BindingContext,
-    PNDIS_PACKET Packet,
-    NDIS_STATUS Status,
-    UINT BytesTransferred)
-/*
- * FUNCTION: Called by NDIS to complete reception of data
- * ARGUMENTS:
- *     BindingContext   = Pointer to a device context (LAN_ADAPTER)
- *     Packet           = Pointer to a packet descriptor
- *     Status           = Status of the operation
- *     BytesTransferred = Number of bytes transferred
- * NOTES:
- *     If the packet was successfully received, determine the protocol
- *     type and pass it to the correct receive handler
- */
-{
+VOID STDCALL LanReceiveWorker( PVOID Context ) {
     UINT PacketType;
-    PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
+    PLIST_ENTRY ListEntry;
+    PLAN_WQ_ITEM WorkItem;
+    PNDIS_PACKET Packet;
+    PLAN_ADAPTER Adapter;
+    UINT BytesTransferred;
+    PNDIS_BUFFER NdisBuffer;
+    IP_PACKET IPPacket;
+
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
-    if (Status == NDIS_STATUS_SUCCESS) {
-        PNDIS_BUFFER NdisBuffer;
-        IP_PACKET IPPacket;
+    while( (ListEntry = 
+	    ExInterlockedRemoveHeadList( &LanWorkList, &LanWorkLock )) ) {
+	WorkItem = CONTAINING_RECORD(ListEntry,  LAN_WQ_ITEM, ListEntry);
+	
+	Packet = WorkItem->Packet;
+	Adapter = WorkItem->Adapter;
+	BytesTransferred = WorkItem->BytesTransferred;
+
+	ExFreePool( WorkItem );
 
         IPPacket.NdisPacket = Packet;
-
+	
         NdisGetFirstBufferFromPacket(Packet,
                                      &NdisBuffer,
                                      &IPPacket.Header,
@@ -241,11 +249,46 @@ VOID STDCALL ProtocolTransferDataComplete(
             default:
                 break;
         }
-    }
 
-    FreeNdisPacket( Packet );
+	FreeNdisPacket( Packet );    
+    }
 }
 
+VOID STDCALL ProtocolTransferDataComplete(
+    NDIS_HANDLE BindingContext,
+    PNDIS_PACKET Packet,
+    NDIS_STATUS Status,
+    UINT BytesTransferred)
+/*
+ * FUNCTION: Called by NDIS to complete reception of data
+ * ARGUMENTS:
+ *     BindingContext   = Pointer to a device context (LAN_ADAPTER)
+ *     Packet           = Pointer to a packet descriptor
+ *     Status           = Status of the operation
+ *     BytesTransferred = Number of bytes transferred
+ * NOTES:
+ *     If the packet was successfully received, determine the protocol
+ *     type and pass it to the correct receive handler
+ */
+{
+    BOOLEAN WorkStart;
+    PLAN_WQ_ITEM WQItem;
+    PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
+
+    if( Status != NDIS_STATUS_SUCCESS ) return;
+    WQItem = ExAllocatePool( NonPagedPool, sizeof(LAN_WQ_ITEM) );
+    if( !WQItem ) return;
+
+    KeAcquireSpinLockAtDpcLevel( &LanWorkLock );
+    WorkStart = IsListEmpty( &LanWorkList );
+    WQItem->Packet = Packet;
+    WQItem->Adapter = Adapter;
+    WQItem->BytesTransferred = BytesTransferred;
+    InsertTailList( &LanWorkList, &WQItem->ListEntry );
+    if( WorkStart )
+	ExQueueWorkItem( &LanWorkItem, CriticalWorkQueue );
+    KeReleaseSpinLockFromDpcLevel( &LanWorkLock );
+}
 
 NDIS_STATUS STDCALL ProtocolReceive(
     NDIS_HANDLE BindingContext,
@@ -313,7 +356,11 @@ NDIS_STATUS STDCALL ProtocolReceive(
 
     KeAcquireSpinLockAtDpcLevel(&Adapter->Lock);
     NdisStatus = AllocatePacketWithBuffer( &NdisPacket, NULL, Adapter->MTU );
-    if( NdisStatus != NDIS_STATUS_SUCCESS ) return NDIS_STATUS_NOT_ACCEPTED;
+    if( NdisStatus != NDIS_STATUS_SUCCESS ) {
+	KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+	return NDIS_STATUS_NOT_ACCEPTED;
+    }
+
     TI_DbgPrint(DEBUG_DATALINK, ("pretransfer LookaheadBufferSize %d packsize %d\n",LookaheadBufferSize,PacketSize));
 	{
 		UINT temp;
@@ -350,14 +397,15 @@ NDIS_STATUS STDCALL ProtocolReceive(
 #endif
     TI_DbgPrint(DEBUG_DATALINK, ("Calling complete\n"));
 
+    /* Release the packet descriptor */
+    KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+
     if (NdisStatus != NDIS_STATUS_PENDING)
 	ProtocolTransferDataComplete(BindingContext,
 				     NdisPacket,
 				     NdisStatus,
-				     PacketSize + HeaderBufferSize);
+				     PacketSize + HeaderBufferSize);    
 
-    /* Release the packet descriptor */
-    KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
     TI_DbgPrint(DEBUG_DATALINK, ("leaving\n"));
 
     return NDIS_STATUS_SUCCESS;
@@ -448,6 +496,7 @@ VOID LANTransmit(
     NDIS_STATUS NdisStatus;
     PETH_HEADER EHeader;
     PVOID Data;
+    KIRQL OldIrql;
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)Context;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
@@ -502,7 +551,10 @@ VOID LANTransmit(
             break;
         }
 
+	KeAcquireSpinLock( &Adapter->Lock, &OldIrql );
         NdisSend(&NdisStatus, Adapter->NdisHandle, NdisPacket);
+	KeReleaseSpinLock( &Adapter->Lock, OldIrql );
+
         if (NdisStatus != NDIS_STATUS_PENDING)
             ProtocolSendComplete((NDIS_HANDLE)Context, NdisPacket, NdisStatus);
     } else {
@@ -1019,6 +1071,26 @@ VOID LANUnregisterProtocol(
         NdisDeregisterProtocol(&NdisStatus, NdisProtocolHandle);
         ProtocolRegistered = FALSE;
     }
+}
+
+VOID LANStartup() {
+    InitializeListHead( &LanWorkList );
+    ExInitializeWorkItem( &LanWorkItem, LanReceiveWorker, NULL );
+}
+
+VOID LANShutdown() {
+    KIRQL OldIrql;
+    PLAN_WQ_ITEM WorkItem;
+    PLIST_ENTRY ListEntry;
+
+    KeAcquireSpinLock( &LanWorkLock, &OldIrql );
+    while( !IsListEmpty( &LanWorkList ) ) {
+	ListEntry = RemoveHeadList( &LanWorkList );
+	WorkItem = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
+	FreeNdisPacket( WorkItem->Packet );
+	ExFreePool( WorkItem );
+    }
+    KeReleaseSpinLock( &LanWorkLock, OldIrql );
 }
 
 /* EOF */

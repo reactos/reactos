@@ -11,9 +11,18 @@
 
 #include "precomp.h"
 
+VOID IRPRemember( PIRP Irp, PCHAR File, UINT Line ) {
+#ifdef MEMTRACK
+    TrackWithTag( IRP_TAG, Irp, File, Line );
+#endif
+}
 
 NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
     TI_DbgPrint(MID_TRACE,("Called: Irp %x, Status %x Event %x\n", Irp, Status, Irp->UserEvent));
+
+#ifdef MEMTRACK
+    UntrackFL( __FILE__, __LINE__, Irp );
+#endif
 
     IoSetCancelRoutine( Irp, NULL );
 

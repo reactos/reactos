@@ -9,7 +9,7 @@
  */
 #include "precomp.h"
 
-#define NDEBUG
+//#define NDEBUG
 
 #ifndef NDEBUG
 DWORD DebugTraceLevel = 0x7fffffff;
@@ -425,6 +425,8 @@ TiDispatchOpenClose(
   NTSTATUS Status;
   PTRANSPORT_CONTEXT Context;
 
+  RIRP(Irp);
+
   TI_DbgPrint(DEBUG_IRP, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X).\n", DeviceObject, Irp));
 
   IoMarkIrpPending(Irp);
@@ -482,6 +484,8 @@ TiDispatchInternal(
   NTSTATUS Status;
   BOOL Complete = TRUE;
   PIO_STACK_LOCATION IrpSp;
+
+  RIRP(Irp);
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
@@ -584,6 +588,8 @@ TiDispatch(
   NTSTATUS Status;
   PIO_STACK_LOCATION IrpSp;
 
+  RIRP(Irp);
+
   IrpSp  = IoGetCurrentIrpStackLocation(Irp);
 
   TI_DbgPrint(DEBUG_IRP, ("Called. IRP is at (0x%X).\n", Irp));
@@ -657,6 +663,9 @@ VOID STDCALL TiUnload(
 
   /* Shutdown network level protocol subsystem */
   IPShutdown();
+
+  /* Shutdown the lan worker */
+  LANShutdown();
 
   /* Free NDIS buffer descriptors */
   if (GlobalBufferPool)
@@ -806,6 +815,9 @@ DriverEntry(
   /* Initialize interface list and protecting spin lock */
   InitializeListHead(&InterfaceListHead);
   KeInitializeSpinLock(&InterfaceListLock);
+
+  /* Initialize the lan worker */
+  LANStartup();
 
   /* Initialize network level protocol subsystem */
   IPStartup(DriverObject, RegistryPath);

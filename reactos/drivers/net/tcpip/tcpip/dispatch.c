@@ -130,7 +130,6 @@ VOID DispCancelRequest(
     /* Try canceling the request */
     switch(MinorFunction) {
     case TDI_SEND:
-
     case TDI_RECEIVE:
         /* FIXME: Close connection */
         break;

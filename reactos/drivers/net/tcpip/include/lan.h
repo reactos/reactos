@@ -33,6 +33,9 @@ typedef struct ETH_HEADER {
 /* Offset of broadcast address */
 #define BCAST_ETH_OFFSET 0x00
 
+/* Max packets queued for a single adapter */
+#define IP_MAX_RECV_BACKLOG 0x20
+
 /* Per adapter information */
 typedef struct LAN_ADAPTER {
     LIST_ENTRY ListEntry;                   /* Entry on list */
@@ -91,6 +94,9 @@ NTSTATUS LANRegisterProtocol(
 
 VOID LANUnregisterProtocol(
     VOID);
+
+VOID LANStartup();
+VOID LANShutdown();
 
 NDIS_STATUS NDISCall(
     PLAN_ADAPTER Adapter,

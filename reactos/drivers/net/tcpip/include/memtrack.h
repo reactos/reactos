@@ -7,6 +7,7 @@
 
 #define FBSD_MALLOC FOURCC('d','s','b','f')
 #define EXALLOC_TAG FOURCC('E','x','A','l')
+#define IRP_TAG     FOURCC('P','I','R','P')
 
 #define AllocatePacketWithBuffer(x,y,z) AllocatePacketWithBufferX(x,y,z,__FILE__,__LINE__)
 #define FreeNdisPacket(x) FreeNdisPacketX(x,__FILE__,__LINE__)

@@ -594,13 +594,13 @@ VOID FreeNdisPacketX
 
         NdisGetNextBuffer(Buffer, &NextBuffer);
         NdisQueryBuffer(Buffer, &Data, &Length);
-        NdisFreeBuffer(Buffer);
 	UntrackFL(File,Line,Buffer);
-        ExFreePool(Data);
+        NdisFreeBuffer(Buffer);
 	UntrackFL(File,Line,Data);
+        ExFreePool(Data);
     }
 
     /* Finally free the NDIS packet discriptor */
-    NdisFreePacket(Packet);
     UntrackFL(File,Line,Packet);
+    NdisFreePacket(Packet);
 }

@@ -10,12 +10,12 @@
 
 #include "precomp.h"
 
-
 LONG TCP_IPIdentification = 0;
 static BOOLEAN TCPInitialized = FALSE;
 static NPAGED_LOOKASIDE_LIST TCPSegmentList;
 LIST_ENTRY SleepingThreadsList;
 FAST_MUTEX SleepingThreadsLock;
+RECURSIVE_MUTEX TcpMutex;
 
 VOID TCPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
 /*
@@ -30,7 +30,7 @@ VOID TCPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
     TI_DbgPrint(MID_TRACE,("Sending packet %d (%d) to oskit\n", 
 			   IPPacket->TotalSize,
 			   IPPacket->HeaderSize));
-    
+
     OskitTCPReceiveDatagram( IPPacket->Header, 
 			     IPPacket->TotalSize, 
 			     IPPacket->HeaderSize );
@@ -121,7 +121,7 @@ NTSTATUS TCPShutdown(VOID)
     TCPInitialized = FALSE;
 
     DeinitOskitTCP();
-    
+
     return STATUS_SUCCESS;
 }
 
@@ -227,13 +227,14 @@ NTSTATUS TCPConnect
 	    &RemoteAddress->Address.IPv4Address,
 	    sizeof(AddressToConnect.sin_addr) );
     AddressToConnect.sin_port = RemotePort;
-    KeReleaseSpinLock(&Connection->Lock, OldIrql);
-    
+
     Status = OskitTCPConnect(Connection->SocketContext,
 			     Connection,
 			     &AddressToConnect, 
 			     sizeof(AddressToConnect));
 
+    KeReleaseSpinLock(&Connection->Lock, OldIrql);
+    
     if( Status == OSK_EINPROGRESS || Status == STATUS_SUCCESS ) 
 	return STATUS_PENDING;
     else
@@ -242,13 +243,18 @@ NTSTATUS TCPConnect
 
 NTSTATUS TCPClose
 ( PTDI_REQUEST Request ) {
+    KIRQL OldIrql;
     PCONNECTION_ENDPOINT Connection;
     NTSTATUS Status;
     Connection = Request->Handle.ConnectionContext;
     
     TI_DbgPrint(MID_TRACE,("TCPClose started\n"));
 
+    KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+
     Status = TCPTranslateError( OskitTCPClose( Connection->SocketContext ) );
+
+    KeReleaseSpinLock(&Connection->Lock, OldIrql);
     
     TI_DbgPrint(MID_TRACE,("TCPClose finished %x\n", Status));
 
@@ -259,11 +265,19 @@ NTSTATUS TCPListen
 ( PTDI_REQUEST Request,
   UINT Backlog ) {
     PCONNECTION_ENDPOINT Connection;
+    NTSTATUS Status;
+    KIRQL OldIrql;
 
     Connection = Request->Handle.ConnectionContext;
 
-    return TCPTranslateError( OskitTCPListen( Connection->SocketContext,
-					      Backlog ) );
+    KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+
+    Status =  TCPTranslateError( OskitTCPListen( Connection->SocketContext,
+						 Backlog ) );
+
+    KeReleaseSpinLock(&Connection->Lock, OldIrql);
+
+    return Status;
 }
 
 NTSTATUS TCPAccept
