@@ -24,3 +24,6 @@ copy sysutils\chklib.exe	%ROS_INSTALL%\bin
 copy sysutils\format.exe	%ROS_INSTALL%\bin
 copy sysutils\ldd.exe		%ROS_INSTALL%\bin
 copy sysutils\pedump.exe	%ROS_INSTALL%\bin
+copy regedit\regedit.exe	%ROS_INSTALL%\bin
+copy regedt32\regedt32.exe	%ROS_INSTALL%\bin
+copy taskmgr\taskmgr.exe	%ROS_INSTALL%\bin

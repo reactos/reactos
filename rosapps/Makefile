@@ -14,7 +14,8 @@ include rules.mak
 # Available applications
 #
 APPS = cmd cmdutils dflat32 mc notevil sysutils \
-net\finger net\ncftp net\ping net\telnet net\whois 
+	net\finger net\ncftp net\ping net\telnet net\whois \
+	regedit regedt32 taskmgr
 
 all: $(APPS)
 .PHONY: all
