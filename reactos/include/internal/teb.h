@@ -33,34 +33,34 @@ typedef struct _PEB_FREE_BLOCK
 
 typedef struct _RTL_USER_PROCESS_PARAMETERS
 {
-   ULONG		TotalSize;		//  00h
-   ULONG		DataSize;		//  04h
-   ULONG                Flags;                  //  08h
-   ULONG                DebugFlags;             //  0Ch
-   PVOID                ConsoleHandle;          //  10h
-   ULONG                ConsoleFlags;           //  14h
+   ULONG		MaximumLength;		//  00h
+   ULONG		Length;			//  04h
+   ULONG		Flags;			//  08h
+   ULONG		DebugFlags;		//  0Ch
+   PVOID		ConsoleHandle;		//  10h
+   ULONG		ConsoleFlags;		//  14h
    HANDLE		InputHandle;		//  18h
    HANDLE		OutputHandle;		//  1Ch
    HANDLE		ErrorHandle;		//  20h
-   CURDIR       	CurrentDirectory;	//  24h
-   UNICODE_STRING	LibraryPath;		//  30h
-   UNICODE_STRING	CommandLine;		//  38h
-   UNICODE_STRING	ImageName;		//  40h
+   CURDIR		CurrentDirectory;	//  24h
+   UNICODE_STRING	DllPath;		//  30h
+   UNICODE_STRING	ImagePathName;		//  38h
+   UNICODE_STRING	CommandLine;		//  40h
    PVOID		Environment;		//  48h
-   DWORD		X;			//  4Ch
-   DWORD		Y;			//  50h
-   DWORD		XSize;			//  54h
-   DWORD		YSize;			//  58h
-   DWORD		XCountChars;		//  5Ch
-   DWORD		YCountChars;		//  60h
-   DWORD		FillAttribute;		//  64h
-   DWORD		WindowFlags;		//  68h
-   DWORD		ShowWindow;		//  6Ch
-   UNICODE_STRING	Title;			//  70h
-   UNICODE_STRING	Desktop;		//  78h
+   ULONG		StartingX;		//  4Ch
+   ULONG		StartingY;		//  50h
+   ULONG		CountX;			//  54h
+   ULONG		CountY;			//  58h
+   ULONG		CountCharsX;		//  5Ch
+   ULONG		CountCharsY;		//  60h
+   ULONG		FillAttribute;		//  64h
+   ULONG		WindowFlags;		//  68h
+   ULONG		ShowWindowFlags;	//  6Ch
+   UNICODE_STRING	WindowTitle;		//  70h
+   UNICODE_STRING	DesktopInfo;		//  78h
    UNICODE_STRING	ShellInfo;		//  80h
    UNICODE_STRING	RuntimeData;		//  88h
-   RTL_DRIVE_LETTER_CURDIR RtlCurrentDirectory[0x20]; // 90h
+   RTL_DRIVE_LETTER_CURDIR DLCurrentDirectory[0x20]; // 90h
 } RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
 
 #define PEB_BASE        (0x7FFDF000)

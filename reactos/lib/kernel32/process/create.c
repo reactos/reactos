@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.21 2000/02/18 00:50:07 ekohl Exp $
+/* $Id: create.c,v 1.22 2000/02/19 19:35:57 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -326,7 +326,7 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 
    /* create the PPB */
    PpbBase = (PVOID)PEB_STARTUPINFO;
-   PpbSize = Ppb->TotalSize;
+   PpbSize = Ppb->MaximumLength;
    Status = NtAllocateVirtualMemory(ProcessHandle,
 				    &PpbBase,
 				    0,
@@ -338,11 +338,11 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 	return(Status);
      }
 
-   DPRINT("Ppb->TotalSize %x\n", Ppb->TotalSize);
+   DPRINT("Ppb->MaximumLength %x\n", Ppb->MaximumLength);
    NtWriteVirtualMemory(ProcessHandle,
 			PpbBase,
 			Ppb,
-			Ppb->TotalSize,
+			Ppb->MaximumLength,
 			&BytesWritten);
 
    /* write pointer to environment */

@@ -1,4 +1,4 @@
-/* $Id: ppb.c,v 1.3 2000/02/18 00:49:11 ekohl Exp $
+/* $Id: ppb.c,v 1.4 2000/02/19 19:34:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -70,23 +70,24 @@ STDCALL
 RtlCreateProcessParameters (
 	PRTL_USER_PROCESS_PARAMETERS	*Ppb,
 	PUNICODE_STRING	CommandLine,
-	PUNICODE_STRING	LibraryPath,
+	PUNICODE_STRING	DllPath,
 	PUNICODE_STRING	CurrentDirectory,
-	PUNICODE_STRING	ImageName,
+	PUNICODE_STRING	ImagePathName,
 	PVOID		Environment,
-	PUNICODE_STRING	Title,
-	PUNICODE_STRING	Desktop,
-	PUNICODE_STRING	Reserved,
-	PUNICODE_STRING	Reserved2
+	PUNICODE_STRING	WindowTitle,
+	PUNICODE_STRING	DesktopInfo,
+	PUNICODE_STRING	ShellInfo,
+	PUNICODE_STRING	RuntimeData
 	)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
 	PRTL_USER_PROCESS_PARAMETERS Param = NULL;
 	ULONG RegionSize = 0;
-	ULONG DataSize = 0;
+	ULONG Length = 0;
 	PWCHAR Dest;
 	UNICODE_STRING EmptyString;
 	HANDLE CurrentDirectoryHandle;
+	HANDLE ConsoleHandle;
 	ULONG ConsoleFlags;
 
 	DPRINT ("RtlCreateProcessParameters\n");
@@ -99,53 +100,55 @@ RtlCreateProcessParameters (
 
 	if (NtCurrentPeb()->ProcessParameters)
 	{
-		if (LibraryPath == NULL)
-			LibraryPath = &NtCurrentPeb()->ProcessParameters->LibraryPath;
+		if (DllPath == NULL)
+			DllPath = &NtCurrentPeb()->ProcessParameters->DllPath;
 		if (Environment == NULL)
 			Environment  = NtCurrentPeb()->ProcessParameters->Environment;
 		if (CurrentDirectory == NULL)
 			CurrentDirectory = &NtCurrentPeb()->ProcessParameters->CurrentDirectory.DosPath;
 		CurrentDirectoryHandle = NtCurrentPeb()->ProcessParameters->CurrentDirectory.Handle;
+		ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
 		ConsoleFlags = NtCurrentPeb()->ProcessParameters->ConsoleFlags;
 	}
 	else
 	{
-		if (LibraryPath == NULL)
-			LibraryPath = &EmptyString;
+		if (DllPath == NULL)
+			DllPath = &EmptyString;
 		if (CurrentDirectory == NULL)
 			CurrentDirectory = &EmptyString;
 		CurrentDirectoryHandle = NULL;
+		ConsoleHandle = NULL;
 		ConsoleFlags = 0;
 	}
 
-	if (ImageName == NULL)
-		ImageName = CommandLine;
-	if (Title == NULL)
-		Title = &EmptyString;
-	if (Desktop == NULL)
-		Desktop = &EmptyString;
-	if (Reserved == NULL)
-		Reserved = &EmptyString;
-	if (Reserved2 == NULL)
-		Reserved2 = &EmptyString;
+	if (ImagePathName == NULL)
+		ImagePathName = CommandLine;
+	if (WindowTitle == NULL)
+		WindowTitle = &EmptyString;
+	if (DesktopInfo == NULL)
+		DesktopInfo = &EmptyString;
+	if (ShellInfo == NULL)
+		ShellInfo = &EmptyString;
+	if (RuntimeData == NULL)
+		RuntimeData = &EmptyString;
 
 	/* size of process parameter block */
-	DataSize = sizeof (RTL_USER_PROCESS_PARAMETERS);
+	Length = sizeof (RTL_USER_PROCESS_PARAMETERS);
 
 	/* size of current directory buffer */
-	DataSize += (MAX_PATH * sizeof(WCHAR));
+	Length += (MAX_PATH * sizeof(WCHAR));
 
 	/* add string lengths */
-	DataSize += ALIGN(LibraryPath->MaximumLength, sizeof(ULONG));
-	DataSize += ALIGN(CommandLine->Length, sizeof(ULONG));
-	DataSize += ALIGN(ImageName->Length, sizeof(ULONG));
-	DataSize += ALIGN(Title->MaximumLength, sizeof(ULONG));
-	DataSize += ALIGN(Desktop->MaximumLength, sizeof(ULONG));
-	DataSize += ALIGN(Reserved->MaximumLength, sizeof(ULONG));
-	DataSize += ALIGN(Reserved2->MaximumLength, sizeof(ULONG));
+	Length += ALIGN(DllPath->MaximumLength, sizeof(ULONG));
+	Length += ALIGN(CommandLine->Length, sizeof(ULONG));
+	Length += ALIGN(ImagePathName->Length, sizeof(ULONG));
+	Length += ALIGN(WindowTitle->MaximumLength, sizeof(ULONG));
+	Length += ALIGN(DesktopInfo->MaximumLength, sizeof(ULONG));
+	Length += ALIGN(ShellInfo->MaximumLength, sizeof(ULONG));
+	Length += ALIGN(RuntimeData->MaximumLength, sizeof(ULONG));
 
 	/* Calculate the required block size */
-	RegionSize = ROUNDUP(DataSize, PAGESIZE);
+	RegionSize = ROUNDUP(Length, PAGESIZE);
 
 	Status = NtAllocateVirtualMemory (
 		NtCurrentProcess (),
@@ -162,11 +165,12 @@ RtlCreateProcessParameters (
 
 	DPRINT ("Ppb allocated\n");
 
-	Param->TotalSize = RegionSize;
-	Param->DataSize = DataSize;
+	Param->MaximumLength = RegionSize;
+	Param->Length = Length;
 	Param->Flags = PPF_NORMALIZED;
 	Param->Environment = Environment;
 	Param->CurrentDirectory.Handle = CurrentDirectoryHandle;
+	Param->ConsoleHandle = ConsoleHandle;
 	Param->ConsoleFlags = ConsoleFlags;
 
 	Dest = (PWCHAR)(((PBYTE)Param) + sizeof(RTL_USER_PROCESS_PARAMETERS));
@@ -193,8 +197,8 @@ RtlCreateProcessParameters (
 
 	/* copy library path */
 	RtlpCopyParameterString (&Dest,
-	                         &Param->LibraryPath,
-	                         LibraryPath,
+	                         &Param->DllPath,
+	                         DllPath,
 	                         0);
 
 	/* copy command line */
@@ -205,30 +209,30 @@ RtlCreateProcessParameters (
 
 	/* copy image name */
 	RtlpCopyParameterString (&Dest,
-	                         &Param->ImageName,
-	                         ImageName,
-	                         ImageName->Length + sizeof(WCHAR));
+	                         &Param->ImagePathName,
+	                         ImagePathName,
+	                         ImagePathName->Length + sizeof(WCHAR));
 
 	/* copy title */
 	RtlpCopyParameterString (&Dest,
-	                         &Param->Title,
-	                         Title,
+	                         &Param->WindowTitle,
+	                         WindowTitle,
 	                         0);
 
 	/* copy desktop */
 	RtlpCopyParameterString (&Dest,
-	                         &Param->Desktop,
-	                         Desktop,
+	                         &Param->DesktopInfo,
+	                         DesktopInfo,
 	                         0);
 
 	RtlpCopyParameterString (&Dest,
 	                         &Param->ShellInfo,
-	                         Reserved,
+	                         ShellInfo,
 	                         0);
 
 	RtlpCopyParameterString (&Dest,
 	                         &Param->RuntimeData,
-	                         Reserved2,
+	                         RuntimeData,
 	                         0);
 
 	RtlDeNormalizeProcessParams (Param);
@@ -264,11 +268,11 @@ RtlDeNormalizeProcessParams (
 	if (Params && (Params->Flags & PPF_NORMALIZED))
 	{
 		DENORMALIZE (Params->CurrentDirectory.DosPath.Buffer, Params);
-		DENORMALIZE (Params->LibraryPath.Buffer, Params);
+		DENORMALIZE (Params->DllPath.Buffer, Params);
 		DENORMALIZE (Params->CommandLine.Buffer, Params);
-		DENORMALIZE (Params->ImageName.Buffer, Params);
-		DENORMALIZE (Params->Title.Buffer, Params);
-		DENORMALIZE (Params->Desktop.Buffer, Params);
+		DENORMALIZE (Params->ImagePathName.Buffer, Params);
+		DENORMALIZE (Params->WindowTitle.Buffer, Params);
+		DENORMALIZE (Params->DesktopInfo.Buffer, Params);
 		DENORMALIZE (Params->ShellInfo.Buffer, Params);
 		DENORMALIZE (Params->RuntimeData.Buffer, Params);
 
@@ -289,11 +293,11 @@ RtlNormalizeProcessParams (
 	if (Params && !(Params->Flags & PPF_NORMALIZED))
 	{
 		NORMALIZE (Params->CurrentDirectory.DosPath.Buffer, Params);
-		NORMALIZE (Params->LibraryPath.Buffer, Params);
+		NORMALIZE (Params->DllPath.Buffer, Params);
 		NORMALIZE (Params->CommandLine.Buffer, Params);
-		NORMALIZE (Params->ImageName.Buffer, Params);
-		NORMALIZE (Params->Title.Buffer, Params);
-		NORMALIZE (Params->Desktop.Buffer, Params);
+		NORMALIZE (Params->ImagePathName.Buffer, Params);
+		NORMALIZE (Params->WindowTitle.Buffer, Params);
+		NORMALIZE (Params->DesktopInfo.Buffer, Params);
 		NORMALIZE (Params->ShellInfo.Buffer, Params);
 		NORMALIZE (Params->RuntimeData.Buffer, Params);
 

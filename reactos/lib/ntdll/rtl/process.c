@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.14 2000/02/18 00:49:11 ekohl Exp $
+/* $Id: process.c,v 1.15 2000/02/19 19:34:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -156,22 +156,17 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
    ULONG PpbSize;
    ULONG BytesWritten;
    ULONG Offset;
-   PVOID ParentEnv = NULL;
    PVOID EnvPtr = NULL;
    ULONG EnvSize = 0;
 
+
    /* create the Environment */
    if (Ppb->Environment != NULL)
-	ParentEnv = Ppb->Environment;
-   else if (NtCurrentPeb()->ProcessParameters->Environment != NULL)
-	ParentEnv = NtCurrentPeb()->ProcessParameters->Environment;
-
-   if (ParentEnv != NULL)
      {
 	MEMORY_BASIC_INFORMATION MemInfo;
 
 	Status = NtQueryVirtualMemory (NtCurrentProcess (),
-	                               ParentEnv,
+	                               Ppb->Environment,
 	                               MemoryBasicInformation,
 	                               &MemInfo,
 	                               sizeof(MEMORY_BASIC_INFORMATION),
@@ -200,14 +195,15 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 
 	NtWriteVirtualMemory(ProcessHandle,
 			     EnvPtr,
-			     ParentEnv,
+			     Ppb->Environment,
 			     EnvSize,
 			     &BytesWritten);
      }
+   DPRINT("EnvironmentPointer %p\n", EnvPtr);
 
    /* create the PPB */
    PpbBase = (PVOID)PEB_STARTUPINFO;
-   PpbSize = Ppb->TotalSize;
+   PpbSize = Ppb->MaximumLength;
    Status = NtAllocateVirtualMemory(ProcessHandle,
 				    &PpbBase,
 				    0,
@@ -219,14 +215,16 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 	return(Status);
      }
 
-   DPRINT("Ppb->TotalSize %x\n", Ppb->TotalSize);
+   DPRINT("Ppb->MaximumLength %x\n", Ppb->MaximumLength);
 
    /* write process parameters block*/
+   RtlDeNormalizeProcessParams (Ppb);
    NtWriteVirtualMemory(ProcessHandle,
 			PpbBase,
 			Ppb,
-			Ppb->TotalSize,
+			Ppb->MaximumLength,
 			&BytesWritten);
+   RtlNormalizeProcessParams (Ppb);
 
    /* write pointer to environment */
    Offset = FIELD_OFFSET(RTL_USER_PROCESS_PARAMETERS, Environment);
@@ -262,13 +260,8 @@ NTSTATUS STDCALL RtlCreateUserProcess(PUNICODE_STRING		CommandLine,
    HANDLE hThread;
    NTSTATUS Status;
    LPTHREAD_START_ROUTINE  lpStartAddress = NULL;
-//   WCHAR TempCommandLine[256];
-//   PVOID BaseAddress;
-//   LARGE_INTEGER SectionOffset;
-//   ULONG InitialViewSize;
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
    ULONG retlen;
-//   DWORD len = 0;
 
    DPRINT("CreateProcessW(CommandLine '%w')\n", CommandLine->Buffer);
    

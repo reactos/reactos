@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.7 2000/02/18 00:49:11 ekohl Exp $
+/* $Id: env.c,v 1.8 2000/02/19 19:34:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -229,8 +229,9 @@ RtlSetEnvironmentVariable (
 	UNICODE_STRING var;
 	int     hole_len, new_len, env_len = 0;
 	WCHAR   *new_env = 0, *env_end = 0, *wcs, *env, *val = 0, *tail = 0, *hole = 0;
-	ULONG   size = 0, new_size;
-	LONG    f = 1;
+	PWSTR head = NULL;
+	ULONG size = 0, new_size;
+	LONG f = 1;
 	NTSTATUS Status = STATUS_SUCCESS;
 
 	DPRINT ("RtlSetEnvironmentVariable Environment %p Name %wZ Value %wZ\n",
@@ -275,6 +276,7 @@ RtlSetEnvironmentVariable (
 					}
 					else /* Exact match */
 					{
+						head = var.Buffer;
 						tail = ++wcs;
 						hole = val;
 					}
@@ -366,14 +368,10 @@ found:
 			if (env)
 			{
 				size = 0;
-CHECKPOINT;
-DPRINT ("env %x\n", env);
-DPRINT ("&env %x\n", &env);
 				NtFreeVirtualMemory (NtCurrentProcess (),
 				                     (VOID**)&env,
 				                     &size,
 				                     MEM_RELEASE);
-CHECKPOINT;
 			}
 		}
 
@@ -395,7 +393,7 @@ CHECKPOINT;
 	{
 		/* remove the environment variable */
 		if (f == 0)
-			memmove (hole,
+			memmove (head,
 			         tail,
 			         (env_end - tail) * sizeof(WCHAR));
 		else
@@ -423,7 +421,7 @@ RtlQueryEnvironmentVariable_U (
 	int len;
 
 	DPRINT("RtlQueryEnvironmentVariable_U Environment %p Variable %wZ Value %p\n",
-	       Environment, varname, Value);
+	       Environment, Name, Value);
 
 	if (!Environment)
 		Environment = NtCurrentPeb()->ProcessParameters->Environment;

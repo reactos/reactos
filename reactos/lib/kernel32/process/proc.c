@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.29 2000/01/27 08:56:47 dwelch Exp $
+/* $Id: proc.c,v 1.30 2000/02/19 19:35:57 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,6 +12,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 #include <windows.h>
 #include <kernel32/proc.h>
 #include <kernel32/thread.h>
@@ -23,39 +24,19 @@
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
-/* TYPES *********************************************************************/
-/*
-typedef struct _WSTARTUPINFO { 
-  DWORD   cb; 
-  LPWSTR  lpReserved; 
-  LPWSTR  lpDesktop; 
-  LPWSTR  lpTitle; 
-  DWORD   dwX; 
-  DWORD   dwY; 
-  DWORD   dwXSize; 
-  DWORD   dwYSize; 
-  DWORD   dwXCountChars; 
-  DWORD   dwYCountChars; 
-  DWORD   dwFillAttribute; 
-  DWORD   dwFlags; 
-  WORD    wShowWindow; 
-  WORD    cbReserved2; 
-  LPBYTE  lpReserved2; 
-  HANDLE  hStdInput; 
-  HANDLE  hStdOutput; 
-  HANDLE  hStdError; 
-} WSTARTUPINFO, *LPWSTARTUPINFO;
-*/
 
 /* GLOBALS *******************************************************************/
 
 WaitForInputIdleType  lpfnGlobalRegisterWaitForInputIdle;
+
+LPSTARTUPINFO lpLocalStartupInfo = NULL;
 
 VOID
 STDCALL
 RegisterWaitForInputIdle (
 	WaitForInputIdleType	lpfnRegisterWaitForInputIdle
 	);
+
 
 /* FUNCTIONS ****************************************************************/
 
@@ -119,7 +100,7 @@ GetExitCodeProcess (
 				       &ProcessBasic,
 				       sizeof(PROCESS_BASIC_INFORMATION),
 				       &BytesWritten);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return FALSE;
@@ -145,13 +126,13 @@ GetProcessId (
 				       &ProcessBasic,
 				       sizeof(PROCESS_BASIC_INFORMATION),
 				       &BytesWritten);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return FALSE;
      }
    memcpy( lpProcessId ,&ProcessBasic.UniqueProcessId,sizeof(DWORD));
-   return TRUE;	
+   return TRUE;
 }
 
 
@@ -210,11 +191,11 @@ OpenProcess (
    else
      ObjectAttributes.Attributes = 0;
    
-   errCode = NtOpenProcess(&ProcessHandle, 
-			   dwDesiredAccess, 
-			   &ObjectAttributes, 
+   errCode = NtOpenProcess(&ProcessHandle,
+			   dwDesiredAccess,
+			   &ObjectAttributes,
 			   &ClientId);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return NULL;
@@ -234,7 +215,7 @@ WinExec (
    PROCESS_INFORMATION  ProcessInformation;
    HINSTANCE hInst;
    DWORD dosErr;
-   
+
    StartupInfo.cb = sizeof(STARTUPINFOA);
    StartupInfo.wShowWindow = uCmdShow;
    StartupInfo.dwFlags = 0;
@@ -247,9 +228,9 @@ WinExec (
 				     0,
 				     NULL,
 				     NULL,
-				     &StartupInfo, 
+				     &StartupInfo,
 				     &ProcessInformation);
-   if ( hInst == NULL ) 
+   if ( hInst == NULL )
      {
 	dosErr = GetLastError();
 	return dosErr;
@@ -294,10 +275,10 @@ DWORD STDCALL SleepEx(DWORD	dwMilliseconds,
 		      BOOL	bAlertable)
 {
    TIME Interval;
-   NTSTATUS errCode;	
-   
+   NTSTATUS errCode;
+
    Interval.QuadPart = dwMilliseconds * 1000;
-   
+
    errCode = NtDelayExecution(bAlertable,&Interval);
    if (!NT_SUCCESS(errCode))
      {
@@ -314,7 +295,7 @@ GetStartupInfoW (
 	LPSTARTUPINFOW	lpStartupInfo
 	)
 {
-   PPEB pPeb = NtCurrentPeb();
+   PRTL_USER_PROCESS_PARAMETERS Params;
 
    if (lpStartupInfo == NULL)
      {
@@ -322,25 +303,27 @@ GetStartupInfoW (
 	return;
      }
 
-   lpStartupInfo->cb = sizeof(STARTUPINFOW);
-//   lstrcpyW(lpStartupInfo->lpDesktop, pPeb->Ppb->Desktop);
-//   lstrcpyW(lpStartupInfo->lpTitle, pPeb->Ppb->Title);
-   lpStartupInfo->dwX = pPeb->ProcessParameters->X;
-   lpStartupInfo->dwY = pPeb->ProcessParameters->Y;
-   lpStartupInfo->dwXSize = pPeb->ProcessParameters->XSize;
-   lpStartupInfo->dwYSize = pPeb->ProcessParameters->YSize;
-   lpStartupInfo->dwXCountChars = pPeb->ProcessParameters->XCountChars;
-   lpStartupInfo->dwYCountChars = pPeb->ProcessParameters->YCountChars;
-   lpStartupInfo->dwFillAttribute = pPeb->ProcessParameters->FillAttribute;
-   lpStartupInfo->dwFlags = pPeb->ProcessParameters->Flags;
-   lpStartupInfo->wShowWindow = pPeb->ProcessParameters->ShowWindow;
-//   lpStartupInfo->lpReserved = pPeb->ProcessParameters->lpReserved1;
-//   lpStartupInfo->cbReserved2 = pPeb->ProcessParameters->cbReserved;
-//   lpStartupInfo->lpReserved2 = pPeb->ProcessParameters->lpReserved2;
+   Params = NtCurrentPeb ()->ProcessParameters;
 
-   lpStartupInfo->hStdInput = pPeb->ProcessParameters->InputHandle;
-   lpStartupInfo->hStdOutput = pPeb->ProcessParameters->OutputHandle;
-   lpStartupInfo->hStdError = pPeb->ProcessParameters->ErrorHandle;
+   lpStartupInfo->cb = sizeof(STARTUPINFOW);
+   lpStartupInfo->lpDesktop = Params->DesktopInfo.Buffer;
+   lpStartupInfo->lpTitle = Params->WindowTitle.Buffer;
+   lpStartupInfo->dwX = Params->StartingX;
+   lpStartupInfo->dwY = Params->StartingY;
+   lpStartupInfo->dwXSize = Params->CountX;
+   lpStartupInfo->dwYSize = Params->CountY;
+   lpStartupInfo->dwXCountChars = Params->CountCharsX;
+   lpStartupInfo->dwYCountChars = Params->CountCharsY;
+   lpStartupInfo->dwFillAttribute = Params->FillAttribute;
+   lpStartupInfo->dwFlags = Params->Flags;
+   lpStartupInfo->wShowWindow = Params->ShowWindowFlags;
+   lpStartupInfo->lpReserved = Params->ShellInfo.Buffer;
+   lpStartupInfo->cbReserved2 = Params->RuntimeData.Length;
+   lpStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeData.Buffer;
+
+   lpStartupInfo->hStdInput = Params->InputHandle;
+   lpStartupInfo->hStdOutput = Params->OutputHandle;
+   lpStartupInfo->hStdError = Params->ErrorHandle;
 }
 
 
@@ -350,8 +333,8 @@ GetStartupInfoA (
 	LPSTARTUPINFOA	lpStartupInfo
 	)
 {
-   PPEB pPeb = NtCurrentPeb();
-   ULONG i = 0;
+   PRTL_USER_PROCESS_PARAMETERS Params;
+   ANSI_STRING AnsiString;
 
    if (lpStartupInfo == NULL)
      {
@@ -359,49 +342,68 @@ GetStartupInfoA (
 	return;
      }
 
-   lpStartupInfo->cb = sizeof(STARTUPINFOA);
-#if 0
-   i = 0;
-   while ((pPeb->ProcessParameters->Desktop[i])!=0 && i < MAX_PATH)
-     {
-	lpStartupInfo->lpDesktop[i] = (unsigned char)
-	  pPeb->ProcessParameters->Desktop[i];
-	i++;
-     }
-   lpStartupInfo->lpDesktop[i] = 0;
+   Params = NtCurrentPeb ()->ProcessParameters;
 
-   i = 0;
-   while ((pPeb->ProcessParameters->Title[i])!=0 && i < MAX_PATH)
-     {
-	lpStartupInfo->lpTitle[i] = (unsigned char)pPeb->ProcessParameters->Title[i];
-	i++;
-     }
-   lpStartupInfo->lpTitle[i] = 0;
-#endif
-   lpStartupInfo->dwX = pPeb->ProcessParameters->X;
-   lpStartupInfo->dwY = pPeb->ProcessParameters->Y;
-   lpStartupInfo->dwXSize = pPeb->ProcessParameters->XSize;
-   lpStartupInfo->dwYSize = pPeb->ProcessParameters->YSize;
-   lpStartupInfo->dwXCountChars = pPeb->ProcessParameters->XCountChars;
-   lpStartupInfo->dwYCountChars = pPeb->ProcessParameters->YCountChars;
-   lpStartupInfo->dwFillAttribute = pPeb->ProcessParameters->FillAttribute;
-   lpStartupInfo->dwFlags = pPeb->ProcessParameters->Flags;
-   lpStartupInfo->wShowWindow = pPeb->ProcessParameters->ShowWindow;
-//   lpStartupInfo->cbReserved2 = pPeb->ProcessParameters->cbReserved;
-//   lpStartupInfo->lpReserved = pPeb->ProcessParameters->lpReserved1;
-//   lpStartupInfo->lpReserved2 = pPeb->ProcessParameters->lpReserved2;
+   RtlAcquirePebLock ();
 
-   lpStartupInfo->hStdInput = pPeb->ProcessParameters->InputHandle;
-   lpStartupInfo->hStdOutput = pPeb->ProcessParameters->OutputHandle;
-   lpStartupInfo->hStdError = pPeb->ProcessParameters->ErrorHandle;
+   if (lpLocalStartupInfo == NULL)
+     {
+	/* create new local startup info (ansi) */
+	lpLocalStartupInfo = RtlAllocateHeap (RtlGetProcessHeap (),
+	                                      0,
+	                                      sizeof(STARTUPINFOA));
+
+	lpLocalStartupInfo->cb = sizeof(STARTUPINFOA);
+
+	/* copy window title string */
+	RtlUnicodeStringToAnsiString (&AnsiString,
+	                              &Params->WindowTitle,
+	                              TRUE);
+	lpLocalStartupInfo->lpTitle = AnsiString.Buffer;
+
+	/* copy desktop info string */
+	RtlUnicodeStringToAnsiString (&AnsiString,
+	                              &Params->DesktopInfo,
+	                              TRUE);
+	lpLocalStartupInfo->lpDesktop = AnsiString.Buffer;
+
+	/* copy shell info string */
+	RtlUnicodeStringToAnsiString (&AnsiString,
+	                              &Params->ShellInfo,
+	                              TRUE);
+	lpLocalStartupInfo->lpReserved = AnsiString.Buffer;
+
+	lpLocalStartupInfo->dwX = Params->StartingX;
+	lpLocalStartupInfo->dwY = Params->StartingY;
+	lpLocalStartupInfo->dwXSize = Params->CountX;
+	lpLocalStartupInfo->dwYSize = Params->CountY;
+	lpLocalStartupInfo->dwXCountChars = Params->CountCharsX;
+	lpLocalStartupInfo->dwYCountChars = Params->CountCharsY;
+	lpLocalStartupInfo->dwFillAttribute = Params->FillAttribute;
+	lpLocalStartupInfo->dwFlags = Params->Flags;
+	lpLocalStartupInfo->wShowWindow = Params->ShowWindowFlags;
+	lpLocalStartupInfo->cbReserved2 = Params->RuntimeData.Length;
+	lpLocalStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeData.Buffer;
+
+	lpLocalStartupInfo->hStdInput = Params->InputHandle;
+	lpLocalStartupInfo->hStdOutput = Params->OutputHandle;
+	lpLocalStartupInfo->hStdError = Params->ErrorHandle;
+     }
+
+   RtlReleasePebLock ();
+
+   /* copy local startup info data to external startup info */
+   memcpy (lpStartupInfo,
+           lpLocalStartupInfo,
+           sizeof(STARTUPINFOA));
 }
 
 
 BOOL
 STDCALL
 FlushInstructionCache (
-	HANDLE	hProcess,	
-	LPCVOID	lpBaseAddress,	
+	HANDLE	hProcess,
+	LPCVOID	lpBaseAddress,
 	DWORD	dwSize
 	)
 {
@@ -482,6 +484,5 @@ FatalAppExitW (
 {
 	return;
 }
-
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.11 2000/02/18 00:51:03 ekohl Exp $
+/* $Id: init.c,v 1.12 2000/02/19 19:37:13 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -65,6 +65,56 @@ SmCreatePagingFiles (VOID)
 #endif
 
 
+static VOID
+SmSetEnvironmentVariables (VOID)
+{
+	UNICODE_STRING EnvVariable;
+	UNICODE_STRING EnvValue;
+
+	/*
+	 * The following environment variables are read from the registry.
+	 * Since the registry does not work yet, the environment variables
+	 * are set one by one, using hard-coded default values.
+	 *
+	 * Variables:
+	 *    SystemRoot = C:\reactos
+	 *    SystemDrive = C:
+	 *
+	 *    OS = ReactOS
+	 *    Path = %SystemRoot%\system32;%SystemRoot%
+	 *    windir = %SystemRoot%
+	 */
+
+	/* Set "SystemRoot = C:\reactos" */
+	RtlInitUnicodeString (&EnvVariable,
+	                      L"SystemRoot");
+	RtlInitUnicodeString (&EnvValue,
+	                      L"C:\\reactos");
+	RtlSetEnvironmentVariable (&SmSystemEnvironment,
+	                           &EnvVariable,
+	                           &EnvValue);
+
+	/* Set "SystemDrive = C:" */
+	RtlInitUnicodeString (&EnvVariable,
+	                      L"SystemDrive");
+	RtlInitUnicodeString (&EnvValue,
+	                      L"C:");
+	RtlSetEnvironmentVariable (&SmSystemEnvironment,
+	                           &EnvVariable,
+	                           &EnvValue);
+
+
+	/* Set "OS = ReactOS" */
+	RtlInitUnicodeString (&EnvVariable,
+	                      L"OS");
+	RtlInitUnicodeString (&EnvValue,
+	                      L"ReactOS");
+	RtlSetEnvironmentVariable (&SmSystemEnvironment,
+	                           &EnvVariable,
+	                           &EnvValue);
+}
+
+
 BOOL
 InitSessionManager (
 	HANDLE	Children[]
@@ -76,9 +126,6 @@ InitSessionManager (
 	UNICODE_STRING CmdLineW;
 	UNICODE_STRING CurrentDirectoryW;
 	PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
-
-	UNICODE_STRING EnvVariable;
-	UNICODE_STRING EnvValue;
 
 	/* Create the "\SmApiPort" object (LPC) */
 	RtlInitUnicodeString (&UnicodeString,
@@ -136,22 +183,6 @@ InitSessionManager (
 	DisplayString (L"SM: System Environment created\n");
 #endif
 
-	RtlInitUnicodeString (&EnvVariable,
-	                      L"OS");
-	RtlInitUnicodeString (&EnvValue,
-	                      L"Reactos 0.0.15");
-
-	RtlSetEnvironmentVariable (SmSystemEnvironment,
-	                           &EnvVariable,
-	                           &EnvValue);
-
-//	RtlSetCurrentEnvironment (SmSystemEnvironment,
-//	                          NULL);
-
-#ifndef NDEBUG
-	DisplayString (L"System Environment set\n");
-#endif
-
 	/* FIXME: Define symbolic links to kernel devices (MS-DOS names) */
 
 	/* FIXME: Run all programs in the boot execution list */
@@ -167,10 +198,11 @@ InitSessionManager (
 
 	/* FIXME: Load missing registry hives */
 
-	/* FIXME: Set environment variables from registry */
+	/* Set environment variables from registry */
+	SmSetEnvironmentVariables ();
 
-	/* Load the kernel mode driver win32k.sys */
 #if 0
+	/* Load the kernel mode driver win32k.sys */
 	RtlInitUnicodeString (&CmdLineW,
 	                      L"\\??\\C:\\reactos\\system32\\drivers\\win32k.sys");
 	Status = NtLoadDriver (&CmdLineW);
@@ -181,7 +213,7 @@ InitSessionManager (
 	}
 #endif
 
-#if 0   
+#if 0
    /* Start the Win32 subsystem (csrss.exe) */
    DisplayString (L"SM: Executing csrss.exe\n");
    RtlInitUnicodeString (&UnicodeString,

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.9 2000/02/18 00:48:25 ekohl Exp $
+/* $Id: rtl.h,v 1.10 2000/02/19 19:33:28 ekohl Exp $
  *
  */
 
@@ -193,14 +193,14 @@ STDCALL
 RtlCreateProcessParameters (
 	IN OUT	PRTL_USER_PROCESS_PARAMETERS	*ProcessParameters,
 	IN	PUNICODE_STRING	CommandLine,
-	IN	PUNICODE_STRING	LibraryPath,
+	IN	PUNICODE_STRING	DllPath,
 	IN	PUNICODE_STRING	CurrentDirectory,
-	IN	PUNICODE_STRING	ImageName,
+	IN	PUNICODE_STRING	ImagePathName,
 	IN	PVOID		Environment,
-	IN	PUNICODE_STRING	Title,
-	IN	PUNICODE_STRING	Desktop,
-	IN	PUNICODE_STRING	Reserved,
-	IN	PUNICODE_STRING	Reserved2
+	IN	PUNICODE_STRING	WindowTitle,
+	IN	PUNICODE_STRING	DesktopInfo,
+	IN	PUNICODE_STRING	ShellInfo,
+	IN	PUNICODE_STRING	RuntimeData
 	);
 
 PRTL_USER_PROCESS_PARAMETERS
