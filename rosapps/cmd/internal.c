@@ -152,7 +152,6 @@ VOID FreeLastPath (VOID)
 		free (lpLastPath);
 }
 
-
 /*
  * CD / CHDIR
  *
@@ -160,10 +159,12 @@ VOID FreeLastPath (VOID)
 INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 {
 	LPTSTR dir;		/* pointer to the directory to change to */
-	LPTSTR place;	/* used to search for the \ when no space is used */
 	LPTSTR lpOldPath;
-	LPTSTR *arg = NULL;
-	INT argc;
+	LPTSTR endofstring; /* pointer to the null character in the directory to change to */
+	LPTSTR lastquote; /* pointer to the last quotation mark in the directory to change to */
+
+	/*Should we better declare a variable containing _tsclen(dir) ? It's used a few times,
+	  but on the other hand paths are generally not very long*/
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -179,33 +180,18 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
-	/* check if there is no space between the command and the path */
-	if (param[0] == _T('\0'))
-	{
-		/* search for the '\', '.' or '-' so that both short & long names will work */
-		for (place = cmd; *place; place++)
-			if (*place == _T('.') || *place == _T('\\') || *place == _T('-'))
-				break;
+	/* The whole param string is our parameter these days. The only thing we do is eliminating every quotation mark */
+	/* Is it safe to change the characters param is pointing to? I presume it is, as there doesn't seem to be any
+	post-processing of it after the function call (what would that accomplish?) */
 
-		if (*place)
-			dir = place;
-		else
-			/* signal that there are no parameters */
-			dir = NULL;
-	}
-	else
-	{
-		arg = split (param, &argc);
+	dir=param;
+	endofstring=dir+_tcslen(dir);
 
-		if (argc > 1)
-		{
-			/*JPP 20-Jul-1998 use standard error message */
-			error_too_many_parameters (param);
-			freep (arg);
-			return 1;
-		}
-		else
-			dir = arg[0];
+	while (lastquote = _tcsrchr(dir,'\"'))
+	{
+		endofstring--;
+		memmove(lastquote,lastquote+1,endofstring-lastquote);
+		*endofstring=_T('\0');
 	}
 
 	/* if doing a CD and no parameters given, print out current directory */
@@ -217,7 +203,6 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 
 		ConOutPuts (szPath);
 
-		freep (arg);
 
 		return 0;
 	}
@@ -227,12 +212,9 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 		if (lpLastPath)
 			dir = lpLastPath;
 		else
-		{
-			freep (arg);
 			return 0;
-		}
 	}
-	else if (dir && _tcslen (dir) > 1 && dir[1] == _T(':'))
+	else if (dir && _tcslen (dir)==2 && dir[1] == _T(':'))
 	{
 		TCHAR szRoot[3] = _T("A:");
 		TCHAR szPath[MAX_PATH];
@@ -249,7 +231,6 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 
 		ConOutPuts (szPath);
 
-		freep (arg);
 
 		return 0;
 	}
@@ -271,17 +252,23 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 		free (lpOldPath);
 		lpOldPath = NULL;
 
-		freep (arg);
 		return 1;
 	}
 	else
 	{
-		if (lpLastPath)
-			free (lpLastPath);
-		lpLastPath = lpOldPath;
+		if (towupper(dir[0])!=lpOldPath[0])
+		{
+			SetCurrentDirectory(lpOldPath);
+			free(lpOldPath);
+		}
+		else
+		{
+			if (lpLastPath)
+				free (lpLastPath);
+			lpLastPath = lpOldPath;
+		}
 	}
 
-	freep (arg);
 
 	return 0;
 }

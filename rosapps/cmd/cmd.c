@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.25 2001/04/26 11:31:33 ekohl Exp $
+/* $Id: cmd.c,v 1.26 2001/05/06 17:12:44 cnettel Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -184,42 +184,20 @@ Execute (LPTSTR first, LPTSTR rest)
 
 	/* check for a drive change */
 	if ((_istalpha (first[0])) && (!_tcscmp (first + 1, _T(":"))))
-	{
-		TCHAR szPath[MAX_PATH];
-		TCHAR szVar[5];
-
-#ifdef _DEBUG
-		DebugPrintf ("Drive change to drive %s\n", first);
-#endif
-		/* save curent directory in environment variable */
-		GetCurrentDirectory (MAX_PATH, szPath);
-
-		_tcscpy (szVar, _T("=A:"));
-		szVar[1] = _totupper (szPath[0]);
-
-		SetEnvironmentVariable (szVar, szPath);
-
-
-		/* check for current directory of new drive */
-		_tcscpy (szVar, _T("=A:"));
-		szVar[1] = _totupper (*first);
-
-		if (GetEnvironmentVariable (szVar, szPath, MAX_PATH) == 0)
+	{	
+		BOOL working = TRUE;
+		if (!SetCurrentDirectory(first))
+		/* Guess they changed disc or something, handle that gracefully and get to root */
 		{
-			/* no environment variable found */
-			_tcscpy (szPath, _T("A:\\"));
-			szPath[0] = _totupper (*first);
+			TCHAR str[4];
+			str[0]=first[0];
+			str[1]=':';
+			str[2]='\\';
+			str[3]=0;
+			working = SetCurrentDirectory(str);
 		}
 
-#ifdef _DEBUG
-		DebugPrintf ("Drive change to drive %s\n", szPath);
-#endif
-
-		/* set new current directory */
-		SetCurrentDirectory (szPath);
-		GetCurrentDirectory (MAX_PATH, szPath);
-		if (szPath[0] != (TCHAR)_totupper (*first))
-			ConErrPuts (INVALIDDRIVE);
+		if (!working) ConErrPuts (INVALIDDRIVE);
 
 		return;
 	}
