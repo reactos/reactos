@@ -498,7 +498,6 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
        if (!KeRosPrintAddress(Eip))
 	 {
 	   DbgPrint("<%X>", Eip);
-	   break;
 	 }
        Status = MmSafeCopyFromUser(&Frame, Frame, sizeof(Frame));
        if (!NT_SUCCESS(Status))
