@@ -833,7 +833,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                          0,
                          CreateFileTypeNone,
                          NULL,
-                         SL_OPEN_PAGING_FILE);
+                         SL_OPEN_PAGING_FILE | IO_NO_PARAMETER_CHECKING);
    RtlReleaseCapturedUnicodeString(&CapturedFileName,
                                    PreviousMode,
                                    FALSE);

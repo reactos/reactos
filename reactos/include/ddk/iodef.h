@@ -161,6 +161,11 @@ enum
 #define SL_INVOKE_ON_ERROR              0x80
 
 /*
+ * IoCreateFile options
+ */
+#define IO_NO_PARAMETER_CHECKING 0x100
+
+/*
  * Possible flags for the device object flags
  */
 #define DO_UNLOAD_PENDING           0x00000001

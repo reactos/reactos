@@ -321,7 +321,7 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
  * @implemented
  */
 NTSTATUS STDCALL
-IoCreateFile(OUT	PHANDLE			FileHandle,
+IoCreateFile(OUT PHANDLE		FileHandle,
 	     IN	ACCESS_MASK		DesiredAccess,
 	     IN	POBJECT_ATTRIBUTES	ObjectAttributes,
 	     OUT PIO_STATUS_BLOCK	IoStatusBlock,
@@ -341,7 +341,9 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
    PIRP			Irp;
    PIO_STACK_LOCATION	StackLoc;
    IO_SECURITY_CONTEXT  SecurityContext;
-   KPROCESSOR_MODE PreviousMode;
+   KPROCESSOR_MODE      PreviousMode;
+   HANDLE               LocalFileHandle;
+   IO_STATUS_BLOCK      LocalIoStatusBlock;
    
    DPRINT("IoCreateFile(FileHandle %x, DesiredAccess %x, "
 	  "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
@@ -350,14 +352,14 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
    
    ASSERT_IRQL(PASSIVE_LEVEL);
 
-  if (IoStatusBlock == NULL)
-    return STATUS_ACCESS_VIOLATION;
+   if (IoStatusBlock == NULL || FileHandle == NULL)
+     return STATUS_ACCESS_VIOLATION;
 
-   *FileHandle = 0;
+   LocalFileHandle = 0;
 
    PreviousMode = ExGetPreviousMode();
 
-   Status = ObCreateObject(PreviousMode,
+   Status = ObCreateObject(0 == (Options & IO_NO_PARAMETER_CHECKING) ? PreviousMode : KernelMode,
 			   IoFileObjectType,
 			   ObjectAttributes,
 			   PreviousMode,
@@ -380,7 +382,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 			    DesiredAccess,
 			    0,
 			    NULL,
-			    FileHandle);
+			    &LocalFileHandle);
    if (!NT_SUCCESS(Status))
      {
 	DPRINT("ObInsertObject() failed! (Status %lx)\n", Status);
@@ -418,14 +420,14 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
    Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize, FALSE);
    if (Irp == NULL)
      {
-	ZwClose(*FileHandle);
+	ZwClose(LocalFileHandle);
 	return STATUS_UNSUCCESSFUL;
      }
 
    //trigger FileObject/Event dereferencing
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
    Irp->RequestorMode = PreviousMode;
-   Irp->UserIosb = IoStatusBlock;
+   Irp->UserIosb = &LocalIoStatusBlock;
    Irp->AssociatedIrp.SystemBuffer = EaBuffer;
    Irp->Tail.Overlay.AuxiliaryBuffer = NULL;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
@@ -493,7 +495,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 			      PreviousMode,
 			      FALSE,
 			      NULL);
-	Status = IoStatusBlock->Status;
+	Status = LocalIoStatusBlock.Status;
      }
    if (!NT_SUCCESS(Status))
      {
@@ -501,7 +503,34 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
         FileObject->DeviceObject = NULL;
         FileObject->Vpb = NULL;
 
-	ZwClose(*FileHandle);
+	ZwClose(LocalFileHandle);
+     }
+   else
+     {
+	if (KernelMode == PreviousMode || 0 != (Options & IO_NO_PARAMETER_CHECKING))
+	  {
+	     *FileHandle = LocalFileHandle;
+	     *IoStatusBlock = LocalIoStatusBlock;
+	  }
+	else
+	  {
+	     _SEH_TRY
+	       {
+	          ProbeForWrite(FileHandle,
+	                        sizeof(HANDLE),
+	                        sizeof(ULONG));
+	          *FileHandle = LocalFileHandle;
+	          ProbeForWrite(IoStatusBlock,
+	                        sizeof(IO_STATUS_BLOCK),
+	                        sizeof(ULONG));
+	          *IoStatusBlock = LocalIoStatusBlock;
+	       }
+	     _SEH_HANDLE
+	       {
+	          Status = _SEH_GetExceptionCode();
+	       }
+	     _SEH_END;
+	  }
      }
 
    ASSERT_IRQL(PASSIVE_LEVEL);
