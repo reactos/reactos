@@ -80,7 +80,7 @@ NTSTATUS STDCALL NtCreateEvent (OUT PHANDLE			EventHandle,
 			  ObjectAttributes,
 			  ExEventType);
    KeInitializeEvent( Event, ManualReset ? NotificationEvent : SynchronizationEvent, InitialState );
-   OnDereferenceObject( Event );
+   ObDereferenceObject( Event );
    return(STATUS_SUCCESS);
 }
 
