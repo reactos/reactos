@@ -53,7 +53,7 @@ VfatFormat(
     FILE_WRITE_ACCESS | FILE_WRITE_ATTRIBUTES,
     &ObjectAttributes,
     &Iosb,
-    1,
+    FILE_SHARE_READ,
     FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
     {

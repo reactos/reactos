@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.134 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: section.c,v 1.135 2003/11/24 14:51:46 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2627,12 +2627,12 @@ MmCreateImageSection(PHANDLE SectionHandle,
 		          &DosHeader,
 		          sizeof(DosHeader),
 		          &Offset,
-		          0);
+		          NULL);
       if (!NT_SUCCESS(Status))
         {
           ObDereferenceObject(FileObject);
           return(Status);
-	}
+        }
     
       /*
        * Check the DOS signature
@@ -2656,7 +2656,7 @@ MmCreateImageSection(PHANDLE SectionHandle,
 		          &PEHeader,
 		          sizeof(PEHeader),
 		          &Offset,
-		          0);
+		          NULL);
       if (!NT_SUCCESS(Status))
         {
           ObDereferenceObject(FileObject);
