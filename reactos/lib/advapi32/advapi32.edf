@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.11 2001/01/14 12:15:18 ea Exp $
+; $Id: advapi32.edf,v 1.12 2001/03/17 22:05:25 ea Exp $
 ;
 ; advapi32.def
 ;
@@ -195,12 +195,12 @@ LockServiceDatabase=LockServiceDatabase@4
 ;LookupAccountNameW=LookupAccountNameW@28
 LookupAccountSidA=LookupAccountSidA@28
 LookupAccountSidW=LookupAccountSidW@28
-;LookupPrivilegeDisplayNameA=LookupPrivilegeDisplayNameA@20
-;LookupPrivilegeDisplayNameW=LookupPrivilegeDisplayNameW@20
-;LookupPrivilegeNameA=LookupPrivilegeNameA@16
-;LookupPrivilegeNameW=LookupPrivilegeNameW@16
-;LookupPrivilegeValueA=LookupPrivilegeValueA@12
-;LookupPrivilegeValueW=LookupPrivilegeValueW@12
+LookupPrivilegeDisplayNameA=LookupPrivilegeDisplayNameA@20
+LookupPrivilegeDisplayNameW=LookupPrivilegeDisplayNameW@20
+LookupPrivilegeNameA=LookupPrivilegeNameA@16
+LookupPrivilegeNameW=LookupPrivilegeNameW@16
+LookupPrivilegeValueA=LookupPrivilegeValueA@12
+LookupPrivilegeValueW=LookupPrivilegeValueW@12
 ;LookupSecurityDescriptorPartsA=LookupSecurityDescriptorPartsA@28
 ;LookupSecurityDescriptorPartsW=LookupSecurityDescriptorPartsW@28
 ;LsaAddAccountRights=LsaAddAccountRights@16

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.16 2000/11/20 19:59:08 ekohl Exp $
+# $Id: makefile,v 1.17 2001/03/17 22:05:25 ea Exp $
 #
 # Makefile for ReactOS advapi32.dll
 #
@@ -12,22 +12,39 @@ DLLTARGET=$(TARGETNAME).dll
 
 
 
-MISC_OBJECTS = misc/dllmain.o misc/shutdown.o \
-		misc/sysfunc.o 
+MISC_OBJECTS=\
+	misc/dllmain.o	\
+	misc/shutdown.o	\
+	misc/sysfunc.o 
 
-REGISTRY_OBJECTS = reg/reg.o
+REGISTRY_OBJECTS=\
+	reg/reg.o
 
-SECURITY_OBJECTS = sec/lsa.o sec/sec.o sec/ac.o sec/sid.o
+SECURITY_OBJECTS=\
+	sec/lsa.o	\
+	sec/sec.o	\
+	sec/ac.o	\
+	sec/sid.o
 
-SERVICE_OBJECTS = service/scm.o service/sctrl.o service/undoc.o
+SERVICE_OBJECTS=\
+	service/scm.o	\
+	service/sctrl.o	\
+	service/undoc.o
 
-TOKEN_OBJECTS = token/token.o
+TOKEN_OBJECTS=\
+	token/privilege.o	\
+	token/token.o
 
-RESOURCE_OBJECT = $(TARGETNAME).coff
+RESOURCE_OBJECT=\
+	$(TARGETNAME).coff
 
-OBJECTS = $(MISC_OBJECTS) $(REGISTRY_OBJECTS) $(SECURITY_OBJECTS) \
-          $(SERVICE_OBJECTS) $(TOKEN_OBJECTS) \
-	  $(RESOURCE_OBJECT)
+OBJECTS=\
+	$(MISC_OBJECTS)		\
+	$(REGISTRY_OBJECTS)	\
+	$(SECURITY_OBJECTS)	\
+	$(SERVICE_OBJECTS)	\
+	$(TOKEN_OBJECTS)	\
+	$(RESOURCE_OBJECT)
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = misc\*.o reg\*.o sec\*.o service\*.o token\*.o \
@@ -57,9 +74,11 @@ $(TARGETNAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGETNAME).def
 		$(TARGETNAME).o \
 		../ntdll/ntdll.a \
 		../kernel32/kernel32.a \
-		-nostartfiles -nostdlib -Wl,--entry=_DllMain@12\
+		-nostartfiles \
+		-nostdlib \
 		-mdll \
 		-o junk.tmp \
+		-Wl,--entry=_DllMain@12\
 		-Wl,--base-file,base.tmp 
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
@@ -72,9 +91,11 @@ $(TARGETNAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGETNAME).def
 		$(TARGETNAME).o \
 		../ntdll/ntdll.a \
 		../kernel32/kernel32.a \
-		-nostartfiles -nostdlib -Wl,--entry=_DllMain@12\
+		-nostartfiles \
+		-nostdlib \
 		-mdll \
 		-o $(TARGETNAME).dll \
+		-Wl,--entry=_DllMain@12\
 		-Wl,--image-base,0x77dc0000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
