@@ -69,10 +69,13 @@ MAKETARGET	= $(MAKE) --no-print-directory -C $(OUTPUT_DIR) \
 			  -f ../../Makefile SRCDIR=$(CURDIR) $(MAKECMDGOALS)
 
 .PHONY: CHANGE_TO_TARGET
-CHANGE_TO_TARGET: $(OBJDIR) $(OBJDIR)/$(TARGET)
-	@$(MAKE) --no-print-directory -C $(TOOLSDIR)
+CHANGE_TO_TARGET: BUILD_TOOLS $(OBJDIR) $(OBJDIR)/$(TARGET)
 	@echo Calculating source file dependencies...
 	+@$(MAKETARGET)
+
+.PHONY: BUILD_TOOLS
+BUILD_TOOLS:
+	@$(MAKE) --no-print-directory -C $(TOOLSDIR)
 
 $(OBJDIR):
 	@echo Creating directory: $(OBJDIR)
