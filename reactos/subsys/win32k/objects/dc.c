@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.145 2004/07/17 21:10:25 weiden Exp $
+/* $Id: dc.c,v 1.146 2004/08/03 19:55:58 blight Exp $
  *
  * DC.C - Device context functions
  *
@@ -497,7 +497,7 @@ IntCreatePrimarySurface()
       CurrentName = DriverFileNames.Buffer;
       GotDriver = FALSE;
       while (!GotDriver &&
-             CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
+             CurrentName < DriverFileNames.Buffer + (DriverFileNames.Length / sizeof (WCHAR)))
       {
          /* Get the DDI driver's entry point */
          GDEnableDriver = DRIVER_FindDDIDriver(CurrentName);
@@ -524,11 +524,11 @@ IntCreatePrimarySurface()
          {
             /* Skip to the next name but never get past the Unicode string */
             while (L'\0' != *CurrentName &&
-                   CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
+                   CurrentName < DriverFileNames.Buffer + (DriverFileNames.Length / sizeof (WCHAR)))
             {
                CurrentName++;
             }
-            if (CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
+            if (CurrentName < DriverFileNames.Buffer + (DriverFileNames.Length / sizeof (WCHAR)))
             {
                CurrentName++;
             }
@@ -558,6 +558,7 @@ IntCreatePrimarySurface()
       }
 
       /* Allocate a phyical device handle from the driver */
+      PrimarySurface.DMW.dmSize = sizeof (PrimarySurface.DMW);
       if (SetupDevMode(&PrimarySurface.DMW, DisplayNumber))
       {
          PrimarySurface.PDev = PrimarySurface.DriverFunctions.EnablePDEV(
@@ -586,6 +587,7 @@ IntCreatePrimarySurface()
       if (DoDefault)
       {
          RtlZeroMemory(&(PrimarySurface.DMW), sizeof(DEVMODEW));
+         PrimarySurface.DMW.dmSize = sizeof (PrimarySurface.DMW);
          PrimarySurface.PDev = PrimarySurface.DriverFunctions.EnablePDEV(
             &PrimarySurface.DMW,
             L"",
@@ -2161,6 +2163,209 @@ IntSetDCColor(HDC hDC, ULONG Object, COLORREF Color)
 
    DPRINT("WIN32K:IntSetDCColor is unimplemented\n");
    return CLR_INVALID;
+}
+
+#define SIZEOF_DEVMODEW_300 188
+#define SIZEOF_DEVMODEW_400 212
+#define SIZEOF_DEVMODEW_500 220
+
+/*! \brief Enumerate possible display settings for the given display...
+ *
+ * \todo Make thread safe!?
+ * \todo Don't ignore lpszDeviceName
+ * \todo Implement non-raw mode (only return settings valid for driver and monitor)
+ */
+BOOL FASTCALL
+IntEnumDisplaySettings(
+  PUNICODE_STRING lpszDeviceName,
+  DWORD iModeNum,
+  LPDEVMODEW lpDevMode,
+  DWORD dwFlags)
+{
+  static DEVMODEW *CachedDevModes = NULL, *CachedDevModesEnd = NULL;
+  static DWORD SizeOfCachedDevModes = 0;
+  LPDEVMODEW CachedMode = NULL;
+  DEVMODEW DevMode;
+  INT Size, OldSize;
+  ULONG DisplayNumber = 0; /* only default display supported */
+  
+  if (lpDevMode->dmSize != SIZEOF_DEVMODEW_300 &&
+      lpDevMode->dmSize != SIZEOF_DEVMODEW_400 &&
+      lpDevMode->dmSize != SIZEOF_DEVMODEW_500)
+  {
+    SetLastWin32Error(STATUS_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  if (iModeNum == ENUM_CURRENT_SETTINGS)
+  {
+    CachedMode = &PrimarySurface.DMW;    
+    assert(CachedMode->dmSize > 0);
+  }
+  else if (iModeNum == ENUM_REGISTRY_SETTINGS)
+  {
+    RtlZeroMemory(&DevMode, sizeof (DevMode));
+    DevMode.dmSize = sizeof (DevMode);
+    DevMode.dmDriverExtra = 0;
+    if (SetupDevMode(&DevMode, DisplayNumber))
+      CachedMode = &DevMode;
+    else
+    {
+      SetLastWin32Error(0); /* FIXME: use error code */
+      return FALSE;
+    }
+    /* FIXME: Maybe look for the matching devmode supplied by the
+     *        driver so we can provide driver private/extra data?
+     */
+  }
+  else
+  {
+    if (iModeNum == 0 || CachedDevModes == NULL) /* query modes from drivers */
+    {
+      UNICODE_STRING DriverFileNames;
+      LPWSTR CurrentName;
+      DRVENABLEDATA DrvEnableData;
+  
+      /* Retrieve DDI driver names from registry */
+      RtlInitUnicodeString(&DriverFileNames, NULL);
+      if (!FindDriverFileNames(&DriverFileNames, DisplayNumber))
+      {
+        DPRINT1("FindDriverFileNames failed\n");
+        return FALSE;
+      }
+  
+      /*
+       * DriverFileNames may be a list of drivers in REG_SZ_MULTI format,
+       * scan all of them until a good one found.
+       */
+      CurrentName = DriverFileNames.Buffer;
+      for (;CurrentName < DriverFileNames.Buffer + (DriverFileNames.Length / sizeof (WCHAR));
+           CurrentName += wcslen(CurrentName) + 1)
+      {
+        INT i;
+        PGD_ENABLEDRIVER GDEnableDriver;
+  
+        /* Get the DDI driver's entry point */
+        GDEnableDriver = DRIVER_FindDDIDriver(CurrentName);
+        if (NULL == GDEnableDriver)
+        {
+          DPRINT("FindDDIDriver failed for %S\n", CurrentName);
+          continue;
+        }
+  
+        /*  Call DDI driver's EnableDriver function  */
+        RtlZeroMemory(&DrvEnableData, sizeof (DrvEnableData));
+  
+        if (!GDEnableDriver(DDI_DRIVER_VERSION_NT5_01, sizeof (DrvEnableData), &DrvEnableData))
+        {
+          DPRINT("DrvEnableDriver failed for %S\n", CurrentName);
+          continue;
+        }
+        
+        CachedDevModesEnd = CachedDevModes;
+        
+        /* find DrvGetModes function */
+        for (i = 0; i < DrvEnableData.c; i++)
+        {
+          PDRVFN DrvFn = DrvEnableData.pdrvfn + i;
+          PGD_GETMODES GetModes;
+          INT SizeNeeded, SizeUsed;
+  
+          if (DrvFn->iFunc != INDEX_DrvGetModes)
+            continue;
+  
+          GetModes = (PGD_GETMODES)DrvFn->pfn;
+  
+          /* make sure we have enough memory to hold the modes */
+          SizeNeeded = GetModes((HANDLE)(PrimarySurface.VideoFileObject->DeviceObject), 0, NULL);
+          if (SizeNeeded <= 0)
+          {
+            DPRINT("DrvGetModes failed for %S\n", CurrentName);
+            break;
+          }
+          
+          SizeUsed = CachedDevModesEnd - CachedDevModes;
+          if (SizeOfCachedDevModes - SizeUsed < SizeNeeded)
+          {
+            PVOID NewBuffer;
+            
+            SizeOfCachedDevModes += SizeNeeded;
+            NewBuffer = ExAllocatePool(PagedPool, SizeOfCachedDevModes);
+            if (NewBuffer == NULL)
+            {
+              /* clean up */
+              ExFreePool(CachedDevModes);
+              SizeOfCachedDevModes = 0;
+              CachedDevModes = NULL;
+              CachedDevModesEnd = NULL;
+              SetLastWin32Error(STATUS_NO_MEMORY);
+              return FALSE;
+            }
+            if (CachedDevModes != NULL)
+            {
+              RtlCopyMemory(NewBuffer, CachedDevModes, SizeUsed);
+              ExFreePool(CachedDevModes);
+            }
+            CachedDevModes = NewBuffer;
+            CachedDevModesEnd = (DEVMODEW *)((PCHAR)NewBuffer + SizeUsed);
+          }
+  
+          /* query modes */
+          SizeNeeded = GetModes((HANDLE)(PrimarySurface.VideoFileObject->DeviceObject),
+                                SizeOfCachedDevModes - SizeUsed,
+                                CachedDevModesEnd);
+          if (SizeNeeded <= 0)
+          {
+            DPRINT("DrvGetModes failed for %S\n", CurrentName);
+          }
+          else
+          {
+            CachedDevModesEnd = (DEVMODEW *)((PCHAR)CachedDevModesEnd + SizeNeeded);
+          }
+          break;
+        }
+      }
+  
+      RtlFreeUnicodeString(&DriverFileNames);
+    }
+
+    /* return cached info */
+    CachedMode = CachedDevModes;
+    if (CachedMode >= CachedDevModesEnd)
+    {
+      SetLastWin32Error(STATUS_NO_MORE_ENTRIES);
+      return FALSE;
+    }
+    while (iModeNum-- > 0 && CachedMode < CachedDevModesEnd)
+    {
+      assert(CachedMode->dmSize > 0);
+      CachedMode = (DEVMODEW *)((PCHAR)CachedMode + CachedMode->dmSize + CachedMode->dmDriverExtra);
+    }
+    if (CachedMode >= CachedDevModesEnd)
+    {
+      SetLastWin32Error(STATUS_NO_MORE_ENTRIES);
+      return FALSE;
+    }
+  }
+
+  assert(CachedMode != NULL);
+
+  Size = OldSize = lpDevMode->dmSize;
+  if (Size > CachedMode->dmSize)
+    Size = CachedMode->dmSize;
+  RtlCopyMemory(lpDevMode, CachedMode, Size);
+  RtlZeroMemory((PCHAR)lpDevMode + Size, OldSize - Size);
+  lpDevMode->dmSize = OldSize;
+  
+  Size = OldSize = lpDevMode->dmDriverExtra;
+  if (Size > CachedMode->dmDriverExtra)
+    Size = CachedMode->dmDriverExtra;
+  RtlCopyMemory((PCHAR)lpDevMode + lpDevMode->dmSize,
+                (PCHAR)CachedMode + CachedMode->dmSize, Size);
+  RtlZeroMemory((PCHAR)lpDevMode + lpDevMode->dmSize + Size, OldSize - Size);
+  lpDevMode->dmDriverExtra = OldSize;
+
+  return TRUE;
 }
 
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.66 2004/05/10 17:07:18 weiden Exp $
+/* $Id: windc.c,v 1.67 2004/08/03 19:55:57 blight Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -832,5 +832,84 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window, int DeltaX, int DeltaY)
   
   DCE_UnlockList();
 }
+
+/* FIXME: find header file for this prototype. */
+extern BOOL FASTCALL
+IntEnumDisplaySettings(
+  PUNICODE_STRING lpszDeviceName,
+  DWORD iModeNum,
+  LPDEVMODEW lpDevMode,
+  DWORD dwFlags);
+
+#define COPY_DEVMODE_VALUE_TO_CALLER(dst, src, member) \
+    Status = MmCopyToCaller(&(dst)->member, &(src)->member, sizeof ((src)->member)); \
+    if (!NT_SUCCESS(Status)) \
+    { \
+      SetLastNtError(Status); \
+      ExFreePool(src); \
+      return FALSE; \
+    }
+
+BOOL
+STDCALL
+NtUserEnumDisplaySettings(
+  PUNICODE_STRING lpszDeviceName,
+  DWORD iModeNum,
+  LPDEVMODEW lpDevMode, /* FIXME is this correct? */
+  DWORD dwFlags )
+{
+  NTSTATUS Status;
+  LPDEVMODEW pSafeDevMode;
+  DWORD Size = 0, ExtraSize = 0;
+  
+  Status = MmCopyFromCaller(&Size, &lpDevMode->dmSize, sizeof (lpDevMode->dmSize));
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return FALSE;
+  }
+  Status = MmCopyFromCaller(&ExtraSize, &lpDevMode->dmDriverExtra, sizeof (lpDevMode->dmDriverExtra));
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return FALSE;
+  }
+  pSafeDevMode = ExAllocatePool(PagedPool, Size + ExtraSize);
+  if (pSafeDevMode == NULL)
+  {
+    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+    return DISP_CHANGE_FAILED;
+  }
+  pSafeDevMode->dmSize = Size;
+  pSafeDevMode->dmDriverExtra = ExtraSize;
+
+  if (!IntEnumDisplaySettings(lpszDeviceName, iModeNum, pSafeDevMode, dwFlags))
+  {
+    ExFreePool(pSafeDevMode);
+    return FALSE;
+  }
+
+  COPY_DEVMODE_VALUE_TO_CALLER(lpDevMode, pSafeDevMode, dmPelsWidth);
+  COPY_DEVMODE_VALUE_TO_CALLER(lpDevMode, pSafeDevMode, dmPelsHeight);
+  COPY_DEVMODE_VALUE_TO_CALLER(lpDevMode, pSafeDevMode, dmBitsPerPel);
+  COPY_DEVMODE_VALUE_TO_CALLER(lpDevMode, pSafeDevMode, dmDisplayFrequency);
+  COPY_DEVMODE_VALUE_TO_CALLER(lpDevMode, pSafeDevMode, dmDisplayFlags);
+
+  /* output private/extra driver data */
+  if (ExtraSize > 0)
+  {
+    Status = MmCopyToCaller((PCHAR)lpDevMode + Size, (PCHAR)pSafeDevMode + Size, ExtraSize);
+    if (!NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      ExFreePool(pSafeDevMode);
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+#undef COPY_DEVMODE_VALUE_TO_CALLER
 
 /* EOF */

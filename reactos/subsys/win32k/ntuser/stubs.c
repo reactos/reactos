@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.45 2004/04/29 20:26:35 weiden Exp $
+/* $Id: stubs.c,v 1.46 2004/08/03 19:55:57 blight Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -253,19 +253,6 @@ NtUserEnumDisplayMonitors(
   LPCRECT lprcClip,
   MONITORENUMPROC lpfnEnum,
   LPARAM dwData)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-BOOL
-STDCALL
-NtUserEnumDisplaySettings(
-  PUNICODE_STRING lpszDeviceName,
-  DWORD iModeNum,
-  LPDEVMODEW lpDevMode, /* FIXME is this correct? */
-  DWORD dwFlags )
 {
   UNIMPLEMENTED
 
