@@ -667,7 +667,6 @@ exitdereferenceobjects:
    InitializeListHead(&Process->ThreadListHead);
    ExReleaseFastMutex(&PspActiveProcessMutex);
 
-   ExInitializeFastMutex(&Process->TebLock);
    Process->Pcb.State = PROCESS_STATE_ACTIVE;
    
    /*
