@@ -38,6 +38,8 @@
 
 #include "explorer_intres.h"
 
+#include <locale.h>
+
 
 ExplorerGlobals g_Globals;
 

@@ -37,11 +37,10 @@
  // for UnixDirectory::read_directory()
 #include <dirent.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <time.h>
 
 
-void UnixDirectory::read_directory(LPCTSTR path)
+void UnixDirectory::read_directory()
 {
 	Entry* first_entry = NULL;
 	Entry* last = NULL;
@@ -49,6 +48,7 @@ void UnixDirectory::read_directory(LPCTSTR path)
 
 	int level = _level + 1;
 
+	LPCTSTR path = (LPCTSTR)_path;
 	DIR* pdir = opendir(path);
 
 	if (pdir) {
@@ -63,7 +63,9 @@ void UnixDirectory::read_directory(LPCTSTR path)
 			*p++ = '/';
 
 		while((ent=readdir(pdir))) {
-			if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			int statres = stat(buffer, &st);
+
+			if (!statres && S_ISDIR(st.st_mode))
 				entry = new UnixDirectory(this, buffer);
 			else
 				entry = new UnixEntry(this);
@@ -72,46 +74,46 @@ void UnixDirectory::read_directory(LPCTSTR path)
 				first_entry = entry;
 
 			if (last)
-				last->next = entry;
+				last->_next = entry;
 
-			lstrcpy(entry->data.cFileName, ent->d_name);
-			entry->data.dwFileAttributes = ent->d_name[0]=='.'? FILE_ATTRIBUTE_HIDDEN: 0;
+			lstrcpy(entry->_data.cFileName, ent->d_name);
+			entry->_data.dwFileAttributes = ent->d_name[0]=='.'? FILE_ATTRIBUTE_HIDDEN: 0;
 
 			strcpy(p, ent->d_name);
 
-			if (!stat(buffer, &st)) {
+			if (!statres) {
 				if (S_ISDIR(st.st_mode))
-					entry->data.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+					entry->_data.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 
-				entry->data.nFileSizeLow = st.st_size & 0xFFFFFFFF;
-				entry->data.nFileSizeHigh = st.st_size >> 32;
+				entry->_data.nFileSizeLow = st.st_size & 0xFFFFFFFF;
+				entry->_data.nFileSizeHigh = st.st_size >> 32;
 
-				memset(&entry->data.ftCreationTime, 0, sizeof(FILETIME));
-				time_to_filetime(&st.st_atime, &entry->data.ftLastAccessTime);
-				time_to_filetime(&st.st_mtime, &entry->data.ftLastWriteTime);
+				memset(&entry->_data.ftCreationTime, 0, sizeof(FILETIME));
+				time_to_filetime(&st.st_atime, &entry->_data.ftLastAccessTime);
+				time_to_filetime(&st.st_mtime, &entry->_data.ftLastWriteTime);
 
-				entry->bhfi.nFileIndexLow = ent->d_ino;
-				entry->bhfi.nFileIndexHigh = 0;
+				entry->_bhfi.nFileIndexLow = ent->d_ino;
+				entry->_bhfi.nFileIndexHigh = 0;
 
-				entry->bhfi.nNumberOfLinks = st.st_nlink;
+				entry->_bhfi.nNumberOfLinks = st.st_nlink;
 
-				entry->bhfi_valid = TRUE;
+				entry->_bhfi_valid = TRUE;
 			} else {
-				entry->data.nFileSizeLow = 0;
-				entry->data.nFileSizeHigh = 0;
-				entry->bhfi_valid = FALSE;
+				entry->_data.nFileSizeLow = 0;
+				entry->_data.nFileSizeHigh = 0;
+				entry->_bhfi_valid = FALSE;
 			}
 
-			entry->down = NULL;
-			entry->up = dir;
-			entry->expanded = FALSE;
-			entry->scanned = FALSE;
-			entry->level = level;
+			entry->_down = NULL;
+			entry->_up = this;
+			entry->_expanded = FALSE;
+			entry->_scanned = FALSE;
+			entry->_level = level;
 
 			last = entry;
 		}
 
-		last->next = NULL;
+		last->_next = NULL;
 
 		closedir(pdir);
 	}
@@ -142,9 +144,9 @@ Entry* UnixDirectory::find_entry(const void* p)
 {
 	LPCTSTR name = (LPCTSTR)p;
 
-	for(Entry*entry=_down; entry; entry=entry->next) {
+	for(Entry*entry=_down; entry; entry=entry->_next) {
 		LPCTSTR p = name;
-		LPCTSTR q = entry->data.cFileName;
+		LPCTSTR q = entry->_data.cFileName;
 
 		do {
 			if (!*p || *p==TEXT('/'))
@@ -162,7 +164,7 @@ void UnixEntry::get_path(PTSTR path) const
 	int level = 0;
 	int len = 0;
 
-	for(Entry* entry=this; entry; level++) {
+	for(const Entry* entry=this; entry; level++) {
 		LPCTSTR name = entry->_data.cFileName;
 		int l = 0;
 

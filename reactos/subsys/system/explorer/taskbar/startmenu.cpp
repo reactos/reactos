@@ -798,7 +798,7 @@ void StartMenuRoot::ShowRestartDialog(HWND hwndOwner, UINT flags)
 	RESTARTWINDOWSDLG RestartDlg = (RESTARTWINDOWSDLG)GetProcAddress(hShell32, (LPCSTR)59);
 
 	if (RestartDlg)
-		RestartDlg(hwndOwner, L"You selected <Log Off>.\n\n", flags);	//TODO: ANSI string conversion if needed
+		RestartDlg(hwndOwner, (LPWSTR)L"You selected <Log Off>.\n\n", flags);	//TODO: ANSI string conversion if needed
 }
 
 void StartMenuRoot::ShowSearchDialog()

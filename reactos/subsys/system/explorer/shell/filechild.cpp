@@ -89,15 +89,15 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 #ifdef __linux__
 	if (info._etype == ET_UNIX)
 	{
-		_root.drive_type = GetDriveType(path);
+		_root._drive_type = GetDriveType(info._path);
 
 		_tsplitpath(info._path, drv, NULL, NULL, NULL);
 		lstrcat(drv, TEXT("/"));
-		lstrcpy(_root.volname, TEXT("root fs"));
-		_root.fs_flags = 0;
-		lstrcpy(_root.fs, TEXT("unixfs"));
-		lstrcpy(_root.path, TEXT("/"));
-		_root._entry = new UnixDirectory(_root._path, info._path);
+		lstrcpy(_root._volname, TEXT("root fs"));
+		_root._fs_flags = 0;
+		lstrcpy(_root._fs, TEXT("unixfs"));
+		lstrcpy(_root._path, TEXT("/"));
+		_root._entry = new UnixDirectory(_root._path);
 		entry = _root._entry->read_tree(info._path, SORT_NAME/*_sortOrder*/);
 	}
 	else

@@ -42,7 +42,17 @@
 
 #include <malloc.h>		// for alloca()
 #include <assert.h>
+#include <stdlib.h>		// for _MAX_DIR, ...
+#include <stdio.h>		// for sprintf()
 #include <time.h>
+
+#ifndef _MAX_PATH
+#define _MAX_DRIVE	3
+#define _MAX_FNAME	256
+#define _MAX_DIR	_MAX_FNAME
+#define _MAX_EXT	_MAX_FNAME
+#define _MAX_PATH	260
+#endif
 
 
 #ifndef BTNS_BUTTON
@@ -50,16 +60,21 @@
 #define BTNS_SEP TBSTYLE_SEP
 #define BTNS_NOPREFIX TBSTYLE_NOPREFIX
 #endif
+
 #ifndef TB_HITTEST	//missing in mingw headers
 #define TB_HITTEST (WM_USER+69)
 #endif
+
 #ifndef TB_GETBUTTONINFO	//missing in mingw headers
 #define TB_GETBUTTONINFO (WM_USER+65)
 #endif
+
+#ifndef __WINE__
 #ifndef SFGAO_HIDDEN	//SFGAO_GHOSTED wrong defined, SFGAO_HIDDEN missing in mingw headers
 #define	SFGAO_HIDDEN 0x00080000L
 #undef SFGAO_GHOSTED
 #define SFGAO_GHOSTED 0x00008000L
+#endif
 #endif
 
 
@@ -435,6 +450,22 @@ extern "C" {
 #else
 #define	_stprintf sprintf
 #endif
+#endif
+
+
+#ifdef __WINE__
+#ifdef UNICODE
+extern void _wsplitpath(const WCHAR* path, WCHAR* drv, WCHAR* dir, WCHAR* name, WCHAR* ext);
+#else
+extern void _splitpath(const CHAR* path, CHAR* drv, CHAR* dir, CHAR* name, CHAR* ext);
+#endif
+#endif
+
+#ifndef FILE_ATTRIBUTE_NOT_CONTENT_INDEXED
+#define FILE_ATTRIBUTE_ENCRYPTED            0x00000040
+#define FILE_ATTRIBUTE_SPARSE_FILE          0x00000200
+#define FILE_ATTRIBUTE_REPARSE_POINT        0x00000400
+#define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED  0x00002000
 #endif
 
 

@@ -8,7 +8,9 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #ifndef _ROS_
+#ifndef __WINE__
 #include "afxres.h"
+#endif
 #endif
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -140,9 +142,8 @@ IDB_LOGOV               BITMAP  DISCARDABLE     "res/logov.bmp"
 
 IDA_EXPLORER ACCELERATORS DISCARDABLE 
 BEGIN
-    "X",            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
-    "S",            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
-                                                    NOINVERT
+    0x58,            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
+    0x53,            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, NOINVERT
 END
 
 #endif    // Neutral resources

@@ -325,7 +325,7 @@ EnumFormatEtcImpl::EnumFormatEtcImpl(const StorageArray& ArrFE)
 		m_pFmtEtc.push_back(*it->_format);
 }
 
-STDMETHODIMP EnumFormatEtcImpl::QueryInterface(REFIID refiid, void FAR* FAR* ppv)
+STDMETHODIMP EnumFormatEtcImpl::QueryInterface(REFIID refiid, void** ppv)
 {
    *ppv = NULL;
    if (IID_IUnknown==refiid || IID_IEnumFORMATETC==refiid)
@@ -356,7 +356,7 @@ STDMETHODIMP_(ULONG) EnumFormatEtcImpl::Release(void)
    return nTemp; 
 }
 
-STDMETHODIMP EnumFormatEtcImpl::Next( ULONG celt,LPFORMATETC lpFormatEtc, ULONG FAR *pceltFetched)
+STDMETHODIMP EnumFormatEtcImpl::Next( ULONG celt,LPFORMATETC lpFormatEtc, ULONG* pceltFetched)
 {
    if (pceltFetched != NULL)
 	   *pceltFetched=0;
@@ -395,7 +395,7 @@ STDMETHODIMP EnumFormatEtcImpl::Reset(void)
    return S_OK;
 }
 			   
-STDMETHODIMP EnumFormatEtcImpl::Clone(IEnumFORMATETC FAR * FAR*ppCloneEnumFormatEtc)
+STDMETHODIMP EnumFormatEtcImpl::Clone(IEnumFORMATETC** ppCloneEnumFormatEtc)
 {
   if (ppCloneEnumFormatEtc == NULL)
 	return E_POINTER;

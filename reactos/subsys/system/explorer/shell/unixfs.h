@@ -47,7 +47,7 @@ struct UnixDirectory : public UnixEntry, public Directory
 	}
 
 	UnixDirectory(UnixDirectory* parent, LPCTSTR path)
-	 :	UnixEntry(parent),
+	 :	UnixEntry(parent)
 	{
 		_path = _tcsdup(path);
 	}

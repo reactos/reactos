@@ -473,7 +473,7 @@ struct ToolTip : public WindowHandle
 	void add(HWND hparent, HWND htool, LPCTSTR txt=LPSTR_TEXTCALLBACK)
 	{
 		TOOLINFO ti = {
-			sizeof(TOOLINFO), TTF_SUBCLASS|TTF_IDISHWND/*|TTF_TRANSPARENT*/, hparent, (UINT)htool, 0, 0, 0, 0, 0, 0, 0
+			sizeof(TOOLINFO), TTF_SUBCLASS|TTF_IDISHWND/*|TTF_TRANSPARENT*/, hparent, (UINT)htool, {0,0,0,0}, 0, 0, 0
 		};
 		ti.lpszText = (LPTSTR) txt;
 

@@ -742,7 +742,7 @@ struct SpecialFolderPath : public ShellPath
 {
 	SpecialFolderPath(int folder, HWND hwnd)
 	{
-		HRESULT hr = SHGetSpecialFolderLocation(hwnd, folder, &_p);
+		/*HRESULT hr = */SHGetSpecialFolderLocation(hwnd, folder, &_p);
 	}
 };
 

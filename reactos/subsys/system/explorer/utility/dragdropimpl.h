@@ -34,15 +34,15 @@ class EnumFormatEtcImpl : public IEnumFORMATETC
 	 EnumFormatEtcImpl(const StorageArray& ArrFE);
 
      //IUnknown members
-     STDMETHOD(QueryInterface)(REFIID, void FAR* FAR*);
+     STDMETHOD(QueryInterface)(REFIID, void**);
      STDMETHOD_(ULONG, AddRef)(void);
      STDMETHOD_(ULONG, Release)(void);
 
      //IEnumFORMATETC members
-     STDMETHOD(Next)(ULONG, LPFORMATETC, ULONG FAR *);
+     STDMETHOD(Next)(ULONG, LPFORMATETC, ULONG*);
      STDMETHOD(Skip)(ULONG);
      STDMETHOD(Reset)(void);
-     STDMETHOD(Clone)(IEnumFORMATETC FAR * FAR*);
+     STDMETHOD(Clone)(IEnumFORMATETC**);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
