@@ -18,11 +18,15 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "windows.h"
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
 #include "twain.h"
 #include "twain_i.h"
+#include "wine/debug.h"
 
-//WINE_DEFAULT_DEBUG_CHANNEL(twain);
+WINE_DEFAULT_DEBUG_CHANNEL(twain);
 
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {

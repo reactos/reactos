@@ -23,7 +23,7 @@
 # include <sane/sane.h>
 #endif
 #include "twain.h"
-#include "windows.h"
+#include "windef.h"
 
 /* internel information about an active data source */
 typedef struct tagActiveDS

@@ -18,13 +18,20 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <stdlib.h>
+//#include "config.h"
 
-//#define NONAMELESSUNION
-//#define NONAMELESSSTRUCT
-#include "windows.h"
+#include <stdlib.h>
+#include <stdarg.h>
+
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+#include "windef.h"
+#include "winbase.h"
 #include "twain.h"
 #include "twain_i.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(twain);
 
 /* DG_CONTROL/DAT_IDENTITY/MSG_CLOSEDS */
 TW_UINT16 TWAIN_CloseDS (pTW_IDENTITY pOrigin, TW_MEMREF pData)

@@ -16,13 +16,17 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+//#include "config.h"
+
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
 #include <stdlib.h>
 #include "twain.h"
 #include "twain_i.h"
-#include "wine/port.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(twain);
 
 /* DG_CONTROL/DAT_CAPABILITY/MSG_GET */
 TW_UINT16 TWAIN_CapabilityGet (pTW_IDENTITY pOrigin, pTW_IDENTITY pDest,

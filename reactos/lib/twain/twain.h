@@ -52,8 +52,13 @@
 #ifndef TWAIN
 #define TWAIN
 
-#include "windows.h"
-#include "wine/port.h"
+#include "windef.h"
+
+#define FAR
+#define huge
+//#define WIN32
+//#define _WIN32
+//#define __declspec(spec)
 
 /****************************************************************************
  * TWAIN Version                                                            *

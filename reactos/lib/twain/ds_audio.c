@@ -18,7 +18,9 @@
 
 #include "twain.h"
 #include "twain_i.h"
-#include "wine/port.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(twain);
 
 /* DG_AUDIO/DAT_AUDIOFILEXFER/MSG_GET */
 TW_UINT16 TWAIN_AudioFileXferGet (pTW_IDENTITY pOrigin, pTW_IDENTITY pDest,

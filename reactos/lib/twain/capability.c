@@ -16,10 +16,18 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "windows.h"
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
 #include "twain.h"
 #include "twain_i.h"
-#include "wine/port.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(twain);
 
 TW_UINT16 TWAIN_SaneCapability (activeDS *pSource, pTW_CAPABILITY pCapability,
                                 TW_UINT16 action)
