@@ -300,6 +300,8 @@ void tokenize ( const string& text, vector<string>& tokens )
 			while ( *p && *p != '\n' )
 				p++;
 			break;
+		case 0:
+			break;
 		default:
 			printf ( "choked on '%c' in tokenize() - press any key to continue\n", *p );
 			getch();

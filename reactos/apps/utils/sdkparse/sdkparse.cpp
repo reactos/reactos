@@ -87,6 +87,8 @@ BOOL FileEnumProc ( PWIN32_FIND_DATA pwfd, const char* filename, long lParam )
 
 void main()
 {
+	printf ( "press any key to start\n" );
+	getch();
 #if 1
 	import_file ( "../test.h" );
 #else
@@ -414,7 +416,7 @@ char* skipsemi ( char* p )
 
 char* findend ( char* p, bool& externc )
 {
-	//if ( !strncmp ( p, "static inline struct _TEB * NtCurrentTeb", 40 ) )
+	//if ( !strncmp ( p, "typedef struct _OSVERSIONINFOEXA : ", 35 ) )
 	//	_CrtDbgBreak();
 	// special-case for 'extern "C"'
 	if ( !strncmp ( p, "extern", 6 ) )
@@ -471,6 +473,21 @@ char* findend ( char* p, bool& externc )
 					pStruct++;
 				pStruct = skip_ws ( pStruct );
 			}
+			// special exception - C++ classes & stuff
+			if ( *pStruct == ':' )
+			{
+				pStruct = skip_ws ( pStruct + 1 );
+				ASSERT ( !strncmp(pStruct,"public",6) || !strncmp(pStruct,"protected",9) || !strncmp(pStruct,"private",7) );
+				// skip access:
+				while ( __iscsym(*pStruct) )
+					pStruct++;
+				pStruct = skip_ws ( pStruct );
+				// skip base-class-name:
+				ASSERT ( __iscsymf(*pStruct) );
+				while ( __iscsym(*pStruct) )
+					pStruct++;
+				pStruct = skip_ws ( pStruct );
+			}
 			if ( *pStruct == '{' )
 				isStruct = true;
 			break;
@@ -496,9 +513,14 @@ char* findend ( char* p, bool& externc )
 
 Type identify ( const vector<string>& tokens, int off )
 {
-	/*if ( tokens.size() >= 3 )
+	/*if ( tokens.size() > off+3 )
 	{
-		if ( tokens[off+2] == "_OBJECTS_AND_SID" )
+		if ( tokens[off+3] == "HandleToUlong" )
+			_CrtDbgBreak();
+	}*/
+	/*if ( tokens.size() > off+1 )
+	{
+		if ( tokens[off+1] == "_OSVERSIONINFOEXA" )
 			_CrtDbgBreak();
 	}*/
 	if ( tokens[off] == "__asm__" )
@@ -642,11 +664,13 @@ int parse_tident ( const vector<string>& tokens, int off, vector<string>& names,
 int parse_variable ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies )
 {
 	// NOTE - Test with bitfields, I think this code will actually handle them properly...
+	if ( tokens[off] == ";" )
+		return off + 1;
 	depend ( tokens[off++], dependencies );
 	int done = tokens.size();
-	while ( tokens[off] != ";" )
+	while ( off < tokens.size() && tokens[off] != ";" )
 		name ( tokens[off++], names );
-	TOKASSERT ( tokens[off] == ";" );
+	TOKASSERT ( off < tokens.size() && tokens[off] == ";" );
 	return off + 1;
 }
 
@@ -668,6 +692,14 @@ int parse_struct ( const vector<string>& tokens, int off, vector<string>& names,
 	if ( tokens[off] != "{" )
 		name ( tokens[off++], names );
 
+	if ( tokens[off] == ":" )
+	{
+		off++;
+		TOKASSERT ( tokens[off] == "public" || tokens[off] == "protected" || tokens[off] == "private" );
+		off++;
+		depend ( tokens[off++], dependencies );
+	}
+
 	TOKASSERT ( tokens[off] == "{" );
 	off++;
 
@@ -681,10 +713,11 @@ int parse_struct ( const vector<string>& tokens, int off, vector<string>& names,
 		off = parse_type ( t, tokens, off, fauxnames, dependencies );
 		//if ( off >= done ) _CrtDbgBreak();
 	}
-	
+
 	// process any trailing dependencies/names...
 	while ( tokens[off] != ";" )
 	{
+		TOKASSERT ( off+1 < done );
 		if ( tokens[off+1] == "," || tokens[off+1] == ";" )
 			name ( tokens[off], names );
 		else
@@ -700,6 +733,8 @@ int parse_struct ( const vector<string>& tokens, int off, vector<string>& names,
 
 int parse_param ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies )
 {
+	if ( tokens[off] == ")" )
+		return off;
 	while ( tokens[off+1] != "," && tokens[off+1] != ")" )
 		depend ( tokens[off++], dependencies );
 	name ( tokens[off++], names );
@@ -736,7 +771,15 @@ int parse_function ( const vector<string>& tokens, int off, vector<string>& name
 	while ( tokens[off] != "}" )
 	{
 		Type t = identify ( tokens, off );
-		off = parse_type ( t, tokens, off, fauxnames, dependencies );
+		if ( t == T_VARIABLE )
+			off = parse_type ( t, tokens, off, fauxnames, dependencies );
+		else
+		{
+			while ( tokens[off] != ";" )
+				off++;
+			TOKASSERT ( tokens[off] == ";" );
+			off++;
+		}
 	}
 
 	TOKASSERT ( tokens[off] == "}" );
@@ -758,7 +801,7 @@ int parse_function_ptr ( const vector<string>& tokens, int off, vector<string>& 
 	name ( tokens[off++], names );
 
 	TOKASSERT ( tokens[off] == ")" );
-	
+
 	off++;
 
 	TOKASSERT ( tokens[off] == "(" );
