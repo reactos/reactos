@@ -708,6 +708,7 @@ W32kTextOut(HDC  hDC,
 
     // We should create the bitmap out of the loop at the biggest possible glyph size
     // Then use memset with 0 to clear it and sourcerect to limit the work of the transbitblt
+
     HSourceGlyph = EngCreateBitmap(bitSize, pitch, BMF_1BPP, 0, glyph->bitmap.buffer);
     SourceGlyphSurf = AccessUserObject(HSourceGlyph);
 

@@ -190,6 +190,8 @@ BOOL EngAssociateSurface(HSURF Surface, HDEV Dev, ULONG Hooks)
 
   SurfGDI->CreateDeviceBitmap = Dc->DriverFunctions.CreateDeviceBitmap;
   SurfGDI->SetPalette = Dc->DriverFunctions.SetPalette;
+  SurfGDI->MovePointer = Dc->DriverFunctions.MovePointer;
+  SurfGDI->SetPointerShape = Dc->DriverFunctions.SetPointerShape;
 
   return TRUE;
 }

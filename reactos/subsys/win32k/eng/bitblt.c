@@ -72,7 +72,6 @@ BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
   {
     // Destination surface is device managed
     DestGDI = AccessInternalObjectFromUserObject(Dest);
-
     if (DestGDI->BitBlt!=NULL)
     {
       if (Source!=NULL)

@@ -92,6 +92,9 @@ typedef VOID (*PFN_Synchronize)(DHPDEV, PRECTL);
 
 typedef VOID (*PFN_MovePointer)(PSURFOBJ, LONG, LONG, PRECTL);
 
+typedef VOID (*PFN_SetPointerShape)(PSURFOBJ, PSURFOBJ, PSURFOBJ, PXLATEOBJ,
+			    LONG, LONG, LONG, LONG, PRECTL, ULONG);
+
 typedef HBITMAP (*PFN_CreateDeviceBitmap)(DHPDEV, SIZEL, ULONG);
 
 typedef BOOL (*PFN_SetPalette)(DHPDEV, PALOBJ*, ULONG, ULONG, ULONG);
@@ -113,6 +116,8 @@ typedef struct _SURFGDI {
   BOOL SynchronizeAccess;
   PFN_CreateDeviceBitmap CreateDeviceBitmap;
   PFN_SetPalette SetPalette;
+  PFN_MovePointer MovePointer;
+  PFN_SetPointerShape SetPointerShape;
 } SURFGDI, *PSURFGDI;
 
 typedef struct _XFORMGDI {

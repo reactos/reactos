@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.21 2001/05/07 22:03:27 chorns Exp $
+/* $Id: dc.c,v 1.22 2001/05/26 08:15:40 jfilby Exp $
  *
  * DC.C - Device context functions
  * 
@@ -188,6 +188,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   HDC  hDC = NULL;
   DRVENABLEDATA  DED;
   HDC hNewDC;
+  PSURFOBJ SurfObj;
 
   /*  Check for existing DC object  */
   if ((NewDC = DC_FindOpenDC(Driver)) != NULL)
@@ -294,6 +295,9 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   NewDC->Surface = NewDC->DriverFunctions.EnableSurface(NewDC->PDev); // hsurf
   NewDC->w.hPalette = NewDC->DevInfo.hpalDefault;
 
+  SurfObj = AccessUserObject(NewDC->Surface);
+  SurfObj->dhpdev = NewDC->PDev;
+
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
 
   /*  Initialize the DC state  */
@@ -308,6 +312,8 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   {
     hDISPLAY_DC = hNewDC;
   }
+
+  TestMouse();
 
   return hNewDC;
 

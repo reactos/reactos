@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.30 2001/05/02 12:33:42 jfilby Exp $
+# $Id: makefile,v 1.31 2001/05/26 08:15:39 jfilby Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -15,7 +15,7 @@ CFLAGS = -I.
 
 ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o eng/copybits.o \
 		 eng/device.o eng/handle.o eng/lineto.o eng/paint.o eng/palette.o \
-		eng/surface.o eng/xlate.o eng/transblt.o
+		eng/surface.o eng/xlate.o eng/transblt.o eng/mouse.o
 MAIN_OBJECTS = main/dllmain.o
 MISC_OBJECTS = misc/driver.o misc/math.o
 LDR_OBJECTS = ldr/loader.o
