@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.92 2004/10/22 20:38:22 ekohl Exp $
+/* $Id: npool.c,v 1.93 2004/11/28 22:06:25 blight Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -19,19 +19,6 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-
-/* Enable strict checking of the nonpaged pool on every allocation */
-/*#define ENABLE_VALIDATE_POOL*/
-
-/* Enable tracking of statistics about the tagged blocks in the pool */
-/*#define TAG_STATISTICS_TRACKING*/
-
-/*
- * Put each block in its own range of pages and position the block at the
- * end of the range so any accesses beyond the end of block are to invalid
- * memory locations. 
- */
-/*#define WHOLE_PAGE_ALLOCATIONS*/
 
 #ifdef ENABLE_VALIDATE_POOL
 #define VALIDATE_POOL validate_kernel_pool()
