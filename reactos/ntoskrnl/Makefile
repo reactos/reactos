@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.26 2001/03/25 18:56:12 dwelch Exp $
+# $Id: Makefile,v 1.27 2001/03/29 17:24:43 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -27,7 +27,8 @@ include $(PATH_TO_TOP)/rules.mak
 all: $(EXE_PREFIX)depends$(EXE_POSTFIX) \
 	$(OBJECTS_PATH) \
 	$(TARGETNAME).nostrip.exe \
-	$(TARGETNAME).exe
+	$(TARGETNAME).exe \
+	$(TARGETNAME).sym
 
 $(EXE_PREFIX)depends$(EXE_POSTFIX): depends.c
 	$(HOST_CC) -o depends$(EXE_POSTFIX) depends.c
@@ -500,9 +501,6 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(TARGETNAME).a $(IE_DATA)
 	- $(RM) temp.exp
 
 $(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a
-	$(STRIP) \
-		--strip-debug \
-		$(TARGETNAME).o
 	$(CC) \
 		-Wl,-T,ntoskrnl.lnk \
 		-nostartfiles -nostdlib \
@@ -523,7 +521,7 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a
 		--kill-at
 	- $(RM) base.tmp
 	$(CC) \
-		-Wl,-T,ntoskrnl.lnk \
+		-Wl,-T,ntoskrnl.lnk -Wl,-s\
 		-nostartfiles -nostdlib \
 		-mdll \
 		-o $(TARGETNAME).exe \
@@ -534,8 +532,9 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a
 		-Wl,temp.exp \
 		$(TARGETNAME).o -lgcc
 	- $(RM) temp.exp
-	$(NM) --numeric-sort $(TARGETNAME).exe > $(TARGETNAME).sym
 
+$(TARGETNAME).sym: $(TARGETNAME).nostrip.exe
+	$(NM) --numeric-sort $(TARGETNAME).nostrip.exe > $(TARGETNAME).sym
 
 $(TARGETNAME).o: $(OBJECTS)
 	$(LD) \

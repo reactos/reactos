@@ -1,6 +1,23 @@
-/* $Id: section.c,v 1.52 2001/03/25 02:34:28 dwelch Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
  *
- * COPYRIGHT:       See COPYING in the top level directory
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: section.c,v 1.53 2001/03/29 17:24:43 dwelch Exp $
+ *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
  * PURPOSE:         Implements section objects
@@ -36,6 +53,9 @@ static GENERIC_MAPPING MmpSectionMapping = {
 #define TAG_MM_SECTION_SEGMENT   TAG('M', 'M', 'S', 'S')
 #define TAG_SECTION_PAGE_TABLE   TAG('M', 'S', 'P', 'T')
 
+#define SHARE_COUNT(E)           ((E) & 0xFFF)
+#define MAX_SHARE_COUNT          0xFFF
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -58,6 +78,7 @@ MmFreeSectionSegments(PFILE_OBJECT FileObject)
   if (FileObject->SectionObjectPointers->ImageSectionObject != NULL)
     {
       PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
+
       ULONG i;
 
       ImageSectionObject = 
@@ -161,6 +182,7 @@ MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
    Table->Pages[TableOffset] = Entry;
 }
 
+
 ULONG 
 MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
 			     ULONG Offset)
@@ -183,6 +205,49 @@ MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
    Entry = Table->Pages[TableOffset];
    return(Entry);
 }
+
+VOID 
+MmSharePageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
+			       ULONG Offset)
+{
+  ULONG Entry;
+
+  Entry = MmGetPageEntrySectionSegment(Segment, Offset);
+  if (Entry == 0)
+    {
+      DPRINT1("Entry == 0 for MmSharePageEntrySectionSegment\n");
+      KeBugCheck(0);
+    }
+  if (SHARE_COUNT(Entry) == MAX_SHARE_COUNT)
+    {
+      DPRINT1("Maximum share count reached\n");
+      KeBugCheck(0);
+    }
+  Entry++;
+  MmSetPageEntrySectionSegment(Segment, Offset, Entry);
+}
+
+VOID 
+MmUnsharePageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
+			       ULONG Offset)
+{
+  ULONG Entry;
+
+  Entry = MmGetPageEntrySectionSegment(Segment, Offset);
+  if (Entry == 0)
+    {
+      DPRINT1("Entry == 0 for MmSharePageEntrySectionSegment\n");
+      KeBugCheck(0);
+    }
+  if (SHARE_COUNT(Entry) == 0)
+    {
+      DPRINT1("Zero share count for unshare\n");
+      KeBugCheck(0);
+    }
+  Entry--;
+  MmSetPageEntrySectionSegment(Segment, Offset, Entry);
+}
+
 
 NTSTATUS 
 MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
@@ -271,7 +336,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	*/
        if (!NT_SUCCESS(PageOp->Status))
 	 {
-	   return(Status);
+	   return(PageOp->Status);
 	 }
        MmLockAddressSpace(AddressSpace);
        MmLockSection(Section);
@@ -286,6 +351,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 
 	   Page = (PVOID)(Entry & 0xFFFFF000);
 	   MmReferencePage(Page);	
+	   //	   MmSharePageEntrySectionSegment(Segment, Offset.u.LowPart);
 
 	   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 					   Address,
@@ -435,7 +501,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	     /*
 	      * FIXME: What do we know in this case?
 	      */
-	    DPRINT("IoPageRead failed (Status %x)\n", Status);
+	    DPRINT1("IoPageRead failed (Status %x)\n", Status);
 	    
 	    /*
 	     * Cleanup and release locks
@@ -471,6 +537,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 */
 	Entry = (ULONG)Page;
 	MmSetPageEntrySectionSegment(Segment, Offset.QuadPart, Entry);
+	//	MmSharePageEntrySectionSegment(Segment, Offset.QuadPart);
 	
 	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 					Address,
@@ -502,6 +569,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	
 	Page = (PVOID)Entry;
 	MmReferencePage(Page);	
+	//	MmSharePageEntrySectionSegment(Segment, Offset.QuadPart);
 	
 	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 					Address,
@@ -1694,24 +1762,35 @@ VOID STATIC
 MmFreeSectionPage(PVOID Context, PVOID Address, ULONG PhysAddr)
 {
   PMEMORY_AREA MArea;
+  ULONG Entry;
 
   MArea = (PMEMORY_AREA)Context;
 
   if (PhysAddr != 0)
     {
-      if (MmGetReferenceCountPage((PVOID)PhysAddr) == 1)
+      ULONG Offset;
+      
+      Offset = 
+	((ULONG)PAGE_ROUND_DOWN(Address) - (ULONG)MArea->BaseAddress) + 
+	MArea->Data.SectionData.ViewOffset;
+
+      Entry = MmGetPageEntrySectionSegment(MArea->Data.SectionData.Segment,
+					   Offset);
+      /*
+       * Just dereference private pages
+       */
+      if (PhysAddr != (Entry & 0xFFFFF000))
 	{
-	  ULONG Offset;
-
-	  Offset = 
-	    ((ULONG)PAGE_ROUND_DOWN(Address) - (ULONG)MArea->BaseAddress) + 
-	    MArea->Data.SectionData.ViewOffset;
-
-	  MmSetPageEntrySectionSegment(MArea->Data.SectionData.Segment,
-				       Offset,
-				       0);
+	  MmDereferencePage((PVOID)PhysAddr);
 	}
-      MmDereferencePage((PVOID)PhysAddr);
+      else
+	{
+#if 0
+	  MmUnsharePageEntrySectionSegment(MArea->Data.SectionData.Segment,
+					   Offset);
+	  MmDereferencePage((PVOID)PhysAddr);
+#endif
+	}
     }
 }
 

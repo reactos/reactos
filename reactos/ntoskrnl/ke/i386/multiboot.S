@@ -65,9 +65,14 @@ _multiboot_entry:
 	movl	%cr0, %edx
 	orl	$0x80000000, %edx
 	movl	%edx, %cr0
-	movl	$l2, %edx
+
+	/*
+	 * Do an absolute jump because we now want to execute at 0xc0000000
+	 */	
+	movl	$.l2, %edx
 	jmp	*%edx
-l2:
+.l2:
+	
 	/*
 	 * Load the GDTR and IDTR with new tables located above
 	 * 0xc0000000

@@ -24,7 +24,7 @@
        use of profiling together with nested functions
      - the ELF `fixup' function uses GCC's regparm feature
      - some (future) systems might want to pass parameters in registers.  */
-/* dwelch: Alerted for ReactOS to output the files to port 0xe9 for processing
+/* dwelch: Altered for ReactOS to output the files to port 0xe9 for processing
 	by bochs. */
 
 	

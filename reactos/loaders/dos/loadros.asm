@@ -323,12 +323,12 @@ entry:
         and	eax, 0xffff	; clear carry
 	shl	eax,8
 	mov	[_multiboot_mem_upper],eax
-;;	xor	eax,eax
-;;	mov	al, 0x30
-;;	out	0x70, al
-;;	in	al, 0x71
-;;	and	eax, 0xffff	; clear carry
-;;	add	[_multiboot_mem_lower],eax
+	xor	eax,eax
+	mov	al, 0x30
+	out	0x70, al
+	in	al, 0x71
+	and	eax, 0xffff	; clear carry
+	add	[_multiboot_mem_lower],eax
 
 .done_mem:
 	pop ebx
