@@ -187,7 +187,7 @@ KeApplicationProcessorInit(VOID)
   /* Check FPU/MMX/SSE support. */
   KiCheckFPU();
 
-  KeInitDpc(Pcr);
+  KeInitDpc(Pcr->Prcb);
 
   if (Pcr->PrcbData.FeatureBits & X86_FEATURE_SYSCALL)
   {
@@ -262,7 +262,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    /* Mark the end of the exception handler list */
    KPCR->Tib.ExceptionList = (PVOID)-1;
 
-   KeInitDpc(KPCR);
+   KeInitDpc(KPCR->Prcb);
 
    KeInitExceptions ();
    KeInitInterrupts ();

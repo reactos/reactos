@@ -41,6 +41,7 @@ VOID KeSetGdtSelector(ULONG Entry, ULONG Value1, ULONG Value2);
 struct _KTHREAD;
 struct _KIRQ_TRAPFRAME;
 struct _KPCR;
+struct _KPRCB;
 struct _KEXCEPTION_FRAME;
 
 #define IPI_REQUEST_FUNCTIONCALL    0
@@ -192,7 +193,7 @@ extern LARGE_INTEGER SystemBootTime;
 VOID KeInitExceptions(VOID);
 VOID KeInitInterrupts(VOID);
 VOID KeInitTimer(VOID);
-VOID KeInitDpc(struct _KPCR* Pcr);
+VOID KeInitDpc(struct _KPRCB* Prcb);
 VOID KeInitDispatcher(VOID);
 VOID KeInitializeDispatcher(VOID);
 VOID KiInitializeSystemClock(VOID);
