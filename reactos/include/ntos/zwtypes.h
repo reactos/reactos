@@ -518,6 +518,14 @@ typedef struct _SYSTEM_LOAD_AND_CALL_IMAGE
   UNICODE_STRING ModuleName;
 } SYSTEM_LOAD_AND_CALL_IMAGE, *PSYSTEM_LOAD_AND_CALL_IMAGE;
 
+// SystemRegistryQuotaInformation (37)
+typedef struct _SYSTEM_REGISTRY_QUOTA_INFORMATION {
+  ULONG  RegistryQuotaAllowed;
+  ULONG  RegistryQuotaUsed;
+  PVOID  Reserved1;
+} SYSTEM_REGISTRY_QUOTA_INFORMATION, *PSYSTEM_REGISTRY_QUOTA_INFORMATION;
+
+
 // SystemTimeZoneInformation (44)
 typedef
 struct _SYSTEM_TIME_ZONE_INFORMATION
