@@ -187,7 +187,7 @@ Path::RelativeFromWorkingDirectory ( const string& path )
 #ifdef WIN32
 		if ( i ) out += "/";
 #else
-		out += "/";
+		out += out.size() ? "/" : "./";
 #endif
 		out += vout[i];
 	}
