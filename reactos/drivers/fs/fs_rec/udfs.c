@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: udfs.c,v 1.2 2003/11/10 17:09:29 ekohl Exp $
+/* $Id: udfs.c,v 1.3 2003/11/13 15:25:28 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -98,7 +98,7 @@ FsRecCheckVolumeRecognitionSequence(IN PDEVICE_OBJECT DeviceObject,
 	  break;
 	}
 
-      DPRINT1("Descriptor identifier: [%.5s]\n", Buffer + 1);
+      DPRINT ("Descriptor identifier: [%.5s]\n", Buffer + 1);
 
       switch (State)
 	{

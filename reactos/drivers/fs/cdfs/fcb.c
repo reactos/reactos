@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.15 2003/08/07 11:47:32 silverblade Exp $
+/* $Id: fcb.c,v 1.16 2003/11/13 15:25:08 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -448,7 +448,6 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
   WCHAR TempName[2];
   WCHAR Name[256];
   PVOID Block;
-  ULONG FirstSector;
   ULONG DirSize;
   PDIR_RECORD Record;
   ULONG Offset;

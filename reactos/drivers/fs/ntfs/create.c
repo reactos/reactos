@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.2 2003/02/13 22:24:16 hbirr Exp $
+/* $Id: create.c,v 1.3 2003/11/13 15:26:34 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -161,8 +161,8 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
   PIO_STACK_LOCATION Stack;
   PFILE_OBJECT FileObject;
   ULONG RequestedDisposition;
-  ULONG RequestedOptions;
-  PFCB Fcb;
+//  ULONG RequestedOptions;
+//  PFCB Fcb;
 //  PWSTR FileName;
   NTSTATUS Status;
 

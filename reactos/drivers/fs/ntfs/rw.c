@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rw.c,v 1.1 2003/07/17 13:31:39 chorns Exp $
+/* $Id: rw.c,v 1.2 2003/11/13 15:26:34 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -163,7 +163,6 @@ NtfsRead(PDEVICE_OBJECT DeviceObject,
 			Irp->Flags,
 			&ReturnedReadLength);
 
-ByeBye:
   if (NT_SUCCESS(Status))
     {
       if (FileObject->Flags & FO_SYNCHRONOUS_IO)

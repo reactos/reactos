@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mft.c,v 1.3 2003/11/12 15:30:21 ekohl Exp $
+/* $Id: mft.c,v 1.4 2003/11/13 15:26:34 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -264,21 +264,21 @@ ReadVCN (PDEVICE_EXTENSION Vcb,
 	 ULONG count,
 	 PVOID buffer)
 {
-	PNONRESIDENT_ATTRIBUTE NresAttr;
-	PATTRIBUTE attr;
-	attr = FindAttribute(file, type, 0);
-	
-	NresAttr = (PNONRESIDENT_ATTRIBUTE) attr;
+  PNONRESIDENT_ATTRIBUTE NresAttr;
+  PATTRIBUTE attr;
 
-	if (NresAttr == 0 || (vcn < NresAttr->StartVcn ||vcn > NresAttr->LastVcn))
-	{
-		
-	  PATTRIBUTE attrList = FindAttribute(file,AttributeAttributeList,0);
-	  DbgPrint("Exeption \n");
-	  //KeDebugCheck(0);
-	}
+  attr = FindAttribute(file, type, 0);
 
-	ReadExternalAttribute(Vcb, NresAttr, vcn, count, buffer);
+  NresAttr = (PNONRESIDENT_ATTRIBUTE) attr;
+
+  if (NresAttr == 0 || (vcn < NresAttr->StartVcn ||vcn > NresAttr->LastVcn))
+    {
+//      PATTRIBUTE attrList = FindAttribute(file,AttributeAttributeList,0);
+      DbgPrint("Exeption \n");
+//      KeDebugCheck(0);
+    }
+
+  ReadExternalAttribute(Vcb, NresAttr, vcn, count, buffer);
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.16 2003/11/10 11:32:08 ekohl Exp $
+/* $Id: fsctl.c,v 1.17 2003/11/13 15:25:08 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -446,6 +446,9 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
   NTSTATUS Status;
   CDINFO CdInfo;
 
+  PLIST_ENTRY Entry;
+  PFCB Fcb;
+
   DPRINT1 ("CdfsVerifyVolume() called\n");
 
 #if 0
@@ -491,6 +494,14 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
       DPRINT1 ("Different volume!\n");
 
       /* FIXME: force volume dismount */
+      Entry = DeviceExt->FcbListHead.Flink;
+      while (Entry != &DeviceExt->FcbListHead)
+	{
+	  Fcb = (PFCB)CONTAINING_RECORD(Entry, FCB, FcbListEntry);
+	  DPRINT1("OpenFile %S  RefCount %ld\n", Fcb->PathName, Fcb->RefCount);
+
+	  Entry = Entry->Flink;
+	}
 
       Status = STATUS_WRONG_VOLUME;
     }

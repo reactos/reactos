@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dirctl.c,v 1.13 2003/08/07 11:47:32 silverblade Exp $
+/* $Id: dirctl.c,v 1.14 2003/11/13 15:25:08 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -170,7 +170,6 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
   ULONG len;
   ULONG DirIndex;
   ULONG Offset = 0;
-  ULONG Read;
   BOOLEAN IsRoot;
   PVOID Context = NULL;
   ULONG DirSize;
@@ -349,11 +348,9 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 	  return(STATUS_SUCCESS);
 	}
 
-
       Offset += Record->RecordLength;
       Record = (PVOID)Record + Record->RecordLength;
       DirIndex++;
-
     }
 
   CcUnpinData(Context);

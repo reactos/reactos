@@ -297,6 +297,13 @@ extern PNTFS_GLOBAL_DATA NtfsGlobalData;
 //LONGLONG RunLCN(PUCHAR run);
 
 //ULONG RunLength(PUCHAR run);
+
+BOOLEAN
+FindRun (PNONRESIDENT_ATTRIBUTE NresAttr,
+	 ULONGLONG vcn,
+	 PULONGLONG lcn,
+	 PULONGLONG count);
+
 VOID
 NtfsDumpFileAttributes (PFILE_RECORD_HEADER FileRecord);
 

@@ -1,4 +1,4 @@
-/* $Id: fsctrl.c,v 1.12 2003/09/20 20:31:57 weiden Exp $
+/* $Id: fsctrl.c,v 1.13 2003/11/13 15:26:07 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -116,8 +116,6 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
 static NTSTATUS
 NpfsDisconnectPipe(PNPFS_FCB Fcb)
 {
-  PNPFS_FCB ServerFcb;
-
   DPRINT("NpfsDisconnectPipe()\n");
 
   if (Fcb->PipeState == FILE_PIPE_DISCONNECTED_STATE)

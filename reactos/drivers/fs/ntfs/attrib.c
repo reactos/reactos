@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: attrib.c,v 1.7 2003/11/12 15:30:21 ekohl Exp $
+/* $Id: attrib.c,v 1.8 2003/11/13 15:26:34 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -170,7 +170,6 @@ static VOID
 NtfsDumpAttribute (PATTRIBUTE Attribute)
 {
   PNONRESIDENT_ATTRIBUTE NresAttr;
-  PRESIDENT_ATTRIBUTE ResAttr;
   UNICODE_STRING Name;
 
   ULONGLONG lcn;

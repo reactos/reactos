@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 2003/11/10 11:32:08 ekohl Exp $
+# $Id: makefile,v 1.7 2003/11/13 15:25:08 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,6 +10,8 @@ TARGET_NAME = cdfs
 
 TARGET_OBJECTS = $(TARGET_NAME).o close.o common.o create.o dirctl.o \
                  fcb.o finfo.o fsctl.o misc.o rw.o volinfo.o cleanup.o
+
+TARGET_CFLAGS = -Werror -Wall
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 

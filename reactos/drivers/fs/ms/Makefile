@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2001/08/21 20:13:12 chorns Exp $
+# $Id: Makefile,v 1.8 2003/11/13 15:25:43 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -12,6 +12,8 @@ TARGET_OBJECTS = \
   fsctrl.o \
   msfs.o \
   rw.o
+
+TARGET_CFLAGS = -Werror -Wall
 
 include $(PATH_TO_TOP)/rules.mak
 

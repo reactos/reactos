@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.10 2003/11/10 11:32:08 ekohl Exp $
+/* $Id: create.c,v 1.11 2003/11/13 15:25:08 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -52,7 +52,7 @@ CdfsMakeAbsoluteFilename(PFILE_OBJECT pFileObject,
 
   /* verify related object is a directory and target name
      don't start with \. */
-  if (Fcb->Entry.FileFlags & 0x02 == 0 ||
+  if ((Fcb->Entry.FileFlags & 0x02) == 0 ||
       pRelativeFileName[0] == L'\\')
     {
       return(STATUS_INVALID_PARAMETER);

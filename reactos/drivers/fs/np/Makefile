@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.13 2003/06/21 19:55:55 hbirr Exp $
+# $Id: Makefile,v 1.14 2003/11/13 15:26:07 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -13,6 +13,8 @@ TARGET_OBJECTS = \
   npfs.o \
   rw.o \
   volume.o
+
+TARGET_CFLAGS = -Werror -Wall
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 
