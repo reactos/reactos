@@ -1,4 +1,4 @@
-/* $Id: painting.c,v 1.8 2003/01/24 22:42:15 jfilby Exp $
+/* $Id: painting.c,v 1.9 2003/03/18 08:33:27 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -492,7 +492,7 @@ PaintRedrawWindow(HWND hWnd, const RECT* UpdateRect, HRGN UpdateRgn,
 	    }
 	  else
 	    {
-	      W32kGetClientRect(hWnd, &Rect2);
+	      W32kGetClientRect(Window, &Rect2);
 	      hRgn = UnsafeW32kCreateRectRgnIndirect(&Rect2);
 	    }
 	}
