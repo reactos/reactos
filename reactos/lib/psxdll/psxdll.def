@@ -1,0 +1,197 @@
+; $Id: psxdll.def,v 1.1 1999/07/18 20:54:04 ea Exp $
+;
+; psxdll.def
+;
+; ReactOS POSIX+ Subsystem
+;
+LIBRARY psxdll
+EXPORTS
+GetProcessHeap
+HeapAlloc = NTDLL.RtlAllocateHeap
+HeapFree = NTDLL.RtlFreeHeap
+HeapReAlloc = NTDLL.RtlReAllocateHeap
+HeapSize = NTDLL.RtlSizeHeap
+RtlAnsiCharToUnicodeChar = NTDLL.RtlAnsiCharToUnicodeChar
+RtlFillMemory = NTDLL.RtlFillMemory
+RtlMoveMemory = NTDLL.RtlMoveMemory
+RtlMultiByteToUnicodeN = NTDLL.RtlMultiByteToUnicodeN
+RtlUnicodeToMultiByteN = NTDLL.RtlUnicodeToMultiByteN
+RtlUnicodeToMultiByteSize = NTDLL.RtlUnicodeToMultiByteSize
+RtlUnwind = NTDLL.RtlUnwind
+RtlUpcaseUnicodeChar = NTDLL.RtlUpcaseUnicodeChar
+RtlUpcaseUnicodeToMultiByteN = NTDLL.RtlUpcaseUnicodeToMultiByteN
+RtlZeroMemory = NTDLL.RtlZeroMemory
+__PdxGetCmdLine
+__PdxInitializeData
+__findenv
+_exit
+_fdptcheck
+_sigjmp_store_mask
+accept
+access
+alarm
+authenticateuser
+bind
+cfgetispeed
+cfgetospeed
+cfsetispeed
+cfsetospeed
+chdir
+chmod
+chown
+close
+closedir
+connect
+creat
+ctermid
+cuserid
+dup
+dup2
+endutxent
+execl
+execl_asuser
+execle
+execle_asuser
+execlp
+execlp_asuser
+execv
+execv_asuser
+execve
+execve_asuser
+execvp
+execvp_asuser
+fcntl
+flock
+fork
+fpathconf
+fstat
+fstatvfs
+fsync
+ftruncate
+getcwd
+getegid
+getenv
+geteuid
+getgid
+getgrgid
+getgrgid_nomembers
+getgrnam
+getgrnam_nomembers
+getgroups
+gethostbyaddr
+gethostbyname
+getitimer
+getlogin
+getloginenv
+getpeername
+getpgrp
+getpid
+getppid
+getprotobyname
+getprotobynumber
+getpwnam
+getpwuid
+getreg
+getreg_strvalue
+getservbyname
+getservbyport
+getsockname
+getsockopt
+gettimeofday
+gettzenv
+getuid
+getutxent
+getutxid
+getutxline
+grantpt
+ioctl
+ipcs
+isatty
+isatty2
+kill
+link
+listen
+lseek
+mkdir
+mkfifo
+mmap
+mprotect
+msgctl
+msgget
+msgrcv
+msgsnd
+munmap
+open
+opendir
+pathconf
+pause
+pipe
+poll
+ptsname
+pututxline
+raise
+read
+readdir
+recv
+recvfrom
+remove
+rename
+renamewtmpx
+rewinddir
+rmdir
+select
+semctl
+semget
+semop
+send
+sendto
+setgid
+setitimer
+setpgid
+setsid
+setsockopt
+setuid
+setuser
+setutxent
+shmat
+shmctl
+shmdt
+shmget
+shutdown
+sigaction
+sigaddset
+sigdelset
+sigemptyset
+sigfillset
+sigismember
+siglongjmp
+signal
+sigpending
+sigprocmask
+sigsuspend
+sleep
+socket
+stat
+statvfs
+sysconf
+system
+tcdrain
+tcflow
+tcflush
+tcgetattr
+tcgetpgrp
+tcsendbreak
+tcsetattr
+tcsetpgrp
+time
+times
+ttyname
+uidtontsid
+umask
+uname
+unlink
+unlockpt
+utime
+wait
+waitpid
+write
