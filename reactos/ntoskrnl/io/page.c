@@ -1,12 +1,12 @@
-/* $Id: page.c,v 1.16 2002/04/27 19:22:09 hbirr Exp $
+/* $Id: page.c,v 1.17 2002/08/28 07:19:10 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/bug.c
- * PURPOSE:         Graceful system shutdown if a bug is detected
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * FILE:            ntoskrnl/io/page.c
+ * PURPOSE:         
+ * PROGRAMMER:      
  * UPDATE HISTORY:
- *                  Created 22/05/98
+ *                  
  */
 
 /* INCLUDES *****************************************************************/
@@ -19,11 +19,12 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL IoPageWrite(PFILE_OBJECT FileObject,
-			    PMDL Mdl,
-			    PLARGE_INTEGER Offset,
-			    PIO_STATUS_BLOCK StatusBlock,
-			    BOOLEAN PagingIo)
+NTSTATUS STDCALL 
+IoPageWrite(PFILE_OBJECT FileObject,
+	    PMDL Mdl,
+	    PLARGE_INTEGER Offset,
+	    PKEVENT Event,
+	    PIO_STATUS_BLOCK StatusBlock)
 {
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
@@ -32,37 +33,23 @@ NTSTATUS STDCALL IoPageWrite(PFILE_OBJECT FileObject,
    DPRINT("IoPageWrite(FileObject %x, Mdl %x)\n",
 	  FileObject, Mdl);
    
-   ObReferenceObjectByPointer(FileObject,
-			      STANDARD_RIGHTS_REQUIRED,
-			      IoFileObjectType,
-			      UserMode);
-   KeResetEvent( &FileObject->Event );   
    Irp = IoBuildSynchronousFsdRequestWithMdl(IRP_MJ_WRITE,
 					     FileObject->DeviceObject,
 					     Mdl,
 					     Offset,
-					     &FileObject->Event,
+					     Event,
 					     StatusBlock,
-					     PagingIo);
+					     TRUE);
+   if (Irp == NULL)
+   {
+      return (STATUS_INSUFFICIENT_RESOURCES);
+   }
+   Irp->Flags = IRP_NOCACHE|IRP_PAGING_IO;
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
    DPRINT("Before IoCallDriver\n");
-   Status = IoCallDriver(FileObject->DeviceObject,Irp);
+   Status = IofCallDriver(FileObject->DeviceObject,Irp);
    DPRINT("Status %d STATUS_PENDING %d\n",Status,STATUS_PENDING);
-   if (Status == STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
-     {
-	DPRINT("Waiting for io operation\n");
-	if (FileObject->Flags & FO_ALERTABLE_IO)
-	  {
-	     KeWaitForSingleObject(&FileObject->Event,Executive,KernelMode,TRUE,NULL);
-	  }
-	else
-	  {
-	     DPRINT("Non-alertable wait\n");
-	     KeWaitForSingleObject(&FileObject->Event,Executive,KernelMode,FALSE,NULL);
-	  }
-	Status = StatusBlock->Status;
-     }
    return(Status);
 }
 
@@ -71,8 +58,8 @@ NTSTATUS STDCALL
 IoPageRead(PFILE_OBJECT FileObject,
 	   PMDL Mdl,
 	   PLARGE_INTEGER Offset,
-	   PIO_STATUS_BLOCK StatusBlock,
-	   BOOLEAN PagingIo)
+	   PKEVENT Event,
+	   PIO_STATUS_BLOCK StatusBlock)
 {
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
@@ -81,49 +68,60 @@ IoPageRead(PFILE_OBJECT FileObject,
    DPRINT("IoPageRead(FileObject %x, Mdl %x)\n",
 	  FileObject, Mdl);
    
-   ObReferenceObjectByPointer(FileObject,
-			      STANDARD_RIGHTS_REQUIRED,
-			      IoFileObjectType,
-			      UserMode);
-   KeResetEvent( &FileObject->Event );   
    Irp = IoBuildSynchronousFsdRequestWithMdl(IRP_MJ_READ,
 					     FileObject->DeviceObject,
 					     Mdl,
 					     Offset,
-					     &FileObject->Event,
+					     Event,
 					     StatusBlock,
-					     PagingIo);
+					     TRUE);
+   if (Irp == NULL)
+   {
+      return (STATUS_INSUFFICIENT_RESOURCES);
+   }
+   Irp->Flags = IRP_NOCACHE|IRP_PAGING_IO;
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
    DPRINT("Before IoCallDriver\n");
-   Status = IoCallDriver(FileObject->DeviceObject, Irp);
+   Status = IofCallDriver(FileObject->DeviceObject, Irp);
    DPRINT("Status %d STATUS_PENDING %d\n",Status,STATUS_PENDING);
-   if (Status==STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
-     {
-	DPRINT("Waiting for io operation\n");
-	if (FileObject->Flags & FO_ALERTABLE_IO)
-	  {
-	     KeWaitForSingleObject(&FileObject->Event,Executive,KernelMode,TRUE,NULL);
-	  }
-	else
-	  {
-	     DPRINT("Non-alertable wait\n");
-	     KeWaitForSingleObject(&FileObject->Event,Executive,KernelMode,FALSE,NULL);
-	  }
-	Status = StatusBlock->Status;
-     }
+
    return(Status);
 }
 
 
-NTSTATUS STDCALL IoSynchronousPageWrite (DWORD	Unknown0,
-					 DWORD	Unknown1,
-					 DWORD	Unknown2,
-					 DWORD	Unknown3,
-					 DWORD	Unknown4)
+NTSTATUS STDCALL 
+IoSynchronousPageWrite (PFILE_OBJECT FileObject,
+			PMDL Mdl,
+			PLARGE_INTEGER Offset,
+			PKEVENT Event,
+			PIO_STATUS_BLOCK StatusBlock)
 {
-   UNIMPLEMENTED;
-   return (STATUS_NOT_IMPLEMENTED);
+   PIRP Irp;
+   PIO_STACK_LOCATION StackPtr;
+   NTSTATUS Status;
+   
+   DPRINT("IoSynchronousPageWrite(FileObject %x, Mdl %x)\n",
+	  FileObject, Mdl);
+   
+   Irp = IoBuildSynchronousFsdRequestWithMdl(IRP_MJ_WRITE,
+					     FileObject->DeviceObject,
+					     Mdl,
+					     Offset,
+					     Event,
+					     StatusBlock,
+					     TRUE);
+   if (Irp == NULL)
+   {
+      return (STATUS_INSUFFICIENT_RESOURCES);
+   }
+   Irp->Flags = IRP_NOCACHE|IRP_PAGING_IO|IRP_SYNCHRONOUS_PAGING_IO;
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->FileObject = FileObject;
+   DPRINT("Before IoCallDriver\n");
+   Status = IofCallDriver(FileObject->DeviceObject,Irp);
+   DPRINT("Status %d STATUS_PENDING %d\n",Status,STATUS_PENDING);
+   return(Status);
 }
 
 
