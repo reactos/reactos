@@ -21,6 +21,7 @@
 #include <internal/ps.h>
 #include <internal/ob.h>
 #include <internal/id.h>
+#include <internal/safe.h>
 #include <ntos/ntdef.h>
 
 #define NDEBUG
@@ -32,6 +33,10 @@ static KSPIN_LOCK DispatcherDatabaseLock;
 
 #define KeDispatcherObjectWakeOne(hdr) KeDispatcherObjectWakeOneOrAll(hdr, FALSE)
 #define KeDispatcherObjectWakeAll(hdr) KeDispatcherObjectWakeOneOrAll(hdr, TRUE)
+
+extern POBJECT_TYPE EXPORTED ExMutantObjectType;
+extern POBJECT_TYPE EXPORTED ExSemaphoreType;
+extern POBJECT_TYPE EXPORTED ExTimerType;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -448,6 +453,28 @@ KiGetWaitableObjectFromObject(PVOID Object)
 }
 
 
+inline BOOL
+KiIsObjectWaitable(PVOID Object)
+{
+    POBJECT_HEADER Header;
+    Header = BODY_TO_HEADER(Object);
+    if (Header->ObjectType == ExEventObjectType ||
+	Header->ObjectType == ExIoCompletionType ||
+	Header->ObjectType == ExMutantObjectType ||
+	Header->ObjectType == ExSemaphoreType ||
+	Header->ObjectType == ExTimerType ||
+	Header->ObjectType == PsProcessType ||
+	Header->ObjectType == PsThreadType ||
+	Header->ObjectType == IoFileObjectType)
+    {
+       return TRUE;
+    }
+    else
+    {
+       return FALSE;
+    }
+}
+
 /*
  * @implemented
  */
@@ -710,19 +737,29 @@ NtWaitForMultipleObjects(IN ULONG Count,
 			 IN HANDLE Object [],
 			 IN WAIT_TYPE WaitType,
 			 IN BOOLEAN Alertable,
-			 IN PLARGE_INTEGER Time)
+			 IN PLARGE_INTEGER UnsafeTime)
 {
    KWAIT_BLOCK WaitBlockArray[EX_MAXIMUM_WAIT_OBJECTS];
    PVOID ObjectPtrArray[EX_MAXIMUM_WAIT_OBJECTS];
    NTSTATUS Status;
    ULONG i, j;
    KPROCESSOR_MODE WaitMode;
+   LARGE_INTEGER Time;
 
    DPRINT("NtWaitForMultipleObjects(Count %lu Object[] %x, Alertable %d, "
 	  "Time %x)\n", Count,Object,Alertable,Time);
 
    if (Count > EX_MAXIMUM_WAIT_OBJECTS)
      return STATUS_UNSUCCESSFUL;
+
+   if (UnsafeTime)
+     {
+       Status = MmCopyFromCaller(&Time, UnsafeTime, sizeof(LARGE_INTEGER));
+       if (!NT_SUCCESS(Status))
+         {
+           return(Status);
+         }
+     }
 
    WaitMode = ExGetPreviousMode();
 
@@ -735,8 +772,15 @@ NtWaitForMultipleObjects(IN ULONG Count,
                                            WaitMode,
                                            &ObjectPtrArray[i],
                                            NULL);
-        if (Status != STATUS_SUCCESS)
+        if (!NT_SUCCESS(Status) || !KiIsObjectWaitable(ObjectPtrArray[i]))
           {
+             if (NT_SUCCESS(Status))
+	       {
+	         DPRINT1("Waiting for object type '%wZ' is not supported\n", 
+		         &BODY_TO_HEADER(ObjectPtrArray[i])->ObjectType->TypeName);
+	         Status = STATUS_HANDLE_NOT_WAITABLE;
+		 i++;
+	       }
              /* dereference all referenced objects */
              for (j = 0; j < i; j++)
                {
@@ -753,7 +797,7 @@ NtWaitForMultipleObjects(IN ULONG Count,
                                      UserRequest,
                                      WaitMode,
                                      Alertable,
-                                     Time,
+				     UnsafeTime ? &Time : NULL,
                                      WaitBlockArray);
 
    /* dereference all objects */
@@ -772,14 +816,24 @@ NtWaitForMultipleObjects(IN ULONG Count,
 NTSTATUS STDCALL
 NtWaitForSingleObject(IN HANDLE Object,
 		      IN BOOLEAN Alertable,
-		      IN PLARGE_INTEGER Time)
+		      IN PLARGE_INTEGER UnsafeTime)
 {
    PVOID ObjectPtr;
    NTSTATUS Status;
    KPROCESSOR_MODE WaitMode;
+   LARGE_INTEGER Time;
 
    DPRINT("NtWaitForSingleObject(Object %x, Alertable %d, Time %x)\n",
 	  Object,Alertable,Time);
+
+   if (UnsafeTime)
+     {
+       Status = MmCopyFromCaller(&Time, UnsafeTime, sizeof(LARGE_INTEGER));
+       if (!NT_SUCCESS(Status))
+         {
+           return(Status);
+         }
+     }
 
    WaitMode = ExGetPreviousMode();
 
@@ -793,12 +847,20 @@ NtWaitForSingleObject(IN HANDLE Object,
      {
 	return(Status);
      }
-
-   Status = KeWaitForSingleObject(ObjectPtr,
-				  UserRequest,
-				  WaitMode,
-				  Alertable,
-				  Time);
+   if (!KiIsObjectWaitable(ObjectPtr))
+     {
+       DPRINT1("Waiting for object type '%wZ' is not supported\n", 
+	       &BODY_TO_HEADER(ObjectPtr)->ObjectType->TypeName);
+       Status = STATUS_HANDLE_NOT_WAITABLE;
+     }
+   else
+     {
+       Status = KeWaitForSingleObject(ObjectPtr,
+				      UserRequest,
+				      WaitMode,
+				      Alertable,
+				      UnsafeTime ? &Time : NULL);
+     }
 
    ObDereferenceObject(ObjectPtr);
 
