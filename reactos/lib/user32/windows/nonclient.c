@@ -1142,3 +1142,41 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
         return result;
 }
 
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+DrawCaptionTempW(
+		 HWND        hwnd,
+		 HDC         hdc,
+		 const RECT *rect,
+		 HFONT       hFont,
+		 HICON       hIcon,
+		 LPCWSTR     str,
+		 UINT        uFlags
+		 )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+DrawCaptionTempA(
+		 HWND        hwnd,
+		 HDC         hdc,
+		 const RECT *rect,
+		 HFONT       hFont,
+		 HICON       hIcon,
+		 LPCSTR      str,
+		 UINT        uFlags
+		 )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.48 2003/11/07 19:13:02 sedwards Exp $
+/* $Id: stubs.c,v 1.49 2003/11/09 13:50:03 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING WINBOOLthe top level directory
  * PROJECT:         ReactOS user32.dll
@@ -123,18 +123,6 @@ CopyImage(
 {
   UNIMPLEMENTED;
   return (HANDLE)0;
-}
-
-
-/*
- * @unimplemented
- */
-HWND
-STDCALL
-GetFocus(VOID)
-{
-  UNIMPLEMENTED;
-  return (HWND)0;
 }
 
 
@@ -269,30 +257,6 @@ MsgWaitForMultipleObjectsEx(
   return 0;
 }
 
-#if 0
-HDEVNOTIFY
-STDCALL
-RegisterDeviceNotificationA(
-  HANDLE hRecipient,
-  LPVOID NotificationFilter,
-  DWORD Flags)
-{
-  UNIMPLEMENTED;
-  return (HDEVNOTIFY)0;
-}
-
-HDEVNOTIFY
-STDCALL
-RegisterDeviceNotificationW(
-  HANDLE hRecipient,
-  LPVOID NotificationFilter,
-  DWORD Flags)
-{
-  UNIMPLEMENTED;
-  return (HDEVNOTIFY)0;
-}
-#endif
-
 
 /*
  * @unimplemented
@@ -389,38 +353,6 @@ WaitForInputIdle(
 /*
  * @unimplemented
  */
-HHOOK
-STDCALL
-SetWindowsHookExA(
-    int idHook,
-    HOOKPROC lpfn,
-    HINSTANCE hMod,
-    DWORD dwThreadId)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-HHOOK
-STDCALL
-SetWindowsHookExW(
-    int idHook,
-    HOOKPROC lpfn,
-    HINSTANCE hMod,
-    DWORD dwThreadId)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
 VOID
 STDCALL
 keybd_event(
@@ -469,60 +401,6 @@ SetDebugErrorLevel( DWORD dwLevel )
 /* EOF */
 
 /*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-ChangeMenuW(
-    HMENU hMenu,
-    UINT cmd,
-    LPCWSTR lpszNewItem,
-    UINT cmdInsert,
-    UINT flags)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-ChangeMenuA(
-    HMENU hMenu,
-    UINT cmd,
-    LPCSTR lpszNewItem,
-    UINT cmdInsert,
-    UINT flags)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-DeregisterShellHookWindow(HWND hWnd)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-RegisterShellHookWindow(HWND hWnd)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
  * @implemented
  */
 WINBOOL
@@ -548,164 +426,11 @@ EndTask(
 /*
  * @unimplemented
  */
-LRESULT
-STDCALL
-MenuWindowProcA(
-		HWND   hWnd,
-		UINT   Msg,
-		WPARAM wParam,
-		LPARAM lParam
-		)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-LRESULT
-STDCALL
-MenuWindowProcW(
-		HWND   hWnd,
-		UINT   Msg,
-		WPARAM wParam,
-		LPARAM lParam
-		)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-DrawCaptionTempW(
-		 HWND        hwnd,
-		 HDC         hdc,
-		 const RECT *rect,
-		 HFONT       hFont,
-		 HICON       hIcon,
-		 LPCWSTR     str,
-		 UINT        uFlags
-		 )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-DrawCaptionTempA(
-		 HWND        hwnd,
-		 HDC         hdc,
-		 const RECT *rect,
-		 HFONT       hFont,
-		 HICON       hIcon,
-		 LPCSTR      str,
-		 UINT        uFlags
-		 )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-HHOOK
-STDCALL
-SetWindowsHookW ( int idHook, HOOKPROC lpfn )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-HHOOK
-STDCALL
-SetWindowsHookA ( int idHook, HOOKPROC lpfn )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-NotifyWinEvent(
-	       DWORD event,
-	       HWND  hwnd,
-	       LONG  idObject,
-	       LONG  idChild
-	       )
-{
-  UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-HWINEVENTHOOK
-STDCALL
-SetWinEventHook(
-		DWORD        eventMin,
-		DWORD        eventMax,
-		HMODULE      hmodWinEventProc,
-		WINEVENTPROC pfnWinEventProc,
-		DWORD        idProcess,
-		DWORD        idThread,
-		DWORD        dwFlags
-		)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
 VOID
 STDCALL
 SwitchToThisWindow ( HWND hwnd, WINBOOL fUnknown )
 {
   UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-UnhookWinEvent ( HWINEVENTHOOK hWinEventHook )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-LRESULT
-STDCALL
-EditWndProc(
-	    HWND   hWnd,
-	    UINT   Msg,
-	    WPARAM wParam,
-	    LPARAM lParam
-	    )
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 /*
@@ -733,78 +458,6 @@ GetInternalWindowPos(
   UNIMPLEMENTED;
   return FALSE;
 }
-
-/*
- * @unimplemented
- */
-HRESULT
-STDCALL
-GetProgmanWindow ( VOID )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-HRESULT
-STDCALL
-GetTaskmanWindow ( VOID )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-SetWindowStationUser ( DWORD x1, DWORD x2 )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-HRESULT
-STDCALL
-SetTaskmanWindow ( DWORD x )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-HRESULT
-STDCALL
-SetProgmanWindow ( DWORD x )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-/*
-VOID
-STDCALL
-ScrollChildren(
-	       HWND   hWnd,
-	       UINT   uMsg,
-	       WPARAM wParam,
-	       LPARAM lParam
-	       )
-{
-  UNIMPLEMENTED;
-}
-*/
 
 /*
  * @unimplemented
@@ -897,8 +550,7 @@ DragObject(
 	   HCURSOR hc1
 	   )
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserDragObject(hwnd1, hwnd2, u1, dw1, hc1);
 }
 
 /*
@@ -936,37 +588,9 @@ SetUserObjectSecurity(
 /*
  * @unimplemented
  */
-WINBOOL
-STDCALL
-UnhookWindowsHook ( int nCode, HOOKPROC pfnFilterProc )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
 UINT
 STDCALL
 UserRealizePalette ( HDC hDC )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-DrawMenuBarTemp(
-		HWND   hwnd,
-		HDC    hDC,
-		LPRECT lprect,
-		HMENU  hMenu,
-		HFONT  hFont
-		)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -1015,28 +639,6 @@ TileChildWindows ( HWND hWndParent, WORD wFlags )
 HDESK
 STDCALL
 GetInputDesktop ( VOID )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-LockWindowStation ( HWINSTA hWinSta )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-UnlockWindowStation ( HWINSTA hWinSta )
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -1303,18 +905,6 @@ WINBOOL
 STDCALL
 IsGUIThread(
     WINBOOL bConvert)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-IsWinEventHookInstalled(
-    DWORD event)
 {
   UNIMPLEMENTED;
   return FALSE;

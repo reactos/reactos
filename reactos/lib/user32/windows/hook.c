@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hook.c,v 1.10 2003/07/10 21:04:32 chorns Exp $
+/* $Id: hook.c,v 1.11 2003/11/09 13:50:04 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -100,3 +100,148 @@ CallNextHookEx(
   UNIMPLEMENTED;
   return (LRESULT)0;
 }
+
+/*
+ * @unimplemented
+ */
+HHOOK
+STDCALL
+SetWindowsHookW ( int idHook, HOOKPROC lpfn )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HHOOK
+STDCALL
+SetWindowsHookA ( int idHook, HOOKPROC lpfn )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+DeregisterShellHookWindow(HWND hWnd)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+RegisterShellHookWindow(HWND hWnd)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+UnhookWindowsHook ( int nCode, HOOKPROC pfnFilterProc )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+NotifyWinEvent(
+	       DWORD event,
+	       HWND  hwnd,
+	       LONG  idObject,
+	       LONG  idChild
+	       )
+{
+  UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+HWINEVENTHOOK
+STDCALL
+SetWinEventHook(
+		DWORD        eventMin,
+		DWORD        eventMax,
+		HMODULE      hmodWinEventProc,
+		WINEVENTPROC pfnWinEventProc,
+		DWORD        idProcess,
+		DWORD        idThread,
+		DWORD        dwFlags
+		)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+UnhookWinEvent ( HWINEVENTHOOK hWinEventHook )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+IsWinEventHookInstalled(
+    DWORD event)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HHOOK
+STDCALL
+SetWindowsHookExA(
+    int idHook,
+    HOOKPROC lpfn,
+    HINSTANCE hMod,
+    DWORD dwThreadId)
+{
+  UNIMPLEMENTED;
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+HHOOK
+STDCALL
+SetWindowsHookExW(
+    int idHook,
+    HOOKPROC lpfn,
+    HINSTANCE hMod,
+    DWORD dwThreadId)
+{
+  UNIMPLEMENTED;
+  return 0;
+}
+

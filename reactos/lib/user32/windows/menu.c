@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.35 2003/11/08 15:35:58 mf Exp $
+/* $Id: menu.c,v 1.36 2003/11/09 13:50:04 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -1385,3 +1385,83 @@ GetMenuContextHelpId(HMENU hmenu)
   return 0;
 }
 
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+DrawMenuBarTemp(
+		HWND   hwnd,
+		HDC    hDC,
+		LPRECT lprect,
+		HMENU  hMenu,
+		HFONT  hFont
+		)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+LRESULT
+STDCALL
+MenuWindowProcA(
+		HWND   hWnd,
+		UINT   Msg,
+		WPARAM wParam,
+		LPARAM lParam
+		)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+LRESULT
+STDCALL
+MenuWindowProcW(
+		HWND   hWnd,
+		UINT   Msg,
+		WPARAM wParam,
+		LPARAM lParam
+		)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+ChangeMenuW(
+    HMENU hMenu,
+    UINT cmd,
+    LPCWSTR lpszNewItem,
+    UINT cmdInsert,
+    UINT flags)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+ChangeMenuA(
+    HMENU hMenu,
+    UINT cmd,
+    LPCSTR lpszNewItem,
+    UINT cmdInsert,
+    UINT flags)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}

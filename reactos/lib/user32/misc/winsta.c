@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.11 2003/08/21 20:29:43 weiden Exp $
+/* $Id: winsta.c,v 1.12 2003/11/09 13:50:03 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -167,6 +167,44 @@ WINBOOL STDCALL
 SetProcessWindowStation(HWINSTA hWinSta)
 {
   return NtUserSetProcessWindowStation(hWinSta);
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+SetWindowStationUser(
+  DWORD Unknown1,
+  DWORD Unknown2,
+  DWORD Unknown3,
+  DWORD Unknown4
+  )
+{
+  return NtUserSetWindowStationUser(Unknown1, Unknown2, Unknown3, Unknown4);
+}
+
+
+/*
+ * @implemented
+ */
+WINBOOL
+STDCALL
+LockWindowStation(HWINSTA hWinSta)
+{
+  return NtUserLockWindowStation(hWinSta);
+}
+
+
+/*
+ * @implemented
+ */
+WINBOOL
+STDCALL
+UnlockWindowStation(HWINSTA hWinSta)
+{
+  return NtUserUnlockWindowStation(hWinSta);
 }
 
 /* EOF */

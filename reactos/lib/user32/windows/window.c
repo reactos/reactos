@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.79 2003/11/09 11:42:08 navaraf Exp $
+/* $Id: window.c,v 1.80 2003/11/09 13:50:04 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1659,6 +1659,61 @@ GetSystemMenu(
     return (HMENU)0;
   }
   return NtUserGetSystemMenu(hWnd, bRevert);
+}
+
+/*
+ * @unimplemented
+ */
+HWND
+STDCALL
+GetFocus(VOID)
+{
+  UNIMPLEMENTED;
+  return (HWND)0;
+}
+
+/*
+ * @unimplemented
+ */
+HWND
+STDCALL
+SetTaskmanWindow(HWND x)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HWND
+STDCALL
+SetProgmanWindow(HWND x)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HWND
+STDCALL
+GetProgmanWindow(VOID)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HWND
+STDCALL
+GetTaskmanWindow(VOID)
+{
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 /* EOF */
