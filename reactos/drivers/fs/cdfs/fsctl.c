@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.15 2003/11/09 11:20:28 ekohl Exp $
+/* $Id: fsctl.c,v 1.16 2003/11/10 11:32:08 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -179,7 +179,7 @@ CdfsGetSVDData(PUCHAR Buffer,
 }
 
 
-NTSTATUS
+static NTSTATUS
 CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
 		  PCDINFO CdInfo)
 {
@@ -353,6 +353,7 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
 
   NewDeviceObject->Vpb = DeviceToMount->Vpb;
 
+  DeviceExt->VolumeDevice = NewDeviceObject;
   DeviceExt->StorageDevice = DeviceToMount;
   DeviceExt->StorageDevice->Vpb->DeviceObject = NewDeviceObject;
   DeviceExt->StorageDevice->Vpb->RealDevice = DeviceExt->StorageDevice;
@@ -407,8 +408,8 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
       goto ByeBye;
     }
 
+  ExInitializeResourceLite(&DeviceExt->VcbResource);
   ExInitializeResourceLite(&DeviceExt->DirResource);
-//  ExInitializeResourceLite(&DeviceExt->FatResource);
 
   KeInitializeSpinLock(&DeviceExt->FcbListLock);
   InitializeListHead(&DeviceExt->FcbListHead);
@@ -439,12 +440,13 @@ static NTSTATUS
 CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
 		 PIRP Irp)
 {
+  PDEVICE_EXTENSION DeviceExt;
   PDEVICE_OBJECT DeviceToVerify;
   PIO_STACK_LOCATION Stack;
   NTSTATUS Status;
   CDINFO CdInfo;
 
-  DPRINT1("CdfsVerifyVolume() called\n");
+  DPRINT1 ("CdfsVerifyVolume() called\n");
 
 #if 0
   if (DeviceObject != CdfsGlobalData->DeviceObject)
@@ -454,25 +456,50 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
     }
 #endif
 
-  Stack = IoGetCurrentIrpStackLocation(Irp);
+  DeviceExt = DeviceObject->DeviceExtension;
+
+  Stack = IoGetCurrentIrpStackLocation (Irp);
   DeviceToVerify = Stack->Parameters.VerifyVolume.DeviceObject;
 
-  DPRINT("Device object %p  Device to verify %p\n", DeviceObject, DeviceToVerify);
+  ExAcquireResourceExclusiveLite (&DeviceExt->VcbResource,
+				  TRUE);
 
-  CdInfo.SerialNumber = ~DeviceToVerify->Vpb->SerialNumber;
-
-  Status = CdfsGetVolumeData(DeviceToVerify, &CdInfo);
-
-  if (NT_SUCCESS(Status))
+  if (!(DeviceToVerify->Flags & DO_VERIFY_VOLUME))
     {
-      DPRINT("Current serial number %08lx  Vpb serial number %08lx\n",
-	     CdInfo.SerialNumber, DeviceToVerify->Vpb->SerialNumber);
-
-      if (CdInfo.SerialNumber != DeviceToVerify->Vpb->SerialNumber)
-	  Status = STATUS_WRONG_VOLUME;
+      DPRINT1 ("Volume has been verified!\n");
+      ExReleaseResourceLite (&DeviceExt->VcbResource);
+      return STATUS_SUCCESS;
     }
 
-  return(Status);
+  DPRINT1 ("Device object %p  Device to verify %p\n", DeviceObject, DeviceToVerify);
+
+  Status = CdfsGetVolumeData (DeviceToVerify,
+			      &CdInfo);
+  if (NT_SUCCESS(Status) &&
+      CdInfo.SerialNumber == DeviceToVerify->Vpb->SerialNumber &&
+      CdInfo.VolumeLabelLength == DeviceToVerify->Vpb->VolumeLabelLength &&
+      !wcsncmp (CdInfo.VolumeLabel, DeviceToVerify->Vpb->VolumeLabel, CdInfo.VolumeLabelLength))
+    {
+      DPRINT1 ("Same volume!\n");
+
+      /* FIXME: Flush and purge metadata */
+
+      Status = STATUS_SUCCESS;
+    }
+  else
+    {
+      DPRINT1 ("Different volume!\n");
+
+      /* FIXME: force volume dismount */
+
+      Status = STATUS_WRONG_VOLUME;
+    }
+
+  DeviceToVerify->Flags &= ~DO_VERIFY_VOLUME;
+
+  ExReleaseResourceLite (&DeviceExt->VcbResource);
+
+  return Status;
 }
 
 
@@ -490,7 +517,7 @@ CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
   switch (Stack->MinorFunction)
     {
       case IRP_MN_USER_FS_REQUEST:
-	DPRINT("CDFS: IRP_MN_USER_FS_REQUEST\n");
+	DPRINT1("CDFS: IRP_MN_USER_FS_REQUEST\n");
 	Status = STATUS_INVALID_DEVICE_REQUEST;
 	break;
 
@@ -505,7 +532,7 @@ CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 	break;
 
       default:
-	DPRINT("CDFS FSC: MinorFunction %d\n", Stack->MinorFunction);
+	DPRINT1("CDFS FSC: MinorFunction %d\n", Stack->MinorFunction);
 	Status = STATUS_INVALID_DEVICE_REQUEST;
 	break;
     }

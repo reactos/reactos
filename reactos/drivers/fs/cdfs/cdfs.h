@@ -141,13 +141,14 @@ typedef struct _CDINFO
 
 typedef struct
 {
+  ERESOURCE VcbResource;
   ERESOURCE DirResource;
-//  ERESOURCE FatResource;
 
   KSPIN_LOCK FcbListLock;
   LIST_ENTRY FcbListHead;
 
   PVPB Vpb;
+  PDEVICE_OBJECT VolumeDevice;
   PDEVICE_OBJECT StorageDevice;
   PFILE_OBJECT StreamFileObject;
 
@@ -174,7 +175,6 @@ typedef struct _FCB
   WCHAR ShortName[13];
   USHORT ShortNameLength;
 
-//  ERESOURCE PagingIoResource;
   ERESOURCE MainResource;
 
   LIST_ENTRY FcbListEntry;
@@ -345,10 +345,6 @@ CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
 
 
 /* fsctl.c */
-
-NTSTATUS
-CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
-		  PCDINFO CdInfo);
 
 NTSTATUS STDCALL
 CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,

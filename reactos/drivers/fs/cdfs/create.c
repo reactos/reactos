@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.9 2003/11/09 11:20:28 ekohl Exp $
+/* $Id: create.c,v 1.10 2003/11/10 11:32:08 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -34,8 +34,6 @@
 #include <debug.h>
 
 #include "cdfs.h"
-
-//#define MEDIA_CHANGE_SUPPORT
 
 
 /* FUNCTIONS ****************************************************************/
@@ -91,10 +89,6 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
   PFCB Fcb;
   NTSTATUS Status;
   PWSTR AbsFileName = NULL;
-#ifdef MEDIA_CHANGE_SUPPORT
-  ULONG MediaChangeCount = 0;
-  ULONG BufferSize;
-#endif
 
   DPRINT("CdfsOpenFile(%08lx, %08lx, %S)\n", DeviceExt, FileObject, FileName);
 
@@ -108,42 +102,37 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
       FileName = AbsFileName;
       if (!NT_SUCCESS(Status))
 	{
-	  return(Status);
+	  return Status;
 	}
-      return(STATUS_UNSUCCESSFUL);
+
+      return STATUS_UNSUCCESSFUL;
     }
 
-#ifdef MEDIA_CHANGE_SUPPORT
-  BufferSize = sizeof(ULONG);
   Status = CdfsDeviceIoControl (DeviceExt->StorageDevice,
 				IOCTL_CDROM_CHECK_VERIFY,
 				NULL,
 				0,
-				(PVOID)&MediaChangeCount,
-				&BufferSize,
+				NULL,
+				0,
 				TRUE);
   DPRINT ("Status %lx\n", Status);
   if (Status == STATUS_VERIFY_REQUIRED)
     {
-      CDINFO CdInfo;
-      DPRINT1 ("Media change detected!\n");
+      PDEVICE_OBJECT DeviceToVerify;
 
-      Status = CdfsGetVolumeData (DeviceExt->StorageDevice,
-				  &CdInfo);
+      DPRINT1 ("Media change detected!\n");
+      DPRINT1 ("Device %p\n", DeviceExt->VolumeDevice);
+
+      DeviceToVerify = IoGetDeviceToVerify (PsGetCurrentThread ());
+      IoSetDeviceToVerify (PsGetCurrentThread (),
+			   NULL);
+
+      Status = IoVerifyVolume (DeviceToVerify,
+			       FALSE);
       if (!NT_SUCCESS(Status))
 	{
-	  DPRINT1 ("CdfsGetVolumeData() failed (Status %lx)\n", Status);
+	  DPRINT1 ("Status %lx\n", Status);
 	  return Status;
-	}
-
-      /* FIXME: Comparing the serial numbers is not enough */
-      if (DeviceExt->CdInfo.SerialNumber == CdInfo.SerialNumber)
-	{
-	  DPRINT1 ("Same CD\n");
-	}
-      else
-	{
-	  DPRINT1 ("Different CD\n");
 	}
     }
   else if (!NT_SUCCESS(Status))
@@ -151,11 +140,6 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
       DPRINT1 ("Status %lx\n", Status);
       return Status;
     }
-  else
-    {
-      DPRINT ("MediaChangeCount %lu\n", MediaChangeCount);
-    }
-#endif
 
   //FIXME: Get cannonical path name (remove .'s, ..'s and extra separators)
 
@@ -197,10 +181,8 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
   if (AbsFileName)
     ExFreePool (AbsFileName);
 
-  return  Status;
+  return Status;
 }
-
-
 
 
 static NTSTATUS
@@ -245,22 +227,22 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
 			FileObject->FileName.Buffer);
 
   if (NT_SUCCESS(Status))
-  {
-    Fcb = FileObject->FsContext;
-    /*
-     * Check the file has the requested attributes
-     */
-    if (RequestedOptions & FILE_NON_DIRECTORY_FILE && CdfsFCBIsDirectory(Fcb))
     {
-       CdfsCloseFile (DeviceExt, FileObject);
-       return STATUS_FILE_IS_A_DIRECTORY;
-    }
-    if (RequestedOptions & FILE_DIRECTORY_FILE && !CdfsFCBIsDirectory(Fcb))
-    {
-       CdfsCloseFile (DeviceExt, FileObject);
-       return STATUS_NOT_A_DIRECTORY;
-    }
-  }  
+      Fcb = FileObject->FsContext;
+
+      /* Check whether the file has the requested attributes */
+      if (RequestedOptions & FILE_NON_DIRECTORY_FILE && CdfsFCBIsDirectory(Fcb))
+	{
+	  CdfsCloseFile (DeviceExt, FileObject);
+	  return STATUS_FILE_IS_A_DIRECTORY;
+	}
+
+      if (RequestedOptions & FILE_DIRECTORY_FILE && !CdfsFCBIsDirectory(Fcb))
+	{
+	  CdfsCloseFile (DeviceExt, FileObject);
+	  return STATUS_NOT_A_DIRECTORY;
+	}
+  }
 
   /*
    * If the directory containing the file to open doesn't exist then
@@ -269,7 +251,7 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
   Irp->IoStatus.Information = (NT_SUCCESS(Status)) ? FILE_OPENED : 0;
   Irp->IoStatus.Status = Status;
 
-  return(Status);
+  return Status;
 }
 
 
@@ -302,7 +284,7 @@ ByeBye:
   IoCompleteRequest(Irp,
 		    NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);
 
-  return(Status);
+  return Status;
 }
 
 /* EOF */
