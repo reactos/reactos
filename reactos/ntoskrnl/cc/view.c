@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.49 2002/09/08 10:23:16 chorns Exp $
+/* $Id: view.c,v 1.50 2002/09/15 10:45:00 guido Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -414,7 +414,7 @@ CcRosGetCacheSegmentChain(PBCB Bcb,
   PCACHE_SEGMENT current;
   ULONG i;
   PCACHE_SEGMENT* CacheSegList;
-  PCACHE_SEGMENT Previous;
+  PCACHE_SEGMENT Previous = NULL;
 
   Length = ROUND_UP(Length, Bcb->CacheSegmentSize);
 

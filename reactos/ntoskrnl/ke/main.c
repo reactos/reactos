@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.137 2002/09/08 10:23:29 chorns Exp $
+/* $Id: main.c,v 1.138 2002/09/15 10:45:02 guido Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -638,7 +638,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    */
   if (((PUCHAR)_LoaderBlock->CommandLine)[0] == '(')
     {
-      ULONG DiskNumber, PartNumber;
+      ULONG DiskNumber = 0, PartNumber = 0;
       PCH p;
       CHAR Temp[256];
       PCH options;

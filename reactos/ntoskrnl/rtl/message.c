@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.4 2002/09/08 10:23:42 chorns Exp $
+/* $Id: message.c,v 1.5 2002/09/15 10:45:05 guido Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -30,7 +30,7 @@ RtlFindMessage(PVOID BaseAddress,
    PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
    PRTL_MESSAGE_RESOURCE_DATA MessageTable;
    NTSTATUS Status;
-   ULONG EntryOffset, IdOffset;
+   ULONG EntryOffset, IdOffset = 0;
    PRTL_MESSAGE_RESOURCE_ENTRY MessageEntry;
 
    ULONG i;

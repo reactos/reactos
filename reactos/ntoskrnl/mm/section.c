@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.97 2002/09/08 10:23:36 chorns Exp $
+/* $Id: section.c,v 1.98 2002/09/15 10:45:03 guido Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1520,7 +1520,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
   BOOLEAN Private;
   NTSTATUS Status;
   PFILE_OBJECT FileObject;
-  PREACTOS_COMMON_FCB_HEADER Fcb;
+  PREACTOS_COMMON_FCB_HEADER Fcb = NULL;
   BOOLEAN DirectMapped;
 
   Address = (PVOID)PAGE_ROUND_DOWN(Address);
@@ -3276,7 +3276,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
    PSECTION_OBJECT Section;
    PMADDRESS_SPACE AddressSpace;
    ULONG ViewOffset;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
 
    Section = (PSECTION_OBJECT)SectionObject;
    AddressSpace = &Process->AddressSpace;

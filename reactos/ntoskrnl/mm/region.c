@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.3 2002/09/08 10:23:36 chorns Exp $
+/* $Id: region.c,v 1.4 2002/09/15 10:45:03 guido Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/region.c
@@ -140,7 +140,7 @@ MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
   PVOID InitialBaseAddress;  
   PMM_REGION NewRegion;
   PLIST_ENTRY CurrentEntry;
-  PMM_REGION CurrentRegion;
+  PMM_REGION CurrentRegion = NULL;
   PVOID CurrentBaseAddress;
   ULONG RemainingLength;
 

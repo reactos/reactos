@@ -471,7 +471,7 @@ ExpSearchSplayTreeWeight(PSPLAY_TREE Tree,
   PSPLAY_TREE_NODE Node,
   PSPLAY_TREE_NODE * ReturnNode)
 {
-  PSPLAY_TREE_NODE x;
+  PSPLAY_TREE_NODE x = NULL;
   LONG Equality;
 #ifdef WEIGHT
   LONG tweight;

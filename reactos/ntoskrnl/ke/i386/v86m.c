@@ -449,8 +449,8 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    {
 	      ULONG Count;
 	      PUCHAR Port;
-	      PUSHORT BufferS;
-	      PULONG BufferL;
+	      PUSHORT BufferS = NULL;
+	      PULONG BufferL = NULL;
 	      ULONG Offset;
 	      
 	      Count = 1;
@@ -566,8 +566,8 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    {
 	      ULONG Count;
 	      PUCHAR Port;
-	      PUSHORT BufferS;
-	      PULONG BufferL;
+	      PUSHORT BufferS = NULL;
+	      PULONG BufferL = NULL;
 	      ULONG Offset;
 	      
 	      Count = 1;

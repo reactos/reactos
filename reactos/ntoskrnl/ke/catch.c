@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.24 2002/09/08 10:23:28 chorns Exp $
+/* $Id: catch.c,v 1.25 2002/09/15 10:45:02 guido Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -268,7 +268,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     }
   else
     {
-      KD_CONTINUE_TYPE Action;
+      KD_CONTINUE_TYPE Action = 0;
 
       /* PreviousMode == KernelMode */
       
@@ -479,7 +479,7 @@ RtlUnwind(
   DWORD EaxValue)
 {
   PEXCEPTION_REGISTRATION ERHead;
-  PEXCEPTION_RECORD pExceptRec;
+  PEXCEPTION_RECORD pExceptRec = NULL;
   EXCEPTION_RECORD TempER;    
   CONTEXT Context;
   //PVOID Stack;

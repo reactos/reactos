@@ -1423,7 +1423,7 @@ NtQueryMultipleValueKey(IN HANDLE KeyHandle,
   PVALUE_CELL ValueCell;
   PKEY_OBJECT KeyObject;
   PDATA_CELL DataCell;
-  ULONG BufferLength;
+  ULONG BufferLength = 0;
   PKEY_CELL KeyCell;
   NTSTATUS Status;
   PUCHAR DataPtr;

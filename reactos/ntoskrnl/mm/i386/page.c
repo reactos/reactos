@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.43 2002/09/08 10:23:37 chorns Exp $
+/* $Id: page.c,v 1.44 2002/09/15 10:45:04 guido Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -534,7 +534,7 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
    ULONG Pte;
    PULONG Pde;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
-   BOOLEAN WasValid;
+   BOOLEAN WasValid = FALSE;
 
    /*
     * If we are setting a page in another process we need to be in its

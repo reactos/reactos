@@ -68,6 +68,7 @@ KiCheckFPU(VOID)
 		: "a" (cr0));
 	return;
      }
-   /* FIXME: Do fsetpm */
-   HardwareMathSupport = 1;   
+   /* fsetpm for i287, ignored by i387 */
+   __asm__(".byte 0xDB, 0xE4\n\t");
+   HardwareMathSupport = 1;
 }
