@@ -1,5 +1,9 @@
 2003-04-06  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/freetype/.cvsignore: Ignore nul.
+
+2003-04-06  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* drivers/storage/atapi/atapi.c (AtapiReadWrite): Expect an interrupt a
 	bit sooner.
 	* hal/halx86/isa.c (HalpGetIsaInterruptVector): Compute vector for MP.
