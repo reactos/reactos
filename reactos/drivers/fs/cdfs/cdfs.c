@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdfs.c,v 1.2 2002/04/15 20:39:49 ekohl Exp $
+/* $Id: cdfs.c,v 1.3 2002/05/14 23:16:23 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -30,7 +30,7 @@
 
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "cdfs.h"
@@ -58,12 +58,12 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   NTSTATUS Status;
   UNICODE_STRING DeviceName;
 
-  DbgPrint("CDFS 0.0.1\n");
+  DbgPrint("CDFS 0.0.2\n");
 
   RtlInitUnicodeString(&DeviceName,
 		       L"\\Device\\cdfs");
   Status = IoCreateDevice(DriverObject,
-			   sizeof(CDFS_GLOBAL_DATA),
+			  sizeof(CDFS_GLOBAL_DATA),
 			  &DeviceName,
 			  FILE_DEVICE_CD_ROM_FILE_SYSTEM,
 			  0,

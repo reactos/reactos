@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rw.c,v 1.3 2002/05/09 15:53:02 ekohl Exp $
+/* $Id: rw.c,v 1.4 2002/05/14 23:16:23 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -85,8 +85,6 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
     {
       LARGE_INTEGER FileOffset;
       IO_STATUS_BLOCK IoStatus;
-
-      DPRINT1("Try caching!\n");
 
       FileOffset.QuadPart = (LONGLONG)ReadOffset;
       CcCopyRead(FileObject,

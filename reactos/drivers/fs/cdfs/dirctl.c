@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dirctl.c,v 1.4 2002/05/09 15:53:02 ekohl Exp $
+/* $Id: dirctl.c,v 1.5 2002/05/14 23:16:23 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -41,8 +41,10 @@
 
 static NTSTATUS
 CdfsGetEntryName(PDEVICE_EXTENSION DeviceExt,
-		 PVOID Block,
-		 ULONG BlockLength,
+		 PVOID *Context,
+		 PVOID *Block,
+		 PLARGE_INTEGER StreamOffset,
+		 ULONG DirLength,
 		 PVOID *Ptr,
 		 PWSTR Name,
 		 PULONG pIndex,
@@ -55,20 +57,35 @@ CdfsGetEntryName(PDEVICE_EXTENSION DeviceExt,
   NTSTATUS Status;
   ULONG Index = 0;
   ULONG Offset = 0;
+  ULONG BlockOffset = 0;
 
-  Record = (PDIR_RECORD)Block;
+  Record = (PDIR_RECORD)*Block;
   while(Index < *pIndex)
     {
-      Offset = Offset + Record->RecordLength;
+      BlockOffset += Record->RecordLength;
+      Offset += Record->RecordLength;
 
-      Record = (PDIR_RECORD)(Block + Offset);
-      if (Record->RecordLength == 0)
+      Record = (PDIR_RECORD)(*Block + BlockOffset);
+      if (BlockOffset >= BLOCKSIZE || Record->RecordLength == 0)
 	{
-	  Offset = ROUND_UP(Offset, 2048);
-	  Record = (PDIR_RECORD)(Block + Offset);
+	  DPRINT("Map next sector\n");
+	  CcUnpinData(*Context);
+	  StreamOffset->QuadPart += BLOCKSIZE;
+	  Offset = ROUND_UP(Offset, BLOCKSIZE);
+	  BlockOffset = 0;
+
+	  if (!CcMapData(DeviceExt->StreamFileObject,
+			 StreamOffset,
+			 BLOCKSIZE, TRUE,
+			 Context, Block))
+	    {
+	      DPRINT("CcMapData() failed\n");
+	      return(STATUS_UNSUCCESSFUL);
+	    }
+	  Record = (PDIR_RECORD)(*Block + BlockOffset);
 	}
 
-      if (Offset >= BlockLength)
+      if (Offset >= DirLength)
 	return(STATUS_NO_MORE_ENTRIES);
 
       Index++;
@@ -202,8 +219,9 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
     DirIndex = *pDirIndex;
 
   if(!CcMapData(DeviceExt->StreamFileObject, &StreamOffset,
-		DirSize, TRUE, &Context, &Block))
+		BLOCKSIZE, TRUE, &Context, &Block))
   {
+    DPRINT("CcMapData() failed\n");
     return(STATUS_UNSUCCESSFUL);
   }
 
@@ -220,10 +238,16 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
       DPRINT("RecordLength %u  ExtAttrRecordLength %u  NameLength %u\n",
 	     Record->RecordLength, Record->ExtAttrRecordLength, Record->FileIdLength);
 
-      Status = CdfsGetEntryName(DeviceExt, Block, DirSize, (PVOID*)&Ptr, name, &DirIndex, pDirIndex2);
+      Status = CdfsGetEntryName(DeviceExt, &Context, &Block, &StreamOffset,
+				DirSize, (PVOID*)&Ptr, name, &DirIndex, pDirIndex2);
       if (Status == STATUS_NO_MORE_ENTRIES)
 	{
 	  break;
+	}
+      else if (Status == STATUS_UNSUCCESSFUL)
+	{
+	  /* Note: the directory cache has already been unpinned */
+	  return(Status);
 	}
 
       DPRINT("Name '%S'\n", name);
@@ -314,7 +338,7 @@ CdfsGetDirectoryInformation(PFCB Fcb,
 {
   ULONG Length;
 
-  DPRINT1("CdfsGetDirectoryInformation() called\n");
+  DPRINT("CdfsGetDirectoryInformation() called\n");
 
   Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
   if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
@@ -358,7 +382,7 @@ CdfsGetFullDirectoryInformation(PFCB Fcb,
 {
   ULONG Length;
 
-  DPRINT1("CdfsGetFullDirectoryInformation() called\n");
+  DPRINT("CdfsGetFullDirectoryInformation() called\n");
 
   Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
   if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.5 2002/05/09 15:53:02 ekohl Exp $
+/* $Id: fcb.c,v 1.6 2002/05/14 23:16:23 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -246,8 +246,8 @@ CdfsFCBInitializeCache(PVCB Vcb,
   Fcb->DevExt = Vcb;
 
   Status = CcRosInitializeFileCache(FileObject,
-                                    &Fcb->RFCB.Bcb,
-                                    PAGESIZE);
+				    &Fcb->RFCB.Bcb,
+				    PAGESIZE);
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("CcRosInitializeFileCache failed\n");
@@ -380,7 +380,7 @@ CdfsMakeFCBFromDirEntry(PVCB Vcb,
 
   rcFCB->RFCB.FileSize.QuadPart = Size;
   rcFCB->RFCB.ValidDataLength.QuadPart = Size;
-  rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, 2096);
+  rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, BLOCKSIZE);
 //  DPRINT1("%S %d %d\n", longName, Size, (ULONG)rcFCB->RFCB.AllocationSize.QuadPart);
   CdfsFCBInitializeCache(Vcb, rcFCB);
   rcFCB->RefCount++;
@@ -447,6 +447,7 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
   ULONG DirSize;
   PDIR_RECORD Record;
   ULONG Offset;
+  ULONG BlockOffset;
   NTSTATUS Status;
 
   LARGE_INTEGER StreamOffset;
@@ -474,18 +475,20 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
   StreamOffset.QuadPart = (LONGLONG)DirectoryFcb->Entry.ExtentLocationL * (LONGLONG)BLOCKSIZE;
 
   if(!CcMapData(DeviceExt->StreamFileObject, &StreamOffset,
-		DirSize, TRUE, &Context, &Block))
+		BLOCKSIZE, TRUE, &Context, &Block))
   {
+    DPRINT("CcMapData() failed\n");
     return(STATUS_UNSUCCESSFUL);
   }
 
   Offset = 0;
+  BlockOffset = 0;
   Record = (PDIR_RECORD)Block;
   while(TRUE)
     {
       if (Record->RecordLength == 0)
 	{
-	  DPRINT1("RecordLength == 0  Stopped!\n");
+	  DPRINT("RecordLength == 0  Stopped!\n");
 	  break;
 	}
 	
@@ -509,12 +512,26 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 	  return(Status);
 	}
 
-      Offset = Offset + Record->RecordLength;
-      Record = (PDIR_RECORD)(Block + Offset);
-      if (Record->RecordLength == 0)
+      Offset += Record->RecordLength;
+      BlockOffset += Record->RecordLength;
+      Record = (PDIR_RECORD)(Block + BlockOffset);
+      if (BlockOffset >= BLOCKSIZE || Record->RecordLength == 0)
 	{
-	  Offset = ROUND_UP(Offset, 2048);
-	  Record = (PDIR_RECORD)(Block + Offset);
+	  DPRINT("Map next sector\n");
+	  CcUnpinData(Context);
+	  StreamOffset.QuadPart += BLOCKSIZE;
+	  Offset = ROUND_UP(Offset, BLOCKSIZE);
+	  BlockOffset = 0;
+
+	  if (!CcMapData(DeviceExt->StreamFileObject,
+			 &StreamOffset,
+			 BLOCKSIZE, TRUE,
+			 &Context, &Block))
+	    {
+	      DPRINT("CcMapData() failed\n");
+	      return(STATUS_UNSUCCESSFUL);
+	    }
+	  Record = (PDIR_RECORD)(Block + BlockOffset);
 	}
 
       if (Offset >= DirSize)

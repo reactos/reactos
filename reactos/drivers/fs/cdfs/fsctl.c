@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.4 2002/05/09 15:53:02 ekohl Exp $
+/* $Id: fsctl.c,v 1.5 2002/05/14 23:16:23 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -100,7 +100,7 @@ CdfsGetSVDData(PUCHAR Buffer,
 
   Svd = (PSVD)Buffer;
 
-  DPRINT1("EscapeSequences: '%.32s'\n", Svd->EscapeSequences);
+  DPRINT("EscapeSequences: '%.32s'\n", Svd->EscapeSequences);
 
   if (strncmp(Svd->EscapeSequences, "%/@", 3) == 0)
     {
@@ -143,6 +143,7 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
   ULONG Sector;
   PVD_HEADER VdHeader;
 
+  Vcb->CdInfo.JolietLevel = 0;
   Sector = CDFS_PRIMARY_DESCRIPTOR_LOCATION;
 
   Buffer = ExAllocatePool(NonPagedPool,
@@ -346,12 +347,14 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
 
   Fcb->RFCB.FileSize.QuadPart = DeviceExt->CdInfo.VolumeSpaceSize * BLOCKSIZE;
   Fcb->RFCB.ValidDataLength.QuadPart = DeviceExt->CdInfo.VolumeSpaceSize * BLOCKSIZE;
-  Fcb->RFCB.AllocationSize.QuadPart = ROUND_UP(DeviceExt->CdInfo.VolumeSpaceSize * BLOCKSIZE, PAGESIZE);
+  Fcb->RFCB.AllocationSize.QuadPart = DeviceExt->CdInfo.VolumeSpaceSize * BLOCKSIZE;
 
   Fcb->Entry.ExtentLocationL = 0;
   Fcb->Entry.DataLengthL = DeviceExt->CdInfo.VolumeSpaceSize * BLOCKSIZE;
 
-  Status = CcRosInitializeFileCache(DeviceExt->StreamFileObject, &Fcb->RFCB.Bcb, PAGESIZE);
+  Status = CcRosInitializeFileCache(DeviceExt->StreamFileObject,
+				    &Fcb->RFCB.Bcb,
+				    PAGESIZE);
   if (!NT_SUCCESS (Status))
     {
       DbgPrint("CcRosInitializeFileCache failed\n");
