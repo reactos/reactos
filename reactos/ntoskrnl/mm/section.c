@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.124 2003/07/21 21:53:53 royce Exp $
+/* $Id: section.c,v 1.125 2003/07/24 18:37:44 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -913,20 +913,27 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        MmUnlockAddressSpace(AddressSpace);
 
        if ((Segment->Flags & MM_PAGEFILE_SEGMENT) || 
-	   (Offset > Segment->RawLength && Section->AllocationAttributes & SEC_IMAGE))
+	   (Offset >= PAGE_ROUND_UP(Segment->RawLength) && Section->AllocationAttributes & SEC_IMAGE))
 	 {
 	   Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
+	   if (!NT_SUCCESS(Status))
+	     {
+	       DPRINT1("MmRequestPageMemoryConsumer failed (Status %x)\n", Status);
+	     }
 	 }
        else
          {
            Status = MiReadPage(MemoryArea, Offset, &Page);
+	   if (!NT_SUCCESS(Status))
+	     {
+	       DPRINT1("MiReadPage failed (Status %x)\n", Status);
+	     }
 	 }
-       if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
+       if (!NT_SUCCESS(Status))
 	 {
 	   /*
 	    * FIXME: What do we know in this case?
 	    */
-	   DPRINT1("MiReadPage or MmRequestPageMemoryConsumer failed (Status %x)\n", Status);
 	   /*
 	    * Cleanup and release locks
 	    */
