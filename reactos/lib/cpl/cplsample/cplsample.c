@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cplsample.c,v 1.1 2004/02/05 19:17:11 weiden Exp $
+/* $Id: cplsample.c,v 1.2 2004/03/08 14:20:14 weiden Exp $
  *
  * PROJECT:         ReactOS Sample Control Panel
  * FILE:            lib/cpl/cplsample/cplsample.c
@@ -148,7 +148,7 @@ Applet1(VOID)
   
   ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
   psh.dwSize = sizeof(PROPSHEETHEADER);
-  psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USECALLBACK;
+  psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USECALLBACK | PSH_PROPTITLE;
   psh.hwndParent = NULL;
   psh.hInstance = hApplet;
   psh.u1.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON_1));
