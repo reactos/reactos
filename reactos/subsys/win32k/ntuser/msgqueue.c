@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.45 2003/12/14 19:04:51 weiden Exp $
+/* $Id: msgqueue.c,v 1.46 2003/12/14 22:14:45 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -177,7 +177,7 @@ MsqInsertSystemMessage(MSG* Msg, BOOL RemMouseMoveMsg)
 
 BOOL STATIC STDCALL
 MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
-			 PUSER_MESSAGE Message, BOOL Remove,
+			 PUSER_MESSAGE Message, BOOL Remove, PBOOL Freed,
 			 PWINDOW_OBJECT ScopeWin, PUSHORT HitTest,
 			 PPOINT ScreenPoint, PBOOL MouseClick)
 {
@@ -206,19 +206,19 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
         Message->Msg.hwnd = Wnd;
         Message->Msg.lParam = MAKELONG(Message->Msg.pt.x, Message->Msg.pt.y);
       }
+      *Freed = FALSE;
       return TRUE;
     }
     
     ExFreePool(Message);
+    *Freed = TRUE;
     return FALSE;
   }
 
-  /*Handle WM_XBUTTONDOWN messages differently too.  We need to check to see 
-  **if the cursor is above an inactive window.
-  */
   if (Msg == WM_LBUTTONDOWN || 
       Msg == WM_MBUTTONDOWN ||
-      Msg == WM_RBUTTONDOWN  )
+      Msg == WM_RBUTTONDOWN ||
+      Msg == WM_XBUTTONDOWN)
   {
     *ScreenPoint = Message->Msg.pt;
     Wnd = NtUserWindowFromPoint(ScreenPoint->x, ScreenPoint->y);
@@ -239,11 +239,13 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
           switch (Result)
           {
               case MA_NOACTIVATEANDEAT:
+                  *Freed = FALSE;
                   return TRUE;
               case MA_NOACTIVATE:
                   break;
               case MA_ACTIVATEANDEAT:
                   NtUserSetFocus(Wnd);
+                  *Freed = FALSE;
                   return TRUE;
 /*              case MA_ACTIVATE:
               case 0:*/
@@ -255,6 +257,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
         else
         {
           ExFreePool(Message);
+          *Freed = TRUE;
           return(FALSE);
         }
     }
@@ -276,6 +279,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   if (Window == NULL)
   {
     ExFreePool(Message);
+    *Freed = TRUE;
     return(FALSE);
   }
 
@@ -286,12 +290,19 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
                    &Message->ListEntry);
     ExReleaseFastMutex(&Window->MessageQueue->HardwareLock);
     KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+    *Freed = FALSE;
     return(FALSE);
   }
   
   if (hWnd != NULL && Window->Self != hWnd &&
       !IntIsChildWindow(hWnd, Window->Self))
   {
+    ExAcquireFastMutex(&Window->MessageQueue->HardwareLock);
+    InsertTailList(&Window->MessageQueue->HardwareMessagesListHead,
+                   &Message->ListEntry);
+    ExReleaseFastMutex(&Window->MessageQueue->HardwareLock);
+    KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+    *Freed = FALSE;
     return(FALSE);
   }
   
@@ -316,17 +327,8 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 
   if ((*HitTest) != HTCLIENT)
   {
-    switch(Msg)
-    {
-      case WM_XBUTTONDOWN:
-      case WM_XBUTTONUP:
-      case WM_XBUTTONDBLCLK:
-        return FALSE;
-      default:
-        Msg += WM_NCMOUSEMOVE - WM_MOUSEMOVE;
-        Message->Msg.wParam = *HitTest;
-        break;
-    }
+    Msg += WM_NCMOUSEMOVE - WM_MOUSEMOVE;
+    Message->Msg.wParam = *HitTest;
   }
   else
   {
@@ -342,7 +344,8 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
       Message->Msg.message = Msg;
       Message->Msg.lParam = MAKELONG(Point.x, Point.y);
     }
-
+  
+  *Freed = FALSE;
   return(TRUE);
 }
 
@@ -354,7 +357,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
   KIRQL OldIrql;
   USHORT HitTest;
   POINT ScreenPoint;
-  BOOL Accept;
+  BOOL Accept, Freed;
   BOOL MouseClick;
   PLIST_ENTRY CurrentEntry;
   PWINDOW_OBJECT DesktopWindow;
@@ -379,7 +382,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	  Current->Msg.message <= WM_MOUSELAST)
 	{
 	  Accept = MsqTranslateMouseMessage(hWnd, FilterLow, FilterHigh,
-					    Current, Remove,
+					    Current, Remove, &Freed,
 					    DesktopWindow, &HitTest,
 					    &ScreenPoint, &MouseClick);
 	  if (Accept)
@@ -393,10 +396,9 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	      IntReleaseWindowObject(DesktopWindow);
 	      return(TRUE);
 	    }
-	  else
-	    {
-	      RemoveEntryList(&Current->ListEntry);
-	    }
+	  
+	  if(Freed)
+	    RemoveEntryList(&Current->ListEntry);
 	}
     }
   ExReleaseFastMutex(&MessageQueue->HardwareLock);
@@ -447,7 +449,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	  ExReleaseFastMutex(&HardwareMessageQueueLock);
 	  /* Translate the message. */
 	  Accept = MsqTranslateMouseMessage(hWnd, FilterLow, FilterHigh,
-					    Current, Remove,
+					    Current, Remove, &Freed,
 					    DesktopWindow, &HitTest,
 					    &ScreenPoint, &MouseClick);
 	  ExAcquireFastMutex(&HardwareMessageQueueLock);
