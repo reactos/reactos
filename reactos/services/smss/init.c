@@ -1,20 +1,20 @@
-/* $Id: init.c,v 1.1 1999/05/30 20:40:18 ea Exp $
+/* $Id: init.c,v 1.2 1999/06/08 22:44:19 ea Exp $
  *
- * smss.c - Session Manager
+ * init.c - Session Manager initialization
  * 
  * ReactOS Operating System
  * 
  * --------------------------------------------------------------------
  *
  * This software is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public License as
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.LIB. If not, write
@@ -41,13 +41,30 @@ InitSessionManager(
 	/* FIXME: Create pagination files (if any) other than the first one */
 	/* FIXME: Load the well known DLLs */
 	/* FIXME: Load the kernel mode driver win32k.sys */
-	/* FIXME: Start the Win32 subsystem (csrss.exe) */
-	Children[0] = INVALID_HANDLE_VALUE;
-	/* FIXME: Start winlogon.exe */
-	Children[1] = INVALID_HANDLE_VALUE;
+	/* Start the Win32 subsystem (csrss.exe) */
+	Status = NtCreateProcess(
+			L"\\??\\C:\\reactos\\system\\csrss.exe",
+			& Children[CHILD_CSRSS]
+			);
+	if (!NT_SUCCESS(Status))
+	{
+		return FALSE;
+	}
+	/* Start winlogon.exe */
+	Status = NtCreateProcess(
+			L"\\??\\C:\\reactos\\system\\winlogon.exe",
+			& Children[CHILD_WINLOGON]
+			);
+	if (!NT_SUCCESS(Status))
+	{
+		Status = NtTerminateProcess(
+				Children[CHILD_CSRSS]
+				);
+		return FALSE;
+	}
 	/* FIXME: Create the \DbgSsApiPort object (LPC) */
 	/* FIXME: Create the \DbgUiApiPort object (LPC) */
-	return FALSE;
+	return TRUE;
 }
 
 

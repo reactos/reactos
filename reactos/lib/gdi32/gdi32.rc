@@ -22,7 +22,7 @@ BEGIN
         BEGIN
             VALUE "CompanyName",	RES_STR_COMPANY_NAME
             VALUE "FileDescription",	"GDI Client DLL\0"
-            VALUE "FileVersion",	"post 0.0.13\0"
+            VALUE "FileVersion",	RES_STR_FILE_VERSION
             VALUE "InternalName",	"gdi32\0"
             VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
             VALUE "OriginalFilename",	"gdi32.dll\0"
