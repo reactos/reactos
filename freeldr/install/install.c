@@ -71,7 +71,7 @@ BOOL BackupBootSector(LPCTSTR lpszVolumeName)
 		//
 		// Generate the next filename
 		//
-		_stprintf(szFileName, _T("%s\\bootsect.%03d"), lpszVolumeName, Count);
+		_stprintf(szFileName, _T("%s\\bootsect.%03ld"), lpszVolumeName, Count);
 
 		//
 		// Try to create a new file, fail if exists
@@ -93,7 +93,7 @@ BOOL BackupBootSector(LPCTSTR lpszVolumeName)
 		if (!(GetLastError() != ERROR_ALREADY_EXISTS))
 		{
 			_tprintf(_T("%s:%d: "), __FILE__, __LINE__);
-			_tprintf(_T("Boot sector backup failed. Error code %d.\n"), GetLastError());
+			_tprintf(_T("Boot sector backup failed. Error code %ld.\n"), GetLastError());
 			return FALSE;
 		}
 	}
@@ -115,7 +115,7 @@ BOOL BackupBootSector(LPCTSTR lpszVolumeName)
 	{
 		CloseHandle(hBackupFile);
 		_tprintf(_T("%s:%d: "), __FILE__, __LINE__);
-		_tprintf(_T("WriteFile() failed. Error code %d.\n"), GetLastError());
+		_tprintf(_T("WriteFile() failed. Error code %ld.\n"), GetLastError());
 		return FALSE;
 	}
 
@@ -171,7 +171,7 @@ BOOL InstallBootSector(LPCTSTR lpszVolumeType)
 		//
 		// Write out new extra sector
 		//
-		if (!WriteVolumeSector(14, (fat_data+512) ))
+		if (!WriteVolumeSector(14, (fat32_data+512)))
 		{
 			return FALSE;
 		}

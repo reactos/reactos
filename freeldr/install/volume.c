@@ -58,7 +58,7 @@ BOOL OpenVolume(LPCTSTR lpszVolumeName)
 	if (hDiskVolume == INVALID_HANDLE_VALUE)
 	{
 		_tprintf(_T("%s:%d: "), __FILE__, __LINE__);
-		_tprintf(_T("Failed. Error code %d.\n"), GetLastError());
+		_tprintf(_T("Failed. Error code %ld.\n"), GetLastError());
 		return FALSE;
 	}
 
@@ -87,7 +87,7 @@ BOOL ReadVolumeSector(ULONG SectorNumber, PVOID SectorBuffer)
 	if (dwFilePosition != (SectorNumber * 512))
 	{
 		_tprintf(_T("%s:%d: "), __FILE__, __LINE__);
-		_tprintf(_T("SetFilePointer() failed. Error code %d.\n"), GetLastError());
+		_tprintf(_T("SetFilePointer() failed. Error code %ld.\n"), GetLastError());
 		return FALSE;
 	}
 	
@@ -95,7 +95,7 @@ BOOL ReadVolumeSector(ULONG SectorNumber, PVOID SectorBuffer)
 	if (!bRetVal || (dwNumberOfBytesRead != 512))
 	{
 		_tprintf(_T("%s:%d: "), __FILE__, __LINE__);
-		_tprintf(_T("ReadFile() failed. Error code %d.\n"), GetLastError());
+		_tprintf(_T("ReadFile() failed. Error code %ld.\n"), GetLastError());
 		return FALSE;
 	}
 
@@ -119,7 +119,7 @@ BOOL WriteVolumeSector(ULONG SectorNumber, PVOID SectorBuffer)
 	if (dwFilePosition != (SectorNumber * 512))
 	{
 		_tprintf(_T("%s:%d: "), __FILE__, __LINE__);
-		_tprintf(_T("SetFilePointer() failed. Error code %d.\n"), GetLastError());
+		_tprintf(_T("SetFilePointer() failed. Error code %ld.\n"), GetLastError());
 		return FALSE;
 	}
 	
@@ -127,7 +127,7 @@ BOOL WriteVolumeSector(ULONG SectorNumber, PVOID SectorBuffer)
 	if (!bRetVal || (dwNumberOfBytesWritten != 512))
 	{
 		_tprintf(_T("%s:%d: "), __FILE__, __LINE__);
-		_tprintf(_T("WriteFile() failed. Error code %d.\n"), GetLastError());
+		_tprintf(_T("WriteFile() failed. Error code %ld.\n"), GetLastError());
 		return FALSE;
 	}
 
