@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.32 2003/09/04 06:41:35 vizzini Exp $
+/* $Id: unicode.c,v 1.33 2003/12/14 18:06:44 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,7 +11,7 @@
  */
 
 #include <ddk/ntddk.h>
-#include <ctype.h>
+#include <internal/ctype.h>
 #include <ntos/minmax.h>
 #include <internal/pool.h>
 #include <internal/nls.h>

@@ -1,4 +1,4 @@
-/* $Id: stdlib.c,v 1.8 2003/07/11 01:23:16 royce Exp $
+/* $Id: stdlib.c,v 1.9 2003/12/14 18:06:44 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,7 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ctype.h>
+#include <internal/ctype.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>

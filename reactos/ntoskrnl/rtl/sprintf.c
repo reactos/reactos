@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.13 2003/09/02 18:19:41 hbirr Exp $
+/* $Id: sprintf.c,v 1.14 2003/12/14 18:06:44 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,7 +23,7 @@
 #include <ddk/ntddk.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <ctype.h>
+#include <internal/ctype.h>
 #include <string.h>
 #include <limits.h>
 
