@@ -1,0 +1,69 @@
+#include <defines.h>
+#include <reactos/resource.h>
+
+#include "resource.h"
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+VS_VERSION_INFO VERSIONINFO
+	FILEVERSION	RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
+	PRODUCTVERSION	RES_UINT_PV_MAJOR,RES_UINT_PV_MINOR,RES_UINT_PV_REVISION,RES_UINT_PV_BUILD	
+	FILEFLAGSMASK	0x3fL
+#ifdef _DEBUG
+	FILEFLAGS	0x1L
+#else
+	FILEFLAGS	0x0L
+#endif
+	FILEOS		0x40004L
+	FILETYPE	0x2L
+	FILESUBTYPE	0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName",	RES_STR_COMPANY_NAME
+            VALUE "FileDescription",	"ReactOS TCP/IPv4 Win32 netstat\0"
+            VALUE "FileVersion",	RES_STR_FILE_VERSION
+            VALUE "InternalName",	"netstat\0"
+            VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
+            VALUE "OriginalCopyright",	"Robert Dickenson (robd@reactos.org)\0"
+            VALUE "OriginalFilename",	"netstat.exe\0"
+            VALUE "ProductName",	RES_STR_PRODUCT_NAME
+            VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+#ifdef __GNUC__
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APP_TITLE           "ReactOS netstat"
+    IDS_APP_USAGE           "\n"\
+                            "Displays current TCP/IP protocol statistics and network connections.\n\n"\
+                            "NETSTAT [-a] [-e] [-n] [-s] [-p proto] [-r] [interval]\n\n"\
+                            "  -a            Displays all connections and listening ports.\n"\
+                            "  -e            Displays Ethernet statistics. May be combined with -s\n"\
+                            "  -n            Displays address and port numbers in numeric form.\n"\
+                            "  -p proto      Shows connections for protocol 'proto' TCP or UDP.\n"\
+                            "                If used with the -s option to display\n"\
+                            "                per-protocol statistics, 'proto' may be TCP, UDP, or IP.\n"\
+                            "  -r            Displays the current routing table.\n"\
+                            "  -s            Displays per-protocol statistics. Statistics are shown for\n"\
+                            "                TCP, UDP and IP by default; use -p option to display\n"\
+                            "                information about a subset of the protocols only.\n"\
+                            "  interval      Redisplays selected statistics every 'interval' seconds.\n"\
+                            "                Press CTRL+C to stop redisplaying. By default netstat will\n"\
+                            "                print the current information only once.\n"
+END
+#endif
+
