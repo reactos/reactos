@@ -4,10 +4,11 @@ PATH_TO_TOP = ../../..
 
 TARGETNAME=afd
 
-CFLAGS = -I./include
+CFLAGS = -I./include -DDBG
 
 RESOURCE_OBJECT = $(TARGETNAME).coff
-AFD_OBJECTS = afd/afd.o afd/dispatch.o afd/event.o afd/opnclose.o afd/rdwr.o afd/tdi.o
+AFD_OBJECTS = afd/afd.o afd/dispatch.o afd/event.o afd/opnclose.o afd/rdwr.o \
+              afd/routines.o afd/tdi.o
 
 all: $(TARGETNAME).sys
 
@@ -17,10 +18,10 @@ OBJECTS = $(AFD_OBJECTS) $(RESOURCE_OBJECT) ../../../ntoskrnl/ntoskrnl.a
 
 
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES = *.o afd\*.o $(TARGETNAME).coff $(TARGETNAME).o \
+CLEAN_FILES = afd\*.o $(TARGETNAME).coff \
               junk.tmp base.tmp temp.exp $(TARGETNAME).sys $(TARGETNAME).sym
 else
-CLEAN_FILES = *.o afd/*.o $(TARGETNAME).coff $(TARGETNAME).o \
+CLEAN_FILES = afd/*.o $(TARGETNAME).coff $ \
               junk.tmp base.tmp temp.exp $(TARGETNAME).sys $(TARGETNAME).sym
 endif
 

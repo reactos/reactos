@@ -49,22 +49,25 @@ MiniDisplayPacket(
 {
     ULONG i, Length;
     UCHAR Buffer[64];
+#if 0
+    if ((DebugTraceLevel | DEBUG_PACKET) > 0) {
+        Length = CopyPacketToBuffer(
+            (PUCHAR)&Buffer,
+            Packet,
+            0,
+            64);
 
-    Length = CopyPacketToBuffer(
-        (PUCHAR)&Buffer,
-        Packet,
-        0,
-        64);
+        DbgPrint("*** PACKET START ***");
 
-    NDIS_DbgPrint(DEBUG_PACKET, ("*** PACKET START ***"));
+        for (i = 0; i < Length; i++) {
+            if (i % 12 == 0)
+                DbgPrint("\n%04X ", i);
+            DbgPrint("%02X ", Buffer[i]);
+        }
 
-    for (i = 0; i < Length; i++) {
-        if (i % 12 == 0)
-            DbgPrint("\n%04X ", i);
-        DbgPrint("%02X ", Buffer[i]);
+        DbgPrint("*** PACKET STOP ***\n");
     }
-
-    NDIS_DbgPrint(DEBUG_PACKET, ("*** PACKET STOP ***\n"));
+#endif
 }
 #endif /* DBG */
 
@@ -99,12 +102,13 @@ MiniIndicateData(
         Adapter, HeaderBuffer, HeaderBufferSize, LookaheadBuffer, LookaheadBufferSize));
 
 #ifdef DBG
-    if (DebugTraceLevel | DEBUG_PACKET) {
+#if 0
+    if ((DebugTraceLevel | DEBUG_PACKET) > 0) {
         ULONG i, Length;
         PUCHAR p;
 
-        NDIS_DbgPrint(DEBUG_PACKET, ("*** RECEIVE PACKET START ***\n"));
-        NDIS_DbgPrint(DEBUG_PACKET, ("HEADER:"));
+        DbgPrint("*** RECEIVE PACKET START ***\n");
+        DbgPrint("HEADER:");
         p = HeaderBuffer;
         for (i = 0; i < HeaderBufferSize; i++) {
             if (i % 12 == 0)
@@ -113,7 +117,7 @@ MiniIndicateData(
             (ULONG_PTR)p += 1;
         }
 
-        NDIS_DbgPrint(DEBUG_PACKET, ("\nFRAME:"));
+        DbgPrint("\nFRAME:\n");
 
         p = LookaheadBuffer;
         Length = (LookaheadBufferSize < 64)? LookaheadBufferSize : 64;
@@ -124,8 +128,9 @@ MiniIndicateData(
             (ULONG_PTR)p += 1;
         }
 
-        NDIS_DbgPrint(DEBUG_PACKET, ("*** RECEIVE PACKET STOP ***\n"));
+        DbgPrint("\n*** RECEIVE PACKET STOP ***\n");
     }
+#endif
 #endif /* DBG */
 
     KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
@@ -327,7 +332,8 @@ MiniAdapterHasAddress(
         break;
 
     default:
-        NDIS_DbgPrint(MIN_TRACE, ("Adapter has unsupported media type (0x%X).\n", Adapter->NdisMiniportBlock.MediaType));
+        NDIS_DbgPrint(MIN_TRACE, ("Adapter has unsupported media type (0x%X).\n",
+            Adapter->NdisMiniportBlock.MediaType));
         return FALSE;
     }
 

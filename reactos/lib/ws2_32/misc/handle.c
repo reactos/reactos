@@ -261,7 +261,10 @@ InitProviderHandleTable(VOID)
         return FALSE;
 	}
 
+    WS_DbgPrint(MIN_TRACE, ("ProviderHandleTable at 0x%X.\n", ProviderHandleTable));
+
     ZeroMemory(ProviderHandleTable, sizeof(PROVIDER_HANDLE_BLOCK));
+
     InitializeListHead(&ProviderHandleTable->Entry);
 
     //InitializeCriticalSection(&ProviderHandleTableLock);

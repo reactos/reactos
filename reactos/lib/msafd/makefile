@@ -2,7 +2,7 @@
 
 PATH_TO_TOP = ../..
 
-CFLAGS = -I./include -DUNICODE
+CFLAGS = -I./include -DUNICODE -DDBG
 
 TARGETNAME=msafd
 

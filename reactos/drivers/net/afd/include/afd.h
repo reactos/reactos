@@ -76,6 +76,7 @@ typedef struct _AFDFCB {
     DWORD               NotificationEvents;
     UNICODE_STRING      TdiDeviceName;
     DWORD               State;
+    PVOID               SendBuffer;
 } AFDFCB, *PAFDFCB;
 
 /* Socket states */
@@ -210,15 +211,11 @@ NTSTATUS AfdDeregisterEventHandlers(
 
 /* Prototypes from opnclose.c */
 
-NTSTATUS AfdCreate(
+NTSTATUS STDCALL AfdCreate(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp);
 
-NTSTATUS AfdCreateNamedPipe(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp);
-
-NTSTATUS AfdClose(
+NTSTATUS STDCALL AfdClose(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp);
 
@@ -237,13 +234,26 @@ NTSTATUS AfdEventReceiveDatagramHandler(
     IN PVOID Tsdu,
     OUT PIRP * IoRequestPacket);
 
-NTSTATUS AfdRead(
+NTSTATUS STDCALL AfdRead(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp);
 
-NTSTATUS AfdWrite(
+NTSTATUS STDCALL AfdWrite(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp);
+
+/* Prototypes from routines.c */
+
+ULONG WSABufferSize(
+    LPWSABUF Buffers,
+    DWORD BufferCount);
+
+NTSTATUS MergeWSABuffers(
+    LPWSABUF Buffers,
+    DWORD BufferCount,
+    PVOID Destination,
+    ULONG MaxLength,
+    PULONG BytesCopied);
 
 /* Prototypes from tdi.c */
 
@@ -252,6 +262,12 @@ NTSTATUS TdiCloseDevice(
     PFILE_OBJECT FileObject);
 
 NTSTATUS TdiOpenAddressFileIPv4(
+    PUNICODE_STRING DeviceName,
+    LPSOCKADDR Name,
+    PHANDLE AddressHandle,
+    PFILE_OBJECT *AddressObject);
+
+NTSTATUS TdiOpenAddressFile(
     PUNICODE_STRING DeviceName,
     LPSOCKADDR Name,
     PHANDLE AddressHandle,
@@ -288,12 +304,13 @@ NTSTATUS TdiQueryAddress(
 
 NTSTATUS TdiSend(
     PFILE_OBJECT TransportObject,
-    PFILE_REQUEST_SENDTO Request);
+    PVOID Buffer,
+    ULONG BufferSize);
 
 NTSTATUS TdiSendDatagram(
     PFILE_OBJECT TransportObject,
     LPSOCKADDR Address,
-    PVOID Buffer,
+    PMDL Mdl,
     ULONG BufferSize);
 
 #endif /*__AFD_H */

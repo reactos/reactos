@@ -25,7 +25,9 @@ NTSTATUS AfdReadFile(
 }
 
 
-NTSTATUS AfdRead(
+NTSTATUS
+STDCALL
+AfdRead(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
@@ -58,7 +60,9 @@ NTSTATUS AfdRead(
 }
 
 
-NTSTATUS AfdWrite(
+NTSTATUS
+STDCALL
+AfdWrite(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {

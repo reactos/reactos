@@ -371,8 +371,6 @@ inet_addr(
     PCHAR p;
     ULONG u = 0;
 
-    /* FIXME: Little endian version only */
-
     p = (PCHAR)cp;
 
     if (strlen(p) == 0)
@@ -381,7 +379,7 @@ inet_addr(
     if (strcmp(p, " ") == 0)
         return 0;
 
-    for (i = 3; i >= 0; i--) {
+    for (i = 0; i <= 3; i++) {
         u += (strtoul(p, &p, 0) << (i * 8));
 
         if (strlen(p) == 0)
@@ -406,11 +404,11 @@ inet_ntoa(
     PCHAR p;
 
     p = ((PWINSOCK_THREAD_BLOCK)NtCurrentTeb()->WinSockData)->Intoa;
-    _itoa(in.S_un.S_addr >> 24, b, 10);
+    _itoa((in.S_un.S_addr >> 24) & 0xFF, b, 10);
     strcpy(p, b);
-    _itoa(in.S_un.S_addr >> 16, b, 10);
+    _itoa((in.S_un.S_addr >> 16) & 0xFF, b, 10);
     strcat(p, b);
-    _itoa(in.S_un.S_addr >> 8, b, 10);
+    _itoa((in.S_un.S_addr >> 8) & 0xFF, b, 10);
     strcat(p, b);
     _itoa(in.S_un.S_addr & 0xFF, b, 10);
     strcat(p, b);

@@ -41,6 +41,8 @@ PAFDFCB AfdInitializeFCB(
 	if (FileObject)
 		FileObject->FsContext = (PVOID)&NewFCB->NTRequiredFCB;
 
+    AFD_DbgPrint(MAX_TRACE, ("FCB created for file object (0x%X) at (0x%X).\n", FileObject, NewFCB));
+
     return NewFCB;
 }
 
@@ -66,11 +68,15 @@ PAFDCCB AfdInitializeCCB(
 
     InsertTailList(&FCB->CCBListHead, &NewCCB->ListEntry);
 
+    AFD_DbgPrint(MAX_TRACE, ("CCB created for file object (0x%X) at (0x%X).\n", FileObject, NewCCB));
+
     return NewCCB;
 }
 
 
-NTSTATUS AfdCreate(
+NTSTATUS
+STDCALL
+AfdCreate(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
@@ -86,6 +92,8 @@ NTSTATUS AfdCreate(
     PFILE_OBJECT FileObject  = IrpSp->FileObject;
 
     AFD_DbgPrint(MIN_TRACE, ("Called.\n"));
+
+    assert(DeviceObject);
 
     DeviceExt = DeviceObject->DeviceExtension;
 
@@ -114,17 +122,45 @@ NTSTATUS AfdCreate(
     /* FIXME: File/socket could already be open, do a search for it */
 
     FCB = AfdInitializeFCB(DeviceExt, FileObject);
+
     CCB = AfdInitializeCCB(FCB, FileObject);
+
     if (CCB && FCB) {
         FCB->AddressFamily      = SocketInfo->AddressFamily;
         FCB->SocketType         = SocketInfo->SocketType;
         FCB->Protocol           = SocketInfo->Protocol;
         FCB->HelperContext      = SocketInfo->HelperContext;
         FCB->NotificationEvents = SocketInfo->NotificationEvents;
-        RtlCopyUnicodeString(&FCB->TdiDeviceName, &SocketInfo->TdiDeviceName);
-    } else {
+
+        if (RtlCreateUnicodeString(&FCB->TdiDeviceName, SocketInfo->TdiDeviceName.Buffer)) {
+/*        RtlInitUnicodeString(&FCB->TdiDeviceName, NULL);
+        FCB->TdiDeviceName.MaximumLength = SocketInfo->TdiDeviceName.Length + sizeof(WCHAR);
+        FCB->TdiDeviceName.Buffer = ExAllocatePool(NonPagedPool, FCB->TdiDeviceName.MaximumLength);*/
+
+            RtlCopyUnicodeString(&FCB->TdiDeviceName, &SocketInfo->TdiDeviceName);
+
+            AFD_DbgPrint(MAX_TRACE, ("TDI device name is (%wZ).\n", &FCB->TdiDeviceName));
+
+            /* Open address file now for raw sockets */
+            if (FCB->SocketType == SOCK_RAW) {
+                AFD_DbgPrint(MAX_TRACE, ("Opening raw socket.\n"));
+
+                Status = TdiOpenAddressFile(
+                    &FCB->TdiDeviceName,
+                    &SocketInfo->Name,
+                    &FCB->TdiAddressObjectHandle,
+                    &FCB->TdiAddressObject);
+
+                AFD_DbgPrint(MAX_TRACE, ("Status of open operation (0x%X).\n", Status));
+
+                if (NT_SUCCESS(Status))
+                    FCB->State = SOCKET_STATE_BOUND;
+            } else
+                Status = STATUS_SUCCESS;
+        } else
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+    } else
         Status = STATUS_INSUFFICIENT_RESOURCES;
-    }
 
     if (!NT_SUCCESS(Status)) {
         /* FIXME: Cleanup */
@@ -141,7 +177,9 @@ NTSTATUS AfdCreate(
 }
 
 
-NTSTATUS AfdClose(
+NTSTATUS
+STDCALL
+AfdClose(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
@@ -151,10 +189,13 @@ NTSTATUS AfdClose(
     PAFDFCB FCB;
     PAFDCCB CCB;
 
+    AFD_DbgPrint(MIN_TRACE, ("Called.\n"));
+
+    assert(DeviceObject);
+    assert(FileObject);
+
     FCB = FileObject->FsContext;
     CCB = FileObject->FsContext2;
-
-    AFD_DbgPrint(MIN_TRACE, ("Called.\n"));
 
     switch (IrpSp->MajorFunction) {
     /* Close a file object */

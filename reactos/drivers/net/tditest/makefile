@@ -29,8 +29,10 @@ endif
 
 $(TARGETNAME).sys: $(OBJECTS)
 	$(CC) \
+		-nostartfiles -nostdlib \
+		--subsystem=native \
 		-mdll \
-		-specs=../../svc_specs \
+		--dll \
 		-Wl,-e,_DriverEntry@8 \
 		-Wl,--base-file,base.tmp \
 		-Wl,--defsym,_end=end  \
@@ -45,8 +47,10 @@ $(TARGETNAME).sys: $(OBJECTS)
         --output-exp temp.exp
 	- $(RM) base.tmp
 	$(CC) \
+		-nostartfiles -nostdlib \
+		--subsystem=native \
 		-mdll \
-		-specs=../../svc_specs \
+		--dll \
 		-Wl,--image-base,0x10000 \
 		-Wl,-e,_DriverEntry@8 \
 		-Wl,temp.exp \

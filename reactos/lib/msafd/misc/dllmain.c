@@ -13,7 +13,7 @@
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
-DWORD DebugTraceLevel = MAX_TRACE;
+DWORD DebugTraceLevel = MIN_TRACE;
 
 #endif /* DBG */
 
@@ -43,7 +43,7 @@ NTSTATUS OpenSocket(
  *     SocketType         = Type of socket
  *     Protocol           = Protocol type
  *     HelperContext      = Pointer to context information for helper DLL
-*      NotificationEvents = Events for which helper DLL is to be notified
+ *     NotificationEvents = Events for which helper DLL is to be notified
  *     TdiDeviceName      = Pointer to name of TDI device to use
  * RETURNS:
  *     Status of operation
@@ -57,21 +57,21 @@ NTSTATUS OpenSocket(
     HANDLE FileHandle;
     NTSTATUS Status;
     ULONG EaLength;
+    ULONG EaShort;
 
-    CP
+    AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
-               AFD_SOCKET_LENGTH +
-               sizeof(AFD_SOCKET_INFORMATION) +
-               TdiDeviceName->Length + 1;
+    EaShort = sizeof(FILE_FULL_EA_INFORMATION) +
+        AFD_SOCKET_LENGTH +
+        sizeof(AFD_SOCKET_INFORMATION);
+
+    EaLength = EaShort + TdiDeviceName->Length + sizeof(WCHAR);
 
     EaInfo = (PFILE_FULL_EA_INFORMATION)HeapAlloc(GlobalHeap, 0, EaLength);
     if (!EaInfo) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    CP
 
     RtlZeroMemory(EaInfo, EaLength);
     EaInfo->EaNameLength = AFD_SOCKET_LENGTH;
@@ -80,8 +80,6 @@ NTSTATUS OpenSocket(
                   AFD_SOCKET_LENGTH);
     EaInfo->EaValueLength = sizeof(AFD_SOCKET_INFORMATION);
 
-    CP
-
     SocketInfo = (PAFD_SOCKET_INFORMATION)(EaInfo->EaName + AFD_SOCKET_LENGTH);
 
     SocketInfo->AddressFamily      = AddressFamily;
@@ -89,52 +87,42 @@ NTSTATUS OpenSocket(
     SocketInfo->Protocol           = Protocol;
     SocketInfo->HelperContext      = HelperContext;
     SocketInfo->NotificationEvents = NotificationEvents;
+    /* Zeroed above so initialized to a wildcard address if a raw socket */
+    SocketInfo->Name.sa_family     = AddressFamily;
 
     /* Store TDI device name last in buffer */
-    SocketInfo->TdiDeviceName.Buffer = (PWCHAR)(EaInfo + EaLength);
-    //SocketInfo->TdiDeviceName.Length = TdiDeviceName.Length;
-    SocketInfo->TdiDeviceName.MaximumLength = TdiDeviceName->Length;
+    SocketInfo->TdiDeviceName.Buffer = (PWCHAR)(EaInfo + EaShort);
+    SocketInfo->TdiDeviceName.MaximumLength = TdiDeviceName->Length + sizeof(WCHAR);
     RtlCopyUnicodeString(&SocketInfo->TdiDeviceName, TdiDeviceName);
-    /*RtlCopyMemory(SocketInfo->TdiDeviceName.Buffer,
-                  TdiDeviceName.Buffer,
-                  TdiDeviceName.Length + 1);*/
 
     AFD_DbgPrint(MAX_TRACE, ("EaInfo at (0x%X)  EaLength is (%d).\n", (UINT)EaInfo, (INT)EaLength));
 
 
     RtlInitUnicodeString(&DeviceName, L"\\Device\\Afd");
-	InitializeObjectAttributes(&ObjectAttributes,
+	  InitializeObjectAttributes(&ObjectAttributes,
         &DeviceName,
         0,
         NULL,
         NULL);
-
-    CP
 
     Status = NtCreateFile(&FileHandle,
         FILE_GENERIC_READ | FILE_GENERIC_WRITE,
         &ObjectAttributes,
         &Iosb,
         NULL,
-		0,
-		0,
-		FILE_OPEN,
-		FILE_SYNCHRONOUS_IO_ALERT,
+		    0,
+		    0,
+		    FILE_OPEN,
+		    FILE_SYNCHRONOUS_IO_ALERT,
         EaInfo,
         EaLength);
 
-    CP
-
     HeapFree(GlobalHeap, 0, EaInfo);
 
-    CP
-
     if (!NT_SUCCESS(Status)) {
-		AFD_DbgPrint(MIN_TRACE, ("Error opening device (Status 0x%X).\n", (UINT)Status));
-        return STATUS_INSUFFICIENT_RESOURCES;
+		  AFD_DbgPrint(MIN_TRACE, ("Error opening device (Status 0x%X).\n", (UINT)Status));
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    CP
 
     *Socket = (SOCKET)FileHandle;
 
@@ -192,18 +180,16 @@ WSPSocket(
         ProtocolInfo.iProtocol      = protocol;
     }
 
-    CP
-
     HelperDLL = LocateHelperDLL(lpProtocolInfo);
     if (!HelperDLL) {
         *lpErrno = WSAEAFNOSUPPORT;
         return INVALID_SOCKET;
     }
-    CP
+
     AddressFamily = lpProtocolInfo->iAddressFamily;
     SocketType    = lpProtocolInfo->iSocketType;
     Protocol      = lpProtocolInfo->iProtocol;
-    CP
+
     Status = HelperDLL->EntryTable.lpWSHOpenSocket2(&AddressFamily,
         &SocketType,
         &Protocol,
@@ -216,7 +202,7 @@ WSPSocket(
         *lpErrno = Status;
         return INVALID_SOCKET;
     }
-    CP
+
     NtStatus = OpenSocket(&Socket,
         AddressFamily,
         SocketType,
@@ -224,17 +210,17 @@ WSPSocket(
         HelperContext,
         NotificationEvents,
         &TdiDeviceName);
-    CP
+
     RtlFreeUnicodeString(&TdiDeviceName);
     if (!NT_SUCCESS(NtStatus)) {
         CP
         *lpErrno = RtlNtStatusToDosError(Status);
         return INVALID_SOCKET;
     }
-    CP
+
     /* FIXME: Assumes catalog entry id to be 1 */
     Socket2 = Upcalls.lpWPUModifyIFSHandle(1, Socket, lpErrno);
-    CP
+
     if (Socket2 == INVALID_SOCKET) {
         /* FIXME: Cleanup */
         AFD_DbgPrint(MIN_TRACE, ("FIXME: Cleanup.\n"));
@@ -268,7 +254,7 @@ WSPCloseSocket(
     AFD_DbgPrint(MAX_TRACE, ("s (0x%X).\n", s));
 
     Status = NtClose((HANDLE)s);
-    CP
+
     if (NT_SUCCESS(Status)) {
         *lpErrno = NO_ERROR;
         return NO_ERROR;
@@ -297,18 +283,18 @@ WSPBind(
  *     0, or SOCKET_ERROR if the socket could not be bound
  */
 {
-    AFD_DbgPrint(MAX_TRACE, ("s (0x%X)  name (0x%X)  namelen (%d).\n", s, name, namelen));
+  AFD_DbgPrint(MAX_TRACE, ("s (0x%X)  name (0x%X)  namelen (%d).\n", s, name, namelen));
 
 #if 0
-    FILE_REQUEST_BIND Request;
-    FILE_REPLY_BIND Reply;
-    IO_STATUS_BLOCK Iosb;
-    NTSTATUS Status;
+  FILE_REQUEST_BIND Request;
+  FILE_REPLY_BIND Reply;
+  IO_STATUS_BLOCK Iosb;
+  NTSTATUS Status;
 
-    RtlCopyMemory(&Request.Name, name, sizeof(SOCKADDR));
+  RtlCopyMemory(&Request.Name, name, sizeof(SOCKADDR));
 
-    Status = NtDeviceIoControlFile((HANDLE)s,
-        NULL,
+  Status = NtDeviceIoControlFile((HANDLE)s,
+    NULL,
 		NULL,
 		NULL,
 		&Iosb,
@@ -320,15 +306,15 @@ WSPBind(
 
 	if (Status == STATUS_PENDING) {
 		if (!NT_SUCCESS(NtWaitForSingleObject((HANDLE)s, FALSE, NULL))) {
-            /* FIXME: What error code should be returned? */
+      /* FIXME: What error code should be returned? */
 			*lpErrno = WSAENOBUFS;
 			return SOCKET_ERROR;
 		}
-    }
+  }
 
-    if (!NT_SUCCESS(Status)) {
-		*lpErrno = WSAENOBUFS;
-        return SOCKET_ERROR;
+  if (!NT_SUCCESS(Status)) {
+	  *lpErrno = WSAENOBUFS;
+    return SOCKET_ERROR;
 	}
 #endif
     return 0;
@@ -361,11 +347,21 @@ WSPSelect(
     AFD_DbgPrint(MAX_TRACE, ("readfds (0x%X)  writefds (0x%X)  exceptfds (0x%X).\n",
         readfds, writefds, exceptfds));
 
+    /* FIXME: For now, all reads are timed out immediately */
+    if (readfds != NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Timing out read query.\n"));
+        *lpErrno = WSAETIMEDOUT;
+        return SOCKET_ERROR;
+    }
+
     /* FIXME: For now, always allow write */
     if (writefds != NULL) {
-        AFD_DbgPrint(MAX_TRACE, ("Setting one socket writeable.\n"));
+        AFD_DbgPrint(MIN_TRACE, ("Setting one socket writeable.\n"));
+        *lpErrno = NO_ERROR;
         return 1;
     }
+
+    *lpErrno = NO_ERROR;
 
     return 0;
 }
@@ -405,22 +401,19 @@ WSPStartup(
 
         Status = WSAVERNOTSUPPORTED;
 
-        CP
-
         hWS2_32 = GetModuleHandle(L"ws2_32.dll");
 
-        CP
-
-        if (hWS2_32) {
-            CP
+        if (hWS2_32 != NULL) {
             lpWPUCompleteOverlappedRequest = (LPWPUCOMPLETEOVERLAPPEDREQUEST)
                 GetProcAddress(hWS2_32, "WPUCompleteOverlappedRequest");
-            CP
-            if (lpWPUCompleteOverlappedRequest) {
+
+            if (lpWPUCompleteOverlappedRequest != NULL) {
                 Status = NO_ERROR;
                 StartupCount++;
+                CP
             }
-            CP
+        } else {
+            AFD_DbgPrint(MIN_TRACE, ("GetModuleHandle() failed for ws2_32.dll\n"));
         }
     } else {
         Status = NO_ERROR;
@@ -429,8 +422,9 @@ WSPStartup(
 
     //LeaveCriticalSection(&InitCriticalSection);
 
+    AFD_DbgPrint(MIN_TRACE, ("WSPSocket() is at 0x%X\n", WSPSocket));
+
     if (Status == NO_ERROR) {
-        CP
         lpProcTable->lpWSPAccept = WSPAccept;
         lpProcTable->lpWSPAddressToString = WSPAddressToString;
         lpProcTable->lpWSPAsyncSelect = WSPAsyncSelect;
@@ -464,7 +458,6 @@ WSPStartup(
 
         lpWSPData->wVersion     = MAKEWORD(2, 2);
         lpWSPData->wHighVersion = MAKEWORD(2, 2);
-        CP
     }
 
     AFD_DbgPrint(MIN_TRACE, ("Status (%d).\n", Status));
@@ -501,8 +494,6 @@ WSPCleanup(
 
     *lpErrno = NO_ERROR;
 
-    CP
-
     return 0;
 }
 
@@ -517,12 +508,9 @@ DllMain(HANDLE hInstDll,
 
     switch (dwReason) {
     case DLL_PROCESS_ATTACH:
-        CP
         /* Don't need thread attach notifications
            so disable them to improve performance */
         DisableThreadLibraryCalls(hInstDll);
-
-        CP
 
         //InitializeCriticalSection(&InitCriticalSection);
 
@@ -533,11 +521,7 @@ DllMain(HANDLE hInstDll,
             return FALSE;
         }
 
-        CP
-
         CreateHelperDLLDatabase();
-
-        CP
         break;
 
     case DLL_THREAD_ATTACH:
@@ -547,14 +531,13 @@ DllMain(HANDLE hInstDll,
         break;
 
     case DLL_PROCESS_DETACH:
-        CP
         DestroyHelperDLLDatabase();
         //HeapDestroy(GlobalHeap);
 
         //DeleteCriticalSection(&InitCriticalSection);
         break;
     }
-    CP
+
     return TRUE;
 }
 

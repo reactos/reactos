@@ -15,6 +15,7 @@
 #define MID_TRACE      0x00000002
 #define MAX_TRACE      0x00000003
 
+#define DEBUG_CHECK    0x00000100
 #define DEBUG_ULTRA    0xFFFFFFFF
 
 #ifdef DBG
@@ -58,7 +59,7 @@ extern DWORD DebugTraceLevel;
     WS_DbgPrint(MIN_TRACE, ("is unimplemented, please try again later.\n"));
 
 #define CHECKPOINT \
-    WS_DbgPrint(MIN_TRACE, ("\n"));
+    WS_DbgPrint(DEBUG_CHECK, ("\n"));
 
 #define CP CHECKPOINT
 

@@ -12,12 +12,14 @@
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
-DWORD DebugTraceLevel = MAX_TRACE;
+DWORD DebugTraceLevel = MIN_TRACE;
 
 #endif /* DBG */
 
 
-NTSTATUS AfdFileSystemControl(
+NTSTATUS
+STDCALL
+AfdFileSystemControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
@@ -29,7 +31,9 @@ NTSTATUS AfdFileSystemControl(
 }
 
 
-NTSTATUS AfdDispatch(
+NTSTATUS
+STDCALL
+AfdDispatch(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 /*
@@ -46,8 +50,8 @@ NTSTATUS AfdDispatch(
 
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
-    AFD_DbgPrint(MAX_TRACE, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X).\n",
-        DeviceObject, Irp));
+    AFD_DbgPrint(MAX_TRACE, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X), IrpSp->FileObject (0x%X).\n",
+        DeviceObject, Irp, IrpSp->FileObject));
 
     Irp->IoStatus.Information = 0;
 
@@ -99,9 +103,7 @@ VOID AfdUnload(
 
 
 NTSTATUS
-#ifndef _MSC_VER
 STDCALL
-#endif
 DriverEntry(
     PDRIVER_OBJECT DriverObject,
 	PUNICODE_STRING RegistryPath)
@@ -130,7 +132,7 @@ DriverEntry(
                             FALSE,
                             &DeviceObject);
     if (!NT_SUCCESS(Status)) {
-        AFD_DbgPrint(MIN_TRACE, ("Could not create device (0x%X).\n", Status));
+      AFD_DbgPrint(MIN_TRACE, ("Could not create device (0x%X).\n", Status));
 	    return Status;
     }
 

@@ -186,8 +186,8 @@ NTSTATUS TdiOpenTransport(
     ULONG EaLength;
 
     EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
-               sizeof(TdiTransportAddress) +
-               sizeof(TA_ADDRESS_IP) + 1;
+               TDI_TRANSPORT_ADDRESS_LENGTH +
+               sizeof(TA_ADDRESS_IP);
     EaInfo = (PFILE_FULL_EA_INFORMATION)ExAllocatePool(NonPagedPool, EaLength);
     if (!EaInfo) {
         TDI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
@@ -196,13 +196,13 @@ NTSTATUS TdiOpenTransport(
 
     RtlZeroMemory(EaInfo, EaLength);
     EaInfo->EaNameLength = TDI_TRANSPORT_ADDRESS_LENGTH;
-    RtlCopyMemory (EaInfo->EaName,
-                   TdiTransportAddress,
-                   sizeof(TdiTransportAddress));
+    RtlCopyMemory(EaInfo->EaName,
+                  TdiTransportAddress,
+                  TDI_TRANSPORT_ADDRESS_LENGTH);
     EaInfo->EaValueLength = sizeof(TA_ADDRESS_IP);
-    Address = (PTA_ADDRESS_IP)(EaInfo->EaName + sizeof(TdiTransportAddress));
+    Address = (PTA_ADDRESS_IP)(EaInfo->EaName + TDI_TRANSPORT_ADDRESS_LENGTH);
     Address->TAAddressCount                 = 1;
-    Address->Address[0].AddressLength       = sizeof(TDI_ADDRESS_IP);
+    Address->Address[0].AddressLength       = TDI_ADDRESS_LENGTH_IP;
     Address->Address[0].AddressType         = TDI_ADDRESS_TYPE_IP;
     Address->Address[0].Address[0].sin_port = WH2N(Port);
     Address->Address[0].Address[0].in_addr  = 0;

@@ -35,13 +35,9 @@ VOID HandleDeferredProcessing(
     Adapter->MiniportBusy = TRUE;
     KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
 
-    NDIS_DbgPrint(MAX_TRACE, ("Before HandleInterruptHandler.\n"));
-
     /* Call the deferred interrupt service handler for this adapter */
     (*Adapter->Miniport->Chars.HandleInterruptHandler)(
         Adapter->NdisMiniportBlock.MiniportAdapterContext);
-
-    NDIS_DbgPrint(MAX_TRACE, ("After HandleInterruptHandler.\n"));
 
     KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
     if ((!WasBusy) && (Adapter->WorkQueueHead)) {

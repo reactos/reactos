@@ -23,8 +23,8 @@
 
 
 /* Name of UDP device */
-//#define UDP_DEVICE_NAME L"\\Device\\Udp"
-#define UDP_DEVICE_NAME L"\\Device\\NTUdp"
+#define UDP_DEVICE_NAME L"\\Device\\Udp"
+//#define UDP_DEVICE_NAME L"\\Device\\NTUdp"
 
 
 #ifdef i386

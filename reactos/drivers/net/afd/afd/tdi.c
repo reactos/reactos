@@ -9,6 +9,35 @@
  */
 #include <afd.h>
 
+#ifdef DBG
+VOID DisplayBuffer(
+    PVOID Buffer,
+    ULONG Size)
+{
+    ULONG i;
+    PCHAR p;
+
+    if ((DebugTraceLevel & MAX_TRACE) == 0)
+        return;
+
+    if (!Buffer) {
+        AFD_DbgPrint(MIN_TRACE, ("Cannot display null buffer.\n"));
+        return;
+    }
+
+    AFD_DbgPrint(MIN_TRACE, ("Displaying buffer at (0x%X)  Size (%d).\n", Buffer, Size));
+
+    p = (PCHAR)Buffer;
+    for (i = 0; i < Size; i++) {
+        if (i % 16 == 0)
+            DbgPrint("\n");
+        DbgPrint("%02X ", (p[i]) & 0xFF);
+    }
+    DbgPrint("\n");
+}
+#endif /* DBG */
+
+
 inline DWORD TdiAddressSizeFromName(
     LPSOCKADDR Name)
 /*
@@ -120,6 +149,8 @@ NTSTATUS TdiCall(
     Events[0] = StopEvent;
     Events[1] = &Event; 
 
+    AFD_DbgPrint(MAX_TRACE, ("Called\n"));
+
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
     Irp->UserEvent = &Event;
     Irp->UserIosb  = IoStatusBlock;
@@ -179,6 +210,8 @@ NTSTATUS TdiOpenDevice(
     IO_STATUS_BLOCK Iosb;
     NTSTATUS Status;
 
+    AFD_DbgPrint(MAX_TRACE, ("Called. DeviceName (%wZ)\n", DeviceName));
+
     InitializeObjectAttributes(&Attr,                   /* Attribute buffer */
                                DeviceName,              /* Device name */
                                OBJ_CASE_INSENSITIVE,    /* Attributes */
@@ -210,7 +243,6 @@ NTSTATUS TdiOpenDevice(
     } else {
         AFD_DbgPrint(MIN_TRACE, ("ZwCreateFile() failed with status (0x%X)\n", Status));
     }
-
     return Status;
 }
 
@@ -219,6 +251,9 @@ NTSTATUS TdiCloseDevice(
     HANDLE Handle,
     PFILE_OBJECT FileObject)
 {
+    AFD_DbgPrint(MAX_TRACE, ("Called. Handle (0x%X)  FileObject (0x%X)\n",
+      Handle, FileObject));
+
     if (FileObject)
         ObDereferenceObject(FileObject);
 
@@ -250,6 +285,9 @@ NTSTATUS TdiOpenAddressFileIPv4(
     NTSTATUS Status;
     ULONG EaLength;
 
+    AFD_DbgPrint(MAX_TRACE, ("Called. DeviceName (%wZ)  Name (0x%X)\n",
+        DeviceName, Name));
+
     EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
                TDI_TRANSPORT_ADDRESS_LENGTH +
                sizeof(TA_ADDRESS_IP);
@@ -267,13 +305,42 @@ NTSTATUS TdiOpenAddressFileIPv4(
     EaInfo->EaValueLength = sizeof(TA_ADDRESS_IP);
     Address = (PTA_ADDRESS_IP)(EaInfo->EaName + TDI_TRANSPORT_ADDRESS_LENGTH);
     TdiBuildAddressIPv4(Address, Name);
-
     Status = TdiOpenDevice(DeviceName,
                            EaLength,
                            EaInfo,
                            AddressHandle,
                            AddressObject);
     ExFreePool(EaInfo);
+    return Status;
+}
+
+
+NTSTATUS TdiOpenAddressFile(
+    PUNICODE_STRING DeviceName,
+    LPSOCKADDR Name,
+    PHANDLE AddressHandle,
+    PFILE_OBJECT *AddressObject)
+/*
+ * FUNCTION: Opens an address file object
+ * ARGUMENTS:
+ *     DeviceName    = Pointer to counted string with name of device
+ *     Name          = Pointer to socket name
+ *     AddressHandle = Address of buffer to place address file handle
+ *     AddressObject = Address of buffer to place address file object
+ * RETURNS:
+ *     Status of operation
+ */
+{
+    NTSTATUS Status;
+
+    switch (Name->sa_family) {
+    case AF_INET:
+        Status = TdiOpenAddressFileIPv4(DeviceName, Name, AddressHandle, AddressObject);
+        break;
+    default:
+        Status = STATUS_INVALID_PARAMETER;
+    }
+
     return Status;
 }
 
@@ -300,6 +367,8 @@ NTSTATUS TdiSetEventHandler(
     IO_STATUS_BLOCK Iosb;
     NTSTATUS Status;
     PIRP Irp;
+
+    AFD_DbgPrint(MAX_TRACE, ("Called\n"));
 
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
 
@@ -555,26 +624,27 @@ NTSTATUS TdiQueryAddress(
 
 NTSTATUS TdiSend(
     PFILE_OBJECT TransportObject,
-    PFILE_REQUEST_SENDTO Request)
+    PVOID Buffer,
+    ULONG BufferSize)
 /*
  * FUNCTION: Sends a block of data
  * ARGUMENTS:
  *     TransportObject = Pointer to transport object
- *     Request         = Pointer to request
+ *     Buffer          = Pointer to buffer with data to send
+ *     BufferSize      = Length of Buffer
  * RETURNS:
  *     Status of operation
  */
 {
+#if 0
     PTDI_CONNECTION_INFORMATION ConnectInfo;
     PDEVICE_OBJECT DeviceObject;
     IO_STATUS_BLOCK Iosb;
     DWORD TdiAddressSize;
-    ULONG BufferSize;
+    PVOID BaseAddress;
     NTSTATUS Status;
     PIRP Irp;
     PMDL Mdl;
-
-    /* FIXME: Connectionless only */
 
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
     if (!DeviceObject) {
@@ -582,7 +652,7 @@ NTSTATUS TdiSend(
         return STATUS_INVALID_PARAMETER;
     }
 
-    TdiAddressSize = TdiAddressSizeFromName(&Request->To);
+    TdiAddressSize = TdiAddressSizeFromName(Address);
 
     ConnectInfo  = (PTDI_CONNECTION_INFORMATION)
         ExAllocatePool(NonPagedPool,
@@ -599,10 +669,10 @@ NTSTATUS TdiSend(
         TdiAddressSize);
 
     ConnectInfo->RemoteAddressLength = TdiAddressSize;
-    ConnectInfo->RemoteAddress       = (PVOID)
+    ConnectInfo->RemoteAddress = (PVOID)
         (ConnectInfo + sizeof(TDI_CONNECTION_INFORMATION));
 
-    TdiBuildAddress(ConnectInfo->RemoteAddress, &Request->To);
+    TdiBuildAddress(ConnectInfo->RemoteAddress, Address);
 
     Irp = TdiBuildInternalDeviceControlIrp(TDI_SEND_DATAGRAM,   /* Sub function */
                                            DeviceObject,        /* Device object */
@@ -614,6 +684,9 @@ NTSTATUS TdiSend(
         ExFreePool(ConnectInfo);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+
+DisplayBuffer(Request->Buffers->buf, Request->Buffers->len);
+
 
     /* FIXME: There may be more than one buffer */
     BufferSize = Request->Buffers->len;
@@ -644,6 +717,12 @@ NTSTATUS TdiSend(
     }
 #endif
 
+CP
+    BaseAddress = MmMapLockedPages(Mdl, KernelMode);
+
+    AFD_DbgPrint(MAX_TRACE, ("Mapped user mode buffer at 0x%X.\n", BaseAddress));
+
+CP
     TdiBuildSendDatagram(Irp,               /* I/O Request Packet */
                          DeviceObject,      /* Device object */
                          TransportObject,   /* File object */
@@ -654,25 +733,33 @@ NTSTATUS TdiSend(
                          ConnectInfo);      /* Connection information */
 
     Status = TdiCall(Irp, DeviceObject, &Iosb, FALSE, NULL);
-
+CP
+    MmUnmapLockedPages(BaseAddress, Mdl);
+CP
+    MmUnlockPages(Mdl);
+CP
+    IoFreeMdl(Mdl);
+CP
     ExFreePool(ConnectInfo);
 
     return Status;
+#endif
+    return STATUS_SUCCESS;
 }
 
 
 NTSTATUS TdiSendDatagram(
     PFILE_OBJECT TransportObject,
     LPSOCKADDR Address,
-    PVOID Buffer,
+    PMDL Mdl,
     ULONG BufferSize)
 /*
  * FUNCTION: Sends a datagram
  * ARGUMENTS:
  *     TransportObject = Pointer to transport object
- *     Address         = Remote address
- *     Buffer          = Pointer to buffer with data to send
- *     BufferSize      = Length of Buffer
+ *     Address         = Remote address to send data to
+ *     Mdl             = MDL of buffer to send
+ *     BufferSize      = Length of buffer
  * RETURNS:
  *     Status of operation
  */
@@ -683,26 +770,33 @@ NTSTATUS TdiSendDatagram(
     DWORD TdiAddressSize;
     NTSTATUS Status;
     PIRP Irp;
-    PMDL Mdl;
+
+CP
 
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
     if (!DeviceObject) {
         AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
         return STATUS_INVALID_PARAMETER;
     }
-
+CP
     TdiAddressSize = TdiAddressSizeFromName(Address);
 
-    ConnectInfo  = (PTDI_CONNECTION_INFORMATION)
+    AFD_DbgPrint(MIN_TRACE, ("TdiAddressSize %d.\n", TdiAddressSize));
+
+CP
+    ConnectInfo = (PTDI_CONNECTION_INFORMATION)
         ExAllocatePool(NonPagedPool,
         sizeof(TDI_CONNECTION_INFORMATION) +
         TdiAddressSize);
 
+    AFD_DbgPrint(MIN_TRACE, ("ConnectInfo 0x%X.\n", ConnectInfo));
+
+CP
     if (!ConnectInfo) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
+CP
     RtlZeroMemory(ConnectInfo,
         sizeof(TDI_CONNECTION_INFORMATION) +
         TdiAddressSize);
@@ -710,20 +804,22 @@ NTSTATUS TdiSendDatagram(
     ConnectInfo->RemoteAddressLength = TdiAddressSize;
     ConnectInfo->RemoteAddress       = (PVOID)
         (ConnectInfo + sizeof(TDI_CONNECTION_INFORMATION));
-
+CP
     TdiBuildAddress(ConnectInfo->RemoteAddress, Address);
-
+CP
     Irp = TdiBuildInternalDeviceControlIrp(TDI_SEND_DATAGRAM,   /* Sub function */
                                            DeviceObject,        /* Device object */
                                            TransportObject,     /* File object */
                                            NULL,                /* Event */
                                            NULL);               /* Return buffer */
+CP
     if (!Irp) {
         AFD_DbgPrint(MIN_TRACE, ("TdiBuildInternalDeviceControlIrp() failed.\n"));
         ExFreePool(ConnectInfo);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+#if 0
     Mdl = IoAllocateMdl(Buffer,     /* Virtual address of buffer */
                         BufferSize, /* Length of buffer */
                         FALSE,      /* Not secondary */
@@ -735,7 +831,6 @@ NTSTATUS TdiSendDatagram(
         ExFreePool(ConnectInfo);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
 #ifdef _MSC_VER
     try {
 #endif
@@ -743,12 +838,13 @@ NTSTATUS TdiSendDatagram(
 #ifdef _MSC_VER
     } except(EXCEPTION_EXECUTE_HANDLER) {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
-        IoFreeMdl(Mdl);
         IoFreeIrp(Irp);
         ExFreePool(ConnectInfo);
         return STATUS_UNSUCCESSFUL;
     }
 #endif
+#endif
+CP
 
     TdiBuildSendDatagram(Irp,               /* I/O Request Packet */
                          DeviceObject,      /* Device object */
@@ -758,11 +854,17 @@ NTSTATUS TdiSendDatagram(
                          Mdl,               /* Descriptor for data buffer */
                          BufferSize,        /* Size of data to send */
                          ConnectInfo);      /* Connection information */
-
+CP
     Status = TdiCall(Irp, DeviceObject, &Iosb, FALSE, NULL);
-
+CP
+#if 0
+    MmUnlockPages(Mdl);
+CP
+    IoFreeMdl(Mdl);
+#endif
+CP
     ExFreePool(ConnectInfo);
-
+CP
     return Status;
 }
 
@@ -893,8 +995,11 @@ NTSTATUS TdiReceiveDatagram(
         *BufferSize = Iosb.Information;
         TdiBuildName(Address, ReturnInfo->RemoteAddress);
     }
-
+CP
+    MmUnlockPages(Mdl);
+CP
     IoFreeMdl(Mdl);
+CP
     ExFreePool(ReceiveInfo);
 
     return Status;

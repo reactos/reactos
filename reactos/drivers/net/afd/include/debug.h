@@ -15,8 +15,8 @@
 #define MID_TRACE      0x00000002
 #define MAX_TRACE      0x00000003
 
-#define DEBUG_IRP      0x00000100
-
+#define DEBUG_CHECK    0x00000100
+#define DEBUG_IRP      0x00000200
 #define DEBUG_ULTRA    0xFFFFFFFF
 
 #ifdef DBG
@@ -85,7 +85,9 @@ extern DWORD DebugTraceLevel;
 
 
 #define CHECKPOINT \
-do { AFD_DbgPrint(MIN_TRACE, ("%s:%d\n", __FILE__, __LINE__)); } while(0);
+    AFD_DbgPrint(DEBUG_CHECK, ("\n"));
+
+#define CP CHECKPOINT
 
 #endif /* __DEBUG_H */
 

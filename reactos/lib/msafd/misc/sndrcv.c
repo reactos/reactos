@@ -18,9 +18,9 @@ WSPAsyncSelect(
     IN  LONG lEvent, 
     OUT LPINT lpErrno)
 {
-    UNIMPLEMENTED
+  UNIMPLEMENTED
 
-    return 0;
+  return 0;
 }
 
 
@@ -37,9 +37,9 @@ WSPRecv(
     IN      LPWSATHREADID lpThreadId,
     OUT     LPINT lpErrno)
 {
-    UNIMPLEMENTED
+  UNIMPLEMENTED
 
-    return 0;
+  return 0;
 }
 
 
@@ -50,11 +50,10 @@ WSPRecvDisconnect(
     OUT LPWSABUF lpInboundDisconnectData,
     OUT LPINT lpErrno)
 {
-    UNIMPLEMENTED
+  UNIMPLEMENTED
 
-    return 0;
+  return 0;
 }
-
 
 INT
 WSPAPI
@@ -71,37 +70,37 @@ WSPRecvFrom(
     IN      LPWSATHREADID lpThreadId,
     OUT     LPINT lpErrno)
 {
-    PFILE_REQUEST_RECVFROM Request;
-    FILE_REPLY_RECVFROM Reply;
-    IO_STATUS_BLOCK Iosb;
-    NTSTATUS Status;
-    DWORD Size;
+  PFILE_REQUEST_RECVFROM Request;
+  FILE_REPLY_RECVFROM Reply;
+  IO_STATUS_BLOCK Iosb;
+  NTSTATUS Status;
+  DWORD Size;
 
-    AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
+  AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    Size = dwBufferCount * sizeof(WSABUF);
+  Size = dwBufferCount * sizeof(WSABUF);
 
-    Request = (PFILE_REQUEST_RECVFROM)HeapAlloc(
-        GlobalHeap, 0, sizeof(FILE_REQUEST_RECVFROM) + Size);
-    if (!Request) {
-        AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-    	*lpErrno = WSAENOBUFS;
-		return SOCKET_ERROR;
-    }
+  Request = (PFILE_REQUEST_RECVFROM)HeapAlloc(
+    GlobalHeap, 0, sizeof(FILE_REQUEST_RECVFROM) + Size);
+  if (!Request) {
+    AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+    *lpErrno = WSAENOBUFS;
+    return SOCKET_ERROR;
+  }
 
-    /* Put buffer pointers after request structure */
-    Request->Buffers     = (LPWSABUF)(Request + sizeof(FILE_REQUEST_RECVFROM));
-    Request->BufferCount = dwBufferCount;
-    Request->Flags       = lpFlags;
-    Request->From        = lpFrom;
-    Request->FromLen     = lpFromLen;
+  /* Put buffer pointers after request structure */
+  Request->Buffers     = (LPWSABUF)(Request + sizeof(FILE_REQUEST_RECVFROM));
+  Request->BufferCount = dwBufferCount;
+  Request->Flags       = lpFlags;
+  Request->From        = lpFrom;
+  Request->FromLen     = lpFromLen;
 
-    RtlCopyMemory(Request->Buffers, lpBuffers, Size);
+  RtlCopyMemory(Request->Buffers, lpBuffers, Size);
 
-    Status = NtDeviceIoControlFile((HANDLE)s,
-        NULL,
+  Status = NtDeviceIoControlFile((HANDLE)s,
+    NULL,
 		NULL,
-		NULL,
+		NULL,   
 		&Iosb,
 		IOCTL_AFD_RECVFROM,
 		Request,
@@ -109,28 +108,28 @@ WSPRecvFrom(
 		&Reply,
 		sizeof(FILE_REPLY_RECVFROM));
 
-    HeapFree(GlobalHeap, 0, Request);
+  HeapFree(GlobalHeap, 0, Request);
 
 	if (Status == STATUS_PENDING) {
-        AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
-        /* FIXME: Wait only for blocking sockets */
+    AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
+    /* FIXME: Wait only for blocking sockets */
 		if (!NT_SUCCESS(NtWaitForSingleObject((HANDLE)s, FALSE, NULL))) {
-            AFD_DbgPrint(MAX_TRACE, ("Wait failed.\n"));
-            /* FIXME: What error code should be returned? */
+      AFD_DbgPrint(MIN_TRACE, ("Wait failed.\n"));
+      /* FIXME: What error code should be returned? */
 			*lpErrno = WSAENOBUFS;
 			return SOCKET_ERROR;
 		}
-    }
+  }
 
-    if (!NT_SUCCESS(Status)) {
-        AFD_DbgPrint(MIN_TRACE, ("Status (0x%X).\n", Status));
+  if (!NT_SUCCESS(Status)) {
+    AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
 		*lpErrno = WSAENOBUFS;
-        return SOCKET_ERROR;
+    return SOCKET_ERROR;
 	}
 
-    AFD_DbgPrint(MAX_TRACE, ("Receive successful.\n"));
+  AFD_DbgPrint(MAX_TRACE, ("Receive successful.\n"));
 
-    return 0;
+  return 0;
 }
 
 
@@ -147,9 +146,9 @@ WSPSend(
     IN  LPWSATHREADID lpThreadId,
     OUT LPINT lpErrno)
 {
-    UNIMPLEMENTED
+  UNIMPLEMENTED
 
-    return 0;
+  return 0;
 }
 
 
@@ -160,9 +159,9 @@ WSPSendDisconnect(
     IN  LPWSABUF lpOutboundDisconnectData,
     OUT LPINT lpErrno)
 {
-    UNIMPLEMENTED
+  UNIMPLEMENTED
 
-    return 0;
+  return 0;
 }
 
 
@@ -181,36 +180,36 @@ WSPSendTo(
     IN  LPWSATHREADID lpThreadId,
     OUT LPINT lpErrno)
 {
-    PFILE_REQUEST_SENDTO Request;
-    FILE_REPLY_SENDTO Reply;
-    IO_STATUS_BLOCK Iosb;
-    NTSTATUS Status;
-    DWORD Size;
+  PFILE_REQUEST_SENDTO Request;
+  FILE_REPLY_SENDTO Reply;
+  IO_STATUS_BLOCK Iosb;
+  NTSTATUS Status;
+  DWORD Size;
 
-    AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
+  AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    Size = dwBufferCount * sizeof(WSABUF);
+  Size = dwBufferCount * sizeof(WSABUF);
 
-    Request = (PFILE_REQUEST_SENDTO)HeapAlloc(
-        GlobalHeap, 0, sizeof(FILE_REQUEST_SENDTO) + Size);
-    if (!Request) {
-        AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-    	*lpErrno = WSAENOBUFS;
-		return SOCKET_ERROR;
-    }
+  Request = (PFILE_REQUEST_SENDTO)HeapAlloc(
+    GlobalHeap, 0, sizeof(FILE_REQUEST_SENDTO) + Size);
+  if (!Request) {
+    AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+    *lpErrno = WSAENOBUFS;
+    return SOCKET_ERROR;
+  }
 
-    /* Put buffer pointers after request structure */
-    Request->Buffers     = (LPWSABUF)(Request + sizeof(FILE_REQUEST_SENDTO));
-    Request->BufferCount = dwBufferCount;
-    Request->Flags       = dwFlags;
-    Request->ToLen       = iToLen;
+  /* Put buffer pointers after request structure */
+  Request->Buffers     = (LPWSABUF)(Request + sizeof(FILE_REQUEST_SENDTO));
+  Request->BufferCount = dwBufferCount;
+  Request->Flags       = dwFlags;
+  Request->ToLen       = iToLen;
 
-    RtlCopyMemory(&Request->To, lpTo, sizeof(SOCKADDR));
+  RtlCopyMemory(&Request->To, lpTo, sizeof(SOCKADDR));
 
-    RtlCopyMemory(Request->Buffers, lpBuffers, Size);
+  RtlCopyMemory(Request->Buffers, lpBuffers, Size);
 
-    Status = NtDeviceIoControlFile((HANDLE)s,
-        NULL,
+  Status = NtDeviceIoControlFile((HANDLE)s,
+    NULL,
 		NULL,
 		NULL,
 		&Iosb,
@@ -220,28 +219,28 @@ WSPSendTo(
 		&Reply,
 		sizeof(FILE_REPLY_SENDTO));
 
-    HeapFree(GlobalHeap, 0, Request);
+  HeapFree(GlobalHeap, 0, Request);
 
 	if (Status == STATUS_PENDING) {
-        AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
-        /* FIXME: Wait only for blocking sockets */
+    AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
+    /* FIXME: Wait only for blocking sockets */
 		if (!NT_SUCCESS(NtWaitForSingleObject((HANDLE)s, FALSE, NULL))) {
-            AFD_DbgPrint(MAX_TRACE, ("Wait failed.\n"));
-            /* FIXME: What error code should be returned? */
-			*lpErrno = WSAENOBUFS;
-			return SOCKET_ERROR;
+      AFD_DbgPrint(MAX_TRACE, ("Wait failed.\n"));
+      /* FIXME: What error code should be returned? */
+      *lpErrno = WSAENOBUFS;
+      return SOCKET_ERROR;
 		}
-    }
+  }
 
-    if (!NT_SUCCESS(Status)) {
-        AFD_DbgPrint(MIN_TRACE, ("Status (0x%X).\n", Status));
-		*lpErrno = WSAENOBUFS;
-        return SOCKET_ERROR;
-	}
+  if (!NT_SUCCESS(Status)) {
+    AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
+    *lpErrno = WSAENOBUFS;
+    return SOCKET_ERROR;
+  }
 
-    AFD_DbgPrint(MAX_TRACE, ("Send successful.\n"));
+  AFD_DbgPrint(MAX_TRACE, ("Send successful.\n"));
 
-    return 0;
+  return 0;
 }
 
 /* EOF */

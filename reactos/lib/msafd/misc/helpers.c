@@ -50,15 +50,11 @@ INT DestroyHelperDLL(
     RemoveEntryList(&HelperDLL->ListEntry);
     //LeaveCriticalSection(&HelperDLLDatabaseLock);
 
-    CP
-
     if (HelperDLL->hModule) {
         Status = UnloadHelperDLL(HelperDLL);
     } else {
         Status = NO_ERROR;
     }
-
-    CP
 
     if (HelperDLL->Mapping)
         HeapFree(GlobalHeap, 0, HelperDLL->Mapping);
@@ -66,8 +62,6 @@ INT DestroyHelperDLL(
     //DeleteCriticalSection(&HelperDLL->Lock);
 
     HeapFree(GlobalHeap, 0, HelperDLL);
-
-    CP
 
     return Status;
 }
@@ -108,35 +102,36 @@ PWSHELPER_DLL LocateHelperDLL(
 }
 
 
-#define GET_ENTRY_POINT(helper, name) { \
+#define GET_ENTRY_POINT(helper, exportname, identifier) { \
     PVOID entry;                        \
                                         \
-    entry = GetProcAddress(helper->hModule, "##name"); \
+    entry = GetProcAddress(helper->hModule, exportname); \
     if (!entry)                         \
         return ERROR_BAD_PROVIDER;      \
-    (*(PULONG*)helper->EntryTable.lp##name) = entry; \
+    ((PVOID)helper->EntryTable.##identifier) = entry; \
 }
 
 
 INT GetHelperDLLEntries(
     PWSHELPER_DLL HelperDLL)
 {
-    GET_ENTRY_POINT(HelperDLL, WSHAddressToString);
-    GET_ENTRY_POINT(HelperDLL, WSHEnumProtocols);
-    GET_ENTRY_POINT(HelperDLL, WSHGetBroadcastSockaddr);
-    GET_ENTRY_POINT(HelperDLL, WSHGetProviderGuid);
-    GET_ENTRY_POINT(HelperDLL, WSHGetSockaddrType);
-    GET_ENTRY_POINT(HelperDLL, WSHGetSocketInformation);
-    GET_ENTRY_POINT(HelperDLL, WSHGetWildcardSockaddr);
-    GET_ENTRY_POINT(HelperDLL, WSHGetWinsockMapping);
-    GET_ENTRY_POINT(HelperDLL, WSHGetWSAProtocolInfo);
-    GET_ENTRY_POINT(HelperDLL, WSHIoctl);
-    GET_ENTRY_POINT(HelperDLL, WSHJoinLeaf);
-    GET_ENTRY_POINT(HelperDLL, WSHNotify);
-    GET_ENTRY_POINT(HelperDLL, WSHOpenSocket);
-    GET_ENTRY_POINT(HelperDLL, WSHOpenSocket2);
-    GET_ENTRY_POINT(HelperDLL, WSHSetSocketInformation);
-    GET_ENTRY_POINT(HelperDLL, WSHStringToAddress);
+    GET_ENTRY_POINT(HelperDLL, "WSHAddressToString", lpWSHAddressToString);
+    GET_ENTRY_POINT(HelperDLL, "WSHEnumProtocols", lpWSHEnumProtocols);
+    GET_ENTRY_POINT(HelperDLL, "WSHGetBroadcastSockaddr", lpWSHGetBroadcastSockaddr);
+    GET_ENTRY_POINT(HelperDLL, "WSHGetProviderGuid", lpWSHGetProviderGuid);
+    GET_ENTRY_POINT(HelperDLL, "WSHGetSockaddrType", lpWSHGetSockaddrType);
+    GET_ENTRY_POINT(HelperDLL, "WSHGetSocketInformation", lpWSHGetSocketInformation);
+    GET_ENTRY_POINT(HelperDLL, "WSHGetWildcardSockaddr", lpWSHGetWildcardSockaddr);
+    GET_ENTRY_POINT(HelperDLL, "WSHGetWinsockMapping", lpWSHGetWinsockMapping);
+    GET_ENTRY_POINT(HelperDLL, "WSHGetWSAProtocolInfo", lpWSHGetWSAProtocolInfo);
+    GET_ENTRY_POINT(HelperDLL, "WSHIoctl", lpWSHIoctl);
+    GET_ENTRY_POINT(HelperDLL, "WSHJoinLeaf", lpWSHJoinLeaf);
+    GET_ENTRY_POINT(HelperDLL, "WSHNotify", lpWSHNotify);
+    GET_ENTRY_POINT(HelperDLL, "WSHOpenSocket", lpWSHOpenSocket);
+    GET_ENTRY_POINT(HelperDLL, "WSHOpenSocket2", lpWSHOpenSocket2);
+    GET_ENTRY_POINT(HelperDLL, "WSHSetSocketInformation", lpWSHSetSocketInformation);
+    GET_ENTRY_POINT(HelperDLL, "WSHStringToAddress", lpWSHStringToAddress);
+
     return NO_ERROR;
 }
 
@@ -151,6 +146,9 @@ INT LoadHelperDLL(
     if (!HelperDLL->hModule) {
         /* DLL is not loaded so load it now */
         HelperDLL->hModule = LoadLibrary(HelperDLL->LibraryName);
+
+        AFD_DbgPrint(MAX_TRACE, ("hModule is (0x%X).\n", HelperDLL->hModule));
+
         if (HelperDLL->hModule) {
             Status = GetHelperDLLEntries(HelperDLL);
         } else
@@ -169,11 +167,13 @@ INT UnloadHelperDLL(
 {
     INT Status = NO_ERROR;
 
-    AFD_DbgPrint(MAX_TRACE, ("HelperDLL (0x%X).\n", HelperDLL));
+    AFD_DbgPrint(MAX_TRACE, ("HelperDLL (0x%X) hModule (0x%X).\n", HelperDLL, HelperDLL->hModule));
 
     if (HelperDLL->hModule) {
-        if (!FreeLibrary(HelperDLL->hModule))
+        if (!FreeLibrary(HelperDLL->hModule)) {
+            CP
             Status = GetLastError();
+        }
 
         HelperDLL->hModule = NULL;
     }
@@ -186,8 +186,6 @@ VOID CreateHelperDLLDatabase(VOID)
 {
     PWSHELPER_DLL HelperDLL;
 
-    CP
-
     //InitializeCriticalSection(&HelperDLLDatabaseLock);
 
     InitializeListHead(&HelperDLLDatabaseListHead);
@@ -199,15 +197,11 @@ VOID CreateHelperDLLDatabase(VOID)
         return;
     }
 
-    CP
-
     HelperDLL->Mapping = HeapAlloc(GlobalHeap, 0, sizeof(WINSOCK_MAPPING) + 3 * sizeof(DWORD));
     if (!HelperDLL->Mapping) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient memory.\n"));
         return;
     }
-
-    CP
 
     HelperDLL->Mapping->Rows    = 1;
     HelperDLL->Mapping->Columns = 3;
@@ -215,11 +209,7 @@ VOID CreateHelperDLLDatabase(VOID)
     HelperDLL->Mapping->Mapping[0].SocketType    = SOCK_RAW;
     HelperDLL->Mapping->Mapping[0].Protocol      = 0;
 
-    CP
-
     LoadHelperDLL(HelperDLL);
-
-    CP
 }
 
 
@@ -228,8 +218,6 @@ VOID DestroyHelperDLLDatabase(VOID)
     PLIST_ENTRY CurrentEntry;
     PLIST_ENTRY NextEntry;
     PWSHELPER_DLL HelperDLL;
-
-    CP
 
     CurrentEntry = HelperDLLDatabaseListHead.Flink;
     while (CurrentEntry != &HelperDLLDatabaseListHead) {
@@ -242,8 +230,6 @@ VOID DestroyHelperDLLDatabase(VOID)
 
         CurrentEntry = NextEntry;
     }
-
-    CP
 
     //DeleteCriticalSection(&HelperDLLDatabaseLock);
 }

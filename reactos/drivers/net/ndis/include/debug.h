@@ -88,6 +88,8 @@ extern DWORD DebugTraceLevel;
 #define CHECKPOINT \
     do { NDIS_DbgPrint(MIN_TRACE, ("(%s:%d)\n", __FILE__, __LINE__)); } while(0);
 
+#define CP CHECKPOINT
+
 #endif /* __DEBUG_H */
 
 /* EOF */
