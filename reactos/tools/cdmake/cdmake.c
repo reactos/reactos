@@ -19,7 +19,7 @@
  * - No Joliet file name validations
  * - Very bad ISO file name generation
  *
- * $Id: cdmake.c,v 1.11 2004/06/04 23:50:15 navaraf Exp $
+ * $Id: cdmake.c,v 1.12 2004/08/25 20:47:22 chorns Exp $
  */
 
 /* According to his website, this file was released into the public domain by Phillip J. Erdelsky */
@@ -67,7 +67,7 @@ const BOOL FALSE = 0;
 #define MAX_LEVEL		8
 #define MAX_NAME_LENGTH		64
 #define MAX_CDNAME_LENGTH	8
-#define MAX_EXTENSION_LENGTH	8
+#define MAX_EXTENSION_LENGTH	10
 #define MAX_CDEXTENSION_LENGTH	3
 #define SECTOR_SIZE		2048
 #define BUFFER_SIZE		(8 * SECTOR_SIZE)
@@ -566,6 +566,10 @@ void parse_filename_into_dirrecord ( const char* filename, PDIR_RECORD d, BOOL d
       error_exit ( "'%s' is not ISO-9660, aborting...", filename );
     s++;
   }
+  if (strlen(s) > MAX_EXTENSION_LENGTH)
+    {
+      error_exit ( "'%s' has too long extension for cdmake, aborting...", filename );
+    }
   *t = 0;
   strcpy(d->extension, s);
   t = d->extension_on_cd;

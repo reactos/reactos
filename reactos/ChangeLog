@@ -1,3 +1,7 @@
+2004-08-25  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* tools/cdmake/cdmake.c: Error out if extension is too long.
+
 2004-08-20  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* Makefile: Fix ntoskrnl dependency problem.
