@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.10 2004/04/09 18:27:10 weiden Exp $
+/* $Id: install.c,v 1.11 2004/04/16 13:37:18 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -35,14 +35,12 @@
 #include <samlib.h>
 #include <syssetup.h>
 
+#include "globals.h"
 #include "resource.h"
 
 // #define NO_GUI
 #define VMWINST
 
-#if 0
-VOID Wizard (VOID);
-#endif
 
 /* userenv.dll */
 BOOL WINAPI InitializeProfiles (VOID);
@@ -289,15 +287,16 @@ InstallReactOS (HINSTANCE hInstance)
   RtlFreeSid (AdminSid);
   RtlFreeSid (DomainSid);
 
-#if 0
-  Wizard ();
+#if 1
+  InstallWizard ();
 #endif
 
 #ifdef VMWINST
   RunVMWInstall();
 #endif
   DialogBox(
-     GetModuleHandle(TEXT("syssetup.dll")),
+//     GetModuleHandle(TEXT("syssetup.dll")),
+     hDllInstance,
      MAKEINTRESOURCE(IDD_RESTART),
      NULL,
      RestartDlgProc);

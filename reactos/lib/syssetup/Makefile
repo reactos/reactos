@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2004/03/21 14:37:18 navaraf Exp $
+# $Id: Makefile,v 1.7 2004/04/16 13:37:18 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -17,7 +17,7 @@ TARGET_RCFLAGS += -D__USE_W32API -D_WIN32_IE=0x0500
  
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_OBJECTS = dllmain.o install.o logfile.o
+TARGET_OBJECTS = dllmain.o install.o logfile.o wizard.o
 # wizard.o
 
 include $(PATH_TO_TOP)/rules.mak

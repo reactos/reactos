@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004 Filip Navara
+ * Copyright (C) 2004 Eric Kohl
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,27 +16,19 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef RESOURCE_H
-#define RESOURCE_H
+typedef struct _SETUPDATA
+{
+  TCHAR OwnerName[51];
+  TCHAR OwnerOrganization[51];
+  TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];	/* max. 63 characters */
+  TCHAR AdminPassword[15];				/* max. 14 characters */
 
-#define IDC_STATIC			-1
-
-#define IDD_WELCOMEPAGE			1000
-
-#define IDD_OWNERPAGE			1001
-#define IDC_OWNERNAME			1002
-#define IDC_OWNERORGANIZATION		1003
-
-#define IDD_COMPUTERPAGE		1004
-#define IDC_COMPUTERNAME		1005
-#define IDC_ADMINPASSWORD1		1006
-#define IDC_ADMINPASSWORD2		1007
+} SETUPDATA, *PSETUPDATA;
 
 
-#define IDD_FINISHPAGE			1050
+extern HINSTANCE hDllInstance;
 
+/* wizard.c */
+VOID InstallWizard (VOID);
 
-#define IDD_RESTART			2000
-#define IDC_RESTART_PROGRESS		2001
-
-#endif /* RESOURCE_H */
+/* EOF */

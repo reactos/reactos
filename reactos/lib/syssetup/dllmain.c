@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.2 2004/03/21 14:37:19 navaraf Exp $
+/* $Id: dllmain.c,v 1.3 2004/04/16 13:37:18 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -30,7 +30,13 @@
 #include <windows.h>
 #include <commctrl.h>
 
+#include "globals.h"
+
+
 /* GLOBALS *******************************************************************/
+
+HINSTANCE hDllInstance;
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -39,8 +45,11 @@ DllMain (HINSTANCE hInstance,
 	 DWORD dwReason,
 	 LPVOID lpReserved)
 {
-   if (dwReason == DLL_PROCESS_ATTACH)
-      InitCommonControls();
+  if (dwReason == DLL_PROCESS_ATTACH)
+  {
+    InitCommonControls();
+    hDllInstance = hInstance;
+  }
 
    return TRUE;
 }
