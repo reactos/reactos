@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.33 2003/12/22 15:30:21 navaraf Exp $
+/* $Id: draw.c,v 1.34 2003/12/22 19:40:29 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -1073,7 +1073,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
         Line2[7].x = Line2[8].x = Line2[1].x - edge;
         Line2[0].x = Line2[9].x = Line2[3].x = Line2[4].x = Line2[1].x - move;
         Line2[5].x = Line2[6].x = Line2[0].x + edge;
-        Line2[0].y = Line2[1].y = Line1[9].y;
+        Line2[0].y = Line2[1].y = Line1[9].y + 93*SmallDiam/750;
         Line2[4].y = Line2[5].y = Line2[8].y = Line2[9].y = Line2[0].y + 93*SmallDiam/750;
         Line2[2].y = Line2[3].y = Line2[0].y + 327*SmallDiam/750;
         Line2[6].y = Line2[7].y = Line2[2].y - edge;
