@@ -25,10 +25,10 @@ New memory layout:
 0000:1000 - 0000:6FFF: Real mode stack area
 0000:7000 - 0000:7FFF: Unused
 0000:8000 - xxxx:xxxx: FreeLoader program & data area
-xxxx:xxxx - 8000:FFFF: Random memory allocation heap
-9000:0000 - 9000:7FFF: Disk read buffer for BIOS Int 13h
-9000:8000 - 9000:8FFF: Screen save buffer passed in from boot sector
-9000:9000 - 9000:FFFF: Protected mode stack area
+xxxx:xxxx - 7000:7FFF: Random memory allocation heap
+7000:8000 - 7000:FFFF: Protected mode stack area
+8000:0000 - 8000:FFFF: File system read buffer
+9000:0000 - 9000:FFFF: Disk read buffer for BIOS Int 13h
 A000:0000 - FFFF:FFFF: reserved
 
 

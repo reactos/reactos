@@ -57,7 +57,7 @@ VOID BootMain(VOID)
 	DebugInit();
 #endif
 
-	InitMemoryManager( (PVOID) 0x20000 /* BaseAddress */, 0x70000 /* Length */);
+	InitMemoryManager( (PVOID) 0x20000 /* BaseAddress */, 0x58000 /* Length */);
 
 	if (!ParseIniFile())
 	{

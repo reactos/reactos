@@ -39,8 +39,11 @@
 #define	NR_TASKS	128		/* Space reserved in the GDT for TSS descriptors */
 
 #define STACK16ADDR	0x7000	/* The 16-bit stack top will be at 0000:7000 */
-#define STACK32ADDR	0xA0000	/* The 32-bit stack top will be at 9000:FFFF, or 0x9FFFF */
+#define STACK32ADDR	0x80000	/* The 32-bit stack top will be at 7000:FFFF, or 0x7FFFF */
 
+#define MAXLOWMEMADDR	0x78000	/* The highest usuable low memory address for our memory allocator */
+
+#define FILESYSBUFFER	0x80000	/* Buffer to store file system data (e.g. cluster buffer for FAT) */
 #define DISKREADBUFFER	0x90000	/* Buffer to store data read in from the disk via the BIOS */
 
 /* Makes "x" a global variable or label */
