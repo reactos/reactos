@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib24bpp.c,v 1.23 2004/04/07 15:37:50 weiden Exp $ */
+/* $Id: dib24bpp.c,v 1.24 2004/04/09 22:00:38 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -30,7 +30,7 @@
 #include "dib.h"
 
 VOID
-DIB_24BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
+DIB_24BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
 {
   PBYTE addr = SurfObj->pvScan0 + (y * SurfObj->lDelta) + (x << 1) + x;
   *(PUSHORT)(addr) = c & 0xFFFF;
@@ -38,14 +38,14 @@ DIB_24BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
 }
 
 ULONG
-DIB_24BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
+DIB_24BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
 {
   PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x << 1) + x;
   return *(PUSHORT)(addr) + (*(addr + 2) << 16);
 }
 
 VOID
-DIB_24BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
+DIB_24BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x1 << 1) + x1;
   LONG cx = x1;
@@ -61,7 +61,7 @@ DIB_24BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 }
 
 VOID
-DIB_24BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
+DIB_24BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
   PBYTE addr = SurfObj->pvScan0 + y1 * SurfObj->lDelta + (x << 1) + x;
   LONG lDelta = SurfObj->lDelta;
@@ -250,7 +250,7 @@ BOOLEAN
 DIB_24BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		 SURFGDI *DestGDI,  SURFGDI *SourceGDI,
 		 PRECTL  DestRect,  POINTL  *SourcePoint,
-		 PBRUSHOBJ Brush, PPOINTL BrushOrigin,
+		 BRUSHOBJ *Brush,   POINTL BrushOrigin,
 		 XLATEOBJ *ColorTranslation, ULONG Rop4)
 {
    ULONG X, Y;
@@ -262,7 +262,7 @@ DIB_24BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
    /* Pattern brushes */
    PGDIBRUSHOBJ GdiBrush;
    HBITMAP PatternSurface = NULL;
-   PSURFOBJ PatternObj;
+   SURFOBJ *PatternObj;
    ULONG PatternWidth, PatternHeight;
 
    if (Rop4 == SRCCOPY)
@@ -295,7 +295,7 @@ DIB_24BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
          PatternSurface = BitmapToSurf(PatternBitmap, NULL);
          BITMAPOBJ_UnlockBitmap(GdiBrush->hbmPattern);
 
-         PatternObj = (PSURFOBJ)AccessUserObject((ULONG)PatternSurface);
+         PatternObj = (SURFOBJ*)AccessUserObject((ULONG)PatternSurface);
          PatternWidth = PatternObj->sizlBitmap.cx;
          PatternHeight = PatternObj->sizlBitmap.cy;
          
@@ -346,7 +346,7 @@ DIB_24BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
    }
 
    if (PatternSurface != NULL)
-      EngDeleteSurface(PatternSurface);
+      EngDeleteSurface((HSURF)PatternSurface);
   
    return TRUE;
 }
@@ -354,7 +354,7 @@ DIB_24BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 BOOLEAN DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             SURFGDI *DestGDI, SURFGDI *SourceGDI,
                             RECTL* DestRect, RECTL *SourceRect,
-                            POINTL* MaskOrigin, POINTL* BrushOrigin,
+                            POINTL* MaskOrigin, POINTL BrushOrigin,
 			                XLATEOBJ *ColorTranslation, ULONG Mode)
 {
   DbgPrint("DIB_24BPP_StretchBlt: Source BPP: %u\n", SourceGDI->BitsPerPixel);

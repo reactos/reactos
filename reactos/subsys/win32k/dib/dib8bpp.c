@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib8bpp.c,v 1.21 2004/04/07 15:37:50 weiden Exp $ */
+/* $Id: dib8bpp.c,v 1.22 2004/04/09 22:00:38 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -30,7 +30,7 @@
 #include "dib.h"
 
 VOID
-DIB_8BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
+DIB_8BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta + x;
 
@@ -38,7 +38,7 @@ DIB_8BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
 }
 
 ULONG
-DIB_8BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
+DIB_8BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
 {
   PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta + x;
 
@@ -46,7 +46,7 @@ DIB_8BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
 }
 
 VOID
-DIB_8BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
+DIB_8BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;
   PBYTE addr = byteaddr + x1;
@@ -60,7 +60,7 @@ DIB_8BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 }
 
 VOID
-DIB_8BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
+DIB_8BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvScan0 + y1 * SurfObj->lDelta;
   PBYTE addr = byteaddr + x;
@@ -273,7 +273,7 @@ BOOLEAN
 DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		 SURFGDI *DestGDI,  SURFGDI *SourceGDI,
 		 PRECTL  DestRect,  POINTL  *SourcePoint,
-		 PBRUSHOBJ Brush, PPOINTL BrushOrigin,
+		 BRUSHOBJ *Brush,   POINTL BrushOrigin,
 		 XLATEOBJ *ColorTranslation, ULONG Rop4)
 {
    LONG i, j, k, sx, sy;
@@ -285,7 +285,7 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
    /* Pattern brushes */
    PGDIBRUSHOBJ GdiBrush;
    HBITMAP PatternSurface = NULL;
-   PSURFOBJ PatternObj;
+   SURFOBJ *PatternObj;
    ULONG PatternWidth, PatternHeight;
 
    if (Rop4 == SRCCOPY)
@@ -318,7 +318,7 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
          PatternSurface = BitmapToSurf(PatternBitmap, NULL);
          BITMAPOBJ_UnlockBitmap(GdiBrush->hbmPattern);
 
-         PatternObj = (PSURFOBJ)AccessUserObject((ULONG)PatternSurface);
+         PatternObj = (SURFOBJ*)AccessUserObject((ULONG)PatternSurface);
          PatternWidth = PatternObj->sizlBitmap.cx;
          PatternHeight = PatternObj->sizlBitmap.cy;
          
@@ -390,7 +390,7 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
    }
 
    if (PatternSurface != NULL)
-      EngDeleteSurface(PatternSurface);
+      EngDeleteSurface((HSURF)PatternSurface);
 
    return TRUE;
 }
@@ -510,7 +510,7 @@ void ScaleRectAvg8(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
 BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             SURFGDI *DestGDI, SURFGDI *SourceGDI,
                             RECTL* DestRect, RECTL *SourceRect,
-                            POINTL* MaskOrigin, POINTL* BrushOrigin,
+                            POINTL* MaskOrigin, POINTL BrushOrigin,
 			                XLATEOBJ *ColorTranslation, ULONG Mode)
 {
   BYTE *SourceLine, *DestLine;

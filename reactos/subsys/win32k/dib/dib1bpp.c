@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib1bpp.c,v 1.23 2004/04/08 15:45:17 navaraf Exp $ */
+/* $Id: dib1bpp.c,v 1.24 2004/04/09 22:00:38 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -31,7 +31,7 @@
 #include "dib.h"
 
 VOID
-DIB_1BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
+DIB_1BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
 {
   PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x >> 3);
 
@@ -42,7 +42,7 @@ DIB_1BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
 }
 
 ULONG
-DIB_1BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
+DIB_1BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
 {
   PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x >> 3);
 
@@ -50,7 +50,7 @@ DIB_1BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
 }
 
 VOID
-DIB_1BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
+DIB_1BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   while(x1 < x2) {
     DIB_1BPP_PutPixel(SurfObj, x1, y, c);
@@ -59,7 +59,7 @@ DIB_1BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 }
 
 VOID
-DIB_1BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
+DIB_1BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
   while(y1 < y2) {
     DIB_1BPP_PutPixel(SurfObj, x, y1, c);
@@ -350,7 +350,7 @@ DIB_1BPP_BitBlt(
 	SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 	SURFGDI *DestGDI,  SURFGDI *SourceGDI,
 	PRECTL  DestRect,  POINTL  *SourcePoint,
-	PBRUSHOBJ Brush, PPOINTL BrushOrigin,
+	BRUSHOBJ *Brush,   POINTL BrushOrigin,
 	XLATEOBJ *ColorTranslation, ULONG Rop4)
 {
    ULONG X, Y, SourceX, SourceY, k;
@@ -363,7 +363,7 @@ DIB_1BPP_BitBlt(
    /* Pattern brushes */
    PGDIBRUSHOBJ GdiBrush;
    HBITMAP PatternSurface = NULL;
-   PSURFOBJ PatternObj;
+   SURFOBJ *PatternObj;
    ULONG PatternWidth, PatternHeight;
 
    if (Rop4 == SRCCOPY)
@@ -396,7 +396,7 @@ DIB_1BPP_BitBlt(
          PatternSurface = BitmapToSurf(PatternBitmap, NULL);
          BITMAPOBJ_UnlockBitmap(GdiBrush->hbmPattern);
 
-         PatternObj = (PSURFOBJ)AccessUserObject((ULONG)PatternSurface);
+         PatternObj = (SURFOBJ*)AccessUserObject((ULONG)PatternSurface);
          PatternWidth = PatternObj->sizlBitmap.cx;
          PatternHeight = PatternObj->sizlBitmap.cy;
          
@@ -515,7 +515,7 @@ DIB_1BPP_BitBlt(
    }
 
    if (PatternSurface != NULL)
-      EngDeleteSurface(PatternSurface);
+      EngDeleteSurface((HSURF)PatternSurface);
   
    return TRUE;
 }
@@ -525,7 +525,7 @@ DIB_1BPP_StretchBlt (
 	SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 	SURFGDI *DestGDI, SURFGDI *SourceGDI,
 	RECTL* DestRect, RECTL *SourceRect,
-	POINTL* MaskOrigin, POINTL* BrushOrigin,
+	POINTL* MaskOrigin, POINTL BrushOrigin,
 	XLATEOBJ *ColorTranslation, ULONG Mode)
 {
 	DbgPrint("DIB_1BPP_StretchBlt: Source BPP: %u\n", SourceGDI->BitsPerPixel);
