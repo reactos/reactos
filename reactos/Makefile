@@ -30,12 +30,15 @@ BUS = acpi isapnp pci
 # vfatlib
 LIB_FSLIB = vfatlib
 
-# User and kernel mode libraries
+# Static libraries
+LIB_STATIC = string rosrtl epsapi zlib
+
+# User mode libraries
 # advapi32 crtdll fmifs gdi32 kernel32 libpcap packet msafd msvcrt ntdll ole32
 # oleaut32 epsapi psapi rpcrt4 secur32 shell32 user32 version ws2help ws2_32 wsock32 wshirda
-DLLS = rosrtl advapi32 crtdll fmifs freetype gdi32 kernel32 packet msafd msvcrt ntdll \
-       epsapi psapi secur32 syssetup user32 version winedbgc winspool ws2help ws2_32 \
-       wsock32 wshirda zlib
+DLLS = advapi32 crtdll fmifs freetype gdi32 kernel32 packet msafd msvcrt ntdll \
+       psapi secur32 syssetup user32 version winedbgc winspool ws2help ws2_32 \
+       wsock32 wshirda
 
 SUBSYS = smss win32k csrss ntvdm
 
@@ -102,23 +105,23 @@ endif
 KERNEL_DRIVERS = $(DRIVERS_LIB) $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) \
 	$(NET_DRIVERS) $(NET_DEVICE_DRIVERS) $(STORAGE_DRIVERS)
 
-all: tools dk implib $(COMPONENTS) $(HALS) $(BUS) $(LIB_FSLIB) $(DLLS) $(SUBSYS) \
+all: tools dk implib $(LIB_STATIC) $(COMPONENTS) $(HALS) $(BUS) $(LIB_FSLIB) $(DLLS) $(SUBSYS) \
      $(LOADERS) $(KERNEL_DRIVERS) $(SYS_APPS) $(SYS_SVC) \
      $(APPS) $(EXT_MODULES)
 
 #config: $(TOOLS:%=%_config)
 
-depends: $(LIB_FSLIB:%=%_depends) $(DLLS:%=%_depends) $(SUBSYS:%=%_depends) $(SYS_SVC:%=%_depends) \
+depends: $(LIB_STATIC:%=%_depends) $(LIB_FSLIB:%=%_depends) $(DLLS:%=%_depends) $(SUBSYS:%=%_depends) $(SYS_SVC:%=%_depends) \
          $(EXT_MODULES:%=%_depends) $(POSIX_LIBS:%=%_depends)
 
 implib: $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
-        $(LIB_FSLIB:%=%_implib) $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
+        $(LIB_STATIC:%=%_implib) $(LIB_FSLIB:%=%_implib) $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
         $(KERNEL_DRIVERS:%=%_implib) $(SUBSYS:%=%_implib) \
         $(SYS_APPS:%=%_implib) $(SYS_SVC:%=%_implib) \
         $(APPS:%=%_implib) $(EXT_MODULES:%=%_implib)
 
 clean: tools dk_clean $(HALS:%=%_clean) \
-       $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(LIB_FSLIB:%=%_clean) $(DLLS:%=%_clean) \
+       $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(LIB_STATIC:%=%_clean) $(LIB_FSLIB:%=%_clean) $(DLLS:%=%_clean) \
        $(LOADERS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) $(SUBSYS:%=%_clean) \
        $(SYS_APPS:%=%_clean) $(SYS_SVC:%=%_clean) \
        $(NET_APPS:%=%_clean) \
@@ -130,13 +133,13 @@ clean_after:
 
 install: tools install_dirs install_before \
          $(COMPONENTS:%=%_install) $(HALS:%=%_install) $(BUS:%=%_install) \
-         $(LIB_FSLIB:%=%_install) $(DLLS:%=%_install) $(LOADERS:%=%_install) \
+         $(LIB_STATIC:%=%_install) $(LIB_FSLIB:%=%_install) $(DLLS:%=%_install) $(LOADERS:%=%_install) \
          $(KERNEL_DRIVERS:%=%_install) $(SUBSYS:%=%_install) \
          $(SYS_APPS:%=%_install) $(SYS_SVC:%=%_install) \
          $(APPS:%=%_install) $(EXT_MODULES:%=%_install)
 
 dist: $(TOOLS_PATH)/rcopy$(EXE_POSTFIX) dist_clean dist_dirs \
-      $(HALS:%=%_dist) $(COMPONENTS:%=%_dist) $(BUS:%=%_dist) $(LIB_FSLIB:%=%_dist) \
+      $(HALS:%=%_dist) $(COMPONENTS:%=%_dist) $(BUS:%=%_dist) $(LIB_STATIC:%=%_dist) $(LIB_FSLIB:%=%_dist) \
 	  $(DLLS:%=%_dist) $(LOADERS:%=%_dist) $(KERNEL_DRIVERS:%=%_dist) $(SUBSYS:%=%_dist) \
       $(SYS_APPS:%=%_dist) $(SYS_SVC:%=%_dist) \
       $(NET_APPS:%=%_dist) \
@@ -151,7 +154,7 @@ bootcd_directory_layout:
 	$(RMKDIR) $(BOOTCD_DIR)/loader
 
 bootcd_bootstrap_files: $(COMPONENTS:%=%_bootcd) $(HALS:%=%_bootcd) $(BUS:%=%_bootcd) \
-	$(LIB_FSLIB:%=%_bootcd) $(DLLS:%=%_bootcd) $(KERNEL_DRIVERS:%=%_bootcd) \
+	$(LIB_STATIC:%=%_bootcd) $(LIB_FSLIB:%=%_bootcd) $(DLLS:%=%_bootcd) $(KERNEL_DRIVERS:%=%_bootcd) \
 	$(SUBSYS:%=%_bootcd) $(SYS_APPS:%=%_bootcd)
 
 bootcd: all bootcd_directory_layout bootcd_bootstrap_files
@@ -656,6 +659,34 @@ $(LIB_FSLIB:%=%_bootcd): %_bootcd:
 
 .PHONY: $(LIB_FSLIB) $(LIB_FSLIB:%=%_depends) $(LIB_FSLIB:%=%_implib) $(LIB_FSLIB:%=%_clean) \
 $(LIB_FSLIB:%=%_install) $(LIB_FSLIB:%=%_dist) $(LIB_FSLIB:%=%_bootcd)
+
+#
+# Static libraries
+#
+
+$(LIB_STATIC): %:
+	$(MAKE) -C lib/$*
+
+$(LIB_STATIC:%=%_depends): %_depends:
+	$(MAKE) -C lib/string depends
+
+$(LIB_STATIC:%=%_implib): %_implib:
+	$(MAKE) -C lib/$* implib
+
+$(LIB_STATIC:%=%_clean): %_clean:
+	$(MAKE) -C lib/$* clean
+
+$(LIB_STATIC:%=%_install): %_install:
+	$(MAKE) -C lib/$* install
+
+$(LIB_STATIC:%=%_dist): %_dist:
+	$(MAKE) -C lib/$* dist
+
+$(LIB_STATIC:%=%_bootcd): %_bootcd:
+	$(MAKE) -C lib/$* bootcd
+
+.PHONY: $(LIB_STATIC) $(LIB_STATIC:%=%_depends) $(LIB_STATIC:%=%_implib) $(LIB_STATIC:%=%_clean) \
+	$(LIB_STATIC:%=%_install) $(LIB_STATIC:%=%_dist) $(LIB_STATIC:%=%_bootcd)
 
 #
 # Required DLLs
