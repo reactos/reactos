@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.h,v 1.2 2004/03/06 01:22:02 navaraf Exp $
+ * $Id: videoprt.h,v 1.3 2004/03/06 22:25:22 dwelch Exp $
  */
 
 #ifndef VIDEOPRT_H
@@ -28,7 +28,7 @@
 #include <ddk/video.h>
 #include <ddk/ntddvdeo.h>
 #include "internal/ps.h"
-#define NDEBUG
+/*#define NDEBUG*/
 #include <debug.h>
 
 /*
@@ -71,6 +71,7 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
    INTERFACE_TYPE AdapterInterfaceType;
    ULONG SystemIoBusNumber;
    UNICODE_STRING RegistryPath;
+   KDPC DpcObject;
    UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
 } VIDEO_PORT_DEVICE_EXTENSION, *PVIDEO_PORT_DEVICE_EXTENSION;
 

@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.7 2004/03/06 08:39:06 jimtabor Exp $
+ * $Id: videoprt.c,v 1.8 2004/03/06 22:25:22 dwelch Exp $
  */
 
 #include "videoprt.h"
@@ -26,6 +26,15 @@
 BOOLEAN CsrssInitialized = FALSE;
 PEPROCESS Csrss = NULL;
 PVIDEO_PORT_DEVICE_EXTENSION ResetDisplayParametersDeviceExtension = NULL;
+static PVOID RomImageBuffer = NULL;
+
+VOID STDCALL STATIC
+VideoPortDeferredRoutine(
+   IN PKDPC Dpc,
+   IN PVOID DeferredContext,
+   IN PVOID SystemArgument1,
+   IN PVOID SystemArgument2
+   );
 
 //  -------------------------------------------------------  Public Interface
 
@@ -554,6 +563,8 @@ VideoPortInitialize(IN PVOID  Context1,
       DeviceExtension->HwResetHw = HwInitializationData->HwResetHw;
       DeviceExtension->AdapterInterfaceType = HwInitializationData->AdapterInterfaceType;
       DeviceExtension->SystemIoBusNumber = 0;
+      KeInitializeDpc(&DeviceExtension->DpcObject, VideoPortDeferredRoutine,
+		      (PVOID)DeviceExtension);
       MaxLen = (wcslen(RegistryPath->Buffer) + 10) * sizeof(WCHAR);
       DeviceExtension->RegistryPath.MaximumLength = MaxLen;
       DeviceExtension->RegistryPath.Buffer = ExAllocatePoolWithTag(PagedPool,
@@ -584,9 +595,12 @@ VideoPortInitialize(IN PVOID  Context1,
 	  ConfigInfo.SystemIoBusNumber = DeviceExtension->SystemIoBusNumber;
 	  ConfigInfo.InterruptMode = (PCIBus == DeviceExtension->AdapterInterfaceType) ?
 	                              LevelSensitive : Latched;
+	  ConfigInfo.DriverRegistryPath = RegistryPath->Buffer;
 
 	  /*  Call HwFindAdapter entry point  */
 	  /* FIXME: Need to figure out what string to pass as param 3  */
+	  DPRINT("HwFindAdapter %X Context2 %X\n", 
+		 HwInitializationData->HwFindAdapter, Context2);
 	  Status = HwInitializationData->HwFindAdapter(&DeviceExtension->MiniPortDeviceExtension,
 	                                               Context2,
 	                                               NULL,
@@ -1376,3 +1390,285 @@ VideoPortReleaseBuffer( IN PVOID HwDeviceExtension,
 }         
 
 
+VP_STATUS
+STDCALL
+VideoPortEnumerateChildren ( IN PVOID HwDeviceExtension,
+			     IN PVOID Reserved )
+{
+  DPRINT1("VideoPortEnumerateChildren(): Unimplemented.\n");
+  return STATUS_SUCCESS;
+}
+
+PVOID
+STDCALL
+VideoPortGetRomImage ( IN PVOID HwDeviceExtension,
+		       IN PVOID Unused1,
+		       IN ULONG Unused2,
+		       IN ULONG Length )
+{
+  DPRINT("VideoPortGetRomImage(HwDeviceExtension 0x%X Length 0x%X)\n",
+	 HwDeviceExtension, Length);
+
+  /* If the length is zero then free the existing buffer. */
+  if (Length == 0)
+    {
+      if (RomImageBuffer != NULL)
+	{
+	  ExFreePool(RomImageBuffer);
+	  RomImageBuffer = NULL;
+	}
+      return NULL;
+    }
+  else
+    {
+      PEPROCESS CallingProcess, PrevAttachedProcess;
+
+      /*
+	The DDK says we shouldn't use the legacy C000 method but get the
+	rom base address from the corresponding pci or acpi register but
+	lets ignore that and use C000 anyway. CSRSS has already mapped the
+	bios area into memory so we'll copy from there.
+      */
+      CallingProcess = PsGetCurrentProcess();
+      if (CallingProcess != Csrss)
+	{
+	  if (NULL != PsGetCurrentThread()->OldProcess)
+	    {
+	      PrevAttachedProcess = CallingProcess;
+	      KeDetachProcess();
+	    }
+	  else
+	    {
+	      PrevAttachedProcess = NULL;
+	    }
+	  KeAttachProcess(Csrss);
+	}
+
+      /*
+	Copy the bios.
+      */
+      Length = min(Length, 0x10000);
+      if (RomImageBuffer != NULL)
+	{
+	  ExFreePool(RomImageBuffer);
+	}
+      RomImageBuffer = ExAllocatePool(PagedPool, Length);
+      if (RomImageBuffer == NULL)
+	{
+	  return(NULL);
+	}
+      RtlCopyMemory(RomImageBuffer, (PUCHAR)0xC0000, Length);
+
+      /*
+	Detach from csrss if we attached.
+      */
+      if (CallingProcess != Csrss)
+	{
+	  KeDetachProcess();
+	  if (NULL != PrevAttachedProcess)
+	    {
+	      KeAttachProcess(PrevAttachedProcess);
+	    }
+	}
+
+      return(RomImageBuffer);
+    }
+}
+
+VOID
+STDCALL
+STATIC
+VideoPortDeferredRoutine ( IN PKDPC Dpc,
+			   IN PVOID DeferredContext,
+			   IN PVOID SystemArgument1,
+			   IN PVOID SystemArgument2 )
+{
+  PVOID HwDeviceExtension = 
+    ((PVIDEO_PORT_DEVICE_EXTENSION)DeferredContext)->MiniPortDeviceExtension;
+  ((PMINIPORT_DPC_ROUTINE)SystemArgument1)(HwDeviceExtension, SystemArgument2);
+}
+
+BOOLEAN
+STDCALL
+VideoPortQueueDpc ( IN PVOID HwDeviceExtension,
+		    IN PMINIPORT_DPC_ROUTINE CallbackRoutine,
+		    IN PVOID Context )
+{
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      VIDEO_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+  return KeInsertQueueDpc(&DeviceExtension->DpcObject, 
+			  (PVOID)CallbackRoutine,
+			  (PVOID)Context);
+}
+
+PVOID
+STDCALL
+VideoPortGetAssociatedDeviceExtension ( IN PVOID DeviceObject )
+{
+  DPRINT1("VideoPortGetAssociatedDeviceExtension(): Unimplemented.\n");
+  return(NULL);
+}
+
+PVOID
+STDCALL
+VideoPortAllocateCommonBuffer ( IN PVOID HwDeviceExtension,
+				IN PVP_DMA_ADAPTER VpDmaAdapter,
+				IN ULONG DesiredLength,
+				OUT PPHYSICAL_ADDRESS LogicalAddress,
+				IN BOOLEAN CacheEnabled,
+				PVOID Reserved )
+{
+  DPRINT1("VideoPortAllocateCommonBuffer(): Unimplemented.\n");
+  return(NULL);
+}
+
+VOID
+STDCALL
+VideoPortReleaseCommonBuffer ( IN PVOID HwDeviceExtension,
+			       IN PVP_DMA_ADAPTER VpDmaAdapter,
+			       IN ULONG Length,
+			       IN PHYSICAL_ADDRESS LogicalAddress,
+			       IN PVOID VirtualAddress,
+			       IN BOOLEAN CacheEnabled )
+{
+  DPRINT1("VideoPortReleaseCommonBuffer(): Unimplemented.\n");
+}
+
+VP_STATUS
+STDCALL
+VideoPortCreateSecondaryDisplay ( IN PVOID HwDeviceExtension,
+				  IN OUT PVOID *SecondaryDeviceExtension,
+				  IN ULONG Flag )
+{
+  DPRINT1("VideoPortCreateSecondaryDisplay(): Unimplemented.\n");
+  return STATUS_UNSUCCESSFUL;
+}
+
+PVP_DMA_ADAPTER
+STDCALL
+VideoPortGetDmaAdapter ( IN PVOID HwDeviceExtension,
+			 IN PVP_DEVICE_DESCRIPTION VpDeviceExtension )
+{
+  DPRINT1("VideoPortGetDmaAdapter(): Unimplemented.\n");
+  return NULL;
+}
+
+VP_STATUS
+STDCALL
+VideoPortGetVersion ( IN PVOID HwDeviceExtension,
+		      IN OUT PVPOSVERSIONINFO VpOsVersionInfo )
+{
+  DPRINT1("VideoPortGetVersion(): Unimplemented.\n");
+  return STATUS_UNSUCCESSFUL;
+}
+
+PVOID
+STDCALL
+VideoPortLockBuffer ( IN PVOID HwDeviceExtension,
+		      IN PVOID BaseAddress,
+		      IN ULONG Length,
+		      IN VP_LOCK_OPERATION Operation )
+{
+  DPRINT1("VideoPortLockBuffer(): Unimplemented.\n");
+  return NULL;
+}
+
+VOID
+STDCALL
+VideoPortUnlockBuffer ( IN PVOID HwDeviceExtension,
+			IN PVOID Mdl )
+{
+  DPRINT1("VideoPortUnlockBuffer(): Unimplemented.\n");
+}
+
+VP_STATUS
+STDCALL
+VideoPortCreateEvent ( IN PVOID HwDeviceExtension,
+		       IN ULONG EventFlag,
+		       IN PVOID Unused,
+		       OUT PEVENT *Event)
+{
+  EVENT_TYPE Type;
+  (*Event) = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), 
+				   TAG_VIDEO_PORT);
+  if ((*Event) == NULL)
+    {
+      return STATUS_NO_MEMORY;
+    }
+  if (EventFlag & NOTIFICATION_EVENT)
+    {
+      Type = NotificationEvent;
+    }
+  else
+    {
+      Type = SynchronizationEvent;
+    }
+  KeInitializeEvent((PKEVENT)*Event, Type, EventFlag & INITIAL_EVENT_SIGNALED);
+  return STATUS_SUCCESS;
+}
+
+VP_STATUS
+STDCALL
+VideoPortDeleteEvent ( IN PVOID HwDeviceExtension,
+		       IN PEVENT Event)
+{
+  ExFreePool(Event);
+  return STATUS_SUCCESS;
+}
+
+LONG
+STDCALL
+VideoPortSetEvent ( IN PVOID HwDeviceExtension,
+		    IN PEVENT Event )
+{
+  return KeSetEvent((PKEVENT)Event, IO_NO_INCREMENT, FALSE);
+}
+
+VOID
+STDCALL
+VideoPortClearEvent ( IN PVOID HwDeviceExtension,
+		      IN PEVENT Event )
+{
+  KeClearEvent((PKEVENT)Event);
+}
+
+VP_STATUS
+STDCALL
+VideoPortWaitForSingleObject ( IN PVOID HwDeviceExtension,
+			       IN PVOID Object,
+			       IN PLARGE_INTEGER Timeout OPTIONAL )
+{
+  return KeWaitForSingleObject(Object,
+			       Executive,
+			       KernelMode,
+			       FALSE,
+			       Timeout);
+}
+
+BOOLEAN
+STDCALL
+VideoPortCheckForDeviceExistence ( IN PVOID HwDeviceExtension,
+				   IN USHORT VendorId,
+				   IN USHORT DeviceId,
+				   IN UCHAR RevisionId,
+				   IN USHORT SubVendorId,
+				   IN USHORT SubSystemId,
+				   IN ULONG Flags )
+{
+  DPRINT1("VideoPortCheckForDeviceExistence(): Unimplemented.\n");
+  return TRUE;
+}
+
+VP_STATUS
+STDCALL
+VideoPortRegisterBugcheckCallback ( IN PVOID HwDeviceExtension,
+				    IN ULONG BugcheckCode,
+				    IN PVOID Callback,
+				    IN ULONG BugcheckDataSize )
+{
+  DPRINT1("VideoPortRegisterBugcheckCallback(): Unimplemented.\n");
+  return STATUS_UNSUCCESSFUL;
+}
