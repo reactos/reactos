@@ -1276,13 +1276,10 @@ NtSetValueKey(IN HANDLE KeyHandle,
       DPRINT("Allocate new value cell\n");
       Status = CmiAddValueToKey(RegistryHive,
 				KeyCell,
+				KeyObject->KeyCellOffset,
 				ValueName,
 				&ValueCell,
 				&ValueCellOffset);
-      if (NT_SUCCESS(Status))
-	{
-	  CmiMarkBlockDirty(RegistryHive, ValueCellOffset);
-	}
     }
 
   if (!NT_SUCCESS(Status))
