@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.35 2003/12/23 21:18:31 navaraf Exp $
+/* $Id: reg.c,v 1.36 2003/12/23 22:00:54 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2123,7 +2123,7 @@ RegQueryValueExW (HKEY hKey,
 			lpValueName);
   BufferSize = sizeof (KEY_VALUE_PARTIAL_INFORMATION) + *lpcbData;
   ValueInfo = RtlAllocateHeap (ProcessHeap,
-			       0,
+			       HEAP_ZERO_MEMORY,
 			       BufferSize);
   if (ValueInfo == NULL)
     {
