@@ -33,6 +33,7 @@
 #ifndef _GNU_H_WINDOWS32_STRUCTURES
 #define _GNU_H_WINDOWS32_STRUCTURES
 
+#include <base.h>
 #include <ntos/security.h>
 #include <ntos/time.h>
 #include <ntdll/rtl.h>
@@ -340,12 +341,10 @@ typedef struct tagPOINTFX {
   FIXED y;
 } POINTFX;
 
-/* moved to gditypes.h since I needed it there - Royce3
 typedef struct _POINTL {
   LONG x;
   LONG y;
 } POINTL, *PPOINTL;
-*/
 
 typedef struct tagPOINTS {
   SHORT x;

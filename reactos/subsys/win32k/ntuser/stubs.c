@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.14 2003/07/19 01:35:27 royce Exp $
+/* $Id: stubs.c,v 1.15 2003/07/19 04:10:30 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -9,6 +9,7 @@
  *       04-06-2001  CSH  Created
  */
 #include <ddk/ntddk.h>
+#include <windows.h>
 
 #define NDEBUG
 #include <debug.h>

@@ -11,20 +11,10 @@
 #ifndef __INCLUDE_NTOS_GDITYPES_H
 #define __INCLUDE_NTOS_GDITYPES_H
 
-#include <structs.h>
-
 #ifndef __USE_W32API
 
 #define CCHDEVICENAME	(32)
 #define CCHFORMNAME	(32)
-
-/* should be in structs.h, but structs.h includes this file and
- * we need it here - Royce3
- */
-typedef struct _POINTL {
-  LONG x;
-  LONG y;
-} POINTL, *PPOINTL;
 
 typedef struct _devicemodeA
 {
@@ -43,7 +33,11 @@ typedef struct _devicemodeA
 			short dmPaperLength;
 			short dmPaperWidth;
 		};
-		POINTL dmPosition;
+		struct
+		{
+			LONG x;
+			LONG y;
+		} dmPosition;
 	};
 	short dmScale;
 	short dmCopies;
@@ -100,7 +94,11 @@ typedef struct _devicemodeW
 			short dmPaperLength;
 			short dmPaperWidth;
 		};
-		POINTL dmPosition;
+		struct
+		{
+			LONG x;
+			LONG y;
+		} dmPosition;
 	};
 	short dmScale;
 	short dmCopies;
