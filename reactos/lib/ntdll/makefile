@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.98 2004/02/01 20:48:05 ekohl Exp $
+# $Id: makefile,v 1.99 2004/02/25 19:34:32 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -155,8 +155,7 @@ TARGET_OBJECTS = \
 	$(RTL_OBJECTS) \
 	$(STDIO_OBJECTS) \
 	$(STDLIB_OBJECTS) \
-	$(STRING_OBJECTS) \
-	stubs/stubs.o
+	$(STRING_OBJECTS)
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 DEP_EXCLUDE_FILTER = napi.%
