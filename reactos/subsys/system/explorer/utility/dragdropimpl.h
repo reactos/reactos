@@ -27,7 +27,7 @@ class EnumFormatEtcImpl : public IEnumFORMATETC
    private:
      ULONG			m_cRefCount;
      FormatArray	m_pFmtEtc;
-     int			m_iCur;
+     size_t			m_iCur;
 
    public:
      EnumFormatEtcImpl(const FormatArray& ArrFE);

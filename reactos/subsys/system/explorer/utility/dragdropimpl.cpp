@@ -379,7 +379,7 @@ STDMETHODIMP EnumFormatEtcImpl::Next( ULONG celt,LPFORMATETC lpFormatEtc, ULONG 
 
 	return (cReturn == 0) ? S_OK : S_FALSE;
 }
-   
+
 STDMETHODIMP EnumFormatEtcImpl::Skip(ULONG celt)
 {
 	if ((m_iCur + int(celt)) >= m_pFmtEtc.size())
