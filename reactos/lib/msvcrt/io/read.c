@@ -1,4 +1,5 @@
-/*
+/* $Id: read.c,v 1.6 2002/05/07 22:32:13 hbirr Exp $
+ *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/io/read.c
@@ -22,7 +23,7 @@ size_t _read(int _fd, void *_buf, size_t _nbyte)
    DWORD _rbyte = 0, nbyte = _nbyte;
    char *bufp = (char*)_buf;
    HANDLE hfile;
-   int istext;
+   int istext, error;
 
    DPRINT("_read(fd %d, buf %x, nbyte %d)\n", _fd, _buf, _nbyte);
 
@@ -37,6 +38,11 @@ size_t _read(int _fd, void *_buf, size_t _nbyte)
    if (!ReadFile(hfile, bufp, nbyte, &_rbyte, NULL))
    {
       /* failure */
+      error = GetLastError();
+      if (error == ERROR_BROKEN_PIPE)
+      {
+	 return 0;
+      }
       return -1;
    }
       
