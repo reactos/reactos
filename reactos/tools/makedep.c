@@ -598,9 +598,9 @@ static void output_dependencies(void)
     INCL_FILE *pFile;
     int i, column;
     FILE *file = NULL;
+#if 0
     char buffer[1024];
 
-#if 0
     if (Separator && ((file = fopen( OutputFileName, "r+" ))))
     {
         while (fgets( buffer, sizeof(buffer), file ))
