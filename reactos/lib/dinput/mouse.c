@@ -880,7 +880,6 @@ int count_button;
 
 if (flags != DIGDD_PEEK) 
 {
-getmousesvalue(iface);
 b[0] = ((GetKeyState(VK_LBUTTON) & 0x80) ? 0xFF : 0x00);	
 b[1] = ((GetKeyState(VK_RBUTTON) & 0x80) ? 0xFF : 0x00);	
 b[2] = ((GetKeyState(VK_MBUTTON) & 0x80) ? 0xFF : 0x00);	
@@ -899,14 +898,17 @@ GetCursorPos( &point );
 
   if (This->acquired == 0) {
 	WARN(" application tries to get data from an unacquired device !\n");
-	//return DIERR_NOTACQUIRED;
+	return DIERR_NOTACQUIRED;
 
 	// windows does not get any data if 
 	// we do not call manual to mouse Acquire
 	// this is only need if some apps calling on getdevice data direcly
 	// in windows GetdeviceData does always update first the data
 	// then return it.
-	 SysMouseAImpl_Acquire(iface);
+	// SysMouseAImpl_Acquire(iface);
+	// we are reading the mouse before we reache here. 
+	// we do not need call on SysMouseAImpl_Acquire 
+	// for now. 
 	}
 	
     
