@@ -1,4 +1,4 @@
-/* $Id: vis.h,v 1.2 2003/08/02 19:56:19 dwelch Exp $
+/* $Id: vis.h,v 1.3 2003/11/19 09:10:35 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
@@ -21,7 +21,7 @@ VIS_ComputeVisibleRegion(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
 
 VOID FASTCALL
 VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
-                        HRGN UncoveredRgn);
+                        HRGN UncoveredRgn, BOOL Redraw);
 VOID FASTCALL
 VIS_RepaintDesktop(HWND Desktop, HRGN RepaintRgn);
 

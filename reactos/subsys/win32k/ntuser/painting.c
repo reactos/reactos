@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.34 2003/11/18 20:49:39 navaraf Exp $
+ *  $Id: painting.c,v 1.35 2003/11/19 09:10:36 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -123,48 +123,81 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
 
    if (Flags & (RDW_ERASENOW | RDW_UPDATENOW))
    {
-      if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
+      if (IntIsDesktopWindow(Window))
       {
-         NtUserSendMessage(hWnd, WM_NCPAINT, (WPARAM)IntGetNCUpdateRegion(Window), 0);
-      }
+         /*
+          * Repainting of desktop window
+          */
 
-      if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
-      {
+#ifndef DESKTOP_IN_CSRSS
+         VIS_RepaintDesktop(hWnd, Window->UpdateRegion);
+#else
+         if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
+         {
+            MsqDecPaintCountQueue(Window->MessageQueue);
+            Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
+         }
+         if (Window->UpdateRegion ||
+             Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
+         {
+            MsqDecPaintCountQueue(Window->MessageQueue);
+            Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
+         }
          if (Window->UpdateRegion)
          {
             hDC = NtUserGetDCEx(hWnd, 0, DCX_CACHE | DCX_USESTYLE |
                DCX_INTERSECTUPDATE);
             if (hDC != NULL)
             {
-#ifndef DESKTOP_IN_CSRSS
-               if (IntIsDesktopWindow(Window))
-               {
-                  VIS_RepaintDesktop(Window->Self, Window->UpdateRegion);
-                  NtGdiDeleteObject(Window->UpdateRegion);
-                  Window->UpdateRegion = 0;
-               }
-               else
+               NtUserSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)hDC, 0);
+               NtUserReleaseDC(hWnd, hDC);
+               DeleteObject(WindowObject->UpdateRegion);
+               WindowObject->UpdateRegion = NULL;
+            }
+         }
 #endif
+      }
+      else
+      {
+         /*
+          * Repainting of non-desktop window
+          */
+
+         if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
+         {
+            NtUserSendMessage(hWnd, WM_NCPAINT, (WPARAM)IntGetNCUpdateRegion(Window), 0);
+         }
+
+         if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
+         {
+            if (Window->UpdateRegion)
+            {
+               hDC = NtUserGetDCEx(hWnd, 0, DCX_CACHE | DCX_USESTYLE |
+                  DCX_INTERSECTUPDATE);
+               if (hDC != NULL)
                {
                   if (NtUserSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)hDC, 0))
                      Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBKGND;
+                  NtUserReleaseDC(hWnd, hDC);
                }
-               NtUserReleaseDC(hWnd, hDC);
             }
          }
-      }
 
-      if (Flags & RDW_UPDATENOW)
-      {
-         if (Window->UpdateRegion != NULL ||
-             Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
+         if (Flags & RDW_UPDATENOW)
          {
-#ifndef DESKTOP_IN_CSRSS
-            if (IntIsDesktopWindow(Window))
-               VIS_RepaintDesktop(Window->Self, Window->UpdateRegion);
-            else
-#endif
+            if (Window->UpdateRegion != NULL ||
+                Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
+            {
                NtUserSendMessage(hWnd, WM_PAINT, 0, 0);
+               if (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
+               {
+                  Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
+                  if (Window->UpdateRegion == NULL)
+                  {
+                     MsqDecPaintCountQueue(Window->MessageQueue);
+                  }
+               }
+            }
          }
       }
    }
@@ -190,8 +223,11 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
          for (phWnd = List; *phWnd; ++phWnd)
          {
             Window = IntGetWindowObject(*phWnd);
-            IntPaintWindows(Window, Flags);
-            IntReleaseWindowObject(Window);
+            if (Window)
+            {
+               IntPaintWindows(Window, Flags);
+               IntReleaseWindowObject(Window);
+            }
          }
          ExFreePool(List);
       }
@@ -478,7 +514,7 @@ IntRedrawWindow(PWINDOW_OBJECT Window, const RECT* UpdateRect, HRGN UpdateRgn,
     * Validate parent covered by region.
     */
 
-   if (Window->UpdateRegion != 0 && Flags & RDW_UPDATENOW)
+   if (Window->UpdateRegion != NULL && Flags & RDW_UPDATENOW)
    {
       IntValidateParent(Window);
    }

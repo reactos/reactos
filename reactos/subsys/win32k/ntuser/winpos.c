@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.41 2003/11/18 20:49:39 navaraf Exp $
+/* $Id: winpos.c,v 1.42 2003/11/19 09:10:36 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -922,9 +922,13 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	      RgnType = NtGdiCombineRgn(DirtyRgn, VisAfter, CopyRgn, RGN_DIFF);
 	      if (ERROR != RgnType && NULLREGION != RgnType)
 		{
+		  NtGdiOffsetRgn(DirtyRgn,
+		     Window->WindowRect.left - Window->ClientRect.left,
+		     Window->WindowRect.top - Window->ClientRect.top);
 		  IntRedrawWindow(Window, NULL, DirtyRgn,
 		                  RDW_ERASE | RDW_FRAME | RDW_INVALIDATE |
-		                  RDW_ALLCHILDREN | RDW_ERASENOW);
+		                  RDW_ALLCHILDREN |
+		                  ((flags & SWP_NOREDRAW) ? 0 : RDW_ERASENOW | RDW_UPDATENOW));
 		}
 	      NtGdiDeleteObject(DirtyRgn);
 	    }
@@ -932,7 +936,8 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	    {
 	      IntRedrawWindow(Window, NULL, NULL,
 	                      RDW_ERASE | RDW_FRAME | RDW_INVALIDATE |
-	                      RDW_ALLCHILDREN | RDW_ERASENOW);
+	                      RDW_ALLCHILDREN |
+	                      ((flags & SWP_NOREDRAW) ? 0 : RDW_ERASENOW | RDW_UPDATENOW));
 	    }
 	}
 
@@ -959,7 +964,8 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	}
       if (ERROR != RgnType && NULLREGION != RgnType)
         {
-          VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, Window, ExposedRgn);
+          VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, Window,
+            ExposedRgn, !(flags & SWP_NOREDRAW));
         }
       NtGdiDeleteObject(ExposedRgn);
 

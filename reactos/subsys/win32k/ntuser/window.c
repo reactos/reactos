@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.136 2003/11/18 20:49:39 navaraf Exp $
+/* $Id: window.c,v 1.137 2003/11/19 09:10:36 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -675,7 +675,7 @@ IntInitDesktopWindow(ULONG Width, ULONG Height)
   DesktopWindow->ClientRect = DesktopWindow->WindowRect;
 
   DesktopRgn = UnsafeIntCreateRectRgnIndirect(&(DesktopWindow->WindowRect));
-  VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, DesktopWindow, DesktopRgn);
+  VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, DesktopWindow, DesktopRgn, TRUE);
   NtGdiDeleteObject(DesktopRgn);
   IntReleaseWindowObject(DesktopWindow);
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.35 2003/11/18 20:49:39 navaraf Exp $
+/* $Id: windc.c,v 1.36 2003/11/19 09:10:36 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -118,7 +118,7 @@ DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags)
 HDC STDCALL
 NtUserGetDC(HWND hWnd)
 {
-    return NtUserGetDCEx(hWnd, NULL, NULL == hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE);
+   return NtUserGetDCEx(hWnd, NULL, NULL == hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE);
 }
 
 PDCE FASTCALL
@@ -436,14 +436,25 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
   if (0 != (Flags & DCX_INTERSECTUPDATE) && NULL == ClipRegion)
     {
       Dce->hClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-      if (Dce->hClipRgn)
-      {
-        if (Window->UpdateRegion)
+      if (Dce->hClipRgn && Window->UpdateRegion)
+        {
           NtGdiCombineRgn(Dce->hClipRgn, Window->UpdateRegion, NULL, RGN_COPY);
-        NtGdiOffsetRgn(Dce->hClipRgn,
-          Window->WindowRect.left - Window->ClientRect.left,
-          Window->WindowRect.top - Window->ClientRect.top);
-      }
+          NtGdiOffsetRgn(Dce->hClipRgn,
+            Window->WindowRect.left - Window->ClientRect.left,
+            Window->WindowRect.top - Window->ClientRect.top);
+
+/*
+          if (!(Flags & DCX_WINDOW))
+            {
+              HRGN ClientRgn = NtGdiCreateRectRgnIndirect(&Window->ClientRect);
+              NtGdiOffsetRgn(ClientRgn,
+                -Window->ClientRect.left,
+                -Window->ClientRect.top);
+              NtGdiCombineRgn(Dce->hClipRgn, Dce->hClipRgn, ClientRgn, RGN_AND);
+              NtGdiDeleteObject(ClientRgn);
+            }
+*/
+        }
       Flags &= DCX_INTERSECTRGN;
     }
 
