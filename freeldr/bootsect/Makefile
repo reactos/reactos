@@ -57,6 +57,10 @@ ext2.bin : ext2.asm
 .PHONY : bootcd
 bootcd: bootcd_dirs isoboot.bin
 	$(CP) isoboot.bin $(BOOTCD_DIR)
+	$(CP) ext2.bin $(BOOTCD_DIR)\disk\loader
+	$(CP) fat.bin $(BOOTCD_DIR)\disk\loader
+	$(CP) fat32.bin $(BOOTCD_DIR)\disk\loader
+	$(CP) isoboot.bin $(BOOTCD_DIR)\disk\loader
 
 .PHONY : bootcd_dirs
 bootcd_dirs:
@@ -65,6 +69,7 @@ bootcd_dirs:
 	$(MKDIR) $(BOOTCD_DIR)\disk\reactos
 	$(MKDIR) $(BOOTCD_DIR)\disk\install
 	$(MKDIR) $(BOOTCD_DIR)\disk\bootdisk
+	$(MKDIR) $(BOOTCD_DIR)\disk\loader
 
 clean:
 	@-$(RM) *.bin

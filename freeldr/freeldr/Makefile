@@ -107,9 +107,7 @@ clean:
 #############################################
 
 .PHONY : bootcd
-bootcd : bootcd_dirs $(OBJDIR)/$(TARGET)/setupldr.sys
-	$(CP) $(OBJDIR)/$(TARGET)/setupldr.sys $(BOOTCD_DIR)/disk/reactos/setupldr.sys
-
+bootcd : bootcd_dirs setup_loader boot_loader
 
 .PHONY : bootcd_dirs
 bootcd_dirs:
@@ -118,7 +116,16 @@ bootcd_dirs:
 	$(MKDIR) $(BOOTCD_DIR)/disk/reactos
 	$(MKDIR) $(BOOTCD_DIR)/disk/install
 	$(MKDIR) $(BOOTCD_DIR)/disk/bootdisk
+	$(MKDIR) $(BOOTCD_DIR)/disk/loader
 
+.PHONY : boot_loader
+boot_loader : $(OBJDIR)/$(TARGET)/freeldr.sys
+	$(CP) $(OBJDIR)/$(TARGET)/freeldr.sys $(BOOTCD_DIR)/disk/loader/freeldr.sys
+	$(CP) ../freeldr.ini $(BOOTCD_DIR)/disk/loader/freeldr.ini
+
+.PHONY : setup_loader
+setup_loader : $(OBJDIR)/$(TARGET)/setupldr.sys
+	$(CP) $(OBJDIR)/$(TARGET)/setupldr.sys $(BOOTCD_DIR)/disk/reactos/setupldr.sys
 
 #############################################
 
