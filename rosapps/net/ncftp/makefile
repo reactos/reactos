@@ -4,8 +4,6 @@
 
 PATH_TO_TOP=../../../reactos
 
-ROS_DIR=../../../reactos
-
 TARGET_TYPE = program
 
 TARGET_APPTYPE = console
