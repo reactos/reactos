@@ -727,6 +727,9 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 
          MmSharePageEntrySectionSegment(Segment, Offset);
 
+         /* FIXME: Should we call MmCreateVirtualMappingUnsafe if
+          * (Section->AllocationAttributes & SEC_PHYSICALMEMORY) is true?
+          */
          Status = MmCreateVirtualMapping(MemoryArea->Process,
                                          Address,
                                          Attributes,
@@ -829,14 +832,14 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       * Just map the desired physical page
       */
       Page = (Offset + MemoryArea->Data.SectionData.ViewOffset) >> PAGE_SHIFT;
-      Status = MmCreateVirtualMapping(AddressSpace->Process,
-                                      Address,
-                                      Region->Protect,
-                                      &Page,
-                                      1);
+      Status = MmCreateVirtualMappingUnsafe(AddressSpace->Process,
+                                            Address,
+                                            Region->Protect,
+                                            &Page,
+                                            1);
       if (!NT_SUCCESS(Status))
       {
-         DPRINT("MmCreateVirtualMapping failed, not out of memory\n");
+         DPRINT("MmCreateVirtualMappingUnsafe failed, not out of memory\n");
          KEBUGCHECK(0);
          return(Status);
       }
@@ -846,7 +849,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       */
       if (Locked)
       {
-         MmLockPage(Page);
+         MmLockPageUnsafe(Page);
       }
 
       /*

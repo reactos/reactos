@@ -29,7 +29,7 @@ extern ULONG MmPageArraySize;
 /*
 MDL Flags desc.
 
-MDL_PAGES_LOCKED              MmProbelAndLockPages has been called for this mdl
+MDL_PAGES_LOCKED              MmProbeAndLockPages has been called for this mdl
 MDL_SOURCE_IS_NONPAGED_POOL   mdl has been build by MmBuildMdlForNonPagedPool
 MDL_PARTIAL                   mdl has been built by IoBuildPartialMdl
 MDL_MAPPING_CAN_FAIL          in case of an error, MmMapLockedPages will return NULL instead of to bugcheck
@@ -233,7 +233,7 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
    /* Unmap all the pages. */
    for (i = 0; i < PageCount; i++)
    {
-      MmDeleteVirtualMapping(NULL,
+      MmDeleteVirtualMapping(Mdl->Process,
                              (char*)BaseAddress + (i * PAGE_SIZE),
                              FALSE,
                              NULL,
@@ -300,7 +300,7 @@ MmBuildMdlFromPages(PMDL Mdl, PPFN_TYPE Pages)
 {
    memcpy(Mdl + 1, Pages, sizeof(PFN_TYPE) * (PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGE_SIZE));
 
-   //FIXME: this flag should be set by the caller perhaps?
+   /* FIXME: this flag should be set by the caller perhaps? */
    Mdl->MdlFlags |= MDL_IO_PAGE_READ;
 }
 
@@ -375,8 +375,8 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
    ASSERT(NrPages <= (Mdl->Size - sizeof(MDL))/sizeof(PFN_TYPE));
 
 
-   if (Mdl->StartVa >= (PVOID)KERNEL_BASE && 
-       MmGetPfnForProcess(NULL, Mdl->StartVa) > MmPageArraySize)
+   if (Mdl->StartVa >= (PVOID)KERNEL_BASE &&
+       MmGetPfnForProcess(NULL, Mdl->StartVa) >= MmPageArraySize)
    {
        /* phys addr is not phys memory so this must be io memory */
        
@@ -392,14 +392,14 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 
    if (Mdl->StartVa >= (PVOID)KERNEL_BASE)
    {
-      //FIXME: why isn't AccessMode used?
+      /* FIXME: why isn't AccessMode used? */
       Mode = KernelMode;
       Mdl->Process = NULL;
       AddressSpace = MmGetKernelAddressSpace();
    }
    else
    {
-      //FIXME: why isn't AccessMode used?
+      /* FIXME: why isn't AccessMode used? */
       Mode = UserMode;
       Mdl->Process = CurrentProcess;      
       AddressSpace = &CurrentProcess->AddressSpace;
@@ -430,8 +430,11 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
             for (j = 0; j < i; j++)
             {
 	       Page = MdlPages[j];
-               MmUnlockPage(Page);
-               MmDereferencePage(Page);
+               if (Page < MmPageArraySize)
+               {
+                  MmUnlockPage(Page);
+                  MmDereferencePage(Page);
+               }
             }
             MmUnlockAddressSpace(AddressSpace);
             ExRaiseStatus(Status);
@@ -451,8 +454,11 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
             for (j = 0; j < i; j++)
             {
 	       Page = MdlPages[j];
-               MmUnlockPage(Page);
-               MmDereferencePage(Page);
+               if (Page < MmPageArraySize)
+               {
+                  MmUnlockPage(Page);
+                  MmDereferencePage(Page);
+               }
             }
             MmUnlockAddressSpace(AddressSpace);
             ExRaiseStatus(Status);
@@ -460,7 +466,10 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
       }
       Page = MmGetPfnForProcess(NULL, Address);
       MdlPages[i] = Page;
-      MmReferencePage(Page);
+      if (Page >= MmPageArraySize)
+         Mdl->MdlFlags |= MDL_IO_SPACE;
+      else
+         MmReferencePage(Page);
    }
    
    MmUnlockAddressSpace(AddressSpace);
@@ -843,6 +852,8 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
       }
 
       KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
+      
+      Mdl->Process = NULL;
    }
 
    /* Set the virtual mappings for the MDL pages. */
@@ -853,11 +864,18 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
       Protect |= PAGE_NOCACHE;
    else if (CacheType == MmWriteCombined)
       DPRINT("CacheType MmWriteCombined not supported!\n");
-   Status = MmCreateVirtualMapping(CurrentProcess,
-                                   Base,
-                                   Protect,
-                                   MdlPages,
-                                   PageCount);
+   if (Mdl->MdlFlags & MDL_IO_SPACE)
+      Status = MmCreateVirtualMappingUnsafe(CurrentProcess,
+                                            Base,
+                                            Protect,
+                                            MdlPages,
+                                            PageCount);
+   else
+      Status = MmCreateVirtualMapping(CurrentProcess,
+                                      Base,
+                                      Protect,
+                                      MdlPages,
+                                      PageCount);
    if (!NT_SUCCESS(Status))
    {
       DbgPrint("Unable to create virtual mapping\n");
