@@ -2792,7 +2792,7 @@ PsLockProcess(PEPROCESS Process, BOOL Timeout)
                                        KernelMode,
                                        FALSE,
                                        Delay);
-        if(!NT_SUCCESS(Status) || STATUS_TIMEOUT)
+        if(!NT_SUCCESS(Status) || Status == STATUS_TIMEOUT)
         {
 #ifndef NDEBUG
           if(Status == STATUS_TIMEOUT)
