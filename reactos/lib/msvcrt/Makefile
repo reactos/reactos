@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.12 2001/07/02 21:51:18 ekohl Exp $
+# $Id: Makefile,v 1.13 2001/07/04 16:39:36 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -11,6 +11,17 @@ CFLAGS = -I../../include -D__MSVCRT__
 
 all: $(TARGET_DLL)
 
+
+OBJECTS_CONIO = \
+	conio/cgets.o \
+	conio/cprintf.o \
+	conio/cputs.o \
+	conio/cscanf.o \
+	conio/getch.o \
+	conio/getche.o \
+	conio/kbhit.o \
+	conio/putch.o \
+	conio/ungetch.o
 
 OBJECTS_CTYPE = \
 	ctype/isalnum.o \
@@ -65,16 +76,30 @@ OBJECTS_FLOAT = \
 
 OBJECTS_IO = \
 	io/access.o \
+	io/chmod.o \
+	io/chsize.o \
 	io/close.o \
 	io/commit.o \
+	io/create.o \
+	io/dup.o \
+	io/dup2.o \
+	io/eof.o \
+	io/filelen.o \
+	io/find.o \
 	io/fmode.o \
 	io/isatty.o \
+	io/locking.o \
 	io/lseek.o \
 	io/mktemp.o \
 	io/open.o \
+	io/pipe.o \
 	io/read.o \
 	io/setmode.o \
+	io/sopen.o \
+	io/tell.o \
+	io/umask.o \
 	io/unlink.o \
+	io/utime.o \
 	io/write.o
 
 OBJECTS_MATH = \
@@ -115,6 +140,7 @@ OBJECTS_STDIO = \
 	stdio/fputc.o \
 	stdio/fputs.o \
 	stdio/fread.o \
+	stdio/fscanf.o \
 	stdio/fwalk.o \
 	stdio/fwrite.o \
 	stdio/getc.o \
@@ -123,14 +149,20 @@ OBJECTS_STDIO = \
 	stdio/putchar.o \
 	stdio/puts.o \
 	stdio/remove.o \
+	stdio/scanf.o \
 	stdio/setvbuf.o \
 	stdio/sprintf.o \
+	stdio/sscanf.o \
 	stdio/stdhnd.o \
 	stdio/tempnam.o \
+	stdio/ungetc.o \
 	stdio/vfprintf.o \
+	stdio/vfscanf.o \
 	stdio/vfwprint.o \
 	stdio/vprintf.o \
+	stdio/vscanf.o \
 	stdio/vsprintf.o \
+	stdio/vsscanf.o
 
 #incomplete
 OBJECTS_STDLIB = \
@@ -206,6 +238,7 @@ OBJECTS_STRING = \
 
 OBJECTS_SYS_STAT = \
 	sys_stat/fstat.o \
+	sys_stat/futime.o \
 	sys_stat/stat.o
 
 OBJECTS_TIME = \
@@ -239,6 +272,7 @@ OBJECTS_WSTRING = \
 	wstring/wcsxfrm.o
 
 OBJECTS = \
+	$(OBJECTS_CONIO) \
 	$(OBJECTS_CTYPE) \
 	$(OBJECTS_DIRECT) \
 	$(OBJECTS_EXCEPT) \
@@ -258,6 +292,7 @@ OBJECTS = \
 
 ifeq ($(DOSCLI), yes)
 CLEAN_FILES = \
+	conio\*.o \
 	ctype\*.o \
 	direct\*.o \
 	float\*.o \
@@ -280,6 +315,7 @@ CLEAN_FILES = \
 	base.tmp
 else
 CLEAN_FILES = \
+	conio/*.o \
 	ctype/*.o \
 	direct/*.o \
 	float/*.o \

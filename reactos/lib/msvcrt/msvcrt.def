@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.8 2001/07/03 13:21:22 ekohl Exp $
+; $Id: msvcrt.def,v 1.9 2001/07/04 16:39:37 ekohl Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -181,13 +181,13 @@ _c_exit
 ; _cabs
 ; _callnewh
 _cexit
-; _cgets
+_cgets
 _chdir
 _chdrive
 _chgsign
 ; _chkesp
-; _chmod
-; _chsize
+_chmod
+_chsize
 _clearfp
 _close
 _commit
@@ -195,21 +195,21 @@ _commode DATA
 _control87
 _controlfp
 _copysign
-; _cprintf
-; _cputs
-; _creat
-; _cscanf
+_cprintf
+_cputs
+_creat
+_cscanf
 _ctype DATA
 ; _cwait
 ; _daylight
 ; _dstbias
-; _dup
-; _dup2
+_dup
+_dup2
 ; _ecvt
 _endthread
 _endthreadex
 _environ_dll DATA
-; _eof
+_eof
 _errno
 _except_handler2
 _except_handler3
@@ -230,14 +230,14 @@ _fcloseall
 ; _fgetwchar
 _filbuf
 ; _fileinfo
-; _filelength
-; _filelengthi64
+_filelength
+_filelengthi64
 _fileno
-; _findclose
-; _findfirst
-; _findfirsti64
-; _findnext
-; _findnexti64
+_findclose
+_findfirst
+_findfirsti64
+_findnext
+_findnexti64
 _finite
 _flsbuf
 _flushall
@@ -249,16 +249,16 @@ _fpreset
 ; _fputwchar
 ; _fsopen
 _fstat
-; _fstati64
+_fstati64
 ; _ftime
 ; _ftol
 _fullpath
-; _futime
+_futime
 ; _gcvt
 _get_osfhandle
 ; _get_sbh_threshold
-; _getch
-; _getche
+_getch
+_getche
 _getcwd
 _getdcwd
 _getdiskfree
@@ -323,19 +323,19 @@ _itow
 ; _j0
 ; _j1
 ; _jn
-; _kbhit
+_kbhit
 ; _lfind
 _loaddll
 _local_unwind2
 ; _lock
-; _locking
+_locking
 _logb
 ; _longjmpex
 _lrotl
 _lrotr
 ; _lsearch
 _lseek
-; _lseeki64
+_lseeki64
 _ltoa
 _ltow
 _makepath
@@ -410,10 +410,10 @@ _osver DATA
 ; _pclose
 _pctype DATA
 _pgmptr DATA
-; _pipe
+_pipe
 ; _popen
 _purecall
-; _putch
+_putch
 _putenv
 ; _putw
 _putws
@@ -442,7 +442,7 @@ _setmode
 _sleep
 _snprintf
 _snwprintf
-; _sopen
+_sopen
 ; _spawnl
 ; _spawnle
 ; _spawnlp
@@ -453,7 +453,7 @@ _snwprintf
 ; _spawnvpe
 _splitpath
 _stat
-; _stati64
+_stati64
 _statusfp
 _strcmpi
 ; _strdate
@@ -473,8 +473,8 @@ _strupr
 _swab
 _sys_errlist DATA
 _sys_nerr DATA
-; _tell
-; _telli64
+_tell
+_telli64
 _tempnam
 ; _timezone
 _tolower
@@ -485,20 +485,20 @@ _ui64toa
 _ui64tow
 _ultoa
 _ultow
-; _umask
-; _ungetch
+_umask
+_ungetch
 _unlink
 _unloaddll
 ; _unlock
-; _utime
+_utime
 _vsnprintf
 _vsnwprintf
 _waccess
 ; _wasctime
 _wchdir
-; _wchmod
+_wchmod
 ; _wcmdln
-; _wcreat
+_wcreat
 _wcsdup
 _wcsicmp
 _wcsicoll
@@ -521,10 +521,10 @@ _wcsupr
 ; _wexecvp
 ; _wexecvpe
 ; _wfdopen
-; _wfindfirst
-; _wfindfirsti64
-; _wfindnext
-; _wfindnexti64
+_wfindfirst
+_wfindfirsti64
+_wfindnext
+_wfindnexti64
 ; _wfopen
 ; _wfreopen
 ; _wfsopen
@@ -549,7 +549,7 @@ _write
 _wrmdir
 _wsearchenv
 ; _wsetlocale
-; _wsopen
+_wsopen
 ; _wspawnl
 ; _wspawnle
 ; _wspawnlp
@@ -559,8 +559,8 @@ _wsearchenv
 ; _wspawnvp
 ; _wspawnvpe
 _wsplitpath
-; _wstat
-; _wstati64
+_wstat
+_wstati64
 ; _wstrdate
 ; _wstrtime
 ; _wsystem
@@ -569,8 +569,8 @@ _wsplitpath
 _wtoi
 _wtoi64
 _wtol
-; _wunlink
-; _wutime
+_wunlink
+_wutime
 ; _y0
 ; _y1
 ; _yn
@@ -619,13 +619,13 @@ fread
 free
 ; freopen
 ; frexp
-; fscanf
+fscanf
 ; fseek
 ; fsetpos
 ; ftell
 fwprintf
 fwrite
-; fwscanf
+fwscanf
 getc
 ; getchar
 getenv
@@ -693,7 +693,7 @@ realloc
 remove
 ; rename
 ; rewind
-; scanf
+scanf
 ; setbuf
 ; setlocale
 setvbuf
@@ -703,7 +703,7 @@ signal
 sprintf
 ; sqrt
 ; srand
-; sscanf
+sscanf
 strcat
 strchr
 strcmp
@@ -726,7 +726,7 @@ strtol
 strtoul
 strxfrm
 swprintf
-; swscanf
+swscanf
 ; system
 ; tan
 ; tanh
@@ -737,8 +737,8 @@ tolower
 toupper
 towlower
 towupper
-; ungetc
-; ungetwc
+ungetc
+ungetwc
 vfprintf
 vfwprintf
 vprintf
@@ -768,6 +768,6 @@ wcstoul
 wcsxfrm
 ; wctomb
 wprintf
-; wscanf
+wscanf
 
 ; EOF
