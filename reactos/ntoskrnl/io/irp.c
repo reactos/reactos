@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.65 2004/08/15 16:39:03 chorns Exp $
+/* $Id: irp.c,v 1.66 2004/08/18 02:24:02 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -123,6 +123,8 @@ IoMakeAssociatedIrp(PIRP Irp,
  *       Irp = Master irp
  *       StackSize = Number of stack locations to be allocated in the irp
  * RETURNS: The irp allocated
+ * NOTE: The caller is responsible for incrementing
+ *       Irp->AssociatedIrp.IrpCount.
  */
 {
    PIRP AssocIrp;
@@ -140,7 +142,6 @@ IoMakeAssociatedIrp(PIRP Irp,
 
    /* Associate them */
    AssocIrp->AssociatedIrp.MasterIrp = Irp;
-   InterlockedIncrement(&Irp->AssociatedIrp.IrpCount);
  
    return AssocIrp;
 }
@@ -364,7 +365,6 @@ IofCompleteRequest(PIRP Irp,
       while ((Mdl = Irp->MdlAddress))
       {
          Irp->MdlAddress = Mdl->Next;
-         MmUnlockPages(Mdl);
          IoFreeMdl(Mdl);
       }
       IoFreeIrp(Irp);
@@ -555,7 +555,7 @@ IoEnqueueIrp(IN PIRP Irp)
 VOID STDCALL
 IoSetTopLevelIrp(IN PIRP Irp)
 {
-  PETHREAD Thread;
+    PETHREAD Thread;
 
     Thread = PsGetCurrentThread();
     Thread->TopLevelIrp = Irp;
