@@ -76,7 +76,8 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
           SetDlgItemText(hwndDlg, IDC_VALUE_NAME, _T("(Default)"));
         }
         SetDlgItemText(hwndDlg, IDC_VALUE_DATA, stringValueData);
-        return TRUE;
+        SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
+        return FALSE;
     case WM_COMMAND:
         switch (LOWORD(wParam)) {
         case IDOK:

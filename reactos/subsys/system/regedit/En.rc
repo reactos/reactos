@@ -94,10 +94,8 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-/*
- *        MENUITEM "&Help Topics",                ID_HELP_HELPTOPICS
- *        MENUITEM SEPARATOR
- */
+        MENUITEM "&Help Topics\tF1",            ID_HELP_HELPTOPICS
+        MENUITEM SEPARATOR
         MENUITEM "&About Registry Editor",      ID_HELP_ABOUT
     END
 END

@@ -47,7 +47,6 @@ typedef struct tagLINE_INFO
  * Global and Local Variables:
  */
 
-static WNDPROC g_orgListWndProc;
 static DWORD g_columnToSort = ~0UL;
 static BOOL  g_invertSort = FALSE;
 static LPTSTR g_valueName;
@@ -95,6 +94,21 @@ LPCTSTR GetValueName(HWND hwndLV)
     }
     memcpy(g_valueName, lineinfo->name, sizeof(TCHAR) * (len + 1));
     return g_valueName;
+}
+
+BOOL IsDefaultValue(HWND hwndLV, int i)
+{
+  PLINE_INFO lineinfo;
+  LVITEM Item;
+  
+  Item.mask = LVIF_PARAM;
+  Item.iItem = i;
+  if(ListView_GetItem(hwndLV, &Item))
+  {
+    lineinfo = (PLINE_INFO)Item.lParam;
+    return lineinfo && (!lineinfo->name || !strcmp(lineinfo->name, _T("")));
+  }
+  return FALSE;
 }
 
 /*******************************************************************************
@@ -305,9 +319,6 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
     return g_invertSort ? _tcscmp(r->name, l->name) : _tcscmp(l->name, r->name);
 }
 
-static void ListViewPopUpMenu(HWND hWnd, POINT pt)
-{}
-
 static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (LOWORD(wParam)) {
@@ -319,19 +330,14 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return TRUE;
 }
 
-static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
 {
-    switch (message) {
-    case WM_COMMAND:
-        if (!_CmdWndProc(hWnd, message, wParam, lParam)) {
-            return CallWindowProc(g_orgListWndProc, hWnd, message, wParam, lParam);
-        }
-        break;
-    case WM_NOTIFY:
-        switch (((LPNMHDR)lParam)->code) {
+    NMLVDISPINFO* Info;
+    *Result = TRUE;
+    switch (((LPNMHDR)lParam)->code) {
         case LVN_GETDISPINFO:
             OnGetDispInfo((NMLVDISPINFO*)lParam);
-            break;
+            return TRUE;
         case LVN_COLUMNCLICK:
             if (g_columnToSort == ((LPNMLISTVIEW)lParam)->iSubItem)
                 g_invertSort = !g_invertSort;
@@ -341,60 +347,35 @@ static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
             }
                     
             ListView_SortItems(hWnd, CompareFunc, (WPARAM)hWnd);
-            break;
+            return TRUE;
         case NM_DBLCLK: 
             {
                 SendMessage(hFrameWnd, WM_COMMAND, MAKEWPARAM(ID_EDIT_MODIFY, 0), 0);
             }
-            break;
+            return TRUE;
 
-        case NM_RCLICK: {
-                int idx;
-                LV_HITTESTINFO lvH;
-                NM_LISTVIEW* pNm = (NM_LISTVIEW*)lParam;
-                lvH.pt.x = pNm->ptAction.x;
-                lvH.pt.y = pNm->ptAction.y;
-                idx = ListView_HitTest(hWnd, &lvH);
-                if (idx != -1) {
-                    POINT pt;
-                    GetCursorPos(&pt);
-                    ListViewPopUpMenu(hWnd, pt);
-                    return idx;
+        case LVN_BEGINLABELEDIT:
+            {
+              PLINE_INFO lineinfo;
+              Info = (NMLVDISPINFO*)lParam;
+              if(Info)
+              {
+                lineinfo = (PLINE_INFO)Info->item.lParam;
+                if(!lineinfo->name || !strcmp(lineinfo->name, _T("")))
+                {
+                  *Result = TRUE;
                 }
+                else
+                {
+                  *Result = FALSE;
+                }
+              }
+              else
+                *Result = TRUE;
+              return TRUE;
             }
-            break;
-
-        default:
-            return CallWindowProc(g_orgListWndProc, hWnd, message, wParam, lParam);
-        }
-        break;
-    case WM_CONTEXTMENU:
-    {
-      POINTS pt;
-      int cnt;
-      pt = MAKEPOINTS(lParam);
-      cnt = ListView_GetNextItem(hWnd, -1, LVNI_FOCUSED | LVNI_SELECTED);
-      if(cnt == -1)
-      {
-        TrackPopupMenu(GetSubMenu(hPopupMenus, PM_NEW), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd, NULL);
-      }
-      else
-      {
-        TrackPopupMenu(GetSubMenu(hPopupMenus, PM_MODIFYVALUE), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd, NULL);
-      }
-      break;
     }
-    case WM_KEYDOWN:
-        if (wParam == VK_TAB) {
-            /*TODO: SetFocus(Globals.hDriveBar) */
-            /*SetFocus(child->nFocusPanel? child->left.hWnd: child->right.hWnd); */
-        }
-        /* fall thru... */
-    default:
-        return CallWindowProc(g_orgListWndProc, hWnd, message, wParam, lParam);
-        break;
-    }
-    return 0;
+    return FALSE;
 }
 
 
@@ -406,7 +387,7 @@ HWND CreateListView(HWND hwndParent, int id)
     /* Get the dimensions of the parent window's client area, and create the list view control.  */
     GetClientRect(hwndParent, &rcClient);
     hwndLV = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, _T("List View"),
-                            WS_VISIBLE | WS_CHILD | LVS_REPORT,
+                            WS_VISIBLE | WS_CHILD | LVS_REPORT | LVS_EDITLABELS,
                             0, 0, rcClient.right, rcClient.bottom,
                             hwndParent, (HMENU)id, hInst, NULL);
     if (!hwndLV) return NULL;
@@ -414,7 +395,7 @@ HWND CreateListView(HWND hwndParent, int id)
     /* Initialize the image list, and add items to the control.  */
     if (!CreateListColumns(hwndLV)) goto fail;
     if (!InitListViewImageLists(hwndLV)) goto fail;
-    g_orgListWndProc = SubclassWindow(hwndLV, ListWndProc);
+
     return hwndLV;
 fail:
     DestroyWindow(hwndLV);
@@ -434,7 +415,9 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
     BOOL AddedDefault = FALSE;
 
     if (!hwndLV) return FALSE;
-
+    
+    ListView_EditLabel(hwndLV, -1);
+    
     SendMessage(hwndLV, WM_SETREDRAW, FALSE, 0);
     count = ListView_GetItemCount(hwndLV);
     for (i = 0; i < count; i++) {

@@ -129,6 +129,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static short last_split;
+    BOOL Result;
     ChildWnd* pChildWnd = g_pChildWnd;
 
     switch (message) {
@@ -287,13 +288,49 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 goto def;
             }
         } else
-            if ((int)wParam == LIST_WINDOW) {
-                if (!SendMessage(pChildWnd->hListWnd, message, wParam, lParam)) {
-                    goto def;
+        {
+            if ((int)wParam == LIST_WINDOW)
+            {
+                if(ListWndNotifyProc(pChildWnd->hListWnd, wParam, lParam, &Result))
+                {
+                  return Result;
                 }
             }
+        }
         break;
-
+    
+    case WM_CONTEXTMENU:
+    {
+      POINTS pt;
+      if((HWND)wParam == pChildWnd->hListWnd)
+      {
+        int i, cnt;
+        BOOL IsDefault;
+        pt = MAKEPOINTS(lParam);
+        cnt = ListView_GetSelectedCount(pChildWnd->hListWnd);
+        i = ListView_GetNextItem(pChildWnd->hListWnd, -1, LVNI_FOCUSED | LVNI_SELECTED);
+        if(i == -1)
+        {
+          TrackPopupMenu(GetSubMenu(hPopupMenus, PM_NEW), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd, NULL);
+        }
+        else
+        {
+          HMENU mnu = GetSubMenu(hPopupMenus, PM_MODIFYVALUE);
+          SetMenuDefaultItem(mnu, ID_EDIT_MODIFY, MF_BYCOMMAND);
+          IsDefault = IsDefaultValue(pChildWnd->hListWnd, i);
+          if(cnt == 1)
+            EnableMenuItem(mnu, ID_EDIT_RENAME, MF_BYCOMMAND | (IsDefault ? MF_DISABLED | MF_GRAYED : MF_ENABLED));
+          else
+            EnableMenuItem(mnu, ID_EDIT_RENAME, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+          EnableMenuItem(mnu, ID_EDIT_MODIFY, MF_BYCOMMAND | (cnt == 1 ? MF_ENABLED : MF_DISABLED | MF_GRAYED));
+          EnableMenuItem(mnu, ID_EDIT_MODIFY_BIN, MF_BYCOMMAND | (cnt == 1 ? MF_ENABLED : MF_DISABLED | MF_GRAYED));
+          
+          TrackPopupMenu(mnu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd, NULL);
+        }
+      }
+      break;
+    }
+    
     case WM_SIZE:
         if (wParam != SIZE_MINIMIZED && pChildWnd != NULL) {
             ResizeWnd(pChildWnd, LOWORD(lParam), HIWORD(lParam));

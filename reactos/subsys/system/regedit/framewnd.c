@@ -441,6 +441,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     BOOL result = TRUE;
     REGSAM regsam = KEY_READ;
     LONG lRet;
+    int item;
     
     switch (LOWORD(wParam)) {
     case ID_REGISTRY_IMPORTREGISTRYFILE:
@@ -468,6 +469,23 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_HELP_ABOUT:
         ShowAboutBox(hWnd);
         return TRUE;
+    case ID_VIEW_SPLIT:
+    {
+        RECT rt;
+        POINT pt, pts;
+        GetClientRect(g_pChildWnd->hWnd, &rt);
+        pt.x = rt.left + g_pChildWnd->nSplitPos;
+        pt.y = (rt.bottom / 2);
+        pts = pt;
+        if(ClientToScreen(g_pChildWnd->hWnd, &pts))
+        {
+          SetCursorPos(pts.x, pts.y);
+          SetCursor(LoadCursor(0, IDC_SIZEWE));
+          SendMessage(g_pChildWnd->hWnd, WM_LBUTTONDOWN, 0, MAKELPARAM(pt.x, pt.y));
+        }
+        return TRUE;
+    }
+    case ID_EDIT_RENAME:
     case ID_EDIT_MODIFY:
         regsam |= KEY_WRITE; 
         break;
@@ -484,6 +502,16 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_EDIT_MODIFY:
         if (valueName && ModifyValue(hWnd, hKey, valueName))
             RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
+        break;
+    case ID_EDIT_RENAME:
+        if(ListView_GetSelectedCount(g_pChildWnd->hListWnd) == 1)
+        {
+          item = ListView_GetNextItem(g_pChildWnd->hListWnd, -1, LVNI_FOCUSED | LVNI_SELECTED);
+          if(item > -1)
+          {
+            ListView_EditLabel(g_pChildWnd->hListWnd, item);
+          }
+        }
         break;
     case ID_EDIT_COPYKEYNAME:
         CopyKeyName(hWnd, _T(""));

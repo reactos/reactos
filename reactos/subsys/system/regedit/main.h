@@ -91,6 +91,8 @@ extern void UpdateStatusBar(void);
 extern HWND CreateListView(HWND hwndParent, int id);
 extern BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath);
 extern LPCTSTR GetValueName(HWND hwndLV);
+extern BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result);
+extern BOOL IsDefaultValue(HWND hwndLV, int i);
 
 /* treeview.c */
 extern HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, int id);
