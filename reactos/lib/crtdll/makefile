@@ -1,3 +1,4 @@
+
 all: crtdll.a
 
 
@@ -11,7 +12,7 @@ CONIO_OBJECTS = conio/cputs.o conio/getch.o conio/getche.o conio/putch.o conio/u
 DIRECT_OBJECTS = direct/chdir.o direct/chdrive.o direct/getcwd.o direct/getdrive.o \
 		 direct/rmdir.o direct/mkdir.o direct/getdfree.o
 
-MISC_OBJECTS =  misc/sleep.o misc/crt1.o misc/getargs.o misc/crtfmode.o
+MISC_OBJECTS =  misc/sleep.o  misc/getargs.o misc/crtfmode.o misc/crtglob.o
 
 STRING_OBJECTS = string/memchr.o string/memcmp.o string/strcat.o \
                  string/strchr.o string/strcmp.o string/strcoll.o \
@@ -29,8 +30,8 @@ WCHAR_OBJECTS = wchar/wcscat.o wchar/wcschr.o wchar/wcscmp.o \
 		 wchar/wcslwr.o wchar/wcsncat.o wchar/wcsncmp.o \
 		 wchar/wcsncpy.o
 
-STDIO_OBJECTS = stdio/vsprintf.o  stdio/getenv.o stdio/doprnt.o stdio/doscan.o  \
-		stdio/puts.o stdio/fclose.o stdio/feof.o stdio/ferror.o \
+STDIO_OBJECTS = stdio/getenv.o stdio/doprnt.o stdio/doscan.o stdio/filbuf.o  \
+		stdio/fclose.o stdio/feof.o stdio/ferror.o stdio/fileno.o\
 		stdio/fflush.o stdio/fgetc.o stdio/fgetpos.o stdio/fgets.o stdio/flsbuf.o \
 		stdio/fopen.o stdio/fprintf.o stdio/fputc.o stdio/fputs.o \
 		stdio/fread.o stdio/freopen.o  stdio/fscanf.o stdio/fseek.o \
@@ -45,10 +46,10 @@ STDIO_OBJECTS = stdio/vsprintf.o  stdio/getenv.o stdio/doprnt.o stdio/doscan.o  
 
 
 IO_OBJECTS = io/access.o io/close.o io/create.o io/dup.o io/dup2.o io/find.o io/isatty.o io/lseek.o \
-		io/open.o io/read.o io/setmode.o io/unlink.o io/write.o io/fmode.o
+		io/open.o io/read.o io/setmode.o io/unlink.o io/write.o io/fmode.o io/mktemp.o
 
 STDLIB_OBJECTS = stdlib/abort.o stdlib/abs.o stdlib/atexit.o stdlib/atof.o stdlib/atoi.o stdlib/atold.o \
-		 stdlib/bsearch.o stdlib/calloc.o stdlib/div.o stdlib/errno.o  stdlib/exit.o \
+		 stdlib/bsearch.o stdlib/div.o stdlib/errno.o  stdlib/exit.o \
 		 stdlib/fullpath.o stdlib/labs.o stdlib/ldiv.o stdlib/llabs.o stdlib/lldiv.o \
 		 stdlib/makepath.o stdlib/malloc.o stdlib/putenv.o stdlib/qsort.o \
 		 stdlib/rand.o stdlib/senv.o stdlib/splitp.o stdlib/strtod.o stdlib/strtol.o \
@@ -58,22 +59,24 @@ PROCESS_OBJECTS = process/spawnl.o process/spawnlp.o process/spawnlpe.o  process
 		process/spawnv.o process/spawnve.o process/spawnle.o process/execl.o process/execlp.o process/execlpe.o  \
 		process/execvpe.o process/execvp.o process/execv.o process/execle.o
 
-TIME_OBJECTS = time/ctime.o time/difftime.o time/strftime.o time/time.o 
+TIME_OBJECTS = time/ctime.o time/difftime.o time/strftime.o 
 
 FLOAT_OBJECTS = float/fpreset.o 
 
 SYS_STAT_OBJECTS = sys_stat/fstat.o sys_stat/stat.o 
 
+
+
 OBJECTS = $(CTYPE_OBJECTS) $(CONIO_OBJECTS) $(DIRECT_OBJECTS) $(MISC_OBJECTS) \
-	  $(STRING_OBJECTS) $(WCHAR_OBJECTS) $(STDIO_OBJECTS) $(STDLIB_OBJECTS) \
+	  $(STRING_OBJECTS)  $(STDIO_OBJECTS) $(STDLIB_OBJECTS) \
 	  $(IO_OBJECTS) $(PROCESS_OBJECTS) $(TIME_OBJECTS) $(FLOAT_OBJECTS) \
 	  $(SYS_STAT_OBJECTS)
 
 
 crtdll.a: $(OBJECTS)
-	$(CC) $(CFLAGS) -c $< -o $@
-	$(AR) vrcs crtdll.a $(OBJECTS)
+	$(LD) -r $(OBJECTS) -o crtdll.a
 
 dummy:
 
 include ../../Rules.mak
+
