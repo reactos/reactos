@@ -338,6 +338,7 @@ ReadSectorsLBA:
 ; CarryFlag set on error
 ReadSectorsCHS:
 		popa
+ReadSectorsCHSLoop:
         pusha
         xchg ax,cx
         xchg ax,dx
@@ -351,8 +352,8 @@ ReadSectorsCHS:
         mov  dh,dl                     ; Head to DH, drive to DL
         mov  dl,[BYTE bp+BootDrive]            ; Drive number
         mov  ch,al                     ; Cylinder in CX
-        ror  ah,1                      ; Low 8 bits of cylinder in CH, high 2 bits
-        ror  ah,1                      ;  in CL shifted to bits 6 & 7
+        ror  ah,2                      ; Low 8 bits of cylinder in CH, high 2 bits
+                                       ;  in CL shifted to bits 6 & 7
         or   cl,ah                     ; Or with sector number
         mov  ax,0201h
         int  13h     ; DISK - READ SECTORS INTO MEMORY
@@ -375,7 +376,7 @@ NoCarryCHS:
         mov  es,bx
         pop  bx
                                         ; Increment read buffer for next sector
-        loop ReadSectorsCHS             ; Read next sector
+        loop ReadSectorsCHSLoop         ; Read next sector
 
         ret   
 
