@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.1 2004/03/10 15:22:44 silverblade Exp $
+# $Id: Makefile.ros-template,v 1.2 2004/08/02 14:58:59 navaraf Exp $
 
 TARGET_NAME = midimap
 
@@ -13,6 +13,8 @@ TARGET_BASE = 0x76160000
 TARGET_RC_SRCS = @RC_SRCS@
 TARGET_RC_BINSRC = @RC_BINSRC@
 TARGET_RC_BINARIES = @RC_BINARIES@
+
+TARGET_EXTENSION = .drv
 
 default: all
 
