@@ -1463,7 +1463,7 @@ static int
 /* u64 variables used to translate some broken 32bit info */
 ULARGE_INTEGER u64File1, u64File2;
 int i;								/* An indexer for "for"s */
-long iComp;							/* The comparison result */
+long iComp = 0;					/* The comparison result */
 
 	/* Calculate critiries by order given from user */
 	for (i = 0;i < lpFlags->stOrderBy.sCriteriaCount;i++)
