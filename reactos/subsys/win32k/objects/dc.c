@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.24 2001/06/29 19:34:35 ekohl Exp $
+/* $Id: dc.c,v 1.25 2001/06/30 17:43:05 jfilby Exp $
  *
  * DC.C - Device context functions
  * 
@@ -308,7 +308,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   W32kSetTextAlign(hNewDC, TA_BASELINE);
 
   // If we've created a DC for the DISPLAY, save the reference for later CreateCompatibleDC(NULL... usage
-  if(wcscmp(Driver, L"DISPLAY")) // FIXME: this works.. but shouldn't we compare to L"DISPLAY" ? (which doesn't work..)
+  if(wcscmp(Driver, L"DISPLAY") == 0)
   {
     hDISPLAY_DC = hNewDC;
   }
