@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.26 2000/03/24 22:25:37 dwelch Exp $
+/* $Id: create.c,v 1.27 2000/04/23 17:40:52 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -499,7 +499,7 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    CsrRequest.Type = CSRSS_CREATE_PROCESS;
    CsrRequest.Data.CreateProcessRequest.NewProcessId = 
      ProcessBasicInfo.UniqueProcessId;
-   CsrRequest.Data.CreateProcessRequest.Flags = 0;
+   CsrRequest.Data.CreateProcessRequest.Flags = dwCreationFlags;
    Status = CsrClientCallServer(&CsrRequest, 
 				&CsrReply,
 				sizeof(CSRSS_API_REQUEST),
