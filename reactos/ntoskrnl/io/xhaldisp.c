@@ -1,4 +1,4 @@
-/* $Id: xhaldisp.c,v 1.1 2000/06/30 22:52:49 ekohl Exp $
+/* $Id: xhaldisp.c,v 1.2 2000/08/21 00:14:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,9 +26,9 @@ HAL_DISPATCH EXPORTED HalDispatchTable =
 	NULL,			// HalDeviceControl
 	xHalExamineMBR,
 	xHalIoAssignDriveLetters,
-	NULL,			// HalIoReadPartitionTable
-	NULL,			// HalIoSetPartitionInformation
-	NULL,			// HalIoWritePartitionTable
+	xHalIoReadPartitionTable,
+	NULL,			// xHalIoSetPartitionInformation,
+	NULL,			// xHalIoWritePartitionTable,
 	NULL,			// HalReferenceHandlerForBus
 	NULL,			// HalReferenceBusHandler
 	NULL			// HalDereferenceBusHandler

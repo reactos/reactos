@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.30 2000/08/18 17:24:17 ekohl Exp $
+/* $Id: ide.c,v 1.31 2000/08/21 00:15:53 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -157,7 +157,6 @@ static NTSTATUS IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
                                 OUT PDEVICE_OBJECT *DeviceObject, 
                                 IN PCONTROLLER_OBJECT ControllerObject, 
                                 IN int UnitNumber,
-                                IN char *Win32Alias,
                                 IN PIDE_DRIVE_IDENTIFY DrvParms, 
                                 IN DWORD Offset, 
                                 IN DWORD Size);
@@ -462,17 +461,16 @@ IDEResetController(IN WORD CommandPort,
 //
 
 BOOLEAN  
-IDECreateDevices(IN PDRIVER_OBJECT DriverObject, 
+IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                  IN PCONTROLLER_OBJECT ControllerObject,
                  IN PIDE_CONTROLLER_EXTENSION ControllerExtension,
                  IN int DriveIdx,
-                 IN int HarddiskIdx) 
+                 IN int HarddiskIdx)
 {
   BOOLEAN                CreatedDevices;
   char                   RawDeviceName[IDE_MAX_NAME_LENGTH];
   char                   PrimaryDeviceName[IDE_MAX_NAME_LENGTH];
   char                   LogicalDeviceName[IDE_MAX_NAME_LENGTH];
-  char                   Win32AliasName[IDE_MAX_NAME_LENGTH];
   int                    CommandPort, PartitionIdx, PartitionNum;
   int                    ExtPartitionIdx, ExtOffset;
   NTSTATUS               RC;
@@ -548,7 +546,6 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                        &RawDeviceObject, 
                        ControllerObject, 
                        DriveIdx,
-                       NULL,
                        &DrvParms,
                        0, 
                        DrvParms.LogicalCyls * DrvParms.LogicalHeads * DrvParms.SectorsPerTrack);
@@ -596,7 +593,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
           p = &PrimaryPartitionTable[PartitionIdx];
 
             //  if the partition entry is in use, create a device for it
-          if (IsRecognizedPartition(p))
+          if (IsRecognizedPartition(p->PartitionType))
             {
               DPRINT("%s ptbl entry:%d type:%02x Offset:%d Size:%d\n",
                      DeviceDirName,
@@ -613,15 +610,12 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
               strcat(PrimaryDeviceName, IDE_NT_PARTITION_NAME);
               PrimaryDeviceName[strlen(PrimaryDeviceName) + 1] = '\0';
               PrimaryDeviceName[strlen(PrimaryDeviceName)] = '0' + PartitionNum++;
-              strcpy(Win32AliasName, "\\??\\ :");
-              Win32AliasName[4] = 'C' + TotalPartitions;
               TotalPartitions++;
               RC = IDECreateDevice(DriverObject, 
                                    PrimaryDeviceName, 
                                    &PrimaryDeviceObject, 
                                    ControllerObject, 
                                    DriveIdx,
-                                   Win32AliasName,
                                    &DrvParms,
                                    p->StartingBlock, 
                                    p->SectorCount);
@@ -633,7 +627,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
 
                 //  Create devices for logical partitions within an extended partition
             } 
-          else if (IsExtendedPartition(p)) 
+          else if (IsExtendedPartition(p->PartitionType))
             {
               ExtOffset = p->StartingBlock;
 
@@ -652,7 +646,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                   for (ExtPartitionIdx = 0; ExtPartitionIdx < 4; ExtPartitionIdx++) 
                     {
                       ep = &ExtendedPartitionTable[ExtPartitionIdx];
-                      if (IsRecognizedPartition(ep))
+                      if (IsRecognizedPartition(ep->PartitionType))
                         {
                           DPRINT("Harddisk%d: Type:%02x Offset:%d Size:%d\n", 
                                  HarddiskIdx, 
@@ -668,15 +662,12 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                           strcat(LogicalDeviceName, IDE_NT_PARTITION_NAME);
                           LogicalDeviceName[strlen(LogicalDeviceName) + 1] = '\0';
                           LogicalDeviceName[strlen(LogicalDeviceName)] = '0' + PartitionNum++;
-                          strcpy(Win32AliasName, "\\??\\ :");
-                          Win32AliasName[4] = 'C' + TotalPartitions;
                           TotalPartitions++;
                           RC = IDECreateDevice(DriverObject, 
                                                LogicalDeviceName, 
                                                &LogicalDeviceObject, 
                                                ControllerObject, 
                                                DriveIdx,
-                                               Win32AliasName,
                                                &DrvParms,
                                                ep->StartingBlock + ExtOffset, 
                                                ep->SectorCount);
@@ -901,15 +892,14 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
                 OUT PDEVICE_OBJECT *DeviceObject, 
                 IN PCONTROLLER_OBJECT ControllerObject, 
                 IN int UnitNumber,
-                IN char *Win32Alias,
                 IN PIDE_DRIVE_IDENTIFY DrvParms,
                 IN DWORD Offset, 
                 IN DWORD Size) 
 {
   WCHAR                  UnicodeBuffer[IDE_MAX_NAME_LENGTH];
   NTSTATUS               RC;
-  ANSI_STRING            AnsiName, AnsiSymLink;
-  UNICODE_STRING         UnicodeName, SymLink;
+  ANSI_STRING            AnsiName;
+  UNICODE_STRING         UnicodeName;
   PIDE_DEVICE_EXTENSION  DeviceExtension;
 
     // Create a unicode device name
@@ -953,24 +943,10 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
          DeviceExtension->Offset,
          DeviceExtension->Size);
 
-    // FIXME: Create Win32 symbolic link (destroy device if it fails)
-
-  if (Win32Alias != NULL)
-    {
-      DPRINT("Creating SymLink %s --> %s\n", DeviceName, Win32Alias);
-      RtlInitAnsiString(&AnsiSymLink, Win32Alias);
-      RtlAnsiStringToUnicodeString(&SymLink, &AnsiSymLink, TRUE);
-      IoCreateSymbolicLink(&SymLink, &UnicodeName);
-      RtlFreeUnicodeString(&SymLink);
-    }
-
     //  Initialize the DPC object here
   IoInitializeDpcRequest(*DeviceObject, IDEDpcForIsr);
 
-  if (Win32Alias != NULL)
-    {
-      DbgPrint("%s is %s %dMB\n", DeviceName, Win32Alias, Size / 2048);
-    }
+  DbgPrint("%s %dMB\n", DeviceName, Size / 2048);
 
   return  RC;
 }

@@ -1,4 +1,4 @@
-/* $Id: disk.h,v 1.3 2000/08/18 17:22:50 ekohl Exp $
+/* $Id: disk.h,v 1.4 2000/08/21 00:11:51 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -72,17 +72,17 @@
 
 
 #define IsRecognizedPartition(P)  \
-    ((P)->PartitionType == PTDOS3xPrimary  || \
-     (P)->PartitionType == PTOLDDOS16Bit   || \
-     (P)->PartitionType == PTDos5xPrimary  || \
-     (P)->PartitionType == PTWin95FAT32    || \
-     (P)->PartitionType == PTWin95FAT32LBA || \
-     (P)->PartitionType == PTWin95FAT16LBA || \
-     (P)->PartitionType == PTLinuxExt2)
+    ((P) == PTDOS3xPrimary  || \
+     (P) == PTOLDDOS16Bit   || \
+     (P) == PTDos5xPrimary  || \
+     (P) == PTWin95FAT32    || \
+     (P) == PTWin95FAT32LBA || \
+     (P) == PTWin95FAT16LBA || \
+     (P) == PTLinuxExt2)
 
 #define IsExtendedPartition(P)  \
-    ((P)->PartitionType == PTDosExtended || \
-     (P)->PartitionType == PTWin95ExtendedLBA)
+    ((P) == PTDosExtended || \
+     (P) == PTWin95ExtendedLBA)
 
 
 typedef enum _MEDIA_TYPE {
@@ -102,13 +102,14 @@ typedef enum _MEDIA_TYPE {
 } MEDIA_TYPE;
 
 typedef struct _PARTITION_INFORMATION {
+  LARGE_INTEGER StartingOffset;
+  LARGE_INTEGER PartitionLength;
+  DWORD HiddenSectors;
+  DWORD PartitionNumber;
   BYTE PartitionType;
   BOOLEAN BootIndicator;
   BOOLEAN RecognizedPartition;
   BOOLEAN RewritePartition;
-  LARGE_INTEGER StartingOffset;
-  LARGE_INTEGER PartitionLength;
-  LARGE_INTEGER HiddenSectors;
 } PARTITION_INFORMATION;
 
 typedef struct _DRIVE_LAYOUT_INFORMATION {

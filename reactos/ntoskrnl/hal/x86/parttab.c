@@ -1,4 +1,4 @@
-/* $Id: parttab.c,v 1.2 2000/06/30 22:51:34 ekohl Exp $
+/* $Id: parttab.c,v 1.3 2000/08/21 00:12:20 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,7 +28,17 @@ IoReadPartitionTable (
 	PDRIVE_LAYOUT_INFORMATION	* PartitionBuffer
 	)
 {
-	UNIMPLEMENTED;
+#ifdef __NTOSKRNL__
+	return HalDispatchTable.HalIoReadPartitionTable(DeviceObject,
+	                                                SectorSize,
+	                                                ReturnRecognizedPartitions,
+	                                                PartitionBuffer);
+#else
+	return HalDispatchTable->HalIoReadPartitionTable(DeviceObject,
+	                                                 SectorSize,
+	                                                 ReturnRecognizedPartitions,
+	                                                 PartitionBuffer);
+#endif
 }
 
 NTSTATUS

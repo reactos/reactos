@@ -19,4 +19,14 @@ xHalIoAssignDriveLetters (
 	OUT	PSTRING			NtSystemPathString
 	);
 
+NTSTATUS
+FASTCALL
+xHalIoReadPartitionTable (
+	PDEVICE_OBJECT			DeviceObject,
+	ULONG				SectorSize,
+	BOOLEAN				ReturnRecognizedPartitions,
+	PDRIVE_LAYOUT_INFORMATION	* PartitionBuffer
+	);
+
+
 #endif
