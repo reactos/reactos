@@ -4,7 +4,7 @@
 TARGET=vidport
 OBJECTS = vidport.o ../../../ntoskrnl/ntoskrnl.a
 
-all: vidport.sys
+all: vidport.sys vidport.a
 
 .phony: all
 
@@ -46,4 +46,11 @@ vidport.sys: $(OBJECTS)
 	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 \
               -specs=../../svc_specs -mdll -o vidport.sys $(OBJECTS) -Wl,temp.exp
 	- $(RM) temp.exp
+
+vidport.a: vidport.sys vidport.def
+	$(DLLTOOL) \
+		--dllname vidport.sys \
+		--def vidport.def \
+		--output-lib vidport.a
+
 
