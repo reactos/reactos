@@ -1,7 +1,6 @@
-winhello.exe
-winhello.nostrip.exe
-winhello.sym
-winhello.coff
-*.d
 *.o
+*.d
+*.exe
+*.coff
+*.sym
 *.map

@@ -1,7 +1,6 @@
-eventpair.exe
-eventpair.nostrip.exe
-eventpair.sym
-eventpair.coff
-*.d
 *.o
+*.d
+*.exe
+*.coff
+*.sym
 *.map

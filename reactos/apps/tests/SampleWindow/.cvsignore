@@ -1,7 +1,6 @@
-window.exe
-window.nostrip.exe
-window.sym
-window.coff
-*.d
 *.o
+*.d
+*.exe
+*.coff
+*.sym
 *.map

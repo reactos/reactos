@@ -1,8 +1,6 @@
-statst.exe
-statst.nostrip.exe
-statst.sym
-statst.coff
+*.o
 *.d
-*.o*.map
-*.map
+*.exe
+*.coff
 *.sym
+*.map

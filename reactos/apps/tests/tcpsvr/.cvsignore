@@ -1,7 +1,6 @@
-tcpsvr.exe
-tcpsvr.nostrip.exe
-tcpsvr.sym
-tcpsvr.coff
-*.d
 *.o
+*.d
+*.exe
+*.coff
+*.sym
 *.map
