@@ -69,7 +69,7 @@ HRESULT WINAPI IFileSystemBindData_Constructor(const WIN32_FIND_DATAW *pfd, LPBC
 	IFileSystemBindDataImpl *sb;
 	HRESULT ret = E_OUTOFMEMORY;
 
-	TRACE("%p, %p", pfd, ppV);
+	TRACE("%p, %p\n", pfd, ppV);
 
 	if (!ppV)
 	  return E_INVALIDARG;
@@ -108,7 +108,7 @@ HRESULT WINAPI FileSystemBindData_GetFindData(LPBC pbc, WIN32_FIND_DATAW *pfd)
 	IFileSystemBindData *pfsbd = NULL;
 	HRESULT ret;
 
-	TRACE("%p, %p", pbc, pfd);
+	TRACE("%p, %p\n", pbc, pfd);
 
 	if (!pfd)
 	  return E_INVALIDARG;
@@ -133,7 +133,7 @@ HRESULT WINAPI FileSystemBindData_SetFindData(LPBC pbc, const WIN32_FIND_DATAW *
 	IFileSystemBindData *pfsbd = NULL;
 	HRESULT ret;
 	
-	TRACE("%p, %p", pbc, pfd);
+	TRACE("%p, %p\n", pbc, pfd);
 
 	ret = IBindCtx_GetObjectParam(pbc, wFileSystemBindData, &pUnk);
 	if (SUCCEEDED(ret))

@@ -445,7 +445,7 @@ static DWORD SHNotifyMoveFileW(LPCWSTR src, LPCWSTR dest, BOOL bRename)
 	    dwAttr = GetFileAttributesW(dest);
 	    if (dwAttr != -1)
 	    {
-	      FIXME("Rename on move to existing file not implemented!");
+	      FIXME("Rename on move to existing file not implemented!\n");
 	    }
 	  }
 	}
@@ -484,7 +484,7 @@ static DWORD SHNotifyCopyFileW(LPCWSTR src, LPCWSTR dest, BOOL bRename)
 	  DWORD dwAttr = GetFileAttributesW(dest);
 	  if (dwAttr != -1)
 	  {
-	    FIXME("Rename on copy to existing file not implemented!");
+	    FIXME("Rename on copy to existing file not implemented!\n");
 	  }
 	}
 	if (ret)
@@ -572,7 +572,7 @@ DWORD WINAPI SHCreateDirectoryExW(HWND hWnd, LPCWSTR path, LPSECURITY_ATTRIBUTES
 	  /* handling network file names?
 	    lstrcpynW(pathName, path, MAX_PATH);
 	    lpStr = PathAddBackslashW(pathName);*/
-	    FIXME("Semi-stub, non zero hWnd should be used somehow?");
+	    FIXME("Semi-stub, non zero hWnd should be used somehow?\n");
 	  }
 	}
 	return ret;
