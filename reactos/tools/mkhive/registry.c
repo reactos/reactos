@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: registry.c,v 1.1 2003/04/14 17:18:48 ekohl Exp $
+/* $Id: registry.c,v 1.2 2003/04/16 15:06:33 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/registry.c
@@ -44,12 +44,18 @@ static HKEY RootKey;
 VOID
 RegInitializeRegistry(VOID)
 {
+  HKEY ControlSetKey;
+  HKEY LinkKey;
+
   /* Create root key */
   RootKey = (HKEY)malloc(sizeof(KEY));
 
   InitializeListHead(&RootKey->SubKeyList);
   InitializeListHead(&RootKey->ValueList);
   InitializeListHead(&RootKey->KeyList);
+
+  RootKey->SubKeyCount = 0;
+  RootKey->ValueCount = 0;
 
   RootKey->NameSize = 2;
   RootKey->Name = (PUCHAR)malloc(2);
@@ -64,9 +70,39 @@ RegInitializeRegistry(VOID)
 	       "Registry\\Machine\\SYSTEM",
 	       NULL);
 
+  /* Create link 'CurrentControlSet' --> 'ControlSet001' */
+  RegCreateKey(RootKey,
+	       "Registry\\Machine\\SYSTEM\\ControlSet001",
+	       &ControlSetKey);
+
+  RegCreateKey(RootKey,
+	       "Registry\\Machine\\SYSTEM\\CurrentControlSet",
+	       &LinkKey);
+
+  RegSetValue(LinkKey,
+	      NULL,
+	      REG_LINK,
+	      (PUCHAR)&ControlSetKey,
+	      sizeof(PVOID));
+
   /* Create HARDWARE key */
   RegCreateKey(RootKey,
 	       "Registry\\Machine\\HARDWARE",
+	       NULL);
+
+  /* Create SAM key */
+  RegCreateKey(RootKey,
+	       "Registry\\Machine\\SAM",
+	       NULL);
+
+  /* Create SECURITY key */
+  RegCreateKey(RootKey,
+	       "Registry\\Machine\\SECURITY",
+	       NULL);
+
+  /* Create DEFAULT key */
+  RegCreateKey(RootKey,
+	       "Registry\\User\\.DEFAULT",
 	       NULL);
 }
 
@@ -153,11 +189,16 @@ RegCreateKey(HKEY ParentKey,
 	  InitializeListHead (&NewKey->SubKeyList);
 	  InitializeListHead (&NewKey->ValueList);
 
+	  NewKey->SubKeyCount = 0;
+	  NewKey->ValueCount = 0;
+
 	  NewKey->DataType = 0;
 	  NewKey->DataSize = 0;
 	  NewKey->Data = NULL;
 
 	  InsertTailList (&CurrentKey->SubKeyList, &NewKey->KeyList);
+	  CurrentKey->SubKeyCount++;
+
 	  NewKey->NameSize = subkeyLength + 1;
 	  NewKey->Name = (PCHAR)malloc (NewKey->NameSize);
 	  if (NewKey->Name == NULL)
@@ -406,6 +447,7 @@ RegSetValue(HKEY Key,
 	  if (Value == NULL)
 	    return(ERROR_OUTOFMEMORY);
 	  InsertTailList(&Key->ValueList, &Value->ValueList);
+	  Key->ValueCount++;
 	  Value->NameSize = strlen(ValueName)+1;
 	  Value->Name = (PCHAR)malloc(Value->NameSize);
 	  if (Value->Name == NULL)
@@ -564,6 +606,7 @@ RegDeleteValue(HKEY Key,
 	return(ERROR_INVALID_PARAMETER);
 
       /* delete value */
+      Key->ValueCount--;
       if (Value->Name != NULL)
 	free(Value->Name);
       Value->Name = NULL;
@@ -639,6 +682,24 @@ RegEnumValue(HKEY Key,
 
   return(ERROR_SUCCESS);
 }
+
+
+ULONG
+RegGetSubKeyCount (HKEY Key)
+{
+  return Key->SubKeyCount;
+}
+
+
+ULONG
+RegGetValueCount (HKEY Key)
+{
+  if (Key->DataSize != 0)
+    return Key->ValueCount + 1;
+
+  return Key->ValueCount;
+}
+
 
 
 #if 0

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: infcache.c,v 1.1 2003/04/14 17:18:48 ekohl Exp $
+/* $Id: infcache.c,v 1.2 2003/04/16 15:06:33 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/infcache.c
@@ -1386,7 +1386,7 @@ InfGetStringField (PINFCONTEXT Context,
       Ptr = CacheField->Data;
     }
 
-  Size = wcslen (Ptr) + 1;
+  Size = strlen (Ptr) + 1;
 
   if (RequiredSize != NULL)
     *RequiredSize = Size;

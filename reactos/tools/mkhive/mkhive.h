@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mkhive.h,v 1.1 2003/04/14 17:18:48 ekohl Exp $
+/* $Id: mkhive.h,v 1.2 2003/04/16 15:06:33 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/mkhive.h
@@ -31,11 +31,14 @@
 #define VOID void
 typedef void *PVOID;
 typedef char CHAR, *PCHAR;
+typedef short WCHAR, *PWCHAR;
 typedef unsigned char UCHAR, *PUCHAR;
 typedef short SHORT, *PSHORT;
 typedef unsigned short USHORT, *PUSHORT;
 typedef long LONG, *PLONG;
 typedef unsigned long ULONG, *PULONG;
+
+typedef unsigned long ULONG_PTR;
 
 typedef int BOOL, *PBOOL;
 
