@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.47 2004/10/13 22:27:03 ion Exp $
+/* $Id: bug.c,v 1.48 2004/12/12 17:42:00 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -103,6 +103,7 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 {
   PRTL_MESSAGE_RESOURCE_ENTRY Message;
   NTSTATUS Status;
+  ULONG Mask;
   KIRQL OldIrql;
 
   /* Make sure we're switching back to the blue screen and print messages on it */
@@ -142,13 +143,25 @@ KeBugCheckWithTf(ULONG BugCheckCode,
     {
       DbgPrint("  No message text found!\n\n");
     }
-
-  if (InBugCheck == 1)
+  Mask = 1 << KeGetCurrentProcessorNumber();
+  if (InBugCheck & Mask)
     {
+#ifdef MP
+      DbgPrint("Recursive bug check on CPU%d, halting now\n", KeGetCurrentProcessorNumber());
+      /*
+       * FIXME:
+       *   Send an ipi to all other processors which halt them too.
+       */
+#else
       DbgPrint("Recursive bug check halting now\n");
+#endif
       Ke386HaltProcessor();
     }
-  InBugCheck = 1;  
+  /* 
+   * FIXME:
+   *   Use InterlockedOr or InterlockedBitSet.
+   */
+  InBugCheck |= Mask;
   if (Tf != NULL)
     {
       KiDumpTrapFrame(Tf, BugCheckParameter1, BugCheckParameter2);
@@ -178,6 +191,10 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 
   for (;;)
     {
+      /*
+       * FIXME:
+       *   Send an ipi to all other processors which halt them too.
+       */
       Ke386HaltProcessor();
     }
 }
