@@ -147,8 +147,8 @@ BOOLEAN KeInsertQueueDpc(PKDPC dpc, PVOID SystemArgument1,
    InsertHeadList(&DpcQueueHead,&dpc->DpcListEntry);
    DPRINT("dpc->DpcListEntry.Flink %x\n", dpc->DpcListEntry.Flink);
    DpcQueueSize++;
-   KeReleaseSpinLock( &DpcQueueLock, oldlvl );
    dpc->Lock=(PULONG)1;
+   KeReleaseSpinLock( &DpcQueueLock, oldlvl );
    DPRINT("DpcQueueHead.Flink %x\n",DpcQueueHead.Flink);
    DPRINT("Leaving KeInsertQueueDpc()\n",0);
    return(TRUE);
