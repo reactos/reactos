@@ -10,6 +10,9 @@
 #include <ndissys.h>
 
 
+/*
+ * @implemented
+ */
 NDIS_STATUS
 EXPORT
 NdisAnsiStringToUnicodeString(
@@ -28,6 +31,9 @@ NdisAnsiStringToUnicodeString(
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 EXPORT
 NdisEqualString(
@@ -49,6 +55,9 @@ NdisEqualString(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisInitAnsiString(
@@ -67,6 +76,9 @@ NdisInitAnsiString(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisInitializeString(
@@ -92,6 +104,9 @@ NdisInitializeString(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisInitUnicodeString(
@@ -110,6 +125,9 @@ NdisInitUnicodeString(
 }
 
 
+/*
+ * @implemented
+ */
 NDIS_STATUS
 EXPORT
 NdisUnicodeStringToAnsiString(
@@ -129,6 +147,9 @@ NdisUnicodeStringToAnsiString(
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 EXPORT
 NdisUpcaseUnicodeString(

@@ -10,6 +10,9 @@
 #include <ndissys.h>
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisAllocateMemoryWithTag(
@@ -29,6 +32,9 @@ NdisAllocateMemoryWithTag(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCreateLookaheadBufferFromSharedMemory(
@@ -40,6 +46,9 @@ NdisCreateLookaheadBufferFromSharedMemory(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisDestroyLookaheadBufferFromSharedMemory(
@@ -49,6 +58,9 @@ NdisDestroyLookaheadBufferFromSharedMemory(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMoveFromMappedMemory(
@@ -60,6 +72,9 @@ NdisMoveFromMappedMemory(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMoveMappedMemory(
@@ -71,6 +86,9 @@ NdisMoveMappedMemory(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMoveToMappedMemory(
@@ -82,6 +100,9 @@ NdisMoveToMappedMemory(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMUpdateSharedMemory(
@@ -94,6 +115,9 @@ NdisMUpdateSharedMemory(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisAllocateMemory(
@@ -135,6 +159,9 @@ NdisAllocateMemory(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisFreeMemory(
@@ -164,6 +191,9 @@ NdisFreeMemory(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisImmediateReadSharedMemory(
@@ -175,6 +205,9 @@ NdisImmediateReadSharedMemory(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisImmediateWriteSharedMemory(
@@ -187,6 +220,9 @@ NdisImmediateWriteSharedMemory(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMAllocateSharedMemory(
@@ -200,6 +236,9 @@ NdisMAllocateSharedMemory(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMAllocateSharedMemoryAsync(
@@ -214,6 +253,9 @@ NdisMAllocateSharedMemoryAsync(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMFreeSharedMemory(

@@ -84,6 +84,9 @@ BOOLEAN STDCALL ServiceRoutine(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCompleteDmaTransfer(
@@ -98,6 +101,9 @@ NdisCompleteDmaTransfer(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisFlushBuffer(
@@ -108,6 +114,9 @@ NdisFlushBuffer(
 }
 
 
+/*
+ * @unimplemented
+ */
 ULONG
 EXPORT
 NdisGetCacheFillSize(
@@ -119,6 +128,9 @@ NdisGetCacheFillSize(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisImmediateReadPortUchar(
@@ -130,6 +142,9 @@ NdisImmediateReadPortUchar(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisImmediateReadPortUlong(
@@ -141,6 +156,9 @@ NdisImmediateReadPortUlong(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisImmediateReadPortUshort(
@@ -152,6 +170,9 @@ NdisImmediateReadPortUshort(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisImmediateWritePortUchar(
@@ -163,6 +184,9 @@ NdisImmediateWritePortUchar(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisImmediateWritePortUlong(
@@ -174,6 +198,9 @@ NdisImmediateWritePortUlong(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisImmediateWritePortUshort(
@@ -185,6 +212,9 @@ NdisImmediateWritePortUshort(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMAllocateMapRegisters(
@@ -200,6 +230,9 @@ NdisMAllocateMapRegisters(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMCompleteDmaTransfer(
@@ -214,6 +247,9 @@ NdisMCompleteDmaTransfer(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMDeregisterDmaChannel(
@@ -223,6 +259,9 @@ NdisMDeregisterDmaChannel(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisMDeregisterInterrupt(
@@ -237,6 +276,9 @@ NdisMDeregisterInterrupt(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMDeregisterIoPortRange(
@@ -259,6 +301,9 @@ NdisMDeregisterIoPortRange(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMFreeMapRegisters(
@@ -268,6 +313,9 @@ NdisMFreeMapRegisters(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMMapIoSpace(
@@ -282,6 +330,9 @@ NdisMMapIoSpace(
 }
 
 
+/*
+ * @unimplemented
+ */
 ULONG
 EXPORT
 NdisMReadDmaCounter(
@@ -293,6 +344,9 @@ NdisMReadDmaCounter(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMRegisterDmaChannel(
@@ -309,6 +363,9 @@ NdisMRegisterDmaChannel(
 }
 
 
+/*
+ * @implemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMRegisterInterrupt(
@@ -394,6 +451,9 @@ NdisMRegisterInterrupt(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMRegisterIoPortRange(
@@ -440,6 +500,9 @@ NdisMRegisterIoPortRange(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMSetupDmaTransfer(
@@ -454,6 +517,9 @@ NdisMSetupDmaTransfer(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMUnmapIoSpace(

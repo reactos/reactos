@@ -721,6 +721,9 @@ VOID STDCALL MiniportDpc(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMCloseLog(
@@ -730,6 +733,9 @@ NdisMCloseLog(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMCreateLog(
@@ -743,6 +749,9 @@ NdisMCreateLog(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMDeregisterAdapterShutdownHandler(
@@ -752,6 +761,9 @@ NdisMDeregisterAdapterShutdownHandler(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMFlushLog(
@@ -761,6 +773,9 @@ NdisMFlushLog(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMIndicateStatus(
@@ -773,6 +788,9 @@ NdisMIndicateStatus(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMIndicateStatusComplete(
@@ -782,6 +800,9 @@ NdisMIndicateStatusComplete(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisInitializeWrapper(
@@ -828,6 +849,9 @@ NdisInitializeWrapper(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisMQueryInformationComplete(
@@ -846,6 +870,9 @@ NdisMQueryInformationComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMRegisterAdapterShutdownHandler(
@@ -953,6 +980,9 @@ DoQueries(
 }
 
 
+/*
+ * @implemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMRegisterMiniport(
@@ -1153,6 +1183,9 @@ NdisMRegisterMiniport(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisMResetComplete(
@@ -1166,6 +1199,9 @@ NdisMResetComplete(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisMSendComplete(
@@ -1187,6 +1223,9 @@ NdisMSendComplete(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisMSendResourcesAvailable(
@@ -1196,6 +1235,9 @@ NdisMSendResourcesAvailable(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisMTransferDataComplete(
@@ -1211,6 +1253,9 @@ NdisMTransferDataComplete(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisMSetInformationComplete(
@@ -1229,6 +1274,9 @@ NdisMSetInformationComplete(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisMSetAttributes(
@@ -1256,6 +1304,9 @@ NdisMSetAttributes(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisMSetAttributesEx(
@@ -1289,6 +1340,9 @@ NdisMSetAttributesEx(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMSleep(
@@ -1298,6 +1352,9 @@ NdisMSleep(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN
 EXPORT
 NdisMSynchronizeWithInterrupt(
@@ -1311,6 +1368,9 @@ NdisMSynchronizeWithInterrupt(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMWriteLogData(
@@ -1324,6 +1384,9 @@ NdisMWriteLogData(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisTerminateWrapper(

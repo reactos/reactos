@@ -9,6 +9,9 @@
  */
 #include <ndissys.h>
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisReinitializePacket(
@@ -18,6 +21,10 @@ NdisReinitializePacket(
 	(Packet)->Private.ValidCounts = FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisAcquireReadWriteLock(
@@ -35,6 +42,9 @@ NdisAcquireReadWriteLock(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisAcquireSpinLock(
@@ -49,6 +59,9 @@ NdisAcquireSpinLock(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisAllocateSpinLock(
@@ -63,6 +76,9 @@ NdisAllocateSpinLock(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisDprAcquireSpinLock(
@@ -78,6 +94,9 @@ NdisDprAcquireSpinLock(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisDprReleaseSpinLock(
@@ -92,6 +111,9 @@ NdisDprReleaseSpinLock(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisFreeSpinLock(
@@ -106,6 +128,9 @@ NdisFreeSpinLock(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisGetCurrentProcessorCpuUsage(
@@ -120,6 +145,9 @@ NdisGetCurrentProcessorCpuUsage(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisInitializeEvent(
@@ -134,6 +162,9 @@ NdisInitializeEvent(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisReleaseSpinLock(
@@ -148,6 +179,9 @@ NdisReleaseSpinLock(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisResetEvent(
@@ -162,6 +196,9 @@ NdisResetEvent(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisSetEvent(
@@ -176,6 +213,9 @@ NdisSetEvent(
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 EXPORT
 NdisWaitEvent(

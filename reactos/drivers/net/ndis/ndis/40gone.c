@@ -10,6 +10,9 @@
 #include <ndissys.h>
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 ArcFilterDprIndicateReceive(
@@ -22,6 +25,9 @@ ArcFilterDprIndicateReceive(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 ArcFilterDprIndicateReceiveComplete(
@@ -31,6 +37,9 @@ ArcFilterDprIndicateReceiveComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 EthChangeFilterAddresses(
@@ -47,6 +56,9 @@ EthChangeFilterAddresses(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN
 EXPORT
 EthCreateFilter(
@@ -64,6 +76,9 @@ EthCreateFilter(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 EthDeleteFilter(
@@ -73,6 +88,9 @@ EthDeleteFilter(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 EthDeleteFilterOpenAdapter(
@@ -86,6 +104,9 @@ EthDeleteFilterOpenAdapter(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 EthFilterAdjust(
@@ -101,6 +122,9 @@ EthFilterAdjust(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 EthFilterIndicateReceive(
@@ -117,6 +141,9 @@ EthFilterIndicateReceive(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 EthFilterIndicateReceiveComplete(
@@ -125,6 +152,10 @@ EthFilterIndicateReceiveComplete(
     UNIMPLEMENTED
 }
 
+
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 EthFilterDprIndicateReceive(
@@ -141,6 +172,9 @@ EthFilterDprIndicateReceive(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 EthFilterDprIndicateReceiveComplete(
@@ -150,7 +184,9 @@ EthFilterDprIndicateReceiveComplete(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 BOOLEAN
 EXPORT
 EthNoteFilterOpenAdapter(
@@ -165,6 +201,9 @@ EthNoteFilterOpenAdapter(
 }
 
 
+/*
+ * @unimplemented
+ */
 UINT
 EXPORT
 EthNumberOfOpenFilterAddresses(
@@ -177,6 +216,9 @@ EthNumberOfOpenFilterAddresses(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 EthQueryGlobalFilterAddresses (
@@ -190,6 +232,9 @@ EthQueryGlobalFilterAddresses (
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 EthQueryOpenFilterAddresses(
@@ -204,6 +249,9 @@ EthQueryOpenFilterAddresses(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN
 EXPORT
 EthShouldAddressLoopBack(
@@ -216,6 +264,9 @@ EthShouldAddressLoopBack(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 FddiChangeFilterLongAddresses(
@@ -232,6 +283,9 @@ FddiChangeFilterLongAddresses(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 FddiChangeFilterShortAddresses(
@@ -248,6 +302,9 @@ FddiChangeFilterShortAddresses(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN
 EXPORT
 FddiCreateFilter(
@@ -267,6 +324,9 @@ FddiCreateFilter(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 FddiDeleteFilter(
@@ -276,6 +336,9 @@ FddiDeleteFilter(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 FddiDeleteFilterOpenAdapter(
@@ -289,6 +352,9 @@ FddiDeleteFilterOpenAdapter(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 FddiFilterAdjust(
@@ -304,6 +370,9 @@ FddiFilterAdjust(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 FddiFilterIndicateReceive(
@@ -321,6 +390,9 @@ FddiFilterIndicateReceive(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 FddiFilterIndicateReceiveComplete(
@@ -330,6 +402,9 @@ FddiFilterIndicateReceiveComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN
 EXPORT
 FddiNoteFilterOpenAdapter(
@@ -344,6 +419,9 @@ FddiNoteFilterOpenAdapter(
 }
 
 
+/*
+ * @unimplemented
+ */
 UINT
 EXPORT
 FddiNumberOfOpenFilterLongAddresses(
@@ -356,6 +434,9 @@ FddiNumberOfOpenFilterLongAddresses(
 }
 
 
+/*
+ * @unimplemented
+ */
 UINT
 EXPORT
 FddiNumberOfOpenFilterShortAddresses(
@@ -368,6 +449,9 @@ FddiNumberOfOpenFilterShortAddresses(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 FddiQueryGlobalFilterLongAddresses(
@@ -381,6 +465,9 @@ FddiQueryGlobalFilterLongAddresses(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 FddiQueryGlobalFilterShortAddresses(
@@ -394,6 +481,9 @@ FddiQueryGlobalFilterShortAddresses(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 FddiQueryOpenFilterLongAddresses(
@@ -408,6 +498,9 @@ FddiQueryOpenFilterLongAddresses(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 FddiQueryOpenFilterShortAddresses(
@@ -422,6 +515,9 @@ FddiQueryOpenFilterShortAddresses(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN
 EXPORT
 FddiShouldAddressLoopBack(
@@ -435,6 +531,9 @@ FddiShouldAddressLoopBack(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisAllocateDmaChannel(
@@ -448,6 +547,9 @@ NdisAllocateDmaChannel(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisAllocateSharedMemory(
@@ -461,6 +563,9 @@ NdisAllocateSharedMemory(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCompleteBufferPhysicalMapping(
@@ -472,6 +577,9 @@ NdisCompleteBufferPhysicalMapping(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCompleteRequest(
@@ -483,6 +591,9 @@ NdisCompleteRequest(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCompleteReset(
@@ -493,6 +604,9 @@ NdisCompleteReset(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCompleteSend(
@@ -504,6 +618,9 @@ NdisCompleteSend(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCompleteTransferData(
@@ -516,6 +633,9 @@ NdisCompleteTransferData(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisIndicateReceive(
@@ -532,6 +652,9 @@ NdisIndicateReceive(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisIndicateReceiveComplete(
@@ -541,6 +664,9 @@ NdisIndicateReceiveComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisIndicateStatus(
@@ -553,6 +679,9 @@ NdisIndicateStatus(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisIndicateStatusComplete(
@@ -562,6 +691,9 @@ NdisIndicateStatusComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisPciAssignResources(
@@ -577,6 +709,9 @@ NdisPciAssignResources(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisReadBindingInformation (
@@ -588,6 +723,9 @@ NdisReadBindingInformation (
 }
 
 
+/*
+ * @unimplemented
+ */
 ULONG
 EXPORT
 NdisReadDmaCounter(
@@ -599,6 +737,9 @@ NdisReadDmaCounter(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisStartBufferPhysicalMapping(
@@ -613,6 +754,9 @@ NdisStartBufferPhysicalMapping(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN
 EXPORT
 NdisSynchronizeWithInterrupt(
@@ -626,6 +770,9 @@ NdisSynchronizeWithInterrupt(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisUnmapIoSpace(
@@ -637,6 +784,9 @@ NdisUnmapIoSpace(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 TrChangeFunctionalAddress(
@@ -652,6 +802,9 @@ TrChangeFunctionalAddress(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 TrChangeGroupAddress(
@@ -667,6 +820,9 @@ TrChangeGroupAddress(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN
 EXPORT
 TrCreateFilter(
@@ -684,6 +840,9 @@ TrCreateFilter(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 TrDeleteFilter(
@@ -693,6 +852,9 @@ TrDeleteFilter(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 TrDeleteFilterOpenAdapter (
@@ -706,6 +868,9 @@ TrDeleteFilterOpenAdapter (
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 TrFilterAdjust(
@@ -721,6 +886,9 @@ TrFilterAdjust(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 TrFilterIndicateReceive(
@@ -736,6 +904,9 @@ TrFilterIndicateReceive(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 TrFilterIndicateReceiveComplete(
@@ -745,6 +916,9 @@ TrFilterIndicateReceiveComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN
 EXPORT
 TrNoteFilterOpenAdapter(
@@ -759,6 +933,9 @@ TrNoteFilterOpenAdapter(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN
 EXPORT
 TrShouldAddressLoopBack(

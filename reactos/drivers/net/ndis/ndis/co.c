@@ -10,6 +10,9 @@
 #include <ndissys.h>
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisCoCreateVc(
@@ -30,6 +33,9 @@ NdisCoCreateVc(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisCoDeleteVc(
@@ -47,6 +53,9 @@ NdisCoDeleteVc(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisCoRequest(
@@ -68,6 +77,9 @@ NdisCoRequest(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCoRequestComplete(
@@ -87,6 +99,9 @@ NdisCoRequestComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCoSendPackets(
@@ -104,7 +119,9 @@ NdisCoSendPackets(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMCoActivateVcComplete(
@@ -122,6 +139,9 @@ NdisMCoActivateVcComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMCoDeactivateVcComplete(
@@ -138,6 +158,9 @@ NdisMCoDeactivateVcComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMCoIndicateReceivePacket(
@@ -155,6 +178,9 @@ NdisMCoIndicateReceivePacket(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMCoIndicateStatus(
@@ -174,6 +200,9 @@ NdisMCoIndicateStatus(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMCoReceiveComplete(
@@ -189,6 +218,9 @@ NdisMCoReceiveComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMCoRequestComplete(
@@ -206,6 +238,9 @@ NdisMCoRequestComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID 
 EXPORT
 NdisMCoSendComplete(
@@ -221,6 +256,5 @@ NdisMCoSendComplete(
 {
     UNIMPLEMENTED
 }
-
 
 /* EOF */

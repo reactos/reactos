@@ -10,6 +10,9 @@
 #include <ndissys.h>
 
 
+/*
+ * @unimplemented
+ */
 ULONG
 EXPORT
 NdisImmediateReadPciSlotInformation(
@@ -25,6 +28,9 @@ NdisImmediateReadPciSlotInformation(
 }
 
 
+/*
+ * @unimplemented
+ */
 ULONG 
 EXPORT
 NdisImmediateWritePciSlotInformation(
@@ -40,6 +46,9 @@ NdisImmediateWritePciSlotInformation(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMPciAssignResources(
@@ -53,6 +62,9 @@ NdisMPciAssignResources(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMQueryAdapterResources(
@@ -65,6 +77,9 @@ NdisMQueryAdapterResources(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisQueryMapRegisterCount(
@@ -77,6 +92,9 @@ NdisQueryMapRegisterCount(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisReadEisaSlotInformation(
@@ -89,6 +107,9 @@ NdisReadEisaSlotInformation(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisReadEisaSlotInformationEx(
@@ -102,6 +123,9 @@ NdisReadEisaSlotInformationEx(
 }
 
 
+/*
+ * @unimplemented
+ */
 ULONG
 EXPORT
 NdisReadPciSlotInformation(
@@ -117,6 +141,9 @@ NdisReadPciSlotInformation(
 }
 
 
+/*
+ * @unimplemented
+ */
 ULONG
 EXPORT
 NdisWritePciSlotInformation(

@@ -10,6 +10,9 @@
 #include <ndissys.h>
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisCmActivateVc(
@@ -28,6 +31,9 @@ NdisCmActivateVc(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCmAddPartyComplete(
@@ -46,6 +52,9 @@ NdisCmAddPartyComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCmCloseAddressFamilyComplete(
@@ -62,6 +71,9 @@ NdisCmCloseAddressFamilyComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCmCloseCallComplete(
@@ -79,6 +91,9 @@ NdisCmCloseCallComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisCmDeactivateVc(
@@ -96,6 +111,9 @@ NdisCmDeactivateVc(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCmDeregisterSapComplete(
@@ -112,6 +130,9 @@ NdisCmDeregisterSapComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCmDispatchCallConnected(
@@ -127,6 +148,9 @@ NdisCmDispatchCallConnected(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisCmDispatchIncomingCall(
@@ -146,6 +170,9 @@ NdisCmDispatchIncomingCall(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCmDispatchIncomingCallQoSChange(
@@ -162,6 +189,9 @@ NdisCmDispatchIncomingCallQoSChange(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCmDispatchIncomingCloseCall(
@@ -180,6 +210,9 @@ NdisCmDispatchIncomingCloseCall(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCmDispatchIncomingDropParty(
@@ -198,6 +231,9 @@ NdisCmDispatchIncomingDropParty(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCmDropPartyComplete(
@@ -214,6 +250,9 @@ NdisCmDropPartyComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCmMakeCallComplete(
@@ -233,6 +272,9 @@ NdisCmMakeCallComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCmModifyCallQoSComplete(
@@ -250,6 +292,9 @@ NdisCmModifyCallQoSComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCmOpenAddressFamilyComplete(
@@ -267,6 +312,9 @@ NdisCmOpenAddressFamilyComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisCmRegisterAddressFamily(
@@ -287,6 +335,9 @@ NdisCmRegisterAddressFamily(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCmRegisterSapComplete(
@@ -304,7 +355,9 @@ NdisCmRegisterSapComplete(
 }
 
 
-
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMCmActivateVc(
@@ -323,6 +376,9 @@ NdisMCmActivateVc(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMCmCreateVc(
@@ -343,6 +399,9 @@ NdisMCmCreateVc(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMCmDeactivateVc(
@@ -360,6 +419,9 @@ NdisMCmDeactivateVc(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMCmDeleteVc(
@@ -377,6 +439,9 @@ NdisMCmDeleteVc(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMCmRegisterAddressFamily(
@@ -396,6 +461,10 @@ NdisMCmRegisterAddressFamily(
     return NDIS_STATUS_FAILURE;
 }
 
+
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMCmRequest(

@@ -10,6 +10,9 @@
 #include <ndissys.h>
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCompleteBindAdapter(
@@ -21,6 +24,9 @@ NdisCompleteBindAdapter(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCompleteQueryStatistics(
@@ -32,6 +38,9 @@ NdisCompleteQueryStatistics(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCompleteUnbindAdapter(
@@ -42,6 +51,9 @@ NdisCompleteUnbindAdapter(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisInitializeListHead(
@@ -51,6 +63,9 @@ NdisInitializeListHead(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisInterlockedAddUlong (
@@ -62,6 +77,9 @@ NdisInterlockedAddUlong (
 }
 
 
+/*
+ * @unimplemented
+ */
 PLIST_ENTRY
 EXPORT
 NdisInterlockedInsertHeadList(
@@ -75,6 +93,9 @@ NdisInterlockedInsertHeadList(
 }
 
 
+/*
+ * @unimplemented
+ */
 PLIST_ENTRY
 EXPORT
 NdisInterlockedInsertTailList(
@@ -88,6 +109,9 @@ NdisInterlockedInsertTailList(
 }
 
 
+/*
+ * @unimplemented
+ */
 PLIST_ENTRY
 EXPORT
 NdisInterlockedRemoveHeadList(
@@ -100,6 +124,9 @@ NdisInterlockedRemoveHeadList(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMCompleteBufferPhysicalMapping(
@@ -110,6 +137,9 @@ NdisMCompleteBufferPhysicalMapping(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMStartBufferPhysicalMapping(
@@ -124,6 +154,9 @@ NdisMStartBufferPhysicalMapping(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMapFile(
@@ -135,6 +168,9 @@ NdisMapFile(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisWriteConfiguration(
@@ -147,6 +183,9 @@ NdisWriteConfiguration(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisWriteErrorLogEntry(
@@ -162,6 +201,9 @@ NdisWriteErrorLogEntry(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCloseConfiguration(
@@ -171,6 +213,9 @@ NdisCloseConfiguration(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCloseFile(
@@ -180,6 +225,9 @@ NdisCloseFile(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisIMDeInitializeDeviceInstance(
@@ -191,6 +239,9 @@ NdisIMDeInitializeDeviceInstance(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisIMInitializeDeviceInstance(
@@ -203,6 +254,9 @@ NdisIMInitializeDeviceInstance(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisIMRegisterLayeredMiniport(
@@ -217,6 +271,9 @@ NdisIMRegisterLayeredMiniport(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMWanIndicateReceive(
@@ -230,6 +287,9 @@ NdisMWanIndicateReceive(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMWanIndicateReceiveComplete(
@@ -239,6 +299,9 @@ NdisMWanIndicateReceiveComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMWanSendComplete(
@@ -250,6 +313,9 @@ NdisMWanSendComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisOpenConfiguration(
@@ -267,6 +333,9 @@ NdisOpenConfigurationKeyByName
 */
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisOpenFile(
@@ -284,6 +353,9 @@ NdisOpenFile(
 NdisOpenGlobalConfiguration
 */
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisOpenProtocolConfiguration(
@@ -295,6 +367,9 @@ NdisOpenProtocolConfiguration(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisReadConfiguration(
@@ -308,6 +383,9 @@ NdisReadConfiguration(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisReadNetworkAddress(
@@ -354,6 +432,9 @@ NdisSetProtocolFilter(
 #endif
 
 
+/*
+ * @unimplemented
+ */
 CCHAR
 EXPORT
 NdisSystemProcessorCount(
@@ -363,6 +444,9 @@ NdisSystemProcessorCount(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisUnmapFile(
@@ -386,6 +470,9 @@ NdisWriteEventLogEntry
 
 /* NDIS 5.0 extensions */
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCompletePnPEvent(
@@ -403,6 +490,9 @@ NdisCompletePnPEvent(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisConvertStringToAtmAddress(
@@ -420,6 +510,9 @@ NdisConvertStringToAtmAddress(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisGetCurrentProcessorCounts(
@@ -437,6 +530,9 @@ NdisGetCurrentProcessorCounts(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisGetDriverHandle(
@@ -453,6 +549,9 @@ NdisGetDriverHandle(
 }
 
 
+/*
+ * @unimplemented
+ */
 PNDIS_PACKET
 EXPORT
 NdisGetReceivedPacket(
@@ -471,6 +570,9 @@ NdisGetReceivedPacket(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisGetSystemUptime(
@@ -486,6 +588,9 @@ NdisGetSystemUptime(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisInitializeReadWriteLock(
@@ -501,6 +606,9 @@ NdisInitializeReadWriteLock(
 }
 
 
+/*
+ * @unimplemented
+ */
 LONG
 EXPORT
 NdisInterlockedDecrement(
@@ -518,6 +626,9 @@ NdisInterlockedDecrement(
 }
 
 
+/*
+ * @unimplemented
+ */
 LONG
 EXPORT
 NdisInterlockedIncrement(
@@ -535,6 +646,9 @@ NdisInterlockedIncrement(
 }
 
 
+/*
+ * @unimplemented
+ */
 PSINGLE_LIST_ENTRY 
 EXPORT
 NdisInterlockedPopEntrySList(
@@ -553,6 +667,9 @@ NdisInterlockedPopEntrySList(
 }
 
 
+/*
+ * @unimplemented
+ */
 PSINGLE_LIST_ENTRY 
 EXPORT
 NdisInterlockedPushEntrySList(
@@ -572,6 +689,9 @@ NdisInterlockedPushEntrySList(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMDeregisterDevice(
@@ -589,6 +709,9 @@ NdisMDeregisterDevice(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMGetDeviceProperty(
@@ -609,6 +732,9 @@ NdisMGetDeviceProperty(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMInitializeScatterGatherDma(
@@ -628,6 +754,9 @@ NdisMInitializeScatterGatherDma(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMPromoteMiniport(
@@ -645,6 +774,9 @@ NdisMPromoteMiniport(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMQueryAdapterInstanceName(
@@ -663,6 +795,9 @@ NdisMQueryAdapterInstanceName(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMRegisterDevice(
@@ -685,6 +820,9 @@ NdisMRegisterDevice(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMRegisterUnloadHandler(
@@ -701,6 +839,9 @@ NdisMRegisterUnloadHandler(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMRemoveMiniport(
@@ -718,6 +859,9 @@ NdisMRemoveMiniport(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisMSetMiniportSecondary(
@@ -736,6 +880,9 @@ NdisMSetMiniportSecondary(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisOpenConfigurationKeyByIndex(
@@ -755,6 +902,9 @@ NdisOpenConfigurationKeyByIndex(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisOpenConfigurationKeyByName(
@@ -773,6 +923,9 @@ NdisOpenConfigurationKeyByName(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisQueryAdapterInstanceName(
@@ -791,6 +944,9 @@ NdisQueryAdapterInstanceName(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisQueryBufferSafe(
@@ -809,6 +965,9 @@ NdisQueryBufferSafe(
 }
 
 
+/*
+ * @unimplemented
+ */
 ULONG
 EXPORT
 NdisReadPcmciaAttributeMemory(
@@ -829,6 +988,9 @@ NdisReadPcmciaAttributeMemory(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisReleaseReadWriteLock(
@@ -845,6 +1007,9 @@ NdisReleaseReadWriteLock(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisWriteEventLogEntry(
@@ -868,6 +1033,9 @@ NdisWriteEventLogEntry(
 }
 
 
+/*
+ * @unimplemented
+ */
 ULONG
 EXPORT
 NdisWritePcmciaAttributeMemory(
@@ -890,6 +1058,9 @@ NdisWritePcmciaAttributeMemory(
 
 /* NDIS 5.0 extensions for intermediate drivers */
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisIMAssociateMiniport(
@@ -906,6 +1077,9 @@ NdisIMAssociateMiniport(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS 
 EXPORT
 NdisIMCancelInitializeDeviceInstance(
@@ -924,6 +1098,9 @@ NdisIMCancelInitializeDeviceInstance(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisIMCopySendCompletePerPacketInfo(
@@ -940,6 +1117,9 @@ NdisIMCopySendCompletePerPacketInfo(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisIMCopySendPerPacketInfo(
@@ -956,6 +1136,9 @@ NdisIMCopySendPerPacketInfo(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisIMDeregisterLayeredMiniport(
@@ -971,6 +1154,9 @@ NdisIMDeregisterLayeredMiniport(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_HANDLE
 EXPORT
 NdisIMGetBindingContext(
@@ -988,6 +1174,9 @@ NdisIMGetBindingContext(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_HANDLE
 EXPORT
 NdisIMGetDeviceContext(
@@ -1005,6 +1194,9 @@ NdisIMGetDeviceContext(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisIMInitializeDeviceInstanceEx(

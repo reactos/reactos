@@ -10,6 +10,9 @@
 #include <ndissys.h>
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPIMP
 NdisClAddParty(
@@ -30,6 +33,9 @@ NdisClAddParty(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPIMP
 NdisClCloseAddressFamily(
@@ -47,6 +53,9 @@ NdisClCloseAddressFamily(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPIMP
 NdisClCloseCall(
@@ -67,6 +76,9 @@ NdisClCloseCall(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPIMP
 NdisClDeregisterSap(
@@ -84,6 +96,9 @@ NdisClDeregisterSap(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPIMP
 NdisClDropParty(
@@ -103,6 +118,9 @@ NdisClDropParty(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPIMP
 NdisClIncomingCallComplete(
@@ -120,6 +138,9 @@ NdisClIncomingCallComplete(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPIMP
 NdisClMakeCall(
@@ -140,6 +161,9 @@ NdisClMakeCall(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS 
 EXPIMP
 NdisClModifyCallQoS(
@@ -158,6 +182,9 @@ NdisClModifyCallQoS(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPIMP
 NdisClOpenAddressFamily(
@@ -180,6 +207,9 @@ NdisClOpenAddressFamily(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPIMP
 NdisClRegisterSap(

@@ -287,7 +287,9 @@ UINT CopyPacketToBufferChain(
 }
 
 
-
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisAdjustBufferLength(
@@ -304,6 +306,9 @@ NdisAdjustBufferLength(
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 EXPORT
 NDIS_BUFFER_TO_SPAN_PAGES(
@@ -323,6 +328,9 @@ NDIS_BUFFER_TO_SPAN_PAGES(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisAllocateBuffer(
@@ -390,6 +398,9 @@ NdisAllocateBuffer(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisAllocateBufferPool(
@@ -436,6 +447,9 @@ NdisAllocateBufferPool(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisAllocatePacket(
@@ -477,6 +491,9 @@ NdisAllocatePacket(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisAllocatePacketPool(
@@ -530,6 +547,9 @@ NdisAllocatePacketPool(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisAllocatePacketPoolEx(
@@ -549,6 +569,9 @@ NdisAllocatePacketPoolEx(
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 EXPORT
 NdisBufferLength(
@@ -568,6 +591,9 @@ NdisBufferLength(
 }
 
 
+/*
+ * @unimplemented
+ */
 PVOID
 EXPORT
 NdisBufferVirtualAddress(
@@ -585,6 +611,9 @@ NdisBufferVirtualAddress(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCopyBuffer(
@@ -609,6 +638,9 @@ NdisCopyBuffer(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisCopyFromPacketToPacket(
@@ -691,6 +723,9 @@ NdisCopyFromPacketToPacket(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisDprAllocatePacket(
@@ -708,6 +743,9 @@ NdisDprAllocatePacket(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisDprAllocatePacketNonInterlocked(
@@ -726,6 +764,9 @@ NdisDprAllocatePacketNonInterlocked(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisDprFreePacket(
@@ -739,6 +780,9 @@ NdisDprFreePacket(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisDprFreePacketNonInterlocked(
@@ -752,6 +796,9 @@ NdisDprFreePacketNonInterlocked(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisFreeBufferPool(
@@ -766,6 +813,9 @@ NdisFreeBufferPool(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisFreePacketPool(
@@ -780,6 +830,9 @@ NdisFreePacketPool(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisFreeBuffer(
@@ -805,6 +858,9 @@ NdisFreeBuffer(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisFreePacket(
@@ -826,6 +882,9 @@ NdisFreePacket(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisGetBufferPhysicalArraySize(
@@ -842,6 +901,9 @@ NdisGetBufferPhysicalArraySize(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisGetFirstBufferFromPacket(
@@ -881,6 +943,9 @@ NdisGetFirstBufferFromPacket(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisReturnPackets(
@@ -897,6 +962,9 @@ NdisReturnPackets(
 }
 
 
+/*
+ * @unimplemented
+ */
 UINT
 EXPORT
 NdisPacketPoolUsage(
@@ -914,6 +982,9 @@ NdisPacketPoolUsage(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisQueryBuffer(
@@ -936,6 +1007,9 @@ NdisQueryBuffer(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisQueryBufferOffset(
@@ -948,6 +1022,9 @@ NdisQueryBufferOffset(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisUnchainBufferAtBack(
@@ -993,6 +1070,9 @@ NdisUnchainBufferAtBack(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisUnchainBufferAtFront(

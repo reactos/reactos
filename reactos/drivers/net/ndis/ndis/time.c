@@ -25,6 +25,9 @@ MiniportTimerDpc(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisCancelTimer(
@@ -35,6 +38,9 @@ NdisCancelTimer(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisGetCurrentSystemTime (
@@ -44,6 +50,9 @@ NdisGetCurrentSystemTime (
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisInitializeTimer(
@@ -57,6 +66,9 @@ NdisInitializeTimer(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisMCancelTimer(
@@ -67,6 +79,9 @@ NdisMCancelTimer(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisMInitializeTimer(
@@ -85,6 +100,9 @@ NdisMInitializeTimer(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisMSetPeriodicTimer(
@@ -99,6 +117,9 @@ NdisMSetPeriodicTimer(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisMSetTimer(
@@ -113,6 +134,9 @@ NdisMSetTimer(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisSetTimer(

@@ -10,6 +10,9 @@
 #include <ndissys.h>
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCompleteCloseAdapter(
@@ -26,6 +29,9 @@ NdisCompleteCloseAdapter(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCompleteOpenAdapter(
@@ -43,6 +49,9 @@ NdisCompleteOpenAdapter(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisDeregisterAdapter(
@@ -60,6 +69,9 @@ NdisDeregisterAdapter(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisDeregisterAdapterShutdownHandler(
@@ -75,6 +87,9 @@ NdisDeregisterAdapterShutdownHandler(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisDeregisterMac(
@@ -91,6 +106,9 @@ NdisDeregisterMac(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisFreeDmaChannel(
@@ -106,6 +124,9 @@ NdisFreeDmaChannel(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisFreeSharedMemory(
@@ -125,6 +146,9 @@ NdisFreeSharedMemory(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisIMQueueMiniportCallback(
@@ -144,6 +168,9 @@ NdisIMQueueMiniportCallback(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisIMRevertBack(
@@ -160,6 +187,9 @@ NdisIMRevertBack(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN
 EXPORT
 NdisIMSwitchToMiniport(
@@ -178,6 +208,9 @@ NdisIMSwitchToMiniport(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisInitializeInterrupt(
@@ -202,6 +235,9 @@ NdisInitializeInterrupt(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisMapIoSpace(
@@ -221,6 +257,9 @@ NdisMapIoSpace(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisOverrideBusNumber(
@@ -238,6 +277,9 @@ NdisOverrideBusNumber(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisQueryReceiveInformation(
@@ -261,6 +303,9 @@ NdisQueryReceiveInformation(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisReadMcaPosInformation(
@@ -279,6 +324,9 @@ NdisReadMcaPosInformation(
 }
 
 
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisRegisterAdapter(
@@ -301,6 +349,9 @@ NdisRegisterAdapter(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisRegisterAdapterShutdownHandler(
@@ -318,6 +369,9 @@ NdisRegisterAdapterShutdownHandler(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisRegisterMac(
@@ -338,6 +392,9 @@ NdisRegisterMac(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisReleaseAdapterResources(
@@ -353,6 +410,9 @@ NdisReleaseAdapterResources(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisRemoveInterrupt(
@@ -368,6 +428,9 @@ NdisRemoveInterrupt(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisSetupDmaTransfer(
@@ -388,6 +451,9 @@ NdisSetupDmaTransfer(
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisUpdateSharedMemory(

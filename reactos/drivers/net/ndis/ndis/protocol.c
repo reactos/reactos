@@ -293,6 +293,9 @@ ProTransferData(
 
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisCloseAdapter(
@@ -326,6 +329,9 @@ NdisCloseAdapter(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisDeregisterProtocol(
@@ -356,6 +362,9 @@ NdisDeregisterProtocol(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisOpenAdapter(
@@ -457,6 +466,9 @@ NdisOpenAdapter(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisRegisterProtocol(
@@ -539,6 +551,9 @@ NdisRegisterProtocol(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisRequest(
@@ -557,6 +572,9 @@ NdisRequest(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisReset(
@@ -567,6 +585,9 @@ NdisReset(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisSend(
@@ -585,6 +606,9 @@ NdisSend(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisSendPackets(
@@ -596,6 +620,9 @@ NdisSendPackets(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisTransferData(
