@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.30 2000/06/29 23:35:38 dwelch Exp $
+/* $Id: timer.c,v 1.31 2000/07/04 08:52:40 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <internal/ke.h>
 #include <internal/id.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -461,11 +462,7 @@ VOID KeExpireTimers(VOID)
 }
 
 
-VOID
-STDCALL
-KeUpdateSystemTime (
-	VOID
-	)
+VOID KiUpdateSystemTime (VOID)
 /*
  * FUNCTION: Handles a timer interrupt
  */

@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.29 2000/06/25 03:59:16 dwelch Exp $
+/* $Id: virtual.c,v 1.30 2000/07/04 08:52:45 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -62,98 +62,10 @@ NTSTATUS MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    MmSetPage(PsGetCurrentProcess(),
 	     Address,
 	     MemoryArea->Attributes,
-	     (ULONG)MmAllocPage());
+	     (ULONG)MmAllocPage(0));
    
    return(STATUS_SUCCESS);
 }
-
-NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
-{
-   PVOID i;
-   
-   DPRINT("MmReleaseMemoryArea(Process %x, Marea %x)\n",Process,Marea);
-   
-   DPRINT("Releasing %x between %x %x\n",
-	  Marea, Marea->BaseAddress, Marea->BaseAddress + Marea->Length);
-   
-   if (Marea->Type == MEMORY_AREA_SECTION_VIEW_COMMIT ||
-       Marea->Type == MEMORY_AREA_SECTION_VIEW_RESERVE)
-     {
-	MmUnmapViewOfSection(Process, Marea);
-     }
-   
-   for (i = Marea->BaseAddress; 
-	i < (Marea->BaseAddress + Marea->Length);
-	i = i+PAGESIZE)
-     {
-	MmDeletePageEntry(Process, i, TRUE);
-     }
-   ExFreePool(Marea);
-   
-   return(STATUS_SUCCESS);
-}
-
-NTSTATUS MmReleaseMmInfo(PEPROCESS Process)
-{
-   PLIST_ENTRY CurrentEntry;
-   PMEMORY_AREA Current;
-   
-   DPRINT("MmReleaseMmInfo(Process %x)\n",Process);
-   
-   MmLockAddressSpace(&Process->Pcb.AddressSpace);
-   
-   while (!IsListEmpty(&Process->Pcb.AddressSpace.MAreaListHead))
-     {
-	CurrentEntry = RemoveHeadList(
-				     &Process->Pcb.AddressSpace.MAreaListHead);
-	Current = CONTAINING_RECORD(CurrentEntry, MEMORY_AREA, Entry);
-	
-	MmReleaseMemoryArea(Process, Current);
-     }
-   
-   Mmi386ReleaseMmInfo(Process);
-   
-   MmUnlockAddressSpace(&Process->Pcb.AddressSpace);
-   
-   DPRINT("Finished MmReleaseMmInfo()\n");
-   return(STATUS_SUCCESS);
-}
-
-BOOLEAN STDCALL MmIsNonPagedSystemAddressValid(PVOID VirtualAddress)
-{
-   UNIMPLEMENTED;
-}
-
-BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
-/*
- * FUNCTION: Checks whether the given address is valid for a read or write
- * ARGUMENTS:
- *          VirtualAddress = address to check
- * RETURNS: True if the access would be valid
- *          False if the access would cause a page fault
- * NOTES: This function checks whether a byte access to the page would
- *        succeed. Is this realistic for RISC processors which don't
- *        allow byte granular access?
- */
-{
-   MEMORY_AREA* MemoryArea;
-   PMADDRESS_SPACE AddressSpace;
-   
-   AddressSpace = &PsGetCurrentProcess()->Pcb.AddressSpace;
-   
-   MmLockAddressSpace(AddressSpace);
-   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
-					  VirtualAddress);
-
-   if (MemoryArea == NULL)
-     {
-	MmUnlockAddressSpace(AddressSpace);
-	return(FALSE);
-     }
-   MmUnlockAddressSpace(AddressSpace);
-   return(TRUE);
-}
-
 
 NTSTATUS STDCALL NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 					 IN OUT	PVOID	* BaseAddress,
@@ -222,12 +134,12 @@ NTSTATUS STDCALL NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 	Type = MEMORY_AREA_COMMIT;
      }
    
-   AddressSpace = &Process->Pcb.AddressSpace;
+   AddressSpace = &Process->AddressSpace;
    MmLockAddressSpace(AddressSpace);
    
    if ((*BaseAddress) != 0)
      {
-	MemoryArea = MmOpenMemoryAreaByAddress(&Process->Pcb.AddressSpace,
+	MemoryArea = MmOpenMemoryAreaByAddress(&Process->AddressSpace,
 					       *BaseAddress);
 	
 	if (MemoryArea != NULL)
@@ -244,24 +156,22 @@ NTSTATUS STDCALL NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 	       }
 	     
 	     MemoryArea = MmSplitMemoryArea(Process,
-					    &Process->Pcb.AddressSpace,
+					    &Process->AddressSpace,
 					    MemoryArea,
 					    *BaseAddress,
 					    *RegionSize,
 					    Type,
 					    Protect);
 	     DPRINT("*BaseAddress %x\n",*BaseAddress);
+	     /* FIXME: Reserve/dereserve swap pages */
 	     MmUnlockAddressSpace(AddressSpace);
 	     ObDereferenceObject(Process);
 	     return(STATUS_SUCCESS);
 	  }
      }
    
-   // FIXME RegionSize should be passed as pointer
-   // dwelch: Why?
-
    Status = MmCreateMemoryArea(Process,
-			       &Process->Pcb.AddressSpace,
+			       &Process->AddressSpace,
 			       Type,
 			       BaseAddress,
 			       *RegionSize,
@@ -277,6 +187,12 @@ NTSTATUS STDCALL NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
      }
    
    DPRINT("*BaseAddress %x\n",*BaseAddress);
+   if ((AllocationType & MEM_COMMIT) &&
+       ((Protect & PAGE_READWRITE) ||
+	(Protect & PAGE_EXECUTE_READWRITE)))
+     {
+	MmReserveSwapPages(PAGE_ROUND_UP((*RegionSize)));
+     }
    MmUnlockAddressSpace(AddressSpace);
    ObDereferenceObject(Process);
    return(STATUS_SUCCESS);
@@ -340,7 +256,7 @@ NTSTATUS STDCALL NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
 	return(Status);
      }
    
-   AddressSpace = &Process->Pcb.AddressSpace;
+   AddressSpace = &Process->AddressSpace;
    
    MmLockAddressSpace(AddressSpace);
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
@@ -361,7 +277,13 @@ NTSTATUS STDCALL NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
 	     ObDereferenceObject(Process);
 	     return(STATUS_UNSUCCESSFUL);
 	  }
-	MmFreeMemoryArea(&Process->Pcb.AddressSpace,
+	if ((MemoryArea->Type == MEMORY_AREA_COMMIT) &&
+	    ((MemoryArea->Attributes & PAGE_READWRITE) ||
+	     (MemoryArea->Attributes & PAGE_EXECUTE_READWRITE)))
+	  {
+	     MmDereserveSwapPages(PAGE_ROUND_UP(MemoryArea->Length));
+	  }
+	MmFreeMemoryArea(&Process->AddressSpace,
 			 BaseAddress,
 			 0,
 			 TRUE);
@@ -370,8 +292,14 @@ NTSTATUS STDCALL NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
 	return(STATUS_SUCCESS);
 	
       case MEM_DECOMMIT:	
+	if ((MemoryArea->Type == MEMORY_AREA_COMMIT) &&
+	    ((MemoryArea->Attributes & PAGE_READWRITE) ||
+	     (MemoryArea->Attributes & PAGE_EXECUTE_READWRITE)))
+	  {
+	     MmDereserveSwapPages(PAGE_ROUND_UP((*RegionSize)));
+	  }
 	MmSplitMemoryArea(Process,
-			  &Process->Pcb.AddressSpace,
+			  &Process->AddressSpace,
 			  MemoryArea,
 			  *BaseAddress,
 			  *RegionSize,
@@ -438,7 +366,7 @@ NTSTATUS STDCALL NtProtectVirtualMemory(IN	HANDLE	ProcessHandle,
 	return(Status);
      }
 
-   AddressSpace = &Process->Pcb.AddressSpace;
+   AddressSpace = &Process->AddressSpace;
    
    MmLockAddressSpace(AddressSpace);
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
@@ -461,7 +389,7 @@ NTSTATUS STDCALL NtProtectVirtualMemory(IN	HANDLE	ProcessHandle,
    else
      {
 	MemoryArea = MmSplitMemoryArea(Process,
-				       &Process->Pcb.AddressSpace,
+				       &Process->AddressSpace,
 				       MemoryArea,
 				       BaseAddress,
 				       NumberOfBytesToProtect,
@@ -527,7 +455,7 @@ NTSTATUS STDCALL NtQueryVirtualMemory (IN HANDLE ProcessHandle,
                   return(Status);
                }
 
-	     AddressSpace = &Process->Pcb.AddressSpace;
+	     AddressSpace = &Process->AddressSpace;
 	     MmLockAddressSpace(AddressSpace);
              MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
                                                     Address);

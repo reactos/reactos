@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.13 2000/06/29 23:35:38 dwelch Exp $
+/* $Id: usercall.c,v 1.14 2000/07/04 08:52:41 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,6 +26,7 @@
 #define _STR(x) #x
 #define STR(x) _STR(x)
 
+#if 0
 void PsBeginThreadWithContextInternal(void);
    __asm__(
      "\n\t.global _PsBeginThreadWithContextInternal\n\t"
@@ -54,6 +55,7 @@ void PsBeginThreadWithContextInternal(void);
      "popl %eax\n\t"
      "popl %ebp\n\t"
      "iret\n\t");
+#endif
 
 VOID KiSystemCallHook(ULONG Nr, ...)
 {
@@ -124,7 +126,7 @@ KeAddSystemServiceTable (
     return TRUE;
 }
 
-
+#if 0
 void interrupt_handler2e(void);
    __asm__("\n\t.global _interrupt_handler2e\n\t"
            "_interrupt_handler2e:\n\t"
@@ -283,5 +285,6 @@ void interrupt_handler2e(void);
 	   "popl %ebp\n\t"       /* Ebp */
 
            "iret\n\t");
+#endif
 
 /* EOF */

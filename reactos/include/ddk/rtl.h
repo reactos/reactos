@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.39 2000/07/04 01:25:27 ekohl Exp $
+/* $Id: rtl.h,v 1.40 2000/07/04 08:52:34 dwelch Exp $
  * 
  */
 
@@ -9,6 +9,15 @@
 #include <stdarg.h>
 
 #include <pe.h>
+
+typedef struct _INITIAL_TEB
+{
+	PVOID StackBase;
+	PVOID StackLimit;
+	PVOID StackCommit;
+	PVOID StackCommitMax;
+	PVOID StackReserved;
+} INITIAL_TEB, *PINITIAL_TEB;
 
 typedef struct _CONTROLLER_OBJECT
 {

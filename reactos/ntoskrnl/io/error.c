@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.3 2000/06/12 14:57:10 ekohl Exp $
+/* $Id: error.c,v 1.4 2000/07/04 08:52:38 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,6 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/ps.h>
 
 #include <internal/debug.h>
 

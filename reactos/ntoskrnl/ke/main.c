@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.50 2000/07/01 18:26:11 ekohl Exp $
+/* $Id: main.c,v 1.51 2000/07/04 08:52:39 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -37,21 +37,7 @@ LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
 
 /* FUNCTIONS ****************************************************************/
 
-static void
-PrintString (char* fmt,...)
-{
-	char buffer[512];
-	va_list ap;
-
-	va_start(ap, fmt);
-	vsprintf(buffer, fmt, ap);
-	va_end(ap);
-
-	HalDisplayString (buffer);
-}
-
-static void
-CreateSystemRootLink (LPWSTR Device)
+static VOID CreateSystemRootLink (LPWSTR Device)
 {
 	UNICODE_STRING LinkName;
 	UNICODE_STRING DeviceName;
@@ -66,104 +52,6 @@ CreateSystemRootLink (LPWSTR Device)
 			      &DeviceName);
 }
 
-void set_breakpoint(unsigned int i, unsigned int addr, unsigned int type,
-		    unsigned int len)
-/*
- * FUNCTION: Sets a hardware breakpoint
- * ARGUMENTS:
- *          i = breakpoint to set (0 to 3)
- *          addr = linear address to break on
- *          type = Type of access to break on
- *          len = length of the variable to watch
- * NOTES:
- *       The variable to watch must be aligned to its length (i.e. a dword
- *	 breakpoint must be aligned to a dword boundary)
- * 
- *       A fatal exception will be generated on the access to the variable.
- *       It is (at the moment) only really useful for catching undefined
- *       pointers if you know the variable effected but not the buggy
- *       routine. 
- * 
- * FIXME: Extend to call out to kernel debugger on breakpoint
- *        Add support for I/O breakpoints
- * REFERENCES: See the i386 programmer manual for more details
- */ 
-{
-   unsigned int mask;
-   
-   if (i>3)
-     {
-	DbgPrint("Invalid breakpoint index at %s:%d\n",__FILE__,__LINE__);
-	return;
-     }
-   
-   /*
-    * Load the linear address
-    */
-   switch (i)
-     {
-      case 0:
-	__asm("movl %0,%%db0\n\t"
-	      : /* no outputs */
-	      : "d" (addr));
-	break;
-	
-      case 1:
-	__asm__("movl %0,%%db1\n\t"
-		: /* no outputs */
-		: "d" (addr));
-	break;
-	
-      case 2:
-	__asm__("movl %0,%%db2\n\t"
-		: /* no outputs */
-		: "d" (addr));
-	break;
-	
-      case 3:
-	__asm__("movl %0,%%db3\n\t"
-		: /* no outputs */
-		: "d" (addr));
-	break;
-     }
-   
-   /*
-    * Setup mask for dr7
-    */
-   mask = (len<<(16 + 2 + i*4)) + (type<<(16 + i*4)) + (1<<(i*2));
-   __asm__("movl %%db7,%%eax\n\t"
-           "orl %0,%%eax\n\t"
-	   "movl %%eax,%%db7\n\t"
-	   : /* no outputs */
-	   : "d" (mask)
-	   : "ax");
-}
-
-extern int edata;
-extern int end;
-
-#if 0
-static char * INIData =
-  "[HKEY_LOCAL_MACHINE\\HARDWARE]\r\n"
-  "\r\n"
-  "[HKEY_LOCAL_MACHINE\\HARDWARE\\DEVICEMAP]\r\n"
-  "\r\n"
-  "[HKEY_LOCAL_MACHINE\\HARDWARE\\DEVICEMAP\\AtDisk]\r\n"
-  "\r\n"
-  "[HKEY_LOCAL_MACHINE\\HARDWARE\\DEVICEMAP\\AtDisk\\Controller 0]\r\n"
-  "Controller Address=dword:000001f0\r\n"
-  "Controller Interrupt=dword:0000000e\r\n"
-  "\r\n"
-  "\r\n"
-  "\r\n"
-  "";
-#endif
-
-unsigned int old_idt[256][2];
-//extern unsigned int idt[];
-unsigned int old_idt_valid = 1;
-
-
 void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
 /*
  * FUNCTION: Called by the boot loader to start the kernel
@@ -174,9 +62,8 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
  */
 {
    unsigned int i;
-   unsigned int start;
-   unsigned int start1;
    unsigned int last_kernel_address;
+   ULONG start, start1;
    
    /*
     * Copy the parameters to a local buffer because lowmem will go away
@@ -200,18 +87,6 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
 
    HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
 
-   start = KERNEL_BASE + PAGE_ROUND_UP(KeLoaderBlock.module_length[0]);
-   if (start < ((int)&end))
-     {
-	PrintString("start %x end %x\n",start,(int)&end);
-	PrintString("Kernel booted incorrectly, aborting\n");
-	PrintString("Reduce the amount of uninitialized data\n");
-	PrintString("\n\n*** The system has halted ***\n");
-	for(;;)
-	     __asm__("hlt\n\t");
-     }
-   start1 = start+PAGE_ROUND_UP(KeLoaderBlock.module_length[1]);
-
    last_kernel_address = KERNEL_BASE;
    for (i=0; i<=KeLoaderBlock.nr_files; i++)
      {
@@ -219,8 +94,7 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
 	  PAGE_ROUND_UP(KeLoaderBlock.module_length[i]);
      }
 
-   DPRINT("MmInitSystem()\n");
-   MmInitSystem(0, &KeLoaderBlock, last_kernel_address);
+   MmInit1(&KeLoaderBlock, last_kernel_address);
 
    /*
     * Initialize the kernel debugger
@@ -235,33 +109,20 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
     * Initialization phase 1
     * Initalize various critical subsystems
     */
-   DPRINT("Kernel Initialization Phase 1\n");
-
-   DPRINT("HalInitSystem()\n");
    HalInitSystem (1, &KeLoaderBlock);
-   DPRINT("MmInitSystem()\n");
-   MmInitSystem(1, &KeLoaderBlock, 0);
-
-   DPRINT("KeInit()\n");
+   MmInit2();
    KeInit();
-   DPRINT("ExInit()\n");
    ExInit();
-   DPRINT("ObInit()\n");
    ObInit();
-   DPRINT("PsInit()\n");
    PiInitProcessManager();
-   DPRINT("IoInit()\n");
    IoInit();
-   DPRINT("LdrInitModuleManagement()\n");
    LdrInitModuleManagement();
    CmInitializeRegistry();
    NtInit();
+   MmInit3();
    
    /* Report all resources used by hal */
    HalReportResourceUsage ();
-   
-   memcpy(old_idt, KiIdt, sizeof(old_idt));
-   old_idt_valid = 0;
    
    /*
     * Initalize services loaded at boot time
@@ -300,7 +161,6 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
    /*
     * Load Auto configured drivers
     */
-   CHECKPOINT;
    LdrLoadAutoConfigDrivers();
    
    /*
@@ -314,12 +174,8 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
   /*
    *  Launch initial process
    */
-   CHECKPOINT;
    LdrLoadInitialProcess();
    
-   /*
-    * Enter idle loop
-    */
    DbgPrint("Finished main()\n");
    PsTerminateSystemThread(STATUS_SUCCESS);
 }

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.47 2000/07/01 22:37:28 ekohl Exp $
+/* $Id: process.c,v 1.48 2000/07/04 08:52:47 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -55,9 +55,9 @@ PEPROCESS PsGetNextProcess(PEPROCESS OldProcess)
      }
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-   NextProcess = CONTAINING_RECORD(OldProcess->Pcb.ProcessListEntry.Flink, 
+   NextProcess = CONTAINING_RECORD(OldProcess->ProcessListEntry.Flink, 
 				   EPROCESS,
-				   Pcb.ProcessListEntry);
+				   ProcessListEntry);
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    Status = ObReferenceObjectByPointer(NextProcess,
 				       PROCESS_ALL_ACCESS,
@@ -137,7 +137,7 @@ VOID PiKillMostProcesses(VOID)
    while (current_entry != &PsProcessListHead)
      {
 	current = CONTAINING_RECORD(current_entry, EPROCESS, 
-				    Pcb.ProcessListEntry);
+				    ProcessListEntry);
 	current_entry = current_entry->Flink;
 	
 	if (current->UniqueProcessId != PsInitialSystemProcess->UniqueProcessId &&
@@ -198,15 +198,16 @@ VOID PsInitProcessManagment(VOID)
    KProcess = &PsInitialSystemProcess->Pcb;
    
    MmInitializeAddressSpace(PsInitialSystemProcess,
-			    &PsInitialSystemProcess->Pcb.AddressSpace);
+			    &PsInitialSystemProcess->AddressSpace);
    ObCreateHandleTable(NULL,FALSE,PsInitialSystemProcess);
    KProcess->PageTableDirectory = get_page_directory();
    PsInitialSystemProcess->UniqueProcessId = 
      InterlockedIncrement(&PiNextProcessUniqueId);
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-   InsertHeadList(&PsProcessListHead, &KProcess->ProcessListEntry);
-   InitializeListHead( &KProcess->ThreadListHead );
+   InsertHeadList(&PsProcessListHead, 
+		  &PsInitialSystemProcess->ProcessListEntry);
+   InitializeListHead(&PsInitialSystemProcess->ThreadListHead);
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    
    strcpy(PsInitialSystemProcess->ImageFileName, "SYSTEM");
@@ -225,7 +226,7 @@ VOID PiDeleteProcess(PVOID ObjectBody)
    DPRINT1("PiDeleteProcess(ObjectBody %x)\n",ObjectBody);
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-   RemoveEntryList(&((PEPROCESS)ObjectBody)->Pcb.ProcessListEntry);
+   RemoveEntryList(&((PEPROCESS)ObjectBody)->ProcessListEntry);
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    (VOID)MmReleaseMmInfo((PEPROCESS)ObjectBody);
    ObDeleteHandleTable((PEPROCESS)ObjectBody);
@@ -373,7 +374,7 @@ NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
    
    KProcess->BasePriority = PROCESS_PRIO_NORMAL;
    MmInitializeAddressSpace(Process,
-			    &KProcess->AddressSpace);
+			    &Process->AddressSpace);
    Process->UniqueProcessId = InterlockedIncrement(&PiNextProcessUniqueId);
    Process->InheritedFromUniqueProcessId = ParentProcess->UniqueProcessId;
    ObCreateHandleTable(ParentProcess,
@@ -382,8 +383,8 @@ NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
    MmCopyMmInfo(ParentProcess, Process);
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-   InsertHeadList(&PsProcessListHead, &KProcess->ProcessListEntry);
-   InitializeListHead( &KProcess->ThreadListHead );
+   InsertHeadList(&PsProcessListHead, &Process->ProcessListEntry);
+   InitializeListHead(&Process->ThreadListHead);
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    
    Process->Pcb.ProcessState = PROCESS_STATE_ACTIVE;
@@ -575,7 +576,7 @@ NTSTATUS STDCALL NtOpenProcess (OUT	PHANDLE		    ProcessHandle,
 	while (current_entry != &PsProcessListHead)
 	  {
 	     current = CONTAINING_RECORD(current_entry, EPROCESS, 
-					 Pcb.ProcessListEntry);
+					 ProcessListEntry);
 	     if (current->UniqueProcessId == (ULONG)ClientId->UniqueProcess)
 	       {
 		  ObReferenceObjectByPointer(current,
@@ -854,7 +855,7 @@ PiSnapshotProcessTable (
 		CurrentP = CONTAINING_RECORD(
 				CurrentEntryP,
 				EPROCESS, 
-				Pcb.ProcessListEntry
+				ProcessListEntry
 				);
 		/*
 		 * Write process data in the buffer.
@@ -869,9 +870,9 @@ PiSnapshotProcessTable (
 			);
 		/* THREAD */
 		for (	pInfoT = & CurrentP->ThreadSysInfo [0],
-			CurrentEntryT = CurrentP->Pcb.ThreadListHead.Flink;
+			CurrentEntryT = CurrentP->ThreadListHead.Flink;
 			
-			(CurrentEntryT != & CurrentP->Pcb.ThreadListHead);
+			(CurrentEntryT != & CurrentP->ThreadListHead);
 			
 			pInfoT = & CurrentP->ThreadSysInfo [pInfoP->ThreadCount],
 			CurrentEntryT = CurrentEntryT->Flink

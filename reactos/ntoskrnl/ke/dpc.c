@@ -1,4 +1,4 @@
-/* $Id: dpc.c,v 1.16 2000/07/01 18:26:10 ekohl Exp $
+/* $Id: dpc.c,v 1.17 2000/07/04 08:52:39 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,6 +17,7 @@
 /* INCLUDES ***************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>

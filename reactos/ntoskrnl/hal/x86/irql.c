@@ -12,6 +12,7 @@
 #include <internal/bitops.h>
 #include <internal/halio.h>
 #include <internal/ke.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -127,11 +128,7 @@ VOID KeSetCurrentIrql(KIRQL newlvl)
 }
 
 
-KIRQL
-STDCALL
-KeGetCurrentIrql (
-	VOID
-	)
+KIRQL STDCALL KeGetCurrentIrql (VOID)
 /*
  * PURPOSE: Returns the current irq level
  * RETURNS: The current irq level

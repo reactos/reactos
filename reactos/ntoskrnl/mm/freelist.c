@@ -32,6 +32,7 @@ typedef struct _PHYSICAL_PAGE
    LIST_ENTRY ListEntry;
    ULONG ReferenceCount;
    KEVENT Event;
+   SWAPENTRY SavedSwapEntry;
 } PHYSICAL_PAGE, *PPHYSICAL_PAGE;
 
 /* GLOBALS ****************************************************************/
@@ -215,6 +216,19 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
    return((PVOID)LastKernelAddress);
 }
 
+SWAPENTRY MmGetSavedSwapEntryPage(PVOID PhysicalAddress)
+{
+   ULONG Start = (ULONG)PhysicalAddress / PAGESIZE;
+   SWAPENTRY SavedSwapEntry;
+   KIRQL oldIrql;
+   
+   KeAcquireSpinLock(&PageListLock, &oldIrql);
+   SavedSwapEntry = MmPageArray[Start].SavedSwapEntry;
+   KeReleaseSpinLock(&PageListLock, oldIrql);
+   
+   return(SavedSwapEntry);
+}
+
 VOID MmReferencePage(PVOID PhysicalAddress)
 {
    ULONG Start = (ULONG)PhysicalAddress / PAGESIZE;
@@ -256,7 +270,7 @@ VOID MmDereferencePage(PVOID PhysicalAddress)
 }
 
 
-PVOID MmAllocPage(VOID)
+PVOID MmAllocPage(SWAPENTRY SavedSwapEntry)
 {
    ULONG offset;
    PLIST_ENTRY ListEntry;
@@ -276,6 +290,7 @@ PVOID MmAllocPage(VOID)
    DPRINT("PageDescriptor %x\n",PageDescriptor);
    PageDescriptor->Flags = PHYSICAL_PAGE_INUSE;
    PageDescriptor->ReferenceCount = 1;
+   PageDescriptor->SavedSwapEntry = SavedSwapEntry;
    ExInterlockedInsertTailList(&UsedPageListHead, ListEntry, 
 			       &PageListLock);
    

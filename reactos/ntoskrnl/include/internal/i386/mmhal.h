@@ -5,6 +5,8 @@
 #ifndef __INTERNAL_HAL_I386_MMHAL_H
 #define __INTERNAL_HAL_I386_MMHAL_H
 
+struct _EPROCESS;
+
 #define PAGESIZE (4096)
 
 PULONG MmGetPageEntry(PVOID Address);
@@ -47,15 +49,16 @@ extern inline PULONG get_page_directory(void)
 #define VADDR_TO_PT_OFFSET(x)  (((x/1024)%4096))
 #define VADDR_TO_PD_OFFSET(x)  ((x)/(4*1024*1024))
 
-VOID MmSetPage(PEPROCESS Process,
+VOID MmSetPage(struct _EPROCESS* Process,
 	       PVOID Address, 
 	       ULONG flProtect,
 	       ULONG PhysicalAddress);
 
 
-VOID MmSetPageProtect(PEPROCESS Process,
+VOID MmSetPageProtect(struct _EPROCESS* Process,
 		      PVOID Address,
 		      ULONG flProtect);
-BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address);
+BOOLEAN MmIsPagePresent(struct _EPROCESS* Process, 
+			PVOID Address);
 
 #endif /* __INTERNAL_HAL_I386_MMHAL_H */

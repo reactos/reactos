@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_SEFUNCS_H
 #define _INCLUDE_DDK_SEFUNCS_H
-/* $Id: sefuncs.h,v 1.12 2000/06/29 23:35:12 dwelch Exp $ */
+/* $Id: sefuncs.h,v 1.13 2000/07/04 08:52:34 dwelch Exp $ */
 NTSTATUS STDCALL RtlCreateAcl(PACL Acl, ULONG AclSize, ULONG AclRevision);
 NTSTATUS STDCALL RtlQueryInformationAcl (PACL Acl, PVOID Information, ULONG InformationLength, ACL_INFORMATION_CLASS InformationClass);
 NTSTATUS STDCALL RtlSetInformationAcl (PACL Acl, PVOID Information, ULONG InformationLength, ACL_INFORMATION_CLASS InformationClass);
@@ -89,13 +89,13 @@ NTSTATUS STDCALL SeAssignSecurity (PSECURITY_DESCRIPTOR ParentDescriptor,
 NTSTATUS STDCALL SeDeassignSecurity (PSECURITY_DESCRIPTOR* SecurityDescriptor);
 BOOLEAN STDCALL SeSinglePrivilegeCheck (LUID PrivilegeValue, KPROCESSOR_MODE PreviousMode);
 VOID STDCALL SeImpersonateClient(PSE_SOME_STRUCT2 a,
-				 PETHREAD Thread);
+				 struct _ETHREAD* Thread);
 
-NTSTATUS STDCALL SeCreateClientSecurity(PETHREAD Thread,
+NTSTATUS STDCALL SeCreateClientSecurity(struct _ETHREAD* Thread,
 				PSECURITY_QUALITY_OF_SERVICE Qos,
 				ULONG e,
 				PSE_SOME_STRUCT2 f);
-NTSTATUS SeExchangePrimaryToken(PEPROCESS Process,
+NTSTATUS SeExchangePrimaryToken(struct _EPROCESS* Process,
 				PACCESS_TOKEN NewToken,
 				PACCESS_TOKEN* OldTokenP);
 VOID STDCALL SeReleaseSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext);

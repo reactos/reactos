@@ -1,5 +1,6 @@
-/* $Id: pagfault.c,v 1.1 2000/04/02 13:32:41 ea Exp $ */
+/* $Id: pagfault.c,v 1.2 2000/07/04 08:52:45 dwelch Exp $ */
 #include <ddk/ntddk.h>
+#include <internal/ps.h>
 
 BOOLEAN
 STDCALL

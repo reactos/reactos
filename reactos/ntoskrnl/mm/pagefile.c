@@ -1,4 +1,4 @@
-/* $Id: pagefile.c,v 1.4 2000/05/13 13:51:05 dwelch Exp $
+/* $Id: pagefile.c,v 1.5 2000/07/04 08:52:45 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,13 +14,12 @@
 #include <ddk/ntddk.h>
 #include <internal/bitops.h>
 #include <internal/io.h>
+#include <internal/mm.h>
 #include <napi/core.h>
 
 #include <internal/debug.h>
 
 /* TYPES *********************************************************************/
-
-typedef ULONG SWAPENTRY;
 
 typedef struct _PPAGINGFILE
 {
@@ -46,6 +45,9 @@ static ULONG MiFreeSwapPages;
 static ULONG MiUsedSwapPages;
 static ULONG MiReservedSwapPages;
 
+#define MM_PAGEFILE_COMMIT_RATIO      (1)
+#define MM_PAGEFILE_COMMIT_GRACE      (256)
+
 #if 0
 static PVOID MmCoreDumpPageFrame;
 static BYTE MmCoreDumpHeader[PAGESIZE];
@@ -55,11 +57,18 @@ static BYTE MmCoreDumpHeader[PAGESIZE];
 
 VOID MmInitPagingFile(VOID)
 {
+   ULONG i;
+   
    KeInitializeSpinLock(&PagingFileListLock);
    
    MiFreeSwapPages = 0;
    MiUsedSwapPages = 0;
    MiReservedSwapPages = 0;
+   
+   for (i = 0; i < MAX_PAGING_FILES; i++)
+     {
+	PagingFileList[i] = NULL;
+     }
 }
 
 VOID MmReserveSwapPages(ULONG Nr)
@@ -68,7 +77,7 @@ VOID MmReserveSwapPages(ULONG Nr)
    
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    MiReservedSwapPages = MiReservedSwapPages + Nr;
-   MiFreeSwapPages = MiFreeSwapPages - Nr;
+//   MiFreeSwapPages = MiFreeSwapPages - Nr;
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
 }
 
@@ -78,7 +87,7 @@ VOID MmDereserveSwapPages(ULONG Nr)
    
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    MiReservedSwapPages = MiReservedSwapPages - Nr;
-   MiFreeSwapPages = MiFreeSwapPages - Nr;
+//   MiFreeSwapPages = MiFreeSwapPages - Nr;
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
 }
 

@@ -13,6 +13,57 @@
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
+struct _KTHREAD;
+
+typedef struct _KTRAP_FRAME
+{
+   PVOID DebugEbp;
+   PVOID DebugEip;
+   PVOID DebugArgMark;
+   PVOID TempCs;
+   PVOID TempEip;
+   PVOID Dr0;
+   PVOID Dr1;
+   PVOID Dr2;
+   PVOID Dr3;
+   PVOID Dr6;
+   PVOID Dr7;
+   USHORT Gs;
+   USHORT Reserved1;
+   USHORT Es;
+   USHORT Reserved2;
+   USHORT Ds;
+   USHORT Reserved3;
+   ULONG Edx;
+   ULONG Ecx;
+   ULONG Eax;
+   ULONG PreviousMode;
+   PVOID ExceptionList;
+   USHORT Fs;
+   USHORT Reserved4;
+   ULONG Edi;
+   ULONG Esi;
+   ULONG Ebx;
+   ULONG Ebp;
+   ULONG ErrorCode;
+   ULONG Eip;
+   ULONG Cs;
+   ULONG Eflags;
+   ULONG Esp;
+   USHORT Ss;
+   USHORT Reserved5;
+   USHORT V86_Es;
+   USHORT Reserved6;
+   USHORT V86_Ds;
+   USHORT Reserved7;
+   USHORT V86_Fs;
+   USHORT Reserved8;
+   USHORT V86_Gs;
+   USHORT Reserved9;
+} KTRAP_FRAME;
+
+VOID KiUpdateSystemTime (VOID);
+
 VOID KeAcquireDispatcherDatabaseLock(BOOLEAN Wait);
 VOID KeReleaseDispatcherDatabaseLock(BOOLEAN Wait);
 BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr);
@@ -22,28 +73,18 @@ VOID KiDispatchInterrupt(ULONG irq);
 VOID KeDrainApcQueue(VOID);
 VOID KeDrainDpcQueue(VOID);
 VOID KeExpireTimers(VOID);
-PKPROCESS KeGetCurrentProcess(VOID);
-NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval);
+NTSTATUS KeAddThreadTimeout(struct _KTHREAD* Thread, 
+			    PLARGE_INTEGER Interval);
 VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULONG Type,
 				  ULONG Size, ULONG SignalState);
 
 VOID KeDumpStackFrames(PVOID Stack, ULONG NrFrames);
 ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);
-BOOLEAN KiTestAlert(PKTHREAD Thread, PCONTEXT UserContext);
+BOOLEAN KiTestAlert(struct _KTHREAD* Thread, PCONTEXT UserContext);
 VOID KeCallApcsThread(VOID);
-VOID KeRemoveAllWaitsThread(PETHREAD Thread, NTSTATUS WaitStatus);
-PULONG KeGetStackTopThread(PETHREAD Thread);
-
-/*
- * FUNCTION: Sets the current irql without altering the current processor 
- * state
- * ARGUMENTS:
- *          newlvl = IRQ level to set
- * NOTE: This is for internal use only
- */
-VOID KeSetCurrentIrql(KIRQL newlvl);
-
+VOID KeRemoveAllWaitsThread(struct _ETHREAD* Thread, NTSTATUS WaitStatus);
+PULONG KeGetStackTopThread(struct _ETHREAD* Thread);
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

@@ -15,6 +15,7 @@
 #include <string.h>
 #include <internal/string.h>
 #include <internal/ob.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>

@@ -1,9 +1,10 @@
-/* $Id: pager.c,v 1.2 2000/07/04 08:52:45 dwelch Exp $
+/* $Id: mpw.c,v 1.1 2000/07/04 08:52:42 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
  * FILE:         ntoskrnl/mm/pager.c
- * PURPOSE:      Moves infrequently used data out of memory
+ * PURPOSE:      Writes data that has been modified in memory but not on
+ *               the disk
  * PROGRAMMER:   David Welch (welch@cwcom.net)
  * UPDATE HISTORY: 
  *               27/05/98: Created
@@ -23,20 +24,26 @@
 
 /* GLOBALS *******************************************************************/
 
-static HANDLE PagerThreadHandle;
-static CLIENT_ID PagerThreadId;
-static KEVENT PagerThreadEvent;
+static HANDLE MpwThreadHandle;
+static CLIENT_ID MpwThreadId;
+static KEVENT MpwThreadEvent;
 static PEPROCESS LastProcess;
-static volatile BOOLEAN PagerThreadShouldTerminate;
-static volatile ULONG PageCount;
+static volatile BOOLEAN MpwThreadShouldTerminate;
+static KEVENT MpwWroteOne;
+static ULONG MmDirtyPagesInMemory;
 
 /* FUNCTIONS *****************************************************************/
 
+BOOLEAN MmShouldIWrite(BOOLEAN Wait)
+{
+   if ((MmDirtyPagesInMemory*3) > 
+}
+
 VOID MmTryPageOutFromProcess(PEPROCESS Process)
 {
-   MmLockAddressSpace(&Process->AddressSpace);
-   PageCount = PageCount - MmTrimWorkingSet(Process, PageCount);
-   MmUnlockAddressSpace(&Process->AddressSpace);
+   MmLockAddressSpace(&Process->Pcb.AddressSpace);
+   PageCount = PageCout - MmTrimWorkingSet(Process);
+   MmUnlockAddressSpace(&Process->Pcb.AddressSpace);
 }
 
 NTSTATUS MmPagerThreadMain(PVOID Ignored)

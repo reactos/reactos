@@ -11,6 +11,8 @@
 
 #include <ddk/types.h>
 
+struct _EPROCESS;
+
 typedef struct 
 {
    CSHORT Type;
@@ -88,20 +90,20 @@ typedef struct
    BOOLEAN Inherit;
 } HANDLE_REP, *PHANDLE_REP;
 
-PHANDLE_REP ObTranslateHandle(PKPROCESS Process, HANDLE h);
+PHANDLE_REP ObTranslateHandle(struct _EPROCESS* Process, HANDLE h);
 extern PDIRECTORY_OBJECT NameSpaceRoot;
 
 VOID ObAddEntryDirectory(PDIRECTORY_OBJECT Parent,
 			 POBJECT Object,
 			 PWSTR Name);
-NTSTATUS ObCreateHandle(PEPROCESS Process,
+NTSTATUS ObCreateHandle(struct _EPROCESS* Process,
 			PVOID ObjectBody,
 			ACCESS_MASK GrantedAccess,
 			BOOLEAN Inherit,
 			PHANDLE Handle);
-VOID ObCreateHandleTable(PEPROCESS Parent,
+VOID ObCreateHandleTable(struct _EPROCESS* Parent,
 			 BOOLEAN Inherit,
-			 PEPROCESS Process);
+			 struct _EPROCESS* Process);
 NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 		      PVOID* ReturnedObject,
 		      PUNICODE_STRING RemainingPath);
@@ -109,8 +111,9 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 
 ULONG ObGetReferenceCount(PVOID Object);
 ULONG ObGetHandleCount(PVOID Object);
-VOID ObCloseAllHandles(PEPROCESS Process);
-VOID ObDeleteHandleTable(PEPROCESS Process);
-PVOID ObDeleteHandle(PEPROCESS Process, HANDLE Handle);
+VOID ObCloseAllHandles(struct _EPROCESS* Process);
+VOID ObDeleteHandleTable(struct _EPROCESS* Process);
+PVOID ObDeleteHandle(struct _EPROCESS* Process, 
+		     HANDLE Handle);
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */

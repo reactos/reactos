@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.57 2000/06/29 23:35:39 dwelch Exp $
+/* $Id: loader.c,v 1.58 2000/07/04 08:52:41 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -374,16 +374,6 @@ LdrProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING ModuleName)
     {
       return LdrPEProcessModule(ModuleLoadBase, ModuleName);
     }
-#if 0
-  if (PEDosHeader->e_magic == IMAGE_DOS_MAGIC)
-    {
-      return 0;
-    }
-  else  /*  Assume COFF format and load  */
-    {
-      return LdrCOFFProcessModule(ModuleLoadBase, ModuleName);
-    }
-#endif
 
   return 0;
 }

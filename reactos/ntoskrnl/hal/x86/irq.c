@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.14 2000/06/29 23:35:34 dwelch Exp $
+/* $Id: irq.c,v 1.15 2000/07/04 08:52:37 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -92,8 +92,7 @@ static KSPIN_LOCK isr_table_lock = {0,};
 #define I486_INTERRUPT_GATE (0xe00)
 
 
-VOID
-HalpDispatchInterrupt (ULONG irq)
+VOID HalpDispatchInterrupt (ULONG irq)
 /*
  * FUNCTION: Calls the irq specific handler for an irq
  * ARGUMENTS:
@@ -124,7 +123,7 @@ HalpDispatchInterrupt (ULONG irq)
 
    if (irq==0)
    {
-        KeUpdateSystemTime ();
+        KiUpdateSystemTime();
    }
    else
    {

@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.34 2000/06/29 23:35:41 dwelch Exp $
+/* $Id: section.c,v 1.35 2000/07/04 08:52:45 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -817,7 +817,7 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
 	return Status;
      }
    
-   AddressSpace = &Process->Pcb.AddressSpace;
+   AddressSpace = &Process->AddressSpace;
    
    DPRINT("Process %x\n", Process);
    DPRINT("ViewSize %x\n",ViewSize);
@@ -839,7 +839,7 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
    DPRINT("Creating memory area\n");
    MmLockAddressSpace(AddressSpace);
    Status = MmCreateMemoryArea(Process,
-			       &Process->Pcb.AddressSpace,
+			       &Process->AddressSpace,
 			       MEMORY_AREA_SECTION_VIEW_COMMIT,
 			       BaseAddress,
 			       *ViewSize,
@@ -939,7 +939,7 @@ NTSTATUS STDCALL NtUnmapViewOfSection (HANDLE	ProcessHandle,
 	return(Status);
      }
    
-   AddressSpace = &Process->Pcb.AddressSpace;
+   AddressSpace = &Process->AddressSpace;
    
    DPRINT("Opening memory area Process %x BaseAddress %x\n",
 	   Process, BaseAddress);
@@ -957,7 +957,7 @@ NTSTATUS STDCALL NtUnmapViewOfSection (HANDLE	ProcessHandle,
 				 MemoryArea);
    
    DPRINT("MmFreeMemoryArea()\n");
-   Status = MmFreeMemoryArea(&Process->Pcb.AddressSpace,
+   Status = MmFreeMemoryArea(&Process->AddressSpace,
 			     BaseAddress,
 			     0,
 			     TRUE);
@@ -1034,17 +1034,17 @@ PVOID STDCALL MmAllocateSection (IN ULONG Length)
 				Length,
 				0,
 				&marea);
-   if (STATUS_SUCCESS != Status)
+   if (!NT_SUCCESS(STATUS_SUCCESS))
      {
 	return (NULL);
-	}
+     }
    DPRINT("Result %p\n",Result);
    for (i = 0; (i <= (Length / PAGESIZE)); i++)
      {
 	MmSetPage (NULL,
 		   (Result + (i * PAGESIZE)),
 		   PAGE_READWRITE,
-		   (ULONG) MmAllocPage ());
+		   (ULONG)MmAllocPage(0));
      }
    MmUnlockAddressSpace(AddressSpace);
    return ((PVOID)Result);

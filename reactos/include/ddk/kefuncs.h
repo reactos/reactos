@@ -4,6 +4,11 @@
 
 /* KERNEL FUNCTIONS ********************************************************/
 
+VOID STDCALL KeAttachProcess (struct _EPROCESS*	Process);
+
+VOID KeDrainApcQueue(VOID);
+struct _KPROCESS* KeGetCurrentProcess(VOID);
+
 /*
  * FUNCTION: Acquires a spinlock so the caller can synchronize access to 
  * data
@@ -11,30 +16,10 @@
  *         SpinLock = Initialized spinlock
  *         OldIrql (OUT) = Set the previous irql on return 
  */
-VOID
-STDCALL
-KeAcquireSpinLock (
-	IN	PKSPIN_LOCK	SpinLock,
-	OUT	PKIRQL		OldIrql
-	);
+VOID STDCALL KeAcquireSpinLock (PKSPIN_LOCK	SpinLock,
+				PKIRQL		OldIrql);
 
-VOID
-STDCALL
-KeAcquireSpinLockAtDpcLevel (
-	IN	PKSPIN_LOCK	SpinLock
-	);
-
-KIRQL
-FASTCALL
-KeAcquireSpinLockRaiseToSynch (
-	IN	PKSPIN_LOCK	SpinLock
-	);
-
-VOID
-STDCALL
-KeAttachProcess (
-	IN	PEPROCESS	Process
-	);
+VOID STDCALL KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock);
 
 /*
  * FUNCTION: Brings the system down in a controlled manner when an 
@@ -43,11 +28,8 @@ KeAttachProcess (
  *           BugCheckCode = Specifies the reason for the bug check
  * RETURNS: Doesn't
  */
-VOID
-STDCALL
-KeBugCheck (
-	IN	ULONG	BugCheckCode
-	);
+VOID STDCALL KeBugCheck (ULONG	BugCheckCode);
+
 
 /*
  * FUNCTION: Brings the system down in a controlled manner when an 
@@ -57,128 +39,47 @@ KeBugCheck (
  *           BugCheckParameter[1-4] = Additional information about bug
  * RETURNS: Doesn't
  */
-VOID
-STDCALL
-KeBugCheckEx (
-	IN	ULONG	BugCheckCode,
-	IN	ULONG	BugCheckParameter1,
-	IN	ULONG	BugCheckParameter2,
-	IN	ULONG	BugCheckParameter3,
-	IN	ULONG	BugCheckParameter4
-	);
+VOID STDCALL KeBugCheckEx (ULONG	BugCheckCode,
+			   ULONG	BugCheckParameter1,
+			   ULONG	BugCheckParameter2,
+			   ULONG	BugCheckParameter3,
+			   ULONG	BugCheckParameter4);
 
-BOOLEAN
-STDCALL
-KeCancelTimer (
-	IN	PKTIMER	Timer
-	);
+BOOLEAN STDCALL KeCancelTimer (PKTIMER	Timer);
 
-VOID
-STDCALL
-KeClearEvent (
-	IN	PKEVENT	Event
-	);
+VOID STDCALL KeClearEvent (PKEVENT	Event);
 
-NTSTATUS
-STDCALL
-KeDelayExecutionThread (
-	KPROCESSOR_MODE	WaitMode,
-	BOOLEAN		Alertable,
-	PLARGE_INTEGER	Internal
-	);
+NTSTATUS STDCALL KeDelayExecutionThread (KPROCESSOR_MODE	WaitMode,
+					 BOOLEAN		Alertable,
+					 PLARGE_INTEGER	Internal);
 
-BOOLEAN
-STDCALL
-KeDeregisterBugCheckCallback (
-	IN	PKBUGCHECK_CALLBACK_RECORD	CallbackRecord
-	);
+BOOLEAN STDCALL KeDeregisterBugCheckCallback (
+		       PKBUGCHECK_CALLBACK_RECORD	CallbackRecord);
 
-VOID
-STDCALL
-KeDetachProcess (
-	VOID
-	);
+VOID STDCALL KeDetachProcess (VOID);
 
-VOID
-STDCALL
-KeEnterCriticalRegion (
-	VOID
-	);
+VOID STDCALL KeEnterCriticalRegion (VOID);
 
-/*
- * FUNCTION: Enters the kernel debugger
- * ARGUMENTS:
- *	None
- */
-VOID
-STDCALL
-KeEnterKernelDebugger (
-	VOID
-	);
+VOID KeFlushIoBuffers(PMDL Mdl, BOOLEAN ReadOperation, BOOLEAN DmaOperation);
 
-/*
- * VOID
- * KeFlushIoBuffers (
- *      PMDL    Mdl,
- *      BOOLEAN ReadOperation,
- *      BOOLEAN DmaOperation
- *      );
- */
-#define KeFlushIoBuffers(Mdl,ReadOperation,DmaOperation)
+KIRQL STDCALL KeGetCurrentIrql (VOID);
 
-VOID
-STDCALL
-KeFlushWriteBuffer (
-	VOID
-	);
+ULONG KeGetCurrentProcessorNumber(VOID);
 
-KIRQL
-STDCALL
-KeGetCurrentIrql (
-	VOID
-	);
+struct _KTHREAD* STDCALL KeGetCurrentThread (VOID);
 
-/*
- * ULONG
- * KeGetCurrentProcessorNumber(VOID);
- */
-/*
- * FIXME: This should be an inline function on x86 systems
- */
-#define KeGetCurrentProcessorNumber() 0UL
+ULONG KeGetDcacheFillSize(VOID);
 
-PKTHREAD
-STDCALL
-KeGetCurrentThread (
-	VOID
-	);
+ULONG STDCALL KeGetPreviousMode (VOID);
 
-/*
- * ULONG KeGetDcacheFillSize(VOID);
- *
- * FUNCTION:
- *      Returns the microprocessor's data cache-line boundary in bytes
- */
-#define KeGetDcacheFillSize() 1L
-
-ULONG
-STDCALL
-KeGetPreviousMode (
-	VOID
-	);
-
-VOID
-STDCALL
-KeInitializeApc (
-	PKAPC			Apc,
-	PKTHREAD		Thread,
-	UCHAR			StateIndex,
-	PKKERNEL_ROUTINE	KernelRoutine,
-	PKRUNDOWN_ROUTINE	RundownRoutine,
-	PKNORMAL_ROUTINE	NormalRoutine,
-	UCHAR			Mode,
-	PVOID			Context
-	);
+VOID STDCALL KeInitializeApc (PKAPC			Apc,
+			      struct _KTHREAD*		Thread,
+			      UCHAR			StateIndex,
+			      PKKERNEL_ROUTINE	KernelRoutine,
+			      PKRUNDOWN_ROUTINE	RundownRoutine,
+			      PKNORMAL_ROUTINE	NormalRoutine,
+			      UCHAR			Mode,
+			      PVOID			Context);
 
 /*
  * VOID
@@ -189,118 +90,54 @@ KeInitializeApc (
 #define KeInitializeCallbackRecord(CallbackRecord) \
 	(CallbackRecord)->State = BufferEmpty
 
-VOID
-STDCALL
-KeInitializeDeviceQueue (
-	PKDEVICE_QUEUE	DeviceQueue
-	);
+VOID STDCALL KeInitializeDeviceQueue (PKDEVICE_QUEUE	DeviceQueue);
 
-VOID
-STDCALL
-KeInitializeDpc (
-	PKDPC			Dpc,
-	PKDEFERRED_ROUTINE	DeferredRoutine,
-	PVOID			DeferredContext
-	);
+VOID STDCALL KeInitializeDpc (PKDPC			Dpc,
+			      PKDEFERRED_ROUTINE	DeferredRoutine,
+			      PVOID			DeferredContext);
 
-VOID
-STDCALL
-KeInitializeEvent (
-	PKEVENT		Event,
-	EVENT_TYPE	Type,
-	BOOLEAN		State
-	);
+VOID STDCALL KeInitializeEvent (PKEVENT		Event,
+				EVENT_TYPE	Type,
+				BOOLEAN		State);
 
-VOID
-STDCALL
-KeInitializeMutex (
-	PKMUTEX	Mutex,
-	ULONG	Level
-	);
+VOID STDCALL KeInitializeMutex (PKMUTEX	Mutex,
+				ULONG	Level);
 
-VOID
-STDCALL
-KeInitializeSemaphore (
-	PKSEMAPHORE	Semaphore,
-	LONG		Count,
-	LONG		Limit
-	);
+VOID STDCALL KeInitializeSemaphore (PKSEMAPHORE	Semaphore,
+				    LONG		Count,
+				    LONG		Limit);
 
 /*
  * FUNCTION: Initializes a spinlock
  * ARGUMENTS:
  *        SpinLock = Spinlock to initialize
  */
-VOID
-STDCALL
-KeInitializeSpinLock (
-	PKSPIN_LOCK	SpinLock
-	);
+VOID STDCALL KeInitializeSpinLock (PKSPIN_LOCK	SpinLock);
 
-VOID
-STDCALL
-KeInitializeTimer (
-	PKTIMER	Timer
-	);
+VOID STDCALL KeInitializeTimer (PKTIMER	Timer);
 
-VOID
-STDCALL
-KeInitializeTimerEx (
-	PKTIMER		Timer,
-	TIMER_TYPE	Type
-	);
+VOID STDCALL KeInitializeTimerEx (PKTIMER		Timer,
+				  TIMER_TYPE	Type);
 
-BOOLEAN
-STDCALL
-KeInsertByKeyDeviceQueue (
-	PKDEVICE_QUEUE		DeviceQueue,
-	PKDEVICE_QUEUE_ENTRY	DeviceQueueEntry,
-	ULONG			SortKey
-	);
+BOOLEAN STDCALL KeInsertByKeyDeviceQueue (PKDEVICE_QUEUE DeviceQueue,
+					  PKDEVICE_QUEUE_ENTRY	QueueEntry,
+					  ULONG			SortKey);
 
-BOOLEAN
-STDCALL
-KeInsertDeviceQueue (
-	PKDEVICE_QUEUE		DeviceQueue,
-	PKDEVICE_QUEUE_ENTRY	DeviceQueueEntry
-	);
+BOOLEAN STDCALL KeInsertDeviceQueue (PKDEVICE_QUEUE		DeviceQueue,
+				     PKDEVICE_QUEUE_ENTRY DeviceQueueEntry);
 
-VOID
-STDCALL
-KeInsertQueueApc (
-	PKAPC	Apc,
-	PVOID	SystemArgument1,
-	PVOID	SystemArgument2,
-	UCHAR	Mode
-	);
+VOID STDCALL KeInsertQueueApc (PKAPC	Apc,
+			       PVOID	SystemArgument1,
+			       PVOID	SystemArgument2,
+			       UCHAR	Mode);
 
-BOOLEAN
-STDCALL
-KeInsertQueueDpc (
-	PKDPC	Dpc,
-	PVOID	SystemArgument1,
-	PVOID	SystemArgument2
-	);
+BOOLEAN STDCALL KeInsertQueueDpc (PKDPC	Dpc,
+				  PVOID	SystemArgument1,
+				  PVOID	SystemArgument2);
 
-VOID
-STDCALL
-KeLeaveCriticalRegion (
-	VOID
-	);
+VOID STDCALL KeLeaveCriticalRegion (VOID);
 
-VOID
-STDCALL
-KeLowerIrql (
-	KIRQL	NewIrql
-	);
-
-NTSTATUS
-STDCALL
-KePulseEvent (
-	PKEVENT		Event,
-	KPRIORITY	Increment,
-	BOOLEAN		Wait
-	);
+VOID STDCALL KeLowerIrql (KIRQL	NewIrql);
 
 LARGE_INTEGER
 STDCALL
@@ -439,12 +276,8 @@ KeResetEvent (
 	PKEVENT	Event
 	);
 
-LONG
-STDCALL
-KeSetBasePriorityThread (
-	PKTHREAD	Thread,
-	LONG		Increment
-	);
+LONG STDCALL KeSetBasePriorityThread (struct _KTHREAD*	Thread,
+				      LONG		Increment);
 
 LONG
 STDCALL
@@ -454,76 +287,32 @@ KeSetEvent (
 	BOOLEAN		Wait
 	);
 
-VOID
-STDCALL
-KeSetImportanceDpc (
-	IN	PKDPC		Dpc,
-	IN	KDPC_IMPORTANCE	Importance
-	);
+KPRIORITY STDCALL KeSetPriorityThread (struct _KTHREAD*	Thread,
+				       KPRIORITY	Priority);
 
-KPRIORITY
-STDCALL
-KeSetPriorityThread (
-	PKTHREAD	Thread,
-	KPRIORITY	Priority
-	);
+BOOLEAN STDCALL KeSetTimer (PKTIMER		Timer,
+			    LARGE_INTEGER	DueTime,
+			    PKDPC		Dpc);
 
-VOID
-STDCALL
-KeSetTargetProcessorDpc (
-	IN	PKDPC	Dpc,
-	IN	CCHAR	Number
-	);
+BOOLEAN STDCALL KeSetTimerEx (PKTIMER		Timer,
+			      LARGE_INTEGER	DueTime,
+			      LONG		Period,
+			      PKDPC		Dpc);
 
-BOOLEAN
-STDCALL
-KeSetTimer (
-	PKTIMER		Timer,
-	LARGE_INTEGER	DueTime,
-	PKDPC		Dpc
-	);
+VOID STDCALL KeStallExecutionProcessor (ULONG	MicroSeconds);
 
-BOOLEAN
-STDCALL
-KeSetTimerEx (
-	PKTIMER		Timer,
-	LARGE_INTEGER	DueTime,
-	LONG		Period,
-	PKDPC		Dpc
-	);
+BOOLEAN STDCALL KeSynchronizeExecution (PKINTERRUPT		Interrupt,
+					PKSYNCHRONIZE_ROUTINE SynchronizeRoutine,
+					PVOID SynchronizeContext);
 
-VOID
-STDCALL
-KeStallExecutionProcessor (
-	ULONG	MicroSeconds
-	);
-
-BOOLEAN
-STDCALL
-KeSynchronizeExecution (
-	PKINTERRUPT		Interrupt,
-	PKSYNCHRONIZE_ROUTINE	SynchronizeRoutine,
-	PVOID			SynchronizeContext
-	);
-
-VOID
-STDCALL
-KeUpdateSystemTime (
-	VOID
-	);
-
-NTSTATUS
-STDCALL
-KeWaitForMultipleObjects (
-	ULONG		Count,
-	PVOID		Object[],
-	WAIT_TYPE	WaitType,
-	KWAIT_REASON	WaitReason,
-	KPROCESSOR_MODE	WaitMode,
-	BOOLEAN		Alertable,
-	PLARGE_INTEGER	Timeout,
-	PKWAIT_BLOCK	WaitBlockArray
-	);
+NTSTATUS STDCALL KeWaitForMultipleObjects (ULONG		Count,
+					   PVOID		Object[],
+					   WAIT_TYPE	WaitType,
+					   KWAIT_REASON	WaitReason,
+					   KPROCESSOR_MODE	WaitMode,
+					   BOOLEAN		Alertable,
+					   PLARGE_INTEGER	Timeout,
+					   PKWAIT_BLOCK	WaitBlockArray);
 
 NTSTATUS
 STDCALL
@@ -545,6 +334,15 @@ KeWaitForSingleObject (
 	PLARGE_INTEGER	Timeout
 	);
 
+
+/*
+ * FUNCTION: Sets the current irql without altering the current processor 
+ * state
+ * ARGUMENTS:
+ *          newlvl = IRQ level to set
+ * NOTE: This is for internal use only
+ */
+VOID KeSetCurrentIrql(KIRQL newlvl);
 
 
 // io permission map has a 8k size
@@ -588,7 +386,7 @@ VOID Ke386QueryIoAccessMap(BOOLEAN NewMap, PIOPM *IoPermissionMap);
  *	Eprocess = Pointer to a executive process object
  *	EnableIo = Specify TRUE to enable IO and FALSE to disable 
  */
-NTSTATUS Ke386IoSetAccessProcess(PEPROCESS Eprocess, BOOLEAN EnableIo);
+NTSTATUS Ke386IoSetAccessProcess(struct _EPROCESS* Eprocess, BOOLEAN EnableIo);
 
 /*
  * FUNCTION: Releases a set of Global Descriptor Table Selectors
@@ -608,6 +406,30 @@ NTSTATUS KeI386ReleaseGdtSelectors(OUT PULONG SelArray,
 NTSTATUS KeI386AllocateGdtSelectors(OUT PULONG SelArray,
 				    IN ULONG NumOfSelectors);
 
+<<<<<<< kefuncs.h
+/*
+ * FUNCTION: Raises a user mode exception
+ * ARGUMENTS:
+ *	ExceptionCode = Status code of the exception
+ */
+VOID KeRaiseUserException(NTSTATUS ExceptionCode);
+
+
+/*
+ * FUNCTION: Enters the kernel debugger
+ * ARGUMENTS:
+ *	None
+ */
+VOID
+STDCALL
+KeEnterKernelDebugger (VOID);
+
+
+VOID
+STDCALL
+KeFlushWriteBuffer (
+	VOID
+	);
 
 KIRQL
 FASTCALL

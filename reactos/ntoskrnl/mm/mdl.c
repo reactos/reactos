@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.20 2000/07/02 17:32:51 ekohl Exp $
+/* $Id: mdl.c,v 1.21 2000/07/04 08:52:42 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -15,7 +15,7 @@
 #include <internal/mm.h>
 #include <internal/mmhal.h>
 #include <string.h>
-#include <internal/string.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -118,7 +118,7 @@ VOID MmBuildMdlFromPages(PMDL Mdl)
    
    for (i=0;i<(PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGESIZE);i++)
      {
-        mdl_pages[i] = (ULONG)MmAllocPage();
+        mdl_pages[i] = (ULONG)MmAllocPage(0);
 	DPRINT("mdl_pages[i] %x\n",mdl_pages[i]);
      }
 }
@@ -154,7 +154,7 @@ MmProbeAndLockPages (
      }
    else
      {
-	AddressSpace = &Mdl->Process->Pcb.AddressSpace;
+	AddressSpace = &Mdl->Process->AddressSpace;
      }
    MmLockAddressSpace(AddressSpace);
    marea = MmOpenMemoryAreaByAddress(AddressSpace,

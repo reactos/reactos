@@ -1,4 +1,4 @@
-/* $Id: view.c,v 1.8 2000/03/05 19:17:40 ea Exp $
+/* $Id: view.c,v 1.9 2000/07/04 08:52:36 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -122,7 +122,7 @@ NTSTATUS STDCALL CcRequestCachePage(PBCB Bcb,
    MmSetPage(NULL,
 	     current->BaseAddress,
 	     PAGE_READWRITE,
-	     (ULONG)MmAllocPage());
+	     (ULONG)MmAllocPage(0));
    
    
    DPRINT("Returning %x (BaseAddress %x)\n", current, *BaseAddress);

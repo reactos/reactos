@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.29 2000/06/25 03:59:15 dwelch Exp $
+/* $Id: npool.c,v 1.30 2000/07/04 08:52:42 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -74,15 +74,6 @@ static block_hdr* used_list_head = NULL;
 static ULONG nr_free_blocks;
 ULONG EiNrUsedBlocks = 0;
 
-#define ALLOC_MAP_SIZE (NONPAGED_POOL_SIZE / PAGESIZE)
-
-/*
- * One bit for each page in the kmalloc region
- *      If set then the page is used by a kmalloc block
- */
-static unsigned int alloc_map[ALLOC_MAP_SIZE/32]={0,};
-static KSPIN_LOCK AllocMapLock;
-
 static KSPIN_LOCK MmNpoolLock;
 
 unsigned int EiFreeNonPagedPool = 0;
@@ -90,56 +81,11 @@ unsigned int EiUsedNonPagedPool = 0;
 
 /* FUNCTIONS ***************************************************************/
 
-VOID ExUnmapPage(PVOID Addr)
-{
-   KIRQL oldIrql;
-   ULONG i = ((ULONG)Addr - kernel_pool_base) / PAGESIZE;
-   
-   DPRINT("ExUnmapPage(Addr %x)\n",Addr);
-   DPRINT("i %x\n",i);
-   
-   KeAcquireSpinLock(&AllocMapLock, &oldIrql);
-   MmSetPage(NULL, (PVOID)Addr, 0, 0);
-   clear_bit(i%32, &alloc_map[i/32]);
-   KeReleaseSpinLock(&AllocMapLock, oldIrql);
-}
-
-PVOID ExAllocatePage(VOID)
-{
-   KIRQL oldlvl;
-   ULONG addr;
-   ULONG i;
-   ULONG PhysPage;
-
-   PhysPage = (ULONG)MmAllocPage();
-   DPRINT("Allocated page %x\n",PhysPage);
-   if (PhysPage == 0)
-     {
-	return(NULL);
-     }
-
-   KeAcquireSpinLock(&AllocMapLock, &oldlvl);
-   for (i=1; i<ALLOC_MAP_SIZE;i++)
-     {
-	if (!test_bit(i%32,&alloc_map[i/32]))
-	  {
-	     DPRINT("i %x\n",i);
-	     set_bit(i%32,&alloc_map[i/32]);
-	     addr = kernel_pool_base + (i*PAGESIZE);
-	     MmSetPage(NULL, (PVOID)addr, PAGE_READWRITE, PhysPage);
-	     KeReleaseSpinLock(&AllocMapLock, oldlvl);
-	     return((PVOID)addr);
-	  }
-     }
-   KeReleaseSpinLock(&AllocMapLock, oldlvl);
-   return(NULL);
-}
-
 VOID ExInitNonPagedPool(ULONG BaseAddress)
 {
    kernel_pool_base = BaseAddress;
-   KeInitializeSpinLock(&AllocMapLock);
    KeInitializeSpinLock(&MmNpoolLock);
+   MmInitKernelMap((PVOID)BaseAddress);
 }
 
 #if 0
@@ -416,54 +362,6 @@ inline static block_hdr* address_to_block(void* addr)
                ( ((int)addr) - sizeof(block_hdr) );
 }
 
-static unsigned int alloc_pool_region(unsigned int nr_pages)
-/*
- * FUNCTION: Allocates a region of pages within the nonpaged pool area
- */
-{
-   unsigned int start = 0;
-   unsigned int length = 0;
-   unsigned int i,j;
-   
-   OLD_DPRINT("alloc_pool_region(nr_pages = %d)\n",nr_pages);
-
-   for (i=1; i<ALLOC_MAP_SIZE;i++)
-     {
-	if (!test_bit(i%32,&alloc_map[i/32]))
-	  {
-	     if (length == 0)
-	       {
-		  start=i;
-		  length = 1;
-	       }
-	     else
-	       {
-		  length++;
-	       }
-	     if (length==nr_pages)
-	       {
-                  OLD_DPRINT("found region at %d for %d\n",start,
-			 length);
-		  for (j=start;j<(start+length);j++)
-		    {
-		       set_bit(j%32,&alloc_map[j/32]);
-		    }
-                  OLD_DPRINT("returning %x\n",(start*PAGESIZE)
-			 +kernel_pool_base);
-		  return((start*PAGESIZE)+kernel_pool_base);
-	       }
-	  }
-	else
-	  {
-	     start=0;
-	     length=0;
-	  }
-     }
-   DbgPrint("CRITICAL: Out of non-paged pool space\n");
-   for(;;);
-   return(0);
-}
-
 static block_hdr* grow_kernel_pool(unsigned int size)
 /*
  * FUNCTION: Grow the executive heap to accomodate a block of at least 'size'
@@ -485,7 +383,7 @@ static block_hdr* grow_kernel_pool(unsigned int size)
 	MmSetPage(NULL,
 		  (PVOID)(start + (i*PAGESIZE)),
 		  PAGE_READWRITE,
-		  (ULONG)MmAllocPage());
+		  (ULONG)MmAllocPage(0));
      }
 
    

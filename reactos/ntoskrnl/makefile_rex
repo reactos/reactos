@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.79 2000/07/04 01:27:40 ekohl Exp $
+# $Id: makefile_rex,v 1.80 2000/07/04 08:52:35 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -81,12 +81,14 @@ OBJECTS_KE = \
 	ke/sem.o \
 	ke/spinlock.o \
 	ke/timer.o \
-	ke/wait.o
+	ke/wait.o 
+	
 
 OBJECTS_KE_I386 = \
 	ke/i386/exp.o \
 	ke/i386/thread.o \
-	ke/i386/usercall.o
+	ke/i386/usercall.o \
+	ke/i386/trap.o
  
 # Memory Manager (Mm)
 OBJECTS_MM = \
@@ -107,7 +109,9 @@ OBJECTS_MM = \
 	mm/section.o \
 	mm/virtual.o \
 	mm/pager.o \
-#	mm/kmap.o
+	mm/wset.o \
+	mm/mminit.o \
+	mm/kmap.o
 
 OBJECTS_MM_I386 = \
 	mm/i386/memsafe.o \

@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.9 2000/06/25 03:59:16 dwelch Exp $
+/* $Id: page.c,v 1.10 2000/07/04 08:52:46 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -15,9 +15,8 @@
 #include <internal/mm.h>
 #include <internal/mmhal.h>
 #include <string.h>
-#include <internal/string.h>
-#include <internal/bitops.h>
 #include <internal/ex.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -218,7 +217,7 @@ PULONG MmGetPageEntry(PVOID PAddress)
    DPRINT("page_dir %x *page_dir %x\n",page_dir,*page_dir);
    if ((*page_dir) == 0)
      {
-	(*page_dir) = ((ULONG)MmAllocPage()) | 0x7;
+	(*page_dir) = ((ULONG)MmAllocPage(0)) | 0x7;
 	memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
 	FLUSH_TLB;
      }

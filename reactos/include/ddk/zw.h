@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.32 2000/06/29 23:35:12 dwelch Exp $
+/* $Id: zw.h,v 1.33 2000/07/04 08:52:34 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -5191,7 +5191,7 @@ NtSetContextChannel (
 NTSTATUS
 STDCALL
 NtSetLdtEntries (
-	PETHREAD	Thread,
+	HANDLE	Thread,
 	ULONG		FirstEntry,
 	PULONG	Entries
 	);

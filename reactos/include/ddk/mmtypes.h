@@ -1,4 +1,4 @@
-/* $Id: mmtypes.h,v 1.7 2000/06/29 23:35:12 dwelch Exp $ */
+/* $Id: mmtypes.h,v 1.8 2000/07/04 08:52:34 dwelch Exp $ */
 
 #ifndef _INCLUDE_DDK_MMTYPES_H
 #define _INCLUDE_DDK_MMTYPES_H
@@ -10,17 +10,6 @@ extern POBJECT_TYPE EXPORTED MmSectionObjectType;
 #else
 extern POBJECT_TYPE IMPORTED MmSectionObjectType;
 #endif
-
-
-struct _EPROCESS;
-
-typedef struct _MADDRESS_SPACE
-{
-   LIST_ENTRY MAreaListHead;
-   KMUTEX Lock;
-   ULONG LowestAddress;
-   struct _EPROCESS* Process;
-} MADDRESS_SPACE, *PMADDRESS_SPACE;
 
 #define   MDL_MAPPED_TO_SYSTEM_VA      (0x1)
 #define   MDL_PAGES_LOCKED             (0x2)
@@ -58,24 +47,21 @@ typedef struct _MDL
 #define MmSmallSystem (0)
 #define MmMediumSystem (1)
 #define MmLargeSystem (2)
+
 /* Used in MmFlushImageSection */
-typedef
-enum _MMFLUSH_TYPE
+typedef enum _MMFLUSH_TYPE
 {
 	MmFlushForDelete,
 	MmFlushForWrite
-
 } MMFLUSH_TYPE;
 
-typedef
-enum _MEMORY_CACHING_TYPE
+typedef enum _MEMORY_CACHING_TYPE
 {
 	MmNonCached = FALSE,
 	MmCached = TRUE,
 	MmFrameBufferCached,
 	MmHardwareCoherentCached,
 	MmMaximumCacheType
-		
 } MEMORY_CACHING_TYPE;
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.15 2000/01/26 10:07:30 dwelch Exp $
+/* $Id: semgr.c,v 1.16 2000/07/04 08:52:47 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -12,6 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/ps.h>
 
 #include <internal/debug.h>
 

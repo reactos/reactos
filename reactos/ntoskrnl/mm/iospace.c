@@ -1,4 +1,4 @@
-/* $Id: iospace.c,v 1.4 2000/04/02 13:32:41 ea Exp $
+/* $Id: iospace.c,v 1.5 2000/07/04 08:52:42 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -110,7 +111,7 @@ PVOID STDCALL MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
 VOID STDCALL MmUnmapIoSpace (IN PVOID BaseAddress,
 			     IN ULONG NumberOfBytes)
 {
-   (VOID)MmFreeMemoryArea(&PsGetCurrentProcess()->Pcb.AddressSpace,
+   (VOID)MmFreeMemoryArea(&PsGetCurrentProcess()->AddressSpace,
 			  BaseAddress,
 			  NumberOfBytes,
 			  FALSE);

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.16 2000/07/04 01:25:27 ekohl Exp $ */
+/* $Id: iofuncs.h,v 1.17 2000/07/04 08:52:34 dwelch Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -618,7 +618,7 @@ IoGetConfigurationInformation (
 #define IoGetCurrentIrpStackLocation(Irp) \
 	((Irp)->Tail.Overlay.CurrentStackLocation)
 */
-PEPROCESS
+struct _EPROCESS*
 STDCALL
 IoGetCurrentProcess (
 	VOID
@@ -634,7 +634,7 @@ IoGetDeviceObjectPointer (
 PDEVICE_OBJECT
 STDCALL
 IoGetDeviceToVerify (
-	PETHREAD	Thread
+	struct _ETHREAD*	Thread
 	);
 PGENERIC_MAPPING
 STDCALL
@@ -676,8 +676,7 @@ STDCALL
 IoGetRelatedDeviceObject (
 	PFILE_OBJECT	FileObject
 	);
-
-PEPROCESS
+struct _EPROCESS*
 STDCALL
 IoGetRequestorProcess (
 	IN	PIRP	Irp
@@ -838,7 +837,7 @@ STDCALL
 IoRaiseInformationalHardError (
 	NTSTATUS	ErrorStatus,
 	PUNICODE_STRING	String,
-	PKTHREAD	Thread
+	struct _KTHREAD*	Thread
 	);
 VOID
 STDCALL
@@ -1045,11 +1044,7 @@ IoSynchronousPageWrite (
 	DWORD	Unknown3,
 	DWORD	Unknown4
 	);
-PEPROCESS
-STDCALL
-IoThreadToProcess (
-	IN	PETHREAD	Thread
-	);
+struct _EPROCESS* STDCALL IoThreadToProcess (struct _ETHREAD*	Thread);
 VOID
 STDCALL
 IoUnregisterFileSystem (

@@ -96,7 +96,7 @@ VOID PsReapThreads(VOID)
 	     KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 	     ObDereferenceObject(current);
 	     KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-	     if (IsListEmpty(&Process->Pcb.ThreadListHead))
+	     if (IsListEmpty(&Process->ThreadListHead))
 	       {
 		  /* 
 		   * TODO: Optimize this so it doesnt jerk the IRQL around so 
@@ -160,7 +160,7 @@ VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
    Thread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&Thread->Tcb.DispatcherHeader);
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);   
-   if (IsListEmpty(&Thread->ThreadsProcess->Pcb.ThreadListHead))
+   if (IsListEmpty(&Thread->ThreadsProcess->ThreadListHead))
      {
 	DPRINT("Terminating associated process\n");
 	PiTerminateProcess(Thread->ThreadsProcess, ExitStatus);

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.4 2000/06/04 19:50:12 ekohl Exp $
+/* $Id: process.c,v 1.5 2000/07/04 08:52:40 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
 #include <internal/mm.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>

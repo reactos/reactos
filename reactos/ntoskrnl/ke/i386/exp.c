@@ -17,13 +17,12 @@
 #include <internal/mmhal.h>
 #include <internal/module.h>
 #include <internal/mm.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *****************************************************************/
-
-static exception_hook* exception_hooks[256]={NULL,};
 
 #define _STR(x) #x
 #define STR(x) _STR(x)
@@ -36,15 +35,15 @@ extern ULONG init_stack_top;
 
 /* FUNCTIONS ****************************************************************/
 
-#define EXCEPTION_HANDLER_WITH_ERROR(x,y)  \
+#define EXCEPTION_HANDLER_WITH_ERROR(y)  \
       void exception_handler##y (void);   \
       void tmp_exception_handler##y (void) { \
-       __asm__("\n\t_exception_handler"##x":\n\t" \
+       __asm__("\n\t_exception_handler"STR(y)":\n\t" \
                 "pushl %gs\n\t" \
                 "pushl %fs\n\t" \
                 "pushl %es\n\t" \
                 "pushl %ds\n\t"    \
-                "pushl $"##x"\n\t"                        \
+                "pushl $"STR(y)"\n\t"                        \
                 "pusha\n\t"                          \
                 "movw $"STR(KERNEL_DS)",%ax\n\t"        \
                 "movw %ax,%ds\n\t"      \
@@ -61,16 +60,16 @@ extern ULONG init_stack_top;
                 "addl $4,%esp\n\t" \
                 "iret\n\t"); }
 
-#define EXCEPTION_HANDLER_WITHOUT_ERROR(x,y)           \
+#define EXCEPTION_HANDLER_WITHOUT_ERROR(y)           \
          void exception_handler##y (void);        \
         void tmp_exception_handler##y (void) { \
-        __asm__("\n\t_exception_handler"##x":\n\t"           \
+        __asm__("\n\t_exception_handler"STR(y)":\n\t"           \
                 "pushl $0\n\t"                        \
                 "pushl %gs\n\t" \
                 "pushl %fs\n\t" \
                 "pushl %es\n\t" \
                 "pushl %ds\n\t"   \
-                "pushl $"##x"\n\t"                       \
+                "pushl $"STR(y)"\n\t"                       \
                 "pusha\n\t"                          \
                 "movw $"STR(KERNEL_DS)",%ax\n\t"        \
                 "movw %ax,%ds\n\t"      \
@@ -87,8 +86,8 @@ extern ULONG init_stack_top;
                 "addl $4,%esp\n\t" \
                 "iret\n\t"); }
 
- void exception_handler_unknown(void);
- void tmp_exception_handler_unknown(void)
+void exception_handler_unknown(void);
+void tmp_exception_handler_unknown(void)
 {
         __asm__("\n\t_exception_handler_unknown:\n\t"           
                 "pushl $0\n\t"
@@ -110,23 +109,23 @@ extern ULONG init_stack_top;
                 "iret\n\t");
 }
 
-EXCEPTION_HANDLER_WITHOUT_ERROR("0",0);
-EXCEPTION_HANDLER_WITHOUT_ERROR("1",1);
-EXCEPTION_HANDLER_WITHOUT_ERROR("2",2);
-EXCEPTION_HANDLER_WITHOUT_ERROR("3",3);
-EXCEPTION_HANDLER_WITHOUT_ERROR("4",4);
-EXCEPTION_HANDLER_WITHOUT_ERROR("5",5);
-EXCEPTION_HANDLER_WITHOUT_ERROR("6",6);
-EXCEPTION_HANDLER_WITHOUT_ERROR("7",7);
-EXCEPTION_HANDLER_WITH_ERROR("8",8);
-EXCEPTION_HANDLER_WITHOUT_ERROR("9",9);
-EXCEPTION_HANDLER_WITH_ERROR("10",10);
-EXCEPTION_HANDLER_WITH_ERROR("11",11);
-EXCEPTION_HANDLER_WITH_ERROR("12",12);
-EXCEPTION_HANDLER_WITH_ERROR("13",13);
-EXCEPTION_HANDLER_WITH_ERROR("14",14);
-EXCEPTION_HANDLER_WITH_ERROR("15",15);
-EXCEPTION_HANDLER_WITHOUT_ERROR("16",16);
+EXCEPTION_HANDLER_WITHOUT_ERROR(0);
+EXCEPTION_HANDLER_WITHOUT_ERROR(1);
+EXCEPTION_HANDLER_WITHOUT_ERROR(2);
+EXCEPTION_HANDLER_WITHOUT_ERROR(3);
+EXCEPTION_HANDLER_WITHOUT_ERROR(4);
+EXCEPTION_HANDLER_WITHOUT_ERROR(5);
+EXCEPTION_HANDLER_WITHOUT_ERROR(6);
+EXCEPTION_HANDLER_WITHOUT_ERROR(7);
+EXCEPTION_HANDLER_WITH_ERROR(8);
+EXCEPTION_HANDLER_WITHOUT_ERROR(9);
+EXCEPTION_HANDLER_WITH_ERROR(10);
+EXCEPTION_HANDLER_WITH_ERROR(11);
+EXCEPTION_HANDLER_WITH_ERROR(12);
+EXCEPTION_HANDLER_WITH_ERROR(13);
+EXCEPTION_HANDLER_WITH_ERROR(14);
+EXCEPTION_HANDLER_WITH_ERROR(15);
+EXCEPTION_HANDLER_WITHOUT_ERROR(16);
 
 extern unsigned int stext, etext;
 
@@ -231,14 +230,6 @@ static void print_address(PVOID address)
      {
 	DbgPrint("Trap at CS:EIP %x:%x\n",cs&0xffff,eip);
 	return;
-     }
-   
-   /*
-    * Activate any hook for the exception
-    */
-   if (exception_hooks[type]!=NULL)
-     {
-	exception_hooks[type](NULL,type);
      }
    
    /*
@@ -420,20 +411,7 @@ static void set_interrupt_gate(unsigned int sel, unsigned int func)
         KiIdt[sel].b = 0x8f00 + (((int)func)&0xffff0000);         
 }
 
- unsigned int ExHookException(exception_hook fn, unsigned int exp)
-/*
- * FUNCTION: Hook an exception
- */
-{
-        if (exp>=256)
-        {
-                return(1);
-        }
-        exception_hooks[exp]=fn;
-        return(0);
-}
-
- void KeInitExceptions(void)
+void KeInitExceptions(void)
 /*
  * FUNCTION: Initalize CPU exception handling
  */

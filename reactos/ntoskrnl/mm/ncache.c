@@ -1,4 +1,4 @@
-/* $Id: ncache.c,v 1.4 2000/03/29 13:11:54 dwelch Exp $
+/* $Id: ncache.c,v 1.5 2000/07/04 08:52:42 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -67,7 +68,7 @@ PVOID STDCALL MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
 	MmSetPage (NULL,
 		   (Result + (i * PAGESIZE)),
 		   PAGE_READWRITE,
-		   (ULONG)MmAllocPage());
+		   (ULONG)MmAllocPage(0));
 	}
    return ((PVOID)Result);
 }
@@ -102,7 +103,7 @@ PVOID STDCALL MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
 VOID STDCALL MmFreeNonCachedMemory (IN PVOID BaseAddress,
 				    IN ULONG NumberOfBytes)
 {
-   MmFreeMemoryArea (&PsGetCurrentProcess()->Pcb.AddressSpace,
+   MmFreeMemoryArea (&PsGetCurrentProcess()->AddressSpace,
 		     BaseAddress,
 		     NumberOfBytes,
 		     TRUE);

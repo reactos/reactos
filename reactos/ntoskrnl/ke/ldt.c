@@ -18,7 +18,7 @@
 
 
 
-NTSTATUS STDCALL NtSetLdtEntries(PETHREAD Thread,
+NTSTATUS STDCALL NtSetLdtEntries(HANDLE Thread,
 				 ULONG FirstEntry,
 				 PULONG Entries)
 {
