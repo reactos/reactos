@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.37 2003/12/28 00:19:24 weiden Exp $
+/* $Id: menu.c,v 1.38 2003/12/28 01:13:02 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -52,24 +52,24 @@
 #define UpdateMenuItemState(state, change) \
 {\
   if((change) & MFS_DISABLED) { \
-    if(!((state) & MFS_DISABLED)) (state) |= MFS_DISABLED; \
+    (state) |= MFS_DISABLED; \
   } else { \
-    if((state) & MFS_DISABLED) (state) ^= MFS_DISABLED; \
+    (state) &= ~MFS_DISABLED; \
   } \
   if((change) & MFS_CHECKED) { \
-    if(!((state) & MFS_CHECKED)) (state) |= MFS_CHECKED; \
+    (state) |= MFS_CHECKED; \
   } else { \
-    if((state) & MFS_CHECKED) (state) ^= MFS_CHECKED; \
+    (state) &= ~MFS_CHECKED; \
   } \
   if((change) & MFS_HILITE) { \
-    if(!((state) & MFS_HILITE)) (state) |= MFS_HILITE; \
+    (state) |= MFS_HILITE; \
   } else { \
-    if((state) & MFS_HILITE) (state) ^= MFS_HILITE; \
+    (state) &= ~MFS_HILITE; \
   } \
-  if(((change) & MFS_DEFAULT) && !((state) & MFS_DEFAULT)) { \
+  if((change) & MFS_DEFAULT) { \
     (state) |= MFS_DEFAULT; \
-  } else if(((state) & MFS_DEFAULT) && !((change) & MFS_DEFAULT)) { \
-    (state) ^= MFS_DEFAULT; \
+  } else { \
+    (state) &= ~MFS_DEFAULT; \
   } \
 }
 
@@ -435,15 +435,14 @@ IntGetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi)
 BOOL FASTCALL
 IntIsMenu(HMENU hMenu)
 {
-
-   PMENU_OBJECT Menu;
-
-   if (!(Menu = IntGetMenuObject(hMenu)))
-      return FALSE;
-   else
-      IntReleaseMenuObject(Menu);
-
-   return TRUE;
+  PMENU_OBJECT Menu;
+  
+  if((Menu = IntGetMenuObject(hMenu)))
+  {
+    IntReleaseMenuObject(Menu);
+    return TRUE;
+  }
+  return FALSE;
 }
 
 
@@ -1041,7 +1040,7 @@ BOOL FASTCALL
 IntTrackPopupMenu(PMENU_OBJECT MenuObject, PWINDOW_OBJECT WindowObject,
                   UINT Flags, POINT *Pos, UINT MenuPos, RECT *ExcludeRect)
 {
-
+  
   return FALSE;
 }
 
@@ -1467,8 +1466,12 @@ NtUserMenuItemInfo(
  LPMENUITEMINFOW lpmii,
  BOOL fsog)
 {
-  BOOL res = FALSE;
-  PMENU_OBJECT MenuObject = IntGetMenuObject(hMenu);
+  PMENU_OBJECT MenuObject;
+  PMENU_ITEM MenuItem;
+  MENUITEMINFOW Safemii;
+  NTSTATUS Status;
+  
+  MenuObject = IntGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -1481,12 +1484,25 @@ NtUserMenuItemInfo(
   }
   else
   {
-    /* Get menu item info */
+    if((IntGetMenuItemByFlag(MenuObject, uItem, (fByPosition ? MF_BYPOSITION : MF_BYCOMMAND), 
+                            &MenuItem, NULL) > -1) &&
+       IntGetMenuItemInfo(MenuObject, MenuItem, &Safemii))
+    {
+      Status = MmCopyToCaller(lpmii, &Safemii, sizeof(MENUITEMINFOW));
+      if(!NT_SUCCESS(Status))
+      {
+        IntReleaseMenuObject(MenuObject);
+        SetLastNtError(Status);
+        return FALSE;
+      }
+      
+      IntReleaseMenuObject(MenuObject);
+      return TRUE;
+    }
   }
   
   IntReleaseMenuObject(MenuObject);
-  
-  return res;
+  return FALSE;
 }
 
 
