@@ -67,14 +67,8 @@ KiIpiServiceRoutine(
 	IN PKEXCEPTION_FRAME  	ExceptionFrame
 );*/
 
-VOID 
-STDCALL
-KeUpdateSystemTime(
-	IN PKTRAP_FRAME   	TrapFrame,
-	IN ULONG  			Increment
-);
-
-VOID KiUpdateSystemTime (KIRQL oldIrql, struct _KIRQ_TRAPFRAME* Tf);
+VOID STDCALL KeUpdateSystemTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);
+VOID STDCALL KeUpdateRunTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);
 
 KIRQL KeAcquireDispatcherDatabaseLock(VOID);
 VOID KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID);
@@ -153,15 +147,6 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 #define KEBUGCHECKWITHTF(a,b,c,d,e,f) DbgPrint("KeBugCheckWithTf at %s:%i\n",__FILE__,__LINE__), KeBugCheckWithTf(a,b,c,d,e,f)
 VOID
 KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG ExceptionNr, ULONG cr2);
-
-VOID
-KiUpdateProcessThreadTime(KIRQL pldIrql, struct _KIRQ_TRAPFRAME* Tf);
-
-VOID
-STDCALL
-KeUpdateRunTime(
-	IN PKTRAP_FRAME	TrapFrame
-);
 
 VOID
 STDCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.51 2004/10/09 12:17:53 gvg Exp $
+/* $Id: pagefile.c,v 1.52 2004/10/30 23:48:56 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -494,7 +494,7 @@ MmDumpToPagingFile(ULONG BugCode,
    UCHAR MdlBase[sizeof(MDL) + sizeof(ULONG)];
    PMDL Mdl = (PMDL)MdlBase;
    PETHREAD Thread = PsGetCurrentThread();
-   ULONG StackSize;
+   ULONG_PTR StackSize;
    PULONG MdlMap;
    LONGLONG NextOffset = 0;
    ULONG i;
@@ -531,8 +531,8 @@ MmDumpToPagingFile(ULONG BugCode,
    Headers->BugCheckParameters[2] = BugCodeParameter3;
    Headers->BugCheckParameters[3] = BugCodeParameter4;
    Headers->FaultingStackBase = (PVOID)Thread->Tcb.StackLimit;
-   Headers->FaultingStackSize = StackSize =
-                                   (ULONG)((char*)Thread->Tcb.StackBase - Thread->Tcb.StackLimit);
+   Headers->FaultingStackSize =
+   StackSize = (ULONG_PTR)(Thread->Tcb.StackBase - Thread->Tcb.StackLimit);
    Headers->PhysicalMemorySize = MmStats.NrTotalPages * PAGE_SIZE;
 
    /* Initialize the dump device. */

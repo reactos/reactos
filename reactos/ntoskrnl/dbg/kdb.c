@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.32 2004/10/27 13:33:59 blight Exp $
+/* $Id: kdb.c,v 1.33 2004/10/30 23:48:55 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -875,7 +875,7 @@ DbgProcessListCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 }
 
 VOID
-DbgPrintBackTrace(PULONG Frame, ULONG StackBase, ULONG StackLimit)
+DbgPrintBackTrace(PULONG Frame, ULONG_PTR StackBase, ULONG_PTR StackLimit)
 {
   PVOID Address;
 

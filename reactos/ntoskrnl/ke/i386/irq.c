@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.48 2004/10/22 20:32:49 ekohl Exp $
+/* $Id: irq.c,v 1.49 2004/10/30 23:48:56 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -303,25 +303,18 @@ KiInterruptDispatch2 (ULONG vector, KIRQL old_level)
 
   DPRINT1("I(0x%.08x, 0x%.08x)\n", vector, old_level);
 
-  if (vector == 0)
-    {
-  	  KiUpdateSystemTime(old_level, 0);
-    }
-  else
-    {
-      /*
-       * Iterate the list until one of the isr tells us its device interrupted
-       */
-      current = isr_table[vector].Flink;
-      isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
+  /*
+   * Iterate the list until one of the isr tells us its device interrupted
+   */
+  current = isr_table[vector].Flink;
+  isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
 
-      while (current != &isr_table[vector] && 
-	     !isr->ServiceRoutine(isr, isr->ServiceContext))
-	{
-	  current = current->Flink;
-	  isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
-	}
-   }
+  while (current != &isr_table[vector] && 
+         !isr->ServiceRoutine(isr, isr->ServiceContext))
+    {
+      current = current->Flink;
+      isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
+    }
 }
 
 VOID
@@ -335,15 +328,7 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
  */
 {
    KIRQL old_level;
-
-#ifdef DBG
-
    KTRAP_FRAME KernelTrapFrame;
-
-   KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
-   KeGetCurrentThread()->TrapFrame = &KernelTrapFrame;
-
-#endif /* DBG */
 
    DbgPrint("V(0x%.02x)", Vector);
 
@@ -368,10 +353,18 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
     */
    Ke386EnableInterrupts();
 
-   /*
-    * Actually call the ISR.
-    */
-   KiInterruptDispatch2(Vector, old_level);
+   if (Vector == 0)
+     {
+       KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
+       KeUpdateSystemTime(&KernelTrapFrame, PROFILE_LEVEL);
+     }
+   else
+     {
+       /*
+        * Actually call the ISR.
+        */
+       KiInterruptDispatch2(Vector, old_level);
+     }
 
    /*
     * Disable interrupts
@@ -466,7 +459,8 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
 
    if (irq == 0)
    {
-      KiUpdateSystemTime(old_level, Trapframe);
+      KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
+      KeUpdateSystemTime(&KernelTrapFrame, PROFILE_LEVEL);
    }
    else
    {
@@ -482,15 +476,6 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
        KdbProfileInterrupt(Trapframe->Eip);
      }
 #endif /* KDBG */
-
-   /*
-    * Maybe do a reschedule as well.
-    */
-   if (old_level < DISPATCH_LEVEL && irq == 0)
-     {
-       KeLowerIrql(APC_LEVEL);
-       PsDispatchThread(THREAD_STATE_READY);
-     }
 
    /*
     * End the system interrupt.

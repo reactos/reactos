@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.84 2004/10/24 16:49:49 weiden Exp $
+/* $Id: timer.c,v 1.85 2004/10/30 23:48:56 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -628,9 +628,164 @@ KeExpireTimers(PKDPC Dpc,
 }
 
 
+VOID INIT_FUNCTION
+KeInitializeTimerImpl(VOID)
+/*
+ * FUNCTION: Initializes timer irq handling
+ * NOTE: This is only called once from main()
+ */
+{
+   TIME_FIELDS TimeFields;
+
+   DPRINT("KeInitializeTimerImpl()\n");
+   InitializeListHead(&AbsoluteTimerListHead);
+   InitializeListHead(&RelativeTimerListHead);
+   KeInitializeSpinLock(&TimerListLock);
+   KeInitializeSpinLock(&TimerValueLock);
+   KeInitializeDpc(&ExpireTimerDpc, KeExpireTimers, 0);
+   /*
+    * Calculate the starting time for the system clock
+    */
+   HalQueryRealTimeClock(&TimeFields);
+   RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
+
+   SharedUserData->TickCountLow = 0;
+   SharedUserData->TickCountMultiplier = 167783691; // 2^24 * 1193182 / 119310
+   SharedUserData->InterruptTime.High2Part = 0;
+   SharedUserData->InterruptTime.LowPart = 0;
+   SharedUserData->InterruptTime.High1Part = 0;
+   SharedUserData->SystemTime.High2Part = SystemBootTime.u.HighPart;
+   SharedUserData->SystemTime.LowPart = SystemBootTime.u.LowPart;
+   SharedUserData->SystemTime.High1Part = SystemBootTime.u.HighPart;
+
+   TimerInitDone = TRUE;
+   DPRINT("Finished KeInitializeTimerImpl()\n");
+}
+
+/*
+ * @unimplemented
+ */
 VOID
-KiUpdateSystemTime(KIRQL oldIrql,
-		   PKIRQ_TRAPFRAME Tf)
+FASTCALL
+KeSetTimeUpdateNotifyRoutine(
+    IN PTIME_UPDATE_NOTIFY_ROUTINE NotifyRoutine
+    )
+{
+	UNIMPLEMENTED;
+}
+
+
+/*
+ * NOTE: On Windows this function takes exactly one parameter and EBP is
+ *       guaranteed to point to KTRAP_FRAME. The function is used only
+ *       by HAL, so there's no point in keeping that prototype.
+ *
+ * @implemented
+ */
+VOID
+STDCALL
+KeUpdateRunTime(
+    IN PKTRAP_FRAME  TrapFrame,
+    IN KIRQL  Irql
+    )
+{
+   PKPCR Pcr;
+   PKTHREAD CurrentThread;
+   PKPROCESS CurrentProcess;
+#if 0
+   ULONG DpcLastCount;
+#endif
+
+   Pcr = KeGetCurrentKPCR();
+
+   /*
+    * Make sure no counting can take place until Processes and Threads are
+    * running!
+    */
+   if ((PsInitialSystemProcess == NULL) || (Pcr->PrcbData.IdleThread == NULL) || 
+        (KiTimerSystemAuditing == 0))
+     {
+       return;
+     }
+
+   DPRINT("KernelTime  %u, UserTime %u \n", Pcr->PrcbData.KernelTime, Pcr->PrcbData.UserTime);
+
+   CurrentThread = /* Pcr->PcrbData.CurrentThread */ KeGetCurrentThread();
+   CurrentProcess = CurrentThread->ApcState.Process;
+
+   /* 
+    * Cs bit 0 is always set for user mode if we are in protected mode.
+    * V86 mode is counted as user time.
+    */
+   if (TrapFrame->Cs & 0x1 ||
+       TrapFrame->Eflags & X86_EFLAGS_VM)
+   {
+      InterlockedIncrement((PLONG)&CurrentThread->UserTime);
+      InterlockedIncrement((PLONG)&CurrentProcess->UserTime);
+      InterlockedIncrement((PLONG)&Pcr->PrcbData.UserTime);
+   }
+   else
+   {
+      if (Irql > DISPATCH_LEVEL)
+      {
+         Pcr->PrcbData.InterruptTime++;
+      }
+      else if (Irql == DISPATCH_LEVEL)
+      {
+         Pcr->PrcbData.DpcTime++;
+      }
+      else
+      {
+         InterlockedIncrement((PLONG)&CurrentThread->KernelTime);
+         InterlockedIncrement((PLONG)&CurrentProcess->KernelTime);
+      }
+   }
+
+#if 0
+   DpcLastCount = Pcr->PrcbData.DpcLastCount;
+   Pcr->PrcbData.DpcLastCount = Pcr->PrcbData.DpcCount;
+   Pcr->PrcbData.DpcRequestRate = ((Pcr->PrcbData.DpcCount - DpcLastCount) +
+                                   Pcr->PrcbData.DpcRequestRate) / 2;
+#endif
+
+   if (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0 &&
+       Pcr->PrcbData.DpcRoutineActive == FALSE &&
+       Pcr->PrcbData.DpcInterruptRequested == FALSE)
+   {
+      HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+   }
+
+   /* FIXME: Do DPC rate adjustments */
+
+   /*
+    * If we're at end of quantum request software interrupt. The rest
+    * is handled in KiDispatchInterrupt.
+    */
+   if ((CurrentThread->Quantum -= 3) < 0)
+   {
+      if (CurrentThread != Pcr->PrcbData.IdleThread)
+      {
+         Pcr->PrcbData.QuantumEnd = TRUE;
+         HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+      }
+   }
+}
+
+
+/*
+ * NOTE: On Windows this function takes exactly zero parameters and EBP is
+ *       guaranteed to point to KTRAP_FRAME. Also [esp+0] contains an IRQL.
+ *       The function is used only by HAL, so there's no point in keeping
+ *       that prototype.
+ *
+ * @implemented
+ */
+VOID 
+STDCALL
+KeUpdateSystemTime(
+    IN PKTRAP_FRAME  TrapFrame,
+    IN KIRQL  Irql
+    )
 /*
  * FUNCTION: Handles a timer interrupt
  */
@@ -666,157 +821,17 @@ KiUpdateSystemTime(KIRQL oldIrql,
    SharedUserData->SystemTime.LowPart = Time.u.LowPart;
    SharedUserData->SystemTime.High1Part = Time.u.HighPart;
 
+   /* FIXME: Here we should check for remote debugger break-ins */
+
    KiReleaseSpinLock(&TimerValueLock);
 
    /* Update process and thread times */
-   KiUpdateProcessThreadTime(oldIrql, Tf);
+   KeUpdateRunTime(TrapFrame, Irql);
 
    /*
     * Queue a DPC that will expire timers
     */
-   KeInsertQueueDpc(&ExpireTimerDpc, (PVOID)Tf->Eip, 0);
+   KeInsertQueueDpc(&ExpireTimerDpc, (PVOID)TrapFrame->Eip, 0);
 }
 
-
-VOID INIT_FUNCTION
-KeInitializeTimerImpl(VOID)
-/*
- * FUNCTION: Initializes timer irq handling
- * NOTE: This is only called once from main()
- */
-{
-   TIME_FIELDS TimeFields;
-
-   DPRINT("KeInitializeTimerImpl()\n");
-   InitializeListHead(&AbsoluteTimerListHead);
-   InitializeListHead(&RelativeTimerListHead);
-   KeInitializeSpinLock(&TimerListLock);
-   KeInitializeSpinLock(&TimerValueLock);
-   KeInitializeDpc(&ExpireTimerDpc, KeExpireTimers, 0);
-   /*
-    * Calculate the starting time for the system clock
-    */
-   HalQueryRealTimeClock(&TimeFields);
-   RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
-
-   SharedUserData->TickCountLow = 0;
-   SharedUserData->TickCountMultiplier = 167783691; // 2^24 * 1193182 / 119310
-   SharedUserData->InterruptTime.High2Part = 0;
-   SharedUserData->InterruptTime.LowPart = 0;
-   SharedUserData->InterruptTime.High1Part = 0;
-   SharedUserData->SystemTime.High2Part = SystemBootTime.u.HighPart;
-   SharedUserData->SystemTime.LowPart = SystemBootTime.u.LowPart;
-   SharedUserData->SystemTime.High1Part = SystemBootTime.u.HighPart;
-
-   TimerInitDone = TRUE;
-   DPRINT("Finished KeInitializeTimerImpl()\n");
-}
-
-
-VOID
-KiUpdateProcessThreadTime(KIRQL oldIrql, PKIRQ_TRAPFRAME Tf)
-{
-   PKTHREAD CurrentThread;
-   PEPROCESS ThreadsProcess;
-   PKPCR Pcr;
-
-   Pcr = KeGetCurrentKPCR();
-
-/*
- *  Make sure no counting can take place until Processes and Threads are
- *  running!
- */
-   if ((PsInitialSystemProcess == NULL) || (Pcr->PrcbData.IdleThread == NULL) || 
-        (KiTimerSystemAuditing == 0))
-     {
-       return;
-     }
-
-   DPRINT("KernelTime  %u, UserTime %u \n", Pcr->PrcbData.KernelTime, Pcr->PrcbData.UserTime);
-
-   if (oldIrql > DISPATCH_LEVEL)
-   {
-      Pcr->PrcbData.InterruptTime++;
-   }
-   else if (oldIrql == DISPATCH_LEVEL)
-   {
-      Pcr->PrcbData.DpcTime++;
-   }
-   else
-   {
-      CurrentThread = KeGetCurrentThread();
-      ThreadsProcess = ((PETHREAD)CurrentThread)->ThreadsProcess;
-      /* 
-       * Cs bit 0 is always set for user mode if we are in protected mode.
-       * V86 mode is counted as user time.
-       */
-      if (Tf->Cs & 0x1 ||
-	  Tf->Eflags & X86_EFLAGS_VM)
-      {
-#ifdef MP
-         InterlockedIncrement((PLONG)&ThreadsProcess->Pcb.UserTime);
-#else
-         ThreadsProcess->Pcb.UserTime++;
-#endif
-         CurrentThread->UserTime++;
-         Pcr->PrcbData.UserTime++;
-      }
-      else
-      {
-#ifdef MP
-         InterlockedIncrement((PLONG)&ThreadsProcess->Pcb.KernelTime);
-#else
-         ThreadsProcess->Pcb.KernelTime++;
-#endif
-         CurrentThread->KernelTime++;
-         Pcr->PrcbData.KernelTime++;
-      }
-   }
-}
-
-/*
- * @unimplemented
- */
-VOID
-FASTCALL
-KeSetTimeUpdateNotifyRoutine(
-    IN PTIME_UPDATE_NOTIFY_ROUTINE NotifyRoutine
-    )
-{
-	UNIMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-KeUpdateRunTime(
-    IN PKTRAP_FRAME TrapFrame
-    )
-{
-	KIRQL OldIrql = PASSIVE_LEVEL;
-
-	/* These are equivalent... we should just remove the Ki and stick it here... */
-	KiUpdateProcessThreadTime(OldIrql, (PKIRQ_TRAPFRAME)TrapFrame);
-}
-
-/*
- * @unimplemented
- */
-VOID 
-STDCALL
-KeUpdateSystemTime(
-    IN PKTRAP_FRAME TrapFrame,
-    IN ULONG Increment
-    )
-{
-	KIRQL OldIrql = PASSIVE_LEVEL;
-
-	/* These are equivalent... we should just remove the Ki and stick it here... */
-	KiUpdateSystemTime(OldIrql, (PKIRQ_TRAPFRAME)TrapFrame);
-}
-
-/*EOF*/
-
+/* EOF */

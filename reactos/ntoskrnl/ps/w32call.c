@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.16 2004/10/22 20:45:46 ekohl Exp $
+/* $Id: w32call.c,v 1.17 2004/10/30 23:48:57 navaraf Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -36,7 +36,7 @@ void* _alloca(size_t size);
 
 typedef struct _NTW32CALL_SAVED_STATE
 {
-  ULONG SavedStackLimit;
+  ULONG_PTR SavedStackLimit;
   PVOID SavedStackBase;
   PVOID SavedInitialStack;
   PVOID CallerResult;
@@ -76,7 +76,7 @@ NtCallbackReturn (PVOID		Result,
   PVOID* CallerResult;
   PVOID InitialStack;
   PVOID StackBase;
-  ULONG StackLimit;
+  ULONG_PTR StackLimit;
   KIRQL oldIrql;
   PNTW32CALL_SAVED_STATE State;
   PKTRAP_FRAME SavedTrapFrame;
@@ -244,7 +244,7 @@ NtW32Call (IN ULONG RoutineIndex,
 {
   PETHREAD Thread;
   PVOID NewStack;
-  ULONG StackSize;
+  ULONG_PTR StackSize;
   PKTRAP_FRAME NewFrame;
   PULONG UserEsp;
   KIRQL oldIrql;
@@ -258,7 +258,7 @@ NtW32Call (IN ULONG RoutineIndex,
   Thread = PsGetCurrentThread();
 
   /* Set up the new kernel and user environment. */
-  StackSize = (ULONG)((char*)Thread->Tcb.StackBase - Thread->Tcb.StackLimit);
+  StackSize = (ULONG_PTR)(Thread->Tcb.StackBase - Thread->Tcb.StackLimit);
   KeAcquireSpinLock(&CallbackStackListLock, &oldIrql);
   if (IsListEmpty(&CallbackStackListHead))
     {
@@ -305,7 +305,7 @@ NtW32Call (IN ULONG RoutineIndex,
   SavedState.SavedTrapFrame = Thread->Tcb.TrapFrame;
   SavedState.SavedCallbackStack = Thread->Tcb.CallbackStack;
   Thread->Tcb.InitialStack = Thread->Tcb.StackBase = (char*)NewStack + StackSize;
-  Thread->Tcb.StackLimit = (ULONG)NewStack;
+  Thread->Tcb.StackLimit = (ULONG_PTR)NewStack;
   Thread->Tcb.KernelStack = (char*)NewStack + StackSize - sizeof(KTRAP_FRAME);
   KeGetCurrentKPCR()->TSS->Esp0 = (ULONG)Thread->Tcb.InitialStack;
   KePushAndStackSwitchAndSysRet((ULONG)&SavedState, Thread->Tcb.KernelStack);

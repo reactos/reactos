@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.71 2004/10/13 01:42:14 ion Exp $
+/* $Id: ps.h,v 1.72 2004/10/30 23:48:56 navaraf Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -81,7 +81,7 @@ typedef struct _KTHREAD
    /* List of mutants owned by the thread */
    LIST_ENTRY        MutantListHead;      /* 10 */
    PVOID             InitialStack;        /* 18 */
-   ULONG             StackLimit;          /* 1C */
+   ULONG_PTR         StackLimit;          /* 1C */
    
    /* Pointer to the thread's environment block in user memory */
    PTEB              Teb;                 /* 20 */
@@ -111,7 +111,7 @@ typedef struct _KTHREAD
    CHAR              BasePriority;        /* 68 */
    UCHAR             DecrementCount;      /* 69 */
    UCHAR             PriorityDecrement;   /* 6A */
-   UCHAR             Quantum;             /* 6B */
+   CHAR              Quantum;             /* 6B */
    KWAIT_BLOCK       WaitBlock[4];        /* 6C */
    PVOID             LegoData;            /* CC */
    ULONG             KernelApcDisable;    /* D0 */

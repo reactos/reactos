@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.40 2004/10/23 14:52:51 blight Exp $
+/* $Id: dpc.c,v 1.41 2004/10/30 23:48:56 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -81,14 +81,30 @@ KiDispatchInterrupt(VOID)
    PKDPC current;
    KIRQL oldlvl;
    PKPCR Pcr;
+   PKTHREAD CurrentThread;
+   PKPROCESS CurrentProcess;
 
    ASSERT_IRQL(DISPATCH_LEVEL);
 
    Pcr = KeGetCurrentKPCR();
 
+   if (Pcr->PrcbData.QuantumEnd)
+     {
+       /*
+        * FIXME: Various special cases should be handled here. The scripts
+        * from David B. Probert that describe it under KiQuantumEnd.
+        */
+       CurrentThread = /* Pcr->PcrbData.CurrentThread */ KeGetCurrentThread();
+       CurrentProcess = CurrentThread->ApcState.Process;
+       CurrentThread->Quantum = CurrentProcess->ThreadQuantum;
+       Pcr->PrcbData.QuantumEnd = FALSE;
+       PsDispatchThread(THREAD_STATE_READY);
+       return;
+     }
+
    if (Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0)
      {
-	return;
+       return;
      }
 
    KeRaiseIrql(HIGH_LEVEL, &oldlvl);

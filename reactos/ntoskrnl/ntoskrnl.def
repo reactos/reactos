@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.196 2004/10/18 20:56:22 navaraf Exp $
+; $Id: ntoskrnl.def,v 1.197 2004/10/30 23:48:57 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -644,7 +644,7 @@ KeStackAttachProcess@8
 KeSynchronizeExecution@12
 KeTerminateThread@4
 KeTickCount DATA
-KeUpdateRunTime@4
+KeUpdateRunTime@8
 KeUpdateSystemTime@8
 KeUnstackDetachProcess@4
 KeUserModeCallback@20

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.55 2004/10/22 20:30:47 ekohl Exp $
+/* $Id: kthread.c,v 1.56 2004/10/30 23:48:56 navaraf Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -87,7 +87,7 @@ KeReleaseThread(PKTHREAD Thread)
   /* FIXME - lock the process */
   RemoveEntryList(&Thread->ThreadListEntry);
   
-  if (Thread->StackLimit != (ULONG)&init_stack)
+  if (Thread->StackLimit != (ULONG_PTR)&init_stack)
     {       
       MmLockAddressSpace(MmGetKernelAddressSpace());
       MmFreeMemoryArea(MmGetKernelAddressSpace(),
@@ -189,17 +189,17 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
         {
           KEBUGCHECK(0);
 	}
-      Thread->InitialStack = (char*)KernelStack + MM_STACK_SIZE;
-      Thread->StackBase    = (char*)KernelStack + MM_STACK_SIZE;
-      Thread->StackLimit   = (ULONG)KernelStack;
-      Thread->KernelStack  = (char*)KernelStack + MM_STACK_SIZE;
+      Thread->InitialStack = (PCHAR)KernelStack + MM_STACK_SIZE;
+      Thread->StackBase    = (PCHAR)KernelStack + MM_STACK_SIZE;
+      Thread->StackLimit   = (ULONG_PTR)KernelStack;
+      Thread->KernelStack  = (PCHAR)KernelStack + MM_STACK_SIZE;
     }
   else
     {
-      Thread->InitialStack = (PVOID)&init_stack_top;
-      Thread->StackBase = (PVOID)&init_stack_top;
-      Thread->StackLimit = (ULONG)&init_stack;
-      Thread->KernelStack = (PVOID)&init_stack_top;
+      Thread->InitialStack = (PCHAR)&init_stack_top;
+      Thread->StackBase = (PCHAR)&init_stack_top;
+      Thread->StackLimit = (ULONG_PTR)&init_stack;
+      Thread->KernelStack = (PCHAR)&init_stack_top;
     }
 
   /* 
@@ -228,7 +228,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   Thread->NpxState = 0;
   
   Thread->Saturation = 0;
-  Thread->Priority = 0; 
+  Thread->Priority = Process->BasePriority; 
   InitializeListHead(&Thread->ApcState.ApcListHead[0]);
   InitializeListHead(&Thread->ApcState.ApcListHead[1]);
   Thread->ApcState.Process = Process;
@@ -244,10 +244,10 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   Thread->WaitListEntry.Flink = NULL;
   Thread->WaitListEntry.Blink = NULL;
   Thread->WaitTime = 0;
-  Thread->BasePriority = 0; 
+  Thread->BasePriority = Process->BasePriority;
   Thread->DecrementCount = 0;
   Thread->PriorityDecrement = 0;
-  Thread->Quantum = 0;
+  Thread->Quantum = Process->ThreadQuantum;
   memset(Thread->WaitBlock, 0, sizeof(KWAIT_BLOCK)*4);
   Thread->LegoData = 0;
   
@@ -303,11 +303,10 @@ crashes. I'm disabling it again, until we fix the APC implementation...
   Thread->Alertable = 1;
   
   Thread->ApcStateIndex = OriginalApcEnvironment;
-  
-  /* FIXME: not all thread are ApcQueueable! */
+
   Thread->ApcQueueable = TRUE;
   
-  Thread->AutoAlignment = 0;
+  Thread->AutoAlignment = Process->AutoAlignment;
   KeInitializeApc(&Thread->SuspendApc,
 		  Thread,
 		  OriginalApcEnvironment,

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.146 2004/10/24 20:37:27 weiden Exp $
+/* $Id: process.c,v 1.147 2004/10/30 23:48:57 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -673,6 +673,8 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    KProcess->LdtDescriptor[0] = 0;
    KProcess->LdtDescriptor[1] = 0;
    InitializeListHead(&KProcess->ThreadListHead);
+   KProcess->ThreadQuantum = 6;
+   KProcess->AutoAlignment = 0;
    MmInitializeAddressSpace(Process,
 			    &Process->AddressSpace);
    Process->UniqueProcessId = InterlockedIncrement((LONG *)&PiNextProcessUniqueId); /* TODO */

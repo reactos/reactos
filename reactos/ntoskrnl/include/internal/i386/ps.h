@@ -145,7 +145,7 @@ typedef struct _KPRCB {
 	PVOID DpcThread;
 	struct _KEVENT *DpcEvent;
 	UCHAR ThreadDpcEnable;
-	UCHAR QuantumEnd;
+	BOOLEAN QuantumEnd;
 	UCHAR PrcbPad50;
 	UCHAR IdleSchedule;
 	ULONG DpcSetEventRequest;
