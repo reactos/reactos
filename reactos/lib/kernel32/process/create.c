@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.74 2003/12/23 22:01:10 gvg Exp $
+/* $Id: create.c,v 1.75 2003/12/24 19:57:42 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -837,7 +837,34 @@ CreateProcessW
         return FALSE;
      }
 
-   if (L'"' == TidyCmdLine[0])
+   if (lpApplicationName != NULL && lpApplicationName[0] != 0)
+     {
+        wcscpy (TempApplicationNameW, lpApplicationName);
+        i = wcslen(TempApplicationNameW);
+        if (TempApplicationNameW[i - 1] == L'.')
+          {
+            TempApplicationNameW[i - 1] = 0;
+          }
+        else
+          {
+            s = max(wcsrchr(TempApplicationNameW, L'\\'), wcsrchr(TempApplicationNameW, L'/'));
+            if (s == NULL)
+              {
+                s = TempApplicationNameW;
+              }
+            else
+              {
+                s++;
+              }
+            e = wcsrchr(s, L'.');
+            if (e == NULL)
+              {
+                wcscat(s, L".exe");
+                e = wcsrchr(s, L'.');
+              }
+          }
+     }
+   else if (L'"' == TidyCmdLine[0])
      {
         wcscpy(TempApplicationNameW, TidyCmdLine + 1);
         s = wcschr(TempApplicationNameW, L'"');
