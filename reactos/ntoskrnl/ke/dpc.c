@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.36 2004/10/01 20:09:57 hbirr Exp $
+/* $Id: dpc.c,v 1.37 2004/10/13 01:42:14 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -144,15 +144,15 @@ KeFlushQueuedDpcs(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-VOID 
+BOOLEAN 
 STDCALL
 KeIsExecutingDpc(
 	VOID
 )
 {
-	UNIMPLEMENTED;
+ 	return KeGetCurrentKPCR()->PrcbData.DpcRoutineActive;
 }
 
 /*

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.27 2004/08/31 20:17:18 hbirr Exp $
+/* $Id: process.c,v 1.28 2004/10/13 01:42:14 ion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -123,11 +123,37 @@ KeStackAttachProcess (
     OUT PRKAPC_STATE ApcState
     )
 {
-	UNIMPLEMENTED;
+	KIRQL OldIrql;
+	PKTHREAD Thread;
+	
+	Thread = KeGetCurrentThread();
+	OldIrql = KeAcquireDispatcherDatabaseLock();
+	
+	/* Crash system if DPC is being executed! */
+	if (KeIsExecutingDpc()) {
+		DPRINT1("Invalid attach (Thread is executing a DPC!)\n");
+		KEBUGCHECK(INVALID_PROCESS_ATTACH_ATTEMPT);
+	}
+	
+	/* Check if the Target Process is already attached */
+	if (Thread->ApcState.Process == Process) {
+		ApcState->Process = (PKPROCESS)1;  /* Meaning already attached to the same Process */
+	} else { 
+		/* Check if the Current Thread is already attached */
+		if (Thread->ApcStateIndex != 0) {
+			KeAttachProcess((PEPROCESS)Process); /* FIXME: Re-write function to support stackability and fix it not to use EPROCESS */
+		} else {
+			KeAttachProcess((PEPROCESS)Process);
+			ApcState->Process = NULL; /* FIXME: Re-write function to support stackability and fix it not to use EPROCESS */
+		}
+	}
+	
+	/* Return to old IRQL*/
+	KeReleaseDispatcherDatabaseLock(OldIrql);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -135,7 +161,41 @@ KeUnstackDetachProcess (
     IN PRKAPC_STATE ApcState
     )
 {
-	UNIMPLEMENTED;
+	KIRQL OldIrql;
+	PKTHREAD Thread;
+	ULONG PageDir;
+	   
+	/* If the special "We tried to attach to the process already being attached to" flag is there, don't do anything */
+	if (ApcState->Process == (PKPROCESS)1) return;
+	
+	Thread = KeGetCurrentThread();
+	OldIrql = KeAcquireDispatcherDatabaseLock();
+	
+	/* Sorry Buddy, can't help you if you've got APCs or just aren't attached */
+	if ((Thread->ApcStateIndex == 0) || (Thread->ApcState.KernelApcInProgress)) {
+		DPRINT1("Invalid detach (Thread not Attached, or Kernel APC in Progress!)\n");
+		KEBUGCHECK(INVALID_PROCESS_DETACH_ATTEMPT);
+	}
+	
+	/* Restore the Old APC State if a Process was present */
+	if (ApcState->Process) {
+		RtlMoveMemory(ApcState, &Thread->ApcState, sizeof(KAPC_STATE));
+	} else {
+		/* The ApcState parameter is useless, so use the saved data and reset it */
+		RtlMoveMemory(&Thread->SavedApcState, &Thread->ApcState, sizeof(KAPC_STATE));
+		Thread->SavedApcState.Process = NULL;
+		Thread->ApcStateIndex = 0;
+		Thread->ApcStatePointer[0] = &Thread->ApcState;
+		Thread->ApcStatePointer[1] = &Thread->SavedApcState;
+	}
+
+	/* Do the Actual Swap */
+	KiSwapApcEnvironment(Thread, Thread->SavedApcState.Process);
+	PageDir = Thread->ApcState.Process->DirectoryTableBase.u.LowPart;
+	Ke386SetPageTableDirectory(PageDir);
+	
+	/* Return to old IRQL*/
+	KeReleaseDispatcherDatabaseLock(OldIrql);
 }
 
 /* EOF */

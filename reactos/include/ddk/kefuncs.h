@@ -597,7 +597,7 @@ KeTerminateThread(
 	IN KPRIORITY   	 Increment  	 
 );
 
-VOID 
+BOOLEAN
 STDCALL
 KeIsExecutingDpc(
 	VOID
@@ -632,7 +632,8 @@ KeFindConfigurationNextEntry(
 VOID
 STDCALL
 KeFlushEntireTb(
-    IN ULONGLONG Flag
+    IN BOOLEAN Unknown,
+    IN BOOLEAN CurrentCpuOnly
 );
 
 VOID

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.70 2004/10/01 20:26:04 gvg Exp $
+/* $Id: ps.h,v 1.71 2004/10/13 01:42:14 ion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -445,6 +445,7 @@ VOID PsInitProcessManagment(VOID);
 VOID PsInitIdleThread(VOID);
 VOID PsDispatchThreadNoLock(ULONG NewThreadStatus);
 VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus);
+VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
 VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus);
 VOID PsReleaseThread(PETHREAD Thread);
 VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext);

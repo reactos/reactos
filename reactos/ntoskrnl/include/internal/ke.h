@@ -169,6 +169,10 @@ KeUpdateRunTime(
 	IN PKTRAP_FRAME	TrapFrame
 );
 
+VOID
+STDCALL
+KeFlushCurrentTb(VOID);
+
 #endif /* not __ASM__ */
 
 #define MAXIMUM_PROCESSORS      32

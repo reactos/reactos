@@ -44,7 +44,7 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
 /* FUNCTIONS *****************************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -52,7 +52,7 @@ KeAreApcsDisabled(
 	VOID
 	)
 {
-	UNIMPLEMENTED;
+ 	return KeGetCurrentThread()->KernelApcDisable ? FALSE : TRUE;
 }
 
 VOID KiRundownThread(VOID)

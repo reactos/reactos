@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.53 2004/09/28 15:02:29 weiden Exp $
+/* $Id: kthread.c,v 1.54 2004/10/13 01:42:14 ion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -63,7 +63,7 @@ KeFreeStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 KPRIORITY
 STDCALL
@@ -71,8 +71,7 @@ KeQueryPriorityThread (
     IN PKTHREAD Thread
     )
 {
-	UNIMPLEMENTED;
-	return 0;
+	return Thread->Priority;
 }
 
 NTSTATUS 
@@ -106,7 +105,7 @@ KeReleaseThread(PKTHREAD Thread)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -114,8 +113,19 @@ KeSetKernelStackSwapEnable(
 	IN BOOLEAN Enable
 	)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+	PKTHREAD Thread;
+	BOOLEAN PreviousState;
+	
+	Thread = KeGetCurrentThread();
+	
+	/* Save Old State */
+	PreviousState = Thread->EnableStackSwap;
+	
+	/* Set New State */
+	Thread->EnableStackSwap = Enable;
+
+	/* Return Old State */
+	return PreviousState;
 }
 
 VOID
@@ -324,7 +334,7 @@ KeRescheduleThread()
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -332,11 +342,18 @@ KeRevertToUserAffinityThread(
     VOID
 )
 {
-	UNIMPLEMENTED;
+	PKTHREAD CurrentThread;
+	CurrentThread = KeGetCurrentThread();
+	
+	/* Return to User Affinity */
+	CurrentThread->Affinity = CurrentThread->UserAffinity;
+	
+	/* Disable System Affinity */
+	CurrentThread->SystemAffinityActive = FALSE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 CCHAR
 STDCALL
@@ -345,12 +362,20 @@ KeSetIdealProcessorThread (
 	IN CCHAR Processor
 	)
 {
-	UNIMPLEMENTED;
-	return 0;
+	CCHAR PreviousIdealProcessor;
+
+	/* Save Old Ideal Processor */
+	PreviousIdealProcessor = Thread->IdealProcessor;
+	
+	/* Set New Ideal Processor */
+	Thread->IdealProcessor = Processor;
+	
+	/* Return Old Ideal Processor */
+	return PreviousIdealProcessor;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -358,11 +383,18 @@ KeSetSystemAffinityThread(
     IN KAFFINITY Affinity
 )
 {
-	UNIMPLEMENTED;
+	PKTHREAD CurrentThread;
+	CurrentThread = KeGetCurrentThread();
+	
+	/* Set the System Affinity Specified */
+	CurrentThread->Affinity = Affinity;
+	
+	/* Enable System Affinity */
+	CurrentThread->SystemAffinityActive = TRUE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID 
 STDCALL
@@ -370,5 +402,8 @@ KeTerminateThread(
 	IN KPRIORITY   	 Increment  	 
 )
 {
-	UNIMPLEMENTED;
+	/* The Increment Argument seems to be ignored by NT and always 0 when called */
+	
+	/* Call our own internal routine */
+	PsTerminateCurrentThread(0);
 }
