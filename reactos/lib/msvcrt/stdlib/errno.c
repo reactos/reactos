@@ -1,4 +1,4 @@
-/* $Id: errno.c,v 1.9 2003/07/11 21:58:09 royce Exp $
+/* $Id: errno.c,v 1.10 2003/07/16 17:53:34 royce Exp $
  *
  */
 
@@ -11,7 +11,7 @@
  */
 int* __doserrno(void)
 {
-  return(&GetThreadData()->tdoserrno);
+  return (int*)(&GetThreadData()->tdoserrno);
 }
 
 /*

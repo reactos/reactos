@@ -21,7 +21,7 @@ int _wputenv(const wchar_t* val)
     epos = wcsrchr(val, L'=');
     if (epos == NULL)
         return -1;
-    buffer = (char*)malloc((epos - val + 1) * sizeof(wchar_t));
+    buffer = (wchar_t*)malloc((epos - val + 1) * sizeof(wchar_t));
     if (buffer == NULL)
         return -1;
     wcsncpy(buffer, val, epos - val);
