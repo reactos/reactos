@@ -1276,6 +1276,7 @@ REBAR_ForceResize (REBAR_INFO *infoPtr)
 	x, y, width, height);
     SetWindowPos (infoPtr->hwndSelf, 0, x, y, width, height,
 		    SWP_NOZORDER);
+    infoPtr->fStatus &= ~AUTO_RESIZE;
 }
 
 
@@ -4484,7 +4485,6 @@ REBAR_Size (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 	infoPtr->fStatus |= BAND_NEEDS_LAYOUT;
 
     REBAR_Layout (infoPtr, &rcClient, TRUE, TRUE);
-    infoPtr->fStatus &= ~AUTO_RESIZE;
 
     return 0;
 }
