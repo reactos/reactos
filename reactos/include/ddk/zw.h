@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.34 2000/09/03 14:48:58 ekohl Exp $
+/* $Id: zw.h,v 1.35 2000/09/08 22:52:17 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1726,16 +1726,15 @@ ZwLoadDriver(
 	IN PUNICODE_STRING DriverServiceName
 	);
 
-//-- NtLoadKey2
 /*
- * FUNCTION: Loads a registry key. 
- * ARGUMENTS: 
+ * FUNCTION: Loads a registry key.
+ * ARGUMENTS:
  *       KeyHandle = Handle to the registry key
-	 ObjectAttributes = ???
+ *       ObjectAttributes = ???
  * REMARK:
-	This procedure maps to the win32 procedure RegLoadKey 
+ *      This procedure maps to the win32 procedure RegLoadKey
  * RETURNS: Status
- */	
+ */
 NTSTATUS
 STDCALL 
 NtLoadKey(
@@ -1748,6 +1747,32 @@ ZwLoadKey(
 	PHANDLE KeyHandle,
 	OBJECT_ATTRIBUTES ObjectAttributes
 	);
+
+/*
+ * FUNCTION: Loads a registry key.
+ * ARGUMENTS:
+ *       KeyHandle = Handle to the registry key
+ *       ObjectAttributes = ???
+ *       Unknown3 = ???
+ * REMARK:
+ *       This procedure maps to the win32 procedure RegLoadKey
+ * RETURNS: Status
+ */
+NTSTATUS
+STDCALL
+NtLoadKey2 (
+	PHANDLE			KeyHandle,
+	OBJECT_ATTRIBUTES	ObjectAttributes,
+	ULONG			Unknown3
+	);
+NTSTATUS
+STDCALL
+ZwLoadKey2 (
+	PHANDLE			KeyHandle,
+	OBJECT_ATTRIBUTES	ObjectAttributes,
+	ULONG			Unknown3
+	);
+
 /*
  * FUNCTION: Locks a range of bytes in a file. 
  * ARGUMENTS: 
@@ -5089,31 +5114,25 @@ ZwYieldExecution(
 
 /* --- REGISTRY --- */
 
-//FIXME: NtUnloadKey needs more arguments
 /*
- * FUNCTION: Unloads a registry key. 
- * ARGUMENTS: 
+ * FUNCTION: Unloads a registry key.
+ * ARGUMENTS:
  *       KeyHandle = Handle to the registry key
  * REMARK:
-	This procedure maps to the win32 procedure RegUnloadKey 
+ *       This procedure maps to the win32 procedure RegUnloadKey
  * RETURNS: Status
- */	
-NTSTATUS 
+ */
+NTSTATUS
 STDCALL
 NtUnloadKey(
 	HANDLE KeyHandle
 	);
-NTSTATUS 
+NTSTATUS
 STDCALL
 ZwUnloadKey(
 	HANDLE KeyHandle
 	);
 
-NTSTATUS
-STDCALL
-NtLoadKey2 (
-	VOID
-	);
 
 /* --- PLUG AND PLAY --- */
 
