@@ -113,6 +113,9 @@ typedef struct _VfatFCB
    PDEVICE_EXTENSION pDevExt;
    struct _VfatFCB * nextFcb, *prevFcb;
    struct _VfatFCB * parentFcb;
+   UCHAR *Buffer;
+   long Flags;
+   ULONG Cluster;
 } VfatFCB, *PVfatFCB;
 
 typedef struct
