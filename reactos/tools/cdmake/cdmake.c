@@ -1,4 +1,4 @@
-/* $Id: cdmake.c,v 1.4 2003/06/21 09:11:24 guido Exp $ */
+/* $Id: cdmake.c,v 1.5 2003/07/29 20:30:11 royce Exp $ */
 /* CD-ROM Maker
    by Philip J. Erdelsky
    pje@acm.org
@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #ifdef WIN32
@@ -55,8 +56,10 @@ const BOOL FALSE = 0;
 // file system parameters
 
 #define MAX_LEVEL		8
-#define MAX_NAME_LENGTH		8
-#define MAX_EXTENSION_LENGTH	3
+#define MAX_NAME_LENGTH		256
+#define MAX_CDNAME_LENGTH	8
+#define MAX_EXTENSION_LENGTH	256
+#define MAX_CDEXTENSION_LENGTH	3
 #define SECTOR_SIZE		2048
 #define BUFFER_SIZE		(8 * SECTOR_SIZE)
 
@@ -93,9 +96,9 @@ typedef struct directory_record
   struct directory_record *parent;
   BYTE flags;
   char name[MAX_NAME_LENGTH+1];
-  char name_on_cd[MAX_NAME_LENGTH+1];
+  char name_on_cd[MAX_CDNAME_LENGTH+1];
   char extension[MAX_EXTENSION_LENGTH+1];
-  char extension_on_cd[MAX_EXTENSION_LENGTH+1];
+  char extension_on_cd[MAX_CDEXTENSION_LENGTH+1];
   DATE_AND_TIME date_and_time;
   DWORD sector;
   DWORD size;
@@ -165,7 +168,7 @@ static char *edit_with_commas(DWORD x, BOOL pad)
   do
   {
     if (i % 4 == 2) s[--i] = ',';
-    s[--i] = x % 10 + '0';
+    s[--i] = (char)(x % 10 + '0');
   } while ((x/=10) != 0);
   if (pad)
   {
@@ -199,14 +202,18 @@ This function edits and displays an error message and then jumps back to the
 error exit point in main().
 -----------------------------------------------------------------------------*/
 
-#define error_exit(fmt,args...) \
-{ \
-  printf(fmt,##args); \
-  printf("\n"); \
-  if (cd.file != NULL) \
-    fclose(cd.file); \
-  release_memory(); \
-  exit(1); \
+void error_exit ( const char* fmt, ... )
+{
+  va_list arg;
+
+  va_start(arg, fmt);
+  vprintf(fmt, arg);
+  va_end(arg);
+  printf("\n");
+  if (cd.file != NULL)
+    fclose(cd.file);
+  release_memory();
+  exit(1);
 }
 
 /*-----------------------------------------------------------------------------
@@ -254,14 +261,14 @@ specified endianity.
 
 static void write_little_endian_word(WORD x)
 {
-  write_byte(x);
-  write_byte(x >> 8);
+  write_byte((BYTE)x);
+  write_byte((BYTE)(x >> 8));
 }
 
 static void write_big_endian_word(WORD x)
 {
-  write_byte(x >> 8);
-  write_byte(x);
+  write_byte((BYTE)(x >> 8));
+  write_byte((BYTE)x);
 }
 
 static void write_both_endian_word(WORD x)
@@ -272,18 +279,18 @@ static void write_both_endian_word(WORD x)
 
 static void write_little_endian_dword(DWORD x)
 {
-  write_byte(x);
-  write_byte(x >> 8);
-  write_byte(x >> 16);
-  write_byte(x >> 24);
+  write_byte((BYTE)x);
+  write_byte((BYTE)(x >> 8));
+  write_byte((BYTE)(x >> 16));
+  write_byte((BYTE)(x >> 24));
 }
 
 static void write_big_endian_dword(DWORD x)
 {
-  write_byte(x >> 24);
-  write_byte(x >> 16);
-  write_byte(x >> 8);
-  write_byte(x);
+  write_byte((BYTE)(x >> 24));
+  write_byte((BYTE)(x >> 16));
+  write_byte((BYTE)(x >> 8));
+  write_byte((BYTE)x);
 }
 
 static void write_both_endian_dword(DWORD x)
@@ -346,9 +353,11 @@ write_directory_record(PDIR_RECORD d,
       identifier_size = 1;
       break;
     case SUBDIRECTORY_RECORD:
+      /*printf ( "Subdir: %s\n", d->name_on_cd );*/
       identifier_size = strlen(d->name_on_cd);
       break;
     case FILE_RECORD:
+      /*printf ( "File: %s.%s -> %s.%s\n", d->name, d->extension, d->name_on_cd, d->extension_on_cd );*/
       identifier_size = strlen(d->name_on_cd) + 2;
       if (d->extension_on_cd[0] != 0)
         identifier_size += 1 + strlen(d->extension_on_cd);
@@ -359,11 +368,11 @@ write_directory_record(PDIR_RECORD d,
     record_size++;
   if (cd.offset + record_size > SECTOR_SIZE)
     fill_sector();
-  write_byte(record_size);
+  write_byte((BYTE)record_size);
   write_byte(0); // number of sectors in extended attribute record
   write_both_endian_dword(d->sector);
   write_both_endian_dword(d->size);
-  write_byte(d->date_and_time.year - 1900);
+  write_byte((BYTE)(d->date_and_time.year - 1900));
   write_byte(d->date_and_time.month);
   write_byte(d->date_and_time.day);
   write_byte(d->date_and_time.hour);
@@ -374,7 +383,7 @@ write_directory_record(PDIR_RECORD d,
   write_byte(0);  // file unit size for an interleaved file
   write_byte(0);  // interleave gap size for an interleaved file
   write_both_endian_word((WORD) 1); // volume sequence number
-  write_byte(identifier_size);
+  write_byte((BYTE)identifier_size);
   switch (DirType)
   {
     case DOT_RECORD:
@@ -426,12 +435,78 @@ It also converts small letters to capital letters and returns the
 result.
 -----------------------------------------------------------------------------*/
 
-static int check_for_punctuation(int c, char *name)
+static int check_for_punctuation(int c, const char *name)
 {
   c = toupper(c & 0xFF);
   if (!accept_punctuation_marks && !isalnum(c) && c != '_')
     error_exit("Punctuation mark in %s", name);
   return c;
+}
+
+#if WIN32
+#define strcasecmp stricmp
+#endif//WIN32
+
+int cdname_exists ( PDIR_RECORD d )
+{
+  PDIR_RECORD p = &root;
+  while ( p )
+  {
+    if ( p != d
+      && !strcasecmp ( p->name_on_cd, d->name_on_cd )
+      && !strcasecmp ( p->extension_on_cd, d->extension_on_cd ) )
+      return 1;
+    p = p->next_in_memory;
+  }
+  return 0;
+}
+
+void parse_filename_into_dirrecord ( const char* filename, PDIR_RECORD d )
+{
+  const char *s = filename;
+  char *t = d->name_on_cd;
+  char *n = d->name;
+
+  while (*s != 0)
+  {
+    if (*s == '.')
+    {
+      s++;
+      break;
+    }
+
+    if ( (t-d->name_on_cd) < sizeof(d->name_on_cd)-1 )
+      *t++ = check_for_punctuation(*s, filename);
+    if ( (n-d->name) < sizeof(d->name)-1 )
+      *n++ = *s;
+    s++;
+  }
+  *t = 0;
+  strcpy(d->extension, s);
+  t = d->extension_on_cd;
+  while ( *s != 0 && (t-d->extension_on_cd) < (sizeof(d->extension_on_cd)-1) )
+    *t++ = check_for_punctuation(*s++, filename);
+  *t = 0;
+  *n = 0;
+
+  /* now see if this cd name already exists...*/
+  while ( cdname_exists ( d ) )
+  {
+    /* hmm... that name already exists, munge our name until we
+       no longer collide */
+    char* p = &d->name_on_cd[strlen(d->name_on_cd)-1];
+    while ( *p == '9' )
+    {
+      *p = '0';
+      if ( --p == d->name_on_cd )
+	error_exit ( "there's no way this can happen, is there?\n" );
+    }
+    if ( isdigit(*p) )
+      *p++;
+    else
+      *p = '0';
+    printf ( "'%s.%s' name collision, trying '%s.%s'\n", d->name, d->extension, d->name_on_cd, d->extension_on_cd );
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -448,41 +523,15 @@ new_directory_record (struct _finddata_t *f,
 		      PDIR_RECORD parent)
 {
   PDIR_RECORD d;
-  char *s;
-  char *t;
-  char *n;
 
   d = malloc(sizeof(DIR_RECORD));
   if (d == NULL)
     error_exit("Insufficient memory");
   d->next_in_memory = root.next_in_memory;
   root.next_in_memory = d;
-  {
-    s = f->name;
-    t = d->name_on_cd;
-    n = d->name;
 
-    while (*s != 0)
-    {
-      if (*s == '.')
-      {
-        s++;
-        break;
-      }
+  parse_filename_into_dirrecord ( f->name, d );
 
-      *t++ = check_for_punctuation(*s, f->name);
-      *n = *s;
-      s++;
-      n++;
-    }
-    *t = 0;
-    strcpy(d->extension, s);
-    t = d->extension_on_cd;
-    while (*s != 0)
-      *t++ = check_for_punctuation(*s++, f->name);
-    *t = 0;
-    *n = 0;
-  }
   convert_date_and_time(&d->date_and_time, &f->time_create);
   if (f->attrib & _A_SUBDIR)
   {
@@ -517,32 +566,8 @@ new_directory_record (struct dirent *entry,
     error_exit("Insufficient memory");
   d->next_in_memory = root.next_in_memory;
   root.next_in_memory = d;
-  {
-    s = entry->d_name;
-    t = d->name_on_cd;
-    n = d->name;
 
-    while (*s != 0)
-    {
-      if (*s == '.')
-      {
-        s++;
-        break;
-      }
-
-      *t++ = check_for_punctuation(*s, entry->d_name);
-      *n = *s;
-      s++;
-      n++;
-    }
-    *t = 0;
-    strcpy(d->extension, s);
-    t = d->extension_on_cd;
-    while (*s != 0)
-      *t++ = check_for_punctuation(*s++, entry->d_name);
-    *t = 0;
-    *n = 0;
-  }
+  parse_filename_into_dirrecord ( entry->d_name, d );
 
   convert_date_and_time(&d->date_and_time, &stbuf->st_mtime);
 #ifdef HAVE_D_TYPE
@@ -965,7 +990,7 @@ static void pass(void)
 
   t = volume_label;
   for (i = 0; i < 32; i++)
-    write_byte(*t != 0 ? toupper(*t++) : ' ');
+    write_byte( (BYTE)( (*t != 0) ? toupper(*t++) : ' ' ) );
 
   write_block(8, 0);
   write_both_endian_dword(total_sectors);
@@ -1088,7 +1113,7 @@ static void pass(void)
   for (d = root.next_in_path_table; d != NULL; d = d->next_in_path_table)
     {
       name_length = strlen(d->name_on_cd);
-      write_byte(name_length);
+      write_byte((BYTE)name_length);
       write_byte(0);  // number of sectors in extended attribute record
       write_little_endian_dword(d->sector);
       write_little_endian_word(d->parent->path_table_index);
@@ -1115,7 +1140,7 @@ static void pass(void)
   for (d = root.next_in_path_table; d != NULL; d = d->next_in_path_table)
     {
       name_length = strlen(d->name_on_cd);
-      write_byte(name_length);
+      write_byte((BYTE)name_length);
       write_byte(0);  // number of sectors in extended attribute record
       write_big_endian_dword(d->sector);
       write_big_endian_word(d->parent->path_table_index);
