@@ -122,7 +122,7 @@ NtOpenEvent(OUT PHANDLE EventHandle,
 
    Status = ObOpenObjectByName(ObjectAttributes,
 			       ExEventObjectType,
-			       0,
+			       NULL,
 			       UserMode,
 			       DesiredAccess,
 			       NULL,
