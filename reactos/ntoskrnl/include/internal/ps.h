@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.55 2003/12/14 18:02:34 hbirr Exp $
+/* $Id: ps.h,v 1.55.2.1 2003/12/17 01:32:47 hyperion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -425,6 +425,12 @@ struct _EPROCESS
     * Added by Philip Susi for list of threads in process
     */
   LIST_ENTRY           ThreadListHead;
+  
+  /*
+   * Added by KJK::Hyperion as a hack to detect the first and last thread
+   * without messing too much with messy existing code
+   */
+  LONG                 ThreadCount;
 };
 
 #define PROCESS_STATE_TERMINATED (1)
@@ -542,6 +548,21 @@ PsTerminateWin32Thread (PETHREAD Thread);
 
 VOID
 PsInitialiseW32Call(VOID);
+
+VOID STDCALL PspRunThreadNotifyRoutines
+(
+ PETHREAD Thread,
+ BOOLEAN Create
+);
+
+VOID STDCALL PspRunProcessNotifyRoutines
+(
+ PEPROCESS Process,
+ BOOLEAN Create
+);
+
+extern FAST_MUTEX PiThreadNotifyRoutineLock;
+extern FAST_MUTEX PiProcessNotifyRoutineLock;
 
 #endif /* ASSEMBLER */
 
