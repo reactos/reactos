@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.19 2003/03/24 00:09:32 hyperion Exp $
+/* $Id: sysinfo.c,v 1.20 2003/03/29 12:55:48 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -461,7 +461,7 @@ QSI_DEF(SystemPathInformation)
 /* Class 5 - Process Information */
 QSI_DEF(SystemProcessInformation)
 {
-	int ovlSize=0, nThreads=1;
+	ULONG ovlSize=0, nThreads=1;
 	PEPROCESS pr, syspr;
 	unsigned char *pCur;
 
