@@ -105,6 +105,11 @@ VeraMono.ttf = 6
 VeraSe.ttf   = 6
 VeraSeBd.ttf = 6
 
+c_10000.nls  = 2
+c_1252.nls   = 2
+c_437.nls    = 2
+l_intl.nls   = 2
+
 winhello.exe = 2
 
 hcalc.exe    = 2
