@@ -58,6 +58,7 @@ TaskBarMap::~TaskBarMap()
 TaskBar::TaskBar(HWND hwnd)
  :	super(hwnd)
 {
+	_last_btn_width = 0;
 }
 
 TaskBar::~TaskBar()
@@ -87,9 +88,6 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 								IDW_TASKTOOLBAR, 0, 0, 0, NULL, 0, 0, 0, 16, 16, sizeof(TBBUTTON));
 
 	SendMessage(_htoolbar, TB_SETBUTTONWIDTH, 0, MAKELONG(TASKBUTTONWIDTH_MAX,TASKBUTTONWIDTH_MAX));
-	//SendMessage(_htoolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
-	//SendMessage(_htoolbar, TB_SETDRAWTEXTFLAGS, DT_CENTER|DT_VCENTER, DT_CENTER|DT_VCENTER);
-	//SetWindowFont(_htoolbar, GetStockFont(ANSI_VAR_FONT), FALSE);
 
 	_next_id = IDC_FIRST_APP;
 
@@ -105,6 +103,7 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	switch(nmsg) {
 	  case WM_SIZE:
 		SendMessage(_htoolbar, WM_SIZE, 0, 0);
+		ResizeButtons();
 		break;
 
 	  case WM_TIMER:
@@ -442,7 +441,11 @@ void TaskBar::ResizeButtons()
 		else if (btn_width > TASKBUTTONWIDTH_MAX)
 			btn_width = TASKBUTTONWIDTH_MAX;
 
-		SendMessage(_htoolbar, TB_SETBUTTONWIDTH, 0, MAKELONG(btn_width,btn_width));
-		SendMessage(_htoolbar, TB_AUTOSIZE, 0, 0);
+		if (btn_width != _last_btn_width) {
+			_last_btn_width = btn_width;
+
+			SendMessage(_htoolbar, TB_SETBUTTONWIDTH, 0, MAKELONG(btn_width,btn_width));
+			SendMessage(_htoolbar, TB_AUTOSIZE, 0, 0);
+		}
 	}
 }
