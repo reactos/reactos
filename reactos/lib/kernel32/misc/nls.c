@@ -440,8 +440,70 @@ IntWideCharToMultiByteUTF8(UINT CodePage, DWORD Flags,
                            LPSTR MultiByteString, INT MultiByteCount,
                            LPCSTR DefaultChar, LPBOOL UsedDefaultChar)
 {
-   DPRINT1("WideCharToMultiByte for CP_UTF8 is not implemented!\n");
-   return 0;
+   INT TempLength;
+   WCHAR Char;
+
+   /* Does caller query for output buffer size? */
+   if (MultiByteCount == 0)
+   {
+      for (TempLength = 0; WideCharCount;
+           WideCharCount--, WideCharString++)
+      {
+         TempLength++;
+         if (*WideCharString >= 0x80)
+         {
+            TempLength++;
+            if (*WideCharString >= 0x800)
+               TempLength++;
+         }
+      }
+      return TempLength;
+   }
+
+   for (TempLength = MultiByteCount; WideCharCount;
+        WideCharCount--, WideCharString++)
+   {
+      Char = *WideCharString;
+      if (Char < 0x80)
+      {
+         if (!TempLength)
+         {
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            break;
+         }
+         TempLength--;
+         *MultiByteString++ = Char;
+         continue;
+      }
+
+      if (Char < 0x800)  /* 0x80-0x7ff: 2 bytes */
+      {
+         if (TempLength < 2)
+         {
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            break;
+         }
+         MultiByteString[1] = 0x80 | (Char & 0x3f); Char >>= 6;
+         MultiByteString[0] = 0xc0 | Char;
+         MultiByteString += 2;
+         TempLength -= 2;
+         continue;
+      }
+
+      /* 0x800-0xffff: 3 bytes */
+      if (TempLength < 3)
+      {
+         SetLastError(ERROR_INSUFFICIENT_BUFFER);
+         break;
+      }
+      MultiByteString[2] = 0x80 | (Char & 0x3f); Char >>= 6;
+      MultiByteString[1] = 0x80 | (Char & 0x3f); Char >>= 6;
+      MultiByteString[0] = 0xe0 | Char;
+      MultiByteString += 3;
+      TempLength -= 3;
+   }
+
+   return MultiByteCount - TempLength;
 }
 
 /**
