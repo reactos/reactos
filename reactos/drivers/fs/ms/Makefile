@@ -1,10 +1,10 @@
-# $Id: Makefile,v 1.4 2001/07/15 21:18:59 rex Exp $
+# $Id: Makefile,v 1.5 2001/07/24 16:31:17 ekohl Exp $
 #
 # Mailslot File System
 #
 PATH_TO_TOP = ../../..
 
-TARGETNAME=msfs
+TARGET = msfs
 
 OBJECTS = create.o finfo.o fsctrl.o msfs.o rw.o msfs.coff
 
@@ -12,51 +12,24 @@ LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 
 CFLAGS = -D__NTDRIVER__
 
-all: $(TARGETNAME).sys
+all: $(TARGET).sys $(TARGET).sys.unstripped
 
 .phony: all
 
 clean:
-	- $(RM) *.o $(TARGETNAME).sym $(TARGETNAME).sys
+	- $(RM) *.o *.sym $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
 
 .phony: clean
 
-$(FLOPPY_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
-	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
+$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGETNAME).sys
+dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
 
-$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
-	$(CP) $(TARGETNAME).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGETNAME).sys
+$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+	$(CP) $(TARGET).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
 
-$(TARGETNAME).sys: $(OBJECTS) $(LIBS)
-	$(CC) \
-		-specs=../../svc_specs \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--defsym,_end=end \
-		-Wl,--defsym,_edata=__data_end__ \
-		-Wl,--defsym,_etext=etext \
-		-Wl,--base-file,base.tmp \
-		$(OBJECTS) $(LIBS)
-	$(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGETNAME).sys \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--kill-at
-	$(RM) base.tmp
-	$(CC) \
-		--verbose \
-		-Wl,--image-base,0x10000 \
-		-Wl,-e,_DriverEntry@8 \
-		-specs=../../svc_specs \
-		-mdll \
-		-o $(TARGETNAME).sys \
-		$(OBJECTS) $(LIBS) \
-		-Wl,temp.exp
-	$(RM) temp.exp
-	$(NM) --numeric-sort msfs.sys > msfs.sym
+$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS) $(LIBS)
 
 msfs.coff: $(PATH_TO_TOP)/include/reactos/buildno.h msfs.rc
 

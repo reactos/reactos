@@ -1,11 +1,13 @@
-# $Id: Makefile,v 1.6 2001/07/15 21:18:59 rex Exp $
+# $Id: Makefile,v 1.7 2001/07/24 16:30:36 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
 
-TARGET=minixfs
+TARGET = minixfs
 
-OBJECTS = $(TARGET).o minix.coff ../../../ntoskrnl/ntoskrnl.a
+OBJECTS = $(TARGET).o minix.coff
+
+LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 
 CFLAGS = -D__NTDRIVER__ -I. -g
 
@@ -23,10 +25,10 @@ install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 $(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
 
-../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+	$(CP) $(TARGET).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
 
 MOBJECTS = block.o blockdev.o cache.o dir.o inode.o mount.o rw.o bitops.o
 
@@ -35,7 +37,7 @@ minixfs.o: $(MOBJECTS)
 
 $(TARGET).sys: $(OBJECTS) minix.coff
 
-minix.coff: ../../../include/reactos/buildno.h minix.rc
+minix.coff: $(PATH_TO_TOP)/include/reactos/buildno.h minix.rc
 
 WITH_DEBUGGING=yes
-include ../../../rules.mak
+include $(PATH_TO_TOP)/rules.mak

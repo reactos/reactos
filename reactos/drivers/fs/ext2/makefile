@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.12 2001/07/15 21:18:59 rex Exp $
+# $Id: makefile,v 1.13 2001/07/24 16:29:25 ekohl Exp $
 #
 # Linux Ext2 IFS Driver
 #
@@ -9,7 +9,7 @@ TARGETNAME=ext2fs
 OBJECTS = super.o blockdev.o inode.o file.o dir.o rw.o quota.o security.o \
           attr.o ext2.coff
 
-LIBS = ../../../ntoskrnl/ntoskrnl.a
+LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 
 CFLAGS = -D__NTDRIVER__ -g -Wall 
 
@@ -24,13 +24,17 @@ clean:
 
 ext2fs.sys: $(OBJECTS) $(LIBS)
 	$(CC) \
-		-specs=../../svc_specs \
+		-nostartfiles \
+		-nostdlib \
+		--subsystem=native \
 		-mdll \
-		-o junk.tmp \
+		--dll \
+		-Wl,-e,_DriverEntry@8 \
+		-Wl,--base-file,base.tmp \
 		-Wl,--defsym,_end=end \
 		-Wl,--defsym,_edata=__data_end__ \
 		-Wl,--defsym,_etext=etext \
-		-Wl,--base-file,base.tmp \
+		-o junk.tmp \
 		$(OBJECTS) $(LIBS)
 	$(RM) junk.tmp
 	$(DLLTOOL) \
@@ -39,18 +43,19 @@ ext2fs.sys: $(OBJECTS) $(LIBS)
 		--output-exp temp.exp
 	$(RM) base.tmp
 	$(CC) \
-		--verbose \
+		-nostartfiles -nostdlib \
+		--subsystem=native \
+		-mdll \
+		--dll \
 		-Wl,--image-base,0x10000 \
 		-Wl,-e,_DriverEntry \
-		-specs=../../svc_specs \
-		-mdll \
+		-Wl,temp.exp \
 		-o $(TARGETNAME).sys \
-		$(OBJECTS) $(LIBS) \
-		-Wl,temp.exp
+		$(OBJECTS) $(LIBS)
 	$(RM) temp.exp
 
-ext2.coff: ../../../include/reactos/buildno.h ext2.rc
+ext2.coff: $(PATH_TO_TOP)/include/reactos/buildno.h ext2.rc
 
-include ../../../rules.mak
+include $(PATH_TO_TOP)/rules.mak
 
 # EOF
