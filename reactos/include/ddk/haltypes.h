@@ -1,4 +1,4 @@
-/* $Id: haltypes.h,v 1.9 2003/02/26 14:11:41 ekohl Exp $
+/* $Id: haltypes.h,v 1.10 2003/04/27 18:08:56 ekohl Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -258,18 +258,6 @@ typedef struct _PCI_SLOT_NUMBER
       ULONG AsULONG;
     } u;
 } PCI_SLOT_NUMBER, *PPCI_SLOT_NUMBER;
-
-
-/* MicroChannel bus data */
-
-typedef struct _CM_MCA_POS_DATA
-{
-  USHORT AdapterId;
-  UCHAR PosData1;
-  UCHAR PosData2;
-  UCHAR PosData3;
-  UCHAR PosData4;
-} CM_MCA_POS_DATA, *PCM_MCA_POS_DATA;
 
 
 /* Hal dispatch table */

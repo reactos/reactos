@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_DDK_CMTYPES_H
 #define __INCLUDE_DDK_CMTYPES_H
 /*
- * Object Manager structures and typedefs
+ * Configuration Manager structures and typedefs
  */
 
 /*
@@ -98,5 +98,6 @@ typedef struct _KEY_VALUE_ENTRY
   ULONG  DataOffset;
   ULONG  Type;
 } KEY_VALUE_ENTRY, *PKEY_VALUE_ENTRY;
+
 
 #endif /* __INCLUDE_DDK_CMTYPES_H */

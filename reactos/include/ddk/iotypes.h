@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.46 2003/03/19 23:14:29 gdalsnes Exp $
+/* $Id: iotypes.h,v 1.47 2003/04/27 18:08:56 ekohl Exp $
  *
  */
 
@@ -194,6 +194,42 @@ typedef struct _IO_RESOURCE_REQUIREMENTS_LIST
    IO_RESOURCE_LIST List[1];
 } IO_RESOURCE_REQUIREMENTS_LIST, *PIO_RESOURCE_REQUIREMENTS_LIST;
 
+
+/* MicroChannel bus data */
+
+typedef struct _CM_MCA_POS_DATA
+{
+  USHORT AdapterId;
+  UCHAR PosData1;
+  UCHAR PosData2;
+  UCHAR PosData3;
+  UCHAR PosData4;
+} CM_MCA_POS_DATA, *PCM_MCA_POS_DATA;
+
+
+/* Int13 drive geometry data */
+
+typedef struct _CM_INT13_DRIVE_PARAMETER
+{
+  USHORT DriveSelect;
+  ULONG MaxCylinders;
+  USHORT SectorsPerTrack;
+  USHORT MaxHeads;
+  USHORT NumberDrives;
+} CM_INT13_DRIVE_PARAMETER, *PCM_INT13_DRIVE_PARAMETER;
+
+
+/* Extended drive geometry data */
+
+typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA
+{
+  ULONG BytesPerSector;
+  ULONG NumberOfCylinders;
+  ULONG SectorsPerTrack;
+  ULONG NumberOfHeads;
+} CM_DISK_GEOMETRY_DEVICE_DATA, *PCM_DISK_GEOMETRY_DEVICE_DATA;
+
+
 typedef struct
 {
    UCHAR Type;
@@ -245,7 +281,7 @@ typedef struct
    INTERFACE_TYPE InterfaceType;
    ULONG BusNumber;
    CM_PARTIAL_RESOURCE_LIST PartialResourceList;
-} __attribute__((packed)) CM_FULL_RESOURCE_DESCRIPTOR;
+} __attribute__((packed)) CM_FULL_RESOURCE_DESCRIPTOR, *PCM_FULL_RESOURCE_DESCRIPTOR;
 
 typedef struct
 {
