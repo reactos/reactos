@@ -106,6 +106,8 @@
 #define IDB_LOGOV16                     164
 #define IDI_DOT_TRANS                   164
 #define IDI_DOT_RED                     165
+#define IDI_ARROW_UP                    166
+#define IDI_ARROW_DOWN                  167
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403

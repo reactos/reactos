@@ -947,6 +947,8 @@ IDI_SPEAKER             ICON    DISCARDABLE     "res/speaker.ico"
 IDI_DOT                 ICON    DISCARDABLE     "res/dot.ico"
 IDI_DOT_TRANS           ICON    DISCARDABLE     "res/dot_trans.ico"
 IDI_DOT_RED             ICON    DISCARDABLE     "res/dot_red.ico"
+IDI_ARROW_UP            ICON    DISCARDABLE     "res/arrow_up.ico"
+IDI_ARROW_DOWN          ICON    DISCARDABLE     "res/arrow_dwn.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

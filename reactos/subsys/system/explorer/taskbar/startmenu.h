@@ -240,8 +240,15 @@ protected:
 
 	int		_border_left;	// left border in pixels
 	int		_border_top;	// top border in pixels
+	int		_bottom_max;	// limit display area for long start menus
+
+	bool	_floating_btn;
+	bool	_arrow_btns;
 
 	POINT	_last_pos;
+	enum SCROLL_MODE {SCROLL_NOT, SCROLL_UP, SCROLL_DOWN} _scroll_mode;
+	int		_scroll_pos;
+	int		_invisible_lines;
 
 	StartMenuCreateInfo _create_info;	// copy of the original create info
 
@@ -291,6 +298,9 @@ protected:
 
 	void	DrawFloatingButton(HDC hdc);
 	void	GetFloatingButtonRect(LPRECT prect);
+	void	GetArrowButtonRects(LPRECT prect_up, LPRECT prect_down);
+
+	void	DrawArrows(HDC hdc);
 
 	void	Paint(PaintCanvas& canvas);
 	void	UpdateIcons(/*int idx*/);

@@ -46,8 +46,17 @@ StartMenu::StartMenu(HWND hwnd)
 {
 	_next_id = IDC_FIRST_MENU;
 	_submenu_id = 0;
+
 	_border_left = 0;
 	_border_top = 0;
+	_bottom_max = INT_MAX;
+
+	_floating_btn = false;
+	_arrow_btns = false;
+	_scroll_mode = SCROLL_NOT;
+	_scroll_pos = 0;
+	_invisible_lines = 0;
+
 	_last_pos = WindowRect(hwnd).pos();
 #ifdef _LIGHT_STARTMENU
 	_selected_id = -1;
@@ -65,8 +74,17 @@ StartMenu::StartMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
 
 	_next_id = IDC_FIRST_MENU;
 	_submenu_id = 0;
+
 	_border_left = 0;
 	_border_top = create_info._border_top;
+	_bottom_max = INT_MAX;
+
+	_floating_btn = create_info._border_top? true: false;
+	_arrow_btns = false;
+	_scroll_mode = SCROLL_NOT;
+	_scroll_pos = 0;
+	_invisible_lines = 0;
+
 	_last_pos = WindowRect(hwnd).pos();
 #ifdef _LIGHT_STARTMENU
 	_selected_id = -1;
@@ -309,7 +327,33 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_MOUSEMOVE: {
 		 // automatically set the focus to startmenu entries when moving the mouse over them
 		if (lparam != _last_mouse_pos) { // don't process WM_MOUSEMOVE when opening submenus using keyboard navigation
-			int new_id = ButtonHitTest(Point(lparam));
+			Point pt(lparam);
+
+			if (_arrow_btns) {
+				RECT rect_up, rect_down;
+
+				GetArrowButtonRects(&rect_up, &rect_down);
+
+				SCROLL_MODE scroll_mode = SCROLL_NOT;
+
+				if (PtInRect(&rect_up, pt))
+					scroll_mode = SCROLL_UP;
+				else if (PtInRect(&rect_down, pt))
+					scroll_mode = SCROLL_DOWN;
+
+				if (scroll_mode != _scroll_mode) {
+					if (scroll_mode == SCROLL_NOT)
+						KillTimer(_hwnd, 0);
+					else {
+						CloseSubmenus();
+						SetTimer(_hwnd, 0, 150, NULL);	// 150 ms scroll interval
+					}
+
+					_scroll_mode = scroll_mode;
+				}
+			}
+
+			int new_id = ButtonHitTest(pt);
 
 			if (new_id != _selected_id)
 				SelectButton(new_id);
@@ -317,6 +361,20 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			_last_mouse_pos = lparam;
 		}
 		break;}
+
+	  case WM_TIMER:
+		if (_scroll_mode == SCROLL_UP) {
+			if (_scroll_pos > 0) {
+				--_scroll_pos;
+				InvalidateRect(_hwnd, NULL, TRUE);
+			}
+		} else {
+			if (_scroll_pos <= _invisible_lines) {
+				++_scroll_pos;
+				InvalidateRect(_hwnd, NULL, TRUE);
+			}
+		}
+		break;
 
 	  case WM_KEYDOWN:
 		ProcessKey(wparam);
@@ -379,13 +437,16 @@ int StartMenu::ButtonHitTest(POINT pt)
 	if (pt.x<rect.left || pt.x>rect.right)
 		return 0;
 
-	for(SMBtnVector::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
+	for(SMBtnVector::const_iterator it=_buttons.begin()+_scroll_pos; it!=_buttons.end(); ++it) {
 		const SMBtnInfo& info = *it;
 
 		if (rect.top > pt.y)
 			break;
 
 		rect.bottom = rect.top + (info._id==-1? STARTMENU_SEP_HEIGHT: STARTMENU_LINE_HEIGHT);
+
+		if (rect.bottom > _bottom_max)
+			break;
 
 		if (pt.y < rect.bottom)	// PtInRect(&rect, pt)
 			return info._id;
@@ -404,7 +465,7 @@ void StartMenu::InvalidateSelection()
 	ClientRect clnt(_hwnd);
 	RECT rect = {_border_left, _border_top, clnt.right, STARTMENU_LINE_HEIGHT};
 
-	for(SMBtnVector::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
+	for(SMBtnVector::const_iterator it=_buttons.begin()+_scroll_pos; it!=_buttons.end(); ++it) {
 		const SMBtnInfo& info = *it;
 
 		rect.bottom = rect.top + (info._id==-1? STARTMENU_SEP_HEIGHT: STARTMENU_LINE_HEIGHT);
@@ -629,7 +690,7 @@ bool StartMenu::GetButtonRect(int id, PRECT prect) const
 	ClientRect clnt(_hwnd);
 	RECT rect = {_border_left, _border_top, clnt.right, STARTMENU_LINE_HEIGHT};
 
-	for(SMBtnVector::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
+	for(SMBtnVector::const_iterator it=_buttons.begin()+_scroll_pos; it!=_buttons.end(); ++it) {
 		const SMBtnInfo& info = *it;
 
 		rect.bottom = rect.top + (info._id==-1? STARTMENU_SEP_HEIGHT: STARTMENU_LINE_HEIGHT);
@@ -676,12 +737,44 @@ void StartMenu::GetFloatingButtonRect(LPRECT prect)
 }
 
 
+void StartMenu::DrawArrows(HDC hdc)
+{
+	static ResIconEx arrowUpIcon(IDI_ARROW_UP, 8, 4);
+	static ResIconEx arrowDownIcon(IDI_ARROW_DOWN, 8, 4);
+
+	ClientRect clnt(_hwnd);
+
+	DrawIconEx(hdc, clnt.right/2-4, _floating_btn?3:1, arrowUpIcon, 8, 4, 0, 0, DI_NORMAL);
+	DrawIconEx(hdc, clnt.right/2-4, clnt.bottom-5, arrowDownIcon, 8, 4, 0, 0, DI_NORMAL);
+}
+
+void StartMenu::GetArrowButtonRects(LPRECT prect_up, LPRECT prect_down)
+{
+	GetClientRect(_hwnd, prect_up);
+	*prect_down = *prect_up;
+
+//	prect_up->left = prect_up->right/2 - 4;
+//	prect_up->right = prect_up->left + 8;
+	prect_up->right -= 8;
+	prect_up->top = _floating_btn? 3: 1;
+	prect_up->bottom = prect_up->top + 4;
+
+//	prect_down->left = prect_down->right/2 - 4;
+//	prect_down->right = prect_down->left + 8;
+	prect_down->right -= 8;
+	prect_down->top = prect_down->bottom - 5;
+}
+
+
 void StartMenu::Paint(PaintCanvas& canvas)
 {
-	if (_border_top)
+	if (_floating_btn)
 		DrawFloatingButton(canvas);
 
 #ifdef _LIGHT_STARTMENU
+	if (_arrow_btns)
+		DrawArrows(canvas);
+
 	ClientRect clnt(_hwnd);
 	RECT rect = {_border_left, _border_top, clnt.right, STARTMENU_LINE_HEIGHT};
 
@@ -690,7 +783,7 @@ void StartMenu::Paint(PaintCanvas& canvas)
 	FontSelection font(canvas, GetStockFont(DEFAULT_GUI_FONT));
 	BkMode bk_mode(canvas, TRANSPARENT);
 
-	for(SMBtnVector::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
+	for(SMBtnVector::const_iterator it=_buttons.begin()+_scroll_pos; it!=_buttons.end(); ++it) {
 		const SMBtnInfo& btn = *it;
 
 		if (rect.top > canvas.rcPaint.bottom)
@@ -699,6 +792,9 @@ void StartMenu::Paint(PaintCanvas& canvas)
 		if (btn._id == -1) {	// a separator?
 			rect.bottom = rect.top + STARTMENU_SEP_HEIGHT;
 
+			if (rect.bottom > _bottom_max)
+				break;
+
 			BrushSelection brush_sel(canvas, GetSysColorBrush(COLOR_BTNSHADOW));
 			PatBlt(canvas, rect.left+2, rect.top+STARTMENU_SEP_HEIGHT/2-1, sep_width, 1, PATCOPY);
 
@@ -706,6 +802,9 @@ void StartMenu::Paint(PaintCanvas& canvas)
 			PatBlt(canvas, rect.left+2, rect.top+STARTMENU_SEP_HEIGHT/2, sep_width, 1, PATCOPY);
 		} else {
 			rect.bottom = rect.top + STARTMENU_LINE_HEIGHT;
+
+			if (rect.bottom > _bottom_max)
+				break;
 
 			if (rect.top >= canvas.rcPaint.top)
 				DrawStartMenuButton(canvas, rect, btn._title, btn, btn._id==_selected_id, false);
@@ -724,7 +823,7 @@ void StartMenu::UpdateIcons(/*int idx*/)
 #ifdef _SINGLE_ICONEXTRACT
 
 	//if (idx >= 0)
-	int idx = 0;
+	int idx = _scroll_pos;
 
 	for(; idx<(int)_buttons.size(); ++idx) {
 		SMBtnInfo& btn = _buttons[idx];
@@ -738,7 +837,11 @@ void StartMenu::UpdateIcons(/*int idx*/)
 				Entry* entry = *it;
 
 				if (entry->_icon_id == ICID_UNKNOWN)
-					entry->extract_icon();
+					try {
+						entry->extract_icon();
+					} catch(COMException&) {
+						// ignore unexpected exceptions while extracting icons
+					}
 
 				if (entry->_icon_id > ICID_NONE) {
 					btn._icon_id = (ICON_ID)/*@@*/ entry->_icon_id;
@@ -746,6 +849,10 @@ void StartMenu::UpdateIcons(/*int idx*/)
 					RECT rect;
 
 					GetButtonRect(btn._id, &rect);
+
+					if (rect.bottom > _bottom_max)
+						break;
+
 					WindowCanvas canvas(_hwnd);
 					DrawStartMenuButton(canvas, rect, NULL, btn, btn._id==_selected_id, false);
 
@@ -1066,7 +1173,7 @@ void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTS
 		ClientToScreen(_hwnd, &rect);
 
 		x = rect.right;	// Submenus should overlap their parent a bit.
-		y = rect.top+STARTMENU_LINE_HEIGHT-_border_top;
+		y = rect.top+STARTMENU_LINE_HEIGHT +_border_top/*own border*/ -STARTMENU_TOP_BTN_SPACE/*border of new submenu*/;
 	} else {
 		WindowRect pos(_hwnd);
 
@@ -1103,7 +1210,7 @@ void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 			if (title.empty())
 				title = entry->_display_name;
 		} else {
-			 // If the entry is no subdirectory, there can only be one shell entry.
+			 // The entry is no subdirectory, so there can only be one shell entry.
 			assert(entries.size()==1);
 
 			HWND hparent = GetParent(_hwnd);
@@ -1264,11 +1371,40 @@ void StartMenu::ResizeToButtons()
 
 	 // move down if we are too high
 	if (rect.top < 0) {
-		rect.top += STARTMENU_LINE_HEIGHT;
-		rect.bottom += STARTMENU_LINE_HEIGHT;
+		int dy = -rect.top;
+		rect.top += dy;
+		rect.bottom += dy;
+	}
+
+	 // enable scroll mode for long start menus, which span more than the whole screen height
+	int cyscreen = GetSystemMetrics(SM_CYSCREEN);
+	int bottom_max = 0;
+
+	if (rect.bottom > cyscreen) {
+		_arrow_btns = true;
+
+		_invisible_lines = (rect.bottom-cyscreen+(STARTMENU_LINE_HEIGHT-1))/STARTMENU_LINE_HEIGHT + 1;
+		rect.bottom -= _invisible_lines * STARTMENU_LINE_HEIGHT;
+
+		bottom_max = rect.bottom;
+
+		if (_floating_btn)
+			rect.bottom += 6;	// lower scroll arrow
+		else {
+			_border_top += 6;	// upper scroll arrow
+			rect.bottom += 2*6;	// upper+lower scroll arrow
+		}
 	}
 
 	MoveWindow(_hwnd, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, TRUE);
+
+	if (bottom_max) {
+		POINT pt = {0, bottom_max};
+
+		ScreenToClient(_hwnd, &pt);
+
+		_bottom_max = pt.y;
+	}
 }
 
 #else // _LIGHT_STARTMENU

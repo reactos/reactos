@@ -361,6 +361,18 @@ SOURCE=.\res\arrow.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\arrow_do.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\arrow_dwn.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\arrow_up.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\arrowsel.ico
 # End Source File
 # Begin Source File

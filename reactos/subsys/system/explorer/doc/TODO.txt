@@ -18,14 +18,11 @@
 - close start start menu when resizing explorer bar
 - adjust already open windows of all running applications when resizing explorer bar
 - implement blink effect in task bar for SetForegoundWindow() requests
-- implement more than one column or scrolling in start menus for very crowded start menus
 - Execute selected programs with additional command line options ("Run" dialog with pre-filled edit field)
 - switch background images with desktop switcher
 - Desktop Manager: Desktop Names; Speicherung der Verteilung von Applikations-Fenstern auf die verschiedenen Desktops -> config file
 - autostart doesn't work on NT4 ?
 - hide desktop bar when showing full screen applications
 - new start menu entry "Filemanager" close to "Explore" -> display C: and D: drive in MDI window
-
-- Startmenu: You can't close the start menu with pressing Win-key You can open the start menu
-  with pressing Win-key, but can't close with another hit of Win-key.
+- Startmenu: You can open the start menu by pressing Win-key, but can't close with another hit of Win-key.
 
