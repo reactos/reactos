@@ -36,10 +36,8 @@ extern DWORD DebugTraceLevel;
 #ifdef NASSERT
 #define ASSERT(x)
 #else /* NASSERT */
-#define ASSERT(x) if (!(x)) { AFD_DbgPrint(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); KeBugCheck(0); }
+#define ASSERT(x) if (!(x)) { AFD_DbgPrint(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); ExitProcess(0); }
 #endif /* NASSERT */
-
-#define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
 
 #else /* DBG */
 
@@ -52,7 +50,6 @@ extern DWORD DebugTraceLevel;
 
 
 #define assert(x) ASSERT(x)
-#define assert_irql(x) ASSERT_IRQL(x)
 
 
 #define UNIMPLEMENTED \
