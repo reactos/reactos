@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.23 2001/04/29 21:08:14 cnettel Exp $
+/* $Id: create.c,v 1.24 2001/05/02 03:18:03 rex Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -23,7 +23,6 @@
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
-#define TAG_FCB TAG('V', 'F', 'C', 'B')
 #define TAG_CCB TAG('V', 'C', 'C', 'B')
 
 /* FUNCTIONS *****************************************************************/
@@ -59,6 +58,47 @@ IsDeletedEntry (PVOID Block, ULONG Offset)
 
   return ((((FATDirEntry *) Block)[Offset].Filename[0] == 0xe5) ||
 	  (((FATDirEntry *) Block)[Offset].Filename[0] == 0));
+}
+
+static void  vfat8Dot3ToString (PCHAR pBasename, PCHAR pExtension, PWSTR pName)
+{
+  int  fromIndex, toIndex;
+
+  fromIndex = toIndex = 0; 
+  while (fromIndex < 8 && pBasename [fromIndex] != ' ')
+  {
+    pName [toIndex++] = pBasename [fromIndex++];
+  }
+  if (pExtension [0] != ' ')
+  {
+    pName [toIndex++] = L'.';
+    fromIndex = 0;
+    while (fromIndex < 3 && pBasename [fromIndex] != ' ')
+    {
+      pName [toIndex++] = pExtension [fromIndex++];
+    }
+  }
+  pName [toIndex] = L'\0';
+}
+
+static void  vfat8Dot3ToVolumeLabel (PCHAR pBasename, PCHAR pExtension, PWSTR pName)
+{
+  int  fromIndex, toIndex;
+
+  fromIndex = toIndex = 0; 
+  while (fromIndex < 8 && pBasename [fromIndex] != ' ')
+  {
+    pName [toIndex++] = pBasename [fromIndex++];
+  }
+  if (pExtension [0] != ' ')
+  {
+    fromIndex = 0;
+    while (fromIndex < 3 && pBasename [fromIndex] != ' ')
+    {
+      pName [toIndex++] = pExtension [fromIndex++];
+    }
+  }
+  pName [toIndex] = L'\0';
 }
 
 BOOLEAN
@@ -132,12 +172,7 @@ GetEntryName (PVOID Block, PULONG _Offset, PWSTR Name, PULONG _jloop,
       return (TRUE);
     }
 
-  RtlAnsiToUnicode (Name, test[Offset].Filename, 8);
-  if (test[Offset].Ext[0] != ' ')
-    {
-      RtlCatAnsiToUnicode (Name, ".", 1);
-    }
-  RtlCatAnsiToUnicode (Name, test[Offset].Ext, 3);
+  vfat8Dot3ToString (test[Offset].Filename, test[Offset].Ext, Name);
 
   *_Offset = Offset;
 
@@ -176,8 +211,7 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
 	      FATDirEntry *test = (FATDirEntry *) block;
 
 	      /* copy volume label */
-	      RtlAnsiToUnicode (Vpb->VolumeLabel, test[i].Filename, 8);
-	      RtlCatAnsiToUnicode (Vpb->VolumeLabel, test[i].Ext, 3);
+              vfat8Dot3ToVolumeLabel (test[i].Filename, test[i].Ext, Vpb->VolumeLabel);
 	      Vpb->VolumeLabelLength = wcslen (Vpb->VolumeLabel);
 
 	      ExFreePool (block);
@@ -399,7 +433,40 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
   return (STATUS_UNSUCCESSFUL);
 }
 
+NTSTATUS 
+vfatMakeAbsoluteFilename (PFILE_OBJECT pFileObject, 
+                          PWSTR pRelativeFileName,
+                          PWSTR *pAbsoluteFilename)
+{
+  PWSTR  rcName;
+  PVFATFCB  fcb;
+  PVFATCCB  ccb;
 
+  DbgPrint ("try related for %S\n", pRelativeFileName);
+  ccb = pFileObject->FsContext2;
+  assert (ccb);
+  fcb = ccb->pFcb;
+  assert (fcb);
+
+  /* verify related object is a directory and target name 
+     don't start with \. */
+  if (!(fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY) 
+      || (pRelativeFileName[0] != '\\'))
+  {
+    return  STATUS_INVALID_PARAMETER;
+  }
+
+  /* construct absolute path name */
+  assert (wcslen (fcb->PathName) + 1 + wcslen (pRelativeFileName) + 1 
+          <= MAX_PATH);
+  rcName = ExAllocatePool (NonPagedPool, MAX_PATH);
+  wcscpy (rcName, fcb->PathName);
+  wcscat (rcName, L"\\");
+  wcscat (rcName, pRelativeFileName);
+  *pAbsoluteFilename = rcName;
+
+  return  STATUS_SUCCESS;
+}
 
 NTSTATUS
 VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
@@ -413,15 +480,11 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   PWSTR string;
 //  PWSTR buffer; // used to store a pointer while checking MAX_PATH conformance
   PVFATFCB ParentFcb;
-  PVFATFCB Fcb, pRelFcb;
+  PVFATFCB Fcb;
   PVFATFCB Temp;
-  PVFATCCB newCCB, pRelCcb;
+  PVFATCCB newCCB;
   NTSTATUS Status;
-  PFILE_OBJECT pRelFileObject;
   PWSTR AbsFileName = NULL;
-  short i, j;
-  PLIST_ENTRY current_entry;
-  KIRQL oldIrql;
   ULONG BytesPerCluster;
 
   DPRINT ("VfatOpenFile(%08lx, %08lx, %S)\n", DeviceExt, FileObject, FileName);
@@ -429,31 +492,9 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   /* FIXME : treat relative name */
   if (FileObject->RelatedFileObject)
     {
-      DbgPrint ("try related for %S\n", FileName);
-      pRelFileObject = FileObject->RelatedFileObject;
-      pRelCcb = pRelFileObject->FsContext2;
-      assert (pRelCcb);
-      pRelFcb = pRelCcb->pFcb;
-      assert (pRelFcb);
-      /*
-       * verify related object is a directory and target name don't start with
-       *  \.
-       */
-      if (!(pRelFcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
-	  || (FileName[0] != '\\'))
-	{
-	  Status = STATUS_INVALID_PARAMETER;
-	  return Status;
-	}
-      /* construct absolute path name */
-      AbsFileName = ExAllocatePool (NonPagedPool, MAX_PATH);
-      for (i = 0; pRelFcb->PathName[i]; i++)
-	AbsFileName[i] = pRelFcb->PathName[i];
-      AbsFileName[i++] = '\\';
-      for (j = 0; FileName[j] && i < MAX_PATH; j++)
-	AbsFileName[i++] = FileName[j];
-      assert (i < MAX_PATH);
-      AbsFileName[i] = 0;
+      Status = vfatMakeAbsoluteFilename (FileObject->RelatedFileObject,
+                                         FileName,
+                                         &AbsFileName);
       FileName = AbsFileName;
     }
 
@@ -462,48 +503,28 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    */
   CHECKPOINT;
 
-  KeAcquireSpinLock (&DeviceExt->FcbListLock, &oldIrql);
-  current_entry = DeviceExt->FcbListHead.Flink;
-  while (current_entry != &DeviceExt->FcbListHead)
-    {
-      Fcb = CONTAINING_RECORD (current_entry, VFATFCB, FcbListEntry);
+  Fcb = vfatGrabFCBFromTable (DeviceExt, FileName);
+  if (Fcb != NULL)
+  {
+    FileObject->FsContext = (PVOID)&Fcb->RFCB;
+    newCCB = ExAllocatePoolWithTag (NonPagedPool, sizeof (VFATCCB), TAG_CCB);
+    memset (newCCB, 0, sizeof (VFATCCB));
+    FileObject->Flags = FileObject->Flags | 
+        FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
+    FileObject->SectionObjectPointers = &Fcb->SectionObjectPointers;
+    FileObject->FsContext2 = newCCB;
+    newCCB->pFcb = Fcb;
+    newCCB->PtrFileObject = FileObject;
+    if (AbsFileName)
+      ExFreePool (AbsFileName);
+    return  STATUS_SUCCESS;
+  }
 
-      DPRINT ("Scanning %x\n", Fcb);
-      DPRINT ("Scanning %S\n", Fcb->PathName);
-
-      if (DeviceExt == Fcb->pDevExt && wstrcmpi (FileName, Fcb->PathName))
-	{
-	  Fcb->RefCount++;
-	  KeReleaseSpinLock (&DeviceExt->FcbListLock, oldIrql);
-	  FileObject->FsContext = (PVOID)&Fcb->RFCB;
-	  newCCB = 
-	    ExAllocatePoolWithTag (NonPagedPool, sizeof (VFATCCB), TAG_CCB);
-	  memset (newCCB, 0, sizeof (VFATCCB));
-	  FileObject->Flags = FileObject->Flags | 
-	    FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
-	  FileObject->SectionObjectPointers = 
-	    &Fcb->SectionObjectPointers;
-	  FileObject->FsContext2 = newCCB;
-	  newCCB->pFcb = Fcb;
-	  newCCB->PtrFileObject = FileObject;
-	  if (AbsFileName)
-	    ExFreePool (AbsFileName);
-	  return (STATUS_SUCCESS);
-	}
-
-      current_entry = current_entry->Flink;
-    }
-  KeReleaseSpinLock (&DeviceExt->FcbListLock, oldIrql);
-
-  CHECKPOINT;
   DPRINT ("FileName %S\n", FileName);
 
   string = FileName;
   ParentFcb = NULL;
-  Fcb = ExAllocatePoolWithTag (NonPagedPool, sizeof (VFATFCB), TAG_FCB);
-  memset (Fcb, 0, sizeof (VFATFCB));
-  Fcb->ObjectName = &Fcb->PathName[1];
-  Fcb->PathName[0]='\\';
+  Fcb = vfatNewFCB (L"\\");
   next = &string[0];
 
   CHECKPOINT;
@@ -540,7 +561,7 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	      break;
 	    }
 
-	  DPRINT ("current '%S'\n", current);
+	  DPRINT ("search for (%S) in (%S)\n", current, ParentFcb ? ParentFcb->PathName : L"");
 	  Status = FindFile (DeviceExt, Fcb, ParentFcb, current, NULL, NULL);
 	  if (Status != STATUS_SUCCESS)
 	    {
@@ -560,11 +581,7 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	  if (ParentFcb == NULL)
 	    {
 	      CHECKPOINT;
-	      Fcb = ExAllocatePoolWithTag (NonPagedPool, sizeof (VFATFCB), 
-					   TAG_FCB);
-	      memset (Fcb, 0, sizeof (VFATFCB));
-              Fcb->ObjectName = &Fcb->PathName[1];
-	      Fcb->PathName[0] = '\\';
+	      Fcb = vfatNewFCB (L"\\");
 	    }
 	  else
 	      Fcb = ParentFcb;
@@ -578,13 +595,12 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	    Fcb->ObjectName=&Fcb->ObjectName[1];
 	    Fcb->ObjectName[0]=0;
 	  }
-	  
 	  CHECKPOINT;
 	  ParentFcb = Temp;
 	}
 
       /* searching for last path component */
-      DPRINT ("current '%S'\n", current);
+      DPRINT ("search for (%S) in (%S)\n", current, Fcb ? Fcb->PathName : L"");
       Status = FindFile (DeviceExt, Fcb, ParentFcb, current, NULL, NULL);
       if (Status != STATUS_SUCCESS)
         {
@@ -621,9 +637,7 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   ParentFcb->RefCount++;
   /* FIXME : initialize all fields in FCB and CCB */
 
-  KeAcquireSpinLock (&DeviceExt->FcbListLock, &oldIrql);
-  InsertTailList (&DeviceExt->FcbListHead, &ParentFcb->FcbListEntry);
-  KeReleaseSpinLock (&DeviceExt->FcbListLock, oldIrql);
+  vfatAddFCBToTable (DeviceExt, ParentFcb);
 
 /*  vfat_wcsncpy (ParentFcb->PathName, FileName, MAX_PATH);
   ParentFcb->ObjectName = ParentFcb->PathName + (current - FileName); */

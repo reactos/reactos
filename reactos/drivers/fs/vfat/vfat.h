@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.27 2001/03/07 13:44:41 ekohl Exp $ */
+/* $Id: vfat.h,v 1.28 2001/05/02 03:18:03 rex Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -229,10 +229,6 @@ updEntry(PDEVICE_EXTENSION DeviceExt,PFILE_OBJECT pFileObject);
  * String functions
  */
 VOID 
-RtlAnsiToUnicode(PWSTR Dest, PCH Source, ULONG Length);
-VOID 
-RtlCatAnsiToUnicode(PWSTR Dest, PCH Source, ULONG Length);
-VOID 
 vfat_initstr(wchar_t *wstr, ULONG wsize);
 wchar_t* 
 vfat_wcsncat(wchar_t * dest, const wchar_t * src,size_t wstart, size_t wcount);
@@ -283,3 +279,12 @@ ReadVolumeLabel(PDEVICE_EXTENSION DeviceExt, PVPB Vpb);
 NTSTATUS
 VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	      PWSTR FileName);
+
+/*  -----------------------------------------------------  FCB Functions */
+
+PVFATFCB  vfatNewFCB (PWCHAR pFileName);
+void  vfatAddFCBToTable (PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB);
+PVFATFCB  vfatGrabFCBFromTable (PDEVICE_EXTENSION  pDeviceExt, 
+                                PWSTR  pFileName);
+
+

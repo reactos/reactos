@@ -1,4 +1,4 @@
-/* $Id: string.c,v 1.5 2001/03/01 13:46:22 dwelch Exp $
+/* $Id: string.c,v 1.6 2001/05/02 03:18:03 rex Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,39 +19,6 @@
 #include "vfat.h"
 
 /* FUNCTIONS ****************************************************************/
-
-void RtlAnsiToUnicode(PWSTR Dest, PCH Source, ULONG Length)
-/*
- * FUNCTION: Convert an ANSI string to it's Unicode equivalent
- */
-{
-   int i;
-   
-   for (i=0; (i<Length && Source[i] != ' '); i++)
-     {
-	Dest[i] = Source[i];
-     }
-   Dest[i]=0;
-}
-
-void RtlCatAnsiToUnicode(PWSTR Dest, PCH Source, ULONG Length)
-/*
- * FUNCTION: Appends a converted ANSI to Unicode string to the end of an
- *           existing Unicode string
- */
-{
-   ULONG i;
-   
-   while((*Dest)!=0)
-     {
-	Dest++;
-     }
-   for (i=0; (i<Length && Source[i] != ' '); i++)
-     {
-	Dest[i] = Source[i];
-     }
-   Dest[i]=0;
-}
 
 void vfat_initstr(wchar_t *wstr, ULONG wsize)
 /*

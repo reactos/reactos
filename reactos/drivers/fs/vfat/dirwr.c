@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.17 2001/02/14 02:53:54 dwelch Exp $
+/* $Id: dirwr.c,v 1.18 2001/05/02 03:18:03 rex Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -174,7 +174,6 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
   PVFATFCB newFCB;
   PVFATCCB newCCB;
   ULONG CurrentCluster;
-  KIRQL oldIrql;
   LARGE_INTEGER SystemTime, LocalTime;
   ULONG BytesPerCluster;
   NTSTATUS Status;
@@ -413,9 +412,8 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
     }
   DPRINT ("write entry offset %d status=%x\n", Offset, status);
   newCCB = ExAllocatePool (NonPagedPool, sizeof (VFATCCB));
-  newFCB = ExAllocatePool (NonPagedPool, sizeof (VFATFCB));
   memset (newCCB, 0, sizeof (VFATCCB));
-  memset (newFCB, 0, sizeof (VFATFCB));
+  newFCB = vfatNewFCB (NULL);
   newCCB->pFcb = newFCB;
   newCCB->PtrFileObject = pFileObject;
   newFCB->RefCount++;
@@ -435,10 +433,7 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
   /* 
    * FIXME : initialize all fields in FCB and CCB
    */
-  KeAcquireSpinLock (&DeviceExt->FcbListLock, &oldIrql);
-  InsertTailList (&DeviceExt->FcbListHead, &newFCB->FcbListEntry);
-  KeReleaseSpinLock (&DeviceExt->FcbListLock, oldIrql);
-
+  vfatAddFCBToTable (DeviceExt, newFCB);
 
   memcpy (&newFCB->entry, pEntry, sizeof (FATDirEntry));
   DPRINT ("new : entry=%11.11s\n", newFCB->entry.Filename);
