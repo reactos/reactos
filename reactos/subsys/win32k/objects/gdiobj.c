@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.78 2004/12/17 15:12:37 navaraf Exp $
+ * $Id: gdiobj.c,v 1.79 2004/12/18 21:41:17 royce Exp $
  */
 #include <w32k.h>
 
@@ -53,7 +53,7 @@ STDCALL PsGetProcessId(
 typedef struct _GDI_HANDLE_TABLE
 {
   PPAGED_LOOKASIDE_LIST LookasideLists;
-  
+
   SLIST_HEADER FreeEntriesHead;
   SLIST_ENTRY FreeEntries[((GDI_HANDLE_COUNT * sizeof(GDI_TABLE_ENTRY)) << 3) /
                           (sizeof(SLIST_ENTRY) << 3)];
@@ -126,7 +126,7 @@ GDIOBJ_iAllocHandleTable(VOID)
   handleTable = ExAllocatePoolWithTag(NonPagedPool, sizeof(GDI_HANDLE_TABLE), TAG_GDIHNDTBLE);
   ASSERT( handleTable );
   RtlZeroMemory(handleTable, sizeof(GDI_HANDLE_TABLE));
-  
+
   /*
    * initialize the free entry cache
    */
@@ -209,6 +209,71 @@ GetObjectSize(DWORD ObjectType)
   return 0;
 }
 
+#ifdef DBG
+
+static int leak_reported = 0;
+#define GDI_STACK_LEVELS 4
+static ULONG GDIHandleAllocator[GDI_STACK_LEVELS][GDI_HANDLE_COUNT];
+struct DbgOpenGDIHandle
+{
+	ULONG loc;
+	int count;
+};
+#define H 1024
+static struct DbgOpenGDIHandle h[H];
+
+void IntDumpHandleTable ( int which )
+{
+	int i, n = 0, j;
+
+	// step through GDI handle table and find out who our culprit is...
+	for ( i = RESERVE_ENTRIES_COUNT; i < GDI_HANDLE_COUNT; i++ )
+	{
+		for ( j = 0; j < n; j++ )
+		{
+			if ( GDIHandleAllocator[which][i] == h[j].loc )
+				break;
+		}
+		if ( j < H )
+		{
+			if ( j == n )
+			{
+				h[j].loc = GDIHandleAllocator[which][i];
+				h[j].count = 1;
+				n = n + 1;
+			}
+			else
+				h[j].count++;
+		}
+	}
+	// bubble sort time! weeeeee!!
+	for ( i = 0; i < n-1; i++ )
+	{
+		if ( h[i].count < h[i+1].count )
+		{
+			struct DbgOpenGDIHandle t;
+			t.loc = h[i+1].loc;
+			t.count = h[i+1].count;
+			h[i+1].loc = h[i].loc;
+			h[i+1].count = h[i].count;
+			j = i;
+			while ( j > 0 && h[j-1].count < t.count )
+				j--;
+			h[j] = t;
+		}
+	}
+	// print the first 30 offenders...
+	DbgPrint ( "Worst GDI Handle leak offenders - stack trace level %i (out of %i unique locations):\n", which, n );
+	for ( i = 0; i < 30 && i < n; i++ )
+	{
+		DbgPrint ( "\t" );
+		if ( !KeRosPrintAddress ( (PVOID)h[i].loc ) )
+			DbgPrint ( "<%X>", h[i].loc );
+		DbgPrint ( " (%i allocations)\n", h[i].count );
+	}
+}
+#endif//DBG
+
 /*!
  * Allocate memory for GDI object and return handle to it.
  *
@@ -269,14 +334,14 @@ GDIOBJ_AllocObj(ULONG ObjectType)
       RtlZeroMemory(ObjectBody, GetObjectSize(ObjectType));
 
       TypeInfo = (ObjectType & 0xFFFF0000) | (ObjectType >> 16);
-      
+
       FreeEntry = InterlockedPopEntrySList(&HandleTable->FreeEntriesHead);
       if(FreeEntry != NULL)
       {
         LONG PrevProcId;
         UINT Index;
         HGDIOBJ Handle;
-        
+
         /* calculate the entry from the address of the entry in the free slot array */
         Index = ((ULONG_PTR)FreeEntry - (ULONG_PTR)&HandleTable->FreeEntries[0]) /
                 sizeof(HandleTable->FreeEntries[0]);
@@ -288,7 +353,7 @@ LockHandle:
         if(PrevProcId == 0)
         {
           ASSERT(Entry->KernelData == NULL);
-          
+
           Entry->KernelData = ObjectBody;
 
           /* we found a free entry, no need to exchange this field atomically
@@ -297,6 +362,27 @@ LockHandle:
 
           /* unlock the entry */
           InterlockedExchange(&Entry->ProcessId, CurrentProcessId);
+
+#ifdef DBG
+          {
+            PULONG Frame;
+			int which;
+#if defined __GNUC__
+            __asm__("mov %%ebp, %%ebx" : "=b" (Frame) : );
+#elif defined(_MSC_VER)
+            __asm mov [Frame], ebp
+#endif
+			Frame = (PULONG)Frame[0]; // step out of AllocObj()
+			for ( which = 0; which < GDI_STACK_LEVELS && Frame[1] != 0 && Frame[1] != 0xDEADBEEF; which++ )
+			{
+	            GDIHandleAllocator[which][Index] = Frame[1]; // step out of AllocObj()
+				Frame = ((PULONG)Frame[0]);
+			}
+			for ( ; which < GDI_STACK_LEVELS; which++ )
+				GDIHandleAllocator[which][Index] = 0xDEADBEEF;
+          }
+#endif//DBG
+          //ExAllocatePool ( PagedPool, (ULONG)newObject ); // initiate red-zone verification of object we allocated
 
           if(W32Process != NULL)
           {
@@ -325,6 +411,20 @@ LockHandle:
 
       ExFreeToPagedLookasideList(LookasideList, newObject);
       DPRINT1("Failed to insert gdi object into the handle table, no handles left!\n");
+#ifdef DBG
+	  if ( !leak_reported )
+	  {
+		  DPRINT1("reporting gdi handle abusers:\n");
+		  int which;
+		  for ( which = 0; which < GDI_STACK_LEVELS; which++ )
+		      IntDumpHandleTable(which);
+		  leak_reported = 1;
+	  }
+	  else
+	  {
+		  DPRINT1("gdi handle abusers already reported!\n");
+	  }
+#endif//DBG
     }
     else
     {
@@ -363,7 +463,7 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ObjectType)
 #endif
 
   DPRINT("GDIOBJ_FreeObj: hObj: 0x%08x\n", hObj);
-  
+
   if(GDI_HANDLE_IS_STOCKOBJ(hObj))
   {
     DPRINT1("GDIOBJ_FreeObj() failed, can't delete stock object handle: 0x%x !!!\n", hObj);
@@ -403,14 +503,14 @@ LockHandle:
         /* Clear the type field so when unlocking the handle it gets finally deleted */
         Entry->Type = 0;
         Entry->KernelData = NULL;
-        
+
         /* unlock the handle slot */
         InterlockedExchange(&Entry->ProcessId, 0);
-        
+
         /* push this entry to the free list */
         InterlockedPushEntrySList(&HandleTable->FreeEntriesHead,
                                   &HandleTable->FreeEntries[GDI_ENTRY_TO_INDEX(HandleTable, Entry)]);
-        
+
         if(W32Process != NULL)
         {
           InterlockedDecrement(&W32Process->GDIObjects);
@@ -433,7 +533,7 @@ LockHandle:
         /* the object is currently locked. just clear the type field so when the
            object gets unlocked it will be finally deleted from the table. */
         Entry->Type = 0;
-        
+
         /* unlock the handle slot */
         InterlockedExchange(&Entry->ProcessId, 0);
 
@@ -680,7 +780,7 @@ GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType)
 #endif
 
   DPRINT("GDIOBJ_LockObj: hObj: 0x%08x\n", hObj);
-  
+
   Thread = PsGetCurrentThread();
 
   /* shift the process id to the left so we can use the first bit to lock the object.
@@ -713,7 +813,7 @@ LockHandle:
          that locked the object. There's no need to do this atomically as we're
          holding the lock of the handle slot, but this way it's easier ;) */
       PrevThread = InterlockedCompareExchangePointer(&GdiHdr->LockingThread, Thread, NULL);
-      
+
       if(PrevThread == NULL || PrevThread == Thread)
       {
         if(++GdiHdr->Locks == 1)
@@ -725,14 +825,14 @@ LockHandle:
         }
 
         InterlockedExchange(&Entry->ProcessId, PrevProcId);
-        
+
         /* we're done, return the object body */
         return GDIHdrToBdy(GdiHdr);
       }
       else
       {
         InterlockedExchange(&Entry->ProcessId, PrevProcId);
-        
+
 #ifdef GDI_DEBUG
         if(++Attempts > 20)
         {
@@ -747,14 +847,16 @@ LockHandle:
     else
     {
       InterlockedExchange(&Entry->ProcessId, PrevProcId);
-      
+
       if(EntryType == 0)
       {
         DPRINT1("Attempted to lock object 0x%x that is deleted!\n", hObj);
+        KeRosDumpStackFrames ( NULL, 20 );
       }
       else
       {
         DPRINT1("Attempted to lock object 0x%x, type mismatch (0x%x : 0x%x)\n", hObj, EntryType, ExpectedType);
+        KeRosDumpStackFrames ( NULL, 20 );
       }
 #ifdef GDI_DEBUG
       DPRINT1("-> called from %s:%i\n", file, line);
@@ -786,6 +888,7 @@ LockHandle:
   else
   {
     DPRINT1("Attempted to lock foreign handle: 0x%x, Owner: 0x%x locked: 0x%x Caller: 0x%x, stockobj: 0x%x\n", hObj, PrevProcId >> 1, PrevProcId & 0x1, PsGetCurrentProcessId(), GDI_HANDLE_IS_STOCKOBJ(hObj));
+    KeRosDumpStackFrames ( NULL, 20 );
 #ifdef GDI_DEBUG
     DPRINT1("-> called from %s:%i\n", file, line);
 #endif
@@ -842,7 +945,8 @@ LockHandle:
       PGDIOBJHDR GdiHdr;
 
       GdiHdr = GDIBdyToHdr(Entry->KernelData);
-      
+	  //ExAllocatePool ( PagedPool, (ULONG)GdiHdr ); // initiate red-zone validation on this block
+
       PrevThread = GdiHdr->LockingThread;
       if(PrevThread == Thread)
       {
@@ -851,33 +955,33 @@ LockHandle:
         if(--GdiHdr->Locks == 0)
         {
           GdiHdr->LockingThread = NULL;
-          
+
 #ifdef GDI_DEBUG
           GdiHdr->lockfile = NULL;
           GdiHdr->lockline = 0;
 #endif
         }
-        
+
         if(Entry->Type == 0 && GdiHdr->Locks == 0)
         {
           PPAGED_LOOKASIDE_LIST LookasideList;
           PW32PROCESS W32Process = PsGetWin32Process();
           DWORD Type = GDI_HANDLE_GET_TYPE(hObj);
-          
+
           ASSERT(ProcessId != 0); /* must not delete a global handle!!!! */
-          
+
           /* we should delete the handle */
           Entry->KernelData = NULL;
           InterlockedExchange(&Entry->ProcessId, 0);
-          
+
           InterlockedPushEntrySList(&HandleTable->FreeEntriesHead,
                                     &HandleTable->FreeEntries[GDI_ENTRY_TO_INDEX(HandleTable, Entry)]);
-          
+
           if(W32Process != NULL)
           {
             InterlockedDecrement(&W32Process->GDIObjects);
           }
-          
+
           /* call the cleanup routine. */
           Ret = RunCleanupCallback(GDIHdrToBdy(GdiHdr), Type);
 
@@ -994,11 +1098,11 @@ GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj)
 #ifdef GDI_DEBUG
   ULONG Attempts = 0;
 #endif
-  
+
   ASSERT(hObj);
 
   DPRINT("GDIOBJ_ConvertToStockObj: hObj: 0x%08x\n", *hObj);
-  
+
   Thread = PsGetCurrentThread();
 
   if(!GDI_HANDLE_IS_STOCKOBJ(*hObj))
@@ -1130,7 +1234,7 @@ GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS NewOwner)
 #endif
 
   DPRINT("GDIOBJ_SetOwnership: hObj: 0x%x, NewProcess: 0x%x\n", ObjectHandle, (NewOwner ? PsGetProcessId(NewOwner) : 0));
-  
+
   Thread = PsGetCurrentThread();
 
   if(!GDI_HANDLE_IS_STOCKOBJ(ObjectHandle))
@@ -1152,7 +1256,7 @@ LockHandle:
       if(Entry->Type != 0 && Entry->KernelData != NULL)
       {
         PGDIOBJHDR GdiHdr = GDIBdyToHdr(Entry->KernelData);
-        
+
         PrevThread = GdiHdr->LockingThread;
         if(PrevThread == NULL || PrevThread == Thread)
         {
@@ -1265,7 +1369,7 @@ GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo)
 #endif
 
   DPRINT("GDIOBJ_CopyOwnership: from: 0x%x, to: 0x%x\n", CopyFrom, CopyTo);
-  
+
   Thread = PsGetCurrentThread();
 
   if(!GDI_HANDLE_IS_STOCKOBJ(CopyFrom) && !GDI_HANDLE_IS_STOCKOBJ(CopyTo))
