@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.20 2003/12/30 18:52:03 fireball Exp $
+/* $Id: copy.c,v 1.21 2004/05/22 18:28:18 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -31,6 +31,8 @@ static PHYSICAL_ADDRESS CcZeroPage = (PHYSICAL_ADDRESS)0LL;
 #else
 static PHYSICAL_ADDRESS CcZeroPage = { 0 };
 #endif
+
+#define MAX_ZERO_LENGTH	(256 * 1024)
 
 /* FUNCTIONS *****************************************************************/
 
@@ -354,15 +356,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
       ReadLength += TempLength;
       Length -= TempLength;
       ReadOffset += TempLength;
-#if defined(__GNUC__)
-      Buffer += TempLength;
-#else
-	  {
-		char* pTemp = Buffer;
-		pTemp += TempLength;
-		Buffer = pTemp;
-	  }
-#endif
+      Buffer = (PVOID)((char*)Buffer + TempLength);
     }  
   while (Length > 0)
     {
@@ -523,41 +517,35 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
   NTSTATUS Status;
   LARGE_INTEGER WriteOffset;
   ULONG Length;
+  ULONG CurrentLength;
   PMDL Mdl;
   ULONG i;
   IO_STATUS_BLOCK Iosb;
   KEVENT Event;
   
   DPRINT("CcZeroData(FileObject %x, StartOffset %I64x, EndOffset %I64x, "
-	 "Wait %d\n", FileObject, StartOffset->QuadPart, EndOffset->QuadPart, 
+	 "Wait %d)\n", FileObject, StartOffset->QuadPart, EndOffset->QuadPart, 
 	 Wait);
   
   Length = EndOffset->u.LowPart - StartOffset->u.LowPart;
+  WriteOffset.QuadPart = StartOffset->QuadPart;
 
   if (FileObject->SectionObjectPointer->SharedCacheMap == NULL)
     {
       /* File is not cached */
-      WriteOffset.QuadPart = StartOffset->QuadPart;
-      
+ 
       while (Length > 0)
 	{
-	  if (Length + WriteOffset.u.LowPart % PAGE_SIZE > 262144)
+	  if (Length + WriteOffset.u.LowPart % PAGE_SIZE > MAX_ZERO_LENGTH)
 	    {
-	      Mdl = MmCreateMdl(NULL, (PVOID)WriteOffset.u.LowPart, 
-				262144 - WriteOffset.u.LowPart % PAGE_SIZE);
-	      WriteOffset.QuadPart += 
-		(262144 - WriteOffset.u.LowPart % PAGE_SIZE);
-	      Length -= (262144 - WriteOffset.u.LowPart % PAGE_SIZE);
+	      CurrentLength = MAX_ZERO_LENGTH - WriteOffset.u.LowPart % PAGE_SIZE;
 	    }
 	  else
 	    {
-	      Mdl = 
-		MmCreateMdl(NULL, (PVOID)WriteOffset.u.LowPart, 
-			    Length - WriteOffset.u.LowPart % PAGE_SIZE);
-	      WriteOffset.QuadPart += 
-		(Length - WriteOffset.u.LowPart % PAGE_SIZE);
-	      Length = 0;
+	      CurrentLength = Length;
 	    }
+          Mdl = MmCreateMdl(NULL, (PVOID)WriteOffset.u.LowPart, CurrentLength);
+
 	  if (Mdl == NULL)
 	    {
 	      return(FALSE);
@@ -568,7 +556,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	      ((PULONG)(Mdl + 1))[i] = CcZeroPage.u.LowPart;
 	    }
           KeInitializeEvent(&Event, NotificationEvent, FALSE);
-	  Status = IoPageWrite(FileObject, Mdl, StartOffset, &Event, &Iosb);
+	  Status = IoPageWrite(FileObject, Mdl, &WriteOffset, &Event, &Iosb);
           if (Status == STATUS_PENDING)
 	  {
              KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -578,6 +566,8 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	    {
 	      return(FALSE);
 	    }
+	  WriteOffset.QuadPart += CurrentLength;
+	  Length -= CurrentLength;
 	}
     }
   else
@@ -588,12 +578,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
       PLIST_ENTRY current_entry;
       PCACHE_SEGMENT CacheSeg, current, previous;
       ULONG TempLength;
-      ULONG Start;
-      ULONG count;
-      ULONG size;
-      PHYSICAL_ADDRESS page;
 
-      Start = StartOffset->u.LowPart;
       Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
       if (Wait)
 	{
@@ -606,10 +591,10 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 					   BcbSegmentListEntry);
 	      if (!CacheSeg->Valid)
 		{
-		  if ((Start >= CacheSeg->FileOffset && 
-		       Start < CacheSeg->FileOffset + Bcb->CacheSegmentSize)
-		      || (Start + Length > CacheSeg->FileOffset && 
-			  Start + Length <= 
+		  if ((WriteOffset.u.LowPart >= CacheSeg->FileOffset && 
+		       WriteOffset.u.LowPart < CacheSeg->FileOffset + Bcb->CacheSegmentSize)
+		      || (WriteOffset.u.LowPart + Length > CacheSeg->FileOffset && 
+			  WriteOffset.u.LowPart + Length <= 
 			  CacheSeg->FileOffset + Bcb->CacheSegmentSize))
 		    {
 		      KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
@@ -621,56 +606,35 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	    }
 	  KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
 	}
-      
       while (Length > 0)
 	{
-	  ULONG RStart = ROUND_DOWN(Start, Bcb->CacheSegmentSize);
-	  WriteOffset.QuadPart = ROUND_DOWN(Start, Bcb->CacheSegmentSize);
-	  if (Start % Bcb->CacheSegmentSize + Length > 262144)
+          ULONG Offset;
+	  Offset = WriteOffset.u.LowPart % Bcb->CacheSegmentSize;
+	  if (Length + Offset > MAX_ZERO_LENGTH)
 	    {
-	      Mdl = MmCreateMdl(NULL, NULL, 262144);
-	      if (Mdl == NULL)
-		{
-		  return FALSE;
-		}
-	      Status = CcRosGetCacheSegmentChain (Bcb, RStart,
-						  262144, &CacheSeg);
-	      if (!NT_SUCCESS(Status))
-		{
-		  ExFreePool(Mdl);
-		  return(FALSE);
-		}
+	      CurrentLength = MAX_ZERO_LENGTH - Offset;
 	    }
 	  else
 	    {
-	      ULONG RLength;
-	      RLength = Start % Bcb->CacheSegmentSize + Length;
-	      RLength = ROUND_UP(RLength, Bcb->CacheSegmentSize);
-	      Mdl = MmCreateMdl(NULL, (PVOID)RStart, RLength);
-	      if (Mdl == NULL)
-		{
-		  return(FALSE);
-		}
-	      Status = CcRosGetCacheSegmentChain (Bcb, RStart, RLength,
-						  &CacheSeg);
-	      if (!NT_SUCCESS(Status))
-		{
-		  ExFreePool(Mdl);
-		  return(FALSE);
-		}
+	      CurrentLength = Length;
 	    }
-	  Mdl->MdlFlags |= (MDL_PAGES_LOCKED|MDL_IO_PAGE_READ);
+	  Status = CcRosGetCacheSegmentChain (Bcb, WriteOffset.u.LowPart - Offset,
+					      Offset + CurrentLength, &CacheSeg);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      return FALSE;
+	    }
 	  current = CacheSeg;
-	  count = 0;
+
 	  while (current != NULL)
 	    {
-	      if ((Start % Bcb->CacheSegmentSize) != 0 || 
-		  Start % Bcb->CacheSegmentSize + Length < 
-		  Bcb->CacheSegmentSize)
-		{
+	      Offset = WriteOffset.u.LowPart % Bcb->CacheSegmentSize;
+	      if (Offset != 0 ||
+                  Offset + CurrentLength < Bcb->CacheSegmentSize)
+	        {
 		  if (!current->Valid)
 		    {
-		      /* Segment lesen */
+		      /* read the segment */
 		      Status = ReadCacheSegment(current);
 		      if (!NT_SUCCESS(Status))
 			{
@@ -678,50 +642,27 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 				  Status);
 			}
 		    }
-		  TempLength = min (Length, Bcb->CacheSegmentSize - 
-				    Start % Bcb->CacheSegmentSize);
-		  memset ((char*)current->BaseAddress + Start % Bcb->CacheSegmentSize,
-			  0, TempLength);
+		  TempLength = min (CurrentLength, Bcb->CacheSegmentSize - Offset);
 		}
 	      else
-		{
+	        {
 		  TempLength = Bcb->CacheSegmentSize;
-		  memset (current->BaseAddress, 0, Bcb->CacheSegmentSize);
 		}
-	      Start += TempLength;
+	      memset ((PUCHAR)current->BaseAddress + Offset, 0, TempLength);
+
+              WriteOffset.QuadPart += TempLength;
+	      CurrentLength -= TempLength;
 	      Length -= TempLength;
-	      
-	      size = ((Mdl->Size - sizeof(MDL)) / sizeof(ULONG));
-	      for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE) && 
-		     count < size; i++)
-		{
-		  PVOID Address;
-		  Address = (char*)current->BaseAddress + (i * PAGE_SIZE);
-		  page = 
-		    MmGetPhysicalAddressForProcess(NULL, Address);
-		  ((PULONG)(Mdl + 1))[count++] = page.u.LowPart;
-		}
-	      current = current->NextInChain;
-	    }
-	  
-	  /* Write the Segment */
-          KeInitializeEvent(&Event, NotificationEvent, FALSE);
-	  Status = IoPageWrite(FileObject, Mdl, &WriteOffset, &Event, &Iosb);
-          if (Status == STATUS_PENDING)
-	  {
-             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-             Status = Iosb.Status;
-	  }
-	  if (!NT_SUCCESS(Status))
-	    {
-	      DPRINT1("IoPageWrite failed, status %x\n", Status);
-	    }
-	  current = CacheSeg;
+
+      	      current = current->NextInChain;
+	    } 
+
+          current = CacheSeg;
 	  while (current != NULL)
 	    {
 	      previous = current;
 	      current = current->NextInChain;
-	      CcRosReleaseCacheSegment(Bcb, previous, TRUE, FALSE, FALSE);
+	      CcRosReleaseCacheSegment(Bcb, previous, TRUE, TRUE, FALSE);
 	    }
 	}
     }
