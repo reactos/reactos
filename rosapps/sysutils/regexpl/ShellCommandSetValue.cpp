@@ -1,4 +1,4 @@
-/* $Id: ShellCommandSetValue.cpp,v 1.4 2001/01/13 23:55:37 narnaoud Exp $
+/* $Id: ShellCommandSetValue.cpp,v 1.5 2001/04/16 05:09:51 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -330,7 +330,42 @@ CheckValueArgument:
     }
     dwValueSize *= sizeof(TCHAR);
     pDataBuffer = (BYTE *) new BYTE [dwValueSize];
-    _tcscpy((TCHAR *)pDataBuffer,pszValueData);
+
+    {
+      const TCHAR *pchSrc = pszValueData;
+      TCHAR *pchDest = (TCHAR *)pDataBuffer;
+      while(*pchSrc)
+      {
+        if (pchSrc[0] == _T('\\'))
+        {
+          if (pchSrc[1] == _T('a'))
+            *pchDest = _T('\a');
+          else if (pchSrc[1] == _T('b'))
+            *pchDest = _T('\b');
+          else if (pchSrc[1] == _T('f'))
+            *pchDest = _T('\f');
+          else if (pchSrc[1] == _T('n'))
+            *pchDest = _T('\n');
+          else if (pchSrc[1] == _T('r'))
+            *pchDest = _T('\r');
+          else if (pchSrc[1] == _T('t'))
+            *pchDest = _T('\t');
+          else
+            *pchDest = pchSrc[1];
+
+          pchSrc +=2;
+          pchDest++;
+          dwValueSize--;
+        }
+        else
+        {
+          *pchDest = *pchSrc;
+          pchSrc++;
+          pchDest++;
+        }
+      }
+      *pchDest = _T('\0');
+    }
     break;
   default:
     ASSERT(FALSE);
