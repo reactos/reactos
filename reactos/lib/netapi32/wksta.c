@@ -296,9 +296,9 @@ NetWkstaTransportEnum(LPWSTR ServerName, DWORD level, PBYTE* pbuf,
  *                NetWkstaUserGetInfo  (NETAPI32.@)
  */
 NET_API_STATUS WINAPI NetWkstaUserGetInfo(LPWSTR reserved, DWORD level,
-                                          PBYTE* bufptr)
+                                          LPBYTE* bufptr)
 {
-    TRACE("(%s, %ld, %p)\n", debugstr_w(reserved), level, bufptr);
+    FIXME("(%s, %ld, %p)\n", debugstr_w(reserved), level, bufptr);
     switch (level)
     {
     case 0:
@@ -317,9 +317,11 @@ NET_API_STATUS WINAPI NetWkstaUserGetInfo(LPWSTR reserved, DWORD level,
         if (!GetUserNameW(ui->wkui0_username, &dwSize))
         {
             NetApiBufferFree(ui);
+	    FIXME("NetWkstaUserGetInfo - ERROR_NOT_ENOUGH_MEMORY\n");
             return ERROR_NOT_ENOUGH_MEMORY;
         }
         else
+	    FIXME("NetWkstaUserGetInfo - trying NetApiBufferReallocate\n");
             NetApiBufferReallocate(
                 *bufptr, sizeof(WKSTA_USER_INFO_0) +
                 (lstrlenW(ui->wkui0_username) + 1) * sizeof(WCHAR),
@@ -346,6 +348,7 @@ NET_API_STATUS WINAPI NetWkstaUserGetInfo(LPWSTR reserved, DWORD level,
 
         /* get some information first to estimate size of the buffer */
         ui0 = NULL;
+	    FIXME("NetWkstaUserGetInfo - ??NetWkstaUserGetInfo\n");
         NetWkstaUserGetInfo(NULL, 0, (PBYTE *) &ui0);
         username_sz = lstrlenW(ui0->wkui0_username) + 1;
 
@@ -418,6 +421,7 @@ NET_API_STATUS WINAPI NetWkstaUserGetInfo(LPWSTR reserved, DWORD level,
         ERR("Invalid level %ld is specified\n", level);
         return ERROR_INVALID_LEVEL;
     }
+    FIXME("NetWkstaUserGetInfo - ERROR_NOT_ENOUGH_MEMORY\n");
     return NERR_Success;
 }
 
