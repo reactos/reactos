@@ -496,7 +496,7 @@ STDCALL
 GetSystemTimeAdjustment(
                         PDWORD lpTimeAdjustment,
                         PDWORD lpTimeIncrement,
-                        PBOOL  lpTimeAdjustmentDisabled
+                        PWINBOOL lpTimeAdjustmentDisabled
                        )
 {
   // FIXME: Preliminary default settings.
@@ -510,8 +510,8 @@ GetSystemTimeAdjustment(
 WINBOOL
 STDCALL
 SetSystemTimeAdjustment(
-                        DWORD dwTimeAdjustment,
-                        BOOL  bTimeAdjustmentDisabled
+                        DWORD   dwTimeAdjustment,
+                        WINBOOL bTimeAdjustmentDisabled
                        )
 {
 
