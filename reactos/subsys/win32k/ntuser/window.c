@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.39 2003/03/24 23:08:51 rcampbell Exp $
+/* $Id: window.c,v 1.40 2003/03/28 18:59:18 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -869,13 +869,21 @@ NtUserMoveWindow(
     Window->WindowRect.bottom = Window->ClientRect.bottom = pWinPos.cy;
     Window->WindowRect.right = Window->ClientRect.right = pWinPos.cx;
     
-    if (uStyle & WS_BORDER)
+    if (!(uStyle & WS_THICKFRAME))
     {
-      Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYSIZEFRAME);
-      Window->ClientRect.bottom -= NtUserGetSystemMetrics(SM_CYSIZEFRAME);
-      Window->ClientRect.left += NtUserGetSystemMetrics(SM_CXSIZEFRAME);
-      Window->ClientRect.right -= NtUserGetSystemMetrics(SM_CXSIZEFRAME);
+      Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYFIXEDFRAME);
+      Window->ClientRect.bottom -= NtUserGetSystemMetrics(SM_CYFIXEDFRAME);
+      Window->ClientRect.left += NtUserGetSystemMetrics(SM_CXFIXEDFRAME);
+      Window->ClientRect.right -= NtUserGetSystemMetrics(SM_CXFIXEDFRAME);
     }
+    else
+    {
+        Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYSIZEFRAME);
+        Window->ClientRect.bottom -= NtUserGetSystemMetrics(SM_CYSIZEFRAME);
+        Window->ClientRect.left += NtUserGetSystemMetrics(SM_CXSIZEFRAME);
+        Window->ClientRect.right -= NtUserGetSystemMetrics(SM_CXSIZEFRAME);
+    }
+
     if (uStyle & WS_CAPTION)
        Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYCAPTION);
     if ( Window->Class->Class.lpszMenuName)
@@ -1159,7 +1167,7 @@ BOOL STDCALL NtUserUpdateWindow( HWND hWnd )
         return FALSE;
     if (pWindow->UpdateRegion)
         NtUserSendMessage( hWnd, WM_PAINT,0,0);
-
+    W32kReleaseWindowObject(pWindow);
     return TRUE;
 }
 
