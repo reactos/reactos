@@ -49,6 +49,10 @@ void HalQueryRealTimeClock(PTIME_FIELDS pTime)
   pTime->Year=BCD_INT(inb_p(0x71));
   if(pTime->Year>80) pTime->Year +=1900;
   else pTime->Year +=2000;
-//FIXME  pTime->MilliSeconds=
+  pTime->Milliseconds=0;
 }
-   
+
+
+void HalSetRealTimeClock(PTIME_FIELDS pTime)
+{
+}

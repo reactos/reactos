@@ -50,6 +50,7 @@ extern inline unsigned int linear_to_physical(unsigned int x)
 /*
  * Current time
  */
+static unsigned long long boot_time = 0;
 static unsigned long long system_time = 0;
 
 /*
@@ -571,10 +572,24 @@ VOID KeInitializeTimerImpl(VOID)
  * NOTE: This is only called once from main()
  */
 {
+   TIME_FIELDS TimeFields;
+   LARGE_INTEGER SystemBootTime;
+
    InitializeListHead(&timer_list_head);
    KeInitializeSpinLock(&timer_list_lock);
    
    /*
     * Calculate the starting time for the system clock
     */
+   HalQueryRealTimeClock(&TimeFields);
+   DbgPrint("Date: %d.%d.%d\nTime: %d:%d:%d\n",
+            TimeFields.Day,
+            TimeFields.Month,
+            TimeFields.Year,
+            TimeFields.Hour,
+            TimeFields.Minute,
+            TimeFields.Second);
+   RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
+   boot_time=SystemBootTime.QuadPart;
+   system_time=boot_time;
 }
