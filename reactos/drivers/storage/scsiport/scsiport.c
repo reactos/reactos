@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.54 2004/04/16 13:39:46 ekohl Exp $
+/* $Id: scsiport.c,v 1.55 2004/04/23 14:29:07 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1840,36 +1840,35 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
   ULONG Bus;
   ULONG Target;
   ULONG Lun;
+  PVOID DataBuffer;
   NTSTATUS Status;
 
   DPRINT ("SpiScanAdapter() called\n");
 
-  RtlZeroMemory(&Srb,
-		sizeof(SCSI_REQUEST_BLOCK));
-  Srb.SrbFlags = SRB_FLAGS_DATA_IN;
-  Srb.DataBuffer = ExAllocatePool(NonPagedPool, 256);
-  Srb.Function = SRB_FUNCTION_EXECUTE_SCSI;
-  Srb.DataTransferLength = 255; //256;
-  Srb.CdbLength = 6;
-
-  Cdb = (PCDB) &Srb.Cdb;
-
-  Cdb->CDB6INQUIRY.OperationCode = SCSIOP_INQUIRY;
-  Cdb->CDB6INQUIRY.AllocationLength = 255;
+  DataBuffer = ExAllocatePool(NonPagedPool, 256);
 
   for (Bus = 0; Bus < DeviceExtension->PortConfig->NumberOfBuses; Bus++)
     {
-      Srb.PathId = Bus;
-
       for (Target = 0; Target < DeviceExtension->PortConfig->MaximumNumberOfTargets; Target++)
 	{
-	  Srb.TargetId = Target;
-
 	  for (Lun = 0; Lun < SCSI_MAXIMUM_LOGICAL_UNITS; Lun++)
 	    {
+              RtlZeroMemory(&Srb,
+		            sizeof(SCSI_REQUEST_BLOCK));
+              Srb.SrbFlags = SRB_FLAGS_DATA_IN;
+              Srb.DataBuffer = DataBuffer;
+              Srb.Function = SRB_FUNCTION_EXECUTE_SCSI;
+              Srb.DataTransferLength = 255; //256;
+              Srb.CdbLength = 6;
 	      Srb.Lun = Lun;
+	      Srb.PathId = Bus;
+      	      Srb.TargetId = Target;
 	      Srb.SrbStatus = SRB_STATUS_SUCCESS;
 
+              Cdb = (PCDB) &Srb.Cdb;
+
+              Cdb->CDB6INQUIRY.OperationCode = SCSIOP_INQUIRY;
+              Cdb->CDB6INQUIRY.AllocationLength = 255;
 	      Cdb->CDB6INQUIRY.LogicalUnitNumber = Lun;
 
 	      RtlZeroMemory(Srb.DataBuffer, 256);
@@ -1881,7 +1880,7 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 	      if (LunExtension == NULL)
 		{
 		  DPRINT("Failed to allocate the LUN extension!\n");
-		  ExFreePool(Srb.DataBuffer);
+		  ExFreePool(DataBuffer);
 		  return;
 		}
 
@@ -1909,7 +1908,7 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 	}
     }
 
-  ExFreePool(Srb.DataBuffer);
+  ExFreePool(DataBuffer);
 
   DPRINT ("SpiScanAdapter() done\n");
 }
