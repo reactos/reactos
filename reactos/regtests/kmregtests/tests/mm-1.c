@@ -74,19 +74,19 @@ static int RunTest(char *Buffer)
   FAIL_IF_FALSE(BoolVal, "MmIsAddressValid() failed for pmem5");
 
   BoolVal = MmIsNonPagedSystemAddressValid(pmem1);
-  FAIL_IF_FALSE(BoolVal, "MmIsAddressValid() failed for pmem1");
+  FAIL_IF_FALSE(BoolVal, "MmIsNonPagedSystemAddressValid() failed for pmem1");
 
   BoolVal = MmIsNonPagedSystemAddressValid(pmem2);
-  FAIL_IF_FALSE(BoolVal, "MmIsAddressValid() failed for pmem2");
+  FAIL_IF_FALSE(BoolVal, "MmIsNonPagedSystemAddressValid() failed for pmem2");
 
   BoolVal = MmIsNonPagedSystemAddressValid(pmem3);
-  FAIL_IF_FALSE(BoolVal, "MmIsAddressValid() failed for pmem3");
+  FAIL_IF_FALSE(BoolVal, "MmIsNonPagedSystemAddressValid() failed for pmem3");
 
   BoolVal = MmIsNonPagedSystemAddressValid(pmem4);
-  FAIL_IF_FALSE(BoolVal, "MmIsAddressValid() failed for pmem4");
+  FAIL_IF_FALSE(BoolVal, "MmIsNonPagedSystemAddressValid() failed for pmem4");
 
   BoolVal = MmIsNonPagedSystemAddressValid(pmem5);
-  FAIL_IF_FALSE(BoolVal, "MmIsAddressValid() failed for pmem5");
+  FAIL_IF_FALSE(BoolVal, "MmIsNonPagedSystemAddressValid() failed for pmem5");
 
   /* Misc functions */
   Server = MmIsThisAnNtAsSystem();
