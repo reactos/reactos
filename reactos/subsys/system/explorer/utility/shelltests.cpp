@@ -61,7 +61,7 @@ static void dump_shell_namespace(ShellFolder& folder)
 				if (attribs == -1)
 					attribs = 0;
 
-				const string& name = folder.get_name(pidl);
+				const String& name = folder.get_name(pidl);
 
 				if (attribs & (SFGAO_FOLDER|SFGAO_HASSUBFOLDER))
 					cout << "folder: ";
