@@ -347,8 +347,8 @@ KeInsertQueueApc (PKAPC	Apc,
     * IPI.
     * FIXME: Check if the thread is terminating.
     */
-   if (Apc->ApcMode == KernelMode && TargetThread->KernelApcDisable >= 1 &&
-       TargetThread->WaitIrql < APC_LEVEL && Apc->NormalRoutine == NULL)
+   if (Apc->ApcMode == KernelMode && TargetThread->WaitIrql < APC_LEVEL && 
+       Apc->NormalRoutine == NULL)
      {
 	KeRemoveAllWaitsThread(CONTAINING_RECORD(TargetThread, ETHREAD, Tcb),
 			       STATUS_KERNEL_APC);
