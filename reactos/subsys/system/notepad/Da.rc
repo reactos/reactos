@@ -23,7 +23,7 @@ LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 MAIN_MENU MENU
 {
- POPUP "&Filef" {
+ POPUP "&Fil" {
   MENUITEM "&Ny...",            CMD_NEW
   MENUITEM "Å&bn\tEnter",       CMD_OPEN
   MENUITEM "&Gem",              CMD_SAVE
@@ -58,7 +58,7 @@ POPUP "&Hjælp" {
   MENUITEM SEPARATOR
   POPUP "&Om Notesblok..." {
    MENUITEM "&Licens",          CMD_LICENSE
-   MENUITEM "&NO WARRANTY",     CMD_NO_WARRANTY
+   MENUITEM "&Ingen Garanti",   CMD_NO_WARRANTY
    MENUITEM "&Om WINE",         CMD_ABOUT_WINE
   }
  }
@@ -94,15 +94,15 @@ PUSHBUTTON    "&Hjælp",       0x153,                180, 39, 40, 15, WS_TABSTOP
 STRINGTABLE DISCARDABLE
 {
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE,   "Page &s"   /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,   "Side &s"
 STRING_PAGESETUP_LEFTVALUE,             "20 mm"     /* FIXME */
 STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
 STRING_PAGESETUP_TOPVALUE,              "25 mm"     /* FIXME */
 STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"     /* FIXME */
 
 STRING_NOTEPAD,                                 "Notesblok"
-STRING_ERROR,                                   "FEJL"
-STRING_WARNING,                                 "ADVARSEL"
+STRING_ERROR,                                   "Fejl"
+STRING_WARNING,                                 "Advarsel"
 STRING_INFO,                                    "Information"
 
 STRING_UNTITLED,                                "(ikke-navngivet)"
@@ -114,10 +114,10 @@ STRING_TOOLARGE,                                "Filen '%s' er for stor til Note
 \nBrug en anden editor til at redigere filen."
 STRING_NOTEXT,                                  "Du har ikke skrevet noget tekst. \
 \nSkriv noget tekst, og prøv så igen"
-STRING_DOESNOTEXIST,                            "File '%s'\ndoes not exist\n\n \
-Do you want to create a new file ?"
-STRING_NOTSAVED,                                "File '%s'\nhas been modified\n\n \
-Would you like to save the changes ?"
+STRING_DOESNOTEXIST,                            "Filen '%s'\neksistere ikke\n\n \
+Ønkser du at oprette en ny fil?"
+STRING_NOTSAVED,                                "Filen '%s'\ner blevet ændret\n\n \
+Ønsker du at gemme ændringerne?"
 STRING_NOTFOUND,                                        "Kan ikke finde '%s'."
 STRING_OUT_OF_MEMORY,                   "Der er ikke nok hukommelse til at udføre \
 denne operation. \nAfslut et eller flere aktive programmer for at frigøre \
