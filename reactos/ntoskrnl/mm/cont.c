@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.18 2002/05/13 18:10:40 chorns Exp $
+/* $Id: cont.c,v 1.19 2002/05/14 21:19:19 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,22 +19,14 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
-MmFreeContinuousPage(IN BOOLEAN Before,
-  IN PVOID  Context,
-  IN PMEMORY_AREA  MemoryArea,
-  IN PVOID  Address,
-  IN ULONG_PTR  PhysicalAddress,
-  IN SWAPENTRY  SwapEntry,
-  IN BOOLEAN  Dirty)
+VOID STATIC
+MmFreeContinuousPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG PhysAddr,
+		     SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
-  if (!Before)
+  assert(SwapEntry == 0);
+  if (PhysAddr != 0)
     {
-		  assert(SwapEntry == 0);
-		  if (PhysicalAddress != 0)
-		    {
-		      MmDereferencePage(PhysicalAddress);
-		    }
+      MmDereferencePage((PVOID)PhysAddr);
     }
 }
 
@@ -51,13 +43,13 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
    
    MmLockAddressSpace(MmGetKernelAddressSpace());
    Status = MmCreateMemoryArea(NULL,
-		MmGetKernelAddressSpace(),
-		MEMORY_AREA_CONTINUOUS_MEMORY,
-		&BaseAddress,
-		NumberOfBytes,
-		0,
-		&MArea,
-		FALSE);
+			       MmGetKernelAddressSpace(),
+			       MEMORY_AREA_CONTINUOUS_MEMORY,
+			       &BaseAddress,
+			       NumberOfBytes,
+			       0,
+			       &MArea,
+			       FALSE);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 
    if (!NT_SUCCESS(Status))
@@ -149,11 +141,11 @@ MmAllocateContiguousMemory (IN ULONG NumberOfBytes,
 VOID STDCALL 
 MmFreeContiguousMemory(IN PVOID BaseAddress)
 {
-	MmFreeMemoryArea(MmGetKernelAddressSpace(),
-		BaseAddress,
-		0,
-		MmFreeContinuousPage,
-		NULL);
+   MmFreeMemoryArea(MmGetKernelAddressSpace(),
+		    BaseAddress,
+		    0,
+		    MmFreeContinuousPage,
+		    NULL);
 }
 
 

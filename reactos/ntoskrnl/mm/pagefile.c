@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.19 2002/05/13 18:10:40 chorns Exp $
+/* $Id: pagefile.c,v 1.20 2002/05/14 21:19:19 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -98,39 +98,11 @@ static BYTE MmCoreDumpHeader[PAGESIZE];
 /*
  * Translate between a swap entry and a file and offset pair.
  */
-#define PTE_SWAP_FILE_MASK  0x0f000000
-#define PTE_SWAP_FILE_BIT   24
-#define FILE_FROM_ENTRY(i) (((i) & PTE_SWAP_FILE_MASK) >> PTE_SWAP_FILE_BIT)
+#define FILE_FROM_ENTRY(i) ((i) >> 24)
 #define OFFSET_FROM_ENTRY(i) (((i) & 0xffffff) - 1)
-#define ENTRY_FROM_FILE_OFFSET(i, j) (((i) << PTE_SWAP_FILE_BIT) | ((j) + 1))
+#define ENTRY_FROM_FILE_OFFSET(i, j) (((i) << 24) | ((j) + 1))
 
 /* FUNCTIONS *****************************************************************/
-
-#ifdef DBG
-
-VOID
-MiValidateSwapEntry(SWAPENTRY Entry)
-{
-	ULONG i;
-	ULONG off;
-
-  if (Entry != 0)
-    {
-	    DPRINT("MiValidateSwapEntry(SwapEntry 0x%.08x)\n", Entry);
-
-			i = FILE_FROM_ENTRY(Entry);
-		
-			assertmsg(i < MAX_PAGING_FILES,
-		    ("Bad SwapEntry (0x%.08x). Wrong paging file number (%d, 0x%.08x)\n", Entry, i, off));
-		
-			off = OFFSET_FROM_ENTRY(Entry);
-		
-			assertmsg(off / 32 <= PagingFileList[i]->AllocMapSize,
-			  ("Bad SwapEntry (0x%.08x). Wrong paging file offset (%d, 0x%.08x)\n", Entry, i, off));
-    }
-}
-	
-#endif
 
 NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
 {
@@ -138,13 +110,13 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    LARGE_INTEGER file_offset;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
-
+   
    if (SwapEntry == 0)
      {
 	KeBugCheck(0);
 	return(STATUS_UNSUCCESSFUL);
      }
-
+   
    i = FILE_FROM_ENTRY(SwapEntry);
    offset = OFFSET_FROM_ENTRY(SwapEntry);
 
@@ -162,12 +134,6 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    
    file_offset.QuadPart = offset * 4096;
      
-  if (file_offset.QuadPart > PagingFileList[i]->MaximumSize.QuadPart)
-		{
-      DPRINT1("Bad swap file offset 0x%.08x\n", file_offset.u.LowPart);
-      KeBugCheck(0);
-		}
-
    Status = IoPageWrite(PagingFileList[i]->FileObject,
 			Mdl,
 			&file_offset,
@@ -183,10 +149,6 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
    
-   DPRINT("MmReadFromSwapPage(SwapEntry 0x%.08x)\n", SwapEntry);
-
-   VALIDATE_SWAP_ENTRY(SwapEntry);
-
    if (SwapEntry == 0)
      {
 	KeBugCheck(0);
@@ -209,19 +171,12 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
      }
    
    file_offset.QuadPart = offset * 4096;
-
-  if (file_offset.QuadPart > PagingFileList[i]->MaximumSize.QuadPart)
-		{
-      DPRINT1("Bad swap file offset 0x%.08x\n", file_offset.u.LowPart);
-      KeBugCheck(0);
-		}
      
    Status = IoPageRead(PagingFileList[i]->FileObject,
 		       Mdl,
 		       &file_offset,
 		       &Iosb,
 		       TRUE);
-   DPRINT("MmReadFromSwapPage() Status 0x%.8X\n", Status);
    return(Status);
 }
 
@@ -311,16 +266,9 @@ MmFreeSwapPage(SWAPENTRY Entry)
    ULONG i;
    ULONG off;
    KIRQL oldIrql;
-  
+   
    i = FILE_FROM_ENTRY(Entry);
-
-   assertmsg(i < MAX_PAGING_FILES,
-     ("Bad SwapEntry (0x%.08x). Wrong paging file number (%d, 0x%.08x)\n", Entry, i, off));
-
    off = OFFSET_FROM_ENTRY(Entry);
-
-   assertmsg(off / 32 <= PagingFileList[i]->AllocMapSize,
-     ("Bad SwapEntry (0x%.08x). Wrong paging file offset (%d, 0x%.08x)\n", Entry, i, off));
    
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    if (PagingFileList[i] == NULL)
@@ -328,8 +276,9 @@ MmFreeSwapPage(SWAPENTRY Entry)
        KeBugCheck(0);
      }
    KeAcquireSpinLockAtDpcLevel(&PagingFileList[i]->AllocMapLock);
-
+   
    PagingFileList[i]->AllocMap[off / 32] &= (~(1 << (off % 32)));
+   
    PagingFileList[i]->FreePages++;
    PagingFileList[i]->UsedPages--;
    
@@ -461,7 +410,6 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 			 SL_OPEN_PAGING_FILE);
    if (!NT_SUCCESS(Status))
      {
-  DPRINT1("Failed to open swap file (Status 0x%.08x)\n", Status);
 	return(Status);
      }
 
@@ -478,7 +426,6 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 			NULL);
    if (!NT_SUCCESS(Status))
      {
-       DPRINT1("Failed to write to swap file (Status 0x%.08x)\n", Status);
        NtClose(FileHandle);
        return(Status);
      }
@@ -492,7 +439,6 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 				      NULL);
    if (!NT_SUCCESS(Status))
      {
-  DPRINT1("Failed to reference swap file (Status 0x%.08x)\n", Status);
 	NtClose(FileHandle);
 	return(Status);
      }
@@ -537,11 +483,16 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    MiFreeSwapPages = MiFreeSwapPages + PagingFile->FreePages;
    MiPagingFileCount++;
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
-
-   DPRINT("Successfully opened swap file\n");
    
    return(STATUS_SUCCESS);
 }
 
 
 /* EOF */
+
+
+
+
+
+
+

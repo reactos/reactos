@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.32 2002/05/13 18:10:40 chorns Exp $
+/* $Id: mminit.c,v 1.33 2002/05/14 21:19:19 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -26,6 +26,11 @@
 /* GLOBALS *****************************************************************/
 
 /*
+ * Size of extended memory (kb) (fixed for now)
+ */
+#define EXTENDED_MEMORY_SIZE  (3*1024*1024)
+
+/*
  * Compiler defined symbols
  */
 extern unsigned int _text_start__;
@@ -43,9 +48,7 @@ static MEMORY_AREA* kernel_pool_desc = NULL;
 static MEMORY_AREA* kernel_shared_data_desc = NULL;
 static MEMORY_AREA* MiPagedPoolDescriptor = NULL;
 
-ULONG_PTR MmSharedDataPagePhysicalAddress = 0;
-
-BOOLEAN MiInitialized = FALSE;
+PVOID MmSharedDataPagePhysicalAddress = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -59,14 +62,18 @@ MM_SYSTEM_SIZE STDCALL MmQuerySystemSize(VOID)
    return(MmSystemSize);
 }
 
-VOID
-MiShutdownMemoryManager()
+VOID MiShutdownMemoryManager(VOID)
 {
 }
 
-VOID
-MmInitVirtualMemory(IN ULONG  LastKernelAddress,
- IN ULONG  KernelLength)
+VOID MmInitVirtualMemory(ULONG LastKernelAddress,
+			 ULONG KernelLength)
+/*
+ * FUNCTION: Intialize the memory areas list
+ * ARGUMENTS:
+ *           bp = Pointer to the boot parameters
+ *           kernel_len = Length of the kernel
+ */
 {
    PVOID BaseAddress;
    ULONG Length;
@@ -79,7 +86,7 @@ MmInitVirtualMemory(IN ULONG  LastKernelAddress,
    LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
    
    MmInitMemoryAreas();
-   ExInitNonPagedPool((PVOID) (LastKernelAddress + PAGESIZE));
+   ExInitNonPagedPool(LastKernelAddress + PAGESIZE);
 
    /*
     * Setup the system area descriptor list
@@ -176,7 +183,7 @@ MmInitVirtualMemory(IN ULONG  LastKernelAddress,
    Status = MmCreateVirtualMapping(NULL,
 				   (PVOID)KI_USER_SHARED_DATA,
 				   PAGE_READWRITE,
-				   MmSharedDataPagePhysicalAddress,
+				   (ULONG)MmSharedDataPagePhysicalAddress,
 				   TRUE);
    if (!NT_SUCCESS(Status))
      {
@@ -191,9 +198,6 @@ MmInitVirtualMemory(IN ULONG  LastKernelAddress,
    MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
 }
 
-/*
- * Called at DISPATCH_LEVEL
- */
 VOID MmInit1(ULONG FirstKrnlPhysAddr,
 	     ULONG LastKrnlPhysAddr,
 	     ULONG LastKernelAddress,
@@ -237,7 +241,7 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
     */
    MmUserProbeAddress = (PVOID)0x7fff0000;
    MmHighestUserAddress = (PVOID)0x7ffeffff;
-
+   
    /*
     * Initialize memory managment statistics
     */
@@ -289,7 +293,6 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
 #ifdef BIOS_MEM_FIX
   MmStats.NrTotalPages += 16;
 #endif
-
    DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGESIZE) / 1024);
 
    LastKernelAddress = (ULONG)MmInitializePageList(
@@ -335,28 +338,20 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
     * Intialize memory areas
     */
    MmInitVirtualMemory(LastKernelAddress, kernel_len);
-
-   MiInitialized = TRUE;
 }
 
-/*
- * Called at DISPATCH_LEVEL
- */
 VOID MmInit2(VOID)
 {
-	MmInitSectionImplementation();
-	MmInitPagingFile();
+   MmInitSectionImplementation();
+   MmInitPagingFile();
 }
 
-/*
- * Called at PASSIVE_LEVEL
- */
 VOID MmInit3(VOID)
 {
-	MmCreatePhysicalMemorySection();
-	MmInitializeRmapList();
-	MmInitPagerThread();
+   MmInitPagerThread();
+   MmCreatePhysicalMemorySection();
+   MmInitializeRmapList();
 
-  /* FIXME: Read parameters from memory */
+   /* FIXME: Read parameters from memory */
 }
 

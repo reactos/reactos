@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.56 2002/05/13 18:10:40 chorns Exp $
+/* $Id: npool.c,v 1.57 2002/05/14 21:19:19 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -78,7 +78,7 @@ ExFreeWholePageBlock(PVOID Addr);
 /*
  * Memory managment initalized symbol for the base of the pool
  */
-static PVOID kernel_pool_base = 0;
+static unsigned int kernel_pool_base = 0;
 
 /*
  * Head of the list of free blocks
@@ -222,7 +222,7 @@ MiAddToTagHashTable(BLOCK_HDR* block)
 #endif /* TAG_STATISTICS_TRACKING */
 
 VOID 
-ExInitNonPagedPool(IN PVOID  BaseAddress)
+ExInitNonPagedPool(ULONG BaseAddress)
 {
    kernel_pool_base = BaseAddress;
    KeInitializeSpinLock(&MmNpoolLock);
@@ -390,13 +390,13 @@ static void validate_free_list(void)
 	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
 	
-	if (base_addr < (ULONG_PTR) (kernel_pool_base) ||
-	    (base_addr+current->Size) > (ULONG_PTR) (kernel_pool_base)+NONPAGED_POOL_SIZE)
+	if (base_addr < (kernel_pool_base) ||
+	    (base_addr+current->Size) > (kernel_pool_base)+NONPAGED_POOL_SIZE)
 	  {		       
 	     DbgPrint("Block %x found outside pool area\n",current);
 	     DbgPrint("Size %d\n",current->Size);
-	     DbgPrint("Limits are %x %x\n", kernel_pool_base,
-		    (ULONG_PTR) kernel_pool_base + NONPAGED_POOL_SIZE);
+	     DbgPrint("Limits are %x %x\n",kernel_pool_base,
+		    kernel_pool_base+NONPAGED_POOL_SIZE);
 	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
 	blocks_seen++;
@@ -442,9 +442,9 @@ static void validate_used_list(void)
 		      current);
 	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
-	if (base_addr < (ULONG_PTR) (kernel_pool_base) ||
+	if (base_addr < (kernel_pool_base) ||
 	    (base_addr+current->Size) >
-	    (ULONG_PTR) (kernel_pool_base) + NONPAGED_POOL_SIZE)
+	    (kernel_pool_base)+NONPAGED_POOL_SIZE)
 	  {
 	     DbgPrint("Block %x found outside pool area\n",current);
 	     for(;;);
@@ -567,8 +567,8 @@ free_pages(BLOCK_HDR* blk)
   ULONG end;
   ULONG i;
 
-  start = (ULONG_PTR) blk;
-  end = (ULONG_PTR) blk + sizeof(BLOCK_HDR) + blk->Size;
+  start = (ULONG)blk;
+  end = (ULONG)blk + sizeof(BLOCK_HDR) + blk->Size;
 
   /*
    * If the block doesn't contain a whole page then there is nothing to do
@@ -699,15 +699,14 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
    NTSTATUS Status;
    KIRQL oldIrql;
 
-   start = (ULONG_PTR) MiAllocNonPagedPoolRegion(nr_pages);
+   start = (ULONG)MiAllocNonPagedPoolRegion(nr_pages);
  
    DPRINT("growing heap for block size %d, ",size);
    DPRINT("start %x\n",start);
   
    for (i=0;i<nr_pages;i++)
      {
-       ULONG_PTR Page;
-
+       PVOID Page;
        /* FIXME: Check whether we can really wait here. */
        Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page);
        if (!NT_SUCCESS(Status))
@@ -718,7 +717,7 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
        Status = MmCreateVirtualMapping(NULL,
 				       (PVOID)(start + (i*PAGESIZE)),
 				       PAGE_READWRITE,
-				       Page,
+				       (ULONG)Page,
 				       FALSE);
 	if (!NT_SUCCESS(Status))
 	  {
@@ -854,9 +853,9 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
        return;
      }
 
-   DPRINT("freeing block %x\n",block);
-
-   POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,block->size,
+   DPRINT("freeing block %x\n",blk);
+   
+   POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->size,
             ((PULONG)&block)[-1]);
    
    KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
@@ -875,7 +874,7 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
      }
 
    DPRINT("freeing block %x\n",blk);
-
+   
    POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->size,
             ((PULONG)&block)[-1]);
    
@@ -1008,7 +1007,7 @@ PVOID STDCALL
 ExAllocateWholePageBlock(ULONG UserSize)
 {
   PVOID Address;
-  ULONG_PTR Page;
+  PVOID Page;
   ULONG i;
   ULONG Size;
   ULONG NrPages;
@@ -1021,19 +1020,19 @@ ExAllocateWholePageBlock(ULONG UserSize)
   for (i = 0; i < NrPages; i++)
     {
       Page = MmAllocPage(MC_NPPOOL, 0);
-      if (Page == 0)
+      if (Page == NULL)
 	{
 	  KeBugCheck(0);
 	}
       MmCreateVirtualMapping(NULL, 
 			     Address + (i * PAGESIZE),
 			     PAGE_READWRITE | PAGE_SYSTEM,
-			     Page,
+			     (ULONG)Page,
 			     TRUE);
     }
 
-  *((PULONG)((ULONG_PTR) Address + (NrPages * PAGESIZE) - Size)) = NrPages;
-  return((PVOID)((ULONG_PTR) Address + (NrPages * PAGESIZE) - UserSize));
+  *((PULONG)((ULONG)Address + (NrPages * PAGESIZE) - Size)) = NrPages;
+  return((PVOID)((ULONG)Address + (NrPages * PAGESIZE) - UserSize));
 }
 
 VOID STDCALL
@@ -1041,14 +1040,14 @@ ExFreeWholePageBlock(PVOID Addr)
 {
   ULONG NrPages;
   
-  if ((ULONG_PTR)Addr < (ULONG_PTR) kernel_pool_base ||
-      (ULONG_PTR)Addr >= ((ULONG_PTR) kernel_pool_base + NONPAGED_POOL_SIZE))
+  if ((ULONG)Addr < kernel_pool_base ||
+      (ULONG)Addr >= (kernel_pool_base + NONPAGED_POOL_SIZE))
     {
       DbgPrint("Block %x found outside pool area\n", Addr);
       KeBugCheck(0);
     }
-  NrPages = *(PULONG)((ULONG_PTR) Addr - sizeof(ULONG));
-  MiFreeNonPagedPoolRegion((PVOID)PAGE_ROUND_DOWN((ULONG_PTR) Addr), NrPages, TRUE);
+  NrPages = *(PULONG)((ULONG)Addr - sizeof(ULONG));
+  MiFreeNonPagedPoolRegion((PVOID)PAGE_ROUND_DOWN((ULONG)Addr), NrPages, TRUE);
 }
 
 #endif /* WHOLE_PAGE_ALLOCATIONS */

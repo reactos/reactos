@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.38 2002/05/13 18:10:40 chorns Exp $
+/* $Id: mdl.c,v 1.39 2002/05/14 21:19:19 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -28,11 +28,11 @@
 PVOID 
 MmGetMdlPageAddress(PMDL Mdl, PVOID Offset)
 {
-   PULONG_PTR MdlPages;
+   PULONG MdlPages;
    
-   MdlPages = (PULONG_PTR)(Mdl + 1);
+   MdlPages = (PULONG)(Mdl + 1);
    
-   return((PVOID) MdlPages[((ULONG_PTR) Offset) / PAGESIZE]);
+   return((PVOID)MdlPages[((ULONG)Offset) / PAGESIZE]);
 }
 
 VOID STDCALL 
@@ -46,8 +46,8 @@ MmUnlockPages(PMDL Mdl)
  * MDL is updated
  */
 {
-   PULONG_PTR MdlPages;
    ULONG i;
+   PULONG MdlPages;
    
    /* 
     * FIXME: I don't know whether this right, but it looks sensible 
@@ -59,18 +59,18 @@ MmUnlockPages(PMDL Mdl)
      }
    
    /*
-    * FIXME: Seems sensible
+    * FIXME: Seems sensible 
     */
    if (!(Mdl->MdlFlags & MDL_PAGES_LOCKED))
      {
 	return;
      }
    
-   MdlPages = (PULONG_PTR) (Mdl + 1);
+   MdlPages = (PULONG)(Mdl + 1);
    for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount+Mdl->ByteOffset)/PAGESIZE); i++)
      {
-	MmUnlockPage(MdlPages[i]);
-	MmDereferencePage(MdlPages[i]);
+	MmUnlockPage((PVOID)MdlPages[i]);
+	MmDereferencePage((PVOID)MdlPages[i]);
      }   
    Mdl->MdlFlags = Mdl->MdlFlags & (~MDL_PAGES_LOCKED);
 }
@@ -88,7 +88,7 @@ PVOID STDCALL MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 {
    PVOID Base;
    ULONG i;
-   PULONG_PTR MdlPages;
+   PULONG MdlPages;
    MEMORY_AREA* Result;
    NTSTATUS Status;
    
@@ -103,18 +103,18 @@ PVOID STDCALL MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
    
    Base = NULL;
    Status = MmCreateMemoryArea(NULL,
-		MmGetKernelAddressSpace(),
-		MEMORY_AREA_MDL_MAPPING,
-		&Base,
-		Mdl->ByteCount + Mdl->ByteOffset,
-		PAGE_READWRITE,
-		&Result,
-		FALSE);
+			       MmGetKernelAddressSpace(),
+			       MEMORY_AREA_MDL_MAPPING,
+			       &Base,
+			       Mdl->ByteCount + Mdl->ByteOffset,
+			       0,
+			       &Result,
+			       FALSE);
    if (!NT_SUCCESS(Status))
      {
 	MmUnlockAddressSpace(MmGetKernelAddressSpace());
 	KeBugCheck(0);
-	return(NULL);
+	return(STATUS_SUCCESS);
      }
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
    
@@ -122,8 +122,8 @@ PVOID STDCALL MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
    for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount+Mdl->ByteOffset)/PAGESIZE); i++)
      {
 	Status = MmCreateVirtualMapping(NULL,
-					(PVOID)((ULONG_PTR) Base+(i*PAGESIZE)),
-					Result->Attributes,
+					(PVOID)((ULONG)Base+(i*PAGESIZE)),
+					PAGE_READWRITE,
 					MdlPages[i],
 					TRUE);
 	if (!NT_SUCCESS(Status))
@@ -171,16 +171,15 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 
 
 VOID 
-MmBuildMdlFromPages(IN PMDL  Mdl, 
-  IN PULONG_PTR  Pages)
+MmBuildMdlFromPages(PMDL Mdl, PULONG Pages)
 {
    ULONG i;
-   PULONG_PTR MdlPages;
+   PULONG MdlPages;
    
    Mdl->MdlFlags = Mdl->MdlFlags | 
      (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
    
-   MdlPages = (PULONG_PTR) (Mdl + 1);
+   MdlPages = (PULONG)(Mdl + 1);
    
    for (i=0;i<(PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGESIZE);i++)
      {
@@ -237,14 +236,14 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
     */
 
    MmLockAddressSpace(&Mdl->Process->AddressSpace);
-   MdlPages = (ULONG *)(Mdl + 1);
+   MdlPages = (ULONG *)(Mdl + 1);      
    NrPages = PAGE_ROUND_UP(Mdl->ByteOffset + Mdl->ByteCount) / PAGESIZE;
    for (i = 0; i < NrPages; i++)
      {
 	PVOID Address;
-
-	Address = Mdl->StartVa + (i*PAGESIZE);
-
+	
+	Address = Mdl->StartVa + (i*PAGESIZE);       
+	
 	if (!MmIsPagePresent(NULL, Address))
 	  {
 	    Status = MmNotPresentFault(Mode, (ULONG)Address, TRUE);
@@ -252,15 +251,15 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 	      {
 		for (j = 0; j < i; j++)
 		  {
-		    MmUnlockPage((ULONG_PTR) MdlPages[j]);
-		    MmDereferencePage((ULONG_PTR) MdlPages[j]);
+		    MmUnlockPage((PVOID)MdlPages[j]);
+		    MmDereferencePage((PVOID)MdlPages[j]);
 		  }
 		ExRaiseStatus(Status);
 	      }
 	  }
 	else
 	  {
-	    MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
+	    MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
 	  }
 	if ((Operation == IoWriteAccess || Operation == IoModifyAccess) &&
 	    (!(MmGetPageProtect(NULL, (PVOID)Address) & PAGE_READWRITE)))
@@ -270,14 +269,14 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 	      {
 		for (j = 0; j < i; j++)
 		  {
-			MmUnlockPage((ULONG_PTR) MdlPages[j]);
-			MmDereferencePage((ULONG_PTR) MdlPages[j]);
+			MmUnlockPage((PVOID)MdlPages[j]);
+			MmDereferencePage((PVOID)MdlPages[j]);
 		  }
 		ExRaiseStatus(Status);
 	      }
 	  }
 	MdlPages[i] = MmGetPhysicalAddressForProcess(NULL, Address);
-	MmReferencePage((ULONG_PTR) MdlPages[i]);
+	MmReferencePage((PVOID)MdlPages[i]);
      }
    MmUnlockAddressSpace(&Mdl->Process->AddressSpace);
    if (Mdl->Process != CurrentProcess)
@@ -371,3 +370,12 @@ MmMapMemoryDumpMdl (PVOID	Unknown0)
 }
 
 /* EOF */
+
+
+
+
+
+
+
+
+

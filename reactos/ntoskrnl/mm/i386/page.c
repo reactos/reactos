@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.35 2002/05/13 18:10:41 chorns Exp $
+/* $Id: page.c,v 1.36 2002/05/14 21:19:20 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -39,140 +39,29 @@
 
 /* GLOBALS *****************************************************************/
 
-/* See pagefile.c for the layout of a swap entry PTE */
-#define PA_BIT_PRESENT     (0)
-#define PA_BIT_READWRITE   (1)
-#define PA_BIT_USER        (2)
-#define PA_BIT_WT          (3)
-#define PA_BIT_CD          (4)
-#define PA_BIT_ACCESSED    (5)
-#define PA_BIT_DIRTY       (6)
-#define PA_BIT_PROTOTYPE   (7)
-#define PA_BIT_TRANSITION  (8)
-#define PA_BIT_DEMAND_ZERO (9)
+#define PA_BIT_PRESENT   (0)
+#define PA_BIT_READWRITE (1)
+#define PA_BIT_USER      (2)
+#define PA_BIT_WT        (3)
+#define PA_BIT_CD        (4)
+#define PA_BIT_ACCESSED  (5)
+#define PA_BIT_DIRTY     (6)
 
-#define PA_PRESENT     (1 << PA_BIT_PRESENT)
-#define PA_READWRITE   (1 << PA_BIT_READWRITE)
-#define PA_USER        (1 << PA_BIT_USER)
-#define PA_DIRTY       (1 << PA_BIT_DIRTY)
-#define PA_WT          (1 << PA_BIT_WT)
-#define PA_CD          (1 << PA_BIT_CD)
-#define PA_ACCESSED    (1 << PA_BIT_ACCESSED)
-#define PA_DIRTY       (1 << PA_BIT_DIRTY)
-#define PA_PROTOTYPE   (1 << PA_BIT_PROTOTYPE)
-#define PA_TRANSITION  (1 << PA_BIT_TRANSITION)
-#define PA_DEMAND_ZERO (1 << PA_BIT_DEMAND_ZERO)
-
-#define GET_SWAPENTRY_FROM_PTE(pte)((pte) & 0x1ffffffe) >> 1
-#define SET_SWAPENTRY_IN_PTE(pte, entry)((pte) = ((entry << 1) & 0x1ffffffe))
-#define IS_SWAPENTRY_PTE(pte)((!(Pte & PA_PRESENT)) && ((pte) & 0x1ffffffe))
+#define PA_PRESENT   (1 << PA_BIT_PRESENT)
+#define PA_READWRITE (1 << PA_BIT_READWRITE)
+#define PA_USER      (1 << PA_BIT_USER)
+#define PA_DIRTY     (1 << PA_BIT_DIRTY)
+#define PA_WT        (1 << PA_BIT_WT)
+#define PA_CD        (1 << PA_BIT_CD)
+#define PA_ACCESSED  (1 << PA_BIT_ACCESSED)
+#define PA_DIRTY     (1 << PA_BIT_DIRTY)
 
 #define PAGETABLE_MAP     (0xf0000000)
 #define PAGEDIRECTORY_MAP (0xf0000000 + (PAGETABLE_MAP / (1024)))
 
 ULONG MmGlobalKernelPageDirectory[1024] = {0, };
 
-#ifdef DBG
-
-PVOID MiBreakPointAddressLow = (PVOID)0x0;
-PVOID MiBreakPointAddressHigh = (PVOID)0x0;
-
-#endif /* DBG */
-
 /* FUNCTIONS ***************************************************************/
-
-#ifdef DBG
-
-VOID
-MiDumpPTE(IN ULONG  Value)
-{
-  if (Value & PA_PRESENT)
-    DbgPrint("Valid\n");
-  else
-    DbgPrint("Invalid\n");
-
-  if (Value & PA_READWRITE)
-    DbgPrint("Read/Write\n");
-  else
-    DbgPrint("Read only\n");
-
-  if (Value & PA_USER)
-    DbgPrint("User access\n");
-  else
-    DbgPrint("System access\n");
-
-  if (Value & PA_WT)
-    DbgPrint("Write through\n");
-  else
-    DbgPrint("Not write through\n");
-
-  if (Value & PA_CD)
-    DbgPrint("No cache\n");
-  else
-    DbgPrint("Cache\n");
-
-  if (Value & PA_ACCESSED)
-    DbgPrint("Accessed\n");
-  else
-    DbgPrint("Not accessed\n");
-
-  if (Value & PA_DIRTY)
-    DbgPrint("Dirty\n");
-  else
-    DbgPrint("Clean\n");
-
-  if (Value & PA_PROTOTYPE)
-    DbgPrint("Prototype\n");
-  else
-    DbgPrint("Not prototype\n");
-
-  if (Value & PA_TRANSITION)
-    DbgPrint("Transition\n");
-  else
-    DbgPrint("Not transition\n");
-
-  if (Value & PA_DEMAND_ZERO)
-    DbgPrint("Demand zero\n");
-  else
-    DbgPrint("Not demand zero\n");
-}
-
-
-/*
- * Call from a debugger to have the OS break into the
- * debugger when a PTE in this range is changed
- */
-VOID
-DbgMmSetBreakPointAddressRange(IN PVOID  LowAddress,
-  IN PVOID  HighAddress)
-{
-	MiBreakPointAddressLow = LowAddress;
-	MiBreakPointAddressHigh = HighAddress;
-}
-
-
-/*
- * Single page version of DbgSetBreakPointAddressRange()
- */
-VOID
-DbgMmSetBreakPointAddress(IN PVOID  Address)
-{
-	MiBreakPointAddressLow = Address;
-	MiBreakPointAddressHigh = Address;
-}
-
-
-VOID
-MiValidatePhysicalAddress(IN ULONG_PTR  PhysicalAddress)
-{
-  if (!MiInitialized)
-    return;
-
-  assertmsg((PhysicalAddress / PAGESIZE) < MmStats.NrTotalPages,
-   ("Bad physical address 0x%.08x\n", PhysicalAddress))
-}
-
-#endif /* DBG */
 
 PULONG 
 MmGetPageDirectory(VOID)
@@ -182,7 +71,6 @@ MmGetPageDirectory(VOID)
                 : "=r" (page_dir));
    return((PULONG)page_dir);
 }
-
 
 static ULONG 
 ProtectToPTE(ULONG flProtect)
@@ -234,7 +122,7 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
 {
    DPRINT("Mmi386ReleaseMmInfo(Process %x)\n",Process);
    
-   MmDereferencePage((ULONG_PTR) Process->Pcb.DirectoryTableBase[0]);
+   MmDereferencePage(Process->Pcb.DirectoryTableBase[0]);
    Process->Pcb.DirectoryTableBase[0] = NULL;
    
    DPRINT("Finished Mmi386ReleaseMmInfo()\n");
@@ -257,9 +145,6 @@ NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
 	return(STATUS_UNSUCCESSFUL);
      }
    PhysPageDirectory = (PULONG)(MmGetPhysicalAddress(PageDirectory)).u.LowPart;
-
-   VALIDATE_PHYSICAL_ADDRESS(PhysPageDirectory);
-
    KProcess->DirectoryTableBase[0] = PhysPageDirectory;   
    CurrentPageDirectory = (PULONG)PAGEDIRECTORY_MAP;
    
@@ -291,7 +176,7 @@ VOID MmDeletePageTable(PEPROCESS Process, PVOID Address)
 	KeAttachProcess(Process);
      }
    *(ADDR_TO_PDE(Address)) = 0;
-   if (Address >= (PVOID) KERNEL_BASE)
+   if (Address >= (PVOID)KERNEL_BASE)
      {
        MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
      }
@@ -307,13 +192,13 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
    PULONG PageTable;
    ULONG i;
-   ULONG_PTR npage;
+   ULONG npage;
    
    if (Process != NULL && Process != CurrentProcess)
      {
 	KeAttachProcess(Process);
      }
-   PageTable = (PULONG) PAGE_ROUND_DOWN((PVOID) ADDR_TO_PTE(Address));
+   PageTable = (PULONG)PAGE_ROUND_DOWN((PVOID)ADDR_TO_PTE(Address));
    for (i = 0; i < 1024; i++)
      {
 	if (PageTable[i] != 0)
@@ -325,11 +210,11 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
      }
    npage = *(ADDR_TO_PDE(Address));
    *(ADDR_TO_PDE(Address)) = 0;
-   if (Address >= (PVOID) KERNEL_BASE)
+   if (Address >= (PVOID)KERNEL_BASE)
      {
        MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
      }
-   MmDereferencePage((ULONG_PTR) PAGE_MASK(npage));
+   MmDereferencePage((PVOID)PAGE_MASK(npage));
    FLUSH_TLB;
    if (Process != NULL && Process != CurrentProcess)
      {
@@ -343,8 +228,8 @@ NTSTATUS MmGetPageEntry2(PVOID PAddress, PULONG* Pte, BOOLEAN MayWait)
  */
 {
    PULONG Pde;
-   ULONG_PTR Address = (ULONG)PAddress;
-   ULONG_PTR npage;
+   ULONG Address = (ULONG)PAddress;
+   ULONG npage;
    
    DPRINT("MmGetPageEntry(Address %x)\n", Address);
    
@@ -360,21 +245,18 @@ NTSTATUS MmGetPageEntry2(PVOID PAddress, PULONG* Pte, BOOLEAN MayWait)
        else
 	 {
 	   NTSTATUS Status;
-	   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, MayWait, &npage);
+	   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, MayWait, (PVOID*)&npage);
 	   if (!NT_SUCCESS(Status))
 	     {
 	       return(Status);
 	     }
-
-     VALIDATE_PHYSICAL_ADDRESS(PAGE_MASK(npage));
-
 	   (*Pde) = npage | 0x7;		
 	   if (Address >= KERNEL_BASE)
 	     {
 	       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 
 		 *Pde;
 	     }
-	   memset((PVOID) PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
+	   memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
 	   FLUSH_TLB;
 	 }
      }
@@ -408,7 +290,7 @@ ULONG MmGetPageEntry1(PVOID PAddress)
    PULONG page_dir;
    ULONG Address = (ULONG)PAddress;
    
-   DPRINT("MmGetPageEntry1(Address %x)\n", Address);
+   DPRINT("MmGetPageEntry(Address %x)\n", Address);
    
    page_dir = ADDR_TO_PDE(Address);
    if ((*page_dir) == 0 &&
@@ -445,31 +327,30 @@ ULONG MmGetPageEntryForProcess1(PEPROCESS Process, PVOID Address)
 }
 
 
-ULONG
-MmGetPhysicalAddressForProcess(IN PEPROCESS  Process,
-  IN PVOID  Address)
+ULONG MmGetPhysicalAddressForProcess(PEPROCESS Process,
+				     PVOID Address)
 {
-	ULONG PageEntry;
-	
-	PageEntry = MmGetPageEntryForProcess(Process, Address);
-
-  VALIDATE_PHYSICAL_ADDRESS(PAGE_MASK(PageEntry));
-
-  return(PAGE_MASK(PageEntry));
+   ULONG PageEntry;
+   
+   PageEntry = MmGetPageEntryForProcess(Process, Address);
+   
+   if (!(PageEntry & PA_PRESENT))
+     {
+	return(0);
+     }
+   return(PAGE_MASK(PageEntry));
 }
 
 VOID
-MmDisableVirtualMapping(IN PEPROCESS  Process,
-  IN PVOID  Address,
-  OUT PBOOLEAN  WasDirty,
-  OUT PULONG_PTR  PhysicalAddr)
+MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, ULONG* PhysicalAddr)
 /*
- * FUNCTION: Disable a virtual mapping 
+ * FUNCTION: Delete a virtual mapping 
  */
 {
    ULONG Pte;
    PULONG Pde;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
+   BOOLEAN WasValid;
 
    /*
     * If we are setting a page in another process we need to be in its
@@ -493,16 +374,20 @@ MmDisableVirtualMapping(IN PEPROCESS  Process,
      }
    if ((*Pde) == 0)
      {
-       DPRINT1("PDE for address 0x%.08x does not exist\n", Address);
        KeBugCheck(0);
      }
 
    /*
-    * Reset the present bit
+    * Atomically set the entry to zero and get the old value.
     */
    Pte = *ADDR_TO_PTE(Address);
    *ADDR_TO_PTE(Address) = Pte & (~PA_PRESENT);
    FLUSH_TLB;
+   WasValid = (PAGE_MASK(Pte) != 0);
+   if (!WasValid)
+     {
+       KeBugCheck(0);
+     }
 
    /*
     * If necessary go back to the original context
@@ -521,18 +406,13 @@ MmDisableVirtualMapping(IN PEPROCESS  Process,
      }
    if (PhysicalAddr != NULL)
      {
-        VALIDATE_PHYSICAL_ADDRESS(PAGE_MASK(Pte));
-
-        *PhysicalAddr = PAGE_MASK(Pte);
+       *PhysicalAddr = PAGE_MASK(Pte);
      }
 }
 
 VOID
-MmDeleteVirtualMapping(PEPROCESS Process,
-  PVOID Address,
-  BOOLEAN FreePage,
-  PBOOLEAN WasDirty,
-  PULONG PhysicalAddr)
+MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
+		       BOOL* WasDirty, ULONG* PhysicalAddr)
 /*
  * FUNCTION: Delete a virtual mapping 
  */
@@ -587,11 +467,11 @@ MmDeleteVirtualMapping(PEPROCESS Process,
    WasValid = (PAGE_MASK(Pte) != 0);
    if (WasValid)
      {
-       MmMarkPageUnmapped((ULONG_PTR) PAGE_MASK(Pte));
+       MmMarkPageUnmapped((PVOID)PAGE_MASK(Pte));
      }
    if (FreePage && WasValid)
      {
-        MmDereferencePage((ULONG_PTR) PAGE_MASK(Pte));
+        MmDereferencePage((PVOID)PAGE_MASK(Pte));
      }
 
    /*
@@ -636,16 +516,13 @@ MmDeleteVirtualMapping(PEPROCESS Process,
      }
    if (PhysicalAddr != NULL)
      {
-       VALIDATE_PHYSICAL_ADDRESS(PAGE_MASK(Pte));
-
        *PhysicalAddr = PAGE_MASK(Pte);
      }
 }
 
 VOID
-MmDeletePageFileMapping(IN PEPROCESS  Process,
-  IN PVOID  Address, 
-	OUT PSWAPENTRY  SwapEntry) 
+MmDeletePageFileMapping(PEPROCESS Process, PVOID Address, 
+			SWAPENTRY* SwapEntry) 
 /*
  * FUNCTION: Delete a virtual mapping 
  */
@@ -653,6 +530,7 @@ MmDeletePageFileMapping(IN PEPROCESS  Process,
    ULONG Pte;
    PULONG Pde;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
+   BOOLEAN WasValid;
 
    /*
     * If we are setting a page in another process we need to be in its
@@ -693,7 +571,7 @@ MmDeletePageFileMapping(IN PEPROCESS  Process,
    /*
     * Decrement the reference count for this page table.
     */
-   if (Process != NULL &&
+   if (Process != NULL && WasValid &&
        Process->AddressSpace.PageTableRefCountTable != NULL &&
        ADDR_TO_PAGE_TABLE(Address) < 768)
      {
@@ -719,7 +597,7 @@ MmDeletePageFileMapping(IN PEPROCESS  Process,
    /*
     * Return some information to the caller
     */
-   *SwapEntry = GET_SWAPENTRY_FROM_PTE(Pte);
+   *SwapEntry = Pte >> 1;
 }
 
 BOOLEAN 
@@ -757,8 +635,8 @@ BOOLEAN MmIsPageTablePresent(PVOID PAddress)
 NTSTATUS MmCreatePageTable(PVOID PAddress)
 {
    PULONG page_dir;
-   ULONG_PTR Address = (ULONG)PAddress;
-   ULONG_PTR npage;
+   ULONG Address = (ULONG)PAddress;
+   ULONG npage;
    
    DPRINT("MmGetPageEntry(Address %x)\n", Address);
    
@@ -773,16 +651,13 @@ NTSTATUS MmCreatePageTable(PVOID PAddress)
    if ((*page_dir) == 0)
      {
        NTSTATUS Status;
-       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &npage);
+       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, (PVOID*)&npage);
        if (!NT_SUCCESS(Status))
 	 {
 	   return(Status);
 	 }
-
-       VALIDATE_PHYSICAL_ADDRESS(PAGE_MASK(npage));
-
        (*page_dir) = npage | 0x7;
-       memset((PVOID) PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
+       memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
        FLUSH_TLB;
      }
    return(STATUS_SUCCESS);
@@ -795,8 +670,8 @@ PULONG MmGetPageEntry(PVOID PAddress)
 {
    PULONG page_tlb;
    PULONG page_dir;
-   ULONG_PTR Address = (ULONG)PAddress;
-   ULONG_PTR npage;
+   ULONG Address = (ULONG)PAddress;
+   ULONG npage;
    
    DPRINT("MmGetPageEntry(Address %x)\n", Address);
    
@@ -811,14 +686,13 @@ PULONG MmGetPageEntry(PVOID PAddress)
    if ((*page_dir) == 0)
      {
        NTSTATUS Status;
-       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &npage);
+       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, (PVOID*)&npage);
        if (!NT_SUCCESS(Status))
 	 {
-     DPRINT1("\n");
 	   KeBugCheck(0);
 	 }
        (*page_dir) = npage | 0x7;
-       memset((PVOID) PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
+       memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
        FLUSH_TLB;
      }
    page_tlb = ADDR_TO_PTE(Address);
@@ -826,13 +700,10 @@ PULONG MmGetPageEntry(PVOID PAddress)
    return(page_tlb);
 }
 
-
-BOOLEAN
-MmIsPageDirty(PEPROCESS Process, PVOID Address)
+BOOLEAN MmIsPageDirty(PEPROCESS Process, PVOID Address)
 {
    return((MmGetPageEntryForProcess(Process, Address)) & PA_DIRTY);
 }
-
 
 BOOLEAN 
 MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
@@ -860,10 +731,7 @@ MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
    return(Accessed);
 }
 
-
-VOID
-MmSetCleanPage(IN PEPROCESS  Process,
-  IN PVOID  Address)
+VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
 {
    PULONG PageEntry;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
@@ -881,143 +749,7 @@ MmSetCleanPage(IN PEPROCESS  Process,
      }
 }
 
-
-BOOLEAN
-MiPageState(IN PEPROCESS  Process,
-  IN PVOID  Address,
-  IN ULONG  PageState)
-{
-	PULONG PageEntry;
-  BOOLEAN Value;
-	PEPROCESS CurrentProcess = PsGetCurrentProcess();
-
-  if (Process != NULL && Process != CurrentProcess)
-    {
-      KeAttachProcess(Process);
-    }
-
-  PageEntry = MmGetPageEntry(Address);
-
-  switch (PageState)
-    {
-      case PAGE_STATE_VALID:
-        Value = ((*PageEntry) & PA_PRESENT) != 0;
-        break;
-      case PAGE_STATE_PROTOTYPE:
-        Value = ((*PageEntry) & PA_PROTOTYPE) != 0;
-        break;
-      case PAGE_STATE_TRANSITION:
-        Value = ((*PageEntry) & PA_TRANSITION) != 0;
-        break;
-      case PAGE_STATE_DEMAND_ZERO:
-        Value = ((*PageEntry) & PA_DEMAND_ZERO) != 0;
-        break;
-      default:
-        DPRINT1("Unknown page state 0x%.08x\n", PageState);
-        KeBugCheck(0);
-        break;
-    }
-
-  if (Process != NULL && Process != CurrentProcess)
-    {
-      KeDetachProcess();
-    }
-
-  return Value;
-}
-
-
-VOID
-MiClearPageState(IN PEPROCESS  Process,
-  IN PVOID  Address,
-  IN ULONG  PageState)
-{
-	PULONG PageEntry;
-	PEPROCESS CurrentProcess = PsGetCurrentProcess();
-
-  if (Process != NULL && Process != CurrentProcess)
-    {
-      KeAttachProcess(Process);
-    }
-  PageEntry = MmGetPageEntry(Address);
-
-  switch (PageState)
-    {
-      case PAGE_STATE_VALID:
-        (*PageEntry) = (*PageEntry) & (~PA_PRESENT);
-        break;
-      case PAGE_STATE_PROTOTYPE:
-        (*PageEntry) = (*PageEntry) & (~PA_PROTOTYPE);
-        break;
-      case PAGE_STATE_TRANSITION:
-        assertmsg(!((*PageEntry) & PA_PRESENT), ("Page 0x%.08x in transition is present\n", Address));
-        (*PageEntry) = (*PageEntry) & (~PA_TRANSITION);
-        break;
-      case PAGE_STATE_DEMAND_ZERO:
-        assertmsg(!((*PageEntry) & PA_PRESENT), ("Demand zero page 0x%.08x is present\n", Address));
-        (*PageEntry) = (*PageEntry) & (~PA_DEMAND_ZERO);
-        break;
-      default:
-        DPRINT1("Unknown page state 0x%.08x\n", PageState);
-        KeBugCheck(0);
-        break;
-    }
-
-  FLUSH_TLB;
-  if (Process != NULL && Process != CurrentProcess)
-    {
-      KeDetachProcess();
-    }
-}
-
-
-VOID
-MiSetPageState(IN PEPROCESS  Process,
-  IN PVOID  Address,
-  IN ULONG  PageState)
-{
-	PULONG PageEntry;
-	PEPROCESS CurrentProcess = PsGetCurrentProcess();
-
-  if (Process != NULL && Process != CurrentProcess)
-    {
-      KeAttachProcess(Process);
-    }
-  PageEntry = MmGetPageEntry(Address);
-
-  switch (PageState)
-    {
-      case PAGE_STATE_VALID:
-        (*PageEntry) = (*PageEntry) | PA_PRESENT;
-        break;
-      case PAGE_STATE_PROTOTYPE:
-        (*PageEntry) = (*PageEntry) | PA_PROTOTYPE;
-        break;
-      case PAGE_STATE_TRANSITION:
-        assertmsg(!((*PageEntry) & PA_PRESENT), ("Page 0x%.08x in transition is present\n", Address));
-        (*PageEntry) = (*PageEntry) | PA_TRANSITION;
-        break;
-      case PAGE_STATE_DEMAND_ZERO:
-        assertmsg(!((*PageEntry) & PA_PRESENT), ("Demand zero page 0x%.08x is present\n", Address));
-        (*PageEntry) = (*PageEntry) | PA_DEMAND_ZERO;
-        break;
-      default:
-        DPRINT1("Unknown page state 0x%.08x\n", PageState);
-        KeBugCheck(0);
-        break;
-    }
-
-  FLUSH_TLB;
-  if (Process != NULL && Process != CurrentProcess)
-    {
-      KeDetachProcess();
-    }
-}
-
-
-VOID
-MmSetDirtyPage(IN PEPROCESS  Process,
-  IN PVOID  Address)
+VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address)
 {
    PULONG PageEntry;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
@@ -1035,10 +767,7 @@ MmSetDirtyPage(IN PEPROCESS  Process,
      }
 }
 
-
-VOID
-MmEnableVirtualMapping(IN PEPROCESS  Process,
-  IN PVOID  Address)
+VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
 {
    PULONG PageEntry;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
@@ -1056,19 +785,16 @@ MmEnableVirtualMapping(IN PEPROCESS  Process,
      }
 }
 
-
 BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address)
 {
    return((MmGetPageEntryForProcess1(Process, Address)) & PA_PRESENT);
 }
 
-BOOLEAN
-MmIsPageSwapEntry(IN PEPROCESS  Process,
-  IN PVOID  Address)
+BOOLEAN MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 {
   ULONG Pte;
   Pte = MmGetPageEntryForProcess1(Process, Address);
-  return(IS_SWAPENTRY_PTE(Pte));
+  return((!(Pte & PA_PRESENT)) && Pte != 0);
 }
 
 NTSTATUS 
@@ -1091,12 +817,12 @@ MmCreateVirtualMappingForKernel(PVOID Address,
       CurrentProcess = NULL;
     }
    
-   if (Process == NULL && Address < (PVOID) KERNEL_BASE)
+   if (Process == NULL && Address < (PVOID)KERNEL_BASE)
      {
        DPRINT1("No process\n");
        KeBugCheck(0);
      }
-   if (Process != NULL && Address >= (PVOID) KERNEL_BASE)
+   if (Process != NULL && Address >= (PVOID)KERNEL_BASE)
      {
        DPRINT1("Setting kernel address with process context\n");
        KeBugCheck(0);
@@ -1123,7 +849,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
      }
    if (PAGE_MASK((*Pte)) != 0)
      {
-       MmMarkPageUnmapped((ULONG_PTR) PAGE_MASK((*Pte)));
+       MmMarkPageUnmapped((PVOID)PAGE_MASK((*Pte)));
      }
    *Pte = PhysicalAddress | Attributes;
    if (Process != NULL && 
@@ -1146,9 +872,9 @@ MmCreateVirtualMappingForKernel(PVOID Address,
 }
 
 NTSTATUS 
-MmCreatePageFileMapping(IN PEPROCESS  Process,
-  IN PVOID  Address,
-  IN SWAPENTRY  SwapEntry)
+MmCreatePageFileMapping(PEPROCESS Process,
+			PVOID Address,
+			SWAPENTRY SwapEntry)
 {
   PEPROCESS CurrentProcess;
   PULONG Pte;
@@ -1163,12 +889,12 @@ MmCreatePageFileMapping(IN PEPROCESS  Process,
       CurrentProcess = NULL;
     }
 
-  if (Process == NULL && Address < (PVOID) KERNEL_BASE)
+  if (Process == NULL && Address < (PVOID)KERNEL_BASE)
     {
       DPRINT1("No process\n");
       KeBugCheck(0);
      }
-  if (Process != NULL && Address >= (PVOID) KERNEL_BASE)
+  if (Process != NULL && Address >= (PVOID)KERNEL_BASE)
     {
       DPRINT1("Setting kernel address with process context\n");
       KeBugCheck(0);
@@ -1194,9 +920,9 @@ MmCreatePageFileMapping(IN PEPROCESS  Process,
     }
   if (PAGE_MASK((*Pte)) != 0)
     {
-      MmMarkPageUnmapped((ULONG_PTR) PAGE_MASK((*Pte)));
+      MmMarkPageUnmapped((PVOID)PAGE_MASK((*Pte)));
     }
-  SET_SWAPENTRY_IN_PTE(*Pte, SwapEntry);
+  *Pte = SwapEntry << 1;
   if (Process != NULL && 
       Process->AddressSpace.PageTableRefCountTable != NULL &&
       ADDR_TO_PAGE_TABLE(Address) < 768)
@@ -1236,17 +962,17 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
       CurrentProcess = NULL;
     }
    
-   if (Process == NULL && Address < (PVOID) KERNEL_BASE)
+   if (Process == NULL && Address < (PVOID)KERNEL_BASE)
      {
        DPRINT1("No process\n");
        KeBugCheck(0);
      }
-   if (Process != NULL && Address >= (PVOID) KERNEL_BASE)
+   if (Process != NULL && Address >= (PVOID)KERNEL_BASE)
      {
        DPRINT1("Setting kernel address with process context\n");
        KeBugCheck(0);
      }
-   MmMarkPageMapped(PhysicalAddress);
+   MmMarkPageMapped((PVOID)PhysicalAddress);
    
    Attributes = ProtectToPTE(flProtect);
    if (!(Attributes & PA_PRESENT) && PhysicalAddress != 0)
@@ -1256,7 +982,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 	       Address, Attributes, flProtect);
        KeBugCheck(0);
      }
- 
+   
    if (Process != NULL && Process != CurrentProcess)
      {
 	KeAttachProcess(Process);
@@ -1277,24 +1003,8 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
      }
    if (PAGE_MASK((*Pte)) != 0)
      {
-       MmMarkPageUnmapped((ULONG_PTR) PAGE_MASK((*Pte)));
+       MmMarkPageUnmapped((PVOID)PAGE_MASK((*Pte)));
      }
-
-#ifdef DBG
-
-	 if ((MiBreakPointAddressLow != NULL) && (MiBreakPointAddressHigh != NULL) &&
-		 ((PAGE_ROUND_DOWN(Address) >= PAGE_ROUND_DOWN(MiBreakPointAddressLow))
-		 && (PAGE_ROUND_DOWN(Address) < PAGE_ROUND_UP(MiBreakPointAddressHigh))))
-	{
-		DbgPrint("Changing PTE of virtual address 0x%.08x from PTE 0x%.08x\n", Address, *Pte);
-		MiDumpPTE(*Pte);
-		DbgPrint("To 0x%.08x\n", PhysicalAddress | Attributes);
-		MiDumpPTE(PhysicalAddress | Attributes);
-		//assert(FALSE);
-	}
-
-#endif /* DBG */
-
    *Pte = PhysicalAddress | Attributes;
    if (Process != NULL && 
        Process->AddressSpace.PageTableRefCountTable != NULL &&
@@ -1322,7 +1032,7 @@ MmCreateVirtualMapping(PEPROCESS Process,
 		       ULONG PhysicalAddress,
 		       BOOLEAN MayWait)
 {
-  if (!MmIsUsablePage(PhysicalAddress))
+  if (!MmIsUsablePage((PVOID)PhysicalAddress))
     {
       DPRINT1("Page at address %x not usable\n", PhysicalAddress);
       KeBugCheck(0);
@@ -1369,15 +1079,14 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
      Process, Address, flProtect);
 
    Attributes = ProtectToPTE(flProtect);
-
-   if ((Process != NULL) && (Process != CurrentProcess))
+   if (Process != CurrentProcess)
      {
 	KeAttachProcess(Process);
      }
    PageEntry = MmGetPageEntry(Address);
    (*PageEntry) = PAGE_MASK(*PageEntry) | Attributes;
    FLUSH_TLB;
-   if ((Process != NULL) && (Process != CurrentProcess))
+   if (Process != CurrentProcess)
      {
 	KeDetachProcess();
      }
@@ -1397,8 +1106,6 @@ MmGetPhysicalAddress(PVOID vaddr)
    Pte = *MmGetPageEntry(vaddr);
    if (Pte & PA_PRESENT)
      {
-       VALIDATE_PHYSICAL_ADDRESS(PAGE_MASK(Pte));
-
        p.QuadPart = PAGE_MASK(Pte);
      }
    else
@@ -1409,19 +1116,5 @@ MmGetPhysicalAddress(PVOID vaddr)
    return p;
 }
 
-#ifdef DBG
-
-VOID
-MiDumpProcessPTE(IN PEPROCESS  Process,
-  IN PVOID  Address)
-{
-  ULONG Value;
-
-  Value = MmGetPageEntryForProcess1(Process, Address);
-
-  MiDumpPTE(Value);
-}
-
-#endif /* DBG */
 
 /* EOF */

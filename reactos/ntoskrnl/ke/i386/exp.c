@@ -544,10 +544,6 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
     */
    if (ExceptionNr == 14)
      {
-#ifdef DBG
-       KIRQL SavedIrql = KeGetCurrentIrql();
-#endif /* DBG */
-
 	__asm__("sti\n\t");
 	Status = MmPageFault(Tf->Cs&0xffff,
 			     &Tf->Eip,
@@ -556,9 +552,6 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 			     Tf->ErrorCode);
 	if (NT_SUCCESS(Status))
 	  {
-       assertmsg((KeGetCurrentIrql() == SavedIrql),
-         ("Page fault handler changed IRQL (Before %d  After %d). Forgot to release a spin lock?\n",
-            SavedIrql, KeGetCurrentIrql()));
 	     return(0);
 	  }
 

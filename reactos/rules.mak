@@ -20,7 +20,6 @@ endif
 #
 ifeq ($(HOST),mingw32-linux)
 NASM_FORMAT = win32
-PREFIX = i386-mingw32msv-
 EXE_POSTFIX :=
 EXE_PREFIX := ./
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
@@ -82,7 +81,7 @@ MC = $(TOOLS_PATH)/wmc/wmc
 # Maybe we can delete these soon
 
 ifeq ($(HOST),mingw32-linux)
-CFLAGS := $(CFLAGS) -I$(PATH_TO_TOP)/include -march=i386
+CFLAGS := $(CFLAGS) -I$(PATH_TO_TOP)/include -pipe -march=i386
 endif
 
 ifeq ($(HOST),mingw32-windows)

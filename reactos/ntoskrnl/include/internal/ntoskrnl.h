@@ -7,16 +7,9 @@
 
 #ifndef __ASM__
 
-#include <roscfg.h>
 #include <ddk/ntddk.h>
 
 #include <stdarg.h>
-
-#ifdef DBG
-#define SET_MAGIC(x, magic)(x)->Magic = (magic);
-#else /* !DBG */
-#define SET_MAGIC(x, magic)
-#endif /* DBG */
 
 /*
  * Use these to place a function in a specific section of the executable

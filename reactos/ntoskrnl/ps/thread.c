@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.91 2002/05/13 18:10:41 chorns Exp $
+/* $Id: thread.c,v 1.92 2002/05/14 21:19:21 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -56,30 +56,6 @@ static GENERIC_MAPPING PiThreadMapping = {THREAD_READ,
 					  THREAD_ALL_ACCESS};
 
 /* FUNCTIONS ***************************************************************/
-
-NTSTATUS
-PiSetPriorityThread(IN HANDLE  ThreadHandle,
-						IN KPRIORITY  Priority)
-{
-	PETHREAD Thread;
-	NTSTATUS Status;
-	
-	Status = ObReferenceObjectByHandle(ThreadHandle,
-		THREAD_ALL_ACCESS,
-		PsThreadType,
-		KernelMode,
-		(PVOID*) &Thread,
-		NULL);
-	
-	if (!NT_SUCCESS(Status))
-		{
-			return(Status);
-		}
-	
-	KeSetPriorityThread(&Thread->Tcb, Priority);
-	ObReferenceObject(Thread);
-	return(STATUS_SUCCESS);
-}
 
 PKTHREAD STDCALL KeGetCurrentThread(VOID)
 {
@@ -166,6 +142,23 @@ VOID PsDumpThreads(BOOLEAN IncludeSystem)
 
 static PETHREAD PsScanThreadList (KPRIORITY Priority, ULONG Affinity)
 {
+#if 0
+   PLIST_ENTRY current_entry;
+   PETHREAD current;
+   
+   current_entry = RemoveHeadList(&PriorityListHead[Priority]);
+   if (current_entry != &PriorityListHead[Priority])
+     {	
+	current = CONTAINING_RECORD(current_entry, ETHREAD, 
+				    Tcb.QueueListEntry);
+     }
+   else
+     {
+	current = NULL;
+     }
+   
+   return(current);
+#else
    PLIST_ENTRY current_entry;
    PETHREAD current;
 
@@ -186,6 +179,7 @@ static PETHREAD PsScanThreadList (KPRIORITY Priority, ULONG Affinity)
        current_entry = current_entry->Flink;
      }
    return(NULL);
+#endif
 }
 
 
@@ -600,7 +594,7 @@ PsAllocateCallbackStack(ULONG StackSize)
     }
   for (i = 0; i < (StackSize / PAGESIZE); i++)
     {
-      ULONG_PTR Page;
+      PVOID Page;
       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page);
       if (!NT_SUCCESS(Status))
 	{
@@ -609,7 +603,7 @@ PsAllocateCallbackStack(ULONG StackSize)
       Status = MmCreateVirtualMapping(NULL,
 				      KernelStack + (i * PAGESIZE),
 				      PAGE_EXECUTE_READWRITE,
-				      Page,
+				      (ULONG)Page,
 				      TRUE);
     }
   return(KernelStack);

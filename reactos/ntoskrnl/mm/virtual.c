@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.57 2002/05/13 18:10:41 chorns Exp $
+/* $Id: virtual.c,v 1.58 2002/05/14 21:19:19 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -39,13 +39,13 @@ typedef struct _MM_SEGMENT
 
 /* FUNCTIONS *****************************************************************/
 
-PMM_SEGMENT
+PMM_SEGMENT 
 MmGetSegmentForAddress(PMEMORY_AREA MArea,
 		       PVOID Address,
 		       PVOID* PCurrentAddress)
 /*
  * FUNCTION: Get the segment corresponding to a particular memory area and
- * address.
+ * address. 
  * ARGUMENTS:
  *          MArea (IN) = The memory area
  *          Address (IN) = The address to get the segment for
@@ -95,14 +95,14 @@ MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
 }
 
 
-NTSTATUS
+NTSTATUS 
 MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 		       PMEMORY_AREA MemoryArea,
 		       PVOID Address,
 		       PMM_PAGEOP PageOp)
 {
-   ULONG_PTR PhysicalAddress;
-   BOOLEAN WasDirty;
+   PVOID PhysicalAddress;
+   BOOL WasDirty;
    SWAPENTRY SwapEntry;
    NTSTATUS Status;
    PMDL Mdl;
@@ -115,7 +115,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     */
    if ((MemoryArea->Attributes & PAGE_READONLY) ||
        (MemoryArea->Attributes & PAGE_EXECUTE_READ))
-     {
+     {       
        MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE,
 			      NULL, (PULONG)&PhysicalAddress);
        MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
@@ -125,7 +125,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	   KeBugCheck(0);
 	 }
        MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
-
+       
        PageOp->Status = STATUS_SUCCESS;
        KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
        MmReleasePageOp(PageOp);
@@ -136,7 +136,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     * Otherwise this is read-write data
     */
    MmDisableVirtualMapping(MemoryArea->Process, Address,
-			   &WasDirty, (PULONG_PTR)&PhysicalAddress);
+			   &WasDirty, (PULONG)&PhysicalAddress);
    if (PhysicalAddress == 0)
      {
        KeBugCheck(0);
@@ -160,7 +160,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * If necessary, allocate an entry in the paging file for this page
     */
-   SwapEntry = MmGetSavedSwapEntryPage(PhysicalAddress);
+   SwapEntry = MmGetSavedSwapEntryPage((PVOID)PhysicalAddress);
    if (SwapEntry == 0)
      {
        SwapEntry = MmAllocSwapPage();
@@ -173,7 +173,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	   return(STATUS_UNSUCCESSFUL);
 	 }
      }
-
+   
    /*
     * Write the page to the pagefile
     */
@@ -182,7 +182,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    Status = MmWriteToSwapPage(SwapEntry, Mdl);
    if (!NT_SUCCESS(Status))
      {
-       DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n",
+       DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n", 
 	       Status);
        MmEnableVirtualMapping(MemoryArea->Process, Address);
        PageOp->Status = STATUS_UNSUCCESSFUL;
@@ -208,7 +208,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 
 NTSTATUS
 MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
-			       MEMORY_AREA* MemoryArea,
+			       MEMORY_AREA* MemoryArea, 
 			       PVOID Address,
 			       BOOLEAN Locked)
 /*
@@ -221,12 +221,12 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
  * NOTES: This function is called with the address space lock held.
  */
 {
-   ULONG_PTR Page;
+   PVOID Page;
    NTSTATUS Status;
    PMM_SEGMENT Segment;
    PVOID CurrentAddress;
    PMM_PAGEOP PageOp;
-
+   
    /*
     * There is a window between taking the page fault and locking the
     * address space when another thread could load the page so we check
@@ -236,8 +236,8 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
      {
 	if (Locked)
 	  {
-	    MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
-	  }
+	    MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	  }  
 	return(STATUS_SUCCESS);
      }
 
@@ -312,7 +312,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
        MmLockAddressSpace(AddressSpace);
        if (Locked)
 	 {
-	   MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
+	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
 	 }
        MmReleasePageOp(PageOp);
        return(STATUS_SUCCESS);
@@ -366,7 +366,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 					(ULONG)Page,
 					TRUE);
 	MmLockAddressSpace(AddressSpace);
-     }
+     }  
    if (!NT_SUCCESS(Status))
      {
        DPRINT1("MmCreateVirtualMapping failed, not out of memory\n");
@@ -384,7 +384,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
     */
    if (Locked)
      {
-       MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
+       MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
      }  
    PageOp->Status = STATUS_SUCCESS;
    KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
@@ -420,7 +420,7 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
 				BaseAddress + (i * PAGESIZE)))
 	    {
 	      SWAPENTRY SwapEntry;
-
+	      
 	      MmDeletePageFileMapping(AddressSpace->Process,
 				      BaseAddress + (i * PAGESIZE),
 				      &SwapEntry);
@@ -434,9 +434,9 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
 				     FALSE, NULL, NULL);
 	      if (PhysicalAddr.u.LowPart != 0)
 		{
-		  MmDeleteRmap((ULONG_PTR)PhysicalAddr.u.LowPart, AddressSpace->Process,
+		  MmDeleteRmap((PVOID)PhysicalAddr.u.LowPart, AddressSpace->Process,
 			       BaseAddress + (i * PAGESIZE));
-		  MmDereferencePage((ULONG_PTR)(PhysicalAddr.u.LowPart));
+		  MmDereferencePage((PVOID)(ULONG)(PhysicalAddr.u.LowPart));
 		}
 	    }
 	}
@@ -528,7 +528,7 @@ MmSplitSegment(PMADDRESS_SPACE AddressSpace,
    ULONG OldType;
    ULONG OldProtect;
    ULONG OldLength;
-
+   
    DPRINT("MmSplitSegment()\n");
    /*
     * Save the type and protection and length of the current segment
@@ -690,7 +690,7 @@ NTSTATUS MmGatherSegment(PMADDRESS_SPACE AddressSpace,
 			   FirstSegment->Protect, 
 			   Type, 
 			   Protect);
-
+	
 	CurrentAddress = FirstAddress + FirstSegment->Length +
 	  RegionSegment->Length;
      }
@@ -771,7 +771,7 @@ NTSTATUS MmGatherSegment(PMADDRESS_SPACE AddressSpace,
 			   OldLength,
 			   OldType, 
 			   OldProtect, 
-			   Type,
+			   Type, 
 			   Protect);
 	
 	CurrentSegment = CONTAINING_RECORD(CurrentEntry,
@@ -825,7 +825,7 @@ NTSTATUS MmComplexVirtualMemoryOperation(PMADDRESS_SPACE AddressSpace,
      {
 	KeBugCheck(0);
      }
-
+   
    if (BaseAddress >= CurrentAddress &&
        (BaseAddress + RegionSize) <= (CurrentAddress + CurrentSegment->Length))
      {
@@ -879,7 +879,7 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
  *                PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE, PAGE_GUARD, 
  *                PAGE_NOACCESS
  * REMARKS:
- *       This function maps to the win32 VirtualAllocEx. Virtual memory is
+ *       This function maps to the win32 VirtualAllocEx. Virtual memory is 
  *       process based so the  protocol starts with a ProcessHandle. I 
  *       splitted the functionality of obtaining the actual address and 
  *       specifying the start address in two parameters ( BaseAddress and 
@@ -987,7 +987,7 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 	ObDereferenceObject(Process);
 	return(STATUS_UNSUCCESSFUL);
      }
-
+   
    Status = MmCreateMemoryArea(Process,
 			       &Process->AddressSpace,
 			       MEMORY_AREA_VIRTUAL_MEMORY,
@@ -1019,18 +1019,18 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
      {
 	MmReserveSwapPages(RegionSize);
      }
-
+   
    *UBaseAddress = BaseAddress;
    *URegionSize = RegionSize;
    DPRINT("*UBaseAddress %x  *URegionSize %x\n", BaseAddress, RegionSize);
-
+   
    MmUnlockAddressSpace(AddressSpace);
    ObDereferenceObject(Process);
    return(STATUS_SUCCESS);
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS STDCALL 
 NtFlushVirtualMemory(IN	HANDLE	ProcessHandle,
 		     IN	PVOID	BaseAddress,
 		     IN	ULONG	NumberOfBytesToFlush,
@@ -1038,34 +1038,31 @@ NtFlushVirtualMemory(IN	HANDLE	ProcessHandle,
 /*
  * FUNCTION: Flushes virtual memory to file
  * ARGUMENTS:
- *        ProcessHandle = Points to the process that allocated the virtual
+ *        ProcessHandle = Points to the process that allocated the virtual 
  *                        memory
  *        BaseAddress = Points to the memory address
  *        NumberOfBytesToFlush = Limits the range to flush,
  *        NumberOfBytesFlushed = Actual number of bytes flushed
- * RETURNS: Status
+ * RETURNS: Status 
  */
 {
 	UNIMPLEMENTED;
 }
-VOID
-MmFreeVirtualMemoryPage (IN BOOLEAN Before,
-		   IN PVOID Context,
-		   IN PMEMORY_AREA MemoryArea,
-		   IN PVOID Address,
-		   IN ULONG_PTR PhysicalAddress,
-		   IN SWAPENTRY SwapEntry,
-           IN BOOLEAN Dirty)
+
+VOID STATIC
+MmFreeVirtualMemoryPage(PVOID Context,
+			MEMORY_AREA* MemoryArea,
+			PVOID Address,
+			ULONG PhysicalAddr,
+			SWAPENTRY SwapEntry,
+			BOOLEAN Dirty)
 {
   PEPROCESS Process = (PEPROCESS)Context;
-
-  if (Before)
-    return;
-
-  if (PhysicalAddress != 0)
+  
+  if (PhysicalAddr != 0)
     {
-      MmDeleteRmap(PhysicalAddress, Process, Address);
-      MmDereferencePage(PhysicalAddress);
+      MmDeleteRmap((PVOID)PhysicalAddr, Process, Address);
+      MmDereferencePage((PVOID)PhysicalAddr);
     }
   else if (SwapEntry != 0)
     {

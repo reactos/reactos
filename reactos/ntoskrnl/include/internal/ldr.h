@@ -13,11 +13,6 @@
 #include <ntdll/ldr.h>
 #include <internal/module.h>
 
-#define  KERNEL_MODULE_NAME  L"ntoskrnl.exe"
-#define  HAL_MODULE_NAME  L"hal.dll"
-#define  MODULE_ROOT_NAME  L"\\Modules\\"
-#define  FILESYSTEM_ROOT_NAME  L"\\FileSystem\\"
-
 NTSTATUS
 LdrLoadDriver (
 	PUNICODE_STRING Filename,

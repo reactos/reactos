@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.15 2002/05/13 18:10:40 chorns Exp $
+/* $Id: kmap.c,v 1.16 2002/05/14 21:19:19 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -47,32 +47,31 @@ ExUnmapPage(PVOID Addr)
    KeReleaseSpinLock(&AllocMapLock, oldIrql);
 }
 
-PVOID
+PVOID 
 ExAllocatePage(VOID)
 {
-  ULONG_PTR Page;
+  ULONG PhysPage;
   NTSTATUS Status;
 
-  Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Page);
+  Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, (PVOID*)&PhysPage);
   if (!NT_SUCCESS(Status))
     {
       return(NULL);
     }
 
-  return(ExAllocatePageWithPhysPage(Page));
+  return(ExAllocatePageWithPhysPage(PhysPage));
 }
 
 NTSTATUS
-MiZeroPage(IN ULONG_PTR  Page)
+MiZeroPage(ULONG PhysPage)
 {
   PVOID TempAddress;
 
-  TempAddress = ExAllocatePageWithPhysPage(Page);
+  TempAddress = ExAllocatePageWithPhysPage(PhysPage);
   if (TempAddress == NULL)
     {
       return(STATUS_NO_MEMORY);
     }
-
   memset(TempAddress, 0, PAGESIZE);
   ExUnmapPage(TempAddress);
   return(STATUS_SUCCESS);
@@ -94,10 +93,10 @@ MiCopyFromUserPage(ULONG DestPhysPage, PVOID SourceAddress)
 }
 
 PVOID
-ExAllocatePageWithPhysPage(IN ULONG_PTR  Page)
+ExAllocatePageWithPhysPage(ULONG PhysPage)
 {
    KIRQL oldlvl;
-   PVOID addr;
+   ULONG addr;
    ULONG i;
    NTSTATUS Status;
 
@@ -108,11 +107,11 @@ ExAllocatePageWithPhysPage(IN ULONG_PTR  Page)
 	 {
 	    DPRINT("i %x\n",i);
 	    AllocMap[i / 32] |= (1 << (i % 32));
-	    addr = (PVOID) (NonPagedPoolBase + (i*PAGESIZE));
+	    addr = (ULONG)(NonPagedPoolBase + (i*PAGESIZE));
 	    Status = MmCreateVirtualMapping(NULL, 
-					    addr, 
+					    (PVOID)addr, 
 					    PAGE_READWRITE | PAGE_SYSTEM, 
-					    Page,
+					    PhysPage,
 					    FALSE);
 	    if (!NT_SUCCESS(Status))
 	      {
@@ -120,7 +119,7 @@ ExAllocatePageWithPhysPage(IN ULONG_PTR  Page)
 		KeBugCheck(0);
 	      }
 	    KeReleaseSpinLock(&AllocMapLock, oldlvl);
-	    return(addr);
+	    return((PVOID)addr);
 	 }
      }
    KeReleaseSpinLock(&AllocMapLock, oldlvl);

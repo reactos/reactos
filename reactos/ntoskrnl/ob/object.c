@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.48 2002/05/13 18:10:41 chorns Exp $
+/* $Id: object.c,v 1.49 2002/05/14 21:19:21 dwelch Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -143,7 +143,7 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
    
    Path = ObjectAttributes->ObjectName->Buffer;
    
-   if ((Path == NULL) && (Path[0] == 0))
+   if (Path[0] == 0)
      {
 	*ReturnedObject = CurrentObject;
 	return(STATUS_SUCCESS);
@@ -155,8 +155,16 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	return(STATUS_UNSUCCESSFUL);
      }
    
+   if (Path)
+     {
 	RtlCreateUnicodeString (&PathString, Path);
 	current = PathString.Buffer;
+     }
+   else
+     {
+	RtlInitUnicodeString (&PathString, NULL);
+	current = NULL;
+     }
 
    RootObject = CurrentObject;
 
@@ -236,18 +244,15 @@ ObCreateObject(OUT PHANDLE Handle,
 
   DPRINT("ObCreateObject(Handle %x, ObjectAttributes %x, Type %x)\n",
 	 Handle, ObjectAttributes, Type);
-
   if (ObjectAttributes != NULL &&
-      ObjectAttributes->ObjectName != NULL &&
-      ObjectAttributes->ObjectName->Buffer != NULL)
+      ObjectAttributes->ObjectName != NULL)
     {
       DPRINT("ObjectAttributes->ObjectName->Buffer %S\n",
 	     ObjectAttributes->ObjectName->Buffer);
     }
 
   if (ObjectAttributes != NULL &&
-      ObjectAttributes->ObjectName != NULL &&
-      ObjectAttributes->ObjectName->Buffer != NULL)
+      ObjectAttributes->ObjectName != NULL)
     {
       Status = ObFindObject(ObjectAttributes,
 			    &Parent,
@@ -263,6 +268,7 @@ ObCreateObject(OUT PHANDLE Handle,
     {
       RtlInitUnicodeString(&RemainingPath, NULL);
     }
+
   RtlMapGenericMask(&DesiredAccess,
 		    Type->Mapping);
 
@@ -298,7 +304,6 @@ ObCreateObject(OUT PHANDLE Handle,
 					  Parent,
 					  RemainingPath.Buffer,
 					  ObjectAttributes);
-
       if (!NT_SUCCESS(Status))
 	{
 	  if (ObjectAttached == TRUE)
@@ -315,7 +320,6 @@ ObCreateObject(OUT PHANDLE Handle,
 	  return(Status);
 	}
     }
-
   RtlFreeUnicodeString( &RemainingPath );
 
   *Object = HEADER_TO_BODY(Header);

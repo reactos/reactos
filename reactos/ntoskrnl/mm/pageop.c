@@ -1,4 +1,4 @@
-/* $Id: pageop.c,v 1.8 2002/05/13 18:10:40 chorns Exp $
+/* $Id: pageop.c,v 1.9 2002/05/14 21:19:19 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -29,36 +29,14 @@ PMM_PAGEOP MmPageOpHashTable[PAGEOP_HASH_TABLE_SIZE] = {NULL, } ;
 
 /* FUNCTIONS *****************************************************************/
 
-#ifdef DBG
-
 VOID
-MiValidatePageOp(IN PMM_PAGEOP  PageOp)
-{
-  if (PageOp != NULL)
-    {
-	    DPRINT("MiValidatePageOp(PageOp 0x%.08x)\n", PageOp);
-
-			assertmsg(PageOp->Magic == TAG_MM_PAGEOP,
-		    ("Bad PageOp (0x%.08x). Wrong magic (0x%.08x)\n", PageOp->Magic));
-
-			assertmsg((PageOp->OpType >= MM_PAGEOP_MINIMUM) && (PageOp->OpType <= MM_PAGEOP_MAXIMUM),
-		    ("Bad PageOp (0x%.08x). Wrong type (%d)\n", PageOp->OpType));
-		}
-}
-
-#endif /* DBG */
-
-VOID
-MmReleasePageOp(IN PMM_PAGEOP  PageOp)
+MmReleasePageOp(PMM_PAGEOP PageOp)
      /*
       * FUNCTION: Release a reference to a page operation descriptor
       */
 {
   KIRQL oldIrql;
   PMM_PAGEOP PrevPageOp;
-
-  assert(PageOp);
-  VALIDATE_PAGEOP(PageOp);
 
   KeAcquireSpinLock(&MmPageOpHashTableLock, &oldIrql);
   PageOp->ReferenceCount--;
@@ -87,31 +65,24 @@ MmReleasePageOp(IN PMM_PAGEOP  PageOp)
       PrevPageOp = PrevPageOp->Next;
     }
   KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
-  CPRINT("PageOp (0x%.08x) not found\n", PageOp);
   KeBugCheck(0);
 }
 
-
 PMM_PAGEOP
-MmGetPageOp(IN PMEMORY_AREA  MArea,
-  IN ULONG  Pid,
-  IN PVOID  Address,
-  IN PMM_SECTION_SEGMENT  Segment,
-  IN ULONG  Offset,
-  IN ULONG  OpType)
-/*
- * FUNCTION: Get a page operation descriptor corresponding to
- * the memory area and either the segment, offset pair or the
- * pid, address pair. Create a new pageop if one does not exist.
- * FIXME: Make Offset 64-bit
- */
+MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
+	    PMM_SECTION_SEGMENT Segment, ULONG Offset, ULONG OpType)
+     /*
+      * FUNCTION: Get a page operation descriptor corresponding to
+      * the memory area and either the segment, offset pair or the
+      * pid, address pair.      
+      */
 {
   ULONG Hash;
   KIRQL oldIrql;
   PMM_PAGEOP PageOp;
 
   /*
-   * Calculate the hash value for pageop structure
+   * Calcuate the hash value for pageop structure
    */
   if (MArea->Type == MEMORY_AREA_SECTION_VIEW_COMMIT)
     {
@@ -119,9 +90,6 @@ MmGetPageOp(IN PMEMORY_AREA  MArea,
     }
   else
     {
-      assertmsg(((ULONG_PTR)Address % PAGESIZE) == 0,
-        ("Address must be page aligned (0x%.08x)\n", Address));
-
       Hash = (((ULONG)Pid) | (((ULONG)Address) / PAGESIZE));
     }
   Hash = Hash % PAGEOP_HASH_TABLE_SIZE;
@@ -159,8 +127,6 @@ MmGetPageOp(IN PMEMORY_AREA  MArea,
    */
   if (PageOp != NULL)
     {
-      VALIDATE_PAGEOP(PageOp);
-
       PageOp->ReferenceCount++;
       KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
       return(PageOp);
@@ -177,8 +143,6 @@ MmGetPageOp(IN PMEMORY_AREA  MArea,
       return(NULL);
     }
   
-  SET_MAGIC(PageOp, TAG_MM_PAGEOP);
-
   if (MArea->Type != MEMORY_AREA_SECTION_VIEW_COMMIT)
     {
       PageOp->Pid = Pid;
@@ -199,90 +163,14 @@ MmGetPageOp(IN PMEMORY_AREA  MArea,
   KeInitializeEvent(&PageOp->CompletionEvent, NotificationEvent, FALSE);
   MmPageOpHashTable[Hash] = PageOp;
 
-  VALIDATE_PAGEOP(PageOp);
-
   KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
   return(PageOp);
 }
 
 
-PMM_PAGEOP
-MmGotPageOp(IN PMEMORY_AREA  MArea,
-  IN ULONG  Pid,
-  IN PVOID  Address,
-  IN PMM_SECTION_SEGMENT  Segment,
-  IN ULONG  Offset)
-/*
- * FUNCTION: Get a page operation descriptor corresponding to
- * the memory area and either the segment, offset pair or the
- * pid, address pair. Returns NULL if a pageop does not exist.
- * FIXME: Make Offset 64-bit
- */
-{
-  ULONG Hash;
-  KIRQL oldIrql;
-  PMM_PAGEOP PageOp;
 
-  /*
-   * Calculate the hash value for pageop structure
-   */
-  if (MArea->Type == MEMORY_AREA_SECTION_VIEW_COMMIT)
-    {
-      Hash = (((ULONG)Segment) | (((ULONG)Offset) / PAGESIZE));
-    }
-  else
-    {
-      assertmsg(((ULONG_PTR)Address % PAGESIZE) == 0,
-        ("Address must be page aligned (0x%.08x)\n", Address));
 
-      Hash = (((ULONG)Pid) | (((ULONG)Address) / PAGESIZE));
-    }
-  Hash = Hash % PAGEOP_HASH_TABLE_SIZE;
 
-  KeAcquireSpinLock(&MmPageOpHashTableLock, &oldIrql);
 
-  /*
-   * Check for an existing pageop structure
-   */
-  PageOp = MmPageOpHashTable[Hash];
-  while (PageOp != NULL)
-    {
-      if (MArea->Type == MEMORY_AREA_SECTION_VIEW_COMMIT)
-	{
-	  if (PageOp->Segment == Segment &&
-	      PageOp->Offset == Offset)
-	    {
-	      break;
-	    }
-	}
-      else
-	{
-	  if (PageOp->Pid == Pid &&
-	      PageOp->Address == Address)
-	    {
-	      break;
-	    }
-	}
-      PageOp = PageOp->Next;
-    }
-  
-  /*
-   * If we found an existing pageop then increment the reference count
-   * and return it.
-   */
-  if (PageOp != NULL)
-    {
-      VALIDATE_PAGEOP(PageOp);
 
-      PageOp->ReferenceCount++;
-      KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
-      return(PageOp);
-    }
 
-  KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
-
-  /*
-   * Otherwise return NULL.
-   */
-  return(NULL);
-}

@@ -222,15 +222,6 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 VOID
 KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG ExceptionNr, ULONG cr2);
 
-VOID
-KiValidateDispatcherObject(IN PDISPATCHER_HEADER  Object);
-
-#ifdef DBG
-#define VALIDATE_DISPATCHER_OBJECT(Object) KiValidateDispatcherObject(Object);
-#else /* !DBG */
-#define VALIDATE_DISPATCHER_OBJECT(Object)
-#endif /* DBG */
-
 #endif /* not __ASM__ */
 
 #define MAXIMUM_PROCESSORS      32
