@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.44 2000/03/09 00:13:37 ekohl Exp $
+; $Id: ntdll.def,v 1.45 2000/03/09 16:01:24 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -239,7 +239,7 @@ RtlAcquirePebLock@0
 ;RtlAtomToAtomTable
 ;RtlAddAttributeActionToRXact
 ;RtlAddAuditAccessToAce
-;RtlAccCompoundAce
+;RtlAddCompoundAce
 ;RtlAdjustPrivilege
 ;RtlAllocateAndInitializeSid
 ;RtlAllocateHandle
@@ -308,7 +308,7 @@ RtlDeNormalizeProcessParams@4
 ;RtlDelete
 ;RtlDeleteAce
 ;RtlDeleteAtomFromAtomTable
-;RtlDeleteCriticalSection
+RtlDeleteCriticalSection@4
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
 ;RtlDeleteRegistryValue
@@ -330,7 +330,7 @@ RtlDowncaseUnicodeString@12
 RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide@16
 RtlEnlargedUnsignedMultiply@8
-;RtlEnterCriticalSection
+RtlEnterCriticalSection@4
 ;RtlEnumProcessHeaps
 ;RtlEnumerateGenericTable
 ;RtlEnumerateGenericTableWithoutSplaying
@@ -401,7 +401,7 @@ RtlInitUnicodeString@8
 ;RtlInitializeAtomPackage
 RtlInitializeBitMap@12
 RtlInitializeContext@20
-;RtlInitializeCriticalSection
+RtlInitializeCriticalSection@4
 ;RtlInitializeGenericTable
 ;RtlInitializeHandleTable
 ;RtlInitializeRXact
@@ -424,7 +424,7 @@ RtlLargeIntegerShiftLeft@12
 RtlLargeIntegerShiftRight@12
 RtlLargeIntegerSubtract@16
 ;RtlLargeIntegerToChar
-;RtlLeaveCriticalSection
+RtlLeaveCriticalSection@4
 ;RtlLengthRequiredSid
 RtlLengthSecurityDescriptor@4
 ;RtlLengthSid
@@ -482,8 +482,8 @@ RtlReleasePebLock@0
 ;RtlResetRtlTranslations
 ;RtlRunDecodeUnicodeString
 ;RtlRunEncodeUnicodeString
-;RtlSecondsSince1970ToTime
-;RtlSecondsSince1980ToTime
+RtlSecondsSince1970ToTime@8
+RtlSecondsSince1980ToTime@8
 ;RtlSelfRelatedToAbsoluteSD
 RtlSetAllBits@4
 ;RtlSetAttributesSecurityDescriptor
@@ -512,12 +512,12 @@ RtlSizeHeap@12
 ;RtlSubtreePredecessor
 ;RtlSubtreeSuccessor
 ;RtlSystemTimeToLocalTime
-;RtlTimeFieldsToTime
+RtlTimeFieldsToTime@8
 ;RtlTimeToElapsedTimeFields
-;RtlTimeToSecondsSince1970
-;RtlTimeToSecondsSince1980
-;RtlTimeToTimeFields
-;RtlTryEnterCriticalSection
+RtlTimeToSecondsSince1970@8
+RtlTimeToSecondsSince1980@8
+RtlTimeToTimeFields@8
+RtlTryEnterCriticalSection@4
 RtlUnicodeStringToAnsiSize@4
 RtlUnicodeStringToAnsiString@12
 RtlUnicodeStringToCountedOemString@12

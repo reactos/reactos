@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.33 2000/03/09 00:13:37 ekohl Exp $
+; $Id: ntdll.edf,v 1.34 2000/03/09 16:01:25 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -254,6 +254,7 @@ RtlCreateUnicodeStringFromAsciiz=RtlCreateUnicodeStringFromAsciiz@8
 RtlCreateUserProcess=RtlCreateUserProcess@40
 RtlCreateUserThread=RtlCreateUserThread@40
 RtlDeNormalizeProcessParams=RtlDeNormalizeProcessParams@4
+RtlDeleteCriticalSection=RtlDeleteCriticalSection@4
 RtlDestroyEnvironment=RtlDestroyEnvironment@4
 RtlDestroyHeap=RtlDestroyHeap@4
 RtlDestroyProcessParameters=RtlDestroyProcessParameters@4
@@ -265,6 +266,7 @@ RtlDowncaseUnicodeString=RtlDowncaseUnicodeString@12
 RtlEnlargedIntegerMultiply=RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide=RtlEnlargedUnsignedDivide@16
 RtlEnlargedUnsignedMultiply=RtlEnlargedUnsignedMultiply@8
+RtlEnterCriticalSection=RtlEnterCriticalSection@4
 RtlEqualString=RtlEqualString@12
 RtlEqualUnicodeString=RtlEqualUnicodeString@12
 RtlEraseUnicodeString=RtlEraseUnicodeString@4
@@ -295,6 +297,7 @@ RtlInitString=RtlInitString@8
 RtlInitUnicodeString=RtlInitUnicodeString@8
 RtlInitializeBitMap=RtlInitializeBitMap@12
 RtlInitializeContext=RtlInitializeContext@20
+RtlInitializeCriticalSection=RtlInitializeCriticalSection@4
 RtlIntegerToChar=RtlIntegerToChar@16
 RtlIntegerToUnicodeString=RtlIntegerToUnicodeString@12
 RtlIsDosDeviceName_U=RtlIsDosDeviceName_U@4
@@ -306,6 +309,7 @@ RtlLargeIntegerNegate=RtlLargeIntegerNegate@8
 RtlLargeIntegerShiftLeft=RtlLargeIntegerShiftLeft@12
 RtlLargeIntegerShiftRight=RtlLargeIntegerShiftRight@12
 RtlLargeIntegerSubtract=RtlLargeIntegerSubtract@16
+RtlLeaveCriticalSection=RtlLeaveCriticalSection@4
 RtlLengthSecurityDescriptor=RtlLengthSecurityDescriptor@4
 RtlLockHeap=RtlLockHeap@4
 RtlMoveMemory=RtlMoveMemory@12
@@ -322,6 +326,8 @@ RtlOemToUnicodeN=RtlOemToUnicodeN@20
 RtlQueryEnvironmentVariable_U=RtlQueryEnvironmentVariable_U@12
 RtlReAllocateHeap=RtlReAllocateHeap@16
 RtlReleasePebLock=RtlReleasePebLock@0
+RtlSecondsSince1970ToTime=RtlSecondsSince1970ToTime@8
+RtlSecondsSince1980ToTime=RtlSecondsSince1980ToTime@8
 RtlSetAllBits=RtlSetAllBits@4
 RtlSetBits=RtlSetBits@12
 RtlSetCurrentDirectory_U=RtlSetCurrentDirectory_U@4
@@ -331,6 +337,11 @@ RtlSetEnvironmentVariable=RtlSetEnvironmentVariable@12
 RtlSetGroupSecurityDescriptor=RtlSetGroupSecurityDescriptor@12
 RtlSetOwnerSecurityDescriptor=RtlSetOwnerSecurityDescriptor@12
 RtlSizeHeap=RtlSizeHeap@12
+RtlTimeFieldsToTime=RtlTimeFieldsToTime@8
+RtlTimeToSecondsSince1970=RtlTimeToSecondsSince1970@8
+RtlTimeToSecondsSince1980=RtlTimeToSecondsSince1980@8
+RtlTimeToTimeFields=RtlTimeToTimeFields@8
+RtlTryEnterCriticalSection=RtlTryEnterCriticalSection@4
 RtlUnicodeStringToAnsiSize=RtlUnicodeStringToAnsiSize@4
 RtlUnicodeStringToAnsiString=RtlUnicodeStringToAnsiString@12
 RtlUnicodeStringToCountedOemString=RtlUnicodeStringToCountedOemString@12

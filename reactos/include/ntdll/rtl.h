@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.12 2000/02/27 02:01:24 ekohl Exp $
+/* $Id: rtl.h,v 1.13 2000/03/09 15:59:50 ekohl Exp $
  *
  */
 
@@ -28,11 +28,35 @@ typedef struct _RTL_USER_PROCESS_INFO
 
 #define HEAP_BASE (0xa0000000)
 
-VOID RtlDeleteCriticalSection (LPCRITICAL_SECTION	lpCriticalSection);
-VOID RtlEnterCriticalSection (LPCRITICAL_SECTION	lpCriticalSection);
-VOID RtlInitializeCriticalSection (LPCRITICAL_SECTION	pcritical);
-VOID RtlLeaveCriticalSection (LPCRITICAL_SECTION	lpCriticalSection);
-WINBOOL RtlTryEntryCriticalSection (LPCRITICAL_SECTION	lpCriticalSection);
+VOID
+STDCALL
+RtlDeleteCriticalSection (
+	LPCRITICAL_SECTION	lpCriticalSection
+	);
+
+VOID
+STDCALL
+RtlEnterCriticalSection (
+	LPCRITICAL_SECTION	lpCriticalSection
+	);
+
+VOID
+STDCALL
+RtlInitializeCriticalSection (
+	LPCRITICAL_SECTION	pcritical
+	);
+
+VOID
+STDCALL
+RtlLeaveCriticalSection (
+	LPCRITICAL_SECTION	lpCriticalSection
+	);
+
+BOOLEAN
+STDCALL
+RtlTryEntryCriticalSection (
+	LPCRITICAL_SECTION	lpCriticalSection
+	);
 
 UINT
 STDCALL
