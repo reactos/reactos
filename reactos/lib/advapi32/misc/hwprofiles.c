@@ -1,4 +1,4 @@
-/* $Id: hwprofiles.c,v 1.1 2004/02/25 23:12:39 sedwards Exp $
+/* $Id: hwprofiles.c,v 1.2 2004/06/17 09:07:12 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -8,8 +8,9 @@
  * UPDATE HISTORY:
  *	20042502
  */
-#include <debug.h>
+#include <ddk/ntddk.h>
 #include <windows.h>
+#include <debug.h>
 
 /******************************************************************************
  * GetCurrentHwProfileA [ADVAPI32.@]
@@ -23,7 +24,8 @@
  *  Success: TRUE. pInfo is updated with the hardware profile details.
  *  Failure: FALSE.
  */
-BOOL STDCALL GetCurrentHwProfileA(LPHW_PROFILE_INFOA pInfo)
+BOOL STDCALL
+GetCurrentHwProfileA(LPHW_PROFILE_INFOA pInfo)
 {
 	DPRINT("GetCurrentHwProfileA stub\n");
 	return 1;

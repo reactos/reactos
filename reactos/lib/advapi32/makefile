@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.40 2004/05/29 21:24:42 hbirr Exp $
+# $Id: makefile,v 1.41 2004/06/17 09:07:12 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,12 +6,12 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = advapi32
 
-TARGET_CFLAGS = -Wall -Werror -fno-builtin
+TARGET_CFLAGS = -Wall -Werror -fno-builtin -D__USE_W32API
 # TARGET_CFLAGS += -DUNICODE
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = ntdll.a kernel32.a libwine.a msvcrt.a
+TARGET_SDKLIBS = ntdll.a kernel32.a
 
 TARGET_BASE = $(TARGET_BASE_LIB_ADVAPI32)
 

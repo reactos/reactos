@@ -16,6 +16,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifdef __USE_W32API
+#include_next <accctrl.h>
+#else
+
 #ifndef __WINE_ACCCTRL_H
 #define __WINE_ACCCTRL_H
 
@@ -463,3 +467,5 @@ typedef struct _FN_OBJECT_MGR_FUNCTIONS
 #endif
 
 #endif /* __WINE_ACCCTRL_H */
+
+#endif /* __USE_W32API */

@@ -122,18 +122,19 @@ typedef PVOID LSA_HANDLE, *PLSA_HANDLE;
 
 typedef enum
 {
-	PolicyAuditLogInformation = 1,
-	PolicyAuditEventsInformation,
-	PolicyPrimaryDomainInformation,
-	PolicyPdAccountInformation,
-	PolicyAccountDomainInformation,
-	PolicyLsaServerRoleInformation,
-	PolicyReplicaSourceInformation,
-	PolicyDefaultQuotaInformation,
-	PolicyModificationInformation,
-	PolicyAuditFullSetInformation,
-	PolicyAuditFullQueryInformation,
-	PolicyDnsDomainInformation
+  PolicyAuditLogInformation = 1,
+  PolicyAuditEventsInformation,
+  PolicyPrimaryDomainInformation,
+  PolicyPdAccountInformation,
+  PolicyAccountDomainInformation,
+  PolicyLsaServerRoleInformation,
+  PolicyReplicaSourceInformation,
+  PolicyDefaultQuotaInformation,
+  PolicyModificationInformation,
+  PolicyAuditFullSetInformation,
+  PolicyAuditFullQueryInformation,
+  PolicyDnsDomainInformation,
+  PolicyEfsInformation
 } POLICY_INFORMATION_CLASS, *PPOLICY_INFORMATION_CLASS;
 
 typedef ULONG POLICY_AUDIT_EVENT_OPTIONS, *PPOLICY_AUDIT_EVENT_OPTIONS;
@@ -484,7 +485,7 @@ STDCALL
 LsaRemoveAccountRights(
     LSA_HANDLE PolicyHandle,
     PSID AccountSid,
-    WINBOOL AllRights,
+    BOOLEAN AllRights,
     PLSA_UNICODE_STRING UserRights,
     ULONG CountOfRights
     );

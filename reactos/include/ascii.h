@@ -94,9 +94,9 @@ GetCurrentHwProfileA (
 WINBOOL
 STDCALL
 LogonUserA (
- LPCSTR lpszUsername,
- LPCSTR lpszDomain,
- LPCSTR lpszPassword,
+ LPSTR lpszUsername,
+ LPSTR lpszDomain,
+ LPSTR lpszPassword,
  DWORD dwLogonType,
  DWORD dwLogonProvider,
  PHANDLE phToken

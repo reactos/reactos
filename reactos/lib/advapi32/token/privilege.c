@@ -1,4 +1,4 @@
-/* $Id: privilege.c,v 1.7 2004/03/25 11:30:07 ekohl Exp $ 
+/* $Id: privilege.c,v 1.8 2004/06/17 09:07:12 ekohl Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,8 +9,9 @@
  *	20010317 ea	stubs
  */
 
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <windows.h>
-#include <ddk/ntddk.h>
 
 
 /**********************************************************************

@@ -1,4 +1,4 @@
-/* $Id: logon.c,v 1.5 2004/03/09 15:04:28 ekohl Exp $
+/* $Id: logon.c,v 1.6 2004/06/17 09:07:12 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -130,9 +130,9 @@ CreateProcessAsUserW (HANDLE hToken,
  * @unimplemented
  */
 BOOL STDCALL
-LogonUserA (LPCSTR lpszUsername,
-	    LPCSTR lpszDomain,
-	    LPCSTR lpszPassword,
+LogonUserA (LPSTR lpszUsername,
+	    LPSTR lpszDomain,
+	    LPSTR lpszPassword,
 	    DWORD dwLogonType,
 	    DWORD dwLogonProvider,
 	    PHANDLE phToken)
@@ -241,9 +241,9 @@ SamGetUserSid (LPCWSTR UserName,
  * @unimplemented
  */
 BOOL STDCALL
-LogonUserW (LPCWSTR lpszUsername,
-	    LPCWSTR lpszDomain,
-	    LPCWSTR lpszPassword,
+LogonUserW (LPWSTR lpszUsername,
+	    LPWSTR lpszDomain,
+	    LPWSTR lpszPassword,
 	    DWORD dwLogonType,
 	    DWORD dwLogonProvider,
 	    PHANDLE phToken)

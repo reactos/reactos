@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.46 2004/04/03 13:12:43 gvg Exp $
+/* $Id: reg.c,v 1.47 2004/06/17 09:07:12 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -37,7 +37,7 @@ static HANDLE ProcessHeap;
 
 /* PROTOTYPES ***************************************************************/
 
-static NTSTATUS MapDefaultKey (PHKEY ParentKey, HKEY Key);
+static NTSTATUS MapDefaultKey (PHANDLE ParentKey, HKEY Key);
 static VOID CloseDefaultKeys(VOID);
 
 static NTSTATUS OpenClassesRootKey(PHANDLE KeyHandle);
@@ -81,7 +81,7 @@ RegCleanup (VOID)
 
 
 static NTSTATUS
-MapDefaultKey (PHKEY RealKey,
+MapDefaultKey (PHANDLE RealKey,
 	       HKEY Key)
 {
   PHANDLE Handle;
@@ -92,7 +92,7 @@ MapDefaultKey (PHKEY RealKey,
 
   if (((ULONG)Key & 0xF0000000) != 0x80000000)
     {
-      *RealKey = Key;
+      *RealKey = (HANDLE)Key;
       return STATUS_SUCCESS;
     }
 
@@ -148,7 +148,7 @@ MapDefaultKey (PHKEY RealKey,
 
   if (NT_SUCCESS(Status))
     {
-      *RealKey = (HKEY)*Handle;
+      *RealKey = *Handle;
     }
 
    return Status;
@@ -332,7 +332,7 @@ RegCreateKeyExA (HKEY hKey,
   UNICODE_STRING SubKeyString;
   UNICODE_STRING ClassString;
   OBJECT_ATTRIBUTES Attributes;
-  HKEY ParentKey;
+  HANDLE ParentKey;
   LONG ErrorCode;
   NTSTATUS Status;
 
@@ -361,7 +361,7 @@ RegCreateKeyExA (HKEY hKey,
 			      OBJ_CASE_INSENSITIVE,
 			      (HANDLE)ParentKey,
 			      (PSECURITY_DESCRIPTOR)lpSecurityAttributes);
-  Status = NtCreateKey (phkResult,
+  Status = NtCreateKey ((PHANDLE)phkResult,
 			samDesired,
 			&Attributes,
 			0,
@@ -404,7 +404,7 @@ RegCreateKeyExW (HKEY hKey,
   UNICODE_STRING SubKeyString;
   UNICODE_STRING ClassString;
   OBJECT_ATTRIBUTES Attributes;
-  HKEY ParentKey;
+  HANDLE ParentKey;
   LONG ErrorCode;
   NTSTATUS Status;
 
@@ -430,7 +430,7 @@ RegCreateKeyExW (HKEY hKey,
 			      OBJ_CASE_INSENSITIVE,
 			      (HANDLE)ParentKey,
 			      (PSECURITY_DESCRIPTOR)lpSecurityAttributes);
-  Status = NtCreateKey (phkResult,
+  Status = NtCreateKey ((PHANDLE)phkResult,
 			samDesired,
 			&Attributes,
 			0,
@@ -504,7 +504,7 @@ RegDeleteKeyA (HKEY hKey,
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING SubKeyName;
-  HKEY ParentKey;
+  HANDLE ParentKey;
   HANDLE TargetKey;
   NTSTATUS Status;
   LONG ErrorCode;
@@ -561,7 +561,7 @@ RegDeleteKeyW (HKEY hKey,
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING SubKeyName;
-  HKEY ParentKey;
+  HANDLE ParentKey;
   HANDLE TargetKey;
   NTSTATUS Status;
   LONG ErrorCode;
@@ -615,7 +615,7 @@ RegDeleteValueA (HKEY hKey,
 		 LPCSTR lpValueName)
 {
   UNICODE_STRING ValueName;
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   LONG ErrorCode;
   NTSTATUS Status;
 
@@ -656,7 +656,7 @@ RegDeleteValueW (HKEY hKey,
   UNICODE_STRING ValueName;
   NTSTATUS Status;
   LONG ErrorCode;
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
 
   Status = MapDefaultKey (&KeyHandle,
 			  hKey);
@@ -761,7 +761,7 @@ RegEnumKeyExA (HKEY hKey,
   DWORD ClassLength;
   DWORD BufferSize;
   DWORD ResultSize;
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   NTSTATUS Status;
 
   DPRINT("RegEnumKeyExA(hKey 0x%x, dwIndex %d, lpName 0x%x, *lpcbName %d, lpClass 0x%x, lpcbClass %d)\n",
@@ -936,7 +936,7 @@ RegEnumKeyExW (HKEY hKey,
   ULONG ResultSize;
   ULONG NameLength;
   ULONG ClassLength;
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   LONG ErrorCode = ERROR_SUCCESS;
   NTSTATUS Status;
 
@@ -1088,7 +1088,7 @@ RegEnumValueA (HKEY hKey,
   ULONG BufferSize;
   ULONG DataLength;
   ULONG ResultSize;
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   LONG ErrorCode;
   NTSTATUS Status;
   UNICODE_STRING StringU;
@@ -1255,7 +1255,7 @@ RegEnumValueW (HKEY hKey,
   ULONG BufferSize;
   ULONG DataLength;
   ULONG ResultSize;
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   LONG ErrorCode;
   NTSTATUS Status;
 
@@ -1373,7 +1373,7 @@ RegEnumValueW (HKEY hKey,
 LONG STDCALL
 RegFlushKey(HKEY hKey)
 {
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   LONG ErrorCode;
   NTSTATUS Status;
 
@@ -1618,7 +1618,7 @@ RegOpenKeyA (HKEY hKey,
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING SubKeyString;
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   LONG ErrorCode;
   NTSTATUS Status;
 
@@ -1638,7 +1638,7 @@ RegOpenKeyA (HKEY hKey,
 			      OBJ_CASE_INSENSITIVE,
 			      KeyHandle,
 			      NULL);
-  Status = NtOpenKey (phkResult,
+  Status = NtOpenKey ((PHANDLE)phkResult,
 		      MAXIMUM_ALLOWED,
 		      &ObjectAttributes);
   RtlFreeUnicodeString (&SubKeyString);
@@ -1668,7 +1668,7 @@ RegOpenKeyW (HKEY hKey,
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING SubKeyString;
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   LONG ErrorCode;
   NTSTATUS Status;
 
@@ -1688,7 +1688,7 @@ RegOpenKeyW (HKEY hKey,
 			      OBJ_CASE_INSENSITIVE,
 			      KeyHandle,
 			      NULL);
-  Status = NtOpenKey (phkResult,
+  Status = NtOpenKey ((PHANDLE)phkResult,
 		      MAXIMUM_ALLOWED,
 		      &ObjectAttributes);
   if (!NT_SUCCESS(Status))
@@ -1716,7 +1716,7 @@ RegOpenKeyExA (HKEY hKey,
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING SubKeyString;
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   LONG ErrorCode;
   NTSTATUS Status;
 
@@ -1736,7 +1736,7 @@ RegOpenKeyExA (HKEY hKey,
 			      OBJ_CASE_INSENSITIVE,
 			      KeyHandle,
 			      NULL);
-  Status = NtOpenKey (phkResult,
+  Status = NtOpenKey ((PHANDLE)phkResult,
 		      samDesired,
 		      &ObjectAttributes);
   RtlFreeUnicodeString (&SubKeyString);
@@ -1765,7 +1765,7 @@ RegOpenKeyExW (HKEY hKey,
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING SubKeyString;
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   LONG ErrorCode;
   NTSTATUS Status;
 
@@ -1793,7 +1793,7 @@ RegOpenKeyExW (HKEY hKey,
 			      OBJ_CASE_INSENSITIVE,
 			      KeyHandle,
 			      NULL);
-  Status = NtOpenKey (phkResult,
+  Status = NtOpenKey ((PHANDLE)phkResult,
 		      samDesired,
 		      &ObjectAttributes);
   if (!NT_SUCCESS(Status))
@@ -1891,7 +1891,7 @@ RegQueryInfoKeyW (HKEY hKey,
   PKEY_FULL_INFORMATION FullInfo;
   ULONG FullInfoSize;
   ULONG ClassLength;
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   NTSTATUS Status;
   LONG ErrorCode = ERROR_SUCCESS;
   ULONG Length;
@@ -2091,12 +2091,12 @@ RegQueryMultipleValuesW (HKEY hKey,
 				    NULL,
 				    NULL,
 				    &val_list[i].ve_valuelen);
-      if(ErrorCode != ERROR_SUCCESS)
+      if (ErrorCode != ERROR_SUCCESS)
 	{
 	  return ErrorCode;
 	}
 
-      if(lpValueBuf != NULL && *ldwTotsize + val_list[i].ve_valuelen <= maxBytes)
+      if (lpValueBuf != NULL && *ldwTotsize + val_list[i].ve_valuelen <= maxBytes)
 	{
 	  ErrorCode = RegQueryValueExW (hKey,
 					val_list[i].ve_valuename,
@@ -2140,7 +2140,7 @@ RegQueryValueExW (HKEY hKey,
   LONG ErrorCode = ERROR_SUCCESS;
   ULONG BufferSize;
   ULONG ResultSize;
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   ULONG MaxCopy = lpcbData ? *lpcbData : 0;
 
   DPRINT("hKey 0x%X  lpValueName %S  lpData 0x%X  lpcbData %d\n",
@@ -2449,7 +2449,7 @@ RegQueryValueW (HKEY hKey,
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING SubKeyString;
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   HANDLE RealKey;
   LONG ErrorCode;
   BOOL CloseRealKey;
@@ -2811,7 +2811,7 @@ RegSaveKeyW (HKEY hKey,
   UNICODE_STRING FileName;
   IO_STATUS_BLOCK IoStatusBlock;
   HANDLE FileHandle;
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   NTSTATUS Status;
   LONG ErrorCode;
 
@@ -2886,7 +2886,7 @@ RegSetKeySecurity (HKEY hKey,
 		   SECURITY_INFORMATION SecurityInformation,
 		   PSECURITY_DESCRIPTOR pSecurityDescriptor)
 {
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   LONG ErrorCode;
   NTSTATUS Status;
 
@@ -3019,7 +3019,7 @@ RegSetValueExW (HKEY hKey,
 {
   UNICODE_STRING ValueName;
   PUNICODE_STRING pValueName;
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   NTSTATUS Status;
   LONG ErrorCode;
 
@@ -3134,7 +3134,7 @@ RegSetValueW (HKEY hKey,
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING SubKeyString;
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   HANDLE RealKey;
   LONG ErrorCode;
   BOOL CloseRealKey;
