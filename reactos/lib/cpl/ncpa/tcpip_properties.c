@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: tcpip_properties.c,v 1.4 2004/10/31 11:54:58 ekohl Exp $
+/* $Id: tcpip_properties.c,v 1.5 2004/12/11 21:07:20 arty Exp $
  *
  * PROJECT:         ReactOS Network Control Panel
  * FILE:            lib/cpl/system/tcpip_properties.c
@@ -79,7 +79,7 @@ TCPIPPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			} 
 			{
 				DWORD dwIPAddr;
-				DWORD b[4];
+				int b[4];
 				IP_ADDR_STRING *pString;
 				pString = &pInfo->IpAddressList;
 				while(pString->Next)
@@ -108,7 +108,7 @@ TCPIPPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					char pszDNS[MAX_PATH];
 					DWORD dwSize = sizeof(pszDNS);
 					DWORD dwType = REG_SZ;
-					DWORD b[2][4];
+					int b[2][4];
 					DWORD dwIPAddr;
 					RegQueryValueExA(hKey,"NameServer",NULL,&dwType,(BYTE*)pszDNS,&dwSize);
 					RegCloseKey(hKey);
