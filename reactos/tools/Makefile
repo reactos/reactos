@@ -15,7 +15,7 @@ TOOLS = \
 	rsym$(EXE_POSTFIX) \
 	rtouch$(EXE_POSTFIX) \
 	mkflpimg$(EXE_POSTFIX) \
-	makedep$(EXE_POSTFIX)
+	depends$(EXE_POSTFIX)
 
 CLEAN_FILES = $(TOOLS)
 
@@ -95,8 +95,8 @@ mkflpimg$(EXE_POSTFIX): mkflpimg.c
 	$(HOST_CC) $(CFLAGS) -DDOS_PATHS mkflpimg.c -o mkflpimg$(EXE_POSTFIX)
 endif
 
-makedep$(EXE_POSTFIX): makedep.c
-	$(HOST_CC) $(CFLAGS) -D__REACTOS__ makedep.c -o makedep$(EXE_POSTFIX)
+depends$(EXE_POSTFIX): depends.c
+	$(HOST_CC) $(CFLAGS) depends.c -o depends$(EXE_POSTFIX)
 
 zlib_target:
 	$(MAKE) -C ../lib/zlib -f Makefile.host
