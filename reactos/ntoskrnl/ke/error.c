@@ -19,8 +19,8 @@
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 KiCoprocessorError(
     VOID
 )
@@ -31,8 +31,8 @@ KiCoprocessorError(
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 KiUnexpectedInterrupt(
     VOID
 )

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.50 2004/08/19 21:51:06 hbirr Exp $
+/* $Id: kthread.c,v 1.51 2004/08/21 21:09:39 tamlin Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -36,8 +36,8 @@
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 KeCapturePersistentThreadState(
 	IN PVOID	CurrentThread,
 	IN ULONG	Setting1,
@@ -65,8 +65,8 @@ KeFreeStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 /*
  * @unimplemented
  */
-STDCALL
 KPRIORITY
+STDCALL
 KeQueryPriorityThread (
     IN PKTHREAD Thread
     )
@@ -105,8 +105,8 @@ KeReleaseThread(PETHREAD Thread)
 /*
  * @unimplemented
  */
-STDCALL
 BOOLEAN
+STDCALL
 KeSetKernelStackSwapEnable(
 	IN BOOLEAN Enable
 	)
@@ -321,8 +321,8 @@ KeRescheduleThread()
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 KeRevertToUserAffinityThread(
     VOID
 )
@@ -333,8 +333,8 @@ KeRevertToUserAffinityThread(
 /*
  * @unimplemented
  */
-STDCALL
 CCHAR
+STDCALL
 KeSetIdealProcessorThread (
 	IN PKTHREAD Thread,
 	IN CCHAR Processor
@@ -347,8 +347,8 @@ KeSetIdealProcessorThread (
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 KeSetSystemAffinityThread(
     IN KAFFINITY Affinity
 )
@@ -359,8 +359,8 @@ KeSetSystemAffinityThread(
 /*
  * @unimplemented
  */
-STDCALL
 VOID 
+STDCALL
 KeTerminateThread(
 	IN KPRIORITY   	 Increment  	 
 )

@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.34 2004/08/15 16:39:05 chorns Exp $
+/* $Id: dpc.c,v 1.35 2004/08/21 21:09:39 tamlin Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -139,8 +139,8 @@ KiDispatchInterrupt(VOID)
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 KeFlushQueuedDpcs(
 	VOID
 	)
@@ -151,8 +151,8 @@ KeFlushQueuedDpcs(
 /*
  * @unimplemented
  */
-STDCALL
 VOID 
+STDCALL
 KeIsExecutingDpc(
 	VOID
 )

@@ -135,8 +135,8 @@ NTSTATUS STDCALL KePulseEvent (PKEVENT		Event,
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 KeSetEventBoostPriority(
 	IN PKEVENT Event,
 	IN PKTHREAD *Thread OPTIONAL
