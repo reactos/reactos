@@ -1,6 +1,9 @@
 #ifndef __INCLUDE_NTOSKRNL_H
 #define __INCLUDE_NTOSKRNL_H
 
+#define __NO_CTYPE_INLINES
+
+
 #include <roscfg.h>
 #include <reactos/version.h>
 #include <reactos/resource.h>
