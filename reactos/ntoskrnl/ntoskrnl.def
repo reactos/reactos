@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.21 1999/10/30 21:24:37 ea Exp $
+; $Id: ntoskrnl.def,v 1.22 1999/10/31 22:41:48 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -179,20 +179,21 @@ RtlConvertUlongToLargeInteger
 RtlCopyMemory
 RtlEnlargedIntegerMultiply
 RtlExtendedIntegerMultiply
+RtlFillMemory@12
 RtlFreeUnicodeString
 RtlInitAnsiString
 RtlInitUnicodeString
 RtlLargeIntegerAdd
 RtlLargeIntegerGreaterThan
 RtlLargeIntegerShiftRight
-RtlMoveMemory
+RtlMoveMemorya@12
 RtlSecondsSince1970ToTime
 RtlSecondsSince1980ToTime
 RtlTimeFieldsToTime
 RtlTimeToSecondsSince1970
 RtlTimeToSecondsSince1980
 RtlTimeToTimeFields
-RtlZeroMemory
+RtlZeroMemory@8
 ZwAccessCheckAndAuditAlarm@44
 ZwAlertThread@4
 ZwAllocateVirtualMemory@24

@@ -1,4 +1,5 @@
-/*
+/* $Id: mem.c,v 1.5 1999/10/31 22:41:49 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            kernel/rtl/mem.c
@@ -56,19 +57,48 @@ VOID RtlCopyMemory(VOID* Destination, CONST VOID* Source, ULONG Length)
    DPRINT("*Destination %x\n",*(PULONG)Destination);
 }
 
-VOID RtlFillMemory(PVOID Destination, ULONG Length, UCHAR Fill)
+
+VOID
+STDCALL
+RtlFillMemory (
+	PVOID	Destination,
+	ULONG	Length,
+	UCHAR	Fill
+	)
 {
-   memset(Destination,Fill,Length);
+	memset(Destination,Fill,Length);
 }
 
-VOID RtlZeroMemory(PVOID Destination, ULONG Length)
+
+VOID
+STDCALL
+RtlZeroMemory (
+	PVOID	Destination,
+	ULONG	Length
+	)
 {
-   RtlFillMemory(Destination,Length,0);
+	RtlFillMemory (
+		Destination,
+		Length,
+		0
+		);
 }
 
-VOID RtlMoveMemory(PVOID Destination,
-		   CONST VOID* Source,
-		   ULONG Length)
+
+VOID
+STDCALL
+RtlMoveMemory (
+	PVOID		Destination,
+	CONST VOID	* Source,
+	ULONG		Length
+	)
 {
-   memmove(Destination,Source,Length);
+	memmove (
+		Destination,
+		Source,
+		Length
+		);
 }
+
+
+/* EOF */
