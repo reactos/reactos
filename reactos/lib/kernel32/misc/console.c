@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.52 2003/02/24 23:24:55 hbirr Exp $
+/* $Id: console.c,v 1.53 2003/03/02 01:23:19 mdill Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2144,7 +2144,6 @@ GenerateConsoleCtrlEvent(
 /*--------------------------------------------------------------
  *	GetConsoleTitleW
  */
-#define MAX_CONSOLE_TITLE_LENGTH 80
 
 WINBASEAPI
 DWORD
@@ -2154,60 +2153,43 @@ GetConsoleTitleW(
 	DWORD		nSize
 	)
 {
-	union {
-	CSRSS_API_REQUEST	quest;
-	CSRSS_API_REPLY		ply;
-	} Re;
-	NTSTATUS		Status;
-
-	/* Marshall data */
-	Re.quest.Type = CSRSS_GET_TITLE;
-	Re.quest.Data.GetTitleRequest.ConsoleHandle =
-		GetStdHandle (STD_INPUT_HANDLE);
-
-	/* Call CSRSS */
-	Status = CsrClientCallServer (
-			& Re.quest,
-			& Re.ply,
-			(sizeof (CSRSS_GET_TITLE_REQUEST) +
-			sizeof (LPC_MESSAGE) +
-			sizeof (ULONG)),
-			sizeof (CSRSS_API_REPLY)
-			);
-	if (	!NT_SUCCESS(Status)
-		|| !NT_SUCCESS (Status = Re.ply.Status)
-		)
-	{
-		SetLastErrorByStatus (Status);
-		return (0);
-	}
-
-	/* Convert size in characters to size in bytes */
-	nSize = sizeof (WCHAR) * nSize;
-
-	/* Unmarshall data */
-	if (nSize < Re.ply.Data.GetTitleReply.Length)
-	{
-		DbgPrint ("%s: ret=%d\n", __FUNCTION__, Re.ply.Data.GetTitleReply.Length);
-		nSize /= sizeof (WCHAR);
-		if (nSize > 1)
-		{
-			wcsncpy (
-				lpConsoleTitle,
-				Re.ply.Data.GetTitleReply.Title,
-				(nSize - 1)
-				);
-			/* Add null */
-			lpConsoleTitle [nSize --] = L'\0';
-		}
-	}
-	else
-	{
-		nSize = Re.ply.Data.GetTitleReply.Length / sizeof (WCHAR);
-		wcscpy (lpConsoleTitle, Re.ply.Data.GetTitleReply.Title);
-	}
-
-	return nSize;
+   CSRSS_API_REQUEST Request;
+   PCSRSS_API_REPLY Reply;
+   NTSTATUS Status;
+   
+   Reply = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CSRSS_API_REPLY) + CSRSS_MAX_TITLE_LENGTH * sizeof(WCHAR));
+   
+   if(Reply == NULL)
+   {
+      SetLastError(ERROR_OUTOFMEMORY);
+      return 0;
+   }
+   
+   Request.Type = CSRSS_GET_TITLE;
+   Request.Data.GetTitleRequest.ConsoleHandle = GetStdHandle(STD_INPUT_HANDLE);
+   
+   Status = CsrClientCallServer(&Request, Reply, sizeof(CSRSS_API_REQUEST), sizeof(CSRSS_API_REPLY) + CSRSS_MAX_TITLE_LENGTH * sizeof(WCHAR));
+   if(!NT_SUCCESS(Status) || !(NT_SUCCESS(Status = Reply->Status)))
+   {
+      SetLastErrorByStatus(Status);
+      RtlFreeHeap(GetProcessHeap(), 0, Reply);
+      return 0;
+   }
+   
+   if(nSize * sizeof(WCHAR) < Reply->Data.GetTitleReply.Length)
+   {
+      wcsncpy(lpConsoleTitle, Reply->Data.GetTitleReply.Title, nSize - 1);
+      lpConsoleTitle[nSize--] = L'\0';
+   }
+   else
+   {  
+      nSize = Reply->Data.GetTitleReply.Length / sizeof (WCHAR);
+      wcscpy(lpConsoleTitle, Reply->Data.GetTitleReply.Title);
+      lpConsoleTitle[nSize] = L'\0';
+   }
+   
+   RtlFreeHeap(GetProcessHeap(), 0, Reply);
+   return nSize;
 }
 
 
@@ -2224,14 +2206,14 @@ GetConsoleTitleA(
 	DWORD		nSize
 	)
 {
-	wchar_t	WideTitle [MAX_CONSOLE_TITLE_LENGTH];
+	wchar_t	WideTitle [CSRSS_MAX_TITLE_LENGTH];
 	DWORD	nWideTitle = sizeof WideTitle;
-//	DWORD	nWritten;
+	DWORD	nWritten;
 	
 	if (!lpConsoleTitle || !nSize) return 0;
 	nWideTitle = GetConsoleTitleW( (LPWSTR) WideTitle, nWideTitle );
 	if (!nWideTitle) return 0;
-#if 0
+
 	if ( (nWritten = WideCharToMultiByte(
     		CP_ACP,			// ANSI code page 
 		0,			// performance and mapping flags 
@@ -2246,7 +2228,7 @@ GetConsoleTitleA(
 		lpConsoleTitle[nWritten] = '\0';
 		return nWritten;
 	}
-#endif
+
 	return 0;
 }
 
@@ -2285,10 +2267,8 @@ SetConsoleTitleW(
   Request->Data.SetTitleRequest.Length = c;  
   Status = CsrClientCallServer(Request,
 			       &Reply,
-			       sizeof(CSRSS_SET_TITLE_REQUEST) +
-			       c +
-			       sizeof( LPC_MESSAGE ) +
-			       sizeof( ULONG ),
+			       sizeof(CSRSS_API_REQUEST) + 
+			       c * sizeof(WCHAR),
 			       sizeof(CSRSS_API_REPLY));
   
   if (!NT_SUCCESS(Status) || !NT_SUCCESS( Status = Reply.Status ) )
@@ -2338,10 +2318,8 @@ SetConsoleTitleA(
   Request->Data.SetTitleRequest.Length = c;
   Status = CsrClientCallServer(Request,
 			       &Reply,
-			       sizeof(CSRSS_SET_TITLE_REQUEST) +
-			       c +
-			       sizeof( LPC_MESSAGE ) +
-			       sizeof( ULONG ),
+			       sizeof(CSRSS_API_REQUEST) + 
+			       c * sizeof(WCHAR),
 			       sizeof(CSRSS_API_REPLY));
   
   if (!NT_SUCCESS(Status) || !NT_SUCCESS( Status = Reply.Status ) )
