@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2004/06/30 10:53:05 ekohl Exp $
+# $Id: Makefile,v 1.4 2004/07/02 20:28:00 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -34,7 +34,8 @@ TARGET_PCH =
 
 TARGET_CLEAN = 
 
-TARGET_OBJECTS = sysdm.o general.o computer.o hardware.o advanced.o userprofile.o
+TARGET_OBJECTS = sysdm.o general.o computer.o hardware.o advanced.o userprofile.o\
+                 environment.o
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 

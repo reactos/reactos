@@ -21,8 +21,8 @@ BOOL CALLBACK HardwarePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 BOOL CALLBACK AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK UserProfilePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-
-//BOOL CALLBACK EnvironmentDlgProc (HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+/* environment.c */
+BOOL CALLBACK EnvironmentDlgProc (HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 
 #endif /* __CPL_SYSDM_H */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: advanced.c,v 1.2 2004/06/30 10:53:05 ekohl Exp $
+/* $Id: advanced.c,v 1.3 2004/07/02 20:28:00 ekohl Exp $
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/advanced.c
@@ -38,8 +38,7 @@ AdvancedPageProc(
   HWND hwndDlg,
   UINT uMsg,
   WPARAM wParam,
-  LPARAM lParam
-)
+  LPARAM lParam)
 {
   switch (uMsg)
   {
@@ -47,6 +46,15 @@ AdvancedPageProc(
       break;
 
     case WM_COMMAND:
+      switch(LOWORD(wParam))
+      {
+        case IDC_ENVVAR:
+          DialogBox(hApplet,
+                    MAKEINTRESOURCE(IDD_ENVIRONMENT_VARIABLES),
+                    hwndDlg,
+                    EnvironmentDlgProc);
+          break;
+      }
       break;
 
   }
