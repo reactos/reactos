@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.179 2004/03/12 19:40:29 navaraf Exp $
+; $Id: ntoskrnl.def,v 1.180 2004/05/18 12:24:40 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -892,18 +892,18 @@ SeCaptureSubjectContext@4
 SeCreateClientSecurity@16
 SeDeassignSecurity@4
 ;SeDeleteAccessState@4
-;SeDeleteObjectAuditAlarm@8
+SeDeleteObjectAuditAlarm@8
 SeExports DATA
 ;SeFreePrivileges@4
 SeImpersonateClient@8
 ;SeLockSubjectContext@4
 ;SeMarkLogonSessionForTerminationNotification@4
-;SeOpenObjectAuditAlarm@36
-;SeOpenObjectForDeleteAuditAlarm@36
+SeOpenObjectAuditAlarm@36
+SeOpenObjectForDeleteAuditAlarm@36
 SePrivilegeCheck@12
 ;SePrivilegeObjectAuditAlarm@24
 SePublicDefaultDacl DATA
-;SeQueryAuthenticationIdToken@8
+SeQueryAuthenticationIdToken@8
 ;SeQuerySecurityDescriptorInfo@16
 ;SeRegisterLogonSessionTerminatedRoutine@4
 ;SeReleaseSecurityDescriptor@12

@@ -1,4 +1,4 @@
-/* $Id: audit.c,v 1.2 2003/12/14 17:44:02 hbirr Exp $
+/* $Id: audit.c,v 1.3 2004/05/18 12:23:48 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -98,6 +98,44 @@ NtPrivilegeObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
 {
   UNIMPLEMENTED;
   return(STATUS_NOT_IMPLEMENTED);
+}
+
+
+VOID STDCALL
+SeDeleteObjectAuditAlarm(IN PVOID Object,
+			 IN HANDLE Handle)
+{
+  UNIMPLEMENTED;
+}
+
+
+VOID STDCALL
+SeOpenObjectAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
+		       IN PVOID Object OPTIONAL,
+		       IN PUNICODE_STRING AbsoluteObjectName OPTIONAL,
+		       IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+		       IN PACCESS_STATE AccessState,
+		       IN BOOLEAN ObjectCreated,
+		       IN BOOLEAN AccessGranted,
+		       IN KPROCESSOR_MODE AccessMode,
+		       OUT PBOOLEAN GenerateOnClose)
+{
+  UNIMPLEMENTED;
+}
+
+
+VOID STDCALL
+SeOpenObjectForDeleteAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
+				IN PVOID Object OPTIONAL,
+				IN PUNICODE_STRING AbsoluteObjectName OPTIONAL,
+				IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+				IN PACCESS_STATE AccessState,
+				IN BOOLEAN ObjectCreated,
+				IN BOOLEAN AccessGranted,
+				IN KPROCESSOR_MODE AccessMode,
+				OUT PBOOLEAN GenerateOnClose)
+{
+  UNIMPLEMENTED;
 }
 
 /* EOF */

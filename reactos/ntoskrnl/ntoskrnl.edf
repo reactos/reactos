@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.165 2004/03/12 19:40:29 navaraf Exp $
+; $Id: ntoskrnl.edf,v 1.166 2004/05/18 12:24:40 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -892,18 +892,18 @@ SeCaptureSubjectContext=SeCaptureSubjectContext@4
 SeCreateClientSecurity=SeCreateClientSecurity@16
 SeDeassignSecurity=SeDeassignSecurity@4
 ;SeDeleteAccessState=SeDeleteAccessState@4
-;SeDeleteObjectAuditAlarm=SeDeleteObjectAuditAlarm@8
+SeDeleteObjectAuditAlarm=SeDeleteObjectAuditAlarm@8
 SeExports DATA
 ;SeFreePrivileges=SeFreePrivileges@4
 SeImpersonateClient=SeImpersonateClient@8
 ;SeLockSubjectContext=SeLockSubjectContext@4
 ;SeMarkLogonSessionForTerminationNotification=SeMarkLogonSessionForTerminationNotification@4
-;SeOpenObjectAuditAlarm=SeOpenObjectAuditAlarm@36
-;SeOpenObjectForDeleteAuditAlarm=SeOpenObjectForDeleteAuditAlarm@36
+SeOpenObjectAuditAlarm=SeOpenObjectAuditAlarm@36
+SeOpenObjectForDeleteAuditAlarm=SeOpenObjectForDeleteAuditAlarm@36
 SePrivilegeCheck=SePrivilegeCheck@12
 ;SePrivilegeObjectAuditAlarm=SePrivilegeObjectAuditAlarm@24
 SePublicDefaultDacl DATA
-;SeQueryAuthenticationIdToken=SeQueryAuthenticationIdToken@8
+SeQueryAuthenticationIdToken=SeQueryAuthenticationIdToken@8
 ;SeQuerySecurityDescriptorInfo=SeQuerySecurityDescriptorInfo@16
 ;SeRegisterLogonSessionTerminatedRoutine=SeRegisterLogonSessionTerminatedRoutine@4
 ;SeReleaseSecurityDescriptor=SeReleaseSecurityDescriptor@12

@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.34 2004/03/19 12:47:17 ekohl Exp $
+/* $Id: token.c,v 1.35 2004/05/18 12:23:48 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -1507,10 +1507,24 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
 /*
  * @implemented
  */
+NTSTATUS STDCALL
+SeQueryAuthenticationIdToken(IN PACCESS_TOKEN Token,
+			     OUT PLUID LogonId)
+{
+  LogonId->LowPart = Token->AuthenticationId.LowPart;
+  LogonId->HighPart = Token->AuthenticationId.HighPart;
+
+  return STATUS_SUCCESS;
+}
+
+
+/*
+ * @implemented
+ */
 SECURITY_IMPERSONATION_LEVEL STDCALL
 SeTokenImpersonationLevel(IN PACCESS_TOKEN Token)
 {
-  return(Token->ImpersonationLevel);
+  return Token->ImpersonationLevel;
 }
 
 
@@ -1520,7 +1534,9 @@ SeTokenImpersonationLevel(IN PACCESS_TOKEN Token)
 TOKEN_TYPE STDCALL
 SeTokenType(IN PACCESS_TOKEN Token)
 {
-  return(Token->TokenType);
+  return Token->TokenType;
 }
+
+
 
 /* EOF */
