@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.13 2004/04/09 20:03:16 navaraf Exp $
+/* $Id: guiconsole.c,v 1.14 2004/05/08 09:19:53 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -229,12 +229,11 @@ GuiConsoleUpdateBitmap(HWND hWnd, RECT rc)
               From = Buff->Buffer +
                      ((Line - (Buff->MaxY - Buff->ShowY)) * Buff->MaxX + LeftChar) * 2;
             }
-          Attribute = *(From + 1);
           Start = LeftChar;
           To = GuiData->LineBuffer;
           for (Char = LeftChar; Char <= RightChar; Char++)
             {
-              if (*(From + 1) != Attribute)
+              if (*(From + 1) != LastAttribute)
                 {
                   TextOutW(GuiData->MemoryDC, Start * GuiData->CharWidth, Line * GuiData->CharHeight,
                            GuiData->LineBuffer, Char - Start);
