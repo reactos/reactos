@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2003/11/14 17:13:35 weiden Exp $
+# $Id: Makefile,v 1.4 2003/11/16 21:46:46 sedwards Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -9,6 +9,8 @@ TARGET_APPTYPE = windows
 TARGET_NAME = welcome
 
 TARGET_INSTALLDIR = system32
+
+TARGET_CFLAGS = -D__USE_W32API
 
 TARGET_SDKLIBS = kernel32.a gdi32.a user32.a
 
