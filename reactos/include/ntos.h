@@ -1,6 +1,6 @@
 #ifndef _NTOS_H
 #define _NTOS_H
-/* $Id: ntos.h,v 1.19 2004/01/11 20:46:05 navaraf Exp $ */
+/* $Id: ntos.h,v 1.20 2004/01/23 21:18:27 ekohl Exp $ */
 
 #if defined(NTOS_MODE_USER)
 /* 
@@ -48,7 +48,6 @@
 #include "ntdll/rtl.h"
 #include "ntdll/trace.h"
 #include "rosrtl/thread.h"
-#include "kernel32/error.h"
 #else /* Assume kernel mode */
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
