@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.52 2000/12/01 12:44:15 jean Exp $
+/* $Id: registry.c,v 1.53 2001/01/28 21:37:37 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,46 +11,42 @@
  *                  Created 22/05/98
  */
 
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <defines.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
+#include <limits.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 /*  -----------------------------------------------------  Typedefs  */
 
-//#define LONG_MAX 0x7fffffff
-
-#define  REG_BLOCK_SIZE  		4096
-#define  REG_HEAP_BLOCK_DATA_OFFSET  	32
-#define  REG_HEAP_ID 			0x6e696268
-#define  REG_INIT_BLOCK_LIST_SIZE  	32
+#define  REG_BLOCK_SIZE			4096
+#define  REG_HEAP_BLOCK_DATA_OFFSET	32
+#define  REG_HEAP_ID			0x6e696268
+#define  REG_INIT_BLOCK_LIST_SIZE	32
 #define  REG_INIT_HASH_TABLE_SIZE	3
-#define  REG_EXTEND_HASH_TABLE_SIZE  	4
-#define  REG_VALUE_LIST_BLOCK_MULTIPLE  4
-#define  REG_KEY_BLOCK_ID    		0x6b6e
-#define  REG_HASH_TABLE_BLOCK_ID  	0x666c
-#define  REG_VALUE_BLOCK_ID  		0x6b76
-#define  REG_KEY_BLOCK_TYPE  		0x20
-#define  REG_ROOT_KEY_BLOCK_TYPE  	0x2c
+#define  REG_EXTEND_HASH_TABLE_SIZE	4
+#define  REG_VALUE_LIST_BLOCK_MULTIPLE	4
+#define  REG_KEY_BLOCK_ID		0x6b6e
+#define  REG_HASH_TABLE_BLOCK_ID	0x666c
+#define  REG_VALUE_BLOCK_ID		0x6b76
+#define  REG_KEY_BLOCK_TYPE		0x20
+#define  REG_ROOT_KEY_BLOCK_TYPE	0x2c
 
-#define  REG_ROOT_KEY_NAME  	L"\\Registry"
-#define  REG_MACHINE_KEY_NAME  	L"\\Registry\\Machine"
-#define  REG_SYSTEM_KEY_NAME  	L"\\Registry\\Machine\\System"
-#define  REG_SOFTWARE_KEY_NAME  L"\\Registry\\Machine\\Software"
-#define  REG_SAM_KEY_NAME  	L"\\Registry\\Machine\\Sam"
-#define  REG_SEC_KEY_NAME  	L"\\Registry\\Machine\\Security"
-#define  REG_USERS_KEY_NAME  	L"\\Registry\\User"
-#define  REG_USER_KEY_NAME  	L"\\Registry\\User\\CurrentUser"
+#define  REG_ROOT_KEY_NAME	L"\\Registry"
+#define  REG_MACHINE_KEY_NAME	L"\\Registry\\Machine"
+#define  REG_SYSTEM_KEY_NAME	L"\\Registry\\Machine\\System"
+#define  REG_SOFTWARE_KEY_NAME	L"\\Registry\\Machine\\Software"
+#define  REG_SAM_KEY_NAME	L"\\Registry\\Machine\\Sam"
+#define  REG_SEC_KEY_NAME	L"\\Registry\\Machine\\Security"
+#define  REG_USERS_KEY_NAME	L"\\Registry\\User"
+#define  REG_USER_KEY_NAME	L"\\Registry\\User\\CurrentUser"
 
-#define  SYSTEM_REG_FILE  	L"\\SystemRoot\\System32\\Config\\SYSTEM"
-#define  SOFTWARE_REG_FILE  	L"\\SystemRoot\\System32\\Config\\SOFTWARE"
-#define  USER_REG_FILE  	L"\\SystemRoot\\System32\\Config\\DEFAULT"
-#define  SAM_REG_FILE  		L"\\SystemRoot\\System32\\Config\\SAM"
-#define  SEC_REG_FILE  		L"\\SystemRoot\\System32\\Config\\SECURITY"
+#define  SYSTEM_REG_FILE	L"\\SystemRoot\\System32\\Config\\SYSTEM"
+#define  SOFTWARE_REG_FILE	L"\\SystemRoot\\System32\\Config\\SOFTWARE"
+#define  USER_REG_FILE		L"\\SystemRoot\\System32\\Config\\DEFAULT"
+#define  SAM_REG_FILE		L"\\SystemRoot\\System32\\Config\\SAM"
+#define  SEC_REG_FILE		L"\\SystemRoot\\System32\\Config\\SECURITY"
 
 #define  KO_MARKED_FOR_DELETE  0x00000001
 
@@ -60,30 +56,30 @@ typedef DWORD  BLOCK_OFFSET;
 /* header for registry hive file : */
 typedef struct _HEADER_BLOCK
 {
-  DWORD  BlockId;		/* ="regf" */
-  DWORD  Version;		/* file version ?*/
-  DWORD  VersionOld;		/* file version ?*/
-  FILETIME  DateModified;
-  DWORD  Unused3;		/* registry format version ? */
-  DWORD  Unused4;		/* registry format version ? */
-  DWORD  Unused5;		/* registry format version ? */
-  DWORD  Unused6;		/* registry format version ? */
+  ULONG  BlockId;		/* ="regf" */
+  ULONG  Version;		/* file version ?*/
+  ULONG  VersionOld;		/* file version ?*/
+  LARGE_INTEGER  DateModified;
+  ULONG  Unused3;		/* registry format version ? */
+  ULONG  Unused4;		/* registry format version ? */
+  ULONG  Unused5;		/* registry format version ? */
+  ULONG  Unused6;		/* registry format version ? */
   BLOCK_OFFSET  RootKeyBlock;
-  DWORD  BlockSize;
-  DWORD  Unused7;
+  ULONG  BlockSize;
+  ULONG  Unused7;
   WCHAR  FileName[64];		/* end of file name */
-  DWORD  Unused8[83];
-  DWORD  Checksum;
+  ULONG  Unused8[83];
+  ULONG  Checksum;
 } HEADER_BLOCK, *PHEADER_BLOCK;
 
 typedef struct _HEAP_BLOCK
 {
-  DWORD  BlockId;		/* = "hbin" */
+  ULONG  BlockId;		/* = "hbin" */
   BLOCK_OFFSET  BlockOffset;	/* block offset of this heap */
-  DWORD  BlockSize;		/* size in bytes, 4k multiple */
-  DWORD  Unused1;
-  FILETIME  DateModified;
-  DWORD  Unused2;
+  ULONG  BlockSize;		/* size in bytes, 4k multiple */
+  ULONG  Unused1;
+  LARGE_INTEGER  DateModified;
+  ULONG  Unused2;
 } HEAP_BLOCK, *PHEAP_BLOCK;
 
 // each sub_block begin with this struct :
@@ -96,22 +92,22 @@ typedef struct _FREE_SUB_BLOCK
 typedef struct _KEY_BLOCK
 {
   LONG  SubBlockSize;
-  WORD  SubBlockId;
-  WORD  Type;
-  FILETIME  LastWriteTime;
-  DWORD UnUsed1;
+  USHORT SubBlockId;
+  USHORT Type;
+  LARGE_INTEGER  LastWriteTime;
+  ULONG  UnUsed1;
   BLOCK_OFFSET  ParentKeyOffset;
-  DWORD  NumberOfSubKeys;
-  DWORD UnUsed2;
+  ULONG  NumberOfSubKeys;
+  ULONG  UnUsed2;
   BLOCK_OFFSET  HashTableOffset;
-  DWORD UnUsed3;
-  DWORD  NumberOfValues;
+  ULONG  UnUsed3;
+  ULONG  NumberOfValues;
   BLOCK_OFFSET  ValuesOffset;
   BLOCK_OFFSET  SecurityKeyOffset;
   BLOCK_OFFSET  ClassNameOffset;
-  DWORD  Unused4[5];
-  WORD  NameSize;
-  WORD  ClassSize; /* size of ClassName in bytes */
+  ULONG  Unused4[5];
+  USHORT NameSize;
+  USHORT ClassSize; /* size of ClassName in bytes */
   UCHAR  Name[0]; /* warning : not zero terminated */
 } KEY_BLOCK, *PKEY_BLOCK;
 
@@ -126,8 +122,8 @@ typedef struct _HASH_RECORD
 typedef struct _HASH_TABLE_BLOCK
 {
   LONG  SubBlockSize;
-  WORD  SubBlockId;
-  WORD  HashTableSize;
+  USHORT SubBlockId;
+  USHORT HashTableSize;
   HASH_RECORD  Table[0];
 } HASH_TABLE_BLOCK, *PHASH_TABLE_BLOCK;
 
@@ -140,13 +136,13 @@ typedef struct _VALUE_LIST_BLOCK
 typedef struct _VALUE_BLOCK
 {
   LONG  SubBlockSize;
-  WORD  SubBlockId;	// "kv"
-  WORD  NameSize;	// length of Name
+  USHORT SubBlockId;	// "kv"
+  USHORT NameSize;	// length of Name
   LONG  DataSize;	// length of datas in the subblock pointed by DataOffset
   BLOCK_OFFSET  DataOffset;// datas are here if high bit of DataSize is set
-  DWORD  DataType;
-  WORD  Flags;
-  WORD  Unused1;
+  ULONG  DataType;
+  USHORT Flags;
+  USHORT Unused1;
   UCHAR  Name[0]; /* warning : not zero terminated */
 } VALUE_BLOCK, *PVALUE_BLOCK;
 
@@ -159,7 +155,7 @@ typedef struct _DATA_BLOCK
 typedef struct _REGISTRY_FILE
 {
   PWSTR  Filename;
-  DWORD FileSize;
+  ULONG  FileSize;
   PFILE_OBJECT FileObject;
   PHEADER_BLOCK  HeaderBlock;
 //  ULONG  NumberOfBlocks;
@@ -184,14 +180,14 @@ typedef struct _KEY_OBJECT
   CSHORT  Size;
   
   ULONG  Flags;
-  WORD  NameSize;	// length of Name
+  USHORT NameSize;	// length of Name
   UCHAR  *Name;
   PREGISTRY_FILE  RegistryFile;
   BLOCK_OFFSET BlockOffset;
   PKEY_BLOCK  KeyBlock;
   struct _KEY_OBJECT  *ParentKey;
-  DWORD  NumberOfSubKeys;		/* subkeys loaded in SubKeys */
-  DWORD  SizeOfSubKeys;			/* space allocated in SubKeys */
+  ULONG  NumberOfSubKeys;		/* subkeys loaded in SubKeys */
+  ULONG  SizeOfSubKeys;			/* space allocated in SubKeys */
   struct _KEY_OBJECT  **SubKeys;		/* list of subkeys loaded */
 } KEY_OBJECT, *PKEY_OBJECT;
 
@@ -204,6 +200,9 @@ static PKEY_OBJECT  CmiRootKey = NULL;
 static PKEY_OBJECT  CmiMachineKey = NULL;
 static PKEY_OBJECT  CmiUserKey = NULL;
 static KSPIN_LOCK  CmiKeyListLock;
+
+static GENERIC_MAPPING CmiKeyMapping =
+	{KEY_READ, KEY_WRITE, KEY_EXECUTE, KEY_ALL_ACCESS};
 
 /*  -----------------------------------------  Forward Declarations  */
 
@@ -311,8 +310,8 @@ CmInitializeRegistry(VOID)
   HANDLE  RootKeyHandle;
   UNICODE_STRING  RootKeyName;
   OBJECT_ATTRIBUTES  ObjectAttributes;
- PKEY_OBJECT  NewKey;
- HANDLE  KeyHandle;
+  PKEY_OBJECT  NewKey;
+  HANDLE  KeyHandle;
   
   /*  Initialize the Key object type  */
   CmiKeyType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
@@ -322,6 +321,7 @@ CmInitializeRegistry(VOID)
   CmiKeyType->MaxHandles = LONG_MAX;
   CmiKeyType->PagedPoolCharge = 0;
   CmiKeyType->NonpagedPoolCharge = sizeof(KEY_OBJECT);
+  CmiKeyType->Mapping = &CmiKeyMapping;
   CmiKeyType->Dump = NULL;
   CmiKeyType->Open = NULL;
   CmiKeyType->Close = NULL;
@@ -398,8 +398,8 @@ DPRINT("Creating HKLM\n");
   RtlInitUnicodeString(&RootKeyName, REG_USERS_KEY_NAME);
 DPRINT("Creating HKU\n");
   InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
-  NewKey=ObCreateObject(&KeyHandle,
-                                STANDARD_RIGHTS_REQUIRED,
+   NewKey=ObCreateObject(&KeyHandle,
+                         STANDARD_RIGHTS_REQUIRED,
                  &ObjectAttributes,
                  CmiKeyType);
   Status = CmiAddSubKey(CmiVolatileFile,
@@ -410,16 +410,16 @@ DPRINT("Creating HKU\n");
                         0,
                         NULL,
                         0);
-    NewKey->RegistryFile = CmiVolatileFile;
-    NewKey->Flags = 0;
-    NewKey->NumberOfSubKeys=0;
-    NewKey->SubKeys= NULL;
-    NewKey->SizeOfSubKeys= NewKey->KeyBlock->NumberOfSubKeys;
-    NewKey->Name=ExAllocatePool(PagedPool,strlen("User"));
-    NewKey->NameSize=strlen("User");
-    memcpy(NewKey->Name,"Machine",strlen("User"));
-  CmiAddKeyToList(CmiRootKey,NewKey);
-    CmiUserKey=NewKey;
+   NewKey->RegistryFile = CmiVolatileFile;
+   NewKey->Flags = 0;
+   NewKey->NumberOfSubKeys=0;
+   NewKey->SubKeys= NULL;
+   NewKey->SizeOfSubKeys= NewKey->KeyBlock->NumberOfSubKeys;
+   NewKey->Name=ExAllocatePool(PagedPool,strlen("User"));
+   NewKey->NameSize=strlen("User");
+   memcpy(NewKey->Name,"Machine",strlen("User"));
+   CmiAddKeyToList(CmiRootKey,NewKey);
+   CmiUserKey=NewKey;
 
 
   /* FIXME: create remaining structure needed for default handles  */
@@ -776,8 +776,8 @@ NtEnumerateKey (
         {
           /*  Fill buffer with requested info  */
           BasicInformation = (PKEY_BASIC_INFORMATION) KeyInformation;
-          BasicInformation->LastWriteTime.u.LowPart = SubKeyBlock->LastWriteTime.dwLowDateTime;
-          BasicInformation->LastWriteTime.u.HighPart = SubKeyBlock->LastWriteTime.dwHighDateTime;
+          BasicInformation->LastWriteTime.u.LowPart = SubKeyBlock->LastWriteTime.u.LowPart;
+          BasicInformation->LastWriteTime.u.HighPart = SubKeyBlock->LastWriteTime.u.HighPart;
           BasicInformation->TitleIndex = Index;
           BasicInformation->NameLength = (SubKeyBlock->NameSize ) * sizeof(WCHAR);
           mbstowcs(BasicInformation->Name, 
@@ -801,8 +801,8 @@ NtEnumerateKey (
         {
           /*  Fill buffer with requested info  */
           NodeInformation = (PKEY_NODE_INFORMATION) KeyInformation;
-          NodeInformation->LastWriteTime.u.LowPart = SubKeyBlock->LastWriteTime.dwLowDateTime;
-          NodeInformation->LastWriteTime.u.HighPart = SubKeyBlock->LastWriteTime.dwHighDateTime;
+          NodeInformation->LastWriteTime.u.LowPart = SubKeyBlock->LastWriteTime.u.LowPart;
+          NodeInformation->LastWriteTime.u.HighPart = SubKeyBlock->LastWriteTime.u.HighPart;
           NodeInformation->TitleIndex = Index;
           NodeInformation->ClassOffset = sizeof(KEY_NODE_INFORMATION) + 
             SubKeyBlock->NameSize * sizeof(WCHAR);
@@ -838,8 +838,8 @@ NtEnumerateKey (
         {
           /* fill buffer with requested info  */
           FullInformation = (PKEY_FULL_INFORMATION) KeyInformation;
-          FullInformation->LastWriteTime.u.LowPart = SubKeyBlock->LastWriteTime.dwLowDateTime;
-          FullInformation->LastWriteTime.u.HighPart = SubKeyBlock->LastWriteTime.dwHighDateTime;
+          FullInformation->LastWriteTime.u.LowPart = SubKeyBlock->LastWriteTime.u.LowPart;
+          FullInformation->LastWriteTime.u.HighPart = SubKeyBlock->LastWriteTime.u.HighPart;
           FullInformation->TitleIndex = Index;
           FullInformation->ClassOffset = sizeof(KEY_FULL_INFORMATION) - 
             sizeof(WCHAR);
@@ -1126,12 +1126,12 @@ END FIXME*/
   fileOffset.u.HighPart = 0;
   for (i=0; i < RegistryFile->BlockListSize ; i++)
   {
-    if( RegistryFile->BlockList[i]->DateModified.dwHighDateTime
-	    > RegistryFile->HeaderBlock->DateModified.dwHighDateTime
-       ||(  RegistryFile->BlockList[i]->DateModified.dwHighDateTime
-	     == RegistryFile->HeaderBlock->DateModified.dwHighDateTime
-          && RegistryFile->BlockList[i]->DateModified.dwLowDateTime
-	      > RegistryFile->HeaderBlock->DateModified.dwLowDateTime)
+    if( RegistryFile->BlockList[i]->DateModified.u.HighPart
+	    > RegistryFile->HeaderBlock->DateModified.u.HighPart
+       ||(  RegistryFile->BlockList[i]->DateModified.u.HighPart
+	     == RegistryFile->HeaderBlock->DateModified.u.HighPart
+          && RegistryFile->BlockList[i]->DateModified.u.LowPart
+	      > RegistryFile->HeaderBlock->DateModified.u.LowPart)
        )
     {
       fileOffset.u.LowPart = RegistryFile->BlockList[i]->BlockOffset+4096;
@@ -1284,8 +1284,8 @@ NtQueryKey (
         {
           /*  Fill buffer with requested info  */
           BasicInformation = (PKEY_BASIC_INFORMATION) KeyInformation;
-          BasicInformation->LastWriteTime.u.LowPart = KeyBlock->LastWriteTime.dwLowDateTime;
-          BasicInformation->LastWriteTime.u.HighPart = KeyBlock->LastWriteTime.dwHighDateTime;
+          BasicInformation->LastWriteTime.u.LowPart = KeyBlock->LastWriteTime.u.LowPart;
+          BasicInformation->LastWriteTime.u.HighPart = KeyBlock->LastWriteTime.u.HighPart;
           BasicInformation->TitleIndex = 0;
           BasicInformation->NameLength = 
                 (KeyObject->NameSize ) * sizeof(WCHAR);
@@ -1309,8 +1309,8 @@ NtQueryKey (
         {
           /*  Fill buffer with requested info  */
           NodeInformation = (PKEY_NODE_INFORMATION) KeyInformation;
-          NodeInformation->LastWriteTime.u.LowPart = KeyBlock->LastWriteTime.dwLowDateTime;
-          NodeInformation->LastWriteTime.u.HighPart = KeyBlock->LastWriteTime.dwHighDateTime;
+          NodeInformation->LastWriteTime.u.LowPart = KeyBlock->LastWriteTime.u.LowPart;
+          NodeInformation->LastWriteTime.u.HighPart = KeyBlock->LastWriteTime.u.HighPart;
           NodeInformation->TitleIndex = 0;
           NodeInformation->ClassOffset = sizeof(KEY_NODE_INFORMATION) + 
             KeyObject->NameSize * sizeof(WCHAR);
@@ -1346,8 +1346,8 @@ NtQueryKey (
         {
           /*  Fill buffer with requested info  */
           FullInformation = (PKEY_FULL_INFORMATION) KeyInformation;
-          FullInformation->LastWriteTime.u.LowPart = KeyBlock->LastWriteTime.dwLowDateTime;
-          FullInformation->LastWriteTime.u.HighPart = KeyBlock->LastWriteTime.dwHighDateTime;
+          FullInformation->LastWriteTime.u.LowPart = KeyBlock->LastWriteTime.u.LowPart;
+          FullInformation->LastWriteTime.u.HighPart = KeyBlock->LastWriteTime.u.HighPart;
           FullInformation->TitleIndex = 0;
           FullInformation->ClassOffset = sizeof(KEY_FULL_INFORMATION) - 
             sizeof(WCHAR);
@@ -2415,8 +2415,8 @@ CmiCreateRegistry(PWSTR  Filename)
         ExAllocatePool(NonPagedPool, sizeof(HEADER_BLOCK));
       RtlZeroMemory(RegistryFile->HeaderBlock, sizeof(HEADER_BLOCK));
       RegistryFile->HeaderBlock->BlockId = 0x66676572;
-      RegistryFile->HeaderBlock->DateModified.dwLowDateTime = 0;
-      RegistryFile->HeaderBlock->DateModified.dwHighDateTime = 0;
+      RegistryFile->HeaderBlock->DateModified.u.LowPart = 0;
+      RegistryFile->HeaderBlock->DateModified.u.HighPart = 0;
       RegistryFile->HeaderBlock->Version = 1;
       RegistryFile->HeaderBlock->Unused3 = 3;
       RegistryFile->HeaderBlock->Unused5 = 1;

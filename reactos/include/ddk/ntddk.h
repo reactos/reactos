@@ -1,4 +1,4 @@
-/* $Id: ntddk.h,v 1.17 2001/01/08 02:14:05 dwelch Exp $
+/* $Id: ntddk.h,v 1.18 2001/01/28 21:36:05 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -27,6 +27,7 @@ extern "C"
 
 #include <ntos/types.h>
 #include <ntos/disk.h>
+#include <ntos/registry.h>
 #include <napi/types.h>
 
 #include <pe.h>
@@ -35,7 +36,6 @@ extern "C"
 #include <ddk/ntdef.h>
 #include <ddk/defines.h>
 #include <ddk/types.h>
-// #include <ddk/cfgtypes.h>
 #include <ddk/cmtypes.h>
 #include <ddk/ketypes.h>
 #include <ntos/security.h>

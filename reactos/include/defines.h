@@ -32,7 +32,11 @@
 #ifndef _GNU_H_WINDOWS32_DEFINES
 #define _GNU_H_WINDOWS32_DEFINES
 
+#include <ntos/registry.h>
+
 #define WINBASEAPI
+
+
 
 #ifndef WIN32_NO_STATUS
 //#define STATUS_WAIT_0     		(0x00000000L)
@@ -42,19 +46,6 @@
 //#define STATUS_PENDING     		(0x00000103L)
 #endif /* WIN32_NO_STATUS */
 
-
-
-/* DuplicateHandle, MapViewOfFile */
-#define KEY_ALL_ACCESS	(0xf003fL)
-#define KEY_CREATE_LINK	(32)
-#define KEY_CREATE_SUB_KEY	(4)
-#define KEY_ENUMERATE_SUB_KEYS	(8)
-#define KEY_EXECUTE	(0x20019L)
-#define KEY_NOTIFY	(16)
-#define KEY_QUERY_VALUE	(1)
-#define KEY_READ	(0x20019L)
-#define KEY_SET_VALUE	(2)
-#define KEY_WRITE	(0x20006L)
 
 
 /* CreateFile, GetFileAttributes, SetFileAttributes */
@@ -2106,18 +2097,6 @@ extern "C" {
 /* NetUserEnum */
 
 /* OpenProcessToken */
-#define TOKEN_ADJUST_DEFAULT	(128)
-#define TOKEN_ADJUST_GROUPS	(64)
-#define TOKEN_ADJUST_PRIVILEGES	(32)
-#define TOKEN_ALL_ACCESS	(0xf00ffL)
-#define TOKEN_ASSIGN_PRIMARY	(1)
-#define TOKEN_DUPLICATE	(2)
-#define TOKEN_EXECUTE	(0x20000L)
-#define TOKEN_IMPERSONATE	(4)
-#define TOKEN_QUERY	(8)
-#define TOKEN_QUERY_SOURCE	(16)
-#define TOKEN_READ	(0x20008L)
-#define TOKEN_WRITE	(0x200e0L)
 
 /* OpenSCManager */
 #define SC_MANAGER_ALL_ACCESS	(0xf003fL)
@@ -2194,10 +2173,6 @@ extern "C" {
 #define HKEY_DYN_DATA		((HKEY)0x00000006)
 
 /* RegCreateKeyEx */
-#define REG_OPTION_VOLATILE	(0x1L)
-#define REG_OPTION_NON_VOLATILE	(0L)
-#define REG_CREATED_NEW_KEY	(0x1L)
-#define REG_OPENED_EXISTING_KEY	(0x2L)
 
 /* RegEnumValue */
 #define REG_BINARY	(3)
@@ -2405,7 +2380,6 @@ extern "C" {
 #define CAL_SSHORTDATE	(5)
 
 /* SetProcessWorkingSetSize */
-#define PROCESS_SET_QUOTA	(256)
 
 /* SetPrinter */
 
@@ -4750,6 +4724,6 @@ DECLARE_HANDLE(HANDLE);
 }
 #endif /* __cplusplus */
 
-#endif /* WIN32_LEAN_AND_MEAN */							       
-							       
+#endif /* WIN32_LEAN_AND_MEAN */
+
 #endif /* _GNU_H_WINDOWS32_DEFINES */
