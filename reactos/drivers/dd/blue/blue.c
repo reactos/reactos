@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.35 2002/09/08 10:22:04 chorns Exp $
+/* $Id: blue.c,v 1.36 2003/03/09 21:43:37 hbirr Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -175,10 +175,12 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
     rows = DeviceExtension->Rows;
     columns = DeviceExtension->Columns;
 
+    __asm__ ("cli\n\t");
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
     offset = READ_PORT_UCHAR (CRTC_DATA)<<8;
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
     offset += READ_PORT_UCHAR (CRTC_DATA);
+    __asm__ ("sti\n\t");
 
     cursory = offset / columns;
     cursorx = offset % columns;
@@ -268,11 +270,13 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
        /* Set the cursor position */
        offset = (cursory * columns) + cursorx;
     }
+    __asm__ ("cli\n\t");
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
     WRITE_PORT_UCHAR (CRTC_DATA, offset);
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
     offset >>= 8;
     WRITE_PORT_UCHAR (CRTC_DATA, offset);
+    __asm__ ("sti\n\t");
 
     Status = STATUS_SUCCESS;
 
