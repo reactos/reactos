@@ -68,21 +68,27 @@ WSPSocket(
 	UNICODE_STRING				TransportName;
 	UNICODE_STRING				DevName;
 	LARGE_INTEGER				GroupData;
+	INT                         Status;
 
 	AFD_DbgPrint(MAX_TRACE, ("Creating Socket, getting TDI Name\n"));
 	AFD_DbgPrint(MAX_TRACE, ("AddressFamily (%d)  SocketType (%d)  Protocol (%d).\n",
     AddressFamily, SocketType, Protocol));
 
 	/* Get Helper Data and Transport */
-	SockGetTdiName (&AddressFamily,
-					&SocketType,
-					&Protocol,
-					g, 
-					dwFlags, 
-					&TransportName, 
-					&HelperDLLContext, 
-					&HelperData, 
-					&HelperEvents);
+	Status = SockGetTdiName (&AddressFamily,
+	                         &SocketType,
+	                         &Protocol,
+	                         g,
+	                         dwFlags,
+	                         &TransportName,
+	                         &HelperDLLContext,
+	                         &HelperData,
+	                         &HelperEvents);
+
+	/* Check for error */
+	if (Status != NO_ERROR) {
+	    goto error;
+	}
 
 	/* AFD Device Name */
 	RtlInitUnicodeString(&DevName, L"\\Device\\Afd\\Endpoint");
