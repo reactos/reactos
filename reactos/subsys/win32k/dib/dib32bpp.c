@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib32bpp.c,v 1.13 2004/03/26 23:48:47 weiden Exp $ */
+/* $Id: dib32bpp.c,v 1.14 2004/03/28 23:25:48 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -121,7 +121,7 @@ DIB_32BPP_BitBltSrcCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         for (i=DestRect->left; i<DestRect->right; i++)
         {
           xColor = XLATEOBJ_iXlate(ColorTranslation,
-              (*SourceLine_4BPP & altnotmask[sx&1]) >> (4 * (1-(sx & 1))));
+              (*SourceLine_4BPP & altnotmask[f1]) >> (4 * (1 - f1)));
           DIB_32BPP_PutPixel(DestSurf, i, j, xColor);
           if(f1 == 1) { SourceLine_4BPP++; f1 = 0; } else { f1 = 1; }
           sx++;
