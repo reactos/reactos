@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.63 2004/01/18 08:29:31 navaraf Exp $
+ *  $Id: painting.c,v 1.64 2004/01/21 17:23:55 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -783,10 +783,8 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
        IntReleaseWindowObject(Window);
        return NULL;
      }
-   IntLPtoDP(DC, (LPPOINT)&ClipRect, 2);
    DC_UnlockDc(lPs->hdc);
    NtGdiIntersectRect(&lPs->rcPaint, &ClientRect, &ClipRect);
-   NtGdiDPtoLP(lPs->hdc, (LPPOINT)&lPs->rcPaint, 2);
 
    if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
    {

@@ -305,7 +305,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
    } else
    if (ExStyle & WS_EX_STATICEDGE)
    {
-      DrawEdge(hDC, &CurrentRect, BDR_SUNKENINNER, BF_RECT | BF_ADJUST);
+      DrawEdge(hDC, &CurrentRect, BDR_SUNKENINNER, BF_RECT | BF_ADJUST | BF_FLAT);
    }
     
    /* Firstly the "thick" frame */
