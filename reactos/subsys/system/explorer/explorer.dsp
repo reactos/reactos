@@ -361,10 +361,6 @@ SOURCE=.\res\arrow.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\res\arrow_do.ico
-# End Source File
-# Begin Source File
-
 SOURCE=.\res\arrow_dwn.ico
 # End Source File
 # Begin Source File
@@ -478,10 +474,6 @@ SOURCE=.\res\icoalig9.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=.\res\icon.ico
-# End Source File
-# Begin Source File
-
 SOURCE=.\res\images.bmp
 # End Source File
 # Begin Source File
@@ -510,23 +502,11 @@ SOURCE=.\res\network.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\res\notify.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\notify_h.ico
-# End Source File
-# Begin Source File
-
 SOURCE=.\res\notify_l.ico
 # End Source File
 # Begin Source File
 
 SOURCE=.\res\notify_r.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\notify_t.ico
 # End Source File
 # Begin Source File
 
