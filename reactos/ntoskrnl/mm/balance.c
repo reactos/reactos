@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.15 2003/04/26 23:13:32 hyperion Exp $
+/* $Id: balance.c,v 1.16 2003/06/14 17:53:25 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -62,17 +62,16 @@ static KSPIN_LOCK AllocationListLock;
 static ULONG NrWorkingThreads = 0;
 static HANDLE WorkerThreadId;
 static ULONG MiPagesRequired = 0;
-static ULONG MiMinimumPagesPerRun = 1;
+static ULONG MiMinimumPagesPerRun = 10;
 
 /* FUNCTIONS ****************************************************************/
 
 VOID MmPrintMemoryStatistic(VOID)
 {
-  DbgPrint("MC_CACHE %d, MC_USER %d, MC_PPOOL %d, MC_NPPOOL %d\n",
-           MiMemoryConsumers[MC_CACHE].PagesUsed, 
-	   MiMemoryConsumers[MC_USER].PagesUsed, 
-           MiMemoryConsumers[MC_PPOOL].PagesUsed, 
-	   MiMemoryConsumers[MC_NPPOOL].PagesUsed); 
+  DbgPrint("MC_CACHE %d, MC_USER %d, MC_PPOOL %d, MC_NPPOOL %d, MiNrAvailablePages %d\n",
+           MiMemoryConsumers[MC_CACHE].PagesUsed, MiMemoryConsumers[MC_USER].PagesUsed, 
+           MiMemoryConsumers[MC_PPOOL].PagesUsed, MiMemoryConsumers[MC_NPPOOL].PagesUsed,
+	   MiNrAvailablePages); 
 }
 
 VOID
@@ -119,7 +118,6 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PHYSICAL_ADDRESS Page)
     {
       InterlockedDecrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
       InterlockedIncrement((LONG *)&MiNrAvailablePages);
-      InterlockedDecrement((LONG *)&MiPagesRequired);
       if (IsListEmpty(&AllocationListHead))
 	{
 	  KeReleaseSpinLock(&AllocationListLock, oldIrql);
@@ -151,7 +149,7 @@ MiTrimMemoryConsumer(ULONG Consumer)
 
   Target = MiMemoryConsumers[Consumer].PagesUsed - 
     MiMemoryConsumers[Consumer].PagesTarget;
-  if (Target < 0)
+  if (Target < 1)
     {
       Target = 1;
     }
@@ -171,7 +169,7 @@ MiRebalanceMemoryConsumers(VOID)
   NTSTATUS Status;
 
   Target = (MiMinimumAvailablePages - MiNrAvailablePages) + MiPagesRequired;
-  Target = min(Target, (LONG) MiMinimumPagesPerRun);
+  Target = max(Target, (LONG) MiMinimumPagesPerRun);
 
   for (i = 0; i < MC_MAXIMUM && Target > 0; i++)
     {
@@ -259,6 +257,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 		  KeBugCheck(0);
 		}
 	      *AllocatedPage = Page;
+	      InterlockedDecrement((LONG *)&MiPagesRequired);
 	      return(STATUS_SUCCESS);
 	    }
 	  InsertTailList(&AllocationListHead, &Request.ListEntry);
@@ -277,6 +276,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 	}
       MmTransferOwnershipPage(Page, Consumer);
       *AllocatedPage = Page;
+      InterlockedDecrement((LONG *)&MiPagesRequired);
       return(STATUS_SUCCESS);
     }
 
