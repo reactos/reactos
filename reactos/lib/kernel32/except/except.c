@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.15 2004/07/07 16:32:01 navaraf Exp $
+/* $Id: except.c,v 1.16 2004/08/22 18:49:11 tamlin Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -140,8 +140,15 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
       Frame = (PULONG)ExceptionInfo->ContextRecord->Ebp;
       while (Frame[1] != 0 && Frame[1] != 0xdeadbeef)
       {
-         _module_name_from_addr((const void*)Frame[1], szMod, sizeof(szMod));
-         DPRINT1("   %8x   %s\n", Frame[1], szMod);
+         if (IsBadReadPtr((PVOID)Frame[1], 4)) {
+           DPRINT1("   %8x   %s\n", Frame[1], "<invalid address>");
+         } else {
+           _module_name_from_addr((const void*)Frame[1], szMod, sizeof(szMod));
+           DPRINT1("   %8x   %s\n", Frame[1], szMod);
+         }
+         if (IsBadReadPtr((PVOID)Frame[0], sizeof(*Frame) * 2)) {
+           break;
+         }
          Frame = (PULONG)Frame[0];
       }
 #endif
