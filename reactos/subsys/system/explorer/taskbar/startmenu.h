@@ -49,6 +49,8 @@ struct StartMenuButton : public Button
 
 typedef list<ShellPath> StartMenuFolders;
 typedef list<ShellDirectory> StartMenuShellDirs;
+typedef map<UINT, const ShellEntry*> ShellEntryMap;
+
 
  // Startmenu window
 struct StartMenu : public OwnerDrawParent<Dialog>
@@ -64,6 +66,7 @@ struct StartMenu : public OwnerDrawParent<Dialog>
 protected:
 	int		_next_id;
 	StartMenuShellDirs _dirs;
+	ShellEntryMap _entry_map;
 
 	static BtnWindowClass s_wcStartMenu;
 
@@ -71,8 +74,12 @@ protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
 
-	void	AddButton(LPCTSTR text, HICON hIcon=0, UINT id=(UINT)-1);
+	UINT	AddButton(LPCTSTR text, HICON hIcon=0, UINT id=(UINT)-1);
+	UINT	AddButton(const ShellFolder folder, const ShellEntry* entry);
+
 	void	AddShellEntries(const ShellDirectory& dir, bool subfolders=true);
+
+	void	ActivateEntry(ShellEntry* entry);
 };
 
 

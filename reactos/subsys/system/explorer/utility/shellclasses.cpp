@@ -74,7 +74,7 @@ CommonDesktop::~CommonDesktop()
 }
 
 
-HRESULT path_from_pidlA(IShellFolder* folder, LPITEMIDLIST pidl, LPSTR buffer, int len)
+HRESULT path_from_pidlA(IShellFolder* folder, LPCITEMIDLIST pidl, LPSTR buffer, int len)
 {
 	StrRetA str;
 
@@ -88,7 +88,7 @@ HRESULT path_from_pidlA(IShellFolder* folder, LPITEMIDLIST pidl, LPSTR buffer, i
 	return hr;
 }
 
-HRESULT path_from_pidlW(IShellFolder* folder, LPITEMIDLIST pidl, LPWSTR buffer, int len)
+HRESULT path_from_pidlW(IShellFolder* folder, LPCITEMIDLIST pidl, LPWSTR buffer, int len)
 {
 	StrRetW str;
 
@@ -102,7 +102,7 @@ HRESULT path_from_pidlW(IShellFolder* folder, LPITEMIDLIST pidl, LPWSTR buffer, 
 	return hr;
 }
 
-HRESULT name_from_pidl(IShellFolder* folder, LPITEMIDLIST pidl, LPTSTR buffer, int len, SHGDNF flags)
+HRESULT name_from_pidl(IShellFolder* folder, LPCITEMIDLIST pidl, LPTSTR buffer, int len, SHGDNF flags)
 {
 	StrRet str;
 
@@ -132,6 +132,7 @@ ShellFolder::ShellFolder()
 ShellFolder::ShellFolder(IShellFolder* p)
  :	IShellFolderPtr(p)
 {
+	p->AddRef();
 }
 
 ShellFolder::ShellFolder(IShellFolder* parent, LPCITEMIDLIST pidl)
@@ -179,16 +180,24 @@ void ShellFolder::attach(IShellFolder* parent, LPCITEMIDLIST pidl)
 ShellFolder::ShellFolder()
 {
 	CheckError(SHGetDesktopFolder(&_p));
+
+	_p->AddRef();
 }
 
 ShellFolder::ShellFolder(IShellFolder* p)
  :	SIfacePtr<IShellFolder>(p)
 {
+	_p->AddRef();
 }
 
 ShellFolder::ShellFolder(IShellFolder* parent, LPCITEMIDLIST pidl)
 {
-	CheckError(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
+	if (pidl->mkid.cb)
+		CheckError(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
+	else
+		_p = Desktop();
+
+	_p->AddRef();
 }
 
 ShellFolder::ShellFolder(LPCITEMIDLIST pidl)
@@ -197,6 +206,8 @@ ShellFolder::ShellFolder(LPCITEMIDLIST pidl)
 		CheckError(Desktop()->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
 	else
 		_p = Desktop();
+
+	_p->AddRef();
 }
 
 void ShellFolder::attach(IShellFolder* parent, LPCITEMIDLIST pidl)
@@ -205,6 +216,7 @@ void ShellFolder::attach(IShellFolder* parent, LPCITEMIDLIST pidl)
 
 	CheckError(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
 
+	_p->AddRef();
 	h->Release();
 }
 

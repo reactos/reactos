@@ -60,13 +60,13 @@ public:
 
 	WIN32_FIND_DATA _data;
 
-	BY_HANDLE_FILE_INFORMATION _bhfi;
-	bool		_bhfi_valid;
-
 	SFGAOF		_shell_attribs;
 
 	ENTRY_TYPE	_etype;
 	HICON		_hicon;
+
+	BY_HANDLE_FILE_INFORMATION _bhfi;
+	bool		_bhfi_valid;
 
 	void	free_subentries();
 
@@ -78,8 +78,8 @@ public:
 	virtual void read_directory() {}
 	virtual const void* get_next_path_component(const void*) {return NULL;}
 	virtual Entry* find_entry(const void*) {return NULL;}
-	virtual void get_path(PTSTR path) = 0;
-	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow);
+	virtual void get_path(PTSTR path) const = 0;
+	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
 };
 
 struct Directory {

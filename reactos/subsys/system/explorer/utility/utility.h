@@ -53,6 +53,10 @@
 
 #ifdef __cplusplus
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4786)	// disable warnings about too long debug information symbols
+#endif
+
  // STL headers for strings and streams
 #include <string>
 #include <iostream>
@@ -64,7 +68,7 @@ using namespace std;
 #include <comdef.h>
 using namespace _com_util;
 
-#endif	// _MSC_VER
+#endif	// _MSC_VER && !_NO_COMUTIL
 
 
 #define	for if (0) {} else for

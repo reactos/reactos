@@ -157,7 +157,7 @@ Entry* UnixDirectory::find_entry(const void* p)
 
 
  // get full path of specified directory entry
-void UnixEntry::get_path(PTSTR path)
+void UnixEntry::get_path(PTSTR path) const
 {
 	int level = 0;
 	int len = 0;

@@ -140,12 +140,12 @@ Entry* WinDirectory::find_entry(const void* p)
 
 
  // get full path of specified directory entry
-void WinEntry::get_path(PTSTR path)
+void WinEntry::get_path(PTSTR path) const
 {
 	int level = 0;
 	int len = 0;
 
-	for(Entry* entry=this; entry; level++) {
+	for(const Entry* entry=this; entry; level++) {
 		LPCTSTR name = entry->_data.cFileName;
 		int l = 0;
 

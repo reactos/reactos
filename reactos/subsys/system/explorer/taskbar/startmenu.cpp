@@ -22,6 +22,8 @@
  //
  // startmenu.cpp
  //
+ // Explorer start menu
+ //
  // Martin Fuchs, 19.08.2003
  //
 
@@ -30,6 +32,7 @@
 
 #include "../explorer.h"
 #include "../globals.h"
+#include "../externals.h"
 #include "../explorer_intres.h"
 
 #include "taskbar.h"
@@ -49,6 +52,8 @@ StartMenu::StartMenu(HWND hwnd, const StartMenuFolders& info)
 {
 	for(StartMenuFolders::const_iterator it=info.begin(); it!=info.end(); ++it)
 		_dirs.push_back(ShellDirectory(Desktop(), *it, _hwnd));
+
+	_next_id = IDC_FIRST_MENU;
 }
 
 
@@ -88,21 +93,22 @@ LRESULT	StartMenu::Init(LPCREATESTRUCT pcs)
 void StartMenu::AddShellEntries(const ShellDirectory& dir, bool subfolders)
 {
 	for(const Entry*entry=dir._down; entry; entry=entry->_next) {
+		 // hide files like "desktop.ini"
 		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
 			continue;
 
-		HICON hIcon = entry->_hicon;
-
-		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			if (!subfolders)
+		 // hide subfolders if requested
+		if (!subfolders)
+			if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 				continue;
 
-			hIcon = SmallIcon(IDI_EXPLORER);
-		}
+		const ShellEntry* shell_entry = static_cast<const ShellEntry*>(entry);
 
-		AddButton(dir._folder.get_name(&*static_cast<const ShellEntry*>(entry)->_pidl).c_str(), hIcon);
+		AddButton(dir._folder, shell_entry);
 	}
 }
+
+
 
 LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
@@ -112,13 +118,12 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 		if (res>=HTSIZEFIRST && res<=HTSIZELAST)
 			return HTCLIENT;	// disable window resizing
-		else
-			return res;
-		}
+
+		return res;}
 
 	  case WM_SYSCOMMAND:
 		if ((wparam&0xFFF0) == SC_SIZE)
-			return 0;	// disable window resizing
+			return 0;			// disable window resizing
 		goto def;
 
 	  default: def:
@@ -135,14 +140,21 @@ int StartMenu::Command(int id, int code)
 		DestroyWindow(_hwnd);
 		break;
 
-	  default:
-		return super::Command(id, code);
+	  default: {
+		ShellEntryMap::const_iterator found = _entry_map.find(id);
+
+		if (found != _entry_map.end()) {
+			ActivateEntry(const_cast<ShellEntry*>(found->second));
+			break;
+		}
+
+		return super::Command(id, code);}
 	}
 
 	return 0;
 }
 
-void StartMenu::AddButton(LPCTSTR text, HICON hIcon, UINT id)
+UINT StartMenu::AddButton(LPCTSTR text, HICON hIcon, UINT id)
 {
 	if (id == (UINT)-1)
 		id = ++_next_id;
@@ -159,6 +171,38 @@ void StartMenu::AddButton(LPCTSTR text, HICON hIcon, UINT id)
 	MoveWindow(_hwnd, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, TRUE);
 
 	StartMenuButton(_hwnd, rect.bottom-rect.top-STARTMENU_LINE_HEIGHT-4, text, id, hIcon);
+
+	return id;
+}
+
+UINT StartMenu::AddButton(const ShellFolder folder, const ShellEntry* entry)
+{
+	HICON hIcon = entry->_hicon;
+
+	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		hIcon = SmallIcon(IDI_EXPLORER);
+
+	const String& entry_name = folder.get_name(entry->_pidl);
+
+	UINT id = AddButton(entry_name, hIcon);
+
+	_entry_map[id] = entry;
+
+	return id;
+}
+
+void StartMenu::ActivateEntry(ShellEntry* entry)
+{
+	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+		StartMenuFolders new_folders;
+
+		new_folders.push_back(entry->create_absolute_pidl(_hwnd));
+
+		WindowRect my_pos(_hwnd);
+		StartMenu::Create(my_pos.right, my_pos.top+STARTMENU_HEIGHT-4, new_folders, _hwnd);
+	} else {
+		entry->launch_entry(_hwnd);
+	}
 }
 
 
@@ -190,7 +234,7 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 	AddShellEntries(usr_startmenu, false);
 
 	 // insert hard coded start entries
-	//AddButton(ResString(IDS_PROGRAMS),0, IDC_PROGRAMS);
+	AddButton(ResString(IDS_PROGRAMS),	0, IDC_PROGRAMS);
 	AddButton(ResString(IDS_EXPLORE),	SmallIcon(IDI_EXPLORER), IDC_EXPLORE);
 	AddButton(ResString(IDS_FAVORITES),	0, IDC_FAVORITES);
 	AddButton(ResString(IDS_DOCUMENTS),	0, IDC_DOCUMENTS);
@@ -201,23 +245,26 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 	AddButton(ResString(IDS_SHUTDOWN),	SmallIcon(IDI_LOGOFF), IDC_SHUTDOWN);
 	AddButton(ResString(IDS_LOGOFF),	SmallIcon(IDI_LOGOFF), IDC_LOGOFF);
 
-
-	 //TEST: open programs menu folder
-	StartMenuFolders prg_folders;
-
-	prg_folders.push_back(SpecialFolder(CSIDL_COMMON_PROGRAMS, _hwnd));
-	prg_folders.push_back(SpecialFolder(CSIDL_PROGRAMS, _hwnd));
-
-	WindowRect my_pos(_hwnd);
-	StartMenu::Create(my_pos.right, my_pos.top+STARTMENU_HEIGHT-4, prg_folders, _hwnd);
-
-
 	return 0;
 }
 
 int StartMenuRoot::Command(int id, int code)
 {
 	switch(id) {
+	  case IDC_PROGRAMS: {
+		StartMenuFolders prg_folders;
+
+		prg_folders.push_back(SpecialFolder(CSIDL_COMMON_PROGRAMS, _hwnd));
+		prg_folders.push_back(SpecialFolder(CSIDL_PROGRAMS, _hwnd));
+
+		WindowRect my_pos(_hwnd);
+		StartMenu::Create(my_pos.right, my_pos.top+STARTMENU_HEIGHT-4, prg_folders, _hwnd);
+		break;}
+
+	  case IDC_EXPLORE:
+		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
+		break;
+
 	  case IDC_LOGOFF:
 		DestroyWindow(GetParent(_hwnd));	//TODO: show dialog and ask for acknowledge
 		break;

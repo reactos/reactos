@@ -1,7 +1,13 @@
-2003-08-16  Martin Fuchs	<martin-fuchs@gmx.net>
+2003-08-19  Martin Fuchs	<martin-fuchs@gmx.net>
+
+	* subsys/system/explorer/taskbar/startmenu.cpp:
+	Implemented navigation in submenus of the start menu.
+	Start menus can now resolve shortcuts and launch programs.
+
+2003-08-18  Martin Fuchs	<martin-fuchs@gmx.net>
 
 	* subsys/system/explorer/taskbar/taskbar.cpp:
-	first draft of explorer start menu
+	First draft of explorer start menu.
 
 2003-08-17  James Tabor <jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net>
 

@@ -115,18 +115,16 @@ LPITEMIDLIST ShellEntry::create_absolute_pidl(HWND hwnd)
 
 
  // get full path of a shell entry
-void ShellEntry::get_path(PTSTR path)
+void ShellEntry::get_path(PTSTR path) const
 {
 	path[0] = TEXT('\0');
 
-	IShellFolder* parent = _up? static_cast<ShellDirectory*>(_up)->_folder: Desktop();
-
-	HRESULT hr = path_from_pidl(parent, &*_pidl, path, MAX_PATH);
+	HRESULT hr = path_from_pidl(get_parent_folder(), &*_pidl, path, MAX_PATH);
 }
 
 
  // get full path of a shell folder
-void ShellDirectory::get_path(PTSTR path)
+void ShellDirectory::get_path(PTSTR path) const
 {
 	path[0] = TEXT('\0');
 
@@ -134,13 +132,10 @@ void ShellDirectory::get_path(PTSTR path)
 	HRESULT hr = S_OK;
 
 	if (!_folder.empty())
-		hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&_pidl, &attribs);
+		hr = const_cast<ShellFolder&>(_folder)->GetAttributesOf(1, (LPCITEMIDLIST*)&_pidl, &attribs);
 
-	if (SUCCEEDED(hr) && (attribs&SFGAO_FILESYSTEM)) {
-		IShellFolder* parent = _up? static_cast<ShellDirectory*>(_up)->_folder: Desktop();
-
-		hr = path_from_pidl(parent, &*_pidl, path, MAX_PATH);
-	}
+	if (SUCCEEDED(hr) && (attribs&SFGAO_FILESYSTEM))
+		hr = path_from_pidl(get_parent_folder(), &*_pidl, path, MAX_PATH);
 }
 
 

@@ -440,16 +440,20 @@ int Window::MessageLoop()
 	MSG msg;
 
 	while(GetMessage(&msg, 0, 0, 0)) {
-		if (pretranslate_msg(&msg))
-			continue;
-
-		if (dispatch_dialog_msg(&msg))
-			continue;
-
-		TranslateMessage(&msg);
-
 		try {
-			DispatchMessage(&msg);
+			if (pretranslate_msg(&msg))
+				continue;
+
+			if (dispatch_dialog_msg(&msg))
+				continue;
+
+			TranslateMessage(&msg);
+
+			try {
+				DispatchMessage(&msg);
+			} catch(COMException& e) {
+				HandleException(e, g_Globals._hMainWnd);
+			}
 		} catch(COMException& e) {
 			HandleException(e, g_Globals._hMainWnd);
 		}

@@ -42,6 +42,7 @@ Entry::Entry(ENTRY_TYPE etype)
 	_down = NULL;
 	_expanded = false;
 	_scanned = false;
+	_bhfi_valid = false;
 	_level = 0;
 	_hicon = 0;
 }
@@ -54,6 +55,7 @@ Entry::Entry(Entry* parent)
 	_down = NULL;
 	_expanded = false;
 	_scanned = false;
+	_bhfi_valid = false;
 	_level = 0;
 	_hicon = 0;
 }

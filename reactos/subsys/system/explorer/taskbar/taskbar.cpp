@@ -61,6 +61,7 @@ DesktopBar::DesktopBar(HWND hwnd)
  :	super(hwnd)
 {
 	_hwndTaskBar = 0;
+	_startMenuRoot = 0;
 }
 
 DesktopBar::~DesktopBar()
@@ -143,12 +144,18 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 int DesktopBar::Command(int id, int code)
 {
 	switch(id) {
-	  case IDC_START: {
-		 // create Startmenu
-		WindowRect my_pos(_hwnd);
+	  case IDC_START:
+		if (_startMenuRoot && IsWindow(_startMenuRoot)) {
+			 // dispose Startmenu
+			DestroyWindow(_startMenuRoot);
+			_startMenuRoot = 0;
+		} else {
+			 // create Startmenu
+			WindowRect my_pos(_hwnd);
 
-		StartMenuRoot::Create(my_pos.left, my_pos.top-4, _hwnd);
-		break;}
+			_startMenuRoot = StartMenuRoot::Create(my_pos.left, my_pos.top-4, _hwnd);
+		}
+		break;
 	}
 
 	return 0;

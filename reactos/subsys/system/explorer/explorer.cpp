@@ -32,9 +32,9 @@
 
 #include "explorer.h"
 #include "globals.h"
+#include "externals.h"
 
 #include "explorer_intres.h"
-#include "externals.h"
 
 
 ExplorerGlobals g_Globals;
@@ -118,26 +118,25 @@ int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, int cmdshow)
 
 	try {
 		InitInstance(hInstance);
-
-		if (hwndDesktop)
-			g_Globals._desktop_mode = true;
-
-		if (cmdshow != SW_HIDE) {
-#ifndef _ROS_	// don't maximize if being called from the ROS desktop
-			if (cmdshow == SW_SHOWNORMAL)
-					/*TODO: read window placement from registry */
-				cmdshow = SW_MAXIMIZE;
-#endif
-
-			explorer_show_frame(hwndDesktop, cmdshow);
-		}
-
-		return Window::MessageLoop();
 	} catch(COMException& e) {
 		HandleException(e, g_Globals._hMainWnd);
+		return -1;
 	}
 
-	return -1;
+	if (hwndDesktop)
+		g_Globals._desktop_mode = true;
+
+	if (cmdshow != SW_HIDE) {
+#ifndef _ROS_	// don't maximize if being called from the ROS desktop
+		if (cmdshow == SW_SHOWNORMAL)
+				/*TODO: read window placement from registry */
+			cmdshow = SW_MAXIMIZE;
+#endif
+
+		explorer_show_frame(hwndDesktop, cmdshow);
+	}
+
+	return Window::MessageLoop();
 }
 
 

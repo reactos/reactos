@@ -80,7 +80,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		lstrcpy(_root._fs, TEXT("Shell"));
 
 		const ShellChildWndInfo& shell_info = static_cast<const ShellChildWndInfo&>(info);
-		_root._entry = new ShellDirectory(Desktop(), shell_info._shell_path, hwnd);
+		_root._entry = new ShellDirectory(Desktop(), DesktopFolder(), hwnd);
 		entry = _root._entry->read_tree((LPCTSTR)&*shell_info._shell_path, SORT_NAME/*_sortOrder*/);
 	}
 	else
@@ -111,10 +111,10 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		entry = _root._entry->read_tree(info._path, SORT_NAME/*_sortOrder*/);
 	}
 
-	if (info._etype == ET_SHELL)
-		lstrcpy(_root._entry->_data.cFileName, TEXT("Desktop"));
-	else
+	if (info._etype != ET_SHELL)
 		wsprintf(_root._entry->_data.cFileName, TEXT("%s - %s"), drv, _root._fs);
+/*@@else
+		lstrcpy(_root._entry->_data.cFileName, TEXT("Desktop"));*/
 
 	_root._entry->_data.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 
@@ -425,7 +425,7 @@ void FileChildWindow::activate_entry(Pane* pane, HWND hwnd)
 			pane->set_header();
 		}
 	} else {
-		entry->launch_entry(_hwnd, SW_SHOWNORMAL);
+		entry->launch_entry(_hwnd);
 	}
 }
 

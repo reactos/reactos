@@ -33,7 +33,9 @@
 #include <shlobj.h>
 
 #ifndef _INC_COMUTIL	// is comutil.h of MS headers available?
+#ifndef _NO_COMUTIL
 #define	_NO_COMUTIL
+#endif
 #endif
 
 
@@ -393,9 +395,9 @@ extern ShellFolder& Desktop();
 #define	path_from_pidl path_from_pidlA
 #endif
 
-extern HRESULT path_from_pidlA(IShellFolder* folder, LPITEMIDLIST pidl, LPSTR buffer, int len);
-extern HRESULT path_from_pidlW(IShellFolder* folder, LPITEMIDLIST pidl, LPWSTR buffer, int len);
-extern HRESULT name_from_pidl(IShellFolder* folder, LPITEMIDLIST pidl, LPTSTR buffer, int len, SHGDNF flags);
+extern HRESULT path_from_pidlA(IShellFolder* folder, LPCITEMIDLIST pidl, LPSTR buffer, int len);
+extern HRESULT path_from_pidlW(IShellFolder* folder, LPCITEMIDLIST pidl, LPWSTR buffer, int len);
+extern HRESULT name_from_pidl(IShellFolder* folder, LPCITEMIDLIST pidl, LPTSTR buffer, int len, SHGDNF flags);
 
 
  // wrapper class for item ID lists
@@ -578,7 +580,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 
 	 // convert an item id list from relative to absolute (=relative to the desktop) format
-	LPITEMIDLIST create_absolute_pidl(IShellFolder* parent_folder, HWND hwnd)
+	LPITEMIDLIST create_absolute_pidl(IShellFolder* parent_folder, HWND hwnd) const
 	{
 		WCHAR buffer[MAX_PATH];
 

@@ -35,7 +35,7 @@ struct UnixEntry : public Entry
 protected:
 	UnixEntry() : Entry(ET_UNIX) {}
 
-	virtual void get_path(PTSTR path);
+	virtual void get_path(PTSTR path) const;
 };
 
 struct UnixDirectory : public UnixEntry, public Directory

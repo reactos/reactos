@@ -77,6 +77,7 @@ protected:
 	int		Command(int id, int code);
 
 	HWND	_hwndTaskBar;
+	HWND	_startMenuRoot;
 };
 
 

@@ -113,13 +113,14 @@ void ShellBrowserChild::InitializeTree(/*const FileChildWndInfo& info*/)
 	lstrcpy(_root._fs, TEXT("Shell"));
 
 
-//@@	_root._entry->read_tree(ShellFolder(shell_info._root_shell_path), info._shell_path, SORT_NAME/*_sortOrder*/);
+//@@	_root._entry->read_tree(shell_info._root_shell_path.get_folder(), info._shell_path, SORT_NAME/*_sortOrder*/);
 
-	//@@ fängt zunächst nur einmal mit dem Desktop-Objekt an
+	//@@ should call read_tree() here; see FileChildWindow::FileChildWindow()
 	_root._entry = new ShellDirectory(Desktop(), DesktopFolder(), _hwnd);
 	_root._entry->read_directory();
 
-	lstrcpy(_root._entry->_data.cFileName, TEXT("Desktop"));
+	/* already filled by ShellDirectory constructor
+	lstrcpy(_root._entry->_data.cFileName, TEXT("Desktop")); */
 
 
 	TV_ITEM tvItem;
@@ -328,7 +329,7 @@ void ShellBrowserChild::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShe
 			tvItem.mask = TVIF_PARAM | TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN;
 			tvItem.pszText = LPSTR_TEXTCALLBACK;
 			tvItem.iImage = tvItem.iSelectedImage = I_IMAGECALLBACK;
-			tvItem.lParam= (LPARAM)entry;
+			tvItem.lParam = (LPARAM)entry;
 			tvItem.cChildren = entry->_shell_attribs & SFGAO_HASSUBFOLDER? 1: 0;
 
 			if (entry->_shell_attribs & SFGAO_SHARE) {
@@ -359,7 +360,7 @@ void ShellBrowserChild::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
 	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		folder = static_cast<ShellDirectory*>(entry)->_folder;
 	else
-		folder = entry->_up? static_cast<ShellDirectory*>(entry->_up)->_folder: Desktop();
+		folder = entry->get_parent_folder();
 
 	if (!folder) {
 		assert(folder);

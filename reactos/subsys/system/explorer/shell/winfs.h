@@ -33,7 +33,7 @@ struct WinEntry : public Entry
 protected:
 	WinEntry() : Entry(ET_WINDOWS) {}
 
-	virtual void get_path(PTSTR path);
+	virtual void get_path(PTSTR path) const;
 };
 
 struct WinDirectory : public WinEntry, public Directory

@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) Console Application" 0x0103
 
-CFG=explorer - Win32 Unicode Debug
+CFG=explorer - Win32 _NO_COMUTIL
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,7 +13,7 @@ CFG=explorer - Win32 Unicode Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "explorer.mak" CFG="explorer - Win32 Unicode Debug"
+!MESSAGE NMAKE /f "explorer.mak" CFG="explorer - Win32 _NO_COMUTIL"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -22,6 +22,7 @@ CFG=explorer - Win32 Unicode Debug
 !MESSAGE "explorer - Win32 Debug Release" (based on "Win32 (x86) Console Application")
 !MESSAGE "explorer - Win32 Unicode Release" (based on "Win32 (x86) Console Application")
 !MESSAGE "explorer - Win32 Unicode Debug" (based on "Win32 (x86) Console Application")
+!MESSAGE "explorer - Win32 _NO_COMUTIL" (based on "Win32 (x86) Console Application")
 !MESSAGE 
 
 # Begin Project
@@ -159,6 +160,33 @@ LINK32=link.cmd
 # ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 # SUBTRACT LINK32 /pdb:none
 
+!ELSEIF  "$(CFG)" == "explorer - Win32 _NO_COMUTIL"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "explorer___Win32__NO_COMUTIL"
+# PROP BASE Intermediate_Dir "explorer___Win32__NO_COMUTIL"
+# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "_NO_COMUTIL"
+# PROP Intermediate_Dir "_NO_COMUTIL"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_ROS_" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_ROS_" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /D "_NO_COMUTIL" /FR /YX /FD /GZ /c
+# ADD BASE RSC /l 0x407 /d "_DEBUG"
+# ADD RSC /l 0x407 /d "_DEBUG"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.cmd
+# ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# SUBTRACT BASE LINK32 /pdb:none
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# SUBTRACT LINK32 /pdb:none
+
 !ENDIF 
 
 # Begin Target
@@ -168,6 +196,7 @@ LINK32=link.cmd
 # Name "explorer - Win32 Debug Release"
 # Name "explorer - Win32 Unicode Release"
 # Name "explorer - Win32 Unicode Debug"
+# Name "explorer - Win32 _NO_COMUTIL"
 # Begin Group "utility"
 
 # PROP Default_Filter ""
@@ -241,6 +270,11 @@ SOURCE=.\de.rc
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "explorer - Win32 _NO_COMUTIL"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
 !ENDIF 
 
 # End Source File
@@ -270,6 +304,11 @@ SOURCE=.\en.rc
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "explorer - Win32 _NO_COMUTIL"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
@@ -323,6 +362,11 @@ SOURCE=.\resource.rc
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Debug"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "explorer - Win32 _NO_COMUTIL"
 
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1

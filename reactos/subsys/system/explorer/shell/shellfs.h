@@ -31,9 +31,10 @@ struct ShellEntry : public Entry
 	ShellEntry(Entry* parent, LPITEMIDLIST shell_path) : Entry(parent), _pidl(shell_path) {}
 	ShellEntry(Entry* parent, const ShellPath& shell_path) : Entry(parent), _pidl(shell_path) {}
 
-	virtual void get_path(PTSTR path);
-	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow);
+	virtual void get_path(PTSTR path) const;
+	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
 
+	IShellFolder* get_parent_folder() const;
 	LPITEMIDLIST create_absolute_pidl(HWND hwnd);
 
 	ShellPath	_pidl;
@@ -43,6 +44,7 @@ protected:
 	ShellEntry(const ShellPath& shell_path) : Entry(ET_SHELL), _pidl(shell_path) {}
 };
 
+
 struct ShellDirectory : public ShellEntry, public Directory
 {
 	ShellDirectory(IShellFolder* shell_root, const ShellPath& shell_path, HWND hwnd)
@@ -50,17 +52,26 @@ struct ShellDirectory : public ShellEntry, public Directory
 		_folder(shell_root, shell_path),
 		_hwnd(hwnd)
 	{
+		lstrcpy(_data.cFileName, ShellFolder(shell_root).get_name(shell_path));
+		_data.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+		_shell_attribs = SFGAO_FOLDER;
+
 		ShellFolder folder(shell_root, shell_path);
 		IShellFolder* pFolder = folder;
 		pFolder->AddRef();
 		_path = pFolder;
 	}
 
-	ShellDirectory(ShellDirectory* parent, IShellFolder* shell_root, LPITEMIDLIST shell_path, HWND hwnd)
+	explicit ShellDirectory(ShellDirectory* parent, IShellFolder* shell_root, LPITEMIDLIST shell_path, HWND hwnd)
 	 :	ShellEntry(parent, shell_path),
 		_folder(shell_root),
 		_hwnd(hwnd)
 	{
+		/* not neccessary - the caller will fill the info
+		lstrcpy(_data.cFileName, _folder.get_name(shell_path));
+		_data.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+		_shell_attribs = SFGAO_FOLDER; */
+
 		shell_root->AddRef();
 		_path = shell_root;
 	}
@@ -76,7 +87,7 @@ struct ShellDirectory : public ShellEntry, public Directory
 	virtual const void* get_next_path_component(const void*);
 	virtual Entry* find_entry(const void* p);
 
-	virtual void get_path(PTSTR path);
+	virtual void get_path(PTSTR path) const;
 
 	ShellFolder _folder;
 	HWND	_hwnd;
@@ -84,3 +95,12 @@ struct ShellDirectory : public ShellEntry, public Directory
 protected:
 	bool	fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN32_FIND_DATA*, BY_HANDLE_FILE_INFORMATION*);
 };
+
+
+inline IShellFolder* ShellEntry::get_parent_folder() const
+{
+	if (_up)
+		return static_cast<ShellDirectory*>(_up)->_folder;
+	else
+		return Desktop();
+}
