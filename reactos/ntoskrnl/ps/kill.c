@@ -93,6 +93,9 @@ PspTerminateProcessThreads(PEPROCESS Process,
         /* Get the Current Thread */
         Thread = CONTAINING_RECORD(CurrentEntry, ETHREAD, ThreadListEntry);
         
+        /* Move to the Next Thread */
+        CurrentEntry = CurrentEntry->Flink;
+        
         /* Make sure it's not the one we're in */
         if (Thread != CurrentThread) {
         
@@ -107,9 +110,6 @@ PspTerminateProcessThreads(PEPROCESS Process,
                 KeForceResumeThread(&Thread->Tcb);
             }
         }
-        
-        /* Move to the Next Thread */
-        CurrentEntry = CurrentEntry->Flink;
     }
 }
 
@@ -419,6 +419,8 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
         return(Status);
     }
     
+    PsLockProcess(Process, FALSE);
+
     if(Process->ExitTime.QuadPart) {
         
         DPRINT1("Process has an exit time!\n");
@@ -431,6 +433,8 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
 
     /* Save the Exit Time */
     KeQuerySystemTime(&Process->ExitTime);
+
+    PsUnlockProcess(Process);
             
     /* Only master thread remains... kill it off */
     if (PsGetCurrentThread()->ThreadsProcess == Process) {
