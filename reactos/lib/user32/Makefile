@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2002/06/13 20:36:39 dwelch Exp $
+# $Id: Makefile,v 1.2 2002/08/28 21:56:50 jfilby Exp $
 
 PATH_TO_TOP = ../..
 
@@ -57,6 +57,7 @@ WINDOWS_OBJECTS = \
 	windows/mdi.o \
 	windows/menu.o \
 	windows/messagebox.o \
+	windows/nonclient.o \
 	windows/paint.o \
 	windows/prop.o \
 	windows/rect.o \
