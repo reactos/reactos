@@ -67,6 +67,7 @@ STRIP = $(PREFIX)strip
 AS = $(PREFIX)gcc -c -x assembler-with-cpp
 CPP = $(PREFIX)cpp
 AR = $(PREFIX)ar
+RC = $(PREFIX)windres
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@

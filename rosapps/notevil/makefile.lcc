@@ -1,0 +1,21 @@
+# $Id: makefile.lcc,v 1.1 1999/05/15 07:23:34 ea Exp $
+# Makefile for lcc-win32
+# 
+CC=lcc.exe
+CFLAGS=-c -O
+LD=lcclnk.exe
+LFLAGS=-s
+RC=lrc.exe
+
+OBJECTS=notevil.obj notevil.res
+
+notevil.exe: $(OBJECTS)
+	$(LD) $(LFLAGS) $(OBJECTS)
+
+notevil.obj: notevil.c resource.h
+	$(CC) $(CFLAGS) notevil.c
+
+notevil.res: notevil.rc
+	$(RC) notevil.rc
+	
+# EOF
