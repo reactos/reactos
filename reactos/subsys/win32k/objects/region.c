@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.54 2004/05/18 13:57:41 weiden Exp $ */
+/* $Id: region.c,v 1.55 2004/05/18 14:06:42 weiden Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -1835,6 +1835,7 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
    /* copy points */
    if (!(Safept = ExAllocatePool(PagedPool, nPoints * sizeof(POINT))))
    {
+      ExFreePool(SafePolyCounts);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return (HRGN)0;
    }
