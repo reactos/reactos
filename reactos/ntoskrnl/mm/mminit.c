@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.23 2001/08/03 09:36:18 ei Exp $
+/* $Id: mminit.c,v 1.24 2001/08/13 16:39:01 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -187,26 +187,44 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
    DPRINT("MmInitVirtualMemory() done\n");
 }
 
-VOID MmInit1(ULONG FirstKrnlPhysAddr, 
+VOID MmInit1(ULONG FirstKrnlPhysAddr,
 	     ULONG LastKrnlPhysAddr,
 	     ULONG LastKernelAddress,
-       PADDRESS_RANGE BIOSMemoryMap,
-       ULONG AddressRangeCount)
+	     PADDRESS_RANGE BIOSMemoryMap,
+	     ULONG AddressRangeCount)
 /*
  * FUNCTION: Initalize memory managment
  */
 {
    ULONG i;
    ULONG kernel_len;
- #ifndef MP
+#ifndef MP
    extern unsigned int unmap_me, unmap_me2, unmap_me3;
-#endif 
+#endif
 
    DPRINT("MmInit1(FirstKrnlPhysAddr, %x, LastKrnlPhysAddr %x, LastKernelAddress %x)\n",
 		  FirstKrnlPhysAddr,
 		  LastKrnlPhysAddr,
 		  LastKernelAddress);
-   
+
+   if ((BIOSMemoryMap != NULL) && (AddressRangeCount > 0))
+     {
+	// If we have a bios memory map, recalulate the the memory size
+	ULONG last = 0;
+	for (i = 0; i < AddressRangeCount; i++)
+	  {
+	    if (BIOSMemoryMap[i].Type == 1
+	        && (BIOSMemoryMap[i].BaseAddrLow + BIOSMemoryMap[i].LengthLow + PAGESIZE -1) / PAGESIZE > last)
+	      {
+		 last = (BIOSMemoryMap[i].BaseAddrLow + BIOSMemoryMap[i].LengthLow + PAGESIZE -1) / PAGESIZE;
+	      }
+	  }
+	if ((last - 256) * 4 > KeLoaderBlock.MemHigher)
+	  {
+	     KeLoaderBlock.MemHigher = (last - 256) * 4;
+	  }
+     }
+
    /*
     * FIXME: Set this based on the system command line
     */

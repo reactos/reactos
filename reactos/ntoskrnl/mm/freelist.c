@@ -130,7 +130,7 @@ VOID MiParseRangeToFreeList(
     Range->Type);
 
   first = (Range->BaseAddrLow + PAGESIZE - 1) / PAGESIZE;
-  last = first + ((Range->LengthLow + PAGESIZE - 1) / PAGESIZE) + 1;
+  last = first + ((Range->LengthLow + PAGESIZE - 1) / PAGESIZE);
   for (i = first; i < last; i++)
     {
       if (MmPageArray[i].Flags == 0)
@@ -156,7 +156,7 @@ VOID MiParseRangeToBiosList(
     Range->Type);
 
   first = (Range->BaseAddrLow + PAGESIZE - 1) / PAGESIZE;
-  last = first + ((Range->LengthLow + PAGESIZE - 1) / PAGESIZE) + 1;
+  last = first + ((Range->LengthLow + PAGESIZE - 1) / PAGESIZE);
   for (i = first; i < last; i++)
     {
       /* Remove the page from the free list if it is there */
