@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.34 2003/04/30 22:07:29 gvg Exp $
+# $Id: Makefile,v 1.35 2003/05/27 20:07:53 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -12,7 +12,7 @@ TARGET_BASE = 0x78000000
 
 TARGET_LFLAGS = -nostartfiles
 
-TARGET_SDKLIBS = kernel32.a ntdll.a
+TARGET_SDKLIBS = string.a kernel32.a ntdll.a
 
 TARGET_GCCLIBS = gcc
 
@@ -400,32 +400,16 @@ STDLIB_OBJECTS = \
 	stdlib/wtoi64.o
 
 STRING_OBJECTS = \
-	string/memccpy.o \
-	string/memchr.o \
-	string/memcmp.o \
-	string/memcpy.o \
 	string/memicmp.o \
-	string/memmove.o \
-	string/memset.o \
-	string/strcat.o \
-	string/strchr.o \
-	string/strcmp.o \
 	string/strcoll.o \
-	string/strcpy.o \
 	string/strcspn.o \
 	string/strdup.o \
 	string/strerror.o \
 	string/stricmp.o \
-	string/strlen.o \
 	string/strlwr.o \
-	string/strncat.o \
-	string/strncmp.o \
 	string/strncoll.o \
-	string/strncpy.o \
 	string/strnicmp.o \
-	string/strnlen.o \
 	string/strpbrk.o \
-	string/strrchr.o \
 	string/strrev.o\
 	string/strset.o \
 	string/strspn.o \
@@ -456,23 +440,13 @@ TIME_OBJECTS = \
 
 
 WSTRING_OBJECTS = \
-	wstring/wcscat.o \
-	wstring/wcschr.o \
-	wstring/wcscmp.o \
 	wstring/wcscoll.o \
-	wstring/wcscpy.o \
 	wstring/wcscspn.o \
 	wstring/wcsdup.o \
 	wstring/wcsicmp.o \
-	wstring/wcslen.o \
 	wstring/wcslwr.o \
-	wstring/wcsncat.o \
-	wstring/wcsncmp.o \
-	wstring/wcsncpy.o \
 	wstring/wcsnicmp.o \
-	wstring/wcsnlen.o \
 	wstring/wcspbrk.o \
-	wstring/wcsrchr.o \
 	wstring/wcsrev.o \
 	wstring/wcsset.o \
 	wstring/wcsspn.o \
