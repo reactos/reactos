@@ -1,4 +1,4 @@
-/* $Id: curdir.c,v 1.34 2003/01/15 21:24:33 chorns Exp $
+/* $Id: curdir.c,v 1.35 2003/03/23 10:46:59 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -81,7 +81,7 @@ GetCurrentDirectoryW (
 {
 	ULONG Length;
 
-	Length = RtlGetCurrentDirectory_U (nBufferLength,
+	Length = RtlGetCurrentDirectory_U (nBufferLength * sizeof(WCHAR),
 	                                   lpBuffer);
 
 	return (Length / sizeof (WCHAR));
