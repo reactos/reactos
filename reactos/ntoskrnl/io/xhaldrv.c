@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.19 2002/04/17 18:26:53 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.20 2002/04/26 19:58:48 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -241,64 +241,65 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
 
 static VOID
 HalpAssignDrive(IN PUNICODE_STRING PartitionName,
-		IN OUT PULONG DriveMap,
-		IN ULONG DriveNumber)
+		IN ULONG DriveNumber,
+		IN UCHAR DriveType)
 {
-   WCHAR DriveNameBuffer[8];
-   UNICODE_STRING DriveName;
-   ULONG i;
+  WCHAR DriveNameBuffer[8];
+  UNICODE_STRING DriveName;
+  ULONG i;
 
-   DPRINT("HalpAssignDrive()\n");
+  DPRINT("HalpAssignDrive()\n");
 
-   if ((DriveNumber != AUTO_DRIVE) && (DriveNumber < 24))
-     {
-	/* force assignment */
-	if ((*DriveMap & (1 << DriveNumber)) != 0)
-	  {
-	     DbgPrint("Drive letter already used!\n");
-	     return;
-	  }
-     }
-   else
-     {
-	/* automatic assignment */
-	DriveNumber = AUTO_DRIVE;
+  if ((DriveNumber != AUTO_DRIVE) && (DriveNumber < 24))
+    {
+      /* Force assignment */
+      if ((SharedUserData->DosDeviceMap & (1 << DriveNumber)) != 0)
+	{
+	  DbgPrint("Drive letter already used!\n");
+	  return;
+	}
+    }
+  else
+    {
+      /* Automatic assignment */
+      DriveNumber = AUTO_DRIVE;
 
-	for (i = 2; i < 24; i++)
-	  {
-	     if ((*DriveMap & (1 << i)) == 0)
-	       {
-		  DriveNumber = i;
-		  break;
-	       }
-	  }
+      for (i = 2; i < 24; i++)
+	{
+	  if ((SharedUserData->DosDeviceMap & (1 << i)) == 0)
+	    {
+	      DriveNumber = i;
+	      break;
+	    }
+	}
 
-	if (DriveNumber == AUTO_DRIVE)
-	  {
-	     DbgPrint("No drive letter available!\n");
-	     return;
-	  }
-     }
+      if (DriveNumber == AUTO_DRIVE)
+	{
+	  DbgPrint("No drive letter available!\n");
+	  return;
+	}
+    }
 
-   DPRINT("DriveNumber %d\n", DriveNumber);
+  DPRINT("DriveNumber %d\n", DriveNumber);
 
-   /* set bit in drive map */
-   *DriveMap = *DriveMap | (1 << DriveNumber);
+  /* Update the shared user page */
+  SharedUserData->DosDeviceMap |= (1 << DriveNumber);
+  SharedUserData->DosDeviceDriveType[DriveNumber] = DriveType;
 
-   /* build drive name */
-   swprintf(DriveNameBuffer,
-	    L"\\??\\%C:",
-	    'A' + DriveNumber);
-   RtlInitUnicodeString(&DriveName,
-			DriveNameBuffer);
+  /* Build drive name */
+  swprintf(DriveNameBuffer,
+	   L"\\??\\%C:",
+	   'A' + DriveNumber);
+  RtlInitUnicodeString(&DriveName,
+		       DriveNameBuffer);
 
-   DPRINT("  %wZ ==> %wZ\n",
-	  &DriveName,
-	  PartitionName);
+  DPRINT("  %wZ ==> %wZ\n",
+	 &DriveName,
+	 PartitionName);
 
-   /* create symbolic link */
-   IoCreateSymbolicLink(&DriveName,
-			PartitionName);
+  /* Create symbolic link */
+  IoCreateSymbolicLink(&DriveName,
+		       PartitionName);
 }
 
 
@@ -319,7 +320,6 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
    PWSTR Buffer2;
    ULONG i;
    NTSTATUS Status;
-   ULONG DriveMap = 0;
    ULONG j;
 
    DPRINT("xHalIoAssignDriveLetters()\n");
@@ -445,8 +445,8 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 		  /* assign it */
 		  HalpAssignDrive(&UnicodeString2,
-				  &DriveMap,
-				  AUTO_DRIVE);
+				  AUTO_DRIVE,
+				  DOSDEVICE_DRIVE_FIXED);
 	       }
 	  }
      }
@@ -473,8 +473,8 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 		  DPRINT("  %wZ\n",
 			 &UnicodeString2);
 		  HalpAssignDrive(&UnicodeString2,
-				  &DriveMap,
-				  AUTO_DRIVE);
+				  AUTO_DRIVE,
+				  DOSDEVICE_DRIVE_FIXED);
 	       }
 	  }
      }
@@ -501,8 +501,8 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 				  DPRINT("  %wZ\n",
 					 &UnicodeString2);
 				  HalpAssignDrive(&UnicodeString2,
-						  &DriveMap,
-						  AUTO_DRIVE);
+						  AUTO_DRIVE,
+						  DOSDEVICE_DRIVE_FIXED);
 			       }
 			  }
 		}
@@ -528,8 +528,8 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 	    DPRINT("  %wZ\n",
 		   &UnicodeString2);
 	    HalpAssignDrive(&UnicodeString2,
-			    &DriveMap,
-			    AUTO_DRIVE);
+			    AUTO_DRIVE,
+			    DOSDEVICE_DRIVE_REMOVABLE);
 	  }
      }
 /* TEST END */
@@ -557,8 +557,8 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 	DPRINT("  %wZ\n",
 	       &UnicodeString1);
 	HalpAssignDrive(&UnicodeString1,
-			&DriveMap,
-			(i < 2) ? i : AUTO_DRIVE);
+			(i < 2) ? i : AUTO_DRIVE,
+			DOSDEVICE_DRIVE_REMOVABLE);
      }
 
    /* Assign cdrom drives */
@@ -574,8 +574,8 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 	/* assign first free drive letter */
 	DPRINT("  %wZ\n", &UnicodeString1);
 	HalpAssignDrive(&UnicodeString1,
-			&DriveMap,
-			AUTO_DRIVE);
+			AUTO_DRIVE,
+			DOSDEVICE_DRIVE_CDROM);
      }
 
    /* Anything else ?? */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.118 2002/04/26 13:11:28 ekohl Exp $
+/* $Id: main.c,v 1.119 2002/04/26 19:57:11 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -561,9 +561,6 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 	  }
 
 	NtClose (Handle);
-
-	/* set bit in dos drives bitmap (drive available) */
-	SharedUserData->DosDeviceMap |= (1<<i);
      }
 
    RtlFreeUnicodeString (&BootPath);
