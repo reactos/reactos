@@ -1,3 +1,8 @@
+2004-05-31  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* include/reactos/version.h (KERNEL_VERSION_BUILD_TYPE): Replace possible
+	value FINAL with RELEASE.
+
 2004-03-27 Art Yerkes <arty@users.sourceforge.net>
 
 	* Fixed make bootcd on windows + cross.  Define TOPDIR as PATH_TO_TOP
