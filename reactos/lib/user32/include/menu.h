@@ -19,4 +19,9 @@ MenuTrackMouseMenuBar(HWND hWnd, ULONG Ht, POINT Pt);
 VOID
 MenuTrackKbdMenuBar(HWND hWnd, ULONG wParam, ULONG Key);
 
+NTSTATUS
+HEAP_strdupA2Wlen ( HANDLE hHeap, LPWSTR* ppszW, LPCSTR lpszA, ULONG len );
+VOID
+HEAP_free ( HANDLE hHeap, LPVOID memory );
+
 #endif /* __LIB_USER32_INCLUDE_MENU_H */

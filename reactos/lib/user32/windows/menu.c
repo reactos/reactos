@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.13 2003/08/01 00:44:27 weiden Exp $
+/* $Id: menu.c,v 1.14 2003/08/04 10:13:51 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -75,6 +75,9 @@ static HFONT hMenuFont = 0;
 
 #define MENU_TYPE_MASK ((MF_STRING | MF_BITMAP | MF_OWNERDRAW | MF_SEPARATOR))
 
+#define MENU_ITEM_TYPE(flags) \
+  ((flags) & (MF_STRING | MF_BITMAP | MF_OWNERDRAW | MF_SEPARATOR))
+  
 #define MENU_BAR_ITEMS_SPACE (12)
 #define SEPARATOR_HEIGHT (5)
 #define MENU_TAB_SPACE (8)
@@ -95,7 +98,11 @@ HANDLE hMenuDefSysPopup = 0;
 #define NO_SELECTED_ITEM (0xffff)
 
 #ifndef MF_END
-#define MF_END             0x0080
+#define MF_END             (0x0080)
+#endif
+
+#ifndef MIIM_STRING
+#define MIIM_STRING      (0x00000040)
 #endif
 
 
@@ -132,6 +139,24 @@ static inline WCHAR *strcatW( WCHAR *dst, const WCHAR *src )
 {
     strcpyW( dst + strlenW(dst), src );
     return dst;
+}
+
+NTSTATUS
+STATIC HEAP_strdupA2W ( HANDLE hHeap, LPWSTR* ppszW, LPCSTR lpszA, UINT* NewLen )
+{
+  ULONG len;
+  NTSTATUS Status;
+  *ppszW = NULL;
+  if ( !lpszA )
+    return STATUS_SUCCESS;
+  len = lstrlenA(lpszA);
+  *ppszW = RtlAllocateHeap ( hHeap, 0, (len+1) * sizeof(WCHAR) );
+  if ( !*ppszW )
+    return STATUS_NO_MEMORY;
+  Status = RtlMultiByteToUnicodeN ( *ppszW, len*sizeof(WCHAR), NULL, (PCHAR)lpszA, len ); 
+  (*ppszW)[len] = L'\0';
+  if(NewLen) (*NewLen) = (UINT)len;
+  return Status;
 }
 
 #ifndef GET_WORD
@@ -726,8 +751,23 @@ GetMenuInfo(HMENU hmenu,
 int STDCALL
 GetMenuItemCount(HMENU hMenu)
 {
-  PPOPUP_MENU Menu = MenuGetMenu(hMenu);
-  return(Menu->NrItems);
+  #if 0
+  return NtUserBuildMenuItemList(hMenu, NULL, 0, 0);
+  #else
+  HANDLE hHeap = RtlGetProcessHeap();
+  MENUITEMINFOW *mi;
+  int i = 0;
+  DWORD cnt = NtUserBuildMenuItemList(hMenu, NULL, 0, 0);
+  DbgPrint("NtUserBuildMenuItemList() count = %d\n", cnt);
+  mi = RtlAllocateHeap(hHeap, 0, cnt * sizeof(MENUITEMINFOW));
+  while(cnt > i)
+  {
+    DbgPrint("  %d-> (NULL)\n", i);
+    i++;
+  }
+  RtlFreeHeap (hHeap, 0, mi);
+  return cnt;
+  #endif
 }
 
 
@@ -905,8 +945,40 @@ InsertMenuItemA(
   WINBOOL fByPosition,
   LPCMENUITEMINFO lpmii)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  MENUITEMINFOW mi;
+  WINBOOL res = FALSE;
+  BOOL CleanHeap = FALSE;
+  NTSTATUS Status;
+  HANDLE hHeap = RtlGetProcessHeap();
+
+  if((lpmii->cbSize == sizeof(MENUITEMINFO)) || 
+     (lpmii->cbSize == sizeof(MENUITEMINFO) - sizeof(HBITMAP)))
+  {
+    memcpy(&mi, lpmii, lpmii->cbSize);
+    
+    /* copy the text string */
+    if((mi.fMask & (MIIM_TYPE | MIIM_STRING)) && 
+      (MENU_ITEM_TYPE(mi.fType) == MF_STRING) && mi.dwTypeData)
+    {
+      Status = HEAP_strdupA2W (hHeap, &mi.dwTypeData, (LPCSTR)mi.dwTypeData, &mi.cch);
+      if (!NT_SUCCESS (Status))
+      {
+        SetLastError (RtlNtStatusToDosError(Status));
+        return FALSE;
+      }
+      CleanHeap = TRUE;
+      DbgPrint("InsertMenuItemA() Text = %ws\n", (PWSTR)mi.dwTypeData);
+    }
+    else
+    {
+      DbgPrint("InsertMenuItemA() No Text\n");
+    }
+    
+    res = NtUserInsertMenuItem(hMenu, uItem, fByPosition, &mi);
+    
+    if(CleanHeap) RtlFreeHeap (hHeap, 0, mi.dwTypeData);
+  }
+  return res;
 }
 
 
@@ -921,8 +993,45 @@ InsertMenuItemW(
   WINBOOL fByPosition,
   LPCMENUITEMINFO lpmii)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  MENUITEMINFOW mi;
+  WINBOOL res = FALSE;
+  BOOL CleanHeap = FALSE;
+  ULONG len = 0;
+  NTSTATUS Status;
+  HANDLE hHeap = RtlGetProcessHeap();
+
+  if((lpmii->cbSize == sizeof(MENUITEMINFO)) || 
+     (lpmii->cbSize == sizeof(MENUITEMINFO) - sizeof(HBITMAP)))
+  {
+    memcpy(&mi, lpmii, lpmii->cbSize);
+    
+    /* copy the text string */
+    if((mi.fMask & (MIIM_TYPE | MIIM_STRING)) && 
+      (MENU_ITEM_TYPE(mi.fType) == MF_STRING) && mi.dwTypeData)
+    {
+      len = lstrlenW(lpmii->dwTypeData);
+      DbgPrint("InsertMenuItemW() len = %d\n", len);
+      mi.dwTypeData = RtlAllocateHeap(hHeap, 0, (len + 1) * sizeof(WCHAR));
+      if(!mi.dwTypeData)
+      {
+        SetLastError (RtlNtStatusToDosError(Status));
+        return FALSE;
+      }
+      memcpy(&mi.dwTypeData, &lpmii->dwTypeData, len);
+      CleanHeap = TRUE;
+      mi.cch = len;
+      DbgPrint("InsertMenuItemW() Text = %ws\n", (PWSTR)mi.dwTypeData);
+    }
+    else
+    {
+      DbgPrint("InsertMenuItemW() No Text\n");
+    }
+    
+    res = NtUserInsertMenuItem(hMenu, uItem, fByPosition, &mi);
+    
+    if(CleanHeap) RtlFreeHeap (hHeap, 0, mi.dwTypeData);
+  }
+  return res;
 }
 
 

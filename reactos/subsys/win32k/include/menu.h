@@ -6,12 +6,30 @@
 
 #define IS_ATOM(x) \
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
+  
+#define MENU_ITEM_TYPE(flags) \
+  ((flags) & (MF_STRING | MF_BITMAP | MF_OWNERDRAW | MF_SEPARATOR))
+  
+#ifndef MF_END
+#define MF_END             (0x0080)
+#endif
+
+#ifndef MIIM_STRING
+#define MIIM_STRING      (0x00000040)
+#endif
+  
+typedef struct _MENU_ITEM
+{
+  struct _MENU_ITEM *Next;
+  MENUITEMINFOW MenuItem;
+} MENU_ITEM, *PMENU_ITEM;
 
 typedef struct _MENU_OBJECT
 {
   HANDLE Self;
+  int MenuItemCount;
   FAST_MUTEX MenuItemsLock;
-  LIST_ENTRY MenuItemsHead;
+  PMENU_ITEM MenuItemList;
   BOOL RtoL;
   DWORD dwStyle;
   UINT cyMax;
@@ -79,7 +97,7 @@ NtUserInsertMenuItem(
   HMENU hMenu,
   UINT uItem,
   WINBOOL fByPosition,
-  LPCMENUITEMINFO lpmii);
+  LPMENUITEMINFOW lpmii);
   
 BOOL
 STDCALL
@@ -119,7 +137,7 @@ BOOL
 STDCALL
 NtUserMenuInfo(
  HMENU hmenu,
- LPCMENUINFO lpcmi,
+ LPMENUINFO lpmi,
  BOOL fsog);
   
 int
@@ -136,7 +154,7 @@ NtUserMenuItemInfo(
  HMENU hMenu,
  UINT uItem,
  BOOL fByPosition,
- LPMENUITEMINFO lpmii,
+ LPMENUITEMINFOW lpmii,
  BOOL fsog);
   
 BOOL
@@ -177,7 +195,7 @@ NtUserThunkedMenuItemInfo(
   UINT uItem,
   BOOL fByPosition,
   BOOL bInsert,
-  LPMENUITEMINFO lpmii,
+  LPMENUITEMINFOW lpmii,
   PUNICODE_STRING lpszCaption);
   
 BOOL
