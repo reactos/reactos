@@ -82,11 +82,4 @@ GLFUNCS_MACRO
 #undef X
 #endif//non-x86 architectures
 
-/* FIXME - change this code to lookup slow table and jump - probably needs to go in nasm */
-#define X(func,ret,typeargs,args,icdidx,stack) EXPORT ret STDCALL func typeargs { return 0; }
-#define XVOID(func,typeargs,args,icdidx,stack) EXPORT void STDCALL func typeargs {}
-#include "slowlist.h"
-#undef XVOID
-#undef X
-
 /* EOF */
