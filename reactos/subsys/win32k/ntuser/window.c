@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.244.2.4 2004/09/01 14:14:26 weiden Exp $
+/* $Id: window.c,v 1.244.2.5 2004/09/01 22:14:50 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1091,9 +1091,9 @@ IntCreateWindow(DWORD dwExStyle,
   Cs.x = Pos.x;
   Cs.y = Pos.y;
 
-  DPRINT("[win32k.window] IntCreateWindow style %d, exstyle %d, parent %d\n", Cs.style, Cs.dwExStyle, Cs.hwndParent);
-  DPRINT("IntCreateWindow(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
-  DPRINT("IntCreateWindow(): About to send NCCREATE message.\n");
+  DPRINT1("[win32k.window] IntCreateWindow style %d, exstyle %d, parent %d\n", Cs.style, Cs.dwExStyle, Cs.hwndParent);
+  DPRINT1("IntCreateWindow(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
+  DPRINT1("IntCreateWindow(): About to send NCCREATE message.\n");
   Result = IntSendMessage(WindowObject, WM_NCCREATE, 0, (LPARAM) &Cs);
   
   /* FIXME - make sure the window still exists! */
@@ -1993,8 +1993,18 @@ IntDefSetText(PWINDOW_OBJECT WindowObject, PUNICODE_STRING WindowText)
   
   RtlFreeUnicodeString(&WindowObject->WindowName);
   WindowObject->WindowName = *WindowText;
+  WindowObject->WindowName.Buffer = ExAllocatePoolWithTag(PagedPool, WindowObject->WindowName.Length, TAG_STRING);
+  if(WindowObject->WindowName.Buffer != NULL)
+  {
+    RtlCopyUnicodeString(&WindowObject->WindowName, WindowText);
+  }
+  else
+  {
+    DPRINT1("Failed to allocate enough memory for the window text!\n");
+    RtlZeroMemory(&WindowObject->WindowName, sizeof(UNICODE_STRING));
+  }
   
-  return TRUE;
+  return FALSE;
 }
 
 INT FASTCALL

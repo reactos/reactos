@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.36.4.4 2004/08/31 11:38:56 weiden Exp $
+/* $Id: input.c,v 1.36.4.5 2004/09/01 22:14:50 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -532,6 +532,7 @@ IntMouseInput(MOUSEINPUT *mi)
     DesktopWindow = WinSta->InputDesktop->DesktopWindow;
     if (DesktopWindow != NULL)
     {
+      DbgPrint("DesktopWindow 0x%x: %d, %d\n", DesktopWindow, DesktopWindow->ClientRect.right, DesktopWindow->ClientRect.bottom);
       if(MousePos.x >= DesktopWindow->ClientRect.right)
         MousePos.x = DesktopWindow->ClientRect.right - 1;
       if(MousePos.y >= DesktopWindow->ClientRect.bottom)

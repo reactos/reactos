@@ -650,11 +650,16 @@ PWINDOW_OBJECT FASTCALL MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULON
 #define DCX_KEEPCLIPRGN		0x00040000
 #define DCX_NOCLIPCHILDREN      0x00080000
 
+#if 0
 #define IntLockWindowUpdate(Window) \
   ExAcquireFastMutex(&Window->UpdateLock)
 
 #define IntUnLockWindowUpdate(Window) \
   ExReleaseFastMutex(&Window->UpdateLock)
+#else
+#define IntLockWindowUpdate(Window)
+#define IntUnLockWindowUpdate(Window)
+#endif
 
 #define IntInvalidateRect(WndObj, Rect, Erase) \
    IntRedrawWindow((WndObj), (LPRECT)(Rect), 0, RDW_INVALIDATE | ((Erase) ? RDW_ERASE : 0))
@@ -926,6 +931,8 @@ BOOL           FASTCALL IntSetShellWindowEx(PWINDOW_OBJECT Shell, PWINDOW_OBJECT
 WORD           FASTCALL IntSetWindowWord(PWINDOW_OBJECT WindowObject, INT Index, WORD NewValue);
 ULONG          FASTCALL IntGetWindowThreadProcessId(PWINDOW_OBJECT Window, ULONG *Pid);
 PWINDOW_OBJECT FASTCALL IntGetWindow(PWINDOW_OBJECT Window, UINT uCmd);
+BOOL           FASTCALL IntDefSetText(PWINDOW_OBJECT WindowObject, PUNICODE_STRING WindowText);
+INT            FASTCALL IntInternalGetWindowText(PWINDOW_OBJECT WindowObject, LPWSTR lpString, INT nMaxCount);
 BOOL           FASTCALL IntDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data);
 DWORD          FASTCALL IntRemoveWndProcHandle(WNDPROC Handle);
 DWORD          FASTCALL IntRemoveProcessWndProcHandles(HANDLE ProcessID);

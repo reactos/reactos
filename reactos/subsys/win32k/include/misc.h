@@ -37,9 +37,37 @@ inline VOID
 IntUserLeaveCritical(VOID);
 
 inline BOOL
+IntUserIsInCriticalShared(VOID);
+
+inline BOOL
 IntUserIsInCritical(VOID);
 
 inline NTSTATUS
 IntConvertThreadToGUIThread(PETHREAD Thread);
+
+#define TempReleaseUserLock(UserLock) \
+  if(IntUserIsInCritical()) \
+  { \
+    (UserLock) = 1; \
+    IntUserLeaveCritical(); \
+  } \
+  else if(IntUserIsInCriticalShared()) \
+  { \
+    (UserLock) = 2; \
+    IntUserLeaveCritical(); \
+  } \
+  else \
+    (UserLock) = 0
+
+#define TempEnterUserLock(UserLock) \
+  switch(UserLock) \
+  { \
+    case 1: \
+      IntUserEnterCritical(); \
+      break; \
+    case 2: \
+      IntUserEnterCriticalShared(); \
+      break; \
+  } \
 
 #endif /* ndef _SUBSYS_WIN32K_INCLUDE_CLEANUP_H */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.120.2.1 2004/07/15 20:07:18 weiden Exp $
+/* $Id: winpos.c,v 1.120.2.2 2004/09/01 22:14:50 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -378,11 +378,11 @@ InternalWindowPosToWinPosStructure(PWINDOWPOS WinPos, PINTERNAL_WINDOWPOS Window
   /* convert the PWINDOW_OBJECTs to HWNDs or HWND_* constants */
   WinPos->hwnd = (HWNDValidateWindowObject(WindowPos->Window) ? WindowPos->Window->Handle : WindowPos->Window);
   WinPos->hwndInsertAfter = (HWNDValidateWindowObject(WindowPos->InsertAfter) ? WindowPos->InsertAfter->Handle : WindowPos->InsertAfter);
-  WinPos->x = WinPos->x;
-  WinPos->y = WinPos->y;
-  WinPos->cx = WinPos->cx;
-  WinPos->cy = WinPos->cy;
-  WinPos->flags = WinPos->flags;
+  WinPos->x = WindowPos->x;
+  WinPos->y = WindowPos->y;
+  WinPos->cx = WindowPos->cx;
+  WinPos->cy = WindowPos->cy;
+  WinPos->flags = WindowPos->flags;
 }
 
 VOID STATIC FASTCALL
@@ -503,7 +503,7 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
       IntSendMessage(WindowObject, WM_WINDOWPOSCHANGING, 0, (LPARAM) &winposCopy);
       WinPosToInternalWindowPosStructure(WinPos, &winposCopy);
     }
-  
+
   *WindowRect = WindowObject->WindowRect;
   *ClientRect = WindowObject->ClientRect;
 
@@ -803,8 +803,8 @@ WinPosSetWindowPos(PWINDOW_OBJECT Window, PWINDOW_OBJECT InsertAfter, INT x, INT
    WinPosDoWinPosChanging(Window, &WinPos, &NewWindowRect, &NewClientRect);
 
    /* Fix up the flags. */
-   
-   /* WARNING!!! The handle values in the WINDOWPOS are wither HWND_* constants
+
+   /* WARNING!!! The handle values in the WINDOWPOS are whether HWND_* constants
                  of PWINDOW_OBJECTs! They're not Handles! */
    
    if (!WinPosFixupFlags(Window, &WinPos))
@@ -826,7 +826,7 @@ WinPosSetWindowPos(PWINDOW_OBJECT Window, PWINDOW_OBJECT InsertAfter, INT x, INT
       /* WARNING!!! The handle values in WinPos are NOT handles, they're PWINDOW_OBJECTs! */
       WinPos.InsertAfter = WinPosDoOwnedPopups(WinPos.Window, WinPos.InsertAfter);
    }
-  
+
    /* Compute the visible region before the window position is changed */
    if (!(WinPos.flags & (SWP_NOREDRAW | SWP_SHOWWINDOW)) &&
        (WinPos.flags & (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | 
@@ -1082,9 +1082,9 @@ WinPosSetWindowPos(PWINDOW_OBJECT Window, PWINDOW_OBJECT InsertAfter, INT x, INT
       {
          NtGdiOffsetRgn(DirtyRgn,
             Window->WindowRect.left - Window->ClientRect.left,
-            Window->WindowRect.top - Window->ClientRect.top);
+            Window->WindowRect.top - Window->ClientRect.top);DbgPrint("WS10a\n");
          IntRedrawWindow(Window, NULL, DirtyRgn,
-            RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+            RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);DbgPrint("WS10b\n");
       }
       NtGdiDeleteObject(DirtyRgn);
    }

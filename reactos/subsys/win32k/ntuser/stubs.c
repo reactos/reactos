@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.45.12.4 2004/09/01 14:14:26 weiden Exp $
+/* $Id: stubs.c,v 1.45.12.5 2004/09/01 22:14:50 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1205,21 +1205,6 @@ NtUserSetWindowPlacement(HWND hWnd,
 }
 
 
-BOOL STDCALL
-NtUserSetWindowPos(      
-    HWND hWnd,
-    HWND hWndInsertAfter,
-    int X,
-    int Y,
-    int cx,
-    int cy,
-    UINT uFlags)
-{
-   UNIMPLEMENTED;
-   return 0;
-}
-
-
 INT STDCALL
 NtUserSetWindowRgn(
   HWND hWnd,
@@ -1267,22 +1252,6 @@ NtUserUpdateLayeredWindow(DWORD Unknown0,
 
 HWND STDCALL
 NtUserWindowFromPoint(LONG X, LONG Y)
-{
-   UNIMPLEMENTED;
-   return 0;
-}
-
-
-BOOL STDCALL
-NtUserDefSetText(HWND WindowHandle, PUNICODE_STRING WindowText)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
-
-INT STDCALL
-NtUserInternalGetWindowText(HWND hWnd, LPWSTR lpString, INT nMaxCount)
 {
    UNIMPLEMENTED;
    return 0;

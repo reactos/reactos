@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.25.8.2 2004/08/31 11:38:56 weiden Exp $
+/* $Id: callback.c,v 1.25.8.3 2004/09/01 22:14:50 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -44,6 +44,12 @@
     IntUserLeaveCritical(); \
     StatusVar = NtW32Call(a, b, c, d, e); \
     IntUserEnterCritical(); \
+  } \
+  else if(IntUserIsInCriticalShared()) \
+  { \
+    IntUserLeaveCritical(); \
+    StatusVar = NtW32Call(a, b, c, d, e); \
+    IntUserEnterCriticalShared(); \
   } \
   else \
     StatusVar = NtW32Call(a, b, c, d, e) \

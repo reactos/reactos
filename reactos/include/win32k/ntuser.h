@@ -373,7 +373,7 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
          int cy,
 		     UINT Flags);
 BOOL STDCALL
-NtUserDefSetText(HWND WindowHandle, PUNICODE_STRING WindowText);
+NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText);
 
 BOOLEAN
 STDCALL

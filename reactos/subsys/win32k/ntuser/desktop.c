@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.17.2.3 2004/08/31 14:34:39 weiden Exp $
+ *  $Id: desktop.c,v 1.17.2.4 2004/09/01 22:14:50 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -247,13 +247,21 @@ IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
 {
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+  INT UserLock;
+  
   DbgPrint("IntShowDesktop 0x%x\n", Desktop->DesktopWindow->Handle);
   Request.Type = CSRSS_SHOW_DESKTOP;
   Request.Data.ShowDesktopRequest.DesktopWindow = Desktop->DesktopWindow->Handle;
   Request.Data.ShowDesktopRequest.Width = Width;
   Request.Data.ShowDesktopRequest.Height = Height;
 
-  return CsrNotify(&Request, &Reply);
+  /* leave the user lock temporarily so we don't dead-lock in case csr calls some user32 api */
+  TempReleaseUserLock(UserLock);
+  Status = CsrNotify(&Request, &Reply);
+  TempEnterUserLock(UserLock);
+  
+  return Status;
 }
 
 NTSTATUS FASTCALL
@@ -262,11 +270,18 @@ IntHideDesktop(PDESKTOP_OBJECT Desktop)
 #if 0
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+  INT UserLock;
 
   Request.Type = CSRSS_HIDE_DESKTOP;
   Request.Data.HideDesktopRequest.DesktopWindow = Desktop->DesktopWindow;
 
-  return NotifyCsrss(&Request, &Reply);
+  /* leave the user lock temporarily so we don't dead-lock in case csr calls some user32 api */
+  TempReleaseUserLock(UserLock);
+  Status = NotifyCsrss(&Request, &Reply);
+  TempEnterUserLock(UserLock);
+  
+  return Status;
 #else
   Desktop->DesktopWindow->Style &= ~WS_VISIBLE;
   return STATUS_SUCCESS;

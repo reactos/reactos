@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: userlock.c,v 1.1.4.1 2004/07/15 20:12:56 weiden Exp $
+/* $Id: userlock.c,v 1.1.4.2 2004/09/01 22:14:50 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -62,9 +62,15 @@ IntUserLeaveCritical(VOID)
 }
 
 inline BOOL
-IntUserIsInCritical(VOID)
+IntUserIsInCriticalShared(VOID)
 {
   /* Exclusive locks are shared locks at the same time */
   return ExIsResourceAcquiredSharedLite(&UserLock);
+}
+
+inline BOOL
+IntUserIsInCritical(VOID)
+{
+  return ExIsResourceAcquiredExclusiveLite(&UserLock);
 }
 

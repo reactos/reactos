@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.4.7 2004/09/01 14:14:26 weiden Exp $
+/* $Id: ntuser.c,v 1.1.4.8 2004/09/01 22:14:50 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -33,10 +33,12 @@
  */
 
 #define BEGIN_NTUSER(ReturnType, ErrorReturn) \
-  ReturnType Result, ErrorResult = ErrorReturn
+  ReturnType Result, ErrorResult = ErrorReturn; \
+  DbgPrint("%s:%i: %s\n", __FILE__, __LINE__, __FUNCTION__)
 
 #define BEGIN_NTUSER_NOERR(ReturnType) \
-  ReturnType Result
+  ReturnType Result; \
+  DbgPrint("%s:%i: %s\n", __FILE__, __LINE__, __FUNCTION__)
 
 #define END_NTUSER() \
   if(IN_CRITICAL()) \
@@ -143,21 +145,17 @@ error: \
  */
 
 #define ENTER_CRITICAL() \
-  DbgPrint("%s:%i ENTER_CRICITAL\n", __FILE__, __LINE__); \
-  IntUserEnterCritical(); \
-  DbgPrint("%s:%i ENTER_CRICITAL done\n", __FILE__, __LINE__)
+  IntUserEnterCritical()
 
 #define ENTER_CRITICAL_SHARED() \
-  DbgPrint("%s:%i ENTER_CRICITAL_SHARED\n", __FILE__, __LINE__); \
-  IntUserEnterCriticalShared(); \
-  DbgPrint("%s:%i ENTER_CRICITAL_SHARED done\n", __FILE__, __LINE__)
+  IntUserEnterCriticalShared()
 
 #define LEAVE_CRITICAL() \
-  DbgPrint("%s:%i LEAVE_CRITICAL\n", __FILE__, __LINE__); \
   IntUserLeaveCritical()
 
 #define IN_CRITICAL() \
   IntUserIsInCritical()
+
 
 /*
  * User entry points
@@ -528,6 +526,32 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   {
     RtlFreeUnicodeString(&SafeClassName);
   }
+  
+  END_NTUSER();
+}
+
+BOOL STDCALL
+NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
+{
+  UNICODE_STRING WndText;
+  NTUSER_USER_OBJECT(WINDOW, Window);
+  BEGIN_BUFFERS();
+  BEGIN_NTUSER(BOOL, FALSE);
+  
+  if(WindowText != NULL)
+  {
+    NTUSER_COPY_BUFFER_NTERROR(&WndText, WindowText, sizeof(UNICODE_STRING));
+    /* FIXME - probe the string */
+  }
+  else
+  {
+    RtlInitUnicodeString(&WndText, NULL);
+  }
+  
+  ENTER_CRITICAL();
+  VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
+  Result = IntDefSetText(Window, &WndText);
+  LEAVE_CRITICAL();
   
   END_NTUSER();
 }
@@ -1126,7 +1150,7 @@ NtUserGetParent(HWND hWnd)
   NTUSER_USER_OBJECT(WINDOW, Window);
   BEGIN_NTUSER(HWND, NULL);
   
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
   Result = (Window->Parent != NULL ? Window->Parent->Handle : NULL);
   LEAVE_CRITICAL();
@@ -1314,6 +1338,27 @@ NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid)
   {
     NTUSER_COPY_BUFFER_BACK_NTERROR(UnsafePid, &SafePid, sizeof(DWORD));
   }
+  
+  END_NTUSER();
+}
+
+INT STDCALL
+NtUserInternalGetWindowText(HWND hWnd, LPWSTR lpString, INT nMaxCount)
+{
+  NTUSER_USER_OBJECT(WINDOW, Window);
+  BEGIN_NTUSER(INT, 0);
+  
+  if(lpString && (nMaxCount <= 1))
+  {
+    NTUSER_FAIL_ERROR(ERROR_INVALID_PARAMETER);
+  }
+  
+  /* FIXME - probe the buffer lpString points to */
+  
+  ENTER_CRITICAL_SHARED();
+  VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
+  Result = IntInternalGetWindowText(Window, lpString, nMaxCount);
+  LEAVE_CRITICAL();
   
   END_NTUSER();
 }
@@ -1814,7 +1859,7 @@ NtUserSetClassLong(HWND hWnd,
   NTUSER_USER_OBJECT(WINDOW, Window);
   BEGIN_NTUSER(DWORD, 0);
   
-  ENTER_CRITICAL_SHARED();
+  ENTER_CRITICAL();
   VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
   Result = IntSetClassLong(Window, Offset, dwNewLong, Ansi);
   LEAVE_CRITICAL();
@@ -1829,7 +1874,7 @@ NtUserSetCursor(HCURSOR hCursor)
   NTUSER_USER_OBJECT(CURSOR, OldCursor);
   BEGIN_NTUSER(HCURSOR, (HCURSOR)0);
   
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   if(hCursor != (HCURSOR)0)
   {
     VALIDATE_USER_OBJECT(CURSOR, hCursor, Cursor);
@@ -2000,6 +2045,35 @@ NtUserSetWindowLong(HWND hWnd, INT Index, LONG NewValue, BOOL Ansi)
   Result = IntSetWindowLong(Window, Index, NewValue, Ansi);
   LEAVE_CRITICAL();
   
+  END_NTUSER();
+}
+
+BOOL STDCALL
+NtUserSetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
+{
+  NTUSER_USER_OBJECT(WINDOW, Window);
+  NTUSER_USER_OBJECT(WINDOW, InsertAfterWindow);
+  BEGIN_NTUSER(BOOL, FALSE);
+  
+  ENTER_CRITICAL();
+  VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
+  if(hWndInsertAfter == HWND_BOTTOM)
+    InsertAfterWindow = WINDOW_BOTTOM;
+  else if(hWndInsertAfter == HWND_NOTOPMOST)
+    InsertAfterWindow = WINDOW_NOTOPMOST;
+  else if(hWndInsertAfter == HWND_TOP)
+    InsertAfterWindow = WINDOW_TOP;
+  else if(hWndInsertAfter == HWND_TOPMOST)
+    InsertAfterWindow = WINDOW_TOPMOST;
+  else if(hWndInsertAfter == HWND_MESSAGE)
+    InsertAfterWindow = WINDOW_MESSAGE;
+  else
+  {
+    VALIDATE_USER_OBJECT(WINDOW, hWndInsertAfter, InsertAfterWindow);
+  }
+  Result = WinPosSetWindowPos(Window, InsertAfterWindow, X, Y, cx, cy, uFlags);
+  LEAVE_CRITICAL();
+
   END_NTUSER();
 }
 
@@ -2177,7 +2251,11 @@ NtUserValidateRgn(HWND hWnd, HRGN hRgn)
 BOOL STDCALL
 NtUserWaitMessage(VOID)
 {
+  BEGIN_NTUSER_NOERR(BOOL);
+  
   /* We're not going to lock anything here, we don't want other threads to hang */
-  return IntWaitMessage(NULL, 0, 0);
+  Result = IntWaitMessage(NULL, 0, 0);
+  
+  END_NTUSER_NOERR();
 }
 
