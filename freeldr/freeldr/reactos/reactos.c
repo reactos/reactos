@@ -100,8 +100,6 @@ LoadDriver(PCHAR szFileName, int nPos)
     strcat(value, szFileName);
   else
     strcat(value, p + 1);
-  while (strlen(value) < 80)
-    strcat(value, " ");
   DrawStatusText(value);
 
   /*
@@ -110,6 +108,42 @@ LoadDriver(PCHAR szFileName, int nPos)
   MultiBootLoadModule(FilePointer, szFileName, NULL);
 
   DrawProgressBar(nPos);
+
+  return(TRUE);
+}
+
+
+static BOOL
+LoadNlsFile(PCHAR szFileName, PCHAR szModuleName)
+{
+  PFILE FilePointer;
+  char value[256];
+  char *p;
+
+  FilePointer = OpenFile(szFileName);
+  if (FilePointer == NULL)
+    {
+      strcat(value, szFileName);
+      strcat(value, " not found.");
+      MessageBox(value);
+      return(FALSE);
+    }
+
+  /*
+   * Update the status bar with the current file
+   */
+  strcpy(value, " Reading ");
+  p = strrchr(szFileName, '\\');
+  if (p == NULL)
+    strcat(value, szFileName);
+  else
+    strcat(value, p + 1);
+  DrawStatusText(value);
+
+  /*
+   * Load the driver
+   */
+  MultiBootLoadModule(FilePointer, szModuleName, NULL);
 
   return(TRUE);
 }
@@ -231,17 +265,104 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 		}
 //	      printf("  Loading driver: '%s'\n", ImagePath);
 
-	      LoadDriver(ImagePath, nPos);
-
 	      if (nPos < 100)
 		nPos += 5;
+
+	      LoadDriver(ImagePath, nPos);
 	    }
 	  Index++;
 	}
     }
   while(done == FALSE);
-
 }
+
+
+static BOOL
+LoadNlsFiles(PCHAR szSystemRoot)
+{
+  LONG rc = ERROR_SUCCESS;
+  HKEY hKey;
+  char szIdBuffer[80];
+  char szNameBuffer[80];
+  char szFileName[256];
+  ULONG BufferSize;
+
+  /* open the codepage key */
+  rc = RegOpenKey(NULL,
+		  "\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage",
+		  &hKey);
+  if (rc != ERROR_SUCCESS)
+    return(FALSE);
+
+
+  /* get ANSI codepage */
+  BufferSize = 80;
+  rc = RegQueryValue(hKey, "ACP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
+  if (rc != ERROR_SUCCESS)
+    return(FALSE);
+
+  BufferSize = 80;
+  rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)szNameBuffer, &BufferSize);
+  if (rc != ERROR_SUCCESS)
+    return(FALSE);
+
+
+  /* load ANSI codepage table */
+  strcpy(szFileName, szSystemRoot);
+  strcat(szFileName, "system32\\");
+  strcat(szFileName, szNameBuffer);
+  if (!LoadNlsFile(szFileName, "ANSI.NLS"))
+    return(FALSE);
+
+
+  /* get OEM codepage */
+  BufferSize = 80;
+  rc = RegQueryValue(hKey, "OEMCP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
+  if (rc != ERROR_SUCCESS)
+    return(FALSE);
+
+  BufferSize = 80;
+  rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)szNameBuffer, &BufferSize);
+  if (rc != ERROR_SUCCESS)
+    return(FALSE);
+
+  /* load OEM codepage table */
+  strcpy(szFileName, szSystemRoot);
+  strcat(szFileName, "system32\\");
+  strcat(szFileName, szNameBuffer);
+  if (!LoadNlsFile(szFileName, "OEM.NLS"))
+    return(FALSE);
+
+
+  /* open the language key */
+  rc = RegOpenKey(NULL,
+		  "\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language",
+		  &hKey);
+  if (rc != ERROR_SUCCESS)
+    return(FALSE);
+
+
+  /* get the Unicode case table */
+  BufferSize = 80;
+  rc = RegQueryValue(hKey, "Default", NULL, (PUCHAR)szIdBuffer, &BufferSize);
+  if (rc != ERROR_SUCCESS)
+    return(FALSE);
+
+  BufferSize = 80;
+  rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)szNameBuffer, &BufferSize);
+  if (rc != ERROR_SUCCESS)
+    return(FALSE);
+
+  /* load Unicode case table */
+  strcpy(szFileName, szSystemRoot);
+  strcat(szFileName, "system32\\");
+  strcat(szFileName, szNameBuffer);
+  if (!LoadNlsFile(szFileName, "UNICASE.NLS"))
+    return(FALSE);
+
+  return(TRUE);
+}
+
 
 void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 {
@@ -487,7 +608,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	 */
 	DetectHardware();
 //	Base = MultiBootCreateModule(HARDWARE.HIV);
-//	RegExportHardwareHive(Base, &Size);
+//	RegExportHive("\\Registry\\Machine\\HARDWARE", Base, &Size);
 //	MultiBootCloseModule(Base, Size);
 
 	DrawProgressBar(20);
@@ -495,14 +616,18 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * load NLS files
 	 */
-//	LoadNlsFiles(szBootPath);
+	if (!LoadNlsFiles(szBootPath))
+	{
+		MessageBox("Failed to load NLS files\n");
+		return;
+	}
 
 	DrawProgressBar(25);
 
 	/*
 	 * load boot drivers
 	 */
-	LoadBootDrivers(szBootPath, 30);
+	LoadBootDrivers(szBootPath, 25);
 
 
 	/*
