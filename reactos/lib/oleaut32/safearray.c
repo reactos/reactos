@@ -123,10 +123,8 @@ static DWORD SAFEARRAY_GetVTSize(VARTYPE vt)
     case VT_UI8:      return sizeof(LONG64);
     case VT_INT:
     case VT_UINT:     return sizeof(INT);
-#ifndef __REACTOS__ /*FIXME: wrong definition of VT_INT_PTR in MinGW headers */
     case VT_INT_PTR:
     case VT_UINT_PTR: return sizeof(UINT_PTR);
-#endif
     case VT_CY:       return sizeof(CY);
     case VT_DATE:     return sizeof(DATE);
     case VT_BSTR:     return sizeof(BSTR);

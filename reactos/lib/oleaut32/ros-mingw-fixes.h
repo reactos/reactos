@@ -38,10 +38,6 @@ HRESULT WINAPI VarDecNeg(const DECIMAL*,DECIMAL*);
 #define VAR_CALENDAR_THAI		((DWORD)0x00000080)
 #define	VAR_CALENDAR_GREGORIAN	((DWORD)0x00000100)
 
-#define V_UI2(X)	V_UNION(X, uiVal)
-#define V_UI4(X)	V_UNION(X, ulVal)
-#define V_UI8(X)	V_UNION(X, ullVal)
-
 #endif
 
 

@@ -69,9 +69,7 @@ static inline void VARIANT_CopyData(const VARIANT *srcVar, VARTYPE vt, void *pOu
   case VT_UI8: memcpy(pOut, &V_UI8(srcVar), sizeof (LONG64));
 #endif
 	break;
-#ifndef __REACTOS__ /*FIXME: wrong definition of VT_INT_PTR in MinGW headers */
   case VT_INT_PTR: memcpy(pOut, &V_INT_PTR(srcVar), sizeof (INT_PTR)); break;
-#endif
   case VT_DECIMAL: memcpy(pOut, &V_DECIMAL(srcVar), sizeof (DECIMAL)); break;
   default:
     FIXME("VT_ type %d unhandled, please report!\n", vt);
@@ -600,7 +598,6 @@ HRESULT WINAPI VarUI1FromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, BYTE* pbO
   return _VarUI1FromStr(strIn, lcid, dwFlags, pbOut);
 }
 
-#ifndef __REACTOS__	/*FIXME: wrong declaration of VarUI1FromDisp() in MinGW header */
 /************************************************************************
  * VarUI1FromDisp (OLEAUT32.137)
  *
@@ -621,7 +618,6 @@ HRESULT WINAPI VarUI1FromDisp(IDispatch* pdispIn, LCID lcid, BYTE* pbOut)
 {
   return _VarUI1FromDisp(pdispIn, lcid, pbOut);
 }
-#endif
 
 /************************************************************************
  * VarUI1FromBool (OLEAUT32.138)
@@ -905,7 +901,6 @@ HRESULT WINAPI VarI2FromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, SHORT* psO
   return _VarI2FromStr(strIn, lcid, dwFlags, psOut);
 }
 
-#ifndef __REACTOS__	/*FIXME: wrong declaration of VarI2FromDisp() in MinGW header */
 /************************************************************************
  * VarI2FromDisp (OLEAUT32.55)
  *
@@ -926,7 +921,6 @@ HRESULT WINAPI VarI2FromDisp(IDispatch* pdispIn, LCID lcid, SHORT* psOut)
 {
   return _VarI2FromDisp(pdispIn, lcid, psOut);
 }
-#endif
 
 /************************************************************************
  * VarI2FromBool (OLEAUT32.56)
@@ -1501,7 +1495,6 @@ HRESULT WINAPI VarI4FromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, LONG *piOu
   return _VarI4FromStr(strIn, lcid, dwFlags, piOut);
 }
 
-#ifndef __REACTOS__	/*FIXME: wrong declaration of VarI4FromDisp() in MinGW header */
 /************************************************************************
  * VarI4FromDisp (OLEAUT32.65)
  *
@@ -1522,7 +1515,6 @@ HRESULT WINAPI VarI4FromDisp(IDispatch* pdispIn, LCID lcid, LONG *piOut)
 {
   return _VarI4FromDisp(pdispIn, lcid, piOut);
 }
-#endif
 
 /************************************************************************
  * VarI4FromBool (OLEAUT32.66)
@@ -2744,12 +2736,10 @@ HRESULT WINAPI VarR4FromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, float *pFl
  *           DISP_E_OVERFLOW, if the value will not fit in the destination
  *           DISP_E_TYPEMISMATCH, if the type cannot be converted
  */
-#ifndef __REACTOS__	/*FIXME: wrong declaration of VarR4FromDisp() in MinGW header */
 HRESULT WINAPI VarR4FromDisp(IDispatch* pdispIn, LCID lcid, float *pFltOut)
 {
   return _VarR4FromDisp(pdispIn, lcid, pFltOut);
 }
-#endif
 
 /************************************************************************
  * VarR4FromBool (OLEAUT32.76)
@@ -3069,12 +3059,10 @@ HRESULT WINAPI VarR8FromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, double *pD
  *           DISP_E_OVERFLOW, if the value will not fit in the destination
  *           DISP_E_TYPEMISMATCH, if the type cannot be converted
  */
-#ifndef __REACTOS__	/*FIXME: wrong declaration of VarUI1FromDisp() in MinGW header */
 HRESULT WINAPI VarR8FromDisp(IDispatch* pdispIn, LCID lcid, double *pDblOut)
 {
   return _VarR8FromDisp(pdispIn, lcid, pDblOut);
 }
-#endif
 
 /************************************************************************
  * VarR8FromBool (OLEAUT32.86)
@@ -3494,12 +3482,10 @@ HRESULT WINAPI VarCyFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, CY* pCyOut
  *           DISP_E_OVERFLOW, if the value will not fit in the destination
  *           DISP_E_TYPEMISMATCH, if the type cannot be converted
  */
-#ifndef __REACTOS__	/*FIXME: wrong declaration of VarCyFromDisp() in MinGW header */
 HRESULT WINAPI VarCyFromDisp(IDispatch* pdispIn, LCID lcid, CY* pCyOut)
 {
   return _VarCyFromDisp(pdispIn, lcid, pCyOut);
 }
-#endif
 
 
 /************************************************************************
@@ -5080,12 +5066,10 @@ VarBoolFromStr_CheckLocalised:
  *           DISP_E_OVERFLOW, if the value will not fit in the destination
  *           DISP_E_TYPEMISMATCH, if the type cannot be converted
  */
-#ifndef __REACTOS__	/*FIXME: wrong declaration of VarBoolFromDisp() in MinGW header */
 HRESULT WINAPI VarBoolFromDisp(IDispatch* pdispIn, LCID lcid, VARIANT_BOOL *pBoolOut)
 {
   return _VarBoolFromDisp(pdispIn, lcid, pBoolOut);
 }
-#endif
 
 /************************************************************************
  * VarBoolFromI1 (OLEAUT32.233)
@@ -5931,12 +5915,10 @@ HRESULT WINAPI VarDateFromR8(double dblIn, DATE* pdateOut)
  *           DISP_E_OVERFLOW, if the value will not fit in the destination
  *           DISP_E_TYPEMISMATCH, if the type cannot be converted
  */
-#ifndef __REACTOS__	/*FIXME: wrong declaration of VarDateFromDisp() in MinGW header */
 HRESULT WINAPI VarDateFromDisp(IDispatch* pdispIn, LCID lcid, DATE* pdateOut)
 {
   return _VarDateFromDisp(pdispIn, lcid, pdateOut);
 }
-#endif
 
 /******************************************************************************
  * VarDateFromBool (OLEAUT32.96)
