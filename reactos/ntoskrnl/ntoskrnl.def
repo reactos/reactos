@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.90 2000/12/26 05:32:43 dwelch Exp $
+; $Id: ntoskrnl.def,v 1.91 2000/12/30 01:41:52 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -1013,7 +1013,7 @@ ExTryToAcquireFastMutex@4
 HalAcquireDisplayOwnership@4
 HalAdjustResourceList@4
 HalAllProcessorsStarted@0
-;HalAllocateAdapterChannel@16
+HalAllocateAdapterChannel@16
 HalAllocateCommonBuffer@16
 ;HalAllocateCrashDumpRegisters@8
 HalAssignSlotResources@32

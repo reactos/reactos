@@ -1,4 +1,4 @@
-/* $Id: halddk.h,v 1.6 2000/10/22 16:34:38 ekohl Exp $
+/* $Id: halddk.h,v 1.7 2000/12/30 01:41:04 ekohl Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -305,8 +305,8 @@ STDCALL
 HalAllocateAdapterChannel (
 	IN	PADAPTER_OBJECT	AdapterObject,
 	ULONG	Unknown2,
-	ULONG	Unknown3,
-	ULONG	Unknown4
+	IN	ULONG		NumberOfMapRegisters,
+	IN	PDRIVER_CONTROL	ExecutionRoutine
 	);
 
 PVOID

@@ -1,4 +1,4 @@
-/* $Id: dma.c,v 1.8 2000/07/19 14:18:18 dwelch Exp $
+/* $Id: dma.c,v 1.9 2000/12/30 01:41:29 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -52,14 +52,14 @@ HalFlushCommonBuffer (ULONG	Unknown1,
    return TRUE;
 }
 
-VOID STDCALL 
+VOID STDCALL
 HalFreeCommonBuffer (PADAPTER_OBJECT		AdapterObject,
 		     ULONG			Length,
 		     PHYSICAL_ADDRESS	LogicalAddress,
 		     PVOID			VirtualAddress,
 		     BOOLEAN			CacheEnabled)
 {
-   UNIMPLEMENTED;
+   MmFreeContiguousMemory(VirtualAddress);
 }
 
 PADAPTER_OBJECT STDCALL

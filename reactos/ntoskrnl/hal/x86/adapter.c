@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.2 2000/07/19 14:18:18 dwelch Exp $
+/* $Id: adapter.c,v 1.3 2000/12/30 01:41:29 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,6 +18,16 @@
 /* FUNCTIONS *****************************************************************/
 
 /* NOTE: IoAllocateAdapterChannel in NTOSKRNL.EXE */
+
+NTSTATUS STDCALL
+HalAllocateAdapterChannel(PADAPTER_OBJECT AdapterObject,
+			  ULONG Unknown2,
+			  ULONG NumberOfMapRegisters,
+			  PDRIVER_CONTROL ExecutionRoutine)
+{
+   UNIMPLEMENTED;
+}
+
 
 BOOLEAN STDCALL
 IoFlushAdapterBuffers (PADAPTER_OBJECT	AdapterObject,
