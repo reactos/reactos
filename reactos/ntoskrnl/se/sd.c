@@ -126,7 +126,7 @@ SeCaptureSecurityDescriptor(
   ULONG OwnerSAC = 0, GroupSAC = 0;
   ULONG OwnerSize = 0, GroupSize = 0;
   ULONG SaclSize = 0, DaclSize = 0;
-  ULONG DescriptorSize = sizeof(SECURITY_DESCRIPTOR);
+  ULONG DescriptorSize = 0;
   NTSTATUS Status = STATUS_SUCCESS;
   
   if(OriginalSecurityDescriptor != NULL)
@@ -135,12 +135,49 @@ SeCaptureSecurityDescriptor(
     {
       _SEH_TRY
       {
+        /* first only probe and copy until the control field of the descriptor
+           to determine whether it's a self-relative descriptor */
+        DescriptorSize = (ULONG)((ULONG_PTR)&OriginalSecurityDescriptor->Control -
+                                 (ULONG_PTR)OriginalSecurityDescriptor) +
+                         sizeof(OriginalSecurityDescriptor->Control);
         ProbeForRead(OriginalSecurityDescriptor,
-                     sizeof(SECURITY_DESCRIPTOR),
+                     DescriptorSize,
                      sizeof(ULONG));
 
+        if(OriginalSecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
+        {
+          Status = STATUS_UNKNOWN_REVISION;
+          _SEH_LEAVE;
+        }
+        
         /* make a copy on the stack */
-        DescriptorCopy = *OriginalSecurityDescriptor;
+        DescriptorCopy.Revision = OriginalSecurityDescriptor->Revision;
+        DescriptorCopy.Sbz1 = OriginalSecurityDescriptor->Sbz1;
+        DescriptorCopy.Control = OriginalSecurityDescriptor->Control;
+        DescriptorSize = ((DescriptorCopy.Control & SE_SELF_RELATIVE) ?
+                          sizeof(SECURITY_DESCRIPTOR_RELATIVE) : sizeof(SECURITY_DESCRIPTOR));
+
+        /* probe and copy the entire security descriptor structure. The SIDs
+           and ACLs will be probed and copied later though */
+        ProbeForRead(OriginalSecurityDescriptor,
+                     DescriptorSize,
+                     sizeof(ULONG));
+        if(DescriptorCopy.Control & SE_SELF_RELATIVE)
+        {
+          PSECURITY_DESCRIPTOR_RELATIVE RelSD = (PSECURITY_DESCRIPTOR_RELATIVE)OriginalSecurityDescriptor;
+          
+          DescriptorCopy.Owner = (PSID)RelSD->Owner;
+          DescriptorCopy.Group = (PSID)RelSD->Group;
+          DescriptorCopy.Sacl = (PACL)RelSD->Sacl;
+          DescriptorCopy.Dacl = (PACL)RelSD->Dacl;
+        }
+        else
+        {
+          DescriptorCopy.Owner = OriginalSecurityDescriptor->Owner;
+          DescriptorCopy.Group = OriginalSecurityDescriptor->Group;
+          DescriptorCopy.Sacl = OriginalSecurityDescriptor->Sacl;
+          DescriptorCopy.Dacl = OriginalSecurityDescriptor->Dacl;
+        }
       }
       _SEH_HANDLE
       {
@@ -165,13 +202,33 @@ SeCaptureSecurityDescriptor(
     }
     else
     {
+      if(OriginalSecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
+      {
+        return STATUS_UNKNOWN_REVISION;
+      }
+      
       /* make a copy on the stack */
-      DescriptorCopy = *OriginalSecurityDescriptor;
-    }
-    
-    if(DescriptorCopy.Revision != SECURITY_DESCRIPTOR_REVISION1)
-    {
-      return STATUS_UNKNOWN_REVISION;
+      DescriptorCopy.Revision = OriginalSecurityDescriptor->Revision;
+      DescriptorCopy.Sbz1 = OriginalSecurityDescriptor->Sbz1;
+      DescriptorCopy.Control = OriginalSecurityDescriptor->Control;
+      DescriptorSize = ((DescriptorCopy.Control & SE_SELF_RELATIVE) ?
+                        sizeof(SECURITY_DESCRIPTOR_RELATIVE) : sizeof(SECURITY_DESCRIPTOR));
+      if(DescriptorCopy.Control & SE_SELF_RELATIVE)
+      {
+        PSECURITY_DESCRIPTOR_RELATIVE RelSD = (PSECURITY_DESCRIPTOR_RELATIVE)OriginalSecurityDescriptor;
+
+        DescriptorCopy.Owner = (PSID)RelSD->Owner;
+        DescriptorCopy.Group = (PSID)RelSD->Group;
+        DescriptorCopy.Sacl = (PACL)RelSD->Sacl;
+        DescriptorCopy.Dacl = (PACL)RelSD->Dacl;
+      }
+      else
+      {
+        DescriptorCopy.Owner = OriginalSecurityDescriptor->Owner;
+        DescriptorCopy.Group = OriginalSecurityDescriptor->Group;
+        DescriptorCopy.Sacl = OriginalSecurityDescriptor->Sacl;
+        DescriptorCopy.Dacl = OriginalSecurityDescriptor->Dacl;
+      }
     }
     
     if(DescriptorCopy.Control & SE_SELF_RELATIVE)
@@ -377,10 +434,11 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
 			      IN PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor OPTIONAL)
 {
   PSECURITY_DESCRIPTOR ObjectSd;
-  PSID Owner = 0;
-  PSID Group = 0;
-  PACL Dacl = 0;
-  PACL Sacl = 0;
+  PSECURITY_DESCRIPTOR_RELATIVE RelSD;
+  PSID Owner = NULL;
+  PSID Group = NULL;
+  PACL Dacl = NULL;
+  PACL Sacl = NULL;
   ULONG OwnerLength = 0;
   ULONG GroupLength = 0;
   ULONG DaclLength = 0;
@@ -388,19 +446,20 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
   ULONG Control = 0;
   ULONG_PTR Current;
   ULONG SdLength;
+  
+  RelSD = (PSECURITY_DESCRIPTOR_RELATIVE)SecurityDescriptor;
 
   if (*ObjectsSecurityDescriptor == NULL)
     {
-      if (*Length < sizeof(SECURITY_DESCRIPTOR))
+      if (*Length < sizeof(SECURITY_DESCRIPTOR_RELATIVE))
 	{
-	  *Length = sizeof(SECURITY_DESCRIPTOR);
+	  *Length = sizeof(SECURITY_DESCRIPTOR_RELATIVE);
 	  return STATUS_BUFFER_TOO_SMALL;
 	}
 
-      *Length = sizeof(SECURITY_DESCRIPTOR);
-      RtlCreateSecurityDescriptor(SecurityDescriptor,
-				  SECURITY_DESCRIPTOR_REVISION);
-      SecurityDescriptor->Control |= SE_SELF_RELATIVE;
+      *Length = sizeof(SECURITY_DESCRIPTOR_RELATIVE);
+      RtlCreateSecurityDescriptorRelative(RelSD,
+				          SECURITY_DESCRIPTOR_REVISION);
       return STATUS_SUCCESS;
     }
 
@@ -447,26 +506,26 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
     }
 
   SdLength = OwnerLength + GroupLength + DaclLength +
-	     SaclLength + sizeof(SECURITY_DESCRIPTOR);
-  if (*Length < sizeof(SECURITY_DESCRIPTOR))
+	     SaclLength + sizeof(SECURITY_DESCRIPTOR_RELATIVE);
+  if (*Length < SdLength)
     {
       *Length = SdLength;
       return STATUS_BUFFER_TOO_SMALL;
     }
 
   /* Build the new security descrtiptor */
-  RtlCreateSecurityDescriptor(SecurityDescriptor,
-			      SECURITY_DESCRIPTOR_REVISION);
-  SecurityDescriptor->Control = Control;
+  RtlCreateSecurityDescriptorRelative(RelSD,
+			              SECURITY_DESCRIPTOR_REVISION);
+  RelSD->Control = Control;
 
-  Current = (ULONG_PTR)SecurityDescriptor + sizeof(SECURITY_DESCRIPTOR);
+  Current = (ULONG_PTR)(RelSD + 1);
 
   if (OwnerLength != 0)
     {
       RtlCopyMemory((PVOID)Current,
 		    Owner,
 		    OwnerLength);
-      SecurityDescriptor->Owner = (PSID)(Current - (ULONG_PTR)SecurityDescriptor);
+      RelSD->Owner = (ULONG)(Current - (ULONG_PTR)SecurityDescriptor);
       Current += OwnerLength;
     }
 
@@ -475,7 +534,7 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
       RtlCopyMemory((PVOID)Current,
 		    Group,
 		    GroupLength);
-      SecurityDescriptor->Group = (PSID)(Current - (ULONG_PTR)SecurityDescriptor);
+      RelSD->Group = (ULONG)(Current - (ULONG_PTR)SecurityDescriptor);
       Current += GroupLength;
     }
 
@@ -484,7 +543,7 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
       RtlCopyMemory((PVOID)Current,
 		    Dacl,
 		    DaclLength);
-      SecurityDescriptor->Dacl = (PACL)(Current - (ULONG_PTR)SecurityDescriptor);
+      RelSD->Dacl = (ULONG)(Current - (ULONG_PTR)SecurityDescriptor);
       Current += DaclLength;
     }
 
@@ -493,7 +552,7 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
       RtlCopyMemory((PVOID)Current,
 		    Sacl,
 		    SaclLength);
-      SecurityDescriptor->Sacl = (PACL)(Current - (ULONG_PTR)SecurityDescriptor);
+      RelSD->Sacl = (ULONG)(Current - (ULONG_PTR)SecurityDescriptor);
       Current += SaclLength;
     }
 

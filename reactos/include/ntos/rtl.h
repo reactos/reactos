@@ -521,7 +521,7 @@ PushEntryList (
 
 NTSTATUS STDCALL
 RtlAbsoluteToSelfRelativeSD (PSECURITY_DESCRIPTOR AbsSD,
-			     PSECURITY_DESCRIPTOR RelSD,
+			     PSECURITY_DESCRIPTOR_RELATIVE RelSD,
 			     PULONG BufferLength);
 
 NTSTATUS STDCALL
@@ -851,6 +851,10 @@ RtlCreateRegistryKey (ULONG RelativeTo,
 NTSTATUS STDCALL
 RtlCreateSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
 			     ULONG Revision);
+
+NTSTATUS STDCALL
+RtlCreateSecurityDescriptorRelative (PSECURITY_DESCRIPTOR_RELATIVE SecurityDescriptor,
+			             ULONG Revision);
 
 NTSTATUS
 STDCALL
@@ -1999,7 +2003,7 @@ RtlLookupElementGenericTableFullAvl (
 
 NTSTATUS STDCALL
 RtlMakeSelfRelativeSD (PSECURITY_DESCRIPTOR AbsSD,
-		       PSECURITY_DESCRIPTOR RelSD,
+		       PSECURITY_DESCRIPTOR_RELATIVE RelSD,
 		       PULONG BufferLength);
 
 VOID STDCALL
@@ -2261,7 +2265,7 @@ RtlSecondsSince1980ToTime (ULONG SecondsSince1980,
 			   PLARGE_INTEGER Time);
 
 NTSTATUS STDCALL
-RtlSelfRelativeToAbsoluteSD (PSECURITY_DESCRIPTOR RelSD,
+RtlSelfRelativeToAbsoluteSD (PSECURITY_DESCRIPTOR_RELATIVE RelSD,
 			     PSECURITY_DESCRIPTOR AbsSD,
 			     PULONG AbsSDSize,
 			     PACL Dacl,
@@ -2276,7 +2280,7 @@ RtlSelfRelativeToAbsoluteSD (PSECURITY_DESCRIPTOR RelSD,
 NTSTATUS
 STDCALL
 RtlSelfRelativeToAbsoluteSD2(
-	PSECURITY_DESCRIPTOR SelfRelativeSecurityDescriptor,
+	PSECURITY_DESCRIPTOR_RELATIVE SelfRelativeSecurityDescriptor,
 	PULONG BufferSize
 	);
 
@@ -2659,7 +2663,7 @@ RtlValidateHeap (
 BOOLEAN
 STDCALL
 RtlValidRelativeSecurityDescriptor (
-	IN PSECURITY_DESCRIPTOR SecurityDescriptorInput,
+	IN PSECURITY_DESCRIPTOR_RELATIVE SecurityDescriptorInput,
 	IN ULONG SecurityDescriptorLength,
 	IN SECURITY_INFORMATION RequiredInformation
 	);

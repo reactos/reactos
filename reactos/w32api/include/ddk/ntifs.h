@@ -3347,9 +3347,9 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlAbsoluteToSelfRelativeSD (
-    IN PSECURITY_DESCRIPTOR     AbsoluteSecurityDescriptor,
-    IN OUT PSECURITY_DESCRIPTOR SelfRelativeSecurityDescriptor,
-    IN PULONG                   BufferLength
+    IN PSECURITY_DESCRIPTOR              AbsoluteSecurityDescriptor,
+    IN OUT PSECURITY_DESCRIPTOR_RELATIVE SelfRelativeSecurityDescriptor,
+    IN PULONG                            BufferLength
 );
 
 NTSYSAPI
@@ -3593,17 +3593,17 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlSelfRelativeToAbsoluteSD (
-    IN PSECURITY_DESCRIPTOR     SelfRelativeSD,
-    OUT PSECURITY_DESCRIPTOR    AbsoluteSD,
-    IN PULONG                   AbsoluteSDSize,
-    IN PACL                     Dacl,
-    IN PULONG                   DaclSize,
-    IN PACL                     Sacl,
-    IN PULONG                   SaclSize,
-    IN PSID                     Owner,
-    IN PULONG                   OwnerSize,
-    IN PSID                     PrimaryGroup,
-    IN PULONG                   PrimaryGroupSize
+    IN PSECURITY_DESCRIPTOR_RELATIVE SelfRelativeSD,
+    OUT PSECURITY_DESCRIPTOR         AbsoluteSD,
+    IN PULONG                        AbsoluteSDSize,
+    IN PACL                          Dacl,
+    IN PULONG                        DaclSize,
+    IN PACL                          Sacl,
+    IN PULONG                        SaclSize,
+    IN PSID                          Owner,
+    IN PULONG                        OwnerSize,
+    IN PSID                          PrimaryGroup,
+    IN PULONG                        PrimaryGroupSize
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */

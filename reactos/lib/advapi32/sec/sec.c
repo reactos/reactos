@@ -258,7 +258,7 @@ MakeAbsoluteSD (
 {
 	NTSTATUS Status;
 
-	Status = RtlSelfRelativeToAbsoluteSD (pSelfRelativeSecurityDescriptor,
+	Status = RtlSelfRelativeToAbsoluteSD ((PSECURITY_DESCRIPTOR_RELATIVE)pSelfRelativeSecurityDescriptor,
 	                                      pAbsoluteSecurityDescriptor,
 	                                      lpdwAbsoluteSecurityDescriptorSize,
 	                                      pDacl,
@@ -293,7 +293,7 @@ MakeSelfRelativeSD (
 	NTSTATUS Status;
 
 	Status = RtlAbsoluteToSelfRelativeSD (pAbsoluteSecurityDescriptor,
-	                                      pSelfRelativeSecurityDescriptor,
+	                                      (PSECURITY_DESCRIPTOR_RELATIVE)pSelfRelativeSecurityDescriptor,
 	                                      (PULONG)lpdwBufferLength);
 	if (!NT_SUCCESS(Status))
 	{

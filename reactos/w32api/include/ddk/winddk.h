@@ -5223,7 +5223,7 @@ NTOSAPI
 BOOLEAN
 DDKAPI
 RtlValidRelativeSecurityDescriptor(
-  IN PSECURITY_DESCRIPTOR  SecurityDescriptorInput,
+  IN PSECURITY_DESCRIPTOR_RELATIVE  SecurityDescriptorInput,
   IN ULONG  SecurityDescriptorLength,
   IN SECURITY_INFORMATION  RequiredInformation);
 
