@@ -26,18 +26,18 @@ NpfsListeningCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
 
   DPRINT1("NpfsListeningCancelRoutine() called\n");
 
+  Waiter = (PNPFS_WAITER_ENTRY)&Irp->Tail.Overlay.DriverContext;
+
   IoReleaseCancelSpinLock(Irp->CancelIrql);
 
-  Waiter = Irp->Tail.Overlay.DriverContext[0];
 
-  KeLockMutex(&Waiter->Pipe->FcbListLock);
+  KeLockMutex(&Waiter->Fcb->Pipe->FcbListLock);
   RemoveEntryList(&Waiter->Entry);
-  KeUnlockMutex(&Waiter->Pipe->FcbListLock);
+  KeUnlockMutex(&Waiter->Fcb->Pipe->FcbListLock);
 
   Irp->IoStatus.Status = STATUS_CANCELLED;
   Irp->IoStatus.Information = 0;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
-  ExFreePool(Waiter);
 }
 
 
@@ -48,18 +48,13 @@ NpfsAddListeningServerInstance(PIRP Irp,
   PNPFS_WAITER_ENTRY Entry;
   KIRQL oldIrql;
 
-  Entry = ExAllocatePool(NonPagedPool, sizeof(NPFS_WAITER_ENTRY));
-  if (Entry == NULL)
-    return STATUS_INSUFFICIENT_RESOURCES;
+  Entry = (PNPFS_WAITER_ENTRY)&Irp->Tail.Overlay.DriverContext;
 
-  Entry->Irp = Irp;
   Entry->Fcb = Fcb;
-  Entry->Pipe = Fcb->Pipe;
 
   KeLockMutex(&Fcb->Pipe->FcbListLock);
 
   IoMarkIrpPending(Irp);
-  Irp->Tail.Overlay.DriverContext[0] = Entry;
   InsertTailList(&Fcb->Pipe->WaiterListHead, &Entry->Entry);
 
   IoAcquireCancelSpinLock(&oldIrql);
@@ -78,7 +73,6 @@ NpfsAddListeningServerInstance(PIRP Irp,
   Irp->IoStatus.Information = 0;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
   KeUnlockMutex(&Fcb->Pipe->FcbListLock);
-  ExFreePool(Entry);
 
   return STATUS_CANCELLED;
 }
@@ -173,38 +167,100 @@ NpfsConnectPipe(PIRP Irp,
 static NTSTATUS
 NpfsDisconnectPipe(PNPFS_FCB Fcb)
 {
-  DPRINT("NpfsDisconnectPipe()\n");
+   NTSTATUS Status;
+   PNPFS_FCB OtherSide;
+   PNPFS_PIPE Pipe;
+   BOOL Server;
 
-  if (Fcb->PipeState == FILE_PIPE_DISCONNECTED_STATE)
-    return STATUS_SUCCESS;
+   DPRINT("NpfsDisconnectPipe()\n");
 
-  if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
-    {
-      Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
-      /* FIXME: Shouldn't this be FILE_PIPE_CLOSING_STATE? */
-      Fcb->OtherSide->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+   Pipe = Fcb->Pipe;
+   KeLockMutex(&Pipe->FcbListLock);
 
-      /* FIXME: remove data queue(s) */
-
-      Fcb->OtherSide->OtherSide = NULL;
+   if (Fcb->PipeState == FILE_PIPE_DISCONNECTED_STATE)
+   {
+      DPRINT("Pipe is already disconnected\n");
+      Status = STATUS_SUCCESS;
+   }
+   else if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
+   {
+      Server = (Fcb->PipeEnd == FILE_PIPE_SERVER_END);
+      OtherSide = Fcb->OtherSide;
       Fcb->OtherSide = NULL;
+      /* Lock the server first */
+      if (Server)
+      {
+         ExAcquireFastMutex(&Fcb->DataListLock);
+	 ExAcquireFastMutex(&OtherSide->DataListLock);
+      }
+      else
+      {
+	 ExAcquireFastMutex(&OtherSide->DataListLock);
+         ExAcquireFastMutex(&Fcb->DataListLock);
+      }
+      OtherSide->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+      OtherSide->OtherSide = NULL;
+      /*
+       * Signaling the write event. If is possible that an other
+       * thread waits for an empty buffer.
+       */
+      KeSetEvent(&OtherSide->ReadEvent, IO_NO_INCREMENT, FALSE);
+      KeSetEvent(&OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
+      if (Server)
+      {
+         ExReleaseFastMutex(&Fcb->DataListLock);
+	 ExReleaseFastMutex(&OtherSide->DataListLock);
+      }
+      else
+      {
+	 ExReleaseFastMutex(&OtherSide->DataListLock);
+	 ExReleaseFastMutex(&OtherSide->DataListLock);
+      }
+      Status = STATUS_SUCCESS;
+   }
+   else if (Fcb->PipeState == FILE_PIPE_LISTENING_STATE)
+   {
+      PLIST_ENTRY Entry;
+      PNPFS_WAITER_ENTRY WaitEntry = NULL;
+      BOOLEAN Complete = FALSE; 
+      PIRP Irp = NULL;
 
-      DPRINT("Pipe disconnected\n");
-      return STATUS_SUCCESS;
-    }
+      Entry = Fcb->Pipe->WaiterListHead.Flink;
+      while (Entry != &Fcb->Pipe->WaiterListHead)
+      {
+         WaitEntry = CONTAINING_RECORD(Entry, NPFS_WAITER_ENTRY, Entry);
+	 if (WaitEntry->Fcb == Fcb)
+	 {
+            RemoveEntryList(Entry);
+	    Irp = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.DriverContext);
+	    Complete = (NULL == IoSetCancelRoutine(Irp, NULL));
+            break;
+	 }
+	 Entry = Entry->Flink;
+      }
 
-  if (Fcb->PipeState == FILE_PIPE_CLOSING_STATE)
-    {
+      if (Irp)
+      {
+         if (Complete)
+	 {
+	    Irp->IoStatus.Status = STATUS_PIPE_BROKEN;
+            Irp->IoStatus.Information = 0;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	 }
+      }
       Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
-      Fcb->OtherSide = NULL;
-
-      /* FIXME: remove data queue(s) */
-
-      DPRINT("Pipe disconnected\n");
-      return STATUS_SUCCESS;
-    }
-
-  return STATUS_UNSUCCESSFUL;
+      Status = STATUS_SUCCESS;
+   }
+   else if (Fcb->PipeState == FILE_PIPE_CLOSING_STATE)
+   {
+      Status = STATUS_PIPE_CLOSING;
+   }
+   else
+   {
+      Status = STATUS_UNSUCCESSFUL;
+   }
+   KeUnlockMutex(&Pipe->FcbListLock);
+   return Status;
 }
 
 

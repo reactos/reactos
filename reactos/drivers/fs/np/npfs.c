@@ -27,6 +27,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    NTSTATUS Status;
    
    DPRINT("Named Pipe FSD 0.0.2\n");
+
+   ASSERT (sizeof(NPFS_CONTEXT) <= sizeof (((PIRP)NULL)->Tail.Overlay.DriverContext));
+   ASSERT (sizeof(NPFS_WAITER_ENTRY) <= sizeof(((PIRP)NULL)->Tail.Overlay.DriverContext));
    
    DriverObject->MajorFunction[IRP_MJ_CREATE] = NpfsCreate;
    DriverObject->MajorFunction[IRP_MJ_CREATE_NAMED_PIPE] =
@@ -74,8 +77,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    DeviceExtension = DeviceObject->DeviceExtension;
    InitializeListHead(&DeviceExtension->PipeListHead);
    InitializeListHead(&DeviceExtension->ThreadListHead);
-   KeInitializeMutex(&DeviceExtension->PipeListLock,
-		     0);
+   KeInitializeMutex(&DeviceExtension->PipeListLock, 0);
    DeviceExtension->EmptyWaiterCount = 0;
 
    /* set the size quotas */
