@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.2 2001/05/10 04:02:21 rex Exp $
+/* $Id: fcb.c,v 1.3 2001/05/10 06:30:23 rex Exp $
  *
  *
  * FILE:             fcb.c
@@ -88,29 +88,34 @@ void  vfatAddFCBToTable (PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
   KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
 }
 
-PVFATFCB  vfatGrabFCBFromTable (PDEVICE_EXTENSION  pDeviceExt, PWSTR  pFileName)
+PVFATFCB  
+vfatGrabFCBFromTable (PDEVICE_EXTENSION  pVCB, PWSTR  pFileName)
 {
   KIRQL  oldIrql;
   PVFATFCB  rcFCB;
   PLIST_ENTRY  current_entry;
 
-  KeAcquireSpinLock (&pDeviceExt->FcbListLock, &oldIrql);
-  current_entry = pDeviceExt->FcbListHead.Flink;
-  while (current_entry != &pDeviceExt->FcbListHead)
+  CHECKPOINT;
+  KeAcquireSpinLock (&pVCB->FcbListLock, &oldIrql);
+  CHECKPOINT;
+  current_entry = pVCB->FcbListHead.Flink;
+  while (current_entry != &pVCB->FcbListHead)
   {
     rcFCB = CONTAINING_RECORD (current_entry, VFATFCB, FcbListEntry);
 
-    DPRINT ("Scanning %x(%S)\n", rcFCB, rcFCB->PathName);
+    DPRINT ("Next FCB in list at %x\n", rcFCB);
+    DPRINT ("  PathName:%S\n", rcFCB->PathName);
 
     if (wstrcmpi (pFileName, rcFCB->PathName))
     {
       rcFCB->RefCount++;
-      KeReleaseSpinLock (&pDeviceExt->FcbListLock, oldIrql);
+      KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
       return  rcFCB;
     }
     current_entry = current_entry->Flink;
   }
-  KeReleaseSpinLock (&pDeviceExt->FcbListLock, oldIrql);
+  CHECKPOINT;
+  KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
 
   return  NULL;
 }
@@ -118,55 +123,56 @@ PVFATFCB  vfatGrabFCBFromTable (PDEVICE_EXTENSION  pDeviceExt, PWSTR  pFileName)
 PVFATFCB  
 vfatMakeRootFCB (PDEVICE_EXTENSION  pVCB)
 {
-  UNIMPLEMENTED;
+  NTSTATUS  status;
+  PVFATFCB  FCB;
+  PFILE_OBJECT  fileObject;
+  ULONG  bytesPerCluster;
+  ULONG  fileCacheQuantum;
+
+  FCB = vfatNewFCB (L"\\");
+  memset (FCB->entry.Filename, ' ', 11);
+  FCB->entry.FileSize = pVCB->rootDirectorySectors * BLOCKSIZE;
+  FCB->entry.Attrib = FILE_ATTRIBUTE_DIRECTORY;
+  if (pVCB->FatType == FAT32)
+  {
+    FCB->entry.FirstCluster = 2;
+  }
+  else
+  {
+    FCB->entry.FirstCluster = 1;
+  }
+  FCB->RefCount = 1;
+  fileObject = IoCreateStreamFileObject (NULL, pVCB->StorageDevice);
+
+  bytesPerCluster = pVCB->Boot->SectorsPerCluster * BLOCKSIZE;
+  fileCacheQuantum = (bytesPerCluster >= PAGESIZE) ? 
+      bytesPerCluster : PAGESIZE;
+  status = CcRosInitializeFileCache (fileObject, 
+                                     &FCB->RFCB.Bcb,
+                                     fileCacheQuantum);
+  if (!NT_SUCCESS (status))
+  {
+    DbgPrint ("CcRosInitializeFileCache failed\n");
+    KeBugCheck (0);
+  }
+  ObDereferenceObject (fileObject);
+  vfatAddFCBToTable (pVCB, FCB);
+
+  return  FCB;
 }
 
 PVFATFCB  
 vfatOpenRootFCB (PDEVICE_EXTENSION  pVCB)
 {
-  NTSTATUS  status;
   PVFATFCB  FCB;
-  HANDLE  fileHandle;
-  OBJECT_ATTRIBUTES  objectAttributes;
-  IO_STATUS_BLOCK  ioStatusBlock;
-  UNICODE_STRING  rootPath;
 
   FCB = vfatGrabFCBFromTable (pVCB, L"\\");
   if (FCB != NULL)
   {
     return  FCB;
   }
-
-  RtlCreateUnicodeString (&rootPath, L"\\");
-  objectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-  objectAttributes.RootDirectory = NULL;
-  objectAttributes.ObjectName = &rootPath;
-  objectAttributes.Attributes = OBJ_CASE_INSENSITIVE;
-  objectAttributes.SecurityDescriptor = NULL;
-  objectAttributes.SecurityQualityOfService = NULL;
-
-  status = IoCreateFile(&fileHandle,
-                        FILE_DIRECTORY_FILE | FILE_RANDOM_ACCESS | 
-                          FILE_GENERIC_READ | FILE_GENERIC_WRITE,
-                        &objectAttributes, 
-                        &ioStatusBlock,
-                        NULL,
-                        0,
-                        0,
-                        FILE_OPEN,
-                        0,
-                        NULL,
-                        0,
-                        0,
-                        NULL,
-                        0);
-  if (status != STATUS_SUCCESS)
-  {
-    return  NULL;
-  }
-  FCB = vfatGrabFCBFromTable (pVCB, L"\\");
-  ZwClose (fileHandle);
-
+  FCB = vfatMakeRootFCB (pVCB);
+  
   return  FCB;
 }
 
