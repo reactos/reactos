@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: toolhelp.c,v 1.7 2004/10/31 00:14:18 weiden Exp $
+/* $Id: toolhelp.c,v 1.8 2004/10/31 19:24:31 weiden Exp $
  *
  * KERNEL32.DLL toolhelp functions
  *
@@ -155,7 +155,7 @@ TH32CreateSnapshot(DWORD dwFlags,
     {
       Status = RtlQueryProcessDebugInformation(th32ProcessID,
                                                PDI_MODULES,
-                                               *HeapDebug);
+                                               *ModuleDebug);
     }
     else
       Status = STATUS_UNSUCCESSFUL;
