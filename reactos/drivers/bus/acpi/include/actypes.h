@@ -1,7 +1,7 @@
 /******************************************************************************
  *
  * Name: actypes.h - Common data types for the entire ACPI subsystem
- *       $Revision: 1.3 $
+ *       $Revision: 1.4 $
  *
  *****************************************************************************/
 
@@ -113,13 +113,13 @@ typedef char                            *ACPI_PHYSICAL_ADDRESS;
 /*
  * 32-bit type definitions (default)
  */
-typedef unsigned char                   UINT8;
-typedef unsigned char                   BOOLEAN;
-typedef unsigned char                   UCHAR;
-typedef unsigned short                  UINT16;
-typedef int                             INT32;
-typedef unsigned int                    UINT32;
-typedef COMPILER_DEPENDENT_UINT64       UINT64;
+//typedef unsigned char                   UINT8;
+//typedef unsigned char                   BOOLEAN;
+//typedef unsigned char                   UCHAR;
+//typedef unsigned short                  UINT16;
+//typedef int                             INT32;
+//typedef unsigned int                    UINT32;
+//typedef COMPILER_DEPENDENT_UINT64       UINT64;
 
 typedef UINT32                          NATIVE_UINT;
 typedef INT32                           NATIVE_INT;

@@ -1,7 +1,7 @@
 /******************************************************************************
  *
  * Name: acpi.h - Master include file, Publics and external data.
- *       $Revision: 1.1 $
+ *       $Revision: 1.2 $
  *
  *****************************************************************************/
 
@@ -25,6 +25,10 @@
 
 #ifndef __ACPI_H__
 #define __ACPI_H__
+
+#include "platform/types.h"
+#undef ROUND_DOWN
+#undef ROUND_UP
 
 /*
  * Common includes for all ACPI driver files

@@ -1,5 +1,15 @@
 2002-11-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* drivers/bus/acpi/include/acpi.h: Include platform/types.h.
+	* drivers/bus/acpi/include/actypes.h: (UINT8, BOOLEAN, UCHAR, UINT16,
+	INT32, UINT32, UINT64): Disable, use the OS defined types instead.
+	* drivers/bus/acpi/include/platform/types.h: Remove all types,
+	include ntos.h instead.
+	* drivers/bus/acpi/ospm/include/acpisys.h: Don't include
+	platform/types.h.
+
+2002-11-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* include/defines.h: Fix warnings when bulding with gcc 3.3.
 	* include/ddk/status.h: Ditto.
 	* include/freetype/internal/ftdebug.h: Ditto.
