@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.38 2000/07/02 17:30:31 ekohl Exp $
+/* $Id: rtl.h,v 1.39 2000/07/04 01:25:27 ekohl Exp $
  * 
  */
 
@@ -1242,6 +1242,12 @@ RtlMultiByteToUnicodeSize (
 DWORD
 STDCALL
 RtlNtStatusToDosError (
+	NTSTATUS	StatusCode
+	);
+
+DWORD
+STDCALL
+RtlNtStatusToDosErrorNoTeb (
 	NTSTATUS	StatusCode
 	);
 

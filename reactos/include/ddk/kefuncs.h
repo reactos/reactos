@@ -294,6 +294,14 @@ KeLowerIrql (
 	KIRQL	NewIrql
 	);
 
+NTSTATUS
+STDCALL
+KePulseEvent (
+	PKEVENT		Event,
+	KPRIORITY	Increment,
+	BOOLEAN		Wait
+	);
+
 LARGE_INTEGER
 STDCALL
 KeQueryPerformanceCounter (

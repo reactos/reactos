@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.7 2000/07/04 01:26:35 ekohl Exp $
+/* $Id: error.c,v 1.1 2000/07/04 01:30:18 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -17,14 +17,15 @@
  * Copyright 2000 Alexandre Julliard
  */
 
-
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
 #include <windows.h>
+#include <errors.h>
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <internal/debug.h>
+
 
 /* TYPES *******************************************************************/
 
@@ -842,7 +843,7 @@ RtlAssert (
 
 
 /**********************************************************************
- * NAME							PRIVATE
+ * NAME							EXPORTED
  * 	RtlNtStatusToDosErrorNoTeb
  *
  * DESCRIPTION

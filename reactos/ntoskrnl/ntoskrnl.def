@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.80 2000/07/02 17:31:32 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.81 2000/07/04 01:27:40 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -27,19 +27,19 @@ ExAllocatePoolWithQuota@8
 ExAllocatePoolWithQuotaTag@12
 ExAllocatePoolWithTag@12
 ExConvertExclusiveToSharedLite@4
-;ExCreateCallback
+ExCreateCallback@16
 ExDeleteNPagedLookasideList@4
 ExDeletePagedLookasideList@4
 ExDeleteResource@4
 ExDeleteResourceLite@4
 ExDesktopObjectType DATA
-;ExDisableResourceBoostLite
+ExDisableResourceBoostLite@4
 ExEventObjectType DATA
 ExExtendZone@12
 ExFreePool@4
 ExFreeToPagedLookasideList@8
 ExGetExclusiveWaiterCount@4
-;ExGetPreviousMode
+ExGetPreviousMode@0
 ExGetSharedWaiterCount@4
 ExInitializeNPagedLookasideList
 ExInitializePagedLookasideList
@@ -47,9 +47,11 @@ ExInitializeResource@4
 ExInitializeResourceLite@4
 ExInitializeZone@16
 ExInterlockedAddLargeInteger@16
-;ExInterlockedAddLargeStatistic
+;@ExInterlockedAddLargeStatistic@8
+ExInterlockedAddLargeStatistic@8
 ExInterlockedAddUlong@12
-;ExInterlockedCompareExchange64
+;@ExInterlockedCompareExchange64@16
+ExInterlockedCompareExchange64@16
 ExInterlockedDecrementLong@8
 ExInterlockedExchangeUlong@12
 ExInterlockedExtendZone@16
@@ -61,12 +63,12 @@ ExInterlockedPopEntrySList@8
 ExInterlockedPushEntryList@12
 ExInterlockedPushEntrySList@12
 ExInterlockedRemoveHeadList@8
-;ExIsProcessorFeaturePresent
+ExIsProcessorFeaturePresent@4
 ExIsResourceAcquiredExclusiveLite@4
 ExIsResourceAcquiredSharedLite@4
 ExLocalTimeToSystemTime@8
-;ExNotifyCallback
-;ExPostSystemEvent
+ExNotifyCallback@12
+ExPostSystemEvent@12
 ;ExQueryPoolBlockSize
 ExQueueWorkItem@8
 ExRaiseAccessViolation@0
@@ -74,17 +76,17 @@ ExRaiseDatatypeMisalignment@0
 ;ExRaiseException
 ;ExRaiseHardError
 ExRaiseStatus@4
-;ExRegisterCallback
+ExRegisterCallback@12
 ExReinitializeResourceLite@4
 ExReleaseFastMutexUnsafe@4
 ExReleaseResourceForThread@8
 ExReleaseResourceForThreadLite@8
 ExReleaseResourceLite@4
-;ExSetResourceOwnerPointer
+ExSetResourceOwnerPointer@8
 ;ExSystemExceptionFilter
 ExSystemTimeToLocalTime@8
 ExTryToAcquireResourceExclusiveLite@4
-;ExUnregisterCallback
+ExUnregisterCallback@4
 ExWindowStationObjectType DATA
 ;ExfInterlockedAddUlong
 ;ExfInterlockedInsertHeadList
@@ -366,7 +368,7 @@ KeLoaderBlock DATA
 KeNumberProcessors DATA
 ;KeProfileInterrupt
 ;KeProfileInterruptWithSource
-;KePulseEvent
+KePulseEvent@12
 KeQuerySystemTime@4
 KeQueryTickCount@4
 KeQueryTimeIncrement@0
@@ -626,7 +628,7 @@ RtlAreAllAccessesGranted@8
 RtlAreAnyAccessesGranted@8
 RtlAreBitsClear@12
 RtlAreBitsSet@12
-;RtlAssert
+RtlAssert@16
 ;RtlCaptureStackBackTrace
 RtlCharToInteger@12
 ;RtlCheckRegistryKey
@@ -733,8 +735,8 @@ RtlMoveMemory@12
 RtlMultiByteToUnicodeN@20
 RtlMultiByteToUnicodeSize@12
 ;RtlNextUnicodePrefix
-;RtlNtStatusToDosError
-;RtlNtStatusToDosErrorNoTeb
+RtlNtStatusToDosError@4
+RtlNtStatusToDosErrorNoTeb@4
 ;RtlNumberGenericTableElements
 RtlNumberOfClearBits@4
 RtlNumberOfSetBits@4

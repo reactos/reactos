@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.15 2000/06/30 22:49:26 ekohl Exp $ */
+/* $Id: iofuncs.h,v 1.16 2000/07/04 01:25:27 ekohl Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -676,17 +676,20 @@ STDCALL
 IoGetRelatedDeviceObject (
 	PFILE_OBJECT	FileObject
 	);
+
 PEPROCESS
 STDCALL
 IoGetRequestorProcess (
 	IN	PIRP	Irp
 	);
+
 VOID
 STDCALL
 IoGetStackLimits (
-	PVOID	* Minimum, /* guess */
-	PVOID	* Maximum  /* guess */
+	PULONG	LowLimit,
+	PULONG	HighLimit
 	);
+
 PIRP
 STDCALL
 IoGetTopLevelIrp (

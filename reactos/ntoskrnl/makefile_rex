@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.78 2000/07/02 17:31:31 ekohl Exp $
+# $Id: makefile_rex,v 1.79 2000/07/04 01:27:40 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -39,6 +39,7 @@ OBJECTS_NT = \
 OBJECTS_RTL = \
 	rtl/bitmap.o \
 	rtl/ctype.o \
+	rtl/error.o \
 	rtl/interlck.o \
 	rtl/largeint.o \
 	rtl/mem.o \

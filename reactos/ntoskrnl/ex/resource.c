@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.13 2000/07/02 10:48:31 ekohl Exp $
+/* $Id: resource.c,v 1.14 2000/07/04 01:27:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,6 +19,7 @@
  * Flag = bits : ResourceOwnedExclusive=0x80
  *               ResourceNeverExclusive=0x10
  *               ResourceReleaseByOtherThread=0x20
+ *               ResourceDisableBoost=0x08
  * SharedWaiters = semaphore, used to manage wait list of shared waiters.
  * ExclusiveWaiters = event, used to manage wait list of exclusive waiters.
  * OwnerThreads[0]= thread who have exclusive access
@@ -33,6 +34,7 @@
  */
 
 #define ResourceOwnedExclusive 0x80
+#define ResourceDisableBoost   0x08
 
 /* INCLUDES *****************************************************************/
 
@@ -423,6 +425,15 @@ ExConvertExclusiveToSharedLite (
    DPRINT("ExConvertExclusiveToSharedLite() finished\n");
 }
 
+VOID
+STDCALL
+ExDisableResourceBoostLite (
+	PERESOURCE	Resource
+	)
+{
+   Resource->Flag |= ResourceDisableBoost;
+}
+
 ULONG
 STDCALL
 ExGetExclusiveWaiterCount (
@@ -756,6 +767,17 @@ ExReleaseResourceForThreadLite (
      
    KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
    DPRINT("ExReleaseResourceForThreadLite() finished\n");
+}
+
+
+VOID
+STDCALL
+ExSetResourceOwnerPointer (
+	IN	PERESOURCE	Resource,
+	IN	PVOID		OwnerPointer
+	)
+{
+
 }
 
 /* EOF */

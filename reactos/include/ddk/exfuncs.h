@@ -152,11 +152,22 @@ ExAllocatePoolWithTag (
 	IN	ULONG		NumberOfBytes,
 	IN	ULONG		Tag
 	);
+
 VOID
 STDCALL
 ExConvertExclusiveToSharedLite (
 	PERESOURCE	Resource
 	);
+
+NTSTATUS
+STDCALL
+ExCreateCallback (
+	OUT	PCALLBACK_OBJECT	* CallbackObject,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
+	IN	BOOLEAN			Create,
+	IN	BOOLEAN			AllowMultipleCallbacks
+	);
+
 VOID
 STDCALL
 ExDeleteNPagedLookasideList (
@@ -177,6 +188,13 @@ STDCALL
 ExDeleteResourceLite (
 	PERESOURCE	Resource
 	);
+
+VOID
+STDCALL
+ExDisableResourceBoostLite (
+	PERESOURCE	Resource
+	);
+
 NTSTATUS
 STDCALL
 ExExtendZone (
@@ -278,6 +296,12 @@ ExGetExclusiveWaiterCount (
 
 ULONG
 STDCALL
+ExGetPreviousMode (
+	VOID
+	);
+
+ULONG
+STDCALL
 ExGetSharedWaiterCount (
 	PERESOURCE	Resource
 	);
@@ -370,6 +394,7 @@ ExInitializeZone (
 	PVOID		InitialSegment,
 	ULONG		InitialSegmentSize
 	);
+
 LARGE_INTEGER
 STDCALL
 ExInterlockedAddLargeInteger (
@@ -377,6 +402,14 @@ ExInterlockedAddLargeInteger (
 	LARGE_INTEGER	Increment,
 	PKSPIN_LOCK	Lock
 	);
+
+VOID
+FASTCALL
+ExInterlockedAddLargeStatistic (
+	IN	PLARGE_INTEGER	Addend,
+	IN	ULONG		Increment
+	);
+
 ULONG
 STDCALL
 ExInterlockedAddUlong (
@@ -395,6 +428,15 @@ ExInterlockedAddUlong (
  */
 #define ExInterlockedAllocateFromZone(Zone,Lock) \
 	(PVOID)ExInterlockedPopEntryList(&(Zone)->FreeList,Lock)
+
+LONGLONG
+FASTCALL
+ExInterlockedCompareExchange64 (
+	IN OUT	PLONGLONG	Destination,
+	IN	PLONGLONG	Exchange,
+	IN	PLONGLONG	Comparand,
+	IN	PKSPIN_LOCK	Lock
+	);
 
 INTERLOCKED_RESULT
 STDCALL
@@ -512,19 +554,43 @@ ExInterlockedRemoveHeadList (
 
 BOOLEAN
 STDCALL
+ExIsProcessorFeaturePresent (
+	IN	ULONG	ProcessorFeature
+	);
+
+BOOLEAN
+STDCALL
 ExIsResourceAcquiredExclusiveLite (
 	PERESOURCE	Resource
 	);
+
 ULONG
 STDCALL
 ExIsResourceAcquiredSharedLite (
 	PERESOURCE	Resource
 	);
+
 VOID
 STDCALL
 ExLocalTimeToSystemTime (
 	PLARGE_INTEGER	LocalTime,
 	PLARGE_INTEGER	SystemTime
+	);
+
+VOID
+STDCALL
+ExNotifyCallback (
+	IN	PVOID	CallbackObject,
+	IN	PVOID	Argument1,
+	IN	PVOID	Argument2
+	);
+
+VOID
+STDCALL
+ExPostSystemEvent (
+	ULONG	Unknown1,
+	ULONG	Unknown2,
+	ULONG	Unknown3
 	);
 
 /*
@@ -557,6 +623,15 @@ STDCALL
 ExRaiseStatus (
 	NTSTATUS	Status
 	);
+
+PVOID
+STDCALL
+ExRegisterCallback (
+	IN	PCALLBACK_OBJECT	CallbackObject,
+	IN	PCALLBACK_FUNCTION	CallbackFunction,
+	IN	PVOID			CallbackContext
+	);
+
 VOID
 STDCALL
 ExReinitializeResourceLite (
@@ -601,22 +676,39 @@ ExReleaseResourceForThreadLite (
 	PERESOURCE		Resource,
 	ERESOURCE_THREAD	ResourceThreadId
 	);
+
+VOID
+STDCALL
+ExSetResourceOwnerPointer (
+	IN	PERESOURCE	Resource,
+	IN	PVOID		OwnerPointer
+	);
+
 VOID
 STDCALL
 ExSystemTimeToLocalTime (
 	PLARGE_INTEGER	SystemTime,
 	PLARGE_INTEGER	LocalTime
 	);
+
 BOOLEAN
 FASTCALL
 ExTryToAcquireFastMutex (
 	PFAST_MUTEX	FastMutex
 	);
+
 BOOLEAN
 STDCALL
 ExTryToAcquireResourceExclusiveLite (
 	PERESOURCE	Resource
 	);
+
+VOID
+STDCALL
+ExUnregisterCallback (
+	IN	PVOID	CallbackRegistration
+	);
+
 /*
 LONG
 FASTCALL

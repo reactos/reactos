@@ -133,4 +133,14 @@ KeGetPreviousMode (
 }
 
 
+ULONG
+STDCALL
+ExGetPreviousMode (
+	VOID
+	)
+{
+   /* CurrentThread is in ntoskrnl/ps/thread.c */
+   return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;
+}
+
 /* EOF */

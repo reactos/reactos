@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.4 2000/06/07 13:04:34 ekohl Exp $
+/* $Id: interlck.c,v 1.5 2000/07/04 01:27:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -122,5 +122,41 @@ ExInterlockedIncrementLong (
 
         return oldval;
 }
+
+VOID
+FASTCALL
+ExInterlockedAddLargeStatistic (
+	IN	PLARGE_INTEGER	Addend,
+	IN	ULONG		Increment
+	)
+{
+	Addend->QuadPart += Increment;
+}
+
+LONGLONG
+FASTCALL
+ExInterlockedCompareExchange64 (
+	IN OUT	PLONGLONG	Destination,
+	IN	PLONGLONG	Exchange,
+	IN	PLONGLONG	Comparand,
+	IN	PKSPIN_LOCK	Lock
+	)
+{
+	KIRQL oldlvl;
+	LONGLONG oldval;
+
+	KeAcquireSpinLock (Lock, &oldlvl);
+
+	oldval = *Destination;
+	if (*Destination == *Comparand)
+	{
+		*Destination = *Exchange;
+	}
+
+	KeReleaseSpinLock (Lock, oldlvl);
+
+	return oldval;
+}
+
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.3 2000/05/09 16:12:47 ekohl Exp $ */
+/* $Id: extypes.h,v 1.4 2000/07/04 01:25:27 ekohl Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
@@ -138,6 +138,17 @@ typedef struct
    LIST_ENTRY ListEntry;
    FAST_MUTEX Lock;
 } PAGED_LOOKASIDE_LIST, *PPAGED_LOOKASIDE_LIST;
+
+
+/* callback object (not functional in NT4)*/
+
+typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
+
+typedef VOID (*PCALLBACK_FUNCTION) (
+	PVOID	CallbackContext,
+	PVOID	Argument1,
+	PVOID	Argument2
+	);
 
 #endif /* __INCLUDE_DDK_EXTYPES_H */
 

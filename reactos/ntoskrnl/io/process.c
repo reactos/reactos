@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.7 2000/07/01 22:37:41 ekohl Exp $
+/* $Id: process.c,v 1.8 2000/07/04 01:29:05 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,12 +30,12 @@ IoGetInitialStack (
 VOID
 STDCALL
 IoGetStackLimits (
-	PVOID	*StackLimit,
-	PVOID	*StackBase
+	PULONG	LowLimit,
+	PULONG	HighLimit
 	)
 {
-	*StackLimit = NtCurrentTeb ()->Tib.StackLimit;
-	*StackBase = NtCurrentTeb ()->Tib.StackBase;
+	*LowLimit = (ULONG)NtCurrentTeb ()->Tib.StackLimit;
+	*HighLimit = (ULONG)NtCurrentTeb ()->Tib.StackBase;
 }
 
 

@@ -191,7 +191,7 @@ typedef struct _NT_TEB
    PVOID glTable;                      // BE8h
    PVOID glCurrentRC;                  // BECh
    PVOID glContext;                    // BF0h
-   ULONG LastStatusValue;              // BF4h
+   NTSTATUS LastStatusValue;           // BF4h
    UNICODE_STRING StaticUnicodeString; // BF8h
    WCHAR StaticUnicodeBuffer[0x105];   // C00h
    PVOID DeallocationStack;            // E0Ch
@@ -208,8 +208,8 @@ typedef struct _NT_TEB
    ULONG Spare3;                       // F78h
    ULONG Spare4;                       // F7Ch
    PVOID ReservedForOle;               // F80h
-   ULONG WaitingOnLoaderLock;          // F84h   
-   
+   ULONG WaitingOnLoaderLock;          // F84h
+
    PVOID StackCommit;                  // F88h
    PVOID StackCommitMax;               // F8Ch
    PVOID StackReserved;                // F90h
