@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.3 2003/08/19 11:48:49 weiden Exp $
+/* $Id: clip.c,v 1.4 2003/12/21 22:41:00 navaraf Exp $
  *
  * PROJECT:         ReactOS gdi32.dll
  * FILE:            lib/gdi32/objects/clip.c
@@ -38,3 +38,21 @@ SelectClipRgn(HDC DC, HRGN Rgn)
 {
   return NtGdiSelectClipRgn(DC, Rgn);
 }
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+IntersectClipRect(
+	HDC		hDc,
+	int		a1,
+	int		a2,
+	int		a3,
+	int		a4
+	)
+{
+   return NtGdiIntersectClipRect(hDc, a1, a2, a3, a4);
+}
+
+

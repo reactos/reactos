@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.43 2003/12/21 10:27:10 navaraf Exp $
+/* $Id: stubs.c,v 1.44 2003/12/21 22:41:00 navaraf Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -459,24 +459,6 @@ DWORD
 STDCALL
 GetFontLanguageInfo(
 	HDC 	hDc
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-IntersectClipRect(
-	HDC		hDc,
-	int		a1,
-	int		a2,
-	int		a3,
-	int		a4
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
