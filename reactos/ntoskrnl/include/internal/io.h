@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.31 2003/05/22 00:47:04 gdalsnes Exp $
+/* $Id: io.h,v 1.32 2003/06/20 22:42:18 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -335,6 +335,12 @@ IoCreateDriverList(VOID);
 
 NTSTATUS
 IoDestroyDriverList(VOID);
+
+
+/* errlog.c */
+
+NTSTATUS
+IopInitErrorLog (VOID);
 
 
 /* rawfs.c */

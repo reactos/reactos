@@ -1,4 +1,4 @@
-/* $Id: errlog.c,v 1.8 2002/09/08 10:23:24 chorns Exp $
+/* $Id: errlog.c,v 1.9 2003/06/20 22:43:27 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,13 +15,11 @@
 
 #include <internal/port.h>
 
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* TYPES *********************************************************************/
 
-#define  LOG_FILE_APPLICATION	L"\\SystemRoot\\System32\\Config\\AppEvent.Evt"
-#define  LOG_FILE_SECURITY	L"\\SystemRoot\\System32\\Config\\SecEvent.Evt"
-#define  LOG_FILE_SYSTEM	L"\\SystemRoot\\System32\\Config\\SysEvent.Evt"
 
 typedef struct _IO_ERROR_LOG_PACKET
 {
@@ -40,21 +38,97 @@ typedef struct _IO_ERROR_LOG_PACKET
    ULONG DumpData[1];
 } IO_ERROR_LOG_PACKET, *PIO_ERROR_LOG_PACKET;
 
+typedef struct _ERROR_LOG_ENTRY
+{
+  ULONG EntrySize;
+} ERROR_LOG_ENTRY, *PERROR_LOG_ENTRY;
+
+
+/* GLOBALS *******************************************************************/
+
+static KSPIN_LOCK IopAllocationLock;
+static ULONG IopTotalLogSize;
+
+
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS IoInitErrorLog(VOID)
+NTSTATUS
+IopInitErrorLog (VOID)
 {
-   return(STATUS_SUCCESS);
+  IopTotalLogSize = 0;
+  KeInitializeSpinLock (&IopAllocationLock);
+
+  return STATUS_SUCCESS;
 }
 
-PVOID STDCALL IoAllocateErrorLogEntry(PVOID IoObject, UCHAR EntrySize)
+
+PVOID STDCALL
+IoAllocateErrorLogEntry (IN PVOID IoObject,
+			 IN UCHAR EntrySize)
 {
-   UNIMPLEMENTED;
+  PERROR_LOG_ENTRY LogEntry;
+  ULONG LogEntrySize;
+  KIRQL Irql;
+
+  DPRINT1 ("IoAllocateErrorLogEntry() called\n");
+
+  if (IoObject == NULL)
+    return NULL;
+
+  KeAcquireSpinLock (&IopAllocationLock,
+		     &Irql);
+
+  if (IopTotalLogSize > PAGE_SIZE)
+    {
+      KeReleaseSpinLock (&IopAllocationLock,
+			 Irql);
+      return NULL;
+    }
+
+  LogEntrySize = sizeof(ERROR_LOG_ENTRY) + EntrySize;
+  LogEntry = ExAllocatePool (NonPagedPool,
+			     LogEntrySize);
+  if (LogEntry == NULL)
+    {
+      KeReleaseSpinLock (&IopAllocationLock,
+			 Irql);
+      return NULL;
+    }
+
+  IopTotalLogSize += EntrySize;
+
+  LogEntry->EntrySize = LogEntrySize;
+
+  KeReleaseSpinLock (&IopAllocationLock,
+		     Irql);
+
+  return (PVOID)((ULONG_PTR)LogEntry + sizeof(ERROR_LOG_ENTRY));
 }
 
-VOID STDCALL IoWriteErrorLogEntry(PVOID ElEntry)
-{
-} 
 
+VOID STDCALL
+IoWriteErrorLogEntry (IN PVOID ElEntry)
+{
+  PERROR_LOG_ENTRY LogEntry;
+  KIRQL Irql;
+
+  DPRINT1 ("IoWriteErrorLogEntry() called\n");
+
+  LogEntry = (PERROR_LOG_ENTRY)((ULONG_PTR)ElEntry - sizeof(ERROR_LOG_ENTRY));
+
+
+  /* FIXME: Write log entry to the error log port or keep it in a list */
+
+
+  /* Release error log entry */
+  KeAcquireSpinLock (&IopAllocationLock,
+		     &Irql);
+
+  IopTotalLogSize -= LogEntry->EntrySize;
+  ExFreePool (LogEntry);
+
+  KeReleaseSpinLock (&IopAllocationLock,
+		     Irql);
+}
 
 /* EOF */
