@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.24 2004/03/23 16:32:20 weiden Exp $
+ * $Id: vis.c,v 1.25 2004/03/23 18:08:07 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -104,7 +104,7 @@ VIS_ComputeVisibleRegion(
             {
                ClipRgn = UnsafeIntCreateRectRgnIndirect(&CurrentSibling->WindowRect);
                /* Combine it with the window region if available */
-               if(CurrentSibling->WindowRegion)
+               if(CurrentSibling->WindowRegion && !(CurrentSibling->Style & WS_MINIMIZE))
                {
                  NtGdiOffsetRgn(ClipRgn, -CurrentSibling->WindowRect.left, -CurrentSibling->WindowRect.top);
                  NtGdiCombineRgn(ClipRgn, ClipRgn, CurrentSibling->WindowRegion, RGN_AND);
@@ -133,7 +133,7 @@ VIS_ComputeVisibleRegion(
          {
             ClipRgn = UnsafeIntCreateRectRgnIndirect(&CurrentWindow->WindowRect);
             /* Combine it with the window region if available */
-            if(CurrentWindow->WindowRegion)
+            if(CurrentWindow->WindowRegion && !(CurrentWindow->Style & WS_MINIMIZE))
             {
               NtGdiOffsetRgn(ClipRgn, -CurrentWindow->WindowRect.left, -CurrentWindow->WindowRect.top);
               NtGdiCombineRgn(ClipRgn, ClipRgn, CurrentWindow->WindowRegion, RGN_AND);
@@ -147,7 +147,7 @@ VIS_ComputeVisibleRegion(
       IntUnLockRelatives(Window);
    }
    
-   if(Window->WindowRegion)
+   if(Window->WindowRegion && !(Window->Style & WS_MINIMIZE))
    {
      NtGdiOffsetRgn(VisRgn, -LeftOffset, -TopOffset);
      NtGdiCombineRgn(VisRgn, VisRgn, Window->WindowRegion, RGN_AND);
