@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.11 2002/03/22 20:35:09 ekohl Exp $
+/* $Id: disk.c,v 1.12 2002/03/22 23:07:40 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -334,7 +334,7 @@ DiskClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
   PDEVICE_EXTENSION DeviceExtension;
   PDISK_DATA DiskData;
 
-  DPRINT1("DiskClassCheckReadWrite() called\n");
+  DPRINT("DiskClassCheckReadWrite() called\n");
 
   DeviceExtension = DeviceObject->DeviceExtension;
   DiskData = (PDISK_DATA)(DeviceExtension + 1);
