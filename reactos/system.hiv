@@ -241,6 +241,20 @@ REGEDIT4
 "Start"=dword:00000001
 "Type"=dword:00000001
 
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Mouse]
+"ErrorControl"=dword:00000000
+"Group"="Pointer Class"
+"ImagePath"=expand:"system32\drivers\mouclass.sys"
+"Start"=dword:00000001
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Psaux]
+"ErrorControl"=dword:00000000
+"Group"="Pointer Port"
+"ImagePath"=expand:"system32\drivers\psaux.sys"
+"Start"=dword:00000001
+"Type"=dword:00000001
+
 [\Registry\Machine\SYSTEM\ControlSet002]
 
 [\Registry\Machine\SYSTEM\Select]

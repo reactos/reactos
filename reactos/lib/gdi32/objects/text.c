@@ -44,14 +44,10 @@ TextOutW(
 	return W32kTextOut(hDC, XStart, YStart, String, Count);
 }
 
-COLORREF 
-STDCALL 
-SetTextColor(
-	HDC		hDC, 
-	COLORREF	color
-	)
+COLORREF  STDCALL 
+SetTextColor(HDC hDC, COLORREF color)
 {
-	return W32kSetTextColor(hDC, color);
+  return(W32kSetTextColor(hDC, color));
 }
 
 BOOL 
@@ -241,3 +237,4 @@ CreateFontW(
 	return W32kCreateFont(Height, Width, Escapement, Orientation, Weight, Italic, Underline, StrikeOut,
                           CharSet, OutputPrecision, ClipPrecision, Quality, PitchAndFamily, Face);
 }
+

@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.22 2002/09/08 10:23:07 chorns Exp $
+/* $Id: unicode.c,v 1.23 2002/09/17 23:41:44 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -473,12 +473,9 @@ RtlCreateUnicodeString (
 }
 
 
-BOOLEAN
-STDCALL
-RtlCreateUnicodeStringFromAsciiz (
-	OUT	PUNICODE_STRING	Destination,
-	IN	PCSZ		Source
-	)
+BOOLEAN STDCALL
+RtlCreateUnicodeStringFromAsciiz (OUT	PUNICODE_STRING	Destination,
+				  IN	PCSZ		Source)
 {
 	ANSI_STRING AnsiString;
 	NTSTATUS Status;

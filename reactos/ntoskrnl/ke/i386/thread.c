@@ -103,9 +103,9 @@ Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
   /*
    * Setup a stack frame for exit from the task switching routine
    */
-
-  InitSize = 5 * sizeof(DWORD) + 6 * sizeof(DWORD) + sizeof(DWORD) +
-             sizeof(KTRAP_FRAME);
+  
+  InitSize = 5 * sizeof(DWORD) + sizeof(DWORD) + 6 * sizeof(DWORD) + 
+    sizeof(FLOATING_SAVE_AREA) + sizeof(KTRAP_FRAME);
   KernelStack = (PULONG)(Thread->KernelStack - InitSize);
 
   /* Set up the initial frame for the return from the dispatcher. */
@@ -115,19 +115,24 @@ Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
   KernelStack[3] = 0;      /* EBP */
   KernelStack[4] = (ULONG)PsBeginThreadWithContextInternal;   /* EIP */
 
+  /* Save the context flags. */
+  KernelStack[5] = Context->ContextFlags;
+
   /* Set up the initial values of the debugging registers. */
-  KernelStack[5] = Context->Dr0;
-  KernelStack[6] = Context->Dr1;
-  KernelStack[7] = Context->Dr2;
-  KernelStack[8] = Context->Dr3;
-  KernelStack[9] = Context->Dr6;
-  KernelStack[10] = Context->Dr7;
+  KernelStack[6] = Context->Dr0;
+  KernelStack[7] = Context->Dr1;
+  KernelStack[8] = Context->Dr2;
+  KernelStack[9] = Context->Dr3;
+  KernelStack[10] = Context->Dr6;
+  KernelStack[11] = Context->Dr7;
 
   /* Set up the initial floating point state. */
-  KernelStack[11] = (ULONG)&Context->FloatSave;
+  memcpy((PVOID)&KernelStack[12], (PVOID)&Context->FloatSave,
+	 sizeof(FLOATING_SAVE_AREA));
 
   /* Set up a trap frame from the context. */
-  TrapFrame = (PKTRAP_FRAME)((PBYTE)KernelStack + 12 * sizeof(DWORD));
+  TrapFrame = (PKTRAP_FRAME)
+    ((PVOID)KernelStack + 12 * sizeof(DWORD) + sizeof(FLOATING_SAVE_AREA));
   TrapFrame->DebugEbp = (PVOID)Context->Ebp;
   TrapFrame->DebugEip = (PVOID)Context->Eip;
   TrapFrame->DebugArgMark = 0;
@@ -161,8 +166,8 @@ Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
 }
 
 NTSTATUS
-Ke386InitThread(PKTHREAD Thread,
-		PKSTART_ROUTINE StartRoutine,
+Ke386InitThread(PKTHREAD Thread, 
+		PKSTART_ROUTINE StartRoutine, 
 		PVOID StartContext)
      /*
       * Initialize a thread

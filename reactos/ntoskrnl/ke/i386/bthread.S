@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bthread.S,v 1.6 2002/09/15 13:49:57 guido Exp $
+/* $Id: bthread.S,v 1.7 2002/09/17 23:41:44 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,6 +32,15 @@
 #include <internal/ps.h>
 #include <ddk/defines.h>
 
+/* Values for contextflags */
+#define CONTEXT_i386    0x10000
+#define CONTEXT_CONTROL         (CONTEXT_i386 | 1)	
+#define CONTEXT_INTEGER         (CONTEXT_i386 | 2)	
+#define CONTEXT_SEGMENTS        (CONTEXT_i386 | 4)	
+#define CONTEXT_FLOATING_POINT  (CONTEXT_i386 | 8)	
+#define CONTEXT_DEBUG_REGISTERS (CONTEXT_i386 | 0x10)
+#define CONTEXT_FULL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS)
+	
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -51,25 +60,6 @@ _PsBeginThread:
 	 * Do the necessary prolog after a context switch
 	 */
 	call	_PiBeforeBeginThread
-
-	/*
-	 * Initialize debugging registers
-	 */
-	movl	$0, %eax                     /* set to 0 */
-	movl	%eax, %dr0
-	movl	%eax, %dr1
-	movl	%eax, %dr2
-	movl	%eax, %dr3
-	movl	%eax, %dr6
-	movl	%eax, %dr7
-
-	/*
-	 * Initialize floating point registers
-	 */
-	movl	(_HardwareMathSupport), %eax
-	jz	nofpu
-	fninit
-nofpu:
 
 	/*
 	 * Call the actual start of the thread
@@ -113,8 +103,15 @@ _PsBeginThreadWithContextInternal:
 	call	_PiBeforeBeginThread
 
 	/*
+	 * Load the context flags.
+	 */
+	popl	%ebx
+	
+	/*
 	 * Load the debugging registers
 	 */
+	testl	$CONTEXT_DEBUG_REGISTERS, %ebx
+	jz	.L1
 	popl	%eax		/* Dr0 */
 	movl	%eax, %dr0
 	popl	%eax		/* Dr1 */
@@ -127,15 +124,21 @@ _PsBeginThreadWithContextInternal:
 	movl	%eax, %dr6
 	popl	%eax		/* Dr7 */
 	movl	%eax, %dr7
-
+	jmp	.L3
+.L1:
+	addl	$24, %esp
+.L3:	
+	
 	/*
 	 * Load the floating point registers
 	 */
 	movl	(_HardwareMathSupport), %eax
-	jz	nofpu2
-	frstor	0(%esp)
-nofpu2:
-	addl	$4, %esp
+	jz	.L2
+	testl	$CONTEXT_FLOATING_POINT, %ebx
+	jz	.L2
+	frstor	(%esp)
+.L2:
+	addl	$112, %esp
 
 	/* Load the rest of the thread's user mode context. */
 	movl	$0, %eax

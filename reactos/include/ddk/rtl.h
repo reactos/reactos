@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.67 2002/09/08 10:47:45 chorns Exp $
+/* $Id: rtl.h,v 1.68 2002/09/17 23:41:43 dwelch Exp $
  * 
  */
 
@@ -723,12 +723,9 @@ RtlCreateUnicodeString (
 	IN	PWSTR		Source
 	);
 
-BOOLEAN
-STDCALL
-RtlCreateUnicodeStringFromAsciiz (
-	OUT	PUNICODE_STRING	Destination,
-	IN	PCSZ		Source
-	);
+BOOLEAN STDCALL
+RtlCreateUnicodeStringFromAsciiz (OUT	PUNICODE_STRING	Destination,
+				  IN	PCSZ		Source);
 
 NTSTATUS
 STDCALL

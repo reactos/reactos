@@ -4203,6 +4203,9 @@ extern "C" {
 #define HTTRANSPARENT	(-1)
 #define HTVSCROLL	(7)
 #define HTZOOM	(9)
+#define HTBORDER (18)
+#define HTMAXBUTTON HTZOOM
+#define HTMINBUTTON HTREDUCE
 
 /* Mouse messages */
 #define MK_CONTROL	(8)

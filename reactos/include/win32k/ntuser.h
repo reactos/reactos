@@ -13,6 +13,8 @@ BOOL STDCALL
 NtUserGetWindowRect(HWND hWnd, LPRECT Rect);
 HANDLE STDCALL
 NtUserGetProp(HWND hWnd, ATOM Atom);
+BOOL STDCALL
+NtUserGetClientOrigin(HWND hWnd, LPPOINT Point);
 
 NTSTATUS
 STDCALL
@@ -338,8 +340,7 @@ NtUserDestroyWindow(HWND Wnd);
 
 LRESULT
 STDCALL
-NtUserDispatchMessage(
-  LPMSG lpmsg);
+NtUserDispatchMessage(CONST MSG* lpmsg);
 
 DWORD
 STDCALL
@@ -437,7 +438,7 @@ STDCALL
 NtUserEndMenu(VOID);
 
 BOOL STDCALL
-NtUserEndPaint(HWND hWnd, PAINTSTRUCT* lPs);
+NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* lPs);
 
 DWORD
 STDCALL

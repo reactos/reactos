@@ -859,6 +859,7 @@ extern "C" {
 
 #endif /* UNICODE and ASCII defines */
 
+  HWND STDCALL GetAncestor(HWND hWnd, UINT GaFlags);
 WINBOOL STDCALL AbnormalTermination(VOID);
 int STDCALL AbortDoc(HDC);
 WINBOOL STDCALL AbortPath(HDC);

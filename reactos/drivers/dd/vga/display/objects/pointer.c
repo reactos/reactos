@@ -14,8 +14,6 @@ BOOL InitPointer(PPDEV ppdev)
   ppdev->PointerAttributes = sizeof(VIDEO_POINTER_ATTRIBUTES) +
     (CursorWidth * CursorHeight) * 2; // space for two cursors (data and mask); we assume 4bpp.. but use 8bpp for speed
 
-  ppdev->pPointerAttributes = EngAllocMem(0, 512, ALLOC_TAG);
-
   // Allocate memory for pointer attributes
   ppdev->pPointerAttributes = EngAllocMem(0, ppdev->PointerAttributes, ALLOC_TAG);
 
