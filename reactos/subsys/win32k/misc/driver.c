@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: driver.c,v 1.29 2003/10/24 08:22:29 gvg Exp $
+/* $Id: driver.c,v 1.30 2003/10/25 18:45:13 gvg Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -224,11 +224,9 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
     if(DED->pdrvfn[i].iFunc == INDEX_DrvSwapBuffers)     DF->SwapBuffers = (PGD_SWAPBUFFERS)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvStartBanding)    DF->StartBanding = (PGD_STARTBANDING)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvNextBand)        DF->NextBand = (PGD_NEXTBAND)DED->pdrvfn[i].pfn;
-#if 0
-    if(DED->pdrvfn[i].iFunc == INDEX_DrvGetDirectDrawInfo) DF->GETDIRECTDRAWINFO = (PGD_)DED->pdrvfn[i].pfn;
-    if(DED->pdrvfn[i].iFunc == INDEX_DrvEnableDirectDraw)  DF->ENABLEDIRECTDRAW = (PGD_)DED->pdrvfn[i].pfn;
-    if(DED->pdrvfn[i].iFunc == INDEX_DrvDisableDirectDraw) DF->DISABLEDIRECTDRAW = (PGD_)DED->pdrvfn[i].pfn;
-#endif
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvGetDirectDrawInfo) DF->GetDirectDrawInfo = (PGD_GETDIRECTDRAWINFO)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvEnableDirectDraw)  DF->EnableDirectDraw = (PGD_ENABLEDIRECTDRAW)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvDisableDirectDraw) DF->DisableDirectDraw = (PGD_DISABLEDIRECTDRAW)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvQuerySpoolType)  DF->QuerySpoolType = (PGD_QUERYSPOOLTYPE)DED->pdrvfn[i].pfn;
   }
 
