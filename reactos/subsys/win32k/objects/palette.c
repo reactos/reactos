@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.12 2003/08/31 07:56:24 gvg Exp $ */
+/* $Id: palette.c,v 1.13 2003/09/25 15:15:03 fireball Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -184,6 +184,12 @@ INT STDCALL PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapO
   int  prevMapping = (palPtr->mapping) ? 1 : 0;
   int  index, iRemapped = 0;
   int *mapping;
+  HPALETTE hSysPal = NtGdiGetStockObject(DEFAULT_PALETTE);
+  PPALOBJ pSysPal = (PPALOBJ)PALETTE_LockPalette(hSysPal);
+
+  COLOR_sysPal = pSysPal->logpalette->palPalEntry;
+  PALETTE_UnlockPalette(hSysPal); // FIXME: Is this a right way to obtain pointer to the system palette?
+
 
   // reset dynamic system palette entries
 
