@@ -970,19 +970,42 @@ static void read_directory_shell(Entry* dir, HWND hwnd)
 #endif // _SHELL_FOLDERS
 
 
+/* sort order for different directory/file types */
+enum TYPE_ORDER {
+	TO_DIR = 0,
+	TO_DOT = 1,
+	TO_DOTDOT = 2,
+	TO_OTHER_DIR = 3,
+	TO_FILE = 4
+};
+
+/* distinguish between ".", ".." and any other directory names */
+static int TypeOrderFromDirname(LPCTSTR name)
+{
+	if (name[0] == '.') {
+		if (name[1] == '\0')
+			return TO_DOT;	/* "." */
+
+		if (name[1]=='.' && name[2]=='\0')
+			return TO_DOTDOT;	/* ".." */
+	}
+
+	return TO_OTHER_DIR;	/* anything else */
+}
+
 /* directories first... */
 static int compareType(const WIN32_FIND_DATA* fd1, const WIN32_FIND_DATA* fd2)
 {
-	int order1 = fd1->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-	int order2 = fd2->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+	int order1 = fd1->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY? TO_DIR: TO_FILE;
+	int order2 = fd2->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY? TO_DIR: TO_FILE;
 
 	/* Handle "." and ".." as special case and move them at the very first beginning. */
-	if (order1 && order2) {
-		order1 = fd1->cFileName[0]!='.'? 1: fd1->cFileName[1]=='.'? 2: fd1->cFileName[1]=='\0'? 3: 1;
-		order2 = fd2->cFileName[0]!='.'? 1: fd2->cFileName[1]=='.'? 2: fd2->cFileName[1]=='\0'? 3: 1;
+	if (order1==TO_DIR && order2==TO_DIR) {
+		order1 = TypeOrderFromDirname(fd1->cFileName);
+		order2 = TypeOrderFromDirname(fd2->cFileName);
 	}
 
-	return order2==order1? 0: order2<order1? -1: 1;
+	return order2==order1? 0: order1<order2? -1: 1;
 }
 
 
