@@ -106,6 +106,13 @@ _multiboot_entry:
 	movl	$V2P(startup_pagedirectory), %esi
 	movl	$(V2P(lowmem_pagetable) + 0x7), 0x0(%esi)
 	movl	$(V2P(kernel_pagetable) + 0x7), 0xC00(%esi)
+	movl	$(V2P(kernel_pagetable+4096) + 0x7), 0xC04(%esi)
+	movl	$(V2P(kernel_pagetable+2*4096) + 0x7), 0xC08(%esi)
+	movl	$(V2P(kernel_pagetable+3*4096) + 0x7), 0xC0c(%esi)
+	movl	$(V2P(kernel_pagetable+4*4096) + 0x7), 0xC10(%esi)
+	movl	$(V2P(kernel_pagetable+5*4096) + 0x7), 0xC14(%esi)
+	movl	$(V2P(kernel_pagetable+6*4096) + 0x7), 0xC18(%esi)
+	movl	$(V2P(kernel_pagetable+7*4096) + 0x7), 0xC1c(%esi)
 	movl	$(V2P(lowmem_pagetable) + 0x7), 0xD00(%esi)
 	movl	$(V2P(startup_pagedirectory) + 0x7), 0xF00(%esi) 
 #ifdef MP
@@ -307,7 +314,7 @@ lowmem_pagetable:
 	.fill 4096, 1, 0
 
 kernel_pagetable:
-	.fill 4096, 1, 0	
+	.fill 8*4096, 1, 0	
 
 #ifdef MP
 apic_pagetable:
