@@ -766,7 +766,7 @@ inline int ListView_FindItemPara(HWND list_ctrl, LPARAM param)
 	fi.flags = LVFI_PARAM;
 	fi.lParam = param;
 
-	return ListView_FindItem(list_ctrl, -1, &fi);
+	return ListView_FindItem(list_ctrl, (unsigned)-1, &fi);
 }
 
 inline int ListView_GetFocusedItem(HWND list_ctrl)
