@@ -13,9 +13,11 @@
 #if defined(WIN32)
 #define DIR_SEPARATOR_CHAR '\\'
 #define DIR_SEPARATOR_STRING "\\"
+#define DOS_PATHS
 #else
 #define DIR_SEPARATOR_CHAR '/'
 #define DIR_SEPARATOR_STRING "/"
+#define UNIX_PATHS
 #endif	
 
 char* convert_path(char* origpath)

@@ -51,11 +51,11 @@ rsym_clean:
 	-@$(rm) $(RSYM_TARGET) $(RSYM_OBJECTS) 2>$(NUL)
 clean: rsym_clean
 
-include tools/buildno/Makefile
+include tools/buildno/makefile
 include tools/cdmake/makefile
 include tools/nci/makefile
 include tools/rbuild/makefile
-include tools/unicode/Makefile
+include tools/unicode/makefile
 include tools/wmc/makefile
-include tools/wpp/Makefile
+include tools/wpp/makefile
 include tools/wrc/makefile
