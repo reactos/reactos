@@ -179,7 +179,7 @@
  185 stub SHHandleDiskFull
  186 stdcall ILGetDisplayNameEx(ptr ptr ptr long)
  187 stub ILGetPseudoNameW
- 188 stub ShellDDEInit
+ 188 stdcall ShellDDEInit(long)
  189 stdcall ILCreateFromPathA(str)
  190 stdcall ILCreateFromPathW(wstr)
  191 stub SHUpdateImageA
