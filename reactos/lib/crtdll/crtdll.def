@@ -17,9 +17,9 @@
 ;  DISCLAMED. This includes but is not limited to warrenties of
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ;
-; $Revision: 1.8 $
-; $Author: dwelch $
-; $Date: 1999/04/18 08:56:06 $
+; $Revision: 1.9 $
+; $Author: ekohl $
+; $Date: 1999/05/11 22:50:44 $
 ;
 ; These three functions appear to be name mangled in some way, so GCC is
 ; probably not going to be able to use them in any case.
@@ -215,7 +215,7 @@ _isctype
 ;_lsearch
 _lseek
 ;_ltoa
-;_makepath
+_makepath
 ;_matherr
 ;_mbbtombc
 ;_mbbtype
@@ -312,18 +312,18 @@ _spawnv
 _spawnve
 _spawnvp
 _spawnvpe
-;_splitpath
+_splitpath
 _stat
 ;_statusfp
 ;_strcmpi
 ;_strdate
 ;_strdec
-;_strdup
+_strdup
 ;_strerror
 _stricmp
 ;_stricoll
 ;_strinc
-;_strlwr
+_strlwr
 ;_strncnt
 ;_strnextc
 _strnicmp
@@ -333,7 +333,7 @@ _strnicmp
 ;_strset
 ;_strspnp
 ;_strtime
-;_strupr
+_strupr
 ;_swab
 ;_sys_errlist
 ;_sys_nerr_dll
