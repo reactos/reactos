@@ -601,5 +601,5 @@ acpi_os_writable(void *ptr, u32 len)
 u32
 acpi_os_get_thread_id (void)
 {
-  return (ULONG)PsGetCurrentThreadId();
+  return (ULONG)PsGetCurrentThreadId() + 1;
 }
