@@ -76,7 +76,7 @@ extern TCHAR szTitle[];
 extern TCHAR szFrameClass[];
 extern TCHAR szChildClass[];
 
-#if __MINGW32_MAJOR_VERSION == 1
+#if __MINGW32_MAJOR_VERSION < 1
 typedef struct tagNMITEMACTIVATE{
     NMHDR   hdr;
     int     iItem;
