@@ -2892,6 +2892,8 @@ extern "C" {
 #define VS_FF_PRERELEASE	(0x2L)
 #define VS_FF_PRIVATEBUILD	(0x8L)
 #define VS_FF_SPECIALBUILD	(0x20L)
+#define VS_FFI_SIGNATURE	(0xfeef04bd)
+#define VS_FFI_STRUCVERSION	(0x00010000)
 #define VOS_UNKNOWN	(0L)
 #define VOS_DOS	(0x10000L)
 #define VOS_OS216	(0x20000L)
