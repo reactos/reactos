@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.62 2004/01/12 20:48:48 gvg Exp $
+/* $Id: msgqueue.c,v 1.63 2004/01/15 21:01:40 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -254,16 +254,14 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
       Msg == WM_RBUTTONDOWN ||
       Msg == WM_XBUTTONDOWN)
   {
-    *ScreenPoint = Message->Msg.pt;
-    Wnd = NtUserWindowFromPoint(ScreenPoint->x, ScreenPoint->y);
+    USHORT Hit = WinPosWindowFromPoint(ScopeWin, 
+    				   Message->Msg.pt, 
+    				   &Window);
     /*
     **Make sure that we have a window that is not already in focus
     */
-    if (0 != Wnd && Wnd != IntGetFocusWindow())
+    if (0 != Window && Window->Self != IntGetFocusWindow())
     {
-        USHORT Hit = WinPosWindowFromPoint(ScopeWin, 
-        				   Message->Msg.pt, 
-					   &Window);
         SpareLParam = MAKELONG(Hit, Msg);
         
         if(Window && (Hit != (USHORT)HTTRANSPARENT))
