@@ -320,7 +320,7 @@ int MainFrame::Command(int id, int code)
 		break;
 
 	  case ID_EXECUTE: {
-		ExecuteDialog dlg = {{0}};
+		ExecuteDialog dlg = {{0}, 0};
 
 		if (DialogBoxParam(g_Globals._hInstance, MAKEINTRESOURCE(IDD_EXECUTE), _hwnd, ExecuteDialog::WndProg, (LPARAM)&dlg) == IDOK) {
 			HINSTANCE hinst = ShellExecute(_hwnd, NULL/*operation*/, dlg.cmd/*file*/, NULL/*parameters*/, NULL/*dir*/, dlg.cmdshow);

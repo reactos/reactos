@@ -73,7 +73,7 @@ void explorer_show_frame(HWND hwndParent, int cmdshow)
 
 	 // create main window
 	g_Globals._hMainWnd = Window::Create(WINDOW_CREATOR(MainFrame), 0,
-					(LPCTSTR)g_Globals._hframeClass, ResString(IDS_TITLE), WS_OVERLAPPEDWINDOW,
+					(LPCTSTR)(int)g_Globals._hframeClass, ResString(IDS_TITLE), WS_OVERLAPPEDWINDOW,
 					CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 					hwndParent, hMenuFrame);
 
