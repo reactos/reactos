@@ -7,8 +7,8 @@ ifeq ($(VERBOSE),yes)
   Q =
   HALFVERBOSEECHO = @:
 else
-  Q =
-  HALFVERBOSEECHO = echo
+  Q = @
+  HALFVERBOSEECHO = @echo
 endif
 endif
 
