@@ -42,7 +42,7 @@ NTSTATUS LdrpAttachThread (VOID);
 
 #define VALUE_BUFFER_SIZE 256
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 ReadCompatibilitySetting(HANDLE Key, LPWSTR Value, PKEY_VALUE_PARTIAL_INFORMATION ValueInfo, DWORD *Buffer)
 {
 	UNICODE_STRING ValueName;
@@ -105,7 +105,7 @@ LoadImageFileExecutionOptions(PPEB Peb)
 
 	    
 	
-BOOL FASTCALL
+BOOLEAN FASTCALL
 LoadCompatibilitySettings(PPEB Peb)
 {
 	NTSTATUS Status;

@@ -55,7 +55,7 @@ extern PLDR_MODULE ExeModule;
 
 /* PROTOTYPES ****************************************************************/
 
-static NTSTATUS LdrFindEntryForName(PUNICODE_STRING Name, PLDR_MODULE *Module, BOOL Ref);
+static NTSTATUS LdrFindEntryForName(PUNICODE_STRING Name, PLDR_MODULE *Module, BOOLEAN Ref);
 static PVOID LdrFixupForward(PCHAR ForwardName);
 static PVOID LdrGetExportByName(PVOID BaseAddress, PUCHAR SymbolName, USHORT Hint);
 static NTSTATUS LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
@@ -64,7 +64,7 @@ static NTSTATUS LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
                                OUT PLDR_MODULE *Module,
                                OUT PVOID *BaseAddress OPTIONAL);
 static NTSTATUS LdrpAttachProcess(VOID);
-static VOID LdrpDetachProcess(BOOL UnloadAll);
+static VOID LdrpDetachProcess(BOOLEAN UnloadAll);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -84,7 +84,7 @@ LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule)
 
 #endif /* DBG || KDBG */
 
-BOOL
+BOOLEAN
 LdrMappedAsDataFile(PVOID *BaseAddress)
 {
   if (0 != ((DWORD_PTR) *BaseAddress & (PAGE_SIZE - 1)))
@@ -96,7 +96,7 @@ LdrMappedAsDataFile(PVOID *BaseAddress)
    return FALSE;
 }
 
-static inline LONG LdrpDecrementLoadCount(PLDR_MODULE Module, BOOL Locked)
+static inline LONG LdrpDecrementLoadCount(PLDR_MODULE Module, BOOLEAN Locked)
 {
    LONG LoadCount;
    if (!Locked)
@@ -115,7 +115,7 @@ static inline LONG LdrpDecrementLoadCount(PLDR_MODULE Module, BOOL Locked)
    return LoadCount;
 }
 
-static inline LONG LdrpIncrementLoadCount(PLDR_MODULE Module, BOOL Locked)
+static inline LONG LdrpIncrementLoadCount(PLDR_MODULE Module, BOOLEAN Locked)
 {
    LONG LoadCount;
    if (!Locked)
@@ -134,7 +134,7 @@ static inline LONG LdrpIncrementLoadCount(PLDR_MODULE Module, BOOL Locked)
    return LoadCount;
 }
 
-static inline VOID LdrpAcquireTlsSlot(PLDR_MODULE Module, ULONG Size, BOOL Locked)
+static inline VOID LdrpAcquireTlsSlot(PLDR_MODULE Module, ULONG Size, BOOLEAN Locked)
 {
    if (!Locked)
      {
@@ -168,7 +168,7 @@ static inline VOID LdrpTlsCallback(PLDR_MODULE Module, ULONG dwReason)
      }
 }
 
-static BOOL LdrpCallDllEntry(PLDR_MODULE Module, DWORD dwReason, PVOID lpReserved)
+static BOOLEAN LdrpCallDllEntry(PLDR_MODULE Module, DWORD dwReason, PVOID lpReserved)
 {
    if (!(Module->Flags & IMAGE_DLL) ||
        Module->EntryPoint == 0)
@@ -561,7 +561,7 @@ static NTSTATUS
 LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                     IN PUNICODE_STRING DllName,
                     OUT PUNICODE_STRING FullDosName,
-                    IN BOOL MapAsDataFile,
+                    IN BOOLEAN MapAsDataFile,
                     OUT PHANDLE SectionHandle)
 {
   WCHAR                 SearchPathBuffer[MAX_PATH];
@@ -834,7 +834,7 @@ LdrFindEntryForAddress(PVOID Address,
 static NTSTATUS
 LdrFindEntryForName(PUNICODE_STRING Name,
                     PLDR_MODULE *Module,
-                    BOOL Ref)
+                    BOOLEAN Ref)
 {
   PLIST_ENTRY ModuleListHead;
   PLIST_ENTRY Entry;
@@ -1338,7 +1338,7 @@ static NTSTATUS
 LdrpGetOrLoadModule(PWCHAR SerachPath,
                     PCHAR Name,
                     PLDR_MODULE* Module,
-                    BOOL Load)
+                    BOOLEAN Load)
 {
    UNICODE_STRING DllName;
    NTSTATUS Status;
@@ -1717,7 +1717,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
              }
            else
              {
-               BOOL WrongForwarder;
+               BOOLEAN WrongForwarder;
                WrongForwarder = FALSE;
                if (ImportedModule->Flags & IMAGE_NOT_AT_BASE)
                  {
@@ -1997,7 +1997,7 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
     ULONG ViewSize;
     PVOID ImageBase;
     PIMAGE_NT_HEADERS NtHeaders;
-    BOOL MappedAsDataFile;
+    BOOLEAN MappedAsDataFile;
 
     if (Module == NULL)
       {
@@ -2130,7 +2130,7 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
 
 static NTSTATUS
 LdrpUnloadModule(PLDR_MODULE Module,
-                 BOOL Unload)
+                 BOOLEAN Unload)
 {
    PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundImportDescriptor;
@@ -2400,7 +2400,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
  *      The loader lock must be held on enty.
  */
 static VOID
-LdrpDetachProcess(BOOL UnloadAll)
+LdrpDetachProcess(BOOLEAN UnloadAll)
 {
    PLIST_ENTRY ModuleListHead;
    PLIST_ENTRY Entry;
@@ -2499,7 +2499,7 @@ LdrpAttachProcess(VOID)
    PLIST_ENTRY ModuleListHead;
    PLIST_ENTRY Entry;
    PLDR_MODULE Module;
-   BOOL Result;
+   BOOLEAN Result;
    NTSTATUS Status = STATUS_SUCCESS;
 
    DPRINT("LdrpAttachProcess() called for %wZ\n",

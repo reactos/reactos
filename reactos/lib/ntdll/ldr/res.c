@@ -110,7 +110,7 @@ LdrFindResource_U(PVOID BaseAddress,
     int j, pos = 0;
     LCID UserLCID, SystemLCID;
     LANGID UserLangID, SystemLangID;
-    BOOL MappedAsDataFile;
+    BOOLEAN MappedAsDataFile;
 
     MappedAsDataFile = LdrMappedAsDataFile(&BaseAddress);
     DPRINT("LdrFindResource_U(%08x, %08x, %d, %08x)\n", BaseAddress, ResourceInfo, Level, ResourceDataEntry);
@@ -280,7 +280,7 @@ LdrAccessResource(IN  PVOID BaseAddress,
     ULONG DataSize;
     ULONG Offset = 0;
     ULONG Data;
-    BOOL MappedAsDataFile;
+    BOOLEAN MappedAsDataFile;
 
     if(!ResourceDataEntry)
         return STATUS_RESOURCE_DATA_NOT_FOUND;

@@ -102,7 +102,7 @@ NTSTATUS LdrMapSections(HANDLE ProcessHandle,
 			PIMAGE_NT_HEADERS NTHeaders);
 NTSTATUS LdrMapNTDllForProcess(HANDLE ProcessHandle,
 			       PHANDLE NTDllSectionHandle);
-BOOL LdrMappedAsDataFile(PVOID *BaseAddress);
+BOOLEAN LdrMappedAsDataFile(PVOID *BaseAddress);
 
 NTSTATUS STDCALL
 LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress);
