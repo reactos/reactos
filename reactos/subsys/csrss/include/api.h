@@ -1,4 +1,4 @@
-/* $Id: api.h,v 1.5 2004/07/03 17:15:02 hbirr Exp $
+/* $Id: api.h,v 1.6 2004/07/12 20:09:34 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -130,6 +130,9 @@ CSR_API(CsrRegisterServicesProcess);
 CSR_API(CsrExitReactos);
 CSR_API(CsrGetShutdownParameters);
 CSR_API(CsrSetShutdownParameters);
+
+CSR_API(CsrSetLogonNotifyWindow);
+CSR_API(CsrRegisterLogonProcess);
 
 #endif /* ndef API_H_INCLUDED */
 

@@ -1,4 +1,4 @@
-/* $Id: sas.c,v 1.1 2004/03/28 12:21:41 weiden Exp $
+/* $Id: sas.c,v 1.2 2004/07/12 20:09:35 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,14 +16,21 @@
 #include <ntsecapi.h>
 #include <wchar.h>
 #include <userenv.h>
+#include <reactos/winlogon.h>
 
 #include "setup.h"
 #include "winlogon.h"
 #include "resource.h"
 
-#define SAS_CLASS   L"SAS window class"
+#define NDEBUG
+#include <debug.h>
+
 #define HK_CTRL_ALT_DEL 0
 #define HK_CTRL_SHIFT_ESC   1
+
+#ifdef __USE_W32API
+extern BOOL STDCALL SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta);
+#endif
 
 void
 DispatchSAS(PWLSESSION Session, DWORD dwSasType)
@@ -48,7 +55,7 @@ SetupSAS(PWLSESSION Session, HWND hwndSAS)
   /* Register Ctrl+Alt+Del Hotkey */
   if(!RegisterHotKey(hwndSAS, HK_CTRL_ALT_DEL, MOD_CONTROL | MOD_ALT, VK_DELETE))
   {
-    DbgPrint("WL-SAS: Unable to register Ctrl+Alt+Del hotkey!\n");
+    DPRINT1("WL-SAS: Unable to register Ctrl+Alt+Del hotkey!\n");
     return FALSE;
   }
   
@@ -56,7 +63,7 @@ SetupSAS(PWLSESSION Session, HWND hwndSAS)
   Session->TaskManHotkey = RegisterHotKey(hwndSAS, HK_CTRL_SHIFT_ESC, MOD_CONTROL | MOD_SHIFT, VK_ESCAPE);
   if(!Session->TaskManHotkey)
   {
-    DbgPrint("WL-SAS: Warning: Unable to register Ctrl+Alt+Esc hotkey!\n");
+    DPRINT1("WL-SAS: Warning: Unable to register Ctrl+Alt+Esc hotkey!\n");
   }
   return TRUE;
 }
@@ -76,6 +83,78 @@ DestroySAS(PWLSESSION Session, HWND hwndSAS)
   return TRUE;
 }
 
+#define EWX_ACTION_MASK 0x0b
+static LRESULT
+HandleExitWindows(DWORD RequestingProcessId, UINT Flags)
+{
+  UINT Action;
+  HANDLE Process;
+  HANDLE Token;
+  BOOL CheckResult;
+  PPRIVILEGE_SET PrivSet;
+
+  /* Check parameters */
+  Action = Flags & EWX_ACTION_MASK;
+  if (EWX_LOGOFF != Action && EWX_SHUTDOWN != Action && EWX_REBOOT != Action
+      && EWX_POWEROFF != Action)
+  {
+    DPRINT1("Invalid ExitWindows action 0x%x\n", Action);
+    return STATUS_INVALID_PARAMETER;
+  }
+
+  /* Check privilege */
+  if (EWX_LOGOFF != Action)
+  {
+    Process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, RequestingProcessId);
+    if (NULL == Process)
+    {
+      DPRINT1("OpenProcess failed with error %d\n", GetLastError());
+      return STATUS_INVALID_HANDLE;
+    }
+    if (! OpenProcessToken(Process, TOKEN_QUERY, &Token))
+    {
+      DPRINT1("OpenProcessToken failed with error %d\n", GetLastError());
+      CloseHandle(Process);
+      return STATUS_INVALID_HANDLE;
+    }
+    CloseHandle(Process);
+    PrivSet = HeapAlloc(GetProcessHeap(), 0, sizeof(PRIVILEGE_SET) + sizeof(LUID_AND_ATTRIBUTES));
+    if (NULL == PrivSet)
+    {
+      DPRINT1("Failed to allocate mem for privilege set\n");
+      CloseHandle(Token);
+      return STATUS_NO_MEMORY;
+    }
+    PrivSet->PrivilegeCount = 1;
+    PrivSet->Control = PRIVILEGE_SET_ALL_NECESSARY;
+    if (! LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &PrivSet->Privilege[0].Luid))
+    {
+      DPRINT1("LookupPrivilegeValue failed with error %d\n", GetLastError());
+      HeapFree(GetProcessHeap(), 0, PrivSet);
+      CloseHandle(Token);
+      return STATUS_UNSUCCESSFUL;
+    }
+    if (! PrivilegeCheck(Token, PrivSet, &CheckResult))
+    {
+      DPRINT1("PrivilegeCheck failed with error %d\n", GetLastError());
+      HeapFree(GetProcessHeap(), 0, PrivSet);
+      CloseHandle(Token);
+      return STATUS_ACCESS_DENIED;
+    }
+    HeapFree(GetProcessHeap(), 0, PrivSet);
+    CloseHandle(Token);
+    if (! CheckResult)
+    {
+      DPRINT1("SE_SHUTDOWN privilege not enabled\n");
+      return STATUS_ACCESS_DENIED;
+    }
+  }
+
+  /* FIXME actually start logoff/shutdown now */
+
+  return 1;
+}
+
 LRESULT CALLBACK
 SASProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -91,10 +170,10 @@ SASProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       switch(wParam)
       {
         case HK_CTRL_ALT_DEL:
-          DbgPrint("SAS: CTR+ALT+DEL\n");
+          DPRINT1("SAS: CTR+ALT+DEL\n");
           break;
         case HK_CTRL_SHIFT_ESC:
-          DbgPrint("SAS: CTR+SHIFT+ESC\n");
+          DPRINT1("SAS: CTR+SHIFT+ESC\n");
           break;
       }
       return 0;
@@ -107,6 +186,10 @@ SASProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         return 1;
       }
       return 0;
+    }
+    case PM_WINLOGON_EXITWINDOWS:
+    {
+      return HandleExitWindows((DWORD) wParam, (UINT) lParam);
     }
     case WM_DESTROY:
     {
@@ -134,33 +217,29 @@ InitializeSAS(PWLSESSION Session)
   swc.hCursor = NULL;
   swc.hbrBackground = NULL;
   swc.lpszMenuName = NULL;
-  swc.lpszClassName = SAS_CLASS;
+  swc.lpszClassName = WINLOGON_SAS_CLASS;
   swc.hIconSm = NULL;
   RegisterClassEx(&swc);
   
   /* create invisible SAS window */
-  Session->SASWindow = CreateWindowEx(0, SAS_CLASS, L"SAS", WS_OVERLAPPEDWINDOW,
+  Session->SASWindow = CreateWindowEx(0, WINLOGON_SAS_CLASS, WINLOGON_SAS_TITLE, WS_POPUP,
                                       0, 0, 0, 0, 0, 0, hAppInstance, NULL);
   if(!Session->SASWindow)
   {
-    DbgPrint("WL: Failed to create SAS window\n");
+    DPRINT1("WL: Failed to create SAS window\n");
     return FALSE;
   }
   
   /* Save the Session pointer so the window proc can access it */
   SetWindowLong(Session->SASWindow, GWL_USERDATA, (LONG)Session);
   
-  #if 0
-  /* Register SAS window to receive SAS notifications
-     FIXME - SetLogonNotifyWindow() takes only one parameter,
-             definition in funcs.h is wrong! */
-  if(!SetLogonNotifyWindow(Session->SASWindow))
+  /* Register SAS window to receive SAS notifications */
+  if(!SetLogonNotifyWindow(Session->SASWindow, Session->InteractiveWindowStation))
   {
     UninitSAS(Session);
-    DbgPrint("WL: Failed to register SAS window\n");
+    DPRINT1("WL: Failed to register SAS window\n");
     return FALSE;
   }
-  #endif
   
   return TRUE;
 }

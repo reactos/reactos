@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.6 2004/07/08 14:35:10 ekohl Exp $
+/* $Id: misc.c,v 1.7 2004/07/12 20:09:34 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/misc.c
@@ -31,6 +31,7 @@
 #include <windows.h>
 #include <user32.h>
 #include <debug.h>
+#include <ntdll/csr.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -75,4 +76,32 @@ RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
   return NtUserCallTwoParam(dwProcessId,
 			    (DWORD)bRegister,
 			    TWOPARAM_ROUTINE_REGISTERLOGONPROC);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetLogonNotifyWindow (HWND Wnd, HWINSTA WinSta)
+{
+  /* Maybe we should call NtUserSetLogonNotifyWindow and let that one inform CSRSS??? */
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+
+  Request.Type = CSRSS_SET_LOGON_NOTIFY_WINDOW;
+  Request.Data.SetLogonNotifyWindowRequest.LogonNotifyWindow = Wnd;
+
+  Status = CsrClientCallServer(&Request,
+			       &Reply,
+			       sizeof(CSRSS_API_REQUEST),
+			       sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+    {
+      SetLastError(RtlNtStatusToDosError(Status));
+      return(FALSE);
+    }
+
+  return(TRUE);
 }

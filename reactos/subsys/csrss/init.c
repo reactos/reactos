@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.28 2004/07/03 17:15:02 hbirr Exp $
+/* $Id: init.c,v 1.29 2004/07/12 20:09:34 gvg Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -207,7 +207,6 @@ CSRSS_API_DEFINITION NativeDefinitions[] =
     CSRSS_DEFINE_API(CSRSS_TERMINATE_PROCESS,            CsrTerminateProcess),
     CSRSS_DEFINE_API(CSRSS_CONNECT_PROCESS,              CsrConnectProcess),
     CSRSS_DEFINE_API(CSRSS_REGISTER_SERVICES_PROCESS,    CsrRegisterServicesProcess),
-    CSRSS_DEFINE_API(CSRSS_EXIT_REACTOS,                 CsrExitReactos),
     CSRSS_DEFINE_API(CSRSS_GET_SHUTDOWN_PARAMETERS,      CsrGetShutdownParameters),
     CSRSS_DEFINE_API(CSRSS_SET_SHUTDOWN_PARAMETERS,      CsrSetShutdownParameters),
     CSRSS_DEFINE_API(CSRSS_GET_INPUT_HANDLE,             CsrGetInputHandle),

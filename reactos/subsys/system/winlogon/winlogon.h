@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winlogon.h,v 1.3 2004/03/28 12:21:41 weiden Exp $
+/* $Id: winlogon.h,v 1.4 2004/07/12 20:09:35 gvg Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS winlogon
  * FILE:            subsys/system/winlogon/winlogon.h
@@ -110,7 +110,7 @@ typedef struct _MSGINAFUNCTIONS
 
 typedef struct _MSGINAINSTANCE
 {
-  HANDLE hDllInstance;
+  HMODULE hDllInstance;
   MSGINAFUNCTIONS Functions;
   PVOID Context;
   DWORD Version;
@@ -125,6 +125,7 @@ typedef struct _WLSESSION
   BOOL TaskManHotkey;
   HWND SASWindow;
   HWINSTA InteractiveWindowStation;
+  LPWSTR InteractiveWindowStationName;
   HDESK ApplicationDesktop;
   HDESK WinlogonDesktop;
   HDESK ScreenSaverDesktop;

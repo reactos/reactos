@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: setup.c,v 1.3 2004/06/04 23:46:02 navaraf Exp $
+/* $Id: setup.c,v 1.4 2004/07/12 20:09:35 gvg Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS winlogon
  * FILE:            subsys/system/winlogon/setup.h
@@ -43,7 +43,7 @@ DWORD
 GetSetupType(VOID)
 {
   DWORD dwError;
-  HANDLE hKey;
+  HKEY hKey;
   DWORD dwType;
   DWORD dwSize;
   DWORD dwSetupType;
@@ -79,7 +79,7 @@ BOOL
 SetSetupType (DWORD dwSetupType)
 {
   DWORD dwError;
-  HANDLE hKey;
+  HKEY hKey;
 
   dwError = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
 			 L"SYSTEM\\Setup", //TEXT("SYSTEM\\Setup"),
@@ -116,7 +116,7 @@ RunSetup (VOID)
   WCHAR CommandLine[MAX_PATH];
   BOOLEAN Result;
   DWORD dwError;
-  HANDLE hKey;
+  HKEY hKey;
   DWORD dwType;
   DWORD dwSize;
   DWORD dwExitCode;

@@ -1,4 +1,4 @@
-/* $Id: csr.c,v 1.1 2004/05/28 21:33:41 gvg Exp $
+/* $Id: csr.c,v 1.2 2004/07/12 20:09:35 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -73,7 +73,7 @@ CsrNotify(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply)
       Status = Reply->Status;
     }
 
-  return STATUS_SUCCESS;
+  return Status;
 }
 
 /* EOF */

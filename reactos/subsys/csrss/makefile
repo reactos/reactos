@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.29 2004/05/28 21:33:41 gvg Exp $
+# $Id: makefile,v 1.30 2004/07/12 20:09:34 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -13,7 +13,7 @@ TARGET_SDKLIBS = rosrtl.a ntdll.a
 
 TARGET_INSTALLDIR = system32
 
-TARGET_CFLAGS = -D__NTAPP__ -Wall -Werror -Iinclude
+TARGET_CFLAGS = -D__NTAPP__ -D__USE_W32API -Wall -Werror -Iinclude
 
 TARGET_LFLAGS = -nostdlib
 

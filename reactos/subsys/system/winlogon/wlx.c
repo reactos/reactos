@@ -1,4 +1,4 @@
-/* $Id: wlx.c,v 1.4 2004/03/28 12:21:41 weiden Exp $
+/* $Id: wlx.c,v 1.5 2004/07/12 20:09:35 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <WinWlx.h>
 #include <wchar.h>
+#include <reactos/winlogon.h>
 
 #include "setup.h"
 #include "winlogon.h"
@@ -493,7 +494,7 @@ static void
 GetMsGinaPath(WCHAR *path)
 {
   DWORD Status, Type, Size;
-  HANDLE hKey;
+  HKEY hKey;
   
   Status = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
@@ -652,7 +653,7 @@ MsGinaInit(void)
   WLSession->MsGina.Version = GinaDllVersion;
   WLSession->SuppressStatus = FALSE;
   
-  if(!WLSession->MsGina.Functions.WlxInitialize(WLSession->InteractiveWindowStation,
+  if(!WLSession->MsGina.Functions.WlxInitialize(WLSession->InteractiveWindowStationName,
                                                (HANDLE)WLSession,
                                                NULL,
                                                (PVOID)&FunctionTable,
@@ -670,7 +671,9 @@ WlxCreateWindowStationAndDesktops(PWLSESSION Session)
   /*
    * Create the interactive window station
    */
-  Session->InteractiveWindowStation = CreateWindowStation(L"WinSta0", 0, GENERIC_ALL, NULL);
+  Session->InteractiveWindowStationName = L"WinSta0";
+  Session->InteractiveWindowStation = CreateWindowStation(Session->InteractiveWindowStationName,
+                                                          0, GENERIC_ALL, NULL);
   if(!Session->InteractiveWindowStation)
   {
     DbgPrint("WL: Failed to create window station (0x%X)\n", GetLastError());
@@ -696,7 +699,7 @@ WlxCreateWindowStationAndDesktops(PWLSESSION Session)
   /*
    * Create the winlogon desktop
    */
-  Session->WinlogonDesktop = CreateDesktop(L"Winlogon",
+  Session->WinlogonDesktop = CreateDesktop(WINLOGON_DESKTOP,
                                            NULL,
                                            NULL,
                                            0,      /* FIXME: Set some flags */

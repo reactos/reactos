@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.33 2004/07/11 13:31:28 weiden Exp $
+/* $Id: winlogon.c,v 1.34 2004/07/12 20:09:35 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -219,7 +219,7 @@ StartLsass (VOID)
 
 
 static BOOLEAN
-OpenRegistryKey (HANDLE *WinLogonKey)
+OpenRegistryKey (HKEY *WinLogonKey)
 {
    return ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                                         L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\WinLogon",
@@ -232,7 +232,7 @@ OpenRegistryKey (HANDLE *WinLogonKey)
 static BOOLEAN StartProcess(PWCHAR ValueName)
 {
    BOOL StartIt;
-   HANDLE WinLogonKey;
+   HKEY WinLogonKey;
    DWORD Type;
    DWORD Size;
    DWORD StartValue;
@@ -262,7 +262,7 @@ static BOOLEAN StartProcess(PWCHAR ValueName)
 /*
 static BOOL RestartShell(void)
 {
-  HANDLE WinLogonKey;
+  HKEY WinLogonKey;
   DWORD Type, Size, Value;
   
   if(OpenRegistryKey(&WinLogonKey))
@@ -338,7 +338,7 @@ HandleHotKey(MSG *Msg)
 #if SUPPORT_CONSOLESTART
 static BOOL StartIntoGUI(VOID)
 {
-  HANDLE WinLogonKey;
+  HKEY WinLogonKey;
   DWORD Type, Size, Value;
   
   if(OpenRegistryKey(&WinLogonKey))
@@ -366,7 +366,7 @@ static BOOL StartIntoGUI(VOID)
 static PWCHAR
 GetShell (WCHAR *CommandLine)
 {
-   HANDLE WinLogonKey;
+   HKEY WinLogonKey;
    BOOL GotCommandLine;
    DWORD Type;
    DWORD Size;
@@ -492,10 +492,6 @@ DoLogonUser (PWCHAR Name,
       return FALSE;
     }
 
-  /* Process the global hotkeys on #if 0 */
-#if 0
-  WaitForSingleObject (ProcessInformation.hProcess, INFINITE);
-#else
   RegisterHotKeys();
 
   while (WaitForSingleObject (ProcessInformation.hProcess, 100) != WAIT_OBJECT_0)
@@ -510,7 +506,7 @@ DoLogonUser (PWCHAR Name,
   }
 
   UnregisterHotKeys();
-#endif
+
   CloseHandle (ProcessInformation.hProcess);
   CloseHandle (ProcessInformation.hThread);
 
@@ -543,7 +539,7 @@ WinMain(HINSTANCE hInstance,
   ULONG AuthenticationPackage;
 #endif
   NTSTATUS Status;
-  
+
   hAppInstance = hInstance;
   
   if(!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
@@ -614,18 +610,13 @@ WinMain(HINSTANCE hInstance,
   
 #if SUPPORT_CONSOLESTART
  StartConsole = !StartIntoGUI();
- if(!StartConsole)
- {
 #endif
-  if(!InitializeSAS(WLSession))
+ if(!InitializeSAS(WLSession))
   {
     DbgPrint("WL: Failed to initialize SAS\n");
     ExitProcess(2);
     return 2;
   }
-#if SUPPORT_CONSOLESTART
- }
-#endif
   
   InitServices();
    

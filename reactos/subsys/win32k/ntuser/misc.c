@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.82 2004/07/08 14:36:18 ekohl Exp $
+/* $Id: misc.c,v 1.83 2004/07/12 20:09:35 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -37,12 +37,14 @@ PUSER_MESSAGE_QUEUE W32kGetPrimitiveMessageQueue() {
 }
 
 BOOL FASTCALL
-IntRegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
+IntRegisterLogonProcess(DWORD ProcessId, BOOL Register)
 {
   PEPROCESS Process;
   NTSTATUS Status;
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
 
-  Status = PsLookupProcessByProcessId((PVOID)dwProcessId,
+  Status = PsLookupProcessByProcessId((PVOID)ProcessId,
 				      &Process);
   if (!NT_SUCCESS(Status))
   {
@@ -50,7 +52,7 @@ IntRegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
     return FALSE;
   }
 
-  if (bRegister)
+  if (Register)
   {
     /* Register the logon process */
     if (LogonProcess != NULL)
@@ -74,6 +76,17 @@ IntRegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
   }
 
   ObDereferenceObject(Process);
+
+  Request.Type = CSRSS_REGISTER_LOGON_PROCESS;
+  Request.Data.RegisterLogonProcessRequest.ProcessId = ProcessId;
+  Request.Data.RegisterLogonProcessRequest.Register = Register;
+
+  Status = CsrNotify(&Request, &Reply);
+  if (! NT_SUCCESS(Status))
+  {
+    DPRINT1("Failed to register logon process with CSRSS\n");
+    return FALSE;
+  }
 
   return TRUE;
 }

@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.5 2004/05/28 21:33:41 gvg Exp $
+/* $Id: dllmain.c,v 1.6 2004/07/12 20:09:34 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -55,6 +55,7 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     CSRSS_DEFINE_API(CSRSS_READ_CONSOLE_OUTPUT_CHAR,     CsrReadConsoleOutputChar),
     CSRSS_DEFINE_API(CSRSS_READ_CONSOLE_OUTPUT_ATTRIB,   CsrReadConsoleOutputAttrib),
     CSRSS_DEFINE_API(CSRSS_GET_NUM_INPUT_EVENTS,         CsrGetNumberOfConsoleInputEvents),
+    CSRSS_DEFINE_API(CSRSS_EXIT_REACTOS,                 CsrExitReactos),
     CSRSS_DEFINE_API(CSRSS_PEEK_CONSOLE_INPUT,           CsrPeekConsoleInput),
     CSRSS_DEFINE_API(CSRSS_READ_CONSOLE_OUTPUT,          CsrReadConsoleOutput),
     CSRSS_DEFINE_API(CSRSS_WRITE_CONSOLE_INPUT,          CsrWriteConsoleInput),
@@ -62,6 +63,8 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     CSRSS_DEFINE_API(CSRSS_CREATE_DESKTOP,               CsrCreateDesktop),
     CSRSS_DEFINE_API(CSRSS_SHOW_DESKTOP,                 CsrShowDesktop),
     CSRSS_DEFINE_API(CSRSS_HIDE_DESKTOP,                 CsrHideDesktop),
+    CSRSS_DEFINE_API(CSRSS_SET_LOGON_NOTIFY_WINDOW,      CsrSetLogonNotifyWindow),
+    CSRSS_DEFINE_API(CSRSS_REGISTER_LOGON_PROCESS,       CsrRegisterLogonProcess),
     { 0, 0, 0, NULL }
   };
 
