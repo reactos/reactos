@@ -21,9 +21,12 @@
 #ifndef __DEBUG_H
 #define __DEBUG_H
 
+#ifdef DEBUG
+
 #define DPRINT_WARNING		0x00000001		// OR this with DebugPrintMask to enable debugger messages and other misc stuff
 #define DPRINT_MEMORY		0x00000002		// OR this with DebugPrintMask to enable memory management messages
 
+VOID	DebugInit(VOID);
 void	DebugPrint(ULONG Mask, char *format, ...);
 
 #define BugCheck0(format) \
@@ -53,5 +56,7 @@ void	DebugPrint(ULONG Mask, char *format, ...);
 				DebugPrint(DPRINT_WARNING, format, arg1, arg2, arg3); \
 				for (;;); \
 			}
+
+#endif // defined DEBUG
 
 #endif // defined __DEBUG_H

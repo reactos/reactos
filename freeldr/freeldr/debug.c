@@ -20,8 +20,32 @@
 #include "freeldr.h"
 #include "debug.h"
 #include "stdlib.h"
+#include "rs232.h"
+#include "parseini.h"
+
+#ifdef DEBUG
 
 ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY;
+
+#define	SCREEN		0
+#define	RS232		1
+
+#define	COM1		1
+#define	COM2		2
+#define	COM3		3
+#define	COM4		4
+
+ULONG	DebugPort = RS232; //SCREEN;
+ULONG	ComPort = COM1;
+ULONG	BaudRate = 19200;
+
+VOID DebugInit(VOID)
+{
+	if (DebugPort == RS232)
+	{
+		Rs232PortInitialize(ComPort, BaudRate);
+	}
+}
 
 void DebugPrint(ULONG Mask, char *format, ...)
 {
@@ -29,6 +53,7 @@ void DebugPrint(ULONG Mask, char *format, ...)
 	char c, *ptr, str[16];
 	char buffer[512];
 	char *p = buffer;
+	int i;
 	
 	// Mask out unwanted debug messages
 	if (!(Mask & DebugPrintMask))
@@ -79,5 +104,21 @@ void DebugPrint(ULONG Mask, char *format, ...)
 	*p=0;
 
 
-	print(buffer);
+	if (DebugPort == RS232)
+	{
+		for (i=0; buffer[i] != 0; i++)
+		{
+			Rs232PortPutByte(buffer[i]);
+			if (buffer[i] == '\n')
+			{
+				Rs232PortPutByte('\r');
+			}
+		}
+	}
+	else
+	{
+		print(buffer);
+	}
 }
+
+#endif // defined DEBUG

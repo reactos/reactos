@@ -25,7 +25,8 @@ export RM = cmd /C del
 export CP = cmd /C copy
 
 #FLAGS = -Wall -nostdinc -fno-builtin
-FLAGS = -Wall -fno-builtin -DDEBUG
+#FLAGS = -Wall -fno-builtin -DDEBUG
+FLAGS = -Wall -fno-builtin
 
 # asmcode.o has to be first in the link line because it contains the startup code
 OBJS = asmcode.a asmcode.o mb.o boot.o freeldr.o stdlib.o fs.a fs.o fs_fat.o \
@@ -33,20 +34,28 @@ OBJS = asmcode.a asmcode.o mb.o boot.o freeldr.o stdlib.o fs.a fs.o fs_fat.o \
 	mem.o memory.o debug.o parseini.o
 ASM_OBJS = asmcode.o mb.o boot.o mem.o
 C_OBJS = freeldr.o stdlib.o fs.a reactos.o tui.o menu.o miscboot.o options.o linux.o \
-	multiboot.o arcname.o memory.o debug.o parseini.o
+	multiboot.o
+C_OBJS2 = arcname.o memory.o debug.o parseini.o rs232.o portio.o
 
 .PHONY : clean
 
 all:	freeldr.sys
 
 freeldr.sys:	asmcode.a c_code.a
-	$(LD) -N -Ttext=0x8000 --oformat=binary -o freeldr.sys asmcode.a c_code.a
+	$(LD) -N -Ttext=0x8000 --oformat=binary -o f.sys asmcode.a c_code.a
+	../bootsect/stubit ../bootsect/fatstub.bin f.sys freeldr.sys 
 
 asmcode.a:	$(ASM_OBJS)
 	$(LD) -r -o asmcode.a $(ASM_OBJS)
 
-c_code.a:	$(C_OBJS)
-	$(LD) -r -o c_code.a $(C_OBJS)
+c_code.a:	c_code1.a c_code2.a
+	$(LD) -r -o c_code.a c_code1.a c_code2.a
+
+c_code1.a:	$(C_OBJS)
+	$(LD) -r -o c_code1.a $(C_OBJS)
+
+c_code2.a:	$(C_OBJS2)
+	$(LD) -r -o c_code2.a $(C_OBJS2)
 
 asmcode.o:	asmcode.S asmcode.h Makefile
 	$(CC) $(FLAGS) -o asmcode.o -c asmcode.S
@@ -107,6 +116,12 @@ debug.o:	debug.c debug.h Makefile
 
 parseini.o:	parseini.c parseini.h Makefile
 	$(CC) $(FLAGS) -o parseini.o -c parseini.c
+
+rs232.o:	rs232.c rs232.h Makefile
+	$(CC) $(FLAGS) -o rs232.o -c rs232.c
+
+portio.o:	portio.c portio.h Makefile
+	$(CC) $(FLAGS) -o portio.o -c portio.c
 
 clean:
 	$(RM) *.o

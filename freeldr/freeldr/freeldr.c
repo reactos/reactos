@@ -28,6 +28,7 @@
 #include "linux.h"
 #include "memory.h"
 #include "parseini.h"
+#include "debug.h"
 
 // Variable BootDrive moved to asmcode.S
 //ULONG			BootDrive = 0;		// BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc.
@@ -57,6 +58,10 @@ void BootMain(void)
 	CursorYPos = wherey();
 
 	printf("Loading FreeLoader...\n");
+
+#ifdef DEBUG
+	DebugInit();
+#endif
 
 	InitMemoryManager((PVOID)0x100000, 0x20000);
 

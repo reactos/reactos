@@ -31,6 +31,7 @@
 
 #define	size_t	unsigned int
 #define BOOL	int
+#define BOOLEAN	int
 #define	NULL	0
 #define	TRUE	1
 #define FALSE	0
@@ -43,6 +44,9 @@
 #define PUCHAR	unsigned char *
 #define WCHAR	unsigned short
 #define PWCHAR	unsigned short *
+#define SHORT	short
+#define USHORT	unsigned short
+#define PUSHORT	unsigned short *
 #define LONG	long
 #define ULONG	unsigned long
 #define PULONG	unsigned long *
