@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.57 2004/02/21 13:13:27 navaraf Exp $
+/* $Id: windc.c,v 1.58 2004/02/22 12:25:35 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -230,83 +230,82 @@ DceReleaseDC(DCE* dce)
 STATIC VOID FASTCALL
 DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
 {
-  HANDLE hRgnVisible = NULL;
-  ULONG DcxFlags;
-  PWINDOW_OBJECT DesktopWindow;
+   HANDLE hRgnVisible = NULL;
+   ULONG DcxFlags;
+   PWINDOW_OBJECT DesktopWindow;
 
-  if (Flags & DCX_PARENTCLIP)
-    {
+   if (Flags & DCX_PARENTCLIP)
+   {
       PWINDOW_OBJECT Parent;
 
       Parent = Window->Parent;
-
-      if (Window->Style & WS_VISIBLE)
-        {
-          if (Parent->Style & WS_CLIPSIBLINGS)
-            {
-              DcxFlags = DCX_CLIPSIBLINGS | 
-                         (Flags & ~(DCX_CLIPCHILDREN | DCX_WINDOW));
-            }
-          else
-            {
-              DcxFlags = Flags & 
-                         ~(DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | DCX_WINDOW);
-            }
-          hRgnVisible = DceGetVisRgn(Parent->Self, DcxFlags, 
-                                     Window->Self, Flags);
-          if (0 == (Flags & DCX_WINDOW))
-            {
-              NtGdiOffsetRgn(hRgnVisible,
-                             Parent->ClientRect.left - Window->ClientRect.left,
-                             Parent->ClientRect.top - Window->ClientRect.top);
-            }
-          else
-            {
-              NtGdiOffsetRgn(hRgnVisible,
-                             Parent->WindowRect.left - Window->WindowRect.left,
-                             Parent->WindowRect.top - Window->WindowRect.top);
-            }
-        }
+      if (Parent->Style & WS_CLIPSIBLINGS)
+      {
+         DcxFlags = DCX_CLIPSIBLINGS | 
+            (Flags & ~(DCX_CLIPCHILDREN | DCX_WINDOW));
+      }
       else
-        {
-          hRgnVisible = NtGdiCreateRectRgn(0, 0, 0, 0);
-        }
-    }
-  else if (NULL == Window)
-    {
+      {
+         DcxFlags = Flags & ~(DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | DCX_WINDOW);
+      }
+      hRgnVisible = DceGetVisRgn(Parent->Self, DcxFlags, Window->Self, Flags);
+      if (hRgnVisible == NULL)
+      {
+         hRgnVisible = NtGdiCreateRectRgn(0, 0, 0, 0);
+      }
+      else
+      {
+         if (0 == (Flags & DCX_WINDOW))
+         {
+            NtGdiOffsetRgn(
+               hRgnVisible,
+               Parent->ClientRect.left - Window->ClientRect.left,
+               Parent->ClientRect.top - Window->ClientRect.top);
+         }
+         else
+         {
+            NtGdiOffsetRgn(
+               hRgnVisible,
+               Parent->WindowRect.left - Window->WindowRect.left,
+               Parent->WindowRect.top - Window->WindowRect.top);
+         }
+      }
+   }
+   else if (Window == NULL)
+   {
       DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
       if (NULL != DesktopWindow)
-        {
-          hRgnVisible = UnsafeIntCreateRectRgnIndirect(&DesktopWindow->WindowRect);
-          IntReleaseWindowObject(DesktopWindow);
-        }
+      {
+         hRgnVisible = UnsafeIntCreateRectRgnIndirect(&DesktopWindow->WindowRect);
+         IntReleaseWindowObject(DesktopWindow);
+      }
       else
-        {
-          hRgnVisible = NULL;
-        }
-    }
-  else
-    {
+      {
+         hRgnVisible = NULL;
+      }
+   }
+   else
+   {
       hRgnVisible = DceGetVisRgn(Window->Self, Flags, 0, 0);
-    }
+   }
 
-  if (0 != (Flags & DCX_INTERSECTRGN))
-    {
+   if (Flags & DCX_INTERSECTRGN)
+   {
       NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_AND);
-    }
+   }
 
-  if (0 != (Flags & DCX_EXCLUDERGN))
-    {
+   if (Flags & DCX_EXCLUDERGN)
+   {
       NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_DIFF);
-    }
+   }
 
-  Dce->DCXFlags &= ~DCX_DCEDIRTY;
-  NtGdiSelectVisRgn(Dce->hDC, hRgnVisible);
+   Dce->DCXFlags &= ~DCX_DCEDIRTY;
+   NtGdiSelectVisRgn(Dce->hDC, hRgnVisible);
 
-  if (hRgnVisible != NULL)
-    {
+   if (hRgnVisible != NULL)
+   {
       NtGdiDeleteObject(hRgnVisible);
-    }
+   }
 }
 
 HDC STDCALL
