@@ -3,6 +3,19 @@
  *
  * Copyright 2000 Bertho A. Stultiens (BS)
  *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #ifndef __WMC_WMC_H
@@ -71,6 +84,15 @@ void add_token(tok_e type, const WCHAR *name, int tok, int cp, const WCHAR *alia
 token_t *lookup_token(const WCHAR *s);
 void get_tokentable(token_t **tab, int *len);
 
+
+#ifdef __GNUC__
 #define _alloca alloca
+//#define alloca __builtin_alloca
+#else /* not GNU C.  */
+//#define alloca __builtin_alloca
+
+#pragma warning (disable:4305) // 'initializing' : truncation from 'const int ' to 'const char '
+
+#endif /*__GNUC__*/
 
 #endif
