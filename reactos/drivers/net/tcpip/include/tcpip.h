@@ -136,7 +136,7 @@ typedef struct {
 } TDIEntityInfo;
 
 #ifndef htons
-#define htons(x) (((x) << 16) | (((x) >> 8) & 0xff))
+#define htons(x) (((x) << 8) | (((x) >> 8) & 0xff))
 #endif
 
 /* Global variable */
