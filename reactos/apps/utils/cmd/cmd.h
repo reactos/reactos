@@ -11,18 +11,37 @@
  *        Moved error messages in here
  *
  *    07/12/98 (Rob Lake)
- *        Moved more error messages here
+ *        Moved more error messages here.
  *
  *    30-Jul-1998 (John P Price <linux-guru@gcfl.net>)
- *        Added compile date to version
+ *        Added compile date to version.
+ *
+ *    26-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *        Introduced a new version string.
+ *        Thanks to Emanuele Aliberti!
  */
 
-// #define WIN32_LEAN_AND_MEAN
+#ifndef _CMD_H_INCLUDED_
+#define _CMD_H_INCLUDED_
+
+#include "config.h"
 
 #include <windows.h>
-// #include <tchar.h>
+#include <tchar.h>
 
-#define SHELLVER     "version 0.0.4 [" __DATE__"]"
+
+#define CMD_VER      "0.1 pre 1"
+
+#ifdef _MSC_VER
+#define SHELLVER     "Version " CMD_VER " [" __DATE__ ", msc]"
+#else
+#ifdef __LCC__
+#define SHELLVER     "Version " CMD_VER " [" __DATE__ ", lcc-win32]"
+#else
+#define SHELLVER     "Version " CMD_VER " [" __DATE__ "]"
+#endif
+#endif
+
 
 #define BREAK_BATCHFILE 1
 #define BREAK_OUTOFBATCH 2
@@ -48,7 +67,7 @@
 
 
 
-/* prototypes for CMD.C */
+/* Prototypes for CMD.C */
 extern HANDLE hOut;
 extern HANDLE hIn;
 extern WORD   wColor;
@@ -56,7 +75,7 @@ extern WORD   wDefColor;
 extern BOOL   bCtrlBreak;
 extern BOOL   bIgnoreEcho;
 extern BOOL   bExit;
-extern int errorlevel;
+extern INT    nErrorLevel;
 extern SHORT  maxx;
 extern SHORT  maxy;
 extern OSVERSIONINFO osvi;
@@ -70,24 +89,32 @@ int  c_brk(void);
 
 
 
-/* prototypes for ALIAS.C */
-VOID ExpandAlias (char *, int);
-INT cmd_alias (LPTSTR, LPTSTR);
+/* Prototypes for ALIAS.C */
+VOID ExpandAlias (LPTSTR, INT);
+INT  cmd_alias (LPTSTR, LPTSTR);
 
 
-/* prototyped for ATTRIB.C */
+/* Prototypes for ATTRIB.C */
 INT cmd_attrib (LPTSTR, LPTSTR);
 
 
-/* prototypes for CLS.C */
+/* Prototypes for BEEP.C */
+INT cmd_beep (LPTSTR, LPTSTR);
+
+
+/* Prototypes for CALL.C */
+INT cmd_call (LPTSTR, LPTSTR);
+
+
+/* Prototypes for CLS.C */
 INT cmd_cls (LPTSTR, LPTSTR);
 
 
-/* prototypes for CMDINPUT.C */
+/* Prototypes for CMDINPUT.C */
 VOID ReadCommand (LPTSTR, INT);
 
 
-/* prototypes for CMDTABLE.C */
+/* Prototypes for CMDTABLE.C */
 #define CMD_SPECIAL     1
 #define CMD_BATCHONLY   2
 
@@ -99,12 +126,12 @@ typedef struct tagCOMMAND
 } COMMAND, *LPCOMMAND;
 
 
-/* prototypes for COLOR.C */
+/* Prototypes for COLOR.C */
 VOID SetScreenColor (WORD);
 INT cmd_color (LPTSTR, LPTSTR); 
 
 
-/* prototypes for CONSOLE.C */
+/* Prototypes for CONSOLE.C */
 #ifdef _DEBUG
 VOID DebugPrintf (LPTSTR, ...);
 #endif /* _DEBUG */
@@ -122,38 +149,42 @@ VOID ConErrChar (TCHAR);
 VOID ConErrPuts (LPTSTR);
 VOID ConErrPrintf (LPTSTR, ...);
 
-
-SHORT wherex (VOID);
-SHORT wherey (VOID);
-VOID goxy (SHORT, SHORT);
+SHORT GetCursorX  (VOID);
+SHORT GetCursorY  (VOID);
+VOID  GetCursorXY (PSHORT, PSHORT);
+VOID  SetCursorXY (SHORT, SHORT);
 
 VOID GetScreenSize (PSHORT, PSHORT);
 VOID SetCursorType (BOOL, BOOL);
 
 
-/* prototypes for COPY.C */
+/* Prototypes for COPY.C */
 INT cmd_copy (LPTSTR, LPTSTR);
 
 
-/* prototypes for DATE.C */
+/* Prototypes for DATE.C */
 INT cmd_date (LPTSTR, LPTSTR);
 
 
-/* prototypes for DEL.C */
+/* Prototypes for DEL.C */
 INT cmd_del (LPTSTR, LPTSTR);
 
 
-/* prototypes for DIR.C */
+/* Prototypes for DIR.C */
 //int incline(int *line, unsigned flags);
 INT cmd_dir (LPTSTR, LPTSTR);
 
 
-/* prototypes for DIRSTACK.C */
+/* Prototypes for DIRSTACK.C */
 VOID InitDirectoryStack (VOID);
 VOID DestroyDirectoryStack (VOID);
 INT  GetDirectoryStackDepth (VOID);
 INT  cmd_pushd (LPTSTR, LPTSTR);
 INT  cmd_popd (LPTSTR, LPTSTR);
+
+
+/* Prototypes for ECHO.C */
+INT  cmd_echo (LPTSTR, LPTSTR);
 
 
 /* Prototypes for ERROR.C */
@@ -175,7 +206,7 @@ VOID error_syntax (LPTSTR);
 VOID msg_pause (VOID);
 
 
-/* prototypes for FILECOMP.C */
+/* Prototypes for FILECOMP.C */
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
 VOID CompleteFilename (LPTSTR, INT);
 INT  ShowCompletionMatches (LPTSTR, INT);
@@ -184,28 +215,36 @@ INT  ShowCompletionMatches (LPTSTR, INT);
 #endif
 
 
-/* prototypes for HISTORY.C */
+/* Prototypes for FOR.C */
+INT cmd_for (LPTSTR, LPTSTR);
+
+
+/* Prototypes for GOTO.C */
+INT cmd_goto (LPTSTR, LPTSTR);
+
+
+/* Prototypes for HISTORY.C */
 #ifdef FEATURE_HISTORY
 VOID History (INT, LPTSTR);
 #endif
 
 
-/* prototypes for INTERNAL.C */
+/* Prototypes for INTERNAL.C */
 VOID InitLastPath (VOID);
 VOID FreeLastPath (VOID);
-int cmd_chdir(char *, char *);
-int cmd_mkdir(char *, char *);
-int cmd_rmdir(char *, char *);
-int internal_exit(char *, char *);
-int cmd_rem(char *, char *);
-int cmd_showcommands(char *, char *);
+INT  cmd_chdir (LPTSTR, LPTSTR);
+INT  cmd_mkdir (LPTSTR, LPTSTR);
+INT  cmd_rmdir (LPTSTR, LPTSTR);
+INT  internal_exit (LPTSTR, LPTSTR);
+INT  cmd_rem (LPTSTR, LPTSTR);
+INT  cmd_showcommands (LPTSTR, LPTSTR);
 
 
-/* prototyped for LABEL.C */
+/* Prototypes for LABEL.C */
 INT cmd_label (LPTSTR, LPTSTR);
 
 
-/* prototypes for LOCALE.C */
+/* Prototypes for LOCALE.C */
 extern TCHAR cDateSeparator;
 extern INT   nDateFormat;
 extern TCHAR cTimeSeparator;
@@ -226,23 +265,24 @@ VOID   freep (LPTSTR *);
 LPTSTR stpcpy (LPTSTR, LPTSTR);
 BOOL   IsValidPathName (LPCTSTR);
 BOOL   IsValidFileName (LPCTSTR);
+BOOL   IsValidDirectory (LPCTSTR);
 BOOL   FileGetString (HANDLE, LPTSTR, INT);
 
 
-/* prototypes for MOVE.C */
+/* Prototypes for MOVE.C */
 INT cmd_move (LPTSTR, LPTSTR);
 
 
-/* prototypes from PATH.C */
+/* Prototypes from PATH.C */
 INT cmd_path (LPTSTR, LPTSTR);
 
 
-/* prototypes from PROMPT.C */
+/* Prototypes from PROMPT.C */
 VOID PrintPrompt (VOID);
 INT  cmd_prompt (LPTSTR, LPTSTR);
 
 
-/* prototypes for REDIR.C */
+/* Prototypes for REDIR.C */
 #define INPUT_REDIRECTION    1
 #define OUTPUT_REDIRECTION   2
 #define OUTPUT_APPEND        4
@@ -251,50 +291,48 @@ INT  cmd_prompt (LPTSTR, LPTSTR);
 INT GetRedirection (LPTSTR, LPTSTR, LPTSTR, LPTSTR, LPINT);
 
 
-/* prototypes for REN.C */
+/* Prototypes for REN.C */
 INT cmd_rename (LPTSTR, LPTSTR);
 
 
-/* prototypes for SET.C */
+/* Prototypes for SET.C */
 INT cmd_set (LPTSTR, LPTSTR);
 
 
-/* prototypes for TIME.C */
+/* Prototypes for TIME.C */
 INT cmd_time (LPTSTR, LPTSTR);
 
 
-/* prototypes for TYPE.C */
+/* Prototypes for TITLE.C */
+INT cmd_title (LPTSTR, LPTSTR);
+
+
+/* Prototypes for TYPE.C */
 INT cmd_type (LPTSTR, LPTSTR);
 
 
-/* prototypes for VER.C */
+/* Prototypes for VER.C */
 VOID ShortVersion (VOID);
 INT  cmd_ver (LPTSTR, LPTSTR);
 
 
-/* prototypes for VERIFY.C */
+/* Prototypes for VERIFY.C */
 INT cmd_verify (LPTSTR, LPTSTR);
 
 
-/* prototypes for VOL.C */
+/* Prototypes for VOL.C */
 INT cmd_vol (LPTSTR, LPTSTR);
 
 
-/* prototypes for WHERE.C */
-BOOL find_which (LPCTSTR, LPTSTR);
+/* Prototypes for WHERE.C */
+BOOL SearchForExecutable (LPCTSTR, LPTSTR);
 
 
 
 
 /* The MSDOS Batch Commands [MS-DOS 5.0 User's Guide and Reference p359] */
-int cmd_call(char *, char *);
-int cmd_echo(char *, char *);
-int cmd_for(char *, char *);
-int cmd_goto(char *, char *);
 int cmd_if(char *, char *);
 int cmd_pause(char *, char *);
 int cmd_shift(char *, char *);
 
-int cmd_beep(char *, char *);
-
-
+#endif /* _CMD_H_INCLUDED_ */

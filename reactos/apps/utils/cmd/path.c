@@ -23,8 +23,6 @@
  *        Fixed Win32 environment handling.
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "config.h"
 
 #ifdef INCLUDE_CMD_PATH

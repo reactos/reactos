@@ -25,8 +25,6 @@
  *        First working version.
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "config.h"
 
 #ifdef INCLUDE_CMD_DEL
@@ -35,6 +33,7 @@
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "cmd.h"
 
@@ -97,6 +96,8 @@ static INT Prompt (LPTSTR str)
 	else if (*p == _T('\03'))
 		return PROMPT_BREAK;
 #endif
+
+	return PROMPT_NO;
 }
 
 

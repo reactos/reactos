@@ -313,11 +313,17 @@ typedef DWORD SERVICE_STATUS_HANDLE;
 
 #ifdef UNICODE
 typedef unsigned short TBYTE;
+#ifndef _TCHAR_DEFINED
+#define _TCHAR_DEFINED
 typedef unsigned short TCHAR;
+#endif /* _TCHAR_DEFINED */
 typedef unsigned short BCHAR;
 #else
 typedef unsigned char TBYTE;
+#ifndef _TCHAR_DEFINED
+#define _TCHAR_DEFINED
 typedef char TCHAR;
+#endif /* _TCHAR_DEFINED */
 typedef BYTE BCHAR;
 #endif /* UNICODE */
 

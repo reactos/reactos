@@ -19,7 +19,7 @@ include rules.mak
 #
 # Required to run the system
 #
-COMPONENTS = iface_native ntoskrnl kernel32 ntdll 
+COMPONENTS = iface_native ntoskrnl kernel32 ntdll
 # crtdll mingw32
 
 #
@@ -34,12 +34,12 @@ LOADERS = dos
 
 #
 # Select the device drivers and filesystems you want
-# 
+#
 KERNEL_SERVICES = blue parallel keyboard null mouse serial sound ide test sdisk \
-                  minix vfat
+		  minix vfat
 
 #  cmd
-APPS = hello shell
+APPS = hello shell cmd
 
 all: $(COMPONENTS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
 .PHONY: all
@@ -75,13 +75,13 @@ iface_native_clean:
 #
 vfat: dummy
 	make -C services/fs/vfat
-	
+
 sdisk: dummy
 	make -C services/dd/sdisk
-	
+
 minix: dummy
 	make -C services/fs/minix
-	
+
 template: dummy
 	make -C services/fs/template
 
@@ -89,7 +89,7 @@ ide-test: dummy
 	make -C services/dd/ide-test
 
 ide: dummy
-	make -C services/dd/ide	
+	make -C services/dd/ide
 
 test: dummy
 	make -C services/dd/test
@@ -111,7 +111,7 @@ blue: dummy
 
 mouse: dummy
 	make -C services/dd/mouse
-	
+
 serial: dummy
 	make -C services/dd/serial
 

@@ -115,9 +115,11 @@
  *
  *    30-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Added "cd -" feature. Changes to the previous directory.
+ *
+ *    15-Mar-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *        Fixed bug in "cd -" feature. If the previous directory was a root
+ *        directory, it was ignored.
  */
-
-#define WIN32_LEAN_AND_MEAN
 
 #include "config.h"
 
@@ -125,6 +127,7 @@
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "cmd.h"
 
@@ -252,7 +255,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	}
 
 	/* remove trailing \ if any, but ONLY if dir is not the root dir */
-	if (_tcslen (dir) >= 2 && dir[_tcslen (dir) - 1] == _T('\\'))
+	if (_tcslen (dir) > 3 && dir[_tcslen (dir) - 1] == _T('\\'))
 		dir[_tcslen(dir) - 1] = _T('\0');
 
 

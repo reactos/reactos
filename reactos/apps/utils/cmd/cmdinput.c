@@ -88,13 +88,11 @@
  *        Unicode and redirection safe!
  *
  *    04-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
- *        Fixed input bug. A "line feed" character remined in the keyboard
+ *        Fixed input bug. A "line feed" character remained in the keyboard
  *        input queue when you pressed <RETURN>. This sometimes caused
  *        some very strange effects.
  *        Fixed some command line editing annoyances.
  */
-
-#define WIN32_LEAN_AND_MEAN
 
 #include "config.h"
 
@@ -121,11 +119,15 @@ ClearCommandLine (LPTSTR str, INT maxlen, SHORT orgx, SHORT orgy)
 {
 	INT count;
 
-	goxy (orgx, orgy);
+	SetCursorXY (orgx, orgy);
 	for (count = 0; count < (INT)_tcslen (str); count++)
 		ConOutChar (_T(' '));
+#ifndef __REACTOS__
 	_tcsnset (str, _T('\0'), maxlen);
-	goxy (orgx, orgy);
+#else
+    memset (str, 0, maxlen * sizeof(TCHAR));
+#endif
+	SetCursorXY (orgx, orgy);
 }
 
 
@@ -150,8 +152,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 	if (bEcho)
 		PrintPrompt();
 
-	orgx = wherex ();
-	orgy = wherey ();
+	GetCursorXY (&orgx, &orgy);
 
 	memset (str, 0, maxlen * sizeof (TCHAR));
 
@@ -171,29 +172,28 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 					{
 						/* if at end of line */
 						str[current - 1] = _T('\0');
-						if (wherex () != 0)
+						if (GetCursorX () != 0)
 						{
 							ConOutPrintf ("\b \b");
 						}
 						else
 						{
-							goxy ((SHORT)(maxx - 1), (SHORT)(wherey () - 1));
+							SetCursorXY ((SHORT)(maxx - 1), (SHORT)(GetCursorY () - 1));
 							ConOutChar (_T(' '));
-							goxy ((SHORT)(maxx - 1), (SHORT)(wherey () - 1));
+							SetCursorXY ((SHORT)(maxx - 1), (SHORT)(GetCursorY () - 1));
 						}
 					}
 					else
 					{
 						for (count = current - 1; count < charcount; count++)
 							str[count] = str[count + 1];
-						if (wherex () != 0)
-							goxy ((SHORT)(wherex () - 1), wherey ());
+						if (GetCursorX () != 0)
+							SetCursorXY ((SHORT)(GetCursorX () - 1), GetCursorY ());
 						else
-							goxy ((SHORT)(maxx - 1), (SHORT)(wherey () - 1));
-						curx = wherex ();
-						cury = wherey ();
+							SetCursorXY ((SHORT)(maxx - 1), (SHORT)(GetCursorY () - 1));
+						GetCursorXY (&curx, &cury);
 						ConOutPrintf (_T("%s "), &str[current - 1]);
-						goxy (curx, cury);
+						SetCursorXY (curx, cury);
 					}
 					charcount--;
 					current--;
@@ -213,10 +213,9 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 					for (count = current; count < charcount; count++)
 						str[count] = str[count + 1];
 					charcount--;
-					curx = wherex ();
-					cury = wherey ();
+					GetCursorXY (&curx, &cury);
 					ConOutPrintf (_T("%s "), &str[current]);
-					goxy (curx, cury);
+					SetCursorXY (curx, cury);
 				}
 				break;
 
@@ -224,7 +223,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				/* goto beginning of string */
 				if (current != 0)
 				{
-					goxy (orgx, orgy);
+					SetCursorXY (orgx, orgy);
 					current = 0;
 				}
 				break;
@@ -233,7 +232,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				/* goto end of string */
 				if (current != charcount)
 				{
-					goxy (orgx, orgy);
+					SetCursorXY (orgx, orgy);
 					ConOutPrintf (_T("%s"), str);
 					current = charcount;
 				}
@@ -251,7 +250,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 						charcount = _tcslen (str);
 						current = charcount;
 
-						goxy(orgx, orgy);
+						SetCursorXY (orgx, orgy);
 						ConOutPrintf (_T("%s"), str);
 						if ((_tcslen (str) > (USHORT)(maxx - orgx)) && (orgy == maxy + 1))
 							orgy--;
@@ -262,15 +261,18 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 						if (ShowCompletionMatches (str, charcount))
 						{
 							PrintPrompt ();
-							orgx = wherex ();
-							orgy = wherey ();
+							GetCursorXY (&orgx, &orgy);
 							ConOutPrintf (_T("%s"), str);
 						}
 					}
 				}
 				else
 				{
+#ifdef __REACTOS__
+					Beep (440, 50);
+#else
 					MessageBeep (-1);
+#endif
 				}
 #endif
 #ifdef FEATURE_4NT_FILENAME_COMPLETION
@@ -330,15 +332,18 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				if (current > 0)
 				{
 					current--;
-					if (wherex () == 0)
-						goxy ((SHORT)(maxx - 1), (SHORT)(wherey () - 1));
+					if (GetCursorX () == 0)
+						SetCursorXY ((SHORT)(maxx - 1), (SHORT)(GetCursorY () - 1));
 					else
-						goxy ((SHORT)(wherex () - 1), wherey ());
+						SetCursorXY ((SHORT)(GetCursorX () - 1), GetCursorY ());
 				}
 				else
 				{
-//					Beep (440, 100);
+#ifdef __REACTOS__
+					Beep (440, 50);
+#else
 					MessageBeep (-1);
+#endif
 				}
 				break;
 
@@ -347,41 +352,47 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				if (current != charcount)
 				{
 					current++;
-					if (wherex () == maxx - 1)
-						goxy (0, (SHORT)(wherey () + 1));
+					if (GetCursorX () == maxx - 1)
+						SetCursorXY (0, (SHORT)(GetCursorY () + 1));
 					else
-						goxy ((SHORT)(wherex () + 1), wherey ());
+						SetCursorXY ((SHORT)(GetCursorX () + 1), GetCursorY ());
 				}
 				break;
 
 			default:
+#ifdef __REACTOS__
+				ch = ir.Event.KeyEvent.AsciiChar;
+				if ((ch >= 32) && (charcount != (maxlen - 2)))
+				{
+#else
 #ifdef _UNICODE
 				ch = ir.Event.KeyEvent.uChar.UnicodeChar;
 #else
 				ch = ir.Event.KeyEvent.uChar.AsciiChar;
-#endif
+#endif /* _UNICODE */
 				if ((ch >= 32 && ch <= 255) && (charcount != (maxlen - 2)))
 				{
+#endif /* __REACTOS__ */
 					/* insert character into string... */
 					if (bInsert && current != charcount)
 					{
 						for (count = charcount; count > current; count--)
 							str[count] = str[count - 1];
 						str[current++] = ch;
-						if (wherex () == maxx - 1)
+						if (GetCursorX () == maxx - 1)
 						{
 							curx = 0;
-							cury = wherey () + 1;
+							cury = GetCursorY () + 1;
 						}
 						else
 						{
-							curx = wherex () + 1;
-							cury = wherey ();
+							GetCursorXY (&curx, &cury);
+							curx++;
 						}
 						ConOutPrintf (_T("%s"), &str[current - 1]);
 						if ((_tcslen (str) > (USHORT)(maxx - orgx)) && (orgy == maxy + 1))
 							cury--;
-						goxy (curx, cury);
+						SetCursorXY (curx, cury);
 						charcount++;
 					}
 					else
@@ -397,8 +408,11 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 #if 0
 				else
 				{
-//					Beep (440, 100);
+#ifdef __REACTOS__
+					Beep (440, 100);
+#else
 					MessageBeep (-1);
+#endif
 				}
 #endif
 				break;

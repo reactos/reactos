@@ -4,6 +4,9 @@
  *
  */
 
+#ifndef _BATCH_H_INCLUDED_
+#define _BATCH_H_INCLUDED_
+
 
 typedef struct tagBATCHCONTEXT
 {
@@ -37,3 +40,5 @@ LPTSTR BatchParams (LPTSTR, LPTSTR);
 VOID   ExitBatch (LPTSTR);
 BOOL   Batch (LPTSTR, LPTSTR, LPTSTR);
 LPTSTR ReadBatchLine (LPBOOL);
+
+#endif /* _BATCH_H_INCLUDED_ */

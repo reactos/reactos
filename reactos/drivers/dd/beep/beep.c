@@ -24,7 +24,7 @@ typedef struct _BEEP_DEVICE_EXTENSION
 	KDPC    Dpc;
 	KTIMER  Timer;
 	KEVENT  Event;
-	DWORD   BeepOn;
+        LONG    BeepOn;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 
@@ -275,7 +275,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     /* set up device extension */
     pDeviceObject->Flags |= DO_BUFFERED_IO;
     pDeviceExtension = pDeviceObject->DeviceExtension;
-    pDeviceExtension->BeepOn = FALSE;
+    pDeviceExtension->BeepOn = 0; /* FALSE */
 
     KeInitializeDpc (&(pDeviceExtension->Dpc),
                      BeepDPC,

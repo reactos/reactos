@@ -105,14 +105,13 @@
  *        Replaced spawnl() by CreateProcess().
  */
 
-// #define WIN32_LEAN_AND_MEAN
-
 #include "config.h"
 
 #include <windows.h>
-// #include <tchar.h>
+#include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "cmd.h"
 #include "batch.h"
@@ -125,7 +124,7 @@ BOOL bExit = FALSE;       /* indicates EXIT was typed */
 BOOL bCanExit = TRUE;     /* indicates if this shell is exitable */
 BOOL bCtrlBreak = FALSE;  /* Ctrl-Break or Ctrl-C hit */
 BOOL bIgnoreEcho = FALSE; /* Ignore 'newline' before 'cls' */
-INT  errorlevel = 0;      /* Errorlevel of last launched external program */
+INT  nErrorLevel = 0;     /* Errorlevel of last launched external program */
 OSVERSIONINFO osvi;
 HANDLE hIn;
 HANDLE hOut;
@@ -179,9 +178,7 @@ Execute (LPTSTR first, LPTSTR rest)
 
 	/* get the PATH environment variable and parse it */
 	/* search the PATH environment variable for the binary */
-	find_which (first, szFullName);
-
-	if (szFullName[0] == _T('\0'))
+	if (!SearchForExecutable (first, szFullName))
 	{
 		error_bad_command ();
 		return;
@@ -209,7 +206,7 @@ Execute (LPTSTR first, LPTSTR rest)
 #endif
 		/* build command line for CreateProcess() */
 		_tcscpy (szFullCmdLine, szFullName);
-		_tcscat (szFullCmdLine, " ");
+		_tcscat (szFullCmdLine, _T(" "));
 		_tcscat (szFullCmdLine, rest);
 
 		/* fill startup info */
@@ -221,8 +218,10 @@ Execute (LPTSTR first, LPTSTR rest)
 		if (CreateProcess (NULL, szFullCmdLine, NULL, NULL, FALSE,
 						   0, NULL, NULL, &stui, &prci))
 		{
+			DWORD dwExitCode;
 			WaitForSingleObject (prci.hProcess, INFINITE);
-			GetExitCodeProcess (prci.hProcess, &errorlevel);
+			GetExitCodeProcess (prci.hProcess, &dwExitCode);
+			nErrorLevel = (INT)dwExitCode;
 			CloseHandle (prci.hThread);
 			CloseHandle (prci.hProcess);
 		}
@@ -302,8 +301,8 @@ DoCommand (LPTSTR line)
 			cl = _tcslen (cmdptr->name);
 
 			if ((cmdptr->flags & CMD_SPECIAL) &&
-				(!_tcsncmp (cmdptr->name, com, cl)) &&
-				(_tcschr (_T("\\.-"), *(com + cl))))
+			    (!_tcsncmp (cmdptr->name, com, cl)) &&
+			    (_tcschr (_T("\\.-"), *(com + cl))))
 			{
 				/* OK its one of the specials...*/
 
@@ -688,7 +687,7 @@ ProcessInput (BOOL bFlag)
 					case _T('7'):
 					case _T('8'):
 					case _T('9'):
-						if (tp = FindArg (*ip - _T('0')))
+						if ((tp = FindArg (*ip - _T('0'))))
 						{
 							cp = stpcpy (cp, tp);
 							ip++;
@@ -698,12 +697,12 @@ ProcessInput (BOOL bFlag)
 						break;
 
 					case _T('?'):
-						cp += wsprintf (cp, _T("%u"), errorlevel);
+						cp += wsprintf (cp, _T("%u"), nErrorLevel);
 						ip++;
 						break;
 
 					default:
-						if (tp = _tcschr (ip, _T('%')))
+						if ((tp = _tcschr (ip, _T('%'))))
 						{
 							char evar[512];
 							*tp = _T('\0');
@@ -846,10 +845,10 @@ static VOID Initialize (int argc, char *argv[])
 #endif
 
 	/* get version information */
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	GetVersionEx (&osvi);
+    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    GetVersionEx (&osvi);
 
-	InitLocale ();
+    InitLocale ();
 
 	/* get default input and output console handles */
 	hOut = GetStdHandle (STD_OUTPUT_HANDLE);
@@ -859,7 +858,7 @@ static VOID Initialize (int argc, char *argv[])
 	InitLastPath ();
 #endif
 
-	if (argc >= 2)
+    if (argc >= 2)
 	{
 		if (!_tcsncmp (argv[1], _T("/?"), 2))
 		{
@@ -932,10 +931,13 @@ static VOID Initialize (int argc, char *argv[])
 	ShowCommands ();
 
 	/* Set COMSPEC environment variable */
-	SetEnvironmentVariable (_T("COMSPEC"), argv[0]);
+    if (argv)
+        SetEnvironmentVariable (_T("COMSPEC"), argv[0]);
 
 	/* add ctrl handler */
+#if 0
 	SetConsoleCtrlHandler (NULL, TRUE);
+#endif
 }
 
 
@@ -952,7 +954,9 @@ static VOID Cleanup (VOID)
 #endif
 
 	/* remove ctrl handler */
-//	SetConsoleCtrlHandler ((PHANDLER_ROUTINE)&BreakHandler, FALSE);
+#if 0
+    SetConsoleCtrlHandler ((PHANDLER_ROUTINE)&BreakHandler, FALSE);
+#endif
 }
 
 
@@ -964,7 +968,9 @@ int main (int argc, char *argv[])
 	INT nExitCode;
 
 	AllocConsole ();
-	SetFileApisToOEM ();
+#ifndef __REACTOS__
+    SetFileApisToOEM ();
+#endif
 
 	/* check switches on command-line */
 	Initialize (argc, argv);

@@ -9,6 +9,15 @@
  *
  */
 
+#define __REACTOS__
+
+#ifndef _CONFIG_H_INCLUDED_
+#define _CONFIG_H_INCLUDED_
+
+#ifndef __REACTOS__
+#define WIN32_LEAN_AND_MEAN
+#endif /* __REACTOS__ */
+
 
 /* JPP 20 Jul 1998 - define DEBUG to add debugging code */
 /*#define DEBUG */
@@ -38,22 +47,27 @@
 /* Define one of these to select the used locale. */
 /*  (date and time formats etc.) used in DATE, TIME */
 /*  DIR and PROMPT. */
-#define LOCALE_WINDOWS      /* System locale */
+#ifdef __REACTOS__
+#define LOCALE_DEFAULT
+#else
+#define LOCALE_WINDOWS   /* System locale */
 /* #define LOCALE_GERMAN */    /* German locale */
 /* #define LOCALE_DEFAULT */   /* United States locale */
-
+#endif
 
 #define INCLUDE_CMD_ATTRIB
-//#define INCLUDE_CMD_BREAK
+/*#define INCLUDE_CMD_BREAK*/
 #define INCLUDE_CMD_CHCP
 #define INCLUDE_CMD_CHDIR
 #define INCLUDE_CMD_CLS
 #define INCLUDE_CMD_COLOR
 #define INCLUDE_CMD_COPY
-//#define INCLUDE_CMD_CTTY
+/*#define INCLUDE_CMD_CTTY*/
 #define INCLUDE_CMD_DATE
 #define INCLUDE_CMD_DEL
+#ifndef __REACTOS__
 #define INCLUDE_CMD_DIR
+#endif
 #define INCLUDE_CMD_LABEL
 #define INCLUDE_CMD_MKDIR
 #define INCLUDE_CMD_MOVE
@@ -63,6 +77,7 @@
 #define INCLUDE_CMD_RENAME
 #define INCLUDE_CMD_SET
 #define INCLUDE_CMD_TIME
+#define INCLUDE_CMD_TITLE
 #define INCLUDE_CMD_TYPE
 #define INCLUDE_CMD_VER
 #define INCLUDE_CMD_REM
@@ -84,3 +99,6 @@ shift
 
 */
 
+
+
+#endif /* _CONFIG_H_INCLUDED_ */

@@ -20,13 +20,12 @@
  *        Unicode and redirection ready!
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "config.h"
 
 #include <windows.h>
 #include <tchar.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "cmd.h"
 #include "batch.h"
@@ -98,7 +97,7 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 		while (_istdigit (*pp))
 			n = n * 10 + (*pp++ - _T('0'));
 
-		x_flag ^= (errorlevel < n) ? 0 : X_EXEC;
+		x_flag ^= (nErrorLevel < n) ? 0 : X_EXEC;
 
 		x_flag |= X_EMPTY;          /* Syntax error if comd empty */
 	}

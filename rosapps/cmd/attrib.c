@@ -29,8 +29,6 @@
  *        Added handling of multiple filenames.
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "config.h"
 
 #ifdef INCLUDE_CMD_ATTRIB
@@ -38,6 +36,7 @@
 #include <windows.h>
 #include <tchar.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "cmd.h"
 

@@ -17,8 +17,6 @@
  *        Unicode ready!
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "config.h"
 
 #include <windows.h>
@@ -173,6 +171,10 @@ COMMAND cmds[] =
 
 #ifdef INCLUDE_CMD_TIME
 	{_T("time"), 0, cmd_time},
+#endif
+
+#ifdef INCLUDE_CMD_TITLE
+	{_T("title"), 0, cmd_title},
 #endif
 
 #ifdef INCLUDE_CMD_TYPE

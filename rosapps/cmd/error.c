@@ -17,12 +17,11 @@
  *        Use FormatMessage() for error reports.
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "config.h"
 
 #include <windows.h>
 #include <tchar.h>
+#include <stdio.h>
 #include <stdarg.h>
 
 #include "cmd.h"
@@ -53,10 +52,10 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 		return;
 
 	va_start (arg_ptr, szFormat);
-	wvsprintf (szMessage, szFormat, arg_ptr);
+    _vstprintf (szMessage, szFormat, arg_ptr);
 	va_end (arg_ptr);
 
-#if 1
+#ifndef __REACTOS__
 
 	if (FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
 					   NULL, dwErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
@@ -69,7 +68,6 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 	else
 	{
 		ConErrPrintf (_T("Unknown error! Error code: 0x%lx\n"), dwErrorCode);
-//		ConErrPrintf (_T("No error message available!\n"));
 		return;
 	}
 

@@ -14,8 +14,6 @@
  *        Redirection ready!
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "config.h"
 
 #ifdef INCLUDE_CMD_COLOR

@@ -16,24 +16,27 @@
  *
  *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Unicode and redirection safe!
+ *
+ *    26-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *        New version info and some output changes.
  */
-
-#define WIN32_LEAN_AND_MEAN
 
 #include "config.h"
 
 #include <windows.h>
 #include <tchar.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "cmd.h"
 
-#define VER_HELP     "display shell version info   VER [/C/R/W/?]"
 
 
 VOID ShortVersion (VOID)
 {
-	ConOutPuts (_T("\n" SHELLINFO " " SHELLVER "\n"));
+	ConOutPuts (_T("\n"
+				   SHELLINFO "\n"
+				   SHELLVER "\n"));
 }
 
 
@@ -48,9 +51,11 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 {
 	INT i;
 
-	/* JPP 07/08/1998 clean up and shortened info. */
-
-	ConOutPuts (_T("\n" SHELLINFO " " SHELLVER "\nCopyright (C) 1994-1998 Tim Norman and others."));
+	ConOutPuts (_T("\n"
+				   SHELLINFO "\n"
+				   SHELLVER "\n"
+				   "\n"
+				   "Copyright (C) 1994-1998 Tim Norman and others."));
 	ConOutPuts (_T("Copyright (C) 1998,1999 Eric Kohl."));
 
 	/* Basic copyright notice */
@@ -67,7 +72,7 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 		/* MS-DOS ver prints just help if /? is alone or not */
 		if (_tcsstr (param, _T("/?")) != NULL)
 		{
-			ConOutPuts (_T(USAGE ": " VER_HELP));
+			ConOutPuts (_T("\ndisplay shell version info\n\nVER [/C/R/W/?]"));
 			return 0;
 		}
 
@@ -91,7 +96,6 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 			if (_totupper (param[i]) == _T('W'))
 			{
 				/* Warranty notice */
-				/* JPP 07/08/1998 removed extra printf calls */
 				ConOutPuts (_T("\n This program is distributed in the hope that it will be useful,\n"
 							   " but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
 							   " MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
@@ -100,7 +104,6 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 			else if (_totupper (param[i]) == _T('R'))
 			{
 				/* Redistribution notice */
-				/* JPP 07/08/1998 removed extra printf calls */
 				ConOutPuts (_T("\n This program is free software; you can redistribute it and/or modify\n"
 							   " it under the terms of the GNU General Public License as published by\n"
 							   " the Free Software Foundation; either version 2 of the License, or\n"
@@ -109,16 +112,15 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 			else if (_totupper (param[i]) == _T('C'))
 			{
 				/* Developer listing */
-				/* JPP 07/08/1998 removed extra printf calls; rearranged names */
-				ConOutPuts (_T("\ndeveloped by:\n"
+				ConOutPuts (_T("\nFreeDOS version written by:\n"
 							   "    Tim Norman      Matt Rains\n"
 							   "    Evan Jeffrey    Steffen Kaiser\n"
 							   "    Svante Frey     Oliver Mueller\n"
 							   "    Aaron Kaufman   Marc Desrochers\n"
 							   "    Rob Lake        John P Price\n"
 							   "    Hans B Pufal\n"
-							   "\nconverted to Win32 by:\n"
-							   "    Eric Kohl\n"));
+							   "\nReactOS version written by:\n"
+							   "    Eric Kohl       Emanuele Aliberti\n"));
 			}
 			else
 			{
@@ -130,7 +132,7 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 
 	ConOutPuts (_T("\nSend bug reports to <ekohl@abo.rhein-zeitung.de>.\n"
 /*
-				   "Updates are available at ftp://www.sid-dis.com/..."
+				   "Updates are available at http://www.sid-dis.com/reactos"
 */
 			   ));
 	return 0;

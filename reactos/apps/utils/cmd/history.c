@@ -19,8 +19,6 @@
  *        Unicode and redirection safe!
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "config.h"
 
 #ifdef FEATURE_HISTORY

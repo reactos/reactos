@@ -21,8 +21,6 @@
  *        Fixed time input bug.
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "config.h"
 
 #ifdef INCLUDE_CMD_TIME
@@ -38,7 +36,7 @@
 static VOID
 PrintTime (VOID)
 {
-#if 0
+#ifdef __REACTOS__
 	SYSTEMTIME st;
 
 	GetLocalTime (&st);
@@ -59,13 +57,13 @@ PrintTime (VOID)
 					st.wSecond, cDecimalSeparator, st.wMilliseconds / 10);
 			break;
 	}
-#endif
-
-	TCHAR szTime[32];
+#else
+    TCHAR szTime[32];
 
 	GetTimeFormat (LOCALE_USER_DEFAULT, 0, NULL, NULL,
 				   szTime, sizeof (szTime));
 	ConOutPrintf (_T("Current date is: %s\n"), szTime);
+#endif
 }
 
 

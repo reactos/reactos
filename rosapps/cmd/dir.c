@@ -106,9 +106,10 @@
  *
  *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Redirection safe!
+ *
+ *    01-Mar-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *        Replaced all runtime io functions by their Win32 counterparts.
  */
-
-#define WIN32_LEAN_AND_MEAN
 
 #include "config.h"
 
@@ -119,13 +120,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include <direct.h>
-
 #include "cmd.h"
-
-
-/* useful macro */
-#define MEM_ERR error_out_of_memory(); return 1;
 
 
 /* flag definitions */
@@ -148,9 +143,9 @@ enum
 
 /* Globally save the # of dirs, files and bytes,
  * probabaly later pass them to functions. Rob Lake  */
-long recurse_dir_cnt;
-long recurse_file_cnt;
-ULARGE_INTEGER recurse_bytes;
+static ULONG recurse_dir_cnt;
+static ULONG recurse_file_cnt;
+static ULARGE_INTEGER recurse_bytes;
 
 
 /*
@@ -161,7 +156,6 @@ ULARGE_INTEGER recurse_bytes;
  */
 static VOID Help (VOID)
 {
-#if 1
 	ConOutPuts (_T("Displays a list of files and subdirectories in a directory.\n"
        "\n"
        "DIR [drive:][path][filename] [/A] [/B] [/L] [/N] [/S] [/P] [/W] [/4]\n"
@@ -183,43 +177,18 @@ static VOID Help (VOID)
        "of the - (hyphen) can turn off defined swtiches.  Ex. /-W would\n"
        "turn off printing in wide format.\n"
       ));
-#endif
-#if 0
-	InitializePageOut ();
-	LinePageOut (_T("Displays a list of files and subdirectories in a directory."));
-	LinePageOut (_T(""));
-	LinePageOut (_T("DIR [drive:][path][filename] [/A] [/B] [/L] [/N] [/S] [/P] [/W] [/4]"));
-	LinePageOut (_T(""));
-	LinePageOut (_T("  [drive:][path][filename]"));
-	LinePageOut (_T("              Specifies drive, directory, and/or files to list."));
-	LinePageOut (_T(""));
-	LinePageOut (_T("  /A          Displays files with HIDDEN SYSTEM attributes"));
-	LinePageOut (_T("              default is ARCHIVE and READ ONLY"));
-	LinePageOut (_T("  /B          Uses bare format (no heading information or summary)."));
-	LinePageOut (_T("  /L          Uses lowercase."));
-	LinePageOut (_T("  /N          New long list format where filenames are on the far right."));
-	LinePageOut (_T("  /S          Displays files in specified directory and all subdirectories"));
-	LinePageOut (_T("  /P          Pauses after each screen full"));
-	LinePageOut (_T("  /W          Prints in wide format"));
-	LinePageOut (_T("  /4          Display four digit years."));
-	LinePageOut (_T(""));
-	LinePageOut (_T("Switches may be present in the DIRCMD environment variable.  Use"));
-	LinePageOut (_T("of the - (hyphen) can turn off defined swtiches.  Ex. /-W would"));
-	LinePageOut (_T("turn off printing in wide format."));
-	TerminatePageOut ();
-#endif
 }
 
 
 /*
- * dir_read_param
+ * DirReadParam
  *
  * read the parameters from the command line
  */
 static BOOL
-DirReadParam (char *line, char **param, LPDWORD lpFlags)
+DirReadParam (LPTSTR line, LPTSTR *param, LPDWORD lpFlags)
 {
-	int slash = 0;
+	INT slash = 0;
 
 	if (!line)
 		return TRUE;
@@ -340,50 +309,35 @@ DirReadParam (char *line, char **param, LPDWORD lpFlags)
 
 
 /*
- * extend_file
+ * ExtendFilespec
  *
  * extend the filespec, possibly adding wildcards
  */
-void extend_file (char **file)
+static VOID
+ExtendFilespec (LPTSTR file)
 {
-	LPTSTR tmp;
-
-	if (!*file)
+	if (!file)
 		return;
 
 	/* if no file spec, change to "*.*" */
-	if (!**file)
+	if (*file == _T('\0'))
 	{
-		free (*file);
-		*file = _tcsdup (_T("*.*"));
+		_tcscpy (file, _T("*.*"));
 		return;
 	}
 
 	/* if starts with . add * in front */
-	if (**file == _T('.'))
+	if (*file == _T('.'))
 	{
-		tmp = malloc ((_tcslen (*file) + 2) * sizeof(TCHAR));
-		if (tmp)
-		{
-			*tmp = _T('*');
-			_tcscpy (&tmp[1], *file);
-		}
-		free (*file);
-		*file = tmp;
+		memmove (&file[1], &file[0], (_tcslen (file) + 1) * sizeof(TCHAR));
+		file[0] = _T('*');
 		return;
 	}
 
 	/* if no . add .* */
-	if (!_tcschr (*file, _T('.')))
+	if (!_tcschr (file, _T('.')))
 	{
-		tmp = malloc ((_tcslen (*file) + 3) * sizeof(TCHAR));
-		if (tmp)
-		{
-			_tcscpy (tmp, *file);
-			_tcscat (tmp, _T(".*"));
-		}
-		free (*file);
-		*file = tmp;
+		_tcscat (file, _T(".*"));
 		return;
 	}
 }
@@ -394,65 +348,55 @@ void extend_file (char **file)
  *
  * split the pathspec into drive, directory, and filespec
  */
-static int
-DirParsePathspec (char *pathspec, int *drive, char **dir, char **file)
+static INT
+DirParsePathspec (LPTSTR szPathspec, LPTSTR szPath, LPTSTR szFilespec)
 {
-	TCHAR  orig_dir[MAX_PATH];
+	TCHAR  szOrigPath[MAX_PATH];
 	LPTSTR start;
 	LPTSTR tmp;
 	INT    i;
-	INT    wildcards = 0;
+	BOOL   bWildcards = FALSE;
 
+	GetCurrentDirectory (MAX_PATH, szOrigPath);
 
 	/* get the drive and change to it */
-	if (pathspec[1] == _T(':'))
+	if (szPathspec[1] == _T(':'))
 	{
-		*drive = _totupper (pathspec[0]) - _T('@');
-		start = pathspec + 2;
-		_chdrive (*drive);
+		TCHAR szRootPath[] = _T("A:");
+
+		szRootPath[0] = szPathspec[0];
+		start = szPathspec + 2;
+		SetCurrentDirectory (szRootPath);
 	}
 	else
 	{
-		*drive = _getdrive ();
-		start = pathspec;
+		start = szPathspec;
 	}
 
-	GetCurrentDirectory (MAX_PATH, orig_dir);
 
 	/* check for wildcards */
-	for (i = 0; pathspec[i]; i++)
-		if (pathspec[i] == _T('*') || pathspec[i] == _T('?'))
-			wildcards = 1;
+	for (i = 0; szPathspec[i]; i++)
+	{
+		if (szPathspec[i] == _T('*') || szPathspec[i] == _T('?'))
+			bWildcards = TRUE;
+	}
 
 	/* check if this spec is a directory */
-	if (!wildcards)
+	if (!bWildcards)
 	{
-		if (chdir(pathspec) == 0)
+		if (SetCurrentDirectory (szPathspec))
 		{
-			*file = _tcsdup (_T("*.*"));
-			if (!*file)
+			_tcscpy (szFilespec, _T("*.*"));
+
+			if (!GetCurrentDirectory (MAX_PATH, szPath))
 			{
-				MEM_ERR
+				szFilespec[0] = _T('\0');
+				SetCurrentDirectory (szOrigPath);
+				error_out_of_memory();
+				return 1;
 			}
 
-			tmp = getcwd (NULL, MAX_PATH);
-			if (!tmp)
-			{
-				free (*file);
-				chdir (orig_dir);
-				MEM_ERR
-			}
-
-			*dir = _tcsdup (&tmp[2]);
-			free (tmp);
-			if (!*dir)
-			{
-				free (*file);
-				chdir (orig_dir);
-				MEM_ERR
-			}
-
-			chdir (orig_dir);
+			SetCurrentDirectory (szOrigPath);
 			return 0;
 		}
 	}
@@ -463,69 +407,50 @@ DirParsePathspec (char *pathspec, int *drive, char **dir, char **file)
 	/* if no path is specified */
 	if (!tmp)
 	{
-		*file = _tcsdup (start);
-		extend_file (file);
-		if (!*file)
+		_tcscpy (szFilespec, start);
+		ExtendFilespec (szFilespec);
+
+		if (!GetCurrentDirectory (MAX_PATH, szPath))
 		{
-			MEM_ERR
+			szFilespec[0] = _T('\0');
+			SetCurrentDirectory (szOrigPath);
+			error_out_of_memory();
+			return 1;
 		}
 
-		tmp = getcwd (NULL, _MAX_PATH);
-		if (!tmp)
-		{
-			free (*file);
-			chdir (orig_dir);
-			MEM_ERR
-		}
-		*dir = _tcsdup (&tmp[2]);
-		free(tmp);
-		if (!*dir)
-		{
-			free (*file);
-			chdir (orig_dir);
-			MEM_ERR
-		}
-
+		SetCurrentDirectory (szOrigPath);
 		return 0;
 	}
 
 	/* get the filename */
-	*file = _tcsdup (tmp + 1);
-	extend_file (file);
-	if (!*file)
-	{
-		MEM_ERR
-	}
+	_tcscpy (szFilespec, tmp+1);
+	ExtendFilespec (szFilespec);
 
-	*tmp = 0;
+	*tmp = _T('\0');
 
 	/* change to this directory and get its full name */
-	if (chdir (start) < 0)
+	if (!SetCurrentDirectory (start))
 	{
-		error_path_not_found ();
 		*tmp = _T('\\');
-		free (*file);
-		chdir (orig_dir);
+		szFilespec[0] = _T('\0');
+		SetCurrentDirectory (szOrigPath);
+		error_path_not_found ();
 		return 1;
 	}
 
-	tmp = getcwd (NULL, _MAX_PATH);
-	if (!tmp)
+	if (!GetCurrentDirectory (MAX_PATH, szPath))
 	{
-		free (*file);
-		MEM_ERR
-	}
-	*dir = _tcsdup (&tmp[2]);
-	free(tmp);
-	if (!*dir)
-	{
-		free(*file);
-		MEM_ERR
+		*tmp = _T('\\');
+		szFilespec[0] = _T('\0');
+		SetCurrentDirectory (szOrigPath);
+		error_out_of_memory ();
+		return 1;
 	}
 
 	*tmp = _T('\\');
 
-	chdir(orig_dir);
+	SetCurrentDirectory (szOrigPath);
+
 	return 0;
 }
 
@@ -550,16 +475,16 @@ Pause (VOID)
  * increment our line if paginating, display message at end of screen
  */
 static INT
-incline (int *line, DWORD dwFlags)
+IncLine (LPINT pLine, DWORD dwFlags)
 {
 	if (!(dwFlags & DIR_PAGE))
 		return 0;
 
-	(*line)++;
+	(*pLine)++;
 
-	if (*line >= (int)maxy - 2)
+	if (*pLine >= (int)maxy - 2)
 	{
-		*line = 0;
+		*pLine = 0;
 		return Pause ();
 	}
 
@@ -573,7 +498,7 @@ incline (int *line, DWORD dwFlags)
  * print the header for the dir command
  */
 static BOOL
-PrintDirectoryHeader (int drive, int *line, DWORD dwFlags)
+PrintDirectoryHeader (LPTSTR szPath, LPINT pLine, DWORD dwFlags)
 {
 	TCHAR szRootName[] = _T("A:\\");
 	TCHAR szVolName[80];
@@ -583,7 +508,7 @@ PrintDirectoryHeader (int drive, int *line, DWORD dwFlags)
 		return TRUE;
 
 	/* get the media ID of the drive */
-	szRootName[0] = drive + _T('@');
+	szRootName[0] = szPath[0];
 	if (!GetVolumeInformation (szRootName, szVolName, 80, &dwSerialNr,
 							   NULL, NULL, NULL, 0))
 	{
@@ -599,13 +524,13 @@ PrintDirectoryHeader (int drive, int *line, DWORD dwFlags)
 	else
 		ConOutPrintf (_T(" has no label\n"));
 
-	if (incline (line, dwFlags) != 0)
+	if (IncLine (pLine, dwFlags))
 		return FALSE;
 
 	/* print the volume serial number if the return was successful */
 	ConOutPrintf (_T(" Volume Serial Number is %04X-%04X\n"),
 				  HIWORD(dwSerialNr), LOWORD(dwSerialNr));
-	if (incline (line, dwFlags) != 0)
+	if (IncLine (pLine, dwFlags))
 		return FALSE;
 
 	return TRUE;
@@ -618,7 +543,7 @@ PrintDirectoryHeader (int drive, int *line, DWORD dwFlags)
  * insert commas into a number
  */
 static INT
-ConvertLong (LONG num, LPTSTR des, INT len)
+ConvertULong (ULONG num, LPTSTR des, INT len)
 {
 	TCHAR temp[32];
 	INT c = 0;
@@ -690,16 +615,17 @@ PrintFileDateTime (LPSYSTEMTIME dt, DWORD dwFlags)
 	{
 		case 0: /* mmddyy */
 		default:
-			ConOutPrintf ("%.2d%c%.2d%c%d", dt->wMonth, cDateSeparator, dt->wDay, cDateSeparator, wYear);
+			ConOutPrintf (_T("%.2d%c%.2d%c%d"),
+					dt->wMonth, cDateSeparator, dt->wDay, cDateSeparator, wYear);
 			break;
 
 		case 1: /* ddmmyy */
-			ConOutPrintf ("%.2d%c%.2d%c%d",
+			ConOutPrintf (_T("%.2d%c%.2d%c%d"),
 					dt->wDay, cDateSeparator, dt->wMonth, cDateSeparator, wYear);
 			break;
 
 		case 2: /* yymmdd */
-			ConOutPrintf ("%d%c%.2d%c%.2d",
+			ConOutPrintf (_T("%d%c%.2d%c%.2d"),
 					wYear, cDateSeparator, dt->wMonth, cDateSeparator, dt->wDay);
 			break;
 	}
@@ -708,14 +634,14 @@ PrintFileDateTime (LPSYSTEMTIME dt, DWORD dwFlags)
 	{
 		case 0: /* 12 hour format */
 		default:
-			ConOutPrintf ("  %2d%c%.2u%c",
+			ConOutPrintf (_T("  %2d%c%.2u%c"),
 					(dt->wHour == 0 ? 12 : (dt->wHour <= 12 ? dt->wHour : dt->wHour - 12)),
 					cTimeSeparator,
 					 dt->wMinute, (dt->wHour <= 11 ? 'a' : 'p'));
 			break;
 
 		case 1: /* 24 hour format */
-			ConOutPrintf ("  %2d%c%.2u",
+			ConOutPrintf (_T("  %2d%c%.2u"),
 					dt->wHour, cTimeSeparator, dt->wMinute);
 			break;
 	}
@@ -729,33 +655,33 @@ PrintFileDateTime (LPSYSTEMTIME dt, DWORD dwFlags)
  *
  */
 static INT
-PrintSummary (int drive, long files, long dirs, ULARGE_INTEGER bytes,
-              DWORD flags, int *line)
+PrintSummary (LPTSTR szPath, ULONG ulFiles, ULONG ulDirs, ULARGE_INTEGER bytes,
+	      LPINT pLine, DWORD dwFlags)
 {
 	TCHAR buffer[64];
 
-	if (flags & DIR_BARE)
+	if (dwFlags & DIR_BARE)
 		return 0;
 
 	/* print number of files and bytes */
-	ConvertLong (files, buffer, sizeof(buffer));
+	ConvertULong (ulFiles, buffer, sizeof(buffer));
 	ConOutPrintf (_T("          %6s File%c"),
-				  buffer, files == 1 ? _T(' ') : _T('s'));
+				  buffer, ulFiles == 1 ? _T(' ') : _T('s'));
 
 	ConvertULargeInteger (bytes, buffer, sizeof(buffer));
 	ConOutPrintf (_T("  %15s byte%c\n"),
 				  buffer, bytes.QuadPart == 1 ? _T(' ') : _T('s'));
 
-	if (incline (line, flags) != 0)
+	if (IncLine (pLine, dwFlags))
 		return 1;
 
 	/* print number of dirs and bytes free */
-	ConvertLong (dirs, buffer, sizeof(buffer));
+	ConvertULong (ulDirs, buffer, sizeof(buffer));
 	ConOutPrintf (_T("          %6s Dir%c"),
-				  buffer, files == 1 ? _T(' ') : _T('s'));
+				  buffer, ulDirs == 1 ? _T(' ') : _T('s'));
 
 
-	if (!(flags & DIR_RECURSE))
+	if (!(dwFlags & DIR_RECURSE))
 	{
 		ULARGE_INTEGER uliFree;
 		TCHAR szRoot[] = _T("A:\\");
@@ -764,14 +690,14 @@ PrintSummary (int drive, long files, long dirs, ULARGE_INTEGER bytes,
 		DWORD dwFreeCl;
 		DWORD dwTotCl;
 
-		szRoot[0] = drive + _T('@');
+		szRoot[0] = szPath[0];
 		GetDiskFreeSpace (szRoot, &dwSecPerCl, &dwBytPerSec, &dwFreeCl, &dwTotCl);
-		uliFree.QuadPart = dwSecPerCl * dwBytPerSec * dwFreeCl;
+	uliFree.QuadPart = dwSecPerCl * dwBytPerSec * dwFreeCl;
 		ConvertULargeInteger (uliFree, buffer, sizeof(buffer));
 		ConOutPrintf (_T("   %15s bytes free\n"), buffer);
 	}
 
-	if (incline (line, flags) != 0)
+	if (IncLine (pLine, dwFlags))
 		return 1;
 
 	return 0;
@@ -783,39 +709,37 @@ PrintSummary (int drive, long files, long dirs, ULARGE_INTEGER bytes,
  *
  * list the files in the directory
  */
-static int
-dir_list (int drive, char *directory, char *filespec, int *line,
-          DWORD flags)
+static INT
+DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 {
-  char pathspec[_MAX_PATH],
-   *ext,
-    buffer[32];
-  WIN32_FIND_DATA file;
-  ULARGE_INTEGER bytecount;
-  long filecount = 0,
-    dircount = 0;
-  int count;
-  FILETIME   ft;
-  SYSTEMTIME dt;
-  HANDLE hFile;
+	TCHAR szFullPath[MAX_PATH];
+	WIN32_FIND_DATA file;
+	ULARGE_INTEGER bytecount;
+	FILETIME   ft;
+	SYSTEMTIME dt;
+	HANDLE hFile;
+	TCHAR  buffer[32];
+	ULONG filecount = 0;
+	ULONG dircount = 0;
+	INT count;
 
-  bytecount.QuadPart = 0;
+	bytecount.QuadPart = 0;
 
-	if (directory[strlen(directory) - 1] == '\\')
-		wsprintf(pathspec, "%c:%s%s", drive + '@', directory, filespec);
-	else
-		wsprintf(pathspec, "%c:%s\\%s", drive + '@', directory, filespec);
+	_tcscpy (szFullPath, szPath);
+	if (szFullPath[_tcslen(szFullPath) - 1] != _T('\\'))
+		_tcscat (szFullPath, _T("\\"));
+	_tcscat (szFullPath, szFilespec);
 
-	hFile = FindFirstFile (pathspec, &file);
+	hFile = FindFirstFile (szFullPath, &file);
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
 		/* Don't want to print anything if scanning recursively
 		 * for a file. RL
 		 */
-		if ((flags & DIR_RECURSE) == 0)
+		if ((dwFlags & DIR_RECURSE) == 0)
 		{
-			error_file_not_found();
-			incline(line, flags);
+			error_file_not_found ();
+			IncLine (pLine, dwFlags);
 			FindClose (hFile);
 			return 1;
 		}
@@ -823,205 +747,212 @@ dir_list (int drive, char *directory, char *filespec, int *line,
 		return 0;
 	}
 
-  /* moved down here because if we are recursively searching and
-   * don't find any files, we don't want just to print
-   * Directory of C:\SOMEDIR
-   * with nothing else
-   * Rob Lake 06/13/98
-   */
-  if ((flags & DIR_BARE) == 0)
-  {
-    ConOutPrintf (" Directory of %c:%s\n", drive + '@', directory);
-    if (incline(line, flags) != 0)
-      return 1;
-    ConOutPrintf ("\n");
-    if (incline(line, flags) != 0)
-      return 1;
-  }
-
-  /* For counting columns of output */
-  count = 0;
-
-  do
-  {
-	/* next file, if user doesn't want all files */
-	if (!(flags & DIR_ALL) &&
-		((file.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) ||
-		 (file.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM)))
-		continue;
-
-	/* begin Rob Lake */
-	if (flags & DIR_LWR)
+	/* moved down here because if we are recursively searching and
+	 * don't find any files, we don't want just to print
+	 * Directory of C:\SOMEDIR
+	 * with nothing else
+	 * Rob Lake 06/13/98
+	 */
+	if ((dwFlags & DIR_BARE) == 0)
 	{
-		strlwr(file.cAlternateFileName);
+		ConOutPrintf (_T(" Directory of %s\n"), szPath);
+		if (IncLine (pLine, dwFlags))
+			return 1;
+		ConOutPrintf (_T("\n"));
+		if (IncLine (pLine, dwFlags))
+			return 1;
 	}
 
-    if (flags & DIR_WIDE && (flags & DIR_BARE) == 0)
-    {
-      if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-      {
-		if (file.cAlternateFileName[0] == '\0')
-          wsprintf (buffer, _T("[%s]"), file.cFileName);
-		else
-          wsprintf (buffer, _T("[%s]"), file.cAlternateFileName);
-        dircount++;
-      }
-      else
-      {
-		if (file.cAlternateFileName[0] == '\0')
-          wsprintf (buffer, _T("%s"), file.cFileName);
-		else
-          wsprintf (buffer, _T("%s"), file.cAlternateFileName);
-        filecount++;
-      }
-      ConOutPrintf (_T("%-15s"), buffer);
-      count++;
-      if (count == 5)
-      {
-        /* output 5 columns */
-        ConOutPrintf ("\n");
-        if (incline(line, flags) != 0)
-          return 1;
-        count = 0;
-      }
+	/* For counting columns of output */
+	count = 0;
 
-	  /* FIXME: this is buggy - now overflow check */
-      bytecount.LowPart += file.nFileSizeLow;
-      bytecount.HighPart += file.nFileSizeHigh;
+	do
+	{
+		/* next file, if user doesn't want all files */
+		if (!(dwFlags & DIR_ALL) &&
+			((file.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) ||
+			 (file.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM)))
+			continue;
 
-      /* next block 06/17/98 */
-    }
-    else if (flags & DIR_BARE)
-    {
-      if (strcmp(file.cFileName, ".") == 0 ||
-		  strcmp(file.cFileName, "..") == 0)
-        continue;
-
-      if (flags & DIR_RECURSE)
-      {
-        TCHAR dir[MAX_PATH];
-        wsprintf (dir, _T("%c:%s\\"), drive + _T('@'), directory);
-        if (flags & DIR_LWR)
-          strlwr(dir);
-        ConOutPrintf (dir);
-      }
-      ConOutPrintf (_T("%-13s\n"), file.cFileName);
-      if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        dircount++;
-      else
-        filecount++;
-      if (incline(line, flags) != 0)
-        return 1;
-
-      /* FIXME: this is buggy - no overflow check */
-      bytecount.LowPart += file.nFileSizeLow;
-      bytecount.HighPart += file.nFileSizeHigh;
-    }
-    else
-    {
-    /* end Rob Lake */
-	  if (flags & DIR_NEW)
-	  {
-		/* print file date and time */
-		if (FileTimeToLocalFileTime (&file.ftLastWriteTime, &ft))
+		if (dwFlags & DIR_LWR)
 		{
-		  FileTimeToSystemTime (&ft, &dt);
-		  PrintFileDateTime (&dt, flags);
+			_tcslwr (file.cAlternateFileName);
 		}
 
-		/* print file size */
-		if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		{
-		  ConOutPrintf ("         <DIR>         ");
-		  dircount++;
-		}
-		else
+		if (dwFlags & DIR_WIDE && (dwFlags & DIR_BARE) == 0)
 		{
 			ULARGE_INTEGER uliSize;
 
-			uliSize.LowPart = file.nFileSizeLow;
-			uliSize.HighPart = file.nFileSizeHigh;
+			if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			{
+				if (file.cAlternateFileName[0] == _T('\0'))
+					wsprintf (buffer, _T("[%s]"), file.cFileName);
+				else
+					wsprintf (buffer, _T("[%s]"), file.cAlternateFileName);
+				dircount++;
+			}
+			else
+			{
+				if (file.cAlternateFileName[0] == _T('\0'))
+					wsprintf (buffer, _T("%s"), file.cFileName);
+				else
+					wsprintf (buffer, _T("%s"), file.cAlternateFileName);
+				filecount++;
+			}
 
-			ConvertULargeInteger (uliSize, buffer, sizeof(buffer));
-			ConOutPrintf (_T("   %20s"), buffer);
+			ConOutPrintf (_T("%-15s"), buffer);
+			count++;
+			if (count == 5)
+			{
+				/* output 5 columns */
+				ConOutPrintf (_T("\n"));
+				if (IncLine (pLine, dwFlags))
+					return 1;
+				count = 0;
+			}
 
+	    uliSize.u.LowPart += file.nFileSizeLow;
+	    uliSize.u.HighPart += file.nFileSizeHigh;
 			bytecount.QuadPart += uliSize.QuadPart;
-			filecount++;
 		}
-
-		/* print long filename */
-		ConOutPrintf (" %s\n", file.cFileName);
-	  }
-	  else
-	  {
-        if (file.cFileName[0] == '.')
-          ConOutPrintf ("%-13s ", file.cFileName);
-	    else if (file.cAlternateFileName[0] == '\0')
-		{
-          char szShortName[13];
-		  strncpy (szShortName, file.cFileName, 13);
-		  ext = strchr(szShortName, '.');
-          if (!ext)
-            ext = "";
-          else
-            *ext++ = 0;
-          ConOutPrintf ("%-8s %-3s  ", szShortName, ext);
-		}
-        else
-		{
-		  ext = strchr(file.cAlternateFileName, '.');
-          if (!ext)
-            ext = "";
-          else
-            *ext++ = 0;
-          ConOutPrintf ("%-8s %-3s  ", file.cAlternateFileName, ext);
-		}
-
-		/* print file size */
-        if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		{
-          ConOutPrintf ("%-14s", "<DIR>");
-          dircount++;
-		}
-		else
+		else if (dwFlags & DIR_BARE)
 		{
 			ULARGE_INTEGER uliSize;
 
-			uliSize.LowPart = file.nFileSizeLow;
-			uliSize.HighPart = file.nFileSizeHigh;
+			if (_tcscmp (file.cFileName, _T(".")) == 0 ||
+				_tcscmp (file.cFileName, _T("..")) == 0)
+				continue;
 
-			ConvertULargeInteger (uliSize, buffer, sizeof(buffer));
-			ConOutPrintf (_T("   %10s "), buffer);
+			if (dwFlags & DIR_RECURSE)
+			{
+				TCHAR dir[MAX_PATH];
 
+				_tcscpy (dir, szPath);
+				_tcscat (dir, _T("\\"));
+				if (dwFlags & DIR_LWR)
+					_tcslwr (dir);
+				ConOutPrintf (dir);
+			}
+
+			ConOutPrintf (_T("%-13s\n"), file.cFileName);
+			if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+				dircount++;
+			else
+				filecount++;
+			if (IncLine (pLine, dwFlags))
+				return 1;
+
+	    uliSize.u.LowPart += file.nFileSizeLow;
+	    uliSize.u.HighPart += file.nFileSizeHigh;
 			bytecount.QuadPart += uliSize.QuadPart;
-			filecount++;
 		}
-
-		/* print file date and time */
-		if (FileTimeToLocalFileTime (&file.ftLastWriteTime, &ft))
+		else
 		{
-		  FileTimeToSystemTime (&ft, &dt);
-		  PrintFileDateTime (&dt, flags);
+			if (dwFlags & DIR_NEW)
+			{
+				/* print file date and time */
+				if (FileTimeToLocalFileTime (&file.ftLastWriteTime, &ft))
+				{
+					FileTimeToSystemTime (&ft, &dt);
+					PrintFileDateTime (&dt, dwFlags);
+				}
+
+				/* print file size */
+				if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+				{
+					ConOutPrintf (_T("         <DIR>         "));
+					dircount++;
+				}
+				else
+				{
+					ULARGE_INTEGER uliSize;
+
+		    uliSize.u.LowPart = file.nFileSizeLow;
+		    uliSize.u.HighPart = file.nFileSizeHigh;
+
+					ConvertULargeInteger (uliSize, buffer, sizeof(buffer));
+					ConOutPrintf (_T("   %20s"), buffer);
+
+					bytecount.QuadPart += uliSize.QuadPart;
+					filecount++;
+				}
+
+				/* print long filename */
+				ConOutPrintf (_T(" %s\n"), file.cFileName);
+			}
+			else
+			{
+				if (file.cFileName[0] == _T('.'))
+					ConOutPrintf (_T("%-13s "), file.cFileName);
+				else if (file.cAlternateFileName[0] == _T('\0'))
+				{
+					TCHAR szShortName[13];
+					LPTSTR ext;
+
+					_tcsncpy (szShortName, file.cFileName, 13);
+					ext = _tcschr (szShortName, _T('.'));
+					if (!ext)
+						ext = _T("");
+					else
+						*ext++ = _T('\0');
+					ConOutPrintf (_T("%-8s %-3s  "), szShortName, ext);
+				}
+				else
+				{
+					LPTSTR ext;
+
+					ext = _tcschr (file.cAlternateFileName, _T('.'));
+					if (!ext)
+						ext = _T("");
+					else
+						*ext++ = _T('\0');
+					ConOutPrintf (_T("%-8s %-3s  "), file.cAlternateFileName, ext);
+				}
+
+				/* print file size */
+				if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+				{
+					ConOutPrintf ("%-14s", "<DIR>");
+					dircount++;
+				}
+				else
+				{
+					ULARGE_INTEGER uliSize;
+
+		    uliSize.u.LowPart = file.nFileSizeLow;
+		    uliSize.u.HighPart = file.nFileSizeHigh;
+
+					ConvertULargeInteger (uliSize, buffer, sizeof(buffer));
+					ConOutPrintf (_T("   %10s "), buffer);
+
+					bytecount.QuadPart += uliSize.QuadPart;
+					filecount++;
+				}
+
+				/* print file date and time */
+				if (FileTimeToLocalFileTime (&file.ftLastWriteTime, &ft))
+				{
+					FileTimeToSystemTime (&ft, &dt);
+					PrintFileDateTime (&dt, dwFlags);
+				}
+
+				/* print long filename */
+				ConOutPrintf (" %s\n", file.cFileName);
+			}
+
+			if (IncLine (pLine, dwFlags))
+				return 1;
 		}
-
-		/* print long filename */
-		ConOutPrintf (" %s\n", file.cFileName);
-	  }
-
-      if (incline(line, flags) != 0)
-        return 1;
-    }
-  }
-  while (FindNextFile (hFile, &file));
-
-  FindClose (hFile);
+	}
+	while (FindNextFile (hFile, &file));
+	FindClose (hFile);
 
 	/* Rob Lake, need to make clean output */
 	/* JPP 07/08/1998 added check for count != 0 */
-	if ((flags & DIR_WIDE) && (count != 0))
+	if ((dwFlags & DIR_WIDE) && (count != 0))
 	{
-		ConOutPrintf ("\n");
-		if (incline(line, flags) != 0)
+		ConOutPrintf (_T("\n"));
+		if (IncLine (pLine, dwFlags))
 			return 1;
 	}
 
@@ -1031,9 +962,8 @@ dir_list (int drive, char *directory, char *filespec, int *line,
 		recurse_file_cnt += filecount;
 		recurse_bytes.QuadPart += bytecount.QuadPart;
 
-		/* The code that was here is now in print_summary */
-		if (PrintSummary (drive, filecount, dircount,
-						  bytecount, flags, line) != 0)
+		/* print_summary */
+		if (PrintSummary (szPath, filecount, dircount, bytecount, pLine, dwFlags))
 			return 1;
 	}
 	else
@@ -1049,104 +979,102 @@ dir_list (int drive, char *directory, char *filespec, int *line,
 /*
  * _Read_Dir: Actual function that does recursive listing
  */
-static int
-Read_Dir (int drive, char *parent, char *filespec, int *lines,
-          DWORD flags)
+static INT
+DirRead (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 {
-  char fullpath[_MAX_PATH];
-  WIN32_FIND_DATA file;
-  HANDLE hFile;
+	TCHAR szFullPath[MAX_PATH];
+	WIN32_FIND_DATA file;
+	HANDLE hFile;
 
-  strcpy (fullpath, parent);
-  strcat (fullpath, "\\");
-  strcat (fullpath, filespec);
+	_tcscpy (szFullPath, szPath);
+	if (szFullPath[_tcslen (szFullPath) - 1] != _T('\\'))
+		_tcscat (szFullPath, _T("\\"));
+	_tcscat (szFullPath, szFilespec);
 
-  hFile = FindFirstFile (fullpath, &file);
-  if (hFile == INVALID_HANDLE_VALUE)
-    return 1;
+	hFile = FindFirstFile (szFullPath, &file);
+	if (hFile == INVALID_HANDLE_VALUE)
+		return 1;
 
-  do
-  {
-	/* don't list "." and ".." */
-    if (strcmp (file.cFileName, ".") == 0 ||
-        strcmp (file.cFileName, "..") == 0)
-      continue;
+	do
+	{
+		/* don't list "." and ".." */
+		if (_tcscmp (file.cFileName, _T(".")) == 0 ||
+			_tcscmp (file.cFileName, _T("..")) == 0)
+			continue;
 
-	if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-    {
-      if (dir_list(drive, file.cFileName, filespec, lines, flags) != 0)
-      {
-        FindClose (hFile);
-        return 1;
-      }
-      if ((flags & DIR_BARE) == 0)
-      {
-        ConOutPrintf ("\n");
-        if (incline(lines, flags) != 0)
-          return 1;
-      }
-      if (Read_Dir(drive, file.cFileName, filespec, lines, flags) == 1)
-      {
-        FindClose (hFile);
-        return 1;
-      }
-    }
-  }
-  while (FindNextFile (hFile, &file));
+		if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		{
+			if (DirList (file.cFileName, szFilespec, pLine, dwFlags))
+			{
+				FindClose (hFile);
+				return 1;
+			}
 
-  if (!FindClose (hFile))
-    return 1;
+			if ((dwFlags & DIR_BARE) == 0)
+			{
+				ConOutPrintf ("\n");
+				if (IncLine (pLine, dwFlags) != 0)
+					return 1;
+			}
 
-  return 0;
+			if (DirRead (file.cFileName, szFilespec, pLine, dwFlags) == 1)
+			{
+				FindClose (hFile);
+				return 1;
+			}
+		}
+	}
+	while (FindNextFile (hFile, &file));
+
+	if (!FindClose (hFile))
+		return 1;
+
+	return 0;
 }
 
 
 /*
  * do_recurse: Sets up for recursive directory listing
  */
-static int
-do_recurse(int drive, char *directory, char *filespec,
-           int *line, DWORD flags)
+static INT
+DirRecurse (LPTSTR szPath, LPTSTR szSpec, LPINT pLine, DWORD dwFlags)
 {
-  char cur_dir[_MAX_DIR];
+	recurse_dir_cnt = 0L;
+	recurse_file_cnt = 0L;
+	recurse_bytes.QuadPart = 0;
 
-  recurse_dir_cnt = recurse_file_cnt = 0L;
-  recurse_bytes.QuadPart = 0;
-
-  _chdrive (drive);
-  getcwd(cur_dir, sizeof(cur_dir));
-
-  if (chdir(directory) == -1)
-    return 1;
-
-	if (!PrintDirectoryHeader (drive, line, flags))
+	if (!PrintDirectoryHeader (szPath, pLine, dwFlags))
 		return 1;
 
-  if (dir_list(drive, directory, filespec, line, flags) != 0)
-    return 1;
-  if ((flags & DIR_BARE) == 0)
-  {
-    ConOutPrintf ("\n");
-    if (incline(line, flags) != 0)
-      return 1;
-  }
-  if (Read_Dir(drive, directory, filespec, line, flags) != 0)
-    return 1;
-  if ((flags & DIR_BARE) == 0)
-    ConOutPrintf ("Total files listed:\n");
-  flags &= ~DIR_RECURSE;
-
-	if (PrintSummary (drive, recurse_file_cnt,
-					  recurse_dir_cnt, recurse_bytes, flags, line) != 0)
+	if (DirList (szPath, szSpec, pLine, dwFlags))
 		return 1;
 
-	if ((flags & DIR_BARE) == 0)
+	if ((dwFlags & DIR_BARE) == 0)
 	{
-		ConOutPrintf ("\n");
-		if (incline(line, flags) != 0)
+		ConOutPrintf (_T("\n"));
+		if (IncLine (pLine, dwFlags))
 			return 1;
 	}
-	chdir(cur_dir);
+
+	if (DirRead (szPath, szSpec, pLine, dwFlags))
+		return 1;
+
+	if ((dwFlags & DIR_BARE) == 0)
+		ConOutPrintf (_T("Total files listed:\n"));
+
+	dwFlags &= ~DIR_RECURSE;
+
+	if (PrintSummary (szPath, recurse_file_cnt,
+					  recurse_dir_cnt, recurse_bytes, pLine, dwFlags))
+		return 1;
+
+	if ((dwFlags & DIR_BARE) == 0)
+	{
+		ConOutPrintf (_T("\n"));
+		if (IncLine (pLine, dwFlags))
+			return 1;
+	}
+
 	return 0;
 }
 
@@ -1158,15 +1086,12 @@ do_recurse(int drive, char *directory, char *filespec,
  */
 INT cmd_dir (LPTSTR first, LPTSTR rest)
 {
-	DWORD dwFlags = DIR_NEW | DIR_FOUR;
-  char *param;
-	TCHAR dircmd[256];
-  int line = 0;
-  int drive,
-    orig_drive;
-  char *directory,
-   *filespec,
-    orig_dir[_MAX_DIR];
+	DWORD  dwFlags = DIR_NEW | DIR_FOUR;
+	TCHAR  dircmd[256];
+	TCHAR  szPath[MAX_PATH];
+	TCHAR  szFilespec[MAX_PATH];
+	LPTSTR param;
+	INT    nLine = 0;
 
 
 	/* read the parameters from the DIRCMD environment variable */
@@ -1184,39 +1109,26 @@ INT cmd_dir (LPTSTR first, LPTSTR rest)
 	if (!param)
 		param = ".";
 
-	if (strchr(param, '/'))
-		param = strtok (param, "/");
-
-	/* save the current directory info */
-	orig_drive = _getdrive ();
-	getcwd(orig_dir, sizeof(orig_dir));
+	if (_tcschr (param, _T('/')))
+		param = _tcstok (param, _T("/"));
 
 	/* parse the directory info */
-	if (DirParsePathspec (param, &drive, &directory, &filespec) != 0)
-	{
-		_chdrive (orig_drive);
-		chdir(orig_dir);
+	if (DirParsePathspec (param, szPath, szFilespec))
 		return 1;
-	}
 
 	if (dwFlags & DIR_RECURSE)
 	{
-		incline(&line, dwFlags);
-		if (do_recurse (drive, directory, filespec, &line, dwFlags) != 0)
+		IncLine (&nLine, dwFlags);
+		if (DirRecurse (szPath, szFilespec, &nLine, dwFlags))
 			return 1;
-		_chdrive (orig_drive);
-		chdir (orig_dir);
 		return 0;
 	}
 
 	/* print the header */
-	if (!PrintDirectoryHeader (drive, &line, dwFlags))
+	if (!PrintDirectoryHeader (szPath, &nLine, dwFlags))
 		return 1;
 
-	chdir (orig_dir);
-	_chdrive (orig_drive);
-
-	if (dir_list (drive, directory, filespec, &line, dwFlags) != 0)
+	if (DirList (szPath, szFilespec, &nLine, dwFlags))
 		return 1;
 
 	return 0;

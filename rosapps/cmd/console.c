@@ -8,12 +8,13 @@
  *        started
  */
 
-
-
-#define WIN32_LEAN_AND_MEAN
+#include "config.h"
 
 #include <windows.h>
 #include <tchar.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
 
 #include "cmd.h"
 
@@ -33,7 +34,7 @@ VOID DebugPrintf (LPTSTR szFormat, ...)
 	va_list arg_ptr;
 
 	va_start (arg_ptr, szFormat);
-	wvsprintf (szOut, szFormat, arg_ptr);
+	_vstprintf (szOut, szFormat, arg_ptr);
 	va_end (arg_ptr);
 
 	OutputDebugString (szOut);
@@ -134,7 +135,7 @@ VOID ConOutPrintf (LPTSTR szFormat, ...)
 	va_list arg_ptr;
 
 	va_start (arg_ptr, szFormat);
-	wvsprintf (szOut, szFormat, arg_ptr);
+	_vstprintf (szOut, szFormat, arg_ptr);
 	va_end (arg_ptr);
 
 	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), szOut, _tcslen(szOut), &dwWritten, NULL);
@@ -165,7 +166,7 @@ VOID ConErrPrintf (LPTSTR szFormat, ...)
 	va_list arg_ptr;
 
 	va_start (arg_ptr, szFormat);
-	wvsprintf (szOut, szFormat, arg_ptr);
+	_vstprintf (szOut, szFormat, arg_ptr);
 	va_end (arg_ptr);
 
 	WriteFile (GetStdHandle (STD_ERROR_HANDLE), szOut, _tcslen(szOut), &dwWritten, NULL);
@@ -174,10 +175,7 @@ VOID ConErrPrintf (LPTSTR szFormat, ...)
 
 
 
-/*
- * goxy -- move the cursor on the screen.
- */
-VOID goxy (SHORT x, SHORT y)
+VOID SetCursorXY (SHORT x, SHORT y)
 {
 	COORD coPos;
 
@@ -187,7 +185,18 @@ VOID goxy (SHORT x, SHORT y)
 }
 
 
-SHORT wherex (VOID)
+VOID GetCursorXY (PSHORT x, PSHORT y)
+{
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+	GetConsoleScreenBufferInfo (GetStdHandle (STD_OUTPUT_HANDLE), &csbi);
+
+	*x = csbi.dwCursorPosition.X;
+	*y = csbi.dwCursorPosition.Y;
+}
+
+
+SHORT GetCursorX (VOID)
 {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
@@ -197,7 +206,7 @@ SHORT wherex (VOID)
 }
 
 
-SHORT wherey (VOID)
+SHORT GetCursorY (VOID)
 {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
@@ -228,46 +237,4 @@ VOID SetCursorType (BOOL bInsert, BOOL bVisible)
 	cci.bVisible = bVisible;
 
 	SetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE), &cci);
-}
-
-
-
-VOID InitializePageOut (VOID)
-{
-	sLineCount = 0;
-
-	if (GetFileType (GetStdHandle (STD_OUTPUT_HANDLE)) == FILE_TYPE_CHAR)
-	{
-		bPageable = TRUE;
-		GetScreenSize (NULL, &sMaxLines);
-	}
-	else
-	{
-		bPageable = FALSE;
-	}
-}
-
-
-VOID TerminatePageOut (VOID)
-{
-
-
-}
-
-
-
-int LinePageOut (LPTSTR szLine)
-{
-	ConOutPuts (szLine);
-
-	if (bPageable)
-	{
-		sLineCount++;
-		if (sLineCount >= sMaxLines)
-		{
-			sLineCount = 0;
-			cmd_pause ("", "");
-		}
-	}
-	return 0;
 }

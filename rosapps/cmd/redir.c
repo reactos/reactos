@@ -22,8 +22,6 @@
  *        Added new error AND output redirection "&>" and "&>>".
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "config.h"
 
 #ifdef FEATURE_REDIRECTION

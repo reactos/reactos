@@ -28,8 +28,6 @@
  *        Fixed date input bug.
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "config.h"
 
 #ifdef INCLUDE_CMD_DATE
@@ -52,7 +50,7 @@ static WORD awMonths[2][13] =
 static VOID
 PrintDate (VOID)
 {
-#if 0
+#ifdef __REACTOS__
 	SYSTEMTIME st;
 
 	GetLocalTime (&st);
@@ -75,12 +73,13 @@ PrintDate (VOID)
 					  aszDayNames[st.wDayOfWeek], st.wYear, cDateSeparator, st.wMonth, cDateSeparator, st.wDay);
 			break;
 	}
-#endif
+#else
 	TCHAR szDate[32];
 
 	GetDateFormat (LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL,
 				   szDate, sizeof (szDate));
 	ConOutPrintf (_T("Current date is: %s\n"), szDate);
+#endif
 }
 
 
@@ -195,7 +194,7 @@ ParseDate (LPTSTR s)
 			break;
 	}
 
-	/* if only entered two digits:
+    /* if only entered two digits: */
 	/*   assume 2000's if value less than 80 */
 	/*   assume 1900's if value greater or equal 80 */
 	if (d.wYear <= 99)

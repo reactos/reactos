@@ -18,8 +18,6 @@
  *        Replaced CRT io functions by Win32 io functions.
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "config.h"
 
 #ifdef INCLUDE_CMD_COPY
@@ -51,8 +49,8 @@ typedef struct tagFILES
 
 
 static BOOL DoSwitches (LPTSTR, LPDWORD);
-static BOOL AddFile (LPFILES, char *, int *, int *, unsigned *);
-static BOOL AddFiles (LPFILES, char *, int *, int *, int *, unsigned *);
+static BOOL AddFile (LPFILES, char *, int *, int *, LPDWORD);
+static BOOL AddFiles (LPFILES, char *, int *, int *, int *, LPDWORD);
 static BOOL GetDestination (LPFILES, LPFILES);
 static INT  ParseCommand (LPFILES, int, char **, LPDWORD);
 static VOID DeleteFileList (LPFILES);
@@ -60,7 +58,8 @@ static INT  Overwrite (LPTSTR);
 
 
 
-static BOOL IsDirectory (LPTSTR fn)
+static BOOL
+IsDirectory (LPTSTR fn)
 {
 	if (!IsValidFileName (fn))
 		return FALSE;
@@ -68,7 +67,8 @@ static BOOL IsDirectory (LPTSTR fn)
 }
 
 
-static BOOL DoSwitches (LPTSTR arg, LPDWORD lpdwFlags)
+static BOOL
+DoSwitches (LPTSTR arg, LPDWORD lpdwFlags)
 {
 	if (!_tcsicmp (arg, _T("/-Y")))
 	{
@@ -112,7 +112,7 @@ static BOOL DoSwitches (LPTSTR arg, LPDWORD lpdwFlags)
 
 
 static BOOL
-AddFile (LPFILES f, char *arg, int *source, int *dest, unsigned *flags)
+AddFile (LPFILES f, char *arg, int *source, int *dest, LPDWORD flags)
 {
 	if (*dest)
 	{
@@ -145,7 +145,7 @@ AddFile (LPFILES f, char *arg, int *source, int *dest, unsigned *flags)
 
 static BOOL
 AddFiles (LPFILES f, char *arg, int *source, int *dest,
-		  int *count, unsigned *flags)
+		  int *count, LPDWORD flags)
 {
 	char t[128];
 	int j;
@@ -202,7 +202,8 @@ AddFiles (LPFILES f, char *arg, int *source, int *dest,
 }
 
 
-static BOOL GetDestination (LPFILES f, LPFILES dest)
+static BOOL
+GetDestination (LPFILES f, LPFILES dest)
 {
 	LPFILES p;
 	LPFILES start = f;

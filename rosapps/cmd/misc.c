@@ -26,16 +26,13 @@
  *        FileGetString() seems to be working now.
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "config.h"
 
 #include <windows.h>
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
-
-#include <conio.h>
+#include <ctype.h>
 
 #include "cmd.h"
 
@@ -45,32 +42,36 @@
  */
 TCHAR cgetchar (VOID)
 {
-	TCHAR ch;
-#if 0
-	DWORD dwRead;
-	DWORD dwOldMode;
-	HANDLE hIn;
+	HANDLE hInput = GetStdHandle (STD_INPUT_HANDLE);
+	INPUT_RECORD irBuffer;
+	DWORD  dwRead;
 
-	hIn = GetStdHandle (STD_INPUT_HANDLE);
-	ConInSwallowInput (hIn);
+	do
+	{
+		WaitForSingleObject (hInput, INFINITE);
+		ReadConsoleInput (hInput, &irBuffer, 1, &dwRead);
+		if ((irBuffer.EventType == KEY_EVENT) &&
+			(irBuffer.Event.KeyEvent.bKeyDown == TRUE))
+		{
+			if ((irBuffer.Event.KeyEvent.dwControlKeyState &
+				 (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) &
+				(irBuffer.Event.KeyEvent.wVirtualKeyCode == 'C'))
+				bCtrlBreak = TRUE;
 
-	GetConsoleMode (hIn, &dwOldMode);
-	SetConsoleMode (hIn, 0);
+			break;
+		}
+	}
+	while (TRUE);
 
-	ReadConsole (hIn, &ch, 1, &dwRead, NULL);
-
-	DebugPrintf ("[cgetchar (0x%x) \'%c\']\n", ch, ch);
-
-	SetConsoleMode (hIn, dwOldMode);
-#endif
-
-	if ((ch = getch()) == 0)
-		ch = getch() << 8;
-
-	if (ch == 3)
-		bCtrlBreak = TRUE;
-
-	return ch;
+#ifdef __REACTOS__
+	return irBuffer.Event.KeyEvent.AsciiChar;
+#else
+#ifndef _UNICODE
+	return irBuffer.Event.KeyEvent.uChar.AsciiChar;
+#else
+	return irBuffer.Event.KeyEvent.uChar.UnicodeChar;
+#endif /* _UNICODE */
+#endif /* __REACTOS__ */
 }
 
 
@@ -265,6 +266,11 @@ BOOL IsValidFileName (LPCTSTR pszPath)
 	return (GetFileAttributes (pszPath) != 0xFFFFFFFF);
 }
 
+
+BOOL IsValidDirectory (LPCTSTR pszPath)
+{
+	return (GetFileAttributes (pszPath) & FILE_ATTRIBUTE_DIRECTORY);
+}
 
 
 BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)

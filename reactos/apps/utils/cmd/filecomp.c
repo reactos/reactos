@@ -13,14 +13,13 @@
  *       Cleanup. Unicode safe!
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "config.h"
 
 #include <windows.h>
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "cmd.h"
 
@@ -31,7 +30,6 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 {
 	WIN32_FIND_DATA file;
 	HANDLE hFile;
-
 	INT   curplace = 0;
 	INT   start;
 	INT   count;
@@ -70,11 +68,11 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 	_tcscpy (path, &str[start]);
 
 	/* look for a '.' in the filename */
-	for (count = _tcslen (directory); path[count] != 0; count++)
+	for (count = _tcslen (directory); path[count] != _T('\0'); count++)
 	{
 		if (path[count] == _T('.'))
 		{
-			found_dot = 1;
+			found_dot = TRUE;
 			break;
 		}
 	}
@@ -94,7 +92,8 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 		do
 		{
 			/* ignore "." and ".." */
-			if (file.cFileName[0] == _T('.'))
+			if (!_tcscmp (file.cFileName, _T(".")) || 
+				!_tcscmp (file.cFileName, _T("..")))
 				continue;
 
 			_tcscpy (fname, file.cFileName);
@@ -129,12 +128,20 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 		_tcscat (&str[start], maxmatch);
 
 		if (!perfectmatch)
+#ifdef __REACTOS__
+			Beep (440, 50);
+#else
 			MessageBeep (-1);
+#endif
 	}
 	else
 	{
 		/* no match found */
+#ifdef __REACTOS__
+		Beep (440, 50);
+#else
 		MessageBeep (-1);
+#endif
 	}
 }
 
@@ -173,7 +180,8 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 	/* extract directory from word */
 	_tcscpy (directory, &str[start]);
 	curplace = _tcslen (directory) - 1;
-	while (curplace >= 0 && directory[curplace] != _T('\\') &&
+	while (curplace >= 0 &&
+		   directory[curplace] != _T('\\') &&
 		   directory[curplace] != _T(':'))
 	{
 		directory[curplace] = 0;
@@ -183,7 +191,7 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 	_tcscpy (path, &str[start]);
 
 	/* look for a . in the filename */
-	for (count = _tcslen (directory); path[count] != 0; count++)
+	for (count = _tcslen (directory); path[count] != _T('\0'); count++)
 	{
 		if (path[count] == _T('.'))
 		{
@@ -191,6 +199,7 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 			break;
 		}
 	}
+
 	if (found_dot)
 		_tcscat (path, _T("*"));
 	else
@@ -208,7 +217,8 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 		do
 		{
 			/* ignore . and .. */
-			if (file.cFileName[0] == _T('.'))
+			if (!_tcscmp (file.cFileName, _T(".")) || 
+				!_tcscmp (file.cFileName, _T("..")))
 				continue;
 
 			if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -233,7 +243,11 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 	else
 	{
 		/* no match found */
+#ifdef __REACTOS__
+		Beep (440, 50);
+#else
 		MessageBeep (-1);
+#endif
 		return FALSE;
 	}
 
