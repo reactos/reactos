@@ -1,3 +1,4 @@
+Users
 *.sys
 *.exe
 *.dll
@@ -14,3 +15,4 @@
 *.sym
 *.plg
 *.bak
+*.map
