@@ -1,4 +1,4 @@
-/* $Id: scrollbar.c,v 1.17 2003/09/24 13:41:40 weiden Exp $
+/* $Id: scrollbar.c,v 1.18 2003/09/25 21:16:56 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -141,43 +141,73 @@ DbgPrint("[SCROLL_DrawInterior:%d]\n", nBar);
   
   psbi->xyThumbTop -= arrowSize;
 
-  if (vertical)
+  if(psbi->dxyLineButton)
   {
-    PatBlt (hdc,
-            rc.left,
-            rc.top,
-            rc.right - rc.left,
-            psbi->dxyLineButton,
-            top_selected ? 0x0f0000 : PATCOPY);
-    rc.top += psbi->xyThumbTop;
-    PatBlt (hdc,
-            rc.left,
-            rc.top + thumbSize,
-            rc.right - rc.left,
-            rc.bottom - rc.top - thumbSize,
-            bottom_selected ? 0x0f0000 : PATCOPY);
-    rc.bottom = rc.top + thumbSize;
-  }
-  else
-  {
-    PatBlt (hdc,
-            rc.left,
-            rc.top,
-            psbi->xyThumbTop,
-            rc.bottom - rc.top,
-            top_selected ? 0x0f0000 : PATCOPY);
-    rc.left += psbi->xyThumbTop;
-    PatBlt (hdc,
-            rc.left + thumbSize,
-            rc.top,
-            rc.right - rc.left - thumbSize,
-            rc.bottom - rc.top,
-            bottom_selected ? 0x0f0000 : PATCOPY);
-    rc.right = rc.left + thumbSize;
+      if (vertical)
+      {
+        if(thumbSize)
+        {
+          PatBlt (hdc,
+                  rc.left,
+                  rc.top,
+                  rc.right - rc.left,
+                  psbi->xyThumbTop,
+                  top_selected ? 0x0f0000 : PATCOPY);
+          rc.top += psbi->xyThumbTop;
+          PatBlt (hdc,
+                  rc.left,
+                  rc.top + thumbSize,
+                  rc.right - rc.left,
+                  rc.bottom - rc.top - thumbSize,
+                  bottom_selected ? 0x0f0000 : PATCOPY);
+          rc.bottom = rc.top + thumbSize;
+        }
+        else
+        {
+          if(psbi->xyThumbTop)
+              PatBlt (hdc,
+                      rc.left,
+                      psbi->dxyLineButton,
+                      rc.right - rc.left,
+                      rc.bottom - rc.bottom,
+                      PATCOPY);
+        }
+      }
+      else
+      {
+        if(thumbSize)
+        {
+          PatBlt (hdc,
+                  rc.left,
+                  rc.top,
+                  psbi->xyThumbTop,
+                  rc.bottom - rc.top,
+                  top_selected ? 0x0f0000 : PATCOPY);
+          rc.left += psbi->xyThumbTop;
+          PatBlt (hdc,
+                  rc.left + thumbSize,
+                  rc.top,
+                  rc.right - rc.left - thumbSize,
+                  rc.bottom - rc.top,
+                  bottom_selected ? 0x0f0000 : PATCOPY);
+          rc.right = rc.left + thumbSize;
+        }
+        else
+        {
+          if(psbi->xyThumbTop)
+              PatBlt (hdc,
+                      psbi->dxyLineButton,
+                      rc.top,
+                      rc.right - rc.left,
+                      rc.bottom - rc.top,
+                      PATCOPY);
+        }
+      }
   }
 
   /* Draw the thumb */
-  DrawEdge (hdc, &rc, EDGE_RAISED, BF_RECT | BF_MIDDLE);
+  if(thumbSize)
+    DrawEdge (hdc, &rc, EDGE_RAISED, BF_RECT | BF_MIDDLE);
 
   /* cleanup */
   SelectObject (hdc, hSavePen);
@@ -281,10 +311,7 @@ SCROLL_DrawScrollBar (HWND hwnd, HDC hdc, INT nBar,
   
   thumbSize = info.xyThumbBottom - info.xyThumbTop;
 
-  if (vertical)
-    arrowSize = GetSystemMetrics(SM_CXVSCROLL);
-  else
-    arrowSize = GetSystemMetrics(SM_CYHSCROLL);
+  arrowSize = info.dxyLineButton;
 
   if (IsRectEmpty (&(info.rcScrollBar))) goto END;
 
