@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.104 2003/06/07 12:17:19 chorns Exp $
+/* $Id: registry.c,v 1.105 2003/06/16 13:56:30 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -495,7 +495,7 @@ CmiCreateCurrentControlSetLink(VOID)
 
   NtClose(KeyHandle);
 
-  return(Status);
+  return Status;
 }
 
 
@@ -509,8 +509,8 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   NTSTATUS Status;
   PWSTR SubName;
 
-  DPRINT("CmiConnectHive(%p, %wZ) called.\n",
-	 RegistryHive, KeyName);
+  DPRINT("CmiConnectHive(%p, %p) called.\n",
+	 KeyObjectAttributes, RegistryHive);
 
   Status = ObFindObject(KeyObjectAttributes,
 			(PVOID*)&ParentKey,
@@ -541,7 +541,8 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
       return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
-  DPRINT("RemainingPath %S  ParentObject %x\n", RemainingPath.Buffer, Object);
+  DPRINT("RemainingPath %S  ParentObject %x\n",
+	 RemainingPath.Buffer, Object);
 
   Status = ObRosCreateObject(NULL,
 			  STANDARD_RIGHTS_REQUIRED,
@@ -550,7 +551,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 			  (PVOID*)&NewKey);
   if (!NT_SUCCESS(Status))
     {
-      return(Status);
+      return Status;
     }
 
   if (!NT_SUCCESS(Status))
@@ -573,7 +574,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
       DPRINT("NumberOfSubKeys %d\n", NewKey->KeyCell->NumberOfSubKeys);
       ObDereferenceObject (NewKey);
       ObDereferenceObject (ParentKey);
-      return(STATUS_INSUFFICIENT_RESOURCES);
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
 
   Status = RtlCreateUnicodeString(&NewKey->Name,
