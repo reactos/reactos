@@ -429,17 +429,17 @@ VfatFormat(
   /* Calculate cluster size */
   if (ClusterSize == 0)
     {
-      if (PartitionInfo.PartitionLength.QuadPart < 8ULL * 1024ULL * 1024ULL)
+      if (PartitionInfo.PartitionLength.QuadPart < 8ULL * 1024ULL * 1024ULL * 1024ULL)
 	{
 	  /* Partition < 8GB ==> 4KB Cluster */
 	  ClusterSize = 4096;
 	}
-      else if (PartitionInfo.PartitionLength.QuadPart < 16ULL * 1024ULL * 1024ULL)
+      else if (PartitionInfo.PartitionLength.QuadPart < 16ULL * 1024ULL * 1024ULL * 1024ULL)
 	{
 	  /* Partition 8GB - 16GB ==> 8KB Cluster */
 	  ClusterSize = 8192;
 	}
-      else if (PartitionInfo.PartitionLength.QuadPart < 32ULL * 1024ULL * 1024ULL)
+      else if (PartitionInfo.PartitionLength.QuadPart < 32ULL * 1024ULL * 1024ULL * 1024ULL)
 	{
 	  /* Partition 16GB - 32GB ==> 16KB Cluster */
 	  ClusterSize = 16384;
