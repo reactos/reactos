@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: gradient.c,v 1.5 2004/02/24 13:27:02 weiden Exp $
+/* $Id: gradient.c,v 1.6 2004/03/21 10:18:33 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -274,7 +274,7 @@ IntEngGradientFillRect(
   FINITCOL(linefrom, lineto, 2); \
   for(g = sx[linefrom]; g != sx[lineto]; g += gxi) \
   { \
-    if(g >= FillRect.left && g < FillRect.right) \
+    if(InY && g >= FillRect.left && g < FillRect.right) \
     { \
       Color = XLATEOBJ_iXlate(pxlo, RGB(gc[0], gc[1], gc[2])); \
       OutputGDI->DIB_PutPixel(OutputObj, g, sy, Color); \
@@ -383,6 +383,8 @@ IntEngGradientFillTriangle(
       {
         if(NtGdiIntersectRect(&FillRect, &RectEnum.arcl[i], prclExtents))
         {
+          BOOL InY;
+          
           DOINIT(v1, v3, 0);
           DOINIT(v1, v2, 1);
           DOINIT(v2, v3, 2);
@@ -393,6 +395,7 @@ IntEngGradientFillTriangle(
           
           while(sy < bt)
           {
+            InY = !(sy < FillRect.top || sy >= FillRect.bottom);
             GOLINE(v1, v3, 0);
             DOLINE(v1, v3, 0);
             ENDLINE(v1, v3, 0);
