@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.45 2000/03/09 16:01:24 ekohl Exp $
+; $Id: ntdll.def,v 1.46 2000/03/12 01:17:23 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -232,16 +232,16 @@ RtlAbsoluteToSelfRelativeSD@12
 RtlAcquirePebLock@0
 ;RtlAcqureResourceExclusive
 ;RtlAcqureResourceShared
-;RtlAddAccessAllowedAce
+RtlAddAccessAllowedAce@16
 ;RtlAddAccessDeniedAce
-;RtlAddAce
+RtlAddAce@20
 ;RtlAddActionToRXact
 ;RtlAtomToAtomTable
 ;RtlAddAttributeActionToRXact
 ;RtlAddAuditAccessToAce
 ;RtlAddCompoundAce
 ;RtlAdjustPrivilege
-;RtlAllocateAndInitializeSid
+RtlAllocateAndInitializeSid@44
 ;RtlAllocateHandle
 RtlAllocateHeap@12
 RtlAnsiCharToUnicodeChar@4
@@ -280,11 +280,11 @@ RtlConvertUlongToLargeInteger@4
 ;RtlCopyLuid
 ;RtlCopyLuidAndAttributesArray
 ;RtlCopySecurityDescriptor
-;RtlCopySid
+RtlCopySid@12
 ;RtlCopySidAndAttributesArray
 RtlCopyString@8
 RtlCopyUnicodeString@8
-;RtlCreateAcl
+RtlCreateAcl@12
 ;RtlCreateAndSetSD
 ;RtlCreateAtomTable
 RtlCreateEnvironment@8
@@ -298,7 +298,7 @@ RtlCreateSecurityDescriptor@8
 RtlCreateUnicodeString@8
 RtlCreateUnicodeStringFromAsciiz@8
 RtlCreateUserProcess@40
-;RtlCreateuserSecurityObject
+;RtlCreateUserSecurityObject
 RtlCreateUserThread@40
 ;RtlCustomCPToUnicodeN
 ;RtlCutoverTimeToSystemTime
@@ -338,8 +338,8 @@ RtlEnterCriticalSection@4
 ;RtlEqualComputerName
 ;RtlEqualDomainName
 ;RtlEqualLuid
-;RtlEqualPrefixSid
-;RtlEqualSid
+RtlEqualPrefixSid@8
+RtlEqualSid@8
 RtlEqualString@12
 RtlEqualUnicodeString@12
 RtlEraseUnicodeString@4
@@ -357,7 +357,7 @@ RtlFindLongestRunSet@8
 ;RtlFindMessage
 RtlFindSetBits@12
 RtlFindSetBitsAndClear@12
-;RtlFirstFreeAce
+RtlFirstFreeAce@8
 ;RtlFlushPropertySet
 ;RtlFormatCurrentUserKeyPath
 ;RtlFormatMessage
@@ -365,14 +365,14 @@ RtlFreeAnsiString@4
 ;RtlFreeHandle
 RtlFreeHeap@12
 RtlFreeOemString@4
-;RtlFreeSid
+RtlFreeSid@4
 RtlFreeUnicodeString@4
 ;RtlFreeUserThreadStack
 ;RtlGenerate8dot3Name
 ;RtlGetAce
 ;RtlGetCallersAddress
 ;RtlGetCompressionWorkSpaceSize
-;RtlGetControlSecurityDescriptor
+RtlGetControlSecurityDescriptor@12
 RtlGetCurrentDirectory_U@8
 RtlGetDaclSecurityDescriptor@16
 ;RtlGetElementGenericTable
@@ -387,7 +387,7 @@ RtlGetProcessHeap@0
 ;RtlGetSaclSecurityDescriptor
 ;RtlGetUserInfoHeap
 ;RtlGuidToPropertySetName
-;RtlIdentifierAuthoritySid
+RtlIdentifierAuthoritySid@4
 ;RtlImageDirectoryEntryToData
 ;RtlImageNtHeader
 ;RtlImageRvaToSection
@@ -406,7 +406,7 @@ RtlInitializeCriticalSection@4
 ;RtlInitializeHandleTable
 ;RtlInitializeRXact
 ;RtlInitializeResource
-;RtlInitializeSid
+RtlInitializeSid@12
 ;RtlInsertElementGenericTable
 RtlIntegerToChar@16
 RtlIntegerToUnicodeString@12
@@ -425,9 +425,9 @@ RtlLargeIntegerShiftRight@12
 RtlLargeIntegerSubtract@16
 ;RtlLargeIntegerToChar
 RtlLeaveCriticalSection@4
-;RtlLengthRequiredSid
+RtlLengthRequiredSid@4
 RtlLengthSecurityDescriptor@4
-;RtlLengthSid
+RtlLengthSid@4
 ;RtlLocalTimeToSystemTime
 RtlLockHeap@4
 ;RtlLookupAtomInAtomTable
@@ -507,8 +507,8 @@ RtlSetOwnerSecurityDescriptor@12
 RtlSizeHeap@12
 ;RtlSplay
 ;RtlStartRXact
-;RtlSubAuthorityCountSid
-;RtlSubAuthoritySid
+RtlSubAuthorityCountSid@4
+RtlSubAuthoritySid@8
 ;RtlSubtreePredecessor
 ;RtlSubtreeSuccessor
 ;RtlSystemTimeToLocalTime
@@ -544,7 +544,7 @@ RtlUpperString@8
 ;RtlUsageHeap
 ;RtlValidAcl
 RtlValidSecurityDescriptor@4
-;RtlValidSid
+RtlValidSid@4
 RtlValidateHeap@12
 ;RtlValidateProcessHeaps
 ;RtlWalkHeap

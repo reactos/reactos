@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.1 2000/02/05 16:08:49 ekohl Exp $
+/* $Id: sd.c,v 1.2 2000/03/12 01:17:59 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -275,16 +275,54 @@ NTSTATUS STDCALL RtlGetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDes
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL RtlAbsoluteToSelfRelativeSD (PSECURITY_DESCRIPTOR AbsSD,
-				     PSECURITY_DESCRIPTOR RelSD,
-				     PULONG BufferLength)
+
+NTSTATUS
+STDCALL
+RtlMakeSelfRelativeSD (
+	PSECURITY_DESCRIPTOR	AbsSD,
+	PSECURITY_DESCRIPTOR	RelSD,
+	PULONG			BufferLength
+	)
 {
-   if (AbsSD->Control & 0x8000)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
+
    UNIMPLEMENTED;
+
 }
 
+
+NTSTATUS
+STDCALL
+RtlAbsoluteToSelfRelativeSD (
+	PSECURITY_DESCRIPTOR	AbsSD,
+	PSECURITY_DESCRIPTOR	RelSD,
+	PULONG			BufferLength
+	)
+{
+	if (AbsSD->Control & SE_SELF_RELATIVE)
+	{
+		return STATUS_BAD_DESCRIPTOR_FORMAT;
+	}
+
+	return (RtlMakeSelfRelativeSD (AbsSD, RelSD, BufferLength));
+}
+
+
+NTSTATUS
+STDCALL
+RtlGetControlSecurityDescriptor (
+	PSECURITY_DESCRIPTOR		SecurityDescriptor,
+	PSECURITY_DESCRIPTOR_CONTROL	Control,
+	PULONG				Revision
+	)
+{
+	*Revision = SecurityDescriptor->Revision;
+
+	if (SecurityDescriptor->Revision != 1)
+		return STATUS_UNKNOWN_REVISION;
+
+	*Control = SecurityDescriptor->Control;
+
+	return STATUS_SUCCESS;
+}
 
 /* EOF */

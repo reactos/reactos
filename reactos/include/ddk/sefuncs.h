@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_SEFUNCS_H
 #define _INCLUDE_DDK_SEFUNCS_H
-/* $Id: sefuncs.h,v 1.5 2000/01/26 10:07:22 dwelch Exp $ */
+/* $Id: sefuncs.h,v 1.6 2000/03/12 01:18:18 ekohl Exp $ */
 NTSTATUS STDCALL RtlCreateSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, ULONG Revision);
 BOOLEAN STDCALL RtlValidSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor);
 ULONG STDCALL RtlLengthSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor);
@@ -13,7 +13,10 @@ NTSTATUS STDCALL RtlGetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDes
 ULONG STDCALL RtlLengthRequiredSid (UCHAR SubAuthorityCount);
 NTSTATUS STDCALL RtlInitializeSid (PSID Sid, PSID_IDENTIFIER_AUTHORITY IdentifierAuthority, UCHAR SubAuthorityCount);
 PULONG STDCALL RtlSubAuthoritySid (PSID Sid, ULONG SubAuthority);
+NTSTATUS STDCALL RtlCopySid (ULONG BufferLength, PSID Dest, PSID Src);
 BOOLEAN STDCALL RtlEqualSid(PSID Sid1, PSID Sid2);
+ULONG STDCALL RtlLengthSid (PSID Sid);
+BOOLEAN STDCALL RtlValidSid (PSID Sid);
 NTSTATUS STDCALL RtlAbsoluteToSelfRelativeSD (PSECURITY_DESCRIPTOR AbsSD, PSECURITY_DESCRIPTOR RelSD, PULONG BufferLength);
 BOOLEAN STDCALL SeAccessCheck (IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 		      IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
