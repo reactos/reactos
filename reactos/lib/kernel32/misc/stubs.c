@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.92 2004/09/23 21:01:23 ea Exp $
+/* $Id: stubs.c,v 1.93 2004/10/04 19:17:58 gvg Exp $
  *
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.
@@ -256,77 +256,6 @@ GetNextVDMCommand (
 {
     STUB;
     return 0;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetStringTypeExW (
-    LCID    Locale,
-    DWORD   dwInfoType,
-    LPCWSTR lpSrcStr,
-    int cchSrc,
-    LPWORD  lpCharType
-    )
-{
-    STUB;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetStringTypeExA (
-    LCID    Locale,
-    DWORD   dwInfoType,
-    LPCSTR  lpSrcStr,
-    int cchSrc,
-    LPWORD  lpCharType
-    )
-{
-    STUB;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetStringTypeW (
-    DWORD   dwInfoType,
-    LPCWSTR lpSrcStr,
-    int cchSrc,
-    LPWORD  lpCharType
-    )
-{
-    STUB;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetStringTypeA (
-    LCID    Locale,
-    DWORD   dwInfoType,
-    LPCSTR  lpSrcStr,
-    int cchSrc,
-    LPWORD  lpCharType
-    )
-{
-    STUB;
-    return FALSE;
 }
 
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.86 2004/09/23 18:02:19 weiden Exp $
+# $Id: makefile,v 1.87 2004/10/04 19:17:58 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -11,13 +11,13 @@ TARGET_NAME = kernel32
 TARGET_BASE = $(TARGET_BASE_LIB_KERNEL32)
 
 # require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror
+TARGET_CFLAGS += -D_DISABLE_TIDENTS -D_SEH_NO_NATIVE_NLG -Wall -Werror
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_RCFLAGS += -DWINVER=0x0500
 
-TARGET_SDKLIBS = rosrtl.a ntdll.a kernel32.a
+TARGET_SDKLIBS = pseh.a rosrtl.a ntdll.a kernel32.a
 
 TARGET_GCCLIBS = gcc
 
@@ -34,7 +34,8 @@ MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o \
                misc/stubs.o misc/lang.o misc/ldr.o misc/res.o \
                misc/sysinfo.o misc/profile.o \
                misc/muldiv.o misc/nls.o misc/computername.o \
-               misc/perfcnt.o misc/lzexpand_main.o misc/lcformat.o
+               misc/perfcnt.o misc/lzexpand_main.o misc/lcformat.o \
+               misc/chartype.o
                
 
 FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
