@@ -1688,7 +1688,7 @@ typedef IShellExecuteHookA IShellExecuteHook;
 typedef IShellLinkA IShellLink;
 typedef BROWSEINFOA BROWSEINFO,*PBROWSEINFO,*LPBROWSEINFO;
 #define SHBrowseForFolder SHBrowseForFolderA
-#define SHCLSIDFromString SHCLSIDFromStringW
+#define SHCLSIDFromString SHCLSIDFromStringA
 #define SHGetDataFromIDList SHGetDataFromIDListA
 #define SHGetPathFromIDList SHGetPathFromIDListA
 #if (_WIN32_IE >= 0x0400)
