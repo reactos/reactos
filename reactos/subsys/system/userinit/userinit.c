@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: userinit.c,v 1.4 2004/08/17 21:47:36 weiden Exp $
+/* $Id: userinit.c,v 1.5 2004/08/17 21:49:51 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Userinit Logon Application
@@ -124,12 +124,12 @@ void SetUserSettings(void)
                        &Size) == ERROR_SUCCESS
        && Type == REG_SZ)
     {
-      /* Change the wallpaper */
+      /* Load and change the wallpaper */
       SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, szWallpaper, SPIF_SENDCHANGE);
     }
     else
     {
-      /* Set the default wallpaper */
+      /* remove the wallpaper */
       SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, NULL, SPIF_SENDCHANGE);
     }
     RegCloseKey(hKey);
