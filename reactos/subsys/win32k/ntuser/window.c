@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.213 2004/04/13 16:55:54 weiden Exp $
+/* $Id: window.c,v 1.214 2004/04/13 18:40:00 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1344,21 +1344,45 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   CBT_CREATEWNDW CbtCreate;
   LRESULT Result;
   BOOL MenuChanged;
+  LPWSTR OrigWindowName = NULL;
 
   DPRINT("NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
   
+  /* safely copy the window name */
   if(lpWindowName)
   {
-    Status = IntSafeCopyUnicodeString(&WindowName, lpWindowName);
+    Status = MmCopyFromCaller(&WindowName, lpWindowName, sizeof(UNICODE_STRING));
     if (!NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
       return((HWND)0);
     }
+    if(WindowName.Buffer)
+    {
+      /* safe the original pointer to the window name */
+      OrigWindowName = WindowName.Buffer;
+      
+      if(!(WindowName.Buffer = ExAllocatePoolWithTag(NonPagedPool, WindowName.MaximumLength, TAG_STRING)))
+      {
+        SetLastNtError(STATUS_NO_MEMORY);
+        return((HWND)0);
+      }
+      
+      Status = MmCopyFromCaller(WindowName.Buffer, OrigWindowName, WindowName.MaximumLength);
+      if(!NT_SUCCESS(Status))
+      {
+        ExFreePool(WindowName.Buffer);
+        SetLastNtError(Status);
+        return((HWND)0);
+      }
+    }
+    
+    if(!WindowName.Buffer)
+      RtlInitUnicodeString(&WindowName, NULL);
   }
   else
     RtlInitUnicodeString(&WindowName, NULL);
-
+  
   ParentWindowHandle = PsGetWin32Thread()->Desktop->DesktopWindow;
   OwnerWindowHandle = NULL;
 
@@ -1580,7 +1604,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   Cs.x = x;
   Cs.y = y;
   Cs.style = dwStyle;
-  Cs.lpszName = lpWindowName->Buffer;
+  Cs.lpszName = OrigWindowName; /* pass the original pointer to usermode! */
   Cs.lpszClass = lpClassName->Buffer;
   Cs.dwExStyle = dwExStyle;
   CbtCreate.lpcs = &Cs;
