@@ -121,47 +121,50 @@ NtIsProcessInJob(IN HANDLE ProcessHandle,
   if(NT_SUCCESS(Status))
   {
     /* FIXME - make sure the job object doesn't get exchanged or deleted while trying to
-               reference it, e.g. by locking it somehow... */
+               reference it, e.g. by locking it somehow until it is referenced... */
 
     PEJOB ProcessJob = Process->Job;
-
-    /* reference the object without caring about access rights as it does not necessarily
-       have to be accessible from the calling process */
-    Status = ObReferenceObjectByPointer(ProcessJob,
-                                        0,
-                                        PsJobType,
-                                        KernelMode);
-    if(NT_SUCCESS(Status))
+    
+    if(ProcessJob != NULL)
     {
-      if(JobHandle == NULL)
+      /* reference the object without caring about access rights as it does not necessarily
+         have to be accessible from the calling process */
+      Status = ObReferenceObjectByPointer(ProcessJob,
+                                          0,
+                                          PsJobType,
+                                          KernelMode);
+      if(NT_SUCCESS(Status))
       {
-        /* simply test whether the process is assigned to a job */
-        Status = ((Process->Job != NULL) ? STATUS_PROCESS_IN_JOB : STATUS_PROCESS_NOT_IN_JOB);
-      }
-      else if(ProcessJob != NULL)
-      {
-        PEJOB JobObject;
-
-        /* get the job object and compare the object pointer with the one assigned to the process */
-        Status = ObReferenceObjectByHandle(JobHandle,
-                                           JOB_OBJECT_QUERY,
-                                           PsJobType,
-                                           PreviousMode,
-                                           (PVOID*)&JobObject,
-                                           NULL);
-        if(NT_SUCCESS(Status))
+        if(JobHandle == NULL)
         {
-          Status = ((ProcessJob == JobObject) ? STATUS_PROCESS_IN_JOB : STATUS_PROCESS_NOT_IN_JOB);
-          ObDereferenceObject(JobObject);
+          /* simply test whether the process is assigned to a job */
+          Status = ((ProcessJob != NULL) ? STATUS_PROCESS_IN_JOB : STATUS_PROCESS_NOT_IN_JOB);
         }
+        else /* JobHandle != NULL */
+        {
+          PEJOB JobObject;
+
+          /* get the job object and compare the object pointer with the one assigned to the process */
+          Status = ObReferenceObjectByHandle(JobHandle,
+                                             JOB_OBJECT_QUERY,
+                                             PsJobType,
+                                             PreviousMode,
+                                             (PVOID*)&JobObject,
+                                             NULL);
+          if(NT_SUCCESS(Status))
+          {
+            Status = ((ProcessJob == JobObject) ? STATUS_PROCESS_IN_JOB : STATUS_PROCESS_NOT_IN_JOB);
+            ObDereferenceObject(JobObject);
+          }
+        }
+
+        ObDereferenceObject(ProcessJob);
       }
-      else
-      {
-        /* the process is not assigned to any job */
-        Status = STATUS_PROCESS_NOT_IN_JOB;
-      }
-      
-      ObDereferenceObject(ProcessJob);
+    }
+    else
+    {
+      /* the process is not assigned to any job */
+      Status = STATUS_PROCESS_NOT_IN_JOB;
     }
     ObDereferenceObject(Process);
   }
