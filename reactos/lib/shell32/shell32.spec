@@ -182,6 +182,10 @@
  188 stub ShellDDEInit
  189 stdcall ILCreateFromPathA(str)
  190 stdcall ILCreateFromPathW(wstr)
+ 191 stub SHUpdateImageA
+ 192 stdcall SHUpdateImageW(wstr long long long)
+ 193 stub SHHandleUpdateImage
+ 194 stub SHCreatePropSheetExtArrayEx
  195 stdcall SHFree(ptr)
  196 stdcall SHAlloc(long)
  197 stub SHGlobalDefect
