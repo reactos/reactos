@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.21 2001/03/15 18:49:17 dwelch Exp $
+# $Id: Makefile,v 1.22 2001/03/15 22:13:50 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -573,13 +573,13 @@ ke/main.o: ke/main.c ../include/reactos/buildno.h
 include $(D1_FILES)
 
 .%.d: %.c depends$(EXE_POSTFIX)
-	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) > $@ 
+	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) $@
 
 .%.d: %.s
-	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) > $@ 
+	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) $@ 
 
 .%.d: %.S
-	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) > $@
+	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) $@
 
 include $(PATH_TO_TOP)/rules.mak
 

@@ -9,14 +9,21 @@ int main(int argc, char* argv[])
   unsigned int i;
   char* dot;
   char* prefix;
+  FILE* out;
 
-  if (argc == 1)
+  if (argc != 3)
     {
-      prefix = "";
+      printf("Too few arguments\n");
+      return(1);
     }
-  else
+
+  prefix = strdup(argv[1]);
+  
+  out = fopen(argv[2], "wb");
+  if (out == NULL)
     {
-      prefix = strdup(argv[1]);
+      printf("Unable to open output file\n");
+      return(1);
     }
 
   i = 0;
@@ -37,11 +44,11 @@ int main(int argc, char* argv[])
     {
       *dot = 0;
     }
-  fprintf(stdout, "%s/.%s.d %s/%s.o:", prefix, buf, prefix,buf);
+  fprintf(out, "%s/.%s.d %s/%s.o:", prefix, buf, prefix,buf);
 
   while ((ch = fgetc(stdin)) != EOF)
     {
-      fputc(ch, stdout);
+      fputc(ch, out);
     }
 
   return(0);
