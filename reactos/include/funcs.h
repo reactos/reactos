@@ -903,7 +903,13 @@ InterlockedExchange(
 		    LPLONG Target,
 		    LONG Value
 		    );
-
+PVOID 
+STDCALL 
+InterlockedCompareExchange(
+	    PVOID *Destination, 
+	    PVOID Exchange,     
+            PVOID Comperand     );
+  
 WINBOOL
 STDCALL
 FreeResource(
