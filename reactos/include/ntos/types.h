@@ -160,13 +160,12 @@ typedef union _LARGE_INTEGER
 
 typedef union _ULARGE_INTEGER
 {
-#ifdef ANONYMOUSUNIONS
   struct
   {
     DWORD LowPart;
     DWORD HighPart;
-  };
-#else
+  } u;
+#ifdef ANONYMOUSUNIONS
   struct
   {
     DWORD LowPart;
