@@ -390,7 +390,7 @@ static int default_dbg_vlog( int cls, const char *channel, const char *func,
     if (cls < sizeof(debug_classes)/sizeof(debug_classes[0]))
         ret += wine_dbg_printf( "%s:%s:%s ", debug_classes[cls], channel + 1, func );
     if (format)
-        ret += __wine_dbg_vprintf( format, args );
+        ret += wine_dbg_vprintf( format, args );
     return ret;
 }
 

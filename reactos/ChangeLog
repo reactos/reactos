@@ -1,3 +1,13 @@
+2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* drivers/fs/vfat/misc.c (VfatLockControl): Move it so it is placed
+	before it is referenced.
+	* include/win32k/ntuser.h (NtUserQueryWindow): Correct prototype.
+	* lib/winedbgc/debug.c (default_dbg_vlog): Use wine_dbg_vprintf, not
+	__wine_dbg_vprintf.
+	* ntoskrnl/nt/vdm.c (NtEarlyInitVdm): Work around GCC 3.4 trying to be
+	smart.
+
 2003-07-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* lib/user32/windows/defwnd.c (DefWndHandleLButtonUpNC,

@@ -25,11 +25,13 @@ static UCHAR OrigBDA[256];
 VOID
 NtEarlyInitVdm(VOID)
 {
+  PVOID start = (PVOID)0x0;
+  
   /*
    * Save various BIOS data tables. At this point the lower 4MB memory
    * map is still active so we can just copy the data from low memory.
    */
-  memcpy(OrigIVT, (PVOID)0x0, 1024);
+  memcpy(OrigIVT, start, 1024);
   memcpy(OrigBDA, (PVOID)0x400, 256);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.7 2003/02/13 22:24:17 hbirr Exp $
+/* $Id: misc.c,v 1.8 2003/07/10 11:03:51 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -21,6 +21,46 @@
 /* FUNCTIONS ****************************************************************/
 
 static LONG QueueCount = 0;
+
+NTSTATUS VfatLockControl(
+   IN PVFAT_IRP_CONTEXT IrpContext
+   )
+{
+   PVFATFCB Fcb;
+   NTSTATUS Status;
+
+   DPRINT("VfatLockControl(IrpContext %x)\n", IrpContext);
+ 
+   assert(IrpContext);
+
+   Fcb = (PVFATFCB)IrpContext->FileObject->FsContext;
+
+   if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
+   {
+      Status = STATUS_INVALID_DEVICE_REQUEST;
+      goto Fail;
+   }
+
+   if (Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
+   {
+      Status = STATUS_INVALID_PARAMETER;
+      goto Fail;
+   }
+
+   Status = FsRtlProcessFileLock(&Fcb->FileLock,
+                                 IrpContext->Irp,
+                                 NULL
+                                 );
+
+   VfatFreeIrpContext(IrpContext);
+   return Status;
+
+Fail:;
+   IrpContext->Irp->IoStatus.Status = Status;
+   IofCompleteRequest(IrpContext->Irp, NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);
+   VfatFreeIrpContext(IrpContext);
+   return Status;
+}
 
 NTSTATUS VfatDispatchRequest (
         IN PVFAT_IRP_CONTEXT IrpContext)
@@ -64,46 +104,6 @@ NTSTATUS VfatDispatchRequest (
          VfatFreeIrpContext(IrpContext);
          return STATUS_DRIVER_INTERNAL_ERROR;
    }
-}
-
-NTSTATUS VfatLockControl(
-   IN PVFAT_IRP_CONTEXT IrpContext
-   )
-{
-   PVFATFCB Fcb;
-   NTSTATUS Status;
-
-   DPRINT("VfatLockControl(IrpContext %x)\n", IrpContext);
- 
-   assert(IrpContext);
-
-   Fcb = (PVFATFCB)IrpContext->FileObject->FsContext;
-
-   if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
-   {
-      Status = STATUS_INVALID_DEVICE_REQUEST;
-      goto Fail;
-   }
-
-   if (Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
-   {
-      Status = STATUS_INVALID_PARAMETER;
-      goto Fail;
-   }
-
-   Status = FsRtlProcessFileLock(&Fcb->FileLock,
-                                 IrpContext->Irp,
-                                 NULL
-                                 );
-
-   VfatFreeIrpContext(IrpContext);
-   return Status;
-
-Fail:;
-   IrpContext->Irp->IoStatus.Status = Status;
-   IofCompleteRequest(IrpContext->Irp, NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);
-   VfatFreeIrpContext(IrpContext);
-   return Status;
 }
 
 NTSTATUS STDCALL VfatBuildRequest (
