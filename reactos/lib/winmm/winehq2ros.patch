@@ -1,6 +1,10 @@
-diff -u /c/source/wine/dlls/winmm/lolvldrv.c winmm/lolvldrv.c
---- /c/source/wine/dlls/winmm/lolvldrv.c	Wed Feb 25 18:47:36 2004
-+++ winmm/lolvldrv.c	Tue Feb 17 01:15:52 2004
+Index: lolvldrv.c
+===================================================================
+RCS file: /home/wine/wine/dlls/winmm/lolvldrv.c,v
+retrieving revision 1.55
+diff -u -r1.55 lolvldrv.c
+--- lolvldrv.c	31 Dec 2003 23:49:45 -0000	1.55
++++ lolvldrv.c	12 Mar 2004 21:27:34 -0000
 @@ -497,10 +497,12 @@
      case DRV_QUERYDEVICEINTERFACESIZE:
          return MMDRV_Message(mld, uMsg, dwParam1, dwParam2, TRUE);
@@ -14,21 +18,34 @@ diff -u /c/source/wine/dlls/winmm/lolvldrv.c winmm/lolvldrv.c
  
      default:
  	WARN("Unknown call %04x\n", uMsg);
-@@ -741,8 +743,9 @@
+@@ -741,11 +743,18 @@
  static BOOL	MMDRV_InitHardcoded(void)
  {
      /* first load hardware drivers */
 +#ifndef __REACTOS__
      MMDRV_Install("wineoss.drv",   	"wineoss.drv",	FALSE);
--
 +#endif /* __REACTOS__ */
++
++#ifdef __REACTOS__
++    // AG: TESTING:
++    MMDRV_Install("mmdrv.dll", "mmdrv.dll", FALSE);
++#endif
+ 
      /* finish with mappers */
-     MMDRV_Install("wavemapper",	   	"msacm.drv",	TRUE);
-     MMDRV_Install("midimapper",   	"midimap.drv",	TRUE);
-
-diff -u /c/source/wine/dlls/winmm/time.c winmm/time.c
---- /c/source/wine/dlls/winmm/time.c	Mon Jan 12 16:03:10 2004
-+++ winmm/time.c	Sun Feb 15 16:55:10 2004
+-    MMDRV_Install("wavemapper",	   	"msacm.drv",	TRUE);
+-    MMDRV_Install("midimapper",   	"midimap.drv",	TRUE);
++    MMDRV_Install("wavemapper",     "msacm32.dll",    TRUE);
++    MMDRV_Install("midimapper",     "midimap.dll",  TRUE);
+ 
+     return TRUE;
+ }
+Index: time.c
+===================================================================
+RCS file: /home/wine/wine/dlls/winmm/time.c,v
+retrieving revision 1.26
+diff -u -r1.26 time.c
+--- time.c	12 Jan 2004 21:03:10 -0000	1.26
++++ time.c	12 Mar 2004 21:27:34 -0000
 @@ -175,14 +175,19 @@
      volatile HANDLE *pActive = (volatile HANDLE *)&TIME_hMMTimer;
      DWORD last_time, cur_time;
@@ -49,10 +66,13 @@ diff -u /c/source/wine/dlls/winmm/time.c winmm/time.c
      }
      return 0;
  }
-
-diff -u /c/source/wine/dlls/winmm/winmm.c winmm/winmm.c
---- /c/source/wine/dlls/winmm/winmm.c	Wed Feb 25 14:28:52 2004
-+++ winmm/winmm.c	Sun Feb 15 22:58:58 2004
+Index: winmm.c
+===================================================================
+RCS file: /home/wine/wine/dlls/winmm/winmm.c,v
+retrieving revision 1.33
+diff -u -r1.33 winmm.c
+--- winmm.c	27 Feb 2004 21:29:32 -0000	1.33
++++ winmm.c	12 Mar 2004 21:27:36 -0000
 @@ -125,10 +125,12 @@
          loaded = -1;
          if (h)

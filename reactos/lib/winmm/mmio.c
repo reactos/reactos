@@ -389,41 +389,47 @@ static LRESULT	send_message(struct IOProcList* ioProc, LPMMIOINFO mmioinfo,
  */
 static FOURCC MMIO_ParseExtA(LPCSTR szFileName)
 {
-    /* Filenames are of the form file.ext+ABC
-       FIXME: What if a '+' is part of the file name?
-       For now, we take the last '+' present */
+    /* Filenames are of the form file.ext{+ABC}
+       For now, we take the last '+' if present */
 
     FOURCC ret = 0;
 
     /* Note that ext{Start,End} point to the . and + respectively */
     LPSTR extEnd;
+    LPSTR extStart;
 
     TRACE("(%s)\n", debugstr_a(szFileName));
 
     if (!szFileName)
 	return ret;
-    extEnd = strrchr(szFileName,'+');
-    if (extEnd) {
-	/* Need to parse to find the extension */
-	LPSTR extStart;
 
-	extStart = extEnd;
-	while (extStart >= szFileName && extStart[0] != '.') {
-	    extStart--;
-	}
+    /* Find the last '.' */
+    extStart = strrchr(szFileName,'.');
 
-	if (extStart < szFileName) {
-	    ERR("+ but no . in szFileName: %s\n", debugstr_a(szFileName));
-	} else {
-	    CHAR ext[5];
+    if (!extStart) {
+         ERR("No . in szFileName: %s\n", debugstr_a(szFileName));
+    } else {
+        CHAR ext[5];
 
-	    if (extEnd - extStart - 1 > 4)
-		WARN("Extension length > 4\n");
-	    lstrcpynA(ext, extStart + 1, min(extEnd-extStart,5));
-	    TRACE("Got extension: %s\n", debugstr_a(ext));
-	    /* FOURCC codes identifying file-extensions must be uppercase */
-	    ret = mmioStringToFOURCCA(ext, MMIO_TOUPPER);
-	}
+        /* Find the '+' afterwards */
+        extEnd = strchr(extStart,'+');
+        if (extEnd) {
+
+            if (extEnd - extStart - 1 > 4)
+                WARN("Extension length > 4\n");
+            lstrcpynA(ext, extStart + 1, min(extEnd-extStart,5));
+
+        } else {
+            /* No + so just an extension */
+            if (strlen(extStart) > 4) {
+                WARN("Extension length > 4\n");
+            }
+            lstrcpynA(ext, extStart + 1, 5);
+        }
+        TRACE("Got extension: %s\n", debugstr_a(ext));
+
+        /* FOURCC codes identifying file-extensions must be uppercase */
+        ret = mmioStringToFOURCCA(ext, MMIO_TOUPPER);
     }
     return ret;
 }
