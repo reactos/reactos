@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: binhive.c,v 1.8 2003/11/14 17:13:36 weiden Exp $
+/* $Id: binhive.c,v 1.9 2004/01/08 14:57:17 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/binhive.c
@@ -260,9 +260,21 @@ typedef struct _REGISTRY_HIVE
 /* FUNCTIONS ****************************************************************/
 
 static VOID
-CmiCreateDefaultHiveHeader(PHIVE_HEADER Header)
+memexpand (PWCHAR Dst,
+	   PCHAR Src,
+	   ULONG Length)
 {
-  assert(Header);
+  ULONG i;
+
+  for (i = 0; i < Length; i++)
+    Dst[i] = (WCHAR)Src[i];
+}
+
+
+static VOID
+CmiCreateDefaultHiveHeader (PHIVE_HEADER Header)
+{
+  assert (Header);
   memset (Header, 0, REG_BLOCK_SIZE);
   Header->BlockId = REG_HIVE_ID;
   Header->UpdateCounter1 = 0;
@@ -283,7 +295,7 @@ CmiCreateDefaultHiveHeader(PHIVE_HEADER Header)
 static VOID
 CmiCreateDefaultBinCell(PHBIN BinCell)
 {
-  assert(BinCell);
+  assert (BinCell);
   memset (BinCell, 0, REG_BLOCK_SIZE);
   BinCell->BlockId = REG_BIN_ID;
   BinCell->DateModified = 0ULL;
@@ -292,11 +304,20 @@ CmiCreateDefaultBinCell(PHBIN BinCell)
 
 
 static VOID
-CmiCreateDefaultRootKeyCell(PKEY_CELL RootKeyCell)
+CmiCreateDefaultRootKeyCell(PKEY_CELL RootKeyCell, PCHAR KeyName)
 {
-  assert(RootKeyCell);
-  memset (RootKeyCell, 0, sizeof(KEY_CELL));
-  RootKeyCell->CellSize = -sizeof(KEY_CELL);
+  PCHAR BaseKeyName;
+  ULONG NameSize;
+  ULONG CellSize;
+
+  assert (RootKeyCell);
+
+  BaseKeyName = strrchr(KeyName, '\\') + 1;
+  NameSize = strlen(BaseKeyName);
+  CellSize = ROUND_UP(sizeof(KEY_CELL) + NameSize - 1, 16);
+
+  memset (RootKeyCell, 0, CellSize);
+  RootKeyCell->CellSize = -CellSize;
   RootKeyCell->Id = REG_KEY_CELL_ID;
   RootKeyCell->Type = REG_ROOT_KEY_CELL_TYPE;
   RootKeyCell->LastWriteTime = 0ULL;
@@ -307,13 +328,16 @@ CmiCreateDefaultRootKeyCell(PKEY_CELL RootKeyCell)
   RootKeyCell->ValueListOffset = -1;
   RootKeyCell->SecurityKeyOffset = 0;
   RootKeyCell->ClassNameOffset = -1;
-  RootKeyCell->NameSize = 0;
+  RootKeyCell->NameSize = NameSize;
   RootKeyCell->ClassSize = 0;
+  memcpy (RootKeyCell->Name,
+	  BaseKeyName,
+	  NameSize);
 }
 
 
 static PREGISTRY_HIVE
-CmiCreateRegistryHive (VOID)
+CmiCreateRegistryHive (PCHAR KeyName)
 {
   PREGISTRY_HIVE Hive;
   PCELL_HEADER FreeCell;
@@ -336,7 +360,7 @@ CmiCreateRegistryHive (VOID)
       free (Hive);
       return NULL;
     }
-  CmiCreateDefaultHiveHeader(Hive->HiveHeader);
+  CmiCreateDefaultHiveHeader (Hive->HiveHeader);
   Hive->FileSize = REG_BLOCK_SIZE;
 
   /* Allocate block list */
@@ -384,20 +408,20 @@ CmiCreateRegistryHive (VOID)
 
   /* Init first bin */
   BinCell = (PHBIN)Hive->BlockList[0];
-  CmiCreateDefaultBinCell(BinCell);
+  CmiCreateDefaultBinCell (BinCell);
   BinCell->BlockOffset = 0;
 
   /* Init root key cell */
   RootKeyCell = (PKEY_CELL)((ULONG_PTR)BinCell + REG_HBIN_DATA_OFFSET);
-  CmiCreateDefaultRootKeyCell(RootKeyCell);
+  CmiCreateDefaultRootKeyCell (RootKeyCell, KeyName);
   Hive->HiveHeader->RootKeyOffset = REG_HBIN_DATA_OFFSET;
 
   /* Init free cell */
-  FreeCell = (PCELL_HEADER)((ULONG_PTR)RootKeyCell + sizeof(KEY_CELL));
-  FreeCell->CellSize = REG_BLOCK_SIZE - (REG_HBIN_DATA_OFFSET + sizeof(KEY_CELL));
+  FreeCell = (PCELL_HEADER)((ULONG_PTR)RootKeyCell - RootKeyCell->CellSize);
+  FreeCell->CellSize = REG_BLOCK_SIZE - (REG_HBIN_DATA_OFFSET - RootKeyCell->CellSize);
 
   Hive->FreeList[0] = FreeCell;
-  Hive->FreeListOffset[0] = REG_HBIN_DATA_OFFSET + sizeof(KEY_CELL);
+  Hive->FreeListOffset[0] = REG_HBIN_DATA_OFFSET - RootKeyCell->CellSize;
   Hive->FreeListSize++;
 
   return Hive;
@@ -970,18 +994,6 @@ CmiAddValueToKeyValueList(PREGISTRY_HIVE Hive,
 }
 
 
-static VOID
-memexpand (PWCHAR Dst,
-	   PCHAR Src,
-	   ULONG Length)
-{
-  ULONG i;
-
-  for (i = 0; i < Length; i++)
-    Dst[i] = (WCHAR)Src[i];
-}
-
-
 static BOOL
 CmiExportValue (PREGISTRY_HIVE Hive,
 		BLOCK_OFFSET KeyCellOffset,
@@ -1249,7 +1261,7 @@ CmiExportHive (PREGISTRY_HIVE Hive,
 			NULL);
   if (KeyCell == NULL)
     {
-      DPRINT1 ("CmiGetBlock() failed\n");
+      DPRINT1 ("CmiGetCell() failed\n");
       return FALSE;
     }
 
@@ -1375,7 +1387,7 @@ ExportBinaryHive (PCHAR FileName,
 
   printf ("  Creating binary hive: %s\n", FileName);
 
-  Hive = CmiCreateRegistryHive ();
+  Hive = CmiCreateRegistryHive (KeyName);
   if (Hive == NULL)
     return FALSE;
 
