@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 2003/02/02 19:24:16 hyperion Exp $
+# $Id: makefile,v 1.11 2003/04/14 01:19:07 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -26,10 +26,12 @@ TARGET_OBJECTS = \
   misc/event.o misc/handle.o misc/ns.o \
   misc/sndrcv.o misc/stubs.o misc/upcall.o
 
+DEP_OBJECTS = $(TARGET_OBJECTS)
+
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
 
-TARGET_CLEAN = misc/*.o
+include $(TOOLS_PATH)/depend.mk
 
 # EOF

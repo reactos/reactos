@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.25 2003/03/20 03:02:07 mtempel Exp $
+# $Id: makefile,v 1.26 2003/04/14 01:19:06 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -18,23 +18,28 @@ TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
 
-TARGET_OBJECTS = $(TARGET_NAME).o
+MAIN_OBJECTS = main/dllmain.o
 
-TARGET_CLEAN = main/*.o misc/*.o objects/*.o
+MISC_OBJECTS = misc/stubs.o misc/stubsa.o misc/stubsw.o misc/win32k.o
+
+OBJECTS_OBJECTS = \
+ objects/dc.o \
+ objects/line.o \
+ objects/pen.o \
+ objects/bitblt.o \
+ objects/text.o \
+ objects/region.o \
+ objects/brush.o \
+ objects/fillshap.o
+
+TARGET_OBJECTS = $(MAIN_OBJECTS) $(MISC_OBJECTS) $(OBJECTS_OBJECTS)
+
+DEP_OBJECTS = $(TARGET_OBJECTS)
 
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
 
-MAIN_OBJECTS = main/dllmain.o
-
-MISC_OBJECTS = misc/stubs.o misc/stubsa.o misc/stubsw.o misc/win32k.o
-
-OBJECTS_OBJECTS = objects/dc.o objects/line.o objects/pen.o objects/bitblt.o objects/text.o objects/region.o objects/brush.o objects/fillshap.o
-
-OBJECTS = $(MAIN_OBJECTS) $(MISC_OBJECTS) $(OBJECTS_OBJECTS)
-
-$(TARGET_NAME).o: $(OBJECTS)
-	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o
+include $(TOOLS_PATH)/depend.mk
 
 # EOF

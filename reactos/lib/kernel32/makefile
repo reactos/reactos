@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.62 2003/04/02 00:23:12 hyperion Exp $
+# $Id: makefile,v 1.63 2003/04/14 01:19:06 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -98,10 +98,13 @@ TARGET_OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
 
 #$(NLS_OBJECTS)
 
+DEP_OBJECTS = $(TARGET_OBJECTS)
 
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
+
+include $(TOOLS_PATH)/depend.mk
 
 $(TARGET_NAME).coff: errcodes.rc
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 2003/04/13 03:24:26 hyperion Exp $
+# $Id: makefile,v 1.7 2003/04/14 01:19:07 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -20,8 +20,12 @@ TARGET_OBJECTS = \
 	misc/stubs.o \
 	misc/win32.o
 	
+DEP_OBJECTS = $(TARGET_OBJECTS)
+
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
+
+include $(TOOLS_PATH)/depend.mk
 
 # EOF

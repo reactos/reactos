@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.17 2003/04/13 03:24:26 hyperion Exp $
+# $Id: makefile,v 1.18 2003/04/14 01:19:06 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -24,10 +24,14 @@ TARGET_OBJECTS = \
 	init.o \
 	label.o \
 	media.o 
-	
+
+DEP_OBJECTS = $(TARGET_OBJECTS)
+
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
+
+include $(TOOLS_PATH)/depend.mk
 
 TARGET_FILES = misc/*.o
 

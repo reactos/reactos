@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2003/02/02 19:24:16 hyperion Exp $
+# $Id: Makefile,v 1.12 2003/04/14 01:19:07 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -18,14 +18,6 @@ TARGET_CFLAGS = \
  -fno-builtin
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
-
-TARGET_OBJECTS = $(TARGET_NAME).o
-
-TARGET_CLEAN = controls/*.o misc/*.o windows/*.o
-
-include $(PATH_TO_TOP)/rules.mak
-
-include $(TOOLS_PATH)/helper.mk
 
 CONTROLS_OBJECTS = \
 	controls/combobox.o \
@@ -72,12 +64,17 @@ WINDOWS_OBJECTS = \
 	windows/rect.o \
 	windows/text.o
 
-OBJECTS = \
+TARGET_OBJECTS = \
   $(MISC_OBJECTS) \
   $(WINDOWS_OBJECTS) \
   $(CONTROLS_OBJECTS)
 
-$(TARGET_NAME).o: $(OBJECTS)
-	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o
+DEP_OBJECTS = $(TARGET_OBJECTS)
+
+include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
+
+include $(TOOLS_PATH)/depend.mk
 
 # EOF

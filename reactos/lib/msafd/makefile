@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.8 2003/02/02 19:24:15 hyperion Exp $
+# $Id: makefile,v 1.9 2003/04/14 01:19:07 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -20,23 +20,18 @@ TARGET_CFLAGS = \
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_OBJECTS = $(TARGET_NAME).o 
+MISC_OBJECTS = \
+  misc/dllmain.o misc/event.o misc/helpers.o \
+  misc/sndrcv.o misc/stubs.o
 
-TARGET_CLEAN = misc/*.o
+TARGET_OBJECTS = $(MISC_OBJECTS)
 
+DEP_OBJECTS = $(TARGET_OBJECTS)
 
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
 
-
-MISC_OBJECTS = \
-  misc/dllmain.o misc/event.o misc/helpers.o \
-  misc/sndrcv.o misc/stubs.o
-
-OBJECTS = $(MISC_OBJECTS)
-
-$(TARGET_NAME).o: $(OBJECTS)
-	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o
+include $(TOOLS_PATH)/depend.mk
 
 # EOF

@@ -619,9 +619,9 @@ typedef struct _QUOTA_LIMITS
 // Information class 2
 typedef struct _IO_COUNTERS
 {
-	ULONG ReadOperationCount;
-	ULONG WriteOperationCount;
-	ULONG OtherOperationCount;
+	LARGE_INTEGER ReadOperationCount;
+	LARGE_INTEGER WriteOperationCount;
+	LARGE_INTEGER OtherOperationCount;
 	LARGE_INTEGER ReadTransferCount;
 	LARGE_INTEGER WriteTransferCount;
 	LARGE_INTEGER OtherTransferCount;

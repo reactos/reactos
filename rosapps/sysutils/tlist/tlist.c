@@ -1,4 +1,4 @@
-/* $Id: tlist.c,v 1.3 2003/03/31 21:03:42 hyperion Exp $
+/* $Id: tlist.c,v 1.4 2003/04/14 01:19:08 hyperion Exp $
  *
  * ReactOS Project
  * TList
@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+
+#include <epsapi.h>
 
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 4096
@@ -33,7 +35,31 @@ LPWSTR ThreadStateName [] =
   NULL
 };
 
+void *PsaiMalloc(SIZE_T size)
+{
+ void * pBuf = NULL;
+ NTSTATUS nErrCode;
 
+ nErrCode = NtAllocateVirtualMemory
+ (
+  NtCurrentProcess(),
+  &pBuf,
+  0,
+  (PULONG)&size,
+  MEM_COMMIT,
+  PAGE_READWRITE
+ );
+
+ if(NT_SUCCESS(nErrCode)) return pBuf;
+ else return NULL;
+}
+
+void PsaiFree(void *ptr)
+{
+ ULONG nSize = 0;
+
+ NtFreeVirtualMemory(NtCurrentProcess(), &ptr, &nSize, MEM_RELEASE);
+}
 
 int STDCALL PrintBanner (VOID)
 {
@@ -76,56 +102,6 @@ BOOL STDCALL AcquirePrivileges (VOID)
 {
   /* TODO: implement it */
   return TRUE;
-}
-
-PSYSTEM_PROCESSES STDCALL
-GetProcessAndThreadsInfo (PULONG Size)
-{
-  NTSTATUS                    Status = STATUS_SUCCESS;
-  PSYSTEM_PROCESSES pInfo = NULL;
-  ULONG                       Length = PAGE_SIZE;
-  ULONG                       RequiredLength = 0;
-
-  while (TRUE)
-  {
-    Status = NtAllocateVirtualMemory (
-               NtCurrentProcess(),
-	       (PVOID) & pInfo,
-	       0,
-	       & Length,
-	       (MEM_RESERVE | MEM_COMMIT),
-	       PAGE_READWRITE
-	       );
-    if (!NT_SUCCESS(Status) || (NULL == pInfo))
-    {
-      fprintf (stderr, "%s(%d): Status = 0x%08lx\n",__FUNCTION__,__LINE__,Status);
-      return NULL;
-    }
-    /*
-     *	Obtain required buffer size (well, try to...)
-     */
-    if (NtQuerySystemInformation (
-          SystemProcessesAndThreadsInformation,
-          pInfo,
-          Length,
-	  & RequiredLength
-	  ) != STATUS_INFO_LENGTH_MISMATCH)
-    {
-      break;
-    }
-    NtFreeVirtualMemory (NtCurrentProcess(), (PVOID)&pInfo, & Length, MEM_RELEASE);
-    Length += PAGE_SIZE;
-  }
-  if (!NT_SUCCESS(Status))
-  {
-    NtFreeVirtualMemory (NtCurrentProcess(), (PVOID)&pInfo, & Length, MEM_RELEASE);
-    return NULL;
-  }
-  if (NULL != Size)
-  {
-    *Size = Length;
-  }
-  return pInfo;
 }
 
 int STDCALL
@@ -239,11 +215,13 @@ int STDCALL PrintProcessList (BOOL DisplayTree)
   LPWSTR                      Module = L"";
   LPWSTR                      Title = L"";
 
-  
-  pInfo = GetProcessAndThreadsInfo (& Length);
-  if (NULL == pInfo) return EXIT_FAILURE;
-  pInfoBase = pInfo;
-  do {
+  if (!NT_SUCCESS(PsaCaptureProcessesAndThreads(&pInfoBase)))
+   return EXIT_FAILURE;
+
+  pInfo = PsaWalkFirstProcess(pInfoBase);
+
+  while (pInfo)
+  {
       if (FALSE == DisplayTree)
       {
         GetProcessInfo (pInfo, & Module, & Title);
@@ -262,16 +240,11 @@ int STDCALL PrintProcessList (BOOL DisplayTree)
 	  PrintProcessAndDescendants (pInfo, pInfoBase, 0);
 	}
       }
-      (PBYTE) pInfo += pInfo->NextEntryDelta;
 
-    } while (0 != pInfo->NextEntryDelta);
+      pInfo = PsaWalkNextProcess(pInfo);
+    }
   
-    NtFreeVirtualMemory (
-      NtCurrentProcess(),
-      (PVOID) & pInfoBase,
-      & Length,
-      MEM_RELEASE
-      );
+    PsaFreeCapture(pInfoBase);
   
     return EXIT_SUCCESS;
 }
@@ -279,25 +252,28 @@ int STDCALL PrintProcessList (BOOL DisplayTree)
 
 int STDCALL PrintThreads (PSYSTEM_PROCESSES pInfo)
 {
-  ULONG                    ThreadIndex = 0;
+  ULONG                    i = 0;
   NTSTATUS                 Status = STATUS_SUCCESS;
   HANDLE                   hThread = INVALID_HANDLE_VALUE;
   OBJECT_ATTRIBUTES        Oa = {0};
   PVOID                    Win32StartAddress = NULL;
   THREAD_BASIC_INFORMATION tInfo = {0};
   ULONG                    ReturnLength = 0;
+  PSYSTEM_THREADS          CurThread;
 
   if (NULL == pInfo) return EXIT_FAILURE;
+   
+  CurThread = PsaWalkFirstThread(pInfo);
 
   wprintf (L"   NumberOfThreads: %d\n", pInfo->ThreadCount);
 
-  for (ThreadIndex = 0; ThreadIndex < pInfo->ThreadCount; ThreadIndex ++)
+  for (i = 0; i < pInfo->ThreadCount; i ++, CurThread = PsaWalkNextThread(CurThread))
   {
     Status = NtOpenThread (
 	       & hThread,
 	       THREAD_QUERY_INFORMATION,
 	       & Oa,
-	       & pInfo->Threads[ThreadIndex].ClientId
+	       & CurThread->ClientId
                );
     if (!NT_SUCCESS(Status))
     {
@@ -334,10 +310,10 @@ int STDCALL PrintThreads (PSYSTEM_PROCESSES pInfo)
 
     /* Now print the collected information */
     wprintf (L"   %4d Win32StartAddr:0x%08x LastErr:0x%08x State:%s\n",
-      pInfo->Threads[ThreadIndex].ClientId.UniqueThread,
+      CurThread->ClientId.UniqueThread,
       Win32StartAddress,
       0 /* FIXME: ((PTEB) tInfo.TebBaseAddress)->LastErrorValue */,
-      ThreadStateName[pInfo->Threads[ThreadIndex].State]
+      ThreadStateName[CurThread->State]
       );
   } 
   return EXIT_SUCCESS;
@@ -356,15 +332,18 @@ GetProcessInfoPid (
   )
 {
   if (NULL == pInfoBase) return NULL;
-  do {
 
+  pInfoBase = PsaWalkFirstProcess(pInfoBase);
+
+  while(pInfoBase)
+  {
     if (Pid == pInfoBase->ProcessId)
     {
       return pInfoBase;
     }
-    (PBYTE) pInfoBase += pInfoBase->NextEntryDelta;
 
-  } while (0 != pInfoBase->NextEntryDelta);
+    pInfoBase = PsaWalkNextProcess(pInfoBase);
+  }
 
   return NULL;
 }
@@ -424,8 +403,8 @@ int STDCALL PrintProcess (char * PidStr)
       return EXIT_FAILURE;
     }
 
-    pInfoBase = GetProcessAndThreadsInfo (& pInfoBaseLength);
-    if (NULL == pInfoBase) return EXIT_FAILURE;
+    if (!NT_SUCCESS(PsaCaptureProcessesAndThreads (&pInfoBase)))
+     return EXIT_FAILURE;
 
     pInfo = GetProcessInfoPid (pInfoBase, (DWORD) ClientId.UniqueProcess);
     if (NULL == pInfo) return EXIT_FAILURE;
@@ -449,13 +428,8 @@ int STDCALL PrintProcess (char * PidStr)
     PrintThreads (pInfo);
 
     PrintModules ();
-    
-    NtFreeVirtualMemory (
-      NtCurrentProcess(),
-      (PVOID) & pInfoBase,
-      & pInfoBaseLength,
-      MEM_RELEASE
-      );
+
+    PsaFreeCapture(pInfoBase);
   
     NtClose (hProcess);
     
