@@ -146,7 +146,7 @@ ULONG ExInterlockedExchangeUlong(PULONG Target,
 INTERLOCKED_RESULT ExInterlockedIncrementLong(PLONG Addend,
 					      PKSPIN_LOCK Lock);
 BOOLEAN ExIsResourceAcquiredExclusiveLite(PERESOURCE Resource);
-BOOLEAN ExIsResourceAcquiredSharedLite(PERESOURCE Resource);
+ULONG ExIsResourceAcquiredSharedLite(PERESOURCE Resource);
 USHORT ExQueryDepthSListHead(PSLIST_HEADER SListHead);
 
 
