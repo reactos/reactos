@@ -19,6 +19,9 @@ ULONG DbgPrint(PCH Format,...);
 #define DPRINT DbgPrint("(%s:%d:%s) ",__FILE__,__LINE__,__FUNCTION__), DbgPrint
 #endif
 
+#define UNIMPLEMENTED   DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
+
+
 struct _GUID;
 
 /* Exported definitions and macros */
