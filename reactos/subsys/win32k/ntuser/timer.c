@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.32 2004/05/10 17:07:18 weiden Exp $
+/* $Id: timer.c,v 1.33 2004/06/29 23:45:31 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -175,7 +175,6 @@ RemoveTimersWindow(HWND Wnd)
 UINT_PTR FASTCALL
 IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, BOOL SystemTimer)
 {
-  ULONG Index;
   PMSG_TIMER_ENTRY MsgTimer = NULL;
   PMSG_TIMER_ENTRY NewTimer;
   LARGE_INTEGER CurrentTime;
@@ -190,15 +189,15 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
   if((hWnd == NULL) && !SystemTimer)
   {
     /* find a free, window-less timer id */
-    Index = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex);
+    nIDEvent = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex);
     
-    if(Index == (ULONG) -1)
+    if(nIDEvent == (UINT_PTR) -1)
     {
       IntUnLockTimerList();
       return 0;
     }
     
-    HintIndex = ++Index;
+    HintIndex = ++nIDEvent;
   }
   else
   {
@@ -302,7 +301,6 @@ IntKillTimer(HWND hWnd, UINT_PTR uIDEvent, BOOL SystemTimer)
       /* FIXME: set the last error */
       return FALSE;
     }
-    
     RtlClearBits(&WindowLessTimersBitMap, uIDEvent - 1, 1);
   }
   else
