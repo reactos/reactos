@@ -76,12 +76,13 @@ HANDLE STDCALL CreateEventW(LPSECURITY_ATTRIBUTES lpEventAttributes,
 	PtrObjectAttributes = NULL;
      }	
     
-   
+   dprintf( "Calling NtCreateEvent\n" );
    errCode = NtCreateEvent(&hEvent,
 			   STANDARD_RIGHTS_ALL|EVENT_READ_ACCESS|EVENT_WRITE_ACCESS,
 			   PtrObjectAttributes,
 			   bManualReset,
 			   bInitialState);
+   dprintf( "Called\n" );
    if (!NT_SUCCESS(errCode)) 
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
@@ -143,15 +144,16 @@ CreateEventA(
 	int i;
 	WCHAR EventNameW[MAX_PATH];
    	i = 0;
-   	while ((*lpName)!=0 && i < MAX_PATH)
+   	if( lpName )
+		while ((*lpName)!=0 && i < MAX_PATH)
      	{
-		EventNameW[i] = *lpName;
-		lpName++;
-		i++;
+		   EventNameW[i] = *lpName;
+		   lpName++;
+		   i++;
      	}
    	EventNameW[i] = 0;
    
-	return CreateEventW(lpEventAttributes,bManualReset,bInitialState,EventNameW);
+    return CreateEventW( lpEventAttributes, bManualReset, bInitialState, lpName ? EventNameW : 0 );
 }
 
 
