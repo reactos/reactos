@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.33 2004/07/14 14:25:31 ekohl Exp $
+/* $Id: semgr.c,v 1.34 2004/07/18 13:02:28 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -322,31 +322,65 @@ SepInheritAcl(PACL Acl,
 	return(STATUS_UNSUCCESSFUL);
     }
 
-
 }
 #endif
+
 
 /*
  * @unimplemented
  */
 NTSTATUS STDCALL
-SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
-		 PSECURITY_DESCRIPTOR ExplicitDescriptor,
-		 PSECURITY_DESCRIPTOR* NewDescriptor,
+SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
+		 PSECURITY_DESCRIPTOR ExplicitDescriptor OPTIONAL,
+		 PSECURITY_DESCRIPTOR *NewDescriptor,
 		 BOOLEAN IsDirectoryObject,
 		 PSECURITY_SUBJECT_CONTEXT SubjectContext,
 		 PGENERIC_MAPPING GenericMapping,
 		 POOL_TYPE PoolType)
 {
+  PSECURITY_DESCRIPTOR Descriptor;
+  ULONG Length;
+  NTSTATUS Status;
+
+  if (ExplicitDescriptor != NULL)
+    {
+      Length = RtlLengthSecurityDescriptor(ExplicitDescriptor);
+    }
+  else
+    {
+      DPRINT("No explicit security descriptor\n");
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  Descriptor = ExAllocatePool(NonPagedPool,
+			      Length);
+  if (Descriptor == NULL)
+    {
+      DPRINT1("ExAlloctePool() failed\n");
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  Status = RtlMakeSelfRelativeSD(ExplicitDescriptor,
+				 Descriptor,
+				 &Length);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("RtlMakeSelfRelativeSD() failed (Status %lx)\n", Status);
+      return Status;
+    }
+
+  *NewDescriptor = Descriptor;
+
+  return STATUS_SUCCESS;
+
 #if 0
-   PSECURITY_DESCRIPTOR Descriptor;
    PSID Owner;
    PSID PrimaryGroup;
    PACL DefaultDacl;
    PSID ProcessOwner;
    PSID ProcessPrimaryGroup;
    PACL Sacl;
-   
+
    if (ExplicitDescriptor == NULL)
      {
 	RtlCreateSecurityDescriptor(&Descriptor, 1);
@@ -355,19 +389,23 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
      {
 	Descriptor = ExplicitDescriptor;
      }
+
    SeLockSubjectContext(SubjectContext);
+
    SepGetDefaultsSubjectContext(SubjectContext,
 				&Owner,
 				&PrimaryGroup,
 				&DefaultDacl,
 				&ProcessOwner,
 				&ProcessPrimaryGroup);
+
    if (Descriptor->Control & SE_SACL_PRESENT ||
        Descriptor->Control & SE_SACL_DEFAULTED)
      {
 	if (ParentDescriptor == NULL)
 	  {
 	  }
+
 	if (Descriptor->Control & SE_SACL_PRESENT ||
 	    Descriptor->Sacl == NULL ||)
 	  {
@@ -378,9 +416,10 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
 	     Sacl = Descriptor->Sacl;
 	     if (Descriptor->Control & SE_SELF_RELATIVE)
 	       {
-		  Sacl = (PACL)(((PVOID)Sacl) + (PVOID)Descriptor);
+		  Sacl = (PACL)(((ULONG_PTR)Sacl) + (ULONG_PTR)Descriptor);
 	       }
 	  }
+
 	SepInheritAcl(Sacl,
 		      IsDirectoryObject,
 		      Owner,
@@ -389,9 +428,6 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
 		      ProcessOwner,
 		      GenericMapping);
      }
-#else
-  UNIMPLEMENTED;
-  return(STATUS_NOT_IMPLEMENTED);
 #endif
 }
 
