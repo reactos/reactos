@@ -140,10 +140,10 @@
     /* compute the control box, and grid fit it */
     FT_Outline_Get_CBox( outline, &cbox );
 
-    cbox.xMin = FT_PIX_FLOOR( cbox.xMin );
-    cbox.yMin = FT_PIX_FLOOR( cbox.yMin );
-    cbox.xMax = FT_PIX_CEIL( cbox.xMax );
-    cbox.yMax = FT_PIX_CEIL( cbox.yMax );
+    cbox.xMin &= -64;
+    cbox.yMin &= -64;
+    cbox.xMax  = ( cbox.xMax + 63 ) & -64;
+    cbox.yMax  = ( cbox.yMax + 63 ) & -64;
 
     width  = (FT_UInt)( ( cbox.xMax - cbox.xMin ) >> 6 );
     height = (FT_UInt)( ( cbox.yMax - cbox.yMin ) >> 6 );
@@ -161,7 +161,7 @@
     if ( !( mode & FT_RENDER_MODE_MONO ) )
     {
       /* we pad to 32 bits, only for backwards compatibility with FT 1.x */
-      pitch = FT_PAD_CEIL( width, 4 );
+      pitch = ( width + 3 ) & -4;
       bitmap->pixel_mode = FT_PIXEL_MODE_GRAY;
       bitmap->num_grays  = 256;
     }
@@ -193,9 +193,9 @@
 
     /* render outline into the bitmap */
     error = render->raster_render( render->raster, &params );
-
+    
     FT_Outline_Translate( outline, cbox.xMin, cbox.yMin );
-
+    
     if ( error )
       goto Exit;
 

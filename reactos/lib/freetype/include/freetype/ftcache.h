@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Cache subsystem (specification).                            */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -63,8 +63,8 @@ FT_BEGIN_HEADER
   /*   FTC_Face_Requester                                                  */
   /*                                                                       */
   /*   FTC_Manager_New                                                     */
-  /*   FTC_Manager_LookupFace                                              */
-  /*   FTC_Manager_LookupSize                                              */
+  /*   FTC_Manager_Lookup_Face                                             */
+  /*   FTC_Manager_Lookup_Size                                             */
   /*                                                                       */
   /*   FTC_Node                                                            */
   /*   FTC_Node_Ref                                                        */
@@ -108,10 +108,10 @@ FT_BEGIN_HEADER
   /*    FTC_FaceID                                                         */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    An opaque pointer type that is used to identity face objects.  The */
+  /*    A generic pointer type that is used to identity face objects.  The */
   /*    contents of such objects is application-dependent.                 */
   /*                                                                       */
-  typedef struct FTC_FaceIDRec_*  FTC_FaceID;
+  typedef FT_Pointer  FTC_FaceID;
 
 
   /*************************************************************************/
@@ -257,16 +257,22 @@ FT_BEGIN_HEADER
   /*    Creates a new cache manager.                                       */
   /*                                                                       */
   /* <Input>                                                               */
-  /*    library     :: The parent FreeType library handle to use.          */
+  /*    library   :: The parent FreeType library handle to use.            */
   /*                                                                       */
-  /*    max_bytes   :: Maximum number of bytes to use for cached data.     */
-  /*                   Use 0 for defaults.                                 */
+  /*    max_faces :: Maximum number of faces to keep alive in manager.     */
+  /*                 Use 0 for defaults.                                   */
   /*                                                                       */
-  /*    requester   :: An application-provided callback used to translate  */
-  /*                   face IDs into real @FT_Face objects.                */
+  /*    max_sizes :: Maximum number of sizes to keep alive in manager.     */
+  /*                 Use 0 for defaults.                                   */
   /*                                                                       */
-  /*    req_data    :: A generic pointer that is passed to the requester   */
-  /*                   each time it is called (see @FTC_Face_Requester).   */
+  /*    max_bytes :: Maximum number of bytes to use for cached data.       */
+  /*                 Use 0 for defaults.                                   */
+  /*                                                                       */
+  /*    requester :: An application-provided callback used to translate    */
+  /*                 face IDs into real @FT_Face objects.                  */
+  /*                                                                       */
+  /*    req_data  :: A generic pointer that is passed to the requester     */
+  /*                 each time it is called (see @FTC_Face_Requester).     */
   /*                                                                       */
   /* <Output>                                                              */
   /*    amanager  :: A handle to a new manager object.  0 in case of       */
@@ -319,7 +325,7 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    FTC_Manager_LookupFace                                             */
+  /*    FTC_Manager_Lookup_Face                                            */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Retrieves the @FT_Face object that corresponds to a given face ID  */
@@ -342,479 +348,63 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    The @FT_Face object doesn't necessarily have a current size object */
   /*    (i.e., face->size can be 0).  If you need a specific `font size',  */
-  /*    use @FTC_Manager_LookupSize instead.                               */
+  /*    use @FTC_Manager_Lookup_Size instead.                              */
   /*                                                                       */
   /*    Never change the face's transformation matrix (i.e., never call    */
   /*    the @FT_Set_Transform function) on a returned face!  If you need   */
   /*    to transform glyphs, do it yourself after glyph loading.           */
   /*                                                                       */
   FT_EXPORT( FT_Error )
-  FTC_Manager_LookupFace( FTC_Manager  manager,
-                          FTC_FaceID   face_id,
-                          FT_Face     *aface );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Struct>                                                              */
-  /*    FTC_ScalerRec                                                      */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A structure used to describe a given character size in either      */
-  /*    pixels or points to the cache manager.  See                        */
-  /*    @FTC_Manager_LookupSize.                                           */
-  /*                                                                       */
-  /* <Fields>                                                              */
-  /*    face_id :: The source face ID.                                     */
-  /*                                                                       */
-  /*    width   :: The character width.                                    */
-  /*                                                                       */
-  /*    height  :: The character height.                                   */
-  /*                                                                       */
-  /*    pixel   :: A Boolean.  If TRUE, the `width' and `height' fields    */
-  /*               are interpreted as integer pixel character sizes.       */
-  /*               Otherwise, they are expressed as 1/64th of points.      */
-  /*                                                                       */
-  /*    x_res   :: Only used when `pixel' is FALSE to indicate the         */
-  /*               horizontal resolution in dpi.                           */
-  /*                                                                       */
-  /*    y_res   :: Only used when `pixel' is FALSE to indicate the         */
-  /*               vertical resolution in dpi.                             */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    This type is mainly used to retrieve @FT_Size objects through the  */
-  /*    cache manager.                                                     */
-  /*                                                                       */
-  typedef struct  FTC_ScalerRec_
-  {
-    FTC_FaceID  face_id;
-    FT_UInt     width;
-    FT_UInt     height;
-    FT_Int      pixel;
-    FT_UInt     x_res;
-    FT_UInt     y_res;
-
-  } FTC_ScalerRec, *FTC_Scaler;
+  FTC_Manager_Lookup_Face( FTC_Manager  manager,
+                           FTC_FaceID   face_id,
+                           FT_Face     *aface );
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    FTC_Manager_LookupSize                                             */
+  /*    FTC_Manager_Lookup_Size                                            */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Retrieve the @FT_Size object that corresponds to a given           */
-  /*    @FTC_Scaler through a cache manager.                               */
+  /*    Retrieves the @FT_Face and @FT_Size objects that correspond to a   */
+  /*    given font.                                                        */
   /*                                                                       */
   /* <Input>                                                               */
   /*    manager :: A handle to the cache manager.                          */
   /*                                                                       */
-  /*    scaler  :: A scaler handle.                                        */
+  /*    font    :: The font to use.                                        */
   /*                                                                       */
   /* <Output>                                                              */
-  /*    asize   :: A handle to the size object.                            */
+  /*    aface   :: A pointer to the handle of the face object.  Set it to  */
+  /*               zero if you don't need it.                              */
+  /*                                                                       */
+  /*    asize   :: A pointer to the handle of the size object.  Set it to  */
+  /*               zero if you don't need it.                              */
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   /* <Note>                                                                */
-  /*    The returned @FT_Size object is always owned by the manager.  You  */
-  /*    should never try to discard it by yourself.                        */
+  /*    The returned @FT_Face object is always owned by the manager.  You  */
+  /*    should never try to discard it yourself.                           */
   /*                                                                       */
-  /*    You can access the parent @FT_Face object simply as `size->face'   */
-  /*    if you need it.  Note that this object is also owned by the        */
-  /*    manager.                                                           */
+  /*    Never change the face's transformation matrix (i.e., never call    */
+  /*    the @FT_Set_Transform function) on a returned face!  If you need   */
+  /*    to transform glyphs, do it yourself after glyph loading.           */
   /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FTC_Manager_LookupSize( FTC_Manager  manager,
-                          FTC_Scaler   scaler,
-                          FT_Size     *asize );
-
-
-  /*************************************************************************/
+  /*    Similarly, the returned @FT_Size object is always owned by the     */
+  /*    manager.  You should never try to discard it, and never change its */
+  /*    settings with @FT_Set_Pixel_Sizes or @FT_Set_Char_Size!            */
   /*                                                                       */
-  /* <Function>                                                            */
-  /*    FTC_Node_Unref                                                     */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Decrement a cache node's internal reference count.  When the count */
-  /*    reaches 0, it is not destroyed but becomes eligible for subsequent */
-  /*    cache flushes.                                                     */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    node    :: The cache node handle.                                  */
-  /*                                                                       */
-  /*    manager :: The cache manager handle.                               */
-  /*                                                                       */
-  FT_EXPORT( void )
-  FTC_Node_Unref( FTC_Node     node,
-                  FTC_Manager  manager );
-
-
-  /* remove all nodes belonging to a given face_id */
-  FT_EXPORT( void )
-  FTC_Manager_RemoveFaceID( FTC_Manager  manager,
-                            FTC_FaceID   face_id );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Section>                                                             */
-  /*    cache_subsystem                                                    */
-  /*                                                                       */
-  /*************************************************************************/
-
-  /************************************************************************
-   *
-   * @type:
-   *    FTC_CMapCache
-   *
-   * @description:
-   *    An opaque handle used to manager a charmap cache.  This cache is
-   *    to hold character codes -> glyph indices mappings.
-   */
-  typedef struct FTC_CMapCacheRec_*  FTC_CMapCache;
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* @function:                                                            */
-  /*    FTC_CMapCache_New                                                  */
-  /*                                                                       */
-  /* @description:                                                         */
-  /*    Create a new charmap cache.                                        */
-  /*                                                                       */
-  /* @input:                                                               */
-  /*    manager :: A handle to the cache manager.                          */
-  /*                                                                       */
-  /* @output:                                                              */
-  /*    acache  :: A new cache handle.  NULL in case of error.             */
-  /*                                                                       */
-  /* @return:                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-  /* @note:                                                                */
-  /*    Like all other caches, this one will be destroyed with the cache   */
-  /*    manager.                                                           */
+  /*    The returned size object is the face's current size, which means   */
+  /*    that you can call @FT_Load_Glyph with the face if you need to.     */
   /*                                                                       */
   FT_EXPORT( FT_Error )
-  FTC_CMapCache_New( FTC_Manager     manager,
-                     FTC_CMapCache  *acache );
+  FTC_Manager_Lookup_Size( FTC_Manager  manager,
+                           FTC_Font     font,
+                           FT_Face     *aface,
+                           FT_Size     *asize );
 
-
-  /* retrieve the index of a given charmap */
-  FT_EXPORT( FT_Int )
-  FT_Get_CharMap_Index( FT_CharMap  charmap );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* @function:                                                            */
-  /*    FTC_CMapCache_Lookup                                               */
-  /*                                                                       */
-  /* @description:                                                         */
-  /*    Translate a character code into a glyph index, using the charmap   */
-  /*    cache.                                                             */
-  /*                                                                       */
-  /* @input:                                                               */
-  /*    cache      :: A charmap cache handle.                              */
-  /*                                                                       */
-  /*    face_id    :: source face id                                       */
-  /*                                                                       */
-  /*    cmap_index :: index of charmap in source face                      */
-  /*                                                                       */
-  /*    char_code  :: The character code (in the corresponding charmap).   */
-  /*                                                                       */
-  /* @return:                                                              */
-  /*    Glyph index.  0 means `no glyph'.                                  */
-  /*                                                                       */
-  FT_EXPORT( FT_UInt )
-  FTC_CMapCache_Lookup( FTC_CMapCache  cache,
-                        FTC_FaceID     face_id,
-                        FT_Int         cmap_index,
-                        FT_UInt32      char_code );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Section>                                                             */
-  /*    cache_subsystem                                                    */
-  /*                                                                       */
-  /*************************************************************************/
-
-
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
-  /*****                                                               *****/
-  /*****                       IMAGE CACHE OBJECT                      *****/
-  /*****                                                               *****/
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
-
-  typedef struct  FTC_ImageTypeRec_
-  {
-    FTC_FaceID   face_id;
-    FT_Int       width;
-    FT_Int       height;
-    FT_Int32     flags;
-
-  } FTC_ImageTypeRec;
-
-  typedef struct FTC_ImageTypeRec_*   FTC_ImageType;
-
- /* */
-
-#define FTC_IMAGE_TYPE_COMPARE( d1, d2 )                    \
-          ( FTC_FONT_COMPARE( &(d1)->font, &(d2)->font ) && \
-            (d1)->flags == (d2)->flags                   )
-
-#define FTC_IMAGE_TYPE_HASH( d )                    \
-          (FT_UFast)( FTC_FONT_HASH( &(d)->font ) ^ \
-                      ( (d)->flags << 4 )         )
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Type>                                                                */
-  /*    FTC_ImageCache                                                     */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A handle to an glyph image cache object.  They are designed to     */
-  /*    hold many distinct glyph images while not exceeding a certain      */
-  /*    memory threshold.                                                  */
-  /*                                                                       */
-  typedef struct FTC_ImageCacheRec_*  FTC_ImageCache;
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FTC_ImageCache_New                                                 */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Creates a new glyph image cache.                                   */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    manager :: The parent manager for the image cache.                 */
-  /*                                                                       */
-  /* <Output>                                                              */
-  /*    acache  :: A handle to the new glyph image cache object.           */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FTC_ImageCache_New( FTC_Manager      manager,
-                      FTC_ImageCache  *acache );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FTC_ImageCache_Lookup                                              */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Retrieves a given glyph image from a glyph image cache.            */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    cache  :: A handle to the source glyph image cache.                */
-  /*                                                                       */
-  /*    type   :: A pointer to a glyph image type descriptor.              */
-  /*                                                                       */
-  /*    gindex :: The glyph index to retrieve.                             */
-  /*                                                                       */
-  /* <Output>                                                              */
-  /*    aglyph :: The corresponding @FT_Glyph object.  0 in case of        */
-  /*              failure.                                                 */
-  /*                                                                       */
-  /*    anode  :: Used to return the address of of the corresponding cache */
-  /*              node after incrementing its reference count (see note    */
-  /*              below).                                                  */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    The returned glyph is owned and managed by the glyph image cache.  */
-  /*    Never try to transform or discard it manually!  You can however    */
-  /*    create a copy with @FT_Glyph_Copy and modify the new one.          */
-  /*                                                                       */
-  /*    If `anode' is _not_ NULL, it receives the address of the cache     */
-  /*    node containing the glyph image, after increasing its reference    */
-  /*    count.  This ensures that the node (as well as the FT_Glyph) will  */
-  /*    always be kept in the cache until you call @FTC_Node_Unref to      */
-  /*    `release' it.                                                      */
-  /*                                                                       */
-  /*    If `anode' is NULL, the cache node is left unchanged, which means  */
-  /*    that the FT_Glyph could be flushed out of the cache on the next    */
-  /*    call to one of the caching sub-system APIs.  Don't assume that it  */
-  /*    is persistent!                                                     */
-  /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FTC_ImageCache_Lookup( FTC_ImageCache  cache,
-                         FTC_ImageType   type,
-                         FT_UInt         gindex,
-                         FT_Glyph       *aglyph,
-                         FTC_Node       *anode );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Type>                                                                */
-  /*    FTC_SBit                                                           */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A handle to a small bitmap descriptor.  See the @FTC_SBitRec       */
-  /*    structure for details.                                             */
-  /*                                                                       */
-  typedef struct FTC_SBitRec_*  FTC_SBit;
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Struct>                                                              */
-  /*    FTC_SBitRec                                                        */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A very compact structure used to describe a small glyph bitmap.    */
-  /*                                                                       */
-  /* <Fields>                                                              */
-  /*    width     :: The bitmap width in pixels.                           */
-  /*                                                                       */
-  /*    height    :: The bitmap height in pixels.                          */
-  /*                                                                       */
-  /*    left      :: The horizontal distance from the pen position to the  */
-  /*                 left bitmap border (a.k.a. `left side bearing', or    */
-  /*                 `lsb').                                               */
-  /*                                                                       */
-  /*    top       :: The vertical distance from the pen position (on the   */
-  /*                 baseline) to the upper bitmap border (a.k.a. `top     */
-  /*                 side bearing').  The distance is positive for upwards */
-  /*                 Y coordinates.                                        */
-  /*                                                                       */
-  /*    format    :: The format of the glyph bitmap (monochrome or gray).  */
-  /*                                                                       */
-  /*    max_grays :: Maximum gray level value (in the range 1 to 255).     */
-  /*                                                                       */
-  /*    pitch     :: The number of bytes per bitmap line.  May be positive */
-  /*                 or negative.                                          */
-  /*                                                                       */
-  /*    xadvance  :: The horizontal advance width in pixels.               */
-  /*                                                                       */
-  /*    yadvance  :: The vertical advance height in pixels.                */
-  /*                                                                       */
-  /*    buffer    :: A pointer to the bitmap pixels.                       */
-  /*                                                                       */
-  typedef struct  FTC_SBitRec_
-  {
-    FT_Byte   width;
-    FT_Byte   height;
-    FT_Char   left;
-    FT_Char   top;
-
-    FT_Byte   format;
-    FT_Byte   max_grays;
-    FT_Short  pitch;
-    FT_Char   xadvance;
-    FT_Char   yadvance;
-
-    FT_Byte*  buffer;
-
-  } FTC_SBitRec;
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Type>                                                                */
-  /*    FTC_SBitCache                                                      */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A handle to a small bitmap cache.  These are special cache objects */
-  /*    used to store small glyph bitmaps (and anti-aliased pixmaps) in a  */
-  /*    much more efficient way than the traditional glyph image cache     */
-  /*    implemented by @FTC_ImageCache.                                    */
-  /*                                                                       */
-  typedef struct FTC_SBitCacheRec_*  FTC_SBitCache;
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FTC_SBitCache_New                                                  */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Creates a new cache to store small glyph bitmaps.                  */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    manager :: A handle to the source cache manager.                   */
-  /*                                                                       */
-  /* <Output>                                                              */
-  /*    acache  :: A handle to the new sbit cache.  NULL in case of error. */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FTC_SBitCache_New( FTC_Manager     manager,
-                     FTC_SBitCache  *acache );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FTC_SBitCache_Lookup                                               */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Looks up a given small glyph bitmap in a given sbit cache and      */
-  /*    `lock' it to prevent its flushing from the cache until needed.     */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    cache  :: A handle to the source sbit cache.                       */
-  /*                                                                       */
-  /*    type   :: A pointer to the glyph image type descriptor.            */
-  /*                                                                       */
-  /*    gindex :: The glyph index.                                         */
-  /*                                                                       */
-  /* <Output>                                                              */
-  /*    sbit   :: A handle to a small bitmap descriptor.                   */
-  /*                                                                       */
-  /*    anode  :: Used to return the address of of the corresponding cache */
-  /*              node after incrementing its reference count (see note    */
-  /*              below).                                                  */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    The small bitmap descriptor and its bit buffer are owned by the    */
-  /*    cache and should never be freed by the application.  They might    */
-  /*    as well disappear from memory on the next cache lookup, so don't   */
-  /*    treat them as persistent data.                                     */
-  /*                                                                       */
-  /*    The descriptor's `buffer' field is set to 0 to indicate a missing  */
-  /*    glyph bitmap.                                                      */
-  /*                                                                       */
-  /*    If `anode' is _not_ NULL, it receives the address of the cache     */
-  /*    node containing the bitmap, after increasing its reference count.  */
-  /*    This ensures that the node (as well as the image) will always be   */
-  /*    kept in the cache until you call @FTC_Node_Unref to `release' it.  */
-  /*                                                                       */
-  /*    If `anode' is NULL, the cache node is left unchanged, which means  */
-  /*    that the bitmap could be flushed out of the cache on the next      */
-  /*    call to one of the caching sub-system APIs.  Don't assume that it  */
-  /*    is persistent!                                                     */
-  /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FTC_SBitCache_Lookup( FTC_SBitCache    cache,
-                        FTC_ImageType    type,
-                        FT_UInt          gindex,
-                        FTC_SBit        *sbit,
-                        FTC_Node        *anode );
-
-
- /* */
 
 FT_END_HEADER
 

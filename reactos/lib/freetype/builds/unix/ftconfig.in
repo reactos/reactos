@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    UNIX-specific configuration file (specification only).               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2000, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -57,12 +57,11 @@ FT_BEGIN_HEADER
   /*************************************************************************/
 
 
-#undef HAVE_UNISTD_H
-#undef HAVE_FCNTL_H
+#define HAVE_UNISTD_H  0
+#define HAVE_FCNTL_H   0
 
-#undef SIZEOF_INT
-#undef SIZEOF_LONG
-
+#define SIZEOF_INT   2
+#define SIZEOF_LONG  2
 
 #define FT_SIZEOF_INT   SIZEOF_INT
 #define FT_SIZEOF_LONG  SIZEOF_LONG
@@ -92,19 +91,6 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* Mac support                                                           */
-  /*                                                                       */
-  /*   This is the only necessary change, so it is defined here instead    */
-  /*   providing a new configuration file.                                 */
-  /*                                                                       */
-#if ( defined( __APPLE__ ) && !defined( DARWIN_NO_CARBON ) ) || \
-    ( defined( __MWERKS__ ) && defined( macintosh )        )
-#define FT_MACINTOSH 1
-#endif
-
-
-  /*************************************************************************/
-  /*                                                                       */
   /* IntN types                                                            */
   /*                                                                       */
   /*   Used to guarantee the size of some specific integers.               */
@@ -126,88 +112,31 @@ FT_BEGIN_HEADER
 #error "no 32bit type found -- please check your configuration files"
 #endif
 
-
-  /* look up an integer type that is at least 32 bits */
-#if FT_SIZEOF_INT >= 4
-
-  typedef int            FT_Fast;
-  typedef unsigned int   FT_UFast;
-
-#elif FT_SIZEOF_LONG >= 4
-
-  typedef long           FT_Fast;
-  typedef unsigned long  FT_UFast;
-
-#endif
-
-
-  /* determine whether we have a 64-bit int type for platforms without */
-  /* Autoconf                                                          */
 #if FT_SIZEOF_LONG == 8
 
   /* FT_LONG64 must be defined if a 64-bit type is available */
 #define FT_LONG64
-#define FT_INT64  long
+#define FT_INT64   long
 
-#elif defined( _MSC_VER ) && _MSC_VER >= 900  /* Visual C++ (and Intel C++) */
-
-  /* this compiler provides the __int64 type */
-#define FT_LONG64
-#define FT_INT64  __int64
-
-#elif defined( __BORLANDC__ )  /* Borland C++ */
-
-  /* XXXX: We should probably check the value of __BORLANDC__ in order */
-  /*       to test the compiler version.                               */
-
-  /* this compiler provides the __int64 type */
-#define FT_LONG64
-#define FT_INT64  __int64
-
-#elif defined( __WATCOMC__ )   /* Watcom C++ */
-
-  /* Watcom doesn't provide 64-bit data types */
-
-#elif defined( __MWERKS__ )    /* Metrowerks CodeWarrior */
-
-#define FT_LONG64
-#define FT_INT64  long long int
-
-#elif defined( __GNUC__ )
-
-  /* GCC provides the "long long" type */
-#define FT_LONG64
-#define FT_INT64  long long int
-
-#endif /* FT_SIZEOF_LONG == 8 */
-
-
-#define FT_BEGIN_STMNT  do {
-#define FT_END_STMNT    } while ( 0 )
-#define FT_DUMMY_STMNT  FT_BEGIN_STMNT FT_END_STMNT
-
+#else
 
   /*************************************************************************/
   /*                                                                       */
-  /* A 64-bit data type will create compilation problems if you compile    */
-  /* in strict ANSI mode.  To avoid them, we disable their use if          */
-  /* __STDC__ is defined.  You can however ignore this rule by             */
-  /* defining the FT_CONFIG_OPTION_FORCE_INT64 configuration macro.        */
+  /* Many compilers provide the non-ANSI `long long' 64-bit type.  You can */
+  /* activate it by defining the FTCALC_USE_LONG_LONG macro in             */
+  /* `ftoption.h'.                                                         */
   /*                                                                       */
-#if defined( FT_LONG64 ) && !defined( FT_CONFIG_OPTION_FORCE_INT64 )
+  /* Note that this will produce many -ansi warnings during library        */
+  /* compilation, and that in many cases,  the generated code will be      */
+  /* neither smaller nor faster!                                           */
+  /*                                                                       */
+#ifdef FTCALC_USE_LONG_LONG
 
-#ifdef __STDC__
+#define FT_LONG64
+#define FT_INT64   long long
 
-  /* Undefine the 64-bit macros in strict ANSI compilation mode.  */
-  /* Since `#undef' doesn't survive in configuration header files */
-  /* we use the postprocessing facility of AC_CONFIG_HEADERS to   */
-  /* replace the leading `/' with `#'.                            */
-/undef FT_LONG64
-/undef FT_INT64
-
-#endif /* __STDC__ */
-
-#endif /* FT_LONG64 && !FT_CONFIG_OPTION_FORCE_INT64 */
+#endif /* FTCALC_USE_LONG_LONG */
+#endif /* FT_SIZEOF_LONG == 8 */
 
 
 #ifdef FT_MAKE_OPTION_SINGLE_OBJECT
@@ -222,7 +151,7 @@ FT_BEGIN_HEADER
 #define FT_LOCAL_DEF( x )  extern "C"  x
 #else
 #define FT_LOCAL( x )      extern  x
-#define FT_LOCAL_DEF( x )  x
+#define FT_LOCAL_DEF( x )  extern  x
 #endif
 
 #endif /* FT_MAKE_OPTION_SINGLE_OBJECT */
@@ -325,7 +254,6 @@ FT_BEGIN_HEADER
 
 
 FT_END_HEADER
-
 
 #endif /* __FTCONFIG_H__ */
 

@@ -53,8 +53,7 @@
     if ( error )
       goto Exit;
 
-    error = t42_parse_dict( face, &loader,
-                            parser->base_dict, parser->base_len );
+    error = t42_parse_dict( face, &loader, parser->base_dict, parser->base_len );
 
     if ( type1->font_type != 42 )
     {
@@ -66,8 +65,7 @@
     /* to the Type1 data                                    */
     type1->num_glyphs = loader.num_glyphs;
 
-    if ( !loader.charstrings.init )
-    {
+    if ( !loader.charstrings.init ) {
       FT_ERROR(( "T42_Open_Face: no charstrings array in face!\n" ));
       error = T42_Err_Invalid_File_Format;
     }
@@ -123,10 +121,8 @@
               if ( ft_strcmp( (const char*)".notdef",
                               (const char*)glyph_name ) != 0 )
               {
-                if ( charcode < min_char )
-                  min_char = charcode;
-                if ( charcode > max_char )
-                  max_char = charcode;
+                if ( charcode < min_char ) min_char = charcode;
+                if ( charcode > max_char ) max_char = charcode;
               }
               break;
             }
@@ -153,12 +149,12 @@
                  FT_Int         num_params,
                  FT_Parameter*  params )
   {
-    FT_Error            error;
-    FT_Service_PsCMaps  psnames;
-    PSAux_Service       psaux;
-    FT_Face             root  = (FT_Face)&face->root;
-    T1_Font             type1 = &face->type1;
-    PS_FontInfo         info  = &type1->font_info;
+    FT_Error         error;
+    PSNames_Service  psnames;
+    PSAux_Service    psaux;
+    FT_Face          root  = (FT_Face)&face->root;
+    T1_Font          type1 = &face->type1;
+    PS_FontInfo      info  = &type1->font_info;
 
     FT_UNUSED( num_params );
     FT_UNUSED( params );
@@ -169,8 +165,9 @@
     face->ttf_face       = NULL;
     face->root.num_faces = 1;
 
-    FT_FACE_FIND_GLOBAL_SERVICE( face, psnames, POSTSCRIPT_CMAPS );
-    face->psnames = psnames;
+    face->psnames = FT_Get_Module_Interface( FT_FACE_LIBRARY( face ),
+                                             "psnames" );
+    psnames = (PSNames_Service)face->psnames;
 
     face->psaux = FT_Get_Module_Interface( FT_FACE_LIBRARY( face ),
                                            "psaux" );
@@ -193,7 +190,7 @@
       goto Exit;
     }
 
-    /* Now load the font program into the face object */
+    /* Now, load the font program into the face object */
 
     /* Init the face object fields */
     /* Now set up root face fields */
@@ -281,8 +278,8 @@
     root->max_advance_width  = face->ttf_face->max_advance_width;
     root->max_advance_height = face->ttf_face->max_advance_height;
 
-    root->underline_position  = (FT_Short)( info->underline_position >> 16 );
-    root->underline_thickness = (FT_Short)( info->underline_thickness >> 16 );
+    root->underline_position  = info->underline_position >> 16;
+    root->underline_thickness = info->underline_thickness >> 16;
 
     root->internal->max_points   = 0;
     root->internal->max_contours = 0;
@@ -354,7 +351,7 @@
 
 #if 0
         /* Select default charmap */
-        if ( root->num_charmaps )
+        if (root->num_charmaps)
           root->charmap = root->charmaps[0];
 #endif
       }
@@ -400,6 +397,9 @@
       FT_FREE( type1->encoding.char_index );
       FT_FREE( type1->encoding.char_name );
       FT_FREE( type1->font_name );
+
+      FT_FREE( type1->paint_type );
+      FT_FREE( type1->stroke_width );
 
       FT_FREE( face->ttf_data );
 
@@ -451,6 +451,8 @@
   {
     FT_UNUSED( driver );
   }
+
+
 
 
   FT_LOCAL_DEF( FT_Error )
@@ -600,7 +602,7 @@
   FT_LOCAL_DEF( FT_Error )
   T42_GlyphSlot_Load( FT_GlyphSlot  glyph,
                       FT_Size       size,
-                      FT_UInt       glyph_index,
+                      FT_Int        glyph_index,
                       FT_Int32      load_flags )
   {
     FT_Error         error;

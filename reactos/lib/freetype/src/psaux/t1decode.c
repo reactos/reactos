@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript Type 1 decoding routines (body).                          */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 2000-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -125,9 +125,9 @@
   t1_lookup_glyph_by_stdcharcode( T1_Decoder  decoder,
                                   FT_Int      charcode )
   {
-    FT_UInt             n;
-    const FT_String*    glyph_name;
-    FT_Service_PsCMaps  psnames = decoder->psnames;
+    FT_UInt           n;
+    const FT_String*  glyph_name;
+    PSNames_Service   psnames = decoder->psnames;
 
 
     /* check range of standard char code */
@@ -143,7 +143,7 @@
 
 
       if ( name && name[0] == glyph_name[0]  &&
-           ft_strcmp( name, glyph_name ) == 0 )
+           ft_strcmp( name,glyph_name ) == 0 )
         return n;
     }
 
@@ -262,6 +262,10 @@
     if ( error )
       goto Exit;
 
+#if 0
+    n_base_points = base->n_points;
+#endif
+
     /* save the left bearing and width of the base character */
     /* as they will be erased by the next load.              */
 
@@ -286,8 +290,23 @@
     decoder->builder.left_bearing = left_bearing;
     decoder->builder.advance      = advance;
 
+    /* XXX: old code doesn't work with PostScript hinter */
+#if 0
+    /* Finally, move the accent */
+    if ( decoder->builder.load_points )
+    {
+      FT_Outline  dummy;
+
+
+      dummy.n_points = (short)( base->n_points - n_base_points );
+      dummy.points   = base->points + n_base_points;
+
+      FT_Outline_Translate( &dummy, adx - asb, ady );
+    }
+#else
     decoder->builder.pos_x = 0;
     decoder->builder.pos_y = 0;
+#endif
 
   Exit:
     return error;
@@ -1110,10 +1129,11 @@
 
     /* retrieve PSNames interface from list of current modules */
     {
-      FT_Service_PsCMaps  psnames = 0;
+      PSNames_Service  psnames = 0;
 
 
-      FT_FACE_FIND_GLOBAL_SERVICE( face, psnames, POSTSCRIPT_CMAPS );
+      psnames = (PSNames_Service)FT_Get_Module_Interface(
+                  FT_FACE_LIBRARY(face), "psnames" );
       if ( !psnames )
       {
         FT_ERROR(( "t1_decoder_init: " ));

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph loader (body).                                    */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004 by                                          */
+/*  Copyright 2002 by                                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -19,7 +19,6 @@
 #include <ft2build.h>
 #include FT_INTERNAL_GLYPH_LOADER_H
 #include FT_INTERNAL_MEMORY_H
-#include FT_INTERNAL_OBJECTS_H
 
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_gloader
@@ -206,7 +205,7 @@
 
     if ( new_max > old_max )
     {
-      new_max = FT_PAD_CEIL( new_max, 8 );
+      new_max = ( new_max + 7 ) & -8;
 
       if ( FT_RENEW_ARRAY( base->points, old_max, new_max ) ||
            FT_RENEW_ARRAY( base->tags,   old_max, new_max ) )
@@ -226,7 +225,7 @@
               n_contours;
     if ( new_max > old_max )
     {
-      new_max = FT_PAD_CEIL( new_max, 4 );
+      new_max = ( new_max + 3 ) & -4;
       if ( FT_RENEW_ARRAY( base->contours, old_max, new_max ) )
         goto Exit;
 
@@ -262,7 +261,7 @@
     old_max = loader->max_subglyphs;
     if ( new_max > old_max )
     {
-      new_max = FT_PAD_CEIL( new_max, 2 );
+      new_max = ( new_max + 1 ) & -2;
       if ( FT_RENEW_ARRAY( base->subglyphs, old_max, new_max ) )
         goto Exit;
 
@@ -337,17 +336,17 @@
       FT_Outline*  in  = &source->base.outline;
 
 
-      FT_ARRAY_COPY( out->points, in->points,
-                     num_points );
-      FT_ARRAY_COPY( out->tags, in->tags,
-                     num_points );
-      FT_ARRAY_COPY( out->contours, in->contours,
-                     num_contours );
+      FT_MEM_COPY( out->points, in->points,
+                   num_points * sizeof ( FT_Vector ) );
+      FT_MEM_COPY( out->tags, in->tags,
+                   num_points * sizeof ( char ) );
+      FT_MEM_COPY( out->contours, in->contours,
+                   num_contours * sizeof ( short ) );
 
       /* do we need to copy the extra points? */
       if ( target->use_extra && source->use_extra )
-        FT_ARRAY_COPY( target->base.extra_points, source->base.extra_points,
-                       num_points );
+        FT_MEM_COPY( target->base.extra_points, source->base.extra_points,
+                     num_points * sizeof ( FT_Vector ) );
 
       out->n_points   = (short)num_points;
       out->n_contours = (short)num_contours;

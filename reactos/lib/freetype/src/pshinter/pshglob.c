@@ -448,7 +448,7 @@
         zone->cur_delta  = FT_MulFix( zone->org_delta,  scale );
 
         /* round scaled reference position */
-        zone->cur_ref = FT_PIX_ROUND( zone->cur_ref );
+        zone->cur_ref = ( zone->cur_ref + 32 ) & -64;
 
 #if 0
         if ( zone->cur_ref > zone->cur_top )
@@ -654,7 +654,7 @@
 
 
         write->org = priv->standard_height[0];
-        write++;
+        write++;                           
         read = priv->snap_heights;
         for ( count = priv->num_snap_heights; count > 0; count-- )
         {

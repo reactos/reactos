@@ -56,16 +56,8 @@ class DocCode:
             self.lines.append( l )
 
     def dump( self, prefix = "", width=60 ):
-        lines = self.dump_lines( 0, width )
-        for l in lines:
-            print prefix + l
-    
-    def dump_lines( self, margin=0, width=60 ):
-        result = []
         for l in self.lines:
-            result.append( " "*margin + l )
-        return result
-    
+            print prefix + l
 
 
 #############################################################################
@@ -84,14 +76,8 @@ class DocPara:
             self.words.extend( string.split( l ) )
 
     def dump( self, prefix = "", width = 60 ):
-        lines = self.dump_lines( 0, width )
-        for l in lines:
-            print prefix + l
-    
-    def dump_lines( self, margin=0, width = 60 ):
-        cur    = ""  # current line
-        col    = 0   # current width
-        result = []
+        cur  = ""  # current line
+        col  = 0   # current width
 
         for word in self.words:
             ln = len(word)
@@ -99,7 +85,7 @@ class DocPara:
                 ln = ln+1
 
             if col + ln > width:
-                result.append( " "*margin + cur )
+                print prefix + cur
                 cur = word
                 col = len(word)
             else:
@@ -109,11 +95,8 @@ class DocPara:
                 col = col + ln
 
         if col > 0:
-            result.append( " "*margin + cur )
-            
-        return result
+            print prefix + cur
 
-    
 
 
 #############################################################################
@@ -204,17 +187,6 @@ class DocField:
             p.dump( prefix )
             first = 0
 
-    def dump_lines( self, margin=0, width=60 ):
-        result = []
-        nl     = None
-        for p in self.items:
-            if nl:
-                result.append( "" )
-                
-            result.extend( p.dump_lines( margin, width ) )
-            nl = 1
-            
-        return result
 
 # this regular expression is used to detect field definitions
 #
@@ -261,16 +233,6 @@ class DocMarkup:
 
         except:
             return None
-        
-    def get_start( self ):
-        try:
-            result = ""
-            for word in self.fields[0].items[0].words:
-                result = result + " " + word
-            return result[1:]
-        
-        except:
-            return "ERROR"
 
     def dump( self, margin ):
         print " "*margin + "<" + self.tag + ">"

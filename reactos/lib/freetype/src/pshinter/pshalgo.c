@@ -2,9 +2,9 @@
 /*                                                                         */
 /*  pshalgo.c                                                              */
 /*                                                                         */
-/*    PostScript hinting algorithm (body).                                 */
+/*    PostScript hinting algorithm 3 (body).                               */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003, 2004 by                                    */
+/*  Copyright 2001, 2002, 2003 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -375,11 +375,11 @@
           len += delta;
       }
       else
-        len = FT_PIX_ROUND( len );
+        len = ( len + 32 ) & -64;
     }
 
     if ( do_snapping )
-      len = FT_PIX_ROUND( len );
+      len = ( len + 32 ) & -64;
 
     return  len;
   }
@@ -417,8 +417,8 @@
   psh_hint_snap_stem_side_delta( FT_Fixed  pos,
                                  FT_Fixed  len )
   {
-    FT_Fixed  delta1 = FT_PIX_ROUND( pos ) - pos;
-    FT_Fixed  delta2 = FT_PIX_ROUND( pos + len ) - pos - len;
+    FT_Fixed  delta1 = ( ( pos + 32 ) & -64 ) - pos;
+    FT_Fixed  delta2 = ( ( pos + len + 32 ) & -64  ) - pos - len;
 
 
     if ( ABS( delta1 ) <= ABS( delta2 ) )
@@ -534,10 +534,10 @@
                * around the nearest pixel center
                */
 #if 1
-              pos = FT_PIX_FLOOR( pos + ( len >> 1 ) );
+              pos = ( pos + ( len >> 1 ) ) & -64;
 #else
              /* this seems to be a bug! */
-              pos = pos + FT_PIX_FLOOR( len >> 1 );
+              pos = ( pos + ( ( len >> 1 ) & -64 ) );
 #endif
               len = 64;
             }
@@ -562,7 +562,7 @@
         if ( len < 64 )
           len = 64;
         else
-          len = FT_PIX_ROUND( len );
+          len = ( len + 32 ) & -64;
 
         switch ( align.align )
         {
@@ -583,9 +583,9 @@
           default:
             hint->cur_len = len;
             if ( len & 64 )
-              pos = FT_PIX_FLOOR( pos + ( len >> 1 ) ) + 32;
+              pos = ( ( pos + ( len >> 1 ) ) & -64 ) + 32;
             else
-              pos = FT_PIX_ROUND( pos + ( len >> 1 ) );
+              pos = ( pos + ( len >> 1 ) + 32 ) & -64;
 
             hint->cur_pos = pos - ( len >> 1 );
             hint->cur_len = len;
@@ -739,13 +739,13 @@
 
             if ( ( len / 64 ) & 1 )
             {
-              delta_a = FT_PIX_FLOOR( center ) + 32 - center;
-              delta_b = FT_PIX_ROUND( center ) - center;
+              delta_a = ( center & -64 ) + 32 - center;
+              delta_b = ( ( center + 32 ) & - 64 ) - center;
             }
             else
             {
-              delta_a = FT_PIX_ROUND( center ) - center;
-              delta_b = FT_PIX_FLOOR( center ) + 32 - center;
+              delta_a = ( ( center + 32 ) & - 64 ) - center;
+              delta_b = ( center & -64 ) + 32 - center;
             }
 
             /* We choose between B) and C) above based on the amount
@@ -761,6 +761,7 @@
             {
               FT_Fixed  side_delta = psh_hint_snap_stem_side_delta ( pos,
                                                                      len );
+
 
               if ( ABS( side_delta ) < ABS( delta_b ) )
                 pos += side_delta;
@@ -1110,7 +1111,7 @@
     /* clear all fields */
     FT_MEM_ZERO( glyph, sizeof ( *glyph ) );
 
-    memory = glyph->memory = globals->memory;
+    memory = globals->memory;
 
     /* allocate and setup points + contours arrays */
     if ( FT_NEW_ARRAY( glyph->points,   outline->n_points   ) ||
@@ -1217,6 +1218,7 @@
       }
     }
 
+    glyph->memory  = memory;
     glyph->outline = outline;
     glyph->globals = globals;
 
@@ -1938,7 +1940,7 @@
 
 
       scaled = FT_MulFix( globals->blues.normal_top.zones->org_ref, y_scale );
-      fitted = FT_PIX_ROUND( scaled );
+      fitted = ( scaled + 32 ) & -64;
 
       if (scaled != fitted ) {
         y_scale = FT_MulDiv( y_scale, fitted, scaled );

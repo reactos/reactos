@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType synthesizing code for emboldening and slanting (body).      */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003 by                                     */
+/*  Copyright 2000-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -279,8 +279,7 @@
       first = last + 1;
     }
 
-    slot->metrics.horiAdvance =
-      ( slot->metrics.horiAdvance + distance*4 ) & ~63;
+    slot->metrics.horiAdvance = ( slot->metrics.horiAdvance + distance*4 ) & -64;
   }
 
 

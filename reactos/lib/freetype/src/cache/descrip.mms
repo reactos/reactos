@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 2001, 2002, 2003, 2004 by
+# Copyright 2001, 2002 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -20,6 +20,7 @@ OBJS=ftcache.obj
 all : $(OBJS)
         library [--.lib]freetype.olb $(OBJS)
 
-ftcache.obj : ftcache.c
+ftcache.obj : ftcache.c ftlru.c ftcmanag.c ftccache.c ftcglyph.c ftcimage.c \
+              ftcsbits.c ftccmap.c 
 
 # EOF

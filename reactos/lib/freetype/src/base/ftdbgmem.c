@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Memory debugger (body).                                              */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003, 2004 by                                    */
+/*  Copyright 2001, 2002, 2003 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -604,7 +604,7 @@
         p = getenv( "FT2_ALLOC_TOTAL_MAX" );
         if ( p != NULL )
         {
-          FT_Long   total_max = ft_atol(p);
+          FT_Long   total_max = atol(p);
           
           if ( total_max > 0 )
           {
@@ -616,7 +616,7 @@
         p = getenv( "FT2_ALLOC_COUNT_MAX" );
         if ( p != NULL )
         {
-          FT_Long  total_count = ft_atol(p);
+          FT_Long  total_count = atol(p);
           
           if ( total_count > 0 )
           {

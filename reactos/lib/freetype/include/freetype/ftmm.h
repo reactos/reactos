@@ -100,6 +100,21 @@ FT_BEGIN_HEADER
 
   /* */
 
+  typedef FT_Error
+  (*FT_Get_MM_Func)( FT_Face           face,
+                     FT_Multi_Master*  master );
+
+  typedef FT_Error
+  (*FT_Set_MM_Design_Func)( FT_Face   face,
+                            FT_UInt   num_coords,
+                            FT_Long*  coords );
+
+  typedef FT_Error
+  (*FT_Set_MM_Blend_Func)( FT_Face   face,
+                           FT_UInt   num_coords,
+                           FT_Long*  coords );
+
+
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */

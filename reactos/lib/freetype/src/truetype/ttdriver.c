@@ -21,7 +21,6 @@
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_SFNT_H
 #include FT_TRUETYPE_IDS_H
-#include FT_SERVICE_XFREE86_NAME_H
 
 #include "ttdriver.h"
 #include "ttgload.h"
@@ -208,8 +207,8 @@
      /* we need to use rounding in the following computations. Otherwise,
       * the resulting hinted outlines will be very slightly distorted
       */
-      dim_x = ( ( char_width  * horz_resolution + (36+32*72) ) / 72 ) & ~63;
-      dim_y = ( ( char_height * vert_resolution + (36+32*72) ) / 72 ) & ~63;
+      dim_x = ( ( char_width  * horz_resolution + (36+32*72) ) / 72 ) & -64;
+      dim_y = ( ( char_height * vert_resolution + (36+32*72) ) / 72 ) & -64;
     }
     else
     {
@@ -345,27 +344,17 @@
   /*************************************************************************/
   /*************************************************************************/
 
-  static const FT_ServiceDescRec  tt_services[] =
-  {
-    { FT_SERVICE_ID_XF86_NAME, FT_XF86_FORMAT_TRUETYPE },
-    { NULL, NULL }
-  };
 
   static FT_Module_Interface
   tt_get_interface( TT_Driver    driver,
                     const char*  tt_interface )
   {
-    FT_Module_Interface  result;
-    FT_Module            sfntd;
-    SFNT_Service         sfnt;
+    FT_Module     sfntd = FT_Get_Module( driver->root.root.library,
+                                         "sfnt" );
+    SFNT_Service  sfnt;
 
-
-    result = ft_service_list_lookup( tt_services, tt_interface );
-    if ( result != NULL )
-      return result;
 
     /* only return the default interface from the SFNT module */
-    sfntd = FT_Get_Module( driver->root.root.library, "sfnt" );
     if ( sfntd )
     {
       sfnt = (SFNT_Service)( sfntd->clazz->module_interface );
@@ -409,20 +398,20 @@
     sizeof ( FT_GlyphSlotRec ),
 
 
-    (FT_Face_InitFunc)       tt_face_init,
-    (FT_Face_DoneFunc)       tt_face_done,
-    (FT_Size_InitFunc)       tt_size_init,
-    (FT_Size_DoneFunc)       tt_size_done,
-    (FT_Slot_InitFunc)       0,
-    (FT_Slot_DoneFunc)       0,
+    (FT_Face_InitFunc)        tt_face_init,
+    (FT_Face_DoneFunc)        tt_face_done,
+    (FT_Size_InitFunc)        tt_size_init,
+    (FT_Size_DoneFunc)        tt_size_done,
+    (FT_Slot_InitFunc)        0,
+    (FT_Slot_DoneFunc)        0,
 
-    (FT_Size_ResetPointsFunc)Set_Char_Sizes,
-    (FT_Size_ResetPixelsFunc)Set_Pixel_Sizes,
-    (FT_Slot_LoadFunc)       Load_Glyph,
+    (FT_Size_ResetPointsFunc) Set_Char_Sizes,
+    (FT_Size_ResetPixelsFunc) Set_Pixel_Sizes,
+    (FT_Slot_LoadFunc)        Load_Glyph,
 
-    (FT_Face_GetKerningFunc) Get_Kerning,
-    (FT_Face_AttachFunc)     0,
-    (FT_Face_GetAdvancesFunc)0
+    (FT_Face_GetKerningFunc)  Get_Kerning,
+    (FT_Face_AttachFunc)      0,
+    (FT_Face_GetAdvancesFunc) 0
   };
 
 

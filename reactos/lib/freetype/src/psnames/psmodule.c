@@ -17,8 +17,8 @@
 
 
 #include <ft2build.h>
+#include FT_INTERNAL_POSTSCRIPT_NAMES_H
 #include FT_INTERNAL_OBJECTS_H
-#include FT_SERVICE_POSTSCRIPT_CMAPS_H
 
 #include "psmodule.h"
 #include "pstables.h"
@@ -176,10 +176,10 @@
 
   /* Builds a table that maps Unicode values to glyph indices */
   static FT_Error
-  ps_unicodes_init( FT_Memory     memory,
-                    FT_UInt       num_glyphs,
-                    const char**  glyph_names,
-                    PS_Unicodes*  table )
+  ps_build_unicode_table( FT_Memory     memory,
+                          FT_UInt       num_glyphs,
+                          const char**  glyph_names,
+                          PS_Unicodes*  table )
   {
     FT_Error  error;
 
@@ -242,8 +242,8 @@
 
 
   static FT_UInt
-  ps_unicodes_char_index( PS_Unicodes*  table,
-                          FT_ULong      unicode )
+  ps_lookup_unicode( PS_Unicodes*  table,
+                     FT_ULong      unicode )
   {
     PS_UniMap  *min, *max, *mid;
 
@@ -273,8 +273,8 @@
 
 
   static FT_ULong
-  ps_unicodes_char_next( PS_Unicodes*  table,
-                         FT_ULong      unicode )
+  ps_next_unicode( PS_Unicodes*  table,
+                   FT_ULong      unicode )
   {
     PS_UniMap  *min, *max, *mid;
 
@@ -335,50 +335,38 @@
 
 
   static
-  const FT_Service_PsCMapsRec  pscmaps_interface =
+  const PSNames_Interface  psnames_interface =
   {
 #ifdef FT_CONFIG_OPTION_ADOBE_GLYPH_LIST
 
-    (PS_Unicode_ValueFunc)     ps_unicode_value,
-    (PS_Unicodes_InitFunc)     ps_unicodes_init,
-    (PS_Unicodes_CharIndexFunc)ps_unicodes_char_index,
-    (PS_Unicodes_CharNextFunc) ps_unicodes_char_next,
+    (PS_Unicode_Value_Func)    ps_unicode_value,
+    (PS_Build_Unicodes_Func)   ps_build_unicode_table,
+    (PS_Lookup_Unicode_Func)   ps_lookup_unicode,
 
 #else
 
     0,
     0,
     0,
-    0,
 
 #endif /* FT_CONFIG_OPTION_ADOBE_GLYPH_LIST */
 
-    (PS_Macintosh_Name_Func)   ps_get_macintosh_name,
-    (PS_Adobe_Std_Strings_Func)ps_get_standard_strings,
+    (PS_Macintosh_Name_Func)    ps_get_macintosh_name,
+    (PS_Adobe_Std_Strings_Func) ps_get_standard_strings,
 
     t1_standard_encoding,
-    t1_expert_encoding
+    t1_expert_encoding,
+
+#ifdef FT_CONFIG_OPTION_ADOBE_GLYPH_LIST
+    (PS_Next_Unicode_Func)     ps_next_unicode
+#else
+    0
+#endif /* FT_CONFIG_OPTION_ADOBE_GLYPH_LIST */
+
   };
 
-
-  static const FT_ServiceDescRec  pscmaps_services[] =
-  {
-    { FT_SERVICE_ID_POSTSCRIPT_CMAPS, &pscmaps_interface },
-    { NULL, NULL }
-  };
-
-
-  static FT_Pointer
-  psnames_get_service( FT_Module    module,
-                       const char*  service_id )
-  {
-    FT_UNUSED( module );
-
-    return ft_service_list_lookup( pscmaps_services, service_id );
-  }
 
 #endif /* !FT_CONFIG_OPTION_NO_POSTSCRIPT_NAMES */
-
 
 
   FT_CALLBACK_TABLE_DEF
@@ -393,15 +381,13 @@
 
 #ifdef FT_CONFIG_OPTION_NO_POSTSCRIPT_NAMES
     0,
+#else
+    (void*)&psnames_interface,   /* module specific interface */
+#endif
+
     (FT_Module_Constructor)0,
     (FT_Module_Destructor) 0,
     (FT_Module_Requester)  0
-#else
-    (void*)&pscmaps_interface,   /* module specific interface */
-    (FT_Module_Constructor)0,
-    (FT_Module_Destructor) 0,
-    (FT_Module_Requester)  psnames_get_service
-#endif
   };
 
 

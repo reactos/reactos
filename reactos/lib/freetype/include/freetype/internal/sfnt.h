@@ -125,6 +125,11 @@ FT_BEGIN_HEADER
   (*TT_Done_Face_Func)( TT_Face  face );
 
 
+  typedef FT_Module_Interface
+  (*SFNT_Get_Interface_Func)( FT_Module    module,
+                              const char*  func_interface );
+
+
   /*************************************************************************/
   /*                                                                       */
   /* <FuncType>                                                            */
@@ -250,27 +255,20 @@ FT_BEGIN_HEADER
   /*    returns its metrics.                                               */
   /*                                                                       */
   /* <Input>                                                               */
-  /*    face ::                                                            */
-  /*      The target face object.                                          */
+  /*    face        :: The target face object.                             */
   /*                                                                       */
-  /*    strike_index ::                                                    */
-  /*      The strike index.                                                */
+  /*    x_ppem      :: The horizontal resolution in points per EM.         */
   /*                                                                       */
-  /*    glyph_index ::                                                     */
-  /*      The current glyph index.                                         */
+  /*    y_ppem      :: The vertical resolution in points per EM.           */
   /*                                                                       */
-  /*    load_flags ::                                                      */
-  /*      The current load flags.                                          */
+  /*    glyph_index :: The current glyph index.                            */
   /*                                                                       */
-  /*    stream ::                                                          */
-  /*      The input stream.                                                */
+  /*    stream      :: The input stream.                                   */
   /*                                                                       */
   /* <Output>                                                              */
-  /*    amap ::                                                            */
-  /*      The target pixmap.                                               */
+  /*    amap        :: The target pixmap.                                  */
   /*                                                                       */
-  /*    ametrics ::                                                        */
-  /*      A big sbit metrics structure for the glyph image.                */
+  /*    ametrics    :: A big sbit metrics structure for the glyph image.   */
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.  Returns an error if no     */
@@ -314,8 +312,8 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef FT_Error
   (*TT_Set_SBit_Strike_Func)( TT_Face    face,
-                              FT_UInt    x_ppem,
-                              FT_UInt    y_ppem,
+                              FT_Int     x_ppem,
+                              FT_Int     y_ppem,
                               FT_ULong  *astrike_index );
 
 
@@ -371,6 +369,57 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <FuncType>                                                            */
+  /*    TT_CharMap_Load_Func                                               */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Loads a given TrueType character map into memory.                  */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    face   :: A handle to the parent face object.                      */
+  /*                                                                       */
+  /*    stream :: A handle to the current stream object.                   */
+  /*                                                                       */
+  /* <InOut>                                                               */
+  /*    cmap   :: A pointer to a cmap object.                              */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0 means success.                             */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    The function assumes that the stream is already in use (i.e.,      */
+  /*    opened).  In case of error, all partially allocated tables are     */
+  /*    released.                                                          */
+  /*                                                                       */
+  typedef FT_Error
+  (*TT_CharMap_Load_Func)( TT_Face       face,
+                           TT_CMapTable  cmap,
+                           FT_Stream     input );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <FuncType>                                                            */
+  /*    TT_CharMap_Free_Func                                               */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Destroys a character mapping table.                                */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    face :: A handle to the parent face object.                        */
+  /*                                                                       */
+  /*    cmap :: A handle to a cmap object.                                 */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0 means success.                             */
+  /*                                                                       */
+  typedef FT_Error
+  (*TT_CharMap_Free_Func)( TT_Face       face,
+                           TT_CMapTable  cmap );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <FuncType>                                                            */
   /*    TT_Load_Table_Func                                                 */
   /*                                                                       */
   /* <Description>                                                         */
@@ -410,6 +459,22 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
+  /* <FuncType>                                                            */
+  /*    SFNT_Load_Table_Func                                               */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Loads a given SFNT table into memory.                              */
+  /*                                                                       */
+  typedef FT_Error
+  (*SFNT_Load_Table_Func)( FT_Face    face,
+                           FT_ULong   tag,
+                           FT_Long    offset,
+                           FT_Byte*   buffer,
+                           FT_ULong*  length );
+
+
+  /*************************************************************************/
+  /*                                                                       */
   /* <Struct>                                                              */
   /*    SFNT_Interface                                                     */
   /*                                                                       */
@@ -427,7 +492,7 @@ FT_BEGIN_HEADER
     TT_Init_Face_Func            init_face;
     TT_Load_Face_Func            load_face;
     TT_Done_Face_Func            done_face;
-    FT_Module_Requester          get_interface;
+    SFNT_Get_Interface_Func      get_interface;
 
     TT_Load_Any_Func             load_any;
     TT_Load_SFNT_HeaderRec_Func  load_sfnt_header;
@@ -465,6 +530,10 @@ FT_BEGIN_HEADER
     /* see `ttpost.h' */
     TT_Get_PS_Name_Func          get_psname;
     TT_Free_Table_Func           free_psnames;
+
+    /* see `ttcmap.h' */
+    TT_CharMap_Load_Func         load_charmap;
+    TT_CharMap_Free_Func         free_charmap;
 
   } SFNT_Interface;
 

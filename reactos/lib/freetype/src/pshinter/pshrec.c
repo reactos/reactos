@@ -68,7 +68,7 @@
     if ( new_max > old_max )
     {
       /* try to grow the table */
-      new_max = FT_PAD_CEIL( new_max, 8 );
+      new_max = ( new_max + 7 ) & -8;
       if ( !FT_RENEW_ARRAY( table->hints, old_max, new_max ) )
         table->max_hints = new_max;
     }
@@ -142,7 +142,7 @@
 
     if ( new_max > old_max )
     {
-      new_max = FT_PAD_CEIL( new_max, 8 );
+      new_max = ( new_max + 7 ) & -8;
       if ( !FT_RENEW_ARRAY( mask->bytes, old_max, new_max ) )
         mask->max_bits = new_max * 8;
     }
@@ -239,7 +239,7 @@
 
     if ( new_max > old_max )
     {
-      new_max = FT_PAD_CEIL( new_max, 8 );
+      new_max = ( new_max + 7 ) & -8;
       if ( !FT_RENEW_ARRAY( table->masks, old_max, new_max ) )
         table->max_masks = new_max;
     }
@@ -1012,7 +1012,7 @@
         FT_ERROR(( "ps_hints_t2mask: "
                    "called with invalid bitcount %d (instead of %d)\n",
                    bit_count, count1 + count2 ));
-
+        
         /* simply ignore the operator */
         return;
       }
@@ -1057,7 +1057,7 @@
         FT_ERROR(( "ps_hints_t2counter: "
                    "called with invalid bitcount %d (instead of %d)\n",
                    bit_count, count1 + count2 ));
-
+                   
         /* simply ignore the operator */
         return;
       }

@@ -635,7 +635,7 @@
         glyph->root.metrics.height       = (FT_Long)ysize << 6;
         glyph->root.metrics.horiBearingX = xpos << 6;
         glyph->root.metrics.horiBearingY = ypos << 6;
-        glyph->root.metrics.horiAdvance  = FT_PIX_ROUND( ( advance >> 2 ) );
+        glyph->root.metrics.horiAdvance  = ( ( advance >> 2 ) + 32 ) & -64;
         glyph->root.metrics.vertBearingX = - glyph->root.metrics.width >> 1;
         glyph->root.metrics.vertBearingY = 0;
         glyph->root.metrics.vertAdvance  = size->root.metrics.height;
@@ -651,12 +651,11 @@
           error = ft_glyphslot_alloc_bitmap( &glyph->root, len );
           if ( !error )
           {
-            error = pfr_load_bitmap_bits(
-                      p,
-                      stream->limit,
-                      format,
-                      FT_BOOL(face->header.color_flags & 2),
-                      &glyph->root.bitmap );
+            error = pfr_load_bitmap_bits( p,
+                                          stream->limit,
+                                          format,
+                                          face->header.color_flags & 2,
+                                          &glyph->root.bitmap );
           }
         }
       }

@@ -291,7 +291,6 @@ FT_BEGIN_HEADER
 #define TT_ADOBE_ID_STANDARD  0
 #define TT_ADOBE_ID_EXPERT    1
 #define TT_ADOBE_ID_CUSTOM    2
-#define TT_ADOBE_ID_LATIN_1   3
 
 
   /*************************************************************************/

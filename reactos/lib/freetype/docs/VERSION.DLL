@@ -51,10 +51,7 @@ libtool  number, as well  as the  shared object  number found  on _most_
 systems, but not all of them:
 
     release    libtool      so
-  -------------------------------
-     2.1.8      9.6.3     6.3.6
-     2.1.7      9.5.3     6.3.5
-     2.1.6      9.5.3     6.3.5
+  --------------------------------------------------------------------
      2.1.5      9.4.3     6.3.4
      2.1.4      9.3.3     6.3.3
      2.1.3      9.2.3     6.3.2
@@ -63,8 +60,6 @@ systems, but not all of them:
      2.1.0      8.0.2         ?
      2.0.9      9.0.3         ?
      2.0.8      8.0.2         ?
-     2.0.4      7.0.1         ?
-     2.0.1      6.1.0         ?
 
 The libtool numbers are a bit inconsistent due to the library's history:
 
@@ -91,19 +86,19 @@ other release numbers.
   old_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS=`freetype-config --cflags`
   AC_TRY_CPP([
-
-#include <ft2build.h>
-#include FT_FREETYPE_H
+#include <freetype/freetype.h>
 #if (FREETYPE_MAJOR*1000 + FREETYPE_MINOR)*1000 + FREETYPE_PATCH < 2000009
 #error Freetype version too low.
 #endif
-  ],
-  [AC_MSG_RESULT(yes)
-   FREETYPE_LIBS=`freetype-config --libs`
-   AC_SUBST(FREETYPE_LIBS)
-   AC_DEFINE(HAVE_FREETYPE,1,[Define if you have the FreeType2 library])
-   CPPFLAGS="$old_CPPFLAGS"],
-  [AC_MSG_ERROR([Need FreeType library version 2.0.9 or higher])])
+  ],[
+    AC_MSG_RESULT(yes)
+    FREETYPE_LIBS=`freetype-config --libs`
+    AC_SUBST(FREETYPE_LIBS)
+    AC_DEFINE(HAVE_FREETYPE,1,[Define if you have the FreeType2 library])
+    CPPFLAGS="$old_CPPFLAGS"
+  ],[
+    AC_MSG_ERROR([Need FreeType library version 2.0.9 or higher])
+  ])
 
 
 --- end of VERSION.DLL ---

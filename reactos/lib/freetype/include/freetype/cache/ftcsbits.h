@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    A small-bitmap cache (specification).                                */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003 by                                     */
+/*  Copyright 2000-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,71 +22,250 @@
 
 #include <ft2build.h>
 #include FT_CACHE_H
-#include FT_CACHE_INTERNAL_GLYPH_H
+#include FT_CACHE_IMAGE_H
 
 
 FT_BEGIN_HEADER
 
-#define FTC_SBIT_ITEMS_PER_NODE  16
 
-  typedef struct  FTC_SNodeRec_
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Section>                                                             */
+  /*    cache_subsystem                                                    */
+  /*                                                                       */
+  /*************************************************************************/
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Type>                                                                */
+  /*    FTC_SBit                                                           */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A handle to a small bitmap descriptor.  See the @FTC_SBitRec       */
+  /*    structure for details.                                             */
+  /*                                                                       */
+  typedef struct FTC_SBitRec_*  FTC_SBit;
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Struct>                                                              */
+  /*    FTC_SBitRec                                                        */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A very compact structure used to describe a small glyph bitmap.    */
+  /*                                                                       */
+  /* <Fields>                                                              */
+  /*    width     :: The bitmap width in pixels.                           */
+  /*                                                                       */
+  /*    height    :: The bitmap height in pixels.                          */
+  /*                                                                       */
+  /*    left      :: The horizontal distance from the pen position to the  */
+  /*                 left bitmap border (a.k.a. `left side bearing', or    */
+  /*                 `lsb').                                               */
+  /*                                                                       */
+  /*    top       :: The vertical distance from the pen position (on the   */
+  /*                 baseline) to the upper bitmap border (a.k.a. `top     */
+  /*                 side bearing').  The distance is positive for upwards */
+  /*                 Y coordinates.                                        */
+  /*                                                                       */
+  /*    format    :: The format of the glyph bitmap (monochrome or gray).  */
+  /*                                                                       */
+  /*    max_grays :: Maximum gray level value (in the range 1 to 255).     */
+  /*                                                                       */
+  /*    pitch     :: The number of bytes per bitmap line.  May be positive */
+  /*                 or negative.                                          */
+  /*                                                                       */
+  /*    xadvance  :: The horizontal advance width in pixels.               */
+  /*                                                                       */
+  /*    yadvance  :: The vertical advance height in pixels.                */
+  /*                                                                       */
+  /*    buffer   :: A pointer to the bitmap pixels.                        */
+  /*                                                                       */
+  typedef struct  FTC_SBitRec_
   {
-    FTC_GNodeRec  gnode;
-    FT_UInt       count;
-    FTC_SBitRec   sbits[FTC_SBIT_ITEMS_PER_NODE];
+    FT_Byte   width;
+    FT_Byte   height;
+    FT_Char   left;
+    FT_Char   top;
 
-  } FTC_SNodeRec, *FTC_SNode;
+    FT_Byte   format;
+    FT_Byte   max_grays;
+    FT_Short  pitch;
+    FT_Char   xadvance;
+    FT_Char   yadvance;
 
+    FT_Byte*  buffer;
 
-#define FTC_SNODE( x )         ( (FTC_SNode)( x ) )
-#define FTC_SNODE_GINDEX( x )  FTC_GNODE( x )->gindex
-#define FTC_SNODE_FAMILY( x )  FTC_GNODE( x )->family
-
-  typedef FT_UInt
-  (*FTC_SFamily_GetCountFunc)( FTC_Family   family,
-                               FTC_Manager  manager );
-
-  typedef FT_Error
-  (*FTC_SFamily_LoadGlyphFunc)( FTC_Family   family,
-                                FT_UInt      gindex,
-                                FTC_Manager  manager,
-                                FT_Face     *aface );
-
-  typedef struct  FTC_SFamilyClassRec_
-  {
-    FTC_MruListClassRec        clazz;
-    FTC_SFamily_GetCountFunc   family_get_count;
-    FTC_SFamily_LoadGlyphFunc  family_load_glyph;
-
-  } FTC_SFamilyClassRec;
-
-  typedef const FTC_SFamilyClassRec*  FTC_SFamilyClass;
-
-#define FTC_SFAMILY_CLASS( x )  ((FTC_SFamilyClass)(x))
-
-#define FTC_CACHE__SFAMILY_CLASS( x )  \
-          FTC_SFAMILY_CLASS( FTC_CACHE__GCACHE_CLASS( x )->family_class )
+  } FTC_SBitRec;
 
 
-  FT_EXPORT( void )
-  FTC_SNode_Free( FTC_SNode  snode,
-                  FTC_Cache  cache );
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Type>                                                                */
+  /*    FTC_SBitCache                                                      */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A handle to a small bitmap cache.  These are special cache objects */
+  /*    used to store small glyph bitmaps (and anti-aliased pixmaps) in a  */
+  /*    much more efficient way than the traditional glyph image cache     */
+  /*    implemented by @FTC_ImageCache.                                    */
+  /*                                                                       */
+  typedef struct FTC_SBitCacheRec_*  FTC_SBitCache;
 
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Type>                                                                */
+  /*    FTC_SBit_Cache                                                     */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    DEPRECATED.  Use @FTC_SBitCache instead.                           */
+  /*                                                                       */
+  typedef FTC_SBitCache  FTC_SBit_Cache;
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    FTC_SBitCache_New                                                  */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Creates a new cache to store small glyph bitmaps.                  */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    manager :: A handle to the source cache manager.                   */
+  /*                                                                       */
+  /* <Output>                                                              */
+  /*    acache  :: A handle to the new sbit cache.  NULL in case of error. */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0 means success.                             */
+  /*                                                                       */
   FT_EXPORT( FT_Error )
-  FTC_SNode_New( FTC_SNode   *psnode,
-                 FTC_GQuery   gquery,
-                 FTC_Cache    cache );
-
-  FT_EXPORT( FT_ULong )
-  FTC_SNode_Weight( FTC_SNode  inode );
+  FTC_SBitCache_New( FTC_Manager     manager,
+                     FTC_SBitCache  *acache );
 
 
-  FT_EXPORT( FT_Bool )
-  FTC_SNode_Compare( FTC_SNode   snode,
-                     FTC_GQuery  gquery,
-                     FTC_Cache   cache );
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    FTC_SBitCache_Lookup                                               */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Looks up a given small glyph bitmap in a given sbit cache and      */
+  /*    "lock" it to prevent its flushing from the cache until needed      */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    cache  :: A handle to the source sbit cache.                       */
+  /*                                                                       */
+  /*    type   :: A pointer to the glyph image type descriptor.            */
+  /*                                                                       */
+  /*    gindex :: The glyph index.                                         */
+  /*                                                                       */
+  /* <Output>                                                              */
+  /*    sbit   :: A handle to a small bitmap descriptor.                   */
+  /*                                                                       */
+  /*    anode  :: Used to return the address of of the corresponding cache */
+  /*              node after incrementing its reference count (see note    */
+  /*              below).                                                  */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0 means success.                             */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    The small bitmap descriptor and its bit buffer are owned by the    */
+  /*    cache and should never be freed by the application.  They might    */
+  /*    as well disappear from memory on the next cache lookup, so don't   */
+  /*    treat them as persistent data.                                     */
+  /*                                                                       */
+  /*    The descriptor's `buffer' field is set to 0 to indicate a missing  */
+  /*    glyph bitmap.                                                      */
+  /*                                                                       */
+  /*    If "anode" is _not_ NULL, it receives the address of the cache     */
+  /*    node containing the bitmap, after increasing its reference count.  */
+  /*    This ensures that the node (as well as the image) will always be   */
+  /*    kept in the cache until you call @FTC_Node_Unref to "release" it.  */
+  /*                                                                       */
+  /*    If "anode" is NULL, the cache node is left unchanged, which means  */
+  /*    that the bitmap could be flushed out of the cache on the next      */
+  /*    call to one of the caching sub-system APIs.  Don't assume that it  */
+  /*    is persistent!                                                     */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
+  FTC_SBitCache_Lookup( FTC_SBitCache    cache,
+                        FTC_ImageType    type,
+                        FT_UInt          gindex,
+                        FTC_SBit        *sbit,
+                        FTC_Node        *anode );
+
 
   /* */
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    FTC_SBit_Cache_New                                                 */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    DEPRECATED.  Use @FTC_SBitCache_New instead.                       */
+  /*                                                                       */
+  /*    Creates a new cache to store small glyph bitmaps.                  */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    manager :: A handle to the source cache manager.                   */
+  /*                                                                       */
+  /* <Output>                                                              */
+  /*    acache  :: A handle to the new sbit cache.  NULL in case of error. */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0 means success.                             */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
+  FTC_SBit_Cache_New( FTC_Manager      manager,
+                      FTC_SBit_Cache  *acache );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    FTC_SBit_Cache_Lookup                                              */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    DEPRECATED.  Use @FTC_SBitCache_Lookup instead.                    */
+  /*                                                                       */
+  /*    Looks up a given small glyph bitmap in a given sbit cache.         */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    cache  :: A handle to the source sbit cache.                       */
+  /*                                                                       */
+  /*    desc   :: A pointer to the glyph image descriptor.                 */
+  /*                                                                       */
+  /*    gindex :: The glyph index.                                         */
+  /*                                                                       */
+  /* <Output>                                                              */
+  /*    sbit   :: A handle to a small bitmap descriptor.                   */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0 means success.                             */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    The small bitmap descriptor and its bit buffer are owned by the    */
+  /*    cache and should never be freed by the application.  They might    */
+  /*    as well disappear from memory on the next cache lookup, so don't   */
+  /*    treat them as persistent data.                                     */
+  /*                                                                       */
+  /*    The descriptor's `buffer' field is set to 0 to indicate a missing  */
+  /*    glyph bitmap.                                                      */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
+  FTC_SBit_Cache_Lookup( FTC_SBit_Cache   cache,
+                         FTC_Image_Desc*  desc,
+                         FT_UInt          gindex,
+                         FTC_SBit        *sbit );
+
 
 FT_END_HEADER
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 driver interface (body).                                      */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -29,13 +29,8 @@
 
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
+#include FT_INTERNAL_POSTSCRIPT_NAMES_H
 
-#include FT_SERVICE_MULTIPLE_MASTERS_H
-#include FT_SERVICE_GLYPH_DICT_H
-#include FT_SERVICE_XFREE86_NAME_H
-#include FT_SERVICE_POSTSCRIPT_NAME_H
-#include FT_SERVICE_POSTSCRIPT_CMAPS_H
-#include FT_SERVICE_POSTSCRIPT_INFO_H
 
   /*************************************************************************/
   /*                                                                       */
@@ -46,10 +41,6 @@
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_t1driver
 
- /*
-  *  GLYPH DICT SERVICE
-  *
-  */
 
   static FT_Error
   t1_get_glyph_name( T1_Face     face,
@@ -78,6 +69,23 @@
   }
 
 
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    t1_get_name_index                                                  */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Uses the Type 1 font's `glyph_names' table to find a given glyph   */
+  /*    name's glyph index.                                                */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    face       :: A handle to the source face object.                  */
+  /*                                                                       */
+  /*    glyph_name :: The glyph name.                                      */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    Glyph index.  0 means `undefined character code'.                  */
+  /*                                                                       */
   static FT_UInt
   t1_get_name_index( T1_Face     face,
                      FT_String*  glyph_name )
@@ -97,17 +105,6 @@
     return 0;
   }
 
-  static const FT_Service_GlyphDictRec  t1_service_glyph_dict =
-  {
-    (FT_GlyphDict_GetNameFunc)  t1_get_glyph_name,
-    (FT_GlyphDict_NameIndexFunc)t1_get_name_index
-  };
-
-
- /*
-  *  POSTSCRIPT NAME SERVICE
-  *
-  */
 
   static const char*
   t1_get_ps_name( T1_Face  face )
@@ -115,82 +112,61 @@
     return (const char*) face->type1.font_name;
   }
 
-  static const FT_Service_PsFontNameRec  t1_service_ps_name =
-  {
-    (FT_PsName_GetFunc)t1_get_ps_name
-  };
 
-
- /*
-  *  MULTIPLE MASTERS SERVICE
-  *
-  */
-
-#ifndef T1_CONFIG_OPTION_NO_MM_SUPPORT
-  static const FT_Service_MultiMastersRec  t1_service_multi_masters =
-  {
-    (FT_Get_MM_Func)       T1_Get_Multi_Master,
-    (FT_Set_MM_Design_Func)T1_Set_MM_Design,
-    (FT_Set_MM_Blend_Func) T1_Set_MM_Blend
-  };
-#endif
-
-
- /*
-  *  POSTSCRIPT INFO SERVICE
-  *
-  */
-
-  static FT_Error
-  t1_ps_get_font_info( FT_Face          face,
-                       PS_FontInfoRec*  afont_info )
-  {
-    *afont_info = ((T1_Face)face)->type1.font_info;
-    return 0;
-  }
-
-
-  static FT_Int
-  t1_ps_has_glyph_names( FT_Face  face )
-  {
-    FT_UNUSED( face );
-    return 1;
-  }
-
-
-  static const FT_Service_PsInfoRec  t1_service_ps_info =
-  {
-    (PS_GetFontInfoFunc)  t1_ps_get_font_info,
-    (PS_HasGlyphNamesFunc)t1_ps_has_glyph_names
-  };
-
-
- /*
-  *  SERVICE LIST
-  *
-  */
-
-  static const FT_ServiceDescRec  t1_services[] =
-  {
-    { FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &t1_service_ps_name },
-    { FT_SERVICE_ID_GLYPH_DICT,           &t1_service_glyph_dict },
-    { FT_SERVICE_ID_XF86_NAME,            FT_XF86_FORMAT_TYPE_1 },
-    { FT_SERVICE_ID_POSTSCRIPT_INFO,      &t1_service_ps_info },
-
-#ifndef T1_CONFIG_OPTION_NO_MM_SUPPORT
-    { FT_SERVICE_ID_MULTI_MASTERS,        &t1_service_multi_masters },
-#endif
-    { NULL, NULL }
-  };
-
-
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    Get_Interface                                                      */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Each driver can provide one or more extensions to the base         */
+  /*    FreeType API.  These can be used to access format specific         */
+  /*    features (e.g., all TrueType/OpenType resources share a common     */
+  /*    file structure and common tables which can be accessed through the */
+  /*    `sfnt' interface), or more simply generic ones (e.g., the          */
+  /*    `postscript names' interface which can be used to retrieve the     */
+  /*     PostScript name of a given glyph index).                          */
+  /*                                                                       */
+  /* <InOut>                                                               */
+  /*    driver       :: A handle to a driver object.                       */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    t1_interface :: A string designing the interface.  Examples are    */
+  /*                    `sfnt', `post_names', `charmaps', etc.             */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    A typeless pointer to the extension's interface (normally a table  */
+  /*    of function pointers).  Returns NULL if the requested extension    */
+  /*    isn't available (i.e., wasn't compiled in the driver at build      */
+  /*    time).                                                             */
+  /*                                                                       */
   static FT_Module_Interface
   Get_Interface( FT_Driver         driver,
                  const FT_String*  t1_interface )
   {
     FT_UNUSED( driver );
+    FT_UNUSED( t1_interface );
 
-    return ft_service_list_lookup( t1_services, t1_interface );
+    if ( ft_strcmp( (const char*)t1_interface, "glyph_name" ) == 0 )
+      return (FT_Module_Interface)t1_get_glyph_name;
+
+    if ( ft_strcmp( (const char*)t1_interface, "name_index" ) == 0 )
+      return (FT_Module_Interface)t1_get_name_index;
+
+    if ( ft_strcmp( (const char*)t1_interface, "postscript_name" ) == 0 )
+      return (FT_Module_Interface)t1_get_ps_name;
+
+#ifndef T1_CONFIG_OPTION_NO_MM_SUPPORT
+    if ( ft_strcmp( (const char*)t1_interface, "get_mm" ) == 0 )
+      return (FT_Module_Interface)T1_Get_Multi_Master;
+
+    if ( ft_strcmp( (const char*)t1_interface, "set_mm_design") == 0 )
+      return (FT_Module_Interface)T1_Set_MM_Design;
+
+    if ( ft_strcmp( (const char*)t1_interface, "set_mm_blend") == 0 )
+      return (FT_Module_Interface)T1_Set_MM_Blend;
+#endif
+    return 0;
   }
 
 

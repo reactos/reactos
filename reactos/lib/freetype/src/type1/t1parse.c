@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 parser (body).                                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -65,30 +65,53 @@
   /*************************************************************************/
 
 
-  static FT_Error
-  read_pfb_tag( FT_Stream   stream,
-                FT_UShort  *atag,
-                FT_Long    *asize )
+#define IS_T1_WHITESPACE( c )  ( (c) == ' '  || (c) == '\t' )
+#define IS_T1_LINESPACE( c )   ( (c) == '\r' || (c) == '\n' )
+
+#define IS_T1_SPACE( c )  ( IS_T1_WHITESPACE( c ) || IS_T1_LINESPACE( c ) )
+
+
+  typedef struct  PFB_Tag_
   {
-    FT_Error   error;
     FT_UShort  tag;
     FT_Long    size;
 
+  } PFB_Tag;
 
-    *atag  = 0;
-    *asize = 0;
 
-    if ( !FT_READ_USHORT( tag ) )
+#undef  FT_STRUCTURE
+#define FT_STRUCTURE  PFB_Tag
+
+
+  static
+  const FT_Frame_Field  pfb_tag_fields[] =
+  {
+    FT_FRAME_START( 6 ),
+      FT_FRAME_USHORT ( tag ),
+      FT_FRAME_LONG_LE( size ),
+    FT_FRAME_END
+  };
+
+
+  static FT_Error
+  read_pfb_tag( FT_Stream   stream,
+                FT_UShort*  tag,
+                FT_Long*    size )
+  {
+    FT_Error  error;
+    PFB_Tag   head;
+
+
+    *tag  = 0;
+    *size = 0;
+    if ( !FT_STREAM_READ_FIELDS( pfb_tag_fields, &head ) )
     {
-      if ( tag == 0x8001U || tag == 0x8002U )
+      if ( head.tag == 0x8001U || head.tag == 0x8002U )
       {
-        if ( !FT_READ_LONG_LE( size ) )
-          *asize = size;
+        *tag  = head.tag;
+        *size = head.size;
       }
-
-      *atag = tag;
     }
-
     return error;
   }
 
@@ -104,7 +127,7 @@
     FT_Long    size;
 
 
-    psaux->ps_parser_funcs->init( &parser->root, 0, 0, memory );
+    psaux->ps_parser_funcs->init( &parser->root,0, 0, memory );
 
     parser->stream       = stream;
     parser->base_len     = 0;
@@ -219,13 +242,36 @@
   }
 
 
+  /* return the value of an hexadecimal digit */
+  static int
+  hexa_value( char  c )
+  {
+    unsigned int  d;
+
+
+    d = (unsigned int)( c - '0' );
+    if ( d <= 9 )
+      return (int)d;
+
+    d = (unsigned int)( c - 'a' );
+    if ( d <= 5 )
+      return (int)( d + 10 );
+
+    d = (unsigned int)( c - 'A' );
+    if ( d <= 5 )
+      return (int)( d + 10 );
+
+    return -1;
+  }
+
+
   FT_LOCAL_DEF( FT_Error )
   T1_Get_Private_Dict( T1_Parser      parser,
                        PSAux_Service  psaux )
   {
     FT_Stream  stream = parser->stream;
     FT_Memory  memory = parser->root.memory;
-    FT_Error   error  = T1_Err_Ok;
+    FT_Error   error  = 0;
     FT_Long    size;
 
 
@@ -279,8 +325,7 @@
           break;
         }
 
-        if ( FT_STREAM_READ( parser->private_dict + parser->private_len,
-                             size ) )
+        if ( FT_STREAM_READ( parser->private_dict + parser->private_len, size ) )
           goto Fail;
 
         parser->private_len += size;
@@ -288,9 +333,9 @@
     }
     else
     {
-      /* We have already `loaded' the whole PFA font file into memory; */
+      /* we have already `loaded' the whole PFA font file into memory; */
       /* if this is a memory resource, allocate a new block to hold    */
-      /* the private dict.  Otherwise, simply overwrite into the base  */
+      /* the private dict. Otherwise, simply overwrite into the base   */
       /* dictionary block in the heap.                                 */
 
       /* first of all, look at the `eexec' keyword */
@@ -299,18 +344,24 @@
       FT_Byte   c;
 
 
-    Again:
       for (;;)
       {
         c = cur[0];
         if ( c == 'e' && cur + 9 < limit )  /* 9 = 5 letters for `eexec' + */
                                             /* newline + 4 chars           */
         {
-          if ( cur[1] == 'e' &&
-               cur[2] == 'x' &&
-               cur[3] == 'e' &&
-               cur[4] == 'c' )
+          if ( cur[1] == 'e' && cur[2] == 'x' &&
+               cur[3] == 'e' && cur[4] == 'c' )
+          {
+            cur += 6; /* we skip the newling after the `eexec' */
+
+            /* XXX: Some fonts use DOS-linefeeds, i.e. \r\n; we need to */
+            /*      skip the extra \n if we find it                     */
+            if ( cur[0] == '\n' )
+              cur++;
+
             break;
+          }
         }
         cur++;
         if ( cur >= limit )
@@ -322,56 +373,9 @@
         }
       }
 
-      /* check whether `eexec' was real -- it could be in a comment */
-      /* or string (as e.g. in u003043t.gsf from ghostscript)       */
-
-      parser->root.cursor = parser->base_dict;
-      parser->root.limit  = cur + 9;
-
-      cur   = parser->root.cursor;
-      limit = parser->root.limit;
-
-      while ( cur < limit )
-      {
-        if ( *cur == 'e' && ft_strncmp( (char*)cur, "eexec", 5 ) == 0 )
-          goto Found;
-
-        T1_Skip_PS_Token( parser );
-        T1_Skip_Spaces  ( parser );
-        cur = parser->root.cursor;
-      }
-
-      /* we haven't found the correct `eexec'; go back and continue */
-      /* searching                                                  */
-
-      cur   = limit;
-      limit = parser->base_dict + parser->base_len;
-      goto Again;
-
       /* now determine where to write the _encrypted_ binary private  */
       /* dictionary.  We overwrite the base dictionary for disk-based */
       /* resources and allocate a new block otherwise                 */
-
-    Found:
-      parser->root.limit = parser->base_dict + parser->base_len;
-
-      T1_Skip_PS_Token( parser );
-      cur = parser->root.cursor;
-      if ( *cur == '\r' )
-      {
-        cur++;
-        if ( *cur == '\n' )
-          cur++;
-      }
-      else if ( *cur == '\n' )
-        cur++;
-      else
-      {
-        FT_ERROR(( "T1_Get_Private_Dict:" ));
-        FT_ERROR(( " `eexec' not properly terminated\n" ));
-        error = T1_Err_Invalid_File_Format;
-        goto Exit;
-      }
 
       size = (FT_Long)( parser->base_len - ( cur - parser->base_dict ) );
 
@@ -398,38 +402,51 @@
       /* the `eexec' keyword); if they all are hexadecimal digits, then   */
       /* we have a case of ASCII storage                                  */
 
-      if ( ft_isxdigit( cur[0] ) && ft_isxdigit( cur[1] ) &&
-           ft_isxdigit( cur[2] ) && ft_isxdigit( cur[3] ) )
+      if ( ( hexa_value( cur[0] ) | hexa_value( cur[1] ) |
+             hexa_value( cur[2] ) | hexa_value( cur[3] ) ) < 0 )
+
+        /* binary encoding -- `simply' copy the private dict */
+        FT_MEM_COPY( parser->private_dict, cur, size );
+
+      else
       {
         /* ASCII hexadecimal encoding */
-        FT_Long  len;
+
+        FT_Byte*  write;
+        FT_Int    count;
 
 
-        parser->root.cursor = cur;
-        (void)psaux->ps_parser_funcs->to_bytes( &parser->root,
-                                                parser->private_dict,
-                                                parser->private_len,
-                                                &len,
-                                                0 );
-        parser->private_len = len;
+        write = parser->private_dict;
+        count = 0;
+
+        for ( ;cur < limit; cur++ )
+        {
+          int  hex1;
+
+
+          /* check for newline */
+          if ( cur[0] == '\r' || cur[0] == '\n' )
+            continue;
+
+          /* exit if we have a non-hexadecimal digit that isn't a newline */
+          hex1 = hexa_value( cur[0] );
+          if ( hex1 < 0 || cur + 1 >= limit )
+            break;
+
+          /* otherwise, store byte */
+          *write++ = (FT_Byte)( ( hex1 << 4 ) | hexa_value( cur[1] ) );
+          count++;
+          cur++;
+        }
 
         /* put a safeguard */
-        parser->private_dict[len] = '\0';
+        parser->private_len = write - parser->private_dict;
+        *write++ = 0;
       }
-      else
-        /* binary encoding -- copy the private dict */
-        FT_MEM_MOVE( parser->private_dict, cur, size );
     }
 
     /* we now decrypt the encoded binary private dictionary */
     psaux->t1_decrypt( parser->private_dict, parser->private_len, 55665U );
-
-    /* replace the four random bytes at the beginning with whitespace */
-    parser->private_dict[0] = ' ';
-    parser->private_dict[1] = ' ';
-    parser->private_dict[2] = ' ';
-    parser->private_dict[3] = ' ';
-
     parser->root.base   = parser->private_dict;
     parser->root.cursor = parser->private_dict;
     parser->root.limit  = parser->root.cursor + parser->private_len;

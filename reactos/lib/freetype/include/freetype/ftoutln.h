@@ -5,7 +5,7 @@
 /*    Support for the FT_Outline type used to store glyph shapes of        */
 /*    most scalable font formats (specification).                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -23,12 +23,6 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
-
-#ifdef FREETYPE_H
-#error "freetype.h of FreeType 1 has been loaded!"
-#error "Please fix the directory search order for header files"
-#error "so that freetype.h of FreeType 2 is found first."
-#endif
 
 
 FT_BEGIN_HEADER
@@ -393,72 +387,6 @@ FT_BEGIN_HEADER
   FT_Outline_Render( FT_Library         library,
                      FT_Outline*        outline,
                      FT_Raster_Params*  params );
-
-
- /**************************************************************************
-  *
-  * @enum:
-  *   FT_Orientation
-  *  
-  * @description:
-  *   A list of values used to describe an outline's contour orientation.
-  *
-  *   The TrueType and Postscript specifications use different conventions
-  *   to determine whether outline contours should be filled or unfilled.
-  *   
-  * @values:
-  *   FT_ORIENTATION_TRUETYPE ::
-  *     According to the TrueType specification, clockwise contours must
-  *     be filled, and counter-clockwise ones must be unfilled.
-  *
-  *   FT_ORIENTATION_POSTSCRIPT ::
-  *     According to the Postscript specification, counter-clockwise contours
-  *     must be filled, and clockwise ones must be unfilled.
-  *
-  *   FT_ORIENTATION_FILL_RIGHT ::
-  *     This is identical to @FT_ORIENTATION_TRUETYPE, but is used to
-  *     remember that in TrueType, everything that is to the right of
-  *     the drawing direction of a contour must be filled.
-  *
-  *   FT_ORIENTATION_FILL_LEFT ::
-  *     This is identical to @FT_ORIENTATION_POSTSCRIPT, but is used to
-  *     remember that in Postscript, everything that is to the left of
-  *     the drawing direction of a contour must be filled.
-  */
-  typedef enum
-  {
-    FT_ORIENTATION_TRUETYPE   = 0,
-    FT_ORIENTATION_POSTSCRIPT = 1,
-    FT_ORIENTATION_FILL_RIGHT = FT_ORIENTATION_TRUETYPE,
-    FT_ORIENTATION_FILL_LEFT  = FT_ORIENTATION_POSTSCRIPT
-  
-  } FT_Orientation;
-
-
- /**************************************************************************
-  *
-  * @function:
-  *   FT_Outline_Get_Orientation
-  *  
-  * @description:
-  *   This function analyzes a glyph outline and tries to compute its
-  *   fill orientation (see @FT_Orientation).  This is done by computing
-  *   the direction of each global horizontal and/or vertical extrema
-  *   within the outline.
-  *
-  *   Note that this will return @FT_ORIENTATION_TRUETYPE for empty
-  *   outlines.
-  *
-  * @input:
-  *   outline ::
-  *     A handle to the source outline.
-  *
-  * @return:
-  *   The orientation.
-  *
-  */
-  FT_EXPORT( FT_Orientation )
-  FT_Outline_Get_Orientation( FT_Outline*  outline );
 
 
   /* */

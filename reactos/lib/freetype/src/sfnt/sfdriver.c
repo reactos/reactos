@@ -22,9 +22,8 @@
 
 #include "sfdriver.h"
 #include "ttload.h"
+#include "ttcmap.h"
 #include "sfobjs.h"
-
-#include "sferrors.h"
 
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
 #include "ttsbit.h"
@@ -34,18 +33,6 @@
 #include "ttpost.h"
 #endif
 
-#include "ttcmap0.h"
-
-#include FT_SERVICE_GLYPH_DICT_H
-#include FT_SERVICE_POSTSCRIPT_NAME_H
-#include FT_SERVICE_SFNT_H
-#include FT_SERVICE_TT_CMAP_H
-
-
- /*
-  *  SFNT TABLE SERVICE
-  *
-  */
 
   static void*
   get_sfnt_table( TT_Face      face,
@@ -92,22 +79,11 @@
   }
 
 
-  static const FT_Service_SFNT_TableRec  sfnt_service_sfnt_table =
-  {
-    (FT_SFNT_TableLoadFunc)tt_face_load_any,
-    (FT_SFNT_TableGetFunc) get_sfnt_table
-  };
-
-
 #ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
 
- /*
-  *  GLYPH DICT SERVICE
-  *
-  */
 
   static FT_Error
-  sfnt_get_glyph_name( TT_Face     face,
+  get_sfnt_glyph_name( TT_Face     face,
                        FT_UInt     glyph_index,
                        FT_Pointer  buffer,
                        FT_UInt     buffer_max )
@@ -133,30 +109,16 @@
   }
 
 
-  static const FT_Service_GlyphDictRec  sfnt_service_glyph_dict =
-  {
-    (FT_GlyphDict_GetNameFunc)  sfnt_get_glyph_name,
-    (FT_GlyphDict_NameIndexFunc)NULL
-  };
-
-#endif /* TT_CONFIG_OPTION_POSTSCRIPT_NAMES */
-
-
- /*
-  *  POSTSCRIPT NAME SERVICE
-  *
-  */
-
   static const char*
-  sfnt_get_ps_name( TT_Face  face )
+  get_sfnt_postscript_name( TT_Face  face )
   {
     FT_Int       n, found_win, found_apple;
     const char*  result = NULL;
 
 
     /* shouldn't happen, but just in case to avoid memory leaks */
-    if ( face->postscript_name )
-      return face->postscript_name;
+    if ( face->root.internal->postscript_name )
+      return face->root.internal->postscript_name;
 
     /* scan the name table to see whether we have a Postscript name here, */
     /* either in Macintosh or Windows platform encodings                  */
@@ -253,42 +215,12 @@
     }
 
   Exit:
-    face->postscript_name = result;
+    face->root.internal->postscript_name = result;
     return result;
   }
 
-  static const FT_Service_PsFontNameRec  sfnt_service_ps_name =
-  {
-    (FT_PsName_GetFunc)sfnt_get_ps_name
-  };
 
-
- /*
-  *  TT CMAP INFO
-  *
-  */
-  static const FT_Service_TTCMapsRec  tt_service_get_cmap_info =
-  {
-    (TT_CMap_Info_GetFunc)tt_get_cmap_info
-  };
-
-
- /*
-  *  SERVICE LIST
-  *
-  */
-
-  static const FT_ServiceDescRec  sfnt_services[] =
-  {
-    { FT_SERVICE_ID_SFNT_TABLE,           &sfnt_service_sfnt_table },
-    { FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &sfnt_service_ps_name },
-#ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
-    { FT_SERVICE_ID_GLYPH_DICT,           &sfnt_service_glyph_dict },
-#endif
-    { FT_SERVICE_ID_TT_CMAP,              &tt_service_get_cmap_info },
-
-    { NULL, NULL }
-  };
+#endif /* TT_CONFIG_OPTION_POSTSCRIPT_NAMES */
 
 
   FT_CALLBACK_DEF( FT_Module_Interface )
@@ -303,7 +235,15 @@
     if ( ft_strcmp( module_interface, "load_sfnt" ) == 0 )
       return (FT_Module_Interface)tt_face_load_any;
 
-    return ft_service_list_lookup( sfnt_services, module_interface );
+#ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
+    if ( ft_strcmp( module_interface, "glyph_name" ) == 0 )
+      return (FT_Module_Interface)get_sfnt_glyph_name;
+#endif
+
+    if ( ft_strcmp( module_interface, "postscript_name" ) == 0 )
+      return (FT_Module_Interface)get_sfnt_postscript_name;
+
+    return 0;
   }
 
 
@@ -372,6 +312,9 @@
 
 #endif /* TT_CONFIG_OPTION_POSTSCRIPT_NAMES */
 
+    /* see `ttcmap.h' */
+    tt_face_load_charmap,
+    tt_face_free_charmap,
   };
 
 

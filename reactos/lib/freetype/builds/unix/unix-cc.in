@@ -70,10 +70,7 @@ T := -o$(space)
 #   Use the ANSIFLAGS variable to define the compiler flags used to enfore
 #   ANSI compliance.
 #
-#   We use our own FreeType configuration file.
-#
-CFLAGS := -c @XX_CFLAGS@ @CPPFLAGS@ @CFLAGS@ \
-          -DFT_CONFIG_CONFIG_H="<ftconfig.h>"
+CFLAGS := -c @XX_CFLAGS@ @CPPFLAGS@ @CFLAGS@
 
 # ANSIFLAGS: Put there the flags used to make your compiler ANSI-compliant.
 #

@@ -19,7 +19,6 @@
 #include <ft2build.h>
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
-#include FT_TRUETYPE_IDS_H
 
 #include "t1gload.h"
 #include "t1load.h"
@@ -30,7 +29,7 @@
 #include "t1afm.h"
 #endif
 
-#include FT_SERVICE_POSTSCRIPT_CMAPS_H
+#include FT_INTERNAL_POSTSCRIPT_NAMES_H
 #include FT_INTERNAL_POSTSCRIPT_AUX_H
 
 
@@ -230,6 +229,9 @@
       FT_FREE( type1->encoding.char_name );
       FT_FREE( type1->font_name );
 
+      FT_FREE( type1->paint_type );
+      FT_FREE( type1->stroke_width );
+
 #ifndef T1_CONFIG_OPTION_NO_AFM
       /* release afm data if present */
       if ( face->afm_data )
@@ -276,11 +278,11 @@
                 FT_Int         num_params,
                 FT_Parameter*  params )
   {
-    FT_Error            error;
-    FT_Service_PsCMaps  psnames;
-    PSAux_Service       psaux;
-    T1_Font             type1 = &face->type1;
-    PS_FontInfo         info = &type1->font_info;
+    FT_Error         error;
+    PSNames_Service  psnames;
+    PSAux_Service    psaux;
+    T1_Font          type1 = &face->type1;
+    PS_FontInfo      info = &type1->font_info;
 
     FT_UNUSED( num_params );
     FT_UNUSED( params );
@@ -290,8 +292,9 @@
 
     face->root.num_faces = 1;
 
-    FT_FACE_FIND_GLOBAL_SERVICE( face, psnames, POSTSCRIPT_CMAPS );
-    face->psnames = psnames;
+    face->psnames = FT_Get_Module_Interface( FT_FACE_LIBRARY( face ),
+                                             "psnames" );
+    psnames = (PSNames_Service)face->psnames;
 
     face->psaux = FT_Get_Module_Interface( FT_FACE_LIBRARY( face ),
                                            "psaux" );
@@ -431,10 +434,8 @@
 
       root->max_advance_height = root->height;
 
-      root->underline_position =
-        (FT_Short)( info->underline_position >> 16 );
-      root->underline_thickness =
-        (FT_Short)( info->underline_thickness >> 16 );
+      root->underline_position  = info->underline_position >> 16;
+      root->underline_thickness = info->underline_thickness >> 16;
 
       root->internal->max_points   = 0;
       root->internal->max_contours = 0;
@@ -468,25 +469,25 @@
         {
         case T1_ENCODING_TYPE_STANDARD:
           charmap.encoding    = FT_ENCODING_ADOBE_STANDARD;
-          charmap.encoding_id = TT_ADOBE_ID_STANDARD;
+          charmap.encoding_id = 0;
           clazz               = cmap_classes->standard;
           break;
 
         case T1_ENCODING_TYPE_EXPERT:
           charmap.encoding    = FT_ENCODING_ADOBE_EXPERT;
-          charmap.encoding_id = TT_ADOBE_ID_EXPERT;
+          charmap.encoding_id = 1;
           clazz               = cmap_classes->expert;
           break;
 
         case T1_ENCODING_TYPE_ARRAY:
           charmap.encoding    = FT_ENCODING_ADOBE_CUSTOM;
-          charmap.encoding_id = TT_ADOBE_ID_CUSTOM;
+          charmap.encoding_id = 2;
           clazz               = cmap_classes->custom;
           break;
 
         case T1_ENCODING_TYPE_ISOLATIN1:
           charmap.encoding    = FT_ENCODING_ADOBE_LATIN_1;
-          charmap.encoding_id = TT_ADOBE_ID_LATIN_1;
+          charmap.encoding_id = 3;
           clazz               = cmap_classes->unicode;
           break;
 

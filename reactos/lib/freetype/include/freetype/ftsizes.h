@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType size objects management (specification).                    */
 /*                                                                         */
-/*  Copyright 1996-2001, 2003 by                                           */
+/*  Copyright 1996-2001 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -31,12 +31,6 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
-
-#ifdef FREETYPE_H
-#error "freetype.h of FreeType 1 has been loaded!"
-#error "Please fix the directory search order for header files"
-#error "so that freetype.h of FreeType 2 is found first."
-#endif
 
 
 FT_BEGIN_HEADER
@@ -107,9 +101,7 @@ FT_BEGIN_HEADER
   /*    FT_Done_Size                                                       */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Discards a given size object.  Note that @FT_Done_Face             */
-  /*    automatically discards all size objects allocated with             */
-  /*    @FT_New_Size.                                                      */
+  /*    Discards a given size object.                                      */
   /*                                                                       */
   /* <Input>                                                               */
   /*    size :: A handle to a target size object.                          */

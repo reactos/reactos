@@ -137,7 +137,7 @@ FT_BEGIN_HEADER
 #error "no 32bit type found -- please check your configuration files"
 #endif
 
-  /* look up an integer type that is at least 32 bits */
+  /* now, lookup for an integer type that is at least 32 bits */
 #if FT_SIZEOF_INT >= 4
 
   typedef int            FT_Fast;
@@ -190,11 +190,6 @@ FT_BEGIN_HEADER
 #define FT_INT64  long long int
 
 #endif /* FT_SIZEOF_LONG == 8 */
-
-
-#define FT_BEGIN_STMNT  do {
-#define FT_END_STMNT    } while ( 0 )
-#define FT_DUMMY_STMNT  FT_BEGIN_STMNT FT_END_STMNT
 
 
   /*************************************************************************/

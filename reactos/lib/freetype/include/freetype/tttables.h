@@ -24,12 +24,6 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#ifdef FREETYPE_H
-#error "freetype.h of FreeType 1 has been loaded!"
-#error "Please fix the directory search order for header files"
-#error "so that freetype.h of FreeType 2 is found first."
-#endif
-
 
 FT_BEGIN_HEADER
 
@@ -572,6 +566,11 @@ FT_BEGIN_HEADER
 
   /* */
 
+  /* internal use only */
+  typedef void*
+  (*FT_Get_Sfnt_Table_Func)( FT_Face      face,
+                             FT_Sfnt_Tag  tag );
+
 
   /*************************************************************************/
   /*                                                                       */
@@ -662,27 +661,6 @@ FT_BEGIN_HEADER
                       FT_Long    offset,
                       FT_Byte*   buffer,
                       FT_ULong*  length );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Get_CMap_Language_ID                                            */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Return TrueType/sfnt specific cmap language ID.  Definitions of    */
-  /*    language ID values are in freetype/ttnameid.h.                     */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    charmap ::                                                         */
-  /*      The target charmap.                                              */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    The language ID of `charmap'.  If `charmap' doesn't belong to a    */
-  /*    TrueType/sfnt face, just return 0 as the default value.            */
-  /*                                                                       */
-  FT_EXPORT( FT_ULong )
-  FT_Get_CMap_Language_ID( FT_CharMap  charmap );
 
   /* */
 

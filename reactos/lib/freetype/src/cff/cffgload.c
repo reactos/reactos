@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType Glyph Loader (body).                                        */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -366,7 +366,7 @@
     decoder->num_globals  = cff->num_global_subrs;
     decoder->globals      = cff->global_subrs;
     decoder->globals_bias = cff_compute_bias( decoder->num_globals );
-
+    
     decoder->hint_mode    = hint_mode;
   }
 
@@ -398,7 +398,7 @@
   }
 
 
-  /* check that there is enough space for `count' more points */
+  /* check that there is enough room for `count' more points */
   static FT_Error
   check_points( CFF_Builder*  builder,
                 FT_Int        count )
@@ -451,7 +451,7 @@
   }
 
 
-  /* check space for a new contour, then add it */
+  /* check room for a new contour, then add it */
   static FT_Error
   cff_builder_add_contour( CFF_Builder*  builder )
   {
@@ -544,10 +544,6 @@
     FT_UInt    n;
     FT_UShort  glyph_sid;
 
-
-    /* CID-keyed fonts don't have glyph names */
-    if ( !cff->charset.sids )
-      return -1;
 
     /* check range of standard char code */
     if ( charcode < 0 || charcode > 255 )
@@ -644,13 +640,13 @@
                      FT_Int        bchar,
                      FT_Int        achar )
   {
-    FT_Error      error;
-    CFF_Builder*  builder = &decoder->builder;
-    FT_Int        bchar_index, achar_index;
-    TT_Face       face = decoder->builder.face;
-    FT_Vector     left_bearing, advance;
-    FT_Byte*      charstring;
-    FT_ULong      charstring_len;
+    FT_Error     error;
+    FT_Int       bchar_index, achar_index, n_base_points;
+    FT_Outline*  base = decoder->builder.base;
+    TT_Face      face = decoder->builder.face;
+    FT_Vector    left_bearing, advance;
+    FT_Byte*     charstring;
+    FT_ULong     charstring_len;
 
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
@@ -680,9 +676,9 @@
 
     /* If we are trying to load a composite glyph, do not load the */
     /* accent character and return the array of subglyphs.         */
-    if ( builder->no_recurse )
+    if ( decoder->builder.no_recurse )
     {
-      FT_GlyphSlot    glyph  = (FT_GlyphSlot)builder->glyph;
+      FT_GlyphSlot    glyph  = (FT_GlyphSlot)decoder->builder.glyph;
       FT_GlyphLoader  loader = glyph->internal->loader;
       FT_SubGlyph     subg;
 
@@ -705,8 +701,8 @@
       /* subglyph 1 = accent character */
       subg->index = achar_index;
       subg->flags = FT_SUBGLYPH_FLAG_ARGS_ARE_XY_VALUES;
-      subg->arg1  = (FT_Int)( adx >> 16 );
-      subg->arg2  = (FT_Int)( ady >> 16 );
+      subg->arg1  = (FT_Int)adx;
+      subg->arg2  = (FT_Int)ady;
 
       /* set up remaining glyph fields */
       glyph->num_subglyphs = 2;
@@ -715,8 +711,6 @@
 
       loader->current.num_subglyphs = 2;
     }
-
-    FT_GlyphLoader_Prepare( builder->loader );
 
     /* First load `bchar' in builder */
     error = cff_get_glyph_data( face, bchar_index,
@@ -732,17 +726,16 @@
       cff_free_glyph_data( face, &charstring, charstring_len );
     }
 
+    n_base_points = base->n_points;
+
     /* Save the left bearing and width of the base character */
     /* as they will be erased by the next load.              */
 
-    left_bearing = builder->left_bearing;
-    advance      = builder->advance;
+    left_bearing = decoder->builder.left_bearing;
+    advance      = decoder->builder.advance;
 
-    builder->left_bearing.x = 0;
-    builder->left_bearing.y = 0;
-
-    builder->pos_x = adx;
-    builder->pos_y = ady;
+    decoder->builder.left_bearing.x = 0;
+    decoder->builder.left_bearing.y = 0;
 
     /* Now load `achar' on top of the base outline. */
     error = cff_get_glyph_data( face, achar_index,
@@ -760,11 +753,20 @@
 
     /* Restore the left side bearing and advance width */
     /* of the base character.                          */
-    builder->left_bearing = left_bearing;
-    builder->advance      = advance;
+    decoder->builder.left_bearing = left_bearing;
+    decoder->builder.advance      = advance;
 
-    builder->pos_x = 0;
-    builder->pos_y = 0;
+    /* Finally, move the accent. */
+    if ( decoder->builder.load_points )
+    {
+      FT_Outline  dummy;
+
+
+      dummy.n_points = (short)( base->n_points - n_base_points );
+      dummy.points   = base->points   + n_base_points;
+
+      FT_Outline_Translate( &dummy, adx, ady );
+    }
 
   Exit:
     return error;
@@ -901,7 +903,7 @@
 
 #ifdef FT_DEBUG_LEVEL_TRACE
         if ( !( val & 0xFFFFL ) )
-          FT_TRACE4(( " %ld", (FT_Int32)( val >> 16 ) ));
+          FT_TRACE4(( " %d", (FT_Int32)( val >> 16 ) ));
         else
           FT_TRACE4(( " %.2f", val / 65536.0 ));
 #endif
@@ -1221,7 +1223,7 @@
             for ( maskbyte = 0;
                   maskbyte < (FT_UInt)(( decoder->num_hints + 7 ) >> 3);
                   maskbyte++, ip++ )
-              FT_TRACE4(( "0x%02X", *ip ));
+              FT_TRACE4(( "%02X", *ip ));
           }
 #else
           ip += ( decoder->num_hints + 7 ) >> 3;
@@ -1647,11 +1649,11 @@
 
         case cff_op_flex1:
           {
-            FT_Pos    start_x, start_y; /* record start x, y values for */
-                                        /* alter use                                */
-            FT_Fixed  dx = 0, dy = 0;   /* used in horizontal/vertical  */
-                                        /* algorithm below              */
-            FT_Int    horizontal, count;
+            FT_Pos  start_x, start_y; /* record start x, y values for alter */
+                                      /* use                                */
+            FT_Int  dx = 0, dy = 0;   /* used in horizontal/vertical        */
+                                      /* algorithm below                    */
+            FT_Int  horizontal, count;
 
 
             FT_TRACE4(( " flex1" ));
@@ -1673,8 +1675,8 @@
             /* grab up to the last argument */
             for ( count = 5; count > 0; count-- )
             {
-              dx += args[0];
-              dy += args[1];
+              dx += (FT_Int)args[0];
+              dy += (FT_Int)args[1];
               args += 2;
             }
 
@@ -1730,7 +1732,7 @@
               x += args[0];
               y += args[1];
               cff_builder_add_point( builder, x, y,
-                                     (FT_Bool)( count == 4 || count == 1 ) );
+                                     (FT_Bool)( count == 3 || count == 0 ) );
               args += 2;
             }
 
@@ -1745,35 +1747,33 @@
           if ( num_args == 4 )
           {
             error = cff_operator_seac( decoder,
-                                       args[0],
-                                       args[1],
+                                       args[0] >> 16,
+                                       args[1] >> 16,
                                        (FT_Int)( args[2] >> 16 ),
                                        (FT_Int)( args[3] >> 16 ) );
             args += 4;
           }
-          else
+
+          if ( !error )
+            error = CFF_Err_Ok;
+
+          cff_builder_close_contour( builder );
+
+          /* close hints recording session */
+          if ( hinter )
           {
-            if ( !error )
-              error = CFF_Err_Ok;
+            if (hinter->close( hinter->hints, builder->current->n_points ) )
+              goto Syntax_Error;
 
-            cff_builder_close_contour( builder );
-
-            /* close hints recording session */
-            if ( hinter )
-            {
-              if (hinter->close( hinter->hints, builder->current->n_points ) )
-                goto Syntax_Error;
-
-              /* apply hints to the loaded glyph outline now */
-              hinter->apply( hinter->hints,
-                             builder->current,
-                             (PSH_Globals)builder->hints_globals,
-                             decoder->hint_mode );
-            }
-
-            /* add current outline to the glyph slot */
-            FT_GlyphLoader_Add( builder->loader );
+            /* apply hints to the loaded glyph outline now */
+            hinter->apply( hinter->hints,
+                           builder->current,
+                           (PSH_Globals)builder->hints_globals,
+                           decoder->hint_mode );
           }
+
+          /* add current outline to the glyph slot */
+          FT_GlyphLoader_Add( builder->loader );
 
           /* return now! */
           FT_TRACE4(( "\n\n" ));
@@ -2315,13 +2315,6 @@
       FT_ULong  charstring_len;
 
 
-      /* in a CID-keyed font, consider `glyph_index' as a CID and map */
-      /* it immediately to the real glyph_index -- if it isn't a      */
-      /* subsetted font, glyph_indices and CIDs are identical, though */
-      if ( cff->top_font.font_dict.cid_registry != 0xFFFFU &&
-           cff->charset.cids )
-        glyph_index = cff->charset.cids[glyph_index];
-
       cff_decoder_init( &decoder, face, size, glyph, hinting,
                         FT_LOAD_TARGET_MODE(load_flags) );
 
@@ -2369,7 +2362,7 @@
       cff_builder_done( &decoder.builder );
     }
 
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
+ #ifdef FT_CONFIG_OPTION_INCREMENTAL
 
     /* Incremental fonts can optionally override the metrics. */
     if ( !error                                                              &&
@@ -2486,11 +2479,11 @@
 
           if ( hinting )
           {
-            metrics->horiAdvance  = FT_PIX_ROUND( metrics->horiAdvance );
-            metrics->vertAdvance  = FT_PIX_ROUND( metrics->vertAdvance );
+            metrics->horiAdvance  = ( metrics->horiAdvance + 32 ) & -64;
+            metrics->vertAdvance  = ( metrics->vertAdvance + 32 ) & -64;
 
-            metrics->vertBearingX = FT_PIX_ROUND( metrics->vertBearingX );
-            metrics->vertBearingY = FT_PIX_ROUND( metrics->vertBearingY );
+            metrics->vertBearingX = ( metrics->vertBearingX + 32 ) & -64;
+            metrics->vertBearingY = ( metrics->vertBearingY + 32 ) & -64;
           }
         }
 

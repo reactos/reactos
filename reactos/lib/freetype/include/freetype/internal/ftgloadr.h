@@ -110,15 +110,15 @@ FT_BEGIN_HEADER
   FT_BASE( void )
   FT_GlyphLoader_Rewind( FT_GlyphLoader  loader );
 
-  /* check that there is enough space to add `n_points' and `n_contours' */
-  /* to the glyph loader                                                 */
+  /* check that there is enough room to add 'n_points' and 'n_contours' */
+  /* to the glyph loader                                                */
   FT_BASE( FT_Error )
   FT_GlyphLoader_CheckPoints( FT_GlyphLoader  loader,
                               FT_UInt         n_points,
                               FT_UInt         n_contours );
 
-  /* check that there is enough space to add `n_subs' sub-glyphs to */
-  /* a glyph loader                                                 */
+  /* check that there is enough room to add 'n_subs' sub-glyphs to */
+  /* a glyph loader                                                */
   FT_BASE( FT_Error )
   FT_GlyphLoader_CheckSubGlyphs( FT_GlyphLoader  loader,
                                  FT_UInt         n_subs );

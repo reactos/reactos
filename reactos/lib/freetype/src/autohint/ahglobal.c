@@ -30,7 +30,7 @@
   /* cf. AH_BLUE_XXX constants in ahtypes.h */
 
   static
-  const char* const  blue_chars[AH_BLUE_MAX] =
+  const char*  blue_chars[AH_BLUE_MAX] =
   {
     "THEZOCQS",
     "HEZLOCUS",

@@ -23,6 +23,7 @@
 #include FT_TRUETYPE_IDS_H
 #include FT_TRUETYPE_TAGS_H
 #include FT_INTERNAL_SFNT_H
+#include FT_INTERNAL_POSTSCRIPT_NAMES_H
 
 #include "ttgload.h"
 #include "ttpload.h"
@@ -227,7 +228,7 @@
 #ifdef TT_CONFIG_OPTION_UNPATENTED_HINTING
 
     /* Determine whether unpatented hinting is to be used for this face. */
-    face->unpatented_hinting = FT_BOOL
+    face->unpatented_hinting =
        ( library->debug_hooks[ FT_DEBUG_HOOK_UNPATENTED_HINTING ] != NULL );
 
     {
@@ -590,15 +591,14 @@
     }
 
     /* Compute root ascender, descender, text height, and max_advance */
-    metrics->ascender =
-      FT_PIX_ROUND( FT_MulFix( face->root.ascender, metrics->y_scale ) );
-    metrics->descender =
-      FT_PIX_ROUND( FT_MulFix( face->root.descender, metrics->y_scale ) );
-    metrics->height =
-      FT_PIX_ROUND( FT_MulFix( face->root.height, metrics->y_scale ) );
-    metrics->max_advance =
-      FT_PIX_ROUND( FT_MulFix( face->root.max_advance_width,
-                               metrics->x_scale ) );
+    metrics->ascender    = ( FT_MulFix( face->root.ascender,
+                                        metrics->y_scale ) + 32 ) & -64;
+    metrics->descender   = ( FT_MulFix( face->root.descender,
+                                        metrics->y_scale ) + 32 ) & -64;
+    metrics->height      = ( FT_MulFix( face->root.height,
+                                        metrics->y_scale ) + 32 ) & -64;
+    metrics->max_advance = ( FT_MulFix( face->root.max_advance_width,
+                                        metrics->x_scale ) + 32 ) & -64;
 
 
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
@@ -749,8 +749,7 @@
       sbit_metrics->descender = strike->hori.descender << 6;
 
       /* XXX: Is this correct? */
-      sbit_metrics->height = sbit_metrics->ascender -
-                             sbit_metrics->descender;
+      sbit_metrics->height = sbit_metrics->ascender - sbit_metrics->descender;
 
       /* XXX: Is this correct? */
       sbit_metrics->max_advance = ( strike->hori.min_origin_SB  +

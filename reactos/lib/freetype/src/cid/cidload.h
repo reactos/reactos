@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 font loader (specification).                         */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -41,8 +41,7 @@ FT_BEGIN_HEADER
                   FT_Byte    offsize );
 
   FT_LOCAL( FT_Error )
-  cid_face_open( CID_Face  face,
-                 FT_Int    face_index );
+  cid_face_open( CID_Face  face );
 
 
 FT_END_HEADER

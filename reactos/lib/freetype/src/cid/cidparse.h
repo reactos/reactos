@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 parser (specification).                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -50,9 +50,6 @@ FT_BEGIN_HEADER
   /*    data_offset    :: The start position of the binary data (i.e., the */
   /*                      end of the data to be parsed.                    */
   /*                                                                       */
-  /*    binary_length  :: The length of the data after the `StartData'     */
-  /*                      command if the data format is hexadecimal.       */
-  /*                                                                       */
   /*    cid            :: A structure which holds the information about    */
   /*                      the current font.                                */
   /*                                                                       */
@@ -67,8 +64,6 @@ FT_BEGIN_HEADER
     FT_Long       postscript_len;
 
     FT_ULong      data_offset;
-
-    FT_Long       binary_length;
 
     CID_FaceInfo  cid;
     FT_Int        num_dict;
@@ -92,10 +87,8 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*************************************************************************/
 
-#define cid_parser_skip_spaces( p ) \
-          (p)->root.funcs.skip_spaces( &(p)->root )
-#define cid_parser_skip_PS_token( p ) \
-          (p)->root.funcs.skip_PS_token( &(p)->root )
+#define cid_parser_skip_spaces( p )  (p)->root.funcs.skip_spaces( &(p)->root )
+#define cid_parser_skip_alpha( p )   (p)->root.funcs.skip_alpha ( &(p)->root )
 
 #define cid_parser_to_int( p )        (p)->root.funcs.to_int( &(p)->root )
 #define cid_parser_to_fixed( p, t )   (p)->root.funcs.to_fixed( &(p)->root, t )

@@ -101,15 +101,15 @@ IV. Overriding default configuration and module headers
     name  the  configuration headers.   To  do  so,  you need  a  custom
     "ft2build.h" whose content can be as simple as:
    
-      #ifndef __FT2_BUILD_MY_PLATFORM_H__
-      #define __FT2_BUILD_MY_PLATFORM_H__
+      #ifndef __FT2_BUILD_GENERIC_H__
+      #define __FT2_BUILD_GENERIC_H__
 
-      #define FT_CONFIG_OPTIONS_H  <custom/my-ftoption.h>
-      #define FT_CONFIG_MODULES_H  <custom/my-ftmodule.h>
+      #define  FT_CONFIG_OPTIONS_H   <custom/my-ftoption.h>
+      #define  FT_CONFIG_MACROS_H    <custom/my-ftmodule.h>
 
       #include <freetype/config/ftheader.h>
 
-      #endif /* __FT2_BUILD_MY_PLATFORM_H__ */
+      #endif /* __FT2_BUILD_GENERIC_H__ */
    
     Place those files in a separate directory, e.g.:
    
