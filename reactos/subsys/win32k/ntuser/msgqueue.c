@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.46 2003/12/14 22:14:45 weiden Exp $
+/* $Id: msgqueue.c,v 1.47 2003/12/14 23:30:32 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -182,7 +182,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 			 PPOINT ScreenPoint, PBOOL MouseClick)
 {
   USHORT Msg = Message->Msg.message;
-  PWINDOW_OBJECT CaptureWin, Window = NULL;
+  PWINDOW_OBJECT FocusWin, CaptureWin, Window = NULL;
   HWND Wnd;
   POINT Point;
 
@@ -195,17 +195,31 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   {
     Wnd = IntGetFocusWindow();
     
-    if(Wnd)
+    if(Wnd && (FocusWin = IntGetWindowObject(Wnd)))
     {
+      if (FocusWin->MessageQueue != PsGetWin32Thread()->MessageQueue)
+      {
+        ExAcquireFastMutex(&FocusWin->MessageQueue->HardwareLock);
+        InsertTailList(&FocusWin->MessageQueue->HardwareMessagesListHead,
+                       &Message->ListEntry);
+        ExReleaseFastMutex(&FocusWin->MessageQueue->HardwareLock);
+        KeSetEvent(&FocusWin->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+        IntReleaseWindowObject(FocusWin);
+        *Freed = FALSE;
+        return(FALSE);
+      }
       *ScreenPoint = Message->Msg.pt;
       
       /* FIXME: Check message filter. */
       
       if(Remove)
       {
-        Message->Msg.hwnd = Wnd;
+        Message->Msg.hwnd = FocusWin->Self;
         Message->Msg.lParam = MAKELONG(Message->Msg.pt.x, Message->Msg.pt.y);
       }
+      
+      IntReleaseWindowObject(FocusWin);
+      
       *Freed = FALSE;
       return TRUE;
     }
