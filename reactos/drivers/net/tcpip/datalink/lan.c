@@ -371,19 +371,17 @@ NDIS_STATUS STDCALL ProtocolReceive(
     IPPacket.NdisPacket = NdisPacket;
     IPPacket.Position = 0;
 	
-#if 0
-    if (LookaheadBufferSize < PacketSize) {
-#endif
-    TI_DbgPrint(DEBUG_DATALINK, ("pretransfer LookaheadBufferSize %d packsize %d\n",LookaheadBufferSize,PacketSize));
+    if ((LookaheadBufferSize + HeaderBufferSize) < PacketSize)
+    {
+        TI_DbgPrint(DEBUG_DATALINK, ("pretransfer LookaheadBufferSize %d packsize %d\n",LookaheadBufferSize,PacketSize));
         /* Get the data */
-    NdisTransferData(&NdisStatus,
-		     Adapter->NdisHandle,
-		     MacReceiveContext,
-		     0,
-		     PacketSize + HeaderBufferSize,
-		     NdisPacket,
-		     &BytesTransferred);
-#if 0
+        NdisTransferData(&NdisStatus,
+                         Adapter->NdisHandle,
+                         MacReceiveContext,
+                         0,
+                         PacketSize + HeaderBufferSize,
+                         NdisPacket,
+                         &BytesTransferred);
     } else {
 	TI_DbgPrint(DEBUG_DATALINK, ("copy\n"));
 	NdisStatus = NDIS_STATUS_SUCCESS;
@@ -394,7 +392,6 @@ NDIS_STATUS STDCALL ProtocolReceive(
 	RtlCopyMemory(BufferData + HeaderBufferSize,
 		      LookaheadBuffer, LookaheadBufferSize);
     }
-#endif
     TI_DbgPrint(DEBUG_DATALINK, ("Calling complete\n"));
 
     /* Release the packet descriptor */
