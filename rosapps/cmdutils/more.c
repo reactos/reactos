@@ -3,7 +3,7 @@
  *
  * clone from 4nt more command
  *
- * 26 Sep 1999 - Dr.F <dfaustus@freemail.it>
+ * 26 Sep 1999 - Paolo Pantaleo <paolopan@freemail.it>
  *     started 
  */
 

@@ -3,7 +3,7 @@
  *
  * clone from 4nt tee command
  *
- * 01 Sep 1999 - Dr.F <dfaustus@freemail.it>
+ * 01 Sep 1999 - Paolo Pantaleo <paolopan@freemail.it>
  *     started 
  *
  *
