@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.71 2004/04/08 20:27:10 jfilby Exp $
+/* $Id: mm.c,v 1.72 2004/04/08 20:49:15 jfilby Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -155,7 +155,6 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
    MmLockAddressSpace(AddressSpace);
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
                       VirtualAddress);
-DbgPrint("validating: MemoryArea: %08x\n", MemoryArea);
    
    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
      {
