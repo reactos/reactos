@@ -308,7 +308,7 @@ GetTempPathW (
 	if (nBufferLength < Value->Length / sizeof(WCHAR) + 2)
 		Length++;
 
-	if (lpBuffer != NULL)
+	if (nBufferLength >= Value->Length /sizeof(WCHAR) + 1)
 	{
 		if (nBufferLength < Value->Length / sizeof(WCHAR) + 2)
 		{
@@ -324,6 +324,9 @@ GetTempPathW (
 			lpBuffer[Value->Length / sizeof(WCHAR)] = L'\\';
 			lpBuffer[Value->Length / sizeof(WCHAR) + 1] = 0;
 		}
+	} else if (nBufferLength > 0)
+	{
+                lpBuffer[0] = L'\0';
 	}
 
 	return Length;
