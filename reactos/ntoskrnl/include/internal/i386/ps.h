@@ -102,7 +102,7 @@ typedef struct _KPRCB {
 	ULONG CcCopyReadWait;
 	ULONG CcCopyReadNoWaitMiss;
 	ULONG KeAlignmentFixupCount;
-	ULONG SpareCounter0;
+	ULONG KeContextSwitches;
 	ULONG KeDcacheFlushCount;
 	ULONG KeExceptionDispatchCount;
 	ULONG KeFirstLevelTbFills;

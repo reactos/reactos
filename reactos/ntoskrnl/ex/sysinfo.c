@@ -1017,12 +1017,35 @@ QSI_DEF(SystemPoolTagInformation)
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 23 - Interrupt Information */
+/* Class 23 - Interrupt Information for all processors */
 QSI_DEF(SystemInterruptInformation)
 {
-	/* FIXME */
-	DPRINT1("NtQuerySystemInformation - SystemInterruptInformation not implemented\n");
-	return (STATUS_NOT_IMPLEMENTED);
+  PKPRCB Prcb;
+  UINT i;
+  ULONG ti;
+  PSYSTEM_INTERRUPT_INFORMATION sii = (PSYSTEM_INTERRUPT_INFORMATION)Buffer;
+  
+  if(Size < KeNumberProcessors * sizeof(SYSTEM_INTERRUPT_INFORMATION))
+  {
+    return (STATUS_INFO_LENGTH_MISMATCH);
+  }
+  
+  ti = KeQueryTimeIncrement();
+  
+  Prcb = ((PKPCR)KPCR_BASE)->Prcb;
+  for (i = 0; i < KeNumberProcessors; i++)
+  {
+    sii->ContextSwitches = Prcb->KeContextSwitches;
+    sii->DpcCount = 0; /* FIXME */
+    sii->DpcRate = 0; /* FIXME */
+    sii->TimeIncrement = ti;
+    sii->DpcBypassCount = 0; /* FIXME */
+    sii->ApcBypassCount = 0; /* FIXME */
+    sii++;
+    Prcb = (PKPRCB)((ULONG_PTR)Prcb + PAGE_SIZE);
+  }
+  
+  return STATUS_SUCCESS;
 }
 
 /* Class 24 - DPC Behaviour Information */

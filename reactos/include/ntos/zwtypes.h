@@ -490,6 +490,19 @@ struct _SYSTEM_CACHE_INFORMATION
 
 } SYSTEM_CACHE_INFORMATION;
 
+// SystemInterruptInformation (23)
+typedef
+struct _SYSTEM_INTERRUPT_INFORMATION
+{
+	ULONG	ContextSwitches;
+	ULONG	DpcCount;
+	ULONG	DpcRate;
+	ULONG	TimeIncrement;
+	ULONG	DpcBypassCount;
+	ULONG	ApcBypassCount;
+
+} SYSTEM_INTERRUPT_INFORMATION, *PSYSTEM_INTERRUPT_INFORMATION;
+
 // SystemDpcInformation (24)
 typedef
 struct _SYSTEM_DPC_INFORMATION
