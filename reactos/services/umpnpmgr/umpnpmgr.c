@@ -79,7 +79,7 @@ PnpEventThread(LPVOID lpParameter)
     DPRINT("Calling NtGetPlugPlayEvent()\n");
 
     /* Wait for the next pnp event */
-    Status = NtGetPlugPlayEvent(0, 0, PnpEvent, 1024);
+    Status = NtGetPlugPlayEvent(0, 0, PnpEvent, PnpEventSize);
     /* Resize the buffer for the PnP event if it's too small. */
     if (Status == STATUS_BUFFER_TOO_SMALL)
     {
