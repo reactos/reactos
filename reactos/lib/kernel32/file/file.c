@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.23 2000/06/03 14:47:32 ea Exp $
+/* $Id: file.c,v 1.24 2000/10/01 19:54:57 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -219,7 +219,7 @@ DWORD STDCALL SetFilePointer(HANDLE hFile,
 	return -1;
      }
    
-   if (lpDistanceToMoveHigh != NULL) 
+   if (lpDistanceToMoveHigh != NULL)
      {
         *lpDistanceToMoveHigh = FilePosition.CurrentByteOffset.u.HighPart;
      }
@@ -229,6 +229,71 @@ DWORD STDCALL SetFilePointer(HANDLE hFile,
 
 DWORD STDCALL GetFileType(HANDLE hFile)
 {
+   FILE_FS_DEVICE_INFORMATION DeviceInfo;
+   IO_STATUS_BLOCK StatusBlock;
+   NTSTATUS Status;
+
+   /* get real handle */
+   switch ((ULONG)hFile)
+     {
+	case STD_INPUT_HANDLE:
+	  hFile = NtCurrentPeb()->ProcessParameters->InputHandle;
+	  break;
+
+	case STD_OUTPUT_HANDLE:
+	  hFile = NtCurrentPeb()->ProcessParameters->OutputHandle;
+	  break;
+
+	case STD_ERROR_HANDLE:
+	  hFile = NtCurrentPeb()->ProcessParameters->ErrorHandle;
+	  break;
+     }
+
+   /* check console handles */
+   if (((ULONG)hFile & 3) == 3)
+     {
+//	if (VerifyConsoleHandle(hFile))
+	  return FILE_TYPE_CHAR;
+     }
+
+   Status = NtQueryVolumeInformationFile(hFile,
+					 &StatusBlock,
+					 &DeviceInfo,
+					 sizeof(FILE_FS_DEVICE_INFORMATION),
+					 FileFsDeviceInformation);
+   if (!NT_SUCCESS(Status))
+     {
+	SetLastErrorByStatus(Status);
+	return FILE_TYPE_UNKNOWN;
+     }
+
+   switch (DeviceInfo.DeviceType)
+     {
+	case FILE_DEVICE_CD_ROM:
+	case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
+	case FILE_DEVICE_CONTROLLER:
+	case FILE_DEVICE_DATALINK:
+	case FILE_DEVICE_DFS:
+	case FILE_DEVICE_DISK:
+	case FILE_DEVICE_DISK_FILE_SYSTEM:
+	case FILE_DEVICE_VIRTUAL_DISK:
+	  return FILE_TYPE_DISK;
+
+	case FILE_DEVICE_KEYBOARD:
+	case FILE_DEVICE_MOUSE:
+	case FILE_DEVICE_NULL:
+	case FILE_DEVICE_PARALLEL_PORT:
+	case FILE_DEVICE_PRINTER:
+	case FILE_DEVICE_SERIAL_PORT:
+	case FILE_DEVICE_SCREEN:
+	case FILE_DEVICE_SOUND:
+	case FILE_DEVICE_MODEM:
+	  return FILE_TYPE_CHAR;
+
+	case FILE_DEVICE_NAMED_PIPE:
+	  return FILE_TYPE_PIPE;
+     }
+
    return FILE_TYPE_UNKNOWN;
 }
 
@@ -242,13 +307,13 @@ DWORD STDCALL GetFileSize(HANDLE hFile,
 
    errCode = NtQueryInformationFile(hFile,
 				    &IoStatusBlock,
-				    &FileStandard, 
+				    &FileStandard,
 				    sizeof(FILE_STANDARD_INFORMATION),
 				    FileStandardInformation);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastErrorByStatus(errCode);
-	if ( lpFileSizeHigh == NULL ) 
+	if ( lpFileSizeHigh == NULL )
 	  {
 	     return -1;
 	  }
@@ -267,19 +332,29 @@ DWORD STDCALL GetFileSize(HANDLE hFile,
 DWORD STDCALL GetCompressedFileSizeA(LPCSTR lpFileName,
 				     LPDWORD lpFileSizeHigh)
 {
-   WCHAR FileNameW[MAX_PATH];
-   ULONG i;
-   
-   i = 0;
-   while ((*lpFileName)!=0 && i < MAX_PATH)
-     {
-	FileNameW[i] = *lpFileName;
-	lpFileName++;
-	i++;
-     }
-   FileNameW[i] = 0;
-   
-   return GetCompressedFileSizeW(FileNameW,lpFileSizeHigh);
+   UNICODE_STRING FileNameU;
+   ANSI_STRING FileName;
+   DWORD Size;
+
+   RtlInitAnsiString(&FileName,
+		     (LPSTR)lpFileName);
+
+   /* convert ansi (or oem) string to unicode */
+   if (bIsFileApiAnsi)
+     RtlAnsiStringToUnicodeString(&FileNameU,
+				  &FileName,
+				  TRUE);
+   else
+     RtlOemStringToUnicodeString(&FileNameU,
+				 &FileName,
+				 TRUE);
+
+   Size = GetCompressedFileSizeW(FileNameU.Buffer,
+				 lpFileSizeHigh);
+
+   RtlFreeUnicodeString (&FileNameU);
+
+   return Size;
 }
 
 
@@ -291,20 +366,20 @@ DWORD STDCALL GetCompressedFileSizeW(LPCWSTR lpFileName,
    IO_STATUS_BLOCK IoStatusBlock;
    HANDLE hFile;
    
-   hFile = CreateFileW(lpFileName,	
-		       GENERIC_READ,	
-		       FILE_SHARE_READ,	
-		       NULL,	
-		       OPEN_EXISTING,	
-		       FILE_ATTRIBUTE_NORMAL,	
+   hFile = CreateFileW(lpFileName,
+		       GENERIC_READ,
+		       FILE_SHARE_READ,
+		       NULL,
+		       OPEN_EXISTING,
+		       FILE_ATTRIBUTE_NORMAL,
 		       NULL);
 
    errCode = NtQueryInformationFile(hFile,
 				    &IoStatusBlock,
-				    &FileCompression, 
+				    &FileCompression,
 				    sizeof(FILE_COMPRESSION_INFORMATION),
 				    FileCompressionInformation);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	CloseHandle(hFile);
 	SetLastErrorByStatus(errCode);
@@ -327,10 +402,10 @@ WINBOOL STDCALL GetFileInformationByHandle(HANDLE hFile,
    
    errCode = NtQueryInformationFile(hFile,
 				    &IoStatusBlock,
-				    &FileDirectory, 
+				    &FileDirectory,
 				    sizeof(FILE_DIRECTORY_INFORMATION),
 				    FileDirectoryInformation);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastErrorByStatus(errCode);
 	return FALSE;
@@ -339,16 +414,16 @@ WINBOOL STDCALL GetFileInformationByHandle(HANDLE hFile,
    lpFileInformation->dwFileAttributes = (DWORD)FileDirectory.FileAttributes;
    memcpy(&lpFileInformation->ftCreationTime,&FileDirectory.CreationTime,sizeof(LARGE_INTEGER));
    memcpy(&lpFileInformation->ftLastAccessTime,&FileDirectory.LastAccessTime,sizeof(LARGE_INTEGER));
-   memcpy(&lpFileInformation->ftLastWriteTime, &FileDirectory.LastWriteTime,sizeof(LARGE_INTEGER)); 
+   memcpy(&lpFileInformation->ftLastWriteTime, &FileDirectory.LastWriteTime,sizeof(LARGE_INTEGER));
    lpFileInformation->nFileSizeHigh = FileDirectory.AllocationSize.u.HighPart;
    lpFileInformation->nFileSizeLow = FileDirectory.AllocationSize.u.LowPart;
    
    errCode = NtQueryInformationFile(hFile,
 				    &IoStatusBlock,
-				    &FileInternal, 
+				    &FileInternal,
 				    sizeof(FILE_INTERNAL_INFORMATION),
 				    FileInternalInformation);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastErrorByStatus(errCode);
 	return FALSE;
@@ -359,10 +434,10 @@ WINBOOL STDCALL GetFileInformationByHandle(HANDLE hFile,
    
    errCode = NtQueryVolumeInformationFile(hFile,
 					  &IoStatusBlock,
-					  &FileFsVolume, 
+					  &FileFsVolume,
 					  sizeof(FILE_FS_VOLUME_INFORMATION),
 					  FileFsVolumeInformation);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastErrorByStatus(errCode);
 	return FALSE;
@@ -372,7 +447,7 @@ WINBOOL STDCALL GetFileInformationByHandle(HANDLE hFile,
    
    errCode = NtQueryInformationFile(hFile,
 				    &IoStatusBlock,
-				    &FileStandard, 
+				    &FileStandard,
 				    sizeof(FILE_STANDARD_INFORMATION),
 				    FileStandardInformation);
    if (!NT_SUCCESS(errCode))
@@ -412,9 +487,7 @@ GetFileAttributesA (
 
 	Result = GetFileAttributesW (FileNameU.Buffer);
 
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             FileNameU.Buffer);
+	RtlFreeUnicodeString (&FileNameU);
 
 	return Result;
 }
@@ -482,9 +555,7 @@ SetFileAttributesA (
 	Result = SetFileAttributesW (FileNameU.Buffer,
 	                             dwFileAttributes);
 
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             FileNameU.Buffer);
+	RtlFreeUnicodeString (&FileNameU);
 
 	return Result;
 }
@@ -500,18 +571,18 @@ WINBOOL STDCALL SetFileAttributesW(LPCWSTR lpFileName,
    
    hFile = CreateFileW(lpFileName,
 		       FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
-		       FILE_SHARE_READ,	
-		       NULL,	
-		       OPEN_EXISTING,	
-		       FILE_ATTRIBUTE_NORMAL,	
+		       FILE_SHARE_READ,
+		       NULL,
+		       OPEN_EXISTING,
+		       FILE_ATTRIBUTE_NORMAL,
 		       NULL);
 
    errCode = NtQueryInformationFile(hFile,
 				    &IoStatusBlock,
-				    &FileBasic, 
+				    &FileBasic,
 				    sizeof(FILE_BASIC_INFORMATION),
 				    FileBasicInformation);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	CloseHandle(hFile);
 	SetLastErrorByStatus(errCode);
@@ -520,17 +591,17 @@ WINBOOL STDCALL SetFileAttributesW(LPCWSTR lpFileName,
    FileBasic.FileAttributes = dwFileAttributes;
    errCode = NtSetInformationFile(hFile,
 				  &IoStatusBlock,
-				  &FileBasic, 
+				  &FileBasic,
 				  sizeof(FILE_BASIC_INFORMATION),
 				  FileBasicInformation);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	CloseHandle(hFile);
 	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
    CloseHandle(hFile);
-   return TRUE;		
+   return TRUE;
 }
 
 
@@ -591,8 +662,8 @@ UINT STDCALL GetTempFileNameW(LPCWSTR lpPathName,
 			       CREATE_NEW, FILE_ATTRIBUTE_TEMPORARY,
 			       0)) == INVALID_HANDLE_VALUE)
      {
-	//    		wsprintfW(lpTempFileName,L"%s\\%c%.3s%4.4x%s",
-	//	  	lpPathName,'~',lpPrefixString,++uUnique,L".tmp");
+	//	wsprintfW(lpTempFileName,L"%s\\%c%.3s%4.4x%s",
+	//	  lpPathName,'~',lpPrefixString,++uUnique,L".tmp");
      }
    
    CloseHandle((HANDLE)hFile);
@@ -608,13 +679,13 @@ WINBOOL STDCALL GetFileTime(HANDLE hFile,
    IO_STATUS_BLOCK IoStatusBlock;
    FILE_BASIC_INFORMATION FileBasic;
    NTSTATUS errCode;
-	
+
    errCode = NtQueryInformationFile(hFile,
 				    &IoStatusBlock,
-				    &FileBasic, 
+				    &FileBasic,
 				    sizeof(FILE_BASIC_INFORMATION),
 				    FileBasicInformation);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastErrorByStatus(errCode);
 	return FALSE;
@@ -645,10 +716,10 @@ WINBOOL STDCALL SetFileTime(HANDLE hFile,
    
    errCode = NtSetInformationFile(hFile,
 				  &IoStatusBlock,
-				  &FileBasic, 
+				  &FileBasic,
 				  sizeof(FILE_BASIC_INFORMATION),
 				  FileBasicInformation);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastErrorByStatus(errCode);
 	return FALSE;
