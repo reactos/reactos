@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.41 2003/10/03 16:18:34 ekohl Exp $
+/* $Id: scsiport.c,v 1.42 2003/10/19 10:43:10 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -779,7 +779,7 @@ ScsiPortInitialize(IN PVOID Argument1,
 //  PortConfig->DemandMode =
       PortConfig->MapBuffers = HwInitializationData->MapBuffers;
       PortConfig->NeedPhysicalAddresses = HwInitializationData->NeedPhysicalAddresses;
-      PortConfig->TaggedQueuing = HwInitializationData->TaggedQueuing;
+      PortConfig->TaggedQueuing = HwInitializationData->TaggedQueueing;
       PortConfig->AutoRequestSense = HwInitializationData->AutoRequestSense;
       PortConfig->MultipleRequestPerLu = HwInitializationData->MultipleRequestPerLu;
       PortConfig->ReceiveEvent = HwInitializationData->ReceiveEvent;
