@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c,v 1.12 2004/06/20 00:45:36 navaraf Exp $
+/* $Id: object.c,v 1.12.16.1 2004/12/13 09:39:19 hyperion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -29,8 +29,7 @@
  */
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <include/object.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

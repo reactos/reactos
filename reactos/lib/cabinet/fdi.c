@@ -2696,13 +2696,19 @@ BOOL __cdecl FDICopy(
   }
 
   /* free decompression temps */
-  if (LZX(window)) {
-    PFDI_FREE(hfdi, LZX(window));
-    LZX(window) = NULL;
-  }
-  if (QTM(window)) {
-    PFDI_FREE(hfdi, QTM(window));
-    QTM(window) = NULL;
+  switch (fol->comp_type & cffoldCOMPTYPE_MASK) {
+  case cffoldCOMPTYPE_LZX:
+    if (LZX(window)) {
+      PFDI_FREE(hfdi, LZX(window));
+      LZX(window) = NULL;
+    }
+    break;
+  case cffoldCOMPTYPE_QUANTUM:
+    if (QTM(window)) {
+      PFDI_FREE(hfdi, QTM(window));
+      QTM(window) = NULL;
+    }
+    break;
   }
 
   while (decomp_state) {
@@ -2738,13 +2744,19 @@ BOOL __cdecl FDICopy(
   bail_and_fail: /* here we free ram before error returns */
 
   /* free decompression temps */
-  if (LZX(window)) {
-    PFDI_FREE(hfdi, LZX(window));
-    LZX(window) = NULL;
-  }
-  if (QTM(window)) {
-    PFDI_FREE(hfdi, QTM(window));
-    QTM(window) = NULL;
+  switch (fol->comp_type & cffoldCOMPTYPE_MASK) {
+  case cffoldCOMPTYPE_LZX:
+    if (LZX(window)) {
+      PFDI_FREE(hfdi, LZX(window));
+      LZX(window) = NULL;
+    }
+    break;
+  case cffoldCOMPTYPE_QUANTUM:
+    if (QTM(window)) {
+      PFDI_FREE(hfdi, QTM(window));
+      QTM(window) = NULL;
+    }
+    break;
   }
 
   while (decomp_state) {

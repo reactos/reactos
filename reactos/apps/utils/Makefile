@@ -11,7 +11,7 @@ include $(PATH_TO_TOP)/rules.mak
 # cabman cat net objdir partinfo pice ps sc stats
 UTIL_APPS = cat objdir partinfo pnpdump sc shutdown stats tickcount consw rundll32 ps
 
-UTIL_NET_APPS = arp finger ipconfig netstat ping telnet whois
+UTIL_NET_APPS = arp finger ipconfig netstat ping route telnet whois
 
 
 all: $(UTIL_APPS) $(UTIL_NET_APPS)

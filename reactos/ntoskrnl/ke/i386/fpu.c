@@ -1,4 +1,4 @@
-/* $Id: fpu.c,v 1.17.2.1 2004/12/08 21:57:35 hyperion Exp $
+/* $Id: fpu.c,v 1.17.2.2 2004/12/13 09:39:11 hyperion Exp $
  *
  *  ReactOS kernel
  *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: init.c,v 1.49.2.1 2004/12/08 21:57:37 hyperion Exp $
+/* $Id: init.c,v 1.49.2.2 2004/12/13 09:39:12 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/init.c

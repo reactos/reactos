@@ -324,7 +324,13 @@ void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len,
 }
 
 int OskitTCPListen( void *socket, int backlog ) {
-    return solisten( socket, backlog );
+    int error;
+    
+    OS_DbgPrint(OSK_MID_TRACE,("Called, socket = %08x\n", socket));
+    error = solisten( socket, backlog );
+    OS_DbgPrint(OSK_MID_TRACE,("Ending: %08x\n", error));
+
+    return error;
 }
 
 void OskitTCPSetAddress( void *socket, 

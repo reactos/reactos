@@ -110,6 +110,11 @@ BOOLEAN SepInitSecurityIDs(VOID);
 BOOLEAN SepInitDACLs(VOID);
 BOOLEAN SepInitSDs(VOID);
 
+NTSTATUS STDCALL 
+SepCreateImpersonationTokenDacl(PACCESS_TOKEN Token, 
+                                PACCESS_TOKEN PrimaryToken,
+                                PACL *Dacl);
+
 VOID SepInitializeTokenImplementation(VOID);
 
 NTSTATUS SepCreateSystemProcessToken(struct _EPROCESS* Process);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.147.2.1 2004/12/08 21:57:41 hyperion Exp $
+/* $Id: dc.c,v 1.147.2.2 2004/12/13 09:39:21 hyperion Exp $
  *
  * DC.C - Device context functions
  *
@@ -465,6 +465,7 @@ IntCreatePrimarySurface()
    BOOL GotDriver;
    BOOL DoDefault;
    ULONG DisplayNumber;
+   RECTL SurfaceRect;
 
    for (DisplayNumber = 0; ; DisplayNumber++)
    {
@@ -621,6 +622,8 @@ IntCreatePrimarySurface()
          DPRINT("Adjusting GDIInfo.ulLogPixelsY\n");
          PrimarySurface.GDIInfo.ulLogPixelsY = 96;
       }
+      
+      PrimarySurface.Pointer.Exclude.right = -1;
 
       DPRINT("calling completePDev\n");
 
@@ -654,6 +657,12 @@ IntCreatePrimarySurface()
       SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
       SurfObj->dhpdev = PrimarySurface.PDev;
       SurfSize = SurfObj->sizlBitmap;
+      SurfSize = SurfObj->sizlBitmap;
+      SurfaceRect.left = SurfaceRect.top = 0;
+      SurfaceRect.right = SurfObj->sizlBitmap.cx;
+      SurfaceRect.bottom = SurfObj->sizlBitmap.cy;
+      /* FIXME - why does EngEraseSurface() sometimes crash?
+        EngEraseSurface(SurfObj, &SurfaceRect, 0); */
       EngUnlockSurface(SurfObj);
       IntShowDesktop(IntGetActiveDesktop(), SurfSize.cx, SurfSize.cy);
       break;
@@ -728,7 +737,12 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   }
 
   NewDC = DC_LockDc( hNewDC );
-  ASSERT( NewDC );
+  /* FIXME - NewDC can be NULL!!! Don't assert here! */
+  if ( !NewDC )
+  {
+    DC_FreeDC( hNewDC );
+    return NULL;
+  }
 
   NewDC->DMW = PrimarySurface.DMW;
   NewDC->DevInfo = &PrimarySurface.DevInfo;
@@ -747,6 +761,12 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
   NewDC->DMW.dmLogPixels = 96;
   SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
+  if ( !SurfObj )
+  {
+	  DC_UnlockDc ( hNewDC );
+	  DC_FreeDC ( hNewDC) ;
+	  return NULL;
+  }
   NewDC->DMW.dmBitsPerPel = BitsPerFormat(SurfObj->iBitmapFormat);
   NewDC->DMW.dmPelsWidth = SurfObj->sizlBitmap.cx;
   NewDC->DMW.dmPelsHeight = SurfObj->sizlBitmap.cy;
@@ -846,8 +866,7 @@ NtGdiDeleteDC(HDC  DCHandle)
     {
       return  FALSE;
     }
-  DPRINT( "Deleting DC\n" );
-  CHECKPOINT;
+
   /*  First delete all saved DCs  */
   while (DCToDelete->saveLevel)
   {
@@ -862,7 +881,7 @@ NtGdiDeleteDC(HDC  DCHandle)
     }
     DC_SetNextDC (DCToDelete, DC_GetNextDC (savedDC));
     DCToDelete->saveLevel--;
-	DC_UnlockDc( savedHDC );
+    DC_UnlockDc( savedHDC );
     NtGdiDeleteDC (savedHDC);
   }
 
@@ -1064,6 +1083,7 @@ NtGdiGetDCState(HDC  hDC)
     return 0;
   }
   newdc = DC_LockDc( hnewdc );
+  /* FIXME - newdc can be NULL!!!! Don't assert here!!! */
   ASSERT( newdc );
 
   newdc->w.flags            = dc->w.flags | DC_SAVED;
@@ -1247,7 +1267,7 @@ NtGdiSetDCState ( HDC hDC, HDC hDCSave )
 	GDISelectPalette16( hDC, dcs->w.hPalette, FALSE );
 #endif
       } else {
-	DC_UnlockDc(hDC);      
+	DC_UnlockDc(hDC);
       }
       DC_UnlockDc ( hDCSave );
     } else {
@@ -1259,20 +1279,11 @@ NtGdiSetDCState ( HDC hDC, HDC hDCSave )
     SetLastWin32Error(ERROR_INVALID_HANDLE);
 }
 
-INT STDCALL
-NtGdiGetDeviceCaps(HDC  hDC,
-                  INT  Index)
+INT FASTCALL
+IntGdiGetDeviceCaps(PDC dc, INT Index)
 {
-  PDC  dc;
-  INT  ret;
+  INT ret;
   POINT  pt;
-
-  dc = DC_LockDc(hDC);
-  if (dc == NULL)
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return 0;
-  }
 
   /* Retrieve capability */
   switch (Index)
@@ -1366,7 +1377,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
       break;
 
     case PHYSICALWIDTH:
-      if(NtGdiEscape(hDC, GETPHYSPAGESIZE, 0, NULL, (LPVOID)&pt) > 0)
+      if(IntGdiEscape(dc, GETPHYSPAGESIZE, 0, NULL, (LPVOID)&pt) > 0)
       {
         ret = pt.x;
       }
@@ -1377,7 +1388,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
       break;
 
     case PHYSICALHEIGHT:
-      if(NtGdiEscape(hDC, GETPHYSPAGESIZE, 0, NULL, (LPVOID)&pt) > 0)
+      if(IntGdiEscape(dc, GETPHYSPAGESIZE, 0, NULL, (LPVOID)&pt) > 0)
       {
         ret = pt.y;
       }
@@ -1388,7 +1399,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
       break;
 
     case PHYSICALOFFSETX:
-      if(NtGdiEscape(hDC, GETPRINTINGOFFSET, 0, NULL, (LPVOID)&pt) > 0)
+      if(IntGdiEscape(dc, GETPRINTINGOFFSET, 0, NULL, (LPVOID)&pt) > 0)
       {
         ret = pt.x;
       }
@@ -1399,7 +1410,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
       break;
 
     case PHYSICALOFFSETY:
-      if(NtGdiEscape(hDC, GETPRINTINGOFFSET, 0, NULL, (LPVOID)&pt) > 0)
+      if(IntGdiEscape(dc, GETPRINTINGOFFSET, 0, NULL, (LPVOID)&pt) > 0)
       {
         ret = pt.y;
       }
@@ -1414,7 +1425,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
       break;
 
     case SCALINGFACTORX:
-      if(NtGdiEscape(hDC, GETSCALINGFACTOR, 0, NULL, (LPVOID)&pt) > 0)
+      if(IntGdiEscape(dc, GETSCALINGFACTOR, 0, NULL, (LPVOID)&pt) > 0)
       {
         ret = pt.x;
       }
@@ -1425,7 +1436,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
       break;
 
     case SCALINGFACTORY:
-      if(NtGdiEscape(hDC, GETSCALINGFACTOR, 0, NULL, (LPVOID)&pt) > 0)
+      if(IntGdiEscape(dc, GETSCALINGFACTOR, 0, NULL, (LPVOID)&pt) > 0)
       {
         ret = pt.y;
       }
@@ -1460,6 +1471,25 @@ NtGdiGetDeviceCaps(HDC  hDC,
       break;
   }
 
+  return ret;
+}
+
+INT STDCALL
+NtGdiGetDeviceCaps(HDC  hDC,
+                  INT  Index)
+{
+  PDC  dc;
+  INT  ret;
+
+  dc = DC_LockDc(hDC);
+  if (dc == NULL)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return 0;
+  }
+
+  ret = IntGdiGetDeviceCaps(dc, Index);
+
   DPRINT("(%04x,%d): returning %d\n", hDC, Index, ret);
 
   DC_UnlockDc( hDC );
@@ -1472,7 +1502,7 @@ DC_GET_VAL( INT, NtGdiGetPolyFillMode, w.polyFillMode )
 INT FASTCALL
 IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
 {
-  PGDIOBJHDR GdiObject;
+  PVOID GdiObject;
   INT Result = 0;
   DWORD ObjectType;
 
@@ -1517,7 +1547,7 @@ IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
         break;
     }
 
-  GDIOBJ_UnlockObj(Handle, GDI_OBJECT_TYPE_DONTCARE);
+  GDIOBJ_UnlockObj(Handle);
 
   return Result;
 }
@@ -1558,7 +1588,7 @@ DWORD STDCALL
 NtGdiGetObjectType(HANDLE handle)
 {
   GDIOBJHDR * ptr;
-  INT result = 0;
+  INT result;
   DWORD objectType;
 
   ptr = GDIOBJ_LockObj(handle, GDI_OBJECT_TYPE_DONTCARE);
@@ -1610,11 +1640,13 @@ NtGdiGetObjectType(HANDLE handle)
     case GDI_OBJECT_TYPE_MEMDC:
       result = OBJ_MEMDC;
       break;
+
     default:
       DPRINT1("Magic 0x%08x not implemented\n", objectType);
+      result = 0;
       break;
   }
-  GDIOBJ_UnlockObj(handle, GDI_OBJECT_TYPE_DONTCARE);
+  GDIOBJ_UnlockObj(handle);
   return result;
 }
 
@@ -1723,7 +1755,7 @@ NtGdiSaveDC(HDC  hDC)
   dc = DC_LockDc (hDC);
   if (dc == NULL)
   {
-    DC_UnlockDc(dc);
+    DC_UnlockDc(hdcs);
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return 0;
   }
@@ -1788,7 +1820,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       }
 
       XlateObj = IntGdiCreateBrushXlate(dc, pen, &Failed);
-      PENOBJ_UnlockPen((HPEN) hGDIObj);
+      PENOBJ_UnlockPen(hGDIObj);
       if (Failed)
       {
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
@@ -1811,7 +1843,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       }
 
       XlateObj = IntGdiCreateBrushXlate(dc, brush, &Failed);
-      BRUSHOBJ_UnlockBrush((HPEN) hGDIObj);
+      BRUSHOBJ_UnlockBrush(hGDIObj);
       if (Failed)
       {
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
@@ -1826,9 +1858,11 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       break;
 
     case GDI_OBJECT_TYPE_FONT:
-      objOrg = (HGDIOBJ)dc->w.hFont;
-      dc->w.hFont = (HFONT) hGDIObj;
-      TextIntRealizeFont(dc->w.hFont);
+      if(NT_SUCCESS(TextIntRealizeFont((HFONT)hGDIObj)))
+      {
+        objOrg = (HGDIOBJ)dc->w.hFont;
+        dc->w.hFont = (HFONT) hGDIObj;
+      }
       break;
 
     case GDI_OBJECT_TYPE_BITMAP:
@@ -1882,9 +1916,9 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 
       DC_UnlockDc ( hDC );
       hVisRgn = NtGdiCreateRectRgn ( 0, 0, pb->SurfObj.sizlBitmap.cx, pb->SurfObj.sizlBitmap.cy );
+      BITMAPOBJ_UnlockBitmap( hGDIObj );
       NtGdiSelectVisRgn ( hDC, hVisRgn );
       NtGdiDeleteObject ( hVisRgn );
-      BITMAPOBJ_UnlockBitmap(hGDIObj);
 
       return objOrg;
 
@@ -1963,7 +1997,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
     RtlCopyMemory(Buf, Driver->Buffer, Driver->MaximumLength);
   }
 
-  hDC = (HDC) GDIOBJ_AllocObj(sizeof(DC), GDI_OBJECT_TYPE_DC, (GDICLEANUPPROC) DC_InternalDeleteDC);
+  hDC = (HDC) GDIOBJ_AllocObj(GDI_OBJECT_TYPE_DC);
   if (hDC == NULL)
   {
     if(Buf)
@@ -1974,6 +2008,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   }
 
   NewDC = DC_LockDc(hDC);
+  /* FIXME - Handle NewDC == NULL! */
   
   if (Driver != NULL)
   {
@@ -2038,17 +2073,17 @@ DC_InitDC(HDC  DCHandle)
 VOID FASTCALL
 DC_FreeDC(HDC  DCToFree)
 {
-  if (!GDIOBJ_FreeObj(DCToFree, GDI_OBJECT_TYPE_DC, GDIOBJFLAG_DEFAULT))
+  if (!GDIOBJ_FreeObj(DCToFree, GDI_OBJECT_TYPE_DC))
   {
     DPRINT("DC_FreeDC failed\n");
   }
 }
 
-BOOL FASTCALL
-DC_InternalDeleteDC( PDC DCToDelete )
+BOOL INTERNAL_CALL
+DC_Cleanup(PVOID ObjectBody)
 {
-
-  RtlFreeUnicodeString(&DCToDelete->DriverName);
+  PDC pDC = (PDC)ObjectBody;
+  RtlFreeUnicodeString(&pDC->DriverName);
   return TRUE;
 }
 
@@ -2237,6 +2272,7 @@ IntEnumDisplaySettings(
   {
     if (iModeNum == 0 || CachedDevModes == NULL) /* query modes from drivers */
     {
+      BOOL PrimarySurfaceCreated = FALSE;
       UNICODE_STRING DriverFileNames;
       LPWSTR CurrentName;
       DRVENABLEDATA DrvEnableData;
@@ -2247,6 +2283,12 @@ IntEnumDisplaySettings(
       {
         DPRINT1("FindDriverFileNames failed\n");
         return FALSE;
+      }
+      
+      if (!HalQueryDisplayOwnership())
+      {
+        IntCreatePrimarySurface();
+        PrimarySurfaceCreated = TRUE;
       }
   
       /*
@@ -2313,6 +2355,10 @@ IntEnumDisplaySettings(
               SizeOfCachedDevModes = 0;
               CachedDevModes = NULL;
               CachedDevModesEnd = NULL;
+              if (PrimarySurfaceCreated)
+              {
+                IntDestroyPrimarySurface();
+              }
               SetLastWin32Error(STATUS_NO_MEMORY);
               return FALSE;
             }
@@ -2339,6 +2385,11 @@ IntEnumDisplaySettings(
           }
           break;
         }
+      }
+      
+      if (PrimarySurfaceCreated)
+      {
+        IntDestroyPrimarySurface();
       }
   
       RtlFreeUnicodeString(&DriverFileNames);

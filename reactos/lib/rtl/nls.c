@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.1.18.1 2004/12/08 21:57:21 hyperion Exp $
+/* $Id: nls.c,v 1.1.18.2 2004/12/13 09:39:01 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

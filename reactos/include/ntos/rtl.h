@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.38.2.1 2004/12/08 21:56:57 hyperion Exp $
+/* $Id: rtl.h,v 1.38.2.2 2004/12/13 09:38:51 hyperion Exp $
  * 
  */
 #ifndef __DDK_RTL_H

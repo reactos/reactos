@@ -1,4 +1,4 @@
-/* $Id: trustee.c,v 1.2 2004/12/12 15:16:49 ekohl Exp $
+/* $Id: trustee.c,v 1.2.2.1 2004/12/13 09:38:54 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

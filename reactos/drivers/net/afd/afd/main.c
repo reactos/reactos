@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.13.2.1 2004/12/08 21:56:51 hyperion Exp $
+/* $Id: main.c,v 1.13.2.2 2004/12/13 09:38:48 hyperion Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -358,6 +358,9 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 	case IOCTL_AFD_DISCONNECT:
 	    return AfdDisconnect( DeviceObject, Irp, IrpSp );
+
+	case IOCTL_AFD_GET_SOCK_NAME:
+	    return AfdGetSockName( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_GET_TDI_HANDLES:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_TDI_HANDLES\n"));

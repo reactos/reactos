@@ -678,6 +678,16 @@ ExReleaseRundownProtectionEx (
     IN PEX_RUNDOWN_REF RunRef,
     IN ULONG Count
     );
+/* ReactOS Specific: begin */
+VOID STDCALL
+ExRosDumpPagedPoolByTag (
+    IN ULONG Tag
+    );
+ULONG STDCALL
+ExRosQueryPoolTag (
+    IN PVOID Block
+    );
+/* ReactOS Specific: end */
 VOID
 FASTCALL
 ExRundownCompleted (

@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.35.2.2 2004/12/13 05:55:31 hyperion Exp $
+/* $Id: zw.h,v 1.35.2.3 2004/12/13 09:38:51 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -5839,7 +5839,7 @@ NtDuplicateToken(
 	IN HANDLE ExistingToken, 
   	IN ACCESS_MASK DesiredAccess, 
  	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+	IN BOOLEAN EffectiveOnly,
   	IN TOKEN_TYPE TokenType,  
   	OUT PHANDLE NewToken     
 	);

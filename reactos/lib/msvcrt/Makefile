@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.48.6.1 2004/12/08 21:57:13 hyperion Exp $
+# $Id: Makefile,v 1.48.6.2 2004/12/13 09:38:58 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -272,7 +272,9 @@ MISC_OBJECTS = \
 	misc/environ.o \
 	misc/getargs.o \
 	misc/initterm.o \
+	misc/lock.o \
 	misc/purecall.o \
+	misc/stubs.o \
 	misc/tls.o
 
 PROCESS_OBJECTS = \
@@ -458,8 +460,6 @@ WINE_OBJECTS = \
 	wine/cpp.o \
 	wine/cppexcept.o \
 	wine/heap.o \
-	wine/lock.o \
-	wine/main.o \
 	wine/thread.o
 
 WSTRING_OBJECTS = \

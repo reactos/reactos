@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.15.2.1 2004/12/08 21:57:24 hyperion Exp $
+/* $Id: wizard.c,v 1.15.2.2 2004/12/13 09:39:02 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries

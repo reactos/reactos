@@ -79,8 +79,18 @@ VOID
 KeReleaseDispatcherDatabaseLock(KIRQL OldIrql)
 {
   DPRINT("KeReleaseDispatcherDatabaseLock(OldIrql %x)\n",OldIrql);
-
-  KeReleaseSpinLock(&DispatcherDatabaseLock, OldIrql);
+  if (!KeIsExecutingDpc() && 
+      OldIrql < DISPATCH_LEVEL && 
+      KeGetCurrentThread() != NULL && 
+      KeGetCurrentThread() == KeGetCurrentKPCR()->PrcbData.IdleThread)
+  {
+    PsDispatchThreadNoLock(THREAD_STATE_READY);
+    KeLowerIrql(OldIrql);
+  }
+  else
+  {
+    KeReleaseSpinLock(&DispatcherDatabaseLock, OldIrql);
+  }
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.58 2004/07/14 20:48:57 navaraf Exp $
+/* $Id: bitblt.c,v 1.58.10.1 2004/12/13 09:39:16 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -91,6 +91,7 @@ BltMask(SURFOBJ* Dest,
    PGDIBRUSHINST GdiBrush = NULL;
    HBITMAP PatternSurface = NULL;
    SURFOBJ *PatternObj = NULL;
+   PBITMAPOBJ PatternBitmap;
    ULONG PatternWidth = 0, PatternHeight = 0, PatternY = 0;
   
    if (Mask == NULL)
@@ -103,8 +104,6 @@ BltMask(SURFOBJ* Dest,
 
    if (Brush->iSolidColor == 0xFFFFFFFF)
    {
-      PBITMAPOBJ PatternBitmap;
-
       GdiBrush = CONTAINING_RECORD(
          Brush,
          GDIBRUSHINST,
@@ -112,11 +111,15 @@ BltMask(SURFOBJ* Dest,
 
       PatternSurface = GdiBrush->GdiBrushObject->hbmPattern;
       PatternBitmap = BITMAPOBJ_LockBitmap(GdiBrush->GdiBrushObject->hbmPattern);
-
-      PatternObj = &PatternBitmap->SurfObj;
-      PatternWidth = PatternObj->sizlBitmap.cx;
-      PatternHeight = PatternObj->sizlBitmap.cy;
+      if(PatternBitmap != NULL)
+      {
+        PatternObj = &PatternBitmap->SurfObj;
+        PatternWidth = PatternObj->sizlBitmap.cx;
+        PatternHeight = PatternObj->sizlBitmap.cy;
+      }
    }
+   else
+     PatternBitmap = NULL;
 
    tMask = Mask->pvScan0 + SourcePoint->y * Mask->lDelta + (SourcePoint->x >> 3);
    for (j = 0; j < dy; j++)
@@ -124,14 +127,14 @@ BltMask(SURFOBJ* Dest,
       lMask = tMask;
       c8 = SourcePoint->x & 0x07;
       
-      if(PatternSurface)
+      if(PatternBitmap != NULL)
          PatternY = (DestRect->top + j) % PatternHeight;
       
       for (i = 0; i < dx; i++)
       {
          if (0 != (*lMask & maskbit[c8]))
          {
-            if (PatternSurface == NULL)
+            if (PatternBitmap == NULL)
             {
                DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_PutPixel(
                   Dest, DestRect->left + i, DestRect->top + j, Brush->iSolidColor);
@@ -153,7 +156,7 @@ BltMask(SURFOBJ* Dest,
       tMask += Mask->lDelta;
    }
 
-   if (PatternSurface != NULL)
+   if (PatternBitmap != NULL)
       BITMAPOBJ_UnlockBitmap(PatternSurface);
 
    return TRUE;
@@ -222,15 +225,25 @@ CallDibBitBlt(SURFOBJ* OutputObj,
    if (ROP_USES_PATTERN(Rop4) && Brush->iSolidColor == 0xFFFFFFFF)
    {
       GdiBrush = CONTAINING_RECORD(Brush, GDIBRUSHINST, BrushObject);
-      bmPattern = BITMAPOBJ_LockBitmap(GdiBrush->GdiBrushObject->hbmPattern);
-      BltInfo.PatternSurface = &bmPattern->SurfObj;
+      if((bmPattern = BITMAPOBJ_LockBitmap(GdiBrush->GdiBrushObject->hbmPattern)))
+      {
+        BltInfo.PatternSurface = &bmPattern->SurfObj;
+      }
+      else
+      {
+        /* FIXME - What to do here? */
+      }
       BltInfo.XlatePatternToDest = GdiBrush->XlateObject;
+   }
+   else
+   {
+     bmPattern = NULL;
    }
 
    Result = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBlt(&BltInfo);
 
    /* Pattern brush */
-   if (ROP_USES_PATTERN(Rop4) && Brush->iSolidColor == 0xFFFFFFFF)
+   if (bmPattern != NULL)
    {
       BITMAPOBJ_UnlockBitmap(BltInfo.PatternSurface->hsurf);
    }
@@ -741,8 +754,7 @@ IntEngStretchBlt(BITMAPOBJ *DestObj,
   if (NULL != SourceObj)
     {
     MouseSafetyOnDrawStart(SourceSurf, SourceRect->left, SourceRect->top,
-                           (SourceRect->left + abs(SourceRect->right - SourceRect->left)),
-			   (SourceRect->top + abs(SourceRect->bottom - SourceRect->top)));
+                           SourceRect->right, SourceRect->bottom);
     }
 
   /* No success yet */

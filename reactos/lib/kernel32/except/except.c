@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.18 2004/11/10 01:07:45 blight Exp $
+/* $Id: except.c,v 1.18.2.1 2004/12/13 09:38:55 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,7 +16,7 @@
 #include "../include/debug.h"
 
 UINT GlobalErrMode = 0;
-LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter = NULL;
+LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter = UnhandledExceptionFilter;
 
 UINT GetErrorMode(void)
 {
@@ -46,10 +46,8 @@ SetUnhandledExceptionFilter(
     LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter
     )
 {
-    LPTOP_LEVEL_EXCEPTION_FILTER OldTopLevelExceptionFilter =
-					 GlobalTopLevelExceptionFilter;
-    GlobalTopLevelExceptionFilter = lpTopLevelExceptionFilter;
-    return OldTopLevelExceptionFilter;
+    return InterlockedExchangePointer(&GlobalTopLevelExceptionFilter,
+                                      lpTopLevelExceptionFilter);
 }
 
 

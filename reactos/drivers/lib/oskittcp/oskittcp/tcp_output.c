@@ -707,6 +707,25 @@ send:
 		((struct ip *)ti)->ip_off |= IP_DF;
 	}
 #endif
+        /*
+         * XXX: It seems that osktittcp expects that packets are
+         * synchronously processed. The current implementation feeds
+         * oskittcp with the packets asynchronously. That's not a
+         * problem normally when the packets are transfered over
+         * network, but it starts to be a problem when it comes to
+         * loopback packets.
+         * The ACK bits are set in tcp_input which calls tcp_output and
+         * expects them to be cleared before further processing.
+         * Instead tcp_output calls ip_output which produces a packet
+         * and ends up in tcp_input and we're stuck in infinite loop.
+         * Normally the flags are masked out at the end of this function
+         * and the incomming packets are processed then, but since 
+         * currently the loopback packet is delivered during the 
+         * ip_output call, the function end is never reached...
+         */
+#ifdef __REACTOS__
+	tp->t_flags &= ~(TF_ACKNOW|TF_DELACK);
+#endif
 	error = ip_output(m, tp->t_inpcb->inp_options, &tp->t_inpcb->inp_route,
 			  so->so_options & SO_DONTROUTE, 0);
     }

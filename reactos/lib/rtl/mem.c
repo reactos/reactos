@@ -1,5 +1,5 @@
 
-/* $Id: mem.c,v 1.2.8.1 2004/12/08 21:57:21 hyperion Exp $
+/* $Id: mem.c,v 1.2.8.2 2004/12/13 09:39:01 hyperion Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

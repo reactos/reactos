@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.124 2004/11/21 12:14:34 navaraf Exp $
+/* $Id: winpos.c,v 1.124.2.1 2004/12/13 09:39:20 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -175,7 +175,7 @@ PINTERNALPOS FASTCALL
 WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT *pt, PRECT RestoreRect)
 {
   PWINDOW_OBJECT Parent;
-  INT XInc, YInc;
+  UINT XInc, YInc;
   
   if (WindowObject->InternalPos == NULL)
     {
@@ -331,7 +331,7 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 VOID FASTCALL
 WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
 {
-  INT XInc, YInc;
+  UINT XInc, YInc;
   RECT WorkArea;
   PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop; /* Or rather get it from the window? */
   
@@ -1046,7 +1046,6 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
           * there's nothing to copy. Also, it's no use copying bits onto
           * themselves.
           */
-         VisRgn = NULL;
          if ((VisRgn = (PROSRGNDATA)RGNDATA_LockRgn(CopyRgn)) && 
              UnsafeIntGetRgnBox(VisRgn, &CopyRect) == NULLREGION)
          {
@@ -1321,7 +1320,8 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
 
   /* FIXME: Check for window destruction. */
 
-  if (Window->Flags & WINDOWOBJECT_NEED_SIZE)
+  if ((Window->Flags & WINDOWOBJECT_NEED_SIZE) &&
+      !(Window->Status & WINDOWSTATUS_DESTROYING))
     {
       WPARAM wParam = SIZE_RESTORED;
 

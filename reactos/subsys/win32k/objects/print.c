@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.23 2004/07/17 17:37:41 blight Exp $ */
+/* $Id: print.c,v 1.23.8.1 2004/12/13 09:39:22 hyperion Exp $ */
 #include <w32k.h>
 
 INT
@@ -44,6 +44,18 @@ NtGdiEndPage(HDC  hDC)
 }
 
 INT
+FASTCALL
+IntGdiEscape(PDC    dc,
+             INT    Escape,
+             INT    InSize,
+             LPCSTR InData,
+             LPVOID OutData)
+{
+  UNIMPLEMENTED;
+  return 0;
+}
+
+INT
 STDCALL
 NtGdiEscape(HDC  hDC,
                 INT  Escape,
@@ -51,8 +63,21 @@ NtGdiEscape(HDC  hDC,
                 LPCSTR  InData,
                 LPVOID  OutData)
 {
-  UNIMPLEMENTED;
-  return 0;
+  PDC dc;
+  INT ret;
+
+  dc = DC_LockDc(hDC);
+  if (dc == NULL)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return 0;
+  }
+
+  /* TODO FIXME - don't pass umode buffer to an Int function */
+  ret = IntGdiEscape(dc, Escape, InSize, InData, OutData);
+
+  DC_UnlockDc( hDC );
+  return ret;
 }
 
 INT
@@ -84,6 +109,8 @@ IntGdiExtEscape(
 {
    BITMAPOBJ *BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
    INT Result;
+
+   /* FIXME - Handle BitmapObj == NULL !!!!!! */
 
    if ( NULL == dc->DriverFunctions.Escape )
    {

@@ -1,4 +1,4 @@
-/* $Id: haltypes.h,v 1.9.2.1 2004/12/08 21:56:57 hyperion Exp $
+/* $Id: haltypes.h,v 1.9.2.2 2004/12/13 09:38:51 hyperion Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel

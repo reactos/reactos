@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.29.8.1 2004/12/08 21:57:14 hyperion Exp $
+/* $Id: path.c,v 1.29.8.2 2004/12/13 09:39:00 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

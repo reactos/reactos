@@ -30,8 +30,9 @@ VOID NBSendPackets( PNEIGHBOR_CACHE_ENTRY NCE ) {
     PNEIGHBOR_PACKET Packet;
 
     /* Send any waiting packets */
-    if( !IsListEmpty( &NCE->PacketQueue ) ) {
-	PacketEntry = RemoveHeadList( &NCE->PacketQueue );
+    PacketEntry = ExInterlockedRemoveHeadList(&NCE->PacketQueue,
+                                              &NCE->Table->Lock);
+    if( PacketEntry != NULL ) {
 	Packet = CONTAINING_RECORD( PacketEntry, NEIGHBOR_PACKET, Next );
 
 	TI_DbgPrint
@@ -57,8 +58,9 @@ VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE,
     PLIST_ENTRY PacketEntry;
     PNEIGHBOR_PACKET Packet;
 	
-    while( !IsListEmpty( &NCE->PacketQueue ) ) {
-	PacketEntry = RemoveHeadList( &NCE->PacketQueue );
+    PacketEntry = ExInterlockedRemoveHeadList(&NCE->PacketQueue,
+                                              &NCE->Table->Lock);
+    while( PacketEntry != NULL ) {
 	Packet = CONTAINING_RECORD
 	    ( PacketEntry, NEIGHBOR_PACKET, Next );
 
@@ -78,6 +80,8 @@ VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE,
     }
 	
 	PoolFreeBuffer( Packet );
+	PacketEntry = ExInterlockedRemoveHeadList(&NCE->PacketQueue,
+	                                          &NCE->Table->Lock);
     }
 }
 
@@ -448,10 +452,10 @@ BOOLEAN NBQueuePacket(
   Packet->Packet = NdisPacket;
   InsertTailList( &NCE->PacketQueue, &Packet->Next );
 
+  TcpipReleaseSpinLock(Lock, OldIrql);
+
   if( NCE->State & NUD_CONNECTED )
       NBSendPackets( NCE );
-
-  TcpipReleaseSpinLock(Lock, OldIrql);
 
   return TRUE;
 }

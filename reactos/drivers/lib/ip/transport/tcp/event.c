@@ -96,13 +96,8 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     Packet.SrcAddr = LocalAddress;
     Packet.DstAddr = RemoteAddress;
 
-<<<<<<< event.c
-    IPSendDatagram( &Packet, NCE, TCPPacketSendComplete, NULL );
-
-=======
     IPSendDatagram( &Packet, NCE, TCPPacketSendComplete, NULL );
     
->>>>>>> 1.11
     if( !NT_SUCCESS(NdisStatus) ) return OSK_EINVAL;
     else return 0;
 }

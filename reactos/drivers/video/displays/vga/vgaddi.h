@@ -25,8 +25,15 @@ typedef struct  _XYPAIR
   USHORT  y;
 } XYPAIR;
 
+typedef struct _SAVED_SCREEN_BITS
+{
+  BOOL Free;
+  DWORD Offset;
+  ULONG Size;
+  LIST_ENTRY ListEntry;
+} SAVED_SCREEN_BITS, *PSAVED_SCREEN_BITS;
+
 // Cursor states
-#define CURSOR_DOWN      0x00000001
 #define CURSOR_COLOR     0x00000004
 #define CURSOR_HW        0x00000010
 #define CURSOR_HW_ACTIVE 0x00000020
@@ -43,14 +50,11 @@ typedef struct _PDEV
   PVOID  AssociatedSurf; // associated surface
 
   // Cursor
-  XYPAIR xyCursor;  // cursor position
   XYPAIR xyHotSpot; // cursor hotspot
-  POINTL ptlExtent; // cursor extent
-  ULONG  cExtent;   // effective cursor extent
-  ULONG  flCursor;  // cursor status
 
   // Pointer
   PVIDEO_POINTER_ATTRIBUTES pPointerAttributes; // HW Pointer Attributes
+  PSAVED_SCREEN_BITS ImageBehindCursor;
   ULONG   XorMaskStartOffset;         // Start offset of hardware pointer
                                       //  XOR mask relative to AND mask for
                                       //  passing to HW pointer
@@ -91,32 +95,6 @@ typedef enum {
 // bank control function vector
 //typedef VOID (*PFN_BankControl)(PDEVSURF, ULONG, BANK_JUST);
 typedef VOID (*PFN_BankControl)(PVOID, ULONG, BANK_JUST);
-
-#if 0
-// descriptor for a saved screen bits block
-
-typedef struct  _SAVED_SCREEN_BITS
-{
-  BOOL  bFlags;
-  PBYTE pjBuffer;  // pointer to save buffer start
-  ULONG ulSize;    // size of save buffer (per plane; display memory only)
-  ULONG ulSaveWidthInBytes; // # of bytes across save area (including
-                            //  partial edge bytes, if any)
-  ULONG ulDelta;   // # of bytes from end of one saved scan's saved bits to
-                   //  start of next (system memory only)
-  PVOID pvNextSSB; // pointer to next saved screen bits block
-                   // for system memory blocks, saved bits start immediately
-                   //  after this structure
-} SAVED_SCREEN_BITS, *PSAVED_SCREEN_BITS;
-#else
-typedef struct _SAVED_SCREEN_BITS
-{
-  BOOL Free;
-  DWORD Offset;
-  ULONG Size;
-  LIST_ENTRY ListEntry;
-} SAVED_SCREEN_BITS, *PSAVED_SCREEN_BITS;
-#endif
 
 // DEVSURF -- definition of a surface as seen and used by the various VGA
 // drivers

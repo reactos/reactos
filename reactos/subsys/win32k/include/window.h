@@ -212,7 +212,7 @@ BOOL FASTCALL
 IntGetWindowInfo(PWINDOW_OBJECT WindowObject, PWINDOWINFO pwi);
 
 VOID FASTCALL
-IntGetWindowBorderMeasures(PWINDOW_OBJECT WindowObject, INT *cx, INT *cy);
+IntGetWindowBorderMeasures(PWINDOW_OBJECT WindowObject, UINT *cx, UINT *cy);
 
 BOOL FASTCALL
 IntAnyPopup(VOID);

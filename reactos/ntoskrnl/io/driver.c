@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.55 2004/11/07 21:20:51 navaraf Exp $
+/* $Id: driver.c,v 1.55.2.1 2004/12/13 09:39:10 hyperion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1237,7 +1237,7 @@ IopInitializeBootDrivers(VOID)
        * and symbol files, if the kernel debugger is active
        */
       if (_stricmp(Extension, ".exe") && _stricmp(Extension, ".dll")
-#ifdef KDBG
+#if defined(DBG) || defined(KDBG)
           && _stricmp(Extension, ".sym")
 #endif
          )

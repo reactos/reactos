@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.108 2004/11/20 16:46:06 weiden Exp $
+/* $Id: msgqueue.c,v 1.108.2.1 2004/12/13 09:39:19 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -719,7 +719,7 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   PUSER_SENT_MESSAGE Message;
   PLIST_ENTRY Entry;
   LRESULT Result;
-  BOOL Freed;
+  BOOL SenderReturned;
   PUSER_SENT_MESSAGE_NOTIFY NotifyMessage;
 
   IntLockMessageQueue(MessageQueue);
@@ -755,8 +755,8 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   /* remove the message from the dispatching list, so lock the sender's message queue */
   IntLockMessageQueue(Message->SenderQueue);
   
-  Freed = (Message->DispatchingListEntry.Flink == NULL);
-  if(!Freed)
+  SenderReturned = (Message->DispatchingListEntry.Flink == NULL);
+  if(!SenderReturned)
   {
     /* only remove it from the dispatching list if not already removed by a timeout */
     RemoveEntryList(&Message->DispatchingListEntry);
@@ -780,7 +780,7 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   IntUnLockMessageQueue(Message->SenderQueue);
 
   /* Notify the sender if they specified a callback. */
-  if (!Freed && Message->CompletionCallback != NULL)
+  if (!SenderReturned && Message->CompletionCallback != NULL)
     {
       if(!(NotifyMessage = ExAllocatePoolWithTag(NonPagedPool,
 					         sizeof(USER_SENT_MESSAGE_NOTIFY), TAG_USRMSG)))
@@ -799,16 +799,92 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
     }
 
 Notified:
-  if(!Freed)
-  {
-    /* only dereference our message queue if the message has not been timed out */
-    IntDereferenceMessageQueue(MessageQueue);
-    IntDereferenceMessageQueue(Message->SenderQueue);
-  }
+
+  /* dereference both sender and our queue */
+  IntDereferenceMessageQueue(MessageQueue);
+  IntDereferenceMessageQueue(Message->SenderQueue);
   
-  /* only free the message if not freed already */
+  /* free the message */
   ExFreePool(Message);
   return(TRUE);
+}
+
+VOID STDCALL
+MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
+{
+  PUSER_SENT_MESSAGE SentMessage;
+  PUSER_MESSAGE PostedMessage;
+  PUSER_MESSAGE_QUEUE MessageQueue;
+  PLIST_ENTRY CurrentEntry, ListHead;
+  PWINDOW_OBJECT Window = pWindow;
+  
+  ASSERT(Window);
+  
+  MessageQueue = Window->MessageQueue;
+  ASSERT(MessageQueue);
+  
+  IntLockMessageQueue(MessageQueue);
+  
+  /* remove the posted messages for this window */
+  CurrentEntry = MessageQueue->PostedMessagesListHead.Flink;
+  ListHead = &MessageQueue->PostedMessagesListHead;
+  while (CurrentEntry != ListHead)
+    {
+      PostedMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
+				        ListEntry);
+      if (PostedMessage->Msg.hwnd == Window->Self)
+	{
+	  RemoveEntryList(&PostedMessage->ListEntry);
+	  MsqDestroyMessage(PostedMessage);
+          CurrentEntry = MessageQueue->PostedMessagesListHead.Flink;
+	}
+      else
+        {
+          CurrentEntry = CurrentEntry->Flink;
+        }
+    }
+
+  /* remove the sent messages for this window */
+  CurrentEntry = MessageQueue->SentMessagesListHead.Flink;
+  ListHead = &MessageQueue->SentMessagesListHead;
+  while (CurrentEntry != ListHead)
+    {
+      CurrentEntry = RemoveHeadList(&MessageQueue->SentMessagesListHead);
+      SentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
+                                      ListEntry);
+      if(SentMessage->Msg.hwnd == Window->Self)
+      {
+        IntLockMessageQueue(SentMessage->SenderQueue);
+        DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
+
+        /* remove the message from the dispatching list */
+        if(SentMessage->DispatchingListEntry.Flink != NULL)
+        {
+          RemoveEntryList(&SentMessage->DispatchingListEntry);
+        }
+
+        /* wake the sender's thread */
+        if (SentMessage->CompletionEvent != NULL)
+        {
+          KeSetEvent(SentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
+        }
+        IntUnLockMessageQueue(SentMessage->SenderQueue);
+
+        /* dereference our and the sender's message queue */
+        IntDereferenceMessageQueue(MessageQueue);
+        IntDereferenceMessageQueue(SentMessage->SenderQueue);
+
+        /* free the message */
+        ExFreePool(SentMessage);
+        
+        CurrentEntry = MessageQueue->SentMessagesListHead.Flink;
+      }
+      else
+      {
+        CurrentEntry = CurrentEntry->Flink;
+      }
+    }
+  IntUnLockMessageQueue(MessageQueue);
 }
 
 VOID FASTCALL
@@ -919,8 +995,6 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 		Message->CompletionEvent = NULL;
                 Message->Result = NULL;
                 RemoveEntryList(&Message->DispatchingListEntry);
-                IntDereferenceMessageQueue(MessageQueue);
-                IntDereferenceMessageQueue(ThreadQueue);
                 break;
               }
             Entry = Entry->Flink;
@@ -978,8 +1052,6 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 		    Message->CompletionEvent = NULL;
                     Message->Result = NULL;
                     RemoveEntryList(&Message->DispatchingListEntry);
-                    IntDereferenceMessageQueue(MessageQueue);
-                    IntDereferenceMessageQueue(ThreadQueue);
                     break;
                   }
                 Entry = Entry->Flink;
@@ -1144,6 +1216,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, 
                                              ListEntry);
       
+      IntLockMessageQueue(CurrentSentMessage->SenderQueue);
       DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
       
       /* remove the message from the dispatching list */
@@ -1157,9 +1230,11 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       {
         KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
       }
+      IntUnLockMessageQueue(CurrentSentMessage->SenderQueue);
       
-      /* dereference our message queue */
+      /* dereference our and the sender's message queue */
       IntDereferenceMessageQueue(MessageQueue);
+      IntDereferenceMessageQueue(CurrentSentMessage->SenderQueue);
       
       /* free the message */
       ExFreePool(CurrentSentMessage);
@@ -1181,8 +1256,9 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
         KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
       }
       
-      /* dereference our message queue */
+      /* dereference our and the sender's message queue */
       IntDereferenceMessageQueue(MessageQueue);
+      IntDereferenceMessageQueue(CurrentSentMessage->SenderQueue);
       
       /* free the message */
       ExFreePool(CurrentSentMessage);
@@ -1196,7 +1272,9 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
                                              DispatchingListEntry);
       CurrentSentMessage->CompletionEvent = NULL;
       CurrentSentMessage->Result = NULL;
-      IntDereferenceMessageQueue(MessageQueue);
+
+      /* do NOT dereference our message queue as it might get attempted to be
+         locked later */
     }
   
   IntUnLockMessageQueue(MessageQueue);

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.94.2.1 2004/12/08 21:57:11 hyperion Exp $
+/* $Id: stubs.c,v 1.94.2.2 2004/12/13 09:38:56 hyperion Exp $
  *
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.
@@ -649,20 +649,6 @@ GetNumaProcessorNode(
 /*
  * @unimplemented
  */
-BOOL
-STDCALL
-GetThreadIOPendingFlag(
-    HANDLE hThread,
-    PBOOL lpIOIsPending
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 UINT
 STDCALL
 GetWriteWatch(
@@ -1159,20 +1145,6 @@ FindNextVolumeMountPointW(
  */
 DWORD
 STDCALL
-GetDllDirectoryW(
-    DWORD nBufferLength,
-    LPWSTR lpBuffer
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
 GetFirmwareEnvironmentVariableW(
     LPCWSTR lpName,
     LPCWSTR lpGuid,
@@ -1304,19 +1276,6 @@ SetComputerNameExW (
 {
     STUB;
     return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetDllDirectoryW(
-    LPCWSTR lpPathName
-    )
-{
-    STUB;
-    return TRUE;
 }
 
 /*
@@ -1473,20 +1432,6 @@ FindNextVolumeMountPointA(
  */
 DWORD
 STDCALL
-GetDllDirectoryA(
-    DWORD nBufferLength,
-    LPSTR lpBuffer
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
 GetFirmwareEnvironmentVariableA(
     LPCSTR lpName,
     LPCSTR lpGuid,
@@ -1618,19 +1563,6 @@ SetComputerNameExA (
 {
     STUB;
     return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetDllDirectoryA(
-    LPCSTR lpPathName
-    )
-{
-    STUB;
-    return TRUE;
 }
 
 /*

@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.14 2004/09/27 20:04:53 gvg Exp $
+/* $Id: token.c,v 1.14.6.1 2004/12/13 09:38:54 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

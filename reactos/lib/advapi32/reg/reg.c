@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.63.2.1 2004/12/08 21:56:58 hyperion Exp $
+/* $Id: reg.c,v 1.63.2.2 2004/12/13 09:38:54 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

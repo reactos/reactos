@@ -39,6 +39,9 @@ VOID LoopTransmit(
   IPPacket.NdisPacket = NdisPacket;
   IPPacket.HeaderSize = 0;
   GetDataPtr( NdisPacket, 0, (PCHAR *)&IPPacket.Header, &IPPacket.TotalSize );
+  IPPacket.Header += Offset;
+  IPPacket.ContigSize = IPPacket.TotalSize;
+  IPPacket.Position = Offset;
 
   TI_DbgPrint(MAX_TRACE, 
 	      ("Doing receive (complete: %x, context %x, packet %x)\n",

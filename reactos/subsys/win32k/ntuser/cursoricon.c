@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.2 2004/12/12 17:56:52 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.2.2.1 2004/12/13 09:39:20 hyperion Exp $ */
 #include <w32k.h>
 
 PCURICON_OBJECT FASTCALL

@@ -395,7 +395,7 @@ VOID ProcessFragment(
     /* If this is the first fragment, save the IP header */
     if (FragFirst == 0) {
       TI_DbgPrint(DEBUG_IP, ("First fragment found. Header buffer is at (0x%X). "
-        "Header size is (%d).\n", IPDR->IPv4Header, IPPacket->HeaderSize));
+        "Header size is (%d).\n", &IPDR->IPv4Header, IPPacket->HeaderSize));
 
       RtlCopyMemory(&IPDR->IPv4Header, IPPacket->Header, IPPacket->HeaderSize);
       IPDR->HeaderSize = IPPacket->HeaderSize;

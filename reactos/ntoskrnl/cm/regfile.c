@@ -1099,19 +1099,16 @@ CmiCreateVolatileHive(PREGISTRY_HIVE *RegistryHive)
   CmiCreateDefaultRootKeyCell (RootKeyCell);
   Hive->HiveHeader->RootKeyOffset = (BLOCK_OFFSET)RootKeyCell;
 
-  ExInitializeResourceLite (&Hive->HiveResource);
-
   /* Acquire hive list lock exclusively */
   KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite (&CmiHiveListLock,
-				  TRUE);
+  ExAcquireResourceExclusiveLite (&CmiRegistryLock, TRUE);
 
   /* Add the new hive to the hive list */
   InsertTailList (&CmiHiveListHead,
 		  &Hive->HiveList);
 
   /* Release hive list lock */
-  ExReleaseResourceLite (&CmiHiveListLock);
+  ExReleaseResourceLite (&CmiRegistryLock);
   KeLeaveCriticalRegion();
 
   VERIFY_REGISTRY_HIVE (Hive);
@@ -1223,20 +1220,16 @@ CmiCreateTempHive(PREGISTRY_HIVE *RegistryHive)
       return Status;
     }
 
-
-  ExInitializeResourceLite (&Hive->HiveResource);
-
   /* Acquire hive list lock exclusively */
   KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite (&CmiHiveListLock,
-				  TRUE);
+  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
 
   /* Add the new hive to the hive list */
   InsertTailList (&CmiHiveListHead,
 		  &Hive->HiveList);
 
   /* Release hive list lock */
-  ExReleaseResourceLite (&CmiHiveListLock);
+  ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
 
   VERIFY_REGISTRY_HIVE (Hive);
@@ -1295,20 +1288,11 @@ CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
       return Status;
     }
 
-  ExInitializeResourceLite (&Hive->HiveResource);
-
   /* Add the new hive to the hive list */
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite (&CmiHiveListLock,
-				  TRUE);
   InsertTailList (&CmiHiveListHead,
 		  &Hive->HiveList);
-  ExReleaseResourceLite (&CmiHiveListLock);
-  KeLeaveCriticalRegion();
-
 
   VERIFY_REGISTRY_HIVE(Hive);
-
 
   Status = CmiConnectHive (KeyObjectAttributes,
 			   Hive);
@@ -1330,17 +1314,8 @@ CmiRemoveRegistryHive(PREGISTRY_HIVE RegistryHive)
   if (RegistryHive->Flags & HIVE_POINTER)
     return STATUS_UNSUCCESSFUL;
 
-  /* Acquire hive list lock exclusively */
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite (&CmiHiveListLock,
-				  TRUE);
-
   /* Remove hive from hive list */
   RemoveEntryList (&RegistryHive->HiveList);
-
-  /* Release hive list lock */
-  ExReleaseResourceLite (&CmiHiveListLock);
-  KeLeaveCriticalRegion();
 
   /* Release file names */
   RtlFreeUnicodeString (&RegistryHive->HiveFileName);
@@ -1352,9 +1327,6 @@ CmiRemoveRegistryHive(PREGISTRY_HIVE RegistryHive)
   /* Release free cell list */
   ExFreePool (RegistryHive->FreeList);
   ExFreePool (RegistryHive->FreeListOffset);
-
-  /* Release hive resource */
-  ExDeleteResource (&RegistryHive->HiveResource);
 
   /* Release bins and bin list */
   CmiFreeHiveBins (RegistryHive);

@@ -1,4 +1,4 @@
-/* $Id: iocompl.c,v 1.15.2.1 2004/12/08 21:57:10 hyperion Exp $
+/* $Id: iocompl.c,v 1.15.2.2 2004/12/13 09:38:56 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

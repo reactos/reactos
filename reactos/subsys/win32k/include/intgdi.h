@@ -165,5 +165,32 @@ IntGdiUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2);
 BOOL FASTCALL
 IntGdiIntersectRect(PRECT Dest, const RECT* Src1, const RECT* Src2);
 
+/* Stock objects */
+
+BOOL FASTCALL
+IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors);
+
+BOOL FASTCALL
+IntGetSysColorBrushes(HBRUSH *Brushes, UINT nBrushes);
+
+BOOL FASTCALL
+IntGetSysColorPens(HPEN *Pens, UINT nPens);
+
+BOOL FASTCALL
+IntGetSysColors(COLORREF *Colors, UINT nColors);
+
+/* Other Stuff */
+
+INT FASTCALL
+IntGdiGetDeviceCaps(PDC dc, INT Index);
+
+INT
+FASTCALL
+IntGdiEscape(PDC    dc,
+             INT    Escape,
+             INT    InSize,
+             LPCSTR InData,
+             LPVOID OutData);
+
 #endif /* _WIN32K_INTGDI_H */
 

@@ -1,4 +1,4 @@
-/* $Id: cleanup.c,v 1.15.6.1 2004/12/08 21:56:48 hyperion Exp $
+/* $Id: cleanup.c,v 1.15.6.2 2004/12/13 09:38:46 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

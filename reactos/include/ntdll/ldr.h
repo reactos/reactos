@@ -68,7 +68,7 @@ typedef struct _LDR_MODULE
    HANDLE         SectionHandle;
    ULONG          CheckSum;
    ULONG          TimeDateStamp;
-#ifdef KDBG
+#if defined(DBG) || defined(KDBG)
   IMAGE_SYMBOL_INFO SymbolInfo;
 #endif /* KDBG */
 } LDR_MODULE, *PLDR_MODULE;
@@ -85,7 +85,7 @@ typedef struct _LDR_SYMBOL_INFO {
 
 #define RVA(m, b) ((ULONG)b + m)
 
-#ifdef KDBG
+#if defined(KDBG) || defined(DBG)
 
 VOID
 LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule);

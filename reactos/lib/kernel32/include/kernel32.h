@@ -41,6 +41,8 @@ extern HMODULE hCurrentModule;
 
 extern CRITICAL_SECTION DllLock;
 
+extern UNICODE_STRING DllDirectory;
+
 /* FUNCTION PROTOTYPES *******************************************************/
 
 BOOL STDCALL IsConsoleHandle(HANDLE Handle);

@@ -1,4 +1,4 @@
-/* $Id: largeint.c,v 1.1 2004/05/31 19:29:02 gdalsnes Exp $
+/* $Id: largeint.c,v 1.1.18.1 2004/12/13 09:39:01 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -254,7 +254,7 @@ RtlLargeIntegerArithmeticShift (
    else
    {
       /* copy the sign bit */
-      RC.u.HighPart |= (LargeInteger.u.HighPart & 0x80000000);
+      RC.u.HighPart = (LargeInteger.u.HighPart & 0x80000000);
       RC.u.LowPart = LargeInteger.u.HighPart >> Shift;
    }
 

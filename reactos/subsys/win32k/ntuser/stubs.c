@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.47.2.1 2004/12/08 21:57:40 hyperion Exp $
+/* $Id: stubs.c,v 1.47.2.2 2004/12/13 09:39:20 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -8,8 +8,7 @@
  * REVISION HISTORY:
  *       04-06-2001  CSH  Created
  */
-#include <ddk/ntddk.h>
-#include <windows.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

@@ -32,24 +32,31 @@ DEPENDS_PATH := $(PATH_TO_TOP)/tools
 endif
 
 .%.d: %.c $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
+	$(HALFVERBOSEECHO) [DEPENDS] $@
 	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
 
 .%.d: %.cc $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
+	$(HALFVERBOSEECHO) [DEPENDS] $@
 	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
 
 .%.d: %.cpp $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
+	$(HALFVERBOSEECHO) [DEPENDS] $@
 	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
 
 .%.d: %.S  $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
+	$(HALFVERBOSEECHO) [DEPENDS] $@
 	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
 
 .%.d: %.s  $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
+	$(HALFVERBOSEECHO) [DEPENDS] $@
 	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
 
 .%.d: %.asm $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
+	$(HALFVERBOSEECHO) [DEPENDS] $@
 	$(NASM_CMD) $(NFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
 
 .%.d: %.h $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES) 
+	$(HALFVERBOSEECHO) [DEPENDS] $@
 	$(PCH_CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
 
 endif

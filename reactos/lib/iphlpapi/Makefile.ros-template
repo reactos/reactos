@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.2.16.1 2004/12/08 21:57:09 hyperion Exp $
+# $Id: Makefile.ros-template,v 1.2.16.2 2004/12/13 09:38:55 hyperion Exp $
 
 TARGET_NAME = iphlpapi
 

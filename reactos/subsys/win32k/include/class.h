@@ -27,6 +27,7 @@ typedef struct _WNDCLASS_OBJECT
   BOOL Unicode;
   BOOL Global;
   LIST_ENTRY ListEntry;
+  LIST_ENTRY GlobalListEntry; /* HACK!!! */
   PCHAR   ExtraData;
   /* list of windows */
   FAST_MUTEX ClassWindowsListLock;

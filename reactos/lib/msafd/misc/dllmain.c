@@ -335,9 +335,10 @@ WSPBind(
 	/* Set up Address in TDI Format */
 	BindData->Address.TAAddressCount = 1;
 	BindData->Address.Address[0].AddressLength = SocketAddressLength - sizeof(SocketAddress->sa_family);
-	RtlCopyMemory (&BindData->Address.Address[0].AddressType,
-					SocketAddress, 
-					SocketAddressLength);
+	BindData->Address.Address[0].AddressType = SocketAddress->sa_family;
+	RtlCopyMemory (BindData->Address.Address[0].Address,
+					SocketAddress->sa_data,
+					SocketAddressLength - sizeof(SocketAddress->sa_family));
 	
 	/* Get Address Information */
 	Socket->HelperData->WSHGetSockaddrType ((PSOCKADDR)SocketAddress, 
@@ -519,7 +520,7 @@ WSPSelect(
     
     /* Wait for Completition */
     if (Status == STATUS_PENDING) {
-	WaitForSingleObject(SockEvent, 0);
+	WaitForSingleObject(SockEvent, INFINITE);
     }
     
     /* Clear the Structures */
@@ -881,9 +882,10 @@ WSPConnect(
 	/* Set up Address in TDI Format */
 	ConnectInfo->RemoteAddress.TAAddressCount = 1;
 	ConnectInfo->RemoteAddress.Address[0].AddressLength = SocketAddressLength - sizeof(SocketAddress->sa_family);
-	RtlCopyMemory (&ConnectInfo->RemoteAddress.Address[0].AddressType, 
-					SocketAddress, 
-					SocketAddressLength);
+	ConnectInfo->RemoteAddress.Address[0].AddressType = SocketAddress->sa_family;
+	RtlCopyMemory (ConnectInfo->RemoteAddress.Address[0].Address, 
+					SocketAddress->sa_data, 
+					SocketAddressLength - sizeof(SocketAddress->sa_family));
 
 	/* Tell AFD that we want Connection Data back, have it allocate a buffer */
 	if (lpCalleeData != NULL) {
@@ -997,7 +999,7 @@ WSPShutdown(
 
 	/* Wait for return */
 	if (Status == STATUS_PENDING) {
-		WaitForSingleObject(SockEvent, 0);
+		WaitForSingleObject(SockEvent, INFINITE);
 	}
 
 	AFD_DbgPrint(MID_TRACE,("Ending\n"));
@@ -1011,12 +1013,78 @@ WSPShutdown(
 INT
 WSPAPI
 WSPGetSockName(
-    IN      SOCKET s,
-    OUT     LPSOCKADDR name,
-    IN OUT  LPINT namelen,
+    IN      SOCKET Handle,
+    OUT     LPSOCKADDR Name,
+    IN OUT  LPINT NameLength,
     OUT     LPINT lpErrno)
 {
-  return 0;
+	IO_STATUS_BLOCK				IOSB;
+	ULONG					TdiAddressSize;
+	PTDI_ADDRESS_INFO			TdiAddress;
+	PTRANSPORT_ADDRESS			SocketAddress;
+	PSOCKET_INFORMATION			Socket = NULL;
+	NTSTATUS				Status;
+	HANDLE                                  SockEvent;
+
+	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return SOCKET_ERROR;
+
+	/* Get the Socket Structure associate to this Socket*/
+	Socket = GetSocketStructure(Handle);
+
+	/* Allocate a buffer for the address */
+	TdiAddressSize = FIELD_OFFSET(TDI_ADDRESS_INFO,
+	                              Address.Address[0].Address) +
+			 Socket->SharedData.SizeOfLocalAddress;
+	TdiAddress = HeapAlloc(GlobalHeap, 0, TdiAddressSize);
+
+	if ( TdiAddress == NULL ) {
+		NtClose( SockEvent );
+		*lpErrno = WSAENOBUFS;
+		return SOCKET_ERROR;
+	}
+
+	SocketAddress = &TdiAddress->Address;
+
+	/* Send IOCTL */
+	Status = NtDeviceIoControlFile( (HANDLE)Socket->Handle,
+					SockEvent,
+					NULL,
+					NULL,
+					&IOSB,
+					IOCTL_AFD_GET_SOCK_NAME,
+					NULL,
+					0,
+					TdiAddress,
+					TdiAddressSize);
+	
+	/* Wait for return */
+	if (Status == STATUS_PENDING) {
+		WaitForSingleObject(SockEvent, INFINITE);
+		Status = IOSB.Status;
+	}
+
+	NtClose( SockEvent );
+
+	if (NT_SUCCESS(Status)) {
+		if (*NameLength >= SocketAddress->Address[0].AddressLength) {
+			Name->sa_family = SocketAddress->Address[0].AddressType;
+			RtlCopyMemory (Name->sa_data,
+			               SocketAddress->Address[0].Address, 
+			               SocketAddress->Address[0].AddressLength);
+			HeapFree(GlobalHeap, 0, TdiAddress);
+			return 0;
+		} else {
+			HeapFree(GlobalHeap, 0, TdiAddress);
+			*lpErrno = WSAEFAULT;
+			return SOCKET_ERROR;
+		}
+	}
+
+	return MsafdReturnWithErrno
+	    ( IOSB.Status, lpErrno, 0, NULL );
 }
 
 
@@ -1193,7 +1261,7 @@ GetSocketInformation(
 
 	/* Wait for return */
 	if (Status == STATUS_PENDING) {
-		WaitForSingleObject(SockEvent, 0);
+		WaitForSingleObject(SockEvent, INFINITE);
 	}
 
 	/* Return Information */
@@ -1249,7 +1317,7 @@ SetSocketInformation(
 
 	/* Wait for return */
 	if (Status == STATUS_PENDING) {
-		WaitForSingleObject(SockEvent, 0);
+		WaitForSingleObject(SockEvent, INFINITE);
 	}
 
 	NtClose( SockEvent );
@@ -1308,7 +1376,7 @@ int CreateContext(PSOCKET_INFORMATION Socket)
 
 	/* Wait for Completition */
 	if (Status == STATUS_PENDING) {
-		WaitForSingleObject(SockEvent, 0);
+		WaitForSingleObject(SockEvent, INFINITE);
 	}
 	
 	NtClose( SockEvent );

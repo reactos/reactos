@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.6.2.1 2004/12/08 21:57:21 hyperion Exp $
+# $Id: Makefile.ros-template,v 1.6.2.2 2004/12/13 09:39:01 hyperion Exp $
 
 TARGET_NAME = shell32
 

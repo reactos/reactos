@@ -3866,11 +3866,11 @@ typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
 #define LOW_LEVEL                          0
 #define APC_LEVEL                          1
 #define DISPATCH_LEVEL                     2
-#define SYNCH_LEVEL                       27
 #define PROFILE_LEVEL                     27
 #define CLOCK1_LEVEL                      28
 #define CLOCK2_LEVEL                      28
 #define IPI_LEVEL                         29
+#define SYNCH_LEVEL			 (IPI_LEVEL-1)
 #define POWER_LEVEL                       30
 #define HIGH_LEVEL                        31
 

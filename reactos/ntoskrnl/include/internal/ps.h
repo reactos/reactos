@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.75.2.1 2004/12/08 21:57:33 hyperion Exp $
+/* $Id: ps.h,v 1.75.2.2 2004/12/13 09:39:10 hyperion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions

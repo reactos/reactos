@@ -16,6 +16,13 @@ TARGET_BOOTSTRAP = yes
 
 CONFIG :=
 
+ifeq ($(DBG), 1)
+DBG_OR_KDBG := 1
+endif
+ifeq ($(KDBG), 1)
+DBG_OR_KDBG := 1
+endif
+
 LINKER_SCRIPT := ntoskrnl.lnk
 STRIP_FLAGS := -Wl,-s
 
@@ -27,7 +34,7 @@ endif
 
 ifeq ($(KDBG), 1)
 OBJECTS_KDBG := dbg/kdb.o dbg/kdb_serial.o dbg/kdb_keyboard.o dbg/rdebug.o \
-                dbg/i386/kdb_help.o dbg/kdb_stabs.o dbg/kdb_symbols.o dbg/profile.o \
+                dbg/i386/kdb_help.o dbg/profile.o \
 		../dk/w32/lib/libkjs.a dbg/i386/i386-dis.o
 CFLAGS_KDBG := -I../lib/kjs/include
 preall: all
@@ -37,9 +44,12 @@ preall: all
 else
 OBJECTS_KDBG :=
 endif
+ifeq ($(DBG_OR_KDBG), 1)
+OBJECTS_KDBG := $(OBJECTS_KDBG) dbg/kdb_stabs.o dbg/kdb_symbols.o
+endif
 
 TARGET_ASFLAGS = -I./include
-TARGET_CFLAGS = -I./include $(CFLAGS_KDBG) -Wall -Werror $(CFLAGS_OPT) -D_ELF_SUPPORT
+TARGET_CFLAGS = -I./include $(CFLAGS_KDBG) -Wall -Werror $(CFLAGS_OPT)
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS

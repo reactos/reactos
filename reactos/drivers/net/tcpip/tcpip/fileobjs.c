@@ -268,7 +268,7 @@ NTSTATUS FileOpenAddress(
   switch (Protocol) {
   case IPPROTO_TCP:
     /* FIXME: If specified port is 0, a port is chosen dynamically */
-    AddrFile->Port = Address->Address[0].Address[0].sin_port;
+    AddrFile->Port = TCPAllocatePort(Address->Address[0].Address[0].sin_port);
     AddrFile->Send = NULL; /* TCPSendData */
     break;
 
@@ -346,7 +346,17 @@ NTSTATUS FileCloseAddress(
   AF_CLR_VALID(AddrFile);
   
   TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-  UDPFreePort( AddrFile->Port );
+
+  /* Protocol specific handling */
+  switch (AddrFile->Protocol) {
+  case IPPROTO_TCP:
+    TCPFreePort( AddrFile->Port );
+    break;
+
+  case IPPROTO_UDP:
+    UDPFreePort( AddrFile->Port );
+    break;
+  }
   
   DeleteAddress(AddrFile);
   

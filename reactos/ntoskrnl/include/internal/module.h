@@ -14,7 +14,7 @@ typedef struct _MODULE_TEXT_SECTION
   LIST_ENTRY ListEntry;
   PWCH Name;
   PIMAGE_OPTIONAL_HEADER OptionalHeader;
-#ifdef KDBG
+#if defined(DBG) || defined(KDBG)
   IMAGE_SYMBOL_INFO SymbolInfo;
 #endif /* KDBG */
 } MODULE_TEXT_SECTION, *PMODULE_TEXT_SECTION;

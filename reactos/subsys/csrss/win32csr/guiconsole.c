@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.22.2.1 2004/12/08 21:57:38 hyperion Exp $
+/* $Id: guiconsole.c,v 1.22.2.2 2004/12/13 09:39:15 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

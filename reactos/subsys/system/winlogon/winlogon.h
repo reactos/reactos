@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winlogon.h,v 1.4.8.1 2004/12/08 21:57:39 hyperion Exp $
+/* $Id: winlogon.h,v 1.4.8.2 2004/12/13 09:39:16 hyperion Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS winlogon
  * FILE:            subsys/system/winlogon/winlogon.h

@@ -32,8 +32,8 @@ typedef struct _W32PROCESS
   LIST_ENTRY CursorIconListHead;
   struct _KBDTABLES* KeyboardLayout;
   ULONG Flags;
-  WORD GDIObjects;
-  WORD UserObjects;
+  LONG GDIObjects;
+  LONG UserObjects;
 } W32PROCESS, *PW32PROCESS;
 
 PW32THREAD STDCALL

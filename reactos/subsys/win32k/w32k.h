@@ -74,8 +74,6 @@
 
 #include <eng/objects.h>
 #include <eng/misc.h>
-#include <eng/handle.h>
-#include <eng/clip.h>
 
 #include <dib/dib.h>
 

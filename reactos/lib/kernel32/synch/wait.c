@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.31.2.1 2004/12/08 21:57:12 hyperion Exp $
+/* $Id: wait.c,v 1.31.2.2 2004/12/13 09:38:57 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

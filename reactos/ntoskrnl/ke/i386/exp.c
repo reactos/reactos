@@ -124,7 +124,7 @@ static NTSTATUS ExceptionToNtStatus[] =
 
 /* FUNCTIONS ****************************************************************/
 
-#ifdef KDBG
+#if defined(DBG) || defined(KDBG)
 BOOLEAN STDCALL
 KeRosPrintAddress(PVOID address)
 {
