@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.25 2001/05/04 01:21:45 rex Exp $
+ * $Id: fat.c,v 1.26 2001/06/14 10:02:59 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -362,8 +362,9 @@ FAT32FindAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
 }
 
 
-ULONG
-FAT12CountAvailableClusters (PDEVICE_EXTENSION DeviceExt)
+NTSTATUS
+FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
+			    PLARGE_INTEGER Clusters)
 /*
  * FUNCTION: Counts free cluster in a FAT12 table
  */
@@ -388,7 +389,7 @@ FAT12CountAvailableClusters (PDEVICE_EXTENSION DeviceExt)
   if (!NT_SUCCESS(Status))
     {
       ExReleaseResourceLite (&DeviceExt->FatResource);
-      return 0; // Will the caller understand NTSTATUS values?
+      return(Status);
     }
   if (!Valid)
     {
@@ -399,8 +400,8 @@ FAT12CountAvailableClusters (PDEVICE_EXTENSION DeviceExt)
       if (!NT_SUCCESS(Status))
 	{
 	  CcRosReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, FALSE);
-          ExReleaseResourceLite (&DeviceExt->FatResource);
-          return 0; // Will the caller understand NTSTATUS values?
+	  ExReleaseResourceLite (&DeviceExt->FatResource);
+	  return(Status);
 	}
     }
   CBlock = (PUCHAR)BaseAddress;
@@ -426,12 +427,15 @@ FAT12CountAvailableClusters (PDEVICE_EXTENSION DeviceExt)
   CcRosReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, FALSE);
   ExReleaseResourceLite (&DeviceExt->FatResource);
 
-  return ulCount;
+  Clusters->QuadPart = ulCount;
+
+  return(STATUS_SUCCESS);
 }
 
 #if 0
-ULONG
-FAT16CountAvailableClusters (PDEVICE_EXTENSION DeviceExt)
+NTSTATUS
+FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
+			    PLARGE_INTEGER Clusters)
 /*
  * FUNCTION: Counts free clusters in a FAT16 table
  */
@@ -451,12 +455,15 @@ FAT16CountAvailableClusters (PDEVICE_EXTENSION DeviceExt)
 
   ExReleaseResourceLite (&DeviceExt->FatResource);
 
-  return ulCount;
+  Clusters->QuadPart = ulCount;
+
+  return(STATUS_SUCCESS);
 }
 #endif
 
-ULONG
-FAT32CountAvailableClusters (PDEVICE_EXTENSION DeviceExt)
+NTSTATUS
+FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
+			    PLARGE_INTEGER Clusters)
 /*
  * FUNCTION: Counts free clusters in a FAT32 table
  */
@@ -466,6 +473,7 @@ FAT32CountAvailableClusters (PDEVICE_EXTENSION DeviceExt)
   ULONG ulCount = 0;
   ULONG i,forto;
   ULONG numberofclusters;
+  NTSTATUS Status;
 
   ExAcquireResourceSharedLite (&DeviceExt->FatResource, TRUE);
 
@@ -478,10 +486,15 @@ FAT32CountAvailableClusters (PDEVICE_EXTENSION DeviceExt)
        sector < ((struct _BootSector32 *) (DeviceExt->Boot))->FATSectors32;
        sector++)
     {
-      /* FIXME: Check status */
-      VfatReadSectors (DeviceExt->StorageDevice,
-		       (ULONG) (DeviceExt->FATStart + sector), 1,
-		       (UCHAR *) Block);
+      Status = VfatReadSectors(DeviceExt->StorageDevice,
+			       (ULONG) (DeviceExt->FATStart + sector), 1,
+			       (UCHAR *) Block);
+      if (!NT_SUCCESS(Status))
+	{
+	  ExFreePool(Block);
+	  ExReleaseResourceLite(&DeviceExt->FatResource);
+	  return(Status);
+	}
 
       if (sector==((struct _BootSector32 *) (DeviceExt->Boot))->FATSectors32-1)
 	 forto=numberofclusters;
@@ -495,12 +508,16 @@ FAT32CountAvailableClusters (PDEVICE_EXTENSION DeviceExt)
     }
   ExFreePool (Block);
   ExReleaseResourceLite (&DeviceExt->FatResource);
-  return ulCount;
+
+  Clusters->QuadPart = ulCount;
+
+  return(STATUS_SUCCESS);
 }
 
 NTSTATUS
-FAT12WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
-		   ULONG NewValue)
+FAT12WriteCluster(PDEVICE_EXTENSION DeviceExt,
+		  ULONG ClusterToWrite,
+		  ULONG NewValue)
 /*
  * FUNCTION: Writes a cluster to the FAT12 physical and in-memory tables
  */
@@ -578,8 +595,9 @@ FAT12WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
 }
 
 NTSTATUS
-FAT16WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
-		   ULONG NewValue)
+FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt,
+		  ULONG ClusterToWrite,
+		  ULONG NewValue)
 /*
  * FUNCTION: Writes a cluster to the FAT16 physical and in-memory tables
  */
@@ -637,9 +655,10 @@ FAT16WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
   return (STATUS_SUCCESS);
 }
 
-VOID
-FAT32WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
-		   ULONG NewValue)
+NTSTATUS
+FAT32WriteCluster(PDEVICE_EXTENSION DeviceExt,
+		  ULONG ClusterToWrite,
+		  ULONG NewValue)
 /*
  * FUNCTION: Writes a cluster to the FAT32 physical tables
  */
@@ -672,11 +691,13 @@ FAT32WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
   ExFreePool (Block);
 #endif
   KeBugCheck(0);
+  return(STATUS_SUCCESS);
 }
 
 NTSTATUS
-WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
-	      ULONG NewValue)
+WriteCluster(PDEVICE_EXTENSION DeviceExt,
+	     ULONG ClusterToWrite,
+	     ULONG NewValue)
 /*
  * FUNCTION: Write a changed FAT entry
  */
@@ -689,8 +710,7 @@ WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
     }
   else if (DeviceExt->FatType == FAT32)
     {
-      FAT32WriteCluster (DeviceExt, ClusterToWrite, NewValue);
-      Status = STATUS_SUCCESS;
+      Status = FAT32WriteCluster (DeviceExt, ClusterToWrite, NewValue);
     }
   else
     {
@@ -711,10 +731,10 @@ ClusterToSector (PDEVICE_EXTENSION DeviceExt, unsigned long Cluster)
 }
 
 NTSTATUS
-VfatRawReadCluster (PDEVICE_EXTENSION DeviceExt, 
-		    ULONG FirstCluster,
-		    PVOID Buffer, 
-		    ULONG Cluster)
+VfatRawReadCluster(PDEVICE_EXTENSION DeviceExt,
+		   ULONG FirstCluster,
+		   PVOID Buffer,
+		   ULONG Cluster)
 /*
  * FUNCTION: Load a cluster from the physical device
  */
@@ -744,10 +764,10 @@ VfatRawReadCluster (PDEVICE_EXTENSION DeviceExt,
 }
 
 NTSTATUS
-VfatRawWriteCluster (PDEVICE_EXTENSION DeviceExt, 
-		     ULONG FirstCluster,
-		     PVOID Buffer, 
-		     ULONG Cluster)
+VfatRawWriteCluster(PDEVICE_EXTENSION DeviceExt,
+		    ULONG FirstCluster,
+		    PVOID Buffer,
+		    ULONG Cluster)
 /*
  * FUNCTION: Write a cluster to the physical device
  */
@@ -760,17 +780,20 @@ VfatRawWriteCluster (PDEVICE_EXTENSION DeviceExt,
 
   if (FirstCluster == 1)
     {
-      Status = VfatWriteSectors (DeviceExt->StorageDevice,
+      Status = VfatWriteSectors(DeviceExt->StorageDevice,
 			        Cluster,
-				DeviceExt->Boot->SectorsPerCluster, Buffer);
+			        DeviceExt->Boot->SectorsPerCluster,
+			        Buffer);
     }
   else
     {
-      Sector = ClusterToSector (DeviceExt, Cluster);
+      Sector = ClusterToSector(DeviceExt,
+			       Cluster);
       
-      Status = VfatWriteSectors (DeviceExt->StorageDevice,
-				 Sector, DeviceExt->Boot->SectorsPerCluster, 
-				 Buffer);
+      Status = VfatWriteSectors(DeviceExt->StorageDevice,
+				Sector,
+				DeviceExt->Boot->SectorsPerCluster,
+				Buffer);
     }
   return(Status);
 }

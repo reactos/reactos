@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.30 2001/06/11 19:52:22 ekohl Exp $ */
+/* $Id: vfat.h,v 1.31 2001/06/14 10:02:59 ekohl Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -249,41 +249,52 @@ BOOL  vfatIsFileNameValid (PWCHAR pFileName);
 /*
  * functions from fat.c
  */
-ULONG 
-ClusterToSector(PDEVICE_EXTENSION DeviceExt, ULONG Cluster);
+ULONG
+ClusterToSector(PDEVICE_EXTENSION DeviceExt,
+		ULONG Cluster);
 NTSTATUS
-GetNextCluster(PDEVICE_EXTENSION DeviceExt, 
+GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 	       ULONG CurrentCluster,
 	       PULONG NextCluster,
 	       BOOLEAN Extend);
 NTSTATUS
-GetNextSector (PDEVICE_EXTENSION DeviceExt, 
-		ULONG CurrentSector,
-		PULONG NextSector,
-		BOOLEAN Extend);
+GetNextSector(PDEVICE_EXTENSION DeviceExt,
+	      ULONG CurrentSector,
+	      PULONG NextSector,
+	      BOOLEAN Extend);
 NTSTATUS
-VfatRawReadCluster (PDEVICE_EXTENSION DeviceExt, 
+VfatRawReadCluster(PDEVICE_EXTENSION DeviceExt,
+		   ULONG FirstCluster,
+		   PVOID Buffer,
+		   ULONG Cluster);
+NTSTATUS
+VfatRawWriteCluster(PDEVICE_EXTENSION DeviceExt,
 		    ULONG FirstCluster,
-		    PVOID Buffer, 
+		    PVOID Buffer,
 		    ULONG Cluster);
-ULONG 
-FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt);
-ULONG 
-FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt);
-ULONG 
-FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt);
 NTSTATUS
-WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
-	      ULONG NewValue);
+FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
+			    PLARGE_INTEGER Clusters);
+NTSTATUS
+FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
+			    PLARGE_INTEGER Clusters);
+NTSTATUS
+FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
+			    PLARGE_INTEGER Clusters);
+NTSTATUS
+WriteCluster(PDEVICE_EXTENSION DeviceExt,
+	     ULONG ClusterToWrite,
+	     ULONG NewValue);
 
 /*
  * From create.c
  */
-NTSTATUS 
+NTSTATUS
 ReadVolumeLabel(PDEVICE_EXTENSION DeviceExt, PVPB Vpb);
 NTSTATUS
-VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
-	      PWSTR FileName);
+VfatOpenFile(PDEVICE_EXTENSION DeviceExt,
+	     PFILE_OBJECT FileObject,
+	     PWSTR FileName);
 
 /*  -----------------------------------------------------  FCB Functions */
 

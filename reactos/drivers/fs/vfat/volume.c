@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.9 2001/06/12 12:35:42 ekohl Exp $
+/* $Id: volume.c,v 1.10 2001/06/14 10:02:59 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -93,6 +93,7 @@ FsdGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
 			PULONG BufferLength)
 {
   PDEVICE_EXTENSION DeviceExt;
+  NTSTATUS Status;
   
   DPRINT("FsdGetFsSizeInformation()\n");
   DPRINT("FsSizeInfo = %p\n", FsSizeInfo);
@@ -110,9 +111,8 @@ FsdGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
 
       FsSizeInfo->TotalAllocationUnits.QuadPart = ((BootSect->Sectors ? BootSect->Sectors : BootSect->SectorsHuge)-DeviceExt->dataStart)/BootSect->SectorsPerCluster;
 
-
-
-      FsSizeInfo->AvailableAllocationUnits.QuadPart = FAT32CountAvailableClusters (DeviceExt);
+      Status = FAT32CountAvailableClusters(DeviceExt,
+					   &FsSizeInfo->AvailableAllocationUnits);
 
       FsSizeInfo->SectorsPerAllocationUnit = BootSect->SectorsPerCluster;
       FsSizeInfo->BytesPerSector = BootSect->BytesPerSector;
@@ -124,24 +124,27 @@ FsdGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
       FsSizeInfo->TotalAllocationUnits.QuadPart = ((BootSect->Sectors ? BootSect->Sectors : BootSect->SectorsHuge)-DeviceExt->dataStart)/BootSect->SectorsPerCluster;
 
       if (DeviceExt->FatType == FAT16)
-	FsSizeInfo->AvailableAllocationUnits.QuadPart =
 #if 0
-	  FAT16CountAvailableClusters (DeviceExt);
+	Status = FAT16CountAvailableClusters(DeviceExt,
+					     &FsSizeInfo->AvailableAllocationUnits);
 #else
-0;
+	{
+	  FsSizeInfo->AvailableAllocationUnits.QuadPart = 0;
+	  Status = STATUS_SUCCESS;
+	}
 #endif
       else
-	FsSizeInfo->AvailableAllocationUnits.QuadPart =
-	  FAT12CountAvailableClusters (DeviceExt);
+	Status = FAT12CountAvailableClusters(DeviceExt,
+					     &FsSizeInfo->AvailableAllocationUnits);
       FsSizeInfo->SectorsPerAllocationUnit = BootSect->SectorsPerCluster;
       FsSizeInfo->BytesPerSector = BootSect->BytesPerSector;
     }
   
   DPRINT("Finished FsdGetFsSizeInformation()\n");
+  if (NT_SUCCESS(Status))
+    *BufferLength -= sizeof(FILE_FS_SIZE_INFORMATION);
   
-  *BufferLength -= sizeof(FILE_FS_SIZE_INFORMATION);
-  
-  return(STATUS_SUCCESS);
+  return(Status);
 }
 
 
