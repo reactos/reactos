@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.1 1999/11/24 23:11:17 ea Exp $
+/* $Id: stubs.c,v 1.2 1999/12/27 22:27:39 ea Exp $
  *
  * services/net/ndis/ndis/stubs.c
  *
@@ -1635,7 +1635,7 @@ NdisUpdateSharedMemory
 
 BOOLEAN
 STDCALL
-NdisWaitEvent(
+NdisWaitEvent (
 	IN	PNDIS_EVENT	Event,
 	IN	UINT		MsToWait
 	)
