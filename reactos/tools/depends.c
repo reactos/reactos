@@ -27,6 +27,18 @@ int main(int argc, char* argv[])
     }
 
   i = 0;
+  while ((ch = fgetc(stdin)) == '#')
+    {
+      while ((ch = fgetc(stdin)) != '\n' && ch != EOF)
+        {
+        }
+    }
+  if (ch != EOF)
+    {
+      buf[i] = ch;
+      i++;
+    }
+
   while ((ch = fgetc(stdin)) != ':' && ch != EOF)
     {
       buf[i] = ch;
