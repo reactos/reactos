@@ -26,9 +26,9 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-   IDS_APPNAME,            "GNU Calculator"
+   IDS_APPNAME,            "Calculator"
 
-   IDS_COPYRIGHT1,         "GNU Calculator 5.0. Licensed under LGPL 2"
+   IDS_COPYRIGHT1,         "Calculator 5.0. Licensed under LGPL 2"
    IDS_COPYRIGHT2          "Copyright 2003, James Briggs"
    IDS_COPYRIGHT3          "San Jose, California, USA"
    IDS_COPYRIGHT4          "james@ActionMessage.com"
