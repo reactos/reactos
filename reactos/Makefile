@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.202 2004/01/12 23:47:51 sedwards Exp $
+# $Id: Makefile,v 1.203 2004/01/14 02:14:46 sedwards Exp $
 #
 # Global makefile
 #
@@ -41,8 +41,8 @@ DLLS_KBD = kbdus kbdgr kbdfr kbduk
 # advapi32 cards crtdll comdlg32 fmifs gdi32 imagehlp kernel32 libpcap packet msafd msvcrt ntdll
 # epsapi psapi richedit rpcrt4 secur32 user32 version ws2help ws2_32 wsock32 wshirda mswsock
 # imagehlp imm32
-DLLS =	libwine advapi32 cards crtdll comdlg32 fmifs freetype gdi32 kernel32 packet lzexpand \
-	msafd msvcrt msvcrt20 ntdll ole32 psapi richedit rpcrt4 secur32 shell32 shlwapi \
+DLLS =	libwine advapi32 cabinet cards crtdll comdlg32 fmifs freetype gdi32 kernel32 packet lzexpand \
+	msafd msvcrt msvcrt20 ntdll ole32 oledlg psapi richedit rpcrt4 secur32 shell32 shlwapi \
 	syssetup twain unicode user32 userenv version winspool ws2help ws2_32 wsock32 \
 	wshirda imm32 iphlpapi msgina mswsock msimg32 d3d8thk winmm comctl32 $(DLLS_KBD)
 
@@ -88,7 +88,7 @@ STORAGE_DRIVERS = atapi cdrom class2 disk scsiport diskdump
 
 # System applications
 # autochk cmd format services setup usetup welcome winlogon
-SYS_APPS = autochk cmd explorer format services setup userinit usetup welcome winlogon regedit
+SYS_APPS = autochk cmd explorer format services setup taskmgr userinit usetup welcome winlogon regedit
 
 # System services
 # rpcss eventlog
