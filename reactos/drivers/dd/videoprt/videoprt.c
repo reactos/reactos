@@ -1,4 +1,4 @@
-/* $Id: videoprt.c,v 1.1 2003/02/15 19:16:32 gvg Exp $
+/* $Id: videoprt.c,v 1.2 2003/02/17 21:24:42 gvg Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -24,8 +24,8 @@
  * it will call VideoPortMapMemory() with the same physical address. It should
  * map to the same virtual address, but I couldn't get this to work at the moment.
  * So, as a workaround, a maximum of 2 physical addresses with their corresponding
- * virtual addresses are kept in the device extension block. They are filled by
- * VideoPortGetDeviceBase() and looked-up by VideoPortMapMemory().
+ * virtual addresses saved. They are filled by VideoPortGetDeviceBase() and
+ * looked-up by VideoPortMapMemory().
  */
 
 #include <errors.h>
@@ -51,8 +51,8 @@ static struct _EPROCESS* Csrss = NULL;
 
 /* FIXME: see file header */
 static PDEVICE_OBJECT pdoLastOpened;
-static PVOID Virt7efc0000;
-static PVOID Virt7ffc0000;
+static PHYSICAL_ADDRESS Phys1, Phys2;
+static PVOID Virt1, Virt2;
 
 PBYTE ReturnCsrssAddress(void)
 {
@@ -138,9 +138,11 @@ VideoPortGetBusData(IN PVOID  HwDeviceExtension,
                     IN ULONG  Offset,
                     IN ULONG  Length)
 {
+  ULONG BusNumber = 0;
+
   DPRINT("VideoPortGetBusData\n");
   return HalGetBusDataByOffset(BusDataType, 
-                               0, 
+                               BusNumber, 
                                SlotNumber, 
                                Buffer, 
                                Offset, 
@@ -182,13 +184,13 @@ VideoPortGetDeviceBase(IN PVOID  HwDeviceExtension,
           Virtual = MmMapIoSpace(TranslatedAddress, NumberOfUchars, MmNonCached);
 	  /* FIXME: see file header */
 	  DPRINT("Mapped 0x%08x to 0x%08x\n", IoAddress.u.LowPart, Virtual);
-	  if (0x7efc0000 == IoAddress.u.LowPart)
+	  if (0 == Phys1.QuadPart)
 	    {
-	      Virt7efc0000 = Virtual;
+	      Virt1 = Virtual;
 	    }
-	  if (0x7ffc0000 == IoAddress.u.LowPart)
+	  if (0 == Phys2.QuadPart)
 	    {
-	      Virt7ffc0000 = Virtual;
+	      Virt2 = Virtual;
 	    }
 	}
     }
@@ -220,8 +222,96 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
                          IN PVOID  DeviceId,
                          IN PULONG  Slot)
 {
+  PCI_SLOT_NUMBER PciSlotNumber;
+  BOOLEAN FoundDevice;
+  ULONG FunctionNumber;
+  PCI_COMMON_CONFIG Config;
+  UINT BusNumber = 0;
+  PCM_RESOURCE_LIST AllocatedResources;
+  NTSTATUS Status;
+  UINT AssignedCount;
+  CM_FULL_RESOURCE_DESCRIPTOR *FullList;
+  CM_PARTIAL_RESOURCE_DESCRIPTOR *Descriptor;
+
   DPRINT("VideoPortGetAccessRanges\n");
-  UNIMPLEMENTED;
+  if (0 == NumRequestedResources)
+    {
+      DPRINT("Looking for VendorId 0x%04x DeviceId 0x%04x\n", (int)*((USHORT *) VendorId),
+             (int)*((USHORT *) DeviceId));
+      FoundDevice = FALSE;
+      PciSlotNumber.u.AsULONG = *Slot;
+      for (FunctionNumber = 0; ! FoundDevice && FunctionNumber < 8; FunctionNumber++)
+	{
+	  PciSlotNumber.u.bits.FunctionNumber = FunctionNumber;
+	  if (sizeof(PCI_COMMON_CONFIG) ==
+	      HalGetBusDataByOffset(PCIConfiguration, BusNumber, PciSlotNumber.u.AsULONG,
+	                            &Config, 0, sizeof(PCI_COMMON_CONFIG)))
+	    {
+	      DPRINT("Slot 0x%02x (Device %d Function %d) VendorId 0x%04x DeviceId 0x%04x\n",
+	             PciSlotNumber.u.AsULONG, PciSlotNumber.u.bits.DeviceNumber,
+	             PciSlotNumber.u.bits.FunctionNumber, Config.VendorID, Config.DeviceID);
+	      FoundDevice = (Config.VendorID == *((USHORT *) VendorId) &&
+	                     Config.DeviceID == *((USHORT *) DeviceId));
+	    }
+	}
+      if (! FoundDevice)
+	{
+	  return STATUS_UNSUCCESSFUL;
+	}
+      Status = HalAssignSlotResources(NULL, NULL, NULL, NULL, PCIBus, BusNumber,
+                                      PciSlotNumber.u.AsULONG, &AllocatedResources);
+      if (! NT_SUCCESS(Status))
+	{
+	  return Status;
+	}
+      AssignedCount = 0;
+      for (FullList = AllocatedResources->List;
+           FullList < AllocatedResources->List + AllocatedResources->Count &&
+           AssignedCount < NumAccessRanges;
+           FullList++)
+	{
+	  assert(FullList->InterfaceType == PCIBus &&
+	         FullList->BusNumber == BusNumber &&
+	         1 == FullList->PartialResourceList.Version &&
+	         1 == FullList->PartialResourceList.Revision);
+	  for (Descriptor = FullList->PartialResourceList.PartialDescriptors;
+	       Descriptor < FullList->PartialResourceList.PartialDescriptors + FullList->PartialResourceList.Count &&
+	       AssignedCount < NumAccessRanges;
+	       Descriptor++)
+	    {
+	      if (CmResourceTypeMemory == Descriptor->Type)
+		{
+		  DPRINT("Memory range starting at 0x%08x length 0x%08x\n",
+		         Descriptor->u.Memory.Start.u.LowPart, Descriptor->u.Memory.Length);
+		  AccessRanges[AssignedCount].RangeStart = Descriptor->u.Memory.Start;
+		  AccessRanges[AssignedCount].RangeLength = Descriptor->u.Memory.Length;
+		  AccessRanges[AssignedCount].RangeInIoSpace = 0;
+		  AccessRanges[AssignedCount].RangeVisible = 0; /* FIXME: Just guessing */
+		  AccessRanges[AssignedCount].RangeShareable =
+		    (CmResourceShareShared == Descriptor->ShareDisposition);
+		}
+	      else if (CmResourceTypePort == Descriptor->Type)
+		{
+		  DPRINT("Port range starting at 0x%04x length %d\n",
+		         Descriptor->u.Memory.Start.u.LowPart, Descriptor->u.Memory.Length);
+		  AccessRanges[AssignedCount].RangeStart = Descriptor->u.Port.Start;
+		  AccessRanges[AssignedCount].RangeLength = Descriptor->u.Port.Length;
+		  AccessRanges[AssignedCount].RangeInIoSpace = 1;
+		  AccessRanges[AssignedCount].RangeVisible = 0; /* FIXME: Just guessing */
+		  AccessRanges[AssignedCount].RangeShareable = 0;
+		}
+	      else
+		{
+		  ExFreePool(AllocatedResources);
+		  return STATUS_UNSUCCESSFUL;
+		}
+	      AssignedCount++;
+	    }
+	}
+      ExFreePool(AllocatedResources);
+    }
+
+  return STATUS_SUCCESS;
 }
 
 VP_STATUS 
@@ -233,6 +323,7 @@ VideoPortGetRegistryParameters(IN PVOID  HwDeviceExtension,
                                IN PVOID  Context)
 {
   DPRINT("VideoPortGetRegistryParameters\n");
+  DPRINT("ParameterName %S\n", ParameterName);
   UNIMPLEMENTED;
 }
 
@@ -461,16 +552,16 @@ VideoPortMapMemory(IN PVOID  HwDeviceExtension,
   DPRINT("VideoPortMapMemory\n");
 
   /* FIXME: see file header */
-  if (0x7efc0000 == PhysicalAddress.u.LowPart)
+  if (Phys1.QuadPart == PhysicalAddress.QuadPart)
     {
-      DPRINT("Using saved mapping for 0x7efc0000\n");
-      *VirtualAddress = Virt7efc0000;
+      DPRINT("Using saved mapping #1\n");
+      *VirtualAddress = Virt1;
       return STATUS_SUCCESS;
     }
-  if (0x7ffc0000 == PhysicalAddress.u.LowPart)
+  if (Phys2.QuadPart == PhysicalAddress.QuadPart)
     {
-      DPRINT("Using saved mapping for 0x7ffc0000\n");
-      *VirtualAddress = Virt7ffc0000;
+      DPRINT("Using saved mapping #2\n");
+      *VirtualAddress = Virt2;
       return STATUS_SUCCESS;
     }
 
