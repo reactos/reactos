@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.83 2004/05/15 08:01:56 gvg Exp $
+ *  $Id: painting.c,v 1.84 2004/07/09 20:13:00 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -914,11 +914,14 @@ NtUserGetUpdateRect(HWND Wnd, LPRECT UnsafeRect, BOOL Erase)
   RGNDATA_UnlockRgn(Rgn);
   NtGdiDeleteObject(Rgn);
 
-  Status = MmCopyToCaller(UnsafeRect, &Rect, sizeof(RECT));
-  if (! NT_SUCCESS(Status))
+  if (UnsafeRect != NULL)
     {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return FALSE;
+      Status = MmCopyToCaller(UnsafeRect, &Rect, sizeof(RECT));
+      if (! NT_SUCCESS(Status))
+        {
+          SetLastWin32Error(ERROR_INVALID_PARAMETER);
+          return FALSE;
+        }
     }
 
   return Rect.left < Rect.right && Rect.top < Rect.bottom;
