@@ -41,7 +41,7 @@ fwprintf(register FILE *iop, const wchar_t *fmt, ...)
   if (iop->_flag & _IONBF)
   {
     iop->_flag &= ~_IONBF;
-    iop->_ptr = iop->_base = localbuf;
+    iop->_ptr = iop->_base = (char *)localbuf;
     iop->_bufsiz = BUFSIZ;
     len = vfwprintf(iop,fmt,a);
     fflush(iop);
