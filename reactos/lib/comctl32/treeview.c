@@ -3093,7 +3093,7 @@ TREEVIEW_Expand(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
     TRACE("\n");
 
     if (wineItem->state & TVIS_EXPANDED)
-	return FALSE;
+	return TRUE;
 
     TRACE("TVE_EXPAND %p %s\n", wineItem, TREEVIEW_ItemName(wineItem));
 
