@@ -1,4 +1,5 @@
-#ifndef _SM_HELPER_H
+#ifndef INCLUDE_SM_HELPER_H
+#define INCLUDE_SM_HELPER_H
 
 /*** DATA TYPES ******************************************************/
 
@@ -43,4 +44,4 @@ SmExecuteProgram (IN     HANDLE           hSmApiPort,
 		  IN     PUNICODE_STRING  Pgm
 		  );
 
-#endif /* ndef _SM_HELPER_H */
+#endif /* ndef INCLUDE_SM_HELPER_H */
