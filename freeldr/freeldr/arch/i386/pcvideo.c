@@ -1,4 +1,4 @@
-/* $Id: pcvideo.c,v 1.2 2004/11/23 11:28:02 gvg Exp $
+/* $Id: pcvideo.c,v 1.3 2004/12/13 15:07:33 gvg Exp $
  *
  *  FreeLoader
  *
@@ -1055,7 +1055,7 @@ PcVideoPutChar(int Ch, U8 Attr, unsigned X, unsigned Y)
 {
   U16 *BufPtr;
 
-  BufPtr = (U16 *) (VIDEOTEXT_MEM_ADDRESS + (Y * BytesPerScanLine + X) * 2);
+  BufPtr = (U16 *) (VIDEOTEXT_MEM_ADDRESS + Y * BytesPerScanLine + X * 2);
   *BufPtr = ((U16) Attr << 8) | (Ch & 0xff);
 }
 
