@@ -726,7 +726,8 @@ DWORD SHNameTranslate(LPWSTR* wString, LPCWSTR* pWToFrom, BOOL more)
 int WINAPI SHFileOperationA(LPSHFILEOPSTRUCTA lpFileOp)
 {
 	SHFILEOPSTRUCTW nFileOp = *((LPSHFILEOPSTRUCTW)lpFileOp);
-	DWORD retCode = 0, size;
+	int retCode = 0;
+	DWORD size;
 	LPWSTR ForFree = NULL, /* we change wString in SHNameTranslate and can't use it for freeing */
 	       wString = NULL; /* we change this in SHNameTranslate */
 
@@ -807,7 +808,7 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
 	LPWSTR pFromFile;
 	LPWSTR pToFile = NULL;
 	LPWSTR lpFileName;
-	long retCode = 0;
+	int retCode = 0;
 	DWORD ToAttr;
 	DWORD ToPathAttr;
 	DWORD FromPathAttr;
@@ -1257,7 +1258,7 @@ shfileop_error:
 	{
 	  nFileOp.fAnyOperationsAborted = TRUE;
 	}
-	TRACE("%s level=%ld AnyOpsAborted=%s ret=0x%lx, with %s %s%s\n",
+	TRACE("%s level=%ld AnyOpsAborted=%s ret=0x%x, with %s %s%s\n",
               debug_shfileops_action(FuncSwitch), level,
 	      nFileOp.fAnyOperationsAborted ? "TRUE":"FALSE",
 	      retCode, debugstr_w(pFrom), pTo ? "-> ":"", debugstr_w(pTo));
