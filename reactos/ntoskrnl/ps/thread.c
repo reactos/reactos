@@ -158,12 +158,12 @@ VOID PsDispatchThread(VOID)
    KIRQL irql;
    LARGE_INTEGER TickCount;
    
-   KeAcquireSpinLock(&ThreadListLock,&irql);
-   
    if (!DoneInitYet)
      {
 	return;
      }
+   
+   KeAcquireSpinLock(&ThreadListLock, &irql);
    
    DPRINT("PsDispatchThread() Current %x\n",CurrentThread);
       
@@ -180,10 +180,6 @@ VOID PsDispatchThread(VOID)
 	if (Candidate == CurrentThread)
 	  {
              DPRINT("Scheduling current thread\n");
-	     if (PiNrRunnableThreads > 2)
-	       {
-		  DbgPrint(".");
-	       }
              KeQueryTickCount(&TickCount);
              CurrentThread->Tcb.LastTick = TickCount.u.LowPart;
 	     CurrentThread->Tcb.State = THREAD_STATE_RUNNING;

@@ -23,6 +23,8 @@
  */
 static KIRQL CurrentIrql = HIGH_LEVEL;
 
+extern ULONG DpcQueueSize;
+
 /* FUNCTIONS ****************************************************************/
 
 #if 0
@@ -45,7 +47,7 @@ static unsigned int HiSetCurrentPICMask(unsigned int mask)
    return mask;
 }
 
-static void HiSwitchIrql(void)
+static VOID HiSwitchIrql(KIRQL oldIrql)
 /*
  * FUNCTION: Switches to the current irql
  * NOTE: Must be called with interrupt disabled
@@ -59,7 +61,6 @@ static void HiSwitchIrql(void)
    if (CurrentIrql == HIGH_LEVEL)
      {
 	HiSetCurrentPICMask(0xffff);
-//	if (CurrentThread != NULL) CurrentThread->KernelApcDisable = TRUE;
 	return;
      }
    if (CurrentIrql > DISPATCH_LEVEL)
@@ -72,27 +73,32 @@ static void HiSwitchIrql(void)
 	  }
 	
 	HiSetCurrentPICMask(current_mask);
-//	if (CurrentThread != NULL) CurrentThread->KernelApcDisable = TRUE;
 	__asm__("sti\n\t");
 	return;
      }
    
    if (CurrentIrql == DISPATCH_LEVEL)
      {
-//	if (CurrentThread != NULL) CurrentThread->KernelApcDisable = TRUE;
 	HiSetCurrentPICMask(0);
 	__asm__("sti\n\t");
 	return;
      }
    if (CurrentIrql == APC_LEVEL)
      {
-//	if (CurrentThread != NULL) CurrentThread->KernelApcDisable = TRUE;
 	HiSetCurrentPICMask(0);
 	__asm__("sti\n\t");
 	return;
      }
-//   if (CurrentThread != NULL) CurrentThread->KernelApcDisable = FALSE;
+
    HiSetCurrentPICMask(0);
+   if (DpcQueueSize > 0 && oldIrql >= DISPATCH_LEVEL)
+     {
+	KeSetCurrentIrql(DISPATCH_LEVEL);
+	__asm__("sti\n\t");
+	KeDrainDpcQueue();
+	__asm__("cli\n\t");
+	KeSetCurrentIrql(PASSIVE_LEVEL);
+     }
    __asm__("sti\n\t");
 }
 
@@ -121,17 +127,21 @@ VOID KeLowerIrql(KIRQL NewIrql)
  *        NewIrql = Irql to lower to
  */
 {
+   KIRQL oldIrql;
+  
    __asm__("cli\n\t");
    
    DPRINT("NewIrql %x CurrentIrql %x\n",NewIrql,CurrentIrql);
    if (NewIrql > CurrentIrql)
      {
-	DbgPrint("NewIrql %x CurrentIrql %x\n",NewIrql,CurrentIrql);
+	DbgPrint("(%s:%d) NewIrql %x CurrentIrql %x\n",
+		 __FILE__, __LINE__, NewIrql,CurrentIrql);
 	KeDumpStackFrames(0,32);
 	for(;;);
      }
+   oldIrql = CurrentIrql;
    CurrentIrql = NewIrql;
-   HiSwitchIrql();
+   HiSwitchIrql(oldIrql);
 }
 
 VOID KeRaiseIrql(KIRQL NewIrql, PKIRQL OldIrql)
@@ -161,7 +171,7 @@ VOID KeRaiseIrql(KIRQL NewIrql, PKIRQL OldIrql)
 //   *OldIrql = InterlockedExchange(&CurrentIrql,NewIrql);
    DPRINT("NewIrql %x OldIrql %x CurrentIrql %x\n",NewIrql,*OldIrql,
           CurrentIrql);
-   HiSwitchIrql();
+   HiSwitchIrql(*OldIrql);
 }
 
 

@@ -55,6 +55,8 @@ void KeDrainDpcQueue(void)
    PKDPC current;
    KIRQL oldlvl;
    
+   assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
+   
    if (DpcQueueSize == 0)
      {
 	return;
