@@ -26,14 +26,14 @@
 .globl _KiSystemService
 
 _KiFastCallEntry:
-
+    
     /* Set FS to PCR */
     movl $PCR_SELECTOR, %ecx
     movw %cx, %fs
-    
+       
     /* Set the current stack to Kernel Stack */
     movl %fs:KPCR_TSS, %ecx
-    movl KTSS_ESP0(%ecx), %ecx
+    movl %ss:KTSS_ESP0(%ecx), %ecx
     movl %ecx, %esp
     
     /* Set up a fake INT Stack. */
@@ -205,7 +205,7 @@ _KiServiceExit:
     /* Save pointer to Trap Frame */
     movl %esp, %ebx
     
-    /* Raise IRQL to HIGH_LEVEL */
+    /* Raise IRQL to APC_LEVEL */
     movl $1, %ecx
     call @KfRaiseIrql@4
     
