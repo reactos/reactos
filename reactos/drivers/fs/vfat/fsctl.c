@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.5 2002/05/28 09:25:09 ekohl Exp $
+/* $Id: fsctl.c,v 1.6 2002/05/29 21:41:41 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -93,12 +93,12 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
       DbgPrint("RecognizedPartition %u\n", PartitionInfo.RecognizedPartition);
       DbgPrint("RewritePartition    %u\n", PartitionInfo.RewritePartition);
 #endif
-      if (PartitionInfo.PartitionType == PTDOS3xPrimary  ||
-          PartitionInfo.PartitionType == PTOLDDOS16Bit   ||
-          PartitionInfo.PartitionType == PTDos5xPrimary  ||
-          PartitionInfo.PartitionType == PTWin95FAT32    ||
-          PartitionInfo.PartitionType == PTWin95FAT32LBA ||
-          PartitionInfo.PartitionType == PTWin95FAT16LBA)
+      if (PartitionInfo.PartitionType == PARTITION_FAT_12       ||
+          PartitionInfo.PartitionType == PARTITION_FAT_16       ||
+          PartitionInfo.PartitionType == PARTITION_HUGE         ||
+          PartitionInfo.PartitionType == PARTITION_FAT32        ||
+          PartitionInfo.PartitionType == PARTITION_FAT32_XINT13 ||
+          PartitionInfo.PartitionType == PARTITION_XINT13)
       {
          *RecognizedFS = TRUE;
       }
