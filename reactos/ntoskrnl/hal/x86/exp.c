@@ -127,7 +127,7 @@ EXCEPTION_HANDLER_WITH_ERROR("14",14);
 EXCEPTION_HANDLER_WITH_ERROR("15",15);
 EXCEPTION_HANDLER_WITHOUT_ERROR("16",16);
 
-extern unsigned int etext;
+extern unsigned int stext, etext;
 
 asmlinkage void exception_handler(unsigned int edi,
                                   unsigned int esi, unsigned int ebp,
@@ -234,40 +234,41 @@ asmlinkage void exception_handler(unsigned int edi,
      }
    
    
-   if ((cs&0xffff)==KERNEL_CS)
-     {
-	DbgPrint("ESP %x\n",esp);
-        stack=(unsigned int *)(esp+24);
+  if ((cs & 0xffff) == KERNEL_CS)
+    {
+      DbgPrint("ESP %x\n",esp);
+      stack = (unsigned int *) (esp + 24);
 	
-//        #if 0
-        printk("Stack:\n");
-        for (i=0;i<16;i=i+4)
+      printk("Stack:\n");
+      for (i = 0; i < 16; i = i + 4)
         {
-	   DbgPrint("%.8x %.8x %.8x %.8x\n",stack[i],stack[i+1],stack[i+2],
-		    stack[i+3]);
+          DbgPrint("%.8x %.8x %.8x %.8x\n", 
+                   stack[i], 
+                   stack[i+1], 
+                   stack[i+2], 
+                   stack[i+3]);
         }
-        printk("Frames:\n");
-        for (i=0;i<32;i++)
+      printk("Frames:\n");
+      for (i = 0; i < 32; i++)
         {
-                if (stack[i] > KERNEL_BASE &&
-                    stack[i] < ((unsigned int)&etext) )
+          if (stack[i] > ((unsigned int) &stext) &&
+              stack[i] < ((unsigned int) &etext))
+            {
+              for (sym = -1, j = 0; symbol_table[j].name; j++)
+                {
+                  if (stack[i] >= symbol_table[j].value &&
+                      (sym == -1 ||
+                       symbol_table[j].value > symbol_table[sym].value))
                     {
-                        sym = 0;
-                        for (j = 0; symbol_table[j].name; j++)
-                          {
-                            if (stack[i] >= symbol_table[j].value &&
-                                symbol_table[j].value > symbol_table[sym].value)
-                              {
-                                sym = j;
-                              }
-                          }
-                        DbgPrint("  %.8x  (%s+%d)", 
-				 stack[i], 
-				 symbol_table[sym].name,
-				 stack[i] - symbol_table[sym].value);
+                      sym = j;
                     }
+                }
+              DbgPrint("  %.8x  (%s+%d)\n", 
+                       stack[i], 
+                       symbol_table[sym].name,
+                       stack[i] - symbol_table[sym].value);
+            }
         }
-//        #endif
      }
    else
      {
