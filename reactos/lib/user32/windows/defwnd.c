@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.46 2003/05/19 20:11:17 gvg Exp $
+/* $Id: defwnd.c,v 1.47 2003/05/25 10:53:05 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -233,25 +233,6 @@ UserHasBigFrameStyle(ULONG Style, ULONG ExStyle)
 	 (ExStyle & WS_EX_DLGMODALFRAME));
 }
 
-INT GetFrameSize(HWND hWnd)
-{
-    ULONG uStyle;
-    ULONG uExStyle;
-
-    uStyle = GetWindowLong(hWnd, GWL_STYLE);
-    uExStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
-
-    if (UserHasThinFrameStyle(uStyle, uExStyle))
-    {
-        return GetSystemMetrics( SM_CXBORDER );
-    }
-    else if (UserHasDlgFrameStyle(uStyle, uExStyle))
-    {
-        return GetSystemMetrics( SM_CXDLGFRAME );
-    }
-    return GetSystemMetrics( SM_CXFRAME );
-}
-
 void UserGetInsideRectNC( HWND hWnd, RECT *rect )
 {
   RECT WindowRect;
@@ -420,7 +401,7 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
 {
     RECT r = *rect;
     char buffer[256];
-    /* Implement and Use DrawCaption() */
+    /* FIXME:  Implement and Use DrawCaption() */
     SelectObject( hDC, GetSysColorBrush(active ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
     PatBlt(hDC,rect->left + GetSystemMetrics(SM_CXFRAME), rect->top +
            GetSystemMetrics(SM_CYFRAME), rect->right - (GetSystemMetrics(SM_CXFRAME) * 2) - 1, rect->top + 
@@ -725,7 +706,7 @@ DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
         case HTCAPTION:
         {
-	        HWND hTopWnd = GetDesktopWindow(); //GetAncestor(hWnd, GA_ROOT); temp fix.
+	        HWND hTopWnd = GetAncestor(hWnd, GA_ROOT);
 	        if (SetActiveWindow(hTopWnd) || GetActiveWindow() == hTopWnd)
 	        {
 	            SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOVE + HTCAPTION, lParam);
