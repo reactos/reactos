@@ -3,8 +3,8 @@
 #
 PATH_TO_TOP = ../..
 
-SRV_OBJECTS = ../common/crt0.o msserver.o
-CLT_OBJECTS = ../common/crt0.o msclient.o
+SRV_OBJECTS = msserver.o
+CLT_OBJECTS = msclient.o
 
 PROGS = msserver.exe msclient.exe
 
@@ -33,11 +33,11 @@ $(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
 	$(CP) $* ../../$(DIST_DIR)/apps/$*
 
 msserver.exe: $(SRV_OBJECTS) $(LIBS)
-	$(LD) $(SRV_OBJECTS) $(LIBS) -o msserver.exe
+	$(CC) $(SRV_OBJECTS) $(LIBS) -o msserver.exe
 	$(NM) --numeric-sort msserver.exe > msserver.sym
 
 msclient.exe: $(CLT_OBJECTS) $(LIBS)
-	$(LD) $(CLT_OBJECTS) $(LIBS) -o msclient.exe
+	$(CC) $(CLT_OBJECTS) $(LIBS) -o msclient.exe
 	$(NM) --numeric-sort msclient.exe > msclient.sym
 
 

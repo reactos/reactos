@@ -5,7 +5,7 @@ PATH_TO_TOP = ../..
 
 CFLAGS = -g
 
-OBJECTS= ../common/crt0.o apc.o
+OBJECTS= apc.o
 PROGS= apc.exe
 
 BASE_CFLAGS = -I../../include
@@ -34,7 +34,7 @@ $(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
 	$(CP) $* ../../$(DIST_DIR)/apps/$*
 
 apc.exe: $(OBJECTS) $(LIBS)
-	$(LD) $(OBJECTS) $(LIBS) -o apc.exe
+	$(CC) $(OBJECTS) $(LIBS) -o apc.exe
 	$(NM) --numeric-sort apc.exe > apc.sym
 
 include ../../rules.mak

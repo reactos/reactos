@@ -6,7 +6,6 @@ PATH_TO_TOP=../..
 TARGET_NAME=alive
 
 OBJECTS=\
-	../common/crt0.o	\
 	$(TARGET_NAME).o
 
 LIBRARIES=\
@@ -41,7 +40,7 @@ $(PROGS:%=$(PATH_TO_TOP)/$(DIST_DIR)/apps/%): $(PATH_TO_TOP)/$(DIST_DIR)/apps/%:
 	$(CP) $* $(PATH_TO_TOP)/$(DIST_DIR)/apps/$*
 
 $(TARGET_NAME).exe: $(OBJECTS)
-	$(LD)\
+	$(CC)\
 		$(OBJECTS)\
 		$(LIBRARIES)\
 		-o $(TARGET_NAME).exe

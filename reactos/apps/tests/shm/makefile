@@ -3,8 +3,8 @@
 #
 PATH_TO_TOP = ../..
 
-SRV_OBJECTS= ../common/crt0.o shmsrv.o
-CLT_OBJECTS= ../common/crt0.o shmclt.o
+SRV_OBJECTS= shmsrv.o
+CLT_OBJECTS= shmclt.o
 
 PROGS= shmsrv.exe shmclt.exe
 
@@ -34,11 +34,11 @@ $(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
 	$(CP) $* ../../$(DIST_DIR)/apps/$*
 
 shmsrv.exe: $(SRV_OBJECTS) $(LIBS)
-	$(LD) $(SRV_OBJECTS) $(LIBS) -o shmsrv.exe
+	$(CC) $(SRV_OBJECTS) $(LIBS) -o shmsrv.exe
 	$(NM) --numeric-sort shmsrv.exe > shmsrv.sym
 
 shmclt.exe: $(CLT_OBJECTS) $(LIBS)
-	$(LD) $(CLT_OBJECTS) $(LIBS) -o shmclt.exe
+	$(CC) $(CLT_OBJECTS) $(LIBS) -o shmclt.exe
 	$(NM) --numeric-sort shmsrv.exe > shmclt.sym
 
 

@@ -3,8 +3,8 @@
 #
 PATH_TO_TOP = ../..
 
-SRV_OBJECTS= ../common/crt0.o lpcsrv.o
-CLT_OBJECTS= ../common/crt0.o lpcclt.o
+SRV_OBJECTS= lpcsrv.o
+CLT_OBJECTS= lpcclt.o
 
 PROGS= lpcsrv.exe lpcclt.exe
 
@@ -37,11 +37,11 @@ $(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
 	$(CP) $* ../../$(DIST_DIR)/apps/$*
 
 lpcsrv.exe: $(SRV_OBJECTS) $(LIBS)
-	$(LD) $(SRV_OBJECTS) $(LIBS) -o lpcsrv.exe
+	$(CC) $(SRV_OBJECTS) $(LIBS) -o lpcsrv.exe
 	$(NM) --numeric-sort lpcsrv.exe > lpcsrv.sym
 
 lpcclt.exe: $(CLT_OBJECTS) $(LIBS)
-	$(LD) $(CLT_OBJECTS) $(LIBS) -o lpcclt.exe
+	$(CC) $(CLT_OBJECTS) $(LIBS) -o lpcclt.exe
 	$(NM) --numeric-sort lpcclt.exe > lpcclt.sym
 
 

@@ -3,7 +3,7 @@
 #
 PATH_TO_TOP = ../..
 
-OBJECTS= ../common/crt0.o regtest.o
+OBJECTS= regtest.o
 PROGS= regtest.exe
 LIBS= ../../lib/kernel32/kernel32.a ../../lib/ntdll/ntdll.a \
       ../../lib/advapi32/advapi32.a
@@ -32,7 +32,7 @@ $(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
 	$(CP) $* ../../$(DIST_DIR)/apps/$*
 
 regtest.exe: $(OBJECTS) $(LIBS)
-	$(CC) -nostartfiles -nostdlib $(OBJECTS) $(LIBS) -lgcc -o regtest.exe
+	$(CC) $(OBJECTS) $(LIBS) -o regtest.exe
 	$(NM) --numeric-sort regtest.exe > regtest.sym
 
 include ../../rules.mak

@@ -3,8 +3,8 @@
 #
 PATH_TO_TOP = ../..
 
-SRV_OBJECTS = ../common/crt0.o npserver.o
-CLT_OBJECTS = ../common/crt0.o npclient.o
+SRV_OBJECTS = npserver.o
+CLT_OBJECTS = npclient.o
 
 PROGS = npserver.exe npclient.exe
 
@@ -33,11 +33,11 @@ $(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
 	$(CP) $* ../../$(DIST_DIR)/apps/$*
 
 npserver.exe: $(SRV_OBJECTS) $(LIBS)
-	$(LD) $(SRV_OBJECTS) $(LIBS) -o npserver.exe
+	$(CC) $(SRV_OBJECTS) $(LIBS) -o npserver.exe
 	$(NM) --numeric-sort npserver.exe > npserver.sym
 
 npclient.exe: $(CLT_OBJECTS) $(LIBS)
-	$(LD) $(CLT_OBJECTS) $(LIBS) -o npclient.exe
+	$(CC) $(CLT_OBJECTS) $(LIBS) -o npclient.exe
 	$(NM) --numeric-sort npclient.exe > npclient.sym
 
 
