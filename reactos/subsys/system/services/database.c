@@ -1,4 +1,4 @@
-/* $Id: database.c,v 1.2 2002/06/12 23:33:15 ekohl Exp $
+/* $Id: database.c,v 1.3 2002/06/17 15:47:32 ekohl Exp $
  *
  * service control manager
  * 
@@ -62,6 +62,7 @@ typedef struct _SERVICE
   ULONG Tag;
 
   BOOLEAN ServiceRunning;
+  BOOLEAN ServiceVisited;
 
 } SERVICE, *PSERVICE;
 
@@ -86,7 +87,7 @@ CreateGroupListRoutine(PWSTR ValueName,
 
   if (ValueType == REG_SZ)
     {
-//      PrintString("Data: '%S'\n", (PWCHAR)ValueData);
+      DPRINT("Data: '%S'\n", (PWCHAR)ValueData);
 
       Group = (PSERVICE_GROUP)HeapAlloc(GetProcessHeap(),
 					HEAP_ZERO_MEMORY,
@@ -118,7 +119,7 @@ CreateServiceListEntry(PUNICODE_STRING ServiceName)
   PSERVICE Service = NULL;
   NTSTATUS Status;
 
-//  PrintString("Service: '%wZ'\n", ServiceName);
+  DPRINT("Service: '%wZ'\n", ServiceName);
 
   /* Allocate service entry */
   Service = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
@@ -193,13 +194,11 @@ CreateServiceListEntry(PUNICODE_STRING ServiceName)
       return(Status);
     }
 
-#if 0
-  PrintString("ServiceName: '%wZ'\n", &Service->ServiceName);
-  PrintString("RegistryPath: '%wZ'\n", &Service->RegistryPath);
-  PrintString("ServiceGroup: '%wZ'\n", &Service->ServiceGroup);
-  PrintString("Start %lx  Type %lx  ErrorControl %lx\n",
-	      Service->Start, Service->Type, Service->ErrorControl);
-#endif
+  DPRINT("ServiceName: '%wZ'\n", &Service->ServiceName);
+  DPRINT("RegistryPath: '%wZ'\n", &Service->RegistryPath);
+  DPRINT("ServiceGroup: '%wZ'\n", &Service->ServiceGroup);
+  DPRINT("Start %lx  Type %lx  ErrorControl %lx\n",
+	 Service->Start, Service->Type, Service->ErrorControl);
 
   /* Append service entry */
   InsertTailList(&ServiceListHead,
@@ -213,7 +212,6 @@ NTSTATUS
 ScmCreateServiceDataBase(VOID)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
-  WCHAR NameBuffer[MAX_PATH];
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING ServicesKeyName;
   UNICODE_STRING SubKeyName;
@@ -225,12 +223,11 @@ ScmCreateServiceDataBase(VOID)
   ULONG KeyInfoLength = 0;
   ULONG ReturnedLength;
 
-//  PrintString("ScmCreateServiceDataBase() called\n");
+  DPRINT("ScmCreateServiceDataBase() called\n");
 
   /* Initialize basic variables */
   InitializeListHead(&GroupListHead);
   InitializeListHead(&ServiceListHead);
-
 
   /* Build group order list */
   RtlZeroMemory(&QueryTable,
@@ -291,7 +288,7 @@ ScmCreateServiceDataBase(VOID)
 	      SubKeyName.Buffer = KeyInfo->Name;
 	      SubKeyName.Buffer[SubKeyName.Length / sizeof(WCHAR)] = 0;
 
-//	      PrintString("KeyName: '%wZ'\n", &SubKeyName);
+	      DPRINT("KeyName: '%wZ'\n", &SubKeyName);
 	      Status = CreateServiceListEntry(&SubKeyName);
 	    }
 	}
@@ -305,7 +302,80 @@ ScmCreateServiceDataBase(VOID)
   HeapFree(GetProcessHeap(), 0, KeyInfo);
   NtClose(ServicesKey);
 
-//  PrintString("ScmCreateServiceDataBase() done\n");
+  DPRINT("ScmCreateServiceDataBase() done\n");
+
+  return(STATUS_SUCCESS);
+}
+
+
+static NTSTATUS
+ScmCheckDriver(PSERVICE_GROUP Group,
+	       PSERVICE Service)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING DirName;
+  HANDLE DirHandle;
+  NTSTATUS Status;
+
+  DPRINT("ScmCheckDriver() called\n");
+
+  if (Service->Type == SERVICE_KERNEL_DRIVER)
+    {
+      RtlInitUnicodeString(&DirName,
+			   L"\\Driver");
+    }
+  else
+    {
+      RtlInitUnicodeString(&DirName,
+			   L"\\FileSystem");
+    }
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &DirName,
+			     0,
+			     NULL,
+			     NULL);
+
+  Status = NtOpenDirectoryObject(&DirHandle,
+				 DIRECTORY_QUERY | DIRECTORY_TRAVERSE,
+				 &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
+#if 0
+  Index = 0;
+  while (TRUE)
+    {
+
+
+      Status = NtQueryDirectoryObject(DirHandle,
+				      &DirInfo,
+				      BufferLength,
+				      TRUE,
+				      FALSE,
+				      &Index,
+				      &DataLength);
+      if (!NT_SUCCESS(Status))
+	{
+	  NtClose(DirHandle);
+	  return(Status);
+	}
+
+#if 0
+	      if (NT_SUCCESS(Status))
+		{
+		  CurrentGroup->ServicesRunning = TRUE;
+		  CurrentService->ServiceRunning = TRUE;
+		}
+#endif
+
+
+    }
+#endif
+
+  NtClose(DirHandle);
 
   return(STATUS_SUCCESS);
 }
@@ -314,56 +384,168 @@ ScmCreateServiceDataBase(VOID)
 VOID
 ScmGetBootAndSystemDriverState(VOID)
 {
+  PLIST_ENTRY GroupEntry;
+  PLIST_ENTRY ServiceEntry;
+  PSERVICE_GROUP CurrentGroup;
+  PSERVICE CurrentService;
+  NTSTATUS Status;
 
+  DPRINT("ScmGetBootAndSystemDriverState() called\n");
+
+  GroupEntry = GroupListHead.Flink;
+  while (GroupEntry != &GroupListHead)
+    {
+      CurrentGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
+
+      DPRINT("Checking group '%wZ'\n", &CurrentGroup->GroupName);
+
+      ServiceEntry = ServiceListHead.Flink;
+      while (ServiceEntry != &ServiceListHead)
+	{
+	  CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+
+	  if (CurrentService->Start == SERVICE_BOOT_START ||
+	      CurrentService->Start == SERVICE_SYSTEM_START)
+	    {
+	      /* Check driver */
+	      DPRINT("  Checking service: %wZ\n", &CurrentService->ServiceName);
+
+	      ScmCheckDriver(CurrentGroup,
+			     CurrentService);
+	    }
+	  ServiceEntry = ServiceEntry->Flink;
+	}
+      GroupEntry = GroupEntry->Flink;
+    }
+
+  DPRINT("ScmGetBootAndSystemDriverState() done\n");
 }
 
 
 static NTSTATUS
-ScmStartService(PSERVICE Service)
+ScmStartService(PSERVICE Service,
+		PSERVICE_GROUP Group)
 {
-#if 0
+  RTL_QUERY_REGISTRY_TABLE QueryTable[3];
   PROCESS_INFORMATION ProcessInformation;
-  STARTUPINFO StartupInfo;
-  WCHAR CommandLine[MAX_PATH];
+  STARTUPINFOW StartupInfo;
+  UNICODE_STRING ImagePath;
+  NTSTATUS Status;
+  ULONG Type;
   BOOL Result;
 
-  PrintString("ScmStartService() called\n");
+  DPRINT("ScmStartService() called\n");
 
-  GetSystemDirectoryW(CommandLine, MAX_PATH);
-  _tcscat(CommandLine, "\\");
-  _tcscat(CommandLine, FileName);
-
-  PrintString("SCM: %s\n", CommandLine);
-
-  /* FIXME: create '\\.\pipe\net\NtControlPipe' instance */
-
-  StartupInfo.cb = sizeof(StartupInfo);
-  StartupInfo.lpReserved = NULL;
-  StartupInfo.lpDesktop = NULL;
-  StartupInfo.lpTitle = NULL;
-  StartupInfo.dwFlags = 0;
-  StartupInfo.cbReserved2 = 0;
-  StartupInfo.lpReserved2 = 0;
-
-  Result = CreateProcessW(CommandLine,
-			  NULL,
-			  NULL,
-			  NULL,
-			  FALSE,
-			  DETACHED_PROCESS,
-			  NULL,
-			  NULL,
-			  &StartupInfo,
-			  &ProcessInformation);
-  if (!Result)
+  if (Service->Type == SERVICE_KERNEL_DRIVER ||
+      Service->Type == SERVICE_FILE_SYSTEM_DRIVER ||
+      Service->Type == SERVICE_RECOGNIZER_DRIVER)
     {
-      /* FIXME: close control pipe */
+      /* Load driver */
+      DPRINT("  Path: %wZ\n", &Service->RegistryPath);
+      Status = NtLoadDriver(&Service->RegistryPath);
+    }
+  else
+    {
+      RtlInitUnicodeString(&ImagePath, NULL);
 
-      PrintString("SCM: Failed to start '%s'\n", FileName);
-      return(STATUS_UNSUCCESSFUL);
+      /* Get service data */
+      RtlZeroMemory(&QueryTable,
+		    sizeof(QueryTable));
+
+      QueryTable[0].Name = L"Type";
+      QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+      QueryTable[0].EntryContext = &Type;
+
+      QueryTable[1].Name = L"ImagePath";
+      QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+      QueryTable[1].EntryContext = &ImagePath;
+
+      Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
+				      Service->ServiceName.Buffer,
+				      QueryTable,
+				      NULL,
+				      NULL);
+      if (NT_SUCCESS(Status))
+	{
+	  DPRINT("ImagePath: '%S'\n", ImagePath.Buffer);
+	  DPRINT("Type: %lx\n", Type);
+
+	  /* FIXME: create '\\.\pipe\net\NtControlPipe' instance */
+
+	  StartupInfo.cb = sizeof(StartupInfo);
+	  StartupInfo.lpReserved = NULL;
+	  StartupInfo.lpDesktop = NULL;
+	  StartupInfo.lpTitle = NULL;
+	  StartupInfo.dwFlags = 0;
+	  StartupInfo.cbReserved2 = 0;
+	  StartupInfo.lpReserved2 = 0;
+
+	  Result = CreateProcessW(ImagePath.Buffer,
+				  NULL,
+				  NULL,
+				  NULL,
+				  FALSE,
+				  DETACHED_PROCESS,
+				  NULL,
+				  NULL,
+				  &StartupInfo,
+				  &ProcessInformation);
+
+	  RtlFreeUnicodeString(&ImagePath);
+
+	  if (!Result)
+	    {
+	      /* FIXME: close control pipe */
+
+	      DPRINT("Failed to start '%S'\n", Service->ServiceName.Buffer);
+	      Status = STATUS_UNSUCCESSFUL;
+	    }
+	  else
+	    {
+	      /* FIXME: connect control pipe */
+
+	    }
+	}
     }
 
-  /* FIXME: connect control pipe */
+  if (NT_SUCCESS(Status))
+    {
+      if (Group != NULL)
+	{
+	  Group->ServicesRunning = TRUE;
+	}
+      Service->ServiceRunning = TRUE;
+    }
+#if 0
+  else
+    {
+      if (CurrentService->ErrorControl == 1)
+	{
+	  /* Log error */
+
+	}
+      else if (CurrentService->ErrorControl == 2)
+	{
+	  if (IsLastKnownGood == FALSE)
+	    {
+	      /* Boot last known good configuration */
+
+	    }
+	}
+      else if (CurrentService->ErrorControl == 3)
+	{
+	  if (IsLastKnownGood == FALSE)
+	    {
+	      /* Boot last known good configuration */
+
+	    }
+	  else
+	    {
+	      /* BSOD! */
+
+	    }
+	}
+    }
 #endif
 
   return(STATUS_SUCCESS);
@@ -379,76 +561,86 @@ ScmAutoStartServices(VOID)
   PSERVICE CurrentService;
   NTSTATUS Status;
 
+  /* Clear 'ServiceVisited' flag */
+  ServiceEntry = ServiceListHead.Flink;
+  while (ServiceEntry != &ServiceListHead)
+    {
+      CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+      CurrentService->ServiceVisited = FALSE;
+      ServiceEntry = ServiceEntry->Flink;
+    }
+
+  /* Start all services which are members of an existing group */
   GroupEntry = GroupListHead.Flink;
   while (GroupEntry != &GroupListHead)
     {
       CurrentGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
 
-//      PrintString("Group '%wZ'\n", &CurrentGroup->GroupName);
+      DPRINT("Group '%wZ'\n", &CurrentGroup->GroupName);
 
       ServiceEntry = ServiceListHead.Flink;
       while (ServiceEntry != &ServiceListHead)
 	{
 	  CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
-	  if ((RtlCompareUnicodeString(&CurrentGroup->GroupName, &CurrentService->ServiceGroup, TRUE) == 0) &&
-	      (CurrentService->Start == SERVICE_AUTO_START))
+	  if ((RtlEqualUnicodeString(&CurrentGroup->GroupName, &CurrentService->ServiceGroup, TRUE)) &&
+	      (CurrentService->Start == SERVICE_AUTO_START) &&
+	      (CurrentService->ServiceVisited == FALSE))
 	    {
-	      if (CurrentService->Type == SERVICE_KERNEL_DRIVER ||
-		  CurrentService->Type == SERVICE_FILE_SYSTEM_DRIVER ||
-		  CurrentService->Type == SERVICE_RECOGNIZER_DRIVER)
-		{
-		  /* Load driver */
-//		  PrintString("  Path: %wZ\n", &CurrentService->RegistryPath);
-		  Status = NtLoadDriver(&CurrentService->RegistryPath);
-		}
-	      else
-		{
-		  /* Start service */
-		  Status = ScmStartService(CurrentService);
-		}
-
-	      if (NT_SUCCESS(Status))
-		{
-		  CurrentGroup->ServicesRunning = TRUE;
-		  CurrentService->ServiceRunning = TRUE;
-		}
-#if 0
-	      else
-		{
-		  if (CurrentService->ErrorControl == 1)
-		    {
-		      /* Log error */
-
-		    }
-		  else if (CurrentService->ErrorControl == 2)
-		    {
-		      if (IsLastKnownGood == FALSE)
-			{
-			  /* Boot last known good configuration */
-
-			}
-		    }
-		  else if (CurrentService->ErrorControl == 3)
-		    {
-		      if (IsLastKnownGood == FALSE)
-			{
-			  /* Boot last known good configuration */
-
-			}
-		      else
-			{
-			  /* BSOD! */
-
-			}
-		    }
-		}
-#endif
-
+	      CurrentService->ServiceVisited = TRUE;
+	      ScmStartService(CurrentService,
+			      CurrentGroup);
 	    }
+
 	  ServiceEntry = ServiceEntry->Flink;
 	}
+
       GroupEntry = GroupEntry->Flink;
+    }
+
+  /* Start all services which are members of any non-existing group */
+  ServiceEntry = ServiceListHead.Flink;
+  while (ServiceEntry != &ServiceListHead)
+    {
+      CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+
+      if ((CurrentGroup->GroupName.Length > 0) &&
+	  (CurrentService->Start == SERVICE_AUTO_START) &&
+	  (CurrentService->ServiceVisited == FALSE))
+	{
+	  CurrentService->ServiceVisited = TRUE;
+	  ScmStartService(CurrentService,
+			  NULL);
+	}
+
+      ServiceEntry = ServiceEntry->Flink;
+    }
+
+  /* Start all services which are not a member of any group */
+  ServiceEntry = ServiceListHead.Flink;
+  while (ServiceEntry != &ServiceListHead)
+    {
+      CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+
+      if ((CurrentGroup->GroupName.Length == 0) &&
+	  (CurrentService->Start == SERVICE_AUTO_START) &&
+	  (CurrentService->ServiceVisited == FALSE))
+	{
+	  CurrentService->ServiceVisited = TRUE;
+	  ScmStartService(CurrentService,
+			  NULL);
+	}
+
+      ServiceEntry = ServiceEntry->Flink;
+    }
+
+  /* Clear 'ServiceVisited' flag again */
+  ServiceEntry = ServiceListHead.Flink;
+  while (ServiceEntry != &ServiceListHead)
+    {
+      CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+      CurrentService->ServiceVisited = FALSE;
+      ServiceEntry = ServiceEntry->Flink;
     }
 }
 
