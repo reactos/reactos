@@ -155,8 +155,8 @@ static BOOL CALLBACK SwitchDesktopEnumFct(HWND hwnd, LPARAM lparam)
 {
 	WindowSet& windows = *(WindowSet*)lparam;
 
-	if (IsWindowVisible(hwnd))
-		if (hwnd!=g_Globals._hwndDesktopBar && hwnd!=g_Globals._hwndDesktop)
+	if (hwnd!=g_Globals._hwndDesktopBar && hwnd!=g_Globals._hwndDesktop)
+		if (IsWindowVisible(hwnd))
 			windows.insert(hwnd);
 
 	return TRUE;
@@ -212,12 +212,17 @@ static BOOL CALLBACK MinimizeDesktopEnumFct(HWND hwnd, LPARAM lparam)
 {
 	list<MinimizeStruct>& minimized = *(list<MinimizeStruct>*)lparam;
 
-	if (IsWindowVisible(hwnd))
-		if (hwnd!=g_Globals._hwndDesktopBar && hwnd!=g_Globals._hwndDesktop)
-			if (!IsIconic(hwnd)) {
+	if (hwnd!=g_Globals._hwndDesktopBar && hwnd!=g_Globals._hwndDesktop)
+		if (IsWindowVisible(hwnd) && !IsIconic(hwnd)) {
+			RECT rect;
+
+			if (GetWindowRect(hwnd,&rect))
+				if (rect.right>0 && rect.bottom>0 &&
+					rect.right>rect.left && rect.bottom>rect.top) {
 				minimized.push_back(MinimizeStruct(hwnd, GetWindowStyle(hwnd)));
 				ShowWindowAsync(hwnd, SW_MINIMIZE);
 			}
+		}
 
 	return TRUE;
 }
