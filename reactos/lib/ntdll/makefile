@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.88 2003/07/06 23:04:19 hyperion Exp $
+# $Id: makefile,v 1.89 2003/07/11 20:55:43 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -67,7 +67,7 @@ STDLIB_OBJECTS = stdlib/abs.o stdlib/atoi.o stdlib/atoi64.o stdlib/atol.o \
                  stdlib/itoa.o stdlib/itow.o stdlib/labs.o stdlib/splitp.o \
                  stdlib/strtol.o stdlib/strtoul.o stdlib/wcstol.o \
                  stdlib/wcstoul.o stdlib/wtoi.o stdlib/wtoi64.o stdlib/wtol.o \
-                 stdlib/mbstowcs.o stdlib/wcstombs.o stdlib/qsort.o
+                 stdlib/mbstowcs.o stdlib/wcstombs.o
 
 STRING_OBJECTS = string/ctype.o  \
                  string/memicmp.o\

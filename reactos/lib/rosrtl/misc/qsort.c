@@ -1,4 +1,4 @@
-/* $Id: qsort.c,v 1.2 2003/07/11 01:23:15 royce Exp $
+/* $Id: qsort.c,v 1.1 2003/07/11 20:55:43 gvg Exp $
  * 
  * FILE: ntoskrnl/rtl/qsort.c
  * NOTE: Adapted from CygWin newlib 2000-03-12.
@@ -145,10 +145,7 @@ med3 (
 }
 
 
-/* EXPORTED
- *
- * @implemented
- */
+/* EXPORTED */
 void
 qsort (
 	void		* a,

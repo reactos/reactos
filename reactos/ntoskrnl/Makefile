@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.99 2003/06/11 12:29:49 ekohl Exp $
+# $Id: Makefile,v 1.100 2003/07/11 20:55:43 gvg Exp $
 #
 # ReactOS Operating System
 #
@@ -93,7 +93,6 @@ OBJECTS_RTL = \
 	rtl/message.o \
 	rtl/nls.o \
 	rtl/purecall.o \
-	rtl/qsort.o \
 	rtl/random.o \
 	rtl/regio.o \
 	rtl/sprintf.o \
@@ -494,7 +493,7 @@ OBJECTS := \
 	$(OBJECTS_RESOURCE)
 
 
-$(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(SDK_PATH_LIB)/string.a  
+$(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(SDK_PATH_LIB)/string.a $(SDK_PATH_LIB)/rosrtl.a 
 	$(CC) \
 		-Wl,-T,ntoskrnl.lnk \
 		-nostartfiles \
@@ -509,6 +508,7 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(SDK_PATH_LIB)/string.a
 		-Wl,--base-file,base.tmp \
 		$(TARGETNAME).o -lgcc \
 		$(SDK_PATH_LIB)/string.a \
+		$(SDK_PATH_LIB)/rosrtl.a \
 		$(DDK_PATH_LIB)/hal.a
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
@@ -532,10 +532,11 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(SDK_PATH_LIB)/string.a
 		-Wl,temp.exp \
 		$(TARGETNAME).o -lgcc \
 		$(SDK_PATH_LIB)/string.a \
+		$(SDK_PATH_LIB)/rosrtl.a \
 		$(DDK_PATH_LIB)/hal.a
 	- $(RM) temp.exp
 
-$(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a $(SDK_PATH_LIB)/string.a
+$(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a $(SDK_PATH_LIB)/string.a $(SDK_PATH_LIB)/rosrtl.a
 	- $(CC) \
 		-Wl,-T,$(LINKER_SCRIPT) \
 		-nostartfiles \
@@ -550,6 +551,7 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a $(SDK_
 		-Wl,--base-file,base.tmp \
 		$(TARGETNAME).o -lgcc \
 		$(SDK_PATH_LIB)/string.a \
+		$(SDK_PATH_LIB)/rosrtl.a \
 		$(DDK_PATH_LIB)/hal.a
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
@@ -573,13 +575,14 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a $(SDK_
 		-Wl,temp.exp \
 		$(TARGETNAME).o -lgcc \
 		$(SDK_PATH_LIB)/string.a \
+		$(SDK_PATH_LIB)/rosrtl.a \
 		$(DDK_PATH_LIB)/hal.a
 	- $(RM) temp.exp
 
 $(TARGETNAME).dbg.o: $(TARGETNAME).o
 	$(STRIP) --strip-debug -o $(TARGETNAME).dbg.o $(TARGETNAME).o
 
-$(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk $(DDK_PATH_LIB)/hal.a $(SDK_PATH_LIB)/string.a
+$(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk $(DDK_PATH_LIB)/hal.a $(SDK_PATH_LIB)/string.a $(SDK_PATH_LIB)/rosrtl.a
 	$(CC) \
 		-Wl,-T,$(TARGETNAME).dbg.lnk \
 		-nostartfiles \
@@ -594,6 +597,7 @@ $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk $(D
 		-Wl,--base-file,base.tmp \
 		$(TARGETNAME).dbg.o -lgcc \
 		$(SDK_PATH_LIB)/string.a \
+		$(SDK_PATH_LIB)/rosrtl.a \
 		$(DDK_PATH_LIB)/hal.a
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
@@ -617,6 +621,7 @@ $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk $(D
 		-Wl,temp.exp \
 		$(TARGETNAME).dbg.o -lgcc \
 		$(SDK_PATH_LIB)/string.a \
+		$(SDK_PATH_LIB)/rosrtl.a \
 		$(DDK_PATH_LIB)/hal.a
 	- $(RM) temp.exp
 
