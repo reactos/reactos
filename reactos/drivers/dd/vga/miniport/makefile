@@ -1,57 +1,35 @@
-# $Id: makefile,v 1.7 2001/07/15 21:18:59 rex Exp $
+# $Id: makefile,v 1.8 2001/07/26 11:44:04 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../../..
+
+TARGET = vgamp
+
 CFLAGS = -D__NTDRIVER__
 
-MP_OBJECTS = vgamp.o initvga.o vgavideo.o vgamp.coff ../../../../ntoskrnl/ntoskrnl.a ../../vidport/vidport.a
+OBJECTS = vgamp.o initvga.o vgavideo.o $(TARGET).coff
 
-all: vgamp.sys
+LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a ../../vidport/vidport.a
+
+all: $(TARGET).sys
 
 .phony: all
 
 clean:
-	- $(RM) *.o junk.tmp base.tmp temp.exp *.sys *.coff
+	- $(RM) *.o *.sym *.coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
 
 .phony: clean
 
-vgamp.sys: $(MP_OBJECTS)
-	$(CC) \
-		-specs=../../../svc_specs \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--defsym,_end=end \
-		-Wl,--defsym,_edata=__data_end__ \
-		-Wl,--defsym,_etext=etext \
-		-Wl,--base-file,base.tmp \
-		$(MP_OBJECTS)
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname vgamp.sys \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--kill-at
-	- $(RM) base.tmp
-	$(CC) \
-		--verbose \
-		-Wl,--image-base,0x10000 \
-		-Wl,-e,_DriverEntry@8 \
-		-Wl,temp.exp \
-		-specs=../../../svc_specs \
-		-mdll \
-		-o vgamp.sys \
-		$(MP_OBJECTS)
-	- $(RM) temp.exp
+install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-install: $(FLOPPY_DIR)/drivers/vgamp.sys
+$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-$(FLOPPY_DIR)/drivers/vgamp.sys: vgamp.sys
-	$(CP) vgamp.sys $(FLOPPY_DIR)/drivers/vgamp.sys
+dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
 
-dist: ../../../../$(DIST_DIR)/drivers/vgamp.sys
+$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+	$(CP) $(TARGET).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
 
-../../../../$(DIST_DIR)/drivers/vgamp.sys: vgamp.sys
-	$(CP) vgamp.sys ../../../../$(DIST_DIR)/drivers/vgamp.sys
+$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS) $(LIBS)
 
-include ../../../../rules.mak
-
+include $(PATH_TO_TOP)/rules.mak
