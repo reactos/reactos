@@ -338,8 +338,8 @@ NTSTATUS TCPReceiveData
 ( PCONNECTION_ENDPOINT Connection,
   PNDIS_BUFFER Buffer,
   ULONG ReceiveLength,
-  ULONG ReceiveFlags,
   PULONG BytesReceived,
+  ULONG ReceiveFlags,
   PTCP_COMPLETION_ROUTINE Complete,
   PVOID Context ) {
     PCHAR DataBuffer;
@@ -395,18 +395,14 @@ NTSTATUS TCPReceiveData
 
 NTSTATUS TCPSendData
 ( PCONNECTION_ENDPOINT Connection,
-  PNDIS_BUFFER Buffer,
-  ULONG DataSize,
-  ULONG Flags,
-  PULONG DataUsed) {
+  PCHAR BufferData,
+  ULONG PacketSize,
+  PULONG DataUsed,
+  ULONG Flags) {
     NTSTATUS Status;
-    PCHAR BufferData;
-    ULONG PacketSize;
 
     RecursiveMutexEnter( &TCPLock, TRUE );
 
-    NdisQueryBuffer( Buffer, &BufferData, &PacketSize );
-    
     TI_DbgPrint(MID_TRACE,("Connection = %x\n", Connection));
     TI_DbgPrint(MID_TRACE,("Connection->SocketContext = %x\n",
 			   Connection->SocketContext));

@@ -10,6 +10,8 @@
 
 #include "precomp.h"
 
+VOID STDCALL KeAcquireSpinLockAtDpcLevel (IN PKSPIN_LOCK SpinLock);
+VOID STDCALL KeReleaseSpinLockFromDpcLevel(IN PKSPIN_LOCK SpinLock);
 
 WORK_QUEUE_ITEM LoopWorkItem;
 PIP_INTERFACE Loopback = NULL;

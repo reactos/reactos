@@ -1,17 +1,16 @@
-# $Id: makefile,v 1.1 2004/09/29 05:10:46 arty Exp $
+# $Id: makefile,v 1.2 2004/09/30 05:41:09 arty Exp $
 
 PATH_TO_TOP = ../../..
 
 TARGET_TYPE = library
 
-TARGET_NAME = ip$(KERNEL)
+TARGET_NAME = ip
 
 TARGET_PCH = $(PATH_TO_TOP)/drivers/lib/ip/include/precomp.h
 
 # -DMEMTRACK
 TARGET_CFLAGS = \
 	-D__USE_W32API \
-	$(DRIVER) \
 	-Wall -Werror \
 	-Iinclude \
 	-I../../net/tcpip/include \

@@ -10,6 +10,9 @@
 
 #include "precomp.h"
 
+VOID STDCALL KeRaiseIrql(KIRQL NewIrql, PKIRQL OldIrql);
+VOID STDCALL KeLowerIrql(KIRQL NewIrql);
+
 extern ULONG TCP_IPIdentification;
 extern LIST_ENTRY SleepingThreadsList;
 extern FAST_MUTEX SleepingThreadsLock;
