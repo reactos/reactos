@@ -1,4 +1,4 @@
-/* $Id: ioctrl.c,v 1.24 2004/08/15 16:39:03 chorns Exp $
+/* $Id: ioctrl.c,v 1.25 2004/10/10 14:01:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,8 +57,9 @@ NtDeviceIoControlFile (IN HANDLE DeviceHandle,
 
   PreviousMode = ExGetPreviousMode();
 
+  /* Check granted access against the access rights from IoContolCode */
   Status = ObReferenceObjectByHandle (DeviceHandle,
-				      FILE_READ_DATA | FILE_WRITE_DATA,
+				      (IoControlCode >> 14) & 0x3,
 				      IoFileObjectType,
 				      PreviousMode,
 				      (PVOID *) &FileObject,
