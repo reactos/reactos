@@ -21,11 +21,13 @@
 
 /* FUNCTIONS *****************************************************************/
 
+#define MAX_STATIC_CS_DEBUG_OBJECTS 64
+
 static RTL_CRITICAL_SECTION RtlCriticalSectionLock;
 static LIST_ENTRY RtlCriticalSectionList;
 static BOOLEAN RtlpCritSectInitialized = FALSE;
-//static RTL_CRITICAL_SECTION_DEBUG RtlpStaticDebugInfo[64];
-//static PRTL_CRITICAL_SECTION_DEBUG RtlpDebugInfoFreeList;
+static RTL_CRITICAL_SECTION_DEBUG RtlpStaticDebugInfo[MAX_STATIC_CS_DEBUG_OBJECTS];
+static BOOLEAN RtlpDebugInfoFreeList[MAX_STATIC_CS_DEBUG_OBJECTS];
 
 /*++
  * RtlDeleteCriticalSection 
@@ -50,26 +52,26 @@ RtlDeleteCriticalSection(
 {
     NTSTATUS Status = STATUS_SUCCESS;
         
+    DPRINT("Deleting Critical Section: %x\n", CriticalSection);
     /* Close the Event Object Handle if it exists */
     if (CriticalSection->LockSemaphore) {
+        
+        /* In case NtClose fails, return the status */
         Status = NtClose(CriticalSection->LockSemaphore);
+        
     }
         
     /* Protect List */
     RtlEnterCriticalSection(&RtlCriticalSectionLock);
-               
-    /* Delete the Debug Data, if it exists */
-    if (CriticalSection->DebugInfo) {
-        
-        /* Remove it from the list */
-        RemoveEntryList(&CriticalSection->DebugInfo->ProcessLocksList);
-        
-        /* Free it */
-        RtlFreeHeap(RtlGetProcessHeap(), 0, CriticalSection->DebugInfo);
-    }
     
+    /* Remove it from the list */
+    RemoveEntryList(&CriticalSection->DebugInfo->ProcessLocksList);      
+        
     /* Unprotect */
     RtlLeaveCriticalSection(&RtlCriticalSectionLock);
+        
+    /* Free it */
+    RtlpFreeDebugInfo(CriticalSection->DebugInfo);
     
     /* Wipe it out */
     RtlZeroMemory(CriticalSection, sizeof(RTL_CRITICAL_SECTION));
@@ -148,7 +150,6 @@ RtlEnterCriticalSection(
         }
         
         /* We don't own it, so we must wait for it */
-        DPRINT ("Waiting\n");
         RtlpWaitForCriticalSection(CriticalSection);
     }
     
@@ -208,7 +209,6 @@ RtlInitializeCriticalSectionAndSpinCount (
     DWORD SpinCount)
 {
     PRTL_CRITICAL_SECTION_DEBUG CritcalSectionDebugData;
-    PVOID Heap;
     
     /* First things first, set up the Object */
     DPRINT("Initializing Critical Section: %x\n", CriticalSection);
@@ -217,56 +217,56 @@ RtlInitializeCriticalSectionAndSpinCount (
     CriticalSection->OwningThread = 0;
     CriticalSection->SpinCount = (NtCurrentPeb()->NumberOfProcessors > 1) ? SpinCount : 0;
 
+    /* Allocate the Debug Data */
+    CritcalSectionDebugData = RtlpAllocateDebugInfo();    
+    DPRINT("Allocated Debug Data: %x inside Process: %x\n", 
+           CritcalSectionDebugData, 
+           NtCurrentTeb()->Cid.UniqueProcess);
+    
+    if (!CritcalSectionDebugData) {
+        
+        /* This is bad! */
+        DPRINT1("Couldn't allocate Debug Data for: %x\n", CriticalSection);
+        return STATUS_NO_MEMORY;
+    }
+    
+    /* Set it up */
+    CritcalSectionDebugData->Type = RTL_CRITSECT_TYPE;
+    CritcalSectionDebugData->ContentionCount = 0;
+    CritcalSectionDebugData->EntryCount = 0;
+    CritcalSectionDebugData->CriticalSection = CriticalSection;
+    CriticalSection->DebugInfo = CritcalSectionDebugData;
+
     /* 
-     * Now set up the Debug Data 
-     * Think of a better way to allocate it, because the Heap Manager won't
-     * have any debug data since the Heap isn't initalized! 
-     */
-    if ((Heap = RtlGetProcessHeap())) {
-
-        CritcalSectionDebugData = RtlAllocateHeap(Heap, 0, sizeof(RTL_CRITICAL_SECTION_DEBUG));
-        DPRINT("Allocated Critical Section Debug Data: %x\n", CritcalSectionDebugData);
-        CritcalSectionDebugData->Type = RTL_CRITSECT_TYPE;
-        CritcalSectionDebugData->ContentionCount = 0;
-        CritcalSectionDebugData->EntryCount = 0;
-        CritcalSectionDebugData->CriticalSection = CriticalSection;
-        CriticalSection->DebugInfo = CritcalSectionDebugData;
-
-        /* 
-         * Add it to the List of Critical Sections owned by the process.
-         * If we've initialized the Lock, then use it. If not, then probably
-         * this is the lock initialization itself, so insert it directly.
-         */
-        if ((CriticalSection != &RtlCriticalSectionLock) && (RtlpCritSectInitialized)) {
-            
-            DPRINT("Securely Inserting into ProcessLocks: %x, %x\n", 
-                   &CritcalSectionDebugData->ProcessLocksList,
-                   CriticalSection);
-            
-            /* Protect List */
-            RtlEnterCriticalSection(&RtlCriticalSectionLock);
-
-            /* Add this one */
-            InsertTailList(&RtlCriticalSectionList, &CritcalSectionDebugData->ProcessLocksList);
-
-            /* Unprotect */
-            RtlLeaveCriticalSection(&RtlCriticalSectionLock);
+    * Add it to the List of Critical Sections owned by the process.
+    * If we've initialized the Lock, then use it. If not, then probably
+    * this is the lock initialization itself, so insert it directly.
+    */
+    if ((CriticalSection != &RtlCriticalSectionLock) && (RtlpCritSectInitialized)) {
         
-        } else {
-
-            DPRINT("Inserting into ProcessLocks: %x, %x\n", 
-                   &CritcalSectionDebugData->ProcessLocksList,
-                   CriticalSection);
-            
-            /* Add it directly */
-            InsertTailList(&RtlCriticalSectionList, &CritcalSectionDebugData->ProcessLocksList);
-        }
+        DPRINT("Securely Inserting into ProcessLocks: %x, %x, %x\n", 
+               &CritcalSectionDebugData->ProcessLocksList,
+               CriticalSection,
+               &RtlCriticalSectionList);
         
+        /* Protect List */
+        RtlEnterCriticalSection(&RtlCriticalSectionLock);
+
+        /* Add this one */
+        InsertTailList(&RtlCriticalSectionList, &CritcalSectionDebugData->ProcessLocksList);
+
+        /* Unprotect */
+        RtlLeaveCriticalSection(&RtlCriticalSectionLock);
+    
     } else {
 
-        DPRINT1("No Debug Data was allocated for: %x\n", CriticalSection);
-        /* This shouldn't happen... */
-        CritcalSectionDebugData = NULL;
+        DPRINT("Inserting into ProcessLocks: %x, %x, %x\n", 
+               &CritcalSectionDebugData->ProcessLocksList,
+               CriticalSection,
+               &RtlCriticalSectionList);
+        
+        /* Add it directly */
+        InsertTailList(&RtlCriticalSectionList, &CritcalSectionDebugData->ProcessLocksList);
     }
 
     return STATUS_SUCCESS;
@@ -397,16 +397,17 @@ RtlpWaitForCriticalSection(
     }
     
     /* Increase the Debug Entry count */
-    DPRINT("Waiting on Critical Section: %x\n", CriticalSection);
-    if (CriticalSection->DebugInfo) CriticalSection->DebugInfo->EntryCount++;
+    DPRINT("Waiting on Critical Section Event: %x %x\n", 
+            CriticalSection, 
+            CriticalSection->LockSemaphore);
+    CriticalSection->DebugInfo->EntryCount++;
     
     for (;;) {
     
         /* Increase the number of times we've had contention */
-        if (CriticalSection->DebugInfo) CriticalSection->DebugInfo->ContentionCount++;
+        CriticalSection->DebugInfo->ContentionCount++;
         
         /* Wait on the Event */
-        DPRINT("Waiting on Event: %x\n", CriticalSection->LockSemaphore);
         Status = NtWaitForSingleObject(CriticalSection->LockSemaphore,
                                        FALSE,
                                        &Timeout);
@@ -470,13 +471,17 @@ RtlpUnWaitCriticalSection(
     }
     
     /* Signal the Event */
-    DPRINT("Signaling CS Event\n");
+    DPRINT("Signaling Critical Section Event: %x, %x\n", 
+            CriticalSection, 
+            CriticalSection->LockSemaphore);
     Status = NtSetEvent(CriticalSection->LockSemaphore, NULL);
             
     if (!NT_SUCCESS(Status)) {
         
         /* We've failed */
-        DPRINT1("Signaling Failed\n");
+        DPRINT1("Signaling Failed for: %x, %x\n", 
+                CriticalSection, 
+                CriticalSection->LockSemaphore);
         RtlRaiseStatus(Status);
     }
 }
@@ -508,7 +513,6 @@ RtlpCreateCriticalSectionSem(
     /* Chevk if we have an event */
     if (!hEvent) {
         
-        DPRINT("Creating Event\n");
         /* No, so create it */
         if (!NT_SUCCESS(Status = NtCreateEvent(&hNewEvent,
                                                EVENT_ALL_ACCESS,
@@ -522,23 +526,16 @@ RtlpCreateCriticalSectionSem(
                 RtlRaiseStatus(Status);
                 return;
         }
+        DPRINT("Created Event: %x \n", hNewEvent);
         
-        if (!(hEvent = InterlockedCompareExchangePointer((PVOID*)&CriticalSection->LockSemaphore,
+        if ((hEvent = InterlockedCompareExchangePointer((PVOID*)&CriticalSection->LockSemaphore,
                                                          (PVOID)hNewEvent,
                                                          0))) {
             
-            /* We created a new event succesffuly */             
-            hEvent = hNewEvent;
-        } else {
-        
             /* Some just created an event */
-            DPRINT("Closing already created event!\n");
+            DPRINT("Closing already created event: %x\n", hNewEvent);
             NtClose(hNewEvent);
         }
-        
-        /* Set either the new or the old */
-        CriticalSection->LockSemaphore = hEvent;
-        DPRINT("Event set!\n");
     }
     
     return;
@@ -567,12 +564,106 @@ RtlpInitDeferedCriticalSection(
            
     /* Initialize the Process Critical Section List */
     InitializeListHead(&RtlCriticalSectionList);
-    
+       
     /* Initialize the CS Protecting the List */
     RtlInitializeCriticalSection(&RtlCriticalSectionLock);
     
     /* It's now safe to enter it */
     RtlpCritSectInitialized = TRUE;
+}
+
+/*++
+ * RtlpAllocateDebugInfo 
+ *
+ *     Finds or allocates memory for a Critical Section Debug Object
+ *
+ * Params:
+ *     None
+ *
+ * Returns:
+ *     A pointer to an empty Critical Section Debug Object.
+ *
+ * Remarks:
+ *     For optimization purposes, the first 64 entries can be cached. From
+ *     then on, future Critical Sections will allocate memory from the heap.
+ *
+ *--*/
+PRTL_CRITICAL_SECTION_DEBUG
+STDCALL
+RtlpAllocateDebugInfo(
+    VOID)
+{
+    ULONG i;
+    
+    /* Try to allocate from our buffer first */
+    for (i = 0; i < MAX_STATIC_CS_DEBUG_OBJECTS; i++) {
+    
+        /* Check if Entry is free */
+        if (!RtlpDebugInfoFreeList[i]) {
+            
+            /* Mark entry in use */
+            DPRINT("Using entry: %d. Buffer: %x\n", i, &RtlpStaticDebugInfo[i]);
+            RtlpDebugInfoFreeList[i] = TRUE;
+        
+            /* Use free entry found */
+            return &RtlpStaticDebugInfo[i];
+        }
+        
+    }
+         
+    /* We are out of static buffer, allocate dynamic */
+    return RtlAllocateHeap(NtCurrentPeb()->ProcessHeap, 
+                           0, 
+                           sizeof(RTL_CRITICAL_SECTION_DEBUG));
+}
+
+/*++
+ * RtlpFreeDebugInfo 
+ *
+ *     Frees the memory for a Critical Section Debug Object
+ *
+ * Params:
+ *     DebugInfo - Pointer to Critical Section Debug Object to free.
+ *
+ * Returns:
+ *     None.
+ *
+ * Remarks:
+ *     If the pointer is part of the static buffer, then the entry is made
+ *     free again. If not, the object is de-allocated from the heap.
+ *
+ *--*/
+VOID
+STDCALL
+RtlpFreeDebugInfo(
+    PRTL_CRITICAL_SECTION_DEBUG DebugInfo)
+{
+    ULONG EntryId;
+    
+    /* Is it part of our cached entries? */
+    if ((DebugInfo >= RtlpStaticDebugInfo) && 
+        (DebugInfo <= &RtlpStaticDebugInfo[MAX_STATIC_CS_DEBUG_OBJECTS-1])) {
+    
+        /* Yes. zero it out */
+        RtlZeroMemory(DebugInfo, sizeof(RTL_CRITICAL_SECTION_DEBUG));
+        
+        /* Mark as free */
+        EntryId = (DebugInfo - RtlpStaticDebugInfo);
+        DPRINT("Freeing from Buffer: %x. Entry: %d inside Process: %x\n", 
+               DebugInfo, 
+               EntryId,
+               NtCurrentTeb()->Cid.UniqueProcess);
+        RtlpDebugInfoFreeList[EntryId] = FALSE;
+
+    } else {
+    
+        /* It's a dynamic one, so free from the heap */
+        DPRINT("Freeing from Heap: %x inside Process: %x\n", 
+               DebugInfo, 
+               NtCurrentTeb()->Cid.UniqueProcess);
+        RtlFreeHeap(NtCurrentPeb()->ProcessHeap, 0, DebugInfo);
+
+    }
 }
 
 /* EOF */

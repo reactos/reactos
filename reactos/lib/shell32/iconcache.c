@@ -292,7 +292,6 @@ void SIC_Destroy(void)
 	ShellBigIconList = 0;
 
 	LeaveCriticalSection(&SHELL32_SicCS);
-	DeleteCriticalSection(&SHELL32_SicCS);
 }
 
 /*************************************************************************

@@ -180,8 +180,6 @@ void FreeChangeNotifications(void)
         DeleteNode( head );
 
     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
-
-    DeleteCriticalSection(&SHELL32_ChangenotifyCS);
 }
 
 /*************************************************************************

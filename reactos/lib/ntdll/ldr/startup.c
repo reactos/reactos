@@ -278,7 +278,10 @@ __true_LdrInitializeThunk (ULONG Unknown1,
        RtlResetRtlTranslations (&NlsTable);
 
        NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + PEDosHeader->e_lfanew);
-      
+
+       /* Initialize Critical Section Data */
+       RtlpInitDeferedCriticalSection();
+             
 
        /* Get number of processors */
        Status = ZwQuerySystemInformation(SystemBasicInformation,
@@ -304,10 +307,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
            DPRINT1("Failed to create process heap\n");
            ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
          }
-
-       /* Initialize Critical Section Data */
-       RtlpInitDeferedCriticalSection();
-             
+            
        /* initalize peb lock support */
        RtlInitializeCriticalSection (&PebLock);
        Peb->FastPebLock = &PebLock;
