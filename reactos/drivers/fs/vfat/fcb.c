@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.5 2001/07/14 18:21:23 ekohl Exp $
+/* $Id: fcb.c,v 1.6 2001/07/20 08:00:20 ekohl Exp $
  *
  *
  * FILE:             fcb.c
@@ -27,7 +27,8 @@
 
 /*  --------------------------------------------------------  PUBLICS  */
 
-PVFATFCB  vfatNewFCB (PWCHAR pFileName)
+PVFATFCB
+vfatNewFCB(PWCHAR pFileName)
 {
   PVFATFCB  rcFCB;
 
@@ -49,24 +50,26 @@ PVFATFCB  vfatNewFCB (PWCHAR pFileName)
   return  rcFCB;
 }
 
-void  vfatDestroyFCB (PVFATFCB  pFCB)
+VOID
+vfatDestroyFCB(PVFATFCB  pFCB)
 {
   ExFreePool (pFCB);
 }
 
 BOOL
-vfatFCBIsDirectory (PDEVICE_EXTENSION pVCB, PVFATFCB FCB)
+vfatFCBIsDirectory(PDEVICE_EXTENSION pVCB, PVFATFCB FCB)
 {
   return  FCB->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY;
 }
 
 BOOL
-vfatFCBIsRoot (PVFATFCB FCB)
+vfatFCBIsRoot(PVFATFCB FCB)
 {
   return  wcscmp (FCB->PathName, L"\\") == 0;
 }
 
-void  vfatGrabFCB (PDEVICE_EXTENSION  pVCB, PVFATFCB  pFCB)
+VOID
+vfatGrabFCB(PDEVICE_EXTENSION  pVCB, PVFATFCB  pFCB)
 {
   KIRQL  oldIrql;
 
@@ -80,7 +83,8 @@ void  vfatGrabFCB (PDEVICE_EXTENSION  pVCB, PVFATFCB  pFCB)
   KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
 }
 
-void  vfatReleaseFCB (PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
+VOID
+vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
 {
   KIRQL  oldIrql;
 
@@ -100,7 +104,8 @@ void  vfatReleaseFCB (PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
   KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
 }
 
-void  vfatAddFCBToTable (PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
+VOID
+vfatAddFCBToTable(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
 {
   KIRQL  oldIrql;
 
@@ -110,8 +115,8 @@ void  vfatAddFCBToTable (PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
   KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
 }
 
-PVFATFCB  
-vfatGrabFCBFromTable (PDEVICE_EXTENSION  pVCB, PWSTR  pFileName)
+PVFATFCB
+vfatGrabFCBFromTable(PDEVICE_EXTENSION  pVCB, PWSTR  pFileName)
 {
   KIRQL  oldIrql;
   PVFATFCB  rcFCB;
@@ -184,12 +189,12 @@ vfatFCBInitializeCache (PVCB  vcb, PVFATFCB  fcb)
 }
 
 NTSTATUS
-vfatRequestAndValidateRegion (PDEVICE_EXTENSION  pDeviceExt, 
-                              PVFATFCB  pFCB, 
-                              ULONG  pOffset,
-                              PVOID * pBuffer,
-                              PCACHE_SEGMENT * pCacheSegment,
-                              BOOL  pExtend)
+vfatRequestAndValidateRegion(PDEVICE_EXTENSION pDeviceExt,
+			     PVFATFCB pFCB,
+			     ULONG  pOffset,
+			     PVOID * pBuffer,
+			     PCACHE_SEGMENT * pCacheSegment,
+			     BOOL pExtend)
 {
   NTSTATUS  status;
   BOOLEAN  valid;
@@ -197,7 +202,7 @@ vfatRequestAndValidateRegion (PDEVICE_EXTENSION  pDeviceExt,
   ULONG  currentCluster;
   ULONG  i;
 
-  status = CcRosRequestCacheSegment(pFCB->RFCB.Bcb, 
+  status = CcRosRequestCacheSegment(pFCB->RFCB.Bcb,
                                     pOffset,
                                     pBuffer,
                                     &valid,
@@ -275,34 +280,34 @@ vfatReleaseRegion (PDEVICE_EXTENSION  pDeviceExt,
   return  CcRosReleaseCacheSegment (pFCB->RFCB.Bcb, pCacheSegment, TRUE);
 }
 
-PVFATFCB  
-vfatMakeRootFCB (PDEVICE_EXTENSION  pVCB)
+PVFATFCB
+vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
 {
   PVFATFCB  FCB;
 
-  FCB = vfatNewFCB (L"\\");
-  memset (FCB->entry.Filename, ' ', 11);
+  FCB = vfatNewFCB(L"\\");
+  memset(FCB->entry.Filename, ' ', 11);
   FCB->entry.FileSize = pVCB->rootDirectorySectors * BLOCKSIZE;
   FCB->entry.Attrib = FILE_ATTRIBUTE_DIRECTORY;
   if (pVCB->FatType == FAT32)
-  {
-    FCB->entry.FirstCluster = 2;
-  }
+    {
+      FCB->entry.FirstCluster = ((struct _BootSector32*)(pVCB->Boot))->RootCluster;
+    }
   else
-  {
-    FCB->entry.FirstCluster = 1;
-  }
+    {
+      FCB->entry.FirstCluster = 1;
+    }
   FCB->RefCount = 1;
 
-  vfatFCBInitializeCache (pVCB, FCB);
-  vfatAddFCBToTable (pVCB, FCB);
+  vfatFCBInitializeCache(pVCB, FCB);
+  vfatAddFCBToTable(pVCB, FCB);
   vfatGrabFCB(pVCB, FCB);
 
-  return  FCB;
+  return(FCB);
 }
 
-PVFATFCB  
-vfatOpenRootFCB (PDEVICE_EXTENSION  pVCB)
+PVFATFCB
+vfatOpenRootFCB(PDEVICE_EXTENSION  pVCB)
 {
   PVFATFCB  FCB;
 
@@ -316,16 +321,16 @@ vfatOpenRootFCB (PDEVICE_EXTENSION  pVCB)
 }
 
 NTSTATUS
-vfatMakeFCBFromDirEntry (PVCB  vcb,
-                         PVFATFCB  directoryFCB,
-                         PWSTR  longName,
-                         PFAT_DIR_ENTRY  dirEntry,
-                         PVFATFCB * fileFCB)
+vfatMakeFCBFromDirEntry(PVCB  vcb,
+			PVFATFCB  directoryFCB,
+			PWSTR  longName,
+			PFAT_DIR_ENTRY  dirEntry,
+			PVFATFCB * fileFCB)
 {
   PVFATFCB  rcFCB;
   WCHAR  pathName [MAX_PATH];
 
-  if (longName [0] != 0 && wcslen (directoryFCB->PathName) + 
+  if (longName [0] != 0 && wcslen (directoryFCB->PathName) +
         sizeof(WCHAR) + wcslen (longName) > MAX_PATH)
   {
     return  STATUS_OBJECT_NAME_INVALID;

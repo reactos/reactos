@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.28 2001/07/13 10:31:14 ekohl Exp $
+ * $Id: fat.c,v 1.29 2001/07/20 08:00:20 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -30,9 +30,9 @@
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-Fat32GetNextCluster (PDEVICE_EXTENSION DeviceExt, 
-		     ULONG CurrentCluster,
-		     PULONG NextCluster)
+Fat32GetNextCluster(PDEVICE_EXTENSION DeviceExt,
+		    ULONG CurrentCluster,
+		    PULONG NextCluster)
 /*
  * FUNCTION: Retrieve the next FAT32 cluster from the FAT table via a physical
  *           disk read
@@ -43,15 +43,18 @@ Fat32GetNextCluster (PDEVICE_EXTENSION DeviceExt,
   PCACHE_SEGMENT CacheSeg;
   NTSTATUS Status;
   ULONG FATOffset;
+  ULONG ChunkSize;
 
-  FATOffset = (DeviceExt->FATStart * BLOCKSIZE) + 
+  ChunkSize=CACHEPAGESIZE(DeviceExt);
+
+  FATOffset = (DeviceExt->FATStart * BLOCKSIZE) +
     (CurrentCluster * sizeof(ULONG));
 
   Status = CcRosRequestCacheSegment(DeviceExt->StorageBcb,
-				 PAGE_ROUND_DOWN(FATOffset),
-				 &BaseAddress,
-				 &Valid,
-				 &CacheSeg);
+				    ROUND_DOWN(FATOffset, ChunkSize),
+				    &BaseAddress,
+				    &Valid,
+				    &CacheSeg);
   if (!NT_SUCCESS(Status))
     {
       return(Status);
@@ -59,9 +62,9 @@ Fat32GetNextCluster (PDEVICE_EXTENSION DeviceExt,
   if (!Valid)
     {
       Status = VfatReadSectors(DeviceExt->StorageDevice,
-			      PAGE_ROUND_DOWN(FATOffset) / BLOCKSIZE,
-			      PAGESIZE / BLOCKSIZE,
-			      BaseAddress);
+			       ROUND_DOWN(FATOffset, ChunkSize) / BLOCKSIZE,
+			       ChunkSize / BLOCKSIZE,
+			       BaseAddress);
       if (!NT_SUCCESS(Status))
 	{
 	  CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, FALSE);
@@ -69,7 +72,7 @@ Fat32GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 	}
     }
 
-  CurrentCluster = *(PULONG)(BaseAddress + (FATOffset % PAGESIZE));
+  CurrentCluster = *(PULONG)(BaseAddress + (FATOffset % ChunkSize));
   if (CurrentCluster >= 0xffffff8 && CurrentCluster <= 0xfffffff)
     CurrentCluster = 0xffffffff;
   CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
@@ -78,9 +81,9 @@ Fat32GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 }
 
 NTSTATUS
-Fat16GetNextCluster (PDEVICE_EXTENSION DeviceExt, 
-		     ULONG CurrentCluster,
-		     PULONG NextCluster)
+Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt,
+		    ULONG CurrentCluster,
+		    PULONG NextCluster)
 /*
  * FUNCTION: Retrieve the next FAT16 cluster from the FAT table
  */
@@ -127,28 +130,28 @@ Fat16GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 }
 
 NTSTATUS
-Fat12GetNextCluster (PDEVICE_EXTENSION DeviceExt, 
-		     ULONG CurrentCluster,
-		     PULONG NextCluster)
+Fat12GetNextCluster(PDEVICE_EXTENSION DeviceExt,
+		    ULONG CurrentCluster,
+		    PULONG NextCluster)
 /*
  * FUNCTION: Retrieve the next FAT12 cluster from the FAT table
  */
 {
- unsigned char* CBlock;
- ULONG FATOffset;
- ULONG Entry;
- BOOLEAN Valid;
- PCACHE_SEGMENT CacheSeg;
- NTSTATUS Status;
- PVOID BaseAddress;
+  PUCHAR CBlock;
+  ULONG FATOffset;
+  ULONG Entry;
+  BOOLEAN Valid;
+  PCACHE_SEGMENT CacheSeg;
+  NTSTATUS Status;
+  PVOID BaseAddress;
 
- *NextCluster = 0;
+  *NextCluster = 0;
 
- Status = CcRosRequestCacheSegment(DeviceExt->Fat12StorageBcb,
-				0,
-				&BaseAddress,
-				&Valid,
-				&CacheSeg);
+  Status = CcRosRequestCacheSegment(DeviceExt->Fat12StorageBcb,
+				    0,
+				    &BaseAddress,
+				    &Valid,
+				    &CacheSeg);
   if (!NT_SUCCESS(Status))
     {
       return(Status);
@@ -188,8 +191,8 @@ Fat12GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 }
 
 NTSTATUS
-FAT16FindAvailableCluster (PDEVICE_EXTENSION DeviceExt,
-			   PULONG Cluster)
+FAT16FindAvailableCluster(PDEVICE_EXTENSION DeviceExt,
+			  PULONG Cluster)
 /*
  * FUNCTION: Finds the first available cluster in a FAT16 table
  */
@@ -206,12 +209,13 @@ FAT16FindAvailableCluster (PDEVICE_EXTENSION DeviceExt,
   ChunkSize = CACHEPAGESIZE(DeviceExt);
   
   FatStart = DeviceExt->FATStart * BLOCKSIZE;
-  FatLength = DeviceExt->Boot->FATSectors * BLOCKSIZE;
+  FatLength = (((DeviceExt->Boot->Sectors ? DeviceExt->Boot->Sectors : DeviceExt->Boot->SectorsHuge)-DeviceExt->dataStart)/DeviceExt->Boot->SectorsPerCluster+2)*2;
+  
   CacheSeg = NULL;
   *Cluster = 0;
 
   for (i = 2; i < FatLength; i+=2)
-    {            
+    {
       if (((FatStart + i) % ChunkSize) == 0 || CacheSeg == NULL)
 	{
 	  if (CacheSeg != NULL)
@@ -255,7 +259,7 @@ FAT16FindAvailableCluster (PDEVICE_EXTENSION DeviceExt,
 }
 
 NTSTATUS
-FAT12FindAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
+FAT12FindAvailableCluster(PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
 /*
  * FUNCTION: Finds the first available cluster in a FAT12 table
  */
@@ -271,7 +275,7 @@ FAT12FindAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
   ULONG numberofclusters;
   
   *Cluster = 0;
-
+  
   Status = CcRosRequestCacheSegment(DeviceExt->Fat12StorageBcb,
 				 0,
 				 &BaseAddress,
@@ -328,6 +332,63 @@ FAT32FindAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
  * FUNCTION: Finds the first available cluster in a FAT32 table
  */
 {
+  ULONG FatLength;
+  ULONG i;
+  NTSTATUS Status;
+  PVOID BaseAddress;
+  PCACHE_SEGMENT CacheSeg;
+  BOOLEAN Valid;
+  ULONG FatStart;
+  ULONG ChunkSize;
+
+  ChunkSize = CACHEPAGESIZE(DeviceExt);
+
+  FatStart = DeviceExt->FATStart * BLOCKSIZE;
+  FatLength = (((DeviceExt->Boot->Sectors ? DeviceExt->Boot->Sectors : DeviceExt->Boot->SectorsHuge)-DeviceExt->dataStart)/DeviceExt->Boot->SectorsPerCluster+2)*4;
+
+  CacheSeg = NULL;
+  *Cluster = 0;
+
+  for (i = 4; i < FatLength; i+=4)
+    {
+      if (((FatStart + i) % ChunkSize) == 0 || CacheSeg == NULL)
+	{
+	  if (CacheSeg != NULL)
+	    {
+	      CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
+	    }
+	  Status = CcRosRequestCacheSegment(DeviceExt->StorageBcb,
+					    ROUND_DOWN(FatStart + i, ChunkSize),
+					    &BaseAddress,
+					    &Valid,
+					    &CacheSeg);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      return(Status);
+	    }
+	  if (!Valid)
+	    {
+	      Status = VfatReadSectors(DeviceExt->StorageDevice,
+				       ROUND_DOWN(FatStart + i, ChunkSize) / BLOCKSIZE,
+				       ChunkSize / BLOCKSIZE,
+				       BaseAddress);
+	      if (!NT_SUCCESS(Status))
+		{
+		  CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, FALSE);
+		  return(Status);
+		}
+	    }
+	}
+      if (*((PULONG)(BaseAddress + ((FatStart + i) % ChunkSize))) == 0)
+	{
+	  DPRINT("Found available cluster 0x%x\n", i);
+	  *Cluster = i / 4;
+	  CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
+	  return(STATUS_SUCCESS);
+	}
+    }
+  CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
+#if 0
   ULONG sector;
   PULONG Block;
   int i,forto;
@@ -371,6 +432,7 @@ FAT32FindAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
     }
   /* Give an error message (out of disk space) if we reach here) */
   ExFreePool (Block);
+#endif
   return (STATUS_DISK_FULL);
 }
 
@@ -445,7 +507,7 @@ FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
   return(STATUS_SUCCESS);
 }
 
-#if 0
+
 NTSTATUS
 FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
 			    PLARGE_INTEGER Clusters)
@@ -456,23 +518,50 @@ FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
   PUSHORT Block;
   ULONG ulCount = 0;
   ULONG i;
+  ULONG numberofclusters;
+  ULONG numberofsectors;
+  ULONG sector;
+  ULONG forto;
+  NTSTATUS Status;
 
   ExAcquireResourceSharedLite (&DeviceExt->FatResource, TRUE);
+  Block = ExAllocatePool (NonPagedPool, BLOCKSIZE);
 
-  Block = (PUSHORT) DeviceExt->FAT;
-  for (i = 2; i < (DeviceExt->Boot->FATSectors * 256); i++)
+  numberofclusters = ((DeviceExt->Boot->Sectors ? DeviceExt->Boot->Sectors : DeviceExt->Boot->SectorsHuge)-DeviceExt->dataStart)/DeviceExt->Boot->SectorsPerCluster+2;
+  numberofsectors = (numberofclusters + 255) / 256;
+  numberofclusters %= 256;
+
+  for (sector = 0; sector < numberofsectors; sector++)
     {
-      if (Block[i] == 0)
-	ulCount++;
-    }
+      Status = VfatReadSectors(DeviceExt->StorageDevice,
+			       DeviceExt->FATStart + sector,
+			       1,
+			       (PUCHAR)Block);
+      if (!NT_SUCCESS(Status))
+	{
+	   ExFreePool(Block);
+	   ExReleaseResourceLite(&DeviceExt->FatResource);
+	   return(Status);
+	}
 
+      if (sector == numberofsectors - 1)
+	forto = numberofclusters;
+      else
+	forto = 256;
+
+      for (i = 0; i < forto; i++)
+	{
+	  if (Block[i] == 0)
+	    ulCount++;
+	}
+    }
   ExReleaseResourceLite (&DeviceExt->FatResource);
 
   Clusters->QuadPart = ulCount;
 
   return(STATUS_SUCCESS);
 }
-#endif
+
 
 NTSTATUS
 FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
@@ -486,6 +575,7 @@ FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
   ULONG ulCount = 0;
   ULONG i,forto;
   ULONG numberofclusters;
+  ULONG numberofsectors;
   NTSTATUS Status;
 
   ExAcquireResourceSharedLite (&DeviceExt->FatResource, TRUE);
@@ -493,11 +583,10 @@ FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
   Block = ExAllocatePool (NonPagedPool, BLOCKSIZE);
 
   numberofclusters = ((DeviceExt->Boot->Sectors ? DeviceExt->Boot->Sectors : DeviceExt->Boot->SectorsHuge)-DeviceExt->dataStart)/DeviceExt->Boot->SectorsPerCluster+2;
+  numberofsectors = (numberofclusters +127) / 128;
   numberofclusters %= 128;
 
-  for (sector = 0;
-       sector < ((struct _BootSector32 *) (DeviceExt->Boot))->FATSectors32;
-       sector++)
+  for (sector = 0; sector < numberofsectors; sector++)
     {
       Status = VfatReadSectors(DeviceExt->StorageDevice,
 			       (ULONG) (DeviceExt->FATStart + sector), 1,
@@ -509,10 +598,10 @@ FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt,
 	  return(Status);
 	}
 
-      if (sector==((struct _BootSector32 *) (DeviceExt->Boot))->FATSectors32-1)
-	 forto=numberofclusters;
-         else
-         forto=128;
+      if (sector == numberofsectors - 1)
+	forto=numberofclusters;
+      else
+	forto=128;
       for (i = 0; i < forto; i++)
 	{
 	  if (Block[i] == 0)
@@ -668,7 +757,7 @@ FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt,
       FATOffset = FATOffset + DeviceExt->Boot->FATSectors * BLOCKSIZE;
     }
 
-  return (STATUS_SUCCESS);
+  return(STATUS_SUCCESS);
 }
 
 NTSTATUS
@@ -679,36 +768,61 @@ FAT32WriteCluster(PDEVICE_EXTENSION DeviceExt,
  * FUNCTION: Writes a cluster to the FAT32 physical tables
  */
 {
-#if 0
-  ULONG FATsector;
-  ULONG FATeis;
-  PUSHORT Block;
+  PVOID BaseAddress;
+  BOOLEAN Valid;
+  PCACHE_SEGMENT CacheSeg;
+  NTSTATUS Status;
+  ULONG FATOffset;
   ULONG Start;
-  int i;
-  struct _BootSector32 *pBoot;
-  DbgPrint ("FAT32WriteCluster %u : %u\n", ClusterToWrite, NewValue);
-  Block = ExAllocatePool (NonPagedPool, BLOCKSIZE);
-  FATsector = ClusterToWrite / 128;
-  FATeis = ClusterToWrite - (FATsector * 128);
-  /* load sector, change value, then rewrite sector */
-  /* FIXME: Check status */
-  VfatReadSectors (DeviceExt->StorageDevice,
-		   DeviceExt->FATStart + FATsector, 1, (UCHAR *) Block);
-  Block[FATeis] = NewValue;
-  /* Write the changed FAT sector to disk (all FAT's) */
-  Start = DeviceExt->FATStart + FATsector;
-  pBoot = (struct _BootSector32 *) DeviceExt->Boot;
-  for (i = 0; i < pBoot->FATCount; i++)
+  ULONG i;
+  ULONG ChunkSize;
+
+  ChunkSize = CACHEPAGESIZE(DeviceExt);
+
+  Start = DeviceExt->FATStart;
+
+  FATOffset = (Start * BLOCKSIZE) + (ClusterToWrite * 4);
+
+  for (i = 0; i < DeviceExt->Boot->FATCount; i++)
     {
-      /* FIXME: Check status */
-      VfatWriteSectors (DeviceExt->StorageDevice, Start, 1, (UCHAR *) Block);
-      Start += pBoot->FATSectors;
+      Status = CcRosRequestCacheSegment(DeviceExt->StorageBcb,
+					ROUND_DOWN(FATOffset, ChunkSize),
+					&BaseAddress,
+					&Valid,
+					&CacheSeg);
+      if (!NT_SUCCESS(Status))
+	{
+	  return(Status);
+	}
+      if (!Valid)
+	{
+	  Status = VfatReadSectors(DeviceExt->StorageDevice,
+				   ROUND_DOWN(FATOffset, ChunkSize) / BLOCKSIZE,
+				   ChunkSize / BLOCKSIZE,
+				   BaseAddress);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, FALSE);
+	      return(Status);
+	    }
+	}
+
+      DPRINT("Writing 0x%x for offset 0x%x 0x%x\n", NewValue, FATOffset,
+	     ClusterToWrite);
+      *((PULONG)(BaseAddress + (FATOffset % ChunkSize))) = NewValue;
+      Status = VfatWriteSectors(DeviceExt->StorageDevice,
+				ROUND_DOWN(FATOffset, ChunkSize) / BLOCKSIZE,
+				ChunkSize / BLOCKSIZE,
+				BaseAddress);
+      CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
+
+      DPRINT("DeviceExt->Boot->FATSectors %d\n",
+	     ((struct _BootSector32 *)DeviceExt->Boot)->FATSectors32);
+      FATOffset += ((struct _BootSector32 *)DeviceExt->Boot)->FATSectors32 * BLOCKSIZE;
     }
-  ExFreePool (Block);
-#endif
-//  KeBugCheck(0);
   return(STATUS_SUCCESS);
 }
+
 
 NTSTATUS
 WriteCluster(PDEVICE_EXTENSION DeviceExt,
@@ -722,21 +836,22 @@ WriteCluster(PDEVICE_EXTENSION DeviceExt,
 
   if (DeviceExt->FatType == FAT16)
     {
-      Status = FAT16WriteCluster (DeviceExt, ClusterToWrite, NewValue);
+      Status = FAT16WriteCluster(DeviceExt, ClusterToWrite, NewValue);
     }
   else if (DeviceExt->FatType == FAT32)
     {
-      Status = FAT32WriteCluster (DeviceExt, ClusterToWrite, NewValue);
+      Status = FAT32WriteCluster(DeviceExt, ClusterToWrite, NewValue);
     }
   else
     {
-      Status = FAT12WriteCluster (DeviceExt, ClusterToWrite, NewValue);
+      Status = FAT12WriteCluster(DeviceExt, ClusterToWrite, NewValue);
     }
   return(Status);
 }
 
 ULONG
-ClusterToSector (PDEVICE_EXTENSION DeviceExt, unsigned long Cluster)
+ClusterToSector(PDEVICE_EXTENSION DeviceExt,
+		ULONG Cluster)
 /*
  * FUNCTION: Converts the cluster number to a sector number for this physical
  *           device
@@ -759,22 +874,23 @@ VfatRawReadCluster(PDEVICE_EXTENSION DeviceExt,
 
   if (FirstCluster == 1)
     {
-      Status = VfatReadSectors (DeviceExt->StorageDevice,
-				Cluster,
-				DeviceExt->Boot->SectorsPerCluster, 
-				Buffer);
+      Status = VfatReadSectors(DeviceExt->StorageDevice,
+			       Cluster,
+			       DeviceExt->Boot->SectorsPerCluster,
+			       Buffer);
       return(Status);
     }
   else
     {
       ULONG Sector;
       
-      Sector = ClusterToSector (DeviceExt, Cluster);
+      Sector = ClusterToSector(DeviceExt, Cluster);
       
 
-      Status = VfatReadSectors (DeviceExt->StorageDevice,
-				Sector, DeviceExt->Boot->SectorsPerCluster, 
-				Buffer);
+      Status = VfatReadSectors(DeviceExt->StorageDevice,
+			       Sector,
+			       DeviceExt->Boot->SectorsPerCluster,
+			       Buffer);
       return(Status);
     }
 }
@@ -791,8 +907,8 @@ VfatRawWriteCluster(PDEVICE_EXTENSION DeviceExt,
   ULONG Sector;
   NTSTATUS Status;
 
-  DPRINT ("VfatWriteCluster(DeviceExt %x, Buffer %x, Cluster %d)\n",
-	  DeviceExt, Buffer, Cluster);
+  DPRINT("VfatWriteCluster(DeviceExt %x, Buffer %x, Cluster %d)\n",
+	 DeviceExt, Buffer, Cluster);
 
   if (FirstCluster == 1)
     {
@@ -815,27 +931,26 @@ VfatRawWriteCluster(PDEVICE_EXTENSION DeviceExt,
 }
 
 NTSTATUS
-GetNextCluster (PDEVICE_EXTENSION DeviceExt, 
-		ULONG CurrentCluster,
-		PULONG NextCluster,
-		BOOLEAN Extend)
+GetNextCluster(PDEVICE_EXTENSION DeviceExt,
+	       ULONG CurrentCluster,
+	       PULONG NextCluster,
+	       BOOLEAN Extend)
 /*
  * FUNCTION: Retrieve the next cluster depending on the FAT type
  */
 {
   NTSTATUS Status;
-
-
+  
 //  DPRINT ("GetNextCluster(DeviceExt %x, CurrentCluster %x)\n",
 //	  DeviceExt, CurrentCluster);
   
   if (Extend)
     {
-      ExAcquireResourceSharedLite (&DeviceExt->FatResource, TRUE);
+      ExAcquireResourceSharedLite(&DeviceExt->FatResource, TRUE);
     }
   else
     {
-      ExAcquireResourceExclusiveLite (&DeviceExt->FatResource, TRUE);
+      ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);
     }
   
   /*
@@ -848,7 +963,7 @@ GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 
       if (DeviceExt->FatType == FAT16)
 	{
-	  Status = FAT16FindAvailableCluster (DeviceExt, &NewCluster);
+	  Status = FAT16FindAvailableCluster(DeviceExt, &NewCluster);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      return(Status);
@@ -856,7 +971,7 @@ GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 	}
       else if (DeviceExt->FatType == FAT32)
 	{
-	  Status = FAT32FindAvailableCluster (DeviceExt, &NewCluster);
+	  Status = FAT32FindAvailableCluster(DeviceExt, &NewCluster);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      return(Status);
@@ -864,7 +979,7 @@ GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 	}
       else
 	{
-	  Status = FAT12FindAvailableCluster (DeviceExt, &NewCluster);
+	  Status = FAT12FindAvailableCluster(DeviceExt, &NewCluster);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      return(Status);
@@ -884,15 +999,15 @@ GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 
   if (DeviceExt->FatType == FAT16)
     {
-      Status = Fat16GetNextCluster (DeviceExt, CurrentCluster, NextCluster);
+      Status = Fat16GetNextCluster(DeviceExt, CurrentCluster, NextCluster);
     }
   else if (DeviceExt->FatType == FAT32)
     {
-      Status = Fat32GetNextCluster (DeviceExt, CurrentCluster, NextCluster);
+      Status = Fat32GetNextCluster(DeviceExt, CurrentCluster, NextCluster);
     }
   else
     {
-      Status = Fat12GetNextCluster (DeviceExt, CurrentCluster, NextCluster);
+      Status = Fat12GetNextCluster(DeviceExt, CurrentCluster, NextCluster);
     }
   if (Extend && (*NextCluster) == 0xFFFFFFFF)
     {
@@ -902,7 +1017,7 @@ GetNextCluster (PDEVICE_EXTENSION DeviceExt,
       /* Firstly, find the next available open allocation unit */
       if (DeviceExt->FatType == FAT16)
 	{
-	  Status = FAT16FindAvailableCluster (DeviceExt, &NewCluster);
+	  Status = FAT16FindAvailableCluster(DeviceExt, &NewCluster);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      return(Status);
@@ -910,7 +1025,7 @@ GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 	}
       else if (DeviceExt->FatType == FAT32)
 	{
-	  Status = FAT32FindAvailableCluster (DeviceExt, &NewCluster);
+	  Status = FAT32FindAvailableCluster(DeviceExt, &NewCluster);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      return(Status);
@@ -918,60 +1033,63 @@ GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 	}
       else
 	{
-	  Status = FAT12FindAvailableCluster (DeviceExt, &NewCluster);
+	  Status = FAT12FindAvailableCluster(DeviceExt, &NewCluster);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      return(Status);
 	    }
 	}
       /* Mark the new AU as the EOF */
-      WriteCluster (DeviceExt, NewCluster, 0xFFFFFFFF);
+      WriteCluster(DeviceExt, NewCluster, 0xFFFFFFFF);
       /* Now, write the AU of the LastCluster with the value of the newly
          found AU */
-      WriteCluster (DeviceExt, CurrentCluster, NewCluster);
+      WriteCluster(DeviceExt, CurrentCluster, NewCluster);
       *NextCluster = NewCluster;
     }
 
-  ExReleaseResourceLite (&DeviceExt->FatResource);
+  ExReleaseResourceLite(&DeviceExt->FatResource);
 
-  return (Status);
+  return(Status);
 }
 
+
 NTSTATUS
-GetNextSector (PDEVICE_EXTENSION DeviceExt,
-		ULONG CurrentSector,
-		PULONG NextSector,
-		BOOLEAN Extend)
+GetNextSector(PDEVICE_EXTENSION DeviceExt,
+	      ULONG CurrentSector,
+	      PULONG NextSector,
+	      BOOLEAN Extend)
 /* Some functions don't have access to the cluster they're really reading from.
    Maybe this is a dirty solution, but it will allow them to handle fragmentation. */
 {
   NTSTATUS Status;
 
-  DPRINT ("GetNextSector(DeviceExt %x, CurrentSector %x)\n",DeviceExt, CurrentSector);
+  DPRINT("GetNextSector(DeviceExt %x, CurrentSector %x)\n",
+	 DeviceExt,
+	 CurrentSector);
   if (CurrentSector<DeviceExt->dataStart || ((CurrentSector - DeviceExt->dataStart + 1) % DeviceExt -> Boot -> SectorsPerCluster))
   /* Basically, if the next sequential sector would be on a cluster border, then we'll need to check in the FAT */
     {
-       (*NextSector)=CurrentSector+1;
-       return (STATUS_SUCCESS);
+      (*NextSector)=CurrentSector+1;
+      return (STATUS_SUCCESS);
     }
   else
-  {
-       CurrentSector = (CurrentSector - DeviceExt->dataStart) / DeviceExt -> Boot -> SectorsPerCluster + 2;
+    {
+      CurrentSector = (CurrentSector - DeviceExt->dataStart) / DeviceExt -> Boot -> SectorsPerCluster + 2;
 
-       Status = GetNextCluster(DeviceExt, CurrentSector, NextSector, Extend);
-       if (!NT_SUCCESS(Status))
-         {
-	   return(Status);
-	 }
-       if ((*NextSector) == 0 || (*NextSector) == 0xffffffff)
-       {
-         /* The caller wants to know a sector. These FAT codes don't correspond to any sector. */
-         return (STATUS_UNSUCCESSFUL);
-       }
+      Status = GetNextCluster(DeviceExt, CurrentSector, NextSector, Extend);
+      if (!NT_SUCCESS(Status))
+	{
+	  return(Status);
+	}
+      if ((*NextSector) == 0 || (*NextSector) == 0xffffffff)
+	{
+	  /* The caller wants to know a sector. These FAT codes don't correspond to any sector. */
+	  return(STATUS_UNSUCCESSFUL);
+	}
 
-       (*NextSector)=ClusterToSector(DeviceExt,(*NextSector));
-       return (STATUS_SUCCESS);
-  }
+      (*NextSector) = ClusterToSector(DeviceExt,(*NextSector));
+      return(STATUS_SUCCESS);
+    }
 }
 
 /* EOF */

@@ -1,8 +1,9 @@
-/* $Id: vfat.h,v 1.32 2001/07/05 01:51:53 rex Exp $ */
+/* $Id: vfat.h,v 1.33 2001/07/20 08:00:21 ekohl Exp $ */
 
 #include <ddk/ntifs.h>
 
-struct _BootSector { 
+struct _BootSector
+{
   unsigned char  magic0, res0, magic1;
   unsigned char  OEMName[8];
   unsigned short BytesPerSector;
@@ -19,22 +20,43 @@ struct _BootSector {
   unsigned char  Res2[450];
 } __attribute__((packed));
 
-struct _BootSector32 {
-  unsigned char  magic0, res0, magic1;
-  unsigned char  OEMName[8];
-  unsigned short BytesPerSector;
-  unsigned char  SectorsPerCluster;
-  unsigned short ReservedSectors;
-  unsigned char  FATCount;
-  unsigned short RootEntries, Sectors;
-  unsigned char  Media;
-  unsigned short FATSectors, SectorsPerTrack, Heads;
-  unsigned long  HiddenSectors, SectorsHuge;
-  unsigned long  FATSectors32;
-  unsigned char  x[27];
-  unsigned long  VolumeID;
-  unsigned char  VolumeLabel[11], SysType[8];
-  unsigned char  Res2[422];
+struct _BootSector32
+{
+  unsigned char  magic0, res0, magic1;			// 0
+  unsigned char  OEMName[8];				// 3
+  unsigned short BytesPerSector;			// 11
+  unsigned char  SectorsPerCluster;			// 13
+  unsigned short ReservedSectors;			// 14
+  unsigned char  FATCount;				// 16
+  unsigned short RootEntries, Sectors;			// 17
+  unsigned char  Media;					// 21
+  unsigned short FATSectors, SectorsPerTrack, Heads;	// 22
+  unsigned long  HiddenSectors, SectorsHuge;		// 28
+  unsigned long  FATSectors32;				// 36
+  unsigned short ExtFlag;				// 40
+  unsigned short FSVersion;				// 42
+  unsigned long  RootCluster;				// 44
+  unsigned short FSInfoSector;				// 48
+  unsigned long  BootBackup;				// 50
+  unsigned char  Res3[10];				// 54
+  unsigned char  Drive;					// 64
+  unsigned char  Res4;					// 65
+  unsigned char  ExtBootSignature;			// 66
+  unsigned long  VolumeID;				// 67
+  unsigned char  VolumeLabel[11], SysType[8];		// 71
+  unsigned char  Res2[418];				// 90
+  unsigned long  Signature1;				// 508
+} __attribute__((packed));
+
+struct _BootBackupSector
+{
+  unsigned long  ExtBootSignature2;			// 0
+  unsigned char  Res6[480];				// 4
+  unsigned long  FSINFOSignature;			// 484
+  unsigned long  FreeCluster;				// 488
+  unsigned long  NextCluster;				// 492
+  unsigned char  Res7[12];				// 496
+  unsigned long  Signatur2;				// 508
 } __attribute__((packed));
 
 typedef struct _BootSector BootSector;

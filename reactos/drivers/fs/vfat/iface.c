@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.56 2001/07/17 07:48:06 ekohl Exp $
+/* $Id: iface.c,v 1.57 2001/07/20 08:00:20 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -58,7 +58,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
    Status = VfatReadSectors(DeviceToMount, 0, 1, (UCHAR *) Boot);
    if (!NT_SUCCESS(Status))
      {
-	return Status;
+	return(Status);
      }
 
    DPRINT("Boot->SysType %.5s\n", Boot->SysType);
@@ -75,12 +75,13 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
 
    ExFreePool(Boot);
 
-   return STATUS_SUCCESS;
+   return(STATUS_SUCCESS);
 }
 
 
 static NTSTATUS
-VfatMountDevice (PDEVICE_EXTENSION DeviceExt, PDEVICE_OBJECT DeviceToMount)
+VfatMountDevice(PDEVICE_EXTENSION DeviceExt,
+		PDEVICE_OBJECT DeviceToMount)
 /*
  * FUNCTION: Mounts the device
  */
@@ -95,7 +96,7 @@ VfatMountDevice (PDEVICE_EXTENSION DeviceExt, PDEVICE_OBJECT DeviceToMount)
    Status = VfatReadSectors(DeviceToMount, 0, 1, (UCHAR *) DeviceExt->Boot);
    if (!NT_SUCCESS(Status))
      {
-	return Status;
+	return(Status);
      }
 
    DeviceExt->FATStart = DeviceExt->Boot->ReservedSectors;
@@ -136,10 +137,10 @@ VfatMountDevice (PDEVICE_EXTENSION DeviceExt, PDEVICE_OBJECT DeviceToMount)
 	DbgPrint("FAT32\n");
 	DeviceExt->FatType = FAT32;
 	DeviceExt->rootDirectorySectors = DeviceExt->Boot->SectorsPerCluster;
-	DeviceExt->rootStart =
-	  DeviceExt->FATStart + DeviceExt->Boot->FATCount
+	DeviceExt->dataStart = DeviceExt->FATStart + DeviceExt->Boot->FATCount
 	  * ((struct _BootSector32 *) (DeviceExt->Boot))->FATSectors32;
-        DeviceExt->dataStart = DeviceExt->rootStart;
+	DeviceExt->rootStart = ClusterToSector (DeviceExt,
+	  ((struct _BootSector32 *)(DeviceExt->Boot))->RootCluster);
      }
    else
      {
@@ -147,7 +148,7 @@ VfatMountDevice (PDEVICE_EXTENSION DeviceExt, PDEVICE_OBJECT DeviceToMount)
 	DeviceExt->FatType = FAT16;
      }
 
-   return STATUS_SUCCESS;
+   return(STATUS_SUCCESS);
 }
 
 
@@ -157,103 +158,128 @@ VfatMount (PDEVICE_OBJECT DeviceToMount)
  * FUNCTION: Mount the filesystem
  */
 {
-   PDEVICE_OBJECT DeviceObject;
-   PDEVICE_EXTENSION DeviceExt;
-   BOOLEAN RecognizedFS;
-   NTSTATUS Status;
+  PDEVICE_OBJECT DeviceObject;
+  PDEVICE_EXTENSION DeviceExt;
+  BOOLEAN RecognizedFS;
+  NTSTATUS Status;
 
-   Status = VfatHasFileSystem (DeviceToMount, &RecognizedFS);
-   if (!NT_SUCCESS(Status))
-     {
-	return Status;
-     }
+  Status = VfatHasFileSystem (DeviceToMount, &RecognizedFS);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
 
-   if (RecognizedFS == FALSE)
-     {
-	DPRINT("VFAT: Unrecognized Volume\n");
-	return STATUS_UNRECOGNIZED_VOLUME;
-     }
+  if (RecognizedFS == FALSE)
+    {
+      DPRINT("VFAT: Unrecognized Volume\n");
+      return(STATUS_UNRECOGNIZED_VOLUME);
+    }
 
-   DPRINT("VFAT: Recognized volume\n");
+  DPRINT("VFAT: Recognized volume\n");
 
-   Status = IoCreateDevice(VfatDriverObject,
-			   sizeof (DEVICE_EXTENSION),
-			   NULL,
-			   FILE_DEVICE_FILE_SYSTEM,
-			   0,
-			   FALSE,
-			   &DeviceObject);
-   if (!NT_SUCCESS(Status))
-     {
-	return Status;
-     }
+  Status = IoCreateDevice(VfatDriverObject,
+			  sizeof (DEVICE_EXTENSION),
+			  NULL,
+			  FILE_DEVICE_FILE_SYSTEM,
+			  0,
+			  FALSE,
+			  &DeviceObject);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
 
-   DeviceObject->Flags = DeviceObject->Flags | DO_DIRECT_IO;
-   DeviceExt = (PVOID) DeviceObject->DeviceExtension;
-   /* use same vpb as device disk */
-   DeviceObject->Vpb = DeviceToMount->Vpb;
-   Status = VfatMountDevice (DeviceExt, DeviceToMount);
-   if (!NT_SUCCESS(Status))
-     {
-	/* FIXME: delete device object */
-	return Status;
-     }
+  DeviceObject->Flags = DeviceObject->Flags | DO_DIRECT_IO;
+  DeviceExt = (PVOID) DeviceObject->DeviceExtension;
+  /* use same vpb as device disk */
+  DeviceObject->Vpb = DeviceToMount->Vpb;
+  Status = VfatMountDevice(DeviceExt,
+			   DeviceToMount);
+  if (!NT_SUCCESS(Status))
+    {
+      /* FIXME: delete device object */
+      return(Status);
+    }
 
-   DeviceObject->Vpb->Flags |= VPB_MOUNTED;
-   DeviceExt->StorageDevice = IoAttachDeviceToDeviceStack(DeviceObject,
-							  DeviceToMount);
-   DeviceExt->StreamStorageDevice = IoCreateStreamFileObject(NULL,
-							     DeviceExt->StorageDevice);
-   if (DeviceExt->FatType == FAT16)
-     Status = CcRosInitializeFileCache(DeviceExt->StreamStorageDevice,
-				       &DeviceExt->StorageBcb,
-				       CACHEPAGESIZE(DeviceExt));
-   else
-     Status = CcRosInitializeFileCache(DeviceExt->StreamStorageDevice,
-				       &DeviceExt->StorageBcb,
-				       PAGESIZE);
-   if (!NT_SUCCESS(Status))
-     {
-	/* FIXME: delete device object */
-	return Status;
-     }
+#if 1
+  DbgPrint("BytesPerSector:     %d\n", DeviceExt->Boot->BytesPerSector);
+  DbgPrint("SectorsPerCluster:  %d\n", DeviceExt->Boot->SectorsPerCluster);
+  DbgPrint("ReservedSectors:    %d\n", DeviceExt->Boot->ReservedSectors);
+  DbgPrint("FATCount:           %d\n", DeviceExt->Boot->FATCount);
+  DbgPrint("RootEntries:        %d\n", DeviceExt->Boot->RootEntries);
+  DbgPrint("Sectors:            %d\n", DeviceExt->Boot->Sectors);
+  DbgPrint("FATSectors:         %d\n", DeviceExt->Boot->FATSectors);
+  DbgPrint("SectorsPerTrack:    %d\n", DeviceExt->Boot->SectorsPerTrack);
+  DbgPrint("Heads:              %d\n", DeviceExt->Boot->Heads);
+  DbgPrint("HiddenSectors:      %d\n", DeviceExt->Boot->HiddenSectors);
+  DbgPrint("SectorsHuge:        %d\n", DeviceExt->Boot->SectorsHuge);
+  DbgPrint("RootStart:          %d\n", DeviceExt->rootStart);
+  DbgPrint("DataStart:          %d\n", DeviceExt->dataStart);
+  if (DeviceExt->FatType == FAT32)
+    {
+      DbgPrint("FATSectors32:       %d\n",
+	       ((struct _BootSector32*)(DeviceExt->Boot))->FATSectors32);
+      DbgPrint("RootCluster:        %d\n",
+	       ((struct _BootSector32*)(DeviceExt->Boot))->RootCluster);
+      DbgPrint("FSInfoSector:       %d\n",
+	       ((struct _BootSector32*)(DeviceExt->Boot))->FSInfoSector);
+      DbgPrint("BootBackup:         %d\n",
+	       ((struct _BootSector32*)(DeviceExt->Boot))->BootBackup);
+    }
+#endif
 
-   if (DeviceExt->FatType == FAT12)
-     {
-	DeviceExt->Fat12StorageDevice = 
-	  IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
-	Status = CcRosInitializeFileCache(DeviceExt->Fat12StorageDevice,
-				       &DeviceExt->Fat12StorageBcb,
-				       PAGESIZE * 3);
-	if (!NT_SUCCESS(Status))
-	  {
-	     /* FIXME: delete device object */
-	     return Status;
-	  }
-     }
-   ExInitializeResourceLite (&DeviceExt->DirResource);
-   ExInitializeResourceLite (&DeviceExt->FatResource);
+  DeviceObject->Vpb->Flags |= VPB_MOUNTED;
+  DeviceExt->StorageDevice = IoAttachDeviceToDeviceStack(DeviceObject,
+							 DeviceToMount);
+  DeviceExt->StreamStorageDevice = IoCreateStreamFileObject(NULL,
+							    DeviceExt->StorageDevice);
+  Status = CcRosInitializeFileCache(DeviceExt->StreamStorageDevice,
+				    &DeviceExt->StorageBcb,
+				    CACHEPAGESIZE(DeviceExt));
+  if (!NT_SUCCESS(Status))
+    {
+      /* FIXME: delete device object */
+      return(Status);
+    }
 
-   KeInitializeSpinLock (&DeviceExt->FcbListLock);
-   InitializeListHead (&DeviceExt->FcbListHead);
+  if (DeviceExt->FatType == FAT12)
+    {
+      DeviceExt->Fat12StorageDevice =
+	IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
+      Status = CcRosInitializeFileCache(DeviceExt->Fat12StorageDevice,
+				        &DeviceExt->Fat12StorageBcb,
+				        PAGESIZE * 3);
+      if (!NT_SUCCESS(Status))
+	{
+	  /* FIXME: delete device object */
+	  return(Status);
+	}
+    }
+  ExInitializeResourceLite(&DeviceExt->DirResource);
+  ExInitializeResourceLite(&DeviceExt->FatResource);
 
-   /* read serial number */
-   if (DeviceExt->FatType == FAT12 || DeviceExt->FatType == FAT16)
-     DeviceObject->Vpb->SerialNumber =
-       ((struct _BootSector *) (DeviceExt->Boot))->VolumeID;
-   else if (DeviceExt->FatType == FAT32)
-     DeviceObject->Vpb->SerialNumber =
-       ((struct _BootSector32 *) (DeviceExt->Boot))->VolumeID;
+  KeInitializeSpinLock(&DeviceExt->FcbListLock);
+  InitializeListHead(&DeviceExt->FcbListHead);
 
-   /* read volume label */
-   ReadVolumeLabel(DeviceExt, DeviceObject->Vpb);
+  /* read serial number */
+  if (DeviceExt->FatType == FAT12 || DeviceExt->FatType == FAT16)
+    DeviceObject->Vpb->SerialNumber =
+      ((struct _BootSector *) (DeviceExt->Boot))->VolumeID;
+  else if (DeviceExt->FatType == FAT32)
+    DeviceObject->Vpb->SerialNumber =
+      ((struct _BootSector32 *) (DeviceExt->Boot))->VolumeID;
 
-   return STATUS_SUCCESS;
+  /* read volume label */
+  ReadVolumeLabel(DeviceExt,
+		  DeviceObject->Vpb);
+
+  return(STATUS_SUCCESS);
 }
 
 
 NTSTATUS STDCALL
-VfatFileSystemControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+VfatFileSystemControl(PDEVICE_OBJECT DeviceObject,
+		      PIRP Irp)
 /*
  * FUNCTION: File system control
  */

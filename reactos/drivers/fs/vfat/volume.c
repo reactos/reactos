@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.10 2001/06/14 10:02:59 ekohl Exp $
+/* $Id: volume.c,v 1.11 2001/07/20 08:00:21 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -124,15 +124,8 @@ FsdGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
       FsSizeInfo->TotalAllocationUnits.QuadPart = ((BootSect->Sectors ? BootSect->Sectors : BootSect->SectorsHuge)-DeviceExt->dataStart)/BootSect->SectorsPerCluster;
 
       if (DeviceExt->FatType == FAT16)
-#if 0
 	Status = FAT16CountAvailableClusters(DeviceExt,
 					     &FsSizeInfo->AvailableAllocationUnits);
-#else
-	{
-	  FsSizeInfo->AvailableAllocationUnits.QuadPart = 0;
-	  Status = STATUS_SUCCESS;
-	}
-#endif
       else
 	Status = FAT12CountAvailableClusters(DeviceExt,
 					     &FsSizeInfo->AvailableAllocationUnits);
@@ -177,9 +170,9 @@ static NTSTATUS
 FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
 			 PFILE_FS_LABEL_INFORMATION FsLabelInfo)
 {
-   DPRINT("FsdSetFsLabelInformation()\n");
-   
-   return STATUS_NOT_IMPLEMENTED;
+  DPRINT("FsdSetFsLabelInformation()\n");
+  
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -268,50 +261,50 @@ VfatSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
  * FUNCTION: Set the specified volume information
  */
 {
-   PIO_STACK_LOCATION Stack;
-   FS_INFORMATION_CLASS FsInformationClass;
-//   PFILE_OBJECT FileObject = NULL;
-//   PVFATFCB FCB = NULL;
-   NTSTATUS Status = STATUS_SUCCESS;
-   PVOID SystemBuffer;
-   ULONG BufferLength;
+  PIO_STACK_LOCATION Stack;
+  FS_INFORMATION_CLASS FsInformationClass;
+//  PFILE_OBJECT FileObject = NULL;
+//  PVFATFCB FCB = NULL;
+  NTSTATUS Status = STATUS_SUCCESS;
+  PVOID SystemBuffer;
+  ULONG BufferLength;
 
-   /* PRECONDITION */
-   assert(DeviceObject != NULL);
-   assert(Irp != NULL);
+  /* PRECONDITION */
+  assert(DeviceObject != NULL);
+  assert(Irp != NULL);
 
-   DPRINT("FsdSetVolumeInformation(DeviceObject %x, Irp %x)\n",
-	  DeviceObject,
-	  Irp);
+  DPRINT("FsdSetVolumeInformation(DeviceObject %x, Irp %x)\n",
+	 DeviceObject,
+	 Irp);
 
-   Stack = IoGetCurrentIrpStackLocation (Irp);
-   FsInformationClass = Stack->Parameters.SetVolume.FsInformationClass;
-   BufferLength = Stack->Parameters.SetVolume.Length;
-   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
-//   FileObject = Stack->FileObject;
-//   FCB = ((PVFATCCB) (FileObject->FsContext2))->pFcb;
+  Stack = IoGetCurrentIrpStackLocation(Irp);
+  FsInformationClass = Stack->Parameters.SetVolume.FsInformationClass;
+  BufferLength = Stack->Parameters.SetVolume.Length;
+  SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
+//  FileObject = Stack->FileObject;
+//  FCB = ((PVFATCCB) (FileObject->FsContext2))->pFcb;
 
-   DPRINT("FsInformationClass %d\n", FsInformationClass);
-   DPRINT("BufferLength %d\n", BufferLength);
-   DPRINT("SystemBuffer %x\n", SystemBuffer);
+  DPRINT("FsInformationClass %d\n", FsInformationClass);
+  DPRINT("BufferLength %d\n", BufferLength);
+  DPRINT("SystemBuffer %x\n", SystemBuffer);
 
-   switch (FsInformationClass)
-     {
-     case FileFsLabelInformation:
-       Status = FsdSetFsLabelInformation(DeviceObject,
-					 SystemBuffer);
-       break;
+  switch(FsInformationClass)
+    {
+    case FileFsLabelInformation:
+      Status = FsdSetFsLabelInformation(DeviceObject,
+					SystemBuffer);
+      break;
 
-     default:
-       Status = STATUS_NOT_SUPPORTED;
-     }
+    default:
+      Status = STATUS_NOT_SUPPORTED;
+    }
 
-   Irp->IoStatus.Status = Status;
-   Irp->IoStatus.Information = 0;
-   IoCompleteRequest(Irp,
-		     IO_NO_INCREMENT);
+  Irp->IoStatus.Status = Status;
+  Irp->IoStatus.Information = 0;
+  IoCompleteRequest(Irp,
+		    IO_NO_INCREMENT);
 
-   return(Status);
+  return(Status);
 }
 
 /* EOF */

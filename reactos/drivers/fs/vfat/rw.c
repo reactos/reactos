@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.24 2001/05/04 01:21:45 rex Exp $
+/* $Id: rw.c,v 1.25 2001/07/20 08:00:20 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -369,9 +369,11 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   assert (FileObject != NULL);
   assert (FileObject->FsContext != NULL);
 
-  DPRINT ("VfatReadFile(DeviceExt %x, FileObject %x, Buffer %x, "
-	  "Length %d, ReadOffset 0x%x)\n", DeviceExt, FileObject, Buffer,
-	  Length, ReadOffset);
+  DPRINT("VfatReadFile(DeviceExt %x, FileObject %x, Buffer %x, "
+	 "Length %d, ReadOffset 0x%x)\n", DeviceExt, FileObject, Buffer,
+	 Length, ReadOffset);
+
+  *LengthRead = 0;
 
   Fcb = ((PVFATCCB)FileObject->FsContext2)->pFcb;
 
@@ -379,7 +381,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    * Find the first cluster
    */
   if (DeviceExt->FatType == FAT32)
-    CurrentCluster = Fcb->entry.FirstCluster 
+    CurrentCluster = Fcb->entry.FirstCluster
       + Fcb->entry.FirstClusterHigh * 65536;
   else
     CurrentCluster = Fcb->entry.FirstCluster;
@@ -412,15 +414,13 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       ChunkSize = PAGESIZE;
     }
 
-  *LengthRead = 0;  
-
   /*
    * Find the cluster to start the read from
    * FIXME: Optimize by remembering the last cluster read and using if 
    * possible.
    */
-  Status = OffsetToCluster(DeviceExt, 
-			   FirstCluster, 
+  Status = OffsetToCluster(DeviceExt,
+			   FirstCluster,
 			   ROUND_DOWN(ReadOffset, ChunkSize),
 			   &CurrentCluster,
 			   FALSE);
