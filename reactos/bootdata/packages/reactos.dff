@@ -116,7 +116,6 @@ lib\setupapi\setupapi.dll               1
 lib\shdocvw\shdocvw.dll                 1
 lib\shell32\shell32.dll                 1
 lib\shlwapi\shlwapi.dll                 1
-lib\smdll\smdll.dll                     1
 lib\syssetup\syssetup.dll               1
 lib\twain\twain_32.dll                  1
 lib\urlmon\urlmon.dll                   1

@@ -33,6 +33,12 @@ FILE_OBJECTS = \
  file/sparse.o \
  file/path.o
 
+SM_OBJECTS = \
+ sm/compses.o \
+ sm/connect.o \
+ sm/execpgm.o \
+ sm/testapi.o
+
 RECMUTEX_OBJECTS = recmutex/recmutex.o
 
 include $(PATH_TO_TOP)/config
@@ -46,7 +52,8 @@ TARGET_NAME = rosrtl
 TARGET_CFLAGS = -D__USE_W32API -Wall -Werror
 
 TARGET_OBJECTS = $(THREAD_OBJECTS) $(MISC_OBJECTS) $(STRING_OBJECTS) \
-		 $(REGISTRY_OBJECTS) $(FILE_OBJECTS) $(RECMUTEX_OBJECTS)
+		 $(REGISTRY_OBJECTS) $(FILE_OBJECTS) $(RECMUTEX_OBJECTS) \
+		 $(SM_OBJECTS)
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 
