@@ -29,9 +29,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.5 $
- * $Author: robd $
- * $Date: 2003/01/01 06:19:37 $
+ * $Revision: 1.6 $
+ * $Author: hyperion $
+ * $Date: 2003/02/04 01:13:26 $
  *
  */
 
@@ -154,8 +154,12 @@ typedef char	TCHAR;
 /*
  * Enclose constant strings and characters in the _TEXT and _T macro.
  */
+#ifndef _TEXT
 #define	_TEXT(x)	x
+#endif
+#ifndef _T
 #define	_T(x)		x
+#endif
 
 
 /*
