@@ -128,7 +128,7 @@ implib: $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
         $(SYS_APPS:%=%_implib) $(TEST_APPS:%=%_implib) \
         $(UTIL_APPS:%=%_implib) $(WINE_MODULES:%=%_implib)
 
-clean: dk_clean $(HALS:%=%_clean) \
+clean: tools dk_clean $(HALS:%=%_clean) \
        $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(DLLS:%=%_clean) \
        $(LOADERS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) $(SUBSYS:%=%_clean) \
        $(SYS_APPS:%=%_clean) $(TEST_APPS:%=%_clean) $(UTIL_APPS:%=%_clean) \
