@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.25 2003/11/15 15:18:06 weiden Exp $
+/* $Id: stubsa.c,v 1.26 2003/12/13 19:27:09 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -69,6 +69,7 @@ CreateICA(
 {
   NTSTATUS Status;
   LPWSTR lpszDriverW, lpszDeviceW, lpszOutputW;
+  UNICODE_STRING Driver, Device, Output;
   DEVMODEW dvmInitW;
   HDC rc = 0;
 
@@ -89,10 +90,13 @@ CreateICA(
 	  {
 	    if ( lpdvmInit )
 	      RosRtlDevModeA2W ( &dvmInitW, (const LPDEVMODEA)lpdvmInit );
-
-	    rc = NtGdiCreateIC ( lpszDriverW,
-				lpszDeviceW,
-				lpszOutputW,
+        
+        RtlInitUnicodeString(&Driver, lpszDriverW);
+        RtlInitUnicodeString(&Device, lpszDeviceW);
+        RtlInitUnicodeString(&Output, lpszOutputW);
+	    rc = NtGdiCreateIC ( &Driver,
+				&Device,
+				&Output,
 				lpdvmInit ? &dvmInitW : NULL );
 
 	    HEAP_free ( lpszOutputW );

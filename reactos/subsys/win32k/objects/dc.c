@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.111 2003/12/13 15:49:32 weiden Exp $
+/* $Id: dc.c,v 1.112 2003/12/13 19:27:10 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -800,14 +800,13 @@ NtGdiCreateDC(PUNICODE_STRING Driver,
 }
 
 HDC STDCALL
-NtGdiCreateIC(LPCWSTR  Driver,
-             LPCWSTR  Device,
-             LPCWSTR  Output,
-             CONST PDEVMODEW  DevMode)
+NtGdiCreateIC(PUNICODE_STRING Driver,
+              PUNICODE_STRING Device,
+              PUNICODE_STRING Output,
+              CONST PDEVMODEW DevMode)
 {
   /* FIXME: this should probably do something else...  */
-  //return  NtGdiCreateDC(Driver, Device, Output, DevMode);
-  return NULL;
+  return  NtGdiCreateDC(Driver, Device, Output, DevMode);
 }
 
 BOOL STDCALL

@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.22 2003/12/12 21:37:39 weiden Exp $
+/* $Id: stubsw.c,v 1.23 2003/12/13 19:27:10 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -51,9 +51,17 @@ CreateICW(
 	CONST DEVMODEW *	lpdvmInit
 	)
 {
-  return NtGdiCreateIC ( lpszDriver,
-		      lpszDevice,
-		      lpszOutput,
+  UNICODE_STRING Driver, Device, Output;
+  
+  if(lpszDriver)
+    RtlInitUnicodeString(&Driver, lpszDriver);
+  if(lpszDevice)
+    RtlInitUnicodeString(&Device, lpszDevice);
+  if(lpszOutput)
+    RtlInitUnicodeString(&Output, lpszOutput);
+  return NtGdiCreateIC ((lpszDriver ? &Driver : NULL),
+		      (lpszDevice ? &Device : NULL),
+		      (lpszOutput ? &Output : NULL),
 		      (CONST PDEVMODEW)lpdvmInit );
 }
 

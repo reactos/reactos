@@ -145,10 +145,10 @@ HDC STDCALL  NtGdiCreateDC(PUNICODE_STRING Driver,
                            PUNICODE_STRING Device,
                            PUNICODE_STRING Output,
                            CONST PDEVMODEW  InitData);
-HDC STDCALL NtGdiCreateIC(LPCWSTR  Driver,
-                         LPCWSTR  Device,
-                         LPCWSTR  Output,
-                         CONST PDEVMODEW  DevMode);
+HDC STDCALL NtGdiCreateIC(PUNICODE_STRING Driver,
+                          PUNICODE_STRING Device,
+                          PUNICODE_STRING Output,
+                          CONST PDEVMODEW  DevMode);
 BOOL STDCALL  NtGdiDeleteDC(HDC  hDC);
 BOOL STDCALL  NtGdiDeleteObject(HGDIOBJ hObject);
 INT STDCALL  NtGdiDrawEscape(HDC  hDC,
