@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.108 2004/04/09 20:03:15 navaraf Exp $
+/* $Id: window.c,v 1.109 2004/04/10 07:37:28 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -677,7 +677,12 @@ FindWindowExA(HWND hwndParent,
    UNICODE_STRING ucWindowName;
    HWND Result;
 
-   if (IS_ATOM(lpszClass)) 
+   if (lpszClass == NULL)
+   {
+      ucClassName.Buffer = NULL;
+      ucClassName.Length = 0;
+   }
+   else if (IS_ATOM(lpszClass)) 
    {
       ucClassName.Buffer = (LPWSTR)lpszClass;
       ucClassName.Length = 0;
@@ -709,26 +714,30 @@ FindWindowExW(HWND hwndParent,
 	      LPCWSTR lpszClass,
 	      LPCWSTR lpszWindow)
 {
-	UNICODE_STRING ucClassName;
-	UNICODE_STRING ucWindowName;
+   UNICODE_STRING ucClassName;
+   UNICODE_STRING ucWindowName;
 
-	if (IS_ATOM(lpszClass)) 
-	{
-		RtlInitUnicodeString(&ucClassName, NULL);
-		ucClassName.Buffer = (LPWSTR)lpszClass;
-    } 
-	else 
-    {
-		RtlInitUnicodeString(&ucClassName, lpszClass);
-    }
+   if (lpszClass == NULL)
+   {
+      ucClassName.Buffer = NULL;
+      ucClassName.Length = 0;
+   }
+   else if (IS_ATOM(lpszClass)) 
+   {
+      RtlInitUnicodeString(&ucClassName, NULL);
+      ucClassName.Buffer = (LPWSTR)lpszClass;
+   } 
+   else 
+   {
+      RtlInitUnicodeString(&ucClassName, lpszClass);
+   }
 
-	// Window names can't be atoms, and if lpszWindow = NULL,
-	// RtlInitUnicodeString will clear it
+   // Window names can't be atoms, and if lpszWindow = NULL,
+   // RtlInitUnicodeString will clear it
 	
-	RtlInitUnicodeString(&ucWindowName, lpszWindow);
+   RtlInitUnicodeString(&ucWindowName, lpszWindow);
 
-
-	return NtUserFindWindowEx(hwndParent, hwndChildAfter, &ucClassName, &ucWindowName);
+   return NtUserFindWindowEx(hwndParent, hwndChildAfter, &ucClassName, &ucWindowName);
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.210 2004/04/09 20:03:19 navaraf Exp $
+/* $Id: window.c,v 1.211 2004/04/10 07:37:28 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2056,13 +2056,20 @@ NtUserFindWindowEx(HWND hwndParent,
   NTSTATUS status;
   HWND windowHandle;
   PWINDOW_OBJECT ParentWindow, WndChildAfter, WndChild;
-  PWNDCLASS_OBJECT classObject;
+  PWNDCLASS_OBJECT classObject = NULL;
+
+  DPRINT1("NtUserFindWindowEx(%x,%x,%wZ,%wZ)\n",
+     hwndParent, hwndChildAfter, ucClassName, ucWindowName);
   
   // Get a pointer to the class
-  status = ClassReferenceClassByNameOrAtom(&classObject, ucClassName->Buffer);
-  if (!NT_SUCCESS(status))
+  if (ucClassName->Buffer != NULL)
     {
-      return NULL;
+      status = ClassReferenceClassByNameOrAtom(&classObject, ucClassName->Buffer);
+      if (!NT_SUCCESS(status))
+        {
+          DPRINT1("Error 1\n");
+          return NULL;
+        }
     }
   
   // If hwndParent==NULL use the desktop window instead
@@ -2074,7 +2081,9 @@ NtUserFindWindowEx(HWND hwndParent,
 
   if(!ParentWindow)
     {
-      ObmDereferenceObject(classObject);
+      if (classObject != NULL)
+        ObmDereferenceObject(classObject);
+      DPRINT1("Error 2\n");
       return NULL;      
     }
 
@@ -2085,6 +2094,7 @@ NtUserFindWindowEx(HWND hwndParent,
     if (!(WndChildAfter = IntGetWindowObject(hwndChildAfter)))
     {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      DPRINT1("Error 3\n");
       return NULL;
     }
 
@@ -2092,6 +2102,7 @@ NtUserFindWindowEx(HWND hwndParent,
     IntLockRelatives(WndChildAfter);
     if (WndChildAfter->Parent != ParentWindow->Self)
     {
+      DPRINT1("Error 4\n");
       IntUnLockRelatives(WndChildAfter);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return NULL;
@@ -2107,15 +2118,18 @@ NtUserFindWindowEx(HWND hwndParent,
 
   while (WndChild)
   {
-    if (classObject == WndChild->Class && (ucWindowName->Buffer==NULL || 
+    if ((classObject == NULL || classObject == WndChild->Class) &&
+        (ucWindowName->Buffer==NULL || 
         RtlCompareUnicodeString (ucWindowName, &WndChild->WindowName, TRUE) == 0))
     {
       windowHandle = WndChild->Self;
 
       IntUnLockRelatives(ParentWindow);
       IntReleaseWindowObject(ParentWindow);
-      ObmDereferenceObject (classObject);
+      if (classObject != NULL)
+        ObmDereferenceObject (classObject);
       
+      DPRINT1("Success: %x\n", windowHandle);
       return windowHandle;
     }
     
@@ -2125,8 +2139,10 @@ NtUserFindWindowEx(HWND hwndParent,
   IntUnLockRelatives(ParentWindow);
 
   IntReleaseWindowObject(ParentWindow);
-  ObmDereferenceObject (classObject);
+  if (classObject != NULL)
+    ObmDereferenceObject (classObject);
 
+  DPRINT1("Not found\n");
   return  NULL;
 }
 
