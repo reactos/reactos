@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.14 2002/09/08 10:23:19 chorns Exp $
+/* $Id: time.c,v 1.15 2002/12/09 20:13:12 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,6 +57,7 @@ NtSetSystemTime (IN	PLARGE_INTEGER	UnsafeNewSystemTime,
   NTSTATUS Status;
   LARGE_INTEGER OldSystemTime;
   LARGE_INTEGER NewSystemTime;
+  TIME_FIELDS TimeFields;
 
   /* FIXME: Check for SeSystemTimePrivilege */
 
@@ -71,7 +72,8 @@ NtSetSystemTime (IN	PLARGE_INTEGER	UnsafeNewSystemTime,
     {
       KeQuerySystemTime(&OldSystemTime);
     }
-  HalSetRealTimeClock ((PTIME_FIELDS)&NewSystemTime);
+  RtlTimeToTimeFields (&NewSystemTime, &TimeFields);
+  HalSetRealTimeClock (&TimeFields);
 
   if (UnsafeOldSystemTime != NULL)
     {
