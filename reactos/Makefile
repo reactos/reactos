@@ -185,14 +185,23 @@ bootcd_install_before:
 	$(CP) media/nls/c_437.nls $(BOOTCD_DIR)/reactos/c_437.nls
 	$(CP) media/nls/l_intl.nls $(BOOTCD_DIR)/reactos/l_intl.nls
 
-bootcd: all bootcd_directory_layout bootcd_bootstrap_files bootcd_install_before
+bootcd_basic: all bootcd_directory_layout bootcd_bootstrap_files bootcd_install_before
+
+bootcd_makecd:
 	$(CABMAN) /C bootdata/packages/reactos.dff /L $(BOOTCD_DIR)/reactos /I
 	$(CABMAN) /C bootdata/packages/reactos.dff /RC $(BOOTCD_DIR)/reactos/reactos.inf /L $(BOOTCD_DIR)/reactos /N
 	- $(RM) $(BOOTCD_DIR)/reactos/reactos.inf
 	$(TOOLS_PATH)/cdmake/cdmake -v -m -b $(BOOTCD_DIR)/../isoboot.bin $(BOOTCD_DIR) REACTOS ReactOS.iso
 
+ubootcd_unattend:
+	$(CP) bootdata/unattend.inf $(BOOTCD_DIR)/reactos/unattend.inf
+
+bootcd: bootcd_basic bootcd_makecd
+
+ubootcd: bootcd_basic ubootcd_unattend bootcd_makecd
+
 .PHONY: all depends implib clean clean_before install dist freeldr bootcd_directory_layout \
-bootcd_bootstrap_files bootcd
+bootcd_bootstrap_files bootcd_install_before bootcd_basic bootcd_makecd ubootcd_unattend bootcd
 
 
 #

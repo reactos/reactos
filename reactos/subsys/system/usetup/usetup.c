@@ -89,7 +89,10 @@ typedef struct _COPYCONTEXT
 
 HANDLE ProcessHeap;
 UNICODE_STRING SourceRootPath;
-
+BOOLEAN IsUnattendedSetup;
+LONG UnattendDestinationDiskNumber;
+LONG UnattendDestinationPartitionNumber;
+WCHAR UnattendInstallationDirectory[MAX_PATH];
 
 /* LOCALS *******************************************************************/
 
@@ -389,6 +392,119 @@ ConfirmQuit(PINPUT_RECORD Ir)
 }
 
 
+VOID
+CheckUnattendedSetup()
+{
+  WCHAR UnattendInfPath[MAX_PATH];
+  UNICODE_STRING FileName;
+  INFCONTEXT Context;
+  HINF UnattendInf;
+  ULONG ErrorLine;
+  NTSTATUS Status;
+  LONG IntValue;
+  PWCHAR Value;
+
+  if (DoesFileExist(SourcePath.Buffer, L"unattend.inf") == FALSE)
+    {
+      DPRINT("Does not exist: %S\\%S\n", SourcePath.Buffer, L"unattend.inf");
+      IsUnattendedSetup = FALSE;
+      return;
+    }
+
+  wcscpy(UnattendInfPath, SourcePath.Buffer);
+  wcscat(UnattendInfPath, L"\\unattend.inf");
+
+  RtlInitUnicodeString(&FileName,
+		       UnattendInfPath);
+
+  /* Load txtsetup.sif from install media. */
+
+  Status = InfOpenFile(&UnattendInf,
+		       &FileName,
+		       &ErrorLine);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("InfOpenFile() failed with status 0x%x\n", Status);
+      return;
+    }
+
+  /* Open 'Unattend' section */
+  if (!InfFindFirstLine(UnattendInf, L"Unattend", L"Signature", &Context))
+    {
+      DPRINT("InfFindFirstLine() failed for section 'Unattend'\n");
+      InfCloseFile(UnattendInf);
+      return;
+    }
+
+  /* Get pointer 'Signature' key */
+  if (!InfGetData(&Context, NULL, &Value))
+    {
+      DPRINT("InfGetData() failed for key 'Signature'\n");
+      InfCloseFile(UnattendInf);
+      return;
+    }
+
+  /* Check 'Signature' string */
+  if (_wcsicmp(Value, L"$ReactOS$") != 0)
+    {
+      DPRINT("Signature not $ReactOS$\n");
+      InfCloseFile(UnattendInf);
+      return;
+    }
+
+  /* Search for 'DestinationDiskNumber' in the 'Unattend' section */
+  if (!InfFindFirstLine(UnattendInf, L"Unattend", L"DestinationDiskNumber", &Context))
+    {
+      DPRINT("InfFindFirstLine() failed for key 'DestinationDiskNumber'\n");
+      InfCloseFile(UnattendInf);
+      return;
+    }
+  if (!InfGetIntField(&Context, 0, &IntValue))
+    {
+      DPRINT("InfGetIntField() failed for key 'DestinationDiskNumber'\n");
+      InfCloseFile(UnattendInf);
+      return;
+    }
+  UnattendDestinationDiskNumber = IntValue;
+
+  /* Search for 'DestinationPartitionNumber' in the 'Unattend' section */
+  if (!InfFindFirstLine(UnattendInf, L"Unattend", L"DestinationPartitionNumber", &Context))
+    {
+      DPRINT("InfFindFirstLine() failed for key 'DestinationPartitionNumber'\n");
+      InfCloseFile(UnattendInf);
+      return;
+    }
+  if (!InfGetIntField(&Context, 0, &IntValue))
+    {
+      DPRINT("InfGetIntField() failed for key 'DestinationPartitionNumber'\n");
+      InfCloseFile(UnattendInf);
+      return;
+    }
+  UnattendDestinationPartitionNumber = IntValue;
+
+  /* Search for 'DestinationPartitionNumber' in the 'Unattend' section */
+  if (!InfFindFirstLine(UnattendInf, L"Unattend", L"DestinationPartitionNumber", &Context))
+    {
+      DPRINT("InfFindFirstLine() failed for key 'DestinationPartitionNumber'\n");
+      InfCloseFile(UnattendInf);
+      return;
+    }
+  /* Get pointer 'InstallationDirectory' key */
+  if (!InfGetData(&Context, NULL, &Value))
+    {
+      DPRINT("InfGetData() failed for key 'InstallationDirectory'\n");
+      InfCloseFile(UnattendInf);
+      return;
+    }
+  wcscpy(UnattendInstallationDirectory, Value);
+
+  InfCloseFile(UnattendInf);
+
+  IsUnattendedSetup = TRUE;
+
+  DPRINT("Running unattended setup\n");
+}
+
 
 /*
  * Start page
@@ -549,6 +665,8 @@ StartPage(PINPUT_RECORD Ir)
 	}
     }
 
+  CheckUnattendedSetup();
+
   return(INTRO_PAGE);
 }
 
@@ -576,6 +694,11 @@ IntroPage(PINPUT_RECORD Ir)
 
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  if (IsUnattendedSetup)
+    {
+      return(INSTALL_INTRO_PAGE);
+    }
 
   while(TRUE)
     {
@@ -695,6 +818,11 @@ InstallIntroPage(PINPUT_RECORD Ir)
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
 
+  if (IsUnattendedSetup)
+    {
+      return(SELECT_PARTITION_PAGE);
+    }
+
   while(TRUE)
     {
       ConInKey(Ir);
@@ -778,6 +906,14 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 	      return SELECT_PARTITION_PAGE;
 	    }
 	}
+    }
+
+  if (IsUnattendedSetup)
+    {
+      SelectPartition(PartitionList,
+        UnattendDestinationDiskNumber,
+        UnattendDestinationPartitionNumber);
+      return(SELECT_FILE_SYSTEM_PAGE);
     }
 
   while(TRUE)
@@ -1526,6 +1662,11 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 
   SetStatusText ("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
+  if (IsUnattendedSetup)
+    {
+      return(CHECK_FILE_SYSTEM_PAGE);
+    }
+
   while (TRUE)
     {
       ConInKey (Ir);
@@ -1738,7 +1879,6 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 		}
 	    }
 
-
 	  /* Set DestinationRootPath */
 	  RtlFreeUnicodeString (&DestinationRootPath);
 	  swprintf (PathBuffer,
@@ -1871,6 +2011,11 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
   DPRINT ("SystemRootPath: %wZ\n", &SystemRootPath);
 
 
+  if (IsUnattendedSetup)
+    {
+      return(INSTALL_DIRECTORY_PAGE);
+    }
+
   while(TRUE)
     {
       ConInKey(Ir);
@@ -1889,6 +2034,44 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     }
 
   return(CHECK_FILE_SYSTEM_PAGE);
+}
+
+
+static PAGE_NUMBER
+InstallDirectoryPage1(PWCHAR InstallDir, PDISKENTRY DiskEntry, PPARTENTRY PartEntry)
+{
+  WCHAR PathBuffer[MAX_PATH];
+
+  /* Create 'InstallPath' string */
+  RtlFreeUnicodeString(&InstallPath);
+  RtlCreateUnicodeString(&InstallPath,
+			 InstallDir);
+
+  /* Create 'DestinationPath' string */
+  RtlFreeUnicodeString(&DestinationPath);
+  wcscpy(PathBuffer,
+	 DestinationRootPath.Buffer);
+  if (InstallDir[0] != L'\\')
+    wcscat(PathBuffer,
+	   L"\\");
+  wcscat(PathBuffer, InstallDir);
+  RtlCreateUnicodeString(&DestinationPath,
+			 PathBuffer);
+
+  /* Create 'DestinationArcPath' */
+  RtlFreeUnicodeString(&DestinationArcPath);
+  swprintf(PathBuffer,
+	   L"multi(0)disk(0)rdisk(%lu)partition(%lu)",
+	   DiskEntry->DiskNumber,
+	   PartEntry->PartInfo[0].PartitionNumber);
+  if (InstallDir[0] != L'\\')
+    wcscat(PathBuffer,
+	   L"\\");
+  wcscat(PathBuffer, InstallDir);
+  RtlCreateUnicodeString(&DestinationArcPath,
+			 PathBuffer);
+
+  return(PREPARE_COPY_PAGE);
 }
 
 
@@ -1955,6 +2138,11 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
 
+  if (IsUnattendedSetup)
+    {
+      return(InstallDirectoryPage1 (InstallDir, DiskEntry, PartEntry));
+    }
+
   while(TRUE)
     {
       ConInKey(Ir);
@@ -1968,36 +2156,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-	  /* Create 'InstallPath' string */
-	  RtlFreeUnicodeString(&InstallPath);
-	  RtlCreateUnicodeString(&InstallPath,
-				 InstallDir);
-
-	  /* Create 'DestinationPath' string */
-	  RtlFreeUnicodeString(&DestinationPath);
-	  wcscpy(PathBuffer,
-		 DestinationRootPath.Buffer);
-	  if (InstallDir[0] != L'\\')
-	    wcscat(PathBuffer,
-		   L"\\");
-	  wcscat(PathBuffer, InstallDir);
-	  RtlCreateUnicodeString(&DestinationPath,
-				 PathBuffer);
-
-	  /* Create 'DestinationArcPath' */
-	  RtlFreeUnicodeString(&DestinationArcPath);
-	  swprintf(PathBuffer,
-		   L"multi(0)disk(0)rdisk(%lu)partition(%lu)",
-		   DiskEntry->DiskNumber,
-		   PartEntry->PartInfo[0].PartitionNumber);
-	  if (InstallDir[0] != L'\\')
-	    wcscat(PathBuffer,
-		   L"\\");
-	  wcscat(PathBuffer, InstallDir);
-	  RtlCreateUnicodeString(&DestinationArcPath,
-				 PathBuffer);
-
-	  return(PREPARE_COPY_PAGE);
+          return (InstallDirectoryPage1 (InstallDir, DiskEntry, PartEntry));
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x08) /* BACKSPACE */
 	{
@@ -3232,6 +3391,11 @@ SuccessPage(PINPUT_RECORD Ir)
   SetTextXY(10, 11, "Press ENTER to reboot your computer.");
 
   SetStatusText("   ENTER = Reboot computer");
+
+  if (IsUnattendedSetup)
+    {
+      return(REBOOT_PAGE);
+    }
 
   while(TRUE)
     {

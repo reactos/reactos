@@ -1,3 +1,15 @@
+2003-10-06  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* Makefile: New target uboot for simple unattended setup.
+	* bootdata/unattend.inf.sample: Sample unattended setup script.
+	* subsys/system/usetup/partlist.c (SelectPartition): New function.
+	* subsys/system/usetup/partlist.h (SelectPartition): Prototype.
+	* subsys/system/usetup/usetup.c: Support unattended setup.
+	(IsUnattendedSetup, UnattendDestinationDiskNumber,
+	UnattendDestinationPartitionNumber, UnattendInstallationDirectory):
+	New.
+	(CheckUnattendedSetup, InstallDirectoryPage1): New function.
+
 2003-08-30  Filip Navara  <xnavara@volny.cz>
 
 	* tools/cabman/cabinet.cxx (CCabinet::ConvertPath): NULL-terminate

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.23 2003/08/29 11:27:16 ekohl Exp $
+/* $Id: partlist.c,v 1.24 2003/10/06 19:22:42 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -1075,6 +1075,51 @@ DrawPartitionList (PPARTLIST List)
 		     DiskEntry);
 
       Entry = Entry->Flink;
+    }
+}
+
+
+VOID
+SelectPartition(PPARTLIST List, ULONG DiskNumber, ULONG PartitionNumber)
+{
+  PDISKENTRY DiskEntry;
+  PPARTENTRY PartEntry;
+  PLIST_ENTRY Entry1;
+  PLIST_ENTRY Entry2;
+  ULONG i;
+
+  /* Check for empty disks */
+  if (IsListEmpty (&List->DiskListHead))
+    return;
+
+  /* Check for first usable entry on next disk */
+  Entry1 = List->CurrentDisk->ListEntry.Flink;
+  while (Entry1 != &List->DiskListHead)
+    {
+      DiskEntry = CONTAINING_RECORD (Entry1, DISKENTRY, ListEntry);
+
+      if (DiskEntry->DiskNumber == DiskNumber)
+        {
+          Entry2 = DiskEntry->PartListHead.Flink;
+          while (Entry2 != &DiskEntry->PartListHead)
+            {
+              PartEntry = CONTAINING_RECORD (Entry2, PARTENTRY, ListEntry);
+
+              for (i = 0; i < 4; i++)
+                {
+                  if (PartEntry->PartInfo[i].PartitionNumber == PartitionNumber)
+	            {
+	              List->CurrentDisk = DiskEntry;
+	              List->CurrentPartition = PartEntry;
+                      DrawPartitionList (List);
+	              return;
+	            }
+                }
+              Entry2 = Entry2->Flink;
+            }
+          return;
+        }
+      Entry1 = Entry1->Flink;
     }
 }
 
