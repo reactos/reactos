@@ -227,7 +227,7 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination)
     PLIST_ENTRY NextEntry;
     PFIB_ENTRY Current;
     UCHAR State, BestState = 0;
-    UINT Length, BestLength = 0;
+    UINT Length, BestLength = 0, MaskLength;
     PNEIGHBOR_CACHE_ENTRY NCE, BestNCE = NULL;
 
     TI_DbgPrint(DEBUG_ROUTER, ("Called. Destination (0x%X)\n", Destination));
@@ -244,31 +244,30 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination)
         NCE   = Current->Router;
         State = NCE->State;
 
-	if (Destination)
-	    Length = CommonPrefixLength(Destination, &NCE->Address);
-	else
-	    Length = 0;
+	Length = CommonPrefixLength(Destination, &Current->NetworkAddress);
+	MaskLength = AddrCountPrefixBits(&Current->Netmask);
+
+	TI_DbgPrint(DEBUG_ROUTER,("This-Route: %s (Sharing %d bits)\n", 
+				  A2S(&NCE->Address), Length));
 	
-	if (BestNCE) {
-	    if ((State  > BestState)  || 
-		((State == BestState) &&
-		 (Length > BestLength))) {
-		/* This seems to be a better router */
-		BestNCE    = NCE;
-		BestLength = Length;
-		BestState  = State;
-	    }
-	} else {
-	    /* First suitable router found, save it */
+	if(Length >= MaskLength && Length > BestLength) {
+	    /* This seems to be a better router */
 	    BestNCE    = NCE;
 	    BestLength = Length;
 	    BestState  = State;
+	    TI_DbgPrint(DEBUG_ROUTER,("Route selected\n"));
 	}
 
         CurrentEntry = NextEntry;
     }
 
     TcpipReleaseSpinLock(&FIBLock, OldIrql);
+
+    if( BestNCE ) {
+	TI_DbgPrint(DEBUG_ROUTER,("Routing to %s\n", A2S(&BestNCE->Address)));
+    } else {
+	TI_DbgPrint(DEBUG_ROUTER,("Packet won't be routed\n"));
+    }
 
     return BestNCE;
 }
@@ -349,11 +348,8 @@ PFIB_ENTRY RouterCreateRoute(
     PFIB_ENTRY FIBE;
 
     /* The NCE references RouterAddress. The NCE is referenced for us */
-    NCE = NBAddNeighbor(Interface,
-                        RouterAddress,
-                        NULL,
-                        Interface->AddressLength,
-                        NUD_PROBE);
+    NCE = NBFindOrCreateNeighbor(Interface, RouterAddress);
+
     if (!NCE) {
         /* Not enough free resources */
         return NULL;

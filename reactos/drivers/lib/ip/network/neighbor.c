@@ -129,7 +129,7 @@ VOID NCETimeout(
         /* FIXME: Probe state */
         TI_DbgPrint(DEBUG_NCACHE, ("NCE probe state.\n"));
         break;
-	
+
     default:
         /* Should not happen since the event timer is not used in the other states */
         TI_DbgPrint(MIN_TRACE, ("Invalid NCE state (%d).\n", NCE->State));

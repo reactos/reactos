@@ -607,17 +607,4 @@ VOID RouteInvalidateNCE(
     TcpipReleaseSpinLock(&RouteCacheLock, OldIrql);
 }
 
-NTSTATUS
-RouteFriendlyAddRoute( PIPROUTE_ENTRY ire ) {
-    KIRQL OldIrql;
-    
-
-    /* Find IF */
-    TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
-    //RouteAddRouteToDestination(&Dest,Nte,If,Nce);
-    TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
-
-    return STATUS_SUCCESS;
-}
-
 /* EOF */
