@@ -1,15 +1,18 @@
-/* $Id: devices.cpp,v 1.2 2002/07/26 00:23:12 robertk Exp $
+/* $Id: devices.cpp,v 1.3 2002/09/04 22:19:47 robertk Exp $
 */
 /*
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS OS/2 sub system
- * FILE:             devices.c
+ * PART:			 doscalls.dll
+ * FILE:             devices.cpp
+ * CONTAINS:		 device io ctl main function.
  * PURPOSE:          Kernelservices for OS/2 apps
  * PROGRAMMER:       Robert K. nonvolatil@yahoo.de
  * REVISION HISTORY:
- *    13-03-2002  Created
+ *  13-03-2002  Created
  *	25-07-2002	Work to make it compile	
+ *	10-11-2002	Done som little things
  */
 
 #define INCL_DOSDEVICES
@@ -58,3 +61,7 @@ APIRET STDCALL Dos32DevIOCtl(HFILE hDevice, ULONG category, ULONG function,
 {
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
+
+
+
+/* EOF */

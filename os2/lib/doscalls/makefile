@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 2002/07/26 00:23:12 robertk Exp $
+# $Id: makefile,v 1.5 2002/09/04 22:19:47 robertk Exp $
 
 PATH_TO_TOP = ../../../reactos
 
@@ -6,7 +6,7 @@ PATH_TO_OS2_TOP = ../..
 
 TARGET_TYPE = dynlink
 
-# TARGET_DEFONLY = yes
+#TARGET_DEFONLY = yes
 
 TARGET_NAME = doscalls
 
@@ -30,7 +30,8 @@ TARGET_SDKLIBS = ntdll.a
 TARGET_OBJECTS = $(TARGET_NAME).o
 
 TARGET_CLEAN = file/*.o vio/*.o sync/*.o mem/*.o \
-				misc/*.o mou/*.o kbd/*.o run/*.o
+				misc/*.o mou/*.o kbd/*.o run/*.o \
+				doscalls.dll temp.exp
 
 DOSCALLS_MISC_OBJECTS = misc/doscalls.o misc/error.o 
 

@@ -1,11 +1,13 @@
-/* $Id: openclose.cpp,v 1.2 2002/07/26 00:23:12 robertk Exp $
+/* $Id: openclose.cpp,v 1.3 2002/09/04 22:19:47 robertk Exp $
 */
 /*
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS OS/2 sub system
- * FILE:             dll/doscalls.c
+ * PART:			 doscalls.dll
+ * FILE:             openclose.cpp
  * PURPOSE:          Kernelservices for OS/2 apps
+ * CONTAINS:		 Open close write and handle related stuff.
  * PROGRAMMER:       Robert K. nonvolatil@yahoo.de
  * REVISION HISTORY:
  *  13-03-2002  Created

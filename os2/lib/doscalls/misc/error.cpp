@@ -1,10 +1,12 @@
-/* $Id: error.cpp,v 1.1 2002/07/26 00:23:13 robertk Exp $
+/* $Id: error.cpp,v 1.2 2002/09/04 22:19:47 robertk Exp $
 */
 /*
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS OS/2 sub system
- * FILE:             dll/process.cpp
+ * PART:			 doscalls.dll
+ * FILE:             error.cpp
+ * CONTAINS:		 Error related CP-functions.
  * PURPOSE:          Kernelservices for OS/2 apps
  * PROGRAMMER:       Robert K. nonvolatil@yahoo.de
  * REVISION HISTORY:
@@ -22,7 +24,25 @@ namespace NT {
 }
 
 
+/*******************************************
+ DosBeep generates sound from the        
+ speaker.                                
 
+ freq (ULONG) - input 
+    Cycles per second (Hertz) in the range of 0x25 to 
+    0x7FFF. 
+ 
+ dur (ULONG) - input 
+    The length of the sound in milliseconds. 
+ 
+ ulrc (APIRET) - returns 
+    Return Code. 
+
+    DosBeep returns one of the following values: 
+
+      0         NO_ERROR 
+      395       ERROR_INVALID_FREQUENCY 
+*******************************************/
 APIRET STDCALL DosBeep(ULONG freq, ULONG dur)
 {
     NT::BEEP_SET_PARAMETERS BeepSetParameters;
@@ -33,7 +53,7 @@ APIRET STDCALL DosBeep(ULONG freq, ULONG dur)
 	NT::OBJECT_ATTRIBUTES oa = {sizeof oa, 0, &unistr, NT::OBJ_CASE_INSENSITIVE, 0, 0};
 
 	// init String still bevore use.
-	NT::RtlInitUnicodeString( &unistr, L"\\\\.\\Beep" );
+	NT::RtlInitUnicodeString( &unistr, (NT::PWSTR)L"\\\\.\\Beep" );
 	
 	if( freq<0x25 || freq>0x7FFF )
 		return ERROR_INVALID_FREQUENCY; //395;	// 
@@ -50,7 +70,7 @@ APIRET STDCALL DosBeep(ULONG freq, ULONG dur)
 				0,	// no sharing
 				FILE_OPEN );
 	
-	if (!NT_SUCCESS(stat))
+	if ( stat<0 )
 	{
 		return ERROR_NOT_READY;
 	}
@@ -68,6 +88,85 @@ APIRET STDCALL DosBeep(ULONG freq, ULONG dur)
 
     return NO_ERROR;
 }
+
+
+/******************************************
+	DosError disables or enables error      
+	notification to end users.              
+ 
+ error (ULONG) - input 
+    Error and Exception pop-up flags. 
+
+    The unused high-order bits are reserved, and must be zero. The following values can be specified 
+    for this parameter. They can be combined using the "logical or" ( | ) operator. 
+
+      FERR_DISABLEHARDERR (0x00000000) 
+          Disable hard error pop-ups. 
+
+      FERR_ENABLEHARDERR (0x00000001) 
+          Enable hard error pop-ups. 
+
+      FERR_ENABLEEXCEPTION (0x00000000) 
+          Enable program exception and untrapped numeric-processor exception pop-ups. 
+
+      FERR_DISABLEEXCEPTION (0x00000002) 
+          Disable program exception and untrapped numeric-processor exception pop-ups. 
+ 
+ ulrc (APIRET) - returns 
+    Return Code. 
+
+    DosError returns one of the following values: 
+
+      0         NO_ERROR 
+      87        ERROR_INVALID_PARAMETER 
+/*******************************************/
+APIRET DosError( ULONG error)
+{
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/*******************************************
+ DosMove moves a file object to another  
+ location, and changes its name.         
+
+ pszOld (PSZ) - input 
+    Address of the old path name of the file or 
+    subdirectory to be moved. 
+ 
+ pszNew (PSZ) - input 
+    Address of the new path name of the file or 
+    subdirectory. 
+ 
+ ulrc (APIRET) - returns 
+    Return Code. 
+
+    DosMove returns the one of following values: 
+
+      0         NO_ERROR 
+      2         ERROR_FILE_NOT_FOUND 
+      3         ERROR_PATH_NOT_FOUND 
+      5         ERROR_ACCESS_DENIED 
+      17        ERROR_NOT_SAME_DEVICE 
+      26        ERROR_NOT_DOS_DISK 
+      32        ERROR_SHARING_VIOLATION 
+      36        ERROR_SHARING_BUFFER_EXCEEDED 
+      87        ERROR_INVALID_PARAMETER 
+      108       ERROR_DRIVE_LOCKED 
+      206       ERROR_FILENAME_EXCED_RANGE 
+      250       ERROR_CIRCULARITY_REQUESTED 
+      251       ERROR_DIRECTORY_IN_CDS 
+*******************************************/
+APIRET DosMove(PSZ pszOld, PSZ pszNew)
+{
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+ 
+
+
+ 
+
 
 
 /* EOF */

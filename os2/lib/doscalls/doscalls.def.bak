@@ -1,4 +1,4 @@
-; $Id: doscalls.def,v 1.4 2002/09/04 22:19:47 robertk Exp $
+; $Id: doscalls.def.bak,v 1.1 2002/09/04 22:19:47 robertk Exp $
 ;
 ; Def for doscalls.dll - part of the OS/2-sub system
 ; for ReactOS. Provides Access to OS/2 kernel services.
@@ -10,14 +10,14 @@ DESCRIPTION "Part of the ReactOS OS/2 sub system, provides base kernel services 
 EXPORTS
 ; FIXME: fill in all exports
 
-DosSleep@4 			
-DosClose@4			
-DosOpen@32			
-DosRead@16			
-DosWrite@16			
-DosDevIOCtl@36		
-DosBeep@8			
-DosExit@8			
-DosCreateThread@20	
+Dos32Sleep@4 			@229
+Dos32Close@4			@257
+Dos32Open@32			@273
+Dos32Read@16			@281
+Dos32Write@16			@282
+Dos32DevIOCtl@36		@284
+Dos32Beep@8			@286
+Dos32Exit@8			@234
+Dos32CreateThread@20		@311
 
 ; EOF
