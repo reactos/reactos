@@ -4,10 +4,13 @@
  * FILE:        ndis/hardware.c
  * PURPOSE:     Hardware related routines
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Vizzini (vizzini@plasmic.com)
  * REVISIONS:
  *   CSH 01/08-2000 Created
+ *   8/25/2003 Vizzini - NDIS4/5 and PnP additions
  */
 #include <ndissys.h>
+#include <miniport.h>
 
 
 /*
@@ -61,17 +64,22 @@ NdisMPciAssignResources(
     IN  NDIS_HANDLE             MiniportHandle,
     IN  ULONG                   SlotNumber,
     OUT PNDIS_RESOURCE_LIST     *AssignedResources)
+/*
+ * NOTES:
+ *     - I think this is fundamentally broken
+ */
 {
   PCM_RESOURCE_LIST ResourceList;
   NTSTATUS Status;
+  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportHandle;
 
   ResourceList = NULL;
-  Status = HalAssignSlotResources (NULL,		/* FIXME: RegistryPath */
-				   NULL,
-				   NULL,		/* FIXME: DriverObject */
-				   NULL,		/* FIXME: DeviceObject */
-				   PCIConfiguration,	/* FIXME: BusType */
-				   0,			/* FIXME: BusNumber */
+  Status = HalAssignSlotResources (Adapter->Miniport->RegistryPath,
+				   0,
+				   Adapter->Miniport->DriverObject,
+				   0,
+				   PCIBus,
+				   Adapter->BusNumber,
 				   SlotNumber,
 				   &ResourceList);
   if (!NT_SUCCESS (Status))
@@ -103,17 +111,20 @@ NdisMQueryAdapterResources(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NDIS_STATUS
 EXPORT
 NdisQueryMapRegisterCount(
     IN  NDIS_INTERFACE_TYPE BusType,
     OUT PUINT               MapRegisterCount)
+/*
+ * On X86 (and all other current hardware), map registers aren't real hardware,
+ * and there is no real limit to the number that can be allocated.
+ * As such, we do what microsoft does on the x86 hals and return as follows
+ */
 {
-    UNIMPLEMENTED
-
-	return NDIS_STATUS_FAILURE;
+	return NDIS_STATUS_NOT_SUPPORTED;
 }
 
 

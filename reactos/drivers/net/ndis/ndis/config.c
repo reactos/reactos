@@ -81,10 +81,10 @@ NdisWriteConfiguration(
     /* reset parameter type to standard reg types */
     switch(ParameterType)
     {
-        /* HexInteger is stored as a string on 9x (as are other dwords), but we don't have to worry about that */
+        /* TODO: figure out what do do with these; are they different? */
         case NdisParameterHexInteger:
         case NdisParameterInteger:
-            ParameterType = REG_DWORD;
+            ParameterType = REG_SZ;
             Data = &ParameterValue->ParameterData.IntegerData;
             DataSize = sizeof(ULONG);
             break;
@@ -245,7 +245,7 @@ NdisOpenProtocolConfiguration(
         return;
     }
 
-    wcsncpy(KeyName, ProtocolSection->Buffer, ProtocolSection->Length);
+    wcsncpy(KeyName, ProtocolSection->Buffer, ProtocolSection->Length/sizeof(WCHAR));
     wcscpy(KeyName + ProtocolSection->Length, PARAMETERS_KEY);
     RtlInitUnicodeString(&KeyNameU, KeyName);
     InitializeObjectAttributes(&KeyAttributes, &KeyNameU, OBJ_CASE_INSENSITIVE, NULL, NULL);
@@ -440,7 +440,7 @@ NdisReadConfiguration(
     *Status = ZwQueryValueKey(ConfigurationContext->Handle, Keyword, KeyValuePartialInformation, NULL, 0, &KeyDataLength);
     if(*Status != STATUS_BUFFER_OVERFLOW && *Status != STATUS_BUFFER_TOO_SMALL && *Status != STATUS_SUCCESS)
     {
-        NDIS_DbgPrint(MID_TRACE,("ZwQueryValueKey #1 failed, status 0x%x\n", *Status));
+        NDIS_DbgPrint(MID_TRACE,("ZwQueryValueKey #1 failed for %wZ, status 0x%x\n", Keyword, *Status));
         *Status = NDIS_STATUS_FAILURE;
         return;
     }
@@ -460,7 +460,7 @@ NdisReadConfiguration(
     if(*Status != STATUS_SUCCESS)
     {
         ExFreePool(KeyInformation);
-        NDIS_DbgPrint(MID_TRACE,("ZwQueryValueKey #2 failed, status 0x%x\n", *Status));
+        NDIS_DbgPrint(MID_TRACE,("ZwQueryValueKey #2 failed for %wZ, status 0x%x\n", Keyword, *Status));
         *Status = NDIS_STATUS_FAILURE;
         return;
     }
@@ -470,14 +470,7 @@ NdisReadConfiguration(
         case NdisParameterInteger:
         case NdisParameterHexInteger:
         {
-            if(KeyInformation->Type != REG_DWORD)
-            {
-                NDIS_DbgPrint(MIN_TRACE,("requested type does not match actual value type\n"));
-                ExFreePool(KeyInformation);
-                *ParameterValue = NULL;
-                *Status = NDIS_STATUS_FAILURE;
-                return;
-            }
+            UNICODE_STRING str;
 
             *ParameterValue = ExAllocatePool(PagedPool, sizeof(NDIS_CONFIGURATION_PARAMETER));
             if(!*ParameterValue)
@@ -488,12 +481,18 @@ NdisReadConfiguration(
                 return;
             }
 
+            str.Length = str.MaximumLength = KeyInformation->DataLength;
+            str.Buffer = (PWCHAR)KeyInformation->Data;
+
             (*ParameterValue)->ParameterType = ParameterType;
-            (*ParameterValue)->ParameterData.IntegerData = *((ULONG *)KeyInformation->Data);
+            *Status = RtlUnicodeStringToInteger(&str, 16, &(*ParameterValue)->ParameterData.IntegerData);
 
             ExFreePool(KeyInformation);
 
-            *Status = NDIS_STATUS_SUCCESS;
+            if(*Status != STATUS_SUCCESS)
+                *Status = NDIS_STATUS_FAILURE;
+            else
+                *Status = NDIS_STATUS_SUCCESS;
 
             return;
         }
@@ -686,6 +685,12 @@ NdisReadNetworkAddress(
     UINT *IntArray = 0;
     int i;
 
+    /* FIXME - We don't quite support this yet due to buggy code below */
+      {
+        *Status = NDIS_STATUS_FAILURE;
+        return;
+      }
+
     *NetworkAddress = NULL;
     *NetworkAddressLength = 6;/* XXX magic constant */
 
@@ -790,7 +795,7 @@ NdisOpenConfigurationKeyByIndex(
     }
 
     /* should i fail instead if the passed-in string isn't long enough? */
-    wcsncpy(KeyName->Buffer, KeyInformation->Name, KeyName->MaximumLength);
+    wcsncpy(KeyName->Buffer, KeyInformation->Name, KeyName->MaximumLength/sizeof(WCHAR));
     KeyName->Length = KeyInformation->NameLength;
 
     InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE, ConfigurationHandle, NULL);

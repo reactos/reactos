@@ -611,7 +611,7 @@ NdisRegisterProtocol(
 
 		wcscpy(RegistryPathStr, SERVICES_KEY);
 		wcsncat(RegistryPathStr, ((WCHAR *)ProtocolCharacteristics->Name.Buffer),
-				ProtocolCharacteristics->Name.Length);
+				ProtocolCharacteristics->Name.Length / sizeof(WCHAR));
 		RegistryPathStr[wcslen(SERVICES_KEY)+ProtocolCharacteristics->Name.Length/sizeof(WCHAR)] = 0;
 		wcscat(RegistryPathStr, LINKAGE_KEY);
 
