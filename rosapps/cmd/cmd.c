@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.28 2001/10/14 18:30:28 phreak Exp $
+/* $Id: cmd.c,v 1.29 2002/04/05 12:53:21 ekohl Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -768,8 +768,9 @@ ProcessInput (BOOL bFlag)
 						break;
 
 					default:
-						if ((tp == _tcschr(ip, _T('%'))) &&
-						    (tp <= _tcschr(ip, _T(' '))-1))
+						tp = _tcschr(ip, _T('%'));
+						if ((tp != NULL) &&
+						    (tp <= _tcschr(ip, _T(' ')) - 1))
 						{
 							char evar[512];
 							*tp = _T('\0');
