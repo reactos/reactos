@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.25 2004/06/20 12:34:20 navaraf Exp $
+/* $Id: callback.c,v 1.26 2004/12/14 23:14:15 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -334,6 +334,7 @@ IntCallHookProc(INT HookId,
           Extra = (PCHAR) (CbtCreatewndExtra + 1);
           RtlCopyMemory(Extra, WindowName->Buffer, WindowName->Length);
           CbtCreatewndExtra->Cs.lpszName = (LPCWSTR) (Extra - (PCHAR) CbtCreatewndExtra);
+          CbtCreatewndExtra->Cs.lpszClass = ClassName->Buffer;
           Extra += WindowName->Length;
           *((WCHAR *) Extra) = L'\0';
           Extra += sizeof(WCHAR);
