@@ -60,8 +60,10 @@ public:
     virtual ~CDFParser();
     unsigned long Load(char* FileName);
     unsigned long Parse();
-    bool InfFileOnly;
+    void SetFileRelativePath(char* Path);
+	bool InfFileOnly;
     bool DontGenerateInf;
+    char FileRelativePath[300];
 private:
     /* Event handlers */
     virtual bool OnDiskLabel(unsigned long Number, char* Label);

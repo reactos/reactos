@@ -78,6 +78,8 @@ CDFParser::CDFParser()
 
     InfModeEnabled = false;
     InfFileHandle = NULL;
+    
+    strcpy(FileRelativePath, "");
 }
 
 CDFParser::~CDFParser()
@@ -382,6 +384,20 @@ unsigned long CDFParser::Parse()
     }
 
     return CAB_STATUS_SUCCESS;
+}
+
+
+void CDFParser::SetFileRelativePath(char* Path)
+/*
+ * FUNCTION: Sets path where files in the .dff is assumed relative to
+ * ARGUMENTS:
+ *    Path = Pointer to string with path
+ */
+{
+    strcpy(FileRelativePath, Path);
+    ConvertPath(FileRelativePath, false);
+    if (strlen(FileRelativePath) > 0)
+        NormalizePath(FileRelativePath, MAX_PATH);
 }
 
 
@@ -1001,7 +1017,7 @@ unsigned long CDFParser::PerformFileCopy()
     char DstName[MAX_PATH];
     char InfLine[MAX_PATH];
 
-    strcpy(SrcName, "");
+    strcpy(SrcName, FileRelativePath);
     strcpy(DstName, "");
 
     i = CurrentChar;
@@ -1015,7 +1031,7 @@ unsigned long CDFParser::PerformFileCopy()
     CurrentString[i] = '\0';
     CurrentToken = TokenString;
     CurrentChar  = i + 1;
-    strcpy(SrcName, CurrentString);
+    strcat(SrcName, CurrentString);
 
     SkipSpaces();
 

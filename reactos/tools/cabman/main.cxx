@@ -190,7 +190,7 @@ void CCABManager::Usage()
 {
     printf("ReactOS Cabinet Manager - Version %s\n\n", CM_VERSION);
     printf("CABMAN [-D | -E] [-A] [-L dir] cabinet [filename ...]\n");
-    printf("CABMAN -C dirfile [-I] [-RC file]\n");
+    printf("CABMAN -C dirfile [-I] [-RC file] [-P dir]\n");
     printf("CABMAN -S cabinet filename\n");
     printf("  cabinet   Cabinet file.\n");
     printf("  filename  Name of the file to extract from the cabinet.\n");
@@ -211,6 +211,7 @@ void CCABManager::Usage()
     printf("  -RC       Specify file to put in cabinet reserved area\n");
     printf("            (size must be less than 64KB).\n");
     printf("  -S        Create simple cabinet.\n");
+    printf("  -P dir    Files in the .dff are relative to this directory\n");
 }
 
 bool CCABManager::ParseCmdline(int argc, char* argv[])
@@ -276,6 +277,14 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
                     break;
           case 's':
           case 'S': Mode = CM_MODE_CREATE_SIMPLE; break;
+          case 'P':
+                    if (argv[i][2] == 0) {
+                        i++;
+                        SetFileRelativePath((char*)&argv[i][0]);
+                    } else {
+                        SetFileRelativePath((char*)&argv[i][1]);
+                    }
+                    break;
           default:
                     printf("Bad parameter %s.\n", argv[i]);
                     return false;
