@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.4 2002/06/07 22:59:19 ekohl Exp $
+/* $Id: acl.c,v 1.5 2002/06/15 10:08:46 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -105,12 +105,12 @@ RtlpAddKnownAce(PACL Acl,
 
   if (!RtlValidSid(Sid))
     {
-      return(STATUS_UNSUCCESSFUL);
+      return(STATUS_INVALID_SID);
     }
   if (Acl->AclRevision > 3 ||
       Revision > 3)
     {
-      return(STATUS_UNSUCCESSFUL);
+      return(STATUS_UNKNOWN_REVISION);
     }
   if (Revision < Acl->AclRevision)
     {
@@ -118,7 +118,7 @@ RtlpAddKnownAce(PACL Acl,
     }
   if (!RtlFirstFreeAce(Acl, &Ace))
     {
-      return(STATUS_UNSUCCESSFUL);
+      return(STATUS_BUFFER_TOO_SMALL);
     }
   if (Ace == NULL)
     {
@@ -127,13 +127,13 @@ RtlpAddKnownAce(PACL Acl,
   if (((PVOID)Ace + RtlLengthSid(Sid) + sizeof(ACE)) >=
       ((PVOID)Acl + Acl->AclSize))
     {
-      return(STATUS_UNSUCCESSFUL);
+      return(STATUS_BUFFER_TOO_SMALL);
     }
   Ace->Header.AceFlags = 0;
   Ace->Header.AceType = Type;
   Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ACE);
   Ace->Header.AccessMask = AccessMask;
-  RtlCopySid(RtlLengthSid(Sid), (PSID)Ace + 1, Sid);
+  RtlCopySid(RtlLengthSid(Sid), (PSID)(Ace + 1), Sid);
   Acl->AceCount++;
   Acl->AclRevision = Revision;
   return(STATUS_SUCCESS);

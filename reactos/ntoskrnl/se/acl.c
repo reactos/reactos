@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.6 2002/06/07 22:59:42 ekohl Exp $
+/* $Id: acl.c,v 1.7 2002/06/15 10:09:17 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -179,42 +179,42 @@ RtlpAddKnownAce(PACL Acl,
 		PSID Sid,
 		ULONG Type)
 {
-   PACE Ace;
-   
-   if (!RtlValidSid(Sid))
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   if (Acl->AclRevision > 3 ||
-       Revision > 3)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   if (Revision < Acl->AclRevision)
-     {
-	Revision = Acl->AclRevision;
-     }
-   if (!RtlFirstFreeAce(Acl, &Ace))
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   if (Ace == NULL)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   if (((PVOID)Ace + RtlLengthSid(Sid) + sizeof(ACE)) >= 
-       ((PVOID)Acl + Acl->AclSize))
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   Ace->Header.AceFlags = 0;
-   Ace->Header.AceType = Type;
-   Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ACE);
-   Ace->Header.AccessMask = AccessMask;
-   RtlCopySid(RtlLengthSid(Sid), (PSID)Ace + 1, Sid);
-   Acl->AceCount++;
-   Acl->AclRevision = Revision;
-   return(STATUS_SUCCESS);
+  PACE Ace;
+
+  if (!RtlValidSid(Sid))
+    {
+      return(STATUS_INVALID_SID);
+    }
+  if (Acl->AclRevision > 3 ||
+      Revision > 3)
+    {
+      return(STATUS_UNKNOWN_REVISION);
+    }
+  if (Revision < Acl->AclRevision)
+    {
+      Revision = Acl->AclRevision;
+    }
+  if (!RtlFirstFreeAce(Acl, &Ace))
+    {
+      return(STATUS_BUFFER_TOO_SMALL);
+    }
+  if (Ace == NULL)
+    {
+      return(STATUS_UNSUCCESSFUL);
+    }
+  if (((PVOID)Ace + RtlLengthSid(Sid) + sizeof(ACE)) >= 
+      ((PVOID)Acl + Acl->AclSize))
+    {
+      return(STATUS_BUFFER_TOO_SMALL);
+    }
+  Ace->Header.AceFlags = 0;
+  Ace->Header.AceType = Type;
+  Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ACE);
+  Ace->Header.AccessMask = AccessMask;
+  RtlCopySid(RtlLengthSid(Sid), (PSID)(Ace + 1), Sid);
+  Acl->AceCount++;
+  Acl->AclRevision = Revision;
+  return(STATUS_SUCCESS);
 }
 
 
@@ -224,7 +224,7 @@ RtlAddAccessAllowedAce(PACL Acl,
 		       ACCESS_MASK AccessMask,
 		       PSID Sid)
 {
-   return(RtlpAddKnownAce(Acl, Revision, AccessMask, Sid, 0));
+  return(RtlpAddKnownAce(Acl, Revision, AccessMask, Sid, 0));
 }
 
 
@@ -300,26 +300,26 @@ RtlCreateAcl(PACL Acl,
 	     ULONG AclSize,
 	     ULONG AclRevision)
 {
-   if (AclSize < 8)
-     {
-	return(STATUS_BUFFER_TOO_SMALL);
-     }
-   if (AclRevision != 2 &&
-       AclRevision != 3)
-     {
-	return(STATUS_UNKNOWN_REVISION);
-     }
-   if (AclSize > 0xffff)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   AclSize = AclSize & ~(0x3);
-   Acl->AclSize = AclSize;
-   Acl->AclRevision = AclRevision;
-   Acl->AceCount = 0;
-   Acl->Sbz1 = 0;
-   Acl->Sbz2 = 0;
-   return(STATUS_SUCCESS);
+  if (AclSize < 8)
+    {
+      return(STATUS_BUFFER_TOO_SMALL);
+    }
+  if (AclRevision != 2 &&
+      AclRevision != 3)
+    {
+      return(STATUS_UNKNOWN_REVISION);
+    }
+  if (AclSize > 0xffff)
+    {
+      return(STATUS_UNSUCCESSFUL);
+    }
+  AclSize = AclSize & ~(0x3);
+  Acl->AclSize = AclSize;
+  Acl->AclRevision = AclRevision;
+  Acl->AceCount = 0;
+  Acl->Sbz1 = 0;
+  Acl->Sbz2 = 0;
+  return(STATUS_SUCCESS);
 }
 
 /* EOF */
