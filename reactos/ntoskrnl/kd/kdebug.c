@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.40 2002/09/08 10:23:27 chorns Exp $
+/* $Id: kdebug.c,v 1.41 2003/01/15 19:58:07 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -216,6 +216,12 @@ KdInitSystem(ULONG Reserved,
 		}
 	    }
 	}
+#ifdef KDBG
+    else if (!_strnicmp(p2, "PROFILE", 7))
+	  {
+        KdbInitProfiling();
+      }
+#endif /* KDBG */
       p1 = p2;
     }
 

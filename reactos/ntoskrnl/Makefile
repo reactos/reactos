@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.89 2003/01/07 17:48:11 robd Exp $
+# $Id: Makefile,v 1.90 2003/01/15 19:58:06 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -27,7 +27,7 @@ endif
 
 ifeq ($(KDBG), 1)
 OBJECTS_KDBG := dbg/kdb.o dbg/kdb_keyboard.o dbg/rdebug.o \
-                dbg/i386/kdb_help.o dbg/kdb_stabs.o
+                dbg/i386/kdb_help.o dbg/kdb_stabs.o dbg/profile.o
 else
 OBJECTS_KDBG :=
 endif

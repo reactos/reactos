@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.146 2002/12/09 23:09:25 ekohl Exp $
+/* $Id: main.c,v 1.147 2003/01/15 19:58:07 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -571,6 +571,10 @@ ExpInitializeExecutive(VOID)
      logger thread */
   DebugLogInit2();
 #endif /* DBGPRINT_FILE_LOG */
+
+#ifdef KDBG
+  KdbInitProfiling2();
+#endif /* KDBG */
 
 
   PiInitDefaultLocale();

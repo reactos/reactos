@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.27 2003/01/02 16:06:49 hbirr Exp $
+/* $Id: irq.c,v 1.28 2003/01/15 19:58:07 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -41,6 +41,9 @@
 #include <internal/ps.h>
 #include <internal/i386/segment.h>
 #include <internal/pool.h>
+#ifdef KDBG
+#include <../dbg/kdb.h>
+#endif /* KDBG */
 
 #ifdef MP
 #include <internal/hal/mps.h>
@@ -370,6 +373,9 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
        if (KeGetCurrentProcessorNumber() == 0)
          {
        KiUpdateSystemTime(old_level, Trapframe->Eip);
+#ifdef KDBG
+       KdbProfileInterrupt(Trapframe->Eip);
+#endif /* KDBG */
          }
      }
    else
@@ -506,6 +512,13 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
     * Actually call the ISR.
     */
    KiInterruptDispatch2(irq, old_level);
+
+#ifdef KDBG
+   if (irq == 0)
+     {
+       KdbProfileInterrupt(Trapframe->Eip);
+     }
+#endif /* KDBG */
 
    /*
     * Maybe do a reschedule as well.

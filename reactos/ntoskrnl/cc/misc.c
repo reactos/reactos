@@ -74,7 +74,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
   PLIST_ENTRY current_entry;
   PCACHE_SEGMENT current;
 
-  DPRINT("CcSetFileSizes(FileObject %x, FileSizes %x)\n", 
+  DPRINT1("CcSetFileSizes(FileObject %x, FileSizes %x)\n", 
 	 FileObject, FileSizes);
   DPRINT("AllocationSize %d, FileSize %d, ValidDataLength %d\n",
          (ULONG)FileSizes->AllocationSize.QuadPart,
@@ -82,6 +82,8 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
          (ULONG)FileSizes->ValidDataLength.QuadPart);
 
   Bcb = ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->Bcb;
+
+  DPRINT1("Bcb 0x%.08x\n", Bcb);
   
   KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
   

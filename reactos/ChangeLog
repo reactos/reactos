@@ -1,5 +1,19 @@
 2003-01-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* ntoskrnl/dbg/profile.c: New file.
+	* ntoskrnl/Makefile (OBJECTS_KDBG): Add dbg/profile.o.
+	* ntoskrnl/dbg/kdb.h: Define NTOS_MODE_KERNEL. Include <ntos.h>.
+	(LdrGetAddressInformation, KdbInitProfiling, KdbInitProfiling2,
+	KdbDisableProfiling, KdbEnableProfiling, KdbProfileInterrupt) Prototype.
+	* ntoskrnl/kd/kdebug.c (KdInitSystem): Add /PROFILE option if KDBG=1.
+	* ntoskrnl/ke/main.c (ExpInitializeExecutive): Call KdbInitProfiling2()
+	if KDBG=1.
+	* ntoskrnl/ke/i386/irq.c: Include <../dbg/kdb.h> if KDBG=1.
+	(KiInterruptDispatch): Call KdbProfileInterrupt() on timer interrupt
+	if KDBG=1.
+
+2003-01-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* drivers/fs/vfat/create.c (VfatSupersedeFile): Only notify cache manager
 	about change in file size if caching is initiated on the file stream.
 
