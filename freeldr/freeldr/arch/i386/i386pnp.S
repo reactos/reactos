@@ -26,101 +26,56 @@
 
 
 /*
- * U32 PnpBiosSupported(PVOID InstallationCheck);
+ * U32 PnpBiosSupported(VOID);
  *
  * RETURNS:
  */
-_pnp_support_result:
+_pnp_bios_entry_point:
 	.long	0
-_pnp_entry_point:
-	.word	0
-_pnp_code_segment:
-	.word	0
-_pnp_data_segment:
+_pnp_bios_data_segment:
 	.word	0
 
 EXTERN(_PnpBiosSupported)
 	.code32
 
-	pushal
-	push	%es
+	pushl	%edi
+	pushl	%esi
 
-	/* convert pointer to node buffer to segment/offset */ 
-	movl	0x08(%ebp),%eax
-	shrl	$4,%eax
-	andl	$0xf000,%eax
-	movw	%ax,_pnp_buffer_segment	
-	movl	0x08(%ebp),%eax
-	andl	$0xffff,%eax
-	movw	%ax,_pnp_buffer_offset	
+	xorl	%edi,%edi
 
-	call	switch_to_real
-
-	.code16
-
-	/* init ES */
-	pushw	$0xF000
-	popw	%es
-
-	/* init cx */
-	movw	$0xFFF0,%si
+	/* init esi */
+	movl	$0xFFFF0,%esi
 
 pnp_again:
-	movw	%es:(%si),%ax
-	cmp		$0x5024,%ax			/* "$P" */
-	jne		pnp_next
-	
-	push	%si
-	add		$2,%si
-	movw	%es:(%si),%ax
-	cmp		$0x506E,%ax			/* "nP" */
-	pop		%si
+	movl	(%esi),%eax
+	cmp		$0x506E5024,%eax			/* "$PnP" */
 	je		pnp_found
 
-pnp_next:
-	cmp		$0,%si
+	cmp		$0xF0000,%esi
 	je		pnp_not_found
 
-	sub		$0x10,%si
+	subl	$0x10,%esi
 	jmp		pnp_again
 
 pnp_found:
-	movzwl	%si,%eax
-	movl	%eax,_pnp_support_result
+	movl	%esi,%edi
 
-	add		$0x0D,%si
-	movw	%es:(%si),%ax
-	movw	%ax,_pnp_entry_point
+	/* Calculate the bios entry point (far pointer) */
+	xorl	%eax,%eax
+	movw	0x0F(%esi),%ax
+	shll	$16,%eax
+	movw	0x0D(%esi),%ax
+	movl	%eax,_pnp_bios_entry_point
 
-	add		$0x02,%si
-	movw	%es:(%si),%ax
-	movw	%ax,_pnp_code_segment
+	/* Store bios data segment */
+	movw	0x1B(%esi),%ax
+	movw	%ax,_pnp_bios_data_segment
 
-	add		$0x0C,%si
-	movw	%es:(%si),%ax
-	movw	%ax,_pnp_data_segment
-
-    /* copy data to buffer */
-    push	%ds
-    movw	%es, %ax
-    movw	%ax, %ds
-    movl	_pnp_support_result, %esi
-    movw	_pnp_buffer_segment, %es
-    movw	_pnp_buffer_offset, %di
-	movw	$0x21, %cx
-	rep		movsb
-	
-	pop		%ds
 pnp_not_found:
+	movl	%edi,%eax
 
-	call	switch_to_prot
-
-	.code32
-
-	pop		%es
-	popal
-
-	movl	_pnp_support_result,%eax
+	popl	%esi
+	popl	%edi
 
 	ret
 
@@ -130,7 +85,7 @@ pnp_not_found:
  *
  * RETURNS:
  */
-_entry_point:
+_pnp_result:
 	.long	0
 _pnp_node_size:
 	.word	0
@@ -147,10 +102,9 @@ EXTERN(_PnpBiosGetDeviceNodeCount)
 	push	%es
 
 	call	switch_to_real
-
 	.code16
 
-	movw	_pnp_data_segment,%ax
+	movw	_pnp_bios_data_segment,%ax
 	pushw	%ax
 
 	pushw	%cs
@@ -163,23 +117,14 @@ EXTERN(_PnpBiosGetDeviceNodeCount)
 
 	pushw	$0
 
-	movw	_pnp_code_segment,%ax
-	movzwl	%ax,%ecx
-	shll	$16,%ecx
-	movw	_pnp_entry_point,%ax
-	movzwl	%ax,%ebx
-	orl		%ebx,%ecx
-	movl	%ecx,_entry_point
-
-	lcall	*_entry_point
+	lcall	*_pnp_bios_entry_point
 	addw	$12,%sp
 
 	movzwl	%ax,%ecx
-	movl	%ecx,_pnp_support_result
+	movl	%ecx,_pnp_result
 
 	
 	call	switch_to_prot
-
 	.code32
 
 	movl	0x08(%ebp),%esi
@@ -198,7 +143,7 @@ EXTERN(_PnpBiosGetDeviceNodeCount)
 	movl	%ebp,%esp
 	popl	%ebp
 
-	movl	_pnp_support_result,%eax
+	movl	_pnp_result,%eax
 
 	ret
 
@@ -215,7 +160,6 @@ _pnp_buffer_offset:
 
 _pnp_node_number:
 	.byte	0
-
 
 EXTERN(_PnpBiosGetDeviceNode)
 	.code32
@@ -241,11 +185,10 @@ EXTERN(_PnpBiosGetDeviceNode)
 	movw	%ax,_pnp_buffer_offset	
 
 	call	switch_to_real
-
 	.code16
 
 	/* push bios segment */
-	movw	_pnp_data_segment,%ax
+	movw	_pnp_bios_data_segment,%ax
 	pushw	%ax
 
 	/* push control flag */	
@@ -266,23 +209,19 @@ EXTERN(_PnpBiosGetDeviceNode)
 	pushw	$1
 
 	/* call entry point */
-	lcall	*_entry_point
+	lcall	*_pnp_bios_entry_point
 	addw	$14,%sp
 
 	movzwl	%ax,%ecx
-	movl	%ecx,_pnp_support_result
-
+	movl	%ecx,_pnp_result
 
 	call	switch_to_prot
-
 	.code32
-
 
 	/* update node number */
 	movl	0x08(%ebp),%esi
 	movb	_pnp_node_number,%al
 	movb	%al,(%esi)
-
 
 	pop		%es
 	popal
@@ -290,7 +229,7 @@ EXTERN(_PnpBiosGetDeviceNode)
 	movl	%ebp,%esp
 	popl	%ebp
 
-	movl	_pnp_support_result,%eax
+	movl	_pnp_result,%eax
 
 	ret
 

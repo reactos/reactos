@@ -209,7 +209,9 @@ ARCH_OBJS	=	fathelp.o	\
 				i386disk.o	\
 				portio.o	\
 				hardware.o	\
+				hwcpu.o		\
 				_alloca.o		# For Mingw32 builds
+
 
 RTL_OBJS	=	print.o		\
 				stdlib.o	\

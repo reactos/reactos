@@ -89,36 +89,6 @@ typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK
 } __attribute__((packed)) CM_PNP_BIOS_INSTALLATION_CHECK, *PCM_PNP_BIOS_INSTALLATION_CHECK;
 
 
-typedef struct _MPS_CONFIG_TABLE_HEADER
-{
-  U32  Signature;
-  U16 BaseTableLength;
-  U8  SpecRev;
-  U8  Checksum;
-  CHAR   OemIdString[8];
-  CHAR   ProductIdString[12];
-  U32   OemTablePointer;
-  U16   OemTableLength;
-  U16   EntryCount;
-  U32   AddressOfLocalAPIC;
-  U16   ExtendedTableLength;
-  U8    ExtendedTableChecksum;
-  U8    Reserved;
-} PACKED MPS_CONFIG_TABLE_HEADER, *PMPS_CONFIG_TABLE_HEADER;
-
-
-typedef struct _MPS_PROCESSOR_ENTRY
-{
-  U8  EntryType;
-  U8  LocalApicId;
-  U8  LocalApicVersion;
-  U8  CpuFlags;
-  U32 CpuSignature;
-  U32 FeatureFlags;
-  U32 Reserved1;
-  U32 Reserved2;
-} PACKED MPS_PROCESSOR_ENTRY, *PMPS_PROCESSOR_ENTRY;
-
 
 static char Hex[] = "0123456789ABCDEF";
 static unsigned int delay_count = 1;
@@ -265,6 +235,7 @@ DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PNP_BIOS_DEVICE_NODE DeviceNode;
+  PCM_PNP_BIOS_INSTALLATION_CHECK InstData;
   char Buffer[80];
   HKEY BusKey;
   U32 x;
@@ -278,43 +249,26 @@ DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
   char *Ptr;
   S32 Error;
 
-  x = PnpBiosSupported((PVOID)DISKREADBUFFER);
-  if (!x)
+  InstData = (PCM_PNP_BIOS_INSTALLATION_CHECK)PnpBiosSupported();
+  if (InstData == NULL || strncmp(InstData->Signature, "$PnP", 4))
     {
-      printf("  PnP-BIOS not supported\n");
+      DbgPrint((DPRINT_HWDETECT, "PnP-BIOS not supported\n"));
       return;
     }
+  DbgPrint((DPRINT_HWDETECT, "Signature '%c%c%c%c'\n",
+	    InstData->Signature[0], InstData->Signature[1],
+	    InstData->Signature[2], InstData->Signature[3]));
+
 
   x = PnpBiosGetDeviceNodeCount(&NodeSize, &NodeCount);
   if (x != 0 || NodeSize == 0 || NodeCount == 0)
     {
-      DbgPrint((DPRINT_HWDETECT, "PnP-BIOS failed to enumerate device nodes\n");
+      DbgPrint((DPRINT_HWDETECT, "PnP-BIOS failed to enumerate device nodes\n"));
       return;
     }
-  DbgPrint((DPRINT_HWDETECT,
-	    "PnP-BIOS supported: found %u device nodes\n",
-	    (unsigned int)NodeCount));
-
-  FoundNodeCount = 0;
-
-  PnpBufferSize = 0;
-  for (i = 0; i < 0x255; i++)
-    {
-      NodeNumber = (U8)i;
-
-      x = PnpBiosGetDeviceNode(&NodeNumber, (PVOID)DISKREADBUFFER);
-      if (x == 0)
-	{
-	  DeviceNode = (PCM_PNP_BIOS_DEVICE_NODE)DISKREADBUFFER;
-	  PnpBufferSize += DeviceNode->Size;
-
-	  FoundNodeCount++;
-	  if (FoundNodeCount >= NodeCount)
-	    break;
-	}
-    }
-  PnpBufferSize += sizeof(CM_PNP_BIOS_INSTALLATION_CHECK);
-  DbgPrint((DPRINT_HWDETECT, "PnpBufferSize: %u\n", PnpBufferSize));
+  DbgPrint((DPRINT_HWDETECT, "PnP-BIOS supported\n"));
+  DbgPrint((DPRINT_HWDETECT, "MaxNodeSize %u  NodeCount %u\n", NodeSize, NodeCount));
+  DbgPrint((DPRINT_HWDETECT, "Estimated buffer size %u\n", NodeSize * NodeCount));
 
   /* Create new bus key */
   sprintf(Buffer,
@@ -344,7 +298,7 @@ DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
     }
 
   /* Set 'Configuration Data' value */
-  Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) + PnpBufferSize;
+  Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) + (NodeSize * NodeCount);
   FullResourceDescriptor = MmAllocateMemory(Size);
   if (FullResourceDescriptor == NULL)
     {
@@ -352,9 +306,9 @@ DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
 		"Failed to allocate resource descriptor\n"));
       return;
     }
+  memset(FullResourceDescriptor, 0, Size);
 
   /* Initialize resource descriptor */
-  memset(FullResourceDescriptor, 0, Size);
   FullResourceDescriptor->InterfaceType = Internal;
   FullResourceDescriptor->BusNumber = 0;
   FullResourceDescriptor->PartialResourceList.Count = 1;
@@ -363,19 +317,18 @@ DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
   FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].ShareDisposition =
     CmResourceShareUndetermined;
 //  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Flags =
-  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].u.DeviceSpecificData.DataSize =
-    PnpBufferSize;
 
-  Ptr = (char *)((PVOID)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
+  Ptr = (char *)(((PVOID)&FullResourceDescriptor->PartialResourceList.PartialDescriptors[0]) +
+		 sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 
   /* Set instalation check data */
-  PnpBiosSupported((PVOID)DISKREADBUFFER);
-  memcpy (Ptr, (PVOID)DISKREADBUFFER, sizeof(CM_PNP_BIOS_INSTALLATION_CHECK));
-
-  Ptr = (char *)((PVOID)Ptr + sizeof(CM_PNP_BIOS_INSTALLATION_CHECK));
+  memcpy (Ptr, InstData, sizeof(CM_PNP_BIOS_INSTALLATION_CHECK));
+  Ptr += sizeof(CM_PNP_BIOS_INSTALLATION_CHECK);
 
   /* Copy device nodes */
-  for (i = 0; i < 0x255; i++)
+  FoundNodeCount = 0;
+  PnpBufferSize = sizeof(CM_PNP_BIOS_INSTALLATION_CHECK);
+  for (i = 0; i < 0xFF; i++)
     {
       NodeNumber = (U8)i;
 
@@ -384,16 +337,32 @@ DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
 	{
 	  DeviceNode = (PCM_PNP_BIOS_DEVICE_NODE)DISKREADBUFFER;
 
+	  DbgPrint((DPRINT_HWDETECT,
+		    "Node: %u  Size %u (0x%x)\n",
+		    DeviceNode->Node,
+		    DeviceNode->Size,
+		    DeviceNode->Size));
+
 	  memcpy (Ptr,
 		  DeviceNode,
 		  DeviceNode->Size);
-	  Ptr = (char *)((U32)Ptr + DeviceNode->Size);
+
+	  Ptr += DeviceNode->Size;
+	  PnpBufferSize += DeviceNode->Size;
 
 	  FoundNodeCount++;
 	  if (FoundNodeCount >= NodeCount)
 	    break;
 	}
     }
+
+  /* Set real data size */
+  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].u.DeviceSpecificData.DataSize =
+    PnpBufferSize;
+  Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) + PnpBufferSize;
+
+  DbgPrint((DPRINT_HWDETECT, "Real buffer size: %u\n", PnpBufferSize));
+  DbgPrint((DPRINT_HWDETECT, "Resource size: %u\n", Size));
 
   /* Set 'Configuration Data' value */
   Error = RegSetValue(BusKey,
@@ -410,398 +379,6 @@ DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
     }
 }
 
-
-static VOID
-DetectCPU(HKEY CpuKey,
-	  HKEY FpuKey)
-{
-  char VendorIdentifier[13];
-  char Identifier[64];
-  U32 FeatureSet;
-  HKEY CpuInstKey;
-  HKEY FpuInstKey;
-  U32 eax = 0;
-  U32 ebx = 0;
-  U32 ecx = 0;
-  U32 edx = 0;
-  U32 *Ptr;
-  S32 Error;
-
-  /* Create the CPU instance key */
-  Error = RegCreateKey(CpuKey,
-		       "0",
-		       &CpuInstKey);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-      return;
-    }
-
-  /* Create the FPU instance key */
-  Error = RegCreateKey(FpuKey,
-		       "0",
-		       &FpuInstKey);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-      return;
-    }
-
-  eax = CpuidSupported();
-  if (eax & 1)
-    {
-      DbgPrint((DPRINT_HWDETECT, "CPUID supported\n"));
-
-      /* Get vendor identifier */
-      GetCpuid(0, &eax, &ebx, &ecx, &edx);
-      VendorIdentifier[12] = 0;
-      Ptr = (U32*)&VendorIdentifier[0];
-      *Ptr = ebx;
-      Ptr++;
-      *Ptr = edx;
-      Ptr++;
-      *Ptr = ecx;
-
-      /* Get Identifier */
-      GetCpuid(1, &eax, &ebx, &ecx, &edx);
-      sprintf(Identifier,
-	      "x86 Family %u Model %u Stepping %u",
-	      (unsigned int)((eax >> 8) & 0x0F),
-	      (unsigned int)((eax >> 4) & 0x0F),
-	      (unsigned int)(eax & 0x0F));
-      FeatureSet = edx;
-    }
-  else
-    {
-      DbgPrint((DPRINT_HWDETECT, "CPUID not supported\n"));
-
-      strcpy(VendorIdentifier, "Unknown");
-      sprintf(Identifier,
-	      "x86 Family %u Model %u Stepping %u",
-	      (unsigned int)((eax >> 8) & 0x0F),
-	      (unsigned int)((eax >> 4) & 0x0F),
-	      (unsigned int)(eax & 0x0F));
-      FeatureSet = 0;
-    }
-
-  /* Set 'Conmponent Information' value (CPU and FPU) */
-  SetComponentInformation(CpuInstKey, 0, 0, 1);
-  SetComponentInformation(FpuInstKey, 0, 0, 1);
-
-  /* Set 'FeatureSet' value (CPU only) */
-  DbgPrint((DPRINT_HWDETECT, "FeatureSet: %x\n", FeatureSet));
-
-  Error = RegSetValue(CpuInstKey,
-		      "FeatureSet",
-		      REG_DWORD,
-		      (PU8)&FeatureSet,
-		      sizeof(U32));
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-    }
-
-  /* Set 'Identifier' value (CPU and FPU) */
-  DbgPrint((DPRINT_HWDETECT, "Identifier: %s\n", Identifier));
-
-  Error = RegSetValue(CpuInstKey,
-		      "Identifier",
-		      REG_SZ,
-		      (PU8)Identifier,
-		      strlen(Identifier) + 1);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-    }
-
-  Error = RegSetValue(FpuInstKey,
-		      "Identifier",
-		      REG_SZ,
-		      (PU8)Identifier,
-		      strlen(Identifier) + 1);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-    }
-
-  /* Set 'VendorIdentifier' value (CPU only) */
-  DbgPrint((DPRINT_HWDETECT, "Vendor Identifier: %s\n", VendorIdentifier));
-
-  Error = RegSetValue(CpuInstKey,
-		      "VendorIdentifier",
-		      REG_SZ,
-		      (PU8)VendorIdentifier,
-		      strlen(VendorIdentifier) + 1);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-    }
-
-  /* FIXME: Set 'Update Signature' value (CPU only) */
-
-  /* FIXME: Set 'Update Status' value (CPU only) */
-
-  /* FIXME: Set '~MHz' value (CPU only) */
-}
-
-
-static VOID
-SetMpsProcessor(HKEY CpuKey,
-		HKEY FpuKey,
-		PMPS_PROCESSOR_ENTRY CpuEntry)
-{
-  char VendorIdentifier[13];
-  char Identifier[64];
-  char Buffer[8];
-  U32 FeatureSet;
-  HKEY CpuInstKey;
-  HKEY FpuInstKey;
-  U32 eax = 0;
-  U32 ebx = 0;
-  U32 ecx = 0;
-  U32 edx = 0;
-  U32 *Ptr;
-  S32 Error;
-
-  /* Get processor instance number */
-  sprintf(Buffer, "%u", CpuEntry->LocalApicId);
-
-  /* Create the CPU instance key */
-  Error = RegCreateKey(CpuKey,
-		       Buffer,
-		       &CpuInstKey);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-      return;
-    }
-
-  /* Create the FPU instance key */
-  Error = RegCreateKey(FpuKey,
-		       Buffer,
-		       &FpuInstKey);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-      return;
-    }
-
-  /* Get 'VendorIdentifier' */
-  GetCpuid(0, &eax, &ebx, &ecx, &edx);
-  VendorIdentifier[12] = 0;
-  Ptr = (U32*)&VendorIdentifier[0];
-  *Ptr = ebx;
-  Ptr++;
-  *Ptr = edx;
-  Ptr++;
-  *Ptr = ecx;
-
-  /* Get 'Identifier' */
-  sprintf(Identifier,
-	  "x86 Family %u Model %u Stepping %u",
-	  (U32)((CpuEntry->CpuSignature >> 8) & 0x0F),
-	  (U32)((CpuEntry->CpuSignature >> 4) & 0x0F),
-	  (U32)(CpuEntry->CpuSignature & 0x0F));
-
-  /* Get FeatureSet */
-  FeatureSet = CpuEntry->FeatureFlags;
-
-  /* Set 'Configuration Data' value (CPU and FPU) */
-  SetComponentInformation(CpuInstKey,
-			  0,
-			  CpuEntry->LocalApicId,
-			  1 << CpuEntry->LocalApicId);
-
-  SetComponentInformation(FpuInstKey,
-			  0,
-			  CpuEntry->LocalApicId,
-			  1 << CpuEntry->LocalApicId);
-
-  /* Set 'FeatureSet' value (CPU only) */
-  DbgPrint((DPRINT_HWDETECT, "FeatureSet: %x\n", FeatureSet));
-
-  Error = RegSetValue(CpuInstKey,
-		      "FeatureSet",
-		      REG_DWORD,
-		      (PU8)&FeatureSet,
-		      sizeof(U32));
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-    }
-
-  /* Set 'Identifier' value (CPU and FPU) */
-  DbgPrint((DPRINT_HWDETECT, "Identifier: %s\n", Identifier));
-
-  Error = RegSetValue(CpuInstKey,
-		      "Identifier",
-		      REG_SZ,
-		      (PU8)Identifier,
-		      strlen(Identifier) + 1);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-    }
-
-  Error = RegSetValue(FpuInstKey,
-		      "Identifier",
-		      REG_SZ,
-		      (PU8)Identifier,
-		      strlen(Identifier) + 1);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-    }
-
-  /* Set 'VendorIdentifier' value (CPU only) */
-  DbgPrint((DPRINT_HWDETECT, "Vendor Identifier: %s\n", VendorIdentifier));
-
-  Error = RegSetValue(CpuInstKey,
-		      "VendorIdentifier",
-		      REG_SZ,
-		      (PU8)VendorIdentifier,
-		      strlen(VendorIdentifier) + 1);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-    }
-
-  /* FIXME: Set 'Update Signature' value (CPU only) */
-
-  /* FIXME: Set 'Update Status' value (CPU only) */
-
-  /* FIXME: Set '~MHz' value (CPU only) */
-}
-
-
-static BOOL
-DetectMps(HKEY CpuKey,
-	  HKEY FpuKey)
-{
-  PMPS_CONFIG_TABLE_HEADER ConfigTable;
-  PMPS_PROCESSOR_ENTRY CpuEntry;
-  U32 DefaultConfig;
-  char *Buffer;
-  char *Ptr;
-  U32 Offset;
-
-  DefaultConfig = MpsGetDefaultConfiguration();
-  if (DefaultConfig == 0)
-    {
-      /* Read configuration table */
-      MpsGetConfigurationTable((PVOID)DISKREADBUFFER);
-      Buffer = (char *)DISKREADBUFFER;
-      DbgPrint((DPRINT_HWDETECT, "MPS signature: %c%c%c%c\n",
-		Buffer[0], Buffer[1], Buffer[2], Buffer[3]));
-
-      ConfigTable = (PMPS_CONFIG_TABLE_HEADER)DISKREADBUFFER;
-      Offset = 0x2C;
-      while (Offset < ConfigTable->BaseTableLength)
-	{
-	  Ptr = Buffer + Offset;
-
-	  switch (*Ptr)
-	    {
-	      case 0:
-		CpuEntry = (PMPS_PROCESSOR_ENTRY)Ptr;
-
-		DbgPrint((DPRINT_HWDETECT, "Processor Entry\n"));
-		DbgPrint((DPRINT_HWDETECT, 
-			  "APIC Id %u  APIC Version %u  Flags %x  Signature %x  Feature %x\n",
-			  CpuEntry->LocalApicId,
-			  CpuEntry->LocalApicVersion,
-			  CpuEntry->CpuFlags,
-			  CpuEntry->CpuSignature,
-			  CpuEntry->FeatureFlags));
-		DbgPrint((DPRINT_HWDETECT,
-			  "Processor %u: x86 Family %u Model %u Stepping %u\n",
-			  CpuEntry->LocalApicId,
-			  (U32)((CpuEntry->CpuSignature >> 8) & 0x0F),
-			  (U32)((CpuEntry->CpuSignature >> 4) & 0x0F),
-			  (U32)(CpuEntry->CpuSignature & 0x0F)));
-
-		SetMpsProcessor(CpuKey, FpuKey, CpuEntry);
-		Offset += 0x14;
-		break;
-
-	      case 1:
-		DbgPrint((DPRINT_HWDETECT, "Bus Entry\n"));
-		Offset += 0x08;
-		break;
-
-	      case 2:
-		DbgPrint((DPRINT_HWDETECT, "I/0 APIC Entry\n"));
-		Offset += 0x08;
-		break;
-
-	      case 3:
-		DbgPrint((DPRINT_HWDETECT, "I/0 Interrupt Assignment Entry\n"));
-		Offset += 0x08;
-		break;
-
-	      case 4:
-		DbgPrint((DPRINT_HWDETECT, "Local Interrupt Assignment Entry\n"));
-		Offset += 0x08;
-		break;
-
-	      default:
-		DbgPrint((DPRINT_HWDETECT, "Unknown Entry %u\n",(U32)*Ptr));
-		return FALSE;
-	    }
-
-	}
-    }
-  else
-    {
-      DbgPrint((DPRINT_HWDETECT,
-	       "Unsupported MPS configuration: %x\n",
-	       (U32)DefaultConfig));
-
-      /* FIXME: Identify default configurations */
-
-      return FALSE;
-    }
-
-  return TRUE;
-}
-
-
-static VOID
-DetectCPUs(HKEY SystemKey)
-{
-  HKEY CpuKey;
-  HKEY FpuKey;
-  S32 Error;
-
-  /* Create the 'CentralProcessor' key */
-  Error = RegCreateKey(SystemKey,
-		       "CentralProcessor",
-		       &CpuKey);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-      return;
-    }
-
-  /* Create the 'FloatingPointProcessor' key */
-  Error = RegCreateKey(SystemKey,
-		       "FloatingPointProcessor",
-		       &FpuKey);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-      return;
-    }
-
-  if (MpsSupported())
-    {
-      DetectMps(CpuKey, FpuKey);
-    }
-  else
-    {
-      DetectCPU(CpuKey, FpuKey);
-    }
-}
 
 
 static VOID

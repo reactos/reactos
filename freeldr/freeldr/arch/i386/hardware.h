@@ -150,6 +150,7 @@ VOID SetComponentInformation(HKEY ComponentKey,
 			     U32 Affinity);
 
 /* hwcpu.c */
+VOID DetectCPUs(HKEY SystemKey);
 
 /* i386cpu.S */
 U32 CpuidSupported(VOID);
@@ -159,13 +160,8 @@ VOID GetCpuid(U32 Level,
 	      U32 *ecx,
 	      U32 *edx);
 
-U32 MpsSupported(VOID);
-U32 MpsGetDefaultConfiguration(VOID);
-U32 MpsGetConfigurationTable(PVOID ConfigTable);
-
 /* i386pnp.S */
-//U32 PnpBiosSupported(VOID);
-U32 PnpBiosSupported(PVOID InstallationCheck);
+U32 PnpBiosSupported(VOID);
 U32 PnpBiosGetDeviceNodeCount(U32 *NodeSize,
 			      U32 *NodeCount);
 U32 PnpBiosGetDeviceNode(U8 *NodeId,
