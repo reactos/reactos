@@ -106,7 +106,7 @@ BOOL IsDefaultValue(HWND hwndLV, int i)
   if(ListView_GetItem(hwndLV, &Item))
   {
     lineinfo = (PLINE_INFO)Item.lParam;
-    return lineinfo && (!lineinfo->name || !strcmp(lineinfo->name, _T("")));
+    return lineinfo && (!lineinfo->name || !_tcscmp(lineinfo->name, _T("")));
   }
   return FALSE;
 }
@@ -392,7 +392,7 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
               if(Info)
               {
                 lineinfo = (PLINE_INFO)Info->item.lParam;
-                if(!lineinfo->name || !strcmp(lineinfo->name, _T("")))
+                if(!lineinfo->name || !_tcscmp(lineinfo->name, _T("")))
                 {
                   *Result = TRUE;
                 }
@@ -490,7 +490,7 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
             dwValSize = max_val_size;
             dwValType = 0L;
             ++dwIndex;
-            if(!strcmp(ValName, _T("")))
+            if(!_tcscmp(ValName, _T("")))
             {
               AddedDefault = TRUE;
             }

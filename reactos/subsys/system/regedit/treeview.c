@@ -111,7 +111,7 @@ static HTREEITEM AddEntryToTree(HWND hwndTV, HTREEITEM hParent, LPTSTR label, HK
 
     tvi.mask = TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN | TVIF_PARAM;
     tvi.pszText = label;
-    tvi.cchTextMax = lstrlen(tvi.pszText);
+    tvi.cchTextMax = _tcslen(tvi.pszText);
     tvi.iImage = Image_Closed;
     tvi.iSelectedImage = Image_Open;
     tvi.cChildren = dwChildren;
@@ -132,7 +132,7 @@ static BOOL InitTreeViewItems(HWND hwndTV, LPTSTR pHostName)
     tvi.mask = TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN | TVIF_PARAM;
     /* Set the text of the item.  */
     tvi.pszText = pHostName;
-    tvi.cchTextMax = lstrlen(tvi.pszText);
+    tvi.cchTextMax = _tcslen(tvi.pszText);
     /* Assume the item is not a parent item, so give it an image.  */
     tvi.iImage = Image_Root;
     tvi.iSelectedImage = Image_Root;

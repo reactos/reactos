@@ -245,7 +245,8 @@ static BOOL ImportRegistryFile(HWND hWnd)
     ofn.lpstrTitle = _T("Import Registry File");
     /*    ofn.lCustData = ;*/
     if (GetOpenFileName(&ofn)) {
-        if (!import_registry_file(ofn.lpstrFile)) {
+        /* FIXME - convert to ascii */
+	if (!import_registry_file((LPSTR)ofn.lpstrFile)) {
             /*printf("Can't open file \"%s\"\n", ofn.lpstrFile);*/
             return FALSE;
         }
@@ -287,8 +288,9 @@ static BOOL ExportRegistryFile(HWND hWnd)
     ofn.lpfnHook = ImportRegistryFile_OFNHookProc;
     ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG1);
     if (GetSaveFileName(&ofn)) {
-        BOOL result;
-        result = export_registry_key(ofn.lpstrFile, ExportKeyPath);
+        BOOL result;   
+        /* FIXME - convert strings to ascii! */
+        result = export_registry_key((CHAR*)ofn.lpstrFile, (CHAR*)ExportKeyPath);
         /*result = export_registry_key(ofn.lpstrFile, NULL);*/
         /*if (!export_registry_key(ofn.lpstrFile, NULL)) {*/
         if (!result) {
@@ -307,7 +309,7 @@ static BOOL ExportRegistryFile(HWND hWnd)
         if (s[0]) {
             TCHAR reg_key_name[KEY_MAX_LEN];
             get_file_name(&s, reg_key_name, KEY_MAX_LEN);
-            export_registry_key(filename, reg_key_name);
+            export_registry_key((CHAR)filename, reg_key_name);
         } else {
             export_registry_key(filename, NULL);
         }

@@ -276,9 +276,9 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		    if (keyPath) {
 		        RefreshListView(pChildWnd->hListWnd, hRootKey, keyPath);
 			rootName = get_root_key_name(hRootKey);
-			fullPath = HeapAlloc(GetProcessHeap(), 0, (lstrlen(rootName) + 1 + lstrlen(keyPath) + 1) * sizeof(TCHAR));
+			fullPath = HeapAlloc(GetProcessHeap(), 0, (_tcslen(rootName) + 1 + _tcslen(keyPath) + 1) * sizeof(TCHAR));
 			if (fullPath) {
-			    _stprintf(fullPath, "%s\\%s", rootName, keyPath);
+			    _stprintf(fullPath, _T("%s\\%s"), rootName, keyPath);
 			    SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)fullPath);
 			    HeapFree(GetProcessHeap(), 0, fullPath);
 			}

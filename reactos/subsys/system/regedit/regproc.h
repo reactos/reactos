@@ -37,7 +37,7 @@ void doRegisterDLL(LPSTR lpsLine);
 void doUnregisterDLL(LPSTR lpsLine);
 
 BOOL export_registry_key(CHAR *file_name, CHAR *reg_key_name);
-BOOL import_registry_file(LPTSTR filename);
+BOOL import_registry_file(LPSTR filename);
 void delete_registry_key(CHAR *reg_key_name);
 
 void setAppName(CHAR *name);

@@ -59,10 +59,10 @@ void error(HWND hwnd, INT resId, ...)
     hInstance = GetModuleHandle(0);
 
     if (!LoadString(hInstance, IDS_ERROR, title, COUNT_OF(title)))
-        lstrcpy(title, "Error");
+        _tcscpy(title, _T("Error"));
 
     if (!LoadString(hInstance, resId, errfmt, COUNT_OF(errfmt)))
-        lstrcpy(errfmt, "Unknown error string!");
+        _tcscpy(errfmt, _T("Unknown error string!"));
 
     va_start(ap, resId);
     _vsntprintf(errstr, COUNT_OF(errstr), errfmt, ap);
@@ -82,10 +82,10 @@ void warning(HWND hwnd, INT resId, ...)
     hInstance = GetModuleHandle(0);
 
     if (!LoadString(hInstance, IDS_WARNING, title, COUNT_OF(title)))
-        lstrcpy(title, "Error");
+        _tcscpy(title, _T("Warning"));
 
     if (!LoadString(hInstance, resId, errfmt, COUNT_OF(errfmt)))
-        lstrcpy(errfmt, "Unknown error string!");
+        _tcscpy(errfmt, _T("Unknown error string!"));
 
     va_start(ap, resId);
     _vsntprintf(errstr, COUNT_OF(errstr), errfmt, ap);
@@ -102,7 +102,7 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
 
     switch(uMsg) {
     case WM_INITDIALOG:
-        if(editValueName && strcmp(editValueName, _T("")))
+        if(editValueName && _tcscmp(editValueName, _T("")))
         {
           SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
         }
@@ -165,7 +165,7 @@ INT_PTR CALLBACK modify_multi_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wPa
 
     switch(uMsg) {
     case WM_INITDIALOG:
-        if(editValueName && strcmp(editValueName, _T("")))
+        if(editValueName && _tcscmp(editValueName, _T("")))
         {
           SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
         }
@@ -282,7 +282,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
         SetWindowLong(hwndValue, GWL_USERDATA, (LONG)oldproc);
         SetWindowLong(hwndValue, GWL_WNDPROC, (LONG)DwordEditSubclassProc);
 
-        if(editValueName && strcmp(editValueName, _T("")))
+        if(editValueName && _tcscmp(editValueName, _T("")))
         {
             SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
         }
@@ -291,7 +291,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
             SetDlgItemText(hwndDlg, IDC_VALUE_NAME, _T("(Default)"));
         }
         CheckRadioButton (hwndDlg, IDC_FORMAT_HEX, IDC_FORMAT_DEC, IDC_FORMAT_HEX);
-        sprintf (ValueString, "%lx", dwordValueData);
+        _stprintf (ValueString, _T("%lx"), dwordValueData);
         SetDlgItemText(hwndDlg, IDC_VALUE_DATA, ValueString);
         SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
         return FALSE;
@@ -313,7 +313,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                         }
                         else
                         {
-                            Value = strtoul (ValueString, &Remainder, 10);
+                            Value = _tcstoul (ValueString, &Remainder, 10);
                         }
                     }
                     else
@@ -321,7 +321,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                         Value = 0;
                     }
                 }
-                sprintf (ValueString, "%lx", Value);
+                _stprintf (ValueString, _T("%lx"), Value);
                 SetDlgItemText(hwndDlg, IDC_VALUE_DATA, ValueString);
                 return TRUE;
             }
@@ -341,7 +341,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                         }
                         else
                         {
-                            Value = strtoul (ValueString, &Remainder, 16);
+                            Value = _tcstoul (ValueString, &Remainder, 16);
                         }
                     }
                     else
@@ -349,7 +349,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                         Value = 0;
                     }
                 }
-                sprintf (ValueString, "%lu", Value);
+                _stprintf (ValueString, _T("%lu"), Value);
                 SetDlgItemText(hwndDlg, IDC_VALUE_DATA, ValueString);
                 return TRUE;
             }
@@ -367,7 +367,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                     }
 
                     Base = (dwordEditMode == EDIT_MODE_HEX) ? 16 : 10;
-                    dwordValueData = strtoul (ValueString, &Remainder, Base);
+                    dwordValueData = _tcstoul (ValueString, &Remainder, Base);
                 }
                 else
                 {
@@ -422,7 +422,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
                 error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
                 goto done;
             }
-            lRet = RegQueryValueEx(hKey, valueName, 0, 0, stringValueData, &valueDataLen);
+            lRet = RegQueryValueEx(hKey, valueName, 0, 0, (LPBYTE)stringValueData, &valueDataLen);
             if (lRet != ERROR_SUCCESS)
             {
                 error(hwnd, IDS_BAD_VALUE, valueName);
@@ -438,7 +438,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
         {
             if (stringValueData)
             {
-                lRet = RegSetValueEx(hKey, valueName, 0, type, stringValueData, lstrlen(stringValueData) + 1);
+                lRet = RegSetValueEx(hKey, valueName, 0, type, (LPBYTE)stringValueData, (_tcslen(stringValueData) + 1) * sizeof(TCHAR));
             }
             else
             {
@@ -452,7 +452,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
     {
         if (valueDataLen > 0)
         {
-            DWORD NewLen, llen, listlen, nl_len;
+            DWORD llen, listlen, nl_len;
             LPTSTR src, lines = NULL;
             
 	    if (!(stringValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen)))
@@ -460,7 +460,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
                 error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
                 goto done;
             }
-            lRet = RegQueryValueEx(hKey, valueName, 0, 0, stringValueData, &valueDataLen);
+            lRet = RegQueryValueEx(hKey, valueName, 0, 0, (LPBYTE)stringValueData, &valueDataLen);
             if (lRet != ERROR_SUCCESS)
             {
                 error(hwnd, IDS_BAD_VALUE, valueName);
@@ -468,7 +468,6 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
             }
             
 	    /* convert \0 to \r\n */
-            NewLen = valueDataLen;
             src = stringValueData;
             nl_len = _tcslen(_T("\r\n")) * sizeof(TCHAR);
             listlen = sizeof(TCHAR);
@@ -510,7 +509,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
                 {
                     if((nl = _tcsstr(src, _T("\r\n"))))
                     {
-                        linechars = (nl - src) / sizeof(TCHAR);
+                        linechars = nl - src;
                         if(nl == src)
                         {
                             EmptyLines = TRUE;
@@ -543,7 +542,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
                     warning(hwnd, IDS_MULTI_SZ_EMPTY_STRING);
                 }
                 
-		lRet = RegSetValueEx(hKey, valueName, 0, type, lines, buflen);
+		lRet = RegSetValueEx(hKey, valueName, 0, type, (LPBYTE)lines, buflen);
 		HeapFree(GetProcessHeap(), 0, lines);
             }
             else
