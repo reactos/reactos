@@ -206,11 +206,6 @@ SaveTrapFrameForKDB_Return:
 
 	call    @KeReleaseDispatcherDatabaseLockFromDpcLevel@0
 
-	cmpl	$0, _PiNrThreadsAwaitingReaping
-	je	5f
-	call	_PiWakeupReaperThread@0
-5:
-
 	/*
 	 * Restore the saved register and exit
 	 */

@@ -2003,6 +2003,34 @@ NtNotifyChangeKey (IN HANDLE KeyHandle,
 	return(STATUS_NOT_IMPLEMENTED);
 }
 
+#if 0
+NTSTATUS STDCALL
+NtNotifyChangeKey (IN HANDLE KeyHandle,
+		   IN HANDLE Event,
+		   IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+		   IN PVOID ApcContext OPTIONAL,
+		   OUT PIO_STATUS_BLOCK IoStatusBlock,
+		   IN ULONG CompletionFilter,
+		   IN BOOLEAN WatchSubtree,
+		   OUT PVOID Buffer,
+		   IN ULONG Length,
+		   IN BOOLEAN Asynchronous)
+{
+     return NtNotifyChangeMultipleKeys(KeyHandle,          
+                                       0,
+                                       NULL,
+                                       Event,
+                                       ApcRoutine,
+                                       ApcContext,
+                                       IoStatusBlock,
+                                       CompletionFilter,
+                                       WatchTree,
+                                       Buffer,
+                                       Length,
+                                       Asynchronous);
+}
+
+#endif
 
 NTSTATUS STDCALL
 NtQueryMultipleValueKey (IN HANDLE KeyHandle,

@@ -287,7 +287,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
             
             /* Block the Thread */
             DPRINT("Blocking the Thread: %x %x!\n", KeGetCurrentThread(), Thread);
-            PsBlockThread(&Status, 
+            KiBlockThread(&Status, 
                           FALSE, 
                           WaitMode,
                           WrQueue);
@@ -473,7 +473,7 @@ KiInsertQueue(IN PKQUEUE Queue,
         
         /* Reschedule the Thread */
         DPRINT("Unblocking the Thread\n");
-        PsUnblockThread((PETHREAD)Thread, (PNTSTATUS)&Entry, 0);
+        KiUnblockThread(Thread, (PNTSTATUS)&Entry, 0);
     
     } else {
     

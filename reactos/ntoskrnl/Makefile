@@ -226,9 +226,10 @@ OBJECTS_PS = \
 	ps/locale.o \
 	ps/process.o \
 	ps/psmgr.o \
+	ps/query.o \
+	ps/security.o \
 	ps/suspend.o \
 	ps/thread.o \
-	ps/tinfo.o \
 	ps/win32.o \
 	ps/w32call.o
 

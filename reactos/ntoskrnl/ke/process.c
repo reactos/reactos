@@ -53,6 +53,35 @@ UpdatePageDirs(PKTHREAD Thread, PKPROCESS Process)
     MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
 }
 
+ULONG
+STDCALL
+KeSetProcess(PKPROCESS Process, 
+             KPRIORITY Increment)
+{
+    KIRQL OldIrql;
+    ULONG OldState;
+    
+    /* Lock Dispatcher */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
+    
+    /* Get Old State */
+    OldState = Process->DispatcherHeader.SignalState;
+    
+    /* Signal the Process */
+    Process->DispatcherHeader.SignalState = TRUE;
+    if ((OldState == 0) && IsListEmpty(&Process->DispatcherHeader.WaitListHead) != TRUE) {
+        
+        /* Satisfy waits */
+        KiWaitTest((PVOID)Process, Increment);
+    }
+    
+    /* Release Dispatcher Database */    
+    KeReleaseDispatcherDatabaseLock(OldIrql);
+    
+    /* Return the previous State */
+    return OldState;           
+}
+
 /*
  * @implemented
  */

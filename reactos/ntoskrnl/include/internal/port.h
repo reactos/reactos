@@ -29,14 +29,6 @@ typedef struct _EPORT
   ULONG		MaxPoolUsage; /* size of NP zone */
 } EPORT, * PEPORT;
 
-
-typedef struct _EPORT_TERMINATION_REQUEST
-{
-	LIST_ENTRY	ThreadListEntry;
-	PEPORT		Port;	
-} EPORT_TERMINATION_REQUEST, *PEPORT_TERMINATION_REQUEST;
-
-
 typedef struct _EPORT_CONNECT_REQUEST_MESSAGE
 {
   LPC_MESSAGE MessageHeader;
@@ -58,6 +50,11 @@ typedef struct _EPORT_CONNECT_REPLY_MESSAGE
   ULONG ConnectDataLength;
   UCHAR ConnectData[0];
 } EPORT_CONNECT_REPLY_MESSAGE, *PEPORT_CONNECT_REPLY_MESSAGE;
+
+typedef struct _TERMINATION_PORT {
+    LIST_ENTRY Links;
+    PVOID Port;
+} TERMINATION_PORT, *PTERMINATION_PORT;
 
 NTSTATUS STDCALL
 LpcRequestPort (PEPORT		Port,

@@ -23,8 +23,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* TYPES *******************************************************************/
-
 /* GLOBALS ******************************************************************/
 
 extern LIST_ENTRY PsActiveProcessHead;
@@ -32,20 +30,12 @@ extern PEPROCESS PsIdleProcess;
 
 POBJECT_TYPE EXPORTED PsThreadType = NULL;
 
-LONG PiNrThreadsAwaitingReaping = 0;
-
 extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
+extern ULONG IdleProcessorMask;
+extern LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
 
-/*
- * PURPOSE: List of threads associated with each priority level
- */
-static LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
-static ULONG PriorityListMask = 0;
-static ULONG IdleProcessorMask = 0;
-static BOOLEAN DoneInitYet = FALSE;
-static KEVENT PiReaperThreadEvent;
-static BOOLEAN PiReaperThreadShouldTerminate = FALSE;
 
+BOOLEAN DoneInitYet = FALSE;
 static GENERIC_MAPPING PiThreadMapping = {STANDARD_RIGHTS_READ | THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION,
 					  STANDARD_RIGHTS_WRITE | THREAD_TERMINATE | THREAD_SUSPEND_RESUME | THREAD_ALERT |
                       THREAD_SET_INFORMATION | THREAD_SET_CONTEXT,
@@ -222,16 +212,13 @@ PsIsThreadTerminating(IN PETHREAD Thread)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL
-PsIsSystemThread(
-    PETHREAD Thread
-    )
+PsIsSystemThread(PETHREAD Thread)
 {
-	UNIMPLEMENTED;
-	return FALSE;	
+    return (Thread->SystemThread ? TRUE: FALSE);
 }
 
 /*
@@ -245,41 +232,6 @@ PsIsThreadImpersonating(
 {
   return Thread->ActiveImpersonationInfo;
 }
-
-static VOID
-KiRequestReschedule(CCHAR Processor)
-{
-   PKPCR Pcr;
-
-   Pcr = (PKPCR)(KPCR_BASE + Processor * PAGE_SIZE);
-   Pcr->Prcb->QuantumEnd = TRUE;
-   KiIpiSendRequest(1 << Processor, IPI_REQUEST_DPC);
-}
-
-static VOID
-PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
-{
-   ASSERT(THREAD_STATE_READY == Thread->Tcb.State);
-   ASSERT(Thread->Tcb.Priority == Priority);
-   if (Priority >= MAXIMUM_PRIORITY || Priority < LOW_PRIORITY)
-     {
-	DPRINT1("Invalid thread priority (%d)\n", Priority);
-	KEBUGCHECK(0);
-     }
-   InsertTailList(&PriorityListHead[Priority], &Thread->Tcb.QueueListEntry);
-   PriorityListMask |= (1 << Priority);
-}
-
-static VOID PsRemoveFromThreadList(PETHREAD Thread)
-{
-   ASSERT(THREAD_STATE_READY == Thread->Tcb.State);
-   RemoveEntryList(&Thread->Tcb.QueueListEntry);
-   if (IsListEmpty(&PriorityListHead[(ULONG)Thread->Tcb.Priority]))
-     {
-        PriorityListMask &= ~(1 << Thread->Tcb.Priority);
-     }
-}
-
 
 VOID PsDumpThreads(BOOLEAN IncludeSystem)
 {
@@ -333,259 +285,6 @@ VOID PsDumpThreads(BOOLEAN IncludeSystem)
      }
      AProcess = AProcess->Flink;
    }
-}
-
-static PETHREAD PsScanThreadList(KPRIORITY Priority, ULONG Affinity)
-{
-   PLIST_ENTRY current_entry;
-   PETHREAD current;
-   ULONG Mask;
-
-   Mask = (1 << Priority);
-   if (PriorityListMask & Mask)
-     {
-       current_entry = PriorityListHead[Priority].Flink;
-       while (current_entry != &PriorityListHead[Priority])
-         {
-           current = CONTAINING_RECORD(current_entry, ETHREAD,
-				       Tcb.QueueListEntry);
-	   if (current->Tcb.State != THREAD_STATE_READY)
-	     {
-	       DPRINT1("%d/%d\n", current->Cid.UniqueThread, current->Tcb.State);
-	     }
-           ASSERT(current->Tcb.State == THREAD_STATE_READY);
-           DPRINT("current->Tcb.Affinity %x Affinity %x PID %d %d\n",
-	          current->Tcb.Affinity, Affinity, current->Cid.UniqueThread,
-	          Priority);
-           if (current->Tcb.Affinity & Affinity)
-	     {
-	       PsRemoveFromThreadList(current);
-	       return(current);
-	     }
-           current_entry = current_entry->Flink;
-	 }
-     }
-   return(NULL);
-}
-
-VOID STDCALL
-PiWakeupReaperThread(VOID)
-{
-  KeSetEvent(&PiReaperThreadEvent, 0, FALSE);
-}
-
-VOID STDCALL
-PiReaperThreadMain(PVOID Ignored)
-{
-  for(;;)
-  {
-    KeWaitForSingleObject(&PiReaperThreadEvent,
-			  Executive,
-			  KernelMode,
-			  FALSE,
-			  NULL);
-    if (PiReaperThreadShouldTerminate)
-	{
-	  PsTerminateSystemThread(0);
-	}
-    PsReapThreads();
-  }
-}
-
-VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
-{
-   KPRIORITY CurrentPriority;
-   PETHREAD Candidate;
-   ULONG Affinity;
-   PKTHREAD KCurrentThread = KeGetCurrentThread();
-   PETHREAD CurrentThread = CONTAINING_RECORD(KCurrentThread, ETHREAD, Tcb);
-
-   DPRINT("PsDispatchThread() %d/%d/%d/%d\n", KeGetCurrentProcessorNumber(),
-	   CurrentThread->Cid.UniqueThread, NewThreadStatus, CurrentThread->Tcb.State);
-
-   CurrentThread->Tcb.State = (UCHAR)NewThreadStatus;
-   switch(NewThreadStatus)
-   {
-     case THREAD_STATE_READY:
-	PsInsertIntoThreadList(CurrentThread->Tcb.Priority,
-			       CurrentThread);
-	break;
-     case THREAD_STATE_TERMINATED_1:
-	PsQueueThreadReap(CurrentThread);
-	break;
-   }
-
-   Affinity = 1 << KeGetCurrentProcessorNumber();
-   for (CurrentPriority = HIGH_PRIORITY;
-	CurrentPriority >= LOW_PRIORITY;
-	CurrentPriority--)
-     {
-	Candidate = PsScanThreadList(CurrentPriority, Affinity);
-	if (Candidate == CurrentThread)
-	  {
-	     Candidate->Tcb.State = THREAD_STATE_RUNNING;
-	     KeReleaseDispatcherDatabaseLockFromDpcLevel();	
-	     return;
-	  }
-	if (Candidate != NULL)
-	  {
-	    PETHREAD OldThread;
-	    PKTHREAD IdleThread;
-
-	    DPRINT("Scheduling %x(%d)\n",Candidate, CurrentPriority);
-
-	    Candidate->Tcb.State = THREAD_STATE_RUNNING;
-
-	    OldThread = CurrentThread;
-	    CurrentThread = Candidate;
-	    IdleThread = KeGetCurrentPrcb()->IdleThread;
-
-	    if (&OldThread->Tcb == IdleThread)
-	    {
-	       IdleProcessorMask &= ~Affinity;
-	    }
-	    else if (&CurrentThread->Tcb == IdleThread)
-	    {
-	       IdleProcessorMask |= Affinity;
-	    }
-
-	    MmUpdatePageDir(PsGetCurrentProcess(),(PVOID)CurrentThread->ThreadsProcess, sizeof(EPROCESS));
-
-	    KiArchContextSwitch(&CurrentThread->Tcb, &OldThread->Tcb);
-	    return;
-	  }
-     }
-   CPRINT("CRITICAL: No threads are ready (CPU%d)\n", KeGetCurrentProcessorNumber());
-   PsDumpThreads(TRUE);
-   KEBUGCHECK(0);
-}
-
-VOID STDCALL
-PsDispatchThread(ULONG NewThreadStatus)
-{
-   KIRQL oldIrql;
-
-   if (!DoneInitYet || KeGetCurrentPrcb()->IdleThread == NULL)
-     {
-	return;
-     }
-   oldIrql = KeAcquireDispatcherDatabaseLock();
-   PsDispatchThreadNoLock(NewThreadStatus);
-   KeLowerIrql(oldIrql);
-}
-
-VOID
-PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus, KPRIORITY Increment)
-{
-  if (THREAD_STATE_TERMINATED_1 == Thread->Tcb.State ||
-      THREAD_STATE_TERMINATED_2 == Thread->Tcb.State)
-    {
-       DPRINT("Can't unblock thread %d because it's terminating\n",
-	       Thread->Cid.UniqueThread);
-    }
-  else if (THREAD_STATE_READY == Thread->Tcb.State ||
-           THREAD_STATE_RUNNING == Thread->Tcb.State)
-    {
-       DPRINT("Can't unblock thread %d because it's ready or running\n",
-	       Thread->Cid.UniqueThread);
-    }
-  else
-    {
-      ULONG Processor;
-      KAFFINITY Affinity;
-
-      /* FIXME: This propably isn't the right way to do it... */
-      if (Thread->Tcb.Priority < LOW_REALTIME_PRIORITY &&
-          Thread->Tcb.BasePriority < LOW_REALTIME_PRIORITY - 2)
-        {
-          if (!Thread->Tcb.PriorityDecrement && !Thread->Tcb.DisableBoost)
-            {
-              Thread->Tcb.Priority = Thread->Tcb.BasePriority + Increment;
-              Thread->Tcb.PriorityDecrement = Increment;
-            }
-        }
-      else
-        {
-          Thread->Tcb.Quantum = Thread->Tcb.ApcState.Process->ThreadQuantum;
-        }
-     
-      if (WaitStatus != NULL)
-	{
-	  Thread->Tcb.WaitStatus = *WaitStatus;
-	}
-      Thread->Tcb.State = THREAD_STATE_READY;
-      PsInsertIntoThreadList(Thread->Tcb.Priority, Thread);
-      Processor = KeGetCurrentProcessorNumber();
-      Affinity = Thread->Tcb.Affinity;
-      if (!(IdleProcessorMask & (1 << Processor) & Affinity) &&
-          (IdleProcessorMask & ~(1 << Processor) & Affinity))
-        {
-	  ULONG i;
-	  for (i = 0; i < KeNumberProcessors - 1; i++)
-	    {
-	      Processor++;
-	      if (Processor >= KeNumberProcessors)
-	        {
-	          Processor = 0;
-	        }
-	      if (IdleProcessorMask & (1 << Processor) & Affinity)
-	        {
-#if 0	        
-                  /* FIXME:
-                   *   Reschedule the threads on an other processor 
-                   */
-		  KeReleaseDispatcherDatabaseLockFromDpcLevel();
-                  KiRequestReschedule(Processor);
-		  KeAcquireDispatcherDatabaseLockAtDpcLevel();
-#endif
-	          break;
-		}
-	    }
-	} 
-    }
-}
-
-VOID
-STDCALL
-PsBlockThread(PNTSTATUS Status, 
-              UCHAR Alertable, 
-              ULONG WaitMode,
-              UCHAR WaitReason)
-{
-    PKTHREAD Thread = KeGetCurrentThread();
-    PKWAIT_BLOCK WaitBlock;
-
-    if (Thread->ApcState.KernelApcPending) {
-    
-        DPRINT("Dispatching Thread as ready (APC!)\n");
-        
-        /* Remove Waits */
-        WaitBlock = Thread->WaitBlockList;
-        while (WaitBlock) {
-            RemoveEntryList (&WaitBlock->WaitListEntry);
-            WaitBlock = WaitBlock->NextWaitBlock;
-        }
-        Thread->WaitBlockList = NULL;
-        
-        /* Dispatch it and return status */
-        PsDispatchThreadNoLock (THREAD_STATE_READY);
-        if (Status != NULL) *Status = STATUS_KERNEL_APC;
-
-    } else {
-
-        /* Set the Thread Data as Requested */
-        DPRINT("Dispatching Thread as blocked\n");
-        Thread->Alertable = Alertable;
-        Thread->WaitMode = (UCHAR)WaitMode;
-        Thread->WaitReason = WaitReason;
-        
-        /* Dispatch it and return status */
-        PsDispatchThreadNoLock(THREAD_STATE_BLOCKED);
-        if (Status != NULL) *Status = Thread->WaitStatus;
-    }
-    
-    DPRINT("Releasing Dispatcher Lock\n");
-    KfLowerIrql(Thread->WaitIrql);
 }
 
 VOID
@@ -751,7 +450,7 @@ PsInitThreadManagment(VOID)
    PsThreadType->Dump = NULL;
    PsThreadType->Open = NULL;
    PsThreadType->Close = NULL;
-   PsThreadType->Delete = PiDeleteThread;
+   PsThreadType->Delete = PspDeleteThread;
    PsThreadType->Parse = NULL;
    PsThreadType->Security = NULL;
    PsThreadType->QueryName = NULL;
@@ -773,218 +472,10 @@ PsInitThreadManagment(VOID)
    DPRINT("FirstThread %x\n",FirstThread);
 
    DoneInitYet = TRUE;
-}
-
-VOID
-PsInitReaperThread(VOID)
-{
-   PETHREAD ReaperThread;
-   KIRQL oldIrql;
-   NTSTATUS Status;
    
-   /*
-    * Create the reaper thread
-    */
-   PsInitializeThreadReaper();
-   KeInitializeEvent(&PiReaperThreadEvent, SynchronizationEvent, FALSE);
-   Status = PsInitializeThread(NULL,
-			       &ReaperThread,
-			       NULL,
-			       KernelMode,
-			       FALSE);
-   if (!NT_SUCCESS(Status))
-     {
-       DPRINT1("PS: Failed to create reaper thread.\n");
-       KEBUGCHECK(0);
-     }
-
-   ReaperThread->StartAddress = PiReaperThreadMain;
-   Status = KiArchInitThread(&ReaperThread->Tcb, PiReaperThreadMain, NULL);
-   if (!NT_SUCCESS(Status))
-     {
-       DPRINT1("PS: Failed to initialize reaper thread.\n");
-       KEBUGCHECK(0);
-     }
-
-   oldIrql = KeAcquireDispatcherDatabaseLock ();
-   PsUnblockThread(ReaperThread, NULL, 0);
-   KeReleaseDispatcherDatabaseLock(oldIrql);
+   InitializeListHead(&PspReaperListHead);
+   ExInitializeWorkItem(&PspReaperWorkItem, PspReapRoutine, NULL);
 }
-
-/*
- * @implemented
- */
-LONG STDCALL
-KeSetBasePriorityThread (PKTHREAD	Thread,
-			 LONG		Increment)
-/*
- * Sets thread's base priority relative to the process' base priority
- * Should only be passed in THREAD_PRIORITY_ constants in pstypes.h
- */
-{
-   KPRIORITY Priority;
-   if (Increment < -2)
-     {
-       Increment = -2;
-     }
-   else if (Increment > 2)
-     {
-       Increment = 2;
-     }
-   Priority = ((PETHREAD)Thread)->ThreadsProcess->Pcb.BasePriority + Increment;
-   if (Priority < LOW_PRIORITY)
-   {
-     Priority = LOW_PRIORITY;
-   }
-   else if (Priority >= MAXIMUM_PRIORITY)
-     {
-       Thread->BasePriority = HIGH_PRIORITY;
-     }
-   KeSetPriorityThread(Thread, Priority);
-   return 1;
-}
-
-
-/*
- * @implemented
- */
-KPRIORITY STDCALL
-KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
-{
-   KPRIORITY OldPriority;
-   KIRQL oldIrql;
-   PKTHREAD CurrentThread;
-   ULONG Mask;
-   int i;
-   PKPCR Pcr;
-
-   if (Priority < LOW_PRIORITY || Priority >= MAXIMUM_PRIORITY)
-     {
-	KEBUGCHECK(0);
-     }
-
-   oldIrql = KeAcquireDispatcherDatabaseLock();
-
-   OldPriority = Thread->Priority;
-
-   if (OldPriority != Priority)
-     {
-       CurrentThread = KeGetCurrentThread();
-       if (Thread->State == THREAD_STATE_READY)
-         {
-	   PsRemoveFromThreadList((PETHREAD)Thread);
-           Thread->BasePriority = Thread->Priority = (CHAR)Priority;
-	   PsInsertIntoThreadList(Priority, (PETHREAD)Thread);
-	   if (CurrentThread->Priority < Priority)
-	     {
-               PsDispatchThreadNoLock(THREAD_STATE_READY);
-               KeLowerIrql(oldIrql);
-	       return (OldPriority);
-	     }
-	 }
-       else if (Thread->State == THREAD_STATE_RUNNING)
-         {
-           Thread->BasePriority = Thread->Priority = (CHAR)Priority;
-	   if (Priority < OldPriority)
-	     {
-	       /* Check for threads with a higher priority */
-	       Mask = ~((1 << (Priority + 1)) - 1);
-	       if (PriorityListMask & Mask)
-	         {
-		   if (Thread == CurrentThread)
-		     {
-                       PsDispatchThreadNoLock(THREAD_STATE_READY);
-                       KeLowerIrql(oldIrql);
-	               return (OldPriority);
-		     }
-		   else
-		     {
-		       for (i = 0; i < KeNumberProcessors; i++)
-		       {
-			  Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
-			  if (Pcr->Prcb->CurrentThread == Thread)
-			  {
-			    KeReleaseDispatcherDatabaseLockFromDpcLevel();
-                            KiRequestReschedule(i);
-                            KeLowerIrql(oldIrql);
-	                    return (OldPriority);
-			  }
-		       }
-		     }
-		 }
-	     }
-	 }
-       else
-         {
-            Thread->BasePriority = Thread->Priority = (CHAR)Priority;
-         }
-     }
-   KeReleaseDispatcherDatabaseLock(oldIrql);
-   return(OldPriority);
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS STDCALL
-KeSetAffinityThread(PKTHREAD	Thread,
-		    KAFFINITY	Affinity)
-/*
- * Sets thread's affinity
- */
-{
-    KIRQL oldIrql;
-    ULONG i;
-    PKPCR Pcr;
-    KAFFINITY ProcessorMask;
-
-    DPRINT("KeSetAffinityThread(Thread %x, Affinity %x)\n", Thread, Affinity);
-
-    ASSERT(Affinity & ((1 << KeNumberProcessors) - 1));
-
-    oldIrql = KeAcquireDispatcherDatabaseLock();
-
-    Thread->UserAffinity = Affinity;
-    if (Thread->SystemAffinityActive == FALSE)
-    {
-       Thread->Affinity = Affinity;
-       if (Thread->State == THREAD_STATE_RUNNING)
-       {
-          ProcessorMask = 1 << KeGetCurrentKPCR()->ProcessorNumber;
-          if (Thread == KeGetCurrentThread())
-	  {
-	     if (!(Affinity & ProcessorMask))
-	     {
-                PsDispatchThreadNoLock(THREAD_STATE_READY);
-                KeLowerIrql(oldIrql);
-		return STATUS_SUCCESS;
-	     }
-	  }
-	  else
-	  {
-	     for (i = 0; i < KeNumberProcessors; i++)
-	     {
-		Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
-		if (Pcr->Prcb->CurrentThread == Thread)
-		{
-		   if (!(Affinity & ProcessorMask))
-		   {
-		      KeReleaseDispatcherDatabaseLockFromDpcLevel();
-                      KiRequestReschedule(i);
-                      KeLowerIrql(oldIrql);
-		      return STATUS_SUCCESS;
-		   }
-		   break;
-		}
-	     }
-	     ASSERT (i < KeNumberProcessors);
-	  }
-       }
-    }
-    KeReleaseDispatcherDatabaseLock(oldIrql);
-    return STATUS_SUCCESS;
-}
-
 
 /**********************************************************************
  *	NtOpenThread/4
@@ -1088,7 +579,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
 NTSTATUS STDCALL
 NtYieldExecution(VOID)
 {
-  PsDispatchThread(THREAD_STATE_READY);
+  KiDispatchThread(THREAD_STATE_READY);
   return(STATUS_SUCCESS);
 }
 
@@ -1103,68 +594,30 @@ NtTestAlert(VOID)
   return KeTestAlertThread(ExGetPreviousMode()) ? STATUS_ALERTED : STATUS_SUCCESS;
 }
 
-
-/*
- * @implemented
- */
-NTSTATUS STDCALL
-PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
-			   OUT PEPROCESS *Process OPTIONAL,
-			   OUT PETHREAD *Thread)
+VOID
+KeSetPreviousMode (ULONG Mode)
 {
-  PHANDLE_TABLE_ENTRY CidEntry;
-  PETHREAD FoundThread;
-
-  PAGED_CODE();
-
-  ASSERT(Thread);
-  ASSERT(Cid);
-
-  CidEntry = PsLookupCidHandle(Cid->UniqueThread, PsThreadType, (PVOID*)&FoundThread);
-  if(CidEntry != NULL)
-  {
-    ObReferenceObject(FoundThread);
-
-    PsUnlockCidHandle(CidEntry);
-
-    if(Process != NULL)
-    {
-      *Process = FoundThread->ThreadsProcess;
-    }
-    *Thread = FoundThread;
-    return STATUS_SUCCESS;
-  }
-
-  return STATUS_INVALID_PARAMETER;
+  PsGetCurrentThread()->Tcb.PreviousMode = (UCHAR)Mode;
 }
 
 
 /*
  * @implemented
  */
-NTSTATUS STDCALL
-PsLookupThreadByThreadId(IN HANDLE ThreadId,
-			 OUT PETHREAD *Thread)
+KPROCESSOR_MODE STDCALL
+KeGetPreviousMode (VOID)
 {
-  PHANDLE_TABLE_ENTRY CidEntry;
-  PETHREAD FoundThread;
+  return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;
+}
 
-  PAGED_CODE();
 
-  ASSERT(Thread);
-
-  CidEntry = PsLookupCidHandle(ThreadId, PsThreadType, (PVOID*)&FoundThread);
-  if(CidEntry != NULL)
-  {
-    ObReferenceObject(FoundThread);
-
-    PsUnlockCidHandle(CidEntry);
-
-    *Thread = FoundThread;
-    return STATUS_SUCCESS;
-  }
-
-  return STATUS_INVALID_PARAMETER;
+/*
+ * @implemented
+ */
+KPROCESSOR_MODE STDCALL
+ExGetPreviousMode (VOID)
+{
+  return (KPROCESSOR_MODE)PsGetCurrentThread()->Tcb.PreviousMode;
 }
 
 /* EOF */

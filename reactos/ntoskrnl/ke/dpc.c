@@ -491,7 +491,7 @@ KiQuantumEnd(VOID)
 
     /* Dispatch the Thread */
     KeLowerIrql(DISPATCH_LEVEL);
-    PsDispatchThread(THREAD_STATE_READY);
+    KiDispatchThread(THREAD_STATE_READY);
 }    
 
 /*

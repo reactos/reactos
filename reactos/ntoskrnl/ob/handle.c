@@ -42,6 +42,12 @@
 
 /* FUNCTIONS ***************************************************************/
 
+VOID
+STDCALL
+ObKillProcess(PEPROCESS Process)
+{
+    ObDeleteHandleTable(Process);
+}
 
 VOID
 ObpDecrementHandleCount(PVOID ObjectBody)

@@ -14,10 +14,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS *******************************************************************/
-
-VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
-
 /* FUNCTIONS *****************************************************************/
 
 /*++
@@ -145,6 +141,120 @@ KeInitializeApc(IN PKAPC Apc,
 }
 
 /*++
+ * KiInsertQueueApc 
+ *
+ *     The KiInsertQueueApc routine queues a APC for execution when the right
+ *     scheduler environment exists.
+ *
+ * Params:
+ *     Apc - Pointer to an initialized control object of type DPC for which the
+ *           caller provides the storage. 
+ *
+ *     PriorityBoost - Priority Boost to apply to the Thread.
+ *
+ * Returns:
+ *     If the APC is already inserted or APC queueing is disabled, FALSE.
+ *     Otherwise, TRUE.
+ *
+ * Remarks:
+ *     The APC will execute at APC_LEVEL for the KernelRoutine registered, and
+ *     at PASSIVE_LEVEL for the NormalRoutine registered.
+ *
+ *     Callers of this routine must be running at IRQL = PASSIVE_LEVEL.
+ *
+ *--*/
+BOOLEAN
+STDCALL
+KiInsertQueueApc(PKAPC Apc,
+                 KPRIORITY PriorityBoost)
+{
+    PKTHREAD Thread = Apc->Thread;
+    PLIST_ENTRY ApcListEntry;
+    PKAPC QueuedApc;
+    
+    /* Don't do anything if the APC is already inserted */
+    if (Apc->Inserted) {
+        
+        return FALSE;
+    }
+    
+    /* Three scenarios: 
+       1) Kernel APC with Normal Routine or User APC = Put it at the end of the List
+       2) User APC which is PsExitSpecialApc = Put it at the front of the List
+       3) Kernel APC without Normal Routine = Put it at the end of the No-Normal Routine Kernel APC list
+    */
+    if ((Apc->ApcMode != KernelMode) && (Apc->KernelRoutine == (PKKERNEL_ROUTINE)PsExitSpecialApc)) {
+        
+        DPRINT ("Inserting the Process Exit APC into the Queue\n");
+        Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->UserApcPending = TRUE;
+        InsertHeadList(&Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode],
+                       &Apc->ApcListEntry);
+        
+    } else if (Apc->NormalRoutine == NULL) {
+        
+        DPRINT ("Inserting Special APC %x into the Queue\n", Apc);
+        
+        for (ApcListEntry = Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode].Flink;
+             ApcListEntry != &Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode];
+             ApcListEntry = ApcListEntry->Flink) {
+
+            QueuedApc = CONTAINING_RECORD(ApcListEntry, KAPC, ApcListEntry);
+            if (Apc->NormalRoutine != NULL) break;
+        }
+        
+        /* We found the first "Normal" APC, so write right before it */
+        ApcListEntry = ApcListEntry->Blink;
+        InsertHeadList(ApcListEntry, &Apc->ApcListEntry);
+        
+    } else {
+        
+        DPRINT ("Inserting Normal APC %x into the %x Queue\n", Apc, Apc->ApcMode);
+        InsertTailList(&Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode],
+                       &Apc->ApcListEntry);
+    }
+    
+    /* Confirm Insertion */    
+    Apc->Inserted = TRUE;
+
+    /*
+     * Three possibilites here again:
+     *  1) Kernel APC, The thread is Running: Request an Interrupt
+     *  2) Kernel APC, The Thread is Waiting at PASSIVE_LEVEL and APCs are enabled and not in progress: Unwait the Thread
+     *  3) User APC, Unwait the Thread if it is alertable
+     */ 
+    if (Apc->ApcMode == KernelMode) { 
+        
+        /* Set Kernel APC pending */
+        Thread->ApcState.KernelApcPending = TRUE;
+        
+        /* Check the Thread State */
+        if (Thread->State == THREAD_STATE_RUNNING) { 
+            
+            /* FIXME: Use IPI */
+            DPRINT ("Requesting APC Interrupt for Running Thread \n");
+            HalRequestSoftwareInterrupt(APC_LEVEL);
+            
+        } else if ((Thread->State == THREAD_STATE_BLOCKED) && (Thread->WaitIrql == PASSIVE_LEVEL) &&
+                   ((Apc->NormalRoutine == NULL) || 
+                   ((!Thread->KernelApcDisable) && (!Thread->ApcState.KernelApcInProgress)))) {
+          
+            DPRINT("Waking up Thread for Kernel-Mode APC Delivery \n");
+            KiAbortWaitThread(Thread, STATUS_KERNEL_APC, PriorityBoost);
+        }
+        
+   } else if ((Thread->State == THREAD_STATE_BLOCKED) && 
+              (Thread->WaitMode == UserMode) && 
+              (Thread->Alertable)) {
+       
+        DPRINT("Waking up Thread for User-Mode APC Delivery \n");
+        Thread->ApcState.UserApcPending = TRUE;
+        KiAbortWaitThread(Thread, STATUS_USER_APC, PriorityBoost);
+    }
+    
+    return TRUE;
+}
+    
+/*++
  * KeInsertQueueApc 
  * @implemented NT4
  *
@@ -181,8 +291,7 @@ KeInsertQueueApc(PKAPC Apc,
 {
     KIRQL OldIrql;
     PKTHREAD Thread;
-    PLIST_ENTRY ApcListEntry;
-    PKAPC QueuedApc;
+    BOOLEAN Inserted;
    
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
     DPRINT("KeInsertQueueApc(Apc %x, SystemArgument1 %x, "
@@ -208,89 +317,12 @@ KeInsertQueueApc(PKAPC Apc,
     Apc->SystemArgument1 = SystemArgument1;
     Apc->SystemArgument2 = SystemArgument2;
 
-    /* Don't do anything if the APC is already inserted */
-    if (Apc->Inserted) {
-        
-        KeReleaseDispatcherDatabaseLock(OldIrql);
-        return FALSE;
-    }
-    
-    /* Three scenarios: 
-       1) Kernel APC with Normal Routine or User APC = Put it at the end of the List
-       2) User APC which is PsExitSpecialApc = Put it at the front of the List
-       3) Kernel APC without Normal Routine = Put it at the end of the No-Normal Routine Kernel APC list
-    */
-    if ((Apc->ApcMode != KernelMode) && (Apc->KernelRoutine == (PKKERNEL_ROUTINE)PsExitSpecialApc)) {
-        
-        DPRINT ("Inserting the Process Exit APC into the Queue\n");
-        Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->UserApcPending = TRUE;
-        InsertHeadList(&Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode],
-                       &Apc->ApcListEntry);
-        
-    } else if (Apc->NormalRoutine == NULL) {
-        
-        DPRINT ("Inserting Special APC %x into the Queue\n", Apc);
-        
-        for (ApcListEntry = Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode].Flink;
-             ApcListEntry != &Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode];
-             ApcListEntry = ApcListEntry->Flink) {
-
-            QueuedApc = CONTAINING_RECORD(ApcListEntry, KAPC, ApcListEntry);
-            if (Apc->NormalRoutine != NULL) break;
-        }
-        
-        /* We found the first "Normal" APC, so write right before it */
-        ApcListEntry = ApcListEntry->Blink;
-        InsertHeadList(ApcListEntry, &Apc->ApcListEntry);
-        
-    } else {
-        
-        DPRINT ("Inserting Normal APC %x into the %x Queue\n", Apc, Apc->ApcMode);
-        InsertTailList(&Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode],
-                   &Apc->ApcListEntry);
-    }
-    
-    /* Confirm Insertion */    
-    Apc->Inserted = TRUE;
-
-    /*
-     * Three possibilites here again:
-     *  1) Kernel APC, The thread is Running: Request an Interrupt
-     *  2) Kernel APC, The Thread is Waiting at PASSIVE_LEVEL and APCs are enabled and not in progress: Unwait the Thread
-     *  3) User APC, Unwait the Thread if it is alertable
-     */ 
-    if (Apc->ApcMode == KernelMode) { 
-        
-        /* Set Kernel APC pending */
-        Thread->ApcState.KernelApcPending = TRUE;
-        
-        /* Check the Thread State */
-        if (Thread->State == THREAD_STATE_RUNNING) { 
-            
-            /* FIXME: Use IPI */
-            DPRINT ("Requesting APC Interrupt for Running Thread \n");
-            HalRequestSoftwareInterrupt(APC_LEVEL);
-            
-        } else if ((Thread->State == THREAD_STATE_BLOCKED) && 
-                 (Thread->WaitIrql < APC_LEVEL) && 
-                 (Apc->NormalRoutine == NULL)) {
-          
-            DPRINT("Waking up Thread for Kernel-Mode APC Delivery \n");
-            KiAbortWaitThread(Thread, STATUS_KERNEL_APC, PriorityBoost);
-        }
-        
-   } else if ((Thread->State == THREAD_STATE_BLOCKED) && 
-              (Thread->WaitMode == UserMode) && 
-              (Thread->Alertable)) {
-       
-        DPRINT("Waking up Thread for User-Mode APC Delivery \n");
-        Thread->ApcState.UserApcPending = TRUE;
-        KiAbortWaitThread(Thread, STATUS_USER_APC, PriorityBoost);
-    }
+    /* Call the Internal Function */
+    Inserted = KiInsertQueueApc(Apc, PriorityBoost);
 
     /* Return Sucess if we are here */
     KeReleaseDispatcherDatabaseLock(OldIrql);
-    return TRUE;
+    return Inserted;
 }
 
 /*++

@@ -49,6 +49,35 @@ struct _KEXCEPTION_FRAME;
 #define IPI_REQUEST_DPC		    2
 #define IPI_REQUEST_FREEZE	    3
 
+/* threadsch.c ********************************************************************/
+
+/* Thread Scheduler Functions */
+
+/* Readies a Thread for Execution. */
+VOID 
+STDCALL
+KiDispatchThreadNoLock(ULONG NewThreadStatus);
+
+/* Readies a Thread for Execution. */
+VOID 
+STDCALL
+KiDispatchThread(ULONG NewThreadStatus);
+
+/* Puts a Thread into a block state. */
+VOID
+STDCALL
+KiBlockThread(PNTSTATUS Status, 
+              UCHAR Alertable, 
+              ULONG WaitMode,
+              UCHAR WaitReason);
+    
+/* Removes a thread out of a block state. */        
+VOID
+STDCALL
+KiUnblockThread(PKTHREAD Thread, 
+                PNTSTATUS WaitStatus, 
+                KPRIORITY Increment);
+
 /* ipi.c ********************************************************************/
 
 BOOLEAN STDCALL 
@@ -150,6 +179,29 @@ VOID inline FASTCALL KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID);
 VOID inline FASTCALL KeReleaseDispatcherDatabaseLock(KIRQL Irql);
 VOID inline FASTCALL KeReleaseDispatcherDatabaseLockFromDpcLevel(VOID);
 
+VOID 
+STDCALL
+KeInitializeThread(struct _KPROCESS* Process, PKTHREAD Thread, BOOLEAN First);
+
+VOID
+STDCALL
+KeRundownThread(VOID);
+
+NTSTATUS KeReleaseThread(PKTHREAD Thread);
+
+VOID
+STDCALL
+KeStackAttachProcess (
+    IN struct _KPROCESS* Process,
+    OUT PKAPC_STATE ApcState
+    );
+
+VOID
+STDCALL
+KeUnstackDetachProcess (
+    IN PKAPC_STATE ApcState
+    );
+
 BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr, KPRIORITY increment);
 VOID STDCALL KeExpireTimers(PKDPC Apc,
 			    PVOID Arg1,
@@ -165,6 +217,10 @@ FASTCALL
 KiAbortWaitThread(PKTHREAD Thread, 
                   NTSTATUS WaitStatus,
                   KPRIORITY Increment);
+                  
+ULONG
+STDCALL
+KeForceResumeThread(IN PKTHREAD Thread);
  
 BOOLEAN STDCALL KiInsertTimer(PKTIMER Timer, LARGE_INTEGER DueTime);
 
@@ -182,6 +238,18 @@ VOID STDCALL KiDeliverApc(KPROCESSOR_MODE PreviousMode,
                   PVOID Reserved,
                   PKTRAP_FRAME TrapFrame);
 
+LONG 
+STDCALL 
+KiInsertQueue(IN PKQUEUE Queue, 
+              IN PLIST_ENTRY Entry, 
+              BOOLEAN Head);
+   
+ULONG
+STDCALL
+KeSetProcess(struct _KPROCESS* Process, 
+             KPRIORITY Increment);
+             
+                            
 VOID STDCALL KeInitializeEventPair(PKEVENT_PAIR EventPair);
 
 VOID STDCALL KiInitializeUserApc(IN PVOID Reserved,

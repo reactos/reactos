@@ -201,6 +201,7 @@ typedef struct _ETHREAD
   UCHAR ActiveImpersonationInfo;
   ULONG PerformanceCountHigh;
   LIST_ENTRY ThreadListEntry;
+  BOOLEAN SystemThread;
 } ETHREAD;
 
 #include <poppack.h>
@@ -437,7 +438,6 @@ VOID PiShutdownProcessManager(VOID);
 VOID PsInitThreadManagment(VOID);
 VOID PsInitProcessManagment(VOID);
 VOID PsInitIdleThread(VOID);
-VOID PsDispatchThreadNoLock(ULONG NewThreadStatus);
 VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus);
 VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
 VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus);
@@ -458,17 +458,23 @@ PsInitializeThread(PEPROCESS Process,
 		   KPROCESSOR_MODE AccessMode,
 		   BOOLEAN First);
 
-PACCESS_TOKEN PsReferenceEffectiveToken(PETHREAD Thread,
+PACCESS_TOKEN STDCALL PsReferenceEffectiveToken(PETHREAD Thread,
 					PTOKEN_TYPE TokenType,
 					PUCHAR b,
 					PSECURITY_IMPERSONATION_LEVEL Level);
 
-NTSTATUS PsOpenTokenOfProcess(HANDLE ProcessHandle,
+NTSTATUS STDCALL PsOpenTokenOfProcess(HANDLE ProcessHandle,
 			      PACCESS_TOKEN* Token);
-
+VOID
+STDCALL
+PspTerminateProcessThreads(PEPROCESS Process,
+                           NTSTATUS ExitStatus);
 NTSTATUS PsSuspendThread(PETHREAD Thread, PULONG PreviousCount);
 NTSTATUS PsResumeThread(PETHREAD Thread, PULONG PreviousCount);
-
+NTSTATUS
+STDCALL
+PspAssignPrimaryToken(PEPROCESS Process,
+                      HANDLE TokenHandle);
 VOID STDCALL PsExitSpecialApc(PKAPC Apc, 
 		      PKNORMAL_ROUTINE *NormalRoutine,
 		      PVOID *NormalContext,
@@ -497,27 +503,25 @@ VOID STDCALL PsExitSpecialApc(PKAPC Apc,
 #define PROCESS_PRIO_RT				18
 
 
-VOID STDCALL
-KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First);
-NTSTATUS KeReleaseThread(PKTHREAD Thread);
-
-VOID
-STDCALL
-KeStackAttachProcess (
-    IN PKPROCESS Process,
-    OUT PKAPC_STATE ApcState
-    );
-
-VOID
-STDCALL
-KeUnstackDetachProcess (
-    IN PKAPC_STATE ApcState
-    );
-
 VOID STDCALL PiDeleteProcess(PVOID ObjectBody);
-VOID PsReapThreads(VOID);
-VOID PsInitializeThreadReaper(VOID);
-VOID PsQueueThreadReap(PETHREAD Thread);
+
+VOID 
+STDCALL 
+PspReapRoutine(PVOID Context);
+
+VOID
+STDCALL
+PspExitThread(NTSTATUS ExitStatus);
+
+extern LIST_ENTRY PspReaperListHead;
+extern WORK_QUEUE_ITEM PspReaperWorkItem;
+extern BOOLEAN PspReaping;
+
+VOID
+STDCALL
+PspTerminateThreadByPointer(PETHREAD Thread,
+                            NTSTATUS ExitStatus);
+
 VOID PsUnfreezeOtherThread(PETHREAD Thread);
 VOID PsFreezeOtherThread(PETHREAD Thread);
 VOID PsFreezeProcessThreads(PEPROCESS Process);
@@ -525,19 +529,9 @@ VOID PsUnfreezeProcessThreads(PEPROCESS Process);
 ULONG PsEnumThreadsByProcess(PEPROCESS Process);
 PEPROCESS PsGetNextProcess(PEPROCESS OldProcess);
 VOID
-STDCALL
-PsBlockThread(PNTSTATUS Status, 
-              UCHAR Alertable, 
-              ULONG WaitMode,
-              UCHAR WaitReason);
-VOID
-PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus, KPRIORITY Increment);
-VOID
 PsApplicationProcessorInit(VOID);
 VOID
 PsPrepareForApplicationProcessorInit(ULONG Id);
-VOID
-PsInitReaperThread(VOID);
 VOID STDCALL
 PsIdleThreadMain(PVOID Context);
 
@@ -553,10 +547,19 @@ VOID STDCALL
 PiSuspendThreadNormalRoutine(PVOID NormalContext,
 			     PVOID SystemArgument1,
 			     PVOID SystemArgument2);
-VOID STDCALL
-PsDispatchThread(ULONG NewThreadStatus);
 VOID
 PsInitialiseSuspendImplementation(VOID);
+NTSTATUS 
+STDCALL
+PspExitProcess(PEPROCESS Process);
+
+VOID 
+STDCALL 
+PspDeleteProcess(PVOID ObjectBody);
+
+VOID 
+STDCALL
+PspDeleteThread(PVOID ObjectBody);
 
 extern LONG PiNrThreadsAwaitingReaping;
 

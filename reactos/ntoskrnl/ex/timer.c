@@ -55,6 +55,66 @@ static const INFORMATION_CLASS_INFO ExTimerInfoClass[] = {
 
 VOID
 STDCALL
+ExTimerRundown(VOID)
+{
+    PETHREAD Thread = PsGetCurrentThread();
+    KIRQL OldIrql;
+    PLIST_ENTRY CurrentEntry;
+    BOOLEAN KillTimer = FALSE;
+    PETIMER Timer;
+    
+    /* Lock the Thread's Active Timer List*/
+    KeAcquireSpinLock(&Thread->ActiveTimerListLock, &OldIrql);
+    
+    /* Loop through all the timers */
+    CurrentEntry = Thread->ActiveTimerListHead.Flink;
+    while (CurrentEntry != &Thread->ActiveTimerListHead) {
+    
+        /* Get the Timer */
+        Timer = CONTAINING_RECORD(CurrentEntry, ETIMER, ActiveTimerListEntry);
+        DPRINT("Timer, ThreadList: %x, %x\n", Timer, Thread);
+        
+        /* Unlock the list */
+        KeReleaseSpinLock(&Thread->ActiveTimerListLock, OldIrql);
+            
+        /* Lock the Timer */
+        KeAcquireSpinLock(&Timer->Lock, &OldIrql);
+        
+        /* Relock the active list */
+        KeAcquireSpinLockAtDpcLevel(&Thread->ActiveTimerListLock);
+        
+        /* Make sure it's associated to us */
+        if ((Timer->ApcAssociated) && (&Thread->Tcb == Timer->TimerApc.Thread)) {
+        
+            /* Remove it */
+            DPRINT("Removing from Thread: %x\n", Thread);
+            RemoveEntryList(&Thread->ActiveTimerListHead); 
+            KeCancelTimer(&Timer->KeTimer);
+            KeRemoveQueueDpc(&Timer->TimerDpc);
+            KeRemoveQueueApc(&Timer->TimerApc);   
+            Timer->ApcAssociated = FALSE;      
+            KillTimer = TRUE;
+        }
+                       
+        /* Unlock the list */
+        KeReleaseSpinLockFromDpcLevel(&Thread->ActiveTimerListLock);
+        
+        /* Unlock the Timer */
+        KeReleaseSpinLock(&Timer->Lock, OldIrql);
+        
+        /* Dereference it, if needed */
+        if (KillTimer) ObDereferenceObject(Timer);
+        
+        /* Loop again */
+        KeAcquireSpinLock(&Thread->ActiveTimerListLock, &OldIrql);
+        CurrentEntry = CurrentEntry->Flink;
+    }       
+    
+    KeReleaseSpinLock(&Thread->ActiveTimerListLock, OldIrql);
+}
+
+VOID
+STDCALL
 ExpDeleteTimer(PVOID ObjectBody)
 {
     KIRQL OldIrql;

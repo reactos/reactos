@@ -582,6 +582,125 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 }
 
 VOID
+KeContextToTrapFrame(PCONTEXT Context,
+		     PKTRAP_FRAME TrapFrame)
+{
+   if ((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
+     {
+	TrapFrame->Esp = Context->Esp;
+	TrapFrame->Ss = Context->SegSs;
+	TrapFrame->Cs = Context->SegCs;
+	TrapFrame->Eip = Context->Eip;
+	TrapFrame->Eflags = Context->EFlags;	
+	TrapFrame->Ebp = Context->Ebp;
+     }
+   if ((Context->ContextFlags & CONTEXT_INTEGER) == CONTEXT_INTEGER)
+     {
+	TrapFrame->Eax = Context->Eax;
+	TrapFrame->Ebx = Context->Ebx;
+	TrapFrame->Ecx = Context->Ecx;
+	TrapFrame->Edx = Context->Edx;
+	TrapFrame->Esi = Context->Esi;
+	TrapFrame->Edi = Context->Edi;
+     }
+   if ((Context->ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
+     {
+	TrapFrame->Ds = Context->SegDs;
+	TrapFrame->Es = Context->SegEs;
+	TrapFrame->Fs = Context->SegFs;
+	TrapFrame->Gs = Context->SegGs;
+     }
+   if ((Context->ContextFlags & CONTEXT_FLOATING_POINT) == CONTEXT_FLOATING_POINT)
+     {
+	/*
+	 * Not handled
+	 *
+	 * This should be handled separately I think.
+	 *  - blight
+	 */
+     }
+   if ((Context->ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
+     {
+	/*
+	 * Not handled
+	 */
+     }
+}
+
+VOID
+KeTrapFrameToContext(PKTRAP_FRAME TrapFrame,
+		     PCONTEXT Context)
+{
+   if ((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
+     {
+	Context->SegSs = TrapFrame->Ss;
+	Context->Esp = TrapFrame->Esp;
+	Context->SegCs = TrapFrame->Cs;
+	Context->Eip = TrapFrame->Eip;
+	Context->EFlags = TrapFrame->Eflags;
+	Context->Ebp = TrapFrame->Ebp;
+     }
+   if ((Context->ContextFlags & CONTEXT_INTEGER) == CONTEXT_INTEGER)
+     {
+	Context->Eax = TrapFrame->Eax;
+	Context->Ebx = TrapFrame->Ebx;
+	Context->Ecx = TrapFrame->Ecx;
+	/*
+	 * NOTE: In the trap frame which is built on entry to a system
+	 * call TrapFrame->Edx will actually hold the address of the
+	 * previous TrapFrame. I don't believe leaking this information
+	 * has security implications. Also EDX holds the address of the
+	 * arguments to the system call in progress so it isn't of much
+	 * interest to the debugger.
+	 */
+	Context->Edx = TrapFrame->Edx;
+	Context->Esi = TrapFrame->Esi;
+	Context->Edi = TrapFrame->Edi;
+     }
+   if ((Context->ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
+     {
+	Context->SegDs = TrapFrame->Ds;
+	Context->SegEs = TrapFrame->Es;
+	Context->SegFs = TrapFrame->Fs;
+	Context->SegGs = TrapFrame->Gs;
+     }
+   if ((Context->ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
+     {
+	/*
+	 * FIXME: Implement this case
+	 */	
+	Context->ContextFlags &= (~CONTEXT_DEBUG_REGISTERS) | CONTEXT_i386;
+     }
+   if ((Context->ContextFlags & CONTEXT_FLOATING_POINT) == CONTEXT_FLOATING_POINT)
+     {
+	/*
+	 * FIXME: Implement this case
+	 *
+	 * I think this should only be filled for FPU exceptions, otherwise I
+         * would not know where to get it from as it can be the current state
+	 * of the FPU or already saved in the thread's FPU save area.
+	 *  -blight
+	 */
+	Context->ContextFlags &= (~CONTEXT_FLOATING_POINT) | CONTEXT_i386;
+     }
+#if 0
+   if ((Context->ContextFlags & CONTEXT_EXTENDED_REGISTERS) == CONTEXT_EXTENDED_REGISTERS)
+     {
+	/*
+	 * FIXME: Investigate this
+	 *
+	 * This is the XMM state (first 512 bytes of FXSAVE_FORMAT/FX_SAVE_AREA)
+	 * This should only be filled in case of a SIMD exception I think, so
+	 * this is not the right place (like for FPU the state could already be
+	 * saved in the thread's FX_SAVE_AREA or still be in the CPU)
+	 *  -blight
+	 */
+        Context->ContextFlags &= ~CONTEXT_EXTENDED_REGISTERS;
+     }
+#endif
+}
+
+VOID
 KeDumpStackFrames(PULONG Frame)
 {
 	PULONG StackBase, StackEnd;

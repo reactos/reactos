@@ -128,6 +128,69 @@ PsLookupCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType, PVOID *Object)
   return NULL;
 }
 
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
+			   OUT PEPROCESS *Process OPTIONAL,
+			   OUT PETHREAD *Thread)
+{
+  PHANDLE_TABLE_ENTRY CidEntry;
+  PETHREAD FoundThread;
+
+  PAGED_CODE();
+
+  ASSERT(Thread);
+  ASSERT(Cid);
+
+  CidEntry = PsLookupCidHandle(Cid->UniqueThread, PsThreadType, (PVOID*)&FoundThread);
+  if(CidEntry != NULL)
+  {
+    ObReferenceObject(FoundThread);
+
+    PsUnlockCidHandle(CidEntry);
+
+    if(Process != NULL)
+    {
+      *Process = FoundThread->ThreadsProcess;
+    }
+    *Thread = FoundThread;
+    return STATUS_SUCCESS;
+  }
+
+  return STATUS_INVALID_PARAMETER;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+PsLookupThreadByThreadId(IN HANDLE ThreadId,
+			 OUT PETHREAD *Thread)
+{
+  PHANDLE_TABLE_ENTRY CidEntry;
+  PETHREAD FoundThread;
+
+  PAGED_CODE();
+
+  ASSERT(Thread);
+
+  CidEntry = PsLookupCidHandle(ThreadId, PsThreadType, (PVOID*)&FoundThread);
+  if(CidEntry != NULL)
+  {
+    ObReferenceObject(FoundThread);
+
+    PsUnlockCidHandle(CidEntry);
+
+    *Thread = FoundThread;
+    return STATUS_SUCCESS;
+  }
+
+  return STATUS_INVALID_PARAMETER;
+}
+
 VOID
 PsUnlockCidHandle(PHANDLE_TABLE_ENTRY CidEntry)
 {

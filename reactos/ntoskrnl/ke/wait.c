@@ -139,7 +139,7 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
 
         /* Block the Thread */
         DPRINT("Blocking the Thread: %d, %d, %x\n", Alertable, WaitMode, KeGetCurrentThread());
-        PsBlockThread(&Status, 
+        KiBlockThread(&Status, 
                       Alertable, 
                       WaitMode, 
                       DelayExecution);
@@ -326,7 +326,7 @@ KeWaitForSingleObject(PVOID Object,
 
         /* Block the Thread */
         DPRINT("Blocking the Thread: %d, %d, %d, %x\n", Alertable, WaitMode, WaitReason, KeGetCurrentThread());
-        PsBlockThread(&Status, 
+        KiBlockThread(&Status, 
                       Alertable, 
                       WaitMode, 
                       (UCHAR)WaitReason);
@@ -575,7 +575,7 @@ KeWaitForMultipleObjects(ULONG Count,
 
         /* Block the Thread */
         DPRINT("Blocking the Thread: %d, %d, %d, %x\n", Alertable, WaitMode, WaitReason, KeGetCurrentThread());
-        PsBlockThread(&Status, 
+        KiBlockThread(&Status, 
                       Alertable, 
                       WaitMode,
                       (UCHAR)WaitReason);
@@ -756,7 +756,7 @@ KiAbortWaitThread(PKTHREAD Thread,
 
     /* Reschedule the Thread */
     DPRINT("Unblocking the Thread\n");
-    PsUnblockThread((PETHREAD)Thread, &WaitStatus, 0);
+    KiUnblockThread(Thread, &WaitStatus, 0);
 }
 
 BOOLEAN
@@ -884,7 +884,7 @@ KeReleaseDispatcherDatabaseLock(KIRQL OldIrql)
     if (!KeIsExecutingDpc() && OldIrql < DISPATCH_LEVEL && KeGetCurrentThread() != NULL && 
         KeGetCurrentThread() == KeGetCurrentPrcb()->IdleThread) {
         
-        PsDispatchThreadNoLock(THREAD_STATE_READY);
+        KiDispatchThreadNoLock(THREAD_STATE_READY);
         KeLowerIrql(OldIrql);
         
     } else {
