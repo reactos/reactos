@@ -133,16 +133,12 @@ static void PaintCells(HDC WindowDC, WORD BitCount1, WORD BitCount2,
       DeleteObject(Brush);
       }
     }
-#ifndef TODO
+
   /* Copy the first bitmap to the second */
   BitBlt(DC2, 4, 4, 4 * CELL_SIZE, 4 * CELL_SIZE, DC1, 5, 5, SRCCOPY);
 
   /* Show results on screen */
   BitBlt(WindowDC, XDest, YDest, 4 * CELL_SIZE, 4 * CELL_SIZE, DC2, 4, 4, SRCCOPY);
-#else
-  /* Show results on screen */
-  BitBlt(WindowDC, XDest, YDest, 4 * CELL_SIZE, 4 * CELL_SIZE, DC1, 5, 5, SRCCOPY);
-#endif
 }
 
 LRESULT CALLBACK MainWndProc(HWND Wnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -155,7 +151,6 @@ LRESULT CALLBACK MainWndProc(HWND Wnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_PAINT:
       WindowDC = BeginPaint(Wnd, &ps);
 
-#ifndef TODO
       PaintCells(WindowDC, 4,  4,  0,              0);
       PaintCells(WindowDC, 4,  8,  5  * CELL_SIZE, 0);
       PaintCells(WindowDC, 4,  16, 10 * CELL_SIZE, 0);
@@ -167,11 +162,9 @@ LRESULT CALLBACK MainWndProc(HWND Wnd, UINT msg, WPARAM wParam, LPARAM lParam)
       PaintCells(WindowDC, 8,  16, 10 * CELL_SIZE, 5  * CELL_SIZE);
       PaintCells(WindowDC, 8,  24, 15 * CELL_SIZE, 5  * CELL_SIZE);
       PaintCells(WindowDC, 8,  32, 20 * CELL_SIZE, 5  * CELL_SIZE);
-#endif
 
       PaintCells(WindowDC, 16, 4,  0,              10 * CELL_SIZE);
       PaintCells(WindowDC, 16, 8,  5  * CELL_SIZE, 10 * CELL_SIZE);
-#ifndef TODO
       PaintCells(WindowDC, 16, 16, 10 * CELL_SIZE, 10 * CELL_SIZE);
       PaintCells(WindowDC, 16, 24, 15 * CELL_SIZE, 10 * CELL_SIZE);
       PaintCells(WindowDC, 16, 32, 20 * CELL_SIZE, 10 * CELL_SIZE);
@@ -187,7 +180,6 @@ LRESULT CALLBACK MainWndProc(HWND Wnd, UINT msg, WPARAM wParam, LPARAM lParam)
       PaintCells(WindowDC, 32, 16, 10 * CELL_SIZE, 20 * CELL_SIZE);
       PaintCells(WindowDC, 32, 24, 15 * CELL_SIZE, 20 * CELL_SIZE);
       PaintCells(WindowDC, 32, 32, 20 * CELL_SIZE, 20 * CELL_SIZE);
-#endif
 
       EndPaint(Wnd, &ps);
       break;
