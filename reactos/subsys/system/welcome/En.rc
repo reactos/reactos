@@ -1,29 +1,25 @@
-/* $Id: De.rc,v 1.3 2004/12/24 17:19:44 ekohl Exp $ */
+/* $Id: En.rc,v 1.1 2004/12/24 17:19:44 ekohl Exp $ */
 
-/*
- * German (Austria) resources by Klemens Friedl (frik85 at hotmail dot com)
- */
-
-LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 /* String Tables */
 
 /* Default settings */
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_APPTITLE            "ReactOS - Willkommen"
+    IDS_APPTITLE            "ReactOS - Welcome"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
-    IDS_DEFAULTTOPICDESC    "Willkommen in ReactOS.\n\nKlicken Sie auf ein Thema auf der linken Seite."
-//    IDS_CHECKTEXT           "Dialog beim nächsen Start wieder anzeigen"
-//    IDS_CLOSETEXT           "Beenden"
+    IDS_DEFAULTTOPICDESC    "Welcome to React Operating System.\n\nClick a topic on the left."
+//    IDS_CHECKTEXT           "Show this dialog again"
+//    IDS_CLOSETEXT           "Exit"
 END
 
 /* Topic buttons */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICBUTTON0        "ReactOS installieren"
-    IDS_TOPICBUTTON1        "CD durchsuchen"
-    IDS_TOPICBUTTON2        "Beenden"
+    IDS_TOPICBUTTON0        "Install ReactOS"
+    IDS_TOPICBUTTON1        "Browse this CD"
+    IDS_TOPICBUTTON2        "Exit"
 //    IDS_TOPICBUTTON3        "Empty Topic 3"
 //    IDS_TOPICBUTTON4        "Empty Topic 4"
 //    IDS_TOPICBUTTON5        "Empty Topic 5"
@@ -36,9 +32,9 @@ END
 /* Topic titles */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICTITLE0         "ReactOS installieren"
-    IDS_TOPICTITLE1         "CD durchsuchen"
-    IDS_TOPICTITLE2         "Beenden"
+    IDS_TOPICTITLE0         "Install ReactOS"
+    IDS_TOPICTITLE1         "Browse this CD"
+    IDS_TOPICTITLE2         "Exit"
 //    IDS_TOPICTITLE3         "Empty Topic Title 3"
 //    IDS_TOPICTITLE4         "Empty Topic Title 4"
 //    IDS_TOPICTITLE5         "Empty Topic Title 5"
@@ -51,9 +47,9 @@ END
 /* Topic descriptions */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICDESC0          "Installiert ReactOS auf ihrem Computer oder aktualisiert eine bestehende Installation."
-    IDS_TOPICDESC1          "Die ReactOS-CD durchsuchen."
-    IDS_TOPICDESC2          "Klicken Sie um dieses Programm zu beenden."
+    IDS_TOPICDESC0          "Create a new ReactOS installation on your computer or upgrade an existing installation."
+    IDS_TOPICDESC1          "Browse the CD."
+    IDS_TOPICDESC2          "Click to exit this application."
 //    IDS_TOPICDESC3          "Topic description 3.\n\nDescribe topic 3 here."
 //    IDS_TOPICDESC4          "Topic description 4.\n\nDescribe topic 4 here."
 //    IDS_TOPICDESC5          "Topic description 5.\n\nDescribe topic 5 here."
@@ -64,4 +60,3 @@ BEGIN
 END
 
 /* EOF */
-
