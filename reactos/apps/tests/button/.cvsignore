@@ -3,4 +3,5 @@ statst.nostrip.exe
 statst.sym
 statst.coff
 *.d
-*.o*.map
+*.o
+*.map
