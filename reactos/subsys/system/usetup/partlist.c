@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.16 2003/08/09 16:32:25 ekohl Exp $
+/* $Id: partlist.c,v 1.17 2003/08/12 15:56:21 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -41,7 +41,7 @@
 /* FUNCTIONS ****************************************************************/
 
 static VOID
-GetDriverName(PDISKENTRY DiskEntry)
+GetDriverName (PDISKENTRY DiskEntry)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   WCHAR KeyName[32];
@@ -498,7 +498,10 @@ AddDiskToList (HANDLE FileHandle,
 
 
 PPARTLIST
-InitializePartitionList(VOID)
+CreatePartitionList (SHORT Left,
+		     SHORT Top,
+		     SHORT Right,
+		     SHORT Bottom)
 {
   PPARTLIST List;
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -518,10 +521,14 @@ InitializePartitionList(VOID)
   if (List == NULL)
     return NULL;
 
-  List->Left = 0;
-  List->Top = 0;
-  List->Right = 0;
-  List->Bottom = 0;
+//  List->Left = 0;
+//  List->Top = 0;
+//  List->Right = 0;
+//  List->Bottom = 0;
+  List->Left = Left;
+  List->Top = Top;
+  List->Right = Right;
+  List->Bottom = Bottom;
 
   List->Line = 0;
 
@@ -533,36 +540,36 @@ InitializePartitionList(VOID)
 
   InitializeListHead (&List->DiskListHead);
 
-  Status = NtQuerySystemInformation(SystemDeviceInformation,
-				    &Sdi,
-				    sizeof(SYSTEM_DEVICE_INFORMATION),
-				    &ReturnSize);
-  if (!NT_SUCCESS(Status))
+  Status = NtQuerySystemInformation (SystemDeviceInformation,
+				     &Sdi,
+				     sizeof(SYSTEM_DEVICE_INFORMATION),
+				     &ReturnSize);
+  if (!NT_SUCCESS (Status))
     {
-      RtlFreeHeap(ProcessHeap, 0, List);
-      return(NULL);
+      RtlFreeHeap (ProcessHeap, 0, List);
+      return NULL;
     }
 
   for (DiskNumber = 0; DiskNumber < Sdi.NumberOfDisks; DiskNumber++)
     {
-      swprintf(Buffer,
-	       L"\\Device\\Harddisk%d\\Partition0",
-	       DiskNumber);
-      RtlInitUnicodeString(&Name,
-			   Buffer);
+      swprintf (Buffer,
+		L"\\Device\\Harddisk%d\\Partition0",
+		DiskNumber);
+      RtlInitUnicodeString (&Name,
+			    Buffer);
 
-      InitializeObjectAttributes(&ObjectAttributes,
-				 &Name,
-				 0,
-				 NULL,
-				 NULL);
+      InitializeObjectAttributes (&ObjectAttributes,
+				  &Name,
+				  0,
+				  NULL,
+				  NULL);
 
-      Status = NtOpenFile(&FileHandle,
-			  0x10001,
-			  &ObjectAttributes,
-			  &Iosb,
-			  1,
-			  FILE_SYNCHRONOUS_IO_NONALERT);
+      Status = NtOpenFile (&FileHandle,
+			   FILE_GENERIC_READ,
+			   &ObjectAttributes,
+			   &Iosb,
+			   FILE_SHARE_READ,
+			   FILE_SYNCHRONOUS_IO_NONALERT);
       if (NT_SUCCESS(Status))
 	{
 	  AddDiskToList (FileHandle,
@@ -608,31 +615,8 @@ InitializePartitionList(VOID)
 }
 
 
-PPARTLIST
-CreatePartitionList(SHORT Left,
-		    SHORT Top,
-		    SHORT Right,
-		    SHORT Bottom)
-{
-  PPARTLIST List;
-
-  List = InitializePartitionList ();
-  if (List == NULL)
-    return NULL;
-
-  List->Left = Left;
-  List->Top = Top;
-  List->Right = Right;
-  List->Bottom = Bottom;
-
-  DrawPartitionList (List);
-
-  return List;
-}
-
-
 VOID
-DestroyPartitionList(PPARTLIST List)
+DestroyPartitionList (PPARTLIST List)
 {
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
@@ -688,7 +672,7 @@ DestroyPartitionList(PPARTLIST List)
 
 
 static VOID
-PrintEmptyLine(PPARTLIST List)
+PrintEmptyLine (PPARTLIST List)
 {
   COORD coPos;
   ULONG Written;
@@ -704,24 +688,24 @@ PrintEmptyLine(PPARTLIST List)
   coPos.X = List->Left + 1;
   coPos.Y = List->Top + 1 + List->Line;
 
-  FillConsoleOutputAttribute(0x17,
-			     Width,
-			     coPos,
-			     &Written);
+  FillConsoleOutputAttribute (0x17,
+			      Width,
+			      coPos,
+			      &Written);
 
-  FillConsoleOutputCharacter(' ',
-			     Width,
-			     coPos,
-			     &Written);
+  FillConsoleOutputCharacter (' ',
+			      Width,
+			      coPos,
+			      &Written);
 
   List->Line++;
 }
 
 
 static VOID
-PrintPartitionData(PPARTLIST List,
-		   PDISKENTRY DiskEntry,
-		   PPARTENTRY PartEntry)
+PrintPartitionData (PPARTLIST List,
+		    PDISKENTRY DiskEntry,
+		    PPARTENTRY PartEntry)
 {
   CHAR LineBuffer[128];
   COORD coPos;
@@ -865,8 +849,8 @@ PrintPartitionData(PPARTLIST List,
 
 
 static VOID
-PrintDiskData(PPARTLIST List,
-	      PDISKENTRY DiskEntry)
+PrintDiskData (PPARTLIST List,
+	       PDISKENTRY DiskEntry)
 {
   PPARTENTRY PartEntry;
   PLIST_ENTRY Entry;
@@ -967,7 +951,7 @@ PrintDiskData(PPARTLIST List,
 
 
 VOID
-DrawPartitionList(PPARTLIST List)
+DrawPartitionList (PPARTLIST List)
 {
   PLIST_ENTRY Entry;
   PDISKENTRY DiskEntry;
@@ -1060,7 +1044,7 @@ DrawPartitionList(PPARTLIST List)
 
 
 VOID
-ScrollDownPartitionList(PPARTLIST List)
+ScrollDownPartitionList (PPARTLIST List)
 {
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
@@ -1120,7 +1104,7 @@ ScrollDownPartitionList(PPARTLIST List)
 
 
 VOID
-ScrollUpPartitionList(PPARTLIST List)
+ScrollUpPartitionList (PPARTLIST List)
 {
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
@@ -1182,9 +1166,9 @@ ScrollUpPartitionList(PPARTLIST List)
 
 
 VOID
-GetActiveBootPartition(PPARTLIST List,
-		       PDISKENTRY *DiskEntry,
-		       PPARTENTRY *PartEntry)
+GetActiveBootPartition (PPARTLIST List,
+			PDISKENTRY *DiskEntry,
+			PPARTENTRY *PartEntry)
 {
   PDISKENTRY LocalDiskEntry;
   PPARTENTRY LocalPartEntry;
@@ -1224,6 +1208,96 @@ GetActiveBootPartition(PPARTLIST List,
 }
 
 
+static PPARTENTRY
+GetPrevPartitionedEntry (PDISKENTRY DiskEntry,
+			 PPARTENTRY CurrentEntry)
+{
+  PPARTENTRY PrevEntry;
+  PLIST_ENTRY Entry;
+
+  if (CurrentEntry->ListEntry.Blink == &DiskEntry->PartListHead)
+    return NULL;
+
+  Entry = CurrentEntry->ListEntry.Blink;
+  while (Entry != &DiskEntry->PartListHead)
+    {
+      PrevEntry = CONTAINING_RECORD (Entry,
+				     PARTENTRY,
+				     ListEntry);
+      if (PrevEntry->Unpartitioned == FALSE)
+	return PrevEntry;
+
+      Entry = Entry->Blink;
+    }
+
+  return NULL;
+}
+
+
+static PPARTENTRY
+GetNextPartitionedEntry (PDISKENTRY DiskEntry,
+			 PPARTENTRY CurrentEntry)
+{
+  PPARTENTRY NextEntry;
+  PLIST_ENTRY Entry;
+
+  if (CurrentEntry->ListEntry.Flink == &DiskEntry->PartListHead)
+    return NULL;
+
+  Entry = CurrentEntry->ListEntry.Flink;
+  while (Entry != &DiskEntry->PartListHead)
+    {
+      NextEntry = CONTAINING_RECORD (Entry,
+				     PARTENTRY,
+				     ListEntry);
+      if (NextEntry->Unpartitioned == FALSE)
+	return NextEntry;
+
+      Entry = Entry->Flink;
+    }
+
+  return NULL;
+}
+
+
+static PPARTENTRY
+GetPrevUnpartitionedEntry (PDISKENTRY DiskEntry,
+			   PPARTENTRY PartEntry)
+{
+  PPARTENTRY PrevPartEntry;
+
+  if (PartEntry->ListEntry.Blink != &DiskEntry->PartListHead)
+    {
+      PrevPartEntry = CONTAINING_RECORD (PartEntry->ListEntry.Blink,
+					 PARTENTRY,
+					 ListEntry);
+      if (PrevPartEntry->Unpartitioned == TRUE)
+	return PrevPartEntry;
+    }
+
+  return NULL;
+}
+
+
+static PPARTENTRY
+GetNextUnpartitionedEntry (PDISKENTRY DiskEntry,
+			   PPARTENTRY PartEntry)
+{
+  PPARTENTRY NextPartEntry;
+
+  if (PartEntry->ListEntry.Flink != &DiskEntry->PartListHead)
+    {
+      NextPartEntry = CONTAINING_RECORD (PartEntry->ListEntry.Flink,
+					 PARTENTRY,
+					 ListEntry);
+      if (NextPartEntry->Unpartitioned == TRUE)
+	return NextPartEntry;
+    }
+
+  return NULL;
+}
+
+
 VOID
 CreateNewPartition (PPARTLIST List,
 		    ULONGLONG PartitionSize,
@@ -1257,18 +1331,74 @@ CreateNewPartition (PPARTLIST List,
       PartEntry->PartInfo[0].PartitionType = PARTITION_ENTRY_UNUSED;
       PartEntry->PartInfo[0].BootIndicator = FALSE; /* FIXME */
       PartEntry->PartInfo[0].RewritePartition = TRUE;
+      PartEntry->PartInfo[1].RewritePartition = TRUE;
+      PartEntry->PartInfo[2].RewritePartition = TRUE;
+      PartEntry->PartInfo[3].RewritePartition = TRUE;
 
-      /* Check for previous partition entry */
-      if (PartEntry->ListEntry.Blink != &DiskEntry->PartListHead)
+      /* Get previous and next partition entries */
+      PrevPartEntry = GetPrevPartitionedEntry (DiskEntry,
+					       PartEntry);
+      NextPartEntry = GetNextPartitionedEntry (DiskEntry,
+					       PartEntry);
+
+      if (PrevPartEntry != NULL && NextPartEntry != NULL)
 	{
-	  PrevPartEntry = CONTAINING_RECORD (PartEntry->ListEntry.Blink,
-					     PARTENTRY,
-					     ListEntry);
+	  /* Current entry is in the middle of the list */
 
+	  /* Copy previous container partition data to current entry */
+	  RtlCopyMemory (&PartEntry->PartInfo[1],
+			 &PrevPartEntry->PartInfo[1],
+			 sizeof(PARTITION_INFORMATION));
+	  PartEntry->PartInfo[1].RewritePartition = TRUE;
+
+	  /* Update previous container partition data */
+
+	  PrevPartEntry->PartInfo[1].StartingOffset.QuadPart =
+	    PartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
+
+	  if (DiskEntry->PartListHead.Flink == &PrevPartEntry->ListEntry)
+	    {
+	      /* Special case - previous partition is first partition */
+	      PrevPartEntry->PartInfo[1].PartitionLength.QuadPart =
+		DiskEntry->DiskSize - PrevPartEntry->PartInfo[1].StartingOffset.QuadPart;
+	    }
+	  else
+	    {
+	      PrevPartEntry->PartInfo[1].PartitionLength.QuadPart =
+		PartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize;
+	    }
+
+	  PrevPartEntry->PartInfo[1].RewritePartition = TRUE;
+	}
+      else if (PrevPartEntry == NULL && NextPartEntry != NULL)
+	{
+	  /* Current entry is the first entry */
 
 	  /* FIXME: Update extended partition entries */
+	}
+      else if (PrevPartEntry != NULL && NextPartEntry == NULL)
+	{
+	  /* Current entry is the last entry */
 
+	  PrevPartEntry->PartInfo[1].StartingOffset.QuadPart =
+	    PartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
 
+	  if (DiskEntry->PartListHead.Flink == &PrevPartEntry->ListEntry)
+	    {
+	      /* Special case - previous partition is first partition */
+	      PrevPartEntry->PartInfo[1].PartitionLength.QuadPart =
+		DiskEntry->DiskSize - PrevPartEntry->PartInfo[1].StartingOffset.QuadPart;
+	    }
+	  else
+	    {
+	      PrevPartEntry->PartInfo[1].PartitionLength.QuadPart =
+		PartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize;
+	    }
+
+	  PrevPartEntry->PartInfo[1].PartitionType =
+	    (DiskEntry->UseLba == TRUE) ? PARTITION_XINT13_EXTENDED : PARTITION_EXTENDED;
+	  PrevPartEntry->PartInfo[1].BootIndicator = FALSE;
+	  PrevPartEntry->PartInfo[1].RewritePartition = TRUE;
 	}
 
       PartEntry->AutoCreate = AutoCreate;
@@ -1302,8 +1432,75 @@ CreateNewPartition (PPARTLIST List,
       NewPartEntry->PartInfo[0].PartitionType = PARTITION_ENTRY_UNUSED;
       NewPartEntry->PartInfo[0].BootIndicator = FALSE; /* FIXME */
       NewPartEntry->PartInfo[0].RewritePartition = TRUE;
+      NewPartEntry->PartInfo[1].RewritePartition = TRUE;
+      NewPartEntry->PartInfo[2].RewritePartition = TRUE;
+      NewPartEntry->PartInfo[3].RewritePartition = TRUE;
 
-      /* FIXME: Update extended partition entries */
+      /* Get previous and next partition entries */
+      PrevPartEntry = GetPrevPartitionedEntry (DiskEntry,
+					       NewPartEntry);
+      NextPartEntry = GetNextPartitionedEntry (DiskEntry,
+					       NewPartEntry);
+
+      if (PrevPartEntry != NULL && NextPartEntry != NULL)
+	{
+	  /* Current entry is in the middle of the list */
+
+	  /* Copy previous container partition data to current entry */
+	  RtlCopyMemory (&NewPartEntry->PartInfo[1],
+			 &PrevPartEntry->PartInfo[1],
+			 sizeof(PARTITION_INFORMATION));
+	  NewPartEntry->PartInfo[1].RewritePartition = TRUE;
+
+	  /* Update previous container partition data */
+
+	  PrevPartEntry->PartInfo[1].StartingOffset.QuadPart =
+	    NewPartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
+
+	  if (DiskEntry->PartListHead.Flink == &PrevPartEntry->ListEntry)
+	    {
+	      /* Special case - previous partition is first partition */
+	      PrevPartEntry->PartInfo[1].PartitionLength.QuadPart =
+		DiskEntry->DiskSize - PrevPartEntry->PartInfo[1].StartingOffset.QuadPart;
+	    }
+	  else
+	    {
+	      PrevPartEntry->PartInfo[1].PartitionLength.QuadPart =
+		NewPartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize;
+	    }
+
+	  PrevPartEntry->PartInfo[1].RewritePartition = TRUE;
+	}
+      else if (PrevPartEntry == NULL && NextPartEntry != NULL)
+	{
+	  /* Current entry is the first entry */
+
+	  /* FIXME: Update extended partition entries */
+	}
+      else if (PrevPartEntry != NULL && NextPartEntry == NULL)
+	{
+	  /* Current entry is the last entry */
+
+	  PrevPartEntry->PartInfo[1].StartingOffset.QuadPart =
+	    NewPartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
+
+	  if (DiskEntry->PartListHead.Flink == &PrevPartEntry->ListEntry)
+	    {
+	      /* Special case - previous partition is first partition */
+	      PrevPartEntry->PartInfo[1].PartitionLength.QuadPart =
+		DiskEntry->DiskSize - PrevPartEntry->PartInfo[1].StartingOffset.QuadPart;
+	    }
+	  else
+	    {
+	      PrevPartEntry->PartInfo[1].PartitionLength.QuadPart =
+		NewPartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize;
+	    }
+
+	  PrevPartEntry->PartInfo[1].PartitionType =
+	    (DiskEntry->UseLba == TRUE) ? PARTITION_XINT13_EXTENDED : PARTITION_EXTENDED;
+	  PrevPartEntry->PartInfo[1].BootIndicator = FALSE;
+	  PrevPartEntry->PartInfo[1].RewritePartition = TRUE;
+	}
 
       /* Update offset and size of the remaining unpartitioned disk space */
       PartEntry->UnpartitionedOffset += PartitionSize;
@@ -1337,35 +1534,55 @@ DeleteCurrentPartition (PPARTLIST List)
   DiskEntry = List->CurrentDisk;
   PartEntry = List->CurrentPartition;
 
-  /* Get pointer to previous partition entry */
-  PrevPartEntry = NULL;
-  if (PartEntry->ListEntry.Blink != &DiskEntry->PartListHead)
+  /* Adjust container partition entries */
+
+  /* Get previous and next partition entries */
+  PrevPartEntry = GetPrevPartitionedEntry (DiskEntry,
+					   PartEntry);
+  NextPartEntry = GetNextPartitionedEntry (DiskEntry,
+					   PartEntry);
+
+  if (PrevPartEntry != NULL && NextPartEntry != NULL)
     {
-      PrevPartEntry = CONTAINING_RECORD (PartEntry->ListEntry.Blink,
-					 PARTENTRY,
-					 ListEntry);
+      /* Current entry is in the middle of the list */
+      /* Copy previous container partition data to current entry */
+      RtlCopyMemory (&PrevPartEntry->PartInfo[1],
+		     &PartEntry->PartInfo[1],
+		     sizeof(PARTITION_INFORMATION));
+      PrevPartEntry->PartInfo[1].RewritePartition = TRUE;
+    }
+  else if (PrevPartEntry == NULL && NextPartEntry != NULL)
+    {
+      /* Current entry is the first entry */
+
+      /* FIXME: Update extended partition entries */
+    }
+  else if (PrevPartEntry != NULL && NextPartEntry == NULL)
+    {
+      /* Current entry is the last entry */
+      RtlZeroMemory (&PrevPartEntry->PartInfo[1],
+		     sizeof(PARTITION_INFORMATION));
+      PrevPartEntry->PartInfo[1].RewritePartition = TRUE;
     }
 
-  /* Get pointer to previous partition entry */
-  NextPartEntry = NULL;
-  if (PartEntry->ListEntry.Flink != &DiskEntry->PartListHead)
-    {
-      NextPartEntry = CONTAINING_RECORD (PartEntry->ListEntry.Flink,
-					 PARTENTRY,
-					 ListEntry);
-    }
 
-  if ((PrevPartEntry != NULL && PrevPartEntry->Unpartitioned == TRUE) &&
-      (NextPartEntry != NULL && NextPartEntry->Unpartitioned == TRUE))
+  /* Adjust unpartitioned disk space entries */
+
+  /* Get pointer to previous and next unpartitioned entries */
+  PrevPartEntry = GetPrevUnpartitionedEntry (DiskEntry,
+					     PartEntry);
+
+  NextPartEntry = GetNextUnpartitionedEntry (DiskEntry,
+					     PartEntry);
+
+  if (PrevPartEntry != NULL && NextPartEntry != NULL)
     {
-      /* Merge previous, current and next entry */
+      /* Merge previous, current and next unpartitioned entry */
 
       /* Adjust the previous entries length */
       PrevPartEntry->UnpartitionedLength += 
 	(PartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize +
 	 NextPartEntry->UnpartitionedLength);
-
-      /* FIXME: Container entries ?? */
 
       /* Remove the current entry */
       RemoveEntryList (&PartEntry->ListEntry);
@@ -1382,15 +1599,13 @@ DeleteCurrentPartition (PPARTLIST List)
       /* Update current partition */
       List->CurrentPartition = PrevPartEntry;
     }
-  else if (PrevPartEntry != NULL && PrevPartEntry->Unpartitioned == TRUE)
+  else if (PrevPartEntry != NULL && NextPartEntry == NULL)
     {
-      /* Merge current and previous entry */
+      /* Merge current and previous unpartitioned entry */
 
       /* Adjust the previous entries length */
       PrevPartEntry->UnpartitionedLength += 
 	(PartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize);
-
-      /* FIXME: Container entries ?? */
 
       /* Remove the current entry */
       RemoveEntryList (&PartEntry->ListEntry);
@@ -1401,17 +1616,15 @@ DeleteCurrentPartition (PPARTLIST List)
       /* Update current partition */
       List->CurrentPartition = PrevPartEntry;
     }
-  else if (NextPartEntry != NULL && NextPartEntry->Unpartitioned == TRUE)
+  else if (PrevPartEntry == NULL && NextPartEntry != NULL)
     {
-      /* Merge current and next entry */
+      /* Merge current and next unpartitioned entry */
 
       /* Adjust the next entries offset and length */
       NextPartEntry->UnpartitionedOffset = 
 	PartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
       NextPartEntry->UnpartitionedLength += 
 	(PartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize);
-
-      /* FIXME: Container entries ?? */
 
       /* Remove the current entry */
       RemoveEntryList (&PartEntry->ListEntry);
@@ -1432,8 +1645,6 @@ DeleteCurrentPartition (PPARTLIST List)
       PartEntry->UnpartitionedLength = 
 	PartEntry->PartInfo[0].PartitionLength.QuadPart + DiskEntry->TrackSize;
 
-      /* FIXME: Container entries ?? */
-
       /* Wipe the partition table */
       RtlZeroMemory (&PartEntry->PartInfo,
 		     sizeof(PartEntry->PartInfo));
@@ -1444,6 +1655,145 @@ DeleteCurrentPartition (PPARTLIST List)
   UpdatePartitionNumbers (DiskEntry);
 
   AssignDriverLetters (List);
+}
+
+
+BOOLEAN
+WritePartitionsToDisk (PPARTLIST List)
+{
+#if 0
+  PDRIVE_LAYOUT_INFORMATION DriveLayout;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK Iosb;
+  WCHAR Buffer[MAX_PATH];
+  UNICODE_STRING Name;
+  HANDLE FileHandle;
+  PDISKENTRY DiskEntry;
+  PPARTENTRY PartEntry;
+  PLIST_ENTRY Entry1;
+  PLIST_ENTRY Entry2;
+  ULONG PartitionCount;
+  ULONG DriveLayoutSize;
+  ULONG Index;
+  NTSTATUS Status;
+
+  if (List == NULL)
+    {
+      return TRUE;
+    }
+
+  Entry1 = List->DiskListHead.Flink;
+  while (Entry1 != &List->DiskListHead)
+    {
+      DiskEntry = CONTAINING_RECORD (Entry1,
+				     DISKENTRY,
+				     ListEntry);
+
+      if (DiskEntry->Modified == TRUE)
+	{
+	  /* Count partitioned entries */
+	  PartitionCount = 0;
+	  Entry2 = DiskEntry->PartListHead.Flink;
+	  while (Entry2 != &DiskEntry->PartListHead)
+	    {
+	      PartEntry = CONTAINING_RECORD (Entry2,
+					     PARTENTRY,
+					     ListEntry);
+	      if (PartEntry->Unpartitioned == FALSE)
+		{
+		  PartitionCount += 4;
+		}
+
+	      Entry2 = Entry2->Flink;
+	    }
+
+	  if (PartitionCount > 0)
+	    {
+	      DriveLayoutSize = sizeof (DRIVE_LAYOUT_INFORMATION) +
+		((PartitionCount - 1) * sizeof (PARTITION_INFORMATION));
+	      DriveLayout = (PDRIVE_LAYOUT_INFORMATION)RtlAllocateHeap (ProcessHeap,
+									0,
+									DriveLayoutSize);
+	      if (DriveLayout == NULL)
+		{
+		  DPRINT1 ("RtlAllocateHeap() failed\n");
+		  return FALSE;
+		}
+
+	      RtlZeroMemory (DriveLayout,
+			     DriveLayoutSize);
+
+	      DriveLayout->PartitionCount = PartitionCount;
+
+	      Index = 0;
+	      Entry2 = DiskEntry->PartListHead.Flink;
+	      while (Entry2 != &DiskEntry->PartListHead)
+		{
+		  PartEntry = CONTAINING_RECORD (Entry2,
+						 PARTENTRY,
+						 ListEntry);
+		  if (PartEntry->Unpartitioned == FALSE)
+		    {
+		      RtlCopyMemory (&DriveLayout->PartitionEntry[Index],
+				     &PartEntry->PartInfo[0],
+				     4 * sizeof (PARTITION_INFORMATION));
+		      Index += 4;
+		    }
+
+		  Entry2 = Entry2->Flink;
+		}
+
+	      swprintf (Buffer,
+			L"\\Device\\Harddisk%d\\Partition0",
+			DiskEntry->DiskNumber);
+	      RtlInitUnicodeString (&Name,
+				    Buffer);
+	      InitializeObjectAttributes (&ObjectAttributes,
+					  &Name,
+					  0,
+					  NULL,
+					  NULL);
+
+	      Status = NtOpenFile (&FileHandle,
+				   FILE_GENERIC_WRITE,
+				   &ObjectAttributes,
+				   &Iosb,
+				   0,
+				   FILE_SYNCHRONOUS_IO_NONALERT);
+	      if (!NT_SUCCESS (Status))
+		{
+		  DPRINT1 ("NtOpenFile() failed (Status %lx)\n", Status);
+		  return FALSE;
+		}
+
+	      Status = NtDeviceIoControlFile (FileHandle,
+					      NULL,
+					      NULL,
+					      NULL,
+					      &Iosb,
+					      IOCTL_DISK_SET_DRIVE_LAYOUT,
+					      DriveLayout,
+					      DriveLayoutSize,
+					      NULL,
+					      0);
+	      NtClose (FileHandle);
+	      if (!NT_SUCCESS (Status))
+		{
+		  DPRINT1 ("NtDeviceIoControlFile() failed (Status %lx)\n", Status);
+		  return FALSE;
+		}
+
+	      RtlFreeHeap (ProcessHeap,
+			   0,
+			   DriveLayout);
+	    }
+	}
+
+      Entry1 = Entry1->Flink;
+    }
+#endif
+
+  return TRUE;
 }
 
 /* EOF */

@@ -708,10 +708,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 	  return(QUIT_PAGE);
 	}
     }
-  else
-    {
-      DrawPartitionList (PartitionList);
-    }
+
+  DrawPartitionList (PartitionList);
 
   while(TRUE)
     {
@@ -1563,7 +1561,6 @@ FormatPartitionPage (PINPUT_RECORD Ir)
   PPARTENTRY PartEntry;
   PLIST_ENTRY Entry;
 //  NTSTATUS Status;
-//  BOOLEAN Valid;
 
 
   ULONG Line;
@@ -1610,8 +1607,16 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 	      case FsFat:
 		if (DiskEntry->UseLba == FALSE)
 		  {
-		    /* FAT16 CHS partition (disk is smaller than 8.4GB) */
-		    PartEntry->PartInfo[0].PartitionType = PARTITION_FAT_16;
+		    if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (32ULL * 1024ULL * 1024ULL))
+		      {
+			/* FAT16 CHS partition (disk is smaller than 32MB) */
+			PartEntry->PartInfo[0].PartitionType = PARTITION_FAT_16;
+		      }
+		    else
+		      {
+			/* FAT16 CHS partition (disk is smaller than 8.4GB) */
+			PartEntry->PartInfo[0].PartitionType = PARTITION_HUGE;
+		      }
 		  }
 		else if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (2ULL * 1024ULL * 1024ULL * 1024ULL))
 		  {
@@ -1652,13 +1657,13 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 		  for (i = 0; i < 4; i++)
 		    {
 		      PrintTextXY (6, Line,
-				   "%u:  %u  %12I64u  %12I64u  %u",
+				   "%u:  %u  %12I64u  %12I64u  %u  %c",
 				   i,
 				   PartEntry->PartInfo[i].PartitionNumber,
 				   PartEntry->PartInfo[i].StartingOffset.QuadPart,
 				   PartEntry->PartInfo[i].PartitionLength.QuadPart,
-				   PartEntry->PartInfo[i].PartitionType);
-
+				   PartEntry->PartInfo[i].PartitionType,
+				   PartEntry->PartInfo[i].RewritePartition ? '*' : ' ');
 
 		      Line++;
 		    }
@@ -1670,19 +1675,23 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 	    }
 //#endif
 
+	  if (WritePartitionsToDisk (PartitionList) == FALSE)
+	    {
+	      DPRINT ("WritePartitionsToDisk() failed\n");
 
-#if 0
-    if (PartData.CreatePartition)
-      {
-    	  Valid = CreateSelectedPartition (PartitionList, PartType, PartData.NewPartSize);
-        if (!Valid)
-          {
-            DPRINT("CreateSelectedPartition() failed\n");
-            /* FIXME: show an error dialog */
-            return(QUIT_PAGE);
-          }
-      }
-#endif
+	      PopupError ("Setup failed to write partition tables.\n",
+			  "ENTER = Reboot computer");
+
+	      while (TRUE)
+		{
+		  ConInKey (Ir);
+
+		  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+		    {
+		      return QUIT_PAGE;
+		    }
+		}
+	    }
 
 	  SetStatusText ("   Press any key ...");
 	  ConInKey(Ir);
