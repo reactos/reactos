@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.114 2004/02/21 09:20:33 gvg Exp $
+# $Id: Makefile,v 1.115 2004/02/24 23:51:38 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -711,12 +711,12 @@ clean:
 
 ifneq ($(BOOTCD_INSTALL),)
 
-install:
+install: $(TARGETNAME).exe $(TARGETNAME).sym $(TARGETNAME).nostrip.exe
 	- $(CP) $(TARGETNAME).exe $(INSTALL_DIR)/$(TARGETNAME).exe
 
 else # BOOTCD_INSTALL
 
-install:
+install: $(TARGETNAME).exe $(TARGETNAME).sym $(TARGETNAME).nostrip.exe
 	- $(CP) $(TARGETNAME).exe $(INSTALL_DIR)/system32/$(TARGETNAME).exe
 	- $(CP) $(TARGETNAME).sym $(INSTALL_DIR)/symbols/$(TARGETNAME).sym
 
