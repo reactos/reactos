@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.23 2003/03/18 06:44:11 rcampbell Exp $
+/* $Id: window.c,v 1.24 2003/03/18 06:46:10 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -611,7 +611,7 @@ GetLastActivePopup(HWND hWnd)
 HWND STDCALL
 GetParent(HWND hWnd)
 {
-  return (HWND)0;
+  return NtUserGetAncestor(hWnd, GA_PARENT);
 }
 
 WINBOOL STDCALL
