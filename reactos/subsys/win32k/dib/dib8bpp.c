@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib8bpp.c,v 1.22 2004/04/09 22:00:38 navaraf Exp $ */
+/* $Id: dib8bpp.c,v 1.23 2004/04/25 11:34:12 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -343,7 +343,7 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       DestBits = (PULONG)(DestSurf->pvScan0 + DestRect->left + j * DestSurf->lDelta);
 
       if(UsesPattern)
-        PatternY = j % PatternHeight;
+        PatternY = (j + BrushOrigin.y) % PatternHeight;
 
       for (i = DestRect->left; i < RoundedRight; i += 4, DestBits++)
       {
@@ -358,10 +358,10 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
          if (UsesPattern)
          {
-            Pattern = DIB_1BPP_GetPixel(PatternObj, i % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack;
-            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 1) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 8;
-            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 2) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 16;
-            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 3) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 24;
+            Pattern = DIB_1BPP_GetPixel(PatternObj, (i + BrushOrigin.x) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack;
+            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + BrushOrigin.x + 1) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 8;
+            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + BrushOrigin.x + 2) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 16;
+            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + BrushOrigin.x + 3) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 24;
          }
          *DestBits = DIB_DoRop(Rop4, Dest, Source, Pattern);	    
       }
@@ -378,7 +378,7 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
             if (UsesPattern)
             {
-               Pattern = DIB_1BPP_GetPixel(PatternObj, i % PatternWidth,PatternY) ? GdiBrush->crFore : GdiBrush->crBack;
+               Pattern = DIB_1BPP_GetPixel(PatternObj, (i + BrushOrigin.x) % PatternWidth,PatternY) ? GdiBrush->crFore : GdiBrush->crBack;
             }
 
             DIB_8BPP_PutPixel(DestSurf, i, j, DIB_DoRop(Rop4, Dest, Source, Pattern) & 0xFFFF);

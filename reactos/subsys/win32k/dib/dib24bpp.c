@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib24bpp.c,v 1.24 2004/04/09 22:00:38 navaraf Exp $ */
+/* $Id: dib24bpp.c,v 1.25 2004/04/25 11:34:12 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -319,7 +319,7 @@ DIB_24BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       SourceX = SourcePoint->x;
       
       if(UsesPattern)
-        PatternY = Y % PatternHeight;
+        PatternY = (Y + BrushOrigin.y) % PatternHeight;
       
       for (X = DestRect->left; X < DestRect->right; X++, DestBits += 3, SourceX++)
       {
@@ -332,7 +332,7 @@ DIB_24BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
          if (UsesPattern)
 	 {
-            Pattern = DIB_1BPP_GetPixel(PatternObj, X % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack;
+            Pattern = DIB_1BPP_GetPixel(PatternObj, (X + BrushOrigin.x) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack;
          }
 
          Dest = DIB_DoRop(Rop4, Dest, Source, Pattern) & 0xFFFFFF;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.51 2004/04/10 00:58:14 navaraf Exp $
+/* $Id: bitblt.c,v 1.52 2004/04/25 11:34:13 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -371,6 +371,7 @@ EngBitBlt(SURFOBJ *DestObj,
   OutputRect.top = DestRect->top + Translate.y;
   OutputRect.bottom = DestRect->bottom + Translate.y;
   
+  #if 0
   if(BrushOrigin)
   {
     AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
@@ -378,6 +379,9 @@ EngBitBlt(SURFOBJ *DestObj,
   }
   else
     AdjustedBrushOrigin = Translate;
+  #else
+  AdjustedBrushOrigin = (BrushOrigin ? *BrushOrigin : Translate);
+  #endif
 
   if (NULL != OutputObj)
     {
@@ -738,7 +742,7 @@ EngStretchBlt(
   OutputRect.right = prclDest->right + Translate.x;
   OutputRect.top = prclDest->top + Translate.y;
   OutputRect.bottom = prclDest->bottom + Translate.y;
-
+#if 0
   if(BrushOrigin)
   {
     AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
@@ -746,6 +750,9 @@ EngStretchBlt(
   }
   else
     AdjustedBrushOrigin = Translate;
+#else
+  AdjustedBrushOrigin = (BrushOrigin ? *BrushOrigin : Translate);
+#endif
 
   if (NULL != OutputObj)
     {
@@ -1134,6 +1141,7 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   OutputRect.top = DestRect->top + Translate.y;
   OutputRect.bottom = DestRect->bottom + Translate.y;
 
+#if 0
   if(BrushOrigin)
   {
     AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
@@ -1141,6 +1149,9 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   }
   else
     AdjustedBrushOrigin = Translate;
+#else
+  AdjustedBrushOrigin = (BrushOrigin ? *BrushOrigin : Translate);
+#endif
 
   if (NULL != OutputObj)
     {

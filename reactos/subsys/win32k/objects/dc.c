@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.128 2004/04/09 20:03:20 navaraf Exp $
+/* $Id: dc.c,v 1.129 2004/04/25 11:34:13 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -1797,7 +1797,13 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
                       brush->BrushObject.iSolidColor = 0xFFFFFFFF;
                     }
                   brush->crBack = XLATEOBJ_iXlate(XlateObj, dc->w.backgroundColor);
-                  brush->crFore = XLATEOBJ_iXlate(XlateObj, dc->w.textColor);
+                  brush->crFore = XLATEOBJ_iXlate(XlateObj, ((brush->flAttrs & GDIBRUSH_IS_HATCH) ? 
+                                                             brush->BrushAttr.lbColor : dc->w.textColor));
+                  /* according to the documentation of SetBrushOrgEx(), the origin is assigned to the
+                     next brush selected into the DC, so we should set it here */
+                  brush->ptOrigin.x = dc->w.brushOrgX;
+                  brush->ptOrigin.y = dc->w.brushOrgY;
+                  
                   BRUSHOBJ_UnlockBrush((HBRUSH) hGDIObj);
                   objOrg = (HGDIOBJ)dc->w.hBrush;
                   dc->w.hBrush = (HBRUSH) hGDIObj;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.69 2004/04/09 20:03:20 navaraf Exp $ */
+/* $Id: bitmaps.c,v 1.70 2004/04/25 11:34:13 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -56,7 +56,7 @@ NtGdiBitBlt(
 	SURFOBJ *SurfDest, *SurfSrc;
 	PSURFGDI SurfGDIDest, SurfGDISrc;
 	RECTL DestRect;
-	POINTL SourcePoint;
+	POINTL SourcePoint, BrushOrigin;
 	BOOL Status;
 	PPALGDI PalDestGDI, PalSourceGDI;
 	XLATEOBJ *XlateObj = NULL;
@@ -114,6 +114,9 @@ NtGdiBitBlt(
 
 	SourcePoint.x = XSrc;
 	SourcePoint.y = YSrc;
+	
+	BrushOrigin.x = 0;
+	BrushOrigin.y = 0;
 
 	/* Determine surfaces to be used in the bitblt */
 	SurfDest = (SURFOBJ*)AccessUserObject((ULONG)DCDest->Surface);
@@ -142,6 +145,7 @@ NtGdiBitBlt(
 			SetLastWin32Error(ERROR_INVALID_HANDLE);
 			return FALSE;
 		}
+		BrushOrigin = BrushObj->ptOrigin;
 	}
 	else
 	{
@@ -244,7 +248,7 @@ NtGdiBitBlt(
 
 	/* Perform the bitblt operation */
 	Status = IntEngBitBlt(SurfDest, SurfSrc, NULL, DCDest->CombinedClip, XlateObj,
-		&DestRect, &SourcePoint, NULL, &BrushObj->BrushObject, NULL, ROP);
+		&DestRect, &SourcePoint, NULL, &BrushObj->BrushObject, &BrushOrigin, ROP);
 
 	EngDeleteXlate(XlateObj);
 	if (NULL != Mono)
@@ -1071,7 +1075,10 @@ NtGdiSetPixelV(
 		return(FALSE);
 	OldBrush = NtGdiSelectObject(hDC, NewBrush);
 	if (OldBrush == NULL)
+	{
+		NtGdiDeleteObject(NewBrush);
 		return(FALSE);
+	}
 	NtGdiPatBlt(hDC, X, Y, 1, 1, PATCOPY);
 	NtGdiSelectObject(hDC, OldBrush);
 	NtGdiDeleteObject(NewBrush);

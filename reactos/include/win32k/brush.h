@@ -31,7 +31,7 @@ typedef struct
    ULONG ulBrushUnique;
    BRUSHATTR *pBrushAttr;
    BRUSHATTR BrushAttr;
-   ULONG Unknown30;
+   POINT ptOrigin;
    ULONG bCacheGrabbed;
    COLORREF crBack;
    COLORREF crFore;
@@ -66,7 +66,7 @@ typedef struct
 #define GDIBRUSH_IS_MASKING		0x8000 /* Pattern bitmap is used as transparent mask (?) */
 #define GDIBRUSH_CACHED_IS_SOLID	0x80000000 
 
-#define  BRUSHOBJ_AllocBrush() ((HBRUSH) GDIOBJ_AllocObj (sizeof(GDIBRUSHOBJ), GDI_OBJECT_TYPE_BRUSH, NULL))
+#define  BRUSHOBJ_AllocBrush() ((HBRUSH) GDIOBJ_AllocObj (sizeof(GDIBRUSHOBJ), GDI_OBJECT_TYPE_BRUSH, (GDICLEANUPPROC) Brush_InternalDelete))
 #define  BRUSHOBJ_FreeBrush(hBrush) GDIOBJ_FreeObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH, GDIOBJFLAG_DEFAULT)
 #define  BRUSHOBJ_LockBrush(hBrush) ((PGDIBRUSHOBJ)GDIOBJ_LockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
 #define  BRUSHOBJ_UnlockBrush(hBrush) GDIOBJ_UnlockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH)

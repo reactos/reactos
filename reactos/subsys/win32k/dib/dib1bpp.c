@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib1bpp.c,v 1.24 2004/04/09 22:00:38 navaraf Exp $ */
+/* $Id: dib1bpp.c,v 1.25 2004/04/25 11:34:12 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -423,7 +423,7 @@ DIB_1BPP_BitBlt(
          Y * DestSurf->lDelta);
 
       if(UsesPattern)
-        PatternY = Y % PatternHeight;
+        PatternY = (Y + BrushOrigin.y) % PatternHeight;
 
       X = DestRect->left;
       if (X & 31)
@@ -444,7 +444,7 @@ DIB_1BPP_BitBlt(
          {
             Pattern = 0;
             for (k = 31 - NoBits; k < NoBits; k++)
-               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k) % PatternWidth, PatternY) << (31 - k));
+               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + BrushOrigin.x + k) % PatternWidth, PatternY) << (31 - k));
          }
 
          Dest = DIB_DoRop(Rop4, Dest, Source, Pattern);	    
@@ -478,10 +478,10 @@ DIB_1BPP_BitBlt(
             Pattern = 0;
             for (k = 0; k < 8; k++)
             {
-               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k) % PatternWidth, PatternY) << (7 - k));
-               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 8) % PatternWidth, PatternY) << (8 + (7 - k)));
-               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 16) % PatternWidth, PatternY) << (16 + (7 - k)));
-               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 24) % PatternWidth, PatternY) << (24 + (7 - k)));
+               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + BrushOrigin.x + k) % PatternWidth, PatternY) << (7 - k));
+               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + BrushOrigin.x + k + 8) % PatternWidth, PatternY) << (8 + (7 - k)));
+               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + BrushOrigin.x + k + 16) % PatternWidth, PatternY) << (16 + (7 - k)));
+               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + BrushOrigin.x + k + 24) % PatternWidth, PatternY) << (24 + (7 - k)));
             }
          }
 
@@ -503,7 +503,7 @@ DIB_1BPP_BitBlt(
 
             if (UsesPattern)
             {
-               Pattern = DIB_1BPP_GetPixel(PatternObj, X % PatternWidth, PatternY);
+               Pattern = DIB_1BPP_GetPixel(PatternObj, (X + BrushOrigin.x) % PatternWidth, PatternY);
             }
 
             DIB_1BPP_PutPixel(DestSurf, X, Y, DIB_DoRop(Rop4, Dest, Source, Pattern) & 0xF);

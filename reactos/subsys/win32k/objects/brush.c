@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: brush.c,v 1.34 2004/04/09 20:03:20 navaraf Exp $
+ * $Id: brush.c,v 1.35 2004/04/25 11:34:13 weiden Exp $
  */
 
 #undef WIN32_LEAN_AND_MEAN
@@ -33,12 +33,56 @@
 #define NDEBUG
 #include <win32k/debug1.h>
 
+static const USHORT HatchBrushes[NB_HATCH_STYLES][8] =
+{
+  {0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00}, /* HS_HORIZONTAL */
+  {0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08}, /* HS_VERTICAL   */
+  {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80}, /* HS_FDIAGONAL  */
+  {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01}, /* HS_BDIAGONAL  */
+  {0x08, 0x08, 0x08, 0xff, 0x08, 0x08, 0x08, 0x08}, /* HS_CROSS      */
+  {0x81, 0x42, 0x24, 0x18, 0x18, 0x24, 0x42, 0x81}  /* HS_DIAGCROSS  */
+};
+
+BOOL FASTCALL
+Brush_InternalDelete( PGDIBRUSHOBJ pBrush )
+{
+  ASSERT(pBrush);
+  
+  if(pBrush->flAttrs & (GDIBRUSH_IS_HATCH | GDIBRUSH_IS_BITMAP))
+  {
+    ASSERT(pBrush->hbmPattern);
+    NtGdiDeleteObject(pBrush->hbmPattern);
+  }
+  
+  return TRUE;
+}
+
 HBRUSH FASTCALL
 IntGdiCreateBrushIndirect(PLOGBRUSH LogBrush)
 {
    PGDIBRUSHOBJ BrushObject;
    HBRUSH hBrush;
-  
+   HBITMAP hPattern;
+   
+   switch (LogBrush->lbStyle)
+   {
+     case BS_HATCHED:
+       if(!(hPattern = NtGdiCreateBitmap(8, 8, 1, 1, HatchBrushes[LogBrush->lbHatch])))
+       {
+         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+         return NULL;
+       }
+       break;
+     
+     case BS_PATTERN:
+       if(!(hPattern = BITMAPOBJ_CopyBitmap((HBITMAP)LogBrush->lbHatch)))
+       {
+         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+         return NULL;
+       }
+       break;
+   }
+   
    hBrush = BRUSHOBJ_AllocBrush();
    if (hBrush == NULL)
    {
@@ -51,22 +95,26 @@ IntGdiCreateBrushIndirect(PLOGBRUSH LogBrush)
    switch (LogBrush->lbStyle)
    {
       case BS_NULL:
-         BrushObject->flAttrs = GDIBRUSH_IS_NULL;
+         BrushObject->flAttrs |= GDIBRUSH_IS_NULL;
          break;
-      
-      /* FIXME */
-      case BS_HATCHED:
 
       case BS_SOLID:
-         BrushObject->flAttrs = GDIBRUSH_IS_SOLID;
+         BrushObject->flAttrs |= GDIBRUSH_IS_SOLID;
          BrushObject->BrushAttr.lbColor = LogBrush->lbColor & 0xFFFFFF;
          BrushObject->BrushObject.iSolidColor = BrushObject->BrushAttr.lbColor;
          /* FIXME: Fill in the rest of fields!!! */
          break;
 
+      case BS_HATCHED:
+         BrushObject->flAttrs |= GDIBRUSH_IS_HATCH;
+         BrushObject->hbmPattern = hPattern;
+         BrushObject->BrushAttr.lbColor = LogBrush->lbColor & 0xFFFFFF;
+         BrushObject->BrushObject.iSolidColor = 0xFFFFFFFF;
+         break;
+
       case BS_PATTERN:
-         BrushObject->flAttrs = GDIBRUSH_IS_BITMAP;
-         BrushObject->hbmPattern = BITMAPOBJ_CopyBitmap((HBITMAP)LogBrush->lbHatch);
+         BrushObject->flAttrs |= GDIBRUSH_IS_BITMAP;
+         BrushObject->hbmPattern = hPattern;
          BrushObject->BrushObject.iSolidColor = 0xFFFFFFFF;
          /* FIXME: Fill in the rest of fields!!! */
          break;
@@ -92,6 +140,7 @@ IntPatBlt(
 {
    RECTL DestRect;
    SURFOBJ *SurfObj;
+   POINTL BrushOrigin;
    BOOL ret;
 
    SurfObj = (SURFOBJ *)AccessUserObject((ULONG)dc->Surface);
@@ -125,6 +174,9 @@ IntPatBlt(
          DestRect.top = YLeft + Height + dc->w.DCOrgY + 1;
          DestRect.bottom = YLeft + dc->w.DCOrgY + 1;
       }
+      
+      BrushOrigin.x = BrushObj->ptOrigin.x + dc->w.DCOrgX;
+      BrushOrigin.y = BrushObj->ptOrigin.y + dc->w.DCOrgY;
 
       ret = IntEngBitBlt(
          SurfObj,
@@ -136,7 +188,7 @@ IntPatBlt(
          NULL,
          NULL,
          &BrushObj->BrushObject,
-         NULL,
+         &BrushOrigin,
          ROP);
    }
 
@@ -221,7 +273,9 @@ NtGdiCreateHatchBrush(INT Style, COLORREF Color)
    LOGBRUSH LogBrush;
 
    if (Style < 0 || Style >= NB_HATCH_STYLES)
+   {
       return 0;
+   }
 
    LogBrush.lbStyle = BS_HATCHED;
    LogBrush.lbColor = Color;

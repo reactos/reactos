@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib16bpp.c,v 1.29 2004/04/09 22:00:38 navaraf Exp $ */
+/* $Id: dib16bpp.c,v 1.30 2004/04/25 11:34:12 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -351,7 +351,7 @@ DIB_16BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       SourceX = SourcePoint->x;
       
       if(UsesPattern)
-        PatternY = Y % PatternHeight;
+        PatternY = (Y + BrushOrigin.y) % PatternHeight;
       
       for (X = DestRect->left; X < RoundedRight; X += 2, DestBits++, SourceX += 2)
       {
@@ -365,8 +365,8 @@ DIB_16BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
          if (UsesPattern)
 	 {
-            Pattern = (DIB_1BPP_GetPixel(PatternObj, X % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack);
-            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + 1) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 16;
+            Pattern = (DIB_1BPP_GetPixel(PatternObj, (X + BrushOrigin.x) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack);
+            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + BrushOrigin.x + 1) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 16;
          }
 
          *DestBits = DIB_DoRop(Rop4, Dest, Source, Pattern);
@@ -383,7 +383,7 @@ DIB_16BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
          if (UsesPattern)
          {
-            Pattern = DIB_1BPP_GetPixel(PatternObj, X % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack;
+            Pattern = DIB_1BPP_GetPixel(PatternObj, (X + BrushOrigin.x) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack;
          }				
 
          DIB_16BPP_PutPixel(DestSurf, X, Y, DIB_DoRop(Rop4, Dest, Source, Pattern) & 0xFFFF);
