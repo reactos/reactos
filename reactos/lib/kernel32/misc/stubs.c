@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.3 1999/08/29 06:59:03 ea Exp $
+/* $Id: stubs.c,v 1.4 1999/09/27 20:58:44 ariadne Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -378,36 +378,7 @@ ConvertDefaultLocale (
 }
 
 
-HANDLE
-STDCALL
-CreateFileMappingA (
-	HANDLE			hFile,
-	LPSECURITY_ATTRIBUTES	lpFileMappingAttributes,
-	DWORD			flProtect,
-	DWORD			dwMaximumSizeHigh,
-	DWORD			dwMaximumSizeLow,
-	LPCSTR			lpName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
 
-
-HANDLE
-STDCALL
-CreateFileMappingW (
-	HANDLE			hFile,
-	LPSECURITY_ATTRIBUTES	lpFileMappingAttributes,
-	DWORD			flProtect,
-	DWORD			dwMaximumSizeHigh,
-	DWORD			dwMaximumSizeLow,
-	LPCWSTR			lpName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
 
 
 HANDLE
@@ -2766,38 +2737,6 @@ InitAtomTable (
 }
 
 
-LONG
-STDCALL
-InterlockedDecrement (
-	LPLONG	lpAddend
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-LONG
-STDCALL
-InterlockedExchange (
-	LPLONG	Target,
-	LONG	Value
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-LONG
-STDCALL
-InterlockedIncrement (
-	LPLONG	lpAddend
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
 DWORD
@@ -3156,36 +3095,6 @@ LockResource (
 	return NULL;
 }
 
-
-LPVOID
-STDCALL
-MapViewOfFile (
-	HANDLE	hFileMappingObject,
-	DWORD	dwDesiredAccess,
-	DWORD	dwFileOffsetHigh,
-	DWORD	dwFileOffsetLow,
-	DWORD	dwNumberOfBytesToMap
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return NULL;
-}
-
-
-LPVOID
-STDCALL
-MapViewOfFileEx (
-	HANDLE	hFileMappingObject,
-	DWORD	dwDesiredAccess,
-	DWORD	dwFileOffsetHigh,
-	DWORD	dwFileOffsetLow,
-	DWORD	dwNumberOfBytesToMap,
-	LPVOID	lpBaseAddress
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return NULL;
-}
 
 
 int
@@ -4047,15 +3956,6 @@ TrimVirtualBuffer (
 }
 
 
-WINBOOL
-STDCALL
-UnmapViewOfFile (
-	LPVOID	lpBaseAddress
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 WINBOOL
