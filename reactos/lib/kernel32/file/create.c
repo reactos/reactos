@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.30 2003/01/15 21:24:33 chorns Exp $
+/* $Id: create.c,v 1.31 2003/01/17 19:26:14 guido Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -250,6 +250,7 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
      break;
     
     default:
+     break;
    }
    
    return FileHandle;
