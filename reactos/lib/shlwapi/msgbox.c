@@ -62,7 +62,7 @@ typedef struct tagDLGDATAEX
 /* Dialogue procedure for general message boxes */
 static INT_PTR CALLBACK SHDlgProcEx(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  DLGDATAEX *d = (DLGDATAEX *)GetWindowLongW(hDlg, DWL_USER);
+  DLGDATAEX *d = (DLGDATAEX *)GetWindowLongPtrW(hDlg, DWLP_USER);
 
   TRACE("(%p,%u,%d,%ld) data %p\n", hDlg, uMsg, wParam, lParam, d);
 
@@ -71,7 +71,7 @@ static INT_PTR CALLBACK SHDlgProcEx(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
   case WM_INITDIALOG:
   {
     /* FIXME: Not sure where native stores its lParam */
-    SetWindowLongW(hDlg, DWL_USER, lParam);
+    SetWindowLongPtrW(hDlg, DWLP_USER, lParam);
     d = (DLGDATAEX *)lParam;
     TRACE("WM_INITDIALOG: %p, %s,%p,%p\n", hDlg, debugstr_w(d->lpszId),
           d->dlgProc, (void*)d->lParam);

@@ -368,9 +368,9 @@
 368 stdcall @(wstr wstr ptr long wstr) kernel32.GetPrivateProfileStructW
 369 stdcall @(wstr wstr ptr ptr long long ptr wstr ptr ptr) kernel32.CreateProcessW
 370 stdcall -noname ExtractIconWrapW(long wstr long)
-371 stdcall DdeInitializeWrapW(ptr ptr long long) user32.DdeInitializeW
-372 stdcall DdeCreateStringHandleWrapW(long ptr long) user32.DdeCreateStringHandleW
-373 stdcall DdeQueryStringWrapW(long ptr wstr long long) user32.DdeQueryStringW
+371 stdcall -noname DdeInitializeWrapW(ptr ptr long long) user32.DdeInitializeW
+372 stdcall -noname DdeCreateStringHandleWrapW(long ptr long) user32.DdeCreateStringHandleW
+373 stdcall -noname DdeQueryStringWrapW(long ptr wstr long long) user32.DdeQueryStringW
 374 stub -noname SHCheckDiskForMediaA
 375 stub -noname SHCheckDiskForMediaW
 376 stdcall -noname MLGetUILanguage()  # kernel32.GetUserDefaultUILanguage
@@ -389,7 +389,7 @@
 389 stdcall -noname GetSaveFileNameWrapW(ptr)
 390 stdcall -noname WNetRestoreConnectionWrapW(long wstr)
 391 stdcall -noname WNetGetLastErrorWrapW(ptr ptr long ptr long)
-392 stdcall EndDialogWrap(ptr ptr) user32.EndDialog
+392 stdcall -noname EndDialogWrap(ptr ptr) user32.EndDialog
 393 stdcall @(long ptr long ptr long) user32.CreateDialogIndirectParamW
 394 stdcall @(long ptr long ptr long) user32.CreateDialogIndirectParamA
 395 stub -noname MLWinHelpA
@@ -456,8 +456,8 @@
 456 stdcall -noname PathIsValidCharW(long long)
 457 stub -noname GetLongPathNameWrapW
 458 stub -noname GetLongPathNameWrapA
-459 stdcall SHExpandEnvironmentStringsA(str ptr long) kernel32.ExpandEnvironmentStringsA
-460 stdcall SHExpandEnvironmentStringsW(wstr ptr long) kernel32.ExpandEnvironmentStringsW
+459 stdcall -noname SHExpandEnvironmentStringsA(str ptr long) kernel32.ExpandEnvironmentStringsA
+460 stdcall -noname SHExpandEnvironmentStringsW(wstr ptr long) kernel32.ExpandEnvironmentStringsW
 461 stdcall -noname SHGetAppCompatFlags(long)
 462 stub -noname UrlFixupW
 463 stub -noname SHExpandEnvironmentStringsForUserA
