@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.20 2003/07/11 15:59:37 royce Exp $
+/* $Id: surface.c,v 1.21 2003/07/27 18:37:23 dwelch Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -98,7 +98,8 @@ static VOID Dummy_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 static BOOLEAN Dummy_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             SURFGDI *DestGDI,  SURFGDI *SourceGDI,
                             PRECTL  DestRect,  POINTL  *SourcePoint,
-                            XLATEOBJ *ColorTranslation)
+			    PBRUSHOBJ BrushObj, POINTL* BrushOrign,
+                            XLATEOBJ *ColorTranslation, ULONG Rop4)
 {
   return FALSE;
 }

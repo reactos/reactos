@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: copybits.c,v 1.15 2003/07/11 15:59:37 royce Exp $
+/* $Id: copybits.c,v 1.16 2003/07/27 18:37:23 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -129,7 +129,7 @@ EngCopyBits(SURFOBJ *Dest,
     switch(clippingType)
     {
       case DC_TRIVIAL:
-        DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI, DestRect, SourcePoint, ColorTranslation);
+        DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI, DestRect, SourcePoint, NULL, NULL, ColorTranslation, SRCCOPY);
 
         MouseSafetyOnDrawEnd(Source, SourceGDI);
         MouseSafetyOnDrawEnd(Dest, DestGDI);
@@ -143,7 +143,7 @@ EngCopyBits(SURFOBJ *Dest,
         ptlTmp.x = SourcePoint->x + rclTmp.left - DestRect->left;
         ptlTmp.y = SourcePoint->y + rclTmp.top  - DestRect->top;
 
-        DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI, &rclTmp, &ptlTmp, ColorTranslation);
+        DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI, &rclTmp, &ptlTmp, NULL, NULL, ColorTranslation, SRCCOPY);
 
         MouseSafetyOnDrawEnd(Source, SourceGDI);
         MouseSafetyOnDrawEnd(Dest, DestGDI);
@@ -169,7 +169,7 @@ EngCopyBits(SURFOBJ *Dest,
               ptlTmp.y = SourcePoint->y + prcl->top - DestRect->top;
 
               if(!DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI,
-                                      prcl, &ptlTmp, ColorTranslation)) return FALSE;
+                                      prcl, &ptlTmp, NULL, NULL, ColorTranslation, SRCCOPY)) return FALSE;
 
               prcl++;
 

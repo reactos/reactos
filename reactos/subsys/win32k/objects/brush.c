@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: brush.c,v 1.21 2003/06/28 08:39:18 gvg Exp $
+/* $Id: brush.c,v 1.22 2003/07/27 18:37:23 dwelch Exp $
  */
 
 
@@ -252,7 +252,7 @@ BOOL STDCALL W32kPatBlt(HDC  hDC,
 		         NULL,
 		         BrushObj,
 		         NULL,
-		         PATCOPY);
+		         ROP);
     }
   GDIOBJ_UnlockObj( dc->w.hBrush, GO_BRUSH_MAGIC );
   DC_ReleasePtr( hDC );

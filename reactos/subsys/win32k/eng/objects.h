@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objects.h,v 1.15 2003/05/18 17:16:17 ea Exp $
+/* $Id: objects.h,v 1.16 2003/07/27 18:37:23 dwelch Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -167,7 +167,8 @@ typedef VOID    (*PFN_DIB_VLine)   (PSURFOBJ, LONG, LONG, LONG, ULONG);
 typedef BOOLEAN (*PFN_DIB_BitBlt)  (PSURFOBJ DestSurf, PSURFOBJ SourceSurf,
                                     PSURFGDI DestGDI,  PSURFGDI SourceGDI,
                                     PRECTL   DestRect, PPOINTL  SourcePoint,
-                                    XLATEOBJ *ColorTranslation);
+				    PBRUSHOBJ BrushObj, PPOINTL BrushOrigin,
+                                    XLATEOBJ *ColorTranslation, ULONG Rop4);
 
 typedef struct _SURFGDI {
   ENGOBJ 		Header;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib24bpp.c,v 1.11 2003/05/18 17:16:17 ea Exp $ */
+/* $Id: dib24bpp.c,v 1.12 2003/07/27 18:37:23 dwelch Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -77,9 +77,10 @@ DIB_24BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 
 BOOLEAN
 DIB_24BPP_BitBlt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-        SURFGDI *DestGDI,  SURFGDI *SourceGDI,
-        PRECTL  DestRect,  POINTL  *SourcePoint,
-        XLATEOBJ *ColorTranslation)
+		   SURFGDI *DestGDI,  SURFGDI *SourceGDI,
+		   PRECTL  DestRect,  POINTL  *SourcePoint,
+		   PBRUSHOBJ BrushObj, PPOINTL BrushOrigin,
+		   XLATEOBJ *ColorTranslation, ULONG Rop4)
 {
   LONG     i, j, sx, sy, xColor, f1;
   PBYTE    SourceBits, DestBits, SourceLine, DestLine;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.23 2003/07/11 15:59:37 royce Exp $
+/* $Id: bitblt.c,v 1.24 2003/07/27 18:37:23 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -175,7 +175,7 @@ CallDibBitBlt(PSURFOBJ OutputObj,
               PPOINTL BrushOrigin,
               ROP4 Rop4)
 {
-  return OutputGDI->DIB_BitBlt(OutputObj, InputObj, OutputGDI, InputGDI, OutputRect, InputPoint, ColorTranslation);
+  return OutputGDI->DIB_BitBlt(OutputObj, InputObj, OutputGDI, InputGDI, OutputRect, InputPoint, Brush, BrushOrigin, ColorTranslation, Rop4);
 }
 
 INT abs(INT nm);
@@ -249,6 +249,10 @@ EngBitBlt(SURFOBJ *DestObj,
     {
     InputGDI = (PSURFGDI) AccessInternalObjectFromUserObject(InputObj);
     }
+  else
+    {
+      InputGDI = NULL;
+    }
 
   OutputRect = *DestRect;
   if (NULL != ClipRegion)
@@ -300,14 +304,6 @@ EngBitBlt(SURFOBJ *DestObj,
     {
     OutputGDI = (PSURFGDI)AccessInternalObjectFromUserObject(OutputObj);
     }
-
-  /* FIXME The code currently assumes there will be a source bitmap. This is not true when, for example, using this function to
-   * paint a brush pattern on the destination. */
-  if (NULL == InputObj && 0xaacc != Rop4 && PATCOPY != Rop4)
-  {
-    DbgPrint("EngBitBlt: A source is currently required, even though not all operations require one (FIXME)\n");
-    return FALSE;
-  }
 
   // Determine clipping type
   if (ClipRegion == (CLIPOBJ *) NULL)
