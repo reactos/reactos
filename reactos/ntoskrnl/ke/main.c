@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.188 2004/06/19 08:48:01 navaraf Exp $
+/* $Id: main.c,v 1.189 2004/07/30 19:28:48 jimtabor Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -95,6 +95,7 @@ static ULONG LastKrnlPhysAddr;
 static ULONG LastKernelAddress;
 volatile BOOLEAN Initialized = FALSE;
 extern ULONG MmCoreDumpType;
+extern CHAR KiTimerSystemAuditing;
 
 extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
 
@@ -821,6 +822,11 @@ ExpInitializeExecutive(VOID)
           KEBUGCHECKEX(SESSION5_INITIALIZATION_FAILED, Status, 1, 0, 0);
         }
     }
+/*
+ * Tell ke/timer.c it's okay to run.
+ */
+
+  KiTimerSystemAuditing = 1;
 
   NtClose(ThreadHandle);
   NtClose(ProcessHandle);
