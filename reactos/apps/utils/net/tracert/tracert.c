@@ -425,6 +425,14 @@ main(argc, argv)
 	struct protoent *pe;
 	struct sockaddr_in from, *to;
 	int ch, i, on, probe, seq, tos, ttl;
+	WSADATA wsadata;
+	INT status;
+
+	status = WSAStartup(MAKEWORD(2, 2), &wsadata);
+	if (status != 0) {
+		printf("Could not initialize winsock dll.\n");	
+		return FALSE;
+	}
 
 	on = 1;
 	seq = tos = 0;
@@ -439,6 +447,7 @@ main(argc, argv)
 			if (max_ttl <= 1) {
 				Fprintf(stderr,
 				    "traceroute: max ttl must be >1.\n");
+				WSACleanup();
 				exit(1);
 			}
 			break;
@@ -450,6 +459,7 @@ main(argc, argv)
 			if (port < 1) {
 				Fprintf(stderr,
 				    "traceroute: port must be >0.\n");
+				WSACleanup();
 				exit(1);
 			}
 			break;
@@ -458,6 +468,7 @@ main(argc, argv)
 			if (nprobes < 1) {
 				Fprintf(stderr,
 				    "traceroute: nprobes must be >0.\n");
+				WSACleanup();
 				exit(1);
 			}
 			break;
@@ -476,6 +487,7 @@ main(argc, argv)
 			if (tos < 0 || tos > 255) {
 				Fprintf(stderr,
 				    "traceroute: tos must be 0 to 255.\n");
+				WSACleanup();
 				exit(1);
 			}
 			break;
@@ -487,6 +499,7 @@ main(argc, argv)
 			if (waittime <= 1) {
 				Fprintf(stderr,
 				    "traceroute: wait must be >1 sec.\n");
+				WSACleanup();
 				exit(1);
 			}
 			break;
@@ -515,6 +528,7 @@ main(argc, argv)
 		} else {
 			(void)fprintf(stderr,
 			    "traceroute: unknown host %s\n", *argv);
+			WSACleanup();
 			exit(1);
 		}
 	}
@@ -524,12 +538,14 @@ main(argc, argv)
 		Fprintf(stderr,
 		    "traceroute: packet size must be 0 <= s < %ld.\n",
 		    MAXPACKET - sizeof(struct opacket));
+		WSACleanup();
 		exit(1);
 	}
 	datalen += sizeof(struct opacket);
 	outpacket = (struct opacket *)malloc((unsigned)datalen);
 	if (! outpacket) {
 		perror("traceroute: malloc");
+		WSACleanup();
 		exit(1);
 	}
 	(void) bzero((char *)outpacket, datalen);
@@ -542,10 +558,12 @@ main(argc, argv)
 
 	if ((pe = getprotobyname("icmp")) == NULL) {
 		Fprintf(stderr, "icmp: unknown protocol\n");
+		WSACleanup();
 		exit(10);
 	}
 	if ((s = socket(AF_INET, SOCK_RAW, pe->p_proto)) < 0) {
 		perror("traceroute: icmp socket");
+		WSACleanup();
 		exit(5);
 	}
 	if (options & SO_DEBUG)
@@ -557,12 +575,14 @@ main(argc, argv)
 
 	if ((sndsock = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
 		perror("traceroute: raw socket");
+		WSACleanup();
 		exit(5);
 	}
 #ifdef SO_SNDBUF
 	if (setsockopt(sndsock, SOL_SOCKET, SO_SNDBUF, (char *)&datalen,
 		       sizeof(datalen)) < 0) {
 		perror("traceroute: SO_SNDBUF");
+		WSACleanup();
 		exit(6);
 	}
 #endif /* SO_SNDBUF */
@@ -570,6 +590,7 @@ main(argc, argv)
 	if (setsockopt(sndsock, IPPROTO_IP, IP_HDRINCL, (char *)&on,
 		       sizeof(on)) < 0) {
 		perror("traceroute: IP_HDRINCL");
+		WSACleanup();
 		exit(6);
 	}
 #endif /* IP_HDRINCL */
@@ -586,12 +607,14 @@ main(argc, argv)
 		from.sin_addr.s_addr = inet_addr(source);
 		if (from.sin_addr.s_addr == -1) {
 			Printf("traceroute: unknown host %s\n", source);
+			WSACleanup();
 			exit(1);
 		}
 		outpacket->ip.ip_src = from.sin_addr;
 #ifndef IP_HDRINCL
 		if (bind(sndsock, (struct sockaddr *)&from, sizeof(from)) < 0) {
 			perror ("traceroute: bind:");
+			WSACleanup();
 			exit (1);
 		}
 #endif /* IP_HDRINCL */
@@ -664,9 +687,14 @@ main(argc, argv)
 			(void) fflush(stdout);
 		}
 		putchar('\n');
-		if (got_there || unreachable >= nprobes-1)
+		if (got_there || unreachable >= nprobes-1) {
+			WSACleanup();
 			exit(0);
+		}
 	}
+
+	WSACleanup();
+	return 0;
 }
 
 int
