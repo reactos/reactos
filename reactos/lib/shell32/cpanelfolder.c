@@ -963,6 +963,7 @@ static ULONG STDMETHODCALLTYPE IShellExecuteHookW_fnRelease(IShellExecuteHookW* 
 
 static HRESULT WINAPI IShellExecuteHookW_fnExecute(IShellExecuteHookW* iface, LPSHELLEXECUTEINFOW psei)
 {
+    static const WCHAR wCplopen[] = {'c','p','l','o','p','e','n','\0'};
     ICPanelImpl *This = (ICPanelImpl *)iface;
 
     SHELLEXECUTEINFOW sei_tmp;
@@ -982,17 +983,20 @@ static HRESULT WINAPI IShellExecuteHookW_fnExecute(IShellExecuteHookW* iface, LP
 	return E_INVALIDARG;
 
     path[0] = '\"';
-    l = 1 + MultiByteToWideChar(CP_ACP, 0, pcpanel->szName, -1, path+1, MAX_PATH);
+    /* Return value from MultiByteToWideChar includes terminating NUL, which
+     * compensates for the starting double quote we just put in */
+    l = MultiByteToWideChar(CP_ACP, 0, pcpanel->szName, -1, path+1, MAX_PATH);
 
     /* pass applet name to Control_RunDLL to distinguish between applets in one .cpl file */
-    path[++l] = '"';
-    path[++l] = ' ';
+    path[l++] = '"';
+    path[l++] = ' ';
 
     MultiByteToWideChar(CP_ACP, 0, pcpanel->szName+pcpanel->offsDispName, -1, path+l, MAX_PATH);
 
     memcpy(&sei_tmp, psei, sizeof(sei_tmp));
     sei_tmp.lpFile = path;
     sei_tmp.fMask &= ~SEE_MASK_INVOKEIDLIST;
+    sei_tmp.lpVerb = wCplopen;
 
     ret = ShellExecuteExW(&sei_tmp);
     if (ret)
