@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.41 2003/10/22 17:44:01 gvg Exp $ */
+/* $Id: bitmaps.c,v 1.42 2003/10/28 17:43:42 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -122,6 +122,11 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
       BrushObj = BRUSHOBJ_LockBrush(DCDest->w.hBrush);
       if (NULL == BrushObj)
         {
+          if (UsesSource)
+            {
+              DC_UnlockDc(hDCSrc);
+            }
+          DC_UnlockDc(hDCDest);
           SetLastWin32Error(ERROR_INVALID_HANDLE);
           return FALSE;
         }

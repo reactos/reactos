@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.33 2003/10/22 20:06:32 sedwards Exp $
+/* $Id: volume.c,v 1.34 2003/10/28 17:43:42 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -242,6 +242,7 @@ GetDiskFreeSpaceW(
   hFile = InternalOpenDirW(lpRootPathName, FALSE);
   if (INVALID_HANDLE_VALUE == hFile)
     {
+      SetLastError(ERROR_PATH_NOT_FOUND);
       return FALSE;
     }
 

@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.6 2003/10/28 09:49:04 navaraf Exp $
+/* $Id: atom.c,v 1.7 2003/10/28 17:43:42 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -579,6 +579,11 @@ RtlQueryAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
    ULONG Length;
    PRTL_ATOM_ENTRY AtomEntry;
 
+   if (Atom == 0)
+     {
+	return STATUS_INVALID_HANDLE;
+     }
+
    if (Atom < 0xC000)
      {
 	if (RefCount != NULL)
@@ -730,11 +735,11 @@ RtlpCheckIntegerAtom(PWSTR AtomName,
    RtlInitUnicodeString(&AtomString,
 			p);
 
-   DPRINT1("AtomString: %wZ\n", &AtomString);
+   DPRINT("AtomString: %wZ\n", &AtomString);
 
    RtlUnicodeStringToInteger(&AtomString,10, &LongValue);
 
-   DPRINT1("LongValue: %lu\n", LongValue);
+   DPRINT("LongValue: %lu\n", LongValue);
 
    *AtomValue = (USHORT)(LongValue & 0x0000FFFF);
 
@@ -878,7 +883,7 @@ RtlpQueryAtomInformation(PRTL_ATOM_TABLE AtomTable,
 	return Status;
      }
 
-   DPRINT1("NameLength: %lu\n", NameLength);
+   DPRINT("NameLength: %lu\n", NameLength);
 
    if (ReturnLength != NULL)
      {
@@ -916,7 +921,7 @@ RtlpQueryAtomTableInformation(PRTL_ATOM_TABLE AtomTable,
 	Length += ((AtomTable->NumberOfAtoms - 1)* sizeof(RTL_ATOM));
      }
 
-   DPRINT1("RequiredLength: %lu\n", Length);
+   DPRINT("RequiredLength: %lu\n", Length);
 
    if (ReturnLength != NULL)
      {
