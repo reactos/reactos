@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.58 2001/05/05 09:31:19 ekohl Exp $
+/* $Id: registry.c,v 1.59 2001/05/30 14:40:36 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -424,7 +424,7 @@ DPRINT("Creating HKU\n");
    NewKey->SizeOfSubKeys= NewKey->KeyBlock->NumberOfSubKeys;
    NewKey->Name=ExAllocatePool(PagedPool,strlen("User"));
    NewKey->NameSize=strlen("User");
-   memcpy(NewKey->Name,"Machine",strlen("User"));
+   memcpy(NewKey->Name,"User",strlen("User"));
    CmiAddKeyToList(CmiRootKey,NewKey);
    CmiUserKey=NewKey;
 
@@ -536,17 +536,14 @@ CmShutdownRegistry(VOID)
   DPRINT("CmShutdownRegistry()...\n");
 }
 
-NTSTATUS 
-STDCALL
-NtCreateKey (
-	OUT	PHANDLE			KeyHandle,
-	IN	ACCESS_MASK		DesiredAccess,
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes, 
-	IN	ULONG			TitleIndex,
-	IN	PUNICODE_STRING		Class,
-	IN	ULONG			CreateOptions,
-	OUT	PULONG			Disposition
-	)
+NTSTATUS STDCALL
+NtCreateKey(OUT PHANDLE KeyHandle,
+	    IN ACCESS_MASK DesiredAccess,
+	    IN POBJECT_ATTRIBUTES ObjectAttributes,
+	    IN ULONG TitleIndex,
+	    IN PUNICODE_STRING Class,
+	    IN ULONG CreateOptions,
+	    OUT PULONG Disposition)
 {
  NTSTATUS	Status;
  PVOID		Object;
@@ -564,17 +561,24 @@ NtCreateKey (
 	return Status;
   }
 DPRINT("RP=%wZ\n",&RemainingPath);
-  if(RemainingPath.Buffer[0] ==0)
+  if ((RemainingPath.Buffer == NULL) || (RemainingPath.Buffer[0] ==0))
   {
-    if (Disposition) *Disposition = REG_OPENED_EXISTING_KEY;
-    Status = ObCreateHandle(
-		PsGetCurrentProcess(),
-		Object,
-		DesiredAccess,
-		FALSE,
-		KeyHandle
-		);
+    /*  Fail if the key has been deleted  */
+    if (((PKEY_OBJECT)Object)->Flags & KO_MARKED_FOR_DELETE)
+    {
+      ObDereferenceObject(Object);
+      return STATUS_UNSUCCESSFUL;
+    }
+    if (Disposition)
+      *Disposition = REG_OPENED_EXISTING_KEY;
+    Status = ObCreateHandle(PsGetCurrentProcess(),
+			    Object,
+			    DesiredAccess,
+			    FALSE,
+			    KeyHandle);
+DPRINT("Status=%x\n",Status);
     ObDereferenceObject(Object);
+    return Status;
   }
   /* if RemainingPath contains \ : must return error */
   if((RemainingPath.Buffer[0])=='\\')
@@ -652,11 +656,8 @@ DPRINT("NCK %S parent=%x\n",RemainingPath.Buffer,Object);
 }
 
 
-NTSTATUS 
-STDCALL
-NtDeleteKey (
-	IN	HANDLE	KeyHandle
-	)
+NTSTATUS STDCALL
+NtDeleteKey(IN HANDLE KeyHandle)
 {
   NTSTATUS  Status;
   PKEY_OBJECT  KeyObject;
@@ -1040,11 +1041,8 @@ NtEnumerateValueKey (
 }
 
 
-NTSTATUS 
-STDCALL
-NtFlushKey (
-	IN	HANDLE	KeyHandle
-	)
+NTSTATUS STDCALL
+NtFlushKey(IN HANDLE KeyHandle)
 {
  NTSTATUS Status;
  PKEY_OBJECT  KeyObject;
@@ -1172,40 +1170,15 @@ END FIXME*/
 }
 
 
-NTSTATUS 
-STDCALL
-NtOpenKey (
-	OUT	PHANDLE			KeyHandle, 
-	IN	ACCESS_MASK		DesiredAccess,
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes
-	)
+NTSTATUS STDCALL
+NtOpenKey(OUT PHANDLE KeyHandle,
+	  IN ACCESS_MASK DesiredAccess,
+	  IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
  NTSTATUS	Status;
  PVOID		Object;
  UNICODE_STRING RemainingPath;
 
-/*
-   if (ObjectAttributes->RootDirectory == HKEY_LOCAL_MACHINE)
-   {
-     Status = ObCreateHandle(
-  		PsGetCurrentProcess(),
-  		CmiMachineKey,
-  		KEY_ALL_ACCESS,
-  		FALSE,
-  		&ObjectAttributes->RootDirectory
-  		);
-   }
-   else if (ObjectAttributes->RootDirectory == HKEY_USERS)
-   {
-     Status = ObCreateHandle(
-  		PsGetCurrentProcess(),
-  		CmiUserKey,
-  		KEY_ALL_ACCESS,
-  		FALSE,
-  		&ObjectAttributes->RootDirectory
-  		);
-   }
-*/
    RemainingPath.Buffer=NULL;
    Status = ObFindObject(ObjectAttributes,&Object,&RemainingPath,CmiKeyType);
 DPRINT("NTOpenKey : after ObFindObject\n");
@@ -1834,12 +1807,9 @@ NtInitializeRegistry (
 }
 
 
-NTSTATUS
-STDCALL
-RtlCheckRegistryKey (
-	IN	ULONG	RelativeTo,
-	IN	PWSTR	Path
-	)
+NTSTATUS STDCALL
+RtlCheckRegistryKey(IN ULONG RelativeTo,
+		    IN PWSTR Path)
 {
    HANDLE KeyHandle;
    NTSTATUS Status;
@@ -2116,7 +2086,7 @@ static NTSTATUS CmiObjectParse(PVOID ParsedObject,
 	return STATUS_UNSUCCESSFUL;
        }
        /*  Create new key object and put into linked list  */
-DPRINT("COP %s;",cPath);
+DPRINT("CmiObjectParse %s\n",cPath);
        FoundObject = ObCreateObject(NULL, 
                                      STANDARD_RIGHTS_REQUIRED, 
                                      NULL, 
@@ -2139,7 +2109,7 @@ DPRINT("COP %s;",cPath);
 			      STANDARD_RIGHTS_REQUIRED,
 			      NULL,
 			      UserMode);
-DPRINT("COP %6.6s ;",FoundObject->Name);   
+DPRINT("CmiObjectParse %s\n",FoundObject->Name);
    if (end != NULL)
      {
 	*end = '\\';
