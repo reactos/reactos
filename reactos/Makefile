@@ -34,8 +34,8 @@ LIB_FSLIB = vfatlib
 # advapi32 crtdll fmifs gdi32 kernel32 libpcap packet msafd msvcrt ntdll ole32
 # oleaut32 epsapi psapi rpcrt4 secur32 shell32 user32 version ws2help ws2_32 wsock32 wshirda
 DLLS = rosrtl advapi32 crtdll fmifs freetype gdi32 kernel32 packet msafd msvcrt ntdll \
-       epsapi psapi secur32 user32 version winedbgc winspool ws2help ws2_32 wsock32 \
-       wshirda zlib #winmm
+       epsapi psapi secur32 syssetup user32 version winedbgc winspool ws2help ws2_32 \
+       wsock32 wshirda zlib
 
 SUBSYS = smss win32k csrss ntvdm
 
@@ -79,8 +79,8 @@ NET_DEVICE_DRIVERS = ne2000
 STORAGE_DRIVERS = atapi cdrom class2 disk scsiport
 
 # System applications
-# autochk cmd services format gstart usetup winlogon
-SYS_APPS = autochk cmd services format gstart usetup winlogon
+# autochk cmd format gstart services setup usetup winlogon
+SYS_APPS = autochk cmd format gstart services setup usetup winlogon
 
 # System services
 # rpcss eventlog
@@ -741,7 +741,7 @@ install_dirs:
 	$(RMKDIR) $(INSTALL_DIR)
 
 install_before:
-	#$(CP) bootdata/autorun.inf $(INSTALL_DIR)/../autorun.inf
+#	$(CP) bootdata/autorun.inf $(INSTALL_DIR)/../autorun.inf
 	$(CP) bootdata/readme.txt $(INSTALL_DIR)/../readme.txt
 	$(RLINE) bootdata/hivecls.inf $(INSTALL_DIR)/hivecls.inf
 	$(RLINE) bootdata/hivedef.inf $(INSTALL_DIR)/hivedef.inf

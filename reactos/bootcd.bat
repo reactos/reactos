@@ -108,6 +108,7 @@ copy /Y lib\oleaut32\oleaut32.dll %BOOTCD_DIR%\disk\install
 copy /Y lib\packet\packet.dll %BOOTCD_DIR%\disk\install
 copy /Y lib\secur32\secur32.dll %BOOTCD_DIR%\disk\install
 copy /Y lib\shell32\shell32.dll %BOOTCD_DIR%\disk\install
+copy /Y lib\syssetup\syssetup.dll %BOOTCD_DIR%\disk\install
 copy /Y lib\user32\user32.dll %BOOTCD_DIR%\disk\install
 copy /Y lib\version\version.dll %BOOTCD_DIR%\disk\install
 copy /Y lib\winedbgc\winedbgc.dll %BOOTCD_DIR%\disk\install
@@ -123,9 +124,10 @@ copy /Y subsys\csrss\csrss.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\ntvdm\ntvdm.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\smss\smss.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\system\autochk\autochk.exe %BOOTCD_DIR%\disk\install
+copy /Y subsys\system\cmd\cmd.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\system\lsass\lsass.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\system\services\services.exe %BOOTCD_DIR%\disk\install
-copy /Y subsys\system\cmd\cmd.exe %BOOTCD_DIR%\disk\install
+copy /Y subsys\system\setup\setup.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\system\winlogon\winlogon.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\win32k\win32k.sys %BOOTCD_DIR%\disk\install
 

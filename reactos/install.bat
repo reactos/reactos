@@ -66,8 +66,9 @@ copy drivers\storage\disk\disk.sys %ROS_INSTALL%\system32\drivers
 copy drivers\storage\class2\class2.sys %ROS_INSTALL%\system32\drivers
 copy subsys\system\autochk\autochk.exe %ROS_INSTALL%\system32
 copy subsys\system\cmd\cmd.exe %ROS_INSTALL%\system32
-copy subsys\system\winlogon\winlogon.exe %ROS_INSTALL%\system32
 copy subsys\system\services\services.exe %ROS_INSTALL%\system32
+copy subsys\system\setup\setup.exe %ROS_INSTALL%\system32
+copy subsys\system\winlogon\winlogon.exe %ROS_INSTALL%\system32
 copy services\eventlog\eventlog.exe %ROS_INSTALL%\system32
 copy services\rpcss\rpcss.exe %ROS_INSTALL%\system32
 copy lib\advapi32\advapi32.dll %ROS_INSTALL%\system32
@@ -85,6 +86,7 @@ copy lib\packet\packet.dll %ROS_INSTALL%\system32
 copy lib\secur32\secur32.dll %ROS_INSTALL%\system32
 copy lib\shell32\roshel32.dll %ROS_INSTALL%\system32
 copy lib\snmpapi\snmpapi.dll %ROS_INSTALL%\system32
+copy lib\syssetup\syssetup.dll %ROS_INSTALL%\system32
 copy lib\user32\user32.dll %ROS_INSTALL%\system32
 copy lib\version\version.dll %ROS_INSTALL%\system32
 copy lib\winedbgc\winedbgc.dll %ROS_INSTALL%\system32
