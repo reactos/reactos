@@ -127,8 +127,8 @@ SmCreateUserProcess (LPWSTR ImagePath,
  * ARGUMENTS
  * 	Name: name of the program to run, that is a value's name in
  * 	      the SM registry key Subsystems;
- * 	Data: what the registry gived back for Name;
- * 	DataLength: how much Data the registry retruns;
+ * 	Data: what the registry gave back for Name;
+ * 	DataLength: how much Data the registry returns;
  * 	DataType: what is Data?
  * 	Expand: set it TRUE if you want this function to use the env
  * 	      to possibly expand Data before giving it back.
