@@ -575,10 +575,10 @@ typedef struct tagBITMAPINFOHEADER {
   LONG   biYPelsPerMeter; 
   DWORD  biClrUsed; 
   DWORD  biClrImportant; 
-} BITMAPINFOHEADER, *LPBITMAPINFOHEADER, *PBITMAPINFO; 
+} BITMAPINFOHEADER, *LPBITMAPINFOHEADER, *PBITMAPINFOHEADER;
 
 typedef struct tagRGBQUAD { 
-  BYTE    rgbBlue; 
+  BYTE    rgbBlue;
   BYTE    rgbGreen; 
   BYTE    rgbRed; 
   BYTE    rgbReserved; 
@@ -587,7 +587,7 @@ typedef struct tagRGBQUAD {
 typedef struct tagBITMAPINFO {
   BITMAPINFOHEADER bmiHeader; 
   RGBQUAD          bmiColors[1]; 
-} BITMAPINFO, *LPBITMAPINFO; 
+} BITMAPINFO, *LPBITMAPINFO, *PBITMAPINFO; 
 
 typedef long FXPT2DOT30,  * LPFXPT2DOT30;
 
