@@ -76,7 +76,8 @@ vfprintf(FILE *f, const char *fmt, va_list ap)
 #define ZEROTRUNC	128	/* truncate zero 's */
 
 
-static int skip_atoi(const char **s)
+static int
+skip_atoi(const char **s)
 {
 	int i=0;
 
@@ -86,7 +87,8 @@ static int skip_atoi(const char **s)
 }
 
 
-static int do_div(long long *n,int base)
+static int
+do_div(long long *n,int base)
 {
 	int __res = ((unsigned long long) *n) % (unsigned) base;
 	*n = ((unsigned long long) *n) / (unsigned) base;
@@ -94,7 +96,8 @@ static int do_div(long long *n,int base)
 }
 
 
-static void number(FILE * f, long long num, int base, int size, int precision ,int type)
+static void
+number(FILE * f, long long num, int base, int size, int precision ,int type)
 {
 	char c,sign,tmp[66];
 	const char *digits="0123456789abcdefghijklmnopqrstuvwxyz";
@@ -162,7 +165,8 @@ static void number(FILE * f, long long num, int base, int size, int precision ,i
 }
 
 
-static void numberf(FILE * f, double __n, char exp_sign,  int size, int precision, int type)
+static void
+numberf(FILE * f, double __n, char exp_sign,  int size, int precision, int type)
 {
 	double exponent = 0.0;
 	double e;
@@ -329,7 +333,8 @@ static void numberf(FILE * f, double __n, char exp_sign,  int size, int precisio
 }
 
 
-static void numberfl(FILE * f, long double __n, char exp_sign,  int size, int precision, int type)
+static void
+numberfl(FILE * f, long double __n, char exp_sign,  int size, int precision, int type)
 {
 	long double exponent = 0.0;
 	long double e;
@@ -497,7 +502,8 @@ static void numberfl(FILE * f, long double __n, char exp_sign,  int size, int pr
 }
 
 
-int __vfprintf(FILE *f, const char *fmt, va_list args)
+int
+__vfprintf(FILE *f, const char *fmt, va_list args)
 {
 	int len;
 	unsigned long long num;
