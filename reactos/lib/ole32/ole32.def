@@ -109,7 +109,7 @@ EXPORTS
 ;  CreateOleAdviseHolder @114
 ;  CreatePointerMoniker @115
 ;  CreateStdProgressIndicator @116
-  CreateStreamOnHGlobal@12 @117
+;  CreateStreamOnHGlobal@12 @117
 ;  DcomChannelSetHResult @118
 ;  DllDebugObjectRPCHook @119
 ;  DllGetClassObject @120
