@@ -600,15 +600,15 @@ int MainFrame::Command(int id, int code)
 #endif
 
 	  case ID_VIEW_TOOL_BAR:
-		toggle_child(_hwnd, id, _htoolbar);
+		toggle_child(_hwnd, id, _htoolbar, 0);
 		break;
 
 	  case ID_VIEW_EXTRA_BAR:
-		toggle_child(_hwnd, id, _hextrabar);
+		toggle_child(_hwnd, id, _hextrabar, 1);
 		break;
 
 	  case ID_VIEW_DRIVE_BAR:
-		toggle_child(_hwnd, id, _hdrivebar);
+		toggle_child(_hwnd, id, _hdrivebar, 2);
 		break;
 
 	  case ID_VIEW_STATUSBAR:
@@ -964,13 +964,16 @@ void MainFrame::fullscreen_move()
 }
 
 
-void MainFrame::toggle_child(HWND hwnd, UINT cmd, HWND hchild)
+void MainFrame::toggle_child(HWND hwnd, UINT cmd, HWND hchild, int band_idx)
 {
 	BOOL vis = IsWindowVisible(hchild);
 
 	CheckMenuItem(_menu_info._hMenuView, cmd, vis?MF_BYCOMMAND:MF_BYCOMMAND|MF_CHECKED);
 
-	ShowWindow(hchild, vis?SW_HIDE:SW_SHOW);
+	if (band_idx != -1)
+		SendMessage(_hwndrebar, RB_SHOWBAND, band_idx, !vis);
+	else
+		ShowWindow(hchild, vis?SW_HIDE:SW_SHOW);
 
 	if (_fullscreen._mode)
 		fullscreen_move();
