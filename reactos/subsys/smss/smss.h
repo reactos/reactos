@@ -20,6 +20,7 @@ BOOL InitSessionManager (HANDLE Children[]);
 
 /* smss.c */
 void DisplayString (LPCWSTR lpwString);
+void PrintString (char* fmt,...);
 
 
 /* smapi.c */

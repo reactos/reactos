@@ -1,4 +1,5 @@
-/*
+/* $Id: smapi.c,v 1.2 1999/12/11 01:42:44 ekohl Exp $
+ *
  * Reactos Session Manager
  *
  *
@@ -9,28 +10,53 @@
 
 #include "smss.h"
 
+//#define NDEBUG
 
 
 VOID STDCALL
-SmApiThread(HANDLE Port)
+SmApiThread (HANDLE Port)
 {
-    ULONG count;
+    NTSTATUS Status;
+    ULONG Unknown;
+    PLPCMESSAGE Reply = NULL;
+    LPCMESSAGE Message;
 
-    DisplayString (L"SmApiThread running...\n");
+#ifndef NDEBUG
+    DisplayString (L"SmApiThread: running\n");
+#endif
 
-#if 0
-    NtSuspendThread (NtCurrentThread(), &count);
-
-    while (TRUE)
+    for (;;)
     {
+#ifndef NDEBUG
+        DisplayString (L"SmApiThread: waiting for message\n");
+#endif
 
+        Status = NtReplyWaitReceivePort (Port,
+                                         &Unknown,
+                                         Reply,
+                                         &Message);
+        if (NT_SUCCESS(Status))
+        {
+#ifndef NDEBUG
+            DisplayString (L"SmApiThread: message received\n");
+#endif
 
+            if (Message.MessageType == LPC_CONNECTION_REQUEST)
+            {
+
+            }
+            else
+            {
+
+            }
+
+        }
     }
 
+#ifndef NDEBUG
+    DisplayString (L"SmApiThread: terminating\n");
 #endif
-    DisplayString (L"SmApiThread terminating...\n");
-
-    NtTerminateThread(NtCurrentThread(), 0);
+    NtTerminateThread (NtCurrentThread (), STATUS_UNSUCCESSFUL);
 }
 
 /* EOF */
