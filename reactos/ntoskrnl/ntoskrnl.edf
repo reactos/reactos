@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.102 2001/10/10 19:41:35 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.103 2001/10/10 22:07:15 hbirr Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -7,9 +7,15 @@
 EXPORTS
 CcRosInitializeFileCache=CcRosInitializeFileCache@12
 CcMdlReadComplete=CcMdlReadComplete@8
-CcRosRequestCacheSegment=CcRosRequestCacheSegment@20
-CcRosReleaseCacheSegment=CcRosReleaseCacheSegment@12
+;CcRosRequestCacheSegment=CcRosRequestCacheSegment@20
+;CcRosReleaseCacheSegment=CcRosReleaseCacheSegment@12
 CcRosReleaseFileCache=CcRosReleaseFileCache@8
+CcCopyRead=CcCopyRead@24
+CcCopyWrite=CcCopyWrite@20
+CcMapData=CcMapData@24
+CcSetDirtyPinnedData=CcSetDirtyPinnedData@8
+CcUnpinData=CcUnpinData@4
+CcSetFileSizes=CcSetFileSizes@8
 DbgBreakPoint=DbgBreakPoint@0
 DbgBreakPointWithStatus=DbgBreakPointWithStatus@4
 ;DbgLoadImageSymbols=DbgLoadImageSymbols@12
