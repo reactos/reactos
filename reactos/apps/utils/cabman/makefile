@@ -1,7 +1,7 @@
 #
 # Makefile for ReactOS Cabinet Manager
 #
-PATH_TO_TOP = ../..
+PATH_TO_TOP = ../../..
 
 #FIXME: why doesn't this work?
 #ZLIB_OBJECTS    = $(PATH_TO_TOP)/lib/zlib/zlib.a

@@ -1,6 +1,6 @@
-# $Id: makefile,v 1.5 2001/08/21 20:13:03 chorns Exp $
+# $Id: makefile,v 1.6 2002/06/07 22:57:51 ekohl Exp $
 
-PATH_TO_TOP = ../../..
+PATH_TO_TOP = ../../../..
 
 TARGET_PATH = common
 

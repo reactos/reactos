@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 2002/06/07 22:58:10 ekohl Exp $
+# $Id: makefile,v 1.1 2002/06/07 22:57:13 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -8,7 +8,7 @@ TARGET_TYPE = program
 
 TARGET_APPTYPE = console
 
-TARGET_NAME = objdir
+TARGET_NAME = tokentest
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 

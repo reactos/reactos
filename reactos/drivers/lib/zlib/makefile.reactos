@@ -1,6 +1,6 @@
-# $Id: makefile.reactos,v 1.1 2002/03/17 21:05:02 hyperion Exp $
+# $Id: makefile.reactos,v 1.2 2002/06/07 22:59:01 ekohl Exp $
 
-PATH_TO_TOP = ../..
+PATH_TO_TOP = ../../..
 
 TARGET_TYPE = library
 

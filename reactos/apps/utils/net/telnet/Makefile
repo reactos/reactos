@@ -1,6 +1,6 @@
-# $Id: Makefile,v 1.4 2001/10/16 22:45:39 phreak Exp $
+# $Id: Makefile,v 1.5 2002/06/07 22:58:02 ekohl Exp $
 
-PATH_TO_TOP = ../../..
+PATH_TO_TOP = ../../../..
 
 TARGET_TYPE = program
 

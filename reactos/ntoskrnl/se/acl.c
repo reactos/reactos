@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.5 2002/02/20 20:15:38 ekohl Exp $
+/* $Id: acl.c,v 1.6 2002/06/07 22:59:42 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -130,14 +130,14 @@ SepInitDACLs(VOID)
 }
 
 
-BOOLEAN
-STDCALL
-RtlFirstFreeAce(PACL Acl, PACE* Ace)
+BOOLEAN STDCALL
+RtlFirstFreeAce(PACL Acl,
+		PACE* Ace)
 {
    PACE Current;
    PVOID AclEnd;
    ULONG i;
-     
+
    Current = (PACE)(Acl + 1);
    *Ace = NULL;
    i = 0;
@@ -171,11 +171,13 @@ RtlFirstFreeAce(PACL Acl, PACE* Ace)
    return(TRUE);
 }
 
-NTSTATUS RtlpAddKnownAce(PACL Acl,
-			 ULONG Revision,
-			 ACCESS_MASK AccessMask,
-			 PSID Sid,
-			 ULONG Type)
+
+NTSTATUS
+RtlpAddKnownAce(PACL Acl,
+		ULONG Revision,
+		ACCESS_MASK AccessMask,
+		PSID Sid,
+		ULONG Type)
 {
    PACE Ace;
    
@@ -215,6 +217,7 @@ NTSTATUS RtlpAddKnownAce(PACL Acl,
    return(STATUS_SUCCESS);
 }
 
+
 NTSTATUS STDCALL
 RtlAddAccessAllowedAce(PACL Acl,
 		       ULONG Revision,
@@ -223,6 +226,7 @@ RtlAddAccessAllowedAce(PACL Acl,
 {
    return(RtlpAddKnownAce(Acl, Revision, AccessMask, Sid, 0));
 }
+
 
 NTSTATUS STDCALL
 RtlAddAce(PACL Acl,
@@ -298,12 +302,12 @@ RtlCreateAcl(PACL Acl,
 {
    if (AclSize < 8)
      {
-	return(STATUS_UNSUCCESSFUL);
+	return(STATUS_BUFFER_TOO_SMALL);
      }
-   if (AclRevision != 2 ||
+   if (AclRevision != 2 &&
        AclRevision != 3)
      {
-	return(STATUS_UNSUCCESSFUL);
+	return(STATUS_UNKNOWN_REVISION);
      }
    if (AclSize > 0xffff)
      {
