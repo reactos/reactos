@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.5 2000/03/26 22:00:07 dwelch Exp $
+/* $Id: scm.c,v 1.6 2001/06/17 20:36:35 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -421,7 +421,7 @@ SC_HANDLE STDCALL OpenSCManagerW(LPCWSTR	lpMachineName,
 	     return(NULL);
 	  }
 	
-	h = CreateFile(L"\\\\.\\pipe\ntsrvctrl",
+	h = CreateFile(L"\\\\.\\pipe\\ntsrvctrl",
 		       dwDesiredAccess,
 		       0,
 		       NULL,
