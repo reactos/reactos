@@ -61,5 +61,5 @@ include tools/nci/makefile
 include tools/rbuild/makefile
 include tools/unicode/makefile
 include tools/wmc/makefile
-include tools/wpp/makefile
+include tools/wpp/wpp.mak
 include tools/wrc/makefile
