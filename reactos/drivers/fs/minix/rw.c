@@ -46,7 +46,7 @@ NTSTATUS MinixRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    
    Length = Stack->Parameters.Read.Length;
    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-   Offset = Stack->Parameters.Read.ByteOffset.LowPart;
+   Offset = GET_LARGE_INTEGER_LOW_PART(Stack->Parameters.Read.ByteOffset);
    
    DPRINT("Length %d Buffer %x Offset %x\n",Length,Buffer,Offset);
    

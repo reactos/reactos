@@ -36,8 +36,14 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
    DPRINT("VFATReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
    	    pDeviceObject,DiskSector,Buffer);
 
-    sectorNumber.HighPart = 0;
-    sectorNumber.LowPart = DiskSector * BLOCKSIZE;
+    SET_LARGE_INTEGER_HIGH_PART(sectorNumber, 0);
+    SET_LARGE_INTEGER_LOW_PART(sectorNumber, DiskSector * BLOCKSIZE);
+
+DPRINT("DiskSector:%ld BLKSZ:%ld sectorNumber:%ld:%ld\n", 
+       (unsigned long) DiskSector,
+       (unsigned long) BLOCKSIZE,
+       (unsigned long) GET_LARGE_INTEGER_HIGH_PART(sectorNumber),
+       (unsigned long) GET_LARGE_INTEGER_LOW_PART(sectorNumber));
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 
@@ -81,7 +87,7 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
     }
 
     if (!NT_SUCCESS(status)) {
-        DbgPrint("IO failed!!! Error code: %d\n", status);
+        DbgPrint("IO failed!!! Error code: %d(%x)\n", status, status);
         ExFreePool(mbr);
         return FALSE;
     }
@@ -111,8 +117,8 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
    DPRINT("VFATWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
    	    pDeviceObject,DiskSector,Buffer);
 
-    sectorNumber.HighPart = 0;
-    sectorNumber.LowPart = DiskSector * BLOCKSIZE;
+    SET_LARGE_INTEGER_HIGH_PART(sectorNumber, 0);
+    SET_LARGE_INTEGER_LOW_PART(sectorNumber, DiskSector * BLOCKSIZE);
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 
@@ -156,7 +162,7 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
     }
 
     if (!NT_SUCCESS(status)) {
-        DbgPrint("IO failed!!! Error code: %d\n", status);
+        DbgPrint("IO failed!!! Error code: %d(%x)\n", status, status);
         ExFreePool(mbr);
         return FALSE;
     }

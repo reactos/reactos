@@ -1178,19 +1178,43 @@ IDEDispatchReadWrite(IN PDEVICE_OBJECT pDO,
     //  Validate operation parameters
   AdjustedOffset = RtlEnlargedIntegerMultiply(DeviceExtension->Offset, 
                                               DeviceExtension->BytesPerSector);
+DPRINT("Offset:%ld * BytesPerSector:%ld  = AdjOffset:%ld:%ld\n",
+       DeviceExtension->Offset, 
+       DeviceExtension->BytesPerSector,
+       (unsigned long) GET_LARGE_INTEGER_HIGH_PART(AdjustedOffset),
+       (unsigned long) GET_LARGE_INTEGER_LOW_PART(AdjustedOffset));
+DPRINT("AdjOffset:%ld:%ld + ByteOffset:%ld:%ld = ",
+       (unsigned long) GET_LARGE_INTEGER_HIGH_PART(AdjustedOffset),
+       (unsigned long) GET_LARGE_INTEGER_LOW_PART(AdjustedOffset),
+       (unsigned long) GET_LARGE_INTEGER_HIGH_PART(IrpStack->Parameters.Read.ByteOffset),
+       (unsigned long) GET_LARGE_INTEGER_LOW_PART(IrpStack->Parameters.Read.ByteOffset));
   AdjustedOffset = RtlLargeIntegerAdd(AdjustedOffset, 
                                       IrpStack->Parameters.Read.ByteOffset);
+DPRINT("AdjOffset:%ld:%ld\n",
+       (unsigned long) GET_LARGE_INTEGER_HIGH_PART(AdjustedOffset),
+       (unsigned long) GET_LARGE_INTEGER_LOW_PART(AdjustedOffset));
   AdjustedExtent = RtlLargeIntegerAdd(AdjustedOffset, 
                                       RtlConvertLongToLargeInteger(IrpStack->Parameters.Read.Length));
-    // FIXME: this assumption will fail on drives bigger than 1TB
-  PartitionExtent.HighPart = 0;
-  PartitionExtent.LowPart = DeviceExtension->Offset + DeviceExtension->Size;
+DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
+       (unsigned long) GET_LARGE_INTEGER_HIGH_PART(AdjustedOffset),
+       (unsigned long) GET_LARGE_INTEGER_LOW_PART(AdjustedOffset),
+       IrpStack->Parameters.Read.Length,
+       (unsigned long) GET_LARGE_INTEGER_HIGH_PART(AdjustedExtent),
+       (unsigned long) GET_LARGE_INTEGER_LOW_PART(AdjustedExtent));
+    /* FIXME: this assumption will fail on drives bigger than 1TB */
+  LARGE_INTEGER_QUAD_PART(PartitionExtent) = DeviceExtension->Offset + DeviceExtension->Size;
   PartitionExtent = RtlExtendedIntegerMultiply(PartitionExtent, 
                                                DeviceExtension->BytesPerSector);
   if (RtlLargeIntegerGreaterThan(AdjustedExtent, PartitionExtent) ||
       (IrpStack->Parameters.Read.Length & (DeviceExtension->BytesPerSector - 1))) 
     {
       DPRINT("Request failed on bad parameters\n",0);
+      DPRINT("AdjustedExtent=%d:%d PartitionExtent=%d:%d ReadLength=%d\n", 
+             (unsigned int) GET_LARGE_INTEGER_HIGH_PART(AdjustedExtent),
+             (unsigned int) GET_LARGE_INTEGER_LOW_PART(AdjustedExtent),
+             (unsigned int) GET_LARGE_INTEGER_HIGH_PART(PartitionExtent),
+             (unsigned int) GET_LARGE_INTEGER_LOW_PART(PartitionExtent),
+             IrpStack->Parameters.Read.Length);
       Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
       return  STATUS_INVALID_PARAMETER;
@@ -1202,7 +1226,7 @@ IDEDispatchReadWrite(IN PDEVICE_OBJECT pDO,
     //  Start the packet and insert the request in order of sector offset
   assert(DeviceExtension->BytesPerSector == 512);
   InsertKeyLI = RtlLargeIntegerShiftRight(IrpStack->Parameters.Read.ByteOffset, 9); 
-  IrpInsertKey = InsertKeyLI.LowPart;
+  IrpInsertKey = GET_LARGE_INTEGER_LOW_PART(InsertKeyLI);
   IoStartPacket(DeviceExtension->DeviceObject, Irp, &IrpInsertKey, NULL);
 
   return  STATUS_PENDING;
@@ -1332,7 +1356,7 @@ IDEStartIo(IN PDEVICE_OBJECT DeviceObject,
       DeviceExtension->BytesRequested = IrpStack->Parameters.Read.Length;
       assert(DeviceExtension->BytesPerSector == 512);
       SectorLI = RtlLargeIntegerShiftRight(IrpStack->Parameters.Read.ByteOffset, 9);
-      DeviceExtension->StartingSector = SectorLI.LowPart;
+      DeviceExtension->StartingSector = GET_LARGE_INTEGER_LOW_PART(SectorLI);
       if (DeviceExtension->BytesRequested > DeviceExtension->BytesPerSector * 
           IDE_MAX_SECTORS_PER_XFER) 
         {

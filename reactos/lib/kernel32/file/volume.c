@@ -94,10 +94,10 @@ GetDiskFreeSpaceW(
 		return FALSE;
 	}
 
-	memcpy(lpBytesPerSector,&FileFsSize.BytesPerSector,sizeof(DWORD));;
-	memcpy(lpSectorsPerCluster,&FileFsSize.SectorsPerAllocationUnit,sizeof(DWORD));
-	memcpy(lpNumberOfFreeClusters,&GET_LARGE_INTEGER_LOW_PART(FileFsSize.AvailableAllocationUnits),sizeof(DWORD));
-   	memcpy(lpTotalNumberOfClusters,&GET_LARGE_INTEGER_LOW_PART(FileFsSize.TotalAllocationUnits),sizeof(DWORD));
+	*lpBytesPerSector = FileFsSize.BytesPerSector;
+	*lpSectorsPerCluster = FileFsSize.SectorsPerAllocationUnit;
+	*lpNumberOfFreeClusters = GET_LARGE_INTEGER_LOW_PART(FileFsSize.AvailableAllocationUnits);
+   	*lpTotalNumberOfClusters = GET_LARGE_INTEGER_LOW_PART(FileFsSize.TotalAllocationUnits);
 	CloseHandle(hFile);
 	return TRUE;
 }

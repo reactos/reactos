@@ -729,8 +729,6 @@ NTSTATUS LdrLoadLibrary(HANDLE ProcessHandle,
   UNIMPLEMENTED;
 }
 
-
-
 /*   LdrLoadImage
  * FUNCTION:
  *   Loads a module into the specified process
@@ -747,7 +745,6 @@ LdrLoadImage(HANDLE ProcessHandle,
              PHANDLE ModuleHandle, 
              PUNICODE_STRING Filename)
 {
-#if 0
   char BlockBuffer[1024];
   NTSTATUS Status;
   OBJECT_ATTRIBUTES FileObjectAttributes;
@@ -824,11 +821,8 @@ LdrLoadImage(HANDLE ProcessHandle,
   ZwClose(FileHandle);
 
   return Status;
-#endif
-  UNIMPLEMENTED;
 }
 
-#if 0
 static NTSTATUS 
 LdrProcessMZImage(HANDLE ProcessHandle, 
                   HANDLE ModuleHandle,
@@ -1255,4 +1249,4 @@ LdrProcessBinImage(HANDLE ProcessHandle,
   return STATUS_SUCCESS;
 }
 
-#endif
+

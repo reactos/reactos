@@ -6,13 +6,16 @@
 
 #ifdef COMPILER_LARGE_INTEGERS
 
-#define GET_LARGE_INTEGER_HIGH_PART(LargeInteger) ( ( LargeInteger >> 32) )
-#define GET_LARGE_INTEGER_LOW_PART(LargeInteger) ( (LargeInteger & 0xFFFFFFFF) )
-#define SET_LARGE_INTEGER_HIGH_PART(LargeInteger,Signed_Long)  \
-  ( LargeInteger |= ( ((LARGE_INTEGER)Signed_Long) << 32 ) )
-#define SET_LARGE_INTEGER_LOW_PART(LargeInteger,Unsigned_Long) \
-  ( LargeInteger |= Unsigned_Long )
-#define LARGE_INTEGER_QUAD_PART(LargeInteger) (LargeInteger)
+#define GET_LARGE_INTEGER_HIGH_PART(LI) ( ( (LI) >> 32) )
+#define GET_LARGE_INTEGER_LOW_PART(LI) ( ((LI) & 0xFFFFFFFF) )
+#define SET_LARGE_INTEGER_HIGH_PART(LI, HP)  \
+  ( (LI) = ((LI) & 0xFFFFFFFFL) | ( ((LARGE_INTEGER)(HP)) << 32 ) )
+#define SET_LARGE_INTEGER_LOW_PART(LI, LP) \
+  ( (LI) = ((LI) & 0xFFFFFFFF00000000L) | (LP) )
+#define LARGE_INTEGER_QUAD_PART(LI) (LI)
+
+typedef long long int LONGLONG, *PLONGLONG;
+typedef unsigned long long int ULONGLONG, *PULONGLONG;
 
 #else
 
@@ -23,6 +26,9 @@
 #define SET_LARGE_INTEGER_LOW_PART(LargeInteger,Unsigned_Long)  \
   ((LargeInteger).LowPart = (Unsigned_Long))
 #define LARGE_INTEGER_QUAD_PART(LI)  (*(LONGLONG *)(&(LI)))
+
+typedef double LONGLONG, *PLONGLONG;
+typedef double ULONGLONG, *PULONGLONG;
 
 #endif
 

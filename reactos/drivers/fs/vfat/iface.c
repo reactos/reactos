@@ -998,7 +998,7 @@ NTSTATUS FsdWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
    Length = Stack->Parameters.Write.Length;
    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-   Offset = Stack->Parameters.Write.ByteOffset.LowPart;
+   Offset = GET_LARGE_INTEGER_LOW_PART(Stack->Parameters.Write.ByteOffset);
 
    Status = FsdWriteFile(DeviceExt,FileObject,Buffer,Length,Offset);
 
@@ -1024,7 +1024,7 @@ NTSTATUS FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    
    Length = Stack->Parameters.Read.Length;
    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-   Offset = Stack->Parameters.Read.ByteOffset.LowPart;
+   Offset = GET_LARGE_INTEGER_LOW_PART(Stack->Parameters.Read.ByteOffset);
    
    Status = FsdReadFile(DeviceExt,FileObject,Buffer,Length,Offset,
 			&LengthRead);
@@ -1136,6 +1136,9 @@ NTSTATUS FsdQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
       case FileStandardInformation:
          RC = FsdGetStandardInformation(FCB, DeviceObject, SystemBuffer);
       break;
+
+      default:
+         RC = STATUS_NOT_IMPLEMENTED;
    }
 
    return RC;

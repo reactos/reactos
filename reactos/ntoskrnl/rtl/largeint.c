@@ -29,32 +29,32 @@ typedef unsigned long long int ULLI, *PULLI;
 LARGE_INTEGER 
 RtlConvertLongToLargeInteger(LONG SignedInteger)
 {
-  LLI RC;
+  LARGE_INTEGER RC;
 
-  RC = SignedInteger;
+  LARGE_INTEGER_QUAD_PART(RC) = SignedInteger;
 
-  return LIFromLLI(RC);
+  return RC;
 }
 
 LARGE_INTEGER 
 RtlConvertUlongToLargeInteger(ULONG UnsignedInteger)
 {
-  LLI RC;
+  LARGE_INTEGER RC;
 
-  RC = UnsignedInteger;
+  LARGE_INTEGER_QUAD_PART(RC) = UnsignedInteger;
 
-  return LIFromLLI(RC);
+  return RC;
 }
 
 LARGE_INTEGER 
 RtlEnlargedIntegerMultiply(LONG Multiplicand,
                            LONG Multiplier)
 {
-  LLI RC;
+  LARGE_INTEGER RC;
 
-  RC = (LLI) Multiplicand * Multiplier;
+  LARGE_INTEGER_QUAD_PART(RC) = (LONGLONG) Multiplicand * Multiplier;
 
-  return LIFromLLI(RC);
+  return RC;
 }
 
 ULONG RtlEnlargedUnsignedDivide(ULARGE_INTEGER Dividend,
@@ -67,23 +67,23 @@ ULONG RtlEnlargedUnsignedDivide(ULARGE_INTEGER Dividend,
 LARGE_INTEGER RtlEnlargedUnsignedMultiply(ULONG Multiplicand,
 					  ULONG Multiplier)
 {
-  LLI RC;
+  LARGE_INTEGER RC;
 
-  RC = (ULLI) Multiplicand * Multiplier;
+  LARGE_INTEGER_QUAD_PART(RC) = (ULONGLONG) Multiplicand * Multiplier;
 
-  return LIFromLLI(RC);
+  return RC;
 }
 
 LARGE_INTEGER 
 RtlExtendedIntegerMultiply(LARGE_INTEGER Multiplicand,
                            LONG Multiplier)
 {
-  LLI M1, RC;
+  LARGE_INTEGER RC;
 
-  M1 = LLIFromLI(Multiplicand);
-  RC = M1 * Multiplier;
+  LARGE_INTEGER_QUAD_PART(RC) = LARGE_INTEGER_QUAD_PART(Multiplicand) * 
+                                Multiplier;
 
-  return LIFromLLI(RC);
+  return RC;
 }
 
 LARGE_INTEGER RtlExtendedLargeIntegerDivide(LARGE_INTEGER Dividend,
@@ -111,35 +111,31 @@ LARGE_INTEGER
 RtlLargeIntegerAdd(LARGE_INTEGER Addend1,
                    LARGE_INTEGER Addend2)
 {
-  LLI RC, A1, A2;
+  LARGE_INTEGER RC;
 
-  DPRINT("Addend1.LowPart %d Addend1.HighPart %d\n",
-         Addend1.LowPart,Addend1.HighPart);
-  DPRINT("Addend2.LowPart %d Addend2.HighPart %d\n",
-         Addend2.LowPart,Addend2.HighPart);
+  RC = LARGE_INTEGER_QUAD_PART(Addend1) + 
+       LARGE_INTEGER_QUAD_PART(Addend2);
 
-  A1 = LLIFromLI(Addend1);
-  A2 = LLIFromLI(Addend2);
-  RC = A1 + A2;
-
-  DPRINT("RC %d\n",(unsigned int)RC);
-
-  return LIFromLLI(RC);
+  return RC;
 }
 
 VOID RtlLargeIntegerAnd(PLARGE_INTEGER Result,
 			LARGE_INTEGER Source,
 			LARGE_INTEGER Mask)
 {
-  Result->HighPart = Source.HighPart & Mask.HighPart;
-  Result->LowPart = Source.LowPart & Mask.LowPart;
+  LARGE_INTEGER_QUAD_PART(*Result) = LARGE_INTEGER_QUAD_PART(Source) & 
+                                     LARGE_INTEGER_QUAD_PART(Mask);
 }
 
 LARGE_INTEGER RtlLargeIntegerArithmeticShift(LARGE_INTEGER LargeInteger,
 					     CCHAR ShiftCount)
 {
+  UNIMPLEMENTED;
+#if 0
   LARGE_INTEGER RC;
 
+
+  RC = LARGE_INTEGER_QUAD_PART(LargeInteger) >> ShiftCount;
   asm ("movb %2, %%cl\n\t"
        "andb $0x3f, %%cl\n\t"
        "movl %3, %%eax\n\t"
@@ -148,12 +144,16 @@ LARGE_INTEGER RtlLargeIntegerArithmeticShift(LARGE_INTEGER LargeInteger,
        "sarl %%cl, %%edx\n\t"
        "movl %%eax, %0\n\t"
        "movl %%edx, %1\n\t"
-       : "=m" (LargeInteger.LowPart), "=m" (LargeInteger.HighPart)
-       : "m" (ShiftCount), "0" (LargeInteger.LowPart), "1" (LargeInteger.HighPart)
+       : "=m" (GET_LARGE_INTEGER_LOW_PART(LargeInteger)), 
+         "=m" (GET_LARGE_INTEGER_HIGH_PART(LargeInteger))
+       : "m" (ShiftCount), 
+         "0" (GET_LARGE_INTEGER_LOW_PART(LargeInteger)), 
+         "1" (GET_LARGE_INTEGER_HIGH_PART(LargeInteger))
        : "eax", "ecx", "edx"
        );
 
   return RC;
+#endif
 }
 
 LARGE_INTEGER RtlLargeIntegerDivide(LARGE_INTEGER Dividend,
@@ -167,132 +167,169 @@ BOOLEAN
 RtlLargeIntegerEqualTo(LARGE_INTEGER Operand1,
                        LARGE_INTEGER Operand2)
 {
+  return LARGE_INTEGER_QUAD_PART(Operand1) == 
+         LARGE_INTEGER_QUAD_PART(Operand2);
+#if 0
   return Operand1.HighPart == Operand2.HighPart && 
          Operand1.LowPart == Operand2.LowPart;
+#endif
 }
 
 BOOLEAN 
 RtlLargeIntegerEqualToZero(LARGE_INTEGER Operand)
 {
-  return Operand.LowPart == 0 && Operand.HighPart == 0;
+  return LARGE_INTEGER_QUAD_PART(Operand) == 0 ;
 }
 
 BOOLEAN 
 RtlLargeIntegerGreaterThan(LARGE_INTEGER Operand1,
                            LARGE_INTEGER Operand2)
 {
+  return LARGE_INTEGER_QUAD_PART(Operand1) > 
+         LARGE_INTEGER_QUAD_PART(Operand2);
+#if 0
   return Operand1.HighPart > Operand2.HighPart ||
          (Operand1.HighPart == Operand2.HighPart && 
           Operand1.LowPart > Operand2.LowPart);
+#endif
 }
 
 BOOLEAN 
 RtlLargeIntegerGreaterThanOrEqualTo(LARGE_INTEGER Operand1,
                                     LARGE_INTEGER Operand2)
 {
+  return LARGE_INTEGER_QUAD_PART(Operand1) >= 
+         LARGE_INTEGER_QUAD_PART(Operand2);
+#if 0
   return Operand1.HighPart > Operand2.HighPart ||
          (Operand1.HighPart == Operand2.HighPart && 
           Operand1.LowPart >= Operand2.LowPart);
+#endif
 }
 
 BOOLEAN 
 RtlLargeIntegerGreaterThanOrEqualToZero(LARGE_INTEGER Operand1)
 {
+  return LARGE_INTEGER_QUAD_PART(Operand1) > 0;
+#if 0
   return Operand1.HighPart >= 0;
+#endif
 }
 
 BOOLEAN 
 RtlLargeIntegerGreaterThanZero(LARGE_INTEGER Operand1)
 {
+  return LARGE_INTEGER_QUAD_PART(Operand1) >= 0; 
+#if 0
   return Operand1.HighPart > 0 || 
          (Operand1.HighPart == 0 && Operand1.LowPart > 0);
+#endif
 }
 
 BOOLEAN 
 RtlLargeIntegerLessThan(LARGE_INTEGER Operand1,
                         LARGE_INTEGER Operand2)
 {
+  return LARGE_INTEGER_QUAD_PART(Operand1) < 
+         LARGE_INTEGER_QUAD_PART(Operand2);
+#if 0
   return Operand1.HighPart < Operand2.HighPart ||
          (Operand1.HighPart == Operand2.HighPart && 
           Operand1.LowPart < Operand2.LowPart);
+#endif
 }
 
 BOOLEAN 
 RtlLargeIntegerLessThanOrEqualTo(LARGE_INTEGER Operand1,
                                  LARGE_INTEGER Operand2)
 {
+  return LARGE_INTEGER_QUAD_PART(Operand1) <= 
+         LARGE_INTEGER_QUAD_PART(Operand2);
+#if 0
   return Operand1.HighPart < Operand2.HighPart ||
          (Operand1.HighPart == Operand2.HighPart && 
           Operand1.LowPart <= Operand2.LowPart);
+#endif
 }
 
 BOOLEAN 
 RtlLargeIntegerLessThanOrEqualToZero(LARGE_INTEGER Operand)
 {
+  return LARGE_INTEGER_QUAD_PART(Operand) <= 0;
+#if 0
   return Operand.HighPart < 0 || 
          (Operand.HighPart == 0 && Operand.LowPart == 0);
+#endif
 }
 
 BOOLEAN 
 RtlLargeIntegerLessThanZero(LARGE_INTEGER Operand)
 {
+  return LARGE_INTEGER_QUAD_PART(Operand) < 0;
+#if 0
   return Operand.HighPart < 0;
+#endif
 }
 
 LARGE_INTEGER RtlLargeIntegerNegate(LARGE_INTEGER Subtrahend)
 {
-  LLI RC;
+  LARGE_INTEGER RC;
 
-  RC = - LLIFromLI(Subtrahend);
+  LARGE_INTEGER_QUAD_PART(RC) = - LARGE_INTEGER_QUAD_PART(Subtrahend);
 
-  return LIFromLLI(RC);
+  return RC;
 }
 
 BOOLEAN 
 RtlLargeIntegerNotEqualTo(LARGE_INTEGER Operand1,
                           LARGE_INTEGER Operand2)
 {
+  return LARGE_INTEGER_QUAD_PART(Operand1) != 
+         LARGE_INTEGER_QUAD_PART(Operand2);
+#if 0
   return Operand1.LowPart != Operand2.LowPart || 
          Operand1.HighPart != Operand2.HighPart; 
+#endif
 }
 
 BOOLEAN 
 RtlLargeIntegerNotEqualToZero(LARGE_INTEGER Operand)
 {
+  return LARGE_INTEGER_QUAD_PART(Operand) != 0;
+#if 0
   return Operand.LowPart != 0 || Operand.HighPart != 0; 
+#endif
 }
 
 LARGE_INTEGER RtlLargeIntegerShiftLeft(LARGE_INTEGER LargeInteger,
 				       CCHAR ShiftCount)
 {
-  LLI RC;
+  LARGE_INTEGER RC;
 
-  RC = LLIFromLI(LargeInteger);
-  RC = RC << ShiftCount;
+  LARGE_INTEGER_QUAD_PART(RC) = LARGE_INTEGER_QUAD_PART(LargeInteger) << 
+                                ShiftCount;
 
-  return LIFromLLI(RC);
+  return RC;
 }
 
 LARGE_INTEGER RtlLargeIntegerShiftRight(LARGE_INTEGER LargeInteger,
 					CCHAR ShiftCount)
 {
-  LLI RC;
+  LARGE_INTEGER RC;
 
-  RC = LLIFromLI(LargeInteger);
-  RC = RC >> ShiftCount;
+  LARGE_INTEGER_QUAD_PART(RC) = LARGE_INTEGER_QUAD_PART(LargeInteger) >> 
+                                ShiftCount;
 
-  return LIFromLLI(RC);
+  return RC;
 }
 
 LARGE_INTEGER RtlLargeIntegerSubtract(LARGE_INTEGER Minuend,
 				      LARGE_INTEGER Subtrahend)
 {
-  LLI S1, S2, RC;
+  LARGE_INTEGER RC;
 
-  S1 = LLIFromLI(Minuend);
-  S2 = LLIFromLI(Subtrahend);
-  RC = S1 - S2;
+  RC = LARGE_INTEGER_QUAD_PART(Minuend) - LARGE_INTEGER_QUAD_PART(Subtrahend);
 
-  return LIFromLLI(RC);
+  return RC;
 }
 

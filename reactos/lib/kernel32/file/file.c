@@ -9,7 +9,7 @@
  *                  Created 01/11/98
  */
 
-
+/* FIXME: the large integer manipulations in this file dont handle overflow  */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -94,8 +94,8 @@ WINBOOL STDCALL WriteFile(HANDLE  hFile,
 	
    if (lpOverLapped != NULL ) 
      {
-	Offset.LowPart = lpOverLapped->Offset;
-	Offset.HighPart = lpOverLapped->OffsetHigh;
+	SET_LARGE_INTEGER_LOW_PART(Offset, lpOverLapped->Offset);
+	SET_LARGE_INTEGER_HIGH_PART(Offset, lpOverLapped->OffsetHigh);
 	lpOverLapped->Internal = STATUS_PENDING;
 	hEvent= lpOverLapped->hEvent;
      }
@@ -131,8 +131,8 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
    
    if ( lpOverLapped != NULL )
      {
-	ByteOffset.LowPart = lpOverLapped->Offset;
-	ByteOffset.HighPart = lpOverLapped->OffsetHigh;
+	SET_LARGE_INTEGER_LOW_PART(ByteOffset, lpOverLapped->Offset);
+	SET_LARGE_INTEGER_HIGH_PART(ByteOffset, lpOverLapped->OffsetHigh);
 	Offset = &ByteOffset;
 	lpOverLapped->Internal = STATUS_PENDING;
 	hEvent = lpOverLapped->hEvent;
@@ -179,15 +179,15 @@ ReadFileEx(
 	
 		
 	if ( lpOverLapped != NULL ) {
-		Offset.LowPart = lpOverLapped->Offset;
-		Offset.HighPart = lpOverLapped->OffsetHigh;
+		SET_LARGE_INTEGER_LOW_PART(Offset, lpOverLapped->Offset);
+		SET_LARGE_INTEGER_HIGH_PART(Offset, lpOverLapped->OffsetHigh);
 		lpOverLapped->Internal = STATUS_PENDING;
 		hEvent = lpOverLapped->hEvent;
 		IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
 	}
 	else {
-		Offset.LowPart = 0;
-		Offset.HighPart = 0;
+		SET_LARGE_INTEGER_LOW_PART(Offset, 0);
+		SET_LARGE_INTEGER_HIGH_PART(Offset, 0);
 		IoStatusBlock = &IIosb;
 	}
 	
@@ -257,8 +257,8 @@ LockFileEx(
    
    lpOverlapped->Internal = STATUS_PENDING;  
    
-   Offset.LowPart = lpOverlapped->Offset;
-   Offset.HighPart = lpOverlapped->OffsetHigh;
+   SET_LARGE_INTEGER_LOW_PART(Offset, lpOverlapped->Offset);
+   SET_LARGE_INTEGER_HIGH_PART(Offset, lpOverlapped->OffsetHigh);
    
    if ( (dwFlags & LOCKFILE_FAIL_IMMEDIATELY) == LOCKFILE_FAIL_IMMEDIATELY )
      LockImmediate = TRUE;
@@ -270,8 +270,8 @@ LockFileEx(
    else
      LockExclusive = FALSE;
    
-   BytesToLock.LowPart = nNumberOfBytesToLockLow;
-   BytesToLock.HighPart = nNumberOfBytesToLockHigh;
+   SET_LARGE_INTEGER_LOW_PART(BytesToLock, nNumberOfBytesToLockLow);
+   SET_LARGE_INTEGER_HIGH_PART(BytesToLock, nNumberOfBytesToLockHigh);
    
    errCode = NtLockFile(hFile,
 			NULL,
@@ -339,11 +339,11 @@ UnlockFileEx(
 	return FALSE;
      }
    
-   BytesToUnLock.LowPart = nNumberOfBytesToUnLockLow;
-   BytesToUnLock.HighPart = nNumberOfBytesToUnLockHigh;
+   SET_LARGE_INTEGER_LOW_PART(BytesToUnLock, nNumberOfBytesToUnLockLow);
+   SET_LARGE_INTEGER_HIGH_PART(BytesToUnLock, nNumberOfBytesToUnLockHigh);
    
-   StartAddress.LowPart = lpOverlapped->Offset;
-   StartAddress.HighPart = lpOverlapped->OffsetHigh;
+   SET_LARGE_INTEGER_LOW_PART(StartAddress, lpOverlapped->Offset);
+   SET_LARGE_INTEGER_HIGH_PART(StartAddress, lpOverlapped->OffsetHigh);
    
    errCode = NtUnlockFile(hFile,
 			  (PIO_STATUS_BLOCK)lpOverlapped,
@@ -519,8 +519,8 @@ CopyFileExW(
 
 
 
-	FilePosition.CurrentByteOffset.LowPart = 0;
-	FilePosition.CurrentByteOffset.HighPart = 0;
+	SET_LARGE_INTEGER_LOW_PART(FilePosition.CurrentByteOffset, 0);
+	SET_LARGE_INTEGER_HIGH_PART(FilePosition.CurrentByteOffset, 0);
 
 	errCode = NtSetInformationFile(FileHandleSource,
 		&IoStatusBlock,&FilePosition, sizeof(FILE_POSITION_INFORMATION),
@@ -927,24 +927,39 @@ SetFilePointer(
 	IO_STATUS_BLOCK IoStatusBlock;
 	if ( dwMoveMethod == FILE_CURRENT ) {
 		NtQueryInformationFile(hFile,&IoStatusBlock,&FilePosition, sizeof(FILE_POSITION_INFORMATION),FilePositionInformation);
-		FilePosition.CurrentByteOffset.LowPart += lDistanceToMove;
-		if ( lpDistanceToMoveHigh != NULL ) 
-			FilePosition.CurrentByteOffset.HighPart += *lpDistanceToMoveHigh;
+		SET_LARGE_INTEGER_LOW_PART(FilePosition.CurrentByteOffset,
+                  GET_LARGE_INTEGER_LOW_PART(FilePosition.CurrentByteOffset) + 
+                  lDistanceToMove);
+		if ( lpDistanceToMoveHigh != NULL ) {
+			SET_LARGE_INTEGER_HIGH_PART(FilePosition.CurrentByteOffset,
+                          GET_LARGE_INTEGER_HIGH_PART(FilePosition.CurrentByteOffset) +
+                          *lpDistanceToMoveHigh);
+                }
 	}
 	else if ( dwMoveMethod == FILE_END ) {
 		NtQueryInformationFile(hFile,&IoStatusBlock,&FileEndOfFile, sizeof(FILE_END_OF_FILE_INFORMATION),FileEndOfFileInformation);
-		FilePosition.CurrentByteOffset.LowPart = FileEndOfFile.EndOfFile.LowPart - lDistanceToMove;
-		if ( lpDistanceToMoveHigh != NULL ) 
-			FilePosition.CurrentByteOffset.HighPart = FileEndOfFile.EndOfFile.HighPart - *lpDistanceToMoveHigh;
-		else
-			FilePosition.CurrentByteOffset.HighPart = FileEndOfFile.EndOfFile.HighPart;
+		SET_LARGE_INTEGER_LOW_PART(FilePosition.CurrentByteOffset,
+                  GET_LARGE_INTEGER_LOW_PART(FileEndOfFile.EndOfFile) - 
+                  lDistanceToMove);
+		if ( lpDistanceToMoveHigh != NULL ) {
+			SET_LARGE_INTEGER_HIGH_PART(FilePosition.CurrentByteOffset,
+                          GET_LARGE_INTEGER_HIGH_PART(FileEndOfFile.EndOfFile) - 
+                          *lpDistanceToMoveHigh);
+		} else {
+			SET_LARGE_INTEGER_HIGH_PART(FilePosition.CurrentByteOffset,
+                          GET_LARGE_INTEGER_HIGH_PART(FileEndOfFile.EndOfFile));
+                }
 	}
 	else if ( dwMoveMethod == FILE_CURRENT ) {
-		FilePosition.CurrentByteOffset.LowPart = lDistanceToMove;
-		if ( lpDistanceToMoveHigh != NULL ) 
-			FilePosition.CurrentByteOffset.HighPart = *lpDistanceToMoveHigh;
-		else
-			FilePosition.CurrentByteOffset.HighPart = 0;
+		SET_LARGE_INTEGER_LOW_PART(FilePosition.CurrentByteOffset,
+                  lDistanceToMove);
+		if ( lpDistanceToMoveHigh != NULL ) {
+			SET_LARGE_INTEGER_HIGH_PART(FilePosition.CurrentByteOffset,
+                          *lpDistanceToMoveHigh);
+		} else {
+			SET_LARGE_INTEGER_HIGH_PART(FilePosition.CurrentByteOffset,
+                          0);
+                }
 	}
 
 	errCode = NtSetInformationFile(hFile,&IoStatusBlock,&FilePosition, sizeof(FILE_POSITION_INFORMATION),FilePositionInformation);
@@ -953,9 +968,10 @@ SetFilePointer(
       		return -1;
    	}
 	
-	if ( lpDistanceToMoveHigh != NULL ) 
-		lpDistanceToMoveHigh = &FilePosition.CurrentByteOffset.HighPart ;
-	return FilePosition.CurrentByteOffset.LowPart;
+	if ( lpDistanceToMoveHigh != NULL ) {
+		*lpDistanceToMoveHigh = GET_LARGE_INTEGER_HIGH_PART(FilePosition.CurrentByteOffset);
+        }
+	return GET_LARGE_INTEGER_LOW_PART(FilePosition.CurrentByteOffset);
 }
 
 DWORD 
@@ -993,10 +1009,10 @@ GetFileSize(
 			return 0;
 	}
 	if ( lpFileSizeHigh != NULL )
-		*lpFileSizeHigh = FileStandard.AllocationSize.HighPart;
+		*lpFileSizeHigh = GET_LARGE_INTEGER_HIGH_PART(FileStandard.AllocationSize);
 
 	CloseHandle(hFile);
-	return FileStandard.AllocationSize.LowPart;	
+	return GET_LARGE_INTEGER_LOW_PART(FileStandard.AllocationSize);	
 }
 
 DWORD
@@ -1082,8 +1098,8 @@ GetFileInformationByHandle(
 	memcpy(&lpFileInformation->ftCreationTime,&FileDirectory.CreationTime,sizeof(LARGE_INTEGER));
 	memcpy(&lpFileInformation->ftLastAccessTime,&FileDirectory.LastAccessTime,sizeof(LARGE_INTEGER));
 	memcpy(&lpFileInformation->ftLastWriteTime, &FileDirectory.LastWriteTime,sizeof(LARGE_INTEGER)); 
-	lpFileInformation->nFileSizeHigh = FileDirectory.AllocationSize.HighPart; 
-    	lpFileInformation->nFileSizeLow = FileDirectory.AllocationSize.LowPart; 
+	lpFileInformation->nFileSizeHigh = GET_LARGE_INTEGER_HIGH_PART(FileDirectory.AllocationSize); 
+    	lpFileInformation->nFileSizeLow = GET_LARGE_INTEGER_LOW_PART(FileDirectory.AllocationSize); 
     	 
     
 
@@ -1092,8 +1108,8 @@ GetFileInformationByHandle(
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
 	}
-	lpFileInformation->nFileIndexHigh = FileInternal.IndexNumber.HighPart;
-	lpFileInformation->nFileIndexLow = FileInternal.IndexNumber.LowPart;
+	lpFileInformation->nFileIndexHigh = GET_LARGE_INTEGER_HIGH_PART(FileInternal.IndexNumber);
+	lpFileInformation->nFileIndexLow = GET_LARGE_INTEGER_LOW_PART(FileInternal.IndexNumber);
 
 
 	errCode = NtQueryVolumeInformationFile(hFile,&IoStatusBlock,&FileFsVolume, sizeof(FILE_FS_VOLUME_INFORMATION),FileFsVolumeInformation);

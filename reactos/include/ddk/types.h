@@ -25,8 +25,6 @@ enum
    DIRECTORY_ALL_ACCESS,
 };
 
-typedef unsigned long long ULONGLONG;
-
 /*
  * General type for status information
  */
@@ -38,11 +36,6 @@ typedef struct _UNICODE_STRING
    USHORT MaximumLength;
    PWSTR Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
-
-#define INIT_UNICODE_STRING(us, str)  \
-  ((us).Length = strlen((str)),  \
-   (us).MaximumLength = (us).Length,  \
-   (us).Buffer = (str), (us))
 
 typedef enum _SECTION_INHERIT {
     ViewShare = 1,

@@ -67,8 +67,8 @@ NTSTATUS Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	     if ((i%512)==0)
 	       {
 		  DPRINT("Offset %x\n",
-			   Stack->Parameters.Write.ByteOffset.LowPart+i);
-		  SdWriteOffset(Stack->Parameters.Write.ByteOffset.LowPart+i);
+			   GET_LARGE_INTEGER_LOW_PART(Stack->Parameters.Write.ByteOffset)+i);
+		  SdWriteOffset(GET_LARGE_INTEGER_LOW_PART(Stack->Parameters.Write.ByteOffset)+i);
 	       }
 	     outb_p(PORT,Buffer[i]);
 	     DbgPrint("%c",Buffer[i]);
@@ -77,8 +77,8 @@ NTSTATUS Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	for (i=0;i<(Length/512);i++)
 	  {
 	     DPRINT("Offset %x\n",
-		    Stack->Parameters.Write.ByteOffset.LowPart+i);
-		  SdWriteOffset(Stack->Parameters.Write.ByteOffset.LowPart+i);	  
+		    GET_LARGE_INTEGER_LOW_PART(Stack->Parameters.Write.ByteOffset)+i);
+		  SdWriteOffset(GET_LARGE_INTEGER_LOW_PART(Stack->Parameters.Write.ByteOffset)+i);	  
 	     outsb(PORT,Buffer,512);
 	  }
 	status = STATUS_SUCCESS;
@@ -99,8 +99,8 @@ NTSTATUS Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	     if ((i%512)==0)
 	       {
 		  DPRINT("Offset %d\n",
-			   Stack->Parameters.Write.ByteOffset.LowPart+i);
-		  SdWriteOffset(Stack->Parameters.Write.ByteOffset.LowPart+i);
+			   GET_LARGE_INTEGER_LOW_PART(Stack->Parameters.Write.ByteOffset)+i);
+		  SdWriteOffset(GET_LARGE_INTEGER_LOW_PART(Stack->Parameters.Write.ByteOffset)+i);
 	       }
 	     Buffer[i]=inb_p(PORT);
 	  }

@@ -47,7 +47,7 @@ CM_OBJECTS = cm/registry.o
 
 TST_OBJECTS = tst/test.o tst/sshell.o tst/readline.o
 
-DBG_OBJECTS = dbg/brkpoint.o
+DBG_OBJECTS = dbg/brkpoint.o dbg/errinfo.o
 
 LDR_OBJECTS = ldr/loader.o
 

@@ -128,8 +128,7 @@ VOID ExExecuteShell(VOID)
 		   hfile);
    
    BaseAddress = (PVOID)0x10000;
-   SectionOffset.HighPart = 0;
-   SectionOffset.LowPart = 0;
+   LARGE_INTEGER_QUAD_PART(SectionOffset) = 0;
    Size = 0x10000;
    ZwMapViewOfSection(SectionHandle,
 		      ShellHandle,
@@ -308,10 +307,10 @@ void TstIDERead(void)
   if (!TestFailed)
     {
       DbgPrint("Reading rootdir block from Partition1\n");
-      BlockOffset.HighPart = 0;
-      BlockOffset.LowPart = BootBlock->BootParameters.ReservedSectorCount * 512 +
-                            BootBlock->BootParameters.FATCount * 
-                            BootBlock->BootParameters.SectorsPerFAT * 512;
+      LARGE_INTEGER_QUAD_PART(BlockOffset) =  
+        BootBlock->BootParameters.ReservedSectorCount * 512 +
+        BootBlock->BootParameters.FATCount * 
+        BootBlock->BootParameters.SectorsPerFAT * 512;
       Status = ZwReadFile(FileHandle,
                           NULL,
                           NULL,
@@ -384,8 +383,7 @@ void TstIDERead(void)
     {
       DbgPrint("Reading data from blocks 10000-4 from Partition1\n");
       RtlFillMemory(SectorBuffer, BufferSize, 0xea);
-      BlockOffset.HighPart = 0;
-      BlockOffset.LowPart = 10000 * IDE_SECTOR_SZ;
+      LARGE_INTEGER_QUAD_PART(BlockOffset) = 10000 * IDE_SECTOR_SZ;
       Status = ZwReadFile(FileHandle,
                           NULL,
                           NULL,
@@ -531,24 +529,26 @@ TstTimer(void)
 
 }
 
-#if 0
 void TstDriverLoad(void)
 {
   NTSTATUS Status;
+  ANSI_STRING AnsiDriverName;
   UNICODE_STRING DriverName;
 
-  INIT_UNICODE_STRING(DriverName, "C:\\reactos\\system\\keyboard.o");
-  Status = LdrLoadDriver(DriverName);
+  RtlInitAnsiString(&AnsiDriverName,"\\??\\C:\\reactos\\system\\keyboard.o"); 
+  RtlAnsiStringToUnicodeString(&DriverName, &AnsiDriverName, TRUE);
+  Status = LdrLoadDriver(&DriverName);
+  RtlFreeUnicodeString(&DriverName);
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("driver load failed, status;%d(%x)\n", Status, Status);
+      DbgPrintErrorMessage(Status);
     }
 }
-#endif
 
 void TstBegin()
 {
-//   TstDriverLoad();
+   TstDriverLoad();
    ExExecuteShell();
 //   TstFileRead();
 //   TstGeneralWrite();

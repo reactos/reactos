@@ -249,7 +249,7 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 		   
 		 case 'W':
                    pus = va_arg(args, PUNICODE_STRING);
-                   if (pus == NULL || pus->Length > pus->MaximumLength)
+                   if (pus == NULL)
                      {
                        s = "<NULL>";
                        while ((*s) != 0)
@@ -259,7 +259,7 @@ int vsprintf(char *buf, const char *fmt, va_list args)
                      }
                    else
                      {
-                       for (i = 0; i < pus->Length; i++)
+                       for (i = 0; pus->Buffer[i] && i < pus->Length; i++)
                          {
                            *str++ = (char)(pus->Buffer[i]);
                          }

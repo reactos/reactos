@@ -134,8 +134,6 @@ typedef char *LPTSTR;
 typedef long *PLONG;
 typedef unsigned short *PWCHAR;
 typedef char *LPSTR;
-//typedef double LONGLONG, *PLONGLONG;
-   typedef long long LONGLONG, *PLONGLONG;
 
    typedef enum _MEDIA_TYPE { 
   Unknown,                
