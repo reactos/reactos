@@ -152,7 +152,9 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 					DWORD processId;
 					DWORD threadId = GetWindowThreadProcessId(entry._hWnd, &processId);
 
+#ifndef __WINE__ // currently no AllowSetForegroundWindow() in Wine
 					AllowSetForegroundWindow(processId);
+#endif
 
 					PostMessage(entry._hWnd, entry._uCallbackMessage, entry._uID, nmsg);
 				}
