@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.105 2003/08/24 12:08:16 dwelch Exp $
+# $Id: Makefile,v 1.106 2003/09/25 15:54:42 navaraf Exp $
 #
 # ReactOS Operating System
 #
@@ -175,6 +175,7 @@ OBJECTS_IO = \
 	io/cntrller.o \
 	io/create.o \
 	io/device.o \
+	io/deviface.o \
 	io/dir.o \
 	io/driver.o \
 	io/errlog.o \
@@ -194,11 +195,15 @@ OBJECTS_IO = \
 	io/npipe.o \
 	io/page.o \
 	io/parttab.o \
-	io/pnpmgr.o \
-	io/pnproot.o \
 	io/process.o \
+	io/pnpnotify.o \
+	io/pnpdma.o \
+	io/pnpmgr.o \
+	io/pnpreport.o \
+	io/pnproot.o \
 	io/queue.o \
 	io/rawfs.o \
+	io/remlock.o \
 	io/resource.o \
 	io/rw.o \
 	io/share.o \
@@ -206,6 +211,7 @@ OBJECTS_IO = \
 	io/symlink.o \
 	io/timer.o \
 	io/vpb.o \
+	io/wdm.o \
 	io/xhaldisp.o \
 	io/xhaldrv.o
 

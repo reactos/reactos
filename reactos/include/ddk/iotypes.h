@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.54 2003/09/04 16:52:10 vizzini Exp $
+/* $Id: iotypes.h,v 1.55 2003/09/25 15:54:42 navaraf Exp $
  *
  */
 
@@ -1135,5 +1135,169 @@ typedef struct _IO_MAILSLOT_CREATE_BUFFER
    ULONG MaxMessageSize;
    LARGE_INTEGER TimeOut;
 } IO_MAILSLOT_CREATE_BUFFER, *PIO_MAILSLOT_CREATE_BUFFER;
+
+
+/* DMA types */
+
+
+typedef struct _SCATTER_GATHER_ELEMENT {
+  PHYSICAL_ADDRESS Address;
+  ULONG Length;
+  ULONG_PTR Reserved;
+} SCATTER_GATHER_ELEMENT, *PSCATTER_GATHER_ELEMENT;
+
+typedef struct _SCATTER_GATHER_LIST {
+  ULONG NumberOfElements;
+  ULONG_PTR Reserved;
+  SCATTER_GATHER_ELEMENT Elements[];
+} SCATTER_GATHER_LIST, *PSCATTER_GATHER_LIST;
+
+typedef struct _DMA_OPERATIONS *PDMA_OPERATIONS;
+
+typedef struct _DMA_ADAPTER {
+  USHORT Version;
+  USHORT Size;
+  PDMA_OPERATIONS DmaOperations;
+  PADAPTER_OBJECT HalAdapter;
+} DMA_ADAPTER, *PDMA_ADAPTER;
+
+typedef VOID (*PPUT_DMA_ADAPTER)(
+  PDMA_ADAPTER DmaAdapter
+  );
+
+typedef PVOID (*PALLOCATE_COMMON_BUFFER)(
+  IN PDMA_ADAPTER DmaAdapter,
+  IN ULONG Length,
+  OUT PPHYSICAL_ADDRESS LogicalAddress,
+  IN BOOLEAN CacheEnabled
+  );
+
+typedef VOID (*PFREE_COMMON_BUFFER)(
+  IN PDMA_ADAPTER DmaAdapter,
+  IN ULONG Length,
+  IN PHYSICAL_ADDRESS LogicalAddress,
+  IN PVOID VirtualAddress,
+  IN BOOLEAN CacheEnabled
+  );
+
+typedef NTSTATUS (*PALLOCATE_ADAPTER_CHANNEL)(
+  IN PDMA_ADAPTER DmaAdapter,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG NumberOfMapRegisters,
+  IN PDRIVER_CONTROL ExecutionRoutine,
+  IN PVOID Context
+  );
+
+typedef BOOLEAN (*PFLUSH_ADAPTER_BUFFERS)(
+  IN PDMA_ADAPTER DmaAdapter,
+  IN PMDL Mdl,
+  IN PVOID MapRegisterBase,
+  IN PVOID CurrentVa,
+  IN ULONG Length,
+  IN BOOLEAN WriteToDevice
+  );
+
+typedef VOID (*PFREE_ADAPTER_CHANNEL)(
+  IN PDMA_ADAPTER DmaAdapter
+  );
+
+typedef VOID (*PFREE_MAP_REGISTERS)(
+  IN PDMA_ADAPTER DmaAdapter,
+  PVOID MapRegisterBase,
+  ULONG NumberOfMapRegisters
+  );
+
+typedef PHYSICAL_ADDRESS (*PMAP_TRANSFER)(
+  IN PDMA_ADAPTER DmaAdapter,
+  IN PMDL Mdl,
+  IN PVOID MapRegisterBase,
+  IN PVOID CurrentVa,
+  IN OUT PULONG Length,
+  IN BOOLEAN WriteToDevice
+  );
+
+typedef ULONG (*PGET_DMA_ALIGNMENT)(
+  IN PDMA_ADAPTER DmaAdapter
+  );
+
+typedef ULONG (*PREAD_DMA_COUNTER)(
+  IN PDMA_ADAPTER DmaAdapter
+  );
+
+typedef VOID (*PDRIVER_LIST_CONTROL)(
+  IN struct _DEVICE_OBJECT *DeviceObject,
+  IN struct _IRP *Irp,
+  IN PSCATTER_GATHER_LIST ScatterGather,
+  IN PVOID Context
+  );
+
+typedef NTSTATUS (*PGET_SCATTER_GATHER_LIST)(
+  IN PDMA_ADAPTER DmaAdapter,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PMDL Mdl,
+  IN PVOID CurrentVa,
+  IN ULONG Length,
+  IN PDRIVER_LIST_CONTROL ExecutionRoutine,
+  IN PVOID Context,
+  IN BOOLEAN WriteToDevice
+  );
+
+typedef VOID (*PPUT_SCATTER_GATHER_LIST)(
+  IN PDMA_ADAPTER DmaAdapter,
+  IN PSCATTER_GATHER_LIST ScatterGather,
+  IN BOOLEAN WriteToDevice
+  );
+
+typedef struct _DMA_OPERATIONS {
+  ULONG Size;
+  PPUT_DMA_ADAPTER PutDmaAdapter;
+  PALLOCATE_COMMON_BUFFER AllocateCommonBuffer;
+  PFREE_COMMON_BUFFER FreeCommonBuffer;
+  PALLOCATE_ADAPTER_CHANNEL AllocateAdapterChannel;
+  PFLUSH_ADAPTER_BUFFERS FlushAdapterBuffers;
+  PFREE_ADAPTER_CHANNEL FreeAdapterChannel;
+  PFREE_MAP_REGISTERS FreeMapRegisters;
+  PMAP_TRANSFER MapTransfer;
+  PGET_DMA_ALIGNMENT GetDmaAlignment;
+  PREAD_DMA_COUNTER ReadDmaCounter;
+  PGET_SCATTER_GATHER_LIST GetScatterGatherList;
+  PPUT_SCATTER_GATHER_LIST PutScatterGatherList;
+} DMA_OPERATIONS;
+
+
+/* Standard bus interface */
+
+struct _DEVICE_DESCRIPTION;
+
+typedef BOOLEAN STDCALL (*PTRANSLATE_BUS_ADDRESS)(
+  IN PVOID Context,
+  IN PHYSICAL_ADDRESS BusAddress,
+  IN ULONG Length,
+  IN OUT PULONG AddressSpace,
+  OUT PPHYSICAL_ADDRESS TranslatedAddress);
+
+typedef PDMA_ADAPTER STDCALL (*PGET_DMA_ADAPTER)(
+  IN PVOID Context,
+  IN struct _DEVICE_DESCRIPTION *DeviceDescriptor,
+  OUT PULONG NumberOfMapRegisters);
+
+typedef ULONG STDCALL (*PGET_SET_DEVICE_DATA)(
+  IN PVOID Context,
+  IN ULONG DataType,
+  IN PVOID Buffer,
+  IN ULONG Offset,
+  IN ULONG Length);
+
+typedef struct _BUS_INTERFACE_STANDARD {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PTRANSLATE_BUS_ADDRESS TranslateBusAddress;
+  PGET_DMA_ADAPTER GetDmaAdapter;
+  PGET_SET_DEVICE_DATA SetBusData;
+  PGET_SET_DEVICE_DATA GetBusData;
+} BUS_INTERFACE_STANDARD, *PBUS_INTERFACE_STANDARD;
 
 #endif /* __INCLUDE_DDK_IOTYPES_H */

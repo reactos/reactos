@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.58 2003/08/24 11:35:41 dwelch Exp $
+/* $Id: device.c,v 1.59 2003/09/25 15:54:42 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -366,7 +366,7 @@ NTSTATUS
 IopInitializeDevice(PDEVICE_NODE DeviceNode,
                     BOOLEAN BootDriversOnly)
 {
-  IO_STATUS_BLOCK	IoStatusBlock;
+  IO_STATUS_BLOCK IoStatusBlock;
   PDRIVER_OBJECT DriverObject;
   IO_STACK_LOCATION Stack;
   PDEVICE_OBJECT Fdo;
@@ -483,7 +483,7 @@ IopInitializeService(
     }
   }
 
-  Status = IopInitializeDevice(DeviceNode, TRUE);
+  Status = IopInitializeDevice(DeviceNode, FALSE);
 
   return(Status);
 }
@@ -491,6 +491,64 @@ IopInitializeService(
 NTSTATUS
 IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode)
 {
+#if 1
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  UNICODE_STRING ImagePath;
+  NTSTATUS Status;
+  WCHAR FullImagePathBuffer[MAX_PATH];
+  UNICODE_STRING FullImagePath;
+  CHAR TextBuffer [256];
+  ULONG x, y, cx, cy;
+
+  RtlZeroMemory(QueryTable, sizeof(QueryTable));
+
+  RtlInitUnicodeString(&ImagePath, NULL);
+
+  QueryTable[0].Name = L"ImagePath";
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[0].EntryContext = &ImagePath;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
+				  DeviceNode->ServiceName.Buffer,
+				  QueryTable,
+				  NULL,
+				  NULL);
+
+  DPRINT("RtlQueryRegistryValues() returned status %x\n", Status);
+
+  if (NT_SUCCESS(Status))
+    {
+      DPRINT("Got ImagePath %S\n", ImagePath.Buffer);
+
+      if (ImagePath.Buffer[0] != L'\\')
+        {
+          wcscpy(FullImagePathBuffer, L"\\SystemRoot\\");
+          wcscat(FullImagePathBuffer, ImagePath.Buffer);
+        }
+      else
+        {
+          wcscpy(FullImagePathBuffer, ImagePath.Buffer);
+        }
+
+      RtlFreeUnicodeString(&ImagePath);
+      RtlInitUnicodeString(&FullImagePath, FullImagePathBuffer);
+
+      HalQueryDisplayParameters(&x, &y, &cx, &cy);
+      RtlFillMemory(TextBuffer, x, ' ');
+      TextBuffer[x] = '\0';
+      HalSetDisplayParameters(0, y-1);
+      HalDisplayString(TextBuffer);
+
+      sprintf(TextBuffer, "PnP Loading %S...\n", DeviceNode->ServiceName.Buffer);
+      HalSetDisplayParameters(0, y-1);
+      HalDisplayString(TextBuffer);
+      HalSetDisplayParameters(cx, cy);
+
+      Status = IopInitializeService(DeviceNode, &FullImagePath);
+    }
+
+  return(Status);
+#else
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   UNICODE_STRING ImagePath;
   HANDLE KeyHandle;
@@ -534,6 +592,7 @@ IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode)
     }
 
   return(Status);
+#endif
 }
 
 NTSTATUS

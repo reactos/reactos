@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.152 2003/09/09 14:50:19 gvg Exp $
+; $Id: ntoskrnl.edf,v 1.153 2003/09/25 15:54:42 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -45,6 +45,7 @@ ExDisableResourceBoostLite=ExDisableResourceBoostLite@4
 ExEventObjectType DATA
 ExExtendZone=ExExtendZone@12
 ExFreePool=ExFreePool@4
+ExFreePoolWithTag=ExFreePoolWithTag@8
 ExFreeToPagedLookasideList=ExiFreeToPagedLookasideList@8
 ExGetExclusiveWaiterCount=ExGetExclusiveWaiterCount@4
 ExGetPreviousMode=ExGetPreviousMode@0
@@ -285,6 +286,7 @@ IoGetConfigurationInformation=IoGetConfigurationInformation@0
 IoGetCurrentProcess=IoGetCurrentProcess@0
 IoGetDeviceObjectPointer=IoGetDeviceObjectPointer@16
 IoGetDeviceToVerify=IoGetDeviceToVerify@4
+IoGetDmaAdapter=IoGetDmaAdapter@12
 IoGetFileObjectGenericMapping=IoGetFileObjectGenericMapping@0
 IoGetInitialStack=IoGetInitialStack@0
 IoGetRelatedDeviceObject=IoGetRelatedDeviceObject@4
@@ -356,6 +358,7 @@ IoWritePartitionTable=IoWritePartitionTable@20
 IoWriteTransferCount DATA
 IofCallDriver=@IofCallDriver@8
 IofCompleteRequest=@IofCompleteRequest@8
+IoIsWdmVersionAvailable=IoIsWdmVersionAvailable@8
 KdDebuggerEnabled DATA
 KdDebuggerNotPresent DATA
 KdPollBreakIn=KdPollBreakIn@0
@@ -472,8 +475,8 @@ KeTickCount DATA
 KeWaitForMultipleObjects=KeWaitForMultipleObjects@32
 KeWaitForMutexObject=KeWaitForMutexObject@20
 KeWaitForSingleObject=KeWaitForSingleObject@20
-;KefAcquireSpinLockAtDpcLevel
-;KefReleaseSpinLockFromDpcLevel
+KefAcquireSpinLockAtDpcLevel=@KefAcquireSpinLockAtDpcLevel@4
+KefReleaseSpinLockFromDpcLevel=@KefReleaseSpinLockFromDpcLevel@4
 ;Kei386EoiHelper
 ;KiAcquireSpinLock@4
 ;KiBugCheckData DATA

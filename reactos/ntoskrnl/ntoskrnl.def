@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.164 2003/09/09 14:50:19 gvg Exp $
+; $Id: ntoskrnl.def,v 1.165 2003/09/25 15:54:42 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -45,6 +45,7 @@ ExDisableResourceBoostLite@4
 ExEventObjectType DATA
 ExExtendZone@12
 ExFreePool@4
+ExFreePoolWithTag@8
 ExFreeToPagedLookasideList@8
 ExGetExclusiveWaiterCount@4
 ExGetPreviousMode@0

@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.22 2003/09/14 09:15:04 hbirr Exp $
+/* $Id: pool.c,v 1.23 2003/09/25 15:54:43 navaraf Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -156,6 +156,16 @@ ExFreePool(IN PVOID Block)
     {
       ExFreeNonPagedPool(Block);
     }
+}
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+ExFreePoolWithTag(IN PVOID Block, IN ULONG Tag)
+{
+  /* FIXME: Validate the tag */
+  ExFreePool(Block);
 }
 
 /* EOF */

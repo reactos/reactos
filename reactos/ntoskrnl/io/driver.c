@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.15 2003/08/24 11:35:41 dwelch Exp $
+/* $Id: driver.c,v 1.16 2003/09/25 15:54:42 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -239,9 +239,97 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 NTSTATUS STDCALL
 NtUnloadDriver(IN PUNICODE_STRING DriverServiceName)
 {
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  WCHAR FullImagePathBuffer[MAX_PATH];
+  UNICODE_STRING ImagePath;
+  UNICODE_STRING FullImagePath;
+  UNICODE_STRING ObjectName;
+  PDRIVER_OBJECT DriverObject;
+  NTSTATUS Status;
+  PMODULE_OBJECT ModuleObject;
+  LPWSTR Start;
+
   DPRINT("DriverServiceName: '%wZ'\n", DriverServiceName);
 
-  return(STATUS_NOT_IMPLEMENTED);
+  /* Get the service name from the module name */
+  Start = wcsrchr(DriverServiceName->Buffer, L'\\');
+  if (Start == NULL)
+    Start = DriverServiceName->Buffer;
+  else
+    Start++;
+
+  ObjectName.Length = wcslen(Start) + 8;
+  ObjectName.Buffer = ExAllocatePool(NonPagedPool,
+    ObjectName.Length * sizeof(WCHAR));
+  wcscpy(ObjectName.Buffer, L"\\Driver\\");
+  memcpy(ObjectName.Buffer + 8, Start, (ObjectName.Length - 8) * sizeof(WCHAR));
+
+  /* Find the driver object */
+  Status = ObReferenceObjectByName(&ObjectName, 0, 0, 0, IoDriverObjectType,
+    KernelMode, 0, (PVOID*)&DriverObject);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Can't locate driver object for %wZ\n", ObjectName);
+      return Status;
+    }
+  ObDereferenceObject(DriverObject);
+
+  RtlInitUnicodeString(&ImagePath, NULL);
+
+  /* Get service data */
+  RtlZeroMemory(&QueryTable,
+		sizeof(QueryTable));
+
+  QueryTable[0].Name = L"ImagePath";
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[0].EntryContext = &ImagePath;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+				  DriverServiceName->Buffer,
+				  QueryTable,
+				  NULL,
+				  NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
+      RtlFreeUnicodeString(&ImagePath);
+      return(Status);
+    }
+
+  if (ImagePath.Length == 0)
+    {
+      wcscpy(FullImagePathBuffer, L"\\SystemRoot\\system32\\drivers");
+      wcscat(FullImagePathBuffer, wcsrchr(DriverServiceName->Buffer, L'\\'));
+      wcscat(FullImagePathBuffer, L".sys");
+    }
+  else if (ImagePath.Buffer[0] != L'\\')
+    {
+      wcscpy(FullImagePathBuffer, L"\\SystemRoot\\");
+      wcscat(FullImagePathBuffer, ImagePath.Buffer);
+    }
+  else
+    {
+      wcscpy(FullImagePathBuffer, ImagePath.Buffer);
+    }
+
+  RtlFreeUnicodeString(&ImagePath);
+  RtlInitUnicodeString(&FullImagePath, FullImagePathBuffer);
+
+  ModuleObject = LdrGetModuleObject(DriverServiceName);
+  if (ModuleObject == NULL)
+    {
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  /* Unload the module and release the references to the device object */
+
+  if (DriverObject->DriverUnload)
+    (*DriverObject->DriverUnload)(DriverObject);
+  ObDereferenceObject(DriverObject);
+  ObDereferenceObject(DriverObject);
+  LdrUnloadModule(ModuleObject);
+
+  return STATUS_SUCCESS;
 }
 
 

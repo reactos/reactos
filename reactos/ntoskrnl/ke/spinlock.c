@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.18 2003/07/21 21:53:51 royce Exp $
+/* $Id: spinlock.c,v 1.19 2003/09/25 15:54:42 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -69,19 +69,13 @@ KeInitializeSpinLock (PKSPIN_LOCK	SpinLock)
    *SpinLock = 0;
 }
 
-#undef KeAcquireSpinLockAtDpcLevel
+#undef KefAcquireSpinLockAtDpcLevel
 
 /*
  * @implemented
  */
-VOID STDCALL
-KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
-/*
- * FUNCTION: Acquires a spinlock when the caller is already running at 
- * dispatch level
- * ARGUMENTS:
- *        SpinLock = Spinlock to acquire
- */
+VOID FASTCALL
+KefAcquireSpinLockAtDpcLevel(PKSPIN_LOCK SpinLock)
 {
    ULONG i;
 
@@ -106,6 +100,39 @@ KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
      }
 }
 
+#undef KeAcquireSpinLockAtDpcLevel
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
+/*
+ * FUNCTION: Acquires a spinlock when the caller is already running at 
+ * dispatch level
+ * ARGUMENTS:
+ *        SpinLock = Spinlock to acquire
+ */
+{
+   KefAcquireSpinLockAtDpcLevel(SpinLock);
+}
+
+#undef KefReleaseSpinLockFromDpcLevel
+
+/*
+ * @implemented
+ */
+VOID FASTCALL
+KefReleaseSpinLockFromDpcLevel(PKSPIN_LOCK SpinLock)
+{
+   if (*SpinLock != 1)
+     {
+	DbgPrint("Releasing unacquired spinlock %x\n", SpinLock);
+	KEBUGCHECK(0);
+     }
+   (void)InterlockedExchange((LONG *)SpinLock, 0);
+}
+
 #undef KeReleaseSpinLockFromDpcLevel
 
 /*
@@ -120,12 +147,7 @@ KeReleaseSpinLockFromDpcLevel (PKSPIN_LOCK	SpinLock)
  *         SpinLock = Spinlock to release
  */
 {
-   if (*SpinLock != 1)
-     {
-	DbgPrint("Releasing unacquired spinlock %x\n", SpinLock);
-	KEBUGCHECK(0);
-     }
-   (void)InterlockedExchange((LONG *)SpinLock, 0);
+   KefReleaseSpinLockFromDpcLevel(SpinLock);
 }
 
 /* EOF */

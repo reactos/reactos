@@ -1,8 +1,8 @@
-/* $Id: pnproot.c,v 1.14 2003/07/21 21:53:51 royce Exp $
+/* $Id: pnproot.c,v 1.15 2003/09/25 15:54:42 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/io/pnproot.c
+ * FILE:           ntoskrnl/io/pnpmgr/pnproot.c
  * PURPOSE:        PnP manager root device
  * PROGRAMMER:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:

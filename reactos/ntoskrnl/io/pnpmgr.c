@@ -1,8 +1,8 @@
-/* $Id: pnpmgr.c,v 1.14 2003/08/24 11:35:41 dwelch Exp $
+/* $Id: pnpmgr.c,v 1.15 2003/09/25 15:54:42 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/io/pnpmgr.c
+ * FILE:           ntoskrnl/io/pnpmgr/pnpmgr.c
  * PURPOSE:        Initializes the PnP manager
  * PROGRAMMER:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -26,8 +26,7 @@ DEFINE_GUID(GUID_CLASS_COMPORT,          0x86e0d1e0L, 0x8089, 0x11d0, 0x9c, 0xe4
 DEFINE_GUID(GUID_SERENUM_BUS_ENUMERATOR, 0x4D36E978L, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18);
 #endif // DEFINE_GUID
 
-
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 
@@ -47,87 +46,23 @@ PDRIVER_OBJECT IopRootDriverObject;
  */
 VOID
 STDCALL
-IoInitializeRemoveLockEx(
-  IN PIO_REMOVE_LOCK Lock,
-  IN ULONG AllocateTag,
-  IN ULONG MaxLockedMinutes,
-  IN ULONG HighWatermark,
-  IN ULONG RemlockSize)
-{
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-IoAcquireRemoveLockEx(
-  IN PIO_REMOVE_LOCK RemoveLock,
-  IN OPTIONAL PVOID Tag,
-  IN LPCSTR File,
-  IN ULONG Line,
-  IN ULONG RemlockSize)
-{
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-IoReleaseRemoveLockEx(
-  IN PIO_REMOVE_LOCK RemoveLock,
-  IN PVOID Tag,
-  IN ULONG RemlockSize)
-{
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-IoReleaseRemoveLockAndWaitEx(
-  IN PIO_REMOVE_LOCK RemoveLock,
-  IN PVOID Tag,
-  IN ULONG RemlockSize)
-{
-}
-
-VOID
-STDCALL
 IoAdjustPagingPathCount(
   IN PLONG Count,
   IN BOOLEAN Increment)
 {
 }
 
-/*
- * @unimplemented
- */
 NTSTATUS
-STDCALL
-IoGetDeviceInterfaceAlias(
-  IN PUNICODE_STRING SymbolicLinkName,
-  IN CONST GUID *AliasInterfaceClassGuid,
-  OUT PUNICODE_STRING AliasSymbolicLinkName)
+IopQueryBusInformation(
+  PDEVICE_OBJECT DeviceObject,
+  PPNP_BUS_INFORMATION BusInformation)
 {
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-IoGetDeviceInterfaces(
-  IN CONST GUID *InterfaceClassGuid,
-  IN PDEVICE_OBJECT PhysicalDeviceObject  OPTIONAL,
-  IN ULONG Flags,
-  OUT PWSTR *SymbolicLinkList)
-{
-  return STATUS_NOT_IMPLEMENTED;
+  IO_STATUS_BLOCK IoStatusBlock;
+  IO_STACK_LOCATION Stack;
+  
+  IoStatusBlock.Information = (ULONG)BusInformation;
+  return IopInitiatePnpIrp(DeviceObject, &IoStatusBlock,
+    IRP_MN_QUERY_BUS_INFORMATION, &Stack);
 }
 
 /*
@@ -142,6 +77,82 @@ IoGetDeviceProperty(
   OUT PVOID PropertyBuffer,
   OUT PULONG ResultLength)
 {
+  PNP_BUS_INFORMATION BusInformation;
+  NTSTATUS Status;
+
+  DPRINT("IoGetDeviceProperty called");
+
+  /*
+   * Used IRPs:
+   *  IRP_MN_QUERY_ID
+   *  IRP_MN_QUERY_BUS_INFORMATION
+   */
+  switch (DeviceProperty)
+  {
+    /* Complete, untested */
+    case DevicePropertyBusNumber:
+      *ResultLength = sizeof(ULONG);
+      if (BufferLength < sizeof(ULONG))
+        return STATUS_BUFFER_TOO_SMALL;
+      Status = IopQueryBusInformation(DeviceObject, &BusInformation);
+      if (NT_SUCCESS(Status))
+        *((ULONG *)PropertyBuffer) = BusInformation.BusNumber;
+      return Status;
+
+    /* Complete, untested */
+    case DevicePropertyBusTypeGuid:
+      *ResultLength = 39 * sizeof(WCHAR);
+      if (BufferLength < (39 * sizeof(WCHAR)))
+        return STATUS_BUFFER_TOO_SMALL;
+      Status = IopQueryBusInformation(DeviceObject, &BusInformation);
+      if (NT_SUCCESS(Status))
+        swprintf((PWSTR)PropertyBuffer,
+          L"{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+          BusInformation.BusTypeGuid.Data1,
+          BusInformation.BusTypeGuid.Data2,
+          BusInformation.BusTypeGuid.Data3,
+          BusInformation.BusTypeGuid.Data4[0],
+          BusInformation.BusTypeGuid.Data4[1],
+          BusInformation.BusTypeGuid.Data4[2],
+          BusInformation.BusTypeGuid.Data4[3],
+          BusInformation.BusTypeGuid.Data4[4],
+          BusInformation.BusTypeGuid.Data4[5],
+          BusInformation.BusTypeGuid.Data4[6],
+          BusInformation.BusTypeGuid.Data4[7]);
+      return Status;
+
+    /* Complete, untested */
+    case DevicePropertyLegacyBusType:
+      *ResultLength = sizeof(INTERFACE_TYPE);
+      if (BufferLength < sizeof(INTERFACE_TYPE))
+        return STATUS_BUFFER_TOO_SMALL;
+      Status = IopQueryBusInformation(DeviceObject, &BusInformation);
+      if (NT_SUCCESS(Status))
+        memcpy(PropertyBuffer, &BusInformation.LegacyBusType,
+          sizeof(INTERFACE_TYPE));
+      return Status;
+
+    case DevicePropertyAddress:
+    case DevicePropertyBootConfiguration:
+    case DevicePropertyBootConfigurationTranslated:
+    case DevicePropertyClassGuid:
+    case DevicePropertyClassName:
+    case DevicePropertyCompatibleIDs:
+    case DevicePropertyDeviceDescription:
+    case DevicePropertyDriverKeyName:
+    case DevicePropertyEnumeratorName: 
+    case DevicePropertyFriendlyName:
+    case DevicePropertyHardwareID:
+    case DevicePropertyLocationInformation:
+    case DevicePropertyManufacturer:
+    case DevicePropertyPhysicalDeviceObjectName:
+    case DevicePropertyUINumber:
+       break;
+
+    default:
+       return STATUS_INVALID_PARAMETER_2;
+  }
+
   return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -171,123 +182,11 @@ IoInvalidateDeviceState(
  */
 NTSTATUS
 STDCALL
-IoOpenDeviceInterfaceRegistryKey(
-  IN PUNICODE_STRING SymbolicLinkName,
-  IN ACCESS_MASK DesiredAccess,
-  OUT PHANDLE DeviceInterfaceKey)
-{
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
 IoOpenDeviceRegistryKey(
   IN PDEVICE_OBJECT DeviceObject,
   IN ULONG DevInstKeyType,
   IN ACCESS_MASK DesiredAccess,
   OUT PHANDLE DevInstRegKey)
-{
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @implemented
- */
-NTSTATUS
-STDCALL
-IoRegisterDeviceInterface(
-  IN PDEVICE_OBJECT PhysicalDeviceObject,
-  IN CONST GUID *InterfaceClassGuid,
-  IN PUNICODE_STRING ReferenceString  OPTIONAL,
-  OUT PUNICODE_STRING SymbolicLinkName)
-{
-	PWCHAR KeyNameString = L"\\Device\\Serenum";
-
-	if (IsEqualGUID(InterfaceClassGuid, (LPGUID)&GUID_SERENUM_BUS_ENUMERATOR)) {
-        RtlInitUnicodeString(SymbolicLinkName, KeyNameString);
-		return STATUS_SUCCESS;
-	}
-	return STATUS_INVALID_DEVICE_REQUEST;
-//    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-IoRegisterPlugPlayNotification(
-  IN IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
-  IN ULONG EventCategoryFlags,
-  IN PVOID EventCategoryData  OPTIONAL,
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDRIVER_NOTIFICATION_CALLBACK_ROUTINE CallbackRoutine,
-  IN PVOID Context,
-  OUT PVOID *NotificationEntry)
-{
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-IoReportDetectedDevice(
-  IN PDRIVER_OBJECT DriverObject,
-  IN INTERFACE_TYPE LegacyBusType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  IN PCM_RESOURCE_LIST ResourceList,
-  IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirements  OPTIONAL,
-  IN BOOLEAN ResourceAssigned,
-  IN OUT PDEVICE_OBJECT *DeviceObject)
-{
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-IoReportResourceForDetection(
-  IN PDRIVER_OBJECT DriverObject,
-  IN PCM_RESOURCE_LIST DriverList   OPTIONAL,
-  IN ULONG DriverListSize    OPTIONAL,
-  IN PDEVICE_OBJECT DeviceObject    OPTIONAL,
-  IN PCM_RESOURCE_LIST DeviceList   OPTIONAL,
-  IN ULONG DeviceListSize   OPTIONAL,
-  OUT PBOOLEAN ConflictDetected)
-{
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-IoReportTargetDeviceChange(
-  IN PDEVICE_OBJECT PhysicalDeviceObject,
-  IN PVOID NotificationStructure)
-{
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-IoReportTargetDeviceChangeAsynchronous(
-  IN PDEVICE_OBJECT PhysicalDeviceObject,
-  IN PVOID NotificationStructure,
-  IN PDEVICE_CHANGE_COMPLETE_CALLBACK Callback  OPTIONAL,
-  IN PVOID Context  OPTIONAL)
 {
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -300,33 +199,6 @@ STDCALL
 IoRequestDeviceEject(
   IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-IoSetDeviceInterfaceState(
-  IN PUNICODE_STRING SymbolicLinkName,
-  IN BOOLEAN Enable)
-{
-	return STATUS_SUCCESS;
-
-//	return STATUS_OBJECT_NAME_EXISTS;
-//	return STATUS_OBJECT_NAME_NOT_FOUND;
-//    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-IoUnregisterPlugPlayNotification(
-  IN PVOID NotificationEntry)
-{
-  return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -721,6 +593,7 @@ IopActionInterrogateDeviceStack(
   WCHAR InstancePath[MAX_PATH];
   IO_STACK_LOCATION Stack;
   NTSTATUS Status;
+  WCHAR KeyBuffer[MAX_PATH];
 
   DPRINT("DeviceNode %x  Context %x\n", DeviceNode, Context);
 
@@ -933,6 +806,19 @@ IopActionInterrogateDeviceStack(
 
   DPRINT("InstancePath is %S\n", DeviceNode->InstancePath.Buffer);
 
+  /*
+   * Create registry key for the device id, if it doesn't exist yet
+   *
+   * FIXME: This code is temporary until I figure out where these keys should
+   * be created. The keys are needed for installation of PnP drivers.
+   *
+   * FiN
+   */  
+
+  wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+  wcscat(KeyBuffer, DeviceNode->DeviceID.Buffer);
+  RtlpCreateRegistryKeyPath(KeyBuffer);
+
   return STATUS_SUCCESS;
 }
 
@@ -954,6 +840,83 @@ IopActionConfigureChildServices(
  *   configured.
  */
 {
+/*
+ * FIXME: There are two versions of this function: one that creates registry
+ * and one that doesn't. The second is the right, but could not be used because
+ * there is not automatic parent key generation.
+ *
+ * Update: It could propably be used now, but there's no need anymore.
+ *
+ * FiN
+ */
+#if 1
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  PDEVICE_NODE ParentDeviceNode;
+  PUNICODE_STRING Service;
+  NTSTATUS Status;
+
+  DPRINT("DeviceNode %x  Context %x\n", DeviceNode, Context);
+
+  ParentDeviceNode = (PDEVICE_NODE)Context;
+
+  /* We are called for the parent too, but we don't need to do special
+     handling for this node */
+  if (DeviceNode == ParentDeviceNode)
+  {
+    DPRINT("Success\n");
+    return STATUS_SUCCESS;
+  }
+
+  /* Make sure this device node is a direct child of the parent device node
+     that is given as an argument */
+  if (DeviceNode->Parent != ParentDeviceNode)
+  {
+    /* Stop the traversal immediately and indicate successful operation */
+    DPRINT("Stop\n");
+    return STATUS_UNSUCCESSFUL;
+  }
+
+  /* Retrieve configuration from Enum key */
+
+  Service = &DeviceNode->ServiceName;
+
+  RtlZeroMemory(QueryTable, sizeof(QueryTable));
+
+  RtlInitUnicodeString(Service, NULL);
+
+  QueryTable[0].Name = L"Service";
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[0].EntryContext = Service;
+
+  Status = RtlQueryRegistryValues(
+	 	RTL_REGISTRY_ENUM,
+	 	DeviceNode->InstancePath.Buffer,
+	 	QueryTable,
+	 	NULL,
+	 	NULL);
+
+  DPRINT("RtlQueryRegistryValues() returned status %x\n", Status);
+  DPRINT("Key: %S\n", DeviceNode->InstancePath.Buffer);
+
+  if (!NT_SUCCESS(Status))
+  {
+    /* FIXME: Log the error */
+    CPRINT("Could not retrieve configuration for device %S (Status %x)\n",
+      DeviceNode->InstancePath.Buffer, Status);
+    IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
+    return STATUS_SUCCESS;
+  }
+
+  if (Service->Buffer == NULL)
+  {
+    IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
+    return STATUS_SUCCESS;
+  }
+
+  DPRINT("Got Service %S\n", Service->Buffer);
+
+  return STATUS_SUCCESS;
+#else
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   PDEVICE_NODE ParentDeviceNode;
   PUNICODE_STRING Service;
@@ -1026,6 +989,7 @@ IopActionConfigureChildServices(
   DPRINT("Got Service %S\n", Service->Buffer);
 
   return STATUS_SUCCESS;
+#endif
 }
 
 
@@ -1212,9 +1176,8 @@ IopInterrogateBusExtender(
     return Status;
   }
 
-  return Status;
+  return STATUS_SUCCESS;
 }
-
 
 VOID IopLoadBootStartDrivers(VOID)
 {
