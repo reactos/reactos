@@ -1,7 +1,7 @@
 *.d
-hal.dll
-hal.nostrip.dll
-halx86up.coff
+*.dll
+*.coff
 *.a
 *.o
 *.sym
+*.map
