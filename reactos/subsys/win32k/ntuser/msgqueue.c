@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.47 2003/12/14 23:30:32 weiden Exp $
+/* $Id: msgqueue.c,v 1.48 2003/12/15 15:08:33 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -182,52 +182,12 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 			 PPOINT ScreenPoint, PBOOL MouseClick)
 {
   USHORT Msg = Message->Msg.message;
-  PWINDOW_OBJECT FocusWin, CaptureWin, Window = NULL;
+  PWINDOW_OBJECT CaptureWin, Window = NULL;
   HWND Wnd;
   POINT Point;
 
   LPARAM SpareLParam;
   LRESULT Result;
-
-  /* handle WM_MOUSEWHEEL messages differently, we don't need to check where
-     the mouse cursor is, we just send it to the window with the current focus */
-  if(Msg == WM_MOUSEWHEEL)
-  {
-    Wnd = IntGetFocusWindow();
-    
-    if(Wnd && (FocusWin = IntGetWindowObject(Wnd)))
-    {
-      if (FocusWin->MessageQueue != PsGetWin32Thread()->MessageQueue)
-      {
-        ExAcquireFastMutex(&FocusWin->MessageQueue->HardwareLock);
-        InsertTailList(&FocusWin->MessageQueue->HardwareMessagesListHead,
-                       &Message->ListEntry);
-        ExReleaseFastMutex(&FocusWin->MessageQueue->HardwareLock);
-        KeSetEvent(&FocusWin->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
-        IntReleaseWindowObject(FocusWin);
-        *Freed = FALSE;
-        return(FALSE);
-      }
-      *ScreenPoint = Message->Msg.pt;
-      
-      /* FIXME: Check message filter. */
-      
-      if(Remove)
-      {
-        Message->Msg.hwnd = FocusWin->Self;
-        Message->Msg.lParam = MAKELONG(Message->Msg.pt.x, Message->Msg.pt.y);
-      }
-      
-      IntReleaseWindowObject(FocusWin);
-      
-      *Freed = FALSE;
-      return TRUE;
-    }
-    
-    ExFreePool(Message);
-    *Freed = TRUE;
-    return FALSE;
-  }
 
   if (Msg == WM_LBUTTONDOWN || 
       Msg == WM_MBUTTONDOWN ||
@@ -282,7 +242,15 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 
   if (CaptureWin == NULL)
   {
-    *HitTest = WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window);
+    if(Msg == WM_MOUSEWHEEL)
+    {
+      *HitTest = HTCLIENT;
+      Window = IntGetWindowObject(IntGetFocusWindow());
+    }
+    else
+    {
+      *HitTest = WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window);
+    }
   }
   else
   {
@@ -304,6 +272,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
                    &Message->ListEntry);
     ExReleaseFastMutex(&Window->MessageQueue->HardwareLock);
     KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+    IntReleaseWindowObject(Window);
     *Freed = FALSE;
     return(FALSE);
   }
@@ -316,6 +285,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
                    &Message->ListEntry);
     ExReleaseFastMutex(&Window->MessageQueue->HardwareLock);
     KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+    IntReleaseWindowObject(Window);
     *Freed = FALSE;
     return(FALSE);
   }
@@ -346,8 +316,11 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   }
   else
   {
-    Point.x -= Window->ClientRect.left;
-    Point.y -= Window->ClientRect.top;
+    if(Msg != WM_MOUSEWHEEL)
+    {
+      Point.x -= Window->ClientRect.left;
+      Point.y -= Window->ClientRect.top;
+    }
   }
   
   /* FIXME: Check message filter. */
@@ -359,6 +332,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
       Message->Msg.lParam = MAKELONG(Point.x, Point.y);
     }
   
+  IntReleaseWindowObject(Window);
   *Freed = FALSE;
   return(TRUE);
 }
