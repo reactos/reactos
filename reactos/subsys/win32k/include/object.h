@@ -110,6 +110,8 @@ PVOID AccessInternalObject(ULONG Handle);
 PVOID AccessInternalObjectFromUserObject(PVOID UserObject);
 ULONG AccessHandleFromUserObject(PVOID UserObject);
 
+VOID InitEngHandleTable( void );
+
 #endif /* __WIN32K_OBJECT_H */
 
 /* EOF */

@@ -1,7 +1,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.14 2002/07/22 07:55:48 ei Exp $
+ * $Id: gdiobj.c,v 1.15 2002/08/04 18:21:59 ei Exp $
  *
  */
 
@@ -400,6 +400,8 @@ InitGdiObjectHandleTable (void)
   //gdi handle table can hold 0x4000 handles
   HandleTable = GDIOBJ_iAllocHandleTable (GDI_HANDLE_NUMBER);
   DPRINT("HandleTable: %x\n", HandleTable );
+
+  InitEngHandleTable();
 }
 
 VOID CreateStockObjects(void)

@@ -64,7 +64,7 @@ PVOID AccessInternalObject(ULONG Handle)
   }
 
   pEngObj = GDIHandles[Handle].pEngObj;
-  return (PVOID)((PCHAR)pEngObj + sizeof( ENGOBJ ) + pEngObj->UserSize);
+  return (PVOID)pEngObj;
 }
 
 PVOID AccessUserObject(ULONG Handle)
@@ -104,3 +104,10 @@ PVOID AccessInternalObjectFromUserObject(PVOID UserObject)
   return AccessInternalObject( AccessHandleFromUserObject( UserObject ) );
 }
 
+VOID InitEngHandleTable( void )
+{
+	ULONG i;
+  	for( i=1; i < MAX_GDI_HANDLES; i++ ){
+		GDIHandles[ i ].pEngObj == NULL;
+	}
+}
