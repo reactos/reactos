@@ -4452,7 +4452,7 @@ typedef VOID
 
 typedef VOID
 (STDCALL *ETH_RCV_INDICATE_HANDLER)(
-    IN  NDIS_HANDLE MiniportAdapter,
+    IN  PETH_FILTER Filter,
     IN  NDIS_HANDLE MacReceiveContext,
     IN  PCHAR       Address,
     IN  PVOID       HeaderBuffer,
@@ -4986,7 +4986,7 @@ NdisMDeregisterIoPortRange(
                                 PacketSize)             \
 {                                                       \
     (*((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->EthRxIndicateHandler)( \
-		(MiniportAdapterHandle),  \
+		((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->FilterDbs.u.EthDB,  \
 		(MiniportReceiveContext), \
 		(HeaderBuffer),           \
 		(HeaderBuffer),           \

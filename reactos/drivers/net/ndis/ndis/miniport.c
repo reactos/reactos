@@ -358,7 +358,7 @@ MiniEthReceiveComplete(
 
 VOID STDCALL
 MiniEthReceiveIndication(
-    IN  NDIS_HANDLE MiniportAdapter,
+    IN  PETH_FILTER Filter,
     IN  NDIS_HANDLE MacReceiveContext,
     IN  PCHAR       Address,
     IN  PVOID       HeaderBuffer,
@@ -379,7 +379,7 @@ MiniEthReceiveIndication(
  *     PacketSize          = Total size of received packet
  */
 {
-    MiniIndicateData(MiniportAdapter,
+    MiniIndicateData((PLOGICAL_ADAPTER)Filter->Miniport,
 		     MacReceiveContext,
 		     HeaderBuffer,
 		     HeaderBufferSize,
