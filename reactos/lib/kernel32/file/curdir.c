@@ -15,7 +15,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* GLOBALS *******************************************************************/
@@ -145,6 +145,9 @@ WINBOOL STDCALL SetCurrentDirectoryW(LPCWSTR lpPathName)
         SetLastError(ERROR_BAD_PATHNAME);
         return FALSE;
      }
+
+   /* Drive letter MUST be capitalized */
+   PathName[0] = towupper (PathName[0]);
 
    DPRINT("PathName %w\n",PathName);
 
