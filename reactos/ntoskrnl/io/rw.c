@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.54 2004/08/15 16:39:03 chorns Exp $
+/* $Id: rw.c,v 1.55 2004/09/28 10:51:05 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -66,10 +66,10 @@ NtReadFile (IN HANDLE FileHandle,
 				     (PVOID*)&FileObject,
 				     NULL);
   if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
-    
+  {
+    return Status;
+  }
+
   if (ByteOffset == NULL)
   {
     /* a valid ByteOffset is required if asynch. op. */
@@ -85,17 +85,18 @@ NtReadFile (IN HANDLE FileHandle,
 
   if (Event != NULL)
   {
-      Status = ObReferenceObjectByHandle(Event,
-					 SYNCHRONIZE,
-					 ExEventObjectType,
-					 PreviousMode,
-					 (PVOID*)&EventObject,
-					 NULL);
+    Status = ObReferenceObjectByHandle(Event,
+				       SYNCHRONIZE,
+				       ExEventObjectType,
+				       PreviousMode,
+				       (PVOID*)&EventObject,
+				       NULL);
       if (!NT_SUCCESS(Status))
 	{
 	  ObDereferenceObject(FileObject);
-	  return(Status);
+	  return Status;
 	}
+
     KeClearEvent(EventObject);
   }
 
@@ -124,16 +125,15 @@ NtReadFile (IN HANDLE FileHandle,
   Status = IoCallDriver(FileObject->DeviceObject, Irp);
   if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
   {
-      Status = KeWaitForSingleObject (&FileObject->Event,
-				      Executive,
-				      PreviousMode,
-				      FileObject->Flags & FO_ALERTABLE_IO,
-				      NULL);
-
+    Status = KeWaitForSingleObject(&FileObject->Event,
+				   Executive,
+				   PreviousMode,
+				   FileObject->Flags & FO_ALERTABLE_IO,
+				   NULL);
     if (Status != STATUS_WAIT_0)
     {
       /* Wait failed. */
-      return(Status);
+      return Status;
     }
 
     Status = IoStatusBlock->Status;
@@ -168,12 +168,14 @@ NtWriteFile (IN HANDLE FileHandle,
 	     IN PLARGE_INTEGER ByteOffset OPTIONAL, /* NOT optional for asynch. operations! */
 	     IN PULONG Key OPTIONAL)
 {
+  OBJECT_HANDLE_INFORMATION HandleInformation;
   NTSTATUS Status;
   PFILE_OBJECT FileObject;
   PIRP Irp;
   PIO_STACK_LOCATION StackPtr;
   KPROCESSOR_MODE PreviousMode;
   PKEVENT EventObject = NULL;
+  LARGE_INTEGER Offset;
 
   DPRINT("NtWriteFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
 	 "IoStatusBlock %x)\n", FileHandle, Buffer, Length, ByteOffset,
@@ -185,17 +187,40 @@ NtWriteFile (IN HANDLE FileHandle,
   PreviousMode = ExGetPreviousMode();
 
   Status = ObReferenceObjectByHandle(FileHandle,
-				     FILE_WRITE_DATA,
+				     0,
 				     IoFileObjectType,
 				     PreviousMode,
 				     (PVOID*)&FileObject,
-				     NULL);
+				     &HandleInformation);
   if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
+  {
+    return Status;
+  }
 
-  if (ByteOffset == NULL)
+  /* Must have FILE_WRITE_DATA | FILE_APPEND_DATA access */
+  if (!(HandleInformation.GrantedAccess & (FILE_WRITE_DATA | FILE_APPEND_DATA)))
+  {
+    DPRINT1("Invalid access rights\n");
+    ObDereferenceObject(FileObject);
+    return STATUS_ACCESS_DENIED;
+  }
+
+  if (HandleInformation.GrantedAccess & FILE_WRITE_DATA)
+  {
+    if (ByteOffset == NULL)
+    {
+      /* a valid ByteOffset is required if asynch. op. */
+      if (!(FileObject->Flags & FO_SYNCHRONOUS_IO))
+      {
+        DPRINT1("NtWriteFile: missing ByteOffset for asynch. op\n");
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_PARAMETER;
+      }
+
+      ByteOffset = &FileObject->CurrentByteOffset;
+    }
+  }
+  else if (HandleInformation.GrantedAccess & FILE_APPEND_DATA)
   {
     /* a valid ByteOffset is required if asynch. op. */
     if (!(FileObject->Flags & FO_SYNCHRONOUS_IO))
@@ -205,27 +230,28 @@ NtWriteFile (IN HANDLE FileHandle,
       return STATUS_INVALID_PARAMETER;
     }
 
-    ByteOffset = &FileObject->CurrentByteOffset;
+    Offset.u.LowPart = FILE_WRITE_TO_END_OF_FILE;
+    Offset.u.HighPart = 0xffffffff;
+    ByteOffset = &Offset;
   }
 
   if (Event != NULL)
   {
-      Status = ObReferenceObjectByHandle(Event,
-					 SYNCHRONIZE,
-					 ExEventObjectType,
-					 PreviousMode,
-					 (PVOID*)&EventObject,
-					 NULL);
-    
+    Status = ObReferenceObjectByHandle(Event,
+				       SYNCHRONIZE,
+				       ExEventObjectType,
+				       PreviousMode,
+				       (PVOID*)&EventObject,
+				       NULL);
     if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject(FileObject);
-      return(Status);
+      return Status;
     }
-    
+
     KeClearEvent(EventObject);
   }
-  
+
   KeClearEvent(&FileObject->Event);
 
   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
@@ -250,20 +276,20 @@ NtWriteFile (IN HANDLE FileHandle,
 
   Status = IoCallDriver(FileObject->DeviceObject, Irp);
   if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+  {
+    Status = KeWaitForSingleObject(&FileObject->Event,
+				   Executive,
+				   PreviousMode,
+				   FileObject->Flags & FO_ALERTABLE_IO,
+				   NULL);
+    if (Status != STATUS_WAIT_0)
     {
-      Status = KeWaitForSingleObject (&FileObject->Event,
-				      Executive,
-				      PreviousMode,
-				      FileObject->Flags & FO_ALERTABLE_IO,
-				      NULL);
-      if (Status != STATUS_WAIT_0)
-	{
-	  /* Wait failed. */
-	  return(Status);
-	}
-
-      Status = IoStatusBlock->Status;
+      /* Wait failed. */
+      return Status;
     }
+
+    Status = IoStatusBlock->Status;
+  }
 
   return Status;
 }
