@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 1999/10/21 16:11:42 ekohl Exp $
+# $Id: makefile,v 1.4 1999/11/07 08:03:26 ea Exp $
 #
 # ReactOS psxdll.dll makefile
 #
@@ -78,9 +78,13 @@ $(TARGETNAME).dll: $(DLLMAIN) $(OBJECTS) $(DEFS)
 
 
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES=*.o *.a misc\*.o
+CLEAN_FILES = *.o *.a misc\*.o libc\stdlib\*.o \
+              $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
+	      $(TARGETNAME).dll $(TARGETNAME).sym $(TARGETNAME).coff
 else
-CLEAN_FILES=*.o *.a misc/*.o
+CLEAN_FILES = *.o *.a misc/*.o libc/stdlib/*.o \
+              $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
+	      $(TARGETNAME).dll $(TARGETNAME).sym $(TARGETNAME).coff
 endif
 
 clean: $(CLEAN_FILES:%=%_clean)

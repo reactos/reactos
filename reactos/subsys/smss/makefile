@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 1999/09/05 12:29:50 ekohl Exp $
+# $Id: makefile,v 1.2 1999/11/07 08:03:28 ea Exp $
 #
 # Session Manager
 #
@@ -20,7 +20,6 @@ all: $(TARGET).exe
 
 
 $(TARGET).coff: $(TARGET).rc
-	$(RC) $(TARGET).rc $(TARGET).coff
 
 $(TARGET).exe: $(OBJECTS) $(LIBS)
 	$(LD) \

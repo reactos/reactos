@@ -5160,6 +5160,19 @@ DECLARE_HANDLE(HANDLE);
 #define IMAGE_DOS_SIGNATURE	(0x5a4d) /* e_magic field */
 #define IMAGE_NT_SIGNATURE	(0x4550) /* nt_signature field */
 
+/* To mark direction in formal parameters list */
+
+#ifndef IN
+#define IN
+#endif
+#ifndef OUT
+#define OUT
+#endif
+#ifndef OPTIONAL
+#define OPTIONAL
+#endif
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

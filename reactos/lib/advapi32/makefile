@@ -1,19 +1,20 @@
-# $Id: makefile,v 1.9 1999/10/25 06:58:09 rex Exp $
+# $Id: makefile,v 1.10 1999/11/07 08:03:24 ea Exp $
 #
 # Makefile for ReactOS advapi32.dll
 #
 
 BASE_CFLAGS = -I../../include
 
-TARGET=advapi32
+TARGETNAME=advapi32
+
 ifneq ($(HOST),mingw32-windows)
   ifneq ($(HOST),mingw32-linux)
-    DLLTARGET=$(TARGET).a
+    DLLTARGET=$(TARGETNAME).a
   else
-    DLLTARGET=$(TARGET).dll
+    DLLTARGET=$(TARGETNAME).dll
   endif
 else
-  DLLTARGET=$(TARGET).dll
+  DLLTARGET=$(TARGETNAME).dll
 endif
 
 
@@ -22,65 +23,96 @@ MISC_OBJECTS = misc/dllmain.o misc/shutdown.o \
 
 REGISTRY_OBJECTS = reg/reg.o
 
-SECURITY_OBJECTS = sec/lsa.o sec/sec.o
-#SECURITY_OBJECTS = sec/lsa.o sec/rtlsec.o sec/sec.o
+SECURITY_OBJECTS = sec/lsa.o sec/sec.o sec/ac.o
 
 SERVICE_OBJECTS = service/scm.o
 
 TOKEN_OBJECTS = token/token.o
 
-RESOURCE_OBJECT = advapi32.coff
+RESOURCE_OBJECT = $(TARGETNAME).coff
 
 OBJECTS = $(MISC_OBJECTS) $(REGISTRY_OBJECTS) $(SECURITY_OBJECTS) \
           $(SERVICE_OBJECTS) $(TOKEN_OBJECTS) \
 	  $(RESOURCE_OBJECT)
 
+ifeq ($(DOSCLI),yes)
+CLEAN_FILES = misc\*.o reg\*.o sec\*.o service\*.o token\*.o \
+              $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
+	      $(TARGETNAME).dll $(TARGETNAME).sym $(TARGETNAME).coff
+else
+CLEAN_FILES = misc/*.o reg/*.o sec/*.o service/*.o token/*.o \
+              $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
+	      $(TARGETNAME).dll $(TARGETNAME).sym $(TARGETNAME).coff
+endif
+
 all: $(DLLTARGET)
 
-$(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
-	$(RC) $(TARGET).rc $(TARGET).coff
+$(TARGETNAME).coff: $(TARGETNAME).rc ../../include/reactos/resource.h
 
-$(TARGET).a: $(OBJECTS)
-	$(LD) -r $(OBJECTS) -o $(TARGET).a
+$(TARGETNAME).a: $(OBJECTS)
+	$(LD) -r $(OBJECTS) -o $(TARGETNAME).a
 
-$(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
-	$(LD) -r $(OBJECTS) -o $(TARGET).o
+$(TARGETNAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGETNAME).def
+	$(LD) -r $(OBJECTS) -o $(TARGETNAME).o
 	$(DLLTOOL) \
-		--dllname $(TARGET).dll \
-		--def $(TARGET).def \
+		--dllname $(TARGETNAME).dll \
+		--def $(TARGETNAME).def \
 		--kill-at \
-		--output-lib $(TARGET).a
+		--output-lib $(TARGETNAME).a
 	$(CC) \
-		$(TARGET).o \
+		$(TARGETNAME).o \
 		../ntdll/ntdll.a \
 		../kernel32/kernel32.a \
-		-specs=$(TARGET)_specs \
+		-specs=$(TARGETNAME)_specs \
 		-mdll \
 		-o junk.tmp \
 		-Wl,--base-file,base.tmp 
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
-		--dllname $(TARGET).dll \
+		--dllname $(TARGETNAME).dll \
 		--base-file base.tmp \
 		--output-exp temp.exp \
-		--def $(TARGET).edf
+		--def $(TARGETNAME).edf
 	- $(RM) base.tmp
 	$(CC) \
-		$(TARGET).o \
+		$(TARGETNAME).o \
 		../ntdll/ntdll.a \
 		../kernel32/kernel32.a \
-		-specs=$(TARGET)_specs \
+		-specs=$(TARGETNAME)_specs \
 		-mdll \
-		-o $(TARGET).dll \
+		-o $(TARGETNAME).dll \
 		-Wl,--image-base,0x20000000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp
 	- $(RM) temp.exp
-	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
+	$(NM) --numeric-sort $(TARGETNAME).dll > $(TARGETNAME).sym
 
 
-clean:
+clean: $(CLEAN_FILES:%=%_clean)
+
+$(CLEAN_FILES:%=%_clean): %_clean:
+	- $(RM) $*
+
+.PHONY: clean $(CLEAN_FILES:%=%_clean)
+
+floppy: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
+
+$(FLOPPY_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)\dlls\$(TARGETNAME).dll
+else
+	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
+endif
+
+dist: $(DIST_DIR)/dlls/$(TARGETNAME).dll
+
+$(DIST_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGETNAME).dll ..\..\$(DIST_DIR)\dlls\$(TARGETNAME).dll
+else
+	$(CP) $(TARGETNAME).dll ../../$(DIST_DIR)/dlls/$(TARGETNAME).dll
+endif
 
 include ../../rules.mak
 

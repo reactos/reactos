@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.34 1999/11/02 08:55:38 dwelch Exp $
+# $Id: makefile_rex,v 1.35 1999/11/07 08:03:27 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -216,6 +216,8 @@ endif
 .PHONY: dist
 
 ex/napi.o: ex/napi.c ../include/ntdll/napi.h
+
+ke/main.o: ke/main.c ../include/reactos/buildno.h
 
 #WITH_DEBUGGING = yes
 WIN32_LEAN_AND_MEAN = yes

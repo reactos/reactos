@@ -15,8 +15,8 @@ include rules.mak
 # Required to run the system
 #
 COMPONENTS = iface_native ntoskrnl
-DLLS = ntdll kernel32 crtdll fmifs gdi32 psxdll
-#DLLS = advapi32 mingw32 user32
+DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32 psxdll
+#DLLS = mingw32 user32
 SUBSYS = smss win32k
 #SUBSYS = csrss
 
@@ -44,11 +44,13 @@ KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS)
 APPS = args hello shell test cat bench
 # APPS = cmd
 
-all: $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
+all: buildno $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
+
 .PHONY: all
 
-clean: $(COMPONENTS:%=%_clean) $(DLLS:%=%_clean) $(LOADERS:%=%_clean) \
+clean: buildno_clean $(COMPONENTS:%=%_clean) $(DLLS:%=%_clean) $(LOADERS:%=%_clean) \
        $(KERNEL_SERVICES:%=%_clean) $(SUBSYS:%=%_clean) $(APPS:%=%_clean)
+       
 .PHONY: clean
 
 floppy: make_floppy_dirs autoexec_floppy $(COMPONENTS:%=%_floppy) \
@@ -59,6 +61,21 @@ floppy: make_floppy_dirs autoexec_floppy $(COMPONENTS:%=%_floppy) \
 dist: clean_dist_dir make_dist_dirs $(COMPONENTS:%=%_dist) $(DLLS:%=%_dist) \
       $(LOADERS:%=%_dist) $(KERNEL_SERVICES:%=%_dist) $(SUBSYS:%=%_dist) \
       $(APPS:%=%_dist)
+
+#
+# Build number generator
+#
+buildno: include/reactos/version.h
+	make -C apps/buildno
+
+buildno_clean:
+	make -C apps/buildno clean
+
+buildno_floppy:
+
+buildno_dist:
+
+.PHONY: buildno buildno_clean buildno_floppy buildno_dist
 
 #
 # Applications

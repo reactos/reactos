@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.28 1999/11/02 08:55:40 dwelch Exp $
+/* $Id: main.c,v 1.29 1999/11/07 08:03:28 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,7 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ntoskrnl.h>
-#include <internal/version.h>
+#include <reactos/buildno.h>
 #include <internal/mm.h>
 #include <string.h>
 #include <internal/string.h>
@@ -153,7 +153,7 @@ asmlinkage void _main(boot_param* _bp)
     */
    HalInitSystem (0, &bp);
    
-   HalDisplayString("Starting ReactOS "KERNEL_VERSION" (Build "__DATE__", "__TIME__")\n");
+   HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
 
    /*
     * Initialize the debug output

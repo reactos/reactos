@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.3 1999/07/26 20:46:40 ea Exp $
+/* $Id: scm.c,v 1.4 1999/11/07 08:03:25 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -388,8 +388,40 @@ LockServiceDatabase(
 	SC_HANDLE	hSCManager
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
 	return NULL;
+}
+
+
+/**********************************************************************
+ *	OpenSCManagerA
+ */
+SC_HANDLE
+STDCALL
+OpenSCManagerA(
+	LPCSTR	lpMachineName,
+	LPCSTR	lpDatabaseName,
+	DWORD	dwDesiredAccess
+	)
+{
+	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
+	return INVALID_HANDLE_VALUE;
+}
+
+
+/**********************************************************************
+ *	OpenSCManagerW
+ */
+SC_HANDLE
+STDCALL
+OpenSCManagerW(
+	LPCWSTR	lpMachineName,
+	LPCWSTR	lpDatabaseName,
+	DWORD	dwDesiredAccess
+	)
+{
+	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
+	return INVALID_HANDLE_VALUE;
 }
 
 

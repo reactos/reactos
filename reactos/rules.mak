@@ -79,6 +79,7 @@ AS = $(PREFIX)gcc -c -x assembler-with-cpp
 CPP = $(PREFIX)cpp
 AR = $(PREFIX)ar
 RC = $(PREFIX)windres
+RCINC = --include-dir ../include --include-dir ../../include --include-dir ../../../include
 
 %.o: %.cc
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -87,7 +88,7 @@ RC = $(PREFIX)windres
 %.o: %.asm
 	$(NASM_CMD) $(NFLAGS) $< -o $@
 %.coff: %.rc
-	$(RC) $< $@
+	$(RC) $(RCINC) $< $@
 
 
 RULES_MAK_INCLUDED = 1

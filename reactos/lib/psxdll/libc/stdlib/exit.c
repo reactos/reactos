@@ -1,4 +1,4 @@
-/* $Id: exit.c,v 1.1 1999/10/12 21:19:40 ea Exp $
+/* $Id: exit.c,v 1.2 1999/11/07 08:03:27 ea Exp $
  *
  * reactos/lib/psxdll/libc/stdlib/exit.c
  *
@@ -18,6 +18,7 @@ _exit (
 		NtCurrentProcess(),
 		code
 		);
+	/* FIXME: notify psxss.exe we died */
 }
 
 
