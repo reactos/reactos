@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: libskygi.c,v 1.5 2004/08/13 12:29:18 weiden Exp $
+/* $Id: libskygi.c,v 1.6 2004/08/13 17:10:22 navaraf Exp $
  *
  * PROJECT:         SkyOS GI library
  * FILE:            lib/libskygi/libskygi.c
@@ -962,9 +962,21 @@ int __cdecl
 GC_destroy(GC *Gc)
 {
    DBG("GC_destroy(0x%x)\n", Gc);
-   if(Gc != NULL)
+   if (Gc != NULL)
    {
-     DeleteDC(((PSKY_GC)Gc)->hDC);
+      switch (Gc->type)
+      {
+         case GC_TYPE_DIB:
+            DeleteDC(((PSKY_GC)Gc)->hDC);
+            break;
+
+         case GC_TYPE_WINDOW:
+            ReleaseDC(((PSKY_WINDOW)Gc->window)->hWnd, ((PSKY_GC)Gc)->hDC);
+            break;
+
+         default:
+            DBG("Unknown GC type: %x\n", Gc->type);
+     }
      HeapFree(GetProcessHeap(), 0, Gc);
      return 1;
    }
