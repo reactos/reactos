@@ -902,7 +902,7 @@ void PictureButton::DrawItem(LPDRAWITEMSTRUCT dis)
 	if (style & BS_BOTTOM) {
 		 // align horizontal centered, vertical floating
 		imagePos.x = (dis->rcItem.left + dis->rcItem.right - _cx) / 2;
-		imagePos.y = dis->rcItem.top + 2;
+		imagePos.y = dis->rcItem.top + 3;
 
 		textRect.left = dis->rcItem.left + 2;
 		textRect.top = dis->rcItem.top + _cy + 4;
@@ -912,7 +912,7 @@ void PictureButton::DrawItem(LPDRAWITEMSTRUCT dis)
 		dt_flags = DT_SINGLELINE|DT_CENTER|DT_VCENTER;
 	} else {
 		 // horizontal floating, vertical centered
-		imagePos.x = dis->rcItem.left + 2;
+		imagePos.x = dis->rcItem.left + 3;
 		imagePos.y = (dis->rcItem.top + dis->rcItem.bottom - _cy)/2;
 
 		textRect.left = dis->rcItem.left + _cx + 4;
