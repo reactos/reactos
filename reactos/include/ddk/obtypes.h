@@ -70,6 +70,11 @@ typedef struct _OBJECT_TYPE
    /*
     * PURPOSE: Called when an open attempts to open a file apparently
     * residing within the object
+    * RETURNS: a pointer to the object that corresponds to the child
+    *   child of ParsedObject that is on Path.  Path is modified to
+    *   to point to the remainder of the path after the child. NULL
+    *   should be return when a leaf is reached and Path should be
+    *   left unchanged as a reault.
     */
    PVOID (*Parse)(PVOID ParsedObject, PWSTR* Path);
    

@@ -88,8 +88,9 @@ TCHAR_OBJECTS = tchar/strdec.o tchar/strinc.o tchar/strninc.o  tchar/strncnt.o t
 
 TIME_OBJECTS = time/ctime.o time/difftime.o time/strftime.o time/time.o time/clock.o
 
+# float/fpclass.o 
 FLOAT_OBJECTS = float/fpreset.o float/clearfp.o float/cntrlfp.o float/statfp.o float/logb.o\
-		float/chgsign.o float/fpclass.o float/isnan.o
+		float/chgsign.o float/isnan.o
 
 SYS_STAT_OBJECTS = sys_stat/fstat.o sys_stat/stat.o sys_stat/futime.o
 

@@ -14,17 +14,23 @@
 
 #include <internal/debug.h>
 
+/* #define  PROTO_REG  1  /* Comment out to disable */
+
 /* FILE STATICS *************************************************************/
 
 POBJECT_TYPE CmKeyType = NULL;
 PKEY_OBJECT RootKey = NULL;
+
+#if PROTO_REG
+static PVOID CmpObjectParse(PVOID ParsedObject, PWSTR* Path);
+#endif
 
 /* FUNCTIONS *****************************************************************/
 
 VOID
 CmInitializeRegistry(VOID)
 {
-#if 0
+#if PROTO_REG
   ANSI_STRING AnsiString;
   
   CmKeyType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
@@ -110,7 +116,7 @@ ZwCreateKey(PHANDLE KeyHandle,
             ULONG CreateOptions,
             PULONG Disposition)
 {
-#if 0
+#if PROTO_REG
   /* FIXME: Should CurLevel be alloced to handle arbitrary size components? */
   WCHAR *S, *T, CurLevel[255];
   PKEY_OBJECT ParentKey, CurSubKey, NewKey;
@@ -690,4 +696,62 @@ NTSTATUS RtlWriteRegistryValue(ULONG RelativeTo,
 {
    UNIMPLEMENTED;
 }
+
+
+#if 0
+static PVOID 
+CmpObjectParse(PVOID ParsedObject, PWSTR* Path)
+{
+  PWSTR  S, SubKeyBuffer;
+  PKEY_OBJECT  CurrentKey, ChildKey;
+
+  UNIMPLEMENTED
+
+  /*  If the path is an empty string, we're done  */
+  if (Path == NULL || Path[0] == 0)
+    {
+      return NULL;
+    }
+
+  /*  Extract subkey name from path  */
+  S = *Path;
+  while (*S != '\\')
+    {
+      S++;
+    }
+  SubKeyBuffer = ExAllocatePool(NonPagedPool, (S - *Path) * sizeof(WSTR));
+  wstrncpy(SubKeyBuffer, *Path, (S - *Path));
+  SubKeyBuffer[S - *Path] = 0;
+  
+  /* %%% Scan Key for matching SubKey  */
+  CurrentKey = (PKEY_OBJECT) ParsedObject;
+  ChildKey = CurrentKey->
+          /*  Move Key Object pointer to first child  */
+          ParentKey = ParentKey->SubKeys;
+          
+          /*  Extract the next path component from requested path  */
+          wstrncpy(CurLevel, S, T-S);
+          CurLevel[T-S] = 0;
+          DPRINT("CurLevel:[%w]", CurLevel);
+          
+          /*  Walk through children looking for path component  */
+          while (ParentKey != NULL)
+            {
+              if (wstrcmp(CurLevel, ParentKey->Name) == 0)
+                {
+                  break;
+                }
+              ParentKey = ParentKey->NextKey;
+            }
+
+
+  /* %%% If SubKey is not found return NULL  */
+  /* %%% Adjust path to next level  */
+  /* %%% Return object for SubKey  */
+
+  ExFreePool(SubKeyBuffer);
+
+}
+#endif
+
 

@@ -1,4 +1,8 @@
 
+/*
+ * Object Manager structures and typedefs
+ */
+
 typedef struct _KEY_VALUE
 {
   ULONG Flags;
@@ -10,6 +14,9 @@ typedef struct _KEY_VALUE
 } KEY_VALUE, *PKEY_VALUE;
 
 typedef struct _KEY_OBJECT
+/*
+ * Type defining the Object Manager Key Object
+ */
 {
   CSHORT Type;
   CSHORT Size;
@@ -30,7 +37,11 @@ typedef struct _KEY_OBJECT
   struct _KEY_OBJECT *NextKey;
 } KEY_OBJECT, *PKEY_OBJECT;
 
-/* key query information class */
+#define  KO_MARKED_FOR_DELETE  0x00000001
+
+/*
+ * key query information class 
+ */
 
 typedef enum _KEY_INFORMATION_CLASS
 {
