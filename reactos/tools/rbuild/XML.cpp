@@ -197,10 +197,10 @@ XMLFile::close()
 }
 
 bool
-XMLFile::open(const string& filename)
+XMLFile::open(const string& filename_)
 {
 	close();
-	FILE* f = fopen ( filename.c_str(), "rb" );
+	FILE* f = fopen ( filename_.c_str(), "rb" );
 	if ( !f )
 		return false;
 	unsigned long len = (unsigned long)filelen(f);
@@ -209,6 +209,7 @@ XMLFile::open(const string& filename)
 	fclose ( f );
 	_p = _buf.c_str();
 	_end = _p + len;
+	_filename = filename_;
 	next_token();
 	return true;
 }
@@ -456,24 +457,23 @@ XMLParse(XMLFile& f,
 	{
 		XMLAttribute* att;
 		att = e->GetAttribute("href",true);
-		if ( att )
+		assert(att);
+
+		string file ( path.Fixup(att->value,true) );
+		string top_file ( Path::RelativeFromWorkingDirectory ( file ) );
+		e->attributes.push_back ( new XMLAttribute ( "top_href", top_file ) );
+		XMLFile fInc;
+		if ( !fInc.open ( file ) )
+			throw FileNotFoundException ( file );
+		else
 		{
-			string file ( path.Fixup(att->value,true) );
-			string top_file ( Path::RelativeFromWorkingDirectory ( file ) );
-			e->attributes.push_back ( new XMLAttribute ( "top_href", top_file ) );
-			XMLFile fInc;
-			if ( !fInc.open ( file ) )
-				throw FileNotFoundException ( file );
-			else
+			Path path2 ( path, att->value );
+			for ( ;; )
 			{
-				Path path2 ( path, att->value );
-				for ( ;; )
-				{
-					XMLElement* e2 = XMLParse ( fInc, path2 );
-					if ( !e2 )
-						break;
-					e->AddSubElement ( e2 );
-				}
+				XMLElement* e2 = XMLParse ( fInc, path2 );
+				if ( !e2 )
+					break;
+				e->AddSubElement ( e2 );
 			}
 		}
 	}
@@ -519,7 +519,7 @@ XMLParse(XMLFile& f,
 			if ( end_tag )
 			{
 				if ( e->name != e2->name )
-					printf ( "end tag name mismatch\n" );
+					printf ( "syntax error: end tag name mismatch\n" );
 				delete e2;
 				break;
 			}

@@ -34,9 +34,10 @@ public:
 	bool next_is_text();
 	bool more_tokens();
 	bool get_token(std::string& token);
+	const std::string& filename() { return _filename; }
 
 private:
-	std::string _buf;
+	std::string _buf, _filename;
 
 	const char *_p, *_end;
 };

@@ -1,6 +1,7 @@
 // module.cpp
 
 #include "pch.h"
+#include <assert.h>
 
 #include "rbuild.h"
 
@@ -19,9 +20,10 @@ Module::Module ( const XMLElement& moduleNode,
 
 Module::~Module ()
 {
-	for ( size_t i = 0; i < files.size(); i++ )
+	size_t i;
+	for ( i = 0; i < files.size(); i++ )
 		delete files[i];
-	for ( size_t i = 0; i < libraries.size(); i++ )
+	for ( i = 0; i < libraries.size(); i++ )
 		delete libraries[i];
 }
 
@@ -40,6 +42,7 @@ void Module::ProcessXML ( const XMLElement& e,
 	else if ( e.name == "directory" )
 	{
 		const XMLAttribute* att = e.GetAttribute ( "name", true );
+		assert(att);
 		subpath = path + "/" + att->value;
 	}
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
