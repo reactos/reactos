@@ -85,3 +85,15 @@ struct StartmenuSettingsDlg : public PropSheetPageDlg
 
 	virtual int	Command(int id, int code);
 };
+
+
+ /// configuration dialog to choose between MDI and SDI mode
+struct MdiSdiDlg : public ResizeController<Dialog>
+{
+	typedef ResizeController<Dialog> super;
+
+	MdiSdiDlg(HWND hwnd);
+
+protected:
+	virtual int	Command(int id, int code);
+};

@@ -746,8 +746,10 @@ struct String
 #endif
 
 	String() {}
+
 	String(LPCTSTR s) {if (s) super::assign(s);}
 	String(LPCTSTR s, int l) : super(s, l) {}
+
 	String(const super& other) : super(other) {}
 	String(const String& other) : super(other) {}
 

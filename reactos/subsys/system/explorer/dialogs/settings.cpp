@@ -229,3 +229,38 @@ int	StartmenuSettingsDlg::Command(int id, int code)
 */
 	return 1;
 }
+
+
+MdiSdiDlg::MdiSdiDlg(HWND hwnd)
+ :	super(hwnd)
+{
+	CenterWindow(hwnd);
+
+	XMLPos explorer_options(g_Globals.get_cfg("general"), "explorer");
+	bool mdi = XMLBool(explorer_options, "mdi", true);
+
+	int id = mdi? IDC_MDI: IDC_SDI;
+	CheckDlgButton(hwnd, id, BST_CHECKED);
+	SetFocus(GetDlgItem(hwnd, id));
+}
+
+int	MdiSdiDlg::Command(int id, int code)
+{	
+	if (code == BN_CLICKED) {
+		switch(id) {
+		  case IDOK: {
+			bool mdi = IsDlgButtonChecked(_hwnd, IDC_MDI)==BST_CHECKED;
+			XMLPos explorer_options(g_Globals.get_cfg("general"), "explorer");
+			XMLBoolRef(explorer_options, "mdi") = mdi;
+		  } // fall through
+
+		  case IDCANCEL:
+			EndDialog(_hwnd, id);
+			break;
+		}
+
+		return 0;
+	}
+
+	return 1;
+}

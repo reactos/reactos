@@ -39,6 +39,8 @@
 #include <fcntl.h>	// for _O_RDONLY
 #endif
 
+#include "dialogs/settings.h"	// for MdiSdiDlg
+
 
 extern "C" int initialize_gdb_stub();	// start up GDB stub
 
@@ -534,7 +536,13 @@ void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
 
 	g_Globals._prescan_nodes = false;
 
-	bool mdi = true;	//@@
+	XMLPos explorer_options(g_Globals.get_cfg("general"), "explorer");
+	XS_String mdiStr = XMLString(explorer_options, "mdi");
+
+	if (mdiStr.empty())
+		Dialog::DoModal(IDD_MDI_SDI, WINDOW_CREATOR(MdiSdiDlg), g_Globals._hwndDesktop);
+
+	bool mdi = XMLBool(explorer_options, "mdi", true);
 
 	 // create main window
 	MainFrameBase::Create(lpCmdLine, mdi, cmdshow);

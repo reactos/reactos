@@ -85,15 +85,15 @@ bool Bookmark::read_url(LPCTSTR path)
  /// convert XBEL bookmark node
 bool Bookmark::read(const_XMLPos& pos)
 {
-	_url = pos.get("href");
+	_url = pos.get("href").c_str();
 
 	if (pos.go_down("title")) {
-		_name = pos->get_content();
+		_name = pos->get_content().c_str();
 		pos.back();
 	}
 
 	if (pos.go_down("desc")) {
-		_description = pos->get_content();
+		_description = pos->get_content().c_str();
 		pos.back();
 	}
 
@@ -106,8 +106,8 @@ bool Bookmark::read(const_XMLPos& pos)
 
 			if (node.get("owner") == "ros-explorer") {
 				if (sub_pos.go_down("icon")) {
-					_icon_path = sub_pos.get("path");
-					_icon_idx = _ttoi(sub_pos.get("index"));
+					_icon_path = sub_pos.get("path").c_str();
+					_icon_idx = XS_toi(sub_pos.get("index"));
 
 					sub_pos.back();	// </icon>
 				}
@@ -126,7 +126,7 @@ void Bookmark::write(XMLPos& pos) const
 {
 	pos.create("bookmark");
 
-	pos["href"] = _url;
+	pos["href"] = _url.c_str();
 
 	if (!_name.empty()) {
 		pos.create("title");
@@ -145,8 +145,8 @@ void Bookmark::write(XMLPos& pos) const
 		pos.create("metadata");
 		pos["owner"] = "ros-explorer";
 		pos.create("icon");
-		pos["path"] = _icon_path;
-		pos["index"].printf(TEXT("%d"), _icon_idx);
+		pos["path"] = _icon_path.c_str();
+		pos["index"].printf(XS_TEXT("%d"), _icon_idx);
 		pos.back();	// </icon>
 		pos.back();	// </metadata>
 		pos.back();	// </info>
@@ -160,12 +160,12 @@ void Bookmark::write(XMLPos& pos) const
 void BookmarkFolder::read(const_XMLPos& pos)
 {
 	if (pos.go_down("title")) {
-		_name = pos->get_content();
+		_name = pos->get_content().c_str();
 		pos.back();
 	}
 
 	if (pos.go_down("desc")) {
-		_description = pos->get_content();
+		_description = pos->get_content().c_str();
 		pos.back();
 	}
 

@@ -70,34 +70,67 @@
 namespace XMLStorage {
 
 
-#ifdef _STRING_DEFINED
+#ifndef XS_String
+
+#ifdef __GNUC__
+#define	XS_STRING_UTF8	// The W32API std::wstring implementation of stdlibc++ is unusable, so use UTF8 encoded strings with std::string instead
+#endif
+	#define	XS_STRING_UTF8//@@
+
+#ifdef XS_STRING_UTF8
+#define	XS_CHAR char
+#define	XS_TEXT(x) x
+#define LPXSSTR LPSTR
+#define LPCXSSTR LPCSTR
+#define	XS_icmp stricmp
+#define	XS_nicmp strnicmp
+#define	XS_toi atoi
+#define	XS_len strlen
+#define	XS_sprintf sprintf
+#define	XS_vsprintf vsprintf
+#else
+#define	XS_CHAR TCHAR
+#define	XS_TEXT(x) TEXT(x)
+#define LPXSSTR LPTSTR
+#define LPCXSSTR LPCTSTR
+#define	XS_icmp _tcsicmp
+#define	XS_nicmp _tcsnicmp
+#define	XS_toi _ttoi
+#define	XS_len _tcslen
+#define	XS_sprintf _stprintf
+#define	XS_vsprintf _vstprintf
+#endif
+
+#if defined(_STRING_DEFINED) && !defined(XS_STRING_UTF8)
 
 #define	XS_String String
 
-#else
+#else // _STRING_DEFINED, !XS_STRING_UTF8
 
  /// string class for TCHAR strings
 
 struct XS_String
-#ifdef UNICODE
+#if defined(UNICODE) && !defined(XS_STRING_UTF8)
  : public std::wstring
 #else
  : public std::string
 #endif
 {
-#ifdef UNICODE
+#if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	typedef std::wstring super;
 #else
 	typedef std::string super;
 #endif
 
 	XS_String() {}
-	XS_String(LPCTSTR s) {if (s) super::assign(s);}
-	XS_String(LPCTSTR s, int l) : super(s, l) {}
+
+	XS_String(LPCXSSTR s) {if (s) super::assign(s);}
+	XS_String(LPCXSSTR s, int l) : super(s, l) {}
+
 	XS_String(const super& other) : super(other) {}
 	XS_String(const XS_String& other) : super(other) {}
 
-#ifdef UNICODE
+#if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	XS_String(LPCSTR s) {assign(s);}
 	XS_String(LPCSTR s, int l) {assign(s, l);}
 	XS_String(const std::string& other) {assign(other.c_str());}
@@ -109,68 +142,80 @@ struct XS_String
 	XS_String(LPCWSTR s, int l) {assign(s, l);}
 	XS_String(const std::wstring& other) {assign(other.c_str());}
 	XS_String& operator=(LPCWSTR s) {assign(s); return *this;}
+#ifdef XS_STRING_UTF8
+	void assign(const XS_String& s) {assign(s.c_str());}
+	void assign(LPCWSTR s) {if (s) {int bl=wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, bl, b, bl, 0, 0));} else erase();}
+	void assign(LPCWSTR s, int l) {int bl=l; if (s) {LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, l, b, bl, 0, 0));} else erase();}
+#else // if !UNICODE && !XS_STRING_UTF8
 	void assign(LPCWSTR s) {if (s) {int bl=wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, bl, b, bl, 0, 0));} else erase();}
 	void assign(LPCWSTR s, int l) {int bl=l; if (s) {LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, l, b, bl, 0, 0));} else erase();}
 #endif
+#endif
 
-	XS_String& operator=(LPCTSTR s) {if (s) super::assign(s); else erase(); return *this;}
+	XS_String& operator=(LPCXSSTR s) {if (s) super::assign(s); else erase(); return *this;}
 	XS_String& operator=(const super& s) {super::assign(s); return *this;}
-	void assign(LPCTSTR s) {super::assign(s);}
-	void assign(LPCTSTR s, int l) {super::assign(s, l);}
+	void assign(LPCXSSTR s) {super::assign(s);}
+	void assign(LPCXSSTR s, int l) {super::assign(s, l);}
 
-	operator LPCTSTR() const {return c_str();}
+	operator LPCXSSTR() const {return c_str();}
 
-#ifdef UNICODE
+#ifdef XS_STRING_UTF8
+	operator std::wstring() const {int bl=length(); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); return std::wstring(b, MultiByteToWideChar(CP_UTF8, 0, c_str(), bl, b, bl));}
+#elif defined(UNICODE)
 	operator std::string() const {int bl=length(); LPSTR b=(LPSTR)alloca(bl); return std::string(b, WideCharToMultiByte(CP_ACP, 0, c_str(), bl, b, bl, 0, 0));}
 #else
 	operator std::wstring() const {int bl=length(); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); return std::wstring(b, MultiByteToWideChar(CP_ACP, 0, c_str(), bl, b, bl));}
 #endif
 
-	XS_String& printf(LPCTSTR fmt, ...)
+	XS_String& printf(LPCXSSTR fmt, ...)
 	{
 		va_list l;
-		TCHAR b[BUFFER_LEN];
+		XS_CHAR b[BUFFER_LEN];
 
 		va_start(l, fmt);
-		super::assign(b, _vstprintf(b, fmt, l));
+		super::assign(b, XS_vsprintf(b, fmt, l));
 		va_end(l);
 
 		return *this;
 	}
 
-	XS_String& vprintf(LPCTSTR fmt, va_list l)
+	XS_String& vprintf(LPCXSSTR fmt, va_list l)
 	{
-		TCHAR b[BUFFER_LEN];
+		XS_CHAR b[BUFFER_LEN];
 
-		super::assign(b, _vstprintf(b, fmt, l));
+		super::assign(b, XS_vsprintf(b, fmt, l));
 
 		return *this;
 	}
 
-	XS_String& appendf(LPCTSTR fmt, ...)
+	XS_String& appendf(LPCXSSTR fmt, ...)
 	{
 		va_list l;
-		TCHAR b[BUFFER_LEN];
+		XS_CHAR b[BUFFER_LEN];
 
 		va_start(l, fmt);
-		super::append(b, _vstprintf(b, fmt, l));
+		super::append(b, XS_vsprintf(b, fmt, l));
 		va_end(l);
 
 		return *this;
 	}
 
-	XS_String& vappendf(LPCTSTR fmt, va_list l)
+	XS_String& vappendf(LPCXSSTR fmt, va_list l)
 	{
-		TCHAR b[BUFFER_LEN];
+		XS_CHAR b[BUFFER_LEN];
 
-		super::append(b, _vstprintf(b, fmt, l));
+		super::append(b, XS_vsprintf(b, fmt, l));
 
 		return *this;
 	}
 };
 
-#endif
+#endif // _STRING_DEFINED, !XS_STRING_UTF8
 
+#endif // XS_String
+
+
+#ifndef XS_STRING_UTF8
 
 inline void assign_utf8(XS_String& s, const char* str)
 {
@@ -211,8 +256,10 @@ inline std::string get_utf8(const XS_String& s)
 	return get_utf8(s.c_str(), s.length());
 }
 
-extern std::string EncodeXMLString(LPCTSTR s);
-extern XS_String DecodeXMLString(LPCTSTR s);
+#endif // XS_STRING_UTF8
+
+extern std::string EncodeXMLString(const XS_String& str);
+extern XS_String DecodeXMLString(const XS_String& str);
 
 
 #ifdef __GNUC__
@@ -287,6 +334,10 @@ protected:
 
 typedef XS_String String_from_XML_Char;
 
+#elif defined(XS_STRING_UTF8)
+
+typedef XS_String String_from_XML_Char;
+
 #else
 
 struct String_from_XML_Char : public XS_String
@@ -300,7 +351,7 @@ struct String_from_XML_Char : public XS_String
 #endif
 
 
-#ifdef UNICODE
+#if defined(UNICODE) && !defined(XS_STRING_UTF8)
 
  // optimization for faster UNICODE/ASCII string comparison without temporary A/U conversion
 inline bool operator==(const XS_String& s1, const char* s2)
@@ -321,7 +372,7 @@ inline bool operator==(const XS_String& s1, const char* s2)
  /// in memory representation of an XML node
 struct XMLNode : public XS_String
 {
-#ifdef UNICODE
+#if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	 // optimized read access without temporary A/U conversion when using ASCII attribute names
 	struct AttributeMap : public std::map<XS_String, XS_String>
 	{
@@ -460,7 +511,7 @@ struct XMLNode : public XS_String
 		if (found != _attributes.end())
 			return found->second;
 		else
-			return TEXT("");
+			return XS_String();
 	}
 
 	 /// convenient value access in children node
@@ -471,7 +522,7 @@ struct XMLNode : public XS_String
 		if (node)
 			return node->get(attr_name);
 		else
-			return TEXT("");
+			return XS_String();
 	}
 
 	 /// convenient storage of distinct values in children node
@@ -487,7 +538,7 @@ struct XMLNode : public XS_String
 		return (*node)[attr_name];
 	}
 
-#ifdef UNICODE
+#if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	 /// convenient value access in children node
 	XS_String subvalue(const char* name, const char* attr_name) const
 	{
@@ -496,7 +547,7 @@ struct XMLNode : public XS_String
 		if (node)
 			return node->get(attr_name);
 		else
-			return TEXT("");
+			return XS_String();
 	}
 
 	 /// convenient storage of distinct values in children node
@@ -525,16 +576,19 @@ struct XMLNode : public XS_String
 
 	XS_String get_content() const
 	{
+#ifdef XS_STRING_UTF8
+		const XS_String& ret = _content;
+#else
 		XS_String ret;
-
 		assign_utf8(ret, _content.c_str());
+#endif
 
-		return DecodeXMLString(ret);
+		return DecodeXMLString(ret.c_str());
 	}
 
 	void set_content(const XS_String& s)
 	{
-		_content.assign(EncodeXMLString(s));
+		_content.assign(EncodeXMLString(s.c_str()));
 	}
 
 	enum WRITE_MODE {
@@ -600,7 +654,7 @@ protected:
 		return NULL;
 	}
 
-#ifdef UNICODE
+#if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	XMLNode* find_first(const char* name) const
 	{
 		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
@@ -976,7 +1030,7 @@ struct XMLPos
 		}
 	}
 
-#ifdef UNICODE
+#if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	 /// search for child and go down
 	bool go_down(const char* name)
 	{
@@ -1114,7 +1168,7 @@ struct const_XMLPos
 	 /// move X-Path like to position in XML tree
 	bool go(const char* path);
 
-#ifdef UNICODE
+#if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	 /// search for child and go down
 	bool go_down(const char* name)
 	{
@@ -1151,10 +1205,10 @@ struct XMLBool
 	{
 	}
 
-	XMLBool(LPCTSTR value, bool def=false)
+	XMLBool(LPCXSSTR value, bool def=false)
 	{
 		if (value && *value)
-			_value = !_tcsicmp(value, TEXT("true"));
+			_value = !XS_icmp(value, XS_TEXT("true"));
 		else
 			_value = def;
 	}
@@ -1164,7 +1218,7 @@ struct XMLBool
 		const XS_String& value = node->get(attr_name);
 
 		if (!value.empty())
-			_value = !_tcsicmp(value, TEXT("true"));
+			_value = !XS_icmp(value.c_str(), XS_TEXT("true"));
 		else
 			_value = def;
 	}
@@ -1179,9 +1233,9 @@ struct XMLBool
 		return !_value;
 	}
 
-	operator LPCTSTR() const
+	operator LPCXSSTR() const
 	{
-		return _value? TEXT("true"): TEXT("false");
+		return _value? XS_TEXT("true"): XS_TEXT("false");
 	}
 
 protected:
@@ -1202,12 +1256,12 @@ struct XMLBoolRef
 
 	operator bool() const
 	{
-		return !_tcsicmp(_ref, TEXT("true"));
+		return !XS_icmp(_ref.c_str(), XS_TEXT("true"));
 	}
 
 	bool operator!() const
 	{
-		return _tcsicmp(_ref, TEXT("true"))? true: false;
+		return XS_icmp(_ref.c_str(), XS_TEXT("true"))? true: false;
 	}
 
 	XMLBoolRef& operator=(bool value)
@@ -1219,7 +1273,7 @@ struct XMLBoolRef
 
 	void assign(bool value)
 	{
-		_ref.assign(value? TEXT("true"): TEXT("false"));
+		_ref.assign(value? XS_TEXT("true"): XS_TEXT("false"));
 	}
 
 	void toggle()
@@ -1239,10 +1293,10 @@ struct XMLInt
 	{
 	}
 
-	XMLInt(LPCTSTR value, int def=0)
+	XMLInt(LPCXSSTR value, int def=0)
 	{
 		if (value && *value)
-			_value = _ttoi(value);
+			_value = XS_toi(value);
 		else
 			_value = def;
 	}
@@ -1252,7 +1306,7 @@ struct XMLInt
 		const XS_String& value = node->get(attr_name);
 
 		if (!value.empty())
-			_value = _ttoi(value);
+			_value = XS_toi(value.c_str());
 		else
 			_value = def;
 	}
@@ -1264,8 +1318,8 @@ struct XMLInt
 
 	operator XS_String() const
 	{
-		TCHAR buffer[32];
-		_stprintf(buffer, TEXT("%d"), _value);
+		XS_CHAR buffer[32];
+		XS_sprintf(buffer, XS_TEXT("%d"), _value);
 		return buffer;
 	}
 
@@ -1294,14 +1348,13 @@ struct XMLIntRef
 
 	operator int() const
 	{
-		return _ttoi(_ref);
+		return XS_toi(_ref.c_str());
 	}
 
 	void assign(int value)
 	{
-		TCHAR buffer[32];
-
-		_stprintf(buffer, TEXT("%d"), value);
+		XS_CHAR buffer[32];
+		XS_sprintf(buffer, XS_TEXT("%d"), value);
 		_ref.assign(buffer);
 	}
 
@@ -1317,7 +1370,7 @@ struct XMLString
 	{
 	}
 
-	XMLString(LPCTSTR value, LPCTSTR def=TEXT(""))
+	XMLString(LPCXSSTR value, LPCXSSTR def=XS_TEXT(""))
 	{
 		if (value && *value)
 			_value = value;
@@ -1325,7 +1378,7 @@ struct XMLString
 			_value = def;
 	}
 
-	XMLString(const XMLNode* node, const XS_String& attr_name, LPCTSTR def=TEXT(""))
+	XMLString(const XMLNode* node, const XS_String& attr_name, LPCXSSTR def=XS_TEXT(""))
 	{
 		const XS_String& value = node->get(attr_name);
 
@@ -1354,14 +1407,14 @@ private:
 
 struct XMStringRef
 {
-	XMStringRef(XMLNode* node, const XS_String& attr_name, LPCTSTR def=TEXT(""))
+	XMStringRef(XMLNode* node, const XS_String& attr_name, LPCXSSTR def=XS_TEXT(""))
 	 :	_ref((*node)[attr_name])
 	{
 		if (_ref.empty())
 			assign(def);
 	}
 
-	XMStringRef(XMLNode* node, const XS_String& node_name, const XS_String& attr_name, LPCTSTR def=TEXT(""))
+	XMStringRef(XMLNode* node, const XS_String& node_name, const XS_String& attr_name, LPCXSSTR def=XS_TEXT(""))
 	 :	_ref(node->subvalue(node_name, attr_name))
 	{
 		if (_ref.empty())
@@ -1391,7 +1444,7 @@ protected:
 
 
 template<typename T>
-	inline void read_option(T& var, const_XMLPos& cfg, LPCTSTR key)
+	inline void read_option(T& var, const_XMLPos& cfg, LPCXSSTR key)
 	{
 		const XS_String& val = cfg.get(key);
 
@@ -1400,12 +1453,12 @@ template<typename T>
 	}
 
 template<>
-	inline void read_option(int& var, const_XMLPos& cfg, LPCTSTR key)
+	inline void read_option(int& var, const_XMLPos& cfg, LPCXSSTR key)
 	{
 		const XS_String& val = cfg.get(key);
 
 		if (!val.empty())
-			var = _ttoi(val);
+			var = XS_toi(val.c_str());
 	}
 
 

@@ -94,6 +94,7 @@
 #define IDB_ICON_ALIGN_2                155
 #define IDD_NOTIFYAREA                  155
 #define IDB_ICON_ALIGN_3                156
+#define IDD_MDI_SDI                     156
 #define IDB_ICON_ALIGN_4                157
 #define IDB_ICON_ALIGN_5                158
 #define IDB_ICON_ALIGN_6                159
@@ -151,6 +152,8 @@
 #define IDC_CHECK_ENTRIES               1028
 #define IDC_VERSION_TXT                 1029
 #define IDC_WIN_VERSION                 1030
+#define IDC_MDI                         1030
+#define IDC_SDI                         1031
 #define ID_REFRESH                      1704
 #define ID_ABOUT_WINEFILE               1705
 #define IDS_VERSION_STR                 5000
@@ -187,6 +190,7 @@
 #define ID_CONFIG_TIME                  40018
 #define ID_VIEW_MDI                     40019
 #define ID_VIEW_SDI                     40020
+#define ID_TOOLS_OPTIONS                40021
 #define ID_SWITCH_DESKTOP_1             50000
 #define ID_WINDOW_NEW                   0xE130
 #define ID_WINDOW_ARRANGE               0xE131
@@ -205,8 +209,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        166
-#define _APS_NEXT_COMMAND_VALUE         40021
-#define _APS_NEXT_CONTROL_VALUE         1030
+#define _APS_NEXT_COMMAND_VALUE         40022
+#define _APS_NEXT_CONTROL_VALUE         1033
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -234,10 +234,10 @@ void NotifyArea::read_config()
 
 			NotifyIconConfig cfg;
 
-			cfg._name = node.get("name");
-			cfg._tipText = node.get("text");
-			cfg._windowTitle = node.get("window");
-			cfg._modulePath = node.get("module");
+			cfg._name = node.get("name").c_str();
+			cfg._tipText = node.get("text").c_str();
+			cfg._windowTitle = node.get("window").c_str();
+			cfg._modulePath = node.get("module").c_str();
 			const string& mode = node.get("show");
 
 			if (mode == "show")
@@ -281,11 +281,11 @@ void NotifyArea::write_config()
 		 // refresh unique name
 		cfg.create_name();
 
-		pos["name"] = cfg._name;
-		pos["text"] = cfg._tipText;
-		pos["window"] = cfg._windowTitle;
-		pos["module"] = cfg._modulePath;
-		pos["show"] = string_from_mode(cfg._mode);
+		pos["name"] = cfg._name.c_str();
+		pos["text"] = cfg._tipText.c_str();
+		pos["window"] = cfg._windowTitle.c_str();
+		pos["module"] = cfg._modulePath.c_str();
+		pos["show"] = string_from_mode(cfg._mode).c_str();
 
 		pos.back();
 	}

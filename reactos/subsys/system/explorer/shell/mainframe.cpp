@@ -35,6 +35,8 @@ extern HWND create_webchildwindow(const WebChildWndInfo& info);
 
 #include "../explorer_intres.h"
 
+#include "../dialogs/settings.h"	// for MdiSdiDlg
+
 
 HWND MainFrameBase::Create(LPCTSTR path, bool mdi, UINT cmdshow)
 {
@@ -86,7 +88,7 @@ HWND MainFrameBase::Create(LPCTSTR path, bool mdi, UINT cmdshow)
 }
 
 
-int MainFrameBase::OpenShellFolders(LPIDA pida, HWND hFrameWnd, bool mdi)
+int MainFrameBase::OpenShellFolders(LPIDA pida, HWND hFrameWnd)
 {
 	int cnt = 0;
 
@@ -110,6 +112,9 @@ int MainFrameBase::OpenShellFolders(LPIDA pida, HWND hFrameWnd, bool mdi)
 					} else {
 						HWND hwnd;
 #ifndef _NO_MDI
+						XMLPos explorer_options(g_Globals.get_cfg("general"), "explorer");
+						bool mdi = XMLBool(explorer_options, "mdi", true);
+
 						if (mdi)
 							hwnd = MDIMainFrame::Create(pidl_abs, 0);
 						else
@@ -152,7 +157,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 	_himl(ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_MASK|ILC_COLOR24, 2, 0))
 {
 	_hMenuFrame = GetMenu(hwnd);
-	_hMenuWindow = GetSubMenu(_hMenuFrame, GetMenuItemCount(_hMenuFrame)-2);
+	_hMenuWindow = GetSubMenu(_hMenuFrame, GetMenuItemCount(_hMenuFrame)-3);
 
 	_menu_info._hMenuView = GetSubMenu(_hMenuFrame, 1);
 
@@ -169,13 +174,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 		{10, ID_GO_HOME, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 		{11, ID_GO_SEARCH, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 		{12, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{13, ID_STOP, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-/*		{0, 0, 0, BTNS_SEP, {0, 0}, 0, 0},
-		{0, ID_WINDOW_NEW, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{1, ID_WINDOW_CASCADE, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{2, ID_WINDOW_TILE_HORZ, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{3, ID_WINDOW_TILE_VERT, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-*/
+		{13, ID_STOP, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0}
 	};
 
 	_htoolbar = CreateToolbarEx(hwnd, 
@@ -394,6 +393,10 @@ int MainFrameBase::Command(int id, int code)
 
 	  case ID_VIEW_FULLSCREEN:
 		CheckMenuItem(_menu_info._hMenuView, id, toggle_fullscreen()?MF_CHECKED:0);
+		break;
+
+	  case ID_TOOLS_OPTIONS:
+		Dialog::DoModal(IDD_MDI_SDI, WINDOW_CREATOR(MdiSdiDlg), _hwnd);
 		break;
 
 	  case ID_ABOUT_WINDOWS:
@@ -672,6 +675,16 @@ bool MainFrameBase::go_to(LPCTSTR url, bool new_window)
 MDIMainFrame::MDIMainFrame(HWND hwnd)
  :	super(hwnd)
 {
+	TBBUTTON mdiBtns[] = {
+		{0, 0, 0, BTNS_SEP, {0, 0}, 0, 0},
+		{0, ID_WINDOW_NEW, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{1, ID_WINDOW_CASCADE, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{2, ID_WINDOW_TILE_HORZ, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{3, ID_WINDOW_TILE_VERT, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0}
+	};
+
+	SendMessage(_htoolbar, TB_ADDBUTTONS, sizeof(mdiBtns)/sizeof(TBBUTTON), (LPARAM)&mdiBtns);
+
 	CLIENTCREATESTRUCT ccs;
 
 	ccs.hWindowMenu = _hMenuWindow;

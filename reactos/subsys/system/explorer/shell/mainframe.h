@@ -39,7 +39,7 @@ struct MainFrameBase : public PreTranslateWindow
 	~MainFrameBase();
 
 	static HWND Create(LPCTSTR path, bool mdi=true, UINT cmdshow=SW_SHOWNORMAL);
-	static int OpenShellFolders(LPIDA pida, HWND hFrameWnd, bool mdi=true);
+	static int OpenShellFolders(LPIDA pida, HWND hFrameWnd);
 
 	WindowHandle _hwndrebar;
 

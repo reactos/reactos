@@ -2,6 +2,7 @@
 <explorer-cfg>
   <general>
     <look-and-feel name="classic"/>
+	<explorer mdi="true"/>
 	<language name="EN"/>
   </general>
 

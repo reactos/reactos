@@ -236,12 +236,13 @@ std::string XMLReaderBase::get_error_string() const
 }
 
 
-std::string EncodeXMLString(LPCTSTR s)
+std::string EncodeXMLString(const XS_String& str)
 {
-	LPTSTR buffer = (LPTSTR)alloca(5*sizeof(TCHAR)*_tcslen(s));	// worst case. "&amp;"
-	LPTSTR o = buffer;
+	LPCXSSTR s = str.c_str();
+	LPXSSTR buffer = (LPXSSTR)alloca(5*sizeof(XS_CHAR)*XS_len(s));	// worst case. "&amp;"
+	LPXSSTR o = buffer;
 
-	for(LPCTSTR p=s; *p; ++p)
+	for(LPCXSSTR p=s; *p; ++p)
 		switch(*p) {
 		  case '&':
 			*o++ = '&';	*o++ = 'a';	*o++ = 'm';	*o++ = 'p';	*o++ = ';';
@@ -259,23 +260,28 @@ std::string EncodeXMLString(LPCTSTR s)
 			*o++ = *p;
 		}
 
+#ifdef XS_STRING_UTF8
+	return XS_String(buffer, o-buffer);
+#else
 	return get_utf8(buffer, o-buffer);
+#endif
 }
 
-XS_String DecodeXMLString(LPCTSTR s)
+XS_String DecodeXMLString(const XS_String& str)
 {
-	LPTSTR buffer = (LPTSTR)alloca(sizeof(TCHAR)*_tcslen(s));
-	LPTSTR o = buffer;
+	LPCXSSTR s = str.c_str();
+	LPXSSTR buffer = (LPXSSTR)alloca(sizeof(XS_CHAR)*XS_len(s));
+	LPXSSTR o = buffer;
 
-	for(LPCTSTR p=s; *p; ++p)
+	for(LPCXSSTR p=s; *p; ++p)
 		if (*p == '&') {
-			if (!_tcsnicmp(p+1, TEXT("amp;"), 4)) {
+			if (!XS_nicmp(p+1, XS_TEXT("amp;"), 4)) {
 				*o++ = '&';
 				p += 4;
-			} else if (!_tcsnicmp(p+1, TEXT("lt;"), 3)) {
+			} else if (!XS_nicmp(p+1, XS_TEXT("lt;"), 3)) {
 				*o++ = '<';
 				p += 3;
-			} else if (!_tcsnicmp(p+1, TEXT("gt;"), 3)) {
+			} else if (!XS_nicmp(p+1, XS_TEXT("gt;"), 3)) {
 				*o++ = '>';
 				p += 3;
 			} else
