@@ -319,7 +319,8 @@ VOID MmInit1(ULONG FirstKernelPhysAddress,
 	     ULONG LastKernelPhysAddress,
 	     ULONG LastKernelAddress,
        PADDRESS_RANGE BIOSMemoryMap,
-       ULONG AddressRangeCount);
+       ULONG AddressRangeCount,
+       ULONG MaxMemInMeg);
 VOID MmInit2(VOID);
 VOID MmInit3(VOID);
 NTSTATUS MmInitPagerThread(VOID);

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.46 2003/05/17 19:16:03 ekohl Exp $
+/* $Id: mminit.c,v 1.47 2003/06/14 17:46:24 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -209,7 +209,8 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
 	     ULONG LastKrnlPhysAddr,
 	     ULONG LastKernelAddress,
 	     PADDRESS_RANGE BIOSMemoryMap,
-	     ULONG AddressRangeCount)
+	     ULONG AddressRangeCount,
+	     ULONG MaxMem)
 /*
  * FUNCTION: Initalize memory managment
  */
@@ -225,7 +226,6 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
 		  LastKrnlPhysAddr,
 		  LastKernelAddress);
 
-   MmInitGlobalKernelPageDirectory();
 
    if ((BIOSMemoryMap != NULL) && (AddressRangeCount > 0))
      {
@@ -245,6 +245,11 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
 	  }
      }
 
+   if (KeLoaderBlock.MemHigher >= (MaxMem - 1) * 1024)
+     {
+        KeLoaderBlock.MemHigher = (MaxMem - 1) * 1024;
+     }
+
    /*
     * FIXME: Set this based on the system command line
     */
@@ -252,6 +257,8 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
    MmUserProbeAddress = (PVOID)0x7fff0000;
    MmHighestUserAddress = (PVOID)0x7ffeffff;
    
+   MmInitGlobalKernelPageDirectory();
+
    /*
     * Initialize memory managment statistics
     */

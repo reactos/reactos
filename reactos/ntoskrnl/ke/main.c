@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.160 2003/06/07 16:16:39 chorns Exp $
+/* $Id: main.c,v 1.161 2003/06/14 17:46:24 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -314,6 +314,8 @@ ExpInitializeExecutive(VOID)
   CHAR str[50];
   NTSTATUS Status;
   BOOLEAN SetupBoot;
+  PCHAR p1, p2;
+  ULONG MaxMem;
 
   /*
    * Fail at runtime if someone has changed various structures without
@@ -343,12 +345,41 @@ ExpInitializeExecutive(VOID)
   KeLowerIrql(DISPATCH_LEVEL);
   
   NtEarlyInitVdm();
-  
+
+  p1 = (PCHAR)KeLoaderBlock.CommandLine;
+
+  MaxMem = 0;
+  while(*p1 && (p2 = strchr(p1, '/')))
+  {
+     p2++;
+     if (!_strnicmp(p2, "MAXMEM", 6))
+     {
+        p2 += 6;
+        while (isspace(*p2)) p2++;
+	if (*p2 == '=')
+	{
+	   p2++;
+	   while(isspace(*p2)) p2++;
+	   if (isdigit(*p2))
+	   {
+	      while (isdigit(*p2))
+	      {
+	         MaxMem = MaxMem * 10 + *p2 - '0';
+		 p2++;
+	      }
+	      break;
+	   }
+	}
+     }
+     p1 = p2;
+  }
+
   MmInit1(FirstKrnlPhysAddr,
 	  LastKrnlPhysAddr,
 	  LastKernelAddress,
 	  (PADDRESS_RANGE)&KeMemoryMap,
-	  KeMemoryMapRangeCount);
+	  KeMemoryMapRangeCount,
+	  MaxMem > 8 ? MaxMem : 4096);
 
   /* Import ANSI code page table */
   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
