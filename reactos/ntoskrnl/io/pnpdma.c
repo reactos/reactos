@@ -1,4 +1,4 @@
-/* $Id: pnpdma.c,v 1.8 2004/10/19 19:37:45 navaraf Exp $
+/* $Id: pnpdma.c,v 1.9 2004/10/23 17:32:51 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -14,13 +14,12 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-
 #ifdef __USE_W32API
 #include <initguid.h>
 #else
 #include <ole32/guiddef.h>
 #endif
-DEFINE_GUID(GUID_BUS_INTERFACE_STANDARD, 0x496B8280L, 0x6F25, 0x11D0, 0xBE, 0xAF, 0x08, 0x00, 0x2B, 0xE2, 0x09, 0x2F);
+#include <ddk/wdmguid.h>
 
 typedef struct _DMA_ADAPTER_INTERNAL {
   USHORT Version;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.46 2004/10/23 14:46:04 ekohl Exp $
+/* $Id: io.h,v 1.47 2004/10/23 17:32:50 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -78,14 +78,14 @@ typedef struct _DEVICE_NODE
 //  PNP_DEVNODE_STATE State;
 //  PNP_DEVNODE_STATE PreviousState;
 //  PNP_DEVNODE_STATE StateHistory[20];
-  UINT StateHistoryEntry;
+//  UINT StateHistoryEntry;
   /* ? */
   INT CompletionStatus;
   /* ? */
   PIRP PendingIrp;
   /* See DNF_* flags below (WinDBG documentation has WRONG values) */
   ULONG Flags;
-  /* See DNUF_* flags below */
+  /* See DNUF_* flags below (and IRP_MN_QUERY_PNP_DEVICE_STATE) */
   ULONG UserFlags;
   /* See CM_PROB_* values are defined in cfg.h */
   ULONG Problem;
@@ -121,9 +121,14 @@ typedef struct _DEVICE_NODE
   USHORT QueryTranslatorMask;
   USHORT NoArbiterMask;
   USHORT QueryArbiterMask;
-  ULONG OverUsed1;
-  ULONG OverUsed2;
-  /* See IRP_MN_QUERY_RESOURCES. */
+  union {
+    struct _DEVICE_NODE *LegacyDeviceNode;
+    PDEVICE_RELATIONS PendingDeviceRelations;
+  } OverUsed1;
+  union {
+    struct _DEVICE_NODE *NextResourceDeviceNode;
+  } OverUsed2;
+  /* See IRP_MN_QUERY_RESOURCES/IRP_MN_FILTER_RESOURCES. */
   PCM_RESOURCE_LIST BootResources;
   /* See the bitfields in DEVICE_CAPABILITIES structure. */
   ULONG CapabilityFlags;

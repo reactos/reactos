@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.81 2004/10/23 15:17:35 blight Exp $
+/* $Id: device.c,v 1.82 2004/10/23 17:32:50 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -63,8 +63,9 @@ IopInitializeDevice(
 
       DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
 
+      /* FIXME: Should be DeviceNode->ResourceList */
       Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->BootResources;
-      /* FIXME: Translate the resource list */
+      /* FIXME: Should be DeviceNode->ResourceListTranslated */
       Stack.Parameters.StartDevice.AllocatedResourcesTranslated = NULL;
 
       Status = IopInitiatePnpIrp(

@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.46 2004/10/23 14:52:51 blight Exp $
+/* $Id: pnpmgr.c,v 1.47 2004/10/23 17:32:51 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -13,14 +13,9 @@
 
 #include <ntoskrnl.h>
 #include <ole32/guiddef.h>
-#ifdef DEFINE_GUID
-DEFINE_GUID(GUID_CLASS_COMPORT,          0x86e0d1e0L, 0x8089, 0x11d0, 0x9c, 0xe4, 0x08, 0x00, 0x3e, 0x30, 0x1f, 0x73);
-DEFINE_GUID(GUID_SERENUM_BUS_ENUMERATOR, 0x4D36E978L, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18);
-#endif // DEFINE_GUID
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 
@@ -77,7 +72,7 @@ IoGetDeviceProperty(
   {
     case DevicePropertyBusNumber:
       Length = sizeof(ULONG);
-      Data = &DeviceNode->BusNumber;
+      Data = &DeviceNode->ChildBusNumber;
       break;
 
     /* Complete, untested */
@@ -102,7 +97,7 @@ IoGetDeviceProperty(
 
     case DevicePropertyLegacyBusType:
       Length = sizeof(INTERFACE_TYPE);
-      Data = &DeviceNode->InterfaceType;
+      Data = &DeviceNode->ChildInterfaceType;
       break;
 
     case DevicePropertyAddress:
@@ -221,8 +216,8 @@ IoGetDeviceProperty(
       Length = 0;
       if (DeviceNode->BootResources->Count != 0)
       {
-	Length = sizeof(CM_RESOURCE_LIST) +
-		 ((DeviceNode->BootResources->Count - 1) * sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
+	Length = FIELD_OFFSET(CM_RESOURCE_LIST, List) +
+		 DeviceNode->BootResources->Count * sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
       }
       Data = &DeviceNode->BootResources;
       break;
@@ -232,8 +227,8 @@ IoGetDeviceProperty(
       Length = 0;
       if (DeviceNode->BootResources->Count != 0)
       {
-	Length = sizeof(CM_RESOURCE_LIST) +
-		 ((DeviceNode->BootResources->Count - 1) * sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
+	Length = FIELD_OFFSET(CM_RESOURCE_LIST, List) +
+		 DeviceNode->BootResources->Count * sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
       }
       Data = &DeviceNode->BootResources;
       break;
@@ -1172,8 +1167,8 @@ IopActionInterrogateDeviceStack(
       PPNP_BUS_INFORMATION BusInformation =
          (PPNP_BUS_INFORMATION)IoStatusBlock.Information;
 
-      DeviceNode->BusNumber = BusInformation->BusNumber;
-      DeviceNode->InterfaceType = BusInformation->LegacyBusType;
+      DeviceNode->ChildBusNumber = BusInformation->BusNumber;
+      DeviceNode->ChildInterfaceType = BusInformation->LegacyBusType;
       memcpy(&DeviceNode->BusTypeGuid,
              &BusInformation->BusTypeGuid,
              sizeof(GUID));
@@ -1183,8 +1178,8 @@ IopActionInterrogateDeviceStack(
    {
       DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
 
-      DeviceNode->BusNumber = -1;
-      DeviceNode->InterfaceType = -1;
+      DeviceNode->ChildBusNumber = -1;
+      DeviceNode->ChildInterfaceType = -1;
       memset(&DeviceNode->BusTypeGuid,
              0,
              sizeof(GUID));
