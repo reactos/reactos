@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.79 2003/08/06 16:47:35 weiden Exp $
+/* $Id: window.c,v 1.80 2003/08/06 18:43:58 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2199,10 +2199,10 @@ NtUserDrawMenuBarTemp(
   HDC hDC,
   PRECT hRect,
   HMENU hMenu,
-  DWORD Unknown4)
+  HFONT hFont)
 {
+  /* we'll use this function just for caching the menu bar */
   UNIMPLEMENTED
-
   return 0;
 }
 

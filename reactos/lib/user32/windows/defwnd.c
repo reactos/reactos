@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.61 2003/08/06 13:17:43 weiden Exp $
+/* $Id: defwnd.c,v 1.62 2003/08/06 18:43:57 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -449,6 +449,7 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   RECT rect;
   ULONG Style;
   ULONG ExStyle;
+  int wFrame = 0;
 
   Active = GetWindowLongW(hWnd, GWL_STYLE) & WIN_NCACTIVATED;
   Style = GetWindowLong(hWnd, GWL_STYLE);
@@ -471,10 +472,12 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   if (UserHasThickFrameStyle(Style, ExStyle))
     {
       UserDrawFrameNC(hWnd, &rect, FALSE, Active);
+      wFrame = GetSystemMetrics(SM_CXSIZEFRAME);
     }
   else if (UserHasDlgFrameStyle(Style, ExStyle))
     {
       UserDrawFrameNC(hWnd, &rect, TRUE, Active);
+      wFrame = GetSystemMetrics(SM_CXDLGFRAME);
     }
   if (Style & WS_CAPTION)
     {
@@ -490,6 +493,8 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
     {
       RECT r = rect;
       r.bottom = rect.top + GetSystemMetrics(SM_CYMENU);
+      r.left += wFrame;
+      r.right -= wFrame;
       rect.top += MenuDrawMenuBar(hDC, &r, hWnd, FALSE);
     }
 

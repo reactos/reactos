@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.19 2003/08/06 13:17:43 weiden Exp $
+/* $Id: menu.c,v 1.20 2003/08/06 18:43:57 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -302,59 +302,13 @@ MenuGetMenuBarHeight(HWND hWnd, ULONG MenuBarWidth, LONG OrgX, LONG OrgY)
 UINT
 MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
 {
-  HFONT hFontOld = SelectObject(hDC, hMenuFont);
-  //DrawTextA(hDC, "This is the menu bar", 19, Rect, DT_SINGLELINE);
-  SelectObject(hDC, hFontOld);
-  return(GetSystemMetrics(SM_CYMENU));
-  /*
-  ULONG MenuID;
-  PPOPUP_MENU Menu;
-  HFONT hFontOld;
-  ULONG i;
+  /* FIXME cache menu bar items using NtUserDrawMenuBarTemp() */
 
-  MenuID = GetWindowLong(hWnd, GWL_ID);
-  Menu = MenuGetMenu((HMENU)MenuID);
+  /* FIXME select menu font first */
+   
+  DrawTextW(hDC, L"FIXME: Draw Menubar", -1, Rect, DT_SINGLELINE | DT_VCENTER);
 
-  if (Menu == NULL || Rect == NULL)
-    {
-      return(GetSystemMetrics(SM_CYMENU));
-    }
-
-  hFontOld = SelectObject(hDC, hMenuFont);
-
-  if (Menu->Height == 0)
-    {
-      MenuMenuBarCalcSize(hDC, Rect, Menu, hWnd);
-    }
-
-  Rect->bottom = Rect->top + Menu->Height;
-
-  if (!Draw)
-    {
-      SelectObject(hDC, hFontOld);
-      return(Menu->Height);
-    }
-
-  FillRect(hDC, Rect, GetSysColorBrush(COLOR_MENU));
-
-  SelectObject(hDC, GetSysColorPen(COLOR_WINDOWFRAME));
-  MoveToEx(hDC, Rect->left, Rect->bottom, NULL);
-  LineTo(hDC, Rect->right, Rect->bottom);
-
-  if (Menu->NrItems == 0)
-    {
-      SelectObject(hDC, hFontOld);
-      return(GetSystemMetrics(SM_CYMENU));
-    }
-
-  for (i = 0; i < Menu->NrItems; i++)
-    {
-      MenuDrawMenuItem(hWnd, (HMENU)MenuID, hWnd, hDC,
-		       Menu->Items + i, Menu->Height, TRUE, ODA_DRAWENTIRE);
-    }
-
-  SelectObject(hDC, hFontOld);
-  return(Menu->Height);*/
+  return(Rect->bottom - Rect->top);
 }
 
 

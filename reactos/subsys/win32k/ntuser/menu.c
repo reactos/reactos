@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.11 2003/08/06 13:17:44 weiden Exp $
+/* $Id: menu.c,v 1.12 2003/08/06 18:43:58 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -101,7 +101,7 @@ CleanupMenuImpl(VOID)
   return(STATUS_SUCCESS);
 }
 
-#if 1
+#if 0
 void FASTCALL
 DumpMenuItemList(PMENU_ITEM MenuItem)
 {
@@ -532,7 +532,7 @@ W32kInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, WINBOOL fByPosition,
   }
   
   pos = W32kInsertMenuItemToList(MenuObject, MenuItem, pos);
-  DumpMenuItemList(MenuObject->MenuItemList);
+
   return pos >= 0;
 }
 

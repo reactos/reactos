@@ -439,7 +439,7 @@ NtUserDrawMenuBarTemp(
   HDC hDC,
   PRECT hRect,
   HMENU hMenu,
-  DWORD Unknown4);
+  HFONT hFont);
 
 DWORD
 STDCALL
