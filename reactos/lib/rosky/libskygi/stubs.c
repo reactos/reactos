@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.5 2004/08/13 11:24:07 weiden Exp $
+/* $Id: stubs.c,v 1.6 2004/08/13 12:29:19 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         SkyOS GI library
@@ -230,61 +230,6 @@ int __cdecl
 GI_EnableMouseTracking(HANDLE hWnd)
 {
   STUB("GI_EnableMouseTracking(0x%x) returns 0!\n", hWnd);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-HANDLE __cdecl
-GI_GetTopLevelWindow(HANDLE hWnd)
-{
-  STUB("GI_GetTopLevelWindow(0x%x) returns NULL!\n", hWnd);
-  return NULL;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
-GI_GetWindowX(HANDLE hWnd)
-{
-  STUB("GI_GetWindowX(0x%x) returns 0!\n", hWnd);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
-GI_GetWindowY(HANDLE hWnd)
-{
-  STUB("GI_GetWindowY(0x%x) returns 0!\n", hWnd);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
-GI_GetWindowWidth(HANDLE hWnd)
-{
-  STUB("GI_GetWindowWidth(0x%x) returns 0!\n", hWnd);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
-GI_GetWindowHeight(HANDLE hWnd)
-{
-  STUB("GI_GetWindowHeight(0x%x) returns 0!\n", hWnd);
   return 0;
 }
 

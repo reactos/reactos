@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: libskygi.c,v 1.4 2004/08/13 11:24:07 weiden Exp $
+/* $Id: libskygi.c,v 1.5 2004/08/13 12:29:18 weiden Exp $
  *
  * PROJECT:         SkyOS GI library
  * FILE:            lib/libskygi/libskygi.c
@@ -546,6 +546,111 @@ GI_CreateApplicationStruct(void)
 /*
  * @implemented
  */
+int __cdecl
+GI_GetWindowX(s_window *win)
+{
+  RECT rc;
+  PSKY_WINDOW skywnd = (PSKY_WINDOW)win;
+  if((skywnd != NULL) && GetWindowRect(skywnd->hWnd, &rc))
+  {
+    MapWindowPoints(HWND_DESKTOP, GetParent(skywnd->hWnd), (LPPOINT)&rc, 2);
+    DBG("GI_GetWindowS(0x%x) returns %d!\n", win, rc.left);
+    return rc.left;
+  }
+  #if DEBUG
+  else
+  {
+    DBG("GI_GetWindowS(0x%x) failed!\n", win);
+  }
+  #endif
+  return 0;
+}
+
+
+/*
+ * @implemented
+ */
+int __cdecl
+GI_GetWindowY(s_window *win)
+{
+  RECT rc;
+  PSKY_WINDOW skywnd = (PSKY_WINDOW)win;
+  if((skywnd != NULL) && GetWindowRect(skywnd->hWnd, &rc))
+  {
+    MapWindowPoints(HWND_DESKTOP, GetParent(skywnd->hWnd), (LPPOINT)&rc, 2);
+    DBG("GI_GetWindowY(0x%x) returns %d!\n", win, rc.top);
+    return rc.left;
+  }
+  #if DEBUG
+  else
+  {
+    DBG("GI_GetWindowY(0x%x) failed!\n", win);
+  }
+  #endif
+  return 0;
+}
+
+
+/*
+ * @implemented
+ */
+int __cdecl
+GI_GetWindowWidth(s_window *win)
+{
+  RECT rc;
+  PSKY_WINDOW skywnd = (PSKY_WINDOW)win;
+  if((skywnd != NULL) && GetWindowRect(skywnd->hWnd, &rc))
+  {
+    DBG("GI_GetWindowWidth(0x%x) returns %d!\n", win, (rc.right - rc.left));
+    return (rc.right - rc.left);
+  }
+  #if DEBUG
+  else
+  {
+    DBG("GI_GetWindowWidth(0x%x) failed!\n", win);
+  }
+  #endif
+  return 0;
+}
+
+
+/*
+ * @implemented
+ */
+int __cdecl
+GI_GetWindowHeight(s_window *win)
+{
+  RECT rc;
+  PSKY_WINDOW skywnd = (PSKY_WINDOW)win;
+  if((skywnd != NULL) && GetWindowRect(skywnd->hWnd, &rc))
+  {
+    DBG("GI_GetWindowHeight(0x%x) returns %d!\n", win, (rc.bottom - rc.top));
+    return (rc.bottom - rc.top);
+  }
+  #if DEBUG
+  else
+  {
+    DBG("GI_GetWindowHeight(0x%x) failed!\n", win);
+  }
+  #endif
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+s_window* __cdecl
+GI_GetTopLevelWindow(s_window *win)
+{
+  STUB("GI_GetTopLevelWindow(0x%x) returns 0x%x!\n", win, win);
+  return win;
+}
+
+
+/*
+ * @implemented
+ */
 DIB* __cdecl
 GI_create_DIB(void *Data,
               unsigned int Width,
@@ -618,12 +723,18 @@ GC* __cdecl
 GC_create_connected(unsigned int Type,
                     unsigned int Width,
                     unsigned int Height,
-                    HANDLE Win)
+                    s_window *Win)
 {
    SKY_GC *Gc;
 
    DBG("GC_create_connected(0x%x, 0x%x, 0x%x, 0x%x)\n",
        Type, Width, Height, Win);
+
+   if(Win == NULL)
+   {
+     DBG("GC_create_connected: no window specified! returned NULL!\n");
+     return NULL;
+   }
 
    Gc = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SKY_GC));
    if (Gc == NULL)
@@ -659,6 +770,7 @@ GC_create_connected(unsigned int Type,
    if (Gc->hDC == NULL)
    {
       HeapFree(GetProcessHeap(), 0, Gc);
+      return NULL;
    }
    else
    {
@@ -677,9 +789,19 @@ int __cdecl
 GC_set_fg_color(GC *Gc,
                 COLOR Color)
 {
-   Gc->fg_color = Color;
-   SetDCPenColor(((PSKY_GC)Gc)->hDC, Color);
-   return 1;
+   if(Gc != NULL)
+   {
+     Gc->fg_color = Color;
+     SetDCPenColor(((PSKY_GC)Gc)->hDC, Color);
+     return 1;
+   }
+   #if DEBUG
+   else
+   {
+     DBG("GC_set_fg_color: Gc == NULL!\n");
+   }
+   #endif
+   return 0;
 }
 
 
@@ -690,9 +812,19 @@ int __cdecl
 GC_set_bg_color(GC *Gc,
                 COLOR Color)
 {
-   Gc->bg_color = Color;
-   SetDCBrushColor(((PSKY_GC)Gc)->hDC, Color);
-   return 1;
+   if(Gc != NULL)
+   {
+     Gc->bg_color = Color;
+     SetDCBrushColor(((PSKY_GC)Gc)->hDC, Color);
+     return 1;
+   }
+   #if DEBUG
+   else
+   {
+     DBG("GC_set_bg_color: Gc == NULL!\n");
+   }
+   #endif
+   return 0;
 }
 
 
@@ -704,8 +836,18 @@ GC_draw_pixel(GC *Gc,
               int X,
               int Y)
 {
-   SetPixelV(((PSKY_GC)Gc)->hDC, X, Y, Gc->fg_color);
-   return 1;
+   if(Gc != NULL)
+   {
+     SetPixelV(((PSKY_GC)Gc)->hDC, X, Y, Gc->fg_color);
+     return 1;
+   }
+   #if DEBUG
+   else
+   {
+     DBG("GC_draw_pixel: Gc == NULL!\n");
+   }
+   #endif
+   return 0;
 }
 
 
@@ -757,17 +899,32 @@ GC_draw_rect_fill(GC *Gc,
                  int Width,
                  int Height)
 {
-   HBRUSH hBrush;
-   RECT Rect = {X, Y, X + Width, Y + Height};
-
    DBG("GC_draw_rect_fill(0x%x, 0x%x, 0x%x, 0x%x, 0x%x)\n",
        Gc, X, Y, Width, Height);
 
-   hBrush = CreateSolidBrush(Gc->bg_color);
-   FillRect(((PSKY_GC)Gc)->hDC, &Rect, hBrush);
-   DeleteObject(hBrush);
+   if(Gc != NULL)
+   {
+     HBRUSH hBrush;
+     RECT Rect;
 
-   return 1;
+     Rect.left = X;
+     Rect.top = Y;
+     Rect.right = X + Width;
+     Rect.bottom = Y + Height;
+
+     hBrush = CreateSolidBrush(Gc->bg_color);
+     FillRect(((PSKY_GC)Gc)->hDC, &Rect, hBrush);
+     DeleteObject(hBrush);
+
+     return 1;
+   }
+   #if DEBUG
+   else
+   {
+     DBG("GC_draw_rect_fill: Gc == NULL!\n");
+   }
+   #endif
+   return 0;
 }
 
 
@@ -782,9 +939,19 @@ GC_draw_line(GC *Gc,
              int y2)
 {
    DBG("GC_draw_line(0x%x, 0x%x, 0x%x, 0x%x, 0x%x)\n", Gc, x1, y1, x2, y2);
-   MoveToEx(((PSKY_GC)Gc)->hDC, x1, y1, NULL);
-   LineTo(((PSKY_GC)Gc)->hDC, x2, y2);
-   return 1;
+   if(Gc != NULL)
+   {
+     MoveToEx(((PSKY_GC)Gc)->hDC, x1, y1, NULL);
+     LineTo(((PSKY_GC)Gc)->hDC, x2, y2);
+     return 1;
+   }
+   #if DEBUG
+   else
+   {
+     DBG("GC_draw_line: Gc == NULL!\n");
+   }
+   #endif
+   return 0;
 }
 
 
@@ -795,9 +962,19 @@ int __cdecl
 GC_destroy(GC *Gc)
 {
    DBG("GC_destroy(0x%x)\n", Gc);
-   DeleteDC(((PSKY_GC)Gc)->hDC);
-   HeapFree(GetProcessHeap(), 0, Gc);
-   return 1;
+   if(Gc != NULL)
+   {
+     DeleteDC(((PSKY_GC)Gc)->hDC);
+     HeapFree(GetProcessHeap(), 0, Gc);
+     return 1;
+   }
+   #if DEBUG
+   else
+   {
+     DBG("GC_destroy: Gc == NULL!\n");
+   }
+   #endif
+   return 0;
 }
 
 /* EOF */
