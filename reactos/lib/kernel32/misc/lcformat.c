@@ -33,7 +33,7 @@
 #include <k32.h>
 
 #include "wine/config.h"
-#include "wine/port.h"
+//#include "wine/port.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
 
