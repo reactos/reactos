@@ -1,4 +1,4 @@
- /* $Id: guicheck.c,v 1.9 2002/09/17 23:43:28 dwelch Exp $
+ /* $Id: guicheck.c,v 1.10 2003/03/06 23:57:03 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -34,13 +34,28 @@ static ULONG NrGuiApplicationsRunning = 0;
 /* FUNCTIONS *****************************************************************/
 
 VOID
-W32kGraphicsCheck(VOID)
+W32kGraphicsCheck(BOOL Create)
 {
-  if (NrGuiApplicationsRunning == 0)
+  if (Create)
     {
-      W32kInitializeDesktopGraphics();
+      if (0 == NrGuiApplicationsRunning)
+	{
+	  W32kInitializeDesktopGraphics();
+	}
+      NrGuiApplicationsRunning++;
     }
-  NrGuiApplicationsRunning++;
+  else
+    {
+      if (0 < NrGuiApplicationsRunning)
+	{
+	  NrGuiApplicationsRunning--;
+	}
+      if (0 == NrGuiApplicationsRunning)
+	{
+	  W32kEndDesktopGraphics();
+	}
+    }
+    
 }
 
 VOID

@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.11 2002/10/31 00:03:31 dwelch Exp $
+/* $Id: winsta.c,v 1.12 2003/03/06 23:57:03 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -845,6 +845,18 @@ W32kInitializeDesktopGraphics(VOID)
   GDIOBJ_MarkObjectGlobal(ScreenDeviceContext);
   EnableMouse(ScreenDeviceContext);
   NtUserAcquireOrReleaseInputOwnership(FALSE);
+}
+
+VOID
+W32kEndDesktopGraphics(VOID)
+{
+  NtUserAcquireOrReleaseInputOwnership(TRUE);
+  EnableMouse(FALSE);
+  if (NULL != ScreenDeviceContext)
+    {
+      W32kDeleteDC(ScreenDeviceContext);
+      ScreenDeviceContext = NULL;
+    }
 }
 
 HDC

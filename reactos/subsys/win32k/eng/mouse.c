@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.17 2003/02/15 19:16:33 gvg Exp $
+/* $Id: mouse.c,v 1.18 2003/03/06 23:57:02 gvg Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -260,7 +260,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     }
 
   /* If the mouse moved then move the pointer. */
-  if (mouse_cx != 0 || mouse_cy != 0)
+  if ((mouse_cx != 0 || mouse_cy != 0) && MouseEnabled)
     {
       mouse_x += mouse_cx;
       mouse_y += mouse_cy;

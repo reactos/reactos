@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.28 2003/01/16 17:55:36 ekohl Exp $
+/* $Id: catch.c,v 1.29 2003/03/06 23:57:02 gvg Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -147,7 +147,9 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	   * If RtlpDispatchException() does not handle the exception then 
 	   * bugcheck 
 	   */
+#ifdef TODO
 	  if (Value != ExceptionContinueExecution)
+#endif
 	    {
 	      KeBugCheck (KMODE_EXCEPTION_NOT_HANDLED);	      
 	    }

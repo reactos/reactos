@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.18 2003/03/06 21:03:49 gvg Exp $
+/* $Id: window.c,v 1.19 2003/03/06 23:57:00 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -472,7 +472,10 @@ DeferWindowPos(HDWP hWinPosInfo,
 WINBOOL STDCALL
 DestroyWindow(HWND hWnd)
 {
-  return FALSE;
+  SendMessageW(hWnd, WM_DESTROY, 0, 0);
+  SendMessageW(hWnd, WM_NCDESTROY, 0, 0);
+
+  return NtUserDestroyWindow(hWnd);
 }
 
 WINBOOL STDCALL

@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.27 2003/03/04 13:19:01 rcampbell Exp $
+/* $Id: defwnd.c,v 1.28 2003/03/06 23:57:00 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -550,10 +550,15 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 	  if ((Style & WS_SYSMENU) && !(ExStyle & WS_EX_TOOLWINDOW))
 	    {
 	      WindowRect.left += GetSystemMetrics(SM_CXSIZE);
+	      WindowRect.right -= GetSystemMetrics(SM_CXSIZE) + 1;
 	    }
 	  if (Point.x <= WindowRect.left)
 	    {
 	      return(HTSYSMENU);
+	    }
+	  if (WindowRect.right <= Point.x)
+	    {
+	      return(HTCLOSE);
 	    }
 
 	  if (Style & WS_MAXIMIZEBOX)
@@ -774,6 +779,7 @@ DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
       SendMessageA(hWnd, WM_SYSCOMMAND, SC_SIZE + wParam - 2, lParam);
       break;
     }
+
   return(0);
 }
 
@@ -781,6 +787,19 @@ LRESULT
 DefWndHandleLButtonDblClkNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   /* FIXME: Implement this. */
+  return(0);
+}
+
+LRESULT
+DefWndHandleLButtonUpNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+  switch (wParam)
+    {
+    case HTCLOSE:
+      SendMessageA(hWnd, WM_CLOSE, 0, 0);
+      break;
+    }
+
   return(0);
 }
 
@@ -976,6 +995,11 @@ User32DefWindowProc(HWND hWnd,
     case WM_NCLBUTTONDOWN:
       {
 	return(DefWndHandleLButtonDownNC(hWnd, wParam, lParam));
+      }
+
+    case WM_NCLBUTTONUP:
+      {
+	return(DefWndHandleLButtonUpNC(hWnd, wParam, lParam));
       }
 
     case WM_LBUTTONDBLCLK:

@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.11 2002/10/31 00:03:31 dwelch Exp $
+/* $Id: message.c,v 1.12 2003/03/06 23:57:03 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -325,9 +325,23 @@ NtUserPostMessage(HWND hWnd,
 		  WPARAM wParam,
 		  LPARAM lParam)
 {
-  UNIMPLEMENTED;
+  PUSER_MESSAGE_QUEUE ThreadQueue;
+
+  if (WM_QUIT == Msg)
+    {
+    ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+
+    ThreadQueue->QuitPosted = TRUE;
+    ThreadQueue->QuitExitCode = wParam;
+
+    return TRUE;
+    }
+  else
+    {
+    UNIMPLEMENTED;
     
-  return 0;
+    return FALSE;
+    }
 }
 
 BOOL STDCALL

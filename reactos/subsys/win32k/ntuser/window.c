@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.24 2003/03/06 21:03:49 gvg Exp $
+/* $Id: window.c,v 1.25 2003/03/06 23:57:03 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -370,7 +370,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 
   /* Initialize gui state if necessary. */
   W32kGuiCheck();
-  W32kGraphicsCheck();
+  W32kGraphicsCheck(TRUE);
 
   if (!RtlCreateUnicodeString(&WindowName, lpWindowName->Buffer))
     {
@@ -645,7 +645,7 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
 BOOLEAN STDCALL
 NtUserDestroyWindow(HWND Wnd)
 {
-  UNIMPLEMENTED
+  W32kGraphicsCheck(FALSE);
 
   return 0;
 }

@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.11 2002/09/17 23:46:23 dwelch Exp $
+/* $Id: message.c,v 1.12 2003/03/06 23:57:00 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -309,6 +309,7 @@ STDCALL
 PostQuitMessage(
   int nExitCode)
 {
+  (void) NtUserPostMessage(NULL, WM_QUIT, nExitCode, 0);
 }
 
 WINBOOL

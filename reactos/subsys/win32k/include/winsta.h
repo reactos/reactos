@@ -36,6 +36,8 @@ PDESKTOP_OBJECT
 W32kGetActiveDesktop(VOID);
 VOID
 W32kInitializeDesktopGraphics(VOID);
+VOID
+W32kEndDesktopGraphics(VOID);
 HDC
 W32kGetScreenDC(VOID);
 
