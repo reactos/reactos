@@ -9,9 +9,9 @@
 #ifndef __VERSION_H
 #define __VERSION_H
 
-#define KERNEL_VERSION   "0.0.12"
+#define KERNEL_VERSION   "0.0.13"
 #define KERNEL_MAJOR_VERSION    0
 #define KERNEL_MINOR_VERSION    0
-#define KERNEL_PATCH_LEVEL      12
+#define KERNEL_PATCH_LEVEL      13
 
 #endif
