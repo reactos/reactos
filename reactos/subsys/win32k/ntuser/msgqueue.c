@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.83 2004/04/13 13:50:31 weiden Exp $
+/* $Id: msgqueue.c,v 1.84 2004/04/14 17:19:38 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -249,65 +249,73 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   PWINDOW_OBJECT Window = NULL;
   HWND CaptureWin;
   POINT Point;
-
+  
+  ThreadQueue = PsGetWin32Thread()->MessageQueue;
+  
   if (Msg == WM_LBUTTONDOWN || 
       Msg == WM_MBUTTONDOWN ||
       Msg == WM_RBUTTONDOWN ||
       Msg == WM_XBUTTONDOWN)
   {
-    *HitTest = WinPosWindowFromPoint(ScopeWin, !FromGlobalQueue, &Message->Msg.pt, &Window);
-    if(Window && FromGlobalQueue && (PsGetWin32Thread()->MessageQueue == Window->MessageQueue))
-    {
-      *HitTest = IntSendMessage(Window->Self, WM_NCHITTEST, 0, 
-                                MAKELONG(Message->Msg.pt.x, Message->Msg.pt.y));
-    }
+    *HitTest = WinPosWindowFromPoint(ScopeWin, ThreadQueue, &Message->Msg.pt, &Window);
     /*
     **Make sure that we have a window that is not already in focus
     */
-    if (Window)
+    if (Window && (Window->Self != IntGetFocusWindow()))
     {
-      if(Window->Self != IntGetFocusWindow())
+      if(ThreadQueue == Window->MessageQueue)
       {
+        /* only get a more detailed hit-test if the window is in the same thread! */
+        *HitTest = IntSendMessage(Window->Self, WM_NCHITTEST, 0, 
+                                  MAKELONG(Message->Msg.pt.x, Message->Msg.pt.y));
+      }
+      if(*HitTest != (USHORT)HTTRANSPARENT)
+      {
+        LRESULT Result;
         
-        if(*HitTest != (USHORT)HTTRANSPARENT)
-        {
-          LRESULT Result;
+        /* Sending a message to another thread might lock up our own when it's 
+           hung, so just send messages to our own thread */
+        if(Window->MessageQueue == ThreadQueue)
           Result = IntSendMessage(Window->Self, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(Window->Self), (LPARAM)MAKELONG(*HitTest, Msg));
-          
-          switch (Result)
-          {
-              case MA_NOACTIVATEANDEAT:
-                  *Freed = FALSE;
-                  IntReleaseWindowObject(Window);
-                  return TRUE;
-              case MA_NOACTIVATE:
-                  break;
-              case MA_ACTIVATEANDEAT:
-                  IntMouseActivateWindow(Window);
-                  IntReleaseWindowObject(Window);
-                  *Freed = FALSE;
-                  return TRUE;
-/*              case MA_ACTIVATE:
-              case 0:*/
-              default:
-                  IntMouseActivateWindow(Window);
-                  break;
-          }
-        }
         else
         {
-          IntReleaseWindowObject(Window);
-          if(RemoveWhenFreed)
-          {
-            RemoveEntryList(&Message->ListEntry);
-          }
-          ExFreePool(Message);
-          *Freed = TRUE;
-          return(FALSE);
+          /* just post WM_MOUSEACTIVATE to the other thread */
+          NtUserPostMessage(Window->Self, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(Window->Self), (LPARAM)MAKELONG(*HitTest, Msg));
+          /* and assume that windows of other threads should always be activated. */
+          Result = MA_ACTIVATE;
+        }
+        
+        switch (Result)
+        {
+          case MA_NOACTIVATEANDEAT:
+            *Freed = FALSE;
+            IntReleaseWindowObject(Window);
+            return TRUE;
+          case MA_NOACTIVATE:
+            break;
+          case MA_ACTIVATEANDEAT:
+            IntMouseActivateWindow(Window);
+            IntReleaseWindowObject(Window);
+            *Freed = FALSE;
+            return TRUE;
+          default:
+            /* MA_ACTIVATE */
+            IntMouseActivateWindow(Window);
+            break;
         }
       }
+      else
+      {
+        IntReleaseWindowObject(Window);
+        if(RemoveWhenFreed)
+        {
+          RemoveEntryList(&Message->ListEntry);
+        }
+        ExFreePool(Message);
+        *Freed = TRUE;
+        return(FALSE);
+      }
     }
-
   }
   
   CaptureWin = IntGetCaptureWindow();
@@ -325,8 +333,8 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     {
       if(!Window)
       {
-        *HitTest = WinPosWindowFromPoint(ScopeWin, !FromGlobalQueue, &Message->Msg.pt, &Window);
-        if(Window && FromGlobalQueue && (PsGetWin32Thread()->MessageQueue == Window->MessageQueue))
+        *HitTest = WinPosWindowFromPoint(ScopeWin, ThreadQueue, &Message->Msg.pt, &Window);
+        if(Window && (ThreadQueue == Window->MessageQueue))
         {
           *HitTest = IntSendMessage(Window->Self, WM_NCHITTEST, 0, 
                                     MAKELONG(Message->Msg.pt.x, Message->Msg.pt.y));
@@ -358,7 +366,6 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     return(FALSE);
   }
   
-  ThreadQueue = PsGetWin32Thread()->MessageQueue;
   if (Window->MessageQueue != ThreadQueue)
   {
     if (! FromGlobalQueue)
@@ -379,70 +386,33 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
         ThreadQueue->MouseMoveMsg = NULL;
       }
     }
+    
+    /* lock the destination message queue, so we don't get in trouble with other
+       threads, messing with it at the same time */
     IntLockHardwareMessageQueue(Window->MessageQueue);
-    if((Message->Msg.message == WM_MOUSEMOVE) && Window->MessageQueue->MouseMoveMsg)
+    InsertTailList(&Window->MessageQueue->HardwareMessagesListHead,
+                   &Message->ListEntry);
+    if(Message->Msg.message == WM_MOUSEMOVE)
     {
-      /* we do not hold more than one WM_MOUSEMOVE message in the queue */
-      Window->MessageQueue->MouseMoveMsg->Msg = Message->Msg;
-      if(RemoveWhenFreed && FromGlobalQueue)
+      if(Window->MessageQueue->MouseMoveMsg)
       {
-        RemoveEntryList(&Message->ListEntry);
+        /* remove the old WM_MOUSEMOVE message, we're processing a more recent
+           one */
+        RemoveEntryList(&Window->MessageQueue->MouseMoveMsg->ListEntry);
+        ExFreePool(Window->MessageQueue->MouseMoveMsg);
       }
-      *Freed = TRUE;
-    }
-    else
-    {
-      InsertTailList(&Window->MessageQueue->HardwareMessagesListHead,
-                     &Message->ListEntry);
-      if(Message->Msg.message == WM_MOUSEMOVE)
-      {
-        Window->MessageQueue->MouseMoveMsg = Message;
-      }
-      *Freed = FALSE;
+      /* save the pointer to the WM_MOUSEMOVE message in the new queue */
+      Window->MessageQueue->MouseMoveMsg = Message;
     }
     IntUnLockHardwareMessageQueue(Window->MessageQueue);
-    if(*Freed)
-    {
-      ExFreePool(Message);
-    }
+    
     KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+    *Freed = FALSE;
     IntReleaseWindowObject(Window);
     return(FALSE);
   }
   
-  if (hWnd != NULL && Window->Self != hWnd &&
-      !IntIsChildWindow(hWnd, Window->Self))
-  {
-    IntLockHardwareMessageQueue(Window->MessageQueue);
-    if((Message->Msg.message == WM_MOUSEMOVE) && Window->MessageQueue->MouseMoveMsg)
-    {
-      /* we do not hold more than one WM_MOUSEMOVE message in the queue */
-      Window->MessageQueue->MouseMoveMsg->Msg = Message->Msg;
-      if(RemoveWhenFreed)
-      {
-        RemoveEntryList(&Message->ListEntry);
-      }
-      *Freed = TRUE;
-    }
-    else
-    {
-      InsertTailList(&Window->MessageQueue->HardwareMessagesListHead,
-                     &Message->ListEntry);
-      if(Message->Msg.message == WM_MOUSEMOVE)
-      {
-        Window->MessageQueue->MouseMoveMsg = Message;
-      }
-      *Freed = FALSE;
-    }
-    IntUnLockHardwareMessageQueue(Window->MessageQueue);
-    if(*Freed)
-    {
-      ExFreePool(Message);
-    }
-    KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
-    IntReleaseWindowObject(Window);
-    return(FALSE);
-  }
+  /* From here on, we're in the same message queue as the caller! */
   
   switch (Msg)
   {
@@ -487,7 +457,43 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     }
   }
   
-  /* FIXME: Check message filter. */
+  if(hWnd != NULL && Window->Self != hWnd)
+  {
+    /* Reject the message because it doesn't match the filter */
+    
+    if(FromGlobalQueue)
+    {
+      /* Lock the message queue so no other thread can mess with it.
+         Our own message queue is not locked while fetching from the global
+         queue, so we have to make sure nothing interferes! */
+      IntLockHardwareMessageQueue(Window->MessageQueue);
+      /* if we're from the global queue, we need to add our message to our
+         private queue so we don't loose it! */
+      InsertTailList(&Window->MessageQueue->HardwareMessagesListHead,
+                     &Message->ListEntry);
+    }
+    
+    if (Message->Msg.message == WM_MOUSEMOVE)
+    {
+      if(Window->MessageQueue->MouseMoveMsg)
+      {
+        /* delete the old message */
+        RemoveEntryList(&Window->MessageQueue->MouseMoveMsg->ListEntry);
+        ExFreePool(Window->MessageQueue->MouseMoveMsg);
+      }
+      /* always save a pointer to this WM_MOUSEMOVE message here because we're
+         sure that the message is in the private queue */
+      Window->MessageQueue->MouseMoveMsg = Message;
+    }
+    if(FromGlobalQueue)
+    {
+      IntUnLockHardwareMessageQueue(Window->MessageQueue);
+    }
+    
+    IntReleaseWindowObject(Window);
+    *Freed = FALSE;
+    return(FALSE);
+  }
 
   if (Remove)
     {
@@ -495,6 +501,34 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
       Message->Msg.message = Msg;
       Message->Msg.lParam = MAKELONG(Point.x, Point.y);
     }
+  
+  /* remove the reference to the current WM_MOUSEMOVE message, if this message
+     is it */
+  if (Message->Msg.message == WM_MOUSEMOVE)
+  {
+    if(FromGlobalQueue)
+    {
+      /* Lock the message queue so no other thread can mess with it.
+         Our own message queue is not locked while fetching from the global
+         queue, so we have to make sure nothing interferes! */
+      IntLockHardwareMessageQueue(Window->MessageQueue);
+      if(Window->MessageQueue->MouseMoveMsg)
+      {
+        /* delete the WM_MOUSEMOVE message in the private queue, we're dealing
+           with one that's been sent later */
+        RemoveEntryList(&Window->MessageQueue->MouseMoveMsg->ListEntry);
+        ExFreePool(Window->MessageQueue->MouseMoveMsg);
+        /* our message is not in the private queue so we can remove the pointer
+           instead of setting it to the current message we're processing */
+        Window->MessageQueue->MouseMoveMsg = NULL;
+      }
+      IntUnLockHardwareMessageQueue(Window->MessageQueue);
+    }
+    else if(Window->MessageQueue->MouseMoveMsg == Message)
+    {
+      Window->MessageQueue->MouseMoveMsg = NULL;
+    }
+  }
   
   IntReleaseWindowObject(Window);
   *Freed = FALSE;

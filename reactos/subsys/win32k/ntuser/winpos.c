@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.110 2004/04/13 23:12:30 weiden Exp $
+/* $Id: winpos.c,v 1.111 2004/04/14 17:19:38 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1368,7 +1368,7 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
 }
 
 VOID STATIC FASTCALL
-WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, BOOL SendHitTestMessage, POINT *Point,
+WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTests, POINT *Point,
 		     PWINDOW_OBJECT* Window, USHORT *HitTest)
 {
   PWINDOW_OBJECT Current;
@@ -1400,8 +1400,7 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, BOOL SendHitTestMessage, POINT *Po
           return;
         }
         
-        if(SendHitTestMessage &&
-           (Current->MessageQueue == PsGetWin32Thread()->MessageQueue))
+        if(OnlyHitTests && (Current->MessageQueue == OnlyHitTests))
         {
           *HitTest = IntSendMessage(Current->Self, WM_NCHITTEST, 0,
                                     MAKELONG(Point->x, Point->y));
@@ -1420,7 +1419,7 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, BOOL SendHitTestMessage, POINT *Po
            Point->y >= Current->ClientRect.top &&
            Point->y < Current->ClientRect.bottom)
         {
-          WinPosSearchChildren(Current, SendHitTestMessage, Point, Window, HitTest);
+          WinPosSearchChildren(Current, OnlyHitTests, Point, Window, HitTest);
           ExFreePool(List);
           return;
         }
@@ -1435,7 +1434,7 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, BOOL SendHitTestMessage, POINT *Po
 }
 
 USHORT FASTCALL
-WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, BOOL SendHitTestMessage, POINT *WinPoint, 
+WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTests, POINT *WinPoint, 
 		      PWINDOW_OBJECT* Window)
 {
   HWND DesktopWindowHandle;
@@ -1468,7 +1467,7 @@ WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, BOOL SendHitTestMessage, POINT *W
   
   HitTest = HTNOWHERE;
   
-  WinPosSearchChildren(ScopeWin, SendHitTestMessage, &Point, Window, &HitTest);
+  WinPosSearchChildren(ScopeWin, OnlyHitTests, &Point, Window, &HitTest);
 
   return ((*Window) ? HitTest : HTNOWHERE);
 }
