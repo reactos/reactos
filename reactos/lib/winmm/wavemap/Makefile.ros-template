@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.2.8.2 2004/12/13 09:39:07 hyperion Exp $
+# $Id: Makefile.ros-template,v 1.2.8.3 2004/12/13 16:18:11 hyperion Exp $
 
 TARGET_NAME = msacm
 

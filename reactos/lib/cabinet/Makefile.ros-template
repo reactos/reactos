@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.3.16.2 2004/12/13 09:38:54 hyperion Exp $
+# $Id: Makefile.ros-template,v 1.3.16.3 2004/12/13 16:18:02 hyperion Exp $
 
 TARGET_NAME = cabinet
 

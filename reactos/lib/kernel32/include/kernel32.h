@@ -43,6 +43,8 @@ extern CRITICAL_SECTION DllLock;
 
 extern UNICODE_STRING DllDirectory;
 
+extern LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter;
+
 /* FUNCTION PROTOTYPES *******************************************************/
 
 BOOL STDCALL IsConsoleHandle(HANDLE Handle);

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1.24.2 2004/12/13 09:38:57 hyperion Exp $
+# $Id: makefile,v 1.1.24.3 2004/12/13 16:18:06 hyperion Exp $
 # Kernel JavaScript
 # 
 # You can use this for various things but the most obvious is as a powerful

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: tcpip_properties.c,v 1.4.2.1 2004/12/13 09:38:55 hyperion Exp $
+/* $Id: tcpip_properties.c,v 1.4.2.2 2004/12/13 16:18:02 hyperion Exp $
  *
  * PROJECT:         ReactOS Network Control Panel
  * FILE:            lib/cpl/system/tcpip_properties.c

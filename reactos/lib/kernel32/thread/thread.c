@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.56.2.2 2004/12/13 09:38:57 hyperion Exp $
+/* $Id: thread.c,v 1.56.2.3 2004/12/13 16:18:06 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,6 +14,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <k32.h>
+#include <pseh/framebased.h>
 
 #define NDEBUG
 #include "../include/debug.h"
@@ -28,10 +29,39 @@ _except_handler(EXCEPTION_RECORD *ExceptionRecord,
 		CONTEXT *ContextRecord,
 		void * DispatcherContext)
 {
-  ExitThread(0);
+   EXCEPTION_POINTERS ExceptionInfo;
+   EXCEPTION_DISPOSITION ExceptionDisposition;
 
-  /* We should not get to here */
-  return(ExceptionContinueSearch);
+   ExceptionInfo.ExceptionRecord = ExceptionRecord;
+   ExceptionInfo.ContextRecord = ContextRecord;
+
+   if (GlobalTopLevelExceptionFilter != NULL)
+   {
+      _SEH_TRY
+      {
+         ExceptionDisposition = GlobalTopLevelExceptionFilter(&ExceptionInfo);
+      }
+      _SEH_HANDLE
+      {
+         ExceptionDisposition = UnhandledExceptionFilter(&ExceptionInfo);
+      }
+      _SEH_END;
+   }
+   else 
+   {
+      ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
+   }
+
+   if (ExceptionDisposition == EXCEPTION_EXECUTE_HANDLER)
+      ExitThread(ExceptionRecord->ExceptionCode);
+
+   /* translate EXCEPTION_XXX defines into EXCEPTION_DISPOSITION enum values */
+   if (ExceptionDisposition == EXCEPTION_CONTINUE_EXECUTION)
+     return ExceptionContinueExecution;
+   else if (ExceptionDisposition == EXCEPTION_CONTINUE_SEARCH)
+     return ExceptionContinueSearch;
+
+   return -1; /* unknown return from UnhandledExceptionFilter */
 }
 
 
@@ -50,8 +80,6 @@ ThreadStartup
     uExitCode = (lpStartAddress)(lpParameter);
   }
   __except1
-  {
-  }
 
   ExitThread(uExitCode);
 }

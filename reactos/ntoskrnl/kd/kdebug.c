@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.56.2.1 2004/12/13 09:39:11 hyperion Exp $
+/* $Id: kdebug.c,v 1.56.2.2 2004/12/13 16:18:12 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

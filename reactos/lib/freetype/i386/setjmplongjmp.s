@@ -1,4 +1,4 @@
-/* $Id: setjmplongjmp.s,v 1.1.34.2 2004/12/13 09:38:55 hyperion Exp $
+/* $Id: setjmplongjmp.s,v 1.1.34.3 2004/12/13 16:18:03 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           FreeType implementation for ReactOS

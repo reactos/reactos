@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.43.6.2 2004/12/13 09:39:06 hyperion Exp $
+/* $Id: message.c,v 1.43.6.3 2004/12/13 16:18:11 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll

@@ -1,4 +1,4 @@
-/* $Id: display_xbox.c,v 1.3 2004/12/11 14:45:00 gvg Exp $
+/* $Id: display_xbox.c,v 1.3.2.1 2004/12/13 16:18:25 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

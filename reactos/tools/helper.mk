@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.95.2.2 2004/12/13 09:39:25 hyperion Exp $
+# $Id: helper.mk,v 1.95.2.3 2004/12/13 16:18:22 hyperion Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:

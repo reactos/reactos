@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: common.c,v 1.7.28.1 2004/12/13 09:38:46 hyperion Exp $
+/* $Id: common.c,v 1.7.28.2 2004/12/13 16:17:58 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

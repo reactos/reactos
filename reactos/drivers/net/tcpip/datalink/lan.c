@@ -354,8 +354,6 @@ VOID STDCALL ProtocolTransferDataComplete(
 
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
-
     if( Status != NDIS_STATUS_SUCCESS ) return;
     TcpipAcquireSpinLock( &LanWorkLock, &OldIrql );
     

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.82.2.1 2004/12/13 09:39:17 hyperion Exp $
+/* $Id: dllmain.c,v 1.82.2.2 2004/12/13 16:18:17 hyperion Exp $
  *
  *  Entry Point for win32k.sys
  */

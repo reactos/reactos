@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.20.12.1 2004/12/13 09:39:22 hyperion Exp $ */
+/* $Id: palette.c,v 1.20.12.2 2004/12/13 16:18:19 hyperion Exp $ */
 #include <w32k.h>
 
 #ifndef NO_MAPPING

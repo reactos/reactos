@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.75.2.2 2004/12/13 09:38:46 hyperion Exp $
+/* $Id: create.c,v 1.75.2.3 2004/12/13 16:17:58 hyperion Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/create.c

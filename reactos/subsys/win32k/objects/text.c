@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.112.4.1 2004/12/13 09:39:22 hyperion Exp $ */
+/* $Id: text.c,v 1.112.4.2 2004/12/13 16:18:22 hyperion Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>

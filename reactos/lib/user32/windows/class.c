@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.51.8.2 2004/12/13 09:39:06 hyperion Exp $
+/* $Id: class.c,v 1.51.8.3 2004/12/13 16:18:09 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll

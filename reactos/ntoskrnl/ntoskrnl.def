@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.201.2.2 2004/12/13 09:39:08 hyperion Exp $
+; $Id: ntoskrnl.def,v 1.201.2.3 2004/12/13 16:18:14 hyperion Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;

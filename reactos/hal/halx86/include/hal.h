@@ -284,10 +284,10 @@ typedef struct _EISA_CONTROL {
    UCHAR Reserved9[30];                 /* 0A2h-0BFh */
    
    /* DMA Controller 2 */
-   DMA1_CONTROL DmaController2;         /* 0C0h-0DFh */
+   DMA1_CONTROL DmaController2;         /* 0C0h-0CFh */
    
    /* System Reserved Ports */
-   UCHAR SystemReserved[800];           /* 0E0h-3FFh */
+   UCHAR SystemReserved[816];           /* 0D0h-3FFh */
    
    /* Extended DMA Registers, Controller 1 */
    UCHAR DmaHighByteCount1[8];          /* 400h-407h */

@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.24.2.3 2004/12/13 09:39:10 hyperion Exp $
+/* $Id: time.c,v 1.24.2.4 2004/12/13 16:18:12 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

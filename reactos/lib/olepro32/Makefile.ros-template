@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.2.16.2 2004/12/13 09:39:01 hyperion Exp $
+# $Id: Makefile.ros-template,v 1.2.16.3 2004/12/13 16:18:08 hyperion Exp $
 
 TARGET_NAME = olepro32
 

@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.9.6.1 2004/12/13 09:39:09 hyperion Exp $
+/* $Id: interlck.c,v 1.9.6.2 2004/12/13 16:18:12 hyperion Exp $
  *
  * reactos/ntoskrnl/ex/i386/interlck.c
  *

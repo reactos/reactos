@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.71.6.2 2004/12/13 09:39:06 hyperion Exp $
+/* $Id: menu.c,v 1.71.6.3 2004/12/13 16:18:10 hyperion Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c

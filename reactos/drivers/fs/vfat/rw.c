@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.71.2.2 2004/12/13 09:38:46 hyperion Exp $
+/* $Id: rw.c,v 1.71.2.3 2004/12/13 16:17:59 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

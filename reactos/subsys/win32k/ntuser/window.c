@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.250.2.1 2004/12/13 09:39:20 hyperion Exp $
+/* $Id: window.c,v 1.250.2.2 2004/12/13 16:18:18 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

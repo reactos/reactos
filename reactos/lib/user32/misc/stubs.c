@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.68.2.1 2004/12/13 09:39:05 hyperion Exp $
+/* $Id: stubs.c,v 1.68.2.2 2004/12/13 16:18:09 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll

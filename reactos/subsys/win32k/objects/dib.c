@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.56.12.1 2004/12/13 09:39:22 hyperion Exp $
+ * $Id: dib.c,v 1.56.12.2 2004/12/13 16:18:19 hyperion Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team

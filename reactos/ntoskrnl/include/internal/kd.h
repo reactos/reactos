@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.28.2.1 2004/12/13 09:39:10 hyperion Exp $
+/* $Id: kd.h,v 1.28.2.2 2004/12/13 16:18:12 hyperion Exp $
  *
  * kernel debugger prototypes
  */

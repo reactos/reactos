@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mca.c,v 1.1 2004/12/03 20:10:43 gvg Exp $
+/* $Id: mca.c,v 1.1.2.1 2004/12/13 16:18:23 hyperion Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS kernel

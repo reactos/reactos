@@ -1,4 +1,4 @@
-/* $Id: afd.h,v 1.25.2.2 2004/12/13 09:38:49 hyperion Exp $
+/* $Id: afd.h,v 1.25.2.3 2004/12/13 16:18:00 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

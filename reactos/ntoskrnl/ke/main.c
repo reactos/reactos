@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.206.2.2 2004/12/13 09:39:11 hyperion Exp $
+/* $Id: main.c,v 1.206.2.3 2004/12/13 16:18:13 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c

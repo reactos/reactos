@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.42.10.2 2004/12/13 09:39:21 hyperion Exp $ */
+/* $Id: cliprgn.c,v 1.42.10.3 2004/12/13 16:18:18 hyperion Exp $ */
 #include <w32k.h>
 
 int FASTCALL

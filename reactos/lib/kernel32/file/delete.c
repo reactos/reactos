@@ -1,4 +1,4 @@
-/* $Id: delete.c,v 1.17.8.2 2004/12/13 09:38:56 hyperion Exp $
+/* $Id: delete.c,v 1.17.8.3 2004/12/13 16:18:03 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

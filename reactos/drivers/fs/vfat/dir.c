@@ -1,5 +1,5 @@
 /*
- * $Id: dir.c,v 1.35.2.2 2004/12/13 09:38:46 hyperion Exp $
+ * $Id: dir.c,v 1.35.2.3 2004/12/13 16:17:58 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

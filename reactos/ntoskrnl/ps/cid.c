@@ -1,4 +1,4 @@
-/* $Id: cid.c,v 1.2.2.2 2004/12/13 09:39:14 hyperion Exp $
+/* $Id: cid.c,v 1.2.2.3 2004/12/13 16:18:14 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

@@ -20,7 +20,7 @@
  * MA 02139, USA.  
  *
  */
-/* $Id: timer.c,v 1.1 2004/12/03 20:10:43 gvg Exp $
+/* $Id: timer.c,v 1.1.2.1 2004/12/13 16:18:23 hyperion Exp $
  *
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/hal/x86/udelay.c
