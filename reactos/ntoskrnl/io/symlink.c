@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.10 2000/01/12 19:02:40 ekohl Exp $
+/* $Id: symlink.c,v 1.11 2000/01/21 23:59:53 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -318,7 +318,6 @@ IoCreateSymbolicLink (
 	)
 {
 	OBJECT_ATTRIBUTES	ObjectAttributes;
-	HANDLE			SymbolicLinkHandle;
 	PSYMLNK_OBJECT		SymbolicLink;
    
 	assert_irql(PASSIVE_LEVEL);
@@ -332,12 +331,12 @@ IoCreateSymbolicLink (
 	InitializeObjectAttributes(
 		& ObjectAttributes,
 		SymbolicLinkName,
-		0,
+		OBJ_PERMANENT,
 		NULL,
 		NULL
 		);
 	SymbolicLink = ObCreateObject(
-			& SymbolicLinkHandle,
+			NULL,
 			SYMBOLIC_LINK_ALL_ACCESS,
 			& ObjectAttributes,
 			IoSymbolicLinkType
@@ -346,8 +345,6 @@ IoCreateSymbolicLink (
 	{
 		return STATUS_UNSUCCESSFUL;
 	}
-   
-	ZwClose(SymbolicLinkHandle);
 	
 	SymbolicLink->TargetName.Length = 0;
 	SymbolicLink->TargetName.MaximumLength = 
@@ -373,7 +370,7 @@ IoCreateSymbolicLink (
 		);
 	
 	DPRINT("%s() = STATUS_SUCCESS\n",__FUNCTION__);
-
+    ObDereferenceObject( SymbolicLink );
 	return STATUS_SUCCESS;
 }
 
