@@ -295,10 +295,21 @@ NtPulseEvent(IN HANDLE EventHandle,
 				      NULL);
    if(NT_SUCCESS(Status))
    {
-     KePulseEvent(Event, EVENT_INCREMENT, FALSE);
+     LONG Prev = KePulseEvent(Event, EVENT_INCREMENT, FALSE);
      ObDereferenceObject(Event);
      
-     /* FIXME - Return the previous state! */
+     if(PreviousState != NULL)
+     {
+       _SEH_TRY
+       {
+         *PreviousState = Prev;
+       }
+       _SEH_HANDLE
+       {
+         Status = _SEH_GetExceptionCode();
+       }
+       _SEH_END;
+     }
    }
 
    return Status;

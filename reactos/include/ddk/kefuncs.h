@@ -218,9 +218,9 @@ VOID STDCALL KeLeaveCriticalRegion (VOID);
 
 VOID STDCALL KeLowerIrql (KIRQL	NewIrql);
 
-NTSTATUS STDCALL KePulseEvent (PKEVENT		Event,
-			       KPRIORITY	Increment,
-			       BOOLEAN		Wait);
+LONG STDCALL KePulseEvent (PKEVENT		Event,
+			   KPRIORITY	Increment,
+			   BOOLEAN		Wait);
 
 LARGE_INTEGER
 STDCALL

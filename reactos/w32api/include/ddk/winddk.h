@@ -7607,7 +7607,7 @@ KeLeaveCriticalRegion(
   VOID);
 
 NTOSAPI
-NTSTATUS
+LONG
 DDKAPI
 KePulseEvent(
   IN PRKEVENT  Event,

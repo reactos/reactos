@@ -108,16 +108,17 @@ LONG STDCALL KeSetEvent (PKEVENT		Event,
 /*
  * @implemented
  */
-NTSTATUS STDCALL KePulseEvent (PKEVENT		Event,
-			       KPRIORITY	Increment,
-			       BOOLEAN		Wait)
+LONG STDCALL
+KePulseEvent (IN PKEVENT	Event,
+              IN KPRIORITY	Increment,
+              IN BOOLEAN	Wait)
 {
    KIRQL OldIrql;
-   int ret;
+   LONG Ret;
 
    DPRINT("KePulseEvent(Event %x, Wait %x)\n",Event,Wait);
    OldIrql = KeAcquireDispatcherDatabaseLock();
-   ret = InterlockedExchange(&Event->Header.SignalState,1);
+   Ret = InterlockedExchange(&Event->Header.SignalState,1);
    KiDispatcherObjectWake(&Event->Header, Increment);
    InterlockedExchange(&(Event->Header.SignalState),0);
 
@@ -132,7 +133,7 @@ NTSTATUS STDCALL KePulseEvent (PKEVENT		Event,
       Thread->WaitIrql = OldIrql;
     }
 
-   return ((NTSTATUS)ret);
+   return Ret;
 }
 
 /*
