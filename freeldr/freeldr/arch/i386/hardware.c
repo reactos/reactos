@@ -1,7 +1,7 @@
 /*
  *  FreeLoader
  *
- *  Copyright (C) 2003  Eric Kohl
+ *  Copyright (C) 2003, 2004  Eric Kohl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -165,6 +165,16 @@ typedef struct _CM_FLOPPY_DEVICE_DATA
   U8 MaximumTrackValue;
   U8 DataTransferRate;
 } __attribute__((packed)) CM_FLOPPY_DEVICE_DATA, *PCM_FLOPPY_DEVICE_DATA;
+
+
+typedef struct _CM_KEYBOARD_DEVICE_DATA
+{
+  U16 Version;
+  U16 Revision;
+  U8 Type;
+  U8 Subtype;
+  U16 KeyboardFlags;
+} __attribute__((packed)) CM_KEYBOARD_DEVICE_DATA, *PCM_KEYBOARD_DEVICE_DATA;
 
 
 static char Hex[] = "0123456789ABCDEF";
@@ -885,7 +895,9 @@ DetectBiosFloppyController(HKEY SystemKey,
   U32 FloppyCount;
 
   FloppyCount = GetFloppyCount();
-/*  printf ("Floppy count: %u\n", FloppyCount);*/
+  DbgPrint((DPRINT_HWDETECT,
+	    "Floppy count: %u\n",
+	    FloppyCount));
 
   if (FloppyCount == 0)
     return;
@@ -1456,6 +1468,244 @@ DetectSerialPorts(HKEY BusKey)
 }
 
 
+static BOOLEAN
+DetectKeyboardDevice(VOID)
+{
+  UCHAR Status;
+  UCHAR Scancode;
+
+  WRITE_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA,
+		   0xF2);
+
+  KeStallExecutionProcessor(10000);
+
+  Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
+  if ((Status & 0x01) != 0x01)
+    {
+      /* PC/XT keyboard or no keyboard */
+      return FALSE;
+    }
+
+  Scancode = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA);
+  if (Scancode != 0xFA)
+    {
+      /* No ACK received */
+      return FALSE;
+    }
+
+  KeStallExecutionProcessor(10000);
+  Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
+  if ((Status & 0x01) != 0x01)
+    {
+      /* Found AT keyboard */
+      return TRUE;
+    }
+
+  Scancode = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA);
+  if (Scancode != 0xAB)
+    {
+      /* No 0xAB received */
+      return FALSE;
+    }
+
+  KeStallExecutionProcessor(10000);
+  Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
+  if ((Status & 0x01) != 0x01)
+    {
+      /* No byte in buffer */
+      return FALSE;
+    }
+
+  Scancode = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA);
+  if (Scancode != 0x41)
+    {
+      /* No 0x41 received */
+      return FALSE;
+    }
+
+  /* Found MF-II keyboard */
+  return TRUE;
+}
+
+
+static VOID
+DetectKeyboardPeripheral(HKEY ControllerKey)
+{
+  PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
+  PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+  PCM_KEYBOARD_DEVICE_DATA KeyboardData;
+  HKEY PeripheralKey;
+  char Buffer[80];
+  U32 Size;
+  S32 Error;
+
+  if (DetectKeyboardDevice())
+  {
+    /* Create controller key */
+    Error = RegCreateKey(ControllerKey,
+			 "KeyboardPeripheral\\0",
+			 &PeripheralKey);
+    if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "Failed to create peripheral key\n"));
+      return;
+    }
+    DbgPrint((DPRINT_HWDETECT, "Created key: KeyboardPeripheral\\0\n"));
+
+    /* Set 'ComponentInformation' value */
+    SetComponentInformation(ControllerKey,
+			    0x28,
+			    0,
+			    0xFFFFFFFF);
+
+    /* Set 'Configuration Data' value */
+    Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) +
+	   sizeof(CM_KEYBOARD_DEVICE_DATA);
+    FullResourceDescriptor = MmAllocateMemory(Size);
+    if (FullResourceDescriptor == NULL)
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"Failed to allocate resource descriptor\n"));
+      return;
+    }
+
+    /* Initialize resource descriptor */
+    memset(FullResourceDescriptor, 0, Size);
+    FullResourceDescriptor->InterfaceType = Isa;
+    FullResourceDescriptor->BusNumber = 0;
+    FullResourceDescriptor->PartialResourceList.Count = 1;
+
+    PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[0];
+    PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
+    PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+    PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(CM_KEYBOARD_DEVICE_DATA);
+
+    KeyboardData = ((PVOID)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
+    KeyboardData->Version = 0;
+    KeyboardData->Revision = 0;
+    KeyboardData->Type = 4;
+    KeyboardData->Subtype = 0;
+    KeyboardData->KeyboardFlags = 0x20;
+
+    /* Set 'Configuration Data' value */
+    Error = RegSetValue(PeripheralKey,
+			"Configuration Data",
+			REG_FULL_RESOURCE_DESCRIPTOR,
+			(PU8)FullResourceDescriptor,
+			Size);
+    MmFreeMemory(FullResourceDescriptor);
+    if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"RegSetValue(Configuration Data) failed (Error %u)\n",
+		(int)Error));
+    }
+
+    /* Set 'Identifier' value */
+    strcpy(Buffer,
+	   "PCAT_ENHANCED");
+    Error = RegSetValue(ControllerKey,
+			"Identifier",
+			REG_SZ,
+			(PU8)Buffer,
+			strlen(Buffer) + 1);
+    if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"RegSetValue() failed (Error %u)\n",
+		(int)Error));
+    }
+  }
+}
+
+
+static VOID
+DetectKeyboardController(HKEY BusKey)
+{
+  PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
+  PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+  HKEY ControllerKey;
+  U32 Size;
+  S32 Error;
+
+  /* Create controller key */
+  Error = RegCreateKey(BusKey,
+		       "KeyboardController\\0",
+		       &ControllerKey);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "Failed to create controller key\n"));
+      return;
+    }
+  DbgPrint((DPRINT_HWDETECT, "Created key: KeyboardController\\0\n"));
+
+  /* Set 'ComponentInformation' value */
+  SetComponentInformation(ControllerKey,
+			  0x28,
+			  0,
+			  0xFFFFFFFF);
+
+  /* Set 'Configuration Data' value */
+  Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) +
+	  2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+  FullResourceDescriptor = MmAllocateMemory(Size);
+  if (FullResourceDescriptor == NULL)
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"Failed to allocate resource descriptor\n"));
+      return;
+    }
+
+  /* Initialize resource descriptor */
+  memset(FullResourceDescriptor, 0, Size);
+  FullResourceDescriptor->InterfaceType = Isa;
+  FullResourceDescriptor->BusNumber = 0;
+  FullResourceDescriptor->PartialResourceList.Count = 3;
+
+  /* Set Interrupt */
+  PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[0];
+  PartialDescriptor->Type = CmResourceTypeInterrupt;
+  PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+  PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
+  PartialDescriptor->u.Interrupt.Level = 1;
+  PartialDescriptor->u.Interrupt.Vector = 1;
+  PartialDescriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
+
+  /* Set IO Port 0x60 */
+  PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[1];
+  PartialDescriptor->Type = CmResourceTypePort;
+  PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+  PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
+  PartialDescriptor->u.Port.Start = (U64)0x60;
+  PartialDescriptor->u.Port.Length = 1;
+
+  /* Set IO Port 0x64 */
+  PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[2];
+  PartialDescriptor->Type = CmResourceTypePort;
+  PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+  PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
+  PartialDescriptor->u.Port.Start = (U64)0x64;
+  PartialDescriptor->u.Port.Length = 1;
+
+  /* Set 'Configuration Data' value */
+  Error = RegSetValue(ControllerKey,
+		      "Configuration Data",
+		      REG_FULL_RESOURCE_DESCRIPTOR,
+		      (PU8)FullResourceDescriptor,
+		      Size);
+  MmFreeMemory(FullResourceDescriptor);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"RegSetValue(Configuration Data) failed (Error %u)\n",
+		(int)Error));
+      return;
+    }
+
+  DetectKeyboardPeripheral(ControllerKey);
+}
+
+
 static VOID
 PS2ControllerWait(VOID)
 {
@@ -1757,12 +2007,10 @@ DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
   DetectSerialPorts(BusKey);
 
 #if 0
-  DetectBiosParallelPorts();
+  DetectParallelPorts(BusKey);
 #endif
 
-#if 0
-  DetectBiosKeyboard(BusKey);
-#endif
+  DetectKeyboardController(BusKey);
 
   DetectPS2Mouse(BusKey);
 
