@@ -723,6 +723,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 	ShellFolder get_folder(IShellFolder* parent)
 	{
+		CONTEXT("ShellPath::get_folder()");
 		return ShellFolder(parent, _p);
 	}
 

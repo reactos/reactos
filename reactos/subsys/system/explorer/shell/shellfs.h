@@ -54,6 +54,8 @@ struct ShellDirectory : public ShellEntry, public Directory
 		_folder(root_folder, shell_path),
 		_hwnd(hwnd)
 	{
+		CONTEXT("ShellDirectory::ShellDirectory()");
+
 		lstrcpy(_data.cFileName, root_folder.get_name(shell_path));
 		_data.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 		_shell_attribs = SFGAO_FOLDER;

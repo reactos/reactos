@@ -130,7 +130,7 @@ String Context::getStackTrace() const
 
 	str << "Context Trace:\n";
 
-	for(const Context*p=this; p!=&s_main; p=p->_last) {
+	for(const Context*p=this; p && p!=&s_main; p=p->_last) {
 		str << "- " << p->_ctx;
 
 		if (!p->_obj.empty())

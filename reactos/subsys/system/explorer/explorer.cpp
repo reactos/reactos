@@ -64,6 +64,17 @@ ExplorerGlobals::ExplorerGlobals()
 }
 
 
+void log(LPCTSTR txt)
+{
+	FmtString msg(TEXT("%s\n"), txt);
+
+	if (g_Globals._log)
+		_fputts(msg, g_Globals._log);
+
+	OutputDebugString(msg);
+}
+
+
 ResString::ResString(UINT nid)
 {
 	TCHAR buffer[BUFFER_LEN];
@@ -244,6 +255,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 		g_Globals._log = fdopen(1, "w");
 		setvbuf(g_Globals._log, 0, _IONBF, 0);
+
+		LOG("starting explore debug log\n");
 	}
 #endif
 

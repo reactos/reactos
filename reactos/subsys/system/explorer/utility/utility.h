@@ -56,6 +56,103 @@
 
 
 #ifdef __cplusplus
+extern "C" {
+#endif
+
+
+#define	for if (0) {} else for
+
+
+#define	BUFFER_LEN				1024
+
+
+extern void log(LPCTSTR txt);
+
+#define	LOG(txt) log(txt)
+
+
+#ifdef _MSC_VER
+#define	LONGLONGARG TEXT("I64")
+#else
+#define	LONGLONGARG TEXT("L")
+#endif
+
+
+#ifndef _tcsrchr
+#ifdef UNICODE
+#define	_tcsrchr wcsrchr
+#else
+#define	_tcsrchr strrchr
+#endif
+#endif
+
+#ifndef _stprintf
+#ifdef UNICODE
+#define	_stprintf wcsprintf
+#else
+#define	_stprintf sprintf
+#endif
+#endif
+
+
+#ifdef __WINE__
+#ifdef UNICODE
+extern void _wsplitpath(const WCHAR* path, WCHAR* drv, WCHAR* dir, WCHAR* name, WCHAR* ext);
+#else
+extern void _splitpath(const CHAR* path, CHAR* drv, CHAR* dir, CHAR* name, CHAR* ext);
+#endif
+#endif
+
+#ifndef FILE_ATTRIBUTE_NOT_CONTENT_INDEXED
+#define FILE_ATTRIBUTE_ENCRYPTED            0x00000040
+#define FILE_ATTRIBUTE_SPARSE_FILE          0x00000200
+#define FILE_ATTRIBUTE_REPARSE_POINT        0x00000400
+#define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED  0x00002000
+#endif
+
+
+#define	SetDlgCtrlID(hwnd, id) SetWindowLong(hwnd, GWL_ID, id)
+#define	SetWindowStyle(hwnd, val) (DWORD)SetWindowLong(hwnd, GWL_STYLE, val)
+#define	SetWindowExStyle(h, val) (DWORD)SetWindowLong(hwnd, GWL_EXSTYLE, val)
+#define	Window_SetIcon(hwnd, type, hicon) (HICON)SendMessage(hwnd, WM_SETICON, type, (LPARAM)(hicon))
+
+
+ // center window in respect to its parent window
+extern void CenterWindow(HWND hwnd);
+
+ // move window into visibility
+extern void MoveVisible(HWND hwnd);
+
+ // display error message
+extern void display_error(HWND hwnd, DWORD error);
+
+ // convert time_t to WIN32 FILETIME
+extern BOOL time_to_filetime(const time_t* t, FILETIME* ftime);
+
+ // search for windows of a specific classname
+extern int find_window_class(LPCTSTR classname);
+
+ // create a bitmap from an icon
+extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd);
+
+ // launch a program or document file
+extern BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow);
+#ifdef UNICODE
+extern BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow);
+#else
+#define	launch_fileA launch_file
+#endif
+
+ // call an DLL export like rundll32
+BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT nCmdShow);
+
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+
+#ifdef __cplusplus
 
 #ifdef _MSC_VER
 #pragma warning(disable: 4786)	// disable warnings about too long debug information symbols
@@ -77,15 +174,6 @@ using namespace std;
 using namespace _com_util;
 
 #endif	// _MSC_VER && !_NO_COMUTIL
-
-
-#define	for if (0) {} else for
-
-
-#define	BUFFER_LEN				1024
-
-
-#define	LOG(x) 	OutputDebugString(FmtString(TEXT("%s\n"), (LPCTSTR)(x)));
 
 
  /// initialization of windows common controls
@@ -706,9 +794,17 @@ struct Context
 		s_current = this;
 	}
 
+	Context(const Context& other)
+	 :	_ctx(other._ctx),
+		_obj(other._obj)
+	{
+		_last = NULL;
+	}
+
 	~Context()
 	{
 		s_current = _last;
+		_last = NULL;
 	}
 
 	String toString() const;
@@ -717,12 +813,12 @@ struct Context
 	const char* _ctx;
 	String	_obj;
 
-	static Context current() {return *s_current;}
+	static Context& current() {return *s_current;}
 
 protected:
 	Context* _last;
 
-	static Context*	s_current;
+	static Context*	s_current;	///@todo use TLS
 	static Context	s_main;
 };
 
@@ -733,91 +829,3 @@ protected:
 
 
 #endif // __cplusplus
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-#ifdef _MSC_VER
-#define	LONGLONGARG TEXT("I64")
-#else
-#define	LONGLONGARG TEXT("L")
-#endif
-
-
-#ifndef _tcsrchr
-#ifdef UNICODE
-#define	_tcsrchr wcsrchr
-#else
-#define	_tcsrchr strrchr
-#endif
-#endif
-
-#ifndef _stprintf
-#ifdef UNICODE
-#define	_stprintf wcsprintf
-#else
-#define	_stprintf sprintf
-#endif
-#endif
-
-
-#ifdef __WINE__
-#ifdef UNICODE
-extern void _wsplitpath(const WCHAR* path, WCHAR* drv, WCHAR* dir, WCHAR* name, WCHAR* ext);
-#else
-extern void _splitpath(const CHAR* path, CHAR* drv, CHAR* dir, CHAR* name, CHAR* ext);
-#endif
-#endif
-
-#ifndef FILE_ATTRIBUTE_NOT_CONTENT_INDEXED
-#define FILE_ATTRIBUTE_ENCRYPTED            0x00000040
-#define FILE_ATTRIBUTE_SPARSE_FILE          0x00000200
-#define FILE_ATTRIBUTE_REPARSE_POINT        0x00000400
-#define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED  0x00002000
-#endif
-
-
-#define	SetDlgCtrlID(hwnd, id) SetWindowLong(hwnd, GWL_ID, id)
-#define	SetWindowStyle(hwnd, val) (DWORD)SetWindowLong(hwnd, GWL_STYLE, val)
-#define	SetWindowExStyle(h, val) (DWORD)SetWindowLong(hwnd, GWL_EXSTYLE, val)
-#define	Window_SetIcon(hwnd, type, hicon) (HICON)SendMessage(hwnd, WM_SETICON, type, (LPARAM)(hicon))
-
-
-
- // center window in respect to its parent window
-extern void CenterWindow(HWND hwnd);
-
- // move window into visibility
-extern void MoveVisible(HWND hwnd);
-
- // display error message
-extern void display_error(HWND hwnd, DWORD error);
-
- // convert time_t to WIN32 FILETIME
-extern BOOL time_to_filetime(const time_t* t, FILETIME* ftime);
-
- // search for windows of a specific classname
-extern int find_window_class(LPCTSTR classname);
-
- // create a bitmap from an icon
-extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd);
-
- // launch a program or document file
-extern BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow);
-#ifdef UNICODE
-extern BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow);
-#else
-#define	launch_fileA launch_file
-#endif
-
- // call an DLL export like rundll32
-BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT nCmdShow);
-
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
-
