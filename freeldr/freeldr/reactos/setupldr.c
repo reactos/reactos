@@ -109,25 +109,32 @@ VOID RunLoader(VOID)
   mb_info.cmdline = (unsigned long)multiboot_kernel_cmdline;
   mb_info.mods_count = 0;
   mb_info.mods_addr = (unsigned long)multiboot_modules;
-  mb_info.mmap_length = (unsigned long)GetBiosMemoryMap((PBIOS_MEMORY_MAP)&multiboot_memory_map);
+  mb_info.mmap_length = (unsigned long)GetBiosMemoryMap((PBIOS_MEMORY_MAP)&multiboot_memory_map) * sizeof(memory_map_t);
   if (mb_info.mmap_length)
     {
       mb_info.mmap_addr = (unsigned long)&multiboot_memory_map;
       mb_info.flags |= MB_INFO_FLAG_MEMORY_MAP;
+      multiboot_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
 #if 0
-      printf("memory map length: %d\n", mb_info.mmap_length);
-      printf("dumping memory map:\n");
-      for (i=0; i<(mb_info.mmap_length / 4); i++)
-	{
-	  printf("0x%x\n", ((unsigned long *)&multiboot_memory_map)[i]);
-	}
-      getch();
+      {
+	 int i;
+         printf("memory map length: %d\n", mb_info.mmap_length);
+         printf("dumping memory map:\n");
+         for (i=0; i<(mb_info.mmap_length / sizeof(memory_map_t)); i++)
+	 {
+	    printf("start: %x\t size: %x\t type %d\n", 
+		   multiboot_memory_map[i].base_addr_low, 
+		   multiboot_memory_map[i].length_low,
+		   multiboot_memory_map[i].type);
+	 }
+         getch();
+      }
 #endif
     }
 #if 0
-//  printf("low_mem = %d\n", mb_info.mem_lower);
-//  printf("high_mem = %d\n", mb_info.mem_upper);
-//  getch();
+  printf("low_mem = %d\n", mb_info.mem_lower);
+  printf("high_mem = %d\n", mb_info.mem_upper);
+  getch();
 #endif
 
   /* Initialize registry */
