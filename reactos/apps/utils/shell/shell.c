@@ -141,6 +141,7 @@ int ExecuteProcess(char* name, char* cmdline, BOOL detached)
 \thThread  = %08X\n\
 \tPID      = %d\n\
 \tTID      = %d\n\n",
+				name,
 				ProcessInformation.hProcess,
 				ProcessInformation.hThread,
 				ProcessInformation.dwProcessId,
@@ -149,7 +150,10 @@ int ExecuteProcess(char* name, char* cmdline, BOOL detached)
 		}
 		else
 		{
-			debug_printf("Could not detach %s\n");
+			debug_printf(
+				"Could not detach %s\n",
+				name
+				);
 		}
 	}
 	else
