@@ -1269,7 +1269,7 @@ HRESULT _SHGetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSize)
 	LPSTR pstr;
 	LPSTR end = pszPath + uOutSize;
 
- 	if (_ILIsMyComputer(pidl)) { /* optimized loop to retreive file system paths */
+ 	if (_ILIsMyComputer(pidl)) { /* optimized loop to retrieve file system paths */
 	    LPCITEMIDLIST p = ILGetNext(pidl);
 	    LPSTR txt;
 
@@ -1319,7 +1319,7 @@ HRESULT _SHGetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSize)
 	}
 
 	if (SUCCEEDED(hr)) {
-	    hr = StrRetToStrNA(pstr, pszPath+MAX_PATH-pstr, &str, pidl);
+	    hr = StrRetToStrNA(pstr, end-pstr, &str, pidl);
 
 	    /* don't allow to return displaynames of the form "::{guid}" */
 	    if (pstr[0]==':' && pstr[1]==':') {
@@ -1373,7 +1373,7 @@ HRESULT _SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSize)
 	LPWSTR pstr;
 	LPWSTR end = pszPath + uOutSize;
 
- 	if (_ILIsMyComputer(pidl)) { /* optimized loop to retreive file system paths */
+ 	if (_ILIsMyComputer(pidl)) { /* optimized loop to retrieve file system paths */
 	    LPCITEMIDLIST p = ILGetNext(pidl);
 	    LPSTR txt;
 
