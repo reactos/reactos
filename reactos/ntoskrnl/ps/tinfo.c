@@ -1,4 +1,4 @@
-/* $Id: tinfo.c,v 1.25 2004/03/19 12:45:07 ekohl Exp $
+/* $Id: tinfo.c,v 1.26 2004/08/05 11:38:01 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -254,8 +254,26 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
        }
        
      case ThreadTimes:
-       Status = STATUS_NOT_IMPLEMENTED;
-       break;
+	 {
+	    PKERNEL_USER_TIMES TTI;
+	 
+	    TTI = (PKERNEL_USER_TIMES)ThreadInformation;
+	 
+	    if (ThreadInformationLength != sizeof(KERNEL_USER_TIMES))
+	      {
+	        Status = STATUS_INFO_LENGTH_MISMATCH;
+	        break;
+	      }
+
+            TTI->KernelTime.QuadPart = Thread->Tcb.KernelTime * 100000LL;
+            TTI->UserTime.QuadPart = Thread->Tcb.UserTime * 100000LL;
+            TTI->CreateTime = (TIME) Thread->CreateTime;
+            /*This works*/
+	    TTI->ExitTime = (TIME) Thread->u1.ExitTime;
+	 
+            Status = STATUS_SUCCESS;
+            break;
+         }
        
      case ThreadPriority:
        /* Can be set only */
