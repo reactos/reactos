@@ -130,7 +130,7 @@ else
 #############################################
 # COMPILER COMMAND LINE OPTIONS
 #
-COMPILER_OPTIONS = -Wall -nostdlib -nostdinc -fno-builtin -O1 -MD
+COMPILER_OPTIONS = -Wall -nostdlib -nostdinc -ffreestanding -fno-builtin -fno-inline -O1 -MD
 # FreeLoader does not use any of the standard libraries, includes, or built-in functions
 
 #############################################
