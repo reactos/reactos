@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 2000/11/20 19:59:14 ekohl Exp $
+# $Id: makefile,v 1.7 2001/06/25 12:32:39 ekohl Exp $
 #
 # Session Manager
 #
@@ -8,7 +8,7 @@ PATH_TO_TOP = ../..
 
 TARGET=smss
 
-BASE_CFLAGS = -I../../include
+CFLAGS = -D__NTAPP__
 
 OBJECTS = $(TARGET).o init.o smapi.o $(TARGET).coff
 

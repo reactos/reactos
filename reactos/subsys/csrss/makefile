@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.12 2001/03/25 02:34:30 dwelch Exp $
+# $Id: makefile,v 1.13 2001/06/25 12:32:27 ekohl Exp $
 #
 # CSRSS: Client/server runtime subsystem
 #
@@ -8,7 +8,7 @@ PATH_TO_TOP = ../..
 
 TARGET=csrss
 
-CFLAGS = -I.
+CFLAGS = -D__NTAPP__ -I.
 
 OBJECTS_API = api/process.o api/wapi.o api/conio.o api/handle.o
 

@@ -117,6 +117,14 @@ typedef char CCHAR;
 #define FALSE 0
 #define TRUE 1
 
+#ifndef NULL
+#ifdef __cplusplus
+#define NULL 0
+#else
+#define NULL ((void*)0)
+#endif /* __cplusplus */
+#endif /* NULL */
+
 typedef const unsigned short *PCWSTR;
 
 typedef char* PCSZ;

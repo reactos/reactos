@@ -1,12 +1,16 @@
-/* $Id: rtl.h,v 1.53 2001/06/22 12:39:48 ekohl Exp $
+/* $Id: rtl.h,v 1.54 2001/06/25 12:31:00 ekohl Exp $
  * 
  */
 
 #ifndef __DDK_RTL_H
 #define __DDK_RTL_H
 
+#if defined(__NTOSKRNL__) || defined(__NTDRIVER__) || defined(__NTHAL__) || defined(__NTDLL__) || defined (__NTAPP__)
+
 #include <stddef.h>
 #include <stdarg.h>
+
+#endif /* __NTOSKRNL__ || __NTDRIVER__ || __NTHAL__ || __NTDLL__ || __NTAPP__ */
 
 #include <pe.h>
 
@@ -2077,6 +2081,8 @@ VOID STDCALL RtlMapGenericMask (PACCESS_MASK AccessMask, PGENERIC_MAPPING Generi
 
 /*  functions exported from NTOSKRNL.EXE which are considered RTL  */
 
+#if defined(__NTOSKRNL__) || defined(__NTDRIVER__) || defined(__NTHAL__) || defined(__NTDLL__) || defined(__NTAPP__)
+
 char *_itoa (int value, char *string, int radix);
 int _snprintf(char * buf, size_t cnt, const char *fmt, ...);
 int _snwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, ...);
@@ -2148,5 +2154,7 @@ size_t wcsspn(const wchar_t *str,const wchar_t *accept);
 wchar_t *wcsstr(const wchar_t *s,const wchar_t *b);
 size_t wcstombs (char *mbstr, const wchar_t *wcstr, size_t count);
 int wctomb (char *mbchar, wchar_t wchar);
+
+#endif /* __NTOSKRNL__ || __NTDRIVER__ || __NTHAL__ || __NTDLL__ || __NTAPP__ */
 
 #endif /* __DDK_RTL_H */
