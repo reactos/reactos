@@ -39,11 +39,13 @@ typedef struct tagDCE
 #define  DCEOBJ_LockDCE(hDCE) ((PDCE)GDIOBJ_LockObj((HGDIOBJ)hDCE, GO_DCE_MAGIC))
 #define  DCEOBJ_UnlockDCE(hDCE) GDIOBJ_UnlockObj((HGDIOBJ)hDCE, GO_DCE_MAGIC)
 
-PDCE DCE_AllocDCE(HWND hWnd, DCE_TYPE type);
-PDCE DCE_FreeDCE(PDCE dce);
-VOID DCE_FreeWindowDCE(HWND);
-INT  DCE_ExcludeRgn(HDC, HWND, HRGN);
-BOOL DCE_InvalidateDCE(HWND, const PRECTL);
-BOOL DCE_InternalDelete(PDCE dce);
+PDCE FASTCALL DCE_AllocDCE(HWND hWnd, DCE_TYPE type); // ???
+PDCE FASTCALL DceAllocDCE(HWND hWnd, DCE_TYPE Type);
+PDCE FASTCALL DCE_FreeDCE(PDCE dce);
+VOID FASTCALL DCE_FreeWindowDCE(HWND);
+HRGN STDCALL  DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags);
+INT  FASTCALL DCE_ExcludeRgn(HDC, HWND, HRGN);
+BOOL FASTCALL DCE_InvalidateDCE(HWND, const PRECTL);
+BOOL FASTCALL DCE_InternalDelete(PDCE dce);
 
 #endif

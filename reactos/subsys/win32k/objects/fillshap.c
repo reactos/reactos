@@ -1,3 +1,22 @@
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: fillshap.c,v 1.18 2003/05/18 17:16:18 ea Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -7,6 +26,8 @@
 #include <win32k/pen.h>
 #include <include/object.h>
 #include <include/inteng.h>
+#include <include/path.h>
+#include <include/paint.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -52,6 +73,8 @@ W32kPie(HDC  hDC,
   UNIMPLEMENTED;
 }
 
+#if 0
+
 //ALTERNATE Selects alternate mode (fills the area between odd-numbered and even-numbered 
 //polygon sides on each scan line). 
 //When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and 
@@ -78,6 +101,7 @@ extern BOOL FillPolygon_WINDING(SURFOBJ *SurfObj,
                                 RECTL BoundRect,
                                 int OrigX,
                                 int OrigY);
+#endif
 
 //This implementation is blatantly ripped off from W32kRectangle
 BOOL
@@ -301,3 +325,4 @@ W32kRoundRect(HDC  hDC,
 {
   UNIMPLEMENTED;
 }
+/* EOF */

@@ -1,7 +1,25 @@
 /*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.23 2003/03/28 16:20:51 gvg Exp $
+ * $Id: gdiobj.c,v 1.24 2003/05/18 17:16:18 ea Exp $
  *
  */
 
@@ -9,6 +27,7 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <include/dce.h>
+#include <include/object.h>
 #include <win32k/gdiobj.h>
 #include <win32k/brush.h>
 #include <win32k/pen.h>
@@ -16,6 +35,7 @@
 #include <win32k/dc.h>
 #include <win32k/bitmaps.h>
 #include <win32k/region.h>
+#include <include/palette.h>
 #define NDEBUG
 #include <win32k/debug1.h>
 
@@ -118,7 +138,7 @@ static FAST_MUTEX  RefCountHandling;
  * Allocate GDI object table.
  * \param	Size - number of entries in the object table.
 */
-static PGDI_HANDLE_TABLE
+static PGDI_HANDLE_TABLE FASTCALL
 GDIOBJ_iAllocHandleTable (WORD Size)
 {
   PGDI_HANDLE_TABLE  handleTable;
@@ -140,7 +160,7 @@ GDIOBJ_iAllocHandleTable (WORD Size)
 /*!
  * Returns the entry into the handle table by index.
 */
-static PGDI_HANDLE_ENTRY
+static PGDI_HANDLE_ENTRY FASTCALL
 GDIOBJ_iGetHandleEntryForIndex (WORD TableIndex)
 {
   //DPRINT("GDIOBJ_iGetHandleEntryForIndex: TableIndex: %d,\n handle: %x, ptr: %x\n", TableIndex, HandleTable->Handles [TableIndex], &(HandleTable->Handles [TableIndex])  );
@@ -153,7 +173,7 @@ GDIOBJ_iGetHandleEntryForIndex (WORD TableIndex)
  * Finds next free entry in the GDI handle table.
  * \return	index into the table is successful, zero otherwise.
 */
-static WORD
+static WORD FASTCALL
 GDIOBJ_iGetNextOpenHandleIndex (void)
 {
   WORD  tableIndex;
@@ -183,7 +203,7 @@ GDIOBJ_iGetNextOpenHandleIndex (void)
  *
  * \note Use GDIOBJ_Lock() to obtain pointer to the new object.
 */
-HGDIOBJ GDIOBJ_AllocObj(WORD Size, WORD Magic)
+HGDIOBJ FASTCALL GDIOBJ_AllocObj(WORD Size, WORD Magic)
 {
   	PGDIOBJHDR  newObject;
   	PGDI_HANDLE_ENTRY  handleEntry;
@@ -221,7 +241,7 @@ HGDIOBJ GDIOBJ_AllocObj(WORD Size, WORD Magic)
  * \note You should only use GDIOBJFLAG_IGNOREPID if you are cleaning up after the process that terminated.
  * \note This function deferres object deletion if it is still in use.
 */
-BOOL  GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic, DWORD Flag)
+BOOL STDCALL GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic, DWORD Flag)
 {
   	PGDIOBJHDR  objectHeader;
   	PGDI_HANDLE_ENTRY  handleEntry;
@@ -301,7 +321,7 @@ BOOL  GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic, DWORD Flag)
  *
  * \todo Don't allow to lock the objects twice! Synchronization!
 */
-PGDIOBJ GDIOBJ_LockObj( HGDIOBJ hObj, WORD Magic )
+PGDIOBJ FASTCALL GDIOBJ_LockObj( HGDIOBJ hObj, WORD Magic )
 {
   	PGDI_HANDLE_ENTRY handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD) hObj & 0xffff);
   	PGDIOBJHDR  objectHeader;
@@ -337,7 +357,7 @@ PGDIOBJ GDIOBJ_LockObj( HGDIOBJ hObj, WORD Magic )
  *
  * \note this function uses an O(n^2) algoritm because we shouldn't need to call it with more than 3 or 4 objects.
 */
-BOOL GDIOBJ_LockMultipleObj( PGDIMULTILOCK pList, INT nObj )
+BOOL FASTCALL GDIOBJ_LockMultipleObj( PGDIMULTILOCK pList, INT nObj )
 {
 	INT i, j;
 	ASSERT( pList );
@@ -372,7 +392,7 @@ BOOL GDIOBJ_LockMultipleObj( PGDIMULTILOCK pList, INT nObj )
  *
  * \todo Change synchronization algorithm.
 */
-BOOL GDIOBJ_UnlockObj( HGDIOBJ hObj, WORD Magic )
+BOOL FASTCALL GDIOBJ_UnlockObj( HGDIOBJ hObj, WORD Magic )
 {
   	PGDI_HANDLE_ENTRY handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD) hObj & 0xffff);
   	PGDIOBJHDR  objectHeader;
@@ -420,7 +440,7 @@ BOOL GDIOBJ_UnlockObj( HGDIOBJ hObj, WORD Magic )
  *
  * \note this function uses O(n^2) algoritm because we shouldn't need to call it with more than 3 or 4 objects.
 */
-BOOL GDIOBJ_UnlockMultipleObj( PGDIMULTILOCK pList, INT nObj )
+BOOL FASTCALL GDIOBJ_UnlockMultipleObj( PGDIMULTILOCK pList, INT nObj )
 {
 	INT i, j;
 	ASSERT( pList );
@@ -447,7 +467,7 @@ BOOL GDIOBJ_UnlockMultipleObj( PGDIMULTILOCK pList, INT nObj )
  *
  * \note	Only stock objects should be marked global.
 */
-VOID GDIOBJ_MarkObjectGlobal(HGDIOBJ ObjectHandle)
+VOID FASTCALL GDIOBJ_MarkObjectGlobal(HGDIOBJ ObjectHandle)
 {
   PGDI_HANDLE_ENTRY  handleEntry;
 
@@ -466,7 +486,7 @@ VOID GDIOBJ_MarkObjectGlobal(HGDIOBJ ObjectHandle)
  * \param 	ObjectHandle - handle of the object.
  * \return 	GDI Magic value.
 */
-WORD  GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle)
+WORD FASTCALL GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle)
 {
   PGDI_HANDLE_ENTRY  handleEntry;
 
@@ -485,8 +505,8 @@ WORD  GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle)
 /*!
  * Initialization of the GDI object engine.
 */
-VOID
-InitGdiObjectHandleTable (void)
+VOID FASTCALL
+InitGdiObjectHandleTable (VOID)
 {
   DPRINT ("InitGdiObjectHandleTable\n");
   ExInitializeFastMutex (&HandleTableMutex);
@@ -501,7 +521,7 @@ InitGdiObjectHandleTable (void)
 /*!
  * Creates a bunch of stock objects: brushes, pens, fonts.
 */
-VOID CreateStockObjects(void)
+VOID FASTCALL CreateStockObjects(void)
 {
   // Create GDI Stock Objects from the logical structures we've defined
 
@@ -605,3 +625,4 @@ VOID STDCALL W32kDumpGdiObjects( INT Process )
 	}
 
 }
+/* EOF */

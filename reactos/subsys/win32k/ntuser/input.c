@@ -1,4 +1,22 @@
-/* $Id: input.c,v 1.5 2003/03/09 18:44:59 jfilby Exp $
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: input.c,v 1.6 2003/05/18 17:16:17 ea Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,6 +37,7 @@
 #include <include/winsta.h>
 #include <include/msgqueue.h>
 #include <ddk/ntddmou.h>
+#include <include/mouse.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -31,8 +50,6 @@ static CLIENT_ID KeyboardThreadId;
 static HANDLE KeyboardDeviceHandle;
 static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
-
-VOID MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -139,7 +156,7 @@ NtUserAcquireOrReleaseInputOwnership(BOOLEAN Release)
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 InitInputImpl(VOID)
 {
   NTSTATUS Status;
@@ -231,7 +248,7 @@ InitInputImpl(VOID)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 CleanupInputImp(VOID)
 {
   return(STATUS_SUCCESS);

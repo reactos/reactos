@@ -1,4 +1,22 @@
-/* $Id: class.c,v 1.15 2003/05/03 14:12:14 gvg Exp $
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: class.c,v 1.16 2003/05/18 17:16:17 ea Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -25,20 +43,20 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
+NTSTATUS FASTCALL
 InitClassImpl(VOID)
 {
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 CleanupClassImpl(VOID)
 {
   return(STATUS_SUCCESS);
 }
 
 
-NTSTATUS
+NTSTATUS STDCALL
 ClassReferenceClassByName(PW32PROCESS Process,
 			  PWNDCLASS_OBJECT* Class,
 			  LPWSTR ClassName)
@@ -67,7 +85,7 @@ ClassReferenceClassByName(PW32PROCESS Process,
   return(STATUS_NOT_FOUND);
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 ClassReferenceClassByAtom(PWNDCLASS_OBJECT *Class,
 			  RTL_ATOM ClassAtom)
 {
@@ -109,7 +127,7 @@ ClassReferenceClassByAtom(PWNDCLASS_OBJECT *Class,
   return(Status);
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 ClassReferenceClassByNameOrAtom(PWNDCLASS_OBJECT *Class,
 				LPWSTR ClassNameOrAtom)
 {
@@ -165,7 +183,7 @@ NtUserGetWOWClass(DWORD Unknown0,
   return(0);
 }
 
-PWNDCLASS_OBJECT
+PWNDCLASS_OBJECT FASTCALL
 W32kCreateClass(LPWNDCLASSEX lpwcx,
 		BOOL bUnicodeClass)
 {
@@ -265,7 +283,7 @@ NtUserRegisterClassExWOW(LPWNDCLASSEX lpwcx,
   return(Atom);
 }
 
-ULONG
+ULONG FASTCALL
 W32kGetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset)
 {
   LONG Ret;

@@ -15,7 +15,7 @@ typedef struct _PROPERTY
   ATOM Atom;
 } PROPERTY, *PPROPERTY;
 
-VOID
+VOID FASTCALL
 WinPosSetupInternalPos(VOID);
 
 typedef struct _WINDOW_OBJECT
@@ -93,29 +93,21 @@ typedef struct _WINDOW_OBJECT
 #define WINDOWOBJECT_NEED_INTERNALPAINT   (0x00000010)
 #define WINDOWOBJECT_RESTOREMAX           (0x00000020)
 
-NTSTATUS
-InitWindowImpl(VOID);
-NTSTATUS
-CleanupWindowImpl(VOID);
-VOID
-W32kGetClientRect(PWINDOW_OBJECT WindowObject, PRECT Rect);
-PWINDOW_OBJECT
-W32kGetWindowObject(HWND hWnd);
-VOID
-W32kReleaseWindowObject(PWINDOW_OBJECT Window);
-HWND STDCALL
-W32kCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
+NTSTATUS FASTCALL InitWindowImpl (VOID);
+NTSTATUS FASTCALL CleanupWindowImpl (VOID);
+VOID     FASTCALL W32kGetClientRect (PWINDOW_OBJECT WindowObject, PRECT Rect);
+PWINDOW_OBJECT FASTCALL W32kGetWindowObject (HWND hWnd);
+VOID     FASTCALL W32kReleaseWindowObject (PWINDOW_OBJECT Window);
+HWND     STDCALL  W32kCreateDesktopWindow (PWINSTATION_OBJECT WindowStation,
 			PWNDCLASS_OBJECT DesktopClass,
 			ULONG Width, ULONG Height);
-BOOL
-W32kIsDesktopWindow(HWND hWnd);
-HWND
-W32kGetActiveWindow(VOID);
-BOOL
-W32kIsWindowVisible(HWND Wnd);
-BOOL
-W32kIsChildWindow(HWND Parent, HWND Child);
-HWND W32kGetDesktopWindow();
+BOOL     FASTCALL W32kIsDesktopWindow (HWND hWnd);
+HWND     FASTCALL W32kGetActiveWindow (VOID);
+BOOL     FASTCALL W32kIsWindowVisible (HWND Wnd);
+BOOL     FASTCALL W32kIsChildWindow (HWND Parent, HWND Child);
+HWND     FASTCALL W32kGetDesktopWindow (VOID);
+HWND     FASTCALL W32kGetFocusWindow (VOID);
+VOID     FASTCALL W32kSetFocusWindow (HWND hWnd);
 
 #endif /* __WIN32K_WINDOW_H */
 

@@ -1,4 +1,22 @@
-/* $Id: winsta.c,v 1.12 2003/03/06 23:57:03 gvg Exp $
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: winsta.c,v 1.13 2003/05/18 17:16:17 ea Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -18,6 +36,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ddk/ntddmou.h>
 #include <win32k/win32k.h>
 #include <include/winsta.h>
 #include <include/object.h>
@@ -25,6 +44,8 @@
 #include <napi/win32.h>
 #include <include/class.h>
 #include <include/window.h>
+#include <include/error.h>
+#include <include/mouse.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -47,13 +68,13 @@ static HDC ScreenDeviceContext = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
-PDESKTOP_OBJECT
+PDESKTOP_OBJECT FASTCALL
 W32kGetActiveDesktop(VOID)
 {
   return(InputDesktop);
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 InitWindowStationImpl(VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -99,14 +120,14 @@ InitWindowStationImpl(VOID)
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 CleanupWindowStationImpl(VOID)
 {
   return STATUS_SUCCESS;
 }
 
 
-NTSTATUS
+NTSTATUS STDCALL
 ValidateWindowStationHandle(HWINSTA WindowStation,
 			    KPROCESSOR_MODE AccessMode,
 			    ACCESS_MASK DesiredAccess,
@@ -128,7 +149,7 @@ ValidateWindowStationHandle(HWINSTA WindowStation,
   return Status;
 }
 
-NTSTATUS
+NTSTATUS STDCALL
 ValidateDesktopHandle(HDESK Desktop,
 		      KPROCESSOR_MODE AccessMode,
 		      ACCESS_MASK DesiredAccess,
@@ -341,7 +362,7 @@ NtUserOpenWindowStation(
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING WindowStationName;
-  PWINSTATION_OBJECT WinStaObject;
+  //PWINSTATION_OBJECT WinStaObject;
   WCHAR NameBuffer[MAX_PATH];
   NTSTATUS Status;
   HWINSTA WinSta;
@@ -838,7 +859,7 @@ NtUserSwitchDesktop(HDESK hDesktop)
   return(TRUE);
 }
 
-VOID
+VOID FASTCALL
 W32kInitializeDesktopGraphics(VOID)
 {
   ScreenDeviceContext = W32kCreateDC(L"DISPLAY", NULL, NULL, NULL);
@@ -847,7 +868,7 @@ W32kInitializeDesktopGraphics(VOID)
   NtUserAcquireOrReleaseInputOwnership(FALSE);
 }
 
-VOID
+VOID FASTCALL
 W32kEndDesktopGraphics(VOID)
 {
   NtUserAcquireOrReleaseInputOwnership(TRUE);
@@ -859,7 +880,7 @@ W32kEndDesktopGraphics(VOID)
     }
 }
 
-HDC
+HDC FASTCALL
 W32kGetScreenDC(VOID)
 {
   return(ScreenDeviceContext);

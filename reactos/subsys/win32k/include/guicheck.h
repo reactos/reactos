@@ -4,9 +4,9 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 
-VOID
+VOID FASTCALL
 W32kGuiCheck(VOID);
-VOID
+VOID FASTCALL
 W32kGraphicsCheck(BOOL Create);
 
 #endif /* __WIN32K_GUICHECK_H */

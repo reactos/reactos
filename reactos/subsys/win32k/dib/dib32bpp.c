@@ -1,3 +1,22 @@
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: dib32bpp.c,v 1.2 2003/05/18 17:16:17 ea Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -8,7 +27,8 @@
 #include "../eng/objects.h"
 #include "dib.h"
 
-VOID DIB_32BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
+VOID
+DIB_32BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;
   PDWORD addr = (PDWORD)byteaddr + x;
@@ -16,7 +36,8 @@ VOID DIB_32BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
   *addr = c;
 }
 
-ULONG DIB_32BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
+ULONG
+DIB_32BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
 {
   PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;
   PDWORD addr = (PDWORD)byteaddr + x;
@@ -24,7 +45,8 @@ ULONG DIB_32BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
   return (ULONG)(*addr);
 }
 
-VOID DIB_32BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
+VOID
+DIB_32BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;
   PDWORD addr = (PDWORD)byteaddr + x1;
@@ -37,7 +59,8 @@ VOID DIB_32BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
   }
 }
 
-VOID DIB_32BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
+VOID
+DIB_32BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvScan0 + y1 * SurfObj->lDelta;
   PDWORD addr = (PDWORD)byteaddr + x;
@@ -51,7 +74,8 @@ VOID DIB_32BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
   }
 }
 
-BOOLEAN DIB_32BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+BOOLEAN
+DIB_32BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          SURFGDI *DestGDI,  SURFGDI *SourceGDI,
                          PRECTL  DestRect,  POINTL  *SourcePoint,
                          XLATEOBJ *ColorTranslation)
@@ -201,3 +225,4 @@ BOOLEAN DIB_32BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
   return TRUE;
 }
+/* EOF */

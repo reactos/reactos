@@ -1,11 +1,11 @@
 #ifndef __WIN32K_ERROR_H
 #define __WIN32K_ERROR_H
 
-VOID
+VOID FASTCALL
 SetLastNtError(
   NTSTATUS Status);
 
-VOID
+VOID FASTCALL
 SetLastWin32Error(
   DWORD Status);
 

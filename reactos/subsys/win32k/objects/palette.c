@@ -1,10 +1,32 @@
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: palette.c,v 1.8 2003/05/18 17:16:18 ea Exp $ */
+
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <win32k/debug.h>
 #include <win32k/bitmaps.h>
 #include <win32k/color.h>
 #include <debug.h>
-#include "../include/palette.h"
+#include <include/palette.h>
+#include <include/object.h>
+#include <include/color.h>
 
 static int           PALETTE_firstFree = 0; 
 static unsigned char PALETTE_freeList[256];
@@ -16,13 +38,13 @@ int COLOR_gapEnd;
 int COLOR_gapFilled;
 int COLOR_max;
 
-PALETTEENTRY *ReturnSystemPalette(void)
+PPALETTEENTRY FASTCALL ReturnSystemPalette (VOID)
 {
   return COLOR_sysPal;
 }
 
 // Create the system palette
-HPALETTE PALETTE_Init(void)
+HPALETTE FASTCALL PALETTE_Init(VOID)
 {
   int i;
   HPALETTE hpalette;
@@ -63,7 +85,7 @@ HPALETTE PALETTE_Init(void)
   return hpalette;
 }
 
-static void PALETTE_FormatSystemPalette(void)
+static void FASTCALL PALETTE_FormatSystemPalette(void)
 {
   // Build free list so we'd have an easy way to find
   // out if there are any available colorcells. 
@@ -84,7 +106,7 @@ static void PALETTE_FormatSystemPalette(void)
 }
 
 /* Ported from WINE 20020804 (graphics\x11drv\palette.c) */
-static int SysPaletteLookupPixel( COLORREF col, BOOL skipReserved )
+static int FASTCALL SysPaletteLookupPixel( COLORREF col, BOOL skipReserved )
 {
   int i, best = 0, diff = 0x7fffffff;
   int r,g,b;
@@ -138,7 +160,7 @@ UINT WINAPI GetNearestPaletteIndex(
   return index;
 }
 
-void PALETTE_ValidateFlags(PALETTEENTRY* lpPalE, int size)
+VOID FASTCALL PALETTE_ValidateFlags(PALETTEENTRY* lpPalE, INT size)
 {
   int i = 0;
   for( ; i<size ; i++ )
@@ -147,7 +169,7 @@ void PALETTE_ValidateFlags(PALETTEENTRY* lpPalE, int size)
 
 // Set the color-mapping table for selected palette. 
 // Return number of entries which mapping has changed.
-int PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
+INT STDCALL PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
 {
   char flag;
   int  prevMapping = (palPtr->mapping) ? 1 : 0;
@@ -251,7 +273,7 @@ int PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
 
 /* Return the physical color closest to 'color'. */
 /* Ported from WINE 20020804 (graphics\x11drv\palette.c) */
-int PALETTE_ToPhysical( PDC dc, COLORREF color )
+INT FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color)
 {
     WORD            index = 0;
     HPALETTE        hPal = (dc)? dc->w.hPalette: W32kGetStockObject(DEFAULT_PALETTE);
@@ -384,3 +406,4 @@ int PALETTE_ToPhysical( PDC dc, COLORREF color )
 //    GDI_ReleaseObj( hPal );
     return index;
 }
+/* EOF */

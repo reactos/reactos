@@ -1,4 +1,23 @@
 /*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: xlate.c,v 1.19 2003/05/18 17:16:17 ea Exp $
+ * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          GDI Color Translation Functions
@@ -22,17 +41,17 @@
 
 ULONG CCMLastSourceColor = 0, CCMLastColorMatch = 0;
 
-ULONG RGBtoULONG(BYTE Red, BYTE Green, BYTE Blue)
+ULONG STDCALL RGBtoULONG(BYTE Red, BYTE Green, BYTE Blue)
 {
   return ((Red & 0xff) << 16) | ((Green & 0xff) << 8) | (Blue & 0xff);
 }
 
-ULONG BGRtoULONG(BYTE Blue, BYTE Green, BYTE Red)
+ULONG STDCALL BGRtoULONG(BYTE Blue, BYTE Green, BYTE Red)
 {
   return ((Blue & 0xff) << 16) | ((Green & 0xff) << 8) | (Red & 0xff);
 }
 
-static ULONG ShiftAndMask(XLATEGDI *XlateGDI, ULONG Color)
+static ULONG FASTCALL ShiftAndMask(XLATEGDI *XlateGDI, ULONG Color)
 {
   ULONG TranslatedColor;
 
@@ -61,7 +80,8 @@ static ULONG ShiftAndMask(XLATEGDI *XlateGDI, ULONG Color)
 // then we should cache more than one value. Same with the source.
 
 // Takes indexed palette and a
-ULONG ClosestColorMatch(XLATEGDI *XlateGDI, ULONG SourceColor, ULONG *DestColors,
+ULONG STDCALL 
+ClosestColorMatch(XLATEGDI *XlateGDI, ULONG SourceColor, ULONG *DestColors,
                         ULONG NumColors)
 {
   PVIDEO_CLUTDATA cSourceColor;
@@ -123,7 +143,8 @@ ULONG ClosestColorMatch(XLATEGDI *XlateGDI, ULONG SourceColor, ULONG *DestColors
   return idx;
 }
 
-VOID IndexedToIndexedTranslationTable(XLATEGDI *XlateGDI, ULONG *TranslationTable,
+VOID STDCALL 
+IndexedToIndexedTranslationTable(XLATEGDI *XlateGDI, ULONG *TranslationTable,
                                       PALGDI *PalDest, PALGDI *PalSource)
 {
   ULONG i;
@@ -134,7 +155,8 @@ VOID IndexedToIndexedTranslationTable(XLATEGDI *XlateGDI, ULONG *TranslationTabl
   }
 }
 
-static VOID BitMasksFromPal(USHORT PalType, PPALGDI Palette,
+static VOID STDCALL
+BitMasksFromPal(USHORT PalType, PPALGDI Palette,
                             PULONG RedMask, PULONG BlueMask, PULONG GreenMask)
 {
   switch(PalType)
@@ -161,7 +183,7 @@ static VOID BitMasksFromPal(USHORT PalType, PPALGDI Palette,
  * Calculate the number of bits Mask must be shift to the left to get a
  * 1 in the most significant bit position
  */
-static INT CalculateShift(ULONG Mask)
+static INT FASTCALL CalculateShift(ULONG Mask)
 {
    INT Shift = 0;
    ULONG LeftmostBit = 1 << (8 * sizeof(ULONG) - 1);
@@ -175,7 +197,7 @@ static INT CalculateShift(ULONG Mask)
    return Shift;
 }
 
-XLATEOBJ *IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
+XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
                             HPALETTE PaletteDest, HPALETTE PaletteSource)
 {
   // FIXME: Add support for BGR conversions
@@ -321,7 +343,7 @@ XLATEOBJ *IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
   return XlateObj;
 }
 
-VOID EngDeleteXlate(XLATEOBJ *XlateObj)
+VOID FASTCALL EngDeleteXlate(XLATEOBJ *XlateObj)
 {
   HPALETTE HXlate    = (HPALETTE)AccessHandleFromUserObject(XlateObj);
   XLATEGDI *XlateGDI = (XLATEGDI*)AccessInternalObject((ULONG)HXlate);
@@ -411,3 +433,4 @@ XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj,
 
   return i;
 }
+/* EOF */

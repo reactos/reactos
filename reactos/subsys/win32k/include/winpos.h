@@ -2,18 +2,18 @@
 #define SWP_NOCLIENTMOVE          0x0800
 #define SWP_NOCLIENTSIZE          0x1000
 
-LRESULT
+LRESULT STDCALL
 WinPosGetNonClientSize(HWND Wnd, RECT* WindowRect, RECT* ClientRect);
-UINT
+UINT STDCALL
 WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
 		    POINT* MinTrack, POINT* MaxTrack);
-UINT
+UINT STDCALL
 WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos);
-BOOLEAN
+BOOLEAN STDCALL
 WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 		   INT cy, UINT flags);
-BOOLEAN
+BOOLEAN FASTCALL
 WinPosShowWindow(HWND Wnd, INT Cmd);
-USHORT
+USHORT STDCALL
 WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint, 
 		      PWINDOW_OBJECT* Window);

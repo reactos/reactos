@@ -64,20 +64,20 @@ typedef struct _USER_MESSAGE_QUEUE
   HWND CaptureWindow;
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;
 
-VOID
+VOID FASTCALL
 MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 	       PUSER_SENT_MESSAGE Message);
-VOID
+VOID FASTCALL
 MsqInitializeMessage(PUSER_MESSAGE Message,
 		     LPMSG Msg);
-PUSER_MESSAGE
+PUSER_MESSAGE FASTCALL
 MsqCreateMessage(LPMSG Msg);
-VOID
+VOID FASTCALL
 MsqDestroyMessage(PUSER_MESSAGE Message);
-VOID
+VOID FASTCALL
 MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 	       PUSER_MESSAGE Message);
-BOOLEAN
+BOOLEAN STDCALL
 MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	       IN BOOLEAN Hardware,
 	       IN BOOLEAN Remove,
@@ -85,30 +85,30 @@ MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	       IN UINT MsgFilterLow,
 	       IN UINT MsgFilterHigh,
 	       OUT PUSER_MESSAGE* Message);
-VOID
+VOID FASTCALL
 MsqInitializeMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
-VOID
+VOID FASTCALL
 MsqFreeMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
-PUSER_MESSAGE_QUEUE
+PUSER_MESSAGE_QUEUE FASTCALL
 MsqCreateMessageQueue(VOID);
-VOID
+VOID FASTCALL
 MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
-PUSER_MESSAGE_QUEUE
+PUSER_MESSAGE_QUEUE FASTCALL
 MsqGetHardwareMessageQueue(VOID);
-NTSTATUS
+NTSTATUS FASTCALL
 MsqWaitForNewMessage(PUSER_MESSAGE_QUEUE MessageQueue);
-NTSTATUS
+NTSTATUS FASTCALL
 MsqInitializeImpl(VOID);
-BOOLEAN
+BOOLEAN FASTCALL
 MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
-NTSTATUS
+NTSTATUS FASTCALL
 MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue);
-VOID
+VOID FASTCALL
 MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 		     PUSER_SENT_MESSAGE_NOTIFY NotifyMessage);
-VOID
+VOID FASTCALL
 MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
-VOID
+VOID FASTCALL
 MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
 LRESULT STDCALL
 W32kSendMessage(HWND hWnd,
@@ -116,9 +116,9 @@ W32kSendMessage(HWND hWnd,
 		WPARAM wParam,
 		LPARAM lParam,
 		BOOL KernelMessage);
-VOID
+VOID STDCALL
 MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
-VOID
+VOID FASTCALL
 MsqInsertSystemMessage(MSG* Msg);
 
 #define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))

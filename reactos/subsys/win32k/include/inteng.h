@@ -3,7 +3,7 @@
 
 /* Definitions of IntEngXxx functions */
 
-extern BOOL STDCALL IntEngLineTo(SURFOBJ *Surface,
+BOOL STDCALL IntEngLineTo(SURFOBJ *Surface,
                                  CLIPOBJ *Clip,
                                  BRUSHOBJ *Brush,
                                  LONG x1,
@@ -24,15 +24,18 @@ BOOL STDCALL IntEngBitBlt(SURFOBJ *DestObj,
 	                  POINTL *BrushOrigin,
 	                  ROP4 rop4);
 
-XLATEOBJ *IntEngCreateXlate(USHORT DestPalType,
+XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType,
                             USHORT SourcePalType,
                             HPALETTE PaletteDest,
                             HPALETTE PaletteSource);
 			
-extern BOOL STDCALL IntEngPolyline(SURFOBJ *DestSurf,
+BOOL STDCALL IntEngPolyline(SURFOBJ *DestSurf,
 	                           CLIPOBJ *Clip,
 	                           BRUSHOBJ *Brush,
 	                           CONST LPPOINT  pt,
 				   LONG dCount,
 	                           MIX mix);
+CLIPOBJ STDCALL * IntEngCreateClipRegion(ULONG count,
+					 PRECTL pRect,
+					 RECTL rcBounds);
 #endif

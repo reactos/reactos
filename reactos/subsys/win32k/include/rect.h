@@ -8,5 +8,5 @@ BOOL STDCALL
 W32kIsEmptyRect(PRECT Rect);
 BOOL STDCALL
 W32kIntersectRect(PRECT Dest, const RECT* Src1, const RECT* Src2);
-BOOL
+BOOL STDCALL
 W32kOffsetRect(LPRECT Rect, INT x, INT y);

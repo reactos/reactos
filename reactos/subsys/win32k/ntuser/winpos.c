@@ -1,4 +1,22 @@
-/* $Id: winpos.c,v 1.9 2003/05/18 07:51:41 gvg Exp $
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: winpos.c,v 1.10 2003/05/18 17:16:17 ea Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -23,6 +41,7 @@
 #include <include/rect.h>
 #include <include/callback.h>
 #include <include/painting.h>
+#include <include/dce.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -33,7 +52,7 @@
 
 #define SWP_EX_PAINTSELF 0x0002
 
-ATOM AtomInternalPos = NULL;
+ATOM AtomInternalPos = (ATOM) NULL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -45,7 +64,7 @@ ATOM AtomInternalPos = NULL;
        (((Style) & WS_THICKFRAME) && \
         !((Style) & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)
 
-VOID
+VOID FASTCALL
 WinPosSetupInternalPos(VOID)
 {
   AtomInternalPos = NtAddAtom(L"SysIP", (ATOM*)(PULONG)&AtomInternalPos);
@@ -67,23 +86,27 @@ NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
   return(TRUE);
 }
 
-BOOL
+BOOL FASTCALL
 WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
+	return FALSE;
 }
 
-POINT STATIC
+POINT STATIC FASTCALL
 WinPosFindIconPos(HWND hWnd, POINT Pos)
 {
+  POINT point;
+  //FIXME
+  return point;
 }
 
-HWND STATIC
+HWND STATIC FASTCALL
 WinPosCreateIconTitle(PWINDOW_OBJECT WindowObject)
 {
   return(NULL);
 }
 
-BOOL STATIC
+BOOL STATIC FASTCALL
 WinPosShowIconTitle(PWINDOW_OBJECT WindowObject, BOOL Show)
 {
   PINTERNALPOS InternalPos = NtUserGetProp(WindowObject->Self,
@@ -127,7 +150,7 @@ WinPosShowIconTitle(PWINDOW_OBJECT WindowObject, BOOL Show)
   return(FALSE);
 }
 
-PINTERNALPOS STATIC
+PINTERNALPOS STATIC STDCALL
 WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
 {
   PINTERNALPOS InternalPos = NtUserGetProp(WindowObject->Self, 
@@ -157,7 +180,7 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
   return(InternalPos);
 }
 
-UINT
+UINT STDCALL
 WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 {
   POINT Size;
@@ -258,7 +281,7 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
   return(SwpFlags);
 }
 
-UINT
+UINT STDCALL
 WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
 		    POINT* MinTrack, POINT* MaxTrack)
 {
@@ -318,20 +341,24 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
   if (MaxPos) *MaxPos = MinMax.ptMaxPosition;
   if (MinTrack) *MinTrack = MinMax.ptMinTrackSize;
   if (MaxTrack) *MaxTrack = MinMax.ptMaxTrackSize;
+
+  return 0; //FIXME: what does it return?
 }
 
-BOOL STATIC
+BOOL STATIC FASTCALL
 WinPosChangeActiveWindow(HWND Wnd, BOOL MouseMsg)
 {
+  return FALSE;
 }
 
-LONG STATIC
+LONG STATIC STDCALL
 WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
 		   RECT* WindowRect, RECT* ClientRect)
 {
+  return 0; //FIXME
 }
 
-BOOL
+BOOL STDCALL
 WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
 		       PWINDOWPOS WinPos,
 		       PRECT WindowRect,
@@ -368,7 +395,7 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
   return(TRUE);
 }
 
-BOOLEAN
+BOOLEAN STDCALL
 WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 		   INT cy, UINT flags)
 {
@@ -493,7 +520,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
     {
       Window->Style |= WS_VISIBLE;
       flags |= SWP_EX_PAINTSELF;
-      VisRgn = 1;
+      VisRgn = (HRGN) 1;
     }
   else
     {
@@ -517,7 +544,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	  if (flags & SWP_EX_PAINTSELF)
 	    {
 	      PaintRedrawWindow(Window->Self, NULL,
-				(VisRgn == 1) ? 0 : VisRgn,
+				(VisRgn == (HRGN) 1) ? 0 : VisRgn,
 				RDW_ERASE | RDW_FRAME | RDW_INVALIDATE |
 				RDW_ALLCHILDREN, 
 				RDW_EX_XYWINDOW | RDW_EX_USEHRGN);
@@ -525,7 +552,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	  else
 	    {
 	      PaintRedrawWindow(Window->Self, NULL,
-				(VisRgn == 1) ? 0 : VisRgn,
+				(VisRgn == (HRGN) 1) ? 0 : VisRgn,
 				RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN,
 				RDW_EX_USEHRGN);
 	    }
@@ -546,14 +573,14 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
   return(TRUE);
 }
 
-LRESULT
+LRESULT STDCALL
 WinPosGetNonClientSize(HWND Wnd, RECT* WindowRect, RECT* ClientRect)
 {
   *ClientRect = *WindowRect;
   return(W32kSendNCCALCSIZEMessage(Wnd, FALSE, ClientRect, NULL));
 }
 
-BOOLEAN
+BOOLEAN FASTCALL
 WinPosShowWindow(HWND Wnd, INT Cmd)
 {
   BOOLEAN WasVisible;
@@ -733,7 +760,7 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
   return(WasVisible);
 }
 
-BOOL STATIC
+BOOL STATIC FASTCALL
 WinPosPtInWindow(PWINDOW_OBJECT Window, POINT Point)
 {
   return(Point.x >= Window->WindowRect.left &&
@@ -742,7 +769,7 @@ WinPosPtInWindow(PWINDOW_OBJECT Window, POINT Point)
 	 Point.y < Window->WindowRect.bottom);
 }
 
-USHORT STATIC
+USHORT STATIC STDCALL
 WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
 		     PWINDOW_OBJECT* Window)
 {
@@ -786,7 +813,7 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
   return(0);
 }
 
-USHORT
+USHORT STDCALL
 WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint, 
 		      PWINDOW_OBJECT* Window)
 {
@@ -832,3 +859,4 @@ WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint,
 
   return(HitTest);
 }
+/* EOF */

@@ -1,3 +1,22 @@
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: path.c,v 1.10 2003/05/18 17:16:18 ea Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -8,6 +27,9 @@
 #include <win32k/float.h>
 #include <win32k/coord.h>
 #include <win32k/line.h>
+#define _WIN32K_PATH_INTERNAL
+#include <include/object.h>
+#include <include/path.h>
 
 #include <math.h>
 #include <float.h>
@@ -20,19 +42,6 @@
 #define GROW_FACTOR_DENOM    1  /* Denominator of grow factor             */
 
 
-static BOOL PATH_PathToRegion(const GdiPath *pPath, INT nPolyFillMode,
-   HRGN *pHrgn);
-static void   PATH_EmptyPath(GdiPath *pPath);
-static BOOL PATH_AddEntry(GdiPath *pPath, const POINT *pPoint,
-   BYTE flags);
-static BOOL PATH_ReserveEntries(GdiPath *pPath, INT numEntries);
-static BOOL PATH_GetPathFromHDC(HDC hdc, GdiPath **ppPath);
-static BOOL PATH_DoArcPart(GdiPath *pPath, FLOAT_POINT corners[],
-   double angleStart, double angleEnd, BOOL addMoveTo);
-static void PATH_ScaleNormalizedPoint(FLOAT_POINT corners[], double x,
-   double y, POINT *pPoint);
-static void PATH_NormalizePoint(FLOAT_POINT corners[], const FLOAT_POINT
-   *pPoint, double *pX, double *pY);
 
 BOOL
 STDCALL
@@ -140,7 +149,7 @@ W32kWidenPath(HDC  hDC)
  *
  * Initializes the GdiPath structure.
  */
-void PATH_InitGdiPath(GdiPath *pPath)
+VOID FASTCALL PATH_InitGdiPath(GdiPath *pPath)
 {
   assert(pPath!=NULL);
 
@@ -155,7 +164,7 @@ void PATH_InitGdiPath(GdiPath *pPath)
  *
  * Destroys a GdiPath structure (frees the memory in the arrays).
  */
-void PATH_DestroyGdiPath(GdiPath *pPath)
+VOID FASTCALL PATH_DestroyGdiPath(GdiPath *pPath)
 {
   assert(pPath!=NULL);
 
@@ -173,7 +182,7 @@ void PATH_DestroyGdiPath(GdiPath *pPath)
  * not a copy constructor).
  * Returns TRUE if successful, else FALSE.
  */
-BOOL PATH_AssignGdiPath(GdiPath *pPathDest, const GdiPath *pPathSrc)
+BOOL FASTCALL PATH_AssignGdiPath(GdiPath *pPathDest, const GdiPath *pPathSrc)
 {
   assert(pPathDest!=NULL && pPathSrc!=NULL);
 
@@ -200,7 +209,7 @@ BOOL PATH_AssignGdiPath(GdiPath *pPathDest, const GdiPath *pPathSrc)
  * open path. This starts a new stroke. Returns TRUE if successful, else
  * FALSE.
  */
-BOOL PATH_MoveTo(HDC hdc)
+BOOL FASTCALL PATH_MoveTo(HDC hdc)
 {
   GdiPath *pPath;
 
@@ -226,7 +235,7 @@ BOOL PATH_MoveTo(HDC hdc)
  * a PT_MOVETO entry, if this is the first LineTo in a stroke).
  * Returns TRUE if successful, else FALSE.
  */
-BOOL PATH_LineTo(HDC hdc, INT x, INT y)
+BOOL STDCALL PATH_LineTo(HDC hdc, INT x, INT y)
 {
   GdiPath *pPath;
   POINT point, pointCurPos;
@@ -265,7 +274,7 @@ BOOL PATH_LineTo(HDC hdc, INT x, INT y)
  * Should be called when a call to Rectangle is performed on a DC that has
  * an open path. Returns TRUE if successful, else FALSE.
  */
-BOOL PATH_Rectangle(HDC hdc, INT x1, INT y1, INT x2, INT y2)
+BOOL STDCALL PATH_Rectangle(HDC hdc, INT x1, INT y1, INT x2, INT y2)
 {
   GdiPath *pPath;
   POINT corners[2], pointTemp;
@@ -347,7 +356,7 @@ BOOL PATH_Rectangle(HDC hdc, INT x1, INT y1, INT x2, INT y2)
  * an open path. This adds four Bezier splines representing the ellipse
  * to the path. Returns TRUE if successful, else FALSE.
  */
-BOOL PATH_Ellipse(HDC hdc, INT x1, INT y1, INT x2, INT y2)
+BOOL STDCALL PATH_Ellipse(HDC hdc, INT x1, INT y1, INT x2, INT y2)
 {
   /* TODO: This should probably be revised to call PATH_AngleArc */
   /* (once it exists) */
@@ -360,7 +369,7 @@ BOOL PATH_Ellipse(HDC hdc, INT x1, INT y1, INT x2, INT y2)
  * an open path. This adds up to five Bezier splines representing the arc
  * to the path. Returns TRUE if successful, else FALSE.
  */
-BOOL PATH_Arc(HDC hdc, INT x1, INT y1, INT x2, INT y2,
+BOOL STDCALL PATH_Arc(HDC hdc, INT x1, INT y1, INT x2, INT y2,
    INT xStart, INT yStart, INT xEnd, INT yEnd)
 {
   GdiPath *pPath;
@@ -504,7 +513,7 @@ BOOL PATH_Arc(HDC hdc, INT x1, INT y1, INT x2, INT y2,
   return TRUE;
 }
 
-BOOL PATH_PolyBezierTo(HDC hdc, const POINT *pts, DWORD cbPoints)
+BOOL STDCALL PATH_PolyBezierTo(HDC hdc, const POINT *pts, DWORD cbPoints)
 {
   GdiPath *pPath;
   POINT pt;
@@ -537,7 +546,7 @@ BOOL PATH_PolyBezierTo(HDC hdc, const POINT *pts, DWORD cbPoints)
   return TRUE;
 }
 
-BOOL PATH_PolyBezier(HDC hdc, const POINT *pts, DWORD cbPoints)
+BOOL STDCALL PATH_PolyBezier(HDC hdc, const POINT *pts, DWORD cbPoints)
 {
   GdiPath *pPath;
   POINT   pt;
@@ -559,7 +568,7 @@ BOOL PATH_PolyBezier(HDC hdc, const POINT *pts, DWORD cbPoints)
   return TRUE;
 }
 
-BOOL PATH_Polyline(HDC hdc, const POINT *pts, DWORD cbPoints)
+BOOL STDCALL PATH_Polyline(HDC hdc, const POINT *pts, DWORD cbPoints)
 {
   GdiPath *pPath;
   POINT   pt;
@@ -581,7 +590,7 @@ BOOL PATH_Polyline(HDC hdc, const POINT *pts, DWORD cbPoints)
   return TRUE;
 }
 
-BOOL PATH_PolylineTo(HDC hdc, const POINT *pts, DWORD cbPoints)
+BOOL STDCALL PATH_PolylineTo(HDC hdc, const POINT *pts, DWORD cbPoints)
 {
   GdiPath *pPath;
   POINT   pt;
@@ -616,7 +625,7 @@ BOOL PATH_PolylineTo(HDC hdc, const POINT *pts, DWORD cbPoints)
 }
 
 
-BOOL PATH_Polygon(HDC hdc, const POINT *pts, DWORD cbPoints)
+BOOL STDCALL PATH_Polygon(HDC hdc, const POINT *pts, DWORD cbPoints)
 {
   GdiPath *pPath;
   POINT   pt;
@@ -640,7 +649,7 @@ BOOL PATH_Polygon(HDC hdc, const POINT *pts, DWORD cbPoints)
   return TRUE;
 }
 
-BOOL PATH_PolyPolygon( HDC hdc, const POINT* pts, const INT* counts,
+BOOL STDCALL PATH_PolyPolygon( HDC hdc, const POINT* pts, const INT* counts,
 		       UINT polygons )
 {
   GdiPath *pPath;
@@ -668,7 +677,7 @@ BOOL PATH_PolyPolygon( HDC hdc, const POINT* pts, const INT* counts,
   return TRUE;
 }
 
-BOOL PATH_PolyPolyline( HDC hdc, const POINT* pts, const DWORD* counts,
+BOOL STDCALL PATH_PolyPolyline( HDC hdc, const POINT* pts, const DWORD* counts,
 			DWORD polylines )
 {
   GdiPath *pPath;
@@ -701,7 +710,7 @@ BOOL PATH_PolyPolyline( HDC hdc, const POINT* pts, const DWORD* counts,
 /* PATH_AddFlatBezier
  *
  */
-static BOOL PATH_AddFlatBezier(GdiPath *pPath, POINT *pt, BOOL closed)
+BOOL STDCALL PATH_AddFlatBezier(GdiPath *pPath, POINT *pt, BOOL closed)
 {
   POINT *pts;
   INT no, i;
@@ -721,7 +730,7 @@ static BOOL PATH_AddFlatBezier(GdiPath *pPath, POINT *pt, BOOL closed)
  * Replaces Beziers with line segments
  *
  */
-static BOOL PATH_FlattenPath(GdiPath *pPath)
+BOOL FASTCALL PATH_FlattenPath(GdiPath *pPath)
 {
   GdiPath newPath;
   INT srcpt;
@@ -754,7 +763,7 @@ static BOOL PATH_FlattenPath(GdiPath *pPath)
  * error occurs, SetLastError is called with the appropriate value and
  * FALSE is returned.
  */
-static BOOL PATH_PathToRegion(const GdiPath *pPath, INT nPolyFillMode,
+BOOL STDCALL PATH_PathToRegion(const GdiPath *pPath, INT nPolyFillMode,
    HRGN *pHrgn)
 {
   int    numStrokes, iStroke, i;
@@ -818,7 +827,7 @@ static BOOL PATH_PathToRegion(const GdiPath *pPath, INT nPolyFillMode,
  *
  * Removes all entries from the path and sets the path state to PATH_Null.
  */
-static void PATH_EmptyPath(GdiPath *pPath)
+VOID STDCALL PATH_EmptyPath(GdiPath *pPath)
 {
   assert(pPath!=NULL);
 
@@ -832,7 +841,7 @@ static void PATH_EmptyPath(GdiPath *pPath)
  * or PT_BEZIERTO, optionally ORed with PT_CLOSEFIGURE. Returns TRUE if
  * successful, FALSE otherwise (e.g. if not enough memory was available).
  */
-BOOL PATH_AddEntry(GdiPath *pPath, const POINT *pPoint, BYTE flags)
+BOOL STDCALL PATH_AddEntry(GdiPath *pPath, const POINT *pPoint, BYTE flags)
 {
   assert(pPath!=NULL);
 
@@ -868,7 +877,7 @@ BOOL PATH_AddEntry(GdiPath *pPath, const POINT *pPoint, BYTE flags)
  * been allocated; allocates larger arrays and copies the existing entries
  * to those arrays, if necessary. Returns TRUE if successful, else FALSE.
  */
-static BOOL PATH_ReserveEntries(GdiPath *pPath, INT numEntries)
+BOOL STDCALL PATH_ReserveEntries(GdiPath *pPath, INT numEntries)
 {
   INT   numEntriesToAllocate;
   POINT *pPointsNew;
@@ -926,7 +935,7 @@ static BOOL PATH_ReserveEntries(GdiPath *pPath, INT numEntries)
  * Retrieves a pointer to the GdiPath structure contained in an HDC and
  * places it in *ppPath. TRUE is returned if successful, FALSE otherwise.
  */
-static BOOL PATH_GetPathFromHDC(HDC hdc, GdiPath **ppPath)
+BOOL FASTCALL PATH_GetPathFromHDC(HDC hdc, GdiPath **ppPath)
 {
   DC *pDC;
 
@@ -949,7 +958,7 @@ static BOOL PATH_GetPathFromHDC(HDC hdc, GdiPath **ppPath)
  * point is added to the path; otherwise, it is assumed that the current
  * position is equal to the first control point.
  */
-static BOOL PATH_DoArcPart(GdiPath *pPath, FLOAT_POINT corners[],
+BOOL STDCALL PATH_DoArcPart(GdiPath *pPath, FLOAT_POINT corners[],
    double angleStart, double angleEnd, BOOL addMoveTo)
 {
   double  halfAngle, a;
@@ -1007,7 +1016,7 @@ static BOOL PATH_DoArcPart(GdiPath *pPath, FLOAT_POINT corners[],
  * coordinates (-1.0, -1.0) correspond to corners[0], the coordinates
  * (1.0, 1.0) correspond to corners[1].
  */
-static void PATH_ScaleNormalizedPoint(FLOAT_POINT corners[], double x,
+VOID STDCALL PATH_ScaleNormalizedPoint(FLOAT_POINT corners[], double x,
    double y, POINT *pPoint)
 {
   pPoint->x=GDI_ROUND( (double)corners[0].x + (double)(corners[1].x-corners[0].x)*0.5*(x+1.0) );
@@ -1019,10 +1028,11 @@ static void PATH_ScaleNormalizedPoint(FLOAT_POINT corners[], double x,
  * Normalizes a point with respect to the box whose corners are passed in
  * corners. The normalized coordinates are stored in *pX and *pY.
  */
-static void PATH_NormalizePoint(FLOAT_POINT corners[],
+VOID STDCALL PATH_NormalizePoint(FLOAT_POINT corners[],
    const FLOAT_POINT *pPoint,
    double *pX, double *pY)
 {
   *pX=(double)(pPoint->x-corners[0].x)/(double)(corners[1].x-corners[0].x) * 2.0 - 1.0;
   *pY=(double)(pPoint->y-corners[0].y)/(double)(corners[1].y-corners[0].y) * 2.0 - 1.0;
 }
+/* EOF */

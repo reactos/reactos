@@ -2,6 +2,9 @@
 #define __WIN32K_OBJECT_H
 
 #include <windows.h>
+#include <win32k/gdiobj.h>
+#include <win32k/bitmaps.h>
+#include <win32k/pen.h>
 
 typedef enum {
   otUnknown = 0,
@@ -40,77 +43,88 @@ typedef struct _USER_HANDLE_TABLE
 } USER_HANDLE_TABLE, *PUSER_HANDLE_TABLE;
 
 
-ULONG
+ULONG FASTCALL
 ObmGetReferenceCount(
   PVOID ObjectBody);
 
-ULONG
+ULONG FASTCALL
 ObmGetHandleCount(
   PVOID ObjectBody);
 
-VOID
+VOID FASTCALL
 ObmReferenceObject(
   PVOID ObjectBody);
 
-VOID
+VOID FASTCALL
 ObmDereferenceObject(
   PVOID ObjectBody);
 
-NTSTATUS
+NTSTATUS FASTCALL
 ObmReferenceObjectByPointer(
   PVOID ObjectBody,
   USER_OBJECT_TYPE ObjectType);
 
-PVOID
+PVOID FASTCALL
 ObmCreateObject(
   PUSER_HANDLE_TABLE HandleTable,
   PHANDLE Handle,
 	USER_OBJECT_TYPE ObjectType,
   ULONG ObjectSize);
 
-NTSTATUS
+NTSTATUS FASTCALL
 ObmCreateHandle(
   PUSER_HANDLE_TABLE HandleTable,
   PVOID ObjectBody,
 	PHANDLE HandleReturn);
 
-NTSTATUS
+NTSTATUS FASTCALL
 ObmReferenceObjectByHandle(
   PUSER_HANDLE_TABLE HandleTable,
   HANDLE Handle,
 	USER_OBJECT_TYPE ObjectType,
 	PVOID* Object);
 
-NTSTATUS
+NTSTATUS FASTCALL
 ObmCloseHandle(
   PUSER_HANDLE_TABLE HandleTable,
   HANDLE Handle);
 
-VOID
+VOID FASTCALL
 ObmInitializeHandleTable(
   PUSER_HANDLE_TABLE HandleTable);
 
-VOID
+VOID FASTCALL
 ObmFreeHandleTable(
   PUSER_HANDLE_TABLE HandleTable);
 
-PUSER_HANDLE_TABLE
+PUSER_HANDLE_TABLE FASTCALL
 ObmCreateHandleTable(VOID);
 
-VOID
-ObmDestroyHandleTable(
-  PUSER_HANDLE_TABLE HandleTable);
+VOID  FASTCALL ObmDestroyHandleTable (PUSER_HANDLE_TABLE HandleTable);
 
-ULONG CreateGDIHandle(ULONG InternalSize, ULONG UserSize);
-VOID FreeGDIHandle(ULONG Handle);
+ULONG FASTCALL CreateGDIHandle (ULONG InternalSize, ULONG UserSize);
+VOID  FASTCALL FreeGDIHandle (ULONG Handle);
 
-PVOID AccessUserObject(ULONG Handle);
-PVOID AccessInternalObject(ULONG Handle);
+PVOID FASTCALL AccessUserObject (ULONG Handle);
+PVOID FASTCALL AccessInternalObject (ULONG Handle);
 
-PVOID AccessInternalObjectFromUserObject(PVOID UserObject);
-ULONG AccessHandleFromUserObject(PVOID UserObject);
+PVOID FASTCALL AccessInternalObjectFromUserObject (PVOID UserObject);
+ULONG FASTCALL AccessHandleFromUserObject (PVOID UserObject);
 
-VOID InitEngHandleTable( void );
+VOID  FASTCALL InitEngHandleTable (VOID);
+VOID  FASTCALL InitGdiObjectHandleTable (VOID);
+
+VOID  FASTCALL CreateStockObjects (VOID);
+
+VOID  FASTCALL GDIOBJ_MarkObjectGlobal (HGDIOBJ ObjectHandle);
+BOOL  FASTCALL GDIOBJ_LockMultipleObj (PGDIMULTILOCK pList, INT nObj);
+
+PPOINT FASTCALL GDI_Bezier (const POINT *Points, INT count, PINT nPtsOut);
+
+/* objects/objconv.c */
+
+PBRUSHOBJ FASTCALL PenToBrushObj (PDC dc, PENOBJ *pen);
+HBITMAP FASTCALL BitmapToSurf (PBITMAPOBJ BitmapObj);
 
 #endif /* __WIN32K_OBJECT_H */
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.61 2003/04/02 23:19:28 gdalsnes Exp $
+# $Id: makefile,v 1.62 2003/05/18 17:16:17 ea Exp $
 
 PATH_TO_TOP = ../..
 
@@ -22,9 +22,16 @@ else
 CFLAGS_DBG :=
 endif
 
-TARGET_CFLAGS = $(CFLAGS_DBG) -I$(PATH_TO_TOP)/ntoskrnl/include -I$(FREETYPE_DIR)/include -DUNICODE -Wall
+TARGET_CFLAGS =\
+ $(CFLAGS_DBG) \
+ -I$(PATH_TO_TOP)/ntoskrnl/include \
+ -I$(FREETYPE_DIR)/include \
+ -DUNICODE \
+ -Wall
 
-TARGET_LFLAGS = $(PATH_TO_TOP)/dk/nkm/lib/freetype.a
+TARGET_LFLAGS =\
+ $(PATH_TO_TOP)/dk/nkm/lib/freetype.a \
+ --disable-stdcall-fixup
 
 ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o \
     eng/copybits.o eng/device.o eng/handle.o eng/lineto.o eng/paint.o \

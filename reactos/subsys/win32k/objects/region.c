@@ -1,3 +1,22 @@
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: region.c,v 1.23 2003/05/18 17:16:18 ea Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -9,6 +28,8 @@
 #include <win32k/cliprgn.h>
 #include <win32k/brush.h>
 #include <include/rect.h>
+#include <include/object.h>
+#include <include/inteng.h>
 
 
 #define NDEBUG
@@ -79,7 +100,7 @@ typedef struct _POINTBLOCK {
   struct _POINTBLOCK *next;
 } POINTBLOCK;
 
-static BOOL REGION_CopyRegion(PROSRGNDATA dst, PROSRGNDATA src)
+static BOOL FASTCALL REGION_CopyRegion(PROSRGNDATA dst, PROSRGNDATA src)
 {
   if(dst != src) //  don't want to copy to itself
   {
@@ -107,7 +128,7 @@ static BOOL REGION_CopyRegion(PROSRGNDATA dst, PROSRGNDATA src)
   return TRUE;
 }
 
-static void REGION_SetExtents (ROSRGNDATA *pReg)
+static void FASTCALL REGION_SetExtents (ROSRGNDATA *pReg)
 {
     RECT *pRect, *pRectEnd, *pExtents;
 
@@ -150,7 +171,7 @@ static void REGION_SetExtents (ROSRGNDATA *pReg)
 /***********************************************************************
  *           REGION_CropAndOffsetRegion
  */
-static BOOL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT rect, PROSRGNDATA rgnSrc, PROSRGNDATA rgnDst)
+static BOOL STDCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT rect, PROSRGNDATA rgnSrc, PROSRGNDATA rgnDst)
 {
   if(!rect) // just copy and offset
   {
@@ -312,7 +333,7 @@ empty:
  *
  * \return	hDst if success, 0 otherwise.
  */
-HRGN REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt)
+HRGN STDCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt)
 {
   PROSRGNDATA objSrc, rgnDst;
   HRGN hNewDst, hRet = NULL;
@@ -325,7 +346,7 @@ HRGN REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt)
 	  Lock[0].hObj = hNewDst;
   }
 
-  GDIOBJ_LockMultipleObj( &Lock, 2 );
+  GDIOBJ_LockMultipleObj( Lock, 2 );
   rgnDst = Lock[0].pObj;
   objSrc = Lock[1].pObj;
 
@@ -347,7 +368,7 @@ HRGN REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt)
 	  }
     }
   }
-  GDIOBJ_UnlockMultipleObj( &Lock, 2 );
+  GDIOBJ_UnlockMultipleObj( Lock, 2 );
   return hRet;
 }
 
@@ -365,7 +386,7 @@ HRGN REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt)
  *          - pReg->numRects will be decreased.
  *
  */
-static INT REGION_Coalesce (
+static INT STDCALL REGION_Coalesce (
 	     PROSRGNDATA pReg, /* Region to coalesce */
 	     INT prevStart,  /* Index of start of previous band */
 	     INT curStart    /* Index of start of current band */
@@ -506,7 +527,7 @@ static INT REGION_Coalesce (
  *      to reduce the number of rectangles in the region.
  *
  */
-static void REGION_RegionOp(
+static void STDCALL REGION_RegionOp(
 	    ROSRGNDATA *newReg, /* Place to store result */
 	    ROSRGNDATA *reg1,   /* First region in operation */
         ROSRGNDATA *reg2,   /* 2nd region in operation */
@@ -798,7 +819,7 @@ static void REGION_RegionOp(
  *      Rectangles may be added to the region.
  *
  */
-static void REGION_IntersectO(ROSRGNDATA *pReg,  RECT *r1, RECT *r1End,
+static void STDCALL REGION_IntersectO(ROSRGNDATA *pReg,  RECT *r1, RECT *r1End,
 		RECT *r2, RECT *r2End, INT top, INT bottom)
 
 {
@@ -821,7 +842,7 @@ static void REGION_IntersectO(ROSRGNDATA *pReg,  RECT *r1, RECT *r1End,
 		 */
 		if (left < right)
 		{
-		    MEMCHECK(pReg, pNextRect, pReg->Buffer);
+		    MEMCHECK(pReg, *(LPRECT*)pNextRect, *(LPRECT*)pReg->Buffer);
 		    pNextRect->left = left;
 		    pNextRect->top = top;
 		    pNextRect->right = right;
@@ -855,7 +876,7 @@ static void REGION_IntersectO(ROSRGNDATA *pReg,  RECT *r1, RECT *r1End,
 /***********************************************************************
  *	     REGION_IntersectRegion
  */
-static void REGION_IntersectRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
+static void STDCALL REGION_IntersectRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
 				   ROSRGNDATA *reg2)
 {
    /* check for trivial reject */
@@ -894,7 +915,7 @@ static void REGION_IntersectRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
  *      with the rectangles we're passed.
  *
  */
-static void REGION_UnionNonO (ROSRGNDATA *pReg, RECT *r, RECT *rEnd,
+static void STDCALL REGION_UnionNonO (ROSRGNDATA *pReg, RECT *r, RECT *rEnd,
 			      INT top, INT bottom)
 {
     RECT *pNextRect;
@@ -903,7 +924,7 @@ static void REGION_UnionNonO (ROSRGNDATA *pReg, RECT *r, RECT *rEnd,
 
     while (r != rEnd)
     {
-		MEMCHECK(pReg, pNextRect, pReg->Buffer);
+		MEMCHECK(pReg, *(LPRECT*)pNextRect, *(LPRECT*)pReg->Buffer);
 		pNextRect->left = r->left;
 		pNextRect->top = top;
 		pNextRect->right = r->right;
@@ -927,7 +948,7 @@ static void REGION_UnionNonO (ROSRGNDATA *pReg, RECT *r, RECT *rEnd,
  *      be changed.
  *
  */
-static void REGION_UnionO (ROSRGNDATA *pReg, RECT *r1, RECT *r1End,
+static void STDCALL REGION_UnionO (ROSRGNDATA *pReg, RECT *r1, RECT *r1End,
 			   RECT *r2, RECT *r2End, INT top, INT bottom)
 {
     RECT *pNextRect;
@@ -986,7 +1007,7 @@ static void REGION_UnionO (ROSRGNDATA *pReg, RECT *r1, RECT *r1End,
 /***********************************************************************
  *	     REGION_UnionRegion
  */
-static void REGION_UnionRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
+static void STDCALL REGION_UnionRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
 			       ROSRGNDATA *reg2)
 {
     /*  checks all the simple cases */
@@ -1062,7 +1083,7 @@ static void REGION_UnionRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
  *      pReg may be affected.
  *
  */
-static void REGION_SubtractNonO1 (ROSRGNDATA *pReg, RECT *r, RECT *rEnd,
+static void STDCALL REGION_SubtractNonO1 (ROSRGNDATA *pReg, RECT *r, RECT *rEnd,
 		INT top, INT bottom)
 {
     RECT *pNextRect;
@@ -1095,7 +1116,7 @@ static void REGION_SubtractNonO1 (ROSRGNDATA *pReg, RECT *r, RECT *rEnd,
  *      pReg may have rectangles added to it.
  *
  */
-static void REGION_SubtractO (ROSRGNDATA *pReg, RECT *r1, RECT *r1End,
+static void STDCALL REGION_SubtractO (ROSRGNDATA *pReg, RECT *r1, RECT *r1End,
 		RECT *r2, RECT *r2End, INT top, INT bottom)
 {
     RECT *pNextRect;
@@ -1221,7 +1242,7 @@ static void REGION_SubtractO (ROSRGNDATA *pReg, RECT *r1, RECT *r1End,
  *      regD is overwritten.
  *
  */
-static void REGION_SubtractRegion(ROSRGNDATA *regD, ROSRGNDATA *regM,
+static void STDCALL REGION_SubtractRegion(ROSRGNDATA *regD, ROSRGNDATA *regM,
 				                       ROSRGNDATA *regS )
 {
    /* check for trivial reject */
@@ -1248,7 +1269,7 @@ static void REGION_SubtractRegion(ROSRGNDATA *regD, ROSRGNDATA *regM,
 /***********************************************************************
  *	     REGION_XorRegion
  */
-static void REGION_XorRegion(ROSRGNDATA *dr, ROSRGNDATA *sra,
+static void STDCALL REGION_XorRegion(ROSRGNDATA *dr, ROSRGNDATA *sra,
 							ROSRGNDATA *srb)
 {
 	HRGN htra, htrb;
@@ -1287,7 +1308,7 @@ static void REGION_XorRegion(ROSRGNDATA *dr, ROSRGNDATA *sra,
 /*!
  * Adds a rectangle to a REGION
  */
-static void REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rgn)
+static void FASTCALL REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rgn)
 {
     ROSRGNDATA region;
 
@@ -1299,7 +1320,7 @@ static void REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rgn)
 }
 
 
-BOOL REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
+BOOL STDCALL REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
 {
   RECT *pCurRect, *pEndRect;
   PROSRGNDATA srcObj = NULL;
@@ -1357,7 +1378,7 @@ done:
   return ret;
 }
 
-HRGN RGNDATA_AllocRgn(INT n)
+HRGN FASTCALL RGNDATA_AllocRgn(INT n)
 {
   HRGN hReg;
   PROSRGNDATA pReg;
@@ -1385,7 +1406,7 @@ HRGN RGNDATA_AllocRgn(INT n)
   return NULL;
 }
 
-BOOL RGNDATA_InternalDelete( PROSRGNDATA pRgn )
+BOOL FASTCALL RGNDATA_InternalDelete( PROSRGNDATA pRgn )
 {
   ASSERT(pRgn);
   if(pRgn->Buffer)
@@ -1731,8 +1752,8 @@ STDCALL
 W32kPaintRgn(HDC  hDC,
                    HRGN  hRgn)
 {
-  RECT box;
-  HRGN tmpVisRgn, prevVisRgn;
+  //RECT box;
+  HRGN tmpVisRgn; //, prevVisRgn;
   DC *dc = DC_HandleToPtr(hDC);
   PROSRGNDATA visrgn;
   CLIPOBJ* ClipRegion;
@@ -1770,13 +1791,13 @@ W32kPaintRgn(HDC  hDC,
   ASSERT(pBrush);
   BrushOrigin.x = dc->w.brushOrgX;
   BrushOrigin.y = dc->w.brushOrgY;
-  SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
+  SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
 
   bRet = IntEngPaint(SurfObj,
 	 ClipRegion,
 	 pBrush,
 	 &BrushOrigin,
-	 0xFFFF);//don't know what to put here
+	 0xFFFF);//FIXME:don't know what to put here
 
   RGNDATA_UnlockRgn( tmpVisRgn );
 
@@ -1886,7 +1907,7 @@ W32kUnionRectWithRgn(HRGN hDest, const RECT* unsafeRect)
 	PRECT pRect;
 	PROSRGNDATA pRgn;
 
-	if( !NT_SUCCESS( MmCopyFromCaller( pRect, unsafeRect, sizeof( RECT ) ) ) )
+	if( !NT_SUCCESS( MmCopyFromCaller( pRect, (PRECT)unsafeRect, sizeof( RECT ) ) ) )
 		return NULL;
 
 	if( !(pRgn = RGNDATA_LockRgn( hDest ) ) )
@@ -1938,4 +1959,4 @@ DWORD STDCALL W32kGetRegionData(HRGN hrgn, DWORD count, LPRGNDATA rgndata)
     RGNDATA_UnlockRgn( hrgn );
     return size + sizeof(RGNDATAHEADER);
 }
-
+/* EOF */

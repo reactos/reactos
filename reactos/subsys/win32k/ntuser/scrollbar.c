@@ -1,4 +1,22 @@
-/* $Id: scrollbar.c,v 1.4 2003/01/24 22:42:15 jfilby Exp $
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: scrollbar.c,v 1.5 2003/05/18 17:16:17 ea Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,6 +37,7 @@
 #include <include/winsta.h>
 #include <include/winpos.h>
 #include <include/rect.h>
+#include <include/scroll.h>
 
 //#define NDEBUG
 #include <debug.h>
@@ -34,7 +53,7 @@
  * 'thumbSize' returns the size of the thumb, and 'thumbPos' returns the position of the thumb relative to the left or to
  * the top. Return TRUE if the scrollbar is vertical, FALSE if horizontal.
  */
-static BOOL
+static BOOL STDCALL
 SCROLL_GetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
 {
   SCROLLBARINFO info;
@@ -133,7 +152,7 @@ SCROLL_GetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
   return vertical;
 }
 
-DWORD SCROLL_CreateScrollBar(PWINDOW_OBJECT Window, LONG idObject)
+DWORD FASTCALL SCROLL_CreateScrollBar(PWINDOW_OBJECT Window, LONG idObject)
 {
   PSCROLLBARINFO psbi;
   LRESULT Result;
@@ -168,7 +187,7 @@ DWORD SCROLL_CreateScrollBar(PWINDOW_OBJECT Window, LONG idObject)
   return 0;
 }
 
-DWORD SCROLL_GetScrollBarInfo(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi)
+DWORD STDCALL SCROLL_GetScrollBarInfo(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi)
 {
   switch(idObject)
   {

@@ -1,4 +1,22 @@
-/* $Id: windc.c,v 1.10 2003/05/04 15:41:40 gvg Exp $
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: windc.c,v 1.11 2003/05/18 17:16:17 ea Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -35,7 +53,7 @@ static PDCE FirstDce = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID STATIC
+VOID STATIC FASTCALL
 DceOffsetVisRgn(HDC hDC, HRGN hVisRgn)
 {
   DC *dc = DC_HandleToPtr(hDC);
@@ -47,7 +65,7 @@ DceOffsetVisRgn(HDC hDC, HRGN hVisRgn)
   DC_ReleasePtr(hDC);
 }
 
-BOOL STATIC
+BOOL STATIC STDCALL
 DceGetVisRect(PWINDOW_OBJECT Window, BOOL ClientArea, RECT* Rect)
 {
   if (ClientArea)
@@ -97,7 +115,7 @@ DceGetVisRect(PWINDOW_OBJECT Window, BOOL ClientArea, RECT* Rect)
   return(FALSE);
 }
 
-BOOL
+BOOL STDCALL
 DceAddClipRects(PWINDOW_OBJECT Parent, PWINDOW_OBJECT End, 
 		HRGN ClipRgn, PRECT Rect, INT XOffset, INT YOffset)
 {
@@ -131,7 +149,7 @@ DceAddClipRects(PWINDOW_OBJECT Parent, PWINDOW_OBJECT End,
   return(FALSE);
 }
 
-HRGN 
+HRGN STDCALL
 DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags)
 {
   PWINDOW_OBJECT Window;
@@ -252,7 +270,7 @@ NtUserGetDC(HWND hWnd)
     return NtUserGetDCEx(hWnd, NULL, NULL == hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE);
 }
 
-DCE* DceAllocDCE(HWND hWnd, DCE_TYPE Type)
+DCE * FASTCALL DceAllocDCE(HWND hWnd, DCE_TYPE Type)
 {
   HDCE DceHandle;
   DCE* Dce;
@@ -292,7 +310,7 @@ DCE* DceAllocDCE(HWND hWnd, DCE_TYPE Type)
   return(Dce);
 }
 
-VOID STATIC
+VOID STATIC STDCALL
 DceSetDrawable(PWINDOW_OBJECT WindowObject, HDC hDC, ULONG Flags,
 	       BOOL SetClipOrigin)
 {
@@ -537,7 +555,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
   return(Dce->hDC);
 }
 
-BOOL
+BOOL FASTCALL
 DCE_InternalDelete(PDCE Dce)
 {
   PDCE PrevInList;

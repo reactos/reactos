@@ -22,4 +22,11 @@ static ColorShifts PALETTE_LBlue  = {0,0,0};
 static int PALETTE_Graymax        = 0;
 static int palette_size;
 
+HPALETTE FASTCALL PALETTE_Init (VOID);
+VOID     FASTCALL PALETTE_ValidateFlags (PALETTEENTRY* lpPalE, INT size);
+INT      STDCALL  PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapOnly);
+INT      FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color);
+
+PPALETTEENTRY FASTCALL ReturnSystemPalette (VOID);
+
 #endif /* __WIN32K_PALETTE_H */

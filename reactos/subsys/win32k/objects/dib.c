@@ -1,3 +1,22 @@
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: dib.c,v 1.22 2003/05/18 17:16:18 ea Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -7,7 +26,10 @@
 #include <ntos/minmax.h>
 #include <include/error.h>
 #include <include/inteng.h>
+#include <include/eng.h>
+#include <include/dib.h>
 #include <internal/safe.h>
+#include <include/surface.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -482,7 +504,8 @@ HBITMAP STDCALL W32kCreateDIBSection(HDC hDC,
   return hbitmap;
 }
 
-HBITMAP DIB_CreateDIBSection(
+HBITMAP STDCALL
+DIB_CreateDIBSection(
   PDC dc, BITMAPINFO *bmi, UINT usage,
   LPVOID *bits, HANDLE section,
   DWORD offset, DWORD ovr_pitch)
@@ -648,7 +671,7 @@ HBITMAP DIB_CreateDIBSection(
  * http://www.microsoft.com/msdn/sdk/platforms/doc/sdk/win32/struc/src/str01.htm
  * 11/16/1999 (RJJ) lifted from wine
  */
-int DIB_GetDIBWidthBytes(int  width, int  depth)
+INT FASTCALL DIB_GetDIBWidthBytes (INT width, INT depth)
 {
   int words;
 
@@ -677,7 +700,7 @@ int DIB_GetDIBWidthBytes(int  width, int  depth)
  * 11/16/1999 (RJJ) lifted from wine
  */
 
-int DIB_GetDIBImageBytes (int  width, int  height, int  depth)
+INT STDCALL DIB_GetDIBImageBytes (INT  width, INT height, INT depth)
 {
   return DIB_GetDIBWidthBytes( width, depth ) * (height < 0 ? -height : height);
 }
@@ -689,7 +712,7 @@ int DIB_GetDIBImageBytes (int  width, int  height, int  depth)
  * 11/16/1999 (RJJ) lifted from wine
  */
 
-int DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse)
+INT FASTCALL DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse)
 {
   int colors;
 
@@ -707,8 +730,11 @@ int DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse)
   }
 }
 
-int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, DWORD *width,
-                              int *height, WORD *bpp, WORD *compr )
+INT STDCALL DIB_GetBitmapInfo (const BITMAPINFOHEADER *header,
+			       PDWORD width,
+			       PINT height,
+			       PWORD bpp,
+			       PWORD compr)
 {
   if (header->biSize == sizeof(BITMAPINFOHEADER))
   {
@@ -733,7 +759,7 @@ int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, DWORD *width,
 
 // Converts a Device Independent Bitmap (DIB) to a Device Dependant Bitmap (DDB)
 // The specified Device Context (DC) defines what the DIB should be converted to
-PBITMAPOBJ DIBtoDDB(HGLOBAL hPackedDIB, HDC hdc) // FIXME: This should be removed. All references to this function should
+PBITMAPOBJ FASTCALL DIBtoDDB(HGLOBAL hPackedDIB, HDC hdc) // FIXME: This should be removed. All references to this function should
 						 // change to W32kSetDIBits
 {
   HBITMAP hBmp = 0;
@@ -758,7 +784,7 @@ PBITMAPOBJ DIBtoDDB(HGLOBAL hPackedDIB, HDC hdc) // FIXME: This should be remove
   return pBmp;
 }
 
-RGBQUAD *DIB_MapPaletteColors(PDC dc, LPBITMAPINFO lpbmi)
+RGBQUAD * FASTCALL DIB_MapPaletteColors(PDC dc, LPBITMAPINFO lpbmi)
 {
   RGBQUAD *lpRGB;
   int nNumColors,i;
@@ -790,7 +816,8 @@ RGBQUAD *DIB_MapPaletteColors(PDC dc, LPBITMAPINFO lpbmi)
   return lpRGB;
 }
 
-PALETTEENTRY *DIBColorTableToPaletteEntries(PALETTEENTRY *palEntries, const RGBQUAD *DIBColorTable, ULONG ColorCount)
+PPALETTEENTRY STDCALL
+DIBColorTableToPaletteEntries(PPALETTEENTRY palEntries, const RGBQUAD *DIBColorTable, ULONG ColorCount)
 {
   ULONG i;
 
@@ -804,7 +831,7 @@ PALETTEENTRY *DIBColorTableToPaletteEntries(PALETTEENTRY *palEntries, const RGBQ
   }
 }
 
-HPALETTE BuildDIBPalette(BITMAPINFO *bmi, PINT paletteType)
+HPALETTE FASTCALL BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
 {
   BYTE bits;
   ULONG ColorCount;
@@ -843,3 +870,4 @@ HPALETTE BuildDIBPalette(BITMAPINFO *bmi, PINT paletteType)
 
   return hPal;
 }
+/* EOF */

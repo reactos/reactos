@@ -1,4 +1,22 @@
-/* $Id: object.c,v 1.5 2002/06/26 18:38:24 hbirr Exp $
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: object.c,v 1.6 2003/05/18 17:16:17 ea Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -19,31 +37,31 @@
 
 /* FUNCTIONS *****************************************************************/
 
-PVOID
+PVOID FASTCALL
 HEADER_TO_BODY(PUSER_OBJECT_HEADER ObjectHeader)
 {
   return (((PUSER_OBJECT_HEADER)ObjectHeader) + 1);
 }
 
-PUSER_OBJECT_HEADER 
+PUSER_OBJECT_HEADER FASTCALL
 BODY_TO_HEADER(PVOID ObjectBody)
 {
   return (((PUSER_OBJECT_HEADER)ObjectBody) - 1);
 }
 
-VOID STATIC
+VOID STATIC FASTCALL
 ObmpLockHandleTable(PUSER_HANDLE_TABLE HandleTable)
 {
   ExAcquireFastMutex(&HandleTable->ListLock);
 }
 
-VOID STATIC
+VOID STATIC FASTCALL
 ObmpUnlockHandleTable(PUSER_HANDLE_TABLE HandleTable)
 {
   ExReleaseFastMutex(&HandleTable->ListLock);
 }
 
-VOID
+VOID FASTCALL
 ObmpPerformRetentionChecks(PUSER_OBJECT_HEADER ObjectHeader)
 {
   if (ObjectHeader->RefCount < 0)
@@ -64,7 +82,7 @@ ObmpPerformRetentionChecks(PUSER_OBJECT_HEADER ObjectHeader)
     }
 }
 
-PUSER_HANDLE
+PUSER_HANDLE FASTCALL
 ObmpGetObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
 		      HANDLE Handle)
 /*
@@ -98,7 +116,7 @@ ObmpGetObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
   return &(Block->Handles[Index % HANDLE_BLOCK_ENTRIES]);
 }
 
-VOID
+VOID FASTCALL
 ObmpCloseAllHandles(PUSER_HANDLE_TABLE HandleTable)
 {
   PLIST_ENTRY CurrentEntry;
@@ -142,7 +160,7 @@ ObmpCloseAllHandles(PUSER_HANDLE_TABLE HandleTable)
   ObmpUnlockHandleTable(HandleTable);
 }
 
-VOID
+VOID FASTCALL
 ObmpDeleteHandleTable(PUSER_HANDLE_TABLE HandleTable)
 {
   PUSER_HANDLE_BLOCK Current;
@@ -164,7 +182,7 @@ ObmpDeleteHandleTable(PUSER_HANDLE_TABLE HandleTable)
   }
 }
 
-PVOID
+PVOID FASTCALL
 ObmpDeleteHandle(PUSER_HANDLE_TABLE HandleTable,
 		 HANDLE Handle)
 {
@@ -196,7 +214,7 @@ ObmpDeleteHandle(PUSER_HANDLE_TABLE HandleTable,
   return ObjectBody;
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 ObmpInitializeObject(PUSER_HANDLE_TABLE HandleTable,
 		     PUSER_OBJECT_HEADER ObjectHeader,
 		     PHANDLE Handle,
@@ -221,7 +239,7 @@ ObmpInitializeObject(PUSER_HANDLE_TABLE HandleTable,
 }
 
 
-ULONG
+ULONG FASTCALL
 ObmGetReferenceCount(PVOID ObjectBody)
 {
   PUSER_OBJECT_HEADER ObjectHeader = BODY_TO_HEADER(ObjectBody);
@@ -229,7 +247,7 @@ ObmGetReferenceCount(PVOID ObjectBody)
   return ObjectHeader->RefCount;
 }
 
-ULONG
+ULONG FASTCALL
 ObmGetHandleCount(PVOID ObjectBody)
 {
   PUSER_OBJECT_HEADER ObjectHeader = BODY_TO_HEADER(ObjectBody);
@@ -237,7 +255,7 @@ ObmGetHandleCount(PVOID ObjectBody)
   return ObjectHeader->HandleCount;
 }
 
-VOID
+VOID FASTCALL
 ObmReferenceObject(PVOID ObjectBody)
 /*
  * FUNCTION: Increments a given object's reference count and performs
@@ -260,7 +278,7 @@ ObmReferenceObject(PVOID ObjectBody)
   ObmpPerformRetentionChecks(ObjectHeader);
 }
 
-VOID
+VOID FASTCALL
 ObmDereferenceObject(PVOID ObjectBody)
 /*
  * FUNCTION: Decrements a given object's reference count and performs
@@ -283,7 +301,7 @@ ObmDereferenceObject(PVOID ObjectBody)
   ObmpPerformRetentionChecks(ObjectHeader);
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 ObmReferenceObjectByPointer(PVOID ObjectBody,
 			    USER_OBJECT_TYPE ObjectType)
 /*
@@ -308,7 +326,7 @@ ObmReferenceObjectByPointer(PVOID ObjectBody,
   return STATUS_SUCCESS;
 }
 
-PVOID
+PVOID FASTCALL
 ObmCreateObject(PUSER_HANDLE_TABLE HandleTable,
 		PHANDLE Handle,
 		USER_OBJECT_TYPE ObjectType,
@@ -344,7 +362,7 @@ ObmCreateObject(PUSER_HANDLE_TABLE HandleTable,
   return ObjectBody;
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 ObmCreateHandle(PUSER_HANDLE_TABLE HandleTable,
 		PVOID ObjectBody,
 		PHANDLE HandleReturn)
@@ -414,7 +432,7 @@ ObmCreateHandle(PUSER_HANDLE_TABLE HandleTable,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 ObmReferenceObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
 			   HANDLE Handle,
 			   USER_OBJECT_TYPE ObjectType,
@@ -461,7 +479,7 @@ ObmReferenceObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 ObmCloseHandle(PUSER_HANDLE_TABLE HandleTable,
 	       HANDLE Handle)
 {
@@ -478,20 +496,20 @@ ObmCloseHandle(PUSER_HANDLE_TABLE HandleTable,
   return STATUS_SUCCESS;
 }
 
-VOID
+VOID FASTCALL
 ObmInitializeHandleTable(PUSER_HANDLE_TABLE HandleTable)
 {
   InitializeListHead(&HandleTable->ListHead);
   ExInitializeFastMutex(&HandleTable->ListLock);
 }
 
-VOID
+VOID FASTCALL
 ObmFreeHandleTable(PUSER_HANDLE_TABLE HandleTable)
 {
   ObmpDeleteHandleTable(HandleTable);
 }
 
-PUSER_HANDLE_TABLE
+PUSER_HANDLE_TABLE FASTCALL
 ObmCreateHandleTable(VOID)
 {
   PUSER_HANDLE_TABLE HandleTable;
@@ -508,7 +526,7 @@ ObmCreateHandleTable(VOID)
   return HandleTable;
 }
 
-VOID
+VOID FASTCALL
 ObmDestroyHandleTable(PUSER_HANDLE_TABLE HandleTable)
 {
   ObmFreeHandleTable(HandleTable);

@@ -1,3 +1,22 @@
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: dib1bpp.c,v 1.6 2003/05/18 17:16:17 ea Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -8,7 +27,8 @@
 #include "../eng/objects.h"
 #include "dib.h"
 
-VOID DIB_1BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
+VOID
+DIB_1BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
 {
   PBYTE addr = SurfObj->pvScan0;
 
@@ -24,14 +44,16 @@ VOID DIB_1BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
   }
 }
 
-ULONG DIB_1BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
+ULONG
+DIB_1BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
 {
   PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x >> 3);
 
   return (*addr & mask1Bpp[x % 8] ? 1 : 0);
 }
 
-VOID DIB_1BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
+VOID
+DIB_1BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   while(x1 < x2) {
     DIB_1BPP_PutPixel(SurfObj, x1, y, c);
@@ -39,7 +61,8 @@ VOID DIB_1BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
   }
 }
 
-VOID DIB_1BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
+VOID
+DIB_1BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
   while(y1 < y2) {
     DIB_1BPP_PutPixel(SurfObj, x, y1, c);
@@ -47,7 +70,8 @@ VOID DIB_1BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
   }
 }
 
-BOOLEAN DIB_1BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+BOOLEAN
+DIB_1BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                         SURFGDI *DestGDI,  SURFGDI *SourceGDI,
                         PRECTL  DestRect,  POINTL  *SourcePoint,
                         XLATEOBJ *ColorTranslation)
@@ -171,3 +195,4 @@ BOOLEAN DIB_1BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
   return TRUE;
 }
+/* EOF */

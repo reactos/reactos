@@ -1,3 +1,22 @@
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: text.c,v 1.32 2003/05/18 17:16:18 ea Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -14,6 +33,8 @@
 #include "../eng/handle.h"
 
 #include <include/inteng.h>
+#include <include/text.h>
+#include <include/eng.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -28,7 +49,7 @@ typedef struct _FONTTABLE {
 FONTTABLE FontTable[256];
 INT FontsLoaded = 0;
 
-BOOL InitFontSupport()
+BOOL FASTCALL InitFontSupport(VOID)
 {
   ULONG error;
   UINT File;
@@ -66,7 +87,7 @@ BOOL InitFontSupport()
   return TRUE;
 }
 
-static NTSTATUS
+static NTSTATUS STDCALL
 GetFontObjectsFromTextObj(PTEXTOBJ TextObj, HFONT *FontHandle, PFONTOBJ *FontObj, PFONTGDI *FontGDI)
 {
   NTSTATUS Status = STATUS_SUCCESS;
@@ -208,7 +229,7 @@ W32kAddFontResource(LPCWSTR  Filename)
   return 1;
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
 {
   PTEXTOBJ TextObj;
@@ -895,7 +916,7 @@ W32kTranslateCharsetInfo(PDWORD  Src,
   UNIMPLEMENTED;
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 TextIntRealizeFont(HFONT FontHandle)
 {
   UINT i;
@@ -941,3 +962,5 @@ TextIntRealizeFont(HFONT FontHandle)
 
   return Status;
 }
+
+/* EOF */

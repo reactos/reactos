@@ -1,4 +1,22 @@
-/* $Id: window.c,v 1.44 2003/05/17 14:30:28 gvg Exp $
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: window.c,v 1.45 2003/05/18 17:16:17 ea Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -23,6 +41,10 @@
 #include <include/callback.h>
 #include <include/msgqueue.h>
 #include <include/rect.h>
+#include <include/dce.h>
+#include <include/paint.h>
+#include <include/painting.h>
+#include <include/scroll.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -79,12 +101,12 @@ NtUserGetAncestor(HWND hWnd, UINT Flags)
     }
 }
 
-VOID
+VOID FASTCALL
 W32kSetFocusWindow(HWND hWnd)
 {
 }
 
-BOOL
+BOOL FASTCALL
 W32kIsChildWindow(HWND Parent, HWND Child)
 {
   PWINDOW_OBJECT BaseWindow = W32kGetWindowObject(Child);
@@ -102,7 +124,7 @@ W32kIsChildWindow(HWND Parent, HWND Child)
   return(FALSE);  
 }
 
-BOOL
+BOOL FASTCALL
 W32kIsWindowVisible(HWND Wnd)
 {
   PWINDOW_OBJECT BaseWindow = W32kGetWindowObject(Wnd);
@@ -125,7 +147,7 @@ W32kIsWindowVisible(HWND Wnd)
   return(Result);
 }
 
-BOOL
+BOOL FASTCALL
 W32kIsDesktopWindow(HWND hWnd)
 {
   PWINDOW_OBJECT WindowObject;
@@ -136,17 +158,17 @@ W32kIsDesktopWindow(HWND hWnd)
   return(IsDesktop);
 }
 
-HWND W32kGetDesktopWindow()
+HWND FASTCALL W32kGetDesktopWindow(VOID)
 {
   return W32kGetActiveDesktop()->DesktopWindow;
 }
 
-HWND W32kGetParentWindow(HWND hWnd)
+HWND FASTCALL W32kGetParentWindow(HWND hWnd)
 {
   return W32kGetWindowObject(hWnd)->ParentHandle;
 }
 
-PWINDOW_OBJECT
+PWINDOW_OBJECT FASTCALL
 W32kGetWindowObject(HWND hWnd)
 {
   PWINDOW_OBJECT WindowObject;
@@ -164,7 +186,7 @@ W32kGetWindowObject(HWND hWnd)
   return(WindowObject);
 }
 
-VOID
+VOID FASTCALL
 W32kReleaseWindowObject(PWINDOW_OBJECT Window)
 {
   ObmDereferenceObject(Window);
@@ -176,7 +198,7 @@ W32kReleaseWindowObject(PWINDOW_OBJECT Window)
  *
  * \note Does not check the validity of the parameters
 */
-VOID
+VOID FASTCALL
 W32kGetClientRect(PWINDOW_OBJECT WindowObject, PRECT Rect)
 {
   ASSERT( WindowObject );
@@ -259,7 +281,7 @@ NtUserGetClientRect(HWND hWnd, LPRECT Rect)
   return(TRUE);
 }
 
-HWND
+HWND FASTCALL
 W32kGetActiveWindow(VOID)
 {
   PUSER_MESSAGE_QUEUE Queue;
@@ -274,7 +296,7 @@ W32kGetActiveWindow(VOID)
     }
 }
 
-HWND
+HWND FASTCALL
 W32kGetFocusWindow(VOID)
 {
   PUSER_MESSAGE_QUEUE Queue;
@@ -292,7 +314,7 @@ W32kGetFocusWindow(VOID)
 }
 
 
-WNDPROC
+WNDPROC FASTCALL
 W32kGetWindowProc(HWND Wnd)
 {
   PWINDOW_OBJECT WindowObject;
@@ -307,7 +329,7 @@ W32kGetWindowProc(HWND Wnd)
   return(WndProc);
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 InitWindowImpl(VOID)
 {
   InitializeListHead(&RegisteredMessageListHead);
@@ -315,7 +337,7 @@ InitWindowImpl(VOID)
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 CleanupWindowImpl(VOID)
 {
   return(STATUS_SUCCESS);
@@ -777,9 +799,9 @@ NtUserFindWindowEx(HWND hwndParent,
   ExReleaseFastMutexUnsafe (&PsGetWin32Process()->WindowListLock);
   
   ObmDereferenceObject (classObject);
+#endif
 
   return  (HWND)0;
-#endif
 }
 
 DWORD STDCALL
@@ -819,7 +841,7 @@ NtUserGetOpenClipboardWindow(VOID)
 DWORD STDCALL
 NtUserGetWindowDC(HWND hWnd)
 {
-  return NtUserGetDCEx( hWnd, 0, DCX_USESTYLE | DCX_WINDOW );
+  return (DWORD) NtUserGetDCEx( hWnd, 0, DCX_USESTYLE | DCX_WINDOW );
 }
 
 DWORD STDCALL
@@ -951,7 +973,7 @@ NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate, UINT flag
 
   if (NULL != lprcUpdate)
     {
-      Status = MmCopyFromCaller(&SafeUpdateRect, lprcUpdate, sizeof(RECT));
+      Status = MmCopyFromCaller(&SafeUpdateRect, (PRECT) lprcUpdate, sizeof(RECT));
       if (! NT_SUCCESS(Status))
 	{
 	  return Status;

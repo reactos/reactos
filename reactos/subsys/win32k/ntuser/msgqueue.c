@@ -1,4 +1,22 @@
-/* $Id: msgqueue.c,v 1.7 2002/11/01 11:29:58 dwelch Exp $
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: msgqueue.c,v 1.8 2003/05/18 17:16:17 ea Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,7 +58,7 @@ static KEVENT HardwareMessageEvent;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+VOID FASTCALL
 MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 {
   ExAcquireFastMutex(&Queue->Lock);
@@ -49,7 +67,7 @@ MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
   ExReleaseFastMutex(&Queue->Lock);
 }
 
-VOID
+VOID FASTCALL
 MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 {
   ExAcquireFastMutex(&Queue->Lock);
@@ -62,7 +80,7 @@ MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 }
 
 
-NTSTATUS
+NTSTATUS FASTCALL
 MsqInitializeImpl(VOID)
 {
   /*CurrentFocusMessageQueue = NULL;*/
@@ -73,7 +91,7 @@ MsqInitializeImpl(VOID)
   return(STATUS_SUCCESS);
 }
 
-VOID
+VOID FASTCALL
 MsqInsertSystemMessage(MSG* Msg)
 {
   KIRQL OldIrql;
@@ -92,7 +110,7 @@ MsqInsertSystemMessage(MSG* Msg)
   KeSetEvent(&HardwareMessageEvent, IO_NO_INCREMENT, FALSE);
 }
 
-BOOL STATIC
+BOOL STATIC STDCALL
 MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 			 PUSER_MESSAGE Message, BOOL Remove, 
 			 PWINDOW_OBJECT ScopeWin, PUSHORT HitTest,
@@ -194,7 +212,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   return(TRUE);
 }
 
-BOOL
+BOOL STDCALL
 MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, 
 		       UINT FilterLow, UINT FilterHigh, BOOL Remove,
 		       PUSER_MESSAGE* Message)
@@ -325,7 +343,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
   return(FALSE);
 }
 
-VOID
+VOID STDCALL
 MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 #if 0
@@ -348,14 +366,14 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 }
 
-VOID
+VOID FASTCALL
 MsqInitializeMessage(PUSER_MESSAGE Message,
 		     LPMSG Msg)
 {
   RtlMoveMemory(&Message->Msg, Msg, sizeof(MSG));
 }
 
-PUSER_MESSAGE
+PUSER_MESSAGE FASTCALL
 MsqCreateMessage(LPMSG Msg)
 {
   PUSER_MESSAGE Message;
@@ -371,13 +389,13 @@ MsqCreateMessage(LPMSG Msg)
   return Message;
 }
 
-VOID
+VOID FASTCALL
 MsqDestroyMessage(PUSER_MESSAGE Message)
 {
   ExFreePool(Message);
 }
 
-VOID
+VOID FASTCALL
 MsqDispatchSentNotifyMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   PLIST_ENTRY ListEntry;
@@ -399,13 +417,13 @@ MsqDispatchSentNotifyMessages(PUSER_MESSAGE_QUEUE MessageQueue)
   }
 }
 
-BOOLEAN
+BOOLEAN FASTCALL
 MsqPeekSentMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   return(!IsListEmpty(&MessageQueue->SentMessagesListHead));
 }
 
-BOOLEAN
+BOOLEAN FASTCALL
 MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   PUSER_SENT_MESSAGE Message;
@@ -461,7 +479,7 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   return(TRUE);
 }
 
-VOID
+VOID FASTCALL
 MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 		     PUSER_SENT_MESSAGE_NOTIFY NotifyMessage)
 {
@@ -471,7 +489,7 @@ MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   ExReleaseFastMutex(&MessageQueue->Lock);
 }
 
-VOID
+VOID FASTCALL
 MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 	       PUSER_SENT_MESSAGE Message)
 {
@@ -480,7 +498,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   ExReleaseFastMutex(&MessageQueue->Lock);
 }
 
-VOID
+VOID FASTCALL
 MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, PUSER_MESSAGE Message)
 {
   ExAcquireFastMutex(&MessageQueue->Lock);
@@ -490,7 +508,7 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, PUSER_MESSAGE Message)
   ExReleaseFastMutex(&MessageQueue->Lock);
 }
 
-BOOLEAN
+BOOLEAN STDCALL
 MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	       IN BOOLEAN Hardware,
 	       IN BOOLEAN Remove,
@@ -536,7 +554,7 @@ MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
   return(FALSE);
 }
 
-NTSTATUS
+NTSTATUS FASTCALL
 MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   PVOID WaitObjects[2] = {&MessageQueue->NewMessages, &HardwareMessageEvent};
@@ -550,7 +568,7 @@ MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 				  NULL));
 }
 
-VOID
+VOID FASTCALL
 MsqInitializeMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   InitializeListHead(&MessageQueue->PostedMessagesListHead);
@@ -564,7 +582,7 @@ MsqInitializeMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
   MessageQueue->FocusWindow = NULL;
 }
 
-VOID
+VOID FASTCALL
 MsqFreeMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   PLIST_ENTRY CurrentEntry;
@@ -580,7 +598,7 @@ MsqFreeMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
     }
 }
 
-PUSER_MESSAGE_QUEUE
+PUSER_MESSAGE_QUEUE FASTCALL
 MsqCreateMessageQueue(VOID)
 {
   PUSER_MESSAGE_QUEUE MessageQueue;
@@ -597,7 +615,7 @@ MsqCreateMessageQueue(VOID)
   return MessageQueue;
 }
 
-VOID
+VOID FASTCALL
 MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   MsqFreeMessageQueue(MessageQueue);

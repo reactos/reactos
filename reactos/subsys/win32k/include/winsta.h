@@ -13,32 +13,32 @@
   ((IoGetCurrentProcess()->Win32WindowStation) = (PVOID)(WinSta))
 
 
-NTSTATUS
+NTSTATUS FASTCALL
 InitWindowStationImpl(VOID);
 
-NTSTATUS
+NTSTATUS FASTCALL
 CleanupWindowStationImpl(VOID);
 
-NTSTATUS
+NTSTATUS STDCALL
 ValidateWindowStationHandle(HWINSTA WindowStation,
 			    KPROCESSOR_MODE AccessMode,
 			    ACCESS_MASK DesiredAccess,
 			    PWINSTATION_OBJECT *Object);
 
-NTSTATUS
+NTSTATUS STDCALL
 ValidateDesktopHandle(HDESK Desktop,
 		      KPROCESSOR_MODE AccessMode,
 		      ACCESS_MASK DesiredAccess,
 		      PDESKTOP_OBJECT *Object);
 LRESULT CALLBACK
 W32kDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-PDESKTOP_OBJECT
+PDESKTOP_OBJECT FASTCALL
 W32kGetActiveDesktop(VOID);
-VOID
+VOID FASTCALL
 W32kInitializeDesktopGraphics(VOID);
-VOID
+VOID FASTCALL
 W32kEndDesktopGraphics(VOID);
-HDC
+HDC FASTCALL
 W32kGetScreenDC(VOID);
 
 #endif /* __WIN32K_WINSTA_H */

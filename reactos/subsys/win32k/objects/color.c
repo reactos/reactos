@@ -1,3 +1,23 @@
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: color.c,v 1.17 2003/05/18 17:16:17 ea Exp $ */
+
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
 #undef WIN32_LEAN_AND_MEAN
@@ -10,6 +30,8 @@
 #include <win32k/pen.h>
 #include "../eng/handle.h"
 #include <include/inteng.h>
+#include <include/color.h>
+#include <include/palette.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -53,7 +75,7 @@ const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
   { 0xff, 0xff, 0xff, PC_SYS_USED }     // last 10
 };
 
-ULONG W32kGetSysColor(int nIndex)
+ULONG FASTCALL W32kGetSysColor(int nIndex)
 {
    PALETTEENTRY *p = COLOR_sysPalTemplate + (nIndex * sizeof(PALETTEENTRY));
    return RGB(p->peRed, p->peGreen, p->peBlue);
@@ -73,11 +95,9 @@ HBRUSH STDCALL W32kGetSysColorBrush(int nIndex)
   return(W32kCreateSolidBrush(Col));
 }
 
-//forward declarations
-COLORREF COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, COLORREF color );
 
 
-const PALETTEENTRY* COLOR_GetSystemPaletteTemplate(void)
+const PALETTEENTRY* FASTCALL COLOR_GetSystemPaletteTemplate(void)
 {
   return (const PALETTEENTRY*)&COLOR_sysPalTemplate;
 }
@@ -483,7 +503,7 @@ BOOL STDCALL W32kUpdateColors(HDC  hDC)
   return 0x666;
 }
 
-int COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, int size,
+INT STDCALL COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size,
                              PXLATEOBJ XlateObj, COLORREF col, BOOL skipReserved)
 {
   int i, best = 0, diff = 0x7fffffff;
@@ -505,7 +525,7 @@ int COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, int size,
   return (XlateObj->pulXlate) ? XlateObj->pulXlate[best] : best;
 }
 
-COLORREF COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, COLORREF color )
+COLORREF STDCALL COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, COLORREF color )
 {
   unsigned char spec_type = color >> 24;
   int i;
@@ -530,7 +550,7 @@ COLORREF COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, COLORREF
   return (0x00ffffff & *(COLORREF*)(COLOR_sysPal + COLOR_PaletteLookupPixel(COLOR_sysPal, 256, NULL, color, FALSE)));
 }
 
-int COLOR_PaletteLookupExactIndex( PALETTEENTRY* palPalEntry, int size,
+int STDCALL COLOR_PaletteLookupExactIndex( PALETTEENTRY* palPalEntry, int size,
                                    COLORREF col )
 {
   int i;
@@ -542,3 +562,4 @@ int COLOR_PaletteLookupExactIndex( PALETTEENTRY* palPalEntry, int size,
   }
   return -1;
 }
+/* EOF */

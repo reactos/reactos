@@ -1,5 +1,25 @@
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: bezier.c,v 1.3 2003/05/18 17:16:17 ea Exp $ */
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <math.h>
 
 /******************************************************************
  * 
@@ -52,7 +72,7 @@
 *       level is the recursion depth
 *       returns true if the recusion can be terminated
 */
-static BOOL BezierCheck( int level, POINT *Points)
+static BOOL FASTCALL BezierCheck( int level, POINT *Points)
 { 
   INT dx, dy;
 
@@ -100,7 +120,7 @@ static BOOL BezierCheck( int level, POINT *Points)
 /* Helper for GDI_Bezier.
  * Just handles one Bezier, so Points should point to four POINTs
  */
-static void GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwOut,
+static void STDCALL GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwOut,
 				INT *nPtsOut, INT level )
 {
   if(*nPtsOut == *dwOut) {
@@ -160,7 +180,7 @@ static void GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwOut,
  *  alternative would be to call the function twice, once to determine the size
  *  and a second time to do the work - I decided this was too much of a pain].
  */
-POINT *GDI_Bezier( const POINT *Points, INT count, INT *nPtsOut )
+POINT * FASTCALL GDI_Bezier( const POINT *Points, INT count, INT *nPtsOut )
 {
   POINT *out;
   INT Bezier, dwOut = BEZIER_INITBUFSIZE, i;
@@ -182,3 +202,4 @@ POINT *GDI_Bezier( const POINT *Points, INT count, INT *nPtsOut )
 
   return out;
 }
+/* EOF */

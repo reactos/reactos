@@ -1,4 +1,23 @@
 /*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: handle.c,v 1.13 2003/05/18 17:16:17 ea Exp $
+ * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Manage GDI Handles
@@ -16,7 +35,7 @@
 
 static int LastHandle = MAX_GDI_HANDLES;
 
-ULONG CreateGDIHandle(ULONG InternalSize, ULONG UserSize)
+ULONG FASTCALL CreateGDIHandle(ULONG InternalSize, ULONG UserSize)
 {
   ULONG size;
   PENGOBJ pObj;
@@ -47,7 +66,7 @@ ULONG CreateGDIHandle(ULONG InternalSize, ULONG UserSize)
   return 0;
 }
 
-VOID FreeGDIHandle(ULONG Handle)
+VOID FASTCALL FreeGDIHandle(ULONG Handle)
 {
   if( Handle == 0 || Handle >= MAX_GDI_HANDLES ){
 	DPRINT1("FreeGDIHandle: invalid handle!!!!\n");
@@ -58,7 +77,7 @@ VOID FreeGDIHandle(ULONG Handle)
   GDIHandles[Handle].pEngObj = NULL;
 }
 
-PVOID AccessInternalObject(ULONG Handle)
+PVOID FASTCALL AccessInternalObject(ULONG Handle)
 {
   PENGOBJ pEngObj;
 
@@ -71,7 +90,7 @@ PVOID AccessInternalObject(ULONG Handle)
   return (PVOID)pEngObj;
 }
 
-PVOID AccessUserObject(ULONG Handle)
+PVOID FASTCALL AccessUserObject(ULONG Handle)
 {
   PENGOBJ pEngObj;
 
@@ -84,7 +103,7 @@ PVOID AccessUserObject(ULONG Handle)
   return (PVOID)( (PCHAR)pEngObj + sizeof( ENGOBJ ) );
 }
 
-ULONG AccessHandleFromUserObject(PVOID UserObject)
+ULONG FASTCALL AccessHandleFromUserObject(PVOID UserObject)
 {
   PENGOBJ pEngObj;
   ULONG Handle;
@@ -102,16 +121,17 @@ ULONG AccessHandleFromUserObject(PVOID UserObject)
   return Handle;
 }
 
-PVOID AccessInternalObjectFromUserObject(PVOID UserObject)
+PVOID FASTCALL AccessInternalObjectFromUserObject(PVOID UserObject)
 {
 
   return AccessInternalObject( AccessHandleFromUserObject( UserObject ) );
 }
 
-VOID InitEngHandleTable( void )
+VOID FASTCALL InitEngHandleTable( void )
 {
 	ULONG i;
   	for( i=1; i < MAX_GDI_HANDLES; i++ ){
 		GDIHandles[ i ].pEngObj = NULL;
 	}
 }
+/* EOF */

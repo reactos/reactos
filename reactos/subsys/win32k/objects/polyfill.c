@@ -1,4 +1,23 @@
 /*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: polyfill.c,v 1.3 2003/05/18 17:16:18 ea Exp $
+ *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Various Polygon Filling routines for Polygon()
@@ -15,6 +34,7 @@
 #include <win32k/dc.h>
 #include <win32k/pen.h>
 #include <include/object.h>
+#include <include/paint.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -71,7 +91,7 @@ static void DEBUG_PRINT_EDGELIST(PFILL_EDGE_LIST list)
 /*
 **  Hide memory clean up.
 */
-static void POLYGONFILL_DestroyEdge(PPFILL_EDGE pEdge)
+static void FASTCALL POLYGONFILL_DestroyEdge(PPFILL_EDGE pEdge)
 {
     if (0 != pEdge)
         EngFreeMem(pEdge);
@@ -80,7 +100,7 @@ static void POLYGONFILL_DestroyEdge(PPFILL_EDGE pEdge)
 /*
 ** Clean up a list.
 */
-static void POLYGONFILL_DestroyEdgeList(PFILL_EDGE_LIST list)
+static void FASTCALL POLYGONFILL_DestroyEdgeList(PFILL_EDGE_LIST list)
 {
     PPFILL_EDGE pThis = 0;
     PPFILL_EDGE pNext = 0;
@@ -99,7 +119,7 @@ static void POLYGONFILL_DestroyEdgeList(PFILL_EDGE_LIST list)
 /*
 ** This makes and initiaizes an Edge struct for a line between two points.
 */
-static PPFILL_EDGE POLYGONFILL_MakeEdge(POINT From, POINT To)
+static PPFILL_EDGE FASTCALL POLYGONFILL_MakeEdge(POINT From, POINT To)
 {
     PPFILL_EDGE rc = (PPFILL_EDGE)EngAllocMem(FL_ZERO_MEMORY, sizeof(PFILL_EDGE), PFILL_EDGE_ALLOC_TAG);
 
@@ -171,7 +191,7 @@ static PPFILL_EDGE POLYGONFILL_MakeEdge(POINT From, POINT To)
 ** Zero element1 = element2 
 ** Positive integer element1 > element2 
 */
-static INT PFILL_EDGE_Compare(PPFILL_EDGE Edge1, PPFILL_EDGE Edge2)
+static INT FASTCALL PFILL_EDGE_Compare(PPFILL_EDGE Edge1, PPFILL_EDGE Edge2)
 {
     //DPRINT("In PFILL_EDGE_Compare()\n");
 	if (Edge1->MinY == Edge2->MinY)
@@ -202,7 +222,7 @@ static INT PFILL_EDGE_Compare(PPFILL_EDGE Edge1, PPFILL_EDGE Edge2)
 /*
 ** Insert an edge into a list keeping the list in order.
 */
-static void POLYGONFILL_ListInsert(PFILL_EDGE_LIST *list, PPFILL_EDGE NewEdge)
+static void FASTCALL POLYGONFILL_ListInsert(PFILL_EDGE_LIST *list, PPFILL_EDGE NewEdge)
 {
     PPFILL_EDGE pThis;
     if (0 != list && 0 != NewEdge)
@@ -238,7 +258,7 @@ static void POLYGONFILL_ListInsert(PFILL_EDGE_LIST *list, PPFILL_EDGE NewEdge)
 /*
 ** Create a list of edges for a list of points.
 */
-static PFILL_EDGE_LIST	POLYGONFILL_MakeEdgeList(PPOINT Points, int Count)
+static PFILL_EDGE_LIST FASTCALL POLYGONFILL_MakeEdgeList(PPOINT Points, int Count)
 {
 	int CurPt = 0;
 	int SeqNum = 0;
@@ -281,7 +301,7 @@ static PFILL_EDGE_LIST	POLYGONFILL_MakeEdgeList(PPOINT Points, int Count)
 ** for scanline Scanline.
 **TODO: Get rid of this floating point arithmetic
 */
-static void POLYGONFILL_UpdateScanline(PPFILL_EDGE pEdge, int Scanline)
+static void FASTCALL POLYGONFILL_UpdateScanline(PPFILL_EDGE pEdge, int Scanline)
 {
     
     int Coord = 0;
@@ -312,7 +332,7 @@ static void POLYGONFILL_UpdateScanline(PPFILL_EDGE pEdge, int Scanline)
 **
 ** Note: once an edge is no longer active, it is deleted.
 */
-static void POLYGONFILL_AECInsertInOrder(PFILL_EDGE_LIST *list, PPFILL_EDGE pEdge)
+static void FASTCALL POLYGONFILL_AECInsertInOrder(PFILL_EDGE_LIST *list, PPFILL_EDGE pEdge)
 {
     BOOL Done = FALSE;
     PPFILL_EDGE pThis = 0;
@@ -343,7 +363,7 @@ static void POLYGONFILL_AECInsertInOrder(PFILL_EDGE_LIST *list, PPFILL_EDGE pEdg
 ** This routine reorders the Active Edge collection (list) after all
 ** the now inactive edges have been removed.
 */
-static void POLYGONFILL_AECReorder(PFILL_EDGE_LIST *AEC)
+static void FASTCALL POLYGONFILL_AECReorder(PFILL_EDGE_LIST *AEC)
 {
     PPFILL_EDGE pThis = 0;
     PPFILL_EDGE pPrev = 0;
@@ -378,7 +398,7 @@ static void POLYGONFILL_AECReorder(PFILL_EDGE_LIST *AEC)
 /*
 ** This method updates the Active edge collection for the scanline Scanline.
 */
-static void POLYGONFILL_UpdateActiveEdges(int Scanline, PFILL_EDGE_LIST *GEC, PFILL_EDGE_LIST *AEC)
+static void STDCALL POLYGONFILL_UpdateActiveEdges(int Scanline, PFILL_EDGE_LIST *GEC, PFILL_EDGE_LIST *AEC)
 {
     PPFILL_EDGE pThis = 0;
     PPFILL_EDGE pAECLast = 0;
@@ -467,7 +487,7 @@ static void POLYGONFILL_UpdateActiveEdges(int Scanline, PFILL_EDGE_LIST *GEC, PF
 ** This method fills the portion of the polygon that intersects with the scanline
 ** Scanline.
 */
-static void POLYGONFILL_FillScanLine(int ScanLine, PFILL_EDGE_LIST ActiveEdges, SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX RopMode, int OrigX, int OrigY)
+static void STDCALL POLYGONFILL_FillScanLine(int ScanLine, PFILL_EDGE_LIST ActiveEdges, SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX RopMode, int OrigX, int OrigY)
 {
     BOOL OnOdd = TRUE;
     RECTL BoundRect;
@@ -510,7 +530,7 @@ static void POLYGONFILL_FillScanLine(int ScanLine, PFILL_EDGE_LIST ActiveEdges, 
 //When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and 
 //even-numbered polygon sides on each scan line. That is, GDI fills the area between the 
 //first and second side, between the third and fourth side, and so on. 
-BOOL FillPolygon_ALTERNATE(SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX RopMode, CONST PPOINT Points, int Count, RECTL BoundRect, int OrigX, int OrigY)
+BOOL STDCALL FillPolygon_ALTERNATE(SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX RopMode, CONST PPOINT Points, int Count, RECTL BoundRect, int OrigX, int OrigY)
 {
 	PFILL_EDGE_LIST list = 0;
     PFILL_EDGE_LIST ActiveEdges = 0;
@@ -541,8 +561,9 @@ BOOL FillPolygon_ALTERNATE(SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX RopMode, CO
 //When the fill mode is WINDING, GDI fills any region that has a nonzero winding value. 
 //This value is defined as the number of times a pen used to draw the polygon would go around the region. 
 //The direction of each edge of the polygon is important. 
-BOOL FillPolygon_WINDING(SURFOBJ *SurfObj, PBRUSHOBJ BrushObj,MIX RopMode, CONST PPOINT Points, int Count, RECTL BoundRect, int OrigX, int OrigY)
+BOOL STDCALL FillPolygon_WINDING(SURFOBJ *SurfObj, PBRUSHOBJ BrushObj,MIX RopMode, CONST PPOINT Points, int Count, RECTL BoundRect, int OrigX, int OrigY)
 {
 	DPRINT("FillPolygon_WINDING\n");
 	return FALSE;
 }
+/* EOF */

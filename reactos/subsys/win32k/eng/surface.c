@@ -1,4 +1,23 @@
 /*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: surface.c,v 1.19 2003/05/18 17:16:17 ea Exp $
+ * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Surace Functions
@@ -23,7 +42,7 @@
 #define NDEBUG
 #include <win32k/debug1.h>
 
-INT BitsPerFormat(ULONG Format)
+INT FASTCALL BitsPerFormat(ULONG Format)
 {
   switch(Format)
   {
@@ -39,7 +58,7 @@ INT BitsPerFormat(ULONG Format)
   }
 }
 
-ULONG BitmapFormat(WORD Bits, DWORD Compression)
+ULONG FASTCALL BitmapFormat(WORD Bits, DWORD Compression)
 {
   switch(Compression)
   {
@@ -84,7 +103,14 @@ static BOOLEAN Dummy_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   return FALSE;
 }
 
-VOID InitializeFuncs(SURFGDI *SurfGDI, ULONG BitmapFormat)
+#define SURF_METHOD(c,n) DIB_##c##_##n
+#define SET_SURFGDI(c)\
+ SurfGDI->DIB_PutPixel=SURF_METHOD(c,PutPixel);\
+ SurfGDI->DIB_HLine=SURF_METHOD(c,HLine);\
+ SurfGDI->DIB_VLine=SURF_METHOD(c,VLine);\
+ SurfGDI->DIB_BitBlt=SURF_METHOD(c,BitBlt);
+
+VOID FASTCALL InitializeFuncs(SURFGDI *SurfGDI, ULONG BitmapFormat)
 {
   SurfGDI->BitBlt   = NULL;
   SurfGDI->CopyBits = NULL;
@@ -94,48 +120,12 @@ VOID InitializeFuncs(SURFGDI *SurfGDI, ULONG BitmapFormat)
 
   switch(BitmapFormat)
     {
-    case BMF_1BPP:
-      SurfGDI->DIB_PutPixel = DIB_1BPP_PutPixel;
-      SurfGDI->DIB_HLine    = DIB_1BPP_HLine;
-      SurfGDI->DIB_VLine    = DIB_1BPP_VLine;
-      SurfGDI->DIB_BitBlt   = DIB_1BPP_BitBlt;
-      break;
-
-    case BMF_4BPP:
-      SurfGDI->DIB_PutPixel = DIB_4BPP_PutPixel;
-      SurfGDI->DIB_HLine    = DIB_4BPP_HLine;
-      SurfGDI->DIB_VLine    = DIB_4BPP_VLine;
-      SurfGDI->DIB_BitBlt   = DIB_4BPP_BitBlt;
-      break;
-
-    case BMF_8BPP:
-      SurfGDI->DIB_PutPixel = DIB_8BPP_PutPixel;
-      SurfGDI->DIB_HLine    = DIB_8BPP_HLine;
-      SurfGDI->DIB_VLine    = DIB_8BPP_VLine;
-      SurfGDI->DIB_BitBlt   = DIB_8BPP_BitBlt;
-      break;
-
-    case BMF_16BPP:
-      SurfGDI->DIB_PutPixel = DIB_16BPP_PutPixel;
-      SurfGDI->DIB_HLine    = DIB_16BPP_HLine;
-      SurfGDI->DIB_VLine    = DIB_16BPP_VLine;
-      SurfGDI->DIB_BitBlt   = DIB_16BPP_BitBlt;
-      break;
-
-    case BMF_24BPP:
-      SurfGDI->DIB_PutPixel = DIB_24BPP_PutPixel;
-      SurfGDI->DIB_HLine    = DIB_24BPP_HLine;
-      SurfGDI->DIB_VLine    = DIB_24BPP_VLine;
-      SurfGDI->DIB_BitBlt   = DIB_24BPP_BitBlt;
-      break;
-
-    case BMF_32BPP:
-      SurfGDI->DIB_PutPixel = DIB_32BPP_PutPixel;
-      SurfGDI->DIB_HLine    = DIB_32BPP_HLine;
-      SurfGDI->DIB_VLine    = DIB_32BPP_VLine;
-      SurfGDI->DIB_BitBlt   = DIB_32BPP_BitBlt;
-      break;
-
+    case BMF_1BPP:  SET_SURFGDI(1BPP) break;
+    case BMF_4BPP:  SET_SURFGDI(4BPP) break;
+    case BMF_8BPP:  SET_SURFGDI(8BPP) break;
+    case BMF_16BPP: SET_SURFGDI(16BPP) break;
+    case BMF_24BPP: SET_SURFGDI(24BPP) break;
+    case BMF_32BPP: SET_SURFGDI(32BPP) break;
     case BMF_4RLE:
     case BMF_8RLE:
       /* Not supported yet, fall through to unrecognized case */
@@ -255,7 +245,7 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
   return NewSurface;
 }
 
-PFN DriverFunction(DRVENABLEDATA *DED, ULONG DriverFunc)
+PFN FASTCALL DriverFunction(DRVENABLEDATA *DED, ULONG DriverFunc)
 {
   ULONG i;
 
@@ -333,3 +323,4 @@ EngUnlockSurface(IN SURFOBJ *Surface)
 {
   // FIXME: Call GDI_UnlockObject
 }
+/* EOF */

@@ -1,4 +1,5 @@
-/*
+/* $Id: stubs.c,v 1.10 2003/05/18 17:16:17 ea Exp $
+ *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native User stubs

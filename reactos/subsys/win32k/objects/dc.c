@@ -1,4 +1,22 @@
-/* $Id: dc.c,v 1.59 2003/05/04 15:41:40 gvg Exp $
+/*
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: dc.c,v 1.60 2003/05/18 17:16:18 ea Exp $
  *
  * DC.C - Device context functions
  *
@@ -20,6 +38,7 @@
 #include <win32k/text.h>
 #include "../eng/handle.h"
 #include <include/inteng.h>
+#include <include/eng.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -88,7 +107,7 @@ INT STDCALL  func_name( HDC hdc, INT mode ) \
 
 //  ---------------------------------------------------------  File Statics
 
-static void  W32kSetDCState16(HDC  hDC, HDC  hDCSave);
+static VOID FASTCALL W32kSetDCState16(HDC  hDC, HDC  hDCSave);
 
 //  -----------------------------------------------------  Public Functions
 
@@ -1291,7 +1310,7 @@ COLORREF STDCALL W32kSetBkColor(HDC hDC, COLORREF color)
   return  oldColor;
 }
 
-static void  W32kSetDCState16(HDC  hDC, HDC  hDCSave)
+STATIC VOID FASTCALL W32kSetDCState16(HDC  hDC, HDC  hDCSave)
 {
   PDC  dc, dcs;
 
@@ -1406,7 +1425,7 @@ static void  W32kSetDCState16(HDC  hDC, HDC  hDCSave)
 
 //  ----------------------------------------------------  Private Interface
 
-HDC  DC_AllocDC(LPCWSTR  Driver)
+HDC FASTCALL DC_AllocDC(LPCWSTR  Driver)
 {
   	PDC  NewDC;
   	HDC  hDC;
@@ -1441,7 +1460,7 @@ HDC  DC_AllocDC(LPCWSTR  Driver)
   	return  hDC;
 }
 
-HDC  DC_FindOpenDC(LPCWSTR  Driver)
+HDC FASTCALL DC_FindOpenDC(LPCWSTR  Driver)
 {
   return NULL;
 }
@@ -1449,7 +1468,7 @@ HDC  DC_FindOpenDC(LPCWSTR  Driver)
 /*!
  * Initialize some common fields in the Device Context structure.
 */
-void  DC_InitDC(HDC  DCHandle)
+VOID FASTCALL DC_InitDC(HDC  DCHandle)
 {
 //  W32kRealizeDefaultPalette(DCHandle);
 
@@ -1461,7 +1480,7 @@ void  DC_InitDC(HDC  DCHandle)
 
 }
 
-void  DC_FreeDC(HDC  DCToFree)
+VOID FASTCALL DC_FreeDC(HDC  DCToFree)
 {
   if (!GDIOBJ_FreeObj(DCToFree, GO_DC_MAGIC, GDIOBJFLAG_DEFAULT))
   {
@@ -1469,24 +1488,24 @@ void  DC_FreeDC(HDC  DCToFree)
   }
 }
 
-BOOL DC_InternalDeleteDC( PDC DCToDelete )
+BOOL FASTCALL DC_InternalDeleteDC( PDC DCToDelete )
 {
 	if( DCToDelete->DriverName )
 		ExFreePool(DCToDelete->DriverName);
 	return TRUE;
 }
 
-HDC  DC_GetNextDC (PDC pDC)
+HDC FASTCALL DC_GetNextDC (PDC pDC)
 {
   return pDC->hNext;
 }
 
-void  DC_SetNextDC (PDC pDC, HDC hNextDC)
+VOID FASTCALL DC_SetNextDC (PDC pDC, HDC hNextDC)
 {
   pDC->hNext = hNextDC;
 }
 
-void
+VOID FASTCALL
 DC_UpdateXforms(PDC  dc)
 {
   XFORM  xformWnd2Vport;
@@ -1509,7 +1528,7 @@ DC_UpdateXforms(PDC  dc)
   dc->w.vport2WorldValid = DC_InvertXform(&dc->w.xformWorld2Vport, &dc->w.xformVport2World);
 }
 
-BOOL
+BOOL FASTCALL
 DC_InvertXform(const XFORM *xformSrc,
                XFORM *xformDest)
 {
@@ -1530,3 +1549,4 @@ DC_InvertXform(const XFORM *xformSrc,
 
   return  TRUE;
 }
+/* EOF */
