@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.74 2004/08/15 16:39:03 chorns Exp $
+/* $Id: device.c,v 1.75 2004/08/18 08:33:25 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -31,7 +31,6 @@ IopInitializeDevice(
    IO_STATUS_BLOCK IoStatusBlock;
    IO_STACK_LOCATION Stack;
    PDEVICE_OBJECT Fdo;
-   PCM_RESOURCE_LIST ResourceList = NULL;
    NTSTATUS Status;
 
    if (DriverObject->DriverExtension->AddDevice)
@@ -64,24 +63,9 @@ IopInitializeDevice(
 
       IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
 
-      /* Query resource list from PDO */
-      Status = IopInitiatePnpIrp(
-         DeviceNode->Pdo,
-         &IoStatusBlock,
-         IRP_MN_QUERY_RESOURCES,
-         &Stack);
-
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT("IopInitiatePnpIrp() failed\n");
-         ObDereferenceObject(Fdo);
-         return Status;
-      }
-      ResourceList = (PCM_RESOURCE_LIST)IoStatusBlock.Information;
-
       DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
 
-      Stack.Parameters.StartDevice.AllocatedResources = ResourceList;
+      Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->BootResourcesList;
       /* FIXME: Translate the resource list */
       Stack.Parameters.StartDevice.AllocatedResourcesTranslated = NULL;
 
@@ -94,8 +78,6 @@ IopInitializeDevice(
       if (!NT_SUCCESS(Status))
       {
           DPRINT("IopInitiatePnpIrp() failed\n");
-          if (ResourceList != NULL)
-             ExFreePool(ResourceList);
           ObDereferenceObject(Fdo);
           return Status;
       }
@@ -108,8 +90,6 @@ IopInitializeDevice(
 
          if (!NT_SUCCESS(Status))
          {
-            if (ResourceList != NULL)
-               ExFreePool(ResourceList);
             ObDereferenceObject(Fdo);
             return Status;
          }
@@ -127,9 +107,6 @@ IopInitializeDevice(
          }
 #endif /* ACPI */
       }
-
-      if (ResourceList != NULL)
-         ExFreePool(ResourceList);
 
       ObDereferenceObject(Fdo);
    }
