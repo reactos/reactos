@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.129 2002/02/22 17:57:57 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.130 2002/03/22 20:58:23 chorns Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -93,6 +93,22 @@ ExSystemTimeToLocalTime@8
 ExTryToAcquireResourceExclusiveLite@4
 ExUnregisterCallback@4
 ExWindowStationObjectType DATA
+ExInitializeBinaryTree@8
+ExDeleteBinaryTree@4
+ExInsertBinaryTree@12
+ExSearchBinaryTree@12
+ExRemoveBinaryTree@12
+ExInitializeSplayTree@12
+ExDeleteSplayTree@4
+ExInsertSplayTree@12
+ExSearchSplayTree@12
+ExRemoveSplayTree@12
+ExWeightOfSplayTree@8
+ExInitializeHashTable@12
+ExDeleteHashTable@4
+ExInsertHashTable@16
+ExSearchHashTable@16
+ExRemoveHashTable@16
 @ExfInterlockedAddUlong@12
 ;@ExfInterlockedInsertHeadList
 ;@ExfInterlockedInsertTailList

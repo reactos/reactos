@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.66 2002/03/13 23:37:25 chorns Exp $
+# $Id: Makefile,v 1.67 2002/03/22 20:58:23 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -223,8 +223,10 @@ OBJECTS_PS = \
 
 # Executive Subsystem (Ex)
 OBJECTS_EX = \
+  ex/btree.o \
 	ex/callback.o \
 	ex/fmutex.o \
+  ex/hashtab.o \
 	ex/init.o \
 	ex/interlck.o \
 	ex/list.o \
@@ -233,6 +235,7 @@ OBJECTS_EX = \
 	ex/power.o \
 	ex/resource.o \
 	ex/time.o \
+  ex/stree.o \
 	ex/sysinfo.o \
 	ex/win32k.o \
 	ex/work.o \

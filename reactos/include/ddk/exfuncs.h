@@ -820,4 +820,83 @@ ExHookException (
 	unsigned int	exp
 	);
 
+/* BEGIN REACTOS ONLY */
+
+BOOLEAN STDCALL
+ExInitializeBinaryTree(IN PBINARY_TREE  Tree,
+  IN PKEY_COMPARATOR  Compare);
+
+VOID STDCALL
+ExDeleteBinaryTree(IN PBINARY_TREE  Tree);
+
+VOID STDCALL
+ExInsertBinaryTree(IN PBINARY_TREE  Tree,
+  IN PVOID  Key,
+  IN PVOID  Value);
+
+BOOLEAN STDCALL
+ExSearchBinaryTree(IN PBINARY_TREE  Tree,
+  IN PVOID  Key,
+  OUT PVOID  * Value);
+
+BOOLEAN STDCALL
+ExRemoveBinaryTree(IN PBINARY_TREE  Tree,
+  IN PVOID  Key,
+  IN PVOID  * Value);
+
+BOOLEAN STDCALL
+ExInitializeSplayTree(IN PSPLAY_TREE  Tree,
+  IN PKEY_COMPARATOR  Compare,
+  IN BOOLEAN  Weighted);
+
+VOID STDCALL
+ExDeleteSplayTree(IN PSPLAY_TREE  Tree);
+
+VOID STDCALL
+ExInsertSplayTree(IN PSPLAY_TREE  Tree,
+  IN PVOID  Key,
+  IN PVOID  Value);
+
+BOOLEAN STDCALL
+ExSearchSplayTree(IN PSPLAY_TREE  Tree,
+  IN PVOID  Key,
+  OUT PVOID  * Value);
+
+BOOLEAN STDCALL
+ExRemoveSplayTree(IN PSPLAY_TREE  Tree,
+  IN PVOID  Key,
+  IN PVOID  * Value);
+
+BOOLEAN STDCALL
+ExWeightOfSplayTree(IN PSPLAY_TREE  Tree,
+  OUT PULONG  Weight);
+
+BOOLEAN STDCALL
+ExInitializeHashTable(IN PHASH_TABLE  HashTable,
+  IN ULONG  HashTableSize,
+  IN PKEY_COMPARATOR  Compare  OPTIONAL);
+
+VOID STDCALL
+ExDeleteHashTable(IN PHASH_TABLE  HashTable);
+
+VOID STDCALL
+ExInsertHashTable(IN PHASH_TABLE  HashTable,
+  IN PVOID  Key,
+  IN ULONG  KeyLength,
+  IN PVOID  Value);
+
+BOOLEAN STDCALL
+ExSearchHashTable(IN PHASH_TABLE  HashTable,
+  IN PVOID  Key,
+  IN ULONG  KeyLength,
+  OUT PVOID  * Value);
+
+BOOLEAN STDCALL
+ExRemoveHashTable(IN PHASH_TABLE  HashTable,
+  IN PVOID  Key,
+  IN ULONG  KeyLength,
+  IN PVOID  * Value);
+
+/* END REACTOS ONLY */
+
 #endif /* ndef _NTOS_EXFUNCS_H */

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.115 2002/02/22 17:57:57 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.116 2002/03/22 20:58:23 chorns Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -93,6 +93,22 @@ ExSystemTimeToLocalTime=ExSystemTimeToLocalTime@8
 ExTryToAcquireResourceExclusiveLite=ExTryToAcquireResourceExclusiveLite@4
 ExUnregisterCallback=ExUnregisterCallback@4
 ExWindowStationObjectType DATA
+ExInitializeBinaryTree=ExInitializeBinaryTree@8
+ExDeleteBinaryTree=ExDeleteBinaryTree@4
+ExInsertBinaryTree=ExInsertBinaryTree@12
+ExSearchBinaryTree=ExSearchBinaryTree@12
+ExRemoveBinaryTree=ExRemoveBinaryTree@12
+ExInitializeSplayTree=ExInitializeSplayTree@12
+ExDeleteSplayTree=ExDeleteSplayTree@4
+ExInsertSplayTree=ExInsertSplayTree@12
+ExSearchSplayTree=ExSearchSplayTree@12
+ExRemoveSplayTree=ExRemoveSplayTree@12
+ExWeightOfSplayTree=ExWeightOfSplayTree@8
+ExInitializeHashTable=ExInitializeHashTable@12
+ExDeleteHashTable=ExDeleteHashTable@4
+ExInsertHashTable=ExInsertHashTable@16
+ExSearchHashTable=ExSearchHashTable@16
+ExRemoveHashTable=ExRemoveHashTable@16
 ExfInterlockedAddUlong=@ExfInterlockedAddUlong@12
 ;ExfInterlockedInsertHeadList
 ;ExfInterlockedInsertTailList

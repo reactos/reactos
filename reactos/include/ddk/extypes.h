@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.6 2001/08/30 23:50:53 ekohl Exp $ */
+/* $Id: extypes.h,v 1.7 2002/03/22 20:58:23 chorns Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
@@ -157,6 +157,49 @@ typedef VOID STDCALL
 (*PCALLBACK_FUNCTION)(PVOID CallbackContext,
 		      PVOID Argument1,
 		      PVOID Argument2);
+
+/* BEGIN REACTOS ONLY */
+
+typedef LONG STDCALL (*PKEY_COMPARATOR)(PVOID  Key1,
+  PVOID  Key2);
+
+struct _BINARY_TREE_NODE;
+
+typedef struct _BINARY_TREE
+{
+  struct _BINARY_TREE_NODE  * RootNode;
+  PKEY_COMPARATOR  Compare;
+  PAGED_LOOKASIDE_LIST  LookasideList;
+  FAST_MUTEX  Lock;
+} BINARY_TREE, *PBINARY_TREE;
+
+
+struct _SPLAY_TREE_NODE;
+
+typedef struct _SPLAY_TREE
+{
+  struct _SPLAY_TREE_NODE  * RootNode;
+  PKEY_COMPARATOR  Compare;
+  BOOLEAN  Weighted;
+  PAGED_LOOKASIDE_LIST  LookasideList;
+  FAST_MUTEX  Lock;
+  PVOID  Reserved[4];
+} SPLAY_TREE, *PSPLAY_TREE;
+
+
+typedef struct _HASH_TABLE
+{
+  // Lock for this structure
+  FAST_MUTEX  Lock;
+
+  // Size of hash table in number of bits
+  ULONG  HashTableSize;
+
+  // Pointer to array of hash buckets with splay trees
+  PSPLAY_TREE  HashTrees;
+} HASH_TABLE, *PHASH_TABLE;
+
+/* END REACTOS ONLY */
 
 #endif /* __INCLUDE_DDK_EXTYPES_H */
 
