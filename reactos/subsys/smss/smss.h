@@ -4,6 +4,7 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <sm/api.h>
+#include <sm/helper.h>
 
 #define CHILD_CSRSS     0
 #define CHILD_WINLOGON  1
