@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.5 2000/02/05 16:08:49 ekohl Exp $
+/* $Id: env.c,v 1.6 2000/02/13 16:05:16 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,7 +16,7 @@
 #include <internal/teb.h>
 #include <string.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <ntdll/ntdll.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -105,6 +105,7 @@ RtlDestroyEnvironment (
 	                     &Size,
 	                     MEM_RELEASE);
 }
+
 
 
 NTSTATUS

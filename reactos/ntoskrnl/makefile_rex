@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.50 2000/01/27 08:56:49 dwelch Exp $
+# $Id: makefile_rex,v 1.51 2000/02/13 16:05:16 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -65,7 +65,8 @@ CM_OBJECTS = cm/registry.o
 
 DBG_OBJECTS = dbg/brkpoint.o dbg/errinfo.o dbg/print.o
 
-LDR_OBJECTS = ldr/loader.o ldr/init.o ldr/syspath.o ldr/sysdll.o ldr/rtl.o
+LDR_OBJECTS = ldr/loader.o ldr/init.o ldr/syspath.o ldr/sysdll.o ldr/rtl.o \
+              ldr/userldr.o
 
 NLS_OBJECTS = nls/nls.o
 

@@ -42,37 +42,18 @@ VOID HalTaskSwitch(PKTHREAD thread)
  * ARGUMENTS:
  *         thread = Thread to switch to
  * NOTE: This function will not return until the current thread is scheduled
- * again (possibly never);
+ * again (possibly never)
  */
 {
-   DPRINT("Scheduling thread %x\n",thread);
-   DPRINT("Scheduling thread %x\n",thread->Context.nr);
-   DPRINT("previous task %x reserved1 %x esp0 %x ss0 %x\n",
-          thread->Context.previous_task,thread->Context.reserved1,
-          thread->Context.esp0,thread->Context.ss0);
-   DPRINT("reserved2 %x esp1 %x ss1 %x reserved3 %x esp2 %x ss2 %x\n",
-          thread->Context.reserved2,thread->Context.esp1,thread->Context.ss1,
-          thread->Context.reserved3,thread->Context.esp2,thread->Context.ss2);
-   DPRINT("reserved4 %x cr3 %x eip %x eflags %x eax %x\n",
-          thread->Context.reserved4,thread->Context.cr3,thread->Context.eip,
-          thread->Context.eflags,thread->Context.eax);
-   DPRINT("ecx %x edx %x ebx %x esp %x ebp %x esi %x\n",
-          thread->Context.ecx,thread->Context.edx,thread->Context.ebx,
-          thread->Context.esp,thread->Context.ebp,thread->Context.esi);
-   DPRINT("edi %x es %x reserved5 %x cs %x reserved6 %x\n",
-          thread->Context.edi,thread->Context.es,thread->Context.reserved5,
-          thread->Context.cs,thread->Context.reserved6);
-   DPRINT("ss %x reserved7 %x ds %x reserved8 %x fs %x\n",
-          thread->Context.ss,thread->Context.reserved7,thread->Context.ds,
-          thread->Context.reserved8,thread->Context.fs);
-   DPRINT("reserved9 %x gs %x reserved10 %x ldt %x reserved11 %x\n",
-          thread->Context.reserved9,thread->Context.gs,
-          thread->Context.reserved10,thread->Context.ldt,
-          thread->Context.reserved11);
-   DPRINT("trap %x iomap_base %x nr %x io_bitmap[0] %x\n",
-          thread->Context.trap,thread->Context.iomap_base,
-          thread->Context.nr,thread->Context.io_bitmap[0]);
-   DPRINT("thread->Context.cr3 %x\n",thread->Context.cr3);
+#if 0
+   PETHREAD Thread;
+   Thread = CONTAINING_RECORD(thread, ETHREAD, Tcb);
+   if (Thread->Cid.UniqueThread != (HANDLE)1)
+     {
+	DPRINT1("Scheduling thread %x (id %d)\n",Thread, 
+		Thread->Cid.UniqueThread);
+     }
+#endif
    __asm__("pushfl\n\t"
 	   "cli\n\t"
 	   "ljmp %0\n\t"

@@ -30,308 +30,151 @@
 #include <internal/teb.h>
 #include <internal/ldr.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 #include "syspath.h"
 
-
-/* FUNCTIONS ****************************************************************/
-
+/* GLOBALS *******************************************************************/
 
 #define STACK_TOP (0xb0000000)
 
-static NTSTATUS LdrCreateUserProcessParameters (
-		       PRTL_USER_PROCESS_PARAMETERS *PpbPtr,
-		       HANDLE ProcessHandle)
-{
-   PVOID		PpbBase;
-   ULONG		PpbSize;
-   RTL_USER_PROCESS_PARAMETERS		Ppb;
-   ULONG		BytesWritten;
-   NTSTATUS	Status;
-   
-   /* Create process parameters block (PPB)*/
-   PpbBase = (PVOID)PEB_STARTUPINFO;
-   PpbSize = sizeof (RTL_USER_PROCESS_PARAMETERS);
+/* FUNCTIONS *****************************************************************/
 
-   Status = ZwAllocateVirtualMemory (ProcessHandle,
-				     (PVOID*)&PpbBase,
-				     0,
-				     &PpbSize,
-				     MEM_COMMIT,
-				     PAGE_READWRITE);
+/*
+ * FIXME: The location of the initial process should be configurable,
+ * from command line or registry
+ */
+NTSTATUS LdrLoadInitialProcess (VOID)
+{
+   NTSTATUS Status;
+   HANDLE ProcessHandle;
+   UNICODE_STRING ProcessName;
+   WCHAR TmpNameBuffer[MAX_PATH];
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   HANDLE FileHandle;
+   HANDLE SectionHandle;
+   PVOID LdrStartupAddr;
+   PVOID StackBase;
+   ULONG StackSize;
+   PIMAGE_NT_HEADERS NTHeaders;
+   PPEB Peb;
+   PEPROCESS Process;
+   CONTEXT Context;
+   HANDLE ThreadHandle;
+   
+   /*
+    * Get the system directory's name (a DOS device
+    * alias name which is in \\??\\).
+    */
+   LdrGetSystemDirectory(TmpNameBuffer, sizeof TmpNameBuffer);
+   wcscat(TmpNameBuffer, L"\\smss.exe");
+   RtlInitUnicodeString(&ProcessName, TmpNameBuffer);
+   
+   /*
+    * Open process image to determine ImageBase
+    * and StackBase/Size.
+    */
+   InitializeObjectAttributes(&ObjectAttributes,
+			      &ProcessName, 
+			      0,
+			      NULL,
+			      NULL);
+   DPRINT("Opening image file %S\n", ObjectAttributes.ObjectName->Buffer);
+   Status = ZwOpenFile(&FileHandle,
+		       FILE_ALL_ACCESS,
+		       &ObjectAttributes, 
+		       NULL,
+		       0,
+		       0);
    if (!NT_SUCCESS(Status))
      {
-	DbgPrint("Ppb allocation failed (Status %x)\n", Status);
+	DPRINT("Image open failed (Status was %x)\n", Status);
+	return Status;
+     }
+   
+   /*
+    * Create a section for the image
+    */
+   DPRINT("Creating section\n");
+   Status = ZwCreateSection(&SectionHandle,
+			    SECTION_ALL_ACCESS,
+			    NULL,
+			    NULL,
+			    PAGE_READWRITE,
+			    MEM_COMMIT,
+			    FileHandle);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("ZwCreateSection failed (Status %x)\n", Status);
+	ZwClose(FileHandle);
+	return(Status);
+     }
+   ZwClose(FileHandle);
+   
+   DPRINT("Creating process\n");
+   Status = ZwCreateProcess(&ProcessHandle,
+			    PROCESS_ALL_ACCESS,
+			    NULL,
+			    SystemProcessHandle,
+			    FALSE,
+			    SectionHandle,
+			    NULL,
+			    NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("Could not create process\n");
 	return Status;
      }
 
-   /* initialize the ppb */
-   memset (&Ppb, 0, sizeof(RTL_USER_PROCESS_PARAMETERS));
-   
-   DPRINT("PpbBase %x\n", PpbBase);
-   ZwWriteVirtualMemory(ProcessHandle,
-			PpbBase,
-			&Ppb,
-			sizeof(RTL_USER_PROCESS_PARAMETERS),
-			&BytesWritten);
-   
-   *PpbPtr = PpbBase;
-   
-   return STATUS_SUCCESS;
-}
-
-
-static NTSTATUS LdrCreatePeb (PPEB	*PebPtr,
-			      HANDLE	ProcessHandle,
-			      PRTL_USER_PROCESS_PARAMETERS Ppb)
-{
-   PPEB		PebBase;
-   ULONG		PebSize;
-   PEB		Peb;
-   ULONG		BytesWritten;
-   NTSTATUS	Status;
-   
-   PebBase = (PVOID)PEB_BASE;
-   PebSize = 0x1000;
-   
-   Status = ZwAllocateVirtualMemory (ProcessHandle,
-				     (PVOID*)&PebBase,
-				     0,
-				     &PebSize,
-				     MEM_COMMIT,
-				     PAGE_READWRITE);
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint ("Peb allocation failed (Status %x)\n", Status);
-	return(Status);
-     }
-
-   /* initialize the peb */
-   memset(&Peb, 0, sizeof Peb);
-   Peb.ProcessParameters = Ppb;
-   
-   ZwWriteVirtualMemory (ProcessHandle,
-			 PebBase,
-			 &Peb,
-			 sizeof(Peb),
-			 &BytesWritten);
-   
-   *PebPtr = (PPEB)PebBase;
-   
-   return(STATUS_SUCCESS);
-}
-
-
-/**********************************************************************
- * NAME
- * 	LdrLoadImage
- *
- * FUNCTION:
- *   Builds the initial environment for a process.  Should be used
- *   to load the initial user process.
- *   
- * ARGUMENTS:
- *   HANDLE   ProcessHandle  handle of the process to load the module into
- *   PUNICODE_STRING  Filename  name of the module to load
- *   
- * RETURNS:
- *   NTSTATUS
- */
-
-NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
-		      PUNICODE_STRING	Filename)
-{
-   CHAR			BlockBuffer [1024];
-   DWORD			ImageBase;
-   DWORD			LdrStartupAddr;
-   DWORD			StackBase;
-   ULONG			ImageSize;
-   ULONG			StackSize;
-   NTSTATUS		Status;
-   OBJECT_ATTRIBUTES	FileObjectAttributes;
-   HANDLE			FileHandle;
-   HANDLE			SectionHandle;
-   HANDLE			ThreadHandle;
-   CONTEXT			Context;
-   PIMAGE_DOS_HEADER	DosHeader;
-   PIMAGE_NT_HEADERS	NTHeaders;
-   ULONG			BytesWritten;
-   ULONG			InitialViewSize;
-   HANDLE			DupSectionHandle;
-   PRTL_USER_PROCESS_PARAMETERS				Ppb;
-   PPEB				Peb;
+   /*
+    * Create initial stack and thread
+    */
    
    /*
     * Aargh!
     */
-   LdrStartupAddr = (DWORD)LdrpGetSystemDllEntryPoint();
+   LdrStartupAddr = (PVOID)LdrpGetSystemDllEntryPoint();
    DPRINT("LdrStartupAddr %x\n", LdrStartupAddr);
-   
-   /*
-    * Open process image to determine ImageBase
-	 * and StackBase/Size.
-    */
-   InitializeObjectAttributes(&FileObjectAttributes,
-			      Filename, 
-			      0,
-			      NULL,
-			      NULL);
-   DPRINT("Opening image file %S\n",
-	  FileObjectAttributes.ObjectName->Buffer
-		);
-	Status = ZwOpenFile(
-			& FileHandle,
-			FILE_ALL_ACCESS,
-			& FileObjectAttributes, 
-			NULL,
-			0,
-			0
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("Image open failed ");
-		DbgPrintErrorMessage(Status);
-
-		return Status;
-	}
-	Status = ZwReadFile(
-			FileHandle,
-			0,
-			0,
-			0,
-			0,
-			BlockBuffer,
-			sizeof BlockBuffer,
-			0,
-			0
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("Image header read failed ");
-		DbgPrintErrorMessage(Status);
-		ZwClose(FileHandle);
-
-		return Status;
-	}
-	/*
-	 * FIXME: this will fail if the NT headers
-	 * are more than 1024 bytes from start.
-	 */
-	DosHeader = (PIMAGE_DOS_HEADER) BlockBuffer;
-	NTHeaders = 
-		(PIMAGE_NT_HEADERS) (BlockBuffer + DosHeader->e_lfanew);
-	if (
-		(DosHeader->e_magic != IMAGE_DOS_MAGIC)
-		|| (DosHeader->e_lfanew == 0L)
-		|| (*(PULONG) NTHeaders != IMAGE_PE_MAGIC)
-		)
-	{
-		DPRINT("Image invalid format rc=%08lx\n", Status);
-		ZwClose(FileHandle);
-
-		return STATUS_UNSUCCESSFUL;
-	}
-	ImageBase = NTHeaders->OptionalHeader.ImageBase;
-	ImageSize = NTHeaders->OptionalHeader.SizeOfImage;
-	/*
-	 * Create a section for the image
-	 */
-	Status = ZwCreateSection(
-			& SectionHandle,
-			SECTION_ALL_ACCESS,
-			NULL,
-			NULL,
-			PAGE_READWRITE,
-			MEM_COMMIT,
-			FileHandle
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("Image create section failed ");
-		DbgPrintErrorMessage(Status);
-		ZwClose(FileHandle);
-
-		return Status;
-	}
-	/*
-	 * Map the image into the process
-	 */
-	InitialViewSize =
-		DosHeader->e_lfanew
-		+ sizeof (IMAGE_NT_HEADERS) 
-		+ (
-			sizeof(IMAGE_SECTION_HEADER)
-			* NTHeaders->FileHeader.NumberOfSections
-			);
-	DPRINT("InitialViewSize %x\n",InitialViewSize);
-	Status = ZwMapViewOfSection(
-			SectionHandle,
-			ProcessHandle,
-			(PVOID *) & ImageBase,
-			0,
-			InitialViewSize,
-			NULL,
-			& InitialViewSize,
-			0,
-			MEM_COMMIT,
-			PAGE_READWRITE
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("Image map view of section failed ");
-		DbgPrintErrorMessage(Status);
-
-		/* FIXME: destroy the section here  */
-
-		ZwClose(FileHandle);
-
-		return Status;
-	}
-	ZwClose(FileHandle);
-
-/* -- PART III -- */
-
-   /* Create the process parameter block (PPB) */
-   DPRINT("Creating PPB\n");
-   Status = LdrCreateUserProcessParameters (&Ppb, ProcessHandle);
-   if (!NT_SUCCESS(Status))
-     {
-	DPRINT("PPB creation failed ");
-	DbgPrintErrorMessage(Status);
-	
-	/* FIXME: unmap the section here  */
-	/* FIXME: destroy the section here  */
-	
-	return Status;
-	}
-   
-   /* Create the process environment block (PEB) */
-   DPRINT("Creating Peb\n");
-   Status = LdrCreatePeb (&Peb,
-			  ProcessHandle,
-			  Ppb);
-   if (!NT_SUCCESS(Status))
-     {
-	DPRINT("PEB creation failed ");
-		DbgPrintErrorMessage(Status);
-	
-	/* FIXME: unmap the section here  */
-	/* FIXME: destroy the section here  */
-	/* FIXME: free the PPB */
-	
-		return Status;
-     }
    
    /*
     * Create page backed section for stack
     */
    DPRINT("Allocating stack\n");
-   StackBase = (STACK_TOP - NTHeaders->OptionalHeader.SizeOfStackReserve);
+   
+   DPRINT("Referencing process\n");
+   Status = ObReferenceObjectByHandle(ProcessHandle,
+				      PROCESS_ALL_ACCESS,
+				      PsProcessType,
+				      KernelMode,
+				      (PVOID*)&Process,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("ObReferenceObjectByProcess() failed (Status %x)\n", Status);
+	return(Status);
+     }
+   
+   DPRINT("Attaching to process\n");
+   KeAttachProcess(Process);
+   Peb = (PPEB)PEB_BASE;
+   DPRINT("Peb %x\n", Peb);
+   DPRINT("CurrentProcess %x Peb->ImageBaseAddress %x\n", 
+	  PsGetCurrentProcess(),
+	  Peb->ImageBaseAddress);
+   NTHeaders = RtlImageNtHeader(Peb->ImageBaseAddress);
+   DPRINT("NTHeaders %x\n", NTHeaders);
+   StackBase = (PVOID)
+     (STACK_TOP - NTHeaders->OptionalHeader.SizeOfStackReserve);
+   DPRINT("StackBase %x\n", StackBase);
    StackSize = NTHeaders->OptionalHeader.SizeOfStackReserve;
+   DPRINT("StackSize %x\n", StackSize);
+   KeDetachProcess();
+   DPRINT("Dereferencing process\n");
+//   ObDereferenceObject(Process);
+   
    DbgPrint ("Stack size %x\n", StackSize);
-
+   DPRINT("Allocating virtual memory\n");
    Status = ZwAllocateVirtualMemory(ProcessHandle,
 				    (PVOID*)&StackBase,
 				    0,
@@ -340,42 +183,22 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 				    PAGE_READWRITE);
    if (!NT_SUCCESS(Status))
      {
-	DPRINT("Stack allocation failed ");
-	DbgPrintErrorMessage(Status);
-
-	/* FIXME: unmap the section here  */
-	/* FIXME: destroy the section here  */
-	
+	DPRINT("Stack allocation failed (Status %x)", Status);
 	return Status;
      }
    
-   ZwDuplicateObject(NtCurrentProcess(),
-		     &SectionHandle,
-		     ProcessHandle,
-		     &DupSectionHandle,
-		     0,
-		     FALSE,
-		     DUPLICATE_SAME_ACCESS);
-   
-   ZwWriteVirtualMemory(ProcessHandle,
-			(PVOID)(STACK_TOP - 8),
-			&ImageBase,
-			sizeof (ImageBase),
-			&BytesWritten);
-   ZwWriteVirtualMemory(ProcessHandle,
-			(PVOID)(STACK_TOP - 12),
-			&DupSectionHandle,
-			sizeof (DupSectionHandle),
-			&BytesWritten);
+   DPRINT("Attaching to process\n");
+   KeAttachProcess(Process);
+   Peb = (PPEB)PEB_BASE;
+   DPRINT("Peb %x\n", Peb);
+   DPRINT("CurrentProcess %x Peb->ImageBaseAddress %x\n", 
+	  PsGetCurrentProcess(),
+	  Peb->ImageBaseAddress);
+   KeDetachProcess();
 
-   /* write pointer to peb on the stack (parameter of NtProcessStartup) */
-   ZwWriteVirtualMemory(ProcessHandle,
-			(PVOID) (STACK_TOP - 16),
-			&Peb,
-			sizeof (ULONG),
-			&BytesWritten);
    
    DbgPrint ("NTOSKRNL: Peb = %x\n", Peb);
+   
    /*
     * Initialize context to point to LdrStartup
     */
@@ -384,13 +207,14 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
    Context.Esp = STACK_TOP - 20;
    Context.EFlags = 0x202;
    Context.SegCs = USER_CS;
-   Context.Eip = LdrStartupAddr;
+   Context.Eip = (ULONG)LdrStartupAddr;
    Context.SegDs = USER_DS;
    Context.SegEs = USER_DS;
    Context.SegFs = USER_DS;
    Context.SegGs = USER_DS;
 
    DPRINT("LdrStartupAddr %x\n",LdrStartupAddr);
+   
    /*
     * FIXME: Create process and let 'er rip
     */
@@ -413,50 +237,17 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 	
 	return Status;
      }
-
-   return STATUS_SUCCESS;
-}
-
-
-/*
- * FIXME: The location of the initial process should be configurable,
- * from command line or registry
- */
-NTSTATUS LdrLoadInitialProcess (VOID)
-{
-   NTSTATUS Status;
-   HANDLE ProcessHandle;
-   UNICODE_STRING ProcessName;
-   WCHAR TmpNameBuffer[MAX_PATH];
-
-
-   Status = ZwCreateProcess(&ProcessHandle,
-			    PROCESS_ALL_ACCESS,
-			    NULL,
-			    SystemProcessHandle,
-			    FALSE,
-			    NULL,
-			    NULL,
-			    NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint("Could not create process\n");
-	return Status;
-     }
    
-   /*
-    * Get the system directory's name (a DOS device
-    * alias name which is in \\??\\).
-    */
-   LdrGetSystemDirectory(TmpNameBuffer, sizeof TmpNameBuffer);
-   wcscat(TmpNameBuffer, L"\\smss.exe");
-   RtlInitUnicodeString(&ProcessName, TmpNameBuffer);
-   Status = LdrLoadImage(ProcessHandle, &ProcessName);
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint("Failed to load %wZ\n",&ProcessName);
-     }
-   return Status;
+   DPRINT("Attaching to process\n");
+   KeAttachProcess(Process);
+   Peb = (PPEB)PEB_BASE;
+   DPRINT("Peb %x\n", Peb);
+   DPRINT("CurrentProcess %x Peb->ImageBaseAddress %x\n", 
+	  PsGetCurrentProcess(),
+	  Peb->ImageBaseAddress);
+   KeDetachProcess();
+   
+   return STATUS_SUCCESS;
 }
 
 /* EOF */

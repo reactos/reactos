@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.45 2000/02/03 21:34:14 phreak Exp $
+/* $Id: loader.c,v 1.46 2000/02/13 16:05:18 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -190,15 +190,13 @@ static VOID LdrLoadAutoConfigDriver (LPWSTR	RelativeDriverName)
    Status = LdrLoadDriver(&DriverName);
    if (!NT_SUCCESS(Status))
      {
-	DbgPrint("driver load failed, status;%d(%x)\n", Status, Status);
-	DbgPrintErrorMessage(Status);
+	DbgPrint("driver load failed, status (%x)\n", Status);
 	KeBugCheck(0);
      }
 }
 
 
-VOID
-LdrLoadAutoConfigDrivers (VOID)
+VOID LdrLoadAutoConfigDrivers (VOID)
 {
 	/*
 	 * Keyboard driver
@@ -248,8 +246,7 @@ LdrCreateModule(PVOID ObjectBody,
  * RETURNS: Status
  */
 
-NTSTATUS 
-LdrLoadDriver(PUNICODE_STRING Filename)
+NTSTATUS LdrLoadDriver(PUNICODE_STRING Filename)
 {
   PMODULE_OBJECT  ModuleObject;
 

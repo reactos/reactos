@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.23 2000/01/18 12:04:31 ekohl Exp $
+/* $Id: utils.c,v 1.24 2000/02/13 16:05:16 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -819,7 +819,7 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
  *
  */
 PEPFUNC LdrPEStartup (PVOID	ImageBase,
-		      HANDLE	SectionHandle)
+		      HANDLE SectionHandle)
 {
    NTSTATUS		Status;
    PEPFUNC			EntryPoint;
@@ -837,10 +837,13 @@ PEPFUNC LdrPEStartup (PVOID	ImageBase,
    /*
     * Initialize image sections.
     */
-   LdrMapSections(NtCurrentProcess(),
-		  ImageBase,
-		  SectionHandle,
-		  NTHeaders);
+   if (SectionHandle != NULL)
+     {
+	LdrMapSections(NtCurrentProcess(),
+		       ImageBase,
+		       SectionHandle,
+		       NTHeaders);
+     }
    
    /*
     * If the base address is different from the

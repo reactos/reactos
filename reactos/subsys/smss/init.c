@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.9 2000/01/11 17:32:13 ekohl Exp $
+/* $Id: init.c,v 1.10 2000/02/13 16:05:19 dwelch Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -133,8 +133,9 @@ InitSessionManager (
 	DisplayString (L"SM: System Environment created\n");
 #endif
 
-	RtlSetCurrentEnvironment (SmSystemEnvironment,
-	                          NULL);
+//	RtlSetCurrentEnvironment (SmSystemEnvironment,
+//	                          NULL);
+   
 #ifndef NDEBUG
 	DisplayString (L"System Environment set\n");
 #endif

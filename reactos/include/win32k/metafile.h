@@ -91,10 +91,12 @@ HENHMETAFILE  W32kSetEnhMetaFileBits(UINT  BufSize,
 HMETAFILE  W32kSetMetaFileBitsEx(UINT  Size,
                                  CONST PBYTE  Data);
 
+#if 0
 HENHMETAFILE  W32kSetWinMetaFileBits(UINT  BufSize,
                                      CONST PBYTE  Buffer,
                                      HDC  Ref,
                                      CONST METAFILEPICT *mfp);
+#endif
 
 #endif
 

@@ -19,5 +19,9 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 			  PVOID* LdrStartupAddress);
 PIMAGE_NT_HEADERS RtlImageNtHeader(PVOID BaseAddress);
 PVOID LdrpGetSystemDllEntryPoint(VOID);
+NTSTATUS LdrpMapImage(HANDLE ProcessHandle, 
+		      HANDLE SectionHandle,
+		      PVOID* ImageBase);
+
 
 #endif /* __INCLUDE_INTERNAL_LDR_H */

@@ -309,6 +309,7 @@ asmlinkage void exception_handler(unsigned int edi,
      }
    else
      {
+#if 0
 	DbgPrint("SS:ESP %x:%x\n",ss0,esp0);
         stack=(PULONG)(esp0);
        
@@ -324,6 +325,7 @@ asmlinkage void exception_handler(unsigned int edi,
 		  }
 	     }
         }
+#endif
      }
    
    DbgPrint("\n");

@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.6 2000/01/17 21:01:37 ekohl Exp $
+/* $Id: print.c,v 1.7 2000/02/13 16:05:17 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,8 +26,7 @@ __asm__ ("\n\t.global _DbgService\n\t"
          "int $0x2D\n\t"
          "ret\n\t");
 
-ULONG
-DbgPrint(PCH Format, ...)
+ULONG DbgPrint(PCH Format, ...)
 {
    ANSI_STRING DebugString;
    CHAR Buffer[512];
@@ -41,8 +40,8 @@ DbgPrint(PCH Format, ...)
    DebugString.Length = vsprintf (Buffer, Format, ap);
    va_end (ap);
 
-   DbgService (1, &DebugString, NULL);
-
+   HalDisplayString(Buffer);
+   
    return (ULONG)DebugString.Length;
 }
 

@@ -248,8 +248,8 @@ ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code)
     * Get the address for the page fault
     */
    __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));                
-//   DbgPrint("Page fault address %x eip %x process %x code %x\n",cr2,eip,
-//	    PsGetCurrentProcess(), error_code);
+   DPRINT("Page fault address %x eip %x process %x code %x\n",cr2,eip,
+	  PsGetCurrentProcess(), error_code);
 
    MmSetPageProtect(PsGetCurrentProcess(),
 		    (PVOID)PAGE_ROUND_DOWN(PsGetCurrentProcess()),
@@ -259,7 +259,7 @@ ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code)
    
    if (error_code & 0x1)
      {
-	DPRINT1("Page protection fault at %x with eip %x\n", cr2, eip);
+	DbgPrint("Page protection fault at %x with eip %x\n", cr2, eip);
 	return(0);
      }
    

@@ -194,13 +194,17 @@ VOID PiDeleteProcess(PVOID ObjectBody)
 }
 
 
-static NTSTATUS PsCreatePeb(HANDLE ProcessHandle)
+static NTSTATUS PsCreatePeb(HANDLE ProcessHandle,
+			    PVOID ImageBase)
 {
    NTSTATUS Status;
    PVOID PebBase;
    ULONG PebSize;
    PEB Peb;
    ULONG BytesWritten;
+   
+   memset(&Peb, 0, sizeof(Peb));
+   Peb.ImageBaseAddress = ImageBase;
    
    PebBase = (PVOID)PEB_BASE;
    PebSize = 0x1000;
@@ -215,8 +219,6 @@ static NTSTATUS PsCreatePeb(HANDLE ProcessHandle)
 	return(Status);
      }
    
-   memset(&Peb, 0, sizeof(Peb));
-
    ZwWriteVirtualMemory(ProcessHandle,
 			(PVOID)PEB_BASE,
 			&Peb,
@@ -294,6 +296,7 @@ NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
    NTSTATUS Status;
    KIRQL oldIrql;
    PVOID LdrStartupAddr;
+   PVOID ImageBase;
    
    DPRINT("NtCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
 
@@ -339,29 +342,54 @@ NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
    /*
     * Now we have created the process proper
     */
+      
+   /*
+    * Map ntdll
+    */
+   Status = LdrpMapSystemDll(*ProcessHandle,
+			     &LdrStartupAddr);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("LdrpMapSystemDll failed (Status %x)\n", Status);
+	ObDereferenceObject(Process);
+	ObDereferenceObject(ParentProcess);
+	return(Status);
+     }
    
-   Status = PsCreatePeb(*ProcessHandle);
+   /*
+    * Map the process image
+    */
+   if (SectionHandle != NULL)
+     {
+	DPRINT("Mapping process image\n");
+	Status = LdrpMapImage(*ProcessHandle,
+			      SectionHandle,
+			      &ImageBase);
+	if (!NT_SUCCESS(Status))
+	  {
+	     DbgPrint("LdrpMapImage failed (Status %x)\n", Status);
+	     ObDereferenceObject(Process);
+	     ObDereferenceObject(ParentProcess);
+	     return(Status);
+	  }
+     }
+   else
+     {
+	ImageBase = NULL;
+     }
+   
+   /*
+    * 
+    */
+   DPRINT("Creating PEB\n");
+   Status = PsCreatePeb(*ProcessHandle,
+			ImageBase);
    if (!NT_SUCCESS(Status))
      {
         DbgPrint("NtCreateProcess() Peb creation failed: Status %x\n",Status);
 	return(Status);
      }
    
-   /*
-    * Map ntdll
-    */
-   Status = LdrpMapSystemDll(*ProcessHandle,
-			     &LdrStartupAddr);
-   
-   /*
-    * FIXME: I don't what I'm supposed to know with a section handle
-    */
-   if (SectionHandle != NULL)
-     {
-	DbgPrint("NtCreateProcess() non-NULL SectionHandle\n");
-	return(STATUS_UNSUCCESSFUL);
-     }
-
    ObDereferenceObject(Process);
    ObDereferenceObject(ParentProcess);
    return(STATUS_SUCCESS);

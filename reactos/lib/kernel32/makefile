@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.29 2000/01/21 23:06:25 phreak Exp $
+# $Id: makefile,v 1.30 2000/02/13 16:05:12 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -156,5 +156,5 @@ else
 	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
 endif
 
-#WARNINGS_ARE_ERRORS = yes
+WARNINGS_ARE_ERRORS = yes
 

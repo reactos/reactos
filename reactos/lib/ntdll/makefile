@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.37 2000/02/05 16:06:52 ekohl Exp $
+# $Id: makefile,v 1.38 2000/02/13 16:05:13 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -6,7 +6,6 @@ TARGET=ntdll
 
 BASE_CFLAGS = -I../../include -D__NTDLL__
 
-include ../../rules.mak
 IMAGE_BASE = 0x77f60000
 
 ifneq ($(HOST),mingw32-windows)
@@ -30,7 +29,7 @@ DBG_OBJECTS = dbg/brkpoint.o dbg/print.o
 
 RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
               rtl/math.o rtl/mem.o rtl/nls.o rtl/process.o rtl/sd.o \
-              rtl/thread.o rtl/unicode.o rtl/env.o rtl/path.o
+              rtl/thread.o rtl/unicode.o rtl/env.o rtl/path.o rtl/ppb.o
 
 STDIO_OBJECTS = stdio/sprintf.o stdio/swprintf.o
 
@@ -131,4 +130,4 @@ else
 endif
 
 #WARNINGS_ARE_ERRORS = yes
-
+include ../../rules.mak

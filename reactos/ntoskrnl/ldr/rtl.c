@@ -32,8 +32,11 @@ PIMAGE_NT_HEADERS RtlImageNtHeader(PVOID BaseAddress)
    PIMAGE_DOS_HEADER DosHeader;
    PIMAGE_NT_HEADERS NTHeaders;
    
+   DPRINT("BaseAddress %x\n", BaseAddress);
    DosHeader = (PIMAGE_DOS_HEADER)BaseAddress;
+   DPRINT("DosHeader %x\n", DosHeader);
    NTHeaders = (PIMAGE_NT_HEADERS)(BaseAddress + DosHeader->e_lfanew);
+   DPRINT("NTHeaders %x\n", NTHeaders);
    if ((DosHeader->e_magic != IMAGE_DOS_MAGIC)
        || (DosHeader->e_lfanew == 0L)
        || (*(PULONG) NTHeaders != IMAGE_PE_MAGIC))

@@ -31,6 +31,26 @@ static KSPIN_LOCK GdtLock;
 
 /* FUNCTIONS *****************************************************************/
 
+VOID KeSetBaseGdtSelector(ULONG Entry,
+			  PVOID Base)
+{
+   KIRQL oldIrql;
+   
+   KeAcquireSpinLock(&GdtLock, &oldIrql);
+   
+   KiGdt[Entry*4 + 1] = ((ULONG)Base) & 0xffff;
+   
+   KiGdt[Entry*4 + 2] = KiGdt[Entry*4 + 2] & ~(0xff);
+   KiGdt[Entry*4 + 2] = KiGdt[Entry*4 + 2] |
+     ((((ULONG)Base) & 0xff0000) >> 16);
+   
+   KiGdt[Entry*4 + 3] = KiGdt[Entry*4 + 3] & ~(0xff00);
+   KiGdt[Entry*4 + 3] = KiGdt[Entry*4 + 3] |
+     ((((ULONG)Base) & 0xff000000) >> 16);
+   
+   KeReleaseSpinLock(&GdtLock, oldIrql);
+}
+
 VOID KeDumpGdtSelector(ULONG Entry)
 {
 }

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.8 2000/01/26 10:07:29 dwelch Exp $
+/* $Id: create.c,v 1.9 2000/02/13 16:05:18 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -251,7 +251,10 @@ PACCESS_TOKEN PsReferenceImpersonationToken(PETHREAD Thread,
    return(Thread->ImpersonationInfo->Token);
 }
 
-static VOID PiTimeoutThread( struct _KDPC *dpc, PVOID Context, PVOID arg1, PVOID arg2 )
+static VOID PiTimeoutThread(struct _KDPC *dpc, 
+			    PVOID Context, 
+			    PVOID arg1, 
+			    PVOID arg2 )
 {
    // wake up the thread, and tell it it timed out
    NTSTATUS Status = STATUS_TIMEOUT;
@@ -263,10 +266,12 @@ static VOID PiTimeoutThread( struct _KDPC *dpc, PVOID Context, PVOID arg1, PVOID
 
 VOID PiBeforeBeginThread(VOID)
 {
+   PPEB Peb;
+   
    DPRINT("PiBeforeBeginThread()\n");
    //KeReleaseSpinLock(&PiThreadListLock, PASSIVE_LEVEL);
    KeLowerIrql(PASSIVE_LEVEL);
-   DPRINT("KeGetCurrentIrql() %d\n", KeGetCurrentIrql());
+   Peb = (PPEB)PEB_BASE;
 }
 
 VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext)
@@ -459,7 +464,9 @@ static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
    /* more initialization */
    Teb.Cid.UniqueThread = Thread->Cid.UniqueThread;
    Teb.Cid.UniqueProcess = Thread->Cid.UniqueProcess;
-
+   
+   DPRINT("sizeof(NT_TEB) %x\n", sizeof(NT_TEB));
+   
    /* write TEB data into teb page */
    Status = NtWriteVirtualMemory(ProcessHandle,
                                  TebBase,

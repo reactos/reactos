@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.1 1999/05/24 20:04:44 ea Exp $
+/* $Id: stubs.c,v 1.2 2000/02/13 16:05:12 dwelch Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -2221,7 +2221,8 @@ SetWinMetaFileBits(
 	UINT			a0, 
 	CONST BYTE		*a1, 
 	HDC			a2, 
-	CONST METAFILEPICT	*a3
+//	CONST METAFILEPICT	*a3
+		   PVOID a3
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

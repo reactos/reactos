@@ -175,7 +175,8 @@ HMETAFILE  W32kSetMetaFileBitsEx(UINT  Size,
 HENHMETAFILE  W32kSetWinMetaFileBits(UINT  BufSize,
                                      CONST PBYTE  Buffer,
                                      HDC  Ref,
-                                     CONST METAFILEPICT *mfp)
+//                                     CONST METAFILEPICT *mfp)
+				     PVOID mfp)
 {
   UNIMPLEMENTED;
 }

@@ -23,7 +23,7 @@
 #include <internal/symbol.h>
 #include <internal/teb.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 #include "syspath.h"
@@ -132,11 +132,13 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
    DPRINT("ImageBase %x\n",ImageBase);
    *LdrStartupAddr = 
      (PVOID)ImageBase + NTHeaders->OptionalHeader.AddressOfEntryPoint;
+   DPRINT("LdrStartupAddr %x\n", LdrStartupAddr);
    SystemDllEntryPoint = *LdrStartupAddr;
    
    /*
     * Create a section for NTDLL
     */
+   DPRINT("Creating section\n");
    Status = ZwCreateSection(&NTDllSectionHandle,
 			    SECTION_ALL_ACCESS,
 			    NULL,
@@ -158,6 +160,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
    InitialViewSize = DosHeader->e_lfanew + 
      sizeof (IMAGE_NT_HEADERS) + 
      (sizeof (IMAGE_SECTION_HEADER) * NTHeaders->FileHeader.NumberOfSections);
+   DPRINT("Mapping view of section\n");
    Status = ZwMapViewOfSection(NTDllSectionHandle,
 			       ProcessHandle,
 			       (PVOID*)&ImageBase,
@@ -181,17 +184,21 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 	LARGE_INTEGER		Offset;
 	ULONG			Base;
 	
+	DPRINT("Mapping view of section %d\n", i);
 	Sections = (PIMAGE_SECTION_HEADER) SECHDROFFSET(BlockBuffer);
+	DPRINT("Sections %x\n", Sections);
 	Base = Sections[i].VirtualAddress + ImageBase;
+	DPRINT("Base %x\n", Base);
 	Offset.u.LowPart = Sections[i].PointerToRawData;
 	Offset.u.HighPart = 0;
+	DPRINT("Mapping view of section\n");
 	Status = ZwMapViewOfSection(NTDllSectionHandle,
 				    ProcessHandle,
-				    (PVOID *) & Base,
+				    (PVOID*)&Base,
 				    0,
 				    Sections[i].Misc.VirtualSize,
 				    &Offset,
-				    (PULONG) & Sections[i].Misc.VirtualSize,
+				    (PULONG)&Sections[i].Misc.VirtualSize,
 				    0,
 				    MEM_COMMIT,
 				    PAGE_READWRITE);
@@ -202,6 +209,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 	     return(Status);
 	  }
      }
+   DPRINT("Finished mapping\n");
    ZwClose(NTDllSectionHandle);
 	
    return(STATUS_SUCCESS);

@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.22 2000/01/12 19:03:42 ekohl Exp $
+/* $Id: section.c,v 1.23 2000/02/13 16:05:18 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -430,6 +430,7 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
    DPRINT("*BaseAddress %x\n",*BaseAddress);
    ObDereferenceObject(Process);   
    
+   DPRINT("NtMapViewOfSection() returning (Status %x)\n", STATUS_SUCCESS);
    return(STATUS_SUCCESS);
 }
 
@@ -472,13 +473,24 @@ NTSTATUS STDCALL NtUnmapViewOfSection (HANDLE	ProcessHandle,
    NTSTATUS	Status;
    PMEMORY_AREA MemoryArea;
    
+   DPRINT("NtUnmapViewOfSection(ProcessHandle %x, BaseAddress %x)\n",
+	  ProcessHandle, BaseAddress);
+   
+   DPRINT("Referencing process\n");
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_VM_OPERATION,
 				      PsProcessType,
 				      UserMode,
 				      (PVOID*)&Process,
 				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("ObReferenceObjectByHandle failed (Status %x)\n", Status);
+	return(Status);
+     }
    
+   DPRINT("Opening memory area Process %x BaseAddress %x\n",
+	  Process, BaseAddress);
    MemoryArea = MmOpenMemoryAreaByAddress(Process, BaseAddress);
    if (MemoryArea == NULL)
      {

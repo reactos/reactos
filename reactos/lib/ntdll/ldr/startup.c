@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.17 2000/02/05 16:07:44 ekohl Exp $
+/* $Id: startup.c,v 1.18 2000/02/13 16:05:14 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,11 +20,9 @@
 #include <wchar.h>
 #include <ntdll/ldr.h>
 #include <ntdll/rtl.h>
+#include <csrss/csrss.h>
 
-//#define DBG_NTDLL_LDR_STARTUP
-#ifndef DBG_NTDLL_LDR_STARTUP
 #define NDEBUG
-#endif
 #include <ntdll/ntdll.h>
 
 /* GLOBALS *******************************************************************/
@@ -36,45 +34,45 @@ extern HANDLE __ProcessHeap;
 
 /* FUNCTIONS *****************************************************************/
 
-
-/*   LdrStartup
- * FUNCTION:
- *   Handles Process Startup Activities.
- * ARGUMENTS:
- *   DWORD    ImageBase  The base address of the process image
- */
-VOID LdrStartup(PPEB Peb,
-		HANDLE SectionHandle,
-		DWORD ImageBase,
-		HANDLE NTDllSectionHandle)
+VOID LdrStartup(VOID)
 {
    PEPFUNC EntryPoint;
    PIMAGE_DOS_HEADER PEDosHeader;
    NTSTATUS Status;
    PIMAGE_NT_HEADERS NTHeaders;
-
-   DPRINT("LdrStartup(Peb %x SectionHandle %x, ImageBase %x, "
-	   "NTDllSectionHandle %x )\n",
-	   Peb, SectionHandle, ImageBase, NTDllSectionHandle);
+   PVOID ImageBase;
+   PPEB Peb;
+   
+   DPRINT("LdrStartup()\n");
 
    LdrDllListHead.BaseAddress = (PVOID)&_image_base__;
    LdrDllListHead.Prev = &LdrDllListHead;
    LdrDllListHead.Next = &LdrDllListHead;
-   LdrDllListHead.SectionHandle = NTDllSectionHandle;
+   LdrDllListHead.SectionHandle = NULL;
    PEDosHeader = (PIMAGE_DOS_HEADER)LdrDllListHead.BaseAddress;
    LdrDllListHead.Headers = (PIMAGE_NT_HEADERS)(LdrDllListHead.BaseAddress +
 						PEDosHeader->e_lfanew);
-
-  /*  If MZ header exists  */
-  PEDosHeader = (PIMAGE_DOS_HEADER) ImageBase;
+   
+   
+   Peb = (PPEB)(PEB_BASE);
+   DPRINT("Peb %x\n", Peb);
+   ImageBase = Peb->ImageBaseAddress;
+   DPRINT("ImageBase %x\n", ImageBase);
+   if (ImageBase <= (PVOID)0x1000)
+     {
+	DPRINT("ImageBase is null\n");
+	for(;;);
+     }
+   
+   /*  If MZ header exists  */
+   PEDosHeader = (PIMAGE_DOS_HEADER) ImageBase;
    DPRINT("PEDosHeader %x\n", PEDosHeader);
-  if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC ||
-      PEDosHeader->e_lfanew == 0L ||
-      *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_PE_MAGIC)
+   if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC ||
+       PEDosHeader->e_lfanew == 0L ||
+       *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_PE_MAGIC)
      {
 	DbgPrint("Image has bad header\n");
-	ZwTerminateProcess(NULL,
-			   STATUS_UNSUCCESSFUL);
+	ZwTerminateProcess(NULL, STATUS_UNSUCCESSFUL);
      }
 
    /* normalize process parameters */
@@ -87,7 +85,7 @@ VOID LdrStartup(PPEB Peb,
 				 NTHeaders->OptionalHeader.SizeOfHeapReserve,
 				 NULL,
 				 NULL);
-   EntryPoint = LdrPEStartup((PVOID)ImageBase, SectionHandle);
+   EntryPoint = LdrPEStartup((PVOID)ImageBase, NULL);
 
    if (EntryPoint == NULL)
      {
@@ -104,8 +102,8 @@ VOID LdrStartup(PPEB Peb,
 	DbgPrint("Failed to connect to csrss.exe: expect trouble\n");
      }
    
-//   DbgPrint("Transferring control to image at %x\n",EntryPoint);
-   Status = EntryPoint(Peb);
+   DbgPrint("Transferring control to image at %x\n",EntryPoint);
+   Status = EntryPoint(NULL);
    ZwTerminateProcess(NtCurrentProcess(),Status);
 }
 
