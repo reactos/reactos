@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.64 2004/01/20 23:35:59 gvg Exp $
+/* $Id: msgqueue.c,v 1.65 2004/02/08 21:47:10 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -63,7 +63,7 @@ static KSPIN_LOCK SystemMessageQueueLock;
 
 static ULONG volatile HardwareMessageQueueStamp = 0;
 static LIST_ENTRY HardwareMessageQueueHead;
-static FAST_MUTEX HardwareMessageQueueLock;
+static KMUTEX HardwareMessageQueueLock;
 
 static KEVENT HardwareMessageEvent;
 
@@ -122,7 +122,7 @@ MsqInitializeImpl(VOID)
   InitializeListHead(&HardwareMessageQueueHead);
   KeInitializeEvent(&HardwareMessageEvent, NotificationEvent, 0);
   KeInitializeSpinLock(&SystemMessageQueueLock);
-  ExInitializeFastMutex(&HardwareMessageQueueLock);
+  KeInitializeMutex(&HardwareMessageQueueLock, 0);
 
   ExInitializePagedLookasideList(&MessageLookasideList,
 				 NULL,
@@ -212,18 +212,18 @@ MsqIsDblClk(PWINDOW_OBJECT Window, PUSER_MESSAGE Message, BOOL Remove)
     
     Res = (dX <= CurInfo->DblClickWidth) &&
           (dY <= CurInfo->DblClickHeight);
+  }
 
-    if(Remove)
+  if(Remove)
+  {
+    if (Res)
     {
       CurInfo->LastBtnDown = 0;
       CurInfo->LastBtnDownX = Message->Msg.pt.x;
       CurInfo->LastBtnDownY = Message->Msg.pt.y;
       CurInfo->LastClkWnd = NULL;
     }
-  }
-  else
-  {
-    if(Remove)
+    else
     {
       CurInfo->LastBtnDownX = Message->Msg.pt.x;
       CurInfo->LastBtnDownY = Message->Msg.pt.y;
@@ -436,6 +436,8 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
   BOOL MouseClick;
   PLIST_ENTRY CurrentEntry;
   PWINDOW_OBJECT DesktopWindow;
+  PVOID WaitObjects[2];
+  NTSTATUS WaitStatus;
 
   if( !IntGetScreenDC() || 
       PsGetWin32Thread()->MessageQueue == W32kGetPrimitiveMessageQueue() ) 
@@ -479,7 +481,19 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
   ExReleaseFastMutex(&MessageQueue->HardwareLock);
 
   /* Now try the global queue. */
-  ExAcquireFastMutex(&HardwareMessageQueueLock);
+  WaitObjects[1] = &MessageQueue->NewMessages;
+  WaitObjects[0] = &HardwareMessageQueueLock;
+  do
+    {
+      WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
+                                            UserMode, TRUE, NULL, NULL);
+      while (MsqDispatchOneSentMessage(MessageQueue))
+        {
+          ;
+        }
+    }
+  while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
+
   /* Transfer all messages from the DPC accessible queue to the main queue. */
   KeAcquireSpinLock(&SystemMessageQueueLock, &OldIrql);
   while (SystemMessageQueueCount > 0)
@@ -521,13 +535,11 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	  Current->Msg.message <= WM_MOUSELAST)
 	{
 	  const ULONG ActiveStamp = HardwareMessageQueueStamp;
-	  ExReleaseFastMutex(&HardwareMessageQueueLock);
 	  /* Translate the message. */
 	  Accept = MsqTranslateMouseMessage(hWnd, FilterLow, FilterHigh,
 					    Current, Remove, &Freed,
 					    DesktopWindow, &HitTest,
 					    &ScreenPoint, &MouseClick, TRUE);
-	  ExAcquireFastMutex(&HardwareMessageQueueLock);
 	  if (Accept)
 	    {
 	      /* Check for no more messages in the system queue. */
@@ -550,7 +562,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 				 &Current->ListEntry);
                   ExReleaseFastMutex(&MessageQueue->HardwareLock);
 		}
-	      ExReleaseFastMutex(&HardwareMessageQueueLock);
+	      KeReleaseMutex(&HardwareMessageQueueLock, FALSE);
 	      *Message = Current;
 	      IntReleaseWindowObject(DesktopWindow);
 	      return(TRUE);
@@ -570,7 +582,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
       KeClearEvent(&HardwareMessageEvent);
     }
   KeReleaseSpinLock(&SystemMessageQueueLock, OldIrql);
-  ExReleaseFastMutex(&HardwareMessageQueueLock);
+  KeReleaseMutex(&HardwareMessageQueueLock, FALSE);
 
   return(FALSE);
 }
