@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.12 2003/07/11 13:50:23 royce Exp $
+/* $Id: nls.c,v 1.13 2003/07/24 16:28:26 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -243,7 +243,7 @@ RtlMultiByteToUnicodeN (IN OUT PWCHAR UnicodeString,
 
       for (i = 0; i < Size; i++)
 	{
-	  *UnicodeString = NlsAnsiToUnicodeTable[*MbString];
+	  *UnicodeString = NlsAnsiToUnicodeTable[*((unsigned char *) MbString)];
 	  UnicodeString++;
 	  MbString++;
 	}
