@@ -1,3 +1,7 @@
+Changes in v1.8.4 (4/5/2003) (chorns)
+
+- Added DOS compatible Master Boot Record (MBR)
+
 Changes in v1.8.3 (3/18/2003) (brianp)
 
 - Added _alloca() function because Mingw32 generates code that needs it

@@ -27,11 +27,15 @@ BOOTCD_DIR	= ..\..\bootcd
 
 .PHONY : clean bootcd
 
-all: $(BIN2C) fat.bin fat32.bin isoboot.bin ext2.bin
+all: $(BIN2C) dosmbr.bin fat.bin fat32.bin isoboot.bin ext2.bin
 
 
 $(BIN2C) :
 	@$(MAKE) --no-print-directory -C $(TOOLSDIR)
+
+dosmbr.bin : dosmbr.asm
+	@echo ===================================================== Assembling dosmbr
+	@$(NASM_CMD) -o dosmbr.bin -f bin dosmbr.asm
 
 fat.bin : fat.asm $(BIN2C)
 	@echo ===================================================== Assembling fat
@@ -57,6 +61,7 @@ ext2.bin : ext2.asm
 .PHONY : bootcd
 bootcd: bootcd_dirs isoboot.bin
 	$(CP) isoboot.bin $(BOOTCD_DIR)
+	$(CP) dosmbr.bin $(BOOTCD_DIR)\disk\loader
 	$(CP) ext2.bin $(BOOTCD_DIR)\disk\loader
 	$(CP) fat.bin $(BOOTCD_DIR)\disk\loader
 	$(CP) fat32.bin $(BOOTCD_DIR)\disk\loader
