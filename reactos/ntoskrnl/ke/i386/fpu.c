@@ -1,4 +1,4 @@
-/* $Id: fpu.c,v 1.16 2004/11/21 13:33:34 blight Exp $
+/* $Id: fpu.c,v 1.17 2004/11/25 13:22:54 blight Exp $
  *
  *  ReactOS kernel
  *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
@@ -28,6 +28,7 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <roscfg.h>
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
@@ -67,7 +68,8 @@
 /* GLOBALS *******************************************************************/
 
 ULONG HardwareMathSupport = 0;
-static ULONG MxcsrFeatureMask = 0, FxsrSupport = 0, XmmSupport = 0;
+static ULONG MxcsrFeatureMask = 0, XmmSupport = 0;
+ULONG FxsrSupport = 0; /* used by Ki386ContextSwitch for MP */
 
 /* FUNCTIONS *****************************************************************/
 
@@ -406,10 +408,14 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 {
   if (ExceptionNr == 7) /* device not present */
     {
+      BOOL FpuInitialized = FALSE;
       unsigned int cr0 = Ke386GetCr0();
-      PKTHREAD CurrentThread, NpxThread;
+      PKTHREAD CurrentThread;
       PFX_SAVE_AREA FxSaveArea;
       KIRQL oldIrql;
+#ifndef MP
+      PKTHREAD NpxThread;
+#endif
       
       (void) cr0;
       ASSERT((cr0 & X86_CR0_TS) == X86_CR0_TS);
@@ -422,15 +428,17 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
       asm volatile("clts");
 
       CurrentThread = KeGetCurrentThread();
+#ifndef MP
       NpxThread = KeGetCurrentKPCR()->PrcbData.NpxThread;
+#endif
 
       ASSERT(CurrentThread != NULL);
-      DPRINT("Device not present exception happened! (Cr0 = 0x%x, NpxState = 0x%x)\n", Ke386GetCr0(), CurrentThread->NpxState);
+      DPRINT("Device not present exception happened! (Cr0 = 0x%x, NpxState = 0x%x)\n", cr0, CurrentThread->NpxState);
 
+#ifndef MP
       /* check if the current thread already owns the FPU */
       if (NpxThread != CurrentThread) /* FIXME: maybe this could be an assertation */
         {
-          BOOL FpuInitialized = FALSE;
           /* save the FPU state into the owner's save area */
           if (NpxThread != NULL)
             {
@@ -448,6 +456,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
                 }
               NpxThread->NpxState = NPX_STATE_VALID;
             }
+#endif /* !MP */
 
           /* restore the state of the current thread */
           ASSERT((CurrentThread->NpxState & NPX_STATE_DIRTY) == 0);
@@ -483,7 +492,9 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
                 }
             }
           KeGetCurrentKPCR()->PrcbData.NpxThread = CurrentThread;
+#ifndef MP
         }
+#endif
 
       CurrentThread->NpxState |= NPX_STATE_DIRTY;
       KeLowerIrql(oldIrql);
@@ -508,8 +519,8 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
       CurrentThread = KeGetCurrentThread();
       if (NpxThread == NULL)
         {
-          DPRINT1("!!! Math/Xmm fault ignored! (NpxThread == NULL)\n");
           KeLowerIrql(oldIrql);
+          DPRINT1("!!! Math/Xmm fault ignored! (NpxThread == NULL)\n");
           return STATUS_SUCCESS;
         }
 
@@ -540,7 +551,6 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
           PFNSAVE_FORMAT FnSave = (PFNSAVE_FORMAT)&Context->FloatSave;
           asm volatile("fnsave %0" : : "m"(*FnSave));
           KeLowerIrql(oldIrql);
-          memset(Context->FloatSave.RegisterArea, 0, sizeof(Context->FloatSave.RegisterArea));
           KiFnsaveToFxsaveFormat((PFXSAVE_FORMAT)Context->ExtendedRegisters, FnSave);
         }
 

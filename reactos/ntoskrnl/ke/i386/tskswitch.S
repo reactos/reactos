@@ -26,6 +26,7 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <roscfg.h>
 #include <internal/i386/segment.h>
 #include <internal/i386/ke.h>
 #include <internal/i386/fpu.h>
@@ -105,7 +106,29 @@ _Ki386ContextSwitch:
 0:
 	lldtw	%ax
 
+	/*
+	 * Get the pointer to the old thread.
+	 */
 	movl	12(%ebp), %ebx
+
+#ifdef MP
+	/*
+	 * Save FPU state if the thread has used it.
+	 */
+	movl	$0, %fs:KPCR_NPX_THREAD
+	testb	$NPX_STATE_DIRTY, KTHREAD_NPX_STATE(%ebx)
+	jz	3f
+	movl	KTHREAD_INITIAL_STACK(%ebx), %eax
+	cmpl	$0, _FxsrSupport
+	je	1f
+	fxsave	-SIZEOF_FX_SAVE_AREA(%eax)
+	jmp	2f
+1:
+	fnsave	-SIZEOF_FX_SAVE_AREA(%eax)
+2:
+	movb	$NPX_STATE_VALID, KTHREAD_NPX_STATE(%ebx)
+3:
+#endif /* MP */
 
 	/*
 	 * FIXME: Save debugging state.
@@ -152,14 +175,16 @@ _Ki386ContextSwitch:
 
 	/*
 	 * Set TS in cr0 to catch FPU code and load the FPU state when needed
-	 * We do this only if NewThread != KPCR->NpxThread
+	 * For uni-processor we do this only if NewThread != KPCR->NpxThread
 	 */
+#ifndef MP
 	cmpl	%ebx, %fs:KPCR_NPX_THREAD
-	je	1f
+	je	4f
+#endif /* !MP */
 	movl	%cr0, %eax
 	orl	$X86_CR0_TS, %eax
 	movl	%eax, %cr0
-1:
+4:
 
 	/*
 	 * FIXME: Restore debugging state
@@ -174,9 +199,9 @@ _Ki386ContextSwitch:
 	call	_KeReleaseSpinLockFromDpcLevel@4
 
 	cmpl	$0, _PiNrThreadsAwaitingReaping
-	je	4f
+	je	5f
 	call	_PiWakeupReaperThread@0
-4:
+5:
 
 	/*
 	 * Restore the saved register and exit
