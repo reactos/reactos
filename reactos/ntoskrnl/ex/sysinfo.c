@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.29 2004/04/23 05:37:10 jimtabor Exp $
+/* $Id: sysinfo.c,v 1.30 2004/04/23 06:19:28 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -328,13 +328,13 @@ QSI_DEF(SystemProcessorInformation)
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}	
-	Spi->ProcessorArchitecture = ((Ke386Cpuid >> 8) & 0xf);
-	Spi->ProcessorLevel	   = ((Ke386Cpuid >> 4) & 0xf);
-	Spi->ProcessorRevision	   = (Ke386Cpuid & 0xf) | ((Ke386Cpuid >> 4) & 0x300);
+	Spi->ProcessorArchitecture = 0; /* Intel Processor */
+	Spi->ProcessorLevel	   = ((Ke386Cpuid >> 8) & 0xf);
+	Spi->ProcessorRevision	   = (Ke386Cpuid & 0xf) | ((Ke386Cpuid << 4) & 0xf00);
 	Spi->Unknown 		   = 0;
 	Spi->FeatureBits	   = Ke386CpuidFlags;
 
-	DPRINT("Arch %d Level %d Rev %d\n", Spi->ProcessorArchitecture,
+	DPRINT("Arch %d Level %d Rev 0x%x\n", Spi->ProcessorArchitecture,
 		Spi->ProcessorLevel, Spi->ProcessorRevision);
 
 	return (STATUS_SUCCESS);
