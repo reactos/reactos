@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.73 2004/02/26 22:23:54 weiden Exp $
+/* $Id: msgqueue.c,v 1.74 2004/02/28 00:44:28 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -242,8 +242,9 @@ BOOL STATIC STDCALL
 MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 			 PUSER_MESSAGE Message, BOOL Remove, PBOOL Freed,
 			 PWINDOW_OBJECT ScopeWin, PUSHORT HitTest,
-			 PPOINT ScreenPoint, PBOOL MouseClick, BOOL FromGlobalQueue)
+			 PPOINT ScreenPoint, BOOL FromGlobalQueue)
 {
+  PUSER_MESSAGE_QUEUE ThreadQueue;
   USHORT Msg = Message->Msg.message;
   PWINDOW_OBJECT CaptureWin, Window = NULL;
   POINT Point;
@@ -349,8 +350,9 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     *Freed = TRUE;
     return(FALSE);
   }
-
-  if (Window->MessageQueue != PsGetWin32Thread()->MessageQueue)
+  
+  ThreadQueue = PsGetWin32Thread()->MessageQueue;
+  if (Window->MessageQueue != ThreadQueue)
   {
     if (! FromGlobalQueue)
     {
@@ -359,17 +361,38 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
        * to move it to a different queue, perhaps because a new window
        * was created which now covers the screen area previously taken
        * by another window. To move it, we need to take it out of the
-       * old queue. Note that we're already holding the lock mutes of the
+       * old queue. Note that we're already holding the lock mutexes of the
        * old queue */
       RemoveEntryList(&Message->ListEntry);
+      
+      /* remove the pointer for the current WM_MOUSEMOVE message in case we
+         just removed it */
+      if(ThreadQueue->MouseMoveMsg == Message)
+      {
+        ThreadQueue->MouseMoveMsg = NULL;
+      }
     }
     IntLockHardwareMessageQueue(Window->MessageQueue);
-    InsertTailList(&Window->MessageQueue->HardwareMessagesListHead,
-                   &Message->ListEntry);
+    if((Message->Msg.message == WM_MOUSEMOVE) && Window->MessageQueue->MouseMoveMsg)
+    {
+      /* we do not hold more than one WM_MOUSEMOVE message in the queue */
+      Window->MessageQueue->MouseMoveMsg->Msg = Message->Msg;
+      ExFreePool(Message);
+      *Freed = TRUE;
+    }
+    else
+    {
+      InsertTailList(&Window->MessageQueue->HardwareMessagesListHead,
+                     &Message->ListEntry);
+      if(Message->Msg.message == WM_MOUSEMOVE)
+      {
+        Window->MessageQueue->MouseMoveMsg = Message;
+      }
+      *Freed = FALSE;
+    }
     IntUnLockHardwareMessageQueue(Window->MessageQueue);
     KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
     IntReleaseWindowObject(Window);
-    *Freed = FALSE;
     return(FALSE);
   }
   
@@ -377,12 +400,26 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
       !IntIsChildWindow(hWnd, Window->Self))
   {
     IntLockHardwareMessageQueue(Window->MessageQueue);
-    InsertTailList(&Window->MessageQueue->HardwareMessagesListHead,
-                   &Message->ListEntry);
+    if((Message->Msg.message == WM_MOUSEMOVE) && Window->MessageQueue->MouseMoveMsg)
+    {
+      /* we do not hold more than one WM_MOUSEMOVE message in the queue */
+      Window->MessageQueue->MouseMoveMsg->Msg = Message->Msg;
+      ExFreePool(Message);
+      *Freed = TRUE;
+    }
+    else
+    {
+      InsertTailList(&Window->MessageQueue->HardwareMessagesListHead,
+                     &Message->ListEntry);
+      if(Message->Msg.message == WM_MOUSEMOVE)
+      {
+        Window->MessageQueue->MouseMoveMsg = Message;
+      }
+      *Freed = FALSE;
+    }
     IntUnLockHardwareMessageQueue(Window->MessageQueue);
     KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
     IntReleaseWindowObject(Window);
-    *Freed = FALSE;
     return(FALSE);
   }
   
@@ -452,7 +489,6 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
   USHORT HitTest;
   POINT ScreenPoint;
   BOOL Accept, Freed;
-  BOOL MouseClick;
   PLIST_ENTRY CurrentEntry;
   PWINDOW_OBJECT DesktopWindow;
   PVOID WaitObjects[2];
@@ -493,12 +529,16 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	  Accept = MsqTranslateMouseMessage(hWnd, FilterLow, FilterHigh,
 					    Current, Remove, &Freed,
 					    DesktopWindow, &HitTest,
-					    &ScreenPoint, &MouseClick, FALSE);
+					    &ScreenPoint, FALSE);
 	  if (Accept)
 	    {
 	      if (Remove)
 		{
 		  RemoveEntryList(&Current->ListEntry);
+		  if(MessageQueue->MouseMoveMsg == Current)
+		  {
+		    MessageQueue->MouseMoveMsg = NULL;
+		  }
 		}
 	      IntUnLockHardwareMessageQueue(MessageQueue);
               IntUnLockSystemHardwareMessageQueueLock(FALSE);
@@ -560,7 +600,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	  Accept = MsqTranslateMouseMessage(hWnd, FilterLow, FilterHigh,
 					    Current, Remove, &Freed,
 					    DesktopWindow, &HitTest,
-					    &ScreenPoint, &MouseClick, TRUE);
+					    &ScreenPoint, TRUE);
 	  if (Accept)
 	    {
 	      /* Check for no more messages in the system queue. */
@@ -579,8 +619,22 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	      if (!Remove)
 		{
                   IntLockHardwareMessageQueue(MessageQueue);
-		  InsertTailList(&MessageQueue->HardwareMessagesListHead,
-				 &Current->ListEntry);
+                  if((Current->Msg.message == WM_MOUSEMOVE) && MessageQueue->MouseMoveMsg)
+                  {
+                    /* we do not hold more than one WM_MOUSEMOVE message in the queue */
+                    MessageQueue->MouseMoveMsg->Msg = Current->Msg;
+                    *Message = MessageQueue->MouseMoveMsg;
+                    ExFreePool(Current);
+                  }
+                  else
+                  {
+		    InsertTailList(&MessageQueue->HardwareMessagesListHead,
+				   &Current->ListEntry);
+		    if(Current->Msg.message == WM_MOUSEMOVE)
+		    {
+		      MessageQueue->MouseMoveMsg = Current;
+		    }
+		  }
                   IntUnLockHardwareMessageQueue(MessageQueue);
 		}
 	      IntUnLockSystemHardwareMessageQueueLock(FALSE);

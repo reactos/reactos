@@ -51,6 +51,8 @@ typedef struct _USER_MESSAGE_QUEUE
   FAST_MUTEX HardwareLock;
   /* Lock for the queue. */
   FAST_MUTEX Lock;
+  /* Pointer to the current WM_MOUSEMOVE message */
+  PUSER_MESSAGE MouseMoveMsg;
   /* True if a WM_QUIT message is pending. */
   BOOLEAN QuitPosted;
   /* The quit exit code. */
