@@ -97,6 +97,9 @@ NTSTATUS
 LdrLoadModule(PUNICODE_STRING Filename,
 	      PMODULE_OBJECT *ModuleObject);
 
+NTSTATUS
+LdrUnloadModule(PMODULE_OBJECT ModuleObject);
+
 PMODULE_OBJECT
 LdrGetModuleObject(PUNICODE_STRING ModuleName);
 

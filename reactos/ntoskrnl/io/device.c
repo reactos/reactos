@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.45 2002/06/12 23:29:23 ekohl Exp $
+/* $Id: device.c,v 1.46 2002/06/13 15:13:54 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -424,11 +424,12 @@ IopInitializeService(
     Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode, FALSE);
     if (!NT_SUCCESS(Status))
     {
+      LdrUnloadModule(ModuleObject);
+
       /* FIXME: Log the error */
       CPRINT("A driver failed to initialize\n");
       return(Status);
     }
-    ObDereferenceObject(ModuleObject);
   }
 
   Status = IopInitializeDevice(DeviceNode, TRUE);
@@ -532,6 +533,7 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
     {
       DeviceNode->DriverObject = NULL;
       ExFreePool(DriverObject->DriverExtension);
+      ObMakeTemporaryObject(DriverObject);
       ObDereferenceObject(DriverObject);
       return(Status);
     }

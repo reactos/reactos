@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.4 2002/06/12 23:29:23 ekohl Exp $
+/* $Id: driver.c,v 1.5 2002/06/13 15:13:54 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -63,9 +63,6 @@ POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
 
 #define TAG_DRIVER             TAG('D', 'R', 'V', 'R')
 #define TAG_DRIVER_EXTENSION   TAG('D', 'R', 'V', 'E')
-
-//#define REGSTR_PATH_SERVICES  L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"
-//#define REGSTR_PATH_SERVICES_LENGTH (sizeof(REGSTR_PATH_SERVICES)-sizeof(WCHAR))
 
 
 /* FUNCTIONS ***************************************************************/
@@ -192,7 +189,6 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
   DPRINT("FullImagePath: '%S'\n", FullImagePathBuffer);
   DPRINT("Type %lx\n", Type);
 
-
   /* Use IopRootDeviceNode for now */
   Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
   if (!NT_SUCCESS(Status))
@@ -221,8 +217,8 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 			       (Type == 2 || Type == 8));
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("IopInitializeDriver() failed (Status %lx)\n", Status);
-      ObDereferenceObject(ModuleObject);
+      DPRINT("IopInitializeDriver() failed (Status %lx)\n", Status);
+      LdrUnloadModule(ModuleObject);
       IopFreeDeviceNode(DeviceNode);
     }
 
@@ -233,7 +229,9 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 NTSTATUS STDCALL
 NtUnloadDriver(IN PUNICODE_STRING DriverServiceName)
 {
-  UNIMPLEMENTED;
+  DPRINT("DriverServiceName: '%wZ'\n", DriverServiceName);
+
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -463,7 +461,9 @@ IoCreateDriverList(VOID)
 		     0x10001,
 		     &ObjectAttributes);
   if (!NT_SUCCESS(Status))
-    return(Status);
+    {
+      return(Status);
+    }
 
   KeyInfoLength = sizeof(KEY_BASIC_INFORMATION) + MAX_PATH * sizeof(WCHAR);
   KeyInfo = ExAllocatePool(NonPagedPool, KeyInfoLength);
@@ -494,7 +494,6 @@ IoCreateDriverList(VOID)
 
 	      DPRINT("KeyName: '%wZ'\n", &SubKeyName);
 	      IopCreateServiceListEntry(&SubKeyName);
-
 	    }
 	}
 
@@ -522,6 +521,9 @@ LdrLoadAutoConfigDrivers(VOID)
   PSERVICE CurrentService;
   NTSTATUS Status;
 
+  CHAR TextBuffer [256];
+  ULONG x, y, cx, cy;
+
   DPRINT("LdrLoadAutoConfigDrivers() called\n");
 
   GroupEntry = GroupListHead.Flink;
@@ -539,11 +541,23 @@ LdrLoadAutoConfigDrivers(VOID)
 	  if ((RtlCompareUnicodeString(&CurrentGroup->GroupName, &CurrentService->ServiceGroup, TRUE) == 0) &&
 	      (CurrentService->Start == 1 /*SERVICE_SYSTEM_START*/))
 	    {
+
+	      HalQueryDisplayParameters(&x, &y, &cx, &cy);
+	      RtlFillMemory(TextBuffer, x, ' ');
+	      TextBuffer[x] = '\0';
+	      HalSetDisplayParameters(0, y-1);
+	      HalDisplayString(TextBuffer);
+
+	      sprintf(TextBuffer, "Loading %S...\n", CurrentService->ServiceName.Buffer);
+	      HalSetDisplayParameters(0, y-1);
+	      HalDisplayString(TextBuffer);
+	      HalSetDisplayParameters(cx, cy);
+
 	      DPRINT("  Path: %wZ\n", &CurrentService->RegistryPath);
 	      Status = NtLoadDriver(&CurrentService->RegistryPath);
 	      if (!NT_SUCCESS(Status))
 		{
-		  DPRINT1("NtLoadDriver() failed (Status %lx)\n", Status);
+		  DPRINT("NtLoadDriver() failed (Status %lx)\n", Status);
 #if 0
 		  if (CurrentService->ErrorControl == 1)
 		    {

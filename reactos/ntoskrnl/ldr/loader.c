@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.110 2002/06/12 23:30:36 ekohl Exp $
+/* $Id: loader.c,v 1.111 2002/06/13 15:14:28 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -986,6 +986,39 @@ LdrLoadModule(PUNICODE_STRING Filename,
 
 
 NTSTATUS
+LdrUnloadModule(PMODULE_OBJECT ModuleObject)
+{
+  KIRQL Irql;
+
+  /* Remove the module from the module list */
+  KeAcquireSpinLock(&ModuleListLock,&Irql);
+  RemoveEntryList(&ModuleObject->ListEntry);
+  KeReleaseSpinLock(&ModuleListLock, Irql);
+
+#ifdef KDBG
+  /* Unload symbols for module if available */
+//  LdrpUnloadModuleSymbols(Module);
+#endif /* KDBG */
+
+  /* Free text section */
+  if (ModuleObject->TextSection != NULL)
+    {
+      ExFreePool(ModuleObject->TextSection->Name);
+      RemoveEntryList(&ModuleObject->TextSection->ListEntry);
+      ExFreePool(ModuleObject->TextSection);
+      ModuleObject->TextSection = NULL;
+    }
+
+  /* Free module section */
+//  MmFreeSection(ModuleObject->Base);
+
+  ExFreePool(ModuleObject);
+
+  return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS
 LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
 			     PCHAR FileName,
 			     ULONG ModuleLength)
@@ -1377,7 +1410,7 @@ LdrGetModuleObject(PUNICODE_STRING ModuleName)
 
   KeReleaseSpinLock(&ModuleListLock, Irql);
 
-  CPRINT("LdrpGetModuleObject: Failed to find dll %wZ\n", ModuleName);
+  CPRINT("LdrpGetModuleObject: Failed to find module %wZ\n", ModuleName);
 
   return(NULL);
 }
