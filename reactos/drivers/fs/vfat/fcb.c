@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.34 2003/10/11 17:51:56 hbirr Exp $
+/* $Id: fcb.c,v 1.35 2003/10/28 20:21:21 hbirr Exp $
  *
  *
  * FILE:             drivers/fs/vfat/fcb.c
@@ -623,7 +623,7 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
   if (curr > pFileNameU->Buffer)
     {
       NameU.Buffer = pFileNameU->Buffer;
-      NameU.MaximumLength = NameU.Length = (curr - pFileNameU->Buffer - 1) * sizeof(WCHAR);
+      NameU.MaximumLength = NameU.Length = (curr - pFileNameU->Buffer) * sizeof(WCHAR);
       FCB = vfatGrabFCBFromTable(pVCB, &NameU);
     }
   else
