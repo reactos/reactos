@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.41 2004/10/22 11:00:41 ekohl Exp $
+/* $Id: pnpmgr.c,v 1.42 2004/10/22 18:34:11 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1193,7 +1193,7 @@ IopActionInterrogateDeviceStack(
       &Stack);
    if (NT_SUCCESS(Status))
    {
-      DPRINT("LocationInformation: %wZ\n", &DeviceNode->DeviceTextLocation);
+      DPRINT("LocationInformation: %S\n", (PWSTR)IoStatusBlock.Information);
       RtlInitUnicodeString(&ValueName,
 			   L"LocationInformation");
       Status = NtSetValueKey(InstanceKey,
