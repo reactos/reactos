@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.43 2002/10/05 10:53:36 dwelch Exp $
+/* $Id: iotypes.h,v 1.44 2002/11/07 02:44:49 robd Exp $
  *
  */
 
@@ -431,6 +431,14 @@ typedef struct __attribute__((packed)) _IO_STACK_LOCATION
 	{
 	  struct _SCSI_REQUEST_BLOCK *Srb;
 	} Scsi;
+
+	  //byte range file locking
+	  struct 
+	{
+      PLARGE_INTEGER Length;
+      ULONG Key;
+      LARGE_INTEGER ByteOffset;
+    } LockControl;
 
       /* Paramters for other calls */
       struct

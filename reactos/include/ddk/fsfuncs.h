@@ -1,7 +1,22 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.16 2002/09/08 10:47:44 chorns Exp $ */
+/* $Id: fsfuncs.h,v 1.17 2002/11/07 02:44:49 robd Exp $ */
 #define FlagOn(x,f) ((x) & (f))
+
+VOID
+STDCALL
+FsRtlFreeFileLock(
+	IN PFILE_LOCK FileLock
+	);
+
+PFILE_LOCK
+STDCALL
+FsRtlAllocateFileLock (
+    IN PCOMPLETE_LOCK_IRP_ROUTINE   CompleteLockIrpRoutine OPTIONAL,
+    IN PUNLOCK_ROUTINE              UnlockRoutine OPTIONAL
+    );
+
+#define FsRtlAreThereCurrentFileLocks(FL) (((FL)->FastIoIsQuestionable))
 
 BOOLEAN STDCALL
 FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,

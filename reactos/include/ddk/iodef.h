@@ -249,6 +249,14 @@ enum
 #define IRP_MJ_SCSI  IRP_MJ_INTERNAL_DEVICE_CONTROL
 
 /*
+ * Minor function numbers for IRP_MJ_LOCK_CONTROL
+ */
+#define IRP_MN_LOCK                     0x01
+#define IRP_MN_UNLOCK_SINGLE            0x02
+#define IRP_MN_UNLOCK_ALL               0x03
+#define IRP_MN_UNLOCK_ALL_BY_KEY        0x04
+
+/*
  * Minor function numbers for IRP_MJ_FILE_SYSTEM_CONTROL
  */
 #define IRP_MN_USER_FS_REQUEST          0x00
