@@ -1,4 +1,4 @@
-/* $Id: util.c,v 1.4 2000/01/20 22:14:45 ea Exp $
+/* $Id: util.c,v 1.5 2000/02/24 23:38:26 ea Exp $
  *
  * reactos/ntoskrnl/fs/util.c
  *
@@ -27,7 +27,7 @@
 BOOLEAN
 STDCALL
 FsRtlIsTotalDeviceFailure (
-	NTSTATUS	NtStatus
+	IN	NTSTATUS	NtStatus
 	)
 {
 	return (
@@ -65,7 +65,7 @@ FsRtlIsTotalDeviceFailure (
 BOOLEAN
 STDCALL
 FsRtlIsNtstatusExpected (
-	NTSTATUS	NtStatus
+	IN	NTSTATUS	NtStatus
 	)
 {
 	return (
@@ -100,8 +100,8 @@ FsRtlIsNtstatusExpected (
 NTSTATUS
 STDCALL
 FsRtlNormalizeNtstatus (
-	NTSTATUS	NtStatusToNormalize,
-	NTSTATUS	NormalizedNtStatus
+	IN	NTSTATUS	NtStatusToNormalize,
+	IN	NTSTATUS	NormalizedNtStatus
 	)
 {
 	return
@@ -165,19 +165,22 @@ FsRtlBalanceReads (
  * ARGUMENTS
  *
  * RETURN VALUE
+ *
+ * NOTE
+ * 	From Bo Branten's ntifs.h v12.
  * 
  */
 BOOLEAN
 STDCALL
 FsRtlCopyRead (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length,
+	IN	BOOLEAN			Wait,
+	IN	ULONG			LockKey,
+	OUT	PVOID			Buffer,
+	OUT	PIO_STATUS_BLOCK	IoStatus,
+	IN	PDEVICE_OBJECT		DeviceObject
 	)
 {
 	return FALSE;
@@ -194,18 +197,20 @@ FsRtlCopyRead (
  *
  * RETURN VALUE
  * 
+ * NOTE
+ * 	From Bo Branten's ntifs.h v12.
  */
 BOOLEAN
 STDCALL
 FsRtlCopyWrite (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7
+	IN	PFILE_OBJECT		FileObject,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG			Length,
+	IN	BOOLEAN			Wait,
+	IN	ULONG			LockKey,
+	IN	PVOID			Buffer,
+	OUT	PIO_STATUS_BLOCK	IoStatus,
+	IN	PDEVICE_OBJECT		DeviceObject
 	)
 {
 	return FALSE;
