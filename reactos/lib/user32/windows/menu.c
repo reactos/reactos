@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.32 2003/08/29 09:29:11 gvg Exp $
+/* $Id: menu.c,v 1.33 2003/08/29 10:20:53 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -377,7 +377,7 @@ DrawMenuItem(HWND hWnd, HMENU mnu, HDC hDC, MENUITEMINFOW *mii, RECT *mir, LPWST
   {
     /* FIXME draw the menu item */
     SetTextColor(hDC, COLOR_MENUTEXT);
-    DrawTextW(hDC, str, -1, mir, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
+    DrawTextW(hDC, str, mii->cch, mir, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
   }
   return res;
 }
