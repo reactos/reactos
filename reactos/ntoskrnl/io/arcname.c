@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: arcname.c,v 1.17 2004/05/02 22:49:24 hbirr Exp $
+/* $Id: arcname.c,v 1.18 2004/05/29 21:28:28 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -258,6 +258,10 @@ IopCheckCdromDevices(PULONG DeviceNumber)
 	}
 #endif
 
+      /*
+       * Check for 'reactos/ntoskrnl.exe' first...
+       */
+
       swprintf(DeviceNameBuffer,
 	       L"\\Device\\CdRom%lu\\reactos\\ntoskrnl.exe",
 	       i);
@@ -285,6 +289,36 @@ IopCheckCdromDevices(PULONG DeviceNumber)
 	  return(STATUS_SUCCESS);
 	}
 
+      /*
+       * ...and for 'reactos/system32/ntoskrnl.exe' also.
+       */
+
+      swprintf(DeviceNameBuffer,
+	       L"\\Device\\CdRom%lu\\reactos\\system32\\ntoskrnl.exe",
+	       i);
+      RtlInitUnicodeString(&DeviceName,
+			   DeviceNameBuffer);
+
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &DeviceName,
+				 0,
+				 NULL,
+				 NULL);
+
+      Status = NtOpenFile(&Handle,
+			  FILE_ALL_ACCESS,
+			  &ObjectAttributes,
+			  &IoStatusBlock,
+			  0,
+			  0);
+      DPRINT("NtOpenFile()  DeviceNumber %lu  Status %lx\n", i, Status);
+      if (NT_SUCCESS(Status))
+	{
+	  DPRINT("Found ntoskrnl.exe on Cdrom%lu\n", i);
+	  NtClose(Handle);
+	  *DeviceNumber = i;
+	  return(STATUS_SUCCESS);
+	}
     }
 
   DPRINT("Could not find ntoskrnl.exe\n");
