@@ -253,8 +253,16 @@ enum
 #define IO_VIDEO_INCREMENT              1
 #define SEMAPHORE_INCREMENT             1
 
-
-#define  FILE_WORD_ALIGNMENT  0x0001
+#define FILE_BYTE_ALIGNMENT             0x00000000
+#define FILE_WORD_ALIGNMENT             0x00000001
+#define FILE_LONG_ALIGNMENT             0x00000003
+#define FILE_QUAD_ALIGNMENT             0x00000007
+#define FILE_OCTA_ALIGNMENT             0x0000000f
+#define FILE_32_BYTE_ALIGNMENT          0x0000001f
+#define FILE_64_BYTE_ALIGNMENT          0x0000003f
+#define FILE_128_BYTE_ALIGNMENT         0x0000007f
+#define FILE_256_BYTE_ALIGNMENT         0x000000ff
+#define FILE_512_BYTE_ALIGNMENT         0x000001ff
 
 /*
  * File disposition values
