@@ -1,3 +1,9 @@
+2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* tools/rgenstat/rgenstat.c (get_previous_identifier): Skip end-of-line
+	characters when searching for identifier.
+	(parse_file): Print a warning if no identifier is found.
+
 2003-07-10  James Tabor	<jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net>
 
 	* subsys/win32k/objects/region.c: (W32kFillRgn) Implement.

@@ -323,7 +323,8 @@ get_previous_identifier(unsigned int end, char *name)
 
   name[0] = 0;
 
-  while ((my_file_pointer > 0) && (is_whitespace(file_buffer[my_file_pointer])))
+  while ((my_file_pointer > 0) && (is_whitespace(file_buffer[my_file_pointer])
+    || is_eol_char(file_buffer[my_file_pointer])))
     {
       my_file_pointer--;
     }
@@ -383,11 +384,13 @@ static void
 parse_file(char *filename)
 {
   PAPI_INFO api_info;
+  char prev[200];
   char name[200];
   int tag_id;
 
   read_file(filename);
 
+  prev[0] = 0;
   do
     {
       tag_id = skip_to_next_tag();
@@ -401,6 +404,11 @@ parse_file(char *filename)
 
       if (skip_to_next_name(name))
         {
+          if (strlen(name) == 0)
+            {
+              printf("Warning: empty function name in file %s. Previous function name was %s.\n",
+                filename, prev);
+            }
           api_info = malloc(sizeof(API_INFO));
           if (api_info == NULL)
             {
@@ -413,7 +421,7 @@ parse_file(char *filename)
 
           api_info->next = api_info_list;
           api_info_list = api_info;
-
+          strcpy(prev, name);
         }
     } while (1);
 
