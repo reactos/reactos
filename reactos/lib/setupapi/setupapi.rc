@@ -25,6 +25,7 @@
 #include "setupapi_private.h"
 
 #include "En.rc"
+#include "De.rc"
 #include "Es.rc"
 #include "Fr.rc"
 #include "It.rc"

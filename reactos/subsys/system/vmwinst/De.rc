@@ -2,7 +2,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
 
 VS_VERSION_INFO VERSIONINFO
 	FILEVERSION	RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
-	PRODUCTVERSION	RES_UINT_PV_MAJOR,RES_UINT_PV_MINOR,RES_UINT_PV_REVISION,RES_UINT_PV_BUILD	
+	PRODUCTVERSION	RES_UINT_PV_MAJOR,RES_UINT_PV_MINOR,RES_UINT_PV_REVISION,RES_UINT_PV_BUILD
 	FILEFLAGSMASK	0x3fL
 #ifdef _DEBUG
 	FILEFLAGS	0x1L
@@ -47,7 +47,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Video Treiber Installation"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Das ReactOS Setup kommt nicht mit dem VMware(r) SVGA Treiber.\n\nGehen Sie also zu  'VM' in der Menüleiste von VMware(r) Workstation und wählen Sie 'VMware Tools installieren...'\n\n\nKlicken Sie auf 'Weiter' um fortzufahren, ansonsten auf 'Abbrechen'",-1,25,25,225,85
+  LTEXT "ReactOS wird nicht mit dem VMware(r) SVGA Treiber ausgeliefert.\n\nGehen Sie bitte zu  'VM' in der Menüleiste von VMware(r) Workstation und wählen Sie 'VMware Tools installieren...'\n\n\nKlicken Sie auf 'Weiter' um fortzufahren, ansonsten auf 'Abbrechen'",-1,25,25,225,85
 END
 
 IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -90,7 +90,7 @@ END
 
 IDD_CHOOSEACTION DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Grafikreiberinstallation"
+CAPTION "Grafiktreiberinstallation"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "Der VMware(r) SVGA Treiber wurde schon installiert.\n\nWählen sie bitte eine der folgenden Optionen aus:",-1,25,5,225,30
@@ -119,10 +119,10 @@ BEGIN
   LTEXT "The ReactOS Setup wird Ihren VMware(r) SVGA Treiber entfernen!!!\n\n\nKlicken Sie auf 'Fertigstellen' um den Treiber zu entfernen oder auf 'Abbrechen' um ihn zu lassen.",-1,25,25,225,85
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
   IDS_WIZARD_NAME "VMware(r) gefunden"
-  IDS_FAILEDTOLOCATEDRIVERS "Das ReactOS Setup konnte die benötigten Dateien nicht finden\nStellen Sie sicher, das sich die VMware-Tools CD in dem Laufwerk befindet."
+  IDS_FAILEDTOLOCATEDRIVERS "Das ReactOS Setup konnte die benötigten Dateien nicht finden.\nStellen Sie sicher, das sich die VMware-Tools CD in dem Laufwerk befindet."
   IDS_FAILEDTOCOPYFILES "Das ReactOS Setup konnte die benötigten Dateien nicht kopieren.\nStellen Sie sicher, das sich die VMware-Tools CD in dem Laufwerk befindet.\n"
   IDS_FAILEDTOACTIVATEDRIVER "Fehler beim Aktivieren des VMware(r) SVGA Treibers!"
   IDS_FAILEDTOSELVGADRIVER "Fehler beim Aktivieren des ReactOS VGA Treibers!"
