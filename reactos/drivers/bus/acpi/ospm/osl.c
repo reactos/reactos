@@ -148,15 +148,11 @@ acpi_os_map_memory(ACPI_PHYSICAL_ADDRESS phys, u32 size, void **virt)
     }
   }
 
-  if ((ULONG)phys >= 0x100000) {
-    Address.QuadPart = (ULONG)phys;
-    *virt = MmMapIoSpace(Address, size, FALSE);
-    if (!*virt)
-      return AE_ERROR;
-  } else {
-    *virt = (PVOID)((ULONG)phys);
-  }
-
+  Address.QuadPart = (ULONG)phys;
+  *virt = MmMapIoSpace(Address, size, FALSE);
+  if (!*virt)
+    return AE_ERROR;
+ 
   return AE_OK;
 }
 
@@ -171,9 +167,7 @@ acpi_os_unmap_memory(void *virt, u32 size)
     IVTVirtualAddress = NULL;
     return;
   }
-  /* FIXME: Causes "Memory area is NULL" bugcheck in marea.c */
-  //if ((ULONG)virt >= 0x100000)
-    //MmUnmapIoSpace(virt, size);
+  MmUnmapIoSpace(virt, size);
 }
 
 ACPI_STATUS
