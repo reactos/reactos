@@ -1,4 +1,5 @@
-/*
+/* $Id: unicode.c,v 1.7 1999/09/12 21:58:32 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/unicode.c
@@ -545,3 +546,78 @@ VOID RtlUpcaseString(IN OUT PSTRING DestinationString,
         DestinationString->Buffer-=len;
         SourceString->Buffer-=len;
 }
+
+/*---*/
+
+#include <wchar.h>
+
+WCHAR
+STDCALL
+RtlAnsiCharToUnicodeChar (
+	CHAR	AnsiChar
+	)
+{
+	/* FIXME: it should probably call RtlMultiByteToUnicodeN
+	 * with length==1.
+	 */
+	return (WCHAR) AnsiChar;
+}
+
+
+
+VOID
+STDCALL
+RtlMultiByteToUnicodeN (
+	VOID
+	)
+{
+}
+
+
+VOID
+STDCALL
+RtlUnicodeToMultiByteN (
+	VOID
+	)
+{
+}
+
+
+ULONG
+STDCALL
+RtlUnicodeToMultiByteSize (
+	VOID
+	)
+{
+	return 0;
+}
+
+
+VOID
+STDCALL
+RtlUnwind (
+	VOID
+	)
+{
+}
+
+
+VOID
+STDCALL
+RtlUpcaseUnicodeChar (
+	VOID
+	)
+{
+}
+
+
+VOID
+STDCALL
+RtlUpcaseUnicodeToMultiByteN (
+	VOID
+	)
+{
+}
+
+
+/* EOF */

@@ -56,17 +56,23 @@ VOID RtlCopyMemory(VOID* Destination, CONST VOID* Source, ULONG Length)
    DPRINT("*Destination %x\n",*(PULONG)Destination);
 }
 
-VOID RtlFillMemory(PVOID Destination, ULONG Length, UCHAR Fill)
+VOID 
+STDCALL
+RtlFillMemory(PVOID Destination, ULONG Length, UCHAR Fill)
 {
    memset(Destination,Fill,Length);
 }
 
-VOID RtlZeroMemory(PVOID Destination, ULONG Length)
+VOID
+STDCALL
+RtlZeroMemory(PVOID Destination, ULONG Length)
 {
    RtlFillMemory(Destination,Length,0);
 }
 
-VOID RtlMoveMemory(PVOID Destination,
+VOID
+STDCALL
+RtlMoveMemory(PVOID Destination,
 		   CONST VOID* Source,
 		   ULONG Length)
 {

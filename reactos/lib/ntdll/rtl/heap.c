@@ -997,13 +997,19 @@ BOOLEAN STDCALL RtlFreeHeap(
  * RETURNS
  *	Pointer to reallocated memory block
  *	NULL: Failure
+ *
+ * REVISIONS
+ * 	Renamed RtlReAllocateHeap as in NT
  */
-LPVOID WINAPI RtlReAllocHeap(
-              HANDLE heap, /* [in] Handle of heap block */
-              DWORD flags,   /* [in] Heap reallocation flags */
-              LPVOID ptr,    /* [in] Address of memory to reallocate */
-              DWORD size     /* [in] Number of bytes to reallocate */
-) {
+LPVOID
+WINAPI
+RtlReAllocateHeap (
+	HANDLE	heap,	/* [in] Handle of heap block */
+	DWORD	flags,	/* [in] Heap reallocation flags */
+	LPVOID	ptr,	/* [in] Address of memory to reallocate */
+	DWORD	size	/* [in] Number of bytes to reallocate */
+	)
+{
     ARENA_INUSE *pArena;
     DWORD oldSize;
     HEAP *heapPtr;
