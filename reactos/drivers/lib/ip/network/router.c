@@ -395,7 +395,7 @@ PFIB_ENTRY RouterCreateRoute(
         return NULL;
     }
 
-    FIBE = RouterAddRoute(NetworkAddress, Netmask, NCE, 1);
+    FIBE = RouterAddRoute(NetworkAddress, Netmask, NCE, Metric);
     if (!FIBE) {
         /* Not enough free resources */
         NBRemoveNeighbor(NCE);
