@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.22 2001/02/10 22:51:07 dwelch Exp $
+/* $Id: rtl.h,v 1.23 2001/02/11 00:14:25 ekohl Exp $
  *
  */
 
@@ -44,31 +44,31 @@ typedef struct _RTL_PROCESS_INFO
 VOID
 STDCALL
 RtlDeleteCriticalSection (
-	LPCRITICAL_SECTION	lpCriticalSection
+	PCRITICAL_SECTION	CriticalSection
 	);
 
 VOID
 STDCALL
 RtlEnterCriticalSection (
-	LPCRITICAL_SECTION	lpCriticalSection
+	PCRITICAL_SECTION	CriticalSection
 	);
 
-VOID
+NTSTATUS
 STDCALL
 RtlInitializeCriticalSection (
-	LPCRITICAL_SECTION	pcritical
+	PCRITICAL_SECTION	CriticalSection
 	);
 
 VOID
 STDCALL
 RtlLeaveCriticalSection (
-	LPCRITICAL_SECTION	lpCriticalSection
+	PCRITICAL_SECTION	CriticalSection
 	);
 
 BOOLEAN
 STDCALL
-RtlTryEntryCriticalSection (
-	LPCRITICAL_SECTION	lpCriticalSection
+RtlTryEnterCriticalSection (
+	PCRITICAL_SECTION	CriticalSection
 	);
 
 UINT

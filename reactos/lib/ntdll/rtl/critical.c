@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.9 2001/01/21 00:07:51 phreak Exp $
+/* $Id: critical.c,v 1.10 2001/02/11 00:15:56 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,36 +12,37 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
+#include <ntos/synch.h>
 
 #include <ntdll/ntdll.h>
 
 /* FUNCTIONS *****************************************************************/
 
 VOID STDCALL
-RtlDeleteCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
+RtlDeleteCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
-   NtClose(lpCriticalSection->LockSemaphore);
-   lpCriticalSection->Reserved = -1;
+   NtClose(CriticalSection->LockSemaphore);
+   CriticalSection->Reserved = -1;
 }
 
 VOID STDCALL
-RtlEnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
+RtlEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
    HANDLE Thread = (HANDLE)NtCurrentTeb()->Cid.UniqueThread;
    ULONG ret;
  
-   if (InterlockedIncrement(&lpCriticalSection->LockCount))
+   if (InterlockedIncrement(&CriticalSection->LockCount))
      {
 	NTSTATUS Status;
 	
-	if (lpCriticalSection->OwningThread == Thread)
+	if (CriticalSection->OwningThread == Thread)
 	  {
-	     lpCriticalSection->RecursionCount++;
+	     CriticalSection->RecursionCount++;
 	     return;
 	  }
 	
 //	DbgPrint("Entering wait for critical section\n");
-	Status = NtWaitForSingleObject(lpCriticalSection->LockSemaphore, 
+	Status = NtWaitForSingleObject(CriticalSection->LockSemaphore, 
 				       0, FALSE);
 	if (!NT_SUCCESS(Status))
 	  {
@@ -50,73 +51,70 @@ RtlEnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 	  }
 //	DbgPrint("Left wait for critical section\n");
      }
-   lpCriticalSection->OwningThread = Thread;
-   lpCriticalSection->RecursionCount = 1;
+   CriticalSection->OwningThread = Thread;
+   CriticalSection->RecursionCount = 1;
    
 #if 0
-   if ((ret = InterlockedIncrement(&(lpCriticalSection->LockCount) )) != 1)
+   if ((ret = InterlockedIncrement(&(CriticalSection->LockCount) )) != 1)
      {
-	if (lpCriticalSection->OwningThread != Thread) 
+	if (CriticalSection->OwningThread != Thread)
 	  {
-	     NtWaitForSingleObject(lpCriticalSection->LockSemaphore, 
+	     NtWaitForSingleObject(CriticalSection->LockSemaphore, 
 				   0, 
 				   FALSE);
-	     lpCriticalSection->OwningThread = Thread;
+	     CriticalSection->OwningThread = Thread;
 	  }
      }
    else
      {
-	lpCriticalSection->OwningThread = Thread;
+	CriticalSection->OwningThread = Thread;
      }
    
-   lpCriticalSection->RecursionCount++;
+   CriticalSection->RecursionCount++;
 #endif
 }
 
-VOID STDCALL
-RtlInitializeCriticalSection(LPCRITICAL_SECTION pcritical)
+NTSTATUS STDCALL
+RtlInitializeCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
    NTSTATUS Status;
    
-   pcritical->LockCount = -1;
-   pcritical->RecursionCount = 0;
-   Status = NtCreateSemaphore(&pcritical->LockSemaphore, 
-			      STANDARD_RIGHTS_ALL, 
-			      NULL, 
-			      0, 
+   CriticalSection->LockCount = -1;
+   CriticalSection->RecursionCount = 0;
+   CriticalSection->OwningThread = (HANDLE)0;
+   CriticalSection->Reserved = 0;
+   
+   Status = NtCreateSemaphore(&CriticalSection->LockSemaphore,
+			      SEMAPHORE_ALL_ACCESS,
+			      NULL,
+			      0,
 			      1);
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint("Failed to create semaphore (Status %x)\n", Status);
-	/* FIXME: Throw exception */	
-     }
-   pcritical->OwningThread = (HANDLE)-1; // critical section has no owner yet
-   pcritical->Reserved = 0;
+   return Status;
 }
 
 VOID STDCALL
-RtlLeaveCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
+RtlLeaveCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
    HANDLE Thread = (HANDLE)NtCurrentTeb()->Cid.UniqueThread;
    
-   if (lpCriticalSection->OwningThread != Thread)
+   if (CriticalSection->OwningThread != Thread)
      {
 	DbgPrint("Freeing critical section not owned\n");
 	return;
      }
    
-   lpCriticalSection->RecursionCount--;
-   if (lpCriticalSection->RecursionCount > 0)
+   CriticalSection->RecursionCount--;
+   if (CriticalSection->RecursionCount > 0)
      {
-	InterlockedDecrement(&lpCriticalSection->LockCount);
+	InterlockedDecrement(&CriticalSection->LockCount);
 	return;
      }
-   lpCriticalSection->OwningThread = 0;
-   if (InterlockedIncrement(&lpCriticalSection->LockCount) >= 0)
+   CriticalSection->OwningThread = 0;
+   if (InterlockedIncrement(&CriticalSection->LockCount) >= 0)
      {
 	NTSTATUS Status;
 	
-	Status = NtReleaseSemaphore(lpCriticalSection->LockSemaphore, 1, NULL);
+	Status = NtReleaseSemaphore(CriticalSection->LockSemaphore, 1, NULL);
 	if (!NT_SUCCESS(Status))
 	  {
 	     DbgPrint("Failed to release semaphore (Status %x)\n",
@@ -125,37 +123,40 @@ RtlLeaveCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
      }
    
 #if 0
-   lpCriticalSection->RecursionCount--;
-   if (lpCriticalSection->RecursionCount == 0)
+   CriticalSection->RecursionCount--;
+   if (CriticalSection->RecursionCount == 0)
      {
-	lpCriticalSection->OwningThread = (HANDLE)-1;
+	CriticalSection->OwningThread = (HANDLE)-1;
 	// if LockCount > 0 and RecursionCount == 0 there
 	// is a waiting thread 
 	// ReleaseSemaphore will fire up a waiting thread
-	if (InterlockedDecrement(&lpCriticalSection->LockCount) > 0)
+	if (InterlockedDecrement(&CriticalSection->LockCount) > 0)
 	  {
-	     NtReleaseSemaphore( lpCriticalSection->LockSemaphore,1,NULL);
+	     NtReleaseSemaphore(CriticalSection->LockSemaphore,1,NULL);
 	  }
      }
-   else InterlockedDecrement( &lpCriticalSection->LockCount );
+   else
+     {
+	InterlockedDecrement(&CriticalSection->LockCount);
+     }
 #endif
 }
 
 BOOLEAN STDCALL
-RtlTryEnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
+RtlTryEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
-   if (InterlockedCompareExchange((PVOID*)&lpCriticalSection->LockCount, 
+   if (InterlockedCompareExchange((PVOID*)&CriticalSection->LockCount, 
 				  (PVOID)1, (PVOID)0 ) == 0)
      {
-	lpCriticalSection->OwningThread = 
+	CriticalSection->OwningThread = 
 	  (HANDLE) NtCurrentTeb()->Cid.UniqueThread;
-	lpCriticalSection->RecursionCount++;
+	CriticalSection->RecursionCount++;
 	return TRUE;
      }
-   if (lpCriticalSection->OwningThread == 
+   if (CriticalSection->OwningThread == 
        (HANDLE)NtCurrentTeb()->Cid.UniqueThread)
      {
-	lpCriticalSection->RecursionCount++;
+	CriticalSection->RecursionCount++;
 	return TRUE;
      }
    return FALSE;
