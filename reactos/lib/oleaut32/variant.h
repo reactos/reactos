@@ -82,13 +82,15 @@ extern const char* wine_vflags[];
 #endif
 
 /* Macros for getting at a DECIMAL's parts */
+#ifndef DEC_LO64
 #define DEC_SIGN(d)      ((d)->u.s.sign)
 #define DEC_SCALE(d)     ((d)->u.s.scale)
 #define DEC_SIGNSCALE(d) ((d)->u.signscale)
 #define DEC_HI32(d)      ((d)->Hi32)
-#define DEC_MID32(d)     ((d)->u1.s1.Mid32)
-#define DEC_LO32(d)      ((d)->u1.s1.Lo32)
-#define DEC_LO64(d)      ((d)->u1.Lo64)
+#define DEC_MID32(d)     ((d)->DUMMYUNIONNAME2.DUMMYSTRUCTNAME2.Mid32)
+#define DEC_LO32(d)      ((d)->DUMMYUNIONNAME2.DUMMYSTRUCTNAME2.Lo32)
+#define DEC_LO64(d)      ((d)->DUMMYUNIONNAME2.Lo64)
+#endif
 
 #define DEC_MAX_SCALE    28 /* Maximum scale for a decimal */
 

@@ -89,7 +89,11 @@
 #define V_ARRAY(X) V_UNION(X,parray)
 #define V_ARRAYREF(X) V_UNION(X,pparray)
 #define V_BYREF(X) V_UNION(X,byref)
-#define V_DECIMAL(X) V_UNION(X,decVal)
+#if (__STDC__ && !defined(_FORCENAMELESSUNION)) || defined(NONAMELESSUNION)
+#define V_DECIMAL(X) ((X)->n1.decVal)
+#else
+#define V_DECIMAL(X) ((X)->decVal)
+#endif
 #define V_DECIMALREF(X) V_UNION(X,pdecVal)
 #define V_I1(X) V_UNION(X,cVal)
 #ifdef _WIN64

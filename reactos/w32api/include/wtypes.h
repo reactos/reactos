@@ -11,11 +11,19 @@
 extern "C" {
 #endif
 
+#define DEC_SIGN(d)	((d)->u.s.sign)
+#define DEC_SCALE(d) ((d)->u.s.scale)
+#define DEC_SIGNSCALE(d) ((d)->u.signscale)
+#define DEC_HI32(d) ((d)->Hi32)
+#define DEC_MID32(d) ((d)->DUMMYUNIONNAME2.DUMMYSTRUCTNAME2.Mid32)
+#define DEC_LO32(d) ((d)->DUMMYUNIONNAME2.DUMMYSTRUCTNAME2.Lo32)
+#define DEC_LO64(d) ((d)->DUMMYUNIONNAME2.Lo64)
+
 #define IID_NULL GUID_NULL
 #define CLSID_NULL GUID_NULL
 #define CBPCLIPDATA(d) ((d).cbSize-sizeof((d).ulClipFmt))
 #define DECIMAL_NEG ((BYTE)0x80)
-#define DECIMAL_SETZERO(d) {(d).Lo64=(d).Hi32=(d).signscale=0;}
+#define DECIMAL_SETZERO(d) {DEC_LO64(d)=DEC_HI32(d)=DEC_SIGNSCALE(d)=0;}
 #define ROTFLAGS_REGISTRATIONKEEPSALIVE	0x01
 #define ROTFLAGS_ALLOWANYCLIENT		0x02
 

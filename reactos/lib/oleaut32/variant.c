@@ -43,13 +43,6 @@
 #include "variant.h"
 
 
-#ifdef __REACTOS__ /*FIXME*/
-/* problems with decVal member of VARIANT union in MinGW headers */
-#undef V_DECIMAL
-#define V_DECIMAL(X) (X->__VARIANT_NAME_1.decVal)
-#endif
-
-
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 const char* wine_vtypes[VT_CLSID] =
@@ -169,9 +162,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_DATE:     return VarI1FromDate(V_DATE(ps), &V_I1(pd));
     case VT_BOOL:     return VarI1FromBool(V_BOOL(ps), &V_I1(pd));
     case VT_CY:       return VarI1FromCy(V_CY(ps), &V_I1(pd));
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO32 */
     case VT_DECIMAL:  return VarI1FromDec(&V_DECIMAL(ps), &V_I1(pd) );
-#endif
     case VT_DISPATCH: return VarI1FromDisp(V_DISPATCH(ps), lcid, &V_I1(pd) );
     case VT_BSTR:     return VarI1FromStr(V_BSTR(ps), lcid, dwFlags, &V_I1(pd) );
     }
@@ -193,9 +184,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_DATE:     return VarI2FromDate(V_DATE(ps), &V_I2(pd));
     case VT_BOOL:     return VarI2FromBool(V_BOOL(ps), &V_I2(pd));
     case VT_CY:       return VarI2FromCy(V_CY(ps), &V_I2(pd));
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO32 */
     case VT_DECIMAL:  return VarI2FromDec(&V_DECIMAL(ps), &V_I2(pd));
-#endif
     case VT_DISPATCH: return VarI2FromDisp(V_DISPATCH(ps), lcid, &V_I2(pd));
     case VT_BSTR:     return VarI2FromStr(V_BSTR(ps), lcid, dwFlags, &V_I2(pd));
     }
@@ -217,9 +206,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_DATE:     return VarI4FromDate(V_DATE(ps), &V_I4(pd));
     case VT_BOOL:     return VarI4FromBool(V_BOOL(ps), &V_I4(pd));
     case VT_CY:       return VarI4FromCy(V_CY(ps), &V_I4(pd));
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO32 */
     case VT_DECIMAL:  return VarI4FromDec(&V_DECIMAL(ps), &V_I4(pd));
-#endif
     case VT_DISPATCH: return VarI4FromDisp(V_DISPATCH(ps), lcid, &V_I4(pd));
     case VT_BSTR:     return VarI4FromStr(V_BSTR(ps), lcid, dwFlags, &V_I4(pd));
     }
@@ -241,9 +228,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_DATE:     return VarUI1FromDate(V_DATE(ps), &V_UI1(pd));
     case VT_BOOL:     return VarUI1FromBool(V_BOOL(ps), &V_UI1(pd));
     case VT_CY:       return VarUI1FromCy(V_CY(ps), &V_UI1(pd));
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO32 */
     case VT_DECIMAL:  return VarUI1FromDec(&V_DECIMAL(ps), &V_UI1(pd));
-#endif
     case VT_DISPATCH: return VarUI1FromDisp(V_DISPATCH(ps), lcid, &V_UI1(pd));
     case VT_BSTR:     return VarUI1FromStr(V_BSTR(ps), lcid, dwFlags, &V_UI1(pd));
     }
@@ -265,9 +250,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_DATE:     return VarUI2FromDate(V_DATE(ps), &V_UI2(pd));
     case VT_BOOL:     return VarUI2FromBool(V_BOOL(ps), &V_UI2(pd));
     case VT_CY:       return VarUI2FromCy(V_CY(ps), &V_UI2(pd));
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO32 */
     case VT_DECIMAL:  return VarUI2FromDec(&V_DECIMAL(ps), &V_UI2(pd));
-#endif
     case VT_DISPATCH: return VarUI2FromDisp(V_DISPATCH(ps), lcid, &V_UI2(pd));
     case VT_BSTR:     return VarUI2FromStr(V_BSTR(ps), lcid, dwFlags, &V_UI2(pd));
     }
@@ -289,9 +272,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_DATE:     return VarUI4FromDate(V_DATE(ps), &V_UI4(pd));
     case VT_BOOL:     return VarUI4FromBool(V_BOOL(ps), &V_UI4(pd));
     case VT_CY:       return VarUI4FromCy(V_CY(ps), &V_UI4(pd));
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO32 */
     case VT_DECIMAL:  return VarUI4FromDec(&V_DECIMAL(ps), &V_UI4(pd));
-#endif
     case VT_DISPATCH: return VarUI4FromDisp(V_DISPATCH(ps), lcid, &V_UI4(pd));
     case VT_BSTR:     return VarUI4FromStr(V_BSTR(ps), lcid, dwFlags, &V_UI4(pd));
     }
@@ -313,9 +294,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_DATE:     return VarUI8FromDate(V_DATE(ps), &V_UI8(pd));
     case VT_BOOL:     return VarUI8FromBool(V_BOOL(ps), &V_UI8(pd));
     case VT_CY:       return VarUI8FromCy(V_CY(ps), &V_UI8(pd));
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO32 */
     case VT_DECIMAL:  return VarUI8FromDec(&V_DECIMAL(ps), &V_UI8(pd));
-#endif
     case VT_DISPATCH: return VarUI8FromDisp(V_DISPATCH(ps), lcid, &V_UI8(pd));
     case VT_BSTR:     return VarUI8FromStr(V_BSTR(ps), lcid, dwFlags, &V_UI8(pd));
     }
@@ -337,9 +316,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_DATE:     return VarI8FromDate(V_DATE(ps), &V_I8(pd));
     case VT_BOOL:     return VarI8FromBool(V_BOOL(ps), &V_I8(pd));
     case VT_CY:       return VarI8FromCy(V_CY(ps), &V_I8(pd));
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO32 */
     case VT_DECIMAL:  return VarI8FromDec(&V_DECIMAL(ps), &V_I8(pd));
-#endif
     case VT_DISPATCH: return VarI8FromDisp(V_DISPATCH(ps), lcid, &V_I8(pd));
     case VT_BSTR:     return VarI8FromStr(V_BSTR(ps), lcid, dwFlags, &V_I8(pd));
     }
@@ -361,9 +338,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_DATE:     return VarR4FromDate(V_DATE(ps), &V_R4(pd));
     case VT_BOOL:     return VarR4FromBool(V_BOOL(ps), &V_R4(pd));
     case VT_CY:       return VarR4FromCy(V_CY(ps), &V_R4(pd));
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO32 */
     case VT_DECIMAL:  return VarR4FromDec(&V_DECIMAL(ps), &V_R4(pd));
-#endif
     case VT_DISPATCH: return VarR4FromDisp(V_DISPATCH(ps), lcid, &V_R4(pd));
     case VT_BSTR:     return VarR4FromStr(V_BSTR(ps), lcid, dwFlags, &V_R4(pd));
     }
@@ -385,9 +360,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_DATE:     return VarR8FromDate(V_DATE(ps), &V_R8(pd));
     case VT_BOOL:     return VarR8FromBool(V_BOOL(ps), &V_R8(pd));
     case VT_CY:       return VarR8FromCy(V_CY(ps), &V_R8(pd));
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO32 */
     case VT_DECIMAL:  return VarR8FromDec(&V_DECIMAL(ps), &V_R8(pd));
-#endif
     case VT_DISPATCH: return VarR8FromDisp(V_DISPATCH(ps), lcid, &V_R8(pd));
     case VT_BSTR:     return VarR8FromStr(V_BSTR(ps), lcid, dwFlags, &V_R8(pd));
     }
@@ -409,9 +382,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_R8:       return VarDateFromR8(V_R8(ps), &V_DATE(pd));
     case VT_BOOL:     return VarDateFromBool(V_BOOL(ps), &V_DATE(pd));
     case VT_CY:       return VarDateFromCy(V_CY(ps), &V_DATE(pd));
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO32 */
     case VT_DECIMAL:  return VarDateFromDec(&V_DECIMAL(ps), &V_DATE(pd));
-#endif
     case VT_DISPATCH: return VarDateFromDisp(V_DISPATCH(ps), lcid, &V_DATE(pd));
     case VT_BSTR:     return VarDateFromStr(V_BSTR(ps), lcid, dwFlags, &V_DATE(pd));
     }
@@ -433,9 +404,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_R8:       return VarBoolFromR8(V_R8(ps), &V_BOOL(pd));
     case VT_DATE:     return VarBoolFromDate(V_DATE(ps), &V_BOOL(pd));
     case VT_CY:       return VarBoolFromCy(V_CY(ps), &V_BOOL(pd));
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO32 */
     case VT_DECIMAL:  return VarBoolFromDec(&V_DECIMAL(ps), &V_BOOL(pd));
-#endif
     case VT_DISPATCH: return VarBoolFromDisp(V_DISPATCH(ps), lcid, &V_BOOL(pd));
     case VT_BSTR:     return VarBoolFromStr(V_BSTR(ps), lcid, dwFlags, &V_BOOL(pd));
     }
@@ -463,9 +432,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_R8:       return VarBstrFromR8(V_R8(ps), lcid, dwFlags, &V_BSTR(pd));
     case VT_DATE:     return VarBstrFromDate(V_DATE(ps), lcid, dwFlags, &V_BSTR(pd));
     case VT_CY:       return VarBstrFromCy(V_CY(ps), lcid, dwFlags, &V_BSTR(pd));
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO32 */
     case VT_DECIMAL:  return VarBstrFromDec(&V_DECIMAL(ps), lcid, dwFlags, &V_BSTR(pd));
-#endif
 /*  case VT_DISPATCH: return VarBstrFromDisp(V_DISPATCH(ps), lcid, dwFlags, &V_BSTR(pd)); */
     }
     break;
@@ -486,10 +453,8 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_R8:       return VarCyFromR8(V_R8(ps), &V_CY(pd));
     case VT_DATE:     return VarCyFromDate(V_DATE(ps), &V_CY(pd));
     case VT_BOOL:     return VarCyFromBool(V_BOOL(ps), &V_CY(pd));
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO32 */
     case VT_DECIMAL:  return VarCyFromDec(&V_DECIMAL(ps), &V_CY(pd));
 
-#endif
     case VT_DISPATCH: return VarCyFromDisp(V_DISPATCH(ps), lcid, &V_CY(pd));
     case VT_BSTR:     return VarCyFromStr(V_BSTR(ps), lcid, dwFlags, &V_CY(pd));
     }
@@ -499,7 +464,6 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     switch (vtFrom)
     {
     case VT_EMPTY:
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_MID32 */
     case VT_BOOL:
        DEC_SIGNSCALE(&V_DECIMAL(pd)) = SIGNSCALE(DECIMAL_POS,0);
        DEC_HI32(&V_DECIMAL(pd)) = 0;
@@ -523,7 +487,6 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_CY:       return VarDecFromCy(V_CY(pd), &V_DECIMAL(ps));
     case VT_DISPATCH: return VarDecFromDisp(V_DISPATCH(ps), lcid, &V_DECIMAL(ps));
     case VT_BSTR:     return VarDecFromStr(V_BSTR(ps), lcid, dwFlags, &V_DECIMAL(pd));
-#endif
     }
     break;
 
@@ -640,14 +603,12 @@ HRESULT WINAPI VariantClear(VARIANTARG* pVarg)
   {
     if (!V_ISBYREF(pVarg))
     {
-#ifndef __REACTOS__	/*FIXME: no safearray yet */
       if (V_ISARRAY(pVarg) || V_VT(pVarg) == VT_SAFEARRAY)
       {
         if (V_ARRAY(pVarg))
           hres = SafeArrayDestroy(V_ARRAY(pVarg));
       }
 	  else
-#endif
       if (V_VT(pVarg) == VT_BSTR)
       {
         if (V_BSTR(pVarg))
@@ -763,14 +724,12 @@ HRESULT WINAPI VariantCopy(VARIANTARG* pvargDest, VARIANTARG* pvargSrc)
 
     if (!V_ISBYREF(pvargSrc))
     {
-#ifndef __REACTOS__	/*FIXME: no safearray yet */
       if (V_ISARRAY(pvargSrc))
       {
         if (V_ARRAY(pvargSrc))
           hres = SafeArrayCopy(V_ARRAY(pvargSrc), &V_ARRAY(pvargDest));
       }
 	  else
-#endif
       if (V_VT(pvargSrc) == VT_BSTR)
       {
         if (V_BSTR(pvargSrc))
@@ -900,14 +859,12 @@ HRESULT WINAPI VariantCopyInd(VARIANT* pvargDest, VARIANTARG* pvargSrc)
     }
   }
 
-#ifndef __REACTOS__	/*FIXME: no safearray yet */
   if (V_ISARRAY(pSrc))
   {
     /* Native doesn't check that *V_ARRAYREF(pSrc) is valid */
     hres = SafeArrayCopy(*V_ARRAYREF(pSrc), &V_ARRAY(pvargDest));
   }
   else
-#endif
   if (V_VT(pSrc) == (VT_BSTR|VT_BYREF))
   {
     /* Native doesn't check that *V_BSTRREF(pSrc) is valid */
@@ -2083,7 +2040,6 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
           V_I8(pVarDst) = -ul64;
           return S_OK;
         }
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO64 */
         else if ((dwVtBits & REAL_VTBITS) == VTBIT_DECIMAL)
         {
           /* Decimal is only output choice left - fast path */
@@ -2093,7 +2049,6 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
           DEC_LO64(&V_DECIMAL(pVarDst)) = -ul64;
           return S_OK;
         }
-#endif
       }
     }
     else if (!bOverflow)
@@ -2147,7 +2102,6 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
         V_UI8(pVarDst) = ul64;
         return S_OK;
       }
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO64 */
       else if ((dwVtBits & REAL_VTBITS) == VTBIT_DECIMAL)
       {
         /* Decimal is only output choice left - fast path */
@@ -2157,7 +2111,6 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
         DEC_LO64(&V_DECIMAL(pVarDst)) = ul64;
         return S_OK;
       }
-#endif
     }
   }
 
@@ -2252,7 +2205,6 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
     }
   }
 
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO64 */
   if (dwVtBits & VTBIT_DECIMAL)
   {
     int i;
@@ -2310,7 +2262,6 @@ VarNumFromParseNum_DecOverflow:
     V_VT(pVarDst) = VT_DECIMAL;
     return S_OK;
   }
-#endif
   return DISP_E_OVERFLOW; /* No more output choices */
 }
 
@@ -3443,7 +3394,6 @@ HRESULT WINAPI VarNot(LPVARIANT pVarIn, LPVARIANT pVarOut)
     case VT_BOOL:
     case VT_I2:  V_I2(pVarOut) = ~V_I2(pVarIn); break;
     case VT_UI2: V_UI2(pVarOut) = ~V_UI2(pVarIn); break;
-#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO32 */
     case VT_DECIMAL:
         hRet = VarI4FromDec(&V_DECIMAL(pVarIn), &V_I4(&varIn));
         if (FAILED(hRet))
@@ -3451,7 +3401,6 @@ HRESULT WINAPI VarNot(LPVARIANT pVarIn, LPVARIANT pVarOut)
         pVarIn = &varIn;
         V_VT(pVarOut) = VT_I4;
         /* Fall through ... */
-#endif
     case VT_INT:
     case VT_I4:  V_I4(pVarOut) = ~V_I4(pVarIn); break;
     case VT_UINT:
