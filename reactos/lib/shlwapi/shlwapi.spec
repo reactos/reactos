@@ -452,8 +452,8 @@
 452 stub -noname CharUpperNoDBCSW
 453 stub -noname CharLowerNoDBCSA
 454 stub -noname CharLowerNoDBCSW
-455 stub -noname PathIsValidCharA
-456 stub -noname PathIsValidCharW
+455 stdcall -noname PathIsValidCharA(long long)
+456 stdcall -noname PathIsValidCharW(long long)
 457 stub -noname GetLongPathNameWrapW
 458 stub -noname GetLongPathNameWrapA
 459 stdcall SHExpandEnvironmentStringsA(str ptr long) kernel32.ExpandEnvironmentStringsA

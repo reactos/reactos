@@ -3960,3 +3960,101 @@ HRESULT WINAPI SHGetWebFolderFilePathW(LPCWSTR lpszFile, LPWSTR lpszPath, DWORD 
     return S_OK;
   return E_FAIL;
 }
+
+#define PATH_CHAR_CLASS_LETTER      0x0001
+#define PATH_CHAR_CLASS_ASTERIX     0x0002
+#define PATH_CHAR_CLASS_DOT         0x0004
+#define PATH_CHAR_CLASS_BACKSLASH   0x0008
+#define PATH_CHAR_CLASS_COLON       0x0010
+#define PATH_CHAR_CLASS_SEMICOLON   0x0020
+#define PATH_CHAR_CLASS_COMMA       0x0040
+#define PATH_CHAR_CLASS_SPACE       0x0080
+#define PATH_CHAR_CLASS_OTHER_VALID 0x0100
+#define PATH_CHAR_CLASS_DOUBLEQUOTE 0x0200
+
+/*************************************************************************
+ * PathIsValidCharAW     [internal]
+ *
+ * Check if a char is of a certain class
+ */
+static BOOL WINAPI PathIsValidCharAW(unsigned Ch, DWORD Class)
+{
+  static struct
+  {
+    char Ch;
+    DWORD Class;
+  } CharClass[] =
+  {
+    { ' ', PATH_CHAR_CLASS_SPACE },
+    { '!', PATH_CHAR_CLASS_OTHER_VALID },
+    { '"', PATH_CHAR_CLASS_DOUBLEQUOTE },
+    { '#', PATH_CHAR_CLASS_OTHER_VALID },
+    { '$', PATH_CHAR_CLASS_OTHER_VALID },
+    { '%', PATH_CHAR_CLASS_OTHER_VALID },
+    { '&', PATH_CHAR_CLASS_OTHER_VALID },
+    { '\'', PATH_CHAR_CLASS_OTHER_VALID },
+    { '(', PATH_CHAR_CLASS_OTHER_VALID },
+    { ')', PATH_CHAR_CLASS_OTHER_VALID },
+    { '*', PATH_CHAR_CLASS_ASTERIX },
+    { '+', PATH_CHAR_CLASS_OTHER_VALID },
+    { ',', PATH_CHAR_CLASS_COMMA },
+    { '-', PATH_CHAR_CLASS_OTHER_VALID },
+    { '.', PATH_CHAR_CLASS_DOT },
+    { ':', PATH_CHAR_CLASS_COLON },
+    { ';', PATH_CHAR_CLASS_SEMICOLON },
+    { '=', PATH_CHAR_CLASS_OTHER_VALID },
+    { '?', PATH_CHAR_CLASS_LETTER },
+    { '@', PATH_CHAR_CLASS_OTHER_VALID },
+    { '[', PATH_CHAR_CLASS_OTHER_VALID },
+    { '\\', PATH_CHAR_CLASS_BACKSLASH },
+    { ']', PATH_CHAR_CLASS_OTHER_VALID },
+    { '^', PATH_CHAR_CLASS_OTHER_VALID },
+    { '_', PATH_CHAR_CLASS_OTHER_VALID },
+    { '`', PATH_CHAR_CLASS_OTHER_VALID },
+    { '{', PATH_CHAR_CLASS_OTHER_VALID },
+    { '}', PATH_CHAR_CLASS_OTHER_VALID },
+    { '~', PATH_CHAR_CLASS_OTHER_VALID },
+    { 0x7f, PATH_CHAR_CLASS_OTHER_VALID }
+  };
+  unsigned Index;
+
+  if (('A' <= Ch && Ch <= 'Z') || ('a' <= Ch && Ch <= 'z'))
+  {
+    return (Class & PATH_CHAR_CLASS_LETTER);
+  }
+
+  if (('0' <= Ch && Ch <= '9') || 0x80 <= Ch)
+  {
+    return (Class & PATH_CHAR_CLASS_OTHER_VALID);
+  }
+
+  for (Index = 0; Index < sizeof(CharClass) / sizeof(CharClass[0]); Index++)
+  {
+    if (Ch == CharClass[Index].Ch)
+    {
+      return (Class & CharClass[Index].Class);
+    }
+  }
+
+  return FALSE;
+}
+
+/*************************************************************************
+ * @     [SHLWAPI.455]
+ *
+ * Check if an Ascii char is of a certain class
+ */
+BOOL WINAPI PathIsValidCharA(char Ch, DWORD Class)
+{
+  return PathIsValidCharAW((unsigned) Ch, Class);
+}
+
+/*************************************************************************
+ * @     [SHLWAPI.456]
+ *
+ * Check if an Unicode char is of a certain class
+ */
+BOOL WINAPI PathIsValidCharW(WCHAR Ch, DWORD Class)
+{
+  return PathIsValidCharAW((unsigned) Ch, Class);
+}
