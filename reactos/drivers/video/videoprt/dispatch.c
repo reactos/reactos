@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: dispatch.c,v 1.2 2004/03/19 20:58:32 navaraf Exp $
+ * $Id: dispatch.c,v 1.3 2004/04/08 09:43:55 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -55,11 +55,11 @@ IntVideoPortResetDisplayParameters(ULONG Columns, ULONG Rows)
           &ResetDisplayParametersDeviceExtension->MiniPortDeviceExtension,
           Columns, Rows))
    {
+      ResetDisplayParametersDeviceExtension = NULL;
       return FALSE;
    }
 
    ResetDisplayParametersDeviceExtension = NULL;
-
    return TRUE;
 }
 
@@ -131,6 +131,8 @@ IntVideoPortDispatchOpen(
    {
       Irp->IoStatus.Status = STATUS_SUCCESS;
 
+      InterlockedIncrement(&DeviceExtension->DeviceOpened);
+
       /*
        * Storing the device extension pointer in a static variable is an
        * ugly hack. Unfortunately, we need it in VideoPortResetDisplayParameters
@@ -168,10 +170,17 @@ IntVideoPortDispatchClose(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp)
 {
+   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
    DPRINT("IntVideoPortDispatchClose\n");
 
-   if (ResetDisplayParametersDeviceExtension != NULL)
+   DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+   if (DeviceExtension->DeviceOpened > 1 &&
+       InterlockedDecrement(&DeviceExtension->DeviceOpened) == 0)
+   {
+      ResetDisplayParametersDeviceExtension = DeviceExtension;
       HalReleaseDisplayOwnership();
+   }
 
    Irp->IoStatus.Status = STATUS_SUCCESS;
    IoCompleteRequest(Irp, IO_NO_INCREMENT);

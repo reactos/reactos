@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.h,v 1.9 2004/03/21 12:31:19 gvg Exp $
+ * $Id: videoprt.h,v 1.10 2004/04/08 09:43:55 navaraf Exp $
  */
 
 #ifndef VIDEOPRT_H
@@ -71,6 +71,7 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
    LIST_ENTRY AddressMappingListHead;
    KDPC DpcObject;
    VIDEO_PORT_DRIVER_EXTENSION *DriverExtension;
+   ULONG DeviceOpened;
    CHAR MiniPortDeviceExtension[1];
 } VIDEO_PORT_DEVICE_EXTENSION, *PVIDEO_PORT_DEVICE_EXTENSION;
 
