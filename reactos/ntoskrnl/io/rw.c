@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.49 2003/11/16 21:03:59 ekohl Exp $
+/* $Id: rw.c,v 1.50 2003/11/28 17:17:44 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -122,7 +122,7 @@ NtReadFile (IN HANDLE FileHandle,
     }
 
   Status = IoCallDriver(FileObject->DeviceObject, Irp);
-  if (Event == NULL && Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+  if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
     {
       BOOLEAN Alertable;
 
@@ -249,7 +249,7 @@ NtWriteFile (IN HANDLE FileHandle,
     }
 
   Status = IoCallDriver(FileObject->DeviceObject, Irp);
-  if (Event == NULL && Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+  if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
     {
       BOOLEAN Alertable;
 
