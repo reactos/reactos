@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.92 2004/10/24 12:39:54 chorns Exp $
+# $Id: helper.mk,v 1.93 2004/10/28 19:01:59 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -1072,7 +1072,7 @@ endif
 ifeq ($(TARGET_TYPE),test)
 run: all
 	@$(CC) -nostdlib -o _runtest.exe regtests.a $(TARGET_LIBS) _stubs.o \
-	$(SDK_PATH_LIB)/rtshared.a $(SDK_PATH_LIB)/regtests.a _hooks.o -lmsvcrt -lntdll
+	$(SDK_PATH_LIB)/rtshared.a $(SDK_PATH_LIB)/regtests.a _hooks.o -lgcc -lmsvcrt -lntdll
 	@$(CP) $(REGTESTS_PATH)/regtests/regtests.dll regtests.dll
 	@_runtest.exe
 	@$(RM) regtests.dll

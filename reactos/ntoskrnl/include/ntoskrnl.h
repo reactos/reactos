@@ -54,6 +54,7 @@
 #include <internal/dbg.h>
 #include <internal/trap.h>
 #include <internal/safe.h>
+#include <internal/test.h>
 #include <ntdll/ldr.h>
 #include <napi/core.h>
 #include <napi/dbg.h>

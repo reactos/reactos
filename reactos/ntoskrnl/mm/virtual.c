@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.81 2004/10/22 20:38:23 ekohl Exp $
+/* $Id: virtual.c,v 1.82 2004/10/28 19:01:58 chorns Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -26,13 +26,7 @@
 
 /* INCLUDE *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/mm.h>
-#include <internal/ob.h>
-#include <internal/io.h>
-#include <internal/ps.h>
-#include <internal/pool.h>
-#include <internal/safe.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -59,58 +53,75 @@ NtFlushVirtualMemory(IN HANDLE ProcessHandle,
    return(STATUS_NOT_IMPLEMENTED);
 }
 
-/* (tMk 2004.II.4)
- * FUNCTION: Locks range of process virtual memory.
- * Called from VirtualLock (lib\kernel32\mem\virtual.c)
- *
- * NOTE: This function will be correct if MmProbeAndLockPages() would be fully IMPLEMENTED.
- */
+
+NTSTATUS STDCALL
+NtLockVirtualMemoryInternal(HANDLE ProcessHandle,
+  PVOID BaseAddress,
+  ULONG NumberOfBytesToLock,
+  PULONG NumberOfBytesLocked,
+  PObReferenceObjectByHandle pObReferenceObjectByHandle,
+  PMmCreateMdl pMmCreateMdl,
+  PObDereferenceObject pObDereferenceObject,
+  PMmProbeAndLockPages pMmProbeAndLockPages,
+  PExFreePool pExFreePool)
+{
+  PEPROCESS Process;
+  NTSTATUS Status;
+  PMDL Mdl;
+
+  Status = pObReferenceObjectByHandle(ProcessHandle,
+    PROCESS_VM_WRITE,
+    NULL,
+    UserMode,
+    (PVOID*)(&Process),
+    NULL);
+  if (!NT_SUCCESS(Status))
+    return(Status);
+
+  Mdl = pMmCreateMdl(NULL,
+    BaseAddress,
+    NumberOfBytesToLock);
+  if (Mdl == NULL)
+    {
+      pObDereferenceObject(Process);
+      return(STATUS_NO_MEMORY);
+    }
+
+  pMmProbeAndLockPages(Mdl,
+    UserMode,
+    IoWriteAccess);
+
+  pExFreePool(Mdl);
+
+  pObDereferenceObject(Process);
+
+  *NumberOfBytesLocked = NumberOfBytesToLock;
+  return(STATUS_SUCCESS);
+}
+
+
 NTSTATUS STDCALL
 NtLockVirtualMemory(HANDLE ProcessHandle,
-                    PVOID BaseAddress,
-                    ULONG NumberOfBytesToLock,
-                    PULONG NumberOfBytesLocked)   // ULONG LockOption?
+  PVOID BaseAddress,
+  ULONG NumberOfBytesToLock,
+  PULONG NumberOfBytesLocked)
 {
-   // AG [08-20-03] : I have *no* idea if this is correct, I just used the
-   // other functions as a template and made a few intelligent guesses...
+  DPRINT("NtLockVirtualMemory(ProcessHandle %x, BaseAddress %x, "
+    "NumberOfBytesToLock %d, NumberOfBytesLocked %x)\n",
+    ProcessHandle,
+    BaseAddress,
+    NumberOfBytesToLock,
+    NumberOfBytesLocked);
 
-   NTSTATUS Status;
-   PMDL Mdl;
-   PEPROCESS Process;
-
-   DPRINT("NtLockVirtualMemory(ProcessHandle %x, BaseAddress %x, "
-          "NumberOfBytesToLock %d), NumberOfBytesLocked %x\n",ProcessHandle,BaseAddress,
-          NumberOfBytesToLock, NumberOfBytesLocked);
-
-   Status = ObReferenceObjectByHandle(ProcessHandle,
-                                      PROCESS_VM_WRITE,
-                                      NULL,
-                                      UserMode,
-                                      (PVOID*)(&Process),
-                                      NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      return(Status);
-   }
-
-   Mdl = MmCreateMdl(NULL,
-                     BaseAddress,
-                     NumberOfBytesToLock);
-   if(Mdl == NULL) 
-   {
-      ObDereferenceObject(Process);
-      return(STATUS_NO_MEMORY);
-   }
-   MmProbeAndLockPages(Mdl,
-                       UserMode,
-                       IoWriteAccess);
-
-   ExFreePool(Mdl);  // Are we supposed to do this here?
-
-   ObDereferenceObject(Process);
-
-   *NumberOfBytesLocked = NumberOfBytesToLock;
-   return(STATUS_SUCCESS);
+  return NtLockVirtualMemoryInternal(ProcessHandle,
+    BaseAddress,
+    NumberOfBytesToLock,
+    NumberOfBytesLocked,
+    ObReferenceObjectByHandle,
+    MmCreateMdl,
+    ObfDereferenceObject,
+    MmProbeAndLockPages,
+    ExFreePool);
 }
 
 

@@ -1,7 +1,3 @@
-hal.dll  __divdi3
-hal.dll  __udivdi3
-hal.dll  __moddi3
-hal.dll  __umoddi3
 hal.dll  _init_end__
 hal.dll  _init_start__
 hal.dll  _text_end__

@@ -1,3 +1,4 @@
+#include <windows.h>
 #include "regtests.h"
 
 extern BOOL

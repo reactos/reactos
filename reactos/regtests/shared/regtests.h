@@ -8,7 +8,6 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include <windows.h>
 
 extern void SetupOnce();
 
@@ -105,7 +104,7 @@ AppendAssertion(char *message)
 
 #define _AssertNotEqualValue(_Expected, _Actual) \
 { \
-  ULONG __Expected = (ULONG) (_Excepted); \
+  ULONG __Expected = (ULONG) (_Expected); \
   ULONG __Actual = (ULONG) (_Actual); \
   if ((__Expected) == (__Actual)) \
     { \
@@ -161,14 +160,14 @@ typedef struct _API_DESCRIPTION
 extern API_DESCRIPTION ExternalDependencies[];
 extern ULONG MaxExternalDependency;
 
-HMODULE STDCALL
+HANDLE STDCALL
 _GetModuleHandleA(LPCSTR lpModuleName);
 
-FARPROC STDCALL
-_GetProcAddress(HMODULE hModule,
+PVOID STDCALL
+_GetProcAddress(HANDLE hModule,
   LPCSTR lpProcName);
 
-HINSTANCE STDCALL
+HANDLE STDCALL
 _LoadLibraryA(LPCSTR lpLibFileName);
 
 VOID STDCALL
@@ -190,7 +189,7 @@ FrameworkGetExportedFunctionNameInternal(PAPI_DESCRIPTION ApiDescription)
 static inline PVOID
 FrameworkGetFunction(PAPI_DESCRIPTION ApiDescription)
 {
-  HMODULE hModule;
+  HANDLE hModule;
   PVOID function;
   PCHAR exportedFunctionName;
 
