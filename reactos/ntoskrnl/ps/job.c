@@ -21,10 +21,10 @@ POBJECT_TYPE EXPORTED PsJobType = NULL;
 LIST_ENTRY PsJobListHead;
 static KSPIN_LOCK PsJobListLock;
 
-static GENERIC_MAPPING PiJobMapping = {PROCESS_READ,
-                                       PROCESS_WRITE,
-                                       PROCESS_EXECUTE,
-                                       PROCESS_ALL_ACCESS};
+static GENERIC_MAPPING PiJobMapping = {STANDARD_RIGHTS_READ | JOB_OBJECT_QUERY,
+                                       STANDARD_RIGHTS_WRITE | JOB_OBJECT_ASSIGN_PROCESS | JOB_OBJECT_SET_ATTRIBUTES | JOB_OBJECT_TERMINATE | JOB_OBJECT_SET_SECURITY_ATTRIBUTES,
+                                       STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
+                                       STANDARD_RIGHTS_ALL | JOB_OBJECT_ALL_ACCESS};
 
 /* FUNCTIONS *****************************************************************/
 
