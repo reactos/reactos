@@ -228,7 +228,11 @@ vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
            /* Uninitialize file cache if initialized for this file object. */
            if (pFCB->FileObject->SectionObjectPointer->SharedCacheMap)
 	   {
+#ifdef USE_ROS_CC_AND_FS
               CcRosReleaseFileCache(pFCB->FileObject);
+#else
+              CcUninitializeCacheMap(pFCB->FileObject, NULL, NULL);
+#endif
 	   }
            vfatDestroyCCB(pFCB->FileObject->FsContext2);
            pFCB->FileObject->FsContext2 = NULL;
@@ -325,9 +329,11 @@ vfatGrabFCBFromTable(PDEVICE_EXTENSION  pVCB, PUNICODE_STRING  PathNameU)
 NTSTATUS
 vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
 {
+#ifdef USE_ROS_CC_AND_FS
   NTSTATUS  status;
-  PFILE_OBJECT  fileObject;
   ULONG  fileCacheQuantum;
+#endif
+  PFILE_OBJECT  fileObject;
   PVFATCCB  newCCB;
 
   fileObject = IoCreateStreamFileObject (NULL, vcb->StorageDevice);
@@ -344,7 +350,7 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
   fileObject->FsContext2 = newCCB;
   fcb->FileObject = fileObject;
 
-
+#ifdef USE_ROS_CC_AND_FS
   fileCacheQuantum = (vcb->FatInfo.BytesPerCluster >= PAGE_SIZE) ?
       vcb->FatInfo.BytesPerCluster : PAGE_SIZE;
 
@@ -355,10 +361,22 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
     DbgPrint ("CcRosInitializeFileCache failed\n");
     KEBUGCHECK (0);
   }
+#else
+  /* FIXME: Guard by SEH. */
+  CcInitializeCacheMap(fileObject,
+                       (PCC_FILE_SIZES)(&fcb->RFCB.AllocationSize),
+                       FALSE,
+                       &VfatGlobalData->CacheMgrCallbacks,
+                       fcb);
+#endif
 
   fcb->Flags |= FCB_CACHE_INITIALIZED;
 
+#ifdef USE_ROS_CC_AND_FS
   return  status;
+#else
+  return STATUS_SUCCESS;
+#endif
 }
 
 PVFATFCB

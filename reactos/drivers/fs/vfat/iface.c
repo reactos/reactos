@@ -49,6 +49,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 {
    PDEVICE_OBJECT DeviceObject;
    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Fat");
+   PFAST_IO_DISPATCH pFastIoDispatch;
    NTSTATUS Status;
 
    Status = IoCreateDevice(DriverObject,
@@ -86,7 +87,19 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = VfatBuildRequest;
 
    DriverObject->DriverUnload = NULL;
+   
+   /* Cache manager */
+   VfatGlobalData->CacheMgrCallbacks.AcquireForLazyWrite = VfatAcquireForLazyWrite;
+   VfatGlobalData->CacheMgrCallbacks.ReleaseFromLazyWrite = VfatReleaseFromLazyWrite;
+   VfatGlobalData->CacheMgrCallbacks.AcquireForReadAhead = VfatAcquireForReadAhead;
+   VfatGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = VfatReleaseFromReadAhead;
+   
+   /* Fast I/O */
+   DriverObject->FastIoDispatch = pFastIoDispatch = &VfatGlobalData->FastIoDispatch;
+   pFastIoDispatch->SizeOfFastIoDispatch = sizeof(FAST_IO_DISPATCH);
+   pFastIoDispatch->FastIoCheckIfPossible = VfatFastIoCheckIfPossible;
 
+   /* Private lists */
    ExInitializeNPagedLookasideList(&VfatGlobalData->FcbLookasideList, 
                                    NULL, NULL, 0, sizeof(VFATFCB), TAG_FCB, 0);
    ExInitializeNPagedLookasideList(&VfatGlobalData->CcbLookasideList, 

@@ -19,6 +19,7 @@ TARGET_OBJECTS = \
   direntry.o \
   dirwr.o \
   fat.o \
+  fastio.o \
   fcb.o \
   finfo.o \
   iface.o \

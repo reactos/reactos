@@ -517,6 +517,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    Fcb->RFCB.ValidDataLength = Fcb->RFCB.FileSize;
    Fcb->RFCB.AllocationSize = Fcb->RFCB.FileSize;
 
+#ifdef USE_ROS_CC_AND_FS
    if (DeviceExt->FatInfo.FatType != FAT12)
    {
       Status = CcRosInitializeFileCache(DeviceExt->FATFileObject, CACHEPAGESIZE(DeviceExt));
@@ -530,6 +531,14 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
       DPRINT1 ("CcRosInitializeFileCache failed\n");
       goto ByeBye;
    }
+#else
+   /* FIXME: Guard by SEH. */
+   CcInitializeCacheMap(DeviceExt->FATFileObject,
+                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                        FALSE,
+                        &VfatGlobalData->CacheMgrCallbacks,
+                        Fcb);
+#endif
    DeviceExt->LastAvailableCluster = 2;
    ExInitializeResourceLite(&DeviceExt->DirResource);
    ExInitializeResourceLite(&DeviceExt->FatResource);
@@ -744,6 +753,7 @@ VfatMoveFile(PVFAT_IRP_CONTEXT IrpContext)
    return STATUS_INVALID_DEVICE_REQUEST;
 }
 
+#ifdef USE_ROS_CC_AND_FS
 static NTSTATUS
 VfatRosQueryLcnMapping(PVFAT_IRP_CONTEXT IrpContext)
 {
@@ -765,6 +775,7 @@ VfatRosQueryLcnMapping(PVFAT_IRP_CONTEXT IrpContext)
    IrpContext->Irp->IoStatus.Information = sizeof(ROS_QUERY_LCN_MAPPING);
    return(STATUS_SUCCESS);
 }
+#endif
 
 NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 /*
@@ -796,9 +807,11 @@ NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 	    case FSCTL_MOVE_FILE:
 	       Status = VfatMoveFile(IrpContext);
 	       break;
+#ifdef USE_ROS_CC_AND_FS
  	    case FSCTL_ROS_QUERY_LCN_MAPPING:
 	       Status = VfatRosQueryLcnMapping(IrpContext);
 	       break;
+#endif
 	    default:
 	       Status = STATUS_INVALID_DEVICE_REQUEST;
 	 }

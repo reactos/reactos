@@ -49,7 +49,11 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
      /* Uninitialize file cache if initialized for this file object. */
      if (FileObject->PrivateCacheMap)
        {
+#ifdef USE_ROS_CC_AND_FS
          CcRosReleaseFileCache (FileObject);
+#else
+         CcUninitializeCacheMap (FileObject, NULL, NULL);
+#endif
        }
 
      pFcb->OpenHandleCount--;

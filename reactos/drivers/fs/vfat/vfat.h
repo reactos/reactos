@@ -269,6 +269,8 @@ typedef struct
   NPAGED_LOOKASIDE_LIST FcbLookasideList;
   NPAGED_LOOKASIDE_LIST CcbLookasideList;
   NPAGED_LOOKASIDE_LIST IrpContextLookasideList;
+  FAST_IO_DISPATCH FastIoDispatch;
+  CACHE_MANAGER_CALLBACKS CacheMgrCallbacks;
 } VFAT_GLOBAL_DATA, *PVFAT_GLOBAL_DATA;
 
 extern PVFAT_GLOBAL_DATA VfatGlobalData;
@@ -506,6 +508,32 @@ NTSTATUS VfatCloseFile(PDEVICE_EXTENSION DeviceExt,
 /*  -------------------------------------------------------  cleanup.c  */
 
 NTSTATUS VfatCleanup (PVFAT_IRP_CONTEXT IrpContext);
+
+/*  ---------------------------------------------------------  fastio.c  */
+
+BOOLEAN NTAPI
+VfatFastIoCheckIfPossible(IN PFILE_OBJECT FileObject,
+                          IN PLARGE_INTEGER FileOffset,
+                          IN ULONG Lenght,
+                          IN BOOLEAN Wait,
+                          IN ULONG LockKey,
+                          IN BOOLEAN CheckForReadOperation,
+                          OUT PIO_STATUS_BLOCK IoStatus,
+                          IN PDEVICE_OBJECT DeviceObject);
+
+BOOLEAN NTAPI
+VfatAcquireForLazyWrite(IN PVOID Context,
+                        IN BOOLEAN Wait);
+
+VOID NTAPI
+VfatReleaseFromLazyWrite(IN PVOID Context);
+
+BOOLEAN NTAPI
+VfatAcquireForReadAhead(IN PVOID Context,
+                        IN BOOLEAN Wait);
+
+VOID NTAPI
+VfatReleaseFromReadAhead(IN PVOID Context);
 
 /*  ---------------------------------------------------------  fsctl.c  */
 
