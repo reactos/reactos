@@ -1,4 +1,4 @@
-/* $Id: irql.c,v 1.10 2003/07/21 21:53:50 royce Exp $
+/* $Id: irql.c,v 1.11 2003/11/04 21:36:22 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -140,8 +140,8 @@ HalpExecuteIrqs(KIRQL NewIrql)
 	       /*
 	        * For each deferred interrupt execute all the handlers at DIRQL.
 	        */
-	       KiInterruptDispatch2(i, NewIrql);
 	       HalpPendingInterruptCount[i]--;
+	       KiInterruptDispatch2(i, NewIrql);
 	     }
 	   CurrentIrql--;
 	   HalpEndSystemInterrupt(CurrentIrql);
