@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.51 2004/08/15 21:36:29 chorns Exp $
+/* $Id: class.c,v 1.52 2004/12/04 22:08:29 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -464,8 +464,10 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
       REGISTERCLASS_ANSI,
       0);
 
-   RtlFreeUnicodeString(&MenuName);
-   RtlFreeUnicodeString(&ClassName);
+   if (!IS_ATOM(lpwcx->lpszMenuName))
+      RtlFreeUnicodeString(&MenuName);
+   if (!IS_ATOM(lpwcx->lpszClassName))
+      RtlFreeUnicodeString(&ClassName);
 
    return (ATOM)Atom;
 }

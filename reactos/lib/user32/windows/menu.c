@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.72 2004/12/04 19:53:55 navaraf Exp $
+/* $Id: menu.c,v 1.73 2004/12/04 22:08:30 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -4074,7 +4074,7 @@ InsertMenuItemA(
 
     res = NtUserInsertMenuItem(hMenu, uItem, fByPosition, &mi);
 
-    if ( CleanHeap ) HEAP_free ( mi.dwTypeData );
+    if ( CleanHeap ) HEAP_free ( MenuText.Buffer );
   }
   return res;
 }
@@ -4094,8 +4094,6 @@ InsertMenuItemW(
   MENUITEMINFOW mi;
   UNICODE_STRING MenuText;
   BOOL res = FALSE;
-  BOOL CleanHeap = FALSE;
-  HANDLE hHeap = GetProcessHeap();
   mi.hbmpItem = (HBITMAP)0;
 
   // while we could just pass 'lpmii' to win32k, we make a copy so that
@@ -4113,20 +4111,13 @@ InsertMenuItemW(
     {
       if(lpmii->cch > 0)
       {
-        if(!RtlCreateUnicodeString(&MenuText, (PWSTR)lpmii->dwTypeData))
-        {
-          SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
-          return FALSE;
-        }
+        RtlInitUnicodeString(&MenuText, (PWSTR)lpmii->dwTypeData);
         mi.dwTypeData = (LPWSTR)&MenuText;
         mi.cch = MenuText.Length / sizeof(WCHAR);
-        CleanHeap = TRUE;
       }
     };
     
     res = NtUserInsertMenuItem(hMenu, uItem, fByPosition, &mi);
-    
-    if(CleanHeap) RtlFreeHeap (hHeap, 0, mi.dwTypeData);
   }
   return res;
 }
