@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.66 2003/08/17 22:45:40 silverblade Exp $
+/* $Id: console.c,v 1.67 2003/08/18 07:32:00 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1239,6 +1239,15 @@ WINBOOL STDCALL AllocConsole(VOID)
    CSRSS_API_REPLY Reply;
    NTSTATUS Status;
    HANDLE hStdError;
+
+   if(NtCurrentPeb()->ProcessParameters->hConsole)
+   {
+	DPRINT("AllocConsole: Allocate duplicate console to the same Process\n");
+	SetLastErrorByStatus (STATUS_OBJECT_EXISTS); 
+	return FALSE;	 
+   }
+
+   Request.Data.AllocConsoleRequest.CtrlDispatcher = (PCONTROLDISPATCHER) &ConsoleControlDispatcher;
 
    Request.Type = CSRSS_ALLOC_CONSOLE;
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
