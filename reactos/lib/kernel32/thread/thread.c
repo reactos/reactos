@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.43 2003/07/24 13:50:26 royce Exp $
+/* $Id: thread.c,v 1.44 2003/08/07 03:29:44 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -35,7 +35,8 @@ _except_handler(EXCEPTION_RECORD *ExceptionRecord,
 }
 
 
-__declspec(noreturn) void STDCALL ThreadStartup
+__declspec(noreturn) void STDCALL
+ThreadStartup
 (
  LPTHREAD_START_ROUTINE lpStartAddress,
  LPVOID lpParameter
@@ -59,7 +60,8 @@ __declspec(noreturn) void STDCALL ThreadStartup
 /*
  * @implemented
  */
-HANDLE STDCALL CreateThread
+HANDLE STDCALL
+CreateThread
 (
  LPSECURITY_ATTRIBUTES lpThreadAttributes,
  DWORD dwStackSize,
@@ -85,7 +87,8 @@ HANDLE STDCALL CreateThread
 /*
  * @implemented
  */
-HANDLE STDCALL CreateRemoteThread
+HANDLE STDCALL
+CreateRemoteThread
 (
  HANDLE hProcess,
  LPSECURITY_ATTRIBUTES lpThreadAttributes,
