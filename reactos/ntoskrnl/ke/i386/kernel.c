@@ -93,7 +93,13 @@ KeApplicationProcessorInit(VOID)
    */
   Ki386InitializeLdt();
 
-  __asm__ __volatile__ ("sti\n\t");
+#ifdef __GNUC__
+    __asm__ __volatile__ ("sti\n\t");
+#elif defined(_MSC_VER)
+  __asm sti
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 VOID INIT_FUNCTION
