@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: metric.c,v 1.17 2003/12/12 18:18:21 weiden Exp $
+/* $Id: metric.c,v 1.18 2004/02/04 01:26:34 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -121,7 +121,7 @@ NtUserGetSystemMetrics(ULONG Index)
       return(32);
     case SM_CXICONSPACING:
     case SM_CYICONSPACING:
-      return(44);
+      return(64);
     case SM_CXMAXIMIZED:
       return(NtUserGetSystemMetrics(SM_CXSCREEN) + 8); /* This seems to be 8
                                                           pixels greater than
