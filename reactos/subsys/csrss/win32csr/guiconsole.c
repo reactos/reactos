@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.9 2004/02/03 17:53:54 navaraf Exp $
+/* $Id: guiconsole.c,v 1.10 2004/02/04 00:05:46 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -571,8 +571,6 @@ GuiConsoleGuiThread(PVOID Data)
   MSG msg;
   PHANDLE GraphicsStartupEvent = (PHANDLE) Data;
 
-  PrivateCsrssManualGuiCheck(+1);
-
   NotifyWnd = CreateWindowW(L"Win32CsrCreateNotify",
                             L"",
                             WS_OVERLAPPEDWINDOW,
@@ -628,6 +626,11 @@ GuiInit(VOID)
     {
       DPRINT1("Failed to set thread desktop\n");
       return FALSE;
+    }
+
+  if (NULL == NotifyWnd)
+    {
+      PrivateCsrssManualGuiCheck(+1);
     }
 
   wc.cbSize = sizeof(WNDCLASSEXW);
