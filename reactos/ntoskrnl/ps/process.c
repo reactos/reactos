@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.69 2001/10/31 00:03:07 dwelch Exp $
+/* $Id: process.c,v 1.70 2001/11/29 16:40:45 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -1097,6 +1097,20 @@ PiQuerySystemProcessInformation(PVOID Buffer,
 	/* OK */	
 	return STATUS_SUCCESS;
 #endif
+}
+
+LARGE_INTEGER STDCALL
+PsGetProcessExitTime(VOID)
+{
+  LARGE_INTEGER Li;
+  Li.QuadPart = PsGetCurrentProcess()->ExitTime.QuadPart;
+  return Li;
+}
+
+BOOLEAN STDCALL
+PsIsThreadTerminating(IN PETHREAD Thread)
+{
+  return(Thread->DeadThread);
 }
 
 /* EOF */
