@@ -217,56 +217,56 @@ VGAStartIO(PVOID  DeviceExtension,
       VGAMapVideoMemory((PVIDEO_MEMORY) RequestPacket->InputBuffer,
                         (PVIDEO_MEMORY_INFORMATION) 
                           RequestPacket->OutputBuffer,
-                        &RequestPacket->StatusBlock);
+                        RequestPacket->StatusBlock);
       break;
       
     case  IOCTL_VIDEO_QUERY_AVAIL_MODES:
       VGAQueryAvailModes((PVIDEO_MODE_INFORMATION) RequestPacket->OutputBuffer,
-                         &RequestPacket->StatusBlock);
+                         RequestPacket->StatusBlock);
       break;
       
     case  IOCTL_VIDEO_QUERY_CURRENT_MODE:
       VGAQueryCurrentMode((PVIDEO_MODE_INFORMATION) RequestPacket->OutputBuffer,
-                          &RequestPacket->StatusBlock);
+                          RequestPacket->StatusBlock);
       break;
       
     case  IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES:
       VGAQueryNumAvailModes((PVIDEO_NUM_MODES) RequestPacket->OutputBuffer,
-                            &RequestPacket->StatusBlock);
+                            RequestPacket->StatusBlock);
       break;
       
     case  IOCTL_VIDEO_RESET_DEVICE:
-      VGAResetDevice(&RequestPacket->StatusBlock);
+      VGAResetDevice(RequestPacket->StatusBlock);
       break;
 
     case  IOCTL_VIDEO_SET_COLOR_REGISTERS:
       VGASetColorRegisters((PVIDEO_CLUT) RequestPacket->InputBuffer,
-                           &RequestPacket->StatusBlock);
+                           RequestPacket->StatusBlock);
       break;
       
     case  IOCTL_VIDEO_SET_CURRENT_MODE:
       VGASetCurrentMode((PVIDEO_MODE) RequestPacket->InputBuffer,
-                        &RequestPacket->StatusBlock);
+                        RequestPacket->StatusBlock);
       break;
       
     case  IOCTL_VIDEO_SHARE_VIDEO_MEMORY:
       VGAShareVideoMemory((PVIDEO_SHARE_MEMORY) RequestPacket->InputBuffer,
                           (PVIDEO_MEMORY_INFORMATION) RequestPacket->OutputBuffer,
-                          &RequestPacket->StatusBlock);
+                          RequestPacket->StatusBlock);
       break;
       
     case  IOCTL_VIDEO_UNMAP_VIDEO_MEMORY:
       VGAUnmapVideoMemory((PVIDEO_MEMORY) RequestPacket->InputBuffer,
-                          &RequestPacket->StatusBlock);
+                          RequestPacket->StatusBlock);
       break;
       
     case  IOCTL_VIDEO_UNSHARE_VIDEO_MEMORY:
       VGAUnshareVideoMemory((PVIDEO_MEMORY) RequestPacket->InputBuffer,
-                            &RequestPacket->StatusBlock);
+                            RequestPacket->StatusBlock);
       break;
     case  IOCTL_VIDEO_SET_PALETTE_REGISTERS:
-      VGASetPaletteRegisters((PVIDEO_CLUT) RequestPacket->InputBuffer,
-                           &RequestPacket->StatusBlock);
+      VGASetPaletteRegisters((PWORD) RequestPacket->InputBuffer,
+                             RequestPacket->StatusBlock);
       break;
 
 #if 0
@@ -278,7 +278,7 @@ VGAStartIO(PVOID  DeviceExtension,
     case  IOCTL_VIDEO_FREE_PUBLIC_ACCESS_RANGES:
       VGAFreePublicAccessRanges((PVIDEO_PUBLIC_ACCESS_RANGES)
                                   RequestPacket->InputBuffer,
-                                &RequestPacket->StatusBlock);
+                                RequestPacket->StatusBlock);
       break;
 
     case  IOCTL_VIDEO_GET_BANK_SELECT_CODE:
@@ -294,7 +294,7 @@ VGAStartIO(PVOID  DeviceExtension,
     case  IOCTL_VIDEO_QUERY_PUBLIC_ACCESS_RANGES:
       VGAQueryPublicAccessRanges((PVIDEO_PUBLIC_ACCESS_RANGES)
                                    RequestPacket->OutputBuffer,
-                                 &RequestPacket->StatusBlock);
+                                 RequestPacket->StatusBlock);
       break;
 
     case  IOCTL_VIDEO_RESTORE_HARDWARE_STATE:
@@ -430,10 +430,10 @@ VOID  VGASetColorRegisters(IN PVIDEO_CLUT  ColorLookUpTable,
 
   for (i=ColorLookUpTable->FirstEntry; i<ColorLookUpTable->NumEntries; i++)
   {
-    VideoPortWritePortUchar(0x03c8, i);
-    VideoPortWritePortUchar(0x03c9, ColorLookUpTable->LookupTable[i].RgbArray.Red);
-    VideoPortWritePortUchar(0x03c9, ColorLookUpTable->LookupTable[i].RgbArray.Green);
-    VideoPortWritePortUchar(0x03c9, ColorLookUpTable->LookupTable[i].RgbArray.Blue);
+    VideoPortWritePortUchar((PUCHAR)0x03c8, i);
+    VideoPortWritePortUchar((PUCHAR)0x03c9, ColorLookUpTable->LookupTable[i].RgbArray.Red);
+    VideoPortWritePortUchar((PUCHAR)0x03c9, ColorLookUpTable->LookupTable[i].RgbArray.Green);
+    VideoPortWritePortUchar((PUCHAR)0x03c9, ColorLookUpTable->LookupTable[i].RgbArray.Blue);
   }
 }
 

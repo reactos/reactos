@@ -1,4 +1,4 @@
-/* $Id: vidport.c,v 1.19 2001/05/02 12:37:06 jfilby Exp $
+/* $Id: vidport.c,v 1.20 2001/06/26 12:51:00 ekohl Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -24,7 +24,7 @@ static struct _EPROCESS* Csrss;
 
 PBYTE ReturnCsrssAddress(void)
 {
-  return Csrss;
+  return (PBYTE)Csrss;
 }
 
 //  -------------------------------------------------------  Public Interface
@@ -295,7 +295,7 @@ VideoPortInitialize(IN PVOID  Context1,
   while (Again);
 
   /* Find a process handle for csrss */
-  Cid.UniqueProcess = 3;
+  Cid.UniqueProcess = (HANDLE)3;
   Cid.UniqueThread = 0;
   Status = ZwOpenProcess(&CsrssHandle,
 			 PROCESS_ALL_ACCESS,
@@ -806,7 +806,7 @@ VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   vrp->OutputBufferLength = Irp->Stack[0].Parameters.DeviceIoControl.OutputBufferLength;
 
   // Call the Miniport Driver with the VRP
-  DeviceObject->DriverObject->DriverStartIo(DeviceObject->DeviceExtension, vrp);
+  DeviceObject->DriverObject->DriverStartIo(DeviceObject->DeviceExtension, (PIRP)vrp);
 
   // Translate the VRP back into the IRP for OutputBuffer
   Irp->UserBuffer                                             = vrp->OutputBuffer;

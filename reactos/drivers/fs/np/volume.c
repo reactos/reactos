@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.1 2001/06/12 12:35:05 ekohl Exp $
+/* $Id: volume.c,v 1.2 2001/06/26 12:47:26 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -21,7 +21,7 @@
 
 static NTSTATUS
 NpfsQueryFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
-			     PULONG *BufferLength)
+			     PULONG BufferLength)
 {
    DPRINT("NpfsQueryFsDeviceInformation()\n");
    DPRINT("FsDeviceInfo = %p\n", FsDeviceInfo);

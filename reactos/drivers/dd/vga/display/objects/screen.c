@@ -103,7 +103,7 @@ DWORD getAvailableModes(HANDLE Driver,
 
 BOOL InitVGA(PPDEV ppdev, BOOL bFirst)
 {
-  UINT ReturnedDataLength;
+  ULONG ReturnedDataLength;
   VIDEO_MEMORY VideoMemory;
   VIDEO_MEMORY_INFORMATION VideoMemoryInfo;
 

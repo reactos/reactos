@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.2 2001/06/12 12:33:42 ekohl Exp $
+/* $Id: finfo.c,v 1.3 2001/06/26 12:46:57 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -143,7 +143,7 @@ MsfsSetInformation(PDEVICE_OBJECT DeviceObject,
    PMSFS_FCB Fcb;
    PMSFS_MAILSLOT Mailslot;
    PVOID SystemBuffer;
-   PULONG BufferLength;
+   ULONG BufferLength;
    NTSTATUS Status;
 
    DPRINT("MsfsSetInformation(DeviceObject %p Irp %p)\n", DeviceObject, Irp);

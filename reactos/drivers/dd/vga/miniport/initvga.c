@@ -2,11 +2,11 @@
 #include <debug.h>
 #include "vgavideo.h"
 
-void outxay(USHORT ad, UCHAR x, UCHAR y)
+void outxay(PUSHORT ad, UCHAR x, UCHAR y)
 {
   USHORT xy = (x << 8) + y;
 
-  VideoPortWritePortUshort((PUSHORT)ad, xy);
+  VideoPortWritePortUshort(ad, xy);
 }
 
 void setMode(VideoMode mode)
@@ -20,7 +20,7 @@ void setMode(VideoMode mode)
 
   for(x=0; x<5; x++)
   {
-    outxay(SEQ, mode.Seq[x], x);
+    outxay((PUSHORT)SEQ, mode.Seq[x], x);
   }
 
   VideoPortWritePortUshort((PUSHORT)CRTC, 0x11);
@@ -28,12 +28,12 @@ void setMode(VideoMode mode)
 
   for(x=0; x<25; x++)
   {
-    outxay(CRTC, mode.Crtc[x], x);
+    outxay((PUSHORT)CRTC, mode.Crtc[x], x);
   }
 
   for(x=0; x<9; x++)
   {
-    outxay(GRAPHICS, mode.Gfx[x], x);
+    outxay((PUSHORT)GRAPHICS, mode.Gfx[x], x);
   }
 
   x=VideoPortReadPortUchar((PUCHAR)FEATURE);
@@ -103,6 +103,7 @@ VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock)
   NTSTATUS Status;
   VIDEO_X86_BIOS_ARGUMENTS vxba;
   VP_STATUS vps;
+  ULONG ThreadRelease = 1;
   
   CHECKPOINT;
   Event = 0;
@@ -115,7 +116,7 @@ VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock)
   if( !NT_SUCCESS( Status ) )
     DbgPrint( "VGA: Failed to open refresh event\n" );
   else {
-    NtSetEvent( Event, 1 );
+    NtSetEvent( Event, &ThreadRelease );
     NtClose( Event );
   }
 }

@@ -137,7 +137,7 @@ NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
    return ioStatus.Status;
 }
 
-NTSTATUS MouseClassDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL MouseClassDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
    NTSTATUS Status;
@@ -218,7 +218,7 @@ VOID MouseClassStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    }
 }
 
-NTSTATUS MouseClassInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS STDCALL MouseClassInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
    // Retrieve GDI's callback
 

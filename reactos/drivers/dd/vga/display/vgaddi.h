@@ -195,7 +195,7 @@ typedef VOID (*PFN_ScreenToScreenBlt)(PDEVSURF, PRECTL, PPOINTL, INT);
 BOOL InitVGA(PPDEV ppdev, BOOL bFirst); // screen.c: initialize VGA mode
 
 #define DRIVER_EXTRA_SIZE 0
-#define ALLOC_TAG 'agvD' // Dvga reversed
+#define ALLOC_TAG  TAG('D', 'v', 'g', 'a') // Dvga tag
 #define DLL_NAME  L"vga" // DLL name in Unicode
 
 #define MAX_SCAN_WIDTH              2048  // pixels
