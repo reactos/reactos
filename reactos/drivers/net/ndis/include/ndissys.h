@@ -23,6 +23,9 @@
 #include <net/ndis.h>
 #endif /* _MSC_VER */
 
+#include "miniport.h"
+#include "protocol.h"
+
 #include <debug.h>
 
 /* Exported functions */

@@ -11,8 +11,7 @@
  *   3  Oct 2003 vizzini - SendPackets support
  */
 #include <roscfg.h>
-#include <miniport.h>
-#include <protocol.h>
+#include "ndissys.h"
 
 #ifdef DBG
 #include <buffer.h>

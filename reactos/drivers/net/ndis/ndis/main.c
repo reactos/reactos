@@ -10,10 +10,9 @@
  *   20 Aug 2003 Vizzini - NDIS4/5 revisions
  *   3  Oct 2003 Vizzini - formatting and minor bugfixing
  */
+
 #include <roscfg.h>
-#include <ndissys.h>
-#include <protocol.h>
-#include <miniport.h>
+#include "ndissys.h"
 
 
 #ifdef DBG

@@ -10,8 +10,8 @@
  *   15 Aug 2003 Vizzini - DMA support
  *   3  Oct 2003 Vizzini - formatting and minor bugfixing
  */
-#include <ndissys.h>
-#include <miniport.h>
+
+#include "ndissys.h"
 
 
 /*

@@ -16,8 +16,7 @@
  *     - Break these functions up a bit; i hate 200-line functions
  */
 
-#include <ndissys.h>
-#include <miniport.h>
+#include "ndissys.h"
 
 /* Registry path to the enumeration database */
 #define ENUM_KEY L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum"

@@ -1,10 +1,12 @@
-# $Id: Makefile,v 1.20 2004/07/29 05:00:43 arty Exp $
+# $Id: Makefile,v 1.21 2004/08/15 23:12:32 chorns Exp $
 
 PATH_TO_TOP = ../../..
 
 TARGET_TYPE = export_driver
 
 TARGET_NAME = ndis
+
+TARGET_PCH = include/ndissys.h
 
 TARGET_CFLAGS = -I./include -DNDIS_WRAPPER -Wall -Werror
 

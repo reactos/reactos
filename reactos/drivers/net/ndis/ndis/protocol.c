@@ -10,9 +10,7 @@
  *   09-13-2003 Vizzini Updates for SendPackets support
  */
 #include <roscfg.h>
-#include <ndissys.h>
-#include <miniport.h>
-#include <protocol.h>
+#include "ndissys.h"
 #include <buffer.h>
 
 #define SERVICES_KEY L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"

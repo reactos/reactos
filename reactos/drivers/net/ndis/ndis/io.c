@@ -10,8 +10,8 @@
  *   20 Aug 2003 Vizzini - DMA support
  *   3  Oct 2003 Vizzini - Formatting and minor bugfixes
  */
-#include <ndissys.h>
-#include <miniport.h>
+
+#include "ndissys.h"
 
 
 VOID STDCALL HandleDeferredProcessing(

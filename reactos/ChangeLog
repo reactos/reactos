@@ -1,5 +1,12 @@
 2004-08-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* drivers/net/ndis/include/.cvsignore: New file.
+	* drivers/net/ndis/.cvsignore: Add *.d.
+	* drivers/net/ndis/Makefile (TARGET_PCH): Set to include/ndissys.h.
+	* drivers/net/ndis/*.c: Use pre-compiled header.
+
+2004-08-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* drivers/net/afd/include/.cvsignore: New file.
 	* drivers/net/afd/include/tdiconn.h: Don't include <afd.h>.
 	* drivers/net/afd/.cvsignore: Add *.d.

@@ -7,7 +7,8 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <ndissys.h>
+
+#include "ndissys.h"
 
 
 /*

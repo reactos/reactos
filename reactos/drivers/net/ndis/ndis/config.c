@@ -31,7 +31,7 @@
  *     - All the routines in this file are PASSIVE_LEVEL only, and all memory is PagedPool
  */
 
-#include <miniport.h>
+#include "ndissys.h"
 
 #define NDIS_VERSION 0x00040000          /* the version of NDIS we claim to be to miniport drivers */
 #define PARAMETERS_KEY L"Parameters"     /* The parameters subkey under the device-specific key */

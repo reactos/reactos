@@ -18,7 +18,8 @@
  *     - Nearly this entire file is PAGED_CODE (with the exception of the
  *       MiniportTimerDpc() function)
  */
-#include <ndissys.h>
+
+#include "ndissys.h"
 
 
 VOID STDCALL

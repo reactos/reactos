@@ -9,7 +9,8 @@
  *   CSH 01/08-2000 Created
  *   3 Oct 2003 Vizzini - Formatting and minor bugfixes
  */
-#include <ndissys.h>
+
+#include "ndissys.h"
 
 
 /*

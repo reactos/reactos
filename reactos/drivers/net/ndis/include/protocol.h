@@ -8,11 +8,6 @@
 #ifndef __PROTOCOL_H
 #define __PROTOCOL_H
 
-#include <ndissys.h>
-#include <net/ndis.h>
-#include "miniport.h"
-
-
 typedef struct _PROTOCOL_BINDING {
     LIST_ENTRY                    ListEntry;        /* Entry on global list */
     KSPIN_LOCK                    Lock;             /* Protecting spin lock */

@@ -13,9 +13,8 @@
  * TODO:
  *    - Fix HalGetBusDataByOffset() param 2 in most calls below
  */
-#include <ndis.h>
-#include <ndissys.h>
-#include "../include/miniport.h"
+
+#include "ndissys.h"
 
 
 /*
