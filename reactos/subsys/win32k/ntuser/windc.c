@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.42 2003/12/12 14:22:37 gvg Exp $
+/* $Id: windc.c,v 1.43 2003/12/12 17:20:53 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -389,9 +389,12 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
   else
     {
       Dce = Window->Dce;
-      /* FIXME: Implement this. */
-#ifdef TODO
-      DbgBreakPoint();
+      if (NULL != Dce && Dce->hwndCurrent == hWnd)
+        {
+          UpdateVisRgn = FALSE; /* updated automatically, via DCHook() */
+        }
+#if 1 /* FIXME */
+      UpdateVisRgn = TRUE;
 #endif
     }
 
