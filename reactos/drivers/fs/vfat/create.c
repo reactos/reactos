@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.49 2002/12/03 01:14:49 hbirr Exp $
+/* $Id: create.c,v 1.50 2003/01/02 16:04:31 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -679,6 +679,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
       if (RequestedDisposition == FILE_CREATE)
 	{
 	  Irp->IoStatus.Information = FILE_EXISTS;
+	  VfatCloseFile (DeviceExt, FileObject);
 	  return(STATUS_OBJECT_NAME_COLLISION);
 	}
 
