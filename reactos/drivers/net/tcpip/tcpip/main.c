@@ -218,7 +218,6 @@ CP
 CP
     /* Open address file object */
 
-
     /* Protocol depends on device object so find the protocol */
     if (DeviceObject == TCPDeviceObject)
       Protocol = IPPROTO_TCP;

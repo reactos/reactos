@@ -259,7 +259,7 @@ NTSTATUS TCPConnect
     InsertHeadList( &Connection->ConnectRequest, &Bucket->Entry );
 
     Status = AddrBuildAddress
-	((PTA_ADDRESS)ConnInfo->RemoteAddress,
+	((PTRANSPORT_ADDRESS)ConnInfo->RemoteAddress,
 	 &RemoteAddress,
 	 &RemotePort);
 

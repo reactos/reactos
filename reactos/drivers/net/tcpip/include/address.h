@@ -41,7 +41,7 @@ NTSTATUS AddrGetAddress(
     PUSHORT Port);
 
 NTSTATUS AddrBuildAddress(
-    PTA_ADDRESS TdiAddress,
+    PTRANSPORT_ADDRESS TdiAddress,
     PIP_ADDRESS *Address,
     PUSHORT Port);
 

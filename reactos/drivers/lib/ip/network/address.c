@@ -169,17 +169,17 @@ NTSTATUS AddrGetAddress(
  *     Status of operation
  */
 NTSTATUS AddrBuildAddress(
-    PTA_ADDRESS TdiAddress,
+    PTRANSPORT_ADDRESS TaAddress,
     PIP_ADDRESS *Address,
     PUSHORT Port)
 {
   PTDI_ADDRESS_IP ValidAddr;
+  PTA_ADDRESS TdiAddress = &TaAddress->Address[0];
   PIP_ADDRESS IPAddress;
 
   if (TdiAddress->AddressType != TDI_ADDRESS_TYPE_IP) {
       TI_DbgPrint
-	  (MID_TRACE,("AddressType %x, Not valid\n", 
-		      TdiAddress->AddressType));
+	  (MID_TRACE,("AddressType %x, Not valid\n", TdiAddress->AddressType));
     return STATUS_INVALID_ADDRESS;
   }
   if (TdiAddress->AddressLength < TDI_ADDRESS_LENGTH_IP) {

@@ -1,4 +1,4 @@
-/* $Id: tdiconn.c,v 1.3 2004/10/03 20:36:45 arty Exp $
+/* $Id: tdiconn.c,v 1.4 2004/10/03 21:44:42 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/tdiconn.c
@@ -131,7 +131,7 @@ TdiBuildConnectionInfoInPlace
 ( PTDI_CONNECTION_INFORMATION ConnectionInfo,
   PTRANSPORT_ADDRESS Address ) {
     NTSTATUS Status = STATUS_SUCCESS;
-    
+
     RtlCopyMemory( ConnectionInfo->RemoteAddress,
 		   Address, 
 		   ConnectionInfo->RemoteAddressLength );
@@ -146,11 +146,11 @@ TdiBuildConnectionInfo
   PTRANSPORT_ADDRESS Address ) {
     NTSTATUS Status = TdiBuildNullConnectionInfo
 	( ConnectionInfo, Address->Address[0].AddressType );
-  
-  if( NT_SUCCESS(Status) )
-    TdiBuildConnectionInfoInPlace( *ConnectionInfo, Address );
-  
-  return Status;
+ 
+    if( NT_SUCCESS(Status) )
+	TdiBuildConnectionInfoInPlace( *ConnectionInfo, Address );
+
+    return Status;
 }
 
 NTSTATUS 
