@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.12 2003/12/28 22:38:09 fireball Exp $
+/* $Id: display.c,v 1.13 2004/01/18 22:35:26 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -692,7 +692,7 @@ HalDisplayString(IN PCH String)
 #error Unknown compiler for inline assembler
 #endif
 
-  KeAcquireSpinLockAtDpcLevel(&Lock);
+  KiAcquireSpinLock(&Lock);
 
 #if 0  
   if (HalOwnsDisplay == FALSE)
@@ -754,7 +754,7 @@ HalDisplayString(IN PCH String)
   WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_CURHI);
   WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, (UCHAR)((offset >> 8) & 0xff));
 #endif
-  KeReleaseSpinLockFromDpcLevel(&Lock);
+  KiReleaseSpinLock(&Lock);
   popfl(Flags);
 }
 

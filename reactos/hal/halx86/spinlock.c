@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.6 2003/11/06 21:13:21 gvg Exp $
+/* $Id: spinlock.c,v 1.7 2004/01/18 22:35:05 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -35,8 +35,7 @@ KeAcquireSpinLock (
  *         OldIrql (OUT) = Caller supplied storage for the previous irql
  */
 {
-   KeRaiseIrql(DISPATCH_LEVEL,OldIrql);
-   KeAcquireSpinLockAtDpcLevel(SpinLock);
+  *OldIrql = KfAcquireSpinLock(SpinLock);
 }
 
 KIRQL FASTCALL
@@ -46,9 +45,8 @@ KeAcquireSpinLockRaiseToSynch (
 {
   KIRQL OldIrql;
 
-  KeRaiseIrql(SYNCH_LEVEL, &OldIrql);
-
-  KeAcquireSpinLockAtDpcLevel(SpinLock);
+  OldIrql = KfRaiseIrql(SYNCH_LEVEL);
+  KiAcquireSpinLock(SpinLock);
 
   return OldIrql;
 }
@@ -65,8 +63,7 @@ KeReleaseSpinLock (
  *        NewIrql = Irql level before acquiring the spinlock
  */
 {
-   KeReleaseSpinLockFromDpcLevel(SpinLock);
-   KeLowerIrql(NewIrql);
+   KfReleaseSpinLock(SpinLock, NewIrql);
 }
 
 KIRQL FASTCALL
@@ -76,8 +73,10 @@ KfAcquireSpinLock (
 {
    KIRQL OldIrql;
 
-   KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-   KeAcquireSpinLockAtDpcLevel(SpinLock);
+   assert(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+   
+   OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
+   KiAcquireSpinLock(SpinLock);
 
    return OldIrql;
 }
@@ -94,8 +93,9 @@ KfReleaseSpinLock (
  *        NewIrql = Irql level before acquiring the spinlock
  */
 {
-   KeReleaseSpinLockFromDpcLevel(SpinLock);
-   KeLowerIrql(NewIrql);
+   assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
+   KiReleaseSpinLock(SpinLock);
+   KfLowerIrql(NewIrql);
 }
 
 /* EOF */
