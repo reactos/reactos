@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.23 2002/04/19 10:10:29 ekohl Exp $
+/* $Id: fs.c,v 1.24 2002/04/19 20:27:20 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/io.h>
+#include <internal/ps.h>
 #include <internal/pool.h>
 
 #define NDEBUG
