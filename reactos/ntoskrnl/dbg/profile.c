@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: profile.c,v 1.1 2003/01/15 19:58:07 chorns Exp $
+/* $Id: profile.c,v 1.2 2003/01/16 19:51:20 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/profile.c
@@ -364,7 +364,7 @@ KdbProfilerAnalyzeSamples()
   return STATUS_SUCCESS;
 }
 
-NTSTATUS
+NTSTATUS STDCALL
 KdbProfilerThreadMain(PVOID Context)
 {
   for (;;)
