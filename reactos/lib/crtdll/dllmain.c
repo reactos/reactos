@@ -22,7 +22,7 @@
 
 #include "precomp.h"
 #include <msvcrt/internal/tls.h>
-#include <msvcrt/stdlib.h>
+#include <stdlib.h>
 #include <msvcrt/wine/msvcrt.h>
 #include <sys/stat.h>
 

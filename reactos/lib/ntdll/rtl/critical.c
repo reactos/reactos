@@ -148,6 +148,13 @@ RtlEnterCriticalSection(
             CriticalSection->RecursionCount++;
             return STATUS_SUCCESS;
         }
+        else if (CriticalSection->OwningThread == (HANDLE)0)
+        {
+            /* No one else owns it either! */
+            DPRINT1("Critical section not initialized (guess)!\n");
+            /* FIXME: raise exception */
+            return STATUS_INVALID_PARAMETER;            
+        }
         
         /* We don't own it, so we must wait for it */
         RtlpWaitForCriticalSection(CriticalSection);
@@ -293,7 +300,16 @@ NTSTATUS
 STDCALL
 RtlLeaveCriticalSection(
     PRTL_CRITICAL_SECTION CriticalSection)
-{     
+{   
+    HANDLE Thread = (HANDLE)NtCurrentTeb()->Cid.UniqueThread;
+    
+    if (Thread != CriticalSection->OwningThread)
+    {
+       DPRINT1("Releasing critical section not owned!\n");
+       /* FIXME: raise exception */
+       return STATUS_INVALID_PARAMETER;
+    }
+   
     /* Decrease the Recursion Count */    
     if (--CriticalSection->RecursionCount) {
     

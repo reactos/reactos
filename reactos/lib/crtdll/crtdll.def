@@ -145,7 +145,7 @@ _findnext
 _finite
 _flsbuf
 _flushall
-_fmode_dll=__fmode DATA
+_fmode_dll=_fmode DATA
 _fpclass
 _fpieee_flt
 _fpreset
