@@ -1,4 +1,4 @@
-/* $Id: priv.c,v 1.2 2002/02/20 20:15:38 ekohl Exp $
+/* $Id: priv.c,v 1.3 2002/02/22 13:36:24 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -274,8 +274,8 @@ SePrivilegeCheck(PPRIVILEGE_SET Privileges,
 }
 
 BOOLEAN STDCALL
-SeSinglePrivilegeCheck(LUID PrivilegeValue,
-		       KPROCESSOR_MODE PreviousMode)
+SeSinglePrivilegeCheck(IN LUID PrivilegeValue,
+		       IN KPROCESSOR_MODE PreviousMode)
 {
    SECURITY_SUBJECT_CONTEXT SubjectContext;
    BOOLEAN r;

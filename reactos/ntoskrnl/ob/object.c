@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.42 2002/02/19 00:09:25 ekohl Exp $
+/* $Id: object.c,v 1.43 2002/02/22 13:35:50 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -444,6 +444,7 @@ NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header)
    return(STATUS_SUCCESS);
 }
 
+
 ULONG ObGetReferenceCount(PVOID ObjectBody)
 {
    POBJECT_HEADER Header = BODY_TO_HEADER(ObjectBody);
@@ -518,6 +519,18 @@ VOID FASTCALL ObfDereferenceObject (PVOID Object)
    Header->RefCount--;
    
    ObPerformRetentionChecks(Header);
+}
+
+
+ULONG STDCALL
+ObGetObjectPointerCount(PVOID Object)
+{
+  POBJECT_HEADER Header;
+
+  assert(Object);
+  Header = BODY_TO_HEADER(Object);
+
+  return(Header->RefCount);
 }
 
 /* EOF */

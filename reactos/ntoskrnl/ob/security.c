@@ -17,11 +17,12 @@
 
 /* FUNCTIONS ***************************************************************/
 
-NTSTATUS STDCALL NtQuerySecurityObject(IN HANDLE ObjectHandle,
-				       IN CINT SecurityObjectInformationClass,
-				       OUT PVOID SecurityObjectInformation,
-				       IN ULONG	Length,
-				       OUT PULONG ReturnLength)
+NTSTATUS STDCALL
+NtQuerySecurityObject(IN HANDLE ObjectHandle,
+		      IN CINT SecurityObjectInformationClass,
+		      OUT PVOID SecurityObjectInformation,
+		      IN ULONG Length,
+		      OUT PULONG ReturnLength)
 {
    NTSTATUS Status;
    PVOID Object;
@@ -43,10 +44,10 @@ NTSTATUS STDCALL NtQuerySecurityObject(IN HANDLE ObjectHandle,
    if (Header->ObjectType != NULL &&
        Header->ObjectType->Security != NULL)
      {
-	Status = Header->ObjectType->Security(Object, 
+	Status = Header->ObjectType->Security(Object,
 					      SecurityObjectInformationClass,
 					      SecurityObjectInformation,
-					      &Length);     
+					      &Length);
 	*ReturnLength = Length;
      }
    else
@@ -58,15 +59,12 @@ NTSTATUS STDCALL NtQuerySecurityObject(IN HANDLE ObjectHandle,
 }
 
 
-NTSTATUS
-STDCALL
-NtSetSecurityObject(
-	IN	HANDLE			Handle, 
-	IN	SECURITY_INFORMATION	SecurityInformation, 
-	IN	PSECURITY_DESCRIPTOR	SecurityDescriptor 
-	)
+NTSTATUS STDCALL
+NtSetSecurityObject(IN HANDLE Handle,
+		    IN SECURITY_INFORMATION SecurityInformation,
+		    IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 

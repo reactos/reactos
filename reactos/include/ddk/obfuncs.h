@@ -19,6 +19,9 @@ ObfReferenceObject(IN PVOID Object);
 #define ObReferenceObject(Object) \
   ObfReferenceObject(Object)
 
+ULONG STDCALL
+ObGetObjectPointerCount(IN PVOID Object);
+
 NTSTATUS STDCALL
 ObInsertObject(PVOID Object,
 	       PACCESS_STATE PassedAccessState,

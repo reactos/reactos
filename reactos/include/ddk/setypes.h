@@ -1,4 +1,4 @@
-/* $Id: setypes.h,v 1.6 2002/02/20 20:09:52 ekohl Exp $
+/* $Id: setypes.h,v 1.7 2002/02/22 13:34:36 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory for details
  * PROJECT:           ReactOS kernel
@@ -154,6 +154,10 @@ typedef struct _SE_EXPORTS
   PSID SeAliasPrintOpsSid;
   PSID SeAliasBackupOpsSid;
 } SE_EXPORTS, *PSE_EXPORTS;
+
+
+typedef NTSTATUS STDCALL
+(*PSE_LOGON_SESSION_TERMINATED_ROUTINE)(IN PLUID LogonId);
 
 #endif
 

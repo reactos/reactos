@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.13 2002/02/20 20:15:38 ekohl Exp $
+/* $Id: token.c,v 1.14 2002/02/22 13:36:24 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -626,6 +626,14 @@ NtCreateToken(OUT PHANDLE TokenHandle,
 #endif
      UNIMPLEMENTED;
 }
+
+
+SECURITY_IMPERSONATION_LEVEL STDCALL
+SeTokenImpersonationLevel(IN PACCESS_TOKEN Token)
+{
+  return(Token->ImpersonationLevel);
+}
+
 
 TOKEN_TYPE STDCALL
 SeTokenType(IN PACCESS_TOKEN Token)
