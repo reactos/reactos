@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: setup.c,v 1.2 2003/12/01 18:21:04 weiden Exp $
+/* $Id: setup.c,v 1.3 2004/06/04 23:46:02 navaraf Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS winlogon
  * FILE:            subsys/system/winlogon/setup.h
@@ -112,6 +112,7 @@ RunSetup (VOID)
 {
   PROCESS_INFORMATION ProcessInformation;
   STARTUPINFO StartupInfo;
+  WCHAR Shell[MAX_PATH];
   WCHAR CommandLine[MAX_PATH];
   BOOLEAN Result;
   DWORD dwError;
@@ -122,30 +123,43 @@ RunSetup (VOID)
 
   DPRINT ("RunSetup() called\n");
 
-  dwError = RegOpenKeyEx (HKEY_LOCAL_MACHINE,
-			  L"SYSTEM\\Setup",
-			  0,
-			  KEY_QUERY_VALUE,
-			  &hKey);
+  dwError = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
+			   L"SYSTEM\\Setup",
+			   0,
+			   KEY_QUERY_VALUE,
+			   &hKey);
   if (dwError != ERROR_SUCCESS)
     {
       return FALSE;
     }
 
   dwSize = MAX_PATH;
-  dwError = RegQueryValueEx (hKey,
-			     L"CmdLine",
-			     NULL,
-			     &dwType,
-			     (LPBYTE)CommandLine,
-			     &dwSize);
+  dwError = RegQueryValueExW (hKey,
+			      L"CmdLine",
+			      NULL,
+			      &dwType,
+			      (LPBYTE)Shell,
+			      &dwSize);
   RegCloseKey (hKey);
-  if (dwError != ERROR_SUCCESS || dwType != REG_SZ)
+  if (dwError != ERROR_SUCCESS)
     {
       return FALSE;
     }
 
-  DPRINT ("Winlogon: Should run '%s' now.\n", CommandLine);
+  if (dwType == REG_EXPAND_SZ)
+    {
+      ExpandEnvironmentStringsW(Shell, CommandLine, MAX_PATH);
+    }
+  else if (dwType == REG_SZ)
+    {
+      wcscpy(CommandLine, Shell);
+    }
+  else
+    {
+      return FALSE;
+    }
+
+  DPRINT ("Winlogon: Should run '%S' now.\n", CommandLine);
 
   StartupInfo.cb = sizeof(StartupInfo);
   StartupInfo.lpReserved = NULL;
@@ -157,16 +171,16 @@ RunSetup (VOID)
 
   DPRINT ("Winlogon: Creating new setup process\n");
 
-  Result = CreateProcess (NULL,
-			  CommandLine,
-			  NULL,
-			  NULL,
-			  FALSE,
-			  DETACHED_PROCESS,
-			  NULL,
-			  NULL,
-			  &StartupInfo,
-			  &ProcessInformation);
+  Result = CreateProcessW (NULL,
+			   CommandLine,
+			   NULL,
+			   NULL,
+			   FALSE,
+			   DETACHED_PROCESS,
+			   NULL,
+			   NULL,
+			   &StartupInfo,
+			   &ProcessInformation);
   if (!Result)
     {
       DPRINT ("Winlogon: Failed to run setup process\n");
