@@ -76,6 +76,7 @@ typedef enum _PAGE_NUMBER
 
   SUCCESS_PAGE,
   QUIT_PAGE,
+  FLUSH_PAGE,
   REBOOT_PAGE,			/* virtual page */
 } PAGE_NUMBER, *PPAGE_NUMBER;
 
@@ -3368,7 +3369,7 @@ QuitPage(PINPUT_RECORD Ir)
 
       if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-	  return(REBOOT_PAGE);
+	  return(FLUSH_PAGE);
 	}
     }
 }
@@ -3388,7 +3389,7 @@ SuccessPage(PINPUT_RECORD Ir)
 
   if (IsUnattendedSetup)
     {
-      return(REBOOT_PAGE);
+      return(FLUSH_PAGE);
     }
 
   while(TRUE)
@@ -3397,9 +3398,23 @@ SuccessPage(PINPUT_RECORD Ir)
 
       if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-	  return(REBOOT_PAGE);
+	  return(FLUSH_PAGE);
 	}
     }
+}
+
+
+static PAGE_NUMBER
+FlushPage(PINPUT_RECORD Ir)
+{
+  SetTextXY(10, 6, "The system is now making sure all data is stored on your disk");
+
+  SetTextXY(10, 8, "This may take a minute");
+  SetTextXY(10, 9, "When finished, your computer will reboot automatically");
+
+  SetStatusText("   Flushing cache");
+
+  return(REBOOT_PAGE);
 }
 
 
@@ -3531,6 +3546,10 @@ NtProcessStartup(PPEB Peb)
 
 	  case SUCCESS_PAGE:
 	    Page = SuccessPage(&Ir);
+	    break;
+
+	  case FLUSH_PAGE:
+	    Page = FlushPage(&Ir);
 	    break;
 
 	  case QUIT_PAGE:
