@@ -1,6 +1,6 @@
-; $Id: advapi32.edf,v 1.15 2001/11/22 02:37:05 ekohl Exp $
+; $Id: advapi32.edf,v 1.16 2002/08/17 15:57:22 robd Exp $
 ;
-; advapi32.def
+; advapi32.edf
 ;
 ; ReactOS Operating System
 ;
