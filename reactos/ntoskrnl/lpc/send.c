@@ -1,4 +1,4 @@
-/* $Id: send.c,v 1.6 2001/11/25 15:21:10 dwelch Exp $
+/* $Id: send.c,v 1.7 2001/12/01 20:57:23 phreak Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -195,7 +195,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
    USHORT LpcRequestMessageSize;
 
    DPRINT("NtRequestWaitReplyPort(PortHandle %x, LpcRequest %x, "
-	  "LpcReply %x)\n", PortHandle, LpcRequest, LpcReply);
+	  "LpcReply %x)\n", PortHandle, UnsafeLpcRequest, UnsafeLpcReply);
 
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS, 
