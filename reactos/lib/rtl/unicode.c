@@ -2671,4 +2671,33 @@ RtlpDuplicateUnicodeString(
    return STATUS_SUCCESS;
 }
 
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlValidateUnicodeString(IN ULONG Flags,
+                         IN PUNICODE_STRING UnicodeString)
+{
+  /* currently no flags are supported! */
+  ASSERT(Flags == 0);
+  
+  if ((Flags == 0) &&
+      ((UnicodeString == NULL) ||
+       ((UnicodeString->Length != 0) &&
+        (UnicodeString->Buffer != NULL) &&
+        ((UnicodeString->Length % sizeof(WCHAR)) == 0) &&
+        ((UnicodeString->MaximumLength % sizeof(WCHAR)) == 0) &&
+        (UnicodeString->MaximumLength >= UnicodeString->Length))))
+  {
+    /* a NULL pointer as a unicode string is considered to be a valid unicode
+       string! */
+    return STATUS_SUCCESS;
+  }
+  else
+  {
+    return STATUS_INVALID_PARAMETER;
+  }
+}
+
 /* EOF */
