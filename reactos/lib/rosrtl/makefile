@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.7 2003/07/21 04:56:32 royce Exp $
+# $Id: makefile,v 1.8 2003/07/22 20:10:04 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -11,7 +11,6 @@ TARGET_LFLAGS = -nostartfiles -nostdlib
 TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
 
 THREAD_OBJECTS = \
- thread/context.o \
  thread/create.o \
  thread/stack.o
 
@@ -19,6 +18,16 @@ MISC_OBJECTS = \
  misc/devmode.o \
  misc/logfont.o \
  misc/qsort.o
+
+include $(PATH_TO_TOP)/config
+
+include makefile.$(ARCH)
+
+TARGET_TYPE = library
+
+TARGET_NAME = rosrtl
+
+TARGET_CFLAGS = -Wall -Werror
 
 TARGET_OBJECTS = $(THREAD_OBJECTS) $(MISC_OBJECTS)
  

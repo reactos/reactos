@@ -1,4 +1,4 @@
-/* $Id: stack.c,v 1.2 2003/06/01 14:59:02 chorns Exp $
+/* $Id: stack.c,v 1.3 2003/07/22 20:10:04 hyperion Exp $
 */
 /*
 */
@@ -8,6 +8,8 @@
 
 #define NDEBUG
 #include <ntdll/ntdll.h>
+
+#include <rosrtl/thread.h>
 
 NTSTATUS NTAPI RtlRosCreateStack
 (
@@ -22,15 +24,13 @@ NTSTATUS NTAPI RtlRosCreateStack
  ULONG_PTR nStackReserve = 0x100000;
  /* FIXME: when we finally have exception handling, make this PAGE_SIZE */
  ULONG_PTR nStackCommit = 0x100000;
- PVOID pStackLowest;
- ULONG_PTR nSize = 0;
  NTSTATUS nErrCode;
 
  if(StackReserve == NULL) StackReserve = &nStackReserve;
- else ROUNDUP(*StackReserve, PAGE_SIZE);
+ else *StackReserve = ROUNDUP(*StackReserve, PAGE_SIZE);
 
  if(StackCommit == NULL) StackCommit = &nStackCommit;
- else ROUNDUP(*StackCommit, PAGE_SIZE);
+ else *StackCommit = ROUNDUP(*StackCommit, PAGE_SIZE);
 
 #if 0
  /* the stack commit size must be equal to or less than the reserve size */
@@ -181,6 +181,37 @@ NTSTATUS NTAPI RtlRosDeleteStack
  if(pStackLowest != NULL)
   return NtFreeVirtualMemory(ProcessHandle, &pStackLowest, &nSize, MEM_RELEASE);
 
+ return STATUS_SUCCESS;
+}
+
+
+NTSTATUS NTAPI RtlpRosGetStackLimits
+(
+ IN PUSER_STACK UserStack,
+ OUT PVOID * StackBase,
+ OUT PVOID * StackLimit
+)
+{
+ /* fixed-size stack */
+ if(UserStack->FixedStackBase && UserStack->FixedStackLimit)
+ {
+  *StackBase = UserStack->FixedStackBase;
+  *StackLimit = UserStack->FixedStackLimit;
+ }
+ /* expandable stack */
+ else if(UserStack->ExpandableStackBase && UserStack->ExpandableStackLimit)
+ {
+  *StackBase = UserStack->ExpandableStackBase;
+  *StackLimit = UserStack->ExpandableStackLimit;
+ }
+ /* can't determine the type of stack: failure */
+ else
+ {
+  DPRINT("Invalid user-mode stack\n");
+  return STATUS_BAD_INITIAL_STACK;
+ }
+
+ /* valid stack */
  return STATUS_SUCCESS;
 }
 

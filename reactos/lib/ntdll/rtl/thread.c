@@ -51,7 +51,7 @@ NTSTATUS STDCALL RtlCreateUserThread
   SecurityDescriptor
  );
  
- return RtlRosCreateUserThreadEx
+ return RtlRosCreateUserThread
  (
   ProcessHandle,
   &oaThreadAttribs,
@@ -76,7 +76,7 @@ NTSTATUS STDCALL RtlInitializeContext
  PUSER_STACK UserStack
 )
 {
- return RtlRosInitializeContextEx
+ return RtlRosInitializeContext
  (
   ProcessHandle,
   Context,

@@ -1,4 +1,4 @@
-/* $Id: fiber.c,v 1.6 2003/07/10 18:50:51 chorns Exp $
+/* $Id: fiber.c,v 1.7 2003/07/22 20:10:04 hyperion Exp $
  *
  * FILE: lib/kernel32/thread/fiber.c
  *
@@ -179,7 +179,7 @@ LPVOID WINAPI CreateFiberEx
  if(!NT_SUCCESS(nErrCode)) goto l_CleanupFiber;
 
  /* initialize the context for the fiber */
- nErrCode = RtlRosInitializeContextEx
+ nErrCode = RtlRosInitializeContext
  (
   NtCurrentProcess(),
   &ctxFiberContext,

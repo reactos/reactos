@@ -1,19 +1,19 @@
-/* $Id: context.c,v 1.3 2003/06/01 14:59:02 chorns Exp $
+/* $Id: context.c,v 1.1 2003/07/22 20:10:04 hyperion Exp $
 */
 /*
 */
 
+#include <string.h>
+
 #define NTOS_MODE_USER
 #include <ntos.h>
 
-#if defined(_M_IX86)
 #include <napi/i386/segment.h>
 #include <napi/i386/floatsave.h>
-#else
-#error Unsupported architecture
-#endif
 
-NTSTATUS NTAPI RtlRosInitializeContextEx
+#include <rosrtl/thread.h>
+
+NTSTATUS NTAPI RtlRosInitializeContext
 (
  IN HANDLE ProcessHandle,
  OUT PCONTEXT Context,
@@ -23,35 +23,27 @@ NTSTATUS NTAPI RtlRosInitializeContextEx
  IN ULONG_PTR * Parameters
 )
 {
+ static PVOID s_pRetAddr = (PVOID)0xDEADBEEF;
+
  ULONG nDummy;
- PCHAR pStackBase;
- PCHAR pStackLimit;
- ULONG_PTR nRetAddr = 0xDEADBEEF;
  SIZE_T nParamsSize = ParameterCount * sizeof(ULONG_PTR);
  NTSTATUS nErrCode;
+ PVOID pStackBase;
+ PVOID pStackLimit;
 
- /* fixed-size stack */
- if(UserStack->FixedStackBase && UserStack->FixedStackLimit)
- {
-  pStackBase = UserStack->FixedStackBase;
-  pStackLimit = UserStack->FixedStackLimit;
- }
- /* expandable stack */
- else if(UserStack->ExpandableStackBase && UserStack->ExpandableStackLimit)
- {
-  pStackBase = UserStack->ExpandableStackBase;
-  pStackLimit = UserStack->ExpandableStackLimit;
- }
- /* bad initial stack */
- else
-  return STATUS_BAD_INITIAL_STACK;
+ /* Intel x86: linear top-down stack, all parameters passed on the stack */
+ /* get the stack base and limit */
+ nErrCode = RtlpRosGetStackLimits(UserStack, &pStackBase, &pStackLimit);
 
- /* stack base lower than the limit */
- if(pStackBase <= pStackLimit)
-  return STATUS_BAD_INITIAL_STACK;
+ /* failure */
+ if(!NT_SUCCESS(nErrCode)) return nErrCode;
 
-#if defined(_M_IX86)
- /* Intel x86: all parameters passed on the stack */
+ /* validate the stack */
+ nErrCode = RtlpRosValidateTopDownUserStack(pStackBase, pStackLimit);
+
+ /* failure */
+ if(!NT_SUCCESS(nErrCode)) return nErrCode;
+
  /* too many parameters */
  if((nParamsSize + sizeof(ULONG_PTR)) > (SIZE_T)(pStackBase - pStackLimit))
   return STATUS_STACK_OVERFLOW;
@@ -92,14 +84,10 @@ NTSTATUS NTAPI RtlRosInitializeContextEx
  (
   ProcessHandle,
   ((PUCHAR)pStackBase) - (nParamsSize + sizeof(ULONG_PTR)),
-  &nRetAddr,
-  sizeof(ULONG_PTR),
+  &s_pRetAddr,
+  sizeof(s_pRetAddr),
   &nDummy
  );
-
-#else
-#error Unsupported architecture
-#endif
 }
 
 /* EOF */

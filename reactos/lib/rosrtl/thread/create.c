@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.3 2003/06/01 14:59:02 chorns Exp $
+/* $Id: create.c,v 1.4 2003/07/22 20:10:04 hyperion Exp $
 */
 /*
 */
@@ -10,7 +10,9 @@
 #define NDEBUG
 #include <ntdll/ntdll.h>
 
-NTSTATUS STDCALL RtlRosCreateUserThreadEx
+#include <rosrtl/thread.h>
+
+NTSTATUS STDCALL RtlRosCreateUserThread
 (
  IN HANDLE ProcessHandle,
  IN POBJECT_ATTRIBUTES ObjectAttributes,
@@ -26,7 +28,6 @@ NTSTATUS STDCALL RtlRosCreateUserThreadEx
 )
 {
  USER_STACK usUserStack;
- OBJECT_ATTRIBUTES oaThreadAttribs;
  CONTEXT ctxInitialContext;
  NTSTATUS nErrCode;
  HANDLE hThread;
@@ -49,7 +50,7 @@ NTSTATUS STDCALL RtlRosCreateUserThreadEx
  if(!NT_SUCCESS(nErrCode)) goto l_Fail;
 
  /* initialize the registers and stack for the thread */
- nErrCode = RtlRosInitializeContextEx
+ nErrCode = RtlRosInitializeContext
  (
   ProcessHandle,
   &ctxInitialContext,
@@ -111,8 +112,16 @@ NTSTATUS CDECL RtlRosCreateUserThreadVa
  
  va_start(vaArgs, ParameterCount);
  
- /* FIXME: this code assumes a stack growing downwards */
- nErrCode = RtlRosCreateUserThreadEx
+ /*
+  FIXME: this code makes several non-portable assumptions:
+   - all parameters are passed on the stack
+   - the stack is a contiguous array of cells as large as an ULONG_PTR
+   - the stack grows downwards
+
+  This happens to work on the Intel x86, but is likely to bomb horribly on most
+  other platforms
+ */
+ nErrCode = RtlRosCreateUserThread
  (
   ProcessHandle,
   ObjectAttributes,
