@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.60 2000/06/07 13:04:05 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.61 2000/06/09 20:02:37 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -46,15 +46,11 @@ ExGetCurrentResourceThread=ExGetCurrentResourceThread@0
 ExGetExclusiveWaiterCount=ExGetExclusiveWaiterCount@4
 ;ExGetPreviousMode
 ExGetSharedWaiterCount=ExGetSharedWaiterCount@4
-;FIXME: ExInitializeFastMutex is a macro!
-ExInitializeFastMutex=ExInitializeFastMutex@4
 ExInitializeNPagedLookasideList=ExInitializeNPagedLookasideList@28
 ExInitializePagedLookasideList=ExInitializePagedLookasideList@28
 ExInitializeResource=ExInitializeResource@4
 ExInitializeResourceLite=ExInitializeResourceLite@4
 ExInitializeSListHead=ExInitializeSListHead@4
-;FIXME: ExInitializeWorkItem is a macro!
-ExInitializeWorkItem=ExInitializeWorkItem@12
 ExInitializeZone=ExInitializeZone@16
 ExInterlockedAddLargeInteger=ExInterlockedAddLargeInteger@16
 ;ExInterlockedAddLargeStatistic
@@ -1019,22 +1015,25 @@ KdPortPutByte=KdPortPutByte@4
 KdPortRestore=KdPortRestore@0
 KdPortSave=KdPortSave@0
 KeAcquireSpinLock=KeAcquireSpinLock@8
-;KeAcquireSpinLockRaiseToSynch
+;KeAcquireSpinLockRaiseToSynch=@KeAcquireSpinLockRaiseToSynch@4
+KeAcquireSpinLockRaiseToSynch=KeAcquireSpinLockRaiseToSynch@4
 KeFlushWriteBuffer=KeFlushWriteBuffer@0
 KeGetCurrentIrql=KeGetCurrentIrql@0
 KeLowerIrql=KeLowerIrql@4
 KeQueryPerformanceCounter=KeQueryPerformanceCounter@4
 KeRaiseIrql=KeRaiseIrql@8
-;KeRaiseIrqlToDpcLevel
-;KeRaiseIrqlToSynchLevel
+;KeRaiseIrqlToDpcLevel=KeRaiseIrqlToDpcLevel@0
+;KeRaiseIrqlToSynchLevel=KeRaiseIrqlToSynchLevel@0
 KeReleaseSpinLock=KeReleaseSpinLock@8
 KeStallExecutionProcessor=KeStallExecutionProcessor@4
-;KfAcquireSpinLock
+;KfAcquireSpinLock=@KfAcquireSpinLock@4
+KfAcquireSpinLock=KfAcquireSpinLock@4
 ;KfLowerIrql=@KfLowerIrql@4
 KfLowerIrql=KfLowerIrql@4
 ;KfRaiseIrql=@KfRaiseIrql@4
 KfRaiseIrql=KfRaiseIrql@4
-;KfReleaseSpinLock
+;KfReleaseSpinLock=@KfReleaseSpinLock@8
+KfReleaseSpinLock=KfReleaseSpinLock@8
 READ_PORT_BUFFER_UCHAR=READ_PORT_BUFFER_UCHAR@12
 READ_PORT_BUFFER_ULONG=READ_PORT_BUFFER_ULONG@12
 READ_PORT_BUFFER_USHORT=READ_PORT_BUFFER_USHORT@12

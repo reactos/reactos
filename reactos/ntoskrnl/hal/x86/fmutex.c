@@ -1,12 +1,13 @@
-/* $Id: fmutex.c,v 1.6 2000/06/09 20:02:59 ekohl Exp $
+/* $Id: fmutex.c,v 1.1 2000/06/09 20:05:00 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ex/fmutex.c
+ * FILE:            ntoskrnl/hal/x86/fmutex.c
  * PURPOSE:         Implements fast mutexes
  * PROGRAMMER:      David Welch (welch@cwcom.net)
+ *                  Eric Kohl (ekohl@rz-online.de)
  * UPDATE HISTORY:
- *                  Created 22/05/98
+ *                  Created 09/06/2000
  */
 
 /* INCLUDES *****************************************************************/
@@ -15,16 +16,16 @@
 
 #include <internal/debug.h>
 
-
 /* FUNCTIONS *****************************************************************/
 
 VOID
 FASTCALL
 EXPORTED
-ExAcquireFastMutexUnsafe (
+ExAcquireFastMutex (
 	PFAST_MUTEX	FastMutex
 	)
 {
+   KeEnterCriticalRegion();
    if (InterlockedDecrement(&(FastMutex->Count))==0)
      {
 	return;
@@ -38,10 +39,11 @@ ExAcquireFastMutexUnsafe (
    FastMutex->Owner=KeGetCurrentThread();
 }
 
+
 VOID
 FASTCALL
 EXPORTED
-ExReleaseFastMutexUnsafe (
+ExReleaseFastMutex (
 	PFAST_MUTEX	FastMutex
 	)
 {
@@ -52,6 +54,19 @@ ExReleaseFastMutexUnsafe (
 	return;
      }
    KeSetEvent(&(FastMutex->Event),0,FALSE);
+
+   KeLeaveCriticalRegion();
+}
+
+
+BOOLEAN
+FASTCALL
+EXPORTED
+ExTryToAcquireFastMutex (
+	PFAST_MUTEX	FastMutex
+	)
+{
+   UNIMPLEMENTED;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.28 2000/06/04 19:50:12 ekohl Exp $
+/* $Id: timer.c,v 1.29 2000/06/09 20:07:20 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -169,28 +169,6 @@ KeDelayExecutionThread (
 				 KernelMode,
 				 Alertable,
 				 NULL));
-}
-
-LARGE_INTEGER
-STDCALL
-KeQueryPerformanceCounter (
-	PLARGE_INTEGER	PerformanceFreq
-	)
-/*
- * FUNCTION: Queries the finest grained running count avaiable in the system
- * ARGUMENTS:
- *         PerformanceFreq (OUT) = The routine stores the number of 
- *                                 performance counters tick per second here
- * RETURNS: The performance counter value in HERTZ
- * NOTE: Returns the system tick count or the time-stamp on the pentium
- */
-{
-  if (PerformanceFreq != NULL)
-    {
-      PerformanceFreq->QuadPart = 0;
-    }
-
-  return *PerformanceFreq;
 }
 
 ULONG

@@ -6,6 +6,7 @@ OBJECTS_HAL = \
 	hal/x86/display.o \
 	hal/x86/dma.o \
 	hal/x86/drive.o \
+	hal/x86/fmutex.o \
 	hal/x86/halinit.o \
 	hal/x86/irq.o \
 	hal/x86/irqhand.o \
@@ -17,8 +18,10 @@ OBJECTS_HAL = \
 	hal/x86/mp.o \
 	hal/x86/parttab.o \
 	hal/x86/pci.o \
+	hal/x86/perfcnt.o \
 	hal/x86/portio.o \
 	hal/x86/reboot.o \
+	hal/x86/spinlock.o \
 	hal/x86/sysbus.o \
 	hal/x86/sysinfo.o \
 	hal/x86/time.o \

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.11 2000/05/13 14:56:46 ea Exp $ */
+/* $Id: iofuncs.h,v 1.12 2000/06/09 20:02:05 ekohl Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -185,11 +185,28 @@ PMDL
 STDCALL
 IoAllocateMdl (
 	PVOID	VirtualAddress,
-	ULONG	Length, 
+	ULONG	Length,
 	BOOLEAN	SecondaryBuffer,
 	BOOLEAN	ChargeQuota,
 	PIRP	Irp
 	);
+
+/*
+ * FUNCTION: Creates a symbolic link between the ARC name of a physical
+ * device and the name of the corresponding device object
+ * ARGUMENTS:
+ *        ArcName = ARC name of the device
+ *        DeviceName = Name of the device object
+ * NOTES:
+ *	VOID
+ *	IoAssignArcName (
+ *		PUNICODE_STRING	ArcName,
+ *		PUNICODE_STRING	DeviceName
+ *		);
+ */
+#define IoAssignArcName (ArcName, DeviceName) \
+	(IoCreateSymbolicLink ((ArcName), (DeviceName)))
+
 /**********************************************************************
  * NAME							EXPORTED
  * 	IoAssignResources@24
@@ -485,6 +502,24 @@ IoCreateUnprotectedSymbolicLink (
 	PUNICODE_STRING	SymbolicLinkName,
 	PUNICODE_STRING	DeviceName
 	);
+
+/*
+ * FUNCTION:
+ *	Deletes a symbolic link between the ARC name of a physical
+ *	device and the name of the corresponding device object
+ *
+ * ARGUMENTS:
+ *	ArcName = ARC name of the device
+ *
+ * NOTES:
+ *	VOID
+ *	IoDeassignArcName (
+ *		PUNICODE_STRING	ArcName
+ *		);
+ */
+#define IoDeassignArcName(ArcName) \
+	IoDeleteSymbolicLink((ArcName))
+
 VOID
 STDCALL
 IoDeleteController (
@@ -1012,22 +1047,6 @@ IoWritePartitionTable (
 //NTSTATUS IoWMIRegistrationControl(DeviceObject, WMIREGACTION Action);
  
 
-/*
- * FUNCTION: Creates a symbolic link between the ARC name of a physical
- * device and the name of the corresponding device object
- * ARGUMENTS:
- *        ArcName = ARC name of the device
- *        DeviceName = Name of the device object
- */
-VOID
-IoAssignArcName (
-	PUNICODE_STRING	ArcName,
-	PUNICODE_STRING	DeviceName
-	);
-VOID
-IoDeassignArcName (
-	PUNICODE_STRING	ArcName
-	);
 /*
  * FUNCTION: Returns a pointer to the callers
  * stack location in the irp 

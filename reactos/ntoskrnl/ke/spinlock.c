@@ -1,4 +1,5 @@
-/*
+/* $Id: spinlock.c,v 1.4 2000/06/09 20:07:20 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/spinlock.c
@@ -108,37 +109,4 @@ KeReleaseSpinLockFromDpcLevel (
    (void)InterlockedExchange(&SpinLock->Lock, 0);
 }
 
-VOID
-STDCALL
-KeAcquireSpinLock (
-	PKSPIN_LOCK	SpinLock,
-	PKIRQL		OldIrql
-	)
-/*
- * FUNCTION: Acquires a spinlock
- * ARGUMENTS:
- *         SpinLock = Spinlock to acquire
- *         OldIrql (OUT) = Caller supplied storage for the previous irql
- */
-{
-   KeRaiseIrql(DISPATCH_LEVEL,OldIrql);
-   KeAcquireSpinLockAtDpcLevel(SpinLock);
-}
-
-VOID
-STDCALL
-KeReleaseSpinLock (
-	PKSPIN_LOCK	SpinLock,
-	KIRQL		NewIrql
-	)
-/*
- * FUNCTION: Releases a spinlock
- * ARGUMENTS:
- *        SpinLock = Spinlock to release
- *        NewIrql = Irql level before acquiring the spinlock
- */
-{
-   KeReleaseSpinLockFromDpcLevel(SpinLock);
-   KeLowerIrql(NewIrql);
-}
-
+/* EOF */

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.73 2000/06/07 13:04:05 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.74 2000/06/09 20:02:37 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -46,15 +46,12 @@ ExGetCurrentResourceThread@0
 ExGetExclusiveWaiterCount@4
 ;ExGetPreviousMode
 ExGetSharedWaiterCount@4
-;FIXME: ExInitializeFastMutex is a macro!
-ExInitializeFastMutex@4
 ExInitializeNPagedLookasideList
 ExInitializePagedLookasideList
 ExInitializeResource@4
 ExInitializeResourceLite@4
+;FIXME: ExInitializeSListHead is a macro!
 ExInitializeSListHead@4
-;FIXME: ExInitializeWorkItem is a macro!
-ExInitializeWorkItem@12
 ExInitializeZone@16
 ExInterlockedAddLargeInteger@16
 ;ExInterlockedAddLargeStatistic
@@ -1089,22 +1086,25 @@ KdPortPutByte@4
 KdPortRestore@0
 KdPortSave@0
 KeAcquireSpinLock@8
-;KeAcquireSpinLockRaiseToSynch
+;@KeAcquireSpinLockRaiseToSynch@4
+KeAcquireSpinLockRaiseToSynch@4
 KeFlushWriteBuffer@0
 KeGetCurrentIrql@0
 KeLowerIrql@4
 KeQueryPerformanceCounter@4
 KeRaiseIrql@8
-;KeRaiseIrqlToDpcLevel
-;KeRaiseIrqlToSynchLevel
+;KeRaiseIrqlToDpcLevel@0
+;KeRaiseIrqlToSynchLevel@0
 KeReleaseSpinLock@8
 KeStallExecutionProcessor@4
-;KfAcquireSpinLock
+;@KfAcquireSpinLock@4
+KfAcquireSpinLock@4
 ;@KfLowerIrql@4
 KfLowerIrql@4
 ;@KfRaiseIrql@4
 KfRaiseIrql@4
-;KfReleaseSpinLock
+;@KfReleaseSpinLock@8
+KfReleaseSpinLock@8
 READ_PORT_BUFFER_UCHAR@12
 READ_PORT_BUFFER_ULONG@12
 READ_PORT_BUFFER_USHORT@12

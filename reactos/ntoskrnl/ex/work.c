@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.5 2000/06/07 13:04:34 ekohl Exp $
+/* $Id: work.c,v 1.6 2000/06/09 20:02:59 ekohl Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -135,6 +135,7 @@ VOID ExInitializeWorkerThreads(VOID)
 			 HIGH_PRIORITY);
 }
 
+#if 0
 VOID
 STDCALL
 ExInitializeWorkItem (
@@ -158,6 +159,7 @@ ExInitializeWorkItem (
    Item->Entry.Flink = NULL;
    Item->Entry.Blink = NULL;
 }
+#endif
 
 VOID
 STDCALL

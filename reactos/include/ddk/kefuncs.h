@@ -76,9 +76,14 @@ KeClearEvent (
 	PKEVENT	Event
 	);
 
-NTSTATUS STDCALL KeDelayExecutionThread (KPROCESSOR_MODE WaitMode,
-					 BOOLEAN Alertable,
-					 PLARGE_INTEGER	Internal);
+NTSTATUS
+STDCALL
+KeDelayExecutionThread (
+	KPROCESSOR_MODE	WaitMode,
+	BOOLEAN		Alertable,
+	PLARGE_INTEGER	Internal
+	);
+
 BOOLEAN
 STDCALL
 KeDeregisterBugCheckCallback (
@@ -556,6 +561,17 @@ KeFlushWriteBuffer (
 	VOID
 	);
 
+KIRQL
+FASTCALL
+KfAcquireSpinLock (
+	IN	PKSPIN_LOCK	SpinLock
+	);
+
+KIRQL
+FASTCALL
+KeAcquireSpinLockRaiseToSynch (
+	IN	PKSPIN_LOCK	SpinLock
+	);
 
 VOID
 FASTCALL
@@ -568,6 +584,13 @@ KIRQL
 FASTCALL
 KfRaiseIrql (
 	IN	KIRQL	NewIrql
+	);
+
+VOID
+FASTCALL
+KfReleaseSpinLock (
+	IN	PKSPIN_LOCK	SpinLock,
+	IN	KIRQL		NewIrql
 	);
 
 #endif /* __INCLUDE_DDK_KEFUNCS_H */

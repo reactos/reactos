@@ -170,13 +170,21 @@ STDCALL
 ExGetSharedWaiterCount (
 	PERESOURCE	Resource
 	);
-/* ReactOS Specific: begin */
-VOID
-FASTCALL
-ExInitializeFastMutex (
-	PFAST_MUTEX	FastMutex
-	);
-/* ReactOS Specific: end */
+
+/*
+ * VOID
+ * ExInitializeFastMutex (
+ * 	PFAST_MUTEX	FastMutex
+ * 	);
+ */
+#define ExInitializeFastMutex(_FastMutex) \
+	(_FastMutex)->Count = 1; \
+	(_FastMutex)->Owner = NULL; \
+	(_FastMutex)->Contention = 0; \
+	KeInitializeEvent(&(_FastMutex)->Event, \
+	                  SynchronizationEvent, \
+	                  FALSE);
+
 VOID
 STDCALL
 ExInitializeNPagedLookasideList (
@@ -214,13 +222,22 @@ STDCALL
 ExInitializeSListHead (
 	PSLIST_HEADER	SListHead
 	);
-VOID
-STDCALL
-ExInitializeWorkItem (
-	PWORK_QUEUE_ITEM	Item,
-	PWORKER_THREAD_ROUTINE	Routine,
-	PVOID			Context
-	);
+
+/*
+ * VOID
+ * ExInitializeWorkItem (
+ *	PWORK_QUEUE_ITEM	Item,
+ *	PWORKER_THREAD_ROUTINE	Routine,
+ *	PVOID			Context
+ *	);
+ */
+#define ExInitializeWorkItem (Item, Routine, Context) \
+	ASSERT_IRQL(DISPATCH_LEVEL); \
+	(Item)->WorkerRoutine = (Routine); \
+	(Item)->Parameter = (Context); \
+	(Item)->List.Flink = NULL; \
+	(Item)->List.Blink = NULL;
+
 NTSTATUS
 STDCALL
 ExInitializeZone (

@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.71 2000/06/04 17:27:35 ea Exp $
+# $Id: makefile_rex,v 1.72 2000/06/09 20:02:37 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -119,7 +119,6 @@ OBJECTS_MM_I386 = \
 # I/O Subsystem (Io)
 OBJECTS_IO = \
 	io/adapter.o \
-	io/arc.o \
 	io/buildirp.o \
 	io/cancel.o \
 	io/cleanup.o \
