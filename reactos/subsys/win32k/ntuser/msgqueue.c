@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.77 2004/03/23 22:24:27 weiden Exp $
+/* $Id: msgqueue.c,v 1.78 2004/03/28 16:21:58 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -385,11 +385,10 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     {
       /* we do not hold more than one WM_MOUSEMOVE message in the queue */
       Window->MessageQueue->MouseMoveMsg->Msg = Message->Msg;
-      if(RemoveWhenFreed)
+      if(RemoveWhenFreed && FromGlobalQueue)
       {
         RemoveEntryList(&Message->ListEntry);
       }
-      ExFreePool(Message);
       *Freed = TRUE;
     }
     else
@@ -403,6 +402,10 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
       *Freed = FALSE;
     }
     IntUnLockHardwareMessageQueue(Window->MessageQueue);
+    if(*Freed)
+    {
+      ExFreePool(Message);
+    }
     KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
     IntReleaseWindowObject(Window);
     return(FALSE);
@@ -420,7 +423,6 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
       {
         RemoveEntryList(&Message->ListEntry);
       }
-      ExFreePool(Message);
       *Freed = TRUE;
     }
     else
@@ -434,6 +436,10 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
       *Freed = FALSE;
     }
     IntUnLockHardwareMessageQueue(Window->MessageQueue);
+    if(*Freed)
+    {
+      ExFreePool(Message);
+    }
     KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
     IntReleaseWindowObject(Window);
     return(FALSE);
