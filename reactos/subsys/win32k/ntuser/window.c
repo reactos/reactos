@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.239 2004/06/20 00:45:37 navaraf Exp $
+/* $Id: window.c,v 1.240 2004/06/20 16:06:05 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1158,7 +1158,7 @@ NtUserBuildHwndList(
     PETHREAD Thread;
     PW32THREAD W32Thread;
     PLIST_ENTRY Current;
-    PWINDOW_OBJECT *Window;
+    PWINDOW_OBJECT Window;
     
     Status = PsLookupThreadByThreadId((PVOID)dwThreadId, &Thread);
     if(!NT_SUCCESS(Status))
@@ -1178,12 +1178,12 @@ NtUserBuildHwndList(
     Current = W32Thread->WindowListHead.Flink;
     while(Current != &(W32Thread->WindowListHead))
     {
-      *Window = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
-      ASSERT(*Window);
+      Window = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
+      ASSERT(Window);
       
-      if(dwCount < nBufSize && pWnd && ((*Window)->Style & WS_CHILD))
+      if(dwCount < nBufSize && pWnd && (Window->Style & WS_CHILD))
       {
-        Status = MmCopyToCaller(pWnd++, &(*Window)->Self, sizeof(HWND));
+        Status = MmCopyToCaller(pWnd++, &Window->Self, sizeof(HWND));
         if(!NT_SUCCESS(Status))
         {
           SetLastNtError(Status);
@@ -1191,7 +1191,7 @@ NtUserBuildHwndList(
         }
       }
       
-      if(!((*Window)->Style & WS_CHILD))
+      if(!(Window->Style & WS_CHILD))
       {
         dwCount++;
       }
