@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.3 2004/07/10 13:11:18 ekohl Exp $
+/* $Id: sid.c,v 1.4 2004/07/12 19:39:29 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -24,8 +24,8 @@
 BOOLEAN STDCALL
 RtlValidSid(IN PSID Sid)
 {
-  if (((Sid->Revision & 0xf) != 1) ||
-      (Sid->SubAuthorityCount > 15))
+  if ((Sid->Revision != SID_REVISION) ||
+      (Sid->SubAuthorityCount > SID_MAX_SUB_AUTHORITIES))
     {
       return FALSE;
     }
@@ -52,7 +52,7 @@ RtlInitializeSid(IN PSID Sid,
                  IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
                  IN UCHAR SubAuthorityCount)
 {
-  Sid->Revision = 1;
+  Sid->Revision = SID_REVISION;
   Sid->SubAuthorityCount = SubAuthorityCount;
   memcpy(&Sid->IdentifierAuthority,
          IdentifierAuthority,
@@ -215,7 +215,7 @@ RtlAllocateAndInitializeSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
   if (pSid == NULL)
     return STATUS_NO_MEMORY;
 
-  pSid->Revision = 1;
+  pSid->Revision = SID_REVISION;
   pSid->SubAuthorityCount = SubAuthorityCount;
   memcpy(&pSid->IdentifierAuthority,
          IdentifierAuthority,
