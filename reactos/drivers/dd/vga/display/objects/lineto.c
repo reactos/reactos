@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.13 2003/08/11 03:35:06 royce Exp $
+ * $Id: lineto.c,v 1.14 2003/08/11 04:02:07 royce Exp $
  */
 
 #include "../vgaddi.h"
@@ -317,7 +317,7 @@ DrvLineTo(SURFOBJ *DestObj,
       xchange = -1;
       deltax = - deltax;
       hx = x2+1;
-      x--;
+      //x--;
     }
   else
     {
@@ -330,7 +330,7 @@ DrvLineTo(SURFOBJ *DestObj,
       ychange = -1;
       deltay = - deltay;
       vy = y2+1;
-      y--;
+      //y--;
     }
   else
     {
