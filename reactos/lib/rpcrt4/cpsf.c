@@ -159,8 +159,9 @@ HRESULT WINAPI NdrDllRegisterProxy(HMODULE hDll,
                                   const CLSID *pclsid)
 {
   LPSTR clsid;
-  char keyname[120], module[120];
+  char keyname[120], module[MAX_PATH];
   HKEY key, subkey;
+  DWORD len;
 
   TRACE("(%p,%p,%s)\n", hDll, pProxyFileList, debugstr_guid(pclsid));
   UuidToStringA((UUID*)pclsid, (unsigned char**)&clsid);
@@ -196,16 +197,18 @@ HRESULT WINAPI NdrDllRegisterProxy(HMODULE hDll,
 
   /* register clsid to point to module */
   snprintf(keyname, sizeof(keyname), "CLSID\\{%s}", clsid);
-  GetModuleFileNameA(hDll, module, sizeof(module));
-  TRACE("registering CLSID %s => %s\n", clsid, module);
-  if (RegCreateKeyExA(HKEY_CLASSES_ROOT, keyname, 0, NULL, 0,
-                      KEY_WRITE, NULL, &key, NULL) == ERROR_SUCCESS) {
-     if (RegCreateKeyExA(key, "InProcServer32", 0, NULL, 0,
-                         KEY_WRITE, NULL, &subkey, NULL) == ERROR_SUCCESS) {
-       RegSetValueExA(subkey, NULL, 0, REG_SZ, module, strlen(module));
-       RegCloseKey(subkey);
-     }
-     RegCloseKey(key);
+  len = GetModuleFileNameA(hDll, module, sizeof(module));
+  if (len && len < sizeof(module)) {
+    TRACE("registering CLSID %s => %s\n", clsid, module);
+    if (RegCreateKeyExA(HKEY_CLASSES_ROOT, keyname, 0, NULL, 0,
+                        KEY_WRITE, NULL, &key, NULL) == ERROR_SUCCESS) {
+      if (RegCreateKeyExA(key, "InProcServer32", 0, NULL, 0,
+                          KEY_WRITE, NULL, &subkey, NULL) == ERROR_SUCCESS) {
+        RegSetValueExA(subkey, NULL, 0, REG_SZ, module, strlen(module));
+        RegCloseKey(subkey);
+      }
+      RegCloseKey(key);
+    }
   }
 
   /* done */
@@ -221,7 +224,8 @@ HRESULT WINAPI NdrDllUnregisterProxy(HMODULE hDll,
                                     const CLSID *pclsid)
 {
   LPSTR clsid;
-  char keyname[120], module[120];
+  char keyname[120], module[MAX_PATH];
+  DWORD len;
 
   TRACE("(%p,%p,%s)\n", hDll, pProxyFileList, debugstr_guid(pclsid));
   UuidToStringA((UUID*)pclsid, (unsigned char**)&clsid);
@@ -246,9 +250,11 @@ HRESULT WINAPI NdrDllUnregisterProxy(HMODULE hDll,
 
   /* unregister clsid */
   snprintf(keyname, sizeof(keyname), "CLSID\\{%s}", clsid);
-  GetModuleFileNameA(hDll, module, sizeof(module));
-  TRACE("unregistering CLSID %s <= %s\n", clsid, module);
-  RegDeleteKeyA(HKEY_CLASSES_ROOT, keyname);
+  len = GetModuleFileNameA(hDll, module, sizeof(module));
+  if (len && len < sizeof(module)) {
+    TRACE("unregistering CLSID %s <= %s\n", clsid, module);
+    RegDeleteKeyA(HKEY_CLASSES_ROOT, keyname);
+  }
 
   /* done */
   RpcStringFreeA((unsigned char**)&clsid);

@@ -172,7 +172,8 @@ HRESULT WINAPI StdProxy_Construct(REFIID riid,
     This->PVtbl = vtbl->Vtbl;
 
   This->lpVtbl = &StdProxy_Vtbl;
-  This->RefCount = 1;
+  /* 1 reference for the proxy and 1 for the object */
+  This->RefCount = 2;
   This->stubless = stubless;
   This->piid = vtbl->header.piid;
   This->pUnkOuter = pUnkOuter;
@@ -189,6 +190,9 @@ HRESULT WINAPI StdProxy_Construct(REFIID riid,
 static void WINAPI StdProxy_Destruct(LPRPCPROXYBUFFER iface)
 {
   ICOM_THIS_MULTI(StdProxyImpl,lpVtbl,iface);
+
+  if (This->pChannel)
+    IRpcProxyBuffer_Disconnect(iface);
 
   IPSFactoryBuffer_Release(This->pPSFactory);
   if (This->thunks) {
@@ -248,6 +252,7 @@ static HRESULT WINAPI StdProxy_Connect(LPRPCPROXYBUFFER iface,
   TRACE("(%p)->Connect(%p)\n",This,pChannel);
 
   This->pChannel = pChannel;
+  IRpcChannelBuffer_AddRef(pChannel);
   return S_OK;
 }
 
@@ -256,6 +261,7 @@ static VOID WINAPI StdProxy_Disconnect(LPRPCPROXYBUFFER iface)
   ICOM_THIS_MULTI(StdProxyImpl,lpVtbl,iface);
   TRACE("(%p)->Disconnect()\n",This);
 
+  IRpcChannelBuffer_Release(This->pChannel);
   This->pChannel = NULL;
 }
 

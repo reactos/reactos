@@ -1121,7 +1121,7 @@ RPC_STATUS WINAPI I_RpcBindingSetAsync( RPC_BINDING_HANDLE Binding, RPC_BLOCKING
 /***********************************************************************
  *             RpcNetworkIsProtseqValidA (RPCRT4.@)
  */
-RPC_STATUS RPC_ENTRY RpcNetworkIsProtseqValidA(unsigned char *protseq) {
+RPC_STATUS WINAPI RpcNetworkIsProtseqValidA(unsigned char *protseq) {
   UNICODE_STRING protseqW;
 
   if (!protseq) return RPC_S_INVALID_RPC_PROTSEQ; /* ? */
@@ -1143,7 +1143,7 @@ RPC_STATUS RPC_ENTRY RpcNetworkIsProtseqValidA(unsigned char *protseq) {
  *   ncalrpc   local-only rpc over LPC (LPC is not really used)
  *   ncacn_np  rpc over named pipes
  */
-RPC_STATUS RPC_ENTRY RpcNetworkIsProtseqValidW(LPWSTR protseq) {
+RPC_STATUS WINAPI RpcNetworkIsProtseqValidW(LPWSTR protseq) {
   static const WCHAR protseqsW[][15] = { 
     {'n','c','a','l','r','p','c',0},
     {'n','c','a','c','n','_','n','p',0}
