@@ -16,6 +16,96 @@
 
 /* FUNCTIONS *****************************************************************/
 
+VOID STDCALL
+KeSetTargetProcessorDpc (IN	PKDPC	Dpc,
+			 IN	CCHAR	Number);
+
+VOID STDCALL
+KiHaltProcessorDpcRoutine(IN PKDPC Dpc,
+			  IN PVOID DeferredContext,
+			  IN PVOID SystemArgument1,
+			  IN PVOID SystemArgument2)
+{
+   if (DeferredContext)
+     {
+       ExFreePool(DeferredContext);
+     }
+   while (TRUE)
+     {
+       KfRaiseIrql(SYNCH_LEVEL);
+       Ke386HaltProcessor();
+     }
+}
+
+VOID STDCALL
+ShutdownThreadMain(PVOID Context)
+{
+   SHUTDOWN_ACTION Action = (SHUTDOWN_ACTION)Context; 
+   LARGE_INTEGER Waittime;
+
+   /* Run the thread on the boot processor */
+   KeSetSystemAffinityThread(1);
+
+   IoShutdownRegisteredDevices();
+   CmShutdownRegistry();
+   IoShutdownRegisteredFileSystems();
+
+   PiShutdownProcessManager();
+   MiShutdownMemoryManager();
+   
+   Waittime.QuadPart = (LONGLONG)-10000000; /* 1sec */
+   KeDelayExecutionThread(KernelMode, FALSE, &Waittime);
+
+   if (Action == ShutdownNoReboot)
+     {
+
+#if 0
+        /* Switch off */
+        HalReturnToFirmware (FIRMWARE_OFF);
+#else
+#ifdef CONFIG_SMP
+        ULONG i;
+	KIRQL OldIrql;
+
+	OldIrql = KeRaiseIrqlToDpcLevel();
+        /* Halt all other processors */
+	for (i = 0; i < KeNumberProcessors; i++)
+	  {
+	    if (i != KeGetCurrentProcessorNumber())
+	      {
+	        PKDPC Dpc = ExAllocatePool(NonPagedPool, sizeof(KDPC));
+		if (Dpc == NULL)
+		  {
+                    KEBUGCHECK(0);
+		  }
+		KeInitializeDpc(Dpc, KiHaltProcessorDpcRoutine, (PVOID)Dpc);
+		KeSetTargetProcessorDpc(Dpc, i);
+		KeInsertQueueDpc(Dpc, NULL, NULL);
+		KiIpiSendRequest(1 << i, IPI_REQUEST_DPC);
+	      }
+	  }
+        KeLowerIrql(OldIrql);
+#endif /* CONFIG_SMP */
+        PopSetSystemPowerState(PowerSystemShutdown);
+
+	CHECKPOINT1;
+
+	KiHaltProcessorDpcRoutine(NULL, NULL, NULL, NULL);
+	/* KiHaltProcessor does never return */
+
+#endif
+     }
+   else if (Action == ShutdownReboot)
+     {
+        HalReturnToFirmware (FIRMWARE_REBOOT);
+     }
+   else
+     {
+        HalReturnToFirmware (FIRMWARE_HALT);
+     }
+}
+
+
 NTSTATUS STDCALL 
 NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 		      IN SYSTEM_POWER_STATE MinSystemState,
@@ -31,6 +121,10 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 NTSTATUS STDCALL 
 NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 {
+   NTSTATUS Status;
+   HANDLE ThreadHandle;
+   PETHREAD ShutdownThread;
+
    static PCH FamousLastWords[] =
      {
        "So long, and thanks for all the fish\n",
@@ -84,42 +178,41 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
    ZwQuerySystemTime(&Now);
    Now.u.LowPart = Now.u.LowPart >> 8; /* Seems to give a somewhat better "random" number */
 
-   IoShutdownRegisteredDevices();
-   CmShutdownRegistry();
-   IoShutdownRegisteredFileSystems();
-
-   PiShutdownProcessManager();
-   MiShutdownMemoryManager();
-   
    if (Action == ShutdownNoReboot)
      {
         HalReleaseDisplayOwnership();
         HalDisplayString("\nYou can switch off your computer now\n\n");
         HalDisplayString(FamousLastWords[Now.u.LowPart % (sizeof(FamousLastWords) / sizeof(PCH))]);
-#if 0
-        /* Switch off */
-        HalReturnToFirmware (FIRMWARE_OFF);
-#else
-        PopSetSystemPowerState(PowerSystemShutdown);
+     }
+   Status = PsCreateSystemThread(&ThreadHandle,
+                                 THREAD_ALL_ACCESS,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 ShutdownThreadMain,
+                                 (PVOID)Action);
+   if (!NT_SUCCESS(Status))
+   {
+      KEBUGCHECK(0);
+   }
+   Status = ObReferenceObjectByHandle(ThreadHandle,
+				      THREAD_ALL_ACCESS,
+				      PsThreadType,
+				      KernelMode,
+				      (PVOID*)&ShutdownThread,
+				      NULL);
+   NtClose(ThreadHandle);
+   if (!NT_SUCCESS(Status))
+     {
+        KEBUGCHECK(0);
+     }
 
-	while (TRUE)
-	  {
-	    Ke386DisableInterrupts();
-	    Ke386HaltProcessor();
-	  }
-#endif
-     }
-   else if (Action == ShutdownReboot)
-     {
-        HalReturnToFirmware (FIRMWARE_REBOOT);
-     }
-   else
-     {
-        HalReturnToFirmware (FIRMWARE_HALT);
-     }
-   
+   KeSetPriorityThread(&ShutdownThread->Tcb, LOW_REALTIME_PRIORITY + 1);
+   ObDereferenceObject(ShutdownThread);
+
    return STATUS_SUCCESS;
 }
+
 
 /* EOF */
 
