@@ -10,13 +10,13 @@
  *                            and re-wrote most of handler code. - Alex Ionescu
  */
 
+#include <roscfg.h>
 #include <ddk/status.h>
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
 #include <internal/i386/ke.h>
 #include <ntos/tss.h>
 #include <napi/shared_data.h>
-#include <roscfg.h>
 
 #define UserMode  (1)
 
@@ -40,7 +40,7 @@ _KiFastCallEntry:
     pushl $USER_DS
     pushl %edx                  /* Ring 3 SS:ESP */
     pushfl
-    orl $200, (%esp)            /* Re-enable IRQs in EFLAGS, to fake INT */
+    orl $X86_EFLAGS_IF, (%esp)  /* Re-enable IRQs in EFLAGS, to fake INT */
     pushl $USER_CS
     pushl $KUSER_SHARED_SYSCALL_RET
     
@@ -281,11 +281,11 @@ FastRet:
     mov %ecx, %fs
     
     /* We will be cleaning up the stack ourselves */
-    popl %edx                 /* New Ring 3 EIP */
-    add $0x4, %esp            /* Skip Ring 3 DS */
-    andl $0xFD, 9(%esp)       /* Remove IRQ hack from EFLAGS */
-    popfl                     /* Restore old EFLAGS */
-    popl %ecx                 /* Old Ring 3 SS:ESP */   
+    popl %edx                         /* New Ring 3 EIP */
+    add $0x4, %esp                    /* Skip Ring 3 DS */
+    andl $~X86_EFLAGS_IF, (%esp)      /* Remove IRQ hack from EFLAGS */
+    popfl                             /* Restore old EFLAGS */
+    popl %ecx                         /* Old Ring 3 SS:ESP */   
        
     /* 
      * At this point:
