@@ -6,8 +6,8 @@
 #include <win32k/bitmaps.h>
 //#include <win32k/debug.h>
 
-// #define NDEBUG
-#include <win32k/debug1.h>
+#define NDEBUG
+#include <debug.h>
 
 BOOL STDCALL W32kBitBlt(HDC  hDCDest,
                  INT  XDest,
@@ -40,7 +40,7 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
   SurfDestAlloc = FALSE;
   SurfSrcAlloc  = FALSE;
 
-DbgPrint("Get surfdest.. ");
+DPRINT("Get surfdest.. ");
 
   // Get the SurfDest
   if(DCDest->Surface != NULL)
@@ -50,12 +50,12 @@ DbgPrint("Get surfdest.. ");
   } else
     return FALSE;
 
-DbgPrint("Get surfsrc.. ");
+DPRINT("Get surfsrc.. ");
 
   // Get the SurfSrc
   if(DCSrc->Surface != NULL)
   {
-DbgPrint("from DC's surface\n");
+DPRINT("from DC's surface\n");
 
     // Use the DC's surface if it has one
     SurfSrc = AccessUserObject(DCSrc->Surface);
@@ -63,7 +63,7 @@ DbgPrint("from DC's surface\n");
     return FALSE;
 
 
-DbgPrint("Go to EngBitBlt\n");
+DPRINT("Go to EngBitBlt\n");
   Status = EngBitBlt(SurfDest, SurfSrc, NULL, NULL, NULL,
 			&DestRect, &SourcePoint, NULL, NULL, NULL, NULL); // FIXME: Color translation (xlateobj)
 
@@ -128,7 +128,7 @@ HBITMAP STDCALL W32kCreateBitmap(INT  Width,
   hBitmap = BITMAPOBJ_PtrToHandle (bmp);
 
   // Allocate memory for bitmap bits
-  bmp->bitmap.bmBits = ExAllocatePool(NonPagedPool, bmp->bitmap.bmWidthBytes * bmp->bitmap.bmHeight);
+  bmp->bitmap.bmBits = ExAllocatePool(PagedPool, bmp->bitmap.bmWidthBytes * bmp->bitmap.bmHeight);
 
   if (Bits) /* Set bitmap bits */
     {
@@ -137,7 +137,6 @@ HBITMAP STDCALL W32kCreateBitmap(INT  Width,
                         Bits);
     }
 
-  BITMAPOBJ_UnlockBitmap (hBitmap);
 
   return  hBitmap;
 }
@@ -448,7 +447,7 @@ LONG STDCALL W32kSetBitmapBits(HBITMAP  hBitmap,
       /* FIXME: Alloc enough for entire bitmap */
       if (bmp->bitmap.bmBits == NULL)
         {
-          bmp->bitmap.bmBits = ExAllocatePool (NonPagedPool, Bytes);
+          bmp->bitmap.bmBits = ExAllocatePool (PagedPool, Bytes);
         }
       if(!bmp->bitmap.bmBits) 
         {
