@@ -37,6 +37,23 @@ LONG KeReleaseSemaphore(PKSEMAPHORE Semaphore,
 			LONG Adjustment,
 			BOOLEAN Wait)
 {
-   UNIMPLEMENTED;
+long initState=Semaphore->Header.SignalState;
+  if(Semaphore->Limit < initState+Adjustment
+      || initState > initState+Adjustment)
+     ExRaiseStatus(STATUS_SEMAPHORE_LIMIT_EXCEEDED);
+  Semaphore->Header.SignalState+=Adjustment;
+  if((initState == 0)
+     && (Semaphore->Header.WaitListHead.Flink != &Semaphore->Header.WaitListHead))
+  {
+    //  wake up SignalState waiters
+    while(Semaphore->Header.SignalState > 0
+           &&  KeDispatcherObjectWakeOne(Semaphore->Header) ) ;
+  }
+  if (Wait)
+  {
+    // FIXME(2) : in this case, we must store somewhere that we have been here
+    // and the functions KeWaitxxx must take care of this
+  }
+  return initState;
 }
 
