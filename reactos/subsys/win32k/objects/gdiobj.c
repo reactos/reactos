@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.71 2004/07/04 12:00:40 navaraf Exp $
+ * $Id: gdiobj.c,v 1.72 2004/09/29 03:36:52 arty Exp $
  *
  */
 #include <w32k.h>
@@ -197,7 +197,7 @@ GDIOBJ_iAllocHandleTable (WORD Size)
   /* prevent APC delivery for the *FastMutexUnsafe calls */
   const KIRQL PrevIrql = KfRaiseIrql(APC_LEVEL);
   ExAcquireFastMutexUnsafe (&HandleTableMutex);
-  handleTable = ExAllocatePoolWithTag(PagedPool, MemSize, TAG_GDIHNDTBLE);
+  handleTable = ExAllocatePoolWithTag(NonPagedPool, MemSize, TAG_GDIHNDTBLE);
   ASSERT( handleTable );
   memset (handleTable, 0, MemSize);
 #if GDI_COUNT_OBJECTS
@@ -205,7 +205,7 @@ GDIOBJ_iAllocHandleTable (WORD Size)
 #endif
   handleTable->wTableSize = Size;
   handleTable->AllocationHint = 1;
-  handleTable->LookasideLists = ExAllocatePoolWithTag(PagedPool,
+  handleTable->LookasideLists = ExAllocatePoolWithTag(NonPagedPool,
                                                       OBJTYPE_COUNT * sizeof(PAGED_LOOKASIDE_LIST),
                                                       TAG_GDIHNDTBLE);
   if (NULL == handleTable->LookasideLists)
