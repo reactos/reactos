@@ -75,7 +75,7 @@ else
 LEAN_AND_MEAN_DEFINE = 
 endif 
 
-CPP = $(PREFIX)g++
+CXX = $(PREFIX)g++
 CC = $(PREFIX)gcc
 NATIVE_CC = gcc
 CFLAGS = \
@@ -102,9 +102,9 @@ TOOLS_PATH = $(PATH_TO_TOP)/../reactos/tools
 RSYM = $(TOOLS_PATH)/rsym
 
 %.o: %.cpp
-	$(CPP) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CFLAGS) -c $< -o $@
 %.o: %.cc
-	$(CPP) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CFLAGS) -c $< -o $@
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 %.o: %.asm
