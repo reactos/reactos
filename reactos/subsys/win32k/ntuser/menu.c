@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.2 2003/08/01 10:56:28 weiden Exp $
+/* $Id: menu.c,v 1.3 2003/08/01 11:56:19 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -241,23 +241,6 @@ NtUserDestroyMenu(
   }
 
   return W32kDestroyMenuObject(MenuObject);
-}
-
-
-/*
- * @unimplemented
- */
-DWORD STDCALL
-NtUserDrawMenuBarTemp(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4)
-{
-  UNIMPLEMENTED
-
-  return 0;
 }
 
 
@@ -490,11 +473,11 @@ NtUserSetMenuFlagRtoL(
  */
 DWORD STDCALL
 NtUserThunkedMenuInfo(
-  DWORD Unknown0,
-  DWORD Unknown1)
+  HMENU hMenu,
+  LPCMENUINFO lpcmi)
 {
   UNIMPLEMENTED
-
+  /* This function seems just to call SetMenuInfo() */
   return 0;
 }
 
@@ -504,15 +487,17 @@ NtUserThunkedMenuInfo(
  */
 DWORD STDCALL
 NtUserThunkedMenuItemInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5)
+  HMENU hMenu,
+  UINT uItem,
+  BOOL fByPosition,
+  BOOL bInsert,
+  LPMENUITEMINFO lpmii,
+  PUNICODE_STRING lpszCaption)
 {
   UNIMPLEMENTED
-
+  /* lpszCaption may be NULL, check for it and call RtlInitUnicodeString()
+     if bInsert == TRUE call NtUserInsertMenuItem() else NtUserSetMenuItemInfo()
+  */
   return 0;
 }
 

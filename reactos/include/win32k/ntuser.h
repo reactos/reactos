@@ -425,10 +425,10 @@ NtUserDrawIconEx(
 DWORD
 STDCALL
 NtUserDrawMenuBarTemp(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
+  HWND hWnd,
+  HDC hDC,
+  PRECT hRect,
+  HMENU hMenu,
   DWORD Unknown4);
 
 DWORD
@@ -1598,18 +1598,18 @@ NtUserSystemParametersInfo(
 DWORD
 STDCALL
 NtUserThunkedMenuInfo(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HMENU hMenu,
+  LPCMENUINFO lpcmi);
 
 DWORD
 STDCALL
 NtUserThunkedMenuItemInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5);
+  HMENU hMenu,
+  UINT uItem,
+  BOOL fByPosition,
+  BOOL bInsert,
+  LPMENUITEMINFO lpmii,
+  PUNICODE_STRING lpszCaption);
 
 DWORD
 STDCALL
