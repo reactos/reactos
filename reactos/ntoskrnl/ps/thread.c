@@ -74,6 +74,16 @@ static VOID PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
    KeReleaseSpinLock(&ThreadListLock,oldlvl);
 }
 
+VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext)
+{
+   NTSTATUS Ret;
+   
+   KeReleaseSpinLock(&ThreadListLock,PASSIVE_LEVEL);
+   Ret = StartRoutine(StartContext);
+   PsTerminateSystemThread(Ret);
+   for(;;);
+}
+
 static PETHREAD PsScanThreadList(KPRIORITY Priority)
 {
    PLIST_ENTRY current_entry;
@@ -134,7 +144,6 @@ VOID PsDispatchThread(VOID)
 	     CurrentThread->Tcb.LastTick = GET_LARGE_INTEGER_LOW_PART(TickCount);
 	     CurrentThread->Tcb.ThreadState = THREAD_STATE_RUNNING;
 	     KeReleaseSpinLock(&ThreadListLock,irql);
-	     KeLowerIrql(PASSIVE_LEVEL);
 	     return;
 	  }
 	if (Candidate != NULL)
@@ -148,9 +157,8 @@ VOID PsDispatchThread(VOID)
 	     
 	     CurrentThread = Candidate;
 	     
-	     KeReleaseSpinLock(&ThreadListLock,irql);
-	     KeLowerIrql(PASSIVE_LEVEL);
 	     HalTaskSwitch(&CurrentThread->Tcb);
+	     KeReleaseSpinLock(&ThreadListLock,irql);
 	     return;
 	  }
      }

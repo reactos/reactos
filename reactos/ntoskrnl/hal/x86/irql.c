@@ -106,7 +106,12 @@ VOID KeLowerIrql(KIRQL NewIrql)
    __asm__("cli\n\t");
    
    DPRINT("NewIrql %x CurrentIrql %x\n",NewIrql,CurrentIrql);
-   assert(NewIrql <= CurrentIrql);
+   if (NewIrql > CurrentIrql)
+     {
+	DbgPrint("NewIrql %x CurrentIrql %x\n",NewIrql,CurrentIrql);
+	KeDumpStackFrames(0);
+	for(;;);
+     }
    CurrentIrql = NewIrql;
    HiSwitchIrql();
 }
