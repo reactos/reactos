@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.2 2004/09/25 03:20:16 arty Exp $
+/* $Id: bitmap.c,v 1.3 2004/09/25 19:39:57 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -35,9 +35,6 @@
 
 
 /* MACROS *******************************************************************/
-
-#define ALIGN(x,align) \
-  (((x)+(align)-1) / (align))
 
 #define MASK(Count, Shift) \
   ((Count) == 32 ? 0xFFFFFFFF : ~(0xFFFFFFFF << (Count)) << (Shift))
@@ -142,7 +139,7 @@ RtlAreBitsSet(PRTL_BITMAP BitMapHeader,
  * @implemented
  *
  * Note: According to the documentation, SizeOfBitmap is in bits, so the
- * ALIGN(...) must be divided by the number of bits per byte here.
+ * ROUND_UP(...) must be divided by the number of bits per byte here.
  * This function is exercised by the whole page allocator in npool.c
  * which is how i came across this error.
  */
@@ -151,7 +148,7 @@ RtlClearAllBits(IN OUT PRTL_BITMAP BitMapHeader)
 {
     memset(BitMapHeader->Buffer,
 	   0x00,
-	   ALIGN(BitMapHeader->SizeOfBitMap, 8) / 8);
+	   ROUND_UP(BitMapHeader->SizeOfBitMap, 8) / 8);
 }
 
 
@@ -743,7 +740,7 @@ RtlNumberOfSetBits(PRTL_BITMAP BitMapHeader)
  * @implemented
  *
  * Note: According to the documentation, SizeOfBitmap is in bits, so the
- * ALIGN(...) must be divided by the number of bits per byte here.
+ * ROUND_UP(...) must be divided by the number of bits per byte here.
  * The companion function, RtlClearAllBits, is exercised by the whole page
  * allocator in npool.c which is how i came across this error.
  */
@@ -752,7 +749,7 @@ RtlSetAllBits(IN OUT PRTL_BITMAP BitMapHeader)
 {
   memset(BitMapHeader->Buffer,
 	 0xFF,
-	 ALIGN(BitMapHeader->SizeOfBitMap, 8) / 8);
+	 ROUND_UP(BitMapHeader->SizeOfBitMap, 8) / 8);
 }
 
 
