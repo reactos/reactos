@@ -8,6 +8,8 @@
 
 
 HANDLE InputHandle, OutputHandle;
+BOOL   bCanExit = TRUE;
+
 
 void debug_printf(char* fmt, ...)
 {
@@ -16,9 +18,10 @@ void debug_printf(char* fmt, ...)
 
    va_start(args,fmt);
    vsprintf(buffer,fmt,args);
-   WriteConsoleA(OutputHandle, buffer, strlen(buffer), NULL, NULL);
    va_end(args);
+   WriteConsoleA(OutputHandle, buffer, strlen(buffer), NULL, NULL);
 }
+
 
 void ExecuteVer(void)
 {
@@ -113,7 +116,6 @@ int ExecuteProcess(char* name, char* cmdline, BOOL detached)
 {
    PROCESS_INFORMATION	ProcessInformation;
    STARTUPINFO		StartupInfo;
-   //	char			arguments;
    BOOL			ret;
    
    memset(&StartupInfo, 0, sizeof(StartupInfo));
@@ -162,7 +164,6 @@ int ExecuteProcess(char* name, char* cmdline, BOOL detached)
 	  {
 	     	debug_printf("ProcessInformation.hThread %x\n",
 			     ProcessInformation.hThread);
-//	     CloseHandle(ProcessInformation.hThread);
 	     WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
 	     CloseHandle(ProcessInformation.hProcess);
 	     debug_printf("Thandle %x\n", ProcessInformation.hThread);
@@ -204,7 +205,7 @@ ExecuteKill(char * lpPid)
 	DWORD	dwProcessId;
 
 	dwProcessId = (DWORD) atol(lpPid);
-   debug_printf("dwProcessId %d\n",dwProcessId);
+	debug_printf("dwProcessId %d\n",dwProcessId);
 	hProcess = OpenProcess(
 			PROCESS_TERMINATE,
 			FALSE,
@@ -239,9 +240,41 @@ void ExecuteCommand(char* line)
 
    if (isalpha(line[0]) && line[1] == ':' && line[2] == 0)
      {
+//#if 0
+	char szPath[MAX_PATH];
+	char szVar[5];
+
+	/* save curent directory in environment variable */
+	GetCurrentDirectory (MAX_PATH, szPath);
+
+	strcpy (szVar, "=A:");
+	szVar[1] = toupper (szPath[0]);
+	SetEnvironmentVariable (szVar, szPath);
+
+	/* check for current directory of new drive */
+	strcpy (szVar, "=A:");
+	szVar[1] = toupper (line[0]);
+	if (GetEnvironmentVariable (szVar, szPath, MAX_PATH) == 0)
+	  {
+	     /* no environment variable found */
+	     strcpy (szPath, "A:\\");
+	     szPath[0] = toupper (line[0]);
+	  }
+
+	/* set new current directory */
+	SetCurrentDirectory (szPath);
+	GetCurrentDirectory (MAX_PATH, szPath);
+	if (szPath[0] != (char)toupper (line[0]))
+	     debug_printf("Invalid drive\n");
+//#endif
+#if 0
+	line[0] = toupper (line[0]);
 	line[2] = '\\';
 	line[3] = 0;
-	SetCurrentDirectoryA(line);
+	if (SetCurrentDirectoryA(line) == FALSE)
+	     debug_printf("Invalid drive\n");
+#endif
+
 	return;
      }
 
@@ -306,13 +339,16 @@ void ExecuteCommand(char* line)
 	return;
      }
    if (strcmp(cmd,"start") == 0)
-   {
+     {
 	ExecuteStart(tail);
 	return;
-   }
+     }
    if (strcmp(cmd,"exit")==0)
      {
-	ExitProcess(0);
+        if (bCanExit == TRUE)
+          {
+             ExitProcess(0);
+          }
 	return;
      }
    if (ExecuteProcess(cmd,tail,FALSE))
@@ -324,7 +360,6 @@ void ExecuteCommand(char* line)
 
 void ReadLine(char* line)
 {
-//   KEY_EVENT_RECORD KeyEvent;
    DWORD Result;
    UCHAR CurrentDir[255];
    char  ch;
@@ -366,6 +401,19 @@ void ReadLine(char* line)
    *line = 0;
 }
 
+void ParseCommandLine (void)
+{
+   char *pszCommandLine;
+
+   pszCommandLine = GetCommandLineA ();
+   _strupr (pszCommandLine);
+   if (strstr (pszCommandLine, "/P") != NULL)
+     {
+        debug_printf("Permanent shell\n");
+        bCanExit = FALSE;
+     }
+}
+
 int main(void)
 {
    static char line[255];
@@ -375,8 +423,9 @@ int main(void)
    OutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 
    debug_printf("Shell Starting...\n");
-     
-   SetCurrentDirectoryA("C:\\");
+
+   ParseCommandLine ();
+//   SetCurrentDirectoryA("C:\\");
 
    for(;;)
      {
