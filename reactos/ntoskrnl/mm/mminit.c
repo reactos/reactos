@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.41 2002/10/01 19:27:22 chorns Exp $
+/* $Id: mminit.c,v 1.42 2002/12/16 22:59:44 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -266,7 +266,9 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
     * Unmap low memory
     */
 #ifndef MP
-   /* FIXME: This is broken in SMP mode */
+   /* In SMP mode we unmap the low memory in MmInit3. 
+      The APIC needs the mapping of the first pages
+      while the processors are starting up. */
    MmDeletePageTable(NULL, 0);
 #endif
    /*
@@ -351,6 +353,14 @@ VOID MmInit2(VOID)
 
 VOID MmInit3(VOID)
 {
+   /*
+    * Unmap low memory
+    */
+#ifdef MP
+   /* In SMP mode we can unmap the low memory  
+      if all processors are started. */
+   MmDeletePageTable(NULL, 0);
+#endif
    MmInitPagerThread();
    MmCreatePhysicalMemorySection();
    MmInitializeRmapList();
