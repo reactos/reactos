@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.35 2004/03/08 21:58:16 navaraf Exp $
+; $Id: advapi32.edf,v 1.36 2004/03/10 21:37:18 navaraf Exp $
 ;
 ; advapi32.edf
 ;
@@ -21,8 +21,8 @@ AllocateAndInitializeSid=AllocateAndInitializeSid@44
 AllocateLocallyUniqueId=AllocateLocallyUniqueId@4
 AreAllAccessesGranted=AreAllAccessesGranted@8
 AreAnyAccessesGranted=AreAnyAccessesGranted@8
-;BackupEventLogA=BackupEventLogA@8
-;BackupEventLogW=BackupEventLogW@8
+BackupEventLogA=BackupEventLogA@8
+BackupEventLogW=BackupEventLogW@8
 ;BuildAccessRequestA
 ;BuildAccessRequestW
 ;BuildExplicitAccessWithNameA=BuildExplicitAccessWithNameA@20
@@ -39,9 +39,9 @@ AreAnyAccessesGranted=AreAnyAccessesGranted@8
 ;BuildTrusteeWithSidW=BuildTrusteeWithSidW@8
 ChangeServiceConfigA=ChangeServiceConfigA@44
 ChangeServiceConfigW=ChangeServiceConfigW@44
-;ClearEventLogA=ClearEventLogA@8
-;ClearEventLogW=ClearEventLogW@8
-;CloseEventLog=CloseEventLog@4
+ClearEventLogA=ClearEventLogA@8
+ClearEventLogW=ClearEventLogW@8
+CloseEventLog=CloseEventLog@4
 CloseServiceHandle=CloseServiceHandle@4
 ControlService=ControlService@12
 CopySid=CopySid@12
@@ -82,7 +82,7 @@ DeleteAce=DeleteAce@8
 DeleteService=DeleteService@4
 ;DenyAccessRightsA
 ;DenyAccessRightsW
-;DeregisterEventSource=DeregisterEventSource@4
+DeregisterEventSource=DeregisterEventSource@4
 ;DestroyPrivateObjectSecurity=DestroyPrivateObjectSecurity@4
 DuplicateToken=DuplicateToken@12
 DuplicateTokenEx=DuplicateTokenEx@24
@@ -142,8 +142,8 @@ GetLengthSid=GetLengthSid@4
 ;GetMultipleTrusteeW=GetMultipleTrusteeW@4
 ;GetNamedSecurityInfoA=GetNamedSecurityInfoA@32
 ;GetNamedSecurityInfoW=GetNamedSecurityInfoW@32
-;GetNumberOfEventLogRecords=GetNumberOfEventLogRecords@8
-;GetOldestEventLogRecord=GetOldestEventLogRecord@8
+GetNumberOfEventLogRecords=GetNumberOfEventLogRecords@8
+GetOldestEventLogRecord=GetOldestEventLogRecord@8
 ;GetPrivateObjectSecurity=GetPrivateObjectSecurity@20
 GetSecurityDescriptorControl=GetSecurityDescriptorControl@12
 GetSecurityDescriptorDacl=GetSecurityDescriptorDacl@16
@@ -191,8 +191,8 @@ LogonUserA=LogonUserA@24
 LogonUserW=LogonUserW@24
 ;LookupAccountNameA=LookupAccountNameA@28
 ;LookupAccountNameW=LookupAccountNameW@28
-;LookupAccountSidA=LookupAccountSidA@28
-;LookupAccountSidW=LookupAccountSidW@28
+LookupAccountSidA=LookupAccountSidA@28
+LookupAccountSidW=LookupAccountSidW@28
 LookupPrivilegeDisplayNameA=LookupPrivilegeDisplayNameA@20
 LookupPrivilegeDisplayNameW=LookupPrivilegeDisplayNameW@20
 LookupPrivilegeNameA=LookupPrivilegeNameA@16
@@ -253,7 +253,7 @@ MakeSelfRelativeSD=MakeSelfRelativeSD@12
 MapGenericMask=MapGenericMask@8
 ;NTAccessMaskToProvAccessRights=NTAccessMaskToProvAccessRights@12
 ;NotifyBootConfigStatus=NotifyBootConfigStatus@4
-;NotifyChangeEventLog=NotifyChangeEventLog@8
+NotifyChangeEventLog=NotifyChangeEventLog@8
 ObjectCloseAuditAlarmA=ObjectCloseAuditAlarmA@12
 ObjectCloseAuditAlarmW=ObjectCloseAuditAlarmW@12
 ObjectDeleteAuditAlarmA=ObjectDeleteAuditAlarmA@12
@@ -262,10 +262,10 @@ ObjectOpenAuditAlarmA=ObjectOpenAuditAlarmA@48
 ObjectOpenAuditAlarmW=ObjectOpenAuditAlarmW@48
 ObjectPrivilegeAuditAlarmA=ObjectPrivilegeAuditAlarmA@24
 ObjectPrivilegeAuditAlarmW=ObjectPrivilegeAuditAlarmW@24
-;OpenBackupEventLogA=OpenBackupEventLogA@8
-;OpenBackupEventLogW=OpenBackupEventLogW@8
-;OpenEventLogA=OpenEventLogA@8
-;OpenEventLogW=OpenEventLogW@8
+OpenBackupEventLogA=OpenBackupEventLogA@8
+OpenBackupEventLogW=OpenBackupEventLogW@8
+OpenEventLogA=OpenEventLogA@8
+OpenEventLogW=OpenEventLogW@8
 OpenProcessToken=OpenProcessToken@12
 OpenSCManagerA=OpenSCManagerA@12
 OpenSCManagerW=OpenSCManagerW@12
@@ -284,8 +284,8 @@ QueryServiceObjectSecurity=QueryServiceObjectSecurity@20
 QueryServiceStatus=QueryServiceStatus@8
 QueryServiceStatusEx=QueryServiceStatusEx@20
 ;QueryWindows31FilesMigration=QueryWindows31FilesMigration@4
-;ReadEventLogA=ReadEventLogA@28
-;ReadEventLogW=ReadEventLogW@28
+ReadEventLogA=ReadEventLogA@28
+ReadEventLogW=ReadEventLogW@28
 RegCloseKey=RegCloseKey@4
 RegConnectRegistryA=RegConnectRegistryA@12
 RegConnectRegistryW=RegConnectRegistryW@12
@@ -333,14 +333,14 @@ RegSetValueExW=RegSetValueExW@24
 RegSetValueW=RegSetValueW@20
 RegUnLoadKeyA=RegUnLoadKeyA@8
 RegUnLoadKeyW=RegUnLoadKeyW@8
-;RegisterEventSourceA=RegisterEventSourceA@8
-;RegisterEventSourceW=RegisterEventSourceW@8
+RegisterEventSourceA=RegisterEventSourceA@8
+RegisterEventSourceW=RegisterEventSourceW@8
 RegisterServiceCtrlHandlerA=RegisterServiceCtrlHandlerA@8
 RegisterServiceCtrlHandlerW=RegisterServiceCtrlHandlerW@8
 ;ReplaceAllAccessRightsA
 ;ReplaceAllAccessRightsW
-;ReportEventA=ReportEventA@36
-;ReportEventW=ReportEventW@36
+ReportEventA=ReportEventA@36
+ReportEventW=ReportEventW@36
 RevertToSelf=RevertToSelf@0
 ;RevokeExplicitAccessRightsA=RevokeExplicitAccessRightsA@16
 ;RevokeExplicitAccessRightsW=RevokeExplicitAccessRightsW@16
