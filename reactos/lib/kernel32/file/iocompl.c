@@ -1,4 +1,4 @@
-/* $Id: iocompl.c,v 1.16 2004/11/25 22:18:16 ion Exp $
+/* $Id: iocompl.c,v 1.17 2004/12/06 14:37:11 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -34,7 +34,7 @@ CreateIoCompletionPort(
 
    if ( ExistingCompletionPort == NULL && FileHandle == INVALID_HANDLE_VALUE ) 
    {
-      SetLastErrorByStatus (STATUS_INVALID_PARAMETER);
+      SetLastError(ERROR_INVALID_PARAMETER);
       return FALSE;
    }
 
@@ -109,30 +109,22 @@ GetQueuedCompletionStatus(
 
    if (!lpNumberOfBytesTransferred||!lpCompletionKey||!lpOverlapped)
    {
-      return ERROR_INVALID_PARAMETER;
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
    }
 
    if (dwMilliseconds != INFINITE)
    {
-      /*
-       * System time units are 100 nanoseconds (a nanosecond is a billionth of
-       * a second).
-       */
-      Interval.QuadPart = -((ULONGLONG)dwMilliseconds * 10000);
+      Interval.QuadPart = RELATIVE_TIME(MILLIS_TO_100NS(dwMilliseconds));
    }  
-   else
-   {
-      /* Approximately 292000 years hence */
-      Interval.QuadPart = -0x7FFFFFFFFFFFFFFFLL;
-   }
 
    errCode = NtRemoveIoCompletion(CompletionHandle,
                                   (PVOID*)lpCompletionKey,
                                   (PVOID*)lpNumberOfBytesTransferred,
                                   &IoStatus,
-                                  &Interval);
+                                  dwMilliseconds == INFINITE ? NULL : &Interval);
 
-   if (!NT_SUCCESS(errCode) ) {
+   if (!NT_SUCCESS(errCode)) {
       *lpOverlapped = NULL;
       SetLastErrorByStatus(errCode);
       return FALSE;
@@ -142,7 +134,7 @@ GetQueuedCompletionStatus(
 
    if (!NT_SUCCESS(IoStatus.Status)){
       //failed io operation
-      SetLastErrorByStatus (IoStatus.Status);
+      SetLastErrorByStatus(IoStatus.Status);
       return FALSE;
    }
 
