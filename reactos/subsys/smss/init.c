@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.1 1999/09/05 12:29:50 ekohl Exp $
+/* $Id: init.c,v 1.2 1999/10/24 17:07:57 rex Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -43,7 +43,16 @@ InitSessionManager(
 	/* FIXME: Define symbolic links to kernel devices (MS-DOS names) */
         /* FIXME: Create paging files (if any) other than the first one */
 	/* FIXME: Load the well known DLLs */
+
 	/* FIXME: Load the kernel mode driver win32k.sys */
+        RtlInitUnicodeString(&CmdLineW,
+                             L"\\??\\C:\\reactos\\system32\\drivers\\win32k.sys");
+        Status = NtLoadDriver(&CmdLineW);
+
+	if (!NT_SUCCESS(Status))
+	{
+		return FALSE;
+	}
 
 #if 0
 	/* Start the Win32 subsystem (csrss.exe) */

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.10 1999/08/29 06:59:06 ea Exp $
+/* $Id: device.c,v 1.11 1999/10/24 17:07:57 rex Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -56,7 +56,8 @@ NtLoadDriver (
 	PUNICODE_STRING	DriverServiceName
 	)
 {
-	UNIMPLEMENTED;
+  /* FIXME: this should lookup the filename from the registry and then call LdrLoadDriver  */
+  return  LdrLoadDriver (DriverServiceName);
 }
 
 

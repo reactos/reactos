@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.34 1999/10/23 18:58:40 rex Exp $
+/* $Id: loader.c,v 1.35 1999/10/24 17:07:57 rex Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -52,23 +52,24 @@ NTSTATUS LdrLoadDriver(PUNICODE_STRING Filename);
 NTSTATUS LdrProcessDriver(PVOID ModuleLoadBase);
 
 PMODULE_OBJECT  LdrLoadModule(PUNICODE_STRING Filename);
-PMODULE_OBJECT  LdrProcessModule(PVOID ModuleLoadBase);
+PMODULE_OBJECT  LdrProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING ModuleName);
 PVOID  LdrGetExportAddress(PMODULE_OBJECT ModuleObject, char *Name, unsigned short Hint);
 static PMODULE_OBJECT LdrOpenModule(PUNICODE_STRING  Filename);
-static PIMAGE_SECTION_HEADER LdrPEGetEnclosingSectionHeader(DWORD  RVA,
-                                                            PMODULE_OBJECT  ModuleObject);
 static NTSTATUS LdrCreateModule(PVOID ObjectBody,
                                 PVOID Parent,
                                 PWSTR RemainingPath,
                                 POBJECT_ATTRIBUTES ObjectAttributes);
 
 /*  PE Driver load support  */
-static PMODULE_OBJECT  LdrPEProcessModule(PVOID ModuleLoadBase);
+static PMODULE_OBJECT  LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING ModuleName);
 static PVOID  LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject, 
                                     char *Name, 
                                     unsigned short Hint);
+#if 0
 static unsigned int LdrGetKernelSymbolAddr(char *Name);
-
+#endif
+static PIMAGE_SECTION_HEADER LdrPEGetEnclosingSectionHeader(DWORD  RVA,
+                                                            PMODULE_OBJECT  ModuleObject);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -221,6 +222,10 @@ LdrLoadAutoConfigDrivers (VOID)
          * VideoPort driver
          */
         LdrLoadAutoConfigDriver( L"vidport.sys" );
+        /*
+         * VGA Miniport driver
+         */
+        LdrLoadAutoConfigDriver( L"vgamp.sys" );
 }
 
 
@@ -279,7 +284,7 @@ LdrLoadModule(PUNICODE_STRING Filename)
   PMODULE_OBJECT  ModuleObject;
   FILE_STANDARD_INFORMATION FileStdInfo;
   WCHAR  NameBuffer[60];
-  PWSTR  RemainingPath;
+//  PWSTR  RemainingPath;
   UNICODE_STRING  ModuleName;
 
   /*  Check for module already loaded  */
@@ -349,7 +354,20 @@ LdrLoadModule(PUNICODE_STRING Filename)
 
   ZwClose(FileHandle);
 
-  ModuleObject = LdrProcessModule(ModuleLoadBase);
+  /*  Build module object name  */
+  wcscpy(NameBuffer, MODULE_ROOT_NAME);
+  if (wcsrchr(Filename->Buffer, '\\') != 0)
+    {
+      wcscat(NameBuffer, wcsrchr(Filename->Buffer, '\\') + 1);
+    }
+  else
+    {
+      wcscat(NameBuffer, Filename->Buffer);
+    }
+  ModuleName.Length = ModuleName.MaximumLength = wcslen(NameBuffer);
+  ModuleName.Buffer = NameBuffer;
+
+  ModuleObject = LdrProcessModule(ModuleLoadBase, &ModuleName);
 
   /*  Cleanup  */
   ExFreePool(ModuleLoadBase);
@@ -362,7 +380,7 @@ LdrProcessDriver(PVOID ModuleLoadBase)
 {
   PMODULE_OBJECT ModuleObject;
 
-  ModuleObject = LdrProcessModule(ModuleLoadBase);
+  ModuleObject = LdrProcessModule(ModuleLoadBase, 0);
   if (ModuleObject == 0)
     {
       return STATUS_UNSUCCESSFUL;
@@ -374,7 +392,7 @@ LdrProcessDriver(PVOID ModuleLoadBase)
 }
 
 PMODULE_OBJECT
-LdrProcessModule(PVOID ModuleLoadBase)
+LdrProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING ModuleName)
 {
   PIMAGE_DOS_HEADER PEDosHeader;
 
@@ -382,7 +400,7 @@ LdrProcessModule(PVOID ModuleLoadBase)
   PEDosHeader = (PIMAGE_DOS_HEADER) ModuleLoadBase;
   if (PEDosHeader->e_magic == IMAGE_DOS_MAGIC && PEDosHeader->e_lfanew != 0L)
     {
-      return LdrPEProcessModule(ModuleLoadBase);
+      return LdrPEProcessModule(ModuleLoadBase, ModuleName);
     }
 #if 0
   if (PEDosHeader->e_magic == IMAGE_DOS_MAGIC)
@@ -391,7 +409,7 @@ LdrProcessModule(PVOID ModuleLoadBase)
     }
   else  /*  Assume COFF format and load  */
     {
-      return LdrCOFFProcessModule(ModuleLoadBase);
+      return LdrCOFFProcessModule(ModuleLoadBase, ModuleName);
     }
 #endif
 
@@ -456,7 +474,7 @@ LdrGetExportAddress(PMODULE_OBJECT ModuleObject,
 /*  ----------------------------------------------  PE Module support */
 
 PMODULE_OBJECT
-LdrPEProcessModule(PVOID ModuleLoadBase)
+LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
 {
   unsigned int DriverSize, Idx, Idx2;
   ULONG RelocDelta, NumRelocs;
@@ -730,29 +748,36 @@ LdrPEProcessModule(PVOID ModuleLoadBase)
     }
 
   /*  Create ModuleName string  */
-  wcscpy(NameBuffer, MODULE_ROOT_NAME);
-  if (PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
-        .VirtualAddress != 0)
+  if (pModuleName != 0)
     {
-      ExportDirectory = (PIMAGE_EXPORT_DIRECTORY) (DriverBase +
-        PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
-          .VirtualAddress);
-      wcscat(NameBuffer, DriverBase + ExportDirectory->Name);
+      wcscpy(NameBuffer, pModuleName->Buffer);
     }
   else
     {
-      char buf[12];
+      wcscpy(NameBuffer, MODULE_ROOT_NAME);
+      if (PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
+            .VirtualAddress != 0)
+        {
+          ExportDirectory = (PIMAGE_EXPORT_DIRECTORY) (DriverBase +
+            PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
+              .VirtualAddress);
+          wcscat(NameBuffer, DriverBase + ExportDirectory->Name);
+        }
+      else
+        {
+          char buf[12];
 
-      sprintf(buf, "%08X", (DWORD) DriverBase);
-      for (Idx = 0; NameBuffer[Idx] != 0; Idx++)
-        ;
-      Idx2 = 0;
-      while ((NameBuffer[Idx + Idx2] = (WCHAR) buf[Idx2]) != 0)
-        Idx2++;
+          sprintf(buf, "%08X", (DWORD) DriverBase);
+          for (Idx = 0; NameBuffer[Idx] != 0; Idx++)
+            ;
+          Idx2 = 0;
+          while ((NameBuffer[Idx + Idx2] = (WCHAR) buf[Idx2]) != 0)
+            Idx2++;
+        }
     }
   ModuleName.Length = ModuleName.MaximumLength = wcslen(NameBuffer);
   ModuleName.Buffer = NameBuffer;
-  DPRINT("Module name is: %W\n", &ModuleName);
+  DbgPrint("Module name is: %W\n", &ModuleName);
   
   /*  Initialize ObjectAttributes for ModuleObject  */
   InitializeObjectAttributes(&ObjectAttributes, 
