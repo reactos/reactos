@@ -49,6 +49,9 @@ extern "C" {
 #define NIF_MESSAGE	1
 #define NIF_ICON	2
 #define NIF_TIP	4
+#define NIF_STATE	8
+#define NIS_HIDDEN	1
+#define NIS_SHAREDICON	2
 #define SE_ERR_FNF	2
 #define SE_ERR_PNF	3
 #define SE_ERR_ACCESSDENIED	5
@@ -112,6 +115,7 @@ typedef struct _AppBarData {
 	LPARAM lParam;
 } APPBARDATA,*PAPPBARDATA;
 DECLARE_HANDLE(HDROP);
+
 typedef struct _NOTIFYICONDATAA {
 	DWORD cbSize;
 	HWND hWnd;
@@ -119,8 +123,25 @@ typedef struct _NOTIFYICONDATAA {
 	UINT uFlags;
 	UINT uCallbackMessage;
 	HICON hIcon;
+#if _WIN32_IE >= 0x0500
+	CHAR szTip[128];
+	DWORD dwState;
+	DWORD dwStateMask;
+	CHAR szInfo[256];
+	union {
+		UINT uTimeout;
+		UINT uVersion;
+	} DUMMYUNIONNAME;
+	CHAR szInfoTitle[64];
+	DWORD dwInfoFlags;
+#else
 	CHAR szTip[64];
+#endif
+#if _WIN32_IE >= 0x600
+	GUID guidItem;
+#endif
 } NOTIFYICONDATAA,*PNOTIFYICONDATAA;
+
 typedef struct _NOTIFYICONDATAW {
 	DWORD cbSize;
 	HWND hWnd;
@@ -128,8 +149,25 @@ typedef struct _NOTIFYICONDATAW {
 	UINT uFlags;
 	UINT uCallbackMessage;
 	HICON hIcon;
+#if _WIN32_IE >= 0x0500
+	WCHAR szTip[128];
+	DWORD dwState;
+	DWORD dwStateMask;
+	WCHAR szInfo[256];
+	union {
+		UINT uTimeout;
+		UINT uVersion;
+	} DUMMYUNIONNAME;
+	WCHAR szInfoTitle[64];
+	DWORD dwInfoFlags;
+#else
 	WCHAR szTip[64];
+#endif
+#if _WIN32_IE >= 0x600
+	GUID guidItem;
+#endif
 } NOTIFYICONDATAW,*PNOTIFYICONDATAW;
+
 typedef struct _SHELLEXECUTEINFOA {
 	DWORD cbSize;
 	ULONG fMask;
