@@ -541,7 +541,7 @@ GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
     if (PrivateNSEnum.NumServers > 1) 
       memcpy( &AddressAfterFixedInfo[0],
 	      &PrivateNSEnum.AddrString[1],
-	      sizeof(IP_ADDR_STRING) * NumberOfServersAllowed - 1 );
+	      sizeof(IP_ADDR_STRING) * (PrivateNSEnum.NumServers - 1) );
     else
       pFixedInfo->CurrentDnsServer->Next = 0;
 
