@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.227 2004/05/08 13:06:12 weiden Exp $
+/* $Id: window.c,v 1.228 2004/05/08 16:06:54 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1661,9 +1661,9 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   
   if(!(WindowObject->Style & (WS_POPUP | WS_CHILD)))
   {
-    /* Automatically assign the caption and border style. Also always
+    /* Automatically assign the overlapped window style. Also always
        clip siblings for overlapped windows. */
-    WindowObject->Style |= (WS_CAPTION | WS_BORDER | WS_CLIPSIBLINGS);
+    WindowObject->Style |= (WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS);
   }
   
   /* create system menu */
@@ -1716,6 +1716,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
         {
           IntReleaseWindowObject(ParentWindow);
         }
+      
+      /* FIXME - Delete window object and remove it from the thread windows list */
+      /* FIXME - delete allocated DCE */
+      
       DPRINT1("CBT-hook returned !0\n");
       return (HWND) NULL;
     }
