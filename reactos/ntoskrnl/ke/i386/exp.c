@@ -301,7 +301,7 @@ KiDoubleFaultHandler(VOID)
 	{
 	  print_address((PVOID)Frame[1]);
 	  Frame = (PULONG)Frame[0];
-          DbgPrint("\n");
+          DbgPrint(" ");
 	}
 #else
       DbgPrint("Frames: ");
@@ -470,7 +470,7 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
        print_address((PVOID)Frame[1]);
        Frame = (PULONG)Frame[0];
        i++;
-       DbgPrint("\n");
+       DbgPrint(" ");
      }
 }
 
