@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.1 2004/05/31 19:29:02 gdalsnes Exp $
+/* $Id: sd.c,v 1.2 2004/08/05 18:17:37 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -749,5 +749,36 @@ RtlSelfRelativeToAbsoluteSD(PSECURITY_DESCRIPTOR RelSD,
 
    return STATUS_SUCCESS;
 }
+
+/*
+* @unimplemented
+*/
+NTSTATUS
+STDCALL
+RtlSelfRelativeToAbsoluteSD2(
+	PSECURITY_DESCRIPTOR SelfRelativeSecurityDescriptor,
+	PULONG BufferSize
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+* @unimplemented
+*/
+BOOLEAN
+STDCALL
+RtlValidRelativeSecurityDescriptor (
+	IN PSECURITY_DESCRIPTOR SecurityDescriptorInput,
+	IN ULONG SecurityDescriptorLength,
+	IN SECURITY_INFORMATION RequiredInformation
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
+
 
 /* EOF */

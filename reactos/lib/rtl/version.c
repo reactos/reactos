@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: version.c,v 1.1 2004/05/31 19:29:02 gdalsnes Exp $
+/* $Id: version.c,v 1.2 2004/08/05 18:17:37 ion Exp $
  *
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Runtime code
@@ -34,6 +34,9 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS ******************************************************************/
+
+extern ULONG NtGlobalFlag;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -64,5 +67,32 @@ RtlGetVersion(RTL_OSVERSIONINFOW *Info)
 
    return STATUS_INVALID_PARAMETER;
 }
+
+/*
+* @implemented
+*/
+ULONG
+STDCALL
+RtlGetNtGlobalFlags(VOID)
+{
+	return(NtGlobalFlag);
+}
+
+/*
+* @unimplemented
+*/
+/*
+NTSTATUS
+STDCALL
+RtlVerifyVersionInfo(
+	IN PRTL_OSVERSIONINFOEXW VersionInfo,
+	IN ULONG TypeMask,
+	IN ULONGLONG  ConditionMask
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+*/
 
 /* EOF */

@@ -135,6 +135,7 @@ VOID KeFreeGdtSelector(ULONG Entry);
 VOID
 NtEarlyInitVdm(VOID);
 
+
 #if defined(__GNUC__)
 #define Ke386DisableInterrupts() __asm__("cli\n\t");
 #define Ke386EnableInterrupts()  __asm__("sti\n\t");

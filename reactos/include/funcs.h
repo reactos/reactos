@@ -1209,13 +1209,6 @@ RtlEnumerateGenericTableWithoutSplaying(
 	IN PVOID *RestartKey
 	);
 
-VOID
-STDCALL
-RtlGetElementGenericTable(
-	IN PRTL_GENERIC_TABLE Table,
-	IN ULONG I
-	);
-
 PVOID
 STDCALL
 RtlLookupElementGenericTable(
@@ -2236,28 +2229,6 @@ NTSTATUS
 STDCALL
 RtlGetVersion(
     OUT PRTL_OSVERSIONINFOW lpVersionInformation
-    );
-NTSTATUS
-STDCALL
-RtlHashUnicodeString(
-    IN const UNICODE_STRING *String,
-    IN BOOL CaseInSensitive,
-    IN ULONG HashAlgorithm,
-    OUT PULONG HashValue
-    );
-BOOL
-STDCALL
-RtlValidRelativeSecurityDescriptor (
-    IN PSECURITY_DESCRIPTOR SecurityDescriptorInput,
-    IN ULONG SecurityDescriptorLength,
-    IN SECURITY_INFORMATION RequiredInformation
-    );
-NTSTATUS
-STDCALL
-RtlVerifyVersionInfo(
-    IN PRTL_OSVERSIONINFOEXW VersionInfo,
-    IN ULONG TypeMask,
-    IN ULONGLONG  ConditionMask
     );
 ULONG
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.9 2003/11/17 20:35:46 sedwards Exp $
+/* $Id: misc.c,v 1.10 2004/08/05 18:17:36 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -14,36 +14,6 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
-
-/* GLOBALS ******************************************************************/
-
-extern ULONG NtGlobalFlag;
-
-/* FUNCTIONS ****************************************************************/
-
-/**********************************************************************
- * NAME							EXPORTED
- * 	RtlGetNtGlobalFlags
- *
- * DESCRIPTION
- *	Retrieves the global os flags.
- *
- * ARGUMENTS
- *	None
- *
- * RETURN VALUE
- *	global flags
- *
- * REVISIONS
- * 	2000-08-10 ekohl
- */
-
-ULONG STDCALL
-RtlGetNtGlobalFlags(VOID)
-{
-  return(NtGlobalFlag);
-}
-
 
 /**********************************************************************
  * NAME							EXPORTED

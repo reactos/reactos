@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.1 2004/06/24 19:30:21 hyperion Exp $
+/* $Id: exception.c,v 1.2 2004/08/05 18:17:36 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -30,6 +30,33 @@ VOID
 RtlpCaptureContext(PCONTEXT Context);
 
 /*
+* @unimplemented
+*/
+NTSTATUS
+STDCALL
+RtlDispatchException(
+	PEXCEPTION_RECORD pExcptRec, 
+	CONTEXT * pContext 
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+* @unimplemented
+*/
+VOID
+STDCALL
+RtlGetCallersAddress(
+	OUT PVOID *CallersAddress,
+	OUT PVOID *CallersCaller
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
  * @implemented
  */
 VOID STDCALL
@@ -45,8 +72,9 @@ RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
 
   Status = ZwRaiseException(ExceptionRecord, &Context, TRUE);
   RtlRaiseException(ExceptionRecord);
-  RtlRaiseStatus(Status); /* If we get to this point, something is seriously wrong... */
+  RtlRaiseStatus(Status); 
 }
+
 
 /*
  * @implemented
@@ -64,5 +92,21 @@ RtlRaiseStatus(NTSTATUS Status)
   ExceptionRecord.ExceptionFlags   = EXCEPTION_NONCONTINUABLE;
   RtlRaiseException (& ExceptionRecord);
 }
+
+/*
+* @unimplemented
+*/
+ULONG
+STDCALL
+RtlWalkFrameChain (
+	OUT PVOID *Callers,
+	IN ULONG Count,
+	IN ULONG Flags
+	)
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: bitmap.c,v 1.9 2003/07/11 01:23:15 royce Exp $
+/* $Id: bitmap.c,v 1.10 2004/08/05 18:17:37 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,6 +10,8 @@
 
 #include <ddk/ntddk.h>
 
+#define NDEBUG
+#include <debug.h>
 
 #define ALIGN(x,align)	(((x)+(align)-1) / (align))
 
@@ -130,6 +132,18 @@ RtlClearAllBits (
 	        ALIGN(BitMapHeader->SizeOfBitMap, 8));
 }
 
+/*
+* @unimplemented
+*/
+VOID
+STDCALL
+RtlClearBit (
+	PRTL_BITMAP BitMapHeader,
+	ULONG BitNumber
+	)
+{
+	UNIMPLEMENTED;
+}
 
 /*
  * @implemented
@@ -315,6 +329,51 @@ RtlFindFirstRunClear (
 	return Count;
 }
 
+/*
+* @unimplemented
+*/
+ULONG
+STDCALL
+RtlFindClearRuns (
+	PRTL_BITMAP BitMapHeader,
+	PRTL_BITMAP_RUN RunArray,
+	ULONG SizeOfRunArray,
+	BOOLEAN LocateLongestRuns
+	)
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+/*
+* @unimplemented
+*/
+ULONG
+STDCALL
+RtlFindLastBackwardRunClear (
+	IN PRTL_BITMAP BitMapHeader,
+	IN ULONG FromIndex,
+	IN PULONG StartingRunIndex
+	)
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+/*
+* @unimplemented
+*/
+ULONG
+STDCALL
+RtlFindNextForwardRunClear (
+	IN PRTL_BITMAP BitMapHeader,
+	IN ULONG FromIndex,
+	IN PULONG StartingRunIndex
+	)
+{
+	UNIMPLEMENTED;
+	return 0;
+}
 
 ULONG
 STDCALL
@@ -654,6 +713,18 @@ RtlSetAllBits (
 	        ALIGN(BitMapHeader->SizeOfBitMap, 8));
 }
 
+/*
+* @unimplemented
+*/
+VOID
+STDCALL
+RtlSetBit (
+	PRTL_BITMAP BitMapHeader,
+	ULONG BitNumber
+	)
+{
+	UNIMPLEMENTED;
+}
 
 /*
  * @implemented
@@ -693,4 +764,17 @@ RtlSetBits (
 	}
 }
 
+/*
+* @unimplemented
+*/
+BOOLEAN
+STDCALL
+RtlTestBit (
+	PRTL_BITMAP BitMapHeader,
+	ULONG BitNumber
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
 /* EOF */

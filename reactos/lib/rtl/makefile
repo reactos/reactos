@@ -14,14 +14,17 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_OBJECTS = \
 	acl.o \
+	bootdata.o \
 	compress.o \
 	dos8dot3.o \
 	env.o \
 	error.o \
 	heap.o \
+	generictbl.o \
 	largeint.o \
 	luid.o \
 	mem.o \
+	network.o \
 	nls.o \
 	random.o \
 	sd.o \
@@ -34,6 +37,7 @@ TARGET_OBJECTS = \
 	encode.o \
 	image.o \
 	splaytree.o \
+	unicodeprfx.o \
         exception.o \
         i386/exception.o \
         i386/except.o

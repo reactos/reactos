@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.1 2004/05/31 19:29:02 gdalsnes Exp $
+/* $Id: error.c,v 1.2 2004/08/05 18:17:36 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -862,6 +862,18 @@ RtlAssert(PVOID FailedAssertion,
    DbgBreakPoint();
 }
 
+/*
+* @unimplemented
+*/
+NTSTATUS
+STDCALL
+RtlMapSecurityErrorToNtStatus(
+	IN ULONG SecurityError
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
 
 /**********************************************************************
  * NAME       EXPORTED

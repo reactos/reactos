@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: capture.c,v 1.4 2002/09/08 10:23:41 chorns Exp $
+/* $Id: capture.c,v 1.5 2004/08/05 18:17:37 ion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/capture.c
@@ -114,6 +114,34 @@ RtlCaptureAnsiString(PANSI_STRING Dest,
     }
 
   return(STATUS_SUCCESS);
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+RtlCaptureContext (
+	OUT PCONTEXT ContextRecord
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+* @unimplemented
+*/
+USHORT
+STDCALL
+RtlCaptureStackBackTrace (
+	IN ULONG FramesToSkip,
+	IN ULONG FramesToCapture,
+	OUT PVOID *BackTrace,
+	OUT PULONG BackTraceHash OPTIONAL
+	)
+{
+	UNIMPLEMENTED;
+	return 0;
 }
 
 /* EOF */

@@ -562,12 +562,15 @@ NtQueueApcThread(HANDLE			ThreadHandle,
    PKAPC Apc;
    PETHREAD Thread;
    NTSTATUS Status;
+   PVOID ThreadVar;
+
+   ThreadVar = &Thread;
    
    Status = ObReferenceObjectByHandle(ThreadHandle,
 				      THREAD_ALL_ACCESS, /* FIXME */
 				      PsThreadType,
 				      UserMode,
-				      (PVOID*)&Thread,
+				      &ThreadVar,
 				      NULL);
    if (!NT_SUCCESS(Status))
      {

@@ -1,5 +1,5 @@
 
-/* $Id: mem.c,v 1.1 2004/05/31 19:29:02 gdalsnes Exp $
+/* $Id: mem.c,v 1.2 2004/08/05 18:17:36 ion Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -144,6 +144,18 @@ RtlMoveMemory (
    );
 }
 
+/*
+* @unimplemented
+*/
+VOID
+FASTCALL
+RtlPrefetchMemoryNonTemporal(
+	IN PVOID Source,
+	IN SIZE_T Length
+	)
+{
+	UNIMPLEMENTED;
+}
 
 /*
  * @implemented

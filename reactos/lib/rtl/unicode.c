@@ -393,6 +393,18 @@ RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
    UnicodeString->MaximumLength = 0;
 }
 
+/*
+* @unimplemented
+*/
+BOOLEAN
+STDCALL
+RtlIsValidOemCharacter (
+	IN PWCHAR Char
+	)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
 
 /*
  * @implemented
@@ -483,7 +495,20 @@ RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
    DestinationString->Buffer = (PWSTR)SourceString;
 }
 
-
+/*
+* @unimplemented
+*/
+NTSTATUS
+STDCALL
+RtlInt64ToUnicodeString (
+	IN ULONGLONG Value,
+	IN ULONG Base OPTIONAL,
+	IN OUT PUNICODE_STRING String
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
 
 /*
  * @implemented
@@ -1406,19 +1431,6 @@ RtlGUIDFromString(
    return STATUS_SUCCESS;
 }
 
-
-/*
- * @unimplemented
- */
-NTSTATUS STDCALL
-RtlInt64ToUnicodeString (IN ULONGLONG Value,
-                         IN ULONG Base,
-                         OUT PUNICODE_STRING String)
-{
-   return STATUS_NOT_IMPLEMENTED;
-}
-
-
 /*
  * @implemented
  */
@@ -1440,7 +1452,21 @@ RtlEraseUnicodeString(
    String->Length = 0;
 }
 
-
+/*
+* @unimplemented
+*/
+NTSTATUS
+STDCALL
+RtlHashUnicodeString(
+	IN const UNICODE_STRING *String,
+	IN BOOLEAN CaseInSensitive,
+	IN ULONG HashAlgorithm,
+	OUT PULONG HashValue
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
 
 /*
  * @implemented
