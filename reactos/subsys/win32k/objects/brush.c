@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: brush.c,v 1.30 2003/12/12 15:47:37 weiden Exp $
+/* $Id: brush.c,v 1.31 2004/01/15 21:03:05 gvg Exp $
  */
 
 
@@ -378,6 +378,7 @@ BOOL STDCALL NtGdiPatBlt(HDC  hDC,
   if (NULL == BrushObj)
     {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
+      DC_UnlockDc(hDC);
       return FALSE;
     }
 
