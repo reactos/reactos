@@ -807,7 +807,7 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
       break;
     case HTMAXBUTTON:
       Btn = DFCS_CAPTIONMAX;
-      SCMsg = SC_MAXIMIZE;
+      SCMsg = ((Style & WS_MAXIMIZE) ? SC_RESTORE : SC_MAXIMIZE);
       HasBtn = (Style & WS_MAXIMIZEBOX);
       break;
     default:

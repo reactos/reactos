@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.168 2003/12/18 13:00:56 gvg Exp $
+/* $Id: window.c,v 1.169 2003/12/19 23:20:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2629,15 +2629,50 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-DWORD STDCALL
-NtUserGetWindowPlacement(DWORD Unknown0,
-			 DWORD Unknown1)
+BOOL STDCALL
+NtUserGetWindowPlacement(HWND hWnd,
+			 WINDOWPLACEMENT *lpwndpl)
 {
-  UNIMPLEMENTED
-
-  return 0;
+  PWINDOW_OBJECT WindowObject;
+  WINDOWPLACEMENT Safepl;
+  NTSTATUS Status;
+  
+  WindowObject = IntGetWindowObject(hWnd);
+  if (WindowObject == NULL)
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
+  
+  Status = MmCopyFromCaller(&Safepl, lpwndpl, sizeof(WINDOWPLACEMENT));
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    IntReleaseWindowObject(WindowObject);
+    return FALSE;
+  }
+  if(Safepl.length != sizeof(WINDOWPLACEMENT))
+  {
+    IntReleaseWindowObject(WindowObject);
+    return FALSE;
+  }
+  
+  /* FIXME - fill structure */
+  Safepl.flags = 0;
+  Safepl.showCmd = ((WindowObject->Style & WINDOWOBJECT_RESTOREMAX) ? SW_MAXIMIZE : SW_SHOWNORMAL);
+  
+  Status = MmCopyToCaller(lpwndpl, &Safepl, sizeof(WINDOWPLACEMENT));
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    IntReleaseWindowObject(WindowObject);
+    return FALSE;
+  }
+  
+  IntReleaseWindowObject(WindowObject);
+  return TRUE;
 }
 
 
@@ -2999,15 +3034,41 @@ NtUserSetWindowFNID(DWORD Unknown0,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-DWORD STDCALL
-NtUserSetWindowPlacement(DWORD Unknown0,
-			 DWORD Unknown1)
+BOOL STDCALL
+NtUserSetWindowPlacement(HWND hWnd,
+			 WINDOWPLACEMENT *lpwndpl)
 {
-  UNIMPLEMENTED
-
-  return 0;
+  PWINDOW_OBJECT WindowObject;
+  WINDOWPLACEMENT Safepl;
+  NTSTATUS Status;
+  
+  WindowObject = IntGetWindowObject(hWnd);
+  if (WindowObject == NULL)
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
+  
+  Status = MmCopyFromCaller(&Safepl, lpwndpl, sizeof(WINDOWPLACEMENT));
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    IntReleaseWindowObject(WindowObject);
+    return FALSE;
+  }
+  if(Safepl.length != sizeof(WINDOWPLACEMENT))
+  {
+    IntReleaseWindowObject(WindowObject);
+    return FALSE;
+  }
+  
+  /* FIXME - change window status */
+  WinPosShowWindow(WindowObject->Self, Safepl.showCmd);
+  
+  IntReleaseWindowObject(WindowObject);
+  return TRUE;
 }
 
 

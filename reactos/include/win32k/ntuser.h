@@ -887,11 +887,11 @@ STDCALL
 NtUserGetWindowDC(
   HWND hWnd);
 
-DWORD
+BOOL
 STDCALL
 NtUserGetWindowPlacement(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HWND hWnd,
+  WINDOWPLACEMENT *lpwndpl);
 
 DWORD
 STDCALL
@@ -1546,11 +1546,11 @@ NtUserSetWindowLong(
   LONG NewValue,
   BOOL Ansi);
 
-DWORD
+BOOL
 STDCALL
 NtUserSetWindowPlacement(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HWND hWnd,
+  WINDOWPLACEMENT *lpwndpl);
 
 BOOL 
 STDCALL NtUserSetWindowPos(      

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.56 2003/12/15 21:51:10 weiden Exp $
+/* $Id: winpos.c,v 1.57 2003/12/19 23:20:06 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -184,6 +184,11 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
     {
       InternalPos = 
 	ExAllocatePool(NonPagedPool, sizeof(INTERNALPOS));
+      if(!InternalPos)
+      {
+        DPRINT1("Failed to allocate INTERNALPOS structure for window 0x%x\n", WindowObject->Self);
+        return NULL;
+      }
       IntSetProp(WindowObject, AtomInternalPos, InternalPos);
       InternalPos->IconTitle = 0;
       InternalPos->NormalRect = WindowObject->WindowRect;
@@ -259,7 +264,7 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 		WinPosShowIconTitle(WindowObject, FALSE);
 		WindowObject->Style &= ~WS_MINIMIZE;
 	      }
-	    WindowObject->Style |= WS_MINIMIZE;
+	    WindowObject->Style |= WS_MAXIMIZE;
 	    NtGdiSetRect(NewPos, InternalPos->MaxPos.x, InternalPos->MaxPos.y,
 			Size.x, Size.y);
 	    break;
@@ -287,13 +292,11 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 		  {
 		    return(-1);
 		  }
-		else
-		  {
-		    WindowObject->Style &= ~WS_MAXIMIZE;
-		  }	      
+		WindowObject->Style &= ~WS_MAXIMIZE;
 		*NewPos = InternalPos->NormalRect;
 		NewPos->right -= NewPos->left;
 		NewPos->bottom -= NewPos->top;
+		DPRINT1("Restoring window to %d, %d, %d, %d\n", NewPos->left, NewPos->top, NewPos->right, NewPos->bottom);
 		break;
 	      }
 	  }

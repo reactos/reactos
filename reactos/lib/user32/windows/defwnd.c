@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.110 2003/12/11 16:24:06 gvg Exp $
+/* $Id: defwnd.c,v 1.111 2003/12/19 23:20:05 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -752,12 +752,38 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 LRESULT
 DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, POINT Pt)
 {
+  WINDOWPLACEMENT wp;
+  
   switch (wParam & 0xfff0)
     {
       case SC_MOVE:
       case SC_SIZE:
 	DefWndDoSizeMove(hWnd, wParam);
 	break;
+      case SC_MINIMIZE:
+        wp.length = sizeof(WINDOWPLACEMENT);
+        if(GetWindowPlacement(hWnd, &wp))
+        {
+          wp.showCmd = SW_MINIMIZE;
+          SetWindowPlacement(hWnd, &wp);
+        }
+        break;
+      case SC_MAXIMIZE:
+        wp.length = sizeof(WINDOWPLACEMENT);
+        if(GetWindowPlacement(hWnd, &wp))
+        {
+          wp.showCmd = SW_MAXIMIZE;
+          SetWindowPlacement(hWnd, &wp);
+        }
+        break;
+      case SC_RESTORE:
+        wp.length = sizeof(WINDOWPLACEMENT);
+        if(GetWindowPlacement(hWnd, &wp))
+        {
+          wp.showCmd = SW_RESTORE;
+          SetWindowPlacement(hWnd, &wp);
+        }
+        break;
       case SC_CLOSE:
         SendMessageA(hWnd, WM_CLOSE, 0, 0);
         break;

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.90 2003/12/18 16:47:27 navaraf Exp $
+/* $Id: window.c,v 1.91 2003/12/19 23:20:05 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1124,14 +1124,13 @@ GetWindowModuleFileNameW(HWND hwnd,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 GetWindowPlacement(HWND hWnd,
 		   WINDOWPLACEMENT *lpwndpl)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (WINBOOL)NtUserGetWindowPlacement(hWnd, lpwndpl);
 }
 
 
@@ -1419,8 +1418,7 @@ WINBOOL STDCALL
 SetWindowPlacement(HWND hWnd,
 		   CONST WINDOWPLACEMENT *lpwndpl)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (WINBOOL)NtUserSetWindowPlacement(hWnd, (WINDOWPLACEMENT *)lpwndpl);
 }
 
 
