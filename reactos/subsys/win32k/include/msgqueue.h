@@ -62,6 +62,13 @@ typedef struct _USER_MESSAGE_QUEUE
   HWND ActiveWindow;
   /* Current capture window for this queue. */
   HWND CaptureWindow;
+
+  /* queue state tracking */
+  WORD WakeBits;
+  WORD WakeMask;
+  WORD ChangedBits;
+  WORD ChangedMask;
+
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;
 
 VOID FASTCALL
@@ -122,6 +129,10 @@ VOID STDCALL
 MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
 MsqInsertSystemMessage(MSG* Msg);
+
+inline BOOL MsqIsSignaled( PUSER_MESSAGE_QUEUE queue );
+inline VOID MsqSetQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
+inline VOID MsqClearQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
 
 #define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))
 
