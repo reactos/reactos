@@ -223,7 +223,7 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 				continue;
 
 			if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                                _stprintf (fname, _T("[%s]"), file.cFileName);
+				_stprintf (fname, _T("[%s]"), file.cFileName);
 			else
 				_tcscpy (fname, file.cFileName);
 

@@ -221,9 +221,9 @@ Execute (LPTSTR first, LPTSTR rest)
 
 #ifndef __REACTOS__                 
 		if (CreateProcess (NULL, szFullCmdLine, NULL, NULL, FALSE,
-                                   0, NULL, NULL, &stui, &prci))
+		   0, NULL, NULL, &stui, &prci))
 #else
-                if (CreateProcess (szFullName, rest, NULL, NULL, FALSE,
+		if (CreateProcess (szFullName, rest, NULL, NULL, FALSE,
                                    0, NULL, NULL, &stui, &prci))
 #endif
 		{
@@ -552,7 +552,7 @@ VOID ParseCommandLine (LPTSTR s)
 			CloseHandle (hErr);
 		hOldConErr = INVALID_HANDLE_VALUE;
 	}
-#endif
+#endif  /* FEATURE_REDIRECTION */
 
 	/* process final command */
 	DoCommand (s);
@@ -615,7 +615,6 @@ VOID ParseCommandLine (LPTSTR s)
 #ifdef _DEBUG
 					DebugPrintf (_T("hFile[0] and hIn dont match!!!\n"));
 #endif
-
 				}
 			}
 		}
@@ -706,7 +705,7 @@ ProcessInput (BOOL bFlag)
 						break;
 
 					case _T('?'):
-                                                cp += _stprintf (cp, _T("%u"), nErrorLevel);
+						cp += _stprintf (cp, _T("%u"), nErrorLevel);
 						ip++;
 						break;
 
@@ -824,7 +823,7 @@ ShowCommands (VOID)
 #ifdef FEATURE_REDIRECTION
 	ConOutPuts ("  [redirections and piping]");
 #endif
-        ConOutChar ('\n');
+	ConOutChar ('\n');
 }
 
 
@@ -854,10 +853,10 @@ static VOID Initialize (int argc, char *argv[])
 #endif
 
 	/* get version information */
-    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx (&osvi);
+	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	GetVersionEx (&osvi);
 
-    InitLocale ();
+	InitLocale ();
 
 	/* get default input and output console handles */
 	hOut = GetStdHandle (STD_OUTPUT_HANDLE);
@@ -867,7 +866,7 @@ static VOID Initialize (int argc, char *argv[])
 	InitLastPath ();
 #endif
 
-    if (argc >= 2)
+	if (argc >= 2)
 	{
 		if (!_tcsncmp (argv[1], _T("/?"), 2))
 		{
@@ -941,8 +940,8 @@ static VOID Initialize (int argc, char *argv[])
 
 	/* Set COMSPEC environment variable */
 #ifndef __REACTOS__
-        if (argv)
-                SetEnvironmentVariable (_T("COMSPEC"), argv[0]);
+	if (argv)
+		SetEnvironmentVariable (_T("COMSPEC"), argv[0]);
 #endif
 
 	/* add ctrl handler */
@@ -966,7 +965,7 @@ static VOID Cleanup (VOID)
 
 	/* remove ctrl handler */
 #if 0
-    SetConsoleCtrlHandler ((PHANDLER_ROUTINE)&BreakHandler, FALSE);
+	SetConsoleCtrlHandler ((PHANDLER_ROUTINE)&BreakHandler, FALSE);
 #endif
 }
 
@@ -980,23 +979,22 @@ int main (int argc, char *argv[])
 
 	AllocConsole ();
 #ifndef __REACTOS__
-        SetFileApisToOEM ();
+	SetFileApisToOEM ();
 #endif
 
 #ifdef __REACTOS__
-        SetCurrentDirectory (_T("C:\\"));
+	SetCurrentDirectory (_T("C:\\"));
 #endif
 
 	/* check switches on command-line */
 	Initialize (argc, argv);
 
 	/* call prompt routine */
-        nExitCode = ProcessInput (FALSE);
+	nExitCode = ProcessInput (FALSE);
 
 	/* do the cleanup */
-        Cleanup ();
-        FreeConsole ();
+	Cleanup ();
+	FreeConsole ();
 
-        return nExitCode;
-//        return 0;
+	return nExitCode;
 }

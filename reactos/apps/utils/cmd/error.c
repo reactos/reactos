@@ -52,7 +52,7 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 		return;
 
 	va_start (arg_ptr, szFormat);
-    _vstprintf (szMessage, szFormat, arg_ptr);
+	_vstprintf (szMessage, szFormat, arg_ptr);
 	va_end (arg_ptr);
 
 #ifndef __REACTOS__
@@ -81,6 +81,10 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 
 		case ERROR_PATH_NOT_FOUND:
 			szError = _T("Path not found --");
+			break;
+
+		case ERROR_BAD_PATHNAME:  /* a1 */
+			szError = _T("Invalid path");
 			break;
 
 		default:
