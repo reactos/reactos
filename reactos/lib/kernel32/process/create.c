@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.18 2000/01/26 10:07:23 dwelch Exp $
+/* $Id: create.c,v 1.19 2000/01/27 08:56:47 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -412,19 +412,16 @@ CreatePeb (
 }
 
 
-WINBOOL
-STDCALL
-CreateProcessW (
-	LPCWSTR lpApplicationName,
-	LPWSTR lpCommandLine,
-	LPSECURITY_ATTRIBUTES lpProcessAttributes,
-	LPSECURITY_ATTRIBUTES lpThreadAttributes,
-	WINBOOL bInheritHandles,
-	DWORD dwCreationFlags,
-	LPVOID lpEnvironment,
-	LPCWSTR lpCurrentDirectory,
-	LPSTARTUPINFOW lpStartupInfo,
-	LPPROCESS_INFORMATION lpProcessInformation)
+WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
+			       LPWSTR lpCommandLine,
+			       LPSECURITY_ATTRIBUTES lpProcessAttributes,
+			       LPSECURITY_ATTRIBUTES lpThreadAttributes,
+			       WINBOOL bInheritHandles,
+			       DWORD dwCreationFlags,
+			       LPVOID lpEnvironment,
+			       LPCWSTR lpCurrentDirectory,
+			       LPSTARTUPINFOW lpStartupInfo,
+			       LPPROCESS_INFORMATION lpProcessInformation)
 {
    HANDLE hSection, hProcess, hThread;
    NTSTATUS Status;
@@ -509,9 +506,6 @@ CreateProcessW (
    /*
     * Map NT DLL into the process
     */
-   Status = LdrMapNTDllForProcess(hProcess,
-				  &NTDllSection);
-
    InitialViewSize = DosHeader.e_lfanew + sizeof(IMAGE_NT_HEADERS)
      + sizeof(IMAGE_SECTION_HEADER) * Headers.FileHeader.NumberOfSections;
 

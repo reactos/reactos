@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.28 2000/01/26 10:07:23 dwelch Exp $
+/* $Id: proc.c,v 1.29 2000/01/27 08:56:47 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -80,32 +80,26 @@ GetProcessTimes (
 	LPFILETIME	lpUserTime
 	)
 {
-	dprintf("GetProcessTimes is unimplemented\n");
+	DPRINT("GetProcessTimes is unimplemented\n");
 	return FALSE;
 }
 
 
-HANDLE
-STDCALL
-GetCurrentProcess (VOID)
+HANDLE STDCALL GetCurrentProcess (VOID)
 {
-	return (HANDLE) NtCurrentProcess();
+	return((HANDLE)NtCurrentProcess());
 }
 
 
-HANDLE
-STDCALL
-GetCurrentThread (VOID)
+HANDLE STDCALL GetCurrentThread (VOID)
 {
-	return (HANDLE) NtCurrentThread();
+   return((HANDLE)NtCurrentThread());
 }
 
 
-DWORD
-STDCALL
-GetCurrentProcessId (VOID)
+DWORD STDCALL GetCurrentProcessId (VOID)
 {
-	return (DWORD) (GetTeb()->Cid).UniqueProcess;
+   return((DWORD)GetTeb()->Cid.UniqueProcess);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.9 2000/01/26 10:07:24 dwelch Exp $
+/* $Id: process.c,v 1.10 2000/01/27 08:56:48 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -341,8 +341,6 @@ RtlCreateUserProcess (
     /*
      * Map NT DLL into the process
      */
-    Status = LdrMapNTDllForProcess(hProcess,
-                                   &NTDllSection);
 
    InitialViewSize = DosHeader.e_lfanew + sizeof(IMAGE_NT_HEADERS) 
      + sizeof(IMAGE_SECTION_HEADER) * Headers.FileHeader.NumberOfSections;

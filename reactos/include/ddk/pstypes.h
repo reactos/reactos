@@ -191,19 +191,19 @@ typedef struct _ETHREAD
    LIST_ENTRY		IrpList; //
    TOP_LEVEL_IRP		TopLevelIrp;
    ULONG			ReadClusterSize;
-	UCHAR			ForwardClusterOnly;
-	UCHAR			DisablePageFaultClustering;
-	UCHAR			DeadThread;
-	UCHAR			HasTerminated;
-	ACCESS_MASK		GrantedAccess;
-	struct _EPROCESS*	ThreadsProcess;
-	PKSTART_ROUTINE		StartAddress;
-	LPTHREAD_START_ROUTINE  Win32StartAddress; // Should Specify a win32 start func
-	UCHAR 			LpcExitThreadCalled;
-        UCHAR 			HardErrorsAreDisabled;
-        UCHAR                   LpcReceivedMsgIdValid;
-        UCHAR                   ActiveImpersonationInfo;
-        ULONG                   PerformanceCountHigh;
+   UCHAR			ForwardClusterOnly;
+   UCHAR			DisablePageFaultClustering;
+   UCHAR			DeadThread;
+   UCHAR			HasTerminated;
+   ACCESS_MASK		GrantedAccess;
+   struct _EPROCESS*	ThreadsProcess;
+   PKSTART_ROUTINE		StartAddress;
+   LPTHREAD_START_ROUTINE  Win32StartAddress; // Should Specify a win32 start func
+   UCHAR 			LpcExitThreadCalled;
+   UCHAR 			HardErrorsAreDisabled;
+   UCHAR                   LpcReceivedMsgIdValid;
+   UCHAR                   ActiveImpersonationInfo;
+   ULONG                   PerformanceCountHigh;
 
    /*
     * Added by David Welch (welch@cwcom.net)

@@ -19,6 +19,7 @@
 #include <internal/string.h>
 #include <internal/id.h>
 #include <internal/teb.h>
+#include <internal/ldr.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -257,16 +258,14 @@ struct _EPROCESS* PsGetCurrentProcess(VOID)
      }
 }
 
-NTSTATUS STDCALL NtCreateProcess (
-	OUT	PHANDLE			ProcessHandle,
-	IN	ACCESS_MASK		DesiredAccess,
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,
-	IN	HANDLE			ParentProcessHandle,
-	IN	BOOLEAN			InheritObjectTable,
-	IN	HANDLE			SectionHandle		OPTIONAL,
-	IN	HANDLE			DebugPort		OPTIONAL,
-	IN	HANDLE			ExceptionPort		OPTIONAL
-	)
+NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
+				  IN ACCESS_MASK DesiredAccess,
+				  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+				  IN HANDLE ParentProcessHandle,
+				  IN BOOLEAN InheritObjectTable,
+				  IN HANDLE SectionHandle OPTIONAL,
+				  IN HANDLE DebugPort OPTIONAL,
+				  IN HANDLE ExceptionPort OPTIONAL)
 /*
  * FUNCTION: Creates a process.
  * ARGUMENTS:
@@ -294,6 +293,7 @@ NTSTATUS STDCALL NtCreateProcess (
    PKPROCESS KProcess;
    NTSTATUS Status;
    KIRQL oldIrql;
+   PVOID LdrStartupAddr;
    
    DPRINT("NtCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
 
@@ -333,15 +333,26 @@ NTSTATUS STDCALL NtCreateProcess (
    InsertHeadList(&PsProcessListHead, &KProcess->ProcessListEntry);
    InitializeListHead( &KProcess->ThreadListHead );
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
-
+   
+   Process->Pcb.ProcessState = PROCESS_STATE_ACTIVE;
+   
+   /*
+    * Now we have created the process proper
+    */
+   
    Status = PsCreatePeb(*ProcessHandle);
    if (!NT_SUCCESS(Status))
      {
-//        DPRINT("NtCreateProcess() Peb creation failed: Status %x\n",Status);
-        DbgPrint ("NtCreateProcess() Peb creation failed: Status %x\n",Status);
+        DbgPrint("NtCreateProcess() Peb creation failed: Status %x\n",Status);
 	return(Status);
      }
-
+   
+   /*
+    * Map ntdll
+    */
+   Status = LdrpMapSystemDll(*ProcessHandle,
+			     &LdrStartupAddr);
+   
    /*
     * FIXME: I don't what I'm supposed to know with a section handle
     */
@@ -351,7 +362,6 @@ NTSTATUS STDCALL NtCreateProcess (
 	return(STATUS_UNSUCCESSFUL);
      }
 
-   Process->Pcb.ProcessState = PROCESS_STATE_ACTIVE;
    ObDereferenceObject(Process);
    ObDereferenceObject(ParentProcess);
    return(STATUS_SUCCESS);

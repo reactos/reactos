@@ -1,3 +1,5 @@
+26/1/99:       ZwCreateProcess now maps ntdll rather than the user-mode code
+
 9/6/99:        Implemented ZwOpenProcess
                Partially implemented killing other threads (possible memory
                                                             leaks)

@@ -1,3 +1,5 @@
+#ifndef __INCLUDE_PE_H
+#define __INCLUDE_PE_H
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
@@ -591,3 +593,4 @@ typedef struct _RELOCATION_ENTRY
 #define	TYPE_RELOC_HIGHADJ	4
 #define	TYPE_RELOC_MIPS_JMPADDR	5
 
+#endif /* __INCLUDE_PE_H */

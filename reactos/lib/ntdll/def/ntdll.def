@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.37 2000/01/23 08:16:20 phreak Exp $
+; $Id: ntdll.def,v 1.38 2000/01/27 08:56:48 dwelch Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -652,7 +652,6 @@ wcstoul
 LdrGetExportByName
 LdrGetExportByOrdinal
 LdrLoadDll
-LdrMapNTDllForProcess
 LdrUnloadDll
 LdrFindResource_U
 LdrAccessResource

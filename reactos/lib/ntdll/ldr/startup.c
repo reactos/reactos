@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.15 2000/01/18 12:04:31 ekohl Exp $
+/* $Id: startup.c,v 1.16 2000/01/27 08:56:48 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,7 +21,7 @@
 #include <ntdll/ldr.h>
 #include <ntdll/rtl.h>
 
-#undef DBG_NTDLL_LDR_STARTUP
+//#define DBG_NTDLL_LDR_STARTUP
 #ifndef DBG_NTDLL_LDR_STARTUP
 #define NDEBUG
 #endif
@@ -36,44 +36,6 @@ extern HANDLE __ProcessHeap;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS LdrMapNTDllForProcess (HANDLE	ProcessHandle,
-				PHANDLE	PtrNTDllSectionHandle)
-{
-   ULONG InitialViewSize;
-   NTSTATUS Status;
-   HANDLE NTDllSectionHandle;
-   PVOID ImageBase;
-   PIMAGE_NT_HEADERS NTHeaders;
-   PIMAGE_DOS_HEADER PEDosHeader;
-
-   DPRINT("LdrMapNTDllForProcess(ProcessHandle %x)\n",ProcessHandle);
-
-   PEDosHeader = (PIMAGE_DOS_HEADER)LdrDllListHead.BaseAddress;
-   NTHeaders = (PIMAGE_NT_HEADERS)(LdrDllListHead.BaseAddress +
-				   PEDosHeader->e_lfanew);
-
-   NTDllSectionHandle = LdrDllListHead.SectionHandle;
-   InitialViewSize = PEDosHeader->e_lfanew + sizeof(IMAGE_NT_HEADERS) 
-     + sizeof(IMAGE_SECTION_HEADER) * NTHeaders->FileHeader.NumberOfSections;
-   ImageBase = LdrDllListHead.BaseAddress;
-   DPRINT("Mapping at %x\n",ImageBase);
-   Status = ZwMapViewOfSection(NTDllSectionHandle,
-			       ProcessHandle,
-			       (PVOID *)&ImageBase,
-			       0,
-			       InitialViewSize,
-			       NULL,
-			       &InitialViewSize,
-			       0,
-			       MEM_COMMIT,
-			       PAGE_READWRITE);
-   LdrMapSections(ProcessHandle,
-		  ImageBase,
-		  NTDllSectionHandle,
-		  NTHeaders);
-   *PtrNTDllSectionHandle = NTDllSectionHandle;
-   return(STATUS_SUCCESS);
-}
 
 /*   LdrStartup
  * FUNCTION:
@@ -105,12 +67,14 @@ VOID LdrStartup(PPEB Peb,
 
   /*  If MZ header exists  */
   PEDosHeader = (PIMAGE_DOS_HEADER) ImageBase;
+   DPRINT("PEDosHeader %x\n", PEDosHeader);
   if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC ||
       PEDosHeader->e_lfanew == 0L ||
       *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_PE_MAGIC)
      {
 	DbgPrint("Image has bad header\n");
-	ZwTerminateProcess(NULL,STATUS_UNSUCCESSFUL);
+	ZwTerminateProcess(NULL,
+			   STATUS_UNSUCCESSFUL);
      }
 
    NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + PEDosHeader->e_lfanew);
