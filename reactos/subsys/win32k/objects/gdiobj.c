@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.56 2004/01/11 01:42:08 gvg Exp $
+ * $Id: gdiobj.c,v 1.57 2004/01/30 13:11:52 rcampbell Exp $
  *
  */
 
@@ -121,11 +121,11 @@ static LOGPEN NullPen =
 
 static LOGFONTW OEMFixedFont =
 { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, OEM_CHARSET,
-  0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"" };
+  0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Bitstream Vera Sans Mono" };
 
 static LOGFONTW AnsiFixedFont =
 { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-  0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"" };
+  0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Bitstream Vera Sans Mono" };
 
 /*static LOGFONTW AnsiVarFont =
  *{ 10, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
@@ -133,15 +133,15 @@ static LOGFONTW AnsiFixedFont =
 
 static LOGFONTW SystemFont =
 { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-  0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"System" };
+  0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"Bitstream Vera Sans" };
 
 static LOGFONTW DeviceDefaultFont =
 { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-  0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"" };
+  0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"Bitstream Vera Sans" };
 
 static LOGFONTW SystemFixedFont =
 { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-  0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"" };
+  0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Bitstream Vera Sans Mono" };
 
 /* FIXME: Is this correct? */
 static LOGFONTW DefaultGuiFont =
