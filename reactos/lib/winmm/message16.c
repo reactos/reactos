@@ -1995,6 +1995,20 @@ static WINMM_MapType	MCI_MapMsg16To32A(WORD uDevType, WORD wMsg, DWORD* lParam)
 	    *lParam = (DWORD)msip32a;
 	}
 	return WINMM_MAP_OKMEM;
+    case MCI_SOUND:
+	{
+            LPMCI_SOUND_PARMS		mbp32 = HeapAlloc(GetProcessHeap(), 0, sizeof(MCI_SOUND_PARMS));
+	    LPMCI_SOUND_PARMS16		mbp16 = MapSL(*lParam);
+
+	    if (mbp32) {
+		mbp32->dwCallback = mbp16->dwCallback;
+		mbp32->lpstrSoundName = MapSL(mbp16->lpstrSoundName);
+	    } else {
+		return WINMM_MAP_NOMEM;
+	    }
+	    *lParam = (DWORD)mbp32;
+	}
+	return WINMM_MAP_OKMEM;
     case DRV_LOAD:
     case DRV_ENABLE:
     case DRV_OPEN:
@@ -2065,6 +2079,7 @@ static  WINMM_MapType	MCI_UnMapMsg16To32A(WORD uDevType, WORD wMsg, DWORD lParam
     case MCI_ESCAPE:
     case MCI_INFO:
     case MCI_SYSINFO:
+    case MCI_SOUND:
 	HeapFree(GetProcessHeap(), 0, (LPVOID)lParam);
 	return WINMM_MAP_OK;
     case MCI_OPEN:
@@ -2454,6 +2469,7 @@ static  WINMM_MapType	MCI_MapMsg32ATo16(WORD uDevType, WORD wMsg, DWORD dwFlags,
 	break;
 	/* case MCI_SETTIMECODE:*/
 	/* case MCI_SIGNAL:*/
+        /* case MCI_SOUND:*/
     case MCI_SPIN:
 	size = sizeof(MCI_SET_PARMS);
 	break;
@@ -2653,6 +2669,7 @@ static  WINMM_MapType	MCI_UnMapMsg32ATo16(WORD uDevType, WORD wMsg, DWORD dwFlag
 	break;
 	/* case MCI_SETTIMECODE:*/
 	/* case MCI_SIGNAL:*/
+        /* case MCI_SOUND:*/
     case MCI_SPIN:
 	break;
     case MCI_STATUS:

@@ -1,5 +1,3 @@
-/* -*- tab-width: 8; c-basic-offset: 4 -*- */
-
 /*
  * MCI internal functions
  *
@@ -18,6 +16,21 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+/* TODO:
+ * - implement WINMM (32bit) multitasking and use it in all MCI drivers
+ *   instead of the home grown one 
+ * - 16bit mmTaskXXX functions are currently broken because the 16
+ *   loader does not support binary command lines => provide Wine's
+ *   own mmtask.tsk not using binary command line.
+ * - correctly handle the MCI_ALL_DEVICE_ID in functions.
+ * - finish mapping 16 <=> 32 of MCI structures and commands
+ * - implement auto-open feature (ie, when a string command is issued
+ *   for a not yet opened device, MCI automatically opens it) 
+ * - use a default registry setting to replace the [mci] section in
+ *   configuration file (layout of info in registry should be compatible
+ *   with all Windows' version - which use different layouts of course)
  */
 
 #include "config.h"
@@ -593,7 +606,7 @@ static	LPCSTR		MCI_FindCommand(UINT uTbl, LPCSTR verb)
      * array look up
      */
     for (idx = 0; idx < S_MciCmdTable[uTbl].nVerbs; idx++) {
-	if (strcmp(S_MciCmdTable[uTbl].aVerbs[idx], verb) == 0)
+	if (strcasecmp(S_MciCmdTable[uTbl].aVerbs[idx], verb) == 0)
 	    return S_MciCmdTable[uTbl].aVerbs[idx];
     }
 
@@ -885,6 +898,7 @@ DWORD WINAPI mciSendStringA(LPCSTR lpstrCommand, LPSTR lpstrRet,
     if (!(verb = HeapAlloc(GetProcessHeap(), 0, strlen(lpstrCommand)+1)))
 	return MCIERR_OUT_OF_MEMORY;
     strcpy( verb, lpstrCommand );
+    CharLowerA(verb);
 
     memset(data, 0, sizeof(data));
 
@@ -898,7 +912,7 @@ DWORD WINAPI mciSendStringA(LPCSTR lpstrCommand, LPSTR lpstrRet,
     }
 
     /* case dev == 'new' has to be handled */
-    if (!strcasecmp(dev, "new")) {
+    if (!strcmp(dev, "new")) {
 	FIXME("'new': NIY as device name\n");
 	dwRet = MCIERR_MISSING_DEVICE_NAME;
 	goto errCleanUp;
@@ -956,6 +970,8 @@ DWORD WINAPI mciSendStringA(LPCSTR lpstrCommand, LPSTR lpstrRet,
 	}
 
 	dwRet = MCI_LoadMciDriver(devType, &wmd);
+	if (dwRet == MCIERR_DEVICE_NOT_INSTALLED)
+	    dwRet = MCIERR_INVALID_DEVICE_NAME;
 	HeapFree(GetProcessHeap(), 0, devType);
 	if (dwRet) {
 	    MCI_UnLoadMciDriver(wmd);
@@ -1518,6 +1534,26 @@ static	DWORD MCI_Break(UINT wDevID, DWORD dwFlags, LPMCI_BREAK_PARMS lpParms)
 }
 
 /**************************************************************************
+ * 			MCI_Sound				[internal]
+ */
+static	DWORD MCI_Sound(UINT wDevID, DWORD dwFlags, LPMCI_SOUND_PARMS lpParms)
+{
+    DWORD	dwRet = 0;
+
+    if (lpParms == NULL)	return MCIERR_NULL_PARAMETER_BLOCK;
+
+    if (dwFlags & MCI_SOUND_NAME)
+        dwRet = sndPlaySoundA(lpParms->lpstrSoundName, SND_SYNC) ? MMSYSERR_NOERROR : MMSYSERR_ERROR;
+    else
+        dwRet = MMSYSERR_ERROR; /* what should be done ??? */
+    if (dwFlags & MCI_NOTIFY)
+	mciDriverNotify((HWND)lpParms->dwCallback, wDevID,
+                        (dwRet == 0) ? MCI_NOTIFY_SUCCESSFUL : MCI_NOTIFY_FAILURE);
+
+    return dwRet;
+}
+
+/**************************************************************************
  * 			MCI_SendCommand				[internal]
  */
 DWORD	MCI_SendCommand(UINT wDevID, UINT16 wMsg, DWORD dwParam1,
@@ -1564,7 +1600,7 @@ DWORD	MCI_SendCommand(UINT wDevID, UINT16 wMsg, DWORD dwParam1,
 		dwRet = MCI_SysInfo(wDevID, dwParam1, (LPMCI_SYSINFO_PARMSA)dwParam2);
 		pFnMciUnMapMsg16To32A(0, wMsg, dwParam2);
 		break;
-	    default: break; /* so that gcc doesnot  bark */
+	    default: break; /* so that gcc does not bark */
 	    }
 	}
 	break;
@@ -1583,9 +1619,18 @@ DWORD	MCI_SendCommand(UINT wDevID, UINT16 wMsg, DWORD dwParam1,
 	}
 	break;
     case MCI_SOUND:
-	/* FIXME: it seems that MCI_SOUND needs the same handling as MCI_BREAK
-	 * but I couldn't get any doc on this MCI message
-	 */
+	if (bFrom32) {
+	    dwRet = MCI_Sound(wDevID, dwParam1, (LPMCI_SOUND_PARMS)dwParam2);
+	} else if (pFnMciMapMsg16To32A) {
+	    switch (pFnMciMapMsg16To32A(0, wMsg, &dwParam2)) {
+	    case WINMM_MAP_OK:
+	    case WINMM_MAP_OKMEM:
+		dwRet = MCI_Sound(wDevID, dwParam1, (LPMCI_SOUND_PARMS)dwParam2);
+		pFnMciUnMapMsg16To32A(0, wMsg, dwParam2);
+		break;
+	    default: break; /* so that gcc does not bark */
+	    }
+	}
 	break;
     default:
 	if (wDevID == MCI_ALL_DEVICE_ID) {

@@ -633,7 +633,12 @@ HMMIO MMIO_Open(LPSTR szFileName, MMIOINFO* refmminfo, DWORD dwOpenFlags,
 	/* Handle any unhandled/error case. Assume DOS file */
 	if (wm->info.fccIOProc == 0)
 	    wm->info.fccIOProc = FOURCC_DOS;
-	if (!(wm->ioProc = MMIO_FindProcNode(wm->info.fccIOProc))) goto error2;
+	if (!(wm->ioProc = MMIO_FindProcNode(wm->info.fccIOProc))) {
+	    /* If not found, retry with FOURCC_DOS */
+	    wm->info.fccIOProc = FOURCC_DOS;
+	    if (!(wm->ioProc = MMIO_FindProcNode(wm->info.fccIOProc)))
+		goto error2;
+	}
 	wm->bTmpIOProc = FALSE;
     }
     /* if just the four character code is present, look up IO proc */
