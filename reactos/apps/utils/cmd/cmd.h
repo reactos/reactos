@@ -30,7 +30,7 @@
 #include <tchar.h>
 
 
-#define CMD_VER      "0.1 pre 2"
+#define CMD_VER      "0.1 pre 5"
 
 #ifdef _MSC_VER
 #define SHELLVER     "Version " CMD_VER " [" __DATE__ ", msc]"
@@ -105,6 +105,10 @@ INT cmd_beep (LPTSTR, LPTSTR);
 INT cmd_call (LPTSTR, LPTSTR);
 
 
+/* Prototypes for CHOICE.C */
+INT CommandChoice (LPTSTR, LPTSTR);
+
+
 /* Prototypes for CLS.C */
 INT cmd_cls (LPTSTR, LPTSTR);
 
@@ -136,6 +140,7 @@ VOID DebugPrintf (LPTSTR, ...);
 #endif /* _DEBUG */
 
 VOID ConInDummy (VOID);
+VOID ConInFlush (VOID);
 VOID ConInKey (PINPUT_RECORD);
 
 VOID ConInString (LPTSTR, DWORD);

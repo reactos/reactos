@@ -18,6 +18,7 @@ batch.c         Batch file interpreter
 beep.c          Implements beep command
 call.c          Implements call command
 chcp.c          Implements chcp command
+choice.c        Implements choice command
 cls.c           Implements cls command
 cmdinput.c      Command-line input functions
 cmdtable.c      Table of available internal commands

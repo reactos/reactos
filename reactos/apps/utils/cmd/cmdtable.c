@@ -68,6 +68,11 @@ COMMAND cmds[] =
 	{_T("chcp"),     0, CommandChcp},
 #endif
 
+#ifdef INCLUDE_CMD_CHOICE
+        {_T("choice"),     0, CommandChoice},
+#endif
+
+
 #ifdef INCLUDE_CMD_CLS
 	{_T("cls"),      0, cmd_cls},
 #endif

@@ -59,6 +59,7 @@
 /*#define INCLUDE_CMD_BREAK*/
 #define INCLUDE_CMD_CHCP
 #define INCLUDE_CMD_CHDIR
+#define INCLUDE_CMD_CHOICE
 #define INCLUDE_CMD_CLS
 #define INCLUDE_CMD_COLOR
 #define INCLUDE_CMD_COPY
@@ -86,7 +87,7 @@
 #define INCLUDE_CMD_VOL
 
 /*
-command that do not have a define:
+commands that do not have a define:
 
 exit
 call
