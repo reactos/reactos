@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<project name="Project" makefile="Makefile">
+	<module name="module1" type="buildtool">
+		<if property="VAR1" value="value1">
+			<file>file1.c</file>
+		</if>
+		<file>file2.c</file>
+	</module>
+</project>

@@ -81,7 +81,15 @@ public:
 	void Run();
 };
 
+
 class LinkerFlagTest : public BaseTest
+{
+public:
+	void Run();
+};
+
+
+class IfTest : public BaseTest
 {
 public:
 	void Run();
