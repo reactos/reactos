@@ -41,7 +41,7 @@ ExfAcquirePushLockExclusive (
 	)
 {
 	UNIMPLEMENTED;
-	return FALSE;
+	return NULL;
 }
 
 /*
@@ -54,7 +54,7 @@ ExfAcquirePushLockShared (
 	)
 {
 	UNIMPLEMENTED;
-	return FALSE;
+	return NULL;
 }
 
 /*
@@ -67,6 +67,7 @@ ExfReleasePushLock (
 	)
 {
 	UNIMPLEMENTED;
+	return NULL;
 }
 
 /* EOF */
