@@ -27,11 +27,6 @@ FindResourceExA(
 	WORD		wLanguage
 	)
 {
-//     WCHAR ResourceNameW[MAX_PATH];
-//     WCHAR TypeNameW[MAX_PATH];
-
-//     WCHAR *ResourceName = ResourceNameW;
-//     WCHAR *TypeName = TypeNameW;
 	UNICODE_STRING TypeU;
 	UNICODE_STRING NameU;
 	ANSI_STRING Type;
@@ -136,7 +131,7 @@ FindResourceExW (
 			return NULL;
 	}
 	else
-		nType = lpType;
+		nType = (ULONG)lpType;
 
 	Status = LdrFindResource_U(hModule,&ResourceDataEntry,lpName, nType,wLanguage);
 	if ( !NT_SUCCESS(Status ) ) {

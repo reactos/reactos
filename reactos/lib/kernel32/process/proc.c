@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.30 2000/02/19 19:35:57 ekohl Exp $
+/* $Id: proc.c,v 1.31 2000/03/16 01:14:37 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -106,7 +106,7 @@ GetExitCodeProcess (
 	return FALSE;
      }
    memcpy(lpExitCode, &ProcessBasic.ExitStatus, sizeof(DWORD));
-   return TRUE;	
+   return TRUE;
 }
 
 
@@ -133,34 +133,6 @@ GetProcessId (
      }
    memcpy( lpProcessId ,&ProcessBasic.UniqueProcessId,sizeof(DWORD));
    return TRUE;
-}
-
-
-PWSTR
-InternalAnsiToUnicode (
-	PWSTR	Out,
-	LPCSTR	In,
-	ULONG	MaxLength
-	)
-{
-   ULONG i;
-   
-   if (In == NULL)
-     {
-	return(NULL);
-     }
-   else
-     {
-	i = 0;
-	while ((*In)!=0 && i < MaxLength)
-	  {
-	     Out[i] = *In;
-	     In++;
-	     i++;
-	  }
-	Out[i] = 0;
-	return(Out);
-     }
 }
 
 
@@ -249,7 +221,7 @@ RegisterWaitForInputIdle (
 	WaitForInputIdleType	lpfnRegisterWaitForInputIdle
 	)
 {
-	lpfnGlobalRegisterWaitForInputIdle = lpfnRegisterWaitForInputIdle; 
+	lpfnGlobalRegisterWaitForInputIdle = lpfnRegisterWaitForInputIdle;
 	return;
 }
 
@@ -257,7 +229,7 @@ RegisterWaitForInputIdle (
 DWORD
 STDCALL
 WaitForInputIdle (
-	HANDLE	hProcess,	
+	HANDLE	hProcess,
 	DWORD	dwMilliseconds
 	)
 {
@@ -265,14 +237,23 @@ WaitForInputIdle (
 }
 
 
-VOID STDCALL Sleep (DWORD dwMilliseconds)
+VOID
+STDCALL
+Sleep (
+	DWORD	dwMilliseconds
+	)
 {
    SleepEx (dwMilliseconds, FALSE);
    return;
 }
 
-DWORD STDCALL SleepEx(DWORD	dwMilliseconds,
-		      BOOL	bAlertable)
+
+DWORD
+STDCALL
+SleepEx (
+	DWORD	dwMilliseconds,
+	BOOL	bAlertable
+	)
 {
    TIME Interval;
    NTSTATUS errCode;
@@ -412,8 +393,7 @@ FlushInstructionCache (
 	errCode = NtFlushInstructionCache(
 			hProcess,
 			(PVOID) lpBaseAddress,
-			dwSize
-			);
+			dwSize);
 	if (!NT_SUCCESS(errCode))
 	{
 		SetLastError(RtlNtStatusToDosError(errCode));
@@ -429,10 +409,8 @@ ExitProcess (
 	UINT	uExitCode
 	)
 {
-	NtTerminateProcess(
-		NtCurrentProcess(),
-		uExitCode
-		);
+	NtTerminateProcess (NtCurrentProcess (),
+	                    uExitCode);
 }
 
 
@@ -443,15 +421,17 @@ TerminateProcess (
 	UINT	uExitCode
 	)
 {
-   NTSTATUS errCode;
-   errCode = NtTerminateProcess(hProcess, uExitCode);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastError(RtlNtStatusToDosError(errCode));
-	return FALSE;
-     }
-   return TRUE;
+	NTSTATUS errCode;
+
+	errCode = NtTerminateProcess(hProcess, uExitCode);
+	if (!NT_SUCCESS(errCode))
+	{
+		SetLastError(RtlNtStatusToDosError(errCode));
+		return FALSE;
+	}
+	return TRUE;
 }
+
 
 VOID
 STDCALL
@@ -460,18 +440,20 @@ FatalAppExitA (
 	LPCSTR	lpMessageText
 	)
 {
-   WCHAR MessageTextW[MAX_PATH];
-   UINT i;
-   i = 0;
-   while ((*lpMessageText)!=0 && i < 35)
-     {
-	MessageTextW[i] = *lpMessageText;
-	lpMessageText++;
-	i++;
-     }
-   MessageTextW[i] = 0;
+	UNICODE_STRING MessageTextU;
+	ANSI_STRING MessageText;
 
-   return FatalAppExitW(uAction,MessageTextW);
+	RtlInitAnsiString (&MessageText,
+	                   (LPSTR)lpMessageText);
+
+	RtlAnsiStringToUnicodeString (&MessageTextU,
+	                              &MessageText,
+	                              TRUE);
+
+	FatalAppExitW (uAction,
+	               MessageTextU.Buffer);
+
+	RtlFreeUnicodeString (&MessageTextU);
 }
 
 

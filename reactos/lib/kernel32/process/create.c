@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.22 2000/02/19 19:35:57 ekohl Exp $
+/* $Id: create.c,v 1.23 2000/03/16 01:14:37 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -30,16 +30,20 @@
 
 /* FUNCTIONS ****************************************************************/
 
-WINBOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
-			       LPSTR lpCommandLine,
-			       LPSECURITY_ATTRIBUTES lpProcessAttributes,
-			       LPSECURITY_ATTRIBUTES lpThreadAttributes,
-			       WINBOOL bInheritHandles,
-			       DWORD dwCreationFlags,
-			       LPVOID lpEnvironment,
-			       LPCSTR lpCurrentDirectory,
-			       LPSTARTUPINFOA lpStartupInfo,
-			       LPPROCESS_INFORMATION lpProcessInformation)
+WINBOOL
+STDCALL
+CreateProcessA (
+	LPCSTR			lpApplicationName,
+	LPSTR			lpCommandLine,
+	LPSECURITY_ATTRIBUTES	lpProcessAttributes,
+	LPSECURITY_ATTRIBUTES	lpThreadAttributes,
+	WINBOOL			bInheritHandles,
+	DWORD			dwCreationFlags,
+	LPVOID			lpEnvironment,
+	LPCSTR			lpCurrentDirectory,
+	LPSTARTUPINFOA		lpStartupInfo,
+	LPPROCESS_INFORMATION	lpProcessInformation
+	)
 /*
  * FUNCTION: The CreateProcess function creates a new process and its
  * primary thread. The new process executes the specified executable file
@@ -57,34 +61,65 @@ WINBOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
  *     lpProcessInformation = Pointer to process information
  */
 {
-   WCHAR ApplicationNameW[MAX_PATH];
-   WCHAR CommandLineW[MAX_PATH];
-   WCHAR CurrentDirectoryW[MAX_PATH];
-   PWSTR PApplicationNameW;
-   PWSTR PCommandLineW;
-   PWSTR PCurrentDirectoryW;
-   
-   DPRINT("CreateProcessA\n");
-   
-   PApplicationNameW = InternalAnsiToUnicode(ApplicationNameW,
-					     lpApplicationName,
-					     MAX_PATH);
-   PCommandLineW = InternalAnsiToUnicode(CommandLineW,
-					 lpCommandLine,
-					 MAX_PATH);
-   PCurrentDirectoryW = InternalAnsiToUnicode(CurrentDirectoryW,
-					      lpCurrentDirectory,
-					      MAX_PATH);
-   return CreateProcessW(PApplicationNameW,
-			 PCommandLineW,
-			 lpProcessAttributes,
-			 lpThreadAttributes,
-			 bInheritHandles,
-			 dwCreationFlags,
-			 lpEnvironment,
-			 PCurrentDirectoryW,
-			 (LPSTARTUPINFOW)lpStartupInfo,
-			 lpProcessInformation);
+	UNICODE_STRING ApplicationNameU;
+	UNICODE_STRING CurrentDirectoryU;
+	UNICODE_STRING CommandLineU;
+	ANSI_STRING ApplicationName;
+	ANSI_STRING CurrentDirectory;
+	ANSI_STRING CommandLine;
+	WINBOOL Result;
+
+	DPRINT("CreateProcessA\n");
+
+	RtlInitAnsiString (&CommandLine,
+	                   lpCommandLine);
+	RtlInitAnsiString (&ApplicationName,
+	                   (LPSTR)lpApplicationName);
+	RtlInitAnsiString (&CurrentDirectory,
+	                   (LPSTR)lpCurrentDirectory);
+
+	/* convert ansi (or oem) strings to unicode */
+	if (bIsFileApiAnsi)
+	{
+		RtlAnsiStringToUnicodeString (&CommandLineU,
+		                              &CommandLine,
+		                              TRUE);
+		RtlAnsiStringToUnicodeString (&ApplicationNameU,
+		                              &ApplicationName,
+		                              TRUE);
+		RtlAnsiStringToUnicodeString (&CurrentDirectoryU,
+		                              &CurrentDirectory,
+		                              TRUE);
+	}
+	else
+	{
+		RtlOemStringToUnicodeString (&CommandLineU,
+		                             &CommandLine,
+		                             TRUE);
+		RtlOemStringToUnicodeString (&ApplicationNameU,
+		                             &ApplicationName,
+		                             TRUE);
+		RtlOemStringToUnicodeString (&CurrentDirectoryU,
+		                             &CurrentDirectory,
+		                             TRUE);
+	}
+
+	Result = CreateProcessW (ApplicationNameU.Buffer,
+	                         CommandLineU.Buffer,
+	                         lpProcessAttributes,
+	                         lpThreadAttributes,
+	                         bInheritHandles,
+	                         dwCreationFlags,
+	                         lpEnvironment,
+	                         CurrentDirectoryU.Buffer,
+	                         (LPSTARTUPINFOW)lpStartupInfo,
+	                         lpProcessInformation);
+
+	RtlFreeUnicodeString (&ApplicationNameU);
+	RtlFreeUnicodeString (&CommandLineU);
+	RtlFreeUnicodeString (&CurrentDirectoryU);
+
+	return Result;
 }
 
 #define STACK_TOP (0xb0000000)
@@ -442,6 +477,11 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
     */
    
    hSection = KlMapFile (lpApplicationName, lpCommandLine);
+   if (hSection == NULL)
+   {
+	RtlDestroyProcessParameters (Ppb);
+	return FALSE;
+   }
    
    /*
     * Create a new process
