@@ -63,6 +63,7 @@ lib\fmifs\fmifs.dll                     1
 lib\freetype\freetype.dll               1
 lib\gdi32\gdi32.dll                     1
 lib\gdiplus\gdiplus.dll                 1
+lib\imagehlp\imagehlp.dll               1
 lib\imm32\imm32.dll                     1
 lib\iphlpapi\iphlpapi.dll               1
 lib\kbddv\kbddv.dll                     1
@@ -119,6 +120,7 @@ subsys\system\services\services.exe     1
 subsys\system\setup\setup.exe           1
 subsys\system\taskmgr\taskmgr.exe       1
 subsys\system\userinit\userinit.exe     1
+subsys\system\vmwinst\vmwinst.exe       1
 subsys\system\winlogon\winlogon.exe     1
 services\eventlog\eventlog.exe          1
 services\rpcss\rpcss.exe                1
