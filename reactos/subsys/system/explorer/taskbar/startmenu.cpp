@@ -85,20 +85,22 @@ Window::CREATORFUNC StartMenu::s_def_creator = STARTMENU_CREATOR(StartMenu);
 
 HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent, LPCTSTR title, CREATORFUNC creator)
 {
-	UINT style;
+	UINT style, ex_style;
 	int top_height;
 
 	if (hwndParent) {
 		style = WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE;
+		ex_style = 0;
 		top_height = STARTMENU_TOP_BTN_SPACE;
 	} else {
 		style = WS_POPUP|WS_CAPTION|WS_SYSMENU|WS_CLIPCHILDREN|WS_VISIBLE;
+		ex_style = WS_EX_TOOLWINDOW;
 		top_height = 0;
 	}
 
 	RECT rect = {x, y, x+STARTMENU_WIDTH_MIN, y+top_height};	// start height before adding an menu button
 
-	AdjustWindowRect(&rect, style, FALSE);
+	AdjustWindowRectEx(&rect, style, FALSE, ex_style);
 
 	StartMenuCreateInfo create_info;
 
@@ -109,7 +111,7 @@ HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndP
 	if (title)
 		create_info._title = title;
 
-	HWND hwnd = Window::Create(creator, &create_info, 0, GetWndClasss(), title,
+	HWND hwnd = Window::Create(creator, &create_info, ex_style, GetWndClasss(), title,
 								style, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, hwndParent);
 
 	 // make sure the window is not off the screen
@@ -240,7 +242,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
  			WindowRect pos(_hwnd);
 
 			//TODO: do something similar to StartMenuRoot::TrackStartmenu() in order to automatically close submenus when clicking on the desktop background
-			StartMenu::Create(pos.left, pos.top, _create_info._folders, 0, _create_info._title, _create_info._creator);
+			StartMenu::Create(pos.left+3, pos.bottom-3, _create_info._folders, 0, _create_info._title, _create_info._creator);
 			CloseStartMenu();
 		}
 		break;}
