@@ -383,7 +383,7 @@ int WINAPI RestartDialogEx(HWND hwndOwner, LPCWSTR lpwstrReason, UINT uFlags, UI
 
     /*FIXME: use uReason */
 
-    if (MessageBoxA(hwndOwner, "Do you want to restart Windows?", "Restart", MB_YESNO|MB_ICONQUESTION) == IDYES)
+    if (MessageBoxA(hwndOwner, "Do you want to restart the system?", "Restart", MB_YESNO|MB_ICONQUESTION) == IDYES)
     {
 	if (SHELL_OsIsUnicode())
 	{
@@ -439,7 +439,7 @@ void WINAPI ExitWindowsDialog (HWND hWndOwner)
 {
     TRACE("(%p)\n", hWndOwner);
 
-    if (MessageBoxA(hWndOwner, "Do you want to exit Windows?", "Shutdown", MB_YESNO|MB_ICONQUESTION) == IDYES)
+    if (MessageBoxA(hWndOwner, "Do you want to shutdown?", "Shutdown", MB_YESNO|MB_ICONQUESTION) == IDYES)
     {
 	if (SHELL_OsIsUnicode())
 	{
