@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.32 2001/11/21 22:27:26 ekohl Exp $
+/* $Id: rtl.h,v 1.33 2002/07/25 16:57:49 ekohl Exp $
  *
  */
 
@@ -12,6 +12,25 @@
 extern "C" {
 #endif /* __cplusplus */
 
+typedef struct _DEBUG_BUFFER
+{
+  HANDLE SectionHandle;
+  PVOID SectionBase;
+  PVOID RemoteSectionBase;
+  ULONG SectionBaseDelta;
+  HANDLE EventPairHandle;
+  ULONG Unknown[2];
+  HANDLE RemoteThreadHandle;
+  ULONG InfoClassMask;
+  ULONG SizeOfInfo;
+  ULONG AllocatedSize;
+  ULONG SectionSize;
+  PVOID ModuleInformation;
+  PVOID BackTraceInformation;
+  PVOID HeapInformation;
+  PVOID LockInformation;
+  PVOID Reserved[8];
+} DEBUG_BUFFER, *PDEBUG_BUFFER;
 
 typedef struct _CRITICAL_SECTION_DEBUG {
     WORD   Type;
@@ -73,6 +92,14 @@ typedef struct _RTL_HANDLE_TABLE
 
 #define HEAP_BASE (0xa0000000)
 
+/* RtlQueryProcessDebugInformation */
+#define PDI_MODULES     0x01	/* The loaded modules of the process */
+#define PDI_BACKTRACE   0x02	/* The heap stack back traces */
+#define PDI_HEAPS       0x04	/* The heaps of the process */
+#define PDI_HEAP_TAGS   0x08	/* The heap tags */
+#define PDI_HEAP_BLOCKS 0x10	/* The heap blocks */
+#define PDI_LOCKS       0x20	/* The locks created by the process */
+
 VOID
 STDCALL
 RtlDeleteCriticalSection (
@@ -109,6 +136,13 @@ RtlCompactHeap (
 	HANDLE	heap,
 	DWORD	flags
 	);
+
+PDEBUG_BUFFER STDCALL
+RtlCreateQueryDebugBuffer(IN ULONG Size,
+			  IN BOOLEAN EventPair);
+
+NTSTATUS STDCALL
+RtlDestroyQueryDebugBuffer(IN PDEBUG_BUFFER DebugBuffer);
 
 BOOLEAN
 STDCALL
@@ -262,6 +296,11 @@ RtlQueryEnvironmentVariable_U (
 	PUNICODE_STRING	Value
 	);
 
+NTSTATUS STDCALL
+RtlQueryProcessDebugInformation(IN ULONG ProcessId,
+				IN ULONG DebugInfoClassMask,
+				IN OUT PDEBUG_BUFFER DebugBuffer);
+
 VOID
 STDCALL
 RtlSetCurrentEnvironment (
@@ -360,6 +399,10 @@ RtlSystemTimeToLocalTime (
 	PLARGE_INTEGER	SystemTime,
 	PLARGE_INTEGER	LocalTime
 	);
+
+VOID STDCALL
+RtlTimeToElapsedTimeFields(IN PLARGE_INTEGER Time,
+			   OUT PTIME_FIELDS TimeFields);
 
 VOID
 STDCALL
