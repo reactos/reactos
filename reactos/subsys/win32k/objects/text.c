@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.32 2003/05/18 17:16:18 ea Exp $ */
+/* $Id: text.c,v 1.33 2003/06/22 21:33:48 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -27,6 +27,7 @@
 #include <win32k/dc.h>
 #include <win32k/text.h>
 #include <win32k/kapi.h>
+#include <include/error.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -528,6 +529,113 @@ W32kGetTextCharsetInfo(HDC  hDC,
   UNIMPLEMENTED;
 }
 
+static BOOL
+FASTCALL
+TextIntGetTextExtentPoint(PDC dc,
+                          LPCWSTR String,
+                          int Count,
+                          LPSIZE Size)
+{
+  PTEXTOBJ TextObj;
+  PFONTGDI FontGDI;
+  FT_Face face;
+  FT_GlyphSlot glyph;
+  INT error, n, glyph_index, i, previous;
+  ULONG TotalWidth = 0, MaxHeight = 0;
+  FT_CharMap charmap, found = NULL;
+  BOOL use_kerning;
+
+  TextObj = TEXTOBJ_LockText(dc->w.hFont);
+  GetFontObjectsFromTextObj(TextObj, NULL, NULL, &FontGDI);
+  face = FontGDI->face;
+
+  if (face->charmap == NULL)
+    {
+      DPRINT("WARNING: No charmap selected!\n");
+      DPRINT("This font face has %d charmaps\n", face->num_charmaps);
+
+      for (n = 0; n < face->num_charmaps; n++)
+	{
+	  charmap = face->charmaps[n];
+	  DPRINT("found charmap encoding: %u\n", charmap->encoding);
+	  if (charmap->encoding != 0)
+	    {
+	      found = charmap;
+	      break;
+	    }
+	}
+
+      if (! found)
+	{
+	  DPRINT1("WARNING: Could not find desired charmap!\n");
+	}
+
+      error = FT_Set_Charmap(face, found);
+      if (error)
+	{
+	  DPRINT1("WARNING: Could not set the charmap!\n");
+	}
+    }
+
+  error = FT_Set_Pixel_Sizes(face,
+                             /* FIXME should set character height if neg */
+                             (TextObj->logfont.lfHeight < 0 ?
+                              - TextObj->logfont.lfHeight :
+                              TextObj->logfont.lfHeight),
+                             TextObj->logfont.lfWidth);
+  if (error)
+    {
+      DPRINT1("Error in setting pixel sizes: %u\n", error);
+    }
+
+  use_kerning = FT_HAS_KERNING(face);
+  previous = 0;
+
+  for (i = 0; i < Count; i++)
+    {
+      glyph_index = FT_Get_Char_Index(face, *String);
+      error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+      if (error)
+	{
+	  DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+	}
+      glyph = face->glyph;
+
+      /* retrieve kerning distance */
+      if (use_kerning && previous && glyph_index)
+	{
+	  FT_Vector delta;
+	  FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
+	  TotalWidth += delta.x >> 6;
+	}
+
+      TotalWidth += glyph->advance.x >> 6;
+      if (glyph->format == ft_glyph_format_outline)
+	{
+	  error = FT_Render_Glyph(glyph, ft_render_mode_mono);
+	  if (error)
+	    {
+	      DPRINT1("WARNING: Failed to render glyph!\n");
+	    }
+
+	  if (0 != glyph->bitmap.rows && MaxHeight < (glyph->bitmap.rows - 1))
+	    {
+	      MaxHeight = glyph->bitmap.rows - 1;
+	    }
+    	}
+
+      previous = glyph_index;
+      String++;
+    }
+
+  TEXTOBJ_UnlockText(dc->w.hFont);
+
+  Size->cx = TotalWidth;
+  Size->cy = MaxHeight;
+
+  return TRUE;
+}
+
 BOOL
 STDCALL
 W32kGetTextExtentExPoint(HDC  hDC,
@@ -543,57 +651,120 @@ W32kGetTextExtentExPoint(HDC  hDC,
 
 BOOL
 STDCALL
-W32kGetTextExtentPoint(HDC  hDC,
-                             LPCWSTR  String,
-                             int  Count,
-                             LPSIZE  Size)
+W32kGetTextExtentPoint(HDC hDC,
+                       LPCWSTR UnsafeString,
+                       int Count,
+                       LPSIZE UnsafeSize)
 {
-  PDC dc = (PDC)AccessUserObject((ULONG) hDC);
-  PFONTGDI FontGDI;
-  FT_Face face;
-  FT_GlyphSlot glyph;
-  INT error, pitch, glyph_index, i;
-  ULONG TotalWidth = 0, MaxHeight = 0, CurrentChar = 0, SpaceBetweenChars = 5;
+  PDC dc;
+  LPWSTR String;
+  SIZE Size;
+  NTSTATUS Status;
+  BOOLEAN Result;
 
-  FontGDI = (PFONTGDI)AccessInternalObject((ULONG) dc->w.hFont);
+  dc = DC_HandleToPtr(hDC);
 
-  for(i=0; i<Count; i++)
-  {
-    glyph_index = FT_Get_Char_Index(face, *String);
-    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-    if(error) DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
-    glyph = face->glyph;
-
-    if (glyph->format == ft_glyph_format_outline)
+  if (NULL == dc)
     {
-      error = FT_Render_Glyph(glyph, ft_render_mode_mono);
-      if(error) DPRINT1("WARNING: Failed to render glyph!\n");
-      pitch = glyph->bitmap.pitch;
-    } else {
-      pitch = glyph->bitmap.width;
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
+  if (Count < 0)
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return FALSE;
     }
 
-    TotalWidth += pitch-1;
-    if((glyph->bitmap.rows-1) > MaxHeight) MaxHeight = glyph->bitmap.rows-1;
+  String = ExAllocatePool(PagedPool, Count * sizeof(WCHAR));
+  if (NULL == String)
+    {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
 
-    CurrentChar++;
+  Status = MmCopyFromCaller(String, UnsafeString, Count * sizeof(WCHAR));
+  if (! NT_SUCCESS(Status))
+    {
+      ExFreePool(String);
+      SetLastNtError(Status);
+      return FALSE;
+    }
 
-    if(CurrentChar < Size->cx) TotalWidth += SpaceBetweenChars;
-    String++;
-  }
+  Result = TextIntGetTextExtentPoint(dc, String, Count, &Size);
 
-  Size->cx = TotalWidth;
-  Size->cy = MaxHeight;
+  ExFreePool(String);
+  if (! Result)
+    {
+      return FALSE;
+    }
+
+  Status = MmCopyToCaller(UnsafeSize, &Size, sizeof(SIZE));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 BOOL
 STDCALL
-W32kGetTextExtentPoint32(HDC  hDC,
-                               LPCWSTR  String,
-                               int  Count,
-                               LPSIZE  Size)
+W32kGetTextExtentPoint32(HDC hDC,
+                         LPCWSTR UnsafeString,
+                         int Count,
+                         LPSIZE UnsafeSize)
 {
-  UNIMPLEMENTED;
+  PDC dc;
+  LPWSTR String;
+  SIZE Size;
+  NTSTATUS Status;
+  BOOLEAN Result;
+
+  dc = DC_HandleToPtr(hDC);
+
+  if (NULL == dc)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
+  if (Count < 0)
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
+
+  String = ExAllocatePool(PagedPool, Count * sizeof(WCHAR));
+  if (NULL == String)
+    {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+
+  Status = MmCopyFromCaller(String, UnsafeString, Count * sizeof(WCHAR));
+  if (! NT_SUCCESS(Status))
+    {
+      ExFreePool(String);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+
+  Result = TextIntGetTextExtentPoint(dc, String, Count, &Size);
+
+  ExFreePool(String);
+  if (! Result)
+    {
+      return FALSE;
+    }
+
+  Status = MmCopyToCaller(UnsafeSize, &Size, sizeof(SIZE));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 int
@@ -632,7 +803,11 @@ W32kGetTextMetrics(HDC hDC,
       if (NT_SUCCESS(Status))
       {
 	Face = FontGDI->face;
-	Error = FT_Set_Pixel_Sizes(Face, TextObj->logfont.lfHeight,
+	Error = FT_Set_Pixel_Sizes(Face,
+	                           /* FIXME should set character height if neg */
+	                           (TextObj->logfont.lfHeight < 0 ?
+	                            - TextObj->logfont.lfHeight :
+	                            TextObj->logfont.lfHeight),
 	                           TextObj->logfont.lfWidth);
 	if (0 != Error)
 	  {
@@ -801,7 +976,12 @@ W32kTextOut(HDC  hDC,
     if (error) DPRINT1("WARNING: Could not set the charmap!\n");
   }
 
-  error = FT_Set_Pixel_Sizes(face, TextObj->logfont.lfHeight, TextObj->logfont.lfWidth);
+  error = FT_Set_Pixel_Sizes(face,
+                             /* FIXME should set character height if neg */
+                             (TextObj->logfont.lfHeight < 0 ?
+                              - TextObj->logfont.lfHeight :
+                              TextObj->logfont.lfHeight),
+                             TextObj->logfont.lfWidth);
   if(error) {
     DPRINT1("Error in setting pixel sizes: %u\n", error);
 	goto fail;

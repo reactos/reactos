@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.8 2003/03/25 22:35:19 gvg Exp $
+/* $Id: stubsw.c,v 1.9 2003/06/22 21:33:48 gvg Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -241,20 +241,6 @@ GetOutlineTextMetricsW(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-BOOL
-APIENTRY
-GetTextExtentPoint32W(
-	HDC		hDc,
-	LPCWSTR		a1,
-	int		a2,
-	LPSIZE		a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
 }
 
 

@@ -240,6 +240,43 @@ GetTextExtentPointW(
 	return W32kGetTextExtentPoint(hDC, String, Count, Size);
 }
 
+
+BOOL
+APIENTRY
+GetTextExtentPoint32A(
+	HDC		hDC,
+	LPCSTR		String,
+	int		Count,
+	LPSIZE		Size
+	)
+{
+  ANSI_STRING StringA;
+  UNICODE_STRING StringU;
+  BOOL ret;
+
+  RtlInitAnsiString(&StringA, (LPSTR)String);
+  RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
+
+  ret = GetTextExtentPoint32W(hDC, StringU.Buffer, Count, Size);
+
+  RtlFreeUnicodeString(&StringU);
+
+  return ret;
+}
+
+
+BOOL
+APIENTRY
+GetTextExtentPoint32W(
+	HDC		hDC,
+	LPCWSTR		String,
+	int		Count,
+	LPSIZE		Size
+	)
+{
+  return W32kGetTextExtentPoint32(hDC, String, Count, Size);
+}
+
 BOOL  
 STDCALL 
 ExtTextOutA(
