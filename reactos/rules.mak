@@ -146,11 +146,3 @@ OS2_PATH_INC=$(OS2_PATH)/include
 
 # Other systems integration
 ROOT_PATH=$(PATH_TO_TOP)/..
-
-COMCTL32_TARGET = comctl23
-
-SHELL32_TARGET = shell23
-
-COMDLG32_TARGET = comdlg23
-
-
