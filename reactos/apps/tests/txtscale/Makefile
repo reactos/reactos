@@ -16,9 +16,8 @@ TARGET_CPPFLAGS = -fexceptions -g -O0 -DWIN32 -D_DEBUG -D_WINDOWS -D_MBCS -W -D_
 TARGET_SDKLIBS = \
 	kernel32.a \
 	user32.a \
-	gdi32.a
-
-TARGET_GCCLIBS = comctl32
+	gdi32.a \
+	comctl32.a
 
 TARGET_OBJECTS = \
 	txtscale.o \

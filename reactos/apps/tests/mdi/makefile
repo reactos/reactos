@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2003/12/10 19:18:06 weiden Exp $
+# $Id: makefile,v 1.2 2004/08/18 02:16:00 navaraf Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,9 +10,7 @@ TARGET_APPTYPE = windows
 
 TARGET_NAME = mdi
 
-TARGET_SDKLIBS = kernel32.a gdi32.a ntdll.a comctl32.a
-
-TARGET_GCCLIBS = comdlg32
+TARGET_SDKLIBS = kernel32.a gdi32.a ntdll.a comctl32.a comdlg32.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 

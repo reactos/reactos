@@ -14,9 +14,8 @@ TARGET_NAME = regedit
 
 TARGET_CFLAGS = -D_WIN32_IE=0x0501 -D_WIN32_WINNT=0x0501 -D__USE_W32API
 	
-TARGET_GCCLIBS = msvcrt advapi32 kernel32 comctl32 comdlg32 shell32 ole32
-
-TARGET_SDKLIBS = kernel32.a advapi32.a user32.a gdi32.a wine_uuid.a ole32.a
+TARGET_SDKLIBS = kernel32.a advapi32.a user32.a gdi32.a wine_uuid.a ole32.a \
+                 shell32.a comctl32.a comdlg32.a
 
 TARGET_OBJECTS = \
 	about.o \

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2003/11/18 22:08:11 sedwards Exp $
+# $Id: makefile,v 1.2 2004/08/18 02:16:00 navaraf Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -13,7 +13,7 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS -D__USE_W32API
 
 TARGET_NAME = rpcrt4_test
 
-TARGET_GCCLIBS = rpcrt4 msvcrt
+TARGET_SDKLIBS = rpcrt4.a
 
 TARGET_OBJECTS = \
 rpc.o \

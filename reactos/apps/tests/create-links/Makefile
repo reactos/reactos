@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2003/12/28 21:36:53 gvg Exp $
+# $Id: Makefile,v 1.2 2004/08/18 02:16:00 navaraf Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,9 +10,9 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = create-links
 
-TARGET_SDKLIBS = kernel32.a gdi32.a
+TARGET_SDKLIBS = kernel32.a gdi32.a ole32.a shell32.a shlwapi.a
 
-TARGET_GCCLIBS = ole32 uuid shell32 shlwapi
+TARGET_GCCLIBS = uuid
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2004/01/14 23:17:50 gvg Exp $
+# $Id: makefile,v 1.4 2004/08/18 02:16:00 navaraf Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,9 +10,9 @@ TARGET_NAME = setup
 
 TARGET_INSTALLDIR = system32
 
-TARGET_SDKLIBS = kernel32.a
+TARGET_SDKLIBS = kernel32.a ole32.a shell32.a shlwapi.a
 
-TARGET_GCCLIBS = ole32 uuid shell32 shlwapi
+TARGET_GCCLIBS = uuid
 
 TARGET_CFLAGS = -Wall -Werror -D__USE_W32API -D_WIN32_IE=0x0400
 
