@@ -88,8 +88,8 @@ VBESortModesCallback(PVBE_MODEINFO VbeModeInfoA, PVBE_MODEINFO VbeModeInfoB)
     * be available we favor more bits per pixel. It should be changed
     * later.
     */
-   if (VbeModeInfoA->BitsPerPixel < VbeModeInfoB->BitsPerPixel) return 1;
-   if (VbeModeInfoA->BitsPerPixel > VbeModeInfoB->BitsPerPixel) return -1;
+   if (VbeModeInfoA->BitsPerPixel < VbeModeInfoB->BitsPerPixel) return -1;
+   if (VbeModeInfoA->BitsPerPixel > VbeModeInfoB->BitsPerPixel) return 1;
    if (VbeModeInfoA->XResolution < VbeModeInfoB->XResolution) return -1;
    if (VbeModeInfoA->XResolution > VbeModeInfoB->XResolution) return 1;
    if (VbeModeInfoA->YResolution < VbeModeInfoB->YResolution) return -1;
@@ -737,9 +737,18 @@ VBEMapVideoMemory(
       FrameBuffer.QuadPart =
          DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].PhysBasePtr;
       MapInformation->VideoRamBase = RequestedAddress->RequestedVirtualAddress;
-      MapInformation->VideoRamLength = 
-         DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].BytesPerScanLine *
-         DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].YResolution;
+      if (DeviceExtension->VbeInfo.Version < 0x300)
+      {
+         MapInformation->VideoRamLength = 
+            DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].BytesPerScanLine *
+            DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].YResolution;
+      }
+      else
+      {
+         MapInformation->VideoRamLength = 
+            DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].LinBytesPerScanLine *
+            DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].YResolution;
+      }
    }
 #ifdef VBE12_SUPPORT
    else
@@ -816,7 +825,10 @@ VBEQueryMode(
    VideoMode->ModeIndex = VideoModeId;
    VideoMode->VisScreenWidth = VBEMode->XResolution;
    VideoMode->VisScreenHeight = VBEMode->YResolution;
-   VideoMode->ScreenStride = VBEMode->BytesPerScanLine;
+   if (DeviceExtension->VbeInfo.Version < 0x300)
+      VideoMode->ScreenStride = VBEMode->BytesPerScanLine;
+   else
+      VideoMode->ScreenStride = VBEMode->LinBytesPerScanLine;
    VideoMode->NumberOfPlanes = VBEMode->NumberOfPlanes;
    VideoMode->BitsPerPlane = VBEMode->BitsPerPixel / VBEMode->NumberOfPlanes;
    VideoMode->Frequency = 1;
