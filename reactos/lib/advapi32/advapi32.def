@@ -1,4 +1,4 @@
-; $Id: advapi32.def,v 1.14 2004/02/25 23:54:12 sedwards Exp $
+; $Id: advapi32.def,v 1.15 2004/02/26 00:33:09 sedwards Exp $
 ;
 ; advapi32.def
 ;
@@ -186,7 +186,7 @@ InitiateSystemShutdownA@20
 InitiateSystemShutdownW@20
 ;IsAccessPermittedA@20
 ;IsAccessPermittedW@20
-;IsTextUnicode@12
+IsTextUnicode@12
 IsValidAcl@4
 IsValidSecurityDescriptor@4
 IsValidSid@4
