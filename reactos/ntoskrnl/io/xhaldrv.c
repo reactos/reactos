@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.18 2002/04/12 17:54:07 ei Exp $
+/* $Id: xhaldrv.c,v 1.19 2002/04/17 18:26:53 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -130,6 +130,30 @@ xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
 				 DiskGeometry.BytesPerSector,
 				 FALSE,
 				 LayoutInfo);
+
+  if ((!NT_SUCCESS(Status) || (*LayoutInfo)->PartitionCount == 0) &&
+      DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
+    {
+      PDRIVE_LAYOUT_INFORMATION Buffer;
+
+      if (NT_SUCCESS(Status))
+	{
+	  ExFreePool(*LayoutInfo);
+	}
+
+      /* Allocate a partition list for a single entry. */
+      Buffer = ExAllocatePool(NonPagedPool,
+			      sizeof(DRIVE_LAYOUT_INFORMATION));
+      if (Buffer != NULL)
+	{
+	  RtlZeroMemory(Buffer,
+			sizeof(DRIVE_LAYOUT_INFORMATION));
+	  Buffer->PartitionCount = 1;
+	  *LayoutInfo = Buffer;
+
+	  Status = STATUS_SUCCESS;
+	}
+    }
 
    ObDereferenceObject(FileObject);
 
@@ -400,34 +424,6 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
    /* Assign pre-assigned (registry) partitions */
 
-#if 0
-   /* Assign bootable partitions */
-   DPRINT("Assigning bootable primary partitions:\n");
-   for (i = 0; i < ConfigInfo->DiskCount; i++)
-     {
-	/* search for bootable partitions */
-	for (j = 0; j < LayoutArray[i]->PartitionCount; j++)
-	  {
-	     if ((LayoutArray[i]->PartitionEntry[j].BootIndicator == TRUE) &&
-		 IsUsablePartition(LayoutArray[i]->PartitionEntry[j].PartitionType))
-	       {
-		  swprintf(Buffer2,
-			   L"\\Device\\Harddisk%d\\Partition%d",
-			   i,
-			   LayoutArray[i]->PartitionEntry[j].PartitionNumber);
-		  RtlInitUnicodeString(&UnicodeString2,
-				       Buffer2);
-
-		  DPRINT("  %wZ\n", &UnicodeString2);
-
-		  /* assign it */
-		  HalpAssignDrive(&UnicodeString2,
-				  &DriveMap,
-				  AUTO_DRIVE);
-	       }
-	  }
-     }
-#endif
 
    /* Assign bootable partition on first harddisk */
    DPRINT("Assigning bootable primary partition on first harddisk:\n");
@@ -454,35 +450,6 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 	       }
 	  }
      }
-
-#if 0
-   /* Assign non-bootable primary partitions */
-   DPRINT("Assigning non-bootable primary partitions:\n");
-   for (i = 0; i < ConfigInfo->DiskCount; i++)
-     {
-	/* search for primary (non-bootable) partitions */
-	for (j = 0; j < PARTITION_TBL_SIZE; j++)
-	  {
-	     if ((LayoutArray[i]->PartitionEntry[j].BootIndicator == FALSE) &&
-		 IsUsablePartition(LayoutArray[i]->PartitionEntry[j].PartitionType))
-	       {
-		  swprintf(Buffer2,
-			   L"\\Device\\Harddisk%d\\Partition%d",
-			   i,
-			   LayoutArray[i]->PartitionEntry[j].PartitionNumber);
-		  RtlInitUnicodeString(&UnicodeString2,
-				       Buffer2);
-
-		  /* assign it */
-		  DPRINT("  %wZ\n",
-			 &UnicodeString2);
-		  HalpAssignDrive(&UnicodeString2,
-				  &DriveMap,
-				  AUTO_DRIVE);
-	       }
-	  }
-     }
-#endif
 
    /* Assign remaining  primary partitions */
    DPRINT("Assigning remaining primary partitions:\n");
@@ -541,6 +508,33 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 		}
      }
 
+#if 0
+/* TEST */
+   /* Assign removable disk drives */
+   DPRINT("Assigning extended (logical) partitions:\n");
+   for (i = 0; i < ConfigInfo->DiskCount; i++)
+     {
+	/* Search for virtual partitions */
+	if (LayoutArray[i]->PartitionCount == 1 &&
+	    LayoutArray[i]->PartitionEntry[0].PartitionType == 0)
+	  {
+	    swprintf(Buffer2,
+		     L"\\Device\\Harddisk%d\\Partition1",
+		     i);
+	    RtlInitUnicodeString(&UnicodeString2,
+				 Buffer2);
+
+	    /* assign it */
+	    DPRINT("  %wZ\n",
+		   &UnicodeString2);
+	    HalpAssignDrive(&UnicodeString2,
+			    &DriveMap,
+			    AUTO_DRIVE);
+	  }
+     }
+/* TEST END */
+#endif
+
    /* Free layout array */
    for (i = 0; i < ConfigInfo->DiskCount; i++)
      {
@@ -572,7 +566,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
    for (i = 0; i < ConfigInfo->CDRomCount; i++)
      {
 	swprintf(Buffer1,
-		 L"\\Device\\Cdrom%d",
+		 L"\\Device\\CdRom%d",
 		 i);
 	RtlInitUnicodeString(&UnicodeString1,
 			     Buffer1);
