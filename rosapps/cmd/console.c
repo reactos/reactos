@@ -19,11 +19,13 @@
 #include "cmd.h"
 
 
+#define OUTPUT_BUFFER_SIZE  4096
+
 
 #ifdef _DEBUG
 VOID DebugPrintf (LPTSTR szFormat, ...)
 {
-	TCHAR szOut[512];
+        TCHAR szOut[OUTPUT_BUFFER_SIZE];
 	va_list arg_ptr;
 	DWORD dwWritten;
 
@@ -135,7 +137,7 @@ VOID ConOutPuts (LPTSTR szText)
 VOID ConOutPrintf (LPTSTR szFormat, ...)
 {
 	DWORD dwWritten;
-	TCHAR szOut[256];
+        TCHAR szOut[OUTPUT_BUFFER_SIZE];
 	va_list arg_ptr;
 
 	va_start (arg_ptr, szFormat);
@@ -169,7 +171,7 @@ VOID ConErrPuts (LPTSTR szText)
 VOID ConErrPrintf (LPTSTR szFormat, ...)
 {
 	DWORD dwWritten;
-	TCHAR szOut[4096];
+        TCHAR szOut[OUTPUT_BUFFER_SIZE];
 	va_list arg_ptr;
 
 	va_start (arg_ptr, szFormat);

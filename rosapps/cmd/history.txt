@@ -344,7 +344,7 @@ o Added CHCP command.
 o Fixed keyboard input bug.
 o Rewrote DEL and MOVE commands.
 
-19-Aug-1999 ReactOS CMD version 0.1 pre 5 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+29-Aug-1999 ReactOS CMD version 0.1 pre 6 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 o Cleaned up DIR command.
 o Searching for executables in the right order.
@@ -352,3 +352,6 @@ o Fixed some little but nasty bugs.
 o Added TITLE command. Thanks to Emanuele Aliberti!
 o Added "/Q", "/W" and "/Z" options to DEL command.
 o Added CHOICE command.
+o Added TIMER command.
+o Added MSGBOX command (not available under ReactOS).
+

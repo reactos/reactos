@@ -131,6 +131,11 @@ COMMAND cmds[] =
 	{_T("move"),     0, cmd_move},
 #endif
 
+
+#ifdef INCLUDE_CMD_MSGBOX
+        {_T("msgbox"),     0, CommandMsgbox},
+#endif
+
 #ifdef INCLUDE_CMD_PATH
 	{_T("path"), 0, cmd_path},
 #endif
@@ -180,6 +185,10 @@ COMMAND cmds[] =
 
 #ifdef INCLUDE_CMD_TIME
 	{_T("time"), 0, cmd_time},
+#endif
+
+#ifdef INCLUDE_CMD_TIMER
+        {_T("timer"), 0, CommandTimer},
 #endif
 
 #ifdef INCLUDE_CMD_TITLE

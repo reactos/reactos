@@ -48,59 +48,23 @@ static WORD awMonths[2][13] =
 
 
 static VOID
-PrintDate (VOID)
-{
-#ifdef __REACTOS__
-	SYSTEMTIME st;
-
-	GetLocalTime (&st);
-
-	switch (nDateFormat)
-	{
-		case 0: /* mmddyy */
-		default:
-			ConOutPrintf (_T("Current date is: %s %02d%c%02d%c%04d\n"),
-					  aszDayNames[st.wDayOfWeek], st.wMonth, cDateSeparator, st.wDay, cDateSeparator, st.wYear);
-			break;
-
-		case 1: /* ddmmyy */
-			ConOutPrintf (_T("Current date is: %s %02d%c%02d%c%04d\n"),
-					  aszDayNames[st.wDayOfWeek], st.wDay, cDateSeparator, st.wMonth, cDateSeparator, st.wYear);
-			break;
-
-		case 2: /* yymmdd */
-			ConOutPrintf (_T("Current date is: %s %04d%c%02d%c%02d\n"),
-					  aszDayNames[st.wDayOfWeek], st.wYear, cDateSeparator, st.wMonth, cDateSeparator, st.wDay);
-			break;
-	}
-#else
-	TCHAR szDate[32];
-
-	GetDateFormat (LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL,
-				   szDate, sizeof (szDate));
-	ConOutPrintf (_T("Current date is: %s\n"), szDate);
-#endif
-}
-
-
-static VOID
 PrintDateString (VOID)
 {
 	switch (nDateFormat)
 	{
 		case 0: /* mmddyy */
 		default:
-			ConOutPrintf (_T("Enter new date (mm%cdd%cyyyy): "),
+			ConOutPrintf (_T("\nEnter new date (mm%cdd%cyyyy): "),
 					cDateSeparator, cDateSeparator);
 			break;
 
 		case 1: /* ddmmyy */
-			ConOutPrintf (_T("Enter new date (dd%cmm%cyyyy): "),
+			ConOutPrintf (_T("\nEnter new date (dd%cmm%cyyyy): "),
 					  cDateSeparator, cDateSeparator);
 			break;
 
 		case 2: /* yymmdd */
-			ConOutPrintf (_T("Enter new date (yyyy%cmm%cdd): "),
+			ConOutPrintf (_T("\nEnter new date (yyyy%cmm%cdd): "),
 					  cDateSeparator, cDateSeparator);
 			break;
 	}

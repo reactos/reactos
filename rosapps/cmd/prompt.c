@@ -54,75 +54,6 @@
 #include "cmd.h"
 
 
-static VOID PrintDate (VOID)
-{
-#ifdef __REACTOS__
-	SYSTEMTIME st;
-
-	GetLocalTime (&st);
-
-	switch (nDateFormat)
-	{
-		case 0: /* mmddyy */
-		default:
-            ConOutPrintf (_T("%s %02d%c%02d%c%04d"),
-					  aszDayNames[st.wDayOfWeek], st.wMonth, cDateSeparator, st.wDay, cDateSeparator, st.wYear);
-			break;
-
-		case 1: /* ddmmyy */
-            ConOutPrintf (_T("%s %02d%c%02d%c%04d"),
-					  aszDayNames[st.wDayOfWeek], st.wDay, cDateSeparator, st.wMonth, cDateSeparator, st.wYear);
-			break;
-
-		case 2: /* yymmdd */
-            ConOutPrintf (_T("%s %04d%c%02d%c%02d"),
-					  aszDayNames[st.wDayOfWeek], st.wYear, cDateSeparator, st.wMonth, cDateSeparator, st.wDay);
-			break;
-	}
-#else
-	TCHAR szDate[32];
-
-	GetDateFormat (LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL,
-				   szDate, sizeof (szDate));
-    ConOutPrintf (_T("%s"), szDate);
-#endif
-}
-
-
-static VOID
-PrintTime (VOID)
-{
-#ifdef __REACTOS__
-	SYSTEMTIME st;
-
-	GetLocalTime (&st);
-
-	switch (nTimeFormat)
-	{
-		case 0: /* 12 hour format */
-		default:
-            ConOutPrintf (_T("%2d%c%02d%c%02d%c%02d%c"),
-					(st.wHour == 0 ? 12 : (st.wHour <= 12 ? st.wHour : st.wHour - 12)),
-					cTimeSeparator, st.wMinute, cTimeSeparator, st.wSecond, cDecimalSeparator,
-					st.wMilliseconds / 10, (st.wHour <= 11 ? 'a' : 'p'));
-			break;
-
-		case 1: /* 24 hour format */
-            ConOutPrintf (_T("%2d%c%02d%c%02d%c%02d"),
-					st.wHour, cTimeSeparator, st.wMinute, cTimeSeparator,
-					st.wSecond, cDecimalSeparator, st.wMilliseconds / 10);
-			break;
-	}
-#else
-    TCHAR szTime[32];
-
-	GetTimeFormat (LOCALE_USER_DEFAULT, 0, NULL, NULL,
-				   szTime, sizeof (szTime));
-    ConOutPrintf (_T("%s"), szTime);
-#endif
-}
-
-
 /*
  * print the command-line prompt
  *
@@ -163,7 +94,7 @@ VOID PrintPrompt(VOID)
 					break;
 
 				case _T('D'):
-                    PrintDate ();
+					PrintDate ();
 					break;
 
 				case _T('E'):
@@ -207,7 +138,7 @@ VOID PrintPrompt(VOID)
 					break;
 
 				case _T('T'):
-                    PrintTime ();
+					PrintTime ();
 					break;
 
 				case _T('V'):

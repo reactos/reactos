@@ -30,7 +30,7 @@
 #include <tchar.h>
 
 
-#define CMD_VER      "0.1 pre 5"
+#define CMD_VER      "0.1 pre 6"
 
 #ifdef _MSC_VER
 #define SHELLVER     "Version " CMD_VER " [" __DATE__ ", msc]"
@@ -259,6 +259,8 @@ extern TCHAR cDecimalSeparator;
 extern INT   nNumberGroups;
 
 VOID InitLocale (VOID);
+VOID PrintDate (VOID);
+VOID PrintTime (VOID);
 
 
 /* Prototypes for MISC.C */
@@ -275,6 +277,10 @@ BOOL   FileGetString (HANDLE, LPTSTR, INT);
 
 /* Prototypes for MOVE.C */
 INT cmd_move (LPTSTR, LPTSTR);
+
+
+/* Prototypes for MSGBOX.C */
+INT CommandMsgbox (LPTSTR, LPTSTR);
 
 
 /* Prototypes from PATH.C */
@@ -309,6 +315,10 @@ INT cmd_start (LPTSTR, LPTSTR);
 
 /* Prototypes for TIME.C */
 INT cmd_time (LPTSTR, LPTSTR);
+
+
+/* Prototypes for TIMER.C */
+INT CommandTimer (LPTSTR cmd, LPTSTR param);
 
 
 /* Prototypes for TITLE.C */

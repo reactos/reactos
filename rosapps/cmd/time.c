@@ -33,40 +33,6 @@
 #include "cmd.h"
 
 
-static VOID
-PrintTime (VOID)
-{
-#ifdef __REACTOS__
-	SYSTEMTIME st;
-
-	GetLocalTime (&st);
-
-	switch (nTimeFormat)
-	{
-		case 0: /* 12 hour format */
-		default:
-			ConOutPrintf (_T("Current time is %2d%c%02d%c%02d%c%02d%c\n"),
-					(st.wHour == 0 ? 12 : (st.wHour <= 12 ? st.wHour : st.wHour - 12)),
-					cTimeSeparator, st.wMinute, cTimeSeparator, st.wSecond, cDecimalSeparator,
-					st.wMilliseconds / 10, (st.wHour <= 11 ? 'a' : 'p'));
-			break;
-
-		case 1: /* 24 hour format */
-			ConOutPrintf (_T("Current time is %2d%c%02d%c%02d%c%02d\n"),
-					st.wHour, cTimeSeparator, st.wMinute, cTimeSeparator,
-					st.wSecond, cDecimalSeparator, st.wMilliseconds / 10);
-			break;
-	}
-#else
-    TCHAR szTime[32];
-
-	GetTimeFormat (LOCALE_USER_DEFAULT, 0, NULL, NULL,
-				   szTime, sizeof (szTime));
-	ConOutPrintf (_T("Current date is: %s\n"), szTime);
-#endif
-}
-
-
 static BOOL ParseTime (LPTSTR s)
 {
 	SYSTEMTIME t;

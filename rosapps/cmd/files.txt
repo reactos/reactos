@@ -42,6 +42,7 @@ internal.c      Internal commands (DIR, RD, etc)
 label.c         Implements label command
 locale.c        Locale handling code
 misc.c          Misc. Functions
+msgbox.c        Implements msgbox command
 move.c          Implements move command
 path.c          Implements path command
 pause.c         Implements pause command
@@ -51,6 +52,7 @@ ren.c           Implements rename command
 set.c           Implements set command
 shift.c         Implements shift command
 time.c          Implements time command
+timer.c         Implements timer command
 type.c          Implements type command
 ver.c           Implements ver command
 where.c         Code to search path for executables
