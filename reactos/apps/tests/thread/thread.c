@@ -18,6 +18,18 @@ DWORD WINAPI thread_main1(LPVOID param)
    return 0;
 }
 
+// Shows the help on how to use these program to the user
+void showHelp()
+{
+
+printf("\nReactOS threads test program (built on %s).\n\n", __DATE__);
+printf("syntax:\tthread.exe <seed>\n");
+printf("\twhere <seed> is an integer number\n");
+printf("\texample: thread.exe 100\n");
+
+
+}
+
 int main (int argc, char* argv[])
 {
    HANDLE hThread;
@@ -25,6 +37,14 @@ int main (int argc, char* argv[])
    DWORD id;
    ULONG nr;
    
+
+   // The user must supply one argument (the seed). if he/she doesn't
+   // then we show the help.
+   if(argc < 2) {
+		showHelp();
+		return 1;
+   }
+		
    nr = atoi(argv[1]);
    printf("Seed %d\n", nr);
    
