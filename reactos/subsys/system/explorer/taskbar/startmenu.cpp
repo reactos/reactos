@@ -1035,6 +1035,8 @@ void StartMenuHandler::ShowSearchDialog()
 
 	if (SHFindFiles)
 		(*SHFindFiles)(NULL, NULL);
+	else
+		MessageBox(0, TEXT("SHFindFiles() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 }
 
 void StartMenuHandler::ShowSearchComputer()
@@ -1043,6 +1045,8 @@ void StartMenuHandler::ShowSearchComputer()
 
 	if (SHFindComputer)
 		(*SHFindComputer)(NULL, NULL);
+	else
+		MessageBox(0, TEXT("SHFindComputer() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 }
 
 void StartMenuHandler::ShowLaunchDialog(HWND hwndDesktopBar)
@@ -1075,6 +1079,8 @@ void StartMenuHandler::ShowRestartDialog(HWND hwndOwner, UINT flags)
 
 	if (RestartDlg)
 		(*RestartDlg)(hwndOwner, (LPWSTR)L"You selected <Log Off>.\n\n", flags);	///@todo ANSI string conversion if needed
+	else
+		MessageBox(hwndOwner, TEXT("RestartDlg() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 }
 
 void ShowExitWindowsDialog(HWND hwndOwner)
@@ -1083,6 +1089,8 @@ void ShowExitWindowsDialog(HWND hwndOwner)
 
 	if (ExitWindowsDlg)
 		(*ExitWindowsDlg)(hwndOwner);
+	else
+		MessageBox(hwndOwner, TEXT("ExitWindowsDlg() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 }
 
 
