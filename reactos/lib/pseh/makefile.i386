@@ -1,5 +1,5 @@
-# $Id: makefile.i386,v 1.1 2004/06/02 18:36:55 hyperion Exp $
+# $Id: makefile.i386,v 1.2 2004/06/03 02:23:34 hyperion Exp $
 
-TARGET_ARCH_OBJECTS = $(ARCH)/framebased.o
+TARGET_ARCH_OBJECTS = $(ARCH)/framebased.o $(ARCH)/setjmp.o
 
 # EOF

@@ -24,9 +24,17 @@
 #define KJK_PSEH_FRAMEBASED_H_
 
 #include <pseh/framebased/internal.h>
+#include <excpt.h>
+
+#ifdef _SEH_NO_NATIVE_NLG
 #include <setjmp.h>
 #include <stddef.h>
-#include <excpt.h>
+#else
+#include <pseh/setjmp.h>
+#define longjmp _SEHLongJmp
+#define setjmp _SEHSetJmp
+#define jmp_buf _SEHJmpBuf_t
+#endif
 
 typedef struct __SEHFrame
 {
