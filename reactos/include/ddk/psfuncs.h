@@ -1,4 +1,4 @@
-/* $Id: psfuncs.h,v 1.31 2004/07/21 01:05:26 ion Exp $
+/* $Id: psfuncs.h,v 1.32 2004/08/12 06:04:21 ion Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
@@ -302,6 +302,12 @@ VOID
 STDCALL PsRevertToSelf(
 	VOID
 	); 
+
+VOID
+STDCALL
+PsRevertThreadToSelf(
+	IN struct _ETHREAD* Thread
+	);
 
 VOID
 STDCALL PsSetJobUIRestrictionsClass(

@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.26 2004/07/16 13:45:02 ion Exp $ */
+/* $Id: fsfuncs.h,v 1.27 2004/08/12 06:04:21 ion Exp $ */
 #define FlagOn(x,f) ((x) & (f))
 
 #include <ntos/fstypes.h>
@@ -311,15 +311,19 @@ FsRtlGetNextMcbEntry (IN PMCB     Mcb,
 #define FsRtlExitFileSystem     KeLeaveCriticalRegion
 
 VOID
+STDCALL
 FsRtlIncrementCcFastReadNotPossible( VOID );
 
 VOID
+STDCALL
 FsRtlIncrementCcFastReadWait( VOID );
 
 VOID
+STDCALL
 FsRtlIncrementCcFastReadNoWait( VOID );
 
 VOID
+STDCALL
 FsRtlIncrementCcFastReadResourceMiss( VOID );
 
 VOID

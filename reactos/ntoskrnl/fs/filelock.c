@@ -1,4 +1,4 @@
-/* $Id: filelock.c,v 1.12 2003/10/12 17:05:44 hbirr Exp $
+/* $Id: filelock.c,v 1.13 2004/08/12 06:04:21 ion Exp $
  *
  * reactos/ntoskrnl/fs/filelock.c
  *
@@ -1288,6 +1288,30 @@ FsRtlFreeFileLock(
 
    FsRtlUninitializeFileLock(FileLock);
    ExFreeToPagedLookasideList(&LockLookaside, FileLock);
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+FsRtlAcquireFileExclusive(
+    IN PFILE_OBJECT FileObject
+    )
+{
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+FsRtlReleaseFile(
+    IN PFILE_OBJECT FileObject
+    )
+{
+    UNIMPLEMENTED;
 }
 
 /* EOF */

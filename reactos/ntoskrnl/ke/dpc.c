@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.32 2004/07/29 23:28:31 jimtabor Exp $
+/* $Id: dpc.c,v 1.33 2004/08/12 06:04:21 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -282,19 +282,5 @@ KeInitDpc(VOID)
    InitializeListHead(&DpcQueueHead);
    KeInitializeSpinLock(&DpcQueueLock);
 }
-
-/*
- * @unimplemented
- *
-STDCALL
-BOOLEAN
-KiIpiServiceRoutine(
-	IN PKTRAP_FRAME   		TrapFrame,
-	IN PKEXCEPTION_FRAME  	ExceptionFrame
-)
-{
-	UNIMPLEMENTED;
-	return FALSE;
-}*/
 
 /* EOF */

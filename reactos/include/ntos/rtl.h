@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.32 2004/08/05 18:17:36 ion Exp $
+/* $Id: rtl.h,v 1.33 2004/08/12 06:04:21 ion Exp $
  * 
  */
 #ifndef __DDK_RTL_H
@@ -1622,6 +1622,15 @@ RtlIntegerToChar (
 	IN OUT	PCHAR	String
 	);
 
+NTSTATUS 
+STDCALL
+RtlIntegerToUnicode(
+	IN ULONG Value,
+	IN ULONG Base  OPTIONAL,
+	IN ULONG Length OPTIONAL,
+	IN OUT LPWSTR String
+	);
+
 NTSTATUS
 STDCALL
 RtlIntegerToUnicodeString (
@@ -2745,6 +2754,13 @@ RtlWalkFrameChain (
 	IN ULONG Count,
 	IN ULONG Flags
 	);
+
+ULONG
+STDCALL
+RtlZeroHeap(
+    IN PVOID HeapHandle,
+    IN ULONG Flags
+    );
 
 ULONG
 STDCALL

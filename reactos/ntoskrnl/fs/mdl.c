@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.6 2004/06/23 00:42:21 ion Exp $
+/* $Id: mdl.c,v 1.7 2004/08/12 06:04:21 ion Exp $
  *
  * reactos/ntoskrnl/fs/mdl.c
  *
@@ -13,6 +13,7 @@
  * @unimplemented
  */
 VOID
+STDCALL
 FsRtlIncrementCcFastReadResourceMiss( VOID )
 {
   UNIMPLEMENTED;
@@ -22,6 +23,7 @@ FsRtlIncrementCcFastReadResourceMiss( VOID )
  * @unimplemented
  */
 VOID
+STDCALL
 FsRtlIncrementCcFastReadNotPossible( VOID )
 {
   UNIMPLEMENTED;
@@ -31,6 +33,7 @@ FsRtlIncrementCcFastReadNotPossible( VOID )
  * @unimplemented
  */
 VOID
+STDCALL
 FsRtlIncrementCcFastReadWait( VOID )
 {
   UNIMPLEMENTED;
@@ -40,6 +43,7 @@ FsRtlIncrementCcFastReadWait( VOID )
  * @unimplemented
  */
 VOID
+STDCALL
 FsRtlIncrementCcFastReadNoWait( VOID )
 {
   UNIMPLEMENTED;

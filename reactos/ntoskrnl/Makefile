@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.137 2004/08/10 12:05:20 ekohl Exp $
+# $Id: Makefile,v 1.138 2004/08/12 06:04:21 ion Exp $
 #
 # ReactOS Operating System
 #
@@ -140,6 +140,7 @@ OBJECTS_KE = \
 	ke/event.o \
 	ke/kqueue.o \
 	ke/kthread.o \
+        ke/ipi.o \
 	ke/main.o \
 	ke/mutex.o \
 	ke/process.o \
