@@ -567,6 +567,20 @@ HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Service",0x00000000,"Pci"
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Class",0x00000000,"Computer"
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","ClassGUID",0x00000000,"{4D36E966-E325-11CE-BFC1-08002BE10318}"
 
+;USB UHCI Driver
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Type",0x00020000,"System32\DRIVERS\usbuhci.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Tag",0x00010001,0x0000000f
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","DisplayName",0x00000000,"ReactOS USB UHCI controller miniport driver"
+;hard coded values for VMWARE
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci\Enum","0",0x00000000,"PCI\VEN_8086&DEV_7112&SUBSYS_197615AD&REV_00\0000"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci\Enum","Count",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci\Enum","NextInstance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_8086&DEV_7112&SUBSYS_197615AD&REV_00\0000","Service",0x0000000,"usbuhci"
+
 ; ReactOS PCNet NIC driver 
 ; To use the AMD supplied driver change the driver name to pcntn5m.sys
 ;
