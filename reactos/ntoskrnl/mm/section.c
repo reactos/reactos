@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.141 2004/01/05 14:28:21 weiden Exp $
+/* $Id: section.c,v 1.142 2004/01/27 20:13:08 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -379,35 +379,39 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
 	}
       else
 	{
-	  MmSetSavedSwapEntryPage(Page, 0);
 	  if ((Segment->Flags & MM_PAGEFILE_SEGMENT) ||
 	      (Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED))
 	    {
-	      if (Dirty && !PageOut)
+	      if (!PageOut)
 	        {
-	           /*
-	            * FIXME:
-	            *   We hold all locks. Nobody can do something with the current 
-	            *   process and the current segment (also not within an other process).
-	            */    
-		   NTSTATUS Status;
-		   PMDL Mdl;
-		   Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
-                   MmBuildMdlFromPages(Mdl, (PULONG)&Page);
-		   Status = MmWriteToSwapPage(SavedSwapEntry, Mdl);
-		   if (!NT_SUCCESS(Status))
-		     {
-		       DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n", Status);
-		     }
+	          if (Dirty)
+	            {
+	              /*
+	               * FIXME:
+	               *   We hold all locks. Nobody can do something with the current 
+	               *   process and the current segment (also not within an other process).
+	               */    
+		      NTSTATUS Status;
+		      PMDL Mdl;
+		      Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
+                      MmBuildMdlFromPages(Mdl, (PULONG)&Page);
+		      Status = MmWriteToSwapPage(SavedSwapEntry, Mdl);
+		      if (!NT_SUCCESS(Status))
+		        {
+		          DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n", Status);
+			  KEBUGCHECK(0);
+		        }
+                    }
+	          MmSetPageEntrySectionSegment(Segment, Offset, MAKE_SWAP_SSE(SavedSwapEntry));
+	      	  MmSetSavedSwapEntryPage(Page, 0);
 	        }
-	      MmSetPageEntrySectionSegment(Segment, Offset, MAKE_SWAP_SSE(SavedSwapEntry));
+              MmReleasePageMemoryConsumer(MC_USER, Page);
 	    }
 	  else
 	    {
-	      MmSetPageEntrySectionSegment(Segment, Offset, 0);
-	      MmFreeSwapPage(SavedSwapEntry);
+	      DPRINT1("Found a swapentry for a non private page in an image or data file sgment\n");
+	      KEBUGCHECK(0);
 	    }
-          MmReleasePageMemoryConsumer(MC_USER, Page);
 	}
     }
   else
@@ -623,6 +627,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    ULONG Attributes;
    PMM_PAGEOP PageOp;
    PMM_REGION Region;
+   BOOL HasSwapEntry;
 
    /*
     * There is a window between taking the page fault and locking the
@@ -726,15 +731,20 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        if (!MmIsPagePresent(AddressSpace->Process, Address))
 	 {
 	   Entry = MmGetPageEntrySectionSegment(Segment, Offset);
-	   if (Entry == 0)
-	   {
-	        MmUnlockSectionSegment(Segment);
-                MmspCompleteAndReleasePageOp(PageOp);
-	        return(STATUS_MM_RESTART_OPERATION);
-	   }
+	   HasSwapEntry = MmIsPageSwapEntry(AddressSpace->Process, (PVOID)PAddress);
+
+	   if (PAGE_FROM_SSE(Entry) == 0 || HasSwapEntry)
+	     {
+	       /*
+	        * The page was a private page in another or in our address space 
+		*/ 
+	       MmUnlockSectionSegment(Segment);
+               MmspCompleteAndReleasePageOp(PageOp);
+	       return(STATUS_MM_RESTART_OPERATION);
+	     }
 
 	   Page.QuadPart = (LONGLONG)(PAGE_FROM_SSE(Entry));
-	   MmReferencePage(Page);
+
 	   MmSharePageEntrySectionSegment(Segment, Offset);
 
 	   Status = MmCreateVirtualMapping(MemoryArea->Process,
@@ -771,11 +781,12 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        return(STATUS_SUCCESS);
      }
 
-   /*
-    * Must be private page we have swapped out.
-    */
-   if (MmIsPageSwapEntry(AddressSpace->Process, (PVOID)PAddress))
+   HasSwapEntry = MmIsPageSwapEntry(AddressSpace->Process, (PVOID)PAddress);
+   if (HasSwapEntry)
      {
+       /*
+        * Must be private page we have swapped out.
+        */
        SWAPENTRY SwapEntry;
        PMDL Mdl;
 
@@ -1507,51 +1518,6 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
     }
 
   /*
-   * Paging out data mapped read-only is easy.
-   */
-  if (Context.Segment->Protection & (PAGE_READONLY|PAGE_EXECUTE_READ))
-    {
-      /*
-       * Read-only data should never be in the swapfile.
-       */
-      if (SwapEntry != 0)
-	{
-	  DPRINT1("SwapEntry != 0 was 0x%.8X at address 0x%.8X, "
-		  "paddress 0x%.8X\n", SwapEntry, Address,
-		  PhysicalAddress);
-	  KEBUGCHECK(0);
-	}
-
-      /*
-       * Read-only data should never be COWed
-       */
-      if (Context.Private)
-	{
-	  DPRINT1("Had private copy of read-only page.\n");
-	  KEBUGCHECK(0);
-	}
-
-      /*
-       * Delete all mappings of this page.
-       */
-      MmDeleteAllRmaps(PhysicalAddress, (PVOID)&Context,
-		       MmPageOutDeleteMapping);
-      if (Context.WasDirty)
-	{
-	  DPRINT1("Had a dirty page of a read-only page.\n");
-	  KEBUGCHECK(0);
-	}
-
-      PageOp->Status = STATUS_SUCCESS;
-      MmspCompleteAndReleasePageOp(PageOp);
-      return(STATUS_SUCCESS);
-    }
-
-  /*
-   * Otherwise we have read-write data.
-   */
-
-  /*
    * Take an additional reference to the page or the cache segment.
    */
   if (DirectMapped && !Context.Private)
@@ -1590,69 +1556,87 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    * we can't free the page at this point.
    */
   SwapEntry = MmGetSavedSwapEntryPage(PhysicalAddress);
-  if (!Context.WasDirty && 
-      !(SwapEntry == 0 && 
-        (Context.Segment->Flags & MM_PAGEFILE_SEGMENT || 
-         Context.Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED)))
+  if (Context.Segment->Flags & MM_PAGEFILE_SEGMENT)
     {
       if (Context.Private)
-	{
-	  if (!(Context.Segment->Characteristics & IMAGE_SECTION_CHAR_BSS) &&
-	      SwapEntry == 0)
-	    {
-	      DPRINT1("Private page, non-dirty but not swapped out "
-		      "process %d address 0x%.8X\n",
-		      AddressSpace->Process ? AddressSpace->Process->UniqueProcessId : 0,
-		      Address);
-	      KEBUGCHECK(0);
-	    }
-	  else
-	    {
-	      if (SwapEntry != 0)
-	        {
-	          MmSetSavedSwapEntryPage(PhysicalAddress, 0);
-	          Status = MmCreatePageFileMapping(AddressSpace->Process,
-					           Address,
-					           SwapEntry);
-	          if (!NT_SUCCESS(Status))
-		    {
-		      KEBUGCHECK(0);
-		    }
-		}
-	    }
-	}
-      if (DirectMapped && !Context.Private)
         {
-          Status = CcRosUnmapCacheSegment(Bcb, FileOffset, FALSE);
-          if (!NT_SUCCESS(Status))
-            {
-              DPRINT1("CCRosUnmapCacheSegment failed, status = %x\n", Status);
-              KEBUGCHECK(0);
-	    }
+          DPRINT1("Found a %s private page (address %x) in a pagefile segment.\n",
+	          Context.WasDirty ? "dirty" : "clean", Address);
+          KEBUGCHECK(0);
 	}
-      else
+      if (!Context.WasDirty && SwapEntry != 0)
         {
+          MmSetSavedSwapEntryPage(PhysicalAddress, 0);
+	  MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, MAKE_SWAP_SSE(SwapEntry));
           MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
+          PageOp->Status = STATUS_SUCCESS;
+          MmspCompleteAndReleasePageOp(PageOp);
+          return(STATUS_SUCCESS);
 	}
-
+    }
+  else if (Context.Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED)
+    {
+      if (Context.Private)
+        {
+          DPRINT1("Found a %s private page (address %x) in a shared section segment.\n",
+	          Context.WasDirty ? "dirty" : "clean", Address);
+          KEBUGCHECK(0);
+	}
+      if (!Context.WasDirty || SwapEntry != 0)
+        {
+          MmSetSavedSwapEntryPage(PhysicalAddress, 0);
+	  if (SwapEntry != 0)
+	    {
+	      MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, MAKE_SWAP_SSE(SwapEntry));
+	    }
+          MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
+          PageOp->Status = STATUS_SUCCESS;
+          MmspCompleteAndReleasePageOp(PageOp);
+          return(STATUS_SUCCESS);
+	}
+    }
+  else if (!Context.Private && DirectMapped)
+    {
+      if (SwapEntry != 0)
+        {
+	  DPRINT1("Found a swapentry for a non private and direct mapped page (address %x)\n",
+	          Address);
+	  KEBUGCHECK(0);
+	}
+      Status = CcRosUnmapCacheSegment(Bcb, FileOffset, FALSE);
+      if (!NT_SUCCESS(Status))
+        {
+          DPRINT1("CCRosUnmapCacheSegment failed, status = %x\n", Status);
+          KEBUGCHECK(0);
+	}
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
       return(STATUS_SUCCESS);
     }
-
-  /*
-   * If this page was direct mapped from the cache then the cache manager
-   * will already have taken care of writing it back.
-   */
-  if (DirectMapped && !Context.Private)
+  else if (!Context.WasDirty && !DirectMapped && !Context.Private)
     {
-      assert(SwapEntry == 0);
-      Status = CcRosUnmapCacheSegment(Bcb, FileOffset, FALSE);
+      if (SwapEntry != 0)
+        {
+	  DPRINT1("Found a swap entry for a non dirty, non private and not direct mapped page (address %x)\n",
+	          Address);
+	  KEBUGCHECK(0);
+	}
+      MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
+      PageOp->Status = STATUS_SUCCESS;
+      MmspCompleteAndReleasePageOp(PageOp);
+      return(STATUS_SUCCESS);
+    }
+  else if (!Context.WasDirty && Context.Private && SwapEntry != 0)
+    {
+      MmSetSavedSwapEntryPage(PhysicalAddress, 0);
+      Status = MmCreatePageFileMapping(AddressSpace->Process,
+				       Address,
+				       SwapEntry);
       if (!NT_SUCCESS(Status))
         {
-          DPRINT1("CcRosUnmapCacheSegment failed, status = %x\n", Status);
-          KEBUGCHECK(0);
+	  KEBUGCHECK(0);
 	}
+      MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
       return(STATUS_SUCCESS);
@@ -1758,7 +1742,15 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    */
   DPRINT("MM: Wrote section page 0x%.8X to swap!\n", PhysicalAddress);
   MmSetSavedSwapEntryPage(PhysicalAddress, 0);
-  MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
+  if (Context.Segment->Flags & MM_PAGEFILE_SEGMENT || 
+      Context.Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED)
+    {
+      MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, MAKE_SWAP_SSE(SwapEntry));
+    }
+  else
+    {
+      MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
+    }
 
   if (Context.Private)
     {
@@ -2561,7 +2553,7 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
       FileObject->SectionObjectPointer->DataSectionObject = (PVOID)Segment;
 
       Segment->FileOffset = 0;
-      Segment->Protection = 0;
+      Segment->Protection = SectionPageProtection;
       Segment->Attributes = 0;
       Segment->Flags = MM_DATAFILE_SEGMENT;
       Segment->Characteristics = 0;
