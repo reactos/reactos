@@ -44,7 +44,8 @@ typedef struct _LPC_MESSAGE_HEADER
 {
    USHORT DataSize;
    USHORT MessageSize;
-   LPC_TYPE MessageType;
+//   LPC_TYPE MessageType;
+   USHORT MessageType;
    USHORT VirtualRangesOffset;
    CLIENT_ID Cid;
    ULONG MessageId;
@@ -112,12 +113,21 @@ typedef struct _LPC_MAX_MESSAGE
 
 #define PORT_MESSAGE_TYPE(m) (LPC_TYPE)((m).Header.MessageType)
 
+#ifndef __USE_NT_LPC__
 NTSTATUS STDCALL NtAcceptConnectPort (PHANDLE	PortHandle,
 				      HANDLE NamedPortHandle,
 				      PLPC_MESSAGE ServerReply,
 				      BOOLEAN AcceptIt,
 				      PLPC_SECTION_WRITE WriteMap,
 				      PLPC_SECTION_READ ReadMap);
+#else
+NTSTATUS STDCALL NtAcceptConnectPort (PHANDLE	PortHandle,
+				      ULONG PortIdentifier,
+				      PLPC_MESSAGE ServerReply,
+				      BOOLEAN AcceptIt,
+				      PLPC_SECTION_WRITE WriteMap,
+				      PLPC_SECTION_READ ReadMap);
+#endif /* ndef __USE_NT_LPC__ */
 
 NTSTATUS STDCALL NtCompleteConnectPort (HANDLE PortHandle);
 
