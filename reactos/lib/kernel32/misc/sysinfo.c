@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.11 2004/03/09 16:35:15 fireball Exp $
+/* $Id: sysinfo.c,v 1.12 2004/05/31 11:41:14 ekohl Exp $
  *
  * reactos/lib/kernel32/misc/sysinfo.c
  *
@@ -98,29 +98,35 @@ GetSystemInfo (
 	case PROCESSOR_ARCHITECTURE_ALPHA:
 		Si->dwProcessorType = PROCESSOR_ALPHA_21064;
 		break;
-		
+
+	case PROCESSOR_ARCHITECTURE_IA64:
+		Si->dwProcessorType = PROCESSOR_INTEL_IA64;
+		break;
+
 	case PROCESSOR_ARCHITECTURE_PPC:
 		switch (Spi.ProcessorLevel)
- 		{
- 		case 1:
- 			Si->dwProcessorType = PROCESSOR_PPC_601;
- 			break;
+		{
+		case 1:
+			Si->dwProcessorType = PROCESSOR_PPC_601;
+			break;
 		case 3:
- 			Si->dwProcessorType = PROCESSOR_PPC_603;
- 			break;
- 		case 4:
- 			Si->dwProcessorType = PROCESSOR_PPC_604;
- 			break;
- 		case 6:
- 			Si->dwProcessorType = -1; /* FIXME: what value? */
- 			break;
- 		case 9:
- 			Si->dwProcessorType = -1; /* FIXME: what value? */
- 			break;
- 		case 20:
- 			Si->dwProcessorType = PROCESSOR_PPC_620;
- 			break;
- 		default:
+			Si->dwProcessorType = PROCESSOR_PPC_603;
+			break;
+		case 4:
+			Si->dwProcessorType = PROCESSOR_PPC_604;
+			break;
+		case 6:
+			/* PPC 603+ */
+			Si->dwProcessorType = PROCESSOR_PPC_603;
+			break;
+		case 9:
+			/* PPC 604+ */
+			Si->dwProcessorType = PROCESSOR_PPC_604;
+			break;
+		case 20:
+			Si->dwProcessorType = PROCESSOR_PPC_620;
+			break;
+		default:
 			Si->dwProcessorType = -1;
 		}
 		break;
