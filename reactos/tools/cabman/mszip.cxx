@@ -65,7 +65,7 @@ unsigned long CMSZipCodec::Compress(void* OutputBuffer,
 {
     unsigned short* Magic;
 
-    DPRINT(MAX_TRACE, ("InputLength (%d).\n", InputLength));
+    DPRINT(MAX_TRACE, ("InputLength (%lu).\n", InputLength));
 
     Magic  = (unsigned short*)OutputBuffer;
     *Magic = MSZIP_MAGIC;
@@ -122,7 +122,7 @@ unsigned long CMSZipCodec::Uncompress(void* OutputBuffer,
 {
     unsigned short Magic;
 
-    DPRINT(MAX_TRACE, ("InputLength (%d).\n", InputLength));
+    DPRINT(MAX_TRACE, ("InputLength (%lu).\n", InputLength));
 
     Magic = *((unsigned short*)InputBuffer);
 
