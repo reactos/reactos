@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.64 2003/10/11 17:51:56 hbirr Exp $
+/* $Id: create.c,v 1.65 2003/11/27 20:49:07 gdalsnes Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/create.c
@@ -540,7 +540,9 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	  if (NT_SUCCESS (Status))
 	    {
 	      pFcb = FileObject->FsContext;
+        
 	      Irp->IoStatus.Information = FILE_CREATED;
+        
 	      VfatSetAllocationSizeInformation(FileObject, 
 					       pFcb,
 					       DeviceExt,
@@ -651,8 +653,12 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	  VfatSupersedeFile(DeviceExt, FileObject, pFcb);
 	  Irp->IoStatus.Information = FILE_SUPERSEDED;
 	}
+      else if (RequestedDisposition == FILE_OVERWRITE || RequestedDisposition == FILE_OVERWRITE_IF)
+  {
+    Irp->IoStatus.Information = FILE_OVERWRITTEN;
+  }
       else
-	{
+  {
 	  Irp->IoStatus.Information = FILE_OPENED;
 	}
     }
