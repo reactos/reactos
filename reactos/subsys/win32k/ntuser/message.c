@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.65 2004/05/14 23:57:32 weiden Exp $
+/* $Id: message.c,v 1.66 2004/05/16 18:33:40 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1089,7 +1089,8 @@ NtUserPostThreadMessage(DWORD idThread,
     Status = CopyMsgToKernelMem(&KernelModeMsg, &UserModeMsg, MsgMemoryEntry);
     if (! NT_SUCCESS(Status))
       {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        ObDereferenceObject( peThread );
+	SetLastWin32Error(ERROR_INVALID_PARAMETER);
         return FALSE;
       }
     MsqPostMessage(pThread->MessageQueue, &KernelModeMsg,
