@@ -349,7 +349,7 @@ protected:
 	int		Command(int id, int code);
 
 	static void	ShowLaunchDialog(HWND hwndOwner);
-	static void	ShowLogoffDialog(HWND hwndOwner, UINT flags);
+	static void	ShowLogoffDialog(HWND hwndOwner);
 	static void	ShowSearchDialog();
 	static void	ShowSearchComputer();
 };

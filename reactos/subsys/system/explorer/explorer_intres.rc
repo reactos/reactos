@@ -1926,7 +1926,7 @@ BEGIN
     IDS_TITLE               "Explorador do Reactos"
     IDS_START               "Iniciar"
     IDS_LOGOFF              "Terminar sessão..."
-    IDS_TERMINATE           "Terminar"
+    IDS_TERMINATE           "Terminar ROS Explorador"
     IDS_SHUTDOWN            "Desligar..."
     IDS_LAUNCH              "Executar..."
     IDS_START_HELP          "Ajuda"

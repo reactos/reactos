@@ -1834,7 +1834,7 @@ int StartMenuHandler::Command(int id, int code)
 
 	  case IDC_LOGOFF:
 		CloseStartMenu(id);
-		ShowLogoffDialog(g_Globals._hwndDesktopBar, EWX_LOGOFF);
+		ShowLogoffDialog(g_Globals._hwndDesktopBar);
 		break;
 
 	  case IDC_TERMINATE:
@@ -1979,7 +1979,7 @@ void StartMenuHandler::ShowLaunchDialog(HWND hwndOwner)
 	}
 }
 
-void StartMenuHandler::ShowLogoffDialog(HWND hwndOwner, UINT flags)
+void StartMenuHandler::ShowLogoffDialog(HWND hwndOwner)
 {
 	static DynamicFct<LOGOFFWINDOWSDIALOG> LogoffWindowsDialog(TEXT("SHELL32"), 54);
 //	static DynamicFct<RESTARTWINDOWSDLG> RestartDialog(TEXT("SHELL32"), 59);
@@ -1988,7 +1988,7 @@ void StartMenuHandler::ShowLogoffDialog(HWND hwndOwner, UINT flags)
 		(*LogoffWindowsDialog)(0);
 /* The RestartDialog function prompts about some system setting change. This is not what we want to display here.
 	else if (RestartDialog)
-		return (*RestartDialog)(hwndOwner, (LPWSTR)L"You selected <Log Off>.\n\n", flags) == 1;	///@todo ANSI string conversion if needed
+		return (*RestartDialog)(hwndOwner, (LPWSTR)L"You selected <Log Off>.\n\n", EWX_LOGOFF) == 1;	///@todo ANSI string conversion if needed
 */
 	else
 		MessageBox(hwndOwner, TEXT("LogoffWindowsDialog() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
