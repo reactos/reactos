@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.16 2003/06/07 11:34:36 chorns Exp $
+/* $Id: fsctl.c,v 1.17 2003/06/24 21:34:41 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -212,6 +212,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    PVFATFCB VolumeFcb = NULL;
    PVFATCCB Ccb = NULL;
    LARGE_INTEGER timeout;
+   PDEVICE_OBJECT DeviceToMount;
 
    DPRINT("VfatMount(IrpContext %x)\n", IrpContext);
 
@@ -223,7 +224,9 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
       goto ByeBye;
    }
 
-   Status = VfatHasFileSystem (IrpContext->Stack->Parameters.MountVolume.DeviceObject, &RecognizedFS, NULL);
+   DeviceToMount = IrpContext->Stack->Parameters.MountVolume.DeviceObject;
+
+   Status = VfatHasFileSystem (DeviceToMount, &RecognizedFS, NULL);
    if (!NT_SUCCESS(Status))
    {
       goto ByeBye;
@@ -254,8 +257,8 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    RtlZeroMemory(DeviceExt, sizeof(DEVICE_EXTENSION));
 
    /* use same vpb as device disk */
-   DeviceObject->Vpb = IrpContext->Stack->Parameters.MountVolume.DeviceObject->Vpb;
-   Status = VfatMountDevice(DeviceExt, IrpContext->Stack->Parameters.MountVolume.DeviceObject);
+   DeviceObject->Vpb = DeviceToMount->Vpb;
+   Status = VfatMountDevice(DeviceExt, DeviceToMount);
    if (!NT_SUCCESS(Status))
    {
       /* FIXME: delete device object */
@@ -275,7 +278,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    }
 #endif
 
-  DeviceExt->StorageDevice = IrpContext->Stack->Parameters.MountVolume.DeviceObject;
+  DeviceExt->StorageDevice = DeviceToMount;
   DeviceExt->StorageDevice->Vpb->DeviceObject = DeviceObject;
   DeviceExt->StorageDevice->Vpb->RealDevice = DeviceExt->StorageDevice;
   DeviceExt->StorageDevice->Vpb->Flags |= VPB_MOUNTED;
@@ -382,15 +385,35 @@ ByeBye:
 static NTSTATUS
 VfatVerify (PVFAT_IRP_CONTEXT IrpContext)
 /*
- * FUNCTION: Mount the filesystem
+ * FUNCTION: Verify the filesystem
  */
 {
+  PDEVICE_OBJECT DeviceToVerify;
+  NTSTATUS Status;
+
   DPRINT("VfatVerify(IrpContext %x)\n", IrpContext);
 
-  assert(IrpContext);
+  DeviceToVerify = IrpContext->Stack->Parameters.VerifyVolume.DeviceObject;
+  Status = VfatBlockDeviceIoControl(DeviceToVerify,
+				    IOCTL_DISK_CHECK_VERIFY,
+				    NULL,
+				    0,
+				    NULL,
+				    NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("VfatBlockDeviceIoControl() failed (Status %lx)\n", Status);
 
-  return(STATUS_INVALID_DEVICE_REQUEST);
+      /* FIXME: Compare volume label */
+
+      DPRINT1("  returning STATUS_WRONG_VOLUME\n");
+
+      return STATUS_WRONG_VOLUME;
+    }
+
+  return STATUS_SUCCESS;
 }
+
 
 static NTSTATUS
 VfatGetVolumeBitmap(PVFAT_IRP_CONTEXT IrpContext)
@@ -399,6 +422,7 @@ VfatGetVolumeBitmap(PVFAT_IRP_CONTEXT IrpContext)
 
    return STATUS_INVALID_DEVICE_REQUEST;
 }
+
 
 static NTSTATUS 
 VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)

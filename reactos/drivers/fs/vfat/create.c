@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.58 2003/06/16 19:15:57 hbirr Exp $
+/* $Id: create.c,v 1.59 2003/06/24 21:34:41 ekohl Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -525,7 +525,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   RequestedDisposition = ((Stack->Parameters.Create.Options >> 24) & 0xff);
   RequestedOptions =
     Stack->Parameters.Create.Options & FILE_VALID_OPTION_FLAGS;
-  PagingFileCreate = (Stack->Flags & SL_OPEN_PAGING_FILE) ? TRUE : FALSE;  
+  PagingFileCreate = (Stack->Flags & SL_OPEN_PAGING_FILE) ? TRUE : FALSE;
   FileObject = Stack->FileObject;
   DeviceExt = DeviceObject->DeviceExtension;
 
@@ -534,6 +534,15 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
       RequestedDisposition == FILE_SUPERSEDE)
     {
       return(STATUS_INVALID_PARAMETER);
+    }
+
+  /* Verify volume */
+  Status = IoVerifyVolume (DeviceExt->StorageDevice,
+			   FALSE);
+  if (!NT_SUCCESS (Status))
+    {
+      DPRINT("IoVerifyVolume() failed (Status %lx)\n", Status);
+      return Status;
     }
 
   /* This a open operation for the volume itself */
@@ -598,7 +607,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
    * If the file open failed then create the required file
    */
   if (!NT_SUCCESS (Status))
-    {      
+    {
       if (RequestedDisposition == FILE_CREATE ||
 	  RequestedDisposition == FILE_OPEN_IF ||
 	  RequestedDisposition == FILE_OVERWRITE_IF ||
