@@ -375,6 +375,11 @@ NTSTATUS TdiSetEventHandler(
   PVOID Handler,
   PVOID Context);
 
+NTSTATUS TdiQueryInformation(
+  PFILE_OBJECT FileObject,
+  LONG QueryType,
+  PMDL MdlBuffer);
+
 NTSTATUS TdiQueryDeviceControl(
   PFILE_OBJECT FileObject,
   ULONG IoControlCode,

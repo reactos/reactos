@@ -969,6 +969,9 @@ NTSTATUS AfdDispGetName(
   PFILE_REPLY_GETNAME Reply;
   PAFDFCB FCB;
   PFILE_OBJECT FileObject;
+  PMDL Mdl;
+  PTDI_ADDRESS_INFO AddressInfoBuffer;
+  ULONG AddressInfoSize;
 
   AFD_DbgPrint(MIN_TRACE, ("\n"));
 
@@ -996,9 +999,42 @@ NTSTATUS AfdDispGetName(
       FileObject = FCB->TdiAddressObject;
     }
 
-    /* FIXME: Implement */
-    /* Make a TDI_QUERY_INFORMATION call to underlying TDI transport driver */
-    Status = STATUS_UNSUCCESSFUL;
+    AddressInfoSize = sizeof(TDI_ADDRESS_INFO) + sizeof(TDI_ADDRESS_IP);
+    AddressInfoBuffer = ExAllocatePool(NonPagedPool, AddressInfoSize);
+
+    Mdl = IoAllocateMdl(
+      AddressInfoBuffer,        /* Virtual address of buffer */
+      AddressInfoSize,          /* Length of buffer */
+      FALSE,                    /* Not secondary */
+      FALSE,                    /* Don't charge quota */
+      NULL);                    /* Don't use IRP */
+
+    if (!Mdl) {
+      ExFreePool(AddressInfoBuffer);
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    MmBuildMdlForNonPagedPool(Mdl);
+
+    Status = TdiQueryInformation(
+      FileObject,
+      TDI_QUERY_ADDRESS_INFO,
+      Mdl);
+
+    if (NT_SUCCESS(Status)) {
+      Reply->Name.sa_family = AddressInfoBuffer->Address.Address[0].AddressType;
+
+      RtlCopyMemory(
+        Reply->Name.sa_data,
+        AddressInfoBuffer->Address.Address[0].Address,
+        sizeof(Reply->Name.sa_data));
+
+      Reply->NameSize = sizeof(Reply->Name.sa_family) + 
+                        AddressInfoBuffer->Address.Address[0].AddressLength;
+    }
+
+    IoFreeMdl(Mdl);
+    ExFreePool(AddressInfoBuffer);
   }
 
   AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));

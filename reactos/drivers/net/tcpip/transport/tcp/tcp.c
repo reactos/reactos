@@ -329,16 +329,22 @@ NTSTATUS TCPiBuildPacket(
     {
       PVOID Data;
       UINT Size;
-      PNDIS_BUFFER NdisBuffer = SendRequest->Buffer;
-      NdisChainBufferAtBack(Packet->NdisPacket, NdisBuffer);
+      /*
+       * NOTE:
+       * Don't name the variable NdisBuffer, because that's internal name
+       * used by the NdisChainBufferAtBack macro and it's the easiest way
+       * how to achieve an elegant crash.
+       */
+      PNDIS_BUFFER _NdisBuffer = SendRequest->Buffer;
+      NdisChainBufferAtBack(Packet->NdisPacket, _NdisBuffer);
       /* Add checksum for segment data */
       /* FIXME: Verify that there is no problem for chained buffers with an odd length */
-      while (NdisBuffer != NULL)
+      while (_NdisBuffer != NULL)
         {
-          NdisQueryBuffer(NdisBuffer, &Data, &Size);
+          NdisQueryBuffer(_NdisBuffer, &Data, &Size);
           DbgPrint("Checksum7:(%d bytes)\n", Size);
           Checksum = TCPv4Checksum(Data, Size, ~Checksum);
-          NdisGetNextBuffer(NdisBuffer, &NdisBuffer);
+          NdisGetNextBuffer(_NdisBuffer, &_NdisBuffer);
         }
     }
 
