@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.203 2004/01/14 02:14:46 sedwards Exp $
+# $Id: Makefile,v 1.204 2004/01/15 10:32:19 ekohl Exp $
 #
 # Global makefile
 #
@@ -32,7 +32,7 @@ BUS = acpi isapnp pci
 LIB_FSLIB = vfatlib
 
 # Static libraries
-LIB_STATIC = string rosrtl epsapi uuid zlib
+LIB_STATIC = string rosrtl epsapi uuid libwine zlib
 
 # Keyboard layout libraries
 DLLS_KBD = kbdus kbdgr kbdfr kbduk
@@ -41,10 +41,11 @@ DLLS_KBD = kbdus kbdgr kbdfr kbduk
 # advapi32 cards crtdll comdlg32 fmifs gdi32 imagehlp kernel32 libpcap packet msafd msvcrt ntdll
 # epsapi psapi richedit rpcrt4 secur32 user32 version ws2help ws2_32 wsock32 wshirda mswsock
 # imagehlp imm32
-DLLS =	libwine advapi32 cabinet cards crtdll comdlg32 fmifs freetype gdi32 kernel32 packet lzexpand \
-	msafd msvcrt msvcrt20 ntdll ole32 oledlg psapi richedit rpcrt4 secur32 shell32 shlwapi \
-	syssetup twain unicode user32 userenv version winspool ws2help ws2_32 wsock32 \
-	wshirda imm32 iphlpapi msgina mswsock msimg32 d3d8thk winmm comctl32 $(DLLS_KBD)
+DLLS = advapi32 cabinet cards comctl32 crtdll comdlg32 d3d8thk fmifs freetype gdi32 \
+	imm32 iphlpapi kernel32 lzexpand msafd msgina msimg32 msvcrt msvcrt20 mswsock ntdll \
+	ole32 oledlg packet psapi richedit rpcrt4 secur32 shell32 shlwapi syssetup twain \
+	unicode user32 userenv version winmm winspool ws2help ws2_32 wsock32 wshirda \
+	$(DLLS_KBD)
 
 SUBSYS = smss win32k csrss ntvdm
 
