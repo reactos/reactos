@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.56 2004/02/20 07:45:58 royce Exp $ */
+/* $Id: bitmaps.c,v 1.57 2004/02/23 22:44:52 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -61,6 +61,7 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
   PBRUSHOBJ BrushObj;
   BOOL UsesSource = ((ROP & 0xCC0000) >> 2) != (ROP & 0x330000);
   BOOL UsesPattern = TRUE;//((ROP & 0xF00000) >> 4) != (ROP & 0x0F0000);  
+  HPALETTE Mono = NULL;
 
   DCDest = DC_LockDc(hDCDest);
   if (NULL == DCDest)
@@ -196,10 +197,27 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
       PALETTE_UnlockPalette(DestPalette);
     }
 
+  /* KB41464 details how to convert between mono and color */
   if (DCDest->w.bitsPerPixel == 1)
     {
       XlateObj = (PXLATEOBJ)IntEngCreateMonoXlate(SourceMode, DestPalette,
          SourcePalette, DCSrc->w.backgroundColor);
+    }
+  else if (UsesSource && 1 == DCSrc->w.bitsPerPixel)
+    {
+      ULONG Colors[2];
+
+      Colors[0] = DCSrc->w.textColor;
+      Colors[1] = DCSrc->w.backgroundColor;
+      Mono = EngCreatePalette(PAL_INDEXED, 2, Colors, 0, 0, 0);
+      if (NULL != Mono)
+        {
+          XlateObj = (PXLATEOBJ)IntEngCreateXlate(DestMode, PAL_INDEXED, DestPalette, Mono);
+        }
+      else
+        {
+          XlateObj = NULL;
+        }
     }
   else
     {
@@ -207,6 +225,10 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
     }
   if (NULL == XlateObj)
     {
+      if (NULL != Mono)
+        {
+          EngDeletePalette(Mono);
+        }
       if (UsesSource && hDCSrc != hDCDest)
         {
           DC_UnlockDc(hDCSrc);
@@ -221,6 +243,10 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
                         &DestRect, &SourcePoint, NULL, BrushObj, NULL, ROP);
 
   EngDeleteXlate(XlateObj);
+  if (NULL != Mono)
+    {
+      EngDeletePalette(Mono);
+    }
   if (UsesPattern)
     {
       BRUSHOBJ_UnlockBrush(DCDest->w.hBrush);
