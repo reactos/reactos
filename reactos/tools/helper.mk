@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.27 2003/02/25 23:08:54 gvg Exp $
+# $Id: helper.mk,v 1.28 2003/04/01 08:13:30 gvg Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -15,6 +15,7 @@
 #                        miniport = Kernel mode driver that does not link with ntoskrnl.exe or hal.dll
 #                        gdi_driver = Kernel mode graphics driver that link with win32k.sys
 #                        subsystem = Kernel subsystem
+#                        kmdll = Kernel mode DLL
 #   $TARGET_APPTYPE    = Application type (windows,native,console)
 #   $TARGET_NAME       = Base name of output file and .rc, .def, and .edf files
 #   $TARGET_OBJECTS    = Object files that compose the module
@@ -277,7 +278,7 @@ ifeq ($(TARGET_TYPE),gdi_driver)
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32
-  MK_DISTDIR := drivers
+  MK_DISTDIR := dlls
   MK_RES_BASE := $(TARGET_NAME)
 endif
 
@@ -327,6 +328,25 @@ ifeq ($(TARGET_TYPE),subsystem)
   MK_EXETYPE := dll
   MK_DEFEXT := .sys
   MK_DEFENTRY := _DriverEntry@8
+  MK_DDKLIBS := ntoskrnl.a hal.a
+  MK_SDKLIBS :=
+  MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
+  MK_CPPFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
+  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
+  MK_IMPLIB := yes
+  MK_IMPLIBONLY := no
+  MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
+  MK_IMPLIB_EXT := .a
+  MK_INSTALLDIR := system32
+  MK_DISTDIR := drivers
+  MK_RES_BASE := $(TARGET_NAME)
+endif
+
+ifeq ($(TARGET_TYPE),kmdll)
+  MK_MODE := kernel
+  MK_EXETYPE := dll
+  MK_DEFEXT := .dll
+  MK_DEFENTRY := 0x0
   MK_DDKLIBS := ntoskrnl.a hal.a
   MK_SDKLIBS :=
   MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
@@ -405,6 +425,11 @@ endif
 ifeq ($(MK_MODE),kernel)
   MK_DEFBASE := 0x10000
   MK_LIBS := $(addprefix $(DDK_PATH_LIB)/, $(MK_DDKLIBS) $(TARGET_DDKLIBS))
+endif
+
+
+ifneq ($(TARGET_LIBS),)
+  MK_LIBS := $(TARGET_LIBS) $(MK_LIBS)
 endif
 
 
