@@ -2310,12 +2310,6 @@ extern "C" {
 #define PURGE_TXCLEAR	(4)
 #define PURGE_RXCLEAR	(8)
 
-/* QueryServiceObjectSecurity */
-#define OWNER_SECURITY_INFORMATION	(0x1L)
-#define GROUP_SECURITY_INFORMATION	(0x2L)
-#define DACL_SECURITY_INFORMATION	(0x4L)
-#define SACL_SECURITY_INFORMATION	(0x8L)
-
 /* ReadEventLog, ReportEvent */
 #define EVENTLOG_FORWARDS_READ	(4)
 #define EVENTLOG_BACKWARDS_READ	(8)
