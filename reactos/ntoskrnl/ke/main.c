@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.144 2002/12/07 14:47:10 ekohl Exp $
+/* $Id: main.c,v 1.145 2002/12/07 15:43:29 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -500,7 +500,7 @@ ExpInitializeExecutive(VOID)
     }
 
   /* Initialize volatile registry settings */
-  if (SetupBoot == TRUE)
+  if (SetupBoot == FALSE)
     {
       CmInit2((PCHAR)KeLoaderBlock.CommandLine);
     }
