@@ -80,7 +80,7 @@ reactos/lib/imm32		#
 reactos/lib/uuid		#
 
 advapi32 -
-  reactos/lib/advapi32/crypyto/*.c	# Synced to Wine-20041201
+  reactos/lib/advapi32/crypto/*.c	# Synced to Wine-20041201
 
 gdi32 -
   reactos/lib/gdi32/objects/linedda.c	# Out of sync
