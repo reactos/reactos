@@ -10,14 +10,17 @@ TARGET_NAME = ddraw
 TARGET_CFLAGS = -D__USE_W32API -I$(PATH_TO_TOP)/include/wine
 
 # require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror 
+TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall 
 
 TARGET_SDKLIBS = ntdll.a gdi32.a dxguid.a ole32.a user32.a d3d8thk.a
 
 
 TARGET_OBJECTS = \
       regsvr.o \
-	ddraw.o
+      ddraw.o \
+      ddraw_hal.o 
+     
+
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 

@@ -12,14 +12,14 @@
 #include <windows.h>
 #include "ddraw.h"
 #include "rosddraw.h"
-
- 
-HRESULT WINAPI DirectDrawCreate(LPGUID lpGUID, LPVOID* lplpDD, LPUNKNOWN pUnkOuter) 
+               
+HRESULT WINAPI DirectDrawCreate(LPGUID lpGUID, LPDIRECTDRAW* lplpDD, LPUNKNOWN pUnkOuter) 
 {    	
     if (pUnkOuter==NULL) return DDERR_INVALIDPARAMS;
 	return DDRAW_Create(lpGUID, (LPVOID*) lplpDD, pUnkOuter, &IID_IDirectDraw, FALSE);
 }
 
+                
 HRESULT WINAPI DirectDrawCreateEx(LPGUID lpGUID, LPVOID* lplpDD, REFIID iid, LPUNKNOWN pUnkOuter)
 {
 	if (pUnkOuter==NULL) return DDERR_INVALIDPARAMS;
@@ -29,7 +29,7 @@ HRESULT WINAPI DirectDrawCreateEx(LPGUID lpGUID, LPVOID* lplpDD, REFIID iid, LPU
 }
 
 HRESULT WINAPI DirectDrawEnumerateA(
-  DWORD *lpCallback, 
+  LPDDENUMCALLBACKA lpCallback, 
   LPVOID lpContext
 )
 {
@@ -38,7 +38,7 @@ HRESULT WINAPI DirectDrawEnumerateA(
 
 
 HRESULT WINAPI DirectDrawEnumerateW(
-  DWORD *lpCallback, 
+  LPDDENUMCALLBACKW lpCallback, 
   LPVOID lpContext
 )
 {
@@ -46,7 +46,7 @@ HRESULT WINAPI DirectDrawEnumerateW(
 }
 
 HRESULT WINAPI DirectDrawEnumerateExA(
-  DWORD lpCallback, 
+  LPDDENUMCALLBACKEXA lpCallback, 
   LPVOID lpContext, 
   DWORD dwFlags
 )
@@ -55,18 +55,18 @@ HRESULT WINAPI DirectDrawEnumerateExA(
 }
 
 HRESULT WINAPI DirectDrawEnumerateExW(
-  DWORD lpCallback, 
+  LPDDENUMCALLBACKEXW lpCallback, 
   LPVOID lpContext, 
   DWORD dwFlags
 )
 {
     return DD_OK;
 }
-
+ 
 HRESULT WINAPI DirectDrawCreateClipper(
   DWORD dwFlags, 
-  DWORD FAR* lplpDDClipper, 
-  IUnknown FAR* pUnkOuter
+  LPDIRECTDRAWCLIPPER* lplpDDClipper, 
+  LPUNKNOWN pUnkOuter
 )
 {
     return DD_OK;
@@ -75,7 +75,11 @@ HRESULT WINAPI DirectDrawCreateClipper(
 HRESULT DDRAW_Create(
 	LPGUID lpGUID, LPVOID *lplpDD, LPUNKNOWN pUnkOuter, REFIID iid, BOOL ex) 
 {  		      
-	HDC desktop;
+	
+	
+
+
+	//HDC desktop;
 	
     /* BOOL ex == TRUE it is DirectDrawCreateEx call here. */
 	
