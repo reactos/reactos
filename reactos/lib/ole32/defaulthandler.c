@@ -49,6 +49,8 @@
 #include <stdarg.h>
 #include <string.h>
 
+#define COBJMACROS
+
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
@@ -123,13 +125,13 @@ typedef struct DefaultHandler DefaultHandler;
 /*
  * Here, I define utility macros to help with the casting of the
  * "this" parameter.
- * There is a version to accomodate all of the VTables implemented
+ * There is a version to accommodate all of the VTables implemented
  * by this object.
  */
-#define _ICOM_THIS_From_IOleObject(class,name)       class* this = (class*)name;
-#define _ICOM_THIS_From_NDIUnknown(class, name)      class* this = (class*)(((char*)name)-sizeof(void*));
-#define _ICOM_THIS_From_IDataObject(class, name)     class* this = (class*)(((char*)name)-2*sizeof(void*));
-#define _ICOM_THIS_From_IRunnableObject(class, name) class* this = (class*)(((char*)name)-3*sizeof(void*));
+#define _ICOM_THIS_From_IOleObject(class,name)       class* this = (class*)name
+#define _ICOM_THIS_From_NDIUnknown(class, name)      class* this = (class*)(((char*)name)-sizeof(void*))
+#define _ICOM_THIS_From_IDataObject(class, name)     class* this = (class*)(((char*)name)-2*sizeof(void*))
+#define _ICOM_THIS_From_IRunnableObject(class, name) class* this = (class*)(((char*)name)-3*sizeof(void*))
 
 /*
  * Prototypes for the methods of the DefaultHandler class.
@@ -656,10 +658,7 @@ static ULONG WINAPI DefaultHandler_NDIUnknown_AddRef(
             IUnknown*      iface)
 {
   _ICOM_THIS_From_NDIUnknown(DefaultHandler, iface);
-
-  this->ref++;
-
-  return this->ref;
+  return InterlockedIncrement(&this->ref);
 }
 
 /************************************************************************
@@ -674,23 +673,19 @@ static ULONG WINAPI DefaultHandler_NDIUnknown_Release(
             IUnknown*      iface)
 {
   _ICOM_THIS_From_NDIUnknown(DefaultHandler, iface);
+  ULONG ref;
 
   /*
    * Decrease the reference count on this object.
    */
-  this->ref--;
+  ref = InterlockedDecrement(&this->ref);
 
   /*
    * If the reference count goes down to 0, perform suicide.
    */
-  if (this->ref==0)
-  {
-    DefaultHandler_Destroy(this);
+  if (ref == 0) DefaultHandler_Destroy(this);
 
-    return 0;
-  }
-
-  return this->ref;
+  return ref;
 }
 
 /*********************************************************

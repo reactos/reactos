@@ -30,8 +30,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
 #include "windef.h"
 #include "winbase.h"
 #include "winnls.h"
@@ -291,9 +293,7 @@ ULONG WINAPI StorageBaseImpl_AddRef(
             IStorage* iface)
 {
   StorageBaseImpl *This = (StorageBaseImpl *)iface;
-  This->ref++;
-
-  return This->ref;
+  return InterlockedIncrement(&This->ref);
 }
 
 /************************************************************************
@@ -311,12 +311,12 @@ ULONG WINAPI StorageBaseImpl_Release(
   /*
    * Decrease the reference count on this object.
    */
-  This->ref--;
+  ULONG ref = InterlockedDecrement(&This->ref);
 
   /*
    * If the reference count goes down to 0, perform suicide.
    */
-  if (This->ref==0)
+  if (ref == 0)
   {
     /*
      * Since we are using a system of base-classes, we want to call the
@@ -324,11 +324,9 @@ ULONG WINAPI StorageBaseImpl_Release(
      * using virtual functions to implement the destructor.
      */
     This->v_destructor(This);
-
-    return 0;
   }
 
-  return This->ref;
+  return ref;
 }
 
 /************************************************************************
@@ -2677,7 +2675,7 @@ ULONG Storage32Impl_AddExtBlockDepot(StorageImpl* This)
   }
   else
   {
-    int i;
+    unsigned int i;
     /*
      * Follow the chain to the last one.
      */
@@ -3637,9 +3635,7 @@ ULONG   WINAPI IEnumSTATSTGImpl_AddRef(
   IEnumSTATSTG* iface)
 {
   IEnumSTATSTGImpl* const This=(IEnumSTATSTGImpl*)iface;
-
-  This->ref++;
-  return This->ref;
+  return InterlockedIncrement(&This->ref);
 }
 
 ULONG   WINAPI IEnumSTATSTGImpl_Release(
@@ -3649,8 +3645,7 @@ ULONG   WINAPI IEnumSTATSTGImpl_Release(
 
   ULONG newRef;
 
-  This->ref--;
-  newRef = This->ref;
+  newRef = InterlockedDecrement(&This->ref);
 
   /*
    * If the reference count goes down to 0, perform suicide.
@@ -6667,7 +6662,8 @@ static HRESULT STORAGE_WriteCompObj( LPSTORAGE pstg, CLSID *clsid,
 /* enumerate HKEY_CLASSES_ROOT\\CLSID looking for a CLSID whose name matches */
 static HRESULT CLSIDFromUserType(LPCWSTR lpszUserType, CLSID *clsid)
 {
-    LONG r, count, i, len;
+    LONG r, i, len;
+    ULONG count;
     WCHAR szKey[0x40];
     HKEY hkey, hkeyclsid;
     LPWSTR buffer = NULL;

@@ -26,13 +26,15 @@
 
 #include "config.h"
 
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
 #include <assert.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
 
 #include "windef.h"
 #include "winbase.h"

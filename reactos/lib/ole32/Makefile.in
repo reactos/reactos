@@ -68,11 +68,7 @@ SUBDIRS = tests
 
 @MAKE_DLL_RULES@
 
-.SUFFIXES: .idl .h
-
-.idl.h:
-	$(WIDL) $(IDLFLAGS) -b -h -H $@ $<
-
-idl: $(IDL_SRCS:.idl=.h)
-
 ### Dependencies:
+
+# note: this will get overwritten by make depend
+$(ALL_OBJS): $(IDL_SRCS:.idl=.h)

@@ -766,7 +766,8 @@ static int
 STORAGE_get_free_big_blocknr(HANDLE hf) {
 	BYTE	block[BIGSIZE];
 	LPINT	sbd = (LPINT)block;
-	int	lastbigblocknr,i,curblock,bigblocknr;
+	int	lastbigblocknr,i,bigblocknr;
+	unsigned int curblock;
 	struct storage_header sth;
 	BOOL ret;
 
@@ -985,7 +986,7 @@ HRESULT WINAPI IStream16_fnQueryInterface(
  */
 ULONG WINAPI IStream16_fnAddRef(IStream16* iface) {
 	IStream16Impl *This = (IStream16Impl *)iface;
-	return ++(This->ref);
+	return InterlockedIncrement(&This->ref);
 }
 
 /******************************************************************************
@@ -993,15 +994,15 @@ ULONG WINAPI IStream16_fnAddRef(IStream16* iface) {
  */
 ULONG WINAPI IStream16_fnRelease(IStream16* iface) {
 	IStream16Impl *This = (IStream16Impl *)iface;
+        ULONG ref;
 	FlushFileBuffers(This->hf);
-	This->ref--;
-	if (!This->ref) {
+        ref = InterlockedDecrement(&This->ref);
+	if (!ref) {
 		CloseHandle(This->hf);
                 UnMapLS( This->thisptr );
 		HeapFree( GetProcessHeap(), 0, This );
-		return 0;
 	}
-	return This->ref;
+	return ref;
 }
 
 /******************************************************************************
@@ -1073,7 +1074,7 @@ HRESULT WINAPI IStream16_fnRead(
 		/* use small block reader */
 		blocknr = STORAGE_get_nth_next_small_blocknr(This->hf,This->stde.pps_sb,This->offset.u.LowPart/SMALLSIZE);
 		while (cb) {
-			int	cc;
+			unsigned int cc;
 
 			if (!STORAGE_get_small_block(This->hf,blocknr,block)) {
 			   WARN("small block read failed!!!\n");
@@ -1093,7 +1094,7 @@ HRESULT WINAPI IStream16_fnRead(
 		/* use big block reader */
 		blocknr = STORAGE_get_nth_next_big_blocknr(This->hf,This->stde.pps_sb,This->offset.u.LowPart/BIGSIZE);
 		while (cb) {
-			int	cc;
+			unsigned int cc;
 
 			if (!STORAGE_get_big_block(This->hf,blocknr,block)) {
 				WARN("big block read failed!!!\n");
@@ -1479,7 +1480,7 @@ HRESULT WINAPI IStream_fnQueryInterface(
  */
 ULONG WINAPI IStream_fnAddRef(IStream* iface) {
 	IStream32Impl *This = (IStream32Impl *)iface;
-	return ++(This->ref);
+	return InterlockedIncrement(&This->ref);
 }
 
 /******************************************************************************
@@ -1487,14 +1488,14 @@ ULONG WINAPI IStream_fnAddRef(IStream* iface) {
  */
 ULONG WINAPI IStream_fnRelease(IStream* iface) {
 	IStream32Impl *This = (IStream32Impl *)iface;
+        ULONG ref;
 	FlushFileBuffers(This->hf);
-	This->ref--;
-	if (!This->ref) {
+        ref = InterlockedDecrement(&This->ref);
+	if (!ref) {
 		CloseHandle(This->hf);
 		HeapFree( GetProcessHeap(), 0, This );
-		return 0;
 	}
-	return This->ref;
+	return ref;
 }
 
 /* --- IStorage16 implementation */
@@ -1533,7 +1534,7 @@ HRESULT WINAPI IStorage16_fnQueryInterface(
  */
 ULONG WINAPI IStorage16_fnAddRef(IStorage16* iface) {
 	IStorage16Impl *This = (IStorage16Impl *)iface;
-	return ++(This->ref);
+	return InterlockedIncrement(&This->ref);
 }
 
 /******************************************************************************
@@ -1541,12 +1542,14 @@ ULONG WINAPI IStorage16_fnAddRef(IStorage16* iface) {
  */
 ULONG WINAPI IStorage16_fnRelease(IStorage16* iface) {
 	IStorage16Impl *This = (IStorage16Impl *)iface;
-	This->ref--;
-	if (This->ref)
-		return This->ref;
-        UnMapLS( This->thisptr );
-        HeapFree( GetProcessHeap(), 0, This );
-	return 0;
+        ULONG ref;
+        ref = InterlockedDecrement(&This->ref);
+        if (!ref)
+        {
+            UnMapLS( This->thisptr );
+            HeapFree( GetProcessHeap(), 0, This );
+        }
+        return ref;
 }
 
 /******************************************************************************

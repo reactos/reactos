@@ -21,6 +21,9 @@
 #include <stdarg.h>
 #include <string.h>
 #include <assert.h>
+
+#define COBJMACROS
+
 #include "winerror.h"
 #include "windef.h"
 #include "winbase.h"
@@ -142,7 +145,7 @@ ULONG WINAPI BindCtxImpl_AddRef(IBindCtx* iface)
 
     TRACE("(%p)\n",This);
 
-    return ++(This->ref);
+    return InterlockedIncrement(&This->ref);
 }
 
 /******************************************************************************
@@ -151,21 +154,19 @@ ULONG WINAPI BindCtxImpl_AddRef(IBindCtx* iface)
 ULONG WINAPI BindCtxImpl_Release(IBindCtx* iface)
 {
     BindCtxImpl *This = (BindCtxImpl *)iface;
+    ULONG ref;
 
     TRACE("(%p)\n",This);
 
-    This->ref--;
+    ref = InterlockedDecrement(&This->ref);
 
-    if (This->ref==0){
-
+    if (ref == 0){
         /* release all registered objects */
         BindCtxImpl_ReleaseBoundObjects((IBindCtx*)This);
 
         BindCtxImpl_Destroy(This);
-
-        return 0;
     }
-    return This->ref;
+    return ref;
 }
 
 

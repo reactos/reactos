@@ -26,8 +26,10 @@
 #include <string.h>
 #include <assert.h>
 
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
@@ -286,20 +288,20 @@ PipeBuf_QueryInterface(
 static ULONG WINAPI
 PipeBuf_AddRef(LPRPCCHANNELBUFFER iface) {
     PipeBuf *This = (PipeBuf *)iface;
-    This->ref++;
-    return This->ref;
+    return InterlockedIncrement(&This->ref);
 }
 
 static ULONG WINAPI
 PipeBuf_Release(LPRPCCHANNELBUFFER iface) {
     PipeBuf *This = (PipeBuf *)iface;
+    ULONG ref;
     wine_rpc_disconnect_header header;
     HANDLE pipe;
     DWORD reqtype = REQTYPE_DISCONNECT;
 
-    This->ref--;
-    if (This->ref)
-	return This->ref;
+    ref = InterlockedDecrement(&This->ref);
+    if (ref)
+	return ref;
 
     FIXME("Free all stuff\n");
 
