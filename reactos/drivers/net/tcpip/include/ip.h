@@ -20,8 +20,8 @@ typedef struct IP_ADDRESS {
     ULONG RefCount;                     /* Number of references to this address */
     UCHAR Type;                         /* Type of IP address */
     union {
-        IPv4_RAW_ADDRESS IPv4Address;   /* IPv4 address */
-        PIPv6_RAW_ADDRESS IPv6Address;  /* IPv6 address */
+        IPv4_RAW_ADDRESS IPv4Address;   /* IPv4 address (in network byte order) */
+        PIPv6_RAW_ADDRESS IPv6Address;  /* IPv6 address (in network byte order) */
     } Address;
 } IP_ADDRESS, *PIP_ADDRESS;
 
@@ -58,6 +58,7 @@ typedef VOID (*PACKET_COMPLETION_ROUTINE)(
 typedef struct IP_PACKET {
     ULONG RefCount;                     /* Reference count for this object */
     UCHAR Type;                         /* Type of IP packet (see IP_ADDRESS_xx above) */
+    UCHAR Flags;                        /* Flags for packet (see IP_PACKET_FLAG_xx below)*/
     PVOID Header;                       /* Pointer to IP header for this packet */
     UINT HeaderSize;                    /* Size of IP header */
     PVOID Data;                         /* Current pointer into packet data */
@@ -68,6 +69,9 @@ typedef struct IP_PACKET {
     IP_ADDRESS SrcAddr;                 /* Source address */
     IP_ADDRESS DstAddr;                 /* Destination address */
 } IP_PACKET, *PIP_PACKET;
+
+#define IP_PACKET_FLAG_RAW      0x01    /* Raw IP packet */
+
 
 /* Packet context */
 typedef struct PACKET_CONTEXT {
@@ -161,11 +165,12 @@ typedef VOID (*IP_PROTOCOL_HANDLER)(
     PIP_PACKET IPPacket);
 
 /* Loopback adapter address information (network byte order) */
-#define LOOPBACK_ADDRESS_IPv4   ((IPv4_RAW_ADDRESS)DH2N(0x7F000001)) 
+#define LOOPBACK_ADDRESS_IPv4   ((IPv4_RAW_ADDRESS)DH2N(0x7F000001))
 #define LOOPBACK_BCASTADDR_IPv4 ((IPv4_RAW_ADDRESS)DH2N(0x7F0000FF))
 #define LOOPBACK_ADDRMASK_IPv4  ((IPv4_RAW_ADDRESS)DH2N(0xFFFFFF00))
 
 /* Protocol definitions */
+#define IPPROTO_RAW     0   /* Raw IP */
 #define IPPROTO_ICMP    1   /* Internet Control Message Protocol */
 #define IPPROTO_IGMP    2   /* Internet Group Management Protocol */
 #define IPPROTO_TCP     6   /* Transmission Control Protocol */

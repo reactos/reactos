@@ -439,16 +439,19 @@ NTSTATUS DispTdiSendDatagram(
 
     TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
-    IrpSp     = IoGetCurrentIrpStackLocation(Irp);
-    DgramInfo = (PTDI_REQUEST_KERNEL_SENDDG)&(IrpSp->Parameters);
-    
-    TranContext                  = IrpSp->FileObject->FsContext;
+    IrpSp       = IoGetCurrentIrpStackLocation(Irp);
+    DgramInfo   = (PTDI_REQUEST_KERNEL_SENDDG)&(IrpSp->Parameters);
+    TranContext = IrpSp->FileObject->FsContext;
+
     /* Initialize a send request */
     Request.Handle.AddressHandle = TranContext->Handle.AddressHandle;
     Request.RequestNotifyObject  = DispDataRequestComplete;
     Request.RequestContext       = Irp;
 
-    Status = DispPrepareIrpForCancel(IrpSp->FileObject->FsContext, Irp, (PDRIVER_CANCEL)DispCancelRequest);
+    Status = DispPrepareIrpForCancel(
+        IrpSp->FileObject->FsContext,
+        Irp,
+        (PDRIVER_CANCEL)DispCancelRequest);
     if (NT_SUCCESS(Status)) {
 
         /* FIXME: DgramInfo->SendDatagramInformation->RemoteAddress 
@@ -459,7 +462,8 @@ NTSTATUS DispTdiSendDatagram(
             (PNDIS_BUFFER)Irp->MdlAddress, DgramInfo->SendLength);
         if (Status != STATUS_PENDING) {
             DispDataRequestComplete(Irp, Status, 0);
-            /* Return STATUS_PENDING because DispPrepareIrpForCancel marks Irp as pending */
+            /* Return STATUS_PENDING because DispPrepareIrpForCancel
+               marks Irp as pending */
             Status = STATUS_PENDING;
         }
     }

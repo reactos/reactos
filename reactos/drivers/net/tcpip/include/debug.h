@@ -15,18 +15,19 @@
 #define MID_TRACE      0x00000002
 #define MAX_TRACE      0x00000003
 
-#define DEBUG_MEMORY   0x00000100
-#define DEBUG_BUFFER   0x00000200
-#define DEBUG_IRP      0x00000400
-#define DEBUG_REFCOUNT 0x00000800
-#define DEBUG_ADDRFILE 0x00001000
-#define DEBUG_DATALINK 0x00002000
-#define DEBUG_ARP      0x00004000
-#define DEBUG_IP       0x00008000
-#define DEBUG_ICMP     0x00010000
-#define DEBUG_ROUTER   0x00020000
-#define DEBUG_RCACHE   0x00040000
-#define DEBUG_NCACHE   0x00080000
+#define DEBUG_CHECK    0x00000100
+#define DEBUG_MEMORY   0x00000200
+#define DEBUG_BUFFER   0x00000400
+#define DEBUG_IRP      0x00000800
+#define DEBUG_REFCOUNT 0x00001000
+#define DEBUG_ADDRFILE 0x00002000
+#define DEBUG_DATALINK 0x00004000
+#define DEBUG_ARP      0x00008000
+#define DEBUG_IP       0x00010000
+#define DEBUG_ICMP     0x00020000
+#define DEBUG_ROUTER   0x00040000
+#define DEBUG_RCACHE   0x00080000
+#define DEBUG_NCACHE   0x00100000
 #define DEBUG_ULTRA    0xFFFFFFFF
 
 #ifdef DBG
@@ -95,7 +96,9 @@ extern DWORD DebugTraceLevel;
 
 
 #define CHECKPOINT \
-    do { TI_DbgPrint(MIN_TRACE, ("(%s:%d)\n", __FILE__, __LINE__)); } while(0);
+    do { TI_DbgPrint(DEBUG_CHECK, ("(%s:%d)\n", __FILE__, __LINE__)); } while(0);
+
+#define CP CHECKPOINT
 
 #endif /* __DEBUG_H */
 

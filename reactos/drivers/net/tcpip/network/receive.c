@@ -210,6 +210,7 @@ PIP_PACKET ReassembleDatagram(
 	IPPacket->Type       = IP_ADDRESS_V4;
     IPPacket->RefCount   = 1;
     IPPacket->TotalSize  = IPDR->HeaderSize + IPDR->DataSize;
+    IPPacket->ContigSize = IPPacket->TotalSize;
     IPPacket->HeaderSize = IPDR->HeaderSize;
     IPPacket->Position   = IPDR->HeaderSize;
 
@@ -474,6 +475,8 @@ VOID ProcessFragment(
             return;
         }
 
+        DISPLAY_IP_PACKET(Datagram);
+
         /* Give the packet to the protocol dispatcher */
         IPDispatchProtocol(NTE, Datagram);
 
@@ -540,7 +543,7 @@ VOID IPv4Receive(
     PNET_TABLE_ENTRY NTE;
     UINT AddressType;
 
-    TI_DbgPrint(MAX_TRACE, ("Received IPv4 datagram.\n"));
+    //TI_DbgPrint(DEBUG_IP, ("Received IPv4 datagram.\n"));
 
     IPPacket->HeaderSize = (((PIPv4_HEADER)IPPacket->Header)->VerIHL & 0x0F) << 2;
 
@@ -559,11 +562,11 @@ VOID IPv4Receive(
         return;
     }
 
-    TI_DbgPrint(MAX_TRACE, ("TotalSize (datalink) is (%d).\n", IPPacket->TotalSize));
+//    TI_DbgPrint(DEBUG_IP, ("TotalSize (datalink) is (%d).\n", IPPacket->TotalSize));
 
     IPPacket->TotalSize = WN2H(((PIPv4_HEADER)IPPacket->Header)->TotalLength);
 
-    TI_DbgPrint(MAX_TRACE, ("TotalSize (IPv4) is (%d).\n", IPPacket->TotalSize));
+//    TI_DbgPrint(DEBUG_IP, ("TotalSize (IPv4) is (%d).\n", IPPacket->TotalSize));
 
 	AddrInitIPv4(&IPPacket->SrcAddr, ((PIPv4_HEADER)IPPacket->Header)->SrcAddr);
 	AddrInitIPv4(&IPPacket->DstAddr, ((PIPv4_HEADER)IPPacket->Header)->DstAddr);
@@ -620,6 +623,7 @@ VOID IPReceive(
 
     /* Check that IP header has a supported version */
     Version = (((PIPv4_HEADER)IPPacket->Header)->VerIHL >> 4);
+
     switch (Version) {
     case 4:
         IPPacket->Type = IP_ADDRESS_V4;
@@ -627,13 +631,10 @@ VOID IPReceive(
         break;
     case 6:
         IPPacket->Type = IP_ADDRESS_V6;
-        TI_DbgPrint(MIN_TRACE, ("Datagram of type IPv6 discarded.\n"));
+        TI_DbgPrint(MAX_TRACE, ("Datagram of type IPv6 discarded.\n"));
         return;
     default:
-        TI_DbgPrint(MIN_TRACE, ("Datagram has an unsupported IP version %d.\n", Version));
-
-        DISPLAY_IP_PACKET(IPPacket);
-
+		TI_DbgPrint(MIN_TRACE, ("Datagram has an unsupported IP version %d.\n", Version));
         return;
     }
 }

@@ -60,6 +60,9 @@ PADDRESS_ENTRY CreateADE(
     TI_DbgPrint(DEBUG_IP, ("Called. IF (0x%X)  Address (0x%X)  Type (0x%X)  NTE (0x%X).\n",
         IF, Address, Type, NTE));
 
+    TI_DbgPrint(DEBUG_IP, ("Address (%s)  NTE (%s).\n",
+        A2S(Address), A2S(NTE->Address)));
+
     /* Allocate space for an ADE and set it up */
     ADE = PoolAllocateBuffer(sizeof(ADDRESS_ENTRY));
     if (!ADE) {
@@ -92,6 +95,8 @@ VOID DestroyADE(
  */
 {
     TI_DbgPrint(DEBUG_IP, ("Called. IF (0x%X)  ADE (0x%X).\n", IF, ADE));
+
+    TI_DbgPrint(DEBUG_IP, ("ADE (%s).\n", ADE->Address));
 
     /* Unlink the address entry from the list */
     RemoveEntryList(&ADE->ListEntry);
@@ -166,6 +171,8 @@ PPREFIX_LIST_ENTRY CreatePLE(
 
     TI_DbgPrint(DEBUG_IP, ("Called. IF (0x%X)  Prefix (0x%X)  Length (%d).\n", IF, Prefix, Length));
 
+    TI_DbgPrint(DEBUG_IP, ("Prefix (%s).\n", A2S(Prefix)));
+
     /* Allocate space for an PLE and set it up */
     PLE = PoolAllocateBuffer(sizeof(PREFIX_LIST_ENTRY));
     if (!PLE) {
@@ -196,6 +203,8 @@ VOID DestroyPLE(
  */
 {
     TI_DbgPrint(DEBUG_IP, ("Called. PLE (0x%X).\n", PLE));
+
+    TI_DbgPrint(DEBUG_IP, ("PLE (%s).\n", PLE->Prefix));
 
     /* Unlink the prefix list entry from the list */
     RemoveEntryList(&PLE->ListEntry);
@@ -271,6 +280,8 @@ PNET_TABLE_ENTRY IPCreateNTE(
 
     TI_DbgPrint(DEBUG_IP, ("Called. IF (0x%X)  Address (0x%X)  PrefixLength (%d).\n", IF, Address, PrefixLength));
 
+    TI_DbgPrint(DEBUG_IP, ("Address (%s).\n", A2S(Address)));
+
     /* Allocate room for an NTE */
     NTE = PoolAllocateBuffer(sizeof(NET_TABLE_ENTRY));
     if (!NTE) {
@@ -336,6 +347,8 @@ VOID DestroyNTE(
     KIRQL OldIrql;
 
     TI_DbgPrint(DEBUG_IP, ("Called. IF (0x%X)  NTE (0x%X).\n", IF, NTE));
+
+    TI_DbgPrint(DEBUG_IP, ("NTE (%s).\n", NTE->Address));
 
     /* Invalidate the prefix list entry for this NTE */
     KeAcquireSpinLock(&PrefixListLock, &OldIrql);
@@ -411,8 +424,10 @@ PNET_TABLE_ENTRY IPLocateNTEOnInterface(
     PLIST_ENTRY CurrentEntry;
     PADDRESS_ENTRY Current;
 
-    TI_DbgPrint(DEBUG_IP, ("Called. IF (0x%X)  Address (0x%X)  AddressType (0x%X).\n",
-        IF, Address, AddressType));
+//    TI_DbgPrint(DEBUG_IP, ("Called. IF (0x%X)  Address (0x%X)  AddressType (0x%X).\n",
+//        IF, Address, AddressType));
+
+//    TI_DbgPrint(DEBUG_IP, ("Address (%s)  AddressType (0x%X).\n", A2S(Address)));
 
     KeAcquireSpinLock(&IF->Lock, &OldIrql);
 
@@ -455,9 +470,11 @@ PNET_TABLE_ENTRY IPLocateNTE(
     PNET_TABLE_ENTRY Current;
     PNET_TABLE_ENTRY NTE;
 
-    TI_DbgPrint(DEBUG_IP, ("Called. Address (0x%X)  AddressType (0x%X).\n",
-        Address, AddressType));
-    
+//    TI_DbgPrint(DEBUG_IP, ("Called. Address (0x%X)  AddressType (0x%X).\n",
+//        Address, AddressType));
+
+//    TI_DbgPrint(DEBUG_IP, ("Address (%s).\n", A2S(Address)));
+
     KeAcquireSpinLock(&NetTableListLock, &OldIrql);
 
     /* Search the list and return the NTE if found */
@@ -500,8 +517,10 @@ PADDRESS_ENTRY IPLocateADE(
     PIP_INTERFACE CurrentIF;
     PADDRESS_ENTRY CurrentADE;
 
-    TI_DbgPrint(DEBUG_IP, ("Called. Address (0x%X)  AddressType (0x%X).\n",
-        Address, AddressType));
+//    TI_DbgPrint(DEBUG_IP, ("Called. Address (0x%X)  AddressType (0x%X).\n",
+//        Address, AddressType));
+
+//    TI_DbgPrint(DEBUG_IP, ("Address (%s).\n", A2S(Address)));
 
     KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
 
@@ -549,9 +568,8 @@ PADDRESS_ENTRY IPGetDefaultADE(
     PLIST_ENTRY CurrentADEEntry;
     PIP_INTERFACE CurrentIF;
     PADDRESS_ENTRY CurrentADE;
-#if 1
     BOOLEAN LoopbackIsRegistered = FALSE;
-#endif
+
     TI_DbgPrint(DEBUG_IP, ("Called. AddressType (0x%X).\n", AddressType));
 
     KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
@@ -560,9 +578,8 @@ PADDRESS_ENTRY IPGetDefaultADE(
     CurrentIFEntry = InterfaceListHead.Flink;
     while (CurrentIFEntry != &InterfaceListHead) {
 	    CurrentIF = CONTAINING_RECORD(CurrentIFEntry, IP_INTERFACE, ListEntry);
-#if 1
+
         if (CurrentIF != Loopback) {
-#endif
             /* Search the address entry list and return the first appropriate ADE found */
             CurrentADEEntry = CurrentIF->ADEListHead.Flink;
             while (CurrentADEEntry != &CurrentIF->ADEListHead) {
@@ -573,13 +590,11 @@ PADDRESS_ENTRY IPGetDefaultADE(
                     return CurrentADE;
                 }
                 CurrentADEEntry = CurrentADEEntry->Flink;
-#if 1
         } else
             LoopbackIsRegistered = TRUE;
-#endif
         CurrentIFEntry = CurrentIFEntry->Flink;
     }
-#if 1
+
     /* No address was found. Use loopback interface if available */
     if (LoopbackIsRegistered) {
         CurrentADEEntry = Loopback->ADEListHead.Flink;
@@ -593,7 +608,7 @@ PADDRESS_ENTRY IPGetDefaultADE(
             CurrentADEEntry = CurrentADEEntry->Flink;
         }
     }
-#endif
+
     KeReleaseSpinLock(&InterfaceListLock, OldIrql);
 
     return NULL;
@@ -775,6 +790,20 @@ BOOLEAN IPRegisterInterface(
             KeReleaseSpinLock(&IF->Lock, OldIrql);
             return FALSE;
         }
+#if 1
+        /* Reference objects for forward information base */
+        ReferenceObject(Current->Address);
+        ReferenceObject(Current->PLE->Prefix);
+        ReferenceObject(Current);
+        /* NCE is already referenced */
+        if (!RouterAddRoute(Current->Address, Current->PLE->Prefix, Current, NCE, 1)) {
+            TI_DbgPrint(MIN_TRACE, ("Could not add route due to insufficient resources.\n"));
+            DereferenceObject(Current->Address);
+            DereferenceObject(Current->PLE->Prefix);
+            DereferenceObject(Current);
+            DereferenceObject(NCE);
+        }
+#else
         RCN = RouteAddRouteToDestination(Current->Address, Current, IF, NCE);
         if (!RCN) {
             TI_DbgPrint(MIN_TRACE, ("Could not create RCN.\n"));
@@ -784,7 +813,7 @@ BOOLEAN IPRegisterInterface(
         }
         /* Don't need this any more since the route cache references the NCE */
         DereferenceObject(NCE);
-
+#endif
         CurrentEntry = CurrentEntry->Flink;
     }
 

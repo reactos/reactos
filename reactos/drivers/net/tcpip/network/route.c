@@ -15,7 +15,7 @@
 
 
 /* This RCN is shared by all external nodes. It complicates things,
-   but the memory.requirements are reduced by approximately 50%.
+   but the memory requirements are reduced by approximately 50%.
    The RCN is protected by the route cache spin lock */
 PROUTE_CACHE_NODE ExternalRCN;
 PROUTE_CACHE_NODE RouteCache;
@@ -217,14 +217,12 @@ VOID RemoveRouteToDestination(
         RemNode->Parent = RCN;
     } else {
         /* The node has internal children */
-#if 0
-        /* Normally we would replace
-           the item of RCN with the item of the leftmost external
-           node on the right subtree of RCN. This we cannot do here
-           because there may be references directly to that node.
-           Instead we swap pointer values (parent, left and right)
-           of the two nodes */
-#endif
+
+        /* Normally we would replace the item of RCN with the item
+           of the leftmost external node on the right subtree of
+           RCN. This we cannot do here because there may be
+           references directly to that node. Instead we swap pointer
+           values (parent, left and right) of the two nodes */
         RemNode = RCN->Right;
         do {
             Parent  = RemNode;
@@ -446,7 +444,11 @@ UINT RouteGetRouteToDestination(
     PNEIGHBOR_CACHE_ENTRY NCE;
     PIP_INTERFACE Interface;
 
-    TI_DbgPrint(DEBUG_RCACHE, ("Called. Destination (0x%X)  NTE (0x%X).\n", Destination, NTE));
+    TI_DbgPrint(DEBUG_RCACHE, ("Called. Destination (0x%X)  NTE (0x%X).\n",
+        Destination, NTE));
+
+    TI_DbgPrint(DEBUG_RCACHE, ("Destination (%s)  NTE (%s).\n",
+        A2S(Destination), A2S(NTE->Address)));
 
     KeAcquireSpinLock(&RouteCacheLock, &OldIrql);
 
@@ -552,12 +554,16 @@ PROUTE_CACHE_NODE RouteAddRouteToDestination(
     KIRQL OldIrql;
     PROUTE_CACHE_NODE RCN;
 
-    TI_DbgPrint(DEBUG_RCACHE, ("Called. Destination (0x%X)  NTE (0x%X)  IF (0x%X)  NCE (0x%X).\n", Destination, NTE, IF, NCE));
+    TI_DbgPrint(DEBUG_RCACHE, ("Called. Destination (0x%X)  NTE (0x%X)  IF (0x%X)  NCE (0x%X).\n",
+        Destination, NTE, IF, NCE));
+
+    TI_DbgPrint(DEBUG_RCACHE, ("Destination (%s)  NTE (%s)  NCE (%s).\n",
+        A2S(Destination), A2S(NTE->Address), A2S(NCE->Address)));
 
     KeAcquireSpinLock(&RouteCacheLock, &OldIrql);
 
     /* Locate an external RCN we can expand */
-    RCN               = RouteCache;
+    RCN = RouteCache;
     ExternalRCN->Left = NULL;
     for (;;) {
         RCN = SearchRouteCache(Destination, RCN);
@@ -572,7 +578,7 @@ PROUTE_CACHE_NODE RouteAddRouteToDestination(
 
     /* Expand the external node */
     if (RCN == RouteCache) {
-        RCN        = ExpandExternalRCN();
+        RCN = ExpandExternalRCN();
         RouteCache = RCN;
     } else
         RCN = ExpandExternalRCN();

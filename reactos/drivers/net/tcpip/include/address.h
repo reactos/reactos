@@ -21,6 +21,12 @@
     (IPAddress)->Address.IPv4Address = (RawAddress);  \
 }
 
+#ifdef DBG
+
+PCHAR A2S(
+    PIP_ADDRESS Address);
+
+#endif /* DBG */
 
 BOOLEAN AddrIsUnspecified(
     PIP_ADDRESS Address);

@@ -632,8 +632,8 @@ VOID BindAdapter(
     }
 
     /* FIXME: Get address from registry.
-       For now just use a private address, eg. 10.0.0.10 */
-    Address = AddrBuildIPv4(0x0A00000A);
+       For now just use a private address, eg. 10.0.0.100 */
+    Address = AddrBuildIPv4(0x6400000A);
     if (!Address) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         FreeTDPackets(Adapter);

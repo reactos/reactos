@@ -213,6 +213,7 @@ NTSTATUS FileOpenAddress(
 
     /* Locate address entry. If specified address is 0, a random address is chosen */
 
+    /* FIXME: IPv4 only */
     IPv4Address = Address->Address[0].Address[0].in_addr;
     if (IPv4Address == 0)
         AddrFile->ADE = IPGetDefaultADE(ADE_UNICAST);
@@ -225,8 +226,8 @@ NTSTATUS FileOpenAddress(
         return STATUS_INVALID_PARAMETER;
     }
 
-    TI_DbgPrint(DEBUG_ADDRFILE, ("Opening address (0x%X) for communication.\n",
-        DN2H(AddrFile->ADE->Address->Address.IPv4Address)));
+    TI_DbgPrint(MID_TRACE, ("Opening address %s for communication.\n",
+        A2S(AddrFile->ADE->Address)));
 
     /* Protocol specific handling */
     switch (Protocol) {
@@ -246,6 +247,9 @@ NTSTATUS FileOpenAddress(
         AddrFile->Send = RawIPSendDatagram;
         break;
     }
+
+    TI_DbgPrint(MID_TRACE, ("IP protocol number for address file object is %d.\n",
+        Protocol));
 
     /* Set protocol */
     AddrFile->Protocol = Protocol;

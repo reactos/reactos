@@ -360,15 +360,9 @@ PVOID AdjustPacket(
     /* If Adjust is zero there is no need to adjust this packet as
        there is no additional space at start the of first buffer */
     if (Adjust != 0) {
-#if 0
-        (ULONG_PTR)(NdisBuffer->MappedSystemVa) += Adjust;
-        (ULONG_PTR)(NdisBuffer->StartVa)        += Adjust;
-        NdisBuffer->ByteCount                   -= Adjust;
-#else
         (ULONG_PTR)(NdisBuffer->MappedSystemVa) += Adjust;
         NdisBuffer->ByteOffset                  += Adjust;
         NdisBuffer->ByteCount                   -= Adjust;
-#endif
     }
 
     return NdisBuffer->MappedSystemVa;
@@ -401,6 +395,7 @@ UINT ResizePacket(
 }
 
 #ifdef DBG
+
 VOID DisplayIPPacket(
     PIP_PACKET IPPacket)
 {
@@ -409,9 +404,6 @@ VOID DisplayIPPacket(
     UINT Length;
     PNDIS_BUFFER Buffer;
     PNDIS_BUFFER NextBuffer;
-
-    if ((DebugTraceLevel & MAX_TRACE) == 0)
-        return;
 
     if (!IPPacket) {
         TI_DbgPrint(MIN_TRACE, ("Cannot display null packet.\n"));
@@ -424,11 +416,22 @@ VOID DisplayIPPacket(
     TI_DbgPrint(MIN_TRACE, ("ContigSize (%d).\n", IPPacket->ContigSize));
     TI_DbgPrint(MIN_TRACE, ("NdisPacket (0x%X).\n", IPPacket->NdisPacket));
 
-    NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, &Buffer, NULL);
-    for (; Buffer != NULL; Buffer = NextBuffer) {
-        NdisGetNextBuffer(Buffer, &NextBuffer);
-        NdisQueryBuffer(Buffer, (PVOID)&p, &Length);
+    if (IPPacket->NdisPacket) {
+        NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, &Buffer, NULL);
+        for (; Buffer != NULL; Buffer = NextBuffer) {
+            NdisGetNextBuffer(Buffer, &NextBuffer);
+            NdisQueryBuffer(Buffer, (PVOID)&p, &Length);
 
+            for (i = 0; i < Length; i++) {
+                if (i % 16 == 0)
+                    DbgPrint("\n");
+                DbgPrint("%02X ", (p[i]) & 0xFF);
+            }
+            DbgPrint("\n");
+        }
+    } else {
+        p      = IPPacket->Header;
+        Length = IPPacket->ContigSize;
         for (i = 0; i < Length; i++) {
             if (i % 16 == 0)
                 DbgPrint("\n");

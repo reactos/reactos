@@ -12,13 +12,54 @@
 #include <pool.h>
 #include <ip.h>
 
+#ifdef DBG
+
+CHAR A2SStr[128];
+
+PCHAR A2S(
+    PIP_ADDRESS Address)
+/*
+ * FUNCTION: Convert an IP address to a string (for debugging)
+ * ARGUMENTS:
+ *     Address = Pointer to an IP address structure
+ * RETURNS:
+ *     Pointer to buffer with string representation of IP address
+ */
+{
+    ULONG ip;
+    CHAR b[10];
+    PCHAR p;
+
+    p = A2SStr;
+
+    if (!Address) {
+        TI_DbgPrint(MIN_TRACE, ("NULL address given.\n"));
+        strcpy(p, "(NULL)");
+        return p;
+    }
+
+    switch (Address->Type) {
+        case IP_ADDRESS_V4:
+            ip = DN2H(Address->Address.IPv4Address);
+            sprintf(p, "%d.%d.%d.%d", (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF);
+            break;
+
+        case IP_ADDRESS_V6:
+            /* FIXME: IPv6 is not supported */
+            strcpy(p, "(IPv6 address not supported)");
+            break;
+    }
+    return p;
+}
+
+#endif /* DBG */
 
 BOOLEAN AddrIsUnspecified(
     PIP_ADDRESS Address)
 /*
  * FUNCTION: Return wether IP address is an unspecified address
  * ARGUMENTS:
- *     Address  = Pointer to an IP address structure
+ *     Address = Pointer to an IP address structure
  * RETURNS:
  *     TRUE if the IP address is an unspecified address, FALSE if not
  */
@@ -289,13 +330,13 @@ PADDRESS_FILE AddrSearchNext(
 
         IPAddress = Current->ADE->Address;
 
-        TI_DbgPrint(DEBUG_ADDRFILE, ("Comparing: ((%d, %d, 0x%X), (%d, %d, 0x%X)).\n",
+        TI_DbgPrint(DEBUG_ADDRFILE, ("Comparing: ((%d, %d, %s), (%d, %d, %s)).\n",
             Current->Port,
             Current->Protocol,
-            IPAddress->Address.IPv4Address,
+            A2S(IPAddress),
             SearchContext->Port,
             SearchContext->Protocol,
-            SearchContext->Address->Address.IPv4Address));
+            A2S(SearchContext->Address)));
 
         /* See if this address matches the search criteria */
         if (((Current->Port    == SearchContext->Port) &&

@@ -27,6 +27,8 @@ VOID DestroyFIBE(
  *     The forward information base lock must be held when called
  */
 {
+    TI_DbgPrint(DEBUG_ROUTER, ("Called. FIBE (0x%X).\n", FIBE));
+
     /* Unlink the FIB entry from the list */
     RemoveEntryList(&FIBE->ListEntry);
 
@@ -92,7 +94,10 @@ UINT CommonPrefixLength(
     UINT i, j;
     UINT Bitmask;
 
-    TI_DbgPrint(DEBUG_RCACHE, ("Called. Address1 (0x%X)  Address2 (0x%X).\n", Address1, Address2));
+    TI_DbgPrint(DEBUG_ROUTER, ("Called. Address1 (0x%X)  Address2 (0x%X).\n", Address1, Address2));
+
+    TI_DbgPrint(DEBUG_ROUTER, ("Address1 (%s)  Address2 (%s).\n",
+        A2S(Address1), A2S(Address2)));
 
     if (Address1->Type == IP_ADDRESS_V4)
         Size = sizeof(IPv4_RAW_ADDRESS);
@@ -142,7 +147,10 @@ BOOLEAN HasPrefix(
     PUCHAR pAddress = (PUCHAR)&Address->Address;
     PUCHAR pPrefix  = (PUCHAR)&Prefix->Address;
 
-    TI_DbgPrint(DEBUG_RCACHE, ("Called. Address (0x%X)  Prefix (0x%X)  Length (%d).\n", Address, Prefix, Length));
+    TI_DbgPrint(DEBUG_ROUTER, ("Called. Address (0x%X)  Prefix (0x%X)  Length (%d).\n", Address, Prefix, Length));
+
+    TI_DbgPrint(DEBUG_ROUTER, ("Address (%s)  Prefix (%s).\n",
+        A2S(Address), A2S(Prefix)));
 
     /* Check that initial integral bytes match */
     while (Length > 8) {
@@ -179,7 +187,9 @@ PNET_TABLE_ENTRY RouterFindBestNTE(
     UINT Length, BestLength  = 0;
     PNET_TABLE_ENTRY BestNTE = NULL;
 
-    TI_DbgPrint(DEBUG_RCACHE, ("Called. Interface (0x%X)  Destination (0x%X).\n", Interface, Destination));
+    TI_DbgPrint(DEBUG_ROUTER, ("Called. Interface (0x%X)  Destination (0x%X).\n", Interface, Destination));
+
+    TI_DbgPrint(DEBUG_ROUTER, ("Destination (%s).\n", A2S(Destination)));
 
     KeAcquireSpinLock(&Interface->Lock, &OldIrql);
 
@@ -226,7 +236,10 @@ PIP_INTERFACE RouterFindOnLinkInterface(
     PLIST_ENTRY CurrentEntry;
     PPREFIX_LIST_ENTRY Current;
 
-    TI_DbgPrint(DEBUG_RCACHE, ("Called. Address (0x%X)  NTE (0x%X).\n", Address, NTE));
+    TI_DbgPrint(DEBUG_ROUTER, ("Called. Address (0x%X)  NTE (0x%X).\n", Address, NTE));
+
+    TI_DbgPrint(DEBUG_ROUTER, ("Address (%s)  NTE (%s).\n",
+        A2S(Address), A2S(NTE->Address)));
 
     CurrentEntry = PrefixListHead.Flink;
     while (CurrentEntry != &PrefixListHead) {
@@ -269,6 +282,9 @@ PFIB_ENTRY RouterAddRoute(
 
     TI_DbgPrint(DEBUG_ROUTER, ("Called. NetworkAddress (0x%X)  Netmask (0x%X)  NTE (0x%X)  "
         "Router (0x%X)  Metric (%d).\n", NetworkAddress, Netmask, NTE, Router, Metric));
+
+    TI_DbgPrint(DEBUG_ROUTER, ("NetworkAddress (%s)  Netmask (%s)  NTE (%s)  Router (%s).\n",
+        A2S(NetworkAddress), A2S(Netmask), A2S(NTE->Address), A2S(Router->Address)));
 
     FIBE = PoolAllocateBuffer(sizeof(FIB_ENTRY));
     if (!FIBE) {
@@ -313,6 +329,9 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(
     PNEIGHBOR_CACHE_ENTRY NCE, BestNCE = NULL;
 
     TI_DbgPrint(DEBUG_ROUTER, ("Called. Destination (0x%X)  NTE (0x%X).\n", Destination, NTE));
+
+    TI_DbgPrint(DEBUG_ROUTER, ("Destination (%s)  NTE (%s).\n",
+        A2S(Destination), A2S(NTE->Address)));
 
     KeAcquireSpinLock(&FIBLock, &OldIrql);
 
@@ -369,6 +388,8 @@ VOID RouterRemoveRoute(
     KIRQL OldIrql;
 
     TI_DbgPrint(DEBUG_ROUTER, ("Called. FIBE (0x%X).\n", FIBE));
+
+    TI_DbgPrint(DEBUG_ROUTER, ("FIBE (%s).\n", A2S(FIBE->NetworkAddress)));
 
     KeAcquireSpinLock(&FIBLock, &OldIrql);
     DestroyFIBE(FIBE);

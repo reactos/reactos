@@ -16,10 +16,10 @@
 #include <udp.h>
 #include <tcp.h>
 
-
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
+//DWORD DebugTraceLevel = MAX_TRACE | DEBUG_CHECK | DEBUG_IRP | DEBUG_RCACHE | DEBUG_ROUTER | DEBUG_REFCOUNT;
 DWORD DebugTraceLevel = MIN_TRACE;
 
 #endif /* DBG */
@@ -102,6 +102,45 @@ VOID TiWriteErrorLog(
 }
 
 
+NTSTATUS TiGetProtocolNumber(
+    PUNICODE_STRING FileName,
+    PULONG Protocol)
+/*
+ * FUNCTION: Returns the protocol number from a file name
+ * ARGUMENTS:
+ *     FileName = Pointer to string with file name
+ *     Protocol = Pointer to buffer to put protocol number in
+ * RETURNS:
+ *     Status of operation
+ */
+{
+    UNICODE_STRING us;
+    NTSTATUS Status;
+    ULONG Value;
+    PWSTR Name;
+
+    TI_DbgPrint(MAX_TRACE, ("Called. FileName (%wZ).\n", FileName));
+
+    Name = FileName->Buffer;
+
+    if (*Name++ != (WCHAR)L'\\')
+        return STATUS_UNSUCCESSFUL;
+
+    if (*Name == (WCHAR)NULL)
+        return STATUS_UNSUCCESSFUL;
+
+    RtlInitUnicodeString(&us, Name);
+
+    Status = RtlUnicodeStringToInteger(&us, 10, &Value);
+    if (!NT_SUCCESS(Status) || ((Value > 255)))
+        return STATUS_UNSUCCESSFUL;
+
+    *Protocol = Value;
+
+    return STATUS_SUCCESS;
+}
+
+
 /*
  * FUNCTION: Creates a file object
  * ARGUMENTS:
@@ -120,6 +159,7 @@ NTSTATUS TiCreateFileObject(
     PTRANSPORT_CONTEXT Context;
     TDI_REQUEST Request;
     NTSTATUS Status;
+    ULONG Protocol;
 
     TI_DbgPrint(DEBUG_IRP, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X).\n", DeviceObject, Irp));
 
@@ -164,14 +204,34 @@ NTSTATUS TiCreateFileObject(
         }
 
         /* Open address file object */
-        /* FIXME: Protocol depends on device object */
-        Status = FileOpenAddress(&Request, Address, IPPROTO_UDP, NULL);
+
+        /* Protocol depends on device object so find the protocol */
+        if (DeviceObject == TCPDeviceObject)
+            Protocol = IPPROTO_TCP;
+        else if (DeviceObject == UDPDeviceObject)
+            Protocol = IPPROTO_UDP;
+        else if (DeviceObject == IPDeviceObject)
+            Protocol = IPPROTO_RAW;
+        else if (DeviceObject == RawIPDeviceObject) {
+            Status = TiGetProtocolNumber(&IrpSp->FileObject->FileName, &Protocol);
+            if (!NT_SUCCESS(Status)) {
+                TI_DbgPrint(MIN_TRACE, ("Raw IP protocol number is invalid.\n"));
+                ExFreePool(Context);
+                return STATUS_INVALID_PARAMETER;
+            }
+        } else {
+            TI_DbgPrint(MIN_TRACE, ("Invalid device object at (0x%X).\n", DeviceObject));
+            ExFreePool(Context);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        Status = FileOpenAddress(&Request, Address, Protocol, NULL);
         if (NT_SUCCESS(Status)) {
             IrpSp->FileObject->FsContext2 = (PVOID)TDI_TRANSPORT_ADDRESS_FILE;
             Context->Handle.AddressHandle = Request.Handle.AddressHandle;
         }
     } else {
-        TI_DbgPrint(MIN_TRACE, ("Connection point, and control connections are not supported.\n"));
+        TI_DbgPrint(MIN_TRACE, ("Connection endpoint, and control connections are not supported.\n"));
         /* FIXME: Open a connection endpoint, or control connection */
         Status = STATUS_NOT_IMPLEMENTED;
     }
@@ -297,7 +357,11 @@ NTSTATUS TiCleanupFileObject(
 }
 
 
-NTSTATUS TiDispatchOpenClose(
+NTSTATUS
+#ifndef _MSC_VER
+STDCALL
+#endif
+TiDispatchOpenClose(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 /*
@@ -360,7 +424,11 @@ NTSTATUS TiDispatchOpenClose(
 }
 
 
-NTSTATUS TiDispatchInternal(
+NTSTATUS
+#ifndef _MSC_VER
+STDCALL
+#endif
+TiDispatchInternal(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 /*
@@ -459,11 +527,15 @@ NTSTATUS TiDispatchInternal(
 }
 
 
-NTSTATUS TiDispatch(
+NTSTATUS
+#ifndef _MSC_VER
+STDCALL
+#endif
+TiDispatch(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 /*
- * FUNCTION: Dispath routine for IRP_MJ_DEVICE_CONTROL requests
+ * FUNCTION: Dispatch routine for IRP_MJ_DEVICE_CONTROL requests
  * ARGUMENTS:
  *     DeviceObject = Pointer to a device object for this driver
  *     Irp          = Pointer to a I/O request packet
@@ -702,23 +774,24 @@ DriverEntry(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-#if 0
-    /* Open underlying adapter(s) we are bound to */
+	/* Open underlying adapter(s) we are bound to */
 
     /* FIXME: Get binding information from registry */
 
     /* Put your own NDIS adapter device name here */
-
+#if 0
     /* ReactOS */
     NdisInitUnicodeString(&DeviceName, L"\\Device\\ne2000");
 
-    /* NT4 */
+    /* NT4 style */
     //NdisInitUnicodeString(&DeviceName, L"\\Device\\El90x1");
 
-    /* NT5 */
+    /* NT5 style */
     //NdisInitUnicodeString(&DeviceName, L"\\Device\\{56388B49-67BB-4419-A3F4-28DF190B9149}");
 
     NdisStatus = LANRegisterAdapter(&DeviceName, &Adapter);
+
+    /* Skip network adapter if it does not exist */
     if (!NT_SUCCESS(NdisStatus)) {
         TI_DbgPrint(MIN_TRACE, ("Failed to intialize adapter. Status (0x%X).\n", Status));
 		TiWriteErrorLog(
@@ -733,7 +806,6 @@ DriverEntry(
         return STATUS_DEVICE_DOES_NOT_EXIST;
     }
 #endif
-
     /* Setup network layer and transport layer entities */
     EntityList = ExAllocatePool(NonPagedPool, sizeof(TDIEntityID) * 2);
     if (!NT_SUCCESS(Status)) {

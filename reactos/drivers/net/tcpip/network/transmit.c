@@ -33,7 +33,7 @@ BOOLEAN PrepareNextFragment(
     BOOLEAN MoreFragments;
     USHORT FragOfs;
 
-    TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+    TI_DbgPrint(MAX_TRACE, ("Called. IFC (0x%X)\n", IFC));
 
     if (IFC->BytesLeft != 0) {
 
@@ -100,7 +100,8 @@ NTSTATUS SendFragments(
     NDIS_STATUS NdisStatus;
     PVOID Data;
 
-    TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+    TI_DbgPrint(MAX_TRACE, ("Called. IPPacket (0x%X)  NCE (0x%X)  PathMTU (%d).\n",
+        IPPacket, NCE, PathMTU));
 
     IFC = PoolAllocateBuffer(sizeof(IPFRAGMENT_CONTEXT));
     if (!IFC)
@@ -180,7 +181,8 @@ VOID IPSendComplete(
  *    This routine is called when an IP datagram fragment has been sent
  */
 {
-    TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+    TI_DbgPrint(MAX_TRACE, ("Called. Context (0x%X)  NdisPacket (0x%X)  NdisStatus (0x%X)\n",
+        Context, NdisPacket, NdisStatus));
 
     /* FIXME: Stop sending fragments and cleanup datagram buffers if
        there was an error */
@@ -225,7 +227,7 @@ NTSTATUS IPSendFragment(
  *     Lowest level IP send routine
  */
 {
-    TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+    TI_DbgPrint(MAX_TRACE, ("Called. NdisPacket (0x%X)  NCE (0x%X).\n", NdisPacket, NCE));
 
     TI_DbgPrint(MAX_TRACE, ("NCE->State = %d.\n", NCE->State));
 
@@ -299,7 +301,9 @@ NTSTATUS IPSendDatagram(
     PNEIGHBOR_CACHE_ENTRY NCE;
     UINT PathMTU;
 
-    TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+    TI_DbgPrint(MAX_TRACE, ("Called. IPPacket (0x%X)  RCN (0x%X)\n", IPPacket, RCN));
+
+    DISPLAY_IP_PACKET(IPPacket);
 
     NCE = RCN->NCE;
 
@@ -313,16 +317,20 @@ NTSTATUS IPSendDatagram(
 
     /* Fetch path MTU now, because it may change */
     PathMTU = RCN->PathMTU;
+
     if (IPPacket->TotalSize > PathMTU) {
         return SendFragments(IPPacket, NCE, PathMTU);
     } else {
-        /* Calculate checksum of IP header */
-        ((PIPv4_HEADER)IPPacket->Header)->Checksum = 0;
+        if (IPPacket->Flags & IP_PACKET_FLAG_RAW == 0) {
+            /* Calculate checksum of IP header */
+            ((PIPv4_HEADER)IPPacket->Header)->Checksum = 0;
 
-        ((PIPv4_HEADER)IPPacket->Header)->Checksum = (USHORT)
-            IPv4Checksum(IPPacket->Header, IPPacket->HeaderSize, 0);
+            ((PIPv4_HEADER)IPPacket->Header)->Checksum = (USHORT)
+                IPv4Checksum(IPPacket->Header, IPPacket->HeaderSize, 0);
 
-        TI_DbgPrint(MAX_TRACE, ("Sending packet (length is %d).\n", WN2H(((PIPv4_HEADER)IPPacket->Header)->TotalLength)));
+            TI_DbgPrint(MAX_TRACE, ("Sending packet (length is %d).\n",
+                WN2H(((PIPv4_HEADER)IPPacket->Header)->TotalLength)));
+        }
 
         return IPSendFragment(IPPacket->NdisPacket, NCE);
     }

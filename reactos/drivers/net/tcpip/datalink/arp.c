@@ -49,7 +49,7 @@ PNDIS_PACKET PrepareARPPacket(
     PVOID DataBuffer;
     ULONG Size;
 
-    TI_DbgPrint(MID_TRACE, ("Called.\n"));
+    TI_DbgPrint(DEBUG_ARP, ("Called.\n"));
 
     /* Prepare ARP packet */
     Size = MaxLLHeaderSize + sizeof(ARP_HEADER) + 
@@ -125,7 +125,7 @@ VOID ARPTransmitComplete(
  *    This routine is called when an ARP request has been sent
  */
 {
-    TI_DbgPrint(MID_TRACE, ("Called.\n"));
+    TI_DbgPrint(DEBUG_ARP, ("Called.\n"));
 
     FreeNdisPacket(NdisPacket);
 }
@@ -148,7 +148,7 @@ BOOLEAN ARPTransmit(
     UCHAR ProtoAddrLen;
     USHORT ProtoType;
 
-    TI_DbgPrint(MID_TRACE, ("Called.\n"));
+    TI_DbgPrint(DEBUG_ARP, ("Called.\n"));
 
     Interface = NTE->Interface;
 
@@ -206,7 +206,7 @@ VOID ARPReceive(
     PNDIS_PACKET NdisPacket;
     PIP_INTERFACE Interface = (PIP_INTERFACE)Context;
 
-    TI_DbgPrint(MID_TRACE, ("Called.\n"));
+    TI_DbgPrint(DEBUG_ARP, ("Called.\n"));
 
     Header = (PARP_HEADER)Packet->Header;
 

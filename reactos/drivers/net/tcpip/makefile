@@ -4,7 +4,7 @@ PATH_TO_TOP = ../../..
 
 TARGETNAME=tcpip
 
-CFLAGS = -I./include -O2
+CFLAGS = -I./include -O2 -DDBG
 
 RESOURCE_OBJECT  = $(TARGETNAME).coff
 TCPIP_OBJECTS    = tcpip/main.o tcpip/address.o tcpip/checksum.o \
