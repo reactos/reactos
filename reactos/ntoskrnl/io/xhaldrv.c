@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.30 2003/04/05 15:36:34 chorns Exp $
+/* $Id: xhaldrv.c,v 1.31 2003/04/28 21:15:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,9 +22,7 @@
 #define  AUTO_DRIVE         ((ULONG)-1)
 
 #define  PARTITION_MAGIC    0xaa55
-#define  PART_MAGIC_OFFSET  0x01fe
-#define  PARTITION_OFFSET   0x01be
-#define  SIGNATURE_OFFSET   0x01b8
+
 #define  PARTITION_TBL_SIZE 4
 
 
@@ -42,18 +40,16 @@ typedef struct _PARTITION
   unsigned int  SectorCount;					/* number of sectors in partition */
 } PACKED PARTITION, *PPARTITION;
 
-typedef struct _PARTITION_TABLE
-{
-  PARTITION Partition[PARTITION_TBL_SIZE];
-  unsigned short Magic;
-} PACKED PARTITION_TABLE, *PPARTITION_TABLE;
 
-typedef struct _MBR
+typedef struct _PARTITION_SECTOR
 {
-  UCHAR MbrBootCode[446];			/* 0x000 */
+  UCHAR BootCode[440];				/* 0x000 */
+  ULONG Signature;				/* 0x1B8 */
+  UCHAR Reserved[2];				/* 0x1BC */
   PARTITION Partition[PARTITION_TBL_SIZE];	/* 0x1BE */
   USHORT Magic;					/* 0x1FE */
-} PACKED MBR, *PMBR;
+} PACKED PARTITION_SECTOR, *PPARTITION_SECTOR;
+
 
 typedef enum _DISK_MANAGER
 {
@@ -175,13 +171,13 @@ xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
 
 
 static NTSTATUS
-xHalReadMBR(IN PDEVICE_OBJECT DeviceObject,
-	       IN ULONG SectorSize,
-	       OUT PVOID *Buffer)
+xHalpReadSector(IN PDEVICE_OBJECT DeviceObject,
+		IN ULONG SectorSize,
+		IN PLARGE_INTEGER SectorOffset,
+		OUT PVOID *Buffer)
 {
   KEVENT Event;
   IO_STATUS_BLOCK StatusBlock;
-  LARGE_INTEGER Offset;
   PUCHAR Sector;
   PIRP Irp;
   NTSTATUS Status;
@@ -208,12 +204,11 @@ xHalReadMBR(IN PDEVICE_OBJECT DeviceObject,
 		    FALSE);
 
   /* Read MBR (Master Boot Record) */
-  Offset.QuadPart = 0;
   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
 				     DeviceObject,
 				     Sector,
 				     SectorSize,
-				     &Offset,
+				     SectorOffset,
 				     &Event,
 				     &StatusBlock);
 
@@ -243,13 +238,13 @@ xHalReadMBR(IN PDEVICE_OBJECT DeviceObject,
 
 
 static NTSTATUS
-xHalWriteMBR(IN PDEVICE_OBJECT DeviceObject,
-	       IN ULONG SectorSize,
-	       OUT PVOID Sector)
+xHalpWriteSector(IN PDEVICE_OBJECT DeviceObject,
+		 IN ULONG SectorSize,
+		 IN PLARGE_INTEGER SectorOffset,
+		 OUT PVOID Sector)
 {
   KEVENT Event;
   IO_STATUS_BLOCK StatusBlock;
-  LARGE_INTEGER Offset;
   PIRP Irp;
   NTSTATUS Status;
 
@@ -265,12 +260,11 @@ xHalWriteMBR(IN PDEVICE_OBJECT DeviceObject,
 		    FALSE);
 
   /* Write MBR (Master Boot Record) */
-  Offset.QuadPart = 0;
   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
 				     DeviceObject,
 				     Sector,
 				     SectorSize,
-				     &Offset,
+				     SectorOffset,
 				     &Event,
 				     &StatusBlock);
 
@@ -303,45 +297,45 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
 	       IN ULONG MBRTypeIdentifier,
 	       OUT PVOID *Buffer)
 {
-  PUCHAR Sector;
+  LARGE_INTEGER SectorOffset;
+  PPARTITION_SECTOR Sector;
   PULONG Shift;
-  PMBR Mbr;
   NTSTATUS Status;
 
   DPRINT("xHalExamineMBR()\n");
 
   *Buffer = NULL;
 
-  Status = xHalReadMBR(DeviceObject,
-	SectorSize,
-	(PVOID *) &Sector);
+  SectorOffset.QuadPart = 0ULL;
+  Status = xHalpReadSector(DeviceObject,
+			   SectorSize,
+			   &SectorOffset,
+			   (PVOID *)&Sector);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("\n");
+      DPRINT1("xHalpReadSector() failed (Status %lx)\n", Status);
       return;
     }
 
-  Mbr = (PMBR)Sector;
-
-  if (Mbr->Magic != PARTITION_MAGIC)
+  if (Sector->Magic != PARTITION_MAGIC)
     {
       DPRINT("Invalid MBR magic value\n");
       ExFreePool(Sector);
       return;
     }
 
-  if (Mbr->Partition[0].PartitionType != MBRTypeIdentifier)
+  if (Sector->Partition[0].PartitionType != MBRTypeIdentifier)
     {
       DPRINT("Invalid MBRTypeIdentifier\n");
       ExFreePool(Sector);
       return;
     }
 
-  if (Mbr->Partition[0].PartitionType == 0x54)
+  if (Sector->Partition[0].PartitionType == 0x54)
     {
       /* Found 'Ontrack Disk Manager'. Shift all sectors by 63 */
       DPRINT("Found 'Ontrack Disk Manager'!\n");
-      Shift = (PULONG)Mbr;
+      Shift = (PULONG)Sector;
       *Shift = 63;
     }
 
@@ -704,10 +698,9 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
   ULARGE_INTEGER RealPartitionOffset;
   ULARGE_INTEGER nextPartitionOffset;
   ULARGE_INTEGER containerOffset;
-  PUCHAR SectorBuffer;
   PIRP Irp;
   NTSTATUS Status;
-  PPARTITION_TABLE PartitionTable;
+  PPARTITION_SECTOR PartitionSector;
   PDRIVE_LAYOUT_INFORMATION LayoutBuffer;
   ULONG i;
   ULONG Count = 0;
@@ -748,9 +741,9 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
       ExFreePool(MbrBuffer);
     }
 
-  SectorBuffer = (PUCHAR)ExAllocatePool(PagedPool,
-					SectorSize);
-  if (SectorBuffer == NULL)
+  PartitionSector = (PPARTITION_SECTOR)ExAllocatePool(PagedPool,
+						      SectorSize);
+  if (PartitionSector == NULL)
     {
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
@@ -759,7 +752,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 							   0x1000);
   if (LayoutBuffer == NULL)
     {
-      ExFreePool(SectorBuffer);
+      ExFreePool(PartitionSector);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
@@ -771,10 +764,6 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 
   do
     {
-      KeInitializeEvent(&Event,
-			NotificationEvent,
-			FALSE);
-
       DPRINT("PartitionOffset: %I64u\n", PartitionOffset.QuadPart / SectorSize);
 
       if (DiskManager == OntrackDiskManager)
@@ -788,9 +777,13 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 
       DPRINT("RealPartitionOffset: %I64u\n", RealPartitionOffset.QuadPart / SectorSize);
 
+      KeInitializeEvent(&Event,
+			NotificationEvent,
+			FALSE);
+
       Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
 					 DeviceObject,
-					 SectorBuffer,
+					 PartitionSector, //SectorBuffer,
 					 SectorSize,
 					 (PLARGE_INTEGER)&RealPartitionOffset,
 					 &Event,
@@ -811,19 +804,17 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 	{
 	  DPRINT("Failed to read partition table sector (Status = 0x%08lx)\n",
 		 Status);
-	  ExFreePool(SectorBuffer);
+	  ExFreePool(PartitionSector);
 	  ExFreePool(LayoutBuffer);
 	  return(Status);
 	}
 
-      PartitionTable = (PPARTITION_TABLE)(SectorBuffer + PARTITION_OFFSET);
-
       /* check the boot sector id */
-      DPRINT("Magic %x\n", PartitionTable->Magic);
-      if (PartitionTable->Magic != PARTITION_MAGIC)
+      DPRINT("Magic %x\n", PartitionSector->Magic);
+      if (PartitionSector->Magic != PARTITION_MAGIC)
 	{
-	  DbgPrint("Invalid partition table magic\n");
-	  ExFreePool(SectorBuffer);
+	  DbgPrint("Invalid partition sector magic\n");
+	  ExFreePool(PartitionSector);
 	  *PartitionBuffer = LayoutBuffer;
 	  return(STATUS_SUCCESS);
 	}
@@ -833,23 +824,24 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 	{
 	  DPRINT1("  %d: flags:%2x type:%x start:%d:%d:%d end:%d:%d:%d stblk:%d count:%d\n",
 		  i,
-		  PartitionTable->Partition[i].BootFlags,
-		  PartitionTable->Partition[i].PartitionType,
-		  PartitionTable->Partition[i].StartingHead,
-		  PartitionTable->Partition[i].StartingSector & 0x3f,
-		  (((PartitionTable->Partition[i].StartingSector) & 0xc0) << 2) +
-		     PartitionTable->Partition[i].StartingCylinder,
-		  PartitionTable->Partition[i].EndingHead,
-		  PartitionTable->Partition[i].EndingSector,
-		  PartitionTable->Partition[i].EndingCylinder,
-		  PartitionTable->Partition[i].StartingBlock,
-		  PartitionTable->Partition[i].SectorCount);
+		  PartitionSector->Partition[i].BootFlags,
+		  PartitionSector->Partition[i].PartitionType,
+		  PartitionSector->Partition[i].StartingHead,
+		  PartitionSector->Partition[i].StartingSector & 0x3f,
+		  (((PartitionSector->Partition[i].StartingSector) & 0xc0) << 2) +
+		     PartitionSector->Partition[i].StartingCylinder,
+		  PartitionSector->Partition[i].EndingHead,
+		  PartitionSector->Partition[i].EndingSector,
+		  PartitionSector->Partition[i].EndingCylinder,
+		  PartitionSector->Partition[i].StartingBlock,
+		  PartitionSector->Partition[i].SectorCount);
 	}
 #endif
 
-      if (ExtendedFound == FALSE);
+      if (PartitionOffset.QuadPart == 0ULL)
 	{
-	  LayoutBuffer->Signature = *((PULONG)(SectorBuffer + SIGNATURE_OFFSET));
+	  LayoutBuffer->Signature = PartitionSector->Signature;
+	  DPRINT("Disk signature: %lx\n", LayoutBuffer->Signature);
 	}
 
       ExtendedFound = FALSE;
@@ -858,17 +850,17 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 	{
 	  if ((ReturnRecognizedPartitions == FALSE) ||
 	       ((ReturnRecognizedPartitions == TRUE) &&
-	        IsRecognizedPartition(PartitionTable->Partition[i].PartitionType)))
+	        IsRecognizedPartition(PartitionSector->Partition[i].PartitionType)))
 	    {
 	      /* handle normal partition */
 	      DPRINT("Partition %u: Normal Partition\n", i);
 	      Count = LayoutBuffer->PartitionCount;
 	      DPRINT("Logical Partition %u\n", Count);
-	      if (PartitionTable->Partition[i].StartingBlock == 0)
+	      if (PartitionSector->Partition[i].StartingBlock == 0)
 		{
 		  LayoutBuffer->PartitionEntry[Count].StartingOffset.QuadPart = 0;
 		}
-	      else if (IsContainerPartition(PartitionTable->Partition[i].PartitionType))
+	      else if (IsContainerPartition(PartitionSector->Partition[i].PartitionType))
 		{
 		  LayoutBuffer->PartitionEntry[Count].StartingOffset.QuadPart =
 		    (ULONGLONG)PartitionOffset.QuadPart;
@@ -877,13 +869,13 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 		{
 		  LayoutBuffer->PartitionEntry[Count].StartingOffset.QuadPart =
 		    (ULONGLONG)PartitionOffset.QuadPart +
-		    ((ULONGLONG)PartitionTable->Partition[i].StartingBlock * (ULONGLONG)SectorSize);
+		    ((ULONGLONG)PartitionSector->Partition[i].StartingBlock * (ULONGLONG)SectorSize);
 		}
 	      LayoutBuffer->PartitionEntry[Count].PartitionLength.QuadPart =
-		(ULONGLONG)PartitionTable->Partition[i].SectorCount * (ULONGLONG)SectorSize;
+		(ULONGLONG)PartitionSector->Partition[i].SectorCount * (ULONGLONG)SectorSize;
 	      LayoutBuffer->PartitionEntry[Count].HiddenSectors = 0;
 
-	      if (IsRecognizedPartition(PartitionTable->Partition[i].PartitionType))
+	      if (IsRecognizedPartition(PartitionSector->Partition[i].PartitionType))
 		{
 		  LayoutBuffer->PartitionEntry[Count].PartitionNumber = Number;
 		  Number++;
@@ -894,11 +886,11 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 		}
 
 	      LayoutBuffer->PartitionEntry[Count].PartitionType =
-		PartitionTable->Partition[i].PartitionType;
+		PartitionSector->Partition[i].PartitionType;
 	      LayoutBuffer->PartitionEntry[Count].BootIndicator =
-		(PartitionTable->Partition[i].BootFlags & 0x80)?TRUE:FALSE;
+		(PartitionSector->Partition[i].BootFlags & 0x80)?TRUE:FALSE;
 	      LayoutBuffer->PartitionEntry[Count].RecognizedPartition =
-		IsRecognizedPartition (PartitionTable->Partition[i].PartitionType);
+		IsRecognizedPartition (PartitionSector->Partition[i].PartitionType);
 	      LayoutBuffer->PartitionEntry[Count].RewritePartition = FALSE;
 
 	      DPRINT(" %ld: nr: %d boot: %1x type: %x start: 0x%I64x count: 0x%I64x\n",
@@ -912,7 +904,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 	      LayoutBuffer->PartitionCount++;
 	    }
 
-	  if (IsContainerPartition(PartitionTable->Partition[i].PartitionType))
+	  if (IsContainerPartition(PartitionSector->Partition[i].PartitionType))
 	    {
 	      ExtendedFound = TRUE;
 	      if ((ULONGLONG) containerOffset.QuadPart == (ULONGLONG) 0)
@@ -920,7 +912,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 		  containerOffset = PartitionOffset;
 		}
 	      nextPartitionOffset.QuadPart = (ULONGLONG) containerOffset.QuadPart +
-		(ULONGLONG) PartitionTable->Partition[i].StartingBlock *
+		(ULONGLONG) PartitionSector->Partition[i].StartingBlock *
 		(ULONGLONG) SectorSize;
 	    }
 	}
@@ -929,7 +921,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
   while (ExtendedFound == TRUE);
 
   *PartitionBuffer = LayoutBuffer;
-  ExFreePool(SectorBuffer);
+  ExFreePool(PartitionSector);
 
   return(STATUS_SUCCESS);
 }
@@ -952,15 +944,15 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 			  IN ULONG NumberOfHeads,
 			  IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
 {
-  PPARTITION_TABLE PartitionTable;
+  PPARTITION_SECTOR PartitionSector;
+  LARGE_INTEGER SectorOffset;
   NTSTATUS Status;
-  PMBR MbrBuffer;
   ULONG i;
 
   DPRINT("xHalIoWritePartitionTable(%p %lu %lu %p)\n",
 	 DeviceObject,
 	 SectorSize,
-     SectorsPerTrack,
+	 SectorsPerTrack,
 	 PartitionBuffer);
 
   assert(DeviceObject);
@@ -970,11 +962,11 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
   xHalExamineMBR(DeviceObject,
 		 SectorSize,
 		 0x54,
-		 (PVOID *) &MbrBuffer);
-  if (MbrBuffer != NULL)
+		 (PVOID *) &PartitionSector);
+  if (PartitionSector != NULL)
     {
       DPRINT1("Ontrack Disk Manager is not supported\n");
-      ExFreePool(MbrBuffer);
+      ExFreePool(PartitionSector);
       return STATUS_UNSUCCESSFUL;
     }
 
@@ -982,11 +974,11 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
   xHalExamineMBR(DeviceObject,
 		 SectorSize,
 		 0x55,
-		 (PVOID *) &MbrBuffer);
-  if (MbrBuffer != NULL)
+		 (PVOID *) &PartitionSector);
+  if (PartitionSector != NULL)
     {
       DPRINT1("EZ-Drive is not supported\n");
-      ExFreePool(MbrBuffer);
+      ExFreePool(PartitionSector);
       return STATUS_UNSUCCESSFUL;
     }
 
@@ -997,25 +989,24 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
         {
           /* FIXME: Implement */
           DPRINT1("Writing MBRs with extended partitions is not implemented\n");
-          ExFreePool(MbrBuffer);
+          return STATUS_UNSUCCESSFUL;
         }
     }
 
 
-  ExFreePool(MbrBuffer);
-
-  Status = xHalReadMBR(DeviceObject,
-	SectorSize,
-	(PVOID *) &MbrBuffer);
-  if (!NT_SUCCESS(Status))
+  SectorOffset.QuadPart = 0ULL;
+  Status = xHalpReadSector(DeviceObject,
+			   SectorSize,
+			   &SectorOffset,
+			   (PVOID *) &PartitionSector);
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT1("xHalReadMBR() failed with status 0x%.08x\n", Status);
+      DPRINT1("xHalpReadSector() failed (Status %lx)\n", Status);
       return Status;
     }
 
   DPRINT1("WARNING: Only 'BootFlags' is implemented\n");
 
-  PartitionTable = (PPARTITION_TABLE)(&MbrBuffer->Partition[0]);
 
   for (i = 0; i < PartitionBuffer->PartitionCount; i++)
     {
@@ -1027,11 +1018,11 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 
       if (PartitionBuffer->PartitionEntry[i].BootIndicator)
         {
-          MbrBuffer->Partition[i].BootFlags |= 0x80;
+          PartitionSector->Partition[i].BootFlags |= 0x80;
         }
       else
         {
-          MbrBuffer->Partition[i].BootFlags &= ~0x80;
+          PartitionSector->Partition[i].BootFlags &= ~0x80;
         }
 
       //= PartitionBuffer->PartitionEntry[i].RecognizedPartition;
@@ -1039,13 +1030,15 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     }
 
 
-  Status = xHalWriteMBR(DeviceObject,
-	SectorSize,
-	(PVOID) MbrBuffer);
+  SectorOffset.QuadPart = 0ULL;
+  Status = xHalpWriteSector(DeviceObject,
+			    SectorSize,
+			    &SectorOffset,
+			    (PVOID) PartitionSector);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("xHalWriteMBR() failed with status 0x%.08x\n", Status);
-      ExFreePool(MbrBuffer);
+      DPRINT1("xHalpWriteSector() failed (Status %lx)\n", Status);
+      ExFreePool(PartitionSector);
       return Status;
     }
 
@@ -1054,21 +1047,21 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 	{
 	  DPRINT1("  %d: flags:%2x type:%x start:%d:%d:%d end:%d:%d:%d stblk:%d count:%d\n",
 		  i,
-		  PartitionTable->Partition[i].BootFlags,
-		  PartitionTable->Partition[i].PartitionType,
-		  PartitionTable->Partition[i].StartingHead,
-		  PartitionTable->Partition[i].StartingSector & 0x3f,
-		  (((PartitionTable->Partition[i].StartingSector) & 0xc0) << 2) +
-		     PartitionTable->Partition[i].StartingCylinder,
-		  PartitionTable->Partition[i].EndingHead,
-		  PartitionTable->Partition[i].EndingSector,
-		  PartitionTable->Partition[i].EndingCylinder,
-		  PartitionTable->Partition[i].StartingBlock,
-		  PartitionTable->Partition[i].SectorCount);
+		  PartitionSector->Partition[i].BootFlags,
+		  PartitionSector->Partition[i].PartitionType,
+		  PartitionSector->Partition[i].StartingHead,
+		  PartitionSector->Partition[i].StartingSector & 0x3f,
+		  (((PartitionSector->Partition[i].StartingSector) & 0xc0) << 2) +
+		     PartitionSector->Partition[i].StartingCylinder,
+		  PartitionSector->Partition[i].EndingHead,
+		  PartitionSector->Partition[i].EndingSector,
+		  PartitionSector->Partition[i].EndingCylinder,
+		  PartitionSector->Partition[i].StartingBlock,
+		  PartitionSector->Partition[i].SectorCount);
 	}
 #endif
 
-  ExFreePool(MbrBuffer);
+  ExFreePool(PartitionSector);
 
   return(STATUS_SUCCESS);
 }
