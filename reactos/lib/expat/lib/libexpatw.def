@@ -1,5 +1,5 @@
 ; DEF file for MS VC++
-LIBRARY   LIBEXPATW
+LIBRARY   expat.dll
 DESCRIPTION "Implements an XML parser."
 EXPORTS
   XML_DefaultCurrent @1
