@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.2 2000/02/21 22:37:57 ekohl Exp $
+/* $Id: sprintf.c,v 1.3 2000/02/27 15:43:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -317,7 +317,7 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 					while ((*s) != 0)
 						*str++ = *s++;
 				} else {
-					for (i = 0; pus->Buffer[i] && i < pus->Length; i++)
+					for (i = 0; pus->Buffer[i] && i < pus->Length / sizeof(WCHAR); i++)
 						*str++ = (unsigned char)(pus->Buffer[i]);
 				}
 			} else {

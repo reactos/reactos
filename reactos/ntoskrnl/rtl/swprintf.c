@@ -1,4 +1,4 @@
-/* $Id: swprintf.c,v 1.2 2000/02/21 22:41:45 ekohl Exp $
+/* $Id: swprintf.c,v 1.3 2000/02/27 15:43:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -123,11 +123,11 @@ number (wchar_t *str, long long num, int base, int size, int precision,
      {
 	if (base==8)
 	  {
-             *str++ = L'0';
+	     *str++ = L'0';
 	  }
 	else if (base==16) 
 	  {
-             *str++ = L'0';
+	     *str++ = L'0';
 	     *str++ = digits[33];
 	  }
      }
@@ -321,7 +321,7 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 			}
 			continue;
 
-		case 'Z':
+		case L'Z':
 			if (qualifier == 'h') {
 				/* print counted ascii string */
 				PANSI_STRING pus = va_arg(args, PANSI_STRING);
@@ -341,7 +341,7 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 					while ((*sw) != 0)
 						*str++ = *sw++;
 				} else {
-					for (i = 0; pus->Buffer[i] && i < pus->Length; i++)
+					for (i = 0; pus->Buffer[i] && i < pus->Length / sizeof(WCHAR); i++)
 						*str++ = pus->Buffer[i];
 				}
 			}
