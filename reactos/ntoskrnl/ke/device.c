@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.4 2004/10/13 22:27:03 ion Exp $
+/* $Id: device.c,v 1.5 2004/10/22 20:07:13 navaraf Exp $
  *
  * FILE:            ntoskrnl/ke/profile.c
  * PURPOSE:         Kernel Device/Settings Functions
@@ -55,8 +55,8 @@ KeFlushEntireTb(
 )
 {
 	KIRQL OldIrql;
-	PKPROCESS Process;
-	PKPCR Pcr;
+	PKPROCESS Process = NULL;
+	PKPCR Pcr = NULL;
 	
 	/* Raise the IRQL for the TB Flush */
 	OldIrql = KeRaiseIrqlToSynchLevel();
