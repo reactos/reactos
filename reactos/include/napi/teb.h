@@ -3,9 +3,9 @@
 #define __INCLUDE_INTERNAL_TEB
 
 #include <napi/types.h>
-#include <w32api.h>
 
 #ifdef __USE_W32API
+#include <w32api.h>
 #include <ddk/ntapi.h>
 #endif /* !__USE_W32API */
 
