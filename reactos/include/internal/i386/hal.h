@@ -77,5 +77,18 @@ BOOLEAN Hal_bios32_is_service_present(ULONG service);
 VOID HalInitializeDisplay (boot_param *bp);
 VOID HalResetDisplay (VOID);
 
+VOID
+HalpInitBusHandlers (VOID);
+
+ULONG
+STDCALL
+HalpGetSystemInterruptVector (
+	PVOID	BusHandler,
+	ULONG BusInterruptLevel,
+	ULONG BusInterruptVector,
+	PKIRQL Irql,
+	PKAFFINITY Affinity
+	);
+
 
 #endif /* __INTERNAL_HAL_HAL_H */

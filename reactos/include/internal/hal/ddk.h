@@ -1,4 +1,4 @@
-/* $Id: ddk.h,v 1.11 2000/03/04 21:59:32 ekohl Exp $
+/* $Id: ddk.h,v 1.12 2000/03/19 13:33:26 ekohl Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -28,19 +28,26 @@ enum
 
 typedef ULONG DMA_WIDTH;
 typedef ULONG DMA_SPEED;
-typedef ULONG BUS_DATA_TYPE;
 
 /*
  * PURPOSE: Types for HalGetBusData
  */
-enum
+typedef enum _BUS_DATA_TYPE
 {
+   ConfigurationSpaceUndefined = -1,
    Cmos,
    EisaConfiguration,
    Pos,
+   CbusConfiguration,
    PCIConfiguration,
+   VMEConfiguration,
+   NuBusConfiguration,
+   PCMCIAConfiguration,
+   MPIConfiguration,
+   MPSAConfiguration,
+   PNPISAConfiguration,
    MaximumBusDataType,
-};
+} BUS_DATA_TYPE, *PBUS_DATA_TYPE;
 
 typedef struct _DEVICE_DESCRIPTION
 {
@@ -66,8 +73,16 @@ typedef BOOLEAN (*PHAL_RESET_DISPLAY_PARAMETERS)(ULONG Columns, ULONG Rows);
 
 
 VOID
+STDCALL
 HalAcquireDisplayOwnership (
-	PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
+	PHAL_RESET_DISPLAY_PARAMETERS	ResetDisplayParameters
+	);
+
+NTSTATUS
+STDCALL
+HalAdjustResourceList (
+	PCM_RESOURCE_LIST	Resources
+	);
 
 PVOID
 HalAllocateCommonBuffer(PADAPTER_OBJECT AdapterObject,
@@ -76,17 +91,23 @@ HalAllocateCommonBuffer(PADAPTER_OBJECT AdapterObject,
 			      BOOLEAN CacheEnabled);
 
 NTSTATUS
-HalAssignSlotResources(PUNICODE_STRING RegistryPath,
-				PUNICODE_STRING DriverClassName,
-				PDRIVER_OBJECT DriverObject,
-				PDEVICE_OBJECT DeviceObject,
-				INTERFACE_TYPE BusType,
-				ULONG BusNumber,
-				ULONG SlotNumber,
-				PCM_RESOURCE_LIST* AllocatedResources);
+STDCALL
+HalAssignSlotResources (
+	PUNICODE_STRING		RegistryPath,
+	PUNICODE_STRING		DriverClassName,
+	PDRIVER_OBJECT		DriverObject,
+	PDEVICE_OBJECT		DeviceObject,
+	INTERFACE_TYPE		BusType,
+	ULONG			BusNumber,
+	ULONG			SlotNumber,
+	PCM_RESOURCE_LIST	*AllocatedResources
+	);
 
 VOID
-HalDisplayString (PCH String);
+STDCALL
+HalDisplayString (
+	IN	PCH	String
+	);
 
 VOID
 HalExamineMBR(PDEVICE_OBJECT DeviceObject,
@@ -106,48 +127,67 @@ HalGetAdapter(PDEVICE_DESCRIPTION DeviceDescription,
 			      PULONG NumberOfMapRegisters);
 
 ULONG
-HalGetBusData(BUS_DATA_TYPE BusDataType,
-		    ULONG BusNumber,
-		    ULONG SlotNumber,
-		    PVOID Buffer,
-		    ULONG Length);
+STDCALL
+HalGetBusData (
+	BUS_DATA_TYPE	BusDataType,
+	ULONG		BusNumber,
+	ULONG		SlotNumber,
+	PVOID		Buffer,
+	ULONG		Length
+	);
 
 ULONG
-HalGetBusDataByOffset(BUS_DATA_TYPE BusDataType,
-			    ULONG BusNumber,
-			    ULONG SlotNumber,
-			    PVOID Buffer,
-			    ULONG Offset,
-			    ULONG Length);
+STDCALL
+HalGetBusDataByOffset (
+	BUS_DATA_TYPE	BusDataType,
+	ULONG		BusNumber,
+	ULONG		SlotNumber,
+	PVOID		Buffer,
+	ULONG		Offset,
+	ULONG		Length
+	);
 
 ULONG
 HalGetDmaAlignmentRequirement(VOID);
 
 ULONG
-HalGetInterruptVector(INTERFACE_TYPE InterfaceType,
-			    ULONG BusNumber,
-			    ULONG BusInterruptLevel,
-			    ULONG BusInterruptVector,
-			    PKIRQL Irql,
-			    PKAFFINITY Affinity);
+STDCALL
+HalGetInterruptVector (
+	INTERFACE_TYPE	InterfaceType,
+	ULONG		BusNumber,
+	ULONG		BusInterruptLevel,
+	ULONG		BusInterruptVector,
+	PKIRQL		Irql,
+	PKAFFINITY	Affinity
+	);
 
 BOOLEAN
-HalInitSystem (ULONG Phase,
-		       boot_param *bp);
+STDCALL
+HalInitSystem (
+	ULONG		Phase,
+	boot_param	*bp
+	);
 
 BOOLEAN
-HalMakeBeep (ULONG Frequency);
+STDCALL
+HalMakeBeep (
+	ULONG Frequency
+	);
 
 VOID
-HalQueryDisplayParameters(PULONG DispSizeX,
-			       PULONG DispSizeY,
-			       PULONG CursorPosX,
-			       PULONG CursorPosY);
+STDCALL
+HalQueryDisplayParameters (
+	PULONG	DispSizeX,
+	PULONG	DispSizeY,
+	PULONG	CursorPosX,
+	PULONG	CursorPosY
+	);
 
 VOID
-HalQueryRealTimeClock(PTIME_FIELDS pTime);
-VOID
-HalSetRealTimeClock(PTIME_FIELDS Time);
+STDCALL
+HalQueryRealTimeClock (
+	PTIME_FIELDS	Time
+	);
 
 VOID
 HalQuerySystemInformation(VOID);
@@ -156,33 +196,54 @@ ULONG
 HalReadDmaCounter(PADAPTER_OBJECT AdapterObject);
 
 VOID
-HalReturnToFirmware(ULONG Action);
+STDCALL
+HalReturnToFirmware (
+	ULONG	Action
+	);
 
 ULONG
-HalSetBusData(BUS_DATA_TYPE BusDataType,
-		    ULONG BusNumber,
-		    ULONG SlotNumber,
-		    PVOID Buffer,
-		    ULONG Length);
+STDCALL
+HalSetBusData (
+	BUS_DATA_TYPE	BusDataType,
+	ULONG		BusNumber,
+	ULONG		SlotNumber,
+	PVOID		Buffer,
+	ULONG		Length
+	);
 
 ULONG
-HalSetBusDataByOffset(BUS_DATA_TYPE BusDataType,
-			    ULONG BusNumber,
-			    ULONG SlotNumber,
-			    PVOID Buffer,
-			    ULONG Offset,
-			    ULONG Length);
+STDCALL
+HalSetBusDataByOffset (
+	BUS_DATA_TYPE	BusDataType,
+	ULONG		BusNumber,
+	ULONG		SlotNumber,
+	PVOID		Buffer,
+	ULONG		Offset,
+	ULONG		Length
+	);
 
 VOID
-HalSetDisplayParameters(ULONG CursorPosX,
-			     ULONG CursorPosY);
+STDCALL
+HalSetDisplayParameters (
+	ULONG	CursorPosX,
+	ULONG	CursorPosY
+	);
+
+VOID
+STDCALL
+HalSetRealTimeClock (
+	PTIME_FIELDS	Time
+	);
 
 BOOLEAN
-HalTranslateBusAddress(INTERFACE_TYPE InterfaceType,
-			       ULONG BusNumber,
-			       PHYSICAL_ADDRESS BusAddress,
-			       PULONG AddressSpace,
-			       PPHYSICAL_ADDRESS TranslatedAddress);
+STDCALL
+HalTranslateBusAddress (
+	INTERFACE_TYPE		InterfaceType,
+	ULONG			BusNumber,
+	PHYSICAL_ADDRESS	BusAddress,
+	PULONG			AddressSpace,
+	PPHYSICAL_ADDRESS	TranslatedAddress
+	);
 
 /*
  * Kernel debugger section
