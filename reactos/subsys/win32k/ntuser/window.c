@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.70 2003/07/28 01:22:28 jimtabor Exp $
+/* $Id: window.c,v 1.71 2003/07/28 02:05:46 jimtabor Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2005,8 +2005,9 @@ NtUserSetCapture(HWND Wnd)
 DWORD FASTCALL
 W32kGetWindowThreadProcessId(PWINDOW_OBJECT Wnd, PDWORD pid)
 {
-   if (pid) *pid = (DWORD) Wnd->OwnerThread->Cid.UniqueThread;
-   return (DWORD) Wnd->OwnerThread->ThreadsProcess->UniqueProcessId;
+   if (pid) *pid = (DWORD) Wnd->OwnerThread->ThreadsProcess->UniqueProcessId;
+   return (DWORD) Wnd->OwnerThread->Cid.UniqueThread;
+   
 }
 
 
