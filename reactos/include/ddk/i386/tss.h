@@ -50,7 +50,7 @@ typedef struct _KTSS
   USHORT Trap;
   USHORT IoMapBase;
   UCHAR  IoBitmap[1];
-} KTSS;
+} KTSS __attribute__((packed));
 
 #endif /* not __ASM__ */
 

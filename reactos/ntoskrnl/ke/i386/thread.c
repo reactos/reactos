@@ -195,8 +195,8 @@ HalInitFirstTask(PETHREAD thread)
     */
    KiTss.Esp0 = (ULONG)&init_stack_top;
    KiTss.Ss0 = KERNEL_DS;
-   KiTss.IoMapBase = FIELD_OFFSET(KTSS, IoBitmap);
-   //KiTss.IoMapBase = 0xFFFF;
+   //   KiTss.IoMapBase = FIELD_OFFSET(KTSS, IoBitmap);
+   KiTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
    KiTss.IoBitmap[0] = 0xFF;   
    KiTss.Ldt = LDT_SELECTOR;
 

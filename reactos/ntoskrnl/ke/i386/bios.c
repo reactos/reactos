@@ -72,7 +72,7 @@ Ke386CallBios(UCHAR Int, PKV86M_REGISTERS Regs)
   Regs->RecoveryInstruction[2] = 0x90;       /* nop */
   Regs->RecoveryInstruction[3] = 0x90;       /* nop */
   Regs->Flags = KV86M_EMULATE_CLI_STI | KV86M_ALLOW_IO_PORT_ACCESS;
-  Regs->Vif = 0;
+  Regs->Vif = 1;
   Regs->PStatus = &Status;
   
   /*
