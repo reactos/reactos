@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.8 2004/01/12 20:48:48 gvg Exp $
+ * $Id: focus.c,v 1.9 2004/01/12 20:51:05 gvg Exp $
  */
 
 #include <win32k/win32k.h>
@@ -188,7 +188,6 @@ IntMouseActivateWindow(PWINDOW_OBJECT Window)
   HWND Top;
   PWINDOW_OBJECT TopWindow;
 
-//if ((DWORD)Window->Self != 0x1c && (DWORD)Window->Self != 0x34) __asm__("int $3\n");
   Top = NtUserGetAncestor(Window->Self, GA_ROOT);
   if (Top != Window->Self)
     {
