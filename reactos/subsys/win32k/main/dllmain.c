@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.40 2003/06/25 22:37:07 gvg Exp $
+/* $Id: dllmain.c,v 1.41 2003/07/31 23:11:38 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -33,6 +33,7 @@
 #include <include/winsta.h>
 #include <include/class.h>
 #include <include/window.h>
+#include <include/menu.h>
 #include <include/object.h>
 #include <include/input.h>
 #include <include/timer.h>
@@ -68,6 +69,9 @@ W32kProcessCallback (struct _EPROCESS *Process,
 
       InitializeListHead(&Win32Process->ClassListHead);
       ExInitializeFastMutex(&Win32Process->ClassListLock);
+      
+      InitializeListHead(&Win32Process->MenuListHead);
+      ExInitializeFastMutex(&Win32Process->MenuListLock);      
 
       Win32Process->WindowStation = NULL;
       if (Process->Win32WindowStation != NULL)
@@ -212,6 +216,13 @@ DllMain (
     DbgPrint("Failed to initialize window implementation!\n");
     return STATUS_UNSUCCESSFUL;
   }
+  
+  Status = InitMenuImpl();
+  if (!NT_SUCCESS(Status))
+  {
+    DbgPrint("Failed to initialize menu implementation!\n");
+    return STATUS_UNSUCCESSFUL;
+  }  
 
   Status = InitInputImpl();
   if (!NT_SUCCESS(Status))
