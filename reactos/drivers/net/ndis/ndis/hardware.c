@@ -11,7 +11,7 @@
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG
 EXPORT
@@ -22,9 +22,12 @@ NdisImmediateReadPciSlotInformation(
     IN  PVOID       Buffer,
     IN  ULONG       Length)
 {
-    UNIMPLEMENTED
-
-    return 0;
+  return HalGetBusDataByOffset (PCIConfiguration,
+				0, /* FIXME */
+				SlotNumber,
+				Buffer,
+				Offset,
+				Length);
 }
 
 
@@ -124,7 +127,7 @@ NdisReadEisaSlotInformationEx(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG
 EXPORT
@@ -135,9 +138,12 @@ NdisReadPciSlotInformation(
     IN  PVOID       Buffer,
     IN  ULONG       Length)
 {
-    UNIMPLEMENTED
-
-	return 0;
+  return HalGetBusDataByOffset (PCIConfiguration,
+				0, /* FIXME */
+				SlotNumber,
+				Buffer,
+				Offset,
+				Length);
 }
 
 
