@@ -96,6 +96,11 @@ extern void _log_(LPCTSTR txt);
 #endif
 #endif
 
+#define	U2A(s, d, l) WideCharToMultiByte(CP_ACP, 0, s, -1, d, l, NULL, NULL)
+#define	U2nA(s, d, l) WideCharToMultiByte(CP_ACP, 0, s, l, d, l, NULL, NULL)
+#define	A2U(s, d, l) MultiByteToWideChar(CP_ACP, 0, s, -1, d, l)
+#define	A2nU(s, d, l) MultiByteToWideChar(CP_ACP, 0, s, l, d, l)
+
 
 #ifdef __WINE__
 #ifdef UNICODE

@@ -33,14 +33,16 @@
 
 
 enum COLUMN_FLAGS {
-	COL_SIZE		= 0x01,
-	COL_DATE		= 0x02,
-	COL_TIME		= 0x04,
-	COL_ATTRIBUTES	= 0x08,
-	COL_DOSNAMES	= 0x10,
-	COL_INDEX		= 0x20,
-	COL_LINKS		= 0x40,
-	COL_ALL = COL_SIZE|COL_DATE|COL_TIME|COL_ATTRIBUTES|COL_DOSNAMES|COL_INDEX|COL_LINKS
+	COL_TYPE		= 0x0001,
+	COL_SIZE		= 0x0002,
+	COL_DATE		= 0x0004,
+	COL_TIME		= 0x0008,
+	COL_ATTRIBUTES	= 0x0010,
+	COL_DOSNAMES	= 0x0020,
+	COL_INDEX		= 0x0040,
+	COL_LINKS		= 0x0080,
+	COL_CONTENT		= 0x0100,
+	COL_ALL = COL_TYPE|COL_SIZE|COL_DATE|COL_TIME|COL_ATTRIBUTES|COL_DOSNAMES|COL_INDEX|COL_LINKS|COL_CONTENT
 };
 
 
@@ -67,7 +69,7 @@ struct Pane : public SubclassedWindow
 
 	Pane(HWND hparent, int id, int id_header, Entry* rool, bool treePane, int visible_cols);
 
-#define COLUMNS 11
+#define COLUMNS 12
 	int 	_widths[COLUMNS];
 	int 	_positions[COLUMNS+1];
 		

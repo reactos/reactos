@@ -47,6 +47,7 @@ Entry::Entry(ENTRY_TYPE etype)
 	_icon_id = ICID_UNKNOWN;
 	_display_name = _data.cFileName;
 	_type_name = NULL;
+	_content = NULL;
 }
 
 Entry::Entry(Entry* parent, ENTRY_TYPE etype)
@@ -62,6 +63,7 @@ Entry::Entry(Entry* parent, ENTRY_TYPE etype)
 	_icon_id = ICID_UNKNOWN;
 	_display_name = _data.cFileName;
 	_type_name = NULL;
+	_content = NULL;
 }
 
 Entry::Entry(const Entry& other)
@@ -83,6 +85,7 @@ Entry::Entry(const Entry& other)
 	_shell_attribs = other._shell_attribs;
 	_display_name = other._display_name==other._data.cFileName? _data.cFileName: _tcsdup(other._display_name);
 	_type_name = other._type_name? _tcsdup(other._type_name): NULL;
+	_content = other._content? _tcsdup(other._content): NULL;
 
 	_etype = other._etype;
 	_icon_id = other._icon_id;
@@ -102,6 +105,9 @@ Entry::~Entry()
 
 	if (_type_name)
 		free(_type_name);
+
+	if (_content)
+		free(_content);
 }
 
 

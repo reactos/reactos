@@ -83,6 +83,7 @@ public:
 	SFGAOF		_shell_attribs;
 	LPTSTR		_display_name;
 	LPTSTR		_type_name;
+	LPTSTR		_content;
 
 	ENTRY_TYPE	_etype;
 	int /*ICON_ID*/ _icon_id;

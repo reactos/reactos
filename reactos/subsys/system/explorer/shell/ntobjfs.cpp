@@ -155,7 +155,7 @@ static DWORD NtOpenObject(OBJECT_TYPE type, HANDLE* phandle, DWORD access, LPCWS
 	UnicodeString ustr(path);
 	OpenStruct open_struct = {sizeof(OpenStruct), 0x00, &ustr, 0x40};
 
-	if (type==SYMBOLICLINK_OBJECT || type==DIRECTORY_OBJECT)
+	if (type==DIRECTORY_OBJECT || type==SYMBOLICLINK_OBJECT)
 		access |= FILE_LIST_DIRECTORY;
 
 	/* if (xflag)
@@ -218,161 +218,127 @@ void NtObjDirectory::read_directory(int scan_flags)
 		*w++ = '\\';
 #endif
 
-	if (_type == DIRECTORY_OBJECT) {
-		NtObjectInfo* info = (NtObjectInfo*)alloca(2048);
+	NtObjectInfo* info = (NtObjectInfo*)alloca(2048);
 
-		if (!(*g_NTDLL->NtQueryDirectoryObject)(dir_handle, info, 2048, TRUE, TRUE, &idx, NULL)) {
-			WIN32_FIND_DATA w32fd;
-			Entry* last = NULL;
-			Entry* entry;
+	if (!(*g_NTDLL->NtQueryDirectoryObject)(dir_handle, info, 2048, TRUE, TRUE, &idx, NULL)) {
+		WIN32_FIND_DATA w32fd;
+		Entry* last = NULL;
+		Entry* entry;
 
-			do {
-				memset(&w32fd, 0, sizeof(WIN32_FIND_DATA));
-
-#ifdef UNICODE
-				wcscpyn(p, info->name.string_ptr, _MAX_PATH);
-#else
-				WideCharToMultiByte(CP_ACP, 0, info->name.string_ptr, info->name.string_len, p, MAX_PATH, 0, 0);
-#endif
-
-				lstrcpy(w32fd.cFileName, p);
-
-				const LPCWSTR* tname = NTDLL::s_ObjectTypes;
-				OBJECT_TYPE type = UNKNOWN_OBJECT_TYPE;
-
-				for(; *tname; tname++)
-					if (!wcsncmp(info->type.string_ptr, *tname, 32))
-						{type=OBJECT_TYPE(tname-NTDLL::s_ObjectTypes); break;}
-
-				if (type == DIRECTORY_OBJECT) {
-					w32fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-
-					entry = new NtObjDirectory(this, buffer);
-				}
-
-				else if (type == SYMBOLICLINK_OBJECT) {
-					w32fd.dwFileAttributes |= ATTRIBUTE_SYMBOLIC_LINK;
-
-					//@@_toscan |= INF_DESCRIPTION;
-
-					entry = NULL;
-
-					if (*w32fd.cFileName>='A' &&*w32fd.cFileName<='Z' && w32fd.cFileName[1]==':')
-						if (!_tcsncmp(buffer,TEXT("\\??\\"),4) ||		// NT4
-							!_tcsncmp(buffer,TEXT("\\GLOBAL??"),9)) {	// XP
-							w32fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-							entry = new WinDirectory(this, w32fd.cFileName);
-						}
-
-					if (!entry)
-						entry = new NtObjDirectory(this, buffer);
-				}
-
-				else if (type == KEY_OBJECT) {
-					w32fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-
-					entry = new RegistryRoot(this, buffer);
-				}
-				else
-					entry = new NtObjEntry(this, type);
-
-				HANDLE handle;
+		do {
+			memset(&w32fd, 0, sizeof(WIN32_FIND_DATA));
 
 #ifdef UNICODE
-				lstrcpyW(p, info->name.string_ptr);
-				if (!NtOpenObject(_type, &handle, 0, buffer))
+			wcscpyn(p, info->name.string_ptr, _MAX_PATH);
 #else
-				lstrcpyW(w, info->name.string_ptr);
-				if (!NtOpenObject(_type, &handle, 0, wbuffer))
+			WideCharToMultiByte(CP_ACP, 0, info->name.string_ptr, info->name.string_len, p, MAX_PATH, 0, 0);
 #endif
-				{
-					NtObject object;
-					DWORD read;
 
-					if (!(*g_NTDLL->NtQueryObject)(handle, 0/*ObjectBasicInformation*/, &object, sizeof(NtObject), &read)) {
-						memcpy(&w32fd.ftCreationTime, &object.creation_time, sizeof(FILETIME));
+			lstrcpy(w32fd.cFileName, p);
 
-						memset(&entry->_bhfi, 0, sizeof(BY_HANDLE_FILE_INFORMATION));
-						entry->_bhfi.nNumberOfLinks = object.reference_count - 1;
-						entry->_bhfi_valid = true;
+			const LPCWSTR* tname = NTDLL::s_ObjectTypes;
+			OBJECT_TYPE type = UNKNOWN_OBJECT_TYPE;
+
+			for(; *tname; tname++)
+				if (!wcsncmp(info->type.string_ptr, *tname, 32))
+					{type=OBJECT_TYPE(tname-NTDLL::s_ObjectTypes); break;}
+
+			if (type == DIRECTORY_OBJECT) {
+				w32fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+
+				entry = new NtObjDirectory(this, buffer);
+			}
+
+			else if (type == SYMBOLICLINK_OBJECT) {
+				w32fd.dwFileAttributes |= ATTRIBUTE_SYMBOLIC_LINK;
+
+				entry = NULL;
+
+				if (*w32fd.cFileName>='A' &&*w32fd.cFileName<='Z' && w32fd.cFileName[1]==':')
+					if (!_tcsncmp(buffer,TEXT("\\??\\"),4) ||		// NT4
+						!_tcsncmp(buffer,TEXT("\\GLOBAL??"),9)) {	// XP
+						w32fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+						entry = new WinDirectory(this, w32fd.cFileName);
 					}
 
-					(*g_NTDLL->NtClose)(handle);
+				if (!entry)
+					entry = new NtObjDirectory(this, buffer);
+			}
+
+			else if (type == KEY_OBJECT) {
+				w32fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+
+				entry = new RegistryRoot(this, buffer);
+			}
+			else
+				entry = new NtObjEntry(this, type);
+
+			HANDLE handle;
+
+#ifdef UNICODE
+			lstrcpyW(p, info->name.string_ptr);
+			if (!NtOpenObject(type, &handle, 0, buffer))
+#else
+			lstrcpyW(w, info->name.string_ptr);
+			if (!NtOpenObject(type, &handle, 0, wbuffer))
+#endif
+			{
+				NtObject object;
+				DWORD read;
+
+				if (!(*g_NTDLL->NtQueryObject)(handle, 0/*ObjectBasicInformation*/, &object, sizeof(NtObject), &read)) {
+					memcpy(&w32fd.ftCreationTime, &object.creation_time, sizeof(FILETIME));
+
+					memset(&entry->_bhfi, 0, sizeof(BY_HANDLE_FILE_INFORMATION));
+					entry->_bhfi.nNumberOfLinks = object.reference_count - 1;
+					entry->_bhfi_valid = true;
 				}
 
-				memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
+				if (type == SYMBOLICLINK_OBJECT) {
+					WCHAR wbuffer[_MAX_PATH];
+					UnicodeString link(_MAX_PATH, wbuffer);
 
+					if (!(*g_NTDLL->NtQuerySymbolicLinkObject)(handle, &link, NULL)) {
+						int len = link.string_len/sizeof(WCHAR);
+						entry->_content = (LPTSTR) malloc((len+1)*sizeof(TCHAR));
 #ifdef UNICODE
-				entry->_type_name = _wcsdup(info->type.string_ptr);
+						wcsncpy(entry->_content, link, len);
 #else
-				char type_name[32];
-				WideCharToMultiByte(CP_ACP, 0, info->type.string_ptr, info->type.string_len, type_name, 32, 0, 0);
-				entry->_type_name = strdup(type_name);
+						U2nA(link, entry->_content, len);
 #endif
+						entry->_content[len] = '\0';
+					}
+				}
 
-				if (!first_entry)
-					first_entry = entry;
-
-				if (last)
-					last->_next = entry;
-
-				entry->_down = NULL;
-				entry->_expanded = false;
-				entry->_scanned = false;
-				entry->_level = level;
-
-				last = entry;
-			} while(!(*g_NTDLL->NtQueryDirectoryObject)(dir_handle, info, 2048, TRUE, FALSE, &idx, NULL));
-
-			last->_next = NULL;
-		}
-	} else {
-/*@@
-		assert(_type==SYMBOLICLINK_OBJECT);
-
-		try {
-			wcscpy(wcpcpy(buffer, UNC(_name)), L"\\");
-
-			if (GetFileAttributesW(buffer) != 0xFFFFFFFF) {
-#ifdef UNICODE
-			TLVEntry* entry = new FileSysEntry(system()->tlvctrlr(), buffer);
-#else
-			TLVEntry* entry = new FileSysEntry(system()->tlvctrlr(), String(buffer));
-#endif
-
-			*entry->pparent() = this;
-			*pchild() = entry;
-
-			expand();
-		} else
-			_toscan |= INF_REFRESH_SCAN_CHILD;
-		} catch(Exception& e) {
-			if (display_errors)
-				HandleException(e);
+				(*g_NTDLL->NtClose)(handle);
 			}
-*/
-	}
 
-/*@@
-	if (_toscan & INF_DESCRIPTION) {
-		_toscan &= ~INF_DESCRIPTION;
+			memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
 
-		if (_type == SYMBOLICLINK_OBJECT) {
-			DWORD len;
-			WCHAR wbuffer[_MAX_PATH];
-			UnicodeString link(_MAX_PATH, wbuffer);
-
-			if (!NtQuerySymbolicLinkObject(dir_handle, &link, &len)) {
 #ifdef UNICODE
-				wcscpy(_description, link);
+			entry->_type_name = _wcsdup(info->type.string_ptr);
 #else
-				U2T(link, _description, -1);
+			char type_name[32];
+			WideCharToMultiByte(CP_ACP, 0, info->type.string_ptr, info->type.string_len, type_name, 32, 0, 0);
+			entry->_type_name = strdup(type_name);
 #endif
-				_inf |= INF_DESCRIPTION;
-			}
-		}
+
+			if (!first_entry)
+				first_entry = entry;
+
+			if (last)
+				last->_next = entry;
+
+			entry->_down = NULL;
+			entry->_expanded = false;
+			entry->_scanned = false;
+			entry->_level = level;
+
+			last = entry;
+		} while(!(*g_NTDLL->NtQueryDirectoryObject)(dir_handle, info, 2048, TRUE, FALSE, &idx, NULL));
+
+		last->_next = NULL;
 	}
-*/
 
 	(*g_NTDLL->NtClose)(dir_handle);
 

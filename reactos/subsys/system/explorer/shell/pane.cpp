@@ -56,7 +56,8 @@ static const LPTSTR g_pos_names[COLUMNS] = {
 	TEXT("Index/Inode"),
 	TEXT("Links"),
 	TEXT("Attributes"),
-	TEXT("Security")
+	TEXT("Security"),
+	TEXT("Content")
 };
 
 static const int g_pos_align[] = {
@@ -70,7 +71,8 @@ static const int g_pos_align[] = {
 	HDF_LEFT,	/* Index */
 	HDF_CENTER,	/* Links */
 	HDF_CENTER,	/* Attributes */
-	HDF_LEFT	/* Security */
+	HDF_LEFT,	/* Security */
+	HDF_LEFT	/* Content / Description */
 };
 
 
@@ -477,7 +479,7 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 
 	++col;
 
-	 // ouput file name
+	 // output file name
 	if (calcWidthCol == -1)
 		_out_wrkr.output_text(dis, _positions, col, entry->_display_name, 0);
 	else if (calcWidthCol==col || calcWidthCol==COLUMNS)
@@ -485,11 +487,13 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 
 	++col;
 
-	 // ouput type/class name
-	if (calcWidthCol == -1)
-		_out_wrkr.output_text(dis, _positions, col, entry->_type_name, 0);
-	else if (calcWidthCol==col || calcWidthCol==COLUMNS)
-		calc_width(dis, col, entry->_type_name);
+	 // output type/class name
+	if (visible_cols & COL_TYPE) {
+		if (calcWidthCol == -1)
+			_out_wrkr.output_text(dis, _positions, col, entry->_type_name, 0);
+		else if (calcWidthCol==col || calcWidthCol==COLUMNS)
+			calc_width(dis, col, entry->_type_name);
+	}
 
 	++col;
 
@@ -609,6 +613,16 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 		output_text(dis, col++, buffer, 0, psize);
 	}
 */
+
+	++col;
+
+	 // output content / symbolic link target 
+	if (visible_cols & COL_CONTENT) {
+		if (calcWidthCol == -1)
+			_out_wrkr.output_text(dis, _positions, col, entry->_content, 0);
+		else if (calcWidthCol==col || calcWidthCol==COLUMNS)
+			calc_width(dis, col, entry->_content);
+	}
 }
 
 
