@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.23 2001/02/11 00:14:25 ekohl Exp $
+/* $Id: rtl.h,v 1.24 2001/02/17 17:40:05 ekohl Exp $
  *
  */
 
@@ -167,6 +167,13 @@ RtlGetLongestNtPathLength (
 ULONG STDCALL RtlGetNtGlobalFlags(VOID);
 
 BOOLEAN STDCALL RtlGetNtProductType(PNT_PRODUCT_TYPE ProductType);
+
+ULONG
+STDCALL
+RtlGetProcessHeaps (
+	ULONG	HeapCount,
+	HANDLE	*HeapArray
+	);
 
 ULONG
 STDCALL
