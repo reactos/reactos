@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.39 2001/03/27 21:43:43 dwelch Exp $
+/* $Id: ide.c,v 1.40 2001/04/30 05:28:17 rex Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -300,17 +300,18 @@ IDECreateController(IN PDRIVER_OBJECT DriverObject,
   if (!IDEResetController(ControllerParams->CommandPortBase,
                           ControllerParams->ControlPortBase)) 
     {
-      DPRINT("Could not find controller %d at %04lx\n",
-          ControllerIdx, ControllerParams->CommandPortBase);
-      return FALSE;
+      DbgPrint ("Could not find controller %d at %04lx\n",
+                ControllerIdx,
+                ControllerParams->CommandPortBase);
+      return  FALSE;
     }
 
   ControllerObject = IoCreateController(sizeof(IDE_CONTROLLER_EXTENSION));
   if (ControllerObject == NULL) 
     {
-      DPRINT("Could not create controller object for controller %d\n",
-          ControllerIdx);
-      return FALSE;
+      DbgPrint ("Could not create controller object for controller %d\n",
+                ControllerIdx);
+      return  FALSE;
     }
 
     //  Fill out Controller extension data
@@ -341,9 +342,10 @@ IDECreateController(IN PDRIVER_OBJECT DriverObject,
                           FALSE);
   if (!NT_SUCCESS(RC)) 
     {
-      DPRINT("Could not Connect Interrupt %d\n", ControllerExtension->Vector);
-      IoDeleteController(ControllerObject);
-      return FALSE;
+      DbgPrint ("Could not Connect Interrupt %d\n", 
+                ControllerExtension->Vector);
+      IoDeleteController (ControllerObject);
+      return  FALSE;
     }
 
     //  Create device objects for each raw device (and for partitions) 
@@ -363,9 +365,10 @@ IDECreateController(IN PDRIVER_OBJECT DriverObject,
 
   if (!CreatedDevices) 
     {
-      DPRINT("Did not find any devices for controller %d\n", ControllerIdx);
-      IoDisconnectInterrupt(ControllerExtension->Interrupt);
-      IoDeleteController(ControllerObject);
+      DbgPrint ("Did not find any devices for controller %d\n", 
+                ControllerIdx);
+      IoDisconnectInterrupt (ControllerExtension->Interrupt);
+      IoDeleteController (ControllerObject);
     }
   else
     {
@@ -488,6 +491,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   ULONG                  SectorCount = 0;
   BOOLEAN                ExtendedPart = FALSE;
   ULONG                  PartitionOffset = 0;
+  ULONG                  offsetToNextPartition = 0;
 
     //  Copy I/O port offsets for convenience
   CommandPort = ControllerExtension->CommandPortBase;
@@ -549,7 +553,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                        SectorCount);
   if (!NT_SUCCESS(RC))
     {
-      DPRINT("IDECreateDevice call failed for raw device\n",0);
+      DbgPrint ("IDECreateDevice call failed for raw device\n", 0);
     }
   else
     {
@@ -590,7 +594,9 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
       else
         {
           //  build devices for all partitions in table
-          DPRINT("Read partition on %wZ at %ld\n", &UnicodeDeviceDirName, PartitionOffset);
+          DPRINT("Read partition on %wZ at %ld\n", 
+                 &UnicodeDeviceDirName, 
+                 PartitionOffset);
           for (PartitionIdx = 0; PartitionIdx < 4; PartitionIdx++)
             {
               //  copy partition pointer for convenience
@@ -599,8 +605,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
               //  if the partition entry is in use, create a device for it
               if (IsRecognizedPartition(p->PartitionType))
                 {
-                  DPRINT("%wZ ptbl entry:%d type:%02x Start:%lu Size:%lu\n",
-                         &UnicodeDeviceDirName,
+                  DPRINT("%wZ ptbl entry:%d type:%02x Start:%lu Size:%lu\n",                         &UnicodeDeviceDirName,
                          PartitionIdx,
                          p->PartitionType,
                          p->StartingBlock,
@@ -619,7 +624,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                                        p->SectorCount);
                   if (!NT_SUCCESS(RC))
                     {
-                      DPRINT("IDECreateDevice call failed\n",0);
+                      DbgPrint ("IDECreateDevice call failed\n", 0);
                       break;
                     }
                   PartitionNum++;
@@ -627,18 +632,16 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
               else if (IsExtendedPartition(p->PartitionType))
                 {
                   //  Create devices for logical partitions within an extended partition
-                  DPRINT("%wZ ptbl entry:%d type:%02x Start:%lu Size:%lu\n",
-                         &UnicodeDeviceDirName,
+                  DPRINT("Extended found: entry:%d type:%02x Start:%lu Size:%lu\n",                         &UnicodeDeviceDirName,
                          PartitionIdx,
                          p->PartitionType,
                          p->StartingBlock,
                          p->SectorCount);
                   ExtendedPart = TRUE;
-                  //TODO: If it is possible for partitions to appear after chain, this code is wrong.
-                  PartitionOffset += p->StartingBlock;
-                  break;
+                  offsetToNextPartition = p->StartingBlock;
                 }
             }
+          PartitionOffset += offsetToNextPartition;
         }
     }
   while (ExtendedPart == TRUE);
@@ -783,20 +786,20 @@ IDEGetPartitionTable(IN int CommandPort,
                      SectorBuf);
   if (RC != 0) 
     {
-      DPRINT("read failed: port %04x drive %d sector %d rc %d\n", 
-             CommandPort, 
-             DriveNum, 
-             Offset, 
-             RC);
+      DbgPrint ("read failed: port %04x drive %d sector %d rc %d\n", 
+                CommandPort, 
+                DriveNum, 
+                Offset, 
+                RC);
       return  FALSE;
     } 
   else if (*((WORD *)(SectorBuf + PART_MAGIC_OFFSET)) != PARTITION_MAGIC) 
     {
-      DPRINT("Bad partition magic: port %04x drive %d offset %d magic %d\n", 
-             CommandPort, 
-             DriveNum, 
-             Offset, 
-             *((short *)(SectorBuf + PART_MAGIC_OFFSET)));
+      DbgPrint ("Bad partition magic: port %04x drive %d offset %d magic %d\n", 
+                CommandPort, 
+                DriveNum, 
+                Offset, 
+                *((short *)(SectorBuf + PART_MAGIC_OFFSET)));
       return  FALSE;
     }
   RtlCopyMemory(PartitionTable, SectorBuf + PARTITION_OFFSET, sizeof(PARTITION) * 4);
@@ -880,8 +883,8 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
       &DeviceName, FILE_DEVICE_DISK, 0, TRUE, DeviceObject);
   if (!NT_SUCCESS(RC))
     {
-      DPRINT("IoCreateDevice call failed\n",0);
-      return RC;
+      DbgPrint ("IoCreateDevice call failed\n");
+      return  RC;
     }
 
     //  Set the buffering strategy here...
@@ -939,10 +942,8 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
                         &DeviceName);
   if (!NT_SUCCESS(RC))
     {
-      DPRINT("IoAssignArcName (%wZ) failed (Status %x)\n",
-             &ArcName, RC);
+      DbgPrint ("IoAssignArcName (%wZ) failed (Status %x)\n", &ArcName, RC);
     }
-
 
   return  RC;
 }
@@ -1180,13 +1181,13 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
   if ((AdjustedExtent.QuadPart > PartitionExtent.QuadPart) ||
       (IrpStack->Parameters.Read.Length & (DeviceExtension->BytesPerSector - 1))) 
     {
-      DPRINT("Request failed on bad parameters\n",0);
-      DPRINT("AdjustedExtent=%d:%d PartitionExtent=%d:%d ReadLength=%d\n", 
-             (unsigned int) AdjustedExtent.u.HighPart,
-             (unsigned int) AdjustedExtent.u.LowPart,
-             (unsigned int) PartitionExtent.u.HighPart,
-             (unsigned int) PartitionExtent.u.LowPart,
-             IrpStack->Parameters.Read.Length);
+      DbgPrint ("Request failed on bad parameters\n");
+      DbgPrint ("AdjustedExtent=%d:%d PartitionExtent=%d:%d ReadLength=%d\n", 
+                (unsigned int) AdjustedExtent.u.HighPart,
+                (unsigned int) AdjustedExtent.u.LowPart,
+                (unsigned int) PartitionExtent.u.HighPart,
+                (unsigned int) PartitionExtent.u.LowPart,
+                IrpStack->Parameters.Read.Length);
       Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
       return  STATUS_INVALID_PARAMETER;
@@ -1470,7 +1471,7 @@ IDEStartController(IN OUT PVOID Context)
       DPRINT ("Drive is BUSY for too long\n");
       if (++ControllerExtension->Retries > IDE_MAX_CMD_RETRIES)
         {
-          DPRINT ("Max Retries on Drive reset reached, returning failure\n");
+          DbgPrint ("Max Retries on Drive reset reached, returning failure\n");
           Irp = ControllerExtension->CurrentIrp;
           Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
           Irp->IoStatus.Information = 0;
@@ -1505,7 +1506,7 @@ IDEStartController(IN OUT PVOID Context)
       DPRINT ("Drive is BUSY for too long after drive select\n");
       if (ControllerExtension->Retries++ > IDE_MAX_CMD_RETRIES)
         {
-          DPRINT ("Max Retries on Drive reset reached, returning failure\n");
+          DbgPrint ("Max Retries on Drive reset reached, returning failure\n");
           Irp = ControllerExtension->CurrentIrp;
           Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
           Irp->IoStatus.Information = 0;
@@ -1686,14 +1687,14 @@ IDEIsr(IN PKINTERRUPT Interrupt,
       SectorCount = IDEReadSectorCount(ControllerExtension->CommandPortBase);
       SectorNum = IDEReadSectorNum(ControllerExtension->CommandPortBase);
         // FIXME: should use the NT error logging facility
-      DPRINT("IDE Error: OP:%02x STAT:%02x ERR:%02x CYLLO:%02x CYLHI:%02x SCNT:%02x SNUM:%02x\n", 
-             DeviceExtension->Operation, 
-             ControllerExtension->DeviceStatus, 
-             ErrorReg, 
-             CylinderLow,
-             CylinderHigh, 
-             SectorCount, 
-             SectorNum);
+      DbgPrint ("IDE Error: OP:%02x STAT:%02x ERR:%02x CYLLO:%02x CYLHI:%02x SCNT:%02x SNUM:%02x\n", 
+                DeviceExtension->Operation, 
+                ControllerExtension->DeviceStatus, 
+                ErrorReg, 
+                CylinderLow,
+                CylinderHigh, 
+                SectorCount, 
+                SectorNum);
 
         // FIXME: should retry the command and perhaps recalibrate the drive
 
@@ -2006,9 +2007,9 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
             DPRINT("Timeout waiting for command completion\n");
             if (++ControllerExtension->Retries > IDE_MAX_CMD_RETRIES)
               {
-                DPRINT("Max retries has been reached, IRP finished with error\n");
 		 if (ControllerExtension->CurrentIrp != NULL)
 		   {
+                      DbgPrint ("Max retries has been reached, IRP finished with error\n");
 		      ControllerExtension->CurrentIrp->IoStatus.Status = STATUS_IO_TIMEOUT;
 		      ControllerExtension->CurrentIrp->IoStatus.Information = 0;
 		      IDEFinishOperation(ControllerExtension);
@@ -2024,9 +2025,9 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
 
           case IDETimerResetWaitForBusyNegate:
           case IDETimerResetWaitForDrdyAssert:
-            DPRINT("Timeout waiting for drive reset, giving up on IRP\n");
             if (ControllerExtension->CurrentIrp != NULL)
               {
+                DbgPrint ("Timeout waiting for drive reset, giving up on IRP\n");
                 ControllerExtension->CurrentIrp->IoStatus.Status = 
                   STATUS_IO_TIMEOUT;
                 ControllerExtension->CurrentIrp->IoStatus.Information = 0;
