@@ -236,11 +236,4 @@ NtQueryDirectoryFile(
    return(Status);
 }
 
-NTSTATUS STDCALL NtQueryOleDirectoryFile(VOID)
-{
-   UNIMPLEMENTED;
-   return(STATUS_NOT_IMPLEMENTED);
-}
-
-
 /* EOF */

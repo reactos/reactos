@@ -815,7 +815,6 @@ NtQueryInformationFile@20
 NtQueryInformationProcess@20
 NtQueryInformationThread@20
 NtQueryInformationToken@20
-;NtQueryOleDirectoryFile@44 <--- ?
 NtQueryQuotaInformationFile@36
 NtQuerySecurityObject@20
 NtQuerySystemInformation@16

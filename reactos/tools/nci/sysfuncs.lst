@@ -102,7 +102,7 @@ NtOpenThread 4
 NtOpenThreadToken 4
 NtOpenThreadTokenEx 5
 NtOpenTimer 3
-NtPlugPlayControl 4
+NtPlugPlayControl 3
 NtPowerInformation 5
 NtPrivilegeCheck 3
 NtPrivilegedServiceAuditAlarm 5
@@ -133,7 +133,6 @@ NtQueryKey 5
 NtQueryMultipleValueKey 6
 NtQueryMutant 5
 NtQueryObject 5
-NtQueryOleDirectoryFile 11
 NtQueryPerformanceCounter 2
 NtQueryQuotaInformationFile 9
 NtQuerySection 5

@@ -24,24 +24,24 @@ CheckRemoteDebuggerPresent (
 {
   HANDLE DebugPort;
   NTSTATUS Status;
-  
-  if(pbDebuggerPresent == NULL)
+
+  if (pbDebuggerPresent == NULL)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
+
   Status = NtQueryInformationProcess(hProcess,
                                      ProcessDebugPort,
                                      (PVOID)&DebugPort,
                                      sizeof(HANDLE),
                                      NULL);
-  if(NT_SUCCESS(Status))
+  if (NT_SUCCESS(Status))
   {
     *pbDebuggerPresent = ((DebugPort != NULL) ? TRUE : FALSE);
     return TRUE;
   }
-  
+
   SetLastErrorByStatus(Status);
   return FALSE;
 }
@@ -64,8 +64,7 @@ ContinueDebugEvent (
   ClientId.UniqueThread = (HANDLE)dwThreadId;
 
   Status = DbgUiContinue(&ClientId, dwContinueStatus);
-
-  if(!NT_SUCCESS(Status))
+  if (!NT_SUCCESS(Status))
   {
     SetLastErrorByStatus(Status);
     return FALSE;
@@ -76,16 +75,50 @@ ContinueDebugEvent (
 
 
 /*
- * @unimplemented
+ * NOTE: I'm not sure if the function is complete.
+ *
+ * @unmplemented
  */
-BOOL
-WINAPI
-DebugActiveProcess (
-    DWORD dwProcessId
-    )
+BOOL WINAPI
+DebugActiveProcess(DWORD dwProcessId)
 {
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  HANDLE hProcess;
+  NTSTATUS Status;
+
+  hProcess = OpenProcess(PROCESS_ALL_ACCESS,
+			 FALSE,
+			 dwProcessId);
+  if (hProcess == NULL)
+    return FALSE;
+
+  /* Notify CSRSS */
+  Request.Type = CSRSS_DEBUG_PROCESS;
+  Request.Data.DebugProcessRequest.DebuggeeProcessId = dwProcessId;
+  Request.Data.DebugProcessRequest.DebuggerProcessId = GetCurrentProcessId();
+  Request.Data.DebugProcessRequest.DebuggerThreadId = GetCurrentThreadId();
+  Status = CsrClientCallServer(&Request,
+			       &Reply,
+			       sizeof(CSRSS_API_REQUEST),
+			       sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+  {
+    SetLastError(ERROR_ACCESS_DENIED);
+    return FALSE;
+  }
+
+  CloseHandle(hProcess);
+
+  /* Connect the current process (debugger) to the debug subsystem */
+  Status = DbgUiConnectToDbg();
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 

@@ -154,7 +154,7 @@ NtOpenSymbolicLinkObject@12
 NtOpenThread@16
 NtOpenThreadToken@16
 NtOpenTimer@12
-NtPlugPlayControl@16
+NtPlugPlayControl@12
 NtPrivilegeCheck@12
 NtPrivilegedServiceAuditAlarm@20
 NtPrivilegeObjectAuditAlarm@24
@@ -182,7 +182,6 @@ NtQueryKey@20
 NtQueryMultipleValueKey@24
 NtQueryMutant@20
 NtQueryObject@20
-NtQueryOleDirectoryFile@44
 NtQueryPerformanceCounter@8
 NtQuerySection@20
 NtQuerySecurityObject@20
@@ -573,7 +572,7 @@ RtlQueryProcessDebugInformation@12
 ;RtlQueryPropertyNames
 ;RtlQueryPropertySet
 RtlQueryRegistryValues@20
-;RtlQuerySecutityObject
+;RtlQuerySecurityObject
 ;RtlQueryTagHeap
 RtlQueryTimeZoneInformation@4
 RtlRaiseException@4
@@ -770,7 +769,7 @@ ZwOpenSymbolicLinkObject@12
 ZwOpenThread@16
 ZwOpenThreadToken@16
 ZwOpenTimer@12
-ZwPlugPlayControl@16
+ZwPlugPlayControl@12
 ZwPrivilegeCheck@12
 ZwPrivilegedServiceAuditAlarm@20
 ZwPrivilegeObjectAuditAlarm@24
@@ -798,7 +797,6 @@ ZwQueryKey@20
 ZwQueryMultipleValueKey@24
 ZwQueryMutant@20
 ZwQueryObject@20
-ZwQueryOleDirectoryFile@44
 ZwQueryPerformanceCounter@8
 ZwQuerySection@20
 ZwQuerySecurityObject@20
