@@ -235,7 +235,7 @@ static NTSTATUS NTAPI RWDetermineMediaType(PDRIVE_INFO DriveInfo)
 	  return STATUS_UNSUCCESSFUL; /* if we can't even write to the controller, it's hopeless */
 	}
    
-      /* Wait for the recalibrate to finish */
+      /* Wait for the ReadID to finish */
       WaitForControllerInterrupt(DriveInfo->ControllerInfo);
 
       if(HwReadIdResult(DriveInfo->ControllerInfo, NULL, NULL) != STATUS_SUCCESS)
@@ -280,6 +280,8 @@ static NTSTATUS NTAPI RWSeekToCylinder(PDRIVE_INFO DriveInfo,
 
   PAGED_CODE();
 
+  KdPrint(("floppy: RWSeekToCylinder called drive 0x%x cylinder %d\n", DriveInfo, Cylinder));
+
   /* Clear any spurious interrupts */
   KeClearEvent(&DriveInfo->ControllerInfo->SynchEvent);
 
@@ -318,6 +320,8 @@ static NTSTATUS NTAPI RWSeekToCylinder(PDRIVE_INFO DriveInfo,
       KdPrint(("floppy: RWSeekToTrack(): Seeek to track failed; current cylinder is 0x%x\n", CurCylinder));
       return STATUS_UNSUCCESSFUL;
     }
+
+  KdPrint(("floppy: RWSeekToCylinder: returning successfully, now on cyl %d\n", Cylinder));
 
   return STATUS_SUCCESS;
 }

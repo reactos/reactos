@@ -885,8 +885,9 @@ NTSTATUS NTAPI HwDiskChanged(PDRIVE_INFO DriveInfo,
     {
       if(!(Buffer & DIR_DISKETTE_CHANGE))
 	{
+	  /* FIXME FIXME FIXME: This is wrong */
 	  KdPrint(("floppy: HdDiskChanged - Model30 - returning TRUE\n"));
-	  *DiskChanged = TRUE;
+	  *DiskChanged = FALSE;
 	}
       else
 	{
