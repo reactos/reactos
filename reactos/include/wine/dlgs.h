@@ -9,8 +9,10 @@
 #ifndef __WINE_DLGS_H
 #define __WINE_DLGS_H
 
-#include_next <dlgs.h>
+#define OFN_DONTADDTORECENT          0x02000000
+#define OFN_ENABLEINCLUDENOTIFY      0x00400000
+#define NEWFILEOPENORD 			 1547
 
-#define NEWFILEOPENORD 1547
+#include_next <dlgs.h>
 
 #endif /* __WINE_DLGS_H */

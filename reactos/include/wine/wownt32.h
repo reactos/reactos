@@ -18,8 +18,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _WOWNT32_H_
-#define _WOWNT32_H_
+#ifndef WINE_WOWNT32_H_
+#define WINE_WOWNT32_H_
 
+#ifndef HWND_16
+#define HWND_16(h32)      (LOWORD(h32))
+#endif
 
 #endif /* _WOWNT32_H_ */
+

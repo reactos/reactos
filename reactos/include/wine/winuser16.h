@@ -19,4 +19,8 @@
 #ifndef __WINE_WINE_WINUSER16_H
 #define __WINE_WINE_WINUSER16_H
 
+#ifndef CB_SETITEMDATA16
+#define CB_SETITEMDATA16           (WM_USER+17)
+#endif
+
 #endif /* __WINE_WINE_WINUSER16_H */
