@@ -477,8 +477,6 @@ PsDispatchThread(ULONG NewThreadStatus)
 VOID
 PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus)
 {
-   ASSERT(Thread->WaitBlockList == NULL);
-      
   if (THREAD_STATE_TERMINATED_1 == Thread->Tcb.State ||
       THREAD_STATE_TERMINATED_2 == Thread->Tcb.State)
     {
