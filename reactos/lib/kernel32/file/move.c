@@ -1,4 +1,4 @@
-/* $Id: move.c,v 1.14 2004/06/13 20:04:55 navaraf Exp $
+/* $Id: move.c,v 1.15 2004/12/04 15:38:22 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,9 +16,15 @@
 #define NDEBUG
 #include "../include/debug.h"
 
+/* GLOBALS *****************************************************************/
 
-#define FILE_RENAME_SIZE  MAX_PATH +sizeof(FILE_RENAME_INFORMATION)
-
+#if defined(__GNUC__)
+void * alloca(size_t size);
+#elif defined(_MSC_VER)
+void* _alloca(size_t size);
+#else
+#error Unknown compiler for alloca intrinsic stack allocation "function"
+#endif
 
 /* FUNCTIONS ****************************************************************/
 
@@ -164,11 +170,12 @@ MoveFileWithProgressW (
 {
 	HANDLE hFile = NULL;
 	IO_STATUS_BLOCK IoStatusBlock;
-	FILE_RENAME_INFORMATION *FileRename;
-	USHORT Buffer[FILE_RENAME_SIZE];
+	PFILE_RENAME_INFORMATION FileRename;
 	NTSTATUS errCode;
-	DWORD err;
 	BOOL Result;
+	UNICODE_STRING DstPathU;
+
+	DPRINT("MoveFileWithProgressW()\n");
 
 	hFile = CreateFileW (lpExistingFileName,
 	                     GENERIC_ALL,
@@ -178,71 +185,118 @@ MoveFileWithProgressW (
 	                     FILE_ATTRIBUTE_NORMAL,
 	                     NULL);
 
-	FileRename = (FILE_RENAME_INFORMATION *)Buffer;
+	if (hFile == INVALID_HANDLE_VALUE)
+	{
+           return FALSE;
+	}
+
+        /* validate & translate the filename */
+        if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpNewFileName,
+				           &DstPathU,
+				           NULL,
+				           NULL))
+        {
+           DPRINT("Invalid destination path\n");
+	   CloseHandle(hFile);
+           SetLastError(ERROR_PATH_NOT_FOUND);
+           return FALSE;
+        }
+
+	FileRename = alloca(sizeof(FILE_RENAME_INFORMATION) + DstPathU.Length);
 	if ((dwFlags & MOVEFILE_REPLACE_EXISTING) == MOVEFILE_REPLACE_EXISTING)
 		FileRename->ReplaceIfExists = TRUE;
 	else
 		FileRename->ReplaceIfExists = FALSE;
-	FileRename->FileNameLength = wcslen (lpNewFileName);
-	memcpy (FileRename->FileName,
-	        lpNewFileName,
-	        min(FileRename->FileNameLength, MAX_PATH));
 
+	memcpy(FileRename->FileName, DstPathU.Buffer, DstPathU.Length);
+        RtlFreeHeap (RtlGetProcessHeap (),
+		     0,
+		     DstPathU.Buffer);
+	/* 
+	 * FIXME:
+	 *   Is the length the count of characters or the length of the buffer?
+	 */
+	FileRename->FileNameLength = DstPathU.Length / sizeof(WCHAR);
 	errCode = NtSetInformationFile (hFile,
 	                                &IoStatusBlock,
 	                                FileRename,
-	                                FILE_RENAME_SIZE,
+	                                sizeof(FILE_RENAME_INFORMATION) + DstPathU.Length,
 	                                FileRenameInformation);
 	CloseHandle(hFile);
 	if (NT_SUCCESS(errCode))
 	{
 		Result = TRUE;
 	}
-	/* FIXME file rename not yet implemented in all FSDs so it will always
-	 * fail, even when the move is to the same device
-	 */
-#if 0
 	else if (STATUS_NOT_SAME_DEVICE == errCode &&
 		 MOVEFILE_COPY_ALLOWED == (dwFlags & MOVEFILE_COPY_ALLOWED))
-#else
-	else
-#endif
 	{
 		Result = CopyFileExW (lpExistingFileName,
 		                      lpNewFileName,
 		                      lpProgressRoutine,
 		                      lpData,
 		                      NULL,
-		                      FileRename->ReplaceIfExists ? 0 : COPY_FILE_FAIL_IF_EXISTS) &&
-		         AdjustFileAttributes(lpExistingFileName, lpNewFileName) &&
-		         DeleteFileW (lpExistingFileName);
-		if (! Result)
+		                      FileRename->ReplaceIfExists ? 0 : COPY_FILE_FAIL_IF_EXISTS);
+		if (Result)
 		{
-			/* Delete of the existing file failed so the
-			 * existing file is still there. Clean up the
-			 * new file (if possible)
-			 */
-			err = GetLastError();
-			if (! SetFileAttributesW (lpNewFileName, FILE_ATTRIBUTE_NORMAL))
-			{
-				DPRINT("Removing possible READONLY attrib from new file failed with code %d\n", GetLastError());
-			}
-			if (! DeleteFileW (lpNewFileName))
-			{
-				DPRINT("Deleting new file during cleanup failed with code %d\n", GetLastError());
-			}
-			SetLastError (err);
+			/* Cleanup the source file */
+			AdjustFileAttributes(lpExistingFileName, lpNewFileName);
+	                Result = DeleteFileW (lpExistingFileName);
 		}
 	}
-	/* See FIXME above */
-#if 0
+#if 1
+	/* FIXME file rename not yet implemented in all FSDs so it will always
+	 * fail, even when the move is to the same device
+	 */
+	else if (STATUS_NOT_IMPLEMENTED == errCode)
+	{
+
+		UNICODE_STRING SrcPathU;
+
+		SrcPathU.Buffer = alloca(sizeof(WCHAR) * MAX_PATH);
+		SrcPathU.MaximumLength = MAX_PATH * sizeof(WCHAR);
+		SrcPathU.Length = GetFullPathNameW(lpExistingFileName, MAX_PATH, SrcPathU.Buffer, NULL);
+		if (SrcPathU.Length >= MAX_PATH)
+		{
+		    SetLastError(ERROR_FILENAME_EXCED_RANGE);
+		    return FALSE;
+		}
+		SrcPathU.Length *= sizeof(WCHAR);
+
+		DstPathU.Buffer = alloca(sizeof(WCHAR) * MAX_PATH);
+		DstPathU.MaximumLength = MAX_PATH * sizeof(WCHAR);
+		DstPathU.Length = GetFullPathNameW(lpNewFileName, MAX_PATH, DstPathU.Buffer, NULL);
+		if (DstPathU.Length >= MAX_PATH)
+		{
+		    SetLastError(ERROR_FILENAME_EXCED_RANGE);
+		    return FALSE;
+		}
+		DstPathU.Length *= sizeof(WCHAR);
+
+		if (0 == RtlCompareUnicodeString(&SrcPathU, &DstPathU, TRUE))
+		{
+		   /* Source and destination file are the same, nothing to do */
+		   return TRUE;
+		}
+
+		Result = CopyFileExW (lpExistingFileName,
+		                      lpNewFileName,
+		                      lpProgressRoutine,
+		                      lpData,
+		                      NULL,
+		                      FileRename->ReplaceIfExists ? 0 : COPY_FILE_FAIL_IF_EXISTS);
+		if (Result)
+		{
+		    /* Cleanup the source file */
+                    AdjustFileAttributes(lpExistingFileName, lpNewFileName); 
+		    Result = DeleteFileW (lpExistingFileName);
+		}
+	}
+#endif
 	else
 	{
 		SetLastErrorByStatus (errCode);
 		Result = FALSE;
 	}
-#endif
-
 	return Result;
 }
 
