@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.5 2004/04/30 16:52:41 navaraf Exp $
+/* $Id: console.c,v 1.6 2004/06/21 18:57:22 weiden Exp $
  *
  *  CONSOLE.C - console input/output functions.
  *
@@ -223,6 +223,20 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 #endif
 }
 
+VOID ConOutFormatMessage (DWORD MessageId, ...)
+{
+	DWORD temp;
+	LPTSTR text;
+	va_list arg_ptr;
+	temp = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+	       NULL,
+	       MessageId,
+	       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+	       (LPTSTR) &text,
+	       0,
+	       &arg_ptr);
+	ConErrPrintf (text);	
+}
 
 VOID ConOutPrintf (LPTSTR szFormat, ...)
 {

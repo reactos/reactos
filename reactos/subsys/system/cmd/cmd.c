@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.15 2004/06/06 17:33:13 hbirr Exp $
+/* $Id: cmd.c,v 1.16 2004/06/21 18:57:22 weiden Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -1334,7 +1334,7 @@ int main (int argc, char *argv[])
 			OPEN_EXISTING, 0, NULL);
   if (GetConsoleScreenBufferInfo(hConsole, &Info) == FALSE)
     {
-      ConErrPrintf (_T("GetConsoleScreenBufferInfo: Error: %ld\n"), GetLastError());
+      ConOutFormatMessage(GetLastError());
       return(1);
     }
   wColor = Info.wAttributes;
