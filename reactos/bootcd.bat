@@ -68,6 +68,7 @@ copy /Y drivers\lib\bzip2\unbzip2.sys %BOOTCD_DIR%\disk\reactos
 
 copy /Y drivers\net\afd\afd.sys %BOOTCD_DIR%\disk\reactos
 copy /Y drivers\net\dd\ne2000\ne2000.sys %BOOTCD_DIR%\disk\reactos
+copy /Y drivers\net\dd\pcnet\pcnet.sys %BOOTCD_DIR%\disk\reactos
 copy /Y drivers\net\ndis\ndis.sys %BOOTCD_DIR%\disk\reactos
 copy /Y drivers\net\npf\npf.sys %BOOTCD_DIR%\disk\reactos
 copy /Y drivers\net\packet\packet.sys %BOOTCD_DIR%\disk\reactos

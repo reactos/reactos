@@ -76,6 +76,7 @@ echo.
 echo installing net drivers...
 copy drivers\net\afd\afd.sys %ROS_INSTALL%\system32\drivers
 copy drivers\net\dd\ne2000\ne2000.sys %ROS_INSTALL%\system32\drivers
+copy drivers\net\dd\pcnet\pcnet.sys %ROS_INSTALL%\system32\drivers
 copy drivers\net\ndis\ndis.sys %ROS_INSTALL%\system32\drivers
 copy drivers\net\tdi\tdi.sys %ROS_INSTALL%\system32\drivers
 copy drivers\net\tcpip\tcpip.sys %ROS_INSTALL%\system32\drivers

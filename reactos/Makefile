@@ -73,8 +73,8 @@ FS_DRIVERS = cdfs fs_rec ms np vfat mup ntfs
 NET_DRIVERS = afd ndis npf tcpip tdi wshtcpip
 
 # Kernel mode networking device drivers
-# ne2000
-NET_DEVICE_DRIVERS = ne2000
+# ne2000 pcnet
+NET_DEVICE_DRIVERS = ne2000 pcnet
 
 # Kernel mode storage drivers
 # atapi cdrom class2 disk scsiport
