@@ -754,14 +754,9 @@ CreateToolbarEx (HWND hwnd, DWORD style, UINT wID, INT nBitmaps,
 {
     HWND hwndTB;
 
-    /* If not position is specified then put it at the top */
-    if ((style & CCS_BOTTOM) == 0) {
-      style|=CCS_TOP;
-    }
-
     hwndTB =
-        CreateWindowExA (0, TOOLBARCLASSNAMEA, "", style|WS_CHILD, 0, 0, 0, 0,
-			   hwnd, (HMENU)wID, 0, NULL);
+        CreateWindowExA(0, TOOLBARCLASSNAMEA, NULL, style|WS_CHILD, 0,0,100,30,
+                        hwnd, (HMENU)wID, COMCTL32_hModule, NULL);
     if(hwndTB) {
 	TBADDBITMAP tbab;
 
