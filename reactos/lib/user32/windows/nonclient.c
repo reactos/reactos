@@ -525,6 +525,11 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
       if (Rect->left > Rect->right)
          Rect->right = Rect->left;
    }
+   else
+   {
+      Rect->right = Rect->left;
+      Rect->bottom = Rect->top;
+   }
     
    return Result;
 }
