@@ -7,6 +7,9 @@
 <directory name="dnsapi">
 	<xi:include href="dnsapi/dnsapi.xml" />
 </directory>
+<directory name="freetype">
+	<xi:include href="freetype/freetype.xml" />
+</directory>
 <directory name="gdi32">
 	<xi:include href="gdi32/gdi32.xml" />
 </directory>

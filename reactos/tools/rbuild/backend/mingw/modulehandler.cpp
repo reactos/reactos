@@ -628,11 +628,11 @@ MingwModuleHandler::GenerateWinebuildCommands ( const Module& module,
 {
 	string basename = GetBasename ( sourceFilename );
 	fprintf ( fMakefile,
-	          "%s.def: %s\n",
+	          "%s.spec.def: %s\n",
 	          basename.c_str (),
 	          sourceFilename.c_str () );
 	fprintf ( fMakefile,
-	          "\t%s --def=%s -o %s.def\n",
+	          "\t%s --def=%s -o %s.spec.def\n",
 	          "${winebuild}",
 	          sourceFilename.c_str (),
 	          basename.c_str () );
@@ -1126,7 +1126,7 @@ string
 MingwModuleHandler::GetSpecObjectDependencies ( const string& filename ) const
 {
 	string basename = GetBasename ( filename );
-	return basename + ".def" + " " + basename + ".stubs.c";
+	return basename + ".spec.def" + " " + basename + ".stubs.c";
 }
 
 string

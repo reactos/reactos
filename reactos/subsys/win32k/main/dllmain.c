@@ -199,12 +199,8 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
 }
 
 
-/*
- * This definition doesn't work
- */
-// BOOL STDCALL DllMain(VOID)
 NTSTATUS STDCALL
-DllMain (
+DriverEntry (
   IN	PDRIVER_OBJECT	DriverObject,
   IN	PUNICODE_STRING	RegistryPath)
 {

@@ -19,3 +19,6 @@
 <directory name="storage">
 	<xi:include href="storage/directory.xml" />
 </directory>
+<directory name="video">
+	<xi:include href="video/directory.xml" />
+</directory>

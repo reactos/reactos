@@ -1,3 +1,6 @@
 <directory name="system">
 	<xi:include href="system/directory.xml" />
 </directory>
+<directory name="win32k">
+	<xi:include href="win32k/win32k.xml" />
+</directory>

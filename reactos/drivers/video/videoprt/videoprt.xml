@@ -1,0 +1,19 @@
+<module name="videoprt" type="kernelmodedriver">
+	<importlibrary definition="videoprt.def" />
+	<include base="videoprt">.</include>
+	<include base="ntoskrnl">include</include>
+	<define name="__USE_W32API" />
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>dispatch.c</file>
+	<file>dma.c</file>
+	<file>event.c</file>
+	<file>int10.c</file>
+	<file>interrupt.c</file>
+	<file>resource.c</file>
+	<file>services.c</file>
+	<file>spinlock.c</file>
+	<file>timer.c</file>
+	<file>videoprt.c</file>
+	<file>videoprt.rc</file>
+</module>
