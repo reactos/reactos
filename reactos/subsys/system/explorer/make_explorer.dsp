@@ -108,7 +108,7 @@ CFG=make_explorer - Win32 bjam
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "URelease"
 # PROP Intermediate_Dir "URelease"
-# PROP Cmd_Line "make -f Makefile.MinGW UNICODE=1"
+# PROP Cmd_Line "msdevfilt -gcc make -f Makefile.MinGW UNICODE=1"
 # PROP Rebuild_Opt "clean all"
 # PROP Target_File "explorer.exe"
 # PROP Bsc_Name ""

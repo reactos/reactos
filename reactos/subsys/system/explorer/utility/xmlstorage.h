@@ -213,6 +213,7 @@ typedef __gnu_cxx::stdio_filebuf<char> STDIO_FILEBUF;
 typedef std::filebuf STDIO_FILEBUF;
 #endif
 
+ /// input file stream with ANSI/UNICODE file names
 struct tifstream : public std::istream
 {
 	typedef std::istream super;
@@ -239,6 +240,7 @@ protected:
 	STDIO_FILEBUF _buf;
 };
 
+ /// output file stream with ANSI/UNICODE file names
 struct tofstream : public std::ostream
 {
 	typedef std::ostream super;
@@ -295,7 +297,7 @@ struct String_from_XML_Char : public String
 inline bool operator==(const String& s1, const char* s2)
 {
 	LPCWSTR p = s1;
-	const unsigned char* q = (const unsigned char *) s2;
+	const unsigned char* q = (const unsigned char*)s2;
 
 	while(*p && *q)
 		if (*p++ != *q++)
