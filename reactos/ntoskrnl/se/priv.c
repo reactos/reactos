@@ -1,4 +1,4 @@
-/* $Id: priv.c,v 1.7 2003/06/17 10:42:37 ekohl Exp $
+/* $Id: priv.c,v 1.8 2003/06/20 18:19:29 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <internal/se.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 
