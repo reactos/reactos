@@ -198,7 +198,7 @@ HRESULT WINAPI DirectInputCreateW(HINSTANCE hinst, DWORD dwVersion, LPDIRECTINPU
 	return 0;
 }
 
-static char *_dump_DIDEVTYPE_value(DWORD dwDevType) {
+static const char *_dump_DIDEVTYPE_value(DWORD dwDevType) {
     switch (dwDevType) {
         case 0: return "All devices";
 	case DIDEVTYPE_MOUSE: return "DIDEVTYPE_MOUSE";

@@ -316,7 +316,7 @@ DataFormat *create_DataFormat(const DIDATAFORMAT *wine_format, LPCDIDATAFORMAT a
 		  * instance id.
 		  */
 		 ((asked_format->rgodf[j].dwType & 0x00FFFF00) == DIDFT_ANYINSTANCE) ||
-		 (DIDFT_GETINSTANCE(wine_format->rgodf[i].dwType) == DIDFT_GETINSTANCE(asked_format->rgodf[j].dwType)))) {
+		 (wine_format->rgodf[i].dwType & asked_format->rgodf[j].dwType))) {
 		
 		done[j] = 1;
 		

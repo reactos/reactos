@@ -304,7 +304,7 @@ static HRESULT setup_dinput_options(JoystickImpl * device)
         int tokens = 0;
         int axis = 0;
         int pov = 0;
-        char *delim = ",";
+        const char *delim = ",";
         char * ptr;
         TRACE("\"%s\" = \"%s\"\n", device->name, buffer);
 
@@ -1062,18 +1062,14 @@ static HRESULT WINAPI JoystickAImpl_GetDeviceData(
         *entries = 0;
         nqtail = This->queue_tail;
         while (len) {
-            DWORD span = ((This->queue_head < nqtail) ? This->queue_len : This->queue_head) - nqtail;
-            if (span > len)
-                span = len;
-
             /* Copy the buffered data into the application queue */
-            memcpy(dod + *entries, This->data_queue + nqtail, span * dodsize);
+            memcpy((char *)dod + *entries * dodsize, This->data_queue + nqtail, dodsize);
             /* Advance position */
-            nqtail += span;
+            nqtail++;
             if (nqtail >= This->queue_len)
                 nqtail -= This->queue_len;
-            *entries += span;
-            len -= span;
+            (*entries)++;
+            len--;
         }
     }
 
