@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.12 2003/08/22 00:33:47 weiden Exp $
+/* $Id: messagebox.c,v 1.13 2003/08/22 00:37:36 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -700,8 +700,9 @@ MessageBeep(UINT uType)
   switch(uType)
   {
     case 0xFFFFFFFF:
-      /* FIXME check if soundcard installed, else fall through to MB_OK */
-      return Beep(500, 100);    // Beep through speaker
+      //if(WaveOutGetNumDevs() == 0)
+        return Beep(500, 100);    // Beep through speaker
+      /* fall through */
     case MB_OK: 
       EventName = L"SystemDefault";
       break;
@@ -718,7 +719,7 @@ MessageBeep(UINT uType)
       EventName = L"SystemQuestion";
       break;
   }
-  DbgPrint("Playing sound: %ws\n", (LPWSTR)EventName);
+
   return PlaySoundW(EventName, NULL, SND_ALIAS | SND_NOWAIT | SND_NOSTOP | SND_ASYNC);
 #else
   return Beep(500, 100);    // Beep through speaker
