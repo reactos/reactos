@@ -105,6 +105,7 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 	// still think the motor is on and this will
 	// result in a read error.
 	//StopFloppyMotor();
+	//DisableA20();
 	ChainLoadBiosBootSectorCode();
 }
 
@@ -174,6 +175,7 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 	// still think the motor is on and this will
 	// result in a read error.
 	//StopFloppyMotor();
+	//DisableA20();
 	ChainLoadBiosBootSectorCode();
 }
 
@@ -226,5 +228,6 @@ VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
 	// still think the motor is on and this will
 	// result in a read error.
 	//StopFloppyMotor();
+	//DisableA20();
 	ChainLoadBiosBootSectorCode();
 }

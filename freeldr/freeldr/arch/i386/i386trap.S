@@ -66,6 +66,10 @@
 	movl	%eax,i386_DR2
 	movl	%dr3,%eax
 	movl	%eax,i386_DR3
+	movl	%dr6,%eax
+	movl	%eax,i386_DR6
+	movl	%dr7,%eax
+	movl	%eax,i386_DR7
 	sgdt	i386_GDTR
 	sidt	i386_IDTR
 	sldt	i386_LDTR
@@ -115,6 +119,10 @@
 	movl	%eax,i386_DR2
 	movl	%dr3,%eax
 	movl	%eax,i386_DR3
+	movl	%dr6,%eax
+	movl	%eax,i386_DR6
+	movl	%dr7,%eax
+	movl	%eax,i386_DR7
 	sgdt	i386_GDTR
 	sidt	i386_IDTR
 	sldt	i386_LDTR
@@ -214,6 +222,10 @@ i386_DR2_Text:
 	.asciz "        DR2: "
 i386_DR3_Text:
 	.asciz "        DR3: "
+i386_DR6_Text:
+	.asciz "        DR6: "
+i386_DR7_Text:
+	.asciz "        DR7: "
 i386_GDTR_Text:
 	.asciz "        GDTR Base: "
 i386_IDTR_Text:
@@ -279,6 +291,10 @@ i386_DR1:
 i386_DR2:
 	.long	0
 i386_DR3:
+	.long	0
+i386_DR6:
+	.long	0
+i386_DR7:
 	.long	0
 i386_GDTR:
 	.word	0
@@ -379,6 +395,18 @@ i386CommonExceptionHandler:
 	call	i386PrintText
 	movl	i386_DR3,%eax
 	call	i386PrintHexDword					// Display DR3
+	incl	i386_ScreenPosY
+	movl	$55,i386_ScreenPosX
+	movl	$i386_DR6_Text,%esi
+	call	i386PrintText
+	movl	i386_DR6,%eax
+	call	i386PrintHexDword					// Display DR6
+	incl	i386_ScreenPosY
+	movl	$55,i386_ScreenPosX
+	movl	$i386_DR7_Text,%esi
+	call	i386PrintText
+	movl	i386_DR7,%eax
+	call	i386PrintHexDword					// Display DR7
 	movl	$0,i386_ScreenPosX
 	incl	i386_ScreenPosY
 	incl	i386_ScreenPosY
@@ -759,3 +787,210 @@ EXTERN(i386MachineCheck)
 
 	movl	$i386MachineCheckText,i386ExceptionDescriptionText
 	jmp		i386CommonExceptionHandler
+
+/************************************************************************
+ * DEBUGGING SUPPORT FUNCTIONS
+ ************************************************************************/
+EXTERN(_INSTRUCTION_BREAKPOINT1)
+	.code32
+
+	pushl	%eax
+
+	movl	8(%esp),%eax
+
+	movl	%eax,%dr0
+	movl	%dr7,%eax
+	andl	$0xfff0ffff,%eax
+	orl		$0x00000303,%eax
+	movl	%eax,%dr7
+
+	popl	%eax
+
+	ret
+
+EXTERN(_MEMORY_READWRITE_BREAKPOINT1)
+	.code32
+
+	pushl	%eax
+
+	movl	8(%esp),%eax
+
+	movl	%eax,%dr0
+	movl	%dr7,%eax
+	andl	$0xfff0ffff,%eax
+	orl		$0x00030303,%eax
+	movl	%eax,%dr7
+
+	popl	%eax
+
+	ret
+
+EXTERN(_MEMORY_WRITE_BREAKPOINT1)
+	.code32
+
+	pushl	%eax
+
+	movl	8(%esp),%eax
+
+	movl	%eax,%dr0
+	movl	%dr7,%eax
+	andl	$0xfff0ffff,%eax
+	orl		$0x00010303,%eax
+	movl	%eax,%dr7
+
+	popl	%eax
+
+	ret
+
+EXTERN(_INSTRUCTION_BREAKPOINT2)
+	.code32
+
+	pushl	%eax
+
+	movl	8(%esp),%eax
+
+	movl	%eax,%dr1
+	movl	%dr7,%eax
+	andl	$0xff0fffff,%eax
+	orl		$0x0000030c,%eax
+	movl	%eax,%dr7
+
+	popl	%eax
+
+	ret
+
+EXTERN(_MEMORY_READWRITE_BREAKPOINT2)
+	.code32
+
+	pushl	%eax
+
+	movl	8(%esp),%eax
+
+	movl	%eax,%dr1
+	movl	%dr7,%eax
+	andl	$0xff0fffff,%eax
+	orl		$0x0030030c,%eax
+	movl	%eax,%dr7
+
+	popl	%eax
+
+	ret
+
+EXTERN(_MEMORY_WRITE_BREAKPOINT2)
+	.code32
+
+	pushl	%eax
+
+	movl	8(%esp),%eax
+
+	movl	%eax,%dr1
+	movl	%dr7,%eax
+	andl	$0xff0fffff,%eax
+	orl		$0x0010030c,%eax
+	movl	%eax,%dr7
+
+	popl	%eax
+
+	ret
+
+EXTERN(_INSTRUCTION_BREAKPOINT3)
+	.code32
+
+	pushl	%eax
+
+	movl	8(%esp),%eax
+
+	movl	%eax,%dr2
+	movl	%dr7,%eax
+	andl	$0xf0ffffff,%eax
+	orl		$0x00000330,%eax
+	movl	%eax,%dr7
+
+	popl	%eax
+
+	ret
+
+EXTERN(_MEMORY_READWRITE_BREAKPOINT3)
+	.code32
+
+	pushl	%eax
+
+	movl	8(%esp),%eax
+
+	movl	%eax,%dr2
+	movl	%dr7,%eax
+	andl	$0xf0ffffff,%eax
+	orl		$0x03000330,%eax
+	movl	%eax,%dr7
+
+	popl	%eax
+
+	ret
+
+EXTERN(_MEMORY_WRITE_BREAKPOINT3)
+	.code32
+
+	pushl	%eax
+
+	movl	8(%esp),%eax
+
+	movl	%eax,%dr2
+	movl	%dr7,%eax
+	andl	$0xf0ffffff,%eax
+	orl		$0x01000330,%eax
+	movl	%eax,%dr7
+
+	popl	%eax
+
+	ret
+
+EXTERN(_INSTRUCTION_BREAKPOINT4)
+	.code32
+
+	pushl	%eax
+
+	movl	8(%esp),%eax
+
+	movl	%eax,%dr3
+	movl	%dr7,%eax
+	andl	$0x0fffffff,%eax
+	orl		$0x000003c0,%eax
+	movl	%eax,%dr7
+
+	popl	%eax
+
+	ret
+
+EXTERN(_MEMORY_READWRITE_BREAKPOINT4)
+	.code32
+
+	pushl	%eax
+
+	movl	8(%esp),%eax
+
+	movl	%eax,%dr3
+	movl	%dr7,%eax
+	andl	$0x0fffffff,%eax
+	orl		$0x300003c0,%eax
+	movl	%eax,%dr7
+
+	popl	%eax
+
+	ret
+
+EXTERN(_MEMORY_WRITE_BREAKPOINT4)
+	.code32
+
+	pushl	%eax
+
+	movl	8(%esp),%eax
+
+	movl	%eax,%dr3
+	movl	%dr7,%eax
+	andl	$0x0fffffff,%eax
+	orl		$0x100003c0,%eax
+	movl	%eax,%dr7
+
+	popl	%eax
+
+	ret

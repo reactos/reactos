@@ -42,9 +42,9 @@
 BootSectorStackTop		equ		0x7bf2
 DataAreaStartHigh		equ		0x2
 DataAreaStartLow		equ		0x4
-BiosCHSDriveSize		equ		0x6
 BiosCHSDriveSizeHigh	equ		0x6
 BiosCHSDriveSizeLow		equ		0x8
+BiosCHSDriveSize		equ		0x8
 ReadSectorsOffset		equ		0xa
 ReadClusterOffset		equ		0xc
 PutCharsOffset			equ		0xe
@@ -88,6 +88,9 @@ main:
         mov ds,ax								; Make DS correct
         mov es,ax								; Make ES correct
 
+
+		cmp BYTE [BYTE bp+BootDrive],BYTE 0xff	; If they have specified a boot drive then use it
+		jne GetDriveParameters
 
         mov [BYTE bp+BootDrive],dl				; Save the boot drive
 
@@ -208,22 +211,6 @@ FoundFreeLoader:
 		jmp  8003h
 
 
-; Reads cluster number in AX into [ES:0000]
-ReadCluster:
-		; StartSector = ((Cluster - 2) * SectorsPerCluster) + ReservedSectors + HiddenSectors;
-        dec   ax								; Adjust start cluster by 2
-        dec   ax								; Because the data area starts on cluster 2
-        xor   ch,ch
-        mov   cl,BYTE [BYTE bp+SectsPerCluster]
-        mul   cx								; Times sectors per cluster
-        add   ax,[BYTE bp-DataAreaStartLow]		; Add start of data area
-        adc   dx,[BYTE bp-DataAreaStartHigh]	; Now we have DX:AX with the logical start sector of OSLOADER.SYS
-        xor   bx,bx								; We will load it to [ES:0000], ES loaded before function call
-		mov   cl,BYTE [BYTE bp+SectsPerCluster]
-		call  ReadSectors
-		ret
-
-
 
 
 ; Displays an error message
@@ -231,10 +218,10 @@ ReadCluster:
 ErrBoot:
         mov  si,msgFreeLdr      ; FreeLdr not found message
         call PutChars           ; Display it
-        mov  si,msgAnyKey       ; Press any key message
-        call PutChars           ; Display it
 
 Reboot:
+        mov  si,msgAnyKey       ; Press any key message
+        call PutChars           ; Display it
         xor ax,ax       
         int 16h                 ; Wait for a keypress
         int 19h                 ; Reboot
@@ -255,22 +242,48 @@ Done:
 BadBoot:
         mov  si,msgDiskError    ; Bad boot disk message
         call PutChars           ; Display it
-        mov  si,msgAnyKey       ; Press any key message
-        call PutChars           ; Display it
 
 		jmp short Reboot
+
+
+; Reads cluster number in AX into [ES:0000]
+ReadCluster:
+		; StartSector = ((Cluster - 2) * SectorsPerCluster) + ReservedSectors + HiddenSectors;
+        dec   ax								; Adjust start cluster by 2
+        dec   ax								; Because the data area starts on cluster 2
+        xor   ch,ch
+        mov   cl,BYTE [BYTE bp+SectsPerCluster]
+        mul   cx								; Times sectors per cluster
+        add   ax,[BYTE bp-DataAreaStartLow]		; Add start of data area
+        adc   dx,[BYTE bp-DataAreaStartHigh]	; Now we have DX:AX with the logical start sector of OSLOADER.SYS
+        xor   bx,bx								; We will load it to [ES:0000], ES loaded before function call
+		mov   cl,BYTE [BYTE bp+SectsPerCluster]
+		;call  ReadSectors
+		;ret
+
+
 
 ; Reads logical sectors into [ES:BX]
 ; DX:AX has logical sector number to read
 ; CX has number of sectors to read
 ReadSectors:
-		cmp dx,WORD [BYTE bp-BiosCHSDriveSizeHigh]; Check if they are reading a sector within CHS range
-		jb ReadSectorsCHS						; Yes - go to the old CHS routine
-		cmp ax,WORD [BYTE bp-BiosCHSDriveSizeLow]; Check if they are reading a sector within CHS range
-		jbe ReadSectorsCHS						; Yes - go to the old CHS routine
+		
+		; We can't just check if the start sector is
+		; in the BIOS CHS range. We have to check if
+		; the start sector + length is in that range.
+		pusha
+		dec cx
+		add ax,cx
+		adc dx,byte 0
+
+		cmp dx,WORD [BYTE bp-BiosCHSDriveSizeHigh]	; Check if they are reading a sector within CHS range
+		jb ReadSectorsCHS							; Yes - go to the old CHS routine
+		cmp ax,WORD [BYTE bp-BiosCHSDriveSizeLow]	; Check if they are reading a sector within CHS range
+		jbe ReadSectorsCHS							; Yes - go to the old CHS routine
 
 ReadSectorsLBA:
-		pushad									; Save logical sector number & sector count
+		popa
+		pusha									; Save logical sector number & sector count
 
 		o32 push byte 0
 		push dx									; Put 64-bit logical
@@ -303,16 +316,13 @@ ReadSectorsLBA:
 		int  13h								; Call BIOS
 		jc   BadBoot							; If the read failed then abort
 
-		add  sp,0x10							; Remove disk address packet from stack
+		add  sp,byte 0x10						; Remove disk address packet from stack
 
-		popad									; Restore sector count & logical sector number
+		popa									; Restore sector count & logical sector number
 
         inc  ax									; Increment Sector to Read
-        jnz  NoCarry
-        inc  dx
+		adc  dx,byte 0
 
-
-NoCarry:
         mov  dx,es
         add  dx,byte 20h						; Increment read buffer for next sector
         mov  es,dx
@@ -327,7 +337,8 @@ NoCarry:
 ; CX has number of sectors to read
 ; CarryFlag set on error
 ReadSectorsCHS:
-        pushad
+		popa
+        pusha
         xchg ax,cx
         xchg ax,dx
         xor  dx,dx
@@ -351,7 +362,7 @@ ReadSectorsCHS:
 
         jc   BadBoot
 
-        popad
+        popa
         inc  ax       ;Increment Sector to Read
         jnz  NoCarryCHS
         inc  dx
@@ -370,11 +381,16 @@ NoCarryCHS:
 
 
 msgDiskError db 'Disk error',0dh,0ah,0
-msgFreeLdr   db 'FREELDR.SYS not found',0dh,0ah,0
+msgFreeLdr   db 'freeldr.sys not found',0dh,0ah,0
 ; Sorry, need the space...
 ;msgAnyKey    db 'Press any key to restart',0dh,0ah,0
 msgAnyKey    db 'Press any key',0dh,0ah,0
 filename     db 'FREELDR SYS'
 
-        times 510-($-$$) db 0   ; Pad to 510 bytes
+        times 509-($-$$) db 0   ; Pad to 509 bytes
+
+BootPartition:
+		db 0
+
+BootSignature:
         dw 0aa55h       ; BootSector signature

@@ -14,9 +14,9 @@ bits 16
 BootSectorStackTop		equ		0x7bf2
 DataAreaStartHigh		equ		0x2
 DataAreaStartLow		equ		0x4
-BiosCHSDriveSize		equ		0x6
 BiosCHSDriveSizeHigh	equ		0x6
 BiosCHSDriveSizeLow		equ		0x8
+BiosCHSDriveSize		equ		0x8
 ReadSectorsOffset		equ		0xa
 ReadClusterOffset		equ		0xc
 PutCharsOffset			equ		0xe
@@ -40,6 +40,8 @@ ExtendSig				equ		38
 SerialNumber			equ		39
 VolumeLabel				equ		43
 FileSystem				equ		54
+
+BootPartition			equ		0x7dfd
         
 
 ; This code will be stored in the first 512 bytes
@@ -120,6 +122,7 @@ LoadFile5:
 
 LoadFile_Done:
         mov  dl,BYTE [BYTE bp+BootDrive]	; Load the boot drive into DL
+		mov  dh,[BootPartition]				; Load the boot partition into DH
         push WORD 0x0000
         push WORD 0x8000					; We will do a far return to 0000:8000h
         retf								; Transfer control to ROSLDR

@@ -653,7 +653,7 @@ typedef struct ext3_dir_entry_2	EXT2_DIR_ENTRY, *PEXT2_DIR_ENTRY;
 #define EXT2_S_IFLNK	0xA000	// Symbolic link
 #define EXT2_S_IFSOCK	0xC000	// Socket
 
-#define FAST_SYMLINK_MAX_NAME_SIZE	60
+#define FAST_SYMLINK_MAX_NAME_SIZE	(EXT3_N_BLOCKS * sizeof(U32)) /* 60 bytes */
 
 typedef struct
 {
@@ -690,8 +690,8 @@ BOOL	Ext2ReadInode(U32 Inode, PEXT2_INODE InodeBuffer);
 BOOL	Ext2ReadGroupDescriptor(U32 Group, PEXT2_GROUP_DESC GroupBuffer);
 U32*	Ext2ReadBlockPointerList(PEXT2_INODE Inode);
 U64		Ext2GetInodeFileSize(PEXT2_INODE Inode);
-BOOL	Ext2CopyIndirectBlockPointers(U32 IndirectBlock, U32 BlockCount, U32* BlockList);
-BOOL	Ext2CopyDoubleIndirectBlockPointers(U32 DoubleIndirectBlock, U32 BlockCount, U32* BlockList);
-BOOL	Ext2CopyTripleIndirectBlockPointers(U32 TripleIndirectBlock, U32 BlockCount, U32* BlockList);
+BOOL	Ext2CopyIndirectBlockPointers(U32* BlockList, U32* CurrentBlockInList, U32 BlockCount, U32 IndirectBlock);
+BOOL	Ext2CopyDoubleIndirectBlockPointers(U32* BlockList, U32* CurrentBlockInList, U32 BlockCount, U32 DoubleIndirectBlock);
+BOOL	Ext2CopyTripleIndirectBlockPointers(U32* BlockList, U32* CurrentBlockInList, U32 BlockCount, U32 TripleIndirectBlock);
 
 #endif // #defined __EXT2_H

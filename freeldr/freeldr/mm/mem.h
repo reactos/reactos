@@ -22,13 +22,17 @@
 #define __MEM_H
 
 
+#ifdef __i386__
+
 #define MM_PAGE_SIZE	4096
+
+#endif // defined __i386__
 
 typedef struct
 {
 	U32		PageAllocated;					// Zero = free, non-zero = allocated
 	U32		PageAllocationLength;			// Number of pages allocated (or zero if this isn't the first page in the chain)
-} PAGE_LOOKUP_TABLE_ITEM, *PPAGE_LOOKUP_TABLE_ITEM;
+} PACKED PAGE_LOOKUP_TABLE_ITEM, *PPAGE_LOOKUP_TABLE_ITEM;
 
 //
 // Define this to 1 if you want the entire contents

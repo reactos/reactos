@@ -25,9 +25,9 @@
 #include <bootmgr.h>
 #include <fs.h>
 
-// Variable BootDrive moved to asmcode.S
+// Variables BootDrive & BootPartition moved to asmcode.S
 //U32				BootDrive = 0;							// BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc.
-U32				BootPartition = 0;						// Boot Partition, 1-4
+//U32				BootPartition = 0;						// Boot Partition, 1-4
 
 VOID BootMain(VOID)
 {
@@ -37,6 +37,8 @@ VOID BootMain(VOID)
 #ifdef DEBUG
 	DebugInit();
 #endif
+
+	DbgPrint((DPRINT_WARNING, "BootMain() called. BootDrive = 0x%x BootPartition = %d\n", BootDrive, BootPartition));
 
 	if (!MmInitializeMemoryManager())
 	{

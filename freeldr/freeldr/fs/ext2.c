@@ -149,7 +149,7 @@ FILE* Ext2OpenFile(PUCHAR FileName)
 			FullPath[Index] = '\0';
 
 			// Concatenate the symbolic link
-			strcat(FullPath, "/");
+			strcat(FullPath, Index == 0 ? "" : "/");
 			strcat(FullPath, SymLinkPath);
 		}
 
@@ -353,7 +353,7 @@ BOOL Ext2ReadFile(FILE *FileHandle, U64 BytesToRead, U64* BytesRead, PVOID Buffe
 	U32				LengthInBlock;
 	U32				NumberOfBlocks;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadFile() BytesToRead = %d Buffer = 0x%x\n", BytesToRead, Buffer));
+	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadFile() BytesToRead = %d Buffer = 0x%x\n", (U32)BytesToRead, Buffer));
 
 	if (BytesRead != NULL)
 	{
@@ -843,11 +843,21 @@ BOOL Ext2ReadBlock(U32 BlockNumber, PVOID Buffer)
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadBlock() BlockNumber = %d Buffer = 0x%x\n", BlockNumber, Buffer));
 
 	// Make sure its a valid block
-	if ((BlockNumber < 1) || (BlockNumber > Ext2SuperBlock->s_blocks_count))
+	if (BlockNumber > Ext2SuperBlock->s_blocks_count)
 	{
 		sprintf(ErrorString, "Error reading block %d - block out of range.", BlockNumber);
 		FileSystemError(ErrorString);
 		return FALSE;
+	}
+
+	// Check to see if this is a sparse block
+	if (BlockNumber == 0)
+	{
+		DbgPrint((DPRINT_FILESYSTEM, "Block is part of a sparse file. Zeroing input buffer.\n"));
+
+		RtlZeroMemory(Buffer, Ext2BlockSizeInBytes);
+
+		return TRUE;
 	}
 
 	return Ext2ReadVolumeSectors(Ext2DriveNumber, (U64)BlockNumber * Ext2BlockSizeInSectors, Ext2BlockSizeInSectors, Buffer);
@@ -996,16 +1006,20 @@ U32* Ext2ReadBlockPointerList(PEXT2_INODE Inode)
 	U64		FileSize;
 	U32		BlockCount;
 	U32*	BlockList;
+	U32		CurrentBlockInList;
 	U32		CurrentBlock;
 
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadBlockPointerList()\n"));
 
-	// Get the file size and round it up
+	// Get the number of blocks this file occupies
+	// I would just use Inode->i_blocks but it
+	// doesn't seem to be the number of blocks
+	// the file size corresponds to, but instead
+	// it is much bigger.
+	//BlockCount = Inode->i_blocks;
 	FileSize = Ext2GetInodeFileSize(Inode);
 	FileSize = ROUND_UP(FileSize, Ext2BlockSizeInBytes);
-
-	// Calculate the number of blocks this file occupies
-	BlockCount = FileSize / Ext2BlockSizeInBytes;
+	BlockCount = (FileSize / Ext2BlockSizeInBytes);
 
 	// Allocate the memory for the block list
 	BlockList = MmAllocateMemory(BlockCount * sizeof(U32));
@@ -1014,75 +1028,43 @@ U32* Ext2ReadBlockPointerList(PEXT2_INODE Inode)
 		return NULL;
 	}
 
-	// Copy the direct blocks
-	for (CurrentBlock=0; CurrentBlock<BlockCount; CurrentBlock++)
-	{
-		if (CurrentBlock > 11)
-		{
-			break;
-		}
+	RtlZeroMemory(BlockList, BlockCount * sizeof(U32));
+	CurrentBlockInList = 0;
 
-		BlockList[CurrentBlock] = Inode->i_block[CurrentBlock];
+	// Copy the direct block pointers
+	for (CurrentBlock=0; CurrentBlockInList<BlockCount && CurrentBlock<EXT3_NDIR_BLOCKS; CurrentBlock++)
+	{
+		BlockList[CurrentBlockInList] = Inode->i_block[CurrentBlock];
+		CurrentBlockInList++;
 	}
-	BlockCount -= CurrentBlock;
 
-	// Copy the indirect blocks
-	if (BlockCount > 0)
+	// Copy the indirect block pointers
+	if (CurrentBlockInList < BlockCount)
 	{
-		if (!Ext2CopyIndirectBlockPointers(Inode->i_block[12], BlockCount, &BlockList[CurrentBlock]))
+		if (!Ext2CopyIndirectBlockPointers(BlockList, &CurrentBlockInList, BlockCount, Inode->i_block[EXT3_IND_BLOCK]))
 		{
 			MmFreeMemory(BlockList);
-			return NULL;
-		}
-
-		CurrentBlock += (Ext2BlockSizeInBytes / sizeof(U32));
-		if (BlockCount >= (Ext2BlockSizeInBytes / sizeof(U32)))
-		{
-			BlockCount -= (Ext2BlockSizeInBytes / sizeof(U32));
-		}
-		else
-		{
-			BlockCount = 0;
+			return FALSE;
 		}
 	}
 
-	// Copy the double-indirect blocks
-	if (BlockCount > 0)
+	// Copy the double indirect block pointers
+	if (CurrentBlockInList < BlockCount)
 	{
-		if (!Ext2CopyIndirectBlockPointers(Inode->i_block[12], BlockCount, &BlockList[CurrentBlock]))
+		if (!Ext2CopyDoubleIndirectBlockPointers(BlockList, &CurrentBlockInList, BlockCount, Inode->i_block[EXT3_DIND_BLOCK]))
 		{
 			MmFreeMemory(BlockList);
-			return NULL;
-		}
-
-		CurrentBlock += (Ext2BlockSizeInBytes / sizeof(U32)) * (Ext2BlockSizeInBytes / sizeof(U32));
-		if (BlockCount >= (Ext2BlockSizeInBytes / sizeof(U32)) * (Ext2BlockSizeInBytes / sizeof(U32)))
-		{
-			BlockCount -= (Ext2BlockSizeInBytes / sizeof(U32)) * (Ext2BlockSizeInBytes / sizeof(U32));
-		}
-		else
-		{
-			BlockCount = 0;
+			return FALSE;
 		}
 	}
 
-	// Copy the triple-indirect blocks
-	if (BlockCount > 0)
+	// Copy the triple indirect block pointers
+	if (CurrentBlockInList < BlockCount)
 	{
-		if (!Ext2CopyIndirectBlockPointers(Inode->i_block[12], BlockCount, &BlockList[CurrentBlock]))
+		if (!Ext2CopyTripleIndirectBlockPointers(BlockList, &CurrentBlockInList, BlockCount, Inode->i_block[EXT3_TIND_BLOCK]))
 		{
 			MmFreeMemory(BlockList);
-			return NULL;
-		}
-
-		CurrentBlock += (Ext2BlockSizeInBytes / sizeof(U32)) * (Ext2BlockSizeInBytes / sizeof(U32)) * (Ext2BlockSizeInBytes / sizeof(U32));
-		if (BlockCount >= (Ext2BlockSizeInBytes / sizeof(U32)) * (Ext2BlockSizeInBytes / sizeof(U32)) * (Ext2BlockSizeInBytes / sizeof(U32)))
-		{
-			BlockCount -= (Ext2BlockSizeInBytes / sizeof(U32)) * (Ext2BlockSizeInBytes / sizeof(U32)) * (Ext2BlockSizeInBytes / sizeof(U32));
-		}
-		else
-		{
-			BlockCount = 0;
+			return FALSE;
 		}
 	}
 
@@ -1101,91 +1083,96 @@ U64 Ext2GetInodeFileSize(PEXT2_INODE Inode)
 	}
 }
 
-BOOL Ext2CopyIndirectBlockPointers(U32 IndirectBlock, U32 BlockCount, U32* BlockList)
+BOOL Ext2CopyIndirectBlockPointers(U32* BlockList, U32* CurrentBlockInList, U32 BlockCount, U32 IndirectBlock)
 {
 	U32*	BlockBuffer = (U32*)FILESYSBUFFER;
 	U32		CurrentBlock;
+	U32		BlockPointersPerBlock;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2CopyIndirectBlockPointers()\n"));
+	DbgPrint((DPRINT_FILESYSTEM, "Ext2CopyIndirectBlockPointers() BlockCount = %d\n", BlockCount));
+
+	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(U32);
 
 	if (!Ext2ReadBlock(IndirectBlock, BlockBuffer))
 	{
 		return FALSE;
 	}
 
-	for (CurrentBlock=0; CurrentBlock<BlockCount; CurrentBlock++)
+	for (CurrentBlock=0; (*CurrentBlockInList)<BlockCount && CurrentBlock<BlockPointersPerBlock; CurrentBlock++)
 	{
-		BlockList[CurrentBlock] = BlockBuffer[CurrentBlock];
-
-		if (CurrentBlock >= ((Ext2BlockSizeInBytes / sizeof(U32)) - 1))
-		{
-			break;
-		}
+		BlockList[(*CurrentBlockInList)] = BlockBuffer[CurrentBlock];
+		(*CurrentBlockInList)++;
 	}
 
 	return TRUE;
 }
 
-BOOL Ext2CopyDoubleIndirectBlockPointers(U32 DoubleIndirectBlock, U32 BlockCount, U32* BlockList)
+BOOL Ext2CopyDoubleIndirectBlockPointers(U32* BlockList, U32* CurrentBlockInList, U32 BlockCount, U32 DoubleIndirectBlock)
 {
-	U32*	BlockBuffer = (U32*)FILESYSBUFFER;
-	U32		CurrentIndirectBlock;
+	U32*	BlockBuffer;
 	U32		CurrentBlock;
+	U32		BlockPointersPerBlock;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2CopyDoubleIndirectBlockPointers()\n"));
+	DbgPrint((DPRINT_FILESYSTEM, "Ext2CopyDoubleIndirectBlockPointers() BlockCount = %d\n", BlockCount));
+
+	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(U32);
+
+	BlockBuffer = (U32*)MmAllocateMemory(Ext2BlockSizeInBytes);
+	if (BlockBuffer == NULL)
+	{
+		return FALSE;
+	}
 
 	if (!Ext2ReadBlock(DoubleIndirectBlock, BlockBuffer))
 	{
+		MmFreeMemory(BlockBuffer);
 		return FALSE;
 	}
 
-	for (CurrentIndirectBlock=0,CurrentBlock=0; CurrentBlock<BlockCount; CurrentIndirectBlock++)
+	for (CurrentBlock=0; (*CurrentBlockInList)<BlockCount && CurrentBlock<BlockPointersPerBlock; CurrentBlock++)
 	{
-		if (!Ext2CopyIndirectBlockPointers(BlockBuffer[CurrentIndirectBlock], BlockCount, &BlockList[CurrentBlock]))
+		if (!Ext2CopyIndirectBlockPointers(BlockList, CurrentBlockInList, BlockCount, BlockBuffer[CurrentBlock]))
 		{
+			MmFreeMemory(BlockBuffer);
 			return FALSE;
-		}
-
-		CurrentBlock += (Ext2BlockSizeInBytes / sizeof(U32));
-		BlockCount -= (Ext2BlockSizeInBytes / sizeof(U32));
-
-		if (CurrentIndirectBlock >= ((Ext2BlockSizeInBytes / sizeof(U32)) - 1))
-		{
-			break;
 		}
 	}
 
+	MmFreeMemory(BlockBuffer);
 	return TRUE;
 }
 
-BOOL Ext2CopyTripleIndirectBlockPointers(U32 TripleIndirectBlock, U32 BlockCount, U32* BlockList)
+BOOL Ext2CopyTripleIndirectBlockPointers(U32* BlockList, U32* CurrentBlockInList, U32 BlockCount, U32 TripleIndirectBlock)
 {
-	U32*	BlockBuffer = (U32*)FILESYSBUFFER;
-	U32		CurrentIndirectBlock;
+	U32*	BlockBuffer;
 	U32		CurrentBlock;
+	U32		BlockPointersPerBlock;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2CopyTripleIndirectBlockPointers()\n"));
+	DbgPrint((DPRINT_FILESYSTEM, "Ext2CopyTripleIndirectBlockPointers() BlockCount = %d\n", BlockCount));
 
-	if (!Ext2ReadBlock(TripleIndirectBlock, BlockBuffer))
+	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(U32);
+
+	BlockBuffer = (U32*)MmAllocateMemory(Ext2BlockSizeInBytes);
+	if (BlockBuffer == NULL)
 	{
 		return FALSE;
 	}
 
-	for (CurrentIndirectBlock=0,CurrentBlock=0; CurrentBlock<BlockCount; CurrentIndirectBlock++)
+	if (!Ext2ReadBlock(TripleIndirectBlock, BlockBuffer))
 	{
-		if (!Ext2CopyDoubleIndirectBlockPointers(BlockBuffer[CurrentIndirectBlock], BlockCount, &BlockList[CurrentBlock]))
+		MmFreeMemory(BlockBuffer);
+		return FALSE;
+	}
+
+	for (CurrentBlock=0; (*CurrentBlockInList)<BlockCount && CurrentBlock<BlockPointersPerBlock; CurrentBlock++)
+	{
+		if (!Ext2CopyDoubleIndirectBlockPointers(BlockList, CurrentBlockInList, BlockCount, BlockBuffer[CurrentBlock]))
 		{
+			MmFreeMemory(BlockBuffer);
 			return FALSE;
-		}
-
-		CurrentBlock += (Ext2BlockSizeInBytes / sizeof(U32)) * (Ext2BlockSizeInBytes / sizeof(U32));
-		BlockCount -= (Ext2BlockSizeInBytes / sizeof(U32)) * (Ext2BlockSizeInBytes / sizeof(U32));
-
-		if (CurrentIndirectBlock >= ((Ext2BlockSizeInBytes / sizeof(U32)) - 1))
-		{
-			break;
 		}
 	}
 
+	MmFreeMemory(BlockBuffer);
 	return TRUE;
 }

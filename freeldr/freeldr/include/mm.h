@@ -29,10 +29,8 @@
 
 typedef struct
 {
-	U32		BaseAddressLow;
-	U32		BaseAddressHigh;
-	U32		LengthLow;
-	U32		LengthHigh;
+	U64		BaseAddress;
+	U64		Length;
 	U32		Type;
 	U32		Reserved;
 } PACKED BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;

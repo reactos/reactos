@@ -43,6 +43,33 @@
 	#define BugCheck(_x_)				  { DebugPrint(DPRINT_WARNING, "Fatal Error: %s:%d(%s)\n", __FILE__, __LINE__, __FUNCTION__); DebugPrint _x_ ; for (;;); }
 	#define DbgDumpBuffer(_x_, _y_, _z_)	DebugDumpBuffer(_x_, _y_, _z_)
 
+#ifdef __i386__
+
+	// Debugging support functions:
+	//
+	// BREAKPOINT() - Inserts an "int 3" instruction
+	// INSTRUCTION_BREAKPOINTX(x) - Enters exception handler right before instruction at address "x" is executed
+	// MEMORY_READWRITE_BREAKPOINTX(x) - Enters exception handler when a read or write occurs at address "x"
+	// MEMORY_WRITE_BREAKPOINTX(x) - Enters exception handler when a write occurs at address "x"
+	//
+	// You may have as many BREAKPOINT()'s as you like but you may only
+	// have up to four of any of the others.
+#define	BREAKPOINT()				__asm__ ("int $3");
+void	INSTRUCTION_BREAKPOINT1(unsigned long addr);
+void	MEMORY_READWRITE_BREAKPOINT1(unsigned long addr);
+void	MEMORY_WRITE_BREAKPOINT1(unsigned long addr);
+void	INSTRUCTION_BREAKPOINT2(unsigned long addr);
+void	MEMORY_READWRITE_BREAKPOINT2(unsigned long addr);
+void	MEMORY_WRITE_BREAKPOINT2(unsigned long addr);
+void	INSTRUCTION_BREAKPOINT3(unsigned long addr);
+void	MEMORY_READWRITE_BREAKPOINT3(unsigned long addr);
+void	MEMORY_WRITE_BREAKPOINT3(unsigned long addr);
+void	INSTRUCTION_BREAKPOINT4(unsigned long addr);
+void	MEMORY_READWRITE_BREAKPOINT4(unsigned long addr);
+void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
+
+#endif // defined __i386__
+
 #else
 
 	#define DbgPrint(_x_)

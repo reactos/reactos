@@ -32,18 +32,28 @@ BOOL IniFileInitialize(VOID)
 	U32		FreeLoaderIniFileSize;
 	BOOL	Success;
 
-	// Open the boot drive for file access
-	if (!OpenDiskDrive(BootDrive, 0))
+	// Open freeldr.ini
+	// BootDrive & BootPartition are passed
+	// in from the boot sector code in the
+	// DL & DH registers.
+	Freeldr_Ini = IniOpenIniFile(BootDrive, BootPartition);
+
+	// If we couldn't open freeldr.ini on the partition
+	// they specified in the boot sector then try
+	// opening the active (boot) partition.
+	if ((Freeldr_Ini == NULL) && (BootPartition != 0))
 	{
-		printf("Error opening boot drive for file access.\n");
+		BootPartition = 0;
+
+		Freeldr_Ini = IniOpenIniFile(BootDrive, BootPartition);
+
 		return FALSE;
 	}
 
-	// Try to open freeldr.ini or fail
-	Freeldr_Ini = OpenFile("freeldr.ini");
 	if (Freeldr_Ini == NULL)
 	{
-		printf("FREELDR.INI not found.\nYou need to re-install FreeLoader.\n");
+		printf("Error opening freeldr.ini or file not found.\n");
+		printf("You need to re-install FreeLoader.\n");
 		return FALSE;
 	}
 
@@ -54,7 +64,7 @@ BOOL IniFileInitialize(VOID)
 	// If we are out of memory then return FALSE
 	if (FreeLoaderIniFileData == NULL)
 	{
-		printf("Out of memory while loading FREELDR.INI.\n");
+		printf("Out of memory while loading freeldr.ini.\n");
 		CloseFile(Freeldr_Ini);
 		return FALSE;
 	}
@@ -75,4 +85,28 @@ BOOL IniFileInitialize(VOID)
 	MmFreeMemory(FreeLoaderIniFileData);
 
 	return Success;
+}
+
+PFILE IniOpenIniFile(U8 BootDriveNumber, U8 BootPartitionNumber)
+{
+	PFILE	IniFileHandle;	// File handle for freeldr.ini
+
+	if (!OpenDiskDrive(BootDriveNumber, BootPartitionNumber))
+	{
+		if (BootPartitionNumber == 0)
+		{
+			printf("Error opening active (bootable) partition on boot drive 0x%x for file access.\n", BootDriveNumber);
+		}
+		else
+		{
+			printf("Error opening partition %d on boot drive 0x%x for file access.\n", BootPartitionNumber, BootDriveNumber);
+		}
+
+		return NULL;
+	}
+
+	// Try to open freeldr.ini
+	IniFileHandle = OpenFile("freeldr.ini");
+
+	return IniFileHandle;
 }

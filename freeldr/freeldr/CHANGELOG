@@ -1,3 +1,32 @@
+Changes in v1.7.4 (8/20/2002) (brianp)
+
+- Boot sector code now reports to freeldr.sys the partition
+  that it was installed on. This is specified by a byte
+  value in the boot sector code. By default the boot partition
+  is set to zero which indicates the active (bootable)
+  partition, unless the installer sets the value to non-zero.
+  If FreeLoader is installed on a partition other than
+  the active (bootable) partition then the installer must
+  set this byte to that partition number. Otherwise
+  FreeLoader will not be able to find freeldr.ini.
+- i386trap.S: Added debug macros BREAKPOINT(),
+  INSTRUCTION_BREAKPOINTX(), MEMORY_READWRITE_BREAKPOINTX(), &
+  MEMORY_WRITE_BREAKPOINTX().
+- partition.c (DiskGetPartitionEntry): Add the relative offset
+  of the extended partition to the partitions start sector.
+- ext2.c (Ext2ReadBlockPointerList, Ext2CopyIndirectBlockPointers,
+  Ext2CopyDoubleIndirectBlockPointers, Ext2CopyTripleIndirectBlockPointers):
+  Rewrote the block pointer functions so they actually work.
+- ini_init.c (IniFileInitialize, IniOpenIniFile): Looks for freeldr.ini
+  on both the active (bootable) partition and the partition
+  passed in from the boot sector code.
+- meminit.c (MmInitializeMemoryManager, MmFixupSystemMemoryMap,
+  MmGetEndAddressOfAnyMemory, MmGetAddressablePageCountIncludingHoles,
+  MmInitPageLookupTable): Fixed bug that would cause FreeLoader to
+  have an off-by-one error when accessing the last entry in the
+  page lookup table on systems with 4GB of memory (or memory mapped
+  at the end of the address space).
+
 Changes in v1.7.2 (8/7/2002) (brianp)
 
 - Fragment size must be equal to the block size

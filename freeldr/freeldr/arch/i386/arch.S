@@ -48,6 +48,9 @@ EXTERN(RealEntryPoint)
 	/* Store the boot drive */
 	movb	%dl,(_BootDrive)
 
+	/* Store the boot partition */
+	movb	%dh,(_BootPartition)
+
 	/* GO! */
 	call	_BootMain
 
@@ -290,4 +293,7 @@ rmode_idtptr:
 	.long	0			/* Base Address */
 
 EXTERN(_BootDrive)
+	.long	0
+
+EXTERN(_BootPartition)
 	.long	0

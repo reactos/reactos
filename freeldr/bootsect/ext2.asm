@@ -2,6 +2,16 @@
 ; EXT2 Boot Sector
 ; Copyright (c) 2002 Brian Palmer
 
+; [bp-0x04] Here we will store the number of sectors per track
+; [bp-0x08] Here we will store the number of heads
+; [bp-0x0c] Here we will store the size of the disk as the BIOS reports in CHS form
+; [bp-0x10] Here we will store the number of LBA sectors read
+
+SECTORS_PER_TRACK		equ	0x04
+NUMBER_OF_HEADS			equ	0x08
+BIOS_CHS_DRIVE_SIZE		equ	0x0C
+LBA_SECTORS_READ		equ	0x10
+
 
 EXT2_ROOT_INO			equ 2
 EXT2_S_IFMT				equ	0f0h
@@ -19,10 +29,11 @@ start:
         nop
 
 BootDrive				db 0x80
-SectorsPerTrack			dw 63
-NumberOfHeads			dw 16
-BiosCHSDriveSize		dd (1024 * 1024 * 63)
-LBASectorsRead			dd 0
+BootPartition			db 0
+;SectorsPerTrack		db 63					; Moved to [bp-SECTORS_PER_TRACK]
+;NumberOfHeads			dw 16					; Moved to [bp-NUMBER_OF_HEADS]
+;BiosCHSDriveSize		dd (1024 * 1024 * 63)	; Moved to [bp-BIOS_CHS_DRIVE_SIZE]
+;LBASectorsRead			dd 0					; Moved to [bp-LBA_SECTORS_READ]
 
 Ext2VolumeStartSector	dd 263088				; Start sector of the ext2 volume
 Ext2BlockSize			dd 2					; Block size in sectors
@@ -48,7 +59,7 @@ main:
         mov es,ax               ; Make ES correct
         mov ss,ax				; Make SS correct
 		mov bp,7c00h
-        mov sp,7c00h            ; Setup a stack
+        mov sp,7b00h            ; Setup a stack
 
 
 GetDriveParameters:
@@ -66,29 +77,33 @@ GetDriveParameters:
 CalcDriveSize:
 		; Now that we have the drive geometry
 		; lets calculate the drive size
-		mov  bl,ch			; Put the low 8-bits of the cylinder count into BL
-		mov  bh,cl			; Put the high 2-bits in BH
-		shr  bh,6			; Shift them into position, now BX contains the cylinder count
-		and  cl,3fh			; Mask off cylinder bits from sector count
+		mov  bl,ch								; Put the low 8-bits of the cylinder count into BL
+		mov  bh,cl								; Put the high 2-bits in BH
+		shr  bh,6								; Shift them into position, now BX contains the cylinder count
+		and  cl,3fh								; Mask off cylinder bits from sector count
 		; CL now contains sectors per track and DH contains head count
-		movzx eax,dh		; Move the heads into EAX
-		movzx ebx,bx		; Move the cylinders into EBX
-		movzx ecx,cl		; Move the sectors per track into ECX
-		inc   eax			; Make it one based because the bios returns it zero based
-		inc   ebx			; Make the cylinder count one based also
-		mul   ecx			; Multiply heads with the sectors per track, result in edx:eax
-		mul   ebx			; Multiply the cylinders with (heads * sectors) [stored in edx:eax already]
+		movzx eax,dh							; Move the heads into EAX
+		movzx ebx,bx							; Move the cylinders into EBX
+		movzx ecx,cl							; Move the sectors per track into ECX
+		inc   eax								; Make it one based because the bios returns it zero based
+		mov   [BYTE bp-NUMBER_OF_HEADS],eax		; Save number of heads
+		mov   [BYTE bp-SECTORS_PER_TRACK],ecx	; Save number of sectors per track
+		inc   ebx								; Make the cylinder count one based also
+		mul   ecx								; Multiply heads with the sectors per track, result in edx:eax
+		mul   ebx								; Multiply the cylinders with (heads * sectors) [stored in edx:eax already]
 
 		; We now have the total number of sectors as reported
 		; by the bios in eax, so store it in our variable
-		mov   [BYTE bp+BiosCHSDriveSize],eax
+		mov   [BYTE bp-BIOS_CHS_DRIVE_SIZE],eax
 
 
 LoadExtraBootCode:
 		; First we have to load our extra boot code at
 		; sector 1 into memory at [0000:7e00h]
-		mov  eax,01h
-		mov  cx,1
+		;mov  eax,01h
+		xor  eax,eax
+		inc  eax								; Read logical sector 1, EAX now = 1
+		mov  cx,1								; Read one sector
 		mov  bx,7e00h							; Read sector to [0000:7e00h]
 		call ReadSectors
 
@@ -177,7 +192,7 @@ Ext2ReadInode:
 ; CX has number of sectors to read
 ReadSectors:
         add  eax,DWORD [BYTE bp+Ext2VolumeStartSector]	; Add the start of the volume
-		cmp  eax,DWORD [BYTE bp+BiosCHSDriveSize]		; Check if they are reading a sector outside CHS range
+		cmp  eax,DWORD [BYTE bp-BIOS_CHS_DRIVE_SIZE]	; Check if they are reading a sector outside CHS range
 		jae  ReadSectorsLBA						; Yes - go to the LBA routine
 												; If at all possible we want to use LBA routines because
 												; They are optimized to read more than 1 sector per read
@@ -200,12 +215,13 @@ CheckInt13hExtensions:							; Now check if this computer supports extended read
 ReadSectorsLBA:
 		pushad									; Save logical sector number & sector count
 
-		cmp  cx,64								; Since the LBA calls only support 0x7F sectors at a time we will limit ourselves to 64
+		cmp  cx,byte 64							; Since the LBA calls only support 0x7F sectors at a time we will limit ourselves to 64
 		jbe  ReadSectorsSetupDiskAddressPacket	; If we are reading less than 65 sectors then just do the read
 		mov  cx,64								; Otherwise read only 64 sectors on this loop iteration
 
 ReadSectorsSetupDiskAddressPacket:
-		mov  [BYTE bp+LBASectorsRead],cx
+		mov  [BYTE bp-LBA_SECTORS_READ],cx
+		mov  WORD [BYTE bp-LBA_SECTORS_READ+2],0
 		o32 push byte 0
 		push eax								; Put 64-bit logical block address on stack
 		push es									; Put transfer segment on stack
@@ -225,7 +241,7 @@ ReadSectorsSetupDiskAddressPacket:
 		popad									; Restore sector count & logical sector number
 
 		push bx
-		mov  ebx,DWORD [BYTE bp+LBASectorsRead]
+		mov  ebx,DWORD [BYTE bp-LBA_SECTORS_READ]
         add  eax,ebx							; Increment sector to read
 		shl  ebx,5
         mov  dx,es
@@ -233,7 +249,7 @@ ReadSectorsSetupDiskAddressPacket:
         mov  es,dx
 		pop  bx
 
-		sub  cx,[BYTE bp+LBASectorsRead]
+		sub  cx,[BYTE bp-LBA_SECTORS_READ]
         jnz  ReadSectorsLBA						; Read next sector
 
         ret
@@ -248,13 +264,13 @@ ReadSectorsCHS:
 ReadSectorsCHSLoop:
         pushad
         xor   edx,edx
-		movzx ecx,WORD [BYTE bp+SectorsPerTrack]
+		mov   ecx,DWORD [BYTE bp-SECTORS_PER_TRACK]
 		div   ecx									; Divide logical by SectorsPerTrack
         inc   dl									; Sectors numbering starts at 1 not 0
 		mov   cl,dl									; Sector in CL
 		mov   edx,eax
 		shr   edx,16
-        div   WORD [BYTE bp+NumberOfHeads]			; Divide logical by number of heads
+        div   WORD [BYTE bp-NUMBER_OF_HEADS]		; Divide logical by number of heads
         mov   dh,dl									; Head in DH
         mov   dl,[BYTE bp+BootDrive]				; Drive number in DL
         mov   ch,al									; Cylinder in CX
@@ -410,6 +426,7 @@ LoadFreeLoader:
 		call Ext2ReadEntireFile			; Read freeldr.sys to 0000:8000
 
         mov  dl,[BYTE bp+BootDrive]
+		mov  dh,[BYTE bp+BootPartition]
         push byte 0						; We loaded at 0000:8000
         push WORD 8000h					; We will do a far return to 0000:8000h
         retf							; Transfer control to FreeLoader
@@ -437,7 +454,7 @@ Ext2ReadEntireFile:
 		; We will do this by rounding the
 		; file size up to the next block
 		; size and then dividing by the block size
-		mov  eax,DWORD [bp+Ext2BlockSizeInBytes]			; Get the block size in bytes
+		mov  eax,DWORD [BYTE bp+Ext2BlockSizeInBytes]		; Get the block size in bytes
 		push eax
 		dec  eax											; Ext2BlockSizeInBytes -= 1
 		add  eax,DWORD [es:di+4]							; Add the file size
@@ -447,7 +464,7 @@ Ext2ReadEntireFile:
 		push eax
 
 		; Make sure the file size isn't zero
-		cmp  eax,0
+		cmp  eax,byte 0
 		jnz  Ext2ReadEntireFile2
 		jmp  PrintFileSizeError
 
@@ -480,14 +497,14 @@ Ext2ReadEntireFile2:
 
 		; Check to see if we actually have
 		; blocks left to read
-		cmp  eax,0
+		cmp  eax,byte 0
 		jz   Ext2ReadEntireFileDone
 
 		; Now we have read all the direct blocks in
 		; the inode. So now we have to read the indirect
 		; block and read all it's direct blocks
 		push eax											; Save the total block count
-		mov  eax,DWORD [bp+Ext2InodeIndirectPointer]		; Get the indirect block pointer
+		mov  eax,DWORD [BYTE bp+Ext2InodeIndirectPointer]	; Get the indirect block pointer
 		push WORD 7000h
 		pop  es
 		xor  bx,bx											; Set the load address to 7000:0000
@@ -496,12 +513,12 @@ Ext2ReadEntireFile2:
 		; Now we have all the block pointers from the
 		; indirect block in the right location so read them in
 		pop  eax											; Restore the total block count
-		mov  ecx,DWORD [bp+Ext2PointersPerBlock]			; Get the number of block pointers that one block contains
+		mov  ecx,DWORD [BYTE bp+Ext2PointersPerBlock]		; Get the number of block pointers that one block contains
 		call Ext2ReadDirectBlockList
 
 		; Check to see if we actually have
 		; blocks left to read
-		cmp  eax,0
+		cmp  eax,byte 0
 		jz   Ext2ReadEntireFileDone
 
 		; Now we have read all the direct blocks from
@@ -509,8 +526,8 @@ Ext2ReadEntireFile2:
 		; we have to read the double indirect block
 		; and read all it's indirect blocks
 		; (whew, it's a good thing I don't support triple indirect blocks)
-		mov  [bp+Ext2BlocksLeftToRead],eax					; Save the total block count
-		mov  eax,DWORD [bp+Ext2InodeDoubleIndirectPointer]	; Get the double indirect block pointer
+		mov  [BYTE bp+Ext2BlocksLeftToRead],eax				; Save the total block count
+		mov  eax,DWORD [BYTE bp+Ext2InodeDoubleIndirectPointer]	; Get the double indirect block pointer
 		push WORD 7800h
 		pop  es
 		push es												; Save an extra copy of this value on the stack
@@ -522,7 +539,7 @@ Ext2ReadEntireFile2:
 
 Ext2ReadIndirectBlock:
 		mov  eax,DWORD [es:di]								; Get indirect block pointer
-		add  di,4											; Update DI for next array index
+		add  di,BYTE 4										; Update DI for next array index
 		push es
 		push di
 
@@ -533,16 +550,16 @@ Ext2ReadIndirectBlock:
 
 		; Now we have all the block pointers from the
 		; indirect block in the right location so read them in
-		mov  eax,DWORD [bp+Ext2BlocksLeftToRead]			; Restore the total block count
-		mov  ecx,DWORD [bp+Ext2PointersPerBlock]			; Get the number of block pointers that one block contains
+		mov  eax,DWORD [BYTE bp+Ext2BlocksLeftToRead]		; Restore the total block count
+		mov  ecx,DWORD [BYTE bp+Ext2PointersPerBlock]		; Get the number of block pointers that one block contains
 		call Ext2ReadDirectBlockList
-		mov  [bp+Ext2BlocksLeftToRead],eax					; Save the total block count
+		mov  [BYTE bp+Ext2BlocksLeftToRead],eax				; Save the total block count
 		pop  di
 		pop  es
 
 		; Check to see if we actually have
 		; blocks left to read
-		cmp  eax,0
+		cmp  eax,byte 0
 		jnz  Ext2ReadIndirectBlock
 
 Ext2ReadEntireFileDone:
@@ -579,7 +596,7 @@ Ext2ReadDirectBlocks:
 
 Ext2ReadDirectBlocksLoop:
 		mov  eax,[es:di]									; Get direct block pointer from array
-		add  di,4											; Update DI for next array index
+		add  di,BYTE 4										; Update DI for next array index
 
 		push cx												; Save number of direct blocks left
 		push es												; Save array segment

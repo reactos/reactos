@@ -67,12 +67,6 @@ BOOL MmInitializeMemoryManager(VOID)
 	ExtendedMemorySize = GetExtendedMemorySize();
 	ConventionalMemorySize = GetConventionalMemorySize();
 
-	// If we got the system memory map then fixup invalid entries
-	if (BiosMemoryMapEntryCount != 0)
-	{
-		MmFixupSystemMemoryMap(BiosMemoryMap, &BiosMemoryMapEntryCount);
-	}
-
 #ifdef DEBUG
 	// Dump the system memory map
 	if (BiosMemoryMapEntryCount != 0)
@@ -80,17 +74,23 @@ BOOL MmInitializeMemoryManager(VOID)
 		DbgPrint((DPRINT_MEMORY, "System Memory Map (Base Address, Length, Type):\n"));
 		for (Index=0; Index<BiosMemoryMapEntryCount; Index++)
 		{
-			DbgPrint((DPRINT_MEMORY, "%x%x\t %x%x\t %s\n", BiosMemoryMap[Index].BaseAddressHigh, BiosMemoryMap[Index].BaseAddressLow, BiosMemoryMap[Index].LengthHigh, BiosMemoryMap[Index].LengthLow, MmGetSystemMemoryMapTypeString(BiosMemoryMap[Index].Type)));
+			DbgPrint((DPRINT_MEMORY, "%x%x\t %x%x\t %s\n", BiosMemoryMap[Index].BaseAddress, BiosMemoryMap[Index].Length, MmGetSystemMemoryMapTypeString(BiosMemoryMap[Index].Type)));
 		}
 	}
 	else
 	{
 		DbgPrint((DPRINT_MEMORY, "GetBiosMemoryMap() not supported.\n"));
 	}
-#endif
 
 	DbgPrint((DPRINT_MEMORY, "Extended memory size: %d KB\n", ExtendedMemorySize));
 	DbgPrint((DPRINT_MEMORY, "Conventional memory size: %d KB\n", ConventionalMemorySize));
+#endif
+
+	// If we got the system memory map then fixup invalid entries
+	if (BiosMemoryMapEntryCount != 0)
+	{
+		MmFixupSystemMemoryMap(BiosMemoryMap, &BiosMemoryMapEntryCount);
+	}
 
 	// Since I don't feel like writing two sets of routines
 	// one to handle the BiosMemoryMap structure and another
@@ -99,10 +99,8 @@ BOOL MmInitializeMemoryManager(VOID)
 	// extended memory size if GetBiosMemoryMap() fails.
 	if (BiosMemoryMapEntryCount == 0)
 	{
-		BiosMemoryMap[0].BaseAddressLow = 0x100000;		// Start at 1MB
-		BiosMemoryMap[0].BaseAddressHigh = 0;
-		BiosMemoryMap[0].LengthLow = ExtendedMemorySize * 1024;
-		BiosMemoryMap[0].LengthHigh = 0;
+		BiosMemoryMap[0].BaseAddress = 0x100000;		// Start at 1MB
+		BiosMemoryMap[0].Length = ExtendedMemorySize * 1024;
 		BiosMemoryMap[0].Type = MEMTYPE_USABLE;
 		BiosMemoryMapEntryCount = 1;
 	}
@@ -153,18 +151,18 @@ U32 MmGetPageNumberFromAddress(PVOID Address)
 
 PVOID MmGetEndAddressOfAnyMemory(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount)
 {
-	U32		MaxStartAddressSoFar;
-	U64	EndAddressOfMemory;
+	U64		MaxStartAddressSoFar;
+	U64		EndAddressOfMemory;
 	U32		Index;
 
 	MaxStartAddressSoFar = 0;
 	EndAddressOfMemory = 0;
 	for (Index=0; Index<MapCount; Index++)
 	{
-		if (MaxStartAddressSoFar < BiosMemoryMap[Index].BaseAddressLow)
+		if (MaxStartAddressSoFar < BiosMemoryMap[Index].BaseAddress)
 		{
-			MaxStartAddressSoFar = BiosMemoryMap[Index].BaseAddressLow;
-			EndAddressOfMemory = ((U64)MaxStartAddressSoFar + (U64)BiosMemoryMap[Index].LengthLow);
+			MaxStartAddressSoFar = BiosMemoryMap[Index].BaseAddress;
+			EndAddressOfMemory = (MaxStartAddressSoFar + BiosMemoryMap[Index].Length);
 			if (EndAddressOfMemory > 0xFFFFFFFF)
 			{
 				EndAddressOfMemory = 0xFFFFFFFF;
@@ -180,8 +178,23 @@ PVOID MmGetEndAddressOfAnyMemory(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount
 U32 MmGetAddressablePageCountIncludingHoles(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount)
 {
 	U32		PageCount;
+	U64		EndAddress;
 
-	PageCount = MmGetPageNumberFromAddress(MmGetEndAddressOfAnyMemory(BiosMemoryMap, MapCount));
+	EndAddress = (U64)(U32)MmGetEndAddressOfAnyMemory(BiosMemoryMap, MapCount);
+
+	// Since MmGetEndAddressOfAnyMemory() won't
+	// return addresses higher than 0xFFFFFFFF
+	// then we need to adjust the end address
+	// to 0x100000000 so we don't get an
+	// off-by-one error
+	if (EndAddress >= 0xFFFFFFFF)
+	{
+		EndAddress = 0x100000000;
+
+		DbgPrint((DPRINT_MEMORY, "MmGetEndAddressOfAnyMemory() returned 0xFFFFFFFF, correcting to be 0x100000000.\n"));
+	}
+
+	PageCount = (EndAddress / MM_PAGE_SIZE);
 
 	DbgPrint((DPRINT_MEMORY, "MmGetAddressablePageCountIncludingHoles() returning %d\n", PageCount));
 
@@ -207,9 +220,9 @@ PVOID MmFindLocationForPageLookupTable(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 Ma
 	{
 		// If this is usable memory with a big enough length
 		// then we'll put our page lookup table here
-		if (TempBiosMemoryMap[Index].Type == MEMTYPE_USABLE && TempBiosMemoryMap[Index].LengthLow >= PageLookupTableSize)
+		if (TempBiosMemoryMap[Index].Type == MEMTYPE_USABLE && TempBiosMemoryMap[Index].Length >= PageLookupTableSize)
 		{
-			PageLookupTableAddress = (PVOID)(TempBiosMemoryMap[Index].BaseAddressLow + (TempBiosMemoryMap[Index].LengthLow - PageLookupTableSize));
+			PageLookupTableAddress = (PVOID)(U32)(TempBiosMemoryMap[Index].BaseAddress + (TempBiosMemoryMap[Index].Length - PageLookupTableSize));
 			break;
 		}
 	}
@@ -231,7 +244,7 @@ VOID MmSortBiosMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount)
 	{
 		for (Index=0; Index<(MapCount-1); Index++)
 		{
-			if (BiosMemoryMap[Index].BaseAddressLow > BiosMemoryMap[Index+1].BaseAddressLow)
+			if (BiosMemoryMap[Index].BaseAddress > BiosMemoryMap[Index+1].BaseAddress)
 			{
 				TempMapItem = BiosMemoryMap[Index];
 				BiosMemoryMap[Index] = BiosMemoryMap[Index+1];
@@ -260,8 +273,8 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, U32 TotalPageCount, BIOS_MEMOR
 
 	for (Index=0; Index<MapCount; Index++)
 	{
-		MemoryMapStartPage = MmGetPageNumberFromAddress((PVOID)BiosMemoryMap[Index].BaseAddressLow);
-		MemoryMapEndPage = MmGetPageNumberFromAddress((PVOID)(BiosMemoryMap[Index].BaseAddressLow + BiosMemoryMap[Index].LengthLow - 1));
+		MemoryMapStartPage = MmGetPageNumberFromAddress((PVOID)(U32)BiosMemoryMap[Index].BaseAddress);
+		MemoryMapEndPage = MmGetPageNumberFromAddress((PVOID)(U32)(BiosMemoryMap[Index].BaseAddress + BiosMemoryMap[Index].Length - 1));
 		MemoryMapPageCount = (MemoryMapEndPage - MemoryMapStartPage) + 1;
 		MemoryMapPageAllocated = (BiosMemoryMap[Index].Type == MEMTYPE_USABLE) ? 0 : BiosMemoryMap[Index].Type;
 		DbgPrint((DPRINT_MEMORY, "Marking pages as type %d: StartPage: %d PageCount: %d\n", MemoryMapPageAllocated, MemoryMapStartPage, MemoryMapPageCount));
@@ -286,9 +299,14 @@ VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, U32 StartPage, U32 PageCoun
 
 	for (Index=StartPage; Index<(StartPage+PageCount); Index++)
 	{
+		if ((Index <= (StartPage + 16)) || (Index >= (StartPage+PageCount-16)))
+		{
+			DbgPrint((DPRINT_MEMORY, "Index = %d StartPage = %d PageCount = %d\n", Index, StartPage, PageCount));
+		}
 		RealPageLookupTable[Index].PageAllocated = PageAllocated;
 		RealPageLookupTable[Index].PageAllocationLength = PageAllocated ? 1 : 0;
 	}
+	DbgPrint((DPRINT_MEMORY, "MmMarkPagesInLookupTable() Done\n"));
 }
 
 VOID MmAllocatePagesInLookupTable(PVOID PageLookupTable, U32 StartPage, U32 PageCount)
@@ -360,14 +378,14 @@ VOID MmFixupSystemMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32], U32* MapCount)
 {
 	int		Index;
 	int		Index2;
-	U64	RealLength;
 
 	// Loop through each entry in the array
 	for (Index=0; Index<*MapCount; Index++)
 	{
-		// If the base address for this entry starts at
-		// or above 4G then remove this entry
-		if (BiosMemoryMap[Index].BaseAddressHigh != 0)
+		// If the entry type isn't usable then remove
+		// it from the memory map (this will help reduce
+		// the size of our lookup table)
+		if (BiosMemoryMap[Index].Type != 0)
 		{
 			// Slide every entry after this down one
 			for (Index2=Index; Index2<(*MapCount - 1); Index2++)
@@ -376,14 +394,6 @@ VOID MmFixupSystemMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32], U32* MapCount)
 			}
 			(*MapCount)--;
 			Index--;
-		}
-
-		// If the base address plus the length for this entry
-		// extends beyond 4G then truncate this entry
-		RealLength = BiosMemoryMap[Index].BaseAddressLow + BiosMemoryMap[Index].LengthLow;
-		if ((BiosMemoryMap[Index].LengthHigh != 0) || (RealLength > 0xFFFFFFFF))
-		{
-			BiosMemoryMap[Index].LengthLow = 0xFFFFFFFF - BiosMemoryMap[Index].BaseAddressLow;
 		}
 	}
 }

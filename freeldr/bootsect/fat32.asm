@@ -51,6 +51,12 @@ main:
 
 
 
+		cmp BYTE [BYTE bp+BootDrive],BYTE 0xff	; If they have specified a boot drive then use it
+		jne CheckSectorsPerFat
+
+        mov [BYTE bp+BootDrive],dl				; Save the boot drive
+
+
 
 CheckSectorsPerFat:
         cmp	WORD [BYTE bp+SectorsPerFat],byte 0x00	; Check the old 16-bit value of SectorsPerFat
@@ -231,8 +237,6 @@ ReadSectorsCHSLoop:
 PrintDiskError:
         mov  si,msgDiskError			; Bad boot disk message
         call PutChars					; Display it
-        mov  si,msgAnyKey				; Press any key message
-        call PutChars					; Display it
 
 		jmp  Reboot
 
@@ -241,10 +245,10 @@ PrintDiskError:
 PrintFileSystemError:
         mov  si,msgFileSystemError		; FreeLdr not found message
         call PutChars					; Display it
-        mov  si,msgAnyKey				; Press any key message
-        call PutChars					; Display it
 
 Reboot:
+        mov  si,msgAnyKey				; Press any key message
+        call PutChars					; Display it
         xor ax,ax       
         int 16h							; Wait for a keypress
         int 19h							; Reboot
@@ -268,7 +272,12 @@ msgDiskError		db 'Disk error',0dh,0ah,0
 msgFileSystemError	db 'File system error',0dh,0ah,0
 msgAnyKey			db 'Press any key to restart',0dh,0ah,0
 
-        times 510-($-$$) db 0   ; Pad to 510 bytes
+        times 509-($-$$) db 0   ; Pad to 510 bytes
+
+BootPartition:
+		db 0
+
+BootSignature:
         dw 0aa55h       ; BootSector signature
         
 
@@ -379,7 +388,8 @@ LoadFile:
         jmp  LoadFile			; Load the next cluster (if any)
 
 LoadFileDone:
-        mov  dl,[BYTE bp+BootDrive]
+        mov  dl,[BYTE bp+BootDrive]		; Load boot drive into DL
+		mov  dh,[BootPartition]			; Load boot partition into DH
         xor  ax,ax
         push ax					; We loaded at 0000:8000
         push WORD 8000h			; We will do a far return to 0000:8000h
@@ -485,7 +495,7 @@ PrintFileNotFound:
 
 		jmp  Reboot
 
-msgFreeLdr   db 'FREELDR.SYS not found',0dh,0ah,0
+msgFreeLdr   db 'freeldr.sys not found',0dh,0ah,0
 filename     db 'FREELDR SYS'
 msgLoading   db 'Loading FreeLoader...',0dh,0ah,0
 

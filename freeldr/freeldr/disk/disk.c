@@ -34,7 +34,7 @@ VOID DiskError(PUCHAR ErrorString)
 {
 	UCHAR	ErrorCodeString[80];
 
-	sprintf(ErrorCodeString, "%s\nError Code: 0x%lx", ErrorString, BiosInt13GetLastErrorCode());
+	sprintf(ErrorCodeString, "%s\nError Code: 0x%x", ErrorString, BiosInt13GetLastErrorCode());
 
 	DbgPrint((DPRINT_DISK, "%s\n", ErrorCodeString));
 

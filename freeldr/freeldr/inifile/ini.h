@@ -21,6 +21,7 @@
 #define __INI_H
 
 #include <rtl.h>
+#include <fs.h>
 
 
 #define INI_FILE_COMMENT_CHAR	';'
@@ -54,6 +55,8 @@ typedef struct
 
 extern	PINI_SECTION		IniFileSectionListHead;
 extern	U32					IniFileSectionListCount;
+
+PFILE	IniOpenIniFile(U8 BootDriveNumber, U8 BootPartitionNumber);
 
 BOOL	IniParseFile(PUCHAR IniFileData, U32 IniFileSize);
 U32		IniGetNextLineSize(PUCHAR IniFileData, U32 IniFileSize, U32 CurrentOffset);

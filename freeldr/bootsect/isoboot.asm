@@ -330,6 +330,7 @@ get_fs_structures:
 	mov	cx, 0xFFFF			; load the whole file
 	call	getfssec			; get the first sector
 	mov	dl, [DriveNo]			; dl = boot drive
+	mov dh, 0					; dh = boot partition
 	jmp	0:0x8000			; jump into OSLoader
 
 
