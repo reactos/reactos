@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <conio.h>
 
 #include "assert.h"
 #include "tokenize.h"
@@ -122,6 +123,19 @@ void tokenize ( const string& text, vector<string>& tokens )
 			tokens.push_back ( ";" );
 			p++;
 			break;
+		case '=':
+			switch ( p[1] )
+			{
+			case '=':
+				tokens.push_back ( string ( p, 2 ) );
+				p += 2;
+				break;
+			default:
+				tokens.push_back ( "=" );
+				p++;
+				break;
+			}
+			break;
 		case ':':
 			switch ( p[1] )
 			{
@@ -189,8 +203,13 @@ void tokenize ( const string& text, vector<string>& tokens )
 				break;
 			}
 			break;
+		case '#':
+			while ( *p != '\n' )
+				p++;
+			break;
 		default:
-			printf ( "choked on '%c' in tokenize()\n", *p );
+			printf ( "choked on '%c' in tokenize() - press any key to continue\n", *p );
+			getch();
 			p++;
 			break;
 		}

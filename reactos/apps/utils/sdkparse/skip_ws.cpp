@@ -10,3 +10,8 @@ char* skip_ws ( char* p )
 {
 	return p + strspn ( p, ws );
 }
+
+const char* skip_ws ( const char* p )
+{
+	return p + strspn ( p, ws );
+}

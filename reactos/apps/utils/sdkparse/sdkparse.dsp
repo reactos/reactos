@@ -118,6 +118,10 @@ SOURCE=.\FixLFN.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Header.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\iskeyword.cpp
 # End Source File
 # Begin Source File
@@ -150,7 +154,15 @@ SOURCE=.\strip_comments.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Symbol.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\tokenize.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Type.h
 # End Source File
 # End Target
 # End Project

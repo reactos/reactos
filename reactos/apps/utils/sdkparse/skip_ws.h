@@ -5,4 +5,6 @@
 
 char* skip_ws ( char* );
 
+const char* skip_ws ( const char* );
+
 #endif//SKIP_WS_H
