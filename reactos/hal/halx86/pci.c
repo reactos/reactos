@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.13 2004/11/01 14:37:19 hbirr Exp $
+/* $Id: pci.c,v 1.14 2004/11/15 09:18:19 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -771,6 +771,22 @@ HalpInitPciBus(VOID)
   BusHandler = HalpAllocateBusHandler(PCIBus,
 				      PCIConfiguration,
 				      1);
+  BusHandler->GetBusData = (pGetSetBusData)HalpGetPciData;
+  BusHandler->SetBusData = (pGetSetBusData)HalpSetPciData;
+  BusHandler->GetInterruptVector =
+    (pGetInterruptVector)HalpGetPciInterruptVector;
+  BusHandler->TranslateBusAddress = 
+    (pTranslateBusAddress)HalpTranslatePciAddress;
+//	BusHandler->AdjustResourceList =
+//		(pGetSetBusData)HalpAdjustPciResourceList;
+  BusHandler->AssignSlotResources =
+    (pAssignSlotResources)HalpAssignPciSlotResources;
+
+
+  /* PCI bus (bus 2) handler */
+  BusHandler = HalpAllocateBusHandler(PCIBus,
+				      PCIConfiguration,
+				      2);
   BusHandler->GetBusData = (pGetSetBusData)HalpGetPciData;
   BusHandler->SetBusData = (pGetSetBusData)HalpSetPciData;
   BusHandler->GetInterruptVector =
