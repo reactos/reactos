@@ -40,6 +40,14 @@
 #include "precomp.h"
 
 
+ // work around GCC's wide string constant bug
+#ifdef __GNUC__
+const LPCXSSTR XMLStorage::XS_TRUE = XS_TEXT("true");
+const LPCXSSTR XMLStorage::XS_FALSE = XS_TEXT("false");
+const LPCXSSTR XMLStorage::XS_NUMBERFMT = XS_TEXT("%d");
+#endif
+
+
 namespace XMLStorage {
 
 

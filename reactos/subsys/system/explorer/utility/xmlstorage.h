@@ -51,6 +51,7 @@
 #ifdef UNICODE
 #define _UNICODE
 #endif
+
 #include <tchar.h>
 #include <malloc.h>
 
@@ -71,10 +72,6 @@ namespace XMLStorage {
 
 
 #ifndef XS_String
-
-#ifdef __GNUC__
-#define	XS_STRING_UTF8	// The W32API std::wstring implementation of stdlibc++ is unusable, so use UTF8 encoded strings with std::string instead
-#endif
 
 #ifdef XS_STRING_UTF8
 #define	XS_CHAR char
@@ -1197,6 +1194,18 @@ protected:
 };
 
 
+ // work around GCC's wide string constant bug
+#ifdef __GNUC__
+extern const LPCXSSTR XS_TRUE;
+extern const LPCXSSTR XS_FALSE;
+extern const LPCXSSTR XS_NUMBERFMT;
+#else
+#define	XS_TRUE XS_TEXT("true")
+#define	XS_FALSE XS_TEXT("false")
+#define	XS_NUMBERFMT XS_TEXT("%d")
+#endif
+
+
 struct XMLBool
 {
 	XMLBool(bool value=false)
@@ -1207,7 +1216,7 @@ struct XMLBool
 	XMLBool(LPCXSSTR value, bool def=false)
 	{
 		if (value && *value)
-			_value = !XS_icmp(value, XS_TEXT("true"));
+			_value = !XS_icmp(value, XS_TRUE);
 		else
 			_value = def;
 	}
@@ -1217,7 +1226,7 @@ struct XMLBool
 		const XS_String& value = node->get(attr_name);
 
 		if (!value.empty())
-			_value = !XS_icmp(value.c_str(), XS_TEXT("true"));
+			_value = !XS_icmp(value.c_str(), XS_TRUE);
 		else
 			_value = def;
 	}
@@ -1234,7 +1243,7 @@ struct XMLBool
 
 	operator LPCXSSTR() const
 	{
-		return _value? XS_TEXT("true"): XS_TEXT("false");
+		return _value? XS_TRUE: XS_FALSE;
 	}
 
 protected:
@@ -1255,12 +1264,12 @@ struct XMLBoolRef
 
 	operator bool() const
 	{
-		return !XS_icmp(_ref.c_str(), XS_TEXT("true"));
+		return !XS_icmp(_ref.c_str(), XS_TRUE);
 	}
 
 	bool operator!() const
 	{
-		return XS_icmp(_ref.c_str(), XS_TEXT("true"))? true: false;
+		return XS_icmp(_ref.c_str(), XS_TRUE)? true: false;
 	}
 
 	XMLBoolRef& operator=(bool value)
@@ -1272,7 +1281,7 @@ struct XMLBoolRef
 
 	void assign(bool value)
 	{
-		_ref.assign(value? XS_TEXT("true"): XS_TEXT("false"));
+		_ref.assign(value? XS_TRUE: XS_FALSE);
 	}
 
 	void toggle()
@@ -1318,7 +1327,7 @@ struct XMLInt
 	operator XS_String() const
 	{
 		XS_CHAR buffer[32];
-		XS_sprintf(buffer, XS_TEXT("%d"), _value);
+		XS_sprintf(buffer, XS_NUMBERFMT, _value);
 		return buffer;
 	}
 
@@ -1353,7 +1362,7 @@ struct XMLIntRef
 	void assign(int value)
 	{
 		XS_CHAR buffer[32];
-		XS_sprintf(buffer, XS_TEXT("%d"), value);
+		XS_sprintf(buffer, XS_NUMBERFMT, value);
 		_ref.assign(buffer);
 	}
 
