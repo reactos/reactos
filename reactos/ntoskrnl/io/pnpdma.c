@@ -1,4 +1,4 @@
-/* $Id: pnpdma.c,v 1.9 2004/10/23 17:32:51 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -31,6 +31,7 @@ typedef struct _DMA_ADAPTER_INTERNAL {
 /* FUNCTIONS *****************************************************************/
 
 VOID
+STDCALL
 IopPutDmaAdapter(
   PDMA_ADAPTER DmaAdapter)
 {
@@ -40,6 +41,7 @@ IopPutDmaAdapter(
 
 
 PVOID
+STDCALL
 IopAllocateCommonBuffer(
   IN PDMA_ADAPTER DmaAdapter,
   IN ULONG Length,
@@ -54,6 +56,7 @@ IopAllocateCommonBuffer(
 
 
 VOID
+STDCALL
 IopFreeCommonBuffer(
   IN PDMA_ADAPTER DmaAdapter,
   IN ULONG Length,
@@ -69,6 +72,7 @@ IopFreeCommonBuffer(
 
 
 NTSTATUS
+STDCALL
 IopAllocateAdapterChannel(
   IN PDMA_ADAPTER DmaAdapter,
   IN PDEVICE_OBJECT DeviceObject,
@@ -84,6 +88,7 @@ IopAllocateAdapterChannel(
 
 
 BOOLEAN
+STDCALL
 IopFlushAdapterBuffers(
   IN PDMA_ADAPTER DmaAdapter,
   IN PMDL Mdl,
@@ -100,6 +105,7 @@ IopFlushAdapterBuffers(
 
 
 VOID
+STDCALL
 IopFreeAdapterChannel(
   IN PDMA_ADAPTER DmaAdapter)
 {
@@ -109,6 +115,7 @@ IopFreeAdapterChannel(
 
 
 VOID
+STDCALL
 IopFreeMapRegisters(
   IN PDMA_ADAPTER DmaAdapter,
   PVOID MapRegisterBase,
@@ -122,6 +129,7 @@ IopFreeMapRegisters(
 
 
 PHYSICAL_ADDRESS
+STDCALL
 IopMapTransfer(
   IN PDMA_ADAPTER DmaAdapter,
   IN PMDL Mdl,
@@ -138,6 +146,7 @@ IopMapTransfer(
 
 
 ULONG
+STDCALL
 IopGetDmaAlignment(
   IN PDMA_ADAPTER DmaAdapter)
 {
@@ -148,6 +157,7 @@ IopGetDmaAlignment(
 
 
 ULONG
+STDCALL
 IopReadDmaCounter(
   IN PDMA_ADAPTER DmaAdapter)
 {
@@ -157,6 +167,7 @@ IopReadDmaCounter(
 
 
 NTSTATUS
+STDCALL
 IopGetScatterGatherList(
   IN PDMA_ADAPTER DmaAdapter,
   IN PDEVICE_OBJECT DeviceObject,
@@ -174,14 +185,15 @@ IopGetScatterGatherList(
 
 
 VOID
+STDCALL
 IopPutScatterGatherList(
   IN PDMA_ADAPTER DmaAdapter,
   IN PSCATTER_GATHER_LIST ScatterGather,
   IN BOOLEAN WriteToDevice)
 {
+  DPRINT("IopPutScatterGatherList\n");
   /* FIXME */
 }
-
 
 /*
  * @implemented
