@@ -328,7 +328,6 @@ asmlinkage void exception_handler(unsigned int edi,
    
    DbgPrint("\n");
    DbgPrint("Killing current task\n");
-   for(;;);
    KeLowerIrql(PASSIVE_LEVEL);
    if ((cs&0xffff) == USER_CS)
      {
