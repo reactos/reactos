@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.127 2004/06/23 21:43:45 ion Exp $
+# $Id: Makefile,v 1.128 2004/06/23 22:32:45 ion Exp $
 #
 # ReactOS Operating System
 #
@@ -130,6 +130,7 @@ OBJECTS_KE = \
 	ke/catch.o \
 	ke/critical.o \
 	ke/dpc.o \
+        ke/device.o \
 	ke/error.o \
 	ke/event.o \
 	ke/kqueue.o \
@@ -137,6 +138,7 @@ OBJECTS_KE = \
 	ke/main.o \
 	ke/mutex.o \
 	ke/process.o \
+        ke/profile.o \
 	ke/queue.o \
 	ke/sem.o \
 	ke/spinlock.o \
