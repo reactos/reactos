@@ -1,5 +1,13 @@
 2003-12-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* tools/wine2ros: New directory.
+	* tools/wine2ros/Makefile: New file.
+	* tools/wine2ros/wine2ros.c: Ditto.
+	* tools/Makefile (wine2ros_target): Add.
+	* rules.mak (WINE2ROS): Define.
+
+2003-12-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	Changes for compiling with w32api/Wine
 
 	* include/basetsd.h: #include_next <basetsd.h>. Add definitions missing

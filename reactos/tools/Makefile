@@ -18,7 +18,7 @@ TOOLS = \
 CLEAN_FILES = $(TOOLS)
 
 all: $(TOOLS) zlib_target wmc_target cabman_target cdmake_target mkhive_target rgenstat_target \
-	pipetools_target
+	wine2ros_target pipetools_target
 
 buildno$(EXE_POSTFIX): buildno.c ../include/reactos/version.h
 	$(HOST_CC) $(CFLAGS) -o buildno$(EXE_POSTFIX) buildno.c
@@ -114,6 +114,9 @@ mkhive_target:
 
 rgenstat_target:
 	$(MAKE) -C rgenstat rgenstat$(EXE_POSTFIX)
+
+wine2ros_target:
+	$(MAKE) -C wine2ros wine2ros$(EXE_POSTFIX)
 
 pipetools_target:
 ifeq ($(HOST),mingw32-windows)
