@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.26 2002/12/09 19:53:44 hbirr Exp $
+/* $Id: irq.c,v 1.27 2003/01/02 16:06:49 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -508,17 +508,19 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
    KiInterruptDispatch2(irq, old_level);
 
    /*
-    * End the system interrupt.
-    */
-   HalEndSystemInterrupt (old_level, 0);
-
-   /*
     * Maybe do a reschedule as well.
     */
    if (old_level < DISPATCH_LEVEL && irq == 0)
      {
+       KeLowerIrql(APC_LEVEL);
        PsDispatchThread(THREAD_STATE_READY);
      }
+
+   /*
+    * End the system interrupt.
+    */
+   __asm__("cli\n\t");
+   HalEndSystemInterrupt (old_level, 0);
 }
 
 #endif /* MP */
