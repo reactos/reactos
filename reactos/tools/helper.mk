@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.23 2002/10/31 00:48:27 ekohl Exp $
+# $Id: helper.mk,v 1.24 2003/01/05 19:17:16 robd Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -549,6 +549,12 @@ endif # MK_IMPLIBONLY
 
 $(MK_FULLRES): $(PATH_TO_TOP)/include/reactos/buildno.h $(TARGET_PATH)/$(MK_RES_BASE).rc
 
+ifeq ($(MK_DEPENDS),yes)
+depends:
+else
+depends:
+endif
+
 ifeq ($(MK_IMPLIB),yes)
 $(MK_IMPLIBPATH)/$(MK_BASENAME).a: $(MK_DEFNAME)
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
@@ -604,7 +610,7 @@ $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME): $(MK_FULLNAME)
 endif # MK_IMPLIBONLY
 
 
-.phony: all implib clean install dist
+.phony: all depends implib clean install dist depends
 
 
 %.o: %.c
