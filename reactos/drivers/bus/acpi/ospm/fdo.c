@@ -60,12 +60,7 @@ AcpiCreateDeviceIDString(PUNICODE_STRING DeviceID,
            L"ACPI\\%S",
            Node->device.id.hid);
 
-  if (!AcpiCreateUnicodeString(DeviceID, Buffer, PagedPool))
-  {
-    return FALSE;
-  }
-
-  return TRUE;
+  return AcpiCreateUnicodeString(DeviceID, Buffer, PagedPool);
 }
 
 
@@ -108,8 +103,15 @@ BOOLEAN
 AcpiCreateInstanceIDString(PUNICODE_STRING InstanceID,
                            BM_NODE *Node)
 {
-  /* FIXME: Create unique instnce id. */
-  return AcpiCreateUnicodeString(InstanceID, L"0000", PagedPool);
+  WCHAR Buffer[10];
+
+  if (Node->device.id.uid[0])
+    swprintf(Buffer, L"%S", Node->device.id.uid);
+  else
+    /* FIXME: Generate unique id! */
+    swprintf(Buffer, L"0000");
+
+  return AcpiCreateUnicodeString(InstanceID, Buffer, PagedPool);
 }
 
 
@@ -188,8 +190,8 @@ FdoQueryBusRelations(
 
       PdoDeviceExtension->Common.DevicePowerState = PowerDeviceD0;
 
-//      PdoDeviceExtension->Common.Ldo = IoAttachDeviceToDeviceStack(DeviceObject,
-//                                                                   Device->Pdo);
+      PdoDeviceExtension->Common.Ldo = IoAttachDeviceToDeviceStack(DeviceObject,
+                                                                   Device->Pdo);
 
       RtlInitUnicodeString(&PdoDeviceExtension->DeviceID, NULL);
       RtlInitUnicodeString(&PdoDeviceExtension->InstanceID, NULL);
