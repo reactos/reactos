@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.67 2003/07/11 13:50:23 royce Exp $
+/* $Id: utils.c,v 1.68 2003/07/26 12:44:20 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -738,8 +738,8 @@ LdrFindEntryForName(PUNICODE_STRING Name,
       return(STATUS_SUCCESS);
     }
 
-  ContainsPath = (2 <= Name->Length && L':' == Name->Buffer[1]);
-  for (i = 0; ! ContainsPath && i < Name->Length; i++)
+  ContainsPath = (Name->Length >= 2 * sizeof(WCHAR) && L':' == Name->Buffer[1]);
+  for (i = 0; ! ContainsPath && i < Name->Length / sizeof(WCHAR); i++)
     {
     ContainsPath = L'\\' == Name->Buffer[i] ||
                    L'/' == Name->Buffer[i];
@@ -1452,6 +1452,7 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
    if (Module != NULL)
      {
        *Module = LdrAddModuleEntry(ImageBase, NTHeaders, FullDosName);
+       (*Module)->SectionHandle = SectionHandle;
      }
 
    /*
