@@ -673,6 +673,13 @@ RtlPrefixUnicodeString(
 
 /*
  * @implemented
+ *
+ * Note that regardless of success or failure status, we should leave the
+ * partial value in Value.  An error is never returned based on the chars
+ * in the string.
+ *
+ * This function does check the base.  Only 2, 8, 10, 16 are permitted,
+ * else STATUS_INVALID_PARAMETER is returned.
  */
 NTSTATUS
 STDCALL
@@ -686,9 +693,13 @@ RtlUnicodeStringToInteger(
    ULONG i;
    ULONG Val;
    BOOLEAN addneg = FALSE;
+   NTSTATUS Status = STATUS_SUCCESS;
 
    *Value = 0;
    Str = String->Buffer;
+
+   if( Base && Base != 2 && Base != 8 && Base != 10 && Base != 16 )
+       return STATUS_INVALID_PARAMETER;
 
    for (i = 0; i < String->Length / sizeof(WCHAR); i++)
    {
@@ -723,21 +734,21 @@ RtlUnicodeStringToInteger(
       }
       else if ((*Str > L'1') && (Base == 2))
       {
-         return STATUS_INVALID_PARAMETER;
+	  break;
       }
       else if (((*Str > L'7') || (*Str < L'0')) && (Base == 8))
       {
-         return STATUS_INVALID_PARAMETER;
+	  break;
       }
       else if (((*Str > L'9') || (*Str < L'0')) && (Base == 10))
       {
-         return STATUS_INVALID_PARAMETER;
+	  break;
       }
       else if (  ((*Str > L'9') || (*Str < L'0')) &&
                  ((towupper (*Str) > L'F') || (towupper (*Str) < L'A')) &&
                  (Base == 16))
       {
-         return STATUS_INVALID_PARAMETER;
+	  break;
       }
       Str++;
    }
@@ -748,8 +759,10 @@ RtlUnicodeStringToInteger(
       Base = 10;
 
    while (iswxdigit (*Str) &&
-          (Val = iswdigit (*Str) ? *Str - L'0' : (iswlower (*Str)
-                                                  ? towupper (*Str) : *Str) - L'A' + 10) < Base)
+          (Val = 
+	   iswdigit (*Str) ? 
+	   *Str - L'0' : 
+	   (towupper (*Str) - L'A' + 10)) < Base)
    {
       *Value = *Value * Base + Val;
       Str++;
@@ -758,7 +771,7 @@ RtlUnicodeStringToInteger(
    if (addneg == TRUE)
       *Value *= -1;
 
-   return STATUS_SUCCESS;
+   return Status;
 }
 
 
