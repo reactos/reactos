@@ -486,12 +486,7 @@ NtContinue(
 	IN CINT IrqLevel
 	);
 
-NTSTATUS
-STDCALL
-ZwContinue(
-	IN PCONTEXT Context,
-	IN CINT IrqLevel
-	);
+NTSTATUS STDCALL ZwContinue(IN PCONTEXT Context, IN CINT IrqLevel);
 
 
 /*

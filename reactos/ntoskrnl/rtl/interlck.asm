@@ -2,9 +2,22 @@ bits 32
 section .text
 
 DECLARE_GLOBAL_SYMBOL InterlockedIncrement
+       push ebp
+       mov  ebp,esp
+
+       push eax
+       push ebx
+
        mov eax,1
-       mov ebx,[esp+4]
+       mov ebx,[ebp+8]
        xadd [ebx],eax
+
+       pop ebx
+       pop eax
+
+       mov esp,ebp
+       pop ebp
+
        ret
        
        

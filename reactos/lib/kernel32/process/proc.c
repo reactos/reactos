@@ -7,6 +7,9 @@
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
+
+/* INCLUDES ****************************************************************/
+
 #define UNICODE
 #include <windows.h>
 #include <kernel32/proc.h>
@@ -16,6 +19,8 @@
 #include <ddk/rtl.h>
 #include <ddk/li.h>
 
+/* GLOBALS *****************************************************************/
+
 extern NT_PEB *CurrentPeb;
 extern NT_PEB Peb;
 
@@ -23,10 +28,9 @@ WaitForInputIdleType  lpfnGlobalRegisterWaitForInputIdle;
 
 VOID RegisterWaitForInputIdle(WaitForInputIdleType  lpfnRegisterWaitForInputIdle);
 
-WINBOOL 
-STDCALL
-GetProcessId(HANDLE hProcess,	LPDWORD lpProcessId );
+/* FUNCTIONS ****************************************************************/
 
+WINBOOL STDCALL GetProcessId(HANDLE hProcess, LPDWORD lpProcessId);
 
 NT_PEB *GetCurrentPeb(VOID)
 {
@@ -46,304 +50,334 @@ HANDLE STDCALL GetCurrentThread(VOID)
 	return (HANDLE)NtCurrentThread();
 }
 
-DWORD 
-STDCALL
-GetCurrentProcessId(VOID)
-{
-	
-	return (DWORD)(GetTeb()->Cid).UniqueProcess;
-	
-	
+DWORD STDCALL GetCurrentProcessId(VOID)
+{	
+	return (DWORD)(GetTeb()->Cid).UniqueProcess;		
 }
 
-unsigned char CommandLineA[MAX_PATH];
-
-LPSTR
-STDCALL
-GetCommandLineA(
-		VOID
-		)
+WINBOOL STDCALL GetExitCodeProcess(HANDLE hProcess, LPDWORD lpExitCode )
 {
-	WCHAR *CommandLineW;
-	ULONG i = 0;
-  	
-	CommandLineW = GetCommandLineW();
-   	while ((CommandLineW[i])!=0 && i < MAX_PATH)
-     	{
-		CommandLineA[i] = (unsigned char)CommandLineW[i];
-		i++;
-     	}
-   	CommandLineA[i] = 0;
-	return CommandLineA;
-}
-LPWSTR
-STDCALL
-GetCommandLineW(
-		VOID
-		)
-{
-	return GetCurrentPeb()->StartupInfo->CommandLine;
-}
-
-
-WINBOOL 
-STDCALL
-GetExitCodeProcess(
-    HANDLE hProcess,	
-    LPDWORD lpExitCode 
-   )
-{
-	NTSTATUS errCode;
-	PROCESS_BASIC_INFORMATION ProcessBasic;
-	ULONG BytesWritten;
-
-	errCode = NtQueryInformationProcess(hProcess,ProcessBasicInformation,&ProcessBasic,sizeof(PROCESS_BASIC_INFORMATION),&BytesWritten);
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	memcpy( lpExitCode ,&ProcessBasic.ExitStatus,sizeof(DWORD));
-	return TRUE;
-	
-}
-
-WINBOOL 
-STDCALL
-GetProcessId(
-    HANDLE hProcess,	
-    LPDWORD lpProcessId 
-   )
-{
-	NTSTATUS errCode;
-	PROCESS_BASIC_INFORMATION ProcessBasic;
-	ULONG BytesWritten;
-
-	errCode = NtQueryInformationProcess(hProcess,ProcessBasicInformation,&ProcessBasic,sizeof(PROCESS_BASIC_INFORMATION),&BytesWritten);
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	memcpy( lpProcessId ,&ProcessBasic.UniqueProcessId,sizeof(DWORD));
-	return TRUE;
-	
-}
-
-WINBOOL
-STDCALL
-CreateProcessA(
-    LPCSTR lpApplicationName,
-    LPSTR lpCommandLine,
-    LPSECURITY_ATTRIBUTES lpProcessAttributes,
-    LPSECURITY_ATTRIBUTES lpThreadAttributes,
-    WINBOOL bInheritHandles,
-    DWORD dwCreationFlags,
-    LPVOID lpEnvironment,
-    LPCSTR lpCurrentDirectory,
-    LPSTARTUPINFO lpStartupInfo,
-    LPPROCESS_INFORMATION lpProcessInformation
-    )
-{
-	WCHAR ApplicationNameW[MAX_PATH];
-	WCHAR CommandLineW[MAX_PATH];
-	WCHAR CurrentDirectoryW[MAX_PATH];
-	
-	
-   	ULONG i;
-  
-	i = 0;
-   	while ((*lpApplicationName)!=0 && i < MAX_PATH)
-     	{
-		ApplicationNameW[i] = *lpApplicationName;
-		lpApplicationName++;
-		i++;
-     	}
-   	ApplicationNameW[i] = 0;
-
-
-	i = 0;
-   	while ((*lpCommandLine)!=0 && i < MAX_PATH)
-     	{
-		CommandLineW[i] = *lpCommandLine;
-		lpCommandLine++;
-		i++;
-     	}
-   	CommandLineW[i] = 0;
-
-	i = 0;
-   	while ((*lpCurrentDirectory)!=0 && i < MAX_PATH)
-     	{
-		CurrentDirectoryW[i] = *lpCurrentDirectory;
-		lpCurrentDirectory++;
-		i++;
-     	}
-   	CurrentDirectoryW[i] = 0;
-	
-	return CreateProcessW(ApplicationNameW,CommandLineW, lpProcessAttributes,lpThreadAttributes,
-		bInheritHandles,dwCreationFlags,lpEnvironment,CurrentDirectoryW,lpStartupInfo,
-		lpProcessInformation);
-		
-		
-}
-
-
-WINBOOL
-STDCALL
-CreateProcessW(
-    LPCWSTR lpApplicationName,
-    LPWSTR lpCommandLine,
-    LPSECURITY_ATTRIBUTES lpProcessAttributes,
-    LPSECURITY_ATTRIBUTES lpThreadAttributes,
-    WINBOOL bInheritHandles,
-    DWORD dwCreationFlags,
-    LPVOID lpEnvironment,
-    LPCWSTR lpCurrentDirectory,
-    LPSTARTUPINFO lpStartupInfo,
-    LPPROCESS_INFORMATION lpProcessInformation
-    )
-{
-	HANDLE hFile, hSection, hProcess, hThread;
-	KPRIORITY PriorityClass;
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	IO_STATUS_BLOCK IoStatusBlock;
-	BOOLEAN CreateSuspended;
-	
-	NTSTATUS errCode;
-
-	UNICODE_STRING ApplicationNameString;
-	
-
-
-	LPTHREAD_START_ROUTINE  lpStartAddress = NULL;
-	LPVOID  lpParameter = NULL;
-	
-	hFile = NULL;
-
-	ApplicationNameString.Length = lstrlenW(lpApplicationName)*sizeof(WCHAR);
+   NTSTATUS errCode;
+   PROCESS_BASIC_INFORMATION ProcessBasic;
+   ULONG BytesWritten;
    
-   	ApplicationNameString.Buffer = (WCHAR *)lpApplicationName;
-   	ApplicationNameString.MaximumLength = ApplicationNameString.Length;
+   errCode = NtQueryInformationProcess(hProcess,
+				       ProcessBasicInformation,
+				       &ProcessBasic,
+				       sizeof(PROCESS_BASIC_INFORMATION),
+				       &BytesWritten);
+   if (!NT_SUCCESS(errCode)) 
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return FALSE;
+     }
+   memcpy( lpExitCode ,&ProcessBasic.ExitStatus,sizeof(DWORD));
+   return TRUE;	
+}
 
-
-	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-	ObjectAttributes.RootDirectory = NULL;
-	
-	
-
-	if ( lpProcessAttributes != NULL ) {
-		if ( lpProcessAttributes->bInheritHandle ) 
-			ObjectAttributes.Attributes = OBJ_INHERIT;
-		else
-			ObjectAttributes.Attributes = 0;
-		ObjectAttributes.SecurityDescriptor = lpProcessAttributes->lpSecurityDescriptor;
-	}
-	ObjectAttributes.Attributes |= OBJ_CASE_INSENSITIVE;
-
-	errCode = NtOpenFile(&hFile,(SYNCHRONIZE|FILE_EXECUTE), &ObjectAttributes,
-		&IoStatusBlock,(FILE_SHARE_DELETE|FILE_SHARE_READ),(FILE_SYNCHRONOUS_IO_NONALERT|FILE_NON_DIRECTORY_FILE));
-	
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-
-	errCode = NtCreateSection(&hSection,SECTION_ALL_ACCESS,NULL,NULL,PAGE_EXECUTE,SEC_IMAGE,hFile);
-	NtClose(hFile);
-
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-		
-	
-	if ( lpProcessAttributes != NULL ) {
-		if ( lpProcessAttributes->bInheritHandle ) 
-			ObjectAttributes.Attributes = OBJ_INHERIT;
-		else
-			ObjectAttributes.Attributes = 0;
-		ObjectAttributes.SecurityDescriptor = lpProcessAttributes->lpSecurityDescriptor;
-	}
-
-	errCode = NtCreateProcess(&hProcess,PROCESS_ALL_ACCESS, &ObjectAttributes,NtCurrentProcess(),bInheritHandles,hSection,NULL,NULL);
-	NtClose(hSection);
-
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-
-	PriorityClass = NORMAL_PRIORITY_CLASS;	
-	NtSetInformationProcess(hProcess,ProcessBasePriority,&PriorityClass,sizeof(KPRIORITY));
-
-	if ( ( dwCreationFlags & CREATE_SUSPENDED  ) ==  CREATE_SUSPENDED)
-		CreateSuspended = TRUE;
-	else
-		CreateSuspended = FALSE;
-
-	hThread =  CreateRemoteThread(
-  		hProcess,	
- 		lpThreadAttributes,
-    		4096, // 1 page ??	
-    		lpStartAddress,	
-    		lpParameter,	
-    		CREATE_SUSPENDED,
-    		&lpProcessInformation->dwThreadId
-   	);
-
-
-	if ( hThread == NULL )
-		return FALSE;
-
-	
-	
-	lpProcessInformation->hProcess = hProcess;
-	lpProcessInformation->hThread = hThread;
-
-	
-
-	
-	GetProcessId(hProcess,&lpProcessInformation->dwProcessId);
-
-	
-
-	return TRUE;
-				
-	
- }
-
-
-
-HANDLE
-STDCALL
-OpenProcess(
-	    DWORD dwDesiredAccess,
-	    WINBOOL bInheritHandle,
-	    DWORD dwProcessId
-	    )
+WINBOOL STDCALL GetProcessId(HANDLE hProcess, LPDWORD lpProcessId )
 {
+   NTSTATUS errCode;
+   PROCESS_BASIC_INFORMATION ProcessBasic;
+   ULONG BytesWritten;
+
+   errCode = NtQueryInformationProcess(hProcess,
+				       ProcessBasicInformation,
+				       &ProcessBasic,
+				       sizeof(PROCESS_BASIC_INFORMATION),
+				       &BytesWritten);
+   if (!NT_SUCCESS(errCode)) 
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return FALSE;
+     }
+   memcpy( lpProcessId ,&ProcessBasic.UniqueProcessId,sizeof(DWORD));
+   return TRUE;	
+}
+
+PWSTR InternalAnsiToUnicode(PWSTR Out, LPCSTR In, ULONG MaxLength)
+{
+   ULONG i;
+   
+   if (In == NULL)
+     {
+	return(NULL);
+     }
+   else
+     {
+	i = 0;
+   	while ((*In)!=0 && i < MaxLength)
+	  {
+	     Out[i] = *In;
+	     In++;
+	     i++;
+	  }
+   	Out[i] = 0;
+	return(Out);
+     }
+}
+
+WINBOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
+			       LPSTR lpCommandLine,
+			       LPSECURITY_ATTRIBUTES lpProcessAttributes,
+			       LPSECURITY_ATTRIBUTES lpThreadAttributes,
+			       WINBOOL bInheritHandles,
+			       DWORD dwCreationFlags,
+			       LPVOID lpEnvironment,
+			       LPCSTR lpCurrentDirectory,
+			       LPSTARTUPINFO lpStartupInfo,
+			       LPPROCESS_INFORMATION lpProcessInformation)
+/*
+ * FUNCTION: The CreateProcess function creates a new process and its
+ * primary thread. The new process executes the specified executable file
+ * ARGUMENTS:
+ * 
+ *     lpApplicationName = Pointer to name of executable module
+ *     lpCommandLine = Pointer to command line string
+ *     lpProcessAttributes = Process security attributes
+ *     lpThreadAttributes = Thread security attributes
+ *     bInheritHandles = Handle inheritance flag
+ *     dwCreationFlags = Creation flags
+ *     lpEnvironment = Pointer to new environment block
+ *     lpCurrentDirectory = Pointer to current directory name
+ *     lpStartupInfo = Pointer to startup info
+ *     lpProcessInformation = Pointer to process information
+ */
+{
+   WCHAR ApplicationNameW[MAX_PATH];
+   WCHAR CommandLineW[MAX_PATH];
+   WCHAR CurrentDirectoryW[MAX_PATH];
+   PWSTR PApplicationNameW;
+   PWSTR PCommandLineW;
+   PWSTR PCurrentDirectoryW;
+   ULONG i;
+   
+   OutputDebugStringA("CreateProcessA\n");
+   
+   PApplicationNameW = InternalAnsiToUnicode(ApplicationNameW,
+					     lpApplicationName,					     
+					     MAX_PATH);
+   PCommandLineW = InternalAnsiToUnicode(CommandLineW,
+					 lpCommandLine,
+					 MAX_PATH);
+   PCurrentDirectoryW = InternalAnsiToUnicode(CurrentDirectoryW,
+					      lpCurrentDirectory,
+					      MAX_PATH);	
+   return CreateProcessW(PApplicationNameW,
+			 PCommandLineW, 
+			 lpProcessAttributes,
+			 lpThreadAttributes,
+			 bInheritHandles,
+			 dwCreationFlags,
+			 lpEnvironment,
+			 PCurrentDirectoryW,
+			 lpStartupInfo,
+			 lpProcessInformation);				
+}
 
 
-	NTSTATUS errCode;
-	HANDLE ProcessHandle;
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	CLIENT_ID ClientId ;
-
-	ClientId.UniqueProcess = (HANDLE)dwProcessId;
-	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-	ObjectAttributes.RootDirectory = (HANDLE)NULL;
-	ObjectAttributes.SecurityDescriptor = NULL;
-	ObjectAttributes.SecurityQualityOfService = NULL;
+WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
+			       LPWSTR lpCommandLine,
+			       LPSECURITY_ATTRIBUTES lpProcessAttributes,
+			       LPSECURITY_ATTRIBUTES lpThreadAttributes,
+			       WINBOOL bInheritHandles,
+			       DWORD dwCreationFlags,
+			       LPVOID lpEnvironment,
+			       LPCWSTR lpCurrentDirectory,
+			       LPSTARTUPINFO lpStartupInfo,
+			       LPPROCESS_INFORMATION lpProcessInformation)
+{
+   HANDLE hFile, hSection, hProcess, hThread;
+   KPRIORITY PriorityClass;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   IO_STATUS_BLOCK IoStatusBlock;
+   BOOLEAN CreateSuspended;
+   NTSTATUS errCode;
+   UNICODE_STRING ApplicationNameString;
+   LPTHREAD_START_ROUTINE  lpStartAddress = NULL;
+   LPVOID  lpParameter = NULL;
+   PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
+   WCHAR TempApplicationName[255];
+   WCHAR TempFileName[255];
+   WCHAR TempDirectoryName[255];
+   ULONG i;
+   ULONG BaseAddress;
+   ULONG Size;
+   LARGE_INTEGER SectionOffset;
+   
+   dprintf("CreateProcessW(lpApplicationName '%w', lpCommandLine '%w')\n",
+	   lpApplicationName,lpCommandLine);
+   
+   hFile = NULL;
+   
+   /*
+    * Find the application name
+    */   
+   TempApplicationName[0] = '\\';
+   TempApplicationName[1] = '?';
+   TempApplicationName[2] = '?';
+   TempApplicationName[3] = '\\';
+   TempApplicationName[4] = 0;
+   
+   dprintf("TempApplicationName '%w'\n",TempApplicationName);
+   	     
+   if (lpApplicationName != NULL)
+     {
+	wcscpy(TempFileName, lpApplicationName);
 	
-	if ( bInheritHandle == TRUE )
-		ObjectAttributes.Attributes = OBJ_INHERIT;
-	else
-		ObjectAttributes.Attributes = 0;
+	dprintf("TempFileName '%w'\n",TempFileName);
+     }
+   else
+     {	
+	wcscpy(TempFileName, lpCommandLine);
+	
+	dprintf("TempFileName '%w'\n",TempFileName);
+	
+	for (i=0; TempFileName[i]!=' ' && TempFileName[i] != 0; i++);
+	TempFileName[i]=0;
+	
+     }
+   if (TempFileName[1] != ':')
+     {
+	GetCurrentDirectoryW(MAX_PATH,TempDirectoryName);
+	wcscat(TempApplicationName,TempDirectoryName);
+     }
+   wcscat(TempApplicationName,TempFileName);
+   
+   RtlInitUnicodeString(&ApplicationNameString, TempApplicationName);
+   
+   dprintf("ApplicationName %w\n",ApplicationNameString.Buffer);
+   
+   InitializeObjectAttributes(&ObjectAttributes,
+			      &ApplicationNameString,
+			      OBJ_CASE_INSENSITIVE,
+			      NULL,
+			      SecurityDescriptor);
 
-	errCode = NtOpenProcess ( &ProcessHandle, dwDesiredAccess, &ObjectAttributes, &ClientId);
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return NULL;
-	}
-	return ProcessHandle;
+   /*
+    * Try to open the executable
+    */
+   
+   errCode = NtOpenFile(&hFile,
+			SYNCHRONIZE|FILE_EXECUTE|FILE_READ_DATA,
+			&ObjectAttributes,
+			&IoStatusBlock,
+			FILE_SHARE_DELETE|FILE_SHARE_READ,
+			FILE_SYNCHRONOUS_IO_NONALERT|FILE_NON_DIRECTORY_FILE);
+   
+   if ( !NT_SUCCESS(errCode) ) 
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return FALSE;
+     }
+
+   errCode = NtCreateSection(&hSection,
+			     SECTION_ALL_ACCESS,
+			     NULL,
+			     NULL,
+			     PAGE_EXECUTE,
+			     SEC_IMAGE,
+			     hFile);
+   NtClose(hFile);
+
+   if ( !NT_SUCCESS(errCode) ) 
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return FALSE;
+     }
+			
+   errCode = NtCreateProcess(&hProcess,
+			     PROCESS_ALL_ACCESS, 
+			     NULL,
+			     NtCurrentProcess(),
+			     bInheritHandles,
+			     NULL,
+			     NULL,
+			     NULL);
+   
+   BaseAddress = (PVOID)0x10000;
+   LARGE_INTEGER_QUAD_PART(SectionOffset) = 0;
+   Size = 0x10000;
+   NtMapViewOfSection(hSection,
+		      hProcess,
+		      &BaseAddress,
+		      0,
+                      Size,
+		      &SectionOffset,
+		      &Size,
+		      0,
+		      MEM_COMMIT,
+		      PAGE_READWRITE);
+
+   
+   NtClose(hSection);
+
+   if ( !NT_SUCCESS(errCode) ) 
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return FALSE;
+     }
+   
+#if 0
+   PriorityClass = NORMAL_PRIORITY_CLASS;	
+   NtSetInformationProcess(hProcess,
+			   ProcessBasePriority,
+			   &PriorityClass,
+			   sizeof(KPRIORITY));
+#endif
+   dprintf("Creating thread for process\n");
+   lpStartAddress = BaseAddress;
+   hThread =  CreateRemoteThread(hProcess,	
+				 lpThreadAttributes,
+				 4096, // 1 page ??	
+				 lpStartAddress,	
+				 lpParameter,	
+				 dwCreationFlags,
+				 &lpProcessInformation->dwThreadId);
+
+   if ( hThread == NULL )
+     return FALSE;
+      
+   lpProcessInformation->hProcess = hProcess;
+   lpProcessInformation->hThread = hThread;
+
+   GetProcessId(hProcess,&lpProcessInformation->dwProcessId);
+
+   return TRUE;				
+}
+
+
+
+HANDLE STDCALL OpenProcess(DWORD dwDesiredAccess,
+			   WINBOOL bInheritHandle,
+			   DWORD dwProcessId)
+{
+   NTSTATUS errCode;
+   HANDLE ProcessHandle;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   CLIENT_ID ClientId ;
+   
+   ClientId.UniqueProcess = (HANDLE)dwProcessId;
+   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+   ObjectAttributes.RootDirectory = (HANDLE)NULL;
+   ObjectAttributes.SecurityDescriptor = NULL;
+   ObjectAttributes.SecurityQualityOfService = NULL;
+   
+   if ( bInheritHandle == TRUE )
+     ObjectAttributes.Attributes = OBJ_INHERIT;
+   else
+     ObjectAttributes.Attributes = 0;
+   
+   errCode = NtOpenProcess(&ProcessHandle, 
+			   dwDesiredAccess, 
+			   &ObjectAttributes, 
+			   &ClientId);
+   if (!NT_SUCCESS(errCode)) 
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return NULL;
+     }
+   return ProcessHandle;
 }
 
 

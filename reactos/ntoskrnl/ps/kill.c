@@ -13,8 +13,12 @@
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
+
+/* GLBOALS *******************************************************************/
+
+extern ULONG PiNrThreads;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -51,6 +55,14 @@ NTSTATUS STDCALL ZwTerminateThread(IN HANDLE ThreadHandle,
      }
 }
 
+VOID PsReleaseThread(PETHREAD Thread)
+{
+   DPRINT("PsReleaseThread(Thread %x)\n",Thread);
+   
+   RemoveEntryList(&Thread->Tcb.Entry);
+   ExFreePool(Thread);
+}
+
 
 NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus)
 /*
@@ -63,6 +75,8 @@ NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus)
    KIRQL oldlvl;
    PETHREAD CurrentThread;
    
+   PiNrThreads--;
+   
    CurrentThread = PsGetCurrentThread();
    
    CurrentThread->ExitStatus = ExitStatus;
@@ -70,7 +84,6 @@ NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus)
    DPRINT("terminating %x\n",CurrentThread);
    KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
    CurrentThread->Tcb.ThreadState = THREAD_STATE_TERMINATED;
-   RemoveEntryList(&CurrentThread->Tcb.Entry);
    ZwYieldExecution();
    for(;;);
 }

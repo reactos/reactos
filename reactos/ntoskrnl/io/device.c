@@ -125,7 +125,7 @@ NTSTATUS InitalizeLoadedDriver(PDRIVER_INITIALIZE entry)
    /*
     * Allocate memory for a driver object
     * NOTE: The object only becomes system visible once the associated
-    * device objects are intialized
+    * device objects are initialized
     */
    DriverObject=ExAllocatePool(NonPagedPool,sizeof(DRIVER_OBJECT));
    if (DriverObject==NULL)

@@ -45,6 +45,7 @@ static KSPIN_LOCK ThreadListLock = {0,};
  */
 static LIST_ENTRY PriorityListHead[NR_THREAD_PRIORITY_LEVELS]={{NULL,NULL},};
 static BOOLEAN DoneInitYet = FALSE;
+ULONG PiNrThreads = 0;
 
 static PETHREAD CurrentThread = NULL;
 
@@ -66,7 +67,8 @@ static VOID PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
 {
    KIRQL oldlvl;
    
-   DPRINT("PsInsertIntoThreadList(Priority %d, Thread %x)\n",Priority,Thread);
+   DPRINT("PsInsertIntoThreadList(Priority %x, Thread %x)\n",Priority,
+	    Thread);
    
    KeAcquireSpinLock(&ThreadListLock,&oldlvl);
    InsertTailList(&PriorityListHead[THREAD_PRIORITY_MAX+Priority],
@@ -91,12 +93,19 @@ static PETHREAD PsScanThreadList(KPRIORITY Priority)
    PETHREAD oldest = NULL;
    ULONG oldest_time = 0;
    
-   DPRINT("PsScanThreadList(Priority %d)\n",Priority);
+//   DPRINT("PsScanThreadList(Priority %d)\n",Priority);
    
    current_entry = PriorityListHead[THREAD_PRIORITY_MAX+Priority].Flink;
    while (current_entry != &PriorityListHead[THREAD_PRIORITY_MAX+Priority])
      {
 	current = CONTAINING_RECORD(current_entry,ETHREAD,Tcb.Entry);
+	#if 0
+	if (current->Tcb.ThreadState == THREAD_STATE_TERMINATED &&
+	    current != CurrentThread)
+	  {
+	     PsReleaseThread(CurrentThread);
+	  }
+	#endif
 	if (current->Tcb.ThreadState == THREAD_STATE_RUNNABLE)
 	  {
 	     if (oldest == NULL || oldest_time > current->Tcb.LastTick)
@@ -107,7 +116,7 @@ static PETHREAD PsScanThreadList(KPRIORITY Priority)
 	  }
 	current_entry = current_entry->Flink;
      }
-   DPRINT("PsScanThreadList() = %x\n",oldest);
+//   DPRINT("PsScanThreadList() = %x\n",oldest);
    return(oldest);
 }
 
@@ -139,16 +148,16 @@ VOID PsDispatchThread(VOID)
 	Candidate = PsScanThreadList(CurrentPriority);
 	if (Candidate == CurrentThread)
 	  {
-	     DPRINT("Scheduling current thread\n");
-	     KeQueryTickCount(&TickCount);
-	     CurrentThread->Tcb.LastTick = GET_LARGE_INTEGER_LOW_PART(TickCount);
+//             DbgPrint("Scheduling current thread\n");
+             KeQueryTickCount(&TickCount);
+             CurrentThread->Tcb.LastTick = GET_LARGE_INTEGER_LOW_PART(TickCount);
 	     CurrentThread->Tcb.ThreadState = THREAD_STATE_RUNNING;
 	     KeReleaseSpinLock(&ThreadListLock,irql);
 	     return;
 	  }
 	if (Candidate != NULL)
 	  {	
-	     DPRINT("Scheduling %x\n",Candidate);
+//             DbgPrint("Scheduling %x\n",Candidate);
 	     
 	     Candidate->Tcb.ThreadState = THREAD_STATE_RUNNING;
 	     
@@ -174,6 +183,8 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
    ULONG ProcessId;
    PETHREAD Thread;
    NTSTATUS Status;
+   
+   PiNrThreads++;
    
    Thread = ObGenericCreateObject(ThreadHandle,
 				  DesiredAccess,
@@ -202,15 +213,23 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
    else
      {
 	Thread->ThreadsProcess=SystemProcess;
+	ObReferenceObjectByPointer(Thread->ThreadsProcess,
+				   PROCESS_CREATE_THREAD,
+				   PsProcessType,
+				   UserMode);
      }
+   ObReferenceObjectByPointer(Thread->ThreadsProcess,
+			      PROCESS_CREATE_THREAD,
+			      PsProcessType,
+			      UserMode);
    InitializeListHead(Thread->Tcb.ApcList);
    InitializeListHead(&(Thread->IrpList));
-   Thread->Cid.UniqueThread=NextThreadUniqueId++;
-//   thread->Cid.ThreadId=InterlockedIncrement(&NextThreadUniqueId);
+   Thread->Cid.UniqueThread=InterlockedIncrement(&NextThreadUniqueId);
    PsInsertIntoThreadList(Thread->Tcb.CurrentPriority,Thread);
    
    *ThreadPtr = Thread;
    
+   ObDereferenceObject(Thread->ThreadsProcess);   
    return(STATUS_SUCCESS);
 }
 
@@ -324,6 +343,9 @@ NTSTATUS ZwCreateThread(PHANDLE ThreadHandle,
 {
    PETHREAD Thread;
    NTSTATUS Status;
+   
+   DbgPrint("ZwCreateThread(ThreadHandle %x, PCONTEXT %x)\n",
+	  ThreadHandle,ThreadContext);
    
    Status = PsInitializeThread(ProcessHandle,&Thread,ThreadHandle,
 			       DesiredAccess,ObjectAttributes);
@@ -509,6 +531,7 @@ NTSTATUS STDCALL ZwResumeThread(IN HANDLE ThreadHandle,
 	Thread->Tcb.ThreadState = THREAD_STATE_RUNNABLE;
      }
    
+   ObDereferenceObject(Thread);
    return(STATUS_SUCCESS);
 }
 
@@ -570,6 +593,7 @@ NTSTATUS STDCALL ZwSuspendThread(IN HANDLE ThreadHandle,
 	  }
      }
    
+   ObDereferenceObject(Thread);
    return(STATUS_SUCCESS);
 }
 

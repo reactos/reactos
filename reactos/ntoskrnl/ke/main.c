@@ -117,7 +117,7 @@ asmlinkage void _main(boot_param* _bp)
    unsigned int start1;
    boot_param bp;
    
-//   memset((void *)&edata,0,((int)&end)-((int)&edata));
+   memset((void *)&edata,0,((int)&end)-((int)&edata));
    
    /*
     * Copy the parameters to a local buffer because lowmem will go away
@@ -139,15 +139,7 @@ asmlinkage void _main(boot_param* _bp)
 	DbgPrint("Reduce the amount of uninitialized data\n");
 	for(;;);
      }   
-   DPRINT("MmGetPhysicalAddress(start) = %x\n",MmGetPhysicalAddress((void *)start));
-   DPRINT("bp.module_length[0] %x PAGE_ROUND_UP(bp.module_length[0]) %x\n",
-          bp.module_length[0],PAGE_ROUND_UP(bp.module_length[0]));
    start1 = start+PAGE_ROUND_UP(bp.module_length[1]);
-   DPRINT("bp.module_length[1] %x PAGE_ROUND_UP(bp.module_length[1]) %x\n",
-          bp.module_length[1],PAGE_ROUND_UP(bp.module_length[1]));
-
-   DPRINT("start %x *start %x\n",start,*((unsigned int *)start));
-   DPRINT("start1 %x *start1 %x\n",start1,*((unsigned int *)start1));
 
    
    /*
@@ -155,15 +147,10 @@ asmlinkage void _main(boot_param* _bp)
     */
    HalInit(&bp);
    MmInitalize(&bp);
-   CHECKPOINT;
    KeInit();
-   CHECKPOINT;
    ObInit();
-   CHECKPOINT;
    PsInit();
-   CHECKPOINT;
    IoInit();  
-   CHECKPOINT;
       
    /*
     * Initalize services loaded at boot time
@@ -172,11 +159,9 @@ asmlinkage void _main(boot_param* _bp)
     
    start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
    start1 = start+PAGE_ROUND_UP(bp.module_length[1]);
-//   DbgPrint("start1 %x *start1 %x\n",start1,*((unsigned int *)start1));
    for (i=1;i<bp.nr_files;i++)
      {
       	process_boot_module(start);
-//	DbgPrint("start1 %x *start1 %x\n",start1,*((unsigned int *)start1));
         start=start+PAGE_ROUND_UP(bp.module_length[i]);
      }
    

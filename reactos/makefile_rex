@@ -31,7 +31,7 @@ LOADERS = dos
 # Select the device drivers and filesystems you want
 #
 KERNEL_SERVICES = parallel keyboard null mouse serial sound ide test sdisk \
-                  minix vfat # ext2fs
+                  minix vfat ext2
 
 APPS = hello shell
 
@@ -104,8 +104,8 @@ serial: dummy
 sound: dummy
 	make -C services/dd/sound
 
-ext2fs: dummy
-	make -C services/fs/ext2fs
+ext2: dummy
+	make -C services/fs/ext2
 
 #
 # Kernel loaders

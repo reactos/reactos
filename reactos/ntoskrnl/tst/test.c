@@ -129,7 +129,7 @@ VOID ExExecuteShell(VOID)
    
    BaseAddress = (PVOID)0x10000;
    LARGE_INTEGER_QUAD_PART(SectionOffset) = 0;
-   Size = 0x10000;
+   Size = 0x20000;
    ZwMapViewOfSection(SectionHandle,
 		      ShellHandle,
 		      &BaseAddress,

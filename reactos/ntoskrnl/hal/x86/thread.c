@@ -150,7 +150,7 @@ NTSTATUS KeValidateUserContext(PCONTEXT Context)
        (Context->EFlags & FLAG_VM) ||
        (!(Context->EFlags & FLAG_IF)))
      {
-	return(STATUS_SUCCESS);
+        return(STATUS_UNSUCCESSFUL);
      }
    return(STATUS_SUCCESS);
 }

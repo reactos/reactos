@@ -71,6 +71,7 @@ wchar_t* wcscpy(wchar_t* str1, const wchar_t* str2)
 	s++;
 	str2++;
      }
+   *s = 0;
    return(str1);
 }
 

@@ -1,7 +1,9 @@
-all: test.bin
+all: hello.bin
 
-test.bin: test.o
-	$(LD) -Ttext 0x10000 test.o ../../lib/ntdll/ntdll.a -o test.exe
-	$(OBJCOPY) -O binary test.exe test.bin
+OBJECTS = ../common/crt0.o hello.o
+
+hello.bin: $(OBJECTS)
+	$(LD) -Ttext 0x10000 $(OBJECTS) ../../lib/kernel32/kernel32.a ../../lib/ntdll/ntdll.a -o hello.exe
+	$(OBJCOPY) -O binary hello.exe hello.bin
 
 include ../../rules.mak

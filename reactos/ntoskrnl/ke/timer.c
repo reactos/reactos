@@ -37,7 +37,7 @@ static unsigned long long system_time = 0;
 /*
  * Number of timer interrupts since initialisation
  */
-static volatile unsigned long long ticks=0;
+volatile ULONGLONG KiTimerTicks;
 
 /*
  * The increment in the system clock every timer tick (in system time units)
@@ -76,10 +76,10 @@ VOID KeCalibrateTimerLoop(VOID)
    for (i=0;i<20;i++)
      {
    
-	start_tick = ticks;
+	start_tick = KiTimerTicks;
         microseconds = 0;
-        while (start_tick == ticks);
-        while (ticks == (start_tick+TICKS_TO_CALIBRATE))
+        while (start_tick == KiTimerTicks);
+        while (KiTimerTicks == (start_tick+TICKS_TO_CALIBRATE))
         {
                 KeStallExecutionProcessor(1);
                 microseconds++;
@@ -418,7 +418,7 @@ VOID KeQueryTickCount(PLARGE_INTEGER TickCount)
  *         TickCount (OUT) = Points to storage for the number of ticks
  */
 {
-  LARGE_INTEGER_QUAD_PART(*TickCount) = ticks;
+  LARGE_INTEGER_QUAD_PART(*TickCount) = KiTimerTicks;
 }
 
 static void HandleExpiredTimer(PKTIMER current)
@@ -484,11 +484,13 @@ BOOLEAN KiTimerInterrupt(VOID)
    char* vidmem=(char *)physical_to_linear(0xb8000 + 160 - 36);
    int i;
    int x,y;
+   extern ULONG PiNrThreads;
+   extern ULONG EiNrUsedBlocks;
    
    /*
     * Increment the number of timers ticks 
     */
-   ticks++;
+   KiTimerTicks++;
    system_time = system_time + CLOCK_INCREMENT;
    
    /*
@@ -508,7 +510,8 @@ BOOLEAN KiTimerInterrupt(VOID)
 	  (EiFreeNonPagedPool + EiUsedNonPagedPool);
      }
 //   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,ticks);
-   sprintf(str,"%.4u %.4u %.7u",x,y,ticks);
+   memset(str, 0, sizeof(str));
+   sprintf(str,"%.8u %.8u",EiNrUsedBlocks,KiTimerTicks);
 //   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,EiUsedNonPagedPool);
    for (i=0;i<17;i++)
      {

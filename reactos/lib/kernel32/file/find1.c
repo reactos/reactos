@@ -16,7 +16,7 @@
 
 /* TYPES ********************************************************************/
 
-typedef struct _KERNEL32_FIND_FILE_DATA
+typedef struct _KERNEL32_FIND_FILE_DATA;
 {
    HANDLE DirectoryHandle;
    FILE_DIRECTORY_INFORMATION FileInfo;
@@ -32,14 +32,14 @@ HANDLE FindFirstFileA(LPCTSTR lpFileName, LPWIN32_FIND_DATA lpFindFileData)
    i = 0;
    while (lpFileName[i]!=0)
      {
-        lpFileNameW[i] = lpFileName[i];
+	lpFileName[i] = lpFileName[i];
 	i++;
      }
    
-   return(FindFirstFileW(lpFileNameW,lpFindFileData));
+   return(FindFirstFileW(lpFileName,lpFindFileData));
 }
 
-WINBOOL FindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DATA lpFindFileData)
+BOOLEAN FindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DATA lpFindFileData)
 {
    return(FindNextFileW(hFindFile, lpFindFileData));
 }
@@ -50,8 +50,7 @@ BOOL FindClose(HANDLE hFindFile)
    
    IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
    NtClose(IData->DirectoryHandle);
-   HeapFree(GetProcessHeap(), 0, IData);
-   return(TRUE);
+   HeapFree(IData);
 }
 
 HANDLE STDCALL FindFirstFileW(LPCWSTR lpFileName, 
@@ -65,7 +64,6 @@ HANDLE STDCALL FindFirstFileW(LPCWSTR lpFileName,
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING DirectoryNameStr;
    IO_STATUS_BLOCK IoStatusBlock;
-   UNICODE_STRING PatternStr;
    
    dprintf("FindFirstFileW(lpFileName %w, lpFindFileData %x)\n",
 	   lpFileName, lpFindFileData);
@@ -76,12 +74,12 @@ HANDLE STDCALL FindFirstFileW(LPCWSTR lpFileName,
    Directory[2] = '?';
    Directory[3] = '\\';
    Directory[4] = 0;
-   wcscat(Directory, CurrentDirectory);
-   wcscat(Directory, lpFileName);
-   End = wcschr(Directory, '\\');
+   wstrcat(Directory, CurrentDirectory);
+   wstrcat(Directory, lpFileName);
+   End = wstrchr(Directory, '\\');
    *End = 0;
    
-   wcscpy(Pattern, End+1);
+   wstrcpy(Pattern, End+1);
    
    dprintf("Directory %w End %w\n",Directory,End);
    
@@ -97,27 +95,24 @@ HANDLE STDCALL FindFirstFileW(LPCWSTR lpFileName,
 			      NULL);
    
    if (ZwOpenFile(&IData->DirectoryHandle,
-		  FILE_TRAVERSE,		 
+		  FILE_TRAVERSE,
 		  &ObjectAttributes,
-		  &IoStatusBlock,
 		  0,
 		  OPEN_EXISTING)!=STATUS_SUCCESS)
      {
 	return(NULL);
      }
-   
-   RtlInitUnicodeString(&PatternStr, Pattern);
-   
+		  
    NtQueryDirectoryFile(IData->DirectoryHandle,
 			NULL,
 			NULL,
 			NULL,
 			&IoStatusBlock,
-			(PVOID)&IData->FileInfo,
+			&IData->FileInfo,
 			sizeof(IData->FileInfo),
 			FileDirectoryInformation,
 			TRUE,
-			&PatternStr,
+			Pattern,
 			FALSE);
    
    return(IData);

@@ -50,6 +50,19 @@ void ExecuteCd(char* cmdline)
 
 void ExecuteDir(char* cmdline)
 {
+        HANDLE shandle;
+        WIN32_FIND_DATA FindData;
+
+        shandle = FindFirstFile("*.*",&FindData);
+
+        if (shandle==INVALID_HANDLE_VALUE)
+        {
+                return;
+        }
+        do
+        {
+                debug_printf("Scanning %s\n",FindData.cFileName);
+        } while(FindNextFile(shandle,&FindData));
 }
 
 void ExecuteType(char* cmdline)
@@ -74,6 +87,28 @@ void ExecuteType(char* cmdline)
 	debug_printf("%c",c);
 	c = 0;
      }
+}
+
+int ExecuteProcess(char* name, char* cmdline)
+{
+   PROCESS_INFORMATION ProcessInformation;
+   STARTUPINFO StartupInfo;
+   char arguments;
+   
+   memset(&StartupInfo,0,sizeof(StartupInfo));
+   StartupInfo.cb = sizeof(STARTUPINFO);
+   StartupInfo.lpTitle = name;
+  
+   return(CreateProcessA(name,
+			 cmdline,
+			 NULL,
+			 NULL,
+			 TRUE,
+			 CREATE_NEW_CONSOLE,
+			 NULL,
+			 NULL,
+			 &StartupInfo,
+			 &ProcessInformation));
 }
 
 void ExecuteCommand(char* line)
@@ -122,6 +157,11 @@ void ExecuteCommand(char* line)
 	ExecuteType(tail);	
 	return;
      }
+   if (ExecuteProcess(cmd,tail))
+     {
+        debug_printf("Done ExecuteProcess\n");
+	return;
+     }
    debug_printf("Unknown command\n");
 }
 
@@ -155,6 +195,8 @@ void ReadLine(char* line)
 void main()
 {
    static char line[255];
+   
+   KERNEL32_Init();
    
    NtDisplayString("Shell Starting...\n");
       

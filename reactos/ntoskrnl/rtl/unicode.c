@@ -221,27 +221,27 @@ VOID RtlCopyString(IN OUT PSTRING DestinationString, IN PSTRING SourceString)
 VOID RtlCopyUnicodeString(IN OUT PUNICODE_STRING DestinationString,
                           IN PUNICODE_STRING SourceString)
 {
-        unsigned long copylen, i;
-
-        if(SourceString==NULL) {
-                 DestinationString->Length=0;
-        } else {
-                 if(SourceString->Length<DestinationString->MaximumLength) {
-                         copylen=SourceString->Length;
-                 } else {
-                         copylen=DestinationString->MaximumLength;
-                 };
-                 for(i=0; i<copylen; i++)
-                 {
-                         *DestinationString->Buffer=*SourceString->Buffer;
-                         DestinationString->Buffer++;
-                         SourceString->Buffer++;
-                 };
-                 *DestinationString->Buffer=0;
-                 DestinationString->Buffer-=copylen;
-                 SourceString->Buffer-=copylen;
-        };
-};
+   unsigned long copylen, i;
+   
+   if(SourceString==NULL) 
+     {
+	DestinationString->Length=0;
+     } 
+   else 
+     {
+	copylen = min(DestinationString->MaximumLength,
+		      SourceString->Length);
+	for(i=0; i<copylen; i++)
+	  {
+	     *DestinationString->Buffer=*SourceString->Buffer;
+	     DestinationString->Buffer++;
+	     SourceString->Buffer++;
+	  }
+	*DestinationString->Buffer=0;
+	DestinationString->Buffer-=copylen;
+	SourceString->Buffer-=copylen;
+     }
+}
 
 BOOLEAN RtlEqualString(PSTRING String1, PSTRING String2, BOOLEAN CaseInsensitive)
 {
@@ -350,20 +350,24 @@ VOID RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
                           IN PCWSTR SourceString)
 {
         unsigned long i, DestSize;
-        UNICODE_STRING Dest=*DestinationString;
 
-        if(SourceString==NULL) {
+        DPRINT("RtlInitUnicodeString(DestinationString %x, "
+                 "SourceString %x)\n",DestinationString,SourceString);
+
+        if (SourceString==NULL)
+        {
                 DestinationString->Length=0;
                 DestinationString->MaximumLength=0;
                 DestinationString->Buffer=NULL;
-        } else {
+        }
+        else
+        {
                 DestSize=wstrlen((PWSTR)SourceString);
                 DestinationString->Length=DestSize;
                 DestinationString->MaximumLength=DestSize+1;
-
                 DestinationString->Buffer=(PWSTR)SourceString;
-        };
-};
+        }
+}
 
 NTSTATUS RtlIntegerToUnicodeString(IN ULONG Value, IN ULONG Base,                    /* optional */
                                    IN OUT PUNICODE_STRING String)

@@ -15,7 +15,7 @@
 #include <internal/mm.h>
 #include <internal/string.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/
@@ -157,20 +157,25 @@ NTSTATUS STDCALL ZwCreateProcess(
    LARGE_INTEGER Offset;
    NTSTATUS Status;
    
+   DPRINT("ZwCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
+
    Status = ObReferenceObjectByHandle(ParentProcessHandle,
 				      PROCESS_CREATE_PROCESS,
 				      PsProcessType,
 				      UserMode,
 				      &ParentProcessHandle,
 				      NULL);
+
    if (Status != STATUS_SUCCESS)
      {
 	DPRINT("ZwCreateProcess() = %x\n",Status);
 	return(Status);
      }
-   
-   Process = ObGenericCreateObject(ProcessHandle,DesiredAccess,
-				   ObjectAttributes,PsProcessType);
+
+   Process = ObGenericCreateObject(ProcessHandle,
+                                   DesiredAccess,
+				   ObjectAttributes,
+                                   PsProcessType);
    KProcess = &(Process->Pcb);
    
    InitializeListHead(&(KProcess->MemoryAreaList));
@@ -187,6 +192,14 @@ NTSTATUS STDCALL ZwCreateProcess(
 	PageDirectory[i]=CurrentPageDirectory[i];
      }
    
+   /*
+    * FIXME: I don't what I'm supposed to know with a section handle
+    */
+   if (SectionHandle != NULL)
+     {
+	DbgPrint("ZwCreateProcess() non-NULL SectionHandle\n");
+	return(STATUS_UNSUCCESSFUL);
+     }
    
    return(STATUS_SUCCESS);
 }

@@ -547,7 +547,8 @@ NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
      }
    CHECKPOINT;
    *Object = current_dir;
-   
+   DPRINT("(%s:%d) current_dir %x\n",__FILE__,__LINE__,current_dir);
+
    return(Status);
 }
  

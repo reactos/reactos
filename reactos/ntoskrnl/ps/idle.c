@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/bug.c
- * PURPOSE:         Graceful system shutdown if a bug is detected
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * FILE:            ntoskrnl/ps/idle.c
+ * PURPOSE:         Using idle time
+ * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *                  Created 22/05/98
  */

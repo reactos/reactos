@@ -223,11 +223,7 @@ BOOL is_page_present(unsigned int vaddr)
  * buffer from an irq.
  */
 {
-#if 0        
-   unsigned int* page_dir = physical_to_linear(current_task->cr3);
-#else
    unsigned int* page_dir = get_page_directory();
-#endif
    unsigned int* page_tlb = NULL;
    
    /*

@@ -1,6 +1,7 @@
 all: ntdll.a
 
-OBJECTS = napi.o stubs/stubs.o string/wstring.o stdio/vsprintf.o
+OBJECTS = napi.o stubs/stubs.o string/wstring.o stdio/vsprintf.o \
+          rtl/unicode.o rtl/namespc.o
 
 ntdll.a: $(OBJECTS)
 	$(AR) vcsr ntdll.a $(OBJECTS)

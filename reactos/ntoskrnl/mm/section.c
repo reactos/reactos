@@ -104,8 +104,8 @@ NTSTATUS STDCALL ZwCreateSection(OUT PHANDLE SectionHandle,
    PSECTION_OBJECT Section;
    NTSTATUS Status;
    
-   DPRINT("ZwCreateSection()\n");
-   
+   DbgPrint("ZwCreateSection()\n");
+
    Section = ObGenericCreateObject(SectionHandle,
 				   DesiredAccess,
 				   ObjectAttributes,
@@ -128,11 +128,13 @@ NTSTATUS STDCALL ZwCreateSection(OUT PHANDLE SectionHandle,
 				      NULL);
    if (Status != STATUS_SUCCESS)
      {
+	DPRINT("ZwCreateSection() = %x\n",Status);
 	return(Status);
      }
    
    Section->AllocateAttributes = AllocationAttributes;
    
+   DPRINT("ZwCreateSection() = STATUS_SUCCESS\n");
    return(STATUS_SUCCESS);
 }
 

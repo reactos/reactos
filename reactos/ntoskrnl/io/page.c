@@ -28,6 +28,9 @@ NTSTATUS IoPageRead(PFILE_OBJECT FileObject,
    PIO_STACK_LOCATION StackPtr;
    NTSTATUS Status;
    
+   DPRINT("IoPageRead(FileObject %x, Address %x)\n",
+	  FileObject,Address);
+
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
 				      FileObject->DeviceObject,

@@ -45,16 +45,11 @@ PVOID ExAllocatePool(POOL_TYPE PoolType, ULONG NumberOfBytes)
  */
 {
    PVOID Block;
-
-   OLD_DPRINT("ExAllocatePool(NumberOfBytes %d) caller %x\n",
-              NumberOfBytes,
-              ((PULONG)&PoolType)[-1]);
-
+//   DbgPrint("ExAllocatePool(NumberOfBytes %d) caller %x\n",
+//            NumberOfBytes,((PULONG)&PoolType)[-1]);
    Block = ExAllocatePoolWithTag(PoolType,NumberOfBytes,TAG_NONE);
-
-   OLD_DPRINT("ExAllocatePool() = %x\n",Block);
-
-   return Block;
+//   DbgPrint("ExAllocatePool() = %x\n",Block);
+   return(Block);
 }
 
 PVOID ExAllocatePoolWithTag(ULONG type, ULONG size, ULONG Tag)
@@ -121,4 +116,3 @@ PVOID ExAllocatePoolWithQuota(POOL_TYPE PoolType, ULONG NumberOfBytes)
 {
    return(ExAllocatePoolWithQuotaTag(PoolType,NumberOfBytes,TAG_NONE));
 }
-

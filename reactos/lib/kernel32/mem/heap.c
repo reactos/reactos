@@ -44,7 +44,7 @@ static HEAP_BUCKET __HeapDefaultBuckets[]=
   { NULL, 256, 15, 4088 },
 };
 
-PHEAP	__ProcessHeap;
+PHEAP	__ProcessHeap = NULL;
 
 static BOOL   __HeapCommit(PHEAP pheap, LPVOID start, LPVOID end);
 static BOOL   __HeapDecommit(PHEAP pheap, LPVOID start, LPVOID end);
@@ -60,8 +60,6 @@ static LPVOID __HeapReAllocFragment(PHEAP pheap, ULONG flags,
 static BOOL   __HeapFreeFragment(PHEAP pheap, ULONG flags, LPVOID ptr);
 static PHEAP  __HeapPrepare(LPVOID base, ULONG minsize, ULONG maxsize,
                             ULONG flags);
-
-
 
 /*********************************************************************
 *                      __HeapCommit                                  *
@@ -625,7 +623,7 @@ PHEAP __HeapPrepare(LPVOID base, ULONG minsize, ULONG maxsize,  ULONG flags)
 
 VOID WINAPI __HeapInit(LPVOID base, ULONG minsize, ULONG maxsize)
 {
-   VirtualAlloc(base,maxsize,MEM_RESERVE,PAGE_READWRITE);
+   base = VirtualAlloc(base,maxsize,MEM_RESERVE,PAGE_READWRITE);
    VirtualAlloc(base,PAGESIZE,MEM_COMMIT,PAGE_READWRITE);
    
    __HeapPrepare(base, minsize, maxsize, 0);
