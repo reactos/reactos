@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.60 2004/12/12 21:38:25 royce Exp $
+/* $Id: bitblt.c,v 1.61 2004/12/12 23:08:09 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -89,7 +89,7 @@ BltMask(SURFOBJ* Dest,
    static BYTE maskbit[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
    /* Pattern brushes */
    PGDIBRUSHINST GdiBrush = NULL;
-   HBITMAP PatternSurface;
+   HBITMAP PatternSurface = NULL;
    SURFOBJ *PatternObj = NULL;
    PBITMAPOBJ PatternBitmap;
    ULONG PatternWidth = 0, PatternHeight = 0, PatternY = 0;

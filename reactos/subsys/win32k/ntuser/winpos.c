@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.126 2004/12/12 01:40:38 weiden Exp $
+/* $Id: winpos.c,v 1.127 2004/12/12 23:08:12 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -175,7 +175,7 @@ PINTERNALPOS FASTCALL
 WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT *pt, PRECT RestoreRect)
 {
   PWINDOW_OBJECT Parent;
-  INT XInc, YInc;
+  UINT XInc, YInc;
   
   if (WindowObject->InternalPos == NULL)
     {
@@ -331,7 +331,7 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 VOID FASTCALL
 WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
 {
-  INT XInc, YInc;
+  UINT XInc, YInc;
   RECT WorkArea;
   PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop; /* Or rather get it from the window? */
   

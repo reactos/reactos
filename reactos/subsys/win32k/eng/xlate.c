@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.43 2004/12/12 01:40:36 weiden Exp $
+/* $Id: xlate.c,v 1.44 2004/12/12 23:08:09 navaraf Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -151,8 +151,8 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
    XLATEGDI *XlateGDI;
    PALGDI *SourcePalGDI = 0;
    PALGDI *DestPalGDI = 0;
-   ULONG SourceRedMask, SourceGreenMask, SourceBlueMask;
-   ULONG DestRedMask, DestGreenMask, DestBlueMask;
+   ULONG SourceRedMask = 0, SourceGreenMask = 0, SourceBlueMask = 0;
+   ULONG DestRedMask = 0, DestGreenMask = 0, DestBlueMask = 0;
    ULONG i;
 
    XlateGDI = EngAllocMem(0, sizeof(XLATEGDI), TAG_XLATEOBJ);

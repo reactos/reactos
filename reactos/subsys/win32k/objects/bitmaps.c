@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.83 2004/12/12 20:58:09 royce Exp $ */
+/* $Id: bitmaps.c,v 1.84 2004/12/12 23:08:12 navaraf Exp $ */
 #include <w32k.h>
 
 #define IN_RECT(r,x,y) \
@@ -156,7 +156,7 @@ NtGdiBitBlt(
 			SourcePalette = DCSrc->w.hPalette;
 
 		/* KB41464 details how to convert between mono and color */
-		if (DCDest->w.bitsPerPixel == DCSrc->w.bitsPerPixel == 1)
+		if (DCDest->w.bitsPerPixel == 1 && DCSrc->w.bitsPerPixel == 1)
 		{
 			XlateObj = NULL;
 		}

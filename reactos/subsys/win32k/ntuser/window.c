@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.254 2004/12/12 16:47:52 navaraf Exp $
+/* $Id: window.c,v 1.255 2004/12/12 23:08:11 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -402,7 +402,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
 }
 
 VOID FASTCALL
-IntGetWindowBorderMeasures(PWINDOW_OBJECT WindowObject, INT *cx, INT *cy)
+IntGetWindowBorderMeasures(PWINDOW_OBJECT WindowObject, UINT *cx, UINT *cy)
 {
   if(HAS_DLGFRAME(WindowObject->Style, WindowObject->ExStyle) && !(WindowObject->Style & WS_MINIMIZE))
   {
@@ -1327,7 +1327,7 @@ BOOL FASTCALL
 IntCalcDefPosSize(PWINDOW_OBJECT Parent, PWINDOW_OBJECT WindowObject, RECT *rc, BOOL IncPos)
 {
   SIZE Sz;
-  POINT Pos;
+  POINT Pos = {0, 0};
   
   if(Parent != NULL)
   {

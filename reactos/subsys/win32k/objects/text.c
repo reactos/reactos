@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.114 2004/12/12 21:58:42 royce Exp $ */
+/* $Id: text.c,v 1.115 2004/12/12 23:08:13 navaraf Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -1497,7 +1497,7 @@ NtGdiExtTextOut(
    INT yoff;
    FONTOBJ *FontObj;
    PFONTGDI FontGDI;
-   PTEXTOBJ TextObj;
+   PTEXTOBJ TextObj = NULL;
    PPALGDI PalDestGDI;
    XLATEOBJ *XlateObj, *XlateObj2;
    ULONG Mode;

@@ -194,8 +194,8 @@ MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd);
 inline BOOL MsqIsSignaled( PUSER_MESSAGE_QUEUE queue );
 inline VOID MsqSetQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
 inline VOID MsqClearQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
-BOOL IntInitMessagePumpHook();
-BOOL IntUninitMessagePumpHook();
+BOOL STDCALL IntInitMessagePumpHook();
+BOOL STDCALL IntUninitMessagePumpHook();
 #define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))
 
 PHOOKTABLE FASTCALL MsqGetHooks(PUSER_MESSAGE_QUEUE Queue);

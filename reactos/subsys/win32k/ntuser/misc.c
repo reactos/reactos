@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.91 2004/12/12 01:40:37 weiden Exp $
+/* $Id: misc.c,v 1.92 2004/12/12 23:08:11 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -563,7 +563,7 @@ NtUserCallTwoParam(
     case TWOPARAM_ROUTINE_GETSYSCOLORPENS:
     case TWOPARAM_ROUTINE_GETSYSCOLORS:
     {
-      DWORD Ret;
+      DWORD Ret = 0;
       union
       {
         PVOID Pointer;
