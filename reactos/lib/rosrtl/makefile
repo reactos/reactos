@@ -1,10 +1,14 @@
-# $Id: makefile,v 1.5 2003/07/21 02:36:00 royce Exp $
+# $Id: makefile,v 1.6 2003/07/21 03:56:27 royce Exp $
 
 PATH_TO_TOP = ../..
 
 TARGET_TYPE = library
 
 TARGET_NAME = rosrtl
+
+TARGET_LFLAGS = -nostartfiles -nostdlib
+
+TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
 
 THREAD_OBJECTS = \
  thread/context.o \
@@ -14,10 +18,6 @@ THREAD_OBJECTS = \
 MISC_OBJECTS = \
  misc/devmode.o \
  misc/qsort.o
-
-TARGET_LFLAGS = -nostartfiles -nostdlib
-
-TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
 
 TARGET_OBJECTS = $(THREAD_OBJECTS) $(MISC_OBJECTS)
  

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.29 2003/07/21 02:36:00 royce Exp $
+# $Id: makefile,v 1.30 2003/07/21 03:56:27 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = gdi32
 
 TARGET_BASE = 0x77ed0000
 
-TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a rosrtl.a
+TARGET_SDKLIBS = rosrtl.a ntdll.a advapi32.a kernel32.a
 
 TARGET_CFLAGS = \
  -I./include \
