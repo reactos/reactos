@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.107 2002/06/10 23:04:48 ekohl Exp $
+/* $Id: loader.c,v 1.108 2002/06/11 18:37:23 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1276,17 +1276,53 @@ static LONG
 LdrpCompareModuleNames(IN PUNICODE_STRING String1,
 		       IN PUNICODE_STRING String2)
 {
-  ULONG len1, len2;
-  PWCHAR s1, s2;
+  ULONG len1, len2, i;
+  PWCHAR s1, s2, p;
   WCHAR  c1, c2;
 
   if (String1 && String2)
     {
+      /* Search String1 for last path component */
       len1 = String1->Length / sizeof(WCHAR);
-      len2 = String2->Length / sizeof(WCHAR);
       s1 = String1->Buffer;
-      s2 = String2->Buffer;
+      for (i = 0, p = String1->Buffer; i < String1->Length; i = i + sizeof(WCHAR), p++)
+	{
+	  if (*p == L'\\')
+	    {
+	      if (i == String1->Length - sizeof(WCHAR))
+		{
+		  s1 = NULL;
+		  len1 = 0;
+		}
+	      else
+		{
+		  s1 = p + 1;
+		  len1 = (String1->Length - i) / sizeof(WCHAR);
+		}
+	    }
+	}
 
+      /* Search String2 for last path component */
+      len2 = String2->Length / sizeof(WCHAR);
+      s2 = String2->Buffer;
+      for (i = 0, p = String2->Buffer; i < String2->Length; i = i + sizeof(WCHAR), p++)
+	{
+	  if (*p == L'\\')
+	    {
+	      if (i == String2->Length - sizeof(WCHAR))
+		{
+		  s2 = NULL;
+		  len2 = 0;
+		}
+	      else
+		{
+		  s2 = p + 1;
+		  len2 = (String2->Length - i) / sizeof(WCHAR);
+		}
+	    }
+	}
+
+      /* Compare last path components */
       if (s1 && s2)
 	{
 	  while (1)
@@ -1327,7 +1363,7 @@ LdrGetModuleObject(PUNICODE_STRING ModuleName)
 
       if (!LdrpCompareModuleNames(&Module->BaseName, ModuleName))
 	{
-	  DPRINT("Module %x\n", Module);
+	  DPRINT("Module %wZ\n", &Module->BaseName);
 	  KeReleaseSpinLock(&ModuleListLock, Irql);
 	  return(Module);
 	}
