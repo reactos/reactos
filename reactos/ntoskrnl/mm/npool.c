@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.47 2001/09/29 19:40:49 phreak Exp $
+/* $Id: npool.c,v 1.48 2001/10/29 02:39:38 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -900,7 +900,7 @@ ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
    current_entry = FreeBlockListHead.Flink;   
    while (current_entry != &FreeBlockListHead)
      {
-  DPRINT("current %x size %x tag_next %x\n",current,current->Size,
+       DPRINT("current %x size %x tag_next %x\n",current,current->Size,
 	       current->tag_next);
 	current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
 	if (current->Size >= Size && 
