@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.71 2004/02/24 13:27:03 weiden Exp $
+/* $Id: msgqueue.c,v 1.72 2004/02/24 15:56:52 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -255,9 +255,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
       Msg == WM_RBUTTONDOWN ||
       Msg == WM_XBUTTONDOWN)
   {
-    USHORT Hit = WinPosWindowFromPoint(ScopeWin, 
-    				   &Message->Msg.pt, 
-    				   &Window);
+    USHORT Hit = WinPosWindowFromPoint(ScopeWin, FALSE, &Message->Msg.pt, &Window);
     /*
     **Make sure that we have a window that is not already in focus
     */
@@ -315,7 +313,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     }
     else
     {
-      *HitTest = WinPosWindowFromPoint(ScopeWin, &Message->Msg.pt, &Window);
+      *HitTest = WinPosWindowFromPoint(ScopeWin, FALSE, &Message->Msg.pt, &Window);
       if(!Window)
       {
         /* change the cursor on desktop background */

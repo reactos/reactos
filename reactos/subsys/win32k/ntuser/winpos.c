@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.99 2004/02/24 13:27:03 weiden Exp $
+/* $Id: winpos.c,v 1.100 2004/02/24 15:56:53 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1277,7 +1277,7 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
 }
 
 BOOL STATIC FASTCALL
-WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT *Point,
+WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, BOOL SendProcHitTests, POINT *Point,
 		     PWINDOW_OBJECT* Window, USHORT *HitTest)
 {
   PWINDOW_OBJECT Current;
@@ -1314,7 +1314,9 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT *Point,
           return TRUE;
         }
         
-        if(Current->MessageQueue == PsGetWin32Thread()->MessageQueue)
+        if((SendProcHitTests && 
+            (Current->OwnerThread->ThreadsProcess == PsGetCurrentProcess())) ||
+           (Current->MessageQueue == PsGetWin32Thread()->MessageQueue))
         {
           *HitTest = IntSendMessage(Current->Self, WM_NCHITTEST, 0,
                                     MAKELONG(Point->x, Point->y));
@@ -1334,7 +1336,7 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT *Point,
            Point->y < Current->ClientRect.bottom)
         {
           USHORT ChildHitTest;
-          if(WinPosSearchChildren(Current, Point, Window, &ChildHitTest))
+          if(WinPosSearchChildren(Current, SendProcHitTests, Point, Window, &ChildHitTest))
           {
             *HitTest = ChildHitTest;
             ExFreePool(List);
@@ -1357,7 +1359,7 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT *Point,
 }
 
 USHORT FASTCALL
-WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT *WinPoint, 
+WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, BOOL SendProcHitTests, POINT *WinPoint, 
 		      PWINDOW_OBJECT* Window)
 {
   HWND DesktopWindowHandle;
@@ -1387,7 +1389,7 @@ WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT *WinPoint,
     IntReleaseWindowObject(DesktopWindow);
   }
   
-  if(WinPosSearchChildren(ScopeWin, &Point, Window, &HitTest))
+  if(WinPosSearchChildren(ScopeWin, SendProcHitTests, &Point, Window, &HitTest))
   {
     return HitTest;
   }

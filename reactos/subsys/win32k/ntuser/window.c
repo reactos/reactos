@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.192 2004/02/24 13:27:03 weiden Exp $
+/* $Id: window.c,v 1.193 2004/02/24 15:56:52 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3373,7 +3373,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
       pt.x = X;
       pt.y = Y;
       
-      Hit = WinPosWindowFromPoint(DesktopWindow, &pt, &Window);
+      Hit = WinPosWindowFromPoint(DesktopWindow, TRUE, &pt, &Window);
       
       if(Window)
       {
