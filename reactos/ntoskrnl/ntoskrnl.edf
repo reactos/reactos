@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.122 2002/07/18 18:15:09 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.123 2002/07/18 21:49:59 ei Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -474,6 +474,8 @@ MmAllocateContiguousMemory=MmAllocateContiguousMemory@12
 MmAllocateNonCachedMemory=MmAllocateNonCachedMemory@4
 MmBuildMdlForNonPagedPool=MmBuildMdlForNonPagedPool@4
 MmCanFileBeTruncated=MmCanFileBeTruncated@8
+MmCopyFromCaller=MmCopyFromCaller@12
+MmCopyToCaller=MmCopyToCaller@12
 MmCreateMdl=MmCreateMdl@12
 MmCreateSection=MmCreateSection@32
 MmDbgTranslatePhysicalAddress=MmDbgTranslatePhysicalAddress@8

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.28 2001/05/03 06:13:05 ekohl Exp $
+/* $Id: stubs.c,v 1.29 2002/07/18 21:49:58 ei Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -375,7 +375,7 @@ GetComputerNameW (
 {
 	WCHAR	Name [MAX_COMPUTERNAME_LENGTH + 1];
 	DWORD	Size = 0;
-	
+
 	/*
 	 * FIXME: get the computer's name from
 	 * the registry.
@@ -872,16 +872,58 @@ LoadModule (
 }
 
 
-int
-STDCALL
-MulDiv (
-	int	nNumber,
-	int	nNumerator,
-	int	nDenominator
-	)
+/***********************************************************************
+ *           MulDiv   (KERNEL32.@)
+ * RETURNS
+ *	Result of multiplication and division
+ *	-1: Overflow occurred or Divisor was 0
+ */
+
+//FIXME! move to correct file
+INT STDCALL MulDiv(
+	     INT nMultiplicand,
+	     INT nMultiplier,
+	     INT nDivisor)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+#if SIZEOF_LONG_LONG >= 8
+    long long ret;
+
+    if (!nDivisor) return -1;
+
+    /* We want to deal with a positive divisor to simplify the logic. */
+    if (nDivisor < 0)
+    {
+      nMultiplicand = - nMultiplicand;
+      nDivisor = -nDivisor;
+    }
+
+    /* If the result is positive, we "add" to round. else, we subtract to round. */
+    if ( ( (nMultiplicand <  0) && (nMultiplier <  0) ) ||
+	 ( (nMultiplicand >= 0) && (nMultiplier >= 0) ) )
+      ret = (((long long)nMultiplicand * nMultiplier) + (nDivisor/2)) / nDivisor;
+    else
+      ret = (((long long)nMultiplicand * nMultiplier) - (nDivisor/2)) / nDivisor;
+
+    if ((ret > 2147483647) || (ret < -2147483647)) return -1;
+    return ret;
+#else
+    if (!nDivisor) return -1;
+
+    /* We want to deal with a positive divisor to simplify the logic. */
+    if (nDivisor < 0)
+    {
+      nMultiplicand = - nMultiplicand;
+      nDivisor = -nDivisor;
+    }
+
+    /* If the result is positive, we "add" to round. else, we subtract to round. */
+    if ( ( (nMultiplicand <  0) && (nMultiplier <  0) ) ||
+	 ( (nMultiplicand >= 0) && (nMultiplier >= 0) ) )
+      return ((nMultiplicand * nMultiplier) + (nDivisor/2)) / nDivisor;
+
+    return ((nMultiplicand * nMultiplier) - (nDivisor/2)) / nDivisor;
+
+#endif
 }
 
 
@@ -901,17 +943,17 @@ MulDiv (
  * 		MB_COMPOSITE
  *		MB_ERR_INVALID_CHARS
  *		MB_USEGLYPHCHARS
- * 		
+ *
  * 	lpMultiByteStr
  * 		Input buffer;
- * 		
+ *
  * 	cchMultiByte
  * 		Size of MultiByteStr, or -1 if MultiByteStr is
  * 		NULL terminated;
- * 		
+ *
  * 	lpWideCharStr
  * 		Output buffer;
- * 		
+ *
  * 	cchWideChar
  * 		Size (in WCHAR unit) of WideCharStr, or 0
  * 		if the caller just wants to know how large
@@ -924,7 +966,7 @@ MulDiv (
  *
  * NOTE
  * 	A raw converter for now. It assumes lpMultiByteStr is
- * 	NEVER multi-byte (that is each input character is 
+ * 	NEVER multi-byte (that is each input character is
  * 	8-bit ASCII) and is ALWAYS NULL terminated.
  * 	FIXME-FIXME-FIXME-FIXME
  */
@@ -1004,7 +1046,7 @@ MultiByteToWideChar (
 	for (	cchConverted = 0,
 		r = (PCHAR) lpMultiByteStr,
 		w = (PWCHAR) lpWideCharStr;
-		
+
 		((*r) && (cchConverted < cchWideChar));
 
 		r++,

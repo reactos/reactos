@@ -65,10 +65,10 @@ enum _BMF_TYPES
   BMF_1BPP = 1,
   BMF_4BPP,
   BMF_8BPP,
-  BMF_16BPP, 
-  BMF_24BPP, 
-  BMF_32BPP, 
-  BMF_4RLE, 
+  BMF_16BPP,
+  BMF_24BPP,
+  BMF_32BPP,
+  BMF_4RLE,
   BMF_8RLE
 };
 
@@ -124,7 +124,7 @@ enum _CD_ORDERS
 enum _ESCAPE_CODES
 {
   ESC_PASSTHROUGH,
-  ESC_QUERYESCSUPPORT 
+  ESC_QUERYESCSUPPORT
 };
 
 #define  FM_INFO_TECH_TRUETYPE              0x00000001
@@ -354,7 +354,7 @@ enum _DRV_HOOK_FUNCS
 enum _QUERY_ADVANCE_WIDTH_TYPES
 {
   QAW_GETWIDTHS = 1,
-  QAW_GETEASYWIDTHS 
+  QAW_GETEASYWIDTHS
 };
 
 #define  QC_OUTLINES  0x00000001
@@ -389,7 +389,7 @@ enum _SPS_RC
 enum _SURF_TYPES
 {
   STYPE_BITMAP = 1,
-  STYPE_DEVICE, 
+  STYPE_DEVICE,
   STYPE_DEVBITMAP
 };
 
@@ -435,14 +435,14 @@ typedef struct _DRVENABLEDATA
 /* FIXME: replace this with correct def for LDECI4  */
 typedef DWORD  LDECI4;
 
-typedef struct _CIECHROMA 
+typedef struct _CIECHROMA
 {
   LDECI4  x;
   LDECI4  y;
   LDECI4  Y;
 } CIECHROMA, *PCIECHROMA;
 
-typedef struct _COLORINFO 
+typedef struct _COLORINFO
 {
   CIECHROMA  Red;
   CIECHROMA  Green;
@@ -462,7 +462,7 @@ typedef struct _COLORINFO
   LDECI4  MagentaInYellowDye;
 } COLORINFO, *PCOLORINFO;
 
-typedef struct _DEVINFO 
+typedef struct _DEVINFO
 {
   ULONG  flGraphicsCaps;
   LOGFONTW  lfDefaultFont;
@@ -475,7 +475,7 @@ typedef struct _DEVINFO
   HPALETTE  hpalDefault;
 } DEVINFO, *PDEVINFO;
 
-typedef struct _GDIINFO 
+typedef struct _GDIINFO
 {
   ULONG  ulVersion;
   ULONG  ulTechnology;
@@ -514,7 +514,7 @@ typedef struct _GDIINFO
   ULONG  ulPanningVertRes;
 } GDIINFO, *PGDIINFO;
 
-typedef struct _BRUSHOBJ 
+typedef struct _BRUSHOBJ
 {
   ULONG  iSolidColor;
   PVOID  pvRbrush;
@@ -523,7 +523,7 @@ typedef struct _BRUSHOBJ
   LOGBRUSH  logbrush;
 } BRUSHOBJ, *PBRUSHOBJ;
 
-typedef struct _CLIPOBJ 
+typedef struct _CLIPOBJ
 {
   ULONG  iUniq;
   RECTL  rclBounds;
@@ -533,27 +533,27 @@ typedef struct _CLIPOBJ
   BYTE  fjOptions;
 } CLIPOBJ, *PCLIPOBJ;
 
-typedef struct _ENUMRECTS 
+typedef struct _ENUMRECTS
 {
   ULONG  c;
   RECTL  arcl[1];
 } ENUMRECTS, *PENUMRECTS;
 
-typedef struct _FONTOBJ 
+typedef struct _FONTOBJ
 {
-  ULONG  iUniq;  
-  ULONG  iFace; 
+  ULONG  iUniq;
+  ULONG  iFace;
   ULONG  cxMax;
   ULONG  flFontType;
   ULONG  iTTUniq;
-  ULONG  iFile;  
+  ULONG  iFile;
   SIZE  sizLogResPpi;
   ULONG  ulStyleSize;
   PVOID  pvConsumer;
   PVOID  pvProducer;
 } FONTOBJ, *PFONTOBJ;
 
-typedef struct _IFIMETRICS 
+typedef struct _IFIMETRICS
 {
   ULONG cjThis;
   ULONG ulVersion;
@@ -618,7 +618,7 @@ typedef struct _IFIMETRICS
 
 #define NB_RESERVED_COLORS              20 // number of fixed colors in system palette
 
-typedef struct _XLATEOBJ 
+typedef struct _XLATEOBJ
 {
   ULONG  iUniq;
   ULONG  flXlate;
@@ -641,7 +641,7 @@ typedef struct _PATHOBJ
   ULONG  cCurves;
 } PATHOBJ, *PPATHOBJ;
 
-typedef struct _SURFOBJ 
+typedef struct _SURFOBJ
 {
   DHSURF  dhsurf;
   HSURF  hsurf;
@@ -1204,10 +1204,14 @@ EngMapFontFile
 EngMapModule
 EngMarkBandingSurface
 EngMovePointer
-EngMulDiv
 EngMultiByteToUnicodeN
 EngMultiByteToWideChar
 */
+
+INT STDCALL EngMulDiv(
+	     INT nMultiplicand,
+	     INT nMultiplier,
+	     INT nDivisor);
 
 BOOL STDCALL
 EngPaint(IN SURFOBJ *Surface,

@@ -4,9 +4,9 @@
 NTSTATUS MmSafeCopyFromUser(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 NTSTATUS MmSafeCopyToUser(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 
-NTSTATUS
+NTSTATUS STDCALL
 MmCopyFromCaller(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
-NTSTATUS
+NTSTATUS STDCALL
 MmCopyToCaller(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 
 NTSTATUS
