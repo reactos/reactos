@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.30 2003/03/12 08:26:54 rcampbell Exp $
+/* $Id: window.c,v 1.31 2003/03/14 22:48:32 ei Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -24,8 +24,11 @@
 #include <include/msgqueue.h>
 #include <include/rect.h>
 
-#define NDEBUG
+//#define NDEBUG
+#include <win32k/debug1.h>
 #include <debug.h>
+
+#define TAG_WNAM  TAG('W', 'N', 'A', 'M')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -156,19 +159,34 @@ W32kReleaseWindowObject(PWINDOW_OBJECT Window)
   ObmDereferenceObject(Window);
 }
 
+/*!
+ * Internal function.
+ * Returns client window rectangle relative to the upper-left corner of client area.
+ *
+ * \note Does not check the validity of the parameters
+*/
 VOID
 W32kGetClientRect(PWINDOW_OBJECT WindowObject, PRECT Rect)
 {
+  ASSERT( WindowObject );
+  ASSERT( Rect );
+
   Rect->left = Rect->top = 0;
   Rect->right = WindowObject->ClientRect.right - WindowObject->ClientRect.left;
   Rect->bottom = 
     WindowObject->ClientRect.bottom - WindowObject->ClientRect.top;
 }
 
+/*!
+ * Internal Function.
+ * Return the dimension of the window in the screen coordinates.
+*/
 BOOL STDCALL
 W32kGetWindowRect(HWND hWnd, LPRECT Rect)
 {
   PWINDOW_OBJECT WindowObject;
+
+  ASSERT( Rect );
 
   WindowObject = W32kGetWindowObject(hWnd);
   if (WindowObject == NULL)
@@ -184,12 +202,31 @@ W32kGetWindowRect(HWND hWnd, LPRECT Rect)
   return(TRUE);
 }
 
+/*!
+ * Return the dimension of the window in the screen coordinates.
+ * \param	hWnd	window handle.
+ * \param	Rect	pointer to the buffer where the coordinates are returned.
+*/
 BOOL STDCALL
 NtUserGetWindowRect(HWND hWnd, LPRECT Rect)
 {
-  return(W32kGetWindowRect(hWnd, Rect));
+  RECT SafeRect;
+  BOOL bRet;
+
+  bRet = W32kGetWindowRect(hWnd, &SafeRect);
+  if (! NT_SUCCESS(MmCopyToCaller(Rect, &SafeRect, sizeof(RECT)))){
+    return(FALSE);
+  }
+  return( bRet );
 }
 
+/*!
+ * Returns client window rectangle relative to the upper-left corner of client area.
+ *
+ * \param	hWnd	window handle.
+ * \param	Rect	pointer to the buffer where the coordinates are returned.
+ *
+*/
 BOOL STDCALL
 NtUserGetClientRect(HWND hWnd, LPRECT Rect)
 {
@@ -230,15 +267,17 @@ HWND
 W32kGetFocusWindow(VOID)
 {
   PUSER_MESSAGE_QUEUE Queue;
-  Queue = (PUSER_MESSAGE_QUEUE)W32kGetActiveDesktop()->ActiveMessageQueue;
+  PDESKTOP_OBJECT pdo = W32kGetActiveDesktop();
+
+  if( !pdo )
+	return NULL;
+
+  Queue = (PUSER_MESSAGE_QUEUE)pdo->ActiveMessageQueue;
+
   if (Queue == NULL)
-    {
       return(NULL);
-    }
   else
-    {
       return(Queue->FocusWindow);
-    }
 }
 
 
@@ -249,6 +288,9 @@ W32kGetWindowProc(HWND Wnd)
   WNDPROC WndProc;
 
   WindowObject = W32kGetWindowObject(Wnd);
+  if( !WindowObject )
+	return NULL;
+
   WndProc = WindowObject->Class->Class.lpfnWndProc;
   W32kReleaseWindowObject(Wnd);
   return(WndProc);

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.13 2003/01/25 23:09:40 ei Exp $
+/* $Id: stubs.c,v 1.14 2003/03/14 22:48:32 ei Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -2078,20 +2078,6 @@ CreatePolygonRgn(
 BOOL
 STDCALL
 DPtoLP(
-	HDC	a0,
-	LPPOINT	a1,
-	int	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-
-BOOL
-STDCALL
-LPtoDP(
 	HDC	a0,
 	LPPOINT	a1,
 	int	a2

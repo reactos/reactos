@@ -197,4 +197,13 @@ RealizePalette(
 }
 
 
-
+BOOL
+STDCALL
+LPtoDP(
+	HDC	a0,
+	LPPOINT	a1,
+	int	a2
+	)
+{
+	return W32kLPtoDP(a0, a1, a2);
+}

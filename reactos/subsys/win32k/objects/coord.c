@@ -1,4 +1,4 @@
-/* $Id: coord.c,v 1.8 2002/07/13 21:37:26 ei Exp $
+/* $Id: coord.c,v 1.9 2003/03/14 22:48:31 ei Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -13,34 +13,38 @@
 #include <ddk/ntddk.h>
 #include <win32k/coord.h>
 #include <win32k/dc.h>
-
 //#define NDEBUG
 #include <win32k/debug1.h>
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL STDCALL W32kCombineTransform(LPXFORM  XFormResult,
-                           CONST LPXFORM  xform1,
-                           CONST LPXFORM  xform2)
+BOOL STDCALL W32kCombineTransform(LPXFORM  UnsafeXFormResult,
+                           CONST LPXFORM  Unsafexform1,
+                           CONST LPXFORM  Unsafexform2)
 {
   XFORM  xformTemp;
+  XFORM  xform1, xform2;
 
   /* Check for illegal parameters */
-  if (!XFormResult || !xform1 || !xform2)
+  if (!UnsafeXFormResult || !Unsafexform1 || !Unsafexform2)
   {
     return  FALSE;
   }
+
+  MmCopyFromCaller( &xform1, Unsafexform1, sizeof(XFORM) );
+  MmCopyFromCaller( &xform2, Unsafexform2, sizeof(XFORM) );
+
   /* Create the result in a temporary XFORM, since xformResult may be
    * equal to xform1 or xform2 */
-  xformTemp.eM11 = xform1->eM11 * xform2->eM11 + xform1->eM12 * xform2->eM21;
-  xformTemp.eM12 = xform1->eM11 * xform2->eM12 + xform1->eM12 * xform2->eM22;
-  xformTemp.eM21 = xform1->eM21 * xform2->eM11 + xform1->eM22 * xform2->eM21;
-  xformTemp.eM22 = xform1->eM21 * xform2->eM12 + xform1->eM22 * xform2->eM22;
-  xformTemp.eDx  = xform1->eDx  * xform2->eM11 + xform1->eDy  * xform2->eM21 + xform2->eDx;
-  xformTemp.eDy  = xform1->eDx  * xform2->eM12 + xform1->eDy  * xform2->eM22 + xform2->eDy;
+  xformTemp.eM11 = xform1.eM11 * xform2.eM11 + xform1.eM12 * xform2.eM21;
+  xformTemp.eM12 = xform1.eM11 * xform2.eM12 + xform1.eM12 * xform2.eM22;
+  xformTemp.eM21 = xform1.eM21 * xform2.eM11 + xform1.eM22 * xform2.eM21;
+  xformTemp.eM22 = xform1.eM21 * xform2.eM12 + xform1.eM22 * xform2.eM22;
+  xformTemp.eDx  = xform1.eDx  * xform2.eM11 + xform1.eDy  * xform2.eM21 + xform2.eDx;
+  xformTemp.eDy  = xform1.eDx  * xform2.eM12 + xform1.eDy  * xform2.eM22 + xform2.eDy;
 
   /* Copy the result to xformResult */
-  *XFormResult = xformTemp;
+  MmCopyToCaller(  UnsafeXFormResult, &xformTemp, sizeof(XFORM) );
 
   return  TRUE;
 }
@@ -57,13 +61,25 @@ FLOAT x, y;
     y * Dc->w.xformVport2World.eM22 + Dc->w.xformVport2World.eDy;
 }
 
+/*!
+ * Converts points from device coordinates into logical coordinates. Conversion depends on the mapping mode,
+ * world transfrom, viewport origin settings for the given device context.
+ * \param	hDC		device context.
+ * \param	Points	an array of POINT structures (in/out).
+ * \param	Count	number of elements in the array of POINT structures.
+ * \return  TRUE 	if success.
+*/
 BOOL STDCALL
 W32kDPtoLP(HDC  hDC,
-	   LPPOINT  Points,
+	   LPPOINT  UnsafePoints,
 	   int  Count)
 {
   PDC Dc;
   ULONG i;
+  LPPOINT Points = (LPPOINT) ExAllocatePool( PagedPool, Count*sizeof(POINT));
+
+  ASSERT(Points);
+  MmCopyFromCaller( Points, UnsafePoints, Count*sizeof(POINT) );
 
   Dc = DC_HandleToPtr (hDC);
   if (Dc == NULL || !Dc->w.vport2WorldValid)
@@ -76,6 +92,8 @@ W32kDPtoLP(HDC  hDC,
       CoordDPtoLP(Dc, &Points[i]);
     }
   DC_ReleasePtr( hDC );
+
+  MmCopyToCaller(  UnsafePoints, Points, Count*sizeof(POINT) );
   return(TRUE);
 }
 
@@ -130,11 +148,23 @@ CoordLPtoDP(PDC Dc, LPPOINT Point)
     y * Dc->w.xformWorld2Vport.eM22 + Dc->w.xformWorld2Vport.eDy;
 }
 
+/*!
+ * Converts points from logical coordinates into device coordinates. Conversion depends on the mapping mode,
+ * world transfrom, viewport origin settings for the given device context.
+ * \param	hDC		device context.
+ * \param	Points	an array of POINT structures (in/out).
+ * \param	Count	number of elements in the array of POINT structures.
+ * \return  TRUE 	if success.
+*/
 BOOL STDCALL
-W32kLPtoDP(HDC hDC, LPPOINT Points, INT Count)
+W32kLPtoDP(HDC hDC, LPPOINT UnsafePoints, INT Count)
 {
   PDC Dc;
   ULONG i;
+  LPPOINT Points = (LPPOINT) ExAllocatePool( PagedPool, Count*sizeof(POINT));
+
+  ASSERT(Points);
+  MmCopyFromCaller( Points, UnsafePoints, Count*sizeof(POINT) );
 
   Dc = DC_HandleToPtr (hDC);
   if (Dc == NULL)
@@ -147,16 +177,22 @@ W32kLPtoDP(HDC hDC, LPPOINT Points, INT Count)
       CoordLPtoDP(Dc, &Points[i]);
     }
   DC_ReleasePtr( hDC );
+  MmCopyToCaller(  UnsafePoints, Points, Count*sizeof(POINT) );
   return(TRUE);
 }
 
 BOOL
 STDCALL
 W32kModifyWorldTransform(HDC  hDC,
-                               CONST LPXFORM  XForm,
+                               CONST LPXFORM  UnsafeXForm,
                                DWORD  Mode)
 {
   PDC  dc;
+  LPXFORM XForm = (LPXFORM) ExAllocatePool( PagedPool, sizeof( XFORM ) );
+
+  ASSERT( XForm );
+
+  MmCopyFromCaller( XForm, UnsafeXForm, sizeof( XFORM ) );
 
   dc = DC_HandleToPtr (hDC);
   if (!dc)
