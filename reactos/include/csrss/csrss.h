@@ -532,6 +532,25 @@ typedef struct
 {
 } CSRSS_HIDE_DESKTOP_REPLY, *PCSRSS_HIDE_DESKTOP_REPLY;
 
+typedef struct
+{
+  HWND LogonNotifyWindow;
+} CSRSS_SET_LOGON_NOTIFY_WINDOW_REQUEST, *PCSRSS_SET_LOGON_NOTIFY_WINDOW_REQUEST;
+
+typedef struct
+{
+} CSRSS_SET_LOGON_NOTIFY_WINDOW_REPLY, *PCSRSS_SET_LOGON_NOTIFY_WINDOW_REPLY;
+
+typedef struct
+{
+  DWORD ProcessId;
+  BOOL Register;
+} CSRSS_REGISTER_LOGON_PROCESS_REQUEST, *PCSRSS_REGISTER_LOGON_PROCESS_REQUEST;
+
+typedef struct
+{
+} CSRSS_REGISTER_LOGON_PROCESS_REPLY, *PCSRSS_REGISTER_LOGON_PROCESS_REPLY;
+
 #define CSRSS_MAX_WRITE_CONSOLE_REQUEST       \
       (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE_REQUEST))
 
@@ -597,6 +616,8 @@ typedef struct
 #define CSRSS_SHOW_DESKTOP                  (0x2C)
 #define CSRSS_HIDE_DESKTOP                  (0x2D)
 #define CSRSS_SET_CONSOLE_ICON              (0x2E)
+#define CSRSS_SET_LOGON_NOTIFY_WINDOW       (0x2F)
+#define CSRSS_REGISTER_LOGON_PROCESS        (0x30)
 
 /* Keep in sync with definition below. */
 #define CSRSS_REQUEST_HEADER_SIZE (LPC_MESSAGE_BASE_SIZE + sizeof(ULONG))
@@ -656,6 +677,8 @@ typedef struct
         CSRSS_SHOW_DESKTOP_REQUEST ShowDesktopRequest;
         CSRSS_HIDE_DESKTOP_REQUEST HideDesktopRequest;
         CSRSS_CONSOLE_SET_WINDOW_ICON ConsoleSetWindowIconRequest;
+        CSRSS_SET_LOGON_NOTIFY_WINDOW_REQUEST SetLogonNotifyWindowRequest;
+        CSRSS_REGISTER_LOGON_PROCESS_REQUEST RegisterLogonProcessRequest;
       } Data;
     };
   };
@@ -703,6 +726,8 @@ typedef struct
         CSRSS_SHOW_DESKTOP_REPLY ShowDesktopReply;
         CSRSS_HIDE_DESKTOP_REPLY HideDesktopReply;
         CSRSS_CONSOLE_SET_WINDOW_ICON ConsoleSetWindowIconReply;
+        CSRSS_SET_LOGON_NOTIFY_WINDOW_REPLY SetLogonNotifyWindowReply;
+        CSRSS_REGISTER_LOGON_PROCESS_REPLY RegisterLogonProcessReply;
       } Data;
     };
   };
