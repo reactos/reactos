@@ -9,19 +9,23 @@
  */
 
 #include <windows.h>
-#include <conio.h>
+#include <crtdll/conio.h>
+#include <crtdll/stdio.h>
 
 
 // FIXME PeekCosoleInput returns more than keyboard hits
+extern int char_avail;
+
 int
 _kbhit(void)
 {
   INPUT_RECORD InputRecord;
-  DWORD NumberRead;
+  DWORD NumberRead=0;
   if (char_avail)
     	return(1);
   else {
-	PeekConsoleInput(stdin->file,&InputRecord,1,&NumberRead);
+	printf("fixeme PeekConsoleInput might do DeviceIo \n");
+	//PeekConsoleInput((HANDLE)stdin->_file,&InputRecord,1,&NumberRead);
 	return NumberRead;
   }
   return 0;

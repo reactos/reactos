@@ -5,22 +5,16 @@
  * PURPOSE:     Checks for a lead byte 
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
+ *		Modified from Taiji Yamada japanese code system utilities
  *              12/04/99: Created
  */
 
 #include <crtdll/mbstring.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/mbctype.h>
 
 
-#define ___     0
-#define _1_     _KNJ_1 /* Legal 1st byte of double byte code */
-#define __2     _KNJ_2 /* Legal 2nd byte of double byte code */
-#define _M_     _KNJ_M /* Non-puntuation in Kana-set */
-#define _P_     _KNJ_P /* Punctuation of Kana-set */
-#define _12     (_1_|__2)
-#define _M2     (_M_|__2)
-#define _P2     (_P_|__2)
-
-static char _jctype[257] = {
+char _jctype[257] = {
 /*-1*/  ___,
 /*0x*/  ___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,
 /*1x*/  ___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,
@@ -40,10 +34,8 @@ static char _jctype[257] = {
 /*Fx*/  _12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,___,___,___
 };
 
- iskanji()    :   ÉVÉtÉg JIS ÉRÅ[ÉhÇÃ1ÉoÉCÉgñ⁄(0x81 <= c <= 0x9F Ç ÇÈ
-                     Ç¢ÇÕ0xE0 <= c <= 0xFC) Ç©Ç«Ç§Ç©
-
-int _ismbblead(char c)
+char *_mbctype = _jctype;
+int _ismbblead(unsigned int c)
 {
 	return ((_jctype+1)[(unsigned char)(c)] & _KNJ_1);
 }
@@ -55,12 +47,12 @@ int _ismbblead(char c)
 
 int _ismbslead( const unsigned char *str, const unsigned char *t)
 {
-	char *s = str;
+	unsigned char *s = (unsigned char *)str;
 	while(*s != 0 && s != t) 
 	{
 		
-		s+= mblen(*s);
+		s+= _mbclen2(*s);
 	}		
-	return ismbblead( *s)
+	return _ismbblead( *s);
 }
 

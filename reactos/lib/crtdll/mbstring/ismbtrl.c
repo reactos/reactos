@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/mbstring/ismblead.c
+ * FILE:        lib/crtdll/mbstring/ismbtrail.c
  * PURPOSE:     Checks for a trailing byte 
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
@@ -9,9 +9,9 @@
  */
 
 #include <crtdll/mbstring.h>
+#include <crtdll/mbctype.h>
 
-  iskanji2()   :   ÉVÉtÉg JIS ÉRÅ[ÉhÇÃ2ÉoÉCÉgñ⁄(0x40 <= c <= 0x7E Ç ÇÈ
-                     Ç¢ÇÕ0x80  <=  c <= 0xFC) Ç©Ç«Ç§Ç©
+//  iskanji2()   : (0x40 <= c <= 0x7E 0x80  <=  c <= 0xFC) 
 
 int _ismbbtrail(unsigned int c)
 {
@@ -26,12 +26,12 @@ int _ismbbtrail(unsigned int c)
 
 int _ismbstrail( const unsigned char *str, const unsigned char *t)
 {
-	char *s = str;
+	unsigned char *s = (unsigned char *)str;
 	while(*s != 0 && s != t) 
 	{
 		
-		s+= mblen(*s);
+		s+= _mbclen2(*s);
 	}
 		
-	return _ismbbtrail( *s)
+	return _ismbbtrail(*s);
 }

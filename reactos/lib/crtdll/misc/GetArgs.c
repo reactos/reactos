@@ -17,6 +17,10 @@ unsigned  int _osmode_dll;
 unsigned  int _osver_dll;
 unsigned  int _osversion_dll;
 
+unsigned int _basemajor_dll;
+unsigned int _baseminor_dll;
+unsigned int _baseversion_dll;
+
 #undef __argv
 #undef __argc
 

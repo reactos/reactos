@@ -1,13 +1,15 @@
-#include <mbctype.h>
-
 /*
- * japanese code system utilities < jutil.h >
- *
- * 日本語のコード体系に関するユーティリティ
- *
- * Copyright (c) 1992-94 Tokyo Denki University, Taiji Yamada
- * Copyright (c) 1997 AIHARA Electrical Engineering Co.,Ltd., Taiji Yamada
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/crtdll/mbstring/hanzen.c
+ * PURPOSE:     Multibyte conversion routines formerly called hantozen and zentohan
+ * PROGRAMER:   Boudewijn Dekker, Taiji Yamada
+ * UPDATE HISTORY:
+		Modified from Taiji Yamada japanese code system utilities
+ *              12/04/99: Created
  */
+
+#include <crtdll/mbctype.h>
 
 static unsigned short han_to_zen_ascii_table[0x5f] = {
   0x8140, 0x8149, 0x8168, 0x8194, 0x8190, 0x8193, 0x8195, 0x8166,
@@ -59,7 +61,7 @@ static unsigned char zen_to_han_symbol_table_2[ZTOH_SYMBOLS] = {
 #define JTOKANA(c) ((c) <= 0x82dd ? (c) + 0xa1 : (c) + 0xa2)
 
  
-static unsigned short _mbbtombc(unsigned short c)
+unsigned short _mbbtombc(unsigned short c)
 {
   if (c >= 0x20 && c <= 0x7e) {
     return han_to_zen_ascii_table[c - 0x20];
@@ -70,7 +72,7 @@ static unsigned short _mbbtombc(unsigned short c)
 }
 
 
-static unsigned short _mbctombb(unsigned short c)
+unsigned short _mbctombb(unsigned short c)
 {
   int i;
   unsigned short *p;

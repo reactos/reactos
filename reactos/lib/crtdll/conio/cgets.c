@@ -1,5 +1,5 @@
 #include <crtdll/conio.h>
-
+#include <crtdll/stdlib.h>
 
 char *
 _cgets(char *string)
@@ -22,7 +22,7 @@ _cgets(char *string)
    */
   while(len < maxlen_wanted-1)
   {
-    c=getch();
+    c=_getch();
     /*
      * shold we check for backspace here?
      * TURBOC does (just checked) but doesn't in cscanf (thats harder
@@ -32,7 +32,7 @@ _cgets(char *string)
     {
       if (len > 0)
       {
-	cputs("\b \b");		/* go back, clear char on screen with space
+	_cputs("\b \b");		/* go back, clear char on screen with space
 				   and go back again */
 	len--;
 	sp[len] = '\0';		/* clear the character in the string */
@@ -47,12 +47,12 @@ _cgets(char *string)
     {
       /* special character ends input */
       sp[len] = '\0';
-      ungetch(c);		/* keep the char for later processing */
+      _ungetch(c);		/* keep the char for later processing */
       break;
     }
     else
     {
-      sp[len] = putch(c);
+      sp[len] = _putch(c);
       len++;
     }
   }

@@ -1,14 +1,14 @@
 #include <crtdll/wchar.h>
 
 
-long wcstol(const wchar_t *cp,wchar_t **endp,unsigned int base)
+long wcstol(const wchar_t *cp,wchar_t **endp,int base)
 {
 	long result = 0,value;
 	int sign = 1;
 
 	if ( *cp == L'-' ) {
 		sign = -1;
-		*cp++;
+		cp++;
 	}
 
 	if (!base) {
@@ -33,7 +33,7 @@ long wcstol(const wchar_t *cp,wchar_t **endp,unsigned int base)
 }
 
 
-unsigned long wcstoul(const wchar_t *cp,wchar_t **endp,unsigned int base)
+unsigned long wcstoul(const wchar_t *cp,wchar_t **endp,int base)
 {
 	unsigned long result = 0,value;
 

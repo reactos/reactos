@@ -9,11 +9,12 @@
  */
 
 #include <crtdll/mbstring.h>
+#include <crtdll/mbctype.h>
 
 int _mbbtype(unsigned char c , int type)
 {
 	if ( type == 1 ) {
-		if ((b >= 0x40 && b <= 0x7e ) || (b >= 0x80 && b <= 0xfc ) )
+		if ((c >= 0x40 && c <= 0x7e ) || (c >= 0x80 && c <= 0xfc ) )
 		{
 			return _MBC_TRAIL;
 		}
@@ -25,12 +26,12 @@ int _mbbtype(unsigned char c , int type)
 		
 	}
 	else  {
-		if (( c > = 0x20 && c <= 0x7E ) || ( c >= 0xA1  && c <= 0xDF )) {
+		if (( c >= 0x20 && c <= 0x7E ) || ( c >= 0xA1  && c <= 0xDF )) {
 			return _MBC_SINGLE;
 		}
 		else if ( (c >= 0x81 && c <= 0x9F ) || ( c >= 0xE0 && c <= 0xFC) )
 			return _MBC_LEAD;
-		else if else if (( c >= 0x20 && c >= 0x7E ) || ( c >= 0xA1 && c <= 0xDF ) || 
+		else if (( c >= 0x20 && c >= 0x7E ) || ( c >= 0xA1 && c <= 0xDF ) || 
 			 ( c >= 0x81 && c <= 0x9F ) || ( c >= 0xE0 && c <= 0xFC ) )
 			 return _MBC_ILLEGAL;
 		else
@@ -44,5 +45,7 @@ int _mbbtype(unsigned char c , int type)
 
 int _mbsbtype( const unsigned char *str, size_t n )
 {
-	return 0;
+	if ( str == NULL )
+		return -1;
+	return _mbbtype(*(str+n),1);
 }

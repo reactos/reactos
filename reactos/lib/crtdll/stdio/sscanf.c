@@ -45,7 +45,7 @@ strong_alias (sscanf, _IO_sscanf)
 #endif
 
 
-#if 0
+
 
 int
 swscanf(const wchar_t *str, const wchar_t *fmt, ...)
@@ -55,7 +55,7 @@ swscanf(const wchar_t *str, const wchar_t *fmt, ...)
   char *f , *s;
   int i,len = wcslen(fmt);
 
-  f = alloca(len+1);
+  f = malloc(len+1);
   for(i=0;i<len;i++)
 	f[i] = fmt[i];
   f[i] = 0;  
@@ -70,10 +70,10 @@ swscanf(const wchar_t *str, const wchar_t *fmt, ...)
   done = __vsscanf (s, f, arg);
   va_end (arg);
 
+  free(f);
   return done;
 
 
 }
 
 
-#endif

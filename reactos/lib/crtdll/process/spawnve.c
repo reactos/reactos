@@ -30,6 +30,8 @@
  #define D_OK	0x10
 #endif
 
+// information about crtdll file handles is not passed to child
+int _fileinfo_dll = 0;
 
 static int
 direct_exec_tail(const char *program, const char *args,

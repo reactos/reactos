@@ -10,22 +10,22 @@
 
 #include <crtdll/mbstring.h>
 
-unsigned char * _mbsset(unsigned char *str, unsigned int c)
+unsigned char * _mbsset(unsigned char *src, unsigned int c)
 {
-	unsigned char *char_s = src;
-	unsigned short *short_s = src;
+	unsigned char *char_src = src;
+	unsigned short *short_src = src;
        
-	if ( c >> 8 == 0 ) {
+	if ( _mbclen2(c) == 1 ) {
 	
-		while(*s != 0) {
-                	*char_src = val;
+		while(*char_src != 0) {
+                	*char_src = c;
                 	char_src++;
         	}
         	*char_src = 0;
         }
         else {
-		while(*s != 0) {
-                	*short_src = val;
+		while(*short_src != 0) {
+                	*short_src = c;
                 	short_src++;
         	}    	
         	*short_src = 0;

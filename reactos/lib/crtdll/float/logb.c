@@ -18,9 +18,9 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-double logb (double __x);
+double _logb (double __x);
 
-double logb (double __x)
+double _logb (double __x)
 {
   register double __value, __junk;
   __asm __volatile__

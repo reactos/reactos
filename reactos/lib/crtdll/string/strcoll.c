@@ -7,6 +7,12 @@
 #if 1
 int strcoll (const char* s1, const char* s2)
 {
+	return strcmp(s1,s2);
+}
+
+int _stricoll (const char* s1, const char* s2)
+{
+	return _stricmp(s1,s2);
 }
 #else
 int strcoll (const char *s1,const char *s2)

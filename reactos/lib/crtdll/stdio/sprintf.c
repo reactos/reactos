@@ -20,11 +20,12 @@ Cambridge, MA 02139, USA.  */
 
 #include <stdarg.h>
 #include <crtdll/stdio.h>
-#include <crtdll/stdio.h>
+#include <crtdll/wchar.h>
 #include <limits.h>
 #include <crtdll/internal/file.h>
 
-
+#undef sprintf
+#undef wsprintf
 int
 sprintf(char *str, const char *fmt, ...)
 {
@@ -33,7 +34,19 @@ sprintf(char *str, const char *fmt, ...)
 
   va_start (arg, fmt);
   done = vsprintf (str, fmt, arg);
-  //va_end (arg);
+  va_end (arg);
+  return done;
+}
+
+int
+swprintf(wchar_t *str, const wchar_t *fmt, ...)
+{
+  va_list arg;
+  int done;
+
+  va_start (arg, fmt);
+  done = vswprintf (str, fmt, arg);
+  va_end (arg);
   return done;
 }
 
@@ -43,15 +56,29 @@ sprintf(char *str, const char *fmt, ...)
    string FORMAT, writing no more than MAXLEN characters.  */
 /* VARARGS3 */
 int
-snprintf (char *s, size_t maxlen,const char *format, ...)
+_snprintf (char *s, size_t maxlen,const char *format, ...)
 {
   va_list arg;
   int done;
 
   va_start (arg, format);
-  done = vsnprintf (s, maxlen, format, arg);
-  //va_end (arg);
+  done = _vsnprintf (s, maxlen, format, arg);
+  va_end (arg);
 
   return done;
 }
+
+int
+_snwprintf (wchar_t *s, size_t maxlen,const wchar_t *format, ...)
+{
+  va_list arg;
+  int done;
+
+  va_start (arg, format);
+  done = _vsnwprintf (s, maxlen, format, arg);
+  va_end (arg);
+
+  return done;
+}
+
 

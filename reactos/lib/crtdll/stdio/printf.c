@@ -18,6 +18,7 @@
 
 #include <stdarg.h>
 #include <crtdll/stdio.h>
+#include <crtdll/wchar.h>
 
 /* Write formatted output to stdout from the format string FORMAT.  */
 /* VARARGS1 */
@@ -29,6 +30,18 @@ printf (const char *format, ...)
 
   va_start (arg, format);
   done = vprintf (format, arg);
+  va_end (arg);
+  return done;
+}
+
+int
+wprintf (const wchar_t *format, ...)
+{
+  va_list arg;
+  int done;
+
+  va_start (arg, format);
+  done = vwprintf (format, arg);
   va_end (arg);
   return done;
 }

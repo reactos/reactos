@@ -19,14 +19,26 @@ Cambridge, MA 02139, USA.  */
 #include <stdarg.h>
 #undef	__OPTIMIZE__	/* Avoid inline `vprintf' function.  */
 #include <crtdll/stdio.h>
+#include <crtdll/wchar.h>
 
 #undef	vprintf
+#undef	vwprintf
 
 /* Write formatted output to stdout according to the
    format string FORMAT, using the argument list in ARG.  */
 int
 vprintf (format, arg)
      const char *format;
+     va_list arg;
+{
+  int ret = vfprintf (stdout, format, arg);
+  fflush(stdout);
+  return ret;
+}
+
+int
+vwprintf (format, arg)
+     const wchar_t *format;
      va_list arg;
 {
   int ret = vfprintf (stdout, format, arg);

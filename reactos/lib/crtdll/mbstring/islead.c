@@ -3,5 +3,6 @@
 
 int isleadbyte(char *mbstr)
 {
-	return IsDBCSLeadByteEx(0,*c);
+	return 0;
+	//return IsDBCSLeadByteEx(0,*c);
 }

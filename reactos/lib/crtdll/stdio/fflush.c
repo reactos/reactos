@@ -95,3 +95,8 @@ int fflush(FILE *f)
   }
   return 0;
 }
+
+int _flushall( void )
+{
+	return fflush(NULL);
+}

@@ -226,3 +226,9 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *t)
   }
   return 0;
 }
+
+size_t
+wcsftime(wchar_t *s, size_t maxsize, const wchar_t *format, const struct tm *t)
+{
+	printf("wcsftime\n");
+}

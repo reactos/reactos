@@ -1,3 +1,6 @@
+#include <windows.h>
+#define PEXCEPTION_FRAME void*
+
 void _global_unwind2( PEXCEPTION_FRAME frame )
 {
 	//RtlUnwind( frame, 0, NULL, 0 );

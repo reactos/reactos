@@ -21,7 +21,7 @@ Cambridge, MA 02139, USA.  */
 
 /* Read a word (int) from STREAM.  */
 int
-getw(FILE *stream)
+_getw(FILE *stream)
 {
 	int w;
 

@@ -19,3 +19,17 @@ void  _initterm (
 		i++;
 	}
 }
+typedef int (* _onexit_t)(void);
+
+_onexit_t __dllonexit (
+        _onexit_t func,
+	void (** fStart[])(void),
+        void (** fEnd[])(void)
+        )
+{
+}
+
+_onexit_t _onexit(_onexit_t x)
+{
+	return x;
+}

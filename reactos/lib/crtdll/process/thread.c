@@ -22,5 +22,7 @@ unsigned long
 }
 void	_endthread(void)
 {
-	ExitThread(0);
+printf("fixme ExitThread\n");
+	//ExitThread(0);
+	for(;;);
 }

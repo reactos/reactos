@@ -1,4 +1,5 @@
-include <stdlib.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/stdio.h>
 
 int  _aexit_rtn_dll(int exitcode)
 {

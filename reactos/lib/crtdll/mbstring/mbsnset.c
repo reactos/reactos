@@ -13,12 +13,12 @@ unsigned char * _mbsnset(unsigned char *src, unsigned int val, size_t count)
 {
 
 	
-	unsigned char *char_s = src;
-	unsigned short *short_s = src;
+	unsigned char *char_src = (unsigned char *)src;
+	unsigned short *short_src = (unsigned short *)src;
        
-	if ( c >> 8 == 0 ) {
+	if ( _mbclen2(val) == 1 ) {
 	
-		while(*s != 0 && count > 0) {
+		while(count > 0) {
                 	*char_src = val;
                 	char_src++;
                 	count--;
@@ -26,7 +26,7 @@ unsigned char * _mbsnset(unsigned char *src, unsigned int val, size_t count)
         	*char_src = 0;
         }
         else {
-		while(*s != 0 && count > 0) {
+		while(count > 0) {
                 	*short_src = val;
                 	short_src++;
                 	count-=2;
@@ -41,12 +41,12 @@ unsigned char * _mbsnset(unsigned char *src, unsigned int val, size_t count)
 unsigned char * _mbsnbset(unsigned char *src, unsigned int val, size_t count)
 {
 	
-	unsigned char *char_s = src;
-	unsigned short *short_s = src;
+	unsigned char *char_src = (unsigned char *)src;
+	unsigned short *short_src = (unsigned short *)src;
        
-	if ( c >> 8 == 0 ) {
+	if ( _mbclen2(val) == 1 ) {
 	
-		while(*s != 0 && count > 0) {
+		while(count > 0) {
                 	*char_src = val;
                 	char_src++;
                 	count--;
@@ -54,10 +54,10 @@ unsigned char * _mbsnbset(unsigned char *src, unsigned int val, size_t count)
         	*char_src = 0;
         }
         else {
-		while(*s != 0 && count > 0) {
+		while(count > 0) {
                 	*short_src = val;
                 	short_src++;
-                	count--;
+                	count-=2;
         	}    	
         	*short_src = 0;
         }

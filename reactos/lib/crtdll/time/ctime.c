@@ -82,6 +82,7 @@ static char sccsid[] = "@(#)ctime.c	5.23 (Berkeley) 6/22/90";
 ** that tzname[0] has the "normal" length of three characters).
 */
 int _daylight_dll;
+int _timezone_dll;
 
 static char WILDABBR[] = "   ";
 
@@ -176,7 +177,7 @@ static struct state gmtmem;
 static int lcl_is_set;
 static int gmt_is_set;
 
-char * tzname[2] = {
+char * _tzname[2] = {
   WILDABBR,
   WILDABBR
 };
@@ -199,12 +200,12 @@ settzname(void)
   const struct state * const sp = lclptr;
   int i;
 
-  tzname[0] = WILDABBR;
-  tzname[1] = WILDABBR;
+  _tzname[0] = WILDABBR;
+  _tzname[1] = WILDABBR;
 #ifdef ALL_STATE
   if (sp == NULL)
   {
-    tzname[0] = tzname[1] = GMT;
+    _tzname[0] = _tzname[1] = GMT;
     return;
   }
 #endif /* defined ALL_STATE */
@@ -212,13 +213,13 @@ settzname(void)
   {
     register const struct ttinfo * const ttisp = &sp->ttis[i];
 
-    tzname[ttisp->tt_isdst] =
+    _tzname[ttisp->tt_isdst] =
       (char *)&sp->chars[ttisp->tt_abbrind];
 #if 0
     if (ttisp->tt_isdst)
       _daylight = 1;
     if (i == 0 || !ttisp->tt_isdst)
-      _timezone = -(ttisp->tt_gmtoff);
+      _timezone_dll = -(ttisp->tt_gmtoff);
     if (i == 0 || ttisp->tt_isdst)
       _altzone = -(ttisp->tt_gmtoff);
 #endif
@@ -230,7 +231,7 @@ settzname(void)
   {
     const struct ttinfo * const ttisp = &sp->ttis[sp->types[i]];
 
-    tzname[ttisp->tt_isdst] = (char *)&sp->chars[ttisp->tt_abbrind];
+    _tzname[ttisp->tt_isdst] = (char *)&sp->chars[ttisp->tt_abbrind];
   }
 }
 
@@ -894,7 +895,7 @@ gmtload(struct state * const sp)
 }
 
 void
-tzset(void)
+_tzset(void)
 {
   const char * name;
 
@@ -972,7 +973,7 @@ localsub(const time_t * const timep, const long offset, struct tm * const tmp)
   const time_t t = *timep;
 
   if (!lcl_is_set)
-    tzset();
+    _tzset();
   sp = lclptr;
 #ifdef ALL_STATE
   if (sp == NULL)
@@ -1007,7 +1008,7 @@ localsub(const time_t * const timep, const long offset, struct tm * const tmp)
    */
   timesub(&t, ttisp->tt_gmtoff, sp, tmp);
   tmp->tm_isdst = ttisp->tt_isdst;
-  tzname[tmp->tm_isdst] = (char *)&sp->chars[ttisp->tt_abbrind];
+  _tzname[tmp->tm_isdst] = (char *)&sp->chars[ttisp->tt_abbrind];
   tmp->tm_zone = (char *)&sp->chars[ttisp->tt_abbrind];
 }
 

@@ -10,32 +10,21 @@
 
 #include <crtdll/mbstring.h>
 
-unsigned char * _mbsrchr(const unsigned char *str, unsigned int c)
+unsigned char * _mbsrchr(const unsigned char *src, unsigned int val)
 {
-	
-	unsigned char *s = str;
-	
-	int count = mbblen(s);       
 
-	s += count;
-	if ( c >> 8 == 0 ) {
-	
-		while( count > 0 ) {
-			if ( *s == c )
-				return s;
-                	count--;
-			s--;
-        	}
-        }
-        else {
-		while( count > 0 ) {
-			if ( *((short *)s) == c )
-				return s;
-                	count--;
-			s--;
-        	}
-        }
-        
-        return src;
+  char  *s = src;
+  short cc = val;
+  const char *sp=(char *)0;
 
+  
+  while (*s)
+  {	
+    	if (*(short *)s == cc)
+      		sp = s;
+    	s+= _mbclen2(*s);
+  }
+  if (cc == 0)
+    	sp = s;
+  return (char *)sp;
 }

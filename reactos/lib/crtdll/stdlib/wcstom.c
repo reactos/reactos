@@ -10,8 +10,5 @@ int	wctomb		(char* mbDest, wchar_t wc)
 	return 0;
 }
 
-int	mblen		(const char* mbs, size_t sizeString)
-{
-	return 0;
-}
+
 

@@ -49,7 +49,7 @@ int scanf (const char *format, ...)
 }
 
 
-#if 0
+
 int
 wscanf(const wchar_t *fmt, ...)
 {
@@ -58,15 +58,15 @@ wscanf(const wchar_t *fmt, ...)
   char *f;
   int i, len = wcslen(fmt);
 
-  f = alloca(len+1);
+  f = malloc(len+1);
   for(i=0;i<len;i++)
 	f[i] = fmt[i];
   f[i] = 0;  
   va_start (arg, fmt);
   done = VSCANF (f, arg);
   va_end (arg);
-
+  free(f);
   return done;
 }
 
-#endif
+

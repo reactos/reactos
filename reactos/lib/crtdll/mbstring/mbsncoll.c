@@ -9,34 +9,101 @@
  */
 #include <crtdll/mbstring.h>
 
-int _mbsncoll(const unsigned char *, const unsigned char *, size_t)
+int colldif(unsigned short c1, unsigned short c2);
+
+int _mbsncoll(const unsigned char *str1, const unsigned char *str2, size_t n)
 {
+	unsigned char *s1 = (unsigned char *)str1;
+	unsigned char *s2 = (unsigned char *)str2;
+
+	unsigned short *short_s1, *short_s2;
+
 	int l1, l2;
-	int ret;
-	
-	l1 = mbslen(str1);
-	l2 = mbslen(str2);
-	ret = CompareStringA(LOCALE_USER_DEFAULT,0,str1,min(l1,n),str2,min(l2,n));
-	
-	if ( ret != 0 )
-	
-		return ret -2;
-	
+
+	if (n == 0)
+		return 0;
+	do {
+		
+		if (*s1 == 0)
+			break;	
+
+		l1 = _ismbblead(*s1);
+		l2 = _ismbblead(*s2);
+		if ( !l1 &&  !l2  ) {
+
+			if (*s1 != *s2)
+				return colldif(*s1, *s2);
+			else {
+				s1 += 1;
+				s2 += 1;
+				n--;
+			}
+		}
+		else if ( l1 && l2 ){
+			short_s1 = (unsigned short *)s1;
+			short_s2 = (unsigned short *)s2;
+			if ( *short_s1 != *short_s2 )
+				return colldif(*short_s1, *short_s2);
+			else {
+				s1 += 2;
+				s2 += 2;
+				n--;
+
+			}
+		}
+		else
+			return colldif(*s1, *s2);
+	} while (n > 0);
 	return 0;
 }
 
 int _mbsnbcoll(const unsigned char *str1, const unsigned char *str2, size_t n)
 {
+	unsigned char *s1 = (unsigned char *)str1;
+	unsigned char *s2 = (unsigned char *)str2;
+
+	unsigned short *short_s1, *short_s2;
+
 	int l1, l2;
-	int ret;
-	
-	l1 = strlen(str1);
-	l2 = strlen(str2);
-	ret = CompareStringA(LOCALE_USER_DEFAULT,0,str1,min(l1,n),str2,min(l2,n));
-	
-	if ( ret != 0 )
-	
-		return ret -2;
-	
+
+	if (n == 0)
+		return 0;
+	do {
+		
+		if (*s1 == 0)
+			break;	
+
+		l1 = _ismbblead(*s1);
+		l2 = _ismbblead(*s2);
+		if ( !l1 &&  !l2  ) {
+
+			if (*s1 != *s2)
+				return colldif(*s1, *s2);
+			else {
+				s1 += 1;
+				s2 += 1;
+				n--;
+			}
+		}
+		else if ( l1 && l2 ){
+			short_s1 = (unsigned short *)s1;
+			short_s2 = (unsigned short *)s2;
+			if ( *short_s1 != *short_s2 )
+				return colldif(*short_s1, *short_s2);
+			else {
+				s1 += 2;
+				s2 += 2;
+				n-=2;
+
+			}
+		}
+		else
+			return colldif(*s1, *s2);
+	} while (n > 0);
 	return 0;
+}
+
+int colldif(unsigned short c1, unsigned short c2)
+{
+	return c1 - c2;
 }

@@ -39,7 +39,11 @@ vfprintf(FILE *f, const char *fmt, va_list ap)
 
 
 
+int
+vfwprintf(FILE *f, const wchar_t *fmt, va_list ap)
+{
 
+}
 
 
 

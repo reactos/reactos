@@ -2,5 +2,6 @@
 
 int _abnormal_termination(void)
 {
-	return AbnormalTermination();
+	printf("Abnormal Termination\n");
+//	return AbnormalTermination();
 }

@@ -17,3 +17,9 @@ int _getdrive( void )
 	
 	return cur_drive;
 }
+
+unsigned long _getdrives(void)
+{
+    return printf("get logical drives\n");
+    //return GetLogicalDrives();
+}

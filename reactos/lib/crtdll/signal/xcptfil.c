@@ -6,5 +6,6 @@ int _XcptFilter (
          struct _EXCEPTION_POINTERS *  ExceptionInfo 
         )
 {
-	return UnhandledExceptionFilter(ExceptionInfo);
+	return printf("Unhandled exception info\n");
+//	return UnhandledExceptionFilter(ExceptionInfo);
 }

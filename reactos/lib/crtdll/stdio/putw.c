@@ -22,7 +22,7 @@ Cambridge, MA 02139, USA.  */
 
 /* Write the word (int) W to STREAM.  */
 int
-putw(int w,FILE *stream)
+_putw(int w,FILE *stream)
 {
   /* Is there a better way?  */
   if (fwrite( &w, sizeof(w), 1, stream) < 1)

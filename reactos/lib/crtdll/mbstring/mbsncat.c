@@ -13,11 +13,11 @@
 
 unsigned char * _mbsncat(unsigned char *dst, const unsigned char *src, size_t n)
 {
-	char *d; 
-    	const char *s = src;	
+	char *d = (char *)dst; 
+    	char *s = (char *)src;	
     	if (n != 0) {
 		d = dst + strlen(dst); // get the end of string 
-		d += mblen(*d); // move 1 or 2 up
+		d += _mbclen2(*d); // move 1 or 2 up
 
 		do {
 			if ((*d++ = *s++) == 0)
@@ -26,7 +26,7 @@ unsigned char * _mbsncat(unsigned char *dst, const unsigned char *src, size_t n)
 					*d++ = 0;
 				break;
       			}
-			if (!_ismbblead(*s1) )
+			if (!_ismbblead(*s) )
 				n--;
     		} while (n > 0);
   	}
@@ -36,10 +36,10 @@ unsigned char * _mbsncat(unsigned char *dst, const unsigned char *src, size_t n)
 unsigned char * _mbsnbcat(unsigned char *dst, const unsigned char *src, size_t n)
 {
 	char *d; 
-    	const char *s = src;	
+    	char *s = (char *)src;	
     	if (n != 0) {
 		d = dst + strlen(dst); // get the end of string 
-		d += mblen(*d); // move 1 or 2 up
+		d += _mbclen2(*d); // move 1 or 2 up
 
 		do {
 			if ((*d++ = *s++) == 0)
@@ -48,7 +48,7 @@ unsigned char * _mbsnbcat(unsigned char *dst, const unsigned char *src, size_t n
 					*d++ = 0;
 				break;
       			}
-			if ( !(n==1 && _ismbblead(*s1)) )
+			if ( !(n==1 && _ismbblead(*s)) )
 				n--;
     		} while (n > 0);
   	}

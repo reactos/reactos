@@ -1,6 +1,6 @@
 #include <crtdll/wchar.h>
 
-wchar_t *_wcstok(wchar_t *s, const wchar_t *ct)
+wchar_t *wcstok(wchar_t *s, const wchar_t *ct)
 {
 	const wchar_t *spanp;
 	int c, sc;

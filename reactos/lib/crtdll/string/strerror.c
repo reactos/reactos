@@ -45,7 +45,7 @@ char __syserr36[] = "No such process (ESRCH)";
 char __syserr37[] = "Improper link (EXDEV)";
 char __syserr38[] = "No more files (ENMFILE)";
 
-const char *__sys_errlist[] = {
+const char *_sys_errlist[] = {
 __syserr00, __syserr01, __syserr02, __syserr03, __syserr04,
 __syserr05, __syserr06, __syserr07, __syserr08, __syserr09,
 __syserr10, __syserr11, __syserr12, __syserr13, __syserr14,
@@ -56,7 +56,7 @@ __syserr30, __syserr31, __syserr32, __syserr33, __syserr34,
 __syserr35, __syserr36, __syserr37, __syserr38
 };
 
-int __sys_nerr = sizeof(__sys_errlist) / sizeof(__sys_errlist[0]);
+int __sys_nerr = sizeof(_sys_errlist) / sizeof(_sys_errlist[0]);
 
 int*	_sys_nerr_dll = &__sys_nerr;
 
@@ -67,7 +67,7 @@ char *strerror(int errnum)
   int v=1000000, lz=0;
 
   if (errnum >= 0 && errnum < __sys_nerr)
-    return((char *)__sys_errlist[errnum]);
+    return((char *)_sys_errlist[errnum]);
 
   strcpy(ebuf, "Unknown error: ");
   cp = ebuf + 15;

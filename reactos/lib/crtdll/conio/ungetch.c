@@ -18,7 +18,7 @@ char ungot_char = 0;
 
 
 int
-ungetch(int c)
+_ungetch(int c)
 {
   if (char_avail)
     return(EOF);

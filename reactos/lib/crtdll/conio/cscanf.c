@@ -1,26 +1,21 @@
 #include <crtdll/conio.h>
-
-
-/*
- * The next two functions are needed by cscanf
- */
-static int
-_scan_getche(FILE *fp)
-{
-  return(getche());
-}
-
-static int
-_scan_ungetch(int c, FILE *fp)
-{
-  return(ungetch(c));
-}
+#include <stdarg.h>
 
 int
-_cscanf(const char *fmt, ...)
+_cscanf(char *fmt, ...)
 {
-//  return(_doscan_low(NULL, _scan_getche, _scan_ungetch, 
-//		     fmt, (void **) unconst( ((&fmt)+1), char ** )));
+	int cnt;
+
+	va_list ap;
+
+	// fixme cscanf
+	printf("cscanf \n");
+  
+  	va_start(ap, fmt);
+  	cnt = __vscanf(fmt, ap);
+  	va_end(ap);
+	return cnt;
+  
 }
 
 
