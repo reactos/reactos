@@ -38,7 +38,7 @@ RCFLAGS	+= -DNDEBUG
 LFLAGS	+= -s
 endif
 
-ifeq ($(ifdef UNICODE),1)
+ifeq ($(UNICODE),1)
 CFLAGS	+= -DUNICODE
 # LFLAGS+= -Wl,--entry,_wWinMain@16
 endif
