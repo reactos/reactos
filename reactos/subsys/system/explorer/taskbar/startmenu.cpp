@@ -1491,17 +1491,27 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
 }
 
 
-HWND StartMenuRoot::Create(HWND hwndOwner)
+static void CalculateStartPos(HWND hwndOwner, RECT& rect)
 {
 	WindowRect pos(hwndOwner);
 
-	RECT rect = {pos.left, pos.top-STARTMENU_LINE_HEIGHT-4, pos.left+STARTMENU_WIDTH_MIN, pos.top};
+	rect.left = pos.left;
+	rect.top = pos.top-STARTMENU_LINE_HEIGHT-4;
+	rect.right = pos.left+STARTMENU_WIDTH_MIN;
+	rect.bottom = pos.top;
 
 #ifndef _LIGHT_STARTMENU
 	rect.top += STARTMENU_LINE_HEIGHT;
 #endif
 
 	AdjustWindowRectEx(&rect, WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, FALSE, 0);
+}
+
+HWND StartMenuRoot::Create(HWND hwndOwner)
+{
+	RECT rect;
+
+	CalculateStartPos(hwndOwner, rect);
 
 	return Window::Create(WINDOW_CREATOR(StartMenuRoot), 0, GetWndClasss(), TITLE_STARTMENU,
 							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN,
@@ -1516,6 +1526,17 @@ void StartMenuRoot::TrackStartmenu()
 
 #ifdef _LIGHT_STARTMENU
 	_selected_id = -1;
+#endif
+
+#ifdef _LIGHT_STARTMENU
+	 // recalculate start menu root position
+	RECT rect;
+
+	CalculateStartPos(GetParent(hwnd), rect);
+
+	SetWindowPos(hwnd, 0, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, 0);
+
+	ResizeToButtons();
 #endif
 
 	 // show previously hidden start menu
