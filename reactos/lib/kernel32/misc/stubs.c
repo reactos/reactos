@@ -1,10 +1,14 @@
-/* $Id: stubs.c,v 1.71 2004/04/12 17:09:36 navaraf Exp $
+/* $Id: stubs.c,v 1.72 2004/04/12 19:52:36 jimtabor Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
  */
 
 #include <k32.h>
+
+#define NDEBUG
+#include "../include/debug.h"
+
 
 //#define _OLE2NLS_IN_BUILD_
 
