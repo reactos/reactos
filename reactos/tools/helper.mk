@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.14 2002/06/14 13:20:08 chorns Exp $
+# $Id: helper.mk,v 1.15 2002/06/14 17:17:38 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -138,8 +138,8 @@ ifeq ($(TARGET_TYPE),library)
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT :=
-  MK_INSTALLDIR := $(SDK_PATH_INC)
-  MK_DISTDIR := # FIXME
+  MK_INSTALLDIR := # Don't install
+  MK_DISTDIR := # Don't include in distribution
   MK_RES_BASE :=
 endif
 
@@ -574,6 +574,15 @@ dist:
 
 else # MK_IMPLIBONLY
 
+ifeq ($(MK_MODE),static)
+
+# Don't install static libraries
+
+install:
+
+dist:
+
+else # MK_MODE
 
 install: $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
 
@@ -587,6 +596,7 @@ $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME): $(MK_FULLNAME)
 	$(CP) $(MK_FULLNAME) $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME)
 	$(CP) $(MK_BASENAME).sym $(DIST_DIR)/symbols/$(MK_BASENAME).sym
 
+endif # MK_MODE
 
 endif # MK_IMPLIBONLY
 
