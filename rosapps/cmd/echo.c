@@ -1,5 +1,6 @@
-/*
- *  ECHO.C - echo internal command.
+/* $Id: echo.c,v 1.3 1999/10/03 22:15:33 ekohl Exp $
+ *
+ *  ECHO.C - internal echo commands.
  *
  *
  *  History:
@@ -30,15 +31,15 @@
 #include "batch.h"
 
 
-INT cmd_echo (LPTSTR cmd, LPTSTR param)
+INT CommandEcho (LPTSTR cmd, LPTSTR param)
 {
 #ifdef _DEBUG
-	DebugPrintf ("cmd_echo '%s' : '%s'\n", cmd, param);
+	DebugPrintf ("CommandEcho '%s' : '%s'\n", cmd, param);
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts ("Displays messages or switches command echoing on or off.\n\n"
+		ConOutPuts ("Displays a message or switches command echoing on or off.\n\n"
 				   "ECHO [ON | OFF]\nECHO [message]\n\n"
 				   "Type ECHO without a parameter to display the current ECHO setting.");
 		return 0;
@@ -55,3 +56,66 @@ INT cmd_echo (LPTSTR cmd, LPTSTR param)
 
 	return 0;
 }
+
+INT CommandEchos (LPTSTR cmd, LPTSTR param)
+{
+#ifdef _DEBUG
+	DebugPrintf ("CommandEchos '%s' : '%s'\n", cmd, param);
+#endif
+
+	if (!_tcsncmp (param, _T("/?"), 2))
+	{
+		ConOutPuts ("Display a messages without trailing carridge return and line feed.\n"
+		            "\n"
+		            "ECHOS message\n");
+		return 0;
+	}
+
+	if (*param)
+		ConOutPrintf ("%s", param);
+
+	return 0;
+}
+
+
+INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
+{
+#ifdef _DEBUG
+	DebugPrintf ("CommandEchoerr '%s' : '%s'\n", cmd, param);
+#endif
+
+	if (!_tcsncmp (param, _T("/?"), 2))
+	{
+		ConOutPuts ("Displays a message to the standard error.\n"
+		            "\n"
+		            "ECHOERR message");
+		return 0;
+	}
+
+	if (*param)
+		ConErrPuts (param);
+
+	return 0;
+}
+
+INT CommandEchoserr (LPTSTR cmd, LPTSTR param)
+{
+#ifdef _DEBUG
+	DebugPrintf ("CommandEchoserr '%s' : '%s'\n", cmd, param);
+#endif
+
+	if (!_tcsncmp (param, _T("/?"), 2))
+	{
+		ConOutPuts ("Prints a messages to standard error output without trailing carridge return and line feed.\n"
+		            "\n"
+		            "ECHOSERR message\n");
+		return 0;
+	}
+
+	if (*param)
+		ConOutPrintf ("%s", param);
+
+	return 0;
+}
+
+/* EOF */
