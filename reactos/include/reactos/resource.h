@@ -22,7 +22,7 @@
 /* Common version strings for rc scripts */
 
 #define RES_STR_COMPANY_NAME	"ReactOS Development Team\0"
-#define RES_STR_LEGAL_COPYRIGHT	"Copyright (c) 1998-2002 ReactOS Team\0"
+#define RES_STR_LEGAL_COPYRIGHT	"Copyright (c) 1998-2003 ReactOS Team\0"
 #define RES_STR_PRODUCT_NAME	"ReactOS Operating System\0"
 #define RES_STR_PRODUCT_VERSION	KERNEL_VERSION_RC
 
