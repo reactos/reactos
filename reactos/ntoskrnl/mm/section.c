@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.20 1999/12/22 14:48:25 dwelch Exp $
+/* $Id: section.c,v 1.21 1999/12/30 01:51:39 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -58,6 +58,7 @@ PVOID MiTryToSharePageInSection(PSECTION_OBJECT Section,
 						       Address);
 	     MmReferencePage((PVOID)PhysPage);
 	     KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
+	     DPRINT("MiTryToSharePageInSection() = %x\n", PhysPage);
 	     return((PVOID)PhysPage);
 	  }
 	
@@ -65,6 +66,7 @@ PVOID MiTryToSharePageInSection(PSECTION_OBJECT Section,
      }
    
    KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
+   DPRINT("MiTryToSharePageInSection() finished\n");
    return(NULL);
 }
 
@@ -177,6 +179,7 @@ NTSTATUS STDCALL NtCreateSection (OUT PHANDLE SectionHandle,
 			    DesiredAccess,
 			    ObjectAttributes,
 			    MmSectionType);
+   DPRINT("SectionHandle %x\n", SectionHandle);
    if (Section == NULL)
      {
 	return(STATUS_UNSUCCESSFUL);
@@ -195,7 +198,7 @@ NTSTATUS STDCALL NtCreateSection (OUT PHANDLE SectionHandle,
    InitializeListHead(&Section->ViewListHead);
    KeInitializeSpinLock(&Section->ViewListLock);
    
-   if (FileHandle != NULL)
+   if (FileHandle != (HANDLE)0xffffffff)
      {
 	Status = ObReferenceObjectByHandle(FileHandle,
 					   FILE_READ_DATA,
@@ -203,7 +206,7 @@ NTSTATUS STDCALL NtCreateSection (OUT PHANDLE SectionHandle,
 					   UserMode,
 					   (PVOID*)&Section->FileObject,
 					   NULL);
-	if (Status != STATUS_SUCCESS)
+	if (!NT_SUCCESS(Status))
 	  {
 	     /*
 	      * Delete section object

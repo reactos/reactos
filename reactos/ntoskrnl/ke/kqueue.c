@@ -20,17 +20,7 @@
 VOID InsertBeforeEntryInList(PLIST_ENTRY Head, PLIST_ENTRY After, 
 			     PLIST_ENTRY Entry)
 {
-   if (After->Blink!=NULL)
-     {
-	After->Blink->Flink = Entry;
-     }
-   else
-     {
-	Head->Flink = Entry;
-     }
-   Entry->Blink = After->Blink;
-   Entry->Flink = After;
-   After->Blink = Entry;
+   InsertHeadList(After, Entry);
 }
 
 BOOLEAN KeInsertByKeyDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
@@ -40,6 +30,8 @@ BOOLEAN KeInsertByKeyDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
    KIRQL oldlvl;
    PLIST_ENTRY current;
    PKDEVICE_QUEUE_ENTRY entry;
+   
+   DPRINT("KeInsertByKeyDeviceQueue()\n");
    
    DeviceQueueEntry->Key=SortKey;
 
@@ -59,7 +51,8 @@ BOOLEAN KeInsertByKeyDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
 	if (entry->Key < SortKey)
 	  {
 	     InsertBeforeEntryInList(&DeviceQueue->ListHead,
-				     &DeviceQueueEntry->Entry,current);
+				     &DeviceQueueEntry->Entry,
+				     current);
 	     KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
 	     return(TRUE);
 	  }
@@ -84,18 +77,12 @@ PKDEVICE_QUEUE_ENTRY KeRemoveByKeyDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
    
    KeAcquireSpinLock(&DeviceQueue->Lock,&oldlvl);
    
-   if (IsListEmpty(&DeviceQueue->ListHead))
-     {
-	DeviceQueue->Busy=FALSE;
-	KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
-	return(NULL);
-     }
-   
    current = DeviceQueue->ListHead.Flink;
-   for(;;)
+   while (current != &DeviceQueue->ListHead)
      {
 	entry = CONTAINING_RECORD(current,KDEVICE_QUEUE_ENTRY,Entry);
-	if (entry->Key < SortKey || current->Flink == NULL)
+	if (entry->Key < SortKey ||
+	    current->Flink == &DeviceQueue->ListHead)
 	  {
 	     RemoveEntryList(current);
 	     KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
@@ -103,6 +90,9 @@ PKDEVICE_QUEUE_ENTRY KeRemoveByKeyDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
 	  }
 	current = current->Flink;
      }
+   DeviceQueue->Busy = FALSE;
+   KeReleaseSpinLock(&DeviceQueue->Lock, oldlvl);
+   return(NULL);
 }
 
 PKDEVICE_QUEUE_ENTRY KeRemoveDeviceQueue(PKDEVICE_QUEUE DeviceQueue)
@@ -173,7 +163,8 @@ BOOLEAN KeInsertDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
 	return(FALSE);
      }
    
-   InsertTailList(&DeviceQueue->ListHead,&DeviceQueueEntry->Entry);
+   InsertTailList(&DeviceQueue->ListHead,
+		  &DeviceQueueEntry->Entry);
    DeviceQueueEntry->Key=0;
    
    KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);

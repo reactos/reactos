@@ -109,7 +109,7 @@ VOID InsertTailList(PLIST_ENTRY ListHead, PLIST_ENTRY ListEntry)
    ListEntry->Blink=Blink;
    Blink->Flink=ListEntry;
    ListHead->Blink=ListEntry;
-   assert( CheckEntry( ListEntry ) );
+   assert(CheckEntry(ListEntry));
 }
 
 VOID InsertHeadList(PLIST_ENTRY ListHead, PLIST_ENTRY ListEntry)

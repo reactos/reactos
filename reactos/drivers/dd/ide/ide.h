@@ -26,7 +26,8 @@ extern "C" {
 #define  IDE_MAX_BUSY_RETRIES      100
 //#define IDE_MAX_BUSY_RETRIES       100000
 #define  IDE_MAX_DRQ_RETRIES       10000
-#define  IDE_MAX_CMD_RETRIES       1
+//#define  IDE_MAX_CMD_RETRIES       1
+#define  IDE_MAX_CMD_RETRIES       0
 #define  IDE_CMD_TIMEOUT           5
 #define  IDE_RESET_PULSE_LENGTH    500  /* maybe a little too long */
 #define  IDE_RESET_BUSY_TIMEOUT    31

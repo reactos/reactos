@@ -24,12 +24,14 @@ void main(int argc, char* argv[])
    NTSTATUS Status;
    HANDLE PortHandle;
    LPCMESSAGE Request;
+   ULONG ConnectInfoLength;
    
    printf("(lpcclt.exe) Lpc client\n");
    
    RtlInitUnicodeString(&PortName, L"\\TestPort");
    
    printf("(lpcclt.exe) Connecting to port\n");
+   ConnectInfoLength = 0;
    Status = NtConnectPort(&PortHandle,
 			  &PortName,
 			  NULL,
@@ -37,7 +39,7 @@ void main(int argc, char* argv[])
 			  0,
 			  0,
 			  NULL,
-			  0);
+			  &ConnectInfoLength);
    if (!NT_SUCCESS(Status))
      {
 	printf("(lpcclt.exe) Failed to connect\n");

@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.1 1999/12/22 14:48:30 dwelch Exp $
+/* $Id: wapi.c,v 1.2 1999/12/30 01:51:42 dwelch Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -16,6 +16,10 @@
 
 #include "api.h"
 
+/* GLOBALS *******************************************************************/
+
+HANDLE CsrssApiHeap;
+
 /* FUNCTIONS *****************************************************************/
 
 static void Thread_Api2(HANDLE ServerPort)
@@ -25,7 +29,7 @@ static void Thread_Api2(HANDLE ServerPort)
    LPCMESSAGE LpcRequest;
    PCSRSS_API_REQUEST Request;
    CSRSS_API_REPLY Reply;
-   CSRSS_PROCESS_DATA ProcessData;
+   PCSRSS_PROCESS_DATA ProcessData;
    
    LpcReply = NULL;
    
@@ -42,39 +46,48 @@ static void Thread_Api2(HANDLE ServerPort)
 	
 	Request = (PCSRSS_API_REQUEST)LpcRequest.MessageData;
 	
+	ProcessData = CsrGetProcessData(LpcRequest.ClientProcessId);
+	
 	DisplayString(L"Received request\n");
 	
 	switch (Request->Type)
 	  {
 	   case CSRSS_CREATE_PROCESS:
-	     Reply.Status = CsrCreateProcess(&ProcessData, Request);
+	     Reply.Status = CsrCreateProcess(ProcessData, 
+					     Request);
 	     break;
 	     
 	   case CSRSS_TERMINATE_PROCESS:
-	     Reply.Status = CsrTerminateProcess(&ProcessData, Request);
+	     Reply.Status = CsrTerminateProcess(ProcessData, 
+						Request);
 	     break;
 	     
 	   case CSRSS_WRITE_CONSOLE:
-	     Reply.Status = CsrWriteConsole(&ProcessData, Request, 
+	     Reply.Status = CsrWriteConsole(ProcessData, 
+					    Request, 
 					    &Reply.Count);
 	     break;
 	     
 	   case CSRSS_READ_CONSOLE:
-	     Reply.Status = CsrReadConsole(&ProcessData, Request, 
+	     Reply.Status = CsrReadConsole(ProcessData, 
+					   Request,
 					   &Reply.Count);
 	     break;
 	     
-	   case CSRSS_NEW_CONSOLE:
-	     Reply.Status = CsrAllocConsole(&ProcessData, Request, 
+	   case CSRSS_ALLOC_CONSOLE:
+	     Reply.Status = CsrAllocConsole(ProcessData, 
+					    Request, 
 					    &Reply.Handle);
 	     break;
 	     
 	   case CSRSS_FREE_CONSOLE:
-	     Reply.Status = CsrFreeConsole(&ProcessData, Request);
+	     Reply.Status = CsrFreeConsole(ProcessData, 
+					   Request);
 	     break;
 	     
 	   case CSRSS_CONNECT_PROCESS:
-	     Reply.Status = CsrConnectProcess(&ProcessData, Request);
+	     Reply.Status = CsrConnectProcess(ProcessData, 
+					      Request);
 	     
 	   default:
 	     Reply.Status = STATUS_NOT_IMPLEMENTED;
@@ -98,6 +111,18 @@ void Thread_Api(PVOID PortHandle)
    NTSTATUS Status;
    LPCMESSAGE Request;
    HANDLE ServerPort;
+   
+   CsrssApiHeap = RtlCreateHeap(HEAP_GROWABLE,
+				NULL,
+				65536,
+				65536,
+				NULL,
+				NULL);
+   if (CsrssApiHeap == NULL)
+     {
+	PrintString("Failed to create private heap, aborting\n");
+	return;
+     }
    
    for (;;)
      {

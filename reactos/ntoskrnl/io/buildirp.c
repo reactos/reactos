@@ -89,6 +89,7 @@ PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
      }
    
    Irp->UserIosb = IoStatusBlock;
+   DPRINT("Irp->UserIosb %x\n", Irp->UserIosb);
    Irp->UserEvent = UserEvent;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    
@@ -155,6 +156,7 @@ PIRP IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
      }
 
    Irp->UserIosb = IoStatusBlock;
+   DPRINT("Irp->UserIosb %x\n", Irp->UserIosb);
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    
    StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -252,6 +254,7 @@ PIRP IoBuildDeviceIoControlRequest(ULONG IoControlCode,
    
    Irp->UserEvent = Event;
    Irp->UserIosb = IoStatusBlock;
+   DPRINT("Irp->UserIosb %x\n", Irp->UserIosb);
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -403,6 +406,7 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
    
    Irp->UserEvent = Event;
    Irp->UserIosb = IoStatusBlock;
+   DPRINT("Irp->UserIosb %x\n", Irp->UserIosb);
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -491,6 +495,7 @@ PIRP IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
    
    Irp->UserEvent = Event;
    Irp->UserIosb = IoStatusBlock;
+   DPRINT("Irp->UserIosb %x\n", Irp->UserIosb);
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
    StackPtr = IoGetNextIrpStackLocation(Irp);

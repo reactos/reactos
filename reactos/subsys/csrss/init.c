@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.3 1999/12/22 14:48:29 dwelch Exp $
+/* $Id: init.c,v 1.4 1999/12/30 01:51:41 dwelch Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -23,63 +23,6 @@
  */
 static HANDLE ApiPortHandle;
 
-#if 0
-static HANDLE SbApiPortHandle;
-#endif
-
-
-#if 0
-/**********************************************************************
- * NAME
- *	Thread_SbApi
- *
- * DESCRIPTION
- * 	Handle connection requests from clients to the port
- * 	"\Windows\SbApiPort".
- */
-static
-void
-Thread_SbApi(void * pPort)
-{
-	NTSTATUS	Status;
-	HANDLE		Port;
-	HANDLE		ConnectedPort;
-
-	Port = * (HANDLE*) pPort;
-	
-	Status = NtListenPort(
-			Port,
-			CSRSS_SBAPI_PORT_QUEUE_SIZE
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		return;
-	}
-	/*
-	 * Wait for a client to connect
-	 */
-	while (TRUE)
-	{
-		Status = NtAcceptConnectPort(
-				Port,
-				& ConnectedPort
-				);
-		if (NT_SUCCESS(Status))
-		{
-			if (NT_SUCCESS(NtCompleteConnectPort(ConnectedPort)))
-			{
-				/* dispatch call */
-				continue;
-			}
-			/* error: Port.CompleteConnect failed */
-			continue;
-		}
-		/* error: Port.AcceptConnect failed */
-	}
-}
-#endif
-
-
 /**********************************************************************
  * NAME
  * 	InitializeServer
@@ -100,7 +43,7 @@ BOOL InitializeServer(void)
    UNICODE_STRING PortName;
 	
    /* NEW NAMED PORT: \ApiPort */
-   RtlInitUnicodeString(&PortName, L"\\ApiPort");
+   RtlInitUnicodeString(&PortName, L"\\Windows\\ApiPort");
    InitializeObjectAttributes(&ObAttributes,
 			      &PortName,
 			      0,
@@ -113,7 +56,7 @@ BOOL InitializeServer(void)
 			 0);
    if (!NT_SUCCESS(Status))
      {
-	DisplayString(L"Unable to create \\ApiPort (Status %x)\n");
+	PrintString("Unable to create \\ApiPort (Status %x)\n", Status);
 	return(FALSE);
      }
 
@@ -129,36 +72,11 @@ BOOL InitializeServer(void)
 				NULL);
    if (!NT_SUCCESS(Status))
      {
-	DisplayString(L"Unable to create server thread\n");
+	PrintString("Unable to create server thread\n");
 	NtClose(ApiPortHandle);
 	return FALSE;
      }
    
-#if 0
-   /* NEW NAMED PORT: \SbApiPort */
-   Status = NtCreatePort(
-			 &Server.SbApi.Port,
-			& ObAttributes,
-			...
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		NtClose(Server.Api.Port);
-		return FALSE;
-	}
-	Status = NtCreateThread(
-			& Server.SbApi.Thread,
-			Thread_SbApi,
-			(void*) & Server.SbApi.Port
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		NtClose(Server.Api.Port);
-		NtClose(Server.SbApi.Port);
-		return FALSE;
-	}
-#endif
-     
    return TRUE;
 }
 

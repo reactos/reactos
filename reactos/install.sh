@@ -19,6 +19,7 @@ cp apps/args/args.exe $1/reactos/bin
 cp apps/bench/bench-thread.exe $1/reactos/bin
 cp apps/cat/cat.exe $1/reactos/bin
 cp subsys/smss/smss.exe $1/reactos/system32
+cp subsys/csrss/csrss.exe $1/reactos/system32
 cp subsys/win32k/win32k.sys $1/reactos/system32/drivers
 cp apps/apc/apc.exe $1/reactos/bin
 cp apps/shm/shmsrv.exe $1/reactos/bin

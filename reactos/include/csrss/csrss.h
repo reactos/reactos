@@ -10,7 +10,7 @@ typedef struct
 #define CSRSS_TERMINATE_PROCESS         (0x2)
 #define CSRSS_WRITE_CONSOLE             (0x3)
 #define CSRSS_READ_CONSOLE              (0x4)
-#define CSRSS_ALLOC_CONSO               (0x5)
+#define CSRSS_ALLOC_CONSOLE             (0x5)
 #define CSRSS_FREE_CONSOLE              (0x6)
 #define CSRSS_CONNECT_PROCESS           (0x7)
 
@@ -26,5 +26,16 @@ typedef struct
    ULONG Count;
    HANDLE Handle;
 } CSRSS_API_REPLY, *PCSRSS_API_REPLY;
+
+typedef struct
+{
+   ULONG NewProcessId;
+   ULONG Flags;
+} CSRSS_CREATE_PROCESS_REQUEST, *PCSRSS_CREATE_PROCESS_REQUEST;
+
+/*
+ * lib/ntdll/csr/api.c
+ */
+NTSTATUS CsrConnectToServer(VOID);
 
 #endif

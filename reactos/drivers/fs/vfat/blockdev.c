@@ -61,11 +61,11 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
         return FALSE;
     }
 
-    DPRINT("Calling IO Driver...\n");
+    DPRINT("Calling IO Driver... with irp %x\n", irp);
     status = IoCallDriver(pDeviceObject,
                           irp);
 
-    DPRINT("Waiting for IO Operation...\n");
+    DPRINT("Waiting for IO Operation for %x\n", irp);
     if (status == STATUS_PENDING) 
      {
 	DPRINT("Operation pending\n");
@@ -74,7 +74,7 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
                               KernelMode,
                               FALSE,
                               NULL);
-        DPRINT("Getting IO Status...\n");
+        DPRINT("Getting IO Status... for %x\n", irp);
         status = ioStatus.Status;
     }
 
@@ -88,7 +88,7 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
                  sectorNumber.u.LowPart);
         return FALSE;
     }
-    DPRINT("Block request succeeded\n");
+    DPRINT("Block request succeeded for %x\n", irp);
     return TRUE;
 }
 

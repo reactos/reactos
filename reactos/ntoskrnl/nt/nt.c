@@ -20,5 +20,6 @@
 VOID NtInit(VOID)
 {
    NtInitializeEventImplementation();
+   NtInitializeSemaphoreImplementation();
    NiInitPort();
 }

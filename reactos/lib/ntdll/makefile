@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.31 1999/12/30 01:33:47 ekohl Exp $
+# $Id: makefile,v 1.32 1999/12/30 01:51:37 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -23,6 +23,8 @@ endif
 
 all: $(DLLTARGET)
 
+CSR_OBJECTS = csr/api.o
+
 DBG_OBJECTS = dbg/brkpoint.o
 
 RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
@@ -46,7 +48,7 @@ STRING_OBJECTS = string/ctype.o string/memccpy.o string/memchr.o \
 
 OBJECTS = napi.o ldr/startup.o $(DBG_OBJECTS) $(RTL_OBJECTS) \
           stdio/vsprintf.o $(STDLIB_OBJECTS) $(STRING_OBJECTS) \
-          stubs/stubs.o ldr/utils.o $(TARGET).coff
+          stubs/stubs.o ldr/utils.o $(CSR_OBJECTS) $(TARGET).coff
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = napi.o ldr\*.o rtl\*.o stdio\*.o stdlib\*.o string\*.o stubs\*.o \

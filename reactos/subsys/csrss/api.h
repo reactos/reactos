@@ -16,6 +16,9 @@ typedef struct
 typedef struct
 {
    PCSRSS_CONSOLE Console;
+   ULONG HandleTableSize;
+   PVOID* HandleTable;
+   ULONG ProcessId;
 } CSRSS_PROCESS_DATA, *PCSRSS_PROCESS_DATA;
 
 NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
@@ -48,3 +51,12 @@ VOID PrintString (char* fmt, ...);
 
 /* api/wapi.c */
 VOID Thread_Api(PVOID PortHandle);
+
+extern HANDLE CsrssApiHeap;
+
+/* api/conio.c */
+VOID CsrInitConsole(PCSRSS_PROCESS_DATA ProcessData,
+		    PCSRSS_CONSOLE Console);
+
+/* api/process.c */
+PCSRSS_PROCESS_DATA CsrGetProcessData(ULONG ProcessId);

@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.1 1999/12/22 14:48:29 dwelch Exp $
+/* $Id: print.c,v 1.2 1999/12/30 01:51:41 dwelch Exp $
  *
  * smss.c - Session Manager
  * 
@@ -29,7 +29,7 @@
 
 #include <ddk/ntddk.h>
 
-#include "csrss.h"
+#include <csrss/csrss.h>
 
 
 VOID DisplayString(LPCWSTR lpwString)
@@ -40,7 +40,7 @@ VOID DisplayString(LPCWSTR lpwString)
    NtDisplayString (&us);
 }
 
-VOID PrintString (char* fmt,. ..)
+VOID PrintString (char* fmt, ...)
 {
    char buffer[512];
    va_list ap;

@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.7 1999/11/24 11:51:44 dwelch Exp $
+/* $Id: section.c,v 1.8 1999/12/30 01:51:37 dwelch Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -13,9 +13,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-HANDLE
-STDCALL
-CreateFileMappingA (
+HANDLE STDCALL CreateFileMappingA (
 	HANDLE			hFile,
 	LPSECURITY_ATTRIBUTES	lpFileMappingAttributes,
 	DWORD			flProtect,
@@ -57,13 +55,13 @@ CreateFileMappingA (
 			    flProtect,
 			    0,
 			    hFile);
-	if (!NT_SUCCESS(Status))
-		{
-		SetLastError(RtlNtStatusToDosError(Status));
-		return NULL;
-		}
-
-	return SectionHandle;
+   if (!NT_SUCCESS(Status))
+     {
+	SetLastError(RtlNtStatusToDosError(Status));
+	return NULL;
+     }
+   
+   return SectionHandle;
 }
 
 
@@ -109,13 +107,13 @@ CreateFileMappingW (
 			    flProtect,
 			    0,
 			    hFile);
-	if (!NT_SUCCESS(Status))
-		{
-		SetLastError(RtlNtStatusToDosError(Status));
-		return NULL;
-		}
-
-	return SectionHandle;
+   if (!NT_SUCCESS(Status))
+     {
+	SetLastError(RtlNtStatusToDosError(Status));
+	return NULL;
+     }
+   
+   return SectionHandle;
 }
 
 

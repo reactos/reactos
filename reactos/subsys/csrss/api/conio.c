@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.1 1999/12/22 14:48:30 dwelch Exp $
+/* $Id: conio.c,v 1.2 1999/12/30 01:51:42 dwelch Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -11,7 +11,7 @@
 
 #include <ddk/ntddk.h>
 
-#include "csrss.h"
+#include <csrss/csrss.h>
 #include "api.h"
 
 /* GLOBALS *******************************************************************/
@@ -21,18 +21,41 @@ static HANDLE KeyboardDevice;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS CsrWriteConsole(PCSRSS_CONIO_PROCESS ProcessData,
-			 PCSRSS_REQUEST Message, 
+NTSTATUS CsrAllocConsole(PCSRSS_PROCESS_DATA ProcessData,
+			 PCSRSS_API_REQUEST LpcMessage, 
+			 PHANDLE ReturnedHandle)
+{
+   return(STATUS_NOT_IMPLEMENTED);
+}
+
+NTSTATUS CsrFreeConsole(PCSRSS_PROCESS_DATA ProcessData,
+			PCSRSS_API_REQUEST LpcMessage)
+{
+   return(STATUS_NOT_IMPLEMENTED);
+}
+
+NTSTATUS CsrReadConsole(PCSRSS_PROCESS_DATA ProcessData,
+			PCSRSS_API_REQUEST LpcMessage, 
+			PULONG CharCount)
+{
+   return(STATUS_NOT_IMPLEMENTED);
+}
+
+
+NTSTATUS CsrWriteConsole(PCSRSS_PROCESS_DATA ProcessData,
+			 PCSRSS_API_REQUEST Message, 
 			 PULONG CharCount)
 {
    NTSTATUS Status;
+   PCSRSS_CONSOLE Console;
    
    if (ProcessData->Console == NULL)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
+   Console = ProcessData->Console;
    
-   Status = NtWaitForSingleObject(ProcessData->Console->LockMutant,
+   Status = NtWaitForSingleObject(Console->LockMutant,
 				  TRUE,
 				  NULL);
    if (!NT_SUCCESS(Status))
@@ -45,9 +68,9 @@ NTSTATUS CsrWriteConsole(PCSRSS_CONIO_PROCESS ProcessData,
 	return(Status);
      }
    
-   if (TopLevel == TRUE)
+   if (Console->TopLevel == TRUE)
      {
-	Status = NtReleaseMutant(ProcessData->Console->LockMutant, NULL);
+	Status = NtReleaseMutant(Console->LockMutant, NULL);
 	if (!NT_SUCCESS(Status))
 	  {
 	     return(Status);
@@ -57,7 +80,7 @@ NTSTATUS CsrWriteConsole(PCSRSS_CONIO_PROCESS ProcessData,
      }
    else
      {
-	Status = NtReleaseMutant(ProcessData->Console->LockMutant, NULL);
+	Status = NtReleaseMutant(Console->LockMutant, NULL);
 	if (!NT_SUCCESS(Status))
 	  {
 	     return(Status);
@@ -67,25 +90,9 @@ NTSTATUS CsrWriteConsole(PCSRSS_CONIO_PROCESS ProcessData,
      }
 }
 
-PCSRSS_CONIO_PROCESS CsrAllocConioProcess(VOID)
+VOID CsrInitConsole(PCSRSS_PROCESS_DATA ProcessData,
+		    PCSRSS_CONSOLE Console)
 {
-   PCSRSS_CONIO_PROCESS ProcessData;
-   
-   ThreadData = RtlAllocHeap(NULL, HEAP_ZERO_MEMORY, 
-			     sizeof(PROCESS_CONIO_THREAD));
-   if (ThreadData == NULL)
-     {
-	return(NULL);
-     }
-   ProcessData->Console = NULL;
-   return(ProcessData);
 }
-
-VOID CsrFreeConioProcess(PCSRSS_CONIO_PROCESS ProcessData)
-{
-   RtlFreeHeap(NULL, 0, ProcessData);
-}
-
-
 
 /* EOF */

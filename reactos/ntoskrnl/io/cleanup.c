@@ -199,6 +199,9 @@ VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
 	return;
      }
    
+   DPRINT("Irp->UserIosb %x &Irp->UserIosb %x\n", 
+	   Irp->UserIosb,
+	   &Irp->UserIosb);
    if (Irp->UserIosb!=NULL)
      {
 	*Irp->UserIosb=Irp->IoStatus;

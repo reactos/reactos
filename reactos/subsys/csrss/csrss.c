@@ -1,4 +1,4 @@
-/* $Id: csrss.c,v 1.3 1999/12/22 14:48:29 dwelch Exp $
+/* $Id: csrss.c,v 1.4 1999/12/30 01:51:41 dwelch Exp $
  *
  * csrss.c - Client/Server Runtime subsystem
  * 
@@ -36,17 +36,6 @@
 BOOL TerminationRequestPending = FALSE;
 
 BOOL InitializeServer(void);
-
-
-void DisplayString(LPCWSTR	Message)
-{
-   UNICODE_STRING title;
-
-   title.Buffer = (LPWSTR) Message;
-   title.Length = wcslen(title.Buffer) * sizeof (WCHAR);
-   title.MaximumLength = title.Length + sizeof (WCHAR);
-   NtDisplayString(&title);
-}
 
 
 /* Native process' entry point */

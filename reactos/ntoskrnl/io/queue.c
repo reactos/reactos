@@ -31,16 +31,21 @@ VOID IoStartNextPacketByKey(PDEVICE_OBJECT DeviceObject,
    PKDEVICE_QUEUE_ENTRY entry;
    PIRP Irp;
    
-   entry = KeRemoveByKeyDeviceQueue(&DeviceObject->DeviceQueue,Key);
+   entry = KeRemoveByKeyDeviceQueue(&DeviceObject->DeviceQueue,
+				    Key);
    
-   if (entry!=NULL)
+   if (entry != NULL)
      {
-	Irp = CONTAINING_RECORD(entry,IRP,Tail.Overlay.DeviceQueueEntry);
+	Irp = CONTAINING_RECORD(entry,
+				IRP,
+				Tail.Overlay.DeviceQueueEntry);
         DeviceObject->CurrentIrp = Irp;
-	DeviceObject->DriverObject->DriverStartIo(DeviceObject,Irp);	
+	DPRINT("Next irp is %x\n", Irp);
+	DeviceObject->DriverObject->DriverStartIo(DeviceObject, Irp);
      }
    else
      {
+	DPRINT("No next irp\n");
         DeviceObject->CurrentIrp = NULL;
      }   
 }
@@ -89,7 +94,9 @@ VOID IoStartPacket(PDEVICE_OBJECT DeviceObject,
 {
    BOOLEAN stat;
    KIRQL oldirql;
-
+   
+   DPRINT("IoStartPacket(Irp %x)\n", Irp);
+   
    ASSERT_IRQL(DISPATCH_LEVEL);
    
    IoAcquireCancelSpinLock(&oldirql);

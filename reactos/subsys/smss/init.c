@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.7 1999/12/24 17:17:51 ekohl Exp $
+/* $Id: init.c,v 1.8 1999/12/30 01:51:42 dwelch Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -157,6 +157,7 @@ InitSessionManager (
 	/* FIXME: Set environment variables from registry */
 
 	/* Load the kernel mode driver win32k.sys */
+#if 0
 	RtlInitUnicodeString (&CmdLineW,
 	                      L"\\??\\C:\\reactos\\system32\\drivers\\win32k.sys");
 	Status = NtLoadDriver (&CmdLineW);
@@ -165,33 +166,50 @@ InitSessionManager (
 	{
 		return FALSE;
 	}
-
-	/* Start the Win32 subsystem (csrss.exe) */
-#if 0
-	DisplayString (L"SM: Executing csrss.exe\n");
-	RtlInitUnicodeString (&UnicodeString,
-	                      L"\\??\\C:\\reactos\\system32\\csrss.exe");
-
-	Status = RtlCreateUserProcess (&UnicodeString,
-	                               NULL,
-	                               NULL,
-	                               FALSE,
-	                               0,
-	                               NULL,
-	                               &Children[CHILD_CSRSS],
-	                               NULL);
-
-	if (!NT_SUCCESS(Status))
-	{
-		DisplayString (L"SM: Loading csrss.exe failed!\n");
-		return FALSE;
-	}
 #endif
 
-	/* Start the simple shell (shell.exe) */
-	DisplayString (L"SM: Executing shell\n");
-	RtlInitUnicodeString (&UnicodeString,
-	                      L"\\??\\C:\\reactos\\system32\\shell.exe");
+#if 0   
+   /* Start the Win32 subsystem (csrss.exe) */
+   DisplayString (L"SM: Executing csrss.exe\n");
+   RtlInitUnicodeString (&UnicodeString,
+			 L"\\??\\C:\\reactos\\system32\\csrss.exe");
+   
+   RtlCreateProcessParameters (&Ppb,
+			       &UnicodeString,
+			       NULL,
+			       NULL,
+			       NULL,
+			       NULL,
+			       NULL,
+			       NULL,
+			       NULL,
+			       NULL);
+   
+   Status = RtlCreateUserProcess (&UnicodeString,
+				  0,
+				  Ppb,
+				  NULL,
+				  NULL,
+				  FALSE,
+				  0,
+				  NULL,
+				  &Children[CHILD_CSRSS],
+				  NULL);
+   
+   if (!NT_SUCCESS(Status))
+     {
+	DisplayString (L"SM: Loading csrss.exe failed!\n");
+	return FALSE;
+     }
+
+   RtlDestroyProcessParameters (Ppb);
+
+#endif   
+   
+   /* Start the simple shell (shell.exe) */
+   DisplayString (L"SM: Executing shell\n");
+   RtlInitUnicodeString (&UnicodeString,
+			 L"\\??\\C:\\reactos\\system32\\shell.exe");
 #if 0
 	/* Start the logon process (winlogon.exe) */
 	RtlInitUnicodeString (&CmdLineW,
