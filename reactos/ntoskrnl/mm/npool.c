@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.38 2001/03/13 17:47:47 dwelch Exp $
+/* $Id: npool.c,v 1.39 2001/03/13 21:39:47 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -26,7 +26,9 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#if 0
+#define ENABLE_VALIDATE_POOL
+
+#ifdef ENABLE_VALIDATE_POOL
 #define VALIDATE_POOL validate_kernel_pool()
 #else
 #define VALIDATE_POOL
@@ -298,18 +300,23 @@ MiDebugDumpNonPagedPool(BOOLEAN NewOnly)
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
 }
 
-#if 0
+#ifdef ENABLE_VALIDATE_POOL
 static void validate_free_list(void)
 /*
  * FUNCTION: Validate the integrity of the list of free blocks
  */
 {
-   BLOCK_HDR* current=free_list_head;
+   BLOCK_HDR* current;
+   PLIST_ENTRY current_entry;
    unsigned int blocks_seen=0;     
    
-   while (current!=NULL)
+   current_entry = FreeBlockListHead.Flink;
+   while (current_entry != &FreeBlockListHead)
      {
-	unsigned int base_addr = (int)current;
+	unsigned int base_addr;
+
+	current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
+	base_addr = (int)current;
 
 	if (current->magic != BLOCK_HDR_FREE_MAGIC)
 	  {
@@ -334,16 +341,17 @@ static void validate_free_list(void)
 	     DbgPrint("Too many blocks on list\n");
 	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
-//                verify_for_write(base_addr,current->size);                
-	if (current->next!=NULL&&current->next->previous!=current)
+	if (current->ListEntry.Flink != &FreeBlockListHead &&
+	    current->ListEntry.Flink->Blink != &current->ListEntry)
 	  {
 	     DbgPrint("%s:%d:Break in list (current %x next %x "
 		    "current->next->previous %x)\n",
-		    __FILE__,__LINE__,current,current->next,
-		    current->next->previous);
+		    __FILE__,__LINE__,current, current->ListEntry.Flink,
+		    current->ListEntry.Flink->Blink);
 	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
-	current=current->next;
+
+	current_entry = current_entry->Flink;
      }
 }
 
@@ -352,12 +360,17 @@ static void validate_used_list(void)
  * FUNCTION: Validate the integrity of the list of used blocks
  */
 {
-   BLOCK_HDR* current=used_list_head;
+   BLOCK_HDR* current;
+   PLIST_ENTRY current_entry;
    unsigned int blocks_seen=0;
    
-   while (current!=NULL)
+   current_entry = UsedBlockListHead.Flink;
+   while (current_entry != &UsedBlockListHead)
      {
-	unsigned int base_addr = (int)current;
+	unsigned int base_addr;
+
+	current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
+	base_addr = (int)current;
 	
 	if (current->magic != BLOCK_HDR_USED_MAGIC)
 	  {
@@ -378,14 +391,15 @@ static void validate_used_list(void)
 	     DbgPrint("Too many blocks on list\n");
 	     for(;;);
 	  }
-	//                verify_for_write(base_addr,current->size);
-	if (current->next!=NULL&&current->next->previous!=current)
+	if (current->ListEntry.Flink != &UsedBlockListHead &&
+	    current->ListEntry.Flink->Blink != &current->ListEntry)
 	  {
 	     DbgPrint("Break in list (current %x next %x)\n",
-		    current,current->next);
+		    current, current->ListEntry.Flink);
 	     for(;;);
 	  }
-	current=current->next;
+
+	current_entry = current_entry->Flink;
      }
 }
 
@@ -398,48 +412,57 @@ static void check_duplicates(BLOCK_HDR* blk)
  */
 {
    unsigned int base = (int)blk;
-   unsigned int last = ((int)blk) + +sizeof(BLOCK_HDR) + blk->size;
+   unsigned int last = ((int)blk) + +sizeof(BLOCK_HDR) + blk->size;   
+   BLOCK_HDR* current;
+   PLIST_ENTRY current_entry;
    
-   BLOCK_HDR* current=free_list_head;
-   while (current!=NULL)
+   current_entry = FreeBlockListHead.Flink;
+   while (current_entry != &FreeBlockListHead)
      {
-	if (current->magic != BLOCK_HDR_FREE_MAGIC)
-	  {
-	     DbgPrint("Bad block magic (probable pool corruption) at %x\n",
-		      current);
+       current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
+
+       if (current->magic != BLOCK_HDR_FREE_MAGIC)
+	 {
+	   DbgPrint("Bad block magic (probable pool corruption) at %x\n",
+		    current);
 	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
+	 }
+       
+       if ( (int)current > base && (int)current < last ) 
+	 {
+	   DbgPrint("intersecting blocks on list\n");
+	   for(;;);
+	 }
+       if  ( (int)current < base &&
+	     ((int)current + current->size + sizeof(BLOCK_HDR))
+	     > base )
+	 {
+	   DbgPrint("intersecting blocks on list\n");
+	   for(;;);
 	  }
 
-	if ( (int)current > base && (int)current < last ) 
-	  {
-	     DbgPrint("intersecting blocks on list\n");
-	     for(;;);
-	  }
-	if  ( (int)current < base &&
-	     ((int)current + current->size + sizeof(BLOCK_HDR))
-	     > base )
-	  {
-	     DbgPrint("intersecting blocks on list\n");
-	     for(;;);
-	  }
-	current=current->next;
+       current_entry = current_entry->Flink;
      }
-   current=used_list_head;
-   while (current!=NULL)
+
+   current_entry = UsedBlockListHead.Flink;
+   while (current_entry != &UsedBlockListHead)
      {
-	if ( (int)current > base && (int)current < last ) 
-	  {
-	     DbgPrint("intersecting blocks on list\n");
-	     for(;;);
-	  }
-	if  ( (int)current < base &&
+       current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
+
+       if ( (int)current > base && (int)current < last ) 
+	 {
+	   DbgPrint("intersecting blocks on list\n");
+	   for(;;);
+	 }
+       if  ( (int)current < base &&
 	     ((int)current + current->size + sizeof(BLOCK_HDR))
 	     > base )
-	  {
-	     DbgPrint("intersecting blocks on list\n");
-	     for(;;);
-	  }
-	current=current->next;
+	 {
+	   DbgPrint("intersecting blocks on list\n");
+	   for(;;);
+	 }
+       
+       current_entry = current_entry->Flink;
      }
    
 }
@@ -449,22 +472,25 @@ static void validate_kernel_pool(void)
  * FUNCTION: Checks the integrity of the kernel memory heap
  */
 {
-   BLOCK_HDR* current=NULL;
+   BLOCK_HDR* current;
+   PLIST_ENTRY current_entry;
    
    validate_free_list();
    validate_used_list();
 
-   current=free_list_head;
-   while (current!=NULL)
+   current_entry = FreeBlockListHead.Flink;
+   while (current_entry != &FreeBlockListHead)
      {
-	check_duplicates(current);
-	current=current->next;
+       current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
+       check_duplicates(current);
+       current_entry = current_entry->Flink;
      }
-   current=used_list_head;
-   while (current!=NULL)
+   current_entry = UsedBlockListHead.Flink;
+   while (current_entry != &UsedBlockListHead)
      {
-	check_duplicates(current);
-	current=current->next;
+       current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
+       check_duplicates(current);
+       current_entry = current_entry->Flink;
      }
 }
 #endif
@@ -500,6 +526,7 @@ merge_free_block(BLOCK_HDR* blk)
 	  blk->size = blk->size + sizeof(BLOCK_HDR) + next->size;
 	}
     }
+
   previous_entry = blk->ListEntry.Blink;
   if (previous_entry != &FreeBlockListHead)
     {
@@ -750,7 +777,8 @@ VOID STDCALL ExFreePool (PVOID block)
 	 }
        else
 	 {
-	   DbgPrint("ExFreePool of non-allocated address %x\n", block);
+	   DbgPrint("ExFreePool of non-allocated address %x (magic %x)\n", 
+		    block, blk->magic);
 	 }
 	KeBugCheck(0);
 	return;
