@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.30 2000/09/01 17:05:09 ekohl Exp $
+/* $Id: startup.c,v 1.31 2000/09/05 11:01:02 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -167,6 +167,8 @@ LdrInitializeThunk (ULONG Unknown1,
 
    InsertTailList(&Peb->Ldr->InLoadOrderModuleList,
 		  &NtModule->InLoadOrderModuleList);
+   InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
+		  &NtModule->InInitializationOrderModuleList);
 
 
    /* add entry for executable (becomes first list entry) */

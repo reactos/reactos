@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.33 2000/06/29 23:35:26 dwelch Exp $
+/* $Id: proc.c,v 1.34 2000/09/05 11:00:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,6 +22,7 @@
 #include <napi/i386/segment.h>
 #include <napi/teb.h>
 #include <ntdll/csr.h>
+#include <ntdll/ldr.h>
 
 
 #define NDEBUG
@@ -444,6 +445,11 @@ ExitProcess (
 	UINT	uExitCode
 	)
 {
+	/* unload all dll's */
+	LdrShutdownProcess ();
+
+	/* FIXME: notify csrss of process termination */
+
 	NtTerminateProcess (NtCurrentProcess (),
 	                    uExitCode);
 }

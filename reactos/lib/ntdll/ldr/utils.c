@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.33 2000/09/04 19:05:03 ekohl Exp $
+/* $Id: utils.c,v 1.34 2000/09/05 11:01:03 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -399,6 +399,8 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
 	/* FIXME: aquire loader lock */
 	InsertTailList(&NtCurrentPeb()->Ldr->InLoadOrderModuleList,
 		       &Module->InLoadOrderModuleList);
+	InsertTailList(&NtCurrentPeb()->Ldr->InInitializationOrderModuleList,
+		       &Module->InInitializationOrderModuleList);
 	/* FIXME: release loader lock */
 
 	/* initialize dll */
@@ -1530,7 +1532,41 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
 NTSTATUS STDCALL
 LdrShutdownProcess (VOID)
 {
-   DPRINT1("LdrShutdownProcess() called\n");
+   PLIST_ENTRY ModuleListHead;
+   PLIST_ENTRY Entry;
+   PLDR_MODULE Module;
+
+   DPRINT("LdrShutdownProcess() called\n");
+
+   RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
+
+   ModuleListHead = &NtCurrentPeb()->Ldr->InInitializationOrderModuleList;
+   Entry = ModuleListHead->Blink;
+
+   while (Entry != ModuleListHead)
+     {
+	Module = CONTAINING_RECORD(Entry, LDR_MODULE, InInitializationOrderModuleList);
+
+	DPRINT("  Unloading %wZ\n",
+	       &Module->BaseDllName);
+
+	if (Module->EntryPoint != 0)
+	  {
+	     PDLLMAIN_FUNC Entrypoint = (PDLLMAIN_FUNC)Module->EntryPoint;
+
+	     DPRINT("Calling entry point at 0x%08x\n", Entrypoint);
+	     Entrypoint (Module->BaseAddress,
+			 DLL_PROCESS_DETACH,
+			 NULL);
+	  }
+
+	Entry = Entry->Blink;
+     }
+
+   RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
+
+   DPRINT("LdrShutdownProcess() done\n");
+
    return STATUS_SUCCESS;
 }
 
@@ -1538,7 +1574,41 @@ LdrShutdownProcess (VOID)
 NTSTATUS STDCALL
 LdrShutdownThread (VOID)
 {
-   DPRINT1("LdrShutdownThread() called\n");
+   PLIST_ENTRY ModuleListHead;
+   PLIST_ENTRY Entry;
+   PLDR_MODULE Module;
+
+   DPRINT("LdrShutdownThread() called\n");
+
+   RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
+
+   ModuleListHead = &NtCurrentPeb()->Ldr->InInitializationOrderModuleList;
+   Entry = ModuleListHead->Blink;
+
+   while (Entry != ModuleListHead)
+     {
+	Module = CONTAINING_RECORD(Entry, LDR_MODULE, InInitializationOrderModuleList);
+
+	DPRINT("  Unloading %wZ\n",
+	       &Module->BaseDllName);
+
+	if (Module->EntryPoint != 0)
+	  {
+	     PDLLMAIN_FUNC Entrypoint = (PDLLMAIN_FUNC)Module->EntryPoint;
+
+	     DPRINT("Calling entry point at 0x%08x\n", Entrypoint);
+	     Entrypoint (Module->BaseAddress,
+			 DLL_THREAD_DETACH,
+			 NULL);
+	  }
+
+	Entry = Entry->Blink;
+     }
+
+   RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
+
+   DPRINT("LdrShutdownThread() done\n");
+
    return STATUS_SUCCESS;
 }
 

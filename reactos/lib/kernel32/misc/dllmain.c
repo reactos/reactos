@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.13 2000/08/15 12:39:18 ekohl Exp $
+/* $Id: dllmain.c,v 1.14 2000/09/05 10:59:27 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,6 +22,7 @@
 extern UNICODE_STRING SystemDirectory;
 extern UNICODE_STRING WindowsDirectory;
 
+static WINBOOL DllInitialized = FALSE;
 
 WINBOOL STDCALL DllMain (HANDLE hInst,
 			 ULONG ul_reason_for_call,
@@ -75,12 +76,23 @@ WINBOOL STDCALL DllMain(HANDLE hInst,
 	     wcscpy (SystemDirectory.Buffer, WindowsDirectory.Buffer);
 	     wcscat (SystemDirectory.Buffer, L"\\System32");
 
+	     /* Insert more dll attach stuff here! */
+
+	     DllInitialized = TRUE;
+
 	     break;
 	  }
       case DLL_PROCESS_DETACH:
 	  {
 	     DPRINT("DLL_PROCESS_DETACH\n");
-	     HeapDestroy(NtCurrentPeb()->ProcessHeap);
+	     if (DllInitialized == TRUE)
+	       {
+		  RtlFreeUnicodeString (&SystemDirectory);
+		  RtlFreeUnicodeString (&WindowsDirectory);
+
+		  /* Insert more dll detach stuff here! */
+
+	       }
 	     break;
 	  }
       default:
