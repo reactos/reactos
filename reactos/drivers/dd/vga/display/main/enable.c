@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.9 $
+ * $Revision: 1.10 $
  * $Author: jfilby $
- * $Date: 2000/10/14 22:40:17 $
+ * $Date: 2000/11/16 21:45:54 $
  *
  */
 
@@ -279,8 +279,8 @@ VOID VGADDIDisableSurface(IN DHPDEV PDev)
     EngFreeMem(pdsurf->BankBufferPlane0);
   }
   CHECKPOINT;
-  if (ppdev->PointerAttributes != NULL) {
-    EngFreeMem(ppdev->PointerAttributes);
+  if (ppdev->pPointerAttributes != NULL) {
+    EngFreeMem(ppdev->pPointerAttributes);
     }
   CHECKPOINT;
   // free any pending saved screen bit blocks
