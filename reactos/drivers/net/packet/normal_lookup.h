@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2000
+ * Copyright (c) 2001
  *	Politecnico di Torino.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -19,34 +19,27 @@
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifndef __DEBUG_INCLUDE
-#define __DEBUG_INCLUDE
+#ifndef __normal_lookup
+#define __normal_lookup
 
+#ifdef WIN32
+#include "tme.h"
+#endif
 
-#if DBG
+#ifdef __FreeBSD__
 
-#define IF_PACKETDEBUG(f) if (PacketDebugFlag & (f))
-extern ULONG PacketDebugFlag;
-
-#define PACKET_DEBUG_LOUD               0x00000001  // debugging info
-#define PACKET_DEBUG_VERY_LOUD          0x00000002  // excessive debugging info
-
-#define PACKET_DEBUG_INIT               0x00000100  // init debugging info
-
-//
-// Macro for deciding whether to dump lots of debugging information.
-//
-
-#define IF_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_LOUD ) { A }
-#define IF_VERY_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_VERY_LOUD ) { A }
-#define IF_INIT_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_INIT ) { A }
-
+#ifdef _KERNEL
+#include <net/tme/tme.h>
 #else
-
-#define IF_LOUD(A)
-#define IF_VERY_LOUD(A)
-#define IF_INIT_LOUD(A)
+#include <tme/tme.h>
+#endif
 
 #endif
 
-#endif /*#define __DEBUG_INCLUDE*/
+#define NORMAL_LUT_W_INSERT				0x00000000
+uint32 normal_lut_w_insert(uint8 *key, TME_DATA *data, MEM_TYPE *mem_ex, struct time_conv *time_ref);   
+#define NORMAL_LUT_WO_INSERT			0x00000001
+uint32 normal_lut_wo_insert(uint8 *key, TME_DATA *data, MEM_TYPE *mem_ex, struct time_conv *time_ref); 
+#define DUMMY_INSERT					1234
+
+#endif

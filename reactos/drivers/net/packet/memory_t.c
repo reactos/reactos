@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2000
+ * Copyright (c) 2001
  *	Politecnico di Torino.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -19,34 +19,47 @@
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifndef __DEBUG_INCLUDE
-#define __DEBUG_INCLUDE
+#include "tme.h"
+#include "memory_t.h"
 
 
-#if DBG
+int32 SW_LONG_AT(void *b, uint32 c)
+{
+	return	((int32)*((uint8 *)b+c)<<24|
+		 (int32)*((uint8 *)b+c+1)<<16|
+		 (int32)*((uint8 *)b+c+2)<<8|
+		 (int32)*((uint8 *)b+c+3)<<0);
+}
 
-#define IF_PACKETDEBUG(f) if (PacketDebugFlag & (f))
-extern ULONG PacketDebugFlag;
+uint32 SW_ULONG_AT(void *b, uint32 c)
+{
+	return	((uint32)*((uint8 *)b+c)<<24|
+		 (uint32)*((uint8 *)b+c+1)<<16|
+		 (uint32)*((uint8 *)b+c+2)<<8|
+		 (uint32)*((uint8 *)b+c+3)<<0);
+}
 
-#define PACKET_DEBUG_LOUD               0x00000001  // debugging info
-#define PACKET_DEBUG_VERY_LOUD          0x00000002  // excessive debugging info
+int16 SW_SHORT_AT(void *b, uint32 os)
+{
+	return ((int16)
+		((int16)*((uint8 *)b+os+0)<<8|
+		 (int16)*((uint8 *)b+os+1)<<0));
+}
 
-#define PACKET_DEBUG_INIT               0x00000100  // init debugging info
+uint16 SW_USHORT_AT(void *b, uint32 os)
+{
+	return ((uint16)
+		((uint16)*((uint8 *)b+os+0)<<8|
+		 (uint16)*((uint8 *)b+os+1)<<0));
+}
 
-//
-// Macro for deciding whether to dump lots of debugging information.
-//
+VOID SW_ULONG_ASSIGN(void *dst, uint32 src)
+{
+	*((uint8*)dst+0)=*((uint8*)&src+3);
+	*((uint8*)dst+1)=*((uint8*)&src+2);
+	*((uint8*)dst+2)=*((uint8*)&src+1);
+	*((uint8*)dst+3)=*((uint8*)&src+0);
 
-#define IF_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_LOUD ) { A }
-#define IF_VERY_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_VERY_LOUD ) { A }
-#define IF_INIT_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_INIT ) { A }
+}
 
-#else
-
-#define IF_LOUD(A)
-#define IF_VERY_LOUD(A)
-#define IF_INIT_LOUD(A)
-
-#endif
-
-#endif /*#define __DEBUG_INCLUDE*/
+void assert(void* assert, const char* file, int line, void* msg) { };

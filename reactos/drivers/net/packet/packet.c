@@ -25,26 +25,25 @@
 #include "ntiologc.h"
 #include "ndis.h"
 #else
-//#include <net/miniport.h>
 #include <ddk/ntddk.h>
-//#include "<ntiologc.h>"
 #include <net/ndis.h>
 #endif
 
 #include "ntddpack.h"
+
 #include "debug.h"
 #include "packet.h"
+#include "win_bpf.h"
+#include "win_bpf_filter_init.h"
 
+#include "tme.h"
 
 #if DBG
-//
 // Declare the global debug flag for this driver.
-//
-
-ULONG PacketDebugFlag = PACKET_DEBUG_LOUD;
+//ULONG PacketDebugFlag = PACKET_DEBUG_LOUD;
+ULONG PacketDebugFlag = PACKET_DEBUG_LOUD + PACKET_DEBUG_VERY_LOUD + PACKET_DEBUG_INIT;
 
 #endif
-
 
 PDEVICE_EXTENSION GlobalDeviceExtension;
 
@@ -60,10 +59,9 @@ PDEVICE_EXTENSION GlobalDeviceExtension;
 #endif // ROBERTS_PATCH
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Strings
+// Global strings
 //
-
-NDIS_STRING PacketName = NDIS_STRING_CONST("Packet_");
+NDIS_STRING NPF_Prefix = NDIS_STRING_CONST("NPF_");
 NDIS_STRING devicePrefix = NDIS_STRING_CONST("\\Device\\");
 NDIS_STRING symbolicLinkPrefix = NDIS_STRING_CONST("\\DosDevices\\");
 NDIS_STRING tcpLinkageKeyName = NDIS_STRING_CONST("\\Registry\\Machine\\System"
@@ -72,32 +70,30 @@ NDIS_STRING AdapterListKey = NDIS_STRING_CONST("\\Registry\\Machine\\System"
 								L"\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}");
 NDIS_STRING bindValueName = NDIS_STRING_CONST("Bind");
 
-//
-// Global variable that points to the names of the bound adapters
-//
+
+/// Global variable that points to the names of the bound adapters
 WCHAR* bindP = NULL;
+
+extern struct time_conv G_Start_Time; // from openclos.c
+
+extern NDIS_SPIN_LOCK Opened_Instances_Lock;
 
 //
 //  Packet Driver's entry routine.
 //
-
-//NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
-//			     PUNICODE_STRING RegistryPath)
-
 NTSTATUS
-STDCALL
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
     )
 {
-    NTSTATUS Status = STATUS_SUCCESS;
-    NDIS_STATUS NdisStatus = STATUS_SUCCESS;
+
     NDIS_PROTOCOL_CHARACTERISTICS  ProtocolChar;
     UNICODE_STRING MacDriverName;
     UNICODE_STRING UnicodeDeviceName;
     PDEVICE_OBJECT DeviceObject = NULL;
     PDEVICE_EXTENSION DeviceExtension = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
     NTSTATUS ErrorCode = STATUS_SUCCESS;
     NDIS_STRING ProtoName = NDIS_STRING_CONST("PacketDriver");
     ULONG          DevicesCreated=0;
@@ -110,92 +106,114 @@ DriverEntry(
 	PKEY_VALUE_PARTIAL_INFORMATION tcpBindingsP;
 	UNICODE_STRING macName;
 	
-	//This driver at the moment works only on single processor machines
+	// This driver at the moment works only on single processor machines
 	if(NdisSystemProcessorCount() != 1){
 		return STATUS_IMAGE_MP_UP_MISMATCH;
 	}
+
     IF_LOUD(DbgPrint("\n\nPacket: DriverEntry\n");)
+
 	RtlZeroMemory(&ProtocolChar,sizeof(NDIS_PROTOCOL_CHARACTERISTICS));
+
 #ifdef NDIS50
     ProtocolChar.MajorNdisVersion            = 5;
 #else
     ProtocolChar.MajorNdisVersion            = 3;
 #endif
     ProtocolChar.MinorNdisVersion            = 0;
-//    ProtocolChar.Reserved                    = 0;
-    ProtocolChar.OpenAdapterCompleteHandler  = PacketOpenAdapterComplete;
-    ProtocolChar.CloseAdapterCompleteHandler = PacketCloseAdapterComplete;
-    ProtocolChar.u2.SendCompleteHandler         = PacketSendComplete;
-    ProtocolChar.u3.TransferDataCompleteHandler = PacketTransferDataComplete;
-    ProtocolChar.ResetCompleteHandler        = PacketResetComplete;
-    ProtocolChar.RequestCompleteHandler      = PacketRequestComplete;
-    ProtocolChar.u4.ReceiveHandler              = Packet_tap;
-    ProtocolChar.ReceiveCompleteHandler      = PacketReceiveComplete;
-    ProtocolChar.StatusHandler               = PacketStatus;
-    ProtocolChar.StatusCompleteHandler       = PacketStatusComplete;
+#ifndef __GNUC__
+    ProtocolChar.Reserved                    = 0;
+#endif
+    ProtocolChar.OpenAdapterCompleteHandler  = NPF_OpenAdapterComplete;
+    ProtocolChar.CloseAdapterCompleteHandler = NPF_CloseAdapterComplete;
+#ifndef __GNUC__
+    ProtocolChar.SendCompleteHandler         = NPF_SendComplete;
+    ProtocolChar.TransferDataCompleteHandler = NPF_TransferDataComplete;
+#endif
+    ProtocolChar.ResetCompleteHandler        = NPF_ResetComplete;
+    ProtocolChar.RequestCompleteHandler      = NPF_RequestComplete;
+#ifndef __GNUC__
+    ProtocolChar.ReceiveHandler              = NPF_tap;
+#endif
+    ProtocolChar.ReceiveCompleteHandler      = NPF_ReceiveComplete;
+    ProtocolChar.StatusHandler               = NPF_Status;
+    ProtocolChar.StatusCompleteHandler       = NPF_StatusComplete;
 #ifdef NDIS50
-    ProtocolChar.BindAdapterHandler          = PacketBindAdapter;
-    ProtocolChar.UnbindAdapterHandler        = PacketUnbindAdapter;
+    ProtocolChar.BindAdapterHandler          = NPF_BindAdapter;
+    ProtocolChar.UnbindAdapterHandler        = NPF_UnbindAdapter;
+    ProtocolChar.PnPEventHandler             = NPF_PowerChange;
     ProtocolChar.ReceivePacketHandler        = NULL;
 #endif
     ProtocolChar.Name                        = ProtoName;
-/*
-NdisRegisterProtocol(
-    OUT PNDIS_STATUS                    Status,
-    OUT PNDIS_HANDLE                    NdisProtocolHandle,
-    IN  PNDIS_PROTOCOL_CHARACTERISTICS  ProtocolCharacteristics,
-    IN  UINT                            CharacteristicsLength);
- */
+
     NdisRegisterProtocol(
-        &NdisStatus,
+        &Status,
         &NdisProtocolHandle,
         &ProtocolChar,
         sizeof(NDIS_PROTOCOL_CHARACTERISTICS));
-    if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        IF_LOUD(DbgPrint("Packet: Failed to register protocol with NDIS\n");)
-        return NdisStatus;
+
+    if (Status != NDIS_STATUS_SUCCESS) {
+
+        IF_LOUD(DbgPrint("NPF: Failed to register protocol with NDIS\n");)
+
+        return Status;
+
     }
-    //
+	
+    NdisAllocateSpinLock(&Opened_Instances_Lock);
+
     // Set up the device driver entry points.
-    //
-    DriverObject->MajorFunction[IRP_MJ_CREATE] = PacketOpen;
-    DriverObject->MajorFunction[IRP_MJ_CLOSE]  = PacketClose;
-    DriverObject->MajorFunction[IRP_MJ_READ]   = PacketRead;
-    DriverObject->MajorFunction[IRP_MJ_WRITE]  = PacketWrite;
-    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL]  = PacketIoControl;
-    DriverObject->DriverUnload = PacketUnload;
-    //
-    //  Get the name of the Packet driver and the name of the MAC driver
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = NPF_Open;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE]  = NPF_Close;
+    DriverObject->MajorFunction[IRP_MJ_READ]   = NPF_Read;
+    DriverObject->MajorFunction[IRP_MJ_WRITE]  = NPF_Write;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL]  = NPF_IoControl;
+    DriverObject->DriverUnload = NPF_Unload;
+
+    //  Get the name of the Packet driver and the name of the NIC driver
     //  to bind to from the registry
-    //
-    Status=PacketReadRegistry(
+    Status=NPF_ReadRegistry(
                &BindString,
                &ExportString,
                RegistryPath
                );
+
     if (Status != STATUS_SUCCESS) {
+
 		IF_LOUD(DbgPrint("Trying dynamic binding\n");)	
+
 		bindP = getAdaptersList();
+
 		if (bindP == NULL) {
 			IF_LOUD(DbgPrint("Adapters not found in the registry, try to copy the bindings of TCP-IP.\n");)
+
 			tcpBindingsP = getTcpBindings();
+			
 			if (tcpBindingsP == NULL){
 				IF_LOUD(DbgPrint("TCP-IP not found, quitting.\n");)
 				goto RegistryError;
 			}
+			
 			bindP = (WCHAR*)tcpBindingsP;
 			bindT = (WCHAR*)(tcpBindingsP->Data);
         } else {
 			bindT = bindP;
+
 		}
+
 		for (; *bindT != UNICODE_NULL; bindT += (macName.Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR)) {
 			RtlInitUnicodeString(&macName, bindT);
 			createDevice(DriverObject, &macName, NdisProtocolHandle);
 		}
+
 		return STATUS_SUCCESS;
+
     }
+
     BindStringSave   = BindString;
     ExportStringSave = ExportString;
+
+
     //
     //  create a device object for each entry
     //
@@ -207,16 +225,21 @@ NdisRegisterProtocol(
             &MacDriverName,
             BindString
             );
+
         RtlInitUnicodeString(
             &UnicodeDeviceName,
             ExportString
             );
+
         //
         //  Advance to the next string of the MULTI_SZ string
         //
         BindString   += (MacDriverName.Length+sizeof(UNICODE_NULL))/sizeof(WCHAR);
+
         ExportString += (UnicodeDeviceName.Length+sizeof(UNICODE_NULL))/sizeof(WCHAR);
-        IF_LOUD(DbgPrint("Packet: DeviceName=%ws  MacName=%ws\n",UnicodeDeviceName.Buffer,MacDriverName.Buffer);)
+
+        IF_LOUD(DbgPrint("NPF: DeviceName=%ws  MacName=%ws\n",UnicodeDeviceName.Buffer,MacDriverName.Buffer);)
+
         //
         //  Create the device object
         //
@@ -229,55 +252,81 @@ NdisRegisterProtocol(
                     FALSE,
                     &DeviceObject
                     );
+
         if (Status != STATUS_SUCCESS) {
-            IF_LOUD(DbgPrint("Packet: IoCreateDevice() failed:\n");)
+            IF_LOUD(DbgPrint("NPF: IoCreateDevice() failed:\n");)
+
             break;
         }
+
         DevicesCreated++;
+
+
         DeviceObject->Flags |= DO_DIRECT_IO;
         DeviceExtension  =  (PDEVICE_EXTENSION) DeviceObject->DeviceExtension;
         DeviceExtension->DeviceObject = DeviceObject;
+
         //
         //  Save the the name of the MAC driver to open in the Device Extension
         //
+
         DeviceExtension->AdapterName=MacDriverName;
+
         if (DevicesCreated == 1) {
+
             DeviceExtension->BindString   = NULL;
             DeviceExtension->ExportString = NULL;
         }
+
+
         DeviceExtension->NdisProtocolHandle=NdisProtocolHandle;
+
+
     }
+
     if (DevicesCreated > 0) {
         //
-        //  Managed to create at least on device.
+        //  Managed to create at least one device.
         //
+        IF_LOUD(DbgPrint("NPF: Managed to create at least one device.\n");)
         return STATUS_SUCCESS;
     }
+
+
+
     ExFreePool(BindStringSave);
     ExFreePool(ExportStringSave);
+
 RegistryError:
-    NdisDeregisterProtocol(&NdisStatus, NdisProtocolHandle);
+    IF_LOUD(DbgPrint("NPF: RegistryError: calling NdisDeregisterProtocol()\n");)
+    NdisDeregisterProtocol(
+        &Status,
+        NdisProtocolHandle
+        );
+
     Status=STATUS_UNSUCCESSFUL;
+
     return(Status);
+
 }
 
-//
-// Return the list of the MACs from SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}
-//
+//-------------------------------------------------------------------
 
 PWCHAR getAdaptersList(void)
 {
-	PWCHAR DeviceNames = (PWCHAR) ExAllocatePool(PagedPool, 4096);
 	PKEY_VALUE_PARTIAL_INFORMATION result = NULL;
 	OBJECT_ATTRIBUTES objAttrs;
 	NTSTATUS status;
 	HANDLE keyHandle;
 	UINT BufPos=0;
 	
+	PWCHAR DeviceNames = (PWCHAR) ExAllocatePoolWithTag(PagedPool, 4096, '0PWA');
+	
 	if (DeviceNames == NULL) {
 		IF_LOUD(DbgPrint("Unable the allocate the buffer for the list of the network adapters\n");)
 			return NULL;
 	}
+	
 	InitializeObjectAttributes(&objAttrs, &AdapterListKey,
 		OBJ_CASE_INSENSITIVE, NULL, NULL);
 	status = ZwOpenKey(&keyHandle, KEY_READ, &objAttrs);
@@ -288,9 +337,11 @@ PWCHAR getAdaptersList(void)
 		KEY_VALUE_PARTIAL_INFORMATION valueInfo;
 		CHAR AdapInfo[1024];
 		UINT i=0;
+		
 		IF_LOUD(DbgPrint("getAdaptersList: scanning the list of the adapters in the registry, DeviceNames=%x\n",DeviceNames);)
+			
 			// Scan the list of the devices
-			while((status=ZwEnumerateKey(keyHandle,i,KeyBasicInformation,AdapInfo,sizeof(AdapInfo),&resultLength))==STATUS_SUCCESS) {
+			while((status=ZwEnumerateKey(keyHandle,i,KeyBasicInformation,AdapInfo,sizeof(AdapInfo),&resultLength))==STATUS_SUCCESS)	{
 				WCHAR ExportKeyName [512];
 				PWCHAR ExportKeyPrefix = L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
 				UINT ExportKeyPrefixSize = sizeof(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}");
@@ -302,33 +353,43 @@ PWCHAR getAdaptersList(void)
 				HANDLE ExportKeyHandle;
 				KEY_VALUE_PARTIAL_INFORMATION valueInfo;
 				ULONG resultLength;
+				
 				RtlCopyMemory(ExportKeyName,
 					ExportKeyPrefix,
 					ExportKeyPrefixSize);
+				
 				RtlCopyMemory((PCHAR)ExportKeyName+ExportKeyPrefixSize,
 					tInfo->Name,
 					tInfo->NameLength+2);
+				
 				RtlCopyMemory((PCHAR)ExportKeyName+ExportKeyPrefixSize+tInfo->NameLength,
 					LinkageKeyPrefix,
 					LinkageKeyPrefixSize);
+				
 				IF_LOUD(DbgPrint("Key name=%ws\n", ExportKeyName);)
+										
 				RtlInitUnicodeString(&AdapterKeyName, ExportKeyName);
+				
 				InitializeObjectAttributes(&objAttrs, &AdapterKeyName,
 					OBJ_CASE_INSENSITIVE, NULL, NULL);
+				
 				status=ZwOpenKey(&ExportKeyHandle,KEY_READ,&objAttrs);
+				
 				if (!NT_SUCCESS(status)) {
 					DbgPrint("OpenKey Failed, %d!\n",status);
 					i++;
 					continue;
 				}
+				
 				status = ZwQueryValueKey(ExportKeyHandle, &FinalExportKey,
 					KeyValuePartialInformation, &valueInfo,
 					sizeof(valueInfo), &resultLength);
+				
 				if (!NT_SUCCESS(status) && (status != STATUS_BUFFER_OVERFLOW)) {
 					IF_LOUD(DbgPrint("\n\nStatus of %x querying key value for size\n", status);)
                 } else { // We know how big it needs to be.
 					ULONG valueInfoLength = valueInfo.DataLength + FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]);
-					PKEY_VALUE_PARTIAL_INFORMATION valueInfoP =	(PKEY_VALUE_PARTIAL_INFORMATION) ExAllocatePool(PagedPool, valueInfoLength);
+					PKEY_VALUE_PARTIAL_INFORMATION valueInfoP =	(PKEY_VALUE_PARTIAL_INFORMATION) ExAllocatePoolWithTag(PagedPool, valueInfoLength, '1PWA');
 					if (valueInfoP != NULL) {
 						status = ZwQueryValueKey(ExportKeyHandle, &FinalExportKey,
 							KeyValuePartialInformation,
@@ -336,36 +397,41 @@ PWCHAR getAdaptersList(void)
 							valueInfoLength, &resultLength);
 						if (!NT_SUCCESS(status)) {
 							IF_LOUD(DbgPrint("Status of %x querying key value\n", status);)
-                        } else{
+                        } else {
 							IF_LOUD(DbgPrint("Device %d = %ws\n", i, valueInfoP->Data);)
 								RtlCopyMemory((PCHAR)DeviceNames+BufPos,
 								valueInfoP->Data,
 								valueInfoP->DataLength);
 							BufPos+=valueInfoP->DataLength-2;
 						}
+						
 						ExFreePool(valueInfoP);
                     } else {
 						IF_LOUD(DbgPrint("Error Allocating the buffer for the device name\n");)
 					}
+					
 				}
+				
 				// terminate the buffer
 				DeviceNames[BufPos/2]=0;
 				DeviceNames[BufPos/2+1]=0;
+				
 				ZwClose (ExportKeyHandle);
 				i++;
+				
 			}
+			
 			ZwClose (keyHandle);
+			
 	}
 	if(BufPos==0){
 		ExFreePool(DeviceNames);
 		return NULL;
 	}
-    return DeviceNames;
+	return DeviceNames;
 }
 
-//
-// Return the MACs that bind to TCP/IP.
-//
+//-------------------------------------------------------------------
 
 PKEY_VALUE_PARTIAL_INFORMATION getTcpBindings(void)
 {
@@ -391,17 +457,17 @@ PKEY_VALUE_PARTIAL_INFORMATION getTcpBindings(void)
     if (!NT_SUCCESS(status) && (status != STATUS_BUFFER_OVERFLOW)) {
       IF_LOUD(DbgPrint("\n\nStatus of %x querying key value for size\n", status);)
     } else {                      // We know how big it needs to be.
-      ULONG valueInfoLength = valueInfo.DataLength +
-        FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]);
+      ULONG valueInfoLength = valueInfo.DataLength + FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]);
       PKEY_VALUE_PARTIAL_INFORMATION valueInfoP =
-        (PKEY_VALUE_PARTIAL_INFORMATION)
-        ExAllocatePool(PagedPool, valueInfoLength);
-      if (valueInfoP != NULL) {
+        (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePoolWithTag(PagedPool, valueInfoLength, '2PWA');
+      
+	  if (valueInfoP != NULL) {
         status = ZwQueryValueKey(keyHandle, &bindValueName,
                                  KeyValuePartialInformation,
                                  valueInfoP,
                                  valueInfoLength, &resultLength);
-        if (!NT_SUCCESS(status)) {
+      
+		if (!NT_SUCCESS(status)) {
           IF_LOUD(DbgPrint("\n\nStatus of %x querying key value\n", status);)
         }
         else if (valueInfoLength != resultLength) {
@@ -435,17 +501,15 @@ PKEY_VALUE_PARTIAL_INFORMATION getTcpBindings(void)
   return result;
 }
 
-//
-// create a device associated with a given MAC.
-//
+//-------------------------------------------------------------------
 
 BOOLEAN createDevice(IN OUT PDRIVER_OBJECT adriverObjectP,
                      IN PUNICODE_STRING amacNameP, NDIS_HANDLE aProtoHandle)
 {
-  BOOLEAN result = FALSE;
   NTSTATUS status;
   PDEVICE_OBJECT devObjP;
   UNICODE_STRING deviceName;
+  BOOLEAN result = FALSE;
 
   IF_LOUD(DbgPrint("\n\ncreateDevice for MAC %ws\n", amacNameP->Buffer);)
   if (RtlCompareMemory(amacNameP->Buffer, devicePrefix.Buffer,
@@ -454,73 +518,101 @@ BOOLEAN createDevice(IN OUT PDRIVER_OBJECT adriverObjectP,
   }
 
   deviceName.Length = 0;
-  deviceName.MaximumLength = (USHORT)(amacNameP->Length + PacketName.Length + sizeof(UNICODE_NULL));
-  deviceName.Buffer = ExAllocatePool(PagedPool, deviceName.MaximumLength);
+  deviceName.MaximumLength = (USHORT)(amacNameP->Length + NPF_Prefix.Length + sizeof(UNICODE_NULL));
+  deviceName.Buffer = ExAllocatePoolWithTag(PagedPool, deviceName.MaximumLength, '3PWA');
+ 
   if (deviceName.Buffer != NULL) {
     RtlAppendUnicodeStringToString(&deviceName, &devicePrefix);
-    RtlAppendUnicodeStringToString(&deviceName, &PacketName);
+    RtlAppendUnicodeStringToString(&deviceName, &NPF_Prefix);
     RtlAppendUnicodeToString(&deviceName, amacNameP->Buffer +
                              devicePrefix.Length / sizeof(WCHAR));
+    
 	IF_LOUD(DbgPrint("\n\nDevice name: %ws\n", deviceName.Buffer);)
+    
 	status = IoCreateDevice(adriverObjectP, sizeof(PDEVICE_EXTENSION),
                             &deviceName, FILE_DEVICE_TRANSPORT, 0, FALSE,
                             &devObjP);
+
     if (NT_SUCCESS(status)) {
       PDEVICE_EXTENSION devExtP = (PDEVICE_EXTENSION)devObjP->DeviceExtension;
+
 	  IF_LOUD(DbgPrint("\n\nDevice created succesfully\n");)
+
       devObjP->Flags |= DO_DIRECT_IO;
+      
 	  devExtP->DeviceObject = devObjP;
       RtlInitUnicodeString(&devExtP->AdapterName,amacNameP->Buffer);   
 	  devExtP->BindString = NULL;
       devExtP->ExportString = NULL;
 	  devExtP->NdisProtocolHandle=aProtoHandle;
+
     }
+
     else IF_LOUD(DbgPrint("\n\nIoCreateDevice status = %x\n", status););
+
+	ExFreePool(deviceName.Buffer);
   }
-  if (deviceName.Length > 0) 
-	  ExFreePool(deviceName.Buffer);
+  
   return result;
 }
 
+//-------------------------------------------------------------------
 
-
-VOID STDCALL
-PacketUnload(IN PDRIVER_OBJECT DriverObject)
+VOID
+NPF_Unload(IN PDRIVER_OBJECT DriverObject)
 {
+	
     PDEVICE_OBJECT     DeviceObject;
     PDEVICE_OBJECT     OldDeviceObject;
     PDEVICE_EXTENSION  DeviceExtension;
+	
     NDIS_HANDLE        NdisProtocolHandle;
     NDIS_STATUS        Status;
 	
-    IF_LOUD(DbgPrint("Packet: Unload\n");)
-		
+    IF_LOUD(DbgPrint("NPF: Unload\n");)
+
+
 	DeviceObject    = DriverObject->DeviceObject;
+
     while (DeviceObject != NULL) {
         DeviceExtension = DeviceObject->DeviceExtension;
+
         NdisProtocolHandle=DeviceExtension->NdisProtocolHandle;
         OldDeviceObject=DeviceObject;
+		
         DeviceObject=DeviceObject->NextDevice;
+
+		IF_LOUD(DbgPrint("Deleting Adapter %ws, Protocol Handle=%x, Device Obj=%x (%x)\n",
+			DeviceExtension->AdapterName.Buffer,
+			NdisProtocolHandle,
+			DeviceObject,
+			OldDeviceObject);)
+		
         IoDeleteDevice(OldDeviceObject);
+		
     }
-    NdisDeregisterProtocol(
+
+	NdisDeregisterProtocol(
         &Status,
         NdisProtocolHandle
         );
+
 	// Free the adapters names
-	ExFreePool( bindP ); 
+	ExFreePool( bindP );
+	
 }
 
+//-------------------------------------------------------------------
 
-NTSTATUS STDCALL
-PacketIoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
+NTSTATUS
+NPF_IoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 {
-    NDIS_STATUS	        Status;
     POPEN_INSTANCE      Open;
     PIO_STACK_LOCATION  IrpSp;
     PLIST_ENTRY         RequestListEntry;
     PINTERNAL_REQUEST   pRequest;
     ULONG               FunctionCode;
+    NDIS_STATUS	        Status;
     PLIST_ENTRY         PacketListEntry;
 	UINT				i;
 	PUCHAR				tpointer;
@@ -529,161 +621,317 @@ PacketIoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 	PPACKET_OID_DATA    OidData;
 	int					*StatsBuf;
     PNDIS_PACKET        pPacket;
-    PPACKET_RESERVED    Reserved;
 	ULONG				mode;
+	PWSTR				DumpNameBuff;
 	PUCHAR				TmpBPFProgram;
-	
-    IF_LOUD(DbgPrint("Packet: IoControl\n");)
+	INT					WriteRes;
+	BOOLEAN				SyncWrite = FALSE;
+	struct bpf_insn		*initprogram;
+	ULONG				insns;
+	ULONG				cnt;
+	BOOLEAN				IsExtendedFilter=FALSE;
+
+    IF_LOUD(DbgPrint("NPF: IoControl\n");)
 		
 	IrpSp = IoGetCurrentIrpStackLocation(Irp);
     FunctionCode=IrpSp->Parameters.DeviceIoControl.IoControlCode;
     Open=IrpSp->FileObject->FsContext;
-    RequestListEntry=ExInterlockedRemoveHeadList(&Open->RequestList,&Open->RequestSpinLock);
-    if (RequestListEntry == NULL) {
-        Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-		Irp->IoStatus.Information = 0;
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_UNSUCCESSFUL;
-    }
-    pRequest=CONTAINING_RECORD(RequestListEntry,INTERNAL_REQUEST,ListElement);
-    pRequest->Irp=Irp;
+
     Irp->IoStatus.Status = STATUS_SUCCESS;
-    IF_LOUD(DbgPrint("Packet: Function code is %08lx  buff size=%08lx  %08lx\n",FunctionCode,IrpSp->Parameters.DeviceIoControl.InputBufferLength,IrpSp->Parameters.DeviceIoControl.OutputBufferLength);)
+
+    IF_LOUD(DbgPrint("NPF: Function code is %08lx  buff size=%08lx  %08lx\n",FunctionCode,IrpSp->Parameters.DeviceIoControl.InputBufferLength,IrpSp->Parameters.DeviceIoControl.OutputBufferLength);)
+		
+
 	switch (FunctionCode){
+		
 	case BIOCGSTATS: //function to get the capture stats
-		StatsBuf=Irp->UserBuffer;
-		StatsBuf[0]=Open->Received;
-		StatsBuf[1]=Open->Dropped;
-		Irp->IoStatus.Information=8;
-		Irp->IoStatus.Status = STATUS_SUCCESS;
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		Status=STATUS_SUCCESS;
-		break;
-	case BIOCGEVNAME: //function to get the name of the event associated with the current instance
-		if(IrpSp->Parameters.DeviceIoControl.OutputBufferLength<26){			
-			Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-			Irp->IoStatus.Information=0;
-			IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		    ExInterlockedInsertTailList(&Open->RequestList, &pRequest->ListElement, &Open->RequestSpinLock);
-			return STATUS_UNSUCCESSFUL;
+		
+		if(IrpSp->Parameters.DeviceIoControl.OutputBufferLength < 4*sizeof(INT)){			
+			EXIT_FAILURE(0);
 		}
-		RtlCopyMemory(Irp->UserBuffer,(Open->ReadEventName.Buffer)+18,26);
-		Irp->IoStatus.Information=26;
-		Irp->IoStatus.Status = STATUS_SUCCESS;
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		Status=STATUS_SUCCESS;
+
+		*(((PUINT)Irp->UserBuffer)+3) = Open->Accepted;
+		*(((PUINT)Irp->UserBuffer)) = Open->Received;
+		*(((PUINT)Irp->UserBuffer)+1) = Open->Dropped;
+		*(((PUINT)Irp->UserBuffer)+2) = 0;		// Not yet supported
+		
+		EXIT_SUCCESS(4*sizeof(INT));
+		
 		break;
-	case BIOCSETF:  //fuction to set a new bpf filter
-		//free the previous buffer if it was present
+		
+	case BIOCGEVNAME: //function to get the name of the event associated with the current instance
+
+		if(IrpSp->Parameters.DeviceIoControl.OutputBufferLength<26){			
+			EXIT_FAILURE(0);
+		}
+
+		RtlCopyMemory(Irp->UserBuffer,(Open->ReadEventName.Buffer)+18,26);
+
+		EXIT_SUCCESS(26);
+
+		break;
+
+	case BIOCSENDPACKETSSYNC:
+
+		SyncWrite = TRUE;
+
+	case BIOCSENDPACKETSNOSYNC:
+
+		WriteRes = NPF_BufferedWrite(Irp,
+			(PUCHAR)Irp->AssociatedIrp.SystemBuffer,
+			IrpSp->Parameters.DeviceIoControl.InputBufferLength,
+			SyncWrite);
+
+		if( WriteRes != -1)
+		{
+			EXIT_SUCCESS(WriteRes);
+		}
+		
+		EXIT_FAILURE(WriteRes);
+
+		break;
+
+	case BIOCSETF:  
+		
+		// Free the previous buffer if it was present
 		if(Open->bpfprogram!=NULL){
 			TmpBPFProgram=Open->bpfprogram;
-			Open->bpfprogram=NULL;
+			Open->bpfprogram = NULL;
 			ExFreePool(TmpBPFProgram);
 		}
-		//get the pointer to the new program
+		
+		if (Open->Filter!=NULL)
+		{
+			JIT_BPF_Filter *OldFilter=Open->Filter;
+			Open->Filter=NULL;
+			BPF_Destroy_JIT_Filter(OldFilter);
+		}
+        
+		// Get the pointer to the new program
 		prog=(PUCHAR)Irp->AssociatedIrp.SystemBuffer;
+		
 		if(prog==NULL){
-			Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-			Irp->IoStatus.Information=0;
-			IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		    ExInterlockedInsertTailList(&Open->RequestList, &pRequest->ListElement, &Open->RequestSpinLock);
-			return STATUS_UNSUCCESSFUL;
+			IF_LOUD(DbgPrint("0001");)
+			
+			EXIT_FAILURE(0);
 		}
-		//before accepting the program we must check that it's valid
-		//Otherwise, a bogus program could easily crash the system
-		if(bpf_validate((struct bpf_insn*)prog,(IrpSp->Parameters.DeviceIoControl.InputBufferLength)/sizeof(struct bpf_insn))==0) {
-			Irp->IoStatus.Information=0;
-			Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-			IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		    ExInterlockedInsertTailList(&Open->RequestList, &pRequest->ListElement, &Open->RequestSpinLock);
-			return STATUS_UNSUCCESSFUL;
+		
+		insns=(IrpSp->Parameters.DeviceIoControl.InputBufferLength)/sizeof(struct bpf_insn);
+		
+		//count the number of operative instructions
+		for (cnt=0;(cnt<insns) &&(((struct bpf_insn*)prog)[cnt].code!=BPF_SEPARATION); cnt++);
+		
+		IF_LOUD(DbgPrint("Operative instructions=%u\n",cnt);)
+
+		if (((struct bpf_insn*)prog)[cnt].code==BPF_SEPARATION && (insns-cnt-1)!=0) 
+		{
+			IF_LOUD(DbgPrint("Initialization instructions=%u\n",insns-cnt-1);)
+	
+			IsExtendedFilter=TRUE;
+
+			initprogram=&((struct bpf_insn*)prog)[cnt+1];
+			
+			if(bpf_filter_init(initprogram,&(Open->mem_ex),&(Open->tme), &G_Start_Time)!=INIT_OK)
+			{
+			
+				IF_LOUD(DbgPrint("Error initializing NPF machine (bpf_filter_init)\n");)
+				
+				EXIT_FAILURE(0);
+			}
 		}
-		//allocate the memory to contain the new filter program
-		TmpBPFProgram=(PUCHAR)ExAllocatePool(NonPagedPool, IrpSp->Parameters.DeviceIoControl.InputBufferLength);
+
+		//the NPF processor has been initialized, we have to validate the operative instructions
+		insns=cnt;
+		
+		if(bpf_validate((struct bpf_insn*)prog,cnt,Open->mem_ex.size)==0)
+		{
+			IF_LOUD(DbgPrint("Error validating program");)
+			//FIXME: the machine has been initialized(?), but the operative code is wrong. 
+			//we have to reset the machine!
+			//something like: reallocate the mem_ex, and reset the tme_core
+			EXIT_FAILURE(0);
+		}
+		
+		// Allocate the memory to contain the new filter program
+		// We could need the original BPF binary if we are forced to use bpf_filter_with_2_buffers()
+		TmpBPFProgram=(PUCHAR)ExAllocatePoolWithTag(NonPagedPool, cnt*sizeof(struct bpf_insn), '4PWA');
 		if (TmpBPFProgram==NULL){
+			IF_LOUD(DbgPrint("Error - No memory for filter");)
 			// no memory
-			Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-			Irp->IoStatus.Information=0;
-			IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		    ExInterlockedInsertTailList(&Open->RequestList, &pRequest->ListElement, &Open->RequestSpinLock);
-			return STATUS_INSUFFICIENT_RESOURCES;
+			EXIT_FAILURE(0);
 		}
+		
 		//copy the program in the new buffer
-		RtlCopyMemory(TmpBPFProgram,prog,IrpSp->Parameters.DeviceIoControl.InputBufferLength);
+		RtlCopyMemory(TmpBPFProgram,prog,cnt*sizeof(struct bpf_insn));
 		Open->bpfprogram=TmpBPFProgram;
+		
+		// Create the new JIT filter function
+
+		if(!IsExtendedFilter)
+			if((Open->Filter=BPF_jitter((struct bpf_insn*)Open->bpfprogram,cnt))
+			== NULL)
+		{
+			IF_LOUD(DbgPrint("Error jittering filter");)
+			EXIT_FAILURE(0);
+		}
+
 		//return
-		Irp->IoStatus.Information=IrpSp->Parameters.DeviceIoControl.InputBufferLength;
-		Irp->IoStatus.Status = STATUS_SUCCESS;
-		Open->Bhead=0;
-		Open->Btail=0;
-		Open->BLastByte=0;
-		Open->Received=0;		
-		Open->Dropped=0;
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		Status=STATUS_SUCCESS;
-		break;
+		Open->Bhead = 0;
+		Open->Btail = 0;
+		Open->BLastByte = 0;
+		Open->Received = 0;		
+		Open->Dropped = 0;
+
+		EXIT_SUCCESS(IrpSp->Parameters.DeviceIoControl.InputBufferLength);
+		
+		break;		
+		
 	case BIOCSMODE:  //set the capture mode
-		mode=((PULONG)Irp->AssociatedIrp.SystemBuffer)[0];
-		if(mode==MODE_STAT){
-			Open->mode=MODE_STAT;
-			Open->Nbytes.QuadPart=0;
-			Open->Npackets.QuadPart=0;
-			if(Open->TimeOut.QuadPart==0)Open->TimeOut.QuadPart=-10000000;
-			Irp->IoStatus.Information=1;
-			Irp->IoStatus.Status = STATUS_SUCCESS;
-			IoCompleteRequest(Irp, IO_NO_INCREMENT);
-			ExInterlockedInsertTailList(&Open->RequestList, &pRequest->ListElement, &Open->RequestSpinLock);
-			return NDIS_STATUS_SUCCESS;
-		}
-		else if(mode==MODE_CAPT){
+		
+		mode=*((PULONG)Irp->AssociatedIrp.SystemBuffer);
+		
+		if(mode == MODE_CAPT){
 			Open->mode=MODE_CAPT;
-			Irp->IoStatus.Information=0;
-			Irp->IoStatus.Status = STATUS_SUCCESS;
-			IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		    ExInterlockedInsertTailList(&Open->RequestList, &pRequest->ListElement, &Open->RequestSpinLock);
-			return NDIS_STATUS_SUCCESS;
+			
+			EXIT_SUCCESS(0);
 		}
+ 		else if (mode==MODE_MON){
+ 			Open->mode=MODE_MON;
+
+			EXIT_SUCCESS(0);
+ 		}	
 		else{
-			Irp->IoStatus.Information=0;
-			Irp->IoStatus.Status = NDIS_STATUS_FAILURE;
-			IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		    ExInterlockedInsertTailList(&Open->RequestList, &pRequest->ListElement, &Open->RequestSpinLock);
-			return NDIS_STATUS_FAILURE;
+			if(mode & MODE_STAT){
+				Open->mode = MODE_STAT;
+				Open->Nbytes.QuadPart=0;
+				Open->Npackets.QuadPart=0;
+				
+				if(Open->TimeOut.QuadPart==0)Open->TimeOut.QuadPart=-10000000;
+				
+			}
+			
+			if(mode & MODE_DUMP){
+				
+				Open->mode |= MODE_DUMP;
+				Open->MinToCopy=(Open->BufSize<2000000)?Open->BufSize/2:1000000;
+				
+			}	
+			EXIT_SUCCESS(0);
 		}
+		
+		EXIT_FAILURE(0);
+		
 		break;
-	case BIOCSETBUFFERSIZE:	//function to set the dimension of the buffer for the packets
-		//get the number of buffers to allocate
-		dim=((PULONG)Irp->AssociatedIrp.SystemBuffer)[0];
-		//free the old buffer
-		if(Open->Buffer!=NULL) ExFreePool(Open->Buffer);
-		//allocate the new buffer
+
+	case BIOCSETDUMPFILENAME:
+
+		if(Open->mode & MODE_DUMP)
+		{
+			
+			// Close current dump file
+			if(Open->DumpFileHandle != NULL){
+				NPF_CloseDumpFile(Open);
+				Open->DumpFileHandle = NULL;
+			}
+			
+			if(IrpSp->Parameters.DeviceIoControl.InputBufferLength == 0){
+				EXIT_FAILURE(0);
+			}
+			
+			// Allocate the buffer that will contain the string
+			DumpNameBuff=ExAllocatePoolWithTag(NonPagedPool, IrpSp->Parameters.DeviceIoControl.InputBufferLength, '5PWA');
+			if(DumpNameBuff==NULL || Open->DumpFileName.Buffer!=NULL){
+				IF_LOUD(DbgPrint("NPF: unable to allocate the dump filename: not enough memory or name already set\n");)
+					EXIT_FAILURE(0);
+			}
+			
+			// Copy the buffer
+			RtlCopyBytes((PVOID)DumpNameBuff, 
+				Irp->AssociatedIrp.SystemBuffer, 
+				IrpSp->Parameters.DeviceIoControl.InputBufferLength);
+			
+			// Force a \0 at the end of the filename to avoid that malformed strings cause RtlInitUnicodeString to crash the system 
+			((SHORT*)DumpNameBuff)[IrpSp->Parameters.DeviceIoControl.InputBufferLength/2-1]=0;
+			
+			// Create the unicode string
+			RtlInitUnicodeString(&Open->DumpFileName, DumpNameBuff);
+			
+			IF_LOUD(DbgPrint("NPF: dump file name set to %ws, len=%d\n",
+				Open->DumpFileName.Buffer,
+				IrpSp->Parameters.DeviceIoControl.InputBufferLength);)
+				
+			// Try to create the file
+			if ( NT_SUCCESS( NPF_OpenDumpFile(Open,&Open->DumpFileName,FALSE)) &&
+				NT_SUCCESS( NPF_StartDump(Open))){
+				
+				EXIT_SUCCESS(0);
+			}
+		}
+		
+		EXIT_FAILURE(0);
+		
+		break;
+				
+	case BIOCSETDUMPLIMITS:
+
+		Open->MaxDumpBytes = *(PULONG)Irp->AssociatedIrp.SystemBuffer;
+		Open->MaxDumpPacks = *((PULONG)Irp->AssociatedIrp.SystemBuffer + 1);
+
+		IF_LOUD(DbgPrint("NPF: Set dump limits to %u bytes, %u packs\n", Open->MaxDumpBytes, Open->MaxDumpPacks);)
+
+		EXIT_SUCCESS(0);
+
+		break;
+
+	case BIOCISDUMPENDED:
+		if(IrpSp->Parameters.DeviceIoControl.OutputBufferLength < 4){			
+			EXIT_FAILURE(0);
+		}
+
+		*((UINT*)Irp->UserBuffer) = (Open->DumpLimitReached)?1:0;
+
+		EXIT_SUCCESS(4);
+
+		break;
+
+	case BIOCSETBUFFERSIZE:
+		
+		// Get the number of bytes to allocate
+		dim = *((PULONG)Irp->AssociatedIrp.SystemBuffer);
+
+		// Free the old buffer
+		tpointer = Open->Buffer;
+		if(tpointer != NULL){
+			Open->BufSize = 0;
+			Open->Buffer = NULL;
+			ExFreePool(tpointer);
+		}
+		// Allocate the new buffer
 		if(dim!=0){
-			tpointer=ExAllocatePool(NonPagedPool,dim);
-			if (tpointer==NULL) {
+			tpointer = ExAllocatePoolWithTag(NonPagedPool, dim, '6PWA');
+			if (tpointer==NULL)	{
 				// no memory
-				Open->BufSize=0;
-				Open->Buffer=NULL;
-				Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-				Irp->IoStatus.Information = 0;
-				IoCompleteRequest(Irp, IO_NO_INCREMENT);
-				ExInterlockedInsertTailList(&Open->RequestList, &pRequest->ListElement, &Open->RequestSpinLock);
-				return STATUS_INSUFFICIENT_RESOURCES;
+				Open->BufSize = 0;
+				Open->Buffer = NULL;
+				EXIT_FAILURE(0);
 			}
 		}
 		else
-			tpointer=NULL;
-		Open->Buffer=tpointer;
-		Open->Bhead=0;
-		Open->Btail=0;
-		Open->BLastByte=0;
-		Irp->IoStatus.Information=dim;
-		Irp->IoStatus.Status = STATUS_SUCCESS;
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		Open->BufSize=(UINT)dim;
-		Status=STATUS_SUCCESS;
+			tpointer = NULL;
+
+		Open->Buffer = tpointer;
+		Open->Bhead = 0;
+		Open->Btail = 0;
+		Open->BLastByte = 0;
+		
+		Open->BufSize = (UINT)dim;
+		EXIT_SUCCESS(dim);
+		
 		break;
+		
 	case BIOCSRTIMEOUT: //set the timeout on the read calls
-		timeout=((PULONG)Irp->AssociatedIrp.SystemBuffer)[0];
+		
+		timeout = *((PULONG)Irp->AssociatedIrp.SystemBuffer);
 		if((int)timeout==-1)
 			Open->TimeOut.QuadPart=(LONGLONG)IMMEDIATE;
 		else {
@@ -691,43 +939,63 @@ PacketIoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 			Open->TimeOut.QuadPart*=10000;
 			Open->TimeOut.QuadPart=-Open->TimeOut.QuadPart;
 		}
-		IF_LOUD(DbgPrint("Packet: read timeout set to %d:%d\n",Open->TimeOut.HighPart,Open->TimeOut.LowPart);)
-		Irp->IoStatus.Information=timeout;
-		Irp->IoStatus.Status = STATUS_SUCCESS;
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		Status=STATUS_SUCCESS;
+
+		//IF_LOUD(DbgPrint("NPF: read timeout set to %d:%d\n",Open->TimeOut.HighPart,Open->TimeOut.LowPart);)
+		EXIT_SUCCESS(timeout);
+		
 		break;
+		
 	case BIOCSWRITEREP: //set the writes repetition number
-		Open->Nwrites=((PULONG)Irp->AssociatedIrp.SystemBuffer)[0];
-		Irp->IoStatus.Information=Open->Nwrites;
-		Irp->IoStatus.Status = STATUS_SUCCESS;
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		Status=STATUS_SUCCESS;
+		
+		Open->Nwrites = *((PULONG)Irp->AssociatedIrp.SystemBuffer);
+		
+		EXIT_SUCCESS(Open->Nwrites);
+		
 		break;
+
 	case BIOCSMINTOCOPY: //set the minimum buffer's size to copy to the application
-		Open->MinToCopy=((PULONG)Irp->AssociatedIrp.SystemBuffer)[0];
-		Irp->IoStatus.Information=Open->MinToCopy;
-		Irp->IoStatus.Status = STATUS_SUCCESS;
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		Status=STATUS_SUCCESS;
+
+		Open->MinToCopy = *((PULONG)Irp->AssociatedIrp.SystemBuffer);
+		
+		EXIT_SUCCESS(Open->MinToCopy);
+		
 		break;
+		
 	case IOCTL_PROTOCOL_RESET:
-        IF_LOUD(DbgPrint("Packet: IoControl - Reset request\n");)
+		
+        IF_LOUD(DbgPrint("NPF: IoControl - Reset request\n");)
+
 		IoMarkIrpPending(Irp);
 		Irp->IoStatus.Status = STATUS_SUCCESS;
+
 		ExInterlockedInsertTailList(&Open->ResetIrpList,&Irp->Tail.Overlay.ListEntry,&Open->RequestSpinLock);
         NdisReset(&Status,Open->AdapterHandle);
         if (Status != NDIS_STATUS_PENDING) {
-            IF_LOUD(DbgPrint("Packet: IoControl - ResetComplete being called\n");)
-				PacketResetComplete(Open,Status);
+            IF_LOUD(DbgPrint("NPF: IoControl - ResetComplete being called\n");)
+				NPF_ResetComplete(Open,Status);
         }
+		
 		break;
+		
+		
 	case BIOCSETOID:
 	case BIOCQUERYOID:
-        //
+		
+		// Extract a request from the list of free ones
+		RequestListEntry=ExInterlockedRemoveHeadList(&Open->RequestList,&Open->RequestSpinLock);
+		if (RequestListEntry == NULL)
+		{
+			EXIT_FAILURE(0);
+		}
+
+		pRequest=CONTAINING_RECORD(RequestListEntry,INTERNAL_REQUEST,ListElement);
+		pRequest->Irp=Irp;
+        
+		//
         //  See if it is an Ndis request
         //
         OidData=Irp->AssociatedIrp.SystemBuffer;
+		
         if (((FunctionCode == BIOCSETOID) || (FunctionCode == BIOCQUERYOID))
             &&
             (IrpSp->Parameters.DeviceIoControl.InputBufferLength == IrpSp->Parameters.DeviceIoControl.OutputBufferLength)
@@ -736,21 +1004,27 @@ PacketIoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
             &&
             (IrpSp->Parameters.DeviceIoControl.InputBufferLength >= sizeof(PACKET_OID_DATA)-1+OidData->Length)) {
 			
-            IF_LOUD(DbgPrint("Packet: IoControl: Request: Oid=%08lx, Length=%08lx\n",OidData->Oid,OidData->Length);)
+            IF_LOUD(DbgPrint("NPF: IoControl: Request: Oid=%08lx, Length=%08lx\n",OidData->Oid,OidData->Length);)
+				
 				//
 				//  The buffer is valid
 				//
 				if (FunctionCode == BIOCSETOID){
+					
 					pRequest->Request.RequestType=NdisRequestSetInformation;
 					pRequest->Request.DATA.SET_INFORMATION.Oid=OidData->Oid;
+					
 					pRequest->Request.DATA.SET_INFORMATION.InformationBuffer=OidData->Data;
 					pRequest->Request.DATA.SET_INFORMATION.InformationBufferLength=OidData->Length;
 				} else{
 					pRequest->Request.RequestType=NdisRequestQueryInformation;
 					pRequest->Request.DATA.QUERY_INFORMATION.Oid=OidData->Oid;
+					
 					pRequest->Request.DATA.QUERY_INFORMATION.InformationBuffer=OidData->Data;
 					pRequest->Request.DATA.QUERY_INFORMATION.InformationBufferLength=OidData->Length;
+					
 				}
+
 				NdisResetEvent(&Open->IOEvent);
 				//
 				//  submit the request
@@ -760,6 +1034,7 @@ PacketIoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 					Open->AdapterHandle,
 					&pRequest->Request
 					);
+				
         } else {
             //
             //  buffer too small
@@ -767,54 +1042,87 @@ PacketIoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
             Status=NDIS_STATUS_FAILURE;
             pRequest->Request.DATA.SET_INFORMATION.BytesRead=0;
             pRequest->Request.DATA.QUERY_INFORMATION.BytesWritten=0;
+			
         }
-        if (Status != NDIS_STATUS_PENDING) {
-            IF_LOUD(DbgPrint("Packet: Calling RequestCompleteHandler\n");)
-			PacketRequestComplete(Open, &pRequest->Request, Status);
-            return Status;
-        }
-		NdisWaitEvent(&Open->IOEvent, 5000);
-		return(Open->IOStatus);
-		break;
-	default:
-		return(NDIS_STATUS_FAILURE);
 		
+        if (Status != NDIS_STATUS_PENDING) {
+            IF_LOUD(DbgPrint("NPF: Calling RequestCompleteHandler\n");)
+				
+			NPF_RequestComplete(Open, &pRequest->Request, Status);
+            return Status;
+			
+        }
+
+		NdisWaitEvent(&Open->IOEvent, 5000);
+
+		return(Open->IOStatus);
+		
+		break;
+		
+		
+	default:
+		
+		EXIT_FAILURE(0);
 	}
-	ExInterlockedInsertTailList(&Open->RequestList, &pRequest->ListElement, &Open->RequestSpinLock);
+	
 	return Status;
 }
 
+//-------------------------------------------------------------------
+
 VOID
-PacketRequestComplete(
+NPF_RequestComplete(
     IN NDIS_HANDLE   ProtocolBindingContext,
     IN PNDIS_REQUEST NdisRequest,
     IN NDIS_STATUS   Status
     )
+
 {
     POPEN_INSTANCE      Open;
     PIO_STACK_LOCATION  IrpSp;
     PIRP                Irp;
     PINTERNAL_REQUEST   pRequest;
-    ULONG               FunctionCode;
+    UINT                FunctionCode;
+	KIRQL				OldIrq;
 
     PPACKET_OID_DATA    OidData;
 
-    IF_LOUD(DbgPrint("Packet: RequestComplete\n");)
+    IF_LOUD(DbgPrint("NPF: RequestComplete\n");)
 
     Open= (POPEN_INSTANCE)ProtocolBindingContext;
+
     pRequest=CONTAINING_RECORD(NdisRequest,INTERNAL_REQUEST,Request);
     Irp=pRequest->Irp;
+
+	if(Irp == NULL){
+
+		// Put the request in the list of the free ones
+		ExInterlockedInsertTailList(&Open->RequestList, &pRequest->ListElement, &Open->RequestSpinLock);
+		
+		return;
+	}
+
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
     FunctionCode=IrpSp->Parameters.DeviceIoControl.IoControlCode;
+
     OidData=Irp->AssociatedIrp.SystemBuffer;
+
     if (FunctionCode == BIOCSETOID) {
+
         OidData->Length=pRequest->Request.DATA.SET_INFORMATION.BytesRead;
+
     } else {
+
         if (FunctionCode == BIOCQUERYOID) {
+
             OidData->Length=pRequest->Request.DATA.QUERY_INFORMATION.BytesWritten;
+
 		    IF_LOUD(DbgPrint("RequestComplete: BytesWritten=%d\n",pRequest->Request.DATA.QUERY_INFORMATION.BytesWritten);)
         }
+
     }
+
     Irp->IoStatus.Information=IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     IF_LOUD(DbgPrint("RequestComplete: BytesReturned=%d\n",IrpSp->Parameters.DeviceIoControl.InputBufferLength);)
@@ -823,146 +1131,135 @@ PacketRequestComplete(
         &Open->RequestList,
         &pRequest->ListElement,
         &Open->RequestSpinLock);
+
     Irp->IoStatus.Status = Status;
+
 	Open->IOStatus = Status;
+
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
 	// Unlock the IOCTL call
 	NdisSetEvent(&Open->IOEvent);
+
     return;
+
+
 }
 
+//-------------------------------------------------------------------
+
 VOID
-PacketStatus(
+NPF_Status(
     IN NDIS_HANDLE   ProtocolBindingContext,
     IN NDIS_STATUS   Status,
     IN PVOID         StatusBuffer,
     IN UINT          StatusBufferSize
     )
+
 {
-    IF_LOUD(DbgPrint("Packet: Status Indication\n");)
+
+    IF_LOUD(DbgPrint("NPF: Status Indication\n");)
+
     return;
+
 }
+
+//-------------------------------------------------------------------
 
 VOID
-PacketStatusComplete(
+NPF_StatusComplete(
     IN NDIS_HANDLE  ProtocolBindingContext
     )
+
 {
-    IF_LOUD(DbgPrint("Packet: StatusIndicationComplete\n");)
+
+    IF_LOUD(DbgPrint("NPF: StatusIndicationComplete\n");)
+
     return;
+
 }
 
-#if 0
+//-------------------------------------------------------------------
 
 NTSTATUS
-PacketCreateSymbolicLink(
-    IN  PUNICODE_STRING  DeviceName,
-    IN  BOOLEAN          Create
-    )
-{
-    UNICODE_STRING UnicodeDosDeviceName;
-    NTSTATUS       Status;
-
-    if (DeviceName->Length < sizeof(L"\\Device\\")) {
-        return STATUS_UNSUCCESSFUL;
-    }
-    RtlInitUnicodeString(&UnicodeDosDeviceName,NULL);
-    UnicodeDosDeviceName.MaximumLength=DeviceName->Length+sizeof(L"\\DosDevices")+sizeof(UNICODE_NULL);
-    UnicodeDosDeviceName.Buffer=ExAllocatePool(
-                                    NonPagedPool,
-                                    UnicodeDosDeviceName.MaximumLength
-                                    );
-    if (UnicodeDosDeviceName.Buffer != NULL) {
-        RtlZeroMemory(
-            UnicodeDosDeviceName.Buffer,
-            UnicodeDosDeviceName.MaximumLength
-            );
-        RtlAppendUnicodeToString(
-            &UnicodeDosDeviceName,
-            L"\\DosDevices\\"
-            );
-        RtlAppendUnicodeToString(
-            &UnicodeDosDeviceName,
-            (DeviceName->Buffer+(sizeof("\\Device")))
-            );
-
-        IF_LOUD(DbgPrint("Packet: DosDeviceName is %ws\n",UnicodeDosDeviceName.Buffer);)
-
-        if (Create) {
-            Status=IoCreateSymbolicLink(&UnicodeDosDeviceName,DeviceName);
-        } else {
-            Status=IoDeleteSymbolicLink(&UnicodeDosDeviceName);
-        }
-        ExFreePool(UnicodeDosDeviceName.Buffer);
-
-    }
-    return Status;
-}
-
-#endif
-
-NTSTATUS
-PacketReadRegistry(
+NPF_ReadRegistry(
     IN  PWSTR              *MacDriverName,
     IN  PWSTR              *PacketDriverName,
     IN  PUNICODE_STRING     RegistryPath
     )
+
 {
     NTSTATUS   Status;
+
     RTL_QUERY_REGISTRY_TABLE ParamTable[4];
+
     PWSTR      Bind       = L"Bind";
     PWSTR      Export     = L"Export";
     PWSTR      Parameters = L"Parameters";
     PWSTR      Linkage    = L"Linkage";
+
     PWCHAR     Path;
 
-    Path=ExAllocatePool(
-             PagedPool,
-             RegistryPath->Length+sizeof(WCHAR)
-             );
+    Path=ExAllocatePoolWithTag(PagedPool, RegistryPath->Length+sizeof(WCHAR), '7PWA');
+
     if (Path == NULL) {
+		IF_LOUD(DbgPrint("\nPacketReadRegistry: returing STATUS_INSUFFICIENT_RESOURCES\n");)
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+
     RtlZeroMemory(
         Path,
         RegistryPath->Length+sizeof(WCHAR)
         );
+
     RtlCopyMemory(
         Path,
         RegistryPath->Buffer,
         RegistryPath->Length
         );
 
-    IF_LOUD(DbgPrint("Packet: Reg path is %ws\n",RegistryPath->Buffer);)
+    IF_LOUD(DbgPrint("NPF: Reg path is %ws\n",RegistryPath->Buffer);)
 
     RtlZeroMemory(
         ParamTable,
         sizeof(ParamTable)
         );
+
+
+
     //
     //  change to the linkage key
     //
-    ParamTable[0].QueryRoutine = NULL;
+    //ParamTable[0].QueryRoutine = NULL;
+    ParamTable[0].QueryRoutine = NPF_QueryRegistryRoutine;
     ParamTable[0].Flags = RTL_QUERY_REGISTRY_SUBKEY;
     ParamTable[0].Name = Linkage;
+
+
     //
     //  Get the name of the mac driver we should bind to
     //
-    ParamTable[1].QueryRoutine = PacketQueryRegistryRoutine;
+
+    ParamTable[1].QueryRoutine = NPF_QueryRegistryRoutine;
     ParamTable[1].Flags = RTL_QUERY_REGISTRY_REQUIRED |
                           RTL_QUERY_REGISTRY_NOEXPAND;
+
     ParamTable[1].Name = Bind;
     ParamTable[1].EntryContext = (PVOID)MacDriverName;
     ParamTable[1].DefaultType = REG_MULTI_SZ;
+
     //
     //  Get the name that we should use for the driver object
     //
-    ParamTable[2].QueryRoutine = PacketQueryRegistryRoutine;
+
+    ParamTable[2].QueryRoutine = NPF_QueryRegistryRoutine;
     ParamTable[2].Flags = RTL_QUERY_REGISTRY_REQUIRED |
                           RTL_QUERY_REGISTRY_NOEXPAND;
+
     ParamTable[2].Name = Export;
     ParamTable[2].EntryContext = (PVOID)PacketDriverName;
     ParamTable[2].DefaultType = REG_MULTI_SZ;
+
 
     Status=RtlQueryRegistryValues(
                RTL_REGISTRY_ABSOLUTE,
@@ -971,13 +1268,29 @@ PacketReadRegistry(
                NULL,
                NULL
                );
+
+    if (Status != STATUS_SUCCESS) {
+		// insert hard coded parameters here while registry on ROS is not working...
+		IF_LOUD(DbgPrint("PacketReadRegistry() RtlQueryRegistryValues failed - returing fixed parameters\n");)
+
+        *MacDriverName = ExAllocatePool(PagedPool, 50 * sizeof(WCHAR));
+		//memcpy(*MacDriverName,    L"\\Device\\ne2000", 15 * sizeof(WCHAR));
+		memcpy(*MacDriverName,    L"\\Device\\ne2000", 15 * sizeof(WCHAR));
+		
+        *PacketDriverName = ExAllocatePool(PagedPool, 50 * sizeof(WCHAR));
+		memcpy(*PacketDriverName, L"\\Device\\NPF_ne2000", 19 * sizeof(WCHAR));
+		Status = STATUS_SUCCESS;
+
+	}
+
     ExFreePool(Path);
     return Status;
 }
 
+//-------------------------------------------------------------------
+
 NTSTATUS
-STDCALL
-PacketQueryRegistryRoutine(
+NPF_QueryRegistryRoutine(
     IN PWSTR     ValueName,
     IN ULONG     ValueType,
     IN PVOID     ValueData,
@@ -985,22 +1298,35 @@ PacketQueryRegistryRoutine(
     IN PVOID     Context,
     IN PVOID     EntryContext
     )
+
 {
+
     PUCHAR       Buffer;
 
     IF_LOUD(DbgPrint("Perf: QueryRegistryRoutine\n");)
+
     if (ValueType != REG_MULTI_SZ) {
+
         return STATUS_OBJECT_NAME_NOT_FOUND;
+
     }
-    Buffer=ExAllocatePool(NonPagedPool,ValueLength);
+
+    Buffer=ExAllocatePoolWithTag(NonPagedPool, ValueLength, '8PWA');
+
     if (Buffer==NULL) {
+
         return STATUS_INSUFFICIENT_RESOURCES;
+
     }
+
     RtlCopyMemory(
         Buffer,
         ValueData,
         ValueLength
         );
+
     *((PUCHAR *)EntryContext)=Buffer;
+
     return STATUS_SUCCESS;
+
 }

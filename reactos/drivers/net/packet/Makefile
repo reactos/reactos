@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2002/06/19 15:43:15 robd Exp $
+# $Id: Makefile,v 1.2 2002/09/24 15:16:46 robd Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -7,15 +7,26 @@ TARGET_TYPE = driver
 
 TARGET_NAME = packet
 
-TARGET_CFLAGS = -DNDIS50
-# -disable-stdcall-fixup
+TARGET_CFLAGS = -DDBG -DWIN_NT_DRIVER -DKQPC_TS
 
 TARGET_OBJECTS = \
-  packet.o \
-  read.o \
-  openclos.o \
-  write.o \
-  win_bpf_filter.o
+	packet.o    \
+	openclos.o  \
+	read.o      \
+	write.o     \
+	dump.o      \
+	jitter.o      \
+	win_bpf_filter.o \
+	tme.o \
+	count_packets.o \
+	win_bpf_filter_init.o \
+	tcp_session.o \
+	memory_t.o \
+	time_calls.o \
+	functions.o \
+	bucket_lookup.o \
+	normal_lookup.o
+
 
 TARGET_DDKLIBS = ndis.a
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2000
+ * Copyright (c) 2001
  *	Politecnico di Torino.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -18,35 +18,14 @@
  * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
+#ifndef __FILTER_INIT
+#define __FILTER_INIT
 
-#ifndef __DEBUG_INCLUDE
-#define __DEBUG_INCLUDE
+#include "tme.h"
 
+#define INIT_OK		1
+#define INIT_ERROR	0
 
-#if DBG
-
-#define IF_PACKETDEBUG(f) if (PacketDebugFlag & (f))
-extern ULONG PacketDebugFlag;
-
-#define PACKET_DEBUG_LOUD               0x00000001  // debugging info
-#define PACKET_DEBUG_VERY_LOUD          0x00000002  // excessive debugging info
-
-#define PACKET_DEBUG_INIT               0x00000100  // init debugging info
-
-//
-// Macro for deciding whether to dump lots of debugging information.
-//
-
-#define IF_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_LOUD ) { A }
-#define IF_VERY_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_VERY_LOUD ) { A }
-#define IF_INIT_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_INIT ) { A }
-
-#else
-
-#define IF_LOUD(A)
-#define IF_VERY_LOUD(A)
-#define IF_INIT_LOUD(A)
+uint32 bpf_filter_init(register struct bpf_insn *pc,MEM_TYPE *mem_ex, TME_CORE *tme, struct time_conv *time_ref);
 
 #endif
-
-#endif /*#define __DEBUG_INCLUDE*/

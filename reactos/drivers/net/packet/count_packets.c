@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2000
+ * Copyright (c) 2001
  *	Politecnico di Torino.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -19,34 +19,33 @@
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifndef __DEBUG_INCLUDE
-#define __DEBUG_INCLUDE
+#ifdef WIN32
+#include "tme.h"
+#include "count_packets.h"
+#endif
 
+#ifdef __FreeBSD__
 
-#if DBG
-
-#define IF_PACKETDEBUG(f) if (PacketDebugFlag & (f))
-extern ULONG PacketDebugFlag;
-
-#define PACKET_DEBUG_LOUD               0x00000001  // debugging info
-#define PACKET_DEBUG_VERY_LOUD          0x00000002  // excessive debugging info
-
-#define PACKET_DEBUG_INIT               0x00000100  // init debugging info
-
-//
-// Macro for deciding whether to dump lots of debugging information.
-//
-
-#define IF_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_LOUD ) { A }
-#define IF_VERY_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_VERY_LOUD ) { A }
-#define IF_INIT_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_INIT ) { A }
-
+#ifdef _KERNEL
+#include <net/tme/tme.h>
+#include <net/tme/count_packets.h>
 #else
-
-#define IF_LOUD(A)
-#define IF_VERY_LOUD(A)
-#define IF_INIT_LOUD(A)
+#include <tme/tme.h>
+#include <tme/count_packets.h>
+#endif
 
 #endif
 
-#endif /*#define __DEBUG_INCLUDE*/
+
+
+uint32 count_packets(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_ex, uint8 *mem_data)
+{
+		
+	c_p_data *counters=(c_p_data*)(block+data->key_len*4);
+
+	counters->bytes+=pkt_size;
+	counters->packets++;
+	
+	return TME_SUCCESS;
+
+}

@@ -37,7 +37,7 @@
  *
  *      @(#)bpf.h       7.1 (Berkeley) 5/7/91
  *
- * @(#) $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/drivers/net/packet/win_bpf.h,v 1.1 2002/06/19 15:43:15 robd Exp $ (LBL)
+ * @(#) $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/drivers/net/packet/win_bpf.h,v 1.2 2002/09/24 15:16:46 robd Exp $ (LBL)
  */
 
 #ifndef BPF_MAJOR_VERSION
@@ -45,36 +45,28 @@
 /* BSD style release date */
 #define BPF_RELEASE 199606
 
-#ifdef __NTDRIVER__
-#define NTKERNEL
-#endif
-
-#ifndef NTKERNEL
-#include <winsock2.h>
-typedef	int bpf_int32;
-typedef	u_int bpf_u_int32;
-#else
 typedef	UCHAR u_char;
 typedef	USHORT u_short;
-typedef	UINT u_int;
-typedef	INT bpf_int32;
-typedef	UINT bpf_u_int32;
-#endif
-
-/*
- * Alignment macros.  BPF_WORDALIGN rounds up to the next 
- * even multiple of BPF_ALIGNMENT. 
- */
-#ifndef __NetBSD__
-#define BPF_ALIGNMENT sizeof(bpf_int32)
-#else
-#define BPF_ALIGNMENT sizeof(long)
-#endif
-#define BPF_WORDALIGN(x) (((x)+(BPF_ALIGNMENT-1))&~(BPF_ALIGNMENT-1))
+typedef	ULONG u_int;
+typedef	LONG bpf_int32;
+typedef	ULONG bpf_u_int32;
+typedef	ULONG u_int32;
 
 #define BPF_MAXINSNS 512
 #define BPF_MAXBUFSIZE 0x8000
 #define BPF_MINBUFSIZE 32
+
+#include "time_calls.h"
+
+/*
+ * The instruction data structure.
+ */
+struct bpf_insn {
+	u_short	code;
+	u_char 	jt;
+	u_char 	jf;
+	bpf_int32 k;
+};
 
 /*
  *  Structure for BIOCSETF.
@@ -122,14 +114,6 @@ struct bpf_hdr {
 	u_short		bh_hdrlen;	/* length of bpf header (this struct
 					   plus alignment padding) */
 };
-/*
- * Because the structure above is not a multiple of 4 bytes, some compilers
- * will insist on inserting padding; hence, sizeof(struct bpf_hdr) won't work.
- * Only the kernel needs to know about it; applications use bh_hdrlen.
- */
-#if defined(KERNEL) || defined(_KERNEL)
-#define SIZEOF_BPF_HDR 18
-#endif
 
 /*
  * Data-link level type codes.
@@ -304,50 +288,34 @@ struct bpf_hdr {
 #define		BPF_TAX		0x00
 #define		BPF_TXA		0x80
 
-/*
- * The instruction data structure.
- */
-struct bpf_insn {
-	u_short	code;
-	u_char 	jt;
-	u_char 	jf;
-	bpf_int32 k;
-};
+/* TME instructions */
+#define		BPF_TME					0x08
+
+#define		BPF_LOOKUP				0x90   
+#define		BPF_EXECUTE				0xa0
+#define		BPF_INIT				0xb0
+#define		BPF_VALIDATE			0xc0
+#define		BPF_SET_ACTIVE			0xd0
+#define		BPF_RESET				0xe0
+#define		BPF_SET_MEMORY			0x80
+#define		BPF_GET_REGISTER_VALUE	0x70
+#define		BPF_SET_REGISTER_VALUE	0x60
+#define		BPF_SET_WORKING			0x50
+#define		BPF_SET_ACTIVE_READ		0x40
+#define		BPF_SET_AUTODELETION	0x30
+#define		BPF_SEPARATION			0xff
+
+#define		BPF_MEM_EX_IMM	0xc0
+#define		BPF_MEM_EX_IND	0xe0
+/*used for ST */
+#define		BPF_MEM_EX		0xc0
+
 
 /*
  * Macros for insn array initializers.
  */
 #define BPF_STMT(code, k) { (u_short)(code), 0, 0, k }
 #define BPF_JUMP(code, k, jt, jf) { (u_short)(code), jt, jf, k }
-
-/**
- *  @}
- */
-
-#if defined(BSD) && (defined(KERNEL) || defined(_KERNEL))
-/*
- * Systems based on non-BSD kernels don't have ifnet's (or they don't mean
- * anything if it is in <net/if.h>) and won't work like this.
- */
-# if __STDC__
-extern void bpf_tap(struct ifnet *, u_char *, u_int);
-extern void bpf_mtap(struct ifnet *, struct mbuf *);
-extern void bpfattach(struct ifnet *, u_int, u_int);
-extern void bpfilterattach(int);
-# else
-extern void bpf_tap();
-extern void bpf_mtap();
-extern void bpfattach();
-extern void bpfilterattach();
-# endif /* __STDC__ */
-#endif /* BSD && (_KERNEL || KERNEL) */
-#if __STDC__
-extern int bpf_validate(struct bpf_insn *, int);
-extern u_int bpf_filter(struct bpf_insn *, u_char *, u_int, u_int);
-#else
-extern int bpf_validate();
-extern u_int bpf_filter();
-#endif
 
 /*
  * Number of scratch memory words (for BPF_LD|BPF_MEM and BPF_ST).

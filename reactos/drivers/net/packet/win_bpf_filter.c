@@ -59,35 +59,12 @@
 	@(#)bpf.c	7.5 (Berkeley) 7/15/91
 */
 
-#if !(defined(lint) || defined(KERNEL))
-static const char rcsid[] =
-    "@(#) $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/drivers/net/packet/win_bpf_filter.c,v 1.1 2002/06/19 15:43:15 robd Exp $ (LBL)";
-#endif
-
-#ifndef WIN32
-#include <sys/param.h>
-#include <sys/time.h>
-#else 
-#include <winsock2.h>
-#endif
-#include <sys/types.h>
+#include "tme.h"
 #include "win_bpf.h"
 
-#define int32 bpf_int32
-#define u_int32 bpf_u_int32
+#include "debug.h"
 
-
-#ifndef LBL_ALIGN
-#if defined(sparc) || defined(mips) || defined(ibm032) || \
-    defined(__alpha) || defined(__hpux)
-#define LBL_ALIGN
-#endif
-#endif
-
-#ifndef LBL_ALIGN
-#ifndef WIN32
-#include <netinet/in.h>
-#endif
+#include "valid_insns.h"
 
 #define EXTRACT_SHORT(p)\
 	((u_short)\
@@ -98,29 +75,23 @@ static const char rcsid[] =
 		 (u_int32)*((u_char *)p+1)<<16|\
 		 (u_int32)*((u_char *)p+2)<<8|\
 		 (u_int32)*((u_char *)p+3)<<0)
-#endif
 
-/** @ingroup NPF 
- *  @{
- */
 
-/** @defgroup NPF_code NPF functions 
- *  @{
- */
-
-/*
- * Execute the filter program starting at pc on the packet p
- * wirelen is the length of the original packet
- * buflen is the amount of data present
- */
-u_int bpf_filter(pc, p, wirelen, buflen)
+u_int bpf_filter(pc, p, wirelen, buflen,mem_ex,tme,time_ref)
 	register struct bpf_insn *pc;
 	register u_char *p;
 	u_int wirelen;
 	register u_int buflen;
+	PMEM_TYPE mem_ex;
+	PTME_CORE tme;
+	struct time_conv *time_ref;
+
 {
 	register u_int32 A, X;
 	register int k;
+	u_int32 j,tmp;
+	u_short tmp2;
+	
 	int32 mem[BPF_MEMWORDS];
 
 	if (pc == 0)
@@ -225,6 +196,57 @@ u_int bpf_filter(pc, p, wirelen, buflen)
 			X = mem[pc->k];
 			continue;
 
+/* LD NO PACKET INSTRUCTIONS */
+
+		case BPF_LD|BPF_MEM_EX_IMM|BPF_B:
+			A= mem_ex->buffer[pc->k];
+			continue;
+
+		case BPF_LDX|BPF_MEM_EX_IMM|BPF_B:
+			X= mem_ex->buffer[pc->k];
+			continue;
+
+		case BPF_LD|BPF_MEM_EX_IMM|BPF_H:
+			A = EXTRACT_SHORT(&mem_ex->buffer[pc->k]);
+			continue;
+
+		case BPF_LDX|BPF_MEM_EX_IMM|BPF_H:
+			X = EXTRACT_SHORT(&mem_ex->buffer[pc->k]);
+			continue;
+
+		case BPF_LD|BPF_MEM_EX_IMM|BPF_W:
+			A = EXTRACT_LONG(&mem_ex->buffer[pc->k]);
+			continue;
+
+		case BPF_LDX|BPF_MEM_EX_IMM|BPF_W:
+			X = EXTRACT_LONG(&mem_ex->buffer[pc->k]);
+			continue;
+			
+		case BPF_LD|BPF_MEM_EX_IND|BPF_B:
+			k = X + pc->k;
+			if ((int32)k>= (int32)mem_ex->size) {
+				return 0;
+			}
+			A= mem_ex->buffer[k];
+			continue;
+
+		case BPF_LD|BPF_MEM_EX_IND|BPF_H:
+			k = X + pc->k;
+			if ((int32)(k+1)>= (int32)mem_ex->size) {
+				return 0;
+			}
+			A=EXTRACT_SHORT((uint32*)&mem_ex->buffer[k]);
+			continue;
+
+		case BPF_LD|BPF_MEM_EX_IND|BPF_W:
+			k = X + pc->k;
+			if ((int32)(k+3)>= (int32)mem_ex->size) {
+				return 0;
+			}
+			A=EXTRACT_LONG((uint32*)&mem_ex->buffer[k]);
+			continue;
+/* END LD NO PACKET INSTRUCTIONS */
+
 		case BPF_ST:
 			mem[pc->k] = A;
 			continue;
@@ -232,6 +254,49 @@ u_int bpf_filter(pc, p, wirelen, buflen)
 		case BPF_STX:
 			mem[pc->k] = X;
 			continue;
+
+/* STORE INSTRUCTIONS */
+		case BPF_ST|BPF_MEM_EX_IMM|BPF_B:
+			mem_ex->buffer[pc->k]=(uint8)A;
+			continue;
+
+		case BPF_STX|BPF_MEM_EX_IMM|BPF_B:
+			mem_ex->buffer[pc->k]=(uint8)X;
+			continue;
+
+		case BPF_ST|BPF_MEM_EX_IMM|BPF_W:
+			tmp=A;
+			*(uint32*)&(mem_ex->buffer[pc->k])=EXTRACT_LONG(&tmp);
+			continue;
+
+		case BPF_STX|BPF_MEM_EX_IMM|BPF_W:
+			tmp=X;
+			*(uint32*)&(mem_ex->buffer[pc->k])=EXTRACT_LONG(&tmp);
+			continue;
+
+		case BPF_ST|BPF_MEM_EX_IMM|BPF_H:
+			tmp2=(uint16)A;
+			*(uint16*)&mem_ex->buffer[pc->k]=EXTRACT_SHORT(&tmp2);
+			continue;
+
+		case BPF_STX|BPF_MEM_EX_IMM|BPF_H:
+			tmp2=(uint16)X;
+			*(uint16*)&mem_ex->buffer[pc->k]=EXTRACT_SHORT(&tmp2);
+			continue;
+
+		case BPF_ST|BPF_MEM_EX_IND|BPF_B:
+			mem_ex->buffer[pc->k+X]=(uint8)A;
+
+		case BPF_ST|BPF_MEM_EX_IND|BPF_W:
+			tmp=A;
+			*(uint32*)&mem_ex->buffer[pc->k+X]=EXTRACT_LONG(&tmp);
+			continue;
+
+		case BPF_ST|BPF_MEM_EX_IND|BPF_H:
+			tmp2=(uint16)A;
+			*(uint16*)&mem_ex->buffer[pc->k+X]=EXTRACT_SHORT(&tmp2);
+			continue;
+/* END STORE INSTRUCTIONS */
 
 		case BPF_JMP|BPF_JA:
 			pc += pc->k;
@@ -346,30 +411,59 @@ u_int bpf_filter(pc, p, wirelen, buflen)
 		case BPF_MISC|BPF_TXA:
 			A = X;
 			continue;
+
+/* TME INSTRUCTIONS */
+		case BPF_MISC|BPF_TME|BPF_LOOKUP:
+			j=lookup_frontend(mem_ex,tme,pc->k,time_ref);
+			if (j==TME_ERROR)
+				return 0;	
+			pc += (j == TME_TRUE) ? pc->jt : pc->jf;
+			continue;
+
+		case BPF_MISC|BPF_TME|BPF_EXECUTE:
+			if (execute_frontend(mem_ex,tme,wirelen,pc->k)==TME_ERROR)
+				return 0;
+			continue;
+
+		case BPF_MISC|BPF_TME|BPF_SET_ACTIVE:
+			if (set_active_tme_block(tme,pc->k)==TME_ERROR)
+				return 0;
+			continue;
+
+		case BPF_MISC|BPF_TME|BPF_GET_REGISTER_VALUE:
+			if (get_tme_block_register(&tme->block_data[tme->working],mem_ex,pc->k,&j)==TME_ERROR)
+				return 0;
+			A=j;
+			continue;
+
+		case BPF_MISC|BPF_TME|BPF_SET_REGISTER_VALUE:
+			if (set_tme_block_register(&tme->block_data[tme->working],mem_ex,pc->k,A,FALSE)==TME_ERROR)
+				return 0;
+			continue;
+/* END TME INSTRUCTIONS */
+
 		}
 	}
 }
 
+//-------------------------------------------------------------------
 
-/*
- * Execute the filter program starting at pc on the packet whose header is 
- * pointed by p and whose data is pointed by pd.
- * headersize is the size of the the header
- * wirelen is the length of the original packet
- * buflen is the amount of data present
- */
-
-u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen)
+u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen, mem_ex,tme,time_ref)
 	register struct bpf_insn *pc;
 	register u_char *p;
 	register u_char *pd;
 	register int headersize; 
 	u_int wirelen;
 	register u_int buflen;
+	PMEM_TYPE mem_ex;
+	PTME_CORE tme;
+	struct time_conv *time_ref;
 {
 	register u_int32 A, X;
 	register int k;
 	int32 mem[BPF_MEMWORDS];
+	u_int32 j,tmp;
+	u_short tmp2;
 
 	if (pc == 0)
 		/*
@@ -538,6 +632,57 @@ u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen)
 			X = mem[pc->k];
 			continue;
 
+/* LD NO PACKET INSTRUCTIONS */
+
+		case BPF_LD|BPF_MEM_EX_IMM|BPF_B:
+			A= mem_ex->buffer[pc->k];
+			continue;
+
+		case BPF_LDX|BPF_MEM_EX_IMM|BPF_B:
+			X= mem_ex->buffer[pc->k];
+			continue;
+
+		case BPF_LD|BPF_MEM_EX_IMM|BPF_H:
+			A = EXTRACT_SHORT(&mem_ex->buffer[pc->k]);
+			continue;
+
+		case BPF_LDX|BPF_MEM_EX_IMM|BPF_H:
+			X = EXTRACT_SHORT(&mem_ex->buffer[pc->k]);
+			continue;
+
+		case BPF_LD|BPF_MEM_EX_IMM|BPF_W:
+			A = EXTRACT_LONG(&mem_ex->buffer[pc->k]);
+			continue;
+
+		case BPF_LDX|BPF_MEM_EX_IMM|BPF_W:
+			X = EXTRACT_LONG(&mem_ex->buffer[pc->k]);
+			continue;
+			
+		case BPF_LD|BPF_MEM_EX_IND|BPF_B:
+			k = X + pc->k;
+			if ((int32)k>= (int32)mem_ex->size) {
+				return 0;
+			}
+			A= mem_ex->buffer[k];
+			continue;
+
+		case BPF_LD|BPF_MEM_EX_IND|BPF_H:
+			k = X + pc->k;
+			if ((int32)(k+1)>= (int32)mem_ex->size) {
+				return 0;
+			}
+			A=EXTRACT_SHORT((uint32*)&mem_ex->buffer[k]);
+			continue;
+
+		case BPF_LD|BPF_MEM_EX_IND|BPF_W:
+			k = X + pc->k;
+			if ((int32)(k+3)>= (int32)mem_ex->size) {
+				return 0;
+			}
+			A=EXTRACT_LONG((uint32*)&mem_ex->buffer[k]);
+			continue;
+/* END LD NO PACKET INSTRUCTIONS */
+		
 		case BPF_ST:
 			mem[pc->k] = A;
 			continue;
@@ -546,6 +691,52 @@ u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen)
 			mem[pc->k] = X;
 			continue;
 
+
+/* STORE INSTRUCTIONS */
+		case BPF_ST|BPF_MEM_EX_IMM|BPF_B:
+			mem_ex->buffer[pc->k]=(uint8)A;
+			continue;
+
+		case BPF_STX|BPF_MEM_EX_IMM|BPF_B:
+			mem_ex->buffer[pc->k]=(uint8)X;
+			continue;
+
+		case BPF_ST|BPF_MEM_EX_IMM|BPF_W:
+			tmp=A;
+			*(uint32*)&(mem_ex->buffer[pc->k])=EXTRACT_LONG(&tmp);
+			continue;
+
+		case BPF_STX|BPF_MEM_EX_IMM|BPF_W:
+			tmp=X;
+			*(uint32*)&(mem_ex->buffer[pc->k])=EXTRACT_LONG(&tmp);
+			continue;
+
+		case BPF_ST|BPF_MEM_EX_IMM|BPF_H:
+			tmp2=(uint16)A;
+			*(uint16*)&mem_ex->buffer[pc->k]=EXTRACT_SHORT(&tmp2);
+			continue;
+
+		case BPF_STX|BPF_MEM_EX_IMM|BPF_H:
+			tmp2=(uint16)X;
+			*(uint16*)&mem_ex->buffer[pc->k]=EXTRACT_SHORT(&tmp2);
+			continue;
+
+		case BPF_ST|BPF_MEM_EX_IND|BPF_B:
+			mem_ex->buffer[pc->k+X]=(uint8)A;
+
+		case BPF_ST|BPF_MEM_EX_IND|BPF_W:
+			tmp=A;
+			*(uint32*)&mem_ex->buffer[pc->k+X]=EXTRACT_LONG(&tmp);
+			continue;
+
+		case BPF_ST|BPF_MEM_EX_IND|BPF_H:
+			tmp2=(uint16)A;
+			*(uint16*)&mem_ex->buffer[pc->k+X]=EXTRACT_SHORT(&tmp2);
+			continue;
+/* END STORE INSTRUCTIONS */
+		
+		
+		
 		case BPF_JMP|BPF_JA:
 			pc += pc->k;
 			continue;
@@ -659,37 +850,72 @@ u_int bpf_filter_with_2_buffers(pc, p, pd, headersize, wirelen, buflen)
 		case BPF_MISC|BPF_TXA:
 			A = X;
 			continue;
+
+/* TME INSTRUCTIONS */
+		case BPF_MISC|BPF_TME|BPF_LOOKUP:
+			j=lookup_frontend(mem_ex,tme,pc->k,time_ref);
+			if (j==TME_ERROR)
+				return 0;	
+			pc += (j == TME_TRUE) ? pc->jt : pc->jf;
+			continue;
+
+		case BPF_MISC|BPF_TME|BPF_EXECUTE:
+			if (execute_frontend(mem_ex,tme,wirelen,pc->k)==TME_ERROR)
+				return 0;
+			continue;
+
+		case BPF_MISC|BPF_TME|BPF_SET_ACTIVE:
+			if (set_active_tme_block(tme,pc->k)==TME_ERROR)
+				return 0;
+			continue;
+
+		case BPF_MISC|BPF_TME|BPF_GET_REGISTER_VALUE:
+			if (get_tme_block_register(&tme->block_data[tme->working],mem_ex,pc->k,&j)==TME_ERROR)
+				return 0;
+			A=j;
+			continue;
+
+		case BPF_MISC|BPF_TME|BPF_SET_REGISTER_VALUE:
+			if (set_tme_block_register(&tme->block_data[tme->working],mem_ex,pc->k,A,FALSE)==TME_ERROR)
+				return 0;
+			continue;
+/* END TME INSTRUCTIONS */
+
 		}
 	}
 }
 
-
-/*
- * Return true if the 'fcode' is a valid filter program.
- * The constraints are that each jump be forward and to a valid
- * code.  The code must terminate with either an accept or reject. 
- * 'valid' is an array for use by the routine (it must be at least
- * 'len' bytes long).  
- *
- * The kernel needs to be able to verify an application's filter code.
- * Otherwise, a bogus program could easily crash the system.
- */
-int
-bpf_validate(f, len)
+int32
+bpf_validate(f, len,mem_ex_size)
 	struct bpf_insn *f;
-	int len;
+	int32 len;
+	uint32 mem_ex_size;	
 {
-	register int i;
+	register int32 i,j;
 	register struct bpf_insn *p;
-
+	int32 flag;
+		
 	for (i = 0; i < len; ++i) {
 		/*
 		 * Check that that jumps are forward, and within 
 		 * the code block.
 		 */
+		
 		p = &f[i];
+
+		IF_LOUD(DbgPrint("Validating program");)
+		
+		flag=0;
+		for(j=0;j<VALID_INSTRUCTIONS_LEN;j++)
+			if (p->code==valid_instructions[j])
+				flag=1;
+		if (flag==0)
+			return 0;
+
+		IF_LOUD(DbgPrint("Validating program: no unknown instructions");)
+		
 		if (BPF_CLASS(p->code) == BPF_JMP) {
-			register int from = i + 1;
+			register int32 from = i + 1;
 
 			if (BPF_OP(p->code) == BPF_JA) {
 				if (from + p->k >= len)
@@ -698,14 +924,33 @@ bpf_validate(f, len)
 			else if (from + p->jt >= len || from + p->jf >= len)
 				return 0;
 		}
+
+		IF_LOUD(DbgPrint("Validating program: no wrong JUMPS");)
+	
 		/*
 		 * Check that memory operations use valid addresses.
 		 */
-		if ((BPF_CLASS(p->code) == BPF_ST ||
+		if (((BPF_CLASS(p->code) == BPF_ST && ((p->code &BPF_MEM_EX_IMM)!=BPF_MEM_EX_IMM && (p->code &BPF_MEM_EX_IND)!=BPF_MEM_EX_IND)) ||
 		     (BPF_CLASS(p->code) == BPF_LD && 
 		      (p->code & 0xe0) == BPF_MEM)) &&
-		    (p->k >= BPF_MEMWORDS || p->k < 0))
+			  (p->k >= BPF_MEMWORDS || p->k < 0))
 			return 0;
+		
+		IF_LOUD(DbgPrint("Validating program: no wrong ST/LD memory locations");)
+			
+		/*
+		 * Check if key stores use valid addresses 
+		 */ 
+		if (BPF_CLASS(p->code) == BPF_ST && (p->code &BPF_MEM_EX_IMM)==BPF_MEM_EX_IMM)
+	    switch (BPF_SIZE(p->code))
+		{
+			case BPF_W: if (p->k<0 || p->k+3>=(int32)mem_ex_size) return 0;
+			case BPF_H: if (p->k<0 || p->k+1>=(int32)mem_ex_size) return 0;
+			case BPF_B: if (p->k<0 || p->k>=(int32)mem_ex_size) return 0;
+		}
+
+		IF_LOUD(DbgPrint("Validating program: no wrong ST/LD mem_ex locations");)
+
 		/*
 		 * Check for constant division by 0.
 		 */

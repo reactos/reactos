@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2000
+ * Copyright (c) 2001
  *	Politecnico di Torino.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -19,34 +19,49 @@
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifndef __DEBUG_INCLUDE
-#define __DEBUG_INCLUDE
+#ifndef __FUNCTIONS
+#define __FUNCTIONS
 
-
-#if DBG
-
-#define IF_PACKETDEBUG(f) if (PacketDebugFlag & (f))
-extern ULONG PacketDebugFlag;
-
-#define PACKET_DEBUG_LOUD               0x00000001  // debugging info
-#define PACKET_DEBUG_VERY_LOUD          0x00000002  // excessive debugging info
-
-#define PACKET_DEBUG_INIT               0x00000100  // init debugging info
-
-//
-// Macro for deciding whether to dump lots of debugging information.
-//
-
-#define IF_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_LOUD ) { A }
-#define IF_VERY_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_VERY_LOUD ) { A }
-#define IF_INIT_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_INIT ) { A }
-
-#else
-
-#define IF_LOUD(A)
-#define IF_VERY_LOUD(A)
-#define IF_INIT_LOUD(A)
-
+#ifdef WIN32
+#include "tme.h"
 #endif
 
-#endif /*#define __DEBUG_INCLUDE*/
+#ifdef __FreeBSD__
+
+#ifdef _KERNEL
+#include <net/tme/tme.h>
+#else
+#include <tme/tme.h>
+#endif
+
+#endif
+/*function mappers */
+
+lut_fcn lut_fcn_mapper(uint32 index);
+exec_fcn exec_fcn_mapper(uint32 index);
+
+/* lookup functions */
+
+#ifdef WIN32
+#include "bucket_lookup.h"
+#include "normal_lookup.h"
+#endif
+
+#ifdef __FreeBSD__
+#include <net/tme/bucket_lookup.h>
+#include <net/tme/normal_lookup.h>
+#endif
+
+/* execution functions */
+
+#ifdef WIN32
+#include "count_packets.h"
+#include "tcp_session.h"
+#endif
+
+#ifdef __FreeBSD__
+#include <net/tme/count_packets.h>
+#include <ne/tme/tcp_session.h>
+#endif
+
+#endif

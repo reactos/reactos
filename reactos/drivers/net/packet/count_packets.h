@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2000
+ * Copyright (c) 2001
  *	Politecnico di Torino.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -19,34 +19,33 @@
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifndef __DEBUG_INCLUDE
-#define __DEBUG_INCLUDE
+#ifndef __count_packets
+#define __count_packets
 
+#ifdef WIN32
+#include "tme.h"
+#endif
 
-#if DBG
+#ifdef __FreeBSD__
 
-#define IF_PACKETDEBUG(f) if (PacketDebugFlag & (f))
-extern ULONG PacketDebugFlag;
-
-#define PACKET_DEBUG_LOUD               0x00000001  // debugging info
-#define PACKET_DEBUG_VERY_LOUD          0x00000002  // excessive debugging info
-
-#define PACKET_DEBUG_INIT               0x00000100  // init debugging info
-
-//
-// Macro for deciding whether to dump lots of debugging information.
-//
-
-#define IF_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_LOUD ) { A }
-#define IF_VERY_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_VERY_LOUD ) { A }
-#define IF_INIT_LOUD(A) IF_PACKETDEBUG( PACKET_DEBUG_INIT ) { A }
-
+#ifdef _KERNEL
+#include <net/tme/tme.h>
 #else
-
-#define IF_LOUD(A)
-#define IF_VERY_LOUD(A)
-#define IF_INIT_LOUD(A)
+#include <tme/tme.h>
+#endif
 
 #endif
 
-#endif /*#define __DEBUG_INCLUDE*/
+typedef struct __c_p_data
+{
+	struct timeval timestamp;
+	uint64 packets;
+	uint64 bytes;
+}
+	c_p_data;
+
+#define COUNT_PACKETS					0x00000000
+uint32 count_packets(uint8 *block, uint32 pkt_size, TME_DATA *data, MEM_TYPE *mem_ex, uint8 *mem_data);
+
+#endif
+
