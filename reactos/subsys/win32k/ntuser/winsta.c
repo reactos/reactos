@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.60 2004/05/14 23:57:32 weiden Exp $
+ *  $Id: winsta.c,v 1.61 2004/05/15 22:50:04 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -611,8 +611,117 @@ NtUserGetObjectInformation(
    DWORD nLength,
    PDWORD nLengthNeeded)
 {
-   SetLastNtError(STATUS_UNSUCCESSFUL);
-   return FALSE;
+   PWINSTATION_OBJECT WinStaObject = NULL;
+   PDESKTOP_OBJECT DesktopObject = NULL;
+   NTSTATUS Status;
+   PVOID pvData = NULL;
+   DWORD nDataSize = 0;
+
+   /* try windowstation */   
+   DPRINT("Trying to open window station 0x%x\n", hObject);
+   Status = IntValidateWindowStationHandle(
+      hObject,
+      UserMode,/*ExGetPreviousMode(),*/
+      GENERIC_READ, /* FIXME: is this ok? */
+      &WinStaObject);
+
+
+   if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_TYPE_MISMATCH)
+   {
+      DPRINT("Failed: 0x%x\n", Status);
+      SetLastNtError(Status);
+      return FALSE;
+   }
+
+   if (Status == STATUS_OBJECT_TYPE_MISMATCH)
+   {
+      /* try desktop */   
+      DPRINT("Trying to open desktop 0x%x\n", hObject);
+      Status = IntValidateDesktopHandle(
+         hObject,
+         UserMode,/*ExGetPreviousMode(),*/
+         GENERIC_READ, /* FIXME: is this ok? */
+         &DesktopObject);
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("Failed: 0x%x\n", Status);
+         SetLastNtError(Status);
+         return FALSE;
+      }
+   }
+   DPRINT("WinSta or Desktop opened!!\n");
+
+   /* get data */
+   switch (nIndex)
+   {
+   case UOI_FLAGS:
+      Status = STATUS_NOT_IMPLEMENTED;
+      DPRINT1("UOI_FLAGS unimplemented!\n");
+      break;
+
+   case UOI_NAME:
+      if (WinStaObject != NULL)
+      {
+         pvData = WinStaObject->Name.Buffer;
+         nDataSize = WinStaObject->Name.Length+2;
+         Status = STATUS_SUCCESS;
+      }
+      else if (DesktopObject != NULL)
+      {
+         pvData = DesktopObject->Name.Buffer;
+         nDataSize = DesktopObject->Name.Length+2;
+         Status = STATUS_SUCCESS;
+      }
+      else
+         Status = STATUS_INVALID_PARAMETER;
+      break;
+
+   case UOI_TYPE:
+      if (WinStaObject != NULL)
+      {
+         pvData = L"WindowStation";
+         nDataSize = (wcslen(pvData) + 1) * sizeof(WCHAR);
+         Status = STATUS_SUCCESS;
+      }
+      else if (DesktopObject != NULL)
+      {
+         pvData = L"Desktop";
+         nDataSize = (wcslen(pvData) + 1) * sizeof(WCHAR);
+         Status = STATUS_SUCCESS;
+      }
+      else
+         Status = STATUS_INVALID_PARAMETER;
+      break;
+
+   case UOI_USER_SID:
+      Status = STATUS_NOT_IMPLEMENTED;
+      DPRINT1("UOI_USER_SID unimplemented!\n");
+      break;
+
+   default:
+      Status = STATUS_INVALID_PARAMETER;
+      break;
+   }
+   
+   /* try to copy data to caller */
+   if (Status == STATUS_SUCCESS)
+   {
+      DPRINT("Trying to copy data to caller (len = %d, len needed = %d)\n", nLength, nDataSize);
+      *nLengthNeeded = nDataSize;
+      if (nLength >= nDataSize)
+         Status = MmCopyToCaller(pvInformation, pvData, nDataSize);
+      else
+         Status = STATUS_BUFFER_TOO_SMALL;
+   }
+
+   /* release objects */
+   if (WinStaObject != NULL)
+      ObDereferenceObject(WinStaObject);
+   if (DesktopObject != NULL)
+      ObDereferenceObject(DesktopObject);
+
+   SetLastNtError(Status);
+   return NTSUCCESS(Status);
 }
 
 /*

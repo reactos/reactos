@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c,v 1.6 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: object.c,v 1.7 2004/05/15 22:50:04 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -82,7 +82,7 @@ UserHandleGrantAccess(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -93,13 +93,46 @@ GetUserObjectInformationA(
   DWORD nLength,
   LPDWORD lpnLengthNeeded)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  LPWSTR buffer;
+  BOOL ret = TRUE; 
+   
+  DPRINT("GetUserObjectInformationA(%x %d %x %d %x)\n", hObj, nIndex,
+         pvInfo, nLength, lpnLengthNeeded);
+   
+  if (nIndex != UOI_NAME && nIndex != UOI_TYPE)
+    return GetUserObjectInformationW(hObj, nIndex, pvInfo, nLength, lpnLengthNeeded);
+
+  /* allocate unicode buffer */    
+  buffer = HeapAlloc(GetProcessHeap(), 0, nLength*2);
+  if (buffer == NULL)
+  {
+    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+    return FALSE;
+  }
+
+  /* get unicode string */
+  if (!GetUserObjectInformationW(hObj, nIndex, buffer, nLength*2, lpnLengthNeeded))
+    ret = FALSE;
+  *lpnLengthNeeded /= 2;
+
+  if (ret)
+  {
+    /* convert string */
+    if (WideCharToMultiByte(CP_THREAD_ACP, 0, buffer, -1,
+                            pvInfo, nLength, NULL, NULL) == 0)
+    {
+      ret = FALSE;
+    }
+  }
+
+  /* free resources */  
+  HeapFree(GetProcessHeap(), 0, buffer);
+  return ret;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -110,6 +143,8 @@ GetUserObjectInformationW(
   DWORD nLength,
   LPDWORD lpnLengthNeeded)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  DPRINT("GetUserObjectInformationW(%x %d %x %d %x)\n", hObj, nIndex,
+         pvInfo, nLength, lpnLengthNeeded);
+  return NtUserGetObjectInformation(hObj, nIndex, pvInfo, nLength, lpnLengthNeeded);
 }
+
