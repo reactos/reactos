@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.40 2003/12/02 19:58:54 navaraf Exp $
+/* $Id: windc.c,v 1.41 2003/12/03 08:19:03 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -440,28 +440,24 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       Flags |= DCX_INTERSECTRGN;
     }
 
-/*
-  if (ClipRegion == (HRGN)1)
+  if (ClipRegion == (HRGN) 1)
     {
       if (!(Flags & DCX_WINDOW))
         {
-          ClipRegion = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
+          Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
         }
       else
         {
-          ClipRegion = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
+          Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
         }
-      NtGdiOffsetRgn(ClipRegion, 
-         -Window->WindowRect.left,
-         -Window->WindowRect.top);
     }
-*/
-
-  if (NULL != ClipRegion)
+  else if (NULL != ClipRegion)
     {
       Dce->hClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-      if(Dce->hClipRgn)
-        NtGdiCombineRgn(Dce->hClipRgn, ClipRegion, NULL, RGN_COPY);
+      if (Dce->hClipRgn)
+        {
+          NtGdiCombineRgn(Dce->hClipRgn, ClipRegion, NULL, RGN_COPY);
+        }
       NtGdiDeleteObject(ClipRegion);
     }
 
