@@ -1,9 +1,4 @@
 EXPORTS
-__putchar
-__getscreensize
-__goxy
-__wherey
-__wherex
 memcpy
 strtok
 toupper
