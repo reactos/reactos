@@ -128,17 +128,17 @@ void test1(void)
     dprintf("\t\t\t\tStatus =%x\n",Status);
     if (Status == STATUS_SUCCESS)
     {
-        dprintf("\tValue:DO=%d, DL=%d, NL=%d, Name = "
-		,KeyValueInformation[0].DataOffset
-		,KeyValueInformation[0].DataLength
-		,KeyValueInformation[0].NameLength);
-	  for (i=0;i<10 && i<KeyValueInformation[0].NameLength/2;i++)
-		dprintf("%C",KeyValueInformation[0].Name[i]);
-        dprintf("\n");
-        dprintf("\t\tType = %d\n",KeyValueInformation[0].Type);
-	  if (KeyValueInformation[0].Type == REG_SZ)
-          dprintf("\t\tValue = %S\n",KeyValueInformation[0].Name+1
-    					+KeyValueInformation[0].NameLength/2);
+      dprintf("\tValue:DO=%d, DL=%d, NL=%d, Name = "
+	      ,KeyValueInformation[0].DataOffset
+	      ,KeyValueInformation[0].DataLength
+	      ,KeyValueInformation[0].NameLength);
+      for (i=0;i<10 && i<KeyValueInformation[0].NameLength/2;i++)
+	dprintf("%C",KeyValueInformation[0].Name[i]);
+      dprintf("\n");
+      dprintf("\t\tType = %d\n",KeyValueInformation[0].Type);
+      if (KeyValueInformation[0].Type == REG_SZ)
+	dprintf("\t\tValue = %S\n",
+		(PWCHAR)((PCHAR)&KeyValueInformation[0] + KeyValueInformation[0].DataOffset));
     }
     dprintf("NtEnumerateValueKey : \n");
     Index=0;
