@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.7 2000/10/22 16:36:49 ekohl Exp $
+/* $Id: sysinfo.c,v 1.8 2000/11/04 13:51:03 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -75,17 +75,17 @@ QSI_DEF(SystemBasicInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 
-	Sbi->AlwaysZero = 0;
-	Sbi->KeMaximumIncrement = 0; /* FIXME */
-	Sbi->MmPageSize = PAGESIZE; /* FIXME: it should be PAGE_SIZE */
-	Sbi->MmNumberOfPhysicalPages = 0; /* FIXME */
-	Sbi->MmLowestPhysicalPage = 0; /* FIXME */
-	Sbi->MmHighestPhysicalPage = 0; /* FIXME */
-	Sbi->MmLowestUserAddress = 0; /* FIXME */
-	Sbi->MmLowestUserAddress1 = 0; /* FIXME */
-	Sbi->MmHighestUserAddress = 0; /* FIXME */
-	Sbi->KeActiveProcessors = 0x00000001; /* FIXME */
-	Sbi->KeNumberProcessors = 1; /* FIXME */
+	Sbi->Reserved = 0;
+	Sbi->TimerResolution = 0; /* FIXME */
+	Sbi->PageSize = PAGESIZE; /* FIXME: it should be PAGE_SIZE */
+	Sbi->NumberOfPhysicalPages = 0; /* FIXME */
+	Sbi->LowestPhysicalPageNumber = 0; /* FIXME */
+	Sbi->HighestPhysicalPageNumber = 0; /* FIXME */
+	Sbi->AllocationGranularity = 65536; /* hard coded on Intel? */
+	Sbi->MinimumUserModeAddress = 0; /* FIXME */
+	Sbi->MaximumUserModeAddress = 0; /* FIXME */
+	Sbi->ActiveProcessorsAffinityMask = 0x00000001; /* FIXME */
+	Sbi->NumberOfProcessors = 1; /* FIXME */
 
 	return (STATUS_SUCCESS);
 }
@@ -106,17 +106,17 @@ QSI_DEF(SystemProcessorInformation)
 	}
 
 	/* FIXME: add CPU type detection code */
-	Spi->KeProcessorArchitecture = 0; /* FIXME */
-	Spi->KeProcessorLevel = 0; /* FIXME */
-	Spi->KeProcessorRevision = 0; /* FIXME */
-	Spi->AlwaysZero = 0;
-	Spi->KeFeatureBits = 0x00000000; /* FIXME */
+	Spi->ProcessorArchitecture = 0; /* FIXME */
+	Spi->ProcessorLevel = 0; /* FIXME */
+	Spi->ProcessorRevision = 0; /* FIXME */
+	Spi->Reserved = 0;
+	Spi->ProcessorFeatureBits = 0x00000000; /* FIXME */
 	
 	return (STATUS_SUCCESS);
 }
 
 /* Class 2 - Performance Information */
-QSI_DEF(SystemPerformanceInfo)
+QSI_DEF(SystemPerformanceInformation)
 {
 	PSYSTEM_PERFORMANCE_INFO Spi 
 		= (PSYSTEM_PERFORMANCE_INFO) Buffer;
@@ -130,32 +130,32 @@ QSI_DEF(SystemPerformanceInfo)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 	
-	Spi->TotalProcessorTime.QuadPart = 0; /* FIXME */
+	Spi->IdleProcessorTime.QuadPart = 0; /* FIXME */
 	Spi->IoReadTransferCount.QuadPart = 0; /* FIXME */
 	Spi->IoWriteTransferCount.QuadPart = 0; /* FIXME */
 	Spi->IoOtherTransferCount.QuadPart = 0; /* FIXME */
 	Spi->IoReadOperationCount = 0; /* FIXME */
 	Spi->IoWriteOperationCount = 0; /* FIXME */
 	Spi->IoOtherOperationCount = 0; /* FIXME */
-	Spi->MmAvailablePages = 0; /* FIXME */
-	Spi->MmTotalCommitedPages = 0; /* FIXME */
-	Spi->MmTotalCommitLimit = 0; /* FIXME */
-	Spi->MmPeakLimit = 0; /* FIXME */
-	Spi->PageFaults = 0; /* FIXME */
-	Spi->WriteCopies = 0; /* FIXME */
-	Spi->TransitionFaults = 0; /* FIXME */
-	Spi->Unknown1 = 0; /* FIXME */
-	Spi->DemandZeroFaults = 0; /* FIXME */
-	Spi->PagesInput = 0; /* FIXME */
-	Spi->PagesRead = 0; /* FIXME */
-	Spi->Unknown2 = 0; /* FIXME */
-	Spi->Unknown3 = 0; /* FIXME */
-	Spi->PagesOutput = 0; /* FIXME */
-	Spi->PageWrites = 0; /* FIXME */
-	Spi->Unknown4 = 0; /* FIXME */
-	Spi->Unknown5 = 0; /* FIXME */
-	Spi->PoolPagedBytes = 0; /* FIXME */
-	Spi->PoolNonPagedBytes = 0; /* FIXME */
+	Spi->AvailablePages = 0; /* FIXME */
+	Spi->CommitedPages = 0; /* FIXME */
+	Spi->CommitLimit = 0; /* FIXME */
+	Spi->PeakCommitment = 0; /* FIXME */
+	Spi->PageFaultCount = 0; /* FIXME */
+	Spi->CopyOnWriteCount = 0; /* FIXME */
+	Spi->TransitionCount = 0; /* FIXME */
+	Spi->CacheTransitionCount = 0; /* FIXME */
+	Spi->DemandZeroCount = 0; /* FIXME */
+	Spi->PageReadCount = 0; /* FIXME */
+	Spi->PageReadIoCount = 0; /* FIXME */
+	Spi->CacheReadCount = 0; /* FIXME */
+	Spi->CacheIoCount = 0; /* FIXME */
+	Spi->DirtyPagesWriteCount = 0; /* FIXME */
+	Spi->DirtyWriteIoCount = 0; /* FIXME */
+	Spi->MappedPagesWriteCount = 0; /* FIXME */
+	Spi->MappedWriteIoCount = 0; /* FIXME */
+	Spi->PagedPoolPages = 0; /* FIXME */
+	Spi->NonPagedPoolPages = 0; /* FIXME */
 	Spi->Unknown6 = 0; /* FIXME */
 	Spi->Unknown7 = 0; /* FIXME */
 	Spi->Unknown8 = 0; /* FIXME */
@@ -208,26 +208,26 @@ QSI_DEF(SystemPerformanceInfo)
 	return (STATUS_SUCCESS);
 }
 
-/* Class 3 - Time Information */
-QSI_DEF(SystemTimeInformation)
+/* Class 3 - Time Of Day Information */
+QSI_DEF(SystemTimeOfDayInformation)
 {
-	PSYSTEM_TIME_INFORMATION Sti
-		= (PSYSTEM_TIME_INFORMATION) Buffer;
+	PSYSTEM_TIMEOFDAY_INFORMATION Sti
+		= (PSYSTEM_TIMEOFDAY_INFORMATION) Buffer;
 
-	*ReqSize = sizeof (SYSTEM_TIME_INFORMATION);
+	*ReqSize = sizeof (SYSTEM_TIMEOFDAY_INFORMATION);
 	/*
 	 * Check user buffer's size 
 	 */
-	if (Size < sizeof (SYSTEM_TIME_INFORMATION))
+	if (Size < sizeof (SYSTEM_TIMEOFDAY_INFORMATION))
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 
-	Sti->KeBootTime.QuadPart = 0;		/* FIXME */
-	Sti->KeSystemTime.QuadPart = 0;		/* FIXME */
-	Sti->ExpTimeZoneBias.QuadPart = 0;	/* FIXME */
-	Sti->ExpTimeZoneId = 0;			/* FIXME */
-	Sti->Unused = 0;			/* FIXME */
+	Sti->BootTime.QuadPart = 0;	/* FIXME */
+	Sti->CurrentTime.QuadPart = 0;	/* FIXME */
+	Sti->TimeZoneBias.QuadPart = 0;	/* FIXME */
+	Sti->TimeZoneId = 0;		/* FIXME */
+	Sti->Reserved = 0;		/* FIXME */
 
 	return (STATUS_SUCCESS);
 }
@@ -246,93 +246,111 @@ QSI_DEF(SystemProcessInformation)
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 6 - SDT Information */
-QSI_DEF(SystemServiceDescriptorTableInfo)
+/* Class 6 - Call Count Information */
+QSI_DEF(SystemCallCountInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 7 - I/O Configuration Information */
-QSI_DEF(SystemIoConfigInfo)
+/* Class 7 - Device Information */
+QSI_DEF(SystemDeviceInformation)
 {
-	/* FIXME */
-	return (STATUS_NOT_IMPLEMENTED);
-}
+	PSYSTEM_DEVICE_INFORMATION Sdi 
+		= (PSYSTEM_DEVICE_INFORMATION) Buffer;
 
-/* Class 8 - Processor Time Information */
-QSI_DEF(SystemProcessorTimeInfo)
-{
-	/* FIXME */
-	return (STATUS_NOT_IMPLEMENTED);
-}
-
-/* Class 9 - Global Flag Information */
-QSI_DEF(SystemNtGlobalFlagInformation)
-{
-	if (sizeof (SYSTEM_GLOBAL_FLAG_INFO) != Size)
-	{
-		* ReqSize = sizeof (SYSTEM_GLOBAL_FLAG_INFO);
-		return (STATUS_INFO_LENGTH_MISMATCH);
-	}
-	((PSYSTEM_GLOBAL_FLAG_INFO) Buffer)->NtGlobalFlag = NtGlobalFlag;
-	return (STATUS_SUCCESS);
-}
-
-SSI_DEF(SystemNtGlobalFlagInformation)
-{
-	if (sizeof (SYSTEM_GLOBAL_FLAG_INFO) != Size)
+	*ReqSize = sizeof (SYSTEM_DEVICE_INFORMATION);
+	/*
+	 * Check user buffer's size 
+	 */
+	if (Size < sizeof (SYSTEM_DEVICE_INFORMATION))
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
-	NtGlobalFlag = ((PSYSTEM_GLOBAL_FLAG_INFO) Buffer)->NtGlobalFlag;
+
+	Sdi->NumberOfDisks = 0; /* FIXME */
+	Sdi->NumberOfFloppies = 0; /* FIXME */
+	Sdi->NumberOfCdRoms = 0; /* FIXME */
+	Sdi->NumberOfTapes = 0; /* FIXME */
+	Sdi->NumberOfSerialPorts = 0; /* FIXME */
+	Sdi->NumberOfParallelPorts = 0; /* FIXME */
+
 	return (STATUS_SUCCESS);
 }
 
-/* Class 10 - ? Information */
-QSI_DEF(SystemInformation10)
+/* Class 8 - Processor Performance Information */
+QSI_DEF(SystemProcessorPerformanceInformation)
+{
+	/* FIXME */
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+/* Class 9 - Flags Information */
+QSI_DEF(SystemFlagsInformation)
+{
+	if (sizeof (SYSTEM_FLAGS_INFORMATION) != Size)
+	{
+		* ReqSize = sizeof (SYSTEM_FLAGS_INFORMATION);
+		return (STATUS_INFO_LENGTH_MISMATCH);
+	}
+	((PSYSTEM_FLAGS_INFORMATION) Buffer)->Flags = NtGlobalFlag;
+	return (STATUS_SUCCESS);
+}
+
+SSI_DEF(SystemFlagsInformation)
+{
+	if (sizeof (SYSTEM_FLAGS_INFORMATION) != Size)
+	{
+		return (STATUS_INFO_LENGTH_MISMATCH);
+	}
+	NtGlobalFlag = ((PSYSTEM_FLAGS_INFORMATION) Buffer)->Flags;
+	return (STATUS_SUCCESS);
+}
+
+/* Class 10 - Call Time Information */
+QSI_DEF(SystemCallTimeInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
 /* Class 11 - Modules Information */
-QSI_DEF(SystemModuleInfo)
+QSI_DEF(SystemModuleInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 12 - Resource Lock Information */
-QSI_DEF(SystemResourceLockInfo)
+/* Class 12 - Locks Information */
+QSI_DEF(SystemLocksInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 13 - ? Information */
-QSI_DEF(SystemInformation13)
+/* Class 13 - Stack Trace Information */
+QSI_DEF(SystemStackTraceInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 14 - ? Information */
-QSI_DEF(SystemInformation14)
+/* Class 14 - Paged Pool Information */
+QSI_DEF(SystemPagedPoolInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 15 - ? Information */
-QSI_DEF(SystemInformation15)
+/* Class 15 - Non Paged Pool Information */
+QSI_DEF(SystemNonPagedPoolInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
 /* Class 16 - Handle Information */
-QSI_DEF(SystemHandleInfo)
+QSI_DEF(SystemHandleInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
@@ -352,22 +370,22 @@ QSI_DEF(SystemPageFileInformation)
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 19 -  Information */
-QSI_DEF(SystemInstructionEmulationInfo)
+/* Class 19 - Vdm Instemul Information */
+QSI_DEF(SystemVdmInstemulInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 20 - ? Information */
-QSI_DEF(SystemInformation20)
+/* Class 20 - Vdm Bop Information */
+QSI_DEF(SystemVdmBopInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 21 -  Information */
-QSI_DEF(SystemCacheInformation)
+/* Class 21 - File Cache Information */
+QSI_DEF(SystemFileCacheInformation)
 {
 	if (Size < sizeof (SYSTEM_CACHE_INFORMATION))
 	{
@@ -378,7 +396,7 @@ QSI_DEF(SystemCacheInformation)
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-SSI_DEF(SystemCacheInformation)
+SSI_DEF(SystemFileCacheInformation)
 {
 	if (Size < sizeof (SYSTEM_CACHE_INFORMATION))
 	{
@@ -395,28 +413,28 @@ QSI_DEF(SystemPoolTagInformation)
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 23 - Processor Schedule Information */
-QSI_DEF(SystemProcessorScheduleInfo)
+/* Class 23 - Interrupt Information */
+QSI_DEF(SystemInterruptInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 24 - DPC Information */
-QSI_DEF(SystemDpcInformation)
+/* Class 24 - DPC Behaviour Information */
+QSI_DEF(SystemDpcBehaviourInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-SSI_DEF(SystemDpcInformation)
+SSI_DEF(SystemDpcBehaviourInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 25 - ? Information */
-QSI_DEF(SystemInformation25)
+/* Class 25 - Full Memory Information */
+QSI_DEF(SystemFullMemoryInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
@@ -447,7 +465,7 @@ SSI_DEF(SystemUnloadGdiDriverInformation)
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 28 -  Information */
+/* Class 28 - Time Adjustment Information */
 QSI_DEF(SystemTimeAdjustmentInformation)
 {
 	if (sizeof (SYSTEM_TIME_ADJUSTMENT_INFO) > Size)
@@ -469,119 +487,119 @@ SSI_DEF(SystemTimeAdjustmentInformation)
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 29 - ? Information */
-QSI_DEF(SystemInformation29)
+/* Class 29 - Summary Memory Information */
+QSI_DEF(SystemSummaryMemoryInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 30 - ? Information */
-QSI_DEF(SystemInformation30)
+/* Class 30 - Next Event Id Information */
+QSI_DEF(SystemNextEventIdInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 31 - ? Information */
-QSI_DEF(SystemInformation31)
+/* Class 31 - Event Ids Information */
+QSI_DEF(SystemEventIdsInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
 /* Class 32 - Crach Dump Information */
-QSI_DEF(SystemCrashDumpSectionInfo)
+QSI_DEF(SystemCrashDumpInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 33 - Processor Fault Information */
-QSI_DEF(SystemProcessorFaultCountInfo)
+/* Class 33 - Exception Information */
+QSI_DEF(SystemExceptionInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
 /* Class 34 - Crach Dump State Information */
-QSI_DEF(SystemCrashDumpStateInfo)
+QSI_DEF(SystemCrashDumpStateInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 35 - Debugger Information */
-QSI_DEF(SystemDebuggerInfo)
+/* Class 35 - Kernel Debugger Information */
+QSI_DEF(SystemKernelDebuggerInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 36 - Thread Switch Counters Information */
-QSI_DEF(SystemThreadSwitchCountersInfo)
+/* Class 36 - Context Switch Information */
+QSI_DEF(SystemContextSwitchInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 37 - Quota Information */
-QSI_DEF(SystemQuotaInformation)
+/* Class 37 - Registry Quota Information */
+QSI_DEF(SystemRegistryQuotaInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-SSI_DEF(SystemQuotaInformation)
+SSI_DEF(SystemRegistryQuotaInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 38 - Load Driver Information */
-SSI_DEF(SystemLoadDriverInfo)
+/* Class 38 - Extend Service Table Information */
+SSI_DEF(SystemExtendServiceTableInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 39 - Priority Separation Information */
-SSI_DEF(SystemPrioritySeparationInfo)
+/* Class 39 - Priority Seperation */
+SSI_DEF(SystemPrioritySeperation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 40 - ? Information */
-QSI_DEF(SystemInformation40)
+/* Class 40 - Plug Play Bus Information */
+QSI_DEF(SystemPlugPlayBusInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 41 - ? Information */
-QSI_DEF(SystemInformation41)
+/* Class 41 - Dock Information */
+QSI_DEF(SystemDockInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 42 - ? Information */
-QSI_DEF(SystemInformation42)
+/* Class 42 - Power Information */
+QSI_DEF(SystemPowerInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 43 - ? Information */
-QSI_DEF(SystemInformation43)
+/* Class 43 - Processor Speed Information */
+QSI_DEF(SystemProcessorSpeedInformation)
 {
 	/* FIXME */
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 44 -  Information */
-QSI_DEF(SystemTimeZoneInformation)
+/* Class 44 - Current Time Zone Information */
+QSI_DEF(SystemCurrentTimeZoneInformation)
 {
 	* ReqSize = sizeof (TIME_ZONE_INFORMATION);
 
@@ -600,7 +618,7 @@ QSI_DEF(SystemTimeZoneInformation)
 }
 
 
-SSI_DEF(SystemTimeZoneInformation)
+SSI_DEF(SystemCurrentTimeZoneInformation)
 {
 	/*
 	 * Check user buffer's size 
@@ -619,7 +637,7 @@ SSI_DEF(SystemTimeZoneInformation)
 }
 
 
-/* Class 45 -  Information */
+/* Class 45 - Lookaside Information */
 QSI_DEF(SystemLookasideInformation)
 {
 	/* FIXME */
@@ -652,49 +670,49 @@ CallQS [] =
 {
 	SI_QX(SystemBasicInformation),
 	SI_QX(SystemProcessorInformation),
-	SI_QX(SystemPerformanceInfo),
-	SI_QX(SystemTimeInformation),
+	SI_QX(SystemPerformanceInformation),
+	SI_QX(SystemTimeOfDayInformation),
 	SI_QX(SystemPathInformation), /* should be SI_XX */
 	SI_QX(SystemProcessInformation),
-	SI_QX(SystemServiceDescriptorTableInfo),
-	SI_QX(SystemIoConfigInfo),
-	SI_QX(SystemProcessorTimeInfo),
-	SI_QS(SystemNtGlobalFlagInformation),
-	SI_QX(SystemInformation10), /* should be SI_XX */
-	SI_QX(SystemModuleInfo),
-	SI_QX(SystemResourceLockInfo),
-	SI_QX(SystemInformation13), /* should be SI_XX */
-	SI_QX(SystemInformation14), /* should be SI_XX */
-	SI_QX(SystemInformation15), /* should be SI_XX */
-	SI_QX(SystemHandleInfo),
+	SI_QX(SystemCallCountInformation),
+	SI_QX(SystemDeviceInformation),
+	SI_QX(SystemProcessorPerformanceInformation),
+	SI_QS(SystemFlagsInformation),
+	SI_QX(SystemCallTimeInformation), /* should be SI_XX */
+	SI_QX(SystemModuleInformation),
+	SI_QX(SystemLocksInformation),
+	SI_QX(SystemStackTraceInformation), /* should be SI_XX */
+	SI_QX(SystemPagedPoolInformation), /* should be SI_XX */
+	SI_QX(SystemNonPagedPoolInformation), /* should be SI_XX */
+	SI_QX(SystemHandleInformation),
 	SI_QX(SystemObjectInformation),
 	SI_QX(SystemPageFileInformation),
-	SI_QX(SystemInstructionEmulationInfo),
-	SI_QX(SystemInformation20), /* it should be SI_XX */
-	SI_QS(SystemCacheInformation),
+	SI_QX(SystemVdmInstemulInformation),
+	SI_QX(SystemVdmBopInformation), /* it should be SI_XX */
+	SI_QS(SystemFileCacheInformation),
 	SI_QX(SystemPoolTagInformation),
-	SI_QX(SystemProcessorScheduleInfo),
-	SI_QS(SystemDpcInformation),
-	SI_QX(SystemInformation25), /* it should be SI_XX */
+	SI_QX(SystemInterruptInformation),
+	SI_QS(SystemDpcBehaviourInformation),
+	SI_QX(SystemFullMemoryInformation), /* it should be SI_XX */
 	SI_XS(SystemLoadGdiDriverInformation),
 	SI_XS(SystemUnloadGdiDriverInformation),
 	SI_QS(SystemTimeAdjustmentInformation),
-	SI_QX(SystemInformation29), /* it should be SI_XX */
-	SI_QX(SystemInformation30), /* it should be SI_XX */
-	SI_QX(SystemInformation31), /* it should be SI_XX */
-	SI_QX(SystemCrashDumpSectionInfo),
-	SI_QX(SystemProcessorFaultCountInfo),
-	SI_QX(SystemCrashDumpStateInfo),
-	SI_QX(SystemDebuggerInfo),
-	SI_QX(SystemThreadSwitchCountersInfo),
-	SI_QS(SystemQuotaInformation),
-	SI_XS(SystemLoadDriverInfo),
-	SI_XS(SystemPrioritySeparationInfo),
-	SI_QX(SystemInformation40), /* it should be SI_XX */
-	SI_QX(SystemInformation41), /* it should be SI_XX */
-	SI_QX(SystemInformation42), /* it should be SI_XX */
-	SI_QX(SystemInformation43), /* it should be SI_XX */
-	SI_QS(SystemTimeZoneInformation), /* it should be SI_QX */
+	SI_QX(SystemSummaryMemoryInformation), /* it should be SI_XX */
+	SI_QX(SystemNextEventIdInformation), /* it should be SI_XX */
+	SI_QX(SystemEventIdsInformation), /* it should be SI_XX */
+	SI_QX(SystemCrashDumpInformation),
+	SI_QX(SystemExceptionInformation),
+	SI_QX(SystemCrashDumpStateInformation),
+	SI_QX(SystemKernelDebuggerInformation),
+	SI_QX(SystemContextSwitchInformation),
+	SI_QS(SystemRegistryQuotaInformation),
+	SI_XS(SystemExtendServiceTableInformation),
+	SI_XS(SystemPrioritySeperation),
+	SI_QX(SystemPlugPlayBusInformation), /* it should be SI_XX */
+	SI_QX(SystemDockInformation), /* it should be SI_XX */
+	SI_QX(SystemPowerInformation), /* it should be SI_XX */
+	SI_QX(SystemProcessorSpeedInformation), /* it should be SI_XX */
+	SI_QS(SystemCurrentTimeZoneInformation), /* it should be SI_QX */
 	SI_QX(SystemLookasideInformation)
 };
 

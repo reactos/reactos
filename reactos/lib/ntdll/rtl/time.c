@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.7 2000/06/29 23:35:32 dwelch Exp $
+/* $Id: time.c,v 1.8 2000/11/04 13:51:41 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -274,18 +274,18 @@ RtlLocalTimeToSystemTime (
 	PLARGE_INTEGER	SystemTime
 	)
 {
-   SYSTEM_TIME_INFORMATION TimeInformation;
+   SYSTEM_TIMEOFDAY_INFORMATION TimeInformation;
    NTSTATUS Status;
 
-   Status = NtQuerySystemInformation (SystemTimeInformation,
+   Status = NtQuerySystemInformation (SystemTimeOfDayInformation,
                                       &TimeInformation,
-                                      sizeof(SYSTEM_TIME_INFORMATION),
+                                      sizeof(SYSTEM_TIMEOFDAY_INFORMATION),
                                       NULL);
    if (!NT_SUCCESS(Status))
       return Status;
 
    SystemTime->QuadPart = LocalTime->QuadPart +
-                          TimeInformation.ExpTimeZoneBias.QuadPart;
+                          TimeInformation.TimeZoneBias.QuadPart;
 
    return STATUS_SUCCESS;
 }
@@ -298,18 +298,18 @@ RtlSystemTimeToLocalTime (
 	PLARGE_INTEGER	LocalTime
 	)
 {
-   SYSTEM_TIME_INFORMATION TimeInformation;
+   SYSTEM_TIMEOFDAY_INFORMATION TimeInformation;
    NTSTATUS Status;
 
-   Status = NtQuerySystemInformation (SystemTimeInformation,
+   Status = NtQuerySystemInformation (SystemTimeOfDayInformation,
                                       &TimeInformation,
-                                      sizeof(SYSTEM_TIME_INFORMATION),
+                                      sizeof(SYSTEM_TIMEOFDAY_INFORMATION),
                                       NULL);
    if (!NT_SUCCESS(Status))
       return Status;
 
    LocalTime->QuadPart = SystemTime->QuadPart -
-                         TimeInformation.ExpTimeZoneBias.QuadPart;
+                         TimeInformation.TimeZoneBias.QuadPart;
 
    return STATUS_SUCCESS;
 }

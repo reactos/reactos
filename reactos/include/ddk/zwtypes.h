@@ -120,48 +120,48 @@ enum _SYSTEM_INFORMATION_CLASS
 	SystemBasicInformation			= 0,	/* Q */
 	SystemProcessorInformation		= 1,	/* Q */
 	SystemPerformanceInformation		= 2,	/* Q */
-	SystemTimeInformation			= 3,	/* Q */
-	SystemPathInformation			= 4,
+	SystemTimeOfDayInformation		= 3,	/* Q */
+	SystemPathInformation			= 4,	/* Q (checked build only) */
 	SystemProcessInformation		= 5,	/* Q */
-	SystemServiceDescriptorTableInfo	= 6,	/* Q */
-	SystemIoConfigInformation		= 7,	/* Q */
-	SystemProcessorTimeInformation		= 8,	/* Q */
-	SystemNtGlobalFlagInformation		= 9,	/* QS */
-	SystemInformation10			= 10,
+	SystemCallCountInfoInformation		= 6,	/* Q */
+	SystemDeviceInformation			= 7,	/* Q */
+	SystemProcessorPerformanceInformation	= 8,	/* Q */
+	SystemFlagsInformation			= 9,	/* QS */
+	SystemCallTimeInformation		= 10,
 	SystemModuleInformation			= 11,	/* Q */
-	SystemResourceLockInformation		= 12,	/* Q */
-	SystemInformation13			= 13,
-	SystemInformation14			= 14,
-	SystemInformation15			= 15,
+	SystemLocksInformation			= 12,	/* Q */
+	SystemStackTraceInformation		= 13,
+	SystemPagedPoolInformation		= 14,
+	SystemNonPagedPoolInformation		= 15,
 	SystemHandleInformation			= 16,	/* Q */
 	SystemObjectInformation			= 17,	/* Q */
 	SystemPageFileInformation		= 18,	/* Q */
-	SystemInstructionEmulationInfo		= 19,	/* Q */
-	SystemInformation20			= 20,
-	SystemCacheInformation			= 21,	/* QS */
+	SystemVdmInstemulInformation		= 19,	/* Q */
+	SystemVdmBopInformation			= 20,
+	SystemFileCacheInformation		= 21,	/* QS */
 	SystemPoolTagInformation		= 22,	/* Q (checked build only) */
-	SystemProcessorScheduleInfo		= 23,	/* Q */
-	SystemDpcInformation			= 24,	/* QS */
+	SystemInterruptInformation		= 23,	/* Q */
+	SystemDpcBehaviourInformation		= 24,	/* QS */
 	SystemFullMemoryInformation		= 25,
 	SystemLoadGdiDriverInformation		= 26,	/* S (callable) */
 	SystemUnloadGdiDriverInformation	= 27,	/* S (callable) */
 	SystemTimeAdjustmentInformation		= 28,	/* QS */
-	SystemInformation29			= 29,
-	SystemInformation30			= 30,
-	SystemInformation31			= 31,
-	SystemCrashDumpSectionInfo		= 32,	/* Q */
-	SystemProcessorFaultCountInfo		= 33,	/* Q */
-	SystemCrashDumpStateInfo		= 34,	/* Q */
-	SystemDebuggerInformation		= 35,	/* Q */
-	SystemThreadSwitchCountersInfo		= 36,	/* Q */
-	SystemQuotaInformation			= 37,	/* QS */
-	SystemLoadDriver			= 38,	/* S */
-	SystemPrioritySeparationInfo		= 39,	/* S */
-	SystemInformation40			= 40,
-	SystemInformation41			= 41,
-	SystemInformation42			= 42,
-	SystemInformation43			= 43,
-	SystemTimeZoneInformation		= 44,	/* QS */
+	SystemSummryMemoryInformation		= 29,
+	SystemNextEventIdInformation		= 30,
+	SystemEventIdsInformation		= 31,
+	SystemCrashDumpInformation		= 32,	/* Q */
+	SystemExceptionInformation		= 33,	/* Q */
+	SystemCrashDumpStateInformation		= 34,	/* Q */
+	SystemKernelDebuggerInformation		= 35,	/* Q */
+	SystemContextSwitchInformation		= 36,	/* Q */
+	SystemRegistryQuotaInformation		= 37,	/* QS */
+	SystemExtendServiceTableInformation	= 38,	/* S */
+	SystemPrioritySeperation		= 39,	/* S */
+	SystemPlugPlayBusInformation		= 40,
+	SystemDockInformation			= 41,
+	SystemPowerInformation			= 42,
+	SystemProcessorSpeedInformation		= 43,
+	SystemCurrentTimeZoneInformation	= 44,	/* QS */
 	SystemLookasideInformation		= 45,	/* Q */
 	SystemInformationClassMax
 
@@ -171,62 +171,60 @@ enum _SYSTEM_INFORMATION_CLASS
 typedef
 struct _SYSTEM_BASIC_INFORMATION
 {
-	DWORD	AlwaysZero;
-	ULONG	KeMaximumIncrement;
-	ULONG	MmPageSize;
-	ULONG	MmNumberOfPhysicalPages;
-	ULONG	MmLowestPhysicalPage;
-	ULONG	MmHighestPhysicalPage;
-	PVOID	MmLowestUserAddress;
-	PVOID	MmLowestUserAddress1;
-	PVOID	MmHighestUserAddress;
-	DWORD	KeActiveProcessors;
-	USHORT	KeNumberProcessors;
-	
+	ULONG		Reserved;
+	ULONG		TimerResolution;
+	ULONG		PageSize;
+	ULONG		NumberOfPhysicalPages;
+	ULONG		LowestPhysicalPageNumber;
+	ULONG		HighestPhysicalPageNumber;
+	ULONG		AllocationGranularity;
+	ULONG		MinimumUserModeAddress;
+	ULONG		MaximumUserModeAddress;
+	KAFFINITY	ActiveProcessorsAffinityMask;
+	CCHAR		NumberOfProcessors;
 } SYSTEM_BASIC_INFORMATION, *PSYSTEM_BASIC_INFORMATION;
 
 // SystemProcessorInformation (1)
 typedef
 struct _SYSTEM_PROCESSOR_INFORMATION
 {
-	USHORT	KeProcessorArchitecture;
-	USHORT	KeProcessorLevel;
-	USHORT	KeProcessorRevision;
-	USHORT	AlwaysZero;
-	DWORD	KeFeatureBits;
-
+	USHORT	ProcessorArchitecture;
+	USHORT	ProcessorLevel;
+	USHORT	ProcessorRevision;
+	USHORT	Reserved;
+	ULONG	ProcessorFeatureBits;
 } SYSTEM_PROCESSOR_INFORMATION, *PSYSTEM_PROCESSOR_INFORMATION;
 
 // SystemPerformanceInfo (2)
 typedef
-struct _SYSTEM_PERFORMANCE_INFO
+struct _SYSTEM_PERFORMANCE_INFORMATION
 {
-	LARGE_INTEGER	TotalProcessorTime;
+	LARGE_INTEGER	IdleProcessorTime;
 	LARGE_INTEGER	IoReadTransferCount;
 	LARGE_INTEGER	IoWriteTransferCount;
 	LARGE_INTEGER	IoOtherTransferCount;
 	ULONG		IoReadOperationCount;
 	ULONG		IoWriteOperationCount;
 	ULONG		IoOtherOperationCount;
-	ULONG		MmAvailablePages;
-	ULONG		MmTotalCommitedPages;
-	ULONG		MmTotalCommitLimit;
-	ULONG		MmPeakLimit;
-	ULONG		PageFaults;
-	ULONG		WriteCopies;
-	ULONG		TransitionFaults;
-	ULONG		Unknown1;
-	ULONG		DemandZeroFaults;
-	ULONG		PagesInput;
-	ULONG		PagesRead;
-	ULONG		Unknown2;
-	ULONG		Unknown3;
-	ULONG		PagesOutput;
-	ULONG		PageWrites;
-	ULONG		Unknown4;
-	ULONG		Unknown5;
-	ULONG		PoolPagedBytes;
-	ULONG		PoolNonPagedBytes;
+	ULONG		AvailablePages;
+	ULONG		CommitedPages;
+	ULONG		CommitLimit;
+	ULONG		PeakCommitment;
+	ULONG		PageFaultCount;
+	ULONG		CopyOnWriteCount;
+	ULONG		TransitionCount;
+	ULONG		CacheTransitionCount;
+	ULONG		DemandZeroCount;
+	ULONG		PageReadCount;
+	ULONG		PageReadIoCount;
+	ULONG		CacheReadCount;
+	ULONG		CacheIoCount;
+	ULONG		DirtyPagesWriteCount;
+	ULONG		DirtyWriteIoCount;
+	ULONG		MappedPagesWriteCount;
+	ULONG		MappedWriteIoCount;
+	ULONG		PagedPoolPages;
+	ULONG		NonPagedPoolPages;
 	ULONG		Unknown6;
 	ULONG		Unknown7;
 	ULONG		Unknown8;
@@ -278,17 +276,16 @@ struct _SYSTEM_PERFORMANCE_INFO
 
 } SYSTEM_PERFORMANCE_INFO, *PSYSTEM_PERFORMANCE_INFO;
 
-// SystemTimeInformation (3)
+// SystemTimeOfDayInformation (3)
 typedef
-struct _SYSTEM_TIME_INFORMATION
+struct _SYSTEM_TIMEOFDAY_INFORMATION
 {
-	TIME	KeBootTime;
-	TIME	KeSystemTime;
-	TIME	ExpTimeZoneBias;
-	ULONG	ExpTimeZoneId;
-	ULONG	Unused;
-	
-} SYSTEM_TIME_INFORMATION, *PSYSTEM_TIME_INFORMATION;
+	LARGE_INTEGER	BootTime;
+	LARGE_INTEGER	CurrentTime;
+	LARGE_INTEGER	TimeZoneBias;
+	ULONG		TimeZoneId;
+	ULONG		Reserved;
+} SYSTEM_TIMEOFDAY_INFORMATION, *PSYSTEM_TIMEOFDAY_INFORMATION;
 
 // SystemPathInformation (4)
 // IT DOES NOT WORK
@@ -299,7 +296,7 @@ struct _SYSTEM_PATH_INFORMATION
 
 } SYSTEM_PATH_INFORMATION, * PSYSTEM_PATH_INFORMATION;
 
-// SystemProcessThreadInfo (5)
+// SystemProcessInformation (5)
 typedef
 struct _SYSTEM_THREAD_INFORMATION
 {
@@ -348,7 +345,7 @@ struct SYSTEM_PROCESS_INFORMATION
 	
 } SYSTEM_PROCESS_INFORMATION, *PSYSTEM_PROCESS_INFORMATION;
 
-// SystemServiceDescriptorTableInfo (6)
+// SystemCallCountInformation (6)
 typedef
 struct _SYSTEM_SDT_INFORMATION
 {
@@ -359,20 +356,19 @@ struct _SYSTEM_SDT_INFORMATION
 
 } SYSTEM_SDT_INFORMATION, *PSYSTEM_SDT_INFORMATION;
 
-// SystemIoConfigInformation (7)
+// SystemDeviceInformation (7)
 typedef
-struct _SYSTEM_IOCONFIG_INFORMATION
+struct _SYSTEM_DEVICE_INFORMATION
 {
-	ULONG	DiskCount;
-	ULONG	FloppyCount;
-	ULONG	CdRomCount;
-	ULONG	TapeCount;
-	ULONG	SerialCount;
-	ULONG	ParallelCount;
-	
-} SYSTEM_IOCONFIG_INFORMATION, *PSYSTEM_IOCONFIG_INFORMATION;
+	ULONG	NumberOfDisks;
+	ULONG	NumberOfFloppies;
+	ULONG	NumberOfCdRoms;
+	ULONG	NumberOfTapes;
+	ULONG	NumberOfSerialPorts;
+	ULONG	NumberOfParallelPorts;
+} SYSTEM_DEVICE_INFORMATION, *PSYSTEM_DEVICE_INFORMATION;
 
-// SystemProcessorTimeInformation (8)
+// SystemProcessorPerformanceInformation (8)
 typedef
 struct _SYSTEM_PROCESSORTIME_INFO
 {
@@ -383,18 +379,18 @@ struct _SYSTEM_PROCESSORTIME_INFO
 	TIME	TotalInterruptTime;
 	ULONG	TotalInterrupts;
 	ULONG	Unused;
-	
+
 } SYSTEM_PROCESSORTIME_INFO, *PSYSTEM_PROCESSORTIME_INFO;
 
-// SystemNtGlobalFlagInformation (9)
+// SystemFlagsInformation (9)
 typedef
-struct _SYSTEM_GLOBAL_FLAG_INFO
+struct _SYSTEM_FLAGS_INFORMATION
 {
-	ULONG	NtGlobalFlag;
+	ULONG	Flags;
 
-} SYSTEM_GLOBAL_FLAG_INFO, * PSYSTEM_GLOBAL_FLAG_INFO;
+} SYSTEM_FLAGS_INFORMATION, * PSYSTEM_FLAGS_INFORMATION;
 
-// SystemInformation10 (10)
+// SystemCallTimeInformation (10)
 // UNKNOWN
 
 // SystemModuleInformation (11)
@@ -421,7 +417,7 @@ struct _SYSTEM_MODULE_INFORMATION
 	
 } SYSTEM_MODULE_INFORMATION, *PSYSTEM_MODULE_INFORMATION;
 
-// SystemResourceLockInformation (12)
+// SystemLocksInformation (12)
 typedef
 struct _SYSTEM_RESOURCE_LOCK_ENTRY
 {

@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.1 2000/04/25 23:22:54 ea Exp $
+/* $Id: sysinfo.c,v 1.2 2000/11/04 13:52:12 ekohl Exp $
  *
  * reactos/lib/kernel32/misc/sysinfo.c
  *
@@ -52,14 +52,14 @@ GetSystemInfo (
 	 *	PROCESSOR_ARCHITECTURE_PPC   3
 	 *	PROCESSOR_ARCHITECTURE_UNKNOWN 0xFFFF
 	 */
-	Si->u.s.wProcessorArchitecture	= Spi.KeProcessorArchitecture;
+	Si->u.s.wProcessorArchitecture	= Spi.ProcessorArchitecture;
 	/* For future use: always zero */
 	Si->u.s.wReserved		= 0;
-	Si->dwPageSize			= Sbi.MmPageSize;
-	Si->lpMinimumApplicationAddress	= Sbi.MmLowestUserAddress;
-	Si->lpMaximumApplicationAddress	= Sbi.MmHighestUserAddress;
-	Si->dwActiveProcessorMask	= Sbi.KeActiveProcessors;
-	Si->dwNumberOfProcessors	= Sbi.KeNumberProcessors;
+	Si->dwPageSize			= Sbi.PageSize;
+	Si->lpMinimumApplicationAddress	= (PVOID)Sbi.MinimumUserModeAddress;
+	Si->lpMaximumApplicationAddress	= (PVOID)Sbi.MaximumUserModeAddress;
+	Si->dwActiveProcessorMask	= Sbi.ActiveProcessorsAffinityMask;
+	Si->dwNumberOfProcessors	= Sbi.NumberOfProcessors;
 	/*
 	 * Compatibility:
 	 *	PROCESSOR_INTEL_386	386
@@ -69,7 +69,7 @@ GetSystemInfo (
 	 *	PROCESSOR_ALPHA_21064	21064
 	 */
 #if 0
-	switch (Spi.KeProcessorArchitecture)
+	switch (Spi.ProcessorArchitecture)
 	{
 	case :
 #endif
@@ -78,8 +78,8 @@ GetSystemInfo (
 		break;
 	}
 #endif
-	Si->dwAllocationGranularity	= 65536; /* hard coded on Intel? */
-	Si->wProcessorRevision = Spi.KeProcessorRevision;
+	Si->dwAllocationGranularity	= Sbi.AllocationGranularity;
+	Si->wProcessorRevision		= Spi.ProcessorRevision;
 	/*
 	 * Get the version of Windows on which
 	 * the process expects to run.
