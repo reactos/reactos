@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.26 2002/12/09 20:01:14 hbirr Exp $
+/* $Id: scsiport.c,v 1.27 2002/12/09 23:14:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -41,7 +41,12 @@
 
 /* TYPES *********************************************************************/
 
-
+/*
+ * SCSI_PORT_TIMER_STATES
+ *
+ * DESCRIPTION
+ *	An enumeration containing the states in the timer DFA
+ */
 typedef enum _SCSI_PORT_TIMER_STATES
 {
   IDETimerIdle,
@@ -49,6 +54,17 @@ typedef enum _SCSI_PORT_TIMER_STATES
   IDETimerResetWaitForBusyNegate,
   IDETimerResetWaitForDrdyAssert
 } SCSI_PORT_TIMER_STATES;
+
+
+typedef struct _SCSI_PORT_DEVICE_BASE
+{
+  LIST_ENTRY List;
+
+  PVOID MappedAddress;
+  ULONG NumberOfBytes;
+  SCSI_PHYSICAL_ADDRESS IoAddress;
+  ULONG SystemIoBusNumber;
+} SCSI_PORT_DEVICE_BASE, *PSCSI_PORT_DEVICE_BASE;
 
 
 /*
@@ -65,44 +81,37 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   ULONG MiniPortExtensionSize;
   PORT_CONFIGURATION_INFORMATION PortConfig;
   ULONG PortNumber;
-  
+
   KSPIN_LOCK IrpLock;
   KSPIN_LOCK SpinLock;
   PKINTERRUPT Interrupt;
   PIRP                   CurrentIrp;
   ULONG IrpFlags;
-  
+
   SCSI_PORT_TIMER_STATES TimerState;
   LONG                   TimerCount;
-  
+
   BOOLEAN Initializing;
-  
+
+  LIST_ENTRY DeviceBaseListHead;
+
   ULONG PortBusInfoSize;
   PSCSI_ADAPTER_BUS_INFO PortBusInfo;
-  
+
   PIO_SCSI_CAPABILITIES PortCapabilities;
-  
+
   PDEVICE_OBJECT DeviceObject;
   PCONTROLLER_OBJECT ControllerObject;
-  
+
   PHW_STARTIO HwStartIo;
   PHW_INTERRUPT HwInterrupt;
-  
+
   PSCSI_REQUEST_BLOCK OriginalSrb;
   SCSI_REQUEST_BLOCK InternalSrb;
   SENSE_DATA InternalSenseData;
-  
+
   UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
 } SCSI_PORT_DEVICE_EXTENSION, *PSCSI_PORT_DEVICE_EXTENSION;
-
-
-/*
- * SCSI_PORT_TIMER_STATES
- *
- * DESCRIPTION
- *	An enumeration containing the states in the timer DFA
- */
-
 
 
 #define IRP_FLAG_COMPLETE	0x00000001
@@ -277,8 +286,36 @@ VOID STDCALL
 ScsiPortFreeDeviceBase(IN PVOID HwDeviceExtension,
 		       IN PVOID MappedAddress)
 {
-  DPRINT("ScsiPortFreeDeviceBase()\n");
-  UNIMPLEMENTED;
+  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+  PSCSI_PORT_DEVICE_BASE DeviceBase;
+  PLIST_ENTRY Entry;
+
+  DPRINT("ScsiPortFreeDeviceBase() called\n");
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      SCSI_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+  if (IsListEmpty(&DeviceExtension->DeviceBaseListHead))
+    return;
+
+  Entry = DeviceExtension->DeviceBaseListHead.Flink;
+  while (Entry != &DeviceExtension->DeviceBaseListHead)
+    {
+      DeviceBase = CONTAINING_RECORD(Entry,
+				     SCSI_PORT_DEVICE_BASE,
+				     List);
+      if (DeviceBase->MappedAddress == MappedAddress)
+	{
+	  MmUnmapIoSpace(DeviceBase->MappedAddress,
+			 DeviceBase->NumberOfBytes);
+	  RemoveEntryList(Entry);
+	  ExFreePool(DeviceBase);
+
+	  return;
+	}
+
+      Entry = Entry->Flink;
+    }
 }
 
 
@@ -306,38 +343,48 @@ ScsiPortGetDeviceBase(IN PVOID HwDeviceExtension,
 		      IN ULONG NumberOfBytes,
 		      IN BOOLEAN InIoSpace)
 {
-  ULONG AddressSpace;
+  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
   PHYSICAL_ADDRESS TranslatedAddress;
-  PVOID VirtualAddress;
-  PVOID Buffer;
-  BOOLEAN rc;
+  PSCSI_PORT_DEVICE_BASE DeviceBase;
+  ULONG AddressSpace;
+  PVOID MappedAddress;
 
-  
-
-  DPRINT("ScsiPortGetDeviceBase()\n");
+  DPRINT("ScsiPortGetDeviceBase() called\n");
 
   AddressSpace = (ULONG)InIoSpace;
-
-  if (!HalTranslateBusAddress(BusType,
-			      SystemIoBusNumber,
-			      IoAddress,
-			      &AddressSpace,
-			      &TranslatedAddress))
+  if (HalTranslateBusAddress(BusType,
+			     SystemIoBusNumber,
+			     IoAddress,
+			     &AddressSpace,
+			     &TranslatedAddress) == FALSE)
     return NULL;
 
   /* i/o space */
   if (AddressSpace != 0)
-    return (PVOID)TranslatedAddress.u.LowPart;
+    return((PVOID)TranslatedAddress.u.LowPart);
 
-  VirtualAddress = MmMapIoSpace(TranslatedAddress,
-				NumberOfBytes,
-				FALSE);
+  MappedAddress = MmMapIoSpace(TranslatedAddress,
+			       NumberOfBytes,
+			       FALSE);
 
-  Buffer = ExAllocatePool(NonPagedPool,0x20);
-  if (Buffer == NULL)
-    return VirtualAddress;
+  DeviceBase = ExAllocatePool(NonPagedPool,
+			      sizeof(SCSI_PORT_DEVICE_BASE));
+  if (DeviceBase == NULL)
+    return(MappedAddress);
 
-  return NULL;  /* ?? */
+  DeviceBase->MappedAddress = MappedAddress;
+  DeviceBase->NumberOfBytes = NumberOfBytes;
+  DeviceBase->IoAddress = IoAddress;
+  DeviceBase->SystemIoBusNumber = SystemIoBusNumber;
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      SCSI_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+
+  InsertHeadList(&DeviceExtension->DeviceBaseListHead,
+		 &DeviceBase->List);
+
+  return(MappedAddress);
 }
 
 
@@ -497,6 +544,8 @@ ScsiPortInitialize(IN PVOID Argument1,
   while (TRUE)
     {
       DPRINT("Calling HwFindAdapter() for Bus %lu\n", PortConfig->SystemIoBusNumber);
+
+      InitializeListHead(&PseudoDeviceExtension->DeviceBaseListHead);
 
 //      RtlZeroMemory(AccessRanges,
 //		    sizeof(ACCESS_RANGE) * PortConfig->NumberOfAccessRanges);
@@ -1152,6 +1201,23 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
   memcpy(PortDeviceExtension->PortConfig.AccessRanges,
 	 PseudoDeviceExtension->PortConfig.AccessRanges,
 	 AccessRangeSize);
+
+  /* Copy device base list */
+  if (IsListEmpty(&PseudoDeviceExtension->DeviceBaseListHead))
+    {
+      InitializeListHead(&PortDeviceExtension->DeviceBaseListHead);
+    }
+  else
+    {
+      PseudoDeviceExtension->DeviceBaseListHead.Flink =
+	PortDeviceExtension->DeviceBaseListHead.Flink;
+      PseudoDeviceExtension->DeviceBaseListHead.Blink =
+	PortDeviceExtension->DeviceBaseListHead.Blink;
+      PortDeviceExtension->DeviceBaseListHead.Blink->Flink =
+	&PortDeviceExtension->DeviceBaseListHead;
+      PortDeviceExtension->DeviceBaseListHead.Flink->Blink =
+	&PortDeviceExtension->DeviceBaseListHead;
+    }
 
   PortDeviceExtension->DeviceObject = PortDeviceObject;
   PortDeviceExtension->PortNumber = PortNumber;
