@@ -439,31 +439,50 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     LPCTSTR keyPath;
     LPCTSTR valueName;
     BOOL result = TRUE;
+    REGSAM regsam = KEY_READ;
     LONG lRet;
+    
+    switch (LOWORD(wParam)) {
+    case ID_REGISTRY_IMPORTREGISTRYFILE:
+        ImportRegistryFile(hWnd);
+        return TRUE;
+    case ID_REGISTRY_EXPORTREGISTRYFILE:
+        ExportRegistryFile(hWnd);
+        return TRUE;
+    case ID_REGISTRY_CONNECTNETWORKREGISTRY:
+        return TRUE;
+    case ID_REGISTRY_DISCONNECTNETWORKREGISTRY:
+        return TRUE;
+    case ID_REGISTRY_PRINT:
+        PrintRegistryHive(hWnd, _T(""));
+        return TRUE;
+    case ID_REGISTRY_EXIT:
+        DestroyWindow(hWnd);
+        return TRUE;
+    case ID_VIEW_STATUSBAR:
+        toggle_child(hWnd, LOWORD(wParam), hStatusBar);
+        return TRUE;
+    case ID_HELP_HELPTOPICS:
+        WinHelp(hWnd, _T("regedit"), HELP_FINDER, 0);
+        return TRUE;
+    case ID_HELP_ABOUT:
+        ShowAboutBox(hWnd);
+        return TRUE;
+    case ID_EDIT_MODIFY:
+        regsam |= KEY_WRITE; 
+        break;
+    }
 
     keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
     valueName = GetValueName(g_pChildWnd->hListWnd);
     if (keyPath) {
-        lRet = RegOpenKeyEx(hKeyRoot, keyPath, 0, KEY_READ, &hKey);
+        lRet = RegOpenKeyEx(hKeyRoot, keyPath, 0, regsam, &hKey);
         if (lRet != ERROR_SUCCESS) hKey = 0;
     }
 
-    switch (LOWORD(wParam)) {
-    case ID_REGISTRY_IMPORTREGISTRYFILE:
-        ImportRegistryFile(hWnd);
-        break;
-    case ID_REGISTRY_EXPORTREGISTRYFILE:
-        ExportRegistryFile(hWnd);
-        break;
-    case ID_REGISTRY_CONNECTNETWORKREGISTRY:
-        break;
-    case ID_REGISTRY_DISCONNECTNETWORKREGISTRY:
-        break;
-    case ID_REGISTRY_PRINT:
-        PrintRegistryHive(hWnd, _T(""));
-        break;
+     switch (LOWORD(wParam)) {
     case ID_EDIT_MODIFY:
-        if (ModifyValue(hWnd, hKey, valueName))
+        if (valueName && ModifyValue(hWnd, hKey, valueName))
             RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
         break;
     case ID_EDIT_COPYKEYNAME:
@@ -477,29 +496,19 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case ID_REGISTRY_OPENLOCAL:
         break;
-    case ID_REGISTRY_EXIT:
-        DestroyWindow(hWnd);
-        break;
+
     case ID_VIEW_REFRESH:
         RefreshView(hWnd);
         break;
    /*case ID_OPTIONS_TOOLBAR:*/
    /*	toggle_child(hWnd, LOWORD(wParam), hToolBar);*/
    /*    break;*/
-    case ID_VIEW_STATUSBAR:
-        toggle_child(hWnd, LOWORD(wParam), hStatusBar);
-        break;
-    case ID_HELP_HELPTOPICS:
-        WinHelp(hWnd, _T("regedit"), HELP_FINDER, 0);
-        break;
-    case ID_HELP_ABOUT:
-        ShowAboutBox(hWnd);
-        break;
     default:
         result = FALSE;
     }
-
-    RegCloseKey(hKey);
+    
+    if(hKey)
+      RegCloseKey(hKey);
     return result;
 }
 

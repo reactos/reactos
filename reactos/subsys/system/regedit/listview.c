@@ -69,26 +69,31 @@ LPCTSTR GetValueName(HWND hwndLV)
     maxLen = HeapSize(GetProcessHeap(), 0, g_valueName);
     if (maxLen == (SIZE_T) - 1) return NULL;
 
-    item = ListView_GetNextItem(hwndLV, -1, LVNI_FOCUSED);
+    item = ListView_GetNextItem(hwndLV, -1, LVNI_FOCUSED | LVNI_SELECTED);
     if (item == -1) return NULL;
-    do {
-        LVItem.mask = LVIF_PARAM;
-        LVItem.iItem = item;
-        if(ListView_GetItem(hwndLV, &LVItem))
+    LVItem.mask = LVIF_PARAM;
+    LVItem.iItem = item;
+    for(;;)
+    {
+      if(ListView_GetItem(hwndLV, &LVItem))
+      {
+        lineinfo = (PLINE_INFO)LVItem.lParam;
+        if(!lineinfo->name)
         {
-          lineinfo = (PLINE_INFO)LVItem.lParam;
-          g_valueName = lineinfo->name;
-	  len = _tcslen(g_valueName);
-	  if (len < maxLen - 1) break;
-	  newStr = HeapReAlloc(GetProcessHeap(), 0, g_valueName, maxLen * 2);
-	  if (!newStr) return NULL;
-	  g_valueName = newStr;
-	  maxLen *= 2;
-       }
-       else
-         break;
-    } while (TRUE);
-
+          *g_valueName = 0;
+          return g_valueName;
+        }
+        len = _tcslen(lineinfo->name);
+        if (len < maxLen - 1) break;
+        newStr = HeapReAlloc(GetProcessHeap(), 0, g_valueName, maxLen * 2);
+        if (!newStr) return NULL;
+        g_valueName = newStr;
+        maxLen *= 2;
+      }
+      else
+        return NULL;
+    }
+    memcpy(g_valueName, lineinfo->name, sizeof(TCHAR) * (len + 1));
     return g_valueName;
 }
 
