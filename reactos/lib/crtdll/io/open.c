@@ -67,15 +67,11 @@ int _open(const char *_path, int _oflag,...)
     * 
     */
    if (( _oflag & _O_RDWR ) == _O_RDWR ) 
-     dwDesiredAccess |= GENERIC_WRITE|GENERIC_READ | FILE_READ_DATA |
-                        FILE_WRITE_DATA | FILE_READ_ATTRIBUTES |
-                        FILE_WRITE_ATTRIBUTES;
+     dwDesiredAccess |= GENERIC_WRITE|GENERIC_READ ;
    else if (( _oflag & O_RDONLY ) == O_RDONLY ) 
-     dwDesiredAccess |= GENERIC_READ | FILE_READ_DATA | FILE_READ_ATTRIBUTES
-                     | FILE_WRITE_ATTRIBUTES;
+     dwDesiredAccess |= GENERIC_READ ;
    else if (( _oflag & _O_WRONLY ) == _O_WRONLY )
-     dwDesiredAccess |= GENERIC_WRITE | FILE_WRITE_DATA | 
-                        FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES;
+     dwDesiredAccess |= GENERIC_WRITE ;
 
    if (( _oflag & S_IREAD ) == S_IREAD )
      dwShareMode |= FILE_SHARE_READ;
