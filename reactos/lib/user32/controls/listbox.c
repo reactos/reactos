@@ -1,4 +1,4 @@
-/* $Id: listbox.c,v 1.10 2003/08/17 22:45:40 silverblade Exp $
+/* $Id: listbox.c,v 1.11 2003/09/27 00:29:52 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -28,8 +28,6 @@
  */
 
 /* Start of hack section -------------------------------- */
-
-#define WHEEL_DELTA 120
 
 #define strcpyW wcscpy
 #define strlenW wcslen
