@@ -15,6 +15,10 @@
 #include <sys/socketvar.h>
 #include <sys/uio.h>
 
+#ifdef WIN32
+#define snprintf _snprintf
+#endif//WIN32
+
 struct linker_set domain_set;
 
 OSKITTCP_EVENT_HANDLERS OtcpEvent = { 0 };
@@ -74,15 +78,32 @@ void RegisterOskitTCPEventHandlers( POSKITTCP_EVENT_HANDLERS EventHandlers ) {
 				   OtcpEvent.PacketSend));
 }
 
-void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len ) {
-    unsigned int i;
-    
-    for( i = 0; i < Len; i++ ) {
-	if( i && !(i & 0xf) ) DbgPrint( "\n" );
-	if( !(i & 0xf) ) DbgPrint( "%08x: ", (OSK_UINT)(Data + i) );
-	DbgPrint( " %02x", Data[i] );
-    }
-    DbgPrint("\n");
+void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len )
+{
+	unsigned int i;
+	char line[81];
+	static const char* hex = "0123456789abcdef";
+
+	for ( i = 0; i < Len; i++ )
+	{
+		int align = i & 0xf;
+		int align3 = (align<<1) + align;
+		unsigned char c = Data[i];
+		if ( !align )
+		{
+			if ( i ) DbgPrint( line );
+			snprintf ( line, sizeof(line)-1, "%08x:                                                                  \n", Data );
+			line[sizeof(line)-1] = '\0';
+		}
+
+		line[10+align3] = hex[(c>>4)&0xf];
+		line[11+align3] = hex[c&0xf];
+		if ( !isprint(c) )
+			c = '.';
+		line[59+align] = c;
+	}
+	if ( Len & 0xf )
+		DbgPrint ( line );
 }
 
 /* From uipc_syscalls.c */
