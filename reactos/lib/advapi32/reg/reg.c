@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.59 2004/10/08 21:19:12 navaraf Exp $
+/* $Id: reg.c,v 1.60 2004/10/10 10:10:52 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2287,7 +2287,7 @@ RegQueryValueExW (HKEY hKey,
 
   RtlInitUnicodeString (&ValueName,
 			lpValueName);
-  BufferSize = sizeof (KEY_VALUE_PARTIAL_INFORMATION) + MaxCopy;
+  BufferSize = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) + MaxCopy;
   ValueInfo = RtlAllocateHeap (ProcessHeap,
 			       0,
 			       BufferSize);
@@ -2317,7 +2317,7 @@ RegQueryValueExW (HKEY hKey,
       MaxCopy = 0;
       if (lpcbData != NULL)
 	{
-	  ResultSize = sizeof(*ValueInfo) + *lpcbData;
+	  ResultSize = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) + *lpcbData;
 	}
     }
 
@@ -2344,7 +2344,7 @@ RegQueryValueExW (HKEY hKey,
 
       if (lpcbData != NULL)
 	{
-	  *lpcbData = (ResultSize - sizeof(*ValueInfo));
+	  *lpcbData = (ResultSize - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]));
 	  DPRINT("(string) Returning Size: %lu\n", *lpcbData);
 	}
     }
@@ -2352,7 +2352,7 @@ RegQueryValueExW (HKEY hKey,
     {
       if (lpcbData != NULL)
 	{
-	  *lpcbData = ResultSize - sizeof(*ValueInfo);
+	  *lpcbData = ResultSize - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]);
 	  DPRINT("(other) Returning Size: %lu\n", *lpcbData);
 	}
     }
