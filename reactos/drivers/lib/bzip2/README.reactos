@@ -1,8 +1,0 @@
-2001-10-16: Imported bzip2 code into reactos project to create a decompression
-library for use by the ramdisk driver to decompress the ramdisk image into mem
-Modified makefile and some source code to build a .dll with only the
-decompression code.  There are 3 exports: the decompression routine, and two
-function pointers that must be initialized to C malloc and free routines.  
-
- - Phillip Susi
-
