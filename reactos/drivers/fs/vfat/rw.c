@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.68 2004/08/05 02:48:18 navaraf Exp $
+/* $Id: rw.c,v 1.69 2004/08/31 20:02:24 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -301,7 +301,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
 
     ExAcquireFastMutex(&Fcb->LastMutex);
     Fcb->LastCluster = StartCluster + (ClusterCount - 1);
-    Fcb->LastOffset = ReadOffset.u.LowPart + (ClusterCount - 1) * BytesPerCluster;
+    Fcb->LastOffset = ROUND_DOWN(ReadOffset.u.LowPart, BytesPerCluster) + (ClusterCount - 1) * BytesPerCluster;
     ExReleaseFastMutex(&Fcb->LastMutex);
 
     // Fire up the read command
@@ -511,7 +511,7 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
 
       ExAcquireFastMutex(&Fcb->LastMutex);
       Fcb->LastCluster = StartCluster + (ClusterCount - 1);
-      Fcb->LastOffset = WriteOffset.u.LowPart + (ClusterCount - 1) * BytesPerCluster;
+      Fcb->LastOffset = ROUND_DOWN(WriteOffset.u.LowPart, BytesPerCluster) + (ClusterCount - 1) * BytesPerCluster;
       ExReleaseFastMutex(&Fcb->LastMutex);
 
       // Fire up the write command
