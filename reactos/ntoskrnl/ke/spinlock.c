@@ -195,9 +195,7 @@ KiAcquireSpinLock(PKSPIN_LOCK SpinLock)
 			  :
                           : "r" (SpinLock));
 #else	                  
-    while (0 != *(volatile PKSPIN_LOCK)SpinLock)
-    {
-    }
+    while (0 != *(volatile KSPIN_LOCK*)SpinLock);
 #endif
 #else
     DbgPrint("Spinning on spinlock %x current value %x\n", SpinLock, i);

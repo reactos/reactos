@@ -1613,11 +1613,15 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
         {
           PRTL_USER_PROCESS_PARAMETERS ProcParams = NULL;
           UNICODE_STRING LocalDest;
+          BOOLEAN Attached;
           ULONG ImagePathLen = 0;
           PUNICODE_STRING DstPath = (PUNICODE_STRING)ProcessInformation;
 
           /* we need to attach to the process to make sure we're in the right context! */
-          KeAttachProcess(&Process->Pcb);
+          Attached = Process != PsGetCurrentProcess();
+
+          if(Attached)
+            KeAttachProcess(&Process->Pcb);
           
           _SEH_TRY
           {
@@ -1677,7 +1681,8 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
                   _SEH_END;
 
                   /* detach from the process */
-                  KeDetachProcess();
+                  if(Attached)
+                    KeDetachProcess();
 
                   /* only copy the string back to the caller if we were able to
                      copy it into the temporary buffer! */
@@ -1715,7 +1720,8 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
           }
           
           /* don't forget to detach from the process!!! */
-          KeDetachProcess();
+          if(Attached)
+            KeDetachProcess();
         }
         else
         {
