@@ -11,7 +11,7 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <internal/bitops.h>
-#include <internal/hal/io.h>
+#include <internal/halio.h>
 
 #define NDEBUG
 #include <internal/debug.h>

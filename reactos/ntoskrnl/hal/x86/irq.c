@@ -27,7 +27,7 @@
 #include <internal/string.h>
 
 #include <internal/i386/segment.h>
-#include <internal/hal/io.h>
+#include <internal/halio.h>
 
 #define NDEBUG
 #include <internal/debug.h>

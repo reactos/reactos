@@ -7,7 +7,7 @@
 */
 
 #include <internal/mmhal.h>
-#include <internal/hal/io.h>
+#include <internal/halio.h>
 
 #define COM1    0x3F8
 #define COM2    0x2F8

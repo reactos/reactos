@@ -12,7 +12,7 @@
 
 /* FUNCTIONS **************************************************************/
 
-#include <internal/hal/io.h>
+#include <internal/halio.h>
 #include <ddk/ntddk.h>
 #include <internal/hal/ddk.h>
 #include <internal/dma.h>

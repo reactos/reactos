@@ -13,7 +13,7 @@
 
 #include <windows.h>
 #include <internal/kernel.h>
-#include <internal/hal/io.h>
+#include <internal/halio.h>
 #include <ddk/ntddk.h>
 #include <string.h>
 #include <internal/debug.h>

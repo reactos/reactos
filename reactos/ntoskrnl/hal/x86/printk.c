@@ -14,7 +14,7 @@
 #include <internal/ntoskrnl.h>
 #include <internal/string.h>
 #include <internal/mmhal.h>
-#include <internal/hal/io.h>
+#include <internal/halio.h>
 
 //#define BOCHS_DEBUGGING 1
 //#define SERIAL_DEBUGGING

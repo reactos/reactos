@@ -12,8 +12,8 @@
 */
 
 #include <internal/mmhal.h>
-#include <internal/hal/io.h>
-#include <internal/hal/ddk.h>
+#include <internal/halio.h>
+/* #include <internal/hal/ddk.h> */
 #include <funcs.h>
 
 #define MOUSE_IRQ_COM1  4
