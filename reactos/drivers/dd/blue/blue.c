@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.17 2000/01/07 18:57:33 ekohl Exp $
+/* $Id: blue.c,v 1.18 2000/01/09 23:16:41 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -21,17 +21,8 @@
 
 /* DEFINITIONS ***************************************************************/
 
-/* uncomment to use fixed screen dimensions */
-//#define BLUE_FIXEDSIZE
-
 #define IDMAP_BASE         0xd0000000
 #define VIDMEM_BASE        0xb8000
-
-#ifdef BLUE_FIXEDSIZE
-#define NR_ROWS            50
-#define NR_COLUMNS         80
-#define NR_SCANLINES       8
-#endif
 
 #define CRTC_COMMAND       ((PUCHAR)0x3d4)
 #define CRTC_DATA          ((PUCHAR)0x3d5)
@@ -134,12 +125,6 @@ ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
               DeviceExtension->Rows,
               DeviceExtension->ScanLines);
 
-#ifdef BLUE_FIXEDSIZE
-    DeviceExtension->ScanLines = NR_SCANLINES; /* FIXME: read it from CRTC */
-    DeviceExtension->Rows  = NR_ROWS; /* FIXME: read it from CRTC */
-    DeviceExtension->Columns = NR_COLUMNS; /* FIXME: read it from CRTC */
-#endif
-
     DeviceExtension->CursorSize    = 5; /* FIXME: value correct?? */
     DeviceExtension->CursorVisible = TRUE;
 
@@ -151,19 +136,11 @@ ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     /* show blinking cursor */
     __asm__("cli\n\t");
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORSTART);
-#ifdef BLUE_FIXEDSIZE
-    WRITE_PORT_UCHAR (CRTC_DATA, 0x47);
-#else
     WRITE_PORT_UCHAR (CRTC_DATA, (DeviceExtension->ScanLines - 1) & 0x1F);
-#endif
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSOREND);
-#ifdef BLUE_FIXEDSIZE
-    WRITE_PORT_UCHAR (CRTC_DATA, 0x07);
-#else
     data = READ_PORT_UCHAR (CRTC_DATA) & 0xE0;
     WRITE_PORT_UCHAR (CRTC_DATA,
                       data | ((DeviceExtension->ScanLines - 1) & 0x1F));
-#endif
     __asm__("sti\n\t");
 
     Status = STATUS_SUCCESS;
@@ -394,8 +371,6 @@ ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORSTART);
                 WRITE_PORT_UCHAR (CRTC_DATA, data);
                 WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSOREND);
-//                WRITE_PORT_UCHAR (CRTC_DATA, height - 1);
-
                 value = READ_PORT_UCHAR (CRTC_DATA) & 0xE0;
                 WRITE_PORT_UCHAR (CRTC_DATA, value | (height - 1));
 
