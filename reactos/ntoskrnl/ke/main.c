@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.190 2004/08/01 21:57:35 navaraf Exp $
+/* $Id: main.c,v 1.191 2004/08/07 03:41:31 sedwards Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -694,7 +694,7 @@ ExpInitializeExecutive(VOID)
 
   /* On the assumption that we can now access disks start up the debug
    * logger thread */
-  if ((KdDebuggerEnabled == TRUE) && (KdDebugState & KD_DEBUG_FILELOG))
+  if ((KdDebuggerEnabled == TRUE) && (KdDebugState & KD_DEBUG_BOOTLOG))
     {
       DebugLogInit2();
     }

@@ -1,4 +1,4 @@
-/* $Id: dlog.c,v 1.13 2004/03/11 21:50:23 dwelch Exp $
+/* $Id: dlog.c,v 1.14 2004/08/07 03:41:31 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -42,11 +42,11 @@ DebugLogDumpMessages(VOID)
   ULONG Offset;
   ULONG Length;
 
-  if (!(KdDebugState & KD_DEBUG_FILELOG))
+  if (!(KdDebugState & KD_DEBUG_BOOTLOG))
     {
       return;
     }
-  KdDebugState &= ~KD_DEBUG_FILELOG;
+  KdDebugState &= ~KD_DEBUG_BOOTLOG;
  
   Offset = (DebugLogEnd + 1) % DEBUGLOG_SIZE;
   do

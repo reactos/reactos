@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.25 2004/06/23 00:49:22 ion Exp $
+/* $Id: kd.h,v 1.26 2004/08/07 03:41:30 sedwards Exp $
  *
  * kernel debugger prototypes
  */
@@ -15,7 +15,7 @@
 #define KD_DEBUG_SCREEN		0x04
 #define KD_DEBUG_SERIAL		0x08
 #define KD_DEBUG_BOCHS		0x10
-#define KD_DEBUG_FILELOG	0x20
+#define KD_DEBUG_BOOTLOG	0x20
 #define KD_DEBUG_MDA            0x40
 #define KD_DEBUG_KDB            0x80
 #define KD_DEBUG_KDSERIAL       0x100

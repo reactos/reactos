@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.53 2004/08/01 21:57:35 navaraf Exp $
+/* $Id: kdebug.c,v 1.54 2004/08/07 03:41:31 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -153,11 +153,11 @@ KdInitSystem(ULONG Reserved,
 		      LogPortInfo.ComPort = Value;
 		    }
 		}
-	      else if (!_strnicmp(p2, "FILE", 4))
+	      else if (!_strnicmp(p2, "BOOTLOG", 4))
 		{
 		  p2 += 4;
 		  KdDebuggerEnabled = TRUE;
-		  KdDebugState |= KD_DEBUG_FILELOG;
+		  KdDebugState |= KD_DEBUG_BOOTLOG;
 		}
 	      else if (!_strnicmp(p2, "MDA", 3))
 		{
@@ -259,7 +259,7 @@ KdInitSystem(ULONG Reserved,
       if (KdDebugState & KD_DEBUG_SERIAL)
 	    KdPortInitializeEx(&LogPortInfo, 0, 0);
 
-      if (KdDebugState & KD_DEBUG_FILELOG)
+      if (KdDebugState & KD_DEBUG_BOOTLOG)
 	    DebugLogInit();
 
       if (KdDebugState & KD_DEBUG_MDA)
@@ -315,7 +315,7 @@ KdInit3(VOID)
 	    PrintString("\n   Serial debugging enabled. COM%ld %ld Baud\n\n",
 			LogPortInfo.ComPort, LogPortInfo.BaudRate);
 
-      if (KdDebugState & KD_DEBUG_FILELOG)
+      if (KdDebugState & KD_DEBUG_BOOTLOG)
 	    PrintString("\n   File log debugging enabled\n\n");
       if (KdDebugState & KD_DEBUG_MDA)
 	    PrintString("\n   MDA debugging enabled\n\n");
@@ -372,7 +372,7 @@ KdpPrintString(PANSI_STRING String)
 	if (KdDebugState & KD_DEBUG_BOCHS)
 		KdBochsDebugPrint(pch);
 
-	if (KdDebugState & KD_DEBUG_FILELOG)
+	if (KdDebugState & KD_DEBUG_BOOTLOG)
 		DebugLogWrite(pch);
 
 	if (KdDebugState & KD_DEBUG_MDA)
