@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ms2ps.cpp,v 1.2 2004/08/08 22:07:06 arty Exp $
+/* $Id: ms2ps.cpp,v 1.3 2004/08/21 19:49:22 arty Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS seh conversion tool
  * FILE:            tools/ms2ps/ms2ps.cpp
@@ -218,10 +218,12 @@ bool expand_input( sl_t &tok ) {
 	while( line[line.size()-1] == '\\' ) {
 	    getline_no_comments( cin, line );
 	    tok.push_back( line );
+	    tok.push_back( "\n" );
 	}
     } else {
 	new_tokens = snarf_tokens( line );
 	tok.splice( tok.end(), new_tokens );
+	tok.push_back( "\n" );
     }
     
     return out;
@@ -393,7 +395,7 @@ void handle_try( sl_t &container, sl_it try_kw, sl_it end ) {
 
 void print_tokens( sl_it begin, sl_it end ) {
     for( sl_it i = begin; i != end; i++ ) 
-	cout << /*"[" <<*/ *i << /*"]" <<*/ endl;
+	cout << /*"[" <<*/ *i << /*"]" <<*/ " ";
 }
 
 int main( int argc, char **argv ) {
