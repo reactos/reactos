@@ -19,6 +19,7 @@
 #define __INTERNAL_DEBUG
 
 #include <internal/ntoskrnl.h>
+#include <internal/dbg.h>
 #include <roscfg.h>
 
 #define UNIMPLEMENTED do {DbgPrint("%s at %s:%d is unimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0);
