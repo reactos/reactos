@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dialog.c,v 1.10 2003/07/26 14:55:35 rcampbell Exp $
+/* $Id: dialog.c,v 1.11 2003/07/26 18:38:52 rcampbell Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -1151,7 +1151,7 @@ CreateDialogIndirectParamA(
   DLGPROC lpDialogFunc,
   LPARAM lParamInit)
 {
-	return CreateDialogIndirectParamA( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit );
+	return DIALOG_CreateIndirect( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit, FALSE, FALSE );
 }
 
 
@@ -1188,7 +1188,7 @@ CreateDialogIndirectParamW(
   DLGPROC lpDialogFunc,
   LPARAM lParamInit)
 {
-  return CreateDialogIndirectParamW( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit );
+  	return DIALOG_CreateIndirect( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit, TRUE, FALSE );
 }
 
 
