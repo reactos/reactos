@@ -1,17 +1,11 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/timer.c
- * PURPOSE:         Handle timers
+ * PURPOSE:         Handle Kernel Timers (Kernel-part of Executive Timers)
  * 
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
- *                  Phillip Susi
- */
-
-/* NOTES ******************************************************************/
-/*
- * System time units are 100-nanosecond intervals
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) - Reimplemented some parts, fixed many bugs.
+ *                  David Welch (welch@mcmail.com) &  Phillip Susi - Original Implementation.
  */
 
 /* INCLUDES ***************************************************************/
@@ -21,451 +15,79 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-
 /* GLOBALS ****************************************************************/
 
-/*
- * Current time
- */
-#if defined(__GNUC__)
-LARGE_INTEGER SystemBootTime = (LARGE_INTEGER)0LL;
-#else
-LARGE_INTEGER SystemBootTime = { 0 };
-#endif
+LIST_ENTRY KiTimerListHead;
 
-CHAR KiTimerSystemAuditing = 0;
-
-/*
- * Number of timer interrupts since initialisation
- */
-volatile ULONGLONG KeTickCount = 0;
-volatile ULONG KiRawTicks = 0;
-
-/*
- * The increment in the system clock every timer tick (in system time units)
- * 
- * = (1/18.2)*10^9 
- * 
- * RJJ was 54945055
- */
-#define CLOCK_INCREMENT (100000)
-
-#ifdef  __GNUC__
-ULONG EXPORTED KeMaximumIncrement = 100000;
-ULONG EXPORTED KeMinimumIncrement = 100000;
-#else
-/* Microsoft-style declarations */
-EXPORTED ULONG KeMaximumIncrement = 100000;
-EXPORTED ULONG KeMinimumIncrement = 100000;
-#endif
-
-
-
-/*
- * PURPOSE: List of timers
- */
-static LIST_ENTRY AbsoluteTimerListHead;
-static LIST_ENTRY RelativeTimerListHead;
-static KSPIN_LOCK TimerListLock;
-static KDPC ExpireTimerDpc;
-
-/* must raise IRQL to PROFILE_LEVEL and grab spin lock there, to sync with ISR */
-
-#define MICROSECONDS_PER_TICK (10000)
-#define TICKS_TO_CALIBRATE (1)
-#define CALIBRATE_PERIOD (MICROSECONDS_PER_TICK * TICKS_TO_CALIBRATE)
 #define SYSTEM_TIME_UNITS_PER_MSEC (10000)
-
-static BOOLEAN TimerInitDone = FALSE;
 
 /* FUNCTIONS **************************************************************/
 
-
-NTSTATUS STDCALL
-NtQueryTimerResolution(OUT PULONG MinimumResolution,
-		       OUT PULONG MaximumResolution,
-		       OUT PULONG ActualResolution)
-{
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-
-NTSTATUS STDCALL
-NtSetTimerResolution(IN ULONG DesiredResolution,
-		     IN BOOLEAN SetResolution,
-		     OUT PULONG CurrentResolution)
-{
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-
-NTSTATUS STDCALL
-NtQueryPerformanceCounter(OUT PLARGE_INTEGER PerformanceCounter,
-			  OUT PLARGE_INTEGER PerformanceFrequency  OPTIONAL)
-{
-  LARGE_INTEGER PerfCounter;
-  LARGE_INTEGER PerfFrequency;
-  KPROCESSOR_MODE PreviousMode;
-  NTSTATUS Status = STATUS_SUCCESS;
-  
-  PreviousMode = ExGetPreviousMode();
-  
-  if(PreviousMode != KernelMode)
-  {
-    _SEH_TRY
-    {
-      ProbeForWrite(PerformanceCounter,
-                    sizeof(LARGE_INTEGER),
-                    sizeof(ULONG));
-      if(PerformanceFrequency != NULL)
-      {
-        ProbeForWrite(PerformanceFrequency,
-                      sizeof(LARGE_INTEGER),
-                      sizeof(ULONG));
-      }
-    }
-    _SEH_HANDLE
-    {
-      Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-    
-    if(!NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-  }
-
-  PerfCounter = KeQueryPerformanceCounter(&PerfFrequency);
-  
-  _SEH_TRY
-  {
-    *PerformanceCounter = PerfCounter;
-    if(PerformanceFrequency != NULL)
-    {
-      *PerformanceFrequency = PerfFrequency;
-    }
-  }
-  _SEH_HANDLE
-  {
-    Status = _SEH_GetExceptionCode();
-  }
-  _SEH_END;
-
-  return Status;
-}
-
-
-NTSTATUS STDCALL
-NtDelayExecution(IN BOOLEAN Alertable,
-		 IN PLARGE_INTEGER DelayInterval)
-{
-   KPROCESSOR_MODE PreviousMode;
-   LARGE_INTEGER SafeInterval;
-   
-   PreviousMode = ExGetPreviousMode();
-   
-   if(PreviousMode != KernelMode)
-   {
-     NTSTATUS Status = STATUS_SUCCESS;
-     
-     _SEH_TRY
-     {
-       ProbeForRead(DelayInterval,
-                    sizeof(LARGE_INTEGER),
-                    sizeof(ULONG));
-       /* make a copy on the kernel stack and let DelayInterval point to it so
-          we don't need to wrap KeDelayExecutionThread in SEH! */
-       SafeInterval = *DelayInterval;
-       DelayInterval = &SafeInterval;
-     }
-     _SEH_HANDLE
-     {
-       Status = _SEH_GetExceptionCode();
-     }
-     _SEH_END;
-     
-     if(!NT_SUCCESS(Status))
-     {
-       return Status;
-     }
-   }
-
-   return KeDelayExecutionThread(PreviousMode,
-                                 Alertable,
-                                 DelayInterval);
-}
-
+BOOLEAN STDCALL KiInsertTimer(PKTIMER Timer, LARGE_INTEGER DueTime);
+VOID STDCALL KiHandleExpiredTimer(PKTIMER Timer);
 
 /*
  * @implemented
- */
-NTSTATUS STDCALL
-KeDelayExecutionThread (KPROCESSOR_MODE	WaitMode,
-			BOOLEAN		Alertable,
-			PLARGE_INTEGER	Interval)
-/*
- * FUNCTION: Puts the current thread into an alertable or nonalertable 
- * wait state for a given internal
- * ARGUMENTS:
- *          WaitMode = Processor mode in which the caller is waiting
- *          Altertable = Specifies if the wait is alertable
- *          Interval = Specifies the interval to wait
- * RETURNS: Status
- */
-{
-   PKTHREAD Thread = KeGetCurrentThread();
-
-   KeSetTimer(&Thread->Timer, *Interval, NULL);
-   return (KeWaitForSingleObject(&Thread->Timer,
-				 (WaitMode == KernelMode) ? Executive : UserRequest, /* TMN: Was unconditionally Executive */
-				 WaitMode, /* TMN: Was UserMode */
-				 Alertable,
-				 NULL));
-}
-
-
-/*
- * @implemented
- */
-ULONG STDCALL
-KeQueryTimeIncrement(VOID)
-/*
- * FUNCTION: Gets the increment (in 100-nanosecond units) that is added to 
- * the system clock every time the clock interrupts
- * RETURNS: The increment
- */
-{
-  return(CLOCK_INCREMENT);
-}
-
-
-/*
- * FUNCTION: Gets the current system time
- * ARGUMENTS:
- *          CurrentTime (OUT) = The routine stores the current time here
- * NOTE: The time is the number of 100-nanosecond intervals since the
- * 1st of January, 1601.
  *
- * @implemented
- */
-VOID STDCALL
-KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
-{
-  do
-    {
-      CurrentTime->u.HighPart = SharedUserData->SystemTime.High1Time;
-      CurrentTime->u.LowPart = SharedUserData->SystemTime.LowPart;
-    }
-  while (CurrentTime->u.HighPart != SharedUserData->SystemTime.High2Time);
-}
-
-ULONGLONG STDCALL
-KeQueryInterruptTime(VOID)
-{
-  LARGE_INTEGER CurrentTime;
-
-  do
-    {
-      CurrentTime.u.HighPart = SharedUserData->InterruptTime.High1Time;
-      CurrentTime.u.LowPart = SharedUserData->InterruptTime.LowPart;
-    }
-  while (CurrentTime.u.HighPart != SharedUserData->InterruptTime.High2Time);
-
-  return CurrentTime.QuadPart;
-}
-
-/*
- * @implemented
- */
-ULONG
-STDCALL
-NtGetTickCount(VOID)
-{
-  LARGE_INTEGER TickCount;
-  KeQueryTickCount(&TickCount);
-  return TickCount.u.LowPart;
-}
-
-/*
- * @implemented
- */
-BOOLEAN STDCALL
-KeSetTimer (PKTIMER		Timer,
-	    LARGE_INTEGER	DueTime,
-	    PKDPC		Dpc)
-/*
- * FUNCTION: Sets the absolute or relative interval at which a timer object
- * is to be set to the signaled state and optionally supplies a 
- * CustomTimerDpc to be executed when the timer expires.
- * ARGUMENTS:
- *          Timer = Points to a previously initialized timer object
- *          DueTimer = If positive then absolute time to expire at
- *                     If negative then the relative time to expire at
- *          Dpc = If non-NULL then a dpc to be called when the timer expires
- * RETURNS: True if the timer was already in the system timer queue
- *          False otherwise
- */
-{
-   return(KeSetTimerEx(Timer, DueTime, 0, Dpc));
-}
-
-/*
- * @implemented
- */
-BOOLEAN STDCALL
-KeSetTimerEx (PKTIMER		Timer,
-	      LARGE_INTEGER	DueTime,
-	      LONG		Period,
-	      PKDPC		Dpc)
-/*
- * FUNCTION: Sets the absolute or relative interval at which a timer object
- * is to be set to the signaled state and optionally supplies a 
- * CustomTimerDpc to be executed when the timer expires.
- * ARGUMENTS:
- *          Timer = Points to a previously initialized timer object
- *          DueTimer = If positive then absolute time to expire at
- *                     If negative then the relative time to expire at
- *          Dpc = If non-NULL then a dpc to be called when the timer expires
- * RETURNS: True if the timer was already in the system timer queue
- *          False otherwise
- */
-{
-   KIRQL oldlvl;
-   LARGE_INTEGER Time;
-   BOOLEAN AlreadyInList;
-
-   DPRINT("KeSetTimerEx(Timer %x), DueTime: \n",Timer);
-
-   ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-
-   KeAcquireSpinLock(&TimerListLock, &oldlvl);
-
-   Timer->Dpc = Dpc;
-   if (DueTime.QuadPart < 0)
-     {
-        Timer->Header.Absolute = 0;
-	Timer->DueTime.QuadPart = KeQueryInterruptTime() - DueTime.QuadPart;
-     }
-   else
-     {
-        KeQuerySystemTime(&Time);
-        Timer->Header.Absolute = 1;
-	if (DueTime.QuadPart >= Time.QuadPart)
-	  {
-            Timer->DueTime.QuadPart = DueTime.QuadPart;
-	  }
-	else
-	  {
-	    Timer->DueTime.QuadPart = Time.QuadPart;
-	  }
-     }
-   Timer->Period = Period;
-   Timer->Header.SignalState = FALSE;
-   AlreadyInList = (Timer->TimerListEntry.Flink == NULL) ? FALSE : TRUE;
-   ASSERT((Timer->TimerListEntry.Flink == NULL && Timer->TimerListEntry.Blink == NULL) ||
-          (Timer->TimerListEntry.Flink != NULL && Timer->TimerListEntry.Blink != NULL));
-   if (AlreadyInList)
-     {
-       RemoveEntryList(&Timer->TimerListEntry);
-     }
-   if (Timer->Header.Absolute)
-     {
-       InsertAscendingList(&AbsoluteTimerListHead, 
-                           KTIMER,
-                           TimerListEntry, 
-                           Timer,
-                           DueTime.QuadPart);
-
-     }
-   else
-     {
-       InsertAscendingList(&RelativeTimerListHead, 
-                          KTIMER,
-                          TimerListEntry, 
-                          Timer, 
-                          DueTime.QuadPart);
-
-     }
-
-   KeReleaseSpinLock(&TimerListLock, oldlvl);
-
-   return AlreadyInList;
-}
-
-/*
- * @implemented
- */
-BOOLEAN STDCALL
-KeCancelTimer (PKTIMER	Timer)
-/*
  * FUNCTION: Removes a timer from the system timer list
  * ARGUMENTS:
  *       Timer = timer to cancel
  * RETURNS: True if the timer was running
  *          False otherwise
  */
+BOOLEAN 
+STDCALL
+KeCancelTimer(PKTIMER Timer)
 {
-   KIRQL oldlvl;
+    KIRQL OldIrql;
+    BOOLEAN Inserted = FALSE;
    
-   DPRINT("KeCancelTimer(Timer %x)\n",Timer);
+    DPRINT("KeCancelTimer(Timer %x)\n",Timer);
 
-   KeAcquireSpinLock(&TimerListLock, &oldlvl);
+    /* Lock the Database and Raise IRQL */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
 
-   if (Timer->TimerListEntry.Flink == NULL)
-     {
-	KeReleaseSpinLock(&TimerListLock, oldlvl);
-	return(FALSE);
-     }
-   if (Timer->Header.Absolute)
-     {
-       ASSERT(&Timer->TimerListEntry != &AbsoluteTimerListHead);
-     }
-   else
-     {
-       ASSERT(&Timer->TimerListEntry != &RelativeTimerListHead);
-     }
-   ASSERT(Timer->TimerListEntry.Flink != &Timer->TimerListEntry);
-   RemoveEntryList(&Timer->TimerListEntry);
-   Timer->TimerListEntry.Flink = Timer->TimerListEntry.Blink = NULL;
-   KeReleaseSpinLock(&TimerListLock, oldlvl);
+    /* Check if it's inserted, and remove it if it is */
+    if ((Inserted = Timer->Header.Inserted)) {
+        
+        /* Remove from list */
+        DPRINT("Timer was inserted, removing\n");
+        RemoveEntryList(&Timer->TimerListEntry);
+        Timer->Header.Inserted = FALSE;
+        
+    } else {
+    
+        DPRINT("Timer was not inserted\n");
+    }
 
-   return(TRUE);
+    /* Release Dispatcher Lock */
+    KeReleaseDispatcherDatabaseLock(OldIrql);
+
+    /* Return the old state */
+    DPRINT("Old State: %d\n", Inserted);
+    return(Inserted);
 }
 
 /*
  * @implemented
- */
-BOOLEAN STDCALL
-KeReadStateTimer (PKTIMER	Timer)
-{
-   return (BOOLEAN)(Timer->Header.SignalState);
-}
-
-/*
- * @implemented
- */
-VOID STDCALL
-KeInitializeTimer (PKTIMER	Timer)
-/*
+ *
  * FUNCTION: Initalizes a kernel timer object
  * ARGUMENTS:
  *          Timer = caller supplied storage for the timer
  * NOTE: This function initializes a notification timer
  */
+VOID 
+STDCALL
+KeInitializeTimer (PKTIMER Timer)
+
 {
-   KeInitializeTimerEx(Timer, NotificationTimer);
+    /* Call the New Function */
+    KeInitializeTimerEx(Timer, NotificationTimer);
 }
 
 /*
  * @implemented
- */
-VOID STDCALL
-KeInitializeTimerEx (PKTIMER		Timer,
-		     TIMER_TYPE	Type)
-/*
+ *
  * FUNCTION: Initializes a kernel timer object
  * ARGUMENTS:
  *          Timer = caller supplied storage for the timer
@@ -475,443 +97,288 @@ KeInitializeTimerEx (PKTIMER		Timer,
  * syncrhonization timer expires its state is set to signalled until a
  * single waiting thread is released and then the timer is reset.
  */
-{
-   ULONG IType;
-
-   if (Type == NotificationTimer)
-     {
-	IType = InternalNotificationTimer;
-     }
-   else if (Type == SynchronizationTimer)
-     {
-	IType = InternalSynchronizationTimer;
-     }
-   else
-     {
-	ASSERT(FALSE);
-	return;
-     }
-
-   KeInitializeDispatcherHeader(&Timer->Header,
-				IType,
-				sizeof(KTIMER) / sizeof(ULONG),
-				FALSE);
-   Timer->TimerListEntry.Flink = Timer->TimerListEntry.Blink = NULL;
-}
-
-/*
- * @implemented
- */
-VOID STDCALL
-KeQueryTickCount(PLARGE_INTEGER TickCount)
-/*
- * FUNCTION: Returns the number of ticks since the system was booted
- * ARGUMENTS:
- *         TickCount (OUT) = Points to storage for the number of ticks
- */
-{
-  TickCount->QuadPart = KeTickCount;
-}
-
-/*
- * @implemented
- */
-ULONG
+VOID 
 STDCALL
-KeQueryRuntimeThread(
-	IN PKTHREAD Thread,
-	OUT PULONG UserTime
-	)
+KeInitializeTimerEx (PKTIMER Timer,
+                     TIMER_TYPE Type)
 {
-	/* Return the User Time */
-	*UserTime = Thread->UserTime;
-	
-	/* Return the Kernel Time */
-	return Thread->KernelTime;
+
+    DPRINT("KeInitializeTimerEx(%x, %d)\n", Timer, Type);
+    
+    /* Initialize the Dispatch Header */
+    KeInitializeDispatcherHeader(&Timer->Header,
+                                 InternalNotificationTimer + Type,
+                                 sizeof(KTIMER) / sizeof(ULONG),
+                                 FALSE);
+   
+    /* Initalize the List Head and other data */
+    InitializeListHead(&Timer->Header.WaitListHead);
+    Timer->DueTime.QuadPart = 0;
+    Timer->Period = 0;
 }
+
 
 /*
  * @implemented
  */
+BOOLEAN 
+STDCALL
+KeReadStateTimer (PKTIMER Timer)
+{
+    /* Return the Signal State */
+    return (BOOLEAN)Timer->Header.SignalState;
+}
+
+/*
+ * @implemented
+ *
+ * FUNCTION: Sets the absolute or relative interval at which a timer object
+ * is to be set to the signaled state and optionally supplies a 
+ * CustomTimerDpc to be executed when the timer expires.
+ * ARGUMENTS:
+ *          Timer = Points to a previously initialized timer object
+ *          DueTimer = If positive then absolute time to expire at
+ *                     If negative then the relative time to expire at
+ *          Dpc = If non-NULL then a dpc to be called when the timer expires
+ * RETURNS: True if the timer was already in the system timer queue
+ *          False otherwise
+ */
+BOOLEAN 
+STDCALL
+KeSetTimer (PKTIMER Timer,
+            LARGE_INTEGER DueTime,
+            PKDPC Dpc)
+{
+    /* Call the newer function and supply a period of 0 */
+    return KeSetTimerEx(Timer, DueTime, 0, Dpc);
+}
+
+/*
+ * @implemented
+ *
+ * FUNCTION: Sets the absolute or relative interval at which a timer object
+ * is to be set to the signaled state and optionally supplies a 
+ * CustomTimerDpc to be executed when the timer expires.
+ * ARGUMENTS:
+ *          Timer = Points to a previously initialized timer object
+ *          DueTimer = If positive then absolute time to expire at
+ *                     If negative then the relative time to expire at
+ *          Dpc = If non-NULL then a dpc to be called when the timer expires
+ * RETURNS: True if the timer was already in the system timer queue
+ *          False otherwise
+ */
+BOOLEAN 
+STDCALL
+KeSetTimerEx (PKTIMER Timer,
+              LARGE_INTEGER DueTime,
+              LONG Period,
+              PKDPC Dpc)
+{
+    KIRQL OldIrql;
+    BOOLEAN Inserted;
+
+    DPRINT("KeSetTimerEx(Timer %x, DueTime %I64d, Period %d, Dpc %x)\n", Timer, DueTime.QuadPart, Period, Dpc);
+    ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+
+    /* Lock the Database and Raise IRQL */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
+
+    /* Check if it's inserted, and remove it if it is */
+    if ((Inserted = Timer->Header.Inserted)) {
+        
+        /* Remove from list */
+        DPRINT("Timer was already inserted\n");
+        RemoveEntryList(&Timer->TimerListEntry);
+        Timer->Header.Inserted = FALSE;        
+    }
+    
+    /* Set Default Timer Data */ 
+    Timer->Dpc = Dpc;
+    Timer->Period = Period;
+    Timer->Header.SignalState = FALSE;
+    Timer->Header.Absolute = FALSE;
+    
+    /* Insert it */
+    if (!KiInsertTimer(Timer, DueTime)) {
+    
+        /* FIXME: I will think about how to handle this and fix it ASAP -- Alex */
+        DPRINT1("CRITICAL UNHANDLED CASE: TIMER ALREADY EXPIRED!!!\n");
+    };
+
+    /* Release Dispatcher Lock */
+    KeReleaseDispatcherDatabaseLock(OldIrql);
+
+    /* Return old state */
+    DPRINT("Old State: %d\n", Inserted);
+    return Inserted;
+}
+
 VOID
 STDCALL
-KeSetTimeIncrement(
-    IN ULONG MaxIncrement,
-    IN ULONG MinIncrement
-)
+KiExpireTimers(PKDPC Dpc,
+               PVOID DeferredContext,
+               PVOID SystemArgument1,
+               PVOID SystemArgument2)
 {
-	/* Set some Internal Variables */
-	/* FIXME: We use a harcoded CLOCK_INCREMENT. That *must* be changed */
-	KeMaximumIncrement = MaxIncrement;
-	KeMinimumIncrement = MinIncrement;
+    ULONG Eip = (ULONG)SystemArgument1;
+    PKTIMER Timer = NULL;
+    ULONGLONG InterruptTime;
+    LIST_ENTRY ExpiredTimerList;
+    PLIST_ENTRY CurrentEntry = NULL;
+    KIRQL OldIrql;
+
+    DPRINT("KiExpireTimers(Dpc: %x)\n", Dpc);
+
+    /* Lock the Database and Raise IRQL */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
+
+    /* Initialize the Expired Timer List */    
+    InitializeListHead(&ExpiredTimerList);
+    
+    /* Query Interrupt Times */ 
+    InterruptTime = KeQueryInterruptTime();
+
+    /* Loop through the Timer List and remove Expired Timers. Insert them into the Expired Listhead */
+    for (CurrentEntry = KiTimerListHead.Flink; CurrentEntry != &KiTimerListHead; CurrentEntry = CurrentEntry->Flink) {
+    
+        /* Get the Current Timer */
+        Timer = CONTAINING_RECORD(CurrentEntry, KTIMER, TimerListEntry);
+        DPRINT("Looping for Timer: %x. Duetime: %I64d. InterruptTime %I64d \n", Timer, Timer->DueTime.QuadPart, InterruptTime);
+        
+        /* Check if we have to Expire it */
+        if (InterruptTime < Timer->DueTime.QuadPart) break;
+       
+        /* Remove it from the Timer List, add it to the Expired List */
+        RemoveEntryList(&Timer->TimerListEntry);
+        InsertTailList(&ExpiredTimerList, &Timer->TimerListEntry);
+    }
+    
+    /* Expire the Timers */
+    while (!IsListEmpty(&ExpiredTimerList)) {
+        
+        /* Get the Next Entry */
+        CurrentEntry = RemoveHeadList(&ExpiredTimerList);
+        
+        /* Get the Timer */
+        Timer = CONTAINING_RECORD(CurrentEntry, KTIMER, TimerListEntry);
+        DPRINT("Expiring Timer: %x\n", Timer);
+        
+        /* Expire it */
+        KiHandleExpiredTimer(Timer);
+    }
+
+    DPRINT("Timers expired\n");
+    /* Add a Profile Event */
+    KiAddProfileEvent(ProfileTime, Eip);
+
+    /* Release Dispatcher Lock */
+    KeReleaseDispatcherDatabaseLock(OldIrql);
 }
 
 /*
  * We enter this function at IRQL DISPATCH_LEVEL, and with the
- * TimerListLock held.
- */
-STATIC VOID 
-HandleExpiredTimer(PKTIMER Timer)
-{
-   DPRINT("HandleExpiredTime(Timer %x)\n", Timer);
-   if (Timer->Dpc != NULL)
-     {
-	DPRINT("Timer->Dpc %x Timer->Dpc->DeferredRoutine %x\n",
-	       Timer->Dpc, Timer->Dpc->DeferredRoutine);
-	KeInsertQueueDpc(Timer->Dpc,
-			 NULL,
-			 NULL);
-	DPRINT("Finished dpc routine\n");
-     }
-
-   ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
-
-   KeAcquireDispatcherDatabaseLockAtDpcLevel();
-   Timer->Header.SignalState = TRUE;
-   KiDispatcherObjectWake(&Timer->Header, 0);
-   KeReleaseDispatcherDatabaseLockFromDpcLevel();
-
-   if (Timer->Period != 0)
-     {
-       Timer->DueTime.QuadPart += 
-	 Timer->Period * SYSTEM_TIME_UNITS_PER_MSEC;
-       if (Timer->Header.Absolute)
-         {
-           InsertAscendingList(&AbsoluteTimerListHead, 
-                               KTIMER,
-                               TimerListEntry,
-                               Timer, 
-	                             DueTime.QuadPart);
-         }
-       else
-         {
-           InsertAscendingList(&RelativeTimerListHead, 
-                               KTIMER,
-                               TimerListEntry, 
-                               Timer,
-	                             DueTime.QuadPart);
-         }
-     }
-}
-
-VOID STDCALL
-KeExpireTimers(PKDPC Dpc,
-	       PVOID Context1,
-	       PVOID Arg1,
-	       PVOID Arg2)
-{
-   PLIST_ENTRY current_entry = NULL;
-   PKTIMER current = NULL;
-   ULONG Eip = (ULONG)Arg1;
-   LARGE_INTEGER InterruptTime;
-   LARGE_INTEGER SystemTime;
-   LIST_ENTRY TimerList;
-
-   DPRINT("KeExpireTimers()\n");
-
-   ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
-
-   InitializeListHead(&TimerList);
-
-   KeAcquireSpinLockAtDpcLevel(&TimerListLock);
-
-   InterruptTime.QuadPart = KeQueryInterruptTime();
-   KeQuerySystemTime(&SystemTime);
-
-   current_entry = RelativeTimerListHead.Flink;
-   ASSERT(current_entry);
-   while (current_entry != &RelativeTimerListHead)
-     {
-       current = CONTAINING_RECORD(current_entry, KTIMER, TimerListEntry);
-       ASSERT(current);
-       ASSERT(current_entry != &RelativeTimerListHead);
-       ASSERT(current_entry->Flink != current_entry);
-       if ((ULONGLONG)InterruptTime.QuadPart < current->DueTime.QuadPart)
-         {
-	   break;
-	 }
-       current_entry = current_entry->Flink;
-       RemoveEntryList(&current->TimerListEntry);
-       InsertTailList(&TimerList, &current->TimerListEntry);
-     }
-
-   current_entry = AbsoluteTimerListHead.Flink;
-   ASSERT(current_entry);
-   while (current_entry != &AbsoluteTimerListHead)
-     {
-       current = CONTAINING_RECORD(current_entry, KTIMER, TimerListEntry);
-       ASSERT(current);
-       ASSERT(current_entry != &AbsoluteTimerListHead);
-       ASSERT(current_entry->Flink != current_entry);
-       if ((ULONGLONG)SystemTime.QuadPart < current->DueTime.QuadPart)
-         {
-	   break;
-	 }
-       current_entry = current_entry->Flink;
-       RemoveEntryList(&current->TimerListEntry);
-       InsertTailList(&TimerList, &current->TimerListEntry);
-     }
-
-   while (!IsListEmpty(&TimerList))
-     {
-       current_entry = RemoveHeadList(&TimerList);
-       current = CONTAINING_RECORD(current_entry, KTIMER, TimerListEntry);
-       current->TimerListEntry.Flink = current->TimerListEntry.Blink = NULL;
-       HandleExpiredTimer(current);
-     }
-
-   KiAddProfileEvent(ProfileTime, Eip);
-
-   KeReleaseSpinLockFromDpcLevel(&TimerListLock);
-}
-
-
-VOID INIT_FUNCTION
-KeInitializeTimerImpl(VOID)
-/*
- * FUNCTION: Initializes timer irq handling
- * NOTE: This is only called once from main()
- */
-{
-   TIME_FIELDS TimeFields;
-
-   DPRINT("KeInitializeTimerImpl()\n");
-   InitializeListHead(&AbsoluteTimerListHead);
-   InitializeListHead(&RelativeTimerListHead);
-   KeInitializeSpinLock(&TimerListLock);
-   KeInitializeDpc(&ExpireTimerDpc, KeExpireTimers, 0);
-   /*
-    * Calculate the starting time for the system clock
-    */
-   HalQueryRealTimeClock(&TimeFields);
-   RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
-
-   SharedUserData->TickCountLowDeprecated = 0;
-   SharedUserData->TickCountMultiplier = 167783691; // 2^24 * 1193182 / 119310
-   SharedUserData->InterruptTime.High2Time = 0;
-   SharedUserData->InterruptTime.LowPart = 0;
-   SharedUserData->InterruptTime.High1Time = 0;
-   SharedUserData->SystemTime.High2Time = SystemBootTime.u.HighPart;
-   SharedUserData->SystemTime.LowPart = SystemBootTime.u.LowPart;
-   SharedUserData->SystemTime.High1Time = SystemBootTime.u.HighPart;
-
-   TimerInitDone = TRUE;
-   DPRINT("Finished KeInitializeTimerImpl()\n");
-}
-
-/*
- * @unimplemented
- */
-VOID
-FASTCALL
-KeSetTimeUpdateNotifyRoutine(
-    IN PTIME_UPDATE_NOTIFY_ROUTINE NotifyRoutine
-    )
-{
-	UNIMPLEMENTED;
-}
-
-
-/*
- * NOTE: On Windows this function takes exactly one parameter and EBP is
- *       guaranteed to point to KTRAP_FRAME. The function is used only
- *       by HAL, so there's no point in keeping that prototype.
- *
- * @implemented
- */
-VOID
-STDCALL
-KeUpdateRunTime(
-    IN PKTRAP_FRAME  TrapFrame,
-    IN KIRQL  Irql
-    )
-{
-   PKPCR Pcr;
-   PKTHREAD CurrentThread;
-   PKPROCESS CurrentProcess;
-#if 0
-   ULONG DpcLastCount;
-#endif
-
-   Pcr = KeGetCurrentKPCR();
-
-   /* Make sure we don't go further if we're in early boot phase. */
-   if (Pcr == NULL || Pcr->PrcbData.CurrentThread == NULL)
-      return;
-
-   DPRINT("KernelTime  %u, UserTime %u \n", Pcr->PrcbData.KernelTime, Pcr->PrcbData.UserTime);
-
-   CurrentThread = Pcr->PrcbData.CurrentThread;
-   CurrentProcess = CurrentThread->ApcState.Process;
-
-   /* 
-    * Cs bit 0 is always set for user mode if we are in protected mode.
-    * V86 mode is counted as user time.
-    */
-   if (TrapFrame->Cs & 0x1 ||
-       TrapFrame->Eflags & X86_EFLAGS_VM)
-   {
-      InterlockedIncrementUL(&CurrentThread->UserTime);
-      InterlockedIncrementUL(&CurrentProcess->UserTime);
-      Pcr->PrcbData.UserTime++;
-   }
-   else
-   {
-      if (Irql > DISPATCH_LEVEL)
-      {
-         Pcr->PrcbData.InterruptTime++;
-      }
-      else if (Irql == DISPATCH_LEVEL)
-      {
-         Pcr->PrcbData.DpcTime++;
-      }
-      else
-      {
-         InterlockedIncrementUL(&CurrentThread->KernelTime);
-         InterlockedIncrementUL(&CurrentProcess->KernelTime);
-	 Pcr->PrcbData.KernelTime++;
-      }
-   }
-
-#if 0
-   DpcLastCount = Pcr->PrcbData.DpcLastCount;
-   Pcr->PrcbData.DpcLastCount = Pcr->PrcbData.DpcCount;
-   Pcr->PrcbData.DpcRequestRate = ((Pcr->PrcbData.DpcCount - DpcLastCount) +
-                                   Pcr->PrcbData.DpcRequestRate) / 2;
-#endif
-
-   if (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0 &&
-       Pcr->PrcbData.DpcRoutineActive == FALSE &&
-       Pcr->PrcbData.DpcInterruptRequested == FALSE)
-   {
-      HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-   }
-
-   /* FIXME: Do DPC rate adjustments */
-
-   /*
-    * If we're at end of quantum request software interrupt. The rest
-    * is handled in KiDispatchInterrupt.
-    */
-   if ((CurrentThread->Quantum -= 3) <= 0)
-   {
-     Pcr->PrcbData.QuantumEnd = TRUE;
-     HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-   }
-}
-
-
-/*
- * NOTE: On Windows this function takes exactly zero parameters and EBP is
- *       guaranteed to point to KTRAP_FRAME. Also [esp+0] contains an IRQL.
- *       The function is used only by HAL, so there's no point in keeping
- *       that prototype.
- *
- * @implemented
+ * Dispatcher Lock held!
  */
 VOID 
 STDCALL
-KeUpdateSystemTime(
-    IN PKTRAP_FRAME  TrapFrame,
-    IN KIRQL  Irql
-    )
+KiHandleExpiredTimer(PKTIMER Timer)
+{
+
+    LARGE_INTEGER DueTime;
+    DPRINT("HandleExpiredTime(Timer %x)\n", Timer);
+    
+    /* First of all, remove the Timer */
+    Timer->Header.Inserted = FALSE;
+    RemoveEntryList(&Timer->TimerListEntry);
+    
+    /* Set it as Signaled */
+    DPRINT("Setting Timer as Signaled\n");
+    Timer->Header.SignalState = TRUE;
+    KiDispatcherObjectWake(&Timer->Header, 0);   
+
+    /* If the Timer is periodic, reinsert the timer with the new due time */
+    if (Timer->Period) {
+        
+        /* Reinsert the Timer */
+        DueTime.QuadPart = Timer->Period * -SYSTEM_TIME_UNITS_PER_MSEC;
+        if (!KiInsertTimer(Timer, DueTime)) {
+        
+            /* FIXME: I will think about how to handle this and fix it ASAP -- Alex */
+            DPRINT1("CRITICAL UNHANDLED CASE: TIMER ALREADY EXPIRED!!!\n");
+        };
+    }
+    
+    /* Check if the Timer has a DPC */
+    if (Timer->Dpc) {
+
+        DPRINT("Timer->Dpc %x Timer->Dpc->DeferredRoutine %x\n", Timer->Dpc, Timer->Dpc->DeferredRoutine);
+        
+        /* Insert the DPC */
+        KeInsertQueueDpc(Timer->Dpc,
+                         NULL,
+                         NULL);
+        
+        DPRINT("Finished dpc routine\n");
+    }
+}
+
 /*
- * FUNCTION: Handles a timer interrupt
+ * Note: This function is called with the Dispatcher Lock held.
  */
+BOOLEAN
+STDCALL
+KiInsertTimer(PKTIMER Timer,
+              LARGE_INTEGER DueTime)
 {
-   LARGE_INTEGER Time;
-
-   ASSERT(KeGetCurrentIrql() == PROFILE_LEVEL);
-
-   KiRawTicks++;
-   
-   if (TimerInitDone == FALSE)
-     {
-	return;
-     }
-   /*
-    * Increment the number of timers ticks 
-    */
-   KeTickCount++;
-   SharedUserData->TickCountLowDeprecated++;
-
-   Time.u.LowPart = SharedUserData->InterruptTime.LowPart;
-   Time.u.HighPart = SharedUserData->InterruptTime.High1Time;
-   Time.QuadPart += CLOCK_INCREMENT;
-   SharedUserData->InterruptTime.High2Time = Time.u.HighPart;
-   SharedUserData->InterruptTime.LowPart = Time.u.LowPart;
-   SharedUserData->InterruptTime.High1Time = Time.u.HighPart;
-
-   Time.u.LowPart = SharedUserData->SystemTime.LowPart;
-   Time.u.HighPart = SharedUserData->SystemTime.High1Time;
-   Time.QuadPart += CLOCK_INCREMENT;
-   SharedUserData->SystemTime.High2Time = Time.u.HighPart;
-   SharedUserData->SystemTime.LowPart = Time.u.LowPart;
-   SharedUserData->SystemTime.High1Time = Time.u.HighPart;
-
-   /* FIXME: Here we should check for remote debugger break-ins */
-
-   /* Update process and thread times */
-   KeUpdateRunTime(TrapFrame, Irql);
-
-   /*
-    * Queue a DPC that will expire timers
-    */
-   KeInsertQueueDpc(&ExpireTimerDpc, (PVOID)TrapFrame->Eip, 0);
-}
-
-
-VOID
-KiSetSystemTime(PLARGE_INTEGER NewSystemTime)
-{
-  LARGE_INTEGER OldSystemTime;
-  LARGE_INTEGER DeltaTime;
-  KIRQL OldIrql;
-  PLIST_ENTRY current_entry = NULL;
-  PKTIMER current = NULL;
-
-  ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-
-  OldIrql = KeAcquireDispatcherDatabaseLock();
-
-  do
-    {
-      OldSystemTime.u.HighPart = SharedUserData->SystemTime.High1Time;
-      OldSystemTime.u.LowPart = SharedUserData->SystemTime.LowPart;
+    LARGE_INTEGER SystemTime;
+    LARGE_INTEGER DifferenceTime;
+    ULONGLONG InterruptTime;
+    
+    DPRINT("KiInsertTimer(Timer %x DueTime %I64d)\n", Timer, DueTime.QuadPart);
+    
+    /* Set it as Inserted */
+    Timer->Header.Inserted = TRUE;
+    
+    /* Convert to relative time if needed */
+    if (DueTime.u.HighPart >= 0) {
+        
+        /* Get System Time */
+        KeQuerySystemTime(&SystemTime);
+        
+        /* Do the conversion */
+        DifferenceTime.QuadPart = SystemTime.QuadPart - DueTime.QuadPart;
+        DPRINT("Time Difference is: %I64d\n", DifferenceTime.QuadPart);
+        
+        /* Make sure it hasn't already expired */
+        if (DifferenceTime.u.HighPart >= 0) {
+        
+            /* Cancel everything */
+            DPRINT("Timer already expired: %d\n", DifferenceTime.u.HighPart);
+            Timer->Header.SignalState = TRUE;
+            Timer->Header.Inserted = FALSE;
+            return FALSE;
+        }
+        
+        /* Set the time as Absolute */
+        Timer->Header.Absolute = TRUE;
+        DueTime = DifferenceTime;
     }
-  while (OldSystemTime.u.HighPart != SharedUserData->SystemTime.High2Time);
-
-  /* Set the new system time */
-  SharedUserData->SystemTime.LowPart = NewSystemTime->u.LowPart;
-  SharedUserData->SystemTime.High1Time = NewSystemTime->u.HighPart;
-  SharedUserData->SystemTime.High2Time = NewSystemTime->u.HighPart;
-
-  /* Calculate the difference between the new and the old time */
-  DeltaTime.QuadPart = NewSystemTime->QuadPart - OldSystemTime.QuadPart;
-
-  /* Update system boot time */
-  SystemBootTime.QuadPart += DeltaTime.QuadPart;
-
-  /* Update all relative timers */
-  current_entry = RelativeTimerListHead.Flink;
-  ASSERT(current_entry);
-  while (current_entry != &RelativeTimerListHead)
-    {
-      current = CONTAINING_RECORD(current_entry, KTIMER, TimerListEntry);
-      ASSERT(current);
-      ASSERT(current_entry != &RelativeTimerListHead);
-      ASSERT(current_entry->Flink != current_entry);
-
-      current->DueTime.QuadPart += DeltaTime.QuadPart;
-
-      current_entry = current_entry->Flink;
-    }
-
-  KeReleaseDispatcherDatabaseLock(OldIrql);
-
-  /*
-   * NOTE: Expired timers will be processed at the next clock tick!
-   */
+    
+    /* Get the Interrupt Time */
+    InterruptTime = KeQueryInterruptTime();
+    
+    /* Set the Final Due Time */
+    Timer->DueTime.QuadPart = InterruptTime - DueTime.QuadPart;
+    DPRINT("Final Due Time is: %I64d\n", Timer->DueTime.QuadPart);
+    
+    /* Now insert it into the Timer List */    
+    DPRINT("Inserting Timer into list\n");
+    InsertAscendingList(&KiTimerListHead, 
+                        KTIMER,
+                        TimerListEntry, 
+                        Timer,
+                        DueTime.QuadPart);
+    
+    return TRUE;
 }
-
 /* EOF */

@@ -284,3 +284,59 @@ KeSetProfileIrql(
 {
 	UNIMPLEMENTED;
 }
+
+NTSTATUS STDCALL
+NtQueryPerformanceCounter(OUT PLARGE_INTEGER PerformanceCounter,
+			  OUT PLARGE_INTEGER PerformanceFrequency  OPTIONAL)
+{
+  LARGE_INTEGER PerfCounter;
+  LARGE_INTEGER PerfFrequency;
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+  PreviousMode = ExGetPreviousMode();
+  
+  if(PreviousMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(PerformanceCounter,
+                    sizeof(LARGE_INTEGER),
+                    sizeof(ULONG));
+      if(PerformanceFrequency != NULL)
+      {
+        ProbeForWrite(PerformanceFrequency,
+                      sizeof(LARGE_INTEGER),
+                      sizeof(ULONG));
+      }
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
+
+  PerfCounter = KeQueryPerformanceCounter(&PerfFrequency);
+  
+  _SEH_TRY
+  {
+    *PerformanceCounter = PerfCounter;
+    if(PerformanceFrequency != NULL)
+    {
+      *PerformanceFrequency = PerfFrequency;
+    }
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+
+  return Status;
+}

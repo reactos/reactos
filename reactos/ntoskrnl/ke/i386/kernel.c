@@ -341,7 +341,7 @@ KeInit2(VOID)
 
    KeInitializeBugCheck();
    KeInitializeDispatcher();
-   KeInitializeTimerImpl();
+   KiInitializeSystemClock();
 
    if (Pcr->PrcbData.FeatureBits & X86_FEATURE_PAE)
    {

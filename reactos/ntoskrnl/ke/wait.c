@@ -397,6 +397,32 @@ BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr, KPRIORITY increment)
    return(FALSE);
 }
 
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+KeDelayExecutionThread (KPROCESSOR_MODE	WaitMode,
+			BOOLEAN		Alertable,
+			PLARGE_INTEGER	Interval)
+/*
+ * FUNCTION: Puts the current thread into an alertable or nonalertable 
+ * wait state for a given internal
+ * ARGUMENTS:
+ *          WaitMode = Processor mode in which the caller is waiting
+ *          Altertable = Specifies if the wait is alertable
+ *          Interval = Specifies the interval to wait
+ * RETURNS: Status
+ */
+{
+   PKTHREAD Thread = KeGetCurrentThread();
+
+   KeSetTimer(&Thread->Timer, *Interval, NULL);
+   return (KeWaitForSingleObject(&Thread->Timer,
+				 (WaitMode == KernelMode) ? Executive : UserRequest, /* TMN: Was unconditionally Executive */
+				 WaitMode, /* TMN: Was UserMode */
+				 Alertable,
+				 NULL));
+}
 
 /*
  * @implemented
@@ -585,12 +611,12 @@ KeWaitForMultipleObjects(ULONG Count,
             {
                Abandoned = KiSideEffectsBeforeWake(hdr, CurrentThread) ? TRUE : Abandoned;
 
+               KeReleaseDispatcherDatabaseLock(OldIrql);               
+               
                if (Timeout != NULL && Timeout->QuadPart != 0)
                {
                   KeCancelTimer(&CurrentThread->Timer);
                }
-
-               KeReleaseDispatcherDatabaseLock(OldIrql);
 
                DPRINT("One object is (already) signaled!\n");
                if (Abandoned == TRUE)
@@ -612,12 +638,13 @@ KeWaitForMultipleObjects(ULONG Count,
             Abandoned = KiSideEffectsBeforeWake(hdr, CurrentThread) ? TRUE : Abandoned;
          }
 
+         KeReleaseDispatcherDatabaseLock(OldIrql);
+         
          if (Timeout != NULL && Timeout->QuadPart != 0)
          {
             KeCancelTimer(&CurrentThread->Timer);
          }
 
-         KeReleaseDispatcherDatabaseLock(OldIrql);
          DPRINT("All objects are (already) signaled!\n");
 
          if (Abandoned == TRUE)
@@ -641,8 +668,8 @@ KeWaitForMultipleObjects(ULONG Count,
       if (Timeout != NULL && KiIsObjectSignalled(&CurrentThread->Timer.Header, CurrentThread))
       {
          KiSideEffectsBeforeWake(&CurrentThread->Timer.Header, CurrentThread);
-         KeCancelTimer(&CurrentThread->Timer);
          KeReleaseDispatcherDatabaseLock(OldIrql);
+         KeCancelTimer(&CurrentThread->Timer);
          return (STATUS_TIMEOUT);
       }
 
