@@ -1117,12 +1117,15 @@ typedef struct _MAPPING_PAIR
 	ULONGLONG	Lcn;
 } MAPPING_PAIR, *PMAPPING_PAIR;
 
+/* Must match RETRIEVAL_POINTERS_BUFFER (ntifs.h) */
+#include <pshpack4.h>
 typedef struct _GET_RETRIEVAL_DESCRIPTOR
 {
 	ULONG		NumberOfPairs;
 	ULONGLONG	StartVcn;
 	MAPPING_PAIR	Pair[0]; // variable size 
 } GET_RETRIEVAL_DESCRIPTOR, *PGET_RETRIEVAL_DESCRIPTOR;
+#include <poppack.h>
 
 typedef struct _MOVEFILE_DESCRIPTOR
 {
