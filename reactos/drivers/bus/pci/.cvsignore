@@ -1,1 +1,4 @@
 pci.coff
+*.d
+*.o
+*.sym

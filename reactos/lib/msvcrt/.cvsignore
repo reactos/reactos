@@ -1,3 +1,6 @@
 msvcrt.coff
 msvcrt.dll
 msvcrt.nostrip.dll
+*.d
+*.o
+*.sym

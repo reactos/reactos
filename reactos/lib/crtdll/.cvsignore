@@ -1,3 +1,6 @@
 crtdll.coff
 crtdll.dll
 crtdll.nostrip.dll
+*.d
+*.o
+*.sym

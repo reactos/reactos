@@ -3,3 +3,6 @@ junk.tmp
 temp.exp
 win32k.coff
 win32k.sys
+*.d
+*.o
+*.sym

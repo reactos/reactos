@@ -1,1 +1,4 @@
 smss.coff
+*.d
+*.o
+*.sym

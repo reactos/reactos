@@ -1,2 +1,4 @@
 svctab.c
 *.d
+*.o
+*.sym

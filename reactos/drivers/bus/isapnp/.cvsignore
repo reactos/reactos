@@ -3,3 +3,6 @@ junk.tmp
 temp.exp
 isapnp.coff
 isapnp.sys.unstripped
+*.d
+*.o
+*.sym

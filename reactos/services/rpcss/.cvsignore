@@ -1,1 +1,4 @@
 rpcss.coff
+*.d
+*.o
+*.sym

@@ -1,1 +1,4 @@
 csrss.coff
+*.d
+*.o
+*.sym

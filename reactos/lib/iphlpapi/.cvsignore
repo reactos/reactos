@@ -1,5 +1,10 @@
-dist
-reactos
+iphlpapi.a
+iphlpapi.dll
+iphlpapi.nostrip.dll
+iphlpapi.coff
+base.tmp
+junk.tmp
+temp.exp
 *.sys
 *.exe
 *.dll
