@@ -821,7 +821,7 @@ DriverEntry(
   LANStartup();
 
   /* Initialize network level protocol subsystem */
-  IPStartup(DriverObject, RegistryPath);
+  IPStartup(RegistryPath);
 
   /* Initialize transport level protocol subsystems */
   DGStartup();

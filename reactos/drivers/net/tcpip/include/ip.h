@@ -252,12 +252,9 @@ VOID IPRegisterProtocol(
     UINT ProtocolNumber,
     IP_PROTOCOL_HANDLER Handler);
 
-NTSTATUS IPStartup(
-    PDRIVER_OBJECT DriverObject,
-    PUNICODE_STRING RegistryPath);
+NTSTATUS IPStartup(PUNICODE_STRING RegistryPath);
 
-NTSTATUS IPShutdown(
-    VOID);
+NTSTATUS IPShutdown(VOID);
 
 
 
