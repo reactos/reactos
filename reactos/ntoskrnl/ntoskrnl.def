@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.25 1999/11/15 15:56:16 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.26 1999/11/20 21:44:34 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -191,6 +191,7 @@ RtlCopyMemory
 RtlCopyString@8
 RtlCopyUnicodeString@8
 RtlCreateUnicodeString@8
+RtlDowncaseUnicodeString@12
 RtlEnlargedIntegerMultiply
 RtlEnlargedUnsignedDivide
 RtlEnlargedUnsignedMultiply
@@ -208,6 +209,7 @@ RtlGetDefaultCodePage@8
 RtlInitAnsiString@8
 RtlInitString@8
 RtlInitUnicodeString@8
+RtlIntegerToChar@16
 RtlIntegerToUnicodeString@12
 RtlLargeIntegerAdd
 RtlLargeIntegerArithmeticShift
@@ -236,8 +238,13 @@ RtlUnicodeStringToOemString@12
 RtlUnicodeToMultiByteN@20
 RtlUnicodeToMultiByteSize@12
 RtlUnicodeToOemN@20
+RtlUpcaseUnicodeChar@4
 RtlUpcaseUnicodeString@12
-RtlUpcaseString@8
+RtlUpcaseUnicodeStringToAnsiString@12
+RtlUpcaseUnicodeStringToOemString@12
+RtlUpcaseUnicodeToMultiByteN@20
+RtlUpcaseUnicodeToOemN@20
+RtlUpperChar@4
 RtlUpperString@8
 RtlZeroMemory@8
 ZwAccessCheckAndAuditAlarm@44

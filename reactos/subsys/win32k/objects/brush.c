@@ -1,4 +1,4 @@
-/* $Id: brush.c,v 1.6 1999/11/17 20:54:05 rex Exp $
+/* $Id: brush.c,v 1.7 1999/11/20 21:49:23 ekohl Exp $
  */
 
 
@@ -7,7 +7,7 @@
 #include <ddk/ntddk.h>
 #include <win32k/bitmaps.h>
 #include <win32k/brush.h>
-#include <win32k/debug.h>
+//#include <win32k/debug.h>
 
 // #define NDEBUG
 #include <internal/debug.h>

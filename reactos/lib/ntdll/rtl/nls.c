@@ -1,8 +1,8 @@
-/* $Id: nls.c,v 1.1 1999/11/15 15:59:29 ekohl Exp $
+/* $Id: nls.c,v 1.2 1999/11/20 21:46:46 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/rtl/nls.c
+ * FILE:            lib/ntdll/rtl/nls.c
  * PURPOSE:         National Language Support (NLS) functions
  * UPDATE HISTORY:
  *                  20/08/99 Created by Emanuele Aliberti
@@ -59,8 +59,8 @@ STDCALL
 RtlGetDefaultCodePage (PUSHORT AnsiCodePage,
                        PUSHORT OemCodePage)
 {
-        *AnsiCodePage = NlsAnsiCodePage;
-        *OemCodePage = NlsOemCodePage;
+	*AnsiCodePage = NlsAnsiCodePage;
+	*OemCodePage = NlsOemCodePage;
 }
 
 
@@ -72,39 +72,39 @@ RtlMultiByteToUnicodeN(PWCHAR UnicodeString,
                        PCHAR  MbString,
                        ULONG  MbSize)
 {
-        ULONG Size = 0;
-        ULONG i;
+	ULONG Size = 0;
+	ULONG i;
 
-        if (NlsMbCodePageTag == FALSE)
-        {
-                /* single-byte code page */
-                if (MbSize > (UnicodeSize / sizeof(WCHAR)))
-                        Size = UnicodeSize / sizeof(WCHAR);
-                else
-                        Size = MbSize;
+	if (NlsMbCodePageTag == FALSE)
+	{
+		/* single-byte code page */
+		if (MbSize > (UnicodeSize / sizeof(WCHAR)))
+			Size = UnicodeSize / sizeof(WCHAR);
+		else
+			Size = MbSize;
 
-                if (ResultSize != NULL)
-                        *ResultSize = Size * sizeof(WCHAR);
+		if (ResultSize != NULL)
+			*ResultSize = Size * sizeof(WCHAR);
 
-                for (i = 0; i < Size; i++)
-                {
-                        *UnicodeString = *MbString;
+		for (i = 0; i < Size; i++)
+		{
+			*UnicodeString = *MbString;
 #if 0
-                        *UnicodeString = AnsiToUnicodeTable[*MbString];
+			*UnicodeString = AnsiToUnicodeTable[*MbString];
 #endif
 
-                        UnicodeString++;
-                        MbString++;
-                };
-        }
-        else
-        {
-                /* multi-byte code page */
-                /* FIXME */
+			UnicodeString++;
+			MbString++;
+		}
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
 
-        }
+	}
 
-        return STATUS_SUCCESS;
+	return STATUS_SUCCESS;
 }
 
 
@@ -114,19 +114,63 @@ RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
                           PCHAR MbString,
                           ULONG MbSize)
 {
-        if (NlsMbCodePageTag == FALSE)
-        {
-                /* single-byte code page */
-                *UnicodeSize = MbSize * sizeof (WCHAR);
-        }
-        else
-        {
-                /* multi-byte code page */
-                /* FIXME */
+	if (NlsMbCodePageTag == FALSE)
+	{
+		/* single-byte code page */
+		*UnicodeSize = MbSize * sizeof (WCHAR);
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
 
-        }
+	}
 
-        return STATUS_SUCCESS;
+	return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+STDCALL
+RtlOemToUnicodeN(PWCHAR UnicodeString,
+                 ULONG  UnicodeSize,
+                 PULONG ResultSize,
+                 PCHAR  OemString,
+                 ULONG  OemSize)
+{
+	ULONG Size = 0;
+	ULONG i;
+
+	if (NlsMbOemCodePageTag == FALSE)
+	{
+		/* single-byte code page */
+		if (OemSize > (UnicodeSize / sizeof(WCHAR)))
+			Size = UnicodeSize / sizeof(WCHAR);
+		else
+			Size = OemSize;
+
+		if (ResultSize != NULL)
+			*ResultSize = Size * sizeof(WCHAR);
+
+		for (i = 0; i < Size; i++)
+		{
+			*UnicodeString = *OemString;
+#if 0
+			*UnicodeString = OemToUnicodeTable[*OemString];
+#endif
+
+			UnicodeString++;
+			OemString++;
+		};
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
+
+	}
+
+	return STATUS_SUCCESS;
 }
 
 
@@ -138,39 +182,39 @@ RtlUnicodeToMultiByteN(PCHAR  MbString,
                        PWCHAR UnicodeString,
                        ULONG  UnicodeSize)
 {
-        ULONG Size = 0;
-        ULONG i;
+	ULONG Size = 0;
+	ULONG i;
 
-        if (NlsMbCodePageTag == FALSE)
-        {
-                /* single-byte code page */
-                if (UnicodeSize > (MbSize * sizeof(WCHAR)))
-                        Size = MbSize;
-                else
-                        Size = UnicodeSize / sizeof(WCHAR);
+	if (NlsMbCodePageTag == FALSE)
+	{
+		/* single-byte code page */
+		if (UnicodeSize > (MbSize * sizeof(WCHAR)))
+			Size = MbSize;
+		else
+			Size = UnicodeSize / sizeof(WCHAR);
 
-                if (ResultSize != NULL)
-                        *ResultSize = Size;
+		if (ResultSize != NULL)
+			*ResultSize = Size;
 
-                for (i = 0; i < Size; i++)
-                {
-                        *MbString = *UnicodeString;
+		for (i = 0; i < Size; i++)
+		{
+			*MbString = *UnicodeString;
 #if 0
-                        *MbString = UnicodeToAnsiTable[*UnicodeString];
+			*MbString = UnicodeToAnsiTable[*UnicodeString];
 #endif
 
-                        MbString++;
-                        UnicodeString++;
-                };
-        }
-        else
-        {
-                /* multi-byte code page */
-                /* FIXME */
+			MbString++;
+			UnicodeString++;
+		}
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
 
-        }
+	}
 
-        return STATUS_SUCCESS;
+	return STATUS_SUCCESS;
 }
 
 
@@ -180,19 +224,157 @@ RtlUnicodeToMultiByteSize(PULONG MbSize,
                           PWCHAR UnicodeString,
                           ULONG UnicodeSize)
 {
-        if (NlsMbCodePageTag == FALSE)
-        {
-                /* single-byte code page */
-                *MbSize = UnicodeSize / sizeof (WCHAR);
-        }
-        else
-        {
-                /* multi-byte code page */
-                /* FIXME */
+	if (NlsMbCodePageTag == FALSE)
+	{
+		/* single-byte code page */
+		*MbSize = UnicodeSize / sizeof (WCHAR);
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
 
-        }
+	}
 
-        return STATUS_SUCCESS;
+	return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+STDCALL
+RtlUnicodeToOemN(PCHAR  OemString,
+                 ULONG  OemSize,
+                 PULONG ResultSize,
+                 PWCHAR UnicodeString,
+                 ULONG  UnicodeSize)
+{
+	ULONG Size = 0;
+	ULONG i;
+
+	if (NlsMbOemCodePageTag == FALSE)
+	{
+		/* single-byte code page */
+		if (UnicodeSize > (OemSize * sizeof(WCHAR)))
+			Size = OemSize;
+		else
+			Size = UnicodeSize / sizeof(WCHAR);
+
+		if (ResultSize != NULL)
+			*ResultSize = Size;
+
+		for (i = 0; i < Size; i++)
+		{
+			*OemString = *UnicodeString;
+#if 0
+			*OemString = UnicodeToOemTable[*UnicodeString];
+#endif
+
+			OemString++;
+			UnicodeString++;
+		};
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
+
+	}
+
+	return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeToMultiByteN (
+	PCHAR	MbString,
+	ULONG	MbSize,
+	PULONG	ResultSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
+	)
+{
+	ULONG Size = 0;
+	ULONG i;
+
+	if (NLS_MB_CODE_PAGE_TAG == FALSE)
+	{
+		/* single-byte code page */
+		if (UnicodeSize > (MbSize * sizeof(WCHAR)))
+			Size = MbSize;
+		else
+			Size = UnicodeSize / sizeof(WCHAR);
+
+		if (ResultSize != NULL)
+			*ResultSize = Size;
+
+		for (i = 0; i < Size; i++)
+		{
+			/* FIXME: Upcase!! */
+			*MbString = *UnicodeString;
+#if 0
+			*MbString = UnicodeToAnsiTable[*UnicodeString];
+#endif
+
+			MbString++;
+			UnicodeString++;
+		}
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
+
+	}
+
+	return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeToOemN (
+	PCHAR	OemString,
+	ULONG	OemSize,
+	PULONG	ResultSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
+	)
+{
+	ULONG Size = 0;
+	ULONG i;
+
+	if (NLS_MB_OEM_CODE_PAGE_TAG == FALSE)
+	{
+		/* single-byte code page */
+		if (UnicodeSize > (OemSize * sizeof(WCHAR)))
+			Size = OemSize;
+		else
+			Size = UnicodeSize / sizeof(WCHAR);
+
+		if (ResultSize != NULL)
+			*ResultSize = Size;
+
+		for (i = 0; i < Size; i++)
+		{
+			/* FIXME: Upcase !! */
+			*OemString = *UnicodeString;
+#if 0
+			*OemString = UnicodeToOemTable[*UnicodeString];
+#endif
+
+			OemString++;
+			UnicodeString++;
+		}
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
+
+	}
+
+	return STATUS_SUCCESS;
 }
 
 /* EOF */

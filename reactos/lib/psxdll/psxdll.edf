@@ -1,4 +1,4 @@
-; $Id: psxdll.edf,v 1.4 1999/11/15 16:02:36 ekohl Exp $
+; $Id: psxdll.edf,v 1.5 1999/11/20 21:47:22 ekohl Exp $
 ;
 ; psxdll.edf
 ;
@@ -18,8 +18,8 @@ ntdll.RtlMultiByteToUnicodeN@20
 ntdll.RtlUnicodeToMultiByteN@20
 ntdll.RtlUnicodeToMultiByteSize@12
 ntdll.RtlUnwind@0
-ntdll.RtlUpcaseUnicodeChar@0
-ntdll.RtlUpcaseUnicodeToMultiByteN@0
+ntdll.RtlUpcaseUnicodeChar@4
+ntdll.RtlUpcaseUnicodeToMultiByteN@20
 ntdll.RtlZeroMemory@8
 
 EXPORTS
@@ -35,8 +35,8 @@ RtlMultiByteToUnicodeN=RtlMultiByteToUnicodeN@20
 RtlUnicodeToMultiByteN=RtlUnicodeToMultiByteN@20
 RtlUnicodeToMultiByteSize=RtlUnicodeToMultiByteSize@12
 RtlUnwind=RtlUnwind@0
-RtlUpcaseUnicodeChar=RtlUpcaseUnicodeChar@0
-RtlUpcaseUnicodeToMultiByteN=RtlUpcaseUnicodeToMultiByteN@0
+RtlUpcaseUnicodeChar=RtlUpcaseUnicodeChar@4
+RtlUpcaseUnicodeToMultiByteN=RtlUpcaseUnicodeToMultiByteN@20
 RtlZeroMemory=RtlZeroMemory@8
 __PdxGetCmdLine=__PdxGetCmdLine@0
 __PdxInitializeData=__PdxInitializeData@8

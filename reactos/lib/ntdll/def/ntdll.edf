@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.11 1999/11/15 15:57:55 ekohl Exp $
+; $Id: ntdll.edf,v 1.12 1999/11/20 21:46:16 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -437,6 +437,8 @@ RtlAppendUnicodeStringToString=RtlAppendUnicodeStringToString@8
 RtlAppendUnicodeToString=RtlAppendUnicodeToString@8
 RtlCharToInteger=RtlCharToInteger@12
 RtlCreateHeap=RtlCreateHeap@24
+RtlCreateUnicodeString=RtlCreateUnicodeString@8
+RtlCreateUnicodeStringFromAsciiz=RtlCreateUnicodeStringFromAsciiz@8
 RtlCreateUserProcess=RtlCreateUserProcess@32
 RtlCreateUserThread=RtlCreateUserThread@40
 RtlCompactHeap=RtlCompactHeap@8
@@ -447,11 +449,13 @@ RtlConvertUlongToLargeInteger
 RtlCopyString=RtlCopyString@8
 RtlCopyUnicodeString=RtlCopyUnicodeString@8
 RtlDestroyHeap=RtlDestroyHeap@4
+RtlDowncaseUnicodeString=RtlDowncaseUnicodeString@12
 RtlEnlargedIntegerMultiply
 RtlEnlargedUnsignedDivide
 RtlEnlargedUnsignedMultiply
 RtlEqualString=RtlEqualString@12
 RtlEqualUnicodeString=RtlEqualUnicodeString@12
+RtlEraseUnicodeString=RtlEraseUnicodeString@4
 RtlExtendedIntegerMultiply
 RtlExtendedLargeIntegerDivide
 RtlExtendedMagicDivide
@@ -464,6 +468,7 @@ RtlInitAnsiString=RtlInitAnsiString@8
 RtlInitializeContext=RtlInitializeContext@20
 RtlInitString=RtlInitString@8
 RtlInitUnicodeString=RtlInitUnicodeString@8
+RtlIntegerToChar=RtlIntegerToChar@16
 RtlIntegerToUnicodeString=RtlIntegerToUnicodeString@12
 RtlLargeIntegerAdd
 RtlLargeIntegerArithmeticShift
@@ -486,10 +491,14 @@ RtlUnicodeStringToInteger=RtlUnicodeStringToInteger@12
 RtlUnicodeToMultiByteN=RtlUnicodeToMultiByteN@20
 RtlUnicodeToMultiByteSize=RtlUnicodeToMultiByteSize@12
 RtlUnwind=RtlUnwind@0
-RtlUpcaseString=RtlUpcaseString@8
-RtlUpcaseUnicodeChar=RtlUpcaseUnicodeChar@0
+RtlUpcaseUnicodeChar=RtlUpcaseUnicodeChar@4
 RtlUpcaseUnicodeString=RtlUpcaseUnicodeString@12
-RtlUpcaseUnicodeToMultiByteN=RtlUpcaseUnicodeToMultiByteN@0
+RtlUpcaseUnicodeStringToAnsiString=RtlUpcaseUnicodeStringToAnsiString@12
+RtlUpcaseUnicodeStringToOemString=RtlUpcaseUnicodeStringToOemString@12
+RtlUpcaseUnicodeToMultiByteN=RtlUpcaseUnicodeToMultiByteN@20
+RtlUpcaseUnicodeToOemN=RtlUpcaseUnicodeToOemN@20
+RtlUpperChar=RtlUpperChar@4
+RtlUpperString=RtlUpperString@8
 RtlValidateHeap=RtlValidateHeap@12
 RtlZeroMemory=RtlZeroMemory@8
 _memccpy

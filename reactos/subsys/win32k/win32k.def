@@ -1,4 +1,4 @@
-; $Id: win32k.def,v 1.6 1999/11/15 16:02:00 ekohl Exp $
+; $Id: win32k.def,v 1.7 1999/11/20 21:47:58 ekohl Exp $
 ;
 ; win32k.def
 ;
@@ -154,22 +154,22 @@ PATHOBJ_bPolyLineTo
 PATHOBJ_vEnumStart
 PATHOBJ_vEnumStartClipLines
 PATHOBJ_vGetBounds
-; RtlAnsiCharToUnicodeChar = NTOSKRNL.RtlAnsiCharToUnicodeChar
-;RtlAnsiCharToUnicodeChar
+;RtlAnsiCharToUnicodeChar = NTOSKRNL.RtlAnsiCharToUnicodeChar
+;RtlAnsiCharToUnicodeChar@4
 ; RtlMultiByteToUnicodeN = NTOSKRNL.RtlMultiByteToUnicodeN
-;RtlMultiByteToUnicodeN
+;RtlMultiByteToUnicodeN@20
 ; RtlRaiseException = NTOSKRNL.RtlRaiseException
-RtlRaiseException
+;RtlRaiseException
 ; RtlUnicodeToMultiByteN = NTOSKRNL.RtlUnicodeToMultiByteN
-;RtlUnicodeToMultiByteN
+;RtlUnicodeToMultiByteN@20
 ; RtlUnicodeToMultiByteSize = NTOSKRNL.RtlUnicodeToMultiByteSize
-;RtlUnicodeToMultiByteSize
+;RtlUnicodeToMultiByteSize@12
 ; RtlUnwind = NTOSKRNL.RtlUnwind
 RtlUnwind
 ; RtlUpcaseUnicodeChar = NTOSKRNL.RtlUpcaseUnicodeChar
-RtlUpcaseUnicodeChar
+;RtlUpcaseUnicodeChar@4
 ; RtlUpcaseUnicodeToMultiByteN = NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
-RtlUpcaseUnicodeToMultiByteN
+;RtlUpcaseUnicodeToMultiByteN@20
 STROBJ_bEnum
 STROBJ_dwGetCodePage
 STROBJ_vEnumStart

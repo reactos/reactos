@@ -1,4 +1,4 @@
-/* $Id: rtl.c,v 1.2 1999/11/15 16:02:50 ekohl Exp $
+/* $Id: rtl.c,v 1.3 1999/11/20 21:47:38 ekohl Exp $
  *
  * reactos/lib/psxdll/misc/rtl.c
  *
@@ -12,16 +12,28 @@
 #include <ntos.h>
 #include <wchar.h>
 
+
 WCHAR
 STDCALL
 RtlAnsiCharToUnicodeChar (
-	PCHAR   AnsiChar
+	CHAR	AnsiChar
 	)
 {
-	/* FIXME: it should probably call RtlMultiByteToUnicodeN
-	 * with length==1.
-	 */
-	return (WCHAR) *AnsiChar;
+	ULONG Size;
+	WCHAR UnicodeChar;
+
+	Size = 1;
+#if 0
+	Size = (NlsLeadByteInfo[AnsiChar] == 0) ? 1 : 2;
+#endif
+
+	RtlMultiByteToUnicodeN (&UnicodeChar,
+	                        sizeof(WCHAR),
+	                        NULL,
+	                        &AnsiChar,
+	                        Size);
+
+	return UnicodeChar;
 }
 
 
@@ -59,41 +71,114 @@ RtlMoveMemory (
 
 NTSTATUS
 STDCALL
-RtlMultiByteToUnicodeN (
-	PWCHAR UnicodeString,
-	ULONG  UnicodeSize,
-	PULONG ResultSize,
-	PCHAR  MbString,
-	ULONG  MbSize
-	)
+RtlMultiByteToUnicodeN(PWCHAR UnicodeString,
+                       ULONG  UnicodeSize,
+                       PULONG ResultSize,
+                       PCHAR  MbString,
+                       ULONG  MbSize)
 {
-	return STATUS_NOT_IMPLEMENTED;
+	ULONG Size = 0;
+	ULONG i;
+
+	if (NLS_MB_CODE_PAGE_TAG == FALSE)
+	{
+		/* single-byte code page */
+		if (MbSize > (UnicodeSize / sizeof(WCHAR)))
+			Size = UnicodeSize / sizeof(WCHAR);
+		else
+			Size = MbSize;
+
+		if (ResultSize != NULL)
+			*ResultSize = Size * sizeof(WCHAR);
+
+		for (i = 0; i < Size; i++)
+		{
+			*UnicodeString = *MbString;
+#if 0
+			*UnicodeString = AnsiToUnicodeTable[*MbString];
+#endif
+
+			UnicodeString++;
+			MbString++;
+		}
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
+
+	}
+
+	return STATUS_SUCCESS;
 }
 
 
 NTSTATUS
 STDCALL
 RtlUnicodeToMultiByteN (
-	PCHAR  MbString,
-	ULONG  MbSize,
-	PULONG ResultSize,
-	PWCHAR UnicodeString,
-	ULONG  UnicodeSize
+	PCHAR	MbString,
+	ULONG	MbSize,
+	PULONG	ResultSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
 	)
 {
-	return STATUS_NOT_IMPLEMENTED;
+	ULONG Size = 0;
+	ULONG i;
+
+	if (NLS_MB_CODE_PAGE_TAG == FALSE)
+	{
+		/* single-byte code page */
+		if (UnicodeSize > (MbSize * sizeof(WCHAR)))
+			Size = MbSize;
+		else
+			Size = UnicodeSize / sizeof(WCHAR);
+
+		if (ResultSize != NULL)
+			*ResultSize = Size;
+
+		for (i = 0; i < Size; i++)
+		{
+			*MbString = *UnicodeString;
+#if 0
+			*MbString = UnicodeToAnsiTable[*UnicodeString];
+#endif
+
+			MbString++;
+			UnicodeString++;
+		}
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
+
+	}
+
+	return STATUS_SUCCESS;
 }
 
 
 NTSTATUS
 STDCALL
 RtlUnicodeToMultiByteSize (
-	PULONG MbSize,
-	PWCHAR UnicodeString,
-	ULONG  UnicodeSize
+	PULONG	MbSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
 	)
 {
-	return STATUS_NOT_IMPLEMENTED;
+	if (NLS_MB_CODE_PAGE_TAG == FALSE)
+	{
+		/* single-byte code page */
+		*MbSize = UnicodeSize / sizeof (WCHAR);
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
+	}
+
+	return STATUS_SUCCESS;
 }
 
 
@@ -106,24 +191,69 @@ RtlUnwind (
 }
 
 
-VOID
+WCHAR
 STDCALL
 RtlUpcaseUnicodeChar (
-	VOID
+	WCHAR Source
 	)
 {
+	if (Source < L'a')
+		return Source;
+
+	if (Source <= L'z')
+		return (Source - (L'a' - L'A'));
+
+	/* FIXME: characters above 'z' */
+
+	return Source;
 }
 
 
-VOID
+NTSTATUS
 STDCALL
 RtlUpcaseUnicodeToMultiByteN (
-	VOID
+	PCHAR	MbString,
+	ULONG	MbSize,
+	PULONG	ResultSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
 	)
 {
+	ULONG Size = 0;
+	ULONG i;
+
+	if (NLS_MB_CODE_PAGE_TAG == FALSE)
+	{
+		/* single-byte code page */
+		if (UnicodeSize > (MbSize * sizeof(WCHAR)))
+			Size = MbSize;
+		else
+			Size = UnicodeSize / sizeof(WCHAR);
+
+		if (ResultSize != NULL)
+			*ResultSize = Size;
+
+		for (i = 0; i < Size; i++)
+		{
+			/* FIXME: Upcase!! */
+			*MbString = *UnicodeString;
+#if 0
+			*MbString = UnicodeToAnsiTable[*UnicodeString];
+#endif
+
+			MbString++;
+			UnicodeString++;
+		}
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
+
+	}
+
+	return STATUS_SUCCESS;
 }
-
-
 
 
 VOID

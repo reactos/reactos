@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.17 1999/11/15 15:55:00 ekohl Exp $
+/* $Id: rtl.h,v 1.18 1999/11/20 21:44:09 ekohl Exp $
  * 
  */
 
@@ -19,28 +19,28 @@ typedef struct _CONTROLLER_OBJECT
 
 typedef struct _STRING
 {
-   USHORT Length;
-   USHORT MaximumLength;
-   PCHAR Buffer;
-} STRING, *PSTRING;
-
-typedef struct _ANSI_STRING
-{
    /*
     * Length in bytes of the string stored in buffer
     */
    USHORT Length;
-   
+
    /*
     * Maximum length of the string 
     */
    USHORT MaximumLength;
-   
+
    /*
     * String
     */
    PCHAR Buffer;
-} ANSI_STRING, *PANSI_STRING;
+} STRING, *PSTRING;
+
+typedef STRING ANSI_STRING;
+typedef PSTRING PANSI_STRING;
+
+typedef STRING OEM_STRING;
+typedef PSTRING POEM_STRING;
+
 
 typedef struct _TIME_FIELDS
 {
@@ -189,10 +189,18 @@ RemoveTailList (
 	PLIST_ENTRY	ListHead
 	);
 
+PVOID
+STDCALL
+RtlAllocateHeap (
+	HANDLE	Heap,
+	ULONG	Flags,
+	ULONG	Size
+	);
+
 WCHAR
 STDCALL
 RtlAnsiCharToUnicodeChar (
-	PCHAR	AnsiChar
+	CHAR	AnsiChar
 	);
 
 ULONG
@@ -330,8 +338,15 @@ RtlCreateSecurityDescriptor (
 BOOLEAN
 STDCALL
 RtlCreateUnicodeString (
-	PUNICODE_STRING	Destination,
-	PWSTR		Source
+	OUT	PUNICODE_STRING	Destination,
+	IN	PWSTR		Source
+	);
+
+BOOLEAN
+STDCALL
+RtlCreateUnicodeStringFromAsciiz (
+	OUT	PUNICODE_STRING	Destination,
+	IN	PCSZ		Source
 	);
 
 NTSTATUS
@@ -340,6 +355,14 @@ RtlDeleteRegistryValue (
 	ULONG	RelativeTo,
 	PWSTR	Path,
 	PWSTR	ValueName
+	);
+
+NTSTATUS
+STDCALL
+RtlDowncaseUnicodeString (
+	IN OUT PUNICODE_STRING	DestinationString,
+	IN PUNICODE_STRING	SourceString,
+	IN BOOLEAN		AllocateDestinationString
 	);
 
 LARGE_INTEGER
@@ -375,6 +398,13 @@ RtlEqualUnicodeString (
 	PUNICODE_STRING	String1,
 	PUNICODE_STRING	String2,
 	BOOLEAN		CaseInSensitive
+	);
+
+/* RtlEraseUnicodeString is exported by ntdll.dll only! */
+VOID
+STDCALL
+RtlEraseUnicodeString (
+	IN	PUNICODE_STRING	String
 	);
 
 LARGE_INTEGER
@@ -422,7 +452,7 @@ RtlFreeAnsiString (
 VOID
 STDCALL
 RtlFreeOemString (
-	PSTRING	OemString
+	POEM_STRING	OemString
 	);
 
 VOID
@@ -461,71 +491,19 @@ RtlInitUnicodeString (
 
 NTSTATUS
 STDCALL
+RtlIntegerToChar (
+	IN	ULONG	Value,
+	IN	ULONG	Base,
+	IN	ULONG	Length,
+	IN OUT	PCHAR	String
+	);
+
+NTSTATUS
+STDCALL
 RtlIntegerToUnicodeString (
-	ULONG		Value,
-	ULONG		Base,
-	PUNICODE_STRING	String
-	);
-
-LARGE_INTEGER
-RtlLargeIntegerAdd (
-	LARGE_INTEGER	Addend1,
-	LARGE_INTEGER	Addend2
-	);
-
-VOID
-RtlLargeIntegerAnd (
-	PLARGE_INTEGER	Result,
-	LARGE_INTEGER	Source,
-	LARGE_INTEGER	Mask
-	);
-
-/* MISSING FUNCTIONS GO HERE */
-
-LARGE_INTEGER
-RtlEnlargedIntegerMultiply (
-	LONG	Multiplicand,
-	LONG	Multiplier
-	);
-
-ULONG
-RtlEnlargedUnsignedDivide (
-	ULARGE_INTEGER	Dividend,
-	ULONG		Divisor,
-	PULONG		Remainder
-	);
-
-LARGE_INTEGER
-RtlEnlargedUnsignedMultiply (
-	ULONG	Multiplicand,
-	ULONG	Multipler
-	);
-
-LARGE_INTEGER
-RtlExtendedIntegerMultiply (
-	LARGE_INTEGER	Multiplicand,
-	LONG		Multiplier
-	);
-
-LARGE_INTEGER
-RtlExtendedLargeIntegerDivide (
-	LARGE_INTEGER	Dividend,
-	ULONG		Divisor,
-	PULONG		Remainder
-	);
-
-LARGE_INTEGER
-RtlExtendedMagicDivide (
-	LARGE_INTEGER	Dividend,
-	LARGE_INTEGER	MagicDivisor,
-	CCHAR		ShiftCount
-	);
-
-LARGE_INTEGER
-ExInterlockedAddLargeInteger (
-	PLARGE_INTEGER	Addend,
-	LARGE_INTEGER	Increment,
-	PKSPIN_LOCK	Lock
+	IN	ULONG		Value,
+	IN	ULONG		Base,
+	IN OUT	PUNICODE_STRING	String
 	);
 
 LARGE_INTEGER
@@ -677,14 +655,14 @@ RtlMultiByteToUnicodeSize (
 ULONG
 STDCALL
 RtlOemStringToUnicodeSize (
-	PANSI_STRING	AnsiString
+	POEM_STRING	AnsiString
 	);
 
 NTSTATUS
 STDCALL
 RtlOemStringToUnicodeString (
 	PUNICODE_STRING	DestinationString,
-	PANSI_STRING	SourceString,
+	POEM_STRING	SourceString,
 	BOOLEAN		AllocateDestinationString
 	);
 
@@ -772,8 +750,8 @@ RtlZeroMemory (
 	);
 
 typedef struct {
-	ULONG    	Length;
-	ULONG    	Unknown[11];
+	ULONG		Length;
+	ULONG		Unknown[11];
 } RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
 
 // Heap creation routine
@@ -787,14 +765,6 @@ RtlCreateHeap (
 	ULONG			SizeToCommit,
 	PVOID			Unknown,
 	PRTL_HEAP_DEFINITION	Definition
-	);
-
-PVOID
-STDCALL
-RtlAllocateHeap (
-	HANDLE	Heap,
-	ULONG	Flags,
-	ULONG	Size
 	);
 
 
@@ -837,7 +807,7 @@ RtlUnicodeStringToOemSize (
 NTSTATUS
 STDCALL
 RtlUnicodeStringToOemString (
-	IN OUT	PANSI_STRING	DestinationString,
+	IN OUT	POEM_STRING	DestinationString,
 	IN	PUNICODE_STRING	SourceString,
 	IN	BOOLEAN		AllocateDestinationString
 	);
@@ -870,12 +840,60 @@ RtlUnicodeToOemN (
 	ULONG  UnicodeSize
 	);
 
+WCHAR
+STDCALL
+RtlUpcaseUnicodeChar (
+	WCHAR Source
+	);
+
 NTSTATUS
 STDCALL
 RtlUpcaseUnicodeString (
-	PUNICODE_STRING	DestinationString,
-	PUNICODE_STRING	SourceString,
-	BOOLEAN		AllocateDestinationString
+	IN OUT	PUNICODE_STRING	DestinationString,
+	IN	PUNICODE_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
+	);
+
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeStringToAnsiString (
+	IN OUT	PANSI_STRING	DestinationString,
+	IN	PUNICODE_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
+	);
+
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeStringToOemString (
+	IN OUT	POEM_STRING	DestinationString,
+	IN	PUNICODE_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
+	);
+
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeToMultiByteN (
+	PCHAR	MbString,
+	ULONG	MbSize,
+	PULONG	ResultSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
+	);
+
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeToOemN (
+	PCHAR	OemString,
+	ULONG	OemSize,
+	PULONG	ResultSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
+	);
+
+CHAR
+STDCALL
+RtlUpperChar (
+	CHAR	Source
 	);
 
 VOID

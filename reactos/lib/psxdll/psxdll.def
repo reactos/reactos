@@ -1,4 +1,4 @@
-; $Id: psxdll.def,v 1.5 1999/11/15 16:02:36 ekohl Exp $
+; $Id: psxdll.def,v 1.6 1999/11/20 21:47:22 ekohl Exp $
 ;
 ; psxdll.def
 ;
@@ -18,8 +18,8 @@ ntdll.RtlMultiByteToUnicodeN@20
 ntdll.RtlUnicodeToMultiByteN@20
 ntdll.RtlUnicodeToMultiByteSize@12
 ntdll.RtlUnwind@0
-ntdll.RtlUpcaseUnicodeChar@0
-ntdll.RtlUpcaseUnicodeToMultiByteN@0
+ntdll.RtlUpcaseUnicodeChar@4
+ntdll.RtlUpcaseUnicodeToMultiByteN@20
 ntdll.RtlZeroMemory@8
 
 EXPORTS
@@ -35,8 +35,8 @@ RtlMultiByteToUnicodeN@20
 RtlUnicodeToMultiByteN@20
 RtlUnicodeToMultiByteSize@12
 RtlUnwind@0
-RtlUpcaseUnicodeChar@0
-RtlUpcaseUnicodeToMultiByteN@0
+RtlUpcaseUnicodeChar@4
+RtlUpcaseUnicodeToMultiByteN@20
 RtlZeroMemory@8
 __PdxGetCmdLine@0
 __PdxInitializeData@8
