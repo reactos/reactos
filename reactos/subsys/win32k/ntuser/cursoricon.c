@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.4 2004/12/20 21:34:23 gvg Exp $ */
+/* $Id: cursoricon.c,v 1.5 2004/12/30 02:32:18 navaraf Exp $ */
 #include <w32k.h>
 
 PCURICON_OBJECT FASTCALL
@@ -446,8 +446,11 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
         if(CurIconObject->IconInfo.hbmMask && 
           (bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmMask)))
         {
-          CurIconObject->Size.cx = bmp->SurfObj.sizlBitmap.cx;
-          CurIconObject->Size.cy = bmp->SurfObj.sizlBitmap.cy / 2;
+          if (CurIconObject->IconInfo.hbmColor == NULL)
+          {
+            CurIconObject->Size.cx = bmp->SurfObj.sizlBitmap.cx;
+            CurIconObject->Size.cy = bmp->SurfObj.sizlBitmap.cy / 2;
+          }
           BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmMask);
           GDIOBJ_SetOwnership(CurIconObject->IconInfo.hbmMask, NULL);
         }

@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: pen.c,v 1.17 2004/12/12 01:40:38 weiden Exp $
+ * $Id: pen.c,v 1.18 2004/12/30 02:32:19 navaraf Exp $
  */
 #include <w32k.h>
 
@@ -109,12 +109,21 @@ HPEN STDCALL
 NtGdiExtCreatePen(
    DWORD PenStyle,
    DWORD Width,
-   CONST PLOGBRUSH LogBrush,
+   CONST LOGBRUSH *LogBrush,
    DWORD StyleCount,
-   CONST PDWORD Style)
+   CONST DWORD *Style)
 {
-   UNIMPLEMENTED;
-   return 0;
+   /* NOTE: This is HACK! */
+   LOGPEN LogPen;
+
+   if (PenStyle & PS_USERSTYLE)
+      PenStyle = (PenStyle & ~PS_STYLE_MASK) | PS_SOLID;
+
+   LogPen.lopnStyle = PenStyle & PS_STYLE_MASK;
+   LogPen.lopnWidth.x = Width;
+   LogPen.lopnColor = (LogBrush != NULL) ? LogBrush->lbColor : 0;
+
+   return IntGdiCreatePenIndirect(&LogPen);
 }
 
 /* EOF */

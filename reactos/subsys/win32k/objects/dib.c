@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.59 2004/12/27 16:47:02 navaraf Exp $
+ * $Id: dib.c,v 1.60 2004/12/30 02:32:19 navaraf Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -149,7 +149,7 @@ IntSetDIBits(
 
   // Create source surface
   SourceSize.cx = bmi->bmiHeader.biWidth;
-  SourceSize.cy = abs(bmi->bmiHeader.biHeight);
+  SourceSize.cy = ScanLines;
 
   // Determine width of DIB
   DIBWidth = DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount);
@@ -157,7 +157,7 @@ IntSetDIBits(
   SourceBitmap = EngCreateBitmap(SourceSize,
                                  DIBWidth,
                                  BitmapFormat(bmi->bmiHeader.biBitCount, bmi->bmiHeader.biCompression),
-                                 0 < bmi->bmiHeader.biHeight ? 0 : BMF_TOPDOWN,
+                                 bmi->bmiHeader.biHeight < 0 ? BMF_TOPDOWN : 0,
                                  (PVOID) Bits);
   if (0 == SourceBitmap)
   {
@@ -217,10 +217,10 @@ IntSetDIBits(
   ZeroPoint.y = 0;
 
   // Determine destination rectangle
-  DestRect.top	= 0;
   DestRect.left	= 0;
+  DestRect.top	= abs(bmi->bmiHeader.biHeight) - StartScan - ScanLines;
   DestRect.right	= SourceSize.cx;
-  DestRect.bottom	= SourceSize.cy;
+  DestRect.bottom	= DestRect.top + ScanLines;
 
   copyBitsResult = EngCopyBits(DestSurf, SourceSurf, NULL, XlateObj, &DestRect, &ZeroPoint);
 
@@ -778,7 +778,7 @@ DIB_CreateDIBSection(
 /*    bm.bmBits = MapViewOfFile(section, FILE_MAP_ALL_ACCESS,
 			      0L, offset, totalSize); */
     DbgPrint("DIB_CreateDIBSection: Cannot yet handle section DIBs\n");
-    SetLastWin32Error(ERROR_INVALID_FUNCTION);
+    SetLastWin32Error(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
   }
   else if (ovr_pitch && offset)
@@ -836,11 +836,11 @@ DIB_CreateDIBSection(
   if (dib)
   {
     Size.cx = bm.bmWidth;
-    Size.cy = bm.bmHeight;
+    Size.cy = abs(bm.bmHeight);
     res = IntCreateBitmap(Size, bm.bmWidthBytes,
                           BitmapFormat(bi->biBitCount * bi->biPlanes, bi->biCompression),
                           BMF_DONTCACHE | BMF_USERMEM | BMF_NOZEROINIT |
-                          (bi->biHeight > 0 ? 0 : BMF_TOPDOWN),
+                          (bi->biHeight < 0 ? BMF_TOPDOWN : 0),
                           bm.bmBits);
     if (! res)
       {
