@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.49 2004/11/07 22:55:38 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.50 2004/11/08 01:46:12 weiden Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -383,7 +383,7 @@ IoOpenDeviceRegistryKey(
    else
    {
       RtlAppendUnicodeToString(&KeyName, EnumKeyName);
-      RtlAppendUnicodeStringToString(&KeyName, &DeviceNode->InstancePath);
+      Status = RtlAppendUnicodeStringToString(&KeyName, &DeviceNode->InstancePath);
       if (DeviceNode->InstancePath.Length == 0)
       {
          ExFreePool(KeyNameBuffer);
