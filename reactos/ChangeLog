@@ -1,3 +1,8 @@
+2004-11-13  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* apps/utils/net/roshttpd/include/list.h (CList<Item>::Get): Declare i
+	before use.
+
 2004-10-29  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* ntoskrnl/include/internal/test.h (NtLockVirtualMemoryInternal): Rename
