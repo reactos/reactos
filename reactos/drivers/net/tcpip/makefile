@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.26 2004/10/07 04:47:42 arty Exp $
+# $Id: makefile,v 1.27 2004/10/08 01:28:32 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -45,14 +45,22 @@ TARGET_OBJECTS = \
   $(INFO_OBJECTS) \
   $(DATALINK_OBJECTS)
 
-preall: $(PATH_TO_TOP)/dk/w32/lib/ip.a $(PATH_TO_TOP)/dk/w32/lib/oskittcp.a
+preall: preclean
+	$(MAKE) -C ../../lib/ip
+	$(MAKE) -C ../../lib/oskittcp
 	$(MAKE) all
+
+preclean:
+	$(RM) 	$(PATH_TO_TOP)/dk/w32/lib/ip.a \
+		$(PATH_TO_TOP)/dk/w32/lib/oskittcp.a
 
 $(PATH_TO_TOP)/dk/w32/lib/oskittcp.a:
 	$(MAKE) -C $(PATH_TO_TOP)/drivers/lib/oskittcp
 
 $(PATH_TO_TOP)/dk/w32/lib/ip.a:
 	$(MAKE) -C $(PATH_TO_TOP)/drivers/lib/ip
+
+$(TARGET_OBJECTS):: makefile
 
 include $(PATH_TO_TOP)/rules.mak
 

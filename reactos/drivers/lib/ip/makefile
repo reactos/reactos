@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 2004/10/07 15:04:45 arty Exp $
+# $Id: makefile,v 1.5 2004/10/08 01:28:32 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -43,6 +43,10 @@ TARGET_OBJECTS = \
 	transport/tcp/if.o \
 	transport/tcp/tcp.o \
 	transport/udp/udp.o
+
+preall: all
+
+$(TARGET_OBJECTS):: makefile
 
 include $(PATH_TO_TOP)/rules.mak
 
