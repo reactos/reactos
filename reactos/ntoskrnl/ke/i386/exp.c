@@ -57,7 +57,8 @@ extern ULONG init_stack_top;
 
 extern unsigned int _text_start__, _text_end__;
 
-static void print_address(PVOID address)
+STATIC BOOLEAN 
+print_address(PVOID address)
 {
    PLIST_ENTRY current_entry;
    PMODULE_OBJECT current;
@@ -75,12 +76,15 @@ static void print_address(PVOID address)
 	  {
 	     DbgPrint("<%wZ: %x>", &current->Name, 
 		      address - current->Base);
-	     return;
+	     return(TRUE);
 	  }
 
 	current_entry = current_entry->Flink;
      }
+#if 0
    DbgPrint("<%x>", address);
+#endif
+   return(FALSE);
 }
 
 ULONG

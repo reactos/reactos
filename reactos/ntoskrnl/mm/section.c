@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.46 2001/02/14 02:53:53 dwelch Exp $
+/* $Id: section.c,v 1.47 2001/02/18 17:43:32 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -218,7 +218,7 @@ MmWaitForPendingOperationSection(PMADDRESS_SPACE AddressSpace,
     * and have a reference to a page containing valid data for the
     * section offset. Set the page and return success.
     */
-   Status = MmCreateVirtualMapping(NULL,
+   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 				   Address,
 				   Attributes,
 				   (ULONG)Page);
@@ -294,7 +294,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        /*
 	* Just map the desired physical page 
 	*/
-       Status = MmCreateVirtualMapping(NULL,
+       Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 				       Address,
 				       MemoryArea->Attributes,
 				       Offset.QuadPart);
@@ -329,7 +329,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	    MmLockSectionSegment(Segment);
 	    Page = MmAllocPage(0);
 	 }
-       Status = MmCreateVirtualMapping(NULL,
+       Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 				       Address,
 				       MemoryArea->Attributes,
 				       (ULONG)Page);
@@ -406,7 +406,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 		Page = (PVOID)Entry;
 		MmReferencePage(Page);	
 		
-		Status = MmCreateVirtualMapping(NULL,
+		Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 						Address,
 						Attributes,
 						(ULONG)Page);
@@ -500,7 +500,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 */
 	MmSetWaitPage(Page);
 	
-	Status = MmCreateVirtualMapping(NULL,
+	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 					Address,
 					Attributes,
 					(ULONG)Page);
@@ -541,7 +541,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	Page = (PVOID)Entry;
 	MmReferencePage(Page);	
 	
-	Status = MmCreateVirtualMapping(NULL,
+	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 					Address,
 					Attributes,
 					(ULONG)Page);
@@ -626,7 +626,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    memcpy(NewAddress, (PVOID)PAGE_ROUND_DOWN(Address), PAGESIZE);
    ExUnmapPage(NewAddress);
 
-   Status = MmCreateVirtualMapping(NULL,
+   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 				   Address,
 				   MemoryArea->Attributes,
 				   (ULONG)NewPage);   

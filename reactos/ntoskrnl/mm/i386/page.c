@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.19 2001/02/10 22:51:11 dwelch Exp $
+/* $Id: page.c,v 1.20 2001/02/18 17:43:32 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -173,8 +173,9 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
      {
 	if (PageTable[i] != 0)
 	  {
-	     DbgPrint("Page table entry not clear\n");
-	     KeBugCheck(0);
+	    DbgPrint("Page table entry not clear at %x/%x (is %x)\n",
+		     ((ULONG)Address / 4*1024*1024), i, PageTable[i]);
+	    KeBugCheck(0);
 	  }
      }
    npage = *(ADDR_TO_PDE(Address));
@@ -324,7 +325,7 @@ VOID MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage)
 	Ptrc = Process->AddressSpace.PageTableRefCountTable;
 	
 	Ptrc[ADDR_TO_PAGE_TABLE(Address)]--;
-#if 0
+#if 1
 	if (Ptrc[ADDR_TO_PAGE_TABLE(Address)] == 0)
 	  {
 	     MmFreePageTable(Process, Address);
@@ -441,9 +442,20 @@ NTSTATUS MmCreateVirtualMapping(PEPROCESS Process,
    
    if (!MmIsUsablePage((PVOID)PhysicalAddress))
      {
+       DPRINT1("Page not usable\n");
        KeBugCheck(0);
      }
-
+   if (Process == NULL && Address < (PVOID)KERNEL_BASE)
+     {
+       DPRINT1("No process\n");
+       KeBugCheck(0);
+     }
+   if (Process != NULL && Address >= (PVOID)KERNEL_BASE)
+     {
+       DPRINT1("Setting kernel address with process context\n");
+       KeBugCheck(0);
+     }
+   
    Attributes = ProtectToPTE(flProtect);
    
    if (Process != NULL && Process != CurrentProcess)
