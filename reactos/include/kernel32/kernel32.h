@@ -49,5 +49,11 @@ BOOLEAN STDCALL IsConsoleHandle(HANDLE Handle);
 
 WINBOOL STDCALL CloseConsoleHandle(HANDLE Handle);
 
+HANDLE STDCALL OpenConsoleW (LPWSTR                 wsName,
+			     DWORD                  dwDesiredAccess,
+			     LPSECURITY_ATTRIBUTES  lpSecurityAttributes OPTIONAL,
+			     DWORD                  dwCreationDistribution);
+
+
 #endif /* ndef _INCLUDE_KERNEL32_KERNEL32_H */
 

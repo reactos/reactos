@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.55 2003/03/09 21:37:18 hbirr Exp $
+/* $Id: console.c,v 1.56 2003/05/05 19:58:27 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -356,17 +356,56 @@ InvalidateConsoleDIBits (DWORD	Unknown0,
   return 0;
 }
 
-DWORD STDCALL
-OpenConsoleW (DWORD	Unknown0,
-	      DWORD	Unknown1,
-	      DWORD	Unknown2,
-	      DWORD	Unknown3)
+HANDLE STDCALL
+OpenConsoleW (LPWSTR                 wsName,
+	      DWORD                  dwDesiredAccess,
+	      LPSECURITY_ATTRIBUTES  lpSecurityAttributes OPTIONAL,
+	      DWORD                  dwCreationDistribution)
      /*
       * Undocumented
       */
 {
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY   Reply;
+  PHANDLE           phConsole = NULL;
+  NTSTATUS          Status = STATUS_SUCCESS;
+  
+  
+  if(0 == _wcsicmp(wsName, L"CONIN$"))
+  {
+    Request.Type = CSRSS_GET_INPUT_HANDLE;
+    phConsole = & Reply.Data.GetInputHandleReply.InputHandle;
+  }
+  else if (0 == _wcsicmp(wsName, L"CONOUT$"))
+  {
+    Request.Type = CSRSS_GET_OUTPUT_HANDLE;
+    phConsole = & Reply.Data.GetOutputHandleReply.OutputHandle;
+  }
+  else
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return(INVALID_HANDLE_VALUE);
+  }
+  if ((GENERIC_READ|GENERIC_WRITE) != dwDesiredAccess)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return(INVALID_HANDLE_VALUE);
+  }
+  if (OPEN_EXISTING != dwCreationDistribution)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return(INVALID_HANDLE_VALUE);
+  }
+  Status = CsrClientCallServer(& Request,
+			       & Reply,
+			       sizeof(CSRSS_API_REQUEST),
+			       sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+  {
+    SetLastErrorByStatus(Status);
+    return INVALID_HANDLE_VALUE;
+  }
+  return(*phConsole);
 }
 
 WINBOOL STDCALL
