@@ -1,7 +1,7 @@
-/* $Id: stubs.c,v 1.1 2004/04/04 21:49:15 weiden Exp $
+/* $Id: stubs.c,v 1.2 2004/09/28 16:04:15 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS msgina.dll
+ * PROJECT:         ReactOS devmgr.dll
  * FILE:            lib/devmgr/stubs.c
  * PURPOSE:         devmgr.dll stubs
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
