@@ -131,7 +131,7 @@ PVOID ObCreateObject(PHANDLE Handle,
    POBJECT_HEADER Header;
    NTSTATUS Status;
    
-   assert_irql(PASSIVE_LEVEL);
+   assert_irql(APC_LEVEL);
    
    DPRINT("ObCreateObject(Handle %x, ObjectAttributes %x, Type %x)\n");
    if (ObjectAttributes != NULL &&

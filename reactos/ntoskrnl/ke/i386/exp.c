@@ -140,7 +140,8 @@ static void print_address(PVOID address)
    
    current_entry = ModuleListHead.Flink;
    
-   while (current_entry != &ModuleListHead)
+   while (current_entry != &ModuleListHead &&
+	  current_entry != NULL)
      {
 	current = CONTAINING_RECORD(current_entry, MODULE_OBJECT, ListEntry);
 	
@@ -327,6 +328,7 @@ asmlinkage void exception_handler(unsigned int edi,
    
    DbgPrint("\n");
    DbgPrint("Killing current task\n");
+   for(;;);
    KeLowerIrql(PASSIVE_LEVEL);
    if ((cs&0xffff) == USER_CS)
      {

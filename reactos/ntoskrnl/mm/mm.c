@@ -262,6 +262,11 @@ asmlinkage int page_fault_handler(unsigned int cs,
 	return(0);
 //	KeBugCheck(0);
      }
+   if (PsGetCurrentProcess() == NULL)
+     {
+	DbgPrint("No current process\n");
+	return(0);
+     }
    
    /*
     * Find the memory area for the faulting address

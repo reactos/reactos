@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.37 1999/12/12 00:49:00 phreak Exp $
+/* $Id: thread.c,v 1.38 1999/12/12 00:59:39 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -46,7 +46,7 @@ KSPIN_LOCK PiThreadListLock;
 /*
  * PURPOSE: List of threads associated with each priority level
  */
-static LIST_ENTRY PiThreadListHead = { &PiThreadListHead, &PiThreadListHead };
+static LIST_ENTRY PiThreadListHead;
 static LIST_ENTRY PriorityListHead[NR_THREAD_PRIORITY_LEVELS];
 static BOOLEAN DoneInitYet = FALSE;
 ULONG PiNrThreads = 0;
@@ -122,6 +122,11 @@ VOID PsDumpThreads(VOID)
    PLIST_ENTRY current_entry;
    PETHREAD current;
    
+   if (!DoneInitYet)
+     {
+	return;
+     }
+   
    current_entry = PiThreadListHead.Flink;
 	
    while (current_entry != &PiThreadListHead)
@@ -148,6 +153,8 @@ VOID PsReapThreads(VOID)
    
 //   DPRINT1("PsReapThreads()\n");
    
+   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+   
    current_entry = PiThreadListHead.Flink;
    
    while (current_entry != &PiThreadListHead)
@@ -164,6 +171,8 @@ VOID PsReapThreads(VOID)
 	     ObDereferenceObject(current);
 	  }
      }
+   
+   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 }
 
 static PETHREAD PsScanThreadList (KPRIORITY Priority)
@@ -213,6 +222,7 @@ static VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	Candidate = PsScanThreadList(CurrentPriority);
 	if (Candidate == CurrentThread)
 	  {
+	     KeReleaseSpinLockFromDpcLevel(&PiThreadListLock);
 	     return;
 	  }
 	if (Candidate != NULL)
@@ -223,12 +233,9 @@ static VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	    	     
 	     CurrentThread = Candidate;
 	     
-	     KeReleaseSpinLockFromDpcLevel( &PiThreadListLock );
-		 HalTaskSwitch(&CurrentThread->Tcb);
-		 KeAcquireSpinLockAtDpcLevel( &PiThreadListLock );
-		 DPRINT( "Woken up, grabbed lock\n" );
+	     KeReleaseSpinLockFromDpcLevel(&PiThreadListLock);
+	     HalTaskSwitch(&CurrentThread->Tcb);
 	     PsReapThreads();
-		 DPRINT( "Reaped\n" );
 	     return;
 	  }
      }
@@ -251,16 +258,23 @@ VOID PsDispatchThread(ULONG NewThreadStatus)
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
    CurrentThread->Tcb.WaitIrql = oldIrql;		// save wait Irql
    PsDispatchThreadNoLock(NewThreadStatus);
-   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+//   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
    KeLowerIrql(oldIrql);
 //   DPRINT("oldIrql %d\n",oldIrql);
 }
 
-static VOID PiTimeoutThread( struct _KDPC *dpc, PVOID Context, PVOID arg1, PVOID arg2 )
+static VOID PiTimeoutThread(struct _KDPC *dpc, 
+			    PVOID Context, 
+			    PVOID arg1, 
+			    PVOID arg2 )
 {
-	// wake up the thread, and tell it it timed out
-	NTSTATUS Status = STATUS_TIMEOUT;
-	PsResumeThread( (ETHREAD *)Context, &Status );
+   /*
+    * wake up the thread, and tell it it timed out
+    */
+   NTSTATUS Status = STATUS_TIMEOUT;
+   
+   DPRINT("PiTimeoutThread()\n");
+   PsResumeThread((ETHREAD *)Context, &Status);
 }
 
 NTSTATUS PsInitializeThread(HANDLE			ProcessHandle, 
@@ -381,6 +395,7 @@ ULONG PsSuspendThread(PETHREAD Thread,
    DPRINT("r %d Thread->Tcb.SuspendCount %d\n",r,Thread->Tcb.SuspendCount);
    
    if (r > 0)
+     {
 	if (Thread != PsGetCurrentThread())
 	  {
 	     if (Thread->Tcb.State == THREAD_STATE_RUNNABLE)
@@ -391,6 +406,7 @@ ULONG PsSuspendThread(PETHREAD Thread,
 	     Thread->Tcb.Alertable = Alertable;
 	     Thread->Tcb.WaitMode = WaitMode;
 	     PiNrRunnableThreads--;
+	     KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 	  }
 	else
 	  {
@@ -400,15 +416,20 @@ ULONG PsSuspendThread(PETHREAD Thread,
 	     PiNrRunnableThreads--;
 		 Thread->Tcb.WaitIrql = oldIrql;		// save wait IRQL
 	     PsDispatchThreadNoLock(THREAD_STATE_SUSPENDED);
+	     KeLowerIrql(oldIrql);
 	     if (WaitStatus != NULL)
 	       {
 		  *WaitStatus = PsGetCurrentThread()->Tcb.WaitStatus;
 	       }
 	  }
+     }
+   else
+     {
 	DPRINT("About to release ThreadListLock = %x\n", &PiThreadListLock);
 	KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-	DPRINT("PsSuspendThread() finished\n");
-	return(r);
+     }
+   DPRINT("PsSuspendThread() finished\n");
+   return(r);
 }
 
 
