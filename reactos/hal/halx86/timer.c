@@ -20,7 +20,7 @@
  * MA 02139, USA.  
  *
  */
-/* $Id: timer.c,v 1.2 2003/12/28 22:38:09 fireball Exp $
+/* $Id: timer.c,v 1.3 2004/01/12 22:36:04 gvg Exp $
  *
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/hal/x86/udelay.c
@@ -82,11 +82,46 @@ static BOOLEAN UdelayCalibrated = FALSE;
 
 /* FUNCTIONS **************************************************************/
 
+/*
+ * NOTE: This function MUST NOT be optimized by the compiler!
+ * If it is, it obviously will not delay AT ALL, and the system
+ * will appear completely frozen at boot since
+ * HalpCalibrateStallExecution will never return.
+ * There are three options to stop optimization:
+ * 1. Use a volatile automatic variable. Making it delay quite a bit
+ *    due to memory accesses, and keeping the code portable. However,
+ *    as this involves memory access it depends on both the CPU cache,
+ *    e.g. if the stack used is already in a cache line or not, and
+ *    whether or not we're MP. If MP, another CPU could (probably would)
+ *    also access RAM at the same time - making the delay imprecise.
+ * 2. Use compiler-specific #pragma's to disable optimization.
+ * 3. Use inline assembly, making it equally unportable as #2.
+ * For supported compilers we use incline assembler. for the others,
+ * portable plain C.
+ */
 VOID STDCALL
 __KeStallExecutionProcessor(ULONG Loops)
 {
-   register unsigned int i;
-   for (i=0; i<Loops;i++);
+  if (!Loops)
+  {
+    return;
+  }
+#if defined(__GNUC__)
+  __asm__ __volatile__ (
+    "mov %0, %%eax\n"
+    "L1: dec %%eax\n"
+    "jnz L1" : : "d" (Loops));
+
+#elif defined(_MSC_VER)
+  __asm mov eax, Loops
+L1:
+  __asm dec eax
+  __asm jnz L1
+#else
+   volatile unsigned int target = Loops;
+   unsigned int i;
+   for (i=0; i<target;i++);
+#endif
 }
 
 VOID STDCALL KeStallExecutionProcessor(ULONG Microseconds)
