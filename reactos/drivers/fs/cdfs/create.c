@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.2 2002/05/01 13:15:42 ekohl Exp $
+/* $Id: create.c,v 1.3 2002/05/09 15:53:02 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -188,6 +188,13 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
 //    return STATUS_INVALID_PARAMETER;
 
   FileObject = Stack->FileObject;
+
+  if (RequestedDisposition == FILE_CREATE ||
+      RequestedDisposition == FILE_OVERWRITE_IF ||
+      RequestedDisposition == FILE_SUPERSEDE)
+    {
+      return(STATUS_ACCESS_DENIED);
+    }
 
   Status = CdfsOpenFile(DeviceExt,
 			FileObject,

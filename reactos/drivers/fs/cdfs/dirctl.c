@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dirctl.c,v 1.3 2002/05/01 13:15:42 ekohl Exp $
+/* $Id: dirctl.c,v 1.4 2002/05/09 15:53:02 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -123,23 +123,19 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
  */
 {
   WCHAR name[256];
-  char * block;
   WCHAR TempStr[2];
+  PVOID Block;
   NTSTATUS Status;
   ULONG len;
   ULONG DirIndex;
   ULONG Offset;
-  ULONG FirstSector;
   ULONG Read;
   BOOLEAN IsRoot;
-  LARGE_INTEGER FileOffset;
   PVOID Context = NULL;
-
   ULONG DirSize;
-  ULONG BufferSize;
-  ULONG SectorCount;
   PUCHAR Ptr;
   PDIR_RECORD Record;
+  LARGE_INTEGER StreamOffset;
 
   DPRINT("FindFile(Parent %x, FileToFind '%S', DirIndex: %d)\n",
 	 Parent, FileToFind, pDirIndex ? *pDirIndex : 0);
@@ -158,8 +154,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 
   if (Parent)
     {
-      FirstSector = Parent->Entry.ExtentLocationL;
-      if (FirstSector == DeviceExt->CdInfo.RootStart)
+      if (Parent->Entry.ExtentLocationL == DeviceExt->CdInfo.RootStart)
 	{
 	  IsRoot = TRUE;
 	}
@@ -171,7 +166,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 
   if (IsRoot == TRUE)
     {
-      FirstSector = DeviceExt->CdInfo.RootStart;
+      StreamOffset.QuadPart = (LONGLONG)DeviceExt->CdInfo.RootStart * (LONGLONG)BLOCKSIZE;
       DirSize = DeviceExt->CdInfo.RootSize;
 
 
@@ -197,35 +192,22 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
     }
   else
     {
-      FirstSector = Parent->Entry.ExtentLocationL;
+      StreamOffset.QuadPart = (LONGLONG)Parent->Entry.ExtentLocationL * (LONGLONG)BLOCKSIZE;
       DirSize = Parent->Entry.DataLengthL;
     }
 
-  DPRINT("FirstSector %lu  DirSize %lu\n", FirstSector, DirSize);
+  DPRINT("StreamOffset %I64u  DirSize %lu\n", StreamOffset.QuadPart, DirSize);
 
   if (pDirIndex && (*pDirIndex))
     DirIndex = *pDirIndex;
 
-  BufferSize = ROUND_UP(DirSize, BLOCKSIZE);
-  SectorCount = BufferSize / BLOCKSIZE;
+  if(!CcMapData(DeviceExt->StreamFileObject, &StreamOffset,
+		DirSize, TRUE, &Context, &Block))
+  {
+    return(STATUS_UNSUCCESSFUL);
+  }
 
-  DPRINT("FirstSector %lu  DirSize %lu  BufferSize %lu  SectorCount %lu\n",
-	 FirstSector, DirSize, BufferSize, SectorCount);
-
-  block = ExAllocatePool(NonPagedPool, BufferSize);
-
-  Status = CdfsReadSectors(DeviceExt->StorageDevice,
-			   FirstSector,
-			   SectorCount,
-			   block);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("Reading directory extent failed (Status %lx)\n", Status);
-      ExFreePool(block);
-      return(Status);
-    }
-
-  Ptr = (PUCHAR)block;
+  Ptr = (PUCHAR)Block;
   while(TRUE)
     {
       Record = (PDIR_RECORD)Ptr;
@@ -238,7 +220,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
       DPRINT("RecordLength %u  ExtAttrRecordLength %u  NameLength %u\n",
 	     Record->RecordLength, Record->ExtAttrRecordLength, Record->FileIdLength);
 
-      Status = CdfsGetEntryName(DeviceExt, block, DirSize, (PVOID*)&Ptr, name, &DirIndex, pDirIndex2);
+      Status = CdfsGetEntryName(DeviceExt, Block, DirSize, (PVOID*)&Ptr, name, &DirIndex, pDirIndex2);
       if (Status == STATUS_NO_MORE_ENTRIES)
 	{
 	  break;
@@ -276,7 +258,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 	  DPRINT("FindFile: new Pathname %S, new Objectname %S, DirIndex %d\n",
 		 Fcb->PathName, Fcb->ObjectName, DirIndex);
 
-	  ExFreePool(block);
+	  CcUnpinData(Context);
 
 	  return(STATUS_SUCCESS);
 	}
@@ -285,14 +267,14 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
       Ptr = Ptr + Record->RecordLength;
       DirIndex++;
 
-      if (((ULONG)Ptr - (ULONG)block) >= DirSize)
+      if (((ULONG)Ptr - (ULONG)Block) >= DirSize)
 	{
 	  DPRINT("Stopped!\n");
 	  break;
 	}
     }
 
-  ExFreePool(block);
+  CcUnpinData(Context);
 
   if (pDirIndex)
     *pDirIndex = DirIndex;

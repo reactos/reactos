@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.4 2002/05/01 13:15:42 ekohl Exp $
+/* $Id: fcb.c,v 1.5 2002/05/09 15:53:02 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -442,14 +442,15 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 {
   WCHAR TempName[2];
   WCHAR Name[256];
-  PUCHAR Block;
+  PVOID Block;
   ULONG FirstSector;
   ULONG DirSize;
-  ULONG BufferSize;
-  ULONG SectorCount;
   PDIR_RECORD Record;
   ULONG Offset;
   NTSTATUS Status;
+
+  LARGE_INTEGER StreamOffset;
+  PVOID Context;
 
   assert(DeviceExt);
   assert(DirectoryFcb);
@@ -469,27 +470,14 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
       FileToFind = TempName;
     }
 
-  FirstSector = DirectoryFcb->Entry.ExtentLocationL;
   DirSize = DirectoryFcb->Entry.DataLengthL;
+  StreamOffset.QuadPart = (LONGLONG)DirectoryFcb->Entry.ExtentLocationL * (LONGLONG)BLOCKSIZE;
 
-  BufferSize = ROUND_UP(DirSize, BLOCKSIZE);
-  SectorCount = BufferSize / BLOCKSIZE;
-
-  DPRINT("FirstSector %lu  DirSize %lu  BufferSize %lu  SectorCount %lu\n",
-	 FirstSector, DirSize, BufferSize, SectorCount);
-
-  Block = ExAllocatePool(NonPagedPool, BufferSize);
-
-  Status = CdfsReadSectors(DeviceExt->StorageDevice,
-			   FirstSector,
-			   SectorCount,
-			   Block);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("Reading directory extent failed (Status %lx)\n", Status);
-      ExFreePool(Block);
-      return(Status);
-    }
+  if(!CcMapData(DeviceExt->StreamFileObject, &StreamOffset,
+		DirSize, TRUE, &Context, &Block))
+  {
+    return(STATUS_UNSUCCESSFUL);
+  }
 
   Offset = 0;
   Record = (PDIR_RECORD)Block;
@@ -516,7 +504,7 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 					   Record,
 					   FoundFCB);
 
-	  ExFreePool(Block);
+	  CcUnpinData(Context);
 
 	  return(Status);
 	}
@@ -529,12 +517,11 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 	  Record = (PDIR_RECORD)(Block + Offset);
 	}
 
-//      if (Offset >= BufferSize)
       if (Offset >= DirSize)
 	break;
     }
 
-  ExFreePool(Block);
+  CcUnpinData(Context);
 
   return(STATUS_OBJECT_NAME_NOT_FOUND);
 }

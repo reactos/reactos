@@ -144,6 +144,7 @@ typedef struct
   KSPIN_LOCK FcbListLock;
   LIST_ENTRY FcbListHead;
 
+  PVPB Vpb;
   PDEVICE_OBJECT StorageDevice;
   PFILE_OBJECT StreamFileObject;
 
@@ -154,6 +155,8 @@ typedef struct
 
 
 #define FCB_CACHE_INITIALIZED   0x0001
+#define FCB_IS_VOLUME_STREAM    0x0002
+#define FCB_IS_VOLUME           0x0004
 
 typedef struct _FCB
 {
@@ -230,6 +233,19 @@ NTSTATUS STDCALL
 CdfsClose(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp);
 
+/* common.c */
+
+NTSTATUS
+CdfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
+		IN ULONG DiskSector,
+		IN ULONG SectorCount,
+		IN OUT PUCHAR Buffer);
+
+NTSTATUS
+CdfsReadRawSectors(IN PDEVICE_OBJECT DeviceObject,
+		   IN ULONG DiskSector,
+		   IN ULONG SectorCount,
+		   IN OUT PUCHAR Buffer);
 
 /* create.c */
 

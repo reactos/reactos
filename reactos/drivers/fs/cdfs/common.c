@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: common.c,v 1.3 2002/04/26 23:21:28 ekohl Exp $
+/* $Id: common.c,v 1.4 2002/05/09 15:53:02 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -106,6 +106,79 @@ CdfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
 	  DPRINT1("IoVerifyVolume() retuned (Status %lx)\n", NewStatus);
         }
 
+      DPRINT("CdfsReadSectors() failed (Status %x)\n", Status);
+      DPRINT("(DeviceObject %x, DiskSector %x, Buffer %x, Offset 0x%I64x)\n",
+	     DeviceObject, DiskSector, Buffer,
+	     Offset.QuadPart);
+      return(Status);
+    }
+
+  DPRINT("Block request succeeded for %x\n", Irp);
+
+  return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS
+CdfsReadRawSectors(IN PDEVICE_OBJECT DeviceObject,
+		   IN ULONG DiskSector,
+		   IN ULONG SectorCount,
+		   IN OUT PUCHAR Buffer)
+{
+  PIO_STACK_LOCATION Stack;
+  IO_STATUS_BLOCK IoStatus;
+  LARGE_INTEGER Offset;
+  ULONG BlockSize;
+  KEVENT Event;
+  PIRP Irp;
+  NTSTATUS Status;
+
+  KeInitializeEvent(&Event,
+		    NotificationEvent,
+		    FALSE);
+
+  Offset.u.LowPart = DiskSector << 11;
+  Offset.u.HighPart = DiskSector >> 21;
+
+  BlockSize = BLOCKSIZE * SectorCount;
+
+  DPRINT("CdfsReadSectors(DeviceObject %x, DiskSector %d, Buffer %x)\n",
+	 DeviceObject, DiskSector, Buffer);
+  DPRINT("Offset %I64x BlockSize %ld\n",
+	 Offset.QuadPart,
+	 BlockSize);
+
+  DPRINT("Building synchronous FSD Request...\n");
+  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
+				     DeviceObject,
+				     Buffer,
+				     BlockSize,
+				     &Offset,
+				     &Event,
+				     &IoStatus);
+  if (Irp == NULL)
+    {
+      DPRINT("IoBuildSynchronousFsdRequest failed\n");
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+//  Stack = IoGetCurrentIrpStackLocation(Irp);
+//  Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
+
+  DPRINT("Calling IO Driver... with irp %x\n", Irp);
+  Status = IoCallDriver(DeviceObject, Irp);
+
+  DPRINT("Waiting for IO Operation for %x\n", Irp);
+  if (Status == STATUS_PENDING)
+    {
+      DPRINT("Operation pending\n");
+      KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
+      DPRINT("Getting IO Status... for %x\n", Irp);
+      Status = IoStatus.Status;
+    }
+
+  if (!NT_SUCCESS(Status))
+    {
       DPRINT("CdfsReadSectors() failed (Status %x)\n", Status);
       DPRINT("(DeviceObject %x, DiskSector %x, Buffer %x, Offset 0x%I64x)\n",
 	     DeviceObject, DiskSector, Buffer,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.1 2002/05/01 13:15:42 ekohl Exp $
+/* $Id: misc.c,v 1.2 2002/05/09 15:53:02 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -93,6 +93,8 @@ CdfsSwapString(PWCHAR Out,
     {
       t[i] = In[i+1];
       t[i+1] = In[i];
+      if (t[i+1] == 0 && t[i] == ';')
+	break;
     }
   t[i] = 0;
   t[i+1] = 0;
