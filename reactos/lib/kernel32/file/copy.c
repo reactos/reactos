@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.13 2003/01/15 21:24:33 chorns Exp $
+/* $Id: copy.c,v 1.14 2003/03/16 12:57:32 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -175,7 +175,7 @@ SetLastWriteTime(
      }
    else
      {
-	FileBasic.LastWriteTime = LastWriteTime;
+	FileBasic.LastWriteTime.QuadPart = LastWriteTime.QuadPart;
 	errCode = NtSetInformationFile (FileHandle,
 					&IoStatusBlock,
 					&FileBasic,
@@ -265,8 +265,10 @@ CopyFileExW (
 			 }
 		       else
 			 {
-			    errCode = SetLastWriteTime(FileHandleDest,
-						       FileBasic.LastWriteTime);
+                TIME t;
+
+			    t.QuadPart = FileBasic.LastWriteTime.QuadPart;
+			    errCode = SetLastWriteTime(FileHandleDest, t);
 			    if (!NT_SUCCESS(errCode))
 			      {
 				 SetLastErrorByStatus(errCode);

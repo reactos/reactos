@@ -721,10 +721,10 @@ typedef struct _OBJECT_NAME_INFORMATION
 
 typedef struct _FILE_BASIC_INFORMATION
 {
-	TIME CreationTime;
-	TIME LastAccessTime;
-	TIME LastWriteTime;
-	TIME ChangeTime;
+	LARGE_INTEGER CreationTime;
+	LARGE_INTEGER LastAccessTime;
+	LARGE_INTEGER LastWriteTime;
+	LARGE_INTEGER ChangeTime;
 	ULONG FileAttributes;
 } FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
 
