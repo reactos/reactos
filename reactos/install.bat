@@ -82,6 +82,7 @@ copy lib\secur32\secur32.dll %ROS_INSTALL%\system32
 copy lib\shell32\roshel32.dll %ROS_INSTALL%\system32
 copy lib\snmpapi\snmpapi.dll %ROS_INSTALL%\system32
 copy lib\user32\user32.dll %ROS_INSTALL%\system32
+copy lib\winmm\winmm.dll %ROS_INSTALL%\system32
 copy lib\ws2_32\ws2_32.dll %ROS_INSTALL%\system32
 copy lib\ws2help\ws2help.dll %ROS_INSTALL%\system32
 copy lib\wshirda\wshirda.dll %ROS_INSTALL%\system32
