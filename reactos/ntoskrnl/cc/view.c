@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.76 2004/08/15 16:39:00 chorns Exp $
+/* $Id: view.c,v 1.77 2004/08/25 15:08:29 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -113,7 +113,7 @@ CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg);
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STATIC
+NTSTATUS
 CcRosFlushCacheSegment(PCACHE_SEGMENT CacheSegment)
 {
   NTSTATUS Status;

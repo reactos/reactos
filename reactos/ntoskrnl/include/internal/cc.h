@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
 
-/* $Id: cc.h,v 1.20 2004/08/01 21:57:34 navaraf Exp $ */
+/* $Id: cc.h,v 1.21 2004/08/25 15:08:29 navaraf Exp $ */
 #include <ddk/ntifs.h>
 #include <reactos/bugcodes.h>
 
@@ -59,11 +59,15 @@ typedef struct _INTERNAL_BCB
   PUBLIC_BCB PFCB;
   PCACHE_SEGMENT CacheSegment;
   BOOLEAN Dirty;
+  CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
 } INTERNAL_BCB, *PINTERNAL_BCB;
 
 VOID STDCALL
 CcMdlReadCompleteDev (IN PMDL		MdlChain,
 		      IN PDEVICE_OBJECT	DeviceObject);
+
+NTSTATUS
+CcRosFlushCacheSegment(PCACHE_SEGMENT CacheSegment);
 
 NTSTATUS
 CcRosGetCacheSegment(PBCB Bcb,

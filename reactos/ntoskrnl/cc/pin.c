@@ -1,4 +1,4 @@
-/* $Id: pin.c,v 1.16 2004/08/15 16:39:00 chorns Exp $
+/* $Id: pin.c,v 1.17 2004/08/25 15:08:29 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -97,10 +97,13 @@ CcMapData (IN PFILE_OBJECT FileObject,
       return FALSE;
     }
   memset(iBcb, 0, sizeof(INTERNAL_BCB));
+  iBcb->PFCB.NodeTypeCode = 0xDE45; /* Undocumented (CAPTIVE_PUBLIC_BCB_NODETYPECODE) */
+  iBcb->PFCB.NodeByteSize = sizeof(PUBLIC_BCB);
+  iBcb->PFCB.MappedLength = Length;
+  iBcb->PFCB.MappedFileOffset = *FileOffset;
   iBcb->CacheSegment = CacheSeg;
   iBcb->Dirty = FALSE;
-  iBcb->PFCB.MappedLength = Length;
-  iBcb->PFCB.MappedFileOffset.QuadPart = FileOffset->QuadPart;
+  iBcb->RefCount = 1;
   *pBcb = (PVOID)iBcb;
   return(TRUE);
 }
@@ -118,8 +121,8 @@ CcPinMappedData (
 	OUT	PVOID			* Bcb
 	)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+  /* no-op for current implementation. */
+  return TRUE;
 }
 
 /*
@@ -136,8 +139,14 @@ CcPinRead (
 	OUT	PVOID			* Buffer
 	)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+  if (CcMapData(FileObject, FileOffset, Length, Wait, Bcb, Buffer))
+  {
+    if (CcPinMappedData(FileObject, FileOffset, Length, Wait, Bcb))
+      return TRUE;
+    else
+      CcUnpinData(Bcb);
+  }
+  return FALSE;
 }
 
 /*
@@ -155,8 +164,15 @@ CcPreparePinWrite (
 	OUT	PVOID			* Buffer
 	)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+        /*
+         * FIXME: This is function is similar to CcPinRead, but doesn't
+         * read the data if they're not present. Instead it should just
+         * prepare the cache segments and zero them out if Zero == TRUE.
+         *
+         * For now calling CcPinRead is better than returning error or
+         * just having UNIMPLEMENTED here.
+         */
+        return CcPinRead(FileObject, FileOffset, Length, Wait, Bcb, Buffer);
 }
 
 /*
@@ -179,8 +195,11 @@ CcUnpinData (IN PVOID Bcb)
 {
   PINTERNAL_BCB iBcb = Bcb;
   CcRosReleaseCacheSegment(iBcb->CacheSegment->Bcb, iBcb->CacheSegment, TRUE, 
-			   iBcb->Dirty, FALSE);
-  ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
+                           iBcb->Dirty, FALSE);
+  if (--iBcb->RefCount == 0)
+  {
+    ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
+  }
 }
 
 /*
@@ -194,4 +213,55 @@ CcUnpinDataForThread (
 	)
 {
 	UNIMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+VOID
+STDCALL
+CcRepinBcb (
+	IN	PVOID	Bcb
+	)
+{
+  PINTERNAL_BCB iBcb = Bcb;
+  iBcb->RefCount++;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+CcUnpinRepinnedBcb (
+	IN	PVOID			Bcb,
+	IN	BOOLEAN			WriteThrough,
+	IN	PIO_STATUS_BLOCK	IoStatus
+	)
+{
+  PINTERNAL_BCB iBcb = Bcb;
+
+  if (--iBcb->RefCount == 0)
+    {
+      IoStatus->Information = 0;
+      if (WriteThrough)
+        {
+          ExAcquireFastMutex(&iBcb->CacheSegment->Lock);
+          if (iBcb->CacheSegment->Dirty)
+            {
+              IoStatus->Status = CcRosFlushCacheSegment(iBcb->CacheSegment);
+            }
+          else
+            {
+              IoStatus->Status = STATUS_SUCCESS;
+            }
+          ExReleaseFastMutex(&iBcb->CacheSegment->Lock);
+        }
+      else
+        {
+          IoStatus->Status = STATUS_SUCCESS;
+        }
+
+      ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
+    }
 }

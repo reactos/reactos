@@ -13,6 +13,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#ifndef VACB_MAPPING_GRANULARITY
+#define VACB_MAPPING_GRANULARITY (256 * 1024)
+#endif
+ 
 /* GLOBALS   *****************************************************************/
 
 extern FAST_MUTEX ViewLock;
@@ -42,7 +46,7 @@ CcGetDirtyPages (
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PFILE_OBJECT
 STDCALL
@@ -50,8 +54,8 @@ CcGetFileObjectFromBcb (
 	IN	PVOID	Bcb
 	)
 {
-	UNIMPLEMENTED;
-	return 0;
+	PINTERNAL_BCB iBcb = (PINTERNAL_BCB)Bcb;
+	return iBcb->CacheSegment->Bcb->FileObject;
 }
 
 /*
@@ -84,7 +88,7 @@ CcInitializeCacheMap (
 	IN	PVOID				LazyWriterContext
 	)
 {
-	UNIMPLEMENTED;
+    CcRosInitializeFileCache(FileObject, VACB_MAPPING_GRANULARITY);
 }
 
 /*
@@ -139,7 +143,13 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
          (ULONG)FileSizes->ValidDataLength.QuadPart);
 
   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-  assert(Bcb);
+
+  /*
+   * It is valid to call this function on file objects that weren't
+   * initialized for caching. In this case it's simple no-op.
+   */
+  if (Bcb == NULL)
+     return;
  
   if (FileSizes->AllocationSize.QuadPart < Bcb->AllocationSize.QuadPart)
   {
@@ -226,6 +236,10 @@ CcUninitializeCacheMap (
 	IN	PCACHE_UNINITIALIZE_EVENT	UninitializeCompleteEvent OPTIONAL
 	)
 {
+#if 0
 	UNIMPLEMENTED;
 	return FALSE;
+#else
+    return CcRosReleaseFileCache(FileObject);
+#endif
 }

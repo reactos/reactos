@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.30 2004/08/15 16:38:59 chorns Exp $
+/* $Id: copy.c,v 1.31 2004/08/25 15:08:28 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,7 +22,7 @@
 static PFN_TYPE CcZeroPage = 0;
 
 #define MAX_ZERO_LENGTH	(256 * 1024)
-#define MAX_RW_LENGTH	(64 * 1024)
+#define MAX_RW_LENGTH	(256 * 1024)
 
 #if defined(__GNUC__)
 void * alloca(size_t size);
@@ -119,7 +119,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	   */
 	  current2 = current;
 	  current_size = 0;
-	  while (current2 != NULL && !current2->Valid)
+	  while (current2 != NULL && !current2->Valid && current_size < MAX_RW_LENGTH)
 	    {
 	      current2 = current2->NextInChain;
 	      current_size += Bcb->CacheSegmentSize;
@@ -131,8 +131,9 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
           MmInitializeMdl(Mdl, NULL, current_size);
 	  Mdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
 	  current2 = current;
+	  current_size = 0;
 	  MdlPages = (PPFN_TYPE)(Mdl + 1);
-	  while (current2 != NULL && !current2->Valid)
+	  while (current2 != NULL && !current2->Valid && current_size < MAX_RW_LENGTH)
 	    {
 	      PVOID address = current2->BaseAddress;
 	      for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE); i++, address += PAGE_SIZE)
@@ -140,6 +141,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 		  *MdlPages++ = MmGetPfnForProcess(NULL, address);
 		}
 	      current2 = current2->NextInChain;
+	      current_size += Bcb->CacheSegmentSize;
 	    }
 
 	  /*
@@ -157,7 +159,10 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	     KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
 	     Status = Iosb.Status;
 	  }
-          MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);            
+          if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
+          {
+	     MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+	  }
 	  if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
 	    {
 	      while (current != NULL)
@@ -168,7 +173,8 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 		}
 	      return(Status);
 	    }
-	  while (current != NULL && !current->Valid)
+	  current_size = 0;
+	  while (current != NULL && !current->Valid && current_size < MAX_RW_LENGTH)
 	    {
 	      previous = current;
 	      current = current->NextInChain;
@@ -185,6 +191,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 #endif
 	      Length = Length - TempLength; 
 	      CcRosReleaseCacheSegment(Bcb, previous, TRUE, FALSE, FALSE);
+	      current_size += Bcb->CacheSegmentSize;
 	    }
 	}
     }

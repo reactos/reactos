@@ -29,11 +29,11 @@
 #define  SAM_REG_FILE			L"\\SystemRoot\\System32\\Config\\SAM"
 #define  SEC_REG_FILE			L"\\SystemRoot\\System32\\Config\\SECURITY"
 
-#define  REG_SYSTEM_FILE_NAME		L"\\SYSTEM"
-#define  REG_SOFTWARE_FILE_NAME		L"\\SOFTWARE"
-#define  REG_DEFAULT_USER_FILE_NAME	L"\\DEFAULT"
-#define  REG_SAM_FILE_NAME		L"\\SAM"
-#define  REG_SEC_FILE_NAME		L"\\SECURITY"
+#define  REG_SYSTEM_FILE_NAME		L"\\system"
+#define  REG_SOFTWARE_FILE_NAME		L"\\software"
+#define  REG_DEFAULT_USER_FILE_NAME	L"\\default"
+#define  REG_SAM_FILE_NAME		L"\\sam"
+#define  REG_SEC_FILE_NAME		L"\\security"
 
 #define  REG_BLOCK_SIZE                4096
 #define  REG_HBIN_DATA_OFFSET          32

@@ -62,18 +62,6 @@ CcGetFlushedValidData (
  */
 VOID
 STDCALL
-CcRepinBcb (
-	IN	PVOID	Bcb
-	)
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
 CcRemapBcb (
     IN PVOID Bcb
     )
@@ -143,20 +131,6 @@ STDCALL
 CcSetReadAheadGranularity (
 	IN	PFILE_OBJECT	FileObject,
 	IN	ULONG		Granularity
-	)
-{
-	UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-CcUnpinRepinnedBcb (
-	IN	PVOID			Bcb,
-	IN	BOOLEAN			WriteThrough,
-	IN	PIO_STATUS_BLOCK	IoStatus
 	)
 {
 	UNIMPLEMENTED;
