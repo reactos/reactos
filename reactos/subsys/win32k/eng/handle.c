@@ -14,6 +14,7 @@
 #define NDEBUG
 #include <win32k/debug1.h>
 
+static int LastHandle = MAX_GDI_HANDLES;
 
 ULONG CreateGDIHandle(ULONG InternalSize, ULONG UserSize)
 {
@@ -31,11 +32,13 @@ ULONG CreateGDIHandle(ULONG InternalSize, ULONG UserSize)
   pObj->InternalSize = InternalSize;
   pObj->UserSize = UserSize;
 
-  for( i=1; i < MAX_GDI_HANDLES; i++ ){
+  for( i = (MAX_GDI_HANDLES - 1 <= LastHandle ? 1 : LastHandle + 1); i != LastHandle;
+       i = (MAX_GDI_HANDLES - 1 <= i ? 1 : i + 1) ){
 	if( GDIHandles[ i ].pEngObj == NULL ){
 		pObj->hObj = i;
 		GDIHandles[ i ].pEngObj = pObj;
 		DPRINT("CreateGDIHandle: obj: %x, handle: %d, usersize: %d\n", pObj, i, UserSize );
+		LastHandle = i;
 		return i;
 	}
   }
