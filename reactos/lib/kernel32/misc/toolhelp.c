@@ -550,7 +550,7 @@ Heap32ListFirst(HANDLE hSnapshot, LPHEAPLIST32 lphl)
   {
     BOOL Ret;
 
-    if(Snapshot->ModuleListCount > 0)
+    if(Snapshot->HeapListCount > 0)
     {
       LPHEAPLIST32 Entries = (LPHEAPLIST32)OffsetToPtr(Snapshot, Snapshot->HeapListOffset);
       Snapshot->HeapListIndex = 1;
