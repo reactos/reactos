@@ -18,10 +18,16 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.21.2.1 2004/03/14 17:16:28 navaraf Exp $
+ * $Id: videoprt.c,v 1.21.2.2 2004/03/15 17:02:14 navaraf Exp $
  */
 
 #include "videoprt.h"
+#include "internal/ps.h"
+
+/* GLOBAL VARIABLES ***********************************************************/
+
+ULONG CsrssInitialized = FALSE;
+PEPROCESS Csrss = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -111,6 +117,38 @@ VideoPortGetProcAddress(
    return NULL;
 }
 
+VOID FASTCALL 
+IntAttachToCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess) 
+{ 
+   *CallingProcess = PsGetCurrentProcess(); 
+   if (*CallingProcess != Csrss) 
+   { 
+      if (PsGetCurrentThread()->OldProcess != NULL)
+      { 
+         *PrevAttachedProcess = *CallingProcess; 
+         KeDetachProcess(); 
+      } 
+      else 
+      { 
+         *PrevAttachedProcess = NULL; 
+      } 
+      KeAttachProcess(Csrss); 
+   } 
+} 
+ 
+VOID FASTCALL 
+IntDetachFromCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess) 
+{ 
+   if (*CallingProcess != Csrss) 
+   { 
+      KeDetachProcess(); 
+      if (NULL != *PrevAttachedProcess) 
+      { 
+         KeAttachProcess(*PrevAttachedProcess); 
+      } 
+   } 
+} 
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -140,11 +178,6 @@ VideoPortInitialize(
          "to the old driver detection paradigm. Unfortunetly this case isn't\n"
          "implemented yet.");
 
-      return STATUS_UNSUCCESSFUL;
-   }
-
-   if (!MapVideoAddressSpace())
-   {
       return STATUS_UNSUCCESSFUL;
    }
 
@@ -427,6 +460,8 @@ VideoPortGetRomImage(
    IN ULONG Length)
 {
    static PVOID RomImageBuffer = NULL;
+   PEPROCESS CallingProcess; 
+   PEPROCESS PrevAttachedProcess; 
 
    DPRINT("VideoPortGetRomImage(HwDeviceExtension 0x%X Length 0x%X)\n",
           HwDeviceExtension, Length);
@@ -463,7 +498,9 @@ VideoPortGetRomImage(
          return NULL;
       }
 
+      IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
       RtlCopyMemory(RomImageBuffer, (PUCHAR)0xC0000, Length);
+      IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
 
       return RomImageBuffer;
    }

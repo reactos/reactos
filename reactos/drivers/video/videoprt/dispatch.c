@@ -18,10 +18,14 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: dispatch.c,v 1.1.2.4 2004/03/14 20:13:46 navaraf Exp $
+ * $Id: dispatch.c,v 1.1.2.5 2004/03/15 17:02:14 navaraf Exp $
  */
 
 #include "videoprt.h"
+
+typedef PVOID PHAL_RESET_DISPLAY_PARAMETERS;
+VOID STDCALL HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
+VOID STDCALL HalReleaseDisplayOwnership();
 
 /* GLOBAL VARIABLES ***********************************************************/
 
@@ -378,10 +382,30 @@ VideoPortDispatchOpen(
 
    DPRINT("VidDispatchOpen\n");
 
+   if (CsrssInitialized == FALSE)
+   {
+      /*
+       * We know the first open call will be from the CSRSS process
+       * to let us know its handle.
+       */
+
+      DPRINT("Referencing CSRSS\n");
+      Csrss = PsGetCurrentProcess();
+      DPRINT("Csrss %p\n", Csrss);
+
+      CsrssInitialized = TRUE;
+
+      Irp->IoStatus.Information = FILE_OPENED;
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+      return STATUS_SUCCESS;
+   }
+
    DriverExtension = IoGetDriverObjectExtension(
       DeviceObject->DriverObject,
       DeviceObject->DriverObject);
    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
    if (DriverExtension->InitializationData.HwInitialize(DeviceExtension->MiniPortDeviceExtension))
    {
       Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -425,7 +449,8 @@ VideoPortDispatchClose(
 {
    DPRINT("VidDispatchClose\n");
 
-   HalReleaseDisplayOwnership();
+   if (ResetDisplayParametersDeviceExtension != NULL)
+      HalReleaseDisplayOwnership();
 
    Irp->IoStatus.Status = STATUS_SUCCESS;
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -539,5 +564,4 @@ VideoPortDispatchPower(
 VOID STDCALL
 VideoPortUnload(PDRIVER_OBJECT DriverObject)
 {
-   UnmapVideoAddressSpace();
 }

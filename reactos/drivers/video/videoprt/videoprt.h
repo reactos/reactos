@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.h,v 1.6.2.1 2004/03/14 17:16:28 navaraf Exp $
+ * $Id: videoprt.h,v 1.6.2.2 2004/03/15 17:02:14 navaraf Exp $
  */
 
 #ifndef VIDEOPRT_H
@@ -31,11 +31,8 @@
 /* #define NDEBUG */
 #include <debug.h>
 
-typedef PVOID PHAL_RESET_DISPLAY_PARAMETERS;
 int swprintf(wchar_t *buf, const wchar_t *fmt, ...);
 int vsprintf(char *buf, const char *fmt, va_list args);
-VOID STDCALL HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
-VOID STDCALL HalReleaseDisplayOwnership();
 BOOLEAN STDCALL HalDisableSystemInterrupt(ULONG Vector, ULONG Unknown2);
 BOOLEAN STDCALL HalEnableSystemInterrupt(ULONG Vector, ULONG Unknown2, ULONG Unknown3);
 PIMAGE_NT_HEADERS STDCALL RtlImageNtHeader(IN PVOID BaseAddress);
@@ -132,20 +129,21 @@ VideoPortInterruptRoutine(
    IN struct _KINTERRUPT *Interrupt,
    IN PVOID ServiceContext);
 
-/* resource.c */
-
-BOOL FASTCALL
-MapVideoAddressSpace(VOID);
-
-VOID FASTCALL
-UnmapVideoAddressSpace(VOID);
-
 /* videoprt.c */
+
+extern ULONG CsrssInitialized;
+extern PEPROCESS Csrss;
 
 PVOID STDCALL
 VideoPortGetProcAddress(
    IN PVOID HwDeviceExtension,
    IN PUCHAR FunctionName);
+
+VOID FASTCALL 
+IntAttachToCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess);
+
+VOID FASTCALL 
+IntDetachFromCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess);
 
 /* int10.c */
 
