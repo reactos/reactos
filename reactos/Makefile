@@ -86,7 +86,7 @@ SYS_SVC = rpcss eventlog
 # pteb regtest sectest shm simple thread vmtest winhello
 TEST_APPS = alive apc args atomtest bench consume count dump_shared_data \
             event file gditest hello isotest lpc mstest mutex nptest \
-            pteb regtest sectest shm simple thread tokentest vmtest winhello
+            pteb regtest sectest shm simple thread tokentest vmtest winhello dibtest
 
 # Test applications
 # cabman cat net objdir partinfo pice ps stats
