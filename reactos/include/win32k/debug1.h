@@ -39,8 +39,8 @@
 #endif
 #endif
 
-#define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); ExAllocatePool(NonPagedPool,0); } while(0);
-#define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); ExAllocatePool(NonPagedPool,0); } while(0);
+#define DPRINT1(args...) DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
+#define CHECKPOINT1 DbgPrint("%s:%d\n",__FILE__,__LINE__);
 
 
 #ifdef __NTOSKRNL__
@@ -50,8 +50,8 @@
 #endif
 
 #ifndef NDEBUG
-#define DPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
-#define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); ExAllocatePool(NonPagedPool,0); } while(0);
+#define DPRINT(args...) DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
+#define CHECKPOINT DbgPrint("%s:%d\n",__FILE__,__LINE__);
 #else
 #define DPRINT(args...)
 #define CHECKPOINT
