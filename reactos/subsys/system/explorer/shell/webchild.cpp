@@ -288,7 +288,7 @@ LRESULT WebChildWindow::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 }
 
 
-void WebChildWindow::jump_to(void* path)
+void WebChildWindow::jump_to(LPCTSTR path)
 {
 
 //@@

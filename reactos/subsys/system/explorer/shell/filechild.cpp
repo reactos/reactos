@@ -644,7 +644,7 @@ int FileChildWindow::Notify(int id, NMHDR* pnmh)
 }
 
 
-void FileChildWindow::jump_to(void* path)
+void FileChildWindow::jump_to(LPCTSTR path)
 {
 
 //@@

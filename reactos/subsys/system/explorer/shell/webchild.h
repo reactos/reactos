@@ -1076,5 +1076,5 @@ protected:
 
 	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam);
 
-	virtual void jump_to(void* path);
+	virtual void jump_to(LPCTSTR path);
 };

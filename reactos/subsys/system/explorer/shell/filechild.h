@@ -100,7 +100,7 @@ protected:
 	int		Notify(int id, NMHDR* pnmh);
 
 	virtual void resize_children(int cx, int cy);
-	virtual void jump_to(void* path);
+	virtual void jump_to(LPCTSTR path);
 
 	void	scan_entry(Entry* entry, HWND hwnd);
 

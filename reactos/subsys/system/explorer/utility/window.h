@@ -293,7 +293,7 @@ protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 
 	virtual void resize_children(int cx, int cy);
-	virtual void jump_to(void* path) = 0;
+	virtual void jump_to(LPCTSTR path) = 0;
 
 protected:
 	MenuInfo*_menu_info;
