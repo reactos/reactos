@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.23 2003/08/14 22:34:16 gvg Exp $
+ * $Id: lineto.c,v 1.24 2003/10/02 21:32:45 gvg Exp $
  */
 
 #include <ddk/winddi.h>
@@ -354,23 +354,25 @@ EngLineTo(SURFOBJ *DestObj,
   RECT_ENUM RectEnum;
   BOOL EnumMore;
 
-  DestRect.left = x1;
-  if (x1 != x2)
+  if (x1 < x2)
     {
+      DestRect.left = x1;
       DestRect.right = x2;
     }
   else
     {
-      DestRect.right = x2 + 1;
+      DestRect.left = x2;
+      DestRect.right = x1 + 1;
     }
-  DestRect.top = y1;
-  if (y1 != y2)
+  if (y1 < y2)
     {
+      DestRect.top = y1;
       DestRect.bottom = y2;
     }
   else
     {
-      DestRect.bottom = y2 + 1;
+      DestRect.top = y2;
+      DestRect.bottom = y1 + 1;
     }
 
   if (! IntEngEnter(&EnterLeave, DestObj, &DestRect, FALSE, &Translate, &OutputObj))
