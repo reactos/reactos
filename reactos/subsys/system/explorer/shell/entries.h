@@ -61,6 +61,7 @@ public:
 	WIN32_FIND_DATA _data;
 
 	SFGAOF		_shell_attribs;
+	LPTSTR		_display_name;
 
 	ENTRY_TYPE	_etype;
 	HICON		_hIcon;

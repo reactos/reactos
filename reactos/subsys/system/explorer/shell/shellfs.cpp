@@ -58,6 +58,9 @@ bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN
 				LPCTSTR path = (LPCTSTR)GlobalLock(medium.UNION_MEMBER(hGlobal));
 				UINT sem_org = SetErrorMode(SEM_FAILCRITICALERRORS);
 
+				 // fill out drive names "C:", ...
+				_tcscpy(pw32fdata->cFileName, path);
+
 				if (GetFileAttributesEx(path, GetFileExInfoStandard, &fad)) {
 					pw32fdata->dwFileAttributes = fad.dwFileAttributes;
 					pw32fdata->ftCreationTime = fad.ftCreationTime;
@@ -281,8 +284,12 @@ void ShellDirectory::read_directory()
 			if (bhfi_valid)
 				memcpy(&entry->_bhfi, &bhfi, sizeof(BY_HANDLE_FILE_INFORMATION));
 
-			if (SUCCEEDED(name_from_pidl(_folder, pidls[n], name, MAX_PATH, SHGDN_INFOLDER|0x2000/*0x2000=SHGDN_INCLUDE_NONFILESYS*/)))
-				_tcscpy(entry->_data.cFileName, name);
+			if (SUCCEEDED(name_from_pidl(_folder, pidls[n], name, MAX_PATH, SHGDN_INFOLDER|0x2000/*0x2000=SHGDN_INCLUDE_NONFILESYS*/))) {
+				if (!entry->_data.cFileName[0])
+					_tcscpy(entry->_data.cFileName, name);
+				else if (_tcscmp(entry->_display_name, name))
+					entry->_display_name = _tcsdup(name);	// store display name separate from file name; sort display by file name
+			}
 
 			 // get display icons for files and virtual objects
 			if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||

@@ -79,7 +79,7 @@ LRESULT ShellBrowserChild::Init(LPCREATESTRUCT pcs)
 
 	ClientRect rect(_hwnd);
 
-	SHFILEINFO  sfi;
+	SHFILEINFO sfi;
 
 	_himlSmall = (HIMAGELIST)SHGetFileInfo(TEXT("C:\\"), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX|SHGFI_SMALLICON);
 //	_himlLarge = (HIMAGELIST)SHGetFileInfo(TEXT("C:\\"), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX|SHGFI_LARGEICON);
@@ -276,18 +276,21 @@ void ShellBrowserChild::OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh)
 	LPNMTVDISPINFO lpdi = (LPNMTVDISPINFO)pnmh;
 	ShellEntry* entry = (ShellEntry*)lpdi->item.lParam;
 
-	if (lpdi->item.mask & TVIF_TEXT) {
-		/* if (SHGetFileInfo((LPCTSTR)&*entry->_pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_DISPLAYNAME))
-			lstrcpy(lpdi->item.pszText, sfi.szDisplayName); */
-		lstrcpy(lpdi->item.pszText, entry->_data.cFileName);
-	}
+	if (lpdi->item.mask & TVIF_TEXT)
+		lpdi->item.pszText = entry->_display_name;
 
-	if (lpdi->item.mask & (TVIF_IMAGE|TVIF_SELECTEDIMAGE)) {
+	if (lpdi->item.mask & (/*TVIF_TEXT|*/TVIF_IMAGE|TVIF_SELECTEDIMAGE)) {
 		ShellPath pidl_abs = entry->create_absolute_pidl();	// Caching of absolute PIDLs could enhance performance.
 		LPCITEMIDLIST pidl = pidl_abs;
 
 		SHFILEINFO sfi;
-
+/*
+		if (lpdi->item.mask & TVIF_TEXT)
+			if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_DISPLAYNAME))
+				lstrcpy(lpdi->item.pszText, sfi.szDisplayName);	//TODO: look at cchTextMax if there is enough space available
+			else
+				lpdi->item.pszText = entry->_data.cFileName;
+*/
 		if (lpdi->item.mask & TVIF_IMAGE)
 			if ((HIMAGELIST)SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_SYSICONINDEX|SHGFI_SMALLICON|SHGFI_LINKOVERLAY) == _himlSmall)
 				lpdi->item.iImage = sfi.iIcon;
@@ -311,6 +314,8 @@ void ShellBrowserChild::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)
 
 		if (entry)
 			if (!InsertSubitems(pnmtv->itemNew.hItem, entry, entry->_folder)) {
+				entry->_shell_attribs &= ~SFGAO_HASSUBFOLDER;
+
 				 // remove subitem "+"
 				TV_ITEM tvItem;
 

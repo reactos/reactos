@@ -407,10 +407,10 @@ void FileChildWindow::activate_entry(Pane* pane, HWND hwnd)
 		if (!scanned_old)
 			scan_entry(entry, hwnd);
 
-		if (entry->_data.cFileName[0]=='.' && entry->_data.cFileName[1]=='\0')
+		if (entry->_data.cFileName[0]==TEXT('.') && entry->_data.cFileName[1]==TEXT('\0'))
 			return;
 
-		if (entry->_data.cFileName[0]=='.' && entry->_data.cFileName[1]=='.' && entry->_data.cFileName[2]=='\0') {
+		if (entry->_data.cFileName[0]==TEXT('.') && entry->_data.cFileName[1]==TEXT('.') && entry->_data.cFileName[2]==TEXT('\0')) {
 			entry = _left->_cur->_up;
 			collapse_entry(_left, entry);
 			goto focus_entry;

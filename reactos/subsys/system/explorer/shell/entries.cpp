@@ -45,6 +45,7 @@ Entry::Entry(ENTRY_TYPE etype)
 	_bhfi_valid = false;
 	_level = 0;
 	_hIcon = 0;
+	_display_name = _data.cFileName;
 }
 
 Entry::Entry(Entry* parent)
@@ -58,6 +59,7 @@ Entry::Entry(Entry* parent)
 	_bhfi_valid = false;
 	_level = 0;
 	_hIcon = 0;
+	_display_name = _data.cFileName;
 }
 
  // free a directory entry
@@ -65,6 +67,9 @@ Entry::~Entry()
 {
 	if (_hIcon && _hIcon!=(HICON)-1)
 		DestroyIcon(_hIcon);
+
+	if (_display_name != _data.cFileName)
+		free(_display_name);
 }
 
 

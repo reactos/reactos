@@ -353,7 +353,7 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 			else
 				img = IMG_FOLDER;
 		} else {
-			LPCTSTR ext = _tcsrchr(entry->_data.cFileName, '.');
+			LPCTSTR ext = _tcsrchr(entry->_data.cFileName, TEXT('.'));
 			if (!ext)
 				ext = TEXT("");
 
@@ -498,9 +498,9 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 
 	 // ouput file name
 	if (calcWidthCol == -1)
-		_out_wrkr.output_text(dis, _positions, col, entry->_data.cFileName, 0);
+		_out_wrkr.output_text(dis, _positions, col, entry->_display_name, 0);
 	else if (calcWidthCol==col || calcWidthCol==COLUMNS)
-		calc_width(dis, col, entry->_data.cFileName);
+		calc_width(dis, col, entry->_display_name);
 
 	++col;
 

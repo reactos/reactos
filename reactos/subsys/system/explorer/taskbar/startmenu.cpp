@@ -298,7 +298,7 @@ StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, const ShellEntry* 
 	for(ShellEntryMap::iterator it=_entries.begin(); it!=_entries.end(); ++it) {
 		StartMenuEntry& sme = it->second;
 
-		if (sme._title == entry_name)
+		if (sme._title == entry_name)	//TODO: speed up by using a map indexed by name
 			for(ShellEntrySet::iterator it2=sme._entries.begin(); it2!=sme._entries.end(); ++it2) {
 				if ((*it2)->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 					 // merge the new shell entry with the existing of the same name
