@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.35 2002/01/08 00:49:01 dwelch Exp $
+/* $Id: rw.c,v 1.36 2002/01/15 21:54:51 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,10 +40,79 @@ NextCluster(PDEVICE_EXTENSION DeviceExt,
 {
   if (Fcb != NULL && Fcb->Flags & FCB_IS_PAGE_FILE)
     {
-      ULONG NextCluster;
-      NextCluster = Fcb->FatChain[(*CurrentCluster)];
-      (*CurrentCluster) = NextCluster;
-      return(STATUS_SUCCESS);
+      ULONG i;
+      PULONG FatChain;
+      NTSTATUS Status;
+      DPRINT("NextCluster(Fcb %x, FirstCluster %x, Extend %d)\n", Fcb, FirstCluster, Extend);
+      if (Fcb->FatChainSize == 0)
+      {
+        // paging file with zero length
+        *CurrentCluster = 0xffffffff;
+        if (Extend)
+        {
+          Fcb->FatChain = ExAllocatePool(NonPagedPool, sizeof(ULONG));
+          if (!Fcb->FatChain)
+          {
+            return STATUS_UNSUCCESSFUL;
+          }
+          Status = GetNextCluster(DeviceExt, 0, CurrentCluster, TRUE);
+          if (!NT_SUCCESS(Status))
+          {
+            ExFreePool(Fcb->FatChain);
+            return Status;
+          }
+          Fcb->FatChain[0] = *CurrentCluster;
+          Fcb->FatChainSize = 1;
+          return Status;
+        }
+        else
+        {
+          return STATUS_UNSUCCESSFUL;
+        }
+      }
+      else
+      {
+        for (i = 0; i < Fcb->FatChainSize; i++)
+        {
+          if (Fcb->FatChain[i] == *CurrentCluster)
+            break;
+        }
+        if (i >= Fcb->FatChainSize)
+        {
+          return STATUS_UNSUCCESSFUL;
+        }
+        if (i == Fcb->FatChainSize - 1)
+        {
+          if (Extend)
+          {
+            FatChain = ExAllocatePool(NonPagedPool, (i + 2) * sizeof(ULONG));
+            if (!FatChain)
+            {
+              *CurrentCluster = 0xffffffff;
+              return STATUS_UNSUCCESSFUL;
+            }
+            Status = GetNextCluster(DeviceExt, *CurrentCluster, CurrentCluster, TRUE);
+            if (NT_SUCCESS(Status) && *CurrentCluster != 0xffffffff)
+            {
+              memcpy(FatChain, Fcb->FatChain, (i + 1) * sizeof(ULONG));
+              FatChain[i + 1] = *CurrentCluster;
+              ExFreePool(Fcb->FatChain);
+              Fcb->FatChain = FatChain;
+              Fcb->FatChainSize = i + 2;
+            }
+            else
+              ExFreePool(FatChain);
+            return Status;
+          }
+          else
+          {
+            *CurrentCluster = 0xffffffff;
+            return STATUS_UNSUCCESSFUL;
+          }
+        }
+        *CurrentCluster = Fcb->FatChain[i + 1];
+        return STATUS_SUCCESS;
+      }
     }
   if (FirstCluster == 1)
     {
@@ -90,19 +159,75 @@ OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
   ULONG CurrentCluster;
   ULONG i;
   NTSTATUS Status;
+  DPRINT("OffsetToCluster(DeviceExt %x, Fcb %x, FirstCluster %x,"
+         " FileOffset %x, Cluster %x, Extend %d)\n", DeviceExt, 
+         Fcb, FirstCluster, FileOffset, Cluster, Extend);
+  if (FirstCluster == 0)
+  {
+    DbgPrint("OffsetToCluster is called with FirstCluster = 0!\n");
+    KeBugCheck(0);
+  }
 
   if (Fcb != NULL && Fcb->Flags & FCB_IS_PAGE_FILE)
     {
       ULONG NCluster;
       ULONG Offset = FileOffset / DeviceExt->BytesPerCluster;
-      if (Offset == 0)
-	{
-	  (*Cluster) = FirstCluster;
-	}
+      PULONG FatChain;
+      int i;
+      if (Fcb->FatChainSize == 0)
+      {
+        DbgPrint("OffsetToCluster is called with FirstCluster = %x"
+                 " and Fcb->FatChainSize = 0!\n", FirstCluster);
+        KeBugCheck(0);
+      }
+      if (Offset < Fcb->FatChainSize)
+      {
+        *Cluster = Fcb->FatChain[Offset];
+        return STATUS_SUCCESS;
+      }
       else
+      {
+        if (!Extend)
+        {
+          *Cluster = 0xffffffff;
+          return STATUS_UNSUCCESSFUL;
+        }
+        else
 	{
-	  (*Cluster) = Fcb->FatChain[Offset - 1];
-	}
+          FatChain = ExAllocatePool(NonPagedPool, (Offset + 1) * sizeof(ULONG));
+          if (!FatChain)
+          {
+            *Cluster = 0xffffffff;
+            return STATUS_UNSUCCESSFUL;
+          }
+		  
+          CurrentCluster = Fcb->FatChain[Fcb->FatChainSize - 1];
+          FatChain[Fcb->FatChainSize - 1] = CurrentCluster;
+          for (i = Fcb->FatChainSize; i < Offset + 1; i++)
+          {
+            Status = GetNextCluster(DeviceExt, CurrentCluster, &CurrentCluster, TRUE);
+            if (!NT_SUCCESS(Status) || CurrentCluster == 0xFFFFFFFF)
+            {
+              while (i >= Fcb->FatChainSize)
+              {
+                WriteCluster(DeviceExt, FatChain[i - 1], 0xFFFFFFFF);
+                i--;
+              }
+              *Cluster = 0xffffffff;
+              ExFreePool(FatChain);
+              if (!NT_SUCCESS(Status))
+                 return Status;
+              return STATUS_UNSUCCESSFUL;
+            }
+            FatChain[i] = CurrentCluster;
+          }
+          memcpy (FatChain, Fcb->FatChain, Fcb->FatChainSize * sizeof(ULONG));
+          ExFreePool(Fcb->FatChain);
+          Fcb->FatChain = FatChain;
+          Fcb->FatChainSize = Offset + 1;
+        }
+      }
+      *Cluster = CurrentCluster;
       return(STATUS_SUCCESS);
     }
   if (FirstCluster == 1)

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.35 2002/01/08 00:49:01 dwelch Exp $
+/* $Id: create.c,v 1.36 2002/01/15 21:54:51 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -643,7 +643,19 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 		      (Stack->Parameters.
 		       Create.FileAttributes & FILE_ATTRIBUTE_VALID_FLAGS));
 	  if (NT_SUCCESS (Status))
+	  {
+		if (PagingFileCreate)
+		{
+		  DPRINT("Creating a new paging file.\n");
+		  pCcb = FileObject->FsContext2;
+		  pFcb = pCcb->pFcb;
+	      pFcb->Flags |= FCB_IS_PAGE_FILE;
+	      pFcb->FatChainSize = 0;
+	  	  pFcb->FatChain = NULL;
+		}
+
 	    Irp->IoStatus.Information = FILE_CREATED;
+	  }
 	  /* FIXME set size if AllocationSize requested */
 	  /* FIXME set extended attributes? */
 	  /* FIXME set share access */
@@ -703,12 +715,15 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     if (PagingFileCreate)
       {
 	ULONG CurrentCluster, NextCluster, i;
-
+	DPRINT("Open an existing paging file\n");
 	pFcb->Flags |= FCB_IS_PAGE_FILE;
 	pFcb->FatChainSize = 
-	  ((pFcb->entry.FileSize / DeviceExt->BytesPerCluster) + 2);
-	pFcb->FatChain = ExAllocatePool(NonPagedPool, 
+	  ((pFcb->entry.FileSize + DeviceExt->BytesPerCluster - 1) / DeviceExt->BytesPerCluster);
+	if (pFcb->FatChainSize)
+	{
+	  pFcb->FatChain = ExAllocatePool(NonPagedPool, 
 					pFcb->FatChainSize * sizeof(ULONG));
+	}
 
 	if (DeviceExt->FatType == FAT32)
 	  {
@@ -721,16 +736,18 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	  }
 
 	i = 0;
-	while (CurrentCluster != 0xffffffff)
-	  {
-	    Status = GetNextCluster (DeviceExt, CurrentCluster, &NextCluster, 
+	if (pFcb->FatChainSize)
+	{
+		while (CurrentCluster != 0xffffffff)
+		{
+		  pFcb->FatChain[i] = CurrentCluster;	
+	      Status = GetNextCluster (DeviceExt, CurrentCluster, &NextCluster, 
 				     FALSE);
-	    pFcb->FatChain[i] = NextCluster;
-	    i++;
-	    CurrentCluster = NextCluster;
-	  }
-	pFcb->FatChain[i] = 0xFFFFFFFF;
+	      i++;
+	      CurrentCluster = NextCluster;
+		}
       }
+	}
 
     /*
      * Check the file has the requested attributes

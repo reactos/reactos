@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.12 2002/01/08 00:49:01 dwelch Exp $
+/* $Id: fcb.c,v 1.13 2002/01/15 21:54:51 hbirr Exp $
  *
  *
  * FILE:             fcb.c
@@ -58,6 +58,8 @@ vfatDestroyFCB(PVFATFCB  pFCB)
 {
   ExDeleteResourceLite(&pFCB->PagingIoResource);
   ExDeleteResourceLite(&pFCB->MainResource);
+  if ((pFCB->Flags & FCB_IS_PAGE_FILE) && pFCB->FatChainSize)
+	ExFreePool(pFCB->FatChain);
   ExFreePool (pFCB);
 }
 
