@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.56 2003/11/16 15:19:28 hbirr Exp $
+/* $Id: mminit.c,v 1.57 2003/11/30 17:17:02 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -52,6 +52,7 @@ static MEMORY_AREA* kernel_data_desc = NULL;
 static MEMORY_AREA* kernel_param_desc = NULL;
 static MEMORY_AREA* kernel_pool_desc = NULL;
 static MEMORY_AREA* kernel_shared_data_desc = NULL;
+static MEMORY_AREA* kernel_mapped_low_mem_desc = NULL; 
 static MEMORY_AREA* MiKernelMapDescriptor = NULL;
 static MEMORY_AREA* MiPagedPoolDescriptor = NULL;
 
@@ -144,6 +145,18 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
 		      &kernel_kpcr_desc,
 		      FALSE,
 		      FALSE);
+
+   BaseAddress = (PVOID)0xd0000000;
+   MmCreateMemoryArea(NULL,
+		      MmGetKernelAddressSpace(),
+		      MEMORY_AREA_SYSTEM,
+		      &BaseAddress,
+		      0x100000,
+		      0,
+		      &kernel_mapped_low_mem_desc,
+		      FALSE,
+		      FALSE);
+
    BaseAddress = (PVOID)KERNEL_BASE;
    Length = PAGE_ROUND_UP(((ULONG)&_text_end__)) - KERNEL_BASE;
    ParamLength = ParamLength - Length;
@@ -305,7 +318,7 @@ MmInit1(ULONG FirstKrnlPhysAddr,
 
    if ((BIOSMemoryMap != NULL) && (AddressRangeCount > 0))
      {
-	// If we have a bios memory map, recalulate the the memory size
+	// If we have a bios memory map, recalulate the memory size
 	ULONG last = 0;
 	for (i = 0; i < AddressRangeCount; i++)
 	  {
@@ -413,12 +426,19 @@ MmInit1(ULONG FirstKrnlPhysAddr,
      }
 
    DPRINT("Invalidating between %x and %x\n",
-	  LastKernelAddress,
-	  0xc0600000);
+	  LastKernelAddress, 0xc0600000);
    for (i=(LastKernelAddress); i<0xc0600000; i+=PAGE_SIZE)
      {
 	 MmRawDeleteVirtualMapping((PVOID)(i));
      }
+
+   DPRINT("Invalidating between %x and %x\n",
+	  0xd0100000, 0xd0400000);
+   for (i=0xd0100000; i<0xd0400000; i+=PAGE_SIZE)
+     {
+	 MmRawDeleteVirtualMapping((PVOID)(i));
+     }
+   
    DPRINT("Almost done MmInit()\n");
 #ifndef MP
    /* FIXME: This is broken in SMP mode */
