@@ -1,4 +1,4 @@
-/* $Id: null.c,v 1.4 2000/07/02 10:54:41 ekohl Exp $
+/* $Id: null.c,v 1.5 2001/06/12 12:36:58 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -27,7 +27,8 @@ NTSTATUS NullRead(PIRP Irp, PIO_STACK_LOCATION stk)
    return(STATUS_END_OF_FILE);
 }
 
-NTSTATUS NullDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+NullDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Handles user mode requests
  * ARGUMENTS:
@@ -63,13 +64,13 @@ NTSTATUS NullDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(status);
 }
 
-NTSTATUS NullUnload(PDRIVER_OBJECT DriverObject)
+NTSTATUS STDCALL
+NullUnload(PDRIVER_OBJECT DriverObject)
 {
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Called by the system to initalize the driver
