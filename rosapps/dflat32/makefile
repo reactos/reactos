@@ -2,6 +2,8 @@
 #  ReactOS makefile for D-Flat/32
 #
 
+PATH_TO_TOP=..
+
 TARGET=edit.exe
 
 all: $(TARGET)
@@ -40,18 +42,18 @@ else
 endif
 
 
-dist: $(TARGET:%=../$(DIST_DIR)/apps/%)
+dist: $(TARGET:%=$(PATH_TO_TOP)/$(DIST_DIR)/apps/%)
 
-$(TARGET:%=../$(DIST_DIR)/apps/%): ../$(DIST_DIR)/apps/%: %
+$(TARGET:%=../$(DIST_DIR)/apps/%): $(PATH_TO_TOP)/$(DIST_DIR)/apps/%: %
 ifeq ($(DOSCLI),yes)
-	$(CP) $* ..\$(DIST_DIR)\apps\$*
+	$(CP) $* $(PATH_TO_TOP)\$(DIST_DIR)\apps\$*
 else
-	$(CP) $* ../$(DIST_DIR)/apps\$*
+	$(CP) $* $(PATH_TO_TOP)/$(DIST_DIR)/apps\$*
 endif
 
 
 #WITH_DEBUGGING=yes
 
-include ../rules.mak
+include $(PATH_TO_TOP)/rules.mak
 
 # EOF

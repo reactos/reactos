@@ -1,4 +1,4 @@
-/* $Id: ph.h,v 1.3 2001/01/13 23:54:40 narnaoud Exp $ */
+/* $Id: ph.h,v 1.4 2002/09/09 22:48:03 sedwards Exp $ */
 
 // ph.h : include file for standard system include files,
 //  or project specific include files that are used frequently, but
@@ -18,7 +18,7 @@
 #define _DEBUG
 #endif
 
-#include <TCHAR.H>
+#include <tchar.h>
 
 #include <stdio.h>
 #include <stdlib.h>
