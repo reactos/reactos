@@ -192,6 +192,7 @@ MainFrame::MainFrame(HWND hwnd)
 	DrawText(canvas, TEXT("My"), -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
 	HFONT hfont = GetStockFont(DEFAULT_GUI_FONT);
 
+#ifdef _DEBUG
 	_haddressedit = CreateWindow(TEXT("EDIT"), TEXT("file://C:\\"), WS_CHILD|WS_VISIBLE, 0, 0, 0, rect.bottom,
 							hwnd, (HMENU)IDW_ADDRESSBAR, g_Globals._hInstance, 0);
 	SetWindowFont(_haddressedit, hfont, FALSE);
@@ -199,6 +200,7 @@ MainFrame::MainFrame(HWND hwnd)
 	_hcommandedit = CreateWindow(TEXT("EDIT"), TEXT("> Command"), WS_CHILD|WS_VISIBLE, 0, 0, 0, rect.bottom,
 							hwnd, (HMENU)IDW_ADDRESSBAR, g_Globals._hInstance, 0);
 	SetWindowFont(_hcommandedit, hfont, FALSE);
+#endif
 
 	/* CreateStatusWindow does not accept WS_BORDER
 		_hstatusbar = CreateWindowEx(WS_EX_NOPARENTNOTIFY, STATUSCLASSNAME, 0,

@@ -1592,7 +1592,11 @@ int StartMenuHandler::Command(int id, int code)
 		break;
 
 	  case IDC_PRINTERS:
+#ifdef _ROS_	// to be removed when printer folder will be implemented
+		MessageBox(0, TEXT("printer folder not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
+#else
 		CreateSubmenu(id, CSIDL_PRINTERS, CSIDL_PRINTHOOD, ResString(IDS_PRINTERS));
+#endif
 		break;
 
 	  case IDC_CONTROL_PANEL:
@@ -1605,14 +1609,22 @@ int StartMenuHandler::Command(int id, int code)
 		break;
 
 	  case IDC_CONNECTIONS:
+#ifdef _ROS_	// to be removed when RAS will be implemented
+		MessageBox(0, TEXT("RAS folder not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
+#else
 		CreateSubmenu(id, CSIDL_CONNECTIONS, ResString(IDS_CONNECTIONS));
+#endif
 		break;
 
 
 	// browse menu
 
 	  case IDC_NETWORK:
+#ifdef _ROS_	// to be removed when network will be implemented
+		MessageBox(0, TEXT("network not yet implemented"), ResString(IDS_TITLE), MB_OK);
+#else
 		CreateSubmenu(id, CSIDL_NETWORK, ResString(IDS_NETWORK));
+#endif
 		break;
 
 	  case IDC_DRIVES:
@@ -1723,8 +1735,13 @@ void SettingsMenu::AddEntries()
 #endif
 		AddButton(ResString(IDS_CONTROL_PANEL),	ICID_CONFIG, false, IDC_CONTROL_PANEL);
 
+#ifdef _ROS_	// to be removed when printer/network will be implemented
+	AddButton(ResString(IDS_PRINTERS),		ICID_PRINTER, false, IDC_PRINTERS);
+	AddButton(ResString(IDS_CONNECTIONS),	ICID_NETWORK, false, IDC_CONNECTIONS);
+#else
 	AddButton(ResString(IDS_PRINTERS),		ICID_PRINTER, true, IDC_PRINTERS);
 	AddButton(ResString(IDS_CONNECTIONS),	ICID_NETWORK, true, IDC_CONNECTIONS);
+#endif
 	AddButton(ResString(IDS_ADMIN),			ICID_CONFIG, true, IDC_ADMIN);
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
@@ -1742,7 +1759,11 @@ void BrowseMenu::AddEntries()
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NONETHOOD))	// or REST_NOENTIRENETWORK ?
 #endif
+#ifdef _ROS_	// to be removed when printer/network will be implemented
+		AddButton(ResString(IDS_NETWORK),	ICID_NETWORK, false, IDC_NETWORK);
+#else
 		AddButton(ResString(IDS_NETWORK),	ICID_NETWORK, true, IDC_NETWORK);
+#endif
 
 	AddButton(ResString(IDS_DRIVES),	ICID_FOLDER, true, IDC_DRIVES);
 }
