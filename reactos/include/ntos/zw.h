@@ -5457,11 +5457,11 @@ NtQueryVirtualMemory(
  * FUNCTION: Raises a hard error (stops the system)
  * ARGUMENTS:
  *	  Status = Status code of the hard error
- *	  Unknown2 = ??
- *	  Unknown3 = ??
- *	  Unknown4 = ??
- *	  Unknown5 = ??
- *	  Unknown6 = ??
+ *	  NumberOfParameters = Number of (optional) parameters in Parameters
+ *	  UnicodeStringParameterMask = (optional) string parameter, one per error code
+ *	  Parameters = An Array of pointers for use in the error message string
+ *	  ResponseOption = Specifies the type of the message box
+ *	  Response = Specifies the user's response
  * RETURNS: Status
  *
  */
@@ -5469,12 +5469,12 @@ NtQueryVirtualMemory(
 NTSTATUS
 STDCALL
 NtRaiseHardError(
-	IN NTSTATUS Status,
-	ULONG Unknown2,
-	ULONG Unknown3,
-	ULONG Unknown4,
-	ULONG Unknown5,
-	ULONG Unknown6
+	IN NTSTATUS ErrorStatus,
+	IN ULONG NumberOfParameters,
+	IN PUNICODE_STRING UnicodeStringParameterMask  OPTIONAL,
+	IN PVOID *Parameters,
+	IN HARDERROR_RESPONSE_OPTION ResponseOption,
+	OUT PHARDERROR_RESPONSE Response
 	);
 
 /*
@@ -6186,23 +6186,24 @@ ZwQueryVirtualMemory(
  * FUNCTION: Raises a hard error (stops the system)
  * ARGUMENTS:
  *	  Status = Status code of the hard error
- *	  Unknown2 = ??
- *	  Unknown3 = ??
- *	  Unknown4 = ??
- *	  Unknown5 = ??
- *	  Unknown6 = ??
+ *	  NumberOfParameters = Number of (optional) parameters in Parameters
+ *	  UnicodeStringParameterMask = (optional) string parameter, one per error code
+ *	  Parameters = An Array of pointers for use in the error message string
+ *	  ResponseOption = Specifies the type of the message box
+ *	  Response = Specifies the user's response
  * RETURNS: Status
  *
  */
+
 NTSTATUS
 STDCALL
 ZwRaiseHardError(
-	IN NTSTATUS Status,
-	ULONG Unknown2,
-	ULONG Unknown3,
-	ULONG Unknown4,
-	ULONG Unknown5,
-	ULONG Unknown6
+	IN NTSTATUS ErrorStatus,
+	IN ULONG NumberOfParameters,
+	IN PUNICODE_STRING UnicodeStringParameterMask  OPTIONAL,
+	IN PVOID *Parameters,
+	IN HARDERROR_RESPONSE_OPTION ResponseOption,
+	OUT PHARDERROR_RESPONSE Response
 	);
 
 /*

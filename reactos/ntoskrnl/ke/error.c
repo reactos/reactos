@@ -44,14 +44,14 @@ KiUnexpectedInterrupt(
 }
 
 NTSTATUS STDCALL 
-NtRaiseHardError(IN NTSTATUS Status,
-		 ULONG Unknown2,
-		 ULONG Unknown3,
-		 ULONG Unknown4,
-		 ULONG Unknown5,
-		 ULONG Unknown6)
+NtRaiseHardError(IN NTSTATUS ErrorStatus,
+                 IN ULONG NumberOfParameters,
+                 IN PUNICODE_STRING UnicodeStringParameterMask  OPTIONAL,
+                 IN PVOID *Parameters,
+                 IN HARDERROR_RESPONSE_OPTION ResponseOption,
+                 OUT PHARDERROR_RESPONSE Response)
 {
-  DPRINT1("Hard error %x\n", Status);
+  DPRINT1("Hard error %x\n", ErrorStatus);
   return(STATUS_SUCCESS);
 }
 
