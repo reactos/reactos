@@ -40,7 +40,6 @@ RM		= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)rdel
 CP		= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)rcopy
 MKDIR		= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)rmkdir
 RMDIR		= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)rrmdir
-NASM_CMD	= nasmw
 OBJCOPY		= objcopy
 DEPTOOL		= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)deptool
 HOSTTOOL	= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)hosttype
