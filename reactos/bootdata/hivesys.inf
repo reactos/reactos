@@ -674,13 +674,14 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Null","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Serial","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Group",0x00000000,"Base"
 HKLM,"SYSTEM\CurrentControlSet\Services\Serial","ImagePath",0x00020000,"system32\drivers\serial.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Type",0x00010001,0x00000001
 ;hard coded values
 HKLM,"SYSTEM\CurrentControlSet\Services\Serial\Enum","0",0x00000000,"ACPI\PNP0501"
 HKLM,"SYSTEM\CurrentControlSet\Services\Serial\Enum","Count",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Serial\Enum","NextInstance",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\0000","Service",0x00000000,"serial"
+HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\1","Service",0x00000000,"serial"
+HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\2","Service",0x00000000,"serial"
 
 ; Packet driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","ErrorControl",0x00010001,0x00000001

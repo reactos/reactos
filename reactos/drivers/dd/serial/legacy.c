@@ -74,11 +74,12 @@ SerialDetectUartType(
 	return Uart16550A;
 }
 
-NTSTATUS
+static NTSTATUS
 DetectLegacyDevice(
 	IN PDRIVER_OBJECT DriverObject,
 	IN ULONG ComPortBase,
-	IN ULONG Irq)
+	IN ULONG Irq,
+	IN PULONG pComPortNumber OPTIONAL)
 {
 	ULONG ResourceListSize;
 	PCM_RESOURCE_LIST ResourceList;
@@ -125,9 +126,16 @@ DetectLegacyDevice(
 		NULL, NULL, 0,
 		&ConflictDetected);
 	if (Status == STATUS_CONFLICTING_ADDRESSES)
+	{
+		DPRINT("Serial: conflict detected for serial port at 0x%lx (Irq %lu)\n", ComPortBase, Irq);
+		ExFreePoolWithTag(ResourceList, SERIAL_TAG);
 		return STATUS_DEVICE_NOT_CONNECTED;
+	}
 	if (!NT_SUCCESS(Status))
+	{
+		ExFreePoolWithTag(ResourceList, SERIAL_TAG);
 		return Status;
+	}
 	
 	/* Test if port exists */
 	UartType = SerialDetectUartType((PUCHAR)ComPortBase);
@@ -143,7 +151,7 @@ DetectLegacyDevice(
 			&Pdo);
 		if (NT_SUCCESS(Status))
 		{
-			Status = SerialAddDeviceInternal(DriverObject, Pdo, UartType, &Fdo);
+			Status = SerialAddDeviceInternal(DriverObject, Pdo, UartType, pComPortNumber, &Fdo);
 			if (NT_SUCCESS(Status))
 			{
 				Status = SerialPnpStartDevice(Fdo, ResourceList);
@@ -159,6 +167,7 @@ DetectLegacyDevice(
 			&ConflictDetected);
 		Status = STATUS_DEVICE_NOT_CONNECTED;
 	}
+	ExFreePoolWithTag(ResourceList, SERIAL_TAG);
 	return Status;
 }
 
@@ -168,13 +177,14 @@ DetectLegacyDevices(
 {
 	ULONG ComPortBase[] = { 0x3f8, 0x2f8, 0x3e8, 0x2e8 };
 	ULONG Irq[] = { 4, 3, 4, 3 };
+	ULONG ComPortNumber[] = { 1, 2, 3, 4 };
 	ULONG i;
 	NTSTATUS Status;
 	NTSTATUS ReturnedStatus = STATUS_SUCCESS;
 	
 	for (i = 0; i < sizeof(ComPortBase)/sizeof(ComPortBase[0]); i++)
 	{
-		Status = DetectLegacyDevice(DriverObject, ComPortBase[i], Irq[i]);
+		Status = DetectLegacyDevice(DriverObject, ComPortBase[i], Irq[i], &ComPortNumber[i]);
 		if (!NT_SUCCESS(Status) && Status != STATUS_DEVICE_NOT_CONNECTED)
 			ReturnedStatus = Status;
 		DPRINT("Serial: Legacy device at 0x%x (IRQ %lu): status = 0x%08lx\n", ComPortBase[i], Irq[i], Status);

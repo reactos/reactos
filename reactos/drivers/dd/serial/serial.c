@@ -41,6 +41,18 @@ DriverEntry(
 	DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = SerialQueryInformation;
 	DriverObject->MajorFunction[IRP_MJ_PNP] = SerialPnp;
 	DriverObject->MajorFunction[IRP_MJ_POWER] = SerialPower;
-
-	return DetectLegacyDevices(DriverObject);
+	
+	/* FIXME: It seems that DriverEntry function may be called more
+	 * than once. Do only legacy detection the first time. */
+	static BOOLEAN FirstTime = TRUE;
+	if (FirstTime)
+	{
+		FirstTime = FALSE;
+		return DetectLegacyDevices(DriverObject);
+	}
+	else
+	{
+		DPRINT1("Serial: DriverEntry called for the second time!\n");
+		return STATUS_SUCCESS;
+	}
 }

@@ -18,6 +18,7 @@ SerialAddDeviceInternal(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PDEVICE_OBJECT Pdo,
 	IN UART_TYPE UartType,
+	IN PULONG pComPortNumber OPTIONAL,
 	OUT PDEVICE_OBJECT* pFdo OPTIONAL)
 {
 	PDEVICE_OBJECT Fdo = NULL;
@@ -27,6 +28,7 @@ SerialAddDeviceInternal(
 	UNICODE_STRING DeviceName;
 	//UNICODE_STRING SymbolicLinkName;
 	static ULONG DeviceNumber = 0;
+	static ULONG ComPortNumber = 1;
 
 	DPRINT("Serial: SerialAddDeviceInternal called\n");
    
@@ -68,6 +70,10 @@ SerialAddDeviceInternal(
 #endif
 
 	DeviceExtension->SerialPortNumber = DeviceNumber++;
+	if (pComPortNumber == NULL)
+		DeviceExtension->ComPort = ComPortNumber++;
+	else
+		DeviceExtension->ComPort = *pComPortNumber;
 	DeviceExtension->Pdo = Pdo;
 	DeviceExtension->PnpState = dsStopped;
 	DeviceExtension->UartType = UartType;
@@ -122,13 +128,9 @@ SerialAddDevice(
 	/* We have here a PDO that does not correspond to a legacy
 	 * serial port. So call the internal AddDevice function.
 	 */
-	DPRINT1("Serial: SerialAddDevice() called. Pdo 0x%p (should be NULL)\n", Pdo);
-	/* FIXME: due to a bug, previously described AddDevice is
-	 * not called with a NULL Pdo. Block this call (blocks
-	 * unfortunately all the other PnP serial ports devices).
-	 */
-	return SerialAddDeviceInternal(DriverObject, Pdo, UartUnknown, NULL);
-	//return STATUS_UNSUCCESSFUL;
+	return SerialAddDeviceInternal(DriverObject, Pdo, UartUnknown, NULL, NULL);
+
+
 }
 
 NTSTATUS STDCALL
@@ -160,7 +162,6 @@ SerialPnpStartDevice(
 	
 	ASSERT(DeviceExtension->PnpState == dsStopped);
 	
-	DeviceExtension->ComPort = DeviceExtension->SerialPortNumber + 1;
 	DeviceExtension->BaudRate = 19200 | SERIAL_BAUD_USER;
 	DeviceExtension->BaseAddress = 0;
 	Dirql = 0;
@@ -330,15 +331,16 @@ SerialPnp(
 				KIRQL Dirql;
 				ULONG ComPortBase;
 				ULONG Irq;
+				BOOLEAN ConflictDetected;
 				
 				DPRINT1("Serial: no allocated resources for this device! Creating fake list\n");
-				switch (((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->SerialPortNumber)
+				switch (((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->ComPort)
 				{
-					case 0:
+					case 1:
 						ComPortBase = 0x3f8;
 						Irq = 4;
 						break;
-					case 1:
+					case 2:
 						ComPortBase = 0x2f8;
 						Irq = 3;
 						break;
@@ -350,10 +352,15 @@ SerialPnp(
 				ResourceListSize = sizeof(CM_RESOURCE_LIST) + sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 				ResourceList = (PCM_RESOURCE_LIST)ExAllocatePoolWithTag(PagedPool, ResourceListSize, SERIAL_TAG);
 				if (!ResourceList)
+				{
+					Irp->IoStatus.Information = 0;
+					Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+					IoCompleteRequest(Irp, IO_NO_INCREMENT);
 					return STATUS_INSUFFICIENT_RESOURCES;
+				}
 				ResourceList->Count = 1;
-				ResourceList->List[0].InterfaceType = Isa;
-				ResourceList->List[0].BusNumber = -1; /* FIXME */
+				ResourceList->List[0].InterfaceType = InterfaceTypeUndefined;
+				ResourceList->List[0].BusNumber = -1; /* unknown */
 				ResourceList->List[0].PartialResourceList.Version = 1;
 				ResourceList->List[0].PartialResourceList.Revision = 1;
 				ResourceList->List[0].PartialResourceList.Count = 2;
@@ -374,6 +381,19 @@ SerialPnp(
 					&Dirql,
 					&ResourceDescriptor->u.Interrupt.Affinity);
 				ResourceDescriptor->u.Interrupt.Level = (ULONG)Dirql;
+				
+				/* Verify that this COM port is not the serial debug port */
+				Status = IoReportResourceForDetection(
+					DeviceObject->DriverObject, ResourceList, 0,
+					NULL, NULL, 0,
+					&ConflictDetected);
+				if (!NT_SUCCESS(Status))
+				{
+					Irp->IoStatus.Information = 0;
+					Irp->IoStatus.Status = Status;
+					IoCompleteRequest(Irp, IO_NO_INCREMENT);
+					return Status;
+				}
 				
 				Stack->Parameters.StartDevice.AllocatedResources =
 					Stack->Parameters.StartDevice.AllocatedResourcesTranslated =
