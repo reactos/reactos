@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.5 2003/08/22 20:00:39 weiden Exp $
+/* $Id: res.c,v 1.6 2003/12/20 21:43:27 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -49,12 +49,11 @@ LdrFindResource_U(PVOID BaseAddress,
     PIMAGE_RESOURCE_DIRECTORY ResBase;
     PIMAGE_RESOURCE_DIRECTORY_ENTRY ResEntry;
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG EntryCount;
     PWCHAR ws;
     ULONG i;
     ULONG Id;
+    LONG low, high, mid, result;
 
-    //DPRINT("LdrFindResource_U()\n");
     DPRINT("LdrFindResource_U(%08x, %08x, %d, %08x)\n", BaseAddress, ResourceInfo, Level, ResourceDataEntry);
 
     /* Get the pointer to the resource directory */
@@ -77,43 +76,51 @@ LdrFindResource_U(PVOID BaseAddress,
 //	ResourceInfo.Name = (ULONG)lpName;
 //	ResourceInfo.Language = (ULONG)wLanguage;
 
-        EntryCount = ResDir->NumberOfNamedEntries;
-        DPRINT("    Id: %d  NumberOfNamedEntries: %d\n", Id, EntryCount);
-        ResEntry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(ResDir + 1);
-        //DPRINT("ResEntry %x\n", (ULONG)ResEntry);
         if (Id & 0xFFFF0000) {
             /* Resource name is a unicode string */
+            ResEntry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(ResDir + 1);
             DPRINT("ResEntry %x - Resource name is a unicode string\n", (ULONG)ResEntry);
-            DPRINT("EntryCount %d\n", (ULONG)EntryCount);
-            for (; EntryCount--; ResEntry++) {
-                /* Scan entries for equal name */
-                if (ResEntry->Name & 0x80000000) {
-                    ws = (PWCHAR)((ULONG)ResBase + (ResEntry->Name & 0x7FFFFFFF));
-                    if (!_wcsnicmp((PWCHAR)Id, ws + 1, *ws) &&
-                          wcslen((PWCHAR)Id) == (int)*ws) {
-                        goto found;
-                    }
-                }
+            DPRINT("EntryCount %d\n", (ULONG)ResDir->NumberOfNamedEntries);
+
+            low = 0;
+            high = ResDir->NumberOfNamedEntries - 1;
+            mid = high/2;
+            while( low <= high ) {
+               /* Does we need check if it's named entry, think not */
+               ws = (PWCHAR)((ULONG)ResBase + (ResEntry[mid].Name & 0x7FFFFFFF));
+               result = _wcsnicmp((PWCHAR)Id, ws + 1, *ws);
+               /* Need double check for lexical & length */
+               if(result == 0) {
+                  result = (wcslen((PWCHAR)Id) - (int)*ws);
+                  if(result == 0) goto found;
+               }
+               if(result < 0)
+                  high = mid - 1;
+               else
+                  low = mid + 1;
+				
+               mid = (low + high)/2;
             }
         } else {
             /* We use ID number instead of string */
+            ResEntry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(ResDir + 1) + ResDir->NumberOfNamedEntries;
             DPRINT("ResEntry %x - Resource ID number instead of string\n", (ULONG)ResEntry);
-            DPRINT("EntryCount %d\n", (ULONG)EntryCount);
-            ResEntry += EntryCount;
-            EntryCount = ResDir->NumberOfIdEntries;
-            DPRINT("EntryCount %d\n", (ULONG)EntryCount);
-            for (; EntryCount--; ResEntry++) {
-                /* Scan entries for equal name */
-                DPRINT("EntryCount %d  ResEntry %x\n", (ULONG)EntryCount, ResEntry);
-                DPRINT("ResEntry->Name %x  Id %x\n", (ULONG)ResEntry->Name, Id);
-                if (ResEntry->Name == Id) {
-                    DPRINT("ID entry found %x\n", Id);
-                    goto found;
-                }
-            }
-        }
+            DPRINT("EntryCount %d\n", (ULONG)ResDir->NumberOfIdEntries);
 
-        //DPRINT("Error %lu\n", i);
+            low = 0;
+            high = ResDir->NumberOfIdEntries - 1;
+            mid = high/2;
+            while( low <= high ) {
+               result = Id - ResEntry[mid].Name;
+               if(result == 0) goto found;
+               if(result < 0)
+                  high = mid - 1;
+               else
+                  low = mid + 1;
+				
+               mid = (low + high)/2;
+             }
+        }
 
         switch (i) {
         case 0:
@@ -139,7 +146,7 @@ LdrFindResource_U(PVOID BaseAddress,
         }
 found:;
         ResDir = (PIMAGE_RESOURCE_DIRECTORY)((ULONG)ResBase +
-                     (ResEntry->OffsetToData & 0x7FFFFFFF));
+                     (ResEntry[mid].OffsetToData & 0x7FFFFFFF));
     }
     DPRINT("ResourceDataEntry: %x\n", (ULONG)ResDir);
 
