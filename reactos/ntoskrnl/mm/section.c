@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.162 2004/08/28 22:18:24 navaraf Exp $
+/* $Id: section.c,v 1.163 2004/09/28 20:58:29 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -3809,7 +3809,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
             return(STATUS_UNSUCCESSFUL);
          }
          /* Otherwise find a gap to map the image. */
-         ImageBase = MmFindGap(AddressSpace, PAGE_ROUND_UP(ImageSize), FALSE);
+         ImageBase = MmFindGap(AddressSpace, PAGE_ROUND_UP(ImageSize), PAGE_SIZE, FALSE);
          if (ImageBase == NULL)
          {
             MmUnlockAddressSpace(AddressSpace);
