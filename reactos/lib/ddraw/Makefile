@@ -12,7 +12,7 @@ TARGET_CFLAGS = -D__USE_W32API -I$(PATH_TO_TOP)/include/wine
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror 
 
-TARGET_SDKLIBS = ntdll.a gdi32.a dxguid.a ole32.a user32.a 
+TARGET_SDKLIBS = ntdll.a gdi32.a dxguid.a ole32.a user32.a d3d8thk.a
 
 
 TARGET_OBJECTS = \

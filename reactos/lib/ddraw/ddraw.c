@@ -10,27 +10,18 @@
  */
 
 #include <windows.h>
-//#include <ddraw.h>
+#include "ddraw.h"
+#include "rosddraw.h"
 
- #define DD_OK 0
  
-HRESULT STDCALL DirectDrawCreate(
-  GUID FAR* lpGUID, 
-  DWORD FAR* lplpDD, 
-  IUnknown FAR* pUnkOuter
-)
-{	
-    return DD_OK;
+HRESULT WINAPI DirectDrawCreate(LPGUID lpGUID, LPVOID* lplpDD, LPUNKNOWN pUnkOuter) 
+{    	
+   return DDRAW_Create(lpGUID, (LPVOID*) lplpDD, pUnkOuter, &IID_IDirectDraw, FALSE);
 }
 
-HRESULT STDCALL DirectDrawCreateEx(
-  GUID FAR* lpGUID, 
-  DWORD FAR* lplpDD, 
-  DWORD Unknown3,
-  IUnknown FAR* pUnkOuter
-)
+HRESULT WINAPI DirectDrawCreateEx(LPGUID lpGUID, LPVOID* lplpDD, REFIID iid, LPUNKNOWN pUnkOuter)
 {
-    return DD_OK;
+    return DDRAW_Create(lpGUID, lplpDD, pUnkOuter, iid, TRUE);
 }
 
 HRESULT WINAPI DirectDrawEnumerateA(
@@ -75,6 +66,29 @@ HRESULT WINAPI DirectDrawCreateClipper(
 )
 {
     return DD_OK;
+}
+
+HRESULT DDRAW_Create(
+	LPGUID lpGUID, LPVOID *lplpDD, LPUNKNOWN pUnkOuter, REFIID iid, BOOL ex) 
+{  		      
+	HDC desktop;
+	
+    /* BOOL ex == TRUE it is DirectDrawCreateEx call here. */
+	
+	/* TODO: 
+	   check the GUID are right 
+	   add scanner that DirectDrawCreate / DirectDrawCreateEx select right driver.
+	   now we will assume it is the current display driver 
+	*/
+
+	if (pUnkOuter != NULL) return DDERR_INVALIDPARAMS;
+	
+	desktop = GetWindowDC(GetDesktopWindow());
+
+	lplpDD = OsThunkDdCreateDirectDrawObject(desktop);   
+	if (lplpDD == NULL) return DDERR_NODIRECTDRAWHW;
+	 	
+	return DD_OK;
 }
 
 BOOL WINAPI DllMain(HINSTANCE hInstance,DWORD fwdReason, LPVOID lpvReserved)
