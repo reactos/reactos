@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.36 2003/08/19 23:54:26 weiden Exp $
+/* $Id: class.c,v 1.37 2003/08/20 01:05:10 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -16,15 +16,13 @@
 #include <window.h>
 #include <strpool.h>
 
-/*
- * @implemented
- */
-WINBOOL
-STDCALL
-GetClassInfoExA(
-  HINSTANCE hinst,
-  LPCSTR lpszClass,
-  LPWNDCLASSEXA lpwcx)
+
+
+static WINBOOL GetClassInfoExCommon(
+    HINSTANCE hInst,
+    LPCWSTR lpszClass,
+    LPWNDCLASSEXW lpwcx,
+    BOOL unicode)
 {
   LPWSTR str;
   UNICODE_STRING str2, str3;
@@ -42,11 +40,26 @@ GetClassInfoExA(
     str = (LPWSTR)lpszClass;
   else
   {
-    Status = HEAP_strdupAtoW (&str, lpszClass, NULL);
-    if ( !NT_SUCCESS (Status) )
+    if (unicode)
     {
-      SetLastError (RtlNtStatusToDosError(Status));
-      return FALSE;
+        str = HEAP_strdupW ( lpszClass, wcslen(lpszClass) );
+
+        if ( !str )
+        {
+          SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
+          return FALSE;
+        }
+    }
+
+    else
+    {
+        Status = HEAP_strdupAtoW(&str, (LPCSTR)lpszClass, NULL);
+        
+        if (! NT_SUCCESS(Status))
+        {
+            SetLastError(RtlNtStatusToDosError(Status));
+            return FALSE;
+        }
     }
   }
 
@@ -60,36 +73,58 @@ GetClassInfoExA(
       HEAP_free ( str );
     return FALSE;
   }
-  
+
   str3.Buffer = (PWSTR)HEAP_alloc ( str3.MaximumLength * sizeof(WCHAR) );
   if ( !str3.Buffer )
   {
     SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
     if ( !IS_ATOM(str) )
       HEAP_free ( str );
-    HEAP_free ( str2.Buffer );
     return FALSE;
   }
 
   w.lpszMenuName = (LPCWSTR)&str2;
   w.lpszClassName = (LPCWSTR)&str3;
-  retval = (BOOL)NtUserGetClassInfo(hinst, str, &w, TRUE, 0);
-  if(!IS_ATOM(str))
+  retval = (BOOL)NtUserGetClassInfo(hInst, str, &w, TRUE, 0);
+  if ( !IS_ATOM(str) )
     HEAP_free(str);
+
   RtlCopyMemory ( lpwcx, &w, sizeof(WNDCLASSEXW) );
 
   if ( !IS_INTRESOURCE(w.lpszMenuName) && w.lpszMenuName )
   {
-    lpwcx->lpszMenuName = heap_string_poolA ( str2.Buffer, str2.Length );
+    if (unicode)
+        lpwcx->lpszMenuName = heap_string_poolW ( str2.Buffer, str2.Length );
+    else
+        (LPWNDCLASSEXA) lpwcx->lpszMenuName = heap_string_poolA ( str2.Buffer, str2.Length );
   }
+
   if ( !IS_ATOM(w.lpszClassName) && w.lpszClassName )
   {
-    lpwcx->lpszClassName = heap_string_poolA ( str3.Buffer, str3.Length );
+    if (unicode)
+        lpwcx->lpszClassName = heap_string_poolW ( str3.Buffer, str3.Length );
+    else
+        (LPWNDCLASSEXA) lpwcx->lpszClassName = heap_string_poolA ( str3.Buffer, str3.Length );
   }
+
   HEAP_free ( str2.Buffer );
   HEAP_free ( str3.Buffer );
 
   return retval;
+}
+
+
+/*
+ * @implemented
+ */
+WINBOOL
+STDCALL
+GetClassInfoExA(
+  HINSTANCE hinst,
+  LPCSTR lpszClass,
+  LPWNDCLASSEXA lpwcx)
+{
+    return GetClassInfoExCommon(hinst, (LPWSTR)lpszClass, (LPWNDCLASSEXW)lpwcx, FALSE);
 }
 
 
@@ -103,8 +138,17 @@ GetClassInfoExW(
   LPCWSTR lpszClass,
   LPWNDCLASSEXW lpwcx)
 {
+    return GetClassInfoExCommon(hinst, lpszClass, lpwcx, TRUE);
+
+    // AG: I've kept this here (commented out) in case of bugs with my
+    // own "common" routine (see above):
+
+/*LPWSTR str;
+  UNICODE_STRING str2;
+=======
   LPWSTR str;
   UNICODE_STRING str2, str3;
+>>>>>>> 1.36
   WNDCLASSEXW w;
   WINBOOL retval;
 
@@ -166,7 +210,7 @@ GetClassInfoExW(
   HEAP_free ( str2.Buffer );
   HEAP_free ( str3.Buffer );
 
-  return retval;
+  return retval;*/
 }
 
 
