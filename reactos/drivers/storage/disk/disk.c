@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.30 2003/05/01 17:50:35 ekohl Exp $
+/* $Id: disk.c,v 1.31 2003/06/24 12:38:00 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -261,6 +261,8 @@ DiskClassFindDevices(PDRIVER_OBJECT DriverObject,
       while (AdapterBusInfo->BusData[Bus].InquiryDataOffset)
 	{
 	  InquiryData = (PINQUIRYDATA)UnitInfo->InquiryData;
+
+	  DPRINT("Device type %u\n", InquiryData->DeviceType);
 
 	  if (((InquiryData->DeviceType == DIRECT_ACCESS_DEVICE) ||
 	       (InquiryData->DeviceType == OPTICAL_DEVICE)) &&
@@ -556,6 +558,32 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
+  /* Allocate sense data buffer */
+  DiskDeviceExtension->SenseData = ExAllocatePool(NonPagedPool,
+						  sizeof(SENSE_BUFFER_SIZE));
+  if (DiskDeviceExtension->SenseData == NULL)
+    {
+      DPRINT("Failed to allocate sense data buffer!\n");
+
+      ExFreePool (DiskDeviceExtension->DiskGeometry);
+
+      ExDeleteNPagedLookasideList(&DiskDeviceExtension->SrbLookasideListHead);
+
+      IoDeleteDevice(DiskDeviceObject);
+
+      /* Release (unclaim) the disk */
+      ScsiClassClaimDevice(PortDeviceObject,
+			   InquiryData,
+			   TRUE,
+			   NULL);
+
+      /* Delete the harddisk device directory */
+      ZwMakeTemporaryObject(Handle);
+      ZwClose(Handle);
+
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
   /* Read the drive's capacity */
   Status = ScsiClassReadDriveCapacity(DiskDeviceObject);
   if (!NT_SUCCESS(Status) &&
@@ -711,6 +739,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	      PartitionDeviceObject->AlignmentRequirement = DiskDeviceObject->AlignmentRequirement;
 
 	      PartitionDeviceExtension = PartitionDeviceObject->DeviceExtension;
+	      PartitionDeviceExtension->SenseData = DiskDeviceExtension->SenseData;
 	      PartitionDeviceExtension->LockCount = 0;
 	      PartitionDeviceExtension->DeviceNumber = DiskNumber;
 	      PartitionDeviceExtension->DeviceObject = PartitionDeviceObject;
