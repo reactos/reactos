@@ -116,6 +116,8 @@ BEGIN
     IDS_ALL_USERS           "All Users\\"
     IDS_SEARCH              "C„utare..."
     IDS_ABOUT_EXPLORER      "&Despre Explorer..."
+    IDS_LAUNCH_MANY_PROGRAMS 
+                            "You have selected more than one program.\nAre you sure you want to launch all of them?"
 END
 
 #endif    // Romanian resources
@@ -463,6 +465,8 @@ BEGIN
     IDS_ALL_USERS           "Alle Benutzer\\"
     IDS_SEARCH              "Suche"
     IDS_ABOUT_EXPLORER      "&‹ber Explorer..."
+    IDS_LAUNCH_MANY_PROGRAMS 
+                            "Sie haben mehrere Programme ausgew‰hlt.\nSind Sie sicher, daﬂ sie diese alle starten wollen?"
 END
 
 #endif    // German (Germany) resources
@@ -724,6 +728,8 @@ BEGIN
     IDS_ALL_USERS           "All Users\\"
     IDS_SEARCH              "Search"
     IDS_ABOUT_EXPLORER      "&About Explorer..."
+    IDS_LAUNCH_MANY_PROGRAMS 
+                            "You have selected more than one program.\nAre you sure you want to launch all of them?"
 END
 
 #endif    // English (U.S.) resources
@@ -834,6 +840,8 @@ BEGIN
     IDS_ALL_USERS           "Tous les utilisateurs\\"
     IDS_SEARCH              "Rechercher"
     IDS_ABOUT_EXPLORER      "A propos de l'explorateur..."
+    IDS_LAUNCH_MANY_PROGRAMS 
+                            "You have selected more than one program.\nAre you sure you want to launch all of them?"
 END
 
 #endif    // French (France) resources

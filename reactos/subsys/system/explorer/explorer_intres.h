@@ -29,6 +29,7 @@
 #define IDS_ALL_USERS                   25
 #define IDS_SEARCH                      26
 #define IDS_ABOUT_EXPLORER              27
+#define IDS_LAUNCH_MANY_PROGRAMS        28
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102

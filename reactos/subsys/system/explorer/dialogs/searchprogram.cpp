@@ -290,7 +290,10 @@ void FindProgramDlg::LaunchSelected()
 	Lock lock(_thread._crit_sect);
 
 	int count = ListView_GetSelectedCount(_list_ctrl);
-	///@todo ask user if there are many selected items
+
+	if (count > 1)
+		if (MessageBox(_hwnd, ResString(IDS_LAUNCH_MANY_PROGRAMS), ResString(IDS_TITLE), MB_OKCANCEL) != IDOK)
+			return;
 
 	for(int idx=-1; (idx=ListView_GetNextItem(_list_ctrl, idx, LVNI_SELECTED))!=-1; ) {
 		LPARAM lparam = ListView_GetItemData(_list_ctrl, idx);
