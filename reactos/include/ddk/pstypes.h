@@ -158,8 +158,8 @@ typedef struct _KAPC_STATE
 {
    LIST_ENTRY ApcListHead[2];
    struct _KPROCESS* Process;
-   UCHAR KernelApcInProgress;
-   UCHAR KernelApcPending;
+   ULONG KernelApcInProgress;
+   ULONG KernelApcPending;
    USHORT UserApcPending;
 } KAPC_STATE, *PKAPC_STATE;
 
@@ -201,6 +201,7 @@ typedef struct _KTHREAD
    UCHAR             Pad;
    PKQUEUE           Queue;     
    KTIMER            Timer;
+   KDPC              TimerDpc;			// Added by Phillip Susi for internal KeAddThreadTimeout() impl.
    LIST_ENTRY        QueueListEntry;
    KAFFINITY         Affinity;
    UCHAR             Preempted;
