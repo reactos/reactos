@@ -1026,6 +1026,12 @@ load_module2:
 	mov	dx, error_file_read_failed
 	jmp	error
 .read_last_data_succeeded:
+	;;
+	;; Close the file
+	;;
+	mov	bx, [_current_filehandle]
+	mov	ah, 0x3e
+	int	0x21
 %ifndef NDEBUG
 	mov	ah,02h
 	mov	dl,'#'
