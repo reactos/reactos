@@ -134,7 +134,9 @@ static inline int bsd_log ( int blah, const char* fmt, ... )
 	va_list arg;
 	int i;
 	va_start(arg, fmt);
+#ifndef __NTDRIVER__
 	i = vprintf ( fmt, arg );
+#endif
 	va_end(arg);
 	return i;
 }
