@@ -144,22 +144,6 @@ getsockopt(
 
 
 /*
- * @unimplemented
- */
-INT
-EXPORT
-ioctlsocket(
-    IN      SOCKET s,
-    IN      LONG cmd,
-    IN OUT  ULONG FAR* argp)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-
-/*
  * @implemented
  */
 INT
@@ -524,28 +508,6 @@ WSAHtons(
     IN  SOCKET s,
     IN  USHORT hostshort,
     OUT USHORT FAR* lpnetshort)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-
-/*
- * @unimplemented
- */
-INT
-EXPORT
-WSAIoctl(
-    IN  SOCKET s,
-    IN  DWORD dwIoControlCode,
-    IN  LPVOID lpvInBuffer,
-    IN  DWORD cbInBuffer,
-    OUT LPVOID lpvOutBuffer,
-    IN  DWORD cbOutBuffer,
-    OUT LPDWORD lpcbBytesReturned,
-    IN  LPWSAOVERLAPPED lpOverlapped,
-    IN  LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
 {
     UNIMPLEMENTED
 

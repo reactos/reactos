@@ -466,6 +466,20 @@ accept(
 /*
  * @implemented
  */
+INT
+EXPORT
+ioctlsocket(
+    IN      SOCKET s,
+    IN      LONG cmd,
+    IN OUT  ULONG FAR* argp)
+{
+  return WSAIoctl(s, cmd, argp, sizeof(ULONG), argp, sizeof(ULONG), argp, 0, 0);
+}
+
+
+/*
+ * @implemented
+ */
 SOCKET
 EXPORT
 WSAAccept(
@@ -551,6 +565,51 @@ WSAConnect(
   Status = Provider->ProcTable.lpWSPConnect(
     s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, &Errno);
 #endif
+
+  DereferenceProviderByPointer(Provider);
+
+  if (Status == SOCKET_ERROR) {
+    WSASetLastError(Errno);
+  }
+
+  return Status;
+}
+
+
+/*
+ * @implemented
+ */
+INT
+EXPORT
+WSAIoctl(
+    IN  SOCKET s,
+    IN  DWORD dwIoControlCode,
+    IN  LPVOID lpvInBuffer,
+    IN  DWORD cbInBuffer,
+    OUT LPVOID lpvOutBuffer,
+    IN  DWORD cbOutBuffer,
+    OUT LPDWORD lpcbBytesReturned,
+    IN  LPWSAOVERLAPPED lpOverlapped,
+    IN  LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
+{
+  PCATALOG_ENTRY Provider;
+  INT Status;
+  INT Errno;
+
+  if (!WSAINITIALIZED) {
+    WSASetLastError(WSANOTINITIALISED);
+    return SOCKET_ERROR;
+  }
+
+  if (!ReferenceProviderByHandle((HANDLE)s, &Provider)) {
+    WSASetLastError(WSAENOTSOCK);
+    return SOCKET_ERROR;
+  }
+
+  Status = Provider->ProcTable.lpWSPIoctl(
+    s, dwIoControlCode, lpvInBuffer, cbInBuffer, lpvOutBuffer,
+    cbOutBuffer, lpcbBytesReturned, lpOverlapped, lpCompletionRoutine,
+    NULL /* lpThreadId */, &Errno);
 
   DereferenceProviderByPointer(Provider);
 
