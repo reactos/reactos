@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.109 2004/05/01 19:21:44 ekohl Exp $
+; $Id: ntdll.edf,v 1.110 2004/05/13 21:01:14 navaraf Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -369,6 +369,7 @@ RtlDecompressFragment=RtlDecompressFragment@32
 RtlDeleteAce=RtlDeleteAce@8
 RtlDeleteAtomFromAtomTable=RtlDeleteAtomFromAtomTable@8
 RtlDeleteCriticalSection=RtlDeleteCriticalSection@4
+RtlDuplicateUnicodeString=RtlDuplicateUnicodeString@12
 RtlSetCriticalSectionSpinCount=RtlSetCriticalSectionSpinCount@8
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
@@ -461,6 +462,7 @@ RtlGetOwnerSecurityDescriptor=RtlGetOwnerSecurityDescriptor@12
 RtlGetProcessHeaps=RtlGetProcessHeaps@8
 RtlGetSaclSecurityDescriptor=RtlGetSaclSecurityDescriptor@16
 ;RtlGetUserInfoHeap
+RtlGetVersion=RtlGetVersion@4
 ;RtlGuidToPropertySetName
 RtlIdentifierAuthoritySid=RtlIdentifierAuthoritySid@4
 RtlImageDirectoryEntryToData=RtlImageDirectoryEntryToData@16
@@ -523,6 +525,7 @@ RtlMultiByteToUnicodeSize=RtlMultiByteToUnicodeSize@12
 ;RtlNewSecurityObject
 RtlNormalizeProcessParams=RtlNormalizeProcessParams@4
 RtlNtStatusToDosError=RtlNtStatusToDosError@4
+RtlNtPathNameToDosPathName=RtlNtPathNameToDosPathName@16
 ;RtlNumberGenericTableElements
 RtlNumberOfClearBits=RtlNumberOfClearBits@4
 RtlNumberOfSetBits=RtlNumberOfSetBits@4
@@ -553,6 +556,7 @@ RtlQueryTimeZoneInformation=RtlQueryTimeZoneInformation@4
 RtlRaiseException=RtlRaiseException@4
 RtlRaiseStatus=RtlRaiseStatus@4
 RtlRandom=RtlRandom@4
+RtlRandomEx=RtlRandom@4
 RtlReAllocateHeap=RtlReAllocateHeap@16
 ;RtlRealPredecessor
 ;RtlRealSuccessor
@@ -635,6 +639,7 @@ RtlValidateProcessHeaps=RtlValidateProcessHeaps@0
 RtlWriteRegistryValue=RtlWriteRegistryValue@24
 ;RtlZeroHeap
 RtlZeroMemory=RtlZeroMemory@8
+RtlpEnsureBufferSize=RtlpEnsureBufferSize@12
 RtlpNtCreateKey=RtlpNtCreateKey@24
 RtlpNtEnumerateSubKey=RtlpNtEnumerateSubKey@16
 RtlpNtMakeTemporaryKey=RtlpNtMakeTemporaryKey@4

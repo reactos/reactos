@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.99 2004/02/25 19:34:32 ekohl Exp $
+# $Id: makefile,v 1.100 2004/05/13 21:01:14 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -104,7 +104,8 @@ RTL_OBJECTS = \
 	rtl/thread.o \
 	rtl/time.o \
 	rtl/timezone.o \
-	rtl/unicode.o
+	rtl/unicode.o \
+	rtl/version.o
 
 STDIO_OBJECTS = \
 	stdio/sprintf.o \

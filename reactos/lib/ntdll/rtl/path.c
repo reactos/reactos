@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.27 2004/03/13 22:23:14 weiden Exp $
+/* $Id: path.c,v 1.28 2004/05/13 21:01:14 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1010,6 +1010,20 @@ RtlDoesFileExists_U(IN PWSTR FileName)
 		return TRUE;
 
 	return FALSE;
+}
+
+NTSTATUS STDCALL
+RtlpEnsureBufferSize(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
+{
+    DPRINT1("RtlpEnsureBufferSize: stub\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS STDCALL
+RtlNtPathNameToDosPathName(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3, ULONG Unknown4)
+{
+    DPRINT1("RtlNtPathNameToDosPathName: stub\n");
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

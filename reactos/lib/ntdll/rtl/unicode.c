@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.37 2004/02/15 07:04:45 arty Exp $
+/* $Id: unicode.c,v 1.38 2004/05/13 21:01:14 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1897,6 +1897,47 @@ ULONG STDCALL
 RtlxUnicodeStringToOemSize (IN PUNICODE_STRING UnicodeString)
 {
   return RtlUnicodeStringToAnsiSize (UnicodeString);
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlDuplicateUnicodeString(
+    INT AddNull,
+    IN PUNICODE_STRING SourceString,
+    PUNICODE_STRING DestinationString)
+{
+    if (SourceString == NULL || DestinationString == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+        
+    if (SourceString->Length == 0 && AddNull != 3)
+    {
+        DestinationString->Length = 0;
+        DestinationString->MaximumLength = 0;
+        DestinationString->Buffer = NULL;
+    } else
+    {
+        unsigned int DestMaxLength = SourceString->Length;
+
+        if (AddNull)
+            DestMaxLength += sizeof(UNICODE_NULL);
+
+        DestinationString->Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, DestMaxLength);
+        if (DestinationString->Buffer == NULL)
+            return STATUS_NO_MEMORY;
+
+        RtlCopyMemory(DestinationString->Buffer, SourceString->Buffer, SourceString->Length);
+        DestinationString->Length = SourceString->Length;
+        DestinationString->MaximumLength = DestMaxLength;
+
+        if (AddNull)
+            DestinationString->Buffer[DestinationString->Length / sizeof(WCHAR)] = 0;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.119 2004/05/01 19:21:44 ekohl Exp $
+; $Id: ntdll.def,v 1.120 2004/05/13 21:01:14 navaraf Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -369,6 +369,7 @@ RtlDecompressFragment@32
 RtlDeleteAce@8
 RtlDeleteAtomFromAtomTable@8
 RtlDeleteCriticalSection@4
+RtlDuplicateUnicodeString@12
 RtlSetCriticalSectionSpinCount@8
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
@@ -461,6 +462,7 @@ RtlGetOwnerSecurityDescriptor@12
 RtlGetProcessHeaps@8
 RtlGetSaclSecurityDescriptor@16
 ;RtlGetUserInfoHeap
+RtlGetVersion@4
 ;RtlGuidToPropertySetName
 RtlIdentifierAuthoritySid@4
 RtlImageDirectoryEntryToData@16
@@ -521,6 +523,7 @@ RtlMultiByteToUnicodeSize@12
 ;RtlNewSecurityGrantedAccess
 ;RtlNewSecurityObject
 RtlNormalizeProcessParams@4
+RtlNtPathNameToDosPathName@16
 RtlNtStatusToDosError@4
 ;RtlNumberGenericTableElements
 RtlNumberOfClearBits@4
@@ -634,6 +637,7 @@ RtlValidateProcessHeaps@0
 RtlWriteRegistryValue@24
 ;RtlZeroHeap
 RtlZeroMemory@8
+RtlpEnsureBufferSize@12
 RtlpNtCreateKey@24
 RtlpNtEnumerateSubKey@16
 RtlpNtMakeTemporaryKey@4
