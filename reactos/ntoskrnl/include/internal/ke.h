@@ -40,6 +40,9 @@ VOID KeSetGdtSelector(ULONG Entry, ULONG Value1, ULONG Value2);
 
 struct _KTHREAD;
 
+VOID STDCALL 
+DbgBreakPointNoBugCheck(VOID);
+
 VOID STDCALL KeRescheduleThread();
 
 VOID KiUpdateSystemTime (KIRQL oldIrql, ULONG Eip);
