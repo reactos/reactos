@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.69 2004/12/12 01:40:36 weiden Exp $
+/* $Id: stubs.c,v 1.70 2004/12/16 03:57:35 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -7,7 +7,7 @@
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * NOTES:           If you implement a function, remove it from this file
  * UPDATE HISTORY:
- *      08-05-2001  CSH  Created
+ *      08-F05-2001  CSH  Created
  */
 
 #include "user32.h"
@@ -223,15 +223,6 @@ EndTask(
     return TRUE;
 }
 
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-SwitchToThisWindow ( HWND hwnd, BOOL fUnknown )
-{
-  UNIMPLEMENTED;
-}
 
 /*
  * @unimplemented

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.120 2004/08/15 21:36:30 chorns Exp $
+/* $Id: window.c,v 1.121 2004/12/16 03:57:35 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -82,13 +82,18 @@ BeginDeferWindowPos(int nNumWindows)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 BringWindowToTop(HWND hWnd)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    return NtUserSetWindowPos( hWnd, 
+                               HWND_TOP, 
+                               0, 
+                               0, 
+                               0, 
+                               0,
+                               SWP_NOSIZE | SWP_NOMOVE );
 }
 
 
@@ -108,6 +113,12 @@ CascadeWindows(HWND hwndParent,
 }
 */
 
+VOID
+STDCALL
+SwitchToThisWindow ( HWND hwnd, BOOL fUnknown )
+{
+  ShowWindow ( hwnd, SW_SHOW );
+}
 
 /*
  * @implemented
