@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.14 2002/03/19 00:48:52 ekohl Exp $
+/* $Id: atapi.c,v 1.15 2002/03/22 20:31:26 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -773,6 +773,7 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	      if (IDEReadStatus(CommandPortBase) & IDE_SR_DRQ)
 		{
 		  /* FIXME: Handle error! */
+		  DPRINT1("AtapiInterrupt(): data overrun error!");
 		}
 	    }
 
@@ -796,6 +797,7 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	      if (IDEReadStatus(CommandPortBase) & IDE_SR_DRQ)
 		{
 		  /* FIXME: Handle error! */
+		  DPRINT1("AtapiInterrupt(): data overrun error!");
 		}
 
 	      DevExt->ExpectingInterrupt = FALSE;
@@ -1429,8 +1431,16 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 #endif
     }
 
-  ByteCountLow = 12;
-  ByteCountHigh = 0;
+  if (Srb->DataTransferLength < 0x10000)
+    {
+      ByteCountLow = (UCHAR)(Srb->DataTransferLength & 0xFF);
+      ByteCountHigh = (UCHAR)(Srb->DataTransferLength >> 8);
+    }
+  else
+    {
+      ByteCountLow = 0xFF;
+      ByteCountHigh = 0xFF;
+    }
 
   /* Set command packet length */
   IDEWriteCylinderHigh(DeviceExtension->CommandPortBase, ByteCountHigh);
