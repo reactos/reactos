@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.236 2004/05/27 11:47:42 weiden Exp $
+/* $Id: window.c,v 1.237 2004/06/16 06:09:40 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1383,20 +1383,20 @@ IntCalcDefPosSize(PWINDOW_OBJECT Parent, PWINDOW_OBJECT WindowObject, RECT *rc, 
  * @implemented
  */
 HWND STDCALL
-NtUserCreateWindowEx(DWORD dwExStyle,
-		     PUNICODE_STRING lpClassName,
-		     PUNICODE_STRING lpWindowName,
-		     DWORD dwStyle,
-		     LONG x,
-		     LONG y,
-		     LONG nWidth,
-		     LONG nHeight,
-		     HWND hWndParent,
-		     HMENU hMenu,
-		     HINSTANCE hInstance,
-		     LPVOID lpParam,
-		     DWORD dwShowMode,
-			 BOOL bUnicodeWindow)
+IntCreateWindowEx(DWORD dwExStyle,
+		  PUNICODE_STRING ClassName,
+		  PUNICODE_STRING WindowName,
+		  DWORD dwStyle,
+		  LONG x,
+		  LONG y,
+		  LONG nWidth,
+		  LONG nHeight,
+		  HWND hWndParent,
+		  HMENU hMenu,
+		  HINSTANCE hInstance,
+		  LPVOID lpParam,
+		  DWORD dwShowMode,
+		  BOOL bUnicodeWindow)
 {
   PWINSTATION_OBJECT WinStaObject;
   PWNDCLASS_OBJECT ClassObject;
@@ -1405,7 +1405,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   HWND ParentWindowHandle;
   HWND OwnerWindowHandle;
   PMENU_OBJECT SystemMenu;
-  UNICODE_STRING WindowName;
   NTSTATUS Status;
   HANDLE Handle;
   POINT Pos;
@@ -1420,44 +1419,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   LRESULT Result;
   BOOL MenuChanged;
   BOOL ClassFound;
-  LPWSTR OrigWindowName = NULL;
-
-  DPRINT("NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
-  
-  /* safely copy the window name */
-  if(lpWindowName)
-  {
-    Status = MmCopyFromCaller(&WindowName, lpWindowName, sizeof(UNICODE_STRING));
-    if (!NT_SUCCESS(Status))
-    {
-      SetLastNtError(Status);
-      return((HWND)0);
-    }
-    if(WindowName.Buffer)
-    {
-      /* safe the original pointer to the window name */
-      OrigWindowName = WindowName.Buffer;
-      
-      if(!(WindowName.Buffer = ExAllocatePoolWithTag(NonPagedPool, WindowName.MaximumLength, TAG_STRING)))
-      {
-        SetLastNtError(STATUS_NO_MEMORY);
-        return((HWND)0);
-      }
-      
-      Status = MmCopyFromCaller(WindowName.Buffer, OrigWindowName, WindowName.MaximumLength);
-      if(!NT_SUCCESS(Status))
-      {
-        ExFreePool(WindowName.Buffer);
-        SetLastNtError(Status);
-        return((HWND)0);
-      }
-    }
-    
-    if(!WindowName.Buffer)
-      RtlInitUnicodeString(&WindowName, NULL);
-  }
-  else
-    RtlInitUnicodeString(&WindowName, NULL);
+  PWSTR ClassNameString;
   
   ParentWindowHandle = PsGetWin32Thread()->Desktop->DesktopWindow;
   OwnerWindowHandle = NULL;
@@ -1479,7 +1441,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     }
   else if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD)
     {
-      RtlFreeUnicodeString(&WindowName);
       return (HWND)0;  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
     }
 
@@ -1495,10 +1456,34 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   /* FIXME: parent must belong to the current process */
 
   /* Check the class. */
-  ClassFound = ClassReferenceClassByNameOrAtom(&ClassObject, lpClassName->Buffer, hInstance);
+  if (IS_ATOM(ClassName->Buffer))
+    {
+      ClassFound = ClassReferenceClassByNameOrAtom(&ClassObject, ClassName->Buffer, hInstance);
+    }
+  else
+    {
+      Status = IntUnicodeStringToNULLTerminated(&ClassNameString, ClassName);
+      if (! NT_SUCCESS(Status))
+        {
+          if (NULL != ParentWindow)
+            {
+              IntReleaseWindowObject(ParentWindow);
+            }
+          return NULL;
+        }
+      ClassFound = ClassReferenceClassByNameOrAtom(&ClassObject, ClassNameString, hInstance);
+      IntFreeNULLTerminatedFromUnicodeString(ClassNameString, ClassName);
+    }
   if (!ClassFound)
   {
-     RtlFreeUnicodeString(&WindowName);
+     if (IS_ATOM(ClassName->Buffer))
+       {
+         DPRINT1("Class 0x%x not found\n", (DWORD_PTR) ClassName->Buffer);
+       }
+     else
+       {
+         DPRINT1("Class %wZ not found\n", ClassName);
+       }
      if (NULL != ParentWindow)
      {
         IntReleaseWindowObject(ParentWindow);
@@ -1516,7 +1501,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   if (!NT_SUCCESS(Status))
     {
       ClassDereferenceObject(ClassObject);
-      RtlFreeUnicodeString(&WindowName);
       if (NULL != ParentWindow)
         {
           IntReleaseWindowObject(ParentWindow);
@@ -1537,7 +1521,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     {
       ObDereferenceObject(WinStaObject);
       ClassDereferenceObject(ClassObject);
-      RtlFreeUnicodeString(&WindowName);
       if (NULL != ParentWindow)
         {
           IntReleaseWindowObject(ParentWindow);
@@ -1622,8 +1605,27 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   ExInitializeFastMutex(&WindowObject->PropListLock);
   ExInitializeFastMutex(&WindowObject->RelativesLock);
   ExInitializeFastMutex(&WindowObject->UpdateLock);
-  
-  WindowObject->WindowName = WindowName;
+
+  if (NULL != WindowName->Buffer)
+    {  
+      WindowObject->WindowName.MaximumLength = WindowName->MaximumLength;
+      WindowObject->WindowName.Length = WindowName->Length;
+      WindowObject->WindowName.Buffer = ExAllocatePoolWithTag(PagedPool, WindowName->MaximumLength,
+                                                              TAG_STRING);
+      if (NULL == WindowObject->WindowName.Buffer)
+        {
+          ClassDereferenceObject(ClassObject);
+          DPRINT1("Failed to allocate mem for window name\n");
+          SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+          return NULL;
+        }
+      RtlCopyMemory(WindowObject->WindowName.Buffer, WindowName->Buffer, WindowName->MaximumLength);
+    }
+  else
+    {
+      RtlInitUnicodeString(&WindowObject->WindowName, NULL);
+    }
+
 
   /* Correct the window style. */
   if (!(dwStyle & WS_CHILD))
@@ -1685,8 +1687,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   Cs.x = Pos.x;
   Cs.y = Pos.y;
   Cs.style = dwStyle;
-  Cs.lpszName = OrigWindowName; /* pass the original pointer to usermode! */
-  Cs.lpszClass = lpClassName->Buffer;
+  Cs.lpszName = (LPCWSTR) WindowName;
+  Cs.lpszClass = (LPCWSTR) ClassName;
   Cs.dwExStyle = dwExStyle;
   CbtCreate.lpcs = &Cs;
   CbtCreate.hwndInsertAfter = HWND_TOP;
@@ -1834,9 +1836,9 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   Cs.x = Pos.x;
   Cs.y = Pos.y;
 
-  DPRINT("[win32k.window] NtUserCreateWindowEx style %d, exstyle %d, parent %d\n", Cs.style, Cs.dwExStyle, Cs.hwndParent);
-  DPRINT("NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
-  DPRINT("NtUserCreateWindowEx(): About to send NCCREATE message.\n");
+  DPRINT("[win32k.window] IntCreateWindowEx style %d, exstyle %d, parent %d\n", Cs.style, Cs.dwExStyle, Cs.hwndParent);
+  DPRINT("IntCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
+  DPRINT("IntCreateWindowEx(): About to send NCCREATE message.\n");
   Result = IntSendMessage(WindowObject->Self, WM_NCCREATE, 0, (LPARAM) &Cs);
   if (!Result)
     {
@@ -1845,14 +1847,14 @@ NtUserCreateWindowEx(DWORD dwExStyle,
         {
           IntReleaseWindowObject(ParentWindow);
         }
-      DPRINT("NtUserCreateWindowEx(): NCCREATE message failed.\n");
+      DPRINT("IntCreateWindowEx(): NCCREATE message failed.\n");
       return((HWND)0);
     }
  
   /* Calculate the non-client size. */
   MaxPos.x = WindowObject->WindowRect.left;
   MaxPos.y = WindowObject->WindowRect.top;
-  DPRINT("NtUserCreateWindowEx(): About to get non-client size.\n");
+  DPRINT("IntCreateWindowEx(): About to get non-client size.\n");
   /* WinPosGetNonClientSize SENDS THE WM_NCCALCSIZE message */
   Result = WinPosGetNonClientSize(WindowObject->Self, 
 				  &WindowObject->WindowRect,
@@ -1909,7 +1911,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     }
 
   /* Send the WM_CREATE message. */
-  DPRINT("NtUserCreateWindowEx(): about to send CREATE message.\n");
+  DPRINT("IntCreateWindowEx(): about to send CREATE message.\n");
   Result = IntSendMessage(WindowObject->Self, WM_CREATE, 0, (LPARAM) &Cs);
   if (Result == (LRESULT)-1)
     {
@@ -1919,7 +1921,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
           IntReleaseWindowObject(ParentWindow);
         }
       ClassDereferenceObject(ClassObject);
-      DPRINT("NtUserCreateWindowEx(): send CREATE message failed.\n");
+      DPRINT("IntCreateWindowEx(): send CREATE message failed.\n");
       return((HWND)0);
     } 
   
@@ -1928,7 +1930,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     {
       LONG lParam;
 
-      DPRINT("NtUserCreateWindow(): About to send WM_SIZE\n");
+      DPRINT("IntCreateWindow(): About to send WM_SIZE\n");
 
       if ((WindowObject->ClientRect.right - WindowObject->ClientRect.left) < 0 ||
           (WindowObject->ClientRect.bottom - WindowObject->ClientRect.top) < 0)
@@ -1941,7 +1943,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       IntSendMessage(WindowObject->Self, WM_SIZE, SIZE_RESTORED, 
           lParam);
 
-      DPRINT("NtUserCreateWindow(): About to send WM_MOVE\n");
+      DPRINT("IntCreateWindow(): About to send WM_MOVE\n");
 
       if (0 != (WindowObject->Style & WS_CHILD) && ParentWindow)
 	{
@@ -1969,7 +1971,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 	((WindowObject->Style & WS_CHILD) || NtUserGetActiveWindow()) ?
 	SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED :
 	SWP_NOZORDER | SWP_FRAMECHANGED;
-      DPRINT("NtUserCreateWindow(): About to minimize/maximize\n");
+      DPRINT("IntCreateWindow(): About to minimize/maximize\n");
       DPRINT("%d,%d %dx%d\n", NewPos.left, NewPos.top, NewPos.right, NewPos.bottom);
       WinPosSetWindowPos(WindowObject->Self, 0, NewPos.left, NewPos.top,
 			 NewPos.right, NewPos.bottom, SwFlag);
@@ -1979,7 +1981,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   if ((WindowObject->Style & WS_CHILD) &&
       (!(WindowObject->ExStyle & WS_EX_NOPARENTNOTIFY)) && ParentWindow)
     {
-      DPRINT("NtUserCreateWindow(): About to notify parent\n");
+      DPRINT("IntCreateWindow(): About to notify parent\n");
       IntSendMessage(ParentWindow->Self,
                      WM_PARENTNOTIFY, 
                      MAKEWPARAM(WM_CREATE, WindowObject->IDMenu),
@@ -2003,15 +2005,85 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   
   if (dwStyle & WS_VISIBLE)
     {
-      DPRINT("NtUserCreateWindow(): About to show window\n");
+      DPRINT("IntCreateWindow(): About to show window\n");
       WinPosShowWindow(WindowObject->Self, dwShowMode);
     }
 
-  DPRINT("NtUserCreateWindow(): = %X\n", Handle);
+  DPRINT("IntCreateWindow(): = %X\n", Handle);
   DPRINT("WindowObject->SystemMenu = 0x%x\n", WindowObject->SystemMenu);
   return((HWND)Handle);
 }
 
+HWND STDCALL
+NtUserCreateWindowEx(DWORD dwExStyle,
+		     PUNICODE_STRING UnsafeClassName,
+		     PUNICODE_STRING UnsafeWindowName,
+		     DWORD dwStyle,
+		     LONG x,
+		     LONG y,
+		     LONG nWidth,
+		     LONG nHeight,
+		     HWND hWndParent,
+		     HMENU hMenu,
+		     HINSTANCE hInstance,
+		     LPVOID lpParam,
+		     DWORD dwShowMode,
+		     BOOL bUnicodeWindow)
+{
+  NTSTATUS Status;
+  UNICODE_STRING WindowName;
+  UNICODE_STRING ClassName;
+  HWND NewWindow;
+
+  DPRINT("NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
+
+  /* Get the class name (string or atom) */
+  Status = MmCopyFromCaller(&ClassName, UnsafeClassName, sizeof(UNICODE_STRING));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return NULL;
+    }
+  if (! IS_ATOM(ClassName.Buffer))
+    {
+      Status = IntSafeCopyUnicodeString(&ClassName, UnsafeClassName);
+      if (! NT_SUCCESS(Status))
+        {
+          SetLastNtError(Status);
+          return NULL;
+        }
+    }
+  
+  /* safely copy the window name */
+  if (NULL != UnsafeWindowName)
+    {
+      Status = IntSafeCopyUnicodeString(&WindowName, UnsafeWindowName);
+      if (! NT_SUCCESS(Status))
+        {
+          if (! IS_ATOM(ClassName.Buffer))
+            {
+              RtlFreeUnicodeString(&ClassName);
+            }
+          SetLastNtError(Status);
+          return NULL;
+        }
+    }
+  else
+    {
+      RtlInitUnicodeString(&WindowName, NULL);
+    }
+
+  NewWindow = IntCreateWindowEx(dwExStyle, &ClassName, &WindowName, dwStyle, x, y, nWidth, nHeight,
+		                hWndParent, hMenu, hInstance, lpParam, dwShowMode, bUnicodeWindow);
+
+  RtlFreeUnicodeString(&WindowName);
+  if (! IS_ATOM(ClassName.Buffer))
+    {
+      RtlFreeUnicodeString(&ClassName);
+    }
+
+  return NewWindow;
+}
 
 /*
  * @unimplemented

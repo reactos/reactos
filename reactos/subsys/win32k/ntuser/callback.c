@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.23 2004/05/22 21:12:15 weiden Exp $
+/* $Id: callback.c,v 1.24 2004/06/16 06:09:40 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -250,6 +250,8 @@ IntCallHookProc(INT HookId,
   CBT_CREATEWNDW *CbtCreateWnd;
   PCHAR Extra;
   PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra;
+  PUNICODE_STRING WindowName;
+  PUNICODE_STRING ClassName;
 
   ArgumentLength = sizeof(HOOKPROC_CALLBACK_ARGUMENTS) - sizeof(WCHAR)
                    + ModuleName->Length;
@@ -261,15 +263,12 @@ IntCallHookProc(INT HookId,
         case HCBT_CREATEWND:
           CbtCreateWnd = (CBT_CREATEWNDW *) lParam;
           ArgumentLength += sizeof(HOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS);
-          if (NULL != CbtCreateWnd->lpcs->lpszName)
+          WindowName = (PUNICODE_STRING) (CbtCreateWnd->lpcs->lpszName);
+          ArgumentLength += WindowName->Length + sizeof(WCHAR);
+          ClassName = (PUNICODE_STRING) (CbtCreateWnd->lpcs->lpszClass);
+          if (! IS_ATOM(ClassName->Buffer))
             {
-              ArgumentLength += (wcslen(CbtCreateWnd->lpcs->lpszName)
-                                 + 1) * sizeof(WCHAR);
-            }
-          if (0 != HIWORD(CbtCreateWnd->lpcs->lpszClass))
-            {
-              ArgumentLength += (wcslen(CbtCreateWnd->lpcs->lpszClass)
-                                 + 1) * sizeof(WCHAR);
+              ArgumentLength += ClassName->Length + sizeof(WCHAR);
             }
           break;
         default:
@@ -310,19 +309,18 @@ IntCallHookProc(INT HookId,
           CbtCreatewndExtra->Cs = *(CbtCreateWnd->lpcs);
           CbtCreatewndExtra->WndInsertAfter = CbtCreateWnd->hwndInsertAfter;
           Extra = (PCHAR) (CbtCreatewndExtra + 1);
-          if (NULL != CbtCreateWnd->lpcs->lpszName)
+          RtlCopyMemory(Extra, WindowName->Buffer, WindowName->Length);
+          CbtCreatewndExtra->Cs.lpszName = (LPCWSTR) (Extra - (PCHAR) CbtCreatewndExtra);
+          Extra += WindowName->Length;
+          *((WCHAR *) Extra) = L'\0';
+          Extra += sizeof(WCHAR);
+          if (! IS_ATOM(ClassName->Buffer))
             {
-              memcpy(Extra, CbtCreateWnd->lpcs->lpszName,
-                     (wcslen(CbtCreateWnd->lpcs->lpszName) + 1) * sizeof(WCHAR));
-              CbtCreatewndExtra->Cs.lpszName = (LPCWSTR) (Extra - (PCHAR) CbtCreatewndExtra);
-              Extra += (wcslen(CbtCreateWnd->lpcs->lpszName) + 1) * sizeof(WCHAR);
-            }
-          if (0 != HIWORD(CbtCreateWnd->lpcs->lpszClass))
-            {
-              memcpy(Extra, CbtCreateWnd->lpcs->lpszClass,
-                     (wcslen(CbtCreateWnd->lpcs->lpszClass) + 1) * sizeof(WCHAR));
+              RtlCopyMemory(Extra, ClassName->Buffer, ClassName->Length);
               CbtCreatewndExtra->Cs.lpszClass =
                 (LPCWSTR) MAKELONG(Extra - (PCHAR) CbtCreatewndExtra, 1);
+              Extra += ClassName->Length;
+              *((WCHAR *) Extra) = L'\0';
             }
           break;
         }

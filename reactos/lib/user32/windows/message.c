@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.39 2004/04/29 21:13:16 gvg Exp $
+/* $Id: message.c,v 1.40 2004/06/16 06:09:40 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -16,6 +16,11 @@
 #include <message.h>
 #define NTOS_MODE_USER
 #include <ntos.h>
+
+#ifndef TODO
+#define NDEBUG
+#include <debug.h>
+#endif
 
 /* DDE message exchange
  * 
@@ -257,6 +262,27 @@ MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
 
   switch (UMMsg->message)
     {
+      case WM_CREATE:
+      case WM_NCCREATE:
+        {
+          CREATESTRUCTW *Cs = (CREATESTRUCTW *) KMMsg->lParam;
+          PCHAR Class;
+          Cs->lpszName = (LPCWSTR) ((PCHAR) Cs + (DWORD_PTR) Cs->lpszName);
+          Class = (PCHAR) Cs + (DWORD_PTR) Cs->lpszClass;
+          if (L'A' == *((WCHAR *) Class))
+            {
+              Class += sizeof(WCHAR);
+              Cs->lpszClass = (LPCWSTR)(DWORD_PTR) (*((ATOM *) Class));
+            }
+          else
+            {
+              ASSERT(L'S' == *((WCHAR *) Class));
+              Class += sizeof(WCHAR);
+              Cs->lpszClass = (LPCWSTR) Class;
+            }
+        }
+        break;
+
       case WM_DDE_ACK:
         {
           PKMDDELPARAM DdeLparam = (PKMDDELPARAM) KMMsg->lParam;
@@ -270,8 +296,9 @@ MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
             {
               UMMsg->lParam = DdeLparam->Value.Unpacked;
             }
-          break;
         }
+        break;
+
       case WM_DDE_EXECUTE:
         {
           PKMDDEEXECUTEDATA KMDdeExecuteData;
@@ -301,6 +328,7 @@ MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
           UMMsg->lParam = (LPARAM) GlobalData;
         }
         break;
+
       default:
         break;
     }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.69 2004/05/22 21:12:15 weiden Exp $
+/* $Id: message.c,v 1.70 2004/06/16 06:09:40 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -71,13 +71,13 @@ typedef struct tagMSGMEMORY
 
 static MSGMEMORY MsgMemory[] =
   {
-    { WM_CREATE, sizeof(CREATESTRUCTW), MMS_FLAG_READWRITE },
+    { WM_CREATE, MMS_SIZE_SPECIAL, MMS_FLAG_READWRITE },
     { WM_DDE_ACK, sizeof(KMDDELPARAM), MMS_FLAG_READ },
     { WM_DDE_EXECUTE, MMS_SIZE_WPARAM, MMS_FLAG_READ },
     { WM_GETMINMAXINFO, sizeof(MINMAXINFO), MMS_FLAG_READWRITE },
     { WM_GETTEXT, MMS_SIZE_WPARAMWCHAR, MMS_FLAG_WRITE },
     { WM_NCCALCSIZE, MMS_SIZE_SPECIAL, MMS_FLAG_READWRITE },
-    { WM_NCCREATE, sizeof(CREATESTRUCTW), MMS_FLAG_READWRITE },
+    { WM_NCCREATE, MMS_SIZE_SPECIAL, MMS_FLAG_READWRITE },
     { WM_SETTEXT, MMS_SIZE_LPARAMSZ, MMS_FLAG_READ },
     { WM_STYLECHANGED, sizeof(STYLESTRUCT), MMS_FLAG_READ },
     { WM_STYLECHANGING, sizeof(STYLESTRUCT), MMS_FLAG_READWRITE },
@@ -107,6 +107,11 @@ FindMsgMemory(UINT Msg)
 static UINT FASTCALL
 MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
 {
+  CREATESTRUCTW *Cs;
+  PUNICODE_STRING WindowName;
+  PUNICODE_STRING ClassName;
+  UINT Size;
+
   if (MMS_SIZE_WPARAM == MsgMemoryEntry->Size)
     {
       return (UINT) wParam;
@@ -123,9 +128,27 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
     {
       switch(MsgMemoryEntry->Message)
         {
+        case WM_CREATE:
+        case WM_NCCREATE:
+          Cs = (CREATESTRUCTW *) lParam;
+          WindowName = (PUNICODE_STRING) Cs->lpszName;
+          ClassName = (PUNICODE_STRING) Cs->lpszClass;
+          Size = sizeof(CREATESTRUCTW) + WindowName->Length + sizeof(WCHAR);
+          if (IS_ATOM(ClassName->Buffer))
+            {
+              Size += sizeof(WCHAR) + sizeof(ATOM);
+            }
+          else
+            {
+              Size += sizeof(WCHAR) + ClassName->Length + sizeof(WCHAR);
+            }
+          return Size;
+          break;
+
         case WM_NCCALCSIZE:
           return wParam ? sizeof(NCCALCSIZE_PARAMS) + sizeof(WINDOWPOS) : sizeof(RECT);
           break;
+
         default:
           assert(FALSE);
           return 0;
@@ -141,28 +164,81 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
 static FASTCALL NTSTATUS
 PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-  NCCALCSIZE_PARAMS *UnpackedParams;
-  NCCALCSIZE_PARAMS *PackedParams;
+  NCCALCSIZE_PARAMS *UnpackedNcCalcsize;
+  NCCALCSIZE_PARAMS *PackedNcCalcsize;
+  CREATESTRUCTW *UnpackedCs;
+  CREATESTRUCTW *PackedCs;
+  PUNICODE_STRING WindowName;
+  PUNICODE_STRING ClassName;
+  UINT Size;
+  PCHAR CsData;
 
   *lParamPacked = lParam;
   if (WM_NCCALCSIZE == Msg && wParam)
     {
-      UnpackedParams = (NCCALCSIZE_PARAMS *) lParam;
-      if (UnpackedParams->lppos != (PWINDOWPOS) (UnpackedParams + 1))
+      UnpackedNcCalcsize = (NCCALCSIZE_PARAMS *) lParam;
+      if (UnpackedNcCalcsize->lppos != (PWINDOWPOS) (UnpackedNcCalcsize + 1))
         {
-          PackedParams = ExAllocatePoolWithTag(PagedPool,
-                                               sizeof(NCCALCSIZE_PARAMS) + sizeof(WINDOWPOS),
-                                               TAG_MSG);
-          if (NULL == PackedParams)
+          PackedNcCalcsize = ExAllocatePoolWithTag(PagedPool,
+                                                   sizeof(NCCALCSIZE_PARAMS) + sizeof(WINDOWPOS),
+                                                   TAG_MSG);
+          if (NULL == PackedNcCalcsize)
             {
               DPRINT1("Not enough memory to pack lParam\n");
               return STATUS_NO_MEMORY;
             }
-          RtlCopyMemory(PackedParams, UnpackedParams, sizeof(NCCALCSIZE_PARAMS));
-          PackedParams->lppos = (PWINDOWPOS) (PackedParams + 1);
-          RtlCopyMemory(PackedParams->lppos, UnpackedParams->lppos, sizeof(WINDOWPOS));
-          *lParamPacked = (LPARAM) PackedParams;
+          RtlCopyMemory(PackedNcCalcsize, UnpackedNcCalcsize, sizeof(NCCALCSIZE_PARAMS));
+          PackedNcCalcsize->lppos = (PWINDOWPOS) (PackedNcCalcsize + 1);
+          RtlCopyMemory(PackedNcCalcsize->lppos, UnpackedNcCalcsize->lppos, sizeof(WINDOWPOS));
+          *lParamPacked = (LPARAM) PackedNcCalcsize;
         }
+    }
+  else if (WM_CREATE == Msg || WM_NCCREATE == Msg)
+    {
+      UnpackedCs = (CREATESTRUCTW *) lParam;
+      WindowName = (PUNICODE_STRING) UnpackedCs->lpszName;
+      ClassName = (PUNICODE_STRING) UnpackedCs->lpszClass;
+      Size = sizeof(CREATESTRUCTW) + WindowName->Length + sizeof(WCHAR);
+      if (IS_ATOM(ClassName->Buffer))
+        {
+          Size += sizeof(WCHAR) + sizeof(ATOM);
+        }
+      else
+        {
+          Size += sizeof(WCHAR) + ClassName->Length + sizeof(WCHAR);
+        }
+      PackedCs = ExAllocatePoolWithTag(PagedPool, Size, TAG_MSG);
+      if (NULL == PackedCs)
+        {
+          DPRINT1("Not enough memory to pack lParam\n");
+          return STATUS_NO_MEMORY;
+        }
+      RtlCopyMemory(PackedCs, UnpackedCs, sizeof(CREATESTRUCTW));
+      CsData = (PCHAR) (PackedCs + 1);
+      PackedCs->lpszName = (LPCWSTR) (CsData - (PCHAR) PackedCs);
+      RtlCopyMemory(CsData, WindowName->Buffer, WindowName->Length);
+      CsData += WindowName->Length;
+      *((WCHAR *) CsData) = L'\0';
+      CsData += sizeof(WCHAR);
+      PackedCs->lpszClass = (LPCWSTR) (CsData - (PCHAR) PackedCs);
+      if (IS_ATOM(ClassName->Buffer))
+        {
+          *((WCHAR *) CsData) = L'A';
+          CsData += sizeof(WCHAR);
+          *((ATOM *) CsData) = (ATOM)(DWORD_PTR) ClassName->Buffer;
+          CsData += sizeof(ATOM);
+        }
+      else
+        {
+          *((WCHAR *) CsData) = L'S';
+          CsData += sizeof(WCHAR);
+          RtlCopyMemory(CsData, ClassName->Buffer, ClassName->Length);
+          CsData += ClassName->Length;
+          *((WCHAR *) CsData) = L'\0';
+          CsData += sizeof(WCHAR);
+        }
+      ASSERT(CsData == (PCHAR) PackedCs + Size);
+      *lParamPacked = (LPARAM) PackedCs;
     }
 
   return STATUS_SUCCESS;
@@ -192,8 +268,14 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
 
       return STATUS_SUCCESS;
     }
+  else if (WM_CREATE == Msg || WM_NCCREATE == Msg)
+    {
+      ExFreePool((PVOID) lParamPacked);
 
-  assert(FALSE);
+      return STATUS_SUCCESS;
+    }
+
+  ASSERT(FALSE);
 
   return STATUS_INVALID_PARAMETER;
 }

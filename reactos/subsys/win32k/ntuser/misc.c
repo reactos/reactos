@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.77 2004/06/11 20:15:07 gvg Exp $
+/* $Id: misc.c,v 1.78 2004/06/16 06:09:40 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1210,3 +1210,35 @@ IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
   return STATUS_SUCCESS;
 }
 
+NTSTATUS FASTCALL
+IntUnicodeStringToNULLTerminated(PWSTR *Dest, PUNICODE_STRING Src)
+{
+  if (Src->Length + sizeof(WCHAR) <= Src->MaximumLength
+      && L'\0' == Src->Buffer[Src->Length / sizeof(WCHAR)])
+    {
+      /* The unicode_string is already nul terminated. Just reuse it. */
+      *Dest = Src->Buffer;
+      return STATUS_SUCCESS;
+    }
+
+  *Dest = ExAllocatePoolWithTag(PagedPool, Src->Length + sizeof(WCHAR), TAG_STRING);
+  if (NULL == *Dest)
+    {
+      return STATUS_NO_MEMORY;
+    }
+  RtlCopyMemory(*Dest, Src->Buffer, Src->Length);
+  (*Dest)[Src->Length / 2] = L'\0';
+
+  return STATUS_SUCCESS;
+}
+
+void FASTCALL
+IntFreeNULLTerminatedFromUnicodeString(PWSTR NullTerminated, PUNICODE_STRING UnicodeString)
+{
+  if (NullTerminated != UnicodeString->Buffer)
+    {
+      ExFreePool(NullTerminated);
+    }
+}
+
+/* EOF */
