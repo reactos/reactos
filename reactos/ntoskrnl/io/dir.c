@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.23 2004/08/15 16:39:03 chorns Exp $
+/* $Id: dir.c,v 1.24 2004/08/22 20:51:43 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,7 +20,7 @@
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
@@ -36,8 +36,76 @@ NtNotifyChangeDirectoryFile (
 	IN	BOOLEAN			WatchTree
 	)
 {
-	UNIMPLEMENTED;
-	return(STATUS_NOT_IMPLEMENTED);
+   PIRP Irp;
+   PDEVICE_OBJECT DeviceObject;
+   PFILE_OBJECT FileObject;
+   NTSTATUS Status;
+   PEXTENDED_IO_STACK_LOCATION IoStack;
+   KPROCESSOR_MODE PreviousMode;
+   
+   DPRINT("NtNotifyChangeDirectoryFile()\n");
+
+   PreviousMode = ExGetPreviousMode();
+
+   Status = ObReferenceObjectByHandle(FileHandle,
+				      FILE_LIST_DIRECTORY,
+				      IoFileObjectType,
+				      PreviousMode,
+				      (PVOID *)&FileObject,
+				      NULL);
+   
+   if (Status != STATUS_SUCCESS)
+     {
+	ObDereferenceObject(FileObject);
+	return(Status);
+     }
+   DeviceObject = FileObject->DeviceObject;
+   
+   Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+   if (Irp==NULL)
+     {
+	ObDereferenceObject(FileObject);
+	return STATUS_UNSUCCESSFUL;
+     }
+   
+   if (Event == NULL)
+     {
+       Event = &FileObject->Event;
+     }
+
+   /* Trigger FileObject/Event dereferencing */
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
+   Irp->RequestorMode = PreviousMode;
+   Irp->UserIosb = IoStatusBlock;
+   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+   Irp->UserEvent = Event;
+   KeResetEvent( Event );
+   Irp->UserBuffer = Buffer;
+   Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
+   Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
+   
+   IoStack = (PEXTENDED_IO_STACK_LOCATION) IoGetNextIrpStackLocation(Irp);
+   
+   IoStack->MajorFunction = IRP_MJ_DIRECTORY_CONTROL;
+   IoStack->MinorFunction = IRP_MN_NOTIFY_CHANGE_DIRECTORY;
+   IoStack->Flags = 0;
+   IoStack->Control = 0;
+   IoStack->DeviceObject = DeviceObject;
+   IoStack->FileObject = FileObject;
+   
+   if (WatchTree)
+     {
+	IoStack->Flags = SL_WATCH_TREE;
+     }
+
+   IoStack->Parameters.NotifyDirectory.CompletionFilter = CompletionFilter;
+   IoStack->Parameters.NotifyDirectory.Length = BufferSize;
+   
+   Status = IoCallDriver(FileObject->DeviceObject,Irp);
+
+   /* FIXME: Should we wait here or not for synchronously opened files? */
+
+   return(Status);
 }
 
 
@@ -126,6 +194,8 @@ NtQueryDirectoryFile(
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    KeResetEvent( &FileObject->Event );
    Irp->UserBuffer=FileInformation;
+   Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
+   Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
    
    IoStack = (PEXTENDED_IO_STACK_LOCATION) IoGetNextIrpStackLocation(Irp);
    
