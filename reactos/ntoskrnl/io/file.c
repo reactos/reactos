@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.31 2004/07/24 01:28:04 navaraf Exp $
+/* $Id: file.c,v 1.32 2004/08/12 06:15:50 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -91,6 +91,7 @@ NtQueryInformationFile(HANDLE FileHandle,
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
    Irp->UserIosb = IoStatusBlock;
    Irp->UserEvent = &FileObject->Event;
+   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    KeResetEvent( &FileObject->Event );
    
    StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -339,6 +340,7 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
    Irp->AssociatedIrp.SystemBuffer = FileInformation;
    Irp->UserIosb = &IoStatusBlock;
    Irp->UserEvent = &FileObject->Event;
+   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    KeResetEvent( &FileObject->Event );
    
    StackPtr = IoGetNextIrpStackLocation(Irp);

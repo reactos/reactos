@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.21 2003/12/14 17:44:02 hbirr Exp $
+/* $Id: dir.c,v 1.22 2004/08/12 06:15:49 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -125,6 +125,7 @@ NtQueryDirectoryFile(
    Irp->RequestorMode = PreviousMode;
    Irp->UserIosb = IoStatusBlock;
    Irp->UserEvent = &FileObject->Event;
+   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    KeResetEvent( &FileObject->Event );
    Irp->UserBuffer=FileInformation;
    
