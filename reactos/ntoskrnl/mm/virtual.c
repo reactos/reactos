@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.76 2004/06/19 08:53:35 vizzini Exp $
+/* $Id: virtual.c,v 1.77 2004/07/09 20:14:49 navaraf Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -180,7 +180,7 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
                /* Since programs might depend on RegionSize for
                 * iteration, we for now just make up a value.
                 */
-               Info->RegionSize = (Address > (PVOID)0x70000000) ? 0 : 0x10000;
+               Info->RegionSize = (Address > (PVOID)0x80000000) ? 0 : 0x10000;
                Info->Protect = PAGE_NOACCESS;
                Info->Type = 0;
                Status = STATUS_SUCCESS;
