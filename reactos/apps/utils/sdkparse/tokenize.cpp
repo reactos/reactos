@@ -165,6 +165,57 @@ void tokenize ( const string& text, vector<string>& tokens )
 				break;
 			}
 			break;
+		case '<':
+			switch ( p[1] )
+			{
+			case '<':
+				if ( p[2] == '=' )
+					tokens.push_back ( string ( p, 3 ) ), p += 3;
+				else
+					tokens.push_back ( string ( p, 2 ) ), p += 2;
+				break;
+			case '=':
+				tokens.push_back ( string ( p, 2 ) );
+				p += 2;
+				break;
+			default:
+				tokens.push_back ( "<" );
+				p++;
+				break;
+			}
+			break;
+		case '>':
+			switch ( p[1] )
+			{
+			case '>':
+				if ( p[2] == '=' )
+					tokens.push_back ( string ( p, 3 ) ), p += 3;
+				else
+					tokens.push_back ( string ( p, 2 ) ), p += 2;
+				break;
+			case '=':
+				tokens.push_back ( string ( p, 2 ) );
+				p += 2;
+				break;
+			default:
+				tokens.push_back ( ">" );
+				p++;
+				break;
+			}
+			break;
+		case '!':
+			switch ( p[1] )
+			{
+			case '=':
+				tokens.push_back ( string ( p, 2 ) );
+				p += 2;
+				break;
+			default:
+				tokens.push_back ( "!" );
+				p++;
+				break;
+			}
+			break;
 		case '=':
 			switch ( p[1] )
 			{

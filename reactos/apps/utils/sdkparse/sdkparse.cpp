@@ -60,8 +60,10 @@ const char* libc_includes[] =
 	"except.h",
 	"limits.h",
 	"stdarg.h",
+	"stddef.h",
 	"stdlib.h",
-	"string.h"
+	"string.h",
+	"types.h"
 };
 
 bool is_libc_include ( const string& inc )
