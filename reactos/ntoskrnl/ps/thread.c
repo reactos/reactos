@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.120 2003/10/12 17:05:50 hbirr Exp $
+/* $Id: thread.c,v 1.121 2003/11/02 01:16:21 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -52,7 +52,7 @@ ULONG PiNrThreads = 0;
 ULONG PiNrReadyThreads = 0;
 static HANDLE PiReaperThreadHandle;
 static KEVENT PiReaperThreadEvent;
-static BOOL PiReaperThreadShouldTerminate = FALSE;
+static BOOLEAN PiReaperThreadShouldTerminate = FALSE;
 ULONG PiNrThreadsAwaitingReaping = 0;
 
 static GENERIC_MAPPING PiThreadMapping = {THREAD_READ,
@@ -293,7 +293,7 @@ PsDispatchThread(ULONG NewThreadStatus)
    /*
     * Save wait IRQL
     */
-   ((PIKPCR) KeGetCurrentKPCR())->CurrentThread->WaitIrql = oldIrql;   
+   ((PIKPCR) KeGetCurrentKPCR())->CurrentThread->WaitIrql = oldIrql;
    PsDispatchThreadNoLock(NewThreadStatus);
    KeLowerIrql(oldIrql);
 }
@@ -304,16 +304,16 @@ PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus)
   KIRQL oldIrql;
 
   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-  if (THREAD_STATE_TERMINATED_1 == Thread->Tcb.State || 
+  if (THREAD_STATE_TERMINATED_1 == Thread->Tcb.State ||
       THREAD_STATE_TERMINATED_2 == Thread->Tcb.State)
     {
-       DPRINT("Can't unblock thread %d because it's terminating\n", 
+       DPRINT("Can't unblock thread %d because it's terminating\n",
 	       Thread->Cid.UniqueThread);
     }
   else if (THREAD_STATE_READY == Thread->Tcb.State ||
            THREAD_STATE_RUNNING == Thread->Tcb.State)
     {
-       DPRINT("Can't unblock thread %d because it's ready or running\n", 
+       DPRINT("Can't unblock thread %d because it's ready or running\n",
 	       Thread->Cid.UniqueThread);
     }
   else
@@ -329,7 +329,7 @@ PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus)
 }
 
 VOID
-PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode, 
+PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
 	      BOOLEAN DispatcherLock, KIRQL WaitIrql, UCHAR WaitReason)
 {
   KIRQL oldIrql;
@@ -345,7 +345,7 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
   {
     if (!DispatcherLock)
       {
-	KeAcquireDispatcherDatabaseLock(FALSE);
+	KeAcquireDispatcherDatabaseLockAtDpcLevel();
       }
     WaitBlock = (PKWAIT_BLOCK)Thread->Tcb.WaitBlockList;
     while (WaitBlock)
@@ -354,7 +354,7 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
 	WaitBlock = WaitBlock->NextWaitBlock;
       }
     Thread->Tcb.WaitBlockList = NULL;
-    KeReleaseDispatcherDatabaseLockAtDpcLevel(FALSE);
+    KeReleaseDispatcherDatabaseLockFromDpcLevel();
     PsDispatchThreadNoLock (THREAD_STATE_READY);
     if (Status != NULL)
       {
@@ -365,7 +365,7 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
     {
       if (DispatcherLock)
 	{
-	  KeReleaseDispatcherDatabaseLockAtDpcLevel(FALSE);
+	  KeReleaseDispatcherDatabaseLockFromDpcLevel();
 	}
       Thread->Tcb.Alertable = Alertable;
       Thread->Tcb.WaitMode = WaitMode;
@@ -618,7 +618,7 @@ KeSetAffinityThread(PKTHREAD	Thread,
 }
 
 
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 NtAlertResumeThread(IN	HANDLE ThreadHandle,
 		    OUT PULONG	SuspendCount)
 {
@@ -626,7 +626,8 @@ NtAlertResumeThread(IN	HANDLE ThreadHandle,
 }
 
 
-NTSTATUS STDCALL NtAlertThread (IN HANDLE ThreadHandle)
+NTSTATUS STDCALL
+NtAlertThread (IN HANDLE ThreadHandle)
 {
    PETHREAD Thread;
    NTSTATUS Status;
@@ -655,7 +656,7 @@ NTSTATUS STDCALL NtAlertThread (IN HANDLE ThreadHandle)
  *
  *	@implemented
  */
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 NtOpenThread(OUT PHANDLE ThreadHandle,
 	     IN	ACCESS_MASK DesiredAccess,
 	     IN	POBJECT_ATTRIBUTES ObjectAttributes,
@@ -711,13 +712,13 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
                      DesiredAccess,
                      FALSE,
                      ThreadHandle);
-         ObDereferenceObject(EThread); 
+         ObDereferenceObject(EThread);
       }
    }
-   return(Status);  
+   return(Status);
 }
 
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 NtContinue(IN PCONTEXT	Context,
 	   IN BOOLEAN TestAlert)
 {

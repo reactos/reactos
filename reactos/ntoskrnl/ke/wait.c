@@ -29,9 +29,6 @@
 /* GLOBALS ******************************************************************/
 
 static KSPIN_LOCK DispatcherDatabaseLock;
-static BOOLEAN WaitSet = FALSE;
-static KIRQL oldlvl = PASSIVE_LEVEL;
-static PKTHREAD Owner = NULL;
 
 #define KeDispatcherObjectWakeOne(hdr) KeDispatcherObjectWakeOneOrAll(hdr, FALSE)
 #define KeDispatcherObjectWakeAll(hdr) KeDispatcherObjectWakeOneOrAll(hdr, TRUE)
@@ -51,40 +48,51 @@ VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header,
    InitializeListHead(&(Header->WaitListHead));
 }
 
-VOID KeAcquireDispatcherDatabaseLock(BOOLEAN Wait)
+
+KIRQL
+KeAcquireDispatcherDatabaseLock(VOID)
 /*
  * PURPOSE: Acquires the dispatcher database lock for the caller
  */
 {
-   DPRINT("KeAcquireDispatcherDatabaseLock(Wait %x)\n",Wait);
-   if (WaitSet && Owner == KeGetCurrentThread())
-     {
-	return;
-     }
-   KeAcquireSpinLock(&DispatcherDatabaseLock, &oldlvl);
-   WaitSet = Wait;
-   Owner = KeGetCurrentThread();
+   KIRQL OldIrql;
+
+   DPRINT("KeAcquireDispatcherDatabaseLock()\n");
+
+   KeAcquireSpinLock (&DispatcherDatabaseLock, &OldIrql);
+   return OldIrql;
 }
 
-VOID KeReleaseDispatcherDatabaseLockAtDpcLevel(BOOLEAN Wait)
+
+VOID
+KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID)
+/*
+ * PURPOSE: Acquires the dispatcher database lock for the caller
+ */
 {
-  DPRINT("KeReleaseDispatcherDatabaseLockAtDpcLevel(Wait %x) WaitSet=%x\n", Wait, WaitSet);
-  if (Wait == WaitSet)
-    {
-      Owner = NULL;
-      KeReleaseSpinLockFromDpcLevel(&DispatcherDatabaseLock);
-    }
+   DPRINT("KeAcquireDispatcherDatabaseLockAtDpcLevel()\n");
+
+   KeAcquireSpinLockAtDpcLevel (&DispatcherDatabaseLock);
 }
 
-VOID KeReleaseDispatcherDatabaseLock(BOOLEAN Wait)
+
+VOID
+KeReleaseDispatcherDatabaseLock(KIRQL OldIrql)
 {
-   DPRINT("KeReleaseDispatcherDatabaseLock(Wait %x) WaitSet=%x\n",Wait,WaitSet);
-   if (Wait == WaitSet)
-     {
-	Owner = NULL;
-	KeReleaseSpinLock(&DispatcherDatabaseLock, oldlvl);
-     }
+  DPRINT("KeReleaseDispatcherDatabaseLock(OldIrql %x)\n",OldIrql);
+
+  KeReleaseSpinLock(&DispatcherDatabaseLock, OldIrql);
 }
+
+
+VOID
+KeReleaseDispatcherDatabaseLockFromDpcLevel(VOID)
+{
+  DPRINT("KeReleaseDispatcherDatabaseLock()\n");
+
+  KeReleaseSpinLockFromDpcLevel(&DispatcherDatabaseLock);
+}
+
 
 static BOOLEAN
 KiSideEffectsBeforeWake(DISPATCHER_HEADER * hdr,
@@ -190,8 +198,9 @@ VOID KeRemoveAllWaitsThread(PETHREAD Thread, NTSTATUS WaitStatus, BOOL Unblock)
 {
    PKWAIT_BLOCK WaitBlock, PrevWaitBlock;
    BOOLEAN WasWaiting = FALSE;
+   KIRQL OldIrql;
 
-   KeAcquireDispatcherDatabaseLock(FALSE);
+   OldIrql = KeAcquireDispatcherDatabaseLock ();
 
    WaitBlock = (PKWAIT_BLOCK)Thread->Tcb.WaitBlockList;
    if (WaitBlock != NULL)
@@ -216,7 +225,7 @@ VOID KeRemoveAllWaitsThread(PETHREAD Thread, NTSTATUS WaitStatus, BOOL Unblock)
 	PsUnblockThread(Thread, &WaitStatus);
      }
 
-   KeReleaseDispatcherDatabaseLock(FALSE);
+   KeReleaseDispatcherDatabaseLock (OldIrql);
 }
 
 static BOOLEAN
@@ -459,6 +468,7 @@ KeWaitForMultipleObjects(ULONG Count,
    ULONG i;
    NTSTATUS Status;
    KIRQL WaitIrql;
+   KIRQL OldIrql;
    BOOLEAN Abandoned;
 
    DPRINT("Entering KeWaitForMultipleObjects(Count %lu Object[] %p) "
@@ -499,7 +509,16 @@ KeWaitForMultipleObjects(ULONG Count,
 
    do
    {
-      KeAcquireDispatcherDatabaseLock(FALSE);
+      if (CurrentThread->WaitNext)
+      {
+         OldIrql = CurrentThread->WaitIrql;
+         CurrentThread->WaitNext = 0;
+         CurrentThread->WaitIrql = PASSIVE_LEVEL;
+      }
+      else
+      {
+         OldIrql = KeAcquireDispatcherDatabaseLock ();
+      }
 
       /*
        * If we are going to wait alertably and a user apc is pending
@@ -507,7 +526,7 @@ KeWaitForMultipleObjects(ULONG Count,
        */
       if (Alertable && KiTestAlert())
       {
-         KeReleaseDispatcherDatabaseLock(FALSE);
+         KeReleaseDispatcherDatabaseLock(OldIrql);
          return (STATUS_USER_APC);
       }
 
@@ -533,7 +552,7 @@ KeWaitForMultipleObjects(ULONG Count,
                   KeCancelTimer(&CurrentThread->Timer);
                }
 
-               KeReleaseDispatcherDatabaseLock(FALSE);
+               KeReleaseDispatcherDatabaseLock(OldIrql);
 
                DPRINT("One object is (already) signaled!\n");
                if (Abandoned == TRUE)
@@ -560,7 +579,7 @@ KeWaitForMultipleObjects(ULONG Count,
             KeCancelTimer(&CurrentThread->Timer);
          }
 
-         KeReleaseDispatcherDatabaseLock(FALSE);
+         KeReleaseDispatcherDatabaseLock(OldIrql);
          DPRINT("All objects are (already) signaled!\n");
 
          if (Abandoned == TRUE)
@@ -574,7 +593,7 @@ KeWaitForMultipleObjects(ULONG Count,
       //zero timeout is used for testing if the object(s) can be immediately acquired
       if (Timeout != NULL && Timeout->QuadPart == 0)
       {
-         KeReleaseDispatcherDatabaseLock(FALSE);
+         KeReleaseDispatcherDatabaseLock(OldIrql);
          return STATUS_TIMEOUT;
       }
 
@@ -585,7 +604,7 @@ KeWaitForMultipleObjects(ULONG Count,
       {
          KiSideEffectsBeforeWake(&CurrentThread->Timer.Header, CurrentThread);
          KeCancelTimer(&CurrentThread->Timer);
-         KeReleaseDispatcherDatabaseLock(FALSE);
+         KeReleaseDispatcherDatabaseLock(OldIrql);
          return (STATUS_TIMEOUT);
       }
 

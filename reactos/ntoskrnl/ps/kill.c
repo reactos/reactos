@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.65 2003/09/18 17:55:21 fireball Exp $
+/* $Id: kill.c,v 1.66 2003/11/02 01:16:21 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -95,14 +95,14 @@ PsReapThreads(VOID)
 	
 	if (current->Tcb.State == THREAD_STATE_TERMINATED_1)
 	  {
-	     PEPROCESS Process = current->ThreadsProcess; 
+	     PEPROCESS Process = current->ThreadsProcess;
 	     NTSTATUS Status = current->ExitStatus;
 	     BOOLEAN Last;
 	     
 	     PiNrThreadsAwaitingReaping--;
 	     current->Tcb.State = THREAD_STATE_TERMINATED_2;
 	     RemoveEntryList(&current->Tcb.ProcessThreadListEntry);
-             Last = IsListEmpty(&Process->ThreadListHead);
+	     Last = IsListEmpty(&Process->ThreadListHead);
 	     KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 
 	     if (Last)
@@ -113,14 +113,14 @@ PsReapThreads(VOID)
 	     {
 		if (current->Tcb.Teb)
 		{
-		  /* If this is not the last thread for the process than free the memory
+		  /* If this is not the last thread for the process then free the memory
 		     from user stack and teb. */
 		  NTSTATUS Status;
 		  ULONG Length;
 		  ULONG Offset;
-	          PVOID DeallocationStack;
+		  PVOID DeallocationStack;
 		  HANDLE ProcessHandle;
-                  Status = ObCreateHandle(PsGetCurrentProcess(), Process, PROCESS_ALL_ACCESS, FALSE, &ProcessHandle);
+		  Status = ObCreateHandle(PsGetCurrentProcess(), Process, PROCESS_ALL_ACCESS, FALSE, &ProcessHandle);
 		  if (!NT_SUCCESS(Status))
 		  {
 		     DPRINT1("ObCreateHandle failed, status = %x\n", Status);
@@ -128,14 +128,14 @@ PsReapThreads(VOID)
 		  }
 		  Offset = FIELD_OFFSET(TEB, DeallocationStack);
 		  Length = 0;
-		  NtReadVirtualMemory(ProcessHandle, (PVOID)current->Tcb.Teb + Offset, 
+		  NtReadVirtualMemory(ProcessHandle, (PVOID)current->Tcb.Teb + Offset,
 		                      (PVOID)&DeallocationStack, sizeof(PVOID), &Length);
 		  if (DeallocationStack && Length == sizeof(PVOID))
 		  {
-    		     NtFreeVirtualMemory(ProcessHandle, &DeallocationStack, &Length, MEM_RELEASE); 
+		     NtFreeVirtualMemory(ProcessHandle, &DeallocationStack, &Length, MEM_RELEASE);
 		  }
 		  Length = PAGE_SIZE;
-		  NtFreeVirtualMemory(ProcessHandle, (PVOID*)&current->Tcb.Teb, &Length, MEM_RELEASE); 
+		  NtFreeVirtualMemory(ProcessHandle, (PVOID*)&current->Tcb.Teb, &Length, MEM_RELEASE);
 		  NtClose(ProcessHandle);
 		}
 	     }
@@ -183,12 +183,12 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 	current_entry = Thread->MutantListHead.Flink;
      }
 
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);   
+   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
    
-   KeAcquireDispatcherDatabaseLock(FALSE);
+   KeAcquireDispatcherDatabaseLockAtDpcLevel();
    CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
-   KeReleaseDispatcherDatabaseLockAtDpcLevel(FALSE);
+   KeReleaseDispatcherDatabaseLockFromDpcLevel ();
 
    ExpSwapThreadEventPair(CurrentThread, NULL); /* Release the associated eventpair object, if there was one */
    KeRemoveAllWaitsThread (CurrentThread, STATUS_UNSUCCESSFUL, FALSE);
@@ -263,6 +263,8 @@ NTSTATUS STDCALL
 PiTerminateProcess(PEPROCESS Process,
 		   NTSTATUS ExitStatus)
 {
+   KIRQL OldIrql;
+
    DPRINT("PiTerminateProcess(Process %x, ExitStatus %x) PC %d HC %d\n",
 	   Process, ExitStatus, ObGetObjectPointerCount(Process),
 	   ObGetObjectHandleCount(Process));
@@ -278,10 +280,10 @@ PiTerminateProcess(PEPROCESS Process,
    KeAttachProcess( Process );
    ObCloseAllHandles(Process);
    KeDetachProcess();
-   KeAcquireDispatcherDatabaseLock(FALSE);
+   OldIrql = KeAcquireDispatcherDatabaseLock ();
    Process->Pcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&Process->Pcb.DispatcherHeader);
-   KeReleaseDispatcherDatabaseLock(FALSE);
+   KeReleaseDispatcherDatabaseLock (OldIrql);
    ObDereferenceObject(Process);
    return(STATUS_SUCCESS);
 }

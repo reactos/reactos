@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: queue.c,v 1.9 2003/08/14 18:30:28 silverblade Exp $
+/* $Id: queue.c,v 1.10 2003/11/02 01:15:15 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/queue.c
@@ -75,10 +75,11 @@ KiInsertQueue(
    )
 {
    ULONG InitialState;
+   KIRQL OldIrql;
   
    DPRINT("KiInsertQueue(Queue %x, Entry %x)\n", Queue, Entry);
    
-   KeAcquireDispatcherDatabaseLock(FALSE);
+   OldIrql = KeAcquireDispatcherDatabaseLock ();
    
    InitialState = Queue->Header.SignalState;
    Queue->Header.SignalState++;
@@ -97,7 +98,7 @@ KiInsertQueue(
       KeDispatcherObjectWake(&Queue->Header);
    }
 
-   KeReleaseDispatcherDatabaseLock(FALSE);
+   KeReleaseDispatcherDatabaseLock(OldIrql);
    return InitialState;
 }
 
@@ -136,8 +137,9 @@ KeRemoveQueue(IN PKQUEUE Queue,
    PLIST_ENTRY ListEntry;
    NTSTATUS Status;
    PKTHREAD Thread = KeGetCurrentThread();
+   KIRQL OldIrql;
 
-   KeAcquireDispatcherDatabaseLock(FALSE);
+   OldIrql = KeAcquireDispatcherDatabaseLock ();
 
    //assiciate new thread with queue?
    if (Thread->Queue != Queue)
@@ -158,12 +160,12 @@ KeRemoveQueue(IN PKQUEUE Queue,
    {
       ListEntry = RemoveHeadList(&Queue->EntryListHead);
       Queue->Header.SignalState--;
-      KeReleaseDispatcherDatabaseLock(FALSE);
+      KeReleaseDispatcherDatabaseLock (OldIrql);
       return ListEntry;
    }
 
    //need to wait for it...
-   KeReleaseDispatcherDatabaseLock(FALSE);
+   KeReleaseDispatcherDatabaseLock (OldIrql);
 
    Status = KeWaitForSingleObject(Queue,
                                   WrQueue,
@@ -177,9 +179,9 @@ KeRemoveQueue(IN PKQUEUE Queue,
    }
    else
    {
-      KeAcquireDispatcherDatabaseLock(FALSE);
+      OldIrql = KeAcquireDispatcherDatabaseLock ();
       ListEntry = RemoveHeadList(&Queue->EntryListHead);
-      KeReleaseDispatcherDatabaseLock(FALSE);
+      KeReleaseDispatcherDatabaseLock (OldIrql);
       return ListEntry;
    }
 
@@ -194,12 +196,13 @@ KeRundownQueue(IN PKQUEUE Queue)
 {
    PLIST_ENTRY EnumEntry;
    PKTHREAD Thread;
+   KIRQL OldIrql;
 
    DPRINT("KeRundownQueue(Queue %x)\n", Queue);
 
    //FIXME: should we wake thread waiting on a queue? 
 
-   KeAcquireDispatcherDatabaseLock(FALSE);
+   OldIrql = KeAcquireDispatcherDatabaseLock ();
 
    // Clear Queue and QueueListEntry members of all threads associated with this queue
    while (!IsListEmpty(&Queue->ThreadListHead))
@@ -215,7 +218,7 @@ KeRundownQueue(IN PKQUEUE Queue)
    else
       EnumEntry = NULL;
 
-   KeReleaseDispatcherDatabaseLock(FALSE);
+   KeReleaseDispatcherDatabaseLock (OldIrql);
 
    return EnumEntry;
 }

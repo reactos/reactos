@@ -13,6 +13,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
 #include <internal/id.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -80,14 +81,29 @@ LONG STDCALL KeSetEvent (PKEVENT		Event,
 			 KPRIORITY	Increment,
 			 BOOLEAN		Wait)
 {
-   int ret;
+  KIRQL OldIrql;
+  int ret;
 
-   DPRINT("KeSetEvent(Event %x, Wait %x)\n",Event,Wait);
-   KeAcquireDispatcherDatabaseLock(Wait);
-   ret = InterlockedExchange(&(Event->Header.SignalState),1);
-   KeDispatcherObjectWake((DISPATCHER_HEADER *)Event);
-   KeReleaseDispatcherDatabaseLock(Wait);
-   return(ret);
+  DPRINT("KeSetEvent(Event %x, Wait %x)\n",Event,Wait);
+
+  OldIrql = KeAcquireDispatcherDatabaseLock();
+
+  ret = InterlockedExchange(&(Event->Header.SignalState),1);
+
+  KeDispatcherObjectWake((DISPATCHER_HEADER *)Event);
+
+  if (Wait == FALSE)
+    {
+      KeReleaseDispatcherDatabaseLock(OldIrql);
+    }
+  else
+    {
+      KTHREAD *Thread = KeGetCurrentThread();
+      Thread->WaitNext = Wait;
+      Thread->WaitIrql = OldIrql;
+    }
+
+  return(ret);
 }
 
 /*
@@ -97,15 +113,27 @@ NTSTATUS STDCALL KePulseEvent (PKEVENT		Event,
 			       KPRIORITY	Increment,
 			       BOOLEAN		Wait)
 {
+   KIRQL OldIrql;
    int ret;
 
    DPRINT("KePulseEvent(Event %x, Wait %x)\n",Event,Wait);
-   KeAcquireDispatcherDatabaseLock(Wait);
+   OldIrql = KeAcquireDispatcherDatabaseLock();
    ret = InterlockedExchange(&(Event->Header.SignalState),1);
    KeDispatcherObjectWake((DISPATCHER_HEADER *)Event);
    InterlockedExchange(&(Event->Header.SignalState),0);
-   KeReleaseDispatcherDatabaseLock(Wait);
-   return((NTSTATUS)ret);
+
+  if (Wait == FALSE)
+    {
+      KeReleaseDispatcherDatabaseLock(OldIrql);
+    }
+  else
+    {
+      KTHREAD *Thread = KeGetCurrentThread();
+      Thread->WaitNext = Wait;
+      Thread->WaitIrql = OldIrql;
+    }
+
+   return ((NTSTATUS)ret);
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.62 2003/10/12 17:05:45 hbirr Exp $
+/* $Id: timer.c,v 1.63 2003/11/02 01:15:15 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -400,6 +400,8 @@ KeQueryTickCount(PLARGE_INTEGER TickCount)
 STATIC VOID 
 HandleExpiredTimer(PKTIMER current)
 {
+  KIRQL OldIrql;
+
    DPRINT("HandleExpiredTime(current %x)\n",current);
    if (current->Dpc != NULL)
      {
@@ -410,10 +412,10 @@ HandleExpiredTimer(PKTIMER current)
 			 NULL);
 	DPRINT("Finished dpc routine\n");
      }
-   KeAcquireDispatcherDatabaseLock(FALSE);
+   OldIrql = KeAcquireDispatcherDatabaseLock ();
    current->Header.SignalState = TRUE;
    KeDispatcherObjectWake(&current->Header);
-   KeReleaseDispatcherDatabaseLock(FALSE);
+   KeReleaseDispatcherDatabaseLock (OldIrql);
    if (current->Period != 0)
      {
 	current->DueTime.QuadPart += 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: sem.c,v 1.13 2003/07/10 17:44:06 royce Exp $
+/* $Id: sem.c,v 1.14 2003/11/02 01:15:15 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/sem.c
@@ -30,6 +30,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
+#include <internal/ps.h>
 #include <internal/id.h>
 
 #define NDEBUG
@@ -40,7 +41,7 @@
 /*
  * @implemented
  */
-VOID STDCALL 
+VOID STDCALL
 KeInitializeSemaphore (PKSEMAPHORE	Semaphore,
 		       LONG		Count,
 		       LONG		Limit)
@@ -55,7 +56,7 @@ KeInitializeSemaphore (PKSEMAPHORE	Semaphore,
 /*
  * @implemented
  */
-LONG STDCALL 
+LONG STDCALL
 KeReadStateSemaphore (PKSEMAPHORE	Semaphore)
 {
    return(Semaphore->Header.SignalState);
@@ -64,7 +65,7 @@ KeReadStateSemaphore (PKSEMAPHORE	Semaphore)
 /*
  * @implemented
  */
-LONG STDCALL 
+LONG STDCALL
 KeReleaseSemaphore (PKSEMAPHORE	Semaphore,
 		    KPRIORITY	Increment,
 		    LONG		Adjustment,
@@ -90,27 +91,38 @@ KeReleaseSemaphore (PKSEMAPHORE	Semaphore,
  *          object is Not-Signaled.
  */
 {
-   ULONG InitialState;
-  
-   DPRINT("KeReleaseSemaphore(Semaphore %x, Increment %d, Adjustment %d, "
+  ULONG InitialState;
+  KIRQL OldIrql;
+
+  DPRINT("KeReleaseSemaphore(Semaphore %x, Increment %d, Adjustment %d, "
 	  "Wait %d)\n", Semaphore, Increment, Adjustment, Wait);
-   
-   KeAcquireDispatcherDatabaseLock(Wait);
-   
-   InitialState = Semaphore->Header.SignalState;
-   if (Semaphore->Limit < (LONG) InitialState + Adjustment ||
-       InitialState > InitialState + Adjustment)
-     {
-	ExRaiseStatus(STATUS_SEMAPHORE_LIMIT_EXCEEDED);
-     }
-   
-   Semaphore->Header.SignalState += Adjustment;
-   if (InitialState == 0)
-     {
-       KeDispatcherObjectWake(&Semaphore->Header);
-     }
-   
-  KeReleaseDispatcherDatabaseLock(Wait);
+
+  OldIrql = KeAcquireDispatcherDatabaseLock();
+
+  InitialState = Semaphore->Header.SignalState;
+  if (Semaphore->Limit < (LONG) InitialState + Adjustment ||
+      InitialState > InitialState + Adjustment)
+    {
+      ExRaiseStatus(STATUS_SEMAPHORE_LIMIT_EXCEEDED);
+    }
+
+  Semaphore->Header.SignalState += Adjustment;
+  if (InitialState == 0)
+    {
+      KeDispatcherObjectWake(&Semaphore->Header);
+    }
+
+  if (Wait == FALSE)
+    {
+      KeReleaseDispatcherDatabaseLock(OldIrql);
+    }
+  else
+    {
+      KTHREAD *Thread = KeGetCurrentThread();
+      Thread->WaitNext = Wait;
+      Thread->WaitIrql = OldIrql;
+    }
+
   return(InitialState);
 }
 

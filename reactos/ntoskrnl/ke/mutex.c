@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mutex.c,v 1.14 2003/07/21 21:53:51 royce Exp $
+/* $Id: mutex.c,v 1.15 2003/11/02 01:15:15 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/mutex.c
@@ -71,7 +71,9 @@ LONG STDCALL
 KeReleaseMutex(IN PKMUTEX Mutex,
 	       IN BOOLEAN Wait)
 {
-  KeAcquireDispatcherDatabaseLock(Wait);
+  KIRQL OldIrql;
+
+  OldIrql = KeAcquireDispatcherDatabaseLock();
   if (Mutex->OwnerThread != KeGetCurrentThread())
     {
       DbgPrint("THREAD_NOT_MUTEX_OWNER: Mutex %p\n", Mutex);
@@ -86,7 +88,18 @@ KeReleaseMutex(IN PKMUTEX Mutex,
 	RemoveEntryList(&Mutex->MutantListEntry);
       KeDispatcherObjectWake(&Mutex->Header);
     }
-  KeReleaseDispatcherDatabaseLock(Wait);
+
+  if (Wait == FALSE)
+    {
+      KeReleaseDispatcherDatabaseLock(OldIrql);
+    }
+  else
+    {
+      KTHREAD *Thread = KeGetCurrentThread();
+      Thread->WaitNext = Wait;
+      Thread->WaitIrql = OldIrql;
+    }
+
   return(0);
 }
 
@@ -153,7 +166,9 @@ KeReleaseMutant(IN PKMUTANT Mutant,
 		IN BOOLEAN Abandon,
 		IN BOOLEAN Wait)
 {
-  KeAcquireDispatcherDatabaseLock(Wait);
+  KIRQL OldIrql;
+
+  OldIrql = KeAcquireDispatcherDatabaseLock();
   if (Abandon == FALSE)
     {
       if (Mutant->OwnerThread != NULL && Mutant->OwnerThread != KeGetCurrentThread())
@@ -183,7 +198,17 @@ KeReleaseMutant(IN PKMUTANT Mutant,
       KeDispatcherObjectWake(&Mutant->Header);
     }
 
-  KeReleaseDispatcherDatabaseLock(Wait);
+  if (Wait == FALSE)
+    {
+      KeReleaseDispatcherDatabaseLock(OldIrql);
+    }
+  else
+    {
+      KTHREAD *Thread = KeGetCurrentThread();
+      Thread->WaitNext = Wait;
+      Thread->WaitIrql = OldIrql;
+    }
+
   return(0);
 }
 
