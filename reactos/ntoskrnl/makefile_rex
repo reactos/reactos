@@ -144,5 +144,5 @@ ex/napi.o: ex/napi.c ../include/ntdll/napi.h
 
 #WITH_DEBUGGING = yes
 WIN32_LEAN_AND_MEAN = yes
-WARNINGS_ARE_ERRORS = yes
+#WARNINGS_ARE_ERRORS = yes
 include ../rules.mak

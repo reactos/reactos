@@ -5,6 +5,15 @@ dashes on a line by themselves.  If you implement the fix
 reffered to in a message, feel free to delete it from the file.
 Rex ***
 -----
+Subject: [ros-kernel] Inside the Boot Process
+Date: Mon, 22 Mar 1999 22:05:47 +0100
+From: Emanuele Aliberti <ea@iol.it>
+
+For those working on the boot loader: in WinNt Magazine november 1998
+issue (http://www.winntmag.com/) there is a detailed description, by
+Mark Russinovich, of the rôle the MBR, NTLDR, boot.ini, ntdetect.com...
+play in the boot process ("Inside the Boot Process, Part 1").
+-----
 Yes with DPCs, KeDrainDpcQueue should go to HIGH_LEVEL because 
 it needs to synchronize with KeInsertDpcQueue. Also the idle thread 
 should run at DISPATCH_LEVEL and regularly drain the dpc queue, that 

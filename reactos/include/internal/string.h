@@ -5,6 +5,10 @@
 #include <internal/types.h>
 #endif
 
+#ifndef _INTERNAL_STDDEF_H
+#include <internal/stddef.h>
+#endif
+
 /*
  * On a 486 or Pentium, we are better off not using the
  * byte string operations. But on a 386 or a PPro the

@@ -465,8 +465,10 @@ typedef enum _TOKEN_INFORMATION_CLASS {
 #define INDEXTOSTATEIMAGEMASK(i) ((i) << 12)  
 
 #ifdef UNICODE
+#define _T(quote) L##quote 
 #define TEXT(quote) L##quote 
 #else
+#define _T(quote) L##quote 
 #define TEXT(quote) quote
 #endif
 

@@ -1,6 +1,7 @@
 
 #include <internal/mmhal.h>
 #include <internal/halio.h>
+#include <internal/hal/page.h>
 #include <ddk/ntddk.h>
 #include <string.h>
 #include <internal/string.h>

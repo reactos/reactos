@@ -2,8 +2,8 @@
  * Lowlevel memory managment definitions
  */
 
-#ifndef __INTERNAL_HAL_PAGE_H
-#define __INTERNAL_HAL_PAGE_H
+#ifndef __INTERNAL_HAL_I386_MMHAL_H
+#define __INTERNAL_HAL_I386_MMHAL_H
 
 #include <ddk/ntddk.h>
 
@@ -60,4 +60,4 @@ VOID MmSetPageProtect(PEPROCESS Process,
 		      ULONG flProtect);
 BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address);
 
-#endif /* __INTERNAL_HAL_PAGE_H */
+#endif /* __INTERNAL_HAL_I386_MMHAL_H */
