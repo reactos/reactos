@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.19 2001/05/04 01:21:45 rex Exp $
+/* $Id: dirwr.c,v 1.20 2001/08/03 19:01:17 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -18,6 +18,18 @@
 #include <debug.h>
 
 #include "vfat.h"
+
+const char *short_illegals=" ;+=[]',\"*\\<>/?:|";
+
+static BOOLEAN
+vfatIsShortIllegal(char c)
+{
+  int i;
+  for (i = 0; short_illegals[i]; i++)
+    if (c == short_illegals[i])
+      return TRUE;
+  return FALSE;
+}
 
 /*
  * Copies a file name into a directory slot (long file name entry)
@@ -161,7 +173,7 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
 */
 {
   WCHAR DirName[MAX_PATH], *FileName, *PathFileName;
-  VFATFCB DirFcb, FileFcb;
+  VFATFCB FileFcb;
   FATDirEntry FatEntry;
   NTSTATUS status;
   FILE_OBJECT FileObject;
@@ -177,6 +189,8 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
   LARGE_INTEGER SystemTime, LocalTime;
   ULONG BytesPerCluster;
   NTSTATUS Status;
+  PVFATFCB pFcb;
+  PVFATCCB pCcb;
 
   PathFileName = pFileObject->FileName.Buffer;
   DPRINT ("addEntry: Pathname=%S\n", PathFileName);
@@ -195,6 +209,14 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
   // open parent directory
   memset (&FileObject, 0, sizeof (FILE_OBJECT));
   status = VfatOpenFile (DeviceExt, &FileObject, DirName);
+  if (!NT_SUCCESS(status))
+  {
+    return Status;
+  }
+  pCcb = FileObject.FsContext2;
+  assert (pCcb);
+  pFcb = pCcb->pFcb;
+  assert (pFcb);
   nbSlots = (NameLen + 12) / 13 + 1;	//nb of entry needed for long name+normal entry
   DPRINT ("NameLen= %d, nbSlots =%d\n", NameLen, nbSlots);
   Buffer =
@@ -205,115 +227,144 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
   // create 8.3 name
   needTilde = FALSE;
   // find last point in name
-  posCar = 0;
+  posCar = j = 0;
   for (i = 0; FileName[i]; i++)
     if (FileName[i] == '.')
+    {
       posCar = i;
+      if (i == j)
+        j++;
+    }
   if (!posCar)
     posCar = i;
+  if (posCar < j)
+  {
+    posCar = i;
+    needTilde = TRUE;
+  }
   if (posCar > 8)
     needTilde = TRUE;
   //copy 8 characters max
   memset (pEntry, ' ', 11);
   for (i = 0, j = 0; j < 8 && i < posCar; i++)
+  {
+    if (vfatIsShortIllegal (FileName[i]))
     {
-      //FIXME : is there other characters to ignore ?
-      if (FileName[i] != '.'
-	  && FileName[i] != ' '
-	  && FileName[i] != '+'
-	  && FileName[i] != ','
-	  && FileName[i] != ';'
-	  && FileName[i] != '=' && FileName[i] != '[' && FileName[i] != ']')
-	pEntry->Filename[j++] = toupper ((char) FileName[i]);
-      else
-	needTilde = TRUE;
+      needTilde = TRUE;
+      pEntry->Filename[j++] = '_';
     }
+    else
+    {
+      if (FileName[i] == '.')
+        needTilde = TRUE;
+      else
+        pEntry->Filename[j++] = toupper ((char) FileName[i]);
+    }
+  }
   //copy extension
   if (FileName[posCar])
-    for (j = 0, i = posCar + 1; FileName[i] && i < posCar + 4; i++)
+    for (j = 0, i = posCar + 1; FileName[i] && j < 3; i++)
+    {
+      if (vfatIsShortIllegal(FileName[i]))
       {
-	pEntry->Ext[j++] = toupper ((char) (FileName[i] & 0x7F));
+        needTilde = TRUE;
+        pEntry->Ext[j++] = '_';
       }
+      else
+      {
+        if (FileName[i] == '.')
+          needTilde = TRUE;
+        else
+	        pEntry->Ext[j++] = toupper ((char) (FileName[i] & 0x7F));
+      }
+    }
   if (FileName[i])
     needTilde = TRUE;
   //find good value for tilde
   if (needTilde)
+  {
+    needLong = TRUE;
+    DPRINT ("searching a good value for tilde\n");
+    for (posCar = 0; posCar < 8 && pEntry->Filename[posCar] != ' '; posCar++);
+    if (posCar == 0) // ??????????????????????
+      pEntry->Filename[posCar++] = '_';
+    posCar += 2;
+    if (posCar > 8)
+      posCar = 8;
+    pEntry->Filename[posCar - 2] = '~';
+    pEntry->Filename[posCar - 1] = '1';
+    vfat8Dot3ToString (pEntry->Filename, pEntry->Ext, DirName);
+    //try first with xxxxxx~y.zzz
+    for (i = 1; i < 10; i++)
     {
-      needLong = TRUE;
-      DPRINT ("searching a good value for tilde\n");
-      for (i = 0; i < 6; i++)
-	DirName[i] = pEntry->Filename[i];
-      for (i = 0; i < 3; i++)
-	DirName[i + 8] = pEntry->Ext[i];
-      //try first with xxxxxx~y.zzz
-      DirName[6] = '~';
-      pEntry->Filename[6] = '~';
-      DirName[8] = '.';
-      DirName[12] = 0;
-      for (i = 1; i < 9; i++)
-	{
-	  DirName[7] = '0' + i;
-	  pEntry->Filename[7] = '0' + i;
-	  status =
-	    FindFile (DeviceExt, &FileFcb, &DirFcb, DirName, NULL, NULL);
-	  if (status != STATUS_SUCCESS)
-	    break;
-	}
+      DirName[posCar-1] = '0' + i;
+      pEntry->Filename[posCar - 1] = '0' + i;
+	    status = FindFile (DeviceExt, &FileFcb, pFcb, DirName, NULL, NULL);
+	    if (!NT_SUCCESS(status))
+	      break;
+    }
+    if (i == 10)
+    {
+      posCar++;
+      if (posCar > 8)
+        posCar = 8;
+      pEntry->Filename[posCar - 3] = '~';
+      pEntry->Filename[posCar - 2] = '1';
+      pEntry->Filename[posCar - 1] = '0';
+      vfat8Dot3ToString (pEntry->Filename, pEntry->Ext, DirName);
       //try second with xxxxx~yy.zzz
-      if (i == 10)
-	{
-	  DirName[5] = '~';
-	  for (; i < 99; i++)
+      for (i = 10; i < 100; i++)
+      {
+        DirName[posCar - 1] = '0' + i % 10;
+        DirName[posCar - 2] = '0' + i / 10;
+        pEntry->Filename[posCar - 1] = '0' + i % 10;
+        pEntry->Filename[posCar - 2] = '0' + i / 10;
+	      status = FindFile (DeviceExt, &FileFcb, pFcb, DirName, NULL, NULL);
+	      if (!NT_SUCCESS(status))
+	        break;
+      }
+      if (i == 100) //FIXME : what to do after 99 tilde ?
 	    {
-	      DirName[7] = '0' + i;
-	      pEntry->Filename[7] = '0' + i;
-	      status =
-		FindFile (DeviceExt, &FileFcb, &DirFcb, DirName, NULL, NULL);
-	      if (status != STATUS_SUCCESS)
-		break;
+	      VfatCloseFile (DeviceExt, &FileObject);
+	      ExFreePool (Buffer);
+	      return STATUS_UNSUCCESSFUL;
 	    }
-	}
-      if (i == 100)		//FIXME : what to do after 99 tilde ?
-	{
-	  VfatCloseFile (DeviceExt, &FileObject);
-	  ExFreePool (Buffer);
-	  return STATUS_UNSUCCESSFUL;
-	}
     }
+  }
   else
-    {
-      DPRINT ("check if long name entry needed, needlong=%d\n", needLong);
-      for (i = 0; i < posCar; i++)
-	if ((USHORT) pEntry->Filename[i] != FileName[i])
+  {
+    DPRINT ("check if long name entry needed, needlong=%d\n", needLong);
+    for (i = 0; i < posCar; i++)
+	    if ((USHORT) pEntry->Filename[i] != FileName[i])
+	    {
+	      DPRINT ("i=%d,%d,%d\n", i, pEntry->Filename[i], FileName[i]);
+	      needLong = TRUE;
+	    }
+    if (FileName[i])
 	  {
-	    DPRINT ("i=%d,%d,%d\n", i, pEntry->Filename[i], FileName[i]);
-	    needLong = TRUE;
-	  }
-      if (FileName[i])
-	{
-	  i++;			//jump on point char
-	  for (j = 0, i = posCar + 1; FileName[i] && i < posCar + 4; i++)
+	    i++;			//jump on point char
+	    for (j = 0, i = posCar + 1; FileName[i] && i < posCar + 4; i++)
 	    if ((USHORT) pEntry->Ext[j++] != FileName[i])
-	      {
-		DPRINT ("i=%d,j=%d,%d,%d\n", i, j, pEntry->Filename[i],
-			FileName[i]);
-		needLong = TRUE;
-	      }
-	}
+	    {
+		    DPRINT ("i=%d,j=%d,%d,%d\n", i, j, pEntry->Filename[i],
+		      FileName[i]);
+        needLong = TRUE;
+      }
     }
+  }
   if (needLong == FALSE)
-    {
-      nbSlots = 1;
-      memcpy (Buffer, pEntry, sizeof (FATDirEntry));
-      memset (pEntry, 0, sizeof (FATDirEntry));
-      pEntry = (FATDirEntry *) Buffer;
-    }
+  {
+    nbSlots = 1;
+    memcpy (Buffer, pEntry, sizeof (FATDirEntry));
+    memset (pEntry, 0, sizeof (FATDirEntry));
+    pEntry = (FATDirEntry *) Buffer;
+  }
   else
-    {
-      memset (DirName, 0xff, sizeof (DirName));
-      memcpy (DirName, FileName, NameLen * sizeof (WCHAR));
-      DirName[NameLen] = 0;
-    }
+  {
+    memset (DirName, 0xff, sizeof (DirName));
+    memcpy (DirName, FileName, NameLen * sizeof (WCHAR));
+    DirName[NameLen] = 0;
+  }
   DPRINT ("dos name=%11.11s\n", pEntry->Filename);
 
   /* set attributes */
@@ -417,7 +468,7 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
   newCCB->pFcb = newFCB;
   newCCB->PtrFileObject = pFileObject;
   newFCB->RefCount++;
-  
+
   BytesPerCluster = DeviceExt->Boot->SectorsPerCluster * BLOCKSIZE;
   if (BytesPerCluster >= PAGESIZE)
     {
@@ -426,11 +477,11 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
     }
   else
     {
-      Status = CcRosInitializeFileCache(pFileObject, &newFCB->RFCB.Bcb, 
+      Status = CcRosInitializeFileCache(pFileObject, &newFCB->RFCB.Bcb,
 				     PAGESIZE);
     }
 
-  /* 
+  /*
    * FIXME : initialize all fields in FCB and CCB
    */
   vfatAddFCBToTable (DeviceExt, newFCB);
