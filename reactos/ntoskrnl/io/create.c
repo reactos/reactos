@@ -86,8 +86,10 @@ IopCreateFile(PVOID			ObjectBody,
   if (ParentObjectType != IoDeviceObjectType &&
       ParentObjectType != IoFileObjectType)
     {
-      CPRINT("Parent is a %S which is neither a file type nor a device type\n",
-	     BODY_TO_HEADER(Parent)->ObjectType->TypeName.Buffer);
+      DPRINT("Parent [%wZ] is a %S which is neither a file type nor a device type ; remaining path = %S\n",
+        &BODY_TO_HEADER(Parent)->Name,
+        BODY_TO_HEADER(Parent)->ObjectType->TypeName.Buffer,
+        RemainingPath);
       return(STATUS_UNSUCCESSFUL);
     }
 

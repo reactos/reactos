@@ -181,6 +181,7 @@ IopDeleteDriver(PVOID ObjectBody)
    DPRINT("IopDeleteDriver(ObjectBody %x)\n", ObjectBody);
 
    ExFreePool(Object->DriverExtension);
+   RtlFreeUnicodeString(&Object->DriverName);
 
    OldIrql = KeRaiseIrqlToDpcLevel();
 
@@ -208,6 +209,7 @@ IopCreateDriverObject(
    UNICODE_STRING DriverName;
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
+   PWSTR Buffer = NULL;
 
    DPRINT("IopCreateDriverObject(%p '%wZ' %x %p %x)\n",
       DriverObject, ServiceName, FileSystem, DriverImageStart, DriverImageSize);
@@ -225,6 +227,10 @@ IopCreateDriverObject(
 
       RtlInitUnicodeString(&DriverName, NameBuffer);
       DPRINT("Driver name: '%wZ'\n", &DriverName);
+      
+      Buffer = (PWSTR)ExAllocatePool(NonPagedPool, DriverName.Length);
+      /* If we don't success, it is not a problem. Our driver
+       * object will not have associated driver name... */
    }
    else
    {
@@ -258,6 +264,12 @@ IopCreateDriverObject(
 
    Object->DriverStart = DriverImageStart;
    Object->DriverSize = DriverImageSize;
+   if (Buffer)
+   {
+      Object->DriverName.Buffer = Buffer;
+      Object->DriverName.Length = Object->DriverName.MaximumLength = DriverName.Length;
+      RtlCopyMemory(Object->DriverName.Buffer, DriverName.Buffer, DriverName.Length);
+   }
 
    *DriverObject = Object;
 
