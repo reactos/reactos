@@ -65,6 +65,10 @@ typedef unsigned short *PUSHORT;
 typedef void *PVOID;
 typedef unsigned char BYTE;
 typedef void *LPVOID;
+typedef DWORD *PDWORD;
+typedef float *PFLOAT;
+typedef unsigned short *PWCH;
+typedef unsigned short *PWORD;
 
 /* Check VOID before defining CHAR, SHORT, and LONG */
 #ifndef VOID
@@ -274,8 +278,6 @@ typedef BYTE *PBYTE;
 typedef const CHAR *PCCH;
 typedef const char *PCSTR;
 typedef const unsigned short *PCWCH;
-typedef DWORD *PDWORD;
-typedef float *PFLOAT;
 /* typedef PHKEY; */
 typedef int *PINT;
 /* typedef LCID *PLCID; */
@@ -296,8 +298,6 @@ typedef char *PTCHAR;
 typedef char *PTSTR;
 #endif /* UNICODE */
 
-typedef unsigned short *PWCH;
-typedef unsigned short *PWORD;
 /*
 typedef PWSTR;
 typedef REGSAM;

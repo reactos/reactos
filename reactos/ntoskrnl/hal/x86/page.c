@@ -12,6 +12,7 @@
 
 #include <internal/mmhal.h>
 #include <internal/mm.h>
+#include <string.h>
 #include <internal/string.h>
 #include <internal/bitops.h>
 #include <ddk/ntddk.h>
@@ -49,11 +50,12 @@ static ULONG ProtectToPTE(ULONG flProtect)
    return(Attributes);
 }
 
-PULONG MmGetPageEntry(PEPROCESS Process, ULONG Address)
+PULONG MmGetPageEntry(PEPROCESS Process, PVOID PAddress)
 {
    ULONG page_table;
    PULONG page_tlb;
    PULONG page_dir;
+   ULONG Address = (ULONG)PAddress;
    
    DPRINT("MmGetPageEntry(Process %x, Address %x)\n",Process,Address);
    
@@ -63,11 +65,11 @@ PULONG MmGetPageEntry(PEPROCESS Process, ULONG Address)
      }
    else
      {
-	page_dir = get_page_directory();
+	page_dir = (PULONG)get_page_directory();
      } 
    
    DPRINT("page_dir %x\n",page_dir);
-   page_tlb = (unsigned int *)physical_to_linear(
+   page_tlb = (PULONG)physical_to_linear(
 			     PAGE_MASK(page_dir[VADDR_TO_PD_OFFSET(Address)]));
    DPRINT("page_tlb %x\n",page_tlb);
 
@@ -75,7 +77,7 @@ PULONG MmGetPageEntry(PEPROCESS Process, ULONG Address)
      {
 	DPRINT("Creating new page directory\n",0);
 	page_table = get_free_page();  // Returns a physical address
-	page_tlb=(unsigned int *)physical_to_linear(page_table);
+	page_tlb=(PULONG)physical_to_linear(page_table);
 	memset(page_tlb,0,PAGESIZE);
 	page_dir[VADDR_TO_PD_OFFSET(Address)]=page_table+0x7;
 	

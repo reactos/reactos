@@ -1,11 +1,13 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-
+//#include <libc/stubs.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <fcntl.h>
+//#include <unistd.h>
 #include <libc/file.h>
 #include <io.h>
 
+extern int _fmode;
 
 FILE *
 freopen(const char *file, const char *mode, FILE *f)

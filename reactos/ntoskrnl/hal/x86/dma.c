@@ -37,7 +37,7 @@ static PMAP_REGISTER map_registers[];
 
 /* FUNCTIONS *****************************************************************/
 
-VOID HalInitializeAdapterSupport()
+VOID HalInitializeAdapterSupport(VOID)
 {
    /* ?? */
 }

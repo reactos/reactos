@@ -280,33 +280,21 @@ typedef struct {
 
 // Heap creation routine
 
-HANDLE 
-STDCALL
-RtlCreateHeap(
-	ULONG Flags, 
-	PVOID BaseAddress, 
-	ULONG SizeToReserve, 
-	ULONG SizeToCommit, 
-	PVOID Unknown,
-	PRTL_HEAP_DEFINITION Definition
-	);
+HANDLE STDCALL RtlCreateHeap(ULONG Flags, 
+			     PVOID BaseAddress, 
+			     ULONG SizeToReserve, 
+			     ULONG SizeToCommit, 
+			     PVOID Unknown,
+			     PRTL_HEAP_DEFINITION Definition);
 
-PVOID 
-STDCALL 
-RtlAllocateHeap(
-	HANDLE Heap, 
-	ULONG Flags, 
-	ULONG Size 
-	);
+PVOID STDCALL RtlAllocateHeap(HANDLE Heap, 
+			      ULONG Flags, 
+			      ULONG Size);
 
 
-BOOLEAN 
-STDCALL 
-RtlFreeHeap(
-	HANDLE Heap, 
-	ULONG Flags, 
-	PVOID Address 
-	);
+BOOLEAN STDCALL RtlFreeHeap(HANDLE Heap, 
+			    ULONG Flags, 
+			    PVOID Address);
 
 NTSTATUS RtlUnicodeStringToAnsiString(IN OUT PANSI_STRING DestinationString,
                                       IN PUNICODE_STRING SourceString,

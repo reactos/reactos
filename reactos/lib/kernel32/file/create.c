@@ -14,13 +14,15 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <wstring.h>
+#include <wchar.h>
 #include <string.h>
-#include <ddk/li.h>
-#include <ddk/rtl.h>
 
 //#define NDEBUG
 #include <kernel32/kernel32.h>
+
+/* EXTERNS ******************************************************************/
+
+DWORD STDCALL GetCurrentDriveW(DWORD nBufferLength, PWSTR lpBuffer);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -103,11 +105,24 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
 	Flags |= FILE_SYNCHRONOUS_IO_ALERT;
      }
    
-   if ( lpFileName[0] == L'\\' || lpFileName[1] == L':') 
+   if (lpFileName[1] == (WCHAR)':') 
      {
-	wcscpy(PathNameW,lpFileName);
+	wcscpy(PathNameW, lpFileName);
      }
-   else  
+   else if (wcslen(lpFileName) > 4 &&
+	    lpFileName[0] == (WCHAR)'\\' &&
+	    lpFileName[1] == (WCHAR)'\\' &&
+	    lpFileName[2] == (WCHAR)'.' &&
+	    lpFileName[3] == (WCHAR)'\\')
+     {
+	wcscpy(PathNameW, lpFileName);
+     }
+   else if (lpFileName[0] == (WCHAR)'\\')
+     {
+	GetCurrentDriveW(MAX_PATH,PathNameW);
+	wcscat(PathNameW, lpFileName);
+     }
+   else
      {
 	Len =  GetCurrentDirectoryW(MAX_PATH,PathNameW);
 	if ( Len == 0 )

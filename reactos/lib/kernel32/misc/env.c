@@ -10,7 +10,7 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <wstring.h>
+#include <wchar.h>
 #include <string.h>
 
 #define MAX_ENVIRONMENT_VARS 255

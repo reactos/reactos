@@ -46,10 +46,10 @@ void ExecuteDir(char* cmdline)
 	  debug_printf("<REP>       "),nRep++;
 	else
 	  debug_printf(" %10d ",FindData.nFileSizeLow),nFile++;
-    RtlTimeToTimeFields(&FindData.ftLastWriteTime  ,&fTime);
-    debug_printf("%02d/%02d/%04d %02d:%02d:%02d "
-        ,fTime.Month,fTime.Day,fTime.Year
-        ,fTime.Hour,fTime.Minute,fTime.Second);
+	//    RtlTimeToTimeFields(&FindData.ftLastWriteTime  ,&fTime);
+//    debug_printf("%02d/%02d/%04d %02d:%02d:%02d "
+//        ,fTime.Month,fTime.Day,fTime.Year
+//        ,fTime.Hour,fTime.Minute,fTime.Second);
 	debug_printf("%s\n",FindData.cFileName);
      } while(FindNextFile(shandle,&FindData));
    debug_printf("\n    %d files\n    %d directories\n\n",nFile,nRep);
@@ -157,6 +157,11 @@ void ExecuteCommand(char* line)
    if (strcmp(cmd,"type")==0)
      {
 	ExecuteType(tail);	
+	return;
+     }
+   if (strcmp(cmd,"exit")==0)
+     {
+	ExitProcess(0);
 	return;
      }
    if (ExecuteProcess(cmd,tail))

@@ -1,17 +1,13 @@
-/* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <windows.h>
 #include <errno.h>
+
+#undef errno
+int errno;
 
 #undef _doserrno
 int _doserrno;
 
-#undef errno
-unsigned int errno;
-
-
 int *_errno(void)
 {
-	
 	return &errno;
 }
 

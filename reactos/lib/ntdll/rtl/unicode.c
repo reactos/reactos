@@ -8,14 +8,7 @@
  *                  Created 10/08/98
  */
 
-#include <base.h>
-#include <wstring.h>
-
 #include <ddk/ntddk.h>
-
-#include <internal/string.h>
-#include <internal/ke.h>
-#include <internal/ctype.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -29,11 +22,6 @@ PUNICODE_STRING RtlDuplicateUnicodeString(PUNICODE_STRING Dest,
      {
 //	Dest=ExAllocatePool(NonPagedPool,sizeof(UNICODE_STRING));       
      }   
-}
-
-VOID RtlUpperString(PSTRING DestinationString, PSTRING SourceString)
-{
-   UNIMPLEMENTED;
 }
 
 WCHAR wtoupper(WCHAR c)
@@ -107,7 +95,7 @@ NTSTATUS RtlAppendUnicodeStringToString(IN OUT PUNICODE_STRING Destination,
 NTSTATUS RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
         IN PWSTR Source)
 {
-        unsigned long i, slen=wstrlen(Source);
+        unsigned long i, slen=wcslen(Source);
 
         if(Destination->MaximumLength-Destination->Length-slen<0)
                 return STATUS_BUFFER_TOO_SMALL;
@@ -357,7 +345,7 @@ VOID RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
                 DestinationString->MaximumLength=0;
                 DestinationString->Buffer=NULL;
         } else {
-                DestSize=wstrlen((PWSTR)SourceString);
+                DestSize=wcslen((PWSTR)SourceString);
                 DestinationString->Length=DestSize;
                 DestinationString->MaximumLength=DestSize+1;
 

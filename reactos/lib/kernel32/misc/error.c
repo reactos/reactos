@@ -6,12 +6,7 @@ static DWORD LastError;
 
 DWORD RtlNtStatusToDosError(NTSTATUS Status)
 {
-  if (NT_SUCCESS(Status))   return(0);
-  else
-  {
-   // FIXME must return different values
-    return 1;
-  }
+   return(0);
 }
 
 

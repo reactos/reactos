@@ -21,7 +21,7 @@ int putc(int c, FILE *fp)
 		}
 		return(_flsbuf(c,fp));
 	}
-	if ( !WriteFile(_get_osfhandle(fp->_file),&c,1,&r,NULL) ) 
+	if ( !WriteFile(filehnd(fp->_file),&c,1,&r,NULL) ) 
 		return -1;
 	return r;
 

@@ -17,6 +17,7 @@
 #include <internal/hal/ddk.h>
 #include <internal/dma.h>
 #include <internal/mm.h>
+#include <string.h>
 #include <internal/string.h>
 #include <devices.h>
 #include "sb16.h"

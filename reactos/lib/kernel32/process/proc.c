@@ -14,10 +14,8 @@
 #include <windows.h>
 #include <kernel32/proc.h>
 #include <kernel32/thread.h>
-#include <wstring.h>
+#include <wchar.h>
 #include <string.h>
-#include <ddk/rtl.h>
-#include <ddk/li.h>
 #include <internal/i386/segment.h>
 
 #define NDEBUG
@@ -406,7 +404,7 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    
    BaseAddress = (PVOID)0x10000;
    LARGE_INTEGER_QUAD_PART(SectionOffset) = 0;
-   Size = 0x10000;
+   Size = 0x20000;
    NtMapViewOfSection(hSection,
 		      hProcess,
 		      &BaseAddress,

@@ -10,9 +10,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define TRUE  1
 #define FALSE 0
+
+#define PARAMETERIZED_LIBS
 
 /* FUNCTIONS ****************************************************************/
 
@@ -24,7 +27,8 @@ int process(FILE* in, FILE* out, FILE *out2)
    char* name2;
    int value;
    char* nr_args;
-
+   char* stmp;
+   
    unsigned char first1 = TRUE;
    
    fprintf(out,"// Machine generated, don't edit\n");
@@ -52,6 +56,11 @@ int process(FILE* in, FILE* out, FILE *out2)
 	     name2 = (char *)strtok(NULL," \t");
 //	     value = strtok(NULL," \t");
 	     nr_args = (char *)strtok(NULL," \t");
+	     
+	     if ((stmp=strchr(nr_args,'\n'))!=NULL)
+	       {
+		  *stmp=0;
+	       }
 	     
 //	     printf("name %s value %d\n",name,value);
 #ifdef PARAMETERIZED_LIBS

@@ -22,6 +22,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
 #include <internal/ob.h>
+#include <string.h>
 #include <internal/string.h>
 #include <internal/hal.h>
 #include <internal/ps.h>

@@ -227,16 +227,16 @@ NTSTATUS ZwOpenSection(PHANDLE SectionHandle,
    return(Status);
 }
 
-NTSTATUS NtMapViewOfSection(HANDLE SectionHandle,
-			    HANDLE ProcessHandle,
-			    PVOID* BaseAddress,
-			    ULONG ZeroBits,
-			    ULONG CommitSize,
-			    PLARGE_INTEGER SectionOffset,
-			    PULONG ViewSize,
-			    SECTION_INHERIT InheritDisposition,
-			    ULONG AllocationType,
-			    ULONG Protect)
+NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
+				    HANDLE ProcessHandle,
+				    PVOID* BaseAddress,
+				    ULONG ZeroBits,
+				    ULONG CommitSize,
+				    PLARGE_INTEGER SectionOffset,
+				    PULONG ViewSize,
+				    SECTION_INHERIT InheritDisposition,
+				    ULONG AllocationType,
+				    ULONG Protect)
 {
    return(ZwMapViewOfSection(SectionHandle,
 			     ProcessHandle,
@@ -250,16 +250,16 @@ NTSTATUS NtMapViewOfSection(HANDLE SectionHandle,
 			     Protect));
 }
 
-NTSTATUS ZwMapViewOfSection(HANDLE SectionHandle,
-			    HANDLE ProcessHandle,
-			    PVOID* BaseAddress,
-			    ULONG ZeroBits,
-			    ULONG CommitSize,
-			    PLARGE_INTEGER SectionOffset,
-			    PULONG ViewSize,
-			    SECTION_INHERIT InheritDisposition,
-			    ULONG AllocationType,
-			    ULONG Protect)
+NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
+				    HANDLE ProcessHandle,
+				    PVOID* BaseAddress,
+				    ULONG ZeroBits,
+				    ULONG CommitSize,
+				    PLARGE_INTEGER SectionOffset,
+				    PULONG ViewSize,
+				    SECTION_INHERIT InheritDisposition,
+				    ULONG AllocationType,
+				    ULONG Protect)
 /*
  * FUNCTION: Maps a view of a section into the virtual address space of a 
  *           process
@@ -287,8 +287,21 @@ NTSTATUS ZwMapViewOfSection(HANDLE SectionHandle,
    MEMORY_AREA* Result;
    NTSTATUS Status;
    
-   DPRINT("ZwMapViewOfSection(SectionHandle %x, ProcessHandle %x)\n",
-	  SectionHandle,ProcessHandle);
+   DPRINT("ZwMapViewOfSection(Section:%08lx, Process:%08lx,\n"
+          "  Base:%08lx, ZeroBits:%08lx, CommitSize:%08lx,\n"
+          "  SectionOffs:%08lx, *ViewSize:%08lx, InheritDisp:%08lx,\n"
+          "  AllocType:%08lx, Protect:%08lx)\n",
+	  SectionHandle, 
+          ProcessHandle,
+          BaseAddress,
+          ZeroBits,
+          CommitSize,
+          SectionOffset,
+          *ViewSize,
+          InheritDisposition,
+          AllocationType,
+          Protect);
+   DPRINT("  *Base:%08lx\n", *BaseAddress);
    
    Status = ObReferenceObjectByHandle(SectionHandle,
 				      SECTION_MAP_READ,
@@ -298,9 +311,11 @@ NTSTATUS ZwMapViewOfSection(HANDLE SectionHandle,
 				      NULL);
    if (Status != STATUS_SUCCESS)
      {
-	DPRINT("%s() = %x\n",Status);
+	DPRINT("ObReference failed rc=%x\n",Status);
 	return(Status);
      }
+   
+   DPRINT("Section %x\n",Section);
    
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_VM_OPERATION,
@@ -313,24 +328,39 @@ NTSTATUS ZwMapViewOfSection(HANDLE SectionHandle,
 	return(Status);
      }
    
+   DPRINT("ViewSize %x\n",ViewSize);
    if ((*ViewSize) > GET_LARGE_INTEGER_LOW_PART(Section->MaximumSize))
      {
 	(*ViewSize) = GET_LARGE_INTEGER_LOW_PART(Section->MaximumSize);
      }
    
-   MmCreateMemoryArea(UserMode,
-		      Process,
-		      MEMORY_AREA_SECTION_VIEW_COMMIT,
-		      BaseAddress,
-		      *ViewSize,
-		      Protect,
-		      &Result);
+   Status = MmCreateMemoryArea(UserMode,
+			       Process,
+			       MEMORY_AREA_SECTION_VIEW_COMMIT,
+			       BaseAddress,
+			       *ViewSize,
+			       Protect,
+			       &Result);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("ZwMapViewOfSection() = %x\n",Status);
+	return(Status);
+     }
    Result->Data.SectionData.Section = Section;
-   Result->Data.SectionData.ViewOffset = GET_LARGE_INTEGER_LOW_PART(*SectionOffset);
+   
+   DPRINT("SectionOffset %x\n",SectionOffset);
+   
+   if (SectionOffset == NULL)
+     {
+	Result->Data.SectionData.ViewOffset = 0;
+     }
+   else
+     {
+	Result->Data.SectionData.ViewOffset =
+     GET_LARGE_INTEGER_LOW_PART(*SectionOffset);
+     }
    
    DPRINT("*BaseAddress %x\n",*BaseAddress);
-   DPRINT("Result->Data.SectionData.Section->FileObject %x\n",
-	    Result->Data.SectionData.Section->FileObject);
    
    return(STATUS_SUCCESS);
 }

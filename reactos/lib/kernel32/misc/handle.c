@@ -8,7 +8,7 @@
  *                  Created 01/11/98
  */
 #include <windows.h>
-#include <ddk\ntddk.h>
+#include <ddk/ntddk.h>
 
 
 

@@ -12,8 +12,6 @@
  
 /* INCLUDE *****************************************************************/
 
-#include <windows.h>
-
 #include <internal/i386/segment.h>
 #include <internal/mm.h>
 #include <internal/mmhal.h>
@@ -317,7 +315,7 @@ ZwAllocateVirtualMemory(
    NTSTATUS Status;
    
    DPRINT("ZwAllocateVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
-	    "ZeroBits %d, RegionSize %d, AllocationType %x, Protect %x)\n",
+	    "ZeroBits %d, *RegionSize %x, AllocationType %x, Protect %x)\n",
 	    ProcessHandle,*BaseAddress,ZeroBits,*RegionSize,AllocationType,
 	    Protect);
    

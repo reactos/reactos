@@ -61,7 +61,7 @@ VOID RtlTimeToTimeFields(PLARGE_INTEGER liTime,
   int LeapSecondCorrections, SecondsInDay, CurYear;
   int LeapYear, CurMonth, GMTOffset;
   long int Days;
-  long long int Time = *(long long int *)liTime;
+  long long int Time = *(long long int *)&liTime;
 
     /* Extract millisecond from time and convert time into seconds */
   TimeFields->Milliseconds = (CSHORT) ((Time % TICKSPERSEC) / TICKSPERMSEC);

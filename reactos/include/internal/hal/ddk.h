@@ -115,4 +115,5 @@ BOOLEAN HalTranslateBusAddress(INTERFACE_TYPE InterfaceType,
 			       PPHYSICAL_ADDRESS TranslatedAddress);
 BOOLEAN HalMakeBeep(ULONG Frequency);
 VOID HalQueryRealTimeClock(PTIME_FIELDS pTime);
+
 #endif /* __INCLUDE_INTERNAL_HAL_DDK_H */

@@ -16,6 +16,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
+#include <string.h>
 #include <internal/string.h>
 #include <internal/mmhal.h>
 #include <internal/i386/segment.h>

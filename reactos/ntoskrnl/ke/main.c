@@ -15,9 +15,11 @@
 #include <internal/ntoskrnl.h>
 #include <internal/version.h>
 #include <internal/mm.h>
+#include <string.h>
 #include <internal/string.h>
 #include <internal/symbol.h>
 #include <internal/module.h>
+#include <internal/ldr.h>
 
 #include <internal/mmhal.h>
 #include <internal/i386/segment.h>
@@ -162,6 +164,7 @@ asmlinkage void _main(boot_param* _bp)
    start1 = start+PAGE_ROUND_UP(bp.module_length[1]);
    for (i=1;i<bp.nr_files;i++)
      {
+        DPRINT("process module at %08lx\n", start);
       	LdrProcessDriver(start);
         start=start+PAGE_ROUND_UP(bp.module_length[i]);
      }
@@ -171,11 +174,18 @@ asmlinkage void _main(boot_param* _bp)
     */
    LdrLoadAutoConfigDrivers();
    
+#ifdef KRNL_TEST
    /*
     * Test various features of the kernel
     */
    TstBegin();
-   
+#endif
+
+  /*
+   *  Launch initial thread
+   */
+  LdrLoadInitialProcess();
+
    /*
     * Enter idle loop
     */

@@ -75,14 +75,14 @@ typedef enum PartitionTypes {
     ((P)->PartitionType == PTDosExtended)
 
 typedef struct Partition {
-  __u8   BootFlags;
-  __u8   StartingHead;
-  __u8   StartingSector;
-  __u8   StartingCylinder;
-  __u8   PartitionType;
-  __u8   EndingHead;
-  __u8   EndingSector;
-  __u8   EndingCylinder;
+  unsigned char   BootFlags;
+  unsigned char   StartingHead;
+  unsigned char   StartingSector;
+  unsigned char   StartingCylinder;
+  unsigned char   PartitionType;
+  unsigned char   EndingHead;
+  unsigned char   EndingSector;
+  unsigned char   EndingCylinder;
   unsigned int  StartingBlock;
   unsigned int  SectorCount;
 

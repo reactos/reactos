@@ -164,7 +164,7 @@ STDCALL
 AllocConsole( VOID )
 {
 	/* FIXME: add CreateFile error checking */
-	StdInput = CreateFile("\\Keyboard",
+	StdInput = CreateFile("\\\\.\\Keyboard",
 			       FILE_GENERIC_READ,
 			       0,
 			       NULL,
@@ -172,7 +172,7 @@ AllocConsole( VOID )
 			       0,
 			       NULL);
    
-	StdOutput = CreateFile("\\BlueScreen",
+	StdOutput = CreateFile("\\\\.\\BlueScreen",
 			       FILE_GENERIC_WRITE|FILE_GENERIC_READ,
 			       0,
 			       NULL,
@@ -936,6 +936,7 @@ GetConsoleTitleA(
 	if (!lpConsoleTitle || !nSize) return 0;
 	nWideTitle = GetConsoleTitleW( (LPWSTR) WideTitle, nWideTitle );
 	if (!nWideTitle) return 0;
+#if 0
 	if ( (nWritten = WideCharToMultiByte(
     		CP_ACP,			// ANSI code page 
 		0,			// performance and mapping flags 
@@ -950,6 +951,7 @@ GetConsoleTitleA(
 		lpConsoleTitle[nWritten] = '\0';
 		return nWritten;
 	}
+#endif
 	return 0;
 }
 
@@ -997,6 +999,7 @@ SetConsoleTitleA(
 		return FALSE;
 	}
 	AnsiTitle[nWideTitle] = '\0';
+#if 0
 	if ( MultiByteToWideChar(
 		CP_ACP,			// ANSI code page 
 		MB_PRECOMPOSED,		// character-type options 
@@ -1008,6 +1011,7 @@ SetConsoleTitleA(
 	{
 		return SetConsoleTitleW( (LPWSTR) WideTitle ); 
 	}
+#endif
 	return FALSE;
 }
 

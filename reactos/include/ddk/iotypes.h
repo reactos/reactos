@@ -152,10 +152,6 @@ typedef struct _IO_STACK_LOCATION
                 HANDLE DeleteHandle;
             } u;
         } SetFile;
-	
-	/*
-	 * This is a guess
-	 */
 	struct
 	  {
 	     ULONG Length;
@@ -175,14 +171,7 @@ typedef struct _IO_STACK_LOCATION
 
 typedef struct _IO_STATUS_BLOCK
 {
-   /*
-    * Is the completion status
-    */
    NTSTATUS Status;
-   
-   /*
-    * Is a request dependant value
-    */
    ULONG Information;
 } IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 

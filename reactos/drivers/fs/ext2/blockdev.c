@@ -10,6 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <string.h>
 #include <internal/string.h>
 
 #define NDEBUG

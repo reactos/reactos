@@ -2,7 +2,8 @@
 #include <windows.h>
 #include <ctype.h>
 
-
+char _SetCurrentDirectory(char *dir);
+int _GetCurrentDirectory(int count,char *buffer);
 
 #undef chdir
 int chdir( const char *_path )

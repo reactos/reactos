@@ -15,6 +15,7 @@
 
 /* INCLUDES ****************************************************************/
 
+#include <string.h>
 #include <internal/string.h>
 #include <internal/stddef.h>
 #include <internal/mm.h>

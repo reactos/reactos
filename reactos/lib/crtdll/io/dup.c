@@ -1,9 +1,13 @@
 #include <windows.h>
 #include <io.h>
 
-
-
-int _dup( int _fd )
+#undef dup
+int dup( int handle )
 {
-	return _open_osfhandle(_get_osfhandle(_fd), 0666);
+	return _dup(handle);
+}
+
+int _dup( int handle )
+{
+	return _open_osfhandle(filehnd(handle), 0666);
 }

@@ -10,10 +10,14 @@
 #include <windows.h>
 #include <io.h>
 
+int unlink( const char *filename )
+{
+	return _unlink(filename);
+}
 
 int _unlink( const char *filename )
 {
-	if ( !DeleteFileA(filename) )
+	if ( !DeleteFile(filename) )
 		return -1;
 	return 0;
 }

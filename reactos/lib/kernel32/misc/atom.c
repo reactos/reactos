@@ -9,10 +9,10 @@
  *                  Created 01/11/98
  */
 
-#include <kernel32\atom.h>
-#include <kernel32\proc.h>
-#include <kernel32\thread.h>
-#include <wstring.h>
+#include <kernel32/atom.h>
+#include <kernel32/proc.h>
+#include <kernel32/thread.h>
+#include <wchar.h>
 #include <string.h>
 //#include <stdlib.h>
 

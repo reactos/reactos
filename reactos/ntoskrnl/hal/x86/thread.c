@@ -3,17 +3,17 @@
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/hal/x86/thread.c
  * PURPOSE:              HAL multitasking functions
- * PROGRAMMER:           David Welch (welch@mcmail.com)
+ * PROGRAMMER:           David Welch (welch@cwcom.net)
  * REVISION HISTORY:
  *             27/06/98: Created
  */
 
 /* INCLUDES ****************************************************************/
 
-#include <windows.h>
 #include <ddk/ntddk.h>
 #include <internal/ntoskrnl.h>
 #include <internal/ps.h>
+#include <string.h>
 #include <internal/string.h>
 #include <internal/hal.h>
 #include <internal/i386/segment.h>
@@ -164,6 +164,7 @@ NTSTATUS HalReleaseTask(PETHREAD Thread)
      {
 	ExFreePool(Thread->Tcb.Context.KernelStackBase);
      }
+   return(STATUS_SUCCESS);
 }
 
 NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
@@ -221,13 +222,13 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
    Thread->Tcb.Context.iomap_base = FIELD_OFFSET(hal_thread_state,io_bitmap);
    Thread->Tcb.Context.esp0 = (ULONG)stack_start;
    Thread->Tcb.Context.ss0 = KERNEL_DS;
-   Thread->Tcb.Context.esp = stack_start;
+   Thread->Tcb.Context.esp = (ULONG)stack_start;
    Thread->Tcb.Context.ss = KERNEL_DS;
    Thread->Tcb.Context.cs = KERNEL_CS;
-   Thread->Tcb.Context.eip = PsBeginThreadWithContextInternal;
+   Thread->Tcb.Context.eip = (ULONG)PsBeginThreadWithContextInternal;
    Thread->Tcb.Context.io_bitmap[0] = 0xff;
-   Thread->Tcb.Context.cr3 = 
-          linear_to_physical(Thread->ThreadsProcess->Pcb.PageTableDirectory);
+   Thread->Tcb.Context.cr3 = (ULONG)MmGetPhysicalAddress(
+			       Thread->ThreadsProcess->Pcb.PageTableDirectory);
    Thread->Tcb.Context.ds = KERNEL_DS;
    Thread->Tcb.Context.es = KERNEL_DS;
    Thread->Tcb.Context.fs = KERNEL_DS;
@@ -285,7 +286,7 @@ BOOLEAN HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
     */
    kernel_stack[1023] = (unsigned int)StartContext;
    kernel_stack[1022] = (unsigned int)fn;
-   kernel_stack[1021] = NULL;     
+   kernel_stack[1021] = 0;     
    
    /*
     * Initialize the thread context
@@ -294,15 +295,15 @@ BOOLEAN HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
    thread->Tcb.Context.ldt = null_ldt_sel;
    thread->Tcb.Context.eflags = (1<<1)+(1<<9);
    thread->Tcb.Context.iomap_base = FIELD_OFFSET(hal_thread_state,io_bitmap);
-   thread->Tcb.Context.esp0 = &kernel_stack[1021];
+   thread->Tcb.Context.esp0 = (ULONG)&kernel_stack[1021];
    thread->Tcb.Context.ss0 = KERNEL_DS;
-   thread->Tcb.Context.esp = &kernel_stack[1021];
+   thread->Tcb.Context.esp = (ULONG)&kernel_stack[1021];
    thread->Tcb.Context.ss = KERNEL_DS;
    thread->Tcb.Context.cs = KERNEL_CS;
    thread->Tcb.Context.eip = (unsigned long)PsBeginThread;
    thread->Tcb.Context.io_bitmap[0] = 0xff;
    thread->Tcb.Context.cr3 = 
-          linear_to_physical(thread->ThreadsProcess->Pcb.PageTableDirectory);
+          MmGetPhysicalAddress(thread->ThreadsProcess->Pcb.PageTableDirectory);
    thread->Tcb.Context.ds = KERNEL_DS;
    thread->Tcb.Context.es = KERNEL_DS;
    thread->Tcb.Context.fs = KERNEL_DS;

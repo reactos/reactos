@@ -4,7 +4,7 @@
 
 extern char *const *_environ;
 
-int _execl(const char *path, const char *argv0, ...)
+int execl(const char *path, const char *argv0, ...)
 {
-  return _spawnve(P_OVERLAY, path, (const char *const*)&argv0,(const char *const*) _environ);
+  return spawnve(P_OVERLAY, path, (char *const*)&argv0, _environ);
 }

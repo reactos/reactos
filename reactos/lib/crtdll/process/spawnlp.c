@@ -4,7 +4,7 @@
 
 extern char **_environ;
 
-int _spawnlp(int mode, const char *path, const char *argv0, ...)
+int spawnlp(int mode, const char *path, const char *argv0, ...)
 {
-  return _spawnvpe(mode, path, (const char * const *)&argv0, (const char * const *)_environ);
+  return spawnvpe(mode, path, (char * const *)&argv0, (char * const *)_environ);
 }

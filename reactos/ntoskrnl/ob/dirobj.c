@@ -10,8 +10,7 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <windows.h>
-#include <wstring.h>
+#include <wchar.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <internal/io.h>
@@ -203,18 +202,18 @@ NTSTATUS ZwQueryDirectoryObject(IN HANDLE DirObjHandle,
 }
 
 
-NTSTATUS NtCreateDirectoryObject(PHANDLE DirectoryHandle,
-				 ACCESS_MASK DesiredAccess,
-				 POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS STDCALL NtCreateDirectoryObject(PHANDLE DirectoryHandle,
+					 ACCESS_MASK DesiredAccess,
+					 POBJECT_ATTRIBUTES ObjectAttributes)
 {
    return(ZwCreateDirectoryObject(DirectoryHandle,
 				  DesiredAccess,
 				  ObjectAttributes));
 }
 
-NTSTATUS ZwCreateDirectoryObject(PHANDLE DirectoryHandle,
-				 ACCESS_MASK DesiredAccess,
-				 POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS STDCALL ZwCreateDirectoryObject(PHANDLE DirectoryHandle,
+					 ACCESS_MASK DesiredAccess,
+					 POBJECT_ATTRIBUTES ObjectAttributes)
 /*
  * FUNCTION: Creates or opens a directory object (a container for other
  * objects)

@@ -684,7 +684,7 @@ next:
         ;
         push    edx
         push    dword 0
-        jmp     dword KERNEL_CS:KERNEL_BASE
+        jmp     dword KERNEL_CS:(KERNEL_BASE+0x1000)
 
 
 ;

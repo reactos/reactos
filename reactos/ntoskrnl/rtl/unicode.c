@@ -8,14 +8,13 @@
  *                  Created 10/08/98
  */
 
-#include <base.h>
-#include <wstring.h>
+#include <wchar.h>
 
 #include <ddk/ntddk.h>
 
 #include <internal/string.h>
 #include <internal/ke.h>
-#include <internal/ctype.h>
+#include <ctype.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -107,7 +106,7 @@ NTSTATUS RtlAppendUnicodeStringToString(IN OUT PUNICODE_STRING Destination,
 NTSTATUS RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
         IN PWSTR Source)
 {
-        unsigned long i, slen=wstrlen(Source);
+        unsigned long i, slen=wcslen(Source);
 
         if(Destination->MaximumLength-Destination->Length-slen<0)
                 return STATUS_BUFFER_TOO_SMALL;
@@ -362,7 +361,7 @@ VOID RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
         }
         else
         {
-                DestSize=wstrlen((PWSTR)SourceString);
+                DestSize=wcslen((PWSTR)SourceString);
                 DestinationString->Length=DestSize;
                 DestinationString->MaximumLength=DestSize+1;
                 DestinationString->Buffer=(PWSTR)SourceString;

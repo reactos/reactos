@@ -9,7 +9,7 @@ fscanf(FILE *f, const char *fmt, ...)
   int r;
   va_list a=0;
   va_start(a, fmt);
-  r = _doscan(f, fmt,(void *) a);
+  r = _doscan(f, fmt, a);
   va_end(a);
   return r;
 }

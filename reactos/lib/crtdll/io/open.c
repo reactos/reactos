@@ -36,6 +36,16 @@ char __is_text_file(FILE *p) {
 
 
 
+
+int __fileno_alloc(HANDLE hFile, int mode);
+
+// fixme
+#undef open
+int open(const char *_path, int _oflag,...)
+{
+	return _open(_path,_oflag);
+}
+
 int _open(const char *_path, int _oflag,...)
 {
 
@@ -158,7 +168,7 @@ __fileno_alloc(HANDLE hFile, int mode)
   return i;
 }
 
-void *_get_osfhandle(int fileno)
+void *filehnd(int fileno)
 {
 	
 	
@@ -235,8 +245,6 @@ int	__fileno_close(int _fd)
 
 	fileno_modes[_fd].fd = -1;
 	fileno_modes[_fd].hFile = (HANDLE)-1;
-
-	return 0;
 		
 }
 

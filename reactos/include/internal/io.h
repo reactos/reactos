@@ -24,7 +24,7 @@ extern POBJECT_TYPE IoSymbolicLinkType;
  *          entry = pointer to the driver initialization routine
  * RETURNS: Success or failure
  */
-NTSTATUS InitializeLoadedDriver(PDRIVER_INITIALIZE entry);
+NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry);
 
 
 
@@ -42,8 +42,8 @@ PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
 				     PDEVICE_OBJECT DeviceToMount);
 NTSTATUS IoPageRead(PFILE_OBJECT FileObject,
 		    PVOID Address,
-		     PLARGE_INTEGER Offset,
-		     PIO_STATUS_BLOCK StatusBlock);
+		    PLARGE_INTEGER Offset,
+		    PIO_STATUS_BLOCK StatusBlock);
 VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost);
 
 NTSTATUS IopCreateFile(PVOID ObjectBody,

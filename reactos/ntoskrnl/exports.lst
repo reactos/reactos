@@ -103,7 +103,6 @@ HalReadDmaCounter
 HalSetBusData
 HalSetBusDataByOffset
 HalTranslateBusAddress
-HalQueryRealTimeClock
 IoAcquireCancelSpinLock
 IoAllocateAdapterChannel
 IoAllocateController
@@ -387,8 +386,9 @@ wcslen
 wcschr
 wcsncat
 wcsncpy
-wtolower
-wtoupper
 CbInitDccb
 CbAcquireForRead
 CbReleaseFromRead
+wtolower
+tolower
+toupper

@@ -11,12 +11,3 @@ vprintf(const char *fmt, va_list ap)
   len = _doprnt(fmt, ap, stdout);
   return (ferror(stdout) ? EOF : len);
 }
-
-int
-vwprintf(const wchar_t *fmt, va_list ap)
-{
-   int len;
-
-   len = _dowprnt(fmt, ap, stdout);
-   return (ferror(stdout) ? EOF : len);	
-}

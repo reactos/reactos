@@ -6,7 +6,9 @@
 .globl _start
 .globl _mainCRTStartup
 .globl start
+/*.globl _DllMainCRTStartup@12*/
 
+/*_DllMainCRTStartup@12:*/
 _stext:
 _mainCRTStartup:
 _start:

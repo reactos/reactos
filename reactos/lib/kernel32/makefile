@@ -7,9 +7,11 @@ MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o misc/dllmain.o 
 
 FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
                file/iocompl.o file/volume.o file/deviceio.o file/dosdev.o \
-	       file/create.o file/find.o
+	       file/create.o file/find.o file/copy.o
 
 MEM_OBJECTS = mem/virtual.o mem/heap.o mem/utils.o
+
+NLS_OBJECTS = # nls/mbtowc.o nls/wctomb.o
 
 THREAD_OBJECTS = thread/thread.o
 
@@ -17,13 +19,13 @@ PROCESS_OBJECTS = process/proc.o process/cmdline.o
 
 STRING_OBJECTS = string/lstring.o
 
-INTERNAL_OBJECTS = internal/dprintf.o internal/init.o
+INTERNAL_OBJECTS = internal/dprintf.o internal/init.o internal/string.o
 
 EXCEPT_OBJECTS = except/except.o
 
 
 OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
-          $(PROCESS_OBJECTS) $(STRING_OBJECTS) $(MEM_OBJECTS) \
+          $(PROCESS_OBJECTS) $(STRING_OBJECTS) $(MEM_OBJECTS) $(NLS_OBJECTS) \
 	  $(INTERNAL_OBJECTS) $(SYNCH_OBJECTS) $(EXCEPT_OBJECTS)
   
 

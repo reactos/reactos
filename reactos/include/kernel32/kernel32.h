@@ -19,3 +19,7 @@ void aprintf(char* fmt, ...);
 
 BOOL __ErrorReturnFalse(ULONG ErrorCode);
 PVOID __ErrorReturnNull(ULONG ErrorCode);
+
+BOOL KERNEL32_AnsiToUnicode(PWSTR DestStr,
+			    LPCSTR SrcStr,
+			    ULONG MaxLen);

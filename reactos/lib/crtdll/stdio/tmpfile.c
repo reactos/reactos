@@ -2,16 +2,22 @@
 /* Copyright (C) 1997 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-
+//#include <libc/stubs.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+//#include <unistd.h>
 #include <io.h>
 #include <libc/file.h>
 #include <share.h>
 
+#if 0
+#ifndef __dj_include_stdio_h_
+#define _name_to_remove _tmpfname
+#endif
+#endif
 
 FILE *	__alloc_file(void);
 

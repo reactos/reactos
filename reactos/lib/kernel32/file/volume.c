@@ -18,12 +18,10 @@
  * Copyright 1996 Alexandre Julliard
  */
 
-#undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <wstring.h>
+#include <wchar.h>
 #include <string.h>
-#include <ddk/li.h>
 
 #define MAX_DOS_DRIVES 26
 

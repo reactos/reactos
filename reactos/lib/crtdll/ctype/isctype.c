@@ -301,4 +301,3 @@ int is_wctype(unsigned short c, int t)
 	return ((_pctype_dll[(c & 0xFF)]&t) == t );
 }
 
-

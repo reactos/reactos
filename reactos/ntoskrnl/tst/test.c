@@ -12,6 +12,7 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <string.h>
 #include <internal/string.h>
 #include <internal/mm.h>
 #include <internal/mmhal.h>

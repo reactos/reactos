@@ -1,4 +1,4 @@
-all: kimage
+all: ntoskrnl.exe utils/pe2bin/pe2bin$(EXE_POSTFIX)
 
 #
 # Defines $(HAL_OBJECTS)
@@ -12,10 +12,10 @@ NT_OBJECTS = nt/port.o nt/channel.o nt/ntevent.o nt/nttimer.o nt/atom.o \
 RTL_OBJECTS = rtl/vsprintf.o rtl/lookas.o rtl/unicode.o rtl/strtok.o \
               rtl/time.o rtl/unalign.o rtl/mem.o rtl/largeint.o rtl/ctype.o \
 	      rtl/list.o rtl/slist.o rtl/interlck.o rtl/return.o \
-	      rtl/wstring.o
+	      rtl/wstring.o rtl/memcpy.o
 
 KE_OBJECTS = ke/main.o ke/timer.o ke/error.o ke/catch.o ke/exports.o \
-             ke/module.o ke/dpc.o ke/wait.o ke/kqueue.o ke/dispatch.o \
+             ke/dpc.o ke/wait.o ke/kqueue.o ke/dispatch.o \
 	     ke/sem.o ke/critical.o ke/event.o ke/apc.o ke/bug.o \
 	     ke/mutex.o ke/kernel.o ke/ldt.o ke/apchelp.o
 
@@ -103,27 +103,49 @@ OBJECTS = objects/hal.o objects/ke.o objects/rtl.o objects/mm.o \
 	  objects/se.o objects/cm.o objects/tst.o objects/dbg.o\
 	  objects/nt.o objects/cc.o objects/ldr.o
 	  
+utils/pe2bin/pe2bin$(EXE_POSTFIX): utils/pe2bin/pe2bin.c
+	$(NATIVE_CC) -I../include -g utils/pe2bin/pe2bin.c -o utils/pe2bin/pe2bin$(EXE_POSTFIX)
+
 utils/export/export$(EXE_POSTFIX): utils/export/export.c
 	$(NATIVE_CC) -g utils/export/export.c -o utils/export/export$(EXE_POSTFIX)
 
 ke/exports.o: exports.lst utils/export/export$(EXE_POSTFIX)
+ifeq ($(HOST),mingw32-windows)
+	.\\utils\\export\\export$(EXE_POSTFIX) < exports.lst > ke\\exports.c
+else
 	utils/export/export$(EXE_POSTFIX) < exports.lst > ke/exports.c
+endif
 	$(CC) $(CFLAGS) -c ke/exports.c -o ke/exports.o
 
-kimage: $(OBJECTS)
-	$(LD) --defsym _end=end --defsym _etext=etext $(KERNEL_BFD_TARGET) -Ttext c0000000 $(LDFLAGS) $(OBJECTS) $(LIBGCC) -o kimage
-	$(NM) --numeric-sort kimage > kernel.sym
-	$(OBJCOPY) -S --gap-fill=0 -O binary kimage kimage.bin
-
-old_kimage: $(OBJECTS)
-	$(LD) --defsym _end=end --defsym _etext=etext --oformat=$(KERNEL_BFD_TARGET) -Ttext c0000000 $(LDFLAGS) $(OBJECTS) $(LIBGCC) -o kimage
-	$(NM) --numeric-sort kimage > kernel.sym
-	$(OBJCOPY) -S --gap-fill=0 -O binary kimage kimage.bin
-
+ntoskrnl.exe: $(OBJECTS) ntoskrnl.def
+	$(LD) -r $(OBJECTS) -o ntoskrnl.o
+	$(DLLTOOL) --dllname ntoskrnl.exe --def ntoskrnl.def \
+	           --output-lib ntoskrnl.a
+	$(CC) -specs=../specs -mdll -o junk.tmp \
+	      -Wl,--image-base,0xc0000000 \
+	      -Wl,--file-alignment,0x1000 \
+	      -Wl,--section-alignment,0x1000 \
+	      -Wl,--defsym,_end=end \
+	      -Wl,--defsym,_edata=__data_end__ \
+	      -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp ntoskrnl.o
+	- $(RM) junk.tmp
+	$(DLLTOOL) --dllname ntoskrnl.exe --base-file base.tmp \
+	           --output-exp temp.exp --def ntoskrnl.def
+	- $(RM) base.tmp
+	$(CC) -specs=../specs -mdll -o ntoskrnl.exe ntoskrnl.o \
+	      -Wl,--image-base,0xc0000000 \
+	      -Wl,--file-alignment,0x1000 \
+	      -Wl,--section-alignment,0x1000 \
+	      -Wl,--defsym,_end=end \
+	      -Wl,--defsym,_edata=__data_end__ \
+	      -Wl,--defsym,_etext=etext -Wl,temp.exp
+	- $(RM) temp.exp
+	$(NM) --numeric-sort ntoskrnl.exe > ntoskrnl.sym
+	
 dummy:
 
 ex/napi.o: ex/napi.c ../include/ntdll/napi.h
 
-WITH_DEBUGGING = yes
+#WITH_DEBUGGING = yes
 WIN32_LEAN_AND_MEAN = yes
 include ../rules.mak

@@ -11,77 +11,38 @@
 
 /* FIXME: the large integer manipulations in this file dont handle overflow  */
 
-#undef WIN32_LEAN_AND_MEAN
+/* INCLUDES ****************************************************************/
+
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <wstring.h>
+#include <wchar.h>
 #include <string.h>
-#include <ddk/li.h>
-#include <ddk/rtl.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
 #define LPPROGRESS_ROUTINE void*
 
+/* GLOBALS ******************************************************************/
 
+static BOOLEAN  bIsFileApiAnsi; // set the file api to ansi or oem
 
+/* FUNCTIONS ****************************************************************/
 
-WINBOOL 
-CopyFileExW( 
-    LPCWSTR lpExistingFileName, 
-    LPCWSTR lpNewFileName, 
-    LPPROGRESS_ROUTINE lpProgressRoutine, 
-    LPVOID lpData, 
-    WINBOOL * pbCancel, 
-    DWORD dwCopyFlags 
-    );
-
-WINBOOL 
-CopyFileExA( 
-    LPCSTR lpExistingFileName, 
-    LPCSTR lpNewFileName, 
-    LPPROGRESS_ROUTINE lpProgressRoutine, 
-    LPVOID lpData, 
-    WINBOOL * pbCancel, 
-    DWORD dwCopyFlags 
-    ); 
-
-
-
-BOOLEAN  bIsFileApiAnsi; // set the file api to ansi or oem
-
-
-
-VOID
-STDCALL
-SetFileApisToOEM(VOID)
+VOID STDCALL SetFileApisToOEM(VOID)
 {
-	bIsFileApiAnsi = FALSE;
-	return;	
+   bIsFileApiAnsi = FALSE;	
 }
 
-WINBASEAPI
-VOID
-WINAPI
-SetFileApisToANSI(VOID)
+WINBASEAPI VOID WINAPI SetFileApisToANSI(VOID)
 {
-	bIsFileApiAnsi = TRUE;
-	return;	
+   bIsFileApiAnsi = TRUE;
 }
 
-
-
-WINBOOL
-STDCALL
-AreFileApisANSI(VOID)
+WINBOOL STDCALL AreFileApisANSI(VOID)
 {
-	return  bIsFileApiAnsi;
-	
+   return(bIsFileApiAnsi);
 }
-
-
-
 
 WINBOOL STDCALL WriteFile(HANDLE hFile,
 			  LPCVOID lpBuffer,	
@@ -90,7 +51,7 @@ WINBOOL STDCALL WriteFile(HANDLE hFile,
 			  LPOVERLAPPED lpOverLapped)
 {
 
-   LARGE_INTEGER Offset,*pOffset;
+   LARGE_INTEGER Offset;
    HANDLE hEvent = NULL;
    NTSTATUS errCode;
    PIO_STATUS_BLOCK IoStatusBlock;
@@ -105,12 +66,11 @@ WINBOOL STDCALL WriteFile(HANDLE hFile,
 	lpOverLapped->Internal = STATUS_PENDING;
 	hEvent= lpOverLapped->hEvent;
    	IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
-      pOffset=&Offset;
      }
    else
      {
 	IoStatusBlock = &IIosb;
-	pOffset = NULL;
+	Offset = NULL;
      }
    errCode = NtWriteFile(hFile,
 			 hEvent,
@@ -119,7 +79,7 @@ WINBOOL STDCALL WriteFile(HANDLE hFile,
 			 IoStatusBlock,
 			 (PVOID)lpBuffer, 
 			 nNumberOfBytesToWrite,
-			 pOffset,
+			 &Offset,
 			 NULL);
    if (!NT_SUCCESS(errCode))
      {
@@ -133,108 +93,85 @@ WINBOOL STDCALL WriteFile(HANDLE hFile,
    return(TRUE);
 }
 
+WINBOOL STDCALL KERNEL32_ReadFile(HANDLE hFile,
+				  LPVOID lpBuffer,
+				  DWORD nNumberOfBytesToRead,
+				  LPDWORD lpNumberOfBytesRead,
+				  LPOVERLAPPED lpOverLapped,
+				  LPOVERLAPPED_COMPLETION_ROUTINE 
+				   lpCompletionRoutine)
+{
+   HANDLE hEvent = NULL;
+   LARGE_INTEGER Offset;
+   NTSTATUS errCode;
+   IO_STATUS_BLOCK IIosb;
+   PIO_STATUS_BLOCK IoStatusBlock;
+   PLARGE_INTEGER ptrOffset;
+   
+   if (lpOverLapped != NULL) 
+     {
+	SET_LARGE_INTEGER_LOW_PART(Offset, lpOverLapped->Offset);
+	SET_LARGE_INTEGER_HIGH_PART(Offset, lpOverLapped->OffsetHigh);
+	lpOverLapped->Internal = STATUS_PENDING;
+	hEvent = lpOverLapped->hEvent;
+	IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
+	ptrOffset = &Offset;
+     }
+   else 
+     {
+	ptrOffset = NULL;
+	IoStatusBlock = &IIosb;
+     }
+   
+   errCode = NtReadFile(hFile,
+			hEvent,
+			(PIO_APC_ROUTINE)lpCompletionRoutine,
+			NULL,
+			IoStatusBlock,
+			lpBuffer,
+			nNumberOfBytesToRead,
+			ptrOffset,
+			NULL);
+   
+   if (errCode != STATUS_PENDING && lpNumberOfBytesRead != NULL)
+     {
+	*lpNumberOfBytesRead = IoStatusBlock->Information;
+     }
+   
+   if (!NT_SUCCESS(errCode))  
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return(FALSE);
+     }
+   return(TRUE);
+}
+
 WINBOOL STDCALL ReadFile(HANDLE hFile,
 			 LPVOID lpBuffer,
 			 DWORD nNumberOfBytesToRead,
 			 LPDWORD lpNumberOfBytesRead,
 			 LPOVERLAPPED lpOverLapped)
 {
-
-   HANDLE hEvent = NULL;
-   PLARGE_INTEGER Offset;
-   LARGE_INTEGER ByteOffset;
-   NTSTATUS errCode;
-   PIO_STATUS_BLOCK IoStatusBlock;
-   IO_STATUS_BLOCK IIosb;
-  
-   if (lpOverLapped != NULL)
-     {
-	SET_LARGE_INTEGER_LOW_PART(ByteOffset, lpOverLapped->Offset);
-	SET_LARGE_INTEGER_HIGH_PART(ByteOffset, lpOverLapped->OffsetHigh);
-	Offset = &ByteOffset;
-	lpOverLapped->Internal = STATUS_PENDING;
-	hEvent = lpOverLapped->hEvent;
-	IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
-     }
-   else
-     {
-	IoStatusBlock = &IIosb;
-	Offset = NULL;
-     }
-				 	     
-   errCode = NtReadFile(hFile,
-			hEvent,
-			NULL,
-			NULL,
-			IoStatusBlock,
-			lpBuffer,
-			nNumberOfBytesToRead,
-			Offset,			
-			NULL);
-   
-   if ( !NT_SUCCESS(errCode) )  
-     {      
-	SetLastError(RtlNtStatusToDosError(errCode));
-	return FALSE;
-     }
-
-   if (lpNumberOfBytesRead != NULL )
-     {
-   	*lpNumberOfBytesRead = IoStatusBlock->Information;
-     }
- 
-   return TRUE;  
+   return(KERNEL32_ReadFile(hFile,
+			    lpBuffer,
+			    nNumberOfBytesToRead,
+			    lpNumberOfBytesRead,
+			    lpOverLapped,
+			    NULL));
 }
 
-WINBOOL
-STDCALL
-ReadFileEx(
-	   HANDLE hFile,
-	   LPVOID lpBuffer,
-	   DWORD nNumberOfBytesToRead,
-	   LPOVERLAPPED lpOverLapped,
-	   LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
-	   )
+WINBOOL STDCALL ReadFileEx(HANDLE hFile,
+			   LPVOID lpBuffer,
+			   DWORD nNumberOfBytesToRead,
+			   LPOVERLAPPED lpOverLapped,
+			   LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
 {
-	HANDLE hEvent = NULL;
-	LARGE_INTEGER Offset;
-	NTSTATUS errCode;
-	IO_STATUS_BLOCK IIosb;
-	PIO_STATUS_BLOCK IoStatusBlock;
-	
-		
-	if ( lpOverLapped != NULL ) {
-		SET_LARGE_INTEGER_LOW_PART(Offset, lpOverLapped->Offset);
-		SET_LARGE_INTEGER_HIGH_PART(Offset, lpOverLapped->OffsetHigh);
-		lpOverLapped->Internal = STATUS_PENDING;
-		hEvent = lpOverLapped->hEvent;
-		IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
-	}
-	else {
-		SET_LARGE_INTEGER_LOW_PART(Offset, 0);
-		SET_LARGE_INTEGER_HIGH_PART(Offset, 0);
-		IoStatusBlock = &IIosb;
-	}
-	
-				 
-		
-
-	errCode = NtReadFile(hFile,
-			     hEvent,
-			     (PIO_APC_ROUTINE)lpCompletionRoutine,
-			     NULL,
-			     IoStatusBlock,
-			     lpBuffer,
-			     nNumberOfBytesToRead,
-			     &Offset,
-			     NULL);
-	if ( !NT_SUCCESS(errCode) )  {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-
-
-	return TRUE;  
+   return(KERNEL32_ReadFile(hFile,
+			    lpBuffer,
+			    nNumberOfBytesToRead,
+			    NULL,
+			    lpOverLapped,
+			    lpCompletionRoutine));
 }
 
 
@@ -388,263 +325,6 @@ UnlockFileEx(
 
 
 
-
-
-
-WINBOOL
-STDCALL
-CopyFileA(
-    LPCSTR lpExistingFileName,
-    LPCSTR lpNewFileName,
-    WINBOOL bFailIfExists
-    )
-{
-	return CopyFileExA(lpExistingFileName,lpNewFileName,NULL,NULL,FALSE,bFailIfExists);
-}
-
-WINBOOL 
-STDCALL 
-CopyFileExA( 
-    LPCSTR lpExistingFileName, 
-    LPCSTR lpNewFileName, 
-    LPPROGRESS_ROUTINE lpProgressRoutine, 
-    LPVOID lpData, 
-    WINBOOL * pbCancel, 
-    DWORD dwCopyFlags 
-    )
-{
-	ULONG i;
-	WCHAR ExistingFileNameW[MAX_PATH];
-	WCHAR NewFileNameW[MAX_PATH];
-
-	
-
-    	i = 0;
-   	while ((*lpExistingFileName)!=0 && i < MAX_PATH)
-     	{
-		ExistingFileNameW[i] = *lpExistingFileName;
-		lpExistingFileName++;
-		i++;
-     	}
-   	ExistingFileNameW[i] = 0;
-
-	i = 0;
-   	while ((*lpNewFileName)!=0 && i < MAX_PATH)
-     	{
-		NewFileNameW[i] = *lpNewFileName;
-		lpNewFileName++;
-		i++;
-     	}
-   	NewFileNameW[i] = 0;
-
-	return CopyFileExW(ExistingFileNameW,NewFileNameW,lpProgressRoutine,lpData,pbCancel,dwCopyFlags);
-}
-
-
-WINBOOL
-STDCALL
-CopyFileW(
-    LPCWSTR lpExistingFileName,
-    LPCWSTR lpNewFileName,
-    WINBOOL bFailIfExists
-    )
-{
-	return CopyFileExW(lpExistingFileName,lpNewFileName,NULL,NULL,NULL,bFailIfExists);
-}
-
-
-
-
-
-WINBOOL 
-STDCALL 
-CopyFileExW( 
-    LPCWSTR lpExistingFileName, 
-    LPCWSTR lpNewFileName, 
-    LPPROGRESS_ROUTINE lpProgressRoutine, 
-    LPVOID lpData, 
-    WINBOOL * pbCancel, 
-    DWORD dwCopyFlags 
-    )
-{
-	
-	NTSTATUS errCode = 0;
-	HANDLE FileHandleSource, FileHandleDest;
-	IO_STATUS_BLOCK IoStatusBlock;
-
-	FILE_STANDARD_INFORMATION FileStandard;
-	FILE_BASIC_INFORMATION FileBasic;
-	FILE_POSITION_INFORMATION FilePosition;
-	
-	UCHAR *lpBuffer = NULL;
-
-
-
-	ULONG RegionSize = 0x1000000;
-
-	BOOL bCancel = FALSE;
-
-	
-
-	FileHandleSource = CreateFileW(
-  		lpExistingFileName,	
-    		GENERIC_READ,	
-    		FILE_SHARE_READ,	
-    		NULL,	
-    		OPEN_EXISTING,	
-    		FILE_ATTRIBUTE_NORMAL|FILE_FLAG_NO_BUFFERING,	
-    		NULL 
-   	);
-
-
-
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-  
-
-	errCode = NtQueryInformationFile(FileHandleSource,
-		&IoStatusBlock,&FileStandard, sizeof(FILE_STANDARD_INFORMATION),
-		FileStandardInformation);
-	if ( !NT_SUCCESS(errCode) ) {
-		NtClose(FileHandleSource);
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-
-	errCode = NtQueryInformationFile(FileHandleSource,
-		&IoStatusBlock,&FileBasic, sizeof(FILE_BASIC_INFORMATION),
-		FileBasicInformation);
-	if ( !NT_SUCCESS(errCode) ) {
-		NtClose(FileHandleSource);
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-		
-
-	
-
-   
-  
-		FileHandleDest = CreateFileW(
-  			lpNewFileName,	
-    		GENERIC_WRITE,	
-    		FILE_SHARE_WRITE,	
-    		NULL,	
-		dwCopyFlags  ?  CREATE_NEW : CREATE_ALWAYS ,	
-    		FileBasic.FileAttributes|FILE_FLAG_NO_BUFFERING,	
-    		NULL 
-		);
- 
-	if ( !NT_SUCCESS(errCode) ) {
-		NtClose(FileHandleSource);
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	} 
-
-
-
-
-	SET_LARGE_INTEGER_LOW_PART(FilePosition.CurrentByteOffset, 0);
-	SET_LARGE_INTEGER_HIGH_PART(FilePosition.CurrentByteOffset, 0);
-
-	errCode = NtSetInformationFile(FileHandleSource,
-		&IoStatusBlock,&FilePosition, sizeof(FILE_POSITION_INFORMATION),
-		FilePositionInformation);
-	if ( !NT_SUCCESS(errCode) ) {
-		NtClose(FileHandleSource);
-		NtClose(FileHandleDest);
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	} 
-
-	errCode = NtSetInformationFile(FileHandleDest,
-		&IoStatusBlock,&FilePosition, sizeof(FILE_POSITION_INFORMATION),
-		FilePositionInformation);
-  
-	if ( !NT_SUCCESS(errCode) ) {
-		NtClose(FileHandleSource);
-		NtClose(FileHandleDest);
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	} 
-
-
-
-	errCode = NtAllocateVirtualMemory( 
-		NtCurrentProcess(),
-		(PVOID *)&lpBuffer,
-		2,
-		&RegionSize,
-		MEM_COMMIT, 
-		PAGE_READWRITE
-	);
-  
-	if ( !NT_SUCCESS(errCode) ) {
-		NtClose(FileHandleSource);
-		NtClose(FileHandleDest);
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	} 
-
-	
-
-	
-
-	
-	do {
-
-		errCode = NtReadFile(
-			     FileHandleSource,
-			     NULL,
-			     NULL,
-			     NULL,
-			     (PIO_STATUS_BLOCK)&IoStatusBlock,
-			     lpBuffer,
-			     RegionSize,
-			     NULL,
-			     NULL);
-		if ( pbCancel != NULL )
-			bCancel = *pbCancel;
-
-	
-		if ( !NT_SUCCESS(errCode) || bCancel )  {
-			NtFreeVirtualMemory(NtCurrentProcess(),(PVOID *)&lpBuffer, &RegionSize,MEM_RELEASE);
-			NtClose(FileHandleSource);
-			NtClose(FileHandleDest);
-			if ( errCode == STATUS_END_OF_FILE )
-				break;
-			else
-				return FALSE;
-			
-		}
-
-		errCode = NtWriteFile(FileHandleDest,
-			     NULL,
-			     lpProgressRoutine,
-			     lpData,
-			     (PIO_STATUS_BLOCK)&IoStatusBlock,
-			     lpBuffer,
-			     RegionSize,
-			     NULL,
-			     NULL);
-
-		
-
- 		if ( !NT_SUCCESS(errCode) ) {
-			NtFreeVirtualMemory(NtCurrentProcess(),(PVOID *)&lpBuffer, &RegionSize,MEM_RELEASE);
-			NtClose(FileHandleSource);
-			NtClose(FileHandleDest);
-			return FALSE;
-		}
-
-	} while ( TRUE );
-
-	return TRUE;
-
-
-}
 
 
 HFILE
@@ -1221,12 +901,8 @@ GetFileAttributesW(
 		
 }
 
-WINBOOL
-STDCALL
-SetFileAttributesA(
-    LPCSTR lpFileName,
-    DWORD dwFileAttributes
-    )
+WINBOOL STDCALL SetFileAttributesA(LPCSTR lpFileName,
+				   DWORD dwFileAttributes)
 {
 	ULONG i;
 	WCHAR FileNameW[MAX_PATH];
@@ -1242,46 +918,47 @@ SetFileAttributesA(
 }
 
 
-WINBOOL
-STDCALL
-SetFileAttributesW(
-    LPCWSTR lpFileName,
-    DWORD dwFileAttributes
-    )
+WINBOOL STDCALL SetFileAttributesW(LPCWSTR lpFileName,
+				   DWORD dwFileAttributes)
 {
-	IO_STATUS_BLOCK IoStatusBlock;
-	FILE_BASIC_INFORMATION FileBasic;
-	HANDLE hFile;
-	NTSTATUS errCode;
+   IO_STATUS_BLOCK IoStatusBlock;
+   FILE_BASIC_INFORMATION FileBasic;
+   HANDLE hFile;
+   NTSTATUS errCode;
+   
+   hFile = CreateFileW(lpFileName,	
+		       FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
+		       FILE_SHARE_READ,	
+		       NULL,	
+		       OPEN_EXISTING,	
+		       FILE_ATTRIBUTE_NORMAL,	
+		       NULL);
 
-
-	hFile = CreateFileW(
-  		lpFileName,	
-    		GENERIC_READ,	
-    		FILE_SHARE_READ,	
-    		NULL,	
-    		OPEN_EXISTING,	
-    		FILE_ATTRIBUTE_NORMAL,	
-    		NULL 
-   	);
-
-	
-	errCode = NtQueryInformationFile(hFile,&IoStatusBlock,&FileBasic, sizeof(FILE_BASIC_INFORMATION),FileBasicInformation);
-	if ( !NT_SUCCESS(errCode) ) {
-		CloseHandle(hFile);
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	FileBasic.FileAttributes = dwFileAttributes;
-	errCode = NtSetInformationFile(hFile,&IoStatusBlock,&FileBasic, sizeof(FILE_BASIC_INFORMATION),FileBasicInformation);
-	if ( !NT_SUCCESS(errCode) ) {
-		CloseHandle(hFile);
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
+   errCode = NtQueryInformationFile(hFile,
+				    &IoStatusBlock,
+				    &FileBasic, 
+				    sizeof(FILE_BASIC_INFORMATION),
+				    FileBasicInformation);
+   if (!NT_SUCCESS(errCode)) 
+     {
 	CloseHandle(hFile);
-	return TRUE;
-		
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return FALSE;
+     }
+   FileBasic.FileAttributes = dwFileAttributes;
+   errCode = NtSetInformationFile(hFile,
+				  &IoStatusBlock,
+				  &FileBasic, 
+				  sizeof(FILE_BASIC_INFORMATION),
+				  FileBasicInformation);
+   if (!NT_SUCCESS(errCode)) 
+     {
+	CloseHandle(hFile);
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return FALSE;
+     }
+   CloseHandle(hFile);
+   return TRUE;		
 }
 
 

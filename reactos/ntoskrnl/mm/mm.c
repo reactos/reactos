@@ -12,6 +12,7 @@
 
 #include <internal/stddef.h>
 #include <internal/mm.h>
+#include <string.h>
 #include <internal/string.h>
 #include <internal/ntoskrnl.h>
 #include <internal/bitops.h>

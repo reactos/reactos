@@ -20,10 +20,10 @@
 **
 */
 
-#undef WIN32_LEAN_AND_MEAN
 #include <internal/mmhal.h>
 #include <internal/halio.h>
 #include <ddk/ntddk.h>
+#include <string.h>
 #include <internal/string.h>
 #include <defines.h>
 
@@ -689,7 +689,8 @@ NTSTATUS KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * Module entry point
  */
-NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
+STDCALL NTSTATUS 
+DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
    PDEVICE_OBJECT DeviceObject;
    ANSI_STRING adevice_name;

@@ -182,23 +182,7 @@ NtImpersonateThread(
 {
 }
 
-NTSTATUS
-STDCALL
-NtCreateToken(
-	OUT PHANDLE TokenHandle,
-	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN TOKEN_TYPE TokenType,
-	IN PLUID AuthenticationId,
-	IN PLARGE_INTEGER ExpirationTime,
-	IN PTOKEN_USER TokenUser,
-	IN PTOKEN_GROUPS TokenGroups,
-	IN PTOKEN_PRIVILEGES TokenPrivileges,
-	IN PTOKEN_OWNER TokenOwner,
-	IN PTOKEN_PRIMARY_GROUP TokenPrimaryGroup,
-	IN PTOKEN_DEFAULT_DACL TokenDefaultDacl,
-	IN PTOKEN_SOURCE TokenSource
-	)
+NTSTATUS STDCALL NtCreateToken(VOID)
 {
 }
 

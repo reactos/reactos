@@ -3,7 +3,7 @@
 #include <errno.h>
 
 int
-fsetpos(FILE *stream, fpos_t *pos)
+fsetpos(FILE *stream, const fpos_t *pos)
 {
   if (stream && pos)
   {

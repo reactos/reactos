@@ -14,10 +14,10 @@
  */
 
 #include <stdarg.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 #include <internal/debug.h>
-#include <internal/ctype.h>
-#include <internal/string.h>
 
 unsigned long simple_strtoul(const char *cp,char **endp,unsigned int base)
 {
@@ -371,7 +371,7 @@ unsigned short towupper(unsigned short w)
 		return w;
 }
 
-char iswlower(unsigned short w)
+int iswlower(wint_t w)
 {
 	if ( w < L'A' )
 		return 1;

@@ -16,7 +16,7 @@
 #include <stdarg.h>
 
 #include <internal/debug.h>
-#include <internal/ctype.h>
+#include <string.h>
 #include <internal/string.h>
 
 #include <ddk/ntddk.h>

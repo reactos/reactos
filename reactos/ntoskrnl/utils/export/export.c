@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
         fprintf(stdout,"#include <internal/ke.h>\n");
         fprintf(stdout,"#include <internal/ntoskrnl.h>\n");
         fprintf(stdout,"#include <internal/mm.h>\n");
-        fprintf(stdout,"#include <wstring.h>\n");
+        fprintf(stdout,"#include <wchar.h>\n");
    
         while (!feof(stdin))
         {

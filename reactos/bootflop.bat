@@ -3,9 +3,11 @@
 :
 : copy files to HD...
 :
-COPY /Y SHELL.BIN C:\reactos\system\SHELL.bin
-COPY /Y BLUES.o C:\reactos\system\drivers\BLUES.o
-COPY /Y KEYBOARD.o C:\reactos\system\drivers\KEYBOARD.o
+COPY /Y BLUE.SYS C:\reactos\system\drivers\blue.SYS
+COPY /Y KEYBOARD.SYS C:\reactos\system\drivers\KEYBOARD.SYS
+COPY /Y NTDLL.DLL C:\reactos\system\NTDLL.DLL
+: COPY /Y CRTDLL.DLL C:\reactos\system\CRTDLL.DLL
+COPY /Y SHELL.EXE C:\reactos\system\SHELL.EXE
 
 :
 : present a menu to the booter...
@@ -13,23 +15,23 @@ COPY /Y KEYBOARD.o C:\reactos\system\drivers\KEYBOARD.o
 ECHO 1) Keyboard,IDE,VFatFSD
 ECHO 2) IDE,VFatFSD
 ECHO 3) No Drivers
-CHOICE /C:123 /T:2,10 "Select kernel boot config"
+CHOICE /C:123 /T:2,3 "Select kernel boot config"
 IF ERRORLEVEL 3 GOTO :L3
 IF ERRORLEVEL 2 GOTO :L2
 
 :L1
 CLS
-LOADROS KIMAGE.BIN KEYBOARD.O IDE.O VFATFSD.O
+LOADROS NTOSKRNL.EXE KEYBOARD.O IDE.SYS VFATFSD.SYS
 GOTO :END
 
 :L2
 CLS
-LOADROS KIMAGE.BIN IDE.O VFATFSD.O
+LOADROS NTOSKRNL.EXE IDE.SYS VFATFSD.SYS
 GOTO :END
 
 :L3
 CLS
-LOADROS KIMAGE.BIN
+LOADROS NTOSKRNL.EXE
 GOTO :END
 
 :END

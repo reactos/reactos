@@ -72,6 +72,7 @@ typedef DISK_GEOMETRY *PDISK_GEOMETRY;
 //  -------------------------------------------------------------------------
 
 #include <internal/i386/io.h>
+#include <string.h>
 #include <internal/string.h>
 
 #define NDEBUG
@@ -230,7 +231,7 @@ IDESwapBytePairs(char *Buf,
 //  RETURNS:
 //    NTSTATUS  
 
-NTSTATUS 
+STDCALL NTSTATUS 
 DriverEntry(IN PDRIVER_OBJECT DriverObject, 
             IN PUNICODE_STRING RegistryPath) 
 {

@@ -10,9 +10,9 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <wchar.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
-#include <wstring.h>
 #include <string.h>
 
 #define NDEBUG
