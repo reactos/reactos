@@ -1,0 +1,7 @@
+threadwait.exe
+threadwait.nostrip.exe
+threadwait.sym
+threadwait.coff
+*.d
+*.o
+*.map
