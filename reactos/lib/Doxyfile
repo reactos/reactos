@@ -3,7 +3,7 @@
 #---------------------------------------------------------------------------
 # Project related configuration options
 #---------------------------------------------------------------------------
-PROJECT_NAME           = ReactOS
+PROJECT_NAME           = "ReactOS libs"
 PROJECT_NUMBER         = 
 OUTPUT_DIRECTORY       = doxy-doc
 OUTPUT_LANGUAGE        = English
@@ -29,9 +29,9 @@ SUBGROUPING            = YES
 # Build related configuration options
 #---------------------------------------------------------------------------
 EXTRACT_ALL            = YES
-EXTRACT_PRIVATE        = YES
-EXTRACT_STATIC         = YES
-EXTRACT_LOCAL_CLASSES  = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+EXTRACT_LOCAL_CLASSES  = NO
 HIDE_UNDOC_MEMBERS     = NO
 HIDE_UNDOC_CLASSES     = NO
 HIDE_FRIEND_COMPOUNDS  = NO
@@ -61,24 +61,12 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = drivers \
-                         apps \
-                         hal \
-                         lib \
-                         services \
-                         subsys \
-                         tools \
-                         regtests
+INPUT                  = .
 FILE_PATTERNS          = *.c \
                          *.h
 RECURSIVE              = YES
-EXCLUDE                = ntoskrnl \
-                         lib \
-                         drivers \
-                         tools \
-                         apps \
-                         subsys/win32k \
-                         subsys/system/explorer
+EXCLUDE                = ntdll \
+                         freetype
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = 
 EXAMPLE_PATH           = 
@@ -121,7 +109,7 @@ TOC_EXPAND             = NO
 DISABLE_INDEX          = NO
 ENUM_VALUES_PER_LINE   = 4
 GENERATE_TREEVIEW      = YES
-TREEVIEW_WIDTH         = 250
+TREEVIEW_WIDTH         = 200
 #---------------------------------------------------------------------------
 # configuration options related to the LaTeX output
 #---------------------------------------------------------------------------
@@ -178,7 +166,7 @@ ENABLE_PREPROCESSING   = NO
 MACRO_EXPANSION        = NO
 EXPAND_ONLY_PREDEF     = NO
 SEARCH_INCLUDES        = YES
-INCLUDE_PATH           = include
+INCLUDE_PATH           = ../include
 INCLUDE_FILE_PATTERNS  = *.h
 PREDEFINED             = 
 EXPAND_AS_DEFINED      = 

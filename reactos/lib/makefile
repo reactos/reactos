@@ -12,3 +12,8 @@ kernel32: dummy
 
 dummy:
 
+
+docu:
+	doxygen Doxyfile
+
+.PHONY: docu

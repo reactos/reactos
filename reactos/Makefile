@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.189 2003/12/07 12:08:20 mf Exp $
+# $Id: Makefile,v 1.190 2003/12/07 13:08:01 mf Exp $
 #
 # Global makefile
 #
@@ -809,6 +809,9 @@ docu:
 
 	echo generating ReactOS Freetype documentation ...
 	$(MAKE) -C lib/freetype docu
+
+	echo generating ReactOS libs documentation ...
+	$(MAKE) -C lib docu
 
 	echo generating ReactOS WIN32K documentation ...
 	$(MAKE) -C subsys/win32k docu
