@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.56 2003/03/28 15:27:02 gvg Exp $
+/* $Id: dc.c,v 1.57 2003/03/28 16:20:51 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -1075,6 +1075,7 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
     case GO_FONT_MAGIC:
       objOrg = (HGDIOBJ)dc->w.hFont;
       dc->w.hFont = (HFONT) hGDIObj;
+      TextIntRealizeFont(dc->w.hFont);
       break;
 
     case GO_BITMAP_MAGIC:

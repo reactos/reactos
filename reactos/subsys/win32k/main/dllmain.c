@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.31 2003/03/11 00:21:41 gvg Exp $
+/* $Id: dllmain.c,v 1.32 2003/03/28 16:20:50 gvg Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -109,11 +109,11 @@ W32kInitialize (VOID)
   // Create surface used to draw the internal font onto
   CreateCellCharSurface();
 
-  // Create stock objects, ie. precreated objects commonly used by win32 applications
-  CreateStockObjects();
-
   // Initialize FreeType library
   if(!InitFontSupport()) return FALSE;
+
+  // Create stock objects, ie. precreated objects commonly used by win32 applications
+  CreateStockObjects();
 
   return TRUE;
 }

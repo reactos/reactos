@@ -1,7 +1,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.22 2003/03/26 08:11:53 gvg Exp $
+ * $Id: gdiobj.c,v 1.23 2003/03/28 16:20:51 gvg Exp $
  *
  */
 
@@ -525,18 +525,17 @@ VOID CreateStockObjects(void)
   StockObjects[NULL_PEN] =  W32kCreatePenIndirect(&NullPen);
   GDIOBJ_MarkObjectGlobal(StockObjects[NULL_PEN]);
 
-  StockObjects[OEM_FIXED_FONT] =      W32kCreateFontIndirect(&OEMFixedFont);
+  (void) TextIntCreateFontIndirect(&OEMFixedFont, &StockObjects[OEM_FIXED_FONT]);
   GDIOBJ_MarkObjectGlobal(StockObjects[OEM_FIXED_FONT]);
-  StockObjects[ANSI_FIXED_FONT] =     W32kCreateFontIndirect(&AnsiFixedFont);
+  (void) TextIntCreateFontIndirect(&AnsiFixedFont, &StockObjects[ANSI_FIXED_FONT]);
   GDIOBJ_MarkObjectGlobal(StockObjects[ANSI_FIXED_FONT]);
-  StockObjects[SYSTEM_FONT] =         W32kCreateFontIndirect(&SystemFont);
+  (void) TextIntCreateFontIndirect(&SystemFont, &StockObjects[SYSTEM_FONT]);
   GDIOBJ_MarkObjectGlobal(StockObjects[SYSTEM_FONT]);
-  StockObjects[DEVICE_DEFAULT_FONT] =
-    W32kCreateFontIndirect(&DeviceDefaultFont);
+  (void) TextIntCreateFontIndirect(&DeviceDefaultFont, &StockObjects[DEVICE_DEFAULT_FONT]);
   GDIOBJ_MarkObjectGlobal(StockObjects[DEVICE_DEFAULT_FONT]);
-  StockObjects[SYSTEM_FIXED_FONT] =   W32kCreateFontIndirect(&SystemFixedFont);
+  (void) TextIntCreateFontIndirect(&SystemFixedFont, &StockObjects[SYSTEM_FIXED_FONT]);
   GDIOBJ_MarkObjectGlobal(StockObjects[SYSTEM_FIXED_FONT]);
-  StockObjects[DEFAULT_GUI_FONT] =    W32kCreateFontIndirect(&DefaultGuiFont);
+  (void) TextIntCreateFontIndirect(&DefaultGuiFont, &StockObjects[DEFAULT_GUI_FONT]);
   GDIOBJ_MarkObjectGlobal(StockObjects[DEFAULT_GUI_FONT]);
 
   StockObjects[DEFAULT_PALETTE] = (HGDIOBJ*)PALETTE_Init();

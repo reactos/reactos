@@ -3,6 +3,7 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <internal/safe.h>
 #include <win32k/brush.h>
 #include <win32k/dc.h>
 #include <win32k/text.h>
@@ -36,12 +37,55 @@ BOOL InitFontSupport()
     return FALSE;
   }
 
+#ifndef TODO
+  W32kAddFontResource(L"\\SystemRoot\\media\\fonts\\arial.ttf");
+#endif
   W32kAddFontResource(L"\\SystemRoot\\media\\fonts\\helb____.ttf");
   W32kAddFontResource(L"\\SystemRoot\\media\\fonts\\timr____.ttf");
 
-  DbgPrint("All fonts loaded\n");
+  DPRINT("All fonts loaded\n");
 
   return TRUE;
+}
+
+static NTSTATUS
+GetFontObjectsFromTextObj(PTEXTOBJ TextObj, HFONT *FontHandle, PFONTOBJ *FontObj, PFONTGDI *FontGDI)
+{
+  UINT i;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  ASSERT(NULL != TextObj && NULL != TextObj->GDIFontHandle);
+  if (NULL != TextObj && NULL != TextObj->GDIFontHandle)
+  {
+    if (NT_SUCCESS(Status) && NULL != FontHandle)
+    {
+      *FontHandle = TextObj->GDIFontHandle;
+    }
+    if (NT_SUCCESS(Status) && NULL != FontObj)
+    {
+      *FontObj = AccessUserObject((ULONG) TextObj->GDIFontHandle);
+      if (NULL == *FontObj)
+      {
+	ASSERT(FALSE);
+	Status = STATUS_INVALID_HANDLE;
+      }
+    }
+    if (NT_SUCCESS(Status) && NULL != FontGDI)
+    {
+      *FontGDI = AccessInternalObject((ULONG) TextObj->GDIFontHandle);
+      if (NULL == *FontGDI)
+      {
+	ASSERT(FALSE);
+	Status = STATUS_INVALID_HANDLE;
+      }
+    }
+  }
+  else
+  {
+    Status = STATUS_INVALID_HANDLE;
+  }
+
+  return Status;
 }
 
 int
@@ -65,8 +109,8 @@ W32kAddFontResource(LPCWSTR  Filename)
   IO_STATUS_BLOCK Iosb;
 
   NewFont = (HFONT)CreateGDIHandle(sizeof( FONTGDI ), sizeof( FONTOBJ ));
-  FontObj = (PFONTOBJ) AccessUserObject( NewFont );
-  FontGDI = (PFONTGDI) AccessInternalObject( NewFont );
+  FontObj = (PFONTOBJ) AccessUserObject( (ULONG) NewFont );
+  FontGDI = (PFONTGDI) AccessInternalObject( (ULONG) NewFont );
 
   RtlCreateUnicodeString(&uFileName, (LPWSTR)Filename);
 
@@ -77,7 +121,7 @@ W32kAddFontResource(LPCWSTR  Filename)
 
   if (!NT_SUCCESS(Status))
   {
-    DbgPrint("Could not open module file: %S\n", Filename);
+    DPRINT1("Could not open module file: %S\n", Filename);
     return 0;
   }
 
@@ -85,7 +129,7 @@ W32kAddFontResource(LPCWSTR  Filename)
   Status = NtQueryInformationFile(FileHandle, &Iosb, &FileStdInfo, sizeof(FileStdInfo), FileStandardInformation);
   if (!NT_SUCCESS(Status))
   {
-    DbgPrint("Could not get file size\n");
+    DPRINT1("Could not get file size\n");
     return 0;
   }
 
@@ -95,7 +139,7 @@ W32kAddFontResource(LPCWSTR  Filename)
 
   if (buffer == NULL)
   {
-    DbgPrint("could not allocate memory for module");
+    DPRINT1("could not allocate memory for module");
     return 0;
   }
 
@@ -103,7 +147,7 @@ W32kAddFontResource(LPCWSTR  Filename)
   Status = NtReadFile(FileHandle, 0, 0, 0, &Iosb, buffer, FileStdInfo.EndOfFile.u.LowPart, 0, 0);
   if (!NT_SUCCESS(Status))
   {
-    DbgPrint("could not read module file into memory");
+    DPRINT1("could not read module file into memory");
     ExFreePool(buffer);
     return 0;
   }
@@ -113,12 +157,12 @@ W32kAddFontResource(LPCWSTR  Filename)
   error = FT_New_Memory_Face(library, buffer, size, 0, &face);
   if (error == FT_Err_Unknown_File_Format)
   {
-    DbgPrint("Unknown font file format\n");
+    DPRINT1("Unknown font file format\n");
     return 0;
   }
   else if (error)
   {
-    DbgPrint("Error reading font file (error code: %u)\n", error); // 48
+    DPRINT1("Error reading font file (error code: %u)\n", error); // 48
     return 0;
   }
 
@@ -130,7 +174,7 @@ W32kAddFontResource(LPCWSTR  Filename)
   FontGDI->TextMetric.tmDescent = face->size->metrics.descender; // units below baseline
   FontGDI->TextMetric.tmHeight = FontGDI->TextMetric.tmAscent + FontGDI->TextMetric.tmDescent;
 
-  DbgPrint("Win32k: Font loaded: %s (%s)\n", face->family_name, face->style_name);
+  DPRINT("Font loaded: %s (%s)\n", face->family_name, face->style_name);
   DPRINT("Num glyphs: %u\n", face->num_glyphs);
 
   // Add this font resource to the font table
@@ -147,24 +191,60 @@ W32kAddFontResource(LPCWSTR  Filename)
   return 1;
 }
 
+NTSTATUS
+TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
+{
+  PTEXTOBJ TextObj;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  *NewFont = TEXTOBJ_AllocText();
+  if (NULL != *NewFont)
+  {
+    TextObj = TEXTOBJ_LockText(*NewFont);
+    if (NULL != TextObj)
+    {
+      memcpy(&TextObj->logfont, lf, sizeof(LOGFONTW));
+      if (lf->lfEscapement != lf->lfOrientation)
+      {
+	/* this should really depend on whether GM_ADVANCED is set */
+	TextObj->logfont.lfOrientation = TextObj->logfont.lfEscapement;
+      }
+      TEXTOBJ_UnlockText(*NewFont);
+    }
+    else
+    {
+      ASSERT(FALSE);
+      Status = STATUS_INVALID_HANDLE;
+    }
+  }
+  else
+  {
+    Status = STATUS_NO_MEMORY;
+  }
+
+  return Status;
+}
+
 HFONT
 STDCALL
 W32kCreateFont(int  Height,
-                      int  Width,
-                      int  Escapement,
-                      int  Orientation,
-                      int  Weight,
-                      DWORD  Italic,
-                      DWORD  Underline,
-                      DWORD  StrikeOut,
-                      DWORD  CharSet,
-                      DWORD  OutputPrecision,
-                      DWORD  ClipPrecision,
-                      DWORD  Quality,
-                      DWORD  PitchAndFamily,
-                      LPCWSTR  Face)
+               int  Width,
+               int  Escapement,
+               int  Orientation,
+               int  Weight,
+               DWORD  Italic,
+               DWORD  Underline,
+               DWORD  StrikeOut,
+               DWORD  CharSet,
+               DWORD  OutputPrecision,
+               DWORD  ClipPrecision,
+               DWORD  Quality,
+               DWORD  PitchAndFamily,
+               LPCWSTR  Face)
 {
   LOGFONTW logfont;
+  HFONT NewFont;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   logfont.lfHeight = Height;
   logfont.lfWidth = Width;
@@ -180,40 +260,45 @@ W32kCreateFont(int  Height,
   logfont.lfQuality = Quality;
   logfont.lfPitchAndFamily = PitchAndFamily;
 
-  if(Face)
-    memcpy(logfont.lfFaceName, Face, sizeof(logfont.lfFaceName));
+  if (NULL != Face)
+  {
+    Status = MmCopyFromCaller(logfont.lfFaceName, Face, sizeof(logfont.lfFaceName));
+  }
   else
+  {
     logfont.lfFaceName[0] = L'\0';
+  }
 
-  return W32kCreateFontIndirect(&logfont);
+  if (NT_SUCCESS(Status))
+    {
+    Status = TextIntCreateFontIndirect(&logfont, &NewFont);
+    }
+
+  return NT_SUCCESS(Status) ? NewFont : NULL;
 }
 
 HFONT
 STDCALL
-W32kCreateFontIndirect(CONST LPLOGFONTW  lf)
+W32kCreateFontIndirect(CONST LPLOGFONTW lf)
 {
-  HFONT hFont = 0;
-  PTEXTOBJ fontPtr;
+  LOGFONTW SafeLogfont;
+  HFONT NewFont;
+  NTSTATUS Status = STATUS_SUCCESS;
 
-  if (lf)
+  if (NULL != lf)
   {
-    if(hFont = TEXTOBJ_AllocText())
+    Status = MmCopyFromCaller(&SafeLogfont, lf, sizeof(LOGFONTW));
+    if (NT_SUCCESS(Status))
     {
-	  fontPtr = TEXTOBJ_LockText( hFont );
-	  ASSERT( fontPtr );  //I want to know when this happens
-	  if( fontPtr ){
-      	memcpy(&fontPtr->logfont, lf, sizeof(LOGFONTW));
-
-      	if (lf->lfEscapement != lf->lfOrientation) {
-      	  /* this should really depend on whether GM_ADVANCED is set */
-      	  fontPtr->logfont.lfOrientation = fontPtr->logfont.lfEscapement;
-      	}
-		TEXTOBJ_UnlockText( hFont );
-	  }
+      Status = TextIntCreateFontIndirect(&SafeLogfont, &NewFont);
     }
   }
+  else
+  {
+    Status = STATUS_INVALID_PARAMETER;
+  }
 
-  return hFont;
+  return NT_SUCCESS(Status) ? NewFont : NULL;
 }
 
 BOOL
@@ -425,26 +510,26 @@ W32kGetTextExtentPoint(HDC  hDC,
                              int  Count,
                              LPSIZE  Size)
 {
-  PDC dc = (PDC)AccessUserObject(hDC);
+  PDC dc = (PDC)AccessUserObject((ULONG) hDC);
   PFONTGDI FontGDI;
   FT_Face face;
   FT_GlyphSlot glyph;
   INT error, pitch, glyph_index, i;
   ULONG TotalWidth = 0, MaxHeight = 0, CurrentChar = 0, SpaceBetweenChars = 5;
 
-  FontGDI = (PFONTGDI)AccessInternalObject(dc->w.hFont);
+  FontGDI = (PFONTGDI)AccessInternalObject((ULONG) dc->w.hFont);
 
   for(i=0; i<Count; i++)
   {
     glyph_index = FT_Get_Char_Index(face, *String);
     error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-    if(error) DbgPrint("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+    if(error) DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
     glyph = face->glyph;
 
     if (glyph->format == ft_glyph_format_outline)
     {
       error = FT_Render_Glyph(glyph, ft_render_mode_mono);
-      if(error) DbgPrint("WARNING: Failed to render glyph!\n");
+      if(error) DPRINT1("WARNING: Failed to render glyph!\n");
       pitch = glyph->bitmap.pitch;
     } else {
       pitch = glyph->bitmap.width;
@@ -484,16 +569,59 @@ W32kGetTextFace(HDC  hDC,
 
 BOOL
 STDCALL
-W32kGetTextMetrics(HDC  hDC,
-                         LPTEXTMETRICW  tm)
+W32kGetTextMetrics(HDC hDC,
+                   LPTEXTMETRICW tm)
 {
-  PDC dc = (PDC)AccessUserObject(hDC);
+  PDC dc;
+  PTEXTOBJ TextObj;
   PFONTGDI FontGDI;
+  NTSTATUS Status = STATUS_SUCCESS;
+  TEXTMETRICW SafeTm;
+  FT_Face Face;
+  ULONG Error;
 
-  FontGDI = (PFONTGDI)AccessInternalObject(dc->w.hFont);
-  memcpy(tm, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
+  dc = DC_HandleToPtr(hDC);
+  if (NULL == dc || NULL == tm)
+  {
+    Status = STATUS_INVALID_PARAMETER;
+  }
+  else
+  {
+    TextObj = TEXTOBJ_LockText(dc->w.hFont);
+    if (NULL != TextObj)
+    {
+      Status = GetFontObjectsFromTextObj(TextObj, NULL, NULL, &FontGDI);
+      if (NT_SUCCESS(Status))
+      {
+	Face = FontGDI->face;
+	Error = FT_Set_Pixel_Sizes(Face, TextObj->logfont.lfHeight,
+	                           TextObj->logfont.lfWidth);
+	if (0 != Error)
+	  {
+	  DPRINT1("Error in setting pixel sizes: %u\n", Error);
+	  Status = STATUS_UNSUCCESSFUL;
+	  }
+        else
+	  {
+	  memcpy(&SafeTm, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
+  	  SafeTm.tmAscent = (Face->size->metrics.ascender + 32) / 64; // units above baseline
+	  SafeTm.tmDescent = (Face->size->metrics.descender + 32) / 64; // units below baseline
+	  SafeTm.tmHeight = (Face->size->metrics.ascender +
+	                     Face->size->metrics.descender + 32) / 64;
+	  Status = MmCopyToCaller(tm, &SafeTm, sizeof(TEXTMETRICW));
+	  }
+      }
+      TEXTOBJ_UnlockText(dc->w.hFont);
+    }
+    else
+    {
+      ASSERT(FALSE);
+      Status = STATUS_INVALID_HANDLE;
+    }
+    DC_ReleasePtr(hDC);
+  }
 
-  return TRUE;
+  return NT_SUCCESS(Status);
 }
 
 BOOL
@@ -578,11 +706,11 @@ W32kTextOut(HDC  hDC,
   // Fixme: Call EngTextOut, which does the real work (calling DrvTextOut where appropriate)
 
   DC *dc = DC_HandleToPtr(hDC);
-  SURFOBJ *SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
-  int error, glyph_index, n, load_flags = FT_LOAD_RENDER, i, j, sx, sy, scc;
+  SURFOBJ *SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
+  int error, glyph_index, n, i;
   FT_Face face;
   FT_GlyphSlot glyph;
-  ULONG TextLeft, TextTop, SpaceBetweenChars = 2, pitch, previous;
+  ULONG TextLeft, TextTop, pitch, previous;
   FT_Bool use_kerning;
   RECTL DestRect, MaskRect;
   POINTL SourcePoint, BrushOrigin;
@@ -593,7 +721,6 @@ W32kTextOut(HDC  hDC,
   SIZEL bitSize;
   FT_CharMap found = 0, charmap;
   INT yoff;
-  HFONT hFont = 0;
   PFONTOBJ FontObj;
   PFONTGDI FontGDI;
   PTEXTOBJ TextObj;
@@ -610,50 +737,40 @@ W32kTextOut(HDC  hDC,
 
   TextObj = TEXTOBJ_LockText(dc->w.hFont);
 
-  for(i=0; i<FontsLoaded; i++)
+  if (! NT_SUCCESS(GetFontObjectsFromTextObj(TextObj, NULL, &FontObj, &FontGDI)))
   {
-    if(wcscmp(FontTable[i].FaceName, TextObj->logfont.lfFaceName) == 0)
-     hFont = FontTable[i].hFont;
+    goto fail;
   }
-
-  if(hFont == 0)
-  {
-    DbgPrint("Specified font %s is not loaded\n", TextObj->logfont.lfFaceName);
-	goto fail;
-  }
-
-  FontObj = (PFONTOBJ)AccessUserObject(hFont);
-  FontGDI = (PFONTGDI)AccessInternalObject(hFont);
   face = FontGDI->face;
 
   if (face->charmap == NULL)
   {
-    DbgPrint("WARNING: No charmap selected!\n");
-    DbgPrint("This font face has %d charmaps\n", face->num_charmaps);
+    DPRINT("WARNING: No charmap selected!\n");
+    DPRINT("This font face has %d charmaps\n", face->num_charmaps);
 
     for (n = 0; n < face->num_charmaps; n++)
     {
       charmap = face->charmaps[n];
-      DbgPrint("found charmap encoding: %u\n", charmap->encoding);
+      DPRINT("found charmap encoding: %u\n", charmap->encoding);
       if (charmap->encoding != 0)
       {
         found = charmap;
         break;
       }
     }
-    if (!found) DbgPrint("WARNING: Could not find desired charmap!\n");
+    if (!found) DPRINT1("WARNING: Could not find desired charmap!\n");
     error = FT_Set_Charmap(face, found);
-    if (error) DbgPrint("WARNING: Could not set the charmap!\n");
+    if (error) DPRINT1("WARNING: Could not set the charmap!\n");
   }
 
   error = FT_Set_Pixel_Sizes(face, TextObj->logfont.lfHeight, TextObj->logfont.lfWidth);
   if(error) {
-    DbgPrint("Error in setting pixel sizes: %u\n", error);
+    DPRINT1("Error in setting pixel sizes: %u\n", error);
 	goto fail;
   }
 
   // Create the brush
-  PalDestGDI = (PPALGDI)AccessInternalObject(dc->w.hPalette);
+  PalDestGDI = (PPALGDI)AccessInternalObject((ULONG) dc->w.hPalette);
   XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalDestGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
   hBrush = W32kCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor));
   Brush = BRUSHOBJ_LockBrush(hBrush);
@@ -686,7 +803,7 @@ W32kTextOut(HDC  hDC,
     glyph_index = FT_Get_Char_Index(face, *String);
     error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
     if(error) {
-      DbgPrint("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+      DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
       goto fail;
     }
     glyph = face->glyph;
@@ -703,7 +820,7 @@ W32kTextOut(HDC  hDC,
     {
       error = FT_Render_Glyph(glyph, ft_render_mode_mono);
       if(error) {
-        DbgPrint("WARNING: Failed to render glyph!\n");
+        DPRINT1("WARNING: Failed to render glyph!\n");
 		goto fail;
       }
       pitch = glyph->bitmap.pitch;
@@ -724,7 +841,7 @@ W32kTextOut(HDC  hDC,
     // Then use memset with 0 to clear it and sourcerect to limit the work of the transbitblt
 
     HSourceGlyph = EngCreateBitmap(bitSize, pitch, BMF_1BPP, 0, glyph->bitmap.buffer);
-    SourceGlyphSurf = (PSURFOBJ)AccessUserObject(HSourceGlyph);
+    SourceGlyphSurf = (PSURFOBJ)AccessUserObject((ULONG) HSourceGlyph);
 
     // Use the font data as a mask to paint onto the DCs surface using a brush
     IntEngBitBlt(SurfObj, NULL, SourceGlyphSurf, NULL, NULL, &DestRect, &SourcePoint, &MaskRect, Brush, &BrushOrigin, 0xAACC);
@@ -759,4 +876,51 @@ W32kTranslateCharsetInfo(PDWORD  Src,
                                DWORD  Flags)
 {
   UNIMPLEMENTED;
+}
+
+NTSTATUS
+TextIntRealizeFont(HFONT FontHandle)
+{
+  UINT i;
+  NTSTATUS Status = STATUS_SUCCESS;
+  PTEXTOBJ TextObj;
+
+  TextObj = TEXTOBJ_LockText(FontHandle);
+  ASSERT(TextObj);
+  if (NULL != TextObj)
+    {
+    for(i = 0; NULL == TextObj->GDIFontHandle && i < FontsLoaded; i++)
+    {
+      if (0 == wcscmp(FontTable[i].FaceName, TextObj->logfont.lfFaceName))
+      {
+	TextObj->GDIFontHandle = FontTable[i].hFont;
+      }
+    }
+
+    if (NULL == TextObj->GDIFontHandle)
+    {
+      if (0 != FontsLoaded)
+      {
+	DPRINT("Requested font %S not found, using first available font\n",
+	       TextObj->logfont.lfFaceName)
+	TextObj->GDIFontHandle = FontTable[0].hFont;
+      }
+      else
+      {
+	DPRINT1("Requested font %S not found, no fonts loaded at all\n",
+	        TextObj->logfont.lfFaceName)
+	Status = STATUS_NOT_FOUND;
+      }
+    }
+
+    ASSERT(! NT_SUCCESS(Status) || NULL != TextObj->GDIFontHandle);
+
+    TEXTOBJ_UnlockText(FontHandle);
+  }
+  else
+  {
+    Status = STATUS_INVALID_HANDLE;
+  }
+
+  return Status;
 }

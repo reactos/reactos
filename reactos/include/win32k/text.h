@@ -14,14 +14,11 @@ typedef struct
 #define  TEXTOBJ_AllocText() \
   ((HFONT) GDIOBJ_AllocObj (sizeof (TEXTOBJ), GO_FONT_MAGIC))
 #define  TEXTOBJ_FreeText(hBMObj)  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GO_FONT_MAGIC, GDIOBJFLAG_DEFAULT)
-/*
-#define  TEXTOBJ_HandleToPtr(hBMObj)  \
-  ((PTEXTOBJ) GDIOBJ_HandleToPtr ((HGDIOBJ) hBMObj, GO_FONT_MAGIC))
-#define  TEXTOBJ_PtrToHandle(hBMObj)  \
-  ((HFONT) GDIOBJ_PtrToHandle ((PGDIOBJ) hBMObj, GO_FONT_MAGIC))
-*/
 #define  TEXTOBJ_LockText(hBMObj) ((PTEXTOBJ) GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GO_FONT_MAGIC))
 #define  TEXTOBJ_UnlockText(hBMObj) GDIOBJ_UnlockObj ((HGDIOBJ) hBMObj, GO_FONT_MAGIC)
+
+NTSTATUS TextIntRealizeFont(HFONT FontHandle);
+NTSTATUS TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont);
 
 int
 STDCALL
