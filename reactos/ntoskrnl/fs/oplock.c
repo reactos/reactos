@@ -1,4 +1,4 @@
-/* $Id: oplock.c,v 1.5 2002/09/08 10:23:20 chorns Exp $
+/* $Id: oplock.c,v 1.6 2003/07/10 06:27:13 royce Exp $
  *
  * reactos/ntoskrnl/fs/oplock.c
  *
@@ -17,6 +17,7 @@
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 NTSTATUS STDCALL
 FsRtlCheckOplock(IN POPLOCK Oplock,
@@ -39,6 +40,7 @@ FsRtlCheckOplock(IN POPLOCK Oplock,
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 BOOLEAN STDCALL
 FsRtlCurrentBatchOplock(IN POPLOCK Oplock)
@@ -59,6 +61,8 @@ FsRtlCurrentBatchOplock(IN POPLOCK Oplock)
  *
  * NOTE
  *	Obsolete function.
+ *
+ * @unimplemented
  */
 VOID STDCALL
 FsRtlInitializeOplock(IN OUT POPLOCK Oplock)
@@ -76,6 +80,7 @@ FsRtlInitializeOplock(IN OUT POPLOCK Oplock)
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 NTSTATUS STDCALL
 FsRtlOplockFsctrl(IN POPLOCK Oplock,
@@ -96,6 +101,7 @@ FsRtlOplockFsctrl(IN POPLOCK Oplock,
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 BOOLEAN STDCALL
 FsRtlOplockIsFastIoPossible(IN POPLOCK Oplock)
@@ -114,6 +120,7 @@ FsRtlOplockIsFastIoPossible(IN POPLOCK Oplock)
  *
  * RETURN VALUE
  *
+ * @implemented
  */
 VOID STDCALL
 FsRtlUninitializeOplock(IN POPLOCK Oplock)

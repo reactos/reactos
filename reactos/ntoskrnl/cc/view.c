@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.64 2003/06/27 21:28:30 hbirr Exp $
+/* $Id: view.c,v 1.65 2003/07/10 06:27:13 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -830,6 +830,9 @@ CcRosFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
   return(Status);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
 	     IN PLARGE_INTEGER FileOffset OPTIONAL,
@@ -1038,6 +1041,9 @@ VOID CcRosDereferenceCache(PFILE_OBJECT FileObject)
   ExReleaseFastMutex(&ViewLock);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL 
 CcRosReleaseFileCache(PFILE_OBJECT FileObject)
 /*
@@ -1110,6 +1116,9 @@ CcTryToInitializeFileCache(PFILE_OBJECT FileObject)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL 
 CcRosInitializeFileCache(PFILE_OBJECT FileObject,
 			 ULONG CacheSegmentSize)
@@ -1165,6 +1174,9 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
    return(STATUS_SUCCESS);
 }
 
+/*
+ * @implemented
+ */
 PFILE_OBJECT STDCALL
 CcGetFileObjectFromSectionPtrs(IN PSECTION_OBJECT_POINTERS SectionObjectPointers)
 {

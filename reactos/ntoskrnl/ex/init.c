@@ -46,6 +46,9 @@ ExInit (VOID)
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 ExIsProcessorFeaturePresent(IN ULONG ProcessorFeature)
 {
@@ -56,6 +59,9 @@ ExIsProcessorFeaturePresent(IN ULONG ProcessorFeature)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 ExPostSystemEvent (ULONG	Unknown1,
 		   ULONG	Unknown2,

@@ -28,6 +28,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlCheckRegistryKey(IN ULONG RelativeTo,
 		    IN PWSTR Path)
@@ -48,6 +51,9 @@ RtlCheckRegistryKey(IN ULONG RelativeTo,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlCreateRegistryKey(IN ULONG RelativeTo,
 		     IN PWSTR Path)
@@ -68,6 +74,9 @@ RtlCreateRegistryKey(IN ULONG RelativeTo,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlDeleteRegistryValue(IN ULONG RelativeTo,
 		       IN PCWSTR Path,
@@ -132,6 +141,9 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlQueryRegistryValues(IN ULONG RelativeTo,
 		       IN PCWSTR Path,
@@ -543,6 +555,9 @@ ByeBye:
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlWriteRegistryValue(IN ULONG RelativeTo,
 		      IN PCWSTR Path,
@@ -578,6 +593,9 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlFormatCurrentUserKeyPath(IN OUT PUNICODE_STRING KeyPath)
 {

@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.15 2002/09/08 10:23:19 chorns Exp $
+/* $Id: work.c,v 1.16 2003/07/10 06:27:13 royce Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -138,6 +138,9 @@ VOID ExInitializeWorkerThreads(VOID)
 			 HIGH_PRIORITY);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 ExQueueWorkItem (PWORK_QUEUE_ITEM	WorkItem,
 		 WORK_QUEUE_TYPE		QueueType)

@@ -38,6 +38,8 @@ NTSTATUS CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg);
  *
  * NOTE
  * 	Used by CcMdlReadComplete@8 and FsRtl
+ *
+ * @unimplemented
  */
 VOID STDCALL
 CcMdlReadCompleteDev (IN	PMDL		MdlChain,
@@ -60,6 +62,8 @@ CcMdlReadCompleteDev (IN	PMDL		MdlChain,
  *
  * NOTE
  * 	From Bo Branten's ntifs.h v13.
+ *
+ * @unimplemented
  */
 VOID STDCALL
 CcMdlReadComplete (IN	PFILE_OBJECT	FileObject,
@@ -73,6 +77,9 @@ CcMdlReadComplete (IN	PFILE_OBJECT	FileObject,
 			 DeviceObject);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 CcSetFileSizes (IN PFILE_OBJECT FileObject,
 		IN PCC_FILE_SIZES FileSizes)

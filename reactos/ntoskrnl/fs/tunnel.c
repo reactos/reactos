@@ -1,4 +1,4 @@
-/* $Id: tunnel.c,v 1.4 2002/09/08 10:23:20 chorns Exp $
+/* $Id: tunnel.c,v 1.5 2003/07/10 06:27:13 royce Exp $
  *
  * reactos/ntoskrnl/fs/tunnel.c
  *
@@ -17,6 +17,7 @@
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 VOID
 STDCALL
@@ -43,6 +44,7 @@ FsRtlAddToTunnelCache (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 VOID
 STDCALL
@@ -64,6 +66,7 @@ FsRtlDeleteKeyFromTunnelCache (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 VOID
 STDCALL
@@ -84,6 +87,7 @@ FsRtlDeleteTunnelCache (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 VOID
 STDCALL
@@ -110,6 +114,7 @@ FsRtlFindInTunnelCache (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 VOID
 STDCALL

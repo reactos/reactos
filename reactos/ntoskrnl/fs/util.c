@@ -1,4 +1,4 @@
-/* $Id: util.c,v 1.13 2003/03/16 13:18:49 chorns Exp $
+/* $Id: util.c,v 1.14 2003/07/10 06:27:13 royce Exp $
  *
  * reactos/ntoskrnl/fs/util.c
  *
@@ -24,6 +24,7 @@
  *	STATUS_CRC_ERROR, STATUS_DEVICE_DATA_ERROR;
  *	TRUE otherwise.
  *
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -67,6 +68,8 @@ FsRtlIsTotalDeviceFailure (
  *	2002-01-17 Fixed a bad bug reported by Bo Brantén.
  *	Up to version 1.8, this function's semantics was
  *	exactly the opposite! Thank you Bo.
+ *
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -102,6 +105,8 @@ FsRtlIsNtstatusExpected (
  * RETURN VALUE
  * 	NtStatusToNormalize if it is an expected value,
  * 	otherwise NormalizedNtStatus.
+ *
+ * @implemented
  */
 NTSTATUS
 STDCALL
@@ -132,6 +137,8 @@ FsRtlNormalizeNtstatus (
  *
  * RETURN VALUE
  * 
+ *
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -151,6 +158,8 @@ FsRtlAllocateResource (VOID)
  *
  * RETURN VALUE
  * 
+ *
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -175,6 +184,7 @@ FsRtlBalanceReads (
  * NOTE
  * 	From Bo Branten's ntifs.h v12.
  * 
+ * @unimplemented
  */
 BOOLEAN
 STDCALL
@@ -205,6 +215,8 @@ FsRtlCopyRead (
  * 
  * NOTE
  * 	From Bo Branten's ntifs.h v12.
+ *
+ * @unimplemented
  */
 BOOLEAN
 STDCALL
@@ -233,6 +245,7 @@ FsRtlCopyWrite (
  *
  * RETURN VALUE
  * 
+ * @implemented
  */
 NTSTATUS
 STDCALL
@@ -269,6 +282,7 @@ FsRtlGetFileSize (
  *
  * RETURN VALUE
  * 
+ * @unimplemented
  */
 VOID
 STDCALL
@@ -291,6 +305,7 @@ FsRtlPostPagingFileStackOverflow (
  *
  * RETURN VALUE
  * 
+ * @unimplemented
  */
 VOID
 STDCALL
@@ -314,6 +329,8 @@ FsRtlPostStackOverflow (
  *
  * RETURN VALUE
  *	It always returns STATUS_SUCCESS.
+ *
+ * @unimplemented
  */
 NTSTATUS
 STDCALL

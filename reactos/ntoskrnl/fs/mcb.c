@@ -1,4 +1,4 @@
-/* $Id: mcb.c,v 1.9 2003/04/27 16:25:25 ea Exp $
+/* $Id: mcb.c,v 1.10 2003/07/10 06:27:13 royce Exp $
  *
  * reactos/ntoskrnl/fs/mcb.c
  *
@@ -18,6 +18,8 @@
  * RETURN VALUE
  *
  * NOTES
+ *
+ * @unimplemented
  */
 BOOLEAN STDCALL
 FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
@@ -29,7 +31,11 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
   return(FALSE);
 }
 
-/* FsRtlAddMcbEntry: Obsolete */
+/*
+ * FsRtlAddMcbEntry: Obsolete
+ *
+ * @implemented
+ */
 BOOLEAN STDCALL
 FsRtlAddMcbEntry (IN PMCB     Mcb,
 		  IN VBN      Vbn,
@@ -42,7 +48,9 @@ FsRtlAddMcbEntry (IN PMCB     Mcb,
 			       (LONGLONG) SectorCount);
 }
 
-
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
 			  IN ULONG RunIndex,
@@ -55,6 +63,9 @@ FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 FsRtlGetNextMcbEntry (IN PMCB     Mcb,
 		      IN ULONG    RunIndex,
@@ -78,6 +89,9 @@ FsRtlGetNextMcbEntry (IN PMCB     Mcb,
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
 			IN POOL_TYPE PoolType)
@@ -86,7 +100,10 @@ FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
   Mcb->PoolType = PoolType;
 }
 
-/* FsRtlInitializeMcb: Obsolete */
+/*
+ * FsRtlInitializeMcb: Obsolete
+ * @implemented
+ */
 VOID STDCALL
 FsRtlInitializeMcb (IN PMCB         Mcb,
 		    IN POOL_TYPE    PoolType)
@@ -95,6 +112,9 @@ FsRtlInitializeMcb (IN PMCB         Mcb,
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
 			 IN LONGLONG Vbn,
@@ -109,6 +129,9 @@ FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 FsRtlLookupLastLargeMcbEntry(IN PLARGE_MCB Mcb,
 			     OUT PLONGLONG Vbn,
@@ -119,6 +142,9 @@ FsRtlLookupLastLargeMcbEntry(IN PLARGE_MCB Mcb,
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 FsRtlLookupLastMcbEntry (IN PMCB     Mcb,
 			 OUT PVBN    Vbn,
@@ -129,6 +155,9 @@ FsRtlLookupLastMcbEntry (IN PMCB     Mcb,
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 FsRtlLookupMcbEntry (IN PMCB     Mcb,
 		     IN VBN      Vbn,
@@ -141,6 +170,9 @@ FsRtlLookupMcbEntry (IN PMCB     Mcb,
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
 {
@@ -152,7 +184,11 @@ FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
 }
 
 
-/* FsRtlNumberOfRunsInMcb: Obsolete */
+/*
+ * FsRtlNumberOfRunsInMcb: Obsolete
+ *
+ * @implemented
+ */
 ULONG STDCALL
 FsRtlNumberOfRunsInMcb (IN PMCB Mcb)
 {
@@ -160,6 +196,9 @@ FsRtlNumberOfRunsInMcb (IN PMCB Mcb)
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 FsRtlRemoveLargeMcbEntry(IN PLARGE_MCB Mcb,
 			 IN LONGLONG Vbn,
@@ -169,6 +208,9 @@ FsRtlRemoveLargeMcbEntry(IN PLARGE_MCB Mcb,
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 FsRtlRemoveMcbEntry (IN PMCB     Mcb,
 		     IN VBN      Vbn,
@@ -178,6 +220,9 @@ FsRtlRemoveMcbEntry (IN PMCB     Mcb,
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 FsRtlSplitLargeMcb(IN PLARGE_MCB Mcb,
 		   IN LONGLONG Vbn,
@@ -188,6 +233,9 @@ FsRtlSplitLargeMcb(IN PLARGE_MCB Mcb,
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,
 		      IN LONGLONG Vbn)
@@ -196,7 +244,11 @@ FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,
 }
 
 
-/* FsRtlTruncateMcb: Obsolete */
+/*
+ * FsRtlTruncateMcb: Obsolete
+ *
+ * @implemented
+ */
 VOID STDCALL
 FsRtlTruncateMcb (IN PMCB Mcb,
 		  IN VBN  Vbn)
@@ -205,13 +257,20 @@ FsRtlTruncateMcb (IN PMCB Mcb,
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 FsRtlUninitializeLargeMcb(IN PLARGE_MCB Mcb)
 {
   UNIMPLEMENTED;
 }
 
-/* FsRtlUninitializeMcb: Obsolete */
+/*
+ * FsRtlUninitializeMcb: Obsolete
+ *
+ * @implemented
+ */
 VOID STDCALL
 FsRtlUninitializeMcb (IN PMCB Mcb)
 {

@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.9 2002/09/08 10:23:19 chorns Exp $
+/* $Id: interlck.c,v 1.10 2003/07/10 06:27:13 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,6 +16,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 INTERLOCKED_RESULT STDCALL
 ExInterlockedDecrementLong (PLONG		Addend,
 			    PKSPIN_LOCK	Lock)
@@ -37,6 +40,9 @@ ExInterlockedDecrementLong (PLONG		Addend,
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 ExInterlockedExchangeUlong (PULONG		Target,
 			    ULONG		Value,
@@ -59,6 +65,9 @@ ExInterlockedExchangeUlong (PULONG		Target,
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 ExInterlockedAddUlong (PULONG		Addend,
 		       ULONG		Increment,
@@ -92,6 +101,9 @@ ExInterlockedAddUlong (PULONG		Addend,
         return oldval;
 }
 
+/*
+ * @implemented
+ */
 LARGE_INTEGER STDCALL
 ExInterlockedAddLargeInteger (PLARGE_INTEGER Addend,
 			      LARGE_INTEGER Increment,
@@ -125,6 +137,9 @@ ExInterlockedAddLargeInteger (PLARGE_INTEGER Addend,
         return oldval;
 }
 
+/*
+ * @implemented
+ */
 INTERLOCKED_RESULT STDCALL
 ExInterlockedIncrementLong (PLONG		Addend,
 			    PKSPIN_LOCK	Lock)
@@ -145,6 +160,9 @@ ExInterlockedIncrementLong (PLONG		Addend,
         return oldval;
 }
 
+/*
+ * @unimplemented
+ */
 VOID FASTCALL
 ExInterlockedAddLargeStatistic (IN	PLARGE_INTEGER	Addend,
 				IN	ULONG		Increment)
@@ -155,6 +173,9 @@ ExInterlockedAddLargeStatistic (IN	PLARGE_INTEGER	Addend,
 	Addend->QuadPart += Increment;
 }
 
+/*
+ * @unimplemented
+ */
 LONGLONG FASTCALL
 ExInterlockedCompareExchange64 (IN OUT	PLONGLONG	Destination,
 				IN	PLONGLONG	Exchange,
@@ -180,6 +201,9 @@ ExInterlockedCompareExchange64 (IN OUT	PLONGLONG	Destination,
 	return oldval;
 }
 
+/*
+ * @implemented
+ */
 ULONG FASTCALL
 ExfInterlockedAddUlong(PULONG Addend,
 		       ULONG Increment,

@@ -187,6 +187,8 @@ ExpRemoveHashTable(IN PHASH_TABLE  HashTable,
 
 /*
  * Initializes a hash table.
+ *
+ * @implemented
  */
 BOOLEAN STDCALL
 ExInitializeHashTable(IN PHASH_TABLE  HashTable,
@@ -244,6 +246,8 @@ ExInitializeHashTable(IN PHASH_TABLE  HashTable,
 
 /*
  * Release resources used by a hash table.
+ *
+ * @implemented
  */
 VOID STDCALL
 ExDeleteHashTable(IN PHASH_TABLE  HashTable)
@@ -261,6 +265,8 @@ ExDeleteHashTable(IN PHASH_TABLE  HashTable)
 
 /*
  * Insert a value in a hash table.
+ *
+ * @unimplemented
  */
 VOID STDCALL
 ExInsertHashTable(IN PHASH_TABLE  HashTable,
@@ -280,6 +286,8 @@ ExInsertHashTable(IN PHASH_TABLE  HashTable,
 
 /*
  * Search for a value associated with a given key in a hash table.
+ *
+ * @implemented
  */
 BOOLEAN STDCALL
 ExSearchHashTable(IN PHASH_TABLE  HashTable,
@@ -300,6 +308,8 @@ ExSearchHashTable(IN PHASH_TABLE  HashTable,
 
 /*
  * Remove a value associated with a given key from a hash table.
+ *
+ * @implemented
  */
 BOOLEAN STDCALL
 ExRemoveHashTable(IN PHASH_TABLE  HashTable,

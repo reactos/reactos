@@ -1,4 +1,4 @@
-/* $Id: name.c,v 1.5 2002/09/08 10:23:20 chorns Exp $
+/* $Id: name.c,v 1.6 2003/07/10 06:27:13 royce Exp $
  *
  * reactos/ntoskrnl/fs/name.c
  *
@@ -23,6 +23,7 @@ PUCHAR	* FsRtlLegalAnsiCharacterArray = NULL;
  * NOTE
  * 	From Bo Branten's ntifs.h v25.
  *
+ * @unimplemented
  */
 BOOLEAN
 STDCALL
@@ -47,6 +48,7 @@ FsRtlAreNamesEqual (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 VOID
 STDCALL
@@ -72,6 +74,8 @@ FsRtlDissectName (
  *
  * NOTE
  * 	From Bo Branten's ntifs.h v12.
+ *
+ * @unimplemented
  */
 BOOLEAN
 STDCALL
@@ -95,6 +99,8 @@ FsRtlDoesNameContainWildCards (
  *
  * NOTE
  * 	From Bo Branten's ntifs.h v12.
+ *
+ * @unimplemented
  */
 BOOLEAN
 STDCALL

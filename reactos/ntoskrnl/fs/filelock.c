@@ -1,4 +1,4 @@
-/* $Id: filelock.c,v 1.7 2003/01/25 15:52:43 hbirr Exp $
+/* $Id: filelock.c,v 1.8 2003/07/10 06:27:13 royce Exp $
  *
  * reactos/ntoskrnl/fs/filelock.c
  *
@@ -185,6 +185,7 @@ FsRtlpCheckLockForReadOrWriteAccess(
  * NAME							EXPORTED
  *	FsRtlCheckLockForReadAccess
  *
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -216,6 +217,7 @@ FsRtlCheckLockForReadAccess (
  * NAME							EXPORTED
  *	FsRtlCheckLockForWriteAccess
  *
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -250,6 +252,7 @@ FsRtlCheckLockForWriteAccess (
  * NAME							EXPORTED
  *	FsRtlFastCheckLockForRead
  *
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -277,6 +280,7 @@ FsRtlFastCheckLockForRead (
  * NAME							EXPORTED
  *	FsRtlFastCheckLockForWrite
  *
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -400,6 +404,7 @@ FsRtlpFastUnlockAllByKey(
  * NAME							EXPORTED
  *	FsRtlFastUnlockAll
  *
+ * @implemented
  */
 NTSTATUS
 STDCALL
@@ -423,6 +428,7 @@ FsRtlFastUnlockAll /*ByProcess*/ (
  * NAME							EXPORTED
  *	FsRtlFastUnlockAllByKey
  *
+ * @implemented
  */
 NTSTATUS
 STDCALL
@@ -684,6 +690,7 @@ FsRtlpUnlockSingle(
  * NAME							EXPORTED
  *	FsRtlFastUnlockSingle
  *
+ * @implemented
  */
 NTSTATUS
 STDCALL
@@ -715,6 +722,8 @@ FsRtlFastUnlockSingle (
  *	FsRtlpDumpFileLocks
  *
  *	NOTE: used for testing and debugging
+ *
+ * @implemented
  */
 VOID
 FASTCALL
@@ -794,6 +803,7 @@ FsRtlpDumpFileLocks(
  * RETURN VALUE
  *	NULL if no more locks.
  *
+ * @implemented
  */
 PFILE_LOCK_INFO
 STDCALL
@@ -895,6 +905,7 @@ restart:;
  * NOTE
  *  Called when creating/allocating/initializing FCB
  *
+ * @implemented
  */
 VOID
 STDCALL
@@ -917,6 +928,7 @@ FsRtlInitializeFileLock (
  * NAME							EXPORTED
  *	FsRtlPrivateLock
  *
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -1063,6 +1075,7 @@ FsRtlPrivateLock (
  * NAME							EXPORTED
  *	FsRtlProcessFileLock
  *
+ * @implemented
  */
 NTSTATUS
 STDCALL
@@ -1151,6 +1164,7 @@ FsRtlProcessFileLock (
  * NAME							EXPORTED
  *	FsRtlUninitializeFileLock
  *
+ * @implemented
  */
 VOID
 STDCALL
@@ -1234,6 +1248,7 @@ FsRtlUninitializeFileLock (
  * 	Only present in NT 5.0 or later.
  *	FCB FILE_LOCK struct should/is acording to DDK allocated from paged pool!
  *
+ * @implemented
  */
 PFILE_LOCK
 STDCALL
@@ -1262,6 +1277,7 @@ FsRtlAllocateFileLock(
  * 	Only present in NT 5.0 or later.
  *	FCB FILE_LOCK struct should/is acording to DDK allocated from paged pool!
  *
+ * @implemented
  */
 VOID
 STDCALL

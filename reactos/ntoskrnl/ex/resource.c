@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.21 2002/09/08 10:23:19 chorns Exp $
+/* $Id: resource.c,v 1.22 2003/07/10 06:27:13 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -54,6 +54,9 @@
 /* FUNCTIONS *****************************************************************/
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 ExTryToAcquireResourceExclusiveLite (
@@ -70,6 +73,9 @@ ExTryToAcquireResourceExclusiveLite (
   return(ExAcquireResourceExclusiveLite(Resource,FALSE));
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 ExAcquireResourceExclusive (
@@ -80,6 +86,9 @@ ExAcquireResourceExclusive (
    return(ExAcquireResourceExclusiveLite(Resource,Wait));
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 ExAcquireResourceExclusiveLite (
@@ -311,6 +320,9 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
    return(TRUE);
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 ExAcquireResourceSharedLite (
@@ -391,6 +403,9 @@ ExAcquireResourceSharedLite (
    return(TRUE);
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 ExConvertExclusiveToSharedLite (
@@ -441,6 +456,9 @@ ExConvertExclusiveToSharedLite (
    DPRINT("ExConvertExclusiveToSharedLite() finished\n");
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 ExDisableResourceBoostLite (
@@ -450,6 +468,9 @@ ExDisableResourceBoostLite (
    Resource->Flag |= ResourceDisableBoost;
 }
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 ExGetExclusiveWaiterCount (
@@ -459,6 +480,9 @@ ExGetExclusiveWaiterCount (
   return(Resource->NumberOfExclusiveWaiters);
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 ExAcquireSharedStarveExclusive (
@@ -531,6 +555,9 @@ ExAcquireSharedStarveExclusive (
    return(TRUE);
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 ExAcquireSharedWaitForExclusive (
@@ -541,6 +568,9 @@ ExAcquireSharedWaitForExclusive (
   return(ExAcquireResourceSharedLite(Resource,Wait));
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 ExDeleteResource (
@@ -550,6 +580,9 @@ ExDeleteResource (
    return(ExDeleteResourceLite(Resource));
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 ExDeleteResourceLite (
@@ -563,6 +596,9 @@ ExDeleteResourceLite (
    return(STATUS_SUCCESS);;
 }
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 ExGetSharedWaiterCount (
@@ -572,6 +608,9 @@ ExGetSharedWaiterCount (
    return(Resource->NumberOfSharedWaiters);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 ExInitializeResource (
@@ -581,6 +620,9 @@ ExInitializeResource (
    return(ExInitializeResourceLite(Resource));
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 ExInitializeResourceLite (PERESOURCE	Resource)
 {
@@ -602,6 +644,9 @@ ExInitializeResourceLite (PERESOURCE	Resource)
    return(0);
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 ExIsResourceAcquiredExclusiveLite (
@@ -620,6 +665,9 @@ ExIsResourceAcquiredExclusiveLite (
 	  && Resource->OwnerThreads[0].OwnerThread==ExGetCurrentResourceThread());
 }
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 ExIsResourceAcquiredSharedLite (
@@ -657,6 +705,9 @@ ExIsResourceAcquiredSharedLite (
    return(0);
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 ExReinitializeResourceLite (
@@ -681,6 +732,9 @@ ExReinitializeResourceLite (
    Resource->OwnerThreads[1].a.OwnerCount=0;
 }
 
+/*
+ * @implemented
+ */
 VOID
 FASTCALL
 ExReleaseResourceLite (
@@ -691,6 +745,9 @@ ExReleaseResourceLite (
 					ExGetCurrentResourceThread()));
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 ExReleaseResourceForThread (
@@ -701,6 +758,9 @@ ExReleaseResourceForThread (
   return(ExReleaseResourceForThreadLite(Resource,ResourceThreadId));
 }
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 ExReleaseResourceForThreadLite (
@@ -785,6 +845,9 @@ ExReleaseResourceForThreadLite (
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 ExSetResourceOwnerPointer (

@@ -1,4 +1,4 @@
-/* $Id: pin.c,v 1.12 2003/06/07 11:34:36 chorns Exp $
+/* $Id: pin.c,v 1.13 2003/07/10 06:27:13 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,6 +30,9 @@ extern NPAGED_LOOKASIDE_LIST iBcbLookasideList;
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 CcMapData (IN PFILE_OBJECT FileObject,
 	   IN PLARGE_INTEGER FileOffset,
@@ -101,6 +104,9 @@ CcMapData (IN PFILE_OBJECT FileObject,
   return(TRUE);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 CcUnpinData (IN PVOID Bcb)
 {
@@ -110,6 +116,9 @@ CcUnpinData (IN PVOID Bcb)
   ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 CcSetDirtyPinnedData (IN PVOID Bcb,
 		      IN PLARGE_INTEGER Lsn)

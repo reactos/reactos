@@ -1100,6 +1100,9 @@ ExpSplayTreeDefaultCompare(IN PVOID  Key1,
 /*
  * Initializes a splay tree.
  */
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 ExInitializeSplayTree(IN PSPLAY_TREE  Tree,
   IN PKEY_COMPARATOR  Compare,
@@ -1164,6 +1167,9 @@ ExInitializeSplayTree(IN PSPLAY_TREE  Tree,
 /*
  * Release resources used by a splay tree.
  */
+/*
+ * @implemented
+ */
 VOID STDCALL
 ExDeleteSplayTree(IN PSPLAY_TREE  Tree)
 {
@@ -1196,6 +1202,9 @@ ExDeleteSplayTree(IN PSPLAY_TREE  Tree)
 /*
  * Insert a value in a splay tree.
  */
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 ExInsertSplayTree(IN PSPLAY_TREE  Tree,
   IN PVOID  Key,
@@ -1218,6 +1227,9 @@ ExInsertSplayTree(IN PSPLAY_TREE  Tree,
 
 /*
  * Search for a value associated with a given key in a splay tree.
+ */
+/*
+ * @implemented
  */
 BOOLEAN STDCALL
 ExSearchSplayTree(IN PSPLAY_TREE  Tree,
@@ -1248,6 +1260,9 @@ ExSearchSplayTree(IN PSPLAY_TREE  Tree,
 
 /*
  * Remove a value associated with a given key from a splay tree.
+ */
+/*
+ * @implemented
  */
 BOOLEAN STDCALL
 ExRemoveSplayTree(IN PSPLAY_TREE  Tree,
@@ -1280,6 +1295,9 @@ ExRemoveSplayTree(IN PSPLAY_TREE  Tree,
  * Return the weight of the root node in the splay tree.
  * The returned value is the number of nodes in the tree.
  */
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 ExWeightOfSplayTree(IN PSPLAY_TREE  Tree,
   OUT PULONG  Weight)
@@ -1307,6 +1325,9 @@ ExWeightOfSplayTree(IN PSPLAY_TREE  Tree,
  * Returns FALSE, if the traversal was terminated prematurely or
  * TRUE if the callback routine did not request that the traversal
  * be terminated prematurely.
+ */
+/*
+ * @implemented
  */
 BOOLEAN STDCALL
 ExTraverseSplayTree(IN PSPLAY_TREE  Tree,

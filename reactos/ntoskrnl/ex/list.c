@@ -1,4 +1,4 @@
-/* $Id: list.c,v 1.7 2002/09/08 10:23:19 chorns Exp $
+/* $Id: list.c,v 1.8 2003/07/10 06:27:13 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,6 +21,9 @@
 /* FUNCTIONS *************************************************************/
 
 
+/*
+ * @implemented
+ */
 PLIST_ENTRY STDCALL
 ExInterlockedInsertHeadList(PLIST_ENTRY ListHead,
 			    PLIST_ENTRY ListEntry,
@@ -53,6 +56,9 @@ ExInterlockedInsertHeadList(PLIST_ENTRY ListHead,
 }
 
 
+/*
+ * @implemented
+ */
 PLIST_ENTRY STDCALL
 ExInterlockedInsertTailList(PLIST_ENTRY ListHead,
 			    PLIST_ENTRY ListEntry,
@@ -85,6 +91,9 @@ ExInterlockedInsertTailList(PLIST_ENTRY ListHead,
 }
 
 
+/*
+ * @implemented
+ */
 PLIST_ENTRY STDCALL
 ExInterlockedRemoveHeadList(PLIST_ENTRY Head,
 			    PKSPIN_LOCK Lock)
@@ -113,6 +122,9 @@ ExInterlockedRemoveHeadList(PLIST_ENTRY Head,
 }
 
 
+/*
+ * @implemented
+ */
 PLIST_ENTRY
 ExInterlockedRemoveTailList(PLIST_ENTRY Head,
 			    PKSPIN_LOCK Lock)
@@ -141,6 +153,9 @@ ExInterlockedRemoveTailList(PLIST_ENTRY Head,
 }
 
 
+/*
+ * @implemented
+ */
 PSINGLE_LIST_ENTRY FASTCALL
 ExInterlockedPopEntrySList(IN PSLIST_HEADER ListHead,
 			   IN PKSPIN_LOCK Lock)
@@ -167,6 +182,9 @@ ExInterlockedPopEntrySList(IN PSLIST_HEADER ListHead,
 }
 
 
+/*
+ * @implemented
+ */
 PSINGLE_LIST_ENTRY FASTCALL
 ExInterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
 			    IN PSINGLE_LIST_ENTRY ListEntry,
@@ -193,6 +211,9 @@ ExInterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
 }
 
 
+/*
+ * @implemented
+ */
 PSINGLE_LIST_ENTRY STDCALL
 ExInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 			  IN PKSPIN_LOCK Lock)
@@ -214,6 +235,9 @@ ExInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 }
 
 
+/*
+ * @implemented
+ */
 PSINGLE_LIST_ENTRY STDCALL
 ExInterlockedPushEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 			   IN PSINGLE_LIST_ENTRY ListEntry,
@@ -238,6 +262,9 @@ ExInterlockedPushEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 }
 
 
+/*
+ * @implemented
+ */
 PLIST_ENTRY FASTCALL
 ExfInterlockedInsertHeadList(IN PLIST_ENTRY ListHead,
 			     IN PLIST_ENTRY ListEntry,
@@ -270,6 +297,9 @@ ExfInterlockedInsertHeadList(IN PLIST_ENTRY ListHead,
 }
 
 
+/*
+ * @implemented
+ */
 PLIST_ENTRY FASTCALL
 ExfInterlockedInsertTailList(IN PLIST_ENTRY ListHead,
 			     IN PLIST_ENTRY ListEntry,
@@ -302,6 +332,9 @@ ExfInterlockedInsertTailList(IN PLIST_ENTRY ListHead,
 }
 
 
+/*
+ * @implemented
+ */
 PSINGLE_LIST_ENTRY FASTCALL
 ExfInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 			   IN PKSPIN_LOCK Lock)
@@ -323,6 +356,9 @@ ExfInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 }
 
 
+/*
+ * @implemented
+ */
 PSINGLE_LIST_ENTRY FASTCALL
 ExfInterlockedPushEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 			    IN PSINGLE_LIST_ENTRY ListEntry,
@@ -347,6 +383,9 @@ ExfInterlockedPushEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 }
 
 
+/*
+ * @implemented
+ */
 PLIST_ENTRY FASTCALL
 ExfInterlockedRemoveHeadList(IN PLIST_ENTRY Head,
 			     IN PKSPIN_LOCK Lock)

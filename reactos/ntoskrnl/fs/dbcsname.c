@@ -1,4 +1,4 @@
-/* $Id: dbcsname.c,v 1.3 2002/09/08 10:23:20 chorns Exp $
+/* $Id: dbcsname.c,v 1.4 2003/07/10 06:27:13 royce Exp $
  *
  * reactos/ntoskrnl/fs/dbcsname.c
  *
@@ -17,6 +17,7 @@
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 VOID
 STDCALL
@@ -40,6 +41,7 @@ FsRtlDissectDbcs (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 BOOLEAN
 STDCALL
@@ -61,6 +63,7 @@ FsRtlDoesDbcsContainWildCards (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 BOOLEAN
 STDCALL
@@ -83,6 +86,7 @@ FsRtlIsDbcsInExpression (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 BOOLEAN
 STDCALL
@@ -108,6 +112,7 @@ FsRtlIsFatDbcsLegal (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 BOOLEAN
 STDCALL

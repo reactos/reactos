@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fmutex.c,v 1.18 2003/04/26 23:13:29 hyperion Exp $
+/* $Id: fmutex.c,v 1.19 2003/07/10 06:27:13 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/fmutex.c
@@ -35,6 +35,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID FASTCALL
 ExAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
 {
@@ -52,6 +55,9 @@ ExAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
   FastMutex->Owner = KeGetCurrentThread();
 }
 
+/*
+ * @implemented
+ */
 VOID FASTCALL
 ExReleaseFastMutexUnsafe(PFAST_MUTEX FastMutex)
 {

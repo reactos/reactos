@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.4 2002/09/08 10:23:20 chorns Exp $
+/* $Id: mdl.c,v 1.5 2003/07/10 06:27:13 royce Exp $
  *
  * reactos/ntoskrnl/fs/mdl.c
  *
@@ -17,6 +17,7 @@
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 BOOLEAN
 STDCALL
@@ -43,6 +44,7 @@ FsRtlMdlRead (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 BOOLEAN STDCALL
 FsRtlMdlReadComplete(IN PFILE_OBJECT FileObject,
@@ -125,6 +127,8 @@ FsRtlMdlReadComplete(IN PFILE_OBJECT FileObject,
  * NOTE
  * 	From Bo Branten's ntifs.h v13.
  * 	(CcMdlReadCompleteDev declared in internal/cc.h)
+ *
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -150,6 +154,7 @@ FsRtlMdlReadCompleteDev (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 BOOLEAN
 STDCALL
@@ -177,6 +182,7 @@ FsRtlMdlReadDev (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 BOOLEAN
 STDCALL
@@ -200,6 +206,7 @@ FsRtlMdlWriteComplete (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 BOOLEAN
 STDCALL
@@ -224,6 +231,7 @@ FsRtlMdlWriteCompleteDev (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 BOOLEAN
 STDCALL
@@ -250,6 +258,7 @@ FsRtlPrepareMdlWrite (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 BOOLEAN
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.5 2002/09/08 10:23:20 chorns Exp $
+/* $Id: notify.c,v 1.6 2003/07/10 06:27:13 royce Exp $
  *
  * reactos/ntoskrnl/fs/notify.c
  *
@@ -17,6 +17,7 @@
  *
  * RETURN VALUE
  *
+ * @implemented
  */
 VOID
 STDCALL
@@ -55,6 +56,7 @@ FsRtlNotifyChangeDirectory (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 VOID
 STDCALL
@@ -77,6 +79,7 @@ FsRtlNotifyCleanup (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 VOID
 STDCALL
@@ -107,6 +110,7 @@ FsRtlNotifyFullChangeDirectory (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 VOID
 STDCALL
@@ -135,6 +139,7 @@ FsRtlNotifyFullReportChange (
  *
  * RETURN VALUE
  *
+ * @implemented
  */
 VOID
 STDCALL
@@ -170,6 +175,7 @@ FsRtlNotifyInitializeSync (
  *
  * RETURN VALUE
  *
+ * @implemented
  */
 VOID
 STDCALL
@@ -209,6 +215,8 @@ FsRtlNotifyReportChange (
  *
  * RETURN VALUE
  *	None.
+ *
+ * @implemented
  */
 VOID
 STDCALL
@@ -234,6 +242,7 @@ FsRtlNotifyUninitializeSync (
  *
  * RETURN VALUE
  *
+ * @unimplemented
  */
 NTSTATUS
 STDCALL

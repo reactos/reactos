@@ -1,4 +1,4 @@
-/* $Id: zone.c,v 1.4 2002/09/08 10:23:20 chorns Exp $
+/* $Id: zone.c,v 1.5 2003/07/10 06:27:13 royce Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -13,6 +13,9 @@
 
 /* FUNCTIONS ***************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 ExExtendZone (
@@ -42,6 +45,9 @@ ExExtendZone (
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 ExInterlockedExtendZone (
@@ -61,6 +67,9 @@ ExInterlockedExtendZone (
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 ExInitializeZone (

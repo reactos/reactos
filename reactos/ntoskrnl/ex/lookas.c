@@ -1,4 +1,4 @@
-/* $Id: lookas.c,v 1.7 2002/09/30 20:52:23 hbirr Exp $
+/* $Id: lookas.c,v 1.8 2003/07/10 06:27:13 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -133,6 +133,9 @@ ExAllocateFromPagedLookasideList (
   return Entry;
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 ExDeleteNPagedLookasideList (
@@ -156,6 +159,9 @@ ExDeleteNPagedLookasideList (
   KeReleaseSpinLock(&ExpNonPagedLookasideListLock, OldIrql);
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 ExDeletePagedLookasideList (
@@ -186,6 +192,9 @@ ExDeletePagedLookasideList (
   KeReleaseSpinLock(&ExpPagedLookasideListLock, OldIrql);
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 ExFreeToPagedLookasideList (
@@ -208,6 +217,9 @@ ExFreeToPagedLookasideList (
 	}
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 ExInitializeNPagedLookasideList (
@@ -262,6 +274,9 @@ ExInitializeNPagedLookasideList (
     &ExpNonPagedLookasideListLock);
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 ExInitializePagedLookasideList (

@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.17 2003/06/07 11:34:36 chorns Exp $
+/* $Id: copy.c,v 1.18 2003/07/10 06:27:13 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -242,6 +242,9 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
   return(STATUS_SUCCESS);
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 CcCopyRead (IN PFILE_OBJECT FileObject,
 	    IN PLARGE_INTEGER FileOffset,
@@ -348,6 +351,9 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
   return TRUE;
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 CcCopyWrite (IN PFILE_OBJECT FileObject,
 	     IN PLARGE_INTEGER FileOffset,
@@ -453,6 +459,9 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
    return(TRUE);
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 CcZeroData (IN PFILE_OBJECT     FileObject,
 	    IN PLARGE_INTEGER   StartOffset,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.9 2003/06/07 16:16:39 chorns Exp $
+/* $Id: callback.c,v 1.10 2003/07/10 06:27:13 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/callback.c
@@ -41,6 +41,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 ExCreateCallback (
@@ -53,6 +56,9 @@ ExCreateCallback (
 	return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 ExNotifyCallback (
@@ -64,6 +70,9 @@ ExNotifyCallback (
 	return;
 }
 
+/*
+ * @unimplemented
+ */
 PVOID
 STDCALL
 ExRegisterCallback (
@@ -75,6 +84,9 @@ ExRegisterCallback (
 	return NULL;
 }
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 ExUnregisterCallback (
