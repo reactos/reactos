@@ -1951,6 +1951,12 @@ DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
       return;
     }
 
+  /* Set 'Component Information' value similar to my NT4 box */
+  SetComponentInformation(BusKey,
+                          0x0,
+                          0x0,
+                          0xFFFFFFFF);
+
   /* Increment bus number */
   (*BusNumber)++;
 
@@ -1984,7 +1990,7 @@ DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
   FullResourceDescriptor->PartialResourceList.Count = 0;
 
   /* Set 'Configuration Data' value */
-  Error = RegSetValue(SystemKey,
+  Error = RegSetValue(BusKey,
 		      "Configuration Data",
 		      REG_FULL_RESOURCE_DESCRIPTOR,
 		      (PU8) FullResourceDescriptor,
@@ -1997,7 +2003,6 @@ DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
 		(int)Error));
       return;
     }
-
 
   /* Detect ISA/BIOS devices */
   DetectBiosDisks(SystemKey, BusKey);
