@@ -94,6 +94,12 @@ REGEDIT4
 "Start"=dword:00000001
 "Type"=dword:00000001
 
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Fs_Rec]
+"ImagePath"="system32\drivers\fs_rec.sys"
+"Group"="Boot file system"
+"Start"=dword:00000000
+"Type"=dword:00000008
+
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Ide]
 "ImagePath"="system32\drivers\ide.sys"
 "Group"="Primary Disk"

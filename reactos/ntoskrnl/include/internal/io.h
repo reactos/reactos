@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.18 2002/04/10 09:58:02 ekohl Exp $
+/* $Id: io.h,v 1.19 2002/05/15 09:38:35 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -265,16 +265,11 @@ VOID
 IoInitVpbImplementation (VOID);
 
 NTSTATUS
-IoTryToMountStorageDevice(IN PDEVICE_OBJECT DeviceObject,
-			  IN BOOLEAN AllowRawMount);
+IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
+	      IN BOOLEAN AllowRawMount);
 POBJECT IoOpenSymlink(POBJECT SymbolicLink);
 POBJECT IoOpenFileOnDevice(POBJECT SymbolicLink, PWCHAR Name);
 
-PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
-				     PDEVICE_OBJECT DeviceObject,
-				     PKEVENT UserEvent,
-				     PIO_STATUS_BLOCK IoStatusBlock,
-				     PDEVICE_OBJECT DeviceToMount);
 VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost);
 
 NTSTATUS STDCALL

@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.27 2002/04/10 09:57:31 ekohl Exp $
+/* $Id: buildirp.c,v 1.28 2002/05/15 09:39:02 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -69,74 +69,14 @@ NTSTATUS IoPrepareIrpBuffer(PIRP Irp,
    return(STATUS_SUCCESS);
 }
 
-PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
-				     PDEVICE_OBJECT DeviceObject,
-				     PKEVENT UserEvent,
-				     PIO_STATUS_BLOCK IoStatusBlock,
-				     PDEVICE_OBJECT DeviceToMount)
-/*
- * FUNCTION: Allocates and sets up a filesystem control IRP
- * ARGUMENTS:
- *         MinorFunction = Type of filesystem control
- *         DeviceObject = Device object to send the request to
- *         UserEvent = Event used to notify the caller of completion
- *         IoStatusBlock (OUT) = Used to return the status of the operation
- *         DeviceToMount = Device to mount (for the IRP_MN_MOUNT_VOLUME 
- *                         or IRP_MN_VERIFY_VOLUME request)
- */
-{
-   PIRP Irp;
-   PIO_STACK_LOCATION StackPtr;
-   
-   Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
-   if (Irp==NULL)
-     {
-	return(NULL);
-     }
-   
-   Irp->UserIosb = IoStatusBlock;
-   DPRINT("Irp->UserIosb %x\n", Irp->UserIosb);
-   Irp->UserEvent = UserEvent;
-   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-   
-   StackPtr = IoGetNextIrpStackLocation(Irp);
-   StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
-   StackPtr->MinorFunction = MinorFunction;
-   StackPtr->Flags = 0;
-   StackPtr->Control = 0;
-   StackPtr->DeviceObject = DeviceObject;
-   StackPtr->FileObject = NULL;
-   StackPtr->CompletionRoutine = NULL;
-   
-   switch(MinorFunction)
-     {
-      case IRP_MN_USER_FS_REQUEST:
-	break;
-	
-      case IRP_MN_MOUNT_VOLUME:
-	StackPtr->Parameters.MountVolume.Vpb = DeviceToMount->Vpb;
-	StackPtr->Parameters.MountVolume.DeviceObject = DeviceToMount;
-	break;
-	
-      case IRP_MN_VERIFY_VOLUME:
-	StackPtr->Parameters.VerifyVolume.Vpb = DeviceToMount->Vpb;
-	StackPtr->Parameters.VerifyVolume.DeviceObject = DeviceToMount;
-	break;
-	
-      case IRP_MN_LOAD_FILE_SYSTEM:
-	break;
-     }
-   return(Irp);
-}
 
-PIRP
-STDCALL
+PIRP STDCALL
 IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
-				   PDEVICE_OBJECT DeviceObject,
-				   PVOID Buffer,
-				   ULONG Length,
-				   PLARGE_INTEGER StartingOffset,
-				   PIO_STATUS_BLOCK IoStatusBlock)
+			      PDEVICE_OBJECT DeviceObject,
+			      PVOID Buffer,
+			      ULONG Length,
+			      PLARGE_INTEGER StartingOffset,
+			      PIO_STATUS_BLOCK IoStatusBlock)
 /*
  * FUNCTION: Allocates and sets up an IRP to be sent to lower level drivers
  * ARGUMENTS:
@@ -218,15 +158,17 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
    return(Irp);
 }
 
-PIRP STDCALL IoBuildDeviceIoControlRequest(ULONG IoControlCode,
-					  PDEVICE_OBJECT DeviceObject,
-					  PVOID InputBuffer,
-					  ULONG InputBufferLength,
-					  PVOID OutputBuffer,
-					  ULONG OutputBufferLength,
-					  BOOLEAN InternalDeviceIoControl,
-					  PKEVENT Event,
-					  PIO_STATUS_BLOCK IoStatusBlock)
+
+PIRP STDCALL
+IoBuildDeviceIoControlRequest(ULONG IoControlCode,
+			      PDEVICE_OBJECT DeviceObject,
+			      PVOID InputBuffer,
+			      ULONG InputBufferLength,
+			      PVOID OutputBuffer,
+			      ULONG OutputBufferLength,
+			      BOOLEAN InternalDeviceIoControl,
+			      PKEVENT Event,
+			      PIO_STATUS_BLOCK IoStatusBlock)
 /*
  * FUNCTION: Allocates and sets up an IRP to be sent to drivers
  * ARGUMENTS:
@@ -392,8 +334,8 @@ PIRP STDCALL IoBuildDeviceIoControlRequest(ULONG IoControlCode,
    return(Irp);
 }
 
-PIRP
-STDCALL
+
+PIRP STDCALL
 IoBuildSynchronousFsdRequest(ULONG MajorFunction,
 				  PDEVICE_OBJECT DeviceObject,
 				  PVOID Buffer,
@@ -575,6 +517,5 @@ IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
 
    return(Irp);
 }
-
 
 /* EOF */

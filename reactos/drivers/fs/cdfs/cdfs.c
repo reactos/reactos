@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdfs.c,v 1.3 2002/05/14 23:16:23 ekohl Exp $
+/* $Id: cdfs.c,v 1.4 2002/05/15 09:39:54 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -61,7 +61,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   DbgPrint("CDFS 0.0.2\n");
 
   RtlInitUnicodeString(&DeviceName,
-		       L"\\Device\\cdfs");
+		       L"\\Cdfs");
   Status = IoCreateDevice(DriverObject,
 			  sizeof(CDFS_GLOBAL_DATA),
 			  &DeviceName,

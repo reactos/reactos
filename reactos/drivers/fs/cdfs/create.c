@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.3 2002/05/09 15:53:02 ekohl Exp $
+/* $Id: create.c,v 1.4 2002/05/15 09:39:54 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -218,10 +218,10 @@ CdfsCreate(PDEVICE_OBJECT DeviceObject,
   PDEVICE_EXTENSION DeviceExt;
   NTSTATUS Status;
 
-  if (DeviceObject->Size == sizeof(DEVICE_OBJECT))
+  if (DeviceObject == CdfsGlobalData->DeviceObject)
     {
       /* DeviceObject represents FileSystem instead of logical volume */
-      DPRINT("FsdCreate called with file system\n");
+      DPRINT("Opening file system\n");
       Irp->IoStatus.Information = FILE_OPENED;
       Status = STATUS_SUCCESS;
       goto ByeBye;
@@ -234,7 +234,6 @@ CdfsCreate(PDEVICE_OBJECT DeviceObject,
   Status = CdfsCreateFile(DeviceObject,
 			  Irp);
   ExReleaseResourceLite(&DeviceExt->DirResource);
-
 
 ByeBye:
   Irp->IoStatus.Status = Status;

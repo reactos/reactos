@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.56 2002/04/10 09:57:31 ekohl Exp $
+/* $Id: create.c,v 1.57 2002/05/15 09:39:02 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -130,12 +130,12 @@ IopCreateFile(PVOID			ObjectBody,
 	{
 	  if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
 	    {
-	      DPRINT("Trying to mount storage device\n");
-	      Status = IoTryToMountStorageDevice(DeviceObject, FALSE);
+	      DPRINT("Mount the logical volume\n");
+	      Status = IoMountVolume(DeviceObject, FALSE);
 	      DPRINT("Status %x\n", Status);
 	      if (!NT_SUCCESS(Status))
 		{
-		  CPRINT("Failed to mount storage device (status %x)\n",
+		  CPRINT("Failed to mount logical volume (Status %x)\n",
 			 Status);
 		  return(Status);
 		}

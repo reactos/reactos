@@ -27,6 +27,7 @@ copy ntoskrnl\ntoskrnl.sym %ROS_INSTALL%\symbols
 copy hal\halx86\hal.dll %ROS_INSTALL%\system32
 copy services\fs\vfat\vfatfs.sys %ROS_INSTALL%\system32\drivers
 copy services\fs\cdfs\cdfs.sys %ROS_INSTALL%\system32\drivers
+copy services\fs\fs_rec\fs_rec.sys %ROS_INSTALL%\system32\drivers
 copy services\fs\ms\msfs.sys %ROS_INSTALL%\system32\drivers
 copy services\fs\np\npfs.sys %ROS_INSTALL%\system32\drivers
 copy services\bus\acpi\acpi.sys %ROS_INSTALL%\system32\drivers

@@ -4,6 +4,6 @@ system32\drivers\class2.sys
 system32\drivers\disk.sys
 system32\drivers\cdrom.sys
 system32\drivers\vfatfs.sys
-system32\drivers\cdfs.sys
+system32\drivers\fs_rec.sys
 system32\config\system.hiv
 *

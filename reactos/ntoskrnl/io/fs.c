@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.25 2002/04/27 19:22:55 hbirr Exp $
+/* $Id: fs.c,v 1.26 2002/05/15 09:39:02 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -209,53 +209,124 @@ IoShutdownRegisteredFileSystems(VOID)
 }
 
 
-NTSTATUS
-IoAskFileSystemToMountDevice(PDEVICE_OBJECT DeviceObject,
-			     PDEVICE_OBJECT DeviceToMount)
+static NTSTATUS
+IopMountFileSystem(PDEVICE_OBJECT DeviceObject,
+		   PDEVICE_OBJECT DeviceToMount)
 {
-   PIRP Irp;
-   IO_STATUS_BLOCK IoStatusBlock;
-   NTSTATUS Status;
-   PKEVENT Event;   // KEVENT must be allocated from non paged pool, not stack
-   
-   DPRINT("IoAskFileSystemToMountDevice(DeviceObject %x, DeviceToMount %x)\n",
-	  DeviceObject,DeviceToMount);
-   
-   assert_irql(PASSIVE_LEVEL);
-   Event = ExAllocatePool( NonPagedPool, sizeof( KEVENT ) );
-   if( Event == 0 )
-     return STATUS_INSUFFICIENT_RESOURCES;
-   KeInitializeEvent(Event,NotificationEvent,FALSE);
-   Irp = IoBuildFilesystemControlRequest(IRP_MN_MOUNT_VOLUME,
-					 DeviceObject,
-					 Event,
-					 &IoStatusBlock,
-					 DeviceToMount);
-   Status = IoCallDriver(DeviceObject,Irp);
-   if (Status==STATUS_PENDING)
-     {
-	KeWaitForSingleObject(Event,Executive,KernelMode,FALSE,NULL);
-	Status = IoStatusBlock.Status;
-     }
-   ExFreePool( Event );
-   return(Status);
+  IO_STATUS_BLOCK IoStatusBlock;
+  PIO_STACK_LOCATION StackPtr;
+  PKEVENT Event;
+  PIRP Irp;
+  NTSTATUS Status;
+
+  DPRINT("IoAskFileSystemToMountDevice(DeviceObject %x, DeviceToMount %x)\n",
+	 DeviceObject,DeviceToMount);
+
+  assert_irql(PASSIVE_LEVEL);
+  Event = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
+  if (Event == NULL)
+    {
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+  KeInitializeEvent(Event, NotificationEvent, FALSE);
+
+  Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+  if (Irp==NULL)
+    {
+      ExFreePool(Event);
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+  Irp->UserIosb = &IoStatusBlock;
+  DPRINT("Irp->UserIosb %x\n", Irp->UserIosb);
+  Irp->UserEvent = Event;
+  Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+
+  StackPtr = IoGetNextIrpStackLocation(Irp);
+  StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
+  StackPtr->MinorFunction = IRP_MN_MOUNT_VOLUME;
+  StackPtr->Flags = 0;
+  StackPtr->Control = 0;
+  StackPtr->DeviceObject = DeviceObject;
+  StackPtr->FileObject = NULL;
+  StackPtr->CompletionRoutine = NULL;
+
+  StackPtr->Parameters.MountVolume.Vpb = DeviceToMount->Vpb;
+  StackPtr->Parameters.MountVolume.DeviceObject = DeviceToMount;
+
+  Status = IoCallDriver(DeviceObject,Irp);
+  if (Status==STATUS_PENDING)
+    {
+      KeWaitForSingleObject(Event,Executive,KernelMode,FALSE,NULL);
+      Status = IoStatusBlock.Status;
+    }
+
+  ExFreePool(Event);
+
+  return(Status);
+}
+
+
+static NTSTATUS
+IopLoadFileSystem(IN PDEVICE_OBJECT DeviceObject)
+{
+  IO_STATUS_BLOCK IoStatusBlock;
+  PIO_STACK_LOCATION StackPtr;
+  PKEVENT Event;
+  PIRP Irp;
+  NTSTATUS Status;
+
+  DPRINT("IopLoadFileSystem(DeviceObject %x)\n", DeviceObject);
+
+  assert_irql(PASSIVE_LEVEL);
+  Event = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
+  if (Event == NULL)
+    {
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+  KeInitializeEvent(Event, NotificationEvent, FALSE);
+
+  Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+  if (Irp==NULL)
+    {
+      ExFreePool(Event);
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+  Irp->UserIosb = &IoStatusBlock;
+  DPRINT("Irp->UserIosb %x\n", Irp->UserIosb);
+  Irp->UserEvent = Event;
+  Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+
+  StackPtr = IoGetNextIrpStackLocation(Irp);
+  StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
+  StackPtr->MinorFunction = IRP_MN_LOAD_FILE_SYSTEM;
+  StackPtr->Flags = 0;
+  StackPtr->Control = 0;
+  StackPtr->DeviceObject = DeviceObject;
+  StackPtr->FileObject = NULL;
+  StackPtr->CompletionRoutine = NULL;
+
+  Status = IoCallDriver(DeviceObject,Irp);
+  if (Status==STATUS_PENDING)
+    {
+      KeWaitForSingleObject(Event,Executive,KernelMode,FALSE,NULL);
+      Status = IoStatusBlock.Status;
+    }
+
+  ExFreePool(Event);
+
+  return(Status);
 }
 
 
 NTSTATUS
-IoAskFileSystemToLoad(IN PDEVICE_OBJECT DeviceObject)
-{
-  UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-IoTryToMountStorageDevice(IN PDEVICE_OBJECT DeviceObject,
-			  IN BOOLEAN AllowRawMount)
+IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
+	      IN BOOLEAN AllowRawMount)
 /*
- * FUNCTION: Trys to mount a storage device
+ * FUNCTION: Mounts a logical volume
  * ARGUMENTS:
- *         DeviceObject = Device to try and mount
+ *         DeviceObject = Device to mount
  * RETURNS: Status
  */
 {
@@ -267,7 +338,8 @@ IoTryToMountStorageDevice(IN PDEVICE_OBJECT DeviceObject,
 
   assert_irql(PASSIVE_LEVEL);
 
-  DPRINT("IoTryToMountStorageDevice(DeviceObject %x)\n",DeviceObject);
+  DPRINT("IoMountVolume(DeviceObject %x  AllowRawMount %x)\n",
+	 DeviceObject, AllowRawMount);
 
   switch (DeviceObject->DeviceType)
     {
@@ -305,17 +377,21 @@ IoTryToMountStorageDevice(IN PDEVICE_OBJECT DeviceObject,
 	  continue;
 	}
       KeReleaseSpinLock(&FileSystemListLock,oldlvl);
-      Status = IoAskFileSystemToMountDevice(current->DeviceObject,
-					    DeviceObject);
+      Status = IopMountFileSystem(current->DeviceObject,
+				  DeviceObject);
       KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
       switch (Status)
 	{
 	  case STATUS_FS_DRIVER_REQUIRED:
 	    KeReleaseSpinLock(&FileSystemListLock,oldlvl);
-	    (void)IoAskFileSystemToLoad(DeviceObject);
+	    Status = IopLoadFileSystem(current->DeviceObject);
+	    if (!NT_SUCCESS(Status))
+	      {
+	        return(Status);
+	      }
 	    KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
 	    current_entry = FileSystemListHead.Flink;
-	    break;
+	    continue;
 
 	  case STATUS_SUCCESS:
 	    DeviceObject->Vpb->Flags = DeviceObject->Vpb->Flags |
@@ -339,7 +415,7 @@ IoTryToMountStorageDevice(IN PDEVICE_OBJECT DeviceObject,
  * 	IoVerifyVolume
  *
  * DESCRIPTION
- *	Veriyfy the file system type and volume information or mount
+ *	Verify the file system type and volume information or mount
  *	a file system.
  *
  * ARGUMENTS
@@ -357,13 +433,13 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
 	       IN BOOLEAN AllowRawMount)
 {
   IO_STATUS_BLOCK IoStatusBlock;
+  PIO_STACK_LOCATION StackPtr;
   PKEVENT Event;
   PIRP Irp;
   NTSTATUS Status;
 
-  DPRINT1("IoVerifyVolume(DeviceObject %x  AllowRawMount %x)\n",
-	 DeviceObject,
-	 AllowRawMount);
+  DPRINT("IoVerifyVolume(DeviceObject %x  AllowRawMount %x)\n",
+	 DeviceObject, AllowRawMount);
 
   Status = STATUS_SUCCESS;
 
@@ -385,11 +461,29 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
 			NotificationEvent,
 			FALSE);
 
-      Irp = IoBuildFilesystemControlRequest(IRP_MN_VERIFY_VOLUME,
-					    DeviceObject,
-					    Event,
-					    &IoStatusBlock,
-					    NULL); //DeviceToMount);
+      Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+      if (Irp==NULL)
+	{
+	  ExFreePool(Event);
+	  return(STATUS_INSUFFICIENT_RESOURCES);
+	}
+
+      Irp->UserIosb = &IoStatusBlock;
+      DPRINT("Irp->UserIosb %x\n", Irp->UserIosb);
+      Irp->UserEvent = Event;
+      Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+
+      StackPtr = IoGetNextIrpStackLocation(Irp);
+      StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
+      StackPtr->MinorFunction = IRP_MN_VERIFY_VOLUME;
+      StackPtr->Flags = 0;
+      StackPtr->Control = 0;
+      StackPtr->DeviceObject = DeviceObject;
+      StackPtr->FileObject = NULL;
+      StackPtr->CompletionRoutine = NULL;
+
+      StackPtr->Parameters.VerifyVolume.Vpb = DeviceObject->Vpb;
+      StackPtr->Parameters.VerifyVolume.DeviceObject = DeviceObject;
 
       Status = IoCallDriver(DeviceObject,
 			    Irp);
@@ -418,8 +512,8 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
     }
 
   /* Start mount sequence */
-  Status = IoTryToMountStorageDevice(DeviceObject,
-				     AllowRawMount);
+  Status = IoMountVolume(DeviceObject,
+			 AllowRawMount);
 
   KeSetEvent(&DeviceObject->DeviceLock,
 	     IO_NO_INCREMENT,
