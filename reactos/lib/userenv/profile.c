@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: profile.c,v 1.16 2004/11/08 21:23:34 weiden Exp $
+/* $Id: profile.c,v 1.17 2004/11/19 20:02:47 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -351,7 +351,7 @@ GetAllUsersProfileDirectoryW (LPWSTR lpProfileDir,
     }
 
   /* Get profiles path */
-  dwLength = MAX_PATH * sizeof(WCHAR);
+  dwLength = sizeof(szBuffer);
   if (RegQueryValueExW (hKey,
 			L"ProfilesDirectory",
 			NULL,
@@ -375,7 +375,7 @@ GetAllUsersProfileDirectoryW (LPWSTR lpProfileDir,
     }
 
   /* Get 'AllUsersProfile' name */
-  dwLength = MAX_PATH * sizeof(WCHAR);
+  dwLength = sizeof(szBuffer);
   if (RegQueryValueExW (hKey,
 			L"AllUsersProfile",
 			NULL,
@@ -393,7 +393,7 @@ GetAllUsersProfileDirectoryW (LPWSTR lpProfileDir,
   wcscat (szProfilePath, L"\\");
   wcscat (szProfilePath, szBuffer);
 
-  dwLength = wcslen (szProfilePath);
+  dwLength = wcslen (szProfilePath) + 1;
   if (lpProfileDir != NULL)
     {
       if (*lpcchSize < dwLength)
@@ -464,7 +464,7 @@ GetDefaultUserProfileDirectoryW (LPWSTR lpProfileDir,
     }
 
   /* Get profiles path */
-  dwLength = MAX_PATH * sizeof(WCHAR);
+  dwLength = sizeof(szBuffer);
   if (RegQueryValueExW (hKey,
 			L"ProfilesDirectory",
 			NULL,
@@ -488,7 +488,7 @@ GetDefaultUserProfileDirectoryW (LPWSTR lpProfileDir,
     }
 
   /* Get 'DefaultUserProfile' name */
-  dwLength = MAX_PATH * sizeof(WCHAR);
+  dwLength = sizeof(szBuffer);
   if (RegQueryValueExW (hKey,
 			L"DefaultUserProfile",
 			NULL,
@@ -506,7 +506,7 @@ GetDefaultUserProfileDirectoryW (LPWSTR lpProfileDir,
   wcscat (szProfilePath, L"\\");
   wcscat (szProfilePath, szBuffer);
 
-  dwLength = wcslen (szProfilePath);
+  dwLength = wcslen (szProfilePath) + 1;
   if (lpProfileDir != NULL)
     {
       if (*lpcchSize < dwLength)
@@ -577,7 +577,7 @@ GetProfilesDirectoryW (LPWSTR lpProfilesDir,
     }
 
   /* Get profiles path */
-  dwLength = MAX_PATH * sizeof(WCHAR);
+  dwLength = sizeof(szBuffer);
   if (RegQueryValueExW (hKey,
 			L"ProfilesDirectory",
 			NULL,
@@ -601,12 +601,12 @@ GetProfilesDirectoryW (LPWSTR lpProfilesDir,
       return FALSE;
     }
 
-  dwLength = wcslen (szProfilesPath);
+  dwLength = wcslen (szProfilesPath) + 1;
   if (lpProfilesDir != NULL)
     {
-      if (*lpcchSize < dwLength / sizeof(WCHAR))
+      if (*lpcchSize < dwLength)
 	{
-	  *lpcchSize = dwLength / sizeof(WCHAR);
+	  *lpcchSize = dwLength;
 	  SetLastError (ERROR_INSUFFICIENT_BUFFER);
 	  return FALSE;
 	}
@@ -694,7 +694,7 @@ GetUserProfileDirectoryW (HANDLE hToken,
       return FALSE;
     }
 
-  dwLength = MAX_PATH * sizeof(WCHAR);
+  dwLength = sizeof(szRawImagePath);
   if (RegQueryValueExW (hKey,
 			L"ProfileImagePath",
 			NULL,
@@ -722,8 +722,8 @@ GetUserProfileDirectoryW (HANDLE hToken,
 
   DPRINT ("ImagePath: '%S'\n", szImagePath);
 
-  dwLength = wcslen (szImagePath);
-  if (dwLength > *lpcchSize)
+  dwLength = wcslen (szImagePath) + 1;
+  if (*lpcchSize < dwLength)
     {
       DPRINT1 ("Buffer too small\n");
       SetLastError (ERROR_INSUFFICIENT_BUFFER);
