@@ -1,4 +1,4 @@
-/* $Id: npipe.c,v 1.9 2001/11/20 20:35:10 ekohl Exp $
+/* $Id: npipe.c,v 1.10 2002/06/25 18:49:38 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -479,8 +479,53 @@ CallNamedPipeW(LPCWSTR lpNamedPipeName,
 	       LPDWORD lpBytesRead,
 	       DWORD nTimeOut)
 {
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+  HANDLE hPipe = INVALID_HANDLE_VALUE;
+  BOOL bRetry = TRUE;
+  BOOL bError = FALSE;
+  DWORD dwPipeMode;
+
+  while (TRUE)
+    {
+      hPipe = CreateFileW(lpNamedPipeName,
+			  GENERIC_READ | GENERIC_WRITE,
+			  FILE_SHARE_READ | FILE_SHARE_WRITE,
+			  NULL,
+			  OPEN_EXISTING,
+			  FILE_ATTRIBUTE_NORMAL,
+			  NULL);
+      if (hPipe != INVALID_HANDLE_VALUE)
+	break;
+
+      if (bRetry == FALSE)
+	return(FALSE);
+
+      WaitNamedPipeW(lpNamedPipeName,
+		     nTimeOut);
+
+      bRetry = FALSE;
+    }
+
+  dwPipeMode = PIPE_READMODE_MESSAGE;
+  bError = SetNamedPipeHandleState(hPipe,
+				   &dwPipeMode,
+				   NULL,
+				   NULL);
+  if (!bError)
+    {
+      CloseHandle(hPipe);
+      return(FALSE);
+    }
+
+  bError = TransactNamedPipe(hPipe,
+			     lpInBuffer,
+			     nInBufferSize,
+			     lpOutBuffer,
+			     nOutBufferSize,
+			     lpBytesRead,
+			     NULL);
+  CloseHandle(hPipe);
+
+  return(bError);
 }
 
 
@@ -723,8 +768,56 @@ TransactNamedPipe(HANDLE hNamedPipe,
 		  LPDWORD lpBytesRead,
 		  LPOVERLAPPED lpOverlapped)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  IO_STATUS_BLOCK IoStatusBlock;
+  NTSTATUS Status;
+
+  if (lpOverlapped == NULL)
+    {
+      Status = NtFsControlFile(hNamedPipe,
+			       NULL,
+			       NULL,
+			       NULL,
+			       &IoStatusBlock,
+			       FSCTL_PIPE_TRANSCEIVE,
+			       lpInBuffer,
+			       nInBufferSize,
+			       lpOutBuffer,
+			       nOutBufferSize);
+      if (Status == STATUS_PENDING)
+	{
+	  NtWaitForSingleObject(hNamedPipe,
+				0,
+				FALSE);
+	  Status = IoStatusBlock.Status;
+	}
+      if (NT_SUCCESS(Status))
+	{
+	  *lpBytesRead = IoStatusBlock.Information;
+	}
+    }
+  else
+    {
+      lpOverlapped->Internal = STATUS_PENDING;
+
+      Status = NtFsControlFile(hNamedPipe,
+			       lpOverlapped->hEvent,
+			       NULL,
+			       NULL,
+			       (PIO_STATUS_BLOCK)lpOverlapped,
+			       FSCTL_PIPE_TRANSCEIVE,
+			       lpInBuffer,
+			       nInBufferSize,
+			       lpOutBuffer,
+			       nOutBufferSize);
+    }
+
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+
+  return(TRUE);
 }
 
 /* EOF */
