@@ -11,6 +11,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/ke.h>
 
 #define NDEBUG
 #include <internal/debug.h>

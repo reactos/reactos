@@ -1,7 +1,10 @@
-all: genntdll$(EXE_POSTFIX)
+all: ntdll.a
 
-genntdll$(EXE_POSTFIX): genntdll.c
-	$(NATIVE_CC) -g genntdll.c -o genntdll$(EXE_POSTFIX)
+OBJECTS = napi.o
+
+ntdll.a: $(OBJECTS)
+	$(AR) vcsr ntdll.a $(OBJECTS)
+	
 dummy:
 
 include ../../rules.mak

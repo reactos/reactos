@@ -15,7 +15,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#include "minix_fs.h"
+#include "minix.h"
 
 /* FUNCTIONS ***************************************************************/
 
@@ -34,6 +34,7 @@ BOOLEAN MinixReadSector(IN PDEVICE_OBJECT pDeviceObject,
    DPRINT("MinixReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
 	  pDeviceObject,DiskSector,Buffer);
    
+   sectorNumber.HighPart = 0;
     sectorNumber.LowPart = DiskSector * BLOCKSIZE;
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
@@ -80,5 +81,53 @@ BOOLEAN MinixReadSector(IN PDEVICE_OBJECT pDeviceObject,
    RtlCopyMemory(Buffer,mbr,sectorSize);
 
     ExFreePool(mbr);
+    return TRUE;
+}
+
+BOOLEAN MinixWriteSector(IN PDEVICE_OBJECT pDeviceObject,
+			IN ULONG	DiskSector,
+			IN UCHAR*	Buffer)
+{
+    LARGE_INTEGER   sectorNumber;
+    PIRP            irp;
+    IO_STATUS_BLOCK ioStatus;
+    KEVENT          event;
+    NTSTATUS        status;
+    ULONG           sectorSize;
+   
+   DPRINT("MinixWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
+	  pDeviceObject,DiskSector,Buffer);
+   
+    sectorNumber.LowPart = DiskSector * BLOCKSIZE;
+
+    KeInitializeEvent(&event, NotificationEvent, FALSE);
+
+    sectorSize = BLOCKSIZE;
+
+    irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
+                                       pDeviceObject,
+                                       Buffer,
+                                       sectorSize,
+                                       &sectorNumber,
+                                       &event,
+                                       &ioStatus );
+
+
+    status = IoCallDriver(pDeviceObject,
+                          irp);
+
+    if (status == STATUS_PENDING) {
+        KeWaitForSingleObject(&event,
+                              Suspended,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        status = ioStatus.Status;
+    }
+
+    if (!NT_SUCCESS(status)) {
+        return FALSE;
+    }
+
     return TRUE;
 }

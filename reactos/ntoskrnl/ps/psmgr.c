@@ -16,7 +16,6 @@
 
 VOID PsInit(VOID)
 {
-   ObjInitializeHandleTable(NULL);
    PsInitProcessManagment();
    PsInitThreadManagment();
    PsInitIdleThread();

@@ -101,65 +101,6 @@ typedef struct _KDEVICE_QUEUE
    KSPIN_LOCK Lock;
 } KDEVICE_QUEUE, *PKDEVICE_QUEUE;
 
-#if RIGHT_DEFINITION_PROVIDED_ABOVE
-#define _KTHREAD _ETHREAD
-
-typedef struct _KTHREAD
-/*
- * PURPOSE: Describes a thread of execution
- */
-{
-   CSHORT Type;
-   CSHORT Size;
- 
-   /*
-    * PURPOSE: Head of the queue of apcs
-    */
-   LIST_ENTRY ApcQueueHead;
-   
-   /*
-    * PURPOSE: Entry in the linked list of threads
-    */
-   LIST_ENTRY Entry;
-   
-   /*
-    * PURPOSE: Current state of the thread
-    */
-   ULONG State;
-   
-   /*
-    * PURPOSE: Priority modifier of the thread
-    */
-   ULONG Priority;
-   
-   /*
-    * PURPOSE: Pointer to our process
-    */
-   struct _EPROCESS* Process;
-   
-   /*
-    * PURPOSE: Handle of our process
-    */
-   HANDLE ProcessHandle;
-   
-   /*
-    * PURPOSE: Thread affinity mask
-    */
-   ULONG AffinityMask;
-   
-   /*
-    * PURPOSE: Saved thread context
-    */
-   hal_thread_state context;
-   
-   /*
-    * PURPOSE: Timeout for the thread to be woken up
-    */
-   signed long long int wake_time;
-   
-} KTHREAD, *PKTHREAD, *PETHREAD;
-#endif
-
 	      
 typedef struct _KAPC
 {

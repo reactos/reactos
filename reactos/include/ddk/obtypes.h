@@ -96,27 +96,13 @@ typedef struct _OBJECT
  * PURPOSE: Header for every object managed by the object manager
  */
 {   
-   /*
-    * PURPOSE: Name of this entry
-    */
-   UNICODE_STRING name;
-   
-   /*
-    * PURPOSE: Our entry in our parents list of subdirectory
-    */
-   LIST_ENTRY entry;
-
-   /*
-    * PURPOSE: Number of non-handle references to this object
-    */
-   ULONG RefCount;
-   
-   /*
-    * PURPOSE: Number of handles opened to this object
-    */
-   ULONG HandleCount;
-   
-   struct _DIRECTORY_OBJECT* Parent;
+   UNICODE_STRING Name;
+   LIST_ENTRY Entry;
+   ULONG RefCount;   
+   ULONG HandleCount;   
+   BOOLEAN Permanent;   
+   struct _DIRECTORY_OBJECT* Parent;   
+   POBJECT_TYPE ObjectType;
    
    /*
     * PURPOSE: Object type
@@ -141,3 +127,9 @@ typedef struct _OBJECT_ATTRIBUTES {
 	SECURITY_DESCRIPTOR *SecurityDescriptor;       
 	SECURITY_QUALITY_OF_SERVICE *SecurityQualityOfService;  
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
+
+typedef struct _HANDLE_TABLE
+{
+   LIST_ENTRY ListHead;
+   KSPIN_LOCK ListLock;
+} HANDLE_TABLE, *PHANDLE_TABLE;

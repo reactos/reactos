@@ -14,11 +14,15 @@
 
 #include <internal/debug.h>
 
+/* GLOBALS *******************************************************************/
+
+static CONFIGURATION_INFORMATION SystemConfigurationInformation = {0,};
+
 /* FUNCTIONS *****************************************************************/
 
-PCONFIGURATION_INFORMATION IoGetConfigurationInformation()
+PCONFIGURATION_INFORMATION IoGetConfigurationInformation(VOID)
 {
-   UNIMPLEMENTED;
+   return(&SystemConfigurationInformation);
 }
 
 NTSTATUS IoReportResourceUsage(PUNICODE_STRING DriverClassName,

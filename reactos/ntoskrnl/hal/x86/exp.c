@@ -13,16 +13,16 @@
 #include <windows.h>
 #include <internal/ntoskrnl.h>
 #include <internal/ke.h>
-#include <internal/hal/segment.h>
-#include <internal/hal/page.h>
+#include <internal/i386/segment.h>
+#include <internal/mmhal.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *****************************************************************/
 
-typedef unsigned int (exception_hook)(CONTEXT* c, unsigned int exp);
-asmlinkage unsigned int ExHookException(exception_hook fn, UINT exp);
+asmlinkage int page_fault_handler(unsigned int cs,
+                                  unsigned int eip);
 
 extern descriptor idt[256];
 static exception_hook* exception_hooks[256]={NULL,};
@@ -30,43 +30,74 @@ static exception_hook* exception_hooks[256]={NULL,};
 #define _STR(x) #x
 #define STR(x) _STR(x)
 
+extern void interrupt_handler2e(void);
+
 /* FUNCTIONS ****************************************************************/
 
 #define EXCEPTION_HANDLER_WITH_ERROR(x,y)  \
       void exception_handler##y (void);   \
        __asm__("\n\t_exception_handler"##x":\n\t" \
+                "pushl %gs\n\t" \
+                "pushl %fs\n\t" \
+                "pushl %es\n\t" \
                 "pushl %ds\n\t"    \
                 "pushl $"##x"\n\t"                        \
                 "pusha\n\t"                          \
                 "movw $"STR(KERNEL_DS)",%ax\n\t"        \
                 "movw %ax,%ds\n\t"      \
+                "movw %ax,%es\n\t"      \
+                "movw %ax,%fs\n\t"      \
+                "movw %ax,%gs\n\t"      \
                 "call _exception_handler\n\t"        \
                 "popa\n\t" \
-                "addl $8,%esp\n\t"                   \
+                "addl $4,%esp\n\t"                   \
+                "popl %ds\n\t"      \
+                "popl %es\n\t"      \
+                "popl %fs\n\t"      \
+                "popl %gs\n\t"      \
+                "addl $4,%esp\n\t" \
                 "iret\n\t")
 
 #define EXCEPTION_HANDLER_WITHOUT_ERROR(x,y)           \
         asmlinkage void exception_handler##y (void);        \
         __asm__("\n\t_exception_handler"##x":\n\t"           \
                 "pushl $0\n\t"                        \
+                "pushl %gs\n\t" \
+                "pushl %fs\n\t" \
+                "pushl %es\n\t" \
                 "pushl %ds\n\t"   \
                 "pushl $"##x"\n\t"                       \
                 "pusha\n\t"                          \
                 "movw $"STR(KERNEL_DS)",%ax\n\t"        \
                 "movw %ax,%ds\n\t"      \
+                "movw %ax,%es\n\t"      \
+                "movw %ax,%fs\n\t"      \
+                "movw %ax,%gs\n\t"      \
                 "call _exception_handler\n\t"        \
                 "popa\n\t"                           \
-                "addl $8,%esp\n\t"                 \
+                "addl $4,%esp\n\t"                 \
+                "popl %ds\n\t"  \
+                "popl %es\n\t"  \
+                "popl %fs\n\t"  \
+                "popl %gs\n\t"  \
+                "addl $4,%esp\n\t" \
                 "iret\n\t")
 
 asmlinkage void exception_handler_unknown(void);        
         __asm__("\n\t_exception_handler_unknown:\n\t"           
                 "pushl $0\n\t"
+                "pushl %gs\n\t" 
+                "pushl %fs\n\t" 
+                "pushl %es\n\t" 
+                "pushl %ds\n\t"   
                 "pushl %ds\n\t"
                 "pushl $0xff\n\t"                       
                 "pusha\n\t"                          
                 "movw $"STR(KERNEL_DS)",%ax\n\t"        
                 "movw %ax,%ds\n\t"      
+                "movw %ax,%es\n\t"      
+                "movw %ax,%fs\n\t"      
+                "movw %ax,%gs\n\t"      
                 "call _exception_handler\n\t"        
                 "popa\n\t"                           
                 "addl $8,%esp\n\t"                 
@@ -87,14 +118,7 @@ EXCEPTION_HANDLER_WITH_ERROR("10",10);
 EXCEPTION_HANDLER_WITH_ERROR("11",11);
 EXCEPTION_HANDLER_WITH_ERROR("12",12);
 EXCEPTION_HANDLER_WITH_ERROR("13",13);
-
-/*
- * The page fault handler is defined by the memory managment because it is
- * special
- */
-//EXCEPTION_HANDLER_WITH_ERROR("14",14);
-asmlinkage void exception_handler14(void);
-
+EXCEPTION_HANDLER_WITH_ERROR("14",14);
 EXCEPTION_HANDLER_WITH_ERROR("15",15);
 EXCEPTION_HANDLER_WITHOUT_ERROR("16",16);
 
@@ -104,9 +128,12 @@ asmlinkage void exception_handler(unsigned int edi,
                                   unsigned int esi, unsigned int ebp,
                                   unsigned int esp, unsigned int ebx,
                                   unsigned int edx, unsigned int ecx,
-                                  unsigned int eax, 
+                                  unsigned int eax,
                                   unsigned int type,
-                                  unsigned int ds,
+				  unsigned int ds,
+				  unsigned int es,
+                                  unsigned int fs,
+				  unsigned int gs,
                                   unsigned int error_code,
                                   unsigned int eip,
                                   unsigned int cs, unsigned int eflags,
@@ -124,6 +151,19 @@ asmlinkage void exception_handler(unsigned int edi,
    
    __asm__("cli\n\t");
    
+   if (type==14)
+     {
+	if (page_fault_handler(cs&0xffff,eip))
+	  {
+	     return;
+	  }
+     }
+   if (type==1)
+     {
+	DbgPrint("Trap at CS:EIP %x:%x\n",cs&0xffff,eip);
+	return;
+     }
+   
    /*
     * Activate any hook for the exception
     */
@@ -137,11 +177,17 @@ asmlinkage void exception_handler(unsigned int edi,
     */
    printk("Exception: %d(%x)\n",type,error_code&0xffff);
    printk("CS:EIP %x:%x\n",cs&0xffff,eip);
+   printk("DS %x ES %x FS %x GS %x\n",ds&0xffff,es&0xffff,fs&0xffff,
+	  gs&0xfff);
 //   for(;;);
    printk("EAX: %.8x   EBX: %.8x   ECX: %.8x\n",eax,ebx,ecx);
    printk("EDX: %.8x   EBP: %.8x   ESI: %.8x\n",edx,ebp,esi);
    printk("EDI: %.8x   EFLAGS: %.8x ",edi,eflags);
    if ((cs&0xffff)==KERNEL_CS)
+     {
+	printk("ESP %.8x\n",esp);
+     }
+   else
      {
 	printk("ESP %.8x\n",esp);
      }
@@ -179,6 +225,15 @@ asmlinkage void exception_handler(unsigned int edi,
      }
    
    for(;;);
+}
+
+static void set_system_call_gate(unsigned int sel, unsigned int func)
+{
+   DPRINT("sel %x %d\n",sel,sel);
+        idt[sel].a = (((int)func)&0xffff) +
+                           (KERNEL_CS << 16);
+        idt[sel].b = 0xef00 + (((int)func)&0xffff0000);
+   DPRINT("idt[sel].b %x\n",idt[sel].b);
 }
 
 static void set_interrupt_gate(unsigned int sel, unsigned int func)
@@ -232,4 +287,6 @@ asmlinkage void KeInitExceptions(void)
         {
 	   set_interrupt_gate(i,(int)exception_handler_unknown);
         }
+   
+   set_system_call_gate(0x2e,(int)interrupt_handler2e);
 }

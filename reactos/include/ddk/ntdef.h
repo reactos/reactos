@@ -6,5 +6,8 @@ struct _ETHREAD;
 struct _EPROCESS;
 
 #define NTKERNELAPI
+#define NTSYSAPI
+#define NTAPI
+
 
 #endif

@@ -15,7 +15,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL HalIsaProbe()
+BOOL HalIsaProbe(VOID)
 /*
  * FUNCTION: Probes for an ISA bus
  * RETURNS: True if detected
@@ -28,5 +28,5 @@ BOOL HalIsaProbe()
    /*
     * Probe for plug and play support
     */
-   
+   return(TRUE);
 }

@@ -44,6 +44,8 @@ enum
    OBJTYP_DEVICE,
    OBJTYP_THREAD,
    OBJTYP_FILE,
+   OBJTYP_PROCESS,
+   OBJTYP_SECTION,
    OBJTYP_MAX,
 };
 
@@ -51,27 +53,23 @@ BOOL ObAddObjectToNameSpace(PUNICODE_STRING path, POBJECT_HEADER Object);
 
 VOID ObRegisterType(CSHORT id, OBJECT_TYPE* type);
 
-VOID ObInitializeObjectHeader(CSHORT id, PWSTR name,
+VOID ObInitializeObjectHeader(POBJECT_TYPE Type, PWSTR name,
 			      POBJECT_HEADER obj);
-
-/*
- * FUNCTION: Get the size of an object
- * ARGUMENTS:
- *         Type = Object type
- * RETURNS: The size in bytes
- */
-ULONG ObSizeOf(CSHORT Type);
-HANDLE ObAddHandle(PVOID obj);
+HANDLE ObInsertHandle(PKPROCESS Process, PVOID ObjectBody,
+		      ACCESS_MASK GrantedAccess, BOOLEAN Inherit);
 VOID ObDeleteHandle(HANDLE Handle);
 NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
 			 PWSTR* UnparsedSection);
-PVOID ObGetObjectByHandle(HANDLE h);
+
 PVOID ObGenericCreateObject(PHANDLE Handle,
 			    ACCESS_MASK DesiredAccess,
 			    POBJECT_ATTRIBUTES ObjectAttributes,
-			    CSHORT Type);
+			    POBJECT_TYPE Type);
 NTSTATUS ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
 			    PVOID* Object, PWSTR* UnparsedSection);
+VOID ObInitializeHandleTable(PKPROCESS Parent, BOOLEAN Inherit,
+			     PKPROCESS Process);
+VOID ObRemoveEntry(POBJECT_HEADER Header);
 
 /*
  * FUNCTION: Creates an entry within a directory
@@ -92,6 +90,18 @@ extern inline PVOID HEADER_TO_BODY(POBJECT_HEADER obj)
    return(((void *)obj)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER));
 }
 
-#define OBJECT_ALLOC_SIZE(type) (ObSizeOf(type)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER))
+#define OBJECT_ALLOC_SIZE(type) (type->NonpagedPoolCharge+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER))
+
+/*
+ * PURPOSE: Defines a handle
+ */
+typedef struct
+{
+   PVOID ObjectBody;
+   ACCESS_MASK GrantedAccess;
+   BOOLEAN Inherit;
+} HANDLE_REP, *PHANDLE_REP;
+
+PHANDLE_REP ObTranslateHandle(PKPROCESS Process, HANDLE h);
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */

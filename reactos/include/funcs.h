@@ -31,6 +31,8 @@
 #ifndef _GNU_H_WINDOWS32_FUNCTIONS
 #define _GNU_H_WINDOWS32_FUNCTIONS
 
+#ifndef WIN32_LEAN_AND_MEAN
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -7430,6 +7432,9 @@ DWORD STDCALL NetGroupEnum (LPWSTR, DWORD, LPBYTE*, DWORD, LPDWORD,
 DWORD STDCALL NetLocalGroupEnum (LPWSTR, DWORD, LPBYTE*, DWORD, LPDWORD,
 				LPDWORD, LPDWORD);
 
+
+VOID CopyMemory(PVOID Destination, CONST VOID* Source, DWORD Length);
+
 void WINAPI
 SHAddToRecentDocs (UINT, LPCVOID);
 
@@ -7480,5 +7485,7 @@ SHLoadInProc (REFCLSID);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+
+#endif /* WIN32_LEAN_AND_MEAN */
 
 #endif /* _GNU_H_WINDOWS32_FUNCTIONS */

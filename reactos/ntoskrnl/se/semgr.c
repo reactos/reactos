@@ -16,6 +16,133 @@
 
 /* FUNCTIONS ***************************************************************/
 
+NTSTATUS STDCALL NtQueryInformationToken(VOID)
+{
+}
+
+NTSTATUS STDCALL NtQuerySecurityObject(VOID)
+{
+}
+
+NTSTATUS STDCALL NtSetSecurityObject(VOID)
+{
+}
+
+NTSTATUS STDCALL NtSetInformationToken(VOID)
+{
+}
+
+NTSTATUS STDCALL NtPrivilegeCheck(VOID)
+{
+}
+
+NTSTATUS STDCALL NtPrivilegedServiceAuditAlarm(VOID)
+{
+}
+
+NTSTATUS STDCALL NtPrivilegeObjectAuditAlarm(VOID)
+{
+}
+
+NTSTATUS STDCALL NtOpenObjectAuditAlarm(VOID)
+{
+}
+
+NTSTATUS STDCALL NtOpenProcessToken(VOID)
+{
+}
+
+NTSTATUS STDCALL NtOpenThreadToken(VOID)
+{
+}
+
+NTSTATUS STDCALL NtDuplicateToken(VOID)
+{
+}
+
+NTSTATUS STDCALL NtImpersonateClientOfPort(VOID)
+{
+}
+
+NTSTATUS STDCALL NtImpersonateThread(VOID)
+{
+}
+
+NTSTATUS STDCALL NtCreateToken(VOID)
+{
+}
+
+NTSTATUS STDCALL NtDeleteObjectAuditAlarm(VOID)
+{
+}
+
+
+NTSTATUS
+STDCALL
+NtAllocateLocallyUniqueId(
+	OUT PVOID LocallyUniqueId
+	)
+{
+}
+
+NTSTATUS
+STDCALL
+ZwAllocateLocallyUniqueId(
+	OUT PVOID LocallyUniqueId
+	)
+{
+}
+
+NTSTATUS STDCALL NtAccessCheckAndAuditAlarm(VOID)
+{
+}
+
+NTSTATUS STDCALL NtAdjustGroupsToken(VOID)
+{
+}
+
+NTSTATUS STDCALL NtAdjustPrivilegesToken(VOID)
+{
+}
+
+NTSTATUS STDCALL NtAllocateUuids(VOID)
+{
+}
+
+NTSTATUS STDCALL NtCloseObjectAuditAlarm(VOID)
+{
+}
+
+NTSTATUS
+STDCALL
+NtAccessCheck(
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN HANDLE ClientToken,
+	IN ULONG DesiredAcces,
+	IN PGENERIC_MAPPING GenericMapping,
+	OUT PRIVILEGE_SET PrivilegeSet,
+	OUT PULONG ReturnLength,
+	OUT PULONG GrantedAccess,
+	OUT PULONG AccessStatus
+	)
+{
+}
+
+NTSTATUS
+STDCALL
+ZwAccessCheck(
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN HANDLE ClientToken,
+	IN ULONG DesiredAcces,
+	IN PGENERIC_MAPPING GenericMapping,
+	OUT PRIVILEGE_SET PrivilegeSet,
+	OUT PULONG ReturnLength,
+	OUT PULONG GrantedAccess,
+	OUT PULONG AccessStatus
+	)
+{
+}
+
 NTSTATUS RtlCreateSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 				     ULONG Revision)
 {

@@ -31,6 +31,51 @@ static LIST_ENTRY FileSystemListHead = {NULL,NULL};
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS
+STDCALL
+NtFsControlFile(
+	IN HANDLE DeviceHandle,
+	IN HANDLE Event OPTIONAL, 
+	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
+	IN PVOID ApcContext OPTIONAL, 
+	OUT PIO_STATUS_BLOCK IoStatusBlock, 
+	IN ULONG IoControlCode,
+	IN PVOID InputBuffer, 
+	IN ULONG InputBufferSize,
+	OUT PVOID OutputBuffer,
+	IN ULONG OutputBufferSize
+	)
+{
+   return(ZwFsControlFile(DeviceHandle,
+			  Event,
+			  ApcRoutine,
+			  ApcContext,
+			  IoStatusBlock,
+			  IoControlCode,
+			  InputBuffer,
+			  InputBufferSize,
+			  OutputBuffer,
+			  OutputBufferSize));
+}
+
+NTSTATUS
+STDCALL
+ZwFsControlFile(
+	IN HANDLE DeviceHandle,
+	IN HANDLE Event OPTIONAL, 
+	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
+	IN PVOID ApcContext OPTIONAL, 
+	OUT PIO_STATUS_BLOCK IoStatusBlock, 
+	IN ULONG IoControlCode,
+	IN PVOID InputBuffer, 
+	IN ULONG InputBufferSize,
+	OUT PVOID OutputBuffer,
+	IN ULONG OutputBufferSize
+	)
+{
+   UNIMPLEMENTED;
+}
+
 VOID IoInitFileSystemImplementation(VOID)
 {
    InitializeListHead(&FileSystemListHead);
@@ -142,6 +187,7 @@ VOID IoUnregisterFileSystem(PDEVICE_OBJECT DeviceObject)
 	if (current->DeviceObject == DeviceObject)
 	  {
 	     RemoveEntryList(current_entry);
+	     ExFreePool(current);
 	     KeReleaseSpinLock(&FileSystemListLock,oldlvl);
 	     return;
 	  }

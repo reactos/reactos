@@ -19,8 +19,8 @@
 #include <internal/symbol.h>
 #include <internal/module.h>
 
-#include <internal/hal/page.h>
-#include <internal/hal/segment.h>
+#include <internal/mmhal.h>
+#include <internal/i386/segment.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -132,9 +132,11 @@ asmlinkage void _main(boot_param* _bp)
    DbgPrint("Starting ReactOS "KERNEL_VERSION"\n");
    
    start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
-   if (start <= ((int)&end))
+   if (start < ((int)&end))
      {
+        DbgPrint("start %x end %x\n",start,(int)&end);
 	DbgPrint("Kernel booted incorrectly, aborting\n");
+	DbgPrint("Reduce the amount of uninitialized data\n");
 	for(;;);
      }   
    DPRINT("MmGetPhysicalAddress(start) = %x\n",MmGetPhysicalAddress(start));
@@ -187,5 +189,5 @@ asmlinkage void _main(boot_param* _bp)
     * Enter idle loop
     */
    printk("Finished main()\n");
-   for (;;);
+   PsTerminateSystemThread(STATUS_SUCCESS);
 }

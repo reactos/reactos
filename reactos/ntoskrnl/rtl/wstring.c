@@ -17,6 +17,39 @@
 
 /* FUNCTIONS *****************************************************************/
 
+wchar_t * wcsncat(wchar_t * dest,const wchar_t * src,size_t count)
+{
+   int i,j;
+   
+   for (j=0;dest[j]!=0;j++);
+   for (i=0;i<count;i++)
+     {
+	dest[j+i] = src[i];
+	if (src[i] == 0)
+	  {
+	     return(dest);
+	  }
+     }
+   dest[j+i]=0;
+   return(dest);
+}
+
+wchar_t * wcsncpy(wchar_t * dest,const wchar_t *src,size_t count)
+{
+   int i;
+   
+   for (i=0;i<count;i++)
+     {
+	dest[i] = src[i];
+	if (src[i] == 0)
+	  {
+	     return(dest);
+	  }
+     }
+   dest[i]=0;
+   return(dest);
+}
+
 wchar_t* wcsrchr(const wchar_t* str, wchar_t ch)
 {
    unsigned int len = 0;

@@ -5,8 +5,6 @@
 #ifndef __INCLUDE_INTERNAL_MM_H
 #define __INCLUDE_INTERNAL_MM_H
 
-#define PAGE_SYSTEM (0x80000000)
-
 #include <internal/linkage.h>
 #include <internal/ntoskrnl.h>
 #include <windows.h>
@@ -16,25 +14,31 @@
 enum
 {
    MEMORY_AREA_INVALID,
-   MEMORY_AREA_SECTION_VIEW,
+   MEMORY_AREA_SECTION_VIEW_COMMIT,
    MEMORY_AREA_CONTINUOUS_MEMORY,
    MEMORY_AREA_NO_CACHE,
    MEMORY_AREA_IO_MAPPING,
    MEMORY_AREA_SYSTEM,
    MEMORY_AREA_MDL_MAPPING,
+   MEMORY_AREA_COMMIT,
+   MEMORY_AREA_RESERVE,
+   MEMORY_AREA_SECTION_VIEW_RESERVE,
 };
 
 typedef struct
 {
    CSHORT Type;
    CSHORT Size;
-   FILE_OBJECT* File;
-} SECTION_OBJECT;
+   LARGE_INTEGER MaximumSize;
+   ULONG SectionPageProtection;
+   ULONG AllocateAttributes;
+   PFILE_OBJECT FileObject;
+} SECTION_OBJECT, *PSECTION_OBJECT;
 
 typedef struct
 {
    ULONG Type;
-   ULONG BaseAddress;
+   PVOID BaseAddress;
    ULONG Length;
    ULONG Attributes;
    LIST_ENTRY Entry;
@@ -47,22 +51,28 @@ typedef struct
 	     ULONG ViewOffset;
 	  } SectionData;
      } Data;
-} MEMORY_AREA;
+} MEMORY_AREA, *PMEMORY_AREA;
 
 
 NTSTATUS MmCreateMemoryArea(KPROCESSOR_MODE Mode,
+			    PEPROCESS Process,
 			    ULONG Type,
-			    PULONG BaseAddress,
+			    PVOID* BaseAddress,
 			    ULONG Length,
 			    ULONG Attributes,
 			    MEMORY_AREA** Result);
-MEMORY_AREA* MmOpenMemoryAreaByAddress(ULONG Address);
+MEMORY_AREA* MmOpenMemoryAreaByAddress(PEPROCESS Process, PVOID Address);
 NTSTATUS MmInitMemoryAreas(VOID);
 VOID ExInitNonPagedPool(ULONG BaseAddress);
-NTSTATUS MmFreeMemoryArea(PVOID BaseAddress,
+NTSTATUS MmFreeMemoryArea(PEPROCESS Process,
+			  PVOID BaseAddress,
 			  ULONG Length,
 			  BOOLEAN FreePages);
-VOID MmDumpMemoryAreas(VOID);
+VOID MmDumpMemoryAreas(PLIST_ENTRY ListHead);
+NTSTATUS MmLockMemoryArea(MEMORY_AREA* MemoryArea);
+NTSTATUS MmUnlockMemoryArea(MEMORY_AREA* MemoryArea);
+NTSTATUS MmInitSectionImplementation(VOID);
+
 
 /*
  * FUNCTION: Gets a page with a restricted max physical address (i.e.
@@ -95,5 +105,14 @@ asmlinkage void free_page(unsigned int physical_base, unsigned int nr);
 void mark_page_not_writable(unsigned int vaddr);
 
 void VirtualInit(boot_param* bp);
+
+#define MM_LOWEST_USER_ADDRESS (4096)
+
+PMEMORY_AREA MmSplitMemoryArea(PEPROCESS Process,
+			       PMEMORY_AREA OriginalMemoryArea,
+			       PVOID BaseAddress,
+			       ULONG Length,
+			       ULONG NewType,
+			       ULONG NewAttributes);
 
 #endif

@@ -11,6 +11,7 @@
 /* INCLUDE *****************************************************************/
 
 #include <windows.h>
+#include <ddk/ntddk.h>
 
 /* GLOBALS *****************************************************************/
 
@@ -44,3 +45,11 @@ VOID STDCALL SetLastError(DWORD dwErrCode)
         error_code=dwErrCode;
 }
 
+
+NTSTATUS STDCALL NtRaiseHardError(VOID)
+{
+}
+
+NTSTATUS STDCALL NtSetDefaultHardErrorPort(VOID)
+{
+}

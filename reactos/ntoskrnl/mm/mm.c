@@ -17,7 +17,7 @@
 #include <internal/bitops.h>
 #include <internal/string.h>
 
-#include <internal/hal/page.h>
+#include <internal/mmhal.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -115,6 +115,7 @@ void MmInitalize(boot_param* bp)
      {
 	set_page(i,0,0);
      }
+   set_page(0,0,0);
    FLUSH_TLB;
    CHECKPOINT;
    /*
@@ -122,51 +123,3 @@ void MmInitalize(boot_param* bp)
     */
    VirtualInit(bp);
 }
-
-
-
-#if 0
-void* MmMapIoSpace(unsigned int physical_address, unsigned int size,
-                   unsigned int cachable)
-/*
- * FUNCTION: Make a portion of io space accessible to a device driver
- */
-{
-        /*
-         * Determine here if the mapping is legel
-         */
-
-        /*
-         *  Find an address to place the mapping
-         */
-        memory_area_desc* current = memory_area_list_head;
-        memory_area_desc* new_area=ExAllocateMemory(sizeof(memory_area_desc));
-        size = PAGE_ROUND_UP(size);
-
-        while (current!=NULL)
-        {
-                if ( current->next==NULL ||
-                     (current->next->base - (current->base+current->length))
-                     >= size)
-                {
-                        new_area->base=current->base+current->length;
-                        new_area->length=size;
-                        new_area->next=current->next;
-                        current->next=new_area;
-                }
-                current=current->next;
-        }
-
-        /*
-         * Map the desired physical memory
-         */
-         for (int i=0;i<size;i++)
-         {
-                set_page(new_area->base+i,
-                         PA_READ | PA_WRITE | PA_EXECUTE | PA_SYSTEM,
-                         physical_address+i);
-         }
-
-         return((void *)new_area->base);
-}
-#endif

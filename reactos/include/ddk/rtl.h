@@ -319,5 +319,30 @@ RtlFreeHeap(
 	PVOID Address 
 	);
 
+NTSTATUS RtlUnicodeStringToAnsiString(IN OUT PANSI_STRING DestinationString,
+                                      IN PUNICODE_STRING SourceString,
+                                      IN BOOLEAN AllocateDestinationString);
+NTSTATUS RtlUnicodeStringToInteger(IN PUNICODE_STRING String, IN ULONG Base,
+                                   OUT PULONG Value);
+NTSTATUS RtlUpcaseUnicodeString(IN OUT PUNICODE_STRING DestinationString,
+                                IN PUNICODE_STRING SourceString,
+                                IN BOOLEAN AllocateDestinationString);
+VOID RtlUpperString(PSTRING DestinationString, PSTRING SourceString);
+BOOLEAN RtlValidSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor);
+NTSTATUS RtlWriteRegistryValue(ULONG RelativeTo,
+			       PWSTR Path,
+			       PWSTR ValueName,
+			       ULONG ValueType,
+			       PVOID ValueData,
+			       ULONG ValueLength);
+
+
+
+
+
+VOID RtlStoreUlong(PULONG Address,
+		   ULONG Value);
+
+
 
 #endif /* __DDK_RTL_H */

@@ -12,25 +12,95 @@
 
 #include <ddk/ntddk.h>
 #include <internal/string.h>
+#include <internal/i386/segment.h>
+#include <internal/ps.h>
 
+#define NDEBUG
 #include <internal/debug.h>
+
+extern VOID KeApcProlog(VOID);
 
 /* FUNCTIONS *****************************************************************/
 
-VOID KeDrainApcQueue(VOID)
+VOID KeApcProlog2(PKAPC Apc)
 {
-   PLIST_ENTRY current_entry;
-   PKAPC current;
-   PKTHREAD CurrentThread=KeGetCurrentThread();
+   Apc->KernelRoutine(Apc,
+		      &Apc->NormalRoutine,
+		      &Apc->NormalContext,
+		      &Apc->SystemArgument2,
+		      &Apc->SystemArgument2);
+   PsSuspendThread(CONTAINING_RECORD(Apc->Thread,ETHREAD,Tcb));
+}
+
+VOID KeDeliverKernelApc(PKAPC Apc)
+/*
+ * FUNCTION: Simulates an interrupt on the target thread which will transfer
+ * control to a kernel mode routine
+ */
+{
+   PKTHREAD TargetThread;
+   PULONG Stack;
    
-   while ((current_entry=RemoveHeadList(CurrentThread->ApcList))!=NULL)
-     {
-	current = CONTAINING_RECORD(current_entry,KAPC,ApcListEntry);
-	current->NormalRoutine(current->NormalContext,
-			       current->SystemArgument1,
-			       current->SystemArgument2);
-	current_entry = current_entry->Flink;
+   TargetThread = Apc->Thread;
+   
+   if (TargetThread == KeGetCurrentThread())
+     {	
+	Apc->KernelRoutine(Apc,
+			   &Apc->NormalRoutine,
+			   &Apc->NormalContext,
+			   &Apc->SystemArgument2,
+			   &Apc->SystemArgument2);
+	return;
      }
+   
+   if (TargetThread->Context.cs == KERNEL_CS)
+     {
+	TargetThread->Context.esp = TargetThread->Context.esp - 16;
+	Stack = (PULONG)TargetThread->Context.esp;
+	Stack[0] = TargetThread->Context.eax;
+	Stack[1] = TargetThread->Context.eip;
+	Stack[2] = TargetThread->Context.cs;
+	Stack[3] = TargetThread->Context.eflags;
+	TargetThread->Context.eip = KeApcProlog;
+	TargetThread->Context.eax = (ULONG)Apc;
+     }
+   else
+     {
+	TargetThread->Context.esp = TargetThread->Context.esp - 40;
+	Stack = (PULONG)TargetThread->Context.esp;
+	Stack[9] = TargetThread->Context.ss;
+	Stack[8] = TargetThread->Context.esp;
+	Stack[7] = TargetThread->Context.gs;
+	Stack[6] = TargetThread->Context.fs;
+	Stack[5] = TargetThread->Context.ds;
+	Stack[4] = TargetThread->Context.es;
+	Stack[3] = TargetThread->Context.eflags;
+	Stack[2] = TargetThread->Context.cs;
+	Stack[1] = TargetThread->Context.eip;
+	Stack[0] = TargetThread->Context.eax;
+	TargetThread->Context.eip = KeApcProlog;
+	TargetThread->Context.eax = (ULONG)Apc;
+     }
+
+   PsResumeThread(CONTAINING_RECORD(TargetThread,ETHREAD,Tcb));   
+}
+
+void KeInsertQueueApc(struct _KAPC *Apc, PVOID SystemArgument1,
+		      PVOID SystemArgument2, UCHAR Mode)
+{
+   KIRQL oldlvl;
+   
+   DPRINT("KeInsertQueueApc(Apc %x, SystemArgument1 %x, "
+	  "SystemArgument2 %x, Mode %d)\n",Apc,SystemArgument1,
+	  SystemArgument2,Mode);
+   
+   KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
+   
+   if (Apc->KernelRoutine != NULL)
+     {
+	KeDeliverKernelApc(Apc);
+     }
+   KeLowerIrql(oldlvl);
 }
 
 VOID KeInitializeApc(PKAPC Apc,
@@ -55,18 +125,35 @@ VOID KeInitializeApc(PKAPC Apc,
    Apc->ApcMode=Mode;
 }
 
-void KeInsertQueueApc(PKAPC Apc, PVOID SystemArgument1,
-			 PVOID SystemArgument2, UCHAR Mode)
+
+NTSTATUS STDCALL NtQueueApcThread(HANDLE ThreadHandle,
+				  PKNORMAL_ROUTINE ApcRoutine,
+				  PVOID NormalContext,
+				  PVOID SystemArgument1,
+				  PVOID SystemArgument2)
 {
-   Apc->SystemArgument1=SystemArgument1;
-   Apc->SystemArgument2=SystemArgument2;
-   Apc->ApcMode=Mode;
-   if (Apc->Inserted)
-     {
-	return;
-     }
-   Apc->Inserted=TRUE;
-   InsertTailList(Apc->Thread->ApcList,&Apc->ApcListEntry);
-   return;
+   return(NtQueueApcThread(ThreadHandle,
+			   ApcRoutine,
+			   NormalContext,
+			   SystemArgument1,
+			   SystemArgument2));
 }
 
+NTSTATUS STDCALL ZwQueueApcThread(HANDLE ThreadHandle,
+				  PKNORMAL_ROUTINE ApcRoutine,
+				  PVOID NormalContext,
+				  PVOID SystemArgument1,
+				  PVOID SystemArgument2)
+{
+   UNIMPLEMENTED;
+}
+
+NTSTATUS STDCALL NtTestAlert(VOID)
+{
+   return(ZwTestAlert());
+}
+
+NTSTATUS STDCALL ZwTestAlert(VOID)
+{
+   UNIMPLEMENTED;
+}

@@ -53,12 +53,12 @@ static LIST_ENTRY timer_list_head = {NULL,NULL};
 static KSPIN_LOCK timer_list_lock = {0,};
 
 
-#define MICROSECONDS_TO_CALIBRATE  (1000000)
-#define MICROSECONDS_PER_TICK (54945)
-#define MICROSECONDS_IN_A_SECOND (10000000)
-#define TICKS_PER_SECOND_APPROX (18)
 
-static unsigned int loops_per_microsecond = 17;
+#define MICROSECONDS_PER_TICK (54945)
+#define TICKS_TO_CALIBRATE (1)
+#define CALIBRATE_PERIOD (MICROSECONDS_PER_TICK * TICKS_TO_CALIBRATE)
+
+static unsigned int loops_per_microsecond = 100;
 
 /* FUNCTIONS **************************************************************/
 
@@ -68,42 +68,98 @@ void KeCalibrateTimerLoop()
    unsigned int end_tick;
    unsigned int nr_ticks;
    unsigned int i;
+   unsigned int microseconds;
    
-   return;
-   
-   for (i=0;i<5;i++)
+   for (i=0;i<20;i++)
      {
    
 	start_tick = ticks;
-	while (start_tick==ticks);
-	KeStallExecutionProcessor(MICROSECONDS_TO_CALIBRATE);
-	end_tick = ticks;
-	while (end_tick==ticks);
-	
-	nr_ticks = end_tick - start_tick;
-	loops_per_microsecond = (loops_per_microsecond * MICROSECONDS_TO_CALIBRATE)
-                           / (nr_ticks*MICROSECONDS_PER_TICK);
-	
-	DbgPrint("nr_ticks %d\n",nr_ticks);
-	DbgPrint("loops_per_microsecond %d\n",loops_per_microsecond);
-	DbgPrint("Processor speed (approx) %d\n",
-		 (6*loops_per_microsecond)/1000);
-	
-	if (nr_ticks == (TICKS_PER_SECOND_APPROX * MICROSECONDS_TO_CALIBRATE) 
-	    / MICROSECONDS_IN_A_SECOND)
-	  {
-	     DbgPrint("Testing loop\n");
-	     KeStallExecutionProcessor(10000);
-	     DbgPrint("Finished loop\n");
-	     return;
-	  }
+        microseconds = 0;
+        while (start_tick == ticks);
+        while (ticks == (start_tick+TICKS_TO_CALIBRATE))
+        {
+                KeStallExecutionProcessor(1);
+                microseconds++;
+        };
+
+//        DbgPrint("microseconds %d\n",microseconds);
+
+        if (microseconds > (CALIBRATE_PERIOD+1000))
+        {
+           loops_per_microsecond = loops_per_microsecond + 1;
+        }
+        if (microseconds < (CALIBRATE_PERIOD-1000))
+        {
+           loops_per_microsecond = loops_per_microsecond - 1;
+        }
+//        DbgPrint("loops_per_microsecond %d\n",loops_per_microsecond);
      }
+//     for(;;);
 }
+
+
+NTSTATUS STDCALL NtQueryTimerResolution (OUT PULONG MinimumResolution,
+					 OUT PULONG MaximumResolution, 
+					 OUT PULONG ActualResolution)
+{
+   return(ZwQueryTimerResolution(MinimumResolution,MaximumResolution,
+				 ActualResolution));
+}
+
+NTSTATUS STDCALL ZwQueryTimerResolution (OUT PULONG MinimumResolution,
+					 OUT PULONG MaximumResolution, 
+					 OUT PULONG ActualResolution)
+{
+   UNIMPLEMENTED;
+}
+
+NTSTATUS STDCALL NtSetTimerResolution(IN ULONG RequestedResolution,
+				      IN BOOL SetOrUnset,
+				      OUT PULONG ActualResolution)
+{
+   return(ZwSetTimerResolution(RequestedResolution,
+			       SetOrUnset,
+			       ActualResolution));
+}
+
+NTSTATUS STDCALL ZwSetTimerResolution(IN ULONG RequestedResolution,
+				      IN BOOL SetOrUnset,
+				      OUT PULONG ActualResolution)
+{
+   UNIMPLEMENTED;
+}
+
+NTSTATUS STDCALL NtQueryPerformanceCounter(IN PLARGE_INTEGER Counter,
+					   IN PLARGE_INTEGER Frequency)
+{
+   return(ZwQueryPerformanceCounter(Counter,
+				    Frequency));
+}
+
+NTSTATUS STDCALL ZwQueryPerformanceCounter(IN PLARGE_INTEGER Counter,
+					   IN PLARGE_INTEGER Frequency)
+{
+   UNIMPLEMENTED;
+}
+
 
 NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval)
 {
    KeInitializeTimer(&(Thread->TimerBlock));
    KeSetTimer(&(Thread->TimerBlock),*Interval,NULL);
+}
+
+
+NTSTATUS STDCALL NtDelayExecution(IN BOOLEAN Alertable,
+				  IN TIME *Interval)
+{
+   return(ZwDelayExecution(Alertable,Interval));
+}
+
+NTSTATUS STDCALL ZwDelayExecution(IN BOOLEAN Alertable,
+				  IN TIME *Interval)
+{
+   UNIMPLEMENTED;
 }
 
 NTSTATUS KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
@@ -211,6 +267,15 @@ VOID KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
    ULLToLargeInteger(system_time,CurrentTime);
 }
 
+NTSTATUS STDCALL NtGetTickCount(PULONG UpTime)
+{
+   return(ZwGetTickCount(UpTime));
+}
+
+NTSTATUS STDCALL ZwGetTickCount(PULONG UpTime)
+{
+   UNIMPLEMENTED;
+}
 
 BOOLEAN KeSetTimer(PKTIMER Timer, LARGE_INTEGER DueTime, PKDPC Dpc)
 /*

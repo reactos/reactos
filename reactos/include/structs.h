@@ -32,10 +32,338 @@
 #ifndef _GNU_H_WINDOWS32_STRUCTURES
 #define _GNU_H_WINDOWS32_STRUCTURES
 
+typedef struct _LARGE_INTEGER { 
+  DWORD LowPart; 
+  LONG  HighPart; 
+} LARGE_INTEGER, *PLARGE_INTEGER; 
+
+typedef struct _LIST_ENTRY { 
+  struct _LIST_ENTRY *Flink; 
+  struct _LIST_ENTRY *Blink; 
+} LIST_ENTRY, *PLIST_ENTRY; 
+
+typedef DWORD ACCESS_MASK; 
+
+
+typedef struct _SID_IDENTIFIER_AUTHORITY { 
+  BYTE Value[6]; 
+} SID_IDENTIFIER_AUTHORITY, *PSID_IDENTIFIER_AUTHORITY, 
+    *LPSID_IDENTIFIER_AUTHORITY; 
+
+
+typedef struct _ACL {
+  BYTE AclRevision; 
+  BYTE Sbz1; 
+  WORD AclSize; 
+  WORD AceCount; 
+  WORD Sbz2; 
+} ACL, *PACL; 
+
+
+typedef struct _SID {
+   BYTE  Revision;
+   BYTE  SubAuthorityCount;
+   SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
+   DWORD SubAuthority[ANYSIZE_ARRAY];
+} SID, *PSID;
+
+typedef WORD SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
+
+typedef struct _SECURITY_DESCRIPTOR {
+  BYTE  Revision;
+  BYTE  Sbz1;
+  SECURITY_DESCRIPTOR_CONTROL Control;
+  PSID Owner;
+  PSID Group;
+  PACL Sacl;
+  PACL Dacl;
+} SECURITY_DESCRIPTOR, *PSECURITY_DESCRIPTOR;
+
+typedef struct _SECURITY_QUALITY_OF_SERVICE { 
+  DWORD Length; 
+  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel; 
+  /* SECURITY_CONTEXT_TRACKING_MODE ContextTrackingMode; */
+  WINBOOL ContextTrackingMode; 
+  BOOLEAN EffectiveOnly; 
+} SECURITY_QUALITY_OF_SERVICE; 
+
+typedef LARGE_INTEGER LUID, *PLUID;
+
+typedef struct _TOKEN_SOURCE {
+  CHAR SourceName[8]; 
+  LUID SourceIdentifier; 
+} TOKEN_SOURCE; 
+
+typedef struct _PARTITION_INFORMATION { 
+  BYTE PartitionType; 
+  BOOLEAN BootIndicator; 
+  BOOLEAN RecognizedPartition; 
+  BOOLEAN RewritePartition; 
+  LARGE_INTEGER StartingOffset; 
+  LARGE_INTEGER PartitionLength; 
+  LARGE_INTEGER HiddenSectors; 
+} PARTITION_INFORMATION ; 
+
+typedef struct _SINGLE_LIST_ENTRY { 
+  struct _SINGLE_LIST_ENTRY *Next; 
+} SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY; 
+
+ 
+typedef struct _CRITICAL_SECTION_DEBUG {
+    WORD   Type;
+    WORD   CreatorBackTraceIndex;
+    struct _CRITICAL_SECTION *CriticalSection;
+    LIST_ENTRY ProcessLocksList;
+    DWORD EntryCount;
+    DWORD ContentionCount;
+    DWORD Depth;
+    PVOID OwnerBackTrace[ 5 ];
+} CRITICAL_SECTION_DEBUG, *PCRITICAL_SECTION_DEBUG;
+
+typedef struct _CRITICAL_SECTION {
+    PCRITICAL_SECTION_DEBUG DebugInfo;
+    LONG LockCount;
+    LONG RecursionCount;
+    HANDLE OwningThread;
+    HANDLE LockSemaphore;
+    DWORD Reserved;
+} CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
+
+typedef struct _ULARGE_INTEGER { 
+  DWORD LowPart; 
+  DWORD HighPart; 
+} ULARGE_INTEGER, *PULARGE_INTEGER; 
+
+typedef struct _GENERIC_MAPPING { 
+  ACCESS_MASK GenericRead; 
+  ACCESS_MASK GenericWrite; 
+  ACCESS_MASK GenericExecute; 
+  ACCESS_MASK GenericAll; 
+} GENERIC_MAPPING, *PGENERIC_MAPPING; 
+
+typedef struct _LUID_AND_ATTRIBUTES { 
+  LUID  Luid; 
+  DWORD Attributes; 
+} LUID_AND_ATTRIBUTES; 
+
+typedef struct _PRIVILEGE_SET { 
+  DWORD PrivilegeCount; 
+  DWORD Control; 
+  LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY]; 
+} PRIVILEGE_SET, *PPRIVILEGE_SET, *LPPRIVILEGE_SET; 
+
+#ifdef __i386__
+
+typedef struct _FLOATING_SAVE_AREA {
+    DWORD   ControlWord;
+    DWORD   StatusWord;
+    DWORD   TagWord;
+    DWORD   ErrorOffset;
+    DWORD   ErrorSelector;
+    DWORD   DataOffset;
+    DWORD   DataSelector;
+    BYTE    RegisterArea[80];
+    DWORD   Cr0NpxState;
+} FLOATING_SAVE_AREA;
+
+typedef struct _CONTEXT {
+    DWORD ContextFlags;
+
+    DWORD   Dr0;
+    DWORD   Dr1;
+    DWORD   Dr2;
+    DWORD   Dr3;
+    DWORD   Dr6;
+    DWORD   Dr7;
+
+    FLOATING_SAVE_AREA FloatSave;
+
+    DWORD   SegGs;
+    DWORD   SegFs;
+    DWORD   SegEs;
+    DWORD   SegDs;
+
+    DWORD   Edi;
+    DWORD   Esi;
+    DWORD   Ebx;
+    DWORD   Edx;
+    DWORD   Ecx;
+    DWORD   Eax;
+
+    DWORD   Ebp;
+    DWORD   Eip;
+    DWORD   SegCs; 
+    DWORD   EFlags;
+    DWORD   Esp;
+    DWORD   SegSs;
+} CONTEXT, *PCONTEXT, *LPCONTEXT;
+
+#else /* __ppc__ */
+
+typedef struct
+  {
+    /* Floating point registers returned when CONTEXT_FLOATING_POINT is set */
+    double Fpr0;
+    double Fpr1;
+    double Fpr2;
+    double Fpr3;
+    double Fpr4;
+    double Fpr5;
+    double Fpr6;
+    double Fpr7;
+    double Fpr8;
+    double Fpr9;
+    double Fpr10;
+    double Fpr11;
+    double Fpr12;
+    double Fpr13;
+    double Fpr14;
+    double Fpr15;
+    double Fpr16;
+    double Fpr17;
+    double Fpr18;
+    double Fpr19;
+    double Fpr20;
+    double Fpr21;
+    double Fpr22;
+    double Fpr23;
+    double Fpr24;
+    double Fpr25;
+    double Fpr26;
+    double Fpr27;
+    double Fpr28;
+    double Fpr29;
+    double Fpr30;
+    double Fpr31;
+    double Fpscr;
+
+    /* Integer registers returned when CONTEXT_INTEGER is set.  */
+    DWORD Gpr0;
+    DWORD Gpr1;
+    DWORD Gpr2;
+    DWORD Gpr3;
+    DWORD Gpr4;
+    DWORD Gpr5;
+    DWORD Gpr6;
+    DWORD Gpr7;
+    DWORD Gpr8;
+    DWORD Gpr9;
+    DWORD Gpr10;
+    DWORD Gpr11;
+    DWORD Gpr12;
+    DWORD Gpr13;
+    DWORD Gpr14;
+    DWORD Gpr15;
+    DWORD Gpr16;
+    DWORD Gpr17;
+    DWORD Gpr18;
+    DWORD Gpr19;
+    DWORD Gpr20;
+    DWORD Gpr21;
+    DWORD Gpr22;
+    DWORD Gpr23;
+    DWORD Gpr24;
+    DWORD Gpr25;
+    DWORD Gpr26;
+    DWORD Gpr27;
+    DWORD Gpr28;
+    DWORD Gpr29;
+    DWORD Gpr30;
+    DWORD Gpr31;
+
+    DWORD Cr;			/* Condition register */
+    DWORD Xer;			/* Fixed point exception register */
+
+    /* The following are set when CONTEXT_CONTROL is set.  */
+    DWORD Msr;			/* Machine status register */
+    DWORD Iar;			/* Instruction address register */
+    DWORD Lr;			/* Link register */
+    DWORD Ctr;			/* Control register */
+
+    /* Control which context values are returned */
+    DWORD ContextFlags;
+    DWORD Fill[3];
+
+    /* Registers returned if CONTEXT_DEBUG_REGISTERS is set.  */
+    DWORD Dr0;                          /* Breakpoint Register 1 */
+    DWORD Dr1;                          /* Breakpoint Register 2 */
+    DWORD Dr2;                          /* Breakpoint Register 3 */
+    DWORD Dr3;                          /* Breakpoint Register 4 */
+    DWORD Dr4;                          /* Breakpoint Register 5 */
+    DWORD Dr5;                          /* Breakpoint Register 6 */
+    DWORD Dr6;                          /* Debug Status Register */
+    DWORD Dr7;                          /* Debug Control Register */
+} CONTEXT, *PCONTEXT, *LPCONTEXT;
+#endif
+
+
+typedef struct value_ent {
+    LPTSTR   ve_valuename;
+    DWORD ve_valuelen;
+    DWORD ve_valueptr;
+    DWORD ve_type;
+} VALENT, *PVALENT;
+
+
+typedef struct _EXCEPTION_RECORD { 
+  DWORD ExceptionCode; 
+  DWORD ExceptionFlags; 
+  struct _EXCEPTION_RECORD *ExceptionRecord; 
+  PVOID ExceptionAddress; 
+  DWORD NumberParameters; 
+  DWORD ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS]; 
+} EXCEPTION_RECORD, *PEXCEPTION_RECORD, *LPEXCEPTION_RECORD; 
+
+typedef struct _DRIVE_LAYOUT_INFORMATION { 
+  DWORD  PartitionCount; 
+  DWORD  Signature; 
+  PARTITION_INFORMATION  PartitionEntry[1]; 
+} DRIVE_LAYOUT_INFORMATION; 
+
+typedef struct _KEY_EVENT_RECORD { 
+  WINBOOL bKeyDown;             
+  WORD wRepeatCount;         
+  WORD wVirtualKeyCode;      
+  WORD wVirtualScanCode; 
+
+  char AsciiChar;
+  char pad;
+#if 0
+  union { 
+    WCHAR UnicodeChar; 
+    CHAR  AsciiChar; 
+  } uChar;  
+#endif
+  DWORD dwControlKeyState;   
+} KEY_EVENT_RECORD PACKED;
+
+typedef struct _COORD {
+  SHORT X;    
+  SHORT Y;    
+} COORD; 
+
+typedef struct _MOUSE_EVENT_RECORD { 
+  COORD dwMousePosition; 
+  DWORD dwButtonState; 
+  DWORD dwControlKeyState; 
+  DWORD dwEventFlags; 
+} MOUSE_EVENT_RECORD; 
+
+typedef struct _DISK_GEOMETRY { 
+  LARGE_INTEGER  Cylinders; 
+  MEDIA_TYPE  MediaType; 
+  DWORD  TracksPerCylinder; 
+  DWORD  SectorsPerTrack; 
+  DWORD  BytesPerSector; 
+} DISK_GEOMETRY ; 
+
+
+#ifndef WIN32_LEAN_AND_MEAN
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
+   
 typedef struct _ABC {
   int     abcA; 
   UINT    abcB; 
@@ -60,7 +388,6 @@ typedef struct _ACE_HEADER {
   WORD AceSize; 
 } ACE_HEADER; 
 
-typedef DWORD ACCESS_MASK; 
 typedef ACCESS_MASK REGSAM;
 
 typedef struct _ACCESS_ALLOWED_ACE {
@@ -80,14 +407,6 @@ typedef struct tagACCESSTIMEOUT {
   DWORD dwFlags; 
   DWORD iTimeOutMSec; 
 } ACCESSTIMEOUT; 
-
-typedef struct _ACL {
-  BYTE AclRevision; 
-  BYTE Sbz1; 
-  WORD AclSize; 
-  WORD AceCount; 
-  WORD Sbz2; 
-} ACL, *PACL; 
 
 typedef struct _ACL_REVISION_INFORMATION {    
   DWORD   AclRevision; 
@@ -629,11 +948,6 @@ typedef struct _CONSOLE_CURSOR_INFO {
   WINBOOL   bVisible; 
 } CONSOLE_CURSOR_INFO, *PCONSOLE_CURSOR_INFO; 
 
-typedef struct _COORD {
-  SHORT X;    
-  SHORT Y;    
-} COORD; 
-
 typedef struct _SMALL_RECT { 
   SHORT Left;      
   SHORT Top;       
@@ -648,183 +962,6 @@ typedef struct _CONSOLE_SCREEN_BUFFER_INFO {
   SMALL_RECT srWindow; 
   COORD      dwMaximumWindowSize; 
 } CONSOLE_SCREEN_BUFFER_INFO, *PCONSOLE_SCREEN_BUFFER_INFO ; 
-
-#ifdef __i386__
-
-typedef struct _FLOATING_SAVE_AREA {
-    DWORD   ControlWord;
-    DWORD   StatusWord;
-    DWORD   TagWord;
-    DWORD   ErrorOffset;
-    DWORD   ErrorSelector;
-    DWORD   DataOffset;
-    DWORD   DataSelector;
-    BYTE    RegisterArea[80];
-    DWORD   Cr0NpxState;
-} FLOATING_SAVE_AREA;
-
-typedef struct _CONTEXT {
-    DWORD ContextFlags;
-
-    DWORD   Dr0;
-    DWORD   Dr1;
-    DWORD   Dr2;
-    DWORD   Dr3;
-    DWORD   Dr6;
-    DWORD   Dr7;
-
-    FLOATING_SAVE_AREA FloatSave;
-
-    DWORD   SegGs;
-    DWORD   SegFs;
-    DWORD   SegEs;
-    DWORD   SegDs;
-
-    DWORD   Edi;
-    DWORD   Esi;
-    DWORD   Ebx;
-    DWORD   Edx;
-    DWORD   Ecx;
-    DWORD   Eax;
-
-    DWORD   Ebp;
-    DWORD   Eip;
-    DWORD   SegCs; 
-    DWORD   EFlags;
-    DWORD   Esp;
-    DWORD   SegSs;
-} CONTEXT, *PCONTEXT, *LPCONTEXT;
-
-#else /* __ppc__ */
-
-typedef struct
-  {
-    /* Floating point registers returned when CONTEXT_FLOATING_POINT is set */
-    double Fpr0;
-    double Fpr1;
-    double Fpr2;
-    double Fpr3;
-    double Fpr4;
-    double Fpr5;
-    double Fpr6;
-    double Fpr7;
-    double Fpr8;
-    double Fpr9;
-    double Fpr10;
-    double Fpr11;
-    double Fpr12;
-    double Fpr13;
-    double Fpr14;
-    double Fpr15;
-    double Fpr16;
-    double Fpr17;
-    double Fpr18;
-    double Fpr19;
-    double Fpr20;
-    double Fpr21;
-    double Fpr22;
-    double Fpr23;
-    double Fpr24;
-    double Fpr25;
-    double Fpr26;
-    double Fpr27;
-    double Fpr28;
-    double Fpr29;
-    double Fpr30;
-    double Fpr31;
-    double Fpscr;
-
-    /* Integer registers returned when CONTEXT_INTEGER is set.  */
-    DWORD Gpr0;
-    DWORD Gpr1;
-    DWORD Gpr2;
-    DWORD Gpr3;
-    DWORD Gpr4;
-    DWORD Gpr5;
-    DWORD Gpr6;
-    DWORD Gpr7;
-    DWORD Gpr8;
-    DWORD Gpr9;
-    DWORD Gpr10;
-    DWORD Gpr11;
-    DWORD Gpr12;
-    DWORD Gpr13;
-    DWORD Gpr14;
-    DWORD Gpr15;
-    DWORD Gpr16;
-    DWORD Gpr17;
-    DWORD Gpr18;
-    DWORD Gpr19;
-    DWORD Gpr20;
-    DWORD Gpr21;
-    DWORD Gpr22;
-    DWORD Gpr23;
-    DWORD Gpr24;
-    DWORD Gpr25;
-    DWORD Gpr26;
-    DWORD Gpr27;
-    DWORD Gpr28;
-    DWORD Gpr29;
-    DWORD Gpr30;
-    DWORD Gpr31;
-
-    DWORD Cr;			/* Condition register */
-    DWORD Xer;			/* Fixed point exception register */
-
-    /* The following are set when CONTEXT_CONTROL is set.  */
-    DWORD Msr;			/* Machine status register */
-    DWORD Iar;			/* Instruction address register */
-    DWORD Lr;			/* Link register */
-    DWORD Ctr;			/* Control register */
-
-    /* Control which context values are returned */
-    DWORD ContextFlags;
-    DWORD Fill[3];
-
-    /* Registers returned if CONTEXT_DEBUG_REGISTERS is set.  */
-    DWORD Dr0;                          /* Breakpoint Register 1 */
-    DWORD Dr1;                          /* Breakpoint Register 2 */
-    DWORD Dr2;                          /* Breakpoint Register 3 */
-    DWORD Dr3;                          /* Breakpoint Register 4 */
-    DWORD Dr4;                          /* Breakpoint Register 5 */
-    DWORD Dr5;                          /* Breakpoint Register 6 */
-    DWORD Dr6;                          /* Debug Status Register */
-    DWORD Dr7;                          /* Debug Control Register */
-} CONTEXT, *PCONTEXT, *LPCONTEXT;
-#endif
-
-typedef struct _LIST_ENTRY { 
-  struct _LIST_ENTRY *Flink; 
-  struct _LIST_ENTRY *Blink; 
-} LIST_ENTRY, *PLIST_ENTRY; 
- 
-typedef struct _CRITICAL_SECTION_DEBUG {
-    WORD   Type;
-    WORD   CreatorBackTraceIndex;
-    struct _CRITICAL_SECTION *CriticalSection;
-    LIST_ENTRY ProcessLocksList;
-    DWORD EntryCount;
-    DWORD ContentionCount;
-    DWORD Depth;
-    PVOID OwnerBackTrace[ 5 ];
-} CRITICAL_SECTION_DEBUG, *PCRITICAL_SECTION_DEBUG;
-
-typedef struct _CRITICAL_SECTION {
-    PCRITICAL_SECTION_DEBUG DebugInfo;
-    LONG LockCount;
-    LONG RecursionCount;
-    HANDLE OwningThread;
-    HANDLE LockSemaphore;
-    DWORD Reserved;
-} CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
-
-typedef struct _SECURITY_QUALITY_OF_SERVICE { 
-  DWORD Length; 
-  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel; 
-  /* SECURITY_CONTEXT_TRACKING_MODE ContextTrackingMode; */
-  WINBOOL ContextTrackingMode; 
-  BOOLEAN EffectiveOnly; 
-} SECURITY_QUALITY_OF_SERVICE; 
 
 typedef struct tagCONVCONTEXT { 
   UINT  cb; 
@@ -1009,15 +1146,6 @@ typedef struct {
   BYTE rgb[1]; 
 } DDEUP; 
  
-typedef struct _EXCEPTION_RECORD { 
-  DWORD ExceptionCode; 
-  DWORD ExceptionFlags; 
-  struct _EXCEPTION_RECORD *ExceptionRecord; 
-  PVOID ExceptionAddress; 
-  DWORD NumberParameters; 
-  DWORD ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS]; 
-} EXCEPTION_RECORD, *PEXCEPTION_RECORD, *LPEXCEPTION_RECORD; 
- 
 typedef struct _EXCEPTION_DEBUG_INFO {
   EXCEPTION_RECORD ExceptionRecord; 
   DWORD dwFirstChance; 
@@ -1176,20 +1304,7 @@ typedef struct tagDIBSECTION {
   HANDLE              dshSection; 
   DWORD               dsOffset; 
 } DIBSECTION; 
- 
-typedef struct _LARGE_INTEGER { 
-  DWORD LowPart; 
-  LONG  HighPart; 
-} LARGE_INTEGER, *PLARGE_INTEGER; 
- 
-typedef struct _DISK_GEOMETRY { 
-  LARGE_INTEGER  Cylinders; 
-  MEDIA_TYPE  MediaType; 
-  DWORD  TracksPerCylinder; 
-  DWORD  SectorsPerTrack; 
-  DWORD  BytesPerSector; 
-} DISK_GEOMETRY ; 
- 
+   
 typedef struct _DISK_PERFORMANCE { 
   LARGE_INTEGER BytesRead; 
   LARGE_INTEGER BytesWritten; 
@@ -1274,21 +1389,7 @@ typedef struct {
   UINT uiLengthDrawn;  
 } DRAWTEXTPARAMS, *LPDRAWTEXTPARAMS; 
  
-typedef struct _PARTITION_INFORMATION { 
-  BYTE PartitionType; 
-  BOOLEAN BootIndicator; 
-  BOOLEAN RecognizedPartition; 
-  BOOLEAN RewritePartition; 
-  LARGE_INTEGER StartingOffset; 
-  LARGE_INTEGER PartitionLength; 
-  LARGE_INTEGER HiddenSectors; 
-} PARTITION_INFORMATION ; 
  
-typedef struct _DRIVE_LAYOUT_INFORMATION { 
-  DWORD  PartitionCount; 
-  DWORD  Signature; 
-  PARTITION_INFORMATION  PartitionEntry[1]; 
-} DRIVE_LAYOUT_INFORMATION; 
  
 typedef struct _DRIVER_INFO_1 { 
   LPTSTR pName; 
@@ -2255,12 +2356,6 @@ typedef struct tagGCP_RESULTS {
   UINT  nMaxFit;
 } GCP_RESULTS, *LPGCP_RESULTS;
  
-typedef struct _GENERIC_MAPPING { 
-  ACCESS_MASK GenericRead; 
-  ACCESS_MASK GenericWrite; 
-  ACCESS_MASK GenericExecute; 
-  ACCESS_MASK GenericAll; 
-} GENERIC_MAPPING, *PGENERIC_MAPPING; 
  
 typedef struct _GLYPHMETRICS { 
   UINT  gmBlackBoxX; 
@@ -2366,30 +2461,6 @@ typedef struct _IMAGEINFO {
   RECT    rcImage;  
 } IMAGEINFO; 
  
-typedef struct _KEY_EVENT_RECORD { 
-  WINBOOL bKeyDown;             
-  WORD wRepeatCount;         
-  WORD wVirtualKeyCode;      
-  WORD wVirtualScanCode; 
-
-  char AsciiChar;
-  char pad;
-#if 0
-  union { 
-    WCHAR UnicodeChar; 
-    CHAR  AsciiChar; 
-  } uChar;  
-#endif
-  DWORD dwControlKeyState;   
-} KEY_EVENT_RECORD PACKED;
- 
-typedef struct _MOUSE_EVENT_RECORD { 
-  COORD dwMousePosition; 
-  DWORD dwButtonState; 
-  DWORD dwControlKeyState; 
-  DWORD dwEventFlags; 
-} MOUSE_EVENT_RECORD; 
- 
 typedef struct _WINDOW_BUFFER_SIZE_RECORD { 
   COORD dwSize; 
 } WINDOW_BUFFER_SIZE_RECORD; 
@@ -2439,29 +2510,6 @@ typedef struct _JOB_INFO_1 {
   SYSTEMTIME Submitted; 
 } JOB_INFO_1; 
  
-typedef struct _SID_IDENTIFIER_AUTHORITY { 
-  BYTE Value[6]; 
-} SID_IDENTIFIER_AUTHORITY, *PSID_IDENTIFIER_AUTHORITY, 
-    *LPSID_IDENTIFIER_AUTHORITY; 
- 
-typedef struct _SID {
-   BYTE  Revision;
-   BYTE  SubAuthorityCount;
-   SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
-   DWORD SubAuthority[ANYSIZE_ARRAY];
-} SID, *PSID;
-
-typedef WORD SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
-
-typedef struct _SECURITY_DESCRIPTOR {
-  BYTE  Revision;
-  BYTE  Sbz1;
-  SECURITY_DESCRIPTOR_CONTROL Control;
-  PSID Owner;
-  PSID Group;
-  PACL Sacl;
-  PACL Dacl;
-} SECURITY_DESCRIPTOR, *PSECURITY_DESCRIPTOR;
  
 typedef struct _JOB_INFO_2 { 
   DWORD      JobId; 
@@ -2541,12 +2589,7 @@ typedef struct _LOCALGROUP_MEMBERS_INFO_3 {
  
 typedef long FXPT16DOT16,  * LPFXPT16DOT16; 
 
-typedef LARGE_INTEGER LUID, *PLUID;
 
-typedef struct _LUID_AND_ATTRIBUTES { 
-  LUID  Luid; 
-  DWORD Attributes; 
-} LUID_AND_ATTRIBUTES; 
  
 typedef LUID_AND_ATTRIBUTES LUID_AND_ATTRIBUTES_ARRAY[ANYSIZE_ARRAY];
 typedef LUID_AND_ATTRIBUTES_ARRAY *PLUID_AND_ATTRIBUTES_ARRAY;
@@ -3472,11 +3515,6 @@ typedef struct _PRINTPROCESSOR_INFO_1 {
   LPTSTR pName; 
 } PRINTPROCESSOR_INFO_1; 
  
-typedef struct _PRIVILEGE_SET { 
-  DWORD PrivilegeCount; 
-  DWORD Control; 
-  LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY]; 
-} PRIVILEGE_SET, *PPRIVILEGE_SET, *LPPRIVILEGE_SET; 
  
 typedef struct _PROCESS_HEAP_ENTRY {  
   PVOID lpData; 
@@ -3839,9 +3877,6 @@ typedef struct _SID_AND_ATTRIBUTES {
 typedef SID_AND_ATTRIBUTES SID_AND_ATTRIBUTES_ARRAY[ANYSIZE_ARRAY];
 typedef SID_AND_ATTRIBUTES_ARRAY *PSID_AND_ATTRIBUTES_ARRAY;
 
-typedef struct _SINGLE_LIST_ENTRY { 
-  struct _SINGLE_LIST_ENTRY *Next; 
-} SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY; 
  
 typedef struct tagSOUNDSENTRY {  
   UINT cbSize; 
@@ -4083,11 +4118,6 @@ typedef struct tagTOGGLEKEYS {
   DWORD cbSize; 
   DWORD dwFlags; 
 } TOGGLEKEYS; 
-
-typedef struct _TOKEN_SOURCE {
-  CHAR SourceName[8]; 
-  LUID SourceIdentifier; 
-} TOKEN_SOURCE; 
  
 typedef struct _TOKEN_CONTROL { 
   LUID TokenId; 
@@ -4216,12 +4246,7 @@ typedef struct {
   UINT nSec;   
   UINT nInc;   
 } UDACCEL; 
- 
-typedef struct _ULARGE_INTEGER { 
-  DWORD LowPart; 
-  DWORD HighPart; 
-} ULARGE_INTEGER, *PULARGE_INTEGER; 
- 
+  
 typedef struct _UNIVERSAL_NAME_INFO { 
   LPTSTR  lpUniversalName; 
 } UNIVERSAL_NAME_INFO; 
@@ -4232,13 +4257,6 @@ typedef struct tagUSEROBJECTFLAGS {
   DWORD dwFlags; 
 } USEROBJECTFLAGS; 
  
-typedef struct value_ent {
-    LPTSTR   ve_valuename;
-    DWORD ve_valuelen;
-    DWORD ve_valueptr;
-    DWORD ve_type;
-} VALENT, *PVALENT;
-
 typedef struct _VERIFY_INFORMATION { 
   LARGE_INTEGER  StartingOffset; 
   DWORD  Length; 
@@ -4554,6 +4572,8 @@ typedef struct
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+
+#endif /* WIN32_LEAN_AND_MEAN */
 
 #endif /* _GNU_H_WINDOWS32_STRUCTURES */
 

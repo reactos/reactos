@@ -32,6 +32,224 @@
 #ifndef _GNU_H_WINDOWS32_DEFINES
 #define _GNU_H_WINDOWS32_DEFINES
 
+#define WINBASEAPI
+
+#define EXCEPTION_MAXIMUM_PARAMETERS	(15)
+#define ANYSIZE_ARRAY	(1)
+
+#define STATUS_WAIT_0     		(0x00000000L)
+#define STATUS_ABANDONED_WAIT_0 	(0x00000080L)
+#define STATUS_USER_APC    		(0x000000C0L)
+#define STATUS_TIMEOUT     		(0x00000102L)
+#define STATUS_PENDING     		(0x00000103L)
+#define STATUS_GUARD_PAGE_VIOLATION  	(0x80000001L)
+#define STATUS_DATATYPE_MISALIGNMENT  	(0x80000002L)
+#define STATUS_BREAKPOINT    		(0x80000003L)
+#define STATUS_SINGLE_STEP    		(0x80000004L)
+#define STATUS_IN_PAGE_ERROR    	(0xC0000006L)
+#define STATUS_INVALID_HANDLE    	(0xC0000008L)
+#define STATUS_ILLEGAL_INSTRUCTION  	(0xC000001DL)
+#define STATUS_NONCONTINUABLE_EXCEPTION (0xC0000025L)
+#define STATUS_INVALID_DISPOSITION  	(0xC0000026L)
+#define STATUS_ARRAY_BOUNDS_EXCEEDED  	(0xC000008CL)
+#define STATUS_FLOAT_DENORMAL_OPERAND 	(0xC000008DL)
+#define STATUS_FLOAT_DIVIDE_BY_ZERO  	(0xC000008EL)
+#define STATUS_FLOAT_INEXACT_RESULT  	(0xC000008FL)
+#define STATUS_FLOAT_INVALID_OPERATION 	(0xC0000090L)
+#define STATUS_FLOAT_OVERFLOW   	(0xC0000091L)
+#define STATUS_FLOAT_STACK_CHECK	(0xC0000092L)
+#define STATUS_FLOAT_UNDERFLOW   	(0xC0000093L)
+#define STATUS_INTEGER_DIVIDE_BY_ZERO 	(0xC0000094L)
+#define STATUS_INTEGER_OVERFLOW   	(0xC0000095L)
+#define STATUS_PRIVILEGED_INSTRUCTION 	(0xC0000096L)
+#define STATUS_STACK_OVERFLOW   	(0xC00000FDL)
+#define STATUS_CONTROL_C_EXIT   	(0xC000013AL)
+
+#define SEC_COMMIT	(134217728)
+#define SEC_IMAGE	(16777216)
+#define SEC_NOCACHE	(268435456)
+#define SEC_RESERVE	(67108864)
+#define PAGE_READONLY	(2)
+#define PAGE_READWRITE	(4)
+#define PAGE_WRITECOPY	(8)
+#define PAGE_EXECUTE	(16)
+#define PAGE_EXECUTE_READ	(32)
+#define PAGE_EXECUTE_READWRITE	(64)
+#define PAGE_EXECUTE_WRITECOPY	(128)
+#define PAGE_GUARD	(256)
+#define PAGE_NOACCESS	(1)
+#define PAGE_NOCACHE	(512)
+#define MEM_COMMIT	(4096)
+#define MEM_FREE	(65536)
+#define MEM_RESERVE	(8192)
+#define MEM_IMAGE	(16777216)
+#define MEM_MAPPED	(262144)
+#define MEM_PRIVATE	(131072)
+#define MEM_DECOMMIT	(16384)
+#define MEM_RELEASE	(32768)
+#define MEM_TOP_DOWN	(1048576)
+#define EXCEPTION_GUARD_PAGE	(0x80000001L)
+#define SECTION_EXTEND_SIZE	(0x10)
+#define SECTION_MAP_READ	(0x4)
+#define SECTION_MAP_WRITE	(0x2)
+#define SECTION_QUERY	(0x1)
+#define SECTION_ALL_ACCESS	(0xf001fL)
+
+
+/* DuplicateHandle, MapViewOfFile */
+#define DUPLICATE_CLOSE_SOURCE	(1)
+#define DUPLICATE_SAME_ACCESS	(2)
+#define FILE_MAP_ALL_ACCESS	(0xf001fL)
+#define FILE_MAP_READ	(4)
+#define FILE_MAP_WRITE	(2)
+#define FILE_MAP_COPY	(1)
+#define MUTEX_ALL_ACCESS	(0x1f0001L)
+#define MUTEX_MODIFY_STATE	(1)
+#define SYNCHRONIZE	(0x100000L)
+#define SEMAPHORE_ALL_ACCESS	(0x1f0003L)
+#define SEMAPHORE_MODIFY_STATE	(2)
+#define EVENT_ALL_ACCESS	(0x1f0003L)
+#define EVENT_MODIFY_STATE	(2)
+#define KEY_ALL_ACCESS	(0xf003fL)
+#define KEY_CREATE_LINK	(32)
+#define KEY_CREATE_SUB_KEY	(4)
+#define KEY_ENUMERATE_SUB_KEYS	(8)
+#define KEY_EXECUTE	(0x20019L)
+#define KEY_NOTIFY	(16)
+#define KEY_QUERY_VALUE	(1)
+#define KEY_READ	(0x20019L)
+#define KEY_SET_VALUE	(2)
+#define KEY_WRITE	(0x20006L)
+#define PROCESS_ALL_ACCESS	(0x1f0fffL)
+#define PROCESS_CREATE_PROCESS	(128)
+#define PROCESS_CREATE_THREAD	(2)
+#define PROCESS_DUP_HANDLE	(64)
+#define PROCESS_QUERY_INFORMATION	(1024)
+#define PROCESS_SET_INFORMATION	(512)
+#define PROCESS_TERMINATE	(1)
+#define PROCESS_VM_OPERATION	(8)
+#define PROCESS_VM_READ	(16)
+#define PROCESS_VM_WRITE	(32)
+#define THREAD_ALL_ACCESS	(0x1f03ffL)
+#define THREAD_DIRECT_IMPERSONATION	(512)
+#define THREAD_GET_CONTEXT	(8)
+#define THREAD_IMPERSONATE	(256)
+#define THREAD_QUERY_INFORMATION	(64)
+#define THREAD_SET_CONTEXT	(16)
+#define THREAD_SET_INFORMATION	(32)
+#define THREAD_SET_THREAD_TOKEN	(128)
+#define THREAD_SUSPEND_RESUME	(2)
+#define THREAD_TERMINATE	(1)
+
+#define PACKED __attribute__((packed))
+
+#define THREAD_PRIORITY_ABOVE_NORMAL	(1)
+#define THREAD_PRIORITY_BELOW_NORMAL	(-1)
+#define THREAD_PRIORITY_HIGHEST	(2)
+#define THREAD_PRIORITY_IDLE	(-15)
+#define THREAD_PRIORITY_LOWEST	(-2)
+#define THREAD_PRIORITY_NORMAL	(0)
+#define THREAD_PRIORITY_TIME_CRITICAL	(15)
+#define THREAD_PRIORITY_ERROR_RETURN	(2147483647)
+
+/* CreateFile, GetFileAttributes, SetFileAttributes */
+#define GENERIC_READ	(0x80000000L)
+#define GENERIC_WRITE	(0x40000000L)
+#define FILE_READ_DATA            ( 0x0001 )    /* file & pipe */
+#define FILE_LIST_DIRECTORY       ( 0x0001 )    /* directory */
+
+#define FILE_WRITE_DATA           ( 0x0002 )    /* file & pipe */
+#define FILE_ADD_FILE             ( 0x0002 )    /* directory */
+
+#define FILE_APPEND_DATA          ( 0x0004 )    /* file */
+#define FILE_ADD_SUBDIRECTORY     ( 0x0004 )    /* directory */
+#define FILE_CREATE_PIPE_INSTANCE ( 0x0004 )    /* named pipe */
+
+#define FILE_READ_EA              ( 0x0008 )    /* file & directory */
+#define FILE_READ_PROPERTIES      FILE_READ_EA
+
+#define FILE_WRITE_EA             ( 0x0010 )    /* file & directory */
+#define FILE_WRITE_PROPERTIES     FILE_WRITE_EA
+
+#define FILE_EXECUTE              ( 0x0020 )    /* file */
+#define FILE_TRAVERSE             ( 0x0020 )    /* directory */
+
+#define FILE_DELETE_CHILD         ( 0x0040 )    /* directory */
+
+#define FILE_READ_ATTRIBUTES      ( 0x0080 )    /* all */
+
+#define FILE_WRITE_ATTRIBUTES     ( 0x0100 )    /* all */
+
+#define FILE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x1FF)
+
+#define FILE_GENERIC_READ         (STANDARD_RIGHTS_READ     |\
+                                   FILE_READ_DATA           |\
+                                   FILE_READ_ATTRIBUTES     |\
+                                   FILE_READ_EA             |\
+                                   SYNCHRONIZE)
+
+
+#define FILE_GENERIC_WRITE        (STANDARD_RIGHTS_WRITE    |\
+                                   FILE_WRITE_DATA          |\
+                                   FILE_WRITE_ATTRIBUTES    |\
+                                   FILE_WRITE_EA            |\
+                                   FILE_APPEND_DATA         |\
+                                   SYNCHRONIZE)
+
+
+#define FILE_GENERIC_EXECUTE      (STANDARD_RIGHTS_EXECUTE  |\
+                                   FILE_READ_ATTRIBUTES     |\
+                                   FILE_EXECUTE             |\
+                                   SYNCHRONIZE)
+
+#define FILE_SHARE_DELETE	(4)
+#define FILE_SHARE_READ	(1)
+#define FILE_SHARE_WRITE	(2)
+#define CONSOLE_TEXTMODE_BUFFER	(1)
+#define CREATE_NEW	(1)
+#define CREATE_ALWAYS	(2)
+#define OPEN_EXISTING	(3)
+#define OPEN_ALWAYS	(4)
+#define TRUNCATE_EXISTING	(5)
+#define FILE_ATTRIBUTE_ARCHIVE	(32)
+#define FILE_ATTRIBUTE_COMPRESSED	(2048)
+#define FILE_ATTRIBUTE_NORMAL	(128)
+#define FILE_ATTRIBUTE_DIRECTORY	(16)
+#define FILE_ATTRIBUTE_HIDDEN	(2)
+#define FILE_ATTRIBUTE_READONLY	(1)
+#define FILE_ATTRIBUTE_SYSTEM	(4)
+#define FILE_ATTRIBUTE_TEMPORARY	(256)
+#define FILE_FLAG_WRITE_THROUGH	(2147483648)
+#define FILE_FLAG_OVERLAPPED	(1073741824)
+#define FILE_FLAG_NO_BUFFERING	(536870912)
+#define FILE_FLAG_RANDOM_ACCESS	(268435456)
+#define FILE_FLAG_SEQUENTIAL_SCAN	(134217728)
+#define FILE_FLAG_DELETE_ON_CLOSE	(67108864)
+#define FILE_FLAG_BACKUP_SEMANTICS	(33554432)
+#define FILE_FLAG_POSIX_SEMANTICS	(16777216)
+#define SECURITY_ANONYMOUS	(0)
+#define SECURITY_IDENTIFICATION	(65536)
+#define SECURITY_IMPERSONATION	(131072)
+#define SECURITY_DELEGATION	(196608)
+#define SECURITY_CONTEXT_TRACKING	(262144)
+#define SECURITY_EFFECTIVE_ONLY	(524288)
+#define SECURITY_SQOS_PRESENT	(1048576)
+
+/* Standard rights */
+#define STANDARD_RIGHTS_REQUIRED	(0xf0000L)
+#define STANDARD_RIGHTS_WRITE	(0x20000L)
+#define STANDARD_RIGHTS_READ	(0x20000L)
+#define STANDARD_RIGHTS_EXECUTE	(0x20000L)
+#define STANDARD_RIGHTS_ALL	(0x1f0000L)
+#define SPECIFIC_RIGHTS_ALL	(0xffffL)
+
+/* ACCESS_MASK */
+#define MAXIMUM_ALLOWED	(0x2000000L)
+#define GENERIC_ALL	(0x10000000L)
+
+
+#ifndef WIN32_LEAN_AND_MEAN
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -45,7 +263,6 @@ extern "C" {
 #define SECURITY_DYNAMIC_TRACKING	(1)
 #define MAX_DEFAULTCHAR	(2)
 #define MAX_LEADBYTES	(12)
-#define EXCEPTION_MAXIMUM_PARAMETERS	(15)
 #define CCHDEVICENAME	(32)
 #define CCHFORMNAME	(32)
 #define MENU_TEXT_LEN	(40)
@@ -54,7 +271,6 @@ extern "C" {
 #define NETBIOS_NAME_LEN	(16)
 #define OFS_MAXPATHNAME	(128)
 #define MAX_TAB_STOPS	(32)
-#define ANYSIZE_ARRAY	(1)
 #define RAS_MaxCallbackNumber	(128)
 #define RAS_MaxDeviceName	(128)
 #define RAS_MaxDeviceType	(16)
@@ -382,119 +598,7 @@ extern "C" {
 #define DIB_PAL_COLORS	(1)
 #define DIB_RGB_COLORS	(0)
 
-/* CreateFile, GetFileAttributes, SetFileAttributes */
-#define GENERIC_READ	(0x80000000L)
-#define GENERIC_WRITE	(0x40000000L)
-#define FILE_READ_DATA            ( 0x0001 )    /* file & pipe */
-#define FILE_LIST_DIRECTORY       ( 0x0001 )    /* directory */
-
-#define FILE_WRITE_DATA           ( 0x0002 )    /* file & pipe */
-#define FILE_ADD_FILE             ( 0x0002 )    /* directory */
-
-#define FILE_APPEND_DATA          ( 0x0004 )    /* file */
-#define FILE_ADD_SUBDIRECTORY     ( 0x0004 )    /* directory */
-#define FILE_CREATE_PIPE_INSTANCE ( 0x0004 )    /* named pipe */
-
-#define FILE_READ_EA              ( 0x0008 )    /* file & directory */
-#define FILE_READ_PROPERTIES      FILE_READ_EA
-
-#define FILE_WRITE_EA             ( 0x0010 )    /* file & directory */
-#define FILE_WRITE_PROPERTIES     FILE_WRITE_EA
-
-#define FILE_EXECUTE              ( 0x0020 )    /* file */
-#define FILE_TRAVERSE             ( 0x0020 )    /* directory */
-
-#define FILE_DELETE_CHILD         ( 0x0040 )    /* directory */
-
-#define FILE_READ_ATTRIBUTES      ( 0x0080 )    /* all */
-
-#define FILE_WRITE_ATTRIBUTES     ( 0x0100 )    /* all */
-
-#define FILE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x1FF)
-
-#define FILE_GENERIC_READ         (STANDARD_RIGHTS_READ     |\
-                                   FILE_READ_DATA           |\
-                                   FILE_READ_ATTRIBUTES     |\
-                                   FILE_READ_EA             |\
-                                   SYNCHRONIZE)
-
-
-#define FILE_GENERIC_WRITE        (STANDARD_RIGHTS_WRITE    |\
-                                   FILE_WRITE_DATA          |\
-                                   FILE_WRITE_ATTRIBUTES    |\
-                                   FILE_WRITE_EA            |\
-                                   FILE_APPEND_DATA         |\
-                                   SYNCHRONIZE)
-
-
-#define FILE_GENERIC_EXECUTE      (STANDARD_RIGHTS_EXECUTE  |\
-                                   FILE_READ_ATTRIBUTES     |\
-                                   FILE_EXECUTE             |\
-                                   SYNCHRONIZE)
-
-#define FILE_SHARE_DELETE	(4)
-#define FILE_SHARE_READ	(1)
-#define FILE_SHARE_WRITE	(2)
-#define CONSOLE_TEXTMODE_BUFFER	(1)
-#define CREATE_NEW	(1)
-#define CREATE_ALWAYS	(2)
-#define OPEN_EXISTING	(3)
-#define OPEN_ALWAYS	(4)
-#define TRUNCATE_EXISTING	(5)
-#define FILE_ATTRIBUTE_ARCHIVE	(32)
-#define FILE_ATTRIBUTE_COMPRESSED	(2048)
-#define FILE_ATTRIBUTE_NORMAL	(128)
-#define FILE_ATTRIBUTE_DIRECTORY	(16)
-#define FILE_ATTRIBUTE_HIDDEN	(2)
-#define FILE_ATTRIBUTE_READONLY	(1)
-#define FILE_ATTRIBUTE_SYSTEM	(4)
-#define FILE_ATTRIBUTE_TEMPORARY	(256)
-#define FILE_FLAG_WRITE_THROUGH	(2147483648)
-#define FILE_FLAG_OVERLAPPED	(1073741824)
-#define FILE_FLAG_NO_BUFFERING	(536870912)
-#define FILE_FLAG_RANDOM_ACCESS	(268435456)
-#define FILE_FLAG_SEQUENTIAL_SCAN	(134217728)
-#define FILE_FLAG_DELETE_ON_CLOSE	(67108864)
-#define FILE_FLAG_BACKUP_SEMANTICS	(33554432)
-#define FILE_FLAG_POSIX_SEMANTICS	(16777216)
-#define SECURITY_ANONYMOUS	(0)
-#define SECURITY_IDENTIFICATION	(65536)
-#define SECURITY_IMPERSONATION	(131072)
-#define SECURITY_DELEGATION	(196608)
-#define SECURITY_CONTEXT_TRACKING	(262144)
-#define SECURITY_EFFECTIVE_ONLY	(524288)
-#define SECURITY_SQOS_PRESENT	(1048576)
-
 /* CreateFileMapping, VirtualAlloc, VirtualFree, VirtualProtect */
-#define SEC_COMMIT	(134217728)
-#define SEC_IMAGE	(16777216)
-#define SEC_NOCACHE	(268435456)
-#define SEC_RESERVE	(67108864)
-#define PAGE_READONLY	(2)
-#define PAGE_READWRITE	(4)
-#define PAGE_WRITECOPY	(8)
-#define PAGE_EXECUTE	(16)
-#define PAGE_EXECUTE_READ	(32)
-#define PAGE_EXECUTE_READWRITE	(64)
-#define PAGE_EXECUTE_WRITECOPY	(128)
-#define PAGE_GUARD	(256)
-#define PAGE_NOACCESS	(1)
-#define PAGE_NOCACHE	(512)
-#define MEM_COMMIT	(4096)
-#define MEM_FREE	(65536)
-#define MEM_RESERVE	(8192)
-#define MEM_IMAGE	(16777216)
-#define MEM_MAPPED	(262144)
-#define MEM_PRIVATE	(131072)
-#define MEM_DECOMMIT	(16384)
-#define MEM_RELEASE	(32768)
-#define MEM_TOP_DOWN	(1048576)
-#define EXCEPTION_GUARD_PAGE	(0x80000001L)
-#define SECTION_EXTEND_SIZE	(0x10)
-#define SECTION_MAP_READ	(0x4)
-#define SECTION_MAP_WRITE	(0x2)
-#define SECTION_QUERY	(0x1)
-#define SECTION_ALL_ACCESS	(0xf001fL)
 
 /* CreateFont */
 #define FW_DONTCARE	(0)
@@ -1051,50 +1155,6 @@ extern "C" {
 #define DT_WORDBREAK	(16)
 #define DT_INTERNAL	(4096)
 
-/* DuplicateHandle, MapViewOfFile */
-#define DUPLICATE_CLOSE_SOURCE	(1)
-#define DUPLICATE_SAME_ACCESS	(2)
-#define FILE_MAP_ALL_ACCESS	(0xf001fL)
-#define FILE_MAP_READ	(4)
-#define FILE_MAP_WRITE	(2)
-#define FILE_MAP_COPY	(1)
-#define MUTEX_ALL_ACCESS	(0x1f0001L)
-#define MUTEX_MODIFY_STATE	(1)
-#define SYNCHRONIZE	(0x100000L)
-#define SEMAPHORE_ALL_ACCESS	(0x1f0003L)
-#define SEMAPHORE_MODIFY_STATE	(2)
-#define EVENT_ALL_ACCESS	(0x1f0003L)
-#define EVENT_MODIFY_STATE	(2)
-#define KEY_ALL_ACCESS	(0xf003fL)
-#define KEY_CREATE_LINK	(32)
-#define KEY_CREATE_SUB_KEY	(4)
-#define KEY_ENUMERATE_SUB_KEYS	(8)
-#define KEY_EXECUTE	(0x20019L)
-#define KEY_NOTIFY	(16)
-#define KEY_QUERY_VALUE	(1)
-#define KEY_READ	(0x20019L)
-#define KEY_SET_VALUE	(2)
-#define KEY_WRITE	(0x20006L)
-#define PROCESS_ALL_ACCESS	(0x1f0fffL)
-#define PROCESS_CREATE_PROCESS	(128)
-#define PROCESS_CREATE_THREAD	(2)
-#define PROCESS_DUP_HANDLE	(64)
-#define PROCESS_QUERY_INFORMATION	(1024)
-#define PROCESS_SET_INFORMATION	(512)
-#define PROCESS_TERMINATE	(1)
-#define PROCESS_VM_OPERATION	(8)
-#define PROCESS_VM_READ	(16)
-#define PROCESS_VM_WRITE	(32)
-#define THREAD_ALL_ACCESS	(0x1f03ffL)
-#define THREAD_DIRECT_IMPERSONATION	(512)
-#define THREAD_GET_CONTEXT	(8)
-#define THREAD_IMPERSONATE	(256)
-#define THREAD_QUERY_INFORMATION	(64)
-#define THREAD_SET_CONTEXT	(16)
-#define THREAD_SET_INFORMATION	(32)
-#define THREAD_SET_THREAD_TOKEN	(128)
-#define THREAD_SUSPEND_RESUME	(2)
-#define THREAD_TERMINATE	(1)
 
 /* EditWordBreakProc */
 #define WB_ISDELIMITER	(2)
@@ -1902,14 +1962,6 @@ extern "C" {
 #define VTA_CENTER	(6)
 
 /* GetThreadPriority */
-#define THREAD_PRIORITY_ABOVE_NORMAL	(1)
-#define THREAD_PRIORITY_BELOW_NORMAL	(-1)
-#define THREAD_PRIORITY_HIGHEST	(2)
-#define THREAD_PRIORITY_IDLE	(-15)
-#define THREAD_PRIORITY_LOWEST	(-2)
-#define THREAD_PRIORITY_NORMAL	(0)
-#define THREAD_PRIORITY_TIME_CRITICAL	(15)
-#define THREAD_PRIORITY_ERROR_RETURN	(2147483647)
 #define TLS_MINIMUM_AVAILABLE	(64)
 
 /* GetTimeFormat */
@@ -4110,17 +4162,6 @@ extern "C" {
 #define TAPE_DRIVE_WRITE_SETMARKS	(-2130706432)
 #define TAPE_DRIVE_WRITE_SHORT_FMKS	(-2080374784)
 
-/* Standard rights */
-#define STANDARD_RIGHTS_REQUIRED	(0xf0000L)
-#define STANDARD_RIGHTS_WRITE	(0x20000L)
-#define STANDARD_RIGHTS_READ	(0x20000L)
-#define STANDARD_RIGHTS_EXECUTE	(0x20000L)
-#define STANDARD_RIGHTS_ALL	(0x1f0000L)
-#define SPECIFIC_RIGHTS_ALL	(0xffffL)
-
-/* ACCESS_MASK */
-#define MAXIMUM_ALLOWED	(0x2000000L)
-#define GENERIC_ALL	(0x10000000L)
 
 /* SID */
 #define SECURITY_NULL_RID	(0L)
@@ -5052,33 +5093,6 @@ extern "C" {
 
 #define POLYFILL_LAST		(2)
 
-#define STATUS_WAIT_0     		(0x00000000L)
-#define STATUS_ABANDONED_WAIT_0 	(0x00000080L)
-#define STATUS_USER_APC    		(0x000000C0L)
-#define STATUS_TIMEOUT     		(0x00000102L)
-#define STATUS_PENDING     		(0x00000103L)
-#define STATUS_GUARD_PAGE_VIOLATION  	(0x80000001L)
-#define STATUS_DATATYPE_MISALIGNMENT  	(0x80000002L)
-#define STATUS_BREAKPOINT    		(0x80000003L)
-#define STATUS_SINGLE_STEP    		(0x80000004L)
-#define STATUS_IN_PAGE_ERROR    	(0xC0000006L)
-#define STATUS_INVALID_HANDLE    	(0xC0000008L)
-#define STATUS_ILLEGAL_INSTRUCTION  	(0xC000001DL)
-#define STATUS_NONCONTINUABLE_EXCEPTION (0xC0000025L)
-#define STATUS_INVALID_DISPOSITION  	(0xC0000026L)
-#define STATUS_ARRAY_BOUNDS_EXCEEDED  	(0xC000008CL)
-#define STATUS_FLOAT_DENORMAL_OPERAND 	(0xC000008DL)
-#define STATUS_FLOAT_DIVIDE_BY_ZERO  	(0xC000008EL)
-#define STATUS_FLOAT_INEXACT_RESULT  	(0xC000008FL)
-#define STATUS_FLOAT_INVALID_OPERATION 	(0xC0000090L)
-#define STATUS_FLOAT_OVERFLOW   	(0xC0000091L)
-#define STATUS_FLOAT_STACK_CHECK	(0xC0000092L)
-#define STATUS_FLOAT_UNDERFLOW   	(0xC0000093L)
-#define STATUS_INTEGER_DIVIDE_BY_ZERO 	(0xC0000094L)
-#define STATUS_INTEGER_OVERFLOW   	(0xC0000095L)
-#define STATUS_PRIVILEGED_INSTRUCTION 	(0xC0000096L)
-#define STATUS_STACK_OVERFLOW   	(0xC00000FDL)
-#define STATUS_CONTROL_C_EXIT   	(0xC000013AL)
 
 #define EXCEPTION_CTRL_C
 
@@ -5139,7 +5153,6 @@ DECLARE_HANDLE(HANDLE);
 
 #define ASCIICHAR AsciiChar
 #define FAR
-#define PACKED __attribute__((packed))
 
 #define FILTER_TEMP_DUPLICATE_ACCOUNT       (0x0001)
 #define FILTER_NORMAL_ACCOUNT               (0x0002)
@@ -5164,4 +5177,6 @@ DECLARE_HANDLE(HANDLE);
 }
 #endif /* __cplusplus */
 
+#endif /* WIN32_LEAN_AND_MEAN */							       
+							       
 #endif /* _GNU_H_WINDOWS32_DEFINES */

@@ -20,7 +20,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#define Aa_Difference 'A'-'a';
+#define Aa_Difference ('A'-'a')
 
 PUNICODE_STRING RtlDuplicateUnicodeString(PUNICODE_STRING Dest, 
 					  PUNICODE_STRING Src)
@@ -40,12 +40,19 @@ WCHAR wtoupper(WCHAR c)
 {
         if((c>='a') && (c<='z')) return c+Aa_Difference;
         return c;
-};
+}
+
+WCHAR wtolower(WCHAR c)
+{
+//   DPRINT("c %c (c-Aa_Difference) %c\n",(char)c,(char)(c-Aa_Difference));
+        if((c>='A') && (c<='Z')) return c-Aa_Difference;
+        return c;
+}
 
 ULONG RtlAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
 {
         return AnsiString->Length*2;
-};
+}
 
 NTSTATUS RtlAnsiStringToUnicodeString(IN OUT PUNICODE_STRING DestinationString,
         IN PANSI_STRING SourceString, IN BOOLEAN AllocateDestinationString)

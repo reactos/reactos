@@ -26,24 +26,45 @@ typedef struct
    OBJECT_ATTRIBUTES Target;
 } SYMLNK_OBJECT, *PSYMLNK_OBJECT;
 
-OBJECT_TYPE SymlinkObjectType = {{NULL,0,0},
-                                0,
-                                0,
-                                ULONG_MAX,
-                                ULONG_MAX,
-                                sizeof(SYMLNK_OBJECT),
-                                0,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               };                           
+POBJECT_TYPE IoSymbolicLinkType = NULL;
 
 /* FUNCTIONS *****************************************************************/
+
+VOID IoInitSymbolicLinkImplementation(VOID)
+{
+   ANSI_STRING AnsiString;
+   
+   IoSymbolicLinkType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
+   
+   IoSymbolicLinkType->TotalObjects = 0;
+   IoSymbolicLinkType->TotalHandles = 0;
+   IoSymbolicLinkType->MaxObjects = ULONG_MAX;
+   IoSymbolicLinkType->MaxHandles = ULONG_MAX;
+   IoSymbolicLinkType->PagedPoolCharge = 0;
+   IoSymbolicLinkType->NonpagedPoolCharge = sizeof(SYMLNK_OBJECT);
+   IoSymbolicLinkType->Dump = NULL;
+   IoSymbolicLinkType->Open = NULL;
+   IoSymbolicLinkType->Close = NULL;
+   IoSymbolicLinkType->Delete = NULL;
+   IoSymbolicLinkType->Parse = NULL;
+   IoSymbolicLinkType->Security = NULL;
+   IoSymbolicLinkType->QueryName = NULL;
+   IoSymbolicLinkType->OkayToClose = NULL;
+   
+   RtlInitAnsiString(&AnsiString,"Symbolic Link");
+   RtlAnsiStringToUnicodeString(&IoSymbolicLinkType->TypeName,
+				&AnsiString,TRUE);
+}
+
+
+NTSTATUS NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
+				  IN ACCESS_MASK DesiredAccess,
+				  IN POBJECT_ATTRIBUTES ObjectAttributes)
+{
+   return(ZwOpenSymbolicLinkObject(LinkHandle,
+				   DesiredAccess,
+				   ObjectAttributes));
+}
 
 NTSTATUS ZwOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
 				  IN ACCESS_MASK DesiredAccess,
@@ -58,20 +79,34 @@ NTSTATUS ZwOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
      {
 	return(Status);
      }
-   *LinkHandle = ObAddHandle(Object);
+   *LinkHandle = ObInsertHandle(KeGetCurrentProcess(),Object,
+				DesiredAccess,FALSE);
    return(STATUS_SUCCESS);
+}
+
+NTSTATUS NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
+				   IN OUT PUNICODE_STRING LinkTarget,
+				   OUT PULONG ReturnedLength OPTIONAL)
+{
+   return(ZwQuerySymbolicLinkObject(LinkHandle,LinkTarget,ReturnedLength));
 }
 
 NTSTATUS ZwQuerySymbolicLinkObject(IN HANDLE LinkHandle,
 				   IN OUT PUNICODE_STRING LinkTarget,
 				   OUT PULONG ReturnedLength OPTIONAL)
 {
-   COMMON_BODY_HEADER* hdr = ObGetObjectByHandle(LinkHandle);
-   PSYMLNK_OBJECT SymlinkObject = (PSYMLNK_OBJECT)hdr;
-
-   if (hdr==NULL)
+   PSYMLNK_OBJECT SymlinkObject;
+   NTSTATUS Status;
+   
+   Status = ObReferenceObjectByHandle(LinkHandle,
+				      SYMBOLIC_LINK_QUERY,
+				      IoSymbolicLinkType,
+				      UserMode,
+				      (PVOID*)&SymlinkObject,
+				      NULL);
+   if (Status != STATUS_SUCCESS)
      {
-	return(STATUS_INVALID_HANDLE);
+	return(Status);
      }
    
    RtlCopyUnicodeString(LinkTarget,SymlinkObject->Target.ObjectName);
@@ -97,15 +132,6 @@ POBJECT IoOpenSymlink(POBJECT _Symlink)
    return(Result);
 }
 
-VOID IoInitSymbolicLinkImplementation(VOID)
-{
-   ANSI_STRING astring;
-   
-   RtlInitAnsiString(&astring,"Symbolic Link");
-   RtlAnsiStringToUnicodeString(&SymlinkObjectType.TypeName,&astring,TRUE);
-   ObRegisterType(OBJTYP_SYMLNK,&SymlinkObjectType);   
-}
-
 NTSTATUS IoCreateUnprotectedSymbolicLink(PUNICODE_STRING SymbolicLinkName,
 					 PUNICODE_STRING DeviceName)
 {
@@ -124,12 +150,15 @@ NTSTATUS IoCreateSymbolicLink(PUNICODE_STRING SymbolicLinkName,
 	  SymbolicLinkName->Buffer,DeviceName->Buffer);
    
    InitializeObjectAttributes(&ObjectAttributes,SymbolicLinkName,0,NULL,NULL);
-   SymbolicLink = ObGenericCreateObject(&SymbolicLinkHandle,0,
-					&ObjectAttributes,OBJTYP_SYMLNK);
+   SymbolicLink = ObGenericCreateObject(&SymbolicLinkHandle,
+					SYMBOLIC_LINK_ALL_ACCESS,
+					&ObjectAttributes,
+					IoSymbolicLinkType);
    if (SymbolicLink == NULL)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
+   
    SymbolicLink->TargetName.Buffer = ExAllocatePool(NonPagedPool,
 					 ((wstrlen(DeviceName->Buffer)+1)*2));
    SymbolicLink->TargetName.MaximumLength = wstrlen(DeviceName->Buffer);
@@ -146,3 +175,25 @@ NTSTATUS IoDeleteSymbolicLink(PUNICODE_STRING DeviceName)
 {
    UNIMPLEMENTED;
 }
+
+NTSTATUS STDCALL NtCreateSymbolicLinkObject(
+	                            OUT PHANDLE SymbolicLinkHandle,
+	                            IN ACCESS_MASK DesiredAccess,
+	                            IN POBJECT_ATTRIBUTES ObjectAttributes,
+	                            IN PUNICODE_STRING Name)
+{
+   return(NtCreateSymbolicLinkObject(SymbolicLinkHandle,
+				     DesiredAccess,
+				     ObjectAttributes,
+				     Name));
+}
+
+NTSTATUS STDCALL ZwCreateSymbolicLinkObject(
+				    OUT PHANDLE SymbolicLinkHandle,
+				    IN ACCESS_MASK DesiredAccess,
+				    IN POBJECT_ATTRIBUTES ObjectAttributes,
+				    IN PUNICODE_STRING Name)
+{
+   UNIMPLEMENTED;
+}
+

@@ -105,6 +105,4 @@ typedef struct __HEAP
    HEAP_BLOCK		Start  __attribute__((aligned (8)));
 } HEAP, *PHEAP;
 
-//PHEAP	__ProcessHeap;
-
 #endif /* __INCLUDE_KERNEL32_HEAP_H */

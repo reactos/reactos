@@ -1,6 +1,13 @@
 /* MEMORY MANAGMENT ******************************************************/
 
-#include <internal/hal/page.h>
+#include <internal/mmhal.h>
+
+BOOLEAN MmIsNonPagedSystemAddressValid(PVOID VirtualAddress);
+BOOLEAN MmIsThisAnNtAsSystem(VOID);
+
+#define PAGE_ROUND_UP(x) ( (((ULONG)x)%PAGESIZE) ? ((((ULONG)x)&(~0xfff))+0x1000) : ((ULONG)x) )
+#define PAGE_ROUND_DOWN(x) (((ULONG)x)&(~0xfff))
+
 
 /*
  * FUNCTION: Determines if the given virtual address is page aligned

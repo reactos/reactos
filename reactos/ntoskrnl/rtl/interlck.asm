@@ -1,23 +1,21 @@
 bits 32
 section .text
 
-global _InterlockedIncrement
-_InterlockedIncrement
+DECLARE_GLOBAL_SYMBOL InterlockedIncrement
        mov eax,1
        mov ebx,[esp+4]
        xadd [ebx],eax
        ret
-
-global _InterlockedDecrement
-_InterlockedDecrement:       
+       
+       
+DECLARE_GLOBAL_SYMBOL InterlockedDecrement
        mov eax,0xffffffff
        mov ebx,[esp+4]
        xadd [ebx],eax
        dec eax
        ret
        
-global _InterlockedExchange
-_InterlockedExchange:
+DECLARE_GLOBAL_SYMBOL InterlockedExchange       
        push ebp
        mov  ebp,esp
 
@@ -34,16 +32,14 @@ _InterlockedExchange:
        mov esp,ebp
        pop ebp
        ret
-       
-global _InterlockedExchangeAdd
-_InterlockedExchangeAdd:
+
+DECLARE_GLOBAL_SYMBOL InterlockedExchangeAdd
        mov eax,[esp+8]
        mov ebx,[esp+4]
        xadd [ebx],eax
        ret
-       
-global _InterlockedCompareExchange
-_InterlockedCompareExchange:
+
+DECLARE_GLOBAL_SYMBOL InterlockedCompareExchange
        mov eax,[esp+12]
        mov edx,[esp+8]
        mov ebx,[esp+4]

@@ -23,15 +23,17 @@
 #define DPRINT1(x)
 #endif
 
-#define UNIMPLEMENTED do {DbgPrint("%s at %s:%d is umimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0);
+#define UNIMPLEMENTED do {DbgPrint("%s at %s:%d is unimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0);
 
 #ifndef NDEBUG
-#define DPRINT(fmt,args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(fmt,args); } while(0);
+#define OLD_DPRINT(fmt,args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(fmt,args); } while(0);
+#define DPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); ExAllocatePool(NonPagedPool,0); } while(0);
 //#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); (*((unsigned int *)0))=1; for (;;); }
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); for (;;); }
-#define CHECKPOINT DbgPrint("%s:%d\n",__FILE__,__LINE__)
+#define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); ExAllocatePool(NonPagedPool,0); } while(0);
 #else
-#define DPRINT(fmt,args...)
+#define DPRINT(args...)
+#define OLD_DPRINT(args...)
 #define assert(x)
 #define CHECKPOINT
 #endif /* NDEBUG */

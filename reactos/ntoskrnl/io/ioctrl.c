@@ -20,3 +20,37 @@ ULONG IoGetFunctionCodeFromCtlCode(ULONG ControlCode)
 {
    UNIMPLEMENTED;
 }
+
+NTSTATUS
+STDCALL
+NtDeviceIoControlFile(
+	IN HANDLE DeviceHandle,
+	IN HANDLE Event OPTIONAL, 
+	IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL, 
+	IN PVOID UserApcContext OPTIONAL, 
+	OUT PIO_STATUS_BLOCK IoStatusBlock, 
+	IN ULONG IoControlCode,
+	IN PVOID InputBuffer, 
+	IN ULONG InputBufferSize,
+	OUT PVOID OutputBuffer,
+	IN ULONG OutputBufferSize
+	)
+{
+}
+
+NTSTATUS
+STDCALL
+ZwDeviceIoControlFile(
+	IN HANDLE DeviceHandle,
+	IN HANDLE Event OPTIONAL, 
+	IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL, 
+	IN PVOID UserApcContext OPTIONAL, 
+	OUT PIO_STATUS_BLOCK IoStatusBlock, 
+	IN ULONG IoControlCode,
+	IN PVOID InputBuffer, 
+	IN ULONG InputBufferSize,
+	OUT PVOID OutputBuffer,
+	IN ULONG OutputBufferSize
+	)
+{
+}

@@ -30,6 +30,7 @@ PVOID MmAllocateSection(ULONG Length)
    
    Result = 0;
    Status = MmCreateMemoryArea(KernelMode,
+			       PsGetCurrentProcess(),
 			       MEMORY_AREA_SYSTEM,
 			       &Result,
 			       Length,
@@ -71,6 +72,7 @@ PVOID MmMapIoSpace(PHYSICAL_ADDRESS PhysicalAddress,
    
    Result=0;
    Status = MmCreateMemoryArea(KernelMode,
+			       PsGetCurrentProcess(),
 			       MEMORY_AREA_IO_MAPPING,
 			       &Result,
 			       NumberOfBytes,
@@ -94,7 +96,8 @@ PVOID MmMapIoSpace(PHYSICAL_ADDRESS PhysicalAddress,
  
 VOID MmUnmapIoSpace(PVOID BaseAddress, ULONG NumberOfBytes)
 {
-   (void)MmFreeMemoryArea(BaseAddress,NumberOfBytes,FALSE);
+   (void)MmFreeMemoryArea(PsGetCurrentProcess(),BaseAddress,NumberOfBytes,
+			  FALSE);
 }
 
 PVOID MmAllocateNonCachedMemory(ULONG NumberOfBytes)
@@ -106,6 +109,7 @@ PVOID MmAllocateNonCachedMemory(ULONG NumberOfBytes)
    
    Result=0;
    Status = MmCreateMemoryArea(KernelMode,
+			       PsGetCurrentProcess(),
 			       MEMORY_AREA_NO_CACHE,
 			       &Result,
 			       NumberOfBytes,
@@ -126,5 +130,5 @@ PVOID MmAllocateNonCachedMemory(ULONG NumberOfBytes)
 
 VOID MmFreeNonCachedMemory(PVOID BaseAddress, ULONG NumberOfBytes)
 {
-   MmFreeMemoryArea(BaseAddress,NumberOfBytes,TRUE);
+   MmFreeMemoryArea(PsGetCurrentProcess(),BaseAddress,NumberOfBytes,TRUE);
 }

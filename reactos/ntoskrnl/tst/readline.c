@@ -26,12 +26,13 @@ static HANDLE KeyboardHandle = NULL;
 static unsigned char TstReadLineReadChar(VOID)
 {
    KEY_EVENT_RECORD key[2];
+   IO_STATUS_BLOCK IoStatusBlock;
    
    ZwReadFile(KeyboardHandle,
 	      NULL,
 	      NULL,
 	      NULL,
-	      NULL,
+	      &IoStatusBlock,
 	      &key[0],
 	      sizeof(KEY_EVENT_RECORD)*2,
 	      0,
@@ -49,7 +50,6 @@ VOID TstReadLine(ULONG Length, PCHAR Buffer)
    for (i=0;i<Length;i++)
      {
 	tmp = TstReadLineReadChar();
-	DbgPrint("%c",tmp);
 //	DbgPrint("%x %x ",tmp,'\n');
 	switch (tmp)
 	  {
@@ -59,6 +59,7 @@ VOID TstReadLine(ULONG Length, PCHAR Buffer)
 	     return;
 	     	     
 	   default:
+             DbgPrint("%c",tmp);
 	     *current = tmp;
 	     current++;
 	  }
@@ -79,7 +80,12 @@ VOID TstReadLineInit(VOID)
    RtlInitAnsiString(&afilename,"\\Device\\Keyboard");
    RtlAnsiStringToUnicodeString(&ufilename,&afilename,TRUE);
    InitializeObjectAttributes(&attr,&ufilename,0,NULL,NULL);
-   ZwOpenFile(&KeyboardHandle,0,&attr,NULL,0,0);
+   ZwOpenFile(&KeyboardHandle,
+	      FILE_GENERIC_READ,
+	      &attr,
+	      NULL,
+	      0,
+	      FILE_SYNCHRONOUS_IO_NONALERT);
    if (KeyboardHandle==NULL)
      {
 	DbgPrint("Failed to open keyboard\n");

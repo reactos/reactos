@@ -131,7 +131,7 @@ typedef struct _KTHREAD
 	ULONG			Quantum;
 	UCHAR			ThreadState; //Thread state is a typeless enum, otherwise it should be const integer
 	ULONG			FreezeCount;
-	ULONG			SuspendCount;
+	LONG			SuspendCount;
 	PTRAP_FRAME		TrapFrame; 
 	PVOID			*Tls;
 	KWAIT_BLOCK		WaitBlock[4];	
@@ -149,6 +149,7 @@ typedef struct _KTHREAD
 	 */
         hal_thread_state                   Context;
         LIST_ENTRY Entry;
+        ULONG LastTick;
 } KTHREAD, *PKTHREAD;
 
 
@@ -255,26 +256,28 @@ typedef struct _ETHREAD {
 } ETHREAD, *PETHREAD;
 
 
-typedef struct _KPROCESS {
-	DISPATCHER_HEADER 	DispatcherHeader;
-	PVOID			PageTableDirectory; // FIXME: I shoud point to a PTD
-	TIME			ElapsedTime;
-	TIME			KernelTime;
-	TIME			UserTime;
-	LIST_ENTRY		InOutSwap;   // ??	
-	KSPIN_LOCK		SpinLock;
-	KAFFINITY		Affinity;
-	ULONG			StackCount;
-	KPRIORITY		BasePriority;
-	ULONG			DefaultThreadQuantum;
-	UCHAR			ProcessState;
-	ULONG			ThreadSeed;
-	UCHAR			DisableBoost;
+typedef struct _KPROCESS 
+{
+   DISPATCHER_HEADER 	DispatcherHeader;
+   PVOID			PageTableDirectory; // FIXME: I shoud point to a PTD
+   TIME			ElapsedTime;
+   TIME			KernelTime;
+   TIME			UserTime;
+   LIST_ENTRY		InOutSwap;   // ??	
+   KSPIN_LOCK		SpinLock;
+   KAFFINITY		Affinity;
+   ULONG			StackCount;
+   KPRIORITY		BasePriority;
+   ULONG			DefaultThreadQuantum;
+   UCHAR			ProcessState;
+   ULONG			ThreadSeed;
+   UCHAR			DisableBoost;
    
    /*
     * Added by David Welch (welch@mcmail.com)
     */
    LIST_ENTRY MemoryAreaList;
+   HANDLE_TABLE HandleTable;
 } KPROCESS, *PKPROCESS;
 
 typedef struct _EPROCESS

@@ -38,7 +38,12 @@ VOID IoStartNextPacketByKey(PDEVICE_OBJECT DeviceObject,
    if (entry!=NULL)
      {
 	Irp = CONTAINING_RECORD(entry,IRP,Tail.Overlay.DeviceQueueEntry);
+        DeviceObject->CurrentIrp = Irp;
 	DeviceObject->DriverObject->DriverStartIo(DeviceObject,Irp);	
+     }
+   else
+     {
+        DeviceObject->CurrentIrp = NULL;
      }   
 }
 
@@ -63,9 +68,13 @@ VOID IoStartNextPacket(PDEVICE_OBJECT DeviceObject, BOOLEAN Cancelable)
    if (entry!=NULL)
      {
 	Irp = CONTAINING_RECORD(entry,IRP,Tail.Overlay.DeviceQueueEntry);
+        DeviceObject->CurrentIrp = Irp;
 	DeviceObject->DriverObject->DriverStartIo(DeviceObject,Irp);	
      }
-   
+   else
+     {
+        DeviceObject->CurrentIrp = NULL;
+     }
 }
 
 VOID IoStartPacket(PDEVICE_OBJECT DeviceObject,
@@ -109,6 +118,7 @@ VOID IoStartPacket(PDEVICE_OBJECT DeviceObject,
    
    if (!stat)
      {			   
+        DeviceObject->CurrentIrp = Irp;
 	DeviceObject->DriverObject->DriverStartIo(DeviceObject,Irp);
      }
 }

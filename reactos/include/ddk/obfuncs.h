@@ -6,7 +6,7 @@
  * ARGUMENTS:
  *        Object = Object's body
  */
-VOID ObDeferenceObject(PVOID Object);
+VOID ObDereferenceObject(PVOID Object);
 
 /*
  * FUNCTION: Performs access validation on an object handle and if access

@@ -11,38 +11,48 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/mm.h>
 
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
 VOID MmUnlockPagableImageSection(PVOID ImageSectionHandle)
+/*
+ * FUNCTION: Releases a section of driver code or driver data, previously
+ * locked into system space with MmLockPagableCodeSection, 
+ * MmLockPagableDataSection or MmLockPagableSectionByHandle
+ * ARGUMENTS:
+ *        ImageSectionHandle = Handle returned by MmLockPagableCodeSection or
+ *                             MmLockPagableDataSection
+ */
 {
-   UNIMPLEMENTED;
+   MmUnlockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
 }
 
 VOID MmLockPagableSectionByHandle(PVOID ImageSectionHandle)
 {
-   UNIMPLEMENTED;
+   MmLockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
 }
 
 PVOID MmLockPagableCodeSection(PVOID AddressWithinSection)
 {
-   UNIMPLEMENTED;
+   PVOID Handle;
+   Handle = MmOpenMemoryAreaByAddress(NULL,AddressWithinSection);
+   MmLockPagableSectionByHandle(Handle);
+   return(Handle);
 }
 
 PVOID MmLockPagableDataSection(PVOID AddressWithinSection)
 {
-   UNIMPLEMENTED;
+   return(MmLockPagableCodeSection(AddressWithinSection));
 }
 
 VOID MmPageEntireDriver(PVOID AddressWithinSection)
 {
-   UNIMPLEMENTED;
 }
 
 VOID MmResetDriverPaging(PVOID AddressWithinSection)
 {
-   UNIMPLEMENTED;
 }
 

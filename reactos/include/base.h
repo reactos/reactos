@@ -43,8 +43,126 @@ extern "C" {
 #endif
 #endif /* !NULL */
 
+/*
+ * Definitions needed for the ddk includes (we miss out win32 only stuff to
+ * cut down on the compile time)					    
+ */
+typedef unsigned char UCHAR;
+typedef unsigned int UINT;
+typedef unsigned long ULONG;
+typedef unsigned short USHORT;
+typedef unsigned short WCHAR;
+typedef unsigned short WORD;
+typedef int WINBOOL;
+typedef unsigned char BOOLEAN;
+typedef unsigned int DWORD; /* was unsigned long */
+typedef unsigned short *LPWSTR;
+typedef unsigned short *PWSTR;
+typedef unsigned char *PUCHAR;
+typedef unsigned int *PUINT;
+typedef unsigned long *PULONG;
+typedef unsigned short *PUSHORT;
+typedef void *PVOID;
+typedef unsigned char BYTE;
+typedef void *LPVOID;
+
+/* Check VOID before defining CHAR, SHORT, and LONG */
+#ifndef VOID
+#define VOID void
+typedef char CHAR;
+typedef short SHORT;
+typedef long LONG;
+#endif
+
+typedef CHAR *PCHAR;
+typedef CHAR *PCH;
+typedef void *HANDLE;
+typedef char CCHAR;
+
+typedef enum _SECURITY_IMPERSONATION_LEVEL {
+    SecurityAnonymous, 
+    SecurityIdentification, 
+    SecurityImpersonation, 
+    SecurityDelegation 
+} SECURITY_IMPERSONATION_LEVEL; 
+
+typedef enum tagTOKEN_TYPE {
+    TokenPrimary = 1, 
+    TokenImpersonation 
+} TOKEN_TYPE; 
+
 #define FALSE 0
 #define TRUE 1
+
+   typedef const unsigned short *PCWSTR;
+
+typedef char* PCSZ;
+   
+#define CONST const
+
+#ifdef i386
+#define STDCALL     __attribute__ ((stdcall))
+#define CDECL       __attribute((cdecl))
+#define CALLBACK    WINAPI
+#define PASCAL      WINAPI
+#else
+#define STDCALL
+#define CDECL
+#define CALLBACK
+#define PASCAL
+#endif
+#define WINAPI      STDCALL
+#define APIENTRY    STDCALL
+#define WINGDIAPI
+
+typedef BYTE *PBOOLEAN;
+typedef HANDLE *PHANDLE;
+   
+typedef DWORD CALLBACK (*PTHREAD_START_ROUTINE) (LPVOID);
+typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
+
+   typedef unsigned short ATOM;
+
+   #ifdef UNICODE
+typedef unsigned short *LPTCH;
+typedef unsigned short *LPTSTR;
+#else
+typedef char *LPTCH;
+typedef char *LPTSTR;
+#endif /* UNICODE */
+
+typedef long *PLONG;
+typedef unsigned short *PWCHAR;
+typedef char *LPSTR;
+typedef double LONGLONG, *PLONGLONG;
+
+   typedef enum _MEDIA_TYPE { 
+  Unknown,                
+  F5_1Pt2_512,            
+  F3_1Pt44_512,           
+  F3_2Pt88_512,           
+  F3_20Pt8_512,           
+  F3_720_512,             
+  F5_360_512,             
+  F5_320_512,             
+  F5_320_1024,            
+  F5_180_512,             
+  F5_160_512,             
+  RemovableMedia,         
+  FixedMedia              
+} MEDIA_TYPE; 
+
+#ifndef max
+#define max(a, b)  (((a) > (b)) ? (a) : (b)) 
+#endif
+
+#ifndef min
+#define min(a, b)  (((a) < (b)) ? (a) : (b)) 
+#endif
+
+   
+#ifndef WIN32_LEAN_AND_MEAN
+   
 
 #ifndef RC_INVOKED
 
@@ -58,30 +176,15 @@ typedef ACMFORMATENUMCB;
 typedef ACMFORMATTAGENUMCB;
 typedef APPLET_PROC;
 */
-typedef unsigned short ATOM;
 /* Changed from BOOL to WINBOOL to avoid Objective-C conflict */
-typedef int WINBOOL;
-typedef unsigned char BOOLEAN;
-typedef unsigned char BYTE;
 typedef unsigned long CALTYPE;
 typedef unsigned long CALID;
-typedef char CCHAR;
 typedef unsigned long COLORREF;
-#define CONST const
-
-/* Check VOID before defining CHAR, SHORT, and LONG */
-#ifndef VOID
-#define VOID void
-typedef char CHAR;
-typedef short SHORT;
-typedef long LONG;
-#endif
 
 /*
 typedef CTRYID;
 typedef DLGPROC;
 */
-typedef unsigned int DWORD; /* was unsigned long */
 typedef double DWORDLONG, *PDWORDLONG;
 /*
 typedef EDITWORDBREAKPROC;
@@ -92,7 +195,6 @@ typedef ENUMRESTYPEPROC;
 */
 typedef float FLOAT;
 /* typedef GLOBALHANDLE; */
-typedef void *HANDLE;
 typedef HANDLE HACCEL;
 typedef HANDLE HBITMAP;
 typedef HANDLE HBRUSH;
@@ -138,7 +240,6 @@ typedef unsigned short LANGID;
 typedef DWORD LCID;
 typedef DWORD LCTYPE;
 /* typedef LOCALHANDLE */
-typedef double LONGLONG, *PLONGLONG;
 typedef unsigned short *LP;
 typedef long LPARAM;
 typedef WINBOOL *LPBOOL;
@@ -147,7 +248,6 @@ typedef CONST CHAR *LPCCH;
 typedef CHAR *LPCH;
 typedef COLORREF *LPCOLORREF;
 typedef const char *LPCSTR;
-typedef char* PCSZ;
    
 #ifdef UNICODE
 typedef const unsigned short *LPCTSTR;
@@ -163,41 +263,23 @@ typedef HANDLE *LPHANDLE;
 /* typedef LPHANDLER_FUNCTION; */
 typedef int *LPINT;
 typedef long *LPLONG;
-typedef char *LPSTR;
-
-#ifdef UNICODE
-typedef unsigned short *LPTCH;
-typedef unsigned short *LPTSTR;
-#else
-typedef char *LPTCH;
-typedef char *LPTSTR;
-#endif /* UNICODE */
 
 typedef long LRESULT;
-typedef void *LPVOID;
 typedef const void *LPCVOID;
 typedef unsigned short *LPWCH;
 typedef unsigned short *LPWORD;
-typedef unsigned short *LPWSTR;
-typedef unsigned short *PWSTR;
 /* typedef NPSTR; */
 typedef unsigned short *NWPSTR;
 typedef WINBOOL *PWINBOOL;
-typedef BYTE *PBOOLEAN;
 typedef BYTE *PBYTE;
 typedef const CHAR *PCCH;
-typedef CHAR *PCH;
-typedef CHAR *PCHAR;
 typedef const char *PCSTR;
 typedef const unsigned short *PCWCH;
-typedef const unsigned short *PCWSTR;
 typedef DWORD *PDWORD;
 typedef float *PFLOAT;
-typedef HANDLE *PHANDLE;
 /* typedef PHKEY; */
 typedef int *PINT;
 /* typedef LCID *PLCID; */
-typedef long *PLONG;
 typedef short *PSHORT;
 /* typedef PSID; */
 typedef char *PSTR;
@@ -215,13 +297,7 @@ typedef char *PTCHAR;
 typedef char *PTSTR;
 #endif /* UNICODE */
 
-typedef unsigned char *PUCHAR;
-typedef unsigned int *PUINT;
-typedef unsigned long *PULONG;
-typedef unsigned short *PUSHORT;
-typedef void *PVOID;
 typedef unsigned short *PWCH;
-typedef unsigned short *PWCHAR;
 typedef unsigned short *PWORD;
 /*
 typedef PWSTR;
@@ -246,30 +322,10 @@ typedef char TCHAR;
 typedef BYTE BCHAR;
 #endif /* UNICODE */
 
-typedef unsigned char UCHAR;
-typedef unsigned int UINT;
-typedef unsigned long ULONG;
-typedef unsigned short USHORT;
-typedef unsigned short WCHAR;
-typedef unsigned short WORD;
 typedef unsigned int WPARAM;
 /* typedef YIELDPROC; */
 
 /* Only use __stdcall under WIN32 compiler */
-#ifdef i386
-#define STDCALL     __attribute__ ((stdcall))
-#define CDECL       __attribute((cdecl))
-#define CALLBACK    WINAPI
-#define PASCAL      WINAPI
-#else
-#define STDCALL
-#define CDECL
-#define CALLBACK
-#define PASCAL
-#endif
-#define WINAPI      STDCALL
-#define APIENTRY    STDCALL
-#define WINGDIAPI
 
 #define _export
 
@@ -281,21 +337,6 @@ typedef enum _ACL_INFORMATION_CLASS {
   AclSizeInformation            
 } ACL_INFORMATION_CLASS; 
  
-typedef enum _MEDIA_TYPE { 
-  Unknown,                
-  F5_1Pt2_512,            
-  F3_1Pt44_512,           
-  F3_2Pt88_512,           
-  F3_20Pt8_512,           
-  F3_720_512,             
-  F5_360_512,             
-  F5_320_512,             
-  F5_320_1024,            
-  F5_180_512,             
-  F5_160_512,             
-  RemovableMedia,         
-  FixedMedia              
-} MEDIA_TYPE; 
  
 #define RASCS_DONE 0x2000
 #define RASCS_PAUSED 0x1000
@@ -339,14 +380,7 @@ typedef enum _RASPROJECTION {
     RASP_PppIpx = 0x802B, 
     RASP_PppIp = 0x8021 
 } RASPROJECTION ; 
- 
-typedef enum _SECURITY_IMPERSONATION_LEVEL {
-    SecurityAnonymous, 
-    SecurityIdentification, 
-    SecurityImpersonation, 
-    SecurityDelegation 
-} SECURITY_IMPERSONATION_LEVEL; 
- 
+  
 typedef enum _SID_NAME_USE { 
     SidTypeUser = 1, 
     SidTypeGroup, 
@@ -370,12 +404,7 @@ typedef enum _TOKEN_INFORMATION_CLASS {
     TokenImpersonationLevel, 
     TokenStatistics 
 } TOKEN_INFORMATION_CLASS; 
- 
-typedef enum tagTOKEN_TYPE {
-    TokenPrimary = 1, 
-    TokenImpersonation 
-} TOKEN_TYPE; 
- 
+  
 #endif /* ! defined (RC_INVOKED) */
 
 /*
@@ -421,13 +450,6 @@ typedef enum tagTOKEN_TYPE {
 #define MAKEROP4(fore,back) (DWORD)((((back) << 8) & 0xFF000000) | (fore)) 
 #define MAKEWPARAM(l, h)   ((WPARAM) MAKELONG(l, h)) 
 
-#ifndef max
-#define max(a, b)  (((a) > (b)) ? (a) : (b)) 
-#endif
-
-#ifndef min
-#define min(a, b)  (((a) < (b)) ? (a) : (b)) 
-#endif
 
 #define PALETTEINDEX(i) ((COLORREF) (0x01000000 | (DWORD) (WORD) (i))) 
 #define PALETTERGB(r, g, b)  (0x02000000 | RGB(r, g, b)) 
@@ -451,8 +473,6 @@ typedef enum tagTOKEN_TYPE {
 typedef int CALLBACK (*BFFCALLBACK) (HWND, UINT, LPARAM, LPARAM);
 typedef UINT CALLBACK (*LPCCHOOKPROC) (HWND, UINT, WPARAM, LPARAM);
 typedef UINT CALLBACK (*LPCFHOOKPROC) (HWND, UINT, WPARAM, LPARAM);
-typedef DWORD CALLBACK (*PTHREAD_START_ROUTINE) (LPVOID);
-typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 typedef DWORD CALLBACK (*EDITSTREAMCALLBACK) (DWORD, LPBYTE, LONG, LONG);
 typedef UINT CALLBACK (*LPFRHOOKPROC) (HWND, UINT, WPARAM, LPARAM);
 typedef UINT CALLBACK (*LPOFNHOOKPROC) (HWND, UINT, WPARAM, LPARAM);
@@ -565,6 +585,8 @@ typedef DWORD CCSTYLEFLAGA, *PCCSTYLEFLAGA, *LPCCSTYLEFLAGA;
 
 #endif /* ! defined (RC_INVOKED) */
 
+#endif /* WIN32_LEAN_AND_MEAN */
+   
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
