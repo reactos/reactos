@@ -35,7 +35,7 @@ static GENERIC_MAPPING ExpPortMapping = {
 
 
 NTSTATUS INIT_FUNCTION
-NiInitPort (VOID)
+LpcpInitSystem (VOID)
 {
     /* Allocate Memory for the LPC Object */
     LpcPortObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
@@ -91,7 +91,7 @@ NiInitPort (VOID)
  *	otherwise.
  */
 NTSTATUS STDCALL
-NiInitializePort (IN OUT  PEPORT Port,
+LpcpInitializePort (IN OUT  PEPORT Port,
 		  IN      USHORT Type,
 		  IN      PEPORT Parent OPTIONAL)
 {

@@ -44,6 +44,13 @@ VOID INIT_FUNCTION
 ExInit3 (VOID)
 {
   ExInitializeWorkerThreads();
+  ExpInitializeEventImplementation();
+  ExpInitializeEventPairImplementation();
+  ExpInitializeMutantImplementation();
+  ExpInitializeSemaphoreImplementation();
+  ExpInitializeTimerImplementation();
+  LpcpInitSystem();
+  ExpInitializeProfileImplementation();
   ExpWin32kInit();
   ExpInitUuids();
 }

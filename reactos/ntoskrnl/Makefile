@@ -77,22 +77,6 @@ OBJECTS_PATH = objects
 #
 include Makefile.$(ARCH)
 
-# System API (Nt/Zw)
-OBJECTS_NT = \
-	nt/channel.o \
-	nt/efi.o \
-	nt/evtpair.o \
-	nt/mutant.o \
-	nt/misc.o \
-	nt/nt.o \
-	nt/ntevent.o \
-	nt/ntsem.o \
-	nt/nttimer.o \
-	nt/plugplay.o \
-	nt/profile.o \
-	nt/vdm.o \
-	nt/zw.o
-
 # Run-Time Library (Rtl)
 OBJECTS_RTL = \
 	rtl/atom.o \
@@ -136,7 +120,8 @@ OBJECTS_KE = \
 	ke/sem.o \
 	ke/spinlock.o \
 	ke/timer.o \
-	ke/wait.o
+	ke/wait.o \
+	ke/zw.o
 
 # Memory Manager (Mm)
 OBJECTS_MM = \
@@ -188,6 +173,7 @@ OBJECTS_IO = \
 	io/deviface.o \
 	io/dir.o \
 	io/driver.o \
+	io/efi.o \
 	io/errlog.o \
 	io/error.o \
 	io/event.o \
@@ -206,6 +192,7 @@ OBJECTS_IO = \
 	io/npipe.o \
 	io/page.o \
 	io/parttab.o \
+	io/plugplay.o \
 	io/process.o \
 	io/pnpnotify.o \
 	io/pnpdma.o \
@@ -259,20 +246,26 @@ OBJECTS_PS = \
 OBJECTS_EX = \
 	ex/btree.o \
 	ex/callback.o \
+	ex/event.o \
+	ex/evtpair.o \
 	ex/fmutex.o \
 	ex/hashtab.o \
 	ex/init.o \
 	ex/interlck.o \
 	ex/list.o \
 	ex/lookas.o \
+	ex/mutant.o \
 	ex/napi.o \
 	ex/power.o \
+	ex/profile.o \
 	ex/resource.o \
 	ex/rundown.o \
 	ex/stree.o \
+	ex/sem.o \
 	ex/synch.o \
 	ex/sysinfo.o \
 	ex/time.o \
+	ex/timer.o \
 	ex/util.o \
 	ex/uuid.o \
 	ex/win32k.o \
@@ -371,7 +364,7 @@ OBJECTS_KD = \
 OBJECTS_INBV = \
 	inbv/inbv.o
 
-DEP_OBJECTS := $(OBJECTS_NT) $(OBJECTS_MM) $(OBJECTS_ARCH) \
+DEP_OBJECTS := $(OBJECTS_MM) $(OBJECTS_ARCH) \
 	$(OBJECTS_IO) $(OBJECTS_KE) $(OBJECTS_OB) \
 	$(OBJECTS_PS) $(OBJECTS_EX) $(OBJECTS_CC) $(OBJECTS_FS) $(OBJECTS_SE) \
 	$(OBJECTS_DBG) $(OBJECTS_CM) $(OBJECTS_LDR) $(OBJECTS_LPC) \
@@ -475,12 +468,6 @@ $(OBJECTS_PATH)/lpc.o: $(OBJECTS_LPC)
 		-o $(OBJECTS_PATH)/lpc.o \
 		$(OBJECTS_LPC)
 
-$(OBJECTS_PATH)/nt.o: $(OBJECTS_NT)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/nt.o \
-		$(OBJECTS_NT)
-
 $(OBJECTS_PATH)/po.o: $(OBJECTS_PO)
 	$(LD) \
 		-r \
@@ -519,7 +506,6 @@ OBJECTS := \
 	$(OBJECTS_PATH)/kd.o \
 	$(OBJECTS_PATH)/ldr.o \
 	$(OBJECTS_PATH)/mm.o \
-	$(OBJECTS_PATH)/nt.o \
 	$(OBJECTS_PATH)/ob.o \
 	$(OBJECTS_PATH)/po.o \
 	$(OBJECTS_PATH)/ps.o \

@@ -232,10 +232,4 @@ NtWriteFileGather ZwWriteFileGather 9
 NtWriteRequestData ZwWriteRequestData 6
 NtWriteVirtualMemory ZwWriteVirtualMemory 5
 NtW32Call ZwW32Call 5
-NtCreateChannel ZwCreateChannel 2
-NtListenChannel ZwListenChannel 2
-NtOpenChannel ZwOpenChannel 2
-NtReplyWaitSendChannel ZwReplyWaitSendChannel 3
-NtSendWaitReplyChannel ZwSendWaitReplyChannel 4
-NtSetContextChannel ZwSetContextChannel 1
 NtYieldExecution ZwYieldExecution 0

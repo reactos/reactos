@@ -63,7 +63,57 @@ KeIpiGenericCall(VOID STDCALL (*WorkerRoutine)(PVOID),
 
 /* next file ***************************************************************/
 
+typedef struct _KPROCESS_PROFILE
+/*
+ * List of the profile data structures associated with a process.
+ */
+{
+  LIST_ENTRY ProfileListHead;
+  LIST_ENTRY ListEntry;
+  HANDLE Pid;
+} KPROCESS_PROFILE, *PKPROCESS_PROFILE;
 
+typedef struct _KPROFILE
+/*
+ * Describes a contiguous region of process memory that is being profiled.
+ */
+{
+  CSHORT Type;
+  CSHORT Name;
+
+  /* Entry in the list of profile data structures for this process. */
+  LIST_ENTRY ListEntry; 
+
+  /* Base of the region being profiled. */
+  PVOID Base;
+
+  /* Size of the region being profiled. */
+  ULONG Size;
+
+  /* Shift of offsets from the region to buckets in the profiling buffer. */
+  ULONG BucketShift;
+
+  /* MDL which described the buffer that receives profiling data. */
+  struct _MDL *BufferMdl;
+
+  /* System alias for the profiling buffer. */
+  PULONG Buffer;
+
+  /* Size of the buffer for profiling data. */
+  ULONG BufferSize;
+
+  /* 
+   * Mask of processors for which profiling data should be collected. 
+   * Currently unused.
+   */
+  ULONG ProcessorMask;
+
+  /* TRUE if profiling has been started for this region. */
+  BOOLEAN Started;
+
+  /* Pointer (and reference) to the process which is being profiled. */
+  struct _EPROCESS *Process;
+} KPROFILE, *PKPROFILE;
 
 VOID STDCALL 
 DbgBreakPointNoBugCheck(VOID);
@@ -80,6 +130,14 @@ KeProfileInterruptWithSource(
 	IN PKTRAP_FRAME   		TrapFrame,
 	IN KPROFILE_SOURCE		Source
 );
+
+VOID KiAddProfileEventToProcess(PLIST_ENTRY ListHead, PVOID Eip);
+VOID KiAddProfileEvent(KPROFILE_SOURCE Source, ULONG Eip);
+VOID KiInsertProfileIntoProcess(PLIST_ENTRY ListHead, PKPROFILE Profile);
+VOID KiInsertProfile(PKPROFILE Profile);
+VOID KiRemoveProfile(PKPROFILE Profile);
+VOID STDCALL KiDeleteProfile(PVOID ObjectBody);
+
 
 VOID STDCALL KeUpdateSystemTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);
 VOID STDCALL KeUpdateRunTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);

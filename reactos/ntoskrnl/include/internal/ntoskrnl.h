@@ -37,9 +37,13 @@ extern IDT_DESCRIPTOR KiIdt[256];
 //extern GDT_DESCRIPTOR KiGdt[256];
 
 
-VOID NtInitializeEventImplementation(VOID);
-VOID NtInit(VOID);
-
+VOID ExpInitializeEventImplementation(VOID);
+VOID ExpInitializeEventImplementation(VOID);
+VOID ExpInitializeEventPairImplementation(VOID);
+VOID ExpInitializeSemaphoreImplementation(VOID);
+VOID ExpInitializeMutantImplementation(VOID);
+VOID ExpInitializeTimerImplementation(VOID);
+VOID ExpInitializeProfileImplementation(VOID);
 /*
  * Initalization functions (called once by main())
  */

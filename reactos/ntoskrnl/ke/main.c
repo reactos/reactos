@@ -534,7 +534,6 @@ ExpInitializeExecutive(VOID)
   IoInit();
   PoInit();
   CmInitializeRegistry();
-  NtInit();
   MmInit3();
   CcInit();
   KdInit2();

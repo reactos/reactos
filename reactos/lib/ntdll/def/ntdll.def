@@ -77,7 +77,6 @@ NtCloseObjectAuditAlarm@12
 NtCompleteConnectPort@4
 NtConnectPort@32
 NtContinue@8
-NtCreateChannel@8
 NtCreateDirectoryObject@12
 NtCreateEvent@20
 NtCreateEventPair@12
@@ -128,7 +127,6 @@ NtImpersonateClientOfPort@8
 NtImpersonateThread@12
 NtInitializeRegistry@4
 NtIsProcessInJob@8
-NtListenChannel@8
 NtListenPort@8
 NtLoadDriver@4
 NtLoadKey@8
@@ -139,7 +137,6 @@ NtMakeTemporaryObject@4
 NtMapViewOfSection@40
 NtNotifyChangeDirectoryFile@36
 NtNotifyChangeKey@40
-NtOpenChannel@8
 NtOpenDirectoryObject@12
 NtOpenEvent@12
 NtOpenEventPair@12
@@ -212,17 +209,14 @@ NtReleaseSemaphore@12
 NtRemoveIoCompletion@20
 NtReplaceKey@12
 NtReplyPort@8
-NtReplyWaitReceivePort@16
 NtReplyWaitReplyPort@8
-NtReplyWaitSendChannel@12
+NtReplyWaitReceivePort@16
 NtRequestPort@8
 NtRequestWaitReplyPort@12
 NtResetEvent@8
 NtRestoreKey@12
 NtResumeThread@8
 NtSaveKey@8
-NtSendWaitReplyChannel@16
-NtSetContextChannel@4
 NtSetContextThread@8
 NtSetDefaultHardErrorPort@4
 NtSetDefaultLocale@8
@@ -704,7 +698,6 @@ ZwCloseObjectAuditAlarm@12
 ZwCompleteConnectPort@4
 ZwConnectPort@32
 ZwContinue@8
-ZwCreateChannel@8
 ZwCreateDirectoryObject@12
 ZwCreateEvent@20
 ZwCreateEventPair@12
@@ -751,7 +744,6 @@ ZwGetTickCount@0
 ZwImpersonateClientOfPort@8
 ZwImpersonateThread@12
 ZwInitializeRegistry@4
-ZwListenChannel@8
 ZwListenPort@8
 ZwLoadDriver@4
 ZwLoadKey@8
@@ -762,7 +754,6 @@ ZwMakeTemporaryObject@4
 ZwMapViewOfSection@40
 ZwNotifyChangeDirectoryFile@36
 ZwNotifyChangeKey@40
-ZwOpenChannel@8
 ZwOpenDirectoryObject@12
 ZwOpenEvent@12
 ZwOpenEventPair@12
@@ -835,15 +826,12 @@ ZwReplaceKey@12
 ZwReplyPort@8
 ZwReplyWaitReceivePort@16
 ZwReplyWaitReplyPort@8
-ZwReplyWaitSendChannel@12
 ZwRequestPort@8
 ZwRequestWaitReplyPort@12
 ZwResetEvent@8
 ZwRestoreKey@12
 ZwResumeThread@8
 ZwSaveKey@8
-ZwSendWaitReplyChannel@16
-ZwSetContextChannel@4
 ZwSetContextThread@8
 ZwSetDefaultHardErrorPort@4
 ZwSetDefaultLocale@8

@@ -14,7 +14,7 @@ TARGET = genntdll
 SYSTEM_CALLS_DB = sysfuncs.lst
 NTDLL_STUBS = ../../lib/ntdll/napi.c
 KERNEL_SERVICE_TABLE = ../../include/ntdll/napi.h
-KERNEL_ZW_CALLS = ../../ntoskrnl/nt/zw.c
+KERNEL_ZW_CALLS = ../../ntoskrnl/ke/zw.c
 NAPI_FILES = $(NTDLL_STUBS) $(KERNEL_SERVICE_TABLE) $(KERNEL_ZW_CALLS)
 
 BASE_CFLAGS = -I../../include

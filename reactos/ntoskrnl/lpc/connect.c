@@ -78,7 +78,7 @@ EiConnectPort(IN PEPORT* ConnectedPort,
     {
       return (Status);
     }
-  NiInitializePort(OurPort, EPORT_TYPE_CLIENT_COMM_PORT, NamedPort);
+  LpcpInitializePort(OurPort, EPORT_TYPE_CLIENT_COMM_PORT, NamedPort);
 
   /*
    * Allocate a request message.
@@ -592,7 +592,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 	  return(Status);
 	}
 
-      NiInitializePort(OurPort, EPORT_TYPE_SERVER_COMM_PORT, NamedPort);
+      LpcpInitializePort(OurPort, EPORT_TYPE_SERVER_COMM_PORT, NamedPort);
     }
 
   /*

@@ -48,7 +48,6 @@
 #include <internal/kd.h>
 #include <internal/ex.h>
 #include <internal/ob.h>
-#include <internal/nt.h>
 #include "internal/xhal.h"
 #include <internal/v86m.h>
 #include <internal/ifs.h>

@@ -22,6 +22,7 @@ OBJECTS_KE_I386 := \
 	ke/i386/tskswitch.o \
 	ke/i386/v86m.o \
 	ke/i386/v86m_sup.o \
+	ke/i386/vdm.o \
 	ke/i386/bios.o \
 	ke/i386/i386-mcount.o \
 	ke/i386/gdt.o \

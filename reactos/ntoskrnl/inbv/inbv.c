@@ -217,3 +217,18 @@ InbvSolidColorFill(IN ULONG Left,
   IN ULONG Color)
 {
 }
+
+NTSTATUS
+STDCALL
+NtDisplayString(IN PUNICODE_STRING DisplayString)
+{
+   ANSI_STRING AnsiString;
+
+   RtlUnicodeStringToAnsiString (&AnsiString, DisplayString, TRUE);
+
+   HalDisplayString (AnsiString.Buffer);
+
+   RtlFreeAnsiString (&AnsiString);
+
+   return(STATUS_SUCCESS);
+}

@@ -99,6 +99,10 @@ typedef struct _KDEVICE_QUEUE
   BOOLEAN Busy;
 } KDEVICE_QUEUE, *PKDEVICE_QUEUE;
 
+/*
+ * Size of the profile hash table.
+ */
+#define PROFILE_HASH_TABLE_SIZE      (32)
 
 #include <pshpack2.h>
 

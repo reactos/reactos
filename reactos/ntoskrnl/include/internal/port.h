@@ -134,11 +134,11 @@ NiCreatePort (PVOID			ObjectBody,
 /* Code in ntoskrnl/lpc/port.c */
 
 NTSTATUS STDCALL
-NiInitializePort (IN OUT  PEPORT	Port,
+LpcpInitializePort (IN OUT  PEPORT	Port,
 		  IN      USHORT        Type,
 		  IN      PEPORT        Parent OPTIONAL);
 NTSTATUS
-NiInitPort (VOID);
+LpcpInitSystem (VOID);
 
 extern POBJECT_TYPE	LpcPortObjectType;
 extern ULONG		LpcpNextMessageId;

@@ -159,7 +159,7 @@ NtCreatePort (PHANDLE		      PortHandle,
       return (Status);
     }
 
-  Status = NiInitializePort (Port, EPORT_TYPE_SERVER_RQST_PORT, NULL);
+  Status = LpcpInitializePort (Port, EPORT_TYPE_SERVER_RQST_PORT, NULL);
   Port->MaxConnectInfoLength = PORT_MAX_DATA_LENGTH;
   Port->MaxDataLength = PORT_MAX_MESSAGE_LENGTH;
   Port->MaxPoolUsage = MaxPoolUsage;
