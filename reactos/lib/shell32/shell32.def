@@ -217,9 +217,9 @@ SheShortenPathA@0 ; @  286
 SheShortenPathW@0 ; @  287
 ShellAboutA@16 ; @  288
 ShellAboutW@16 ; @  289
-ShellExecuteA@24 ; @  290
+ShellExecuteA=ShellExecuteA@24 ; @  290
 ShellExecuteEx@4 ; @  291
-ShellExecuteExA@4 ; @  292
+ShellExecuteExA=ShellExecuteExA@4 ; @  292
 ShellExecuteExW@4 ; @  293
 ShellExecuteW@24 ; @  294
 Shell_NotifyIcon@8 ; @  296
@@ -304,7 +304,7 @@ ExtractAssociatedIconA@12
 ExtractAssociatedIconExA@0
 ExtractAssociatedIconExW@0
 ExtractAssociatedIconW@12
-ExtractIconA@12
+ExtractIconA=ExtractIconA@12
 ExtractIconEx@20
 ExtractIconExA@20
 ExtractIconExW@20
@@ -348,7 +348,7 @@ SHGetFileInfo@20
 SHGetFileInfoA@20
 SHGetFileInfoW@20
 SHGetInstanceExplorer@4
-SHGetMalloc@4
+SHGetMalloc=SHGetMalloc@4
 SHGetNewLinkInfo@20
 SHGetPathFromIDList=SHGetPathFromIDList@8
 SHGetPathFromIDListA=SHGetPathFromIDListA@8
