@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.33 2003/10/18 17:35:44 navaraf Exp $
+/* $Id: winpos.c,v 1.34 2003/10/20 14:00:58 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1228,19 +1228,27 @@ WinPosSetActiveWindow(PWINDOW_OBJECT Window, BOOL Mouse, BOOL ChangeFocus)
   if (PrevActive != NULL)
     {
       PWINDOW_OBJECT PrevActiveWindow = IntGetWindowObject(PrevActive);
-      WORD Iconised = HIWORD(PrevActiveWindow->Style & WS_MINIMIZE);
-      if (!IntSendMessage(PrevActive, WM_NCACTIVATE, FALSE, 0, TRUE))
-	{
-	  /* FIXME: Check if the new window is system modal. */
-	  return(FALSE);
-	}
-      IntSendMessage(PrevActive, 
-		      WM_ACTIVATE, 
-		      MAKEWPARAM(WA_INACTIVE, Iconised), 
-		      (LPARAM)Window->Self,
-		      TRUE);
-      /* FIXME: Check if anything changed while processing the message. */
-      IntReleaseWindowObject(PrevActiveWindow);
+      if(PrevActiveWindow)
+      {
+        WORD Iconised = HIWORD(PrevActiveWindow->Style & WS_MINIMIZE);
+        if (!IntSendMessage(PrevActive, WM_NCACTIVATE, FALSE, 0, TRUE))
+	      {
+	        /* FIXME: Check if the new window is system modal. */
+	        return(FALSE);
+	      }
+        IntSendMessage(PrevActive, 
+		        WM_ACTIVATE, 
+		        MAKEWPARAM(WA_INACTIVE, Iconised), 
+		        (LPARAM)Window->Self,
+		        TRUE);
+        /* FIXME: Check if anything changed while processing the message. */
+        IntReleaseWindowObject(PrevActiveWindow);
+      }
+      else
+      {
+        ActiveQueue->ActiveWindow = NULL;
+        PrevActive = NULL;
+      }
     }
 
   if (Window != NULL)
