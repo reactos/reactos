@@ -32,10 +32,12 @@ VOID STDCALL EngFreeMem(PVOID Mem)
 
 PVOID STDCALL EngAllocUserMem(ULONG cj, ULONG tag)
 {
-   PVOID newMem;
+/*   PVOID newMem;
 
-/*   return ZwAllocateVirtualMemory(mycurrentprocess, newMem, 0, cj,
+   return ZwAllocateVirtualMemory(mycurrentprocess, newMem, 0, cj,
      MEM_COMMIT, PAGE_READWRITE); */
+
+   return NULL;
 }
 
 VOID STDCALL EngFreeUserMem(PVOID pv)
