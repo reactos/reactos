@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dos8dot3.c,v 1.7 2003/07/11 01:23:15 royce Exp $
+/* $Id: dos8dot3.c,v 1.8 2003/10/11 17:38:42 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -36,25 +36,46 @@
 
 /* CONSTANTS *****************************************************************/
 
-const PWCHAR RtlpShortIllegals = L" ;+=[]',\"*\\<>/?:|";
+const PCHAR RtlpShortIllegals = " ;+=[],\"*\\<>/?:|";
 
 
 /* FUNCTIONS *****************************************************************/
 
 static BOOLEAN
-RtlpIsShortIllegal(WCHAR Char)
+RtlpIsShortIllegal(CHAR Char)
 {
-  int i;
-
-  for (i = 0; RtlpShortIllegals[i]; i++)
-    {
-      if (Char == RtlpShortIllegals[i])
-	return(TRUE);
-    }
-
-  return(FALSE);
+  return strchr(RtlpShortIllegals, Char) ? TRUE : FALSE;
 }
 
+static USHORT
+RtlpGetCheckSum(PUNICODE_STRING Name)
+{
+  USHORT Hash = 0;
+  ULONG Length;
+  PWCHAR c;
+
+  Length = Name->Length / sizeof(WCHAR);
+  c = Name->Buffer;
+  while(Length--)
+    {
+      Hash = (Hash + (*c << 4) + (*c >> 4)) * 11;
+      c++;
+    }
+  return Hash;
+}
+
+static ULONG
+RtlpGetIndexLength(ULONG Index)
+{
+   ULONG Length = 0;
+   while (Index)
+     {
+       Index /= 10;
+       Length++;
+     }
+   return Length ? Length : 1;
+}
+   
 
 /*
  * @implemented
@@ -65,18 +86,19 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
 		     IN OUT PGENERATE_NAME_CONTEXT Context,
 		     OUT PUNICODE_STRING Name8dot3)
 {
+  ULONG Count;
   WCHAR NameBuffer[8];
   WCHAR ExtBuffer[4];
-  USHORT StrLength;
-  USHORT NameLength;
-  USHORT ExtLength;
-  USHORT CopyLength;
-  USHORT DotPos;
-  USHORT i, j;
-  USHORT CurrentIndex;
-
-  memset(NameBuffer, 0, sizeof(NameBuffer));
-  memset(ExtBuffer, 0, sizeof(ExtBuffer));
+  ULONG StrLength;
+  ULONG NameLength;
+  ULONG ExtLength;
+  ULONG CopyLength;
+  ULONG DotPos;
+  ULONG i, j;
+  ULONG IndexLength;
+  ULONG CurrentIndex;
+  USHORT Checksum;
+  CHAR c;
 
   StrLength = Name->Length / sizeof(WCHAR);
   DPRINT("StrLength: %hu\n", StrLength);
@@ -100,12 +122,18 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
   /* Copy name (6 valid characters max) */
   for (i = 0, NameLength = 0; NameLength < 6 && i < DotPos; i++)
     {
-      if ((!RtlpIsShortIllegal(Name->Buffer[i])) &&
-	  (Name->Buffer[i] != L'.'))
+      c = 0;
+      RtlUpcaseUnicodeToOemN(&c, sizeof(CHAR), &Count, &Name->Buffer[i], sizeof(WCHAR));
+      if (Count != 1 || c == 0 || RtlpIsShortIllegal(c))
+        {
+	  NameBuffer[NameLength++] = L'_';
+	}
+      else if (c != '.')
 	{
-	  NameBuffer[NameLength++] = RtlUpcaseUnicodeChar(Name->Buffer[i]);
+	  NameBuffer[NameLength++] = (WCHAR)c;
 	}
     }
+  
   DPRINT("NameBuffer: '%.08S'\n", NameBuffer);
   DPRINT("NameLength: %hu\n", NameLength);
 
@@ -114,9 +142,15 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
     {
       for (i = DotPos, ExtLength = 0; ExtLength < 4 && i < StrLength; i++)
 	{
-	  if (!RtlpIsShortIllegal(Name->Buffer[i]))
+          c = 0;
+          RtlUpcaseUnicodeToOemN(&c, sizeof(CHAR), &Count, &Name->Buffer[i], sizeof(WCHAR));
+	  if (Count != 1 || c == 0 || RtlpIsShortIllegal(Name->Buffer[i]))
 	    {
-	      ExtBuffer[ExtLength++] = RtlUpcaseUnicodeChar(Name->Buffer[i]);
+              ExtBuffer[ExtLength++] = L'_';
+	    }
+	  else
+	    {
+	      ExtBuffer[ExtLength++] = c;
 	    }
 	}
     }
@@ -128,53 +162,91 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
   DPRINT("ExtLength: %hu\n", ExtLength);
 
   /* Determine next index */
-  CurrentIndex = Context->LastIndexValue;
-  CopyLength = min(NameLength, (CurrentIndex < 10) ? 6 : 5);
+  IndexLength = RtlpGetIndexLength(Context->LastIndexValue);
+  if (Context->CheckSumInserted)
+    {
+      CopyLength = min(NameLength, 8 - 4 - 1 - IndexLength);
+      Checksum = RtlpGetCheckSum(Name);
+    }
+  else
+    {
+      CopyLength = min(NameLength, 8 - 1 - IndexLength);
+      Checksum = 0;
+    }
+
   DPRINT("CopyLength: %hu\n", CopyLength);
 
   if ((Context->NameLength == CopyLength) &&
       (wcsncmp(Context->NameBuffer, NameBuffer, CopyLength) == 0) &&
       (Context->ExtensionLength == ExtLength) &&
-      (wcsncmp(Context->ExtensionBuffer, ExtBuffer, ExtLength) == 0))
-    CurrentIndex++;
+      (wcsncmp(Context->ExtensionBuffer, ExtBuffer, ExtLength) == 0) &&
+      (Checksum == Context->Checksum) &&
+      (Context->LastIndexValue < 999))
+    {
+      CHECKPOINT;
+      Context->LastIndexValue++;
+      if (Context->CheckSumInserted == FALSE && 
+	  Context->LastIndexValue > 9)
+        {
+	  Context->CheckSumInserted = TRUE;
+          Context->LastIndexValue = 1;
+          Context->Checksum = RtlpGetCheckSum(Name);
+	}
+    }
   else
-    CurrentIndex = 1;
-  DPRINT("CurrentIndex: %hu\n", CurrentIndex);
+    {
+      CHECKPOINT;
+      Context->LastIndexValue = 1;
+      Context->CheckSumInserted = FALSE;
+    }
+
+  IndexLength = RtlpGetIndexLength(Context->LastIndexValue);
+
+  DPRINT("CurrentIndex: %hu, IndexLength %hu\n", Context->LastIndexValue, IndexLength);
+  
+  if (Context->CheckSumInserted)
+    {
+      CopyLength = min(NameLength, 8 - 4 - 1 - IndexLength);
+    }
+  else
+    {
+      CopyLength = min(NameLength, 8 - 1 - IndexLength);
+    }
 
   /* Build the short name */
-  for (i = 0; i < CopyLength; i++)
+  memcpy(Name8dot3->Buffer, NameBuffer, CopyLength * sizeof(WCHAR));
+  j = CopyLength;
+  if (Context->CheckSumInserted)
     {
-      Name8dot3->Buffer[i] = NameBuffer[i];
+      j += 3;
+      Checksum = Context->Checksum;
+      for (i = 0; i < 4; i++)
+        {
+	  Name8dot3->Buffer[j--] = (Checksum % 16) > 9 ? (Checksum % 16) + L'A' - 10 : (Checksum % 16) + L'0';
+	  Checksum /= 16;
+	}
+      j = CopyLength + 4;
     }
-
-  Name8dot3->Buffer[i++] = L'~';
-  if (CurrentIndex >= 10)
-    Name8dot3->Buffer[i++] = (CurrentIndex / 10) + L'0';
-  Name8dot3->Buffer[i++] = (CurrentIndex % 10) + L'0';
-
-  for (j = 0; j < ExtLength; i++, j++)
+  Name8dot3->Buffer[j++] = L'~';
+  j += IndexLength - 1;
+  CurrentIndex = Context->LastIndexValue;
+  for (i = 0; i < IndexLength; i++)
     {
-      Name8dot3->Buffer[i] = ExtBuffer[j];
+      Name8dot3->Buffer[j--] = (CurrentIndex % 10) + L'0';
+      CurrentIndex /= 10;
     }
+  j += IndexLength + 1;
 
-  Name8dot3->Length = i * sizeof(WCHAR);
+  memcpy(Name8dot3->Buffer + j, ExtBuffer, ExtLength * sizeof(WCHAR));
+  Name8dot3->Length = (j + ExtLength) * sizeof(WCHAR);
 
   DPRINT("Name8dot3: '%wZ'\n", Name8dot3);
 
   /* Update context */
   Context->NameLength = CopyLength;
-  for (i = 0; i < CopyLength; i++)
-    {
-      Context->NameBuffer[i] = NameBuffer[i];
-    }
-
   Context->ExtensionLength = ExtLength;
-  for (i = 0; i < ExtLength; i++)
-    {
-      Context->ExtensionBuffer[i] = ExtBuffer[i];
-    }
-
-  Context->LastIndexValue = CurrentIndex;
+  memcpy(Context->NameBuffer, NameBuffer, CopyLength * sizeof(WCHAR));
+  memcpy(Context->ExtensionBuffer, ExtBuffer, ExtLength * sizeof(WCHAR));
 }
 
 
