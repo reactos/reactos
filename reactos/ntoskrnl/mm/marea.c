@@ -452,6 +452,8 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
    (*Result)->Attributes = Attributes;
    (*Result)->LockCount = 0;
    (*Result)->Process = Process;
+   (*Result)->PageOpCount = 0;
+   (*Result)->DeleteInProgress = FALSE;
    
    MmInsertMemoryArea(AddressSpace, *Result);
    

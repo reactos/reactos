@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.2 2001/06/29 19:31:59 ekohl Exp $
+/* $Id: winsta.c,v 1.3 2002/06/11 22:09:01 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -13,121 +13,111 @@
 #include <debug.h>
 
 
-WINBOOL
-STDCALL
-CloseWindowStation(
-  HWINSTA hWinSta)
+WINBOOL STDCALL
+CloseWindowStation(HWINSTA hWinSta)
 {
-  return NtUserCloseWindowStation(hWinSta);
+  return(NtUserCloseWindowStation(hWinSta));
 }
 
-HWINSTA
-STDCALL
-CreateWindowStationA(
-  LPSTR lpwinsta,
-  DWORD dwReserved,
-  ACCESS_MASK dwDesiredAccess,
-  LPSECURITY_ATTRIBUTES lpsa)
+HWINSTA STDCALL
+CreateWindowStationA(LPSTR lpwinsta,
+		     DWORD dwReserved,
+		     ACCESS_MASK dwDesiredAccess,
+		     LPSECURITY_ATTRIBUTES lpsa)
 {
   ANSI_STRING WindowStationNameA;
   UNICODE_STRING WindowStationNameU;
   HWINSTA hWinSta;
+  
+  if (lpwinsta != NULL) 
+    {
+      RtlInitAnsiString(&WindowStationNameA, lpwinsta);
+      RtlAnsiStringToUnicodeString(&WindowStationNameU, &WindowStationNameA, 
+				   TRUE);
+    } 
+  else 
+    {
+      RtlInitUnicodeString(&WindowStationNameU, NULL);
+    }
 
-	if (lpwinsta != NULL) {
-		RtlInitAnsiString(&WindowStationNameA, lpwinsta);
-		RtlAnsiStringToUnicodeString(&WindowStationNameU, &WindowStationNameA, TRUE);
-  } else {
-    RtlInitUnicodeString(&WindowStationNameU, NULL);
-  }
+  hWinSta = CreateWindowStationW(WindowStationNameU.Buffer,
+				 dwReserved,
+				 dwDesiredAccess,
+				 lpsa);
 
-  hWinSta = CreateWindowStationW(
-    WindowStationNameU.Buffer,
-    dwReserved,
-    dwDesiredAccess,
-    lpsa);
-
-	RtlFreeUnicodeString(&WindowStationNameU);
-
+  RtlFreeUnicodeString(&WindowStationNameU);
+  
   return hWinSta;
 }
 
-HWINSTA
-STDCALL
-CreateWindowStationW(
-  LPWSTR lpwinsta,
-  DWORD dwReserved,
-  ACCESS_MASK dwDesiredAccess,
-  LPSECURITY_ATTRIBUTES lpsa)
+HWINSTA STDCALL
+CreateWindowStationW(LPWSTR lpwinsta,
+		     DWORD dwReserved,
+		     ACCESS_MASK dwDesiredAccess,
+		     LPSECURITY_ATTRIBUTES lpsa)
 {
   UNICODE_STRING WindowStationName;
-
+  
   RtlInitUnicodeString(&WindowStationName, lpwinsta);
-
-  return NtUserCreateWindowStation(
-    &WindowStationName,
-    dwDesiredAccess,
-    lpsa, 0, 0, 0);
+  
+  return NtUserCreateWindowStation(&WindowStationName,
+				   dwDesiredAccess,
+				   lpsa, 0, 0, 0);
 }
 
-WINBOOL
-STDCALL
-EnumWindowStationsA(
-  ENUMWINDOWSTATIONPROC lpEnumFunc,
-  LPARAM lParam)
+WINBOOL STDCALL
+EnumWindowStationsA(ENUMWINDOWSTATIONPROC lpEnumFunc,
+		    LPARAM lParam)
 {
   return FALSE;
 }
 
-WINBOOL
-STDCALL
-EnumWindowStationsW(
-  ENUMWINDOWSTATIONPROC lpEnumFunc,
-  LPARAM lParam)
+WINBOOL STDCALL
+EnumWindowStationsW(ENUMWINDOWSTATIONPROC lpEnumFunc,
+		    LPARAM lParam)
 {
   return FALSE;
 }
 
-HWINSTA
-STDCALL
+HWINSTA STDCALL
 GetProcessWindowStation(VOID)
 {
   return NtUserGetProcessWindowStation();
 }
 
-HWINSTA
-STDCALL
-OpenWindowStationA(
-  LPSTR lpszWinSta,
-  WINBOOL fInherit,
-  ACCESS_MASK dwDesiredAccess)
+HWINSTA STDCALL
+OpenWindowStationA(LPSTR lpszWinSta,
+		   WINBOOL fInherit,
+		   ACCESS_MASK dwDesiredAccess)
 {
   ANSI_STRING WindowStationNameA;
   UNICODE_STRING WindowStationNameU;
   HWINSTA hWinSta;
-
-	if (lpszWinSta != NULL) {
-		RtlInitAnsiString(&WindowStationNameA, lpszWinSta);
-		RtlAnsiStringToUnicodeString(&WindowStationNameU, &WindowStationNameA, TRUE);
-  } else {
-    RtlInitUnicodeString(&WindowStationNameU, NULL);
-  }
-
-  hWinSta = OpenWindowStationW(
-    WindowStationNameU.Buffer,
-    fInherit,
-    dwDesiredAccess);
-
-	RtlFreeUnicodeString(&WindowStationNameU);
-
+  
+  if (lpszWinSta != NULL) 
+    {
+      RtlInitAnsiString(&WindowStationNameA, lpszWinSta);
+      RtlAnsiStringToUnicodeString(&WindowStationNameU, &WindowStationNameA, 
+				   TRUE);
+    } 
+  else 
+    {
+      RtlInitUnicodeString(&WindowStationNameU, NULL);
+    }
+  
+  hWinSta = OpenWindowStationW(WindowStationNameU.Buffer,
+			       fInherit,
+			       dwDesiredAccess);
+  
+  RtlFreeUnicodeString(&WindowStationNameU);
+  
   return hWinSta;
 }
 
-HWINSTA
-STDCALL
-OpenWindowStationW(
-  LPWSTR lpszWinSta,
-  WINBOOL fInherit,
-  ACCESS_MASK dwDesiredAccess)
+HWINSTA STDCALL
+OpenWindowStationW(LPWSTR lpszWinSta,
+		   WINBOOL fInherit,
+		   ACCESS_MASK dwDesiredAccess)
 {
   UNICODE_STRING WindowStationName;
 
@@ -136,10 +126,8 @@ OpenWindowStationW(
   return NtUserOpenWindowStation(&WindowStationName, dwDesiredAccess);
 }
 
-WINBOOL
-STDCALL
-SetProcessWindowStation(
-  HWINSTA hWinSta)
+WINBOOL STDCALL
+SetProcessWindowStation(HWINSTA hWinSta)
 {
   return NtUserSetProcessWindowStation(hWinSta);
 }

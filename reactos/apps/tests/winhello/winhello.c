@@ -1,11 +1,13 @@
 #include <windows.h>
+#include <stdio.h>
 
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
-int WINAPI WinMain(HINSTANCE hInstance,
-  HINSTANCE hPrevInstance,
-  LPSTR lpszCmdLine,
-  int nCmdShow)
+int WINAPI 
+WinMain(HINSTANCE hInstance,
+	HINSTANCE hPrevInstance,
+	LPSTR lpszCmdLine,
+	int nCmdShow)
 {
   WNDCLASS wc;
   MSG msg;
@@ -21,21 +23,30 @@ int WINAPI WinMain(HINSTANCE hInstance,
   wc.lpszMenuName = NULL;
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;
-  RegisterClass(&wc);
+  if (RegisterClass(&wc) == 0)
+    {
+      fprintf(stderr, "RegisterClass failed (last error 0x%X)\n",
+	      GetLastError());
+      return(1);
+    }
 
-  hWnd = CreateWindow
-  ( "HelloClass",
-    "Hello World",
-    WS_OVERLAPPEDWINDOW|WS_HSCROLL|WS_VSCROLL,
-    0,
-    0,
-    CW_USEDEFAULT,
-    CW_USEDEFAULT,
-    NULL,
-    NULL,
-    hInstance,
-    NULL
-  );
+  hWnd = CreateWindow("HelloClass",
+		      "Hello World",
+		      WS_OVERLAPPEDWINDOW|WS_HSCROLL|WS_VSCROLL,
+		      0,
+		      0,
+		      CW_USEDEFAULT,
+		      CW_USEDEFAULT,
+		      NULL,
+		      NULL,
+		      hInstance,
+		      NULL);
+  if (hWnd == NULL)
+    {
+      fprintf(stderr, "CreateWindow failed (last error 0x%X)\n",
+	      GetLastError());
+      return(1);
+    }
 
   ShowWindow(hWnd, nCmdShow);
 
@@ -57,7 +68,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   {
     case WM_PAINT:
       hDC = BeginPaint(hWnd, &ps);
-      TextOut(hDC, 10, 10, "Hello World from ReactOS!", strlen("Hello World from ReactOS!"));
+      TextOut(hDC, 10, 10, "Hello World from ReactOS!", 
+	      strlen("Hello World from ReactOS!"));
       EndPaint(hWnd, &ps);
       break;
 

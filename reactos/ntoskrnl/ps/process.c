@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.80 2002/06/04 15:26:57 dwelch Exp $
+/* $Id: process.c,v 1.81 2002/06/11 22:09:03 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -255,6 +255,7 @@ PsInitProcessManagment(VOID)
      (LARGE_INTEGER)(LONGLONG)(ULONG)MmGetPageDirectory();
    PsInitialSystemProcess->UniqueProcessId = 
      InterlockedIncrement(&PiNextProcessUniqueId);
+   PsInitialSystemProcess->Win32WindowStation = (HANDLE)0;
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
    InsertHeadList(&PsProcessListHead, 
@@ -284,22 +285,24 @@ PiFreeSymbols(PPEB Peb)
   assert (Peb);
   assert (Peb->Ldr);
 
-	CurrentEntry = Peb->Ldr->InLoadOrderModuleList.Flink;
-	while ((CurrentEntry != &Peb->Ldr->InLoadOrderModuleList) && (CurrentEntry != NULL))
+  CurrentEntry = Peb->Ldr->InLoadOrderModuleList.Flink;
+  while (CurrentEntry != &Peb->Ldr->InLoadOrderModuleList && 
+	 CurrentEntry != NULL)
+    {
+      Current = CONTAINING_RECORD(CurrentEntry, LDR_MODULE, 
+				  InLoadOrderModuleList);
+      Symbol = Current->Symbols.Symbols;
+      while (Symbol != NULL)
 	{
-	  Current = CONTAINING_RECORD (CurrentEntry, LDR_MODULE, InLoadOrderModuleList);
-    Symbol = Current->Symbols.Symbols;
-		while (Symbol != NULL)
-		{
-      NextSymbol = Symbol->Next;
-      RtlFreeUnicodeString (&Symbol->Name);
-      ExFreePool (Symbol);
-	    Symbol = NextSymbol;
-		}
-    Current->Symbols.SymbolCount = 0;
-    Current->Symbols.Symbols = NULL;
-    CurrentEntry = CurrentEntry->Flink;
-  }
+	  NextSymbol = Symbol->Next;
+	  RtlFreeUnicodeString (&Symbol->Name);
+	  ExFreePool (Symbol);
+	  Symbol = NextSymbol;
+	}
+      Current->Symbols.SymbolCount = 0;
+      Current->Symbols.Symbols = NULL;
+      CurrentEntry = CurrentEntry->Flink;
+    }
 }
 
 #endif /* KDBG */
@@ -515,9 +518,29 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 		       InheritObjectTable,
 		       Process);
    MmCopyMmInfo(ParentProcess, Process);
+   if (ParentProcess->Win32WindowStation != (HANDLE)0)
+     {
+       /* Always duplicate the process window station. */
+       Process->Win32WindowStation = 0;
+       Status = ObDuplicateObject(ParentProcess,
+				  Process,
+				  ParentProcess->Win32WindowStation,
+				  &Process->Win32WindowStation,
+				  0,
+				  FALSE,
+				  DUPLICATE_SAME_ACCESS);
+       if (!NT_SUCCESS(Status))
+	 {
+	   KeBugCheck(0);
+	 }
+     }
+   else
+     {
+       Process->Win32WindowStation = (HANDLE)0;
+     }
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-  for (i = 0; i < PiProcessNotifyRoutineCount; i++)
+   for (i = 0; i < PiProcessNotifyRoutineCount; i++)
     {
       PiProcessNotifyRoutine[i](Process->InheritedFromUniqueProcessId,
 			        (HANDLE)Process->UniqueProcessId,

@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.2 2001/06/16 14:11:31 ekohl Exp $
+/* $Id: winsta.c,v 1.3 2002/06/11 22:09:03 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,14 +19,13 @@
 #include <include/winsta.h>
 #include <include/object.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 #define WINSTA_ROOT_NAME L"\\Windows\\WindowStations"
 
 
 HDESK InputDesktop; /* Currently active desktop */
-
 
 NTSTATUS
 InitWindowStationImpl(VOID)
@@ -37,28 +36,26 @@ InitWindowStationImpl(VOID)
   NTSTATUS Status;
 
   /*
-	 * Create the '\Windows\WindowStations' directory
-	 */
-  RtlInitUnicodeString(
-    &UnicodeString,
-    WINSTA_ROOT_NAME);
+   * Create the '\Windows\WindowStations' directory
+   */
+  RtlInitUnicodeString(&UnicodeString,
+		       WINSTA_ROOT_NAME);
 
-  InitializeObjectAttributes(
-    &ObjectAttributes,
-    &UnicodeString,
-    0,
-    NULL,
-    NULL);
-
-  Status = ZwCreateDirectoryObject(
-	  &WindowStationsDirectory,
-    0,
-    &ObjectAttributes);
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &UnicodeString,
+			     0,
+			     NULL,
+			     NULL);
+  
+  Status = ZwCreateDirectoryObject(&WindowStationsDirectory,
+				   0,
+				   &ObjectAttributes);
   if (!NT_SUCCESS(Status))
-  {
-    DPRINT("Could not create \\Windows\\WindowStations directory (Status 0x%X)\n", Status);
-    return Status;
-  }
+    {
+      DPRINT("Could not create \\Windows\\WindowStations directory "
+	     "(Status 0x%X)\n", Status);
+      return Status;
+    }
 
   return STATUS_SUCCESS;
 }
@@ -71,48 +68,46 @@ CleanupWindowStationImpl(VOID)
 
 
 NTSTATUS
-ValidateWindowStationHandle(
-  HWINSTA WindowStation,
-  KPROCESSOR_MODE AccessMode,
-  ACCESS_MASK DesiredAccess,
-  PWINSTATION_OBJECT *Object)
+ValidateWindowStationHandle(HWINSTA WindowStation,
+			    KPROCESSOR_MODE AccessMode,
+			    ACCESS_MASK DesiredAccess,
+			    PWINSTATION_OBJECT *Object)
 {
   NTSTATUS Status;
-
-  Status = ObReferenceObjectByHandle(
-    WindowStation,
-    DesiredAccess,
-    ExWindowStationObjectType,
-    AccessMode,
-    (PVOID*)Object,
-    NULL);
-  if (!NT_SUCCESS(Status)) {
-    SetLastNtError(Status);
-  }
-
+  
+  Status = ObReferenceObjectByHandle(WindowStation,
+				     DesiredAccess,
+				     ExWindowStationObjectType,
+				     AccessMode,
+				     (PVOID*)Object,
+				     NULL);
+  if (!NT_SUCCESS(Status)) 
+    {
+      SetLastNtError(Status);
+    }
+  
   return Status;
 }
 
 NTSTATUS
-ValidateDesktopHandle(
-  HDESK Desktop,
-  KPROCESSOR_MODE AccessMode,
-  ACCESS_MASK DesiredAccess,
-  PDESKTOP_OBJECT *Object)
+ValidateDesktopHandle(HDESK Desktop,
+		      KPROCESSOR_MODE AccessMode,
+		      ACCESS_MASK DesiredAccess,
+		      PDESKTOP_OBJECT *Object)
 {
   NTSTATUS Status;
 
-  Status = ObReferenceObjectByHandle(
-    Desktop,
-    DesiredAccess,
-    ExDesktopObjectType,
-    AccessMode,
-    (PVOID*)Object,
-    NULL);
-  if (!NT_SUCCESS(Status)) {
-    SetLastNtError(Status);
-  }
-
+  Status = ObReferenceObjectByHandle(Desktop,
+				     DesiredAccess,
+				     ExDesktopObjectType,
+				     AccessMode,
+				     (PVOID*)Object,
+				     NULL);
+  if (!NT_SUCCESS(Status)) 
+    {
+      SetLastNtError(Status);
+    }
+  
   return Status;
 }
 
@@ -372,29 +367,31 @@ NtUserSetObjectInformation(
  * RETURNS:
  *   Status
  */
-BOOL
-STDCALL
-NtUserSetProcessWindowStation(
-  HWINSTA hWindowStation)
+BOOL STDCALL
+NtUserSetProcessWindowStation(HWINSTA hWindowStation)
 {
   PWINSTATION_OBJECT Object;
   NTSTATUS Status;
 
-  DPRINT("About to set process window station with handle (0x%X)\n", hWindowStation);
+  DPRINT("About to set process window station with handle (0x%X)\n", 
+	 hWindowStation);
 
-  Status = ValidateWindowStationHandle(
-    hWindowStation,
-    KernelMode,
-    0,
-    &Object);
-  if (!NT_SUCCESS(Status)) {
-    DPRINT("Validation of window station handle (0x%X) failed\n", hWindowStation);
-    return FALSE;
-  }
-
+  Status = ValidateWindowStationHandle(hWindowStation,
+				       KernelMode,
+				       0,
+				       &Object);
+  if (!NT_SUCCESS(Status)) 
+    {
+      DPRINT("Validation of window station handle (0x%X) failed\n", 
+	     hWindowStation);
+      return FALSE;
+    }
+  
   ObDereferenceObject(Object);
 
   SET_PROCESS_WINDOW_STATION(hWindowStation);
+  DPRINT("IoGetCurrentProcess()->Win32WindowStation 0x%X\n",
+	 IoGetCurrentProcess()->Win32WindowStation);
 
   return TRUE;
 }

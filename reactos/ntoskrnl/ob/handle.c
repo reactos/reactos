@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.37 2002/05/07 22:38:29 hbirr Exp $
+/* $Id: handle.c,v 1.38 2002/06/11 22:09:02 dwelch Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -105,14 +105,62 @@ static PHANDLE_REP ObpGetObjectByHandle(PHANDLE_TABLE HandleTable, HANDLE h)
    return(&(blk->handles[handle%HANDLE_BLOCK_ENTRIES]));
 }
 
+NTSTATUS
+ObDuplicateObject(PEPROCESS SourceProcess,
+		  PEPROCESS TargetProcess,
+		  HANDLE SourceHandle,
+		  PHANDLE TargetHandle,
+		  ACCESS_MASK DesiredAccess,
+		  BOOLEAN InheritHandle,
+		  ULONG	Options)
+{
+  KIRQL oldIrql;
+  PHANDLE_REP SourceHandleRep;
+  PVOID ObjectBody;
 
-NTSTATUS STDCALL NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
-				    IN	HANDLE		SourceHandle,
-				    IN	HANDLE		TargetProcessHandle,
-				    OUT	PHANDLE		UnsafeTargetHandle,
-				    IN	ACCESS_MASK	DesiredAccess,
-				    IN	BOOLEAN		InheritHandle,
-				    ULONG		Options)
+  KeAcquireSpinLock(&SourceProcess->HandleTable.ListLock, &oldIrql);
+  SourceHandleRep = ObpGetObjectByHandle(&SourceProcess->HandleTable,
+					 SourceHandle);
+  if (SourceHandleRep == NULL)
+    {
+      KeReleaseSpinLock(&SourceProcess->HandleTable.ListLock, oldIrql);
+      return(STATUS_INVALID_HANDLE);
+    }
+  ObjectBody = SourceHandleRep->ObjectBody;
+  ObReferenceObjectByPointer(ObjectBody,
+			     0,
+			     NULL,
+			     UserMode);
+  
+  if (Options & DUPLICATE_SAME_ACCESS)
+    {
+      DesiredAccess = SourceHandleRep->GrantedAccess;
+    }
+  
+  KeReleaseSpinLock(&SourceProcess->HandleTable.ListLock, oldIrql);
+  ObCreateHandle(TargetProcess,
+		 ObjectBody,
+		 DesiredAccess,
+		 InheritHandle,
+		 TargetHandle);
+  
+  if (Options & DUPLICATE_CLOSE_SOURCE)
+    {
+      ZwClose(SourceHandle);
+    }
+  
+  ObDereferenceObject(ObjectBody);
+  return(STATUS_SUCCESS);
+}
+
+NTSTATUS STDCALL 
+NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
+		   IN	HANDLE		SourceHandle,
+		   IN	HANDLE		TargetProcessHandle,
+		   OUT	PHANDLE		UnsafeTargetHandle,
+		   IN	ACCESS_MASK	DesiredAccess,
+		   IN	BOOLEAN		InheritHandle,
+		   ULONG		Options)
 /*
  * FUNCTION: Copies a handle from one process space to another
  * ARGUMENTS:
@@ -191,15 +239,13 @@ NTSTATUS STDCALL NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
      }
    
    KeReleaseSpinLock(&SourceProcess->HandleTable.ListLock, oldIrql);
-   
    if (!SourceHandleRep->Inherit)
-   {
-      ObDereferenceObject(TargetProcess);
-      ObDereferenceObject(SourceProcess);
-      ObDereferenceObject(ObjectBody);
-      return STATUS_INVALID_HANDLE;
-   }
-
+     {
+       ObDereferenceObject(TargetProcess);
+       ObDereferenceObject(SourceProcess);
+       ObDereferenceObject(ObjectBody);
+       return STATUS_INVALID_HANDLE;
+     }
    ObCreateHandle(TargetProcess,
 		  ObjectBody,
 		  DesiredAccess,
@@ -267,7 +313,7 @@ VOID ObCloseAllHandles(PEPROCESS Process)
 		  current->handles[i].ObjectBody = NULL;
 		  
 		  KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);
-   KeDetachProcess();
+		  KeDetachProcess();
 		  
 		  if ((Header->ObjectType != NULL) &&
 		      (Header->ObjectType->Close != NULL))
@@ -277,7 +323,7 @@ VOID ObCloseAllHandles(PEPROCESS Process)
 		    }
 		  
 		  ObDereferenceObject(ObjectBody);
-   KeAttachProcess( Process );
+		  KeAttachProcess(Process);
 		  KeAcquireSpinLock(&HandleTable->ListLock, &oldIrql);
 		  current_entry = &HandleTable->ListHead;
 		  break;
@@ -370,14 +416,16 @@ VOID ObCreateHandleTable(PEPROCESS Parent,
 		{
 		   if (current_block->handles[i].Inherit && Inherit)
 		   {
-		      new_block->handles[i].ObjectBody = current_block->handles[i].ObjectBody;
-		      new_block->handles[i].GrantedAccess = current_block->handles[i].GrantedAccess;
+		      new_block->handles[i].ObjectBody = 
+			current_block->handles[i].ObjectBody;
+		      new_block->handles[i].GrantedAccess = 
+			current_block->handles[i].GrantedAccess;
 		      new_block->handles[i].Inherit = TRUE;
 		      InterlockedIncrement(&(BODY_TO_HEADER(current_block->handles[i].ObjectBody)->HandleCount));
 		   }
 		}
 	     }
-             InsertTailList(&(Process->HandleTable.ListHead), &new_block->entry);
+             InsertTailList(&Process->HandleTable.ListHead, &new_block->entry);
 	     parent_current = parent_current->Flink;
 	  }
         KeReleaseSpinLockFromDpcLevel(&Process->HandleTable.ListLock);

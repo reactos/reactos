@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.4 2002/01/15 02:51:32 dwelch Exp $
+/* $Id: syscall.S,v 1.5 2002/06/11 22:09:02 dwelch Exp $
  *
  * FILE:            ntoskrnl/hal/x86/syscall.s
  * PURPOSE:         2E trap handler
@@ -63,6 +63,7 @@ _interrupt_handler2e:
 	   pushl        %ebx
            /* Set the new previous mode based on the saved CS selector */
 	   movl	        0x24(%esp), %ebx
+	   andl         $0x0000FFFF, %ebx
 	   cmpl         $KERNEL_CS, %ebx
 	   jne          L1
 	   movb         $KernelMode, %ss:KTHREAD_PREVIOUS_MODE(%esi)

@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.8 2002/02/08 02:57:06 chorns Exp $
+/* $Id: winlogon.c,v 1.9 2002/06/11 22:09:03 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -227,6 +227,12 @@ WinMain(HINSTANCE hInstance,
     */
    InteractiveWindowStation = CreateWindowStationW(
       L"WinSta0", 0, GENERIC_ALL, NULL);
+   if (InteractiveWindowStation == NULL)
+     {
+       DbgPrint("Failed to create window station (0x%X)\n", GetLastError());
+       NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
+       ExitProcess(1);
+     }
 
    /*
     * Set the process window station

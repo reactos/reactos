@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.4 2002/01/27 01:11:24 dwelch Exp $
+/* $Id: class.c,v 1.5 2002/06/11 22:09:03 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -18,7 +18,7 @@
 #include <include/winsta.h>
 #include <include/object.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/

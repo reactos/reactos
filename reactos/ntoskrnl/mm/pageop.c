@@ -1,4 +1,4 @@
-/* $Id: pageop.c,v 1.9 2002/05/14 21:19:19 dwelch Exp $
+/* $Id: pageop.c,v 1.10 2002/06/11 22:09:02 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -45,6 +45,7 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
       KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
       return;
     }
+  InterlockedDecrement(&PageOp->MArea->PageOpCount);
   PrevPageOp = MmPageOpHashTable[PageOp->Hash];
   if (PrevPageOp == PageOp)
     {
@@ -66,6 +67,68 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
     }
   KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
   KeBugCheck(0);
+}
+
+PMM_PAGEOP
+MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
+		 PMM_SECTION_SEGMENT Segment, ULONG Offset)
+{
+  ULONG Hash;
+  KIRQL oldIrql;
+  PMM_PAGEOP PageOp;
+  
+  /*
+   * Calcuate the hash value for pageop structure
+   */
+  if (MArea->Type == MEMORY_AREA_SECTION_VIEW_COMMIT)
+    {
+      Hash = (((ULONG)Segment) | (((ULONG)Offset) / PAGESIZE));
+    }
+  else
+    {
+      Hash = (((ULONG)Pid) | (((ULONG)Address) / PAGESIZE));
+    }
+  Hash = Hash % PAGEOP_HASH_TABLE_SIZE;
+
+  KeAcquireSpinLock(&MmPageOpHashTableLock, &oldIrql);
+
+  /*
+   * Check for an existing pageop structure
+   */
+  PageOp = MmPageOpHashTable[Hash];
+  while (PageOp != NULL)
+    {
+      if (MArea->Type == MEMORY_AREA_SECTION_VIEW_COMMIT)
+	{
+	  if (PageOp->Segment == Segment &&
+	      PageOp->Offset == Offset)
+	    {
+	      break;
+	    }
+	}
+      else
+	{
+	  if (PageOp->Pid == Pid &&
+	      PageOp->Address == Address)
+	    {
+	      break;
+	    }
+	}
+      PageOp = PageOp->Next;
+    }
+  
+  /*
+   * If we found an existing pageop then increment the reference count
+   * and return it.
+   */
+  if (PageOp != NULL)
+    {
+      PageOp->ReferenceCount++;
+      KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
+      return(PageOp);
+    }
+  KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
+  return(NULL);
 }
 
 PMM_PAGEOP
@@ -160,8 +223,10 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
   PageOp->Abandoned = FALSE;
   PageOp->Status = STATUS_PENDING;
   PageOp->OpType = OpType;
+  PageOp->MArea = MArea;
   KeInitializeEvent(&PageOp->CompletionEvent, NotificationEvent, FALSE);
   MmPageOpHashTable[Hash] = PageOp;
+  InterlockedIncrement(&MArea->PageOpCount);
 
   KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
   return(PageOp);

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.43 2002/05/06 22:20:32 dwelch Exp $
+# $Id: makefile,v 1.44 2002/06/11 22:09:03 dwelch Exp $
 
 PATH_TO_TOP = ../..
 
@@ -10,10 +10,15 @@ TARGET_BASE = 0x0
 
 TARGET_ENTRY = _DllMain@8
 
-# from atheos appserver makefile
-COPTS   = -pipe -O3 -I./freetype/include -c -Wall
+include $(PATH_TO_TOP)/config
 
-TARGET_CFLAGS = -I$(PATH_TO_TOP)/ntoskrnl/include -DUNICODE -Wall
+ifeq ($(DBG), 1)
+CFLAGS_DBG := -g
+else
+CFLAGS_DBG :=
+endif
+
+TARGET_CFLAGS = $(CFLAGS_DBG) -I$(PATH_TO_TOP)/ntoskrnl/include -DUNICODE -Wall
 
 ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o \
     eng/copybits.o eng/device.o eng/handle.o eng/lineto.o eng/paint.o \

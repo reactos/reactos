@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.9 2001/06/12 17:50:27 chorns Exp $
+/* $Id: class.c,v 1.10 2002/06/11 22:09:01 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -151,10 +151,8 @@ RealGetWindowClassW(
   return 0;
 }
 
-ATOM
-STDCALL
-RegisterClassA(
-  CONST WNDCLASS *lpWndClass)
+ATOM STDCALL
+RegisterClassA(CONST WNDCLASS *lpWndClass)
 {
   WNDCLASSEX Class;
 
@@ -164,10 +162,8 @@ RegisterClassA(
   return RegisterClassExA(&Class);
 }
 
-ATOM
-STDCALL
-RegisterClassExA(
-  CONST WNDCLASSEX *lpwcx)
+ATOM STDCALL
+RegisterClassExA(CONST WNDCLASSEX *lpwcx)
 {
   UNICODE_STRING MenuName;
   UNICODE_STRING ClassName;
@@ -179,58 +175,52 @@ RegisterClassExA(
     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return (ATOM)0;
   }
-
+  
   if (!RtlCreateUnicodeStringFromAsciiz(&ClassName, (PCSZ)lpwcx->lpszMenuName))
-  {
-    RtlFreeUnicodeString(&MenuName);
-    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-    return (ATOM)0;
-  }
-
+    {
+      RtlFreeUnicodeString(&MenuName);
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+      return (ATOM)0;
+    }
+  
   RtlMoveMemory(&Class, lpwcx, sizeof(WNDCLASSEX));
   Class.lpszMenuName = (LPCTSTR)MenuName.Buffer;
   Class.lpszClassName = (LPCTSTR)ClassName.Buffer;
 
-  Atom = NtUserRegisterClassExWOW(
-    (WNDCLASSEX*)lpwcx,
-    FALSE,
-    0,
-    0,
-    0,
-    0);
-
+  Atom = NtUserRegisterClassExWOW((WNDCLASSEX*)lpwcx,
+				  FALSE,
+				  0,
+				  0,
+				  0,
+				  0);
+  
   RtlFreeUnicodeString(&ClassName);
-
+  
   RtlFreeUnicodeString(&MenuName);
-
+  
   return (ATOM)Atom;
 }
 
-ATOM
-STDCALL
-RegisterClassExW(
-  CONST WNDCLASSEX *lpwcx)
+ATOM STDCALL
+RegisterClassExW(CONST WNDCLASSEX *lpwcx)
 {
   RTL_ATOM Atom;
-
-  Atom = NtUserRegisterClassExWOW(
-    (WNDCLASSEX*)lpwcx,
-    TRUE,
-    0,
-    0,
-    0,
-    0);
-
+  
+  Atom = NtUserRegisterClassExWOW((WNDCLASSEX*)lpwcx,
+				  TRUE,
+				  0,
+				  0,
+				  0,
+				  0);
+  
   return (ATOM)Atom;
 }
 
-ATOM
-STDCALL
-RegisterClassW(
-  CONST WNDCLASS *lpWndClass)
+ATOM STDCALL
+RegisterClassW(CONST WNDCLASS *lpWndClass)
 {
   WNDCLASSEX Class;
-
+  
   RtlMoveMemory(&Class.style, lpWndClass, sizeof(WNDCLASS));
   Class.cbSize = sizeof(WNDCLASSEX);
   Class.hIconSm = INVALID_HANDLE_VALUE;

@@ -1,3 +1,49 @@
+2002-06-11  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* subsys/system/winlogon/winlogon.c (WinMain): Check for
+	failure when creating a window system.
+
+2002-06-11  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* ntoskrnl/ob/handle.c (ObDuplicateObject): Added this internal
+	function for duplicating objects.
+	* ntoskrnl/ps/process.c (NtCreateProcess): Duplicate the parent
+	process's window station to the child process.
+	* ntoskrnl/ps/process.c (PsInitProcessManagement): Initialize the
+	first process's window station.
+
+2002-06-11  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* ntoskrnl/mm/marea.c (MmCreateMemoryArea): Initialise
+	page operation structure members.
+	* ntoskrnl/mm/pageop.c (MmReleasePageOp, MmGetPageOp): Increment
+	or decrement the page operation count in the memory area.
+	* ntoskrnl/mm/virtual.c (MmNotPresentFaultVirtualMemory,
+	MmPageOutVirtualMemory): Check for a deleted memory area before 
+	handling the fault.
+	* ntoskrnl/mm/virtual.c (MmFreeVirtualMemory): Wait for all
+	page operations to finish before freeing the memory area.
+
+2002-06-11  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* ntoskrnl/ke/i386/syscall.S (interrupt_handler2e): Corrected
+	test for previous mode, upper 16-bit of CS on the stack after an
+	interrupt are arbitary.
+
+2002-06-11  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* lib/user32/misc/winsta.c: Cleaned up indentation.
+
+2002-06-11  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+	
+	* apps/tests/winhello/winhello.c (WinMain, MainWndProc):
+	Cleaned up formatting, some more error checks.
+
+2002-06-04  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* ntoskrnl/mm/virtual.c (MmSecureVirtualMemory,
+	MmUnsecureVirtualMemory, NtQueryVirtualMemory): Corrected indentation.
+
 2002-06-04  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
 
 	* ntoskrnl/ke/i386/exp.c (KiDoubleFaultHandler): Print CR3

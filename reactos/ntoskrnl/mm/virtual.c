@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.60 2002/06/10 21:34:37 hbirr Exp $
+/* $Id: virtual.c,v 1.61 2002/06/11 22:09:02 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -109,6 +109,14 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 
    DPRINT("MmPageOutVirtualMemory(Address 0x%.8X) PID %d\n",
 	   Address, MemoryArea->Process->UniqueProcessId);
+
+   /*
+    * Check for paging out from a deleted virtual memory area.
+    */
+   if (MemoryArea->DeleteInProgress)
+     {
+       return(STATUS_UNSUCCESSFUL);
+     }
 
    /*
     * Paging out code or readonly data is easy.
@@ -239,6 +247,14 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	    MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
 	  }  
 	return(STATUS_SUCCESS);
+     }
+
+   /*
+    * Check for the virtual memory area being deleted.
+    */
+   if (MemoryArea->DeleteInProgress)
+     {
+       return(STATUS_UNSUCCESSFUL);
      }
 
    /*
@@ -1076,9 +1092,53 @@ MmFreeVirtualMemory(PEPROCESS Process,
 {
   PLIST_ENTRY current_entry;
   PMM_SEGMENT current;
+  ULONG i;
   
-  DPRINT("MmFreeVirtualMemory(Process %p  MemoryArea %p)\n", Process, MemoryArea);
+  DPRINT("MmFreeVirtualMemory(Process %p  MemoryArea %p)\n", Process, 
+	 MemoryArea);
   
+  /* Mark this memory area as about to be deleted. */
+  MemoryArea->DeleteInProgress = TRUE;
+
+  /* 
+   * Wait for any ongoing paging operations. Notice that since we have
+   * flagged this memory area as deleted no more page ops will be added.
+   */
+  if (MemoryArea->PageOpCount > 0)
+    {
+      for (i = 0; i < (PAGE_ROUND_UP(MemoryArea->Length) / PAGESIZE); i++)
+	{
+	  PMM_PAGEOP PageOp;
+
+	  if (MemoryArea->PageOpCount == 0)
+	    {
+	      break;
+	    }
+	  
+	  PageOp = MmCheckForPageOp(MemoryArea, Process->UniqueProcessId,
+				    MemoryArea->BaseAddress + (i * PAGESIZE),
+				    NULL, 0);
+	  if (PageOp != NULL)
+	    {
+	      NTSTATUS Status;
+	      MmUnlockAddressSpace(&Process->AddressSpace);
+	      Status = KeWaitForSingleObject(&PageOp->CompletionEvent,
+					     0,
+					     KernelMode,
+					     FALSE,
+					     NULL);
+	      if (Status != STATUS_SUCCESS)
+		{
+		  DPRINT1("Failed to wait for page op\n");
+		  KeBugCheck(0);
+		}
+	      MmLockAddressSpace(&Process->AddressSpace);
+	      MmReleasePageOp(PageOp);
+	    }
+	}
+    }
+
+  /* Free all the individual segments. */
   current_entry = MemoryArea->Data.VirtualMemoryData.SegmentListHead.Flink;
   while (current_entry != &MemoryArea->Data.VirtualMemoryData.SegmentListHead)
     {
@@ -1088,6 +1148,7 @@ MmFreeVirtualMemory(PEPROCESS Process,
       ExFreePool(current);
     }
 
+  /* Actually free the memory area. */
   MmFreeMemoryArea(&Process->AddressSpace,
 		   MemoryArea->BaseAddress,
 		   0,
@@ -1154,21 +1215,13 @@ NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
    switch (FreeType)
      {
       case MEM_RELEASE:
+	/* We can only free a memory area in one step. */
 	if (MemoryArea->BaseAddress != BaseAddress)
 	  {
 	     MmUnlockAddressSpace(AddressSpace);
 	     ObDereferenceObject(Process);
 	     return(STATUS_UNSUCCESSFUL);
-	  }
-#if 0	
-	if ((MemoryArea->Type == MEMORY_AREA_COMMIT) &&
-	    ((MemoryArea->Attributes & PAGE_READWRITE) ||
-	     (MemoryArea->Attributes & PAGE_EXECUTE_READWRITE)))
-	  {
-	     MmDereserveSwapPages(PAGE_ROUND_UP(MemoryArea->Length));
-	  }
-#endif
-
+	  }	
 	MmFreeVirtualMemory(Process, MemoryArea);
 	MmUnlockAddressSpace(AddressSpace);
 	ObDereferenceObject(Process);
@@ -1286,12 +1339,13 @@ NtProtectVirtualMemory(IN	HANDLE	ProcessHandle,
 }
 
 
-NTSTATUS STDCALL NtQueryVirtualMemory (IN HANDLE ProcessHandle,
-				       IN PVOID Address,
-				       IN CINT VirtualMemoryInformationClass,
-				       OUT PVOID VirtualMemoryInformation,
-				       IN ULONG Length,
-				       OUT PULONG ResultLength)
+NTSTATUS STDCALL 
+NtQueryVirtualMemory (IN HANDLE ProcessHandle,
+		      IN PVOID Address,
+		      IN CINT VirtualMemoryInformationClass,
+		      OUT PVOID VirtualMemoryInformation,
+		      IN ULONG Length,
+		      OUT PULONG ResultLength)
 {
    NTSTATUS Status;
    PEPROCESS Process;
@@ -1504,26 +1558,20 @@ NtWriteVirtualMemory(IN	HANDLE	ProcessHandle,
 }
 
 
-DWORD
-STDCALL
-MmSecureVirtualMemory (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+DWORD STDCALL
+MmSecureVirtualMemory (DWORD	Unknown0,
+		       DWORD	Unknown1,
+		       DWORD	Unknown2)
 {
-	UNIMPLEMENTED;
-	return 0;
+  UNIMPLEMENTED;
+  return 0;
 }
 
 
-VOID
-STDCALL
-MmUnsecureVirtualMemory (
-	DWORD	Unknown0
-	)
+VOID STDCALL
+MmUnsecureVirtualMemory (DWORD Unknown0)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 /* EOF */

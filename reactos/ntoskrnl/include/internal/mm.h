@@ -119,28 +119,30 @@ typedef struct
 
 typedef struct
 {
-   ULONG Type;
-   PVOID BaseAddress;
-   ULONG Length;
-   ULONG Attributes;
-   LIST_ENTRY Entry;
-   ULONG LockCount;
-   struct _EPROCESS* Process;
-   union
-     {
-       struct
-	{	     
-	  SECTION_OBJECT* Section;
-	  ULONG ViewOffset;
-	  LIST_ENTRY ViewListEntry;
-	  PMM_SECTION_SEGMENT Segment;
-	  BOOLEAN WriteCopyView;
-       } SectionData;
-       struct
-       {
-	 LIST_ENTRY SegmentListHead;
-       } VirtualMemoryData;
-   } Data;
+  ULONG Type;
+  PVOID BaseAddress;
+  ULONG Length;
+  ULONG Attributes;
+  LIST_ENTRY Entry;
+  ULONG LockCount;
+  struct _EPROCESS* Process;
+  BOOLEAN DeleteInProgress;
+  ULONG PageOpCount;
+  union
+  {
+    struct
+    {	     
+      SECTION_OBJECT* Section;
+      ULONG ViewOffset;
+      LIST_ENTRY ViewListEntry;
+      PMM_SECTION_SEGMENT Segment;
+      BOOLEAN WriteCopyView;
+    } SectionData;
+    struct
+    {
+      LIST_ENTRY SegmentListHead;
+    } VirtualMemoryData;
+  } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
 typedef struct _MADDRESS_SPACE
@@ -520,7 +522,8 @@ VOID
 MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, ULONG* PhysicalAddr);
 VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address);
 VOID
-MmDeletePageFileMapping(PEPROCESS Process, PVOID Address, SWAPENTRY* SwapEntry);
+MmDeletePageFileMapping(PEPROCESS Process, PVOID Address, 
+			SWAPENTRY* SwapEntry);
 NTSTATUS 
 MmCreatePageFileMapping(PEPROCESS Process,
 			PVOID Address,
@@ -532,5 +535,8 @@ VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address);
 VOID
 MmInitializeMdlImplementation(VOID);
 extern PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
+PMM_PAGEOP
+MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
+		 PMM_SECTION_SEGMENT Segment, ULONG Offset);
 
 #endif

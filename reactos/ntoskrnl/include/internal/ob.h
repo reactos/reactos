@@ -100,5 +100,13 @@ ObpCreateTypeObject(POBJECT_TYPE ObjectType);
 
 ULONG
 ObGetObjectHandleCount(PVOID Object);
+NTSTATUS
+ObDuplicateObject(PEPROCESS SourceProcess,
+		  PEPROCESS TargetProcess,
+		  HANDLE SourceHandle,
+		  PHANDLE TargetHandle,
+		  ACCESS_MASK DesiredAccess,
+		  BOOLEAN InheritHandle,
+		  ULONG	Options);
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */
