@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.136 2003/12/14 17:56:22 hbirr Exp $
+/* $Id: section.c,v 1.137 2003/12/21 19:12:19 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -252,7 +252,7 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
   Entry = MmGetPageEntrySectionSegment(Segment, Offset);
   if (Entry == 0)
     {
-      DPRINT1("Entry == 0 for MmSharePageEntrySectionSegment\n");
+      DPRINT1("Entry == 0 for MmUnsharePageEntrySectionSegment\n");
       KEBUGCHECK(0);
     }
   if (SHARE_COUNT_FROM_SSE(Entry) == 0)
