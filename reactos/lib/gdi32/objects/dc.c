@@ -11,6 +11,21 @@
 /*
  * @implemented
  */
+BOOL
+STDCALL
+DPtoLP(
+        HDC     a0,
+        LPPOINT a1,
+        int     a2
+        )
+{
+        return W32kDPtoLP(a0, a1, a2);
+}
+
+
+/*
+ * @implemented
+ */
 COLORREF
 STDCALL
 SetBkColor(

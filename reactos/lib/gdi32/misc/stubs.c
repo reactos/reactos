@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.27 2003/07/20 16:44:55 jimtabor Exp $
+/* $Id: stubs.c,v 1.28 2003/07/21 01:20:53 jimtabor Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -1920,22 +1920,6 @@ CreatePolygonRgn(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-DPtoLP(
-	HDC	a0,
-	LPPOINT	a1,
-	int	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
 }
 
 
