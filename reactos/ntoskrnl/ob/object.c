@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.75 2004/03/04 00:07:02 navaraf Exp $
+/* $Id: object.c,v 1.76 2004/03/12 00:28:13 dwelch Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -611,7 +611,8 @@ ObpPerformRetentionChecksWorkRoutine (IN PVOID Parameter)
 
 
 static NTSTATUS
-ObpPerformRetentionChecksDpcLevel(IN POBJECT_HEADER ObjectHeader)
+ObpPerformRetentionChecksDpcLevel(IN POBJECT_HEADER ObjectHeader,
+				  IN LONG OldRefCount)
 {
   if (ObjectHeader->RefCount < 0)
     {
@@ -627,7 +628,7 @@ ObpPerformRetentionChecksDpcLevel(IN POBJECT_HEADER ObjectHeader)
       KEBUGCHECK(0);
     }
 
-  if (ObjectHeader->RefCount == 0 &&
+  if (OldRefCount == 0 &&
       ObjectHeader->HandleCount == 0 &&
       ObjectHeader->Permanent == FALSE)
     {
@@ -696,18 +697,20 @@ VOID FASTCALL
 ObfReferenceObject(IN PVOID Object)
 {
   POBJECT_HEADER Header;
+  LONG NewRefCount;
 
   assert(Object);
 
   Header = BODY_TO_HEADER(Object);
 
+  /* No one should be referencing an object once we are deleting it. */
   if (Header->CloseInProcess)
     {
       KEBUGCHECK(0);
     }
-  InterlockedIncrement(&Header->RefCount);
 
-  ObpPerformRetentionChecksDpcLevel(Header);
+  NewRefCount = InterlockedIncrement(&Header->RefCount);
+  ObpPerformRetentionChecksDpcLevel(Header, NewRefCount);
 }
 
 
@@ -731,29 +734,21 @@ VOID FASTCALL
 ObfDereferenceObject(IN PVOID Object)
 {
   POBJECT_HEADER Header;
-  extern POBJECT_TYPE PsProcessType;
+  LONG NewRefCount;
 
   assert(Object);
 
+  /* Extract the object header. */
   Header = BODY_TO_HEADER(Object);
 
-  if (Header->ObjectType == PsProcessType)
-    {
-      DPRINT("Deref p 0x%x with refcount %d type %x ",
-	     Object, Header->RefCount, PsProcessType);
-      DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
-    }
+  /* 
+     Drop our reference and get the new count so we can tell if this was the
+     last reference.
+  */
+  NewRefCount = InterlockedDecrement(&Header->RefCount);
 
-  if (Header->ObjectType == PsThreadType)
-    {
-      DPRINT("Deref t 0x%x with refcount %d type %x ",
-	     Object, Header->RefCount, PsThreadType);
-      DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
-    }
-
-  InterlockedDecrement(&Header->RefCount);
-
-  ObpPerformRetentionChecksDpcLevel(Header);
+  /* Check whether the object can now be deleted. */
+  ObpPerformRetentionChecksDpcLevel(Header, NewRefCount);
 }
 
 
