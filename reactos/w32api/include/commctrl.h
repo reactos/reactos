@@ -513,6 +513,9 @@ extern "C" {
 #define TB_PRESSBUTTON	(WM_USER+3)
 #define TB_HIDEBUTTON	(WM_USER+4)
 #define TB_INDETERMINATE	(WM_USER+5)
+#if (_WIN32_IE >= 0x0400)
+#define TB_MARKBUTTON           (WM_USER+6)
+#endif
 #define TB_ISBUTTONENABLED	(WM_USER+9)
 #define TB_ISBUTTONCHECKED	(WM_USER+10)
 #define TB_ISBUTTONPRESSED	(WM_USER+11)
@@ -1883,6 +1886,22 @@ typedef struct {
 	LPWSTR pszText;
 	int cchText;
 } NMTBDISPINFOW, *LPNMTBDISPINFOW;
+typedef struct tagNMTBGETINFOTIPA
+{
+	NMHDR hdr;
+	LPSTR pszText;
+	int cchTextMax;
+	int iItem;
+	LPARAM lParam;
+} NMTBGETINFOTIPA, *LPNMTBGETINFOTIPA;
+typedef struct tagNMTBGETINFOTIPW
+{
+	NMHDR hdr;
+	LPWSTR pszText;
+	int cchTextMax;
+	int iItem;
+	LPARAM lParam;
+} NMTBGETINFOTIPW, *LPNMTBGETINFOTIPW;
 typedef struct tagNMMOUSE {
 	NMHDR hdr;
 	DWORD_PTR dwItemSpec;
