@@ -1,3 +1,5 @@
+# $Id: makefile,v 1.4 2001/07/21 15:40:04 ea Exp $
+#
 # ReactOS 0.17
 # Jurgen Van Gael [jurgen.vangael@student.kuleuven.ac.be]
 #
@@ -5,7 +7,7 @@
 #
 PATH_TO_TOP = ../..
 
-CFLAGS = -fno-rtti -I../../include/
+CFLAGS = -fno-rtti -I$(PATH_TO_TOP)/include/
 
 TARGETNAME=ole32
 
@@ -19,14 +21,17 @@ OBJECTS=\
 	Ole2.o \
 	OleAuto.o \
 	Misc.o \
-	Storage.o
+	Storage.o \
+	$(TARGETNAME).coff
 
 
 CLEAN_FILES = *.o \
               $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-	      $(TARGETNAME).dll $(TARGETNAME).sym
+	      $(TARGETNAME).dll $(TARGETNAME).sym $(TARGETNAME).coff
 
 all: $(DLLTARGET)
+
+$(TARGETNAME).coff: $(TARGETNAME).rc $(PATH_TO_TOP)/include/reactos/resource.h
 
 $(TARGETNAME).a: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o $(TARGETNAME).a
@@ -75,4 +80,4 @@ clean:
 
 .PHONY: clean 
 
-include ../../rules.mak
+include $(PATH_TO_TOP)/rules.mak
