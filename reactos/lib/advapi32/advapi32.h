@@ -6,4 +6,5 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <windows.h>
+#include <sddl.h>
 #include <rosrtl/string.h>

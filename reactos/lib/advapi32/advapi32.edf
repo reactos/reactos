@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.40 2004/07/10 14:38:23 weiden Exp $
+; $Id: advapi32.edf,v 1.41 2004/08/23 21:16:25 gvg Exp $
 ;
 ; advapi32.edf
 ;
@@ -44,6 +44,8 @@ ClearEventLogW=ClearEventLogW@8
 CloseEventLog=CloseEventLog@4
 CloseServiceHandle=CloseServiceHandle@4
 ControlService=ControlService@12
+ConvertSidToStringSidA=ConvertSidToStringSidA@8
+ConvertSidToStringSidW=ConvertSidToStringSidW@8
 CopySid=CopySid@12
 ;CreatePrivateObjectSecurity=CreatePrivateObjectSecurity@24
 CreateProcessAsUserA=CreateProcessAsUserA@44
