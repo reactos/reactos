@@ -24,14 +24,13 @@
  * PROGRAMER:        Filip Navara <xnavara@volny.cz>
  */
 
-#include <ddk/ntddk.h>
-#include <ddk/ntddmou.h>
 #include <win32k/win32k.h>
 #include <windows.h>
 #include <internal/safe.h>
 #include <include/clipboard.h>
 #include <include/cleanup.h>
 #include <include/error.h>
+#include <include/useratom.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -40,11 +39,11 @@ PW32THREAD ClipboardThread;
 HWND ClipboardWindow;
 #endif
 
-INT FASTCALL
+ULONG FASTCALL
 IntGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName)
 {
-  UNIMPLEMENTED;
-  return 0;
+   return IntGetAtomName((RTL_ATOM)format, FormatName->Buffer,
+      FormatName->MaximumLength);
 }
 
 UINT FASTCALL
@@ -132,10 +131,11 @@ INT STDCALL
 NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
    INT cchMaxCount)
 {
-  INT Ret;
+#if 1
   NTSTATUS Status;
   PWSTR Buf;
   UNICODE_STRING SafeFormatName, BufFormatName;
+  ULONG Ret;
   
   if((cchMaxCount < 1) || !FormatName)
   {
@@ -196,6 +196,9 @@ NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
   
   ExFreePool(Buf);
   return Ret;
+#else
+   return IntGetClipboardFormatName(format, FormatName);
+#endif
 }
 
 HWND STDCALL

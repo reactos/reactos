@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clipboard.c,v 1.8 2003/12/14 13:55:01 weiden Exp $
+/* $Id: clipboard.c,v 1.9 2003/12/14 17:59:15 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -110,8 +110,10 @@ GetClipboardFormatNameA(UINT format, LPSTR lpszFormatName, int cchMaxCount)
    FormatName.MaximumLength = cchMaxCount * sizeof(WCHAR);
    FormatName.Buffer = lpBuffer;
    Length = NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
+   DbgPrint("GetClipboardFormatNameA(%x): %S\n", format, lpBuffer);
    HEAP_strcpyWtoA(lpszFormatName, lpBuffer, Length);
    HEAP_free(lpBuffer);
+   DbgPrint("GetClipboardFormatNameA(%x): returning %s\n", format, lpszFormatName);
    
    return Length;
 }
@@ -123,11 +125,14 @@ INT STDCALL
 GetClipboardFormatNameW(UINT format, LPWSTR lpszFormatName, INT cchMaxCount)
 {
    UNICODE_STRING FormatName;
+   ULONG Ret;
    
    FormatName.Length = 0;
    FormatName.MaximumLength = cchMaxCount * sizeof(WCHAR);
    FormatName.Buffer = (PWSTR)lpszFormatName;
-   return NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
+   Ret = NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
+   DbgPrint("GetClipboardFormatNameW(%x): returning %S\n", format, lpszFormatName);
+   return Ret;
 }
 
 /*
@@ -190,7 +195,9 @@ IsClipboardFormatAvailable(UINT format)
 UINT STDCALL
 RegisterClipboardFormatA(LPCSTR lpszFormat)
 {
-   return RegisterWindowMessageA(lpszFormat);
+   ULONG Ret = RegisterWindowMessageA(lpszFormat);
+   DbgPrint("RegisterClipboardFormatA(%s) - %x\n", lpszFormat, Ret);
+   return Ret;
 }
 
 /*
@@ -199,7 +206,9 @@ RegisterClipboardFormatA(LPCSTR lpszFormat)
 UINT STDCALL
 RegisterClipboardFormatW(LPCWSTR lpszFormat)
 {
-   return RegisterClipboardFormatW(lpszFormat);
+   ULONG Ret = RegisterClipboardFormatW(lpszFormat);
+   DbgPrint("RegisterClipboardFormatW(%S) - %x\n", lpszFormat, Ret);
+   return Ret;
 }
 
 /*

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.162 2003/12/14 14:26:50 weiden Exp $
+/* $Id: window.c,v 1.163 2003/12/14 17:59:16 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -51,6 +51,7 @@
 #include <include/hotkey.h>
 #include <include/focus.h>
 #include <include/hook.h>
+#include <include/useratom.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -58,18 +59,8 @@
 
 #define TAG_WNAM  TAG('W', 'N', 'A', 'M')
 
-typedef struct _REGISTERED_MESSAGE
-{
-   LIST_ENTRY ListEntry;
-   WCHAR MessageName[1];
-} REGISTERED_MESSAGE, *PREGISTERED_MESSAGE;
-
-static LIST_ENTRY RegisteredMessageListHead;
 static WndProcHandle *WndProcHandlesArray = 0;
 static WORD WndProcHandlesArraySize = 0;
-
-#define REGISTERED_MESSAGE_MIN 0xc000
-#define REGISTERED_MESSAGE_MAX 0xffff
 #define WPH_SIZE 0x40 /* the size to add to the WndProcHandle array each time */
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -83,7 +74,6 @@ static WORD WndProcHandlesArraySize = 0;
 NTSTATUS FASTCALL
 InitWindowImpl(VOID)
 {
-   InitializeListHead(&RegisteredMessageListHead);
    WndProcHandlesArray = ExAllocatePool(PagedPool,WPH_SIZE * sizeof(WndProcHandle));
    WndProcHandlesArraySize = WPH_SIZE;
    return STATUS_SUCCESS;
@@ -2790,6 +2780,7 @@ NtUserRealChildWindowFromPoint(DWORD Unknown0,
 UINT STDCALL
 NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
 {
+#if 0
   PLIST_ENTRY Current;
   PREGISTERED_MESSAGE NewMsg, RegMsg;
   UINT Msg = REGISTERED_MESSAGE_MIN;
@@ -2851,6 +2842,14 @@ NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
   InsertTailList(&RegisteredMessageListHead, &(NewMsg->ListEntry));
 
   return Msg;
+#else
+   /*
+    * Notes:
+    * - There's no need to call MmSafe*, because it should be done in kernel.
+    * - The passed UNICODE_STRING is expected to be NULL-terminated.
+    */
+   return (UINT)IntAddAtom(MessageNameUnsafe->Buffer);
+#endif
 }
 
 
