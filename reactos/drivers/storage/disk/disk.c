@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.14 2002/05/28 09:29:07 ekohl Exp $
+/* $Id: disk.c,v 1.15 2002/06/06 23:19:53 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -200,7 +200,9 @@ DiskClassFindDevices(PDRIVER_OBJECT DriverObject,
       return(FALSE);
     }
 
+  DPRINT("PortCapabilities: %p\n", PortCapabilities);
   DPRINT("MaximumTransferLength: %lu\n", PortCapabilities->MaximumTransferLength);
+  DPRINT("MaximumPhysicalPages: %lu\n", PortCapabilities->MaximumPhysicalPages);
 
   /* Get inquiry data */
   Status = ScsiClassGetInquiryData(PortDeviceObject,
@@ -268,7 +270,6 @@ DiskClassFindDevices(PDRIVER_OBJECT DriverObject,
     }
 
   ExFreePool(Buffer);
-  ExFreePool(PortCapabilities);
 
   DPRINT("DiskClassFindDevices() done\n");
 
@@ -481,10 +482,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   DiskDeviceExtension->DeviceNumber = DiskNumber;
   DiskDeviceExtension->PortDeviceObject = PortDeviceObject;
   DiskDeviceExtension->PhysicalDevice = DiskDeviceObject;
-
-  /* FIXME: Not yet! Will cause pointer corruption! */
-//  DiskDeviceExtension->PortCapabilities = PortCapabilities;
-
+  DiskDeviceExtension->PortCapabilities = Capabilities;
   DiskDeviceExtension->StartingOffset.QuadPart = 0;
   DiskDeviceExtension->PortNumber = (UCHAR)PortNumber;
   DiskDeviceExtension->PathId = InquiryData->PathId;
@@ -631,10 +629,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	      PartitionDeviceExtension->PortDeviceObject = PortDeviceObject;
 	      PartitionDeviceExtension->DiskGeometry = DiskDeviceExtension->DiskGeometry;
 	      PartitionDeviceExtension->PhysicalDevice = DiskDeviceExtension->PhysicalDevice;
-
-	  /* FIXME: Not yet! Will cause pointer corruption! */
-//	  PartitionDeviceExtension->PortCapabilities = PortCapabilities;
-
+	      PartitionDeviceExtension->PortCapabilities = Capabilities;
 	      PartitionDeviceExtension->StartingOffset.QuadPart =
 		PartitionEntry->StartingOffset.QuadPart;
 	      PartitionDeviceExtension->PartitionLength.QuadPart =
@@ -659,8 +654,6 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	      break;
 	    }
 	}
-
-
     }
 
   if (PartitionList != NULL)

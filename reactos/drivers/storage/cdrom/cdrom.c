@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.10 2002/05/26 20:23:22 ekohl Exp $
+/* $Id: cdrom.c,v 1.11 2002/06/06 23:19:19 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -202,7 +202,9 @@ CdromClassFindDevices(IN PDRIVER_OBJECT DriverObject,
       return(FALSE);
     }
 
+  DPRINT("PortCapabilities: %p\n", PortCapabilities);
   DPRINT("MaximumTransferLength: %lu\n", PortCapabilities->MaximumTransferLength);
+  DPRINT("MaximumPhysicalPages: %lu\n", PortCapabilities->MaximumPhysicalPages);
 
   /* Get inquiry data */
   Status = ScsiClassGetInquiryData(PortDeviceObject,
@@ -270,7 +272,6 @@ CdromClassFindDevices(IN PDRIVER_OBJECT DriverObject,
     }
 
   ExFreePool(Buffer);
-  ExFreePool(PortCapabilities);
 
   DPRINT("CdromClassFindDevices() done\n");
 
@@ -433,10 +434,7 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   DiskDeviceExtension->DeviceNumber = DeviceNumber;
   DiskDeviceExtension->PortDeviceObject = PortDeviceObject;
   DiskDeviceExtension->PhysicalDevice = DiskDeviceObject;
-
-  /* FIXME: Not yet! Will cause pointer corruption! */
-//  DiskDeviceExtension->PortCapabilities = PortCapabilities;
-
+  DiskDeviceExtension->PortCapabilities = Capabilities;
   DiskDeviceExtension->StartingOffset.QuadPart = 0;
   DiskDeviceExtension->PortNumber = (UCHAR)PortNumber;
   DiskDeviceExtension->PathId = InquiryData->PathId;
@@ -578,7 +576,7 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	    Status = ScsiClassReadDriveCapacity(DeviceObject);
 	    if (NT_SUCCESS(Status))
 	      {
-		Geometry = (PDISK_GEOMETRY) Irp->AssociatedIrp.SystemBuffer;
+		Geometry = (PDISK_GEOMETRY)Irp->AssociatedIrp.SystemBuffer;
 		RtlMoveMemory(Geometry,
 			      DeviceExtension->DiskGeometry,
 			      sizeof(DISK_GEOMETRY));

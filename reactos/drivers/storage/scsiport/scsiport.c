@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.15 2002/05/26 20:25:49 ekohl Exp $
+/* $Id: scsiport.c,v 1.16 2002/06/06 23:20:08 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -77,6 +77,8 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   
   ULONG PortBusInfoSize;
   PSCSI_ADAPTER_BUS_INFO PortBusInfo;
+  
+  PIO_SCSI_CAPABILITIES PortCapabilities;
   
   PDEVICE_OBJECT DeviceObject;
   PCONTROLLER_OBJECT ControllerObject;
@@ -896,25 +898,12 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 
       case IOCTL_SCSI_GET_CAPABILITIES:
 	{
-	  PIO_SCSI_CAPABILITIES Capabilities;
-
 	  DPRINT("  IOCTL_SCSI_GET_CAPABILITIES\n");
 
-	  Capabilities = (PIO_SCSI_CAPABILITIES)Irp->AssociatedIrp.SystemBuffer;
-	  Capabilities->Length = sizeof(IO_SCSI_CAPABILITIES);
-	  Capabilities->MaximumTransferLength =
-	    DeviceExtension->PortConfig.MaximumTransferLength;
-	  Capabilities->MaximumPhysicalPages = 1;
-	  Capabilities->SupportedAsynchronousEvents = 0;
-	  Capabilities->AlignmentMask =
-	    DeviceExtension->PortConfig.AlignmentMask;
-	  Capabilities->TaggedQueuing =
-	    DeviceExtension->PortConfig.TaggedQueuing;
-	  Capabilities->AdapterScansDown =
-	    DeviceExtension->PortConfig.AdapterScansDown;
-	  Capabilities->AdapterUsesPio = TRUE;
+	  *((PIO_SCSI_CAPABILITIES *)Irp->AssociatedIrp.SystemBuffer) =
+	    DeviceExtension->PortCapabilities;
 
-	  Irp->IoStatus.Information = sizeof(IO_SCSI_CAPABILITIES);
+	  Irp->IoStatus.Information = sizeof(PIO_SCSI_CAPABILITIES);
 	}
 	break;
 
@@ -1068,6 +1057,7 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
 			 IN ULONG PortNumber)
 {
   PSCSI_PORT_DEVICE_EXTENSION PortDeviceExtension;
+  PIO_SCSI_CAPABILITIES PortCapabilities;
   PDEVICE_OBJECT PortDeviceObject;
   WCHAR NameBuffer[80];
   UNICODE_STRING DeviceName;
@@ -1173,6 +1163,24 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
   IoInitializeTimer(PortDeviceExtension->DeviceObject,
 		    ScsiPortIoTimer,
 		    PortDeviceExtension);
+
+  /* Initialize port capabilities */
+  PortCapabilities = ExAllocatePool(NonPagedPool,
+				    sizeof(IO_SCSI_CAPABILITIES));
+  PortDeviceExtension->PortCapabilities = PortCapabilities;
+  PortCapabilities->Length = sizeof(IO_SCSI_CAPABILITIES);
+  PortCapabilities->MaximumTransferLength =
+    PortDeviceExtension->PortConfig.MaximumTransferLength;
+  PortCapabilities->MaximumPhysicalPages =
+    PortCapabilities->MaximumTransferLength / PAGESIZE;
+  PortCapabilities->SupportedAsynchronousEvents = 0; /* FIXME */
+  PortCapabilities->AlignmentMask =
+    PortDeviceExtension->PortConfig.AlignmentMask;
+  PortCapabilities->TaggedQueuing =
+    PortDeviceExtension->PortConfig.TaggedQueuing;
+  PortCapabilities->AdapterScansDown =
+    PortDeviceExtension->PortConfig.AdapterScansDown;
+  PortCapabilities->AdapterUsesPio = TRUE; /* FIXME */
 
   /* Initialize inquiry data */
   PortDeviceExtension->PortBusInfoSize = 0;

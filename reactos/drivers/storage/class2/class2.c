@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.20 2002/06/05 19:31:39 hbirr Exp $
+/* $Id: class2.c,v 1.21 2002/06/06 23:19:36 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -536,19 +536,10 @@ NTSTATUS STDCALL
 ScsiClassGetCapabilities(PDEVICE_OBJECT PortDeviceObject,
 			 PIO_SCSI_CAPABILITIES *PortCapabilities)
 {
-  PIO_SCSI_CAPABILITIES Buffer;
   IO_STATUS_BLOCK IoStatusBlock;
   NTSTATUS Status;
   KEVENT Event;
   PIRP Irp;
-
-  *PortCapabilities = NULL;
-  Buffer = ExAllocatePool(NonPagedPool,
-			  sizeof(IO_SCSI_CAPABILITIES));
-  if (Buffer == NULL)
-    {
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
 
   KeInitializeEvent(&Event,
 		    NotificationEvent,
@@ -558,14 +549,13 @@ ScsiClassGetCapabilities(PDEVICE_OBJECT PortDeviceObject,
 				      PortDeviceObject,
 				      NULL,
 				      0,
-				      Buffer,
-				      sizeof(IO_SCSI_CAPABILITIES),
+				      PortCapabilities,
+				      sizeof(PVOID),
 				      FALSE,
 				      &Event,
 				      &IoStatusBlock);
   if (Irp == NULL)
     {
-      ExFreePool(Buffer);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
@@ -581,14 +571,7 @@ ScsiClassGetCapabilities(PDEVICE_OBJECT PortDeviceObject,
       Status = IoStatusBlock.Status;
     }
 
-  if (!NT_SUCCESS(Status))
-    {
-      ExFreePool(Buffer);
-    }
-  else
-    {
-      *PortCapabilities = Buffer;
-    }
+  DPRINT("PortCapabilities at %p\n", *PortCapabilities);
 
   return(Status);
 }
@@ -1486,10 +1469,8 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
 	 IrpStack->Parameters.Read.ByteOffset.QuadPart,
 	 IrpStack->Parameters.Read.Length);
 
-//  MaximumTransferLength = DeviceExtension->PortCapabilities->MaximumTransferLength;
-//  MaximumTransferPages = DeviceExtension->PortCapabilities->MaximumPhysicalPages;
-  MaximumTransferLength = 0x10000; /* 64 kbytes */
-  MaximumTransferPages = MaximumTransferLength / PAGESIZE;
+  MaximumTransferLength = DeviceExtension->PortCapabilities->MaximumTransferLength;
+  MaximumTransferPages = DeviceExtension->PortCapabilities->MaximumPhysicalPages;
 
   CurrentTransferLength = IrpStack->Parameters.Read.Length;
 
@@ -1560,9 +1541,7 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
 	      MaximumTransferLength, CurrentTransferLength);
 
       /* Adjust the maximum transfer length */
-//    CurrentTransferPages = DeviceExtension->PortCapabilities->MaximumPhysicalPages - 1;
-      CurrentTransferPages = 0x10000 / PAGESIZE;
-	    
+      CurrentTransferPages = DeviceExtension->PortCapabilities->MaximumPhysicalPages;
 
       if (MaximumTransferLength > CurrentTransferPages * PAGESIZE)
 	  MaximumTransferLength = CurrentTransferPages * PAGESIZE;
