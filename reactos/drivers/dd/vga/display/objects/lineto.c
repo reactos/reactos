@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.17 2003/11/16 12:36:24 gvg Exp $
+ * $Id: lineto.c,v 1.18 2003/12/31 16:10:35 weiden Exp $
  */
 
 #include "../vgaddi.h"
@@ -36,7 +36,7 @@ vgaNWtoSE(CLIPOBJ* Clip, BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG delt
   ULONG Pixel = Brush->iSolidColor;
   LONG delta;
 
-  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, ENUM_RECT_LIMIT);
+  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
   EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
   ClipRect = RectEnum.arcl;
   delta = max(deltax, deltay);
@@ -102,7 +102,7 @@ vgaSWtoNE(CLIPOBJ* Clip, BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG delt
   ULONG Pixel = Brush->iSolidColor;
   LONG delta;
 
-  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTUP, ENUM_RECT_LIMIT);
+  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTUP, 0);
   EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
   ClipRect = RectEnum.arcl;
   delta = max(deltax, deltay);
@@ -167,7 +167,7 @@ vgaNEtoSW(CLIPOBJ* Clip, BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG delt
   ULONG Pixel = Brush->iSolidColor;
   LONG delta;
 
-  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_LEFTDOWN, ENUM_RECT_LIMIT);
+  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_LEFTDOWN, 0);
   EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
   ClipRect = RectEnum.arcl;
   delta = max(deltax, deltay);
@@ -232,7 +232,7 @@ vgaSEtoNW(CLIPOBJ* Clip, BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG delt
   ULONG Pixel = Brush->iSolidColor;
   LONG delta;
 
-  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_LEFTUP, ENUM_RECT_LIMIT);
+  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_LEFTUP, 0);
   EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
   ClipRect = RectEnum.arcl;
   delta = max(deltax, deltay);
@@ -339,7 +339,7 @@ DrvLineTo(SURFOBJ *DestObj,
 
   if (y1 == y2)
     {
-      CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, ENUM_RECT_LIMIT);
+      CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
       do
 	{
 	  EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
@@ -360,7 +360,7 @@ DrvLineTo(SURFOBJ *DestObj,
     }
   else if (x1 == x2)
     {
-      CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, ENUM_RECT_LIMIT);
+      CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
       do
 	{
 	  EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.36 2003/12/26 00:31:22 weiden Exp $
+/* $Id: bitblt.c,v 1.37 2003/12/31 16:06:48 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -375,7 +375,7 @@ EngBitBlt(SURFOBJ *DestObj,
 	{
 	  Direction = CD_ANY;
 	}
-      CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, Direction, ENUM_RECT_LIMIT);
+      CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, Direction, 0);
       do
 	{
 	  EnumMore = CLIPOBJ_bEnum(ClipRegion,(ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
@@ -675,7 +675,7 @@ EngStretchBlt(
 	{
 	  Direction = CD_ANY;
 	}
-      CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, Direction, ENUM_RECT_LIMIT);
+      CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, Direction, 0);
       do
 	{
 	  EnumMore = CLIPOBJ_bEnum(ClipRegion,(ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
@@ -1041,7 +1041,7 @@ EngMaskBitBlt(SURFOBJ *DestObj,
 	{
 	  Direction = CD_ANY;
 	}
-      CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, Direction, ENUM_RECT_LIMIT);
+      CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, Direction, 0);
       do
 	{
 	  EnumMore = CLIPOBJ_bEnum(ClipRegion,(ULONG) sizeof(RectEnum), (PVOID) &RectEnum);

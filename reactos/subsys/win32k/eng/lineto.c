@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.27 2003/12/22 12:44:16 navaraf Exp $
+ * $Id: lineto.c,v 1.28 2003/12/31 16:06:48 weiden Exp $
  */
 
 #include <ddk/winddi.h>
@@ -65,7 +65,7 @@ NWtoSE(SURFOBJ* OutputObj, SURFGDI* OutputGDI, CLIPOBJ* Clip,
   ULONG Pixel = Brush->iSolidColor;
   LONG delta;
 
-  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, ENUM_RECT_LIMIT);
+  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
   EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
   TranslateRects(&RectEnum, Translate);
   ClipRect = RectEnum.arcl;
@@ -135,7 +135,7 @@ SWtoNE(SURFOBJ* OutputObj, SURFGDI* OutputGDI, CLIPOBJ* Clip,
   ULONG Pixel = Brush->iSolidColor;
   LONG delta;
 
-  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTUP, ENUM_RECT_LIMIT);
+  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTUP, 0);
   EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
   TranslateRects(&RectEnum, Translate);
   ClipRect = RectEnum.arcl;
@@ -204,7 +204,7 @@ NEtoSW(SURFOBJ* OutputObj, SURFGDI* OutputGDI, CLIPOBJ* Clip,
   ULONG Pixel = Brush->iSolidColor;
   LONG delta;
 
-  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_LEFTDOWN, ENUM_RECT_LIMIT);
+  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_LEFTDOWN, 0);
   EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
   TranslateRects(&RectEnum, Translate);
   ClipRect = RectEnum.arcl;
@@ -273,7 +273,7 @@ SEtoNW(SURFOBJ* OutputObj, SURFGDI* OutputGDI, CLIPOBJ* Clip,
   ULONG Pixel = Brush->iSolidColor;
   LONG delta;
 
-  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_LEFTUP, ENUM_RECT_LIMIT);
+  CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_LEFTUP, 0);
   EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
   TranslateRects(&RectEnum, Translate);
   ClipRect = RectEnum.arcl;
@@ -418,7 +418,7 @@ EngLineTo(SURFOBJ *DestObj,
 
   if (y1 == y2)
     {
-      CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, ENUM_RECT_LIMIT);
+      CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
       do
 	{
 	  EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
@@ -439,7 +439,7 @@ EngLineTo(SURFOBJ *DestObj,
     }
   else if (x1 == x2)
     {
-      CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, ENUM_RECT_LIMIT);
+      CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
       do
 	{
 	  EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);

@@ -452,7 +452,7 @@ DrvBitBlt(SURFOBJ *Dest,
 	{
 	  Direction = CD_ANY;
 	}
-      CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, Direction, ENUM_RECT_LIMIT);
+      CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, Direction, 0);
       do
 	{
 	  EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);

@@ -151,8 +151,7 @@ BOOL VGADDIPaintRgn(SURFOBJ *Surface, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix
       } else {
          /* Enumerate all the rectangles and draw them */
 
-         CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, CD_ANY,
-                            ENUM_RECT_LIMIT);
+         CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, CD_ANY, 0);
 
          do {
 			int i;
