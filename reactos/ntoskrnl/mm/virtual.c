@@ -393,6 +393,11 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                                     NewAccessProtection,
                                     OldAccessProtection);
    }
+   else
+   {
+      /* FIXME: Should we return failure or success in this case? */
+      Status = STATUS_SUCCESS;
+   }
 
    MmUnlockAddressSpace(AddressSpace);
 
