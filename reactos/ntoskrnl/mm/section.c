@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.148 2004/05/01 00:25:41 tamlin Exp $
+/* $Id: section.c,v 1.149 2004/05/01 17:11:34 tamlin Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2018,6 +2018,10 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
 {
    PMM_REGION Region;
    PVOID RegionBaseAddress;
+   PSECTION_OBJECT Section;
+   PLIST_ENTRY CurrentEntry;
+   PMEMORY_AREA CurrentMArea;
+   KIRQL oldIrql;
 
    Region = MmFindRegion(MemoryArea->BaseAddress,
                          &MemoryArea->Data.SectionData.RegionListHead,
@@ -2026,20 +2030,40 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
    {
       return STATUS_UNSUCCESSFUL;
    }
-   Info->BaseAddress = (PVOID)PAGE_ROUND_DOWN(Address);
-   Info->AllocationBase = MemoryArea->BaseAddress;
-   Info->AllocationProtect = MemoryArea->Attributes;
-   Info->RegionSize = MemoryArea->Length;
-   Info->State = MEM_COMMIT;
-   Info->Protect = Region->Protect;
-   if (MemoryArea->Data.SectionData.Section->AllocationAttributes & SEC_IMAGE)
+   Section = MemoryArea->Data.SectionData.Section;
+   if (Section->AllocationAttributes & SEC_IMAGE)
    {
+      KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
+      CurrentEntry = Section->ViewListHead.Flink;
+      Info->AllocationBase = NULL;
+      while (CurrentEntry != &Section->ViewListHead)
+      {
+         CurrentMArea = CONTAINING_RECORD(CurrentEntry, MEMORY_AREA, Data.SectionData.ViewListEntry);
+         CurrentEntry = CurrentEntry->Flink;
+         if (Info->AllocationBase == NULL)
+         {
+            Info->AllocationBase = CurrentMArea->BaseAddress;
+         }
+         else if (CurrentMArea->BaseAddress < Info->AllocationBase)
+         {
+            Info->AllocationBase = CurrentMArea->BaseAddress;
+         }
+      }
+      KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
+      Info->BaseAddress = MemoryArea->BaseAddress;
+      Info->AllocationProtect = MemoryArea->Attributes;
       Info->Type = MEM_IMAGE;
    }
    else
    {
+      Info->BaseAddress = RegionBaseAddress;
+      Info->AllocationBase = MemoryArea->BaseAddress;
+      Info->AllocationProtect = Region->Protect;
       Info->Type = MEM_MAPPED;
    }
+   Info->RegionSize = MemoryArea->Length;
+   Info->State = MEM_COMMIT;
+   Info->Protect = Region->Protect;
 
    *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
    return(STATUS_SUCCESS);
