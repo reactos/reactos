@@ -23,7 +23,8 @@ NTSTATUS
 STDCALL
 NtFlushWriteBuffer(VOID)
 {
-	UNIMPLEMENTED;
+	KeFlushWriteBuffer();
+	return STATUS_SUCCESS;
 }
 
 NTSTATUS
