@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: filesup.c,v 1.2 2002/11/23 01:55:27 ekohl Exp $
+/* $Id: filesup.c,v 1.3 2003/01/11 16:03:55 hbirr Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/filesup.c
@@ -102,7 +102,6 @@ SetupCopyFile(PWCHAR SourceFileName,
   NTSTATUS Status;
 
   Buffer = NULL;
-  RegionSize = 0x1000000;
 
   RtlInitUnicodeString(&FileName,
 		       SourceFileName);
@@ -203,6 +202,11 @@ CHECKPOINT1;
     return(Status);
   }
 
+  RegionSize = PAGE_ROUND_UP(FileStandard.EndOfFile.u.LowPart);
+  if (RegionSize > 0x100000)
+  {
+     RegionSize = 0x100000;
+  }
   Status = NtAllocateVirtualMemory(NtCurrentProcess(),
 				   (PVOID *)&Buffer,
 				   2,
