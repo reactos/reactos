@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.22 2003/03/19 23:11:23 gdalsnes Exp $
+/* $Id: file.c,v 1.23 2003/03/23 14:46:09 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -340,8 +340,36 @@ NTSTATUS STDCALL
 NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 		      OUT PFILE_BASIC_INFORMATION FileInformation)
 {
-   UNIMPLEMENTED;
-   return STATUS_NOT_IMPLEMENTED;
+  IO_STATUS_BLOCK IoStatusBlock;
+  HANDLE FileHandle;
+  NTSTATUS Status;
+
+  /* Open the file */
+  Status = NtOpenFile (&FileHandle,
+		       SYNCHRONIZE | FILE_READ_ATTRIBUTES,
+		       ObjectAttributes,
+		       &IoStatusBlock,
+		       FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		       FILE_SYNCHRONOUS_IO_NONALERT);
+  if (!NT_SUCCESS (Status))
+    {
+      DPRINT ("NtOpenFile() failed (Status %lx)\n", Status);
+      return Status;
+    }
+
+  /* Get file attributes */
+  Status = NtQueryInformationFile (FileHandle,
+				   &IoStatusBlock,
+				   FileInformation,
+				   sizeof(FILE_BASIC_INFORMATION),
+				   FileBasicInformation);
+  NtClose (FileHandle);
+  if (!NT_SUCCESS (Status))
+    {
+      DPRINT ("NtQueryInformationFile() failed (Status %lx)\n", Status);
+    }
+
+  return Status;
 }
 
 
@@ -349,8 +377,36 @@ NTSTATUS STDCALL
 NtQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 			  OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation)
 {
-   UNIMPLEMENTED;
-   return STATUS_NOT_IMPLEMENTED;
+  IO_STATUS_BLOCK IoStatusBlock;
+  HANDLE FileHandle;
+  NTSTATUS Status;
+
+  /* Open the file */
+  Status = NtOpenFile (&FileHandle,
+		       SYNCHRONIZE | FILE_READ_ATTRIBUTES,
+		       ObjectAttributes,
+		       &IoStatusBlock,
+		       FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		       FILE_SYNCHRONOUS_IO_NONALERT);
+  if (!NT_SUCCESS (Status))
+    {
+      DPRINT ("NtOpenFile() failed (Status %lx)\n", Status);
+      return Status;
+    }
+
+  /* Get file attributes */
+  Status = NtQueryInformationFile (FileHandle,
+				   &IoStatusBlock,
+				   FileInformation,
+				   sizeof(FILE_NETWORK_OPEN_INFORMATION),
+				   FileNetworkOpenInformation);
+  NtClose (FileHandle);
+  if (!NT_SUCCESS (Status))
+    {
+      DPRINT ("NtQueryInformationFile() failed (Status %lx)\n", Status);
+    }
+
+  return Status;
 }
 
 
