@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 	return 0;
      }
    
-   cbLength = (ULONG)strlen(lpszTestMessage);
+   cbLength = (ULONG)strlen(lpszTestMessage)+1;
    
    WriteFile(hMailslot,
 	     lpszTestMessage,
