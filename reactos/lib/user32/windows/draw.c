@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.15 2003/07/20 03:01:13 jimtabor Exp $
+/* $Id: draw.c,v 1.16 2003/08/11 07:02:06 rcampbell Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -890,8 +890,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
     COLORREF clrsave;
     SIZE size;
 
-    //UITOOLS95_DFC_ButtonPush(dc, r, uFlags & 0xff00);
-    if(uFlags & DFCS_PUSHED)
+  if(uFlags & DFCS_PUSHED)
       UITOOLS95_DrawRectEdge(dc,r,EDGE_SUNKEN, BF_RECT | BF_MIDDLE | BF_SOFT);
     else
       UITOOLS95_DrawRectEdge(dc,r,BDR_RAISEDINNER | BDR_RAISEDOUTER, BF_RECT |
@@ -938,6 +937,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
 			start.y++;
         }
 
+        /* now use the width of each line */
         width -= numLines - 1;
 
         for (i = 0; i < numLines; i++)
@@ -945,12 +945,11 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
             MoveToEx(dc, start.x + i, start.y, &oldPos);
             LineTo(dc, start.x + i + width, start.y + height);
 
-            MoveToEx(dc, start.x + i, start.y + height, &oldPos);
-            LineTo(dc, start.x + i + width, start.y);
+            MoveToEx(dc, start.x + i, start.y + height - 1, &oldPos);
+            LineTo(dc, start.x + i + width, start.y - 1);
         }
 
         SelectObject(dc, hpsave);
-        
         return TRUE;
     }
 
@@ -959,8 +958,8 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
         /* FIXME: We need the Marlett font in order to get this right. */
 
         hf = CreateFontA(-SmallDiam, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-                         ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                         DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, "System");
+                        ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                        DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, "System");
         alignsave = SetTextAlign(dc, TA_TOP|TA_LEFT);
         bksave = SetBkMode(dc, TRANSPARENT);
         clrsave = GetTextColor(dc);
@@ -983,7 +982,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
         return TRUE;
 
     case DFCS_CAPTIONMIN:
-        Line1[0].x = Line1[3].x = myr.left   +  96*SmallDiam/750+3; /* Wine uses +2 here?? */
+        Line1[0].x = Line1[3].x = myr.left   +  96*SmallDiam/750+2;
         Line1[1].x = Line1[2].x = Line1[0].x + 372*SmallDiam/750;
         Line1[0].y = Line1[1].y = myr.top    + 563*SmallDiam/750+1;
         Line1[2].y = Line1[3].y = Line1[0].y +  92*SmallDiam/750;
@@ -1038,12 +1037,13 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
         break;
 
     default:
-        DbgPrint("Invalid caption; flags=0x%04x\n", uFlags);
         return FALSE;
     }
 
+    /* Here the drawing takes place */
     if(uFlags & DFCS_INACTIVE)
     {
+        /* If we have an inactive button, then you see a shadow */
         hbsave = (HBRUSH)SelectObject(dc, GetSysColorBrush(COLOR_BTNHIGHLIGHT));
         hpsave = (HPEN)SelectObject(dc, GetSysColorPen(COLOR_BTNHIGHLIGHT));
         Polygon(dc, Line1, Line1N);
@@ -1053,6 +1053,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
         SelectObject(dc, hbsave);
     }
 
+    /* Correct for the shadow shift */
     if (!(uFlags & DFCS_PUSHED))
     {
         for(i = 0; i < Line1N; i++)
@@ -1067,6 +1068,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
         }
     }
 
+    /* Make the final picture */
     hbsave = (HBRUSH)SelectObject(dc, GetSysColorBrush(colorIdx));
     hpsave = (HPEN)SelectObject(dc, GetSysColorPen(colorIdx));
 
@@ -1079,8 +1081,6 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
     return TRUE;
 }
 
-/* Ported from WINE20020904 */
-/* Draw a scroll-bar control coming from DrawFrameControl() */
 static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 {
     POINT Line[4];
@@ -1210,7 +1210,6 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
         return TRUE;
 
     default:
-        DbgPrint("Invalid scroll; flags=0x%04x\n", uFlags);
         return FALSE;
     }
 
