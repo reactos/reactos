@@ -21,9 +21,9 @@
 #endif
 
 
-static void print_error(LONG win32_error)
+static void print_error(DWORD win32_error)
 {
-	fprintf(stderr, "WIN32 error %d\n", win32_error);
+	fprintf(stderr, "WIN32 error %lu\n", win32_error);
 }
 
 

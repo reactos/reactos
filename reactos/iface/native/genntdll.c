@@ -1,4 +1,4 @@
-/* $Id: genntdll.c,v 1.12 2003/01/03 00:28:07 guido Exp $
+/* $Id: genntdll.c,v 1.13 2003/12/17 01:46:08 hyperion Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS version of ntdll
@@ -22,7 +22,7 @@
 
 #define PARAMETERIZED_LIBS
 
-#define VERBOSE
+/* #define VERBOSE */
 
 #define INPUT_BUFFER_SIZE 255
 

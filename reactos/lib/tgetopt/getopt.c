@@ -1,4 +1,4 @@
-/* $Id: getopt.c,v 1.1 2003/04/22 03:20:25 hyperion Exp $
+/* $Id: getopt.c,v 1.2 2003/12/17 01:46:08 hyperion Exp $
 */
 /*
  tgetopt -- POSIX-compliant implementation of getopt() with string-type-generic
@@ -10,7 +10,8 @@
 #include <tchar.h>
 #include <string.h>
 #include <stdio.h>
-#include <tgetopt.h>
+
+#include "tgetopt.h"
 
 int _topterr = 1;
 int _toptind = 1;
@@ -85,7 +86,7 @@ int _tgetopt(int argc, _TCHAR * const argv[], const _TCHAR * optstring)
  {
   /* print an error message */
   if(_topterr && optstring[0] != _T(':'))
-   _ftprintf(stderr, _T("%s: illegal option -- %c\n"), argv[0], _toptopt);;
+   _ftprintf(stderr, _T("%s: illegal option -- %c\n"), argv[0], _toptopt);
 
   /* return an error */
   return _T('?');
@@ -102,7 +103,7 @@ int _tgetopt(int argc, _TCHAR * const argv[], const _TCHAR * optstring)
    s_nArgChar = 0;
 
    /* this is the last argument */
-   if(_toptopt >= argc)
+   if(_toptind >= argc)
    {
     /* print an error message */
     if(_topterr && optstring[0] != _T(':'))
@@ -122,6 +123,7 @@ int _tgetopt(int argc, _TCHAR * const argv[], const _TCHAR * optstring)
 
    /* return the argument */
    _toptarg = argv[_toptind];
+   ++ _toptind;
   }
   /* the rest of the argument is the argument of the option */
   else
