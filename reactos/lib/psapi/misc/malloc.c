@@ -1,4 +1,4 @@
-/* $Id: malloc.c,v 1.5 2004/11/02 23:42:49 weiden Exp $
+/* $Id: malloc.c,v 1.6 2004/11/03 22:43:00 weiden Exp $
  */
 /*
  * COPYRIGHT:   None
@@ -14,6 +14,9 @@
  */
 
 #include "precomp.h"
+
+#define NDEBUG
+#include <debug.h>
 
 PVOID
 STDCALL

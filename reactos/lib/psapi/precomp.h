@@ -1,6 +1,8 @@
+#define NTOS_MODE_USER
 #include <windows.h>
 #include <psapi.h>
-#include <epsapi.h>
+#include <ntos.h>
+#include "internal.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,5 +11,3 @@
 #include <ntos/heap.h>
 #include <ntdll/ldr.h>
 
-#define SetLastErrorByStatus(__S__) \
- ((void)SetLastError(RtlNtStatusToDosError(__S__)))

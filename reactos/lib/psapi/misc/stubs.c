@@ -1,5 +1,8 @@
-/* $Id: stubs.c,v 1.6 2004/11/02 23:42:49 weiden Exp $ */
+/* $Id: stubs.c,v 1.7 2004/11/03 22:43:00 weiden Exp $ */
 #include "precomp.h"
+
+#define NDEBUG
+#include <debug.h>
 
 #if 0
 /*
