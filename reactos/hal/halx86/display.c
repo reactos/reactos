@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.13 2004/01/18 22:35:26 gdalsnes Exp $
+/* $Id: display.c,v 1.14 2004/03/16 22:45:55 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -577,9 +577,8 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
       ULONG ScanLines;
       ULONG Data;
 
-      VideoBuffer = (WORD *)(0xd0000000 + 0xb8000);
-      GraphVideoBuffer = (PUCHAR)(0xd0000000 + 0xa0000);
-//      VideoBuffer = HalMapPhysicalMemory (0xb8000, 2);
+      VideoBuffer = (WORD *)(0xff3b8000);
+      GraphVideoBuffer = (PUCHAR)(0xff3a0000);
 
       /* Set cursor position */
 //      CursorX = LoaderBlock->cursorx;

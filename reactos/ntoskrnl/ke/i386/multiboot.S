@@ -139,7 +139,6 @@ _multiboot_entry:
 	movl	$(V2P(kernel_pagetable+30*4096) + 0x7), 0xC78(%esi)
 	movl	$(V2P(kernel_pagetable+31*4096) + 0x7), 0xC7c(%esi)
 
-	movl	$(V2P(lowmem_pagetable) + 0x7), 0xD00(%esi)
 	movl	$(V2P(startup_pagedirectory) + 0x7), 0xF00(%esi) 
 #ifdef MP
 	movl	$(V2P(apic_pagetable) + 0x7), 0xFEC(%esi)
@@ -199,6 +198,18 @@ _multiboot_entry:
 	movl	$0, %edi
 	movl	$0x1007, %eax
 	movl	%eax, (%esi, %edi)
+
+	/*
+	 * Initialize a part of the same pagetable to map the vga frame buffer.
+	 */
+	movl	$0xa0007, %eax
+	movl	$0x20, %ecx
+	movl	$0xE80, %edi
+.l9:	
+	movl	%eax, (%esi, %edi)
+	add	$4, %edi
+	add	$0x1000, %eax
+	loop	.l9
 
 #ifdef MP
 

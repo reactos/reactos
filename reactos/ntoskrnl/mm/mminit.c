@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.61 2004/03/16 21:13:15 dwelch Exp $
+/* $Id: mminit.c,v 1.62 2004/03/16 22:45:56 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -48,7 +48,7 @@ static MEMORY_AREA* kernel_data_desc = NULL;
 static MEMORY_AREA* kernel_param_desc = NULL;
 static MEMORY_AREA* kernel_pool_desc = NULL;
 static MEMORY_AREA* kernel_shared_data_desc = NULL;
-static MEMORY_AREA* kernel_mapped_low_mem_desc = NULL; 
+static MEMORY_AREA* kernel_mapped_vga_framebuffer_desc = NULL; 
 static MEMORY_AREA* MiKernelMapDescriptor = NULL;
 static MEMORY_AREA* MiPagedPoolDescriptor = NULL;
 
@@ -146,14 +146,14 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
 		      FALSE,
 		      BoundaryAddressMultiple);
 
-   BaseAddress = (PVOID)0xd0000000;
+   BaseAddress = (PVOID)0xFF3A0000;
    MmCreateMemoryArea(NULL,
 		      MmGetKernelAddressSpace(),
 		      MEMORY_AREA_SYSTEM,
 		      &BaseAddress,
-		      0x100000,
+		      0x20000,
 		      0,
-		      &kernel_mapped_low_mem_desc,
+		      &kernel_mapped_vga_framebuffer_desc,
 		      FALSE,
 		      FALSE,
 		      BoundaryAddressMultiple);
