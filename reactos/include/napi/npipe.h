@@ -1,7 +1,9 @@
 #ifndef __INCLUDE_NAPI_NPIPE_H
 #define __INCLUDE_NAPI_NPIPE_H
 
-#include <ddk/ntddk.h>
+#ifndef __NTDDK_H
+#error you must not include <napi/npipe.h> directly, include <ddk/ntddk.h> instead
+#endif /* __NTDDK_H */
 
 /*
  * FUNCTION: ZwCreateNamedPipeFile creates named pipe
