@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.47 2003/12/14 11:36:43 gvg Exp $
+ *  $Id: painting.c,v 1.48 2003/12/18 21:42:38 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -356,6 +356,10 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
          for (phWnd = List; *phWnd; ++phWnd)
          {
             Child = IntGetWindowObject(*phWnd);
+            if(!Child)
+            {
+              continue;
+            }
             if ((Child->Style & (WS_VISIBLE | WS_MINIMIZE)) == WS_VISIBLE)
             {
                /*
