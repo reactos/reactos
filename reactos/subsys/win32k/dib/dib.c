@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib.c,v 1.12 2004/07/14 20:48:56 navaraf Exp $ */
+/* $Id$ */
 #include <w32k.h>
 
 /* Static data */

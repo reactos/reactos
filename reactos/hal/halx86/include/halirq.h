@@ -1,5 +1,5 @@
 /*
- * $Id: halirq.h,v 1.1 2004/11/01 14:37:18 hbirr Exp $
+ * $Id$
  */
 
 #ifndef __INCLUDE_HAL_HALIRQ

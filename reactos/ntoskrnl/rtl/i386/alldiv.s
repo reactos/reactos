@@ -1,4 +1,4 @@
-/* $Id: alldiv.s,v 1.1 2003/06/11 12:28:21 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

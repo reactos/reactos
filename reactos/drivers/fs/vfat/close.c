@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.21 2003/10/11 17:51:56 hbirr Exp $
+/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

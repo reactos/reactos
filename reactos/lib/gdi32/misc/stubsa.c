@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.35 2004/12/30 02:32:23 navaraf Exp $
+/* $Id$
  *
  * reactos/lib/gdi32/misc/stubs.c
  *

@@ -1,4 +1,4 @@
-/* $Id: halinit_xbox.c,v 1.3 2004/12/08 11:42:28 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel

@@ -1,4 +1,4 @@
-/* $Id: dlog.c,v 1.16 2004/09/01 00:15:08 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

@@ -1,4 +1,4 @@
-/* $Id: callback.c,v 1.9 2004/01/05 13:49:18 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

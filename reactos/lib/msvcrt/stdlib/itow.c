@@ -1,4 +1,4 @@
-/* $Id: itow.c,v 1.6 2003/07/11 21:58:09 royce Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries

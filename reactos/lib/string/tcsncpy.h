@@ -1,4 +1,4 @@
-/* $Id: tcsncpy.h,v 1.3 2004/01/28 08:51:09 gvg Exp $
+/* $Id$
  */
 
 #include <stddef.h>

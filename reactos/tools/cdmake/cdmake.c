@@ -19,7 +19,7 @@
  * - No Joliet file name validations
  * - Very bad ISO file name generation
  *
- * $Id: cdmake.c,v 1.12 2004/08/25 20:47:22 chorns Exp $
+ * $Id$
  */
 
 /* According to his website, this file was released into the public domain by Phillip J. Erdelsky */

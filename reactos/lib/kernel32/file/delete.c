@@ -1,4 +1,4 @@
-/* $Id: delete.c,v 1.18 2004/11/29 17:31:21 gdalsnes Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

@@ -1,4 +1,4 @@
-/* $Id: accel.h,v 1.2 2004/01/28 21:00:23 gvg Exp $
+/* $Id$
 */
 
 #ifndef __USER32_ACCEL_H_INCLUDED__

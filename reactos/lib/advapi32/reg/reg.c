@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.67 2004/12/26 23:09:51 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

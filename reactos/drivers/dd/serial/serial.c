@@ -1,4 +1,4 @@
-/* $Id: serial.c,v 1.11 2003/11/14 17:13:25 weiden Exp $
+/* $Id$
  *
  * Serial driver
  * Written by Jason Filby (jasonfilby@yahoo.com)

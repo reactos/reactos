@@ -1,6 +1,6 @@
-# $Id: makefile,v 1.9 2002/09/08 10:22:05 chorns Exp $
+# $Id$
 
-# $Id: makefile,v 1.9 2002/09/08 10:22:05 chorns Exp $
+# $Id$
 
 PATH_TO_TOP = ../../..
 

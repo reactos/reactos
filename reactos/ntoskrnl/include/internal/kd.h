@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.29 2004/12/09 14:20:06 royce Exp $
+/* $Id$
  *
  * kernel debugger prototypes
  */

@@ -1,4 +1,4 @@
-/* $Id: string.c,v 1.13 2004/08/31 16:08:38 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

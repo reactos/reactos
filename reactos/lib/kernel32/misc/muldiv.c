@@ -1,4 +1,4 @@
-/* $Id: muldiv.c,v 1.2 2003/07/10 18:50:51 chorns Exp $
+/* $Id$
  *
  */
 #include <windows.h>

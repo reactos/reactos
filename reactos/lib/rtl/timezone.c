@@ -1,4 +1,4 @@
-/* $Id: timezone.c,v 1.1 2004/05/31 19:29:02 gdalsnes Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

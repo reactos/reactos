@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/src/main.c,v $
- * $Id: main.c,v 1.1 2004/01/10 20:38:18 arty Exp $
+ * $Id$
  */
 
 #if HAVE_CONFIG_H

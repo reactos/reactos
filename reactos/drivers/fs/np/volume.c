@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.4 2002/09/08 10:22:11 chorns Exp $
+/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

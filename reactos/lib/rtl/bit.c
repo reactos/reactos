@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bit.c,v 1.1 2004/08/10 12:00:09 ekohl Exp $
+/* $Id$
  *
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Runtime code

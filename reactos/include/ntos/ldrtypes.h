@@ -1,4 +1,4 @@
-/* $Id: ldrtypes.h,v 1.1 2002/11/15 21:56:37 chorns Exp $ */
+/* $Id$ */
 
 #ifndef __INCLUDE_DDK_LDRTYPES_H
 #define __INCLUDE_DDK_LDRTYPES_H

@@ -1,4 +1,4 @@
-/* $Id: class2.rc,v 1.6 2004/10/16 20:27:26 gvg Exp $ */
+/* $Id$ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"SCSI Class Driver Helper\0"

@@ -1,4 +1,4 @@
-/* $Id: devmgr.rc,v 1.2 2004/10/16 20:27:31 gvg Exp $ */
+/* $Id$ */
 
 #include <defines.h>
 #include "resource.h"

@@ -1,4 +1,4 @@
-/* $Id: makepath.c,v 1.12 2003/08/08 00:46:20 hbirr Exp $
+/* $Id$
  */
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>

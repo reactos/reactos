@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.26 2004/09/05 22:26:17 hbirr Exp $
+/* $Id$
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel

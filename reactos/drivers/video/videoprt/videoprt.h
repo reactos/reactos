@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.h,v 1.13 2004/12/19 15:51:51 navaraf Exp $
+ * $Id$
  */
 
 #ifndef VIDEOPRT_H

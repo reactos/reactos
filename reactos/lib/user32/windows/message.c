@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.49 2004/12/30 02:32:26 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll

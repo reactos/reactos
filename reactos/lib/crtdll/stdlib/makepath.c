@@ -1,4 +1,4 @@
-/* $Id: makepath.c,v 1.10 2003/07/11 17:25:32 royce Exp $
+/* $Id$
  */
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>

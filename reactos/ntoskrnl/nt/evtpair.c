@@ -1,4 +1,4 @@
-/* $Id: evtpair.c,v 1.23 2004/09/28 15:02:29 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

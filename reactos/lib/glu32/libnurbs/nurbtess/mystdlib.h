@@ -35,7 +35,7 @@
 /*
  * mystdlib.h
  *
- * $Date: 2004/02/02 16:39:13 $ $Revision: 1.1 $
+ * $Date$ $Revision: 1.1 $
  * $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/glu32/libnurbs/nurbtess/mystdlib.h,v 1.1 2004/02/02 16:39:13 navaraf Exp $
  */
 

@@ -20,8 +20,8 @@
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ;
 ; $Revision: 1.19 $
-; $Author: ekohl $
-; $Date: 2004/02/26 12:23:29 $
+; $Author$
+; $Date$
 ;
 ; These three functions appear to be name mangled in some way, so GCC is
 ; probably not going to be able to use them in any case.

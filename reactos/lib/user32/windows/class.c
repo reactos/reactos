@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.56 2004/12/26 23:56:16 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll

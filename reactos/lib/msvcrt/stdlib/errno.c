@@ -1,4 +1,4 @@
-/* $Id: errno.c,v 1.13 2004/01/11 10:58:45 hbirr Exp $
+/* $Id$
  *
  */
 #ifdef __USE_W32API

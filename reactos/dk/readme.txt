@@ -1,4 +1,4 @@
-$Id: readme.txt,v 1.1 2001/08/21 18:06:43 ea Exp $
+$Id$
 
 Development Kits for ReactOS
 ----------------------------

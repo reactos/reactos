@@ -1,4 +1,4 @@
-/* $Id: epsapi.h,v 1.6 2004/11/08 00:37:19 weiden Exp $
+/* $Id$
 */
 /*
  * epsapi.h

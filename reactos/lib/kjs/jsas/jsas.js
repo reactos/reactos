@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/jsas/jsas.js,v $
- * $Id: jsas.js,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 function process_file (name)
@@ -792,7 +792,7 @@ operand_flags["jsr_w"] = 0x1;
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/jsas/jsas.js,v $
- * $Id: jsas.js,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 /*

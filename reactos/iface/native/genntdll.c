@@ -1,4 +1,4 @@
-/* $Id: genntdll.c,v 1.17 2004/04/12 22:07:45 hyperion Exp $
+/* $Id$
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS version of ntdll

@@ -1,4 +1,4 @@
-/* $Id: cid.c,v 1.3 2004/11/27 19:41:55 hbirr Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

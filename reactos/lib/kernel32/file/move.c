@@ -1,4 +1,4 @@
-/* $Id: move.c,v 1.16 2004/12/18 13:26:57 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

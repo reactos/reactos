@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.22 2004/09/11 17:06:33 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries

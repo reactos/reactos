@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.76 2004/12/23 23:55:56 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

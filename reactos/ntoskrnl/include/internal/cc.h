@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
 
-/* $Id: cc.h,v 1.21 2004/08/25 15:08:29 navaraf Exp $ */
+/* $Id$ */
 #include <ddk/ntifs.h>
 #include <reactos/bugcodes.h>
 

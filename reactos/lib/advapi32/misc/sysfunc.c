@@ -1,4 +1,4 @@
-/* $Id: sysfunc.c,v 1.9 2004/12/11 00:21:33 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

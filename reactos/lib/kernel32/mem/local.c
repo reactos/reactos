@@ -1,4 +1,4 @@
-/* $Id: local.c,v 1.11 2004/06/13 20:04:55 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top level directory
  *              Copyright (C) 1996, Onno Hovers, All rights reserved

@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.1 2004/12/20 19:55:07 greatlrd Exp $
+# $Id$
 
 TARGET_NAME = dxdiagn
 

@@ -18,7 +18,7 @@
  *
  * VMware is a registered trademark of VMware, Inc.
  */
-/* $Id: vmwinst.c,v 1.12 2004/10/11 21:08:05 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VMware(r) driver installation utility

@@ -1,4 +1,4 @@
-/* $Id: pdo.c,v 1.3 2004/12/27 14:24:00 ekohl Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS ACPI bus driver
  * FILE:            acpi/ospm/pdo.c

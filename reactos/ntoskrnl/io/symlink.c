@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.35 2004/10/22 20:25:54 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

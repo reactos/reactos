@@ -1,4 +1,4 @@
-/* $Id: list.c,v 1.16 2004/10/18 20:56:22 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

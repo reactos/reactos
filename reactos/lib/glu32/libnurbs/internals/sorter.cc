@@ -35,7 +35,7 @@
 /*
  * sorter.c++
  *
- * $Date: 2004/02/02 16:39:12 $ $Revision: 1.1 $
+ * $Date$ $Revision: 1.1 $
  * $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/glu32/libnurbs/internals/sorter.cc,v 1.1 2004/02/02 16:39:12 navaraf Exp $
  */
 

@@ -1,4 +1,4 @@
-/* $Id: xboxvmp.rc,v 1.1 2004/12/10 17:11:35 gvg Exp $ */
+/* $Id$ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"Xbox Miniport Device Driver\0"

@@ -1,6 +1,6 @@
 #ifndef _NTOS_H
 #define _NTOS_H
-/* $Id: ntos.h,v 1.21 2004/04/10 23:19:42 ekohl Exp $ */
+/* $Id$ */
 
 #if defined(NTOS_MODE_USER)
 /* 

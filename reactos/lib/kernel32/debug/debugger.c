@@ -1,4 +1,4 @@
-/* $Id: debugger.c,v 1.5 2004/12/09 19:03:33 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.12 2004/10/04 19:22:16 gvg Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2004/12/25 19:38:17 navaraf Exp $
+# $Id$
 # Kernel JavaScript
 # 
 # You can use this for various things but the most obvious is as a powerful

@@ -1,4 +1,4 @@
-/* $Id: scsi.h,v 1.4 2003/08/25 01:37:47 sedwards Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.27 2004/12/23 12:34:59 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

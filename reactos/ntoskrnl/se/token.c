@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.45 2004/12/19 16:16:58 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.7 2004/09/11 17:06:33 gvg Exp $
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

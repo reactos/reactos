@@ -1,4 +1,4 @@
-/* $Id: filelock.c,v 1.18 2004/12/30 18:30:05 ion Exp $
+/* $Id$
  *
  * reactos/ntoskrnl/fs/filelock.c
  *

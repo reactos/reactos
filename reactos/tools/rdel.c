@@ -1,4 +1,4 @@
-/*  $Id: rdel.c,v 1.3 2004/07/18 21:15:47 blight Exp $  
+/*  $Id$  
  * COPYRIGHT:             See COPYING in the top level directory
  * PROGRAMMER:            Rex Jolliff (rex@lvcablemodem.com)
  * PURPOSE:               Platform independent delete command

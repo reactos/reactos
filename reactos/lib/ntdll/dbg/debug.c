@@ -1,4 +1,4 @@
-/* $Id: debug.c,v 1.14 2004/01/06 16:08:02 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

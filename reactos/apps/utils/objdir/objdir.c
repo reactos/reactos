@@ -1,4 +1,4 @@
-/* $Id: objdir.c,v 1.14 2004/08/05 12:11:49 ea Exp $
+/* $Id$
  *
  * DESCRIPTION: Object Manager Simple Explorer
  * PROGRAMMER:  David Welch

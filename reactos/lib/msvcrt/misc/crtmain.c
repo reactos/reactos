@@ -1,4 +1,4 @@
-/* $Id: crtmain.c,v 1.6 2004/08/15 18:16:37 chorns Exp $
+/* $Id$
  *
  * ReactOS MSVCRT.DLL Compatibility Library
  */

@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.22 2004/12/10 16:50:37 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

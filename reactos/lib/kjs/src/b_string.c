@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/src/b_string.c,v $
- * $Id: b_string.c,v 1.2 2004/12/24 23:01:35 navaraf Exp $
+ * $Id$
  */
 
 /* TODO: global method: String (obj) => string */

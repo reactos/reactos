@@ -1,4 +1,4 @@
-/* $Id: oplock.c,v 1.8 2004/08/15 16:39:02 chorns Exp $
+/* $Id$
  *
  * reactos/ntoskrnl/fs/oplock.c
  *

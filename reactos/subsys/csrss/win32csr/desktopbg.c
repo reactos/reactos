@@ -1,4 +1,4 @@
-/* $Id: desktopbg.c,v 1.15 2004/12/24 17:45:58 weiden Exp $
+/* $Id$
  *
  * reactos/subsys/csrss/win32csr/desktopbg.c
  *

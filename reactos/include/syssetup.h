@@ -1,4 +1,4 @@
-/* $Id: syssetup.h,v 1.2 2004/01/14 22:15:09 gvg Exp $
+/* $Id$
 */
 /*
  * syssetup.h

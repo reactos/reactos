@@ -1,4 +1,4 @@
-/* $Id: llmosrt.c,v 1.1 2003/07/10 12:29:02 chorns Exp $ */
+/* $Id$ */
 /* A Linked-List Memory Sort
    by Philip J. Erdelsky
    pje@acm.org

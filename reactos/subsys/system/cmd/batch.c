@@ -1,4 +1,4 @@
-/* $Id: batch.c,v 1.5 2004/11/08 02:16:06 weiden Exp $
+/* $Id$
  *
  *  BATCH.C - batch file processor for CMD.EXE.
  *

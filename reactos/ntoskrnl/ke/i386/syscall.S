@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.18 2004/10/31 19:46:10 ekohl Exp $
+/* $Id$
  *
  * FILE:            ntoskrnl/ke/i386/syscall.S
  * PURPOSE:         2E trap handler

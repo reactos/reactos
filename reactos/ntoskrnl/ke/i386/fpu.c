@@ -1,4 +1,4 @@
-/* $Id: fpu.c,v 1.19 2004/11/27 23:50:26 hbirr Exp $
+/* $Id$
  *
  *  ReactOS kernel
  *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team

@@ -1,4 +1,4 @@
-/* $Id: font.c,v 1.11 2004/12/30 02:32:24 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

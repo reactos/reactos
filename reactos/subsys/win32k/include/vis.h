@@ -1,4 +1,4 @@
-/* $Id: vis.h,v 1.6 2004/01/17 15:18:25 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem

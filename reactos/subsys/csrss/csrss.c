@@ -1,4 +1,4 @@
-/* $Id: csrss.c,v 1.15 2003/11/17 02:12:51 hyperion Exp $
+/* $Id$
  *
  * csrss.c - Client/Server Runtime subsystem
  * 

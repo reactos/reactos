@@ -1,4 +1,4 @@
-/* $Id: winpos.c,v 1.11 2004/08/15 21:36:30 chorns Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll

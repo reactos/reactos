@@ -1,4 +1,4 @@
-/* $Id: lsass.h,v 1.6 2004/01/06 16:04:18 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

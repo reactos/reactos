@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.31 2004/12/12 22:36:10 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

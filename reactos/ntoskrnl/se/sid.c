@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.16 2003/12/30 18:52:06 fireball Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

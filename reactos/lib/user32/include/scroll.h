@@ -1,4 +1,4 @@
-/* $Id: scroll.h,v 1.1 2004/01/14 21:28:24 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS user32.dll

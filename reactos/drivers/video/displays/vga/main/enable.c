@@ -2,8 +2,8 @@
  * entry.c
  *
  * $Revision: 1.5 $
- * $Author: weiden $
- * $Date: 2004/12/12 17:56:51 $
+ * $Author$
+ * $Date$
  *
  */
 

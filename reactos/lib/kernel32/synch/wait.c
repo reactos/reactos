@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.32 2004/12/04 19:31:26 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

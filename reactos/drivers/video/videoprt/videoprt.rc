@@ -1,4 +1,4 @@
-/* $Id: videoprt.rc,v 1.3 2004/10/16 20:27:29 gvg Exp $ */
+/* $Id$ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"Videoport Driver\0"

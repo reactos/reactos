@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.12 2004/10/25 14:22:21 blight Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

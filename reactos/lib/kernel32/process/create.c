@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.92 2004/12/30 08:05:11 hyperion Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

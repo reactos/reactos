@@ -1,4 +1,4 @@
-/* $Id: smapi.c,v 1.11 2004/01/06 16:10:11 ekohl Exp $
+/* $Id$
  *
  * Reactos Session Manager
  *

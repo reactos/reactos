@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.7 2004/04/09 20:03:15 navaraf Exp $
+/* $Id$
  *
  * smss.c - Session Manager
  * 

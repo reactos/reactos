@@ -1,4 +1,4 @@
-/* $Id: internal.h,v 1.2 2004/11/08 00:34:45 weiden Exp $
+/* $Id$
 */
 /*
  * epsapi.h

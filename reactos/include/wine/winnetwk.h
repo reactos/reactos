@@ -1,4 +1,4 @@
-/* $Id: winnetwk.h,v 1.2 2004/06/29 13:40:40 gvg Exp $
+/* $Id$
  *
  * Compatibility header
  *

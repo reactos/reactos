@@ -1,4 +1,4 @@
-/* $Id: tape.h,v 1.1 2004/04/10 23:18:42 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: control.c,v 1.8 2004/10/30 12:38:52 ekohl Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/control.c

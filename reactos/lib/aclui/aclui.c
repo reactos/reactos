@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: aclui.c,v 1.8 2004/10/21 18:28:05 weiden Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS Access Control List Editor
  * FILE:            lib/aclui/aclui.c

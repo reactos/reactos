@@ -1,4 +1,4 @@
-/* $Id: gld_debug_norm.c,v 1.2 2004/10/05 14:19:00 blight Exp $ */
+/* $Id$ */
 
 /*
  * Mesa 3-D graphics library

@@ -1,4 +1,4 @@
-/* $Id: xhaldisp.c,v 1.12 2004/11/21 06:51:18 ion Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

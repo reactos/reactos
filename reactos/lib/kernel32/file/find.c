@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.46 2004/09/06 15:56:25 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

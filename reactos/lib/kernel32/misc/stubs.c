@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.101 2004/12/18 13:26:57 weiden Exp $
+/* $Id$
  *
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.

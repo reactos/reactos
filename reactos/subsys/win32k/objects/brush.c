@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: brush.c,v 1.43 2004/12/18 18:19:24 royce Exp $
+ * $Id$
  */
 #include <w32k.h>
 

@@ -1,4 +1,4 @@
-/* $Id: tickcount.c,v 1.2 2003/07/06 23:04:18 hyperion Exp $
+/* $Id$
 */
 /*
  tickcount -- Display the kernel tick count in human-readable format

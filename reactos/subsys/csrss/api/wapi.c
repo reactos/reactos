@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.37 2004/07/03 17:15:02 hbirr Exp $
+/* $Id$
  * 
  * reactos/subsys/csrss/api/wapi.c
  *

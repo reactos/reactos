@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.104 2004/12/25 11:18:51 navaraf Exp $
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

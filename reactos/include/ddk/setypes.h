@@ -1,4 +1,4 @@
-/* $Id: setypes.h,v 1.17 2004/12/22 05:06:59 royce Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory for details
  * PROJECT:           ReactOS kernel

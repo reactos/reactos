@@ -1,4 +1,4 @@
-/* $Id: diskcopy.c,v 1.2 2004/02/23 11:55:12 ekohl Exp $
+/* $Id$
  *
  * COPYING:	See the top level directory
  * PROJECT:	ReactOS 

@@ -1,4 +1,4 @@
-/* $Id: smss.c,v 1.15 2003/08/11 18:50:12 chorns Exp $
+/* $Id$
  *
  * smss.c - Session Manager
  * 

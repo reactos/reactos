@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.38 2004/12/22 01:22:08 navaraf Exp $
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

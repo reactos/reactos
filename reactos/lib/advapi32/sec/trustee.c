@@ -1,4 +1,4 @@
-/* $Id: trustee.c,v 1.3 2004/12/15 12:29:13 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

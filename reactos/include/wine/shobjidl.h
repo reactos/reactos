@@ -1,4 +1,4 @@
-/* $Id: shobjidl.h,v 1.4 2004/06/29 13:40:40 gvg Exp $
+/* $Id$
  *
  * Compatibility header
  *

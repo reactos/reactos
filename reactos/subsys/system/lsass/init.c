@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.1 2001/07/24 10:18:05 ekohl Exp $
+/* $Id$
  *
  * init.c - Local Security Manager Initialization
  * 

@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.2 2004/12/16 23:46:41 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.155 2004/12/24 17:45:59 weiden Exp $
+/* $Id$
  *
  * DC.C - Device context functions
  *

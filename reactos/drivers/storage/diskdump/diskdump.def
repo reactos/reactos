@@ -1,4 +1,4 @@
-; $Id: diskdump.def,v 1.1 2003/08/27 21:28:08 dwelch Exp $
+; $Id$
 ;
 ; diskdump.def - export definition file for crash dump driver
 ;

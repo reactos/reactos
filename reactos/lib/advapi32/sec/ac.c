@@ -1,4 +1,4 @@
-/* $Id: ac.c,v 1.12 2004/12/13 19:06:28 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

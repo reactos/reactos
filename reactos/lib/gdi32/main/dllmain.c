@@ -2,8 +2,8 @@
  * dllmain.c
  *
  * $Revision: 1.11 $
- * $Author: weiden $
- * $Date: 2004/09/06 21:15:45 $
+ * $Author$
+ * $Date$
  *
  */
 

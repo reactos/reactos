@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.5 2004/09/19 14:36:47 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

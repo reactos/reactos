@@ -1,4 +1,4 @@
-/* $Id: cleanup.c,v 1.16 2004/12/05 16:31:50 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

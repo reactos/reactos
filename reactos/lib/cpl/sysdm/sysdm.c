@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: sysdm.c,v 1.3 2004/07/01 20:27:50 ekohl Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/sysdm.c

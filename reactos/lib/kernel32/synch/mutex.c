@@ -1,4 +1,4 @@
-/* $Id: mutex.c,v 1.10 2004/10/24 12:26:26 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

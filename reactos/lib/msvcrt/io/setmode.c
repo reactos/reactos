@@ -1,4 +1,4 @@
-/* $Id: setmode.c,v 1.9 2003/07/11 21:57:54 royce Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries

@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.60 2004/12/15 03:00:33 royce Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

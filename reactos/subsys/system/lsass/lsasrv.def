@@ -1,4 +1,4 @@
-; $Id: lsasrv.def,v 1.1 2001/07/24 10:18:05 ekohl Exp $
+; $Id$
 LIBRARY lsasrv
 EXPORTS
 LsaIAuditNotifyPackageLoad

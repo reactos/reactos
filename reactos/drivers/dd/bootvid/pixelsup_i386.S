@@ -1,4 +1,4 @@
-/* $Id: pixelsup_i386.S,v 1.2 2004/03/04 18:55:09 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

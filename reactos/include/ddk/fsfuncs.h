@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.31 2004/12/30 18:30:04 ion Exp $ */
+/* $Id$ */
 #define FlagOn(x,f) ((x) & (f))
 
 #include <ntos/fstypes.h>

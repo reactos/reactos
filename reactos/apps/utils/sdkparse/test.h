@@ -1,4 +1,4 @@
-/* $Id: test.h,v 1.4 2003/11/18 05:20:00 royce Exp $
+/* $Id$
 */
 /*
  * test.h

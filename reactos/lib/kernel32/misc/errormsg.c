@@ -1,4 +1,4 @@
-/* $Id: errormsg.c,v 1.17 2004/06/13 20:04:56 navaraf Exp $
+/* $Id$
  *
  * reactos/lib/kernel32/misc/errormsg.c
  *

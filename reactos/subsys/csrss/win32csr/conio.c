@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.19 2004/12/25 11:22:37 navaraf Exp $
+/* $Id$
  *
  * reactos/subsys/csrss/win32csr/conio.c
  *

@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_LDRFUNCS_H
 #define __INCLUDE_DDK_LDRFUNCS_H
-/* $Id: ldrfuncs.h,v 1.7 2004/06/23 22:21:03 ion Exp $ */
+/* $Id$ */
 
 NTSTATUS STDCALL
 LdrAccessResource(IN  PVOID BaseAddress,

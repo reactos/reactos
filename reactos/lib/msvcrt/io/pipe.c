@@ -1,4 +1,4 @@
-/* $Id: pipe.c,v 1.8 2004/08/15 18:16:36 chorns Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries

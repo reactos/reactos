@@ -1,4 +1,4 @@
-/* $Id: guiconsole.h,v 1.3 2004/03/07 21:00:11 hbirr Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

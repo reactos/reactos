@@ -1,4 +1,4 @@
-/* $Id: nttimer.c,v 1.26 2004/10/24 16:49:49 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

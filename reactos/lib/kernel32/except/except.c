@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.21 2004/12/13 13:32:23 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

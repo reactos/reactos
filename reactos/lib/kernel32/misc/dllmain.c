@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.38 2004/11/29 00:08:59 gdalsnes Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

@@ -1,4 +1,4 @@
-/* $Id: buildno.c,v 1.6 2004/10/16 20:27:43 gvg Exp $
+/* $Id$
  *
  * buildno - Generate the build number for ReactOS
  *

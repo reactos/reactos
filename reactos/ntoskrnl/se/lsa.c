@@ -1,4 +1,4 @@
-/* $Id: lsa.c,v 1.6 2004/08/15 16:39:11 chorns Exp $
+/* $Id$
  */
 
 #include <ntoskrnl.h>

@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.55 2004/12/21 18:37:28 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel

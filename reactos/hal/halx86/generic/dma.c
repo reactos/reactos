@@ -1,4 +1,4 @@
-/* $Id: dma.c,v 1.2 2004/12/10 19:05:33 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

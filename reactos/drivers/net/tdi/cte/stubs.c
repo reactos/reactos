@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.6 2004/01/28 20:55:18 ekohl Exp $
+/* $Id$
  *
  */
 #include <ddk/ntddk.h>

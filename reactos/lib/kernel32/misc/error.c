@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.23 2004/10/24 12:36:12 weiden Exp $
+/* $Id$
  *
  * reactos/lib/kernel32/misc/error.c
  *

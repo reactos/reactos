@@ -1,4 +1,4 @@
-/* $Id: direntry.c,v 1.19 2004/12/25 11:18:38 navaraf Exp $
+/* $Id$
  *
  *
  * FILE:             DirEntry.c

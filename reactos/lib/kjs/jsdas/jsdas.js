@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/jsdas/jsdas.js,v $
- * $Id: jsdas.js,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 function ByteCode$SymtabEntry (name, offset)
@@ -879,7 +879,7 @@ DASM$op_flags[74] 	= 0x1;
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/jsdas/jsdas.js,v $
- * $Id: jsdas.js,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 /*

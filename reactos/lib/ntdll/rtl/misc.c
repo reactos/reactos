@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.11 2004/12/13 23:11:13 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

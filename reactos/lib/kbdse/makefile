@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2004/01/09 13:18:37 fireball Exp $
+# $Id$
 
 PATH_TO_TOP = ../..
 

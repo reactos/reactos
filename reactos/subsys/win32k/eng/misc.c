@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.9 2004/07/03 17:40:25 navaraf Exp $ */
+/* $Id$ */
 #include <w32k.h>
 
 BOOL STDCALL

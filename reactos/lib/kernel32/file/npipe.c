@@ -1,4 +1,4 @@
-/* $Id: npipe.c,v 1.22 2004/12/30 16:15:46 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

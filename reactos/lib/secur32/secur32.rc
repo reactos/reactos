@@ -1,4 +1,4 @@
-/* $Id: secur32.rc,v 1.5 2004/10/16 20:27:37 gvg Exp $ */
+/* $Id$ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"Security\0"

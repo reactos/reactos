@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.2 2004/12/03 23:37:42 blight Exp $
+# $Id$
 
 TARGET_NAME = riched20
 

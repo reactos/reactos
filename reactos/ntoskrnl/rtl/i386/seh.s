@@ -1,4 +1,4 @@
-/* $Id: seh.s,v 1.3 2002/10/26 09:53:16 dwelch Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

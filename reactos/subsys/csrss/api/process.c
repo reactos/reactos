@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.39 2004/12/25 22:58:59 gvg Exp $
+/* $Id$
  *
  * reactos/subsys/csrss/api/process.c
  *

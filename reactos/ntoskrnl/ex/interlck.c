@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.17 2004/10/17 13:08:26 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

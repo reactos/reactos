@@ -1,4 +1,4 @@
-/* $Id: listen.c,v 1.5 2004/12/25 21:30:17 arty Exp $
+/* $Id$
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/listen.c

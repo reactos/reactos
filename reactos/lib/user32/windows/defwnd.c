@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.149 2004/12/13 15:39:52 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll

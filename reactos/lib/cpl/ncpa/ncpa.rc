@@ -1,4 +1,4 @@
-/* $Id: ncpa.rc,v 1.4 2004/10/16 20:27:31 gvg Exp $ */
+/* $Id$ */
 
 #include "resource.h"
 #ifdef _MSC_VER

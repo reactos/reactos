@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.16 2004/07/03 17:40:23 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

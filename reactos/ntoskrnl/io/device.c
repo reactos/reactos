@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.87 2004/12/27 14:21:35 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel

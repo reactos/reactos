@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.58 2004/12/14 10:18:57 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

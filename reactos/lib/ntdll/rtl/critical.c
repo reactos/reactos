@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.20 2004/03/24 23:43:52 gdalsnes Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

@@ -1,4 +1,4 @@
-/* $Id: video.c,v 1.10 2004/04/09 20:03:15 navaraf Exp $
+/* $Id$
  *
  * ReactOS Project
  */

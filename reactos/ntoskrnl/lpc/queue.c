@@ -1,4 +1,4 @@
-/* $Id: queue.c,v 1.10 2004/08/15 16:39:06 chorns Exp $
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

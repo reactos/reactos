@@ -1,4 +1,4 @@
-/* $Id: name.c,v 1.13 2004/12/30 18:30:05 ion Exp $
+/* $Id$
  *
  * reactos/ntoskrnl/fs/name.c
  *

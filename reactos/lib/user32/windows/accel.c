@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accel.c,v 1.15 2004/08/15 21:36:28 chorns Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c

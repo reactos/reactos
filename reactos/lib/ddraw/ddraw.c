@@ -1,4 +1,4 @@
-/* $Id: ddraw.c,v 1.1 2004/02/03 23:09:48 rcampbell Exp $
+/* $Id$
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel

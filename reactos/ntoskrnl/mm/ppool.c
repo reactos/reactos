@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.39 2004/12/21 04:05:18 royce Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

@@ -1,4 +1,4 @@
-/* $Id: teb.c,v 1.2 2003/08/07 01:51:42 royce Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

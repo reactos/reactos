@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.9 2004/12/05 16:31:51 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

@@ -19,8 +19,8 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  * $Revision: 1.4 $
- * $Author: robd $
- * $Date: 2002/11/24 18:06:01 $
+ * $Author$
+ * $Date$
  *
  */
 

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.50 2004/12/24 19:02:32 greatlrd Exp $
+/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

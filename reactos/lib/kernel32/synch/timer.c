@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.19 2004/10/24 16:49:48 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel

@@ -1,4 +1,4 @@
-/* $Id: fputs.c,v 1.9 2004/12/25 11:18:50 navaraf Exp $
+/* $Id$
  *
  *  ReactOS msvcrt library
  *

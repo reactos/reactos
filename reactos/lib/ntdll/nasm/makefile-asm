@@ -1,4 +1,4 @@
-# $Id: makefile-asm,v 1.1 2003/07/30 19:06:55 greatlrd Exp $
+# $Id$
 
 PATH_TO_TOP = ../..
 

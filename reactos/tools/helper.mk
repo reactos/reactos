@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.101 2004/12/13 02:20:09 blight Exp $
+# $Id$
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.37 2004/11/21 21:09:42 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

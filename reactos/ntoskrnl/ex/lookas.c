@@ -1,4 +1,4 @@
-/* $Id: lookas.c,v 1.14 2004/08/15 16:39:01 chorns Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

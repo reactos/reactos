@@ -1,4 +1,4 @@
-/* $Id: _wgetopt.c,v 1.1 2003/04/22 03:20:25 hyperion Exp $
+/* $Id$
 */
 /*
  tgetopt -- POSIX-compliant implementation of getopt() with string-type-generic

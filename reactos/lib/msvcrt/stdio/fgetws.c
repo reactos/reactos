@@ -1,4 +1,4 @@
-/* $Id: fgetws.c,v 1.1 2002/11/24 18:42:24 robd Exp $
+/* $Id$
  *
  *  ReactOS msvcrt library
  *

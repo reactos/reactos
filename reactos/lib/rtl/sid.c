@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.4 2004/07/12 19:39:29 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

@@ -1,4 +1,4 @@
-/* $Id: port.h,v 1.2 2002/11/14 18:21:03 chorns Exp $
+/* $Id$
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel

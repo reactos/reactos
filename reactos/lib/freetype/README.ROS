@@ -67,4 +67,4 @@ file, so it is obvious to everyone which FreeType version we're using.
 After testing, you can commit the new/changed files to CVS. ALthough files
 config.mk and freetype.def are generated, they should be included in CVS.
 
-$Id: README.ROS,v 1.7 2004/10/16 20:27:33 gvg Exp $
+$Id$

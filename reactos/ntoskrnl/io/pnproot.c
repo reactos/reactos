@@ -1,4 +1,4 @@
-/* $Id: pnproot.c,v 1.24 2004/10/24 09:13:18 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel

@@ -1,4 +1,4 @@
-/* $Id: getopt.c,v 1.2 2003/12/17 01:46:08 hyperion Exp $
+/* $Id$
 */
 /*
  tgetopt -- POSIX-compliant implementation of getopt() with string-type-generic

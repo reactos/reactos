@@ -1,4 +1,4 @@
-/* $Id: pager.c,v 1.18 2004/08/15 16:39:08 chorns Exp $
+/* $Id$
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel

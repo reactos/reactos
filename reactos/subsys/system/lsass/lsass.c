@@ -1,4 +1,4 @@
-/* $Id: lsass.c,v 1.2 2004/02/25 22:36:53 sedwards Exp $
+/* $Id$
  *
  * reactos/services/lsass/lsass.c
  * 

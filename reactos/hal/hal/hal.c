@@ -1,4 +1,4 @@
-/* $Id: hal.c,v 1.8 2004/11/21 21:53:06 ion Exp $
+/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.72 2004/12/27 16:48:29 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll

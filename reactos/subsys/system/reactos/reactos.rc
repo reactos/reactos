@@ -1,4 +1,4 @@
-/* $Id: reactos.rc,v 1.1 2004/12/24 17:16:43 ekohl Exp $ */
+/* $Id$ */
 
 #include <defines.h>
 #include "resource.h"

@@ -1,4 +1,4 @@
-/* $Id: putc.c,v 1.11 2004/08/20 00:57:44 navaraf Exp $
+/* $Id$
  *
  *  ReactOS msvcrt library
  *

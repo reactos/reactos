@@ -1,4 +1,4 @@
-/* $Id: malloc.c,v 1.6 2004/11/03 22:43:00 weiden Exp $
+/* $Id$
  */
 /*
  * COPYRIGHT:   None

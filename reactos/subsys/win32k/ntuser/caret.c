@@ -1,4 +1,4 @@
-/* $Id: caret.c,v 1.17 2004/12/29 19:55:01 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

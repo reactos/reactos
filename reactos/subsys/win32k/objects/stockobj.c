@@ -19,7 +19,7 @@
 /*
  * STOCKOBJ.C - GDI Stock Objects
  *
- * $Id: stockobj.c,v 1.2 2004/12/12 01:40:39 weiden Exp $
+ * $Id$
  *
  */
 #include <w32k.h>

@@ -1,4 +1,4 @@
-/* $Id: bind.c,v 1.6 2004/11/21 20:54:52 arty Exp $
+/* $Id$
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/bind.c

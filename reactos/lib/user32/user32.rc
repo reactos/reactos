@@ -1,4 +1,4 @@
-/* $Id: user32.rc,v 1.36 2004/10/16 20:27:39 gvg Exp $ */
+/* $Id$ */
 
 #include <defines.h>
 #include <messages.h>

@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_NTOS_DBGFUNCS_H
 #define __INCLUDE_NTOS_DBGFUNCS_H
-/* $Id: dbgfuncs.h,v 1.1 2003/06/07 16:23:46 chorns Exp $ */
+/* $Id$ */
 
 #define DBG_STATUS_CONTROL_C       1
 #define DBG_STATUS_SYSRQ           2

@@ -1,4 +1,4 @@
-/* $Id: winlogon.rc,v 1.9 2004/10/16 20:27:42 gvg Exp $ */
+/* $Id$ */
 
 #include <defines.h>
 #include "resource.h"

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: environment.c,v 1.5 2004/10/11 21:08:04 weiden Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/sysdm/environment.c

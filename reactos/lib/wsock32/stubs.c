@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.6 2003/11/19 13:16:22 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock DLL

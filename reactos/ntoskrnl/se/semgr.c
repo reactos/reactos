@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.51 2004/11/21 18:35:05 gdalsnes Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

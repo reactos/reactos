@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/jsc/gram.js,v $
- * $Id: gram.js,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 /* General helpers. */

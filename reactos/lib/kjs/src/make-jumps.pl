@@ -24,7 +24,7 @@
 #
 #
 #
-# $Id: make-jumps.pl,v 1.1 2004/01/10 20:38:18 arty Exp $
+# $Id$
 #
 
 $linenumbers = 0;

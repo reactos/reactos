@@ -1,4 +1,4 @@
-/* $Id: services.c,v 1.18 2004/04/12 17:20:47 navaraf Exp $
+/* $Id$
  *
  * service control manager
  * 

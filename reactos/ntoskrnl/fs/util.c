@@ -1,4 +1,4 @@
-/* $Id: util.c,v 1.18 2004/08/21 20:40:27 tamlin Exp $
+/* $Id$
  *
  * reactos/ntoskrnl/fs/util.c
  *

@@ -34,7 +34,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: moddi3.c,v 1.2 2002/11/24 18:42:16 robd Exp $
+ * $Id$
  */
 
 #include <msvcrt/internal/quad.h>

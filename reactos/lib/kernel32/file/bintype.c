@@ -1,4 +1,4 @@
-/* $Id: bintype.c,v 1.2 2004/10/30 22:18:17 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

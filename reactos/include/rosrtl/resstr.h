@@ -1,4 +1,4 @@
-/* $Id: resstr.h,v 1.1 2004/08/10 11:54:43 weiden Exp $
+/* $Id$
  */
 
 #ifndef ROSRTL_RESSTR_H__

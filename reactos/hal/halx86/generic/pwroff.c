@@ -1,4 +1,4 @@
-/* $Id: pwroff.c,v 1.1 2004/12/03 20:10:43 gvg Exp $
+/* $Id$
  *
  * FILE       : reactos/hal/x86/apm.c
  * DESCRIPTION: Turn CPU off...
