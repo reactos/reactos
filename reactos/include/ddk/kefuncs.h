@@ -246,6 +246,12 @@ KeQueryTimeIncrement (
 	VOID
 	);
 
+ULONGLONG 
+STDCALL
+KeQueryInterruptTime(
+    VOID
+    );
+            
 VOID
 STDCALL
 KeRaiseIrql (

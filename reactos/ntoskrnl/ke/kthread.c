@@ -72,6 +72,23 @@ KeQueryPriorityThread (
 	return Thread->Priority;
 }
 
+/*
+ * @implemented
+ */
+ULONG
+STDCALL
+KeQueryRuntimeThread(
+	IN PKTHREAD Thread,
+	OUT PULONG UserTime
+	)
+{
+	/* Return the User Time */
+	*UserTime = Thread->UserTime;
+	
+	/* Return the Kernel Time */
+	return Thread->KernelTime;
+}
+
 NTSTATUS 
 KeReleaseThread(PKTHREAD Thread)
 /*
@@ -404,4 +421,46 @@ KeTerminateThread(IN KPRIORITY Increment)
 	
 	/* Call our own internal routine */
 	PsTerminateCurrentThread(0);
+}
+
+
+NTSTATUS 
+STDCALL
+NtDelayExecution(IN BOOLEAN Alertable,
+                 IN PLARGE_INTEGER DelayInterval)
+{
+   KPROCESSOR_MODE PreviousMode;
+   LARGE_INTEGER SafeInterval;
+   
+   PreviousMode = ExGetPreviousMode();
+   
+   if(PreviousMode != KernelMode)
+   {
+     NTSTATUS Status = STATUS_SUCCESS;
+     
+     _SEH_TRY
+     {
+       ProbeForRead(DelayInterval,
+                    sizeof(LARGE_INTEGER),
+                    sizeof(ULONG));
+       /* make a copy on the kernel stack and let DelayInterval point to it so
+          we don't need to wrap KeDelayExecutionThread in SEH! */
+       SafeInterval = *DelayInterval;
+       DelayInterval = &SafeInterval;
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
+
+   return KeDelayExecutionThread(PreviousMode,
+                                 Alertable,
+                                 DelayInterval);
 }
