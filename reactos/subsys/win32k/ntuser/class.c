@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.29 2003/08/13 20:24:05 chorns Exp $
+/* $Id: class.c,v 1.30 2003/08/14 01:38:19 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -502,11 +502,13 @@ W32kSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL
 	  {
 		WindowObject->Class->lpfnWndProcA = (WNDPROC)dwNewLong;
 		WindowObject->Class->lpfnWndProcW = (WNDPROC)dwNewLong+0x80000000;
+		WindowObject->Class->Unicode = FALSE;
 	  }
 	  else
 	  {
 		WindowObject->Class->lpfnWndProcW = (WNDPROC)dwNewLong;
 		WindowObject->Class->lpfnWndProcA = (WNDPROC)dwNewLong+0x80000000;
+		WindowObject->Class->Unicode = TRUE;
 	  }
       break;
     }
