@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.54 2000/09/06 03:08:22 phreak Exp $
+/* $Id: thread.c,v 1.55 2000/09/24 23:55:21 phreak Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -124,10 +124,9 @@ HANDLE STDCALL PsGetCurrentThreadId(VOID)
 
 static VOID PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
 {
-//   DPRINT("PsInsertIntoThreadList(Priority %x, Thread %x)\n",Priority,
-//	  Thread);
-//   DPRINT("Offset %x\n", THREAD_PRIORITY_MAX + Priority);
-   
+   DPRINT("PsInsertIntoThreadList(Priority %x, Thread %x)\n",Priority,
+	  Thread);
+   DPRINT("Offset %x\n", THREAD_PRIORITY_MAX + Priority);
    InsertTailList(&PriorityListHead[THREAD_PRIORITY_MAX+Priority],
 		  &Thread->Tcb.QueueListEntry);
    PiNrRunnableThreads++;
@@ -443,14 +442,20 @@ KeSetPriorityThread (
 {
    KPRIORITY OldPriority;
    KIRQL oldIrql;
-   
-   OldPriority = Thread->Priority;
-   Thread->Priority = Priority;
 
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-   RemoveEntryList(&Thread->QueueListEntry);
-   PsInsertIntoThreadList(Thread->BasePriority,
-			  CONTAINING_RECORD(Thread,ETHREAD,Tcb));
+   // Truncate priority to the max value
+   Priority = Priority > THREAD_PRIORITY_MAX ? THREAD_PRIORITY_MAX : Priority;
+   OldPriority = Thread->Priority;
+   Thread->Priority = Priority;
+   // Remove thread from run queue, and plcae it back on using the new priority
+   // but only if it is already on the runqueue!
+   if( Thread->State == THREAD_STATE_RUNNABLE )
+     {
+       RemoveEntryList(&Thread->QueueListEntry);
+       PsInsertIntoThreadList(Thread->Priority,
+			      CONTAINING_RECORD(Thread,ETHREAD,Tcb));
+     }
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
    return(OldPriority);
 }
