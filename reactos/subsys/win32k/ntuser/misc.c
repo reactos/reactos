@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.51 2004/02/16 07:26:25 rcampbell Exp $
+/* $Id: misc.c,v 1.52 2004/02/16 11:16:06 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -529,16 +529,6 @@ NtUserSystemParametersInfo(
           return FALSE;
         }
         
-        return TRUE;
-      }
-    case SPI_GETICONTITLELOGFONT:
-      {
-        Status = MmCopyToCaller(pvParam, &IconFont, sizeof(IconFont));
-        if(!NT_SUCCESS(Status))
-        {
-          SetLastNtError(Status);
-          return FALSE;
-        }
         return TRUE;
       }
     case SPI_GETGRADIENTCAPTIONS:
