@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.248 2004/09/01 23:49:39 arty Exp $
+# $Id: Makefile,v 1.249 2004/09/15 10:16:05 mf Exp $
 #
 # Global makefile
 #
@@ -98,7 +98,7 @@ STORAGE_DRIVERS = atapi cdrom class2 disk floppy scsiport diskdump
 
 # System applications
 # autochk cmd format services setup usetup welcome winlogon
-SYS_APPS = autochk cmd explorer expand format services setup taskmgr userinit usetup welcome vmwinst winlogon regedit
+SYS_APPS = autochk cmd explorer expand format services setup taskmgr userinit usetup welcome vmwinst winlogon regedit winefile
 
 # System services
 # rpcss eventlog
