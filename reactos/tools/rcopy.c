@@ -22,6 +22,27 @@
 #define DIR_SEPARATOR_STRING "\\"
 #endif
 
+char *
+make_absolute(char *absolute, char *path)
+{
+#ifndef WIN32
+  if (path[0] == DIR_SEPARATOR_CHAR)
+    {
+      strcpy(buf, path);
+    }
+  else
+    {
+      getcwd(buf, sizeof(buf));
+      strcat(buf, DIR_SEPARATOR_STRING);
+      strcat(buf, path);
+    }
+#else
+  _fullpath(absolute, path, MAX_PATH);
+#endif
+
+  return absolute;
+}
+
 char* convert_path(char* origpath)
 {
    char* newpath;
@@ -113,24 +134,13 @@ copy_directory (char *path1, char *path2)
     	{
     	  if ((f.attrib & _A_SUBDIR) == 0 && f.name[0] != '.')
     	    {
-              // Check for an absolute path
-              if (path1[0] == DIR_SEPARATOR_CHAR)
-                {
-                  strcpy(buf, path1);
-                  strcat(buf, DIR_SEPARATOR_STRING);
-                  strcat(buf, f.name);
-                }
-              else
-                {
-                  getcwd(buf, sizeof(buf));
-                  strcat(buf, DIR_SEPARATOR_STRING);
-                  strcat(buf, path1);
-                  if (path1[strlen(path1) - 1] != DIR_SEPARATOR_CHAR)
-                    strcat(buf, DIR_SEPARATOR_STRING);
-                  strcat(buf, f.name);
-                }
+              // Convert to absolute path
+              make_absolute(buf, path1);
+              if (path1[strlen(path1) - 1] != DIR_SEPARATOR_CHAR)
+                strcat(buf, DIR_SEPARATOR_STRING);
+              strcat(buf, f.name);
 
-    		      //printf("copying file %s\n", buf);
+              //printf("copying file %s\n", buf);
               if (path2[strlen(path2) - 1] == DIR_SEPARATOR_CHAR)
                 {
                   strcpy(tobuf, path2);
@@ -180,22 +190,11 @@ copy_directory (char *path1, char *path2)
 
         if (entry->d_type == DT_REG) // normal file
 		    {
-              // Check for an absolute path
-              if (path1[0] == DIR_SEPARATOR_CHAR)
-                {
-                  strcpy(buf, path1);
-                  strcat(buf, DIR_SEPARATOR_STRING);
-                  strcat(buf, entry->d_name);
-                }
-              else
-                {
-                  getcwd(buf, sizeof(buf));
-                  strcat(buf, DIR_SEPARATOR_STRING);
-                  strcat(buf, path1);
-                  if (path1[strlen(path1) - 1] != DIR_SEPARATOR_CHAR)
-                    strcat(buf, DIR_SEPARATOR_STRING);
-                  strcat(buf, entry->d_name);
-                }
+              // Convert to absolute path
+              make_absolute(buf, path1);
+              if (path1[strlen(path1) - 1] != DIR_SEPARATOR_CHAR)
+                strcat(buf, DIR_SEPARATOR_STRING);
+              strcat(buf, entry->d_name);
               if (stat(buf, &stbuf) == -1)
                 {
                   sprintf(err, "Can't access '%s' (%s)\n", buf, strerror(errno));
@@ -243,17 +242,8 @@ is_directory(char *path)
   char buf[MAX_PATH];
   char err[400];
 
-  // Check for an absolute path
-  if (path[0] == DIR_SEPARATOR_CHAR)
-    {
-      strcpy(buf, path);
-    }
-  else
-    {
-      getcwd(buf, sizeof(buf));
-      strcat(buf, DIR_SEPARATOR_STRING);
-      strcat(buf, path);
-    }
+  // Convert to absolute path
+  make_absolute(buf, path);
   if (stat(buf, &stbuf) == -1)
     {
       /* Assume a destination file */
