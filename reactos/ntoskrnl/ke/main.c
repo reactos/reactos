@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.149 2003/03/22 22:32:17 ekohl Exp $
+/* $Id: main.c,v 1.150 2003/04/01 16:35:22 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -85,23 +85,24 @@ static BOOLEAN
 RtlpCheckFileNameExtension(PCHAR FileName,
 			   PCHAR Extension)
 {
-   PCHAR Ext;
+  PCHAR Ext;
 
-   Ext = strrchr(FileName, '.');
-   if ((Extension == NULL) || (*Extension == 0))
-     {
-	if (Ext == NULL)
-	  return TRUE;
-	else
-	  return FALSE;
-     }
-   if (*Extension != '.')
-     Ext++;
-   
-   if (_stricmp(Ext, Extension) == 0)
-     return TRUE;
-   else
-     return FALSE;
+  Ext = strrchr(FileName, '.');
+  if (Ext == NULL)
+    {
+      if ((Extension == NULL) || (*Extension == 0))
+	return TRUE;
+      else
+	return FALSE;
+    }
+
+  if (*Extension != '.')
+    Ext++;
+
+  if (_stricmp(Ext, Extension) == 0)
+    return TRUE;
+  else
+    return FALSE;
 }
 
 
@@ -479,12 +480,14 @@ ExpInitializeExecutive(VOID)
 	}
     }
 
-  /*  Pass 2: import system registry chunk  */
+  /*  Pass 2: import system hive registry chunk  */
   SetupBoot = TRUE;
   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
     {
       start = KeLoaderModules[i].ModStart;
       length = KeLoaderModules[i].ModEnd - start;
+
+      DPRINT("Module: '%s'\n", (PCHAR)KeLoaderModules[i].String);
       name = strrchr((PCHAR)KeLoaderModules[i].String, '\\');
       if (name == NULL)
 	{
@@ -498,13 +501,13 @@ ExpInitializeExecutive(VOID)
       if (!_stricmp (name, "system") ||
 	  !_stricmp (name, "system.hiv"))
 	{
-	  CPRINT("Process 'system' registry chunk at %08lx\n", start);
+	  CPRINT("Process system hive registry chunk at %08lx\n", start);
 	  SetupBoot = FALSE;
 	  CmImportSystemHive((PCHAR)start, length);
 	}
     }
 
-  /*  Pass 3: import hardware registry chunk  */
+  /*  Pass 3: import hardware hive registry chunk  */
   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
     {
       start = KeLoaderModules[i].ModStart;
@@ -513,7 +516,7 @@ ExpInitializeExecutive(VOID)
       if (!_stricmp (name, "hardware") ||
 	  !_stricmp (name, "hardware.hiv"))
 	{
-	  CPRINT("Process 'hardware' registry chunk at %08lx\n", start);
+	  CPRINT("Process hardware hive registry chunk at %08lx\n", start);
 	  CmImportHardwareHive((PCHAR)start, length);
 	}
     }
