@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cleanup.c,v 1.1 2002/09/09 17:27:14 hbirr Exp $
+/* $Id: cleanup.c,v 1.2 2003/01/02 16:01:21 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -58,8 +58,11 @@ CdfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
       return  STATUS_SUCCESS;
     }
 
-  /* Uninitialize the file cache. */
-  CcRosReleaseFileCache (FileObject, Ccb->Fcb->RFCB.Bcb);
+  /* Uninitialize file cache if initialized for this file object. */
+  if (Ccb->Fcb->RFCB.Bcb != NULL)
+    {
+      CcRosReleaseFileCache (FileObject, Ccb->Fcb->RFCB.Bcb);
+    }
  
   return STATUS_SUCCESS;
 }
