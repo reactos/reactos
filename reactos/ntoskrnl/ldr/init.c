@@ -31,6 +31,7 @@
  *   RJJ  06/03/99  Moved user PE loader into NTDLL
  *   EA   19990717  LdrGetSystemDirectory()
  *   EK   20000618  Using SystemRoot link instead of LdrGetSystemDirectory()
+ *   HYP  20020911  Code to determine smss's path from the registry
  */
 
 /* INCLUDES *****************************************************************/
@@ -50,14 +51,15 @@
 /* FUNCTIONS *****************************************************************/
 
 /*
- * FIXME: The location of the initial process should be configurable,
- * from command line or registry
+ * TODO: Read the location of the initial process from command line before
+ * trying the registry - embedded setups, like the installation CD-ROM, may not
+ * have a SYSTEM hive
  */
 NTSTATUS LdrLoadInitialProcess (VOID)
 {
    NTSTATUS Status;
    HANDLE ProcessHandle;
-   UNICODE_STRING ProcessName;
+   UNICODE_STRING ProcessName = {0, 0, NULL};
    OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE FileHandle;
    HANDLE SectionHandle;
@@ -71,14 +73,65 @@ NTSTATUS LdrLoadInitialProcess (VOID)
    ULONG ResultLength;
    PVOID ImageBaseAddress;
    ULONG InitialStack[5];
+#if 0
+   /* FIXME: Test this please */
+   HANDLE RootDir;
+   PWSTR Environment = L"SystemRoot=\\SystemRoot\0";
+   RTL_QUERY_REGISTRY_TABLE RegistryValues[] = {
+      {
+         NULL,
+         RTL_QUERY_REGISTRY_DIRECT,
+         L"Path",
+         &ProcessName,
+         REG_SZ,
+         L"\\SystemRoot\\system32\\smss.exe"
+         sizeof(L"\\SystemRoot\\system32\\smss.exe") - sizeof(WCHAR)
+      },
+      { NULL, 0, NULL, NULL, 0, NULL, 0 }
+   };
+
+   /* try to query the SMSS path from the registry */
+   Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+                                   L"Session Manager",
+                                   RegistryValues,
+                                   NULL,
+                                   Environment);
    
+   /* failure or invalid data: use default */
+   if(!NT_SUCCESS(Status) || ProcessName.Length < sizeof(WCHAR))
+      RtlInitUnicodeStringFromLiteral(&ProcessName,
+                                      L"\\SystemRoot\\system32\\smss.exe");
+   /* relative path: open \SystemRoot\system32 */
+   else if(ProcessName.Buffer[0] != L'\\')
+   {
+      UNICODE_STRING DirPath;
+    
+      RtlInitUnicodeStringFromLiteral(&DirPath, L"\\SystemRoot\\system32");
+
+      InitializeObjectAttributes(&ObjectAttributes,
+                                 &DirPath,
+                                 0,
+                                 NULL,
+                                 NULL);
+
+      if(!NT_SUCCESS(ZwOpenFile(&RootDir, 0, &ObjectAttributes, NULL, 0, 0)))
+         /* failure: use default */
+         RtlInitUnicodeStringFromLiteral(&ProcessName,
+                                         L"\\SystemRoot\\system32\\smss.exe");
+   }
+
+   InitializeObjectAttributes(&ObjectAttributes,
+			      &ProcessName,
+			      0,
+			      RootDir,
+			      NULL);
+#else
    /*
     * Get the absolute path to smss.exe using the
     * SystemRoot link.
     */
    RtlInitUnicodeStringFromLiteral(&ProcessName,
 			L"\\SystemRoot\\system32\\smss.exe");
-   
    /*
     * Open process image to determine ImageBase
     * and StackBase/Size.
@@ -88,6 +141,7 @@ NTSTATUS LdrLoadInitialProcess (VOID)
 			      0,
 			      NULL,
 			      NULL);
+#endif
    DPRINT("Opening image file %S\n", ObjectAttributes.ObjectName->Buffer);
    Status = ZwOpenFile(&FileHandle,
 		       FILE_ALL_ACCESS,
@@ -95,6 +149,11 @@ NTSTATUS LdrLoadInitialProcess (VOID)
 		       NULL,
 		       0,
 		       0);
+#if 0
+   /* FIXME? ExFreePool() should ignore non-pool data */
+   RtlFreeUnicodeString(&ProcessName);
+   NtClose(RootDir);
+#endif
    if (!NT_SUCCESS(Status))
      {
 	DPRINT("Image open failed (Status was %x)\n", Status);
