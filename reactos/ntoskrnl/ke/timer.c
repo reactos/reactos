@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.70 2004/04/14 23:32:37 jimtabor Exp $
+/* $Id: timer.c,v 1.71 2004/04/18 00:52:57 jimtabor Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -38,6 +38,7 @@ LARGE_INTEGER SystemBootTime = (LARGE_INTEGER)0LL;
 LARGE_INTEGER SystemBootTime = { 0 };
 #endif
 
+CHAR KiTimerSystemAuditing = 0;
 volatile ULONG KiKernelTime;
 volatile ULONG KiUserTime;
 volatile ULONG KiDpcTime;
@@ -64,11 +65,14 @@ static LIST_ENTRY AbsoluteTimerListHead;
 static LIST_ENTRY RelativeTimerListHead;
 static KSPIN_LOCK TimerListLock;
 static KSPIN_LOCK TimerValueLock;
+static KSPIN_LOCK TimeLock;
 static KDPC ExpireTimerDpc;
 
 /* must raise IRQL to PROFILE_LEVEL and grab spin lock there, to sync with ISR */
 
 extern ULONG PiNrRunnableThreads;
+extern HANDLE PsIdleThreadHandle;
+
 
 #define MICROSECONDS_PER_TICK (10000)
 #define TICKS_TO_CALIBRATE (1)
@@ -654,6 +658,7 @@ KeInitializeTimerImpl(VOID)
    InitializeListHead(&RelativeTimerListHead);
    KeInitializeSpinLock(&TimerListLock);
    KeInitializeSpinLock(&TimerValueLock);
+   KeInitializeSpinLock(&TimeLock);
    KeInitializeDpc(&ExpireTimerDpc, KeExpireTimers, 0);
    /*
     * Calculate the starting time for the system clock
@@ -682,22 +687,35 @@ KiUpdateProcessThreadTime(VOID)
    PKPROCESS CurrentProcess;
 
    assert(KeGetCurrentIrql() == PASSIVE_LEVEL);
-
-   CurrentThread = KeGetCurrentThread();
+/*
+ *  Make sure no counting can take place until Processes and Threads are
+ *  running!
+ */
+   if ((PsInitialSystemProcess == NULL) || 
+              (PsIdleThreadHandle == NULL) || (KiTimerSystemAuditing == 0))
+     {
+       return;
+     }
+   	
    CurrentProcess = KeGetCurrentProcess();
+   CurrentThread = KeGetCurrentThread();
+   
+   DPRINT("KiKernelTime  %u, KiUserTime %u \n", KiKernelTime, KiUserTime);
 
-  DPRINT("KiKernelTime  %u, KiUserTime %u \n", KiKernelTime, KiUserTime);
+   KiAcquireSpinLock(&TimeLock);
 
    if (CurrentThread->PreviousMode == UserMode)
-    {
-       ++CurrentThread->UserTime;
+     {
+       ++CurrentThread->UserTime;       
        ++CurrentProcess->UserTime;
        ++KiUserTime;
-    }
+     }
    if (CurrentThread->PreviousMode == KernelMode)
      {
        ++CurrentProcess->KernelTime;
        ++CurrentThread->KernelTime;
        ++KiKernelTime;
      }
+
+    KiReleaseSpinLock(&TimeLock);       
 } 
