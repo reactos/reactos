@@ -488,9 +488,9 @@ process_directory (char *path, char *cvspath)
 
                   strcpy(newcvspath, cvspath);
                   strcat(newcvspath, f.name);
-                  strcat(newcvspath, '/');
+                  strcat(newcvspath, "/");
 
-                  process_directory(buf, cvspath, f.name);
+                  process_directory(buf, newcvspath);
                 }
               continue;
       	    }
@@ -564,7 +564,7 @@ process_directory (char *path, char *cvspath)
           	    {
                   strcpy(newcvspath, cvspath);
                   strcat(newcvspath, f.name);
-                  strcat(newcvspath, '/');
+                  strcat(newcvspath, "/");
 
                   process_directory(buf, newcvspath);
                   continue;

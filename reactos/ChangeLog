@@ -1,5 +1,9 @@
 2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* tools/rgenstat/rgenstat.c (process_directory): Fix building on Windows.
+
+2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* tools/rgenstat/rgenstat.c (API_INFO): Add filename field.
 	(path_to_url, get_filename): New functions.
 	(parse_file, process_directory): Build cvs path.
