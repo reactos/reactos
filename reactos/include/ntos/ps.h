@@ -88,7 +88,7 @@ extern struct _EPROCESS* EXPORTED PsInitialSystemProcess;
 extern POBJECT_TYPE EXPORTED PsProcessType;
 extern POBJECT_TYPE EXPORTED PsThreadType;
 #else
-#ifdef __GNU__ // robd
+#ifdef __GNUC__ // robd
 extern struct _EPROCESS* IMPORTED PsInitialSystemProcess;
 extern POBJECT_TYPE IMPORTED PsProcessType;
 extern POBJECT_TYPE IMPORTED PsThreadType;
