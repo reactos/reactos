@@ -70,7 +70,7 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 	else
 	{
 		/* exec the program */
-		TCHAR szFullCmdLine [1024];
+		TCHAR szFullCmdLine [CMDLINE_LENGTH];
 		PROCESS_INFORMATION prci;
 		STARTUPINFO stui;
 
