@@ -1,0 +1,655 @@
+/* $Id: stubs.c,v 1.1 2004/07/12 15:08:43 weiden Exp $
+ *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Hid User Library
+ * FILE:            lib/hid/stubs.c
+ * PURPOSE:         hid.dll stubs
+ * NOTES:           If you implement a function, remove it from this file
+ *
+ * UPDATE HISTORY:
+ *      07/12/2004  Created
+ */
+#include <windows.h>
+#include <ddk/hidpi.h>
+#include "internal.h"
+
+#define UNIMPLEMENTED \
+  DbgPrint("HID:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__)
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_FlushQueue(IN HANDLE HidDeviceObject)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_FreePreparsedData(IN PHIDP_PREPARSED_DATA PreparsedData)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_GetAttributes(IN HANDLE HidDeviceObject,
+                   OUT PHIDD_ATTRIBUTES Attributes)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_GetConfiguration(IN HANDLE HidDeviceObject,
+                      OUT PHIDD_CONFIGURATION Configuration,
+                      IN ULONG ConfigurationLength)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_GetFeature(IN HANDLE HidDeviceObject,
+                OUT PVOID ReportBuffer,
+                IN ULONG ReportBufferLength)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+VOID DDKAPI
+HidD_GetHidGuid(OUT LPGUID HidGuid)
+{
+  UNIMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_GetIndexedString(IN HANDLE HidDeviceObject,
+                      IN ULONG StringIndex,
+                      OUT PVOID Buffer,
+                      IN ULONG BufferLength)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_GetInputReport(IN HANDLE HidDeviceObject,
+                    IN OUT PVOID ReportBuffer,
+                    IN ULONG ReportBufferLength)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_GetManufacturerString(IN HANDLE HidDeviceObject,
+                           OUT PVOID Buffer,
+                           IN ULONG BufferLength)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_GetMsGenreDescriptor(IN HANDLE HidDeviceObject,
+                          OUT PVOID Buffer,
+                          IN ULONG BufferLength)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_GetNumInputBuffers(IN HANDLE HidDeviceObject,
+                        OUT PULONG NumberBuffers)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_GetPhysicalDescriptor(IN HANDLE HidDeviceObject,
+                           OUT PVOID Buffer,
+                           IN ULONG BufferLength)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_GetPreparsedData(IN HANDLE HidDeviceObject,
+                      OUT PHIDP_PREPARSED_DATA *PreparsedData)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_GetProductString(IN HANDLE HidDeviceObject,
+                      OUT PVOID Buffer,
+                      IN ULONG BufferLength)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_GetSerialNumberString(IN HANDLE HidDeviceObject,
+                           OUT PVOID Buffer,
+                           IN ULONG BufferLength)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_SetConfiguration(IN HANDLE HidDeviceObject,
+                      IN PHIDD_CONFIGURATION Configuration,
+                      IN ULONG ConfigurationLength)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_SetFeature(IN HANDLE HidDeviceObject,
+                IN PVOID ReportBuffer,
+                IN ULONG ReportBufferLength)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_SetNumInputBuffers(IN HANDLE  HidDeviceObject,
+                        OUT ULONG  NumberBuffers)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+BOOLEAN DDKAPI
+HidD_SetOutputReport(IN HANDLE HidDeviceObject,
+                     IN PVOID ReportBuffer,
+                     IN ULONG ReportBufferLength)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_GetCaps(IN PHIDP_PREPARSED_DATA PreparsedData,
+             OUT PHIDP_CAPS Capabilities)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_GetData(IN HIDP_REPORT_TYPE ReportType,
+             OUT PHIDP_DATA DataList,
+             IN OUT PULONG DataLength,
+             IN PHIDP_PREPARSED_DATA PreparsedData,
+             IN PCHAR Report,
+             IN ULONG ReportLength)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_GetExtendedAttributes(IN HIDP_REPORT_TYPE ReportType,
+                           IN USHORT DataIndex,
+                           IN PHIDP_PREPARSED_DATA PreparsedData,
+                           OUT PHIDP_EXTENDED_ATTRIBUTES Attributes,
+                           IN OUT PULONG LengthAttributes)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_GetLinkCollectionNodes(OUT PHIDP_LINK_COLLECTION_NODE LinkCollectionNodes,
+                            IN OUT PULONG LinkCollectionNodesLength,
+                            IN PHIDP_PREPARSED_DATA PreparsedData)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_GetScaledUsageValue(IN HIDP_REPORT_TYPE ReportType,
+                         IN USAGE UsagePage,
+                         IN USHORT LinkCollection OPTIONAL,
+                         IN USAGE Usage,
+                         OUT PLONG UsageValue,
+                         IN PHIDP_PREPARSED_DATA PreparsedData,
+                         IN PCHAR Report,
+                         IN ULONG ReportLength)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_GetSpecificButtonCaps(IN HIDP_REPORT_TYPE ReportType,
+                           IN USAGE UsagePage,
+                           IN USHORT LinkCollection,
+                           IN USAGE Usage,
+                           OUT PHIDP_BUTTON_CAPS ButtonCaps,
+                           IN OUT PULONG ButtonCapsLength,
+                           IN PHIDP_PREPARSED_DATA PreparsedData)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_GetSpecificValueCaps(IN HIDP_REPORT_TYPE ReportType,
+                          IN USAGE UsagePage,
+                          IN USHORT LinkCollection,
+                          IN USAGE Usage,
+                          OUT PHIDP_VALUE_CAPS ValueCaps,
+                          IN OUT PULONG ValueCapsLength,
+                          IN PHIDP_PREPARSED_DATA PreparsedData)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_GetUsageValue(IN HIDP_REPORT_TYPE ReportType,
+                   IN USAGE UsagePage,
+                   IN USHORT LinkCollection,
+                   IN USAGE Usage,
+                   OUT PULONG UsageValue,
+                   IN PHIDP_PREPARSED_DATA PreparsedData,
+                   IN PCHAR Report,
+                   IN ULONG ReportLength)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_GetUsageValueArray(IN HIDP_REPORT_TYPE ReportType,
+                        IN USAGE UsagePage,
+                        IN USHORT LinkCollection  OPTIONAL,
+                        IN USAGE Usage,
+                        OUT PCHAR UsageValue,
+                        IN USHORT UsageValueByteLength,
+                        IN PHIDP_PREPARSED_DATA PreparsedData,
+                        IN PCHAR Report,
+                        IN ULONG ReportLength)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_GetUsages(IN HIDP_REPORT_TYPE ReportType,
+               IN USAGE UsagePage,
+               IN USHORT LinkCollection  OPTIONAL,
+               OUT USAGE *UsageList,
+               IN OUT ULONG *UsageLength,
+               IN PHIDP_PREPARSED_DATA PreparsedData,
+               IN PCHAR Report,
+               IN ULONG ReportLength)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_GetUsagesEx(IN HIDP_REPORT_TYPE ReportType,
+                 IN USHORT LinkCollection,
+                 OUT PUSAGE_AND_PAGE ButtonList,
+                 IN OUT ULONG *UsageLength,
+                 IN PHIDP_PREPARSED_DATA PreparsedData,
+                 IN PCHAR Report,
+                 IN ULONG ReportLength)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_InitializeReportForID(IN HIDP_REPORT_TYPE ReportType,
+                           IN UCHAR ReportID,
+                           IN PHIDP_PREPARSED_DATA PreparsedData,
+                           IN OUT PCHAR Report,
+                           IN ULONG ReportLength)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+ULONG DDKAPI
+HidP_MaxDataListLength(IN HIDP_REPORT_TYPE  ReportType,
+                       IN PHIDP_PREPARSED_DATA  PreparsedData)
+{
+  UNIMPLEMENTED;
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+ULONG DDKAPI
+HidP_MaxUsageListLength(IN HIDP_REPORT_TYPE ReportType,
+                        IN USAGE UsagePage OPTIONAL,
+                        IN PHIDP_PREPARSED_DATA PreparsedData)
+{
+  UNIMPLEMENTED;
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_SetData(IN HIDP_REPORT_TYPE ReportType,
+             IN PHIDP_DATA DataList,
+             IN OUT PULONG DataLength,
+             IN PHIDP_PREPARSED_DATA PreparsedData,
+             IN OUT PCHAR Report,
+             IN ULONG ReportLength)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_SetScaledUsageValue(IN HIDP_REPORT_TYPE ReportType,
+                         IN USAGE UsagePage, 
+                         IN USHORT LinkCollection OPTIONAL,
+                         IN USAGE Usage,
+                         IN LONG UsageValue,
+                         IN PHIDP_PREPARSED_DATA PreparsedData,
+                         IN OUT PCHAR Report,
+                         IN ULONG ReportLength)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_SetUsageValue(IN HIDP_REPORT_TYPE ReportType,
+                   IN USAGE UsagePage,
+                   IN USHORT LinkCollection,
+                   IN USAGE Usage,
+                   IN ULONG UsageValue,
+                   IN PHIDP_PREPARSED_DATA PreparsedData,
+                   IN OUT PCHAR Report,
+                   IN ULONG ReportLength)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_SetUsageValueArray(IN HIDP_REPORT_TYPE ReportType,
+                        IN USAGE UsagePage,
+                        IN USHORT LinkCollection OPTIONAL,
+                        IN USAGE Usage,
+                        IN PCHAR UsageValue,
+                        IN USHORT UsageValueByteLength,
+                        IN PHIDP_PREPARSED_DATA PreparsedData,
+                        OUT PCHAR Report,
+                        IN ULONG ReportLength)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_SetUsages(IN HIDP_REPORT_TYPE ReportType,
+               IN USAGE UsagePage,
+               IN USHORT LinkCollection OPTIONAL,
+               IN PUSAGE UsageList,
+               IN OUT PULONG UsageLength,
+               IN PHIDP_PREPARSED_DATA PreparsedData,
+               IN OUT PCHAR Report,
+               IN ULONG ReportLength)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_TranslateUsagesToI8042ScanCodes(IN PUSAGE ChangedUsageList,
+                                     IN ULONG UsageListLength,
+                                     IN HIDP_KEYBOARD_DIRECTION KeyAction,
+                                     IN OUT PHIDP_KEYBOARD_MODIFIER_STATE ModifierState,
+                                     IN PHIDP_INSERT_SCANCODES InsertCodesProcedure,
+                                     IN PVOID InsertCodesContext)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_UnsetUsages(IN HIDP_REPORT_TYPE ReportType,
+                 IN USAGE UsagePage,
+                 IN USHORT LinkCollection OPTIONAL,
+                 IN PUSAGE UsageList,
+                 IN OUT PULONG UsageLength,
+                 IN PHIDP_PREPARSED_DATA PreparsedData,
+                 IN OUT PCHAR Report,
+                 IN ULONG ReportLength)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+HIDAPI
+NTSTATUS DDKAPI
+HidP_UsageListDifference(IN PUSAGE PreviousUsageList,
+                         IN PUSAGE CurrentUsageList,
+                         OUT PUSAGE BreakUsageList,
+                         OUT PUSAGE MakeUsageList,
+                         IN ULONG UsageListLength)
+{
+  UNIMPLEMENTED;
+  return HIDP_STATUS_NOT_IMPLEMENTED;
+}
+
+/* EOF */
