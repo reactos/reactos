@@ -121,6 +121,8 @@ static void ShowNetworkInterfaces()
     if ((result = GetNumberOfInterfaces(&dwNumIf)) != NO_ERROR) {
         _tprintf(_T("GetNumberOfInterfaces() failed with code 0x%08X - Use FormatMessage to obtain the message string for the returned error\n"), result);
         return;
+    } else {
+        _tprintf(_T("GetNumberOfInterfaces() returned %d\n"), dwNumIf);
     }
 
     result = GetInterfaceInfo(pIfTable, &dwOutBufLen);
@@ -133,12 +135,24 @@ static void ShowNetworkInterfaces()
         _tprintf(_T("ERROR: failed to allocate 0x%08X bytes of memory\n"), dwOutBufLen);
         return;
     }
+/*
+typedef struct _IP_ADAPTER_INDEX_MAP {
+  ULONG Index;                     // adapter index 
+  WCHAR Name[MAX_ADAPTER_NAME];    // name of the adapter 
+} IP_ADAPTER_INDEX_MAP, * PIP_ADAPTER_INDEX_MAP;
+
+typedef struct _IP_INTERFACE_INFO {
+  LONG NumAdapters;                 // number of adapters in array 
+  IP_ADAPTER_INDEX_MAP Adapter[1];  // adapter indices and names 
+} IP_INTERFACE_INFO,*PIP_INTERFACE_INFO;
+ */
     result = GetInterfaceInfo(pIfTable, &dwOutBufLen);
     if (result == NO_ERROR) {
         int i;
-        //_tprintf(_T("GetInterfaceInfo() returned with %d adaptor entries\n"), pIfTable->NumAdapters);
+        _tprintf(_T("GetInterfaceInfo() returned with %d adaptor entries\n"), pIfTable->NumAdapters);
         for (i = 0; i < pIfTable->NumAdapters; i++) {
-           wprintf(L"[%d] %s\n", i, pIfTable->Adapter[i].Name);
+           wprintf(L"[%d] %s\n", i + 1, pIfTable->Adapter[i].Name);
+           //wprintf(L"[%d] %s\n", pIfTable->Adapter[i].Index, pIfTable->Adapter[i].Name);
 
 //  \DEVICE\TCPIP_{DB0E61C1-3498-4C5F-B599-59CDE8A1E357}
 //  \DEVICE\TCPIP_{BD445697-0945-4591-AE7F-2AB0F383CA87}
@@ -166,6 +180,44 @@ static void ShowNetworkInterfaces()
     free(pIfTable);
 }
 
+/*
+typedef struct _IP_ADAPTER_INFO {
+  struct _IP_ADAPTER_INFO* Next;
+  DWORD ComboIndex;
+  char AdapterName[MAX_ADAPTER_NAME_LENGTH + 4];
+1  char Description[MAX_ADAPTER_DESCRIPTION_LENGTH + 4];
+  UINT AddressLength;
+2  BYTE Address[MAX_ADAPTER_ADDRESS_LENGTH];
+  DWORD Index;
+  UINT Type;
+3  UINT DhcpEnabled;
+5  PIP_ADDR_STRING CurrentIpAddress;
+  IP_ADDR_STRING IpAddressList;
+7  IP_ADDR_STRING GatewayList;
+8  IP_ADDR_STRING DhcpServer;
+  BOOL HaveWins;
+  IP_ADDR_STRING PrimaryWinsServer;
+  IP_ADDR_STRING SecondaryWinsServer;
+a  time_t LeaseObtained;
+b  time_t LeaseExpires; 
+} IP_ADAPTER_INFO, *PIP_ADAPTER_INFO;
+ */
+/*
+Ethernet adapter VMware Virtual Ethernet Adapter (Network Address Translation (NAT) for VMnet8):
+
+        Connection-specific DNS Suffix  . :
+1        Description . . . . . . . . . . . : VMware Virtual Ethernet Adapter (Network Address Translation (NAT) for VMnet8)
+2        Physical Address. . . . . . . . . : 00-50-56-C0-00-08
+3        DHCP Enabled. . . . . . . . . . . : Yes
+        Autoconfiguration Enabled . . . . : Yes
+5        IP Address. . . . . . . . . . . . : 192.168.136.1
+        Subnet Mask . . . . . . . . . . . : 255.255.255.0
+7        Default Gateway . . . . . . . . . :
+8        DHCP Server . . . . . . . . . . . : 192.168.136.254
+        DNS Servers . . . . . . . . . . . :
+a        Lease Obtained. . . . . . . . . . : Monday, 30 December 2002 5:56:53 PM
+b        Lease Expires . . . . . . . . . . : Monday, 30 December 2002 6:26:53 PM
+ */
 static void ShowAdapterInfo()
 {
     IP_ADAPTER_INFO* pAdaptorInfo;
