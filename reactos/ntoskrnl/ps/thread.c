@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.35 1999/12/10 22:07:23 phreak Exp $
+/* $Id: thread.c,v 1.36 1999/12/11 17:26:43 phreak Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -7,6 +7,7 @@
  * PROGRAMMER:             David Welch (welch@mcmail.com)
  * REVISION HISTORY: 
  *               23/06/98: Created
+ *               12/10/99: Phillip Susi:  Thread priorities, and APC work
  */
 
 /*
@@ -250,12 +251,19 @@ VOID PsDispatchThread(ULONG NewThreadStatus)
    KIRQL oldIrql;
    
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+   CurrentThread->Tcb.WaitIrql = oldIrql;		// save wait Irql
    PsDispatchThreadNoLock(NewThreadStatus);
 //   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
    KeLowerIrql(oldIrql);
 //   DPRINT("oldIrql %d\n",oldIrql);
 }
 
+static VOID PiTimeoutThread( struct _KDPC *dpc, PVOID Context, PVOID arg1, PVOID arg2 )
+{
+	// wake up the thread, and tell it it timed out
+	NTSTATUS Status = STATUS_TIMEOUT;
+	PsResumeThread( (ETHREAD *)Context, &Status );
+}
 
 NTSTATUS PsInitializeThread(HANDLE			ProcessHandle, 
 			    PETHREAD		* ThreadPtr,
@@ -278,6 +286,8 @@ NTSTATUS PsInitializeThread(HANDLE			ProcessHandle,
    InitializeListHead(&Thread->Tcb.ApcState.ApcListHead[0]);
    InitializeListHead(&Thread->Tcb.ApcState.ApcListHead[1]);
    Thread->Tcb.KernelApcDisable = 1;
+   Thread->Tcb.WaitIrql = PASSIVE_LEVEL;
+   KeInitializeDpc( &Thread->Tcb.TimerDpc, PiTimeoutThread, Thread );
 
    KeInitializeDispatcherHeader(&Thread->Tcb.DispatcherHeader,
                                 InternalThreadType,
@@ -373,7 +383,6 @@ ULONG PsSuspendThread(PETHREAD Thread,
    DPRINT("r %d Thread->Tcb.SuspendCount %d\n",r,Thread->Tcb.SuspendCount);
    
    if (r > 0)
-     {
 	if (Thread != PsGetCurrentThread())
 	  {
 	     if (Thread->Tcb.State == THREAD_STATE_RUNNABLE)
@@ -384,7 +393,6 @@ ULONG PsSuspendThread(PETHREAD Thread,
 	     Thread->Tcb.Alertable = Alertable;
 	     Thread->Tcb.WaitMode = WaitMode;
 	     PiNrRunnableThreads--;
-	     KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 	  }
 	else
 	  {
@@ -392,21 +400,17 @@ ULONG PsSuspendThread(PETHREAD Thread,
 	     Thread->Tcb.Alertable = Alertable;
 	     Thread->Tcb.WaitMode = WaitMode;	     
 	     PiNrRunnableThreads--;
+		 Thread->Tcb.WaitIrql = oldIrql;		// save wait IRQL
 	     PsDispatchThreadNoLock(THREAD_STATE_SUSPENDED);
 	     if (WaitStatus != NULL)
 	       {
 		  *WaitStatus = PsGetCurrentThread()->Tcb.WaitStatus;
 	       }
-	     KeLowerIrql(oldIrql);
 	  }
-     }
-   else
-     {       
 	DPRINT("About to release ThreadListLock = %x\n", &PiThreadListLock);
 	KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 	DPRINT("PsSuspendThread() finished\n");
-     }
-   return(r);
+	return(r);
 }
 
 
@@ -710,6 +714,7 @@ LONG KeSetBasePriorityThread(PKTHREAD Thread, LONG Increment)
    else if( Thread->BasePriority >= NR_THREAD_PRIORITY_LEVELS )
 	   Thread->BasePriority = NR_THREAD_PRIORITY_LEVELS - 1;
    Thread->Priority = Thread->BasePriority;
+   return 1;
 }
 
 
