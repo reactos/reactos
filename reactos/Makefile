@@ -66,10 +66,10 @@ Makefile.auto: $(RMKDIR_TARGET) $(BUILDNO_TARGET) $(NCI_SERVICE_FILES) $(WMC_TAR
 
 
 include$(SEP)reactos$(SEP)bugcodes.h ntoskrnl$(SEP)bugcodes.rc: $(WMC_TARGET) ntoskrnl$(SEP)ntoskrnl.mc
-	$(WMC_TARGET) -H include$(SEP)reactos$(SEP)bugcodes.h -o ntoskrnl$(SEP)bugcodes.rc ntoskrnl$(SEP)ntoskrnl.mc
+	$(WMC_TARGET) -i -H include$(SEP)reactos$(SEP)bugcodes.h -o ntoskrnl$(SEP)bugcodes.rc ntoskrnl$(SEP)ntoskrnl.mc
 
 include$(SEP)reactos$(SEP)errcodes.h lib$(SEP)kernel32$(SEP)errcodes.rc: $(WMC_TARGET) lib$(SEP)kernel32$(SEP)kernel32.mc
-	$(WMC_TARGET) -H include$(SEP)reactos$(SEP)errcodes.h -o lib$(SEP)kernel32$(SEP)errcodes.rc lib$(SEP)kernel32$(SEP)kernel32.mc
+	$(WMC_TARGET) -i -H include$(SEP)reactos$(SEP)errcodes.h -o lib$(SEP)kernel32$(SEP)errcodes.rc lib$(SEP)kernel32$(SEP)kernel32.mc
 
 .PHONY: makefile_auto_clean
 makefile_auto_clean:
