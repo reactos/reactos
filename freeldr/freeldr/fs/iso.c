@@ -19,14 +19,14 @@
 
 #include <freeldr.h>
 #include <fs.h>
-#include "iso.h"
 #include <disk.h>
 #include <rtl.h>
-#include <ui.h>
 #include <arch.h>
 #include <mm.h>
 #include <debug.h>
 #include <cache.h>
+
+#include "iso.h"
 
 
 #define SECTORSIZE 2048
@@ -39,7 +39,7 @@ U32			IsoDriveNumber = 0;
 
 BOOL IsoOpenVolume(U32 DriveNumber)
 {
-	PPVD Pvd;
+	PPVD Pvd = (PPVD)DISKREADBUFFER;
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoOpenVolume() DriveNumber = 0x%x VolumeStartSector = 16\n", DriveNumber));
 
@@ -49,19 +49,14 @@ BOOL IsoOpenVolume(U32 DriveNumber)
 	IsoRootSector = 0;
 	IsoRootLength = 0;
 
-	Pvd = MmAllocateMemory(SECTORSIZE);
-
 	if (!DiskReadLogicalSectors(DriveNumber, 16, 1, Pvd))
 	{
 		FileSystemError("Failed to read the PVD.");
-		MmFreeMemory(Pvd);
 		return FALSE;
 	}
 
 	IsoRootSector = Pvd->RootDirRecord.ExtentLocationL;
 	IsoRootLength = Pvd->RootDirRecord.DataLengthL;
-
-	MmFreeMemory(Pvd);
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoRootSector = %u  IsoRootLegth = %u\n", IsoRootSector, IsoRootLength));
 
@@ -72,13 +67,13 @@ BOOL IsoOpenVolume(U32 DriveNumber)
 static BOOL IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, U32 DirectoryLength, PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
 	PDIR_RECORD	Record;
-	U32			Offset;
+	U32		Offset;
 	U32 i;
 	UCHAR Name[32];
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectoryLength = %d FileName = %s\n", DirectoryBuffer, DirectoryLength, FileName));
 
-	memset(Name, 0, 32 * sizeof(UCHAR));
+	RtlZeroMemory(Name, 32 * sizeof(UCHAR));
 
 	Offset = 0;
 	Record = (PDIR_RECORD)DirectoryBuffer;
@@ -123,20 +118,31 @@ static BOOL IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, U32 Directory
 		if (Offset >= DirectoryLength)
 			return FALSE;
 
-		memset(Name, 0, 32 * sizeof(UCHAR));
+		RtlZeroMemory(Name, 32 * sizeof(UCHAR));
 	}
 
 	return FALSE;
 }
 
 
-
+/*
+ * IsoBufferDirectory()
+ * This function allocates a buffer, reads the specified directory
+ * and returns a pointer to that buffer. The function returns NULL
+ * if allocation or read fails. The directory is specified by its
+ * starting sector and length.
+ */
 static PVOID IsoBufferDirectory(U32 DirectoryStartSector, U32 DirectoryLength)
 {
 	PVOID	DirectoryBuffer;
+	PVOID	Ptr;
 	U32	SectorCount;
+	U32	i;
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoBufferDirectory() DirectoryStartSector = %d DirectoryLength = %d\n", DirectoryStartSector, DirectoryLength));
+
+	SectorCount = ROUND_UP(DirectoryLength, SECTORSIZE) / SECTORSIZE;
+	DbgPrint((DPRINT_FILESYSTEM, "Trying to read (DirectoryCount) %d sectors.\n", SectorCount));
 
 	//
 	// Attempt to allocate memory for directory buffer
@@ -149,16 +155,17 @@ static PVOID IsoBufferDirectory(U32 DirectoryStartSector, U32 DirectoryLength)
 		return NULL;
 	}
 
-	SectorCount = ROUND_UP(DirectoryLength, SECTORSIZE) / SECTORSIZE;
-	DbgPrint((DPRINT_FILESYSTEM, "Trying to read (DirectoryCount) %d sectors.\n", SectorCount));
-
 	//
 	// Now read directory contents into DirectoryBuffer
 	//
-	if (!DiskReadLogicalSectors(IsoDriveNumber, DirectoryStartSector, SectorCount, DirectoryBuffer))
+	for (i = 0, Ptr = DirectoryBuffer; i < SectorCount; i++, Ptr += SECTORSIZE)
 	{
-		MmFreeMemory(DirectoryBuffer);
-		return NULL;
+		if (!DiskReadLogicalSectors(IsoDriveNumber, DirectoryStartSector + i, 1, (PVOID)DISKREADBUFFER))
+		{
+			MmFreeMemory(DirectoryBuffer);
+			return NULL;
+		}
+		RtlCopyMemory(Ptr, (PVOID)DISKREADBUFFER, SECTORSIZE);
 	}
 
 	return DirectoryBuffer;
@@ -184,7 +191,7 @@ static BOOL IsoLookupFile(PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoLookupFile() FileName = %s\n", FileName));
 
-	memset(IsoFileInfoPointer, 0, sizeof(ISO_FILE_INFO));
+	RtlZeroMemory(IsoFileInfoPointer, sizeof(ISO_FILE_INFO));
 
 	//
 	// Figure out how many sub-directories we are nested in
@@ -244,7 +251,7 @@ static BOOL IsoLookupFile(PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 
 	}
 
-	memcpy(IsoFileInfoPointer, &IsoFileInfo, sizeof(ISO_FILE_INFO));
+	RtlCopyMemory(IsoFileInfoPointer, &IsoFileInfo, sizeof(ISO_FILE_INFO));
 
 	return TRUE;
 }
@@ -274,39 +281,9 @@ FILE* IsoOpenFile(PUCHAR FileName)
 		return NULL;
 	}
 
-	memcpy(FileHandle, &TempFileInfo, sizeof(ISO_FILE_INFO));
+	RtlCopyMemory(FileHandle, &TempFileInfo, sizeof(ISO_FILE_INFO));
 
 	return (FILE*)FileHandle;
-}
-
-
-/*
- * IsoReadPartialSector()
- * Reads part of a cluster into memory
- */
-static BOOL IsoReadPartialSector(U32 SectorNumber, U32 StartingOffset, U32 Length, PVOID Buffer)
-{
-	PUCHAR	SectorBuffer;
-
-	DbgPrint((DPRINT_FILESYSTEM, "IsoReadPartialSector() SectorNumber = %d StartingOffset = %d Length = %d Buffer = 0x%x\n", SectorNumber, StartingOffset, Length, Buffer));
-
-	SectorBuffer = MmAllocateMemory(SECTORSIZE);
-	if (SectorBuffer == NULL)
-	{
-		return FALSE;
-	}
-
-	if (!DiskReadLogicalSectors(IsoDriveNumber, SectorNumber, 1, SectorBuffer))
-	{
-		MmFreeMemory(SectorBuffer);
-		return FALSE;
-	}
-
-	memcpy(Buffer, ((PVOID)SectorBuffer + StartingOffset), Length);
-
-	MmFreeMemory(SectorBuffer);
-
-	return TRUE;
 }
 
 
@@ -322,6 +299,7 @@ BOOL IsoReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer
 	U32		OffsetInSector;
 	U32		LengthInSector;
 	U32		NumberOfSectors;
+	U32		i;
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoReadFile() BytesToRead = %d Buffer = 0x%x\n", BytesToRead, Buffer));
 
@@ -394,10 +372,11 @@ BOOL IsoReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer
 		//
 		// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
 		//
-		if (!IsoReadPartialSector(SectorNumber, OffsetInSector, LengthInSector, Buffer))
+		if (!DiskReadLogicalSectors(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
 		{
 			return FALSE;
 		}
+		RtlCopyMemory(Buffer, ((PVOID)DISKREADBUFFER + OffsetInSector), LengthInSector);
 		if (BytesRead != NULL)
 		{
 			*BytesRead += LengthInSector;
@@ -417,24 +396,27 @@ BOOL IsoReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer
 		//
 		NumberOfSectors = (BytesToRead / SECTORSIZE);
 
-		if (NumberOfSectors > 0)
+		for (i = 0; i < NumberOfSectors; i++)
 		{
 			SectorNumber = IsoFileInfo->FileStart + (IsoFileInfo->FilePointer / SECTORSIZE);
 
 			//
 			// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
 			//
-			if (!DiskReadLogicalSectors(IsoDriveNumber, SectorNumber, NumberOfSectors, Buffer))
+			if (!DiskReadLogicalSectors(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
 			{
 				return FALSE;
 			}
+
+			RtlCopyMemory(Buffer, (PVOID)DISKREADBUFFER, SECTORSIZE);
+
 			if (BytesRead != NULL)
 			{
-				*BytesRead += (NumberOfSectors * SECTORSIZE);
+				*BytesRead += SECTORSIZE;
 			}
-			BytesToRead -= (NumberOfSectors * SECTORSIZE);
-			IsoFileInfo->FilePointer += (NumberOfSectors * SECTORSIZE);
-			Buffer += (NumberOfSectors * SECTORSIZE);
+			BytesToRead -= SECTORSIZE;
+			IsoFileInfo->FilePointer += SECTORSIZE;
+			Buffer += SECTORSIZE;
 		}
 	}
 
@@ -448,10 +430,11 @@ BOOL IsoReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer
 		//
 		// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
 		//
-		if (!IsoReadPartialSector(SectorNumber, 0, BytesToRead, Buffer))
+		if (!DiskReadLogicalSectors(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
 		{
 			return FALSE;
 		}
+		RtlCopyMemory(Buffer, (PVOID)DISKREADBUFFER, BytesToRead);
 		if (BytesRead != NULL)
 		{
 			*BytesRead += BytesToRead;
@@ -461,7 +444,7 @@ BOOL IsoReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer
 		Buffer += BytesToRead;
 	}
 
-	printf("IsoReadFile() done\n");
+	DbgPrint((DPRINT_FILESYSTEM, "IsoReadFile() done\n"));
 
 	return TRUE;
 }

@@ -1,3 +1,8 @@
+Changes in v1.7.7 (9/5/2002) (ekohl)
+
+- fs/iso.c: Got iso-fs working again.
+- reactos/setupldr.c: Implemented very simple setup loader.
+
 Changes in v1.7.6 (8/31/2002) (ekohl)
 
 - bootsect/isoboot.asm: Reduced read transfer size to ensure that
