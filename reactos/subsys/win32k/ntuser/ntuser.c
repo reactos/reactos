@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.4.15 2004/09/27 12:26:31 royce Exp $
+/* $Id: ntuser.c,v 1.1.4.16 2004/09/27 12:48:48 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -677,13 +677,13 @@ BOOL STDCALL
 NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
 {
   UNICODE_STRING WndText;
+  NTSTATUS Status;
   NTUSER_USER_OBJECT(WINDOW, Window);
-  BEGIN_BUFFERS();
   BEGIN_NTUSER(BOOL, FALSE);
   
   if(WindowText != NULL)
   {
-    NTUSER_COPY_BUFFER_NTERROR(&WndText, WindowText, sizeof(UNICODE_STRING));
+    Status = IntSafeCopyUnicodeString(&WndText, WindowText);
     /* FIXME - probe the string */
   }
   else
@@ -695,6 +695,11 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
   VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
   Result = IntDefSetText(Window, &WndText);
   LEAVE_CRITICAL();
+
+  if(WindowText != NULL)
+  {
+    RtlFreeUnicodeString(&WndText);
+  }
   
   END_NTUSER();
 }
@@ -1554,6 +1559,22 @@ NtUserInvalidateRgn(HWND hWnd, HRGN Rgn, BOOL Erase)
 }
 
 BOOL STDCALL
+NtUserMoveWindow(HWND hWnd, int X, int Y, int nWidth, int nHeight, BOOL bRepaint)
+{
+  NTUSER_USER_OBJECT(WINDOW, Window);
+  BEGIN_NTUSER(BOOL, FALSE);
+
+  ENTER_CRITICAL();
+  VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
+  Result = WinPosSetWindowPos(Window, NULL, X, Y, nWidth, nHeight,
+    (bRepaint ? SWP_NOZORDER | SWP_NOACTIVATE
+              : SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREDRAW));
+  LEAVE_CRITICAL();
+
+  END_NTUSER();
+}
+
+BOOL STDCALL
 NtUserPaintDesktop(HDC hDC)
 {
   BEGIN_NTUSER_NOERR(BOOL);
@@ -1845,6 +1866,29 @@ NtUserRegisterClassExWOW(CONST WNDCLASSEXW* lpwcx,
     RtlFreeUnicodeString(&SafeMenuName);
   }
   
+  END_NTUSER();
+}
+
+UINT STDCALL
+NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
+{
+  UNICODE_STRING SafeMessageName;
+  NTSTATUS Status;
+  BEGIN_NTUSER(UINT,0);
+
+  NTUSER_FAIL_INVALID_PARAMETER(MessageNameUnsafe,NULL);
+
+  Status = IntSafeCopyUnicodeStringTerminateNULL(&SafeMessageName, MessageNameUnsafe);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return 0;
+  }
+
+  Result = (UINT)IntAddAtom(SafeMessageName.Buffer);
+
+  RtlFreeUnicodeString(&SafeMessageName);
+
   END_NTUSER();
 }
 
@@ -2239,28 +2283,6 @@ NtUserSetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy
   END_NTUSER();
 }
 
-BOOL STDCALL
-NtUserMoveWindow (
-    HWND hWnd,
-    int X,
-    int Y,
-    int nWidth,
-    int nHeight,
-    BOOL bRepaint )
-{
-  NTUSER_USER_OBJECT(WINDOW, Window);
-  BEGIN_NTUSER(BOOL, FALSE);
- 
-  ENTER_CRITICAL();
-  VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
-  Result = WinPosSetWindowPos(Window, NULL, X, Y, nWidth, nHeight,
-    (bRepaint ? SWP_NOZORDER | SWP_NOACTIVATE
-              : SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREDRAW));
-  LEAVE_CRITICAL();
- 
-  END_NTUSER();
-}
-
 WORD STDCALL
 NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
 {
@@ -2460,27 +2482,4 @@ NtUserWaitMessage(VOID)
   Result = IntWaitMessage(NULL, 0, 0);
   
   END_NTUSER_NOERR();
-}
-
-UINT STDCALL
-NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
-{
-  UNICODE_STRING SafeMessageName;
-  NTSTATUS Status;
-  BEGIN_NTUSER(UINT,0);
-  
-  NTUSER_FAIL_INVALID_PARAMETER(MessageNameUnsafe,NULL);
-  
-  Status = IntSafeCopyUnicodeStringTerminateNULL(&SafeMessageName, MessageNameUnsafe);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return 0;
-  }
-  
-  Result = (UINT)IntAddAtom(SafeMessageName.Buffer);
-  
-  RtlFreeUnicodeString(&SafeMessageName);
-
-  END_NTUSER();
 }

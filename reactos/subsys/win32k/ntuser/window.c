@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.244.2.11 2004/09/27 01:13:52 royce Exp $
+/* $Id: window.c,v 1.244.2.12 2004/09/27 12:48:48 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1999,27 +1999,33 @@ IntGetWindow(PWINDOW_OBJECT Window, UINT uCmd)
   return NULL;
 }
 
+NTSTATUS  STDCALL RtlDuplicateUnicodeString(
+    int add_nul,
+    const UNICODE_STRING *source,
+    UNICODE_STRING *destination);
 
 BOOL INTERNAL_CALL
 IntDefSetText(PWINDOW_OBJECT WindowObject, PUNICODE_STRING WindowText)
 {
-  /* WARNING - do not use or free the WindowText after this call ! */
   ASSERT(WindowObject);
   
   RtlFreeUnicodeString(&WindowObject->WindowName);
-  WindowObject->WindowName = *WindowText;
-  WindowObject->WindowName.Buffer = ExAllocatePoolWithTag(PagedPool, WindowObject->WindowName.Length, TAG_STRING);
-  if(WindowObject->WindowName.Buffer != NULL)
+  if(WindowText->Length > 0)
   {
-    RtlCopyUnicodeString(&WindowObject->WindowName, WindowText);
+    WindowObject->WindowName.Length = WindowText->Length;
+    WindowObject->WindowName.MaximumLength = WindowObject->WindowName.Length;
+    WindowObject->WindowName.Buffer = ExAllocatePoolWithTag(PagedPool, WindowObject->WindowName.MaximumLength, TAG_STRING);
+    if(WindowObject->WindowName.Buffer != NULL)
+    {
+      RtlCopyMemory(WindowObject->WindowName.Buffer, WindowText->Buffer, WindowObject->WindowName.Length);
+    }
+    else
+    {
+      WindowObject->WindowName.Length = WindowObject->WindowName.MaximumLength = 0;
+      return FALSE;
+    }
   }
-  else
-  {
-    DPRINT1("Failed to allocate enough memory for the window text!\n");
-    RtlZeroMemory(&WindowObject->WindowName, sizeof(UNICODE_STRING));
-  }
-  
-  return FALSE;
+  return TRUE;
 }
 
 INT INTERNAL_CALL
