@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.14 2003/06/27 21:17:35 gvg Exp $
+# $Id: makefile,v 1.15 2004/12/27 20:09:57 gvg Exp $
 #
 # ReactOS System Utilities
 #
@@ -31,11 +31,11 @@ BASE_CFLAGS = -I$(PATH_TO_CVSROOT)/reactos/include -D_M_IX86
 ROS_DIR=$(PATH_TO_CVSROOT)/reactos
 ROS_INC=$(ROS_DIR)/include
 ROS_LIB=$(ROS_DIR)/dk/w32/lib
-IMPORT_NTDLL=$(ROS_LIB)/ntdll.a
-IMPORT_FMIFS=$(ROS_LIB)/fmifs.a
-IMPORT_KERNEL32=$(ROS_LIB)/kernel32.a
-IMPORT_ADVAPI32=$(ROS_LIB)/advapi32.a
-IMPORT_USER32=$(ROS_LIB)/user32.a
+IMPORT_NTDLL=$(ROS_LIB)/libntdll.a
+IMPORT_FMIFS=$(ROS_LIB)/libfmifs.a
+IMPORT_KERNEL32=$(ROS_LIB)/libkernel32.a
+IMPORT_ADVAPI32=$(ROS_LIB)/libadvapi32.a
+IMPORT_USER32=$(ROS_LIB)/libuser32.a
 IMPORT_MSVCRT=
 
 TARGET=\
