@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.39 2003/12/20 21:45:14 weiden Exp $
+/* $Id: message.c,v 1.40 2003/12/24 10:23:13 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,6 +40,7 @@
 #include <include/callback.h>
 #include <include/painting.h>
 #include <include/input.h>
+#include <include/desktop.h>
 #include <internal/safe.h>
 
 #define NDEBUG
@@ -432,6 +433,22 @@ NtUserPostMessage(HWND hWnd,
   if (WM_QUIT == Msg)
     {
       MsqPostQuitMessage(PsGetWin32Thread()->MessageQueue, wParam);
+    }
+  else if (hWnd == HWND_BROADCAST)
+    {
+      HWND *List;
+      PWINDOW_OBJECT DesktopWindow;
+      ULONG i;
+
+      DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
+      List = IntWinListChildren(DesktopWindow);
+      IntReleaseWindowObject(DesktopWindow);
+      if (List != NULL)
+        {
+          for (i = 0; List[i]; i++)
+            NtUserPostMessage(List[i], Msg, wParam, lParam);
+          ExFreePool(List);
+        }      
     }
   else
     {
