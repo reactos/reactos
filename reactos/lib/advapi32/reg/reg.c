@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.48 2004/07/02 21:20:51 gvg Exp $
+/* $Id: reg.c,v 1.49 2004/07/03 14:46:39 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1729,7 +1729,6 @@ RegOpenKeyA (HKEY hKey,
   LONG ErrorCode;
   NTSTATUS Status;
 
-DPRINT1("RegOpenKeyA hKey 0x%x subkey %s\n", hKey, lpSubKey);
   Status = MapDefaultKey (&KeyHandle,
 			  hKey);
   if (!NT_SUCCESS(Status))
