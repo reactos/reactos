@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.72 2004/04/12 19:52:36 jimtabor Exp $
+/* $Id: stubs.c,v 1.73 2004/04/22 02:20:52 jimtabor Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1020,28 +1020,6 @@ GetWriteWatch(
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GlobalMemoryStatusEx(
-    LPMEMORYSTATUSEX lpBuffer
-    )
-{
-    DPRINT1("GlobalMemoryStatusEx is unimplmented\n");
-    lpBuffer->dwLength = sizeof(MEMORYSTATUSEX);
-    lpBuffer->dwMemoryLoad = 0;
-    lpBuffer->ullTotalPhys = 32*1024*1024;
-    lpBuffer->ullAvailPhys = 32*1024*1024;
-    lpBuffer->ullTotalPageFile = 32*1024*1024;
-    lpBuffer->ullAvailPageFile = 32*1024*1024;
-    lpBuffer->ullTotalVirtual = 32*1024*1024;
-    lpBuffer->ullAvailVirtual = 32*1024*1024;
-    lpBuffer->ullAvailExtendedVirtual = 0;
-    return TRUE;
 }
 
 /*

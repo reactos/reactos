@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.22 2004/04/06 20:59:40 gvg Exp $
+/* $Id: global.c,v 1.23 2004/04/22 02:20:52 jimtabor Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -348,58 +348,130 @@ GlobalLock(HGLOBAL hMem)
     return palloc;
 }
 
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
+{
+  SYSTEM_BASIC_INFORMATION	SysBasicInfo;
+  SYSTEM_PERFORMANCE_INFORMATION	SysPerfInfo;
+  ULONG UserMemory;
+  NTSTATUS Status;
+
+    DPRINT("GlobalMemoryStatusEx\n");
+
+    if (lpBuffer->dwLength != sizeof(MEMORYSTATUSEX))
+      {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+      }
+
+   Status = ZwQuerySystemInformation(SystemBasicInformation,
+                                     &SysBasicInfo,
+                                     sizeof(SysBasicInfo),
+                                     NULL);
+   if (!NT_SUCCESS(Status))
+     {
+       SetLastErrorByStatus(Status);
+       return FALSE;
+     }
+
+   Status = ZwQuerySystemInformation(SystemPerformanceInformation,
+                                     &SysPerfInfo,
+                                     sizeof(SysPerfInfo),
+                                     NULL);
+   if (!NT_SUCCESS(Status))
+     {
+       SetLastErrorByStatus(Status);
+       return FALSE;
+     }            
+
+   Status = ZwQuerySystemInformation(SystemFullMemoryInformation,
+                                     &UserMemory,
+                                     sizeof(ULONG),
+                                     NULL);
+   if (!NT_SUCCESS(Status))
+     {
+       SetLastErrorByStatus(Status);
+       return FALSE;
+     }            
 
 /*
- * @unimplemented
+ * Load percentage 0 thru 100. 0 is good and 100 is bad.
+ *
+ *	Um = allocated memory / physical memory
+ *	Um =      177 MB      /     256 MB        = 69.1%
+ *
+ *	Mult allocated memory by 100 to move decimal point up.
+ */
+   lpBuffer->dwMemoryLoad = (SysBasicInfo.NumberOfPhysicalPages -
+  			     SysPerfInfo.AvailablePages) * 100 /
+    			     SysBasicInfo.NumberOfPhysicalPages;
+
+	DPRINT1("Memory Load: %d\n",lpBuffer->dwMemoryLoad );
+    
+   lpBuffer->ullTotalPhys = SysBasicInfo.NumberOfPhysicalPages *
+   					SysBasicInfo.PhysicalPageSize;
+   lpBuffer->ullAvailPhys = SysPerfInfo.AvailablePages *
+    					SysBasicInfo.PhysicalPageSize;
+
+	DPRINT("%d\n",SysPerfInfo.AvailablePages );
+	DPRINT("%d\n",lpBuffer->ullAvailPhys );
+
+   lpBuffer->ullTotalPageFile = SysPerfInfo.TotalCommitLimit *
+    					SysBasicInfo.PhysicalPageSize;
+
+	DPRINT("%d\n",lpBuffer->ullTotalPageFile );
+
+   lpBuffer->ullAvailPageFile = ((SysPerfInfo.TotalCommitLimit -
+    					SysPerfInfo.TotalCommittedPages) *
+    					SysBasicInfo.PhysicalPageSize);
+
+/* VM available to the calling processes, User Mem? */
+   lpBuffer->ullTotalVirtual = SysBasicInfo.HighestUserAddress - 
+    					SysBasicInfo.LowestUserAddress;
+
+   lpBuffer->ullAvailVirtual = (lpBuffer->ullTotalVirtual -
+    					(UserMemory *
+    					 SysBasicInfo.PhysicalPageSize));
+
+	DPRINT("%d\n",lpBuffer->ullAvailVirtual );
+	DPRINT("%d\n",UserMemory);
+	DPRINT("%d\n",SysBasicInfo.PhysicalPageSize);
+
+/* lol! Memory from beyond! */
+   lpBuffer->ullAvailExtendedVirtual = 0;
+   return TRUE;
+}
+
+/*
+ * @implemented
  */
 VOID STDCALL
 GlobalMemoryStatus(LPMEMORYSTATUS lpBuffer)
 {
-    static MEMORYSTATUS	cached_memstatus;
-//    static int cache_lastchecked = 0;
-    SYSTEM_INFO si;
+    MEMORYSTATUSEX lpBufferEx;
+    
+    if (lpBuffer->dwLength != sizeof(MEMORYSTATUS))
+      {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return;      
+      }
 
-//    if (GetSystemTimeAsFileTime(NULL)==cache_lastchecked) {
-//	memcpy(lpBuffer,&cached_memstatus,sizeof(MEMORYSTATUS));
-//	return;
-//    }
-//    cache_lastchecked = GetSystemTimeAsFileTime(NULL);
+    lpBufferEx.dwLength = sizeof(MEMORYSTATUSEX);
 
-    lpBuffer->dwLength        = sizeof(MEMORYSTATUS);
-    lpBuffer->dwMemoryLoad    = 0;
-    lpBuffer->dwTotalPhys     = 32*1024*1024;
-    lpBuffer->dwAvailPhys     = 32*1024*1024;
-    lpBuffer->dwTotalPageFile = 32*1024*1024;
-    lpBuffer->dwAvailPageFile = 32*1024*1024;
-
-    /* Some applications (e.g. QuickTime 6) crash if we tell them there
-     * is more than 2GB of physical memory.
-     */
-    if (lpBuffer->dwTotalPhys>2U*1024*1024*1024)
-    {
-        lpBuffer->dwTotalPhys=2U*1024*1024*1024;
-        lpBuffer->dwAvailPhys=2U*1024*1024*1024;
-    }
-
-    /* FIXME: should do something for other systems */
-    GetSystemInfo(&si);
-    lpBuffer->dwTotalVirtual  = (char*)si.lpMaximumApplicationAddress-(char*)si.lpMinimumApplicationAddress;
-    /* FIXME: we should track down all the already allocated VM pages and substract them, for now arbitrarily remove 64KB so that it matches NT */
-    lpBuffer->dwAvailVirtual  = lpBuffer->dwTotalVirtual-64*1024;
-    memcpy(&cached_memstatus,lpBuffer,sizeof(MEMORYSTATUS));
-
-    /* it appears some memory display programs want to divide by these values */
-    if(lpBuffer->dwTotalPageFile==0)
-        lpBuffer->dwTotalPageFile++;
-
-    if(lpBuffer->dwAvailPageFile==0)
-        lpBuffer->dwAvailPageFile++;
-
-    DPRINT1("<-- LPMEMORYSTATUS: dwLength %ld, dwMemoryLoad %ld, dwTotalPhys %ld, dwAvailPhys %ld,"
-          " dwTotalPageFile %ld, dwAvailPageFile %ld, dwTotalVirtual %ld, dwAvailVirtual %ld\n",
-          lpBuffer->dwLength, lpBuffer->dwMemoryLoad, lpBuffer->dwTotalPhys, lpBuffer->dwAvailPhys,
-          lpBuffer->dwTotalPageFile, lpBuffer->dwAvailPageFile, lpBuffer->dwTotalVirtual,
-          lpBuffer->dwAvailVirtual);
+    if (GlobalMemoryStatusEx(&lpBufferEx))
+      {
+         lpBuffer->dwMemoryLoad    = lpBufferEx.dwMemoryLoad;
+         lpBuffer->dwTotalPhys     = lpBufferEx.ullTotalPhys;
+         lpBuffer->dwAvailPhys     = lpBufferEx.ullAvailPhys;
+         lpBuffer->dwTotalPageFile = lpBufferEx.ullTotalPageFile;
+         lpBuffer->dwAvailPageFile = lpBufferEx.ullAvailPageFile;
+         lpBuffer->dwTotalVirtual  = lpBufferEx.ullTotalVirtual;
+         lpBuffer->dwAvailVirtual  = lpBufferEx.ullAvailVirtual;
+      }
 }
 
 
