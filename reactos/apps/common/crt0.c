@@ -10,8 +10,6 @@ int mainCRTStartup(PWSTR args)
 {
    int nRet;
    
-   KERNEL32_Init(args);
-   
 //   SetUnhandledExceptionFilter(NULL);
    
 //   _fpreset();

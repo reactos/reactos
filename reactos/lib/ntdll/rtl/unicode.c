@@ -43,32 +43,36 @@ ULONG RtlAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
 }
 
 NTSTATUS RtlAnsiStringToUnicodeString(IN OUT PUNICODE_STRING DestinationString,
-        IN PANSI_STRING SourceString, IN BOOLEAN AllocateDestinationString)
+				      IN PANSI_STRING SourceString, 
+				      IN BOOLEAN AllocateDestinationString)
 {
-        unsigned long i;
+   unsigned long i;
 
-        if(AllocateDestinationString==TRUE) {
-//          DestinationString->Buffer=ExAllocatePool(NonPagedPool, (SourceString->Length+1)*2);
-          DestinationString->MaximumLength=SourceString->Length;
-        };
+   if (AllocateDestinationString == TRUE)
+     {
+	DestinationString->Buffer=RtlAllocateHeap(RtlGetProcessHeap(), 
+						  0, 
+						  (SourceString->Length+1)*2);
+	DestinationString->MaximumLength=SourceString->Length;
+     }
 
-        DestinationString->Length=SourceString->Length;
-        memset(DestinationString->Buffer, 0, SourceString->Length*2);
-
-        for (i=0; i<SourceString->Length; i++)
-        {
-                *DestinationString->Buffer=*SourceString->Buffer;
-
-                SourceString->Buffer++;
-                DestinationString->Buffer++;
-        };
-        *DestinationString->Buffer=0;
-
-        SourceString->Buffer-=SourceString->Length;
-        DestinationString->Buffer-=SourceString->Length;
-
-        return STATUS_SUCCESS;
-};
+   DestinationString->Length=SourceString->Length;
+   memset(DestinationString->Buffer, 0, SourceString->Length*2);
+   
+   for (i=0; i<SourceString->Length; i++)
+     {
+	*DestinationString->Buffer=*SourceString->Buffer;
+	
+	SourceString->Buffer++;
+	DestinationString->Buffer++;
+     }
+   *DestinationString->Buffer=0;
+   
+   SourceString->Buffer-=SourceString->Length;
+   DestinationString->Buffer-=SourceString->Length;
+   
+   return STATUS_SUCCESS;
+}
 
 NTSTATUS RtlAppendUnicodeStringToString(IN OUT PUNICODE_STRING Destination,
         IN PUNICODE_STRING Source)
@@ -313,18 +317,21 @@ VOID RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
 VOID RtlInitAnsiString(IN OUT PANSI_STRING DestinationString,
                        IN PCSZ SourceString)
 {
-        unsigned long DestSize;
-
-        if(SourceString==NULL) {
-                DestinationString->Length=0;
-                DestinationString->MaximumLength=0;
-        } else {
-                DestSize=strlen((const char *)SourceString);
-                DestinationString->Length=DestSize;
-                DestinationString->MaximumLength=DestSize+1;
-        };
-        DestinationString->Buffer=(PCHAR)SourceString;
-};
+   unsigned long DestSize;
+   
+   if(SourceString==NULL) 
+     {
+	DestinationString->Length=0;
+	DestinationString->MaximumLength=0;
+     } 
+   else 
+     {
+	DestSize=strlen((const char *)SourceString);
+	DestinationString->Length=DestSize;
+	DestinationString->MaximumLength=DestSize+1;
+     }
+   DestinationString->Buffer=(PCHAR)SourceString;
+}
 
 VOID RtlInitString(IN OUT PSTRING DestinationString,
                    IN PCSZ SourceString)

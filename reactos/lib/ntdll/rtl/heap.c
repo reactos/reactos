@@ -29,7 +29,7 @@
 #include <string.h>
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <ntdll/ntdll.h>
 
 #define HEAP_VALIDATE
@@ -753,7 +753,7 @@ PVOID STDCALL RtlAllocateHeap(HANDLE Heap,
    DPRINT("HeapAlloc(hheap 0x%lX, flags 0x%lX, size 0x%lX )\n",
            (ULONG) Heap, Flags, (ULONG) Size );
 #ifdef HEAP_VALIDATE
-   HeapValidate(Heap, 0, 0);
+   RtlValidateHeap(Heap, 0, 0);
 #endif
    if(( Flags | pheap->Flags)  & HEAP_NO_SERIALIZE )
       RtlEnterCriticalSection(&(pheap->Synchronize));
@@ -768,7 +768,7 @@ PVOID STDCALL RtlAllocateHeap(HANDLE Heap,
 
    DPRINT("HeapAlloc returns 0x%lX\n", (ULONG) retval);
    
-   HeapValidate(Heap, 0, 0);
+   RtlValidateHeap(Heap, 0, 0);
    return retval;
 
 
@@ -788,7 +788,7 @@ LPVOID STDCALL RtlReAllocHeap(HANDLE hheap, DWORD flags, LPVOID ptr,
    DPRINT("HeapReAlloc( 0x%lX, 0x%lX, 0x%lX, 0x%lX )\n",
            (ULONG) hheap, flags, (ULONG) ptr, size );
 #ifdef HEAP_VALIDATE
-   HeapValidate(hheap, 0, 0);
+   RtlValidateHeap(hheap, 0, 0);
 #endif
    if(( flags | pheap->Flags)  & HEAP_NO_SERIALIZE )
       RtlEnterCriticalSection(&(pheap->Synchronize));
@@ -821,7 +821,7 @@ BOOLEAN STDCALL RtlFreeHeap(HANDLE Heap, ULONG Flags, PVOID Address)
    DPRINT("HeapFree( 0x%lX, 0x%lX, 0x%lX )\n",
           (ULONG) Heap, Flags, (ULONG) Address );
 #ifdef HEAP_VALIDATE
-   HeapValidate(Heap, 0, 0);
+   RtlValidateHeap(Heap, 0, 0);
 #endif
    if(( Flags | pheap->Flags)  & HEAP_NO_SERIALIZE )
       RtlEnterCriticalSection(&(pheap->Synchronize));
@@ -849,9 +849,9 @@ BOOLEAN STDCALL RtlFreeHeap(HANDLE Heap, ULONG Flags, PVOID Address)
 /*********************************************************************
 *                   GetProcessHeap  --  KERNEL32                     *
 *********************************************************************/
-HANDLE WINAPI GetProcessHeap(VOID)
+HANDLE WINAPI RtlGetProcessHeap(VOID)
 {
-   DPRINT("GetProcessHeap()\n");
+   DPRINT("RtlGetProcessHeap()\n");
    return (HANDLE) __ProcessHeap;
 }
 
@@ -891,7 +891,6 @@ DWORD WINAPI RtlEnumProcessHeaps(DWORD maxheaps, PHANDLE phandles )
 /*********************************************************************
 *                    HeapLock  --  KERNEL32                          *
 *********************************************************************/
-
 BOOL WINAPI RtlLockHeap(HANDLE hheap)
 {
    PHEAP pheap=hheap;
@@ -905,7 +904,6 @@ BOOL WINAPI RtlLockHeap(HANDLE hheap)
 /*********************************************************************
 *                    HeapUnlock  --  KERNEL32                        *
 *********************************************************************/
-
 BOOL WINAPI RtlUnlockHeap(HANDLE hheap)
 {
    PHEAP pheap=hheap;
@@ -922,7 +920,6 @@ BOOL WINAPI RtlUnlockHeap(HANDLE hheap)
 * NT uses this function to compact moveable blocks and other things  *
 * Here it does not compact, but it finds the largest free region     *
 *********************************************************************/
-
 UINT RtlCompactHeap(HANDLE hheap, DWORD flags)
 {
    PHEAP	pheap=hheap;
@@ -955,7 +952,7 @@ UINT RtlCompactHeap(HANDLE hheap, DWORD flags)
 /*********************************************************************
 *                    HeapSize  --  KERNEL32                          *
 *********************************************************************/
-DWORD WINAPI HeapSize(HANDLE hheap, DWORD flags, LPCVOID pmem)
+DWORD WINAPI RtlSizeHeap(HANDLE hheap, DWORD flags, LPCVOID pmem)
 {
    PHEAP	pheap=(PHEAP) hheap;
    PHEAP_BLOCK	palloc=((PHEAP_BLOCK)pmem-1);
@@ -995,7 +992,7 @@ DWORD WINAPI HeapSize(HANDLE hheap, DWORD flags, LPCVOID pmem)
 *                                                                    *
 * NOTE: only implemented in NT                                       *
 *********************************************************************/
-BOOL WINAPI HeapValidate(HANDLE hheap, DWORD flags, LPCVOID pmem)
+BOOL WINAPI RtlValidateHeap(HANDLE hheap, DWORD flags, LPCVOID pmem)
 {
    PHEAP		pheap=(PHEAP)hheap;
    PHEAP_BLOCK		pcheck;

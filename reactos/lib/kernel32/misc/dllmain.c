@@ -13,22 +13,19 @@
 #include <wchar.h>
 #include <kernel32/proc.h>
 
-WINBOOL   
-STDCALL   
-DllMain (
-	HANDLE hInst, 
-	ULONG ul_reason_for_call,
-	LPVOID lpReserved );
+WINBOOL STDCALL DllMain (HANDLE hInst, 
+			 ULONG ul_reason_for_call,
+			 LPVOID lpReserved);
 
 
 
 NT_TEB *Teb;
 
 
-
-
-
-
+BOOL WINAPI DllMainCRTStartup(HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
+{
+   return(TRUE);
+}
 
 WINBOOL STDCALL DllMain (HANDLE hInst, 
 			 ULONG ul_reason_for_call,

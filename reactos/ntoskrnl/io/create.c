@@ -188,7 +188,7 @@ NTSTATUS STDCALL ZwCreateFile(PHANDLE FileHandle,
 	FileObject->Flags = FileObject->Flags | FO_SYNCHRONOUS_IO;
      }
       
-   KeInitializeEvent(&Event,NotificationEvent,FALSE);
+   KeInitializeEvent(&Event, NotificationEvent, FALSE);
    
    Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize, FALSE);
    if (Irp==NULL)
