@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.55 2003/12/28 10:56:20 gvg Exp $
+ *  $Id: painting.c,v 1.56 2003/12/30 16:55:00 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -469,16 +469,19 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
  * IntIsWindowDrawable
  *
  * Remarks
- *    Window is drawable when it is visible, all parents are not
- *    minimized, and it is itself not minimized.
+ *    Window is drawable when it is visible and all parents are not
+ *    minimized.
  */
 
 BOOL FASTCALL
 IntIsWindowDrawable(PWINDOW_OBJECT Window)
 {
-   for (; Window; Window = Window->Parent)
+   PWINDOW_OBJECT Wnd = Window;
+   
+   for (; Wnd; Wnd = Wnd->Parent)
    {
-      if (!(Window->Style & WS_VISIBLE))
+      if (!(Wnd->Style & WS_VISIBLE) ||
+          ((Wnd->Style & WS_MINIMIZE) && (Wnd != Window)))
          return FALSE;
    }
 
