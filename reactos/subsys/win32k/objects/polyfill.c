@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: polyfill.c,v 1.3 2003/05/18 17:16:18 ea Exp $
+/* $Id: polyfill.c,v 1.4 2003/06/25 16:55:33 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -487,41 +487,41 @@ static void STDCALL POLYGONFILL_UpdateActiveEdges(int Scanline, PFILL_EDGE_LIST 
 ** This method fills the portion of the polygon that intersects with the scanline
 ** Scanline.
 */
-static void STDCALL POLYGONFILL_FillScanLine(int ScanLine, PFILL_EDGE_LIST ActiveEdges, SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX RopMode, int OrigX, int OrigY)
+static void STDCALL POLYGONFILL_FillScanLine(int ScanLine, PFILL_EDGE_LIST ActiveEdges, SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX RopMode)
 {
-    BOOL OnOdd = TRUE;
-    RECTL BoundRect;
-    int XInterceptOdd,XInterceptEven,ret;
-    PPFILL_EDGE pThis = ActiveEdges;
+  BOOL OnOdd = TRUE;
+  RECTL BoundRect;
+  int XInterceptOdd,XInterceptEven,ret;
+  PPFILL_EDGE pThis = ActiveEdges;
     
-    while (0 != pThis)
+  while (NULL != pThis)
     {
-        if (OnOdd)
-        {
-            XInterceptOdd = pThis->XIntercept;
-            OnOdd = FALSE;
-        }
-        else
-        {
-            BoundRect.top = ScanLine + OrigY - 1;
-            BoundRect.bottom = ScanLine + OrigY + 1;
-            BoundRect.left = XInterceptOdd + OrigX - 2;
-            BoundRect.right = XInterceptEven + OrigX;
+      if (OnOdd)
+	{
+	  XInterceptOdd = pThis->XIntercept;
+	  OnOdd = FALSE;
+	}
+      else
+	{
+	  BoundRect.top = ScanLine - 1;
+	  BoundRect.bottom = ScanLine + 1;
+	  BoundRect.left = XInterceptOdd - 2;
+	  BoundRect.right = XInterceptEven;
 
-            XInterceptEven = pThis->XIntercept;
-            DPRINT("Fill Line (%d, %d) to (%d, %d)\n",XInterceptOdd - 1,ScanLine ,XInterceptEven - 1,ScanLine );
-            ret = EngLineTo(SurfObj,
-					        NULL, // ClipObj,
-					        BrushObj,
-					        XInterceptOdd + OrigX - 1, 
-					        ScanLine + OrigY, 
-					        XInterceptEven + OrigX - 1, 
-					        ScanLine + OrigY,
-					        &BoundRect, // Bounding rectangle
-					        RopMode); // MIX
-            OnOdd = TRUE;
-        }
-        pThis = pThis->pNext;
+	  XInterceptEven = pThis->XIntercept;
+	  DPRINT("Fill Line (%d, %d) to (%d, %d)\n",XInterceptOdd - 1, ScanLine, XInterceptEven - 1, ScanLine);
+	  ret = EngLineTo(SurfObj,
+	                  NULL, /* ClipObj */
+	                  BrushObj,
+		          XInterceptOdd - 1, 
+		          ScanLine, 
+	                  XInterceptEven - 1, 
+	                  ScanLine,
+                          &BoundRect, /* Bounding rectangle */
+                          RopMode); /* MIX */
+	  OnOdd = TRUE;
+	}
+      pThis = pThis->pNext;
     }
 }
 
@@ -530,40 +530,46 @@ static void STDCALL POLYGONFILL_FillScanLine(int ScanLine, PFILL_EDGE_LIST Activ
 //When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and 
 //even-numbered polygon sides on each scan line. That is, GDI fills the area between the 
 //first and second side, between the third and fourth side, and so on. 
-BOOL STDCALL FillPolygon_ALTERNATE(SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX RopMode, CONST PPOINT Points, int Count, RECTL BoundRect, int OrigX, int OrigY)
+BOOL STDCALL FillPolygon_ALTERNATE(SURFOBJ *SurfObj, PBRUSHOBJ BrushObj, MIX RopMode, CONST PPOINT Points, int Count, RECTL BoundRect)
 {
-	PFILL_EDGE_LIST list = 0;
-    PFILL_EDGE_LIST ActiveEdges = 0;
-    int ScanLine;
-	DPRINT("FillPolygon_ALTERNATE\n");
+  PFILL_EDGE_LIST list = 0;
+  PFILL_EDGE_LIST ActiveEdges = 0;
+  int ScanLine;
+
+  DPRINT("FillPolygon_ALTERNATE\n");
 	
-	//Create Edge List.
-	list = POLYGONFILL_MakeEdgeList(Points, Count);
-	//DEBUG_PRINT_EDGELIST(list);
-    if (0 == list) return FALSE;
+  /* Create Edge List. */
+  list = POLYGONFILL_MakeEdgeList(Points, Count);
+  /* DEBUG_PRINT_EDGELIST(list); */
+  if (NULL == list)
+    {
+      return FALSE;
+    }
 
-	//For each Scanline from BoundRect.bottom to BoundRect.top, 
-	//determine line segments to draw
-	for (ScanLine = BoundRect.top + 1; ScanLine < BoundRect.bottom ; ++ScanLine)
-	{
-        POLYGONFILL_UpdateActiveEdges(ScanLine, &list, &ActiveEdges);
-        //DEBUG_PRINT_EDGELIST(ActiveEdges);
-        POLYGONFILL_FillScanLine(ScanLine, ActiveEdges, SurfObj, BrushObj, RopMode, OrigX, OrigY);
-	}
+  /* For each Scanline from BoundRect.bottom to BoundRect.top, 
+   * determine line segments to draw
+   */
+  for (ScanLine = BoundRect.top + 1; ScanLine < BoundRect.bottom ; ++ScanLine)
+    {
+      POLYGONFILL_UpdateActiveEdges(ScanLine, &list, &ActiveEdges);
+      /* DEBUG_PRINT_EDGELIST(ActiveEdges); */
+      POLYGONFILL_FillScanLine(ScanLine, ActiveEdges, SurfObj, BrushObj, RopMode);
+    }
     
-	//Free Edge List. If any are left.
-	POLYGONFILL_DestroyEdgeList(list);
+  /* Free Edge List. If any are left. */
+  POLYGONFILL_DestroyEdgeList(list);
 
-	return TRUE;
+  return TRUE;
 }
 
 //WINDING Selects winding mode (fills any region with a nonzero winding value). 
 //When the fill mode is WINDING, GDI fills any region that has a nonzero winding value. 
 //This value is defined as the number of times a pen used to draw the polygon would go around the region. 
 //The direction of each edge of the polygon is important. 
-BOOL STDCALL FillPolygon_WINDING(SURFOBJ *SurfObj, PBRUSHOBJ BrushObj,MIX RopMode, CONST PPOINT Points, int Count, RECTL BoundRect, int OrigX, int OrigY)
+BOOL STDCALL FillPolygon_WINDING(SURFOBJ *SurfObj, PBRUSHOBJ BrushObj,MIX RopMode, CONST PPOINT Points, int Count, RECTL BoundRect)
 {
-	DPRINT("FillPolygon_WINDING\n");
-	return FALSE;
+  DPRINT("FillPolygon_WINDING\n");
+
+  return FALSE;
 }
 /* EOF */

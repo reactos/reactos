@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.19 2003/06/06 10:27:43 gvg Exp $ */
+/* $Id: fillshap.c,v 1.20 2003/06/25 16:55:33 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -24,10 +24,12 @@
 #include <win32k/fillshap.h>
 #include <win32k/dc.h>
 #include <win32k/pen.h>
+#include <include/error.h>
 #include <include/object.h>
 #include <include/inteng.h>
 #include <include/path.h>
 #include <include/paint.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -85,9 +87,7 @@ extern BOOL FillPolygon_ALTERNATE(SURFOBJ *SurfObj,
                                   MIX RopMode,
                                   CONST PPOINT Points,
                                   int Count,
-                                  RECTL BoundRect,
-                                  int OrigX,
-                                  int OrigY);
+                                  RECTL BoundRect);
 
 
 //WINDING Selects winding mode (fills any region with a nonzero winding value). 
@@ -98,110 +98,168 @@ extern BOOL FillPolygon_WINDING(SURFOBJ *SurfObj,
                                 PBRUSHOBJ BrushObj,MIX RopMode,
                                 CONST PPOINT Points,
                                 int Count,
-                                RECTL BoundRect,
-                                int OrigX,
-                                int OrigY);
+                                RECTL BoundRect);
 #endif
 
 //This implementation is blatantly ripped off from W32kRectangle
 BOOL
 STDCALL
 W32kPolygon(HDC  hDC,
-            CONST PPOINT  Points,
-            int  Count)
+            CONST PPOINT UnsafePoints,
+            int Count)
 {
-  DC		*dc = DC_HandleToPtr(hDC);
-  SURFOBJ	*SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
-  PBRUSHOBJ	OutBrushObj, FillBrushObj;
-  BOOL      ret;
-  PRECTL	RectBounds;
-  PENOBJ    *pen;
-  RECTL     DestRect;
-  int       CurrentPoint;
+  DC *dc = DC_HandleToPtr(hDC);
+  SURFOBJ *SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
+  PBRUSHOBJ OutBrushObj, FillBrushObj;
+  BOOL ret;
+  PRECTL RectBounds;
+  PENOBJ *pen;
+  RECTL DestRect;
+  int CurrentPoint;
+  PPOINT Points;
+  NTSTATUS Status;
 
   DPRINT("In W32kPolygon()\n");
   
-  if(0 == dc)
-   return FALSE;
+  if (NULL == dc || NULL == Points || Count < 2)
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
 
-  if(0 == Points)
-   return FALSE;
+  /* Copy points from userspace to kernelspace */
+  Points = ExAllocatePool(PagedPool, Count * sizeof(POINT));
+  if (NULL == Points)
+    {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+  Status = MmCopyFromCaller(Points, UnsafePoints, Count * sizeof(POINT));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      ExFreePool(Points);
+      return FALSE;
+    }
 
-  if (2 > Count)
-   return FALSE;
+  /* Convert to screen coordinates */
+  for (CurrentPoint = 0; CurrentPoint < Count; CurrentPoint++)
+    {
+      Points[CurrentPoint].x += dc->w.DCOrgX;
+      Points[CurrentPoint].y += dc->w.DCOrgY;
+    }
 
   RectBounds = GDIOBJ_LockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
   //ei not yet implemented ASSERT(RectBounds);
-	
-  DestRect.bottom   = Points[0].y + dc->w.DCOrgY + 1;
-  DestRect.top      = Points[0].y + dc->w.DCOrgY;
-  DestRect.right    = Points[0].y + dc->w.DCOrgX;
-  DestRect.left     = Points[0].y + dc->w.DCOrgX + 1;
-  
 
-
-  if(PATH_IsPathOpen(dc->w.path)) 
-  {	  
+  if (PATH_IsPathOpen(dc->w.path)) 
+    {	  
       ret = PATH_Polygon(hDC, Points, Count);
-  } 
+    } 
   else 
-  {
-	  //Get the current pen.
-	  pen = (PENOBJ*) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
+    {
+      /* Get the current pen. */
+      pen = (PENOBJ*) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
       ASSERT(pen);
-      OutBrushObj = (PBRUSHOBJ)PenToBrushObj(dc, pen);
-      GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC );
-	  
-      // Draw the Polygon Edges with the current pen
-	  for (CurrentPoint = 0; CurrentPoint < Count; ++CurrentPoint)
-      {
-		  DestRect.bottom   = MAX(DestRect.bottom, Points[CurrentPoint].y);
-		  DestRect.top      = MIN(DestRect.top, Points[CurrentPoint].y);
-		  DestRect.right    = MAX(DestRect.right, Points[CurrentPoint].y);
-		  DestRect.left     = MIN(DestRect.left, Points[CurrentPoint].y);
-	  }//for
+      OutBrushObj = (PBRUSHOBJ) PenToBrushObj(dc, pen);
+      GDIOBJ_UnlockObj(dc->w.hPen, GO_PEN_MAGIC);
 	
-	  //Now fill the polygon with the current brush.
-	  FillBrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
-	  // determine the fill mode to fill the polygon.
-	  if (dc->w.polyFillMode == WINDING)
-		  ret = FillPolygon_WINDING(SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect, dc->w.DCOrgX, dc->w.DCOrgY);
-	  else//default
-		  ret = FillPolygon_ALTERNATE(SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect, dc->w.DCOrgX, dc->w.DCOrgY);
+      DestRect.left   = Points[0].x;
+      DestRect.right  = Points[0].x;
+      DestRect.top    = Points[0].y;
+      DestRect.bottom = Points[0].y;
+	  
+      for (CurrentPoint = 1; CurrentPoint < Count; ++CurrentPoint)
+	{
+	  DestRect.left     = MIN(DestRect.left, Points[CurrentPoint].x);
+	  DestRect.right    = MAX(DestRect.right, Points[CurrentPoint].x);
+	  DestRect.top      = MIN(DestRect.top, Points[CurrentPoint].y);
+	  DestRect.bottom   = MAX(DestRect.bottom, Points[CurrentPoint].y);
+	}
+	
+      /* Now fill the polygon with the current brush. */
+      FillBrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
+      /* determine the fill mode to fill the polygon. */
+      if (WINDING == dc->w.polyFillMode)
+	{
+	  ret = FillPolygon_WINDING(SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
+	}
+      else /* default */
+	{
+	  ret = FillPolygon_ALTERNATE(SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
+	}
+
       // Draw the Polygon Edges with the current pen
-	  for (CurrentPoint = 0; CurrentPoint < Count; ++CurrentPoint)
-	  { 
-        POINT To,From;
-	    //Let CurrentPoint be i
-	    //if i+1 > Count, Draw a line from Points[i] to Points[0]
-		//Draw a line from Points[i] to Points[i+1] 
-		if (CurrentPoint + 1 >= Count)
+      for (CurrentPoint = 0; CurrentPoint < Count; ++CurrentPoint)
+	{ 
+          POINT To, From, Next;
+
+	  /* Let CurrentPoint be i
+	   * if i+1 > Count, Draw a line from Points[i] to Points[0]
+	   * Draw a line from Points[i] to Points[i+1]
+	   */
+	  From = Points[CurrentPoint];
+	  if (Count <= CurrentPoint + 1)
+	    {
+	      To = Points[0];
+	    }
+	  else
+	    {
+	      To = Points[CurrentPoint + 1];
+	    }
+
+	  /* Special handling of lower right corner of a rectangle. If we
+	   * don't treat it specially, it will end up looking like this:
+	   *
+	   *                *
+	   *                *
+	   *                *
+	   *       *********
+	   */
+	  if (3 < Count)
+	    {
+	      if (Count <= CurrentPoint + 2)
 		{
-		  To = Points[CurrentPoint];
-		  From = Points[0];
+		  Next = Points[CurrentPoint + 2 - Count];
 		}
-		else
+	      else
 		{
-		  From = Points[CurrentPoint];
-		  To = Points[CurrentPoint + 1];
+		  Next = Points[CurrentPoint + 2];
 		}
-		DPRINT("Polygon Making line from (%d,%d) to (%d,%d)\n", From.x, From.y, To.x, To.y );
-		ret = EngLineTo(SurfObj,
-                        NULL, // ClipObj,
-                        OutBrushObj,
-                        From.x + dc->w.DCOrgX, 
-		      	        From.y + dc->w.DCOrgY, 
-					    To.x + dc->w.DCOrgX, 
-					    To.y + dc->w.DCOrgY,
-                        RectBounds, // Bounding rectangle
-                        dc->w.ROPmode); // MIX
+	      if (From.x == To.x &&
+	          From.y <= To.y &&
+	          To.y == Next.y &&
+	          Next.x <= To.x)
+		{
+		  To.y++;
+		}
+	      else if (From.y == To.y &&
+	               From.x <= To.x &&
+	               To.x == Next.x &&
+	               Next.y <= To.y)
+		{
+		  To.x++;
+		}
+	    }
+	  DPRINT("Polygon Making line from (%d,%d) to (%d,%d)\n", From.x, From.y, To.x, To.y );
+	  ret = IntEngLineTo(SurfObj,
+	                     NULL, /* ClipObj */
+	                     OutBrushObj,
+	                     From.x, 
+	                     From.y, 
+	                     To.x, 
+	                     To.y,
+	                     &DestRect,
+	                     dc->w.ROPmode); /* MIX */
 		  
-	  }//for
-      GDIOBJ_UnlockObj( dc->w.hBrush, GO_BRUSH_MAGIC );
-  }// else
+	}
+      GDIOBJ_UnlockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
+    }
   
   GDIOBJ_UnlockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
-  DC_ReleasePtr( hDC );
+  DC_ReleasePtr(hDC);
+  ExFreePool(Points);
+
   return ret;
 }
 
