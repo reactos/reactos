@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.40 2004/10/21 03:39:37 arty Exp $
+/* $Id: pnpmgr.c,v 1.41 2004/10/22 11:00:41 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -77,6 +77,7 @@ IoGetDeviceProperty(
   PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
   ULONG Length;
   PVOID Data;
+  PWSTR Ptr;
 
   DPRINT("IoGetDeviceProperty(%x %d)\n", DeviceObject, DeviceProperty);
 
@@ -140,6 +141,10 @@ IoGetDeviceProperty(
     case DevicePropertyDriverKeyName:
     case DevicePropertyManufacturer:
     case DevicePropertyFriendlyName:
+    case DevicePropertyHardwareID:
+    case DevicePropertyCompatibleIDs:
+    case DevicePropertyDeviceDescription:
+    case DevicePropertyLocationInformation:
       {
         LPWSTR RegistryPropertyName, KeyNameBuffer;
         UNICODE_STRING KeyName, ValueName;
@@ -161,6 +166,14 @@ IoGetDeviceProperty(
             RegistryPropertyName = L"Mfg"; break;
           case DevicePropertyFriendlyName:
             RegistryPropertyName = L"FriendlyName"; break;
+          case DevicePropertyHardwareID:
+            RegistryPropertyName = L"HardwareID"; break;
+          case DevicePropertyCompatibleIDs:
+            RegistryPropertyName = L"CompatibleIDs"; break;
+          case DevicePropertyDeviceDescription:
+            RegistryPropertyName = L"DeviceDesc"; break;
+          case DevicePropertyLocationInformation:
+            RegistryPropertyName = L"LocationInformation"; break;
           default:
             RegistryPropertyName = NULL; break;
         }
@@ -221,12 +234,38 @@ IoGetDeviceProperty(
       }
 
     case DevicePropertyBootConfiguration:
+      Length = 0;
+      if (DeviceNode->BootResourceList->Count != 0)
+      {
+	Length = sizeof(CM_RESOURCE_LIST) +
+		 ((DeviceNode->BootResourceList->Count - 1) * sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
+      }
+      Data = &DeviceNode->BootResourceList;
+      break;
+
+    /* FIXME: use a translated boot configuration instead */
     case DevicePropertyBootConfigurationTranslated:
-    case DevicePropertyCompatibleIDs:
-    case DevicePropertyDeviceDescription:
+      Length = 0;
+      if (DeviceNode->BootResourceList->Count != 0)
+      {
+	Length = sizeof(CM_RESOURCE_LIST) +
+		 ((DeviceNode->BootResourceList->Count - 1) * sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
+      }
+      Data = &DeviceNode->BootResourceList;
+      break;
+
     case DevicePropertyEnumeratorName:
-    case DevicePropertyHardwareID:
-    case DevicePropertyLocationInformation:
+      Ptr = wcschr(DeviceNode->InstancePath.Buffer, L'\\');
+      if (Ptr != NULL)
+      {
+	Length = (ULONG)((ULONG_PTR)Ptr - (ULONG_PTR)DeviceNode->InstancePath.Buffer) + sizeof(WCHAR);
+      }
+      else
+      {
+	Length = 0;
+	Data = NULL;
+      }
+
     case DevicePropertyPhysicalDeviceObjectName:
       return STATUS_NOT_IMPLEMENTED;
 
@@ -238,6 +277,13 @@ IoGetDeviceProperty(
   if (BufferLength < Length)
     return STATUS_BUFFER_TOO_SMALL;
   RtlCopyMemory(PropertyBuffer, Data, Length);
+
+  /* Terminate the string */
+  if (DeviceProperty == DevicePropertyEnumeratorName)
+  {
+    Ptr = (PWSTR)PropertyBuffer;
+    Ptr[(Length / sizeof(WCHAR)) - 1] = 0;
+  }
 
   return STATUS_SUCCESS;
 }
@@ -488,27 +534,15 @@ IopFreeDeviceNode(PDEVICE_NODE DeviceNode)
     ExFreePool(DeviceNode->CmResourceList);
   }
 
-  if (DeviceNode->BootResourcesList)
+  if (DeviceNode->BootResourceList)
   {
-    ExFreePool(DeviceNode->BootResourcesList);
+    ExFreePool(DeviceNode->BootResourceList);
   }
 
   if (DeviceNode->ResourceRequirementsList)
   {
     ExFreePool(DeviceNode->ResourceRequirementsList);
   }
-
-  RtlFreeUnicodeString(&DeviceNode->DeviceID);
-
-  RtlFreeUnicodeString(&DeviceNode->InstanceID);
-
-  RtlFreeUnicodeString(&DeviceNode->HardwareIDs);
-
-  RtlFreeUnicodeString(&DeviceNode->CompatibleIDs);
-
-  RtlFreeUnicodeString(&DeviceNode->DeviceText);
-
-  RtlFreeUnicodeString(&DeviceNode->DeviceTextLocation);
 
   if (DeviceNode->BusInformation)
   {
@@ -785,69 +819,6 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
 
   DPRINT("IopSetDeviceInstanceData() called\n");
 
-  RtlInitUnicodeString(&KeyName,
-		       L"CompatibleIDs");
-  Status = NtSetValueKey(InstanceKey,
-			 &KeyName,
-			 0,
-			 REG_MULTI_SZ,
-			 DeviceNode->CompatibleIDs.Buffer,
-			 DeviceNode->CompatibleIDs.MaximumLength);
-
-  RtlInitUnicodeString(&KeyName,
-		       L"HardwareID");
-  Status = NtSetValueKey(InstanceKey,
-			 &KeyName,
-			 0,
-			 REG_MULTI_SZ,
-			 DeviceNode->HardwareIDs.Buffer,
-			 DeviceNode->HardwareIDs.MaximumLength);
-
-  /* Set 'DeviceDesc' value */
-  RtlInitUnicodeString(&KeyName,
-		       L"DeviceDesc");
-  Status = NtSetValueKey(InstanceKey,
-			 &KeyName,
-			 0,
-			 REG_SZ,
-			 DeviceNode->DeviceText.Buffer,
-			 DeviceNode->DeviceText.MaximumLength);
-
-  /* Set 'LocationInformation' value */
-  DPRINT("LocationInformation: %wZ\n", &DeviceNode->DeviceTextLocation);
-  RtlInitUnicodeString(&KeyName,
-		       L"LocationInformation");
-  Status = NtSetValueKey(InstanceKey,
-			 &KeyName,
-			 0,
-			 REG_SZ,
-			 DeviceNode->DeviceTextLocation.Buffer,
-			 DeviceNode->DeviceTextLocation.MaximumLength);
-
-  /* Set 'Capabilities' value */
-  RtlInitUnicodeString(&KeyName,
-		       L"Capabilities");
-  Status = NtSetValueKey(InstanceKey,
-			 &KeyName,
-			 0,
-			 REG_DWORD,
-			 (PVOID)((ULONG_PTR)&DeviceNode->CapabilityFlags + 4),
-			 sizeof(ULONG));
-
-  /* Set 'UINumber' value */
-  if (DeviceNode->CapabilityFlags != NULL &&
-      DeviceNode->CapabilityFlags->UINumber != (ULONG)-1)
-  {
-    RtlInitUnicodeString(&KeyName,
-			 L"UINumber");
-    Status = NtSetValueKey(InstanceKey,
-			   &KeyName,
-			   0,
-			   REG_DWORD,
-			   &DeviceNode->CapabilityFlags->UINumber,
-			   sizeof(ULONG));
-  }
-
   /* Create the 'LogConf' key */
   RtlInitUnicodeString(&KeyName,
 		       L"LogConf");
@@ -866,9 +837,9 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
   if (NT_SUCCESS(Status))
   {
     /* Set 'BootConfig' value */
-    if (DeviceNode->BootResourcesList != NULL)
+    if (DeviceNode->BootResourceList != NULL)
     {
-      ResCount = DeviceNode->BootResourcesList->Count;
+      ResCount = DeviceNode->BootResourceList->Count;
       if (ResCount != 0)
       {
 	ListSize = sizeof(CM_RESOURCE_LIST) +
@@ -880,7 +851,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
 			       &KeyName,
 			       0,
 			       REG_RESOURCE_LIST,
-			       &DeviceNode->BootResourcesList,
+			       &DeviceNode->BootResourceList,
 			       ListSize);
       }
     }
@@ -942,6 +913,7 @@ IopActionInterrogateDeviceStack(
    USHORT Length;
    USHORT TotalLength;
    HANDLE InstanceKey = NULL;
+   UNICODE_STRING ValueName;
 
    DPRINT("IopActionInterrogateDeviceStack(%p, %p)\n", DeviceNode, Context);
    DPRINT("PDO %x\n", DeviceNode->Pdo);
@@ -986,9 +958,8 @@ IopActionInterrogateDeviceStack(
       &Stack);
    if (NT_SUCCESS(Status))
    {
-      RtlInitUnicodeString(
-         &DeviceNode->DeviceID,
-         (PWSTR)IoStatusBlock.Information);
+      /* Copy the device id string */
+      wcscpy(InstancePath, (PWSTR)IoStatusBlock.Information);
 
       /*
        * FIXME: Check for valid characters, if there is invalid characters
@@ -998,7 +969,6 @@ IopActionInterrogateDeviceStack(
    else
    {
       DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
-      RtlInitUnicodeString(&DeviceNode->DeviceID, NULL);
    }
 
    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryInstanceID to device stack\n");
@@ -1011,9 +981,9 @@ IopActionInterrogateDeviceStack(
       &Stack);
    if (NT_SUCCESS(Status))
    {
-      RtlInitUnicodeString(
-      &DeviceNode->InstanceID,
-      (PWSTR)IoStatusBlock.Information);
+      /* Append the instance id string */
+      wcscat(InstancePath, L"\\");
+      wcscat(InstancePath, (PWSTR)IoStatusBlock.Information);
 
       /*
        * FIXME: Check for valid characters, if there is invalid characters
@@ -1023,7 +993,71 @@ IopActionInterrogateDeviceStack(
    else
    {
       DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
-      RtlInitUnicodeString(&DeviceNode->InstanceID, NULL);
+   }
+
+   Status = IopQueryCapabilities(DeviceNode->Pdo, &DeviceNode->CapabilityFlags);
+   if (NT_SUCCESS(Status))
+   {
+   }
+   else
+   {
+   }
+
+   if (!DeviceNode->CapabilityFlags->UniqueID)
+   {
+      DPRINT("Instance ID is not unique\n");
+      /* FIXME: Add information from parent bus driver to InstancePath */
+   }
+
+   if (!IopCreateUnicodeString(&DeviceNode->InstancePath, InstancePath, PagedPool))
+   {
+      DPRINT("No resources\n");
+      /* FIXME: Cleanup and disable device */
+   }
+
+   DPRINT1("InstancePath is %S\n", DeviceNode->InstancePath.Buffer);
+
+   /*
+    * Create registry key for the instance id, if it doesn't exist yet
+    */
+   KeyBuffer = ExAllocatePool(
+      PagedPool,
+      (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
+   wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+   wcscat(KeyBuffer, DeviceNode->InstancePath.Buffer);
+   Status = IopCreateDeviceKeyPath(KeyBuffer,
+				   &InstanceKey);
+   ExFreePool(KeyBuffer);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Failed to create the instance key! (Status %lx)\n", Status);
+   }
+
+
+   if (DeviceNode->CapabilityFlags != NULL)
+   {
+      /* Set 'Capabilities' value */
+      RtlInitUnicodeString(&ValueName,
+			   L"Capabilities");
+      Status = NtSetValueKey(InstanceKey,
+			     &ValueName,
+			     0,
+			     REG_DWORD,
+			     (PVOID)((ULONG_PTR)&DeviceNode->CapabilityFlags + 4),
+			     sizeof(ULONG));
+
+      /* Set 'UINumber' value */
+      if (DeviceNode->CapabilityFlags->UINumber != (ULONG)-1)
+      {
+         RtlInitUnicodeString(&ValueName,
+			      L"UINumber");
+         Status = NtSetValueKey(InstanceKey,
+				&ValueName,
+				0,
+				REG_DWORD,
+				&DeviceNode->CapabilityFlags->UINumber,
+				sizeof(ULONG));
+      }
    }
 
    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryHardwareIDs to device stack\n");
@@ -1054,14 +1088,22 @@ IopActionInterrogateDeviceStack(
       DPRINT("TotalLength: %hu\n", TotalLength);
       DPRINT("\n");
 
-      DeviceNode->HardwareIDs.Length = TotalLength * sizeof(WCHAR);
-      DeviceNode->HardwareIDs.MaximumLength = DeviceNode->HardwareIDs.Length + sizeof(WCHAR);
-      DeviceNode->HardwareIDs.Buffer = (PWSTR)IoStatusBlock.Information;
+      RtlInitUnicodeString(&ValueName,
+			   L"HardwareID");
+      Status = NtSetValueKey(InstanceKey,
+			     &ValueName,
+			     0,
+			     REG_MULTI_SZ,
+			     (PVOID)IoStatusBlock.Information,
+			     (TotalLength + 1) * sizeof(WCHAR));
+      if (!NT_SUCCESS(Status))
+	{
+	   DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+	}
    }
    else
    {
       DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
-      RtlInitUnicodeString(&DeviceNode->HardwareIDs, NULL);
    }
 
    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryCompatibleIDs to device stack\n");
@@ -1092,23 +1134,24 @@ IopActionInterrogateDeviceStack(
       DPRINT("TotalLength: %hu\n", TotalLength);
       DPRINT("\n");
 
-      DeviceNode->CompatibleIDs.Length = TotalLength * sizeof(WCHAR);
-      DeviceNode->CompatibleIDs.MaximumLength = DeviceNode->CompatibleIDs.Length + sizeof(WCHAR);
-      DeviceNode->CompatibleIDs.Buffer = (PWSTR)IoStatusBlock.Information;
+      RtlInitUnicodeString(&ValueName,
+			   L"CompatibleIDs");
+      Status = NtSetValueKey(InstanceKey,
+			     &ValueName,
+			     0,
+			     REG_MULTI_SZ,
+			     (PVOID)IoStatusBlock.Information,
+			     (TotalLength + 1) * sizeof(WCHAR));
+      if (!NT_SUCCESS(Status))
+	{
+	   DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+	}
    }
    else
    {
       DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
-      RtlInitUnicodeString(&DeviceNode->CompatibleIDs, NULL);
    }
 
-   Status = IopQueryCapabilities(DeviceNode->Pdo, &DeviceNode->CapabilityFlags);
-   if (NT_SUCCESS(Status))
-   {
-   }
-   else
-   {
-   }
 
    DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextDescription to device stack\n");
 
@@ -1121,14 +1164,22 @@ IopActionInterrogateDeviceStack(
       &Stack);
    if (NT_SUCCESS(Status))
    {
-      RtlInitUnicodeString(
-         &DeviceNode->DeviceText,
-         (PWSTR)IoStatusBlock.Information);
+      RtlInitUnicodeString(&ValueName,
+			   L"DeviceDesc");
+      Status = NtSetValueKey(InstanceKey,
+			     &ValueName,
+			     0,
+			     REG_SZ,
+			     (PVOID)IoStatusBlock.Information,
+			     (wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
+      if (!NT_SUCCESS(Status))
+	{
+	   DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+	}
    }
    else
    {
       DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
-      RtlInitUnicodeString(&DeviceNode->DeviceText, NULL);
    }
 
    DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextLocation to device stack\n");
@@ -1142,14 +1193,23 @@ IopActionInterrogateDeviceStack(
       &Stack);
    if (NT_SUCCESS(Status))
    {
-      RtlInitUnicodeString(
-         &DeviceNode->DeviceTextLocation,
-         (PWSTR)IoStatusBlock.Information);
+      DPRINT("LocationInformation: %wZ\n", &DeviceNode->DeviceTextLocation);
+      RtlInitUnicodeString(&ValueName,
+			   L"LocationInformation");
+      Status = NtSetValueKey(InstanceKey,
+			     &ValueName,
+			     0,
+			     REG_SZ,
+			     (PVOID)IoStatusBlock.Information,
+			     (wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
+      if (!NT_SUCCESS(Status))
+	{
+	   DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+	}
    }
    else
    {
       DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
-      RtlInitUnicodeString(&DeviceNode->DeviceTextLocation, NULL);
    }
 
    DPRINT("Sending IRP_MN_QUERY_BUS_INFORMATION to device stack\n");
@@ -1179,14 +1239,14 @@ IopActionInterrogateDeviceStack(
       NULL);
    if (NT_SUCCESS(Status))
    {
-      DeviceNode->BootResourcesList =
+      DeviceNode->BootResourceList =
          (PCM_RESOURCE_LIST)IoStatusBlock.Information;
       DeviceNode->Flags |= DNF_HAS_BOOT_CONFIG;
    }
    else
    {
       DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
-      DeviceNode->BootResourcesList = NULL;
+      DeviceNode->BootResourceList = NULL;
    }
 
    DPRINT("Sending IRP_MN_QUERY_RESOURCE_REQUIREMENTS to device stack\n");
@@ -1207,46 +1267,13 @@ IopActionInterrogateDeviceStack(
       DeviceNode->ResourceRequirementsList = NULL;
    }
 
-   /*
-    * Assemble the instance path for the device
-    */
-
-   wcscpy(InstancePath, DeviceNode->DeviceID.Buffer);
-   wcscat(InstancePath, L"\\");
-   wcscat(InstancePath, DeviceNode->InstanceID.Buffer);
-
-   if (!DeviceNode->CapabilityFlags || !DeviceNode->CapabilityFlags->UniqueID)
-   {
-      DPRINT("Instance ID is not unique\n");
-      /* FIXME: Add information from parent bus driver to InstancePath */
-   }
-
-   if (!IopCreateUnicodeString(&DeviceNode->InstancePath, InstancePath, PagedPool))
-   {
-      DPRINT("No resources\n");
-      /* FIXME: Cleanup and disable device */
-   }
-
-   DPRINT("InstancePath is %S\n", DeviceNode->InstancePath.Buffer);
-
-   /*
-    * Create registry key for the instance id, if it doesn't exist yet
-    */
-
-   KeyBuffer = ExAllocatePool(
-      PagedPool,
-      (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
-   wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
-   wcscat(KeyBuffer, DeviceNode->InstancePath.Buffer);
-   Status = IopCreateDeviceKeyPath(KeyBuffer,
-				   &InstanceKey);
-   ExFreePool(KeyBuffer);
 
    if (InstanceKey != NULL)
    {
       IopSetDeviceInstanceData(InstanceKey, DeviceNode);
-      NtClose(InstanceKey);
    }
+
+   NtClose(InstanceKey);
 
    DeviceNode->Flags |= DNF_PROCESSED;
 

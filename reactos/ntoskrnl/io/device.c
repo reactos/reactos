@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.77 2004/08/21 20:51:25 tamlin Exp $
+/* $Id: device.c,v 1.78 2004/10/22 11:00:41 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -65,7 +65,7 @@ IopInitializeDevice(
 
       DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
 
-      Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->BootResourcesList;
+      Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->BootResourceList;
       /* FIXME: Translate the resource list */
       Stack.Parameters.StartDevice.AllocatedResourcesTranslated = NULL;
 
@@ -641,7 +641,7 @@ IoCreateDevice(
        CreatedDeviceObject->DeviceType == FILE_DEVICE_CD_ROM ||
        CreatedDeviceObject->DeviceType == FILE_DEVICE_TAPE)
    {
-      IoAttachVpb(CreatedDeviceObject);      
+      IoAttachVpb(CreatedDeviceObject);
    }
    CreatedDeviceObject->SectorSize = 512; /* FIXME */
   
