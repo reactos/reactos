@@ -81,9 +81,9 @@ ps2_mouse_handler(PKINTERRUPT Interrupt, PVOID ServiceContext)
     mouse_buffer_position = 0;
 
     /* Determine the current state of the buttons */
-    Input->RawButtons = (mouse_buffer[0] & 1) * GPM_B_LEFT +
-                        (mouse_buffer[0] & 2) * GPM_B_RIGHT +
-                        (mouse_buffer[0] & 4) * GPM_B_MIDDLE;
+    Input->RawButtons = (mouse_buffer[0] & 1) /* * GPM_B_LEFT */ +
+                        (mouse_buffer[0] & 2) /* * GPM_B_RIGHT */ +
+                        (mouse_buffer[0] & 4) /* * GPM_B_MIDDLE */;
 
     /* Determine ButtonFlags */
     Input->ButtonFlags = 0;
@@ -116,7 +116,7 @@ ps2_mouse_handler(PKINTERRUPT Interrupt, PVOID ServiceContext)
         Input->ButtonFlags |= MOUSE_BUTTON_3_DOWN;
       } else {
         Input->ButtonFlags |= MOUSE_BUTTON_3_UP;
-     }
+      }
     }
 
     /* Some PS/2 mice send reports with negative bit set in data[0] and zero for

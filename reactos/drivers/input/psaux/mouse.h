@@ -26,9 +26,9 @@
                                          CONTROLLER_MODE_KEYBOARD_INTERRUPT)
 
 // Used with mouse buttons
-#define GPM_B_LEFT      4
-#define GPM_B_MIDDLE    2
-#define GPM_B_RIGHT     1
+#define GPM_B_LEFT      1
+#define GPM_B_RIGHT     2
+#define GPM_B_MIDDLE    4
 
 // Some aux operations take long time
 #define MAX_RETRIES          60
