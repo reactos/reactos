@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.38 2004/05/13 20:42:27 navaraf Exp $
+; $Id: advapi32.edf,v 1.39 2004/05/26 09:50:10 weiden Exp $
 ;
 ; advapi32.edf
 ;
@@ -140,8 +140,8 @@ GetLengthSid=GetLengthSid@4
 ;GetMultipleTrusteeOperationA=GetMultipleTrusteeOperationA@4
 ;GetMultipleTrusteeOperationW=GetMultipleTrusteeOperationW@4
 ;GetMultipleTrusteeW=GetMultipleTrusteeW@4
-;GetNamedSecurityInfoA=GetNamedSecurityInfoA@32
-;GetNamedSecurityInfoW=GetNamedSecurityInfoW@32
+GetNamedSecurityInfoA=GetNamedSecurityInfoA@32
+GetNamedSecurityInfoW=GetNamedSecurityInfoW@32
 GetNumberOfEventLogRecords=GetNumberOfEventLogRecords@8
 GetOldestEventLogRecord=GetOldestEventLogRecord@8
 ;GetPrivateObjectSecurity=GetPrivateObjectSecurity@20
@@ -350,10 +350,10 @@ SetAclInformation=SetAclInformation@16
 ;SetEntriesInAclA=SetEntriesInAclA@16
 ;SetEntriesInAclW=SetEntriesInAclW@16
 SetFileSecurityA=SetFileSecurityA@12
-;SetFileSecurityW=SetFileSecurityW@12
+SetFileSecurityW=SetFileSecurityW@12
 SetKernelObjectSecurity=SetKernelObjectSecurity@12
-;SetNamedSecurityInfoA=SetNamedSecurityInfoA@28
-;SetNamedSecurityInfoW=SetNamedSecurityInfoW@28
+SetNamedSecurityInfoA=SetNamedSecurityInfoA@28
+SetNamedSecurityInfoW=SetNamedSecurityInfoW@28
 ;SetPrivateObjectSecurity=SetPrivateObjectSecurity@20
 SetSecurityDescriptorDacl=SetSecurityDescriptorDacl@16
 SetSecurityDescriptorGroup=SetSecurityDescriptorGroup@12

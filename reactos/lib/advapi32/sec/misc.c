@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.15 2004/05/13 20:42:28 navaraf Exp $
+/* $Id: misc.c,v 1.16 2004/05/26 09:50:10 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,6 +9,7 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <windows.h>
+#include <Accctrl.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -107,6 +108,22 @@ GetKernelObjectSecurity(HANDLE Handle,
       return(FALSE);
     }
   return(TRUE);
+}
+
+
+/******************************************************************************
+ * SetFileSecurityW [ADVAPI32.@]
+ * Sets the security of a file or directory
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+SetFileSecurityW (LPCWSTR lpFileName,
+		  SECURITY_INFORMATION RequestedInformation,
+		  PSECURITY_DESCRIPTOR pSecurityDescriptor)
+{
+  DPRINT("SetFileSecurityA : stub\n");
+  return TRUE;
 }
 
 
@@ -507,6 +524,80 @@ LookupPrivilegeNameW (LPCWSTR lpSystemName,
 {
   SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
+}
+
+
+/**********************************************************************
+ * GetNamedSecurityInfoW			EXPORTED
+ *
+ * @unimplemented
+ */
+DWORD STDCALL
+GetNamedSecurityInfoW(LPWSTR pObjectName,
+                      SE_OBJECT_TYPE ObjectType,
+                      SECURITY_INFORMATION SecurityInfo,
+                      PSID *ppsidOwner,
+                      PSID *ppsidGroup,
+                      PACL *ppDacl,
+                      PACL *ppSacl,
+                      PSECURITY_DESCRIPTOR *ppSecurityDescriptor)
+{
+  return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/**********************************************************************
+ * GetNamedSecurityInfoA			EXPORTED
+ *
+ * @unimplemented
+ */
+DWORD STDCALL
+GetNamedSecurityInfoA(LPSTR pObjectName,
+                      SE_OBJECT_TYPE ObjectType,
+                      SECURITY_INFORMATION SecurityInfo,
+                      PSID *ppsidOwner,
+                      PSID *ppsidGroup,
+                      PACL *ppDacl,
+                      PACL *ppSacl,
+                      PSECURITY_DESCRIPTOR *ppSecurityDescriptor)
+{
+  return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/**********************************************************************
+ * SetNamedSecurityInfoW			EXPORTED
+ *
+ * @unimplemented
+ */
+DWORD STDCALL
+SetNamedSecurityInfoW(LPWSTR pObjectName,
+                      SE_OBJECT_TYPE ObjectType,
+                      SECURITY_INFORMATION SecurityInfo,
+                      PSID psidOwner,
+                      PSID psidGroup,
+                      PACL pDacl,
+                      PACL pSacl)
+{
+  return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/**********************************************************************
+ * SetNamedSecurityInfoA			EXPORTED
+ *
+ * @unimplemented
+ */
+DWORD STDCALL
+SetNamedSecurityInfoA(LPSTR pObjectName,
+                      SE_OBJECT_TYPE ObjectType,
+                      SECURITY_INFORMATION SecurityInfo,
+                      PSID psidOwner,
+                      PSID psidGroup,
+                      PACL pDacl,
+                      PACL pSacl)
+{
+  return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 /* EOF */

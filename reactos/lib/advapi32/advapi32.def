@@ -1,4 +1,4 @@
-; $Id: advapi32.def,v 1.18 2004/05/13 20:42:27 navaraf Exp $
+; $Id: advapi32.def,v 1.19 2004/05/26 09:50:09 weiden Exp $
 ;
 ; advapi32.def
 ;
@@ -144,8 +144,8 @@ GetLengthSid@4
 ;GetMultipleTrusteeOperationA@4
 ;GetMultipleTrusteeOperationW@4
 ;GetMultipleTrusteeW@4
-;GetNamedSecurityInfoA@32
-;GetNamedSecurityInfoW@32
+GetNamedSecurityInfoA@32
+GetNamedSecurityInfoW@32
 ;GetNumberOfEventLogRecords@8
 ;GetOldestEventLogRecord@8
 ;GetPrivateObjectSecurity@20
@@ -353,9 +353,10 @@ SetAclInformation@16
 ;SetEntriesInAclA@16
 ;SetEntriesInAclW@16
 SetFileSecurityA@20
+SetFileSecurityW@20
 SetKernelObjectSecurity@12
-;SetNamedSecurityInfoA@28
-;SetNamedSecurityInfoW@28
+SetNamedSecurityInfoA@28
+SetNamedSecurityInfoW@28
 ;SetPrivateObjectSecurity@20
 SetSecurityDescriptorDacl@16
 SetSecurityDescriptorGroup@12
