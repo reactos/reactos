@@ -55,6 +55,7 @@ class XMLElement
 public:
 	std::string name;
 	std::vector<XMLAttribute*> attributes;
+	XMLElement* parentElement;
 	std::vector<XMLElement*> subElements;
 	std::string value;
 
@@ -62,6 +63,7 @@ public:
 	~XMLElement();
 	bool Parse(const std::string& token,
 	           bool& end_tag);
+	void AddSubElement ( XMLElement* e );
 	XMLAttribute* GetAttribute ( const std::string& attribute,
 	                             bool required);
 	const XMLAttribute* GetAttribute ( const std::string& attribute,

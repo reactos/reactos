@@ -177,7 +177,8 @@ XMLFile::XMLFile()
 {
 }
 
-void XMLFile::close()
+void
+XMLFile::close()
 {
 	while ( _f.size() )
 	{
@@ -188,7 +189,8 @@ void XMLFile::close()
 	_p = _end = NULL;
 }
 
-bool XMLFile::open(const string& filename)
+bool
+XMLFile::open(const string& filename)
 {
 	close();
 	FILE* f = fopen ( filename.c_str(), "rb" );
@@ -208,24 +210,28 @@ bool XMLFile::open(const string& filename)
 // an xml element or a text element, basically it's a glorified
 // skipspace, normally the user of this class won't need to call
 // this function
-void XMLFile::next_token()
+void
+XMLFile::next_token()
 {
 	_p += strspn ( _p, WS );
 }
 
-bool XMLFile::next_is_text()
+bool
+XMLFile::next_is_text()
 {
 	return *_p != '<';
 }
 
-bool XMLFile::more_tokens()
+bool
+XMLFile::more_tokens()
 {
 	return _p != _end;
 }
 
 // get_token() is used to return a token, and move the pointer
 // past the token
-bool XMLFile::get_token(string& token)
+bool
+XMLFile::get_token(string& token)
 {
 	const char* tokend;
 	if ( *_p == '<' )
@@ -258,11 +264,12 @@ XMLAttribute::XMLAttribute()
 
 XMLAttribute::XMLAttribute(const string& name_,
                            const string& value_)
-: name(name_), value(value_)
+	: name(name_), value(value_)
 {
 }
 
 XMLElement::XMLElement()
+	: parentElement(NULL)
 {
 }
 
@@ -275,14 +282,22 @@ XMLElement::~XMLElement()
 		delete subElements[i];
 }
 
+void
+XMLElement::AddSubElement ( XMLElement* e )
+{
+	subElements.push_back ( e );
+	e->parentElement = this;
+}
+
 // Parse()
 // This function takes a single xml tag ( i.e. beginning with '<' and
 // ending with '>', and parses out it's tag name and constituent
 // attributes.
 // Return Value: returns true if you need to look for a </tag> for
 // the one it just parsed...
-bool XMLElement::Parse(const string& token,
-                       bool& end_tag)
+bool
+XMLElement::Parse(const string& token,
+                  bool& end_tag)
 {
 	const char* p = token.c_str();
 	assert ( *p == '<' );
@@ -392,9 +407,10 @@ XMLElement::GetAttribute ( const string& attribute,
 // Return Value: an XMLElement allocated via the new operator that contains
 // it's parsed data. Keep calling this function until it returns NULL
 // (no more data)
-XMLElement* XMLParse(XMLFile& f,
-                     const Path& path,
-                     bool* pend_tag = NULL)
+XMLElement*
+XMLParse(XMLFile& f,
+         const Path& path,
+         bool* pend_tag = NULL)
 {
 	string token;
 	if ( !f.get_token(token) )
@@ -424,7 +440,7 @@ XMLElement* XMLParse(XMLFile& f,
 					XMLElement* e2 = XMLParse ( fInc, path2 );
 					if ( !e2 )
 						break;
-					e->subElements.push_back ( e2 );
+					e->AddSubElement ( e2 );
 				}
 			}
 		}
@@ -471,7 +487,7 @@ XMLElement* XMLParse(XMLFile& f,
 				delete e2;
 				break;
 			}
-			e->subElements.push_back ( e2 );
+			e->AddSubElement ( e2 );
 		}
 	}
 	return e;
@@ -483,7 +499,8 @@ Project::~Project()
 		delete modules[i];
 }
 
-void Project::ProcessXML ( const XMLElement& e, const string& path )
+void
+Project::ProcessXML ( const XMLElement& e, const string& path )
 {
 	const XMLAttribute *att;
 	string subpath(path);
@@ -515,7 +532,8 @@ void Project::ProcessXML ( const XMLElement& e, const string& path )
 		ProcessXML ( *e.subElements[i], subpath );
 }
 
-int main ( int argc, char** argv )
+int
+main ( int argc, char** argv )
 {
 	// store the current directory for path calculations
 	working_directory.resize ( _MAX_PATH );
@@ -525,12 +543,15 @@ int main ( int argc, char** argv )
 
 	XMLFile f;
 	Path path;
-	if ( !f.open ( "ReactOS.xml" ) )
+	string xml_file ( "ReactOS.xml" );
+	if ( !f.open ( xml_file ) )
 	{
 		printf ( "couldn't open ReactOS.xml!\n" );
 		return -1;
 	}
 
+	vector<string> xml_dependencies;
+	xml_dependencies.push_back ( xml_file );
 	for ( ;; )
 	{
 		XMLElement* head = XMLParse ( f, path );
