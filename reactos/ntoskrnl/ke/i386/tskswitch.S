@@ -87,7 +87,7 @@ _Ki386ContextSwitch:
 	 * Set the current LDT
 	 */
         xorl	%eax, %eax
-	movl	ETHREAD_THREADS_PROCESS(%ebx), %edi
+	movl	KTHREAD_APCSTATE_PROCESS(%ebx), %edi
 	testw	$0xFFFF, KPROCESS_LDT_DESCRIPTOR0(%edi)
 	jz	.L4
 
@@ -141,7 +141,7 @@ _Ki386ContextSwitch:
 	/*
 	 * Change the address space
 	 */
-	movl	ETHREAD_THREADS_PROCESS(%ebx), %ebx
+	movl	KTHREAD_APCSTATE_PROCESS(%ebx), %ebx
 	movl	KPROCESS_DIRECTORY_TABLE_BASE(%ebx), %eax
 	movl	%eax, %cr3
 

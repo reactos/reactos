@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.139 2004/08/15 16:39:10 chorns Exp $
+/* $Id: process.c,v 1.140 2004/08/31 20:17:18 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -387,7 +387,13 @@ PiDeleteProcess(PVOID ObjectBody)
 
   Context.Process = (PEPROCESS)ObjectBody;
 
-  if (PsGetCurrentProcess() == Context.Process || PsGetCurrentThread()->OldProcess == NULL)
+  if (PsGetCurrentProcess() == Context.Process ||
+      PsGetCurrentThread()->ThreadsProcess == Context.Process)
+    {
+       KEBUGCHECK(0);
+    }
+
+  if (PsGetCurrentThread()->ThreadsProcess == PsGetCurrentProcess())
     {
       Context.IsWorkerQueue = FALSE;
       PiDeleteProcessWorker(&Context);
@@ -525,13 +531,13 @@ PEPROCESS STDCALL
 IoGetCurrentProcess(VOID)
 {
    if (PsGetCurrentThread() == NULL || 
-       PsGetCurrentThread()->ThreadsProcess == NULL)
+       PsGetCurrentThread()->Tcb.ApcState.Process == NULL)
      {
 	return(PsInitialSystemProcess);
      }
    else
      {
-	return(PsGetCurrentThread()->ThreadsProcess);
+	return(PEPROCESS)(PsGetCurrentThread()->Tcb.ApcState.Process);
      }
 }
 

@@ -1,4 +1,4 @@
-/* $Id: send.c,v 1.16 2004/08/15 16:39:06 chorns Exp $
+/* $Id: send.c,v 1.17 2004/08/31 20:17:18 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -245,13 +245,13 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
       handle we can undo this, so everything is normal again. Need to
       re-KeAttach() before returning though */
    CurrentThread = PsGetCurrentThread();
-   if (NULL == CurrentThread->OldProcess)
+   if (&CurrentThread->ThreadsProcess->Pcb == CurrentThread->Tcb.ApcState.Process)
      {
        AttachedProcess = NULL;
      }
    else
      {
-       AttachedProcess = CurrentThread->ThreadsProcess;
+       AttachedProcess = (PEPROCESS)CurrentThread->Tcb.ApcState.Process;
        KeDetachProcess();
      }
 

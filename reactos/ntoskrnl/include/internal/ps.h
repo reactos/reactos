@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.65 2004/08/21 12:34:58 tamlin Exp $
+/* $Id: ps.h,v 1.66 2004/08/31 20:17:17 hbirr Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -62,7 +62,8 @@ typedef struct _KAPC_STATE
    struct _KPROCESS* Process;
    UCHAR KernelApcInProgress;
    UCHAR KernelApcPending;
-   USHORT UserApcPending;
+   UCHAR UserApcPending;
+   UCHAR Reserved;
 } KAPC_STATE, *PKAPC_STATE, *__restrict PRKAPC_STATE;
 
 #include <poppack.h>
@@ -223,10 +224,6 @@ typedef struct _ETHREAD
   BOOLEAN ActiveImpersonationInfo;                  /* 23B/267 */
   ULONG PerformanceCountHigh;                       /* 23C/268 */
 
-  /*
-   * Added by David Welch (welch@cwcom.net)
-   */
-  struct _EPROCESS* OldProcess;                     /* 240/26C */
 
   struct _W32THREAD* Win32Thread;
   

@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.26 2004/07/03 17:40:21 navaraf Exp $
+ * $Id: videoprt.c,v 1.27 2004/08/31 20:17:17 hbirr Exp $
  */
 
 #include "videoprt.h"
@@ -457,7 +457,7 @@ IntAttachToCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess)
    *CallingProcess = PsGetCurrentProcess(); 
    if (*CallingProcess != Csrss) 
    { 
-      if (PsGetCurrentThread()->OldProcess != NULL)
+      if (PsGetCurrentThread()->ThreadsProcess != *CallingProcess)
       { 
          *PrevAttachedProcess = *CallingProcess; 
          KeDetachProcess(); 

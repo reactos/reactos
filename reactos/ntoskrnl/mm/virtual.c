@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.79 2004/07/17 03:03:52 ion Exp $
+/* $Id: virtual.c,v 1.80 2004/08/31 20:17:18 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -376,7 +376,8 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
    NTSTATUS Status;
    PMDL Mdl;
    PVOID SystemAddress;
-   PEPROCESS Process;
+   PEPROCESS Process, CurrentProcess;
+
 
    DPRINT("NtReadVirtualMemory(ProcessHandle %x, BaseAddress %x, "
           "Buffer %x, NumberOfBytesToRead %d)\n",ProcessHandle,BaseAddress,
@@ -393,31 +394,40 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
       return(Status);
    }
 
-   Mdl = MmCreateMdl(NULL,
-                     Buffer,
-                     NumberOfBytesToRead);
-   if(Mdl == NULL) 
+   CurrentProcess = PsGetCurrentProcess();
+
+   if (Process == CurrentProcess)
    {
-      ObDereferenceObject(Process);
-      return(STATUS_NO_MEMORY);
+      memcpy(Buffer, BaseAddress, NumberOfBytesToRead);
    }
-   MmProbeAndLockPages(Mdl,
-                       UserMode,
-                       IoWriteAccess);
-
-   KeAttachProcess(Process);
-
-   SystemAddress = MmGetSystemAddressForMdl(Mdl);
-   memcpy(SystemAddress, BaseAddress, NumberOfBytesToRead);
-
-   KeDetachProcess();
-
-   if (Mdl->MappedSystemVa != NULL)
+   else
    {
-      MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+      Mdl = MmCreateMdl(NULL,
+                        Buffer,
+                        NumberOfBytesToRead);
+      if(Mdl == NULL) 
+      {
+         ObDereferenceObject(Process);
+         return(STATUS_NO_MEMORY);
+      }
+      MmProbeAndLockPages(Mdl,
+                          UserMode,
+                          IoWriteAccess);
+
+      KeAttachProcess(Process);
+
+      SystemAddress = MmGetSystemAddressForMdl(Mdl);
+      memcpy(SystemAddress, BaseAddress, NumberOfBytesToRead);
+
+      KeDetachProcess();
+
+      if (Mdl->MappedSystemVa != NULL)
+      {
+         MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+      }
+      MmUnlockPages(Mdl);
+      ExFreePool(Mdl);
    }
-   MmUnlockPages(Mdl);
-   ExFreePool(Mdl);
 
    ObDereferenceObject(Process);
 
@@ -515,32 +525,39 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
       return(Status);
    }
 
-   Mdl = MmCreateMdl(NULL,
-                     Buffer,
-                     NumberOfBytesToWrite);
-   MmProbeAndLockPages(Mdl,
-                       UserMode,
-                       IoReadAccess);
-   if(Mdl == NULL)
+   if (Process == PsGetCurrentProcess())
    {
-      ObDereferenceObject(Process);
-      return(STATUS_NO_MEMORY);
+      memcpy(BaseAddress, Buffer, NumberOfBytesToWrite);
    }
-   KeAttachProcess(Process);
+   else
+   {
+      Mdl = MmCreateMdl(NULL,
+                        Buffer,
+                        NumberOfBytesToWrite);
+      MmProbeAndLockPages(Mdl,
+                          UserMode,
+                          IoReadAccess);
+      if(Mdl == NULL)
+      {
+         ObDereferenceObject(Process);
+         return(STATUS_NO_MEMORY);
+      }
+      KeAttachProcess(Process);
 
-   SystemAddress = MmGetSystemAddressForMdl(Mdl);
-   memcpy(BaseAddress, SystemAddress, NumberOfBytesToWrite);
+      SystemAddress = MmGetSystemAddressForMdl(Mdl);
+      memcpy(BaseAddress, SystemAddress, NumberOfBytesToWrite);
 
-   KeDetachProcess();
+      KeDetachProcess();
+
+      if (Mdl->MappedSystemVa != NULL)
+      {
+         MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+      }
+      MmUnlockPages(Mdl);
+      ExFreePool(Mdl);
+   }
 
    ObDereferenceObject(Process);
-
-   if (Mdl->MappedSystemVa != NULL)
-   {
-      MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
-   }
-   MmUnlockPages(Mdl);
-   ExFreePool(Mdl);
 
    *NumberOfBytesWritten = NumberOfBytesToWrite;
 

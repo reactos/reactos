@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.73 2004/08/15 16:39:10 chorns Exp $
+/* $Id: kill.c,v 1.74 2004/08/31 20:17:18 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -254,6 +254,7 @@ PiTerminateProcess(PEPROCESS Process,
 		   NTSTATUS ExitStatus)
 {
    KIRQL OldIrql;
+   PEPROCESS CurrentProcess;
 
    DPRINT("PiTerminateProcess(Process %x, ExitStatus %x) PC %d HC %d\n",
 	   Process, ExitStatus, ObGetObjectPointerCount(Process),
@@ -267,9 +268,16 @@ PiTerminateProcess(PEPROCESS Process,
         ObDereferenceObject(Process);
 	return(STATUS_SUCCESS);
      }
-   KeAttachProcess( Process );
+   CurrentProcess = PsGetCurrentProcess();
+   if (Process != CurrentProcess)
+   {
+      KeAttachProcess( Process );
+   }
    ObCloseAllHandles(Process);
-   KeDetachProcess();
+   if (Process != CurrentProcess)
+   {
+      KeDetachProcess();
+   }
    OldIrql = KeAcquireDispatcherDatabaseLock ();
    Process->Pcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&Process->Pcb.DispatcherHeader);

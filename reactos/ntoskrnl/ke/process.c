@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.26 2004/08/27 10:24:04 hbirr Exp $
+/* $Id: process.c,v 1.27 2004/08/31 20:17:18 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -49,11 +49,17 @@ KeAttachProcess (PEPROCESS Process)
    
    CurrentThread = PsGetCurrentThread();
 
-   if (CurrentThread->OldProcess != NULL)
+   if (&CurrentThread->ThreadsProcess->Pcb != CurrentThread->Tcb.ApcState.Process)
      {
-	DbgPrint("Invalid attach (thread is already attached)\n");
+	DPRINT1("Invalid attach (thread is already attached)\n");
 	KEBUGCHECK(INVALID_PROCESS_ATTACH_ATTEMPT);
      }
+   if (&Process->Pcb == CurrentThread->Tcb.ApcState.Process)
+     {
+	DPRINT1("Invalid attach (process is the same)\n");
+	KEBUGCHECK(INVALID_PROCESS_ATTACH_ATTEMPT);
+     }
+
    
    /* The stack and the thread structure of the current process may be 
       located in a page which is not present in the page directory of 
@@ -71,8 +77,7 @@ KeAttachProcess (PEPROCESS Process)
 
    KiSwapApcEnvironment(&CurrentThread->Tcb, &Process->Pcb);
 
-   CurrentThread->OldProcess = PsGetCurrentProcess();
-   CurrentThread->ThreadsProcess = Process;
+   CurrentThread->Tcb.ApcState.Process = &Process->Pcb;
    PageDir = Process->Pcb.DirectoryTableBase.u.LowPart;
    DPRINT("Switching process context to %x\n",PageDir);
    Ke386SetPageTableDirectory(PageDir);
@@ -93,19 +98,16 @@ KeDetachProcess (VOID)
    
    CurrentThread = PsGetCurrentThread();
 
-   if (CurrentThread->OldProcess == NULL)
+   if (&CurrentThread->ThreadsProcess->Pcb == CurrentThread->Tcb.ApcState.Process)
      {
-	DbgPrint("Invalid detach (thread was not attached)\n");
+	DPRINT1("Invalid detach (thread was not attached)\n");
 	KEBUGCHECK(INVALID_PROCESS_DETACH_ATTEMPT);
      }
    
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
 
-   KiSwapApcEnvironment(&CurrentThread->Tcb, &CurrentThread->OldProcess->Pcb);   
-   
-   CurrentThread->ThreadsProcess = CurrentThread->OldProcess;
-   CurrentThread->OldProcess = NULL;
-   PageDir = CurrentThread->ThreadsProcess->Pcb.DirectoryTableBase.u.LowPart;
+   KiSwapApcEnvironment(&CurrentThread->Tcb, CurrentThread->Tcb.SavedApcState.Process);
+   PageDir = CurrentThread->Tcb.ApcState.Process->DirectoryTableBase.u.LowPart;
    Ke386SetPageTableDirectory(PageDir);
 
    KeLowerIrql(oldlvl);
