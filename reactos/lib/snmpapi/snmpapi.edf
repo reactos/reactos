@@ -1,0 +1,43 @@
+; SNMPAPI.DLL - ReactOS Sockets 2 Simple Network Management Protocol API DLL
+
+LIBRARY snmpapi.dll
+
+EXPORTS
+SnmpSvcAddrIsIpx=SnmpSvcAddrIsIpx@8
+SnmpSvcAddrToSocket=SnmpSvcAddrToSocket@8
+SnmpSvcGetEnterpriseOID=SnmpSvcGetEnterpriseOID@8
+SnmpSvcGetUptime=SnmpSvcGetUptime@0
+SnmpSvcInitUptime=SnmpSvcInitUptime@0
+SnmpSvcSetLogLevel=SnmpSvcSetLogLevel@4
+SnmpSvcSetLogType=SnmpSvcSetLogType@4
+SnmpTfxClose=SnmpTfxClose@8
+SnmpTfxOpen=SnmpTfxOpen@8
+SnmpTfxQuery=SnmpTfxQuery@8
+SnmpUtilAnsiToUnicode=SnmpUtilAnsiToUnicode@8
+SnmpUtilAsnAnyCpy=SnmpUtilAsnAnyCpy@8
+SnmpUtilAsnAnyFree=SnmpUtilAsnAnyFree@4
+SnmpUtilDbgPrint=SnmpUtilDbgPrint@0
+SnmpUtilIdsToA=SnmpUtilIdsToA@8
+SnmpUtilMemAlloc=SnmpUtilMemAlloc@4
+SnmpUtilMemFree=SnmpUtilMemFree@4
+SnmpUtilMemReAlloc=SnmpUtilMemReAlloc@8
+SnmpUtilOctetsCmp=SnmpUtilOctetsCmp@8
+SnmpUtilOctetsCpy=SnmpUtilOctetsCpy@8
+SnmpUtilOctetsFree=SnmpUtilOctetsFree@4
+SnmpUtilOctetsNCmp=SnmpUtilOctetsNCmp@12
+SnmpUtilOidAppend=SnmpUtilOidAppend@8
+SnmpUtilOidCmp=SnmpUtilOidCmp@8
+SnmpUtilOidCpy=SnmpUtilOidCpy@8
+SnmpUtilOidFree=SnmpUtilOidFree@4
+SnmpUtilOidNCmp=SnmpUtilOidNCmp@12
+SnmpUtilOidToA=SnmpUtilOidToA@4
+SnmpUtilPrintAsnAny=SnmpUtilPrintAsnAny@4
+SnmpUtilPrintOid=SnmpUtilPrintOid@4
+SnmpUtilUTF8ToUnicode=SnmpUtilUTF8ToUnicode@8
+SnmpUtilUnicodeToAnsi=SnmpUtilUnicodeToAnsi@8
+SnmpUtilUnicodeToUTF8=SnmpUtilUnicodeToUTF8@8
+SnmpUtilVarBindCpy=SnmpUtilVarBindCpy@8
+SnmpUtilVarBindFree=SnmpUtilVarBindFree@4
+SnmpUtilVarBindListCpy=SnmpUtilVarBindListCpy@8
+SnmpUtilVarBindListFree=SnmpUtilVarBindListFree@4
+; EOF
