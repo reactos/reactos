@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.7 1999/10/21 11:10:26 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.8 1999/10/24 17:52:17 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -154,6 +154,7 @@ NtQueryInformationProcess=NtQueryInformationProcess@20
 NtQueryInformationToken=NtQueryInformationToken@20
 ;NtQueryOleDirectoryFile@ <--- ?
 NtQuerySecurityObject=NtQuerySecurityObject@20
+NtQuerySystemTime=NtQuerySystemTime@4
 NtQueryVolumeInformationFile=NtQueryVolumeInformationFile@20
 NtReadFile=NtReadFile@36
 ;NtRequestPort@8
@@ -165,6 +166,7 @@ NtSetInformationFile=NtSetInformationFile@20
 NtSetInformationProcess=NtSetInformationProcess@16
 NtSetInformationThread=NtSetInformationThread@16
 NtSetSecurityObject=NtSetSecurityObject@12
+NtSetSystemTime=NtSetSystemTime@8
 NtUnlockFile=NtUnlockFile@20
 ;NtVdmControl@8 <--- ?
 NtWaitForSingleObject=NtWaitForSingleObject@12
@@ -183,7 +185,11 @@ RtlLargeIntegerAdd
 RtlLargeIntegerGreaterThan
 RtlLargeIntegerShiftRight
 RtlMoveMemory
+RtlSecondsSince1970ToTime
+RtlSecondsSince1980ToTime
 RtlTimeFieldsToTime
+RtlTimeToSecondsSince1970
+RtlTimeToSecondsSince1980
 RtlTimeToTimeFields
 RtlZeroMemory
 ZwAccessCheckAndAuditAlarm=ZwAccessCheckAndAuditAlarm@44
@@ -239,6 +245,7 @@ ZwQuerySection=ZwQuerySection@20
 ZwQuerySecurityObject=ZwQuerySecurityObject@20
 ZwQuerySymbolicLinkObject=ZwQuerySymbolicLinkObject@12
 ZwQuerySystemInformation=ZwQuerySystemInformation@16
+ZwQuerySystemTime=ZwQuerySystemTime@4
 ZwQueryValueKey=ZwQueryValueKey@24
 ZwQueryVolumeInformationFile=ZwQueryVolumeInformationFile@20
 ZwReadFile=ZwReadFile@36
@@ -389,7 +396,7 @@ HalSetBusDataByOffset
 HalSetDisplayParameters
 ;HalSetEnvironmentVariable
 ;HalSetProfileInterval
-;HalSetRealTimeClock
+HalSetRealTimeClock
 ;HalSetTimeIncrement
 ;HalStartNextProcessor
 ;HalStartProfileInterrupt

@@ -1,4 +1,5 @@
-/*
+/* $Id: time.c,v 1.8 1999/10/24 17:51:54 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            kernel/rtl/time.c
@@ -30,6 +31,10 @@
 #define DAYSPERNORMALYEAR  365
 #define DAYSPERLEAPYEAR    366
 #define MONSPERYEAR        12
+
+#define TICKSTO1970         0x019db1ded53e8000
+#define TICKSTO1980         0x01a8e79fe1d58000
+
 
 static const int YearLengths[2] = {DAYSPERNORMALYEAR, DAYSPERLEAPYEAR};
 static const int MonthLengths[2][MONSPERYEAR] =
@@ -189,3 +194,65 @@ BOOLEAN RtlTimeFieldsToTime(PTIME_FIELDS tfTimeFields,
 
   return TRUE;
 }
+
+
+VOID
+RtlSecondsSince1970ToTime (ULONG SecondsSince1970,
+                           PLARGE_INTEGER Time)
+{
+   LONGLONG llTime;
+
+   llTime = (SecondsSince1970 * TICKSPERSEC) + TICKSTO1970;
+
+   *Time = *(LARGE_INTEGER *)&llTime;
+}
+
+
+VOID
+RtlSecondsSince1980ToTime (ULONG SecondsSince1980,
+                           PLARGE_INTEGER Time)
+{
+   LONGLONG llTime;
+
+   llTime = (SecondsSince1980 * TICKSPERSEC) + TICKSTO1980;
+
+   *Time = *(LARGE_INTEGER *)&llTime;
+}
+
+
+BOOLEAN
+RtlTimeToSecondsSince1970 (PLARGE_INTEGER Time,
+                           PULONG SecondsSince1970)
+{
+   LARGE_INTEGER liTime;
+
+   liTime.QuadPart = Time->QuadPart - TICKSTO1970;
+   liTime.QuadPart = liTime.QuadPart / TICKSPERSEC;
+
+   if (liTime.u.HighPart != 0)
+      return FALSE;
+
+   *SecondsSince1970 = liTime.u.LowPart;
+
+   return TRUE;
+}
+
+
+BOOLEAN
+RtlTimeToSecondsSince1980 (PLARGE_INTEGER Time,
+                           PULONG SecondsSince1980)
+{
+   LARGE_INTEGER liTime;
+
+   liTime.QuadPart = Time->QuadPart - TICKSTO1980;
+   liTime.QuadPart = liTime.QuadPart / TICKSPERSEC;
+
+   if (liTime.u.HighPart != 0)
+      return FALSE;
+
+   *SecondsSince1980 = liTime.u.LowPart;
+
+   return TRUE;
+}
+
+/* EOF */

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.19 1999/10/21 11:10:26 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.20 1999/10/24 17:52:17 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -154,6 +154,7 @@ NtQueryInformationProcess@20
 NtQueryInformationToken@20
 ;NtQueryOleDirectoryFile@ <--- ?
 NtQuerySecurityObject@20
+NtQuerySystemTime@4
 NtQueryVolumeInformationFile@20
 NtReadFile@36
 ;NtRequestPort@8
@@ -165,6 +166,7 @@ NtSetInformationFile@20
 NtSetInformationProcess@16
 NtSetInformationThread@16
 NtSetSecurityObject@12
+NtSetSystemTime@8
 NtUnlockFile@20
 ;NtVdmControl@8 <--- ?
 NtWaitForSingleObject@12
@@ -183,7 +185,11 @@ RtlLargeIntegerAdd
 RtlLargeIntegerGreaterThan
 RtlLargeIntegerShiftRight
 RtlMoveMemory
+RtlSecondsSince1970ToTime
+RtlSecondsSince1980ToTime
 RtlTimeFieldsToTime
+RtlTimeToSecondsSince1970
+RtlTimeToSecondsSince1980
 RtlTimeToTimeFields
 RtlZeroMemory
 ZwAccessCheckAndAuditAlarm@44
@@ -239,6 +245,7 @@ ZwQuerySection@20
 ZwQuerySecurityObject@20
 ZwQuerySymbolicLinkObject@12
 ZwQuerySystemInformation@16
+ZwQuerySystemTime@4
 ZwQueryValueKey@24
 ZwQueryVolumeInformationFile@20
 ZwReadFile@36
@@ -389,7 +396,7 @@ HalSetBusDataByOffset
 HalSetDisplayParameters
 ;HalSetEnvironmentVariable
 ;HalSetProfileInterval
-;HalSetRealTimeClock
+HalSetRealTimeClock
 ;HalSetTimeIncrement
 ;HalStartNextProcessor
 ;HalStartProfileInterrupt
