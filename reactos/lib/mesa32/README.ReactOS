@@ -1,0 +1,8 @@
+This is Mesa-6.0.1 (http://www.mesa3d.org/) with an ICD interface.
+
+The ICD functions are in src/drivers/windows/icd/icd.c
+I have created a new Makefile for ReactOS which will build Mesa with the ICD
+interface. I have not adjusted the Visual C++ project/workspace files.
+
+ --blight
+ 

@@ -1,0 +1,179 @@
+Microsoft Developer Studio Workspace File, Format Version 6.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "array_cache"=".\SRC\MESA\array_cache\array_cache.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "gdi"=".\src\mesa\drivers\windows\gdi\gdi.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name array_cache
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name main
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name math
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name swrast_setup
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name swrast
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name tnl
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name glapi
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "glapi"=".\SRC\MESA\glapi\glapi.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "glu"=".\src\glu\sgi\glu.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name gdi
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "glut"=".\src\glut\glx\glut.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name glu
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "main"=".\SRC\MESA\main\main.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "math"=".\SRC\MESA\math\math.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "osmesa"=".\SRC\MESA\DRIVERS\osmesa\osmesa.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name gdi
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "swrast"=".\SRC\MESA\swrast\swrast.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "swrast_setup"=".\SRC\MESA\swrast_setup\swrast_setup.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "tnl"=".\SRC\MESA\tnl\tnl.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+
