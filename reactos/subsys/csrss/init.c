@@ -335,7 +335,7 @@ DisplayString(L"CSR: CsrServerInitialization\n");
                                0,
                                NULL,
                                NULL,
-                               (PTHREAD_START_ROUTINE)ServerApiPortThead,
+                               (PTHREAD_START_ROUTINE)ServerApiPortThread,
                                ApiPortHandle,
                                NULL,
                                NULL);

@@ -38,42 +38,75 @@
 
 #include "api.h"
 
-/* Native process' entry point */
+#define NDEBUG
+#include <debug.h>
 
-VOID STDCALL NtProcessStartup(PPEB Peb)
+#define CSRP_MAX_ARGUMENT_COUNT 512
+
+typedef struct _COMMAND_LINE_ARGUMENT
 {
-   PRTL_USER_PROCESS_PARAMETERS ProcParams;
-   PWSTR ArgBuffer;
-   PWSTR *argv;
-   ULONG argc = 0;
-   int i = 0;
-   int afterlastspace = 0;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   HANDLE CsrssInitEvent;
-   UNICODE_STRING UnicodeString;
-   NTSTATUS Status;
+	ULONG		Count;
+	UNICODE_STRING	Buffer;
+	PWSTR		* Vector;
 
-   ProcParams = RtlNormalizeProcessParams (Peb->ProcessParameters);
+} COMMAND_LINE_ARGUMENT, *PCOMMAND_LINE_ARGUMENT;
 
-   argv = (PWSTR *)RtlAllocateHeap (Peb->ProcessHeap,
-                                    0, 512 * sizeof(PWSTR));
-   ArgBuffer = (PWSTR)RtlAllocateHeap (Peb->ProcessHeap,
-                                       0,
-                                       ProcParams->CommandLine.Length + sizeof(WCHAR));
-   memcpy (ArgBuffer,
-           ProcParams->CommandLine.Buffer,
-           ProcParams->CommandLine.Length + sizeof(WCHAR));
+/**********************************************************************
+ * NAME							PRIVATE
+ * 	CsrpParseCommandLine/3
+ */
+static NTSTATUS STDCALL
+CsrpParseCommandLine (HANDLE                       ProcessHeap,
+		      PRTL_USER_PROCESS_PARAMETERS RtlProcessParameters,
+		      PCOMMAND_LINE_ARGUMENT       Argument)
+{
+   INT i = 0;
+   INT afterlastspace = 0;
 
-   while (ArgBuffer[i])
+   
+   DPRINT("CSR: %s called\n", __FUNCTION__);
+
+   RtlZeroMemory (Argument, sizeof (COMMAND_LINE_ARGUMENT));
+
+   Argument->Vector = (PWSTR *) RtlAllocateHeap (ProcessHeap,
+						 0,
+						 (CSRP_MAX_ARGUMENT_COUNT * sizeof Argument->Vector[0]));
+   if(NULL == Argument->Vector)
+   {
+	   DPRINT("CSR: %s: no memory for Argument->Vector\n", __FUNCTION__);
+	   return STATUS_NO_MEMORY;
+   }
+
+   Argument->Buffer.Length =
+   Argument->Buffer.MaximumLength =
+   	RtlProcessParameters->CommandLine.Length
+	+ sizeof Argument->Buffer.Buffer [0]; /* zero terminated */
+   Argument->Buffer.Buffer =
+	(PWSTR) RtlAllocateHeap (ProcessHeap,
+				 0,
+                                 Argument->Buffer.MaximumLength);
+   if(NULL == Argument->Buffer.Buffer)
+   {
+	   DPRINT("CSR: %s: no memory for Argument->Buffer.Buffer\n", __FUNCTION__);
+	   return STATUS_NO_MEMORY;
+   }
+
+   RtlCopyMemory (Argument->Buffer.Buffer,
+		  RtlProcessParameters->CommandLine.Buffer,
+		  RtlProcessParameters->CommandLine.Length);
+
+   while (Argument->Buffer.Buffer [i])
      {
-	if (ArgBuffer[i] == L' ')
+	if (Argument->Buffer.Buffer[i] == L' ')
 	  {
-	     argc++;
-	     ArgBuffer[i] = L'\0';
-	     argv[argc-1] = &(ArgBuffer[afterlastspace]);
+	     Argument->Count ++;
+	     Argument->Buffer.Buffer [i] = L'\0';
+	     Argument->Vector [Argument->Count - 1] = & (Argument->Buffer.Buffer [afterlastspace]);
 	     i++;
-	     while (ArgBuffer[i] == L' ')
+	     while (Argument->Buffer.Buffer [i] == L' ')
+	     {
 		i++;
+	     }
 	     afterlastspace = i;
 	  }
 	else
@@ -82,56 +115,122 @@ VOID STDCALL NtProcessStartup(PPEB Peb)
 	  }
      }
 
-   if (ArgBuffer[afterlastspace] != L'\0')
+   if (Argument->Buffer.Buffer [afterlastspace] != L'\0')
      {
-	argc++;
-	ArgBuffer[i] = L'\0';
-	argv[argc-1] = &(ArgBuffer[afterlastspace]);
+	Argument->Count ++;
+	Argument->Buffer.Buffer [i] = L'\0';
+	Argument->Vector [Argument->Count - 1] = & (Argument->Buffer.Buffer [afterlastspace]);
      }
-   
-   RtlRosInitUnicodeStringFromLiteral(&UnicodeString,
+
+  return STATUS_SUCCESS; 
+}
+
+/**********************************************************************
+ * NAME							PRIVATE
+ * 	CsrpFreeCommandLine/2
+ */
+		      
+static VOID STDCALL
+CsrpFreeCommandLine (HANDLE                 ProcessHeap,
+		     PCOMMAND_LINE_ARGUMENT Argument)
+{
+	DPRINT("CSR: %s called\n", __FUNCTION__);
+	
+	RtlFreeHeap (ProcessHeap,
+	             0,
+		     Argument->Vector);
+	RtlFreeHeap (ProcessHeap,
+	             0,
+	             Argument->Buffer.Buffer);
+}
+
+
+/**********************************************************************
+ * NAME							PRIVATE
+ * 	CsrpOpenKeInitDoneEvent/0
+ */
+static NTSTATUS STDCALL
+CsrpOpenKeInitDoneEvent (PHANDLE CsrssInitEvent)
+{
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING    EventName;
+
+   DPRINT("CSR: %s called\n", __FUNCTION__);
+
+   RtlInitUnicodeString(& EventName,
 			L"\\CsrssInitDone");
-   InitializeObjectAttributes(&ObjectAttributes,
-			      &UnicodeString,
-			      EVENT_ALL_ACCESS,
-			      0,
-			      NULL);
-   Status = NtOpenEvent(&CsrssInitEvent,
+   InitializeObjectAttributes (& ObjectAttributes,
+				& EventName,
+				EVENT_ALL_ACCESS,
+				0,
+				NULL);
+   return NtOpenEvent (CsrssInitEvent,
 			EVENT_ALL_ACCESS,
-			&ObjectAttributes);
+			& ObjectAttributes);
+}
+
+/* Native process' entry point */
+
+VOID STDCALL NtProcessStartup(PPEB Peb)
+{
+   PRTL_USER_PROCESS_PARAMETERS RtlProcessParameters = NULL;
+   COMMAND_LINE_ARGUMENT        CmdLineArg = {0};
+   HANDLE                       CsrssInitEvent = (HANDLE) 0;
+   NTSTATUS                     Status = STATUS_SUCCESS;
+
+   DPRINT("CSR: %s\n", __FUNCTION__);
+
+   RtlProcessParameters = RtlNormalizeProcessParams (Peb->ProcessParameters);
+
+   /*==================================================================
+    * Parse the command line.
+    *================================================================*/
+   Status = CsrpParseCommandLine (Peb->ProcessHeap,
+				  RtlProcessParameters,
+				  & CmdLineArg);
+   if(STATUS_SUCCESS != Status)
+   {
+	   DbgPrint("CSR: CsrpParseCommandLine failed (Status=0x%08lx)\n",
+		Status);
+   }
+   /*
+    * Open the Ke notification event to notify we are OK after
+    * subsystem server initialization.
+    */
+   Status = CsrpOpenKeInitDoneEvent(& CsrssInitEvent);
    if (!NT_SUCCESS(Status))
      {
-	DbgPrint("CSR: Failed to open csrss notification event\n");
+	DbgPrint("CSR: CsrpOpenKeInitDoneEvent failed (Status=0x%08lx)\n",
+			Status);
      }
-   if (CsrServerInitialization (argc, argv) == TRUE)
+   /*==================================================================
+    *	Initialize the Win32 environment subsystem server.
+    *================================================================*/
+   if (CsrServerInitialization (CmdLineArg.Count, CmdLineArg.Vector) == TRUE)
      {
+	/*=============================================================
+	 * Tell Ke we are up and safe. If we fail to notify Ke, it will
+	 * bugcheck the system with SESSION5_INITIALIZATION_FAILED.
+	 * TODO: choose a better way to check user mode initialization
+	 * is OK.
+	 *===========================================================*/
+	NtSetEvent (CsrssInitEvent, NULL);
 
-	NtSetEvent(CsrssInitEvent,
-		   NULL);
-	
-	RtlFreeHeap (Peb->ProcessHeap,
-	             0, argv);
-	RtlFreeHeap (Peb->ProcessHeap,
-	             0,
-	             ArgBuffer);
-
-	/* terminate the current thread only */
-	NtTerminateThread( NtCurrentThread(), 0 );
+	CsrpFreeCommandLine (Peb->ProcessHeap, & CmdLineArg);	
+	/*
+	 * Terminate the current thread only.
+	 */
+	NtTerminateThread (NtCurrentThread(), 0);
      }
    else
      {
-	DisplayString( L"CSR: Subsystem initialization failed.\n" );
+	DisplayString (L"CSR: CsrServerInitialization failed.\n");
 
-	RtlFreeHeap (Peb->ProcessHeap,
-	             0, argv);
-	RtlFreeHeap (Peb->ProcessHeap,
-	             0,
-	             ArgBuffer);
-
+	CsrpFreeCommandLine (Peb->ProcessHeap, & CmdLineArg);	
 	/*
-	 * Tell SM we failed.
+	 * Tell the SM we failed.
 	 */
-	NtTerminateProcess( NtCurrentProcess(), 0 );
+	NtTerminateProcess (NtCurrentProcess(), 0);
      }
 }
 

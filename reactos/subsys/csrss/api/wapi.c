@@ -2,7 +2,7 @@
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
- * Initialize the CSRSS subsystem server process.
+ * CSRSS port message processing
  *
  * ReactOS Operating System
  *
@@ -147,14 +147,14 @@ ClientConnectionThread(HANDLE ServerPort)
 
 /**********************************************************************
  * NAME
- *	Thread_Api
+ *	ServerApiPortThread/1
  *
  * DESCRIPTION
  * 	Handle connection requests from clients to the port
  * 	"\Windows\ApiPort".
  */
 void STDCALL
-ServerApiPortThead(PVOID PortHandle)
+ServerApiPortThread (PVOID PortHandle)
 {
    NTSTATUS Status;
    LPC_MAX_MESSAGE Request;
@@ -230,6 +230,53 @@ ServerApiPortThead(PVOID PortHandle)
      }
    NtClose(PortHandle);
    NtTerminateThread(NtCurrentThread(), Status);
+}
+
+/**********************************************************************
+ * NAME
+ *	ServerSbApiPortThread/1
+ *
+ * DESCRIPTION
+ * 	Handle connection requests from SM to the port
+ * 	"\Windows\SbApiPort".
+ */
+VOID STDCALL
+ServerSbApiPortThread (PVOID PortHandle)
+{
+	HANDLE          hSbApiPortListen = (HANDLE) PortHandle;
+	HANDLE          hConnectedPort = (HANDLE) 0;
+	LPC_MAX_MESSAGE Request = {{0}};
+	NTSTATUS        Status = STATUS_SUCCESS;
+
+	while (TRUE)
+	{
+		Status = NtListenPort (hSbApiPortListen, & Request.Header);
+		if (!NT_SUCCESS(Status))
+		{
+			DPRINT1("CSR: %s: NtListenPort(SB) failed\n", __FUNCTION__);
+			break;
+		}
+		Status = NtAcceptConnectPort (& hConnectedPort,
+						hSbApiPortListen,
+	   					NULL,
+	   					TRUE,
+	   					NULL,
+	   					NULL);
+		if(!NT_SUCCESS(Status))
+		{
+			DPRINT1("CSR: %s: NtAcceptConnectPort() failed\n", __FUNCTION__);
+			break;
+		}
+		Status = NtCompleteConnectPort (hConnectedPort);
+		if(!NT_SUCCESS(Status))
+		{
+			DPRINT1("CSR: %s: NtCompleteConnectPort() failed\n", __FUNCTION__);
+			break;
+		}
+		/* TODO: create thread for the connected port */
+	}
+	NtClose (hSbApiPortListen);
+	NtTerminateThread (NtCurrentThread(), Status);
 }
 
 /* EOF */

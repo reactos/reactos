@@ -96,7 +96,8 @@ NTSTATUS FASTCALL CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions
 VOID FASTCALL CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
                                 PCSRSS_API_REQUEST Request,
                                 PCSRSS_API_REPLY Reply);
-VOID STDCALL ServerApiPortThead(PVOID PortHandle);
+VOID STDCALL ServerApiPortThread (PVOID PortHandle);
+VOID STDCALL ServerSbApiPortThread (PVOID PortHandle);
 VOID Console_Api( DWORD Ignored );
 
 extern HANDLE CsrssApiHeap;
