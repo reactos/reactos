@@ -27,6 +27,8 @@
 typedef DWORD PTRDIFF;
 #endif
 
+#define GDI_DRIVER_VERSION 0x4000   // NT 4 compatibility
+
 /* FIXME: find definitions for these structs  */
 typedef PVOID  PCOLORADJUSTMENT;
 typedef PVOID  PDD_CALLBACKS;
@@ -48,6 +50,15 @@ typedef PVOID  PVIDEOMEMORY;
 /* FIXME: how big should this constant be?  */
 #define  HS_DDI_MAX  6
 
+/* XLate types */
+#define XO_TRIVIAL      0x00000001
+#define XO_TABLE        0x00000002
+#define XO_TO_MONO      0x00000004
+
+#define XO_SRCPALETTE    1
+#define XO_DESTPALETTE   2
+#define XO_DESTDCPALETTE 3
+
 /*  EngCreateBitmap format types  */
 enum _BMF_TYPES
 {
@@ -66,6 +77,24 @@ enum _BMF_TYPES
 #define  BMF_DONTCACHE   0x00000004
 #define  BMF_USERMEM     0x00000008
 #define  BMF_KMSECTION   0x00000010
+
+#define DC_TRIVIAL      0
+#define DC_RECT         1
+#define DC_COMPLEX      3
+
+#define FC_RECT         1
+#define FC_RECT4        2
+#define FC_COMPLEX      3
+
+#define TC_RECTANGLES   0
+#define TC_PATHOBJ      2
+
+#define OC_BANK_CLIP    1
+
+#define CT_RECTANGLES   0L
+
+#define CD_LEFTWARDS    1L
+#define CD_UPWARDS      2L
 
 /*  Options for CLIPOBJ_cEnumStart BuildOrder field  */
 enum _CD_ORDERS
@@ -167,7 +196,78 @@ enum _GLYPH_MODE
   FO_GLYPHBITS,
   FO_PATHOBJ
 };
- 
+
+// Allowed values for GDIINFO.ulPrimaryOrder.
+
+#define PRIMARY_ORDER_ABC       0
+#define PRIMARY_ORDER_ACB       1
+#define PRIMARY_ORDER_BAC       2
+#define PRIMARY_ORDER_BCA       3
+#define PRIMARY_ORDER_CBA       4
+#define PRIMARY_ORDER_CAB       5
+
+// Allowed values for GDIINFO.ulHTPatternSize.
+
+#define HT_PATSIZE_2x2          0
+#define HT_PATSIZE_2x2_M        1
+#define HT_PATSIZE_4x4          2
+#define HT_PATSIZE_4x4_M        3
+#define HT_PATSIZE_6x6          4
+#define HT_PATSIZE_6x6_M        5
+#define HT_PATSIZE_8x8          6
+#define HT_PATSIZE_8x8_M        7
+#define HT_PATSIZE_10x10        8
+#define HT_PATSIZE_10x10_M      9
+#define HT_PATSIZE_12x12        10
+#define HT_PATSIZE_12x12_M      11
+#define HT_PATSIZE_14x14        12
+#define HT_PATSIZE_14x14_M      13
+#define HT_PATSIZE_16x16        14
+#define HT_PATSIZE_16x16_M      15
+#define HT_PATSIZE_MAX_INDEX    HT_PATSIZE_16x16_M
+#define HT_PATSIZE_DEFAULT      HT_PATSIZE_4x4_M
+
+// Allowed values for GDIINFO.ulHTOutputFormat.
+
+#define HT_FORMAT_1BPP          0
+#define HT_FORMAT_4BPP          2
+#define HT_FORMAT_4BPP_IRGB     3
+#define HT_FORMAT_8BPP          4
+#define HT_FORMAT_16BPP         5
+#define HT_FORMAT_24BPP         6
+#define HT_FORMAT_32BPP         7
+
+// Allowed values for GDIINFO.flHTFlags.
+
+#define HT_FLAG_SQUARE_DEVICE_PEL    0x00000001
+#define HT_FLAG_HAS_BLACK_DYE        0x00000002
+#define HT_FLAG_ADDITIVE_PRIMS       0x00000004
+#define HT_FLAG_OUTPUT_CMY           0x00000100
+
+#define GCAPS_BEZIERS           0x00000001
+#define GCAPS_GEOMETRICWIDE     0x00000002
+#define GCAPS_ALTERNATEFILL     0x00000004
+#define GCAPS_WINDINGFILL       0x00000008
+#define GCAPS_HALFTONE          0x00000010
+#define GCAPS_COLOR_DITHER      0x00000020
+#define GCAPS_HORIZSTRIKE       0x00000040
+#define GCAPS_VERTSTRIKE        0x00000080
+#define GCAPS_OPAQUERECT        0x00000100
+#define GCAPS_VECTORFONT        0x00000200
+#define GCAPS_MONO_DITHER       0x00000400
+#define GCAPS_ASYNCCHANGE       0x00000800
+#define GCAPS_ASYNCMOVE         0x00001000
+#define GCAPS_DONTJOURNAL       0x00002000
+#define GCAPS_DIRECTDRAW        0x00004000
+#define GCAPS_ARBRUSHOPAQUE     0x00008000
+#define GCAPS_PANNING           0x00010000
+#define GCAPS_HIGHRESTEXT       0x00040000
+#define GCAPS_PALMANAGED        0x00080000
+#define GCAPS_DITHERONREALIZE   0x00200000
+#define GCAPS_NO64BITMEMACCESS  0x00400000
+#define GCAPS_FORCEDITHER       0x00800000
+#define GCAPS_GRAY16            0x01000000
+
 /*  EngAssocateSurface hook flags  */
 #define  HOOK_BITBLT             0x00000001
 #define  HOOK_STRETCHBLT         0x00000002
@@ -310,6 +410,7 @@ typedef HANDLE  HSURF;
 typedef HANDLE  DHPDEV;
 typedef HANDLE  DHSURF;
 typedef ULONG  (*PFN)(VOID);
+typedef ULONG IDENT;
 
 typedef struct _DRVFN
 {
@@ -865,7 +966,6 @@ EngAcquireSemaphore
 */
 
 /* FIXME: find correct defines for following symbols  */
-#define  ALLOC_TAG  1
 #define  FL_ZERO_MEMORY  1
 
 PVOID  APIENTRY  EngAllocMem(ULONG  Flags,
@@ -926,6 +1026,15 @@ VOID  APIENTRY  EngDebugPrint(PCHAR  StandardPrefix,
 
 HANDLE STDCALL EngLoadImage(LPWSTR DriverName);
 
+DWORD APIENTRY EngDeviceIoControl(
+   HANDLE  hDevice,
+   DWORD   dwIoControlCode,
+   LPVOID  lpInBuffer,
+   DWORD   nInBufferSize,
+   LPVOID  lpOutBuffer,
+   DWORD   nOutBufferSize,
+   DWORD *lpBytesReturned);
+
 /*
 EngDeleteClip
 EngDeleteDriverObj
@@ -935,7 +1044,6 @@ EngDeletePath
 EngDeleteSemaphore
 EngDeleteSurface
 EngDeleteWnd
-EngDeviceIoControl
 EngEnumForms
 EngEraseSurface
 EngFillPath

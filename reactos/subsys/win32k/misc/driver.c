@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.10 2000/03/10 12:39:53 jfilby Exp $
+/* $Id: driver.c,v 1.11 2000/03/17 21:02:59 jfilby Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -14,6 +14,7 @@
 #include <wchar.h>
 #include <internal/module.h>
 #include <ddk/winddi.h>
+#include <ddk/ntddvid.h>
 
 //#define NDEBUG
 #include <internal/debug.h>
@@ -63,7 +64,6 @@ BOOL  DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
 PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name)
 {
   UNICODE_STRING DriverNameW;
-  NTSTATUS Status;
   PMODULE_OBJECT ModuleObject;
   GRAPHICS_DRIVER *Driver = DriverList;
 
@@ -162,14 +162,27 @@ BOOL  DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
   return TRUE;
 }
 
-HANDLE  DRIVER_FindMPDriver(LPCWSTR  Name)
+typedef VP_STATUS (*PMP_DRIVERENTRY)(PVOID, PVOID);
+
+HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
 {
+  UNICODE_STRING DriverNameW;
+  PMODULE_OBJECT ModuleObject;
+
   PWSTR  lName;
-  HANDLE  DriverHandle;
   NTSTATUS  Status;
   UNICODE_STRING  DeviceName;
+  HANDLE DriverHandle;
   OBJECT_ATTRIBUTES  ObjectAttributes;
-  
+
+  PDRIVER_OBJECT  DriverObject;
+  PMP_DRIVERENTRY PMP_DriverEntry;
+
+  /* Phase 1 */
+  RtlInitUnicodeString (&DriverNameW, L"\\??\\C:\\reactos\\system32\\drivers\\vgamp.sys");
+  ModuleObject = EngLoadImage(&DriverNameW);
+
+  /* Phase 2 */
   if (Name[0] != '\\')
     {
       lName = ExAllocatePool(NonPagedPool, wcslen(Name) * sizeof(WCHAR) + 
@@ -191,36 +204,21 @@ HANDLE  DRIVER_FindMPDriver(LPCWSTR  Name)
       wcscpy(lName, Name);
     }
   
-  RtlInitUnicodeString(&DeviceName, lName);
-  InitializeObjectAttributes(&ObjectAttributes,
-                             &DeviceName,
-                             0,
-                             NULL,
-                             NULL);
-  Status = ZwOpenFile(&DriverHandle,
-                      FILE_ALL_ACCESS, 
-                      &ObjectAttributes, 
-                      NULL, 
-                      0, 
-                      FILE_SYNCHRONOUS_IO_ALERT);
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("Failed to open display device\n");
-      DbgPrint("%08lx\n", Status);
-      if (Name[0] != '\\')
-        {
-          ExFreePool(lName);
-        }
-      
-      return  NULL;
-    }
+  /* Phase 3 */
+  DriverObject = ExAllocatePool(NonPagedPool,sizeof(DRIVER_OBJECT));
+  if (DriverObject == NULL)
+  {
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+  memset(DriverObject, 0, sizeof(DRIVER_OBJECT));
 
-  if (Name[0] != '\\')
-    {
-      ExFreePool(lName);
-    }
+  // We pass the DriverObject to the Miniport driver, which passes it to the VideoPort driver
+  // The VideoPort driver then creates the Device Object
 
-  return  DriverHandle;
+  PMP_DriverEntry = ModuleObject->EntryPoint;
+  PMP_DriverEntry(DriverObject, NULL);
+
+  return  DriverObject;
 }
 
 BOOL  DRIVER_UnregisterDriver(LPCWSTR  Name)
@@ -299,4 +297,3 @@ INT  DRIVER_UnreferenceDriver (LPCWSTR  Name)
   
   return  GenericDriver ? --GenericDriver->ReferenceCount : 0;
 }
-

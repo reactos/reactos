@@ -23,15 +23,14 @@ DWORD APIENTRY EngDeviceIoControl(
    NTSTATUS Status;
    KEVENT Event;
    IO_STATUS_BLOCK Iosb;
-   PDEVICE_OBJECT  theDevice;
+   PDRIVER_OBJECT DriverObject;
 
-   ObReferenceObjectByHandle(hDevice, GENERIC_ALL, NULL, UserMode,
-                            (PVOID *)&theDevice, NULL);
+   DriverObject = hDevice;
 
    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
    Irp = IoBuildDeviceIoControlRequest(dwIoControlCode,
-                                       theDevice,
+                                       DriverObject->DeviceObject,
                                        lpInBuffer,
                                        nInBufferSize,
                                        lpOutBuffer,
@@ -40,7 +39,7 @@ DWORD APIENTRY EngDeviceIoControl(
                                        &Event,
                                        &Iosb);
 
-   Status = IoCallDriver(theDevice, Irp);
+   Status = IoCallDriver(DriverObject->DeviceObject, Irp);
 
    if (Status == STATUS_PENDING)
    {

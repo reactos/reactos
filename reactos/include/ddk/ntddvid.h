@@ -29,11 +29,94 @@
 
 typedef LONG VP_STATUS, *PVP_STATUS;
 
+// Bit definitions for Attribute Flags
+#define VIDEO_MODE_COLOR          0x0001
+#define VIDEO_MODE_GRAPHICS       0x0002
+#define VIDEO_MODE_PALETTE_DRIVEN 0x0004
+
 #define VIDEO_MEMORY_SPACE_MEMORY    0x00
 #define VIDEO_MEMORY_SPACE_IO        0x01
 #define VIDEO_MEMORY_SPACE_USER_MODE 0x02
 #define VIDEO_MEMORY_SPACE_DENSE     0x04
 #define VIDEO_MEMORY_SPACE_P6CACHE   0x08
+
+typedef struct _VIDEO_POINTER_CAPABILITIES {
+   ULONG Flags;
+   ULONG MaxWidth;
+   ULONG MaxHeight;
+   ULONG HWPtrBitmapStart;
+   ULONG HWPtrBitmapEnd;
+} VIDEO_POINTER_CAPABILITIES, *PVIDEO_POINTER_CAPABILITIES;
+
+typedef struct _VIDEO_POINTER_ATTRIBUTES {
+   ULONG Flags;
+   ULONG Width;
+   ULONG Height;
+   ULONG WidthInBytes;
+   ULONG Enable;
+   SHORT Column;
+   SHORT Row;
+   UCHAR Pixels[1];
+} VIDEO_POINTER_ATTRIBUTES, *PVIDEO_POINTER_ATTRIBUTES;
+
+typedef enum _VIDEO_BANK_TYPE {
+   VideoNotBanked = 0,
+   VideoBanked1RW,
+   VideoBanked1R1W,
+   VideoBanked2RW,
+   NumVideoBankTypes
+} VIDEO_BANK_TYPE, *PVIDEO_BANK_TYPE;
+
+typedef struct _VIDEO_BANK_SELECT {
+   ULONG Length;
+   ULONG Size;
+   ULONG BankingFlags;
+   ULONG BankingType;
+   ULONG PlanarHCBankingType;
+   ULONG BitmapWidthInBytes;
+   ULONG BitmapSize;
+   ULONG Granularity;
+   ULONG PlanarHCGranularity;
+   ULONG CodeOffset;
+   ULONG PlanarHCBankCodeOffset;
+   ULONG PlanarHCEnableCodeOffset;
+   ULONG PlanarHCDisableCodeOffset;
+} VIDEO_BANK_SELECT, *PVIDEO_BANK_SELECT;
+
+typedef struct _VIDEO_CLUTDATA {
+    UCHAR Red;
+    UCHAR Green;
+    UCHAR Blue;
+    UCHAR Unused;
+} VIDEO_CLUTDATA, *PVIDEO_CLUTDATA;
+
+typedef struct _VIDEO_NUM_MODES {
+    ULONG NumModes;
+    ULONG ModeInformationLength;
+} VIDEO_NUM_MODES, *PVIDEO_NUM_MODES;
+
+typedef struct _VIDEO_MODE_INFORMATION {
+    ULONG Length;
+    ULONG ModeIndex;
+    ULONG VisScreenWidth;
+    ULONG VisScreenHeight;
+    ULONG ScreenStride;
+    ULONG NumberOfPlanes;
+    ULONG BitsPerPlane;
+    ULONG Frequency;
+    ULONG XMillimeter;
+    ULONG YMillimeter;
+    ULONG NumberRedBits;
+    ULONG NumberGreenBits;
+    ULONG NumberBlueBits;
+    ULONG RedMask;
+    ULONG GreenMask;
+    ULONG BlueMask;
+    ULONG AttributeFlags;
+    ULONG VideoMemoryBitmapWidth;
+    ULONG VideoMemoryBitmapHeight;
+    ULONG DriverSpecificAttributeFlags;
+} VIDEO_MODE_INFORMATION, *PVIDEO_MODE_INFORMATION;
 
 typedef enum _VIDEO_DEVICE_DATA_TYPE 
 {
@@ -187,8 +270,14 @@ typedef struct _VIDEO_X86_BIOS_ARGUMENTS
 
 typedef VOID (*PBANKED_SECTION_ROUTINE)(IN ULONG  ReadBank, IN ULONG  WriteBank, IN PVOID  Context);
 
-/* FIXME: replace with proper typedefs  */
-typedef PVOID PVIDEO_CLUT;
+typedef struct {
+    USHORT   NumEntries;
+    USHORT   FirstEntry;
+    union {
+        VIDEO_CLUTDATA RgbArray;
+        ULONG RgbLong;
+    } LookupTable[1];
+} VIDEO_CLUT, *PVIDEO_CLUT;
 
 typedef struct _VIDEO_MEMORY 
 {
@@ -207,10 +296,6 @@ typedef struct _VIDEO_MODE
 {
   ULONG  RequestedMode;
 } VIDEO_MODE, *PVIDEO_MODE;
-
-/* FIXME: replace with proper typedefs  */
-typedef PVOID PVIDEO_MODE_INFORMATION;
-typedef PVOID PVIDEO_NUM_MODES;
 
 typedef struct _VIDEO_SHARE_MEMORY 
 {

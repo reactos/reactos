@@ -397,13 +397,27 @@ VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock)
 VOID  VGASetColorRegisters(IN PVIDEO_CLUT  ColorLookUpTable,
                            OUT PSTATUS_BLOCK  StatusBlock)
 {
-  UNIMPLEMENTED;
+  int i;
+
+  VideoPortWritePortUchar(0x03c8, ColorLookUpTable->FirstEntry);
+
+  for (i=0; i<ColorLookUpTable->NumEntries; i++)
+  {
+    VideoPortWritePortUchar(0x03c9, ColorLookUpTable->LookupTable[i].RgbArray.Red);
+    VideoPortWritePortUchar(0x03c9, ColorLookUpTable->LookupTable[i].RgbArray.Green);
+    VideoPortWritePortUchar(0x03c9, ColorLookUpTable->LookupTable[i].RgbArray.Blue);
+  }
 }
 
 VOID  VGASetCurrentMode(IN PVIDEO_MODE  RequestedMode,
                         OUT PSTATUS_BLOCK  StatusBlock)
 {
-  UNIMPLEMENTED;
+  if(RequestedMode->RequestedMode == 12)
+  {
+    InitVGAMode();
+  } else {
+    DbgPrint("Unrecognised mode for VGASetCurrentMode\n");
+  }
 }
 
 VOID  VGAShareVideoMemory(IN PVIDEO_SHARE_MEMORY  RequestedMemory,
@@ -424,6 +438,3 @@ VOID  VGAUnshareVideoMemory(IN PVIDEO_MEMORY  MemoryToUnshare,
 {
   UNIMPLEMENTED;
 }
-
-
-

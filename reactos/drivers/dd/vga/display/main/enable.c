@@ -1,16 +1,14 @@
 /*
  * entry.c
  *
- * $Revision: 1.1 $
+ * $Revision: 1.2 $
  * $Author: jfilby $
- * $Date: 2000/03/10 12:45:45 $
+ * $Date: 2000/03/17 21:02:57 $
  *
  */
 
-#include <ddk/ntddk.h>
-#include <ddk/winddi.h>
+#include "gdiinfo.h"
 #include <internal/debug.h>
-#include "vgaddi.h"
 
 #define  DBG_PREFIX  "VGADDI: "
 
@@ -45,7 +43,7 @@ DRVFN FuncList[] =
   {INDEX_DrvDisableSurface, (PFN) VGADDIDisableSurface},
   {INDEX_DrvEnablePDEV, (PFN) VGADDIEnablePDEV},
   {INDEX_DrvEnableSurface, (PFN) VGADDIEnableSurface},
-  {INDEX_DrvGetModes, (PFN) VGADDIGetModes}
+  {INDEX_DrvGetModes, (PFN) VGADDIGetModes},
 
 #if 0
   /*  Optional Display driver functions  */
@@ -85,10 +83,10 @@ DrvEnableDriver(IN ULONG  EngineVersion,
                 IN ULONG  SizeOfDED, 
                 OUT PDRVENABLEDATA  DriveEnableData)
 {
-  DbgPrint("VGADDI: DrvEnableDriver called...\n");
+  EngDebugPrint("VGADDI", "DrvEnableDriver called...\n", 0);
 
   DriveEnableData->pdrvfn = FuncList;
-  DriveEnableData->c = sizeof FuncList / sizeof &FuncList[0];
+  DriveEnableData->c = sizeof(FuncList) / sizeof(DRVFN);
   DriveEnableData->iDriverVersion = DDI_DRIVER_VERSION;
 
   return  TRUE;
@@ -144,9 +142,7 @@ DHPDEV VGADDIEnablePDEV(IN DEVMODEW  *DM,
 {
   PPDEV  PDev;
 
-DbgPrint("Welcome to VGADDIEnablePDEV!!\n");
   PDev = EngAllocMem(FL_ZERO_MEMORY, sizeof(PDEV), ALLOC_TAG);
-DbgPrint("Engallocmem worked?!\n");
   if (PDev == NULL)
     {
       EngDebugPrint(DBG_PREFIX, "EngAllocMem failed for PDEV\n", 0);
@@ -154,9 +150,19 @@ DbgPrint("Engallocmem worked?!\n");
       return  NULL;
     }
   PDev->KMDriver = Driver;
+  PDev->xyCursor.x = 320;
+  PDev->xyCursor.y = 240;
+  PDev->ptlExtent.x = 0;
+  PDev->ptlExtent.y = 0;
+  PDev->cExtent = 0;
+  PDev->flCursor = CURSOR_DOWN;
+  // FIXME: fill out DevCaps
+  // FIXME: full out DevInfo
 
-  /* FIXME: fill out DevCaps  */
-  /* FIXME: full out DevInfo  */
+  devinfoVGA.hpalDefault = EngCreatePalette(PAL_INDEXED, 16,
+                           (PULONG)(VGApalette.PaletteEntry), 0, 0, 0);
+
+  *DI = devinfoVGA;
 
   return  PDev;
 }
@@ -176,30 +182,284 @@ VOID VGADDICompletePDEV(IN DHPDEV  PDev,
 VOID VGADDIAssertMode(IN DHPDEV  DPev, 
                       IN BOOL  Enable)
 {
-  DbgPrint("Yeeha!!\n");
-  EngDebugPrint(DBG_PREFIX, "UNIMPLEMENTED\n", 0);
+  PPDEV ppdev = (PPDEV)DPev;
+  ULONG returnedDataLength;
+
+  if(Enable==TRUE)
+  {
+    // Reenable our graphics mode
+
+/*   if (!InitPointer(ppdev))
+     {
+         // Failed to set pointer
+         return FALSE;
+     } POINTER CODE CURRENTLY UNIMPLEMENTED... */
+
+     if (!InitVGA(ppdev, FALSE))
+     {
+        // Failed to initialize the VGA
+        return FALSE;
+     }
+
+  } else {
+    // Go back to last known mode
+
+    if (EngDeviceIoControl(ppdev->KMDriver,
+                           IOCTL_VIDEO_RESET_DEVICE,
+                           NULL,
+                           0,
+                           NULL,
+                           0,
+                           &returnedDataLength))
+    {
+      // Failed to go back to mode
+      return FALSE;
+    }
+
+  }
 }
 
 VOID VGADDIDisablePDEV(IN DHPDEV PDev)
 {
-  EngDebugPrint(DBG_PREFIX, "UNIMPLEMENTED\n", 0);
+  PPDEV ppdev = (PPDEV)PDev;
+
+  EngDeletePalette(devinfoVGA.hpalDefault);
+
+  if (ppdev->pjPreallocSSBBuffer != NULL)
+  {
+    EngFreeMem(ppdev->pjPreallocSSBBuffer);
+  }
+
+  if (ppdev->pucDIB4ToVGAConvBuffer != NULL)
+  {
+    EngFreeMem(ppdev->pucDIB4ToVGAConvBuffer);
+  }
+
+  EngFreeMem(PDev);
 }
 
 VOID VGADDIDisableSurface(IN DHPDEV PDev)
 {
-  EngDebugPrint(DBG_PREFIX, "UNIMPLEMENTED\n", 0);
+  PPDEV ppdev = (PPDEV)PDev;
+  PDEVSURF pdsurf = ppdev->AssociatedSurf;
+  PSAVED_SCREEN_BITS pSSB, pSSBNext;
+
+  EngFreeMem(pdsurf->BankSelectInfo);
+
+  if (pdsurf->BankInfo != NULL) {
+    EngFreeMem(pdsurf->BankInfo);
+  }
+  if (pdsurf->BankInfo2RW != NULL) {
+    EngFreeMem(pdsurf->BankInfo2RW);
+  }
+  if (pdsurf->BankBufferPlane0 != NULL) {
+    EngFreeMem(pdsurf->BankBufferPlane0);
+  }
+  if (ppdev->PointerAttributes != NULL) {
+    EngFreeMem(ppdev->PointerAttributes);
+  }
+
+  // free any pending saved screen bit blocks
+  pSSB = pdsurf->ssbList;
+  while (pSSB != (PSAVED_SCREEN_BITS) NULL) {
+
+    // Point to the next saved screen bits block
+    pSSBNext = (PSAVED_SCREEN_BITS) pSSB->pvNextSSB;
+
+    // Free the current block
+    EngFreeMem(pSSB);
+    pSSB = pSSBNext;
+  }
+
+  EngDeleteSurface((HSURF) ppdev->SurfHandle);
+  EngFreeMem(pdsurf); // free the surface
+}
+
+VOID InitSavedBits(PPDEV ppdev)
+{
+  if (!(ppdev->fl & DRIVER_OFFSCREEN_REFRESHED))
+  {
+    return;
+  }
+
+  // set up rect to right of visible screen
+  ppdev->SavedBitsRight.left   = ppdev->sizeSurf.cx;
+  ppdev->SavedBitsRight.top    = 0;
+  ppdev->SavedBitsRight.right  = ppdev->sizeMem.cx-PLANAR_PELS_PER_CPU_ADDRESS;
+  ppdev->SavedBitsRight.bottom = ppdev->sizeSurf.cy;
+
+  if ((ppdev->SavedBitsRight.right <= ppdev->SavedBitsRight.left) ||
+      (ppdev->SavedBitsRight.bottom <= ppdev->SavedBitsRight.top))
+  {
+    ppdev->SavedBitsRight.left   = 0;
+    ppdev->SavedBitsRight.top    = 0;
+    ppdev->SavedBitsRight.right  = 0;
+    ppdev->SavedBitsRight.bottom = 0;
+  }
+
+  // set up rect below visible screen
+  ppdev->SavedBitsBottom.left   = 0;
+  ppdev->SavedBitsBottom.top    = ppdev->sizeSurf.cy;
+  ppdev->SavedBitsBottom.right  = ppdev->sizeMem.cx-PLANAR_PELS_PER_CPU_ADDRESS;
+  ppdev->SavedBitsBottom.bottom = ppdev->sizeMem.cy - ppdev->NumScansUsedByPointer;
+
+  if ((ppdev->SavedBitsBottom.right <= ppdev->SavedBitsBottom.left) ||
+      (ppdev->SavedBitsBottom.bottom <= ppdev->SavedBitsBottom.top))
+  {
+    ppdev->SavedBitsBottom.left   = 0;
+    ppdev->SavedBitsBottom.top    = 0;
+    ppdev->SavedBitsBottom.right  = 0;
+    ppdev->SavedBitsBottom.bottom = 0;
+  }
+
+  ppdev->BitsSaved = FALSE;
+
+  return;
 }
 
 HSURF VGADDIEnableSurface(IN DHPDEV  PDev)
 {
-  EngDebugPrint(DBG_PREFIX, "UNIMPLEMENTED\n", 0);
+  PPDEV ppdev = (PPDEV)PDev;
+  PDEVSURF pdsurf;
+  DHSURF dhsurf;
+  HSURF hsurf;
+
+  // Initialize the VGA
+  if (!InitVGA(ppdev, TRUE))
+  {
+    goto error_done;
+  }
+
+  dhsurf = (DHSURF)EngAllocMem(0, sizeof(DEVSURF), ALLOC_TAG);
+  if (dhsurf == (DHSURF) 0)
+  {
+    goto error_done;
+  }
+
+  pdsurf = (PDEVSURF) dhsurf;
+  pdsurf->ident         = DEVSURF_IDENT;
+  pdsurf->flSurf        = 0;
+  pdsurf->Format       = BMF_PHYSDEVICE;
+  pdsurf->jReserved1    = 0;
+  pdsurf->jReserved2    = 0;
+  pdsurf->ppdev         = ppdev;
+  pdsurf->sizeSurf.cx   = ppdev->sizeSurf.cx;
+  pdsurf->sizeSurf.cy   = ppdev->sizeSurf.cy;
+  pdsurf->NextPlane    = 0;
+  pdsurf->Scan0       = ppdev->fbScreen;
+  pdsurf->BitmapStart = ppdev->fbScreen;
+  pdsurf->StartBmp      = ppdev->fbScreen;
+/*  pdsurf->Conv          = &ConvertBuffer[0]; */
+
+/* if (!bInitPointer(ppdev)) {
+      DISPDBG((0, "DrvEnablePDEV failed bInitPointer\n"));
+      goto error_clean;
+   } POINTER CODE UNIMPLEMENTED */
+
+/* if (!SetUpBanking(pdsurf, ppdev)) {
+      DISPDBG((0, "DrvEnablePDEV failed SetUpBanking\n"));
+      goto error_clean;
+   } BANKING CODE UNIMPLEMENTED */
+
+  if ((hsurf = EngCreateDeviceSurface(dhsurf, ppdev->sizeSurf, BMF_4BPP)) ==
+      (HSURF)0)
+  {
+    // Call to EngCreateDeviceSurface failed
+    EngDebugPrint("VGADDI:", "EngCreateDeviceSurface call failed\n", 0);
+    goto error_clean;
+  }
+
+  InitSavedBits(ppdev);
+
+  if (EngAssociateSurface(hsurf, ppdev->GDIDevHandle, HOOK_BITBLT | HOOK_PAINT | HOOK_LINETO))
+  {
+    EngDebugPrint("VGADDI:", "Successfully associated surface\n", 0);
+    ppdev->SurfHandle = hsurf;
+    ppdev->AssociatedSurf = pdsurf;
+
+    // Set up an empty saved screen block list
+    pdsurf->ssbList = NULL;
+
+    return(hsurf);
+  }
+
+  EngDeleteSurface(hsurf);
+
+error_clean:
+   EngFreeMem(dhsurf);
+
+error_done:
+   return((HSURF)0);
 }
 
 ULONG VGADDIGetModes(IN HANDLE Driver,
                      IN ULONG DataSize,
                      OUT PDEVMODEW DM)
 {
-  EngDebugPrint(DBG_PREFIX, "UNIMPLEMENTED\n", 0);
+  DWORD NumModes;
+  DWORD ModeSize;
+  DWORD OutputSize;
+  DWORD OutputModes = DataSize / (sizeof(DEVMODEW) + DRIVER_EXTRA_SIZE);
+  PVIDEO_MODE_INFORMATION VideoModeInformation, VideoTemp;
+
+  NumModes = getAvailableModes(Driver,
+                               (PVIDEO_MODE_INFORMATION *) &VideoModeInformation,
+                               &ModeSize);
+
+  if (NumModes == 0)
+  {
+    return 0;
+  }
+
+  if (DM == NULL)
+  {
+    OutputSize = NumModes * (sizeof(DEVMODEW) + DRIVER_EXTRA_SIZE);
+  } else {
+
+    OutputSize=0;
+    VideoTemp = VideoModeInformation;
+
+    do
+    {
+      if (VideoTemp->Length != 0)
+      {
+        if (OutputModes == 0)
+        {
+          break;
+        }
+
+        memset(DM, 0, sizeof(DEVMODEW));
+        memcpy(DM->dmDeviceName, DLL_NAME, sizeof(DLL_NAME));
+
+        DM->dmSpecVersion      = DM_SPECVERSION;
+        DM->dmDriverVersion    = DM_SPECVERSION;
+        DM->dmSize             = sizeof(DEVMODEW);
+        DM->dmDriverExtra      = DRIVER_EXTRA_SIZE;
+        DM->dmBitsPerPel       = VideoTemp->NumberOfPlanes *
+                                 VideoTemp->BitsPerPlane;
+        DM->dmPelsWidth        = VideoTemp->VisScreenWidth;
+        DM->dmPelsHeight       = VideoTemp->VisScreenHeight;
+        DM->dmDisplayFrequency = VideoTemp->Frequency;
+        DM->dmDisplayFlags     = 0;
+
+        DM->dmFields           = DM_BITSPERPEL       |
+                                 DM_PELSWIDTH        |
+                                 DM_PELSHEIGHT       |
+                                 DM_DISPLAYFREQUENCY |
+                                 DM_DISPLAYFLAGS     ;
+
+        // next DEVMODE entry
+        OutputModes--;
+
+        DM = (PDEVMODEW) ( ((ULONG)DM) + sizeof(DEVMODEW) + DRIVER_EXTRA_SIZE);
+
+        OutputSize += (sizeof(DEVMODEW) + DRIVER_EXTRA_SIZE);
+      }
+
+      VideoTemp = (PVIDEO_MODE_INFORMATION)(((PUCHAR)VideoTemp) + ModeSize);
+
+    } while (--NumModes);
+  }
 }
 
 /* EOF */

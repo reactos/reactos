@@ -1,4 +1,4 @@
-/* $Id: vidport.c,v 1.11 2000/03/01 03:25:11 ekohl Exp $
+/* $Id: vidport.c,v 1.12 2000/03/17 21:02:58 jfilby Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -204,6 +204,8 @@ VideoPortInitialize(IN PVOID  Context1,
           return Status;
         }
 
+      MPDriverObject->DeviceObject = MPDeviceObject;
+
       /* initialize the miniport drivers dispatch table */
       MPDriverObject->MajorFunction[IRP_MJ_CREATE] = VidDispatchOpenClose;
       MPDriverObject->MajorFunction[IRP_MJ_CLOSE] = VidDispatchOpenClose;
@@ -221,6 +223,7 @@ VideoPortInitialize(IN PVOID  Context1,
       ExtensionData->DeviceObject = MPDeviceObject;
       
       /*  Set the buffering strategy here...  */
+      /*  If you change this, remember to change VidDispatchDeviceControl too */
       MPDeviceObject->Flags |= DO_BUFFERED_IO;
 
       /*  Call HwFindAdapter entry point  */
@@ -754,7 +757,31 @@ static  NTSTATUS
 VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, 
                          IN PIRP Irp) 
 {
-  UNIMPLEMENTED;
+  PVIDEO_REQUEST_PACKET vrp;
+
+  DbgPrint("IO Control code: %u\n", Irp->Stack[0].Parameters.DeviceIoControl.IoControlCode);
+
+  // Translate the IRP to a VRP
+  vrp = ExAllocatePool(PagedPool, sizeof(VIDEO_REQUEST_PACKET));
+  vrp->StatusBlock = ExAllocatePool(PagedPool, sizeof(STATUS_BLOCK));
+  vrp->IoControlCode      = Irp->Stack[0].Parameters.DeviceIoControl.IoControlCode;
+
+  // We're assuming METHOD_BUFFERED
+  vrp->InputBuffer        = Irp->AssociatedIrp.SystemBuffer;
+  vrp->InputBufferLength  = Irp->Stack[0].Parameters.DeviceIoControl.InputBufferLength;
+  vrp->OutputBuffer       = Irp->UserBuffer;
+  vrp->OutputBufferLength = Irp->Stack[0].Parameters.DeviceIoControl.OutputBufferLength;
+
+  // Call the Miniport Driver with the VRP
+  DeviceObject->DriverObject->DriverStartIo(DeviceObject->DeviceExtension, vrp);
+
+  // Translate the VRP back into the IRP for OutputBuffer
+  Irp->UserBuffer                                             = vrp->OutputBuffer;
+  Irp->Stack[0].Parameters.DeviceIoControl.OutputBufferLength = vrp->OutputBufferLength;
+
+  // Free the VRP
+  ExFreePool(vrp->StatusBlock);
+  ExFreePool(vrp);
+
+  return STATUS_SUCCESS;
 }
-
-

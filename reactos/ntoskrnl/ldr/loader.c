@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.48 2000/02/27 18:01:44 ekohl Exp $
+/* $Id: loader.c,v 1.49 2000/03/17 21:02:56 jfilby Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -206,7 +206,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
         /*
          * VGA Miniport driver
          */
-        LdrLoadAutoConfigDriver( L"vgamp.sys" );
+//        LdrLoadAutoConfigDriver( L"vgamp.sys" ); moving to win32k
 }
 
 

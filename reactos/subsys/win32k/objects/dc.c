@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.12 2000/03/08 21:23:14 jfilby Exp $
+/* $Id: dc.c,v 1.13 2000/03/17 21:02:59 jfilby Exp $
  *
  * DC.C - Device context functions
  * 
@@ -166,7 +166,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   PDC  NewDC;
   HDC  hDC = NULL;
   DRVENABLEDATA  DED;
-  
+
   /*  Check for existing DC object  */
   if ((NewDC = DC_FindOpenDC(Driver)) != NULL)
     {
@@ -186,7 +186,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
       DbgPrint("FindMPDriver failed\n");
       goto Failure;
     }
-  
+
   /*  Get the DDI driver's entry point  */
   /*  FIXME: Retrieve DDI driver name from registry */
   if ((GDEnableDriver = DRIVER_FindDDIDriver(L"\\??\\C:\\reactos\\system32\\drivers\\vgaddi.dll")) == NULL)
@@ -194,9 +194,10 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
       DbgPrint("FindDDIDriver failed\n");
       goto Failure;
     }
-  
+
   /*  Call DDI driver's EnableDriver function  */
   RtlZeroMemory(&DED, sizeof(DED));
+
   if (!GDEnableDriver(DDI_DRIVER_VERSION, sizeof(DED), &DED))
     {
       DbgPrint("DrvEnableDriver failed\n");
@@ -209,7 +210,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
       DbgPrint("BuildDDIFunctions failed\n");
       goto Failure;
     }
-  
+
   /*  Allocate a phyical device handle from the driver  */
   if (Device != NULL)
     {
@@ -226,6 +227,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   NewDC->DMW.dmPelsHeight = 480;
   NewDC->DMW.dmDisplayFlags = 0;
   NewDC->DMW.dmDisplayFrequency = 0;
+
   NewDC->PDev = NewDC->DriverFunctions.EnablePDev(&NewDC->DMW,
                                                   L"",
                                                   HS_DDI_MAX,
@@ -242,18 +244,18 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
       DbgPrint("DrvEnablePDEV failed\n");
       goto Failure;
     }
-  
+
   /*  Complete initialization of the physical device  */
   NewDC->DriverFunctions.CompletePDev(NewDC->PDev, NewDC);
 
   DRIVER_ReferenceDriver (Driver);
-  
+
   /*  Enable the drawing surface  */
   NewDC->Surface = NewDC->DriverFunctions.EnableSurface(NewDC->PDev);
 
   /*  Initialize the DC state  */
   DC_InitDC(NewDC);
-  
+
   return  DC_PtrToHandle(NewDC);
 
 Failure:

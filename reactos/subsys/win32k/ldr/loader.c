@@ -1,6 +1,6 @@
 #include <ddk/winddi.h>
 
-HANDLE __cdecl LdrLoadModule (LPWSTR);
+// HANDLE __cdecl LdrLoadModule (LPWSTR);
 
 HANDLE
 STDCALL

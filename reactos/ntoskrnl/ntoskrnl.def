@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.57 2000/03/11 00:51:36 ea Exp $
+; $Id: ntoskrnl.def,v 1.58 2000/03/17 21:02:56 jfilby Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -167,6 +167,7 @@ FsRtlUninitializeOplock@4
 IoAllocateIrp@8
 IoAllocateController
 IoAttachDeviceToDeviceStack
+IoBuildDeviceIoControlRequest
 IoBuildSynchronousFsdRequest
 IoCallDriver@8
 IoCompleteRequest@8
@@ -282,6 +283,7 @@ NtUnlockFile@20
 ;NtVdmControl@8 <--- ?
 NtWaitForSingleObject@12
 NtWriteFile@36
+ObReferenceObjectByHandle
 PoQueryPowerSequence@0
 PoRequestPowerChange@12
 PoSetDeviceIdleDetection@8
