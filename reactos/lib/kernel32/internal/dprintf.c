@@ -3,34 +3,36 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+ULONG DbgService( ULONG Service, PVOID Context1, PVOID Context2 );
+
 VOID STDCALL OutputDebugStringA(LPCSTR lpOutputString)
 {
-   WCHAR DebugStringW[161];
-   int i,j;
-   i = 0;
-   j = 0;
-   while ( lpOutputString[i] != 0 )
-     {
-	while ( j < 160 && lpOutputString[i] != 0 )
-	  {
-	     DebugStringW[j] = (WCHAR)lpOutputString[i];		
-	     i++;
-	     j++;
-	  }
-	DebugStringW[j] = 0;
-	OutputDebugStringW(DebugStringW);
-	j = 0;
-     }   
-   return;
+  ANSI_STRING AnsiString;
+  AnsiString.Buffer = lpOutputString;
+  AnsiString.Length = AnsiString.MaximumLength = lstrlenA( lpOutputString );
+  DbgService( 1, &AnsiString, NULL );
 }
 
 VOID STDCALL OutputDebugStringW(LPCWSTR lpOutputString)
 {
    UNICODE_STRING UnicodeOutput;
+   ANSI_STRING AnsiString;
+   char buff[512];
 
    UnicodeOutput.Buffer = (WCHAR *)lpOutputString;
    UnicodeOutput.Length = lstrlenW(lpOutputString)*sizeof(WCHAR);
    UnicodeOutput.MaximumLength = UnicodeOutput.Length;
-	
-   NtDisplayString(&UnicodeOutput);
+   AnsiString.Buffer = buff;
+   AnsiString.MaximumLength = 512;
+   AnsiString.Length = 0;
+   if( UnicodeOutput.Length > 512 )
+     UnicodeOutput.Length = 512;
+   if( NT_SUCCESS( RtlUnicodeStringToAnsiString( &AnsiString, &UnicodeOutput, FALSE ) ) )
+     DbgService( 1, &AnsiString, NULL );
 }
+
+
+
+
+
+

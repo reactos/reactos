@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.36 2000/01/10 20:33:50 ekohl Exp $
+; $Id: ntdll.def,v 1.37 2000/01/23 08:16:20 phreak Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -7,6 +7,7 @@ LIBRARY ntdll.dll
 EXPORTS
 DbgBreakPoint
 DbgPrint
+DbgService
 DbgUserBreakPoint
 NlsAnsiCodePage
 NlsMbCodePageTag

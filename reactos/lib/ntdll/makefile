@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.35 2000/01/14 02:22:17 ekohl Exp $
+# $Id: makefile,v 1.36 2000/01/23 08:16:20 phreak Exp $
 #
 # ReactOS Operating System
 #
@@ -6,6 +6,7 @@ TARGET=ntdll
 
 BASE_CFLAGS = -I../../include -D__NTDLL__
 
+include ../../rules.mak
 IMAGE_BASE = 0x77f60000
 
 ifneq ($(HOST),mingw32-windows)
@@ -130,5 +131,4 @@ else
 endif
 
 #WARNINGS_ARE_ERRORS = yes
-include ../../rules.mak
 
