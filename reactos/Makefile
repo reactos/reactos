@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.269 2004/12/11 17:53:11 blight Exp $
+# $Id: Makefile,v 1.270 2004/12/13 02:20:08 blight Exp $
 #
 # Global makefile
 #
@@ -6,16 +6,6 @@
 PATH_TO_TOP = .
 
 include $(PATH_TO_TOP)/rules.mak
-
-ifeq ($(VERBOSE),no)
-  HALFVERBOSEECHO = @:
-else
-ifeq ($(VERBOSE),yes)
-  HALFVERBOSEECHO = @:
-else
-  HALFVERBOSEECHO = @echo
-endif
-endif
 
 #
 # Define to build ReactOS external targets

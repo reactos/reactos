@@ -1,21 +1,38 @@
 # Default to half-verbose mode
 ifeq ($(VERBOSE),no)
   Q = @
+  HALFVERBOSEECHO = @:
+  # Do not print "Entering directory ..."
+  export MAKEFLAGS += --no-print-directory
+  # Be silent
+  export MAKEFLAGS += --silent
 else
 ifeq ($(VERBOSE),yes)
   Q =
+  HALFVERBOSEECHO = @:
 else
   Q = @
+  # the following is a hack to get the target name for wine dlls
+  # it's disabled because it produces warnings about overriden rules for author.c
+  #ifeq ($(TARGET_TYPE),winedll)
+  #  export TOOLS_PATH = $(PATH_TO_TOP)/tools
+  #  -include Makefile.ros
+  #endif
+  ifeq ($(TARGET_NAME),)
+    HALFVERBOSEECHO = @echo
+  else
+    HALFVERBOSEECHO = @echo $(TARGET_NAME):
+  endif
+  # Do not print "Entering directory ..."
+  export MAKEFLAGS += --no-print-directory
+  # Be silent
+  export MAKEFLAGS += --silent
 endif
 endif
 
 export MAKE := @$(MAKE)
 
 ifeq ($(VERBOSE),no)
-# Do not print "Entering directory ..."
-export MAKEFLAGS += --no-print-directory
-# Be silent
-export MAKEFLAGS += --silent
 endif
 
 # Windows is default host environment
@@ -24,8 +41,14 @@ export HOST = mingw32-windows
 endif
 
 # Default to building map files which includes source and asm code
-ifeq ($(FULL_MAP),)
-export FULL_MAP = yes
+# Other options are: yes
+ifeq ($(BUILD_MAP),)
+export BUILD_MAP = full
+endif
+
+# Default to dumping .sym files out of .nostrip files
+ifeq ($(BUILD_SYM),)
+export BUILD_SYM = yes
 endif
 
 # Default to minimal dependencies, making components not

@@ -31,16 +31,6 @@ else
 DEPENDS_PATH := $(PATH_TO_TOP)/tools
 endif
 
-ifeq ($(VERBOSE),no)
-  HALFVERBOSEECHO = @:
-else
-ifeq ($(VERBOSE),yes)
-  HALFVERBOSEECHO = @:
-else
-  HALFVERBOSEECHO = @echo
-endif
-endif
-
 .%.d: %.c $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
 	$(HALFVERBOSEECHO) [DEPENDS] $@
 	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@

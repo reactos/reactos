@@ -1,10 +1,12 @@
-# $Id: Makefile,v 1.3 2004/12/04 21:40:55 gvg Exp $
+# $Id: Makefile,v 1.4 2004/12/13 02:20:09 blight Exp $
 
 PATH_TO_TOP = ../../..
 
 VPATH = ../generic
 
 default: all
+
+TARGET_NAME = halup
 
 #
 # Build configuration
@@ -28,8 +30,6 @@ TARGET_CFLAGS = -I../include -I$(PATH_TO_TOP)/ntoskrnl/include -Wall -Werror -DU
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS
-
-TARGET_NAME = halup
 
 ifeq ($(MP), 1)
 TARGET_INSTALL = no

@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.100 2004/12/11 17:53:12 blight Exp $
+# $Id: helper.mk,v 1.101 2004/12/13 02:20:09 blight Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -705,16 +705,6 @@ ifeq ($(MK_INSTALL_FULLNAME),)
   MK_INSTALL_FULLNAME := $(MK_FULLNAME)
 endif
 
-ifeq ($(VERBOSE),no)
-  HALFVERBOSEECHO = @:
-else
-ifeq ($(VERBOSE),yes)
-  HALFVERBOSEECHO = @:
-else
-  HALFVERBOSEECHO = @echo
-endif
-endif
-
 ifeq ($(MK_IMPLIBONLY),yes)
 
 TARGET_CLEAN += $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
@@ -786,14 +776,18 @@ endif
 	  	-o $(MK_NOSTRIPNAME) \
 	  	$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
+ifeq ($(BUILD_SYM),yes)
 	$(HALFVERBOSEECHO) [RSYM]    $(MK_BASENAME).sym
 	- $(RSYM) $(MK_NOSTRIPNAME) $(MK_BASENAME).sym
-ifeq ($(FULL_MAP),yes)
+endif
+ifeq ($(BUILD_MAP),full)
 	$(HALFVERBOSEECHO) [OBJDUMP] $(MK_BASENAME).map
 	$(OBJDUMP) -d -S $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
 else
+ifeq ($(BUILD_MAP),yes)
 	$(HALFVERBOSEECHO) [NM]      $(MK_BASENAME).map
 	$(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
+endif
 endif
 
 $(MK_FULLNAME): $(MK_NOSTRIPNAME) $(MK_EXTRADEP)
@@ -877,14 +871,18 @@ $(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS)
 		-o $(MK_NOSTRIPNAME) \
 	  	$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
+ifeq ($(BUILD_SYM),yes)
 	$(HALFVERBOSEECHO) [RSYM]    $(MK_BASENAME).sym
 	$(RSYM) $(MK_NOSTRIPNAME) $(MK_BASENAME).sym
-ifeq ($(FULL_MAP),yes)
+endif
+ifeq ($(BUILD_MAP),full)
 	$(HALFVERBOSEECHO) [OBJDUMP] $(MK_BASENAME).map
 	$(OBJDUMP) -d -S $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
 else
+ifeq ($(BUILD_MAP),yes)
 	$(HALFVERBOSEECHO) [NM]      $(MK_BASENAME).map
 	$(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
+endif
 endif
 
 $(MK_FULLNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS) $(MK_NOSTRIPNAME)
