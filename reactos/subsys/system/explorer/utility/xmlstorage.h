@@ -1376,10 +1376,26 @@ struct XMLDoc : public XMLNode
 		tifstream in(path);
 		XMLReader reader(this, in);
 
-		return read(reader, path);
+		return read(reader, String(path));
 	}
 
-	bool read(XMLReaderBase& reader, const char* display_path="")
+	bool read(XMLReaderBase& reader)
+	{
+		XML_Status status = reader.read();
+
+		if (status == XML_STATUS_ERROR) {
+			std::ostringstream out;
+
+			out << "input stream" << reader.get_position() << " " << reader.get_error_string();
+
+			_last_error = reader.get_error_code();
+			_last_error_msg = out.str();
+		}
+
+		return status != XML_STATUS_ERROR;
+	}
+
+	bool read(XMLReaderBase& reader, const string& display_path)
 	{
 		XML_Status status = reader.read();
 
