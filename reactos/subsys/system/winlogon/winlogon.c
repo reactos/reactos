@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.18 2003/03/25 19:26:33 ekohl Exp $
+/* $Id: winlogon.c,v 1.19 2003/08/28 13:38:24 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -64,8 +64,10 @@ static BOOLEAN StartServices(VOID)
    StartupInfo.dwFlags = 0;
    StartupInfo.cbReserved2 = 0;
    StartupInfo.lpReserved2 = 0;
-   
+
+#if 0   
    PrintString("WL: Creating new process - \"services.exe\".\n");
+#endif
 
    Result = CreateProcess(CommandLine,
                           NULL,
@@ -109,7 +111,7 @@ static BOOLEAN StartServices(VOID)
    WaitForSingleObject(ServicesInitEvent, INFINITE);
    //DbgPrint("WL: Closing event object \"SvcctrlStartEvent_A3725DX\"\n");
    CloseHandle(ServicesInitEvent);
-   DbgPrint("WL: StartServices() Done.\n");
+   //DbgPrint("WL: StartServices() Done.\n");
       
    return TRUE;
 }

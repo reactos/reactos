@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.104 2003/08/25 23:24:02 rcampbell Exp $
+/* $Id: window.c,v 1.105 2003/08/28 13:38:24 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1167,7 +1167,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Class = ClassObject;
   WindowObject->ExStyle = dwExStyle;
   WindowObject->Style = dwStyle & ~WS_VISIBLE;
-  DbgPrint("1: Style is now %d\n", WindowObject->Style);
+  DPRINT("1: Style is now %d\n", WindowObject->Style);
   
   SystemMenu = IntGetSystemMenu(WindowObject, TRUE, TRUE);
   
@@ -1221,12 +1221,12 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   if (!(dwStyle & WS_CHILD))
     {
       WindowObject->Style |= WS_CLIPSIBLINGS;
-      DbgPrint("3: Style is now %d\n", WindowObject->Style);
+      DPRINT("3: Style is now %d\n", WindowObject->Style);
       if (!(dwStyle & WS_POPUP))
 	{
 	  WindowObject->Style |= WS_CAPTION;
       WindowObject->Flags |= WINDOWOBJECT_NEED_SIZE;
-      DbgPrint("4: Style is now %d\n", WindowObject->Style);
+      DPRINT("4: Style is now %d\n", WindowObject->Style);
 	  /* FIXME: Note the window needs a size. */ 
 	}
     }
@@ -1293,7 +1293,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     // AG: For some reason these don't get set already. This might need moving
     // elsewhere... What is actually done with WindowObject anyway, to retain
     // its data?
-  DbgPrint("[win32k.window] NtUserCreateWindowEx style %d, exstyle %d, parent %d\n", Cs.style, Cs.dwExStyle, Cs.hwndParent);
+  DPRINT("[win32k.window] NtUserCreateWindowEx style %d, exstyle %d, parent %d\n", Cs.style, Cs.dwExStyle, Cs.hwndParent);
 //  NtUserSetWindowLong(Handle, GWL_STYLE, WindowObject->Style, TRUE);
 //  NtUserSetWindowLong(Handle, GWL_EXSTYLE, WindowObject->ExStyle, TRUE);
   // Any more?
@@ -1418,10 +1418,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       WinPosShowWindow(WindowObject->Self, dwShowMode);
     }
   /* FIXME:  Should code be reworked to accomodate the following line? */
-	DbgPrint("Setting Active Window to %d\n\n\n",WindowObject->Self);
+	DPRINT("Setting Active Window to %d\n\n\n",WindowObject->Self);
   NtUserSetActiveWindow(WindowObject->Self);
   DPRINT("NtUserCreateWindow(): = %X\n", Handle);
-  DbgPrint("WindowObject->SystemMenu = 0x%x\n", WindowObject->SystemMenu);
+  DPRINT("WindowObject->SystemMenu = 0x%x\n", WindowObject->SystemMenu);
   return((HWND)Handle);
 }
 

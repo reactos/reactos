@@ -1,4 +1,4 @@
-/* $Id: regcontrol.c,v 1.11 2003/08/17 22:45:40 silverblade Exp $
+/* $Id: regcontrol.c,v 1.12 2003/08/28 13:38:23 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -27,7 +27,7 @@ static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
   wc.cbClsExtra = 0;
   wc.cbWndExtra = Descr->extra;
 
-#if 1
+#if 0
   if(IS_ATOM(wc.lpszClassName))
     DbgPrint("Registering built-in class atom=0x%x\n", wc.lpszClassName);
   else
@@ -43,7 +43,9 @@ static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
  */
 void ControlsInit(void)
 {
-    DbgPrint("ControlsInit()\n");
+#if 0
+  DbgPrint("ControlsInit()\n");
+#endif
 
   RegisterBuiltinClass(&DIALOG_builtin_class);
   RegisterBuiltinClass(&POPUPMENU_builtin_class);

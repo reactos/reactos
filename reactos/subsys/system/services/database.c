@@ -1,4 +1,4 @@
-/* $Id: database.c,v 1.8 2003/08/04 17:54:52 royce Exp $
+/* $Id: database.c,v 1.9 2003/08/28 13:38:24 gvg Exp $
  *
  * service control manager
  * 
@@ -505,7 +505,7 @@ ScmStartService(PSERVICE Service,
 							4,
 							30000,
 							NULL);
-	  DPRINT1("CreateNamedPipeW() done\n");
+	  DPRINT("CreateNamedPipeW() done\n");
 	  if (Service->ControlPipeHandle == INVALID_HANDLE_VALUE)
 	    {
 	      DPRINT1("Failed to create control pipe!\n");
@@ -544,12 +544,12 @@ ScmStartService(PSERVICE Service,
 	    }
 	  else
 	    {
-	      DPRINT1("Process Id: %lu  Handle %lx\n",
-		      ProcessInformation.dwProcessId,
-		      ProcessInformation.hProcess);
-	      DPRINT1("Thread Id: %lu  Handle %lx\n",
-		      ProcessInformation.dwThreadId,
-		      ProcessInformation.hThread);
+	      DPRINT("Process Id: %lu  Handle %lx\n",
+		     ProcessInformation.dwProcessId,
+		     ProcessInformation.hProcess);
+	      DPRINT("Thread Id: %lu  Handle %lx\n",
+		     ProcessInformation.dwThreadId,
+		     ProcessInformation.hThread);
 
 	      /* Get process and thread ids */
 	      Service->ProcessId = ProcessInformation.dwProcessId;
@@ -561,7 +561,7 @@ ScmStartService(PSERVICE Service,
 	      /* FIXME: connect control pipe */
 	      if (ConnectNamedPipe(Service->ControlPipeHandle, NULL))
 		{
-		  DPRINT1("Control pipe connected!\n");
+		  DPRINT("Control pipe connected!\n");
 		  Status = STATUS_SUCCESS;
 		}
 	      else

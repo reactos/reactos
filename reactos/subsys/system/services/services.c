@@ -1,4 +1,4 @@
-/* $Id: services.c,v 1.11 2003/01/05 19:18:44 robd Exp $
+/* $Id: services.c,v 1.12 2003/08/28 13:38:24 gvg Exp $
  *
  * service control manager
  * 
@@ -35,8 +35,7 @@
 
 #include "services.h"
 
-#define DBG
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 
@@ -210,14 +209,14 @@ ScmNamedPipeListenerThread(LPVOID Context)
 
 //    hPipe = (HANDLE)Context;
     for (;;) {
-        PrintString("SCM: Waiting for new connection on named pipe...\n");
+        DPRINT("SCM: Waiting for new connection on named pipe...\n");
         /* Create named pipe */
         if (!ScmCreateNamedPipe()) {
-            PrintString("\nSCM: Failed to create named pipe\n");
+            DPRINT1("\nSCM: Failed to create named pipe\n");
             break;
             //ExitThread(0);
         }
-        PrintString("\nSCM: named pipe session created.\n");
+        DPRINT("\nSCM: named pipe session created.\n");
         Sleep(10);
     }
     DPRINT("\n\nWARNING: ScmNamedPipeListenerThread(%x) - Aborted.\n\n", Context);
@@ -237,7 +236,7 @@ BOOL StartScmNamedPipeThreadListener(void)
                  &dwThreadId);
 
     if (!hThread) {
-        PrintString("SERVICES: Could not create thread (Status %lx)\n", GetLastError());
+        DPRINT1("SERVICES: Could not create thread (Status %lx)\n", GetLastError());
         return FALSE;
     }
     return TRUE;
@@ -253,16 +252,16 @@ WinMain(HINSTANCE hInstance,
   HANDLE hEvent;
   NTSTATUS Status;
 
-  PrintString("SERVICES: Service Control Manager\n");
+  DPRINT("SERVICES: Service Control Manager\n");
 
   /* Create start event */
   if (!ScmCreateStartEvent(&hScmStartEvent))
     {
-      PrintString("SERVICES: Failed to create start event\n");
+      DPRINT1("SERVICES: Failed to create start event\n");
       ExitThread(0);
     }
 
-  PrintString("SERVICES: created start event with handle %x.\n", hScmStartEvent);
+  DPRINT("SERVICES: created start event with handle %x.\n", hScmStartEvent);
 
   /* FIXME: more initialization */
 
@@ -271,7 +270,7 @@ WinMain(HINSTANCE hInstance,
   Status = ScmCreateServiceDataBase();
   if (!NT_SUCCESS(Status))
     {
-      PrintString("SERVICES: failed to create SCM database (Status %lx)\n", Status);
+      DPRINT1("SERVICES: failed to create SCM database (Status %lx)\n", Status);
       ExitThread(0);
     }
 
@@ -279,20 +278,20 @@ WinMain(HINSTANCE hInstance,
   ScmGetBootAndSystemDriverState();
 
 #if 0
-    PrintString("SERVICES: Attempting to create named pipe...\n");
+    DPRINT("SERVICES: Attempting to create named pipe...\n");
     /* Create named pipe */
     if (!ScmCreateNamedPipe()) {
-        PrintString("SERVICES: Failed to create named pipe\n");
+        DPRINT1("SERVICES: Failed to create named pipe\n");
         ExitThread(0);
     }
-    PrintString("SERVICES: named pipe created successfully.\n");
+    DPRINT("SERVICES: named pipe created successfully.\n");
 #else
-    PrintString("SERVICES: Attempting to create named pipe listener...\n");
+    DPRINT("SERVICES: Attempting to create named pipe listener...\n");
     if (!StartScmNamedPipeThreadListener()) {
-        PrintString("SERVICES: Failed to create named pipe listener thread.\n");
+        DPRINT1("SERVICES: Failed to create named pipe listener thread.\n");
         ExitThread(0);
     }
-    PrintString("SERVICES: named pipe listener thread created.\n");
+    DPRINT("SERVICES: named pipe listener thread created.\n");
 #endif
    /* FIXME: create listener thread for pipe */
 
@@ -300,7 +299,7 @@ WinMain(HINSTANCE hInstance,
   /* Register service process with CSRSS */
   RegisterServicesProcess(GetCurrentProcessId());
 
-  PrintString("SERVICES: Initialized.\n");
+  DPRINT("SERVICES: Initialized.\n");
 
   /* Signal start event */
   SetEvent(hScmStartEvent);
@@ -315,7 +314,7 @@ WinMain(HINSTANCE hInstance,
   /* FIXME: more to do ? */
 
 
-  PrintString("SERVICES: Running.\n");
+  DPRINT("SERVICES: Running.\n");
 
 #if 1
   hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -327,7 +326,7 @@ WinMain(HINSTANCE hInstance,
       }
 #endif
 
-  PrintString("SERVICES: Finished.\n");
+  DPRINT("SERVICES: Finished.\n");
 
   ExitThread(0);
   return(0);

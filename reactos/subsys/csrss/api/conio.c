@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.51 2003/08/18 10:58:49 hbirr Exp $
+/* $Id: conio.c,v 1.52 2003/08/28 13:38:23 gvg Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -155,7 +155,7 @@ CSR_API(CsrAllocConsole)
    NtClose( Process );
    LOCK;
    ProcessData->CtrlDispatcher = Request->Data.AllocConsoleRequest.CtrlDispatcher;
-   DPRINT1("CSRSS:CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);      
+   DPRINT("CSRSS:CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);      
    InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ProcessEntry);
    UNLOCK;
 

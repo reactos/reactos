@@ -1,4 +1,4 @@
-/* $Id: sctrl.c,v 1.11 2003/08/07 04:03:22 royce Exp $
+/* $Id: sctrl.c,v 1.12 2003/08/28 13:38:23 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -340,7 +340,7 @@ StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
   HANDLE hPipe;
   DWORD dwError;
 
-  DPRINT1("StartServiceCtrlDispatcherW() called\n");
+  DPRINT("StartServiceCtrlDispatcherW() called\n");
 
   i = 0;
   while (lpServiceStartTable[i].lpServiceProc != NULL)
