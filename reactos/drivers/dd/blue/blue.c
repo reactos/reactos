@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.29 2001/01/31 02:24:46 phreak Exp $
+/* $Id: blue.c,v 1.30 2001/07/30 11:49:38 ea Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -211,6 +211,7 @@ STDCALL ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 		   break;
 		   
 		case '\r':
+		   cursorx = 0;
 		   break;
 		   
 		case '\t':
