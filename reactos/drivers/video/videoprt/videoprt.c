@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.9 2004/03/07 04:43:55 dwelch Exp $
+ * $Id: videoprt.c,v 1.10 2004/03/08 04:09:02 jimtabor Exp $
  */
 
 #include "videoprt.h"
@@ -1400,26 +1400,31 @@ VideoPortDDCMonitorHelper(
    return FALSE;
 }
 
-
+/*
+ * @implemented
+ */
 VP_STATUS
 STDCALL
 VideoPortAllocateBuffer(IN PVOID  HwDeviceExtension,
 			IN ULONG  Size,
 			OUT PVOID  *Buffer)
 {
-  DPRINT("VideoPortAllocateBuffer\n");
+  DPRINT("VideoPortAllocateBuffer()\n");
   
-  Buffer = ExAllocatePool (PagedPool, Size) ;
+  Buffer = ExAllocatePool (NonPagedPool, Size) ;
   return STATUS_SUCCESS;
       
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 VideoPortReleaseBuffer( IN PVOID HwDeviceExtension,
 		        IN PVOID Ptr)
 {
-  DPRINT("VideoPortReleaseBuffer\n");
+  DPRINT("VideoPortReleaseBuffer()\n");
 
 	ExFreePool(Ptr);
 }         
@@ -1591,12 +1596,27 @@ VideoPortGetDmaAdapter ( IN PVOID HwDeviceExtension,
   return NULL;
 }
 
+
+/*
+ * @implemented
+ */
 VP_STATUS
 STDCALL
 VideoPortGetVersion ( IN PVOID HwDeviceExtension,
 		      IN OUT PVPOSVERSIONINFO VpOsVersionInfo )
 {
-  DPRINT1("VideoPortGetVersion(): Unimplemented.\n");
+PPEB Peb;
+
+  DPRINT1("VideoPortGetVersion()\n");
+
+	Peb = NtCurrentPeb();
+
+	VpOsVersionInfo->MajorVersion = Peb->OSMajorVersion;
+	VpOsVersionInfo->MinorVersion = Peb->OSMinorVersion;
+	VpOsVersionInfo->BuildNumber = Peb->OSBuildNumber;
+	VpOsVersionInfo->ServicePackMajor = Peb->SPMajorVersion;
+	VpOsVersionInfo->ServicePackMinor = Peb->SPMinorVersion;
+
   return STATUS_UNSUCCESSFUL;
 }
 
