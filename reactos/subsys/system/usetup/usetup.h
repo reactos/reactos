@@ -37,6 +37,8 @@
 
 extern HANDLE ProcessHeap;
 
+extern UNICODE_STRING SourceRootPath;
+
 
 #endif /* __USETUP_H__*/
 
