@@ -2200,7 +2200,7 @@ VerFindFileA(
 LONG
 STDCALL
 RegConnectRegistryA (
-    LPSTR lpMachineName,
+    LPCSTR lpMachineName,
     HKEY hKey,
     PHKEY phkResult
     );
@@ -2342,7 +2342,7 @@ LONG
 STDCALL
 RegQueryValueExA (
     HKEY hKey,
-    LPSTR lpValueName,
+    LPCSTR lpValueName,
     LPDWORD lpReserved,
     LPDWORD lpType,
     LPBYTE lpData,

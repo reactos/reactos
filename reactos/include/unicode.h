@@ -2293,7 +2293,7 @@ LONG
 STDCALL
 RegQueryMultipleValuesW (
     HKEY hKey,
-    PVALENT val_list,
+    PVALENTW val_list,
     DWORD num_vals,
     LPWSTR lpValueBuf,
     LPDWORD ldwTotsize
@@ -2303,7 +2303,7 @@ LONG
 STDCALL
 RegQueryValueExW (
     HKEY hKey,
-    LPWSTR lpValueName,
+    LPCWSTR lpValueName,
     LPDWORD lpReserved,
     LPDWORD lpType,
     LPBYTE lpData,
@@ -2322,7 +2322,7 @@ RegReplaceKeyW (
 LONG
 STDCALL
 RegConnectRegistryW (
-    LPWSTR lpMachineName,
+    LPCWSTR lpMachineName,
     HKEY hKey,
     PHKEY phkResult
     );

@@ -44,7 +44,7 @@
 #include <ntos/ps.h>
 #include <ntos/disk.h>
 #include <ntos/gditypes.h>
-
+/*
 typedef struct _VALENT
 {
    LPTSTR ve_valuename;
@@ -52,6 +52,28 @@ typedef struct _VALENT
    DWORD ve_valueptr;
    DWORD ve_type;
 } VALENT, *PVALENT;
+ */
+typedef struct _VALENT_A {
+   LPSTR ve_valuename;
+   DWORD ve_valuelen;
+   DWORD ve_valueptr;
+   DWORD ve_type;
+} VALENTA, *PVALENTA;
+
+typedef struct _VALENT_W {
+   LPWSTR ve_valuename;
+   DWORD  ve_valuelen;
+   DWORD  ve_valueptr;
+   DWORD  ve_type;
+} VALENTW, *PVALENTW;
+
+#ifdef UNICODE
+typedef VALENTW VALENT;
+typedef PVALENTW PVALENT;
+#else
+typedef VALENTA VALENT;
+typedef PVALENTA PVALENT;
+#endif
 
 #ifndef WIN32_LEAN_AND_MEAN
 
