@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2002/09/03 18:44:18 chorns Exp $
+# $Id: Makefile,v 1.8 2002/09/09 22:36:40 sedwards Exp $
 #
 #  ReactOS makefile for RegExpl
 #
@@ -9,7 +9,7 @@ include $(PATH_TO_TOP)/rules.mak
 
 TARGET_NAME=regexpl
 
-all: $(TARGET_NAME).exe
+all: $(TARGET_NAME)$(EXE_POSTFIX)
 
 include depend.mak
 

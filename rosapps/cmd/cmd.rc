@@ -1,5 +1,5 @@
 #include <windows.h>
-#include "../../reactos/include/reactos/resource.h"
+#include <reactos/resource.h>
 #include "cmdver.h"
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
