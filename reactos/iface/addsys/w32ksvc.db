@@ -554,4 +554,3 @@ NtUserGetDesktopWindow			0
 NtUserAcquireOrReleaseInputOwnership    1
 NtUserGetWindowThreadProcessId          2
 NtUserGetQueueStatus                    1
-
