@@ -1,4 +1,4 @@
-/* $Id: dlog.c,v 1.1 2001/02/16 18:32:20 dwelch Exp $
+/* $Id: dlog.c,v 1.2 2001/03/25 18:56:12 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,6 +25,7 @@
 static CHAR DebugLog[DEBUGLOG_SIZE];
 static ULONG DebugLogStart;
 static ULONG DebugLogEnd;
+static ULONG DebugLogCount;
 static KSPIN_LOCK DebugLogLock;
 static ULONG DebugLogOverflow;
 static HANDLE DebugLogThreadHandle;
@@ -42,9 +43,10 @@ VOID
 DebugLogInit(VOID)
 {
   KeInitializeSpinLock(&DebugLogLock);
-  DebugLogStart = -1;
+  DebugLogStart = 0;
   DebugLogEnd = 0;
   DebugLogOverflow = 0;
+  DebugLogCount = 0;
   KeInitializeSemaphore(&DebugLogSem, 0, 255);
 }
 
@@ -53,7 +55,7 @@ DebugLogThreadMain(PVOID Context)
 {
   KIRQL oldIrql;
   IO_STATUS_BLOCK Iosb;
-  CHAR Buffer[256];
+  static CHAR Buffer[256];
   ULONG WLen;
 
   for (;;)
@@ -64,7 +66,7 @@ DebugLogThreadMain(PVOID Context)
 			    FALSE,
 			    NULL);
       KeAcquireSpinLock(&DebugLogLock, &oldIrql);
-      while (DebugLogStart != -1)
+      while (DebugLogCount > 0)
 	{
 	  if (DebugLogStart > DebugLogEnd)
 	    {
@@ -72,10 +74,7 @@ DebugLogThreadMain(PVOID Context)
 	      memcpy(Buffer, &DebugLog[DebugLogStart], WLen);
 	      DebugLogStart = 
 		(DebugLogStart + WLen) % DEBUGLOG_SIZE;
-	      if (DebugLogStart == DebugLogEnd)
-		{
-		  DebugLogStart = -1;
-		}
+	      DebugLogCount = DebugLogCount - WLen;
 	      KeReleaseSpinLock(&DebugLogLock, oldIrql);
 	      NtWriteFile(DebugLogFile,
 			  NULL,
@@ -93,10 +92,7 @@ DebugLogThreadMain(PVOID Context)
 	      memcpy(Buffer, &DebugLog[DebugLogStart], WLen);
 	      DebugLogStart = 
 		(DebugLogStart + WLen) % DEBUGLOG_SIZE;
-	      if (DebugLogStart == DebugLogEnd)
-		{
-		  DebugLogStart = -1;
-		}
+	      DebugLogCount = DebugLogCount - WLen;
 	      KeReleaseSpinLock(&DebugLogLock, oldIrql);
 	      NtWriteFile(DebugLogFile,
 			  NULL,
@@ -168,34 +164,40 @@ DebugLogInit2(VOID)
 
    KeAcquireSpinLock(&DebugLogLock, &oldIrql);
 
-   if (DebugLogEnd == DebugLogStart)
+   if (DebugLogCount == DEBUGLOG_SIZE)
      {
        DebugLogOverflow++;
        KeReleaseSpinLock(&DebugLogLock, oldIrql);
-       KeReleaseSemaphore(&DebugLogSem, IO_NO_INCREMENT, 1, FALSE);
+       if (oldIrql < DISPATCH_LEVEL)
+	 {
+	   KeReleaseSemaphore(&DebugLogSem, IO_NO_INCREMENT, 1, FALSE);
+	 }
        return;
-     }
-   if (DebugLogStart == -1)
-     {
-       DebugLogStart = DebugLogEnd;
      }
 
    while ((*String) != 0)
      {
        DebugLog[DebugLogEnd] = *String;
        String++;
-       if (((DebugLogEnd + 1) % DEBUGLOG_SIZE) == DebugLogStart)
+       DebugLogCount++;
+       if (DebugLogCount == DEBUGLOG_SIZE)
 	 {	   
 	   DebugLogOverflow++;
 	   KeReleaseSpinLock(&DebugLogLock, oldIrql);
-	   KeReleaseSemaphore(&DebugLogSem, IO_NO_INCREMENT, 1, FALSE);
+	   if (oldIrql < DISPATCH_LEVEL)
+	     {
+	       KeReleaseSemaphore(&DebugLogSem, IO_NO_INCREMENT, 1, FALSE);
+	     }
 	   return;
 	 }
       DebugLogEnd = (DebugLogEnd + 1) % DEBUGLOG_SIZE;
      }
 
    KeReleaseSpinLock(&DebugLogLock, oldIrql);
-   KeReleaseSemaphore(&DebugLogSem, IO_NO_INCREMENT, 1, FALSE);
+   if (oldIrql < DISPATCH_LEVEL)
+     {
+       KeReleaseSemaphore(&DebugLogSem, IO_NO_INCREMENT, 1, FALSE);
+     }
  }
 
  #else /* not DBGPRINT_FILE_LOG */

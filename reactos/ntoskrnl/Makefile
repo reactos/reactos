@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.25 2001/03/18 19:35:12 dwelch Exp $
+# $Id: Makefile,v 1.26 2001/03/25 18:56:12 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -17,9 +17,10 @@ OBJECTS_PATH = objects
 
 ASFLAGS = -Iinclude
 CFLAGS = -Iinclude -D__NTOSKRNL__ -DDBG -g -Wall -Werror 
+# -DDBGPRINT_FILE_LOG
 #         -W -Wpointer-arith -Wconversion -Wstrict-prototypes -Wundef \
 #	 -Wmissing-prototypes -Wshadow\
-#CFLAGS += -DDBGPRINT_FILE_LOG
+#CFLAGS = -DDBGPRINT_FILE_LOG
 
 include $(PATH_TO_TOP)/rules.mak
 

@@ -71,7 +71,19 @@ _Ki386RetToV86Mode:
 	 * Since we are going to fiddle with the stack pointer this must be
 	 * a critical section for this processor
 	 */
+	
+	/*
+	 * Save the old initial stack
+	 */
+	movl	_CurrentThread, %esi	
+	movl	KTHREAD_INITIAL_STACK(%esi), %edi
+	pushl	%edi
 
+	/*
+	 * We also need to set the stack in the kthread structure
+	 */
+	movl	%esp, KTHREAD_INITIAL_STACK(%esi)
+	
 	/*
 	 * The stack used for handling exceptions from v86 mode in this thread
 	 * will be the current stack adjusted so we don't overwrite the 
@@ -79,18 +91,6 @@ _Ki386RetToV86Mode:
 	 */
 	movl    $_KiTss, %esi
 	movl	%esp, KTSS_ESP0(%esi)
-
-	/*
-	 * We also need to set the stack in the kthread structure
-	 */
-	movl	_CurrentThread, %esi
-	movl	KTHREAD_INITIAL_STACK(%esi), %edi
-	movl	%esp, KTHREAD_INITIAL_STACK(%esi)
-
-	/*
-	 * Save the old initial stack
-	 */
-	pushl	%edi
 	
 	/*
 	 * Create the stack frame for an iret to v86 mode

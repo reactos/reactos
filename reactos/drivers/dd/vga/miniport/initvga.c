@@ -121,10 +121,14 @@ VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock)
   OBJECT_ATTRIBUTES Attr;
   UNICODE_STRING Name;
   NTSTATUS Status;
+  VIDEO_X86_BIOS_ARGUMENTS vxba;
+  VP_STATUS vps;
   
   CHECKPOINT;
   Event = 0;
-  setMode( Mode3 );
+  //  setMode( Mode3 );
+  vxba.Eax = 0x0003;
+  vps = VideoPortInt10(NULL, &vxba);
   RtlInitUnicodeString( &Name, L"\\TextConsoleRefreshEvent" );
   InitializeObjectAttributes( &Attr, &Name, 0, 0, 0 );
   Status = NtOpenEvent( &Event, STANDARD_RIGHTS_ALL, &Attr );

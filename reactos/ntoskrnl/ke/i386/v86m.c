@@ -32,7 +32,7 @@
 #include <internal/i386/segment.h>
 #include <string.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -51,8 +51,8 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
   ip = (PUCHAR)((Tf->Cs & 0xFFFF) * 16 + (Tf->Eip & 0xFFFF));
   sp = (PUSHORT)((Tf->Ss & 0xFFFF) * 16 + (Tf->Esp & 0xFFFF));
    
-  DPRINT("KeV86GPF handling %x at %x:%x ss:sp %x:%x\n",
-	 ip[0], Tf->Cs, Tf->Eip, Tf->Ss, Tf->Esp);
+  DPRINT("KeV86GPF handling %x at %x:%x ss:sp %x:%x Flags %x\n",
+	 ip[0], Tf->Cs, Tf->Eip, Tf->Ss, Tf->Esp, VTf->regs->Flags);
  
   switch (ip[0])
     {

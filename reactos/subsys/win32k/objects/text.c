@@ -366,17 +366,17 @@ W32kTextOut(HDC  hDC,
 {
     DC			*dc      = DC_HandleToPtr(hDC);
     SURFOBJ		*SurfObj = AccessUserObject(dc->Surface);
-    PUNICODE_STRING	UString;
-    PANSI_STRING	AString;
+    UNICODE_STRING	UString;
+    ANSI_STRING	AString;
 
-    RtlCreateUnicodeString(UString, (PWSTR)String);
-    RtlUnicodeStringToAnsiString(AString, UString, TRUE);
+    RtlCreateUnicodeString(&UString, (PWSTR)String);
+    RtlUnicodeStringToAnsiString(&AString, &UString, TRUE);
 
     // For now we're just going to use an internal font
-    grWriteCellString(SurfObj, XStart, YStart, AString->Buffer, 0xffffff);
+    grWriteCellString(SurfObj, XStart, YStart, AString.Buffer, 0xffffff);
 
-    RtlFreeAnsiString(AString);
-    RtlFreeUnicodeString(UString);
+    RtlFreeAnsiString(&AString);
+    RtlFreeUnicodeString(&UString);
 }
 
 UINT
