@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.8 2004/01/19 20:14:28 gvg Exp $
+/* $Id: guiconsole.c,v 1.9 2004/02/03 17:53:54 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -291,95 +291,20 @@ GuiConsoleHandleKey(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 static VOID FASTCALL
 GuiConsoleHandleCopyRegion(HWND hWnd, PRECT Source, PRECT Dest)
 {
-  HDC Dc;
-  int XDest, YDest, Width, Height, XSrc, YSrc;
-  PCSRSS_CONSOLE Console;
+  RECT ClientRect, ScrollRect;
   PGUI_CONSOLE_DATA GuiData;
-  RECT CursorRect, UpdateRect;
-  DWORD CursorX, CursorY;
-  PCSRSS_SCREEN_BUFFER Buff;
+  PCSRSS_CONSOLE Console;
 
+  GetClientRect(hWnd, &ClientRect);
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
-  Buff = Console->ActiveBuffer;
-
-  /* Check if the cursor is in the source rectangle and if it is,
-   * make sure it's invisible */ 
-  GuiConsoleGetLogicalCursorPos(Buff, &CursorX, &CursorY);
-  if (Source->left <= CursorX && CursorX <= Source->right &&
-      Source->top <= CursorY && CursorY <= Source->bottom)
-    {
-      GuiData->ForceCursorOff = TRUE;
-
-      CursorRect.left = CursorX * GuiData->CharWidth;
-      CursorRect.top = CursorY * GuiData->CharHeight;
-      CursorRect.right = (CursorX + 1) * GuiData->CharWidth;
-      CursorRect.bottom = (CursorY + 1) * GuiData->CharHeight;
-
-      InvalidateRect(hWnd, &CursorRect, FALSE);
-    }
-
-
-  /* This is a bit tricky. We want to copy a source rectangle to
-   * a destination rectangle, but there is no guarantee that the
-   * contents of the source rectangle is valid. First let's try
-   * to make it as valid as possible by painting all outstanding
-   * updates. To do that we have to release the lock, otherwise
-   * the paint code can't acquire it */
-
-  UpdateWindow(hWnd);
-
-  Dc = GetDC(hWnd);
-  if (NULL == Dc)
-    {
-      return;
-    }
-
-  XSrc = Source->left * GuiData->CharWidth;
-  YSrc = Source->top * GuiData->CharHeight;
-  XDest = Dest->left * GuiData->CharWidth;
-  YDest = Dest->top * GuiData->CharHeight;
-  Width = (Dest->right - Dest->left + 1) * GuiData->CharWidth;
-  Height = (Dest->bottom - Dest->top + 1) * GuiData->CharHeight;
-
-  BitBlt(Dc, XDest, YDest, Width, Height, Dc, XSrc, YSrc, SRCCOPY);
-
-  ReleaseDC(hWnd, Dc);
-
-  /* Although we tried to make sure that the source rectangle was
-   * up-to-date, this is not guaranteed. For example, the user could
-   * have moved a window between the UpdateWindow() and the BitBlt()
-   * above, invalidating part of the window. So, we're going to
-   * check if the current update rect of the window overlaps with the
-   * source rectangle. If it does, we invalidate the corresponding
-   * part of the destination rectangle so it will eventually be
-   * repainted. Note that this is probably doesn't happen all that
-   * often and GetUpdateRect() below will usually return FALSE,
-   * indicating that the whole window is valid */
-
-  if (GetUpdateRect(hWnd, &UpdateRect, FALSE))
-    {
-      UpdateRect.left = max(UpdateRect.left, XSrc);
-      UpdateRect.top = max(UpdateRect.top, YSrc);
-      UpdateRect.right = min(UpdateRect.right, XSrc + Width);
-      UpdateRect.bottom = min(UpdateRect.bottom, YSrc + Height);
-      if (UpdateRect.left < UpdateRect.right && UpdateRect.top < UpdateRect.bottom)
-        {
-          UpdateRect.left += XDest - XSrc;
-          UpdateRect.top += YDest - YSrc;
-          UpdateRect.right += XDest - XSrc;
-          UpdateRect.bottom += YDest - YSrc;
-
-          InvalidateRect(Console->hWindow, &UpdateRect, FALSE);
-        }
-    }
-
-  /* Show cursor again if we made it invisible */
-  if (GuiData->ForceCursorOff)
-    {
-      GuiData->ForceCursorOff = FALSE;
-
-      InvalidateRect(hWnd, &CursorRect, FALSE);
-    }
+  ScrollRect.left = min(Source->left, Dest->left) * GuiData->CharWidth;
+  ScrollRect.top = min(Source->top, Dest->top) * GuiData->CharHeight;
+  ScrollRect.right = max(Source->right, Dest->right) * GuiData->CharWidth;
+  ScrollRect.bottom = max(Source->bottom, Dest->bottom) * GuiData->CharHeight;
+  ScrollWindow(hWnd,
+    (Dest->left - Source->left) * GuiData->CharWidth,
+    (Dest->top - Source->top) * GuiData->CharHeight,
+    &ScrollRect, &ClientRect);
 }
 
 static VOID FASTCALL
