@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.4 2004/08/12 23:38:17 weiden Exp $
+/* $Id: stubs.c,v 1.5 2004/08/13 11:24:07 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         SkyOS GI library
@@ -45,73 +45,6 @@ GC_blit(GC *gc,
         sBlit *pBlit)
 {
   STUB("GC_blit(0x%x, 0x%x) returns 0!\n", gc, pBlit);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-GC* __cdecl
-GC_create_connected(unsigned int type,
-                    unsigned int width,
-                    unsigned int height,
-                    HANDLE win)
-{
-  STUB("GC_create_connected(0x%x, 0x%x, 0x%x, 0x%x) returns NULL!\n", type, width, height, win);
-  return NULL;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
-GC_destroy(GC *gc)
-{
-  STUB("GC_destroy(0x%x) returns 0!\n", gc);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
-GC_draw_line(GC *gc,
-             int x1,
-             int y1,
-             int x2,
-             int y2)
-{
-  STUB("GC_draw_line(0x%x, 0x%x, 0x%x, 0x%x, 0x%x) returns 0!\n", gc, x1, y1, x2, y2);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
-GC_draw_rect_fill(GC *gc,
-                 int x,
-                 int y,
-                 int width,
-                 int height)
-{
-  STUB("GC_draw_rect_fill(0x%x, 0x%x, 0x%x, 0x%x, 0x%x) returns 0!\n", gc, x, y, width, height);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
-GC_set_bg_color(GC *gc,
-                COLOR col)
-{
-  STUB("GC_set_bg_color(0x%x, 0x%x) returns 0!\n", gc, col);
   return 0;
 }
 
@@ -191,17 +124,6 @@ GI_kill_timer(unsigned int uiID)
 /*
  * @unimplemented
  */
-DIB* __cdecl
-GI_load_bitmap(char *filename,
-               unsigned int ImageIndex)
-{
-  STUB("GI_load_bitmap(0x%x, 0x%x) returns NULL!\n", filename, ImageIndex);
-  return NULL;
-}
-
-/*
- * @unimplemented
- */
 int __cdecl
 GI_messagebox(HANDLE hWnd,
               unsigned int flags,
@@ -235,18 +157,6 @@ GC_draw_text(GC *gc,
              unsigned char *text)
 {
   STUB("GC_draw_text(0x%x, 0x%x, 0x%x) returns 0!\n", gc, rect, text);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
-GC_set_fg_color(GC *gc,
-                COLOR col)
-{
-  //STUB("GC_set_fg_color(0x%x, 0x%x) returns 0!\n", gc, col);
   return 0;
 }
 
@@ -449,54 +359,11 @@ GI_set_dimension(HANDLE hWnd,
  * @unimplemented
  */
 int __cdecl
-GC_blit_from_DIB(GC *gc,
-                 DIB *dib,
-                 int x,
-                 int y)
-{
-  STUB("GC_blit_from_DIB(0x%x, 0x%x, 0x%x, 0x%x) returns 0!\n", gc, dib, x, y);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
-GC_draw_pixel(GC *gc,
-              int x,
-              int y)
-{
-  //STUB("GC_draw_pixel(0x%x, 0x%x, 0x%x) returns 0!\n", gc, x, y);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
 GC_set_clip(GC *gc,
             s_region *clip)
 {
   STUB("GC_set_clip(0x%x, 0x%x) returns 0!\n", gc, clip);
   return 0;
-}
-
-
-/*
- * @unimplemented
- */
-DIB* __cdecl
-GI_create_DIB(void *data,
-              unsigned int width,
-              unsigned int height,
-              unsigned int bpp,
-              void *palette,
-              unsigned int palette_size)
-{
-  STUB("GI_create_DIB(0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x) returns NULL!\n", data, width, height, bpp, palette, palette_size);
-  return NULL;
 }
 
 
@@ -537,5 +404,16 @@ GI_widget_status_set(s_window *win,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
+DIB* __cdecl
+GI_load_bitmap(char *filename,
+               unsigned int ImageIndex)
+{
+  STUB("GI_load_bitmap(0x%x, 0x%x) returns NULL!\n", filename, ImageIndex);
+  return NULL;
+}
 
 /* EOF */

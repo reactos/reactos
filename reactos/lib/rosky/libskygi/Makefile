@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2004/08/12 23:38:17 weiden Exp $
+# $Id: Makefile,v 1.4 2004/08/13 11:24:07 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -12,13 +12,16 @@ TARGET_BASE = 0x71b10000
 
 TARGET_CFLAGS = \
  -I./include \
+ -D_WIN32_IE=0x0600 \
+ -D_WIN32_WINNT=0x0501 \
+ -D__USE_W32API \
  -Wall \
  -Werror \
  -fno-builtin
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = kernel32.a ntdll.a user32.a
+TARGET_SDKLIBS = kernel32.a ntdll.a user32.a gdi32.a
 
 TARGET_ENTRY = 0x00000000
 

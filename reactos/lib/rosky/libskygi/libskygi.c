@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: libskygi.c,v 1.3 2004/08/12 23:38:17 weiden Exp $
+/* $Id: libskygi.c,v 1.4 2004/08/13 11:24:07 weiden Exp $
  *
  * PROJECT:         SkyOS GI library
  * FILE:            lib/libskygi/libskygi.c
@@ -33,10 +33,21 @@
 typedef struct
 {
   s_window Window;
-  MSG LastMsg;
   HWND hWnd;
-  s_gi_msg DispatchMsg;
 } SKY_WINDOW, *PSKY_WINDOW;
+
+typedef struct
+{
+  GC GraphicsContext;
+  HDC hDC;
+} SKY_GC, *PSKY_GC;
+
+typedef struct
+{
+  DIB Dib;
+  HBITMAP hBitmap;
+  HDC hAssociateDC;
+} SKY_DIB, *PSKY_DIB;
 
 static ATOM SkyClassAtom;
 static BOOL SkyClassRegistered = FALSE;
@@ -64,7 +75,9 @@ IntMapWindowStyle(ULONG SkyStyle, ULONG *ExStyle)
    Style |= (SkyStyle & WF_NO_TITLE) ? 0 : WS_CAPTION;
    Style |= (SkyStyle & WF_NOT_SIZEABLE) ? WS_THICKFRAME : 0;
    Style |= (SkyStyle & WF_POPUP) ? WS_POPUP : 0;
-   Style |= (SkyStyle & WF_NO_BUTTONS) ? 0 : WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU;
+   Style |= (SkyStyle & WF_NO_BUTTONS) ? 0 :
+            ((SkyStyle & WF_NOT_SIZEABLE) ? 0 : WS_MAXIMIZEBOX) |
+            WS_MINIMIZEBOX | WS_SYSMENU;
    *ExStyle = (SkyStyle & WF_SMALL_TITLE) ? WS_EX_TOOLWINDOW : 0;
 
    return Style;
@@ -152,6 +165,8 @@ IntDispatchMsgRect(s_window *win, unsigned int type, unsigned int para1, unsigne
 BOOL
 IntIsSkyMessage(PSKY_WINDOW skw, MSG *Msg, s_gi_msg *smsg)
 {
+  smsg->win = skw;
+
   switch(Msg->message)
   {
     case WM_DESTROY:
@@ -163,9 +178,13 @@ IntIsSkyMessage(PSKY_WINDOW skw, MSG *Msg, s_gi_msg *smsg)
     case WM_PAINT:
     {
       RECT rc;
+      PAINTSTRUCT ps;
       
       if(GetUpdateRect(skw->hWnd, &rc, FALSE))
       {
+        BeginPaint(skw->hWnd, &ps);
+        EndPaint(skw->hWnd, &ps);
+
         smsg->type = MSG_GUI_REDRAW;
         smsg->para1 = 0;
         smsg->para2 = 0;
@@ -177,14 +196,40 @@ IntIsSkyMessage(PSKY_WINDOW skw, MSG *Msg, s_gi_msg *smsg)
 
         return TRUE;
       }
+      break;
     }
 
     case WM_QUIT:
       smsg->type = MSG_QUIT;
       smsg->para1 = 0;
       smsg->para2 = 0;
-      smsg->win = (s_window*)Msg->wParam;
       return TRUE;
+
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONUP:
+    {
+      POINT pt;
+
+      switch (Msg->message)
+      {
+        case WM_LBUTTONDOWN: smsg->type = MSG_MOUSE_BUT1_PRESSED; break;
+        case WM_LBUTTONUP: smsg->type = MSG_MOUSE_BUT1_RELEASED; break;
+        case WM_RBUTTONDOWN: smsg->type = MSG_MOUSE_BUT2_PRESSED; break;
+        case WM_RBUTTONUP: smsg->type = MSG_MOUSE_BUT2_RELEASED; break;
+      }
+#if 0
+      pt.x = LOWORD(Msg->lParam);
+      pt.y = HIWORD(Msg->lParam);
+#else
+      pt = Msg->pt;
+      MapWindowPoints(NULL, skw->hWnd, &pt, 1);
+#endif
+      smsg->para1 = pt.x;
+      smsg->para2 = pt.y;
+      return TRUE;
+    }
   }
   
   return FALSE;
@@ -204,42 +249,56 @@ IntIsSkyMessage(PSKY_WINDOW skw, MSG *Msg, s_gi_msg *smsg)
 LRESULT CALLBACK
 IntDefaultWin32Proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  PSKY_WINDOW skw = (PSKY_WINDOW)GetWindowLongW(hWnd, GWL_USERDATA);
-  
-  if(skw != NULL)
-  {
-    switch(msg)
-    {
-      case WM_ERASEBKGND:
-        return 1; /* don't handle this message */
-      
-      case WM_PAINT:
-      {
-        PAINTSTRUCT ps;
-        s_region srect;
-        
-        BeginPaint(hWnd, &ps);
-        srect.x1 = ps.rcPaint.left;
-        srect.y1 = ps.rcPaint.top;
-        srect.x2 = ps.rcPaint.right;
-        srect.y2 = ps.rcPaint.bottom;
-        IntDispatchMsgRect(&skw->Window, MSG_GUI_REDRAW, 0, 0, &srect);
-        EndPaint(hWnd, &ps);
-        
-        return 0;
-      }
-      
-      case WM_CLOSE:
-        IntDispatchMsg(&skw->Window, MSG_DESTROY, 0, 0);
-        return 0;
+  PSKY_WINDOW skw;
 
-      case WM_DESTROY:
-        SetWindowLongW(hWnd, GWL_USERDATA, 0);
-        /* free the SKY_WINDOW structure */
-        HeapFree(GetProcessHeap(), 0, skw);
-        return 0;
-    }
+  if (msg == WM_NCCREATE)
+  {
+    /*
+     * Save the pointer to the structure so we can access it later when
+     * dispatching the Win32 messages so we know which sky window it is
+     * and dispatch the right messages.
+     */
+    skw = (PSKY_WINDOW)((LPCREATESTRUCTW)lParam)->lpCreateParams;
+    SetWindowLongPtr(hWnd, GWL_USERDATA, (ULONG_PTR)skw);
   }
+  else
+  {
+    skw = (PSKY_WINDOW)GetWindowLongPtr(hWnd, GWL_USERDATA);
+    if (skw == NULL)
+      return DefWindowProcW(hWnd, msg, wParam, lParam);
+  }
+
+  switch(msg)
+  {
+    case WM_CLOSE:
+      IntDispatchMsg(&skw->Window, MSG_DESTROY, 0, 0);
+      return 0;
+
+    case WM_CREATE:
+      return 1;
+    
+    /* FIXME: Find a more general solution! */
+    /* We can get there for message sent by SendMessage. */
+    case WM_PAINT:
+    {
+      PAINTSTRUCT ps;
+      s_region srect;
+      
+      BeginPaint(hWnd, &ps);
+      srect.x1 = ps.rcPaint.left;
+      srect.y1 = ps.rcPaint.top;
+      srect.x2 = ps.rcPaint.right;
+      srect.y2 = ps.rcPaint.bottom;
+      IntDispatchMsgRect(&skw->Window, MSG_GUI_REDRAW, 0, 0, &srect);
+      EndPaint(hWnd, &ps);
+      
+      return 0;
+    }
+
+    case WM_ERASEBKGND:
+      return 1; /* don't handle this message */
+  }
+
   return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
@@ -278,6 +337,7 @@ GI_create_app(app_para *p)
   PSKY_WINDOW skw;
   ULONG Style, ExStyle;
   WCHAR WindowName[sizeof(p->cpName) / sizeof(p->cpName[0])];
+  RECT ClientRect;
   
   DBG("GI_create_app(0x%x)\n", p);
 
@@ -311,6 +371,19 @@ GI_create_app(app_para *p)
   MultiByteToWideChar(CP_UTF8, 0, p->cpName, -1, WindowName,
                       sizeof(WindowName) / sizeof(WindowName[0]));
   
+  skw->Window.win_func = p->win_func;
+  /* FIXME - fill the window structure */
+
+  /*
+   * We must convert the client rect passed in to the window rect expected
+   * by CreateWindowExW.
+   */
+  ClientRect.left = 0;
+  ClientRect.top = 0;
+  ClientRect.right = 0 + p->ulWidth;
+  ClientRect.bottom = 0 + p->ulHeight;
+  AdjustWindowRectEx(&ClientRect, Style, p->ulStyle & WF_HAS_MENU, ExStyle);
+
   /* create the Win32 window */
   skw->hWnd = CreateWindowExW(ExStyle,
                               L"ROSkyWindow",
@@ -318,12 +391,12 @@ GI_create_app(app_para *p)
                               WS_OVERLAPPEDWINDOW,
                               p->ulX,
                               p->ulY,
-                              p->ulWidth,
-                              p->ulHeight,
+                              ClientRect.right - ClientRect.left,
+                              ClientRect.bottom - ClientRect.top,
                               NULL,
                               NULL,
                               GetModuleHandleW(NULL),
-                              NULL);
+                              skw);
 
   if(skw->hWnd == NULL)
   {
@@ -331,15 +404,7 @@ GI_create_app(app_para *p)
     HeapFree(GetProcessHeap(), 0, skw);
     return NULL;
   }
-
-  skw->Window.win_func = p->win_func;
-  /* FIXME - fill the window structure */
-  
-  /* save the pointer to the structure so we can access it later when dispatching
-     the win32 messages so we know which sky window it is and dispatch the right
-     messages */
-  SetWindowLongW(skw->hWnd, GWL_USERDATA, (LONG)skw);
-  
+    
   DBG("Created Win32 window: 0x%x\n", skw->hWnd);
   
   return &skw->Window;
@@ -354,8 +419,10 @@ GI_destroy_window(s_window *win)
   PSKY_WINDOW skw = (PSKY_WINDOW)win;
 
   DBG("GI_destroy_window(0x%x)\n", win);
-  
-  return (int)DestroyWindow(skw->hWnd);
+  DestroyWindow(skw->hWnd);
+  HeapFree(GetProcessHeap(), 0, skw);
+
+  return 0;
 }
 
 
@@ -367,56 +434,39 @@ GI_wait_message(s_gi_msg *m,
                 s_window* w)
 {
   MSG Msg;
-  BOOL Ret;
+  BOOL Ret, SkyMessage;
   HWND hwndFilter;
-  PSKY_WINDOW msgwnd, filterwnd;
+  PSKY_WINDOW msgwnd;
   
   DBG("GI_wait_message(0x%x, 0x%x)\n", m, w);
   
-  filterwnd = (w != NULL ? (PSKY_WINDOW)w : NULL);
-  
-  hwndFilter = (w != NULL ? filterwnd->hWnd : NULL);
-  for(;;)
+  hwndFilter = (w != NULL ? ((PSKY_WINDOW)w)->hWnd : NULL);
+  do
   {
+    Ret = GetMessage(&Msg, hwndFilter, 0, 0);
+
     /* loop until we found a message that a sky app would handle, too */
     RtlZeroMemory(m, sizeof(s_gi_msg));
-  
-    Ret = GetMessage(&Msg, hwndFilter, 0, 0);
-    if(Ret)
-    {
-      if(Msg.hwnd != NULL && (msgwnd = (PSKY_WINDOW)GetWindowLongW(Msg.hwnd, GWL_USERDATA)))
+
+    if(Msg.hwnd != NULL && (msgwnd = (PSKY_WINDOW)GetWindowLongW(Msg.hwnd, GWL_USERDATA)))
       {
-        msgwnd->LastMsg = Msg;
-        if(!IntIsSkyMessage(msgwnd, &Msg, m))
-        {
-          /* We're not interested in dispatching a sky message, try again */
-          TranslateMessage(&Msg);
-          DispatchMessage(&Msg);
-        }
+        SkyMessage = IntIsSkyMessage(msgwnd, &Msg, m);
       }
-      else
-      {
-        /* We're not interested in dispatching a sky message, try again */
-        TranslateMessage(&Msg);
-        DispatchMessage(&Msg);
-      }
-    }
     else
+      {
+        SkyMessage = FALSE;
+      }
+
+    if (!SkyMessage)
     {
-      /* break the loop, the sky app is supposed to shut down */
-      m->type = MSG_QUIT;
-      break;
+      /* We're not interested in dispatching a sky message, try again */
+      TranslateMessage(&Msg);
+      DispatchMessage(&Msg);
     }
   }
+  while (!SkyMessage);
   
-  if(m->win == NULL)
-  {
-    /* only set the win field if it's not set yet by IntIsSkyMessage() */
-    m->win = (msgwnd != NULL ? &msgwnd->Window : NULL);
-  }
-  /* FIXME */
-  
-  return (m->type != MSG_QUIT);
+  return Ret;
 }
 
 
@@ -428,19 +478,10 @@ GI_dispatch_message(s_window *win,
                     s_gi_msg *m)
 {
   PSKY_WINDOW skywnd = (PSKY_WINDOW)win;
-  DBG("GI_dispatch_message(0x%x, 0x%x)\n", win, m);
-  
-  /* FIXME - why is win==1?! */
-  if(win == (s_window*)0x1) return 0;
-  
-  if(win != NULL)
-  {
-    /* save the dispatched message */
-    skywnd->DispatchMsg = *m;
-    /* dispatch the last win32 message to the win32 window procedure */
-    DispatchMessage(&skywnd->LastMsg);
-  }
-  
+  DBG("GI_dispatch_message(0x%x, 0x%x - %d)\n", win, m, m->type);
+  /* dispatch the SkyOS message to the SkyOS window procedure */
+  if (skywnd != 0)
+    return skywnd->Window.win_func(win, m);
   return 1;
 }
 
@@ -464,8 +505,8 @@ GI_ShowApplicationWindow(s_window *win)
 int __cdecl
 GI_redraw_window(s_window *win)
 {
-  DBG("GI_redraw_window(0x%x)!\n", win);
   PSKY_WINDOW skywnd = (PSKY_WINDOW)win;
+  DBG("GI_redraw_window(0x%x)!\n", win);
   if(skywnd != NULL)
   {
     RedrawWindow(skywnd->hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
@@ -475,13 +516,13 @@ GI_redraw_window(s_window *win)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 void __cdecl
 GI_post_quit(s_window *win)
 {
   DBG("GI_post_quit(0x%x)\n", win);
-  PostQuitMessage((int)win);
+  PostMessage(((PSKY_WINDOW)win)->hWnd, WM_QUIT, 0, 0);
 }
 
 
@@ -499,6 +540,264 @@ GI_CreateApplicationStruct(void)
   STUB("GI_CreateApplicationStruct() returns 0x%x (allocated structure on the heap)!\n", app);
 
   return app;
+}
+
+
+/*
+ * @implemented
+ */
+DIB* __cdecl
+GI_create_DIB(void *Data,
+              unsigned int Width,
+              unsigned int Height,
+              unsigned int Bpp,
+              void *Palette,
+              unsigned int PaletteSize)
+{
+   SKY_DIB *Dib;
+   BITMAPINFO *BitmapInfo;
+
+   DBG("GI_create_DIB(0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x)\n", 
+       Data, Width, Height, Bpp, Palette, PaletteSize);
+
+   Dib = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SKY_DIB));
+   if (Dib == NULL)
+   {
+      return NULL;
+   }
+
+   BitmapInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(BITMAPINFOHEADER) +
+                          PaletteSize * sizeof(RGBQUAD));
+   if (BitmapInfo == NULL)
+   {
+      HeapFree(GetProcessHeap(), 0, Dib);
+      return NULL;
+   }
+
+   Dib->Dib.color = Bpp;
+   Dib->Dib.width = Width;
+   Dib->Dib.height = Height;
+   Dib->Dib.data = Data;
+   Dib->Dib.palette_size = PaletteSize;
+   Dib->Dib.palette = Palette;
+
+   BitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+   BitmapInfo->bmiHeader.biWidth = Width;
+   BitmapInfo->bmiHeader.biHeight = Height;
+   BitmapInfo->bmiHeader.biPlanes = 1;
+   BitmapInfo->bmiHeader.biBitCount = Bpp;
+   BitmapInfo->bmiHeader.biCompression = BI_RGB;
+   BitmapInfo->bmiHeader.biSizeImage = 0;
+   BitmapInfo->bmiHeader.biXPelsPerMeter = 0;
+   BitmapInfo->bmiHeader.biYPelsPerMeter = 0;
+   BitmapInfo->bmiHeader.biClrUsed = PaletteSize;
+   BitmapInfo->bmiHeader.biClrImportant = 0;
+   RtlCopyMemory(BitmapInfo->bmiColors, Palette, PaletteSize * sizeof(RGBQUAD));
+
+   Dib->hBitmap = CreateDIBSection(NULL,
+                                   BitmapInfo,
+                                   DIB_RGB_COLORS,
+                                   Data,
+                                   NULL,
+                                   0);
+   HeapFree(GetProcessHeap(), 0, BitmapInfo);
+   if (Dib->hBitmap == NULL)
+   {
+      HeapFree(GetProcessHeap(), 0, Dib);
+      return NULL;
+   }
+
+   return (DIB*)Dib;
+}
+
+
+/*
+ * @implemented
+ */
+GC* __cdecl
+GC_create_connected(unsigned int Type,
+                    unsigned int Width,
+                    unsigned int Height,
+                    HANDLE Win)
+{
+   SKY_GC *Gc;
+
+   DBG("GC_create_connected(0x%x, 0x%x, 0x%x, 0x%x)\n",
+       Type, Width, Height, Win);
+
+   Gc = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SKY_GC));
+   if (Gc == NULL)
+   {
+      return NULL;
+   }
+
+   Gc->GraphicsContext.type = Type;
+   Gc->GraphicsContext.width = Width;
+   Gc->GraphicsContext.height = Height;
+
+   switch (Type)
+   {
+      case GC_TYPE_DIB:
+         Gc->hDC = CreateCompatibleDC(0);
+         if (Gc->hDC)
+         {
+            Gc->GraphicsContext.hDIB = (DIB*)Win;
+            SelectObject(Gc->hDC, ((PSKY_DIB)Win)->hBitmap);
+            ((PSKY_DIB)Win)->hAssociateDC = Gc->hDC;
+         }
+         break;
+
+      case GC_TYPE_WINDOW:
+         Gc->hDC = GetDC(((PSKY_WINDOW)Win)->hWnd);
+         Gc->GraphicsContext.window = Win;
+         break;
+
+      default:
+         DBG("Unknown GC type: %x\n", Type);
+   }
+
+   if (Gc->hDC == NULL)
+   {
+      HeapFree(GetProcessHeap(), 0, Gc);
+   }
+   else
+   {
+      SelectObject(Gc->hDC, GetStockObject(DC_BRUSH));
+      SelectObject(Gc->hDC, GetStockObject(DC_PEN));
+   }
+
+   return (GC*)Gc;
+}
+
+
+/*
+ * @implemented
+ */
+int __cdecl
+GC_set_fg_color(GC *Gc,
+                COLOR Color)
+{
+   Gc->fg_color = Color;
+   SetDCPenColor(((PSKY_GC)Gc)->hDC, Color);
+   return 1;
+}
+
+
+/*
+ * @implemented
+ */
+int __cdecl
+GC_set_bg_color(GC *Gc,
+                COLOR Color)
+{
+   Gc->bg_color = Color;
+   SetDCBrushColor(((PSKY_GC)Gc)->hDC, Color);
+   return 1;
+}
+
+
+/*
+ * @implemented
+ */
+int __cdecl
+GC_draw_pixel(GC *Gc,
+              int X,
+              int Y)
+{
+   SetPixelV(((PSKY_GC)Gc)->hDC, X, Y, Gc->fg_color);
+   return 1;
+}
+
+
+/*
+ * @implemented
+ */
+int __cdecl
+GC_blit_from_DIB(GC *Gc,
+                 DIB *Dib,
+                 int X,
+                 int Y)
+{
+   int Result;
+   HDC hSrcDC;
+   HBITMAP hOldBitmap;
+
+   DBG("GC_blit_from_DIB(0x%x, 0x%x, 0x%x, 0x%x)\n", Gc, Dib, X, Y);
+
+   if (((PSKY_DIB)Dib)->hAssociateDC == NULL)
+   {
+      hSrcDC = CreateCompatibleDC(0);
+      hOldBitmap = SelectObject(hSrcDC, ((PSKY_DIB)Dib)->hBitmap);
+   }
+   else
+   {
+      hSrcDC = ((PSKY_DIB)Dib)->hAssociateDC;
+   }
+
+   Result = BitBlt(((PSKY_GC)Gc)->hDC, X, Y, Dib->width, Dib->height,
+                   hSrcDC, 0, 0, SRCCOPY);
+   
+   if (((PSKY_DIB)Dib)->hAssociateDC == NULL)
+   {
+      SelectObject(hSrcDC, hOldBitmap);
+      DeleteDC(hSrcDC);
+   }
+
+   return !Result;
+}
+
+
+/*
+ * @implemented
+ */
+int __cdecl
+GC_draw_rect_fill(GC *Gc,
+                 int X,
+                 int Y,
+                 int Width,
+                 int Height)
+{
+   HBRUSH hBrush;
+   RECT Rect = {X, Y, X + Width, Y + Height};
+
+   DBG("GC_draw_rect_fill(0x%x, 0x%x, 0x%x, 0x%x, 0x%x)\n",
+       Gc, X, Y, Width, Height);
+
+   hBrush = CreateSolidBrush(Gc->bg_color);
+   FillRect(((PSKY_GC)Gc)->hDC, &Rect, hBrush);
+   DeleteObject(hBrush);
+
+   return 1;
+}
+
+
+/*
+ * @implemented
+ */
+int __cdecl
+GC_draw_line(GC *Gc,
+             int x1,
+             int y1,
+             int x2,
+             int y2)
+{
+   DBG("GC_draw_line(0x%x, 0x%x, 0x%x, 0x%x, 0x%x)\n", Gc, x1, y1, x2, y2);
+   MoveToEx(((PSKY_GC)Gc)->hDC, x1, y1, NULL);
+   LineTo(((PSKY_GC)Gc)->hDC, x2, y2);
+   return 1;
+}
+
+
+/*
+ * @implemented
+ */
+int __cdecl
+GC_destroy(GC *Gc)
+{
+   DBG("GC_destroy(0x%x)\n", Gc);
+   DeleteDC(((PSKY_GC)Gc)->hDC);
+   HeapFree(GetProcessHeap(), 0, Gc);
+   return 1;
 }
 
 /* EOF */
