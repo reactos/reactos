@@ -6,4 +6,7 @@ EXPORTS
 AddIPAddress=AddIPAddress@20
 SetIpNetEntry=SetIpNetEntry@4
 CreateIpForwardEntry=CreateIpForwardEntry@4
+GetNetworkParams=GetNetworkParams@8
+GetNumberOfInterfaces=GetNumberOfInterfaces@4
+GetInterfaceInfo=GetInterfaceInfo@8
 ; EOF
