@@ -503,7 +503,6 @@ VOID ProtocolBindAdapter(
  */
 {
 	/* we get to ignore BindContext because we will never pend an operation with NDIS */
-	DbgPrint(("tcpip!ProtocolBindAdapter called\n"));
 	TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 	*Status = LANRegisterAdapter(DeviceName);
 }
@@ -629,13 +628,13 @@ VOID BindAdapter(
     Adapter->TDPackets = NULL;
     for (i = 0; i < 2; i++) {
         Packet              = AllocateTDPacket(Adapter);
-        PC(Packet)->Context = Adapter->TDPackets;
-        Adapter->TDPackets  = Packet;
         if (!Packet) {
             TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
             FreeTDPackets(Adapter);
             return;
         }
+        PC(Packet)->Context = Adapter->TDPackets;
+        Adapter->TDPackets  = Packet;
     }
 
     /* Bind the adapter to IP layer */
@@ -761,6 +760,7 @@ NDIS_STATUS LANRegisterAdapter(
     /* Initialize array with media IDs we support */
     MediaArray[MEDIA_ETH] = NdisMedium802_3;
 
+    TI_DbgPrint(DEBUG_DATALINK,("opening adapter %wZ\n", AdapterName));
     /* Open the adapter. */
     NdisOpenAdapter(&NdisStatus,
                     &OpenStatus,
