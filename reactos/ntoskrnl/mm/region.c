@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.4 2002/09/15 10:45:03 guido Exp $
+/* $Id: region.c,v 1.5 2003/01/02 16:41:56 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/region.c
@@ -183,12 +183,11 @@ MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
    * and call the helper function to actually do the changes.
    */
   CurrentEntry = NewRegion->RegionListEntry.Flink;
+  CurrentRegion = CONTAINING_RECORD(CurrentEntry, MM_REGION, 
+				    RegionListEntry);
   CurrentBaseAddress = StartAddress + NewRegion->Length;
   while (RemainingLength > 0 && CurrentRegion->Length <= RemainingLength)
     {
-      CurrentRegion = CONTAINING_RECORD(CurrentEntry, MM_REGION, 
-					RegionListEntry);
-      CurrentEntry = CurrentEntry->Flink;      
       if (CurrentRegion->Type != NewType &&
 	  CurrentRegion->Protect != NewProtect)
 	{
@@ -199,8 +198,11 @@ MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
       CurrentBaseAddress += CurrentRegion->Length;
       NewRegion->Length += CurrentRegion->Length;
       RemainingLength -= CurrentRegion->Length;
+      CurrentEntry = CurrentEntry->Flink;      
       RemoveEntryList(&CurrentRegion->RegionListEntry);
       ExFreePool(CurrentRegion);
+      CurrentRegion = CONTAINING_RECORD(CurrentEntry, MM_REGION, 
+					RegionListEntry);
     }
 
   /*
