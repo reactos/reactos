@@ -254,21 +254,21 @@ SerialMouseStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 	if (KeSynchronizeExecution(DeviceExtension->MouseInterrupt, MouseSynchronizeRoutine, Irp))
 	{
-        	KIRQL oldIrql;
+		KIRQL oldIrql;
 		Irp->IoStatus.Status = STATUS_SUCCESS;
 		Irp->IoStatus.Information = 0;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	        oldIrql = KeGetCurrentIrql();
-                if (oldIrql < DISPATCH_LEVEL)
-                  {
-                    KeRaiseIrql (DISPATCH_LEVEL, &oldIrql);
-                    IoStartNextPacket (DeviceObject, FALSE);
-                    KeLowerIrql(oldIrql);
-	          }
-                else
-                  {
-                    IoStartNextPacket (DeviceObject, FALSE);
-	          }
+		oldIrql = KeGetCurrentIrql();
+		if (oldIrql < DISPATCH_LEVEL)
+		{
+			KeRaiseIrql(DISPATCH_LEVEL, &oldIrql);
+			IoStartNextPacket(DeviceObject, FALSE);
+			KeLowerIrql(oldIrql);
+		}
+		else
+		{
+			IoStartNextPacket (DeviceObject, FALSE);
+		}
 	}
 }
 
@@ -377,65 +377,95 @@ VOID SerialMouseIsrDpc(PKDPC Dpc, PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID C
 
 void InitializeSerialPort(ULONG Port)
 {
-        /* DLAB off */
-        WRITE_PORT_UCHAR((PUCHAR)Port + 3, 0);
-        WRITE_PORT_UCHAR((PUCHAR)Port + 2, 0);  /* FCR: disable FIFO */
-        WRITE_PORT_UCHAR((PUCHAR)Port + 1, 0);  /* IER: disable ints */
-        /* Set DLAB on */
+	/* DLAB off */
+	WRITE_PORT_UCHAR((PUCHAR)Port + 3, 0);
+	WRITE_PORT_UCHAR((PUCHAR)Port + 2, 0);  /* FCR: disable FIFO */
+	WRITE_PORT_UCHAR((PUCHAR)Port + 1, 0);  /* IER: disable ints */
+	/* Set DLAB on */
 	WRITE_PORT_UCHAR((PUCHAR)Port + 3, 0x80);
 	/* Set serial port speed */
 	WRITE_PORT_UCHAR((PUCHAR)Port, 0x60);
 	WRITE_PORT_UCHAR((PUCHAR)Port + 1, 0);
-        /* Set DLAB off and set LCR */
+	/* Set DLAB off and set LCR */
 	WRITE_PORT_UCHAR((PUCHAR)Port + 3, 2);
+}
 
-	WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x09);  /* DR int enable */
+BOOL UARTReadChar(ULONG Port, CHAR *Value, ULONG Timeout)
+{
+	ULONG i, j;
+
+	for (i = 0; i < Timeout; i++)
+	{
+		for (j = 0; j < 1000; j++)
+		{
+			/* Is there a character ready? */
+			if (READ_PORT_UCHAR((PUCHAR)Port + 5) & 0x01)
+			{
+				/* Yes, read it and return */
+        *Value = READ_PORT_UCHAR((PUCHAR)Port);
+        return TRUE;
+			}
+			else
+			{
+			  /* No, wait */
+			  KeStallExecutionProcessor(1);
+			}
+		}
+	}
+
+	return FALSE;
 }
 
 ULONG DetectMicrosoftMouse(ULONG Port)
 {
-	CHAR Buffer[4];
-        ULONG i;
+	CHAR Buffer[8];
+	ULONG Count, i;
 	UCHAR LCR, MCR;
 
-        /* Save original LCR/MCR */
-        LCR = READ_PORT_UCHAR((PUCHAR)Port + 3); /* LCR (line ctrl reg) */
-        MCR = READ_PORT_UCHAR((PUCHAR)Port + 4); /* MCR (modem ctrl reg) */
+	/* Save original LCR/MCR */
+	LCR = READ_PORT_UCHAR((PUCHAR)Port + 3); /* LCR (line ctrl reg) */
+	MCR = READ_PORT_UCHAR((PUCHAR)Port + 4); /* MCR (modem ctrl reg) */
 
-        /* Reset UART */
-        WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0);  /* MCR: DTR/RTS/OUT2 off */
+	/* Reset UART */
+	WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0);  /* MCR: DTR/RTS/OUT2 off */
 
-        /* Set communications parameters */
-        InitializeSerialPort(Port);
+	/* Set communications parameters */
+	InitializeSerialPort(Port);
 
-        /* Flush receive buffer */
-        (void) READ_PORT_UCHAR((PUCHAR)Port);
-        KeStallExecutionProcessor(150000);      /* Wait > 100 ms */
+	/* Flush receive buffer */
+	(void) READ_PORT_UCHAR((PUCHAR)Port);
+	/* right? -> wait two ticks (approx 1/9 sec) */
+	KeStallExecutionProcessor(100000);
 
 	/* Enable DTR/RTS (OUT2 disabled) */
 	WRITE_PORT_UCHAR((PUCHAR)Port + 4, 3);
 
-	/* Discard serial buffer data */
-	while (READ_PORT_UCHAR((PUCHAR)Port + 5) & 0x01)
-		(void)READ_PORT_UCHAR((PUCHAR)Port);
-        KeStallExecutionProcessor(200000);      /* Wait */
-
-	/* Read the data */
-	for (i = 0; i < 4; i++)
-		Buffer[i] = READ_PORT_UCHAR((PUCHAR)Port);
+  if (UARTReadChar(Port, &Buffer[0], 500))
+  {
+		Count = 1;
+		while (Count < 8)
+		{ 
+			if (UARTReadChar(Port, &Buffer[Count], 100))
+				Count++;
+			else
+				break;
+		} 
+	}
+	else
+		return MOUSE_TYPE_NONE;
 
 	/* Restore LCR/MCR */
 	WRITE_PORT_UCHAR((PUCHAR)Port + 3, LCR); /* LCR (line ctrl reg) */
 	WRITE_PORT_UCHAR((PUCHAR)Port + 4, MCR); /* MCR (modem ctrl reg) */
 
-	for (i = 0; i < 4; ++i)
+	for (i = 0; i < Count; ++i)
 	{
 		/* Sign for Microsoft Ballpoint */
 		if (Buffer[i] == 'B')
 		{
 			DbgPrint("Microsoft Ballpoint device detected");
 			DbgPrint("THIS DEVICE IS NOT SUPPORTED, YET");
-			return MOUSE_TYPE_NONE;
+                        return MOUSE_TYPE_NONE;
 		} else
 		/* Sign for Microsoft Mouse protocol followed by button specifier */
 		if (Buffer[i] == 'M')
@@ -462,7 +492,6 @@ ULONG DetectMicrosoftMouse(ULONG Port)
 	}
 
 	return MOUSE_TYPE_NONE;
-
 }
 
 PDEVICE_OBJECT
@@ -545,8 +574,6 @@ InitializeMouse(ULONG Port, ULONG Irq, PDRIVER_OBJECT DriverObject)
 	/* No mouse, no need to continue */
 	if (MouseType == MOUSE_TYPE_NONE)
 	{
-		WRITE_PORT_UCHAR((PUCHAR)(Port) + 1, 1);
-		InitializeSerialPort(Port);
 		return FALSE;
 	}
 
@@ -555,7 +582,7 @@ InitializeMouse(ULONG Port, ULONG Irq, PDRIVER_OBJECT DriverObject)
 	
 	ClearMouse(Port);
 
-        /* Enable RTS, DTR and OUT2 */
+	/* Enable RTS, DTR and OUT2 */
 	WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x0b);
 
 	/* Allocate new device */
@@ -625,9 +652,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 		return STATUS_UNSUCCESSFUL;
 	}
 
-	DriverObject->MajorFunction[IRP_MJ_CREATE] = SerialMouseDispatch;
-	DriverObject->MajorFunction[IRP_MJ_CLOSE] = SerialMouseDispatch;
-	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = SerialMouseInternalDeviceControl;
+	DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)SerialMouseDispatch;
+	DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)SerialMouseDispatch;
+	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = (PDRIVER_DISPATCH)SerialMouseInternalDeviceControl;
 	DriverObject->DriverStartIo = SerialMouseStartIo;
 
 	return STATUS_SUCCESS;
