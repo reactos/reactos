@@ -580,7 +580,7 @@ struct String
 #endif
 
 	String() {}
-	String(LPCTSTR s) : super(s) {}
+	String(LPCTSTR s) {if (s) super::assign(s);}
 	String(LPCTSTR s, int l) : super(s, l) {}
 	String(const super& other) : super(other) {}
 	String(const String& other) : super(other) {}
@@ -590,18 +590,18 @@ struct String
 	String(LPCSTR s, int l) {assign(s, l);}
 	String(const string& other) {assign(other.c_str());}
 	String& operator=(LPCSTR s) {assign(s); return *this;}
-	void assign(LPCSTR s) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, -1, b, BUFFER_LEN));}
-	void assign(LPCSTR s, int l) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, l, b, BUFFER_LEN));}
+	void assign(LPCSTR s) {if (s) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, -1, b, BUFFER_LEN));} else erase();}
+	void assign(LPCSTR s, int l) {if (s) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, l, b, BUFFER_LEN));} else erase();}
 #else
 	String(LPCWSTR s) {assign(s);}
 	String(LPCWSTR s, int l) {assign(s, l);}
 	String(const wstring& other) {assign(other.c_str());}
 	String& operator=(LPCWSTR s) {assign(s); return *this;}
-	void assign(LPCWSTR s) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, -1, b, BUFFER_LEN, 0, 0));}
-	void assign(LPCWSTR s, int l) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, l, b, BUFFER_LEN, 0, 0));}
+	void assign(LPCWSTR s) {if (s) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, -1, b, BUFFER_LEN, 0, 0));} else erase();}
+	void assign(LPCWSTR s, int l) {if (s) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, l, b, BUFFER_LEN, 0, 0));} else erase();}
 #endif
 
-	String& operator=(LPCTSTR s) {super::assign(s); return *this;}
+	String& operator=(LPCTSTR s) {if (s) super::assign(s); else erase(); return *this;}
 	String& operator=(const super& s) {super::assign(s); return *this;}
 
 	operator LPCTSTR() const {return c_str();}
