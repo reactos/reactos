@@ -86,6 +86,35 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
          return Status;
       }
       PartitionInfoIsValid = TRUE;
+      DPRINT("Partition Information:\n");
+      DPRINT("StartingOffset      %u\n", PartitionInfo.StartingOffset.QuadPart  / 512);
+      DPRINT("PartitionLength     %u\n", PartitionInfo.PartitionLength.QuadPart / 512);
+      DPRINT("HiddenSectors       %u\n", PartitionInfo.HiddenSectors);
+      DPRINT("PartitionNumber     %u\n", PartitionInfo.PartitionNumber);
+      DPRINT("PartitionType       %u\n", PartitionInfo.PartitionType);
+      DPRINT("BootIndicator       %u\n", PartitionInfo.BootIndicator);
+      DPRINT("RecognizedPartition %u\n", PartitionInfo.RecognizedPartition);
+      DPRINT("RewritePartition    %u\n", PartitionInfo.RewritePartition);
+      if (PartitionInfo.PartitionType)
+      {
+         if (PartitionInfo.PartitionType == PARTITION_FAT_12       ||
+             PartitionInfo.PartitionType == PARTITION_FAT_16       ||
+             PartitionInfo.PartitionType == PARTITION_HUGE         ||
+             PartitionInfo.PartitionType == PARTITION_FAT32        ||
+             PartitionInfo.PartitionType == PARTITION_FAT32_XINT13 ||
+             PartitionInfo.PartitionType == PARTITION_XINT13)
+         {
+            *RecognizedFS = TRUE;
+         }
+      }
+      else if (DiskGeometry.MediaType == RemovableMedia &&
+               PartitionInfo.PartitionNumber > 0 &&
+               PartitionInfo.StartingOffset.QuadPart == 0LL &&
+               PartitionInfo.PartitionLength.QuadPart > 0LL)
+      {
+         /* This is possible a removable media formated as super floppy */
+         *RecognizedFS = TRUE;
+      }
    }
    else if (DiskGeometry.MediaType == Unknown)
    {
@@ -96,6 +125,14 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
        */
       *RecognizedFS = TRUE;
       DiskGeometry.BytesPerSector = 512;
+   }
+   else
+   {
+      *RecognizedFS = TRUE;
+   }  
+   if (*RecognizedFS == FALSE)
+   {
+      return STATUS_SUCCESS;
    }
 
    Boot = ExAllocatePool(NonPagedPool, DiskGeometry.BytesPerSector);
@@ -110,8 +147,6 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
    Status = VfatReadDisk(DeviceToMount, &Offset, DiskGeometry.BytesPerSector, (PUCHAR) Boot, FALSE);
    if (NT_SUCCESS(Status))
    {
-      *RecognizedFS = TRUE;
-
       if (Boot->Signatur1 != 0xaa55)
       {
          *RecognizedFS = FALSE;
