@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.88 2003/08/12 22:27:55 weiden Exp $
+/* $Id: window.c,v 1.89 2003/08/12 22:45:27 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1489,7 +1489,6 @@ NtUserInternalGetWindowText(HWND hWnd,
 {
   DWORD res = 0;
   PWINDOW_OBJECT WindowObject;
-  HANDLE Atom;
   
   W32kAcquireWinLockShared(); /* ??? */
   WindowObject = W32kGetWindowObject(hWnd);
