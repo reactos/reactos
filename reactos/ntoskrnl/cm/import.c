@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.25 2003/11/27 00:48:11 gdalsnes Exp $
+/* $Id: import.c,v 1.26 2003/12/14 17:58:00 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,7 +12,6 @@
 
 #include <ddk/ntddk.h>
 #include <string.h>
-#include <ctype.h>
 #include <roscfg.h>
 
 #define NDEBUG
@@ -181,7 +180,7 @@ CmImportSystemHive(PCHAR ChunkBase,
   /* Import the binary system hive (non-volatile, offset-based, permanent) */
   if (!CmImportBinaryHive (ChunkBase, ChunkSize, 0, &RegistryHive))
     {
-      DPRINT1 ("CmiImportBinaryHive() failed\n", Status);
+      DPRINT1 ("CmiImportBinaryHive() failed\n");
       return FALSE;
     }
 
@@ -333,7 +332,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
   /* Import the binary system hive (volatile, offset-based, permanent) */
   if (!CmImportBinaryHive (ChunkBase, ChunkSize, HIVE_NO_FILE, &RegistryHive))
     {
-      DPRINT1 ("CmiImportBinaryHive() failed\n", Status);
+      DPRINT1 ("CmiImportBinaryHive() failed\n");
       return FALSE;
     }
 
