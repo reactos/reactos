@@ -18,7 +18,7 @@
  * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
  * MA 02139, USA.  
  * 
- * $Id: scmprot.h,v 1.1 2004/04/12 17:14:26 navaraf Exp $
+ * $Id: scmprot.h,v 1.1.2.1 2004/04/12 17:27:52 navaraf Exp $
  */
 
 #ifndef _SCM_H
