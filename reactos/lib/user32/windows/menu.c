@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.73 2004/12/04 22:08:30 navaraf Exp $
+/* $Id: menu.c,v 1.74 2004/12/11 19:45:10 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -3761,7 +3761,7 @@ GetMenuItemInfoA(
    
    if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO)mii, FALSE))
    {
-      HeapFree(GetProcessHeap(), 0, mii->dwTypeData);
+      HeapFree(GetProcessHeap(), 0, Text.Buffer);
       mii->dwTypeData = AnsiString;
       return FALSE;
    }
