@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.19 2003/06/01 17:08:03 hbirr Exp $
+/* $Id: dllmain.c,v 1.20 2004/01/31 13:29:19 navaraf Exp $
  *
  * dllmain.c
  *
@@ -14,15 +14,16 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.19 $
- * $Author: hbirr $
- * $Date: 2003/06/01 17:08:03 $
+ * $Revision: 1.20 $
+ * $Author: navaraf $
+ * $Date: 2004/01/31 13:29:19 $
  *
  */
 
 #include <windows.h>
 #include <msvcrt/internal/tls.h>
 #include <msvcrt/stdlib.h>
+#include "../wine/msvcrt.h"
 
 #define NDEBUG
 #include <msvcrt/msvcrtdbg.h>
@@ -61,8 +62,6 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
     switch (dwReason)
     {
     case DLL_PROCESS_ATTACH://1
-#if 0
-#else
         /* initialize version info */
         DPRINT("Attach %d\n", nAttachCount);
         _osver = GetVersion();
@@ -99,9 +98,12 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
 
         /* FIXME: more initializations... */
 
+        /* FIXME: Initialization of the WINE code */
+        msvcrt_init_mt_locks();
+        msvcrt_init_args();
+
         nAttachCount++;
         DPRINT("Attach done\n");
-#endif
         break;
 
     case DLL_THREAD_ATTACH://2
@@ -116,6 +118,10 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         if (nAttachCount > 0)
         {
             nAttachCount--;
+
+            /* Deinitialization of the WINE code */
+            msvcrt_free_args();
+            msvcrt_free_mt_locks();
 
             /* FIXME: more cleanup... */
             _fcloseall();
