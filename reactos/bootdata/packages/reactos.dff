@@ -68,6 +68,7 @@ lib\cpl\timedate\timedate.cpl           1
 lib\comctl32\comctl32.dll               1
 lib\comdlg32\comdlg32.dll               1
 lib\crtdll\crtdll.dll                   1
+lib\devenum\devenum.dll                 1
 lib\dinput\dinput.dll                   1
 lib\dinput8\dinput8.dll                 1
 lib\dsound\dsound.dll			    1
