@@ -69,6 +69,8 @@ ShellBrowserChild::ShellBrowserChild(HWND hwnd, HWND left_hwnd, WindowHandle& ri
 
 ShellBrowserChild::~ShellBrowserChild()
 {
+	TreeView_SetImageList(_left_hwnd, 0, TVSIL_NORMAL);
+
 	if (_pShellView)
 		_pShellView->Release();
 
@@ -102,7 +104,7 @@ LRESULT ShellBrowserChild::Init(HWND hWndFrame)
 		InitDragDrop();
 	}
 
-	const String& root_name = GetDesktopFolder().get_name(_create_info._root_shell_path, SHGDN_FORPARSING);
+	const String& root_name = GetDesktopFolder().get_name(_create_info._root_shell_path, SHGDN_FORADDRESSBAR);
 
 	_root._drive_type = DRIVE_UNKNOWN;
 	lstrcpy(_root._volname, root_name);
