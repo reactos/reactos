@@ -25,116 +25,34 @@
 #include <multiboot.h>
 
 	/*
-     * Here we assume the kernel is loaded at 1mb
-     * This boots the kernel
+	 * Here we assume the kernel is loaded at 1mb
+	 * This boots the kernel
 	 */
 	.code32
 EXTERN(_boot_reactos)
-	call	switch_to_real
-	.code16
-
-    /* Save cursor position */
-	movw    $3,%ax          //! Reset video mode
-	int     $0x10
-
-
-	movb    $10,%bl
-	movb    $12,%ah
-	int     $0x10
-
-	movw    $0x1112,%ax		// Use 8x8 font
-	xorb	%bl,%bl
-	int     $0x10
-	movw    $0x1200,%ax		// Use alternate print screen
-	movb    $0x20,%bl
-	int     $0x10
-	movb    $1,%ah			// Define cursor (scan lines 6 to 7)
-	movw    $0x0607,%cx
-	int     $0x10
-
-	movb    $1,%ah
-	movw    $0x600,%cx
-	int     $0x10
-
-	movb	$6,%ah			// Scroll active page up
-	movb	$0x32,%al		// Clear 25 lines
-	movw	$0,%cx			// Upper left of scroll
-	movw	$0x314F,%dx		// Lower right of scroll
-	movb	$(1*0x00+0),%bh	// Use normal attribute on blanked line
-	int		$0x10			// Video-IO
-
-
-	movw	$0,%dx
-	movb	$0,%dh
-
-	movb	$2,%ah
-	movb	$0,%bh
-	int		$0x10
-
-	movw	$0,%dx
-	movb	$0,%dh
-
-	movb	$2,%ah
-	movb	$0,%bh
-	int		$0x10
+	call	_MachVideoPrepareForReactOS
 
 	call	_multi_boot
 
 	// Should never get here
 	cli
+bootloop:
 	hlt
+	jmp	bootloop
 
 
 	/*
 	 * After you have setup the _mb_header and _mb_info structures
 	 * then call this routine to transfer control to the kernel.
-	 * This routine must be entered in 16-bit mode.
 	 */
-	.code16
 EXTERN(_multi_boot)
 
 	cli
 
 	/*
-	 * Setup various variables
-	 */
-	movw	%ds,%bx
-	movzwl	%bx,%eax
-	shll	$4,%eax
-	addl	%eax,kernel_gdtbase
-
-	/*
 	 * Load the absolute address of the multiboot information structure
 	 */
 	movl	$_mb_info,%ebx
-
-	/*
-	 * load gdt
-	 */
-	lgdt	kernel_gdtptr
-
-	/*       
-	 * Enter pmode and clear prefetch queue
-	 */
-	movl	%cr0,%eax
-	orl		$0x10001,%eax
-	movl	%eax,%cr0
-	jmp		next
-next:
-	/*
-	 * NOTE: This must be position independant (no references to
-	 * non absolute variables)
-	 */
-
-	/*
-	 * Initalize segment registers
-	 */
-	movw	$KERNEL_DS,%ax
-	movw	%ax,%ds
-	movw	%ax,%ss
-	movw	%ax,%es
-	movw	%ax,%fs
-	movw	%ax,%gs
 
 	/*
 	 * Initalize eflags
@@ -154,33 +72,6 @@ next:
 	pushl	$KERNEL_CS
 	pushl	_mb_entry_addr
 	lretl
-
-	//ljmpl	$KERNEL_CS,$(0x0200000+0x1000)
-	//ljmpl	$KERNEL_CS,(_mb_entry_addr)
-	//ljmpl	$KERNEL_CS,$(KERNEL_BASE+0x1000)
-
-
-	.p2align	2	/* force 4-byte alignment */
-kernel_gdt:
-	.word 0               // Zero descriptor
-	.word 0
-	.word 0
-	.word 0
-
-	.word 0xffff          // Kernel code descriptor 
-	.word 0x0000          // 
-	.word 0x9a00          // base 0h limit 4gb
-	.word 0x00cf
-                       
-	.word 0xffff          // Kernel data descriptor
-	.word 0x0000          // 
-	.word 0x9200          // base 0h limit 4gb
-	.word 0x00cf
-
-kernel_gdtptr:
-	.word	(3*8)-1			/* Limit */
-kernel_gdtbase:
-	.long	kernel_gdt				/* Base Address */
 
 
 EXTERN(_mb_header)

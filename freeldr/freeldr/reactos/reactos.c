@@ -686,7 +686,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		rosPartition = 0;
 		while (1)
 		{
-		   if (!DiskGetPartitionEntry(BootDrive, ++i, &PartitionTableEntry))
+		   if (!MachDiskGetPartitionEntry(BootDrive, ++i, &PartitionTableEntry))
 		   {
 		      BootPartition = 0;
 		      break;

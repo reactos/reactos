@@ -1,4 +1,4 @@
-/* $Id: machpc.c,v 1.5 2004/11/14 22:04:38 gvg Exp $
+/* $Id: machpc.c,v 1.6 2004/11/23 11:28:02 gvg Exp $
  *
  *  FreeLoader
  *
@@ -46,6 +46,7 @@ PcMachInit(VOID)
   MachVtbl.VideoSetPaletteColor = PcVideoSetPaletteColor;
   MachVtbl.VideoGetPaletteColor = PcVideoGetPaletteColor;
   MachVtbl.VideoSync = PcVideoSync;
+  MachVtbl.VideoPrepareForReactOS = PcVideoPrepareForReactOS;
   MachVtbl.GetMemoryMap = PcMemGetMemoryMap;
   MachVtbl.DiskReadLogicalSectors = PcDiskReadLogicalSectors;
   MachVtbl.DiskGetPartitionEntry = PcDiskGetPartitionEntry;

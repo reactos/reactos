@@ -1,4 +1,4 @@
-/* $Id: pcvideo.c,v 1.1 2004/11/14 22:04:38 gvg Exp $
+/* $Id: pcvideo.c,v 1.2 2004/11/23 11:28:02 gvg Exp $
  *
  *  FreeLoader
  *
@@ -1104,6 +1104,13 @@ PcVideoSync(VOID)
        * retrace we need to wait for the next one.
        */
     }
+}
+
+VOID
+PcVideoPrepareForReactOS(VOID)
+{
+  PcVideoSetMode80x50_80x43();
+  PcVideoHideShowTextCursor(FALSE);
 }
 
 /* EOF */

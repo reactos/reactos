@@ -1,4 +1,4 @@
-/* $Id: machxbox.c,v 1.5 2004/11/14 22:04:38 gvg Exp $
+/* $Id: machxbox.c,v 1.6 2004/11/23 11:28:02 gvg Exp $
  *
  *  FreeLoader
  *
@@ -44,6 +44,7 @@ XboxMachInit(VOID)
   MachVtbl.VideoSetPaletteColor = XboxVideoSetPaletteColor;
   MachVtbl.VideoGetPaletteColor = XboxVideoGetPaletteColor;
   MachVtbl.VideoSync = XboxVideoSync;
+  MachVtbl.VideoPrepareForReactOS = XboxVideoPrepareForReactOS;
   MachVtbl.GetMemoryMap = XboxMemGetMemoryMap;
   MachVtbl.DiskReadLogicalSectors = XboxDiskReadLogicalSectors;
   MachVtbl.DiskGetPartitionEntry = XboxDiskGetPartitionEntry;

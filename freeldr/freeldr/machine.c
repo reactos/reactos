@@ -1,4 +1,4 @@
-/* $Id: machine.c,v 1.5 2004/11/14 22:04:38 gvg Exp $
+/* $Id: machine.c,v 1.6 2004/11/23 11:28:02 gvg Exp $
  *
  *  FreeLoader
  *
@@ -35,6 +35,7 @@
 #undef MachVideoSetPaletteColor
 #undef MachVideoGetPaletteColor
 #undef MachVideoSync
+#undef MachVideoPrepareForReactOS
 #undef MachGetMemoryMap
 #undef MachDiskReadLogicalSectors
 #undef MachDiskGetPartitionEntry
@@ -131,7 +132,13 @@ MachVideoGetPaletteColor(U8 Color, U8 *Red, U8 *Green, U8 *Blue)
 VOID
 MachVideoSync(VOID)
 {
-  return MachVtbl.VideoSync();
+  MachVtbl.VideoSync();
+}
+
+VOID
+MachVideoPrepareForReactOS(VOID)
+{
+  MachVtbl.VideoPrepareForReactOS();
 }
 
 U32

@@ -1,4 +1,4 @@
-/* $Id: machxbox.h,v 1.5 2004/11/14 22:04:38 gvg Exp $
+/* $Id: machxbox.h,v 1.6 2004/11/23 11:28:02 gvg Exp $
  *
  *  FreeLoader
  *
@@ -45,6 +45,7 @@ BOOL XboxVideoIsPaletteFixed(VOID);
 VOID XboxVideoSetPaletteColor(U8 Color, U8 Red, U8 Green, U8 Blue);
 VOID XboxVideoGetPaletteColor(U8 Color, U8* Red, U8* Green, U8* Blue);
 VOID XboxVideoSync(VOID);
+VOID XboxVideoPrepareForReactOS(VOID);
 
 VOID XboxMemInit(VOID);
 PVOID XboxMemReserveMemory(U32 MbToReserve);

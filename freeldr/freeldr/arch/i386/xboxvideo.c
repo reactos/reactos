@@ -1,4 +1,4 @@
-/* $Id: xboxvideo.c,v 1.3 2004/11/14 22:04:38 gvg Exp $
+/* $Id: xboxvideo.c,v 1.4 2004/11/23 11:28:02 gvg Exp $
  *
  *  FreeLoader
  *
@@ -35,7 +35,7 @@ static U32 Delta;
 #define CHAR_WIDTH  8
 #define CHAR_HEIGHT 16
 
-#define TOP_BOTTOM_LINES 40
+#define TOP_BOTTOM_LINES 0
 
 #define FB_SIZE_MB 4
 
@@ -207,6 +207,12 @@ VOID
 XboxVideoSync()
 {
   /* Not supported */
+}
+
+VOID
+XboxVideoPrepareForReactOS(VOID)
+{
+  XboxVideoClearScreenColor(MAKE_COLOR(0, 0, 0), TRUE);
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: machine.h,v 1.5 2004/11/14 22:04:39 gvg Exp $
+/* $Id: machine.h,v 1.6 2004/11/23 11:28:02 gvg Exp $
  *
  *  FreeLoader
  *
@@ -52,6 +52,7 @@ typedef struct tagMACHVTBL
   VOID (*VideoSetPaletteColor)(U8 Color, U8 Red, U8 Green, U8 Blue);
   VOID (*VideoGetPaletteColor)(U8 Color, U8* Red, U8* Green, U8* Blue);
   VOID (*VideoSync)(VOID);
+  VOID (*VideoPrepareForReactOS)(VOID);
 
   U32 (*GetMemoryMap)(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize);
 
@@ -82,6 +83,7 @@ extern MACHVTBL MachVtbl;
 #define MachVideoSetPaletteColor(Col, R, G, B)	MachVtbl.VideoSetPaletteColor((Col), (R), (G), (B))
 #define MachVideoGetPaletteColor(Col, R, G, B)	MachVtbl.VideoGetPaletteColor((Col), (R), (G), (B))
 #define MachVideoSync()				MachVtbl.VideoSync()
+#define MachVideoPrepareForReactOS()		MachVtbl.VideoPrepareForReactOS()
 #define MachGetMemoryMap(MMap, Size)		MachVtbl.GetMemoryMap((MMap), (Size))
 #define MachDiskReadLogicalSectors(Drive, Start, Count, Buf)	MachVtbl.DiskReadLogicalSectors((Drive), (Start), (Count), (Buf))
 #define MachDiskGetPartitionEntry(Drive, Part, Entry)	MachVtbl.DiskGetPartitionEntry((Drive), (Part), (Entry))
