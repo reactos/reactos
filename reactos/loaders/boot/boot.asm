@@ -27,11 +27,14 @@
 ;
 ; $Logfile:   C:/dos-c/src/boot/boot.asv  $
 ;
-; $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/loaders/boot/Attic/boot.asm,v 1.2 1998/08/12 22:43:38 rosmgr Exp $
+; $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/loaders/boot/Attic/boot.asm,v 1.3 1998/08/25 04:37:43 rex Exp $
 ;
 ; $Log: boot.asm,v $
-; Revision 1.2  1998/08/12 22:43:38  rosmgr
-; Update from the kernel team
+; Revision 1.3  1998/08/25 04:37:43  rex
+; new release cleanup
+;
+; Revision 1.1.1.2  1998/08/25 04:27:38  rex
+; A much Needed Update
 ;
 ;	
 ;	   Rev 1.5   10 Jan 1997  4:58:06   patv
@@ -285,7 +288,4 @@ filename        db      "KERNEL  BIN"
                 TIMES 510-($-$$) DB 0 
 sign            dw      0aa55h
                 
-
-
-
 
