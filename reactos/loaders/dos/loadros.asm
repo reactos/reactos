@@ -286,12 +286,26 @@ entry:
 .checkForHive:
 	; Check if it is a hive file
 	cmp	byte [bx-5],'.'
-	jne	.lst_copy
+	jne	.checkForNls
 	cmp	byte [bx-4],'h'
-	jne	.lst_copy
+	jne	.checkForNls
 	cmp	byte [bx-3],'i'
-	jne	.lst_copy
+	jne	.checkForNls
 	cmp	byte [bx-2],'v'
+	jne	.checkForNls
+
+	call	sym_load_module
+	jmp	.after_copy
+
+.checkForNls:
+	; Check if it is a NLS file
+	cmp	byte [bx-5],'.'
+	jne	.lst_copy
+	cmp	byte [bx-4],'n'
+	jne	.lst_copy
+	cmp	byte [bx-3],'l'
+	jne	.lst_copy
+	cmp	byte [bx-2],'s'
 	jne	.lst_copy
 
 	call	sym_load_module
