@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.66 2004/05/16 18:33:40 weiden Exp $
+/* $Id: message.c,v 1.67 2004/05/22 08:27:15 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -38,7 +38,6 @@ typedef struct
 {
   UINT uFlags;
   UINT uTimeout;
-  ULONG_PTR uResult;
 } DOSENDMESSAGE, *PDOSENDMESSAGE;
 
 /* FUNCTIONS *****************************************************************/
@@ -1216,6 +1215,8 @@ IntSendMessageTimeoutSingle(HWND hWnd,
   if(Status == STATUS_TIMEOUT)
   {
     IntReleaseWindowObject(Window);
+    if(uResult)
+      *uResult = Result;
     SetLastWin32Error(ERROR_TIMEOUT);
     return FALSE;
   }
@@ -1406,7 +1407,7 @@ IntDoSendMessage(HWND Wnd,
       {
         Result = IntSendMessageTimeout(KernelModeMsg.hwnd, KernelModeMsg.message,
                                        KernelModeMsg.wParam, KernelModeMsg.lParam,
-                                       dsm->uFlags, dsm->uTimeout, &dsm->uResult);
+                                       dsm->uFlags, dsm->uTimeout, &Result);
       }
       Status = CopyMsgToUserMem(&UserModeMsg, &KernelModeMsg);
       if (! NT_SUCCESS(Status))
@@ -1446,7 +1447,7 @@ NtUserSendMessageTimeout(HWND hWnd,
   {
     NTSTATUS Status;
     
-    Status = MmCopyToCaller(uResult, &dsm.uResult, sizeof(ULONG_PTR));
+    Status = MmCopyToCaller(uResult, &Result, sizeof(ULONG_PTR));
     if(!NT_SUCCESS(Status))
     {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
