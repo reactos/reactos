@@ -435,10 +435,11 @@ KeRemoveQueueApc (PKAPC Apc)
    PKTHREAD TargetThread;
 
    KeRaiseIrql(HIGH_LEVEL, &oldIrql);
-   KeAcquireSpinLockAtDpcLevel(&PiApcLock);
+   KiAcquireSpinLock(&PiApcLock);
    if (Apc->Inserted == FALSE)
      {
-	KeReleaseSpinLock(&PiApcLock, oldIrql);
+	KiReleaseSpinLock(&PiApcLock);
+  KeLowerIrql(oldIrql);
 	return(FALSE);
      }
 
@@ -454,7 +455,8 @@ KeRemoveQueueApc (PKAPC Apc)
      }
    Apc->Inserted = FALSE;
 
-   KeReleaseSpinLock(&PiApcLock, oldIrql);
+   KiReleaseSpinLock(&PiApcLock);
+   KeLowerIrql(oldIrql);   
    return(TRUE);
 }
 
