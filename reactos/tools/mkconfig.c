@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
 
 int
 write_if_change(char* outbuf, char* filename)

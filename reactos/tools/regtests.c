@@ -21,10 +21,10 @@
 #include <unistd.h>
 #endif
 #include <ctype.h>
-#ifndef WIN32
 #ifndef MAX_PATH
 #define MAX_PATH 260
 #endif
+#ifndef WIN32
 #define DIR_SEPARATOR_CHAR '/'
 #define DIR_SEPARATOR_STRING "/"
 #else
