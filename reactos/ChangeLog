@@ -1,3 +1,8 @@
+2003-08-22  Martin Fuchs	<martin-fuchs@gmx.net>
+
+	* include/wine/commctrl.h:
+	Removed commctrl.h header file to use the one of W32API headers.
+
 2003-08-19  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* subsys/win32k/ntuser/menu.c (IntSetMenuDefaultItem,
