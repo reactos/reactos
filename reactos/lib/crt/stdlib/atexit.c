@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <internal/atexit.h>
 
-typedef int (* _onexit_t)(void);
-
 /*
  * @implemented
  *
