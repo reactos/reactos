@@ -182,20 +182,20 @@
 182 stdcall -noname SHCheckMenuItem(long long long)
 183 stdcall -noname SHRegisterClassA(ptr)
 184 stdcall @(ptr ptr long) SHLWAPI_184
-185 stub -noname SHMessageBoxCheckA
+185 stdcall -noname SHMessageBoxCheckA(ptr str str long long str)
 186 stub -noname SHSimulateDrop
 187 stdcall -noname SHLoadFromPropertyBag(ptr ptr)
 188 stub -noname IUnknown_TranslateAcceleratorOCS
 189 stdcall -noname IUnknown_OnFocusOCS(ptr ptr)
 190 stub -noname IUnknown_HandleIRestrict
-191 stub -noname SHMessageBoxCheckW
+191 stdcall -noname SHMessageBoxCheckW(ptr wstr wstr long long wstr)
 192 stdcall -noname SHGetMenuFromID(ptr long)
 193 stdcall -noname SHGetCurColorRes()
-194 stub -noname SHWaitForSendMessageThread
+194 stdcall -noname SHWaitForSendMessageThread(ptr long)
 195 stub -noname SHIsExpandableFolder
 196 stub -noname DnsRecordSetCompare
 197 stdcall -noname SHFillRectClr(long ptr long)
-198 stub -noname SHSearchMapInt
+198 stdcall -noname SHSearchMapInt(ptr ptr long long)
 199 stdcall -noname IUnknown_Set(ptr ptr)
 200 stub -noname MayQSForward
 201 stdcall -noname MayExecForward(ptr long ptr long long ptr ptr)
@@ -213,7 +213,7 @@
 213 stdcall -noname IStream_Reset(ptr)
 214 stdcall -noname IStream_Size(ptr ptr)
 215 stdcall -noname SHAnsiToUnicode(str ptr long)
-216 stub -noname SHAnsiToUnicodeCP
+216 stdcall -noname SHAnsiToUnicodeCP(long str ptr long)
 217 stdcall -noname SHUnicodeToAnsi(wstr ptr ptr)
 218 stdcall -noname SHUnicodeToAnsiCP(long wstr ptr ptr)
 219 stdcall -noname QISearch(long long long long)
@@ -222,7 +222,7 @@
 222 stdcall -noname _SHGlobalCounterCreate(long)
 223 stdcall -noname _SHGlobalCounterGetValue(long)
 224 stdcall -noname _SHGlobalCounterIncrement(long)
-225 stub -noname SHStripMneumonicW
+225 stdcall -noname SHStripMneumonicW(wstr)
 226 stub -noname ZoneCheckPathA
 227 stub -noname ZoneCheckPathW
 228 stub -noname ZoneCheckUrlA
@@ -288,8 +288,8 @@
 288 stub -noname IUnknown_CPContainerInvokeIndirect
 289 stdcall -noname PlaySoundWrapW(wstr long long)
 290 stub -noname SHMirrorIcon
-291 stub -noname SHMessageBoxCheckExA
-292 stub -noname SHMessageBoxCheckExW
+291 stdcall -noname SHMessageBoxCheckExA(ptr ptr ptr ptr ptr long str)
+292 stdcall -noname SHMessageBoxCheckExW(ptr ptr ptr ptr ptr long wstr)
 293 stub -noname SHCancelUserWorkItems
 294 stdcall -noname SHGetIniStringW(long long long long long)
 295 stdcall -noname SHSetIniStringW(wstr ptr wstr wstr)
@@ -445,7 +445,7 @@
 445 stdcall -noname PathFileExistsAndAttributesA(str ptr)
 446 stdcall -noname PathFileExistsAndAttributesW(wstr ptr)
 447 stub -noname FixSlashesAndColonA
-448 stub -noname FixSlashesAndColonW
+448 stdcall -noname FixSlashesAndColonW(wstr)
 449 stub -noname NextPathA
 450 stub -noname NextPathW
 451 stub -noname CharUpperNoDBCSA
@@ -458,7 +458,7 @@
 458 stub -noname GetLongPathNameWrapA
 459 stub -noname SHExpandEnvironmentStringsA
 460 stub -noname SHExpandEnvironmentStringsW
-461 stub -noname SHGetAppCompatFlags
+461 stdcall -noname SHGetAppCompatFlags()
 462 stub -noname UrlFixupW
 463 stub -noname SHExpandEnvironmentStringsForUserA
 464 stub -noname SHExpandEnvironmentStringsForUserW

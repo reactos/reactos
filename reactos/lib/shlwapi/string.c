@@ -2435,6 +2435,63 @@ char WINAPI SHStripMneumonicA(LPCSTR lpszStr)
 }
 
 /*************************************************************************
+ *      @	[SHLWAPI.225]
+ *
+ * Unicode version of SHStripMneumonicA.
+ */
+WCHAR WINAPI SHStripMneumonicW(LPCWSTR lpszStr)
+{
+  LPWSTR lpszIter, lpszTmp;
+  WCHAR ch;
+
+  TRACE("(%s)\n", debugstr_w(lpszStr));
+
+  ch = *lpszStr;
+
+  if ((lpszIter = StrChrW(lpszStr, '&')))
+  {
+    lpszTmp = CharNextW(lpszIter);
+    if (lpszTmp && *lpszTmp)
+    {
+      if (*lpszTmp != '&')
+        ch =  *lpszTmp;
+
+      while (lpszIter && *lpszIter)
+      {
+        lpszTmp = CharNextW(lpszIter);
+        *lpszIter = *lpszTmp;
+        lpszIter = lpszTmp;
+      }
+    }
+  }
+
+  return ch;
+}
+
+/*************************************************************************
+ *      @	[SHLWAPI.216]
+ *
+ * Convert an Ascii string to Unicode.
+ *
+ * PARAMS
+ * dwCp     [I] Code page for the conversion
+ * lpSrcStr [I] Source Ascii string to convert
+ * lpDstStr [O] Destination for converted Unicode string
+ * iLen     [I] Length of lpDstStr
+ *
+ * RETURNS
+ *  The return value of the MultiByteToWideChar() function called on lpSrcStr.
+ */
+DWORD WINAPI SHAnsiToUnicodeCP(DWORD dwCp, LPCSTR lpSrcStr, LPWSTR lpDstStr, int iLen)
+{
+  DWORD dwRet;
+
+  dwRet = MultiByteToWideChar(dwCp, 0, lpSrcStr, -1, lpDstStr, iLen);
+  TRACE("%s->%s,ret=%ld\n", debugstr_a(lpSrcStr), debugstr_w(lpDstStr), dwRet);
+  return dwRet;
+}
+
+/*************************************************************************
  *      @	[SHLWAPI.215]
  *
  * Convert an Ascii string to Unicode.
@@ -2446,14 +2503,13 @@ char WINAPI SHStripMneumonicA(LPCSTR lpszStr)
  *
  * RETURNS
  *  The return value of the MultiByteToWideChar() function called on lpSrcStr.
+ *
+ * NOTES
+ *  This function simply calls SHAnsiToUnicodeCP with code page CP_ACP.
  */
 DWORD WINAPI SHAnsiToUnicode(LPCSTR lpSrcStr, LPWSTR lpDstStr, int iLen)
 {
-  DWORD dwRet;
-
-  dwRet = MultiByteToWideChar(CP_ACP, 0, lpSrcStr, -1, lpDstStr, iLen);
-  TRACE("%s->%s,ret=%ld\n", debugstr_a(lpSrcStr), debugstr_w(lpDstStr), dwRet);
-  return dwRet;
+  return SHAnsiToUnicodeCP(CP_ACP, lpSrcStr, lpDstStr, iLen);
 }
 
 /*************************************************************************

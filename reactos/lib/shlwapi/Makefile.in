@@ -12,6 +12,7 @@ C_SRCS = \
 	assoc.c \
 	clist.c \
 	istream.c \
+	msgbox.c \
 	ordinal.c \
 	path.c \
 	reg.c \
@@ -22,6 +23,9 @@ C_SRCS = \
 	thread.c \
 	url.c \
 	wsprintf.c
+
+RC_SRCS = \
+	shlwapi.rc
 
 SUBDIRS = tests
 

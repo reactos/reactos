@@ -45,7 +45,6 @@
 #include "wine/unicode.h"
 #include "servprov.h"
 #include "winreg.h"
-#include "winuser.h"
 #include "wine/debug.h"
 #include "shlwapi.h"
 
@@ -1902,41 +1901,6 @@ DWORD WINAPI IUnknown_OnFocusOCS(IUnknown *lpUnknown, IDispatch** lppDisp)
   return hRet;
 }
 
-static const WCHAR szDontShowKey[] = { 'S','o','f','t','w','a','r','e','\\',
-  'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
-  'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-  'E','x','p','l','o','r','e','r','\\','D','o','n','t','S','h','o','w',
-  'M','e','T','h','i','s','D','i','a','l','o','g','A','g','a','i','n','\0'
-};
-
-/*************************************************************************
- * @    [SHLWAPI.191]
- *
- * Pop up a 'Don't show this message again' error dialog box.
- *
- * PARAMS
- *  hWnd      [I] Window to own the dialog box
- *  arg2      [I] Unknown
- *  arg3      [I] Unknown
- *  arg4      [I] Unknown
- *  arg5      [I] Unknown
- *  lpszValue [I] Registry value holding boolean show/don't show.
- *
- * RETURNS
- *  Nothing.
- */
-void WINAPI SHMessageBoxCheckW(HWND hWnd, PVOID arg2, PVOID arg3, PVOID arg4, PVOID arg5, LPCWSTR lpszValue)
-{
-  FIXME("(%p,%p,%p,%p,%p,%s) - stub!\n", hWnd, arg2, arg3, arg4, arg5, debugstr_w(lpszValue));
-
-  if (SHRegGetBoolUSValueW(szDontShowKey, lpszValue, FALSE, TRUE))
-  {
-    /* FIXME: Should use DialogBoxParamW to load a dialog box; its dlgproc
-     * should accept clicks on 'Don't show' and set the reg value appropriately.
-     */
-  }
-}
-
 /*************************************************************************
  * @    [SHLWAPI.192]
  *
@@ -1989,6 +1953,41 @@ DWORD WINAPI SHGetCurColorRes()
 }
 
 /*************************************************************************
+ *      @	[SHLWAPI.194]
+ *
+ * Wait for a message to arrive, with a timeout.
+ *
+ * PARAMS
+ *  hand      [I] Handle to query
+ *  dwTimeout [I] Timeout in ticks or INFINITE to never timeout
+ *
+ * RETURNS
+ *  STATUS_TIMEOUT if no message is received before dwTimeout ticks passes.
+ *  Otherwise returns the value from MsgWaitForMultipleObjectsEx when a
+ *  message is available.
+ */
+DWORD WINAPI SHWaitForSendMessageThread(HANDLE hand, DWORD dwTimeout)
+{
+  DWORD dwEndTicks = GetTickCount() + dwTimeout;
+  DWORD dwRet;
+
+  while ((dwRet = MsgWaitForMultipleObjectsEx(1, &hand, dwTimeout, QS_SENDMESSAGE, 0)) == 1)
+  {
+    MSG msg;
+
+    PeekMessageW(&msg, NULL, 0, 0, PM_NOREMOVE);
+
+    if (dwTimeout != INFINITE)
+    {
+        if ((int)(dwTimeout = dwEndTicks - GetTickCount()) <= 0)
+            return WAIT_TIMEOUT;
+    }
+  }
+
+  return dwRet;
+}
+
+/*************************************************************************
  *      @       [SHLWAPI.197]
  *
  * Blank out a region of text by drawing the background only.
@@ -2008,6 +2007,43 @@ DWORD WINAPI SHFillRectClr(HDC hDC, LPCRECT pRect, COLORREF cRef)
     SetBkColor(hDC, cOldColor);
     return 0;
 }
+
+/*************************************************************************
+ *      @	[SHLWAPI.198]
+ *
+ * Return the value asociated with a key in a map.
+ *
+ * PARAMS
+ *  lpKeys   [I] A list of keys of length iLen
+ *  lpValues [I] A list of values associated with lpKeys, of length iLen
+ *  iLen     [I] Length of both lpKeys and lpValues
+ *  iKey     [I] The key value to look up in lpKeys
+ *
+ * RETURNS
+ *  The value in lpValues associated with iKey, or -1 if iKey is not
+ *  found in lpKeys.
+ *
+ * NOTES
+ *  - If two elements in the map share the same key, this function returns
+ *    the value closest to the start of the map
+ *  - The native version of this function crashes if lpKeys or lpValues is NULL.
+ */
+int WINAPI SHSearchMapInt(const int *lpKeys, const int *lpValues, int iLen, int iKey)
+{
+  if (lpKeys && lpValues)
+  {
+    int i = 0;
+
+    while (i < iLen)
+    {
+      if (lpKeys[i] == iKey)
+        return lpValues[i]; /* Found */
+      i++;
+    }
+  }
+  return -1; /* Not found */
+}
+
 
 /*************************************************************************
  *      @	[SHLWAPI.199]
@@ -2421,12 +2457,12 @@ static WCHAR strRegistryPolicyW[] = {'S','o','f','t','w','a','r','e','\\','M','i
  */
 DWORD WINAPI SHGetRestriction(LPCWSTR lpSubKey, LPCWSTR lpSubName, LPCWSTR lpValue)
 {
-	DWORD retval, datsize = 4;
+	DWORD retval, datsize = sizeof(retval);
 	HKEY hKey;
 
 	if (!lpSubKey)
 	  lpSubKey = (LPCWSTR)strRegistryPolicyW;
-	
+
 	retval = RegOpenKeyW(HKEY_LOCAL_MACHINE, lpSubKey, &hKey);
     if (retval != ERROR_SUCCESS)
 	  retval = RegOpenKeyW(HKEY_CURRENT_USER, lpSubKey, &hKey);
@@ -2435,7 +2471,7 @@ DWORD WINAPI SHGetRestriction(LPCWSTR lpSubKey, LPCWSTR lpSubName, LPCWSTR lpVal
 
 	SHGetValueW(hKey, lpSubName, lpValue, NULL, (LPBYTE)&retval, &datsize);
 	RegCloseKey(hKey);
-	return retval;  
+	return retval;
 }
 
 /*************************************************************************
@@ -3800,6 +3836,31 @@ DWORD WINAPI SHMenuIndexFromID(HMENU hMenu, UINT uID)
 {
     return GetMenuPosFromID(hMenu, uID);
 }
+
+
+/*************************************************************************
+ *      @	[SHLWAPI.448]
+ */
+VOID WINAPI FixSlashesAndColonW(LPWSTR lpwstr)
+{
+    while (*lpwstr)
+    {
+        if (*lpwstr == '/')
+            *lpwstr = '\\';
+        lpwstr++;
+    }
+}
+
+
+/*************************************************************************
+ *      @	[SHLWAPI.461]
+ */
+DWORD WINAPI SHGetAppCompatFlags()
+{
+  FIXME("stub\n");
+  return 0;
+}
+
 
 /*************************************************************************
  *      @	[SHLWAPI.549]

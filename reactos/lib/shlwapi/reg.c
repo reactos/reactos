@@ -47,11 +47,12 @@ static const WCHAR szExtensionW[] = { 'E', 'x', 't','e','n','s','i','o','n','\0'
 
 /* internal structure of what the HUSKEY points to */
 typedef struct {
-    HKEY     HKCUkey;                  /* HKEY of opened HKCU key      */
-    HKEY     HKLMkey;                  /* HKEY of opened HKLM key      */
-    HKEY     start;                    /* HKEY of where to start       */
-    WCHAR    key_string[MAX_PATH];     /* additional path from 'start' */
-} Internal_HUSKEY, *LPInternal_HUSKEY;
+    HKEY     HKCUstart; /* Start key in CU hive */
+    HKEY     HKCUkey;   /* Opened key in CU hive */
+    HKEY     HKLMstart; /* Start key in LM hive */
+    HKEY     HKLMkey;   /* Opened key in LM hive */
+    WCHAR    lpszPath[MAX_PATH];
+} SHUSKEY, *LPSHUSKEY;
 
 DWORD   WINAPI SHStringFromGUIDW(REFGUID,LPWSTR,INT);
 HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID,LPCWSTR,BOOL,BOOL,PHKEY);
@@ -68,7 +69,7 @@ HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID,LPCWSTR,BOOL,BOOL,PHKEY);
 static HKEY WINAPI REG_GetHKEYFromHUSKEY(HUSKEY hUSKey, BOOL which)
 {
         HKEY test = (HKEY) hUSKey;
-        LPInternal_HUSKEY mihk = (LPInternal_HUSKEY) hUSKey;
+        LPSHUSKEY mihk = (LPSHUSKEY) hUSKey;
 
 	if ((test == HKEY_CLASSES_ROOT)        ||
 	    (test == HKEY_CURRENT_CONFIG)      ||
@@ -89,72 +90,29 @@ static HKEY WINAPI REG_GetHKEYFromHUSKEY(HUSKEY hUSKey, BOOL which)
 /*************************************************************************
  * SHRegOpenUSKeyA	[SHLWAPI.@]
  *
- * Opens a user-specific registry key
+ * Open a user-specific registry key.
+ *
+ * PARAMS
+ *  Path           [I] Key name to open
+ *  AccessType     [I] Access type
+ *  hRelativeUSKey [I] Relative user key
+ *  phNewUSKey     [O] Destination for created key
+ *  fIgnoreHKCU    [I] TRUE=Don't check HKEY_CURRENT_USER
  *
  * RETURNS
  *  Success: ERROR_SUCCESS
  *  Failure: An error code from RegOpenKeyExA().
  */
-LONG WINAPI SHRegOpenUSKeyA(
-        LPCSTR Path, /* [I] Key name to open */
-        REGSAM AccessType, /* [I] Access type */
-        HUSKEY hRelativeUSKey, /* [I] Relative user key */
-        PHUSKEY phNewUSKey, /* [O] Destination for created key */
-        BOOL fIgnoreHKCU)  /* [I] TRUE=Don't check HKEY_CURRENT_USER */
+LONG WINAPI SHRegOpenUSKeyA(LPCSTR Path, REGSAM AccessType, HUSKEY hRelativeUSKey,
+                            PHUSKEY phNewUSKey, BOOL fIgnoreHKCU)
 {
-    HKEY openHKCUkey=0;
-    HKEY openHKLMkey=0;
-    LONG ret2, ret1 = ~ERROR_SUCCESS;
-    LPInternal_HUSKEY ihky;
+    WCHAR szPath[MAX_PATH];
 
-    TRACE("(%s, 0x%lx, 0x%lx, %p, %s)\n", debugstr_a(Path),
-	  (LONG)AccessType, (LONG)hRelativeUSKey, phNewUSKey,
-	  (fIgnoreHKCU) ? "Ignoring HKCU" : "Process HKCU then HKLM");
+    if (Path)
+      MultiByteToWideChar(CP_ACP, 0, Path, -1, szPath, MAX_PATH);
 
-    /* now create the internal version of HUSKEY */
-    ihky = (LPInternal_HUSKEY)HeapAlloc(GetProcessHeap(), 0 ,
-					sizeof(Internal_HUSKEY));
-    MultiByteToWideChar(0, 0, Path, -1, ihky->key_string,
-			sizeof(ihky->key_string)-1);
-
-    if (hRelativeUSKey) {
-	openHKCUkey = ((LPInternal_HUSKEY)hRelativeUSKey)->HKCUkey;
-	openHKLMkey = ((LPInternal_HUSKEY)hRelativeUSKey)->HKLMkey;
-    }
-    else {
-	openHKCUkey = HKEY_CURRENT_USER;
-	openHKLMkey = HKEY_LOCAL_MACHINE;
-    }
-
-    ihky->HKCUkey = 0;
-    ihky->HKLMkey = 0;
-    if (!fIgnoreHKCU) {
-	ret1 = RegOpenKeyExA(openHKCUkey, Path,
-			     0, AccessType, &ihky->HKCUkey);
-	/* if successful, then save real starting point */
-	if (ret1 != ERROR_SUCCESS)
-	    ihky->HKCUkey = 0;
-    }
-    ret2 = RegOpenKeyExA(openHKLMkey, Path,
-			 0, AccessType, &ihky->HKLMkey);
-    if (ret2 != ERROR_SUCCESS)
-	ihky->HKLMkey = 0;
-
-    if ((ret1 != ERROR_SUCCESS) || (ret2 != ERROR_SUCCESS))
-	TRACE("one or more opens failed: HKCU=%ld HKLM=%ld\n", ret1, ret2);
-
-    /* if all attempts have failed then bail */
-    if ((ret1 != ERROR_SUCCESS) && (ret2 != ERROR_SUCCESS)) {
-	HeapFree(GetProcessHeap(), 0, ihky);
-	if (phNewUSKey)
-	    *phNewUSKey = NULL;
-	return ret2;
-    }
-
-    TRACE("HUSKEY=%p\n", ihky);
-    if (phNewUSKey)
-	*phNewUSKey = (HUSKEY)ihky;
-    return ERROR_SUCCESS;
+    return SHRegOpenUSKeyW(Path ? szPath : NULL, AccessType, hRelativeUSKey,
+                           phNewUSKey, fIgnoreHKCU);
 }
 
 /*************************************************************************
@@ -162,64 +120,61 @@ LONG WINAPI SHRegOpenUSKeyA(
  *
  * See SHRegOpenUSKeyA.
  */
-LONG WINAPI SHRegOpenUSKeyW(
-        LPCWSTR Path,
-        REGSAM AccessType,
-        HUSKEY hRelativeUSKey,
-        PHUSKEY phNewUSKey,
-        BOOL fIgnoreHKCU)
+LONG WINAPI SHRegOpenUSKeyW(LPCWSTR Path, REGSAM AccessType, HUSKEY hRelativeUSKey,
+                            PHUSKEY phNewUSKey, BOOL fIgnoreHKCU)
 {
-    HKEY openHKCUkey=0;
-    HKEY openHKLMkey=0;
     LONG ret2, ret1 = ~ERROR_SUCCESS;
-    LPInternal_HUSKEY ihky;
+    LPSHUSKEY hKey;
 
-    TRACE("(%s, 0x%lx, 0x%lx, %p, %s)\n", debugstr_w(Path),
-	  (LONG)AccessType, (LONG)hRelativeUSKey, phNewUSKey,
-	  (fIgnoreHKCU) ? "Ignoring HKCU" : "Process HKCU then HKLM");
+    TRACE("(%s,0x%lx,%p,%p,%d)\n", debugstr_w(Path),(LONG)AccessType,
+          hRelativeUSKey, phNewUSKey, fIgnoreHKCU);
 
-    /* now create the internal version of HUSKEY */
-    ihky = (LPInternal_HUSKEY)HeapAlloc(GetProcessHeap(), 0 ,
-					sizeof(Internal_HUSKEY));
-    lstrcpynW(ihky->key_string, Path, sizeof(ihky->key_string));
-
-    if (hRelativeUSKey) {
-	openHKCUkey = ((LPInternal_HUSKEY)hRelativeUSKey)->HKCUkey;
-	openHKLMkey = ((LPInternal_HUSKEY)hRelativeUSKey)->HKLMkey;
-    }
-    else {
-	openHKCUkey = HKEY_CURRENT_USER;
-	openHKLMkey = HKEY_LOCAL_MACHINE;
-    }
-
-    ihky->HKCUkey = 0;
-    ihky->HKLMkey = 0;
-    if (!fIgnoreHKCU) {
-	ret1 = RegOpenKeyExW(openHKCUkey, Path,
-			    0, AccessType, &ihky->HKCUkey);
-	/* if successful, then save real starting point */
-	if (ret1 != ERROR_SUCCESS)
-	    ihky->HKCUkey = 0;
-    }
-    ret2 = RegOpenKeyExW(openHKLMkey, Path,
-			0, AccessType, &ihky->HKLMkey);
-    if (ret2 != ERROR_SUCCESS)
-	ihky->HKLMkey = 0;
-
-    if ((ret1 != ERROR_SUCCESS) || (ret2 != ERROR_SUCCESS))
-	TRACE("one or more opens failed: HKCU=%ld HKLM=%ld\n", ret1, ret2);
-
-    /* if all attempts have failed then bail */
-    if ((ret1 != ERROR_SUCCESS) && (ret2 != ERROR_SUCCESS)) {
-	HeapFree(GetProcessHeap(), 0, ihky);
-	if (phNewUSKey)
-	    *phNewUSKey = NULL;
-	return ret2;
-    }
-
-    TRACE("HUSKEY=0x%08lx\n", (LONG)ihky);
     if (phNewUSKey)
-	*phNewUSKey = (HUSKEY)ihky;
+        *phNewUSKey = NULL;
+
+    /* Create internal HUSKEY */
+    hKey = (LPSHUSKEY)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*hKey));
+    lstrcpynW(hKey->lpszPath, Path, sizeof(hKey->lpszPath));
+
+    if (hRelativeUSKey)
+    {
+        hKey->HKCUstart = SHRegDuplicateHKey(REG_GetHKEYFromHUSKEY(hRelativeUSKey, REG_HKCU));
+        hKey->HKLMstart = SHRegDuplicateHKey(REG_GetHKEYFromHUSKEY(hRelativeUSKey, REG_HKLM));
+
+        /* FIXME: if either of these keys is NULL, create the start key from
+         *        the relative keys start+path
+         */
+    }
+    else
+    {
+        hKey->HKCUstart = HKEY_CURRENT_USER;
+        hKey->HKLMstart = HKEY_LOCAL_MACHINE;
+    }
+
+    if (!fIgnoreHKCU)
+    {
+        ret1 = RegOpenKeyExW(hKey->HKCUstart, hKey->lpszPath, 0, AccessType, &hKey->HKCUkey);
+        if (ret1)
+            hKey->HKCUkey = 0;
+    }
+
+    ret2 = RegOpenKeyExW(hKey->HKLMstart, hKey->lpszPath, 0, AccessType, &hKey->HKLMkey);
+    if (ret2)
+        hKey->HKLMkey = 0;
+
+    if (ret1 || ret2)
+        TRACE("one or more opens failed: HKCU=%ld HKLM=%ld\n", ret1, ret2);
+
+    if (ret1 && ret2)
+    {
+        /* Neither open succeeded: fail */
+        SHRegCloseUSKey(hKey);
+        return ret2;
+    }
+
+    TRACE("HUSKEY=%p\n", hKey);
+    if (phNewUSKey)
+        *phNewUSKey = (HUSKEY)hKey;
     return ERROR_SUCCESS;
 }
 
@@ -235,14 +190,19 @@ LONG WINAPI SHRegOpenUSKeyW(
 LONG WINAPI SHRegCloseUSKey(
         HUSKEY hUSKey) /* [I] Key to close */
 {
-    LPInternal_HUSKEY mihk = (LPInternal_HUSKEY)hUSKey;
+    LPSHUSKEY hKey = (LPSHUSKEY)hUSKey;
     LONG ret = ERROR_SUCCESS;
 
-    if (mihk->HKCUkey)
-	ret = RegCloseKey(mihk->HKCUkey);
-    if (mihk->HKLMkey)
-	ret = RegCloseKey(mihk->HKLMkey);
-    HeapFree(GetProcessHeap(), 0, mihk);
+    if (hKey->HKCUkey)
+        ret = RegCloseKey(hKey->HKCUkey);
+    if (hKey->HKCUstart && hKey->HKCUstart != HKEY_CURRENT_USER)
+        ret = RegCloseKey(hKey->HKCUstart);
+    if (hKey->HKLMkey)
+        ret = RegCloseKey(hKey->HKLMkey);
+    if (hKey->HKLMstart && hKey->HKLMstart != HKEY_LOCAL_MACHINE)
+        ret = RegCloseKey(hKey->HKCUstart);
+
+    HeapFree(GetProcessHeap(), 0, hKey);
     return ret;
 }
 
@@ -429,6 +389,14 @@ LONG WINAPI SHRegGetUSValueW(
  *
  * Set a user-specific registry value.
  *
+ * PARAMS
+ *  pszSubKey [I] Name of key to set the value in
+ *  pszValue  [I] Name of value under pszSubKey to set the value in
+ *  dwType    [I] Type of the value
+ *  pvData    [I] Data to set as the value
+ *  cbData    [I] length of pvData
+ *  dwFlags   [I] SHREGSET_ flags from "shlwapi.h"
+ *
  * RETURNS
  *  Success: ERROR_SUCCESS
  *  Failure: An error code from SHRegOpenUSKeyA() or SHRegWriteUSValueA(), or
@@ -437,31 +405,29 @@ LONG WINAPI SHRegGetUSValueW(
  * NOTES
  *   This function opens pszSubKey, sets the value, and then closes the key.
  */
-LONG WINAPI SHRegSetUSValueA(
-	LPCSTR pszSubKey, /* [I] Name of key to set the value in */
-	LPCSTR pszValue, /* [I] Name of value under pszSubKey to set the value in */
-	DWORD  dwType, /* [I] Type of the value */
-	LPVOID pvData, /* [I] Data to set as the value */
-	DWORD  cbData, /* [I] length of pvData */
-	DWORD  dwFlags) /* [I] SHREGSET_ flags from "shlwapi.h" */
+LONG WINAPI SHRegSetUSValueA(LPCSTR pszSubKey, LPCSTR pszValue, DWORD dwType,
+                             LPVOID pvData, DWORD cbData, DWORD dwFlags)
 {
-        HUSKEY myhuskey;
-	LONG   ret;
-	BOOL   ignoreHKCU;
+  BOOL ignoreHKCU = TRUE;
+  HUSKEY hkey;
+  LONG ret;
 
-        if (!pvData) return ERROR_INVALID_FUNCTION;
-	TRACE("key '%s', value '%s', datalen %ld\n",
-	      debugstr_a(pszSubKey), debugstr_a(pszValue), cbData);
+  TRACE("(%s,%s,%ld,%p,%ld,0x%08lx\n", debugstr_a(pszSubKey), debugstr_a(pszValue),
+        dwType, pvData, cbData, dwFlags);
 
-	ignoreHKCU = ((dwFlags == SHREGSET_HKLM) || (dwFlags == SHREGSET_FORCE_HKLM));
+  if (!pvData)
+    return ERROR_INVALID_FUNCTION;
 
-	ret = SHRegOpenUSKeyA(pszSubKey, 0x1, 0, &myhuskey, ignoreHKCU);
-	if (ret == ERROR_SUCCESS) {
- 	  ret = SHRegWriteUSValueA(myhuskey, pszValue, dwType, pvData,
-				   cbData, dwFlags);
-	    SHRegCloseUSKey(myhuskey);
-	}
-	return ret;
+  if (dwFlags & SHREGSET_HKCU || dwFlags & SHREGSET_FORCE_HKCU)
+    ignoreHKCU = FALSE;
+
+  ret = SHRegOpenUSKeyA(pszSubKey, KEY_ALL_ACCESS, 0, &hkey, ignoreHKCU);
+  if (ret == ERROR_SUCCESS)
+  {
+    ret = SHRegWriteUSValueA(hkey, pszValue, dwType, pvData, cbData, dwFlags);
+    SHRegCloseUSKey(hkey);
+  }
+  return ret;
 }
 
 /*************************************************************************
@@ -469,31 +435,29 @@ LONG WINAPI SHRegSetUSValueA(
  *
  * See SHRegSetUSValueA.
  */
-LONG WINAPI SHRegSetUSValueW(
-	LPCWSTR pszSubKey,
-	LPCWSTR pszValue,
-	DWORD   dwType,
-	LPVOID  pvData,
-	DWORD   cbData,
-	DWORD   dwFlags)
+LONG WINAPI SHRegSetUSValueW(LPCWSTR pszSubKey, LPCWSTR pszValue, DWORD dwType,
+                             LPVOID pvData, DWORD cbData, DWORD dwFlags)
 {
-        HUSKEY myhuskey;
-	LONG   ret;
-	BOOL   ignoreHKCU;
+  BOOL ignoreHKCU = TRUE;
+  HUSKEY hkey;
+  LONG ret;
 
-        if (!pvData) return ERROR_INVALID_FUNCTION;
-	TRACE("key '%s', value '%s', datalen %ld\n",
-	      debugstr_w(pszSubKey), debugstr_w(pszValue), cbData);
+  TRACE("(%s,%s,%ld,%p,%ld,0x%08lx\n", debugstr_w(pszSubKey), debugstr_w(pszValue),
+        dwType, pvData, cbData, dwFlags);
 
-	ignoreHKCU = ((dwFlags == SHREGSET_HKLM) || (dwFlags == SHREGSET_FORCE_HKLM));
+  if (!pvData)
+    return ERROR_INVALID_FUNCTION;
 
-	ret = SHRegOpenUSKeyW(pszSubKey, 0x1, 0, &myhuskey, ignoreHKCU);
-	if (ret == ERROR_SUCCESS) {
- 	  ret = SHRegWriteUSValueW(myhuskey, pszValue, dwType, pvData,
-				   cbData, dwFlags);
-	    SHRegCloseUSKey(myhuskey);
-	}
-	return ret;
+  if (dwFlags & SHREGSET_HKCU || dwFlags & SHREGSET_FORCE_HKCU)
+    ignoreHKCU = FALSE;
+
+  ret = SHRegOpenUSKeyW(pszSubKey, KEY_ALL_ACCESS, 0, &hkey, ignoreHKCU);
+  if (ret == ERROR_SUCCESS)
+  {
+    ret = SHRegWriteUSValueW(hkey, pszValue, dwType, pvData, cbData, dwFlags);
+    SHRegCloseUSKey(hkey);
+  }
+  return ret;
 }
 
 /*************************************************************************
@@ -801,31 +765,22 @@ LONG WINAPI SHRegEnumUSKeyW(
  *
  * RETURNS
  *  Success: ERROR_SUCCESS.
- *  Failure: An error code from RegSetValueExA().
+ *  Failure: ERROR_INVALID_PARAMETER, if any parameter is invalid, otherwise
+ *           an error code from RegSetValueExA().
+ *
+ * NOTES
+ *  dwFlags must have at least SHREGSET_FORCE_HKCU or SHREGSET_FORCE_HKLM set.
  */
 LONG  WINAPI SHRegWriteUSValueA(HUSKEY hUSKey, LPCSTR pszValue, DWORD dwType,
-				LPVOID pvData, DWORD cbData, DWORD dwFlags)
+                                LPVOID pvData, DWORD cbData, DWORD dwFlags)
 {
-    HKEY dokey;
+    WCHAR szValue[MAX_PATH];
 
-    TRACE("(%p,%s,%ld,%p,%ld,%ld)\n",
-	      hUSKey, debugstr_a(pszValue), dwType, pvData, cbData, dwFlags);
+    if (pszValue)
+      MultiByteToWideChar(CP_ACP, 0, pszValue, -1, szValue, MAX_PATH);
 
-    if ((dwFlags & SHREGSET_FORCE_HKCU) &&
-	    (dokey = REG_GetHKEYFromHUSKEY(hUSKey,REG_HKCU))) {
-	RegSetValueExA(dokey, pszValue, 0, dwType, pvData, cbData);
-    }
-
-    if ((dwFlags & SHREGSET_FORCE_HKLM) &&
-	    (dokey = REG_GetHKEYFromHUSKEY(hUSKey,REG_HKLM))) {
-	RegSetValueExA(dokey, pszValue, 0, dwType, pvData, cbData);
-    }
-
-    if (dwFlags & (SHREGSET_FORCE_HKCU | SHREGSET_FORCE_HKLM))
-	return ERROR_SUCCESS;
-
-    FIXME("SHREGSET_HKCU or SHREGSET_HKLM not supported\n");
-    return ERROR_SUCCESS;
+    return SHRegWriteUSValueW(hUSKey, pszValue ? szValue : NULL, dwType,
+                               pvData, cbData, dwFlags);
 }
 
 /*************************************************************************
@@ -834,28 +789,72 @@ LONG  WINAPI SHRegWriteUSValueA(HUSKEY hUSKey, LPCSTR pszValue, DWORD dwType,
  * See SHRegWriteUSValueA.
  */
 LONG  WINAPI SHRegWriteUSValueW(HUSKEY hUSKey, LPCWSTR pszValue, DWORD dwType,
-				LPVOID pvData, DWORD cbData, DWORD dwFlags)
+                                LPVOID pvData, DWORD cbData, DWORD dwFlags)
 {
-    HKEY dokey;
+    LONG dummy;
+    LPSHUSKEY hKey = (LPSHUSKEY)hUSKey;
+    LONG ret = ERROR_SUCCESS;
 
-    TRACE("(%p,%s,%ld,%p,%ld,%ld)\n",
-	      hUSKey, debugstr_w(pszValue), dwType, pvData, cbData, dwFlags);
+    TRACE("(%p,%s,%ld,%p,%ld,%ld)\n", hUSKey, debugstr_w(pszValue),
+          dwType, pvData, cbData, dwFlags);
 
-    if ((dwFlags & SHREGSET_FORCE_HKCU) &&
-	    (dokey = REG_GetHKEYFromHUSKEY(hUSKey,REG_HKCU))) {
-	RegSetValueExW(dokey, pszValue, 0, dwType, pvData, cbData);
+    if (!hUSKey || IsBadWritePtr(hUSKey, sizeof(SHUSKEY)) ||
+        !(dwFlags & (SHREGSET_FORCE_HKCU|SHREGSET_FORCE_HKLM)))
+        return ERROR_INVALID_PARAMETER;
+
+    if (dwFlags & (SHREGSET_FORCE_HKCU|SHREGSET_HKCU))
+    {
+        if (!hKey->HKCUkey)
+        {
+            /* Create the key */
+            ret = RegCreateKeyW(hKey->HKCUstart, hKey->lpszPath, &hKey->HKCUkey);
+            TRACE("Creating HKCU key, ret = %ld\n", ret);
+            if (ret && (dwFlags & (SHREGSET_FORCE_HKCU)))
+            {
+                hKey->HKCUkey = 0;
+                return ret;
+            }
+        }
+
+        if (!ret)
+        {
+            if ((dwFlags & SHREGSET_FORCE_HKCU) ||
+                RegQueryValueExW(hKey->HKCUkey, pszValue, NULL, NULL, NULL, &dummy))
+            {
+                /* Doesn't exist or we are forcing: Write value */
+                ret = RegSetValueExW(hKey->HKCUkey, pszValue, 0, dwType, pvData, cbData);
+                TRACE("Writing HKCU value, ret = %ld\n", ret);
+            }
+        }
     }
 
-    if ((dwFlags & SHREGSET_FORCE_HKLM) &&
-	    (dokey = REG_GetHKEYFromHUSKEY(hUSKey,REG_HKLM))) {
-	RegSetValueExW(dokey, pszValue, 0, dwType, pvData, cbData);
+    if (dwFlags & (SHREGSET_FORCE_HKLM|SHREGSET_HKLM))
+    {
+        if (!hKey->HKLMkey)
+        {
+            /* Create the key */
+            ret = RegCreateKeyW(hKey->HKLMstart, hKey->lpszPath, &hKey->HKLMkey);
+            TRACE("Creating HKLM key, ret = %ld\n", ret);
+            if (ret && (dwFlags & (SHREGSET_FORCE_HKLM)))
+            {
+                hKey->HKLMkey = 0;
+                return ret;
+            }
+        }
+
+        if (!ret)
+        {
+            if ((dwFlags & SHREGSET_FORCE_HKLM) ||
+                RegQueryValueExW(hKey->HKLMkey, pszValue, NULL, NULL, NULL, &dummy))
+            {
+                /* Doesn't exist or we are forcing: Write value */
+                ret = RegSetValueExW(hKey->HKLMkey, pszValue, 0, dwType, pvData, cbData);
+                TRACE("Writing HKLM value, ret = %ld\n", ret);
+            }
+        }
     }
 
-    if (dwFlags & (SHREGSET_FORCE_HKCU | SHREGSET_FORCE_HKLM))
-	return ERROR_SUCCESS;
-
-    FIXME("SHREGSET_HKCU or SHREGSET_HKLM not supported\n");
-    return ERROR_SUCCESS;
+    return ret;
 }
 
 /*************************************************************************

@@ -581,6 +581,9 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
 	TRACE("Simplified, orig <%s>, simple <%s>\n",
 	      debugstr_w(pszUrl), debugstr_w(lpszUrlCpy));
     }
+    nLen = lstrlenW(lpszUrlCpy);
+    while ((nLen > 0) && ((lpszUrlCpy[nLen-1] == '\r')||(lpszUrlCpy[nLen-1] == '\n')))
+        lpszUrlCpy[--nLen]=0;
 
     if(dwFlags & URL_UNESCAPE)
         UrlUnescapeW(lpszUrlCpy, NULL, NULL, URL_UNESCAPE_INPLACE);
