@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -112,7 +112,7 @@ ExCreateHandleTable(IN PEPROCESS QuotaProcess  OPTIONAL)
     HandleTable->QuotaProcess = QuotaProcess;
     HandleTable->FirstFreeTableEntry = -1; /* no entries freed so far */
     HandleTable->NextIndexNeedingPool = 0; /* no entries freed so far, so we have to allocate already for the first handle */
-    HandleTable->UniqueProcessId = (QuotaProcess ? QuotaProcess->UniqueProcessId : PsGetCurrentProcessId());
+    HandleTable->UniqueProcessId = (QuotaProcess ? QuotaProcess->UniqueProcessId : NULL);
 
     ExInitializeResource(&HandleTable->HandleTableLock);
 
