@@ -645,7 +645,7 @@ ToUnicodeEx=ToUnicodeEx@28
 TrackMouseEvent=TrackMouseEvent@4
 TrackPopupMenu=TrackPopupMenu@28
 TrackPopupMenuEx=TrackPopupMenuEx@24
-;TranslateAccelerator@12
+TranslateAccelerator=TranslateAcceleratorA@12
 TranslateAcceleratorA=TranslateAcceleratorA@12
 TranslateAcceleratorW=TranslateAcceleratorW@12
 TranslateMDISysAccel=TranslateMDISysAccel@8
