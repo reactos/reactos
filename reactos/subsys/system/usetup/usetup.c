@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: usetup.c,v 1.2 2002/09/19 16:21:15 ekohl Exp $
+/* $Id: usetup.c,v 1.3 2002/09/25 14:48:35 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS user-mode setup application
@@ -36,15 +36,20 @@
 #include "usetup.h"
 
 
-#define INTRO_PAGE		0
-#define INSTALL_INTRO_PAGE	1
+#define INTRO_PAGE			0
+#define INSTALL_INTRO_PAGE		1
 
-#define CHOOSE_PARTITION_PAGE	5
+#define CHOOSE_PARTITION_PAGE		3
+#define SELECT_FILE_SYSTEM_PAGE		4
+#define CHECK_FILE_SYSTEM_PAGE		5
+#define PREPARE_COPY_PAGE		6
+#define INSTALL_DIRECTORY_PAGE		7
+#define FILE_COPY_PAGE			8
+#define INIT_SYSTEM_PAGE		9
 
-
-#define SUCCESS_PAGE		100
-#define QUIT_PAGE		101
-#define REBOOT_PAGE		102
+#define SUCCESS_PAGE			100
+#define QUIT_PAGE			101
+#define REBOOT_PAGE			102
 
 
 HANDLE ProcessHeap;
@@ -318,6 +323,7 @@ ChoosePartitionPage(PINPUT_RECORD Ir)
   SCSI_ADDRESS ScsiAddress;
   ULONGLONG DiskSize;
   char *Scale;
+  char *PartType;
 
 
 
@@ -428,12 +434,33 @@ ChoosePartitionPage(PINPUT_RECORD Ir)
 			  if ((LayoutBuffer->PartitionEntry[i].PartitionType != PARTITION_ENTRY_UNUSED) &&
 			      !IsContainerPartition(LayoutBuffer->PartitionEntry[i].PartitionType))
 			    {
+			      if ((LayoutBuffer->PartitionEntry[i].PartitionType == PARTITION_FAT_12) ||
+				  (LayoutBuffer->PartitionEntry[i].PartitionType == PARTITION_FAT_16) ||
+				  (LayoutBuffer->PartitionEntry[i].PartitionType == PARTITION_HUGE) ||
+				  (LayoutBuffer->PartitionEntry[i].PartitionType == PARTITION_XINT13))
+				{
+				  PartType = "FAT";
+				}
+			      else if ((LayoutBuffer->PartitionEntry[i].PartitionType == PARTITION_FAT32) ||
+				       (LayoutBuffer->PartitionEntry[i].PartitionType == PARTITION_FAT32_XINT13))
+				{
+				  PartType = "FAT32";
+				}
+			      else if (LayoutBuffer->PartitionEntry[i].PartitionType == PARTITION_IFS)
+				{
+				  PartType = "NTFS"; /* FIXME: Not quite correct! */
+				}
+			      else
+				{
+				  PartType = "Unknown";
+				}
+
 			      PrintTextXY(10, Line++,
-					  "%d: nr: %d boot: %1x type: %x size: %I64u MB",
-				      i,
-				      LayoutBuffer->PartitionEntry[i].PartitionNumber,
-				      LayoutBuffer->PartitionEntry[i].BootIndicator,
-				      LayoutBuffer->PartitionEntry[i].PartitionType,
+					  "%d: nr: %d type: %x (%s)  %I64u MB",
+					  i,
+					  LayoutBuffer->PartitionEntry[i].PartitionNumber,
+					  LayoutBuffer->PartitionEntry[i].PartitionType,
+					  PartType,
 				      (LayoutBuffer->PartitionEntry[i].PartitionLength.QuadPart + (1 << 19)) >>20);
 
 
@@ -478,8 +505,7 @@ ChoosePartitionPage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
 	{
-	  /* FIXME: Preliminary exit */
-	  return(SUCCESS_PAGE);
+	  return(SELECT_FILE_SYSTEM_PAGE);
 	}
     }
 
@@ -487,7 +513,202 @@ ChoosePartitionPage(PINPUT_RECORD Ir)
 }
 
 
+static ULONG
+SelectFileSystemPage(PINPUT_RECORD Ir)
+{
 
+  SetTextXY(6, 8, "Select a file system");
+
+  SetTextXY(6, 10, "At present, ReactOS can not be installed on unformatted partitions.");
+
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return(QUIT_PAGE);
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+	{
+	  return(CHECK_FILE_SYSTEM_PAGE);
+	}
+    }
+
+  return(SELECT_FILE_SYSTEM_PAGE);
+}
+
+
+static ULONG
+CheckFileSystemPage(PINPUT_RECORD Ir)
+{
+
+  SetTextXY(6, 8, "Check file system");
+
+  SetTextXY(6, 10, "At present, ReactOS can not check file systems.");
+
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return(QUIT_PAGE);
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+	{
+	  return(INSTALL_DIRECTORY_PAGE);
+	}
+    }
+
+  return(CHECK_FILE_SYSTEM_PAGE);
+}
+
+
+static ULONG
+InstallDirectoryPage(PINPUT_RECORD Ir)
+{
+
+  SetTextXY(6, 8, "Enter the install directory");
+
+  SetTextXY(6, 12, "Install directory:  \reactos");
+
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return(QUIT_PAGE);
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+	{
+	  return(PREPARE_COPY_PAGE);
+	}
+    }
+
+  return(INSTALL_DIRECTORY_PAGE);
+}
+
+
+static ULONG
+PrepareCopyPage(PINPUT_RECORD Ir)
+{
+
+  SetTextXY(6, 8, "Preparing to copy files");
+
+
+  SetTextXY(6, 12, "Build file copy list");
+
+  SetTextXY(6, 14, "Create directories");
+
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return(QUIT_PAGE);
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+	{
+	  return(FILE_COPY_PAGE);
+	}
+    }
+
+  return(PREPARE_COPY_PAGE);
+}
+
+
+static ULONG
+FileCopyPage(PINPUT_RECORD Ir)
+{
+
+  SetTextXY(6, 8, "Copying files");
+
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return(QUIT_PAGE);
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+	{
+	  return(INIT_SYSTEM_PAGE);
+	}
+    }
+
+  return(FILE_COPY_PAGE);
+}
+
+
+static ULONG
+InitSystemPage(PINPUT_RECORD Ir)
+{
+
+  SetTextXY(6, 8, "Initializing system settings");
+
+
+  SetTextXY(6, 12, "Create registry hives");
+
+  SetTextXY(6, 14, "Update registry hives");
+
+  SetTextXY(6, 16, "Install/update boot manager");
+
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return(QUIT_PAGE);
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+	{
+	  return(SUCCESS_PAGE);
+	}
+    }
+
+  return(INIT_SYSTEM_PAGE);
+}
 
 
 static ULONG
@@ -591,13 +812,30 @@ NtProcessStartup(PPEB Peb)
 	    Page = ChoosePartitionPage(&Ir);
 	    break;
 
-#if 0
-	  case ROOT_DIRECTORY_PAGE:
-#endif
+	  case SELECT_FILE_SYSTEM_PAGE:
+	    Page = SelectFileSystemPage(&Ir);
+	    break;
 
-#if 0
+	  case CHECK_FILE_SYSTEM_PAGE:
+	    Page = CheckFileSystemPage(&Ir);
+	    break;
+
+	  case INSTALL_DIRECTORY_PAGE:
+	    Page = InstallDirectoryPage(&Ir);
+	    break;
+
+	  case PREPARE_COPY_PAGE:
+	    Page = PrepareCopyPage(&Ir);
+	    break;
+
 	  case FILE_COPY_PAGE:
-#endif
+	    Page = FileCopyPage(&Ir);
+	    break;
+
+	  case INIT_SYSTEM_PAGE:
+	    Page = InitSystemPage(&Ir);
+	    break;
+
 
 	  case SUCCESS_PAGE:
 	    Page = SuccessPage(&Ir);
