@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.22 2003/12/30 18:52:05 fireball Exp $
+/* $Id: connect.c,v 1.23 2004/01/22 21:56:48 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -755,7 +755,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 
 /**********************************************************************
  * NAME							EXPORTED
- * 	NtSecureConnectPort@36
+ * 	NtSecureConnectPort/9
  * 	
  * DESCRIPTION
  *	Connect to a named port and wait for the other side to 
@@ -765,7 +765,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
  *
  * ARGUMENTS
  *	ConnectedPort
- *	PortName
+ *	PortName: fully qualified name in the Ob name space;
  *	Qos
  *	WriteMap
  *	ServerSid
@@ -787,7 +787,16 @@ NtSecureConnectPort (OUT    PHANDLE				ConnectedPort,
 		     IN OUT PVOID				ConnectInfo		OPTIONAL,
 		     IN OUT PULONG				UserConnectInfoLength	OPTIONAL)
 {
-	return (STATUS_NOT_IMPLEMENTED);
+  /* TODO: implement a new object type: SecurePort */
+  /* TODO: verify the process' SID that hosts the rendez-vous port equals ServerSid */
+  return NtConnectPort (ConnectedPort,
+		        PortName,
+		        Qos,
+		        WriteMap,
+		        ReadMap,
+		        MaxMessageSize,
+		        ConnectInfo,
+		        UserConnectInfoLength);
 }
 
 /* EOF */
