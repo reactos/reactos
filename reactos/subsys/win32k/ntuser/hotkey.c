@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hotkey.c,v 1.9 2004/05/10 17:07:18 weiden Exp $
+/* $Id: hotkey.c,v 1.10 2004/05/25 15:52:44 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -210,20 +210,30 @@ NtUserRegisterHotKey(HWND hWnd,
   PHOT_KEY_ITEM HotKeyItem;
   PWINDOW_OBJECT Window;
   PWINSTATION_OBJECT WinStaObject = NULL;
+  PETHREAD HotKeyThread;
   
-  Window = IntGetWindowObject(hWnd);
-  if(!Window)
+  if (hWnd == NULL)
   {
-    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    return FALSE;
+    HotKeyThread = PsGetCurrentThread();
   }
+  else
+  {
+    Window = IntGetWindowObject(hWnd);
+    if(!Window)
+    {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return FALSE;
+    }
+    HotKeyThread = Window->OwnerThread;
+    IntReleaseWindowObject(Window);
+  }
+
   
-  if(Window->OwnerThread->ThreadsProcess && Window->OwnerThread->ThreadsProcess->Win32Process)
-    WinStaObject = Window->OwnerThread->ThreadsProcess->Win32Process->WindowStation;
+  if(HotKeyThread->ThreadsProcess && HotKeyThread->ThreadsProcess->Win32Process)
+    WinStaObject = HotKeyThread->ThreadsProcess->Win32Process->WindowStation;
   
   if(!WinStaObject)
   {
-    IntReleaseWindowObject(Window);
     return FALSE;
   }
 
@@ -233,7 +243,6 @@ NtUserRegisterHotKey(HWND hWnd,
   if (IsHotKey (WinStaObject, fsModifiers, vk))
   {
     IntUnLockHotKeys(WinStaObject);
-    IntReleaseWindowObject(Window);
     return FALSE;
   }
 
@@ -241,11 +250,10 @@ NtUserRegisterHotKey(HWND hWnd,
   if (HotKeyItem == NULL)
     {
       IntUnLockHotKeys(WinStaObject);
-      IntReleaseWindowObject(Window);
       return FALSE;
     }
 
-  HotKeyItem->Thread = PsGetCurrentThread();
+  HotKeyItem->Thread = HotKeyThread;
   HotKeyItem->hWnd = hWnd;
   HotKeyItem->id = id;
   HotKeyItem->fsModifiers = fsModifiers;
@@ -256,7 +264,6 @@ NtUserRegisterHotKey(HWND hWnd,
 
   IntUnLockHotKeys(WinStaObject);
   
-  IntReleaseWindowObject(Window);
   return TRUE;
 }
 

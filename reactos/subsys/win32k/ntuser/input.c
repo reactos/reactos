@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.33 2004/05/14 23:57:32 weiden Exp $
+/* $Id: input.c,v 1.34 2004/05/25 15:52:45 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -30,11 +30,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <w32k.h>
-
 #include <rosrtl/string.h>
-
-#define NDEBUG
-#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -238,14 +234,24 @@ KeyboardThreadMain(PVOID StartContext)
 	      lParam |= (1 << 29);
 	    }
 	  
-	  if(KeyEvent.bKeyDown && (fsModifiers & MOD_ALT)) 
-	    msg.message = WM_SYSKEYDOWN;
-	  else if(KeyEvent.bKeyDown)
-	    msg.message = WM_KEYDOWN;
-	  else if(fsModifiers & MOD_ALT)
-	    msg.message = WM_SYSKEYUP;
-	  else
-	    msg.message = WM_KEYUP;
+	  if (GetHotKey(InputWindowStation,
+			fsModifiers,
+			KeyEvent.wVirtualKeyCode,
+			&Thread,
+			&hWnd,
+			&id))
+	    {
+	      if (KeyEvent.bKeyDown)
+		{
+		  DPRINT("Hot key pressed (hWnd %lx, id %d)\n", hWnd, id);
+		  MsqPostHotKeyMessage (Thread,
+					hWnd,
+					(WPARAM)id,
+					MAKELPARAM((WORD)fsModifiers, 
+						   (WORD)msg.wParam));
+		}
+	      continue;	
+	    }
 
 	  /* Find the target thread whose locale is in effect */
 	  if (!IntGetScreenDC())
@@ -258,6 +264,15 @@ KeyboardThreadMain(PVOID StartContext)
 	    }
 
 	  if (!FocusQueue) continue;
+
+	  if(KeyEvent.bKeyDown && (fsModifiers & MOD_ALT)) 
+	    msg.message = WM_SYSKEYDOWN;
+	  else if(KeyEvent.bKeyDown)
+	    msg.message = WM_KEYDOWN;
+	  else if(fsModifiers & MOD_ALT)
+	    msg.message = WM_SYSKEYUP;
+	  else
+	    msg.message = WM_KEYUP;
 
 	  msg.wParam = KeyEvent.wVirtualKeyCode;
 	  msg.lParam = lParam;
@@ -274,30 +289,10 @@ KeyboardThreadMain(PVOID StartContext)
 	  else
 	    continue;
 	  
-	  if (GetHotKey(InputWindowStation,
-			fsModifiers,
-			msg.wParam,
-			&Thread,
-			&hWnd,
-			&id))
-	    {
-	      if (KeyEvent.bKeyDown)
-		{
-		  DPRINT("Hot key pressed (hWnd %lx, id %d)\n", hWnd, id);
-		  MsqPostHotKeyMessage (Thread,
-					hWnd,
-					(WPARAM)id,
-					MAKELPARAM((WORD)fsModifiers, 
-						   (WORD)msg.wParam));
-		}
-	    }
-	  else 
-	    {
-	      /*
-	       * Post a keyboard message.
-	       */
-	      MsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
-	    }
+	  /*
+	   * Post a keyboard message.
+	   */
+	  MsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
 	}
       DPRINT( "KeyboardInput Thread Stopped...\n" );
     }
