@@ -86,38 +86,35 @@ typedef struct
 #define MM_PAGEFILE_SEGMENT    (0x1)
 #define MM_DATAFILE_SEGMENT    (0x2)
 
-#define MM_SECTION_SEGMENT_BSS (0x1)
-
 typedef struct _MM_SECTION_SEGMENT
 {
   ULONG FileOffset;
   ULONG Protection;
-  ULONG Attributes;
   ULONG Length;
   ULONG RawLength;
   FAST_MUTEX Lock;
-  ULONG ReferenceCount;
+  LONG ReferenceCount;/* WRONG TYPE */
   SECTION_PAGE_DIRECTORY PageDirectory;
-  ULONG Flags;
-  PVOID VirtualAddress;
+  /*ULONG Flags;*/ /* USELESS */
+  ULONG VirtualAddress;/* WRONG TYPE */
   ULONG Characteristics;
-  BOOLEAN WriteCopy;
+  /*BOOLEAN WriteCopy;*/ /* USELESS */
 } MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
 
 typedef struct _MM_IMAGE_SECTION_OBJECT
 {
-  PVOID ImageBase;
-  PVOID EntryPoint;
-  ULONG StackReserve;
-  ULONG StackCommit;
+  ULONG_PTR ImageBase;/* WRONG TYPE */
+  ULONG EntryPoint;/* WRONG TYPE */
+  ULONG_PTR StackReserve;/* WRONG TYPE */
+  ULONG_PTR StackCommit;/* WRONG TYPE */
   ULONG Subsystem;
-  ULONG MinorSubsystemVersion;
-  ULONG MajorSubsystemVersion;
   ULONG ImageCharacteristics;
+  USHORT MinorSubsystemVersion;/* WRONG TYPE */
+  USHORT MajorSubsystemVersion;/* WRONG TYPE */
   USHORT Machine;
   BOOLEAN Executable;
   ULONG NrSegments;
-  MM_SECTION_SEGMENT Segments[0];
+  PMM_SECTION_SEGMENT Segments;/* WRONG TYPE */
 } MM_IMAGE_SECTION_OBJECT, *PMM_IMAGE_SECTION_OBJECT;
 
 typedef struct _SECTION_OBJECT

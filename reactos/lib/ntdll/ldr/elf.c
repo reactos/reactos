@@ -1,4 +1,4 @@
-/* $Id: elf.c,v 1.1.2.1 2004/12/02 02:44:18 hyperion Exp $
+/* $Id: elf.c,v 1.1.2.2 2004/12/08 20:01:40 hyperion Exp $
 */
 
 /*
@@ -41,6 +41,8 @@
  *
  * John Polstra <jdp@polstra.com>.
  */
+
+#if 0
 
 #ifndef __GNUC__
 #error "GCC is needed to compile this file"
@@ -450,6 +452,8 @@ _rtld(Elf_Addr *sp, func_ptr_type *exit_proc, Obj_Entry **objp)
     return (func_ptr_type) obj_main->entry;
 }
 
+#endif /* 0 */
+
 Elf_Addr
 _rtld_bind(Obj_Entry *obj, Elf_Word reloff)
 {
@@ -488,6 +492,8 @@ _rtld_bind(Obj_Entry *obj, Elf_Word reloff)
     rlock_release(rtld_bind_lock, lockstate);
     return target;
 }
+
+#if 0
 
 /*
  * Error reporting function.  Use it like printf.  If formats the message
@@ -546,6 +552,8 @@ die(void)
 	msg = "Fatal error";
     errx(1, "%s", msg);
 }
+
+#endif /* 0 */
 
 /*
  * Process a shared object's DYNAMIC section, and save the important
@@ -786,6 +794,8 @@ digest_phdr(const Elf_Phdr *phdr, int phnum, caddr_t entry, const char *path)
     return obj;
 }
 
+#if 0
+
 static Obj_Entry *
 dlcheck(void *handle)
 {
@@ -825,6 +835,8 @@ donelist_check(DoneList *dlp, const Obj_Entry *obj)
     return false;
 }
 
+#endif /* 0 */
+
 /*
  * Hash function for symbol table lookup.  Don't even think about changing
  * this.  It is specified by the System V ABI.
@@ -844,6 +856,8 @@ elf_hash(const char *name)
     }
     return h;
 }
+
+#if 0
 
 /*
  * Find the library with the given name, and return its full pathname.
@@ -895,6 +909,8 @@ find_library(const char *xname, const Obj_Entry *refobj)
     }
     return NULL;
 }
+
+#endif /* 0 */
 
 /*
  * Given a symbol number in a referencing object, find the corresponding
@@ -969,6 +985,8 @@ find_symdef(unsigned long symnum, const Obj_Entry *refobj,
     }
     return def;
 }
+
+#if 0
 
 /*
  * Return the search path from the ldconfig hints file, reading it if
@@ -1429,6 +1447,8 @@ objlist_remove_unref(Objlist *list)
     *list = newlist;
 }
 
+#endif /* 0 */
+
 /*
  * Relocate newly-loaded shared objects.  The argument is a pointer to
  * the Obj_Entry for the first such object.  All objects from the first
@@ -1496,6 +1516,8 @@ relocate_objects(Obj_Entry *first, bool bind_now, Obj_Entry *rtldobj)
 
     return 0;
 }
+
+#if 0
 
 /*
  * Cleanup procedure.  It will be called (by the atexit mechanism) just
@@ -2286,6 +2308,8 @@ symlook_list(const char *name, unsigned long hash, Objlist *objlist,
     return def;
 }
 
+#endif /* 0 */
+
 /*
  * Search the symbol table of a single shared object for a symbol of
  * the given name.  Returns a pointer to the symbol, or NULL if no
@@ -2320,6 +2344,8 @@ symlook_obj(const char *name, unsigned long hash, const Obj_Entry *obj,
     }
     return NULL;
 }
+
+#if 0
 
 static void
 trace_loaded_objects(Obj_Entry *obj)
@@ -2792,3 +2818,5 @@ _rtld_free_tls(void *tcb, size_t tcbsize, size_t tcbalign)
 {
     free_tls(tcb, tcbsize, tcbalign);
 }
+
+#endif /* 0 */

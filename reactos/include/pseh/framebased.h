@@ -37,29 +37,39 @@
 */
 #ifdef _SEH_NO_NATIVE_NLG
 # include <pseh/setjmp.h>
-# define longjmp _SEHLongJmp
-# define setjmp _SEHSetJmp
-# define jmp_buf _SEHJmpBuf_t
 #else
 # include <setjmp.h>
+# define _SEHLongJmp longjmp
+# define _SEHSetJmp setjmp
+# define _SEHJmpBuf_t jmp_buf
 #endif
 
 typedef struct __SEHFrame
 {
  _SEHPortableFrame_t SEH_Header;
- jmp_buf SEH_JmpBuf;
+ _SEHJmpBuf_t SEH_JmpBuf;
  void * SEH_Locals;
 }
 _SEHFrame_t;
 
-static __declspec(noreturn) void __stdcall _SEHCompilerSpecificHandler
+/*
+ Note: just define __inline to an empty symbol if your C compiler doesn't
+ support it
+*/
+#ifdef __cplusplus
+# ifndef __inline
+#  define __inline inline
+# endif
+#endif
+
+static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
 (
  _SEHPortableFrame_t * frame
 )
 {
  _SEHFrame_t * myframe;
  myframe = (_SEHFrame_t *)(((char *)frame) - offsetof(_SEHFrame_t, SEH_Header));
- longjmp(myframe->SEH_JmpBuf, 1);
+ _SEHLongJmp(myframe->SEH_JmpBuf, 1);
 }
 
 #define _SEH_FILTER(NAME_) \
@@ -68,6 +78,8 @@ static __declspec(noreturn) void __stdcall _SEHCompilerSpecificHandler
   struct _EXCEPTION_POINTERS * _SEHExceptionPointers, \
   struct __SEHPortableFrame * _SEHPortableFrame \
  )
+
+#define _SEH_STATIC_FILTER(ACTION_) ((_SEHFilter_t)((ACTION_) + 2))
 
 #define _SEH_FINALLY(NAME_) \
  void __stdcall NAME_ \
@@ -78,7 +90,7 @@ static __declspec(noreturn) void __stdcall _SEHCompilerSpecificHandler
 #define _SEH_TRY_FINALLY(FINALLY_) \
  _SEH_TRY_FILTER_FINALLY \
  ( \
-  (_SEHFilter_t)(_SEH_CONTINUE_SEARCH + 1), \
+  _SEH_STATIC_FILTER(_SEH_CONTINUE_SEARCH), \
   (FINALLY_) \
  )
 
@@ -90,7 +102,7 @@ static __declspec(noreturn) void __stdcall _SEHCompilerSpecificHandler
 #define _SEH_TRY_HANDLE_FINALLY(FINALLY_) \
  _SEH_TRY_FILTER_FINALLY \
  ( \
-  (_SEHFilter_t)(_SEH_EXECUTE_HANDLER + 1), \
+  _SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER), \
   (FINALLY_) \
  )
 
@@ -117,7 +129,7 @@ static __declspec(noreturn) void __stdcall _SEHCompilerSpecificHandler
   _SEHPortableFrame = &_SEHFrame->SEH_Header;                                  \
   (void)_SEHPortableFrame;                                                     \
                                                                                \
-  if(setjmp(_SEHFrame->SEH_JmpBuf) == 0)                                       \
+  if(_SEHSetJmp(_SEHFrame->SEH_JmpBuf) == 0)                                   \
   {                                                                            \
    _SEHEnter(&_SEHFrame->SEH_Header);                                          \
                                                                                \
