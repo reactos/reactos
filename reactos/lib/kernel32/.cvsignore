@@ -10,4 +10,5 @@ temp.exp
 *.sym
 *.tmp
 *.gch
+*.pch
 *.map

@@ -1,6 +1,7 @@
 temp.exp
 *.tmp
 *.gch
+*.pch
 *.sys
 *.coff
 *.sym
