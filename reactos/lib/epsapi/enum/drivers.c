@@ -1,4 +1,4 @@
-/* $Id: drivers.c,v 1.3 2004/11/03 22:43:00 weiden Exp $
+/* $Id: drivers.c,v 1.4 2004/11/08 00:34:45 weiden Exp $
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -14,10 +14,14 @@
  *                          and improve reusability
  */
 
-#include "precomp.h"
+#include <stddef.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 #define NDEBUG
 #include <debug.h>
+
+#include <epsapi.h>
 
 NTSTATUS NTAPI
 PsaEnumerateSystemModules(IN PSYSMOD_ENUM_ROUTINE Callback,

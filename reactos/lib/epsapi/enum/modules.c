@@ -1,4 +1,4 @@
-/* $Id: modules.c,v 1.1 2004/11/03 22:43:00 weiden Exp $
+/* $Id: modules.c,v 1.4 2004/11/08 00:34:46 weiden Exp $
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -19,10 +19,13 @@
  *                          and improve reusability
  */
 
-#include "precomp.h"
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 #define NDEBUG
 #include <debug.h>
+
+#include <epsapi.h>
 
 NTSTATUS NTAPI
 PsaEnumerateProcessModules(IN HANDLE ProcessHandle,

@@ -1,4 +1,4 @@
-/* $Id: processes.c,v 1.1 2004/11/03 22:43:00 weiden Exp $
+/* $Id: processes.c,v 1.3 2004/11/08 00:34:46 weiden Exp $
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -31,10 +31,11 @@
  *                          and improve reusability
  */
 
-#include "precomp.h"
-
-#define NDEBUG
+#include <ddk/ntddk.h>
 #include <debug.h>
+#include <stddef.h>
+
+#include <epsapi.h>
 
 NTSTATUS NTAPI
 PsaCaptureProcessesAndThreads(OUT PSYSTEM_PROCESSES *ProcessesAndThreads)

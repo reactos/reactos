@@ -1,6 +1,7 @@
 #define NTOS_MODE_USER
 #include <windows.h>
 #include <psapi.h>
+#include <epsapi.h>
 #include <ntos.h>
 #include "internal.h"
 #include <stddef.h>
