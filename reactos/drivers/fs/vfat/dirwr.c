@@ -1,4 +1,5 @@
-/*
+/* $Id: dirwr.c,v 1.9 2000/03/01 23:41:35 ea Exp $
+ *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/dirwr.c
