@@ -101,13 +101,13 @@ WINE_OTHER = unicode library
 
 WINE_TOOLS = bin2res wrc winebuild
 
-WINE_DLLS = comcat crtdll dsound dplayx richedit shlwapi twain
+WINE_DLLS = comcat crtdll comctl32 commdlg dsound dplayx richedit shlwapi twain \
+ole32 shell32 winspool \
+rpcrt4 # needed to make rcprt4 implib 
 
-#mapi32 ole32 oleaut32 oledlg olepro32 olecli olesvr \
-#shell32 comctl32 shfolder shdocvw commdlg winmm
-#ddraw dinput dplay serialui tapi32 urlmon winspool wintrust
-#winspool msinfo comcat
-#lzexpand (missing imports)
+# mapi32 oleaut32 oledlg olepro32 olecli olesvr shfolder shdocvw 
+# winmm ddraw dinput dplay serialui tapi32 urlmon winspool wintrust 
+# msinfo lzexpand (missing imports)
 
 WINE_PROGS = control expand osversioncheck regedit regsrv32 winver
 # (waiting on wrc fix for the rest of these)
