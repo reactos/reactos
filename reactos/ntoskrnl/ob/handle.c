@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.51 2003/09/25 20:07:46 ekohl Exp $
+/* $Id: handle.c,v 1.52 2003/10/05 16:57:39 ekohl Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -597,7 +597,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
 			  POBJECT_TYPE ObjectType,
 			  KPROCESSOR_MODE AccessMode,
 			  PVOID* Object,
-			  POBJECT_HANDLE_INFORMATION HandleInformationPtr)
+			  POBJECT_HANDLE_INFORMATION HandleInformation)
 /*
  * FUNCTION: Increments the reference count for an object and returns a 
  * pointer to its body
@@ -625,7 +625,6 @@ ObReferenceObjectByHandle(HANDLE Handle,
 	   "ObjectType %x, AccessMode %d, Object %x)\n",Handle,DesiredAccess,
 	   ObjectType,AccessMode,Object);
 
-   
    /*
     * Handle special handle names
     */
@@ -641,6 +640,12 @@ ObReferenceObjectByHandle(HANDLE Handle,
 	if (! NT_SUCCESS(Status))
 	  {
 	    return Status;
+	  }
+
+	if (HandleInformation != NULL)
+	  {
+	    HandleInformation->HandleAttributes = 0; /* FIXME? */
+	    HandleInformation->GrantedAccess = PROCESS_ALL_ACCESS;
 	  }
 
 	*Object = PsGetCurrentProcess();
@@ -662,6 +667,12 @@ ObReferenceObjectByHandle(HANDLE Handle,
 	if (! NT_SUCCESS(Status))
 	  {
 	    return Status;
+	  }
+
+	if (HandleInformation != NULL)
+	  {
+	    HandleInformation->HandleAttributes = 0; /* FIXME? */
+	    HandleInformation->GrantedAccess = THREAD_ALL_ACCESS;
 	  }
 
 	*Object = PsGetCurrentThread();
@@ -721,7 +732,13 @@ ObReferenceObjectByHandle(HANDLE Handle,
 	     return(STATUS_ACCESS_DENIED);
 	  }
      }
-   
+
+   if (HandleInformation != NULL)
+     {
+	HandleInformation->HandleAttributes = 0; /* FIXME */
+	HandleInformation->GrantedAccess = GrantedAccess;
+     }
+
    *Object = ObjectBody;
    
    CHECKPOINT;
