@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.1 2000/12/05 02:38:08 ekohl Exp $
+/* $Id: shell.c,v 1.2 2001/01/21 00:05:53 phreak Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -133,7 +133,7 @@ int ExecuteProcess(char* name, char* cmdline, BOOL detached)
    PROCESS_INFORMATION	ProcessInformation;
    STARTUPINFO		StartupInfo;
    BOOL			ret;
-   CHAR			fullname[MAX_PATH];
+   CHAR			fullname[260];
    PCHAR		p;
    
    /* append '.exe' if needed */
@@ -148,8 +148,6 @@ int ExecuteProcess(char* name, char* cmdline, BOOL detached)
    memset(&StartupInfo, 0, sizeof(StartupInfo));
    StartupInfo.cb = sizeof (STARTUPINFO);
    StartupInfo.lpTitle = name;
-   // set mode to default for new process
-   SetConsoleMode( GetStdHandle( STD_INPUT_HANDLE ), ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT );
    ret = CreateProcessA(fullname,
 			cmdline,
 			NULL,
@@ -198,8 +196,6 @@ int ExecuteProcess(char* name, char* cmdline, BOOL detached)
 	     CloseHandle(ProcessInformation.hThread);
 	  }
      }
-   // reset mode
-   SetConsoleMode( GetStdHandle( STD_INPUT_HANDLE ), 0 );
    return(ret);
 }
 
@@ -413,42 +409,20 @@ void ReadLine(char* line)
 {
    DWORD Result;
    UCHAR CurrentDir[255];
-   int   length = 0;
-   int c;
 
    GetCurrentDirectoryA(255,CurrentDir);
    debug_printf("%s>", CurrentDir);
-
-   do
-     {
-       if ( !ReadConsoleA(InputHandle, line, 255 - length, &Result, NULL) )
-	  {
-	     debug_printf("Failed to read from console\n");
-	     for(;;);
-	  }
-       for( c = 0; c < Result; c++ )
-	 switch ( line[c] )
-	   {
-	   case '\b':
-	     if (length > 0)
-	       {
-		 debug_printf("\b \b");
-		 memmove( &line[c-1], &line[c], Result - c - 1 );
-		 c-=2;
-		 length--;
-		 Result--;
-	       }
-	     break;
-	   case '\n': 
-	     line[c] = 0;
-	     debug_printf( "\n" );
-	     return;
-	   default:
-	      debug_printf( "%c", line[c] );
-              length++;
-          }
-       line += Result;
-     } while (1);
+   if ( !ReadConsoleA(InputHandle, line, 252, &Result, NULL) )
+      {
+	 debug_printf("Failed to read from console\n");
+	 for(;;);
+      }
+   // If the \n is in there, so is the \r so null it, otherwise, null the last char
+   if( line[Result-1] == '\n' )
+      line[Result-2] = 0;
+   else {
+     line[Result] = 0;
+   }
 }
 
 void ParseCommandLine (void)
@@ -466,15 +440,9 @@ void ParseCommandLine (void)
 
 int main(void)
 {
-   static char line[255];
+   static char line[256];
    
    AllocConsole();
-   // clear line buffered mode
-   if( !SetConsoleMode( GetStdHandle( STD_INPUT_HANDLE ), 0 ) )
-     {
-       debug_printf( "Error: could not set console mode, error: %d\n", GetLastError() );
-       return GetLastError();
-     }
    InputHandle = GetStdHandle(STD_INPUT_HANDLE);
    OutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 
