@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.63 2003/08/17 22:45:40 silverblade Exp $
+/* $Id: window.c,v 1.64 2003/08/17 23:48:36 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -376,15 +376,32 @@ AllowSetForegroundWindow(DWORD dwProcessId)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 AnimateWindow(HWND hwnd,
 	      DWORD dwTime,
 	      DWORD dwFlags)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  /* FIXME Add animation code */
+
+  /* If trying to show/hide and it's already   *
+   * shown/hidden or invalid window, fail with *
+   * invalid parameter                         */
+   
+  BOOL visible;
+  visible = IsWindowVisible(hwnd);
+  if(!IsWindow(hwnd) ||
+    (visible && !(dwFlags & AW_HIDE)) ||
+    (!visible && (dwFlags & AW_HIDE)))
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  ShowWindow(hwnd, (dwFlags & AW_HIDE) ? SW_HIDE : ((dwFlags & AW_ACTIVATE) ? SW_SHOW : SW_SHOWNA));
+
+  return TRUE;
 }
 
 
