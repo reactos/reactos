@@ -300,7 +300,7 @@ static BOOL FILEDLG_ScanDir(HWND hWnd, LPWSTR newPath)
     HCURSOR             hCursorWait, oldCursor;
 
     TRACE("Trying to change to %s\n", debugstr_w(newPath));
-    if  ( !SetCurrentDirectoryW( newPath ))
+    if  ( newPath[0] && !SetCurrentDirectoryW( newPath ))
         return FALSE;
     lstrcpynW(buffer, newPath, sizeof(buffer)/sizeof(WCHAR));
 

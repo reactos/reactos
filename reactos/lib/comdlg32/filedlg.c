@@ -32,8 +32,6 @@
  *
  * FIXME: old style hook messages are not implemented (except FILEOKSTRING)
  *
- * FIXME: lpstrCustomFilter not handled
- *
  * FIXME: algorithm for selecting the initial directory is too simple
  *
  * FIXME: add to recent docs
@@ -379,10 +377,10 @@ BOOL  WINAPI GetFileDialog95A(LPOPENFILENAMEA ofn,UINT iDlgType)
     LPCSTR s;
     int n, len;
 
-    /* filter is a list...  title\0ext\0......\0\0 */
+    /* customfilter contains a pair of strings...  title\0ext\0 */
     s = ofn->lpstrCustomFilter;
-    while (*s) s = s+strlen(s)+1;
-    s++;
+    if (*s) s = s+strlen(s)+1;
+    if (*s) s = s+strlen(s)+1;
     n = s - ofn->lpstrCustomFilter;
     len = MultiByteToWideChar( CP_ACP, 0, ofn->lpstrCustomFilter, n, NULL, 0 );
     customfilter = MemAlloc(len*sizeof(WCHAR));
@@ -437,8 +435,6 @@ BOOL  WINAPI GetFileDialog95A(LPOPENFILENAMEA ofn,UINT iDlgType)
  *
  * Copy the OPENFILENAMEW structure in a FileOpenDlgInfos structure.
  * Call GetFileName95 with this structure and clean the memory.
- *
- * FIXME: lpstrCustomFilter has to be converted back
  *
  */
 BOOL  WINAPI GetFileDialog95W(LPOPENFILENAMEW ofn,UINT iDlgType)
@@ -1983,6 +1979,22 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
             }
 	  }
 
+          /* copy currently selected filter to lpstrCustomFilter */
+          if (fodInfos->ofnInfos->lpstrCustomFilter)
+          {
+            LPOPENFILENAMEA ofn = fodInfos->ofnInfos;
+            int len = WideCharToMultiByte(CP_ACP, 0, fodInfos->ShellInfos.lpstrCurrentFilter, -1,
+                                          NULL, 0, NULL, NULL);
+            if (len + strlen(ofn->lpstrCustomFilter) + 1 <= ofn->nMaxCustFilter)
+            {
+              LPSTR s = ofn->lpstrCustomFilter;
+              s += strlen(ofn->lpstrCustomFilter)+1;
+              WideCharToMultiByte(CP_ACP, 0, fodInfos->ShellInfos.lpstrCurrentFilter, -1,
+                                  s, len, NULL, NULL);
+            }
+          }
+
+
           if ( !FILEDLG95_SendFileOK(hwnd, fodInfos) )
 	      goto ret;
 
@@ -2148,13 +2160,34 @@ static void FILEDLG95_SHELL_Clean(HWND hwnd)
 static HRESULT FILEDLG95_FILETYPE_Init(HWND hwnd)
 {
   FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+  int nFilters = 0;  /* number of filters */
+  int nFilterIndexCB;
 
   TRACE("\n");
 
+  if(fodInfos->customfilter)
+  {
+      /* customfilter has one entry...  title\0ext\0
+       * Set first entry of combo box item with customfilter
+       */
+      LPWSTR  lpstrExt;
+      LPCWSTR lpstrPos = fodInfos->customfilter;
+
+      /* Get the title */
+      lpstrPos += strlenW(fodInfos->customfilter) + 1;
+
+      /* Copy the extensions */
+      if (! *lpstrPos) return E_FAIL;	/* malformed filter */
+      if (!(lpstrExt = MemAlloc((strlenW(lpstrPos)+1)*sizeof(WCHAR)))) return E_FAIL;
+      strcpyW(lpstrExt,lpstrPos);
+
+      /* Add the item at the end of the combo */
+      CBAddStringW(fodInfos->DlgInfos.hwndFileTypeCB, fodInfos->customfilter);
+      CBSetItemDataPtr(fodInfos->DlgInfos.hwndFileTypeCB, nFilters, lpstrExt);
+      nFilters++;
+  }
   if(fodInfos->filter)
   {
-    int nFilters = 0;	/* number of filters */
-    LPWSTR lpstrFilter;
     LPCWSTR lpstrPos = fodInfos->filter;
 
     for(;;)
@@ -2182,26 +2215,36 @@ static HRESULT FILEDLG95_FILETYPE_Init(HWND hwnd)
       CBSetItemDataPtr(fodInfos->DlgInfos.hwndFileTypeCB, nFilters, lpstrExt);
       nFilters++;
     }
-    /*
-     * Set the current filter to the one specified
-     * in the initialisation structure
-     * FIXME: lpstrCustomFilter not handled at all
-     */
+  }
+
+  /*
+   * Set the current filter to the one specified
+   * in the initialisation structure
+   */
+  if (fodInfos->filter || fodInfos->customfilter)
+  {
+    LPWSTR lpstrFilter;
+
+    /* Check to make sure our index isn't out of bounds. */
+    if ( fodInfos->ofnInfos->nFilterIndex >
+         nFilters - (fodInfos->customfilter == NULL ? 0 : 1) )
+      fodInfos->ofnInfos->nFilterIndex = (fodInfos->customfilter == NULL ? 1 : 0);
 
     /* set default filter index */
     if(fodInfos->ofnInfos->nFilterIndex == 0 && fodInfos->customfilter == NULL)
       fodInfos->ofnInfos->nFilterIndex = 1;
 
-    /* First, check to make sure our index isn't out of bounds. */
-    if ( fodInfos->ofnInfos->nFilterIndex > nFilters )
-      fodInfos->ofnInfos->nFilterIndex = nFilters;
+    /* calculate index of Combo Box item */
+    nFilterIndexCB = fodInfos->ofnInfos->nFilterIndex;
+    if (fodInfos->customfilter == NULL)
+      nFilterIndexCB--;
 
     /* Set the current index selection. */
-    CBSetCurSel(fodInfos->DlgInfos.hwndFileTypeCB, fodInfos->ofnInfos->nFilterIndex-1);
+    CBSetCurSel(fodInfos->DlgInfos.hwndFileTypeCB, nFilterIndexCB);
 
     /* Get the corresponding text string from the combo box. */
     lpstrFilter = (LPWSTR) CBGetItemDataPtr(fodInfos->DlgInfos.hwndFileTypeCB,
-                                             fodInfos->ofnInfos->nFilterIndex-1);
+                                             nFilterIndexCB);
 
     if ((INT)lpstrFilter == CB_ERR)  /* control is empty */
       lpstrFilter = NULL;
@@ -2214,7 +2257,9 @@ static HRESULT FILEDLG95_FILETYPE_Init(HWND hwnd)
       fodInfos->ShellInfos.lpstrCurrentFilter = MemAlloc( len * sizeof(WCHAR) );
       strcpyW(fodInfos->ShellInfos.lpstrCurrentFilter,lpstrFilter);
     }
-  }
+  } else
+      fodInfos->ofnInfos->nFilterIndex = 0;
+
   return NOERROR;
 }
 
@@ -2237,8 +2282,9 @@ static BOOL FILEDLG95_FILETYPE_OnCommand(HWND hwnd, WORD wNotifyCode)
       /* Get the current item of the filetype combo box */
       int iItem = CBGetCurSel(fodInfos->DlgInfos.hwndFileTypeCB);
 
-      /* set the current filter index - indexed from 1 */
-      fodInfos->ofnInfos->nFilterIndex = iItem + 1;
+      /* set the current filter index */
+      fodInfos->ofnInfos->nFilterIndex = iItem +
+        (fodInfos->customfilter == NULL ? 1 : 0);
 
       /* Set the current filter with the current selection */
       if(fodInfos->ShellInfos.lpstrCurrentFilter)

@@ -24,92 +24,92 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 OPEN_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ч&#1110;ДЛТЙФЙ"
+CAPTION "Відкрити"
 FONT 8, "Ms Sans Serif"
 {
- LTEXT "&&#1030;Н'С ЖБКМХ:", 1090, 6, 6, 76, 9
+ LTEXT "&Ім'я файлу:", 1090, 6, 6, 76, 9
  EDITTEXT 1152, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "&фЕЛЙ:", -1, 110, 6, 92, 9
+ LTEXT "&Теки:", -1, 110, 6, 92, 9
  LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "рПЛБЪХЧБФЙ ЖБКМЙ &ФЙРХ:", 1089, 6, 104, 90, 9
+ LTEXT "Показувати файли &типу:", 1089, 6, 104, 90, 9
  COMBOBOX 1136, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- LTEXT "&дЙУЛЙ:", 1091, 110, 104, 92, 9
+ LTEXT "&Диски:", 1091, 110, 104, 92, 9
  COMBOBOX 1137, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "ч&#1110;ДЛТЙФЙ", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "ч&#1110;ДН&#1110;ОБ", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&дПЧ&#1110;ДЛБ", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
- CHECKBOX "&мЙЫЕ ДМС ЮЙФБООС", 1040, 208, 68, 54, 24, BS_AUTOCHECKBOX | BS_MULTILINE  | WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Відкрити", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Відміна", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Довідка", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Лише для читання", 1040, 208, 68, 54, 24, BS_AUTOCHECKBOX | BS_MULTILINE  | WS_GROUP | WS_TABSTOP
 }
 
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ъВЕТЕЗФЙ СЛ ..."
+CAPTION "Зберегти як ..."
 FONT 8, "Ms Sans Serif"
 {
- LTEXT "&&&#1030;Н'С ЖБКМХ:", 1090, 6, 6, 76, 9
+ LTEXT "&&Ім'я файлу:", 1090, 6, 6, 76, 9
  EDITTEXT 1152, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "&фЕЛЙ:", -1, 110, 6, 92, 9
+ LTEXT "&Теки:", -1, 110, 6, 92, 9
  LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "рПЛБЪХЧБФЙ ЖБКМЙ &ФЙРХ:", 1089, 6, 104, 90, 9
+ LTEXT "Показувати файли &типу:", 1089, 6, 104, 90, 9
  COMBOBOX 1136, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- LTEXT "&дЙУЛЙ:", 1091, 110, 104, 92, 9
+ LTEXT "&Диски:", 1091, 110, 104, 92, 9
  COMBOBOX 1137, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "ъВЕТЕЗФЙ СЛ", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "ч&#1110;ДН&#1110;ОБ", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&дПЧ&#1110;ДЛБ", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
- CHECKBOX "&мЙЫЕ ДМС ЮЙФБООС", 1040, 208, 68, 54, 24, BS_AUTOCHECKBOX | BS_MULTILINE | WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Зберегти як", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Відміна", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Довідка", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Лише для читання", 1040, 208, 68, 54, 24, BS_AUTOCHECKBOX | BS_MULTILINE | WS_GROUP | WS_TABSTOP
 }
 
 
 PRINT DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 264, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "дТХЛ"
+CAPTION "Друк"
 FONT 8, "Ms Sans Serif"
 {
- LTEXT "рТЙОФЕТ:", 1088, 6, 6, 40, 9
+ LTEXT "Принтер:", 1088, 6, 6, 40, 9
  LTEXT "", 1089, 60, 6, 150, 9
- GROUPBOX "дТХЛХЧБФЙ", 1072, 6, 30, 160, 65, BS_GROUPBOX
- RADIOBUTTON "&чУЕ", 1056, 16, 45, 60, 12
- RADIOBUTTON "ч&ЙД&#1110;МЕООЙК ЖТБЗНЕОФ", 1057, 16, 60, 60, 12
- RADIOBUTTON "&уФПТ&#1110;ОЛЙ", 1058, 16, 75, 60, 12
- DEFPUSHBUTTON "дТХЛ", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "ч&#1110;ДН&#1110;ОБ", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "чМБУФЙЧПУФ&#1110;", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
- LTEXT "&Ъ:", 1090, 60, 80, 30, 9
- LTEXT "&ДП:", 1091, 120, 80, 30, 9
- LTEXT "&сЛ&#1110;УФШ ДТХЛХ:", 1092, 6, 100, 76, 9
+ GROUPBOX "Друкувати", 1072, 6, 30, 160, 65, BS_GROUPBOX
+ RADIOBUTTON "&Все", 1056, 16, 45, 60, 12
+ RADIOBUTTON "В&иділенний фрагмент", 1057, 16, 60, 60, 12
+ RADIOBUTTON "&Сторінки", 1058, 16, 75, 60, 12
+ DEFPUSHBUTTON "Друк", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Відміна", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Властивості", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ LTEXT "&з:", 1090, 60, 80, 30, 9
+ LTEXT "&до:", 1091, 120, 80, 30, 9
+ LTEXT "&Якість друку:", 1092, 6, 100, 76, 9
  COMBOBOX 1136, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- CHECKBOX "дТХЛ ДП ЖБКМХ", 1040, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "уФЙУМП", 1041, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Друк до файлу", 1040, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Стисло", 1041, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
 PRINT_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 264, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "оБУФТПКЛБ РТЙОФЕТБ"
+CAPTION "Настройка принтера"
 FONT 8, "Ms Sans Serif"
 {
- GROUPBOX "рТЙОФЕТ", 1072, 6, 10, 180, 65, BS_GROUPBOX
- RADIOBUTTON "рТЙОФЕТ ЪБ &ПВХНПЧМЕООСН", 1056, 16, 20, 80, 12
- LTEXT "[оЕНБ]", 1088, 35, 35, 120, 9
- RADIOBUTTON "&&#1030;ОЫЙК РТЙОФЕТ", 1057, 16, 50, 80, 12
+ GROUPBOX "Принтер", 1072, 6, 10, 180, 65, BS_GROUPBOX
+ RADIOBUTTON "Принтер за &обумовленням", 1056, 16, 20, 80, 12
+ LTEXT "[Нема]", 1088, 35, 35, 120, 9
+ RADIOBUTTON "&Інший принтер", 1057, 16, 50, 80, 12
  COMBOBOX 1136, 35, 65, 149, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "OK", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "ч&#1110;ДН&#1110;ОБ", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&оБУФТПКЛБ", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
- GROUPBOX "пТ&#1110;&#1108;ОФБГ&#1110;С", 1073, 6, 85, 100, 50, BS_GROUPBOX
- RADIOBUTTON "&лОЙЦОБ", 1058, 50, 100, 40, 12
- RADIOBUTTON "&бМШВПНОБ", 1059, 50, 115, 40, 12
+ PUSHBUTTON "Відміна", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Настройка", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ GROUPBOX "Орієнтація", 1073, 6, 85, 100, 50, BS_GROUPBOX
+ RADIOBUTTON "&Книжна", 1058, 50, 100, 40, 12
+ RADIOBUTTON "&Альбомна", 1059, 50, 115, 40, 12
  ICON "LANDSCAP", 1097, 10, 95, 32, 32
  ICON "PORTRAIT", 1098, 10, 95, 32, 32
- GROUPBOX "рБР&#1110;Т", 1074, 120, 85, 180, 50, BS_GROUPBOX
- LTEXT "тП&ЪН&#1110;Т", 1089, 130, 95, 30, 9
- LTEXT "&дЦЕТЕМП", 1090, 130, 110, 30, 9
+ GROUPBOX "Папір", 1074, 120, 85, 180, 50, BS_GROUPBOX
+ LTEXT "Ро&змір", 1089, 130, 95, 30, 9
+ LTEXT "&Джерело", 1090, 130, 110, 30, 9
  COMBOBOX 1137, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  COMBOBOX 1138, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
 }
@@ -117,31 +117,31 @@ FONT 8, "Ms Sans Serif"
 
 CHOOSE_FONT DIALOG DISCARDABLE  13, 54, 264, 147
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ыТЙЖФ"
+CAPTION "Шрифт"
 FONT 8, "Ms Sans Serif"
 {
-    LTEXT           "&ыТЙЖФ:",1088 ,6,3,40,9
+    LTEXT           "&Шрифт:",1088 ,6,3,40,9
     COMBOBOX        1136 ,6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "&уФЙМШ:",1089 ,108,3,44,9
+    LTEXT           "&Стиль:",1089 ,108,3,44,9
     COMBOBOX        1137,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "&тПЪН&#1110;Т:",1090,179,3,30,9
+    LTEXT           "&Розмір:",1090,179,3,30,9
     COMBOBOX        1138,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON   "OK",IDOK,218,6,40,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
-    PUSHBUTTON      "ч&#1110;ДН&#1110;ОБ",IDCANCEL,218,23,40,14,WS_GROUP | WS_TABSTOP
-    PUSHBUTTON      "&ъБУФПУХЧБФЙ", 1026,218,40,40,14,WS_GROUP | WS_TABSTOP
-    PUSHBUTTON      "&дПЧ&#1110;ДЛБ" , 1038,218,57,40,14,WS_GROUP | WS_TABSTOP
-    GROUPBOX        "бФТЙВХФЙ",1072,6,72,84,34,WS_GROUP
-    CHECKBOX	    "&ъБЛТЕУМЕОЙК", 1040, 10,82,75,10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX 	    "&р&#1110;ДЛТЕУМЕОЙК", 1041, 10,94,75,10, BS_AUTOCHECKBOX
-    LTEXT           "&лПМ&#1110;Т:", 1091 ,6,110,30,9
+    PUSHBUTTON      "Відміна",IDCANCEL,218,23,40,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Застосувати", 1026,218,40,40,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Довідка" , 1038,218,57,40,14,WS_GROUP | WS_TABSTOP
+    GROUPBOX        "Атрибути",1072,6,72,84,34,WS_GROUP
+    CHECKBOX	    "&Закреслений", 1040, 10,82,75,10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX 	    "&Підкреслений", 1041, 10,94,75,10, BS_AUTOCHECKBOX
+    LTEXT           "&Колір:", 1091 ,6,110,30,9
     COMBOBOX        1139,6,120,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "&ъТБЪПЛ",grp2,98,72,120,36,WS_GROUP
-    CTEXT           "бБвВAaBb",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
-    LTEXT           "уЛТЙРФ:",stc7 ,98,114,80,9
+    GROUPBOX        "&Зразок",grp2,98,72,120,36,WS_GROUP
+    CTEXT           "АаБбAaBb",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
+    LTEXT           "Скрипт:",stc7 ,98,114,80,9
     COMBOBOX        cmb5,98,124,120,10,CBS_DROPDOWNLIST |CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
@@ -149,23 +149,23 @@ FONT 8, "Ms Sans Serif"
 
 CHOOSE_COLOR DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 310, 185
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ъН&#1110;ОБ РБМ&#1110;ФТЙ"
+CAPTION "Зміна палітри"
 FONT 8, "Ms Sans Serif"
 {
- LTEXT "&вБЪПЧБ РБМ&#1110;ФТБ:",   1088, 4,    4,  140, 10
- LTEXT "д&ПДБФЛПЧ&#1110; ЛПМШПТЙ:",  1089, 4,   106, 140, 10
- LTEXT "лПМ&#1110;Т|ъБ&МЙЧЛБ",  1090, 150, 151,  48, 10
- LTEXT   "&юЕТЧПОЙК:", 726 /*1094*/,254,126,32,10
+ LTEXT "&Базова палітра:",   1088, 4,    4,  140, 10
+ LTEXT "Д&одаткові кольори:",  1089, 4,   106, 140, 10
+ LTEXT "Колір|За&ливка",  1090, 150, 151,  48, 10
+ LTEXT   "&Червоний:", 726 /*1094*/,254,126,32,10
  EDITTEXT 706, 288,124,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT   "&ъЕМЕОЙК:",727/*1095*/,254,140,32,10
+ LTEXT   "&Зелений:",727/*1095*/,254,140,32,10
  EDITTEXT 707, 288,138,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT   "у&ЙО&#1110;К:",728 /*1096*/,264,154,24,10
+ LTEXT   "С&иній:",728 /*1096*/,264,154,24,10
  EDITTEXT 708, 288,152,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "ч&#1110;Д&Ф&#1110;ОПЛ:" ,723 /*1091*/,202,126,30,10
+ LTEXT  "Від&тінок:" ,723 /*1091*/,202,126,30,10
  EDITTEXT 703, 234,124,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&лПОФТБУФ:" ,724 /*1092*/,199,140,34,10
+ LTEXT  "&Контраст:" ,724 /*1092*/,199,140,34,10
  EDITTEXT 704, 234,138,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&сУЛТБЧ&#1110;УФШ:" ,725 /*1093*/,202,154,30,10
+ LTEXT  "&Яскравість:" ,725 /*1093*/,202,154,30,10
  EDITTEXT 705, 234,152,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  CONTROL "" ,720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
  CONTROL "" ,721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
@@ -173,258 +173,258 @@ FONT 8, "Ms Sans Serif"
  CONTROL "" ,702,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
  CONTROL "" ,709,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
  DEFPUSHBUTTON "OK",  IDOK,  4, 166, 44, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "ч&#1110;ДН&#1110;ОБ", IDCANCEL, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "дПЧ&#1110;ДЛБ", 1038,100,166, 44, 14
- PUSHBUTTON "&дПДБФЙ ДП ОБВПТХ",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&чЙЪОБЮЙФЙ ЛПМ&#1110;Т >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Відміна", IDCANCEL, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Довідка", 1038,100,166, 44, 14
+ PUSHBUTTON "&Додати до набору",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Визначити колір >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON  "&i",713,300,200,4,14   /* just a dummy:  'i' is  like  &i  in "sol&id"  */
 }
 
 
 FINDDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 245, 62
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "рПЫХЛ"
+CAPTION "Пошук"
 FONT 8, "Ms Sans Serif"
 {
- LTEXT "&ъТБЪПЛ:", -1, 4, 8, 42, 8
+ LTEXT "&Зразок:", -1, 4, 8, 42, 8
  EDITTEXT 1152, 47, 7, 138, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "&мЙЫЕ УМПЧП Г&#1110;МЛПН", 1040, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "ъБМ&#1110;Л &ТЕ&#1169;&#1110;УФТХ", 1041, 4, 42, 100, 12, BS_AUTOCHECKBOX | WS_TABSTOP
- GROUPBOX "оБРТСН", 1072, 107, 26, 78, 28
- CONTROL "&чЗПТХ", 1056, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 111, 38, 40, 12
- CONTROL "ч&ОЙЪ", 1057, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 152, 38, 30, 12
+ CHECKBOX "&Лише слово цілком", 1040, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Залік &реґістру", 1041, 4, 42, 100, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ GROUPBOX "Напрям", 1072, 107, 26, 78, 28
+ CONTROL "&Вгору", 1056, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 111, 38, 40, 12
+ CONTROL "В&низ", 1057, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 152, 38, 30, 12
 
- DEFPUSHBUTTON "ъ&ОБКФЙ ДБМ&#1110;", IDOK, 190,  5, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "ч&#1110;ДН&#1110;ОБ", IDCANCEL	 , 190, 23, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&дПЧ&#1110;ДЛБ", pshHelp	 , 190, 45, 50, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "З&найти далі", IDOK, 190,  5, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Відміна", IDCANCEL	 , 190, 23, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Довідка", pshHelp	 , 190, 45, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
 
 REPLACEDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 230, 94
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ъБН&#1110;ОБ"
+CAPTION "Заміна"
 FONT 8, "Ms Sans Serif"
 {
- LTEXT "&ъТБЪПЛ:", -1, 4, 9, 48, 8
+ LTEXT "&Зразок:", -1, 4, 9, 48, 8
  EDITTEXT 1152, 54, 7, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT "ъ&БН&#1110;ОЙФЙ ОБ:", -1, 4, 26, 48, 8
+ LTEXT "З&амінити на:", -1, 4, 26, 48, 8
  EDITTEXT 1153, 54, 24, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "&мЙЫЕ УМПЧП Г&#1110;МЛПН", 1040, 5, 46, 104, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "ъБМ&#1110;Л &ТЕ&#1169;&#1110;УФТХ", 1041, 5, 62, 104, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ CHECKBOX "&Лише слово цілком", 1040, 5, 46, 104, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Залік &реґістру", 1041, 5, 62, 104, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 
- DEFPUSHBUTTON "ъ&ОБКФЙ ДБМ&#1110;", IDOK, 174,  4, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "&ъБН&#1110;ОЙФЙ", psh1	 , 174, 21, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "ъБН&#1110;ОЙФЙ &ЧУЕ", psh2 , 174, 38, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "ч&#1110;ДН&#1110;ОБ", IDCANCEL	 , 174, 55, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&дПЧ&#1110;ДЛБ", pshHelp	 , 174, 75, 50, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "З&найти далі", IDOK, 174,  4, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "&Замінити", psh1	 , 174, 21, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Замінити &все", psh2 , 174, 38, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Відміна", IDCANCEL	 , 174, 55, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Довідка", pshHelp	 , 174, 75, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
 PRINT32 DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 186
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
       DS_CONTEXTHELP | DS_3DLOOK
-CAPTION "дТХЛ"
+CAPTION "Друк"
 FONT 8, "Ms Sans Serif"
 {
     DEFPUSHBUTTON   "OK",     IDOK,     180,164, 48,14, WS_GROUP | BS_DEFPUSHBUTTON
-    PUSHBUTTON      "ч&#1110;ДН&#1110;ОБ", IDCANCEL, 232,164, 48,14, WS_GROUP
-    PUSHBUTTON      "&дПЧ&#1110;ДЛБ",  pshHelp,  50, 161, 48,14, WS_GROUP
+    PUSHBUTTON      "Відміна", IDCANCEL, 232,164, 48,14, WS_GROUP
+    PUSHBUTTON      "&Довідка",  pshHelp,  50, 161, 48,14, WS_GROUP
 
-    GROUPBOX        "рТЙОФЕТ",        grp4,   8,  4, 272,84, WS_GROUP
-    CONTROL         "дТХЛ Х ЖБК&М", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
-    PUSHBUTTON      "&чМБУФЙЧПУФ&#1110;",    psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "&&#1030;Н'С:",         stc6,  16, 20,  36,8
+    GROUPBOX        "Принтер",        grp4,   8,  4, 272,84, WS_GROUP
+    CONTROL         "Друк у фай&л", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
+    PUSHBUTTON      "&Властивості",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Ім'я:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "уФБФХУ:",        stc8,  16, 36,  36,10, SS_NOPREFIX
-    LTEXT           "еНХМШПЧБОП",    stc12, 60, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "фЙР:",          stc7,  16, 48,  36,10, SS_NOPREFIX
-    LTEXT           "еНХМШПЧБОП",     stc11, 60, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "н&#1110;УГЕ:",         stc10, 16, 60,  36,10, SS_NOPREFIX
-    LTEXT           "еНХМШПЧБОП", stc14, 60, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "рТЙН&#1110;ФЛБ:",       stc13,  16, 72,  36,10, SS_NOPREFIX
-    LTEXT           "еНХМШПЧБОП",   stc13, 60, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Статус:",        stc8,  16, 36,  36,10, SS_NOPREFIX
+    LTEXT           "Емульовано",    stc12, 60, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Тип:",          stc7,  16, 48,  36,10, SS_NOPREFIX
+    LTEXT           "Емульовано",     stc11, 60, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Місце:",         stc10, 16, 60,  36,10, SS_NOPREFIX
+    LTEXT           "Емульовано", stc14, 60, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Примітка:",       stc13,  16, 72,  36,10, SS_NOPREFIX
+    LTEXT           "Емульовано",   stc13, 60, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "лПР&#1110;&#1111;",         grp2, 160, 92, 120,64, WS_GROUP
-    LTEXT           "юЙУМП &ЛПР&#1110;К:",stc5,168,108,68,8
+    GROUPBOX        "Копії",         grp2, 160, 92, 120,64, WS_GROUP
+    LTEXT           "Число &копій:",stc5,168,108,68,8
     ICON            "",               ico3, 162,124,  76,24, WS_GROUP | SS_CENTERIMAGE
-    CONTROL         "&тПЪВЙФЙ",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,230,130,40,12
+    CONTROL         "&Розбити",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,230,130,40,12
     EDITTEXT                          edt3, 240,106,  32,12, WS_GROUP | ES_NUMBER
 
-    GROUPBOX        "дТХЛХЧБФЙ",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&чУЕ",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "&уФПТ&#1110;ОЛЙ",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,50,12
-    CONTROL         "&чЙД&#1110;МЕООС",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    GROUPBOX        "Друкувати",    grp1,   8,92,  144,64, WS_GROUP
+    CONTROL         "&Все",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "&Сторінки",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,50,12
+    CONTROL         "&Виділення",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
     EDITTEXT                          edt1,  85,122,  20,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  20,12, WS_GROUP | ES_NUMBER
-    RTEXT           "&Ч&#1110;Д:",         stc2,  70,124,  10,8
-    RTEXT           "&ДП:",           stc3, 106,124,  10,8
+    RTEXT           "&від:",         stc2,  70,124,  10,8
+    RTEXT           "&до:",           stc3, 106,124,  10,8
 }
 
 PRINT32_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 178
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
       DS_CONTEXTHELP | DS_3DLOOK
-CAPTION "хУФБОПЧЛЙ РТЙОФЕТБ"
+CAPTION "Установки принтера"
 FONT 8, "Ms Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,180,156,48,14,WS_GROUP
-    PUSHBUTTON      "ч&#1110;ДН&#1110;ОБ",IDCANCEL,232,156,48,14
-/*    PUSHBUTTON      "у&#1110;ФЛБ...", psh5, 284,156,48,14 */
+    PUSHBUTTON      "Відміна",IDCANCEL,232,156,48,14
+/*    PUSHBUTTON      "Сітка...", psh5, 284,156,48,14 */
 
-    GROUPBOX        "рТЙОФЕТ",        grp4,   8,  4, 272,84, WS_GROUP
-    PUSHBUTTON      "&чМБУФЙЧПУФ&#1110;",    psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "&&#1030;Н'С:",         stc6,  16, 20,  36,8
+    GROUPBOX        "Принтер",        grp4,   8,  4, 272,84, WS_GROUP
+    PUSHBUTTON      "&Властивості",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Ім'я:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "уФБФХУ:",        stc8,  16, 36,  36,10, SS_NOPREFIX
-    LTEXT           "еНХМШПЧБОП",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "фЙР:",          stc7,  16, 48,  36,10, SS_NOPREFIX
-    LTEXT           "еНХМШПЧБОП",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "н&#1110;УГЕ:",         stc10, 16, 60,  36,10, SS_NOPREFIX
-    LTEXT           "еНХМШПЧБОП", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "рТЙН&#1110;ФЛЙ:",       stc9,  16, 72,  36,10, SS_NOPREFIX
-    LTEXT           "еНХМШПЧБО&#1110;",   stc13, 52, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Статус:",        stc8,  16, 36,  36,10, SS_NOPREFIX
+    LTEXT           "Емульовано",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Тип:",          stc7,  16, 48,  36,10, SS_NOPREFIX
+    LTEXT           "Емульовано",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Місце:",         stc10, 16, 60,  36,10, SS_NOPREFIX
+    LTEXT           "Емульовано", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Примітки:",       stc9,  16, 72,  36,10, SS_NOPREFIX
+    LTEXT           "Емульовані",   stc13, 52, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "рБР&#1110;Т",          grp2,   8, 92, 164,56, WS_GROUP
-    LTEXT           "тПЪ&Н&#1110;Т:",         stc2,  16,108,  36, 8
+    GROUPBOX        "Папір",          grp2,   8, 92, 164,56, WS_GROUP
+    LTEXT           "Роз&мір:",         stc2,  16,108,  36, 8
     COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "&дЦЕТЕМП:",       stc3,  16,128,  36, 8
+    LTEXT           "&Джерело:",       stc3,  16,128,  36, 8
     COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 
-    GROUPBOX        "пТ&#1110;&#1108;ОФБГ&#1110;С",    grp1, 180, 92, 100,56, WS_GROUP
+    GROUPBOX        "Орієнтація",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "&рПТФТЕФ",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "м&БОДЫБЖФ",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    CONTROL         "&Портрет",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "Л&андшафт",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
 END
 
 NEWFILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 280, 164
 STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
-CAPTION "ч&#1110;ДЛТЙФЙ"
+CAPTION "Відкрити"
 FONT 8, "MS Sans Serif"
 {
-    LTEXT	"ыХЛБФЙ &Ч",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
+    LTEXT	"Шукати &в",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
     COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
 
     LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
     LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
 
-    LTEXT	"&#1030;Н'С &ЖБКМХ:",IDC_FILENAMESTATIC,5,112,46,8, SS_NOTIFY
+    LTEXT	"Ім'я &файлу:",IDC_FILENAMESTATIC,5,112,46,8, SS_NOTIFY
     EDITTEXT	IDC_FILENAME,54,110,155,12,ES_AUTOHSCROLL
 
-    LTEXT	"жБКМЙ &ФЙРХ",IDC_FILETYPESTATIC,5,128,42,8, SS_NOTIFY
-    COMBOBOX	IDC_FILETYPE,54,126,155,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT	"Файли &типу",IDC_FILETYPESTATIC,5,128,42,8, SS_NOTIFY
+    COMBOBOX	IDC_FILETYPE,54,126,155,53,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
 
-    CONTROL	"мЙЫЕ ДМС &ЮЙФБООС",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
+    CONTROL	"Лише для &читання",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
 
-    DEFPUSHBUTTON	"&ч&#1110;ДЛТЙФЙ",		 IDOK,222,110,50,14
-    PUSHBUTTON		"ч&#1110;ДН&#1110;ОБ",		 IDCANCEL,222,128,50,14
-    PUSHBUTTON		"&дПЧ&#1110;ДЛБ",		 pshHelp,222,145,50,14
+    DEFPUSHBUTTON	"&Відкрити",		 IDOK,222,110,50,14
+    PUSHBUTTON		"Відміна",		 IDCANCEL,222,128,50,14
+    PUSHBUTTON		"&Довідка",		 pshHelp,222,145,50,14
 }
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_ABOUTBOX            "&рТП ФЕУФ чЙВ&#1110;ТфЕЛЙ"
-    IDS_DOCUMENTFOLDERS     "фЕЛЙ ДПЛХНЕОФ&#1110;Ч"
-    IDS_PERSONAL            "нП&#1111; ДПЛХНЕОФЙ"
-    IDS_FAVORITES           "ъБЛМБДЛЙ"
-    IDS_PATH                "уЙУФЕНОЙК ЫМСИ"
-    IDS_DESKTOP             "уФ&#1110;МШОЙГС"
-    IDS_FONTS               "ыТЙЖФЙ"
-    IDS_MYCOMPUTER          "н&#1110;К ЛПНР'АФЕТ"
+    IDS_ABOUTBOX            "&Про тест ВибірТеки"
+    IDS_DOCUMENTFOLDERS     "Теки документів"
+    IDS_PERSONAL            "Мої документи"
+    IDS_FAVORITES           "Закладки"
+    IDS_PATH                "Системний шлях"
+    IDS_DESKTOP             "Стільниця"
+    IDS_FONTS               "Шрифти"
+    IDS_MYCOMPUTER          "Мій комп'ютер"
 }
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_SYSTEMFOLDERS       "уЙУФЕНО&#1110; ФЕЛЙ"
-    IDS_LOCALHARDRIVES      "мПЛБМШО&#1110; ЦПТУФЛ&#1110; ДЙУЛЙ"
-    IDS_FILENOTFOUND        "жБКМ ОЕ ЪОБКДЕОП"
-    IDS_VERIFYFILE          "рЕТЕЧ&#1110;ТФЕ, ЮЙ РТБЧЙМШОП ЧЛБЪБОП &#1110;Н'С ЖБКМХ"
-    IDS_CREATEFILE          "жБКМ ОЕ &#1110;УОХ&#1108;\nюЙ ИПЮЕФЕ чЙ КПЗП УФЧПТЙФЙ?"
-    IDS_OVERWRITEFILE       "жБКМ ХЦЕ &#1110;УОХ&#1108;.\nъБН&#1110;ОЙФЙ КПЗП?"
-    IDS_INVALID_FILENAME_TITLE "оЕЧ&#1110;ТОЙК УЙНЧПМ Ч ЪБРЙУХ ЫМСИХ"
-    IDS_INVALID_FILENAME    "&#1030;Н'С ЖБКМХ ОЕ НПЦЕ Н&#1110;УФЙФЙ ОБУФХРО&#1110; УЙНЧПМЙ: \n                          / : < > |"
-    IDS_PATHNOTEXISTING     "ыМСИ ОЕ &#1110;УОХ&#1108;"
-    IDS_FILENOTEXISTING     "жБКМ ОЕ &#1110;УОХ&#1108;"
+    IDS_SYSTEMFOLDERS       "Системні теки"
+    IDS_LOCALHARDRIVES      "Локальні жорсткі диски"
+    IDS_FILENOTFOUND        "Файл не знайдено"
+    IDS_VERIFYFILE          "Перевірте, чи правильно вказано ім'я файлу"
+    IDS_CREATEFILE          "Файл не існує\nЧи хочете Ви його створити?"
+    IDS_OVERWRITEFILE       "Файл уже існує.\nЗамінити його?"
+    IDS_INVALID_FILENAME_TITLE "Невірний символ в запису шляху"
+    IDS_INVALID_FILENAME    "Ім'я файлу не може містити наступні символи: \n                          / : < > |"
+    IDS_PATHNOTEXISTING     "Шлях не існує"
+    IDS_FILENOTEXISTING     "Файл не існує"
 }
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_UPFOLDER         "чЗПТХ ОБ ПДЙО Т&#1110;ЧЕОШ"
-    IDS_NEWFOLDER        "уФЧПТЙФЙ ОПЧХ ФЕЛХ"
-    IDS_LISTVIEW         "уРЙУПЛ"
-    IDS_REPORTVIEW       "рПДТПВЙГ&#1110;"
-    IDS_TODESKTOP        "рЕТЕИ&#1110;Д ОБ УФ&#1110;МШОЙГА"
+    IDS_UPFOLDER         "Вгору на один рівень"
+    IDS_NEWFOLDER        "Створити нову теку"
+    IDS_LISTVIEW         "Список"
+    IDS_REPORTVIEW       "Подробиці"
+    IDS_TODESKTOP        "Перехід на стільницю"
 }
 
 STRINGTABLE DISCARDABLE
 {
-    PD32_PRINT_TITLE       "дТХЛ"
+    PD32_PRINT_TITLE       "Друк"
 
-    PD32_VALUE_UREADABLE                  "оЕЮЙФБ&#1108;НЙК ЕМЕНЕОФ"
-    PD32_INVALID_PAGE_RANGE "гЕ ЪОБЮЕООС ОЕ МЕЦЙФШ Х Д&#1110;БРБЪПО&#1110; УФПТ&#1110;ОПЛ\n\
-чЧЕД&#1110;ФШ ЪОБЮЕООЕ Н&#1110;Ц %d ФБ %d"
-    PD32_FROM_NOT_ABOVE_TO                "ъОБЮЕООС ч&#1030;д ОЕ РПЧЙООП РЕТЕЧЙЭХЧБФЙ дп:"
-    PD32_MARGINS_OVERLAP                  "нЕЦ&#1110; РЕТЕЛТЙЧБАФШ ЮЙ РЕТЕЧЙЭХАФШ \
-ТПЪН&#1110;ТЙ РБРЕТХ.\nчЧЕД&#1110;ФШ &#1111;И ОБОПЧП"
-    PD32_NR_OF_COPIES_EMPTY               "ъОБЮЕООС юЙУМБ лПР&#1110;К ОЕ НПЦЕ ВХФЙ \
-РХУФЙН"
-    PD32_TOO_LARGE_COPIES                 "фБЛБ ЧЕМЙЛБ Л&#1110;МШЛ&#1110;УФШ ЛПР&#1110;К ОЕ \
-НПЦЕ ВХФЙ ОБДТХЛПЧБОБ чБЫЙН РТЙОФЕТПН.\nчЧЕД&#1110;ФШ ЪОБЮЕООС Н&#1110;Ц 1 ФБ %d"
-    PD32_PRINT_ERROR                      "чЙОЙЛМБ РПНЙМЛБ РТЙОФЕТБ"
-    PD32_NO_DEFAULT_PRINTER               "оЕНБ&#1108; РТЙОФЕТБ, РПУФБЧМЕОПЗП ЪБ ПВХНПЧМЕООСН"
-    PD32_CANT_FIND_PRINTER                "оЕ ЧДБМПУШ ЪОБКФЙ РТЙОФЕТ"
-    PD32_OUT_OF_MEMORY                    "нБМП РБН'СФ&#1110;"
-    PD32_GENERIC_ERROR                    "чЙОЙЛМБ(Й) РПНЙМЛБ(Й)"
-    PD32_DRIVER_UNKNOWN                   "оЕЧ&#1110;ДПНЙК ДТБКЧЕТ РТЙОФЕТБ"
+    PD32_VALUE_UREADABLE                  "Нечитаємий елемент"
+    PD32_INVALID_PAGE_RANGE "Це значення не лежить у діапазоні сторінок\n\
+Введіть значенне між %d та %d"
+    PD32_FROM_NOT_ABOVE_TO                "Значення ВІД не повинно перевищувати ДО:"
+    PD32_MARGINS_OVERLAP                  "Межі перекривають чи перевищують \
+розміри паперу.\nВведіть їх наново"
+    PD32_NR_OF_COPIES_EMPTY               "Значення Числа Копій не може бути \
+пустим"
+    PD32_TOO_LARGE_COPIES                 "Така велика кількість копій не \
+може бути надрукована Вашим принтером.\nВведіть значення між 1 та %d"
+    PD32_PRINT_ERROR                      "Виникла помилка принтера"
+    PD32_NO_DEFAULT_PRINTER               "Немає принтера, поставленого за обумовленням"
+    PD32_CANT_FIND_PRINTER                "Не вдалось знайти принтер"
+    PD32_OUT_OF_MEMORY                    "Мало пам'яті"
+    PD32_GENERIC_ERROR                    "Виникла(и) помилка(и)"
+    PD32_DRIVER_UNKNOWN                   "Невідомий драйвер принтера"
 
-    PD32_DEFAULT_PRINTER                  "рТЙОФЕТ ЪБ ПВХНПЧМЕООСН; "
-    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "%d ДПЛХНЕОФ&#1110;Ч Х ЮЕТЪ&#1110;"
-    PD32_PRINT_ALL_X_PAGES                "&чУ&#1110; %d УФПТ&#1110;ОПЛ"
-    PD32_MARGINS_IN_INCHES                "нЕЦ&#1110;  [ДАКНЙ]"
-    PD32_MARGINS_IN_MILIMETERS            "нЕЦ&#1110; [НН]"
-    PD32_MILIMETERS                       "НН"
+    PD32_DEFAULT_PRINTER                  "Принтер за обумовленням; "
+    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "%d документів у черзі"
+    PD32_PRINT_ALL_X_PAGES                "&Всі %d сторінок"
+    PD32_MARGINS_IN_INCHES                "Межі  [дюйми]"
+    PD32_MARGINS_IN_MILIMETERS            "Межі [мм]"
+    PD32_MILIMETERS                       "мм"
 
-    PD32_PRINTER_STATUS_READY             "зПФПЧП"
-    PD32_PRINTER_STATUS_PAUSED            "рТЙЪХРЙОЕОП; "
-    PD32_PRINTER_STATUS_ERROR             "рПНЙМЛБ; "
-    PD32_PRINTER_STATUS_PENDING_DELETION  "юЕЛБООС ЧЙДБМЕООС; "
-    PD32_PRINTER_STATUS_PAPER_JAM         "рБР&#1110;Т ЪБУФТСЗ; "
-    PD32_PRINTER_STATUS_PAPER_OUT         "оЕ ЧЙУФБЮБ&#1108; РБРЕТХ; "
-    PD32_PRINTER_STATUS_MANUAL_FEED       "рПУФБЧФЕ РБР&#1110;Т ЧТХЮОХ; "
-    PD32_PRINTER_STATUS_PAPER_PROBLEM     "рТПВМЕНБ У РБРЕТПН; "
-    PD32_PRINTER_STATUS_OFFLINE           "рТЙОФЕТ Ч ТЕЦЙН&#1110; offline; "
-    PD32_PRINTER_STATUS_IO_ACTIVE         "чЧ&#1110;Д/чЙЧ&#1110;Д БЛФЙЧОЙК; "
-    PD32_PRINTER_STATUS_BUSY              "ъБКОСФЙК; "
-    PD32_PRINTER_STATUS_PRINTING          "кДЕ ДТХЛ; "
-    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "мПФПЛ РЕТЕРПЧОЕОЙК РБРЕТПН; "
-    PD32_PRINTER_STATUS_NOT_AVAILABLE     "оЕ ДПУФХРОЙК; "
-    PD32_PRINTER_STATUS_WAITING           "юЕЛБООС; "
-    PD32_PRINTER_STATUS_PROCESSING        "пВТПВЛБ; "
-    PD32_PRINTER_STATUS_INITIALIZING      "зПФХЧБООС; "
-    PD32_PRINTER_STATUS_WARMING_UP        "рТПЗТ&#1110;Ч; "
-    PD32_PRINTER_STATUS_TONER_LOW         "фПОЕТ РТЙ Л&#1110;ОГ&#1110;; "
-    PD32_PRINTER_STATUS_NO_TONER          "оЕНБ ФПОЕТБ; "
+    PD32_PRINTER_STATUS_READY             "Готово"
+    PD32_PRINTER_STATUS_PAUSED            "Призупинено; "
+    PD32_PRINTER_STATUS_ERROR             "Помилка; "
+    PD32_PRINTER_STATUS_PENDING_DELETION  "Чекання видалення; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "Папір застряг; "
+    PD32_PRINTER_STATUS_PAPER_OUT         "Не вистачає паперу; "
+    PD32_PRINTER_STATUS_MANUAL_FEED       "Поставте папір вручну; "
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Проблема с папером; "
+    PD32_PRINTER_STATUS_OFFLINE           "Принтер в режимі offline; "
+    PD32_PRINTER_STATUS_IO_ACTIVE         "Ввід/Вивід активний; "
+    PD32_PRINTER_STATUS_BUSY              "Зайнятий; "
+    PD32_PRINTER_STATUS_PRINTING          "Йде друк; "
+    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Лоток переповнений папером; "
+    PD32_PRINTER_STATUS_NOT_AVAILABLE     "Не доступний; "
+    PD32_PRINTER_STATUS_WAITING           "Чекання; "
+    PD32_PRINTER_STATUS_PROCESSING        "Обробка; "
+    PD32_PRINTER_STATUS_INITIALIZING      "Готування; "
+    PD32_PRINTER_STATUS_WARMING_UP        "Прогрів; "
+    PD32_PRINTER_STATUS_TONER_LOW         "Тонер при кінці; "
+    PD32_PRINTER_STATUS_NO_TONER          "Нема тонера; "
     PD32_PRINTER_STATUS_PAGE_PUNT         "Page punt; "
-    PD32_PRINTER_STATUS_USER_INTERVENTION "рЕТЕТЧБОП ЛПТЙУФХЧБЮЕН; "
-    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "нБМП РБН'СФ&#1110;; "
-    PD32_PRINTER_STATUS_DOOR_OPEN         "лТЙЫЛБ РТЙОФЕТБ Ч&#1110;ДЛТЙФБ; "
-    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "оЕЧ&#1110;ДПНЙК УЕТЧЕТ РТЙОФЕТБ; "
-    PD32_PRINTER_STATUS_POWER_SAVE        "цЙЧМЕООС Ч ВЕЪРЕЮОПНХ ТЕЦЙН&#1110;; "
+    PD32_PRINTER_STATUS_USER_INTERVENTION "Перервано користувачем; "
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Мало пам'яті; "
+    PD32_PRINTER_STATUS_DOOR_OPEN         "Кришка принтера відкрита; "
+    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Невідомий сервер принтера; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "Живлення в безпечному режимі; "
 }
 
 STRINGTABLE DISCARDABLE /* Color names */
 {
-    IDS_COLOR_BLACK     "юПТОЙК"
-    IDS_COLOR_MAROON    "вТХОБФОЙК"
-    IDS_COLOR_GREEN     "ъЕМЕОЙК"
-    IDS_COLOR_OLIVE     "пМЙЧЛПЧЙК"
-    IDS_COLOR_NAVY      "уЙО&#1110;К"
-    IDS_COLOR_PURPLE    "рХТРХТОЙК"
-    IDS_COLOR_TEAL      "ъЕМЕОП-УЙО&#1110;К"
-    IDS_COLOR_GRAY      "у&#1110;ТЙК"
-    IDS_COLOR_SILVER    "уТ&#1110;ВОЙК"
-    IDS_COLOR_RED       "юЕТЧПОЙК"
-    IDS_COLOR_LIME      "уБМБФПЧЙК"
-    IDS_COLOR_YELLOW    "цПЧФЙК"
-    IDS_COLOR_BLUE      "зПМХВЙК"
-    IDS_COLOR_FUCHSIA   "ж&#1110;ПМЕФПЧЙК"
-    IDS_COLOR_AQUA      "бЛЧБНБТЙО"
-    IDS_COLOR_WHITE     "в&#1110;МЙК"
+    IDS_COLOR_BLACK     "Чорний"
+    IDS_COLOR_MAROON    "Брунатний"
+    IDS_COLOR_GREEN     "Зелений"
+    IDS_COLOR_OLIVE     "Оливковий"
+    IDS_COLOR_NAVY      "Синій"
+    IDS_COLOR_PURPLE    "Пурпурний"
+    IDS_COLOR_TEAL      "Зелено-синій"
+    IDS_COLOR_GRAY      "Сірий"
+    IDS_COLOR_SILVER    "Срібний"
+    IDS_COLOR_RED       "Червоний"
+    IDS_COLOR_LIME      "Салатовий"
+    IDS_COLOR_YELLOW    "Жовтий"
+    IDS_COLOR_BLUE      "Голубий"
+    IDS_COLOR_FUCHSIA   "Фіолетовий"
+    IDS_COLOR_AQUA      "Аквамарин"
+    IDS_COLOR_WHITE     "Білий"
 }
