@@ -90,7 +90,7 @@ extern void UpdateStatusBar(void);
 /* listview.c */
 extern HWND CreateListView(HWND hwndParent, int id);
 extern BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath);
-extern LPCTSTR GetValueName(HWND hwndLV);
+extern LPCTSTR GetValueName(HWND hwndLV, int iStartAt);
 extern BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result);
 extern BOOL IsDefaultValue(HWND hwndLV, int i);
 
@@ -100,6 +100,6 @@ extern BOOL OnTreeExpanding(HWND hWnd, NMTREEVIEW* pnmtv);
 extern LPCTSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey);
 
 /* edit.c */
-extern BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName);
+extern BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin);
 
 #endif /* __MAIN_H__ */

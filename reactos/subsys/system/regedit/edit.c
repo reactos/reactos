@@ -448,7 +448,7 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
 }
 
 
-BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
+BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
 {
     DWORD type;
     LONG lRet;
@@ -475,7 +475,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
         goto done;
     }
 
-    if ((type == REG_SZ) || (type == REG_EXPAND_SZ))
+    if (EditBin == FALSE && ((type == REG_SZ) || (type == REG_EXPAND_SZ)))
     {
         if (valueDataLen > 0)
         {
@@ -510,7 +510,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
                 result = TRUE;
         }
     }
-    else if (type == REG_MULTI_SZ)
+    else if (EditBin == FALSE && type == REG_MULTI_SZ)
     {
         if (valueDataLen > 0)
         {
@@ -615,7 +615,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
                 result = TRUE;
         }
     }
-    else if (type == REG_DWORD)
+    else if (EditBin == FALSE && type == REG_DWORD)
     {
         lRet = RegQueryValueEx(hKey, valueName, 0, 0, (LPBYTE)&dwordValueData, &valueDataLen);
         if (lRet != ERROR_SUCCESS)
@@ -631,20 +631,27 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
                 result = TRUE;
         }
     }
-    else if (type == REG_NONE || type == REG_BINARY)
+    else if (EditBin == TRUE || type == REG_NONE || type == REG_BINARY)
     {
-        if(!(binValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen)))
+        if(valueDataLen > 0)
         {
-          error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
-          goto done;
+	    if(!(binValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen)))
+            {
+              error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
+              goto done;
+            }
+	    
+	    lRet = RegQueryValueEx(hKey, valueName, 0, 0, (LPBYTE)binValueData, &valueDataLen);
+            if (lRet != ERROR_SUCCESS)
+            {
+                HeapFree(GetProcessHeap(), 0, binValueData);
+	        error(hwnd, IDS_BAD_VALUE, valueName);
+                goto done;
+            }
         }
-	
-	lRet = RegQueryValueEx(hKey, valueName, 0, 0, (LPBYTE)binValueData, &valueDataLen);
-        if (lRet != ERROR_SUCCESS)
+        else
         {
-            HeapFree(GetProcessHeap(), 0, binValueData);
-	    error(hwnd, IDS_BAD_VALUE, valueName);
-            goto done;
+            binValueData = NULL;
         }
 
         if (DialogBox(0, MAKEINTRESOURCE(IDD_EDIT_BIN_DATA), hwnd, modify_binary_dlgproc) == IDOK)

@@ -55,7 +55,7 @@ static LPTSTR g_valueName;
 static int default_column_widths[MAX_LIST_COLUMNS] = { 200, 175, 400 };
 static int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_LEFT, LVCFMT_LEFT };
 
-LPCTSTR GetValueName(HWND hwndLV)
+LPCTSTR GetValueName(HWND hwndLV, int iStartAt)
 {
     int item, len, maxLen;
     LPTSTR newStr;
@@ -68,7 +68,7 @@ LPCTSTR GetValueName(HWND hwndLV)
     maxLen = HeapSize(GetProcessHeap(), 0, g_valueName);
     if (maxLen == (SIZE_T) - 1) return NULL;
 
-    item = ListView_GetNextItem(hwndLV, -1, LVNI_FOCUSED | LVNI_SELECTED);
+    item = ListView_GetNextItem(hwndLV, iStartAt, LVNI_SELECTED);
     if (item == -1) return NULL;
     LVItem.mask = LVIF_PARAM;
     LVItem.iItem = item;
@@ -114,7 +114,7 @@ BOOL IsDefaultValue(HWND hwndLV, int i)
 /*******************************************************************************
  * Local module support methods
  */
-static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValBuf, DWORD dwCount, int Position)
+static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValBuf, DWORD dwCount, int Position, BOOL ValExists)
 {
     LINE_INFO* linfo;
     LVITEM item;
@@ -162,9 +162,16 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
         switch (dwValType) {
         case REG_SZ:
         case REG_EXPAND_SZ:
-            if(dwCount)
+            if(dwCount > 0)
             {
               ListView_SetItemText(hwndLV, index, 2, ValBuf);
+            }
+            else if(!ValExists)
+            {
+              TCHAR buffer[255];
+              /* load (value not set) string */
+              LoadString(hInst, IDS_VALUE_NOT_SET, buffer, sizeof(buffer)/sizeof(TCHAR));
+              ListView_SetItemText(hwndLV, index, 2, buffer);
             }
             break;
         case REG_MULTI_SZ:
@@ -195,8 +202,15 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
             }
             break;
         case REG_DWORD: {
-                TCHAR buf[64];
-                wsprintf(buf, _T("0x%08X (%d)"), *(DWORD*)ValBuf, *(DWORD*)ValBuf);
+                TCHAR buf[200];
+                if(dwCount == sizeof(DWORD))
+                {
+                  wsprintf(buf, _T("0x%08X (%d)"), *(DWORD*)ValBuf, *(DWORD*)ValBuf);
+                }
+                else
+                {
+                  LoadString(hInst, IDS_INVALID_DWORD, buf, sizeof(buf)/sizeof(TCHAR));
+                }
                 ListView_SetItemText(hwndLV, index, 2, buf);
             }
             /*            lpsRes = convertHexToDWORDStr(lpbData, dwLen); */
@@ -336,10 +350,6 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
             break;
           }
         }
-        break;
-    case 2:
-        LoadString(hInst, IDS_VALUE_NOT_SET, buffer, sizeof(buffer)/sizeof(TCHAR));
-	plvdi->item.pszText = buffer;
         break;
     case 3:
         plvdi->item.pszText = _T("");
@@ -499,7 +509,7 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
         /*                dwValSize = max_val_size; */
         while (RegEnumValue(hNewKey, dwIndex, ValName, &dwValNameLen, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS) {
             ValBuf[dwValSize] = 0;
-            AddEntryToList(hwndLV, ValName, dwValType, ValBuf, dwValSize, -1);
+            AddEntryToList(hwndLV, ValName, dwValType, ValBuf, dwValSize, -1, TRUE);
             dwValNameLen = max_val_name_len;
             dwValSize = max_val_size;
             dwValType = 0L;
@@ -514,7 +524,7 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
     }
     if(!AddedDefault)
     {
-      AddEntryToList(hwndLV, _T(""), REG_SZ, NULL, 0, 0);
+      AddEntryToList(hwndLV, _T(""), REG_SZ, NULL, 0, 0, FALSE);
     }
     ListView_SortItems(hwndLV, CompareFunc, (WPARAM)hwndLV);
     RegCloseKey(hNewKey);

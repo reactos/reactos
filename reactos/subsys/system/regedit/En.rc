@@ -258,6 +258,11 @@ BEGIN
     IDS_UNSUPPORTED_TYPE    "Can't edit keys of this type (%ld)"
     IDS_TOO_BIG_VALUE       "Value is too big (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "Data of type REG_MULTI_SZ cannot contain empty strings.\nThe empty strings have been removed from the list."
+    IDS_QUERY_DELETE_ONE    "Are you sure you want to delete this value?"
+    IDS_QUERY_DELETE_MORE   "Are you sure you want to delete these values?"
+    IDS_QUERY_DELETE_CONFIRM "Confirm Value Delete"
+    IDS_ERR_DELVAL_CAPTION  "Error Deleting Values"
+    IDS_ERR_DELETEVALUE     "Unable to delete all specified values!"
 END
 
 STRINGTABLE DISCARDABLE
@@ -269,6 +274,7 @@ BEGIN
     IDS_MY_COMPUTER         "My Computer"
     IDS_IMPORT_REG_FILE     "Import Registry File"
     IDS_EXPORT_REG_FILE     "Export Registry File"
+    IDS_INVALID_DWORD       "(invalid DWORD value)"
 END
 
 STRINGTABLE DISCARDABLE

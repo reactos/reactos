@@ -527,12 +527,14 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     case ID_EDIT_RENAME:
     case ID_EDIT_MODIFY:
+    case ID_EDIT_MODIFY_BIN:
+    case ID_EDIT_DELETE:
         regsam |= KEY_WRITE; 
         break;
     }
 
     keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
-    valueName = GetValueName(g_pChildWnd->hListWnd);
+    valueName = GetValueName(g_pChildWnd->hListWnd, -1);
     if (keyPath) {
         lRet = RegOpenKeyEx(hKeyRoot, keyPath, 0, regsam, &hKey);
         if (lRet != ERROR_SUCCESS) hKey = 0;
@@ -540,19 +542,58 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
      switch (LOWORD(wParam)) {
     case ID_EDIT_MODIFY:
-        if (valueName && ModifyValue(hWnd, hKey, valueName))
+        if (valueName && ModifyValue(hWnd, hKey, valueName, FALSE))
+            RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
+        break;
+    case ID_EDIT_MODIFY_BIN:
+        if (valueName && ModifyValue(hWnd, hKey, valueName, TRUE))
             RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
         break;
     case ID_EDIT_RENAME:
         if(ListView_GetSelectedCount(g_pChildWnd->hListWnd) == 1)
         {
-          item = ListView_GetNextItem(g_pChildWnd->hListWnd, -1, LVNI_FOCUSED | LVNI_SELECTED);
+          item = ListView_GetNextItem(g_pChildWnd->hListWnd, -1, LVNI_SELECTED);
           if(item > -1)
           {
             ListView_EditLabel(g_pChildWnd->hListWnd, item);
           }
         }
         break;
+    case ID_EDIT_DELETE:
+    {
+        UINT nSelected = ListView_GetSelectedCount(g_pChildWnd->hListWnd);
+        if(nSelected >= 1)
+        {
+          TCHAR msg[128], caption[128];
+          LoadString(hInst, IDS_QUERY_DELETE_CONFIRM, caption, sizeof(caption)/sizeof(TCHAR));
+          LoadString(hInst, (nSelected == 1 ? IDS_QUERY_DELETE_ONE : IDS_QUERY_DELETE_MORE), msg, sizeof(msg)/sizeof(TCHAR));
+          if(MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONQUESTION | MB_YESNO) == IDYES)
+          {
+            int ni, errs;
+            
+	    item = -1;
+	    errs = 0;
+            while((ni = ListView_GetNextItem(g_pChildWnd->hListWnd, item, LVNI_SELECTED)) > -1)
+            {
+              valueName = GetValueName(g_pChildWnd->hListWnd, item);
+              if(RegDeleteValue(hKey, valueName) != ERROR_SUCCESS)
+              {
+                errs++;
+              }
+	      item = ni;
+            }
+            
+            RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
+            if(errs > 0)
+            {
+              LoadString(hInst, IDS_ERR_DELVAL_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
+              LoadString(hInst, IDS_ERR_DELETEVALUE, msg, sizeof(msg)/sizeof(TCHAR));
+              MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONSTOP);
+            }
+          }
+        }
+	break;
+    }
     case ID_EDIT_COPYKEYNAME:
         CopyKeyName(hWnd, _T(""));
         break;
