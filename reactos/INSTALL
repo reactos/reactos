@@ -31,7 +31,7 @@ The system can only be started from DOS. Copy the following files,
 services/dd/ide/ide.sys, services/fs/vfat/vfatfsd.sys
 ntoskrnl/ntoskrnl.exe and loaders/dos/loadros.com, to a suitable
 directory, such as C:\. The system can then be booted with the
-command 'loadros.com ntoskrnl.exe ide.sys vfatfsd.sys'.
+command 'loadros.com ntoskrnl.exe ide.sys vfatfs.sys'.
 
 
 You may also want to try running the enhanced shell, cmd.exe, found in

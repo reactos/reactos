@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.16 2001/03/31 15:35:08 jfilby Exp $
+/* $Id: driver.c,v 1.17 2001/04/15 22:08:23 narnaoud Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -12,7 +12,7 @@
 #include <windows.h>
 #include <win32k/driver.h>
 #include <wchar.h>
-#include "../../ntoskrnl/include/internal/module.h"
+//#include "../../ntoskrnl/include/internal/module.h"
 #include <ddk/winddi.h>
 #include <ddk/ntddvid.h>
 
