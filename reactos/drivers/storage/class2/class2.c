@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.19 2002/05/26 20:24:42 ekohl Exp $
+/* $Id: class2.c,v 1.20 2002/06/05 19:31:39 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1560,7 +1560,9 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
 	      MaximumTransferLength, CurrentTransferLength);
 
       /* Adjust the maximum transfer length */
-      CurrentTransferPages = DeviceExtension->PortCapabilities->MaximumPhysicalPages - 1;
+//    CurrentTransferPages = DeviceExtension->PortCapabilities->MaximumPhysicalPages - 1;
+      CurrentTransferPages = 0x10000 / PAGESIZE;
+	    
 
       if (MaximumTransferLength > CurrentTransferPages * PAGESIZE)
 	  MaximumTransferLength = CurrentTransferPages * PAGESIZE;
