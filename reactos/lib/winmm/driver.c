@@ -226,7 +226,7 @@ BOOL	DRIVER_GetLibName(LPCWSTR keyName, LPCWSTR sectName, LPWSTR buf, int sz)
     if (lRet == ERROR_SUCCESS) return TRUE;
     /* default to system.ini if we can't find it in the registry,
      * to support native installations where system.ini is still used */
-    return GetPrivateProfileStringW(sectName, keyName, &wsznull, buf, sz, wszSystemIni);
+    return GetPrivateProfileStringW(sectName, keyName, &wsznull, buf, sz / sizeof(WCHAR), wszSystemIni);
 }
 
 /**************************************************************************
