@@ -35,9 +35,13 @@ export MAKE := @$(MAKE)
 ifeq ($(VERBOSE),no)
 endif
 
-# Windows is default host environment
+# detect Windows host environment
 ifeq ($(HOST),)
-export HOST = mingw32-windows
+ifeq ($(word 1,$(shell gcc -dumpmachine)),mingw32)
+HOST=mingw32-windows
+else
+HOST=mingw32-linux
+endif
 endif
 
 # Default to building map files which includes source and asm code
