@@ -221,4 +221,6 @@ typedef struct _KSYSTEM_TIME
 
 typedef struct _EPROCESS EPROCESS, *PEPROCESS;
 
+typedef HANDLE HSEMAPHORE;
+
 #endif /* __INCLUDE_DDK_KETYPES_H */
