@@ -1413,15 +1413,21 @@ VOID FASTCALL
 MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   PDESKTOP_OBJECT desk;
+
   /* remove the message queue from any desktops */
-  if((desk = (PDESKTOP_OBJECT)InterlockedExchange((LONG*)&MessageQueue->Desktop, 0)))
-  {
-    InterlockedExchange((LONG*)&desk->ActiveMessageQueue, 0);
-    IntDereferenceMessageQueue(MessageQueue);
-  }
+  if ((desk = (PDESKTOP_OBJECT)InterlockedExchange((LONG*)&MessageQueue->Desktop, 0)))
+    {
+      InterlockedExchange((LONG*)&desk->ActiveMessageQueue, 0);
+      IntDereferenceMessageQueue(MessageQueue);
+    }
   
+  /* if this is the primitive message queue, deregister it */
+  if (MessageQueue == W32kGetPrimitiveMessageQueue())
+    W32kUnregisterPrimitiveMessageQueue();
+
   /* clean it up */
   MsqCleanupMessageQueue(MessageQueue);
+
   /* decrease the reference counter, if it hits zero, the queue will be freed */
   IntDereferenceMessageQueue(MessageQueue);
 }
