@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.118 2004/03/13 18:21:56 dwelch Exp $
+# $Id: Makefile,v 1.119 2004/05/24 12:08:55 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -94,14 +94,15 @@ OBJECTS_NT = \
 	nt/nttimer.o \
 	nt/plugplay.o \
 	nt/profile.o \
-	nt/zw.o \
-	nt/vdm.o
+	nt/vdm.o \
+	nt/zw.o
 
 # Run-Time Library (Rtl)
 OBJECTS_RTL = \
 	rtl/atom.o \
 	rtl/bit.o \
 	rtl/bitmap.o \
+	rtl/capture.o \
 	rtl/compress.o \
 	rtl/ctype.o \
 	rtl/dos8dot3.o \
@@ -113,6 +114,7 @@ OBJECTS_RTL = \
 	rtl/nls.o \
 	rtl/purecall.o \
 	rtl/random.o \
+	rtl/rangelist.o \
 	rtl/regio.o \
 	rtl/sprintf.o \
 	rtl/stdlib.o \
@@ -122,8 +124,7 @@ OBJECTS_RTL = \
 	rtl/timezone.o \
 	rtl/unicode.o \
 	rtl/version.o \
-	rtl/wstring.o \
-	rtl/capture.o
+	rtl/wstring.o
 
 OBJECTS_RTL := $(filter-out $(RTL_EXCLUDE_FILTER), $(OBJECTS_RTL))
 
@@ -138,46 +139,46 @@ OBJECTS_KE = \
 	ke/error.o \
 	ke/event.o \
 	ke/kqueue.o \
+	ke/kthread.o \
 	ke/main.o \
 	ke/mutex.o \
 	ke/process.o \
+	ke/queue.o \
 	ke/sem.o \
 	ke/spinlock.o \
 	ke/timer.o \
-	ke/wait.o \
-	ke/kthread.o \
-	ke/queue.o
+	ke/wait.o
 
 # Memory Manager (Mm)
 OBJECTS_MM = \
+	mm/anonmem.o \
 	mm/aspace.o \
+	mm/balance.o \
 	mm/cont.o \
 	mm/drvlck.o \
 	mm/freelist.o \
 	mm/iospace.o \
+	mm/kmap.o \
 	mm/marea.o \
 	mm/mdl.o \
 	mm/mm.o \
+	mm/mminit.o \
+	mm/mpw.o \
 	mm/ncache.o \
 	mm/npool.o \
 	mm/pagfault.o \
 	mm/pagefile.o \
+	mm/pageop.o \
+	mm/pager.o \
 	mm/paging.o \
 	mm/pool.o \
 	mm/ppool.o \
-	mm/section.o \
-	mm/virtual.o \
-	mm/pager.o \
-	mm/wset.o \
-	mm/mminit.o \
-	mm/kmap.o \
-	mm/mpw.o \
-	mm/pageop.o \
-	mm/balance.o \
+	mm/region.o \
 	mm/rmap.o \
+	mm/section.o \
 	mm/slab.o \
-	mm/anonmem.o \
-	mm/region.o
+	mm/virtual.o \
+	mm/wset.o
 
 # I/O Subsystem (Io)
 OBJECTS_IO = \
@@ -242,24 +243,24 @@ OBJECTS_OB = \
 # Process Manager (Ps)
 OBJECTS_PS = \
 	ps/create.o \
+	ps/debug.o \
 	ps/idle.o \
 	ps/kill.o \
 	ps/locale.o \
 	ps/process.o \
 	ps/psmgr.o \
+	ps/suspend.o \
 	ps/thread.o \
 	ps/tinfo.o \
-	ps/debug.o \
-	ps/suspend.o \
 	ps/win32.o \
 	ps/w32call.o
 
 # Executive Subsystem (Ex)
 OBJECTS_EX = \
-  ex/btree.o \
+	ex/btree.o \
 	ex/callback.o \
 	ex/fmutex.o \
-  ex/hashtab.o \
+	ex/hashtab.o \
 	ex/init.o \
 	ex/interlck.o \
 	ex/list.o \
@@ -268,7 +269,7 @@ OBJECTS_EX = \
 	ex/power.o \
 	ex/resource.o \
 	ex/time.o \
-  ex/stree.o \
+	ex/stree.o \
 	ex/sysinfo.o \
 	ex/win32k.o \
 	ex/work.o \
@@ -304,11 +305,11 @@ OBJECTS_SE = \
 # Configuration Manager (Registry)
 OBJECTS_CM = \
 	cm/import.o  \
-	cm/registry.o  \
 	cm/ntfunc.o \
-	cm/rtlfunc.o \
 	cm/regfile.o \
-	cm/regobj.o
+	cm/registry.o  \
+	cm/regobj.o \
+	cm/rtlfunc.o
 
 # Debugger Support (Dbg)
 OBJECTS_DBG = \
@@ -342,23 +343,24 @@ OBJECTS_LPC = \
 	lpc/send.o
 
 # Power Management (Po)
-OBJECTS_PO = po/power.o
+OBJECTS_PO = \
+	po/power.o
 
 # Cache Manager (Cc)
 OBJECTS_CC = \
 	cc/cacheman.o \
-	cc/view.o \
 	cc/copy.o \
 	cc/pin.o \
-	cc/misc.o
+	cc/misc.o \
+	cc/view.o
 
 # Kernel Debugger Support (Kd)
 OBJECTS_KD = \
-	kd/kdebug.o \
-	kd/service.o \
 	kd/dlog.o \
     kd/gdbstub.o \
-    kd/mda.o
+	kd/kdebug.o \
+    kd/mda.o \
+	kd/service.o
 
 # Boot video (Inbv)
 OBJECTS_INBV = \
@@ -712,12 +714,12 @@ clean:
 
 ifneq ($(BOOTCD_INSTALL),)
 
-install: $(TARGETNAME).exe $(TARGETNAME).sym $(TARGETNAME).nostrip.exe
+install:
 	- $(CP) $(TARGETNAME).exe $(INSTALL_DIR)/$(TARGETNAME).exe
 
 else # BOOTCD_INSTALL
 
-install: $(TARGETNAME).exe $(TARGETNAME).sym $(TARGETNAME).nostrip.exe
+install:
 	- $(CP) $(TARGETNAME).exe $(INSTALL_DIR)/system32/$(TARGETNAME).exe
 	- $(CP) $(TARGETNAME).sym $(INSTALL_DIR)/symbols/$(TARGETNAME).sym
 

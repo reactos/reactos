@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.167 2004/05/20 12:42:51 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.168 2004/05/24 12:08:55 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -689,6 +689,7 @@ RtlAbsoluteToSelfRelativeSD=RtlAbsoluteToSelfRelativeSD@12
 RtlAddAccessAllowedAce=RtlAddAccessAllowedAce@16
 RtlAddAce=RtlAddAce@20
 RtlAddAtomToAtomTable=RtlAddAtomToAtomTable@12
+RtlAddRange=RtlAddRange@36
 ;RtlAllocateAndInitializeSid
 ;RtlAllocateHeap
 RtlAnsiCharToUnicodeChar=RtlAnsiCharToUnicodeChar@4
@@ -718,6 +719,7 @@ RtlConvertLongToLargeInteger=RtlConvertLongToLargeInteger@4
 RtlConvertSidToUnicodeString=RtlConvertSidToUnicodeString@12
 RtlConvertUlongToLargeInteger=RtlConvertUlongToLargeInteger@4
 RtlCopyLuid=RtlCopyLuid@8
+RtlCopyRangeList=RtlCopyRangeList@8
 RtlCopySid=RtlCopySid@12
 RtlCopyString=RtlCopyString@8
 RtlCopyUnicodeString=RtlCopyUnicodeString@8
@@ -735,6 +737,8 @@ RtlDecompressFragment=RtlDecompressFragment@32
 RtlDeleteAtomFromAtomTable=RtlDeleteAtomFromAtomTable@8
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
+RtlDeleteOwnersRanges=RtlDeleteOwnersRanges@8
+RtlDeleteRange=RtlDeleteRange@24
 RtlDeleteRegistryValue=RtlDeleteRegistryValue@12
 RtlDescribeChunk=RtlDescribeChunk@20
 RtlDestroyAtomTable=RtlDestroyAtomTable@4
@@ -764,12 +768,14 @@ RtlFindLongestRunClear=RtlFindLongestRunClear@8
 RtlFindLongestRunSet=RtlFindLongestRunSet@8
 RtlFindMessage=RtlFindMessage@20
 RtlFindMostSignificantBit=RtlFindMostSignificantBit@8
+RtlFindRange=RtlFindRange@48
 RtlFindSetBits=RtlFindSetBits@12
 RtlFindSetBitsAndClear=RtlFindSetBitsAndClear@12
 ;RtlFindUnicodePrefix
 RtlFormatCurrentUserKeyPath=RtlFormatCurrentUserKeyPath@4
 RtlFreeAnsiString=RtlFreeAnsiString@4
 ;RtlFreeHeap
+RtlFreeRangeList=RtlFreeRangeList@4
 RtlFreeOemString=RtlFreeOemString@4
 RtlFreeUnicodeString=RtlFreeUnicodeString@4
 RtlGenerate8dot3Name=RtlGenerate8dot3Name@16
@@ -778,7 +784,9 @@ RtlGetCompressionWorkSpaceSize=RtlGetCompressionWorkSpaceSize@12
 RtlGetDaclSecurityDescriptor=RtlGetDaclSecurityDescriptor@16
 RtlGetDefaultCodePage=RtlGetDefaultCodePage@8
 ;RtlGetElementGenericTable
+RtlGetFirstRange=RtlGetFirstRange@12
 RtlGetGroupSecurityDescriptor=RtlGetGroupSecurityDescriptor@12
+RtlGetNextRange=RtlGetNextRange@12
 RtlGetOwnerSecurityDescriptor=RtlGetOwnerSecurityDescriptor@12
 RtlGetVersion=RtlGetVersion@4
 RtlImageNtHeader=RtlImageNtHeader@4
@@ -789,13 +797,16 @@ RtlInitString=RtlInitString@8
 RtlInitUnicodeString=RtlInitUnicodeString@8
 RtlInitializeBitMap=RtlInitializeBitMap@12
 ;RtlInitializeGenericTable
+RtlInitializeRangeList=RtlInitializeRangeList@4
 RtlInitializeSid=RtlInitializeSid@12
 ;RtlInitializeUnicodePrefix
 ;RtlInsertElementGenericTable
 ;RtlInsertUnicodePrefix
 RtlIntegerToChar=RtlIntegerToChar@16
 RtlIntegerToUnicodeString=RtlIntegerToUnicodeString@12
+RtlInvertRangeList=RtlInvertRangeList@8
 RtlIsNameLegalDOS8Dot3=RtlIsNameLegalDOS8Dot3@12
+RtlIsRangeAvailable=RtlIsRangeAvailable@40
 RtlLargeIntegerAdd=RtlLargeIntegerAdd@16
 RtlLargeIntegerArithmeticShift=RtlLargeIntegerArithmeticShift@12
 RtlLargeIntegerDivide=RtlLargeIntegerDivide@20
@@ -809,6 +820,7 @@ RtlLengthSid=RtlLengthSid@4
 RtlLookupAtomInAtomTable=RtlLookupAtomInAtomTable@12
 ;RtlLookupElementGenericTable
 RtlMapGenericMask=RtlMapGenericMask@8
+RtlMergeRangeLists=RtlMergeRangeLists@16
 RtlMoveMemory=RtlMoveMemory@12
 RtlMultiByteToUnicodeN=RtlMultiByteToUnicodeN@20
 RtlMultiByteToUnicodeSize=RtlMultiByteToUnicodeSize@12

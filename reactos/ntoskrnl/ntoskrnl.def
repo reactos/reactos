@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.181 2004/05/20 12:42:51 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.182 2004/05/24 12:08:55 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -688,6 +688,7 @@ RtlAbsoluteToSelfRelativeSD@12
 RtlAddAccessAllowedAce@16
 RtlAddAce@20
 RtlAddAtomToAtomTable@12
+RtlAddRange@36
 ;RtlAllocateAndInitializeSid
 ;RtlAllocateHeap
 RtlAnsiCharToUnicodeChar@4
@@ -717,6 +718,7 @@ RtlConvertLongToLargeInteger@4
 RtlConvertSidToUnicodeString@12
 RtlConvertUlongToLargeInteger@4
 RtlCopyLuid@8
+RtlCopyRangeList@8
 RtlCopySid@12
 RtlCopyString@8
 RtlCopyUnicodeString@8
@@ -734,6 +736,8 @@ RtlDecompressFragment@32
 RtlDeleteAtomFromAtomTable@8
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
+RtlDeleteOwnersRanges@8
+RtlDeleteRange@24
 RtlDeleteRegistryValue@12
 RtlDescribeChunk@20
 RtlDestroyAtomTable@4
@@ -763,12 +767,14 @@ RtlFindLongestRunClear@8
 RtlFindLongestRunSet@8
 RtlFindMessage@20
 RtlFindMostSignificantBit@8
+RtlFindRange@48
 RtlFindSetBits@12
 RtlFindSetBitsAndClear@12
 ;RtlFindUnicodePrefix
 RtlFormatCurrentUserKeyPath@4
 RtlFreeAnsiString@4
 ;RtlFreeHeap
+RtlFreeRangeList@4
 RtlFreeOemString@4
 RtlFreeUnicodeString@4
 RtlGenerate8dot3Name@16
@@ -777,7 +783,9 @@ RtlGetCompressionWorkSpaceSize@12
 RtlGetDaclSecurityDescriptor@16
 RtlGetDefaultCodePage@8
 ;RtlGetElementGenericTable
+RtlGetFirstRange@12
 RtlGetGroupSecurityDescriptor@12
+RtlGetNextRange@12
 RtlGetOwnerSecurityDescriptor@12
 RtlGetVersion@4
 RtlImageNtHeader@4
@@ -788,13 +796,16 @@ RtlInitString@8
 RtlInitUnicodeString@8
 RtlInitializeBitMap@12
 ;RtlInitializeGenericTable
+RtlInitializeRangeList@4
 RtlInitializeSid@12
 ;RtlInitializeUnicodePrefix
 ;RtlInsertElementGenericTable
 ;RtlInsertUnicodePrefix
 RtlIntegerToChar@16
 RtlIntegerToUnicodeString@12
+RtlInvertRangeList@8
 RtlIsNameLegalDOS8Dot3@12
+RtlIsRangeAvailable@40
 RtlLargeIntegerAdd@16
 RtlLargeIntegerArithmeticShift@12
 RtlLargeIntegerDivide@20
@@ -808,6 +819,7 @@ RtlLengthSid@4
 RtlLookupAtomInAtomTable@12
 ;RtlLookupElementGenericTable
 RtlMapGenericMask@8
+RtlMergeRangeLists@16
 RtlMoveMemory@12
 RtlMultiByteToUnicodeN@20
 RtlMultiByteToUnicodeSize@12
