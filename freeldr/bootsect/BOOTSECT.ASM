@@ -17,7 +17,7 @@ BytesPerSector  dw 512
 SectsPerCluster db 1
 ReservedSectors dw 1
 NumberOfFats    db 2
-MaxRootEntries  dw 512
+MaxRootEntries  dw 224
 TotalSectors    dw 2880
 MediaDescriptor db 0f0h
 SectorsPerFat   dw 9
