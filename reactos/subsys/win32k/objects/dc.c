@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.28 2001/11/02 06:10:11 rex Exp $
+/* $Id: dc.c,v 1.29 2001/11/19 12:06:23 jfilby Exp $
  *
  * DC.C - Device context functions
  * 
@@ -92,19 +92,19 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
 {
   PDC  NewDC, OrigDC = NULL;
   HBITMAP  hBitmap;
+  SIZEL onebyone;
 
   OrigDC = DC_HandleToPtr(hDC);
   if (OrigDC == NULL)
   {
-    return  0;
+    NewDC = DC_AllocDC(L"DISPLAY");
+  } else {
+    /*  Allocate a new DC based on the original DC's device  */
+    NewDC = DC_AllocDC(OrigDC->DriverName);
   }
-
-  /*  Allocate a new DC based on the original DC's device  */
-  NewDC = DC_AllocDC(OrigDC->DriverName);
 
   if (NewDC == NULL) 
   {
-//    DRIVER_ReferenceDriver (NewDC->DriverName);
     return  NULL;
   }
 
@@ -112,28 +112,36 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
   NewDC->hSelf = NewDC;
 
   /* FIXME: Should this DC request its own PDEV?  */
-  NewDC->PDev = OrigDC->PDev;
-  NewDC->DMW = OrigDC->DMW;
-  memcpy(NewDC->FillPatternSurfaces, 
-         OrigDC->FillPatternSurfaces,
-         sizeof OrigDC->FillPatternSurfaces);
-  NewDC->GDIInfo = OrigDC->GDIInfo;
-  NewDC->DevInfo = OrigDC->DevInfo;
+  if(OrigDC == NULL) {
+  } else {
+    NewDC->PDev = OrigDC->PDev;
+    NewDC->DMW = OrigDC->DMW;
+    memcpy(NewDC->FillPatternSurfaces, 
+           OrigDC->FillPatternSurfaces,
+           sizeof OrigDC->FillPatternSurfaces);
+    NewDC->GDIInfo = OrigDC->GDIInfo;
+    NewDC->DevInfo = OrigDC->DevInfo;
+  }
 
-  /* FIXME: Should this DC request its own surface?  */
-  /* Yes, in fact, a 1x1 monochrome surface (to be implemented..) */
-  NewDC->Surface = OrigDC->Surface;
+  // Create a 1x1 monochrome bitmap surface
+  onebyone.cx = 1;
+  onebyone.cy = 1;
+  NewDC->Surface = EngCreateBitmap(onebyone, 1, BMF_1BPP, 0, NULL);
 
   /* DriverName is copied in the AllocDC routine  */
-  NewDC->DeviceDriver = OrigDC->DeviceDriver;
-  NewDC->wndOrgX = OrigDC->wndOrgX;
-  NewDC->wndOrgY = OrigDC->wndOrgY;
-  NewDC->wndExtX = OrigDC->wndExtX;
-  NewDC->wndExtY = OrigDC->wndExtY;
-  NewDC->vportOrgX = OrigDC->vportOrgX;
-  NewDC->vportOrgY = OrigDC->vportOrgY;
-  NewDC->vportExtX = OrigDC->vportExtX;
-  NewDC->vportExtY = OrigDC->vportExtY;
+  if(OrigDC == NULL) {
+    NewDC->DeviceDriver = DRIVER_FindMPDriver(NewDC->DriverName);
+  } else {
+    NewDC->DeviceDriver = OrigDC->DeviceDriver;
+    NewDC->wndOrgX = OrigDC->wndOrgX;
+    NewDC->wndOrgY = OrigDC->wndOrgY;
+    NewDC->wndExtX = OrigDC->wndExtX;
+    NewDC->wndExtY = OrigDC->wndExtY;
+    NewDC->vportOrgX = OrigDC->vportOrgX;
+    NewDC->vportOrgY = OrigDC->vportOrgY;
+    NewDC->vportExtX = OrigDC->vportExtX;
+    NewDC->vportExtY = OrigDC->vportExtY;
+  }
 
   DC_InitDC(NewDC);
 
@@ -148,9 +156,13 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
   NewDC->w.bitsPerPixel = 1;
   NewDC->w.hBitmap      = hBitmap;
   NewDC->w.hFirstBitmap = hBitmap;
-  NewDC->w.hPalette = OrigDC->w.hPalette;
-  NewDC->w.textColor = OrigDC->w.textColor;
-  NewDC->w.textAlign = OrigDC->w.textAlign;
+
+  if(OrigDC != NULL)
+  {
+    NewDC->w.hPalette = OrigDC->w.hPalette;
+    NewDC->w.textColor = OrigDC->w.textColor;
+    NewDC->w.textAlign = OrigDC->w.textAlign;
+  }
 
   return  DC_PtrToHandle(NewDC);
 }
