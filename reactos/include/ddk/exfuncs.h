@@ -991,8 +991,23 @@ InterlockedIncrement (
 	);
 
 #ifndef InterlockedExchangePointer
-#define InterlockedExchangePointer(__T__, __V__) \
- (PVOID)InterlockedExchange((PLONG)(__T__), (LONG)(__V__))
+# ifdef _WIN64
+#  define InterlockedExchangePointer(__T__, __V__) \
+             (PVOID)InterlockedExchange64((PLONGLONG)(__T__), (LONGLONG)(__V__))
+# else
+#  define InterlockedExchangePointer(__T__, __V__) \
+             (PVOID)InterlockedExchange((PLONG)(__T__), (LONG)(__V__))
+# endif
+#endif
+
+#ifndef InterlockedCompareExchangePointer
+# ifdef _WIN64
+#  define InterlockedCompareExchangePointer(__T__, __V__, __C__) \
+             (PVOID)InterlockedCompareExchange64((PLONGLONG)(__T__), (LONGLONG)(__V__), (LONGLONG)(__C__))
+# else
+#  define InterlockedCompareExchangePointer(__T__, __V__, __C__) \
+             (PVOID)InterlockedCompareExchange((PLONG)(__T__), (LONG)(__V__), (LONG)(__C__))
+# endif
 #endif
 
 /*---*/
