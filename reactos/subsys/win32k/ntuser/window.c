@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.202 2004/03/28 21:46:26 weiden Exp $
+/* $Id: window.c,v 1.203 2004/03/30 20:50:15 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -873,7 +873,7 @@ IntSetOwner(HWND hWnd, HWND hWndNewOwner)
 PWINDOW_OBJECT FASTCALL
 IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
 {
-   PWINDOW_OBJECT WndOldParent;
+   PWINDOW_OBJECT WndOldParent, Sibling, InsertAfter;
    HWND hWnd, hWndNewParent, hWndOldParent;
    BOOL WasVisible;
    BOOL MenuChanged;
@@ -904,7 +904,29 @@ IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
    if (WndNewParent != WndOldParent)
    {
       IntUnlinkWindow(Wnd);
-      IntLinkWindow(Wnd, WndNewParent, NULL /*prev sibling*/);
+      InsertAfter = NULL;
+      if (0 == (Wnd->ExStyle & WS_EX_TOPMOST))
+      {
+        /* Not a TOPMOST window, put after TOPMOSTs of new parent */
+        IntLockRelatives(WndNewParent);
+        Sibling = WndNewParent->FirstChild;
+        while (NULL != Sibling && 0 != (Sibling->ExStyle & WS_EX_TOPMOST))
+        {
+          InsertAfter = Sibling;
+          Sibling = Sibling->NextSibling;
+        }
+        IntUnLockRelatives(WndNewParent);
+      }
+      if (NULL == InsertAfter)
+      {
+        IntLinkWindow(Wnd, WndNewParent, InsertAfter /*prev sibling*/);
+      }
+      else
+      {
+        IntReferenceWindowObject(InsertAfter);
+        IntLinkWindow(Wnd, WndNewParent, InsertAfter /*prev sibling*/);
+        IntReleaseWindowObject(InsertAfter);
+      }
 
       if (WndNewParent->Self != IntGetDesktopWindow()) /* a child window */
       {
@@ -917,12 +939,13 @@ IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
    }
    
    /*
-    * SetParent additionally needs to make hwnd the topmost window
-    * in the x-order and send the expected WM_WINDOWPOSCHANGING and
+    * SetParent additionally needs to make hwnd the top window
+    * in the z-order and send the expected WM_WINDOWPOSCHANGING and
     * WM_WINDOWPOSCHANGED notification messages.
     */
-   WinPosSetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0,
-      SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | (WasVisible ? SWP_SHOWWINDOW : 0));
+   WinPosSetWindowPos(hWnd, (0 == (Wnd->ExStyle & WS_EX_TOPMOST) ? HWND_TOP : HWND_TOPMOST),
+                      0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE
+                                | (WasVisible ? SWP_SHOWWINDOW : 0));
 
    /*
     * FIXME: a WM_MOVE is also generated (in the DefWindowProc handler
@@ -1613,8 +1636,33 @@ NtUserCreateWindowEx(DWORD dwExStyle,
         }
       else
         {
-          /* link window as top sibling */
-          IntLinkWindow(WindowObject, ParentWindow, NULL /*prev sibling*/);
+          /* link window as top sibling (but after topmost siblings) */
+          PWINDOW_OBJECT InsertAfter, Sibling;
+          if (0 == (dwExStyle & WS_EX_TOPMOST))
+            {
+              IntLockRelatives(ParentWindow);
+              InsertAfter = NULL;
+              Sibling = ParentWindow->FirstChild;
+              while (NULL != Sibling && 0 != (Sibling->ExStyle & WS_EX_TOPMOST))
+                {
+                  InsertAfter = Sibling;
+                  Sibling = Sibling->NextSibling;
+                }
+              IntUnLockRelatives(ParentWindow);
+            }
+          else
+            {
+              InsertAfter = NULL;
+            }
+          if (NULL != InsertAfter)
+            {
+              IntReferenceWindowObject(InsertAfter);
+            }
+          IntLinkWindow(WindowObject, ParentWindow, InsertAfter /* prev sibling */);
+          if (NULL != InsertAfter)
+            {
+              IntReleaseWindowObject(InsertAfter);
+            }
         }
     }
 

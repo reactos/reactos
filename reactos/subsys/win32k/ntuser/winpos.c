@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.105 2004/03/23 21:30:18 gvg Exp $
+/* $Id: winpos.c,v 1.106 2004/03/30 20:50:16 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -745,7 +745,8 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
       if (!(WinPos->flags & SWP_NOACTIVATE)) 
       {
          WinPos->flags &= ~SWP_NOZORDER;
-         WinPos->hwndInsertAfter = HWND_TOP;
+         WinPos->hwndInsertAfter = (0 != (Window->ExStyle & WS_EX_TOPMOST) ?
+                                    HWND_TOPMOST : HWND_TOP);
          return TRUE;
       }
    }
@@ -763,16 +764,22 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
          WinPos->hwndInsertAfter = HWND_NOTOPMOST;
       }
 
-      /* FIXME: TOPMOST not supported yet */
-      if ((WinPos->hwndInsertAfter == HWND_TOPMOST) ||
-          (WinPos->hwndInsertAfter == HWND_NOTOPMOST))
+      if (WinPos->hwndInsertAfter == HWND_NOTOPMOST)
       {
          WinPos->hwndInsertAfter = HWND_TOP;
       }
+      else if (HWND_TOP == WinPos->hwndInsertAfter
+               && 0 != (Window->ExStyle & WS_EX_TOPMOST))
+      {
+         /* Keep it topmost when it's already topmost */
+         WinPos->hwndInsertAfter = HWND_TOPMOST;
+      }
 
       /* hwndInsertAfter must be a sibling of the window */
-      if ((WinPos->hwndInsertAfter != HWND_TOP) &&
-          (WinPos->hwndInsertAfter != HWND_BOTTOM))
+      if (HWND_TOPMOST != WinPos->hwndInsertAfter
+          && HWND_TOP != WinPos->hwndInsertAfter
+          && HWND_NOTOPMOST != WinPos->hwndInsertAfter
+          && HWND_BOTTOM != WinPos->hwndInsertAfter)
       {
          PWINDOW_OBJECT Parent = IntGetParentObject(Window);
          if (NtUserGetAncestor(WinPos->hwndInsertAfter, GA_PARENT) !=
@@ -905,12 +912,32 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwnd != NtUserGetShellWindow())
    {
       PWINDOW_OBJECT ParentWindow;
+      PWINDOW_OBJECT Sibling;
       PWINDOW_OBJECT InsertAfterWindow;
 
       if ((ParentWindow = IntGetParentObject(Window)))
       {
-         if (WinPos.hwndInsertAfter == HWND_TOP)
+         if (HWND_TOPMOST == WinPos.hwndInsertAfter)
+         {
             InsertAfterWindow = NULL;
+         }
+         else if (HWND_TOP == WinPos.hwndInsertAfter
+                  || HWND_NOTOPMOST == WinPos.hwndInsertAfter)
+         {
+            InsertAfterWindow = NULL;
+            IntLockRelatives(ParentWindow);
+            Sibling = ParentWindow->FirstChild;
+            while (NULL != Sibling && 0 != (Sibling->ExStyle & WS_EX_TOPMOST))
+            {
+               InsertAfterWindow = Sibling;
+               Sibling = Sibling->NextSibling;
+            }
+            if (NULL != InsertAfterWindow)
+            {
+              IntReferenceWindowObject(InsertAfterWindow);
+            }
+            IntUnLockRelatives(ParentWindow);
+         }
          else if (WinPos.hwndInsertAfter == HWND_BOTTOM)
          {
             IntLockRelatives(ParentWindow);
@@ -934,6 +961,14 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
          }
          if (InsertAfterWindow != NULL)
             IntReleaseWindowObject(InsertAfterWindow);
+         if (HWND_TOPMOST == WinPos.hwndInsertAfter)
+         {
+            Window->ExStyle |= WS_EX_TOPMOST;
+         }
+         else
+         {
+            Window->ExStyle &= ~ WS_EX_TOPMOST;
+         }
          
          IntReleaseWindowObject(ParentWindow);
       }
