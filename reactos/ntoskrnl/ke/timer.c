@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.85 2004/10/30 23:48:56 navaraf Exp $
+/* $Id: timer.c,v 1.86 2004/10/31 15:24:06 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -761,13 +761,10 @@ KeUpdateRunTime(
     * If we're at end of quantum request software interrupt. The rest
     * is handled in KiDispatchInterrupt.
     */
-   if ((CurrentThread->Quantum -= 3) < 0)
+   if ((CurrentThread->Quantum -= 3) <= 0)
    {
-      if (CurrentThread != Pcr->PrcbData.IdleThread)
-      {
-         Pcr->PrcbData.QuantumEnd = TRUE;
-         HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-      }
+     Pcr->PrcbData.QuantumEnd = TRUE;
+     HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
    }
 }
 
