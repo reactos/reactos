@@ -16,6 +16,9 @@
  *
  *    26-Jan-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Replaced CRT io functions by Win32 io functions.
+ *
+ *    27-Oct-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *        Disabled prompting then used in batch mode.
  */
 
 #include "config.h"
@@ -29,6 +32,7 @@
 #include <ctype.h>
 
 #include "cmd.h"
+#include "batch.h"
 
 
 #define VERIFY  1               /* VERIFY Switch */
@@ -205,7 +209,7 @@ AddFiles (LPFILES f, char *arg, int *source, int *dest,
 static BOOL
 GetDestination (LPFILES f, LPFILES dest)
 {
-        LPFILES p = NULL;
+	LPFILES p = NULL;
 	LPFILES start = f;
 
 	while (f->next != NULL)
@@ -270,6 +274,7 @@ ParseCommand (LPFILES f, int argc, char **arg, LPDWORD lpdwFlags)
 			}
 		}
 	}
+
 #ifdef _DEBUG
 	DebugPrintf ("ParseCommand: flags has %s\n",
 				 *lpdwFlags & ASCII ? "ASCII" : "BINARY");
@@ -299,6 +304,7 @@ Overwrite (LPTSTR fn)
 
 	ConOutPrintf (_T("Overwrite %s (Yes/No/All)? "), fn);
 	ConInString (inp, 10);
+	ConOutPuts (_T(""));
 
 	_tcsupr (inp);
 	for (p = inp; _istspace (*p); p++)
@@ -417,8 +423,6 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 		return 0;
 	}
 
-	ConOutPuts (source);
-
 	do
 	{
 		ReadFile (hFileSrc, buffer, BUFF_SIZE, &dwRead, NULL);
@@ -484,11 +488,11 @@ int setup_copy (LPFILES sources, char **p, BOOL bMultiple,
 {
 	WIN32_FIND_DATA find;
 
-  char drive_s[_MAX_DRIVE],
-    dir_s[_MAX_DIR],
-    file_s[_MAX_FNAME],
-    ext_s[_MAX_EXT];
-  char from_merge[_MAX_PATH];
+	char drive_s[_MAX_DRIVE];
+	CHAR dir_s[_MAX_DIR];
+	char file_s[_MAX_FNAME];
+	char ext_s[_MAX_EXT];
+	char from_merge[_MAX_PATH];
 
 	LPTSTR real_source;
 	LPTSTR real_dest;
@@ -497,7 +501,6 @@ int setup_copy (LPFILES sources, char **p, BOOL bMultiple,
 	BOOL bAll = FALSE;
 	BOOL bDone;
 	HANDLE hFind;
-
 
 	real_source = (LPTSTR)malloc (MAX_PATH);
 	real_dest = (LPTSTR)malloc (MAX_PATH);
@@ -556,13 +559,23 @@ int setup_copy (LPFILES sources, char **p, BOOL bMultiple,
 
 			if (IsValidFileName (real_dest) && !bAll)
 			{
-				int over = Overwrite (real_dest);
-				if (over == 2)
+				/* Don't prompt in a batch file */
+				if (bc != NULL)
+				{
 					bAll = TRUE;
-				else if (over == 0)
-					goto next;
-				else if (bMultiple)
-					bAll = TRUE;
+				}
+				else
+				{
+					int over;
+
+					over = Overwrite (real_dest);
+					if (over == 2)
+						bAll = TRUE;
+					else if (over == 0)
+						goto next;
+					else if (bMultiple)
+						bAll = TRUE;
+				}
 			}
 			if (copy (real_source, real_dest, *append, lpdwFlags))
 				nCopied++;
@@ -587,16 +600,16 @@ int setup_copy (LPFILES sources, char **p, BOOL bMultiple,
 
 INT cmd_copy (LPTSTR first, LPTSTR rest)
 {
-  char **p;
-  char drive_d[_MAX_DRIVE],
-    dir_d[_MAX_DIR],
-    file_d[_MAX_FNAME],
-    ext_d[_MAX_EXT];
+	char **p;
+	char drive_d[_MAX_DRIVE];
+	char dir_d[_MAX_DIR];
+	char file_d[_MAX_FNAME];
+	char ext_d[_MAX_EXT];
 
-  int argc,
-    append,
-    files,
-    copied;
+	int argc;
+	int append;
+	int files;
+	int copied;
 
 	LPFILES sources;
 	FILES dest;
