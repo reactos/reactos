@@ -1,7 +1,12 @@
 /*
  * Debugging channels functions for WINE
  */
-#include <ntddk.h>
+#include <windows.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "porting.h"
+
+//#include <ntddk.h>
 #include <wine/debugtools.h>
 
 //DECLARE_DEBUG_CHANNEL(tid);

@@ -17,13 +17,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <ntddk.h>
-#include <wine/debugtools.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <ctype.h>
+#include <windows.h>
+//#include <ntddk.h>
+//#include <wine/debugtools.h>
+//#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdarg.h>
+//#include <string.h>
+//#include <ctype.h>
 /*
 #include "config.h"
 #include "wine/port.h"
@@ -57,21 +58,21 @@ WINE_DEFAULT_DEBUG_CHANNEL(winedbgc);
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    
-/*
-    TRACE("Initializing or Finalizing proxy winedbgc: %p,%lx,%p\n", hinstDLL, fdwReason, lpvReserved);
-
+//    TRACE("Initializing or Finalizing winedbgc: %p,%lx,%p\n", hinstDLL, fdwReason, lpvReserved);
     if (fdwReason == DLL_PROCESS_ATTACH)
     {
-       TRACE("Loading winedbgc...\n");
+//       TRACE("Loading winedbgc...\n");
+/*
 #ifndef __REACTOS__
        if (winedbgc_LoadDriverManager())
           winedbgc_LoadDMFunctions();
 #endif
+ */
     }
     else if (fdwReason == DLL_PROCESS_DETACH)
     {
-      TRACE("Unloading winedbgc...\n");
+//      TRACE("Unloading winedbgc...\n");
+/*
 #ifndef __REACTOS__
       if (gProxyHandle.bFunctionReady)
       {
@@ -87,8 +88,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
          gProxyHandle.dmHandle = NULL;
       }
 #endif
-    }
  */
+    }
     return TRUE;
 }
 
