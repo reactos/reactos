@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.32 2004/12/14 21:25:21 weiden Exp $
+/* $Id: misc.c,v 1.33 2004/12/14 21:26:53 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -647,7 +647,7 @@ LookupAccountSidA (LPCSTR lpSystemName,
   BOOL Ret;
   
   /*
-   * save the buffer size the caller passed to use as they may get modified and
+   * save the buffer size the caller passed to us, as they may get modified and
    * we require the original values when converting back to ansi
    */
   szName = *cchName;
