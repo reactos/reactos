@@ -1,4 +1,4 @@
-/* $Id: vidport.c,v 1.16 2000/12/26 05:32:44 dwelch Exp $
+/* $Id: vidport.c,v 1.17 2001/03/20 15:09:02 ekohl Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -44,15 +44,6 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 {
   DbgPrint("VideoPort Driver %s\n", VERSION);
   return  STATUS_SUCCESS;
-}
-
-ULONG
-STDCALL
-VideoPortCompareMemory(IN PVOID  Source1, 
-                       IN PVOID  Source2, 
-                       IN ULONG  Length)
-{
-  return RtlCompareMemory(Source1, Source2, Length);
 }
 
 VOID
@@ -389,15 +380,6 @@ VideoPortMapMemory(IN PVOID  HwDeviceExtension,
   return  STATUS_SUCCESS;
 }
 
-VOID 
-STDCALL
-VideoPortMoveMemory(OUT PVOID  Destination,
-                    IN PVOID  Source,
-                    IN ULONG  Length)
-{
-  RtlMoveMemory(Destination, Source, Length);
-}
-
 UCHAR 
 STDCALL
 VideoPortReadPortUchar(IN PUCHAR  Port)
@@ -538,13 +520,6 @@ VideoPortSetTrappedEmulatorPorts(IN PVOID  HwDeviceExtension,
                                  IN PVIDEO_ACCESS_RANGE  AccessRange)
 {
   UNIMPLEMENTED;
-}
-
-VOID 
-STDCALL
-VideoPortStallExecution(IN ULONG  Microseconds)
-{
-  KeStallExecutionProcessor(Microseconds);
 }
 
 VOID 
@@ -695,14 +670,6 @@ VideoPortWriteRegisterBufferUlong(IN PULONG  Register,
                                   IN ULONG  Count)
 {
   WRITE_REGISTER_BUFFER_ULONG(Register, Buffer, Count);
-}
-
-VOID
-STDCALL
-VideoPortZeroMemory(OUT PVOID  Destination, 
-                         IN ULONG  Length)
-{
-  RtlZeroMemory (Destination, Length);
 }
 
 VOID
