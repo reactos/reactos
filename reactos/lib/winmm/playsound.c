@@ -62,13 +62,13 @@ static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
     HKEY        hRegSnd, hRegApp, hScheme, hSnd;
     DWORD       err, type, count;
 
-    static  WCHAR       wszSounds[] = {'S','o','u','n','d','s',0};
-    static  WCHAR       wszDefault[] = {'D','e','f','a','u','l','t',0};
-    static  WCHAR       wszKey[] = {'A','p','p','E','v','e','n','t','s','\\',
+    static const WCHAR  wszSounds[] = {'S','o','u','n','d','s',0};
+    static const WCHAR  wszDefault[] = {'D','e','f','a','u','l','t',0};
+    static const WCHAR  wszKey[] = {'A','p','p','E','v','e','n','t','s','\\',
                                     'S','c','h','e','m','e','s','\\',
                                     'A','p','p','s',0};
-    static  WCHAR       wszDotDefault[] = {'.','D','e','f','a','u','l','t',0};
-    static  WCHAR       wszNull[] = {0};
+    static const WCHAR  wszDotDefault[] = {'.','D','e','f','a','u','l','t',0};
+    static const WCHAR  wszNull[] = {0};
 
     TRACE("searching in SystemSound list for %s\n", debugstr_w(lpszName));
     GetProfileStringW(wszSounds, (LPWSTR)lpszName, wszNull, str, sizeof(str)/sizeof(str[0]));
@@ -257,7 +257,7 @@ static DWORD WINAPI proc_PlaySound(LPVOID arg)
 
     /* if resource, grab it */
     if ((wps->fdwSound & SND_RESOURCE) == SND_RESOURCE) {
-        static WCHAR wszWave[] = {'W','A','V','E',0};
+        static const WCHAR wszWave[] = {'W','A','V','E',0};
         HRSRC	hRes;
         HGLOBAL	hGlob;
 

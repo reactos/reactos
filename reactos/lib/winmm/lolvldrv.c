@@ -53,7 +53,7 @@ typedef struct tagWINE_LLTYPE {
 } WINE_LLTYPE;
 
 static int		MMDrvsHi /* = 0 */;
-static WINE_MM_DRIVER	MMDrvs[3];
+static WINE_MM_DRIVER	MMDrvs[8];
 static LPWINE_MLD	MM_MLDrvs[40];
 #define MAX_MM_MLDRVS	(sizeof(MM_MLDrvs) / sizeof(MM_MLDrvs[0]))
 
@@ -612,13 +612,15 @@ static	BOOL	MMDRV_Install(LPCSTR drvRegName, LPCSTR drvFileName, BOOL bIsMapper)
 
     TRACE("('%s', '%s', mapper=%c);\n", drvRegName, drvFileName, bIsMapper ? 'Y' : 'N');
 
-    /* be sure that size of MMDrvs matches the max number of loadable drivers !!
-     * if not just increase size of MMDrvs */
-    assert(MMDrvsHi <= sizeof(MMDrvs)/sizeof(MMDrvs[0]));
-
     for (i = 0; i < MMDrvsHi; i++) {
-	if (!strcmp(drvRegName, MMDrvs[i].drvname)) return FALSE;
+        if (!strcmp(drvRegName, MMDrvs[i].drvname)) return FALSE;
     }
+
+    /* Be sure that size of MMDrvs matches the max number of loadable
+     * drivers !!
+     * If not just increase size of MMDrvs
+     */
+    assert(MMDrvsHi <= sizeof(MMDrvs)/sizeof(MMDrvs[0]));
 
     memset(lpDrv, 0, sizeof(*lpDrv));
 
