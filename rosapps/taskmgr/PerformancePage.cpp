@@ -99,18 +99,6 @@ static HANDLE	hPerformancePageEvent = NULL;	// When this event becomes signaled 
 
 void		PerformancePageRefreshThread(void *lpParameter);
 
-void AdjustFramePostion(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference, int)
-{
-	RECT	rc;
-	int		cx, cy;
-    GetClientRect(hCntrl, &rc);
-    MapWindowPoints(hCntrl, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)));
-    cx = rc.left + nXDifference;
-    cy = rc.top + nYDifference;
-    SetWindowPos(hCntrl, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
-    InvalidateRect(hCntrl, NULL, TRUE);
-}
-		 
 void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference, int pos)
 {
     RECT	rc;
@@ -120,6 +108,7 @@ void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference,
     if (pos) {
         cx = rc.left;
         cy = rc.top;
+        sx = rc.right - rc.left;
         switch (pos) {
         case 1:
             break;
@@ -127,40 +116,32 @@ void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference,
             cy += nYDifference / 2;
             break;
         case 3:
-            cx += nXDifference / 2;
+            sx += nXDifference / 2;
             break;
         case 4:
-            cx += nXDifference / 2;
             cy += nYDifference / 2;
+            sx += nXDifference / 2;
             break;
         }
-        sx = rc.right - rc.left + nXDifference / 2;
         sy = rc.bottom - rc.top + nYDifference / 2;
+        SetWindowPos(hCntrl, NULL, cx, cy, sx, sy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOZORDER);
     } else {
         cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         sx = sy = 0;
+        SetWindowPos(hCntrl, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
     }
-    SetWindowPos(hCntrl, NULL, cx, cy, sx, sy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOZORDER);
     InvalidateRect(hCntrl, NULL, TRUE);
 }
 		 
 void AdjustControlPostion(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference)
 {
-	RECT	rc;
-	int		cx, cy;
-
-    GetClientRect(hCntrl, &rc);
-    MapWindowPoints(hCntrl, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)));
-    cx = rc.left + nXDifference;
-    cy = rc.top + nYDifference;
-    SetWindowPos(hCntrl, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
-    InvalidateRect(hCntrl, NULL, TRUE);
+    AdjustFrameSize(hCntrl, hDlg, nXDifference, nYDifference, 0);
 }
 		 
 void AdjustCntrlPos(int ctrl_id, HWND hDlg, int nXDifference, int nYDifference)
 {
-    AdjustControlPostion(GetDlgItem(hDlg, ctrl_id), hDlg, nXDifference, nYDifference);
+    AdjustFrameSize(GetDlgItem(hDlg, ctrl_id), hDlg, nXDifference, nYDifference, 0);
 }
 		 
 LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -284,10 +265,10 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 //		SetWindowPos(hPerformancePageCpuUsageHistoryGraph, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
 
 		// Reposition the performance page's controls
-        AdjustFramePostion(hPerformancePageTotalsFrame, hDlg, 0, nYDifference, 0);
-        AdjustFramePostion(hPerformancePageCommitChargeFrame, hDlg, 0, nYDifference, 0);
-        AdjustFramePostion(hPerformancePageKernelMemoryFrame, hDlg, 0, nYDifference, 0);
-        AdjustFramePostion(hPerformancePagePhysicalMemoryFrame, hDlg, 0, nYDifference, 0);
+        AdjustFrameSize(hPerformancePageTotalsFrame, hDlg, 0, nYDifference, 0);
+        AdjustFrameSize(hPerformancePageCommitChargeFrame, hDlg, 0, nYDifference, 0);
+        AdjustFrameSize(hPerformancePageKernelMemoryFrame, hDlg, 0, nYDifference, 0);
+        AdjustFrameSize(hPerformancePagePhysicalMemoryFrame, hDlg, 0, nYDifference, 0);
 #if 0
         AdjustControlPostion(hPerformancePageCommitChargeTotalLabel, hDlg, 0, nYDifference);
         AdjustControlPostion(hPerformancePageCommitChargeLimitLabel, hDlg, 0, nYDifference);
@@ -357,10 +338,10 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
         AdjustFrameSize(hPerformancePageCpuUsageHistoryFrame, hDlg, nXDifference, nYDifference, 3);
         AdjustFrameSize(hPerformancePageMemUsageHistoryFrame, hDlg, nXDifference, nYDifference, 4);
 /*
-        AdjustFramePostion(hPerformancePageCpuUsageGraph, hDlg, nXDifference, nYDifference, 1);
-        AdjustFramePostion(hPerformancePageMemUsageGraph, hDlg, nXDifference, nYDifference, 2);
-        AdjustFramePostion(hPerformancePageMemUsageHistoryGraph, hDlg, nXDifference, nYDifference, 3);
-        AdjustFramePostion(hPerformancePageCpuUsageHistoryGraph, hDlg, nXDifference, nYDifference, 4);
+        AdjustFrameSize(hPerformancePageCpuUsageGraph, hDlg, nXDifference, nYDifference, 1);
+        AdjustFrameSize(hPerformancePageMemUsageGraph, hDlg, nXDifference, nYDifference, 2);
+        AdjustFrameSize(hPerformancePageMemUsageHistoryGraph, hDlg, nXDifference, nYDifference, 3);
+        AdjustFrameSize(hPerformancePageCpuUsageHistoryGraph, hDlg, nXDifference, nYDifference, 4);
  */
 		break;
 	}
