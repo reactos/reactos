@@ -17,6 +17,7 @@ extern const GUID CLSID_Internet;
 extern const GUID CLSID_NetworkPlaces;
 extern const GUID CLSID_RecycleBin;
 extern const GUID CLSID_ShellFSFolder;
+extern const GUID CLSID_Printers;
 extern const GUID FMTID_Intshcut;
 extern const GUID FMTID_InternetSite;
 extern const GUID CGID_Explorer;

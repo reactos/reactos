@@ -238,7 +238,7 @@ static LPITEMIDLIST _ILCreateCPanelApplet(LPCSTR name, LPCSTR displayName,
     int size = size0;
     int l;
 
-    tmp.type = 0;
+    tmp.type = PT_CPLAPPLET;
     tmp.u.cpanel.dummy = 0;
     tmp.u.cpanel.iconIdx = iconIdx;
 
@@ -280,7 +280,7 @@ static PIDLCPanelStruct* _ILGetCPanelPointer(LPCITEMIDLIST pidl)
 {
     LPPIDLDATA pdata = _ILGetDataPointer(pidl);
 
-    if (pdata && pdata->type==0)
+    if (pdata && pdata->type==PT_CPLAPPLET)
         return (PIDLCPanelStruct*)&(pdata->u.cpanel);
 
     return NULL;

@@ -2,6 +2,7 @@
  * internal pidl functions
  *
  * Copyright 1998 Juergen Schmied
+ * Copyright 2004 Juan Lang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -85,7 +86,7 @@
 *		GUID	871C5380-42A0-1069-A2EA-08002B30309D
 */
 
-#define PT_DESKTOP	0x00 /* internal */
+#define PT_CPLAPPLET	0x00
 #define PT_GUID		0x1F
 #define PT_DRIVE	0x23
 #define PT_DRIVE2	0x25
@@ -116,29 +117,37 @@ typedef struct tagPIDLCPanelStruct
     CHAR szName[1];		/*10*/ /* terminated by 0x00, followed by display name and comment string */
 } PIDLCPanelStruct;
 
+typedef struct tagGUIDStruct
+{
+    BYTE dummy; /* offset 01 is unknown */
+    GUID guid;  /* offset 02 */
+} GUIDStruct;
+
+typedef struct tagDriveStruct
+{
+    CHAR szDriveName[20];	/*01*/
+    WORD unknown;		/*21*/
+} DriveStruct;
+
+typedef struct tagFileStruct
+{
+    BYTE dummy;			/*01 is 0x00 for files or dirs */
+    DWORD dwFileSize;		/*02*/
+    WORD uFileDate;		/*06*/
+    WORD uFileTime;		/*08*/
+    WORD uFileAttribs;		/*10*/
+    CHAR szNames[1];		/*12*/
+    /* Here are coming two strings. The first is the long name.
+    The second the dos name when needed or just 0x00 */
+} FileStruct;
+
 typedef struct tagPIDLDATA
 {	PIDLTYPE type;			/*00*/
 	union
-	{ struct
-	  { BYTE dummy;			/*01*/
-	    GUID guid;			/*02*/
-	    BYTE dummy1;		/*18*/
-	  } guid;
-	  struct
-	  { CHAR szDriveName[20];	/*01*/
-	    DWORD dwUnknown;		/*21*/
-	    /* the drive seems to be 25 bytes every time */
-	  } drive;
-	  struct
-	  { BYTE dummy;			/*01 is 0x00 for files or dirs */
-	    DWORD dwFileSize;		/*02*/
-	    WORD uFileDate;		/*06*/
-	    WORD uFileTime;		/*08*/
-	    WORD uFileAttribs;		/*10*/
-	    CHAR szNames[1];		/*12*/
-	    /* Here are coming two strings. The first is the long name.
-	    The second the dos name when needed or just 0x00 */
-	  } file, folder, generic;
+	{
+	  struct tagGUIDStruct guid;
+	  struct tagDriveStruct drive;
+	  struct tagFileStruct file;
 	  struct
 	  { WORD dummy;		/*01*/
 	    CHAR szNames[1];	/*03*/
@@ -183,10 +192,13 @@ BOOL	_ILIsCPanelStruct	(LPCITEMIDLIST pidl);
  * simple pidls
  */
 
-/* Basic PIDL constructor.  Allocates size + 2 bytes (to include space for the
- * NULL PIDL terminator), and sets type to type.
+/* Basic PIDL constructor.  Allocates size + 5 bytes, where:
+ * - two bytes are SHITEMID.cb
+ * - one byte is PIDLDATA.type
+ * - two bytes are the NULL PIDL terminator
+ * Sets type of the returned PIDL to type.
  */
-LPITEMIDLIST	_ILCreateWithTypeAndSize(PIDLTYPE type, UINT size);
+LPITEMIDLIST	_ILAlloc(PIDLTYPE type, size_t size);
 
 /* Creates a PIDL with guid format and type type, which must be either PT_GUID
  * or PT_SHELLEXT.

@@ -1440,9 +1440,38 @@ HRESULT WINAPI SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppv, LPCI
  *
  *************************************************************************
  */
+LPITEMIDLIST _ILAlloc(PIDLTYPE type, size_t size)
+{
+    LPITEMIDLIST pidlOut = NULL;
+
+    if((pidlOut = SHAlloc(size + 5)))
+    {
+        LPPIDLDATA pData;
+        LPITEMIDLIST pidlNext;
+
+        ZeroMemory(pidlOut, size + 5);
+        pidlOut->mkid.cb = size + 3;
+
+        if ((pData = _ILGetDataPointer(pidlOut)))
+            pData->type = type;
+
+        if ((pidlNext = ILGetNext(pidlOut)))
+            pidlNext->mkid.cb = 0x00;
+        TRACE("-- (pidl=%p, size=%u)\n", pidlOut, size);
+    }
+
+    return pidlOut;
+}
+
 LPITEMIDLIST _ILCreateDesktop()
-{	TRACE("()\n");
-	return _ILCreateWithTypeAndSize(PT_DESKTOP, 0);
+{
+    LPITEMIDLIST ret;
+
+    TRACE("()\n");
+    ret = SHAlloc(2);
+    if (ret)
+        ret->mkid.cb = 0;
+    return ret;
 }
 
 LPITEMIDLIST _ILCreateMyComputer()
@@ -1481,7 +1510,7 @@ LPITEMIDLIST _ILCreatePrinters()
     TRACE("()\n");
     if (parent)
     {
-        LPITEMIDLIST printers = _ILCreateGuid(PT_GUID, &CLSID_ControlPanel);
+        LPITEMIDLIST printers = _ILCreateGuid(PT_GUID, &CLSID_Printers);
 
         if (printers)
         {
@@ -1509,7 +1538,7 @@ LPITEMIDLIST _ILCreateGuid(PIDLTYPE type, REFIID guid)
 
     if (type == PT_SHELLEXT || type == PT_GUID)
     {
-        pidlOut = _ILCreateWithTypeAndSize(type, 2 + 2 + sizeof(GUID));
+        pidlOut = _ILAlloc(type, sizeof(GUIDStruct));
         if (pidlOut)
         {
             LPPIDLDATA pData = _ILGetDataPointer(pidlOut);
@@ -1539,30 +1568,11 @@ LPITEMIDLIST _ILCreateGuidFromStrA(LPCSTR szGUID)
 	return _ILCreateGuid(PT_GUID, &iid);
 }
 
-LPITEMIDLIST _ILCreateWithTypeAndSize(PIDLTYPE type, UINT size)
-{
-    LPITEMIDLIST pidlOut = NULL, pidlTemp = NULL;
-    LPPIDLDATA   pData;
-
-    if(!(pidlOut = SHAlloc(size + 2))) return NULL;
-    ZeroMemory(pidlOut, size + 2);
-    pidlOut->mkid.cb = size;
-
-    if ((pData = _ILGetDataPointer(pidlOut)))
-        pData->type = type;
-
-    if ((pidlTemp = ILGetNext(pidlOut)))
-        pidlTemp->mkid.cb = 0x00;
-
-    TRACE("-- (pidl=%p, size=%u)\n", pidlOut, size);
-    return pidlOut;
-}
-
 LPITEMIDLIST _ILCreateFromFindDataA(WIN32_FIND_DATAA * stffile )
 {
     char	buff[MAX_PATH + 14 +1]; /* see WIN32_FIND_DATA */
     char *	pbuff = buff;
-    ULONG	len, len1;
+    size_t	len, len1;
     LPITEMIDLIST pidl;
     PIDLTYPE type;
 
@@ -1581,8 +1591,10 @@ LPITEMIDLIST _ILCreateFromFindDataA(WIN32_FIND_DATAA * stffile )
 
     type = (stffile->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? PT_FOLDER : 
      PT_VALUE;
-    /* FIXME: magic #s! */
-    if ((pidl = _ILCreateWithTypeAndSize(type, 2 + 12 + len + len1)))
+    /* FileStruct already has one byte for the first name, so use len - 1 in
+     * size calculation
+     */
+    if ((pidl = _ILAlloc(type, sizeof(FileStruct) + (len - 1) + len1)))
     {
         LPPIDLDATA pData;
         LPSTR pszDest;
@@ -1591,9 +1603,9 @@ LPITEMIDLIST _ILCreateFromFindDataA(WIN32_FIND_DATAA * stffile )
         if ((pData = _ILGetDataPointer(pidl)))
         {
             pData->type = type;
-            FileTimeToDosDateTime(&(stffile->ftLastWriteTime),&pData->u.folder.uFileDate,&pData->u.folder.uFileTime);
-            pData->u.folder.dwFileSize = stffile->nFileSizeLow;
-            pData->u.folder.uFileAttribs = (WORD)stffile->dwFileAttributes;
+            FileTimeToDosDateTime(&(stffile->ftLastWriteTime),&pData->u.file.uFileDate,&pData->u.file.uFileTime);
+            pData->u.file.dwFileSize = stffile->nFileSizeLow;
+            pData->u.file.uFileAttribs = (WORD)stffile->dwFileAttributes;
         }
         if ((pszDest = _ILGetTextPointer(pidl)))
         {
@@ -1632,8 +1644,7 @@ LPITEMIDLIST _ILCreateDrive(LPCWSTR lpszNew)
     sTemp[3]=0x00;
     TRACE("(%s)\n",debugstr_w(sTemp));
 
-    /* FIXME: magic #s! */
-    if ((pidlOut = _ILCreateWithTypeAndSize(PT_DRIVE, 25)))
+    if ((pidlOut = _ILAlloc(PT_DRIVE, sizeof(DriveStruct))))
     {
         LPSTR pszDest;
 
@@ -1973,8 +1984,6 @@ BOOL _ILGetFileDateTime(LPCITEMIDLIST pidl, FILETIME *pFt)
     switch (pdata->type)
     {
         case PT_FOLDER:
-            DosDateTimeToFileTime(pdata->u.folder.uFileDate, pdata->u.folder.uFileTime, pFt);
-            break;
         case PT_VALUE:
             DosDateTimeToFileTime(pdata->u.file.uFileDate, pdata->u.file.uFileTime, pFt);
             break;
@@ -2132,8 +2141,6 @@ DWORD _ILGetFileAttributes(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
 	switch(pData->type)
 	{
 	  case PT_FOLDER:
-	    wAttrib = pData->u.folder.uFileAttribs;
-	    break;
 	  case PT_VALUE:
 	    wAttrib = pData->u.file.uFileAttribs;
 	    break;

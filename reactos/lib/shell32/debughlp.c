@@ -201,9 +201,7 @@ void pdump (LPCITEMIDLIST pidl)
 	      char szName[MAX_PATH];
 
 	      _dbg_ILSimpleGetText(pidltemp, szName, MAX_PATH);
-	      if( PT_FOLDER == type)
-	        dwAttrib = pData->u.folder.uFileAttribs;
-	      else if( PT_VALUE == type)
+	      if( PT_FOLDER == type || PT_VALUE == type)
 	        dwAttrib = pData->u.file.uFileAttribs;
 
 	      MESSAGE ("[%p] size=%04u type=%lx attr=0x%08lx name=\"%s\" (%s,%s)\n",
@@ -230,7 +228,7 @@ BOOL pcheck (LPCITEMIDLIST pidl)
         { do
           { type   = _dbg_ILGetDataPointer(pidltemp)->type;
             switch (type)
-	    { case PT_DESKTOP:
+	    { case PT_CPLAPPLET:
 	      case PT_GUID:
 	      case PT_SHELLEXT:
 	      case PT_DRIVE:
