@@ -14,6 +14,7 @@
 	I've tested this patch it works okay w/o kbdus.dll installed. (jt)
 
 	* apps/utils/Makefile: Main part of patch.
+	* ntoskrnl/include/internal/: kbd.h Ditto.
 	* subsys/csrss/api/conio.c: Ditto.
 	* subsys/csrss/api/wapi.c: Ditto.
 	* subsys/win32k/ldr/loader.c: Ditto.
