@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
   hMutex = CreateMutexW(NULL, FALSE, L"TestMutex");
   if (hMutex == INVALID_HANDLE_VALUE)
     {
-      dprintf("CreateMutex() failed! Error: %lu\n", GetLastError);
+      dprintf("CreateMutex() failed! Error: %lu\n", GetLastError());
       return 0;
     }
   dprintf("CreateMutex() succeeded!\n");
