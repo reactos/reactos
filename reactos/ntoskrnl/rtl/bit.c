@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bit.c,v 1.1 2004/02/02 00:36:36 ekohl Exp $
+/* $Id: bit.c,v 1.2 2004/08/07 19:13:27 ion Exp $
  *
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Runtime code
@@ -31,6 +31,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 CCHAR STDCALL
 RtlFindLeastSignificantBit (IN ULONGLONG Set)
 {
@@ -48,7 +51,9 @@ RtlFindLeastSignificantBit (IN ULONGLONG Set)
   return -1;
 }
 
-
+/*
+ * @implemented
+ */
 CCHAR STDCALL
 RtlFindMostSignificantBit (IN ULONGLONG Set)
 {

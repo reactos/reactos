@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.2 2004/08/05 18:17:37 ion Exp $
+/* $Id: sd.c,v 1.3 2004/08/07 19:13:25 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -17,6 +17,9 @@
 
 /* FUNCTIONS ***************************************************************/
 
+/*
+* @implemented
+*/
 NTSTATUS STDCALL
 RtlCreateSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
                             ULONG Revision)

@@ -32,8 +32,8 @@ extern "C" {
 #endif
 
 #if 0
-#include <stdio.h>
-#include "bfd.h"
+/* #include <stdio.h> */
+/* #include "bfd.h" */
 #endif
 
 typedef int (*fprintf_ftype) PARAMS((PTR, const char*, ...));

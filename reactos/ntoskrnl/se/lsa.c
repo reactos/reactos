@@ -1,12 +1,14 @@
-/* $Id: lsa.c,v 1.4 2004/08/03 19:20:39 ion Exp $
+/* $Id: lsa.c,v 1.5 2004/08/07 19:13:27 ion Exp $
  */
 #include <ddk/ntddk.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
-
 /* LsaCallAuthenticationPackage@28 */
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL LsaCallAuthenticationPackage (
     DWORD Unknown0,
     DWORD Unknown1,
@@ -21,6 +23,9 @@ NTSTATUS STDCALL LsaCallAuthenticationPackage (
 }
 
 /* LsaDeregisterLogonProcess@8 */
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL LsaDeregisterLogonProcess (
     DWORD Unknown0,
     DWORD Unknown1
@@ -30,6 +35,9 @@ NTSTATUS STDCALL LsaDeregisterLogonProcess (
 }
 
 /* LsaFreeReturnBuffer@4 */
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL LsaFreeReturnBuffer (PVOID Buffer)
 {
     ULONG Size = 0; /* required by MEM_RELEASE */
@@ -43,6 +51,9 @@ NTSTATUS STDCALL LsaFreeReturnBuffer (PVOID Buffer)
 }
 
 /* LsaLogonUser@56 */
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL LsaLogonUser (
     DWORD Unknown0,
     DWORD Unknown1,
@@ -64,6 +75,9 @@ NTSTATUS STDCALL LsaLogonUser (
 }
 
 /* LsaLookupAuthenticationPackage@12 */
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL LsaLookupAuthenticationPackage (
     DWORD	Unknown0,
     DWORD	Unknown1,
@@ -74,6 +88,9 @@ NTSTATUS STDCALL LsaLookupAuthenticationPackage (
 }
 
 /* LsaRegisterLogonProcess@12 */
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL LsaRegisterLogonProcess (
     DWORD	Unknown0,
     DWORD	Unknown1,

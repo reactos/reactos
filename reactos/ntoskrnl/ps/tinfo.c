@@ -1,4 +1,4 @@
-/* $Id: tinfo.c,v 1.26 2004/08/05 11:38:01 jimtabor Exp $
+/* $Id: tinfo.c,v 1.27 2004/08/07 19:13:26 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,6 +22,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 NtSetInformationThread (IN HANDLE ThreadHandle,
 			IN THREADINFOCLASS ThreadInformationClass,
@@ -207,7 +210,9 @@ NtSetInformationThread (IN HANDLE ThreadHandle,
   return Status;
 }
 
-
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtQueryInformationThread (IN	HANDLE		ThreadHandle,
 			  IN	THREADINFOCLASS	ThreadInformationClass,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: power.c,v 1.9 2004/07/17 03:06:01 ion Exp $
+/* $Id: power.c,v 1.10 2004/08/07 19:13:26 ion Exp $
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/po/power.c
  * PURPOSE:         Power Manager
@@ -36,7 +36,9 @@
 
 PDEVICE_NODE PopSystemPowerDeviceNode = NULL;
 
-
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 PoCallDriver(

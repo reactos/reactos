@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: version.c,v 1.2 2004/08/05 18:17:37 ion Exp $
+/* $Id: version.c,v 1.3 2004/08/07 19:13:25 ion Exp $
  *
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Runtime code
@@ -40,6 +40,9 @@ extern ULONG NtGlobalFlag;
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+* @implemented
+*/
 NTSTATUS STDCALL
 RtlGetVersion(RTL_OSVERSIONINFOW *Info)
 {

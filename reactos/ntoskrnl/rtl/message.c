@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.5 2002/09/15 10:45:05 guido Exp $
+/* $Id: message.c,v 1.6 2004/08/07 19:13:27 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -19,6 +19,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlFindMessage(PVOID BaseAddress,
 	       ULONG Type,

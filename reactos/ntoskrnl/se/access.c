@@ -1,4 +1,4 @@
-/* $Id: access.c,v 1.5 2004/08/03 19:20:39 ion Exp $
+/* $Id: access.c,v 1.6 2004/08/07 19:13:27 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -18,6 +18,9 @@
 
 /* FUNCTIONS ***************************************************************/
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 RtlAreAllAccessesGranted (

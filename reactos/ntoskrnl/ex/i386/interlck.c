@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.6 2003/12/30 18:52:03 fireball Exp $
+/* $Id: interlck.c,v 1.7 2004/08/07 19:13:26 ion Exp $
  *
  * reactos/ntoskrnl/ex/i386/interlck.c
  *
@@ -8,6 +8,9 @@
 
 #if defined(__GNUC__)
 
+/*
+ * @implemented
+ */
 INTERLOCKED_RESULT FASTCALL
 Exfi386InterlockedIncrementLong(IN PLONG Addend);
 
@@ -20,6 +23,9 @@ __asm__("\n\t.global @Exfi386InterlockedIncrementLong@4\n\t"
 
 #elif defined(_MSC_VER)
 
+/*
+ * @implemented
+ */
 __declspec(naked)
 INTERLOCKED_RESULT FASTCALL
 Exfi386InterlockedIncrementLong(IN PLONG Addend)
@@ -37,6 +43,9 @@ Exfi386InterlockedIncrementLong(IN PLONG Addend)
 
 #if defined(__GNUC__)
 
+/*
+ * @implemented
+ */
 INTERLOCKED_RESULT FASTCALL
 Exfi386InterlockedDecrementLong(IN PLONG Addend);
 
@@ -49,6 +58,9 @@ __asm__("\n\t.global @Exfi386InterlockedDecrementLong@4\n\t"
 
 #elif defined(_MSC_VER)
 
+/*
+ * @implemented
+ */
 __declspec(naked)
 INTERLOCKED_RESULT FASTCALL
 Exfi386InterlockedDecrementLong(IN PLONG Addend)
@@ -66,6 +78,9 @@ Exfi386InterlockedDecrementLong(IN PLONG Addend)
 
 #if defined(__GNUC__)
 
+/*
+ * @implemented
+ */
 ULONG FASTCALL
 Exfi386InterlockedExchangeUlong(IN PULONG Target,
 				IN ULONG Value);
@@ -78,6 +93,9 @@ __asm__("\n\t.global @Exfi386InterlockedExchangeUlong@8\n\t"
 
 #elif defined(_MSC_VER)
 
+/*
+ * @implemented
+ */
 __declspec(naked)
 ULONG FASTCALL
 Exfi386InterlockedExchangeUlong(IN PULONG Target,
@@ -192,6 +210,9 @@ Exi386InterlockedExchangeUlong(IN PULONG Target,
  * STDCALL : _InterlockedIncrement@4
  */
 #if defined(__GNUC__)
+/*
+ * @implemented
+ */
 LONG FASTCALL
 InterlockedIncrement(PLONG Addend);
 /*
@@ -210,7 +231,9 @@ __asm__("\n\t.global @InterlockedIncrement@4\n\t"
 	"ret\n\t");
 
 #elif defined(_MSC_VER)
-
+/*
+ * @implemented
+ */
 __declspec(naked)
 LONG FASTCALL
 InterlockedIncrement(PLONG Addend)
@@ -231,6 +254,9 @@ InterlockedIncrement(PLONG Addend)
  * STDCALL : _InterlockedDecrement@4
  */
 #if defined(__GNUC__)
+/*
+ * @implemented
+ */
 LONG FASTCALL
 InterlockedDecrement(PLONG Addend);
 
@@ -243,6 +269,9 @@ __asm__("\n\t.global @InterlockedDecrement@4\n\t"
 
 #elif defined(_MSC_VER)
 
+/*
+ * @implemented
+ */
 __declspec(naked)
 LONG FASTCALL
 InterlockedDecrement(PLONG Addend)
@@ -264,6 +293,9 @@ InterlockedDecrement(PLONG Addend)
  */
 
 #if defined(__GNUC__)
+/*
+ * @implemented
+ */
 LONG FASTCALL
 InterlockedExchange(PLONG Target,
 		    LONG Value);
@@ -275,7 +307,9 @@ __asm__("\n\t.global @InterlockedExchange@8\n\t"
 	"ret\n\t");
 
 #elif defined(_MSC_VER)
-
+/*
+ * @implemented
+ */
 __declspec(naked)
 LONG FASTCALL
 InterlockedExchange(PLONG Target,
@@ -295,7 +329,9 @@ InterlockedExchange(PLONG Target,
  * STDCALL: _InterlockedExchangeAdd@8
  */
 #if defined(__GNUC__)
-
+/*
+ * @implemented
+ */
 LONG FASTCALL
 InterlockedExchangeAdd(PLONG Addend,
 		       LONG Value);
@@ -307,7 +343,9 @@ __asm__("\n\t.global @InterlockedExchangeAdd@8\n\t"
 	"ret\n\t");
 
 #elif defined(_MSC_VER)
-
+/*
+ * @implemented
+ */
 __declspec(naked)
 LONG FASTCALL
 InterlockedExchangeAdd(PLONG Addend,

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.76 2004/07/19 06:08:21 ion Exp $
+/* $Id: create.c,v 1.77 2004/08/07 19:13:26 ion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -53,6 +53,9 @@ PiThreadNotifyRoutine[MAX_THREAD_NOTIFY_ROUTINE_COUNT];
 
 /* FUNCTIONS ***************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 PsAssignImpersonationToken(PETHREAD Thread,
 			   HANDLE TokenHandle)
@@ -238,7 +241,9 @@ NtImpersonateThread(IN HANDLE ThreadHandle,
   return STATUS_SUCCESS;
 }
 
-
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtOpenThreadToken (IN HANDLE ThreadHandle,
 		   IN ACCESS_MASK DesiredAccess,

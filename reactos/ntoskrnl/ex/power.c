@@ -32,6 +32,9 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
   return(STATUS_NOT_IMPLEMENTED);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL 
 NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 {

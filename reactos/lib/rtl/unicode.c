@@ -46,7 +46,9 @@ extern BOOLEAN NlsMbOemCodePageTag;
 /* FUNCTIONS *****************************************************************/
 
 
-
+/*
+* @implemented
+*/
 WCHAR STDCALL
 RtlAnsiCharToUnicodeChar (IN CHAR AnsiChar)
 {
