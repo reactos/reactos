@@ -1,4 +1,4 @@
-/* $Id: name.c,v 1.9 2004/08/15 16:39:02 chorns Exp $
+/* $Id: name.c,v 1.10 2004/08/18 02:32:00 navaraf Exp $
  *
  * reactos/ntoskrnl/fs/name.c
  *
@@ -9,7 +9,6 @@
 /* DATA */
 
 PUCHAR	* FsRtlLegalAnsiCharacterArray = NULL;
-
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -92,17 +91,17 @@ FsRtlDissectName (IN UNICODE_STRING Name,
   Length = Name.Length / sizeof(WCHAR);
 
   /* Search for next backslash or end-of-string */
-  while ((NameOffset + NameLength <= Length) &&
+  while ((NameOffset + NameLength < Length) &&
          (Name.Buffer[NameOffset + NameLength] != L'\\'))
   {
     NameLength++;
   }
 
-  FirstPart->Length = NameLength * sizeof(WCHAR);
+  FirstPart->Length = 
   FirstPart->MaximumLength = NameLength * sizeof(WCHAR);
   FirstPart->Buffer = &Name.Buffer[NameOffset];
 
-  NameOffset += (NameLength + 1);
+  NameOffset += NameLength + 1;
   if (NameOffset < Length)
   {
     RemainingPart->Length = (Length - NameOffset) * sizeof(WCHAR);
@@ -136,9 +135,9 @@ FsRtlDoesNameContainWildCards (IN PUNICODE_STRING Name)
     return FALSE;
 
   /* Set pointer to last character of the string */
-  Ptr = (PWCHAR)((ULONG_PTR)Name->Buffer + Name->Length - sizeof(WCHAR));
+  Ptr = Name->Buffer + (Name->Length / sizeof(WCHAR));
 
-  while (Ptr > Name->Buffer)
+  while (Ptr >= Name->Buffer)
     {
       /* Stop at backslash */
       if (*Ptr == L'\\')
@@ -171,7 +170,7 @@ FsRtlDoesNameContainWildCards (IN PUNICODE_STRING Name)
  * NOTE
  * 	From Bo Branten's ntifs.h v12.
  *
- * @unimplemented
+ * @implemented
  */
 BOOLEAN STDCALL
 FsRtlIsNameInExpression (IN PUNICODE_STRING Expression,
@@ -179,6 +178,65 @@ FsRtlIsNameInExpression (IN PUNICODE_STRING Expression,
 			 IN BOOLEAN IgnoreCase,
 			 IN PWCHAR UpcaseTable OPTIONAL)
 {
+  USHORT ExpressionPosition, NamePosition;
+  UNICODE_STRING TempExpression, TempName;
+
+  ExpressionPosition = 0;
+  NamePosition = 0;
+  while (ExpressionPosition < (Expression->Length / sizeof(WCHAR)) &&
+         NamePosition < (Name->Length / sizeof(WCHAR)))
+    {
+      if (Expression->Buffer[ExpressionPosition] == L'*')
+        {
+          ExpressionPosition++;
+          if (ExpressionPosition == (Expression->Length / sizeof(WCHAR)))
+            {
+              return TRUE;
+            }
+          while (NamePosition < (Name->Length / sizeof(WCHAR)))
+            {
+              TempExpression.Length =
+              TempExpression.MaximumLength =
+                Expression->Length - (ExpressionPosition * sizeof(WCHAR));
+              TempExpression.Buffer = Expression->Buffer + ExpressionPosition;
+              TempName.Length =
+              TempName.MaximumLength =
+                Name->Length - (NamePosition * sizeof(WCHAR));
+              TempName.Buffer = Name->Buffer + NamePosition;
+              /* FIXME: Rewrite to get rid of recursion */
+              if (FsRtlIsNameInExpression(&TempExpression, &TempName,
+                                          IgnoreCase, UpcaseTable))
+                {
+                  return TRUE;
+                }
+              NamePosition++;
+            }
+        }
+
+      /* FIXME: Take UpcaseTable into account! */
+      if (Expression->Buffer[ExpressionPosition] == L'?' ||
+          (IgnoreCase &&
+           RtlUpcaseUnicodeChar(Expression->Buffer[ExpressionPosition]) ==
+           RtlUpcaseUnicodeChar(Name->Buffer[NamePosition])) ||
+          (!IgnoreCase &&
+           Expression->Buffer[ExpressionPosition] ==
+           Name->Buffer[NamePosition]))
+        {
+          NamePosition++;
+          ExpressionPosition++;
+        }
+      else
+        {
+          return FALSE;
+        }
+    }
+
+  if (ExpressionPosition == (Expression->Length / sizeof(WCHAR)) &&
+      NamePosition == (Name->Length / sizeof(WCHAR)))
+    {
+      return TRUE;
+    }
+
   return FALSE;
 }
 
