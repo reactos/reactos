@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.23 2002/04/27 19:13:15 hbirr Exp $
+/* $Id: create.c,v 1.24 2002/05/07 22:21:02 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -131,6 +131,13 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
    ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE;
    ObjectAttributes.SecurityDescriptor = NULL;
    ObjectAttributes.SecurityQualityOfService = NULL;
+
+   if (lpSecurityAttributes)
+   {
+      if(lpSecurityAttributes->bInheritHandle)
+         ObjectAttributes.Attributes |= OBJ_INHERIT;
+      ObjectAttributes.SecurityDescriptor = lpSecurityAttributes->lpSecurityDescriptor;
+   }
    
    Status = NtCreateFile (&FileHandle,
 			  dwDesiredAccess,
