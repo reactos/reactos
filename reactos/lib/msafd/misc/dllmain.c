@@ -103,7 +103,7 @@ NTSTATUS OpenSocket(
 
   AFD_DbgPrint(MAX_TRACE, ("EaInfo at (0x%X)  EaLength is (%d).\n", (UINT)EaInfo, (INT)EaLength));
 
-  RtlInitUnicodeString(&DeviceName, L"\\Device\\Afd");
+  RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\Afd");
 	InitializeObjectAttributes(
     &ObjectAttributes,
     &DeviceName,
@@ -658,7 +658,7 @@ NTSTATUS OpenCommandChannel(
   SocketInfo = (PAFD_SOCKET_INFORMATION)((ULONG_PTR)EaInfo->EaName + AFD_SOCKET_LENGTH);
   SocketInfo->CommandChannel = TRUE;
 
-  RtlInitUnicodeString(&DeviceName, L"\\Device\\Afd");
+  RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\Afd");
 	InitializeObjectAttributes(
     &ObjectAttributes,
     &DeviceName,

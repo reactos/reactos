@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.73 2002/06/19 22:31:33 ekohl Exp $
+/* $Id: registry.c,v 1.74 2002/08/20 20:37:11 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -566,7 +566,7 @@ CmiCreateCurrentControlSetLink(VOID)
 
   DPRINT("Link target '%S'\n", TargetNameBuffer);
 
-  RtlInitUnicodeString(&LinkName,
+  RtlInitUnicodeStringFromLiteral(&LinkName,
 		       L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &LinkName,
@@ -586,7 +586,7 @@ CmiCreateCurrentControlSetLink(VOID)
       return(Status);
     }
 
-  RtlInitUnicodeString(&LinkValue,
+  RtlInitUnicodeStringFromLiteral(&LinkValue,
 		       L"SymbolicLinkValue");
   Status=NtSetValueKey(KeyHandle,
 		       &LinkValue,

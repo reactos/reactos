@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.30 2002/05/07 22:44:23 hbirr Exp $
+/* $Id: conio.c,v 1.31 2002/08/20 20:37:16 hyperion Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -786,7 +786,7 @@ VOID STDCALL CsrInitConsoleSupport(VOID)
    
    DPRINT("CSR: CsrInitConsoleSupport()\n");
    
-   RtlInitUnicodeString(&DeviceName, L"\\??\\BlueScreen");
+   RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\BlueScreen");
    InitializeObjectAttributes(&ObjectAttributes,
 			      &DeviceName,
 			      0,
@@ -803,7 +803,7 @@ VOID STDCALL CsrInitConsoleSupport(VOID)
 	DbgPrint("CSR: Failed to open console. Expect problems.\n");
      }
 
-   RtlInitUnicodeString(&DeviceName, L"\\??\\Keyboard");
+   RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\Keyboard");
    InitializeObjectAttributes(&ObjectAttributes,
 			      &DeviceName,
 			      0,

@@ -192,14 +192,13 @@ NTSTATUS PiceSendIoctl(PDEVICE_OBJECT Target, ULONG Ioctl,
 BOOLEAN PatchKeyboardDriver(void)
 {
 	PINTERNAL_I8042_HOOK_KEYBOARD phkData;
-    UNICODE_STRING DevName;
+	//When we have i8042 driver this should be changed!!!!!!!
+    UNICODE_STRING DevName = UNICODE_STRING_INITIALIZER(L"\\Device\\Keyboard");
 	PDEVICE_OBJECT kbdDevice = NULL;
 	PFILE_OBJECT FO = NULL;
 	NTSTATUS status;
 
 	ENTER_FUNC();
-	//When we have i8042 driver this should be changed!!!!!!!
-	RtlInitUnicodeString(&DevName, L"\\Device\\Keyboard");
 
 	//Get pointer to keyboard device
     if( !NT_SUCCESS( status = IoGetDeviceObjectPointer( &DevName, FILE_READ_ACCESS, &FO, &kbdDevice ) ) )

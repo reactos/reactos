@@ -90,7 +90,7 @@ NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
    PDEVICE_OBJECT PortDeviceObject = NULL;
    PFILE_OBJECT FileObject = NULL;
    NTSTATUS status;
-   UNICODE_STRING PortName;
+   UNICODE_STRING PortName = UNICODE_STRING_INITIALIZER(L"\\Device\\Mouse");
    IO_STATUS_BLOCK ioStatus;
    KEVENT event;
    PIRP irp;
@@ -102,7 +102,6 @@ NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
    // Get the port driver's DeviceObject
    // FIXME: The name might change.. find a way to be more dynamic?
 
-   RtlInitUnicodeString(&PortName, L"\\Device\\Mouse");
    status = IoGetDeviceObjectPointer(&PortName, FILE_READ_ATTRIBUTES, &FileObject, &PortDeviceObject);
 
    if(status != STATUS_SUCCESS)
@@ -263,8 +262,8 @@ NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
    PDEVICE_OBJECT DeviceObject;
-   UNICODE_STRING DeviceName;
-   UNICODE_STRING SymlinkName;
+   UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\MouseClass");
+   UNICODE_STRING SymlinkName = UNICODE_STRING_INITIALIZER(L"\\??\\MouseClass");
 
    DriverObject->MajorFunction[IRP_MJ_CREATE] = MouseClassDispatch;
 //   DriverObject->MajorFunction[IRP_MJ_CLOSE]  = MouseClassDispatch;
@@ -272,7 +271,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = MouseClassInternalDeviceControl; // to get GDI callback
 //   DriverObject->DriverStartIo                = MouseClassStartIo;
 
-   RtlInitUnicodeString(&DeviceName, L"\\Device\\MouseClass");
    IoCreateDevice(DriverObject,
 		  sizeof(DEVICE_EXTENSION),
 		  &DeviceName,
@@ -282,7 +280,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 		  &DeviceObject);
    DeviceObject->Flags = DeviceObject->Flags | DO_BUFFERED_IO;
 
-   RtlInitUnicodeString(&SymlinkName, L"\\??\\MouseClass");
    IoCreateSymbolicLink(&SymlinkName, &DeviceName);
 
    return ConnectMousePortDriver(DeviceObject);

@@ -1030,7 +1030,7 @@ NdisMRegisterMiniport(
 
     /* Create the device object for this adapter */
     /* FIXME: Use GUIDs */
-    RtlInitUnicodeString(&Adapter->DeviceName, L"\\Device\\ne2000");
+    RtlInitUnicodeStringFromLiteral(&Adapter->DeviceName, L"\\Device\\ne2000");
     Status = IoCreateDevice(Miniport->DriverObject,
                             0,
                             &Adapter->DeviceName,

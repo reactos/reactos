@@ -183,7 +183,7 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
 		//ei unimplemented DriverObject->MajorFunction[IRP_MJ_CLOSE] = pice_close;
 		DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = pice_ioctl;
 
-		RtlInitUnicodeString(&DeviceName, L"\\Device\\Pice");
+		RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\Pice");
 		IoCreateDevice(DriverObject,
 				0,
 				&DeviceName,
@@ -193,7 +193,7 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
 				&DeviceObject);
 		DeviceObject->Flags = DeviceObject->Flags | DO_BUFFERED_IO;
 
-		RtlInitUnicodeString(&SymlinkName, L"\\??\\Pice");
+		RtlInitUnicodeStringFromLiteral(&SymlinkName, L"\\??\\Pice");
 		IoCreateSymbolicLink(&SymlinkName, &DeviceName);
 
 		return(STATUS_SUCCESS);

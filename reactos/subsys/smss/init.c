@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.41 2002/08/17 15:31:03 hbirr Exp $
+/* $Id: init.c,v 1.42 2002/08/20 20:37:17 hyperion Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -517,7 +517,7 @@ SmSetEnvironmentVariables(VOID)
 	 SharedUserData->NtSystemRoot);
 
   /* Cet SystemRoot = "C:\reactos" */
-  RtlInitUnicodeString(&EnvVariable,
+  RtlInitUnicodeStringFromLiteral(&EnvVariable,
 		       L"SystemRoot");
   RtlInitUnicodeString(&EnvValue,
 		       ValueBuffer);
@@ -529,7 +529,7 @@ SmSetEnvironmentVariables(VOID)
   ValueBuffer[2] = 0;
 
   /* Set SystemDrive = "C:" */
-  RtlInitUnicodeString(&EnvVariable,
+  RtlInitUnicodeStringFromLiteral(&EnvVariable,
 		       L"SystemDrive");
   RtlInitUnicodeString(&EnvValue,
 		       ValueBuffer);
@@ -560,7 +560,7 @@ SmLoadSubsystems(VOID)
   NTSTATUS Status;
 
   /* Load kernel mode subsystem (aka win32k.sys) */
-  RtlInitUnicodeString(&ImageInfo.ModuleName,
+  RtlInitUnicodeStringFromLiteral(&ImageInfo.ModuleName,
 		       L"\\SystemRoot\\system32\\drivers\\win32k.sys");
 
   Status = NtSetSystemInformation(SystemLoadAndCallImage,
@@ -678,7 +678,7 @@ InitSessionManager(HANDLE Children[])
     }
 
   /* Run csrss.exe */
-  RtlInitUnicodeString(&UnicodeString,
+  RtlInitUnicodeStringFromLiteral(&UnicodeString,
 		       L"\\CsrssInitDone");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &UnicodeString,
@@ -787,7 +787,7 @@ InitSessionManager(HANDLE Children[])
   Children[CHILD_WINLOGON] = ProcessInfo.ProcessHandle;
 
   /* Create the \DbgSsApiPort object (LPC) */
-  RtlInitUnicodeString(&UnicodeString,
+  RtlInitUnicodeStringFromLiteral(&UnicodeString,
 		       L"\\DbgSsApiPort");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &UnicodeString,
@@ -810,7 +810,7 @@ InitSessionManager(HANDLE Children[])
 #endif
 
   /* Create the \DbgUiApiPort object (LPC) */
-  RtlInitUnicodeString(&UnicodeString,
+  RtlInitUnicodeStringFromLiteral(&UnicodeString,
 		       L"\\DbgUiApiPort");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &UnicodeString,

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.64 2002/08/18 18:50:25 hyperion Exp $
+/* $Id: rtl.h,v 1.65 2002/08/20 20:37:08 hyperion Exp $
  * 
  */
 
@@ -1065,6 +1065,70 @@ RtlInitUnicodeString (
 	PUNICODE_STRING	DestinationString,
 	PCWSTR		SourceString
 	);
+
+/*
+VOID
+InitializeUnicodeString (
+	PUNICODE_STRING	DestinationString,
+        USHORT          Lenght,
+        USHORT          MaximumLength,
+	PCWSTR		Buffer
+	);
+
+ Initialize an UNICODE_STRING from its fields. Use when you know the values of
+ all the fields in advance
+
+ */
+
+#define InitializeUnicodeString(__PDEST_STRING__,__LENGTH__,__MAXLENGTH__,__BUFFER__) \
+{ \
+ (__PDEST_STRING__)->Length = (__LENGTH__); \
+ (__PDEST_STRING__)->MaximumLength = (__MAXLENGTH__); \
+ (__PDEST_STRING__)->Buffer = (__BUFFER__); \
+}
+
+/*
+VOID
+RtlInitUnicodeStringFromLiteral (
+	PUNICODE_STRING	DestinationString,
+	PCWSTR		SourceString
+	);
+
+ Initialize an UNICODE_STRING from a wide string literal. WARNING: use only with
+ string literals and statically initialized arrays, it will calculate the wrong
+ length otherwise
+
+ */
+
+#define RtlInitUnicodeStringFromLiteral(__PDEST_STRING__,__SOURCE_STRING__) \
+ InitializeUnicodeString( \
+  (__PDEST_STRING__), \
+  sizeof(__SOURCE_STRING__) - sizeof(WCHAR), \
+  sizeof(__SOURCE_STRING__), \
+  (__SOURCE_STRING__) \
+ )
+
+/*
+ Static initializer for UNICODE_STRING variables. Usage:
+
+ UNICODE_STRING wstr = UNICODE_STRING_INITIALIZER(L"string");
+
+*/
+
+#define UNICODE_STRING_INITIALIZER(__SOURCE_STRING__) \
+{ \
+ sizeof((__SOURCE_STRING__)) - sizeof(WCHAR), \
+ sizeof((__SOURCE_STRING__)), \
+ (__SOURCE_STRING__) \
+}
+
+/*
+ Initializer for empty UNICODE_STRING variables. Usage:
+
+ UNICODE_STRING wstr = EMPTY_UNICODE_STRING;
+
+*/
+#define EMPTY_UNICODE_STRING {0, 0, NULL}
 
 VOID
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: beep.c,v 1.11 2002/07/18 00:29:19 ekohl Exp $
+/* $Id: beep.c,v 1.12 2002/08/20 20:37:04 hyperion Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -240,8 +240,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 {
   PDEVICE_EXTENSION DeviceExtension;
   PDEVICE_OBJECT DeviceObject;
-  UNICODE_STRING DeviceName;
-  UNICODE_STRING SymlinkName;
+  UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\Beep");
+  UNICODE_STRING SymlinkName = UNICODE_STRING_INITIALIZER(L"\\??\\Beep");
   NTSTATUS Status;
 
   DPRINT("Beep Device Driver 0.0.3\n");
@@ -253,8 +253,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = BeepDeviceControl;
   DriverObject->DriverUnload = BeepUnload;
 
-  RtlInitUnicodeString(&DeviceName,
-		       L"\\Device\\Beep");
   Status = IoCreateDevice(DriverObject,
 			  sizeof(DEVICE_EXTENSION),
 			  &DeviceName,
@@ -278,8 +276,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 		    FALSE);
 
   /* Create the dos device link */
-  RtlInitUnicodeString(&SymlinkName,
-		       L"\\??\\Beep");
   IoCreateSymbolicLink(&SymlinkName,
 		       &DeviceName);
 

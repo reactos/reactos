@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.6 2001/11/02 09:10:49 ekohl Exp $
+/* $Id: nls.c,v 1.7 2002/08/20 20:37:16 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -166,7 +166,7 @@ RtlpInitNlsSections(ULONG Mod1Start,
   DPRINT("Upcase section end: 0x%08lX\n", Mod3End);
 
   /* Create the '\NLS' directory */
-  RtlInitUnicodeString(&UnicodeString,
+  RtlInitUnicodeStringFromLiteral(&UnicodeString,
 		       L"\\NLS");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &UnicodeString,
@@ -180,7 +180,7 @@ RtlpInitNlsSections(ULONG Mod1Start,
     return(Status);
 
   /* Create the 'NlsSectionUnicode' section */
-  RtlInitUnicodeString(&UnicodeString,
+  RtlInitUnicodeStringFromLiteral(&UnicodeString,
 		       L"NlsSectionUnicode");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &UnicodeString,

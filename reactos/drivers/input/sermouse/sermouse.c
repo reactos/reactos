@@ -350,7 +350,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
   DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = SerialMouseInternalDeviceControl;
   DriverObject->DriverStartIo                = SerialMouseStartIo;
 
-  RtlInitUnicodeString(&DeviceName, L"\\Device\\Mouse"); // FIXME: find correct device name
+  RtlInitUnicodeStringFromLiteral(&DeviceName,
+                                  L"\\Device\\Mouse"); // FIXME: find correct device name
   IoCreateDevice(DriverObject,
 	  sizeof(DEVICE_EXTENSION),
 	  &DeviceName,
@@ -360,7 +361,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 	  &DeviceObject);
   DeviceObject->Flags = DeviceObject->Flags | DO_BUFFERED_IO;
 
-  RtlInitUnicodeString(&SymlinkName, L"\\??\\Mouse"); // FIXME: find correct device name
+  RtlInitUnicodeStringFromLiteral(&SymlinkName,
+                                  L"\\??\\Mouse"); // FIXME: find correct device name
   IoCreateSymbolicLink(&SymlinkName, &DeviceName);
 
   DeviceExtension = DeviceObject->DeviceExtension;

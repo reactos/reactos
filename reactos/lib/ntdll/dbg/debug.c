@@ -1,4 +1,4 @@
-/* $Id: debug.c,v 1.3 2001/08/03 17:17:16 ekohl Exp $
+/* $Id: debug.c,v 1.4 2002/08/20 20:37:10 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -77,11 +77,8 @@ DbgSsInitialize(HANDLE ReplyPort,
 		ULONG Unknown3)
 {
 	SECURITY_QUALITY_OF_SERVICE Qos;
-	UNICODE_STRING PortName;
+	UNICODE_STRING PortName = UNICODE_STRING_INITIALIZER(L"\\DbgSsApiPort");
 	NTSTATUS Status;
-
-	RtlInitUnicodeString (&PortName,
-	                      L"\\DbgSsApiPort");
 
 	Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
 	Qos.ImpersonationLevel = SecurityIdentification;
@@ -123,15 +120,12 @@ NTSTATUS STDCALL
 DbgUiConnectToDbg(VOID)
 {
 	SECURITY_QUALITY_OF_SERVICE Qos;
-	UNICODE_STRING PortName;
+	UNICODE_STRING PortName = UNICODE_STRING_INITIALIZER(L"\\DbgUiApiPort");
 	NTSTATUS Status;
 	PTEB Teb;
 	ULONG InfoSize;
 
 	Teb = NtCurrentTeb ();
-
-	RtlInitUnicodeString (&PortName,
-	                      L"\\DbgUiApiPort");
 
 	Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
 	Qos.ImpersonationLevel = SecurityIdentification;

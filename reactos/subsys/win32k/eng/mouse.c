@@ -96,13 +96,11 @@ NTSTATUS ConnectMouseClassDriver()
    PDEVICE_OBJECT ClassDeviceObject = NULL;
    PFILE_OBJECT FileObject = NULL;
    NTSTATUS status;
-   UNICODE_STRING ClassName;
+   UNICODE_STRING ClassName = UNICODE_STRING_INITIALIZER(L"\\Device\\MouseClass");
    IO_STATUS_BLOCK ioStatus;
    KEVENT event;
    PIRP irp;
    GDI_INFORMATION GDIInformation;
-
-   RtlInitUnicodeString(&ClassName, L"\\Device\\MouseClass");
 
    status = IoGetDeviceObjectPointer(&ClassName, FILE_READ_ATTRIBUTES, &FileObject, &ClassDeviceObject);
 

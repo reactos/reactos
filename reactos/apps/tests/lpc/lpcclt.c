@@ -1,4 +1,4 @@
-/* $Id: lpcclt.c,v 1.8 2002/02/24 17:44:22 ea Exp $
+/* $Id: lpcclt.c,v 1.9 2002/08/20 20:37:03 hyperion Exp $
  *
  * DESCRIPTION: Simple LPC Client
  * PROGRAMMER:  David Welch
@@ -31,7 +31,7 @@ void debug_printf(char* fmt, ...)
 
 int main(int argc, char* argv[])
 {
-   UNICODE_STRING PortName;
+   UNICODE_STRING PortName = UNICODE_STRING_INITIALIZER(TEST_PORT_NAME_U);
    NTSTATUS Status;
    HANDLE PortHandle;
    LPC_MAX_MESSAGE Request;
@@ -40,8 +40,6 @@ int main(int argc, char* argv[])
    SECURITY_QUALITY_OF_SERVICE Sqos;
    
    printf("%s: Lpc test client\n", MyName);
-   
-   RtlInitUnicodeString(&PortName, TEST_PORT_NAME_U);
    
    printf("%s: Connecting to port \"%s\"...\n", MyName, TEST_PORT_NAME);
    ConnectInfoLength = 0;

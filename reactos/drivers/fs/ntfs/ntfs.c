@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntfs.c,v 1.1 2002/06/25 22:23:06 ekohl Exp $
+/* $Id: ntfs.c,v 1.2 2002/08/20 20:37:06 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -55,12 +55,10 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 {
   PDEVICE_OBJECT DeviceObject;
   NTSTATUS Status;
-  UNICODE_STRING DeviceName;
+  UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Ntfs");
 
   DPRINT("NTFS 0.0.1\n");
 
-  RtlInitUnicodeString(&DeviceName,
-		       L"\\Ntfs");
   Status = IoCreateDevice(DriverObject,
 			  sizeof(NTFS_GLOBAL_DATA),
 			  &DeviceName,

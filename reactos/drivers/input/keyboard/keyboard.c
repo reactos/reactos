@@ -831,8 +831,8 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
  */
 {
    PDEVICE_OBJECT DeviceObject;
-   UNICODE_STRING DeviceName;
-   UNICODE_STRING SymlinkName;
+   UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\Keyboard");
+   UNICODE_STRING SymlinkName = UNICODE_STRING_INITIALIZER(L"\\??\\Keyboard");
    
    DPRINT("Keyboard Driver 0.0.4\n");
 
@@ -842,8 +842,7 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
    DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = KbdInternalDeviceControl;  
 
    DriverObject->DriverStartIo = KbdStartIo;
-   
-   RtlInitUnicodeString(&DeviceName, L"\\Device\\Keyboard");
+
    IoCreateDevice(DriverObject,
 		  sizeof(DEVICE_EXTENSION),
 		  &DeviceName,
@@ -857,8 +856,6 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
    DeviceObject->Flags = DeviceObject->Flags | DO_BUFFERED_IO;
    InitializeKeyboard( DeviceObject );
    
-   
-   RtlInitUnicodeString(&SymlinkName, L"\\??\\Keyboard");
    IoCreateSymbolicLink(&SymlinkName, &DeviceName);
    
    return(STATUS_SUCCESS);

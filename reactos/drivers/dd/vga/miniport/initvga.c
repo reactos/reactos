@@ -99,7 +99,7 @@ VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock)
   char *vidmem;
   HANDLE Event;
   OBJECT_ATTRIBUTES Attr;
-  UNICODE_STRING Name;
+  UNICODE_STRING Name = UNICODE_STRING_INITIALIZER(L"\\TextConsoleRefreshEvent");
   NTSTATUS Status;
   VIDEO_X86_BIOS_ARGUMENTS vxba;
   VP_STATUS vps;
@@ -114,7 +114,6 @@ VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock)
   memset(&vxba, 0, sizeof(vxba));
   vxba.Eax = 0x1112;
   vps = VideoPortInt10(NULL, &vxba);
-  RtlInitUnicodeString( &Name, L"\\TextConsoleRefreshEvent" );
   InitializeObjectAttributes( &Attr, &Name, 0, 0, 0 );
   Status = ZwOpenEvent( &Event, STANDARD_RIGHTS_ALL, &Attr );
   if( !NT_SUCCESS( Status ) )

@@ -1,4 +1,4 @@
-/* $Id: locale.c,v 1.1 2001/07/12 17:21:06 ekohl Exp $
+/* $Id: locale.c,v 1.2 2002/08/20 20:37:14 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,9 +57,9 @@ PiInitDefaultLocale(VOID)
    ValueInfo = (PKEY_VALUE_PARTIAL_INFORMATION)ValueBuffer;
 
    /* read system locale */
-   RtlInitUnicodeString(&KeyName,
+   RtlInitUnicodeStringFromLiteral(&KeyName,
 			L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Language");
-   RtlInitUnicodeString(&ValueName,
+   RtlInitUnicodeStringFromLiteral(&ValueName,
 			L"Default");
 
    InitializeObjectAttributes(&ObjectAttributes,
@@ -97,9 +97,9 @@ PiInitDefaultLocale(VOID)
      }
 
    /* read default thread locale */
-   RtlInitUnicodeString(&KeyName,
+   RtlInitUnicodeStringFromLiteral(&KeyName,
 			L"\\Registry\\User\\.Default\\Control Panel\\International");
-   RtlInitUnicodeString(&ValueName,
+   RtlInitUnicodeStringFromLiteral(&ValueName,
 			L"Locale");
 
    InitializeObjectAttributes(&ObjectAttributes,
@@ -199,17 +199,17 @@ NtSetDefaultLocale(IN BOOLEAN ThreadOrSystem,
 				    &UserKey);
 	if (!NT_SUCCESS(Status))
 	  return(Status);
-	RtlInitUnicodeString(&KeyName,
+	RtlInitUnicodeStringFromLiteral(&KeyName,
 			     L"Control Panel\\International");
-	RtlInitUnicodeString(&ValueName,
+	RtlInitUnicodeStringFromLiteral(&ValueName,
 			     L"Locale");
      }
    else
      {
 	/* system locale */
-	RtlInitUnicodeString(&KeyName,
+	RtlInitUnicodeStringFromLiteral(&KeyName,
 			     L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Language");
-	RtlInitUnicodeString(&ValueName,
+	RtlInitUnicodeStringFromLiteral(&ValueName,
 			     L"Default");
      }
 

@@ -1,4 +1,4 @@
-/* $Id: database.c,v 1.4 2002/07/20 13:34:10 ekohl Exp $
+/* $Id: database.c,v 1.5 2002/08/20 20:37:18 hyperion Exp $
  *
  * service control manager
  * 
@@ -247,7 +247,7 @@ ScmCreateServiceDataBase(VOID)
   if (!NT_SUCCESS(Status))
     return(Status);
 
-  RtlInitUnicodeString(&ServicesKeyName,
+  RtlInitUnicodeStringFromLiteral(&ServicesKeyName,
 		       L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
 
   InitializeObjectAttributes(&ObjectAttributes,
@@ -329,12 +329,12 @@ ScmCheckDriver(PSERVICE Service)
 
   if (Service->Type == SERVICE_KERNEL_DRIVER)
     {
-      RtlInitUnicodeString(&DirName,
+      RtlInitUnicodeStringFromLiteral(&DirName,
 			   L"\\Driver");
     }
   else
     {
-      RtlInitUnicodeString(&DirName,
+      RtlInitUnicodeStringFromLiteral(&DirName,
 			   L"\\FileSystem");
     }
 

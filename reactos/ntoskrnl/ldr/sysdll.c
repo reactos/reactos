@@ -73,7 +73,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
    OBJECT_ATTRIBUTES	FileObjectAttributes;
    HANDLE			FileHandle;
    HANDLE			NTDllSectionHandle;
-   UNICODE_STRING		DllPathname;
+   UNICODE_STRING DllPathname = UNICODE_STRING_INITIALIZER(L"\\SystemRoot\\system32\\ntdll.dll");
    PIMAGE_DOS_HEADER	DosHeader;
    PIMAGE_NT_HEADERS	NTHeaders;
    PEPROCESS Process;
@@ -85,8 +85,6 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
     * Locate and open NTDLL to determine ImageBase
     * and LdrStartup
     */
-   RtlInitUnicodeString(&DllPathname,
-			L"\\SystemRoot\\system32\\ntdll.dll");
    InitializeObjectAttributes(&FileObjectAttributes,
 			      &DllPathname,
 			      0,

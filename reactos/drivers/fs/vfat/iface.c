@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iface.c,v 1.64 2002/08/14 20:58:31 dwelch Exp $
+/* $Id: iface.c,v 1.65 2002/08/20 20:37:07 hyperion Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/iface.c
@@ -51,10 +51,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
  */
 {
    PDEVICE_OBJECT DeviceObject;
-   UNICODE_STRING DeviceName;
+   UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Fat");
    NTSTATUS Status;
 
-   RtlInitUnicodeString(&DeviceName, L"\\Fat");
    Status = IoCreateDevice(DriverObject,
 			   sizeof(VFAT_GLOBAL_DATA),
 			   &DeviceName,

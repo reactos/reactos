@@ -1,9 +1,10 @@
 #include <ddk/ntddk.h>
 
 #define STUB(x) void x(void) { \
-				UNICODE_STRING UnicodeString; \
-                                RtlInitUnicodeString(&UnicodeString,\
-                                L"NTDLL: Stub for "#x"\n"); \
+				UNICODE_STRING UnicodeString = \
+                                  UNICODE_STRING_INITIALIZER( \
+                                    L"NTDLL: Stub for "#x"\n" \
+                                  ); \
                                 NtDisplayString(&UnicodeString); }
 
 

@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.6 2002/08/16 01:39:17 dwelch Exp $
+/* $Id: winsta.c,v 1.7 2002/08/20 20:37:19 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -63,7 +63,7 @@ InitWindowStationImpl(VOID)
   /*
    * Create the '\Windows\WindowStations' directory
    */
-  RtlInitUnicodeString(&UnicodeString,
+  RtlInitUnicodeStringFromLiteral(&UnicodeString,
 		       WINSTA_ROOT_NAME);
 
   InitializeObjectAttributes(&ObjectAttributes,

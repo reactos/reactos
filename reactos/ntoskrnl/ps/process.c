@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.88 2002/07/18 00:25:31 dwelch Exp $
+/* $Id: process.c,v 1.89 2002/08/20 20:37:14 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -224,7 +224,7 @@ PsInitProcessManagment(VOID)
    PsProcessType->Create = NULL;
    PsProcessType->DuplicationNotify = NULL;
    
-   RtlInitUnicodeString(&PsProcessType->TypeName, L"Process");
+   RtlInitUnicodeStringFromLiteral(&PsProcessType->TypeName, L"Process");
    
    InitializeListHead(&PsProcessListHead);
    KeInitializeSpinLock(&PsProcessListLock);

@@ -1,4 +1,4 @@
-/* $Id: input.c,v 1.1 2002/01/14 01:11:58 dwelch Exp $
+/* $Id: input.c,v 1.2 2002/08/20 20:37:19 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,7 +40,7 @@ KeyboardThreadMain(PVOID StartContext)
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
 
-  RtlInitUnicodeString(&KeyboardDeviceName, L"\\??\\Keyboard");
+  RtlInitUnicodeStringFromLiteral(&KeyboardDeviceName, L"\\??\\Keyboard");
   InitializeObjectAttributes(&KeyboardObjectAttributes,
 			     &KeyboardDeviceName,
 			     0,

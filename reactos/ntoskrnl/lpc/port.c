@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.8 2001/12/05 01:40:24 dwelch Exp $
+/* $Id: port.c,v 1.9 2002/08/20 20:37:13 hyperion Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,7 +44,7 @@ NTSTATUS NiInitPort (VOID)
 {
    ExPortType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
-   RtlInitUnicodeString(&ExPortType->TypeName,L"Port");
+   RtlInitUnicodeStringFromLiteral(&ExPortType->TypeName,L"Port");
    
    ExPortType->Tag = TAG('L', 'P', 'R', 'T');
    ExPortType->MaxObjects = ULONG_MAX;

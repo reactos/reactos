@@ -54,13 +54,12 @@ void test1(void)
  HKEY hKey = NULL,hKey1;
  OBJECT_ATTRIBUTES ObjectAttributes; 
  NTSTATUS Status; 
- UNICODE_STRING KeyName;
+ UNICODE_STRING KeyName = UNICODE_STRING_INITIALIZER(L"\\Registry");
  ULONG Index,Length,i;
  KEY_BASIC_INFORMATION KeyInformation[5];
  KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
 
   dprintf("NtOpenKey \\Registry : ");
-  RtlInitUnicodeString(&KeyName, L"\\Registry");
   InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
@@ -104,7 +103,7 @@ void test1(void)
   NtClose(hKey);
 
   dprintf("NtOpenKey \\Registry\\Machine : ");
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine");
   InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
@@ -114,7 +113,7 @@ void test1(void)
   dprintf("\t\t\tStatus =%x\n",Status);
 
   dprintf("NtOpenKey System\\Setup : ");
-  RtlInitUnicodeString(&KeyName, L"System\\Setup");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"System\\Setup");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
 				, hKey1 , NULL);
   Status = NtOpenKey ( &hKey, KEY_READ , &ObjectAttributes);
@@ -122,7 +121,7 @@ void test1(void)
   if(Status==0)
   {
     dprintf("NtQueryValueKey : ");
-    RtlInitUnicodeString(&KeyName, L"CmdLine");
+    RtlInitUnicodeStringFromLiteral(&KeyName, L"CmdLine");
     Status=NtQueryValueKey(hKey,&KeyName,KeyValueFullInformation
 		,&KeyValueInformation[0], sizeof(KeyValueInformation)
 		,&Length);
@@ -169,6 +168,7 @@ void test1(void)
   NtClose( hKey1 );
 }
 
+
 void test2(void)
 {
  HKEY hKey,hKey1;
@@ -181,7 +181,7 @@ void test2(void)
  DWORD Result;
   dprintf("NtCreateKey volatile: \n");
   dprintf("  \\Registry\\Machine\\Software\\test2reactos: ");
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\test2reactos");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test2reactos");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
 				, NULL, NULL);
   Status = NtCreateKey ( &hKey, KEY_ALL_ACCESS , &ObjectAttributes
@@ -190,31 +190,31 @@ void test2(void)
   NtClose(hKey);
   do_enumeratekey(L"\\Registry\\Machine\\Software");
   dprintf("  ...\\test2 :");
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\test2reactos\\test2");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test2reactos\\test2");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
 				, NULL, NULL);
   Status = NtCreateKey ( &hKey1, KEY_ALL_ACCESS , &ObjectAttributes
 		,0,NULL,REG_OPTION_VOLATILE,NULL);
   dprintf("\t\t\t\t\tStatus=%x\n",Status);
   dprintf("  ...\\TestVolatile :");
-  RtlInitUnicodeString(&KeyName, L"TestVolatile");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"TestVolatile");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
 				, hKey1, NULL);
   Status = NtCreateKey ( &hKey, KEY_ALL_ACCESS , &ObjectAttributes
 		,0,NULL,REG_OPTION_VOLATILE,NULL);
   dprintf("\t\t\t\tStatus=%x\n",Status);
   NtClose(hKey1);
-  RtlInitUnicodeString(&ValueName, L"TestREG_SZ");
+  RtlInitUnicodeStringFromLiteral(&ValueName, L"TestREG_SZ");
   dprintf("NtSetValueKey reg_sz: ");
   Status=NtSetValueKey(hKey,&ValueName,0,REG_SZ,(PVOID)L"Test Reg_sz",24);
   dprintf("\t\t\t\tStatus=%x\n",Status);
-  RtlInitUnicodeString(&ValueName, L"TestDWORD");
+  RtlInitUnicodeStringFromLiteral(&ValueName, L"TestDWORD");
   dprintf("NtSetValueKey reg_dword: ");
   Status=NtSetValueKey(hKey,&ValueName,0,REG_DWORD,(PVOID)"reac",4);
   dprintf("\t\t\tStatus=%x\n",Status);
   NtClose(hKey);
   dprintf("NtOpenKey \\Registry\\Machine\\Software\\test2reactos\\test2\\TestVolatile : ");
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\test2reactos\\test2\\TestVolatile");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test2reactos\\test2\\TestVolatile");
   InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
@@ -250,7 +250,7 @@ void test2(void)
   dprintf("delete \\Registry\\Machine\\software\\test2reactos ?");
   ReadConsoleA(InputHandle, Buffer, 3, &Result, NULL) ;
   if (Buffer[0] != 'y' && Buffer[0] != 'Y') return;
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\test2reactos\\test2\\TestVolatile");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test2reactos\\test2\\TestVolatile");
   InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
@@ -263,7 +263,7 @@ void test2(void)
   Status=NtDeleteKey(hKey);
   dprintf("\t\t\t\tStatus =%x\n",Status);
   NtClose(hKey);
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\test2reactos\\test2");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test2reactos\\test2");
   InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
@@ -276,7 +276,7 @@ void test2(void)
   Status=NtDeleteKey(hKey);
   dprintf("\t\t\t\tStatus =%x\n",Status);
   NtClose(hKey);
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\test2reactos");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test2reactos");
   InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
@@ -303,7 +303,7 @@ void test3(void)
  DWORD Result;
   dprintf("NtCreateKey non volatile: \n");
   dprintf("  \\Registry\\Machine\\Software\\test3reactos: ");
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
 				, NULL, NULL);
   Status = NtCreateKey ( &hKey, KEY_ALL_ACCESS , &ObjectAttributes
@@ -316,7 +316,7 @@ void test3(void)
   dprintf("\t\tStatus=%x\n",Status);
   NtClose(hKey);
   dprintf("  ...\\test3 :");
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos\\test3");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos\\test3");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
 				, NULL, NULL);
   Status = NtCreateKey ( &hKey, KEY_ALL_ACCESS , &ObjectAttributes
@@ -327,24 +327,24 @@ void test3(void)
   dprintf("\t\tStatus=%x\n",Status);
   NtClose(hKey);
   dprintf("  ...\\testNonVolatile :");
-  RtlInitUnicodeString(&KeyName, L"TestNonVolatile");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"TestNonVolatile");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
 				, hKey1, NULL);
   Status = NtCreateKey ( &hKey, KEY_ALL_ACCESS , &ObjectAttributes
 		,0,NULL,REG_OPTION_NON_VOLATILE,NULL);
   dprintf("\t\t\t\tStatus=%x\n",Status);
   NtClose(hKey1);
-  RtlInitUnicodeString(&ValueName, L"TestREG_SZ");
+  RtlInitUnicodeStringFromLiteral(&ValueName, L"TestREG_SZ");
   dprintf("NtSetValueKey reg_sz: ");
   Status=NtSetValueKey(hKey,&ValueName,0,REG_SZ,(PVOID)L"Test Reg_sz",24);
   dprintf("\t\t\t\tStatus=%x\n",Status);
-  RtlInitUnicodeString(&ValueName, L"TestDWORD");
+  RtlInitUnicodeStringFromLiteral(&ValueName, L"TestDWORD");
   dprintf("NtSetValueKey reg_dword: ");
   Status=NtSetValueKey(hKey,&ValueName,0,REG_DWORD,(PVOID)"reac",4);
   dprintf("\t\t\tStatus=%x\n",Status);
   NtClose(hKey);
   dprintf("NtOpenKey \\Registry\\Machine\\Software\\test3reactos\\test3\\testNonVolatile : ");
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos\\test3\\testNonVolatile");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos\\test3\\testNonVolatile");
   InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
@@ -380,7 +380,7 @@ void test3(void)
   dprintf("delete \\Registry\\Machine\\software\\test3reactos ?");
   ReadConsoleA(InputHandle, Buffer, 3, &Result, NULL) ;
   if (Buffer[0] != 'y' && Buffer[0] != 'Y') return;
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos\\test3\\testNonvolatile");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos\\test3\\testNonvolatile");
   InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
@@ -392,7 +392,7 @@ void test3(void)
   dprintf("NtDeleteKey : ");
   Status=NtDeleteKey(hKey);
   dprintf("\t\t\t\tStatus =%x\n",Status);
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos\\test3");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos\\test3");
   InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
@@ -405,7 +405,7 @@ void test3(void)
   Status=NtDeleteKey(hKey);
   dprintf("\t\t\t\tStatus =%x\n",Status);
   NtClose(hKey);
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos");
   InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
@@ -595,7 +595,7 @@ void test5(void)
 
   dprintf("NtOpenKey : \n");
   dprintf("  \\Registry\\Machine\\Software\\reactos : ");
-  RtlInitUnicodeString(&KeyName,L"\\Registry\\Machine\\Software\\reactos");
+  RtlInitUnicodeStringFromLiteral(&KeyName,L"\\Registry\\Machine\\Software\\reactos");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
 				, NULL, NULL);
   Status=NtOpenKey( &hKey, KEY_ALL_ACCESS, &ObjectAttributes);
@@ -622,7 +622,7 @@ void test6(void)
 
   dprintf("Create target key\n");
   dprintf("  Key: \\Registry\\Machine\\SOFTWARE\\Reactos\n");
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\Reactos");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\Reactos");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
 				, NULL, NULL);
   Status = NtCreateKey(&hKey, KEY_ALL_ACCESS , &ObjectAttributes
@@ -633,7 +633,7 @@ void test6(void)
 
   dprintf("Create target value\n");
   dprintf("  Value: TestValue = 'Test String'\n");
-  RtlInitUnicodeString(&ValueName, L"TestValue");
+  RtlInitUnicodeStringFromLiteral(&ValueName, L"TestValue");
   Status=NtSetValueKey(hKey,&ValueName,0,REG_SZ,(PVOID)L"TestString",22);
   dprintf("  NtSetValueKey() called (Status %lx)\n",Status);
   if (!NT_SUCCESS(Status))
@@ -645,7 +645,7 @@ void test6(void)
 
   dprintf("Create link key\n");
   dprintf("  Key: \\Registry\\Machine\\SOFTWARE\\Test\n");
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\Test");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\Test");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
 			     OBJ_CASE_INSENSITIVE | OBJ_OPENLINK,
@@ -664,7 +664,7 @@ void test6(void)
 
   dprintf("Create link value\n");
   dprintf("  Value: SymbolicLinkValue = '\\Registry\\Machine\\SOFTWARE\\Reactos'\n");
-  RtlInitUnicodeString(&ValueName, L"SymbolicLinkValue");
+  RtlInitUnicodeStringFromLiteral(&ValueName, L"SymbolicLinkValue");
   Status=NtSetValueKey(hKey,&ValueName,0,REG_LINK,(PVOID)L"\\Registry\\Machine\\SOFTWARE\\Reactos",68);
   dprintf("  NtSetValueKey() called (Status %lx)\n",Status);
   if (!NT_SUCCESS(Status))
@@ -679,7 +679,7 @@ void test6(void)
 
   dprintf("Open link key\n");
   dprintf("  Key: \\Registry\\Machine\\SOFTWARE\\Test\n");
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\Test");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\Test");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_OPENIF
 				, NULL, NULL);
   Status = NtCreateKey(&hKey, KEY_ALL_ACCESS , &ObjectAttributes
@@ -690,7 +690,7 @@ void test6(void)
 
   dprintf("Query value\n");
   dprintf("  Value: TestValue\n");
-  RtlInitUnicodeString(&ValueName, L"TestValue");
+  RtlInitUnicodeStringFromLiteral(&ValueName, L"TestValue");
   Status=NtQueryValueKey(hKey,
 			 &ValueName,
 			 KeyValueFullInformation,
@@ -729,7 +729,7 @@ void test7(void)
 
   dprintf("Open link key\n");
   dprintf("  Key: \\Registry\\Machine\\SOFTWARE\\Test\n");
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\Test");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\Test");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
 			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_OPENLINK,
@@ -750,7 +750,7 @@ void test7(void)
     }
 
   dprintf("Delete link value\n");
-  RtlInitUnicodeString(&ValueName, L"SymbolicLinkValue");
+  RtlInitUnicodeStringFromLiteral(&ValueName, L"SymbolicLinkValue");
   Status = NtDeleteValueKey(hKey,
 			    &ValueName);
   dprintf("  NtDeleteValueKey() called (Status %lx)\n",Status);
@@ -801,7 +801,7 @@ void test8(void)
 //  dprintf("\t\t\t\tStatus =%x\n",Status);
 
 
-  RtlInitUnicodeString(&KeyName,L"test5");
+  RtlInitUnicodeStringFromLiteral(&KeyName,L"test5");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
 				, NULL, NULL);
   Status = NtLoadKey(HKEY_LOCAL_MACHINE,&ObjectAttributes);
@@ -811,7 +811,7 @@ void test8(void)
   dprintf("\t\t\t\tdwError =%x\n",dwError);
 
   dprintf("NtOpenKey \\Registry\\Machine : ");
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine");
+  RtlInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine");
   InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
@@ -819,7 +819,7 @@ void test8(void)
                                NULL);
   Status=NtOpenKey( &hKey, MAXIMUM_ALLOWED, &ObjectAttributes);
   dprintf("\t\t\tStatus =%x\n",Status);
-  RtlInitUnicodeString(&KeyName,L"test5");
+  RtlInitUnicodeStringFromLiteral(&KeyName,L"test5");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
 				, NULL, NULL);
   Status = NtLoadKey(hKey,&ObjectAttributes);

@@ -1,4 +1,4 @@
-/* $Id: pnproot.c,v 1.7 2002/05/05 14:57:43 chorns Exp $
+/* $Id: pnproot.c,v 1.8 2002/08/20 20:37:12 hyperion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -467,7 +467,7 @@ PnpRootFdoEnumerateDevices(
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
-  RtlInitUnicodeString(
+  RtlInitUnicodeStringFromLiteral(
     &KeyName,
     L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\" \
     ENUM_NAME_ROOT);

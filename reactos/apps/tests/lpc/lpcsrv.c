@@ -1,4 +1,4 @@
-/* $Id: lpcsrv.c,v 1.8 2002/02/24 17:44:22 ea Exp $
+/* $Id: lpcsrv.c,v 1.9 2002/08/20 20:37:04 hyperion Exp $
  *
  * DESCRIPTION: Simple LPC Server
  * PROGRAMMER:  David Welch
@@ -32,7 +32,7 @@ void debug_printf(char* fmt, ...)
 
 int main(int argc, char* argv[])
 {
-   UNICODE_STRING PortName;
+   UNICODE_STRING PortName = UNICODE_STRING_INITIALIZER(TEST_PORT_NAME_U);
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
    HANDLE NamedPortHandle;
@@ -40,8 +40,7 @@ int main(int argc, char* argv[])
    LPC_MAX_MESSAGE ConnectMsg;
    
    printf("%s: Lpc test server\n", MyName);
-   
-   RtlInitUnicodeString(&PortName, TEST_PORT_NAME_U);
+
    InitializeObjectAttributes(&ObjectAttributes,
 			      &PortName,
 			      0,

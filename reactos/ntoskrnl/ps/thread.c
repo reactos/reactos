@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.103 2002/08/17 01:42:03 dwelch Exp $
+/* $Id: thread.c,v 1.104 2002/08/20 20:37:14 hyperion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -414,7 +414,7 @@ PsInitThreadManagment(VOID)
    
    PsThreadType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
-   RtlInitUnicodeString(&PsThreadType->TypeName, L"Thread");
+   RtlInitUnicodeStringFromLiteral(&PsThreadType->TypeName, L"Thread");
    
    PsThreadType->Tag = TAG('T', 'H', 'R', 'T');
    PsThreadType->TotalObjects = 0;

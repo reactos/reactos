@@ -1,4 +1,4 @@
-/* $Id: parallel.c,v 1.7 2002/02/08 02:57:08 chorns Exp $
+/* $Id: parallel.c,v 1.8 2002/08/20 20:37:05 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -127,13 +127,11 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
  */
 {
    PDEVICE_OBJECT DeviceObject;
-   UNICODE_STRING DeviceName;
+   UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\Parallel");
    NTSTATUS Status;
    
    DPRINT("Parallel Port Driver 0.0.1\n");
    
-   RtlInitUnicodeString (&DeviceName,
-			 L"\\Device\\Parallel");
    Status = IoCreateDevice(DriverObject,
 			   0,
 			   &DeviceName,

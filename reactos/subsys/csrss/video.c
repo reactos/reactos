@@ -1,4 +1,4 @@
-/* $Id: video.c,v 1.3 2001/08/14 12:57:16 ea Exp $
+/* $Id: video.c,v 1.4 2002/08/20 20:37:17 hyperion Exp $
  *
  * ReactOS Project
  */
@@ -21,7 +21,7 @@ InitializeVideoAddressSpace(VOID)
    /*
     * Open the physical memory section
     */
-   RtlInitUnicodeString(&PhysMemName, L"\\Device\\PhysicalMemory");
+   RtlInitUnicodeStringFromLiteral(&PhysMemName, L"\\Device\\PhysicalMemory");
    InitializeObjectAttributes(&ObjectAttributes,
 			      &PhysMemName,
 			      0,

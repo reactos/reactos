@@ -154,14 +154,12 @@ DriverEntry(PDRIVER_OBJECT _DriverObject,
 {
    PDEVICE_OBJECT DeviceObject;
    NTSTATUS ret;
-   UNICODE_STRING DeviceName;
+   UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\Ext2Fsd");
    
    DbgPrint("Ext2 FSD 0.0.1\n");
    
    DriverObject = _DriverObject;
    
-   RtlInitUnicodeString(&DeviceName,
-			L"\\Device\\Ext2Fsd");
    ret = IoCreateDevice(DriverObject,
 			0,
 			&DeviceName,

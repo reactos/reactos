@@ -146,10 +146,9 @@ DriverEntry(
 {
     PDEVICE_EXTENSION DeviceExt;
     PDEVICE_OBJECT DeviceObject;
-    UNICODE_STRING DeviceName;
+    UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\Afd");
     NTSTATUS Status;
 
-    RtlInitUnicodeString(&DeviceName, L"\\Device\\Afd");
     Status = IoCreateDevice(DriverObject,
                             sizeof(DEVICE_EXTENSION),
                             &DeviceName,

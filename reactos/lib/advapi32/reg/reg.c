@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.14 2001/09/03 23:11:59 ekohl Exp $
+/* $Id: reg.c,v 1.15 2002/08/20 20:37:09 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -181,12 +181,9 @@ static NTSTATUS
 OpenClassesRootKey(PHANDLE KeyHandle)
 {
   OBJECT_ATTRIBUTES Attributes;
-  UNICODE_STRING KeyName;
+  UNICODE_STRING KeyName = UNICODE_STRING_INITIALIZER(L"\\Registry\\Machine\\Software\\CLASSES");
 
   DPRINT("OpenClassesRootKey()\n");
-
-  RtlInitUnicodeString(&KeyName,
-		       L"\\Registry\\Machine\\Software\\CLASSES");
 
   InitializeObjectAttributes(&Attributes,
 			     &KeyName,
@@ -204,12 +201,9 @@ static NTSTATUS
 OpenLocalMachineKey(PHANDLE KeyHandle)
 {
   OBJECT_ATTRIBUTES Attributes;
-  UNICODE_STRING KeyName;
+  UNICODE_STRING KeyName = UNICODE_STRING_INITIALIZER(L"\\Registry\\Machine");
 
   DPRINT("OpenLocalMachineKey()\n");
-
-  RtlInitUnicodeString(&KeyName,
-		       L"\\Registry\\Machine");
 
   InitializeObjectAttributes(&Attributes,
 			     &KeyName,
@@ -227,12 +221,9 @@ static NTSTATUS
 OpenUsersKey(PHANDLE KeyHandle)
 {
   OBJECT_ATTRIBUTES Attributes;
-  UNICODE_STRING KeyName;
+  UNICODE_STRING KeyName = UNICODE_STRING_INITIALIZER(L"\\Registry\\User");
 
   DPRINT("OpenUsersKey()\n");
-
-  RtlInitUnicodeString(&KeyName,
-		       L"\\Registry\\User");
 
   InitializeObjectAttributes(&Attributes,
 			     &KeyName,
@@ -250,12 +241,10 @@ static NTSTATUS
 OpenCurrentConfigKey(PHANDLE KeyHandle)
 {
   OBJECT_ATTRIBUTES Attributes;
-  UNICODE_STRING KeyName;
+  UNICODE_STRING KeyName =
+   UNICODE_STRING_INITIALIZER(L"\\Registry\\Machine\\System\\CurrentControlSet\\Hardware Profiles\\Current");
 
   DPRINT("OpenCurrentConfigKey()\n");
-
-  RtlInitUnicodeString(&KeyName,
-		       L"\\Registry\\Machine\\System\\CurrentControlSet\\Hardware Profiles\\Current");
 
   InitializeObjectAttributes(&Attributes,
 			     &KeyName,
@@ -464,7 +453,6 @@ RegCreateKeyExW(HKEY			hKey,
 	}
 
 	DPRINT("ParentKey %x\n", (ULONG)ParentKey);
-
 	RtlInitUnicodeString (&ClassString, lpClass);
 	RtlInitUnicodeString (&SubKeyString, lpSubKey);
 

@@ -83,7 +83,7 @@ NTSTATUS STDCALL RamdrvDispatchOpenClose(PDEVICE_OBJECT DeviceObject,
 NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
 			     IN PUNICODE_STRING RegistryPath)
 {
-  UNICODE_STRING DeviceName;
+  UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\Ramdisk");
   NTSTATUS Status;
   PDEVICE_OBJECT DeviceObject;
   PRAMDRV_DEVICE_EXTENSION devext;
@@ -109,7 +109,6 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
   
   
   // create device and symbolic link
-  RtlInitUnicodeString( &DeviceName, L"\\Device\\Ramdisk" );
   Status = IoCreateDevice( DriverObject,
 			   sizeof( RAMDRV_DEVICE_EXTENSION ),
 			   &DeviceName,
@@ -128,10 +127,10 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
       Status = STATUS_INSUFFICIENT_RESOURCES;
       goto cleandevice;
     }
-  RtlInitUnicodeString( &LinkName, L"\\??\\Z:" );
+  RtlInitUnicodeStringFromLiteral( &LinkName, L"\\??\\Z:" );
   IoCreateSymbolicLink( &LinkName, &DeviceName );
 
-  RtlInitUnicodeString( &LinkName, L"\\Device\\Floppy0\\ramdisk.bz2" );
+  RtlInitUnicodeStringFromLiteral( &LinkName, L"\\Device\\Floppy0\\ramdisk.bz2" );
   InitializeObjectAttributes( &objattr,
 			      &LinkName,
 			      0,

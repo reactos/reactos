@@ -122,7 +122,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
 #endif
     
    /* FIXME: Let's assume one drive and one controller for the moment */
-   RtlInitUnicodeString(&DeviceName, L"\\Device\\Floppy0");
+   RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\Floppy0");
    Status = IoCreateDevice(DriverObject,
 			   sizeof(FLOPPY_DEVICE_EXTENSION),
 			   &DeviceName,

@@ -1,4 +1,4 @@
-/* $Id: dlog.c,v 1.4 2001/08/30 20:38:19 dwelch Exp $
+/* $Id: dlog.c,v 1.5 2002/08/20 20:37:12 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -119,7 +119,7 @@ DebugLogInit2(VOID)
   UNICODE_STRING FileName;
   IO_STATUS_BLOCK Iosb;
 
-  RtlInitUnicodeString(&FileName, L"\\SystemRoot\\debug.log");
+  RtlInitUnicodeStringFromLiteral(&FileName, L"\\SystemRoot\\debug.log");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &FileName,
 			     0,

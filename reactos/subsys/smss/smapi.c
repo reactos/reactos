@@ -1,4 +1,4 @@
-/* $Id: smapi.c,v 1.6 2002/05/24 07:49:41 ekohl Exp $
+/* $Id: smapi.c,v 1.7 2002/08/20 20:37:17 hyperion Exp $
  *
  * Reactos Session Manager
  *
@@ -78,7 +78,7 @@ SmCreateApiPort(VOID)
   UNICODE_STRING UnicodeString;
   NTSTATUS Status;
 
-  RtlInitUnicodeString(&UnicodeString,
+  RtlInitUnicodeStringFromLiteral(&UnicodeString,
 		       L"\\SmApiPort");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &UnicodeString,

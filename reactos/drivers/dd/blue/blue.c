@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.32 2002/02/08 02:57:07 chorns Exp $
+/* $Id: blue.c,v 1.33 2002/08/20 20:37:05 hyperion Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -607,8 +607,8 @@ NTSTATUS STDCALL
 DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
     PDEVICE_OBJECT DeviceObject;
-    UNICODE_STRING DeviceName;
-    UNICODE_STRING SymlinkName;
+    UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\BlueScreen");
+    UNICODE_STRING SymlinkName = UNICODE_STRING_INITIALIZER(L"\\??\\BlueScreen");
 
     DPRINT ("Screen Driver 0.0.6\n");
 
@@ -618,7 +618,6 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     DriverObject->MajorFunction[IRP_MJ_WRITE]  = ScrWrite;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL ] = ScrIoControl;
 
-    RtlInitUnicodeString (&DeviceName, L"\\Device\\BlueScreen");
     IoCreateDevice (DriverObject,
                     sizeof(DEVICE_EXTENSION),
                     &DeviceName,
@@ -627,7 +626,6 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
                     TRUE,
                     &DeviceObject);
 
-    RtlInitUnicodeString (&SymlinkName, L"\\??\\BlueScreen");
     IoCreateSymbolicLink (&SymlinkName, &DeviceName);
 
     return (STATUS_SUCCESS);

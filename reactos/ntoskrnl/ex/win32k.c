@@ -284,7 +284,7 @@ ExpWin32kInit(VOID)
   ExWindowStationObjectType->OkayToClose = NULL;
   ExWindowStationObjectType->Create = ExpWinStaObjectCreate;
   ExWindowStationObjectType->DuplicationNotify = NULL;
-  RtlInitUnicodeString(&ExWindowStationObjectType->TypeName, L"WindowStation");
+  RtlInitUnicodeStringFromLiteral(&ExWindowStationObjectType->TypeName, L"WindowStation");
 
   /* Create desktop object type */
   ExDesktopObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
@@ -312,7 +312,7 @@ ExpWin32kInit(VOID)
   ExDesktopObjectType->OkayToClose = NULL;
   ExDesktopObjectType->Create = ExpDesktopObjectCreate;
   ExDesktopObjectType->DuplicationNotify = NULL;
-  RtlInitUnicodeString(&ExDesktopObjectType->TypeName, L"Desktop");
+  RtlInitUnicodeStringFromLiteral(&ExDesktopObjectType->TypeName, L"Desktop");
 }
 
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.91 2002/08/17 15:12:49 hbirr Exp $
+/* $Id: section.c,v 1.92 2002/08/20 20:37:13 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1842,14 +1842,13 @@ MmCreatePhysicalMemorySection(VOID)
   PSECTION_OBJECT PhysSection;
   NTSTATUS Status;
   OBJECT_ATTRIBUTES Obj;
-  UNICODE_STRING Name;
+  UNICODE_STRING Name = UNICODE_STRING_INITIALIZER(L"\\Device\\PhysicalMemory");
   LARGE_INTEGER SectionSize;
    
   /*
    * Create the section mapping physical memory 
    */
   SectionSize.QuadPart = 0xFFFFFFFF;
-  RtlInitUnicodeString(&Name, L"\\Device\\PhysicalMemory");
   InitializeObjectAttributes(&Obj,
 			     &Name,
 			     0,
@@ -1889,7 +1888,7 @@ MmInitSectionImplementation(VOID)
 {
    MmSectionObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
-   RtlInitUnicodeString(&MmSectionObjectType->TypeName, L"Section");
+   RtlInitUnicodeStringFromLiteral(&MmSectionObjectType->TypeName, L"Section");
    
    MmSectionObjectType->Tag = TAG('S', 'E', 'C', 'T');
    MmSectionObjectType->TotalObjects = 0;

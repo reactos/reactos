@@ -1,4 +1,4 @@
-/* $Id: csrss.c,v 1.10 2002/02/08 02:57:10 chorns Exp $
+/* $Id: csrss.c,v 1.11 2002/08/20 20:37:17 hyperion Exp $
  *
  * csrss.c - Client/Server Runtime subsystem
  * 
@@ -88,7 +88,7 @@ VOID NtProcessStartup(PPEB Peb)
 	argv[argc-1] = &(ArgBuffer[afterlastspace]);
      }
    
-   RtlInitUnicodeString(&UnicodeString,
+   RtlInitUnicodeStringFromLiteral(&UnicodeString,
 			L"\\CsrssInitDone");
    InitializeObjectAttributes(&ObjectAttributes,
 			      &UnicodeString,

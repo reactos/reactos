@@ -76,7 +76,7 @@ NTSTATUS LdrLoadInitialProcess (VOID)
     * Get the absolute path to smss.exe using the
     * SystemRoot link.
     */
-   RtlInitUnicodeString(&ProcessName,
+   RtlInitUnicodeStringFromLiteral(&ProcessName,
 			L"\\SystemRoot\\system32\\smss.exe");
    
    /*

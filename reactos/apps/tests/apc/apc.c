@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
    NTSTATUS Status;
    HANDLE FileHandle;
    OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING FileName;
+   UNICODE_STRING FileName = UNICODE_STRING_INITIALIZER(L"\\C:\\a.txt");
    IO_STATUS_BLOCK IoStatus;
    CHAR Buffer[256];
    HANDLE EventHandle;
@@ -42,8 +42,6 @@ int main(int argc, char* argv[])
      }
    
    printf("Opening file\n");
-   RtlInitUnicodeString(&FileName,
-			      L"\\C:\\a.txt");			      
    InitializeObjectAttributes(&ObjectAttributes,
 			      &FileName,
 			      0,

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.15 2002/06/17 15:42:30 ekohl Exp $
+/* $Id: registry.c,v 1.16 2002/08/20 20:37:10 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -113,7 +113,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 		   OUT PHANDLE KeyHandle)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyPath;
+  UNICODE_STRING KeyPath = UNICODE_STRING_INITIALIZER(L"\\Registry\\User\\.Default");
   NTSTATUS Status;
 
   Status = RtlFormatCurrentUserKeyPath(&KeyPath);
@@ -131,9 +131,6 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
       if (NT_SUCCESS(Status))
 	return(STATUS_SUCCESS);
     }
-
-  RtlInitUnicodeString(&KeyPath,
-		       L"\\Registry\\User\\.Default");
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyPath,

@@ -867,7 +867,7 @@ KdbLdrLoadAutoConfigDrivers(VOID)
    * is created after their module entries
    */
 
-  RtlInitUnicodeString(&ModuleName, KERNEL_MODULE_NAME);
+  RtlInitUnicodeStringFromLiteral(&ModuleName, KERNEL_MODULE_NAME);
   ModuleObject = LdrGetModuleObject(&ModuleName);
   if (ModuleObject != NULL)
     {
@@ -875,7 +875,7 @@ KdbLdrLoadAutoConfigDrivers(VOID)
 			    &ModuleObject->TextSection->SymbolInfo);
     }
 
-  RtlInitUnicodeString(&ModuleName, HAL_MODULE_NAME);
+  RtlInitUnicodeStringFromLiteral(&ModuleName, HAL_MODULE_NAME);
   ModuleObject = LdrGetModuleObject(&ModuleName);
   if (ModuleObject != NULL)
     {

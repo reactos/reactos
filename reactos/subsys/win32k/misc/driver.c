@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.19 2002/06/14 07:48:19 ekohl Exp $
+/* $Id: driver.c,v 1.20 2002/08/20 20:37:18 hyperion Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -169,7 +169,7 @@ HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
   HANDLE DisplayHandle;
   NTSTATUS Status;
 
-  RtlInitUnicodeString(&DeviceName, L"\\??\\DISPLAY1");
+  RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\DISPLAY1");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DeviceName,
 			     0,

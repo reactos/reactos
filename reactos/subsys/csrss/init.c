@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.13 2002/06/14 14:23:14 ekohl Exp $
+/* $Id: init.c,v 1.14 2002/08/20 20:37:17 hyperion Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -84,7 +84,7 @@ CsrInitVideo(VOID)
   HANDLE VideoHandle;
   NTSTATUS Status;
 
-  RtlInitUnicodeString(&DeviceName, L"\\??\\DISPLAY1");
+  RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\DISPLAY1");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DeviceName,
 			     0,
@@ -140,7 +140,7 @@ CsrServerInitialization (
    CsrInitVideo();
 
    /* NEW NAMED PORT: \ApiPort */
-   RtlInitUnicodeString(&PortName, L"\\Windows\\ApiPort");
+   RtlInitUnicodeStringFromLiteral(&PortName, L"\\Windows\\ApiPort");
    InitializeObjectAttributes(&ObAttributes,
 			      &PortName,
 			      0,
@@ -186,7 +186,7 @@ CsrServerInitialization (
 	NtClose(ApiPortHandle);
 	return FALSE;
      }
-   RtlInitUnicodeString( &RefreshEventName, L"\\TextConsoleRefreshEvent" );
+   RtlInitUnicodeStringFromLiteral( &RefreshEventName, L"\\TextConsoleRefreshEvent" );
    InitializeObjectAttributes( &RefreshEventAttr, &RefreshEventName, 0, NULL, NULL );
    Status = NtCreateEvent( &RefreshEventHandle, STANDARD_RIGHTS_ALL, &RefreshEventAttr, FALSE, FALSE );
    if( !NT_SUCCESS( Status ) )

@@ -1,4 +1,4 @@
-/* $Id: lsa.c,v 1.2 2001/06/25 12:32:56 ekohl Exp $
+/* $Id: lsa.c,v 1.3 2002/08/20 20:37:11 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -256,13 +256,12 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
 			PHANDLE Handle,
 			PLSA_OPERATIONAL_MODE OperationalMode)
 {
-   UNICODE_STRING Portname;
+   UNICODE_STRING Portname = UNICODE_STRING_INITIALIZER(L"\\SeLsaCommandPort");
    ULONG ConnectInfoLength;
    NTSTATUS Status;
    LSASS_REQUEST Request;
    LSASS_REPLY Reply;
-   
-   RtlInitUnicodeString(&Portname, L"\\SeLsaCommandPort");
+
    ConnectInfoLength = 0;
    Status = NtConnectPort(Handle,
 			  &Portname,

@@ -1,4 +1,4 @@
-/* $Id: lpc.c,v 1.5 2002/02/02 17:15:22 phreak Exp $
+/* $Id: lpc.c,v 1.6 2002/08/20 20:37:10 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -131,7 +131,7 @@ CsrClientConnectToServer(VOID)
      {
        return(Status);
      }
-   RtlInitUnicodeString(&PortName, L"\\Windows\\ApiPort");
+   RtlInitUnicodeStringFromLiteral(&PortName, L"\\Windows\\ApiPort");
    ConnectInfoLength = 0;
    LpcWrite.Length = sizeof(LPC_SECTION_WRITE);
    LpcWrite.SectionHandle = CsrSectionHandle;
