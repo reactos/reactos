@@ -31,6 +31,7 @@
 
 #include "entries.h"
 #include "ntobjfs.h"
+#include "winfs.h"
 #include "regfs.h"
 
 
@@ -254,15 +255,17 @@ void NtObjDirectory::read_directory(int scan_flags)
 
 					//@@_toscan |= INF_DESCRIPTION;
 
-					entry = new NtObjDirectory(this, buffer);
+					entry = NULL;
 
-					if (*w32fd.cFileName>='A' &&*w32fd.cFileName<='Z' && w32fd.cFileName[1]==':') {
-						if (!_tcsncmp(buffer,TEXT("\\??\\"),4) || !_tcsncmp(buffer,TEXT("\\GLOBAL??\\"),10)) {
-
-							///@todo mount drive at this entry
-
+					if (*w32fd.cFileName>='A' &&*w32fd.cFileName<='Z' && w32fd.cFileName[1]==':')
+						if (!_tcsncmp(buffer,TEXT("\\??\\"),4) ||		// NT4
+							!_tcsncmp(buffer,TEXT("\\GLOBAL??"),9)) {	// XP
+							w32fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+							entry = new WinDirectory(this, w32fd.cFileName);
 						}
-					}
+
+					if (!entry)
+						entry = new NtObjDirectory(this, buffer);
 				}
 
 				else if (type == KEY_OBJECT) {
