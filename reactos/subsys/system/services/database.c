@@ -1,4 +1,4 @@
-/* $Id: database.c,v 1.18 2004/09/20 19:47:25 hbirr Exp $
+/* $Id: database.c,v 1.19 2004/10/10 21:00:59 navaraf Exp $
  *
  * service control manager
  * 
@@ -359,6 +359,12 @@ ScmCreateServiceDataBase(VOID)
 
 	      DPRINT("KeyName: '%wZ'\n", &SubKeyName);
 	      Status = CreateServiceListEntry(&SubKeyName);
+
+	      /* Ignore services without proper registry. */
+	      if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+	        {
+	          Status = STATUS_SUCCESS;
+	        }
 	    }
 	}
 
