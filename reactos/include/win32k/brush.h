@@ -1,4 +1,9 @@
 
+#ifndef __WIN32K_BRUSH_H
+#define __WIN32K_BRUSH_H
+
+#include <windows.h>
+
 HBRUSH  W32kCreateBrushIndirect(CONST LOGBRUSH  *lb);
 HBRUSH  W32kCreateDIBPatternBrush(HGLOBAL  hDIBPacked,
                                   UINT  ColorSpec);
@@ -19,4 +24,6 @@ BOOL  W32kSetBrushOrgEx(HDC  hDC,
                         INT  XOrg,
                         INT  YOrg,
                         LPPOINT  Point);
+
+#endif
 

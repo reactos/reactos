@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.1 1999/06/15 02:26:43 rex Exp $
+/* $Id: driver.c,v 1.2 1999/07/12 23:26:57 rex Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -6,6 +6,11 @@
  */
 
 #include <win32k/driver.h>
+#include <ddk/ntddk.h>
+#include <wchar.h>
+
+//#define NDEBUG
+#include <internal/debug.h>
 
 typedef struct _GRAPHICS_DRIVER
 {
@@ -17,7 +22,7 @@ typedef struct _GRAPHICS_DRIVER
 static PGRAPHICS_DRIVER  DriverList;
 static PGRAPHICS_DRIVER  GenericDriver;
 
-BOOL  DRIVER_RegisterDriver(PWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
+BOOL  DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
 {
   PGRAPHICS_DRIVER  Driver = ExAllocatePool(NonPagedPool, sizeof(*Driver));
   if (!Driver) 
@@ -42,12 +47,12 @@ BOOL  DRIVER_RegisterDriver(PWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
       return  FALSE;
     }
   
-  Driver->name = NULL;
+  Driver->Name = NULL;
   GenericDriver = Driver;
   return  TRUE;
 }
 
-PGD_ENABLEDRIVER  DRIVER_FindDriver(PWSTR  Name)
+PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name)
 {
   GRAPHICS_DRIVER *Driver = DriverList;
   
@@ -63,7 +68,65 @@ PGD_ENABLEDRIVER  DRIVER_FindDriver(PWSTR  Name)
   return  GenericDriver ? GenericDriver->EnableDriver : NULL;
 }
 
-BOOL  DRIVER_UnregisterDriver(PWSTR  Name)
+BOOL  DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED, 
+                               PDRIVER_FUNCTIONS  DF)
+{
+  UNIMPLEMENTED;
+}
+
+HANDLE  DRIVER_FindMPDriver(LPCWSTR  Name)
+{
+  PWSTR  lName;
+  HANDLE  DriverHandle;
+  NTSTATUS  Status;
+  UNICODE_STRING  DeviceName;
+  OBJECT_ATTRIBUTES  ObjectAttributes;
+  
+  if (Name[0] != '\\')
+    {
+      lName = ExAllocatePool(NonPagedPool, wcslen(Name) * sizeof(WCHAR) + 
+                             10 * sizeof(WCHAR));
+      wcscpy(lName, L"\\Devices\\");
+      wcscat(lName, Name);
+    }
+  else
+    {
+      lName = Name;
+    }
+  
+  RtlInitUnicodeString(&DeviceName, lName);
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &DeviceName,
+                             0,
+                             NULL,
+                             NULL);
+  Status = ZwOpenFile(&DriverHandle,
+                      FILE_ALL_ACCESS, 
+                      &ObjectAttributes, 
+                      NULL, 
+                      0, 
+                      FILE_SYNCHRONOUS_IO_ALERT);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Failed to open display device\n");
+      DbgPrint("%08lx\n", Status);
+      if (Name[0] != '\\')
+        {
+          ExFreePool(lName);
+        }
+      
+      return  NULL;
+    }
+
+  if (Name[0] != '\\')
+    {
+      ExFreePool(lName);
+    }
+
+  return  DriverHandle;
+}
+
+BOOL  DRIVER_UnregisterDriver(LPCWSTR  Name)
 {
   PGRAPHICS_DRIVER  Driver = NULL;
   

@@ -1,6 +1,10 @@
 
 
+#undef WIN32_LEAN_AND_MEAN
 #include <win32k/brush.h>
+
+// #define NDEBUG
+#include <internal/debug.h>
 
 HBRUSH  W32kCreateBrushIndirect(CONST LOGBRUSH  *lb)
 {

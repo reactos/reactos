@@ -3,9 +3,13 @@
 #
 
 MAIN_OBJECTS = main/dllmain.o
-STUBS_OBJECTS = stubs/stubs.o
+MISC_OBJECTS = misc/driver.o
+OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/dc.o
 RESOURCE_OBJECT = win32k.coff
-OBJECTS = $(MAIN_OBJECTS) $(STUBS_OBJECTS) $(RESOURCE_OBJECT)
+STUBS_OBJECTS = stubs/stubs.o
+
+OBJECTS = $(MAIN_OBJECTS) $(MISC_OBJECTS) $(OBJECTS_OBJECTS)  \
+          $(RESOURCE_OBJECT) $(STUBS_OBJECTS) 
 
 all: win32k.sys
 
@@ -13,11 +17,11 @@ win32k.coff: win32k.rc ../../include/reactos/resource.h
 	$(RC) win32k.rc win32k.coff
 
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES = main\*.o stubs\*.o win32k.coff win32k.o win32k.a junk.tmp base.tmp  \
-              temp.exp win32k.sys win32k.sym
+CLEAN_FILES = main\*.o misc\*.o stubs\*.o objects\*.o win32k.coff win32k.o  \
+              win32k.a junk.tmp base.tmp temp.exp win32k.sys win32k.sym
 else
-CLEAN_FILES = main/*.o stubs/*.o win32k.coff win32k.o win32k.a junk.tmp base.tmp  \
-              temp.exp win32k.sys win32k.sym
+CLEAN_FILES = main/*.o misc/*.o stubs/*.o objects/*.o win32k.coff win32k.o  \
+              win32k.a junk.tmp base.tmp temp.exp win32k.sys win32k.sym
 endif
 
 win32k.sys: $(OBJECTS) win32k.def

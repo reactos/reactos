@@ -1,6 +1,27 @@
 
+#ifndef __WIN32K_DRIVER_H
+#define __WIN32K_DRIVER_H
 
-BOOL (*PGD_ENABLEDRIVER)(ULONG, ULONG, PDRVENABLEDATA); 
+#include <ddk/winddi.h>
+
+typedef BOOL (*PGD_ENABLEDRIVER)(ULONG, ULONG, PDRVENABLEDATA); 
+typedef DHPDEV (*PGD_ENABLEPDEV)(DEVMODEW  *,
+                                 LPWSTR,
+                                 ULONG,
+                                 HSURF  *,
+                                 ULONG,
+                                 ULONG  *,
+                                 ULONG,
+                                 DEVINFO  *,
+                                 LPWSTR,
+                                 LPWSTR,
+                                 HANDLE);
+typedef VOID (*PGD_COMPLETEPDEV)(DHPDEV, HDEV);
+typedef VOID (*PGD_DISABLEPDEV)(DHPDEV); 
+typedef HSURF (*PGD_ENABLESURFACE)(DHPDEV);
+typedef VOID (*PGD_DISABLESURFACE)(DHPDEV);
+typedef VOID (*PGD_ASSERTMODE)(DHPDEV, BOOL);
+typedef BOOL (*PGD_RESETPDEV)(DHPDEV, DHPDEV);
 
 typedef struct _DRIVER_FUNCTIONS
 {
@@ -65,8 +86,12 @@ typedef struct _DRIVER_FUNCTIONS
 #endif
 } DRIVER_FUNCTIONS, *PDRIVER_FUNCTIONS;
 
-BOOL  DRIVER_RegisterDriver(PWSTR  Name, GD_ENABLEDRIVER  EnableDriver);
-PDRIVER_FUNCTIONS  DRIVER_FindDriver(PWSTR  Name);
-BOOL  DRIVER_BuildFunctions(PWSTR  Name, PDRVENABLEDATA  DED);
-BOOL  DRIVER_UnregisterDriver(PWSTR  Name);
+BOOL  DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver);
+PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name);
+HANDLE  DRIVER_FindMPDriver(LPCWSTR  Name);
+BOOL  DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED, 
+                               PDRIVER_FUNCTIONS  DF);
+BOOL  DRIVER_UnregisterDriver(LPCWSTR  Name);
+
+#endif
 

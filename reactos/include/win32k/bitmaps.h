@@ -1,4 +1,9 @@
 
+#ifndef __WIN32K_BITMAPS_H
+#define __WIN32K_BITMAPS_H
+
+#include <windows.h>
+#include <win32k/dc.h>
 
 BOOL  W32kBitBlt(HDC  hDCDest,
                  INT  XDest,
@@ -144,5 +149,5 @@ INT  W32kStretchDIBits(HDC  hDC,
                        DWORD  ROP);
 
 
-
+#endif
 

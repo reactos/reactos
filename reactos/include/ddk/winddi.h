@@ -2,9 +2,51 @@
  * WinDDI.h - definition of the GDI - DDI interface
  */
 
+#ifndef __DDK_WINDDI_H
+#define __DDK_WINDDI_H
+
+#if defined(WIN32_LEAN_AND_MEAN) && defined(_GNU_H_WINDOWS32_STRUCTURES)
+#error "windows.h cannot be included before winddi.h if WIN32_LEAN_AND_MEAN is defined"
+#endif
+
+#ifdef WIN32_LEAN_AND_MEAN
+#undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#define WIN32_LEAN_AND_MEAN
+#else
+#include <windows.h>
+#endif
+
+#ifndef IN
+#define IN
+#define OUT
+#define OPTIONAL
+#endif
+
+#ifndef PTRDIFF
+typedef DWORD PTRDIFF;
+#endif
+
+/* FIXME: find definitions for these structs  */
+typedef PVOID  PCOLORADJUSTMENT;
+typedef PVOID  PDD_CALLBACKS;
+typedef PVOID  PDD_HALINFO;
+typedef PVOID  PDD_PALETTECALLBACKS;
+typedef PVOID  PDD_SURFACECALLBACKS;
+typedef PVOID  PFONTINFO;
+typedef PVOID  PGAMMA_TABLES;
+typedef PVOID  PGLYPHDATA;
+typedef PVOID  PLINEATTRS;
+typedef DWORD  MIX;
+typedef DWORD  ROP4;
+typedef PVOID  PSTROBJ;
+typedef PVOID  PTTPOLYGONHEADER;
+typedef PVOID  PVIDEOMEMORY;
 
 #define  DDI_DRIVER_VERSION  0x00010000
+
+/* FIXME: how big should this constant be?  */
+#define  HS_DDI_MAX  6
 
 /*  EngCreateBitmap format types  */
 enum _BMF_TYPES
@@ -156,7 +198,7 @@ enum _DRV_HOOK_FUNCS
   INDEX_DrvStrokePath,
   INDEX_DrvFillPath,
   INDEX_DrvStrokeAndFillPath,
-  INDEX_DrvPaint
+  INDEX_DrvPaint,
   INDEX_DrvBitBlt,
   INDEX_DrvCopyBits,
   INDEX_DrvStretchBlt,
@@ -262,20 +304,12 @@ enum _SURF_TYPES
 #define  WOC_CHANGED            0x00000010
 #define  WOC_DELETE             0x00000020
 
-enum _WIN_CHARSET
-{
-  ANSI_CHARSET = 1,
-  SYMBOL_CHARSET, 
-  SHIFTJIS_CHARSET, 
-  HANGEUL_CHARSET, 
-  CHINESEBIG5_CHARSET, 
-  OEM_CHARSET 
-};
-
 typedef HANDLE  HDEV;
+typedef HANDLE  HGLYPH;
+typedef HANDLE  HSURF;
 typedef HANDLE  DHPDEV;
-typedef ULONG  (*PFN)();
-typedef VOID (CALLBACK * WNDOBJCHANGEPROC)(PWNDOBJ WndObj, ULONG Flags);
+typedef HANDLE  DHSURF;
+typedef ULONG  (*PFN)(VOID);
 
 typedef struct _DRVFN
 {
@@ -294,19 +328,88 @@ typedef struct _DRVENABLEDATA
   ULONG  c;
   DRVFN  *pdrvfn;
 } DRVENABLEDATA, *PDRVENABLEDATA;
- 
+
+/* FIXME: replace this with correct def for LDECI4  */
+typedef DWORD  LDECI4;
+
+typedef struct _CIECHROMA 
+{
+  LDECI4  x;
+  LDECI4  y;
+  LDECI4  Y;
+} CIECHROMA, *PCIECHROMA;
+
+typedef struct _COLORINFO 
+{
+  CIECHROMA  Red;
+  CIECHROMA  Green;
+  CIECHROMA  Blue;
+  CIECHROMA  Cyan;
+  CIECHROMA  Magenta;
+  CIECHROMA  Yellow;
+  CIECHROMA  AlignmentWhite;
+  LDECI4  RedGamma;
+  LDECI4  GreenGamma;
+  LDECI4  BlueGamma;
+  LDECI4  MagentaInCyanDye;
+  LDECI4  YellowInCyanDye;
+  LDECI4  CyanInMagentaDye;
+  LDECI4  YellowInMagentaDye;
+  LDECI4  CyanInYellowDye;
+  LDECI4  MagentaInYellowDye;
+} COLORINFO, *PCOLORINFO;
+
 typedef struct _DEVINFO 
 {
   ULONG  flGraphicsCaps;
-  LOGFONTW  lfDefaultFont;
-  LOGFONTW  lfAnsiVarFont;
-  LOGFONTW  lfAnsiFixFont;
+  LOGFONT  lfDefaultFont;
+  LOGFONT  lfAnsiVarFont;
+  LOGFONT  lfAnsiFixFont;
   ULONG  cFonts;
   ULONG  iDitherFormat;
   USHORT  cxDither;
   USHORT  cyDither;
   HPALETTE  hpalDefault;
 } DEVINFO, *PDEVINFO;
+
+typedef struct _GDIINFO 
+{
+  ULONG  ulVersion;
+  ULONG  ulTechnology;
+  ULONG  ulHorzSize;
+  ULONG  ulVertSize;
+  ULONG  ulHorzRes;
+  ULONG  ulVertRes;
+  ULONG  cBitsPixel;
+  ULONG  cPlanes;
+  ULONG  ulNumColors;
+  ULONG  flRaster;
+  ULONG  ulLogPixelsX;
+  ULONG  ulLogPixelsY;
+  ULONG  flTextCaps;
+  ULONG  ulDACRed;
+  ULONG  ulDACGreen;
+  ULONG  ulDACBlue;
+  ULONG  ulAspectX;
+  ULONG  ulAspectY;
+  ULONG  ulAspectXY;
+  LONG  xStyleStep;
+  LONG  yStyleStep;
+  LONG  denStyleStep;
+  POINTL  ptlPhysOffset;
+  SIZEL  szlPhysSize;
+  ULONG  ulNumPalReg;
+  COLORINFO  ciDevice;
+  ULONG  ulDevicePelsDPI;
+  ULONG  ulPrimaryOrder;
+  ULONG  ulHTPatternSize;
+  ULONG  ulHTOutputFormat;
+  ULONG  flHTFlags;
+  ULONG  ulVRefresh;
+  ULONG  ulBltAlignment;
+  ULONG  ulPanningHorzRes;
+  ULONG  ulPanningVertRes;
+} GDIINFO, *PGDIINFO;
 
 typedef struct _DEVMODEW 
 {
@@ -336,7 +439,7 @@ typedef struct _DEVMODEW
   DWORD  dmPelsHeight;
   DWORD  dmDisplayFlags;
   DWORD  dmDisplayFrequency;
-} DEVMODEW;
+} DEVMODEW, *PDEVMODEW;
 
 typedef struct _BRUSHOBJ 
 {
@@ -465,10 +568,24 @@ typedef struct _SURFOBJ
   USHORT  fjBitmap;
 } SURFOBJ, *PSURFOBJ;
 
+typedef struct _WNDOBJ
+{
+  CLIPOBJ  coClient;
+  PVOID  pvConsumer;
+  RECTL  rclClient;
+} WNDOBJ, *PWNDOBJ;
+
+typedef VOID (CALLBACK * WNDOBJCHANGEPROC)(PWNDOBJ WndObj, ULONG Flags);
+
+typedef struct _XFORMOBJ
+{
+  /* FIXME: what does this beast look like?  */
+} XFORMOBJ, *PXFORMOBJ;
+
 typedef struct _XLATEOBJ 
 {
   ULONG  iUniq;
-  FLONG  flXlate;
+  ULONG  flXlate;
   USHORT  iSrcType;
   USHORT  iDstType;
   ULONG  cEntries;
@@ -778,7 +895,7 @@ EngCreateEvent
 */
 
 HPALETTE EngCreatePalette(IN ULONG  Mode,
-                          IN ULONG  Colors, 
+                          IN ULONG  NumColors,
                           IN PULONG  *Colors, 
                           IN ULONG  Red, 
                           IN ULONG  Green, 
@@ -898,7 +1015,7 @@ ULONG FONTOBJ_cGetGlyphs(IN PFONTOBJ  FontObj,
                          IN ULONG  NumGlyphs,
                          IN HGLYPH  *GlyphHandles,
                          IN PVOID  *OutGlyphs);
-GAMMA_TABLES *FONTOBJ_pGetGammaTables(IN PFONTOBJ  FontObj);
+PGAMMA_TABLES FONTOBJ_pGetGammaTables(IN PFONTOBJ  FontObj);
 IFIMETRICS *FONTOBJ_pifi(IN PFONTOBJ  FontObj);
 PVOID  FONTOBJ_pvTrueTypeFontFile(IN PFONTOBJ  FontObj,
                                   IN ULONG  *FileSize);
@@ -941,4 +1058,6 @@ XLATEOBJ_cGetPalette
 XLATEOBJ_iXlate
 XLATEOBJ_piVector
 */
+
+#endif
 
