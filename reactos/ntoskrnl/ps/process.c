@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.72 2002/01/02 21:00:02 chorns Exp $
+/* $Id: process.c,v 1.73 2002/01/03 12:48:02 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -285,6 +285,7 @@ PiFreeSymbols(PPEB Peb)
 		while (Symbol != NULL)
 		{
       NextSymbol = Symbol->Next;
+      RtlFreeUnicodeString (&Symbol->Name);
       ExFreePool (Symbol);
 	    Symbol = NextSymbol;
 		}
