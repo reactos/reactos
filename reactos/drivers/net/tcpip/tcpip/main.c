@@ -18,9 +18,13 @@
 #include <tcp.h>
 #include <rosrtl/string.h>
 
-#ifdef DBG
+#define NDEBUG
+
+#ifndef NDEBUG
 DWORD DebugTraceLevel = 0x7fffffff;
-#endif /* DBG */
+#else
+DWORD DebugTraceLevel = MIN_TRACE;
+#endif /* NDEBUG */
 
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
 PDEVICE_OBJECT UDPDeviceObject   = NULL;
