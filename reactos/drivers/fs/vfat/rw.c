@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.15 2001/01/12 21:00:08 dwelch Exp $
+/* $Id: rw.c,v 1.16 2001/01/13 12:40:21 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -270,7 +270,9 @@ VfatReadCluster(PDEVICE_EXTENSION DeviceExt,
 		ULONG FirstCluster,
 		PULONG CurrentCluster,
 		PVOID Destination,
-		ULONG Cached)
+		ULONG Cached,
+		ULONG InternalOffset,
+		ULONG InternalLength)
 {
   ULONG BytesPerCluster;
   BOOLEAN Valid;
@@ -310,7 +312,7 @@ VfatReadCluster(PDEVICE_EXTENSION DeviceExt,
       /*
        * Copy the data from the cache to the caller
        */
-      memcpy(Destination, BaseAddress, BytesPerCluster);
+      memcpy(Destination, BaseAddress + InternalOffset, InternalLength);
       CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, TRUE);
 
       Status = NextCluster(DeviceExt, FirstCluster, CurrentCluster);
@@ -381,7 +383,7 @@ VfatReadCluster(PDEVICE_EXTENSION DeviceExt,
       /*
        * Copy the data from the cache to the caller
        */
-      memcpy(Destination, BaseAddress + InternalOffset, BytesPerCluster);
+      memcpy(Destination, BaseAddress + InternalOffset, InternalLength);
       CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, TRUE);
     }
   return(STATUS_SUCCESS);
@@ -398,10 +400,9 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   ULONG CurrentCluster;
   ULONG FirstCluster;
   PVFATFCB Fcb;
-  PVOID Temp;
-  ULONG TempLength;
   ULONG ChunkSize;
   NTSTATUS Status;
+  ULONG TempLength;
 
   /* PRECONDITION */
   assert (DeviceExt != NULL);
@@ -443,16 +444,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   
   ChunkSize = max(DeviceExt->BytesPerCluster, PAGESIZE);
 
-  *LengthRead = 0;
-  
-  /*
-   * Allocate a buffer to hold partial clusters
-   */
-  Temp = ExAllocatePool (NonPagedPool, ChunkSize);
-  if (!Temp)
-    {
-      return(STATUS_NO_MEMORY);
-    }
+  *LengthRead = 0;  
 
   /*
    * Find the cluster to start the read from
@@ -471,13 +463,12 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    * cluster and copy it.
    */
   if ((ReadOffset % ChunkSize) != 0)
-    {
+    {      
+      TempLength = min (Length, ChunkSize - (ReadOffset % ChunkSize));
       VfatReadCluster(DeviceExt, Fcb, 
 		      ROUND_DOWN(ReadOffset, ChunkSize),
-		      FirstCluster, &CurrentCluster, Temp, 1);
-      TempLength = min (Length, ChunkSize - (ReadOffset % ChunkSize));
-
-      memcpy (Buffer, Temp + ReadOffset % ChunkSize, TempLength);
+		      FirstCluster, &CurrentCluster, Buffer, 1,
+		      ReadOffset % ChunkSize, TempLength);
 
       (*LengthRead) = (*LengthRead) + TempLength;
       Length = Length - TempLength;
@@ -488,10 +479,9 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   while (Length >= ChunkSize)
     {
       VfatReadCluster(DeviceExt, Fcb, ReadOffset,
-		      FirstCluster, &CurrentCluster, Buffer,  1);
+		      FirstCluster, &CurrentCluster, Buffer, 1, 0, ChunkSize);
       if (CurrentCluster == 0xffffffff)
 	{
-	  ExFreePool (Temp);
 	  return (STATUS_SUCCESS);
 	}
 
@@ -500,15 +490,12 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       Length = Length - ChunkSize;
       ReadOffset = ReadOffset + ChunkSize;
     }
-
   if (Length > 0)
     {
       VfatReadCluster(DeviceExt, Fcb, ReadOffset,
-		      FirstCluster, &CurrentCluster, Temp, 1);
+		      FirstCluster, &CurrentCluster, Buffer, 1, 0, Length);
       (*LengthRead) = (*LengthRead) + Length;
-      memcpy (Buffer, Temp, Length);
     }
-  ExFreePool (Temp);
   return (STATUS_SUCCESS);
 }
 
