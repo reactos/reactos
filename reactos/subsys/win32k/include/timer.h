@@ -2,5 +2,6 @@
 #define _SUBSYS_WIN32K_INCLUDE_TIMER_H
 
 NTSTATUS FASTCALL InitTimerImpl(VOID);
+VOID FASTCALL RemoveTimersThread(HANDLE ThreadID);
 
 #endif /* ndef _SUBSYS_WIN32K_INCLUDE_TIMER_H */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.3 2003/05/22 02:07:22 gdalsnes Exp $
+/* $Id: timer.c,v 1.4 2003/06/05 22:47:47 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -69,6 +69,7 @@ typedef struct _MSG_TIMER_ENTRY{
 
 
 //return true if the new timer became the first entry
+//must hold mutex while calling this
 BOOL
 FASTCALL
 InsertTimerAscendingOrder(PMSG_TIMER_ENTRY NewTimer)
@@ -101,6 +102,7 @@ InsertTimerAscendingOrder(PMSG_TIMER_ENTRY NewTimer)
 
 }
 
+//must hold mutex while calling this
 PMSG_TIMER_ENTRY
 FASTCALL
 RemoveTimer(HWND hWnd, UINT_PTR IDEvent, HANDLE ThreadID)
@@ -113,19 +115,54 @@ RemoveTimer(HWND hWnd, UINT_PTR IDEvent, HANDLE ThreadID)
    while (EnumEntry != &TimerListHead)
    {
       MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
+      EnumEntry = EnumEntry->Flink;
+
       if (MsgTimer->Msg.hwnd == hWnd && 
           MsgTimer->Msg.wParam == (WPARAM)IDEvent &&
           MsgTimer->ThreadID == ThreadID)
       {
-         RemoveEntryList(EnumEntry);
+         RemoveEntryList(&MsgTimer->ListEntry);
          return MsgTimer;
       }
-      EnumEntry = EnumEntry->Flink;
    }
 
    return NULL;
 }
 
+
+/* 
+ * NOTE: It doesn't kill timers. It just removes them from the list.
+ */
+VOID
+FASTCALL
+RemoveTimersThread(HANDLE ThreadID)
+{
+   PMSG_TIMER_ENTRY MsgTimer;
+   PLIST_ENTRY EnumEntry;
+
+   ExAcquireFastMutex(&Mutex);
+
+   EnumEntry = TimerListHead.Flink;
+   while (EnumEntry != &TimerListHead)
+   {
+      MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
+      EnumEntry = EnumEntry->Flink;
+
+      if (MsgTimer->ThreadID == ThreadID)
+      {
+         if (MsgTimer->Msg.hwnd == NULL)
+         {
+            RtlClearBits(&HandleLessTimersBitMap, ((UINT_PTR)MsgTimer->Msg.wParam) - 1, 1);   
+         }
+
+         RemoveEntryList(&MsgTimer->ListEntry);
+         ExFreePool(MsgTimer);
+      }
+   }
+
+   ExReleaseFastMutex(&Mutex);
+
+}
 
 
 
@@ -163,6 +200,7 @@ NtUserSetTimer(
       Index = RtlFindClearBitsAndSet(&HandleLessTimersBitMap, 1, HintIndex); 
       if (Index == -1) 
       {
+         ExReleaseFastMutex(&Mutex);
          return STATUS_UNSUCCESSFUL;
       }
 
@@ -266,7 +304,9 @@ NtUserSetSystemTimer(
 
 
 static NTSTATUS STDCALL
-TimerThreadMain(VOID)
+TimerThreadMain(
+   PVOID StartContext
+   )
 {
    NTSTATUS Status;
    LARGE_INTEGER CurrentTime;
@@ -305,12 +345,10 @@ TimerThreadMain(VOID)
 
             /* 
              * FIXME: 1) Find a faster way of getting the thread message queue? (lookup by id is slow)
-             *        2) Kill all timers for thread when the thread exits?
              */
 
             if (!NT_SUCCESS(PsLookupThreadByThreadId(MsgTimer->ThreadID, &Thread)))
             {
-               //FIXME: remove all other timers for this thread also?
                ExFreePool(MsgTimer);
                continue;
             }

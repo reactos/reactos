@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.35 2003/05/18 17:16:17 ea Exp $
+/* $Id: dllmain.c,v 1.36 2003/06/05 22:47:47 gdalsnes Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -38,6 +38,7 @@
 #include <include/input.h>
 #include <include/timer.h>
 #include <include/text.h>
+#include <include/cleanup.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -117,6 +118,13 @@ DllMain (
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("Failed to initialize timer implementation.\n");
+      return(Status);
+    }
+
+  Status = InitCleanupImpl();
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Failed to initialize cleanup implementation.\n");
       return(Status);
     }
 
