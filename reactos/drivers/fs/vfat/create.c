@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.52 2003/01/16 22:02:24 gvg Exp $
+/* $Id: create.c,v 1.53 2003/01/19 01:06:45 gvg Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -558,7 +558,8 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   PVFATCCB pCcb;
   PVFATFCB pFcb;
   PWCHAR c;
-  BOOLEAN PagingFileCreate = FALSE;  
+  BOOLEAN PagingFileCreate = FALSE;
+  LARGE_INTEGER AllocationSize;
   
   /* Unpack the various parameters. */
   Stack = IoGetCurrentIrpStackLocation (Irp);
@@ -706,6 +707,22 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	  VfatCloseFile (DeviceExt, FileObject);
 	  return(STATUS_NOT_A_DIRECTORY);
 	}
+
+      if (RequestedDisposition == FILE_OVERWRITE ||
+          RequestedDisposition == FILE_OVERWRITE_IF)
+	{
+	AllocationSize.QuadPart = 0;
+	Status = VfatSetAllocationSizeInformation (FileObject,
+	                                           pFcb,
+	                                           DeviceExt,
+	                                           &AllocationSize);
+	if (!NT_SUCCESS (Status))
+	  {
+	  VfatCloseFile (DeviceExt, FileObject);
+	  return(Status);
+	  }
+	}
+	
       
       /* Supersede the file */
       if (RequestedDisposition == FILE_SUPERSEDE)
