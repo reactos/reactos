@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.91 2003/10/01 19:11:06 weiden Exp $
+/* $Id: defwnd.c,v 1.92 2003/10/03 11:44:44 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1623,12 +1623,11 @@ DefWndAdjustRect(RECT* Rect,  ULONG Style, BOOL Menu, ULONG ExStyle)
     }
   if (Style & WS_CAPTION)
     {
-      Rect->top -= (GetSystemMetrics(SM_CYCAPTION) -
-	GetSystemMetrics(SM_CYBORDER)) + 1;
+      Rect->top -= GetSystemMetrics(SM_CYCAPTION);
     }
   if (Menu)
     {
-      Rect->top -= GetSystemMetrics(SM_CYMENU) + GetSystemMetrics(SM_CYBORDER);
+      Rect->top -= GetSystemMetrics(SM_CYMENU);
     }
 }
 
@@ -1687,7 +1686,7 @@ DefWndNCCalcSize(HWND hWnd, RECT* Rect)
         if (UserHasMenu(hWnd, Style))
         {
             Rect->top += MenuGetMenuBarHeight(hWnd, Rect->right - Rect->left,
-                -TmpRect.left, -TmpRect.top) + 1;
+                -TmpRect.left, -TmpRect.top);
         }
         if (Rect->top > Rect->bottom)
             Rect->bottom = Rect->top;
@@ -1726,23 +1725,33 @@ DefWndHandleWindowPosChanging(HWND hWnd, WINDOWPOS* Pos)
 LRESULT
 DefWndHandleWindowPosChanged(HWND hWnd, WINDOWPOS* Pos)
 {
-    RECT rect;
+  RECT Rect;
 
-    GetClientRect(hWnd, &rect);
+  GetClientRect(hWnd, &Rect);
+  MapWindowPoints(hWnd, (GetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD ?
+                         GetParent(hWnd) : NULL), (LPPOINT) &Rect, 2);
 
-    if (!(Pos->flags & SWP_NOCLIENTMOVE))
-        SendMessageW(hWnd, WM_MOVE, 0, MAKELONG(rect.left, rect.top));
-
-    if (!(Pos->flags & SWP_NOCLIENTSIZE))
+  if (! (Pos->flags & SWP_NOCLIENTMOVE))
     {
-        WPARAM wp = SIZE_RESTORED;
-        if (IsZoomed(hWnd)) wp = SIZE_MAXIMIZED;
-        else if (IsIconic(hWnd)) wp = SIZE_MINIMIZED;
-        SendMessageW(hWnd, WM_SIZE, wp,
-            MAKELONG(rect.right - rect.left, rect.bottom - rect.top));
+      SendMessageW(hWnd, WM_MOVE, 0, MAKELONG(Rect.left, Rect.top));
     }
 
-    return 0;
+  if (! (Pos->flags & SWP_NOCLIENTSIZE))
+    {
+      WPARAM wp = SIZE_RESTORED;
+      if (IsZoomed(hWnd))
+        {
+          wp = SIZE_MAXIMIZED;
+        }
+      else if (IsIconic(hWnd))
+        {
+          wp = SIZE_MINIMIZED;
+        }
+      SendMessageW(hWnd, WM_SIZE, wp,
+                   MAKELONG(Rect.right - Rect.left, Rect.bottom - Rect.top));
+    }
+
+  return 0;
 }
 
 /***********************************************************************
