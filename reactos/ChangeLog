@@ -1,5 +1,9 @@
 2004-08-19  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* regtests/shared/regtests.c: Mark test name with |.
+
+2004-08-19  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* Makefile: Depend on roscfg.h.
 
 2004-08-19  Casper S. Hornstrup  <chorns@users.sourceforge.net>

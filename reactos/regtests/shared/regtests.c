@@ -83,11 +83,11 @@ PerformTest(TestOutputRoutine OutputRoutine, PROS_TEST Test, LPSTR TestName)
 
   if (Result != TS_OK)
     {
-      sprintf(OutputBuffer, "ROSREGTEST: (%s) Status: Failed (%s)\n", Name, Buffer);
+      sprintf(OutputBuffer, "ROSREGTEST: |%s| Status: Failed (%s)\n", Name, Buffer);
     }
   else
     {
-      sprintf(OutputBuffer, "ROSREGTEST: (%s) Status: Success\n", Name);
+      sprintf(OutputBuffer, "ROSREGTEST: |%s| Status: Success\n", Name);
     }
   if (OutputRoutine != NULL)
     {
