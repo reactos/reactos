@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.130 2003/10/12 17:05:48 hbirr Exp $
+/* $Id: section.c,v 1.131 2003/10/18 09:35:11 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2294,27 +2294,6 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
     {
       return(STATUS_INVALID_PAGE_PROTECTION);
     }
-
-  /*
-   * Read a bit so caching is initiated for the file object.
-   * This is only needed because MiReadPage currently cannot
-   * handle non-cached streams.
-   */
-  Offset.QuadPart = 0;
-  Status = ZwReadFile(FileHandle,
-		      NULL,
-		      NULL,
-		      NULL,
-		      &Iosb,
-		      &Buffer,
-		      sizeof (Buffer),
-		      &Offset,
-		      0);
-  if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE))
-    {
-      return(Status);
-    }
-
   /*
    * Create the section
    */
@@ -2410,7 +2389,6 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
   if (MaximumSize.QuadPart > 
       ((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->FileSize.QuadPart)
     {
-      IO_STATUS_BLOCK Iosb;
       Status = NtSetInformationFile(FileHandle,
 				    &Iosb,
 				    &MaximumSize,
@@ -2422,6 +2400,42 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
 	  ObDereferenceObject(Section);
 	  ObDereferenceObject(FileObject);
 	  return(STATUS_SECTION_NOT_EXTENDED);
+	}
+    }
+
+  if (FileObject->SectionObjectPointer == NULL ||
+      FileObject->SectionObjectPointer->SharedCacheMap == NULL)
+    {
+      /*
+       * Read a bit so caching is initiated for the file object.
+       * This is only needed because MiReadPage currently cannot
+       * handle non-cached streams.
+       */
+      Offset.QuadPart = 0;
+      Status = ZwReadFile(FileHandle,
+		          NULL,
+		          NULL,
+		          NULL,
+		          &Iosb,
+		          &Buffer,
+		          sizeof (Buffer),
+		          &Offset,
+		          0);
+      if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE))
+        {
+          ZwClose(*SectionHandle);
+          ObDereferenceObject(Section);
+          ObDereferenceObject(FileObject);
+          return(Status);
+        }
+      if (FileObject->SectionObjectPointer == NULL ||
+          FileObject->SectionObjectPointer->SharedCacheMap == NULL)
+        {
+	  /* FIXME: handle this situation */
+          ZwClose(*SectionHandle);
+          ObDereferenceObject(Section);
+          ObDereferenceObject(FileObject);
+	  return STATUS_INVALID_PARAMETER; 
 	}
     }
 
