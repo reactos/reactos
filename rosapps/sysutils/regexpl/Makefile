@@ -1,6 +1,9 @@
+# $Id: Makefile,v 1.2 2000/10/08 10:48:10 narnaoud Exp $
 #
 #  ReactOS makefile for RegExpl
 #
+
+include ../../rules.mak
 
 TARGET_NAME=regexpl
 
@@ -13,7 +16,6 @@ IMPORT_KERNEL32=$(ROS_LIB)/kernel32/kernel32.a
 IMPORT_ADVAPI32=$(ROS_LIB)/advapi32/advapi32.a
 IMPORT_USER32=$(ROS_LIB)/user32/user32.a
 IMPORT_CRTDLL=$(ROS_LIB)/crtdll/crtdll.a
-
 
 all: $(TARGET_NAME)$(EXE_POSTFIX)
 
@@ -89,8 +91,6 @@ ifeq ($(DOSCLI),yes)
 else
 	$(CP) $* ../$(DIST_DIR)/apps\$*
 endif
-
-include ../../rules.mak
 
 # EOF
 
