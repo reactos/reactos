@@ -6,7 +6,7 @@
 # Select your host
 #
 #HOST = mingw32-linux
-#HOST = mingw32-windows
+HOST = mingw32-windows
 
 include rules.mak
 
@@ -14,7 +14,7 @@ include rules.mak
 # Required to run the system
 #
 COMPONENTS = iface_native iface_additional ntoskrnl
-DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32
+DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32 secur32
 SUBSYS = smss win32k csrss
 
 #
@@ -44,7 +44,7 @@ NET_DRIVERS = ndis tcpip tditest
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS)
 
 APPS = args hello shell test cat bench apc shm lpc thread event file gditest \
-       pteb consume
+       pteb consume dump_shared_data
 
 #       objdir
 

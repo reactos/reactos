@@ -3,6 +3,13 @@ mkdir -p $1/reactos/system32
 mkdir -p $1/reactos/system32/drivers
 mkdir -p $1/reactos/bin
 ./install-system.sh $1
+cp services/dd/floppy/floppy.sys $1/reactos/system32/drivers/
+cp services/dd/keyboard/keyboard.sys $1/reactos/system32/drivers
+cp services/dd/blue/blue.sys $1/reactos/system32/drivers
+cp services/dd/vga/miniport/vgamp.sys $1/reactos/system32/drivers
+cp services/dd/vga/display/vgaddi.dll $1/reactos/system32/drivers
+cp services/dd/vidport/vidport.sys $1/reactos/system32/drivers
+cp services/fs/minix/minixfs.sys $1/reactos/system32/drivers
 cp apps/shell/shell.exe $1/reactos/system32
 cp lib/ntdll/ntdll.dll $1/reactos/system32
 cp lib/kernel32/kernel32.dll $1/reactos/system32
@@ -28,3 +35,4 @@ cp apps/file/file.exe $1/reactos/bin
 cp apps/pteb/pteb.exe $1/reactos/bin
 cp apps/consume/consume.exe $1/reactos/bin
 cp apps/float/float.exe $1/reactos/bin
+cp apps/dump_shared_data/dump_shared_data.exe $1/reactos/bin

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.59 2000/07/19 14:18:18 dwelch Exp $
+/* $Id: loader.c,v 1.60 2000/08/12 19:33:21 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -182,7 +182,7 @@ static VOID LdrLoadAutoConfigDriver (LPWSTR	RelativeDriverName)
    if (!NT_SUCCESS(Status))
      {
 	DbgPrint("driver load failed, status (%x)\n", Status);
-	KeBugCheck(0);
+//	KeBugCheck(0);
      }
 }
 
@@ -200,9 +200,14 @@ VOID LdrLoadAutoConfigDrivers (VOID)
    LdrLoadAutoConfigDriver( L"blue.sys" );
    
    /*
-    * Floppy disk driver
+    * 
     */
-//   LdrLoadAutoConfigDriver(L"floppy.sys");
+   LdrLoadAutoConfigDriver(L"vidport.sys");
+   
+   /*
+    * 
+    */
+   LdrLoadAutoConfigDriver(L"vgamp.sys");
    
    /*
     * Minix filesystem driver
@@ -714,6 +719,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
               else
                 {
                    DbgPrint("Unresolved kernel symbol: %s\n", pName);
+		   return(NULL);
                 }
               ImportAddressList++;
               FunctionNameList++;

@@ -188,10 +188,10 @@ NTSTATUS STDCALL NtTerminateProcess(IN	HANDLE		ProcessHandle,
    }
    
    PiTerminateProcessThreads(Process, ExitStatus);
-   if( PsGetCurrentThread()->ThreadsProcess == Process )
+   if (PsGetCurrentThread()->ThreadsProcess == Process)
      {
-       ObDereferenceObject( Process );
-       PsTerminateCurrentThread( ExitStatus );
+       ObDereferenceObject(Process);
+       PsTerminateCurrentThread(ExitStatus);
      }
    ObDereferenceObject(Process);
    return(STATUS_SUCCESS);

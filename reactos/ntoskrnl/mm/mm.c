@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.34 2000/07/07 10:30:56 dwelch Exp $
+/* $Id: mm.c,v 1.35 2000/08/12 19:33:22 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -33,6 +33,7 @@
 PVOID EXPORTED MmUserProbeAddress = NULL; 
 PVOID EXPORTED MmHighestUserAddress = NULL;
 MM_STATS MmStats; 
+extern PVOID MmSharedDataPagePhysicalAddress;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -194,6 +195,14 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 	Status = MmNotPresentFaultVirtualMemory(AddressSpace,
 						MemoryArea,
 						(PVOID)Address);
+	break;
+	
+      case MEMORY_AREA_SHARED_DATA:
+	MmSetPage(PsGetCurrentProcess(),
+		  (PVOID)PAGE_ROUND_DOWN(Address),
+		  PAGE_READONLY,
+		  (ULONG)MmSharedDataPagePhysicalAddress);
+	Status = STATUS_SUCCESS;
 	break;
 	
       default:

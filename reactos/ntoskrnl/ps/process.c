@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.51 2000/07/07 00:49:02 phreak Exp $
+/* $Id: process.c,v 1.52 2000/08/12 19:33:22 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -25,6 +25,7 @@
 #include <internal/port.h>
 #include <napi/dbg.h>
 #include <internal/dbg.h>
+#include <napi/shared_data.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -356,6 +357,8 @@ NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
    PVOID Peb;
    PEPORT DebugPort;
    PEPORT ExceptionPort;
+   PVOID BaseAddress;
+   PMEMORY_AREA MemoryArea;
    
    DPRINT("NtCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
 
@@ -446,7 +449,26 @@ NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
    /*
     * Now we have created the process proper
     */
-      
+   
+   /*
+    * Create the shared data page
+    */
+   MmLockAddressSpace(&Process->AddressSpace);
+   BaseAddress = (PVOID)USER_SHARED_DATA_BASE;
+   Status = MmCreateMemoryArea(Process,
+			       &Process->AddressSpace,
+			       MEMORY_AREA_SHARED_DATA,
+			       &BaseAddress,
+			       PAGESIZE,
+			       PAGE_READONLY,
+			       &MemoryArea);
+   MmUnlockAddressSpace(&Process->AddressSpace);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT1("Failed to create shared data page\n");
+	KeBugCheck(0);
+     }
+   
    /*
     * Map ntdll
     */

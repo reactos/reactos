@@ -1,4 +1,4 @@
-/* $Id: bug.c,v 1.13 2000/07/02 10:49:30 ekohl Exp $
+/* $Id: bug.c,v 1.14 2000/08/12 19:33:21 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,8 +32,7 @@ VOID KeInitializeBugCheck(VOID)
    InBugCheck = 0;
 }
 
-BOOLEAN
-STDCALL
+BOOLEAN STDCALL
 KeDeregisterBugCheckCallback (
 	PKBUGCHECK_CALLBACK_RECORD	CallbackRecord
 	)
@@ -41,8 +40,7 @@ KeDeregisterBugCheckCallback (
    UNIMPLEMENTED;
 }
 
-BOOLEAN
-STDCALL
+BOOLEAN STDCALL
 KeRegisterBugCheckCallback (
 	PKBUGCHECK_CALLBACK_RECORD	CallbackRecord,
 	PKBUGCHECK_CALLBACK_ROUTINE	CallbackRoutine,
@@ -59,8 +57,7 @@ KeRegisterBugCheckCallback (
    return(TRUE);
 }
 
-VOID
-STDCALL
+VOID STDCALL
 KeBugCheckEx (
 	ULONG	BugCheckCode,
 	ULONG	BugCheckParameter1,
@@ -81,18 +78,19 @@ KeBugCheckEx (
    DbgPrint("Bug detected (code %x param %x %x %x %x)\n",BugCheckCode,
 	  BugCheckParameter1,BugCheckParameter2,BugCheckParameter3,
 	  BugCheckParameter4);
-   PsDumpThreads();
+//   PsDumpThreads();
    KeDumpStackFrames(&((&BugCheckCode)[-1]),64);
    
+#if 1
    for(;;)
 	   __asm__("hlt\n\t");	//PJS: use HLT instruction, rather than busy wait
+#else
+   for(;;);
+#endif   
 }
 
-VOID
-STDCALL
-KeBugCheck (
-	ULONG	BugCheckCode
-	)
+VOID STDCALL
+KeBugCheck (ULONG	BugCheckCode)
 /*
  * FUNCTION: Brings the system down in a controlled manner when an 
  * inconsistency that might otherwise cause corruption has been detected
@@ -109,12 +107,16 @@ KeBugCheck (
 	for(;;);
      }
    InBugCheck = 1;
-   PsDumpThreads();
+//   PsDumpThreads();
    KeDumpStackFrames(&((&BugCheckCode)[-1]), 80);
+#if 1
    for(;;)
      {
 	__asm__("hlt\n\t");
      }
+#else
+   for(;;);
+#endif
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: reboot.c,v 1.4 2000/03/19 13:34:47 ekohl Exp $
+/* $Id: reboot.c,v 1.5 2000/08/12 19:33:20 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -47,12 +47,15 @@ HalReboot (VOID)
     outb_p (0x64, 0xfe);
 
     /* stop the processor */
+#if 1
     __asm__("hlt\n");
+#else
+   for(;;);
+#endif   
 }
 
 
-VOID
-STDCALL
+VOID STDCALL
 HalReturnToFirmware (
 	ULONG	Action
 	)

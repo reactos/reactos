@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.28 2000/08/11 12:34:58 ekohl Exp $
+/* $Id: startup.c,v 1.29 2000/08/12 19:33:18 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,14 +22,14 @@
 #include <ntdll/ntdll.h>
 
 
-VOID RtlpInitProcessHeaps (PPEB Peb);
+VOID RtlInitializeHeapManager (VOID);
 
 /* GLOBALS *******************************************************************/
 
 DLL LdrDllListHead;
 extern unsigned int _image_base__;
 
-CRITICAL_SECTION PebLock;
+static CRITICAL_SECTION PebLock;
 
 ULONG NtGlobalFlag = 0;
 
@@ -97,6 +97,7 @@ LdrInitializeThunk (ULONG Unknown1,
    NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + PEDosHeader->e_lfanew);
 
    /* create process heap */
+   RtlInitializeHeapManager();
    Peb->ProcessHeap = RtlCreateHeap(0,
 				    (PVOID)HEAP_BASE,
 				    NTHeaders->OptionalHeader.SizeOfHeapCommit,
@@ -108,9 +109,6 @@ LdrInitializeThunk (ULONG Unknown1,
 	DbgPrint("Failed to create process heap\n");
 	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
-
-   /* initialize process heaps support */
-   RtlpInitProcessHeaps (Peb);
 
    /* initalize peb lock support */
    RtlInitializeCriticalSection (&PebLock);

@@ -34,7 +34,7 @@ org 100h
 ;
 BITS 16
 
-%define NDEBUG 1
+;%define NDEBUG 1
 
 %macro	DPRINT	1+
 %ifndef	NDEBUG

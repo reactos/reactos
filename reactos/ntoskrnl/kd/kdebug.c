@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.12 2000/07/01 18:25:00 ekohl Exp $
+/* $Id: kdebug.c,v 1.13 2000/08/12 19:33:21 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -311,16 +311,17 @@ KdPollBreakIn (
 	return Result;
 }
 
-VOID
-STDCALL
-KeEnterKernelDebugger (
-	VOID
-	)
+VOID STDCALL
+KeEnterKernelDebugger (VOID)
 {
 	HalDisplayString ("\n\n *** Entered kernel debugger ***\n");
 
+#if 1
 	for (;;)
 		__asm__("hlt\n\t");
+#else
+   for(;;);
+#endif
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.4 2000/07/19 14:18:19 dwelch Exp $
+/* $Id: mminit.c,v 1.5 2000/08/12 19:33:22 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -24,6 +24,7 @@
 #include <internal/io.h>
 #include <internal/ps.h>
 #include <internal/mmhal.h>
+#include <napi/shared_data.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -52,6 +53,9 @@ static MEMORY_AREA* kernel_text_desc = NULL;
 static MEMORY_AREA* kernel_data_desc = NULL;
 static MEMORY_AREA* kernel_param_desc = NULL;
 static MEMORY_AREA* kernel_pool_desc = NULL;
+static MEMORY_AREA* kernel_shared_data_desc = NULL;
+
+PVOID MmSharedDataPagePhysicalAddress = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -139,7 +143,25 @@ VOID MmInitVirtualMemory(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
 		      Length,
 		      0,
 		      &kernel_pool_desc);
-
+   
+   DPRINT1("Creating shared data page\n");
+   BaseAddress = (PVOID)KERNEL_SHARED_DATA_BASE;
+   Length = PAGESIZE;
+   MmCreateMemoryArea(NULL,
+		      MmGetKernelAddressSpace(),
+		      MEMORY_AREA_SYSTEM,
+		      &BaseAddress,
+		      Length,
+		      0,
+		      &kernel_shared_data_desc);
+   MmSharedDataPagePhysicalAddress = MmAllocPage(0);
+   MmSetPage(NULL,
+	     (PVOID)KERNEL_SHARED_DATA_BASE,
+	     PAGE_READWRITE,
+	     (ULONG)MmSharedDataPagePhysicalAddress);
+   ((PKUSER_SHARED_DATA)KERNEL_SHARED_DATA_BASE)->TickCountLow = 0xdeadbeef;
+   DPRINT1("Finished creating shared data page\n");
+   
 //   MmDumpMemoryAreas();
    DPRINT("MmInitVirtualMemory() done\n");
 }

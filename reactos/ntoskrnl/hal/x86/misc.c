@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.4 2000/04/09 15:58:13 ekohl Exp $
+/* $Id: misc.c,v 1.5 2000/08/12 19:33:20 dwelch Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS kernel
@@ -14,8 +14,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-VOID
-STDCALL
+VOID STDCALL
 HalHandleNMI (ULONG Unused)
 {
 	UCHAR ucStatus;
@@ -35,16 +34,18 @@ HalHandleNMI (ULONG Unused)
 	KeEnterKernelDebugger ();
 }
 
-VOID
-STDCALL
+VOID STDCALL
 HalProcessorIdle (VOID)
 {
+#if 1
 	__asm__("sti\n\t" \
 	        "hlt\n\t");
+#else
+   
+#endif
 }
 
-ULONG
-FASTCALL
+ULONG FASTCALL
 HalSystemVectorDispatchEntry (
 	ULONG	Unknown1,
 	ULONG	Unknown2,
@@ -54,8 +55,7 @@ HalSystemVectorDispatchEntry (
 	return 0;
 }
 
-VOID
-STDCALL
+VOID STDCALL
 KeFlushWriteBuffer (
 	VOID
 	)
@@ -63,8 +63,7 @@ KeFlushWriteBuffer (
 	return;
 }
 
-VOID
-STDCALL
+VOID STDCALL
 HalReportResourceUsage (
 	VOID
 	)

@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.5 1999/11/20 21:53:53 ekohl Exp $
+/* $Id: winlogon.c,v 1.6 2000/08/12 19:33:23 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,316 +11,234 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-//#include <stdio.h>
+#include <ntos.h>
+#include <windows.h>
+#include <stdio.h>
+#include <lsass/ntsecapi.h>
 
 #include <wchar.h>
 
 
 /* GLOBALS ******************************************************************/
 
-HANDLE	SM		= INVALID_HANDLE_VALUE;	/* SM API LPC port */
-HANDLE	SasEvent	= INVALID_HANDLE_VALUE;	/* int 0x19 */
-
-
 /* FUNCTIONS *****************************************************************/
 
-
-/***********************************************************************
- *	SmTerminationRequestHandler
- */
-VOID
-STDCALL
-SmTerminationRequestHandler (VOID)
+BOOLEAN StartServices(VOID)
 {
-	/* Should winlogon perform any action
-	 * before committing suicide?
-	 */
-	NtTerminateProcess(
-		NtCurrentProcess(),
-		0
-		);
+   HANDLE ServicesInitEvent;
+   BOOLEAN Result;
+   STARTUPINFO StartupInfo;
+   PROCESS_INFORMATION ProcessInformation;
+   
+   ServicesInitEvent = CreateEvent(NULL,
+				TRUE,
+				FALSE,
+		                "\\ServicesInitDone");				
+   
+   if (ServicesInitEvent == NULL)
+     {
+	DbgPrint("Failed to create services notification event\n");
+	return(FALSE);
+     }
+   
+   /* Start the Win32 subsystem (csrss.exe) */
+   DbgPrint("WL: Executing services.exe\n");
+   
+   StartupInfo.cb = sizeof(StartupInfo);
+   StartupInfo.lpReserved = NULL;
+   StartupInfo.lpDesktop = NULL;
+   StartupInfo.lpTitle = NULL;
+   StartupInfo.dwFlags = 0;
+   StartupInfo.cbReserved2 = 0;
+   StartupInfo.lpReserved2 = 0;
+   
+   Result = CreateProcess("C:\\reactos\\system32\\services.exe",
+			  NULL,
+			  NULL,
+			  NULL,
+			  FALSE,
+			  DETACHED_PROCESS,
+			  NULL,
+			  NULL,
+			  &StartupInfo,
+			  &ProcessInformation);
+   if (!Result)
+     {
+	DbgPrint("WL: Failed to execute services\n");
+	return(FALSE);
+     }
+   
+   DbgPrint("WL: Waiting for services\n");
+   WaitForSingleObject(ServicesInitEvent, INFINITE);
+   
+   DbgPrint("WL: Finished waiting for services\n");
+   return(TRUE);
 }
 
-
-/***********************************************************************
- * 	HasSystemGui
- * 	
- * DESCRIPTION
- * 	Call the Session Manager to know if user I/O is via a GUI or
- * 	via a CUI.
- *
- * RETURN VALUE
- * 	TRUE	GUI active
- * 	FALSE	CUI only
- */
-BOOL
-HasSystemGui (VOID)
+BOOLEAN StartLsass(VOID)
 {
-	/* FIXME: call smss.exe to know, since it
-	 * controls environment subsystem servers
-	 * waking up. ReactOS has only text mode
-	 * now, therefore we can answer (EA.19990608).
-	 */
-	return FALSE; /* NO GUI */
+   HANDLE LsassInitEvent;
+   BOOLEAN Result;
+   STARTUPINFO StartupInfo;
+   PROCESS_INFORMATION ProcessInformation;
+   
+   LsassInitEvent = CreateEvent(NULL,
+				TRUE,
+				FALSE,
+				"\\LsassInitDone");				
+   
+   if (LsassInitEvent == NULL)
+     {
+	DbgPrint("Failed to create lsass notification event\n");
+	return(FALSE);
+     }
+   
+   /* Start the Win32 subsystem (csrss.exe) */
+   DbgPrint("WL: Executing lsass.exe\n");
+   
+   StartupInfo.cb = sizeof(StartupInfo);
+   StartupInfo.lpReserved = NULL;
+   StartupInfo.lpDesktop = NULL;
+   StartupInfo.lpTitle = NULL;
+   StartupInfo.dwFlags = 0;
+   StartupInfo.cbReserved2 = 0;
+   StartupInfo.lpReserved2 = 0;
+   
+   Result = CreateProcess("C:\\reactos\\system32\\lsass.exe",
+			  NULL,
+			  NULL,
+			  NULL,
+			  FALSE,
+			  DETACHED_PROCESS,
+			  NULL,
+			  NULL,
+			  &StartupInfo,
+			  &ProcessInformation);
+   if (!Result)
+     {
+	DbgPrint("WL: Failed to execute lsass\n");
+	return(FALSE);
+     }
+   
+   DbgPrint("WL: Waiting for lsass\n");
+   WaitForSingleObject(LsassInitEvent, INFINITE);
+   
+   DbgPrint("WL: Finished waiting for lsass\n");
+   return(TRUE);
 }
 
-
-/***********************************************************************
- *	HasSystemActiveSession
- * 	
- * DESCRIPTION
- * 	Call the Session Manager to know if there is already an active
- * 	session.
- *
- * RETURN VALUE
- * 	TRUE	a session is active
- * 	FALSE	no sessions
- */
-BOOL
-HasSystemActiveSession (VOID)
+VOID DoLoginUser(PCHAR Name, PCHAR Password)
 {
-	/* FIXME: call smss.exe to know */
-	return FALSE; /* NO SESSIONS */
+   PROCESS_INFORMATION ProcessInformation;
+   STARTUPINFO StartupInfo;
+   BOOLEAN Result;
+   
+   StartupInfo.cb = sizeof(StartupInfo);
+   StartupInfo.lpReserved = NULL;
+   StartupInfo.lpDesktop = NULL;
+   StartupInfo.lpTitle = NULL;
+   StartupInfo.dwFlags = 0;
+   StartupInfo.cbReserved2 = 0;
+   StartupInfo.lpReserved2 = 0;
+   
+   Result = CreateProcess("C:\\reactos\\system32\\shell.exe",
+			  NULL,
+			  NULL,
+			  NULL,
+			  FALSE,
+			  DETACHED_PROCESS,
+			  NULL,
+			  NULL,
+			  &StartupInfo,
+			  &ProcessInformation);
+   if (!Result)
+     {
+	DbgPrint("WL: Failed to execute user shell\n");
+	return;
+     }
+   WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
 }
 
-
-/***********************************************************************
- * 	GuiLogin
- * 	
- * DESCRIPTION
- * 	Graphical login procedure
- *
- * NOTE
- * 	Read values from
- * 	
- *	HKEY_LOCAL-MACHINE
- *		SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon
- *
- */
-VOID
-GuiLogin (VOID)
+int STDCALL
+WinMain(HINSTANCE hInstance, 
+	HINSTANCE hPrevInstance,
+	LPSTR lpCmdLine, 
+	int nShowCmd)
 {
-	/* FIXME: Open logon dialog */
+#if 0
+   LSA_STRING ProcessName;
+   NTSTATUS Status;
+   HANDLE LsaHandle;
+   LSA_OPERATIONAL_MODE Mode;
+#endif
+   CHAR LoginPrompt[] = "login:";
+   CHAR PasswordPrompt[] = "password:";
+   ULONG Result;
+   CHAR LoginName[255];
+   CHAR Password[255];
+   ULONG i;
+   
+   /* 
+    * FIXME: Create WindowStations here. At the moment lsass and services
+    * share ours
+    */
+   
+   StartLsass();
+   StartServices();
+   
+   /* FIXME: What name does the real WinLogon use? */
+#if 0
+   RtlInitUnicodeString((PUNICODE_STRING)&ProcessName, L"WinLogon");
+   Status = LsaRegisterLogonProcess(&ProcessName, &LsaHandle, &Mode);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("WL: Failed to connect to lsass\n");
+	return(1);
+     }
+#endif
+   
+   /* smss wouldn't have created a console for us */
+   AllocConsole();
+   
+   /* Main loop */
+   for (;;)
+     {
+	/* Display login prompt */
+	WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
+		     LoginPrompt,
+		     wcslen(LoginPrompt),
+		     &Result,
+		     NULL);
+	i = 0;
+	do
+	  {
+	     ReadConsole(GetStdHandle(STD_INPUT_HANDLE),
+			 &LoginName[i],
+			 1,
+			 &Result,
+			 NULL);
+	     i++;
+	  } while (LoginName[i - 1] != '\n');
+	LoginName[i - 1] = 0;
+	
+	/* Display password prompt */
+	WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
+		     PasswordPrompt,
+		     wcslen(PasswordPrompt),
+		     &Result,
+		     NULL);
+	i = 0;
+	do
+	  {
+	     ReadConsole(GetStdHandle(STD_INPUT_HANDLE),
+			 &Password[i],
+			 1,
+			 &Result,
+			 NULL);
+	     i++;
+	  } while (Password[i - 1] != '\n');
+	Password[i - 1] =0;
+	
+	DoLoginUser(LoginName, Password);
+     }
 }
-
-
-/***********************************************************************
- * 	GuiMonitor
- * 	
- * DESCRIPTION
- * 	Graphical monitor procedure
- */
-VOID
-GuiMonitor (VOID)
-{
-	/* FIXME: Open Monitor dialog */
-}
-
-
-/***********************************************************************
- * 	CuiLogin
- * 	
- * DESCRIPTION
- * 	Text mode (console) login procedure
- *
- * NOTE
- * 	Read values from
- * 	
- *	HKEY_LOCAL-MACHINE
- *		SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon
- *
- */
-VOID
-CuiLogin (VOID)
-{
-	char username[255];
-	char password[255];
-
-	/* FIXME: to be used ntdll.dll only? */
-	printf("Winlogon\n");
-	printf("login: ");
-	fgets(username, 255, stdin);
-	printf("Password: ");
-	fgets(password, 255, stdin);
-	/*
-	 * 
-	 */
-	NtCreateProcess(
-		L"\\\\??\\C:\\reactos\\system\\userinit.exe",
-		);
-	/*
-	 *	Security issue: buffers are cleared.
-	 */
-	NtZeroMemory(username, sizeof username);
-	NtZeroMemory(password, sizeof password);
-}
-
-
-/***********************************************************************
- * 	CuiMonitor
- * 	
- * DESCRIPTION
- * 	Text mode (console) Monitor procedure
- */
-VOID
-CuiMonitor (VOID)
-{
-	WCHAR	HostName [64];
-	WCHAR	UserName [64];
-	WCHAR	FormattedDate [64];
-	WCHAR	InputKey = L'\0';
-
-	/* FIXME: query the system to get these info */
-	wcscpy( HostName, L"BACH" );
-	wcscpy( UserName, L"Administrator" );
-
-	/* FIXME: use locale info to format */
-        NtGetSystemTime(
-		);
-
-	/* Print info and Monitor menu */
-	NtDisplayString(L"\
-ReactOS Security:\n\
-\tYou are logged on as %s/%s\n\
-\yLogon date: %s\n\n\
-Use the Task Manager to close an application that is not responding.\n\n\
-1) Lock Workstation\n\
-2) Change Password\n\
-3) Logoff...\n\
-4) Task Manager...\n\
-5) Shut Down...\n\
-6) Cancel\n\n? ",
-		HostName,
-		UserName,
-		FormattedDate
-		);
-	while (TRUE)
-	{
-		/* FIXME: get a char and perform the requested action */
-		switch (InputKey)
-		{
-		case L'1':
-			DisplayString(L"Workstation locked...\n");
-			return;
-		case L'2':
-			DisplayString(L"Changing Password:\n");
-			return;
-		case L'3':
-			DisplayString(L"Logging off...\n");
-			return;
-		case L'4':
-			DisplayString(L"Task Manager:\n");
-			return;
-		case L'5':
-			DisplayString(L"Shutting Down:\n");
-			DisplayString(L"1) Shutdown\n");
-			DisplayString(L"2) Restart\n");
-			DisplayString(L"3) Logoff\n");
-			DisplayString(L"4) Cancel\n");
-			return;
-		case 27L: /* ESC */
-		case L'6':
-			return;
-		default:
-			DisplayString(L"Invalid key (1-6).\n");
-		}
-	}
-}
-
-
-HANDLE
-ConnectToSmApiPort(VOID)
-{
-	HANDLE			PortHandle;
-	NTSTATUS		Status = STATUS_SUCCESS;
-	UNICODE_STRING		SmApiPort;
-	LPWSTR			PortName = L"\\SmApiPort";
-	OBJECT_ATTRIBUTES	PortAttributes = {0};
-
-	SmApiPort.Length    = wcslen(PortName) * sizeof (WCHAR);
-	SmApiPort.MaxLength = SmApiPort.Length + sizeof (WCHAR);
-	SmApiPort.Buffer    = PortName;
-	Status = NtConnectPort(
-			& PortHandle,
-			& SmApiPort,
-			& PortAttributes, /* FIXME: ? */
-			0, /* FIXME: ? */
-			0, /* FIXME: ? */
-			0, /* FIXME: ? */
-			0, /* FIXME: ? */
-			0x00010000 /* FIXME: ? */
-			);
-	return (NT_SUCCESS(Status))
-		? PortHandle
-		: INVALID_HANDLE_VALUE;
-}
-
-
-/* Native process entry point */
-void
-NtProcessStartup( PSTARTUP_ARGUMENT StartupArgument )
-{
-	NTSTATUS		Status = STATUS_SUCCESS;
-
-	/* FIXME: connnect to the Session Manager
-	 * for LPC calls
-	 */
-	SM = ConnectToSmApiPort();
-	if (INVALID_HANDLE_VALUE == SM)
-	{
-		NtTerminateProcess(
-			NtCurrentProcess(),
-			0 /* FIXME: return a proper value to SM */
-			);
-	}
-	/* FIXME: register a termination callback
-	 * for smss.exe
-	 */
-	/* ??? register SmTerminationRequestHandler */
-	/* FIXME: hook Ctrl+Alt+Del (int 0x19)
-	 * (SAS = Secure Attention Sequence)
-	 */
-	/* ??? SasEvent = ? */
-	while (TRUE)
-	{
-		/*
-		 * Make the main thread wait
-		 * for SAS indefinitely.
-		 */
-		NtWaitForSingleObject(
-			SasEvent
-			/* ... */
-			);
-		/*
-		 * If there is no local session, begin
-		 * the logon procedure; otherwise open
-		 * the monitor dialog.
-		 */
-		if (TRUE == HasSystemActiveSession())
-		{
-			/* MONITOR */
-			if (TRUE == HasSystemGui())
-			{
-				/* GUI active: monitor in graphical mode */
-				GuiMonitor();
-				continue;
-			}
-			/* No GUI: monitor in text mode */
-			CuiMonitor();
-			continue;
-		}
-		/* LOGON */
-		if (TRUE == HasSystemGui())
-		{
-			/* GUI active, login in graphical mode */
-			GuiLogin();
-			continue;
-		}
-		/* No GUI, login in console mode */
-		CuiLogin();
-	}
-}
-
-
-/* EOF */

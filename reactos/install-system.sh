@@ -12,10 +12,3 @@ cp services/dd/ide/ide.sys $1
 cp ntoskrnl/ntoskrnl.exe $1/reactos/system32/
 cp services/fs/vfat/vfatfs.sys $1/reactos/system32/drivers/
 cp services/dd/ide/ide.sys $1/reactos/system32/drivers/
-#cp services/dd/floppy/floppy.sys $1/reactos/system32/drivers/
-cp services/dd/keyboard/keyboard.sys $1/reactos/system32/drivers
-cp services/dd/blue/blue.sys $1/reactos/system32/drivers
-#cp services/dd/vga/miniport/vgamp.sys $1/reactos/system32/drivers
-#cp services/dd/vga/display/vgaddi.dll $1/reactos/system32/drivers
-#cp services/dd/vidport/vidport.sys $1/reactos/system32/drivers
-cp services/fs/minix/minixfs.sys $1/reactos/system32/drivers

@@ -1,16 +1,16 @@
-# $Id: makefile,v 1.2 1999/08/29 13:45:06 dwelch Exp $
+# $Id: makefile,v 1.3 2000/08/12 19:33:23 dwelch Exp $
 #
 # Logon/login Application
 #
 # ReactOS Operating System
 #
-TARGET=winlogon
+TARGET = winlogon
 
 BASE_CFLAGS = -I../../include
 
-OBJECTS = $(TARGET).o init.o $(TARGET).coff
+OBJECTS = winlogon.o $(TARGET).coff
 
-LIBS = ../../lib/ntdll/ntdll.a
+LIBS = -lkernel32 ../../lib/ntdll/ntdll.a
 
 all: $(TARGET).exe
 
@@ -27,12 +27,11 @@ clean:
 $(TARGET).coff: $(TARGET).rc
 	$(RC) $(TARGET).rc $(TARGET).coff
 
-$(TARGET).exe: $(OBJECTS) $(LIBS)
-	$(LD) \
+$(TARGET).exe: $(OBJECTS)
+	$(CC) \
 		$(OBJECTS) \
 		$(LIBS) \
-		-o $(TARGET).exe \
-		--subsystem native
+		-o $(TARGET).exe 
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
 
 include ../../rules.mak
