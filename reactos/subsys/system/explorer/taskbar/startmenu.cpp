@@ -1678,7 +1678,7 @@ void StartMenuHandler::ShowSearchComputer()
 void StartMenuHandler::ShowLaunchDialog(HWND hwndOwner)
 {
 	 ///@todo All text phrases should be put into the resources.
-	static LPCSTR szTitle = "Create New Task";
+	static LPCSTR szTitle = "Run";
 	static LPCSTR szText = "Type the name of a program, folder, document, or Internet resource, and Explorer will open it for you.";
 
 	static DynamicFct<RUNFILEDLG> RunFileDlg(TEXT("SHELL32"), 61);
