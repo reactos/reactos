@@ -99,7 +99,7 @@ static char *ExceptionTypeStrings[] =
     "SIMD Fault"
   };
 
-static NTSTATUS ExceptionToNtStatus[] =
+NTSTATUS ExceptionToNtStatus[] =
   {
     STATUS_INTEGER_DIVIDE_BY_ZERO,
     STATUS_SINGLE_STEP,
@@ -108,7 +108,7 @@ static NTSTATUS ExceptionToNtStatus[] =
     STATUS_INTEGER_OVERFLOW,
     STATUS_ARRAY_BOUNDS_EXCEEDED,
     STATUS_ILLEGAL_INSTRUCTION,
-    STATUS_ACCESS_VIOLATION, /* STATUS_FLT_INVALID_OPERATION */
+    STATUS_FLOAT_INVALID_OPERATION,
     STATUS_ACCESS_VIOLATION,
     STATUS_ACCESS_VIOLATION,
     STATUS_ACCESS_VIOLATION,
@@ -117,10 +117,10 @@ static NTSTATUS ExceptionToNtStatus[] =
     STATUS_ACCESS_VIOLATION,
     STATUS_ACCESS_VIOLATION,
     STATUS_ACCESS_VIOLATION, /* RESERVED */
-    STATUS_ACCESS_VIOLATION, /* STATUS_FLT_INVALID_OPERATION */
+    STATUS_FLOAT_INVALID_OPERATION, /* Should not be used, the FPU can give more specific info */
     STATUS_DATATYPE_MISALIGNMENT,
     STATUS_ACCESS_VIOLATION,
-    STATUS_ACCESS_VIOLATION  /* STATUS_FLT_MULTIPLE_TRAPS? */
+    STATUS_FLOAT_MULTIPLE_TRAPS,
   };
 
 /* FUNCTIONS ****************************************************************/
@@ -190,9 +190,8 @@ KiKernelTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
       Er.NumberParameters = 0;
     }
 
-  Er.ExceptionFlags = (STATUS_SINGLE_STEP == Er.ExceptionCode ||
-                       STATUS_BREAKPOINT  == Er.ExceptionCode) ?
-                       0 : EXCEPTION_NONCONTINUABLE;
+  /* FIXME: Which exceptions are noncontinuable? */
+  Er.ExceptionFlags = 0;
 
   KiDispatchException(&Er, 0, Tf, KernelMode, TRUE);
 

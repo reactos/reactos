@@ -35,16 +35,6 @@
 
 /* DEFINES *******************************************************************/
 
-#define EXCEPTION_FLT_DENORMAL_OPERAND          (0xc000008dL)
-#define EXCEPTION_FLT_DIVIDE_BY_ZERO            (0xc000008eL)
-#define EXCEPTION_FLT_INEXACT_RESULT            (0xc000008fL)
-#define EXCEPTION_FLT_INVALID_OPERATION         (0xc0000090L)
-#define EXCEPTION_FLT_OVERFLOW                  (0xc0000091L)
-#define EXCEPTION_FLT_STACK_CHECK               (0xc0000092L)
-#define EXCEPTION_FLT_UNDERFLOW                 (0xc0000093L)
-#define EXCEPTION_FLT_MULTIPLE_FAULTS           (0xC00002B4L)
-#define EXCEPTION_FLT_MULTIPLE_TRAPS            (0xC00002B5L)
-
 /* x87 Status Word exception flags */
 #define X87_SW_IE       (1<<0)   /* Invalid Operation */
 #define X87_SW_DE       (1<<1)   /* Denormalized Operand */
@@ -566,19 +556,19 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
           DPRINT("FpuStatusWord = 0x%04x\n", FpuStatusWord);
 
           if (FpuStatusWord & X87_SW_IE)
-            Er.ExceptionCode = EXCEPTION_FLT_INVALID_OPERATION;
+            Er.ExceptionCode = STATUS_FLOAT_INVALID_OPERATION;
           else if (FpuStatusWord & X87_SW_DE)
-            Er.ExceptionCode = EXCEPTION_FLT_DENORMAL_OPERAND;
+            Er.ExceptionCode = STATUS_FLOAT_DENORMAL_OPERAND;
           else if (FpuStatusWord & X87_SW_ZE)
-            Er.ExceptionCode = EXCEPTION_FLT_DIVIDE_BY_ZERO;
+            Er.ExceptionCode = STATUS_FLOAT_DIVIDE_BY_ZERO;
           else if (FpuStatusWord & X87_SW_OE)
-            Er.ExceptionCode = EXCEPTION_FLT_OVERFLOW;
+            Er.ExceptionCode = STATUS_FLOAT_OVERFLOW;
           else if (FpuStatusWord & X87_SW_UE)
-            Er.ExceptionCode = EXCEPTION_FLT_UNDERFLOW;
+            Er.ExceptionCode = STATUS_FLOAT_UNDERFLOW;
           else if (FpuStatusWord & X87_SW_PE)
-            Er.ExceptionCode = EXCEPTION_FLT_INEXACT_RESULT;
+            Er.ExceptionCode = STATUS_FLOAT_INEXACT_RESULT;
           else if (FpuStatusWord & X87_SW_SE)
-            Er.ExceptionCode = EXCEPTION_FLT_STACK_CHECK;
+            Er.ExceptionCode = STATUS_FLOAT_STACK_CHECK;
           else
             ASSERT(0); /* not reached */
           /* FIXME: is this the right way to get the correct EIP of the faulting instruction? */
@@ -586,8 +576,8 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
         }
       else /* ExceptionNr == 19 */
         {
-          /* FIXME: When should we use EXCEPTION_FLT_MULTIPLE_FAULTS? */
-          Er.ExceptionCode = EXCEPTION_FLT_MULTIPLE_TRAPS;
+          /* FIXME: When should we use STATUS_FLOAT_MULTIPLE_FAULTS? */
+          Er.ExceptionCode = STATUS_FLOAT_MULTIPLE_TRAPS;
           Er.ExceptionAddress = (PVOID)Tf->Eip;
         }
 
