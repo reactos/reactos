@@ -226,10 +226,35 @@ typedef	BOOL (WINAPI* SHFINDFILES)(LPCITEMIDLIST pidlRoot, LPCITEMIDLIST pidlSav
 typedef	BOOL (WINAPI* SHFINDCOMPUTER)(LPCITEMIDLIST pidlRoot, LPCITEMIDLIST pidlSavedSearch);
 
 
- /// Startmenu root window
-struct StartMenuRoot : public StartMenu
+ /// Handling of standard start menu commands
+struct StartMenuHandler : public StartMenu
 {
 	typedef StartMenu super;
+
+	StartMenuHandler(HWND hwnd)
+	 :	super(hwnd)
+	{
+	}
+
+	StartMenuHandler(HWND hwnd, const StartMenuCreateInfo& create_info)
+	 :	super(hwnd, create_info)
+	{
+	}
+
+protected:
+	int		Command(int id, int code);
+
+	static void	ShowLaunchDialog(HWND hwndDesktopBar);
+	static void	ShowRestartDialog(HWND hwndOwner, UINT flags);
+	static void	ShowSearchDialog();
+	static void	ShowSearchComputer();
+};
+
+
+ /// Startmenu root window
+struct StartMenuRoot : public StartMenuHandler
+{
+	typedef StartMenuHandler super;
 
 	StartMenuRoot(HWND hwnd);
 
@@ -243,28 +268,6 @@ protected:
 	SIZE	_logo_size;
 
 	void	AddEntries();
-	int		Command(int id, int code);
-
-	static void	ShowLaunchDialog(HWND hwndDesktopBar);
-	static void	ShowRestartDialog(HWND hwndOwner, UINT flags);
-};
-
-
- /// Handling of standard start menu commands
-struct StartMenuHandler : public StartMenu
-{
-	typedef StartMenu super;
-
-	StartMenuHandler(HWND hwnd, const StartMenuCreateInfo& create_info)
-	 :	super(hwnd, create_info)
-	{
-	}
-
-protected:
-	int		Command(int id, int code);
-
-	static void	ShowSearchDialog();
-	static void	ShowSearchComputer();
 };
 
 

@@ -907,9 +907,12 @@ LRESULT	StartMenuRoot::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 }
 
 
-int StartMenuRoot::Command(int id, int code)
+int StartMenuHandler::Command(int id, int code)
 {
 	switch(id) {
+
+	// start menu root
+
 	  case IDC_PROGRAMS:
 		CreateSubmenu(id, CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, ResString(IDS_PROGRAMS));
 		break;
@@ -963,58 +966,9 @@ int StartMenuRoot::Command(int id, int code)
 		ShowExitWindowsDialog(hwndDesktopBar);
 		break;}
 
-	  default:
-		return super::Command(id, code);
-	}
 
-	return 0;
-}
+	// settings menu
 
-
-void StartMenuRoot::ShowLaunchDialog(HWND hwndDesktopBar)
-{
-	 ///@todo All text phrases should be put into the resources.
-	static LPCSTR szTitle = "Create New Task";
-	static LPCSTR szText = "Type the name of a program, folder, document, or Internet resource, and Task Manager will open it for you.";
-
-	static DynamicFct<RUNFILEDLG> RunFileDlg(TEXT("SHELL32"), 61);
-
-	 // Show "Run..." dialog
-	if (RunFileDlg) {
-#define	W_VER_NT 0
-		if ((HIWORD(GetVersion())>>14) == W_VER_NT) {
-			WCHAR wTitle[40], wText[256];
-
-			MultiByteToWideChar(CP_ACP, 0, szTitle, -1, wTitle, 40);
-			MultiByteToWideChar(CP_ACP, 0, szText, -1, wText, 256);
-
-			(*RunFileDlg)(hwndDesktopBar, 0, NULL, (LPCSTR)wTitle, (LPCSTR)wText, RFF_CALCDIRECTORY);
-		}
-		else
-			(*RunFileDlg)(hwndDesktopBar, 0, NULL, szTitle, szText, RFF_CALCDIRECTORY);
-	}
-}
-
-void ShowExitWindowsDialog(HWND hwndOwner)
-{
-	static DynamicFct<EXITWINDOWSDLG> ExitWindowsDlg(TEXT("SHELL32"), 60);
-
-	if (ExitWindowsDlg)
-		(*ExitWindowsDlg)(hwndOwner);
-}
-
-void StartMenuRoot::ShowRestartDialog(HWND hwndOwner, UINT flags)
-{
-	static DynamicFct<RESTARTWINDOWSDLG> RestartDlg(TEXT("SHELL32"), 59);
-
-	if (RestartDlg)
-		(*RestartDlg)(hwndOwner, (LPWSTR)L"You selected <Log Off>.\n\n", flags);	///@todo ANSI string conversion if needed
-}
-
-
-int StartMenuHandler::Command(int id, int code)
-{
-	switch(id) {
 	  case IDC_SETTINGS_MENU:
 		CreateSubmenu(id, CSIDL_CONTROLS, ResString(IDS_SETTINGS_MENU));
 		break;
@@ -1074,6 +1028,7 @@ int StartMenuHandler::Command(int id, int code)
 	return 0;
 }
 
+
 void StartMenuHandler::ShowSearchDialog()
 {
 	static DynamicFct<SHFINDFILES> SHFindFiles(TEXT("SHELL32"), 90);
@@ -1088,6 +1043,46 @@ void StartMenuHandler::ShowSearchComputer()
 
 	if (SHFindComputer)
 		(*SHFindComputer)(NULL, NULL);
+}
+
+void StartMenuHandler::ShowLaunchDialog(HWND hwndDesktopBar)
+{
+	 ///@todo All text phrases should be put into the resources.
+	static LPCSTR szTitle = "Create New Task";
+	static LPCSTR szText = "Type the name of a program, folder, document, or Internet resource, and Task Manager will open it for you.";
+
+	static DynamicFct<RUNFILEDLG> RunFileDlg(TEXT("SHELL32"), 61);
+
+	 // Show "Run..." dialog
+	if (RunFileDlg) {
+#define	W_VER_NT 0
+		if ((HIWORD(GetVersion())>>14) == W_VER_NT) {
+			WCHAR wTitle[40], wText[256];
+
+			MultiByteToWideChar(CP_ACP, 0, szTitle, -1, wTitle, 40);
+			MultiByteToWideChar(CP_ACP, 0, szText, -1, wText, 256);
+
+			(*RunFileDlg)(hwndDesktopBar, 0, NULL, (LPCSTR)wTitle, (LPCSTR)wText, RFF_CALCDIRECTORY);
+		}
+		else
+			(*RunFileDlg)(hwndDesktopBar, 0, NULL, szTitle, szText, RFF_CALCDIRECTORY);
+	}
+}
+
+void StartMenuHandler::ShowRestartDialog(HWND hwndOwner, UINT flags)
+{
+	static DynamicFct<RESTARTWINDOWSDLG> RestartDlg(TEXT("SHELL32"), 59);
+
+	if (RestartDlg)
+		(*RestartDlg)(hwndOwner, (LPWSTR)L"You selected <Log Off>.\n\n", flags);	///@todo ANSI string conversion if needed
+}
+
+void ShowExitWindowsDialog(HWND hwndOwner)
+{
+	static DynamicFct<EXITWINDOWSDLG> ExitWindowsDlg(TEXT("SHELL32"), 60);
+
+	if (ExitWindowsDlg)
+		(*ExitWindowsDlg)(hwndOwner);
 }
 
 
