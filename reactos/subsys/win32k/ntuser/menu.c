@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.56 2004/11/20 16:46:06 weiden Exp $
+/* $Id: menu.c,v 1.57 2004/12/13 15:38:19 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -631,11 +631,8 @@ IntInsertMenuItemToList(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, int pos)
 BOOL FASTCALL
 IntGetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINFO lpmii)
 {
-  UNICODE_STRING Text;
   NTSTATUS Status;
 
-  lpmii->cch = MenuItem->Text.Length / sizeof(WCHAR);
-  
   if(lpmii->fMask & MIIM_BITMAP)
     {
       lpmii->hbmpItem = MenuItem->hbmpItem;
@@ -665,30 +662,22 @@ IntGetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
     {
       lpmii->hSubMenu = MenuItem->hSubMenu;
     }
-  if (0 != (lpmii->fMask & MIIM_STRING) ||
-      0 != (lpmii->fMask & MIIM_TYPE))
+  if (lpmii->fMask & (MIIM_STRING | MIIM_TYPE))
     {
-      Status = MmCopyFromCaller(&Text, lpmii->dwTypeData, sizeof(UNICODE_STRING));
-      if (! NT_SUCCESS(Status))
+      if (lpmii->dwTypeData == NULL)
         {
-          SetLastNtError(Status);
-          return FALSE;
+          lpmii->cch = MenuItem->Text.Length / sizeof(WCHAR);
         }
-      Text.Length = min(Text.MaximumLength, MenuItem->Text.Length);
-      if (0 != Text.Length)
+      else
         {
-          Status = MmCopyToCaller(Text.Buffer, MenuItem->Text.Buffer, Text.Length);
+          Status = MmCopyToCaller(lpmii->dwTypeData, MenuItem->Text.Buffer,
+                                  min(lpmii->cch * sizeof(WCHAR),
+                                      MenuItem->Text.MaximumLength));
           if (! NT_SUCCESS(Status))
             {
               SetLastNtError(Status);
               return FALSE;
             }
-        }
-      Status = MmCopyToCaller(lpmii->dwTypeData, &Text, sizeof(UNICODE_STRING));
-      if (! NT_SUCCESS(Status))
-        {
-          SetLastNtError(Status);
-          return FALSE;
         }
     }
 
@@ -704,8 +693,6 @@ IntGetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
 BOOL FASTCALL
 IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINFO lpmii)
 {
-  PUNICODE_STRING Source;
-  UINT copylen = 0;
   PMENU_OBJECT SubMenuObject;
   
   if(!MenuItem || !MenuObject || !lpmii)
@@ -765,15 +752,21 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
   {
     if(lpmii->dwTypeData && lpmii->cch)
     {
-      Source = (PUNICODE_STRING)lpmii->dwTypeData;
+      UNICODE_STRING Source;
+
+      Source.Length = 
+      Source.MaximumLength = lpmii->cch * sizeof(WCHAR);
+      Source.Buffer = lpmii->dwTypeData;
+
       FreeMenuText(MenuItem);
-      copylen = min((UINT)Source->MaximumLength, (lpmii->cch + 1) * sizeof(WCHAR));
-      MenuItem->Text.Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, copylen, TAG_STRING);
-      if(MenuItem->Text.Buffer)
+      MenuItem->Text.Buffer = (PWSTR)ExAllocatePoolWithTag(
+        PagedPool, Source.Length + sizeof(WCHAR), TAG_STRING);
+      if(MenuItem->Text.Buffer != NULL)
       {
         MenuItem->Text.Length = 0;
-        MenuItem->Text.MaximumLength = copylen;
-        RtlCopyUnicodeString(&MenuItem->Text, Source);
+        MenuItem->Text.MaximumLength = Source.Length + sizeof(WCHAR);
+        RtlCopyUnicodeString(&MenuItem->Text, &Source);
+        MenuItem->Text.Buffer[MenuItem->Text.Length / sizeof(WCHAR)] = 0;
       }
       else
       {

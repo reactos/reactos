@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.75 2004/12/11 20:18:06 navaraf Exp $
+/* $Id: menu.c,v 1.76 2004/12/13 15:38:18 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -199,92 +199,38 @@ MenuInitRosMenuItemInfo(PROSMENUITEMINFO ItemInfo)
  *
  * Get full information about a menu item
  */
-#define INITIAL_STRING_SIZE 32 /* in WCHARs */
 static BOOL FASTCALL
 MenuGetRosMenuItemInfo(HMENU Menu, UINT Index, PROSMENUITEMINFO ItemInfo)
 {
-  UNICODE_STRING Text = {0, 0, NULL};
-
-  if (MF_STRING == MENU_ITEM_TYPE(ItemInfo->fType))
+  if (ItemInfo->dwTypeData != NULL)
     {
-      if (NULL != ItemInfo->dwTypeData)
-        {
-          /* There's already a buffer allocated */
-          Text.Buffer = ItemInfo->dwTypeData;
-          Text.Length = ItemInfo->cch * sizeof(WCHAR);
-          Text.MaximumLength = (ItemInfo->cch < INITIAL_STRING_SIZE ? INITIAL_STRING_SIZE
-                                : ItemInfo->cch + 1) * sizeof(WCHAR);
-        }
-      else
-        {
-          Text.Buffer = HeapAlloc(GetProcessHeap(), 0, INITIAL_STRING_SIZE * sizeof(WCHAR));
-          if (NULL == Text.Buffer)
-            {
-              return FALSE;
-            }
-          Text.Length = 0;
-          Text.MaximumLength = INITIAL_STRING_SIZE * sizeof(WCHAR);
-          ItemInfo->cch = INITIAL_STRING_SIZE - 1;
-        }
+      HeapFree(GetProcessHeap(), 0, ItemInfo->dwTypeData);
     }
-  ItemInfo->dwTypeData = (LPWSTR) &Text;
 
   ItemInfo->fMask = MIIM_BITMAP | MIIM_CHECKMARKS | MIIM_DATA | MIIM_FTYPE
                     | MIIM_ID | MIIM_STATE | MIIM_STRING | MIIM_SUBMENU | MIIM_TYPE;
+  ItemInfo->dwTypeData = NULL;
 
   if (! NtUserMenuItemInfo(Menu, Index, TRUE, ItemInfo, FALSE))
     {
-      if (NULL != Text.Buffer)
-        {
-          HeapFree(GetProcessHeap(), 0, Text.Buffer);
-          ItemInfo->dwTypeData = NULL;
-          ItemInfo->cch = 0;
-        }
       ItemInfo->fType = 0;
       return FALSE;
     }
 
-  if (MF_STRING == MENU_ITEM_TYPE(ItemInfo->fType))
+  if (MENU_ITEM_TYPE(ItemInfo->fType) == MF_STRING)
     {
-      /* We have a string... */
-      if (Text.MaximumLength < (ItemInfo->cch + 1) * sizeof(WCHAR))
+      ItemInfo->cch++;
+      ItemInfo->dwTypeData = HeapAlloc(GetProcessHeap(), 0,
+                                       ItemInfo->cch * sizeof(WCHAR));
+      if (NULL == ItemInfo->dwTypeData)
         {
-          /* ...but we didn't allocate enough memory. Let's try again */
-          HeapFree(GetProcessHeap(), 0, Text.Buffer);
-          Text.Buffer = HeapAlloc(GetProcessHeap(), 0, (ItemInfo->cch + 1) * sizeof(WCHAR));
-          if (NULL == Text.Buffer)
-            {
-              ItemInfo->dwTypeData = NULL;
-              ItemInfo->cch = 0;
-              return FALSE;
-            }
-          Text.Length = (ItemInfo->cch + 1) * sizeof(WCHAR);
-          Text.MaximumLength = (ItemInfo->cch + 1) * sizeof(WCHAR);
-          ItemInfo->cch++;
-          if (! NtUserMenuItemInfo(Menu, Index, TRUE, ItemInfo, FALSE))
-            {
-              HeapFree(GetProcessHeap(), 0, Text.Buffer);
-              ItemInfo->dwTypeData = NULL;
-              ItemInfo->cch = 0;
-              ItemInfo->fType = 0;
-            }
+          return FALSE;
         }
-    }
 
-  if (MF_STRING == MENU_ITEM_TYPE(ItemInfo->fType))
-    {
-      ItemInfo->dwTypeData = Text.Buffer;
-      ItemInfo->cch = Text.Length / sizeof(WCHAR);
-      Text.Buffer[ItemInfo->cch] = L'\0';
-    }
-  else
-    {
-      /* Not a string, clean up the buffer */
-      if (NULL != Text.Buffer)
+      if (! NtUserMenuItemInfo(Menu, Index, TRUE, ItemInfo, FALSE))
         {
-          HeapFree(GetProcessHeap(), 0, Text.Buffer);
-          ItemInfo->dwTypeData = NULL;
-          ItemInfo->cch = 0;
+          ItemInfo->fType = 0;
+          return FALSE;
         }
     }
 
@@ -299,27 +245,18 @@ MenuGetRosMenuItemInfo(HMENU Menu, UINT Index, PROSMENUITEMINFO ItemInfo)
 static BOOL FASTCALL
 MenuSetRosMenuItemInfo(HMENU Menu, UINT Index, PROSMENUITEMINFO ItemInfo)
 {
-  UNICODE_STRING Text;
-  BOOL StringVal;
   BOOL Ret;
 
-  StringVal = (MF_STRING == MENU_ITEM_TYPE(ItemInfo->fType) && NULL != ItemInfo->dwTypeData);
-  if (StringVal)
-    {
-      Text.Buffer = ItemInfo->dwTypeData;
-      Text.Length = wcslen(Text.Buffer) * sizeof(WCHAR);
-      Text.MaximumLength = Text.Length + sizeof(WCHAR);
-      ItemInfo->dwTypeData = (LPWSTR) &Text;
-    }
+  if (MENU_ITEM_TYPE(ItemInfo->fType) == MF_STRING &&
+      ItemInfo->dwTypeData != NULL)
+  {
+    ItemInfo->cch = wcslen(ItemInfo->dwTypeData);
+  }
   ItemInfo->fMask = MIIM_BITMAP | MIIM_CHECKMARKS | MIIM_DATA | MIIM_FTYPE
                     | MIIM_ID | MIIM_STATE | MIIM_STRING | MIIM_SUBMENU | MIIM_TYPE;
+
   
   Ret = NtUserMenuItemInfo(Menu, Index, TRUE, ItemInfo, TRUE);
-
-  if (StringVal)
-    {
-      ItemInfo->dwTypeData = Text.Buffer;
-    }
 
   return Ret;
 }
@@ -332,11 +269,9 @@ MenuSetRosMenuItemInfo(HMENU Menu, UINT Index, PROSMENUITEMINFO ItemInfo)
 static VOID FASTCALL
 MenuCleanupRosMenuItemInfo(PROSMENUITEMINFO ItemInfo)
 {
-  if (MF_STRING == MENU_ITEM_TYPE(ItemInfo->fType) && NULL != ItemInfo->dwTypeData)
+  if (ItemInfo->dwTypeData != NULL)
     {
       HeapFree(GetProcessHeap(), 0, ItemInfo->dwTypeData);
-      ItemInfo->dwTypeData = NULL;
-      ItemInfo->cch = 0;
     }
 }
 
@@ -422,7 +357,7 @@ MenuGetBitmapItemSize(UINT Id, DWORD Data, SIZE *Size)
   /* check if there is a magic menu item associated with this item */
   if (0 != Id && IS_MAGIC_ITEM(Id))
     {
-      switch(LOWORD(Id))
+      switch((INT_PTR) LOWORD(Id))
         {
           case (INT_PTR) HBMMENU_SYSTEM:
             if (0 != Data)
@@ -3747,8 +3682,15 @@ GetMenuItemInfoA(
    BOOL ByPosition,
    LPMENUITEMINFOA mii)
 {
-   UNICODE_STRING Text;
-   CHAR *AnsiString;
+   LPSTR AnsiBuffer;
+   MENUITEMINFOW miiW;
+
+   if (mii->cbSize != sizeof(MENUITEMINFOA) &&
+       mii->cbSize != sizeof(MENUITEMINFOA) - sizeof(HBITMAP))
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+   }
 
    if ((mii->fMask & (MIIM_STRING | MIIM_TYPE)) == 0)
    {
@@ -3756,31 +3698,35 @@ GetMenuItemInfoA(
       return NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) mii, FALSE);
    }
 
-   Text.Length = 0;
-   Text.MaximumLength = mii->cch * sizeof(WCHAR);
-   Text.Buffer = RtlAllocateHeap(GetProcessHeap(), 0, mii->cch * sizeof(WCHAR));
-   if (mii->dwTypeData == NULL)
-      return FALSE;
-   AnsiString = mii->dwTypeData;
-   mii->dwTypeData = (LPSTR) &Text;
+   RtlCopyMemory(&miiW, mii, mii->cbSize);
+   AnsiBuffer = mii->dwTypeData;
+
+   if (AnsiBuffer != NULL)
+   {
+      miiW.dwTypeData = RtlAllocateHeap(GetProcessHeap(), 0,
+                                        miiW.cch * sizeof(WCHAR));
+      if (miiW.dwTypeData == NULL)
+         return FALSE;
+   }
    
-   if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO)mii, FALSE))
+   if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO)&miiW, FALSE))
    {
-      HeapFree(GetProcessHeap(), 0, Text.Buffer);
-      mii->dwTypeData = AnsiString;
+      HeapFree(GetProcessHeap(), 0, miiW.dwTypeData);
       return FALSE;
    }
 
-   if (IS_STRING_ITEM(mii->fType))
+   if (AnsiBuffer != NULL)
    {
-      WideCharToMultiByte(CP_ACP, 0, Text.Buffer, mii->cch, AnsiString, mii->cch,
-                          NULL, NULL);
-      if (Text.MaximumLength > Text.Length)
-         AnsiString[mii->cch] = 0;
+      if (IS_STRING_ITEM(miiW.fType))
+      {
+         WideCharToMultiByte(CP_ACP, 0, miiW.dwTypeData, miiW.cch, AnsiBuffer,
+                             mii->cch, NULL, NULL);
+      }
+      RtlFreeHeap(GetProcessHeap(), 0, miiW.dwTypeData);
    }
 
-   RtlFreeHeap(GetProcessHeap(), 0, Text.Buffer);
-   mii->dwTypeData = AnsiString;
+   RtlCopyMemory(mii, &miiW, miiW.cbSize);
+   mii->dwTypeData = AnsiBuffer;
 
    return TRUE;
 }
@@ -3796,29 +3742,7 @@ GetMenuItemInfoW(
    BOOL ByPosition,
    LPMENUITEMINFOW mii)
 {
-   UNICODE_STRING Text;
-   WCHAR *UnicodeString;
-
-   if ((mii->fMask & (MIIM_STRING | MIIM_TYPE)) == 0)
-   {
-      /* No text requested, just pass on */
-      return NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) mii, FALSE);
-   }
-
-   Text.Length = 0;
-   Text.MaximumLength = mii->cch * sizeof(WCHAR);
-   Text.Buffer = mii->dwTypeData;
-   UnicodeString = mii->dwTypeData;
-   mii->dwTypeData = (LPWSTR) &Text;
-
-   if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO)mii, FALSE))
-   {
-      mii->dwTypeData = UnicodeString;
-      return FALSE;
-   }
-
-   mii->dwTypeData = UnicodeString;
-   return TRUE;
+   return NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) mii, FALSE);
 }
 
 
@@ -3851,6 +3775,7 @@ GetMenuState(
 
   mii.cbSize = sizeof(MENUITEMINFOW);
   mii.fMask = MIIM_STATE | MIIM_TYPE | MIIM_SUBMENU;
+  mii.dwTypeData = NULL;
   
   SetLastError(0);
   if(NtUserMenuItemInfo(hMenu, uId, uFlags, &mii, FALSE))
@@ -4066,20 +3991,20 @@ InsertMenuItemA(
     if((mi.fMask & (MIIM_TYPE | MIIM_STRING)) && 
       (MENU_ITEM_TYPE(mi.fType) == MF_STRING) && mi.dwTypeData)
     {
-      Status = HEAP_strdupAtoW ( &mi.dwTypeData, (LPCSTR)mi.dwTypeData, &mi.cch );
+      Status = RtlCreateUnicodeStringFromAsciiz(&MenuText, (LPSTR)mi.dwTypeData);
       if (!NT_SUCCESS (Status))
       {
         SetLastError (RtlNtStatusToDosError(Status));
         return FALSE;
       }
-      RtlInitUnicodeString(&MenuText, (PWSTR)mi.dwTypeData);
-      mi.dwTypeData = (LPWSTR)&MenuText;
+      mi.dwTypeData = MenuText.Buffer;
+      mi.cch = MenuText.Length / sizeof(WCHAR);
       CleanHeap = TRUE;
     }
 
     res = NtUserInsertMenuItem(hMenu, uItem, fByPosition, &mi);
 
-    if ( CleanHeap ) HEAP_free ( MenuText.Buffer );
+    if ( CleanHeap ) RtlFreeUnicodeString ( &MenuText );
   }
   return res;
 }
@@ -4112,14 +4037,12 @@ InsertMenuItemW(
     
     /* copy the text string */
     if((mi.fMask & (MIIM_TYPE | MIIM_STRING)) && 
-      (MENU_ITEM_TYPE(mi.fType) == MF_STRING) && mi.dwTypeData)
+      (MENU_ITEM_TYPE(mi.fType) == MF_STRING) &&
+      mi.dwTypeData != NULL)
     {
-      if(lpmii->cch > 0)
-      {
-        RtlInitUnicodeString(&MenuText, (PWSTR)lpmii->dwTypeData);
-        mi.dwTypeData = (LPWSTR)&MenuText;
-        mi.cch = MenuText.Length / sizeof(WCHAR);
-      }
+      RtlInitUnicodeString(&MenuText, (PWSTR)lpmii->dwTypeData);
+      mi.dwTypeData = MenuText.Buffer;
+      mi.cch = MenuText.Length / sizeof(WCHAR);
     };
     
     res = NtUserInsertMenuItem(hMenu, uItem, fByPosition, &mi);
@@ -4441,11 +4364,12 @@ SetMenuItemInfoA(
 
   if ((MenuItemInfoW.fMask & (MIIM_TYPE | MIIM_STRING)) &&
       (MENU_ITEM_TYPE(MenuItemInfoW.fType) == MF_STRING) &&
-      MenuItemInfoW.dwTypeData)
+      MenuItemInfoW.dwTypeData != NULL)
   {
     RtlCreateUnicodeStringFromAsciiz(&UnicodeString,
                                      (LPSTR)MenuItemInfoW.dwTypeData);
-    MenuItemInfoW.dwTypeData = (LPWSTR)&UnicodeString;
+    MenuItemInfoW.dwTypeData = UnicodeString.Buffer;
+    MenuItemInfoW.cch = UnicodeString.Length / sizeof(WCHAR);
   }
   else
   {
@@ -4476,17 +4400,9 @@ SetMenuItemInfoW(
   LPCMENUITEMINFOW lpmii)
 {
   MENUITEMINFOW MenuItemInfoW;
-  UNICODE_STRING UnicodeString;
 
   RtlCopyMemory(&MenuItemInfoW, lpmii, min(lpmii->cbSize, sizeof(MENUITEMINFOW)));
-
-  if ((MenuItemInfoW.fMask & (MIIM_TYPE | MIIM_STRING)) &&
-      (MENU_ITEM_TYPE(MenuItemInfoW.fType) == MF_STRING) &&
-      MenuItemInfoW.dwTypeData)
-  {
-    RtlInitUnicodeString(&UnicodeString, MenuItemInfoW.dwTypeData);
-    MenuItemInfoW.dwTypeData = (LPWSTR)&UnicodeString;
-  }
+  MenuItemInfoW.cch = wcslen(MenuItemInfoW.dwTypeData);
 
   return NtUserMenuItemInfo(hMenu, uItem, fByPosition,
                             (PROSMENUITEMINFO)&MenuItemInfoW, TRUE);
