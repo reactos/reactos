@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.8 2003/07/29 18:17:53 hbirr Exp $
+/* $Id: timer.c,v 1.9 2003/08/11 21:10:49 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -309,7 +309,7 @@ NtUserSetSystemTimer(
 }
 
 
-static NTSTATUS STDCALL
+static VOID STDCALL_FUNC
 TimerThreadMain(
    PVOID StartContext
    )

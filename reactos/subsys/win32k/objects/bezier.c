@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bezier.c,v 1.3 2003/05/18 17:16:17 ea Exp $ */
+/* $Id: bezier.c,v 1.4 2003/08/11 21:10:49 royce Exp $ */
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <math.h>
@@ -63,7 +63,15 @@
 #define BEZIERMIDDLE(Mid, P1, P2) \
   (Mid).x=((P1).x+(P2).x + 1)/2;\
   (Mid).y=((P1).y+(P2).y + 1)/2;
-    
+
+static int abs ( int __x )
+{
+  if ( __x < 0 )
+    return -__x;
+  else
+    return __x;
+}
+
 /**********************************************************
 * BezierCheck helper function to check
 * that recursion can be terminated
@@ -78,40 +86,61 @@ static BOOL FASTCALL BezierCheck( int level, POINT *Points)
 
   dx=Points[3].x-Points[0].x;
   dy=Points[3].y-Points[0].y;
-  if(abs(dy)<=abs(dx)) {/* shallow line */
+  if ( abs(dy) <= abs(dx) ) /* shallow line */
+  {
     /* check that control points are between begin and end */
-    if(Points[1].x < Points[0].x){
-      if(Points[1].x < Points[3].x) return FALSE;
-    }else
-    if(Points[1].x > Points[3].x) return FALSE;
-    if(Points[2].x < Points[0].x) {
-      if(Points[2].x < Points[3].x) return FALSE;
-    } else
-      if(Points[2].x > Points[3].x) return FALSE;
-      dx=BEZIERSHIFTDOWN(dx);
-      if(!dx) return TRUE;
-      if(abs(Points[1].y-Points[0].y-(dy/dx)*
-        BEZIERSHIFTDOWN(Points[1].x-Points[0].x)) > BEZIERPIXEL ||
-        abs(Points[2].y-Points[0].y-(dy/dx)*
-        BEZIERSHIFTDOWN(Points[2].x-Points[0].x)) > BEZIERPIXEL) return FALSE;
+    if ( Points[1].x < Points[0].x )
+    {
+      if ( Points[1].x < Points[3].x )
+	return FALSE;
+    }
+    else if ( Points[1].x > Points[3].x )
+      return FALSE;
+    if ( Points[2].x < Points[0].x)
+    {
+      if ( Points[2].x < Points[3].x )
+	return FALSE;
+    }
+    else if ( Points[2].x > Points[3].x )
+      return FALSE;
+    dx = BEZIERSHIFTDOWN(dx);
+    if ( !dx )
+      return TRUE;
+    if ( abs(Points[1].y-Points[0].y-(dy/dx)*
+	BEZIERSHIFTDOWN(Points[1].x-Points[0].x)) > BEZIERPIXEL ||
+	abs(Points[2].y-Points[0].y-(dy/dx)*
+	BEZIERSHIFTDOWN(Points[2].x-Points[0].x)) > BEZIERPIXEL
+	)
+	return FALSE;
       else
         return TRUE;
-    } else{ /* steep line */
+  }
+  else
+  { /* steep line */
       /* check that control points are between begin and end */
-      if(Points[1].y < Points[0].y){
-        if(Points[1].y < Points[3].y) return FALSE;
-      } else
-        if(Points[1].y > Points[3].y) return FALSE;
-      if(Points[2].y < Points[0].y){
-        if(Points[2].y < Points[3].y) return FALSE;
-      } else
-        if(Points[2].y > Points[3].y) return FALSE;
-      dy=BEZIERSHIFTDOWN(dy);
-      if(!dy) return TRUE;
-      if(abs(Points[1].x-Points[0].x-(dx/dy)*
+      if(Points[1].y < Points[0].y)
+      {
+        if(Points[1].y < Points[3].y)
+	  return FALSE;
+      }
+      else if(Points[1].y > Points[3].y)
+	return FALSE;
+      if ( Points[2].y < Points[0].y )
+      {
+        if ( Points[2].y < Points[3].y )
+	  return FALSE;
+      }
+      else if ( Points[2].y > Points[3].y )
+	return FALSE;
+      dy = BEZIERSHIFTDOWN(dy);
+      if ( !dy )
+	return TRUE;
+      if ( abs(Points[1].x-Points[0].x-(dx/dy)*
         BEZIERSHIFTDOWN(Points[1].y-Points[0].y)) > BEZIERPIXEL ||
         abs(Points[2].x-Points[0].x-(dx/dy)*
-        BEZIERSHIFTDOWN(Points[2].y-Points[0].y)) > BEZIERPIXEL ) return FALSE;
+        BEZIERSHIFTDOWN(Points[2].y-Points[0].y)) > BEZIERPIXEL
+	)
+	return FALSE;
       else
         return TRUE;
     }

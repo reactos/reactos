@@ -35,7 +35,7 @@ BOOL STDCALL IntEngPolyline(SURFOBJ *DestSurf,
 	                           CONST LPPOINT  pt,
 				   LONG dCount,
 	                           MIX mix);
-CLIPOBJ STDCALL * IntEngCreateClipRegion(ULONG count,
+CLIPOBJ* STDCALL IntEngCreateClipRegion(ULONG count,
 					 PRECTL pRect,
 					 RECTL rcBounds);
 #endif

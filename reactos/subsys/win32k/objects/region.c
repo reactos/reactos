@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.30 2003/08/04 19:07:50 royce Exp $ */
+/* $Id: region.c,v 1.31 2003/08/11 21:10:49 royce Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -1833,7 +1833,8 @@ W32kPaintRgn(HDC  hDC,
   //visrgn = RGNDATA_LockRgn(tmpVisRgn);
   visrgn = RGNDATA_LockRgn(hRgn);
 
-  ClipRegion = IntEngCreateClipRegion( visrgn->rdh.nCount, visrgn->Buffer, visrgn->rdh.rcBound );
+  ClipRegion = IntEngCreateClipRegion (
+	  visrgn->rdh.nCount, (PRECTL)visrgn->Buffer, visrgn->rdh.rcBound );
   ASSERT( ClipRegion );
   pBrush = BRUSHOBJ_LockBrush(dc->w.hBrush);
   ASSERT(pBrush);

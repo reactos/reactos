@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.23 2003/06/06 10:17:44 gvg Exp $
+ * $Id: dib.c,v 1.24 2003/08/11 21:10:49 royce Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -44,11 +44,11 @@ UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
   PDC dc;
   PALETTEENTRY * palEntry;
   PPALOBJ palette;
-  RGBQUAD *end;
+  const RGBQUAD *end;
 
-  if (!(dc = (PDC)AccessUserObject(hDC))) return 0;
+  if (!(dc = (PDC)AccessUserObject((ULONG)hDC))) return 0;
 
-  if (!(palette = (PPALOBJ)AccessUserObject(dc->DevInfo->hpalDefault)))
+  if (!(palette = (PPALOBJ)AccessUserObject((ULONG)dc->DevInfo->hpalDefault)))
   {
 //    GDI_ReleaseObj( hdc );
     return 0;
@@ -56,7 +56,8 @@ UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
 
   // Transfer color info
 
-  if (dc->w.bitsPerPixel <= 8) {
+  if (dc->w.bitsPerPixel <= 8)
+  {
     palEntry = palette->logpalette->palPalEntry + StartIndex;
     if (StartIndex + Entries > (1 << dc->w.bitsPerPixel))
       Entries = (1 << dc->w.bitsPerPixel) - StartIndex;
@@ -70,7 +71,9 @@ UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
       palEntry->peGreen = Colors->rgbGreen;
       palEntry->peBlue  = Colors->rgbBlue;
     }
-  } else {
+  }
+  else
+  {
     Entries = 0;
   }
 
@@ -81,13 +84,15 @@ UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
 }
 
 // Converts a DIB to a device-dependent bitmap
-INT STDCALL W32kSetDIBits(HDC  hDC,
-                   HBITMAP  hBitmap,
-                   UINT  StartScan,
-                   UINT  ScanLines,
-                   CONST VOID  *Bits,
-                   CONST BITMAPINFO  *bmi,
-                   UINT  ColorUse)
+INT STDCALL
+W32kSetDIBits(
+	HDC  hDC,
+	HBITMAP  hBitmap,
+	UINT  StartScan,
+	UINT  ScanLines,
+	CONST VOID  *Bits,
+	CONST BITMAPINFO  *bmi,
+	UINT  ColorUse)
 {
   DC *dc;
   BITMAPOBJ *bitmap;
@@ -104,7 +109,7 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
   RGBQUAD *lpRGB;
   HPALETTE DDB_Palette, DIB_Palette;
   ULONG DDB_Palette_Type, DIB_Palette_Type;
-  PBYTE vBits = Bits;
+  const BYTE* vBits = (const BYTE*)Bits;
   INT scanDirection = 1, DIBWidth;
 
   // Check parameters
@@ -195,18 +200,20 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
   return result;
 }
 
-INT STDCALL W32kSetDIBitsToDevice(HDC  hDC,
-                           INT  XDest,
-                           INT  YDest,
-                           DWORD  Width,
-                           DWORD  Height,
-                           INT  XSrc,
-                           INT  YSrc,
-                           UINT  StartScan,
-                           UINT  ScanLines,
-                           CONST VOID  *Bits,
-                           CONST BITMAPINFO  *bmi,
-                           UINT  ColorUse)
+INT STDCALL
+W32kSetDIBitsToDevice(
+	HDC  hDC,
+	INT  XDest,
+	INT  YDest,
+	DWORD  Width,
+	DWORD  Height,
+	INT  XSrc,
+	INT  YSrc,
+	UINT  StartScan,
+	UINT  ScanLines,
+	CONST VOID  *Bits,
+	CONST BITMAPINFO  *bmi,
+	UINT  ColorUse)
 {
 
 }
@@ -854,7 +861,8 @@ PBITMAPOBJ FASTCALL DIBtoDDB(HGLOBAL hPackedDIB, HDC hdc) // FIXME: This should 
   return pBmp;
 }
 
-RGBQUAD * FASTCALL DIB_MapPaletteColors(PDC dc, LPBITMAPINFO lpbmi)
+RGBQUAD * FASTCALL
+DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
 {
   RGBQUAD *lpRGB;
   int nNumColors,i;
@@ -863,7 +871,8 @@ RGBQUAD * FASTCALL DIB_MapPaletteColors(PDC dc, LPBITMAPINFO lpbmi)
 
   palObj = AccessUserObject(dc->DevInfo->hpalDefault);
 
-  if (palObj == NULL) {
+  if (palObj == NULL)
+  {
 //      RELEASEDCINFO(hDC);
     return NULL;
   }
@@ -875,7 +884,8 @@ RGBQUAD * FASTCALL DIB_MapPaletteColors(PDC dc, LPBITMAPINFO lpbmi)
   lpRGB = (RGBQUAD *)ExAllocatePool(NonPagedPool, sizeof(RGBQUAD) * nNumColors);
   lpIndex = (DWORD *)&lpbmi->bmiColors[0];
 
-  for (i=0; i<nNumColors; i++) {
+  for (i=0; i<nNumColors; i++)
+  {
     lpRGB[i].rgbRed = palObj->logpalette->palPalEntry[*lpIndex].peRed;
     lpRGB[i].rgbGreen = palObj->logpalette->palPalEntry[*lpIndex].peGreen;
     lpRGB[i].rgbBlue = palObj->logpalette->palPalEntry[*lpIndex].peBlue;

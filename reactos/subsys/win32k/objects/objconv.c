@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objconv.c,v 1.9 2003/05/18 17:16:18 ea Exp $ */
+/* $Id: objconv.c,v 1.10 2003/08/11 21:10:49 royce Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -42,7 +42,7 @@
 PBRUSHOBJ FASTCALL PenToBrushObj(PDC dc, PENOBJ *pen)
 {
   BRUSHOBJ *BrushObj;
-  XLATEOBJ *RGBtoVGA16;
+  //XLATEOBJ *RGBtoVGA16;
 
   ASSERT( pen );
 

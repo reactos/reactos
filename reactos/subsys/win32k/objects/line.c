@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.17 2003/07/14 09:43:11 gvg Exp $ */
+/* $Id: line.c,v 1.18 2003/08/11 21:10:49 royce Exp $ */
 
 // Some code from the WINE project source (www.winehq.com)
 
@@ -133,7 +133,7 @@ W32kLineTo(HDC  hDC,
            int  YEnd)
 {
   DC *dc = DC_HandleToPtr(hDC);
-  SURFOBJ *SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
+  SURFOBJ *SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
   BOOL Ret;
   PPENOBJ Pen;
   RECT Bounds;
@@ -303,7 +303,7 @@ W32kPolyline(HDC  hDC,
                    int  Count)
 {
   DC		*dc = DC_HandleToPtr(hDC);
-  SURFOBJ	*SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
+  SURFOBJ	*SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
   BOOL ret;
   LONG i;
   PPENOBJ   pen;

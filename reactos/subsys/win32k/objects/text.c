@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.40 2003/08/09 21:14:01 gvg Exp $ */
+/* $Id: text.c,v 1.41 2003/08/11 21:10:49 royce Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -861,8 +861,12 @@ W32kGetTextExtentPoint32(HDC hDC,
     }
   TextObj = TEXTOBJ_LockText(dc->w.hFont);
   DC_ReleasePtr(hDC);
-  Result = TextIntGetTextExtentPoint(dc, String, Count, 0, NULL, NULL, &Size);
+  Result = TextIntGetTextExtentPoint (
+	  TextObj, String, Count, 0, NULL, NULL, &Size);
+  dc = DC_HandleToPtr(hDC);
+  ASSERT(dc); // it succeeded earlier, it should now, too
   TEXTOBJ_UnlockText(dc->w.hFont);
+  DC_ReleasePtr(hDC);
 
   ExFreePool(String);
   if (! Result)
@@ -1175,7 +1179,18 @@ W32kTextOut(HDC  hDC,
     SourceGlyphSurf = (PSURFOBJ)AccessUserObject((ULONG) HSourceGlyph);
 
     // Use the font data as a mask to paint onto the DCs surface using a brush
-    IntEngBitBlt(SurfObj, NULL, SourceGlyphSurf, dc->CombinedClip, NULL, &DestRect, &SourcePoint, &MaskRect, Brush, &BrushOrigin, 0xAACC);
+    IntEngBitBlt (
+		SurfObj,
+		NULL,
+		SourceGlyphSurf,
+		dc->CombinedClip,
+		NULL,
+		&DestRect,
+		&SourcePoint,
+		(PPOINTL)&MaskRect,
+		Brush,
+		&BrushOrigin,
+		0xAACC );
 
     EngDeleteSurface(HSourceGlyph);
 

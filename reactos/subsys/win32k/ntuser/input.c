@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.10 2003/08/04 16:54:54 gdalsnes Exp $
+/* $Id: input.c,v 1.11 2003/08/11 21:10:49 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -53,7 +53,7 @@ static BOOLEAN InputThreadsRunning = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL STATIC
+VOID STDCALL_FUNC STATIC
 KeyboardThreadMain(PVOID StartContext)
 {
   UNICODE_STRING KeyboardDeviceName;
@@ -76,7 +76,7 @@ KeyboardThreadMain(PVOID StartContext)
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("W32K: Failed to open keyboard.\n");
-      return(Status);
+      return; //(Status);
     }
 
   for (;;)
@@ -119,7 +119,7 @@ KeyboardThreadMain(PVOID StartContext)
 	  if (!NT_SUCCESS(Status))
 	    {
 	      DbgPrint("W32K: Failed to read from keyboard.\n");
-	      return(Status);
+	      return; //(Status);
 	    }
 	  
     SysKey = KeyEvent.dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED);

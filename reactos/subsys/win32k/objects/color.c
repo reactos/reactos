@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.17 2003/05/18 17:16:17 ea Exp $ */
+/* $Id: color.c,v 1.18 2003/08/11 21:10:49 royce Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -42,7 +42,7 @@ int COLOR_gapFilled = 0;
 int COLOR_max = 256;
 
 static HPALETTE hPrimaryPalette = 0; // used for WM_PALETTECHANGED
-static HPALETTE hLastRealizedPalette = 0; // UnrealizeObject() needs it
+//static HPALETTE hLastRealizedPalette = 0; // UnrealizeObject() needs it
 
 const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
 {
@@ -77,7 +77,7 @@ const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
 
 ULONG FASTCALL W32kGetSysColor(int nIndex)
 {
-   PALETTEENTRY *p = COLOR_sysPalTemplate + (nIndex * sizeof(PALETTEENTRY));
+   const PALETTEENTRY *p = COLOR_sysPalTemplate + (nIndex * sizeof(PALETTEENTRY));
    return RGB(p->peRed, p->peGreen, p->peBlue);
 }
 
@@ -167,10 +167,14 @@ HPALETTE STDCALL W32kCreatePalette(CONST PLOGPALETTE palette)
 {
   PPALOBJ  PalObj;
 
-  HPALETTE NewPalette = (HPALETTE)EngCreatePalette(PAL_INDEXED, palette->palNumEntries, (PULONG*) palette->palPalEntry, 0, 0, 0);
+  HPALETTE NewPalette = (HPALETTE)EngCreatePalette(
+	  PAL_INDEXED,
+	  palette->palNumEntries,
+	  (PULONG)palette->palPalEntry,
+	  0, 0, 0);
   ULONG size;
 
-  PalObj = (PPALOBJ)AccessUserObject(NewPalette);
+  PalObj = (PPALOBJ)AccessUserObject ( (ULONG)NewPalette );
 
   size = sizeof(LOGPALETTE) + (palette->palNumEntries * sizeof(PALETTEENTRY));
   PalObj->logpalette = ExAllocatePool(NonPagedPool, size);
@@ -197,7 +201,7 @@ COLORREF STDCALL W32kGetNearestColor(HDC  hDC,
   if( (dc = DC_HandleToPtr(hDC) ) )
   {
     HPALETTE hpal = (dc->w.hPalette)? dc->w.hPalette : W32kGetStockObject(DEFAULT_PALETTE);
-    palObj = (PPALOBJ)AccessUserObject(hpal);
+    palObj = (PPALOBJ)AccessUserObject((ULONG)hpal);
     if (!palObj) {
 //      GDI_ReleaseObj(hdc);
       return nearest;
@@ -216,7 +220,7 @@ COLORREF STDCALL W32kGetNearestColor(HDC  hDC,
 UINT STDCALL W32kGetNearestPaletteIndex(HPALETTE  hpal,
                                  COLORREF  Color)
 {
-  PPALOBJ     palObj = (PPALOBJ)AccessUserObject(hpal);
+  PPALOBJ     palObj = (PPALOBJ)AccessUserObject((ULONG)hpal);
   UINT index  = 0;
 
   if( palObj )
@@ -237,7 +241,7 @@ UINT STDCALL W32kGetPaletteEntries(HPALETTE  hpal,
   PPALOBJ palPtr;
   UINT numEntries;
 
-  palPtr = (PPALOBJ)AccessUserObject(hpal);
+  palPtr = (PPALOBJ)AccessUserObject((ULONG)hpal);
   if (!palPtr) return 0;
 
   numEntries = palPtr->logpalette->palNumEntries;
@@ -264,8 +268,8 @@ UINT STDCALL W32kGetSystemPaletteEntries(HDC  hDC,
                                   UINT  Entries,
                                   LPPALETTEENTRY  pe)
 {
-  UINT i;
-  PDC dc;
+  //UINT i;
+  //PDC dc;
 /*
   if (!(dc = AccessUserObject(hdc))) return 0;
 
@@ -291,11 +295,14 @@ UINT STDCALL W32kGetSystemPaletteEntries(HDC  hDC,
   done:
 //    GDI_ReleaseObj(hdc);
   return count; */
+  // FIXME UNIMPLEMENTED;
+  return 0;
 }
 
 UINT STDCALL W32kGetSystemPaletteUse(HDC  hDC)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 /*!
@@ -327,12 +334,12 @@ UINT STDCALL W32kRealizePalette(HDC  hDC)
   if (!dc)
   	return 0;
 
-  palPtr = (PPALOBJ)AccessUserObject(dc->w.hPalette);
+  palPtr = (PPALOBJ)AccessUserObject((ULONG)dc->w.hPalette);
   SurfGDI = (PSURFGDI)AccessInternalObjectFromUserObject(dc->Surface);
-  systemPalette = W32kGetStockObject(STOCK_DEFAULT_PALETTE);
-  sysPtr = (PPALOBJ)AccessInternalObject(systemPalette);
-  palGDI = (PPALGDI)AccessInternalObject(dc->w.hPalette);
-  sysGDI = (PPALGDI)AccessInternalObject(systemPalette);
+  systemPalette = W32kGetStockObject((INT)STOCK_DEFAULT_PALETTE);
+  sysPtr = (PPALOBJ)AccessInternalObject((ULONG)systemPalette);
+  palGDI = (PPALGDI)AccessInternalObject((ULONG)dc->w.hPalette);
+  sysGDI = (PPALGDI)AccessInternalObject((ULONG)systemPalette);
 
   // Step 1: Create mapping of system palette\DC palette
   realized = PALETTE_SetMapping(palPtr, 0, palPtr->logpalette->palNumEntries,
@@ -453,7 +460,7 @@ UINT STDCALL W32kSetPaletteEntries(HPALETTE  hpal,
   PPALOBJ palPtr;
   INT numEntries;
 
-  palPtr = (PPALOBJ)AccessUserObject(hpal);
+  palPtr = (PPALOBJ)AccessUserObject((ULONG)hpal);
   if (!palPtr) return 0;
 
   numEntries = palPtr->logpalette->palNumEntries;
@@ -484,9 +491,9 @@ BOOL STDCALL W32kUnrealizeObject(HGDIOBJ  hgdiobj)
 
 BOOL STDCALL W32kUpdateColors(HDC  hDC)
 {
-  PDC dc;
-  HWND hWnd;
-  int size;
+  //PDC dc;
+  //HWND hWnd;
+  //int size;
 /*
   if (!(dc = AccessUserObject(hDC))) return 0;
   size = dc->GDIInfo->ulNumPalReg;
@@ -500,6 +507,7 @@ BOOL STDCALL W32kUpdateColors(HDC  hDC)
     // but it would take forever given the speed of XGet/PutPixel.
     if (hWnd && size) Callout.RedrawWindow( hWnd, NULL, 0, RDW_INVALIDATE );
   } */
+  // FIXME UNIMPLEMENTED
   return 0x666;
 }
 

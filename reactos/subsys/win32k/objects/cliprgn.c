@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.18 2003/07/14 17:36:59 gvg Exp $ */
+/* $Id: cliprgn.c,v 1.19 2003/08/11 21:10:49 royce Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -76,7 +76,7 @@ CLIPPING_UpdateGCRegion(DC* Dc)
     }
 
   Dc->CombinedClip = IntEngCreateClipRegion(CombinedRegion->rdh.nCount,
-                                            CombinedRegion->Buffer,
+                                            (PRECTL)CombinedRegion->Buffer,
                                             CombinedRegion->rdh.rcBound);
   ASSERT(NULL != Dc->CombinedClip);
 

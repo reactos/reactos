@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: painting.c,v 1.25 2003/08/11 19:05:27 gdalsnes Exp $
+/* $Id: painting.c,v 1.26 2003/08/11 21:10:49 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -860,7 +860,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
   HRGN UpdateRegion;
   RECT ClientRect;
   RECT ClipRect;
-  NTSTATUS Status;
+  //NTSTATUS Status;
   INT DcxFlags;
 
   if (!(Window = W32kGetWindowObject(hWnd)))

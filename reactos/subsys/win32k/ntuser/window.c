@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.86 2003/08/11 19:05:26 gdalsnes Exp $
+/* $Id: window.c,v 1.87 2003/08/11 21:10:49 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2419,9 +2419,8 @@ W32kSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
     {
       if (!(Wnd->Style & WS_CHILD))
       {
-        HMENU Menu = Wnd->Menu;
+        //if ( Wnd->Menu ) DestroyMenu ( Wnd->menu );
         Wnd->Menu = NULL;
-        //if (Menu) DestroyMenu( menu );
       }
     }
   }

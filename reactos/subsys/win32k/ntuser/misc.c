@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.3 2003/08/06 13:17:44 weiden Exp $
+/* $Id: misc.c,v 1.4 2003/08/11 21:10:49 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -54,7 +54,7 @@ NtUserCallOneParam(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
       }
-      Result = WindowObject->Menu;
+      Result = (DWORD)WindowObject->Menu;
       W32kReleaseWindowObject(WindowObject);
       return Result;
       

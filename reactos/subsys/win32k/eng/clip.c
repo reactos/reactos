@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.15 2003/07/14 17:35:31 gvg Exp $
+/* $Id: clip.c,v 1.16 2003/08/11 21:10:49 royce Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -42,7 +42,7 @@ VOID STDCALL IntEngDeleteClipRegion(CLIPOBJ *ClipObj)
   FreeGDIHandle(HClip);
 }
 
-CLIPOBJ STDCALL *
+CLIPOBJ* STDCALL
 IntEngCreateClipRegion(ULONG count, PRECTL pRect, RECTL rcBounds)
 {
   HCLIP hClip;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.13 2003/08/07 10:25:59 weiden Exp $
+/* $Id: menu.c,v 1.14 2003/08/11 21:10:49 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -171,7 +171,8 @@ W32kFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
   if(bRecurse && MenuItem->MenuItem.hSubMenu)
   {
     PMENU_OBJECT SubMenuObject;
-    SubMenuObject = W32kGetWindowObject(MenuItem->MenuItem.hSubMenu);
+    SubMenuObject = (PMENU_OBJECT)W32kGetWindowObject(
+		MenuItem->MenuItem.hSubMenu );
     if(SubMenuObject)
     {
       W32kDestroyMenuObject(SubMenuObject, bRecurse);

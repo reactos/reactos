@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: path.c,v 1.10 2003/05/18 17:16:18 ea Exp $ */
+/* $Id: path.c,v 1.11 2003/08/11 21:10:49 royce Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -763,6 +763,12 @@ BOOL FASTCALL PATH_FlattenPath(GdiPath *pPath)
  * error occurs, SetLastError is called with the appropriate value and
  * FALSE is returned.
  */
+#if 0
+// FIXME - don't reenable this function until you deal with the
+// const pPath being given to PATH_FlattenPath() - which is
+// expecting a non-const*. Since this function isn't being called
+// at the moment, I'm commenting it out until the issue needs to
+// be addressed.
 BOOL STDCALL PATH_PathToRegion(const GdiPath *pPath, INT nPolyFillMode,
    HRGN *pHrgn)
 {
@@ -773,7 +779,7 @@ BOOL STDCALL PATH_PathToRegion(const GdiPath *pPath, INT nPolyFillMode,
   assert(pPath!=NULL);
   assert(pHrgn!=NULL);
 
-  PATH_FlattenPath(pPath);
+  PATH_FlattenPath ( pPath );
 
   /* FIXME: What happens when number of points is zero? */
 
@@ -822,6 +828,7 @@ BOOL STDCALL PATH_PathToRegion(const GdiPath *pPath, INT nPolyFillMode,
   *pHrgn=hrgn;
   return TRUE;
 }
+#endif
 
 /* PATH_EmptyPath
  *

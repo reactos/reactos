@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.27 2003/08/11 10:30:19 gvg Exp $
+/* $Id: class.c,v 1.28 2003/08/11 21:10:49 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -212,10 +212,10 @@ W32kGetClassName(struct _WINDOW_OBJECT *WindowObject,
 		return((RTL_ATOM)0);
 	}
 	length = 0;
-	Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,(RTL_ATOM)WindowObject->Class->lpszClassName,NULL,NULL,name,&length);
+	Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,(RTL_ATOM)(size_t)WindowObject->Class->lpszClassName,NULL,NULL,name,&length);
     name = ExAllocatePool(PagedPool,length+1);
 	free = TRUE;
-	Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,(RTL_ATOM)WindowObject->Class->lpszClassName,NULL,NULL,name,&length);
+	Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,(RTL_ATOM)(size_t)WindowObject->Class->lpszClassName,NULL,NULL,name,&length);
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT("Validation of window station handle (0x%X) failed\n",

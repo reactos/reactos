@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.33 2003/08/04 19:08:26 royce Exp $
+ * $Id: gdiobj.c,v 1.34 2003/08/11 21:10:49 royce Exp $
  *
  */
 
@@ -594,7 +594,8 @@ GDIOBJ_LockObjDbg ( const char* file, int line, HGDIOBJ hObj, WORD Magic )
 	  )
      )
     {
-      DPRINT1("GDIBOJ_LockObj failed for %d, magic: %d, reqMagic\n",(WORD) hObj & 0xffff, handleEntry->wMagic, Magic);
+      DPRINT1("GDIBOJ_LockObj failed for %d, magic: %d, reqMagic\n",
+		  (WORD)((size_t)hObj&0xffff), handleEntry->wMagic, Magic);
       DPRINT1("\tcalled from: %s:%i\n", file, line );
       return  NULL;
     }
@@ -629,9 +630,10 @@ GDIOBJ_UnlockObjDbg ( const char* file, int line, HGDIOBJ hObj, WORD Magic )
 	  )
      )
     {
-      DPRINT1("GDIBOJ_UnlockObj failed for %d, magic: %d, reqMagic\n",(WORD) hObj & 0xffff, handleEntry->wMagic, Magic );
+      DPRINT1("GDIBOJ_UnlockObj failed for %d, magic: %d, reqMagic\n",
+		  (WORD)((size_t)hObj & 0xffff), handleEntry->wMagic, Magic );
       DPRINT1("\tcalled from: %s:%i\n", file, line );
-      return  NULL;
+      return FALSE;
     }
   //DbgPrint("(%s:%i) GDIOBJ_UnlockObj(0x%x,0x%x)\n", file, line, hObj, Magic );
   handleEntry->lockfile = NULL;
@@ -666,8 +668,9 @@ GDIOBJ_LockObj( HGDIOBJ hObj, WORD Magic )
 	  )
      )
     {
-      DPRINT1("GDIBOJ_LockObj failed for %d, magic: %d, reqMagic\n",(WORD) hObj & 0xffff, handleEntry->wMagic, Magic);
-      return  NULL;
+      DPRINT1("GDIBOJ_LockObj failed for %d, magic: %d, reqMagic\n",
+		  (WORD)((size_t)hObj & 0xffff), handleEntry->wMagic, Magic);
+      return NULL;
     }
 
   objectHeader = (PGDIOBJHDR) handleEntry->pObject;
@@ -713,7 +716,7 @@ GDIOBJ_UnlockObj( HGDIOBJ hObj, WORD Magic )
      )
   {
     DPRINT1( "GDIOBJ_UnLockObj: failed\n");
-    return  FALSE;
+    return FALSE;
   }
 
   objectHeader = (PGDIOBJHDR) handleEntry->pObject;
