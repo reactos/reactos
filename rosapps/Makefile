@@ -13,7 +13,7 @@ include rules.mak
 #
 # Available applications
 #
-APPS = cmd cmdutils cmdutils\touch dflat32 mc notevil sysutils \
+APPS = cmd cmdutils cmdutils\touch dflat32 hcalc mc notevil sysutils \
 	net\finger net\ncftp net\niclist net\ping net\telnet net\whois \
 	regedit regedt32 taskmgr
 
