@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.7 2004/01/16 19:58:47 weiden Exp $
+/* $Id: dir.c,v 1.8 2004/01/28 17:47:27 gvg Exp $
  *
  *  DIR.C - dir internal command.
  *
@@ -113,6 +113,9 @@
  *  
  *    23-Feb-2001 (Carl Nettelblad <cnettel@hem.passagen.se>)
  *        dir /s now works in deeper trees
+ *
+ *    28-Jan-2004 (Michael Fritscher <michael@fritscher.net>)
+ *        Fix for /p, so it is working under Windows in GUI-mode, too. 
  */
 
 #include "config.h"
@@ -496,12 +499,23 @@ DirParsePathspec (LPTSTR szPathspec, LPTSTR szPath, LPTSTR szFilespec)
 static BOOL
 IncLine (LPINT pLine, DWORD dwFlags)
 {
+	BOOL error;
+	CONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo;
+	LONG WindowHeight;
+	error = GetConsoleScreenBufferInfo(hConsole, &lpConsoleScreenBufferInfo);
+	
+	WindowHeight= lpConsoleScreenBufferInfo.srWindow.Bottom - lpConsoleScreenBufferInfo.srWindow.Top;
+
+	if (!WindowHeight)  //That prevents bad behave if WindowHeight couln't calc
+	{
+		 WindowHeight= 1000000;
+	}
 	if (!(dwFlags & DIR_PAGE))
 		return FALSE;
 
 	(*pLine)++;
 
-	if (*pLine >= (int)maxy - 2)
+	if (*pLine >= (int)maxy - 2 || *pLine >= WindowHeight) //Because I don't know if WindowsHeight work under all cases, perhaps then maxy is the right value
 	{
 		*pLine = 0;
 		return (PagePrompt () == PROMPT_BREAK);
