@@ -36,6 +36,12 @@
 #endif
 
 
+ // work around GCC's wide string constant bug
+#ifdef __GNUC__
+const LPCTSTR sCFSTR_SHELLIDLIST = TEXT("Shell IDList Array");
+#endif
+
+
  // helper functions for string copying
 
 LPSTR strcpyn(LPSTR dest, LPCSTR source, size_t count)

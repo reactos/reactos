@@ -45,6 +45,13 @@ using namespace _com_util;
 #endif
 #endif
 
+ // work around GCC's wide string constant bug when compiling inline functions
+#ifdef __GNUC__
+extern const LPCTSTR sCFSTR_SHELLIDLIST;
+#undef CFSTR_SHELLIDLIST
+#define	CFSTR_SHELLIDLIST sCFSTR_SHELLIDLIST
+#endif
+
 
  // Exception Handling
 

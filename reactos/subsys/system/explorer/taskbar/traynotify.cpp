@@ -661,7 +661,7 @@ void NotifyArea::Paint()
 	MemCanvas mem_dc;
 	SelectedBitmap bmp(mem_dc, CreateCompatibleBitmap(canvas, NOTIFYICON_SIZE, NOTIFYICON_SIZE));
 	RECT rect = {0, 0, NOTIFYICON_SIZE, NOTIFYICON_SIZE};
-	BLENDFUNCTION blend = {AC_SRC_OVER, 0, 128, 0};
+	BLENDFUNCTION blend = {AC_SRC_OVER, 0, 128, 0};	// 50 % visible
 
 	for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it) {
 		if (it->_dwState & NIS_HIDDEN) {
