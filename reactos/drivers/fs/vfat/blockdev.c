@@ -20,35 +20,6 @@
 /* FUNCTIONS ***************************************************************/
 
 NTSTATUS STDCALL
-VfatReadWriteCompletion (IN PDEVICE_OBJECT DeviceObject,
-			 IN PIRP Irp,
-			 IN PVOID Context)
-{
-   PMDL Mdl;
-
-   DPRINT("VfatReadBlockDeviceCompletion(DeviceObject %x, Irp %x, Context %x)\n",
-          DeviceObject, Irp, Context);
-
-   while ((Mdl = Irp->MdlAddress))
-     {
-       Irp->MdlAddress = Mdl->Next;
-       
-       MmUnlockPages(Mdl);
-       IoFreeMdl(Mdl);
-     }
-
-   *Irp->UserIosb = Irp->IoStatus;
-   if (Irp->PendingReturned)
-     {
-       KeSetEvent(Irp->UserEvent, IO_NO_INCREMENT, FALSE);
-     }
-
-   IoFreeIrp(Irp);
-
-   return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-NTSTATUS STDCALL
 VfatReadWritePartialCompletion (IN PDEVICE_OBJECT DeviceObject,
 				IN PIRP Irp,
 				IN PVOID Context)
@@ -123,13 +94,6 @@ VfatReadDisk (IN PDEVICE_OBJECT pDeviceObject,
       Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
     }
 
-  IoSetCompletionRoutine(Irp,
-                         VfatReadWriteCompletion,
-			 NULL,
-			 TRUE,
-			 TRUE,
-			 TRUE);
-
   DPRINT ("Calling IO Driver... with irp %x\n", Irp);
   Status = IoCallDriver (pDeviceObject, Irp);
 
@@ -161,28 +125,37 @@ VfatReadDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
 		     IN BOOLEAN Wait)
 {
   PIRP Irp;
+  PIO_STACK_LOCATION StackPtr;
   NTSTATUS Status;
   PVOID Buffer;
 
   DPRINT ("VfatReadDiskPartial(IrpContext %x, ReadOffset %I64x, ReadLength %d, BufferOffset %x, Wait %d)\n",
 	  IrpContext, ReadOffset->QuadPart, ReadLength, BufferOffset, Wait);
 
-  DPRINT ("Building synchronous FSD Request...\n");
+  DPRINT ("Building asynchronous FSD Request...\n");
 
   Buffer = MmGetMdlVirtualAddress(IrpContext->Irp->MdlAddress) + BufferOffset;
-
-  Irp = IoBuildSynchronousFsdRequest (IRP_MJ_READ,
-                                      IrpContext->DeviceExt->StorageDevice,
-				      NULL,
-				      ReadLength,
-				      ReadOffset,
-				      NULL,
-                                      NULL);
+ 
+  Irp = IoAllocateIrp(IrpContext->DeviceExt->StorageDevice->StackSize, TRUE);
   if (Irp == NULL)
     {
-      DPRINT("IoBuildSynchronousFsdRequest failed\n");
+      DPRINT("IoAllocateIrp failed\n");
       return(STATUS_UNSUCCESSFUL);
     }
+
+  Irp->UserIosb = NULL;
+  Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+
+  StackPtr = IoGetNextIrpStackLocation(Irp);
+  StackPtr->MajorFunction = IRP_MJ_READ;
+  StackPtr->MinorFunction = 0;
+  StackPtr->Flags = 0;
+  StackPtr->Control = 0;
+  StackPtr->DeviceObject = IrpContext->DeviceExt->StorageDevice;
+  StackPtr->FileObject = NULL;
+  StackPtr->CompletionRoutine = NULL;
+  StackPtr->Parameters.Read.Length = ReadLength;
+  StackPtr->Parameters.Read.ByteOffset = *ReadOffset;
 
   if (!IoAllocateMdl(Buffer, ReadLength, FALSE, FALSE, Irp))
     {
@@ -232,6 +205,7 @@ VfatWriteDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
 		      IN BOOLEAN Wait)
 {
   PIRP Irp;
+  PIO_STACK_LOCATION StackPtr;
   NTSTATUS Status;
   PVOID Buffer;
 
@@ -240,20 +214,27 @@ VfatWriteDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
 
   Buffer = MmGetMdlVirtualAddress(IrpContext->Irp->MdlAddress) + BufferOffset;
 
-  DPRINT ("Building synchronous FSD Request...\n");
-  Irp = IoBuildSynchronousFsdRequest (IRP_MJ_WRITE,
-				      IrpContext->DeviceExt->StorageDevice,
-				      NULL,
-				      WriteLength,
-				      WriteOffset, 
-				      NULL, 
-				      NULL);
-
-  if (!Irp)
+  DPRINT ("Building asynchronous FSD Request...\n");
+  Irp = IoAllocateIrp(IrpContext->DeviceExt->StorageDevice->StackSize, TRUE);
+  if (Irp == NULL)
     {
-      DPRINT ("WRITE failed!!!\n");
-      return (STATUS_UNSUCCESSFUL);
+      DPRINT("IoAllocateIrp failed\n");
+      return(STATUS_UNSUCCESSFUL);
     }
+
+  Irp->UserIosb = NULL;
+  Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+
+  StackPtr = IoGetNextIrpStackLocation(Irp);
+  StackPtr->MajorFunction = IRP_MJ_WRITE;
+  StackPtr->MinorFunction = 0;
+  StackPtr->Flags = 0;
+  StackPtr->Control = 0;
+  StackPtr->DeviceObject = IrpContext->DeviceExt->StorageDevice;
+  StackPtr->FileObject = NULL;
+  StackPtr->CompletionRoutine = NULL;
+  StackPtr->Parameters.Read.Length = WriteLength;
+  StackPtr->Parameters.Read.ByteOffset = *WriteOffset;
 
   if (!IoAllocateMdl(Buffer, WriteLength, FALSE, FALSE, Irp))
     {
