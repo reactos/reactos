@@ -1,9 +1,7 @@
-/**
- *
- * deptool.c
- * Copyright (C) 2002 by Brian Palmer <brianp@sginet.com>
- *
- */
+//
+// deptool.c
+// Copyright (C) 2002 by Brian Palmer <brianp@sginet.com>
+//
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,18 +24,14 @@ int main(int argc, char *argv[])
 	int		CurIdx2;
 	int		RuleDependencySplit = 0;
 
-	/**
-	 * Make sure they passed enough command line parameters
-	 */
+	// Make sure they passed enough command line parameters
 	if (argc < 2)
 	{
 		printf("Usage: deptool srcfile.d\n");
 		return ERROR_NOTENOUGHPARAMS;
 	}
 
-	/**
-	 * Try to open the dependency file
-	 */
+	// Try to open the dependency file
 	DependFile = fopen(argv[1], "r+t");
 	if (DependFile == NULL)
 	{
@@ -45,16 +39,12 @@ int main(int argc, char *argv[])
 		return ERROR_DEPENDFILENOTFOUND;
 	}
 
-	/**
-	 * Get the file size
-	 */
+	// Get the file size
 	fseek(DependFile, 0, SEEK_END);
 	DependFileSize = ftell(DependFile);
 	rewind(DependFile);
 
-	/**
-	 * Allocate memory
-	 */
+	// Allocate memory
 	DependFileData = (char *)malloc(DependFileSize);
 	NewDependFileData = (char *)malloc(DependFileSize * 3);
 	if (!DependFileData || !NewDependFileData)
@@ -66,9 +56,7 @@ int main(int argc, char *argv[])
 	memset(DependFileData, 0, DependFileSize);
 	memset(NewDependFileData, 0, DependFileSize * 3);
 
-	/**
-	 * Read in file data
-	 */
+	// Read in file data
 	fread(DependFileData, 1, DependFileSize, DependFile);
 	if (ferror(DependFile))
 	{
@@ -77,16 +65,12 @@ int main(int argc, char *argv[])
 		return ERROR_READERROR;
 	}
 
-	/**
-	 * Loop through the dependency file data and
-	 * insert the rule for the dependency file itself
-	 */
+	// Loop through the dependency file data and
+	// insert the rule for the dependency file itself
 	for (CurIdx=0,CurIdx2=0; DependFileData[CurIdx]; CurIdx++,CurIdx2++)
 	{
-		/**
-		 * Find the first colon ':' in the file and insert
-		 * the rule right before it
-		 */
+		// Find the first colon ':' in the file and insert
+		// the rule right before it
 		if (DependFileData[CurIdx] == ':')
 		{
 			NewDependFileData[CurIdx2] = ' ';
@@ -106,27 +90,21 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	/**
-	 * Now loop through all the rule dependencies and
-	 * turn them into rules themselves
-	 */
+	// Now loop through all the rule dependencies and
+	// turn them into rules themselves
 	strcat(NewDependFileData, "\n\n");
 	CurIdx = RuleDependencySplit;
 	CurIdx2 = strlen(NewDependFileData);
 	for (; DependFileData[CurIdx]; CurIdx++,CurIdx2++)
 	{
-		/**
-		 * If it's a line continuation char '\' then skip over it
-		 */
+		// If it's a line continuation char '\' then skip over it
 		if (DependFileData[CurIdx] == '\\')
 		{
 			CurIdx2--;
 			continue;
 		}
 
-		/**
-		 * If it's a new line char '\n' then insert a colon ':' to make it a rule
-		 */
+		// If it's a new line char '\n' then insert a colon ':' to make it a rule
 		if (DependFileData[CurIdx] == '\n')
 		{
 			NewDependFileData[CurIdx2] = ':';
@@ -136,9 +114,7 @@ int main(int argc, char *argv[])
 		NewDependFileData[CurIdx2] = DependFileData[CurIdx];
 	}
 
-	/**
-	 * Write out file data
-	 */
+	// Write out file data
 	rewind(DependFile);
 	fwrite(NewDependFileData, 1, strlen(NewDependFileData), DependFile);
 	if (ferror(DependFile))
