@@ -156,7 +156,7 @@ void RegDirectory::read_directory(int scan_flags)
 			DWORD value_len = sizeof(value);
 
 			if (!RegQueryValueEx(hKey, name, NULL, NULL, (LPBYTE)value, &value_len)) {
-				if (type==REG_SZ || type==REG_EXPAND_SZ)
+				if (type==REG_SZ || type==REG_EXPAND_SZ || type==REG_LINK)
 					entry->_content = _tcsdup(value);
 				else if (type == REG_DWORD) {
 					TCHAR b[32];

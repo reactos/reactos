@@ -560,7 +560,7 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 
 	 // show file attributes
 	if (visible_cols & COL_ATTRIBUTES) {
-		lstrcpy(buffer, TEXT(" \t \t \t \t \t \t \t \t \t \t \t "));
+		lstrcpy(buffer, TEXT(" \t \t \t \t \t \t \t \t \t \t \t \t \t \t "));
 
 		if (attrs & FILE_ATTRIBUTE_NORMAL)					buffer[ 0] = 'N';
 		else {
@@ -576,6 +576,8 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 			if (attrs & FILE_ATTRIBUTE_REPARSE_POINT)		buffer[20] = 'Q';
 			if (attrs & FILE_ATTRIBUTE_OFFLINE) 			buffer[22] = 'O';
 			if (attrs & FILE_ATTRIBUTE_NOT_CONTENT_INDEXED) buffer[24] = 'X';
+			if (attrs & ATTRIBUTE_EXECUTABLE)				buffer[26] = 'x';
+			if (attrs & ATTRIBUTE_SYMBOLIC_LINK)			buffer[28] = 'L';
 		}
 
 		if (calcWidthCol == -1)

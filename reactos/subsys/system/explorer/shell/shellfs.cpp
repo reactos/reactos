@@ -299,8 +299,10 @@ void ShellDirectory::read_directory(int scan_flags)
 				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED)
 					attribs |= SFGAO_COMPRESSED;
 
-				if (ext && !_tcsicmp(ext, _T(".lnk")))
+				if (ext && !_tcsicmp(ext, _T(".lnk"))) {
 					attribs |= SFGAO_LINK;
+					w32fd.dwFileAttributes |= ATTRIBUTE_SYMBOLIC_LINK;
+				}
 
 				entry->_shell_attribs = attribs;
 
@@ -394,6 +396,9 @@ void ShellDirectory::read_directory(int scan_flags)
 						else if (_tcscmp(entry->_display_name, name))
 							entry->_display_name = _tcsdup(name);	// store display name separate from file name; sort display by file name
 					}
+
+					if (attribs & SFGAO_LINK)
+						w32fd.dwFileAttributes |= ATTRIBUTE_SYMBOLIC_LINK;
 
 					entry->_down = NULL;
 					entry->_expanded = false;
