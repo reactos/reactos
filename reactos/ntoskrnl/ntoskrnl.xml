@@ -9,6 +9,7 @@
 	<define name="__ELF_WORD_SIZE">32</define>
 	<include base="kjs">include</include>
 	<include base="ntoskrnl">include</include>
+	<library>csq</library>
 	<library>hal</library>
 	<library>kjs</library>
 	<library>pseh</library>
@@ -24,6 +25,58 @@
 			<outputfile switches="-o">bugcodes.rc</outputfile>
 		</output>
 	</invoke>
+
+	<directory name="ke"> <!-- leave this at the top -->
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>multiboot.S</file> <!-- leave this at the top -->
+				<file>bios.c</file>
+				<file>brkpoint.c</file>
+				<file>bthread.S</file>
+				<file>exp.c</file>
+				<file>fpu.c</file>
+				<file>gdt.c</file>
+				<file>i386-mcount.S</file>
+				<file>idt.c</file>
+				<file>irq.c</file>
+				<file>irqhand.s</file>
+				<file>kernel.c</file>
+				<file>ldt.c</file>
+				<file>stkswitch.S</file>
+				<file>syscall.S</file>
+				<file>thread.c</file>
+				<file>tlbflush.S</file>
+				<file>trap.S</file>
+				<file>tskswitch.S</file>
+				<file>tss.c</file>
+				<file>usercall.c</file>
+				<file>usertrap.c</file>
+				<file>v86m.c</file>
+				<file>v86m_sup.S</file>
+			</directory>
+		</if>
+		<file>apc.c</file>
+		<file>bug.c</file>
+		<file>catch.c</file>
+		<file>critical.c</file>
+		<file>device.c</file>
+		<file>dpc.c</file>
+		<file>error.c</file>
+		<file>event.c</file>
+		<file>gmutex.c</file>
+		<file>ipi.c</file>
+		<file>kqueue.c</file>
+		<file>kthread.c</file>
+		<file>main.c</file>
+		<file>mutex.c</file>
+		<file>process.c</file>
+		<file>profile.c</file>
+		<file>queue.c</file>
+		<file>sem.c</file>
+		<file>spinlock.c</file>
+		<file>timer.c</file>
+		<file>wait.c</file>
+	</directory>
 	<directory name="cc">
 		<file>cacheman.c</file>
 		<file>copy.c</file>
@@ -170,57 +223,6 @@
 		<file>mda.c</file>
 		<file>service.c</file>
 	</directory>
-	<directory name="ke">
-		<if property="ARCH" value="i386">
-			<directory name="i386">
-				<file>bios.c</file>
-				<file>brkpoint.c</file>
-				<file>bthread.S</file>
-				<file>exp.c</file>
-				<file>fpu.c</file>
-				<file>gdt.c</file>
-				<file>i386-mcount.S</file>
-				<file>idt.c</file>
-				<file>irq.c</file>
-				<file>irqhand.s</file>
-				<file>kernel.c</file>
-				<file>ldt.c</file>
-				<file>multiboot.S</file>
-				<file>stkswitch.S</file>
-				<file>syscall.S</file>
-				<file>thread.c</file>
-				<file>tlbflush.S</file>
-				<file>trap.S</file>
-				<file>tskswitch.S</file>
-				<file>tss.c</file>
-				<file>usercall.c</file>
-				<file>usertrap.c</file>
-				<file>v86m.c</file>
-				<file>v86m_sup.S</file>
-			</directory>
-		</if>
-		<file>apc.c</file>
-		<file>bug.c</file>
-		<file>catch.c</file>
-		<file>critical.c</file>
-		<file>device.c</file>
-		<file>dpc.c</file>
-		<file>error.c</file>
-		<file>event.c</file>
-		<file>gmutex.c</file>
-		<file>ipi.c</file>
-		<file>kqueue.c</file>
-		<file>kthread.c</file>
-		<file>main.c</file>
-		<file>mutex.c</file>
-		<file>process.c</file>
-		<file>profile.c</file>
-		<file>queue.c</file>
-		<file>sem.c</file>
-		<file>spinlock.c</file>
-		<file>timer.c</file>
-		<file>wait.c</file>
-	</directory>
 	<directory name="ldr">
 		<file>init.c</file>
 		<file>loader.c</file>
@@ -337,7 +339,17 @@
 	<directory name="rtl">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
+				<file>alldiv.s</file>
+				<file>allmul.s</file>
+				<file>allrem.s</file>
+				<file>allshl.s</file>
+				<file>allshr.s</file>
+				<file>aulldiv.s</file>
+				<file>aullrem.s</file>
+				<file>aullshr.s</file>
+				<file>except.s</file>
 				<file>exception.c</file>
+				<file>seh.s</file>
 			</directory>
 		</if>
 		<file>atom.c</file>
