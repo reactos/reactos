@@ -34,6 +34,7 @@
 #define IDS_DESKTOP                     30
 #define IDS_TASKBAR                     31
 #define IDS_STARTMENU                   32
+#define IDS_MINIMIZE_ALL                33
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
