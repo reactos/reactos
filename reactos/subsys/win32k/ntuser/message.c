@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.38 2003/12/14 23:52:54 weiden Exp $
+/* $Id: message.c,v 1.39 2003/12/20 21:45:14 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -121,6 +121,64 @@ NtUserDispatchMessage(CONST MSG* UnsafeMsg)
   return Result;
 }
 
+VOID FASTCALL
+IntSendSpecialMessages(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg)
+{
+  if(!Msg->hwnd || ThreadQueue->CaptureWindow)
+  {
+    return;
+  }
+  
+  switch(Msg->message)
+  {
+    case WM_MOUSEMOVE:
+    {
+      IntSendMessage(Msg->hwnd, WM_SETCURSOR, (WPARAM)Msg->hwnd, MAKELPARAM(HTCLIENT, Msg->message), TRUE);
+      break;
+    }
+    case WM_NCMOUSEMOVE:
+    {
+      IntSendMessage(Msg->hwnd, WM_SETCURSOR, (WPARAM)Msg->hwnd, MAKELPARAM(Msg->wParam, Msg->message), TRUE);
+      break;
+    }
+    case WM_LBUTTONDOWN:
+    case WM_MBUTTONDOWN:
+    case WM_RBUTTONDOWN:
+    case WM_XBUTTONDOWN:
+    case WM_LBUTTONDBLCLK:
+    case WM_MBUTTONDBLCLK:
+    case WM_RBUTTONDBLCLK:
+    case WM_XBUTTONDBLCLK:
+    {
+      WPARAM wParam;
+      
+      if(!IntGetWindowStationObject(InputWindowStation))
+      {
+        break;
+      }
+      wParam = (WPARAM)InputWindowStation->SystemCursor.ButtonsDown;
+      ObDereferenceObject(InputWindowStation);
+      
+      IntSendMessage(Msg->hwnd, WM_MOUSEMOVE, wParam, Msg->lParam, TRUE);
+      IntSendMessage(Msg->hwnd, WM_SETCURSOR, (WPARAM)Msg->hwnd, MAKELPARAM(HTCLIENT, Msg->message), TRUE);
+      break;
+    }
+    case WM_NCLBUTTONDOWN:
+    case WM_NCMBUTTONDOWN:
+    case WM_NCRBUTTONDOWN:
+    case WM_NCXBUTTONDOWN:
+    case WM_NCLBUTTONDBLCLK:
+    case WM_NCMBUTTONDBLCLK:
+    case WM_NCRBUTTONDBLCLK:
+    case WM_NCXBUTTONDBLCLK:
+    {
+      IntSendMessage(Msg->hwnd, WM_NCMOUSEMOVE, (WPARAM)Msg->wParam, Msg->lParam, TRUE);
+      IntSendMessage(Msg->hwnd, WM_SETCURSOR, (WPARAM)Msg->hwnd, MAKELPARAM(Msg->wParam, Msg->message), TRUE);
+      break;
+    }
+  }
+}
+
 /*
  * Internal version of PeekMessage() doing all the work
  */
@@ -178,6 +236,7 @@ IntPeekMessage(LPMSG Msg,
       if (RemoveMessages)
 	{
 	  MsqDestroyMessage(Message);
+	  IntSendSpecialMessages(ThreadQueue, Msg);
 	}
       return TRUE;
     }
@@ -196,6 +255,7 @@ IntPeekMessage(LPMSG Msg,
       if (RemoveMessages)
 	{
 	  MsqDestroyMessage(Message);
+	  IntSendSpecialMessages(ThreadQueue, Msg);
 	}
       return TRUE;
     }

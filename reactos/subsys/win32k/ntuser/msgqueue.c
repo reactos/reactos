@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.52 2003/12/20 15:42:47 weiden Exp $
+/* $Id: msgqueue.c,v 1.53 2003/12/20 21:45:14 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -252,6 +252,11 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     else
     {
       *HitTest = WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window);
+      if(!Window)
+      {
+        /* change the cursor on desktop background */
+        IntLoadDefaultCursors(TRUE);
+      }
     }
   }
   else

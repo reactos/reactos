@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.48 2003/12/13 22:38:29 weiden Exp $
+/* $Id: mouse.c,v 1.49 2003/12/20 21:45:14 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -295,6 +295,15 @@ MouseMoveCursor(LONG X, LONG Y)
     IntCheckClipCursor(&X, &Y, CurInfo);
     if((X != CurInfo->x) || (Y != CurInfo->y))
     {
+      /* move cursor */
+      CurInfo->x = X;
+      CurInfo->y = Y;
+      if(CurInfo->Enabled)
+      {
+        ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
+        SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
+        ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
+      }
       /* send MOUSEMOVE message */
       KeQueryTickCount(&LargeTickCount);
       TickCount = LargeTickCount.u.LowPart;
@@ -305,15 +314,6 @@ MouseMoveCursor(LONG X, LONG Y)
       Msg.pt.x = X;
       Msg.pt.y = Y;
       MsqInsertSystemMessage(&Msg, TRUE);
-      /* move cursor */
-      CurInfo->x = X;
-      CurInfo->y = Y;
-      if(CurInfo->Enabled)
-      {
-        ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
-        SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
-        ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
-      }
       res = TRUE;
     }
         
@@ -333,7 +333,6 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   ULONG i;
   PSYSTEM_CURSORINFO CurInfo;
   BOOL MouseEnabled = FALSE;
-  BOOL MouseMoveAdded = FALSE;
   BOOL Moved = FALSE;
   LONG mouse_ox, mouse_oy;
   LONG mouse_cx = 0, mouse_cy = 0;
@@ -399,21 +398,11 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     Msg.pt.x = CurInfo->x;
     Msg.pt.y = CurInfo->y;
     
-    MouseMoveAdded = FALSE;
-    
-    //PrintInputData(i, Data[i]);
-    
     if (Data[i].ButtonFlags != 0)
     {
       wp = 0;
       if ((Data[i].ButtonFlags & MOUSE_LEFT_BUTTON_DOWN) > 0)
       {
-        /* insert WM_MOUSEMOVE messages before Button down messages */
-        if ((0 != Data[i].LastX) || (0 != Data[i].LastY))
-        {
-          MsqInsertSystemMessage(&Msg, FALSE);
-          MouseMoveAdded = TRUE;
-        }
       	CurInfo->ButtonsDown |= CurInfo->SwapButtons ? MK_RBUTTON : MK_LBUTTON;
       	if(IntDetectDblClick(CurInfo, TickCount))
           Msg.message = CurInfo->SwapButtons ? WM_RBUTTONDBLCLK : WM_LBUTTONDBLCLK;
@@ -422,12 +411,6 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       }
       if ((Data[i].ButtonFlags & MOUSE_MIDDLE_BUTTON_DOWN) > 0)
       {
-        /* insert WM_MOUSEMOVE messages before Button down messages */
-        if ((0 != Data[i].LastX) || (0 != Data[i].LastY))
-        {
-          MsqInsertSystemMessage(&Msg, FALSE);
-          MouseMoveAdded = TRUE;
-        }
       	CurInfo->ButtonsDown |= MK_MBUTTON;
       	if(IntDetectDblClick(CurInfo, TickCount))
       	  Msg.message = WM_MBUTTONDBLCLK;
@@ -436,12 +419,6 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       }
       if ((Data[i].ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN) > 0)
       {
-        /* insert WM_MOUSEMOVE messages before Button down messages */
-        if ((0 != Data[i].LastX) || (0 != Data[i].LastY))
-        {
-          MsqInsertSystemMessage(&Msg, FALSE);
-          MouseMoveAdded = TRUE;
-        }
       	CurInfo->ButtonsDown |= CurInfo->SwapButtons ? MK_LBUTTON : MK_RBUTTON;
       	if(IntDetectDblClick(CurInfo, TickCount))
       	  Msg.message = CurInfo->SwapButtons ? WM_LBUTTONDBLCLK : WM_RBUTTONDBLCLK;
@@ -451,35 +428,23 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       
       if ((Data[i].ButtonFlags & MOUSE_BUTTON_4_DOWN) > 0)
       {
-        /* insert WM_MOUSEMOVE messages before Button down messages */
-        if ((0 != Data[i].LastX) || (0 != Data[i].LastY))
-        {
-          MsqInsertSystemMessage(&Msg, FALSE);
-          MouseMoveAdded = TRUE;
-        }
       	CurInfo->ButtonsDown |= MK_XBUTTON1;
       	if(IntDetectDblClick(CurInfo, TickCount))
       	{
       	  Msg.message = WM_XBUTTONDBLCLK;
       	  wp = XBUTTON1;
-   	    }
+   	}
       	else
           Msg.message = WM_XBUTTONDOWN;
       }
       if ((Data[i].ButtonFlags & MOUSE_BUTTON_5_DOWN) > 0)
       {
-        /* insert WM_MOUSEMOVE messages before Button down messages */
-        if ((0 != Data[i].LastX) || (0 != Data[i].LastY))
-        {
-          MsqInsertSystemMessage(&Msg, FALSE);
-          MouseMoveAdded = TRUE;
-        }
       	CurInfo->ButtonsDown |= MK_XBUTTON2;
       	if(IntDetectDblClick(CurInfo, TickCount))
       	{
       	  Msg.message = WM_XBUTTONDBLCLK;
       	  wp = XBUTTON2;
-   	    }
+   	}
       	else
           Msg.message = WM_XBUTTONDOWN;
       }
@@ -532,14 +497,6 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
         
         Msg.wParam = CurInfo->ButtonsDown;
         MsqInsertSystemMessage(&Msg, FALSE);
-      
-        /* insert WM_MOUSEMOVE messages after Button up messages */
-        if(!MouseMoveAdded && Moved)
-        {
-          Msg.message = WM_MOUSEMOVE;
-          MsqInsertSystemMessage(&Msg, FALSE);
-          MouseMoveAdded = TRUE;
-        }
       }
     }
   }
@@ -550,17 +507,13 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   /* If the mouse moved then move the pointer. */
   if ((mouse_cx != 0 || mouse_cy != 0) && MouseEnabled)
   {
-
-    if(!MouseMoveAdded)
-    {
-      Msg.wParam = CurInfo->ButtonsDown;
-      Msg.message = WM_MOUSEMOVE;
-      Msg.pt.x = CurInfo->x;
-      Msg.pt.y = CurInfo->y;
-      Msg.time = TickCount;
-      Msg.lParam = MAKELPARAM(CurInfo->x, CurInfo->y);
-      MsqInsertSystemMessage(&Msg, TRUE);
-    }
+    Msg.wParam = CurInfo->ButtonsDown;
+    Msg.message = WM_MOUSEMOVE;
+    Msg.pt.x = CurInfo->x;
+    Msg.pt.y = CurInfo->y;
+    Msg.time = TickCount;
+    Msg.lParam = MAKELPARAM(CurInfo->x, CurInfo->y);
+    MsqInsertSystemMessage(&Msg, TRUE);
     
     if (!CurInfo->SafetySwitch && !CurInfo->SafetySwitch2 &&
         ((mouse_ox != CurInfo->x) || (mouse_oy != CurInfo->y)))
