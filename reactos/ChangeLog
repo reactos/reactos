@@ -1,4 +1,9 @@
-2003-01-02  Steven Edwards  <Steven_Ed4153@yahoo.com>
+2004-01-18  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* tools/winebuild/spec32.c (BuildDef32File): Don't support private flag
+	when cross-compiling.
+
+2004-01-02  Steven Edwards  <Steven_Ed4153@yahoo.com>
 	* ntoskrnl/kd/dlog.c: Make /DEBUGPORT=FILE work. With the help
 	of Filip Navara
 	* ntoskrnl/ke/main.c: Ditto
