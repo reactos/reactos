@@ -393,8 +393,6 @@ VOID NdisStartDevices()
               /* read class, looking for net guid */
               RtlInitUnicodeString(&ValueName, L"ClassGUID");
 
-              NDIS_DbgPrint(MAX_TRACE, ("About to ask for 0x%x bytes\n", VALUE_INFORMATION_SIZE));
-
               KeyValueInformation = ExAllocatePool(PagedPool, VALUE_INFORMATION_SIZE);
               if(!KeyValueInformation)
                 {

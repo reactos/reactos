@@ -482,6 +482,7 @@ UINT ResizePacket(
 VOID DisplayIPPacket(
     PIP_PACKET IPPacket)
 {
+#if 0
     UINT i;
     PCHAR p;
     UINT Length;
@@ -527,6 +528,7 @@ VOID DisplayIPPacket(
         }
         DbgPrint("\n");
     }
+#endif
 }
 #endif /* DBG */
 

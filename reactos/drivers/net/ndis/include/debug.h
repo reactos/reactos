@@ -4,7 +4,6 @@
  * FILE:        include/debug.h
  * PURPOSE:     Debugging support macros
  * DEFINES:     DBG     - Enable debug output
- *              NASSERT - Disable assertions
  */
 #ifndef __DEBUG_H
 #define __DEBUG_H
@@ -45,19 +44,6 @@ extern DWORD DebugTraceLevel;
 
 #endif /* _MSC_VER */
 
-
-/* ASSERT is in rtl.h */
-#if 0
-#ifdef ASSERT
-#undef ASSERT
-#endif
-
-#ifdef NASSERT
-#define ASSERT(x)
-#else /* NASSERT */
-#define ASSERT(x) if (!(x)) { NDIS_DbgPrint(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); KeBugCheck(0); }
-#endif /* NASSERT */
-#endif
 #define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
 
 #else /* DBG */

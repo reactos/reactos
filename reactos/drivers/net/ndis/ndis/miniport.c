@@ -172,6 +172,26 @@ MiniIndicateData(
 
         KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
+#if DBG
+        if(!AdapterBinding)
+          {
+            NDIS_DbgPrint(MIN_TRACE, ("AdapterBinding was null\n"));
+            return;
+          }
+
+        if(!AdapterBinding->ProtocolBinding)
+          {
+            NDIS_DbgPrint(MIN_TRACE, ("AdapterBinding->ProtocolBinding was null\n"));
+            return;
+          }
+
+        if(!AdapterBinding->ProtocolBinding->Chars.u4.ReceiveHandler)
+          {
+            NDIS_DbgPrint(MIN_TRACE, ("AdapterBinding->ProtocolBinding->Chars.u4.ReceiveHandler was null\n"));
+            return;
+          }
+#endif
+
         (*AdapterBinding->ProtocolBinding->Chars.u4.ReceiveHandler)(
             AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
             MacReceiveContext,
@@ -186,6 +206,8 @@ MiniIndicateData(
         CurrentEntry = CurrentEntry->Flink;
     }
     KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+
+    NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
 
@@ -200,9 +222,51 @@ MiniIndicateReceivePacket(
  *     Miniport: Miniport handle for the adapter
  *     PacketArray: pointer to a list of packet pointers to indicate
  *     NumberOfPackets: number of packets to indicate
+ * NOTES:
+ *     - This currently is a big temporary hack.  In the future this should
+ *       call ProtocolReceivePacket() on each bound protocol if it exists.
+ *       For now it just mimics NdisMEthIndicateReceive.
  */
 {
-  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+  UINT i;
+
+  for(i = 0; i < NumberOfPackets; i++)
+    {
+      PCHAR PacketBuffer = 0;
+      UINT PacketLength = 0;
+      PNDIS_BUFFER NdisBuffer = 0;
+
+#define PACKET_TAG (('k' << 24) + ('P' << 16) + ('D' << 8) + 'N')
+
+      NdisAllocateMemoryWithTag((PVOID)&PacketBuffer, 1518, PACKET_TAG);
+      if(!PacketBuffer)
+        {
+          NDIS_DbgPrint(MIN_TRACE, ("insufficient resources\n"));
+          return;
+        }
+
+      NdisQueryPacket(PacketArray[i], NULL, NULL, &NdisBuffer, NULL);
+
+      while(NdisBuffer)
+        {
+          PNDIS_BUFFER CurrentBuffer;
+          PVOID BufferVa;
+          UINT BufferLen;
+
+          NdisQueryBuffer(NdisBuffer, &BufferVa, &BufferLen);
+          memcpy(PacketBuffer + PacketLength, BufferVa, BufferLen);
+          PacketLength += BufferLen;
+
+          CurrentBuffer = NdisBuffer;
+          NdisGetNextBuffer(CurrentBuffer, &NdisBuffer);
+        }
+
+      NDIS_DbgPrint(MID_TRACE, ("indicating a %d-byte packet\n", PacketLength));
+
+      MiniIndicateData(Miniport, 0, PacketBuffer, 14, PacketBuffer+14, PacketLength-14, PacketLength-14);
+
+      NdisFreeMemory(PacketBuffer, 0, 0);
+    }
 }
 
 
@@ -246,7 +310,7 @@ MiniEthReceiveComplete(
 
 VOID
 MiniEthReceiveIndication(
-    IN  PETH_FILTER Filter,
+    IN  PETH_FILTER Filter,     /* shouldn't be NDIS_HANDLE? */
     IN  NDIS_HANDLE MacReceiveContext,
     IN  PCHAR       Address,
     IN  PVOID       HeaderBuffer,
@@ -363,7 +427,20 @@ MiniAdapterHasAddress(
 
     NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-    Start1 = (PUCHAR)&Adapter->Address;
+#if DBG
+    if(!Adapter)
+      {
+        NDIS_DbgPrint(MID_TRACE, ("Adapter object was null\n"));
+        return FALSE;
+      }
+
+    if(!Packet)
+      {
+        NDIS_DbgPrint(MID_TRACE, ("Packet was null\n"));
+        return FALSE;
+      }
+#endif
+
     NdisQueryPacket(Packet, NULL, NULL, &NdisBuffer, NULL);
     if (!NdisBuffer) {
         NDIS_DbgPrint(MID_TRACE, ("Packet contains no buffers.\n"));
@@ -391,6 +468,11 @@ MiniAdapterHasAddress(
         return FALSE;
     }
 
+    Start1 = (PUCHAR)&Adapter->Address;
+    NDIS_DbgPrint(MAX_TRACE, ("packet address: %x:%x:%x:%x:%x:%x adapter address: %x:%x:%x:%x:%x:%x\n",
+        *((char *)Start1), *(((char *)Start1)+1), *(((char *)Start1)+2), *(((char *)Start1)+3), *(((char *)Start1)+4), *(((char *)Start1)+5),
+        *((char *)Start2), *(((char *)Start2)+1), *(((char *)Start2)+2), *(((char *)Start2)+3), *(((char *)Start2)+4), *(((char *)Start2)+5)
+    ));
     return (RtlCompareMemory((PVOID)Start1, (PVOID)Start2, Length) == Length);
 }
 
@@ -696,26 +778,45 @@ VOID STDCALL MiniportDpc(
         Adapter->MiniportAdapterBinding = AdapterBinding;
         switch (WorkItemType) {
         case NdisWorkItemSend:
+          /*
+           * called by ProSend when protocols want to send packets to the miniport
+           */
 #ifdef DBG
             MiniDisplayPacket((PNDIS_PACKET)WorkItemContext);
 #endif
-            NdisStatus = (*Adapter->Miniport->Chars.u1.SendHandler)(
-                Adapter->NdisMiniportBlock.MiniportAdapterContext,
-                (PNDIS_PACKET)WorkItemContext,
-                0);
-            if (NdisStatus != NDIS_STATUS_PENDING) {
-                MiniSendComplete((NDIS_HANDLE)Adapter,
-                                 (PNDIS_PACKET)WorkItemContext,
-                                 NdisStatus);
-            }
+            if(Adapter->Miniport->Chars.SendPacketsHandler)
+              {
+                NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
+
+                /*
+                 * XXX assumes single-packet - prolly OK since we'll call something
+                 * different on multi-packet sends
+                 */
+                (*Adapter->Miniport->Chars.SendPacketsHandler)(
+                    Adapter->NdisMiniportBlock.MiniportAdapterContext, (PPNDIS_PACKET)&WorkItemContext, 1);
+
+                NDIS_DbgPrint(MAX_TRACE, ("back from miniport's SendPackets handler\n"));
+              }
+            else
+              {
+                NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
+                NdisStatus = (*Adapter->Miniport->Chars.u1.SendHandler)(
+                    Adapter->NdisMiniportBlock.MiniportAdapterContext, (PNDIS_PACKET)WorkItemContext, 0);
+                NDIS_DbgPrint(MAX_TRACE, ("back from miniport's Send handler\n"));
+
+                if (NdisStatus != NDIS_STATUS_PENDING) 
+                    MiniSendComplete((NDIS_HANDLE)Adapter, (PNDIS_PACKET)WorkItemContext, NdisStatus);
+              }
+
             break;
 
         case NdisWorkItemSendLoopback:
-            NdisStatus = ProIndicatePacket(Adapter,
-                                           (PNDIS_PACKET)WorkItemContext);
-            MiniSendComplete((NDIS_HANDLE)Adapter,
-                             (PNDIS_PACKET)WorkItemContext,
-                             NdisStatus);
+          /*
+           * called by ProSend when protocols want to send loopback packets
+           */
+            /* XXX atm ProIndicatePacket sends a packet up via the loopback adapter only */
+            NdisStatus = ProIndicatePacket(Adapter, (PNDIS_PACKET)WorkItemContext);
+            MiniSendComplete((NDIS_HANDLE)Adapter, (PNDIS_PACKET)WorkItemContext, NdisStatus);
             break;
 
         case NdisWorkItemReturnPackets:
@@ -1284,7 +1385,7 @@ NdisIStartAdapter(
   Status = ZwOpenKey(&RegKeyHandle, KEY_ALL_ACCESS, &RegKeyAttributes);
   if(Status != STATUS_SUCCESS)
     {
-      NDIS_DbgPrint(MIN_TRACE,("failed to open adapter-specific reg key %ws\n", RegKeyPath));
+      NDIS_DbgPrint(MIN_TRACE,("failed to open adapter-specific reg key %wZ\n", &RegKeyPathU));
       ExFreePool(Adapter);
       return;
     }
@@ -1697,6 +1798,7 @@ NdisMSetAttributesEx(
     if(AttributeFlags & NDIS_ATTRIBUTE_DESERIALIZE)
       {
         NDIS_DbgPrint(MIN_TRACE, ("Deserialized miniport - UNIMPLEMENTED\n"));
+        /* XXX when this is implemented, be sure to fix ProSend() to not nail the irql up to dispatch_level */
 #ifdef DBG
         __asm__("int $3\n");
 #endif

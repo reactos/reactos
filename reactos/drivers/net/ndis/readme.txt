@@ -1,6 +1,21 @@
 Build instructions for NDIS library
 -----------------------------------
 
+ - Building of ndis is currently only supported with the mingw gcc compiler
+
+ - from this directory:
+    'make' to make the library
+    'make clean' to clean it
+
+ - from the top level reactos directory:
+    'make ndis'
+
+ - make must be run from the top level reactos directory to update the import
+   library, unless you manually update it
+
+-----------------------------
+All of the below is outdated.
+-----------------------------
 Building with Visual C++ and Windows NT DDK:
 
 Variables:
