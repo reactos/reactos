@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.123 2004/11/20 16:46:06 weiden Exp $
+/* $Id: winpos.c,v 1.124 2004/11/21 12:14:34 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -261,9 +261,9 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 	       RDW_NOINTERNALPAINT);
 	    WindowObject->Style |= WS_MINIMIZE;
 	    WinPosFindIconPos(WindowObject, &InternalPos->IconPos);
-	    NtGdiSetRect(NewPos, InternalPos->IconPos.x, InternalPos->IconPos.y,
-			NtUserGetSystemMetrics(SM_CXMINIMIZED),
-			NtUserGetSystemMetrics(SM_CYMINIMIZED));
+	    IntGdiSetRect(NewPos, InternalPos->IconPos.x, InternalPos->IconPos.y,
+			  NtUserGetSystemMetrics(SM_CXMINIMIZED),
+			  NtUserGetSystemMetrics(SM_CYMINIMIZED));
 	    SwpFlags |= SWP_NOCOPYBITS;
 	    break;
 	  }
@@ -279,8 +279,8 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 		WindowObject->Style &= ~WS_MINIMIZE;
 	      }
 	    WindowObject->Style |= WS_MAXIMIZE;
-	    NtGdiSetRect(NewPos, InternalPos->MaxPos.x, InternalPos->MaxPos.y,
-			Size.x, Size.y);
+	    IntGdiSetRect(NewPos, InternalPos->MaxPos.x, InternalPos->MaxPos.y,
+			  Size.x, Size.y);
 	    break;
 	  }
 
@@ -294,8 +294,8 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 		    WinPosGetMinMaxInfo(WindowObject, &Size,
 					&InternalPos->MaxPos, NULL, NULL);
 		    WindowObject->Style |= WS_MAXIMIZE;
-		    NtGdiSetRect(NewPos, InternalPos->MaxPos.x,
-				InternalPos->MaxPos.y, Size.x, Size.y);
+		    IntGdiSetRect(NewPos, InternalPos->MaxPos.x,
+				  InternalPos->MaxPos.y, Size.x, Size.y);
 		    break;
 		  }
 		else
