@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.70 2004/05/14 23:57:32 weiden Exp $
+/* $Id: mouse.c,v 1.71 2004/05/30 14:01:12 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -51,8 +51,10 @@ EnableMouse(HDC hDisplayDC)
     
     dc = DC_LockDc(hDisplayDC);
     SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
-    SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
     DC_UnlockDc( hDisplayDC );
+    
+    ASSERT(SurfObj);
+    SurfGDI = (PSURFGDI)AccessInternalObjectFromUserObject(SurfObj);
     
     /* Move the cursor to the screen center */
     DPRINT("Setting Cursor up at 0x%x, 0x%x\n", SurfObj->sizlBitmap.cx / 2, SurfObj->sizlBitmap.cy / 2);

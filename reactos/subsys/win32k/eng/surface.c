@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.39 2004/05/14 22:56:18 gvg Exp $
+/* $Id: surface.c,v 1.40 2004/05/30 14:01:12 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -317,14 +317,10 @@ EngCreateBitmap(IN SIZEL Size,
   PVOID UncompressedBits;
   ULONG UncompressedFormat;
 
-  NewBitmap = (PVOID)CreateGDIHandle(sizeof(SURFGDI), sizeof(SURFOBJ));
+  NewBitmap = (PVOID)CreateGDIHandle(sizeof(SURFGDI), sizeof(SURFOBJ), (PVOID*)&SurfGDI, (PVOID*)&SurfObj);
   if( !ValidEngHandle( NewBitmap ) )
 	return 0;
 
-  SurfObj = (SURFOBJ*) AccessUserObject( (ULONG) NewBitmap );
-  SurfGDI = (SURFGDI*) AccessInternalObject( (ULONG) NewBitmap );
-  ASSERT( SurfObj );
-  ASSERT( SurfGDI );
   SurfGDI->BitsPerPixel = BitsPerFormat(Format);
   if (Format == BMF_4RLE) {
 	  SurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(BMF_4BPP));
@@ -401,14 +397,9 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
   SURFOBJ *SurfObj;
   SURFGDI *SurfGDI;
 
-  NewSurface = (HSURF)CreateGDIHandle(sizeof( SURFGDI ), sizeof( SURFOBJ ));
+  NewSurface = (HSURF)CreateGDIHandle(sizeof( SURFGDI ), sizeof( SURFOBJ ), (PVOID*)&SurfGDI, (PVOID*)&SurfObj);
   if( !ValidEngHandle( NewSurface ) )
 	return 0;
-
-  SurfObj = (SURFOBJ*) AccessUserObject( (ULONG) NewSurface );
-  SurfGDI = (SURFGDI*) AccessInternalObject( (ULONG) NewSurface );
-  ASSERT( SurfObj );
-  ASSERT( SurfGDI );
 
   SurfGDI->BitsPerPixel = BitsPerFormat(Format);
   SurfObj->dhsurf = dhsurf;
@@ -450,8 +441,9 @@ EngAssociateSurface(IN HSURF Surface,
 
   Device = (GDIDEVICE*)Dev;
 
-  SurfGDI = (PVOID)AccessInternalObject((ULONG)Surface);
-  SurfObj = (PVOID)AccessUserObject((ULONG)Surface);
+  SurfObj = (SURFOBJ*)AccessUserObject((ULONG)Surface);
+  ASSERT(SurfObj);
+  SurfGDI = (SURFGDI*)AccessInternalObjectFromUserObject(SurfObj);
 
   // Associate the hdev
   SurfObj->hdev = Dev;

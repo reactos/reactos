@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.136 2004/05/26 18:49:06 weiden Exp $
+/* $Id: dc.c,v 1.137 2004/05/30 14:01:13 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -652,7 +652,7 @@ IntCreatePrimarySurface()
 
       SurfObj = (SURFOBJ*)AccessUserObject((ULONG) PrimarySurface.Handle);
       SurfObj->dhpdev = PrimarySurface.PDev;
-      SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) PrimarySurface.Handle);
+      SurfGDI = (PSURFGDI)AccessInternalObjectFromUserObject(SurfObj);
       IntShowDesktop(
          IntGetActiveDesktop(),
          SurfGDI->SurfObj.sizlBitmap.cx,
@@ -676,7 +676,7 @@ IntDestroyPrimarySurface()
 #if 0
     DPRINT("Hiding mouse pointer\n" );
     SurfObj = (SURFOBJ*)AccessUserObject((ULONG) PrimarySurface.Handle);
-    SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) PrimarySurface.Handle);
+    SurfGDI = (PSURFGDI)AccessInternalObjectFromUserObject(SurfObj);
     SurfGDI->SetPointerShape(SurfObj, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0);
 #endif
     DPRINT("Reseting display\n" );

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.h,v 1.5 2003/05/18 17:16:17 ea Exp $
+/* $Id: handle.h,v 1.6 2004/05/30 14:01:12 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -38,8 +38,6 @@ typedef struct _GDI_HANDLE {
 
 #define INVALID_HANDLE  0
 #define MAX_GDI_HANDLES 4096
-
-GDI_HANDLE GDIHandles[MAX_GDI_HANDLES];
 
 #define ValidEngHandle( x )  (!( (x) == INVALID_HANDLE ))
 

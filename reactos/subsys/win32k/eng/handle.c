@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.15 2004/05/10 17:07:17 weiden Exp $
+/* $Id: handle.c,v 1.16 2004/05/30 14:01:12 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -29,28 +29,34 @@
 #include <w32k.h>
 
 static int LastHandle = MAX_GDI_HANDLES;
+static GDI_HANDLE GDIHandles[MAX_GDI_HANDLES];
 
-ULONG FASTCALL CreateGDIHandle(ULONG InternalSize, ULONG UserSize)
+ULONG FASTCALL CreateGDIHandle(ULONG InternalSize, ULONG UserSize, PVOID *InternalObject, PVOID *UserObject)
 {
-  ULONG size;
   PENGOBJ pObj;
   int i;
 
-  //size = sizeof( ENGOBJ ) + InternalSize + UserSize;
-  size = InternalSize;      	//internal size includes header and user portions
-  pObj = EngAllocMem( FL_ZERO_MEMORY, size, 0 );
+  /* internal size includes header and user portions */
+  pObj = EngAllocMem( FL_ZERO_MEMORY, InternalSize, 0 );
 
   if( !pObj )
 	return 0;
-
+  
+  #if 0
+  /* not used at the moment */
   pObj->InternalSize = InternalSize;
   pObj->UserSize = UserSize;
+  #endif
 
   for( i = (MAX_GDI_HANDLES - 1 <= LastHandle ? 1 : LastHandle + 1); i != LastHandle;
        i = (MAX_GDI_HANDLES - 1 <= i ? 1 : i + 1) ){
 	if( GDIHandles[ i ].pEngObj == NULL ){
 		pObj->hObj = i;
 		GDIHandles[ i ].pEngObj = pObj;
+		
+		*InternalObject = pObj;
+		*UserObject = (PVOID)( (PCHAR)pObj + sizeof( ENGOBJ ) );
+		
 		DPRINT("CreateGDIHandle: obj: %x, handle: %d, usersize: %d\n", pObj, i, UserSize );
 		LastHandle = i;
 		return i;
@@ -77,13 +83,12 @@ PVOID FASTCALL AccessInternalObject(ULONG Handle)
   PENGOBJ pEngObj;
 
   if (Handle == 0 || Handle >= MAX_GDI_HANDLES
-      || GDIHandles[Handle].pEngObj == NULL)
+      || !(pEngObj = GDIHandles[Handle].pEngObj))
     {
       DPRINT1("AccessInternalObject: invalid handle: %d!!!!\n", Handle);
       return NULL;
     }
-
-  pEngObj = GDIHandles[Handle].pEngObj;
+  
   return (PVOID)pEngObj;
 }
 
@@ -92,13 +97,12 @@ PVOID FASTCALL AccessUserObject(ULONG Handle)
   PENGOBJ pEngObj;
 
   if (Handle == 0 || Handle >= MAX_GDI_HANDLES
-      || GDIHandles[Handle].pEngObj == NULL)
+      || !(pEngObj = GDIHandles[Handle].pEngObj))
     {
       DPRINT1("AccessUserObject: invalid handle: %d!!!!\n", Handle);
       return NULL;
     }
-
-  pEngObj = GDIHandles[Handle].pEngObj;
+  
   return (PVOID)( (PCHAR)pEngObj + sizeof( ENGOBJ ) );
 }
 
@@ -118,12 +122,6 @@ ULONG FASTCALL AccessHandleFromUserObject(PVOID UserObject)
   	return INVALID_HANDLE;
   }
   return Handle;
-}
-
-PVOID FASTCALL AccessInternalObjectFromUserObject(PVOID UserObject)
-{
-
-  return AccessInternalObject( AccessHandleFromUserObject( UserObject ) );
 }
 
 VOID FASTCALL InitEngHandleTable( void )

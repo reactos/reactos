@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.56 2004/05/14 23:57:32 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.57 2004/05/30 14:01:13 weiden Exp $ */
 #include <w32k.h>
 
 PCURICON_OBJECT FASTCALL
@@ -99,7 +99,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
       }
   
       SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
-      SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
+      SurfGDI = (PSURFGDI)AccessInternalObjectFromUserObject(SurfObj);
       DevInfo = dc->DevInfo;
       DC_UnlockDc(Screen);
    }

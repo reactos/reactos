@@ -112,14 +112,16 @@ ObmCreateHandleTable(VOID);
 
 VOID  FASTCALL ObmDestroyHandleTable (PUSER_HANDLE_TABLE HandleTable);
 
-ULONG FASTCALL CreateGDIHandle (ULONG InternalSize, ULONG UserSize);
+ULONG FASTCALL CreateGDIHandle (ULONG InternalSize, ULONG UserSize, PVOID *InternalObject, PVOID *UserObject);
 VOID  FASTCALL FreeGDIHandle (ULONG Handle);
 
 PVOID FASTCALL AccessUserObject (ULONG Handle);
 PVOID FASTCALL AccessInternalObject (ULONG Handle);
 
-PVOID FASTCALL AccessInternalObjectFromUserObject (PVOID UserObject);
 ULONG FASTCALL AccessHandleFromUserObject (PVOID UserObject);
+
+#define AccessInternalObjectFromUserObject(UserObj) \
+  ((PVOID)( (PCHAR)(UserObj) - sizeof( ENGOBJ ) ) )
 
 VOID  FASTCALL InitEngHandleTable (VOID);
 VOID  FASTCALL InitGdiObjectHandleTable (VOID);

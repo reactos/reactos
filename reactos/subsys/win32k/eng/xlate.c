@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.34 2004/05/10 17:07:17 weiden Exp $
+/* $Id: xlate.c,v 1.35 2004/05/30 14:01:12 weiden Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -215,14 +215,9 @@ XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
   ULONG    DestRedMask, DestGreenMask, DestBlueMask;
   UINT     i;
 
-  NewXlate = (HPALETTE)CreateGDIHandle(sizeof( XLATEGDI ), sizeof( XLATEOBJ ));
+  NewXlate = (HPALETTE)CreateGDIHandle(sizeof( XLATEGDI ), sizeof( XLATEOBJ ), (PVOID*)&XlateGDI, (PVOID*)&XlateObj);
   if ( !ValidEngHandle ( NewXlate ) )
     return NULL;
-
-  XlateObj = (XLATEOBJ*) AccessUserObject( (ULONG) NewXlate );
-  XlateGDI = (XLATEGDI*) AccessInternalObject( (ULONG) NewXlate );
-  ASSERT( XlateObj );
-  ASSERT( XlateGDI );
 
   if (NULL != PaletteSource)
   {
@@ -396,14 +391,9 @@ XLATEOBJ * STDCALL IntEngCreateMonoXlate(
    XLATEGDI *XlateGDI;
    PALGDI *SourcePalGDI;
 
-   NewXlate = (HPALETTE)CreateGDIHandle(sizeof(XLATEGDI), sizeof(XLATEOBJ));
+   NewXlate = (HPALETTE)CreateGDIHandle(sizeof(XLATEGDI), sizeof(XLATEOBJ), (PVOID*)&XlateGDI, (PVOID*)&XlateObj);
    if (!ValidEngHandle(NewXlate))
       return NULL;
-
-   XlateObj = (XLATEOBJ *)AccessUserObject((ULONG)NewXlate);
-   XlateGDI = (XLATEGDI *)AccessInternalObject((ULONG)NewXlate);
-   ASSERT(XlateObj);
-   ASSERT(XlateGDI);
 
    XlateObj->iSrcType = SourcePalType;
    XlateObj->iDstType = PAL_INDEXED;

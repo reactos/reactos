@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.21 2004/05/14 22:56:18 gvg Exp $
+/* $Id: clip.c,v 1.22 2004/05/30 14:01:12 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -45,17 +45,13 @@ IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
   if (1 < count)
     {
       hClip = (HCLIP) CreateGDIHandle(sizeof(CLIPGDI) + count * sizeof(RECTL),
-                                      sizeof(CLIPOBJ));
+                                      sizeof(CLIPOBJ), (PVOID*)&clipInt, (PVOID*)&clipUser);
 
       if (hClip)
 	{
-	  clipInt = (CLIPGDI *) AccessInternalObject(hClip);
 	  RtlCopyMemory(clipInt->EnumRects.arcl, pRect, count * sizeof(RECTL));
 	  clipInt->EnumRects.c = count;
 	  clipInt->EnumOrder = CD_ANY;
-
-	  clipUser = (CLIPOBJ *) AccessUserObject(hClip);
-	  ASSERT(NULL != clipUser);
 
 	  clipUser->iDComplexity = DC_COMPLEX;
 	  clipUser->iFComplexity = (count <= 4) ? FC_RECT4: FC_COMPLEX;
@@ -68,16 +64,13 @@ IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
   else
     {
       hClip = (HCLIP) CreateGDIHandle(sizeof(CLIPGDI),
-	                              sizeof(CLIPOBJ));
+	                              sizeof(CLIPOBJ),
+				      (PVOID)&clipInt, (PVOID)&clipUser);
       if (hClip)
 	{
-	  clipInt = (CLIPGDI *) AccessInternalObject(hClip);
 	  RtlCopyMemory(clipInt->EnumRects.arcl, rcBounds, sizeof(RECTL));
 	  clipInt->EnumRects.c = 1;
 	  clipInt->EnumOrder = CD_ANY;
-
-	  clipUser = (CLIPOBJ *) AccessUserObject(hClip);
-	  ASSERT(NULL != clipUser);
 
 	  clipUser->iDComplexity = ((rcBounds->top==rcBounds->bottom)
 	                            && (rcBounds->left==rcBounds->right))
