@@ -61,19 +61,19 @@ dist: clean_dist_dir make_dist_dirs $(APPS:%=%_dist)
 # Applications
 #
 $(APPS): %:
-	make -C $*
+	$(MAKE)  -C $*
 
 $(APPS:%=%_clean): %_clean:
-	make -C $* clean
+	$(MAKE)  -C $* clean
 
 $(APPS:%=%_floppy): %_floppy:
-	make -C $* floppy
+	$(MAKE)  -C $* floppy
 
 $(APPS:%=%_dist): %_dist:
-	make -C $* dist
+	$(MAKE)  -C $* dist
 
 $(APPS:%=%_install): %_install:
-	make -C $* install
+	$(MAKE)  -C $* install
 
 .PHONY: $(APPS) $(APPS:%=%_clean) $(APPS:%=%_floppy) $(APPS:%=%_dist) $(APPS:%=%_install)
 
