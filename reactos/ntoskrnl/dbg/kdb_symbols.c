@@ -325,7 +325,7 @@ KdbSymGetAddressInformation(IN PIMAGE_SYMBOL_INFO SymbolInfo,
     }
 #endif
 
-  assert(LineNumber || FileName || FunctionName);
+  ASSERT(LineNumber || FileName || FunctionName);
 
   if (LineNumber != NULL || FunctionName != NULL)
     {
@@ -580,12 +580,12 @@ KdbpSymAddCachedFile(IN PUNICODE_STRING FileName,
 
   /* allocate entry */
   CacheEntry = ExAllocatePool(NonPagedPool, sizeof (IMAGE_SYMBOL_INFO_CACHE));
-  assert(CacheEntry);
+  ASSERT(CacheEntry);
   RtlZeroMemory(CacheEntry, sizeof (IMAGE_SYMBOL_INFO_CACHE));
 
   /* fill entry */
   RtlCreateUnicodeString(&CacheEntry->FileName, FileName->Buffer);
-  assert(CacheEntry->FileName.Buffer);
+  ASSERT(CacheEntry->FileName.Buffer);
   CacheEntry->RefCount = 1;
   CacheEntry->FileBuffer = SymbolInfo->FileBuffer;
   CacheEntry->SymbolsBase = SymbolInfo->SymbolsBase;
@@ -621,7 +621,7 @@ KdbpSymRemoveCachedFile(IN PIMAGE_SYMBOL_INFO SymbolInfo)
 
       if (Current->FileBuffer == SymbolInfo->FileBuffer) /* found */
         {
-          assert(Current->RefCount > 0);
+          ASSERT(Current->RefCount > 0);
           Current->RefCount--;
           if (Current->RefCount < 1)
             {
@@ -639,7 +639,7 @@ KdbpSymRemoveCachedFile(IN PIMAGE_SYMBOL_INFO SymbolInfo)
   KeReleaseSpinLock(&SymbolFileListLock, Irql);
   DPRINT1("Warning: Removing unknown symbol file: FileBuffer = %p, ImageBase = %p\n",
           SymbolInfo->FileBuffer, SymbolInfo->ImageBase);
-  assert(0);
+  ASSERT(0);
 }
 
 /*! \brief Loads a symbol file.
@@ -840,8 +840,8 @@ KdbSymFreeProcessSymbols(IN PEPROCESS Process)
     KeAttachProcess(Process);
   }
   Peb = Process->Peb;
-  assert (Peb);
-  assert (Peb->Ldr);
+  ASSERT(Peb);
+  ASSERT(Peb->Ldr);
 
   CurrentEntry = Peb->Ldr->InLoadOrderModuleList.Flink;
   while (CurrentEntry != &Peb->Ldr->InLoadOrderModuleList && 

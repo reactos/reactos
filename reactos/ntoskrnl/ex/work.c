@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.19 2004/08/15 16:39:01 chorns Exp $
+/* $Id: work.c,v 1.20 2004/10/22 20:18:37 ekohl Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -151,7 +151,7 @@ ExQueueWorkItem (PWORK_QUEUE_ITEM	WorkItem,
  *        QueueType = Queue to insert it in
  */
 {
-    assert(WorkItem!=NULL);
+    ASSERT(WorkItem!=NULL);
     ASSERT_IRQL(DISPATCH_LEVEL);
    
    /*

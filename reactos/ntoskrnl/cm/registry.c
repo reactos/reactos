@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.126 2004/09/13 11:46:07 ekohl Exp $
+/* $Id: registry.c,v 1.127 2004/10/22 20:14:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -114,7 +114,7 @@ CmiCheckSubKeys(BOOLEAN Verbose,
 			 KEY_ALL_ACCESS,
 			 &ObjectAttributes);
 
-      assert(NT_SUCCESS(Status));
+      ASSERT(NT_SUCCESS(Status));
 
       CmiCheckKey(Verbose, SubKey);
 
@@ -123,7 +123,7 @@ CmiCheckSubKeys(BOOLEAN Verbose,
       Index++;
     }
 
-  assert(NT_SUCCESS(Status));
+  ASSERT(NT_SUCCESS(Status));
 }
 
 
@@ -174,7 +174,7 @@ CmiCheckValues(BOOLEAN Verbose,
       Index++;
     }
 
-  assert(NT_SUCCESS(Status));
+  ASSERT(NT_SUCCESS(Status));
 }
 
 
@@ -218,7 +218,7 @@ CmiCheckByName(BOOLEAN Verbose,
 	{
           DbgPrint("KeyPath %wZ  Status: %.08x", KeyPath, Status);
           DbgPrint("KeyPath %S  Status: %.08x", KeyPath.Buffer, Status);
-          assert(NT_SUCCESS(Status));
+          ASSERT(NT_SUCCESS(Status));
 	}
     }
 
@@ -254,7 +254,7 @@ CmInitializeRegistry(VOID)
 
   /*  Initialize the Key object type  */
   CmiKeyType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-  assert(CmiKeyType);
+  ASSERT(CmiKeyType);
   CmiKeyType->Tag = TAG('R', 'e', 'g', 'K');
   CmiKeyType->TotalObjects = 0;
   CmiKeyType->TotalHandles = 0;
@@ -283,7 +283,7 @@ CmInitializeRegistry(VOID)
 
   /*  Build volatile registry store  */
   Status = CmiCreateVolatileHive (&CmiVolatileHive);
-  assert(NT_SUCCESS(Status));
+  ASSERT(NT_SUCCESS(Status));
 
   /* Create '\Registry' key. */
   RtlInitUnicodeString(&KeyName, REG_ROOT_KEY_NAME);
@@ -297,14 +297,14 @@ CmInitializeRegistry(VOID)
 			  0,
 			  0,
 			  (PVOID *) &RootKey);
-  assert(NT_SUCCESS(Status));
+  ASSERT(NT_SUCCESS(Status));
   Status = ObInsertObject(RootKey,
 			  NULL,
 			  STANDARD_RIGHTS_REQUIRED,
 			  0,
 			  NULL,
 			  &RootKeyHandle);
-  assert(NT_SUCCESS(Status));
+  ASSERT(NT_SUCCESS(Status));
   RootKey->RegistryHive = CmiVolatileHive;
   RootKey->KeyCellOffset = CmiVolatileHive->HiveHeader->RootKeyOffset;
   RootKey->KeyCell = CmiGetCell (CmiVolatileHive, RootKey->KeyCellOffset, NULL);
@@ -314,14 +314,14 @@ CmInitializeRegistry(VOID)
   RootKey->SubKeys = NULL;
   RootKey->SizeOfSubKeys = 0;
   Status = RtlCreateUnicodeString(&RootKey->Name, L"Registry");
-  assert(NT_SUCCESS(Status));
+  ASSERT(NT_SUCCESS(Status));
 
 #if 0
   Status = CmiAllocateCell(CmiVolatileHive,
 			   0x10, //LONG CellSize,
 			   (PVOID *)&RootSecurityCell,
 			   &RootKey->KeyCell->SecurityKeyOffset);
-  assert(NT_SUCCESS(Status));
+  ASSERT(NT_SUCCESS(Status));
 
   /* Copy the security descriptor */
 
@@ -345,7 +345,7 @@ CmInitializeRegistry(VOID)
 		       NULL,
 		       REG_OPTION_VOLATILE,
 		       NULL);
-  assert(NT_SUCCESS(Status));
+  ASSERT(NT_SUCCESS(Status));
 
   /* Create '\Registry\User' key. */
   RtlInitUnicodeString(&KeyName,
@@ -362,7 +362,7 @@ CmInitializeRegistry(VOID)
 		       NULL,
 		       REG_OPTION_VOLATILE,
 		       NULL);
-  assert(NT_SUCCESS(Status));
+  ASSERT(NT_SUCCESS(Status));
 }
 
 
@@ -1183,12 +1183,7 @@ CmiSyncHives(VOID)
 
   CmiHiveSyncPending = TRUE;
 
-
-#if defined(__GNUC__)
-  Timeout.QuadPart = -50000000LL;
-#else
-  Timeout.QuadPart = -50000000;
-#endif
+  Timeout.QuadPart = (LONGLONG)-50000000;
   KeSetTimer(&CmiHiveSyncTimer,
 	     Timeout,
 	     &CmiHiveSyncDpc);

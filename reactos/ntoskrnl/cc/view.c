@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.78 2004/09/19 12:11:44 hbirr Exp $
+/* $Id: view.c,v 1.79 2004/10/22 20:11:12 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -185,7 +185,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
 	{
 	  continue;
 	}
-      assert(current->Dirty);
+      ASSERT(current->Dirty);
       if (current->ReferenceCount > 1)
 	{
 	  ExReleaseFastMutex(&current->Lock);
@@ -202,7 +202,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
       else
       {
          (*Count) += PagesPerSegment;
-         Target -= PagesPerSegment;     
+         Target -= PagesPerSegment;
       }
       ExAcquireFastMutex(&ViewLock);
       current_entry = DirtySegmentListHead.Flink;
@@ -319,7 +319,7 @@ CcRosReleaseCacheSegment(PBCB Bcb,
   BOOLEAN WasDirty = CacheSeg->Dirty;
   KIRQL oldIrql;
 
-  assert(Bcb);
+  ASSERT(Bcb);
 
   DPRINT("CcReleaseCacheSegment(Bcb %x, CacheSeg %x, Valid %d)\n",
 	 Bcb, CacheSeg, Valid);
@@ -364,7 +364,7 @@ CcRosLookupCacheSegment(PBCB Bcb, ULONG FileOffset)
   PCACHE_SEGMENT current;
   KIRQL oldIrql;
 
-  assert(Bcb);
+  ASSERT(Bcb);
 
   DPRINT("CcRosLookupCacheSegment(Bcb %x, FileOffset %d)\n", Bcb, FileOffset);
 
@@ -394,7 +394,7 @@ CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset)
   PCACHE_SEGMENT CacheSeg;
   KIRQL oldIrql;
 
-  assert(Bcb);
+  ASSERT(Bcb);
 
   DPRINT("CcRosMarkDirtyCacheSegment(Bcb %x, FileOffset %d)\n", Bcb, FileOffset);
 
@@ -431,7 +431,7 @@ CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
   BOOLEAN WasDirty;
   KIRQL oldIrql;
 
-  assert(Bcb);
+  ASSERT(Bcb);
 
   DPRINT("CcRosUnmapCacheSegment(Bcb %x, FileOffset %d, NowDirty %d)\n",
           Bcb, FileOffset, NowDirty);
@@ -488,8 +488,8 @@ CcRosCreateCacheSegment(PBCB Bcb,
 #else
 #endif
   PHYSICAL_ADDRESS BoundaryAddressMultiple;
-  
-  assert(Bcb);
+
+  ASSERT(Bcb);
 
   DPRINT("CcRosCreateCacheSegment()\n");
 
@@ -639,7 +639,7 @@ CcRosGetCacheSegmentChain(PBCB Bcb,
   PCACHE_SEGMENT* CacheSegList;
   PCACHE_SEGMENT Previous = NULL;
 
-  assert(Bcb);
+  ASSERT(Bcb);
 
   DPRINT("CcRosGetCacheSegmentChain()\n");
 
@@ -702,7 +702,7 @@ CcRosGetCacheSegment(PBCB Bcb,
    PCACHE_SEGMENT current;
    NTSTATUS Status;
 
-   assert(Bcb);
+   ASSERT(Bcb);
 
    DPRINT("CcRosGetCacheSegment()\n");
 
@@ -744,7 +744,7 @@ CcRosRequestCacheSegment(PBCB Bcb,
 {
   ULONG BaseOffset;
 
-  assert(Bcb);
+  ASSERT(Bcb);
 
   if ((FileOffset % Bcb->CacheSegmentSize) != 0)
     {
@@ -766,7 +766,7 @@ STATIC VOID
 CcFreeCachePage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
 		PFN_TYPE Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
-  assert(SwapEntry == 0);
+  ASSERT(SwapEntry == 0);
   if (Page != 0)
     {
       MmReleasePageMemoryConsumer(MC_CACHE, Page);
@@ -829,7 +829,7 @@ CcRosFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
   NTSTATUS Status;
   KIRQL oldIrql;
 
-  assert(Bcb);
+  ASSERT(Bcb);
 
   DPRINT("CcRosFreeCacheSegment(Bcb %x, CacheSeg %x)\n",
          Bcb, CacheSeg);
@@ -873,18 +873,14 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
    if (SectionObjectPointers && SectionObjectPointers->SharedCacheMap)
    {
       Bcb = (PBCB)SectionObjectPointers->SharedCacheMap;
-      assert(Bcb);
+      ASSERT(Bcb);
       if (FileOffset)
       {
 	 Offset = *FileOffset;
       }
       else 
       {
-#if defined(__GNUC__)
-	 Offset.QuadPart = 0LL;
-#else
-	 Offset.QuadPart = 0;
-#endif
+	 Offset.QuadPart = (LONGLONG)0;
 	 Length = Bcb->FileSize.u.LowPart;
       }
    
@@ -945,8 +941,8 @@ CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
    LIST_ENTRY FreeList;
    KIRQL oldIrql;
 
-   assert(Bcb);
-   
+   ASSERT(Bcb);
+
    Bcb->RefCount++;
    ExReleaseFastMutex(&ViewLock);
 
@@ -1006,17 +1002,17 @@ VOID CcRosReferenceCache(PFILE_OBJECT FileObject)
   PBCB Bcb;
   ExAcquireFastMutex(&ViewLock);
   Bcb = (PBCB)FileObject->SectionObjectPointer->SharedCacheMap;
-  assert(Bcb);
+  ASSERT(Bcb);
   if (Bcb->RefCount == 0)
   {
-     assert(Bcb->BcbRemoveListEntry.Flink != NULL);
+     ASSERT(Bcb->BcbRemoveListEntry.Flink != NULL);
      RemoveEntryList(&Bcb->BcbRemoveListEntry);
      Bcb->BcbRemoveListEntry.Flink = NULL;
 
   }
   else
   {
-     assert(Bcb->BcbRemoveListEntry.Flink == NULL);
+     ASSERT(Bcb->BcbRemoveListEntry.Flink == NULL);
   }
   Bcb->RefCount++;
   ExReleaseFastMutex(&ViewLock);
@@ -1045,7 +1041,7 @@ VOID CcRosDereferenceCache(PFILE_OBJECT FileObject)
   PBCB Bcb;
   ExAcquireFastMutex(&ViewLock);
   Bcb = (PBCB)FileObject->SectionObjectPointer->SharedCacheMap;
-  assert(Bcb);
+  ASSERT(Bcb);
   if (Bcb->RefCount > 0)
   {
     Bcb->RefCount--;
@@ -1155,13 +1151,13 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
    ExAcquireFastMutex(&ViewLock);
    if (Bcb == NULL)
    {
-      Bcb = ExAllocateFromNPagedLookasideList(&BcbLookasideList);	
+      Bcb = ExAllocateFromNPagedLookasideList(&BcbLookasideList);
       if (Bcb == NULL)
       {
         ExReleaseFastMutex(&ViewLock);
 	return(STATUS_UNSUCCESSFUL);
       }
-      memset(Bcb, 0, sizeof(BCB));      
+      memset(Bcb, 0, sizeof(BCB));
       ObReferenceObjectByPointer(FileObject,
 			         FILE_ALL_ACCESS,
 			         NULL,
@@ -1204,7 +1200,7 @@ CcGetFileObjectFromSectionPtrs(IN PSECTION_OBJECT_POINTERS SectionObjectPointers
    if (SectionObjectPointers && SectionObjectPointers->SharedCacheMap)
    {
       Bcb = (PBCB)SectionObjectPointers->SharedCacheMap;
-      assert(Bcb);
+      ASSERT(Bcb);
       return Bcb->FileObject;
    }
    return NULL;
@@ -1223,11 +1219,7 @@ CmLazyCloseThreadMain(PVOID Ignored)
 
    while (1)
    {
-#if defined(__GNUC__)
-      Timeout.QuadPart += 100000000LL; // 10sec
-#else
-      Timeout.QuadPart += 100000000; // 10sec
-#endif
+      Timeout.QuadPart += (LONGLONG)100000000; // 10sec
       Status = KeWaitForSingleObject(&LazyCloseThreadEvent,
 	                             0,
 				     KernelMode,

@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.28 2004/08/15 16:39:01 chorns Exp $
+/* $Id: resource.c,v 1.29 2004/10/22 20:18:35 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -826,7 +826,7 @@ ExReleaseResourceForThreadLite (
 	Resource->OwnerThreads[0].OwnerThread = 0;
 	Resource->ActiveCount--;
 	Resource->Flag &=(~ResourceOwnedExclusive);
-	assert(Resource->ActiveCount == 0);
+	ASSERT(Resource->ActiveCount == 0);
 	DPRINT("Resource->NumberOfExclusiveWaiters %d\n",
 	       Resource->NumberOfExclusiveWaiters);
 	if (Resource->NumberOfExclusiveWaiters)

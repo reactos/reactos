@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rdebug.c,v 1.6 2004/08/15 16:39:00 chorns Exp $
+/* $Id: rdebug.c,v 1.7 2004/10/22 20:16:48 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -119,7 +119,7 @@ DbgEnableFile(PCH Filename)
   if (!DbgpFind(Filename))
     {
       Entry = ExAllocatePool(NonPagedPool, sizeof(RDEBUG_ENTRY));
-      assert(Entry);
+      ASSERT(Entry);
       RtlMoveMemory(Entry->Filename, Filename, strlen(Filename) + 1);
       InsertTailList(&RDebugListHead, &Entry->ListEntry);
     }

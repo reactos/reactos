@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: profile.c,v 1.9 2004/08/26 16:04:49 blight Exp $
+/* $Id: profile.c,v 1.10 2004/10/22 20:16:47 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/profile.c
@@ -100,7 +100,7 @@ KdbAddEntryToProfileDatabase(PPROFILE_DATABASE ProfileDatabase, ULONG_PTR Addres
   if (IsListEmpty(&ProfileDatabase->ListHead))
     {
       block = ExAllocatePool(NonPagedPool, sizeof(PROFILE_DATABASE_BLOCK));
-      assert(block);
+      ASSERT(block);
       block->UsedEntries = 0;
       InsertTailList(&ProfileDatabase->ListHead, &block->ListEntry);
       block->Entries[block->UsedEntries++].Address = Address;
@@ -111,7 +111,7 @@ KdbAddEntryToProfileDatabase(PPROFILE_DATABASE ProfileDatabase, ULONG_PTR Addres
   if (block->UsedEntries >= PDE_BLOCK_ENTRIES)
     {
       block = ExAllocatePool(NonPagedPool, sizeof(PROFILE_DATABASE_BLOCK));
-      assert(block);
+      ASSERT(block);
       block->UsedEntries = 0;
       InsertTailList(&ProfileDatabase->ListHead, &block->ListEntry);
     }
@@ -335,7 +335,7 @@ KdbProfilerAnalyzeSamples()
 	      if (!ExSearchHashTable(&Hashtable, (PVOID) NameBuffer, KeyLength, (PVOID *) &sgi))
 	        {
 	          sgi = ExAllocatePool(NonPagedPool, sizeof(SAMPLE_GROUP_INFO));
-	          assert(sgi);
+	          ASSERT(sgi);
               sgi->Address = Address;
 	          sgi->Count = 1;
 	          strcpy(sgi->Description, NameBuffer);
@@ -464,7 +464,7 @@ KdbEnableProfiling()
       KeInitializeMutex(&KdbProfilerLock, 0);
 
       KdbProfileDatabase = ExAllocatePool(NonPagedPool, sizeof(PROFILE_DATABASE));
-      assert(KdbProfileDatabase);
+      ASSERT(KdbProfileDatabase);
       InitializeListHead(&KdbProfileDatabase->ListHead);
       KeInitializeDpc(&KdbProfilerCollectorDpc, KdbProfilerCollectorDpcRoutine, NULL);
 
@@ -484,7 +484,7 @@ KdbEnableProfiling()
 VOID
 KdbProfileInterrupt(ULONG_PTR Address)
 {
-  assert(KeGetCurrentIrql() == PROFILE_LEVEL);
+  ASSERT(KeGetCurrentIrql() == PROFILE_LEVEL);
 
   if (KdbProfilingInitialized != TRUE)
     {

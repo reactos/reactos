@@ -32,7 +32,7 @@ CmiCalcChecksum(PULONG Buffer);
 VOID
 CmiCreateDefaultHiveHeader(PHIVE_HEADER Header)
 {
-  assert(Header);
+  ASSERT(Header);
   RtlZeroMemory(Header, sizeof(HIVE_HEADER));
   Header->BlockId = REG_HIVE_ID;
   Header->UpdateCounter1 = 0;
@@ -54,7 +54,7 @@ CmiCreateDefaultHiveHeader(PHIVE_HEADER Header)
 VOID
 CmiCreateDefaultBinHeader(PHBIN BinHeader)
 {
-  assert(BinHeader);
+  ASSERT(BinHeader);
   RtlZeroMemory(BinHeader, sizeof(HBIN));
   BinHeader->HeaderId = REG_BIN_ID;
   BinHeader->DateModified.u.LowPart = 0;
@@ -66,7 +66,7 @@ CmiCreateDefaultBinHeader(PHBIN BinHeader)
 VOID
 CmiCreateDefaultRootKeyCell(PKEY_CELL RootKeyCell)
 {
-  assert(RootKeyCell);
+  ASSERT(RootKeyCell);
   RtlZeroMemory(RootKeyCell, sizeof(KEY_CELL));
   RootKeyCell->CellSize = -sizeof(KEY_CELL);
   RootKeyCell->Id = REG_KEY_CELL_ID;
@@ -90,13 +90,13 @@ CmiVerifyBinHeader(PHBIN BinHeader)
   if (CmiDoVerify)
     {
 
-  assert(BinHeader);
+  ASSERT(BinHeader);
 
   if (BinHeader->HeaderId != REG_BIN_ID)
     {
       DbgPrint("Bin header ID is %.08x (should be %.08x)\n",
         BinHeader->HeaderId, REG_BIN_ID);
-      assert(BinHeader->HeaderId == REG_BIN_ID);
+      ASSERT(BinHeader->HeaderId == REG_BIN_ID);
     }
 
   //BinHeader->DateModified.dwLowDateTime
@@ -108,7 +108,7 @@ CmiVerifyBinHeader(PHBIN BinHeader)
     {
       DbgPrint("BinSize is %.08x (should be a multiple of %.08x)\n",
         BinHeader->BinSize, REG_BLOCK_SIZE);
-      assert(BinHeader->BinSize % REG_BLOCK_SIZE == 0);
+      ASSERT(BinHeader->BinSize % REG_BLOCK_SIZE == 0);
     }
 
     }
@@ -121,20 +121,20 @@ CmiVerifyKeyCell(PKEY_CELL KeyCell)
   if (CmiDoVerify)
     {
 
-  assert(KeyCell);
+  ASSERT(KeyCell);
 
   if (KeyCell->CellSize == 0)
     {
       DbgPrint("CellSize is %d (must not be 0)\n",
         KeyCell->CellSize);
-      assert(KeyCell->CellSize != 0);
+      ASSERT(KeyCell->CellSize != 0);
     }
 
   if (KeyCell->Id != REG_KEY_CELL_ID)
     {
       DbgPrint("Id is %.08x (should be %.08x)\n",
         KeyCell->Id, REG_KEY_CELL_ID);
-      assert(KeyCell->Id == REG_KEY_CELL_ID);
+      ASSERT(KeyCell->Id == REG_KEY_CELL_ID);
     }
 
   //KeyCell->Flags;
@@ -145,14 +145,14 @@ CmiVerifyKeyCell(PKEY_CELL KeyCell)
     {
       DbgPrint("ParentKeyOffset is %d (must not be < 0)\n",
         KeyCell->ParentKeyOffset);
-      assert(KeyCell->ParentKeyOffset >= 0);
+      ASSERT(KeyCell->ParentKeyOffset >= 0);
     }
 
   if (KeyCell->NumberOfSubKeys < 0)
     {
       DbgPrint("NumberOfSubKeys is %d (must not be < 0)\n",
         KeyCell->NumberOfSubKeys);
-      assert(KeyCell->NumberOfSubKeys >= 0);
+      ASSERT(KeyCell->NumberOfSubKeys >= 0);
     }
 
   //KeyCell->HashTableOffset;
@@ -161,7 +161,7 @@ CmiVerifyKeyCell(PKEY_CELL KeyCell)
     {
       DbgPrint("NumberOfValues is %d (must not be < 0)\n",
         KeyCell->NumberOfValues);
-      assert(KeyCell->NumberOfValues >= 0);
+      ASSERT(KeyCell->NumberOfValues >= 0);
     }
 
   //KeyCell->ValuesOffset = -1;
@@ -170,7 +170,7 @@ CmiVerifyKeyCell(PKEY_CELL KeyCell)
     {
       DbgPrint("SecurityKeyOffset is %d (must not be < 0)\n",
         KeyCell->SecurityKeyOffset);
-      assert(KeyCell->SecurityKeyOffset >= 0);
+      ASSERT(KeyCell->SecurityKeyOffset >= 0);
     }
 
   //KeyCell->ClassNameOffset = -1;
@@ -195,7 +195,7 @@ CmiVerifyRootKeyCell(PKEY_CELL RootKeyCell)
     {
       DbgPrint("Flags is %.08x (should be %.08x)\n",
         RootKeyCell->Flags, REG_KEY_ROOT_CELL | REG_KEY_NAME_PACKED);
-      assert(!(RootKeyCell->Flags & (REG_KEY_ROOT_CELL | REG_KEY_NAME_PACKED)));
+      ASSERT(!(RootKeyCell->Flags & (REG_KEY_ROOT_CELL | REG_KEY_NAME_PACKED)));
     }
 
     }
@@ -208,20 +208,20 @@ CmiVerifyValueCell(PVALUE_CELL ValueCell)
   if (CmiDoVerify)
     {
 
-  assert(ValueCell);
+  ASSERT(ValueCell);
 
   if (ValueCell->CellSize == 0)
     {
       DbgPrint("CellSize is %d (must not be 0)\n",
         ValueCell->CellSize);
-      assert(ValueCell->CellSize != 0);
+      ASSERT(ValueCell->CellSize != 0);
     }
 
   if (ValueCell->Id != REG_VALUE_CELL_ID)
     {
       DbgPrint("Id is %.08x (should be %.08x)\n",
         ValueCell->Id, REG_VALUE_CELL_ID);
-      assert(ValueCell->Id == REG_VALUE_CELL_ID);
+      ASSERT(ValueCell->Id == REG_VALUE_CELL_ID);
     }
 
   //ValueCell->NameSize;
@@ -245,7 +245,7 @@ CmiVerifyValueListCell(PVALUE_LIST_CELL ValueListCell)
     {
       DbgPrint("CellSize is %d (must not be 0)\n",
         ValueListCell->CellSize);
-      assert(ValueListCell->CellSize != 0);
+      ASSERT(ValueListCell->CellSize != 0);
     }
 
     }
@@ -262,21 +262,21 @@ CmiVerifyKeyObject(PKEY_OBJECT KeyObject)
     {
       DbgPrint("RegistryHive is NULL (must not be NULL)\n",
         KeyObject->RegistryHive);
-      assert(KeyObject->RegistryHive != NULL);
+      ASSERT(KeyObject->RegistryHive != NULL);
     }
 
   if (KeyObject->KeyCell == NULL)
     {
       DbgPrint("KeyCell is NULL (must not be NULL)\n",
         KeyObject->KeyCell);
-      assert(KeyObject->KeyCell != NULL);
+      ASSERT(KeyObject->KeyCell != NULL);
     }
 
   if (KeyObject->ParentKey == NULL)
     {
       DbgPrint("ParentKey is NULL (must not be NULL)\n",
         KeyObject->ParentKey);
-      assert(KeyObject->ParentKey != NULL);
+      ASSERT(KeyObject->ParentKey != NULL);
     }
 
     }
@@ -294,42 +294,42 @@ CmiVerifyHiveHeader(PHIVE_HEADER Header)
       DbgPrint("BlockId is %.08x (must be %.08x)\n",
         Header->BlockId,
         REG_HIVE_ID);
-      assert(Header->BlockId == REG_HIVE_ID);
+      ASSERT(Header->BlockId == REG_HIVE_ID);
     }
 
   if (Header->Unused3 != 1)
     {
       DbgPrint("Unused3 is %.08x (must be 1)\n",
         Header->Unused3);
-      assert(Header->Unused3 == 1);
+      ASSERT(Header->Unused3 == 1);
     }
 
   if (Header->Unused4 != 3)
     {
       DbgPrint("Unused4 is %.08x (must be 3)\n",
         Header->Unused4);
-      assert(Header->Unused4 == 3);
+      ASSERT(Header->Unused4 == 3);
     }
 
   if (Header->Unused5 != 0)
     {
       DbgPrint("Unused5 is %.08x (must be 0)\n",
         Header->Unused5);
-      assert(Header->Unused5 == 0);
+      ASSERT(Header->Unused5 == 0);
     }
 
   if (Header->Unused6 != 1)
     {
       DbgPrint("Unused6 is %.08x (must be 1)\n",
         Header->Unused6);
-      assert(Header->Unused6 == 1);
+      ASSERT(Header->Unused6 == 1);
     }
 
   if (Header->Unused7 != 1)
     {
       DbgPrint("Unused7 is %.08x (must be 1)\n",
         Header->Unused7);
-      assert(Header->Unused7 == 1);
+      ASSERT(Header->Unused7 == 1);
     }
 
     }
@@ -396,7 +396,7 @@ CmiCreateNewRegFile(HANDLE FileHandle)
 
   ExFreePool(Buffer);
 
-  assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
+  ASSERTMSG(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
 
   if (!NT_SUCCESS(Status))
     {
@@ -686,7 +686,7 @@ CmiImportHiveBins(PREGISTRY_HIVE Hive,
 	  return STATUS_REGISTRY_CORRUPT;
 	}
 
-      assertmsg((Bin->BinSize % REG_BLOCK_SIZE) == 0,
+      ASSERTMSG((Bin->BinSize % REG_BLOCK_SIZE) == 0,
 		("Bin size (0x%.08x) must be multiple of 4K\n",
 		Bin->BinSize));
 
@@ -2319,7 +2319,7 @@ CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
 
   DPRINT("Scanning for sub key %wZ\n", KeyName);
 
-  assert(RegistryHive);
+  ASSERT(RegistryHive);
 
   *SubKeyCell = NULL;
 
@@ -3062,7 +3062,7 @@ CmiAllocateHashTableCell (IN PREGISTRY_HIVE RegistryHive,
     }
   else
     {
-      assert(SubKeyCount <= 0xffff); /* should really be USHORT_MAX or similar */
+      ASSERT(SubKeyCount <= 0xffff); /* should really be USHORT_MAX or similar */
       NewHashBlock->Id = REG_HASH_TABLE_CELL_ID;
       NewHashBlock->HashTableSize = (USHORT)SubKeyCount;
       *HashBlock = NewHashBlock;
@@ -3177,7 +3177,7 @@ CmiAllocateValueCell(PREGISTRY_HIVE RegistryHive,
     }
   else
     {
-      assert(NameSize <= 0xffff); /* should really be USHORT_MAX or similar */
+      ASSERT(NameSize <= 0xffff); /* should really be USHORT_MAX or similar */
       NewValueCell->Id = REG_VALUE_CELL_ID;
       NewValueCell->NameSize = (USHORT)NameSize;
       if (Packable)
@@ -3661,8 +3661,8 @@ CmiAddFree(PREGISTRY_HIVE RegistryHive,
   LONG maxInd;
   LONG medInd;
 
-  assert(RegistryHive);
-  assert(FreeBlock);
+  ASSERT(RegistryHive);
+  ASSERT(FreeBlock);
 
   DPRINT("FreeBlock %.08lx  FreeOffset %.08lx\n",
 	 FreeBlock, FreeOffset);

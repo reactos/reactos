@@ -1,4 +1,4 @@
-/* $Id: filelock.c,v 1.14 2004/08/15 16:39:01 chorns Exp $
+/* $Id: filelock.c,v 1.15 2004/10/22 20:19:58 ekohl Exp $
  *
  * reactos/ntoskrnl/fs/filelock.c
  *
@@ -125,7 +125,7 @@ FsRtlpCheckLockForReadOrWriteAccess(
    PFILE_LOCK_GRANTED   Granted;
    PLIST_ENTRY          EnumEntry;
 
-   assert(FileLock);
+   ASSERT(FileLock);
    LockToc = FileLock->LockInformation;
 
    if (LockToc == NULL || Length->QuadPart == 0) 
@@ -327,7 +327,7 @@ FsRtlpFastUnlockAllByKey(
    //must make local copy since FILE_LOCK struct is allowed to be paged
    PUNLOCK_ROUTINE		GotUnlockRoutine;
 
-   assert(FileLock);
+   ASSERT(FileLock);
    LockToc = FileLock->LockInformation;
 
    if (LockToc == NULL)
@@ -629,7 +629,7 @@ FsRtlpUnlockSingle(
    PFILE_LOCK_GRANTED   Granted;
    PLIST_ENTRY          EnumEntry;
 
-   assert(FileLock);
+   ASSERT(FileLock);
    LockToc = FileLock->LockInformation;
 
    if (LockToc == NULL || Length->QuadPart == 0)
@@ -734,7 +734,7 @@ FsRtlpDumpFileLocks(
    PLIST_ENTRY          EnumEntry;
    PEXTENDED_IO_STACK_LOCATION   Stack;
 
-   assert(FileLock);
+   ASSERT(FileLock);
    LockToc = FileLock->LockInformation;
 
    if (LockToc == NULL) 
@@ -823,7 +823,7 @@ FsRtlGetNextFileLock (
    FILE_LOCK_INFO       LocalLastReturnedLockInfo;
    PVOID                LocalLastReturnedLock;
 
-   assert(FileLock);
+   ASSERT(FileLock);
    LockToc = FileLock->LockInformation;
    if (LockToc == NULL)
    {
@@ -946,7 +946,7 @@ FsRtlPrivateLock (
    PFILE_LOCK_TOC       LockToc;
    KIRQL                oldirql;
 
-   assert(FileLock);
+   ASSERT(FileLock);
    if (FileLock->LockInformation == NULL) 
    {
       ExAcquireFastMutex(&LockTocMutex);
@@ -1021,7 +1021,7 @@ FsRtlPrivateLock (
    KeReleaseSpinLock(&LockToc->SpinLock, oldirql);	//fires cancel routine
 
    //never pending if no irp;-)
-   assert(!(IoStatus->Status == STATUS_PENDING && !Irp));
+   ASSERT(!(IoStatus->Status == STATUS_PENDING && !Irp));
 
    if (IoStatus->Status != STATUS_PENDING) 
    {
@@ -1085,7 +1085,7 @@ FsRtlProcessFileLock (
    NTSTATUS             Status;
    IO_STATUS_BLOCK      LocalIoStatus;
 
-   assert(FileLock);
+   ASSERT(FileLock);
    Stack = (PEXTENDED_IO_STACK_LOCATION) IoGetCurrentIrpStackLocation(Irp);
    Irp->IoStatus.Information = 0;
 
@@ -1174,7 +1174,7 @@ FsRtlUninitializeFileLock (
    PLIST_ENTRY          EnumEntry;
    KIRQL                oldirql;
 
-   assert(FileLock);
+   ASSERT(FileLock);
    if (FileLock->LockInformation == NULL)
    {
       return;
@@ -1281,7 +1281,7 @@ FsRtlFreeFileLock(
    IN PFILE_LOCK FileLock
    )
 {
-   assert(FileLock);
+   ASSERT(FileLock);
 
    FsRtlUninitializeFileLock(FileLock);
    ExFreeToPagedLookasideList(&LockLookaside, FileLock);

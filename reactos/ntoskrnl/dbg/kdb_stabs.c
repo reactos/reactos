@@ -73,7 +73,7 @@ KdbpStabFindEntry(IN PIMAGE_SYMBOL_INFO SymbolInfo,
   StabsEnd = (PVOID)((ULONG_PTR)SymbolInfo->SymbolsBase + SymbolInfo->SymbolsLength);
   if (StartEntry != NULL)
     {
-      assert((ULONG_PTR)StartEntry >= (ULONG_PTR)StabEntry);
+      ASSERT((ULONG_PTR)StartEntry >= (ULONG_PTR)StabEntry);
       if ((ULONG_PTR)StartEntry >= (ULONG_PTR)StabsEnd)
         return NULL;
       StabEntry = StartEntry;
