@@ -110,12 +110,17 @@ int STDCALL GetSystemMetrics(int  nIndex)
 }
 
 
-WINBOOL STDCALL SystemParametersInfo(UINT  uiAction,
+WINBOOL STDCALL SystemParametersInfoA(UINT  uiAction,
     UINT  uiParam, PVOID  pvParam, UINT  fWinIni )
 {
 	return FALSE;
 }
 
+WINBOOL STDCALL SystemParametersInfoW(UINT  uiAction,
+    UINT  uiParam, PVOID  pvParam, UINT  fWinIni )
+{
+	return FALSE;
+}
 #if 0
    /***********************************************************************
     *           SYSMETRICS_Init

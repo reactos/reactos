@@ -215,6 +215,25 @@ INT STDCALL GetUpdateRgn( HWND hwnd, HRGN hrgn, WINBOOL erase )
     return retval;
 }
 
+int
+STDCALL
+SetWindowRgn(
+	     HWND hWnd,
+	     HRGN hRgn,
+	     WINBOOL bRedraw)
+{
+	return 0;
+}
+ 
+int
+STDCALL
+GetWindowRgn(
+	     HWND hWnd,
+	     HRGN hRgn)
+{
+	return 0;
+}
+
 /***********************************************************************
  *           ExcludeUpdateRgn   (USER32.195)
  */

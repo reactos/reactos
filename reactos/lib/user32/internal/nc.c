@@ -27,6 +27,11 @@ static HBITMAP hbitmapRestoreD = 0;
     (((style) & WS_THICKFRAME) && \
      !(((style) & (WS_DLGFRAME|WS_BORDER)) == WS_DLGFRAME))
 
+
+#define HAS_THINFRAME(style) \
+    (((style) & WS_BORDER) || !((style) & (WS_CHILD | WS_POPUP)))
+
+
 #define HAS_FIXEDFRAME(style,exStyle) \
    (((((exStyle) & WS_EX_DLGMODALFRAME) || \
       ((style) & WS_DLGFRAME)) && ((style) & WS_BORDER)) && \
@@ -49,6 +54,25 @@ static HBITMAP hbitmapRestoreD = 0;
 
 
 int TWEAK_WineLook = WIN95_LOOK;
+
+
+/***********************************************************************
+ *           WIN_WindowNeedsWMBorder
+ *
+ * This method defines the rules for a window to have a WM border,
+ * caption...  It is used for consitency purposes.
+ */
+BOOL WIN_WindowNeedsWMBorder( DWORD style, DWORD exStyle )
+{
+    if (!(style & WS_CHILD) && 
+	!(exStyle & WS_EX_TOOLWINDOW) &&
+        ( ((style & WS_CAPTION) == WS_CAPTION) ||
+	  (style & WS_THICKFRAME)))
+        return TRUE;
+    //if (exStyle & WS_EX_TRAYWINDOW)
+	//return TRUE;
+    return FALSE;
+}
 
 /***********************************************************************
  *           NC_AdjustRect
@@ -122,57 +146,35 @@ void NC_AdjustRect( LPRECT rect, DWORD style, WINBOOL menu,
  *
  *****************************************************************************/
 
+
 void
-NC_AdjustRectOuter95 (LPRECT rect, DWORD style, WINBOOL menu, DWORD exStyle)
+NC_AdjustRectOuter95 (LPRECT rect, DWORD style, BOOL menu, DWORD exStyle)
 {
     if(style & WS_ICONIC) return;
 
     /* Decide if the window will be managed (see CreateWindowEx) */
-    // Options.managed &&
-
-    if (!( !(style & WS_CHILD) &&
-          ((style & (WS_DLGFRAME | WS_THICKFRAME)) ||
-           (exStyle & WS_EX_DLGMODALFRAME))))
+    if (!WIN_WindowNeedsWMBorder(style, exStyle))
     {
-        if (HAS_FIXEDFRAME( style, exStyle ))
-            InflateRect(rect, SYSMETRICS_CXDLGFRAME, SYSMETRICS_CYDLGFRAME );
+        if (HAS_THICKFRAME( style ))
+            InflateRect( rect, GetSystemMetrics(SM_CXFRAME), GetSystemMetrics(SM_CYFRAME) );
         else
-        {
-            if (HAS_SIZEFRAME(style))
-                InflateRect( rect, SYSMETRICS_CXFRAME, SYSMETRICS_CYFRAME );
-
-            if (style & WS_BORDER)
-                InflateRect( rect, SYSMETRICS_CXBORDER, SYSMETRICS_CYBORDER);
-
-        }
+        if (HAS_DLGFRAME( style, exStyle ))
+            InflateRect(rect, GetSystemMetrics(SM_CXDLGFRAME), GetSystemMetrics(SM_CYDLGFRAME) );
+        else
+        if (HAS_THINFRAME( style ))
+            InflateRect( rect, GetSystemMetrics(SM_CXBORDER), GetSystemMetrics(SM_CYBORDER));
 
         if ((style & WS_CAPTION) == WS_CAPTION)
         {
 	    if (exStyle & WS_EX_TOOLWINDOW)
-		rect->top -= SYSMETRICS_CYSMCAPTION;
+		rect->top -= GetSystemMetrics(SM_CYSMCAPTION);
 	    else
-		rect->top -= SYSMETRICS_CYCAPTION;
-        }
-    } else {
-
-	if (HAS_SIZEFRAME(style))
-                InflateRect( rect, SYSMETRICS_CXFRAME, SYSMETRICS_CYFRAME );
-#if 0
-        if (style & WS_BORDER)
-            InflateRect( rect, SYSMETRICS_CXBORDER, SYSMETRICS_CYBORDER);
-#endif
-
-        if ((style & WS_CAPTION) == WS_CAPTION)
-        {
-	    if (exStyle & WS_EX_TOOLWINDOW)
-		rect->top -= SYSMETRICS_CYSMCAPTION;
-	    else
-		rect->top -= SYSMETRICS_CYCAPTION;
+		rect->top -= GetSystemMetrics(SM_CYCAPTION);
         }
     }
 
     if (menu)
-	rect->top -= sysMetrics[SM_CYMENU];
+	rect->top -= GetSystemMetrics(SM_CYMENU);
 }
 
 
@@ -183,7 +185,7 @@ NC_AdjustRectOuter95 (LPRECT rect, DWORD style, WINBOOL menu, DWORD exStyle)
  * parameters of the client area.
  *
  + PARAMS
- *     LPRECT rect
+ *     LPRECT16 rect
  *     DWORD    style
  *     DWORD    exStyle
  *
@@ -208,13 +210,13 @@ NC_AdjustRectInner95 (LPRECT rect, DWORD style, DWORD exStyle)
     if(style & WS_ICONIC) return;
 
     if (exStyle & WS_EX_CLIENTEDGE)
-	InflateRect (rect, sysMetrics[SM_CXEDGE], sysMetrics[SM_CYEDGE]);
+	InflateRect (rect, GetSystemMetrics(SM_CXEDGE), GetSystemMetrics(SM_CYEDGE));
 
     if (exStyle & WS_EX_STATICEDGE)
-	InflateRect (rect, sysMetrics[SM_CXBORDER], sysMetrics[SM_CYBORDER]);
+	InflateRect (rect, GetSystemMetrics(SM_CXBORDER), GetSystemMetrics(SM_CYBORDER));
 
-    if (style & WS_VSCROLL) rect->right  += SYSMETRICS_CXVSCROLL;
-    if (style & WS_HSCROLL) rect->bottom += SYSMETRICS_CYHSCROLL;
+    if (style & WS_VSCROLL) rect->right  += GetSystemMetrics(SM_CXVSCROLL);
+    if (style & WS_HSCROLL) rect->bottom += GetSystemMetrics(SM_CYHSCROLL);
 }
 
 /***********************************************************************
@@ -1427,7 +1429,7 @@ void  NC_DoNCPaint95(
 
     //rect = wndPtr->rectWindow;
 
-    printf("::%d %d\n", rect.right, rect.bottom);
+    DPRINT("::%d %d\n", rect.right, rect.bottom);
 
 
     SelectObject( hdc, GetSysColorPen(COLOR_WINDOWFRAME) );
@@ -2063,7 +2065,7 @@ static void NC_TrackScrollBar( HWND hwnd, WPARAM wParam, POINT pt )
 	scrollbar = SB_VERT;
     }
 
-    if (!(msg = malloc(sizeof(MSG)))) return;
+    if (!(msg = HeapAlloc(GetProcessHeap,0,sizeof(MSG)))) return;
     pt.x -= wndPtr->rectWindow.left;
     pt.y -= wndPtr->rectWindow.top;
     SetCapture( hwnd );
@@ -2094,7 +2096,7 @@ static void NC_TrackScrollBar( HWND hwnd, WPARAM wParam, POINT pt )
             break;
         }
     } while (msg->message != WM_LBUTTONUP);
-    free(msg);
+    HeapFree(GetProcessHeap(),0,msg);
 }
 
 /***********************************************************************

@@ -17,9 +17,9 @@
 
 
 /* Built-in classes */
-
+#ifndef DLGWINDOWEXTRA
 #define DLGWINDOWEXTRA sizeof(DIALOGINFO)
-
+#endif
 
 static WNDCLASS WIDGETS_BuiltinClasses[BIC_NB_CLASSES+1] =
 {
@@ -56,8 +56,9 @@ static WNDCLASS WIDGETS_BuiltinClasses[BIC_NB_CLASSES+1] =
 //    { CS_GLOBALCLASS, MDIClientWndProc,
 //      0, sizeof(MDICLIENTINFO), 0, 0, 0, LTGRAY_BRUSH, 0, "MDIClient" },
     /* BIC_DESKTOP */
- //   { CS_GLOBALCLASS, DesktopWndProc, 0, sizeof(DESKTOPINFO),
- //     0, 0, (HCURSOR)IDC_ARROW, 0, 0, DESKTOP_CLASS_NAME },
+//sizeof(DESKTOPINFO)
+    { CS_GLOBALCLASS, DesktopWndProc, 0, 1024,
+      0, 0, (HCURSOR)IDC_ARROW, 0, 0, DESKTOP_CLASS_NAME },
     /* BIC_DIALOG */
     { CS_GLOBALCLASS | CS_SAVEBITS, DefDlgProc, 100, 100,
       0, 0, (HCURSOR)IDC_ARROW, 0, 0, DIALOG_CLASS_NAMEW },
@@ -98,6 +99,11 @@ WINBOOL WIDGETS_Init(void)
     return TRUE;
 }
 
+LRESULT WINAPI DesktopWndProc( HWND hwnd, UINT message,
+                               WPARAM wParam, LPARAM lParam )
+{
+	return 0;
+}
 
 /***********************************************************************
  *           WIDGETS_IsControl

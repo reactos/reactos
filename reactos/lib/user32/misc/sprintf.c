@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.2 1999/06/05 19:02:15 ariadne Exp $
+/* $Id: sprintf.c,v 1.3 2000/04/12 22:40:42 ariadne Exp $
  *
  * user32.dll
  *
@@ -13,7 +13,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
-#include "windows.h"
+#include <windows.h>
 
 #define WPRINTF_LEFTALIGN   0x0001  /* Align output on the left ('-' prefix) */
 #define WPRINTF_PREFIX_HEX  0x0002  /* Prefix hex with 0x ('#' prefix) */

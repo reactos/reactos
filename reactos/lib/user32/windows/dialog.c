@@ -272,10 +272,20 @@ INT STDCALL GetDlgCtrlID( HWND hwnd )
     else return 0;
 }
  
-HWND STDCALL GetDlgItem(HWND  hDlg, int  nIDDlgItem )
+HWND WINAPI GetDlgItem( HWND hwndDlg, INT id )
 {
-}
+    WND *pWnd;
 
+    if (!(pWnd = WIN_FindWndPtr( hwndDlg ))) return 0;
+    for (WIN_UpdateWndPtr(&pWnd,pWnd->child); pWnd;WIN_UpdateWndPtr(&pWnd,pWnd->next))
+        if (pWnd->wIDmenu == (UINT)id)
+        {
+            HWND retvalue = pWnd->hwndSelf;
+            WIN_ReleaseWndPtr(pWnd);
+            return retvalue;
+        }
+    return 0;
+}
 
 
 
@@ -285,9 +295,12 @@ HWND STDCALL GetDlgItem(HWND  hDlg, int  nIDDlgItem )
 LRESULT STDCALL SendDlgItemMessageA( HWND hwnd, INT id, UINT msg,
                                       WPARAM wParam, LPARAM lParam )
 {
-    HWND hwndCtrl = GetDlgItem( hwnd, id );
-    if (hwndCtrl) return SendMessageA( hwndCtrl, msg, wParam, lParam );
-    else return 0;
+    HWND hwndCtrl;
+    hwndCtrl = GetDlgItem( hwnd, id );
+    if (hwndCtrl) 
+	return SendMessageA( hwndCtrl, msg, wParam, lParam );
+    else 
+	return 0;
 }
 
 
@@ -297,9 +310,12 @@ LRESULT STDCALL SendDlgItemMessageA( HWND hwnd, INT id, UINT msg,
 LRESULT STDCALL SendDlgItemMessageW( HWND hwnd, INT id, UINT msg,
                                       WPARAM wParam, LPARAM lParam )
 {
-    HWND hwndCtrl = GetDlgItem( hwnd, id );
-    if (hwndCtrl) return SendMessageW( hwndCtrl, msg, wParam, lParam );
-    else return 0;
+    HWND hwndCtrl;
+    hwndCtrl = GetDlgItem( hwnd, id );
+    if (hwndCtrl) 
+	return SendMessageW( hwndCtrl, msg, wParam, lParam );
+    else 
+	return 0;
 }
 
 
@@ -357,6 +373,7 @@ WINBOOL STDCALL SetDlgItemInt( HWND hwnd, INT id, UINT value,
     if (fSigned) sprintf( str, "%d", (INT)value );
     else sprintf( str, "%u", value );
     SendDlgItemMessageA( hwnd, id, WM_SETTEXT, 0, (LPARAM)str );
+    return TRUE;
 }
 
 

@@ -3696,51 +3696,109 @@ static LRESULT EDIT_WM_VScroll(WND *wnd, EDITSTATE *es, INT action, INT pos, HWN
 
 // temporary hack
 
-WINBOOL STDCALL IsClipboardFormatAvailable(
-    UINT  format 
-   )
-{
-	return FALSE;
-}
-
 WINBOOL
 STDCALL
 OpenClipboard(
-	      HWND hWndNewOwner)
-{
-	return FALSE;
-}
+	      HWND hWndNewOwner) { return 0; }
 
+ 
 WINBOOL
 STDCALL
 CloseClipboard(
-	       VOID)
-{
-	return TRUE;
-}
+	       VOID) { return 0; }
 
+ 
+HWND
+STDCALL
+GetClipboardOwner(
+		  VOID) { return 0; }
+
+ 
+HWND
+STDCALL
+SetClipboardViewer(
+		   HWND hWndNewViewer) { return 0; }
+
+ 
+HWND
+STDCALL
+GetClipboardViewer(
+		   VOID) { return 0; }
+
+ 
 WINBOOL
 STDCALL
-EmptyClipboard(
-	       VOID)
-{
-	return TRUE;
-}
+ChangeClipboardChain(
+		     HWND hWndRemove,
+		     HWND hWndNewNext) { return 0; }
 
+ 
 HANDLE
 STDCALL
 SetClipboardData(
 		 UINT uFormat,
-		 HANDLE hMem)
-{
-	return NULL;
-}
+		 HANDLE hMem) { return 0; }
 
  
 HANDLE
 STDCALL
 GetClipboardData(
-		 UINT uFormat)
+		 UINT uFormat) { return 0; }
+
+ 
+ 
+int
+STDCALL
+CountClipboardFormats(
+		      VOID) { return 0; }
+
+ 
+UINT
+STDCALL
+EnumClipboardFormats(
+		     UINT format) { return 0; }
+
+ 
+WINBOOL
+STDCALL
+EmptyClipboard(
+	       VOID) { return 0; }
+
+ 
+WINBOOL
+STDCALL
+IsClipboardFormatAvailable(
+			   UINT format) { return 0; }
+
+ 
+int
+STDCALL
+GetPriorityClipboardFormat(
+			   UINT *paFormatPriorityList,
+			   int cFormats) { return 0; }
+
+ 
+HWND
+STDCALL
+GetOpenClipboardWindow(
+		       VOID) { return 0; }
+
+
+UINT
+STDCALL
+RegisterClipboardFormatA(
+    LPCSTR lpszFormat)
 {
-	return NULL;
+	return 0;
 }
+
+UINT
+STDCALL
+RegisterClipboardFormatW(
+    LPCWSTR lpszFormat)
+{
+	return 0;
+}
+
+
+ 

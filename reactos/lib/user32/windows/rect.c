@@ -39,7 +39,7 @@ WINBOOL STDCALL GetWindowRect( HWND hwnd, LPRECT rect )
     if (!wndPtr) return FALSE;
     
     *rect = wndPtr->rectWindow;
-    if (wndPtr->dwStyle & WS_CHILD)
+    if (wndPtr->dwStyle & WS_CHILD )
 	MapWindowPoints( wndPtr->parent->hwndSelf, 0, (POINT *)rect, 2 );
     return TRUE;
 }

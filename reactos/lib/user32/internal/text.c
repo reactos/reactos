@@ -712,8 +712,9 @@ LONG TEXT_TabbedTextOutW( HDC hdc, INT x, INT y, LPCWSTR lpstr,
     }
     return MAKELONG(tabPos - start, HIWORD(extent));
 }
-
+#if 0
 int _alloca(int x)
 {
 	return malloc(x);
 }
+#endif

@@ -624,6 +624,19 @@ SendMessageCallbackA(
 		return TRUE;
 }
 
+WINBOOL
+STDCALL
+SendMessageCallbackW(
+    HWND hWnd,
+    UINT Msg,
+    WPARAM wParam,
+    LPARAM lParam,
+    SENDASYNCPROC lpResultCallBack,
+    DWORD dwData)
+{
+	return FALSE;
+}
+
 /***********************************************************************
  *           ReplyMessage   (USER.115)
  */
@@ -866,6 +879,14 @@ LONG STDCALL GetMessageExtraInfo(void)
     return queue->GetMessageExtraInfoVal;
 }
 
+
+LPARAM
+STDCALL
+SetMessageExtraInfo(
+		    LPARAM lParam)
+{
+	return 0;
+}
 
 WINBOOL STDCALL MessageBeep( UINT uType )
 {

@@ -35,7 +35,7 @@ typedef enum
     BIC_STATIC,
     BIC_SCROLL,
 //    BIC_MDICLIENT,
-//    BIC_DESKTOP,
+    BIC_DESKTOP,
     BIC_DIALOG,
     BIC_ICONTITLE,
     BIC_NB_CLASSES
@@ -58,6 +58,8 @@ LRESULT STDCALL IconTitleWndProc( HWND hwnd, UINT msg,
                                         WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI StaticWndProc( HWND hWnd, UINT uMsg, WPARAM wParam,
                               LPARAM lParam );
+LRESULT WINAPI DesktopWndProc( HWND hwnd, UINT message,
+                               WPARAM wParam, LPARAM lParam );
 
 WINBOOL	WIDGETS_IsControl( WND* pWnd, BUILTIN_CLASS cls );
 

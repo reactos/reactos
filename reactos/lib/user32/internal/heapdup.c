@@ -87,12 +87,16 @@ int lpstrncpyW( LPWSTR ptr1,LPWSTR ptr2, int n)
 
 LPSTR HEAP_strdupA(HANDLE  hHeap,DWORD  dwFlags,LPCSTR ptr)
 {
-	 INT len = lstrlenA(ptr);
-	 LPSTR lpszString = HeapAlloc(hHeap, dwFlags, (len + 1) );
-	 if ( lpszString != NULL )
+	INT len;
+	LPSTR lpszString;
+	if ( ptr == NULL )
+		return NULL;
+	len = lstrlenA(ptr);
+	lpszString = HeapAlloc(hHeap, dwFlags, (len + 1) );
+	if ( lpszString != NULL )
 	 	lstrcpyA(lpszString,ptr);
 	 
-	 return lpszString;
+	return lpszString;
 }
 LPWSTR HEAP_strdupW(HANDLE  hHeap,DWORD  dwFlags,LPCWSTR ptr)
 {

@@ -11,13 +11,90 @@
 #include <user32/debug.h>
 #include <user32/heapdup.h>
 #include <user32/dialog.h>
-
+#include <user32/widgets.h>
 WND *rootWnd;
+
 //////////////////////////////////////////////////////////////////////////////////
 
-WND *pWndDesktop;
+WND *pWndDesktop = NULL;
 
-HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
+
+/***********************************************************************
+ *           WIN_CreateDesktopWindow
+ *
+ * Create the desktop window.
+ */
+BOOL WIN_CreateDesktopWindow(void)
+{
+    CLASS *class;
+    HWND hwndDesktop;
+    //DESKTOP *pDesktop;
+
+    DPRINT("Creating desktop window\n");
+
+#if 0
+    if (!ICONTITLE_Init() ||
+	!WINPOS_CreateInternalPosAtom() ||
+	!(class = CLASS_FindClassByAtom( STRING2ATOM(DESKTOP_CLASS_NAME) , 0 )))
+	return FALSE;
+#else
+	WINPOS_CreateInternalPosAtom();
+	class = CLASS_FindClassByAtom( STRING2ATOMW(DESKTOP_CLASS_NAME) , 0 );
+#endif
+    hwndDesktop = HeapAlloc(GetProcessHeap(),0, sizeof(WND)+class->cbWndExtra );
+    if (!hwndDesktop) return FALSE;
+    pWndDesktop = (WND *) ( hwndDesktop );
+
+    //pDesktop = (DESKTOP *) pWndDesktop->wExtra;
+    //pDesktop->pDriver = DESKTOP_Driver;
+    //pWndDesktop->pDriver = WND_Driver;
+
+    //pDesktop->pDriver->pInitialize(pDesktop);
+    //pWndDesktop->pDriver->pInitialize(pWndDesktop);
+
+    pWndDesktop->next              = NULL;
+    pWndDesktop->child             = NULL;
+    pWndDesktop->parent            = NULL;
+    pWndDesktop->owner             = NULL;
+    pWndDesktop->class             = class;
+    pWndDesktop->dwMagic           = WND_MAGIC;
+    pWndDesktop->hwndSelf          = hwndDesktop;
+    pWndDesktop->hInstance         = 0;
+    pWndDesktop->rectWindow.left   = 0;
+    pWndDesktop->rectWindow.top    = 0;
+    pWndDesktop->rectWindow.right  = GetSystemMetrics(SM_CXSCREEN);
+    pWndDesktop->rectWindow.bottom = GetSystemMetrics(SM_CYSCREEN);
+    pWndDesktop->rectClient        = pWndDesktop->rectWindow;
+    pWndDesktop->text              = NULL;
+    //pWndDesktop->hmemTaskQ         = GetFastQueue16();
+    pWndDesktop->hrgnUpdate        = 0;
+    pWndDesktop->hwndLastActive    = hwndDesktop;
+    pWndDesktop->dwStyle           = WS_VISIBLE | WS_CLIPCHILDREN |
+                                     WS_CLIPSIBLINGS;
+    pWndDesktop->dwExStyle         = 0;
+    pWndDesktop->dce               = NULL;
+    pWndDesktop->pVScroll          = NULL;
+    pWndDesktop->pHScroll          = NULL;
+    pWndDesktop->pProp             = NULL;
+    pWndDesktop->wIDmenu           = 0;
+    pWndDesktop->helpContext       = 0;
+    //pWndDesktop->flags             = Options.desktopGeometry ? WIN_NATIVE : 0; 
+    pWndDesktop->hSysMenu          = 0;
+    pWndDesktop->userdata          = 0;
+    pWndDesktop->winproc = (WNDPROC)class->winproc;
+    //pWndDesktop->irefCount         = 0;
+
+    /* FIXME: How do we know if it should be Unicode or not */
+    //if(!pWndDesktop->pDriver->pCreateDesktopWindow(pWndDesktop, class, FALSE))
+    //  return FALSE;
+    
+    SendMessageA( hwndDesktop, WM_NCCREATE, 0, 0 );
+    pWndDesktop->flags |= WIN_NEEDS_ERASEBKGND;
+    return TRUE;
+}
+
+
+HANDLE WIN_CreateWindowEx( CREATESTRUCT *cs, ATOM classAtom)
 {
     HANDLE hWnd;
     WND *wndPtr;
@@ -27,8 +104,20 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
     HWND  hWndLinkAfter = NULL;
  /* Create the window structure */
 
- 
-
+ #if 0
+    if (cs->hwndParent)
+    {
+	/* Make sure parent is valid */
+        if (!IsWindow( cs->hwndParent ))
+        {
+            DPRINT("Bad parent %04x\n", cs->hwndParent );
+	    return 0;
+	}
+    } else if ((cs->style & WS_CHILD) && !(cs->style & WS_POPUP)) {
+        DPRINT("No parent for child window\n" );
+        return 0;  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
+    }
+#endif
     classPtr = CLASS_FindClassByAtom(classAtom,cs->hInstance);
     if ( classPtr == NULL )
 	return NULL;
@@ -46,10 +135,6 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
     rootWnd = wndPtr;
 
     wndPtr->class       = classPtr;
-
-//    if ( CreatePipe(&(wndPtr->hmemTaskQ), &(wndPtr->hwndSelf),NULL,4096) == FALSE )
-//	return -1;
-
     
     wndPtr->hwndSelf = wndPtr;
     hWnd = wndPtr->hwndSelf;
@@ -59,14 +144,24 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
     wndPtr->next  = NULL;
     wndPtr->child = NULL;
 
-    if ((cs->style & WS_CHILD) && cs->hWndParent)
+   if ((cs->style & WS_CHILD) && cs->hwndParent)
     {
-        wndPtr->parent = WIN_FindWndPtr( cs->hWndParent );
+        wndPtr->parent = WIN_FindWndPtr( cs->hwndParent );
         wndPtr->owner  = NULL;
+        WIN_ReleaseWndPtr(wndPtr->parent);
     }
-    else {
-	wndPtr->owner = NULL;
-	wndPtr->parent = NULL;
+    else
+    {
+        wndPtr->parent = pWndDesktop;
+        if (!cs->hwndParent || (cs->hwndParent == pWndDesktop->hwndSelf))
+            wndPtr->owner = NULL;
+        else
+        {
+            WND *tmpWnd = WIN_FindWndPtr(cs->hwndParent);
+            wndPtr->owner = WIN_GetTopParentPtr(tmpWnd);
+            WIN_ReleaseWndPtr(wndPtr->owner);
+            WIN_ReleaseWndPtr(tmpWnd);
+	}
     }
 	
 /*
@@ -212,7 +307,7 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
     wndPtr->rectClient= wndPtr->rectWindow;
 
 
-    printf(":%d %d %d %d\n", wndPtr->rectWindow.left, wndPtr->rectWindow.top,
+    DPRINT(":%d %d %d %d\n", wndPtr->rectWindow.left, wndPtr->rectWindow.top,
 		wndPtr->rectWindow.right, wndPtr->rectWindow.bottom);
 
         /* Get class or window DC if needed */
@@ -693,7 +788,9 @@ WND * WIN_FindWndPtr( HWND hwnd )
 
 WND*   WIN_GetDesktop(void)
 {
-	return NULL;
+	if ( pWndDesktop == NULL )
+		WIN_CreateDesktopWindow();
+	return pWndDesktop;
 }
 
 WND **WIN_BuildWinArray( WND *wndPtr, UINT bwaFlags, UINT* pTotal )
@@ -710,7 +807,7 @@ WND **WIN_BuildWinArray( WND *wndPtr, UINT bwaFlags, UINT* pTotal )
 
     /* First count the windows */
 
-    if (!wndPtr) wndPtr = pWndDesktop;
+    if (!wndPtr) wndPtr = WIN_GetDesktop();
     for (pWnd = wndPtr->child, count = 0; pWnd; pWnd = pWnd->next) 
     {
 	if( (pWnd->dwStyle & skipFlags) || (skipOwned && pWnd->owner) ) continue;
@@ -964,6 +1061,41 @@ WINBOOL WIN_GetClientRect(WND *wndPtr, LPRECT lpRect )
     return TRUE;	
 }
 
+/***********************************************************************
+ *           WIN_LockWndPtr
+ *
+ * Use in case the wnd ptr is not initialized with WIN_FindWndPtr
+ * but by initWndPtr;
+ * Returns the locked initialisation pointer
+ */
+WND *WIN_LockWndPtr(WND *initWndPtr)
+{
+    if(!initWndPtr) return 0;
+  
+    return initWndPtr;
+
+}
+  
+
+void WIN_ReleaseWndPtr(WND *wndPtr)
+{
+    if(!wndPtr) return;
+}
+
+/***********************************************************************
+ *           WIN_UpdateWndPtr
+ *
+ * Updates the value of oldPtr to newPtr.
+ */
+void WIN_UpdateWndPtr(WND **oldPtr, WND *newPtr)
+{
+    WND *tmpWnd = NULL;
+    
+    tmpWnd = WIN_LockWndPtr(newPtr);
+    WIN_ReleaseWndPtr(*oldPtr);
+    *oldPtr = tmpWnd;
+
+}
 
 /*******************************************************************
  *           GetSysModalWindow16   (USER.52)

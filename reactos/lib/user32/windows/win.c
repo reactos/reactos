@@ -38,7 +38,7 @@ HWND STDCALL CreateWindowExA( DWORD exStyle, LPCSTR lpClassName,
                                  HINSTANCE hInstance, LPVOID data )
 {
 
-    CREATESTRUCTW cs;
+    CREATESTRUCT cs;
     CLASS *p;
     DWORD status;
 
@@ -65,7 +65,7 @@ HWND STDCALL CreateWindowExA( DWORD exStyle, LPCSTR lpClassName,
     cs.lpCreateParams = data;
     cs.hInstance      = hInstance;
     cs.hMenu          = menu;
-    cs.hWndParent     = parent;
+    cs.hwndParent     = parent;
     cs.x              = x;
     cs.y              = y;
     cs.cx             = width;
@@ -89,7 +89,7 @@ HWND STDCALL CreateWindowExW( DWORD exStyle, LPCWSTR lpClassName,
 {
     CLASS *p;
     DWORD status;
-    CREATESTRUCTW cs;
+    CREATESTRUCT cs;
 
     
 
@@ -105,7 +105,7 @@ HWND STDCALL CreateWindowExW( DWORD exStyle, LPCWSTR lpClassName,
     cs.lpCreateParams = data;
     cs.hInstance      = hInstance;
     cs.hMenu          = menu;
-    cs.hWndParent     = parent;
+    cs.hwndParent     = parent;
     cs.x              = x;
     cs.y              = y;
     cs.cx             = width;
@@ -257,7 +257,7 @@ WINBOOL STDCALL EnableWindow( HWND hWnd, WINBOOL enable )
 
 HWND STDCALL GetDesktopWindow(VOID)
 {
-	return NULL;
+	return WIN_GetDesktop()->hwndSelf;
 }
 
 

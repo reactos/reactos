@@ -286,6 +286,20 @@ WINBOOL STDCALL ShowWindow( HWND hwnd, INT cmd )
 }
 
 
+WINBOOL
+STDCALL
+ShowWindowAsync(
+		HWND hWnd,
+		int nCmdShow)
+{
+	return FALSE;
+}
+
+WINBOOL
+STDCALL
+BringWindowToTop(
+		 HWND hWnd) { return FALSE; }
+
 WINBOOL STDCALL SetWindowPos( HWND hWnd, HWND hWndInsertAfter ,
 	     int X, int Y,
 	     int cx, int cy,
@@ -593,3 +607,29 @@ WINBOOL STDCALL MoveWindow( HWND hwnd, INT x, INT y, INT cx, INT cy,
     return SetWindowPos( hwnd, 0, x, y, cx, cy, flags );
 }
 
+WINBOOL
+STDCALL
+GetWindowPlacement(
+		   HWND hWnd,
+		   WINDOWPLACEMENT *lpwndpl)
+{
+	return FALSE;
+}
+
+ 
+WINBOOL
+STDCALL
+SetWindowPlacement(
+		   HWND hWnd,
+		   CONST WINDOWPLACEMENT *lpwndpl)
+{
+	return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetForegroundWindow(
+		    HWND hWnd)
+{
+	return FALSE;
+}

@@ -1,7 +1,7 @@
 
 #include <windows.h>
 
-#include <user32/static.h>
+//#include <user32/static.h>
 
 HICON LoadStandardIcon(UINT IconId);
 
@@ -67,7 +67,14 @@ CreateIconIndirect(
     return hObj;
 }
 
- 
+WINBOOL
+STDCALL
+DestroyIcon(
+	    HICON hIcon)
+{
+	return FALSE;
+} 
+
 HICON
 STDCALL
 CopyIcon(

@@ -121,7 +121,7 @@ LPCDLGITEMTEMPLATE  DIALOG_ParseTemplate( LPCDLGTEMPLATE DlgTemplate, DLG_TEMPLA
     result->cx      = DlgTemplate->cx;
     result->cy      = DlgTemplate->cy;
     
-    printf("%d %d %d %d\n",result->x, result->y, result->cx, result->cy);
+    DPRINT("%d %d %d %d\n",result->x, result->y, result->cx, result->cy);
  
 
     p = &(DlgTemplate->cy);

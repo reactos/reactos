@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.8 1999/12/01 22:30:45 ariadne Exp $
+# $Id: makefile_rex,v 1.9 2000/04/12 22:40:38 ariadne Exp $
 #
 # ReactOS Operating System
 #
@@ -22,15 +22,34 @@ endif
 
 all: $(DLLTARGET)
 
+INTERNAL_OBJECTS = internal/menu.o internal/heapdup.o internal/nc.o\
+		 internal/win.o internal/dce.o internal/msg.o internal/queue.o\
+		internal/signal.o internal/event.o internal/timer.o internal/region.o\
+		internal/text.o internal/defwnd.o internal/paint.o internal/uitools.o\
+		internal/dialog.o internal/winpos.o
 
-MISC_OBJECTS = misc/sprintf.o misc/exitwin.o misc/dllmain.o misc/string.o misc/sysmetr.o
+MISC_OBJECTS = misc/sprintf.o  misc/dllmain.o misc/string.o misc/sysmetr.o misc/winstat.o\
+	misc/bitmap.o misc/cursor.o misc/vk.o misc/stubs.o misc/stubsa.o misc/stubsw.o
 
-#RESOURCE_OBJECT = $(TARGET).coff
 
-WINDOWS_OBJECTS = windows/msg.o windows/wndproc.o windows/win.o windows/hook.o windows/spy.o\
-		#windows/queue.o
+WINDOWS_OBJECTS = windows/wndproc.o windows/win.o windows/hook.o windows/spy.o\
+		windows/queue.o windows/winpos.o windows/class.o windows/dc.o\
+		windows/timer.o windows/rect.o windows/msg.o windows/input.o windows/property.o\
+		windows/focus.o windows/paint.o windows/msgbox.o windows/dialog.o\
+		windows/scroll.o windows/defdlg.o 
 
-OBJECTS = $(MISC_OBJECTS)  $(WINDOWS_OBJECTS)
+GRAPHICS_OBJECTS = graphics/rect.o graphics/caret.o graphics/text.o graphics/syscol.o graphics/fill.o\
+		graphics/draw.o graphics/icon.o
+
+CONTROLS_OBJECTS = controls/button.o controls/combo.o controls/edit.o controls/icontitle.o controls/listbox.o\
+		controls/widgets.o controls/menu.o controls/scroll.o controls/static.o
+
+RESOURCE_OBJECTS = resources/sysres.o
+
+RESOURCE_OBJECT = user32.coff
+
+OBJECTS = $(MISC_OBJECTS) $(INTERNAL_OBJECTS) $(GRAPHICS_OBJECTS) $(RESOURCE_OBJECTS) $(RESOURCE_OBJECT)\
+	$(CONTROLS_OBJECTS) $(WINDOWS_OBJECTS)
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = misc\*.o \
@@ -55,6 +74,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	$(CC) $(TARGET).o \
 		../ntdll/ntdll.a \
 		../kernel32/kernel32.a \
+		../gdi32/gdi32.a \
 		-specs=$(TARGET)_specs \
 		-mdll \
 		-o junk.tmp \
@@ -69,6 +89,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	$(CC) $(TARGET).o \
 		../ntdll/ntdll.a\
 		../kernel32/kernel32.a \
+		../gdi32/gdi32.a \
 		-specs=$(TARGET)_specs \
 		-mdll \
 		-o $(TARGET).dll \

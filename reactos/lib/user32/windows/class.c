@@ -491,6 +491,35 @@ WORD STDCALL GetClassWord( HWND hWnd, INT nIndex )
     return 0;
 }
 
+WORD
+STDCALL
+SetClassWord(
+	     HWND hWnd,
+	     int nIndex,
+	     WORD wNewWord)
+{
+	return 0;
+}
+
+DWORD
+STDCALL
+SetClassLongA(
+    HWND hWnd,
+    int nIndex,
+    LONG dwNewLong)
+{
+	return 0;
+}
+
+DWORD
+STDCALL
+SetClassLongW(
+    HWND hWnd,
+    int nIndex,
+    LONG dwNewLong)
+{
+	return 0;
+}
 
 CLASS *CLASS_FindClassByAtom( ATOM classAtom, HINSTANCE hInstance )
 {

@@ -18,7 +18,7 @@
 #include <user32/queue.h>
 #include <user32/heapdup.h>
 
-
+int abs(int x);
 
 UINT doubleClickSpeed = 452;
 INT debugSMRL = 0;       /* intertask SendMessage() recursion level */
@@ -287,7 +287,7 @@ DWORD MSG_TranslateKbdMsg( HWND hTopWnd, DWORD filter,
  */
 void MSG_JournalRecordMsg( MSG *msg )
 {
-    EVENTMSG *event = malloc(sizeof(EVENTMSG));
+    EVENTMSG *event = HeapAlloc(GetProcessHeap(),0,sizeof(EVENTMSG));
     if (!event) return;
     event->message = msg->message;
     event->time = msg->time;
@@ -317,7 +317,7 @@ void MSG_JournalRecordMsg( MSG *msg )
         HOOK_CallHooksA( WH_JOURNALRECORD, HC_ACTION, 0,
                           (LPARAM)(event) );
     }
-    free(event);
+    HeapFree(GetProcessHeap(),0,event);
 }
 
 /***********************************************************************
@@ -333,7 +333,7 @@ int MSG_JournalPlayBackMsg(void)
 
  if ( HOOK_IsHooked( WH_JOURNALPLAYBACK ) )
  {
-  tmpMsg = malloc(sizeof(EVENTMSG));
+  tmpMsg = HeapAlloc(GetProcessHeap(),0,sizeof(EVENTMSG));
   wtime=HOOK_CallHooksA( WH_JOURNALPLAYBACK, HC_GETNEXT, 0,
 			  (LPARAM)(tmpMsg));
   /*  DPRINT("Playback wait time =%ld\n",wtime); */
@@ -407,7 +407,7 @@ int MSG_JournalPlayBackMsg(void)
 
     result= QS_MOUSE | QS_KEY; /* ? */
   }
-  free(tmpMsg);
+  HeapFree(GetProcessHeap(),0,tmpMsg);
  }
  return result;
 } 
@@ -456,7 +456,7 @@ WINBOOL MSG_PeekHardwareMsg( MSG *msg, HWND hwnd, DWORD filter,
         else /* Non-standard hardware event */
         {
             HARDWAREHOOKSTRUCT *hook;
-            if ( (hook = malloc(sizeof(HARDWAREHOOKSTRUCT))) )
+            if ( (hook = HeapAlloc(GetProcessHeap(),0,sizeof(HARDWAREHOOKSTRUCT))) )
             {
                 WINBOOL ret;
                 hook->hWnd     = msg->hwnd;
@@ -466,7 +466,7 @@ WINBOOL MSG_PeekHardwareMsg( MSG *msg, HWND hwnd, DWORD filter,
                 ret = HOOK_CallHooksA( WH_HARDWARE,
                                         remove ? HC_ACTION : HC_NOREMOVE,
                                         0, (LPARAM)hook );
-                free(hook);
+                HeapFree(GetProcessHeap(),0,hook);
                 if (ret) 
 		{
 		    QUEUE_RemoveMsg( sysMsgQueue, pos );
@@ -489,7 +489,7 @@ WINBOOL MSG_PeekHardwareMsg( MSG *msg, HWND hwnd, DWORD filter,
 						 msg->wParam, msg->lParam );
 		   else
 		   {
-                       MOUSEHOOKSTRUCT *hook = malloc(sizeof(MOUSEHOOKSTRUCT));
+                       MOUSEHOOKSTRUCT *hook = HeapAlloc(GetProcessHeap(),0,sizeof(MOUSEHOOKSTRUCT));
                        if (hook)
                        {
                            hook->pt           = msg->pt;
@@ -498,7 +498,7 @@ WINBOOL MSG_PeekHardwareMsg( MSG *msg, HWND hwnd, DWORD filter,
                            hook->dwExtraInfo  = 0;
                            HOOK_CallHooksA( WH_CBT, HCBT_CLICKSKIPPED ,msg->message,
                                           (LPARAM)hook );
-                           free(hook);
+                           HeapFree(GetProcessHeap(),0,hook);
                        }
                    }
                 }
@@ -552,7 +552,7 @@ LRESULT MSG_SendMessageInterTask( HWND hwnd, UINT msg,
             if (wndPtr->dwStyle & WS_POPUP || wndPtr->dwStyle & WS_CAPTION) 
                 MSG_SendMessageInterTask( wndPtr->hwndSelf, msg, wParam, lParam, bUnicode );
         }
-	HeapFree( GetProcessHeap(), 0, list );
+	HeapFree(GetProcessHeap(),0, list );
         return TRUE;
     }
 
@@ -878,7 +878,7 @@ WINBOOL MSG_InternalGetMessage( MSG *msg, HWND hwnd, HWND hwndOwner,
 
         if (HOOK_IsHooked( WH_SYSMSGFILTER ) || HOOK_IsHooked( WH_MSGFILTER ))
         {
-            MSG *pmsg = malloc(sizeof(MSG));
+            MSG *pmsg = HeapAlloc(GetProcessHeap(),0,sizeof(MSG));
             if (pmsg)
             {
                 WINBOOL ret;
@@ -887,7 +887,7 @@ WINBOOL MSG_InternalGetMessage( MSG *msg, HWND hwnd, HWND hwndOwner,
                                                  (LPARAM)(pmsg) ) ||
                        (WINBOOL)HOOK_CallHooksA( WH_MSGFILTER, code, 0,
                                                  (LPARAM)(pmsg) ));
-                free(pmsg);
+                HeapFree(GetProcessHeap(),0,pmsg);
                 if (ret)
                 {
                     /* Message filtered -> remove it from the queue */

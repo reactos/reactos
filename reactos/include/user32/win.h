@@ -61,45 +61,17 @@ typedef struct tagWND
     DWORD         wExtra[1];     /* Window extra bytes */
 } WND;
 
-typedef struct tagCREATESTRUCTA { 
-  LPVOID    lpCreateParams;  
-  HINSTANCE hInstance;       
-  HMENU     hMenu;           
-  HWND      hWndParent;      
-  int       cy;              
-  int       cx;              
-  int       y;               
-  int       x;               
-  LONG      style;           
-  LPCSTR    lpszName;        
-  LPCSTR    lpszClass;       
-  DWORD     dwExStyle;       
-} CREATESTRUCTA, *LPCREATESTRUCTA; 
 
-typedef struct tagCREATESTRUCTW { 
-  LPVOID    lpCreateParams;  
-  HINSTANCE hInstance;       
-  HMENU     hMenu;           
-  HWND      hWndParent;      
-  int       cy;              
-  int       cx;              
-  int       y;               
-  int       x;               
-  LONG      style;           
-  LPCWSTR   lpszName;        
-  LPCWSTR   lpszClass;       
-  DWORD     dwExStyle;       
-} CREATESTRUCTW, *LPCREATESTRUCTW; 
 
 typedef struct
 {
-    CREATESTRUCTA *lpcs;
+    CREATESTRUCT *lpcs;
     HWND           hwndInsertAfter;
 } CBT_CREATEWNDA, *LPCBT_CREATEWNDA;
 
 typedef struct
 {
-    CREATESTRUCTW *lpcs;
+    CREATESTRUCT *lpcs;
     HWND           hwndInsertAfter;
 } CBT_CREATEWNDW, *LPCBT_CREATEWNDW;
 
@@ -144,9 +116,10 @@ typedef struct
 
 
   /* Window functions */
-HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM atomName );
+HANDLE WIN_CreateWindowEx( CREATESTRUCT *cs, ATOM atomName );
 #define WIN_FindWndPtr(hwnd) (WND *)hwnd
 //WND*   WIN_FindWndPtr( HWND hwnd );
+void WIN_ReleaseWndPtr(WND *pWnd);
 WND*   WIN_GetDesktop(void);
 void   WIN_DumpWindow( HWND hwnd );
 void   WIN_WalkWindows( HWND hwnd, int indent );
