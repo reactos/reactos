@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2003/08/15 17:06:49 gvg Exp $
+# $Id$
 
 PATH_TO_TOP = ../../../reactos
 
@@ -12,7 +12,7 @@ TARGET_SDKLIBS = kernel32.a gdi32.a
 
 TARGET_OBJECTS = maze.o
 
-TARGET_CFLAGS = -Wall -Werror
+TARGET_CFLAGS = -D__USE_W32API -Wall -Werror
 
 include $(PATH_TO_TOP)/rules.mak
 
