@@ -1,4 +1,4 @@
-/* $Id: conport.c,v 1.2 1999/06/27 07:11:25 ea Exp $
+/* $Id: conport.c,v 1.3 1999/06/27 07:15:16 ea Exp $
  *
  * reactos/apps/lpc/conport.c
  *
@@ -81,7 +81,6 @@ DumpInfo (
 	HANDLE		Port
 	)
 {
-	int i;
 	BYTE			ObjectInformation [BUF_SIZE] = {0};
 	ULONG			ResultLength;
 
@@ -93,8 +92,6 @@ DumpInfo (
 	 * Query object information.
 	 */
 	printf("Basic Information:\n");
-	Status = -1;
-	for ( i=1024000; i && Status != STATUS_SUCCESS; --i)
 	Status = QueryObject(
 			Port,
 			ObjectBasicInformation,
