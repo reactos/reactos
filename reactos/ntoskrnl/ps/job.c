@@ -262,19 +262,28 @@ NtCreateJobObject(PHANDLE JobHandle,
     InsertTailList(&PsJobListHead, &Job->JobLinks);
     ExReleaseFastMutex(&PsJobListLock);
     
-    /* pass the handle back to the caller */
-    _SEH_TRY
+    Status = ObInsertObject(Job,
+                            NULL,
+                            DesiredAccess,
+                            0,
+                            NULL,
+                            &hJob);
+    if(NT_SUCCESS(Status))
     {
-      /* NOTE: if the caller passed invalid buffers to receive the handle it's his
-               own fault! the object will still be created and live... It's possible
-               to find the handle using ObFindHandleForObject()! */
-      *JobHandle = hJob;
+      /* pass the handle back to the caller */
+      _SEH_TRY
+      {
+        /* NOTE: if the caller passed invalid buffers to receive the handle it's his
+                 own fault! the object will still be created and live... It's possible
+                 to find the handle using ObFindHandleForObject()! */
+        *JobHandle = hJob;
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
     }
-    _SEH_HANDLE
-    {
-      Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
   }
   
   return Status;
