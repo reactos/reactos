@@ -40,6 +40,8 @@ EXTERN(_PnpBiosSupported)
 
 	pushl	%edi
 	pushl	%esi
+	pushl	%ecx
+	pushl	%edx
 
 	xorl	%edi,%edi
 
@@ -54,10 +56,27 @@ pnp_again:
 	cmp		$0xFFFF0,%esi
 	je		pnp_not_found
 
+pnp_add:
 	addl	$0x10,%esi
 	jmp		pnp_again
 
 pnp_found:
+	/* first calculate the checksum */
+	pushl	%esi
+
+	pushl	$0x21
+	popl	%ecx
+	xorl	%edx, %edx
+
+pnp_loop:
+	lodsb
+	addb	%al,%dl
+	loopl	pnp_loop
+
+	testb	%dl, %dl
+	popl	%esi
+	jnz		pnp_add
+
 	movl	%esi,%edi
 
 	/* Calculate the bios entry point (far pointer) */
@@ -74,6 +93,8 @@ pnp_found:
 pnp_not_found:
 	movl	%edi,%eax
 
+	popl	%edx
+	popl	%ecx
 	popl	%esi
 	popl	%edi
 
