@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.45 2003/02/02 16:57:30 ekohl Exp $
+/* $Id: stubs.c,v 1.46 2003/02/03 14:20:03 ekohl Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -19,14 +19,6 @@ IsProcessorFeaturePresent( DWORD ProcessorFeature )
 BOOL
 STDCALL
 BaseAttachCompleteThunk (VOID)
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-BOOL STDCALL
-CancelIo(HANDLE hFile)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
@@ -575,7 +567,7 @@ GetSystemDefaultLangID (VOID)
 
 #endif
 
-DWORD
+WINBOOL
 STDCALL
 GetSystemPowerStatus (
     DWORD   Unknown0
@@ -871,25 +863,14 @@ SetThreadLocale (
 #endif
 
 
-WINBOOL
-STDCALL
+WINBOOL STDCALL
 SetSystemPowerState (
-    DWORD   Unknown0,
-    DWORD   Unknown1
+    IN WINBOOL fSuspend,
+    IN WINBOOL fForce
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetThreadIdealProcessor(HANDLE hThread,
-			DWORD dwIdealProcessor)
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: iocompl.c,v 1.7 2003/01/15 21:24:33 chorns Exp $
+/* $Id: iocompl.c,v 1.8 2003/02/03 14:19:30 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -135,5 +135,22 @@ FileIOCompletionRoutine(
 	return;
 }
 
+
+BOOL STDCALL
+CancelIo(HANDLE hFile)
+{
+  IO_STATUS_BLOCK IoStatusBlock;
+  NTSTATUS Status;
+
+  Status = NtCancelIoFile(hFile,
+			  &IoStatusBlock);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+
+  return(TRUE);
+}
 
 /* EOF */
