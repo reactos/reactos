@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.44 2003/01/22 02:23:48 ekohl Exp $
+/* $Id: stubs.c,v 1.45 2003/02/02 16:57:30 ekohl Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -762,28 +762,6 @@ LoadModule (
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
-}
-
-
-WINBOOL
-STDCALL
-QueryPerformanceCounter (
-    LARGE_INTEGER   * lpPerformanceCount
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-QueryPerformanceFrequency (
-    LARGE_INTEGER   * lpFrequency
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
 }
 
 
