@@ -54,6 +54,7 @@ NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,
 #ifdef KDBG
       LdrLoadUserModuleSymbols((PLDR_MODULE)InputBuffer);
 #endif /* KDBG */
+      break;
   }
   return STATUS_SUCCESS;
 }

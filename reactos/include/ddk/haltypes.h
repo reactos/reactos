@@ -1,4 +1,4 @@
-/* $Id: haltypes.h,v 1.1 2001/08/27 01:18:57 ekohl Exp $
+/* $Id: haltypes.h,v 1.2 2001/09/23 22:14:03 chorns Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel

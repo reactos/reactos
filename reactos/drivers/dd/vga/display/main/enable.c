@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.15 $
- * $Author: jfilby $
- * $Date: 2001/07/01 14:32:47 $
+ * $Revision: 1.16 $
+ * $Author: chorns $
+ * $Date: 2001/09/23 22:14:10 $
  *
  */
 
@@ -487,3 +487,4 @@ ULONG VGADDIGetModes(IN HANDLE Driver,
 }
 
 /* EOF */
+

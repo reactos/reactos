@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
- * $Author: ekohl $
- * $Date: 2000/12/03 17:49:21 $
+ * $Revision: 1.2 $
+ * $Author: chorns $
+ * $Date: 2001/09/23 22:14:03 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */

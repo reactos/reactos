@@ -37,3 +37,4 @@ int _mbsnbicmp(const unsigned char *s1, const unsigned char *s2, size_t n)
   } while (n > 0);
   return 0;
 }
+

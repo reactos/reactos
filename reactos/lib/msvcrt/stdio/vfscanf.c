@@ -16,11 +16,10 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-
+#include <stdarg.h>
 #include <msvcrt/errno.h>
 #include <limits.h>
 #include <msvcrt/ctype.h>
-#include <msvcrt/stdarg.h>
 #include <msvcrt/stdio.h>
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>

@@ -79,7 +79,7 @@ _flsbuf(int c, FILE *f)
     c1 = c;           
     rn = 1;           
     base = &c1;       
-    f->_cnt = 0;      
+    f->_cnt = 0;
   }                   
   else /* _IOFBF */
   {
@@ -106,7 +106,7 @@ _flsbuf(int c, FILE *f)
     base += n;
   }
 
-  
+
   if ((f->_flag&(_IOLBF|_IONBF)) == 0)
   {
     f->_cnt--;

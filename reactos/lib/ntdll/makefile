@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.65 2001/08/21 20:13:06 chorns Exp $
+# $Id: makefile,v 1.66 2001/09/23 22:14:09 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -9,7 +9,8 @@ TARGET_NAME = ntdll
 TARGET_CFLAGS = -D__NTDLL__
 
 TARGET_LFLAGS = -Wl,--file-alignment,0x1000 \
-  -Wl,--section-alignment,0x1000
+  -Wl,--section-alignment,0x1000 \
+  -nostartfiles
 
 TARGET_GCCLIBS = gcc
 

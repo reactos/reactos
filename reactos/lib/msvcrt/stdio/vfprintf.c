@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
+#include <stdarg.h>
 #include <msvcrt/stdio.h>
-#include <msvcrt/stdarg.h>
 #include <msvcrt/malloc.h>
 #include <msvcrt/internal/file.h>
 
@@ -12,7 +12,7 @@ int _isinf(double x);
 
 
 int
-__vfprintf (FILE *fp, const char *fmt0, va_list argp);
+__vfprintf (FILE *fp, const char *fmt0, va_list args);
 
 int
 vfprintf(FILE *f, const char *fmt, va_list ap)
@@ -404,7 +404,7 @@ static void numberfl(FILE * f, long double __n, char exp_sign,  int size, int pr
 		// # flags forces a . and prevents trucation of trailing zero's
 		if ( precision > 0 ) {
 			//frac = modfl(__n,&intr);
-	
+
 			i = precision-1;
 			while ( i >= 0  ) {
 				frac*=10.0L;

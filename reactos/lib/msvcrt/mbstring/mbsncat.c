@@ -56,3 +56,4 @@ unsigned char * _mbsnbcat(unsigned char *dst, const unsigned char *src, size_t n
 	}
 	return dst;
 }
+

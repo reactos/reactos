@@ -22,6 +22,4 @@ typedef struct {
   unsigned int empty:16;
 } long_double_t;
 
-
-
 #endif

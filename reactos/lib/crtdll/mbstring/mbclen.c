@@ -25,6 +25,3 @@ int mblen( const char *s, size_t count )
 		return -1;
 	return l;
 }
-
-
-

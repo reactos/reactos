@@ -29,7 +29,8 @@ rcopy$(EXE_POSTFIX): rcopy.c
 endif
 
 rdel$(EXE_POSTFIX): rdel.c
-	$(HOST_CC) $(CFLAGS) -liberty rdel.c -o rdel$(EXE_POSTFIX)
+	$(HOST_CC) $(CFLAGS) rdel.c -o rdel$(EXE_POSTFIX)
+#	$(HOST_CC) $(CFLAGS) -liberty rdel.c -o rdel$(EXE_POSTFIX)
 
 ifeq ($(HOST),mingw32-linux)
 rmkdir$(EXE_POSTFIX): rmkdir.c
