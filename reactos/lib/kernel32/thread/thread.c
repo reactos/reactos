@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.57 2004/12/04 19:30:09 navaraf Exp $
+/* $Id: thread.c,v 1.58 2004/12/09 19:11:07 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -792,6 +792,37 @@ QueueUserAPC(PAPCFUNC pfnAPC, HANDLE hThread, ULONG_PTR dwData)
     SetLastErrorByStatus(Status);
 
   return NT_SUCCESS(Status);
+}
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+GetThreadIOPendingFlag(HANDLE hThread,
+                       PBOOL lpIOIsPending)
+{
+  ULONG IoPending;
+  NTSTATUS Status;
+  
+  if(lpIOIsPending == NULL)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  Status = NtQueryInformationThread(hThread,
+                                    ThreadIsIoPending,
+                                    (PVOID)&IoPending,
+                                    sizeof(IoPending),
+                                    NULL);
+  if(NT_SUCCESS(Status))
+  {
+    *lpIOIsPending = ((IoPending != 0) ? TRUE : FALSE);
+    return TRUE;
+  }
+  
+  SetLastErrorByStatus(Status);
+  return FALSE;
 }
 
 /* EOF */

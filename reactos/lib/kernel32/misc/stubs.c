@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.99 2004/12/09 17:28:10 weiden Exp $
+/* $Id: stubs.c,v 1.100 2004/12/09 19:11:07 weiden Exp $
  *
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.
@@ -640,20 +640,6 @@ STDCALL
 GetNumaProcessorNode(
     UCHAR Processor,
     PUCHAR NodeNumber
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetThreadIOPendingFlag(
-    HANDLE hThread,
-    PBOOL lpIOIsPending
     )
 {
     STUB;
