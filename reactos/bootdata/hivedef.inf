@@ -20,17 +20,17 @@ HKCU,"SOFTWARE\Microsoft\Windows",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",,0x00000012
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Desktop",0x00020000,"%SystemDrive%\Documents and Settings\Default\Desktop"
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","AppData",0x00020000,"%SystemDrive%\Documents and Settings\Default\Application Data"
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Programs",0x00020000,"%SystemDrive%\Documents and Settings\Default\Start Menu\Programs"
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Start Menu",0x00020000,"%SystemDrive%\Documents and Settings\Default\Start Menu"
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Favorites",0x00020000,"%SystemDrive%\Documents and Settings\Default\Favorites"
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Startup",0x00020000,"%SystemDrive%\Documents and Settings\Default\Start Menu\Programs\Startup"
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Templates",0x00020000,"%SystemDrive%\Documents and Settings\Default\Templates"
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Personal",0x00020000,"%SystemDrive%\Documents and Settings\Default\My Documents"
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","SendTo",0x00020000,"%SystemDrive%\Documents and Settings\Default\SendTo"
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Recent",0x00020000,"%SystemDrive%\Documents and Settings\Default\Recent"
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","NetHood",0x00020000,"%SystemDrive%\Documents and Settings\Default\NetHood"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Desktop",0x00020000,"%USERPROFILE%\Desktop"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","AppData",0x00020000,"%USERPROFILE%\Application Data"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Programs",0x00020000,"%USERPROFILE%\Start Menu\Programs"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Start Menu",0x00020000,"%USERPROFILE%\Start Menu"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Favorites",0x00020000,"%USERPROFILE%\Favorites"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Startup",0x00020000,"%USERPROFILE%\Programs\Startup"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Templates",0x00020000,"%USERPROFILE%\Templates"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Personal",0x00020000,"%USERPROFILE%\My Documents"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","SendTo",0x00020000,"%USERPROFILE%\SendTo"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Recent",0x00020000,"%USERPROFILE%\Recent"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","NetHood",0x00020000,"%USERPROFILE%\NetHood"
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders","Common Desktop",0x00020000,"%ALLUSERSPROFILE%\Desktop"
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders","Common Programs",0x00020000,"%ALLUSERSPROFILE%\Start Menu\Programs"
