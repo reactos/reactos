@@ -8,7 +8,7 @@ Wishlist for ReactOS CMD
  - Progress indikator on long file operations (copy/move).
      Percentage at the right side of the filename.
 
- - [cd test directory] should change to the subdirectoy "test directory".
+ - [cd test directory] should change to the subdirectory "test directory".
 
 More ideas?
 
