@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.85 2004/05/02 20:53:50 tamlin Exp $
+/* $Id: utils.c,v 1.86 2004/05/13 20:30:26 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1474,6 +1474,11 @@ LdrpProcessImportDirectoryEntry(
          {
            Ordinal = (*FunctionNameList) & 0x7fffffff;
            *ImportAddressList = LdrGetExportByOrdinal(ImportedModule->BaseAddress, Ordinal);
+           if ((*ImportAddressList) == NULL)
+             {
+               DPRINT1("Failed to import #%ld from %wZ\n", Ordinal, &ImportedModule->FullDllName);
+               return STATUS_UNSUCCESSFUL;
+             }
          }
        else
          {
@@ -1482,7 +1487,7 @@ LdrpProcessImportDirectoryEntry(
            *ImportAddressList = LdrGetExportByName(ImportedModule->BaseAddress, pe_name->Name, pe_name->Hint);
            if ((*ImportAddressList) == NULL)
              {
-               DPRINT1("Failed to import %s\n", pe_name->Name);
+               DPRINT1("Failed to import %s from %wZ\n", pe_name->Name, &ImportedModule->FullDllName);
                return STATUS_UNSUCCESSFUL;
              }
 	 }
