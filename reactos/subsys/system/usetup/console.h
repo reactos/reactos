@@ -108,7 +108,7 @@ VOID
 SetTextXY(SHORT x, SHORT y, PCHAR Text);
 
 VOID
-SetInputTextXY(SHORT x, SHORT y, SHORT len, PCHAR Text);
+SetInputTextXY(SHORT x, SHORT y, SHORT len, PWCHAR Text);
 
 VOID
 SetUnderlinedTextXY(SHORT x, SHORT y, PCHAR Text);

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2002/10/29 18:40:02 ekohl Exp $
+# $Id: makefile,v 1.4 2002/11/13 18:25:18 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -12,7 +12,7 @@ TARGET_INSTALLDIR = system32
 
 TARGET_CFLAGS = -D__NTAPP__
 
-TARGET_OBJECTS = $(TARGET_NAME).o console.o drivesup.o partlist.o
+TARGET_OBJECTS = $(TARGET_NAME).o console.o drivesup.o filesup.o inicache.o partlist.o
 
 include $(PATH_TO_TOP)/rules.mak
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.h,v 1.3 2002/11/02 23:17:06 ekohl Exp $
+/* $Id: partlist.h,v 1.4 2002/11/13 18:25:18 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -50,6 +50,11 @@ typedef struct _PARTENTRY
   ULONG PartType;
 
   CHAR DriveLetter;
+  CHAR VolumeLabel[17];
+  CHAR FileSystemName[9];
+
+  BOOL Unpartitioned;
+
   BOOL Used;
 } PARTENTRY, *PPARTENTRY;
 

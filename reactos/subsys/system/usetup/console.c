@@ -367,6 +367,57 @@ WriteConsoleOutputCharacters(LPCSTR lpCharacter,
 
 
 NTSTATUS
+WriteConsoleOutputCharactersW(LPCWSTR lpCharacter,
+			      ULONG nLength,
+			      COORD dwWriteCoord)
+{
+  IO_STATUS_BLOCK IoStatusBlock;
+  PCHAR Buffer;
+  COORD *pCoord;
+  PCHAR pText;
+  NTSTATUS Status;
+  ULONG i;
+
+  Buffer = RtlAllocateHeap(ProcessHeap,
+			   0,
+			   nLength + sizeof(COORD));
+  pCoord = (COORD *)Buffer;
+  pText = (PCHAR)(pCoord + 1);
+
+  *pCoord = dwWriteCoord;
+
+  /* FIXME: use real unicode->oem conversion */
+  for (i = 0; i < nLength; i++)
+    pText[i] = (CHAR)lpCharacter[i];
+  pText[i] = 0;
+
+  Status = NtDeviceIoControlFile(StdOutput,
+				 NULL,
+				 NULL,
+				 NULL,
+				 &IoStatusBlock,
+				 IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
+				 NULL,
+				 0,
+				 Buffer,
+				 nLength + sizeof(COORD));
+  if (Status == STATUS_PENDING)
+    {
+      NtWaitForSingleObject(StdOutput,
+			    FALSE,
+			    NULL);
+      Status = IoStatusBlock.Status;
+    }
+
+  RtlFreeHeap(ProcessHeap,
+	      0,
+	      Buffer);
+
+  return(Status);
+}
+
+
+NTSTATUS
 WriteConsoleOutputAttributes(CONST USHORT *lpAttribute,
 			     ULONG nLength,
 			     COORD dwWriteCoord,
@@ -892,7 +943,7 @@ SetTextXY(SHORT x, SHORT y, PCHAR Text)
 
 
 VOID
-SetInputTextXY(SHORT x, SHORT y, SHORT len, PCHAR Text)
+SetInputTextXY(SHORT x, SHORT y, SHORT len, PWCHAR Text)
 {
   COORD coPos;
   ULONG Length;
@@ -901,16 +952,20 @@ SetInputTextXY(SHORT x, SHORT y, SHORT len, PCHAR Text)
   coPos.X = x;
   coPos.Y = y;
 
-  Length = strlen(Text);
+  Length = wcslen(Text);
+  if (Length > len - 1)
+    {
+      Length = len - 1;
+    }
 
   FillConsoleOutputAttribute(0x70,
 			     len,
 			     coPos,
 			     &Written);
 
-  WriteConsoleOutputCharacters(Text,
-			       Length,
-			       coPos);
+  WriteConsoleOutputCharactersW(Text,
+				Length,
+				coPos);
 
   coPos.X += Length;
   FillConsoleOutputCharacter('_',

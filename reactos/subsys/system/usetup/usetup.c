@@ -27,9 +27,13 @@
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
 
+#include <ntos/minmax.h>
+#include <reactos/resource.h>
+
 #include "usetup.h"
 #include "console.h"
 #include "partlist.h"
+#include "inicache.h"
 
 
 
@@ -56,13 +60,15 @@
 
 HANDLE ProcessHeap;
 
-BOOL PartDataValid = FALSE;
+BOOLEAN PartDataValid;
 PARTDATA PartData;
 
-CHAR InstallDir[51];
+WCHAR InstallDir[51];
 
 UNICODE_STRING SourcePath;
 UNICODE_STRING SourceRootPath;
+
+PINICACHE IniCache;
 
 
 /* FUNCTIONS ****************************************************************/
@@ -88,6 +94,216 @@ PrintString(char* fmt,...)
 }
 
 
+static VOID
+PopupError(PCHAR Text,
+	   PCHAR Status)
+{
+  SHORT xScreen;
+  SHORT yScreen;
+  SHORT yTop;
+  SHORT xLeft;
+  COORD coPos;
+  ULONG Written;
+  ULONG Length;
+  ULONG MaxLength;
+  ULONG Lines;
+  PCHAR p;
+  PCHAR pnext;
+  BOOLEAN LastLine;
+  SHORT Width;
+  SHORT Height;
+
+
+  /* Count text lines and longest line */
+  MaxLength = 0;
+  Lines = 0;
+  pnext = Text;
+  while (TRUE)
+  {
+    p = strchr(pnext, '\n');
+    if (p == NULL)
+    {
+      Length = strlen(pnext);
+      LastLine = TRUE;
+    }
+    else
+    {
+      Length = (ULONG)(p - pnext);
+      LastLine = FALSE;
+    }
+
+    Lines++;
+    if (Length > MaxLength)
+      MaxLength = Length;
+
+    if (LastLine == TRUE)
+      break;
+
+    pnext = p + 1;
+  }
+
+  /* Check length of status line */
+  if (Status != NULL)
+  {
+    Length = strlen(Status);
+    if (Length > MaxLength)
+      MaxLength = Length;
+  }
+
+  GetScreenSize(&xScreen, &yScreen);
+
+  Width = MaxLength + 4;
+  Height = Lines + 2;
+  if (Status != NULL)
+    Height += 2;
+
+  yTop = (yScreen - Height) / 2;
+  xLeft = (xScreen - Width) / 2;
+
+
+  /* Set screen attributes */
+  coPos.X = xLeft;
+  for (coPos.Y = yTop; coPos.Y < yTop + Height; coPos.Y++)
+  {
+    FillConsoleOutputAttribute(0x74,
+			       Width,
+			       coPos,
+			       &Written);
+  }
+
+  /* draw upper left corner */
+  coPos.X = xLeft;
+  coPos.Y = yTop;
+  FillConsoleOutputCharacter(0xDA, // '+',
+			     1,
+			     coPos,
+			     &Written);
+
+  /* draw upper edge */
+  coPos.X = xLeft + 1;
+  coPos.Y = yTop;
+  FillConsoleOutputCharacter(0xC4, // '-',
+			     Width - 2,
+			     coPos,
+			     &Written);
+
+  /* draw upper right corner */
+  coPos.X = xLeft + Width - 1;
+  coPos.Y = yTop;
+  FillConsoleOutputCharacter(0xBF, // '+',
+			     1,
+			     coPos,
+			     &Written);
+
+  /* Draw right edge, inner space and left edge */
+  for (coPos.Y = yTop + 1; coPos.Y < yTop + Height - 1; coPos.Y++)
+  {
+    coPos.X = xLeft;
+    FillConsoleOutputCharacter(0xB3, // '|',
+			       1,
+			       coPos,
+			       &Written);
+
+    coPos.X = xLeft + 1;
+    FillConsoleOutputCharacter(' ',
+			       Width - 2,
+			       coPos,
+			       &Written);
+
+    coPos.X = xLeft + Width - 1;
+    FillConsoleOutputCharacter(0xB3, // '|',
+			       1,
+			       coPos,
+			       &Written);
+  }
+
+  /* draw lower left corner */
+  coPos.X = xLeft;
+  coPos.Y = yTop + Height - 1;
+  FillConsoleOutputCharacter(0xC0, // '+',
+			     1,
+			     coPos,
+			     &Written);
+
+  /* draw lower edge */
+  coPos.X = xLeft + 1;
+  coPos.Y = yTop + Height - 1;
+  FillConsoleOutputCharacter(0xC4, // '-',
+			     Width - 2,
+			     coPos,
+			     &Written);
+
+  /* draw lower right corner */
+  coPos.X = xLeft + Width - 1;
+  coPos.Y = yTop + Height - 1;
+  FillConsoleOutputCharacter(0xD9, // '+',
+			     1,
+			     coPos,
+			     &Written);
+
+  /* Print message text */
+  coPos.Y = yTop + 1;
+  pnext = Text;
+  while (TRUE)
+  {
+    p = strchr(pnext, '\n');
+    if (p == NULL)
+    {
+      Length = strlen(pnext);
+      LastLine = TRUE;
+    }
+    else
+    {
+      Length = (ULONG)(p - pnext);
+      LastLine = FALSE;
+    }
+
+    if (Length != 0)
+    {
+      coPos.X = xLeft + 2;
+      WriteConsoleOutputCharacters(pnext,
+				   Length,
+				   coPos);
+    }
+
+    if (LastLine == TRUE)
+      break;
+
+    coPos.Y++;
+    pnext = p + 1;
+  }
+
+  /* Print separator line and status text */
+  if (Status != NULL)
+  {
+    coPos.Y = yTop + Height - 3;
+    coPos.X = xLeft;
+    FillConsoleOutputCharacter(0xC3, // '+',
+			       1,
+			       coPos,
+			       &Written);
+
+    coPos.X = xLeft + 1;
+    FillConsoleOutputCharacter(0xC4, // '-',
+			       Width - 2,
+			       coPos,
+			       &Written);
+
+    coPos.X = xLeft + Width - 1;
+    FillConsoleOutputCharacter(0xB4, // '+',
+			       1,
+			       coPos,
+			       &Written);
+
+    coPos.Y++;
+    coPos.X = xLeft + 2;
+    WriteConsoleOutputCharacters(Status,
+				 min(strlen(Status), Width - 4),
+				 coPos);
+  }
+}
+
+
 /*
  * Confirm quit setup
  * RETURNS
@@ -97,65 +313,15 @@ PrintString(char* fmt,...)
 static BOOL
 ConfirmQuit(PINPUT_RECORD Ir)
 {
-  SHORT xScreen;
-  SHORT yScreen;
-  SHORT yTop;
-  SHORT xLeft;
   BOOL Result = FALSE;
-  PUSHORT pAttributes = NULL;
-  PUCHAR pCharacters = NULL;
-  COORD Pos;
 
-  GetScreenSize(&xScreen, &yScreen);
-  yTop = (yScreen - 10) / 2;
-  xLeft = (xScreen - 52) / 2;
-
-  /* Save screen */
-#if 0
-  Pos.X = 0;
-  Pos.Y = 0;
-  pAttributes = (PUSHORT)RtlAllocateHeap(ProcessHeap,
-					 0,
-					 xScreen * yScreen * sizeof(USHORT));
-CHECKPOINT1;
-DPRINT1("pAttributes %p\n", pAttributes);
-  ReadConsoleOutputAttributes(pAttributes,
-			      xScreen * yScreen,
-			      Pos,
-			      NULL);
-CHECKPOINT1;
-  pCharacters = (PUCHAR)RtlAllocateHeap(ProcessHeap,
-					0,
-					xScreen * yScreen * sizeof(UCHAR));
-CHECKPOINT1;
-  ReadConsoleOutputCharacters(pCharacters,
-			      xScreen * yScreen,
-			      Pos,
-			      NULL);
-CHECKPOINT1;
-#endif
-
-  /* Draw popup window */
-  SetTextXY(xLeft, yTop,
-	    "+----------------------------------------------------+");
-  SetTextXY(xLeft, yTop + 1,
-	    "| ReactOS 0.0.20 is not completely installed on your |");
-  SetTextXY(xLeft, yTop + 2,
-	    "| computer. If you quit Setup now, you will need to  |");
-  SetTextXY(xLeft, yTop + 3,
-	    "| run Setup again to install ReactOS.                |");
-  SetTextXY(xLeft, yTop + 4,
-	    "|                                                    |");
-  SetTextXY(xLeft, yTop + 5,
-	    "|   * Press ENTER to continue Setup.                 |");
-  SetTextXY(xLeft, yTop + 6,
-	    "|   * Press F3 to quit Setup.                        |");
-  SetTextXY(xLeft, yTop + 7,
-	    "+----------------------------------------------------+");
-  SetTextXY(xLeft, yTop + 8,
-	    "| F3= Quit  ENTER = Continue                         |");
-  SetTextXY(xLeft, yTop + 9,
-	    "+----------------------------------------------------+");
+  PopupError("ReactOS is not completely installed on your\n"
+	     "computer. If you quit Setup now, you will need to\n"
+	     "run Setup again to install ReactOS.\n"
+	     "\n"
+	     "  * Press ENTER to continue Setup.\n"
+	     "  * Press F3 to quit Setup.",
+	     "F3= Quit  ENTER = Continue");
 
   while(TRUE)
     {
@@ -174,31 +340,8 @@ CHECKPOINT1;
 	}
     }
 
-  /* Restore screen */
-#if 0
-CHECKPOINT1;
-  WriteConsoleOutputAttributes(pAttributes,
-			       xScreen * yScreen,
-			       Pos,
-			       NULL);
-CHECKPOINT1;
-
-  WriteConsoleOutputCharacters(pCharacters,
-			       xScreen * yScreen,
-			       Pos);
-CHECKPOINT1;
-
-  RtlFreeHeap(ProcessHeap,
-	      0,
-	      pAttributes);
-  RtlFreeHeap(ProcessHeap,
-	      0,
-	      pCharacters);
-#endif
-
   return(Result);
 }
-
 
 
 
@@ -211,6 +354,12 @@ static ULONG
 StartPage(PINPUT_RECORD Ir)
 {
   NTSTATUS Status;
+  WCHAR FileNameBuffer[MAX_PATH];
+  UNICODE_STRING FileName;
+
+  PINICACHESECTION Section;
+  PWCHAR Value;
+
 
   SetStatusText("   Please wait...");
 
@@ -226,12 +375,91 @@ StartPage(PINPUT_RECORD Ir)
       PrintTextXY(6, 16, "SourceRootPath: '%wZ'", &SourceRootPath);
     }
 
-  /*
-   * FIXME: Open and load txtsetup.sif here. A pointer (or handle) to the
-   * ini data should be stored in a global variable.
-   * The full path to txtsetup.sif is created by appending '\txtsetup.sif'
-   * to the unicode string SourceRootPath.
-   */
+
+  /* Load txtsetup.sif from install media. */
+  wcscpy(FileNameBuffer, SourceRootPath.Buffer);
+  wcscat(FileNameBuffer, L"\\install\\txtsetup.sif");
+  RtlInitUnicodeString(&FileName,
+		       FileNameBuffer);
+
+  IniCache = NULL;
+  Status = IniCacheLoad(&IniCache,
+			&FileName);
+  if (!NT_SUCCESS(Status))
+  {
+    PopupError("Setup failed to load the file TXTSETUP.SIF.\n",
+	       "ENTER = Reboot computer");
+
+      while(TRUE)
+      {
+	ConInKey(Ir);
+
+	if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	{
+	  return(QUIT_PAGE);
+	}
+      }
+  }
+
+  /* Open 'Version' section */
+  Section = IniCacheGetSection(IniCache,
+			       L"Version");
+  if (Section == NULL)
+  {
+    PopupError("Setup found a corrupt TXTSETUP.SIF.\n",
+	       "ENTER = Reboot computer");
+
+      while(TRUE)
+      {
+	ConInKey(Ir);
+
+	if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	{
+	  return(QUIT_PAGE);
+	}
+      }
+  }
+
+
+  /* Get pointer 'Signature' key */
+  Status = IniCacheGetKey(Section,
+			  L"Signature",
+			  &Value);
+  if (!NT_SUCCESS(Status))
+  {
+    PopupError("Setup found a corrupt TXTSETUP.SIF.\n",
+	       "ENTER = Reboot computer");
+
+      while(TRUE)
+      {
+	ConInKey(Ir);
+
+	if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	{
+	  return(QUIT_PAGE);
+	}
+      }
+  }
+
+  /* Check 'Signature' string */
+  if (_wcsicmp(Value, L"$ReactOS$") != 0)
+  {
+    PopupError("Setup found an invalid signature in TXTSETUP.SIF.\n",
+	       "ENTER = Reboot computer");
+
+    while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+      {
+	return(QUIT_PAGE);
+      }
+    }
+  }
+
+#if 0
+  PopupError("This is a test error.", "ENTER = Reboot computer");
 
   SetStatusText("   ENTER = Continue");
 
@@ -246,6 +474,9 @@ StartPage(PINPUT_RECORD Ir)
     }
 
   return(START_PAGE);
+#endif
+
+  return(INTRO_PAGE);
 }
 
 
@@ -607,8 +838,8 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
   SetTextXY(6, 8, "Setup installs ReactOS files onto the selected partition. Choose a");
   SetTextXY(6, 9, "directory where you want ReactOS to be installed:");
 
-  strcpy(InstallDir, "\\reactos");
-  Length = strlen(InstallDir);
+  wcscpy(InstallDir, L"\\reactos");
+  Length = wcslen(InstallDir);
 
   SetInputTextXY(8, 11, 51, InstallDir);
 
@@ -632,6 +863,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
+
 	  return(PREPARE_COPY_PAGE);
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x08) /* BACKSPACE */
@@ -647,7 +879,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 	{
 	  if (Length < 50)
 	    {
-	      InstallDir[Length] = Ir->Event.KeyEvent.uChar.AsciiChar;
+	      InstallDir[Length] = (WCHAR)Ir->Event.KeyEvent.uChar.AsciiChar;
 	      Length++;
 	      InstallDir[Length] = 0;
 	      SetInputTextXY(8, 11, 51, InstallDir);
@@ -662,24 +894,14 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 static ULONG
 PrepareCopyPage(PINPUT_RECORD Ir)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  IO_STATUS_BLOCK IoStatusBlock;
-  CHAR PathBuffer[MAX_PATH];
-  UNICODE_STRING PathName;
-  HANDLE DirectoryHandle;
-  NTSTATUS Status;
-  PCHAR End;
+  WCHAR PathBuffer[MAX_PATH];
+  PINICACHESECTION Section;
+  PINICACHEITERATOR Iterator;
+  PWCHAR KeyName;
+  PWCHAR KeyValue;
   ULONG Length;
-  ULONG i;
+  NTSTATUS Status;
 
-  PCHAR Dirs[]= {
-    "System32",
-    "System32\\Config",
-    "System32\\Drivers",
-    "Inf",
-    "Help",
-    "Fonts",
-    NULL};
 
   SetTextXY(6, 8, "Setup prepares your computer for copying the ReactOS files. ");
 
@@ -701,111 +923,133 @@ PrepareCopyPage(PINPUT_RECORD Ir)
   SetHighlightedTextXY(50, 12, "Done");
 
 
+
+
   /* create directories */
   SetInvertedTextXY(8, 14, "Create directories");
 
 
+  /* Open 'Directories' section */
+  Section = IniCacheGetSection(IniCache,
+			       L"Directories");
+  if (Section == NULL)
+  {
+    PopupError("Setup failed to find the 'Directories' section\n"
+	       "in TXTSETUP.SIF.\n",
+	       "ENTER = Reboot computer");
+
+      while(TRUE)
+      {
+	ConInKey(Ir);
+
+	if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	{
+	  return(QUIT_PAGE);
+	}
+      }
+  }
+
   /*
-   * FIXME: Enumerate the ini section 'Directories' and create all "relative" directories
+   * FIXME:
+   * Install directories like '\reactos\test' are not handled yet.
    */
 
+  /* Build full install directory name */
+  swprintf(PathBuffer,
+	   L"\\Device\\Harddisk%lu\\Partition%lu",
+	   PartData.DiskNumber,
+	   PartData.PartNumber);
+  if (InstallDir[0] != L'\\')
+    wcscat(PathBuffer, L"\\");
+  wcscat(PathBuffer, InstallDir);
 
-  /* create the systemroot directory */
-  sprintf(PathBuffer,
-	  "\\Device\\Harddisk%lu\\Partition%lu",
-	  PartData.DiskNumber,
-	  PartData.PartNumber);
-  if (InstallDir[0] != '\\')
-    strcat(PathBuffer, "\\");
-  strcat(PathBuffer, InstallDir);
-
-  /* remove trailing backslash */
-  Length = strlen(PathBuffer);
+  /* Remove trailing backslash */
+  Length = wcslen(PathBuffer);
   if ((Length > 0) && (PathBuffer[Length - 1] == '\\'))
     PathBuffer[Length - 1] = 0;
 
-  RtlCreateUnicodeStringFromAsciiz(&PathName,
-				   PathBuffer);
+  /* Create the install directory */
+  Status = CreateDirectory(PathBuffer);
+  if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
+  {
+    DPRINT1("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
 
-  ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-  ObjectAttributes.RootDirectory = NULL;
-  ObjectAttributes.ObjectName = &PathName;
-  ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE | OBJ_INHERIT;
-  ObjectAttributes.SecurityDescriptor = NULL;
-  ObjectAttributes.SecurityQualityOfService = NULL;
+    PopupError("Setup could not create the install directory.",
+	       "ENTER = Reboot computer");
 
-  Status = NtCreateFile(&DirectoryHandle,
-			DIRECTORY_ALL_ACCESS,
-			&ObjectAttributes,
-			&IoStatusBlock,
-			NULL,
-			FILE_ATTRIBUTE_DIRECTORY,
-			0,
-			FILE_CREATE,
-			FILE_DIRECTORY_FILE,
-			NULL,
-			0);
-  if (!NT_SUCCESS(Status))
+    while(TRUE)
     {
-      PrintTextXY(6, 25, "Creating directory failed: Status = 0x%08lx", Status);
+      ConInKey(Ir);
 
+      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+      {
+	return(QUIT_PAGE);
+      }
     }
-  else
+  }
+
+
+  /* Enumerate the directory values and create the subdirectories */
+  Iterator = IniCacheFindFirstValue(Section,
+				    &KeyName,
+				    &KeyValue);
+  if (Iterator != NULL)
+  {
+    do
     {
-      PrintTextXY(6, 25, "Created directory.");
-      NtClose (DirectoryHandle);
+      if (KeyValue[0] == L'\\' && KeyValue[1] != 0)
+      {
+        DPRINT("Absolute Path: '%S'\n", KeyValue);
+
+	swprintf(PathBuffer,
+		 L"\\Device\\Harddisk%lu\\Partition%lu",
+		 PartData.DiskNumber,
+		 PartData.PartNumber);
+	wcscat(PathBuffer, KeyValue);
+
+	DPRINT("FullPath: '%S'\n", PathBuffer);
+      }
+      else if (KeyValue[0] != L'\\')
+      {
+	DPRINT("RelativePath: '%S'\n", KeyValue);
+	swprintf(PathBuffer,
+		 L"\\Device\\Harddisk%lu\\Partition%lu",
+		 PartData.DiskNumber,
+		 PartData.PartNumber);
+
+	if (InstallDir[0] != L'\\')
+	  wcscat(PathBuffer, L"\\");
+	wcscat(PathBuffer, InstallDir);
+	wcscat(PathBuffer, L"\\");
+	wcscat(PathBuffer, KeyValue);
+
+	DPRINT("FullPath: '%S'\n", PathBuffer);
+
+	Status = CreateDirectory(PathBuffer);
+	if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
+	  {
+	    DPRINT1("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
+
+	    PopupError("Setup could not create install directories.",
+		       "ENTER = Reboot computer");
+
+	    while(TRUE)
+	    {
+	      ConInKey(Ir);
+
+	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	      {
+		IniCacheFindClose(Iterator);
+		return(QUIT_PAGE);
+	      }
+	    }
+	  }
+      }
     }
+    while (IniCacheFindNextValue(Iterator, &KeyName, &KeyValue));
 
-
-  RtlFreeUnicodeString(&PathName);
-
-
-  /* create the subdirectories */
-
-  /* append backslash and init end pointer */
-  strcat(PathBuffer, "\\");
-  Length = strlen(PathBuffer);
-  End = &PathBuffer[Length];
-
-  for (i = 0; Dirs[i] != NULL; i++)
-    {
-      strcpy(End, Dirs[i]);
-
-
-      RtlCreateUnicodeStringFromAsciiz(&PathName,
-				       PathBuffer);
-
-
-      ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-      ObjectAttributes.RootDirectory = NULL;
-      ObjectAttributes.ObjectName = &PathName;
-      ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE | OBJ_INHERIT;
-      ObjectAttributes.SecurityDescriptor = NULL;
-      ObjectAttributes.SecurityQualityOfService = NULL;
-
-      Status = NtCreateFile(&DirectoryHandle,
-			    DIRECTORY_ALL_ACCESS,
-			    &ObjectAttributes,
-			    &IoStatusBlock,
-			    NULL,
-			    FILE_ATTRIBUTE_DIRECTORY,
-			    0,
-			    FILE_CREATE,
-			    FILE_DIRECTORY_FILE,
-			    NULL,
-			    0);
-      if (!NT_SUCCESS(Status))
-	{
-	  PrintTextXY(6, 25, "Creating directory failed: Status = 0x%08lx", Status);
-	}
-      else
-	{
-	  PrintTextXY(6, 25, "Created directory.");
-	  NtClose (DirectoryHandle);
-	}
-
-      RtlFreeUnicodeString(&PathName);
-    }
+    IniCacheFindClose(Iterator);
+  }
 
 
   SetTextXY(8, 14, "Create directories");
@@ -1066,12 +1310,14 @@ NtProcessStartup(PPEB Peb)
 		       0,0,0,0,0);
     }
 
+  PartDataValid = FALSE;
+
   Page = START_PAGE;
   while (Page != REBOOT_PAGE)
     {
       ClearScreen();
 
-      SetUnderlinedTextXY(4, 3, " ReactOS 0.0.20 Setup ");
+      SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Setup ");
 
       switch (Page)
 	{

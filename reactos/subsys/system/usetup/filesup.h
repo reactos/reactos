@@ -16,26 +16,21 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: drivesup.h,v 1.3 2002/11/13 18:25:18 ekohl Exp $
+/* $Id: filesup.h,v 1.1 2002/11/13 18:25:18 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/drivesup.h
- * PURPOSE:         Drive support functions
+ * FILE:            subsys/system/usetup/filesup.h
+ * PURPOSE:         File support functions
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __DRIVESUP_H__
-#define __DRIVESUP_H__
+#ifndef __FILESUP_H__
+#define __FILESUP_H__
 
 NTSTATUS
-GetSourcePaths(PUNICODE_STRING SourcePath,
-	       PUNICODE_STRING SourceRootPath);
-
-CHAR
-GetDriveLetter(ULONG DriveNumber,
-	       ULONG PartitionNumber);
+CreateDirectory(PWCHAR DirectoryName);
 
 
-#endif /* __DRIVESUP_H__ */
+#endif /* __FILESUP_H__ */
 
 /* EOF */
