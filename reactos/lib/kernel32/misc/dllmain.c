@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.28 2003/08/16 06:19:15 jimtabor Exp $
+/* $Id: dllmain.c,v 1.29 2003/08/18 10:47:04 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -34,6 +34,8 @@ DllMain(HANDLE hInst,
 /* Critical section for various kernel32 data structures */
 CRITICAL_SECTION DllLock;
 CRITICAL_SECTION ConsoleLock;
+
+extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -129,7 +131,10 @@ DllMain(HANDLE hDll,
 
 	/* Initialize the DLL critical section */
 	RtlInitializeCriticalSection(&DllLock);
+
+	/* Initialize console ctrl handler */
 	RtlInitializeCriticalSection(&ConsoleLock);
+	SetConsoleCtrlHandler(DefaultConsoleCtrlHandler, TRUE);
 
 	/* Insert more dll attach stuff here! */
 

@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.67 2003/08/18 07:32:00 jimtabor Exp $
+/* $Id: console.c,v 1.68 2003/08/18 10:47:04 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -30,10 +30,8 @@ extern BOOL WINAPI IsDebuggerPresent(VOID);
 
 static BOOL IgnoreCtrlEvents = FALSE;
 
-static PHANDLER_ROUTINE StaticCtrlHandlers[] = 
-			{ (PHANDLER_ROUTINE) &DefaultConsoleCtrlHandler };
-static PHANDLER_ROUTINE* CtrlHandlers = StaticCtrlHandlers;
-static ULONG NrCtrlHandlers = _NOACHS(StaticCtrlHandlers);
+static PHANDLER_ROUTINE* CtrlHandlers = NULL;
+static ULONG NrCtrlHandlers = 0;
 static ULONG CtrlHandlersArraySize = 0;
 
 /* Default Console Control Handler *******************************************/
@@ -46,10 +44,12 @@ BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event)
 	{
 	case CTRL_C_EVENT:
 		DPRINT("Ctrl-C Event\n");
+		ExitProcess(0);
 		break;
 		
 	case CTRL_BREAK_EVENT:
 		DPRINT("Ctrl-Break Event\n");
+		ExitProcess(0);
 		break;
 
 	case CTRL_SHUTDOWN_EVENT:
@@ -2645,6 +2645,7 @@ AddConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
 			   NrCtrlHandlers * sizeof(PHANDLER_ROUTINE)); 
       if (CtrlHandlers == NULL)
 	{
+	  NrCtrlHandlers = 0;
 	  SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	  return(FALSE);
 	}
@@ -2670,8 +2671,9 @@ RemoveConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
 	{
 	  if ( ((void*)(CtrlHandlers[i])) == (void*)HandlerRoutine)
 	    {
-	      CtrlHandlers[i] = CtrlHandlers[NrCtrlHandlers - 1];
 	      NrCtrlHandlers--;
+	      memmove(CtrlHandlers + i, CtrlHandlers + i + 1, 
+		      (NrCtrlHandlers - i) * sizeof(PHANDLER_ROUTINE));
 	      CtrlHandlers = 
 		RtlReAllocateHeap(RtlGetProcessHeap(),
 				  HEAP_ZERO_MEMORY,

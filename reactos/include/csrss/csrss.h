@@ -27,6 +27,7 @@ typedef struct
 {
    ULONG NewProcessId;
    ULONG Flags;
+   PCONTROLDISPATCHER CtrlDispatcher;
 } CSRSS_CREATE_PROCESS_REQUEST, *PCSRSS_CREATE_PROCESS_REQUEST;
 
 typedef struct

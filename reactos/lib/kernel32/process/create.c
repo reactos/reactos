@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.68 2003/07/10 18:50:51 chorns Exp $
+/* $Id: create.c,v 1.69 2003/08/18 10:47:04 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,6 +17,9 @@
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS ****************************************************************/
+
+extern __declspec(noreturn) 
+VOID CALLBACK ConsoleControlDispatcher(DWORD CodeAndFlag);
 
 __declspec(dllimport)
 PRTL_BASE_PROCESS_START_ROUTINE RtlBaseProcessStartRoutine;
@@ -194,7 +197,7 @@ BOOL STDCALL CreateProcessA
   ANSI_STRING strEnvVar;
 
   /* scan the environment to calculate its Unicode size */
-  for(pcScan = lpEnvironment; *pcScan; pcScan += strEnvVar.MaximumLength)
+  for(pcScan = lpEnvironment; *pcScan; pcScan += strEnvVar.Length + sizeof(char))
   {
    /* add the size of the current variable */
    RtlInitAnsiString(&strEnvVar, pcScan);
@@ -226,7 +229,7 @@ BOOL STDCALL CreateProcessA
   wstrEnvVar.MaximumLength = nEnvLen;
 
   /* scan the environment to convert it */
-  for(pcScan = lpEnvironment; *pcScan; pcScan += strEnvVar.MaximumLength)
+  for(pcScan = lpEnvironment; *pcScan; pcScan += strEnvVar.Length + sizeof(char))
   {
    /* convert the current variable */
    RtlInitAnsiString(&strEnvVar, pcScan);
@@ -1041,6 +1044,7 @@ CreateProcessW
       dwCreationFlags |= DETACHED_PROCESS;
    }
    CsrRequest.Data.CreateProcessRequest.Flags = dwCreationFlags;
+   CsrRequest.Data.CreateProcessRequest.CtrlDispatcher = ConsoleControlDispatcher;
    Status = CsrClientCallServer(&CsrRequest, 
 				&CsrReply,
 				sizeof(CSRSS_API_REQUEST),
