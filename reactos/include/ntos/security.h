@@ -74,17 +74,10 @@ typedef struct _SECURITY_DESCRIPTOR_CONTEXT
 
 #ifndef __USE_W32API
 
-#ifndef _MSC_VER 
-#define SYSTEM_LUID                    {{ 0x3E7, 0x0 }}
-#define ANONYMOUS_LOGON_LUID           {{ 0x3e6, 0x0 }}
-#define LOCALSERVICE_LUID              {{ 0x3e5, 0x0 }}
-#define NETWORKSERVICE_LUID            {{ 0x3e4, 0x0 }}
-#else
 #define SYSTEM_LUID                     { 0x3E7, 0x0 }
 #define ANONYMOUS_LOGON_LUID            { 0x3e6, 0x0 }
 #define LOCALSERVICE_LUID               { 0x3e5, 0x0 }
 #define NETWORKSERVICE_LUID             { 0x3e4, 0x0 }
-#endif
     
 /* SID Auhority */
 #define SECURITY_NULL_SID_AUTHORITY		{0,0,0,0,0,0}

@@ -24,10 +24,11 @@ static LARGE_INTEGER LuidValue;
 VOID INIT_FUNCTION
 SepInitLuid(VOID)
 {
-  LARGE_INTEGER DummyLuidValue = SYSTEM_LUID;
+  LUID DummyLuidValue = SYSTEM_LUID;
   
   KeInitializeSpinLock(&LuidLock);
-  LuidValue = DummyLuidValue;
+  LuidValue.u.HighPart = DummyLuidValue.HighPart;
+  LuidValue.u.LowPart = DummyLuidValue.LowPart;
   LuidIncrement.QuadPart = 1;
 }
 
