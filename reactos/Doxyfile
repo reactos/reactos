@@ -14,7 +14,7 @@ ALWAYS_DETAILED_SEC    = NO
 INLINE_INHERITED_MEMB  = NO
 FULL_PATH_NAMES        = YES
 STRIP_FROM_PATH        = D:\osexperts\reactos\
-SHORT_NAMES            = YES
+SHORT_NAMES            = NO
 JAVADOC_AUTOBRIEF      = YES
 MULTILINE_CPP_IS_BRIEF = NO
 DETAILS_AT_TOP         = NO
@@ -74,10 +74,10 @@ FILE_PATTERNS          = *.c \
 RECURSIVE              = YES
 EXCLUDE                = ntoskrnl \
                          drivers \
+                         tools \
+                         apps \
                          subsys/win32k \
                          subsys/system/explorer
-                         apps \
-                         tools
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = 
 EXAMPLE_PATH           = 
@@ -90,7 +90,7 @@ FILTER_SOURCE_FILES    = NO
 # configuration options related to source browsing
 #---------------------------------------------------------------------------
 SOURCE_BROWSER         = NO
-INLINE_SOURCES         = NO
+INLINE_SOURCES         = YES
 STRIP_CODE_COMMENTS    = YES
 REFERENCED_BY_RELATION = YES
 REFERENCES_RELATION    = YES
