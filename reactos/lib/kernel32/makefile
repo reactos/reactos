@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.74 2004/01/14 21:40:12 rcampbell Exp $
+# $Id: makefile,v 1.75 2004/01/16 21:08:31 mf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -12,6 +12,8 @@ TARGET_BASE = 0x77f00000
 TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
+
+TARGET_RCFLAGS += -DWINVER=0x0500
 
 TARGET_SDKLIBS = rosrtl.a ntdll.a kernel32.a
 
