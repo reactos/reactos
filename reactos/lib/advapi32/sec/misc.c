@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.30 2004/12/13 19:06:28 weiden Exp $
+/* $Id: misc.c,v 1.31 2004/12/14 06:40:50 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,6 +9,7 @@
 #include "advapi32.h"
 #include <accctrl.h>
 #include <malloc.h>
+#include <ntsecapi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -666,38 +667,93 @@ LookupAccountSidA (LPCSTR lpSystemName,
 /******************************************************************************
  * LookupAccountSidW [ADVAPI32.@]
  *
- * @unimplemented
+ * @implemented
  */
-BOOL STDCALL
-LookupAccountSidW (LPCWSTR lpSystemName,
-		   PSID lpSid,
-		   LPWSTR lpName,
-		   LPDWORD cchName,
-		   LPWSTR lpReferencedDomainName,
-		   LPDWORD cchReferencedDomainName,
-		   PSID_NAME_USE peUse)
+BOOL WINAPI
+LookupAccountSidW (
+	LPCWSTR pSystemName,
+	PSID pSid,
+	LPWSTR pAccountName,
+	LPDWORD pdwAccountName,
+	LPWSTR pDomainName,
+	LPDWORD pdwDomainName,
+	PSID_NAME_USE peUse )
 {
-  DWORD NameLength;
-  DWORD DomainLength;
-  
-  DPRINT1("LookupAccountSidW is unimplemented, but returns success\n");
-  
-  /* Calculate length needed */
-  NameLength = wcslen(L"Administrator") + sizeof(WCHAR);
-  DomainLength = wcslen(L"BUILTIN") + sizeof(WCHAR);
-  
-  if (*cchName < NameLength || *cchReferencedDomainName < DomainLength)
-  {
-    *cchName = NameLength;
-    *cchReferencedDomainName = DomainLength;
-    SetLastError(ERROR_INSUFFICIENT_BUFFER);
-    return FALSE;
-  }
-  
-  if (lpName) lstrcpynW(lpName, L"Administrator", *cchName);
-  if (lpReferencedDomainName) lstrcpynW(lpReferencedDomainName, L"BUILTIN", *cchReferencedDomainName);
-  return TRUE;
+	LSA_UNICODE_STRING SystemName;
+	LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+	LSA_HANDLE PolicyHandle = INVALID_HANDLE_VALUE;
+	NTSTATUS Status;
+	PLSA_REFERENCED_DOMAIN_LIST ReferencedDomain = NULL;
+	PLSA_TRANSLATED_NAME TranslatedName = NULL;
+	BOOL ret;
+
+	RtlInitUnicodeString ( &SystemName, pSystemName );
+	ZeroMemory(&ObjectAttributes, sizeof(ObjectAttributes));
+	Status = LsaOpenPolicy ( &SystemName, &ObjectAttributes, POLICY_LOOKUP_NAMES, &PolicyHandle );
+	if ( !SUCCEEDED(Status) )
+	{
+		SetLastError ( LsaNtStatusToWinError(Status) );
+		return FALSE;
+	}
+	Status = LsaLookupSids ( PolicyHandle, 1, &pSid, &ReferencedDomain, &TranslatedName );
+
+	LsaClose ( PolicyHandle );
+
+	if ( Status != 0 /* STATUS_SUCCESS */ )
+	{
+		SetLastError ( LsaNtStatusToWinError(Status) );
+		ret = FALSE;
+	}
+	else
+	{
+		ret = TRUE;
+		if ( TranslatedName )
+		{
+			DWORD dwSrcLen = TranslatedName->Name.Length / sizeof(WCHAR);
+			if ( *pdwAccountName <= dwSrcLen )
+			{
+				*pdwAccountName = dwSrcLen + 1;
+				ret = FALSE;
+			}
+			else
+			{
+				*pdwAccountName = dwSrcLen;
+				wcscpy ( pAccountName, TranslatedName->Name.Buffer );
+			}
+			if ( peUse )
+				*peUse = TranslatedName->Use;
+		}
+
+		if ( ReferencedDomain )
+		{
+			if ( ReferencedDomain->Entries > 0 )
+			{
+				DWORD dwSrcLen = ReferencedDomain->Domains[0].Name.Length / sizeof(WCHAR);
+				if ( *pdwDomainName <= dwSrcLen )
+				{
+					*pdwDomainName = dwSrcLen + 1;
+					ret = FALSE;
+				}
+				else
+				{
+					*pdwDomainName = dwSrcLen;
+					wcscpy ( pDomainName, ReferencedDomain->Domains[0].Name.Buffer );
+				}
+			}
+		}
+
+		if ( !ret )
+			SetLastError(ERROR_INSUFFICIENT_BUFFER);
+	}
+
+	if ( ReferencedDomain )
+		LsaFreeMemory ( ReferencedDomain );
+	if ( TranslatedName )
+		LsaFreeMemory ( TranslatedName );
+
+	return ret;
 }
+
 
 
 /******************************************************************************
