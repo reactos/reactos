@@ -5536,6 +5536,9 @@ HRESULT WINAPI StgCreateDocfile(
   return hr;
 }
 
+/******************************************************************************
+ *              StgCreateStorageEx        [OLE32.@]
+ */
 HRESULT WINAPI StgCreateStorageEx(const WCHAR* pwcsName, DWORD grfMode, DWORD stgfmt, DWORD grfAttrs, STGOPTIONS* pStgOptions, void* reserved, REFIID riid, void** ppObjectOpen)
 {
     TRACE("(%s, %lx, %lx, %lx, %p, %p, %p, %p)\n", debugstr_w(pwcsName),
@@ -5898,7 +5901,7 @@ HRESULT  WINAPI OleLoadFromStream(IStream *pStm,REFIID iidInterface,void** ppvOb
     res=CoCreateInstance(&clsid,NULL,CLSCTX_INPROC_SERVER,iidInterface,ppvObj);
     if (!SUCCEEDED(res))
 	return res;
-    res=IUnknown_QueryInterface((IUnknown*)*ppvObj,&IID_IPersistStream,(LPVOID*)(char*)&xstm);
+    res=IUnknown_QueryInterface((IUnknown*)*ppvObj,&IID_IPersistStream,(LPVOID*)&xstm);
     if (!SUCCEEDED(res)) {
 	IUnknown_Release((IUnknown*)*ppvObj);
 	return res;

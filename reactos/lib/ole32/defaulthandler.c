@@ -1103,7 +1103,7 @@ static HRESULT WINAPI DefaultHandler_GetExtent(
 
   TRACE("(%p, %lx, %p)\n", iface, dwDrawAspect, psizel);
 
-  hres = IUnknown_QueryInterface(this->dataCache, &IID_IViewObject2, (void**)(char*)&cacheView);
+  hres = IUnknown_QueryInterface(this->dataCache, &IID_IViewObject2, (void**)&cacheView);
 
   if (FAILED(hres))
     return E_UNEXPECTED;
@@ -1337,7 +1337,7 @@ static HRESULT WINAPI DefaultHandler_GetData(
 
   hres = IUnknown_QueryInterface(this->dataCache,
 				 &IID_IDataObject,
-				 (void**)(char*)&cacheDataObject);
+				 (void**)&cacheDataObject);
 
   if (FAILED(hres))
     return E_UNEXPECTED;
@@ -1381,7 +1381,7 @@ static HRESULT WINAPI DefaultHandler_QueryGetData(
 
   hres = IUnknown_QueryInterface(this->dataCache,
 				 &IID_IDataObject,
-				 (void**)(char*)&cacheDataObject);
+				 (void**)&cacheDataObject);
 
   if (FAILED(hres))
     return E_UNEXPECTED;
@@ -1434,7 +1434,7 @@ static HRESULT WINAPI DefaultHandler_SetData(
 
   hres = IUnknown_QueryInterface(this->dataCache,
 				 &IID_IDataObject,
-				 (void**)(char*)&cacheDataObject);
+				 (void**)&cacheDataObject);
 
   if (FAILED(hres))
     return E_UNEXPECTED;

@@ -156,12 +156,12 @@ CFStub_Invoke(
 	}
 	memcpy(&iid,msg->Buffer,sizeof(iid));
 	TRACE("->CreateInstance(%s)\n",debugstr_guid(&iid));
-	hres = IUnknown_QueryInterface(This->pUnkServer,&IID_IClassFactory,(LPVOID*)(char*)&classfac);
+	hres = IUnknown_QueryInterface(This->pUnkServer,&IID_IClassFactory,(LPVOID*)&classfac);
 	if (hres) {
 	    FIXME("Ole server does not provide a IClassFactory?\n");
 	    return hres;
 	}
-	hres = IClassFactory_CreateInstance(classfac,NULL,&iid,(LPVOID*)(char*)&ppv);
+	hres = IClassFactory_CreateInstance(classfac,NULL,&iid,(LPVOID*)&ppv);
 	IClassFactory_Release(classfac);
 	if (hres) {
 	    msg->cbBuffer = 0;
@@ -436,7 +436,8 @@ CFProxy_Construct(LPVOID *ppv,LPVOID *ppProxy) {
 
     cf->lpvtbl_cf	= &cfproxyvt;
     cf->lpvtbl_proxy	= &pspbvtbl;
-    cf->ref		= 2; /* we return 2 references to the object! */
+    /* 1 reference for the proxy and 1 for the object */
+    cf->ref		= 2;
     *ppv		= &(cf->lpvtbl_cf);
     *ppProxy		= &(cf->lpvtbl_proxy);
     return S_OK;

@@ -1085,7 +1085,7 @@ static HRESULT WINAPI DataCache_GetData(
   {
     /* Get the Persist Storage */
 
-    hr = IDataObject_QueryInterface(iface, &IID_IPersistStorage, (void**)(char*)&pPersistStorage);
+    hr = IDataObject_QueryInterface(iface, &IID_IPersistStorage, (void**)&pPersistStorage);
 
     if (hr != S_OK)
       goto cleanup;
@@ -1214,7 +1214,7 @@ static HRESULT WINAPI DataCache_IDataObject_SetData(
 
   TRACE("(%p, %p, %p, %d)\n", iface, pformatetc, pmedium, fRelease);
 
-  hres = IDataObject_QueryInterface(iface, &IID_IOleCache2, (void**)(char*)&oleCache);
+  hres = IDataObject_QueryInterface(iface, &IID_IOleCache2, (void**)&oleCache);
 
   if (FAILED(hres))
     return E_UNEXPECTED;

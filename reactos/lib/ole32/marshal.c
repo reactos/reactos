@@ -256,7 +256,7 @@ StdMarshalImpl_MarshalInterface(
   IPSFactoryBuffer	*psfacbuf;
 
   TRACE("(...,%s,...)\n",debugstr_guid(riid));
-  IUnknown_QueryInterface((LPUNKNOWN)pv,&IID_IUnknown,(LPVOID*)(char*)&pUnk);
+  IUnknown_QueryInterface((LPUNKNOWN)pv,&IID_IUnknown,(LPVOID*)&pUnk);
   mid.processid = GetCurrentProcessId();
   mid.objectid = (DWORD)pUnk; /* FIXME */
   IUnknown_Release(pUnk);
@@ -280,7 +280,7 @@ StdMarshalImpl_MarshalInterface(
     FIXME("Failed to create a stub for %s\n",debugstr_guid(riid));
     return hres;
   }
-  IUnknown_QueryInterface((LPUNKNOWN)pv,riid,(LPVOID*)(char*)&pUnk);
+  IUnknown_QueryInterface((LPUNKNOWN)pv,riid,(LPVOID*)&pUnk);
   MARSHAL_Register_Stub(&mid,pUnk,stub);
   IUnknown_Release(pUnk);
   return S_OK;
@@ -315,13 +315,20 @@ StdMarshalImpl_UnmarshalInterface(
     return hres;
   }
   hres = PIPE_GetNewPipeBuf(&mid,&chanbuf);
+  IPSFactoryBuffer_Release(psfacbuf);
   if (hres) {
     ERR("Failed to get an rpc channel buffer for %s\n",debugstr_guid(riid));
   } else {
+    /* Connect the channel buffer to the proxy and release the no longer
+     * needed proxy.
+     * NOTE: The proxy should have taken an extra reference because it also
+     * aggregates the object, so we can safely release our reference to it. */
     IRpcProxyBuffer_Connect(rpcproxy,chanbuf);
-    IRpcProxyBuffer_Release(rpcproxy); /* no need */
+    IRpcProxyBuffer_Release(rpcproxy);
+    /* IRpcProxyBuffer takes a reference on the channel buffer and
+     * we no longer need it, so release it */
+    IRpcChannelBuffer_Release(chanbuf);
   }
-  IPSFactoryBuffer_Release(psfacbuf);
   return hres;
 }
 
@@ -448,7 +455,7 @@ CoMarshalInterface( IStream *pStm, REFIID riid, IUnknown *pUnk,
   );
   STUBMGR_Start(); /* Just to be sure we have one running. */
   mid.processid = GetCurrentProcessId();
-  IUnknown_QueryInterface(pUnk,&IID_IUnknown,(LPVOID*)(char*)&pUnknown);
+  IUnknown_QueryInterface(pUnk,&IID_IUnknown,(LPVOID*)&pUnknown);
   mid.objectid = (DWORD)pUnknown;
   IUnknown_Release(pUnknown);
   memcpy(&mid.iid,riid,sizeof(mid.iid));
@@ -523,7 +530,7 @@ CoUnmarshalInterface(IStream *pStm, REFIID riid, LPVOID *ppv) {
       FIXME("Stream read 3 failed, %lx, (%ld of %d)\n",hres,res,sizeof(xclsid));
       return hres;
   }
-  hres=CoCreateInstance(&xclsid,NULL,CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER | CLSCTX_LOCAL_SERVER,&IID_IMarshal,(void**)(char*)&pUnk);
+  hres=CoCreateInstance(&xclsid,NULL,CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER | CLSCTX_LOCAL_SERVER,&IID_IMarshal,(void**)&pUnk);
   if (hres) {
       FIXME("Failed to create instance of unmarshaller %s.\n",debugstr_guid(&xclsid));
       return hres;
@@ -596,45 +603,68 @@ CoReleaseMarshalData(IStream *pStm) {
 /***********************************************************************
  *		CoMarshalInterThreadInterfaceInStream	[OLE32.@]
  *
- * Marshal interfaces across threads. We don't have a thread distinction,
- * meaning most interfaces just work across different threads, the RPC
- * handles it.
+ * Marshal an interface across threads in the same process.
+ *
+ * PARAMS
+ *  riid  [I] Identifier of the interface to be marshalled.
+ *  pUnk  [I] Pointer to IUnknown-derived interface that will be marshalled.
+ *  ppStm [O] Pointer to IStream object that is created and then used to store the marshalled inteface.
+ *
+ * RETURNS
+ *  Success: S_OK
+ *  Failure: E_OUTOFMEMORY and other COM error codes
+ *
+ * SEE
+ *   CoMarshalInterface(), CoUnmarshalInterface() and CoGetInterfaceAndReleaseStream()
  */
 HRESULT WINAPI
 CoMarshalInterThreadInterfaceInStream(
-  REFIID riid, LPUNKNOWN pUnk, LPSTREAM * ppStm
-) {
-  ULONG res;
-  ULARGE_INTEGER	xpos;
-  LARGE_INTEGER		seekto;
-  HRESULT		hres;
+  REFIID riid, LPUNKNOWN pUnk, LPSTREAM * ppStm)
+{
+    ULARGE_INTEGER	xpos;
+    LARGE_INTEGER		seekto;
+    HRESULT		hres;
 
-  TRACE("(%s, %p, %p)\n",debugstr_guid(riid), pUnk, ppStm);
-  hres = CreateStreamOnHGlobal(0, TRUE, ppStm);
-  if (hres) return hres;
-  /* CoMarshalInterface(...); */
-  hres = IStream_Write(*ppStm,&pUnk,sizeof(LPUNKNOWN),&res);
-  if (hres) return hres;
-  memset(&seekto,0,sizeof(seekto));
-  IStream_Seek(*ppStm,seekto,SEEK_SET,&xpos);
-  return S_OK;
+    TRACE("(%s, %p, %p)\n",debugstr_guid(riid), pUnk, ppStm);
+
+    hres = CreateStreamOnHGlobal(0, TRUE, ppStm);
+    if (FAILED(hres)) return hres;
+    hres = CoMarshalInterface(*ppStm, riid, pUnk, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
+
+    /* FIXME: is this needed? */
+    memset(&seekto,0,sizeof(seekto));
+    IStream_Seek(*ppStm,seekto,SEEK_SET,&xpos);
+
+    return hres;
 }
 
 /***********************************************************************
  *		CoGetInterfaceAndReleaseStream	[OLE32.@]
+ *
+ * Unmarshalls an inteface from a stream and then releases the stream.
+ *
+ * PARAMS
+ *  pStm [I] Stream that contains the marshalled inteface.
+ *  riid [I] Interface identifier of the object to unmarshall.
+ *  ppv  [O] Address of pointer where the requested interface object will be stored.
+ *
+ * RETURNS
+ *  Success: S_OK
+ *  Failure: A COM error code
+ *
+ * SEE
+ *  CoMarshalInterThreadInterfaceInStream() and CoUnmarshalInteface()
  */
 HRESULT WINAPI
-CoGetInterfaceAndReleaseStream(LPSTREAM pStm,REFIID riid, LPVOID *ppv) {
-  ULONG res;
-  HRESULT		hres;
-  LPUNKNOWN		pUnk;
+CoGetInterfaceAndReleaseStream(LPSTREAM pStm,REFIID riid, LPVOID *ppv)
+{
+    HRESULT hres;
 
-  TRACE("(,%s,)\n",debugstr_guid(riid));
-  /* CoUnmarshalInterface(...); */
-  hres = IStream_Read(pStm,&pUnk,sizeof(LPUNKNOWN),&res);
-  if (hres) return hres;
-  IStream_Release(pStm);
-  return IUnknown_QueryInterface(pUnk,riid,ppv);
+    TRACE("(%p, %s, %p)\n", pStm, debugstr_guid(riid), ppv);
+
+    hres = CoUnmarshalInterface(pStm, riid, ppv);
+    IStream_Release(pStm);
+    return hres;
 }
 
 static HRESULT WINAPI

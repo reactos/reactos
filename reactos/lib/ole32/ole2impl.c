@@ -151,7 +151,7 @@ HRESULT WINAPI OleCreateFromData(LPDATAOBJECT pSrcDataObject, REFIID riid,
           /* Create default handler for Persist storage */
 
           if (hr1 == S_OK)
-            hr1 = OleCreateDefaultHandler(&clsID, NULL, &IID_IPersistStorage, (LPVOID*)(char*)&pPersistStorage);
+            hr1 = OleCreateDefaultHandler(&clsID, NULL, &IID_IPersistStorage, (LPVOID*)&pPersistStorage);
 
           /* Load the storage to Persist storage */
 
@@ -161,7 +161,7 @@ HRESULT WINAPI OleCreateFromData(LPDATAOBJECT pSrcDataObject, REFIID riid,
           /* Query for IOleObject */
 
           if (hr1 == S_OK)
-            hr1 = IPersistStorage_QueryInterface(pPersistStorage, &IID_IOleObject, (LPVOID*)(char*)&pOleObject);
+            hr1 = IPersistStorage_QueryInterface(pPersistStorage, &IID_IOleObject, (LPVOID*)&pOleObject);
 
           /* Set client site with the IOleObject */
 

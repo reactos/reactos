@@ -710,7 +710,7 @@ HRESULT WINAPI OleSetContainedObject(
 
   hres = IUnknown_QueryInterface(pUnknown,
 				 &IID_IRunnableObject,
-				 (void**)(char*)&runnable);
+				 (void**)&runnable);
 
   if (SUCCEEDED(hres))
   {
@@ -756,7 +756,7 @@ HRESULT WINAPI OleLoad(
 			  NULL,
 			  CLSCTX_INPROC_HANDLER,
 			  &IID_IOleObject,
-			  (void**)(char*)&oleObject);
+			  (void**)&oleObject);
 
   /*
    * If that fails, as it will most times, load the default
@@ -767,7 +767,7 @@ HRESULT WINAPI OleLoad(
     hres = OleCreateDefaultHandler(&storageInfo.clsid,
 				   NULL,
 				   &IID_IOleObject,
-				   (void**)(char*)&oleObject);
+				   (void**)&oleObject);
   }
 
   /*
@@ -786,7 +786,7 @@ HRESULT WINAPI OleLoad(
    */
   hres = IOleObject_QueryInterface(oleObject,
 				   &IID_IPersistStorage,
-				   (void**)(char*)&persistStorage);
+				   (void**)&persistStorage);
 
   if (SUCCEEDED(hres))
   {
@@ -860,7 +860,7 @@ HRESULT WINAPI OleLockRunning(LPUNKNOWN pUnknown, BOOL fLock, BOOL fLastUnlockCl
 
   hres = IUnknown_QueryInterface(pUnknown,
 				 &IID_IRunnableObject,
-				 (void**)(char*)&runnable);
+				 (void**)&runnable);
 
   if (SUCCEEDED(hres))
   {
@@ -2229,7 +2229,7 @@ HRESULT WINAPI OleDraw(
 
   hres = IUnknown_QueryInterface(pUnk,
 				 &IID_IViewObject,
-				 (void**)(char*)&viewobject);
+				 (void**)&viewobject);
 
   if (SUCCEEDED(hres))
   {
@@ -2284,20 +2284,20 @@ HRESULT WINAPI OleCreate(
 
     FIXME("\n\t%s\n\t%s semi-stub!\n", debugstr_guid(rclsid), debugstr_guid(riid));
 
-    if (SUCCEEDED((hres = CoCreateInstance(rclsid, 0, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER|CLSCTX_LOCAL_SERVER , riid, (LPVOID*)(char*)&pUnk))))
+    if (SUCCEEDED((hres = CoCreateInstance(rclsid, 0, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER|CLSCTX_LOCAL_SERVER , riid, (LPVOID*)&pUnk))))
     {
         if (pClientSite)
         {
             IOleObject * pOE;
             IPersistStorage * pPS;
-            if (SUCCEEDED((hres = IUnknown_QueryInterface( pUnk, &IID_IOleObject, (LPVOID*)(char*)&pOE))))
+            if (SUCCEEDED((hres = IUnknown_QueryInterface( pUnk, &IID_IOleObject, (LPVOID*)&pOE))))
             {
                 TRACE("trying to set clientsite %p\n", pClientSite);
                 hres1 = IOleObject_SetClientSite(pOE, pClientSite);
                 TRACE("-- result 0x%08lx\n", hres1);
                 IOleObject_Release(pOE);
             }
-            if (SUCCEEDED((hres = IUnknown_QueryInterface( pUnk, &IID_IPersistStorage, (LPVOID*)(char*)&pPS))))
+            if (SUCCEEDED((hres = IUnknown_QueryInterface( pUnk, &IID_IPersistStorage, (LPVOID*)&pPS))))
             {
                 TRACE("trying to set stg %p\n", pStg);
                 hres1 = IPersistStorage_InitNew(pPS, pStg);

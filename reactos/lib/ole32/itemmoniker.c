@@ -454,7 +454,7 @@ HRESULT WINAPI ItemMonikerImpl_BindToObject(IMoniker* iface,
 
     *ppvResult=0;
 
-    res=IMoniker_BindToObject(pmkToLeft,pbc,NULL,&refid,(void**)(char*)&poic);
+    res=IMoniker_BindToObject(pmkToLeft,pbc,NULL,&refid,(void**)&poic);
 
     if (SUCCEEDED(res)){
 
@@ -487,7 +487,7 @@ HRESULT WINAPI ItemMonikerImpl_BindToStorage(IMoniker* iface,
     if(pmkToLeft==NULL)
         return E_INVALIDARG;
 
-    res=IMoniker_BindToObject(pmkToLeft,pbc,NULL,&IID_IOleItemContainer,(void**)(char*)&poic);
+    res=IMoniker_BindToObject(pmkToLeft,pbc,NULL,&IID_IOleItemContainer,(void**)&poic);
 
     if (SUCCEEDED(res)){
 
@@ -715,7 +715,7 @@ HRESULT WINAPI ItemMonikerImpl_IsRunning(IMoniker* iface,
         /* requesting an IOleItemContainer interface pointer. The method then calls IOleItemContainer::IsRunning,*/
         /* passing the string contained within this moniker. */
 
-        res=IMoniker_BindToObject(pmkToLeft,pbc,NULL,&IID_IOleItemContainer,(void**)(char*)&poic);
+        res=IMoniker_BindToObject(pmkToLeft,pbc,NULL,&IID_IOleItemContainer,(void**)&poic);
 
         if (SUCCEEDED(res)){
 
@@ -876,11 +876,11 @@ HRESULT WINAPI ItemMonikerImpl_ParseDisplayName(IMoniker* iface,
         /* Otherwise, the method calls IMoniker::BindToObject on the pmkToLeft parameter, requesting an */
         /* IParseDisplayName interface pointer to the object identified by the moniker, and passes the display */
         /* name to IParseDisplayName::ParseDisplayName */
-        res=IMoniker_BindToObject(pmkToLeft,pbc,NULL,&IID_IOleItemContainer,(void**)(char*)&poic);
+        res=IMoniker_BindToObject(pmkToLeft,pbc,NULL,&IID_IOleItemContainer,(void**)&poic);
 
         if (SUCCEEDED(res)){
 
-            res=IOleItemContainer_GetObject(poic,This->itemName,BINDSPEED_MODERATE,pbc,&IID_IParseDisplayName,(void**)(char*)&ppdn);
+            res=IOleItemContainer_GetObject(poic,This->itemName,BINDSPEED_MODERATE,pbc,&IID_IParseDisplayName,(void**)&ppdn);
 
             res=IMoniker_GetDisplayName(iface,pbc,NULL,&displayName);
 
