@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.18 2004/02/22 12:25:34 navaraf Exp $
+ * $Id: vis.c,v 1.19 2004/02/22 16:56:14 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -82,7 +82,8 @@ VIS_ComputeVisibleRegion(
       NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_AND);
       NtGdiDeleteObject(ClipRgn);
 
-      if (ClipSiblings)
+      if ((CurrentWindow->Style & WS_CLIPSIBLINGS) ||
+          (PreviousWindow == Window && ClipSiblings))
       {
          ExAcquireFastMutexUnsafe(&CurrentWindow->ChildrenListLock);
          CurrentSibling = CurrentWindow->FirstChild;

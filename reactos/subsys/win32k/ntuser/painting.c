@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.71 2004/02/21 23:30:18 navaraf Exp $
+ *  $Id: painting.c,v 1.72 2004/02/22 16:56:14 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -560,7 +560,7 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
    }
 
    ExAcquireFastMutex(&Window->ChildrenListLock);
-   for (Child = Window->LastChild; Child; Child = Child->PrevSibling)
+   for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
    {
       if (IntIsWindowDirty(Child) &&
           IntWndBelongsToThread(Child, Thread))
