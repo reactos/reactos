@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.31 2003/06/24 12:38:00 ekohl Exp $
+/* $Id: disk.c,v 1.32 2003/07/23 18:45:08 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -37,7 +37,8 @@
 
 #define VERSION  "0.0.1"
 
-#define SCSI_DISK_TIMEOUT 10		/* Default timeout: 10 seconds */
+#define SCSI_DISK_TIMEOUT	10	/* Default timeout: 10 seconds */
+#define MODE_DATA_SIZE		192
 
 
 typedef struct _DISK_DATA
@@ -842,30 +843,37 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(DISK_GEOMETRY))
 	  {
 	    Status = STATUS_INVALID_PARAMETER;
+	    break;
 	  }
-	else
-	  {
-	    PDISK_GEOMETRY Geometry;
 
-	    if (DeviceExtension->DiskGeometry == NULL)
-	      {
-		DPRINT("No disk geometry available!\n");
-		DeviceExtension->DiskGeometry = ExAllocatePool(NonPagedPool,
-							       sizeof(DISK_GEOMETRY));
-	      }
+	if (DeviceExtension->DiskGeometry == NULL)
+	  {
+	    DPRINT("No disk geometry available!\n");
+	    DeviceExtension->DiskGeometry = ExAllocatePool(NonPagedPool,
+							   sizeof(DISK_GEOMETRY));
+	  }
+
+	if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
+	  {
 	    Status = ScsiClassReadDriveCapacity(DeviceObject);
 	    DPRINT("ScsiClassReadDriveCapacity() returned (Status %lx)\n", Status);
-	    if (NT_SUCCESS(Status))
+	    if (!NT_SUCCESS(Status))
 	      {
-		Geometry = (PDISK_GEOMETRY)Irp->AssociatedIrp.SystemBuffer;
-		RtlMoveMemory(Geometry,
-			      DeviceExtension->DiskGeometry,
-			      sizeof(DISK_GEOMETRY));
-
-		Status = STATUS_SUCCESS;
-		Information = sizeof(DISK_GEOMETRY);
+		/* Drive is not ready */
+		DiskData->DriveNotReady = FALSE;
+		break;
 	      }
+
+	    /* Drive is ready */
+	    DiskData->DriveNotReady = FALSE;
 	  }
+
+	RtlMoveMemory(Irp->AssociatedIrp.SystemBuffer,
+		      DeviceExtension->DiskGeometry,
+		      sizeof(DISK_GEOMETRY));
+
+	Status = STATUS_SUCCESS;
+	Information = sizeof(DISK_GEOMETRY);
 	break;
 
       case IOCTL_DISK_GET_PARTITION_INFO:
@@ -1009,10 +1017,48 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	  }
 	break;
 
+      case IOCTL_DISK_IS_WRITABLE:
+	{
+	  PMODE_PARAMETER_HEADER ModeData;
+	  ULONG Length;
+
+	  ModeData = ExAllocatePool (NonPagedPool,
+				     MODE_DATA_SIZE);
+	  if (ModeData == NULL)
+	    {
+	      Status = STATUS_INSUFFICIENT_RESOURCES;
+	      break;
+	    }
+	  RtlZeroMemory (ModeData,
+			 MODE_DATA_SIZE);
+
+	  Length = ScsiClassModeSense (DeviceObject,
+				       (PVOID)ModeData,
+				       MODE_DATA_SIZE,
+				       MODE_SENSE_RETURN_ALL);
+	  if (Length < sizeof(MODE_PARAMETER_HEADER))
+	    {
+	      /* FIXME: Retry */
+	      Status = STATUS_IO_DEVICE_ERROR;
+	      ExFreePool (ModeData);
+	      break;
+	    }
+
+	  if (ModeData->DeviceSpecificParameter & MODE_DSP_WRITE_PROTECT)
+	    {
+	      Status = STATUS_MEDIA_WRITE_PROTECTED;
+	    }
+	  else
+	    {
+	      Status = STATUS_SUCCESS;
+	    }
+	  ExFreePool (ModeData);
+	}
+	break;
+
       case IOCTL_DISK_VERIFY:
       case IOCTL_DISK_FORMAT_TRACKS:
       case IOCTL_DISK_PERFORMANCE:
-      case IOCTL_DISK_IS_WRITABLE:
       case IOCTL_DISK_LOGGING:
       case IOCTL_DISK_FORMAT_TRACKS_EX:
       case IOCTL_DISK_HISTOGRAM_STRUCTURE:
