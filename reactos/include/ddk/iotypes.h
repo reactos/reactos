@@ -196,6 +196,8 @@ typedef struct _CM_MCA_POS_DATA
 } CM_MCA_POS_DATA, *PCM_MCA_POS_DATA;
 
 
+#include <pshpack1.h>
+
 /* Int13 drive geometry data */
 
 typedef struct _CM_INT13_DRIVE_PARAMETER
@@ -206,6 +208,8 @@ typedef struct _CM_INT13_DRIVE_PARAMETER
   USHORT MaxHeads;
   USHORT NumberDrives;
 } CM_INT13_DRIVE_PARAMETER, *PCM_INT13_DRIVE_PARAMETER;
+
+#include <poppack.h>
 
 
 /* Extended drive geometry data */
