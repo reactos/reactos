@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.132 2004/09/23 17:03:59 weiden Exp $
+; $Id: ntdll.def,v 1.133 2004/11/07 13:08:24 hyperion Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -681,6 +681,7 @@ RtlxOemStringToUnicodeSize@4
 RtlxUnicodeStringToAnsiSize@4
 RtlxUnicodeStringToOemSize@4
 ;SaveEm87Context
+VerSetConditionMask@16
 ZwAcceptConnectPort@24
 ZwAccessCheck@32
 ZwAccessCheckAndAuditAlarm@44
