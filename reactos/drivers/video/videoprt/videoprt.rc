@@ -24,9 +24,9 @@ BEGIN
             VALUE "CompanyName",	RES_STR_COMPANY_NAME
             VALUE "FileDescription",	"Videoport Driver\0"
             VALUE "FileVersion",	"0.0.0\0"
-            VALUE "InternalName",	"vidport\0"
+            VALUE "InternalName",	"videoprt\0"
             VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
-            VALUE "OriginalFilename",	"vidport.sys\0"
+            VALUE "OriginalFilename",	"videoprt.sys\0"
             VALUE "ProductName",	RES_STR_PRODUCT_NAME
             VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
         END

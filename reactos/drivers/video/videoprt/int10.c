@@ -18,84 +18,13 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: int10.c,v 1.4 2004/03/08 21:45:39 navaraf Exp $
+ * $Id: int10.c,v 1.5 2004/03/19 20:58:31 navaraf Exp $
  */
 
 #include "videoprt.h"
 #include "internal/v86m.h"
 
-VOID FASTCALL
-IntAttachToCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess)
-{
-   *CallingProcess = PsGetCurrentProcess();
-   if (*CallingProcess != Csrss)
-   {
-      if (NULL != PsGetCurrentThread()->OldProcess)
-      {
-         *PrevAttachedProcess = *CallingProcess;
-         KeDetachProcess();
-      }
-      else
-      {
-         *PrevAttachedProcess = NULL;
-      }
-      KeAttachProcess(Csrss);
-   }
-}
-
-VOID FASTCALL
-IntDetachFromCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess)
-{
-   if (*CallingProcess != Csrss)
-   {
-      KeDetachProcess();
-      if (NULL != *PrevAttachedProcess)
-      {
-         KeAttachProcess(*PrevAttachedProcess);
-      }
-   }
-}
-
-
-/*
- * @implemented
- */
-
-VP_STATUS STDCALL
-VideoPortInt10(
-   IN PVOID HwDeviceExtension,
-   IN PVIDEO_X86_BIOS_ARGUMENTS BiosArguments)
-{
-   KV86M_REGISTERS Regs;
-   NTSTATUS Status;
-   PEPROCESS CallingProcess;
-   PEPROCESS PrevAttachedProcess;
-
-   DPRINT("VideoPortInt10\n");
-
-   IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
-
-   memset(&Regs, 0, sizeof(Regs));
-   DPRINT("- Input register Eax: %x\n", BiosArguments->Eax);
-   Regs.Eax = BiosArguments->Eax;
-   DPRINT("- Input register Ebx: %x\n", BiosArguments->Ebx);
-   Regs.Ebx = BiosArguments->Ebx;
-   DPRINT("- Input register Ecx: %x\n", BiosArguments->Ecx);
-   Regs.Ecx = BiosArguments->Ecx;
-   DPRINT("- Input register Edx: %x\n", BiosArguments->Edx);
-   Regs.Edx = BiosArguments->Edx;
-   DPRINT("- Input register Esi: %x\n", BiosArguments->Esi);
-   Regs.Esi = BiosArguments->Esi;
-   DPRINT("- Input register Edi: %x\n", BiosArguments->Edi);
-   Regs.Edi = BiosArguments->Edi;
-   DPRINT("- Input register Ebp: %x\n", BiosArguments->Ebp);
-   Regs.Ebp = BiosArguments->Ebp;
-   Status = Ke386CallBios(0x10, &Regs);
-
-   IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
-
-   return Status;
-}
+/* PRIVATE FUNCTIONS **********************************************************/
 
 VP_STATUS STDCALL
 IntInt10AllocateBuffer(
@@ -106,8 +35,8 @@ IntInt10AllocateBuffer(
 {
    PVOID MemoryAddress;
    NTSTATUS Status;
-   PEPROCESS CallingProcess;
-   PEPROCESS PrevAttachedProcess;
+   PEPROCESS CallingProcess; 
+   PEPROCESS PrevAttachedProcess; 
 
    DPRINT("IntInt10AllocateBuffer\n");
 
@@ -116,17 +45,21 @@ IntInt10AllocateBuffer(
    MemoryAddress = (PVOID)0x20000;
    Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &MemoryAddress, 0,
       Length, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+
    if (!NT_SUCCESS(Status))
    {
       DPRINT("- ZwAllocateVirtualMemory failed\n");
-      return STATUS_NO_MEMORY;
+      IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+      return ERROR_NOT_ENOUGH_MEMORY;
    }
+
    if (MemoryAddress > (PVOID)(0x100000 - *Length))
    {
       ZwFreeVirtualMemory(NtCurrentProcess(), &MemoryAddress, Length,
          MEM_RELEASE);
       DPRINT("- Unacceptable memory allocated\n");
-      return STATUS_NO_MEMORY;
+      IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+      return ERROR_NOT_ENOUGH_MEMORY;
    }
 
    *Seg = (ULONG)MemoryAddress >> 4;
@@ -138,7 +71,7 @@ IntInt10AllocateBuffer(
 
    IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
 
-   return STATUS_SUCCESS;
+   return NO_ERROR;
 }
 
 VP_STATUS STDCALL
@@ -149,8 +82,8 @@ IntInt10FreeBuffer(
 {
    PVOID MemoryAddress = (PVOID)((Seg << 4) + Off);
    NTSTATUS Status;
-   PEPROCESS CallingProcess;
-   PEPROCESS PrevAttachedProcess;
+   PEPROCESS CallingProcess; 
+   PEPROCESS PrevAttachedProcess; 
 
    DPRINT("IntInt10FreeBuffer\n");
    DPRINT("- Segment: %x\n", Seg);
@@ -172,8 +105,8 @@ IntInt10ReadMemory(
    OUT PVOID Buffer,
    IN ULONG Length)
 {
-   PEPROCESS CallingProcess;
-   PEPROCESS PrevAttachedProcess;
+   PEPROCESS CallingProcess; 
+   PEPROCESS PrevAttachedProcess; 
 
    DPRINT("IntInt10ReadMemory\n");
    DPRINT("- Segment: %x\n", Seg);
@@ -185,7 +118,7 @@ IntInt10ReadMemory(
    RtlCopyMemory(Buffer, (PVOID)((Seg << 4) + Off), Length);
    IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
 
-   return STATUS_SUCCESS;
+   return NO_ERROR;
 }
 
 VP_STATUS STDCALL
@@ -196,8 +129,8 @@ IntInt10WriteMemory(
    IN PVOID Buffer,
    IN ULONG Length)
 {
-   PEPROCESS CallingProcess;
-   PEPROCESS PrevAttachedProcess;
+   PEPROCESS CallingProcess; 
+   PEPROCESS PrevAttachedProcess; 
 
    DPRINT("IntInt10WriteMemory\n");
    DPRINT("- Segment: %x\n", Seg);
@@ -209,7 +142,7 @@ IntInt10WriteMemory(
    RtlCopyMemory((PVOID)((Seg << 4) + Off), Buffer, Length);
    IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
 
-   return STATUS_SUCCESS;
+   return NO_ERROR;
 }
 
 VP_STATUS STDCALL
@@ -219,8 +152,8 @@ IntInt10CallBios(
 {
    KV86M_REGISTERS Regs;
    NTSTATUS Status;
-   PEPROCESS CallingProcess;
-   PEPROCESS PrevAttachedProcess;
+   PEPROCESS CallingProcess; 
+   PEPROCESS PrevAttachedProcess; 
 
    DPRINT("IntInt10CallBios\n");
 
@@ -255,6 +188,48 @@ IntInt10CallBios(
    BiosArguments->Ebp = Regs.Ebp;
    BiosArguments->SegDs = Regs.Ds;
    BiosArguments->SegEs = Regs.Es;
+
+   IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+
+   return Status;
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+/*
+ * @implemented
+ */
+
+VP_STATUS STDCALL
+VideoPortInt10(
+   IN PVOID HwDeviceExtension,
+   IN PVIDEO_X86_BIOS_ARGUMENTS BiosArguments)
+{
+   KV86M_REGISTERS Regs;
+   NTSTATUS Status;
+   PEPROCESS CallingProcess; 
+   PEPROCESS PrevAttachedProcess; 
+
+   DPRINT("VideoPortInt10\n");
+
+   IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
+
+   memset(&Regs, 0, sizeof(Regs));
+   DPRINT("- Input register Eax: %x\n", BiosArguments->Eax);
+   Regs.Eax = BiosArguments->Eax;
+   DPRINT("- Input register Ebx: %x\n", BiosArguments->Ebx);
+   Regs.Ebx = BiosArguments->Ebx;
+   DPRINT("- Input register Ecx: %x\n", BiosArguments->Ecx);
+   Regs.Ecx = BiosArguments->Ecx;
+   DPRINT("- Input register Edx: %x\n", BiosArguments->Edx);
+   Regs.Edx = BiosArguments->Edx;
+   DPRINT("- Input register Esi: %x\n", BiosArguments->Esi);
+   Regs.Esi = BiosArguments->Esi;
+   DPRINT("- Input register Edi: %x\n", BiosArguments->Edi);
+   Regs.Edi = BiosArguments->Edi;
+   DPRINT("- Input register Ebp: %x\n", BiosArguments->Ebp);
+   Regs.Ebp = BiosArguments->Ebp;
+   Status = Ke386CallBios(0x10, &Regs);
 
    IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
 

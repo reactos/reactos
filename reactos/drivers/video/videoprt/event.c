@@ -18,25 +18,40 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: spinlock.c,v 1.2 2004/03/19 20:58:32 navaraf Exp $
+ * $Id: event.c,v 1.2 2004/03/19 20:58:32 navaraf Exp $
  */
 
 #include "videoprt.h"
 
+/* PUBLIC FUNCTIONS ***********************************************************/
+
 /*
  * @implemented
  */
 
 VP_STATUS STDCALL
-VideoPortCreateSpinLock(
+VideoPortCreateEvent(
    IN PVOID HwDeviceExtension,
-   OUT PSPIN_LOCK *SpinLock)
+   IN ULONG EventFlag,
+   IN PVOID Unused,
+   OUT PEVENT *Event)
 {
-   DPRINT("VideoPortCreateSpinLock\n");   
-   *SpinLock = ExAllocatePool(NonPagedPool, sizeof(KSPIN_LOCK));
-   if (*SpinLock == NULL)
+   EVENT_TYPE Type;
+ 
+   (*Event) = ExAllocatePoolWithTag(
+      NonPagedPool,
+      sizeof(KEVENT), 
+      TAG_VIDEO_PORT);
+
+   if ((*Event) == NULL)
       return ERROR_NOT_ENOUGH_MEMORY;
-   KeInitializeSpinLock((PKSPIN_LOCK)*SpinLock);
+
+   if (EventFlag & NOTIFICATION_EVENT)
+      Type = NotificationEvent;
+   else
+      Type = SynchronizationEvent;
+
+   KeInitializeEvent((PKEVENT)*Event, Type, EventFlag & INITIAL_EVENT_SIGNALED);
    return NO_ERROR;
 }
 
@@ -45,12 +60,11 @@ VideoPortCreateSpinLock(
  */
 
 VP_STATUS STDCALL
-VideoPortDeleteSpinLock(
+VideoPortDeleteEvent(
    IN PVOID HwDeviceExtension,
-   IN PSPIN_LOCK SpinLock)
+   IN PEVENT Event)
 {
-   DPRINT("VideoPortDeleteSpinLock\n");
-   ExFreePool(SpinLock);
+   ExFreePool(Event);
    return NO_ERROR;
 }
 
@@ -58,14 +72,12 @@ VideoPortDeleteSpinLock(
  * @implemented
  */
 
-VOID STDCALL
-VideoPortAcquireSpinLock(
+LONG STDCALL
+VideoPortSetEvent(
    IN PVOID HwDeviceExtension,
-   IN PSPIN_LOCK SpinLock,
-   OUT PUCHAR OldIrql)
+   IN PEVENT Event)
 {
-   DPRINT("VideoPortAcquireSpinLock\n");
-   KeAcquireSpinLock((PKSPIN_LOCK)SpinLock, OldIrql);
+   return KeSetEvent((PKEVENT)Event, IO_NO_INCREMENT, FALSE);
 }
 
 /*
@@ -73,37 +85,27 @@ VideoPortAcquireSpinLock(
  */
 
 VOID STDCALL
-VideoPortAcquireSpinLockAtDpcLevel(
+VideoPortClearEvent(
    IN PVOID HwDeviceExtension,
-   IN PSPIN_LOCK SpinLock)
+   IN PEVENT Event)
 {
-   DPRINT("VideoPortAcquireSpinLockAtDpcLevel\n");
-   KefAcquireSpinLockAtDpcLevel((PKSPIN_LOCK)SpinLock);
+   KeClearEvent((PKEVENT)Event);
 }
 
 /*
  * @implemented
  */
 
-VOID STDCALL
-VideoPortReleaseSpinLock(
+VP_STATUS STDCALL
+VideoPortWaitForSingleObject(
    IN PVOID HwDeviceExtension,
-   IN PSPIN_LOCK SpinLock,
-   IN UCHAR NewIrql)
+   IN PVOID Object,
+   IN PLARGE_INTEGER Timeout OPTIONAL)
 {
-   DPRINT("VideoPortReleaseSpinLock\n");
-   KeReleaseSpinLock((PKSPIN_LOCK)SpinLock, NewIrql);
-}
-
-/*
- * @implemented
- */
-
-VOID STDCALL
-VideoPortReleaseSpinLockFromDpcLevel(
-   IN PVOID HwDeviceExtension,
-   IN PSPIN_LOCK SpinLock)
-{
-   DPRINT("VideoPortReleaseSpinLockFromDpcLevel\n");
-   KefReleaseSpinLockFromDpcLevel((PKSPIN_LOCK)SpinLock);
+   return KeWaitForSingleObject(
+      Object,
+      Executive,
+      KernelMode,
+      FALSE,
+      Timeout);
 }
