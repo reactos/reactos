@@ -167,7 +167,7 @@ MiniIndicateData(
    * subsequently re-acquire the lock.
    *
    * I don't see how this does any good, as it would seem he's just
-   * trying to protect the packet list.  If someobdy else dequeues
+   * trying to protect the packet list.  If somebody else dequeues
    * a packet, we are in fact in bad shape, but we don't want to
    * necessarily call the receive handler at elevated irql either.
    *
@@ -1901,7 +1901,7 @@ NdisMSynchronizeWithInterrupt(
     IN  PVOID                       SynchronizeFunction,
     IN  PVOID                       SynchronizeContext)
 {
-  return(KeSynchronizeExecution((PKINTERRUPT)Interrupt,
+  return(KeSynchronizeExecution(Interrupt->InterruptObject,
 				(PKSYNCHRONIZE_ROUTINE)SynchronizeFunction,
 				SynchronizeContext));
 }
