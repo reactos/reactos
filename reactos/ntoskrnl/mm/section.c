@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.65 2001/10/31 01:03:04 dwelch Exp $
+/* $Id: section.c,v 1.66 2001/11/13 22:46:49 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -786,8 +786,8 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	*/
        MmLockAddressSpace(AddressSpace);
        MmReleasePageOp(PageOp);
-       return(STATUS_MM_RESTART_OPERATION);       
-     }   
+       return(STATUS_MM_RESTART_OPERATION);
+     }
 
    /*
     * Release locks now we have the pageop
@@ -1744,7 +1744,7 @@ MmMapViewOfSegment(PEPROCESS Process,
    MArea->Data.SectionData.ViewOffset = ViewOffset;
 
    return(STATUS_SUCCESS);
-}		   
+}
 
 
 /**********************************************************************
@@ -1752,7 +1752,7 @@ MmMapViewOfSegment(PEPROCESS Process,
  *	NtMapViewOfSection
  *
  * DESCRIPTION
- * 	Maps a view of a section into the virtual address space of a 
+ *	Maps a view of a section into the virtual address space of a 
  *	process.
  *	
  * ARGUMENTS
@@ -1783,8 +1783,8 @@ MmMapViewOfSegment(PEPROCESS Process,
  *		
  *	InheritDisposition
  *		Specified how the view is to be shared with
- *              child processes.
- *              
+ *		child processes.
+ *		
  *	AllocateType
  *		Type of allocation for the pages.
  *		
@@ -1794,7 +1794,7 @@ MmMapViewOfSegment(PEPROCESS Process,
  * RETURN VALUE
  * 	Status.
  */
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 NtMapViewOfSection(HANDLE SectionHandle,
 		   HANDLE ProcessHandle,
 		   PVOID* BaseAddress,
@@ -1805,11 +1805,10 @@ NtMapViewOfSection(HANDLE SectionHandle,
 		   SECTION_INHERIT InheritDisposition,
 		   ULONG AllocationType,
 		   ULONG Protect)
- {
+{
    PSECTION_OBJECT Section;
    PEPROCESS Process;
    NTSTATUS Status;
-   ULONG ViewOffset;
    PMADDRESS_SPACE AddressSpace;
 
    Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -1837,97 +1836,22 @@ NtMapViewOfSection(HANDLE SectionHandle,
 	ObDereferenceObject(Process);
 	return(Status);
      }
-
-   MmLockAddressSpace(AddressSpace);   
-   MmLockSection(Section);
    
-   if (Section->Flags & MM_IMAGE_SECTION)
-     {
-       ULONG i;
-
-       for (i = 0; i < Section->NrSegments; i++)
-	 {
-	   PVOID SBaseAddress;
-
-	   if (!(Section->Segments[i].Characteristics & IMAGE_SECTION_NOLOAD))
-	     {
-	       SBaseAddress = (PVOID)
-		 ((ULONG)Section->ImageBase + 
-		  (ULONG)Section->Segments[i].VirtualAddress);
-
-	       MmLockSectionSegment(&Section->Segments[i]);
-	       Status = MmMapViewOfSegment(Process,
-					   &Process->AddressSpace,
-					   Section,
-					   &Section->Segments[i],
-					   &SBaseAddress,
-					   Section->Segments[i].Length,
-					   Section->Segments[i].Protection,
-					   Section->Segments[i].FileOffset);
-	       MmUnlockSectionSegment(&Section->Segments[i]);
-	       if (!NT_SUCCESS(Status))
-		 {
-		   MmUnlockSection(Section);
-		   MmUnlockAddressSpace(AddressSpace);	       
-		   ObDereferenceObject(Section);
-		   ObDereferenceObject(Process);
-		   return(Status);
-		 }
-	     }
-	 }
-       *BaseAddress = Section->ImageBase;
-     }
-   else
-     {
-       if (SectionOffset == NULL)
-	 {
-	   ViewOffset = 0;
-	 }
-       else
-	 {
-	   ViewOffset = SectionOffset->u.LowPart;
-	 }
-       
-       if ((ViewOffset % PAGESIZE) != 0)
-	 {
-	   MmUnlockSection(Section);
-	   MmUnlockAddressSpace(AddressSpace);	       
-	   ObDereferenceObject(Section);
-	   ObDereferenceObject(Process);
-	   return(STATUS_MAPPED_ALIGNMENT);
-	 }
-
-       if (((*ViewSize)+ViewOffset) > Section->MaximumSize.u.LowPart)
-	 {
-	   (*ViewSize) = Section->MaximumSize.u.LowPart - ViewOffset;
-	 }
-       
-       MmLockSectionSegment(Section->Segments);
-       Status = MmMapViewOfSegment(Process,
-				   &Process->AddressSpace,
-				   Section,
-				   Section->Segments,
-				   BaseAddress,
-				   *ViewSize,
-				   Protect,
-				   ViewOffset);
-       MmUnlockSectionSegment(Section->Segments);
-       if (!NT_SUCCESS(Status))
-	 {
-	   MmUnlockSection(Section);
-	   MmUnlockAddressSpace(AddressSpace);	       
-	   ObDereferenceObject(Section);
-	   ObDereferenceObject(Process);
-	   return(Status);
-	 }
-     }
-
-   MmUnlockSection(Section);
-   MmUnlockAddressSpace(AddressSpace);
+   Status = MmMapViewOfSection(Section,
+			       Process,
+			       BaseAddress,
+			       ZeroBits,
+			       CommitSize,
+			       SectionOffset,
+			       ViewSize,
+			       InheritDisposition,
+			       AllocationType,
+			       Protect);
+   
    ObDereferenceObject(Section);
-   ObDereferenceObject(Process); 
+   ObDereferenceObject(Process);
    
-   return(STATUS_SUCCESS);
+   return(Status);
 }
 
 VOID STATIC
@@ -2037,7 +1961,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
  * REVISIONS
  *
  */
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 NtUnmapViewOfSection (HANDLE	ProcessHandle,
 		      PVOID	BaseAddress)
 {
@@ -2068,7 +1992,7 @@ NtUnmapViewOfSection (HANDLE	ProcessHandle,
 }
 
 
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 NtQuerySection (IN	HANDLE	SectionHandle,
 		IN	CINT	SectionInformationClass,
 		OUT	PVOID	SectionInformation,
@@ -2235,32 +2159,159 @@ MmAllocateSection (IN ULONG Length)
 
 /**********************************************************************
  * NAME							EXPORTED
- *	MmMapViewOfSection@40
+ *	MmMapViewOfSection
  *
  * DESCRIPTION
+ *	Maps a view of a section into the virtual address space of a 
+ *	process.
  *	
  * ARGUMENTS
- * 	FIXME: stack space allocated is 40 bytes, but nothing
- * 	is known about what they are filled with.
+ *	Section
+ *		Pointer to the section object.
+ *		
+ *	ProcessHandle
+ *		Pointer to the process.
+ *		
+ *	BaseAddress
+ *		Desired base address (or NULL) on entry;
+ *		Actual base address of the view on exit.
+ *		
+ *	ZeroBits
+ *		Number of high order address bits that must be zero.
+ *		
+ *	CommitSize
+ *		Size in bytes of the initially committed section of 
+ *		the view.
+ *		
+ *	SectionOffset
+ *		Offset in bytes from the beginning of the section
+ *		to the beginning of the view.
+ *		
+ *	ViewSize
+ *		Desired length of map (or zero to map all) on entry
+ *		Actual length mapped on exit.
+ *		
+ *	InheritDisposition
+ *		Specified how the view is to be shared with
+ *		child processes.
+ *		
+ *	AllocationType
+ *		Type of allocation for the pages.
+ *		
+ *	Protect
+ *		Protection for the committed region of the view.
  *
  * RETURN VALUE
- * 	Status.
- *
+ *	Status.
  */
-PVOID STDCALL
-MmMapViewOfSection (DWORD	Unknown0,
-		    DWORD	Unknown1,
-		    DWORD	Unknown2,
-		    DWORD	Unknown3,
-		    DWORD	Unknown4,
-		    DWORD	Unknown5,
-		    DWORD	Unknown6,
-		    DWORD	Unknown7,
-		    DWORD	Unknown8,
-		    DWORD	Unknown9)
+NTSTATUS STDCALL
+MmMapViewOfSection(IN PVOID SectionObject,
+		   IN PEPROCESS Process,
+		   IN OUT PVOID *BaseAddress,
+		   IN ULONG ZeroBits,
+		   IN ULONG CommitSize,
+		   IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
+		   IN OUT PULONG ViewSize,
+		   IN SECTION_INHERIT InheritDisposition,
+		   IN ULONG AllocationType,
+		   IN ULONG Protect)
 {
-	UNIMPLEMENTED;
-	return (NULL);
+   PSECTION_OBJECT Section;
+   PMADDRESS_SPACE AddressSpace;
+   ULONG ViewOffset;
+   NTSTATUS Status;
+
+   Section = (PSECTION_OBJECT)SectionObject;
+   AddressSpace = &Process->AddressSpace;
+
+   MmLockAddressSpace(AddressSpace);
+   MmLockSection(SectionObject);
+   
+   if (Section->Flags & MM_IMAGE_SECTION)
+     {
+       ULONG i;
+
+       for (i = 0; i < Section->NrSegments; i++)
+	 {
+	   PVOID SBaseAddress;
+
+	   if (!(Section->Segments[i].Characteristics & IMAGE_SECTION_NOLOAD))
+	     {
+	       SBaseAddress = (PVOID)
+		 ((ULONG)Section->ImageBase + 
+		  (ULONG)Section->Segments[i].VirtualAddress);
+
+	       MmLockSectionSegment(&Section->Segments[i]);
+	       Status = MmMapViewOfSegment(Process,
+					   &Process->AddressSpace,
+					   Section,
+					   &Section->Segments[i],
+					   &SBaseAddress,
+					   Section->Segments[i].Length,
+					   Section->Segments[i].Protection,
+					   Section->Segments[i].FileOffset);
+	       MmUnlockSectionSegment(&Section->Segments[i]);
+	       if (!NT_SUCCESS(Status))
+		 {
+		   MmUnlockSection(Section);
+		   MmUnlockAddressSpace(AddressSpace);
+		   ObDereferenceObject(Section);
+		   ObDereferenceObject(Process);
+		   return(Status);
+		 }
+	     }
+	 }
+       *BaseAddress = Section->ImageBase;
+     }
+   else
+     {
+       if (SectionOffset == NULL)
+	 {
+	   ViewOffset = 0;
+	 }
+       else
+	 {
+	   ViewOffset = SectionOffset->u.LowPart;
+	 }
+       
+       if ((ViewOffset % PAGESIZE) != 0)
+	 {
+	   MmUnlockSection(Section);
+	   MmUnlockAddressSpace(AddressSpace);
+	   ObDereferenceObject(Section);
+	   ObDereferenceObject(Process);
+	   return(STATUS_MAPPED_ALIGNMENT);
+	 }
+
+       if (((*ViewSize)+ViewOffset) > Section->MaximumSize.u.LowPart)
+	 {
+	   (*ViewSize) = Section->MaximumSize.u.LowPart - ViewOffset;
+	 }
+       
+       MmLockSectionSegment(Section->Segments);
+       Status = MmMapViewOfSegment(Process,
+				   &Process->AddressSpace,
+				   Section,
+				   Section->Segments,
+				   BaseAddress,
+				   *ViewSize,
+				   Protect,
+				   ViewOffset);
+       MmUnlockSectionSegment(Section->Segments);
+       if (!NT_SUCCESS(Status))
+	 {
+	   MmUnlockSection(Section);
+	   MmUnlockAddressSpace(AddressSpace);
+	   ObDereferenceObject(Section);
+	   ObDereferenceObject(Process);
+	   return(Status);
+	 }
+     }
+
+   MmUnlockSection(Section);
+   MmUnlockAddressSpace(AddressSpace);
+
+   return(STATUS_SUCCESS);
 }
 
 

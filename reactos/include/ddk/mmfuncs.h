@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.10 2001/06/22 12:39:47 ekohl Exp $ */
+/* $Id: mmfuncs.h,v 1.11 2001/11/13 22:46:24 ekohl Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
 
@@ -366,19 +366,19 @@ MmMapViewInSystemSpace (
 	OUT	PVOID	* MappedBase,
 	IN	PULONG	ViewSize
 	);
-PVOID
+NTSTATUS
 STDCALL
 MmMapViewOfSection (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7,
-	DWORD	Unknown8,
-	DWORD	Unknown9
+	IN	PVOID		SectionObject,
+	IN	PEPROCESS	Process,
+	IN OUT	PVOID		* BaseAddress,
+	IN	ULONG		ZeroBits,
+	IN	ULONG		CommitSize,
+	IN OUT	PLARGE_INTEGER	SectionOffset OPTIONAL,
+	IN OUT	PULONG		ViewSize,
+	IN	SECTION_INHERIT	InheritDisposition,
+	IN	ULONG		AllocationType,
+	IN	ULONG		Protect
 	);
 
 /*
