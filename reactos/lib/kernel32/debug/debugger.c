@@ -1,4 +1,4 @@
-/* $Id: debugger.c,v 1.1 2003/03/31 22:28:59 hyperion Exp $
+/* $Id: debugger.c,v 1.2 2003/04/02 00:06:00 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -68,6 +68,8 @@ BOOL WINAPI IsDebuggerPresent(VOID)
 
 BOOL WINAPI WaitForDebugEvent(LPDEBUG_EVENT lpDebugEvent, DWORD dwMilliseconds)
 {
+ SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+ return FALSE;
 }
 
 /* EOF */

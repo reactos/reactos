@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.37 2003/03/31 22:30:48 hyperion Exp $
+/* $Id: rtl.h,v 1.38 2003/04/02 00:05:59 hyperion Exp $
  *
  */
 
@@ -577,6 +577,19 @@ RtlpNtSetValueKey (
 	IN	PVOID	Data,
 	IN	ULONG	DataLength
 	);
+
+
+VOID NTAPI RtlRunDecodeUnicodeString
+(
+ IN UCHAR hash,
+ IN OUT PUNICODE_STRING uString
+);
+
+VOID NTAPI RtlRunEncodeUnicodeString
+(
+ IN OUT PUCHAR hash,
+ IN OUT PUNICODE_STRING uString
+);
 
 #ifndef __NTDRIVER__
 

@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.84 2003/03/31 22:32:18 hyperion Exp $
+; $Id: ntdll.edf,v 1.85 2003/04/02 00:06:00 hyperion Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -526,8 +526,8 @@ RtlReleasePebLock=RtlReleasePebLock@0
 RtlReleaseResource=RtlReleaseResource@4
 ;RtlRemoteCall
 ;RtlResetRtlTranslations
-;RtlRunDecodeUnicodeString
-;RtlRunEncodeUnicodeString
+RtlRunDecodeUnicodeString=RtlRunDecodeUnicodeString@8
+RtlRunEncodeUnicodeString=RtlRunEncodeUnicodeString@8
 RtlSecondsSince1970ToTime=RtlSecondsSince1970ToTime@8
 RtlSecondsSince1980ToTime=RtlSecondsSince1980ToTime@8
 RtlSelfRelativeToAbsoluteSD=RtlSelfRelativeToAbsoluteSD@44
