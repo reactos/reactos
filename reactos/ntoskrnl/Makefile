@@ -185,9 +185,9 @@ OBJECTS_IO = \
 	io/parttab.o \
 	io/plugplay.o \
 	io/process.o \
-	io/pnpnotify.o \
 	io/pnpdma.o \
 	io/pnpmgr.o \
+	io/pnpnotify.o \
 	io/pnpreport.o \
 	io/pnproot.o \
 	io/queue.o \
@@ -516,6 +516,7 @@ TARGET_LIBS = \
 	$(SDK_PATH_LIB)/libstring.a \
 	$(SDK_PATH_LIB)/librosrtl.a \
 	$(SDK_PATH_LIB)/libpseh.a \
+	$(SDK_PATH_LIB)/libwdmguid.a \
 	$(PATH_TO_TOP)/drivers/lib/csq/csq.o
 
 TARGET_LFLAGS = \
@@ -542,7 +543,7 @@ $(PATH_TO_TOP)/include/reactos/bugcodes.h bugcodes.rc: ntoskrnl.mc
 
 TARGET_CLEAN = \
   $(PATH_TO_TOP)/include/reactos/bugcodes.h \
-  $(DEP_OBJECTS) $(DEP_FILES) MSG00409.bin bugcodes.rc 
+  $(DEP_OBJECTS) $(DEP_FILES) MSG00409.bin bugcodes.rc
 
 ex/napi.o: ex/zw.S $(PATH_TO_TOP)/include/ntdll/napi.h
 

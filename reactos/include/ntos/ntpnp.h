@@ -244,6 +244,8 @@ NtGetPlugPlayEvent(
  *    ...
  */
 
+#define PLUGPLAY_USER_RESPONSE 0x07
+
 NTSTATUS STDCALL
 NtPlugPlayControl(
    ULONG ControlCode,

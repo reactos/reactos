@@ -11,6 +11,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include <ddk/wdmguid.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -434,7 +435,7 @@ IoRequestDeviceEject(
 
 BOOLEAN
 IopCreateUnicodeString(
-  PUNICODE_STRING	Destination,
+  PUNICODE_STRING Destination,
   PWSTR Source,
   POOL_TYPE PoolType)
 {
@@ -1317,6 +1318,10 @@ IopActionInterrogateDeviceStack(
    NtClose(InstanceKey);
 
    DeviceNode->Flags |= DNF_PROCESSED;
+
+   /* Report the device to the user-mode pnp manager */
+   IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
+                             &DeviceNode->InstancePath);
 
    return STATUS_SUCCESS;
 }
