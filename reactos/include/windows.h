@@ -61,9 +61,9 @@
 #include <base.h>
 
 /* WIN32 messages */
-#ifndef WIN32_LEAN_AND_MEAN
-#include <messages.h>
-#endif
+//#ifndef WIN32_LEAN_AND_MEAN
+//#include <messages.h>
+//#endif
 
 /* WIN32 definitions */
 #include <defines.h>

@@ -1,7 +1,8 @@
 /* $Id$ */
 
 #include <defines.h>
-#include <messages.h>
+#include <winuser.h>
+
 #include <resource.h>
 
 #define REACTOS_VERSION_DLL
