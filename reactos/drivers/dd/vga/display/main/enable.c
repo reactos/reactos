@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.22 $
- * $Author: chorns $
- * $Date: 2002/09/08 10:22:07 $
+ * $Revision: 1.23 $
+ * $Author: dwelch $
+ * $Date: 2002/09/25 21:21:35 $
  *
  */
 
@@ -71,6 +71,8 @@ DrvEnableDriver(IN ULONG EngineVersion,
 
   // FIXME: Use Vidport to map the memory properly
   vidmem = (char *)(0xd0000000 + 0xa0000);
+
+  VGADDI_InitializeOffScreenMem((640 * 480) >> 3, 65536 - ((640 * 480) >> 3));
 
   DriveEnableData->pdrvfn = FuncList;
   DriveEnableData->c = sizeof(FuncList) / sizeof(DRVFN);
@@ -257,6 +259,7 @@ DrvDisableSurface(IN DHPDEV PDev)
   }
   CHECKPOINT;
   // free any pending saved screen bit blocks
+#if 0
   pSSB = pdsurf->ssbList;
   while (pSSB != (PSAVED_SCREEN_BITS) NULL) {
 
@@ -267,6 +270,7 @@ DrvDisableSurface(IN DHPDEV PDev)
     EngFreeMem(pSSB);
     pSSB = pSSBNext;
     }
+#endif
   EngDeleteSurface((HSURF) ppdev->SurfHandle);
   //  EngFreeMem(pdsurf); // free the surface
 }

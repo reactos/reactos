@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.18 2001/08/21 20:13:12 chorns Exp $
+# $Id: makefile,v 1.19 2002/09/25 21:21:35 dwelch Exp $
 
 PATH_TO_TOP = ../../../..
 
@@ -17,7 +17,8 @@ OTHER_OBJECTS = \
   objects/lineto.o \
   objects/paint.o \
   objects/bitblt.o \
-  objects/transblt.o
+  objects/transblt.o \
+  objects/offscreen.o
 
 VGAVIDEO_OBJECTS = \
   vgavideo/vgavideo.o  

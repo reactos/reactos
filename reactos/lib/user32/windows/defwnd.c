@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.11 2002/09/20 21:55:15 jfilby Exp $
+/* $Id: defwnd.c,v 1.12 2002/09/25 21:21:36 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -204,7 +204,8 @@ static void UserGetInsideRectNC( HWND hwnd, RECT *rect )
 	  {
 	    if (UserHasThinFrameStyle(Style, ExStyle))
 	      {
-		InflateRect( rect, -GetSystemMetrics(SM_CXBORDER), -GetSystemMetrics(SM_CYBORDER) );
+		InflateRect(rect, -GetSystemMetrics(SM_CXBORDER), 
+			    -GetSystemMetrics(SM_CYBORDER));
 	      }
 	  }
       }
@@ -221,8 +222,9 @@ void UserDrawSysButton( HWND hwnd, HDC hdc, BOOL down )
     UserGetInsideRectNC( hwnd, &rect );
     hdcMem = CreateCompatibleDC( hdc );
     hbitmap = SelectObject( hdcMem, hbitmapClose );
-    BitBlt(hdc, rect.left, rect.top, GetSystemMetrics(SM_CXSIZE), GetSystemMetrics(SM_CYSIZE),
-	   hdcMem, (Style & WS_CHILD) ? GetSystemMetrics(SM_CXSIZE) : 0, 0,
+    BitBlt(hdc, rect.left, rect.top, GetSystemMetrics(SM_CXSIZE), 
+	   GetSystemMetrics(SM_CYSIZE), hdcMem, 
+	   (Style & WS_CHILD) ? GetSystemMetrics(SM_CXSIZE) : 0, 0,
 	   down ? NOTSRCCOPY : SRCCOPY );
     SelectObject( hdcMem, hbitmap );
     DeleteDC( hdcMem );

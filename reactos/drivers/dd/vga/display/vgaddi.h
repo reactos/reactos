@@ -2,8 +2,6 @@
 #include <ddk/winddi.h>
 #include <ddk/ntddvid.h>
 
-HANDLE GdiHeap;
-
 #define DS_SOLIDBRUSH  0x00000001
 #define DS_GREYBRUSH   0x00000002
 #define DS_BRUSH       0x00000004
@@ -94,6 +92,7 @@ typedef enum {
 //typedef VOID (*PFN_BankControl)(PDEVSURF, ULONG, BANK_JUST);
 typedef VOID (*PFN_BankControl)(PVOID, ULONG, BANK_JUST);
 
+#if 0
 // descriptor for a saved screen bits block
 
 typedef struct  _SAVED_SCREEN_BITS
@@ -109,6 +108,15 @@ typedef struct  _SAVED_SCREEN_BITS
                    // for system memory blocks, saved bits start immediately
                    //  after this structure
 } SAVED_SCREEN_BITS, *PSAVED_SCREEN_BITS;
+#else
+typedef struct _SAVED_SCREEN_BITS
+{
+  BOOL Free;
+  DWORD Offset;
+  ULONG Size;
+  LIST_ENTRY ListEntry;
+} SAVED_SCREEN_BITS, *PSAVED_SCREEN_BITS;
+#endif
 
 // DEVSURF -- definition of a surface as seen and used by the various VGA
 // drivers
@@ -206,3 +214,22 @@ BOOL InitVGA(PPDEV ppdev, BOOL bFirst); // screen.c: initialize VGA mode
 BOOL VGAtoGDI(
   SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask, XLATEOBJ *ColorTranslation,
   RECTL   *DestRect, POINTL *SourcePoint);
+
+VOID
+VGADDI_BltFromSavedScreenBits(ULONG DestX,
+			      ULONG DestY,
+			      PSAVED_SCREEN_BITS Src,
+			      ULONG SizeX,
+			      ULONG SizeY);
+VOID
+VGADDI_BltToSavedScreenBits(PSAVED_SCREEN_BITS Dest,
+			    ULONG SourceX,
+			    ULONG SourceY,
+			    ULONG SizeX,
+			    ULONG SizeY);
+VOID
+VGADDI_FreeSavedScreenBits(PSAVED_SCREEN_BITS SavedBits);
+PSAVED_SCREEN_BITS
+VGADDI_AllocSavedScreenBits(ULONG Size);
+VOID
+VGADDI_InitializeOffScreenMem(ULONG Start, ULONG Length);

@@ -4,6 +4,24 @@
 #include <ntos/minmax.h>
 #include "vgavideo.h"
 
+UCHAR PreCalcReverseByte[256];
+int maskbit[640];
+int y80[480];
+int xconv[640];
+int bit8[640];
+int startmasks[8];
+int endmasks[8];
+char* vidmem;
+
+static unsigned char saved_SEQ_mask;	/* 0x02 */
+static unsigned char saved_GC_eSR;	/* 0x01 */
+static unsigned char saved_GC_fun;	/* 0x03 */
+static unsigned char saved_GC_rmap;	/* 0x04 */
+static unsigned char saved_GC_mode;	/* 0x05 */
+static unsigned char saved_GC_mask;	/* 0x08 */
+static unsigned char leftMask;
+static int byteCounter;
+static unsigned char rightMask;
 
 INT abs(INT nm)
 {
@@ -128,6 +146,19 @@ VOID vgaPreCalc()
   {
     xconv[j] = j >> 3;
   }
+
+  for (j = 0; j < 256; j++)
+    {
+      PreCalcReverseByte[j] = 
+	(((j >> 0) & 0x1) << 7) |
+	(((j >> 1) & 0x1) << 6) |
+	(((j >> 2) & 0x1) << 5) |
+	(((j >> 3) & 0x1) << 4) |
+	(((j >> 4) & 0x1) << 3) |
+	(((j >> 5) & 0x1) << 2) |
+	(((j >> 6) & 0x1) << 1) |
+	(((j >> 7) & 0x1) << 0);
+    }
 }
 
 void

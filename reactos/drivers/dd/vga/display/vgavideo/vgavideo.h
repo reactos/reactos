@@ -10,9 +10,16 @@
 //This is in mingw standard headers
 //typedef struct { int quot, rem; } div_t;
 
-int maskbit[640], y80[480], xconv[640], bit8[640], startmasks[8], endmasks[8];
+extern int maskbit[640];
+extern int y80[480];
+extern int xconv[640];
+extern int bit8[640];
+extern int startmasks[8];
+extern int endmasks[8];
 
-char* vidmem;
+extern UCHAR PreCalcReverseByte[256];
+
+extern char* vidmem;
 
 #define MISC     0x3c2
 #define SEQ      0x3c4
@@ -55,15 +62,5 @@ BOOL VGADDIIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2);
 
 #define ASSIGNVP4(x, y, vp) vp = vidmem /* VBUF */ + (((x) + (y)*SCREEN_X) >> 3);
 #define ASSIGNMK4(x, y, mask) mask = 0x80 >> ((x) & 7);
-
-static unsigned char saved_SEQ_mask;	/* 0x02 */
-static unsigned char saved_GC_eSR;	/* 0x01 */
-static unsigned char saved_GC_fun;	/* 0x03 */
-static unsigned char saved_GC_rmap;	/* 0x04 */
-static unsigned char saved_GC_mode;	/* 0x05 */
-static unsigned char saved_GC_mask;	/* 0x08 */
-static unsigned char leftMask;
-static int byteCounter;
-static unsigned char rightMask;
 
 void get_masks(int x, int w);
