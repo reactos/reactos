@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.6 2000/03/26 19:38:26 ea Exp $
+/* $Id: page.c,v 1.7 2000/03/29 13:11:53 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,15 +19,10 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-STDCALL
-IoPageRead (
-	PFILE_OBJECT		FileObject,
-	PMDL			Mdl,
-	PLARGE_INTEGER		Offset,
-	PIO_STATUS_BLOCK	StatusBlock,
-	DWORD			Unknown4
-	)
+NTSTATUS STDCALL IoPageRead(PFILE_OBJECT FileObject,
+			    PMDL Mdl,
+			    PLARGE_INTEGER Offset,
+			    PIO_STATUS_BLOCK StatusBlock)
 {
    PIRP Irp;
    KEVENT Event;
@@ -72,18 +67,14 @@ IoPageRead (
 }
 
 
-NTSTATUS
-STDCALL
-IoSynchronousPageWrite (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	)
+NTSTATUS STDCALL IoSynchronousPageWrite (DWORD	Unknown0,
+					 DWORD	Unknown1,
+					 DWORD	Unknown2,
+					 DWORD	Unknown3,
+					 DWORD	Unknown4)
 {
-	UNIMPLEMENTED;
-	return (STATUS_NOT_IMPLEMENTED);
+   UNIMPLEMENTED;
+   return (STATUS_NOT_IMPLEMENTED);
 }
 
 

@@ -61,22 +61,26 @@ typedef struct
 
 /* FUNCTIONS */
 
-PVOID
-STDCALL
-MmAllocateSection (
-	IN	ULONG	Length
-	);
-NTSTATUS MmCreateMemoryArea(KPROCESSOR_MODE Mode,
-			    PEPROCESS Process,
+VOID MmLockAddressSpace(PMADDRESS_SPACE AddressSpace);
+VOID MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace);
+VOID MmInitializeKernelAddressSpace(VOID);
+PMADDRESS_SPACE MmGetCurrentAddressSpace(VOID);
+PMADDRESS_SPACE MmGetKernelAddressSpace(VOID);
+NTSTATUS MmInitializeAddressSpace(PMADDRESS_SPACE AddressSpace);
+NTSTATUS MmDestroyAddressSpace(PMADDRESS_SPACE AddressSpace);
+PVOID STDCALL MmAllocateSection (IN ULONG Length);
+NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
+			    PMADDRESS_SPACE AddressSpace,
 			    ULONG Type,
 			    PVOID* BaseAddress,
 			    ULONG Length,
 			    ULONG Attributes,
 			    MEMORY_AREA** Result);
-MEMORY_AREA* MmOpenMemoryAreaByAddress(PEPROCESS Process, PVOID Address);
+MEMORY_AREA* MmOpenMemoryAreaByAddress(PMADDRESS_SPACE AddressSpace, 
+				       PVOID Address);
 NTSTATUS MmInitMemoryAreas(VOID);
 VOID ExInitNonPagedPool(ULONG BaseAddress);
-NTSTATUS MmFreeMemoryArea(PEPROCESS Process,
+NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 			  PVOID BaseAddress,
 			  ULONG Length,
 			  BOOLEAN FreePages);
@@ -90,6 +94,7 @@ NTSTATUS MmInitSectionImplementation(VOID);
 #define MM_LOWEST_USER_ADDRESS (4096)
 
 PMEMORY_AREA MmSplitMemoryArea(PEPROCESS Process,
+			       PMADDRESS_SPACE AddressSpace,
 			       PMEMORY_AREA OriginalMemoryArea,
 			       PVOID BaseAddress,
 			       ULONG Length,

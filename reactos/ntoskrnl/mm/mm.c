@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.25 2000/03/26 19:38:30 ea Exp $
+/* $Id: mm.c,v 1.26 2000/03/29 13:11:54 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -53,11 +53,6 @@ static MEMORY_AREA* kernel_data_desc = NULL;
 static MEMORY_AREA* kernel_param_desc = NULL;
 static MEMORY_AREA* kernel_pool_desc = NULL;
 
-/*
- * All pagefaults are synchronized on this 
- */
-static KSPIN_LOCK MiPageFaultLock;
-
 /* FUNCTIONS ****************************************************************/
 
 VOID MiShutdownMemoryManager(VOID)
@@ -80,7 +75,7 @@ VOID MmInitVirtualMemory(boot_param* bp)
    DPRINT("MmInitVirtualMemory(%x)\n",bp);
    
    MmInitMemoryAreas();
-   ExInitNonPagedPool(KERNEL_BASE+ PAGE_ROUND_UP(kernel_len) + PAGESIZE);
+   ExInitNonPagedPool(KERNEL_BASE + PAGE_ROUND_UP(kernel_len) + PAGESIZE);
    
    
    /*
@@ -89,8 +84,13 @@ VOID MmInitVirtualMemory(boot_param* bp)
    BaseAddress = (PVOID)KERNEL_BASE;
    Length = PAGE_ROUND_UP(((ULONG)&etext)) - KERNEL_BASE;
    ParamLength = ParamLength - Length;
-   MmCreateMemoryArea(KernelMode,NULL,MEMORY_AREA_SYSTEM,&BaseAddress,
-		      Length,0,&kernel_text_desc);
+   MmCreateMemoryArea(NULL,
+		      MmGetKernelAddressSpace(),
+		      MEMORY_AREA_SYSTEM,
+		      &BaseAddress,
+		      Length,
+		      0,
+		      &kernel_text_desc);
    
    Length = PAGE_ROUND_UP(((ULONG)&_bss_end__)) - 
             PAGE_ROUND_UP(((ULONG)&etext));
@@ -98,8 +98,8 @@ VOID MmInitVirtualMemory(boot_param* bp)
    DPRINT("Length %x\n",Length);
    BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&etext));
    DPRINT("BaseAddress %x\n",BaseAddress);
-   MmCreateMemoryArea(KernelMode,
-		      NULL,
+   MmCreateMemoryArea(NULL,
+		      MmGetKernelAddressSpace(),		      
 		      MEMORY_AREA_SYSTEM,
 		      &BaseAddress,
 		      Length,
@@ -108,27 +108,34 @@ VOID MmInitVirtualMemory(boot_param* bp)
    
    BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&end));
    Length = ParamLength;
-   MmCreateMemoryArea(KernelMode,NULL,MEMORY_AREA_SYSTEM,&BaseAddress,
-		      Length,0,&kernel_param_desc);
+   MmCreateMemoryArea(NULL,
+		      MmGetKernelAddressSpace(),		      
+		      MEMORY_AREA_SYSTEM,
+		      &BaseAddress,
+		      Length,
+		      0,
+		      &kernel_param_desc);
 
    BaseAddress = (PVOID)(KERNEL_BASE + PAGE_ROUND_UP(kernel_len) + PAGESIZE);
    Length = NONPAGED_POOL_SIZE;
-   MmCreateMemoryArea(KernelMode,NULL,MEMORY_AREA_SYSTEM,&BaseAddress,
-		      Length,0,&kernel_pool_desc);
+   MmCreateMemoryArea(NULL,
+		      MmGetKernelAddressSpace(),
+		      MEMORY_AREA_SYSTEM,
+		      &BaseAddress,
+		      Length,
+		      0,
+		      &kernel_pool_desc);
 
 //   MmDumpMemoryAreas();
    DPRINT("MmInitVirtualMemory() done\n");
 }
 
-NTSTATUS MmCommitedSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
+NTSTATUS MmCommitedSectionHandleFault(PMADDRESS_SPACE AddressSpace,
+				      MEMORY_AREA* MemoryArea, 
+				      PVOID Address)
 {
-   KIRQL oldIrql;
-   
-   KeAcquireSpinLock(&MiPageFaultLock, &oldIrql);
-   
    if (MmIsPagePresent(NULL, Address))
      {
-	KeReleaseSpinLock(&MiPageFaultLock, oldIrql);
 	return(STATUS_SUCCESS);
      }
    
@@ -137,12 +144,11 @@ NTSTATUS MmCommitedSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
 	     MemoryArea->Attributes,
 	     (ULONG)MmAllocPage());
    
-   KeReleaseSpinLock(&MiPageFaultLock, oldIrql);
-   
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea, 
+NTSTATUS MmSectionHandleFault(PMADDRESS_SPACE AddressSpace,
+			      MEMORY_AREA* MemoryArea, 
 			      PVOID Address)
 {
    LARGE_INTEGER Offset;
@@ -150,16 +156,12 @@ NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea,
    PMDL Mdl;
    PVOID Page;
    NTSTATUS Status;
-   KIRQL oldIrql;
    
    DPRINT("MmSectionHandleFault(MemoryArea %x, Address %x)\n",
 	  MemoryArea,Address);
    
-   KeAcquireSpinLock(&MiPageFaultLock, &oldIrql);
-   
    if (MmIsPagePresent(NULL, Address))
      {
-	KeReleaseSpinLock(&MiPageFaultLock, oldIrql);
 	return(STATUS_SUCCESS);
      }
    
@@ -198,25 +200,22 @@ NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea,
      
    Page = MmGetMdlPageAddress(Mdl, 0);
    
-   KeReleaseSpinLock(&MiPageFaultLock, oldIrql);
+   MmUnlockAddressSpace(AddressSpace);
    
    Status = IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
 		       Mdl,
 		       &Offset,
-		       &IoStatus,
-		       0 /* FIXME: UNKNOWN ARG */
-		       );
+		       &IoStatus);
    
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
       
-   KeAcquireSpinLock(&MiPageFaultLock, &oldIrql);
+   MmLockAddressSpace(AddressSpace);
    
    if (MmIsPagePresent(NULL, Address))
      {
-	KeReleaseSpinLock(&MiPageFaultLock, oldIrql);
 	return(STATUS_SUCCESS);
      }
    
@@ -224,8 +223,6 @@ NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea,
 	     Address,
 	     MemoryArea->Attributes,
 	     (ULONG)Page);
-   
-   KeReleaseSpinLock(&MiPageFaultLock, oldIrql);
    
    DPRINT("Returning from MmSectionHandleFault()\n");
    
@@ -237,7 +234,7 @@ ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code)
  * FUNCTION: Handle a page fault
  */
 {
-   KPROCESSOR_MODE FaultMode;
+   PMADDRESS_SPACE AddressSpace;
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
    unsigned int cr2;
@@ -251,9 +248,9 @@ ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code)
 //   DPRINT1("Page fault address %x eip %x process %x code %x cr3 %x\n",cr2,eip,
 //	  PsGetCurrentProcess(), error_code, cr3);
 
-   MmSetPageProtect(PsGetCurrentProcess(),
-		    (PVOID)PAGE_ROUND_DOWN(PsGetCurrentProcess()),
-		    0x7);
+//   MmSetPageProtect(PsGetCurrentProcess(),
+//		    (PVOID)PAGE_ROUND_DOWN(PsGetCurrentProcess()),
+//		    0x7);
    
    cr2 = PAGE_ROUND_DOWN(cr2);
    
@@ -290,17 +287,20 @@ ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code)
 	     DbgPrint("%s:%d\n",__FILE__,__LINE__);
 	     return(0);
 	  }
-	FaultMode = UserMode;
+	AddressSpace = &PsGetCurrentProcess()->Pcb.AddressSpace;
+	AddressSpace = MmGetKernelAddressSpace();
      }
    else
      {
-	FaultMode = KernelMode;
+	AddressSpace = &PsGetCurrentProcess()->Pcb.AddressSpace;
      }
    
-   MemoryArea = MmOpenMemoryAreaByAddress(PsGetCurrentProcess(),(PVOID)cr2);
+   MmLockAddressSpace(AddressSpace);
+   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, (PVOID)cr2);
    if (MemoryArea == NULL)
      {
 	DbgPrint("%s:%d\n",__FILE__,__LINE__);
+	MmUnlockAddressSpace(AddressSpace);
 	return(0);
      }
    
@@ -311,11 +311,15 @@ ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code)
 	break;
 	
       case MEMORY_AREA_SECTION_VIEW_COMMIT:
-	Status = MmSectionHandleFault(MemoryArea, (PVOID)cr2);
+	Status = MmSectionHandleFault(AddressSpace,
+				      MemoryArea, 
+				      (PVOID)cr2);
 	break;
 	
       case MEMORY_AREA_COMMIT:
-	Status = MmCommitedSectionHandleFault(MemoryArea,(PVOID)cr2);
+	Status = MmCommitedSectionHandleFault(AddressSpace,
+					      MemoryArea,
+					      (PVOID)cr2);
 	break;
 	
       default:
@@ -323,6 +327,7 @@ ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code)
 	break;
      }
    DPRINT("Completed page fault handling\n");
+   MmUnlockAddressSpace(AddressSpace);
    return(NT_SUCCESS(Status));
 }
 
@@ -368,10 +373,10 @@ void MmInitialize(boot_param* bp, ULONG LastKernelAddress)
     * Free physical memory not used by the kernel
     */
    LastKernelAddress = (ULONG)MmInitializePageList(
-						   (PVOID)first_krnl_phys_addr,
-						   (PVOID)last_krnl_phys_addr,
-						   1024,
-					      PAGE_ROUND_UP(LastKernelAddress));
+					   (PVOID)first_krnl_phys_addr,
+					   (PVOID)last_krnl_phys_addr,
+					   1024,
+					   PAGE_ROUND_UP(LastKernelAddress));
    kernel_len = last_krnl_phys_addr - first_krnl_phys_addr;
    
    /*
@@ -405,20 +410,20 @@ void MmInitialize(boot_param* bp, ULONG LastKernelAddress)
    MmInitVirtualMemory(bp);
 }
 
-VOID
-MmInitSystem (ULONG Phase, boot_param* bp, ULONG LastKernelAddress)
+VOID MmInitSystem (ULONG Phase, boot_param* bp, ULONG LastKernelAddress)
 {
-	if (Phase == 0)
-	{
-		/* Phase 0 Initialization */
-		MmInitialize (bp, LastKernelAddress);
-	}
-	else
-	{
-		/* Phase 1 Initialization */
-		MmInitSectionImplementation();
-		MmInitPagingFile();
-	}
+   if (Phase == 0)
+     {
+	/* Phase 0 Initialization */
+	MmInitializeKernelAddressSpace();
+	MmInitialize (bp, LastKernelAddress);
+     }
+   else
+     {
+	/* Phase 1 Initialization */
+	MmInitSectionImplementation();
+	MmInitPagingFile();
+     }
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.3 2000/03/19 09:14:51 ea Exp $
+/* $Id: cont.c,v 1.4 2000/03/29 13:11:54 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,14 +44,11 @@
  * REVISIONS
  *
  */
-PVOID
-STDCALL
-MmAllocateContiguousMemory (
-	IN	ULONG			NumberOfBytes,
-	IN	PHYSICAL_ADDRESS	HighestAcceptableAddress
-	)
+PVOID STDCALL MmAllocateContiguousMemory (
+	IN ULONG NumberOfBytes,
+	IN PHYSICAL_ADDRESS HighestAcceptableAddress)
 {
-	UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }
 
 
@@ -77,13 +74,9 @@ MmAllocateContiguousMemory (
  * REVISIONS
  *
  */
-VOID
-STDCALL
-MmFreeContiguousMemory (
-	IN OUT	PVOID	BaseAddress
-	)
+VOID STDCALL MmFreeContiguousMemory(IN PVOID BaseAddress)
 {
-	UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }
 
 

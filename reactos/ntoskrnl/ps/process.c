@@ -162,7 +162,7 @@ VOID PsInitProcessManagment(VOID)
 				FALSE);
    KProcess = &SystemProcess->Pcb;  
    
-   InitializeListHead(&(KProcess->MemoryAreaList));
+   MmInitializeAddressSpace(&SystemProcess->Pcb.AddressSpace);
    ObCreateHandleTable(NULL,FALSE,SystemProcess);
    KProcess->PageTableDirectory = get_page_directory();
    SystemProcess->UniqueProcessId = 
@@ -330,7 +330,7 @@ NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
    KProcess = &Process->Pcb;
    
    KProcess->BasePriority = PROCESS_PRIO_NORMAL;
-   InitializeListHead(&(KProcess->MemoryAreaList));
+   MmInitializeAddressSpace(&KProcess->AddressSpace);
    Process->UniqueProcessId = InterlockedIncrement(&PiNextProcessUniqueId);
    Process->InheritedFromUniqueProcessId = ParentProcess->UniqueProcessId;
    ObCreateHandleTable(ParentProcess,

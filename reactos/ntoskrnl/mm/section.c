@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.25 2000/03/26 19:38:32 ea Exp $
+/* $Id: section.c,v 1.26 2000/03/29 13:11:54 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -342,6 +342,7 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
    NTSTATUS	Status;
    KIRQL oldIrql;
    ULONG ViewOffset;
+   PMADDRESS_SPACE AddressSpace;
    
    DPRINT("NtMapViewOfSection(Section:%08lx, Process:%08lx,\n"
 	  "  Base:%08lx, ZeroBits:%08lx, CommitSize:%08lx,\n"
@@ -381,6 +382,8 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
 	return Status;
      }
    
+   AddressSpace = &Process->Pcb.AddressSpace;
+   
    DPRINT("Process %x\n", Process);
    DPRINT("ViewSize %x\n",ViewSize);
    
@@ -399,8 +402,9 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
 	}
    
    DPRINT("Creating memory area\n");
-   Status = MmCreateMemoryArea(UserMode,
-			       Process,
+   MmLockAddressSpace(AddressSpace);
+   Status = MmCreateMemoryArea(Process,
+			       &Process->Pcb.AddressSpace,
 			       MEMORY_AREA_SECTION_VIEW_COMMIT,
 			       BaseAddress,
 			       *ViewSize,
@@ -410,6 +414,7 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
      {
 	DPRINT("NtMapViewOfSection() = %x\n",Status);
 	
+	MmUnlockAddressSpace(AddressSpace);
 	ObDereferenceObject(Process);
 	ObDereferenceObject(Section);
 	
@@ -428,6 +433,7 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
    
    
    DPRINT("*BaseAddress %x\n",*BaseAddress);
+   MmUnlockAddressSpace(AddressSpace);
    ObDereferenceObject(Process);   
    
    DPRINT("NtMapViewOfSection() returning (Status %x)\n", STATUS_SUCCESS);
@@ -472,6 +478,7 @@ NTSTATUS STDCALL NtUnmapViewOfSection (HANDLE	ProcessHandle,
    PEPROCESS	Process;
    NTSTATUS	Status;
    PMEMORY_AREA MemoryArea;
+   PMADDRESS_SPACE AddressSpace;
    
    DPRINT("NtUnmapViewOfSection(ProcessHandle %x, BaseAddress %x)\n",
 	  ProcessHandle, BaseAddress);
@@ -489,22 +496,28 @@ NTSTATUS STDCALL NtUnmapViewOfSection (HANDLE	ProcessHandle,
 	return(Status);
      }
    
+   AddressSpace = &Process->Pcb.AddressSpace;
+   
    DPRINT("Opening memory area Process %x BaseAddress %x\n",
 	  Process, BaseAddress);
-   MemoryArea = MmOpenMemoryAreaByAddress(Process, BaseAddress);
+   MmLockAddressSpace(AddressSpace);
+   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
+					  BaseAddress);
    if (MemoryArea == NULL)
      {
+	MmUnlockAddressSpace(AddressSpace);
 	ObDereferenceObject(Process);
 	return(STATUS_UNSUCCESSFUL);
      }
    
-   Status = MmUnmapViewOfSection(Process, MemoryArea);
+   Status = MmUnmapViewOfSection(Process,
+				 MemoryArea);
    
-   Status = MmFreeMemoryArea(Process,
+   Status = MmFreeMemoryArea(&Process->Pcb.AddressSpace,
 			     BaseAddress,
 			     0,
 			     TRUE);
-   
+   MmUnlockAddressSpace(AddressSpace);
    ObDereferenceObject(Process);
 
    return Status;
@@ -557,47 +570,40 @@ NTSTATUS STDCALL NtExtendSection(IN	HANDLE	SectionHandle,
  * REVISIONS
  *
  */
-PVOID
-STDCALL
-MmAllocateSection (
-	IN	ULONG	Length
-	)
+PVOID STDCALL MmAllocateSection (IN ULONG Length)
 {
-	PVOID		Result;
-	MEMORY_AREA	* marea;
-	NTSTATUS	Status;
-	ULONG		i;
+   PVOID Result;
+   MEMORY_AREA* marea;
+   NTSTATUS Status;
+   ULONG i;
+   PMADDRESS_SPACE AddressSpace;
    
-	DPRINT("MmAllocateSection(Length %x)\n",Length);
+   DPRINT("MmAllocateSection(Length %x)\n",Length);
    
-	Result = NULL;
-	Status = MmCreateMemoryArea (
-			KernelMode,
-			PsGetCurrentProcess (),
-			MEMORY_AREA_SYSTEM,
-			& Result,
-			Length,
-			0,
-			& marea
-			);
-	if (STATUS_SUCCESS != Status)
-	{
-		return (NULL);
+   AddressSpace = MmGetKernelAddressSpace();
+   Result = NULL;
+   MmLockAddressSpace(AddressSpace);
+   Status = MmCreateMemoryArea (NULL,
+				AddressSpace,
+				MEMORY_AREA_SYSTEM,
+				&Result,
+				Length,
+				0,
+				&marea);
+   if (STATUS_SUCCESS != Status)
+     {
+	return (NULL);
 	}
-	DPRINT("Result %p\n",Result);
-	for (	i = 0;
-		(i <= (Length / PAGESIZE));
-		i ++
-		)
-	{
-		MmSetPage (
-			NULL,
-			(Result + (i * PAGESIZE)),
-			PAGE_READWRITE,
-			(ULONG) MmAllocPage ()
-			);
-	}
-	return ((PVOID) Result);
+   DPRINT("Result %p\n",Result);
+   for (i = 0; (i <= (Length / PAGESIZE)); i++)
+     {
+	MmSetPage (NULL,
+		   (Result + (i * PAGESIZE)),
+		   PAGE_READWRITE,
+		   (ULONG) MmAllocPage ());
+     }
+   MmUnlockAddressSpace(AddressSpace);
+   return ((PVOID)Result);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: ncache.c,v 1.3 2000/03/19 09:14:51 ea Exp $
+/* $Id: ncache.c,v 1.4 2000/03/29 13:11:54 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,44 +43,33 @@
  * REVISIONS
  *
  */
-PVOID
-STDCALL
-MmAllocateNonCachedMemory (
-	IN	ULONG	NumberOfBytes
-	)
+PVOID STDCALL MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
 {
-	PVOID		Result;
-	MEMORY_AREA	* marea;
-	NTSTATUS	Status;
-	ULONG		i;
+   PVOID Result;
+   MEMORY_AREA* marea;
+   NTSTATUS Status;
+   ULONG i;
    
-	Result = NULL;
-	Status = MmCreateMemoryArea (
-			KernelMode,
-			PsGetCurrentProcess (),
-			MEMORY_AREA_NO_CACHE,
-			& Result,
-			NumberOfBytes,
-			0,
-			& marea
-			);
-	if (STATUS_SUCCESS != Status)
-	{
-		return (NULL);
+   Result = NULL;
+   Status = MmCreateMemoryArea (NULL,
+				MmGetKernelAddressSpace(),
+				MEMORY_AREA_NO_CACHE,
+				&Result,
+				NumberOfBytes,
+				0,
+				&marea);
+   if (!NT_SUCCESS(Status))
+     {
+	return (NULL);
+     }
+   for (i = 0; (i <= (NumberOfBytes / PAGESIZE)); i++)
+     {
+	MmSetPage (NULL,
+		   (Result + (i * PAGESIZE)),
+		   PAGE_READWRITE,
+		   (ULONG)MmAllocPage());
 	}
-	for (	i = 0;
-		(i <= (NumberOfBytes / PAGESIZE));
-		i ++
-		)
-	{
-		MmSetPage (
-			NULL,
-			(Result + (i * PAGESIZE)),
-			PAGE_READWRITE,
-			(ULONG) MmAllocPage ()
-			);
-	}
-	return ((PVOID) Result);
+   return ((PVOID)Result);
 }
 
 
@@ -110,19 +99,13 @@ MmAllocateNonCachedMemory (
  * REVISIONS
  *
  */
-VOID
-STDCALL
-MmFreeNonCachedMemory (
-	IN	PVOID	BaseAddress,
-	IN	ULONG	NumberOfBytes
-	)
+VOID STDCALL MmFreeNonCachedMemory (IN PVOID BaseAddress,
+				    IN ULONG NumberOfBytes)
 {
-	MmFreeMemoryArea (
-		PsGetCurrentProcess (),
-		BaseAddress,
-		NumberOfBytes,
-		TRUE
-		);
+   MmFreeMemoryArea (&PsGetCurrentProcess()->Pcb.AddressSpace,
+		     BaseAddress,
+		     NumberOfBytes,
+		     TRUE);
 }
 
 

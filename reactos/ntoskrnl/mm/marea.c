@@ -17,11 +17,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS *******************************************************************/
-
-static LIST_ENTRY SystemAreaList;
-static KSPIN_LOCK SystemAreaListLock;
-
 /* FUNCTIONS *****************************************************************/
 
 VOID MmDumpMemoryAreas(PLIST_ENTRY ListHead)
@@ -44,97 +39,23 @@ VOID MmDumpMemoryAreas(PLIST_ENTRY ListHead)
    DbgPrint("Finished MmDumpMemoryAreas()\n");
 }
 
-VOID MmLockMemoryAreaList(PVOID Address, PKIRQL oldlvl)
-{
-   if (Address >= (PVOID)KERNEL_BASE)     
-     {
-	KeAcquireSpinLock(&SystemAreaListLock,oldlvl);
-     }
-   else
-     {
-	PKPROCESS CurrentProcess = KeGetCurrentProcess();
-	
-	KeAcquireSpinLock(&(CurrentProcess->SpinLock),oldlvl);
-     }
-}
-
-VOID MmUnlockMemoryAreaList(PVOID Address, PKIRQL oldlvl)
-{
-   if (Address >= (PVOID)KERNEL_BASE)     
-     {
-	KeReleaseSpinLock(&SystemAreaListLock,*oldlvl);
-     }
-   else
-     {
-	PKPROCESS CurrentProcess = KeGetCurrentProcess();
-	KeReleaseSpinLock(&(CurrentProcess->SpinLock),*oldlvl);
-     }
-
-}
-
-VOID MmLockMemoryAreaListByMode(KPROCESSOR_MODE Mode, PKIRQL oldlvl)
-{   
-   if (Mode == KernelMode)     
-     {
-	KeAcquireSpinLock(&SystemAreaListLock,oldlvl);
-     }
-   else
-     {
-	PKPROCESS CurrentProcess = KeGetCurrentProcess();
-	
-	KeAcquireSpinLock(&(CurrentProcess->SpinLock),oldlvl);
-     }
-}
-
-VOID MmUnlockMemoryAreaListByMode(KPROCESSOR_MODE Mode, PKIRQL oldlvl)
-{
-   if (Mode == KernelMode)     
-     {
-	KeReleaseSpinLock(&SystemAreaListLock,*oldlvl);
-     }
-   else
-     {
-	PKPROCESS CurrentProcess = KeGetCurrentProcess();
-	KeReleaseSpinLock(&(CurrentProcess->SpinLock),*oldlvl);
-     }
-
-}
-
-
-static PLIST_ENTRY MmGetRelatedListHead(PEPROCESS Process, PVOID BaseAddress)
-{
-   if (BaseAddress >= (PVOID)KERNEL_BASE)
-     {
-	return(&SystemAreaList);
-     }
-   else
-     {
-	return(&(Process->Pcb.MemoryAreaList));
-     }
-}
-
-static MEMORY_AREA* MmInternalOpenMemoryAreaByAddress(PLIST_ENTRY ListHead, 
-						      PVOID Address)
+MEMORY_AREA* MmOpenMemoryAreaByAddress(PMADDRESS_SPACE AddressSpace,
+				       PVOID Address)
 {
    PLIST_ENTRY current_entry;
    MEMORY_AREA* current;
    PLIST_ENTRY previous_entry;
 
-//   MmDumpMemoryAreas();
+   DPRINT("MmOpenMemoryAreaByAddress(AddressSpace %x, Address %x)\n",
+	  AddressSpace, Address);
    
-   DPRINT("MmInternalOpenMemoryAreaByAddress(ListHead %x, Address %x)\n",
-	  ListHead,Address);
-   
-   if (ListHead==NULL)
+   previous_entry = &AddressSpace->MAreaListHead;
+   current_entry = AddressSpace->MAreaListHead.Flink;
+   while (current_entry != &AddressSpace->MAreaListHead)
      {
-	return(NULL);
-     }
-   
-   previous_entry = ListHead;
-   current_entry = ListHead->Flink;
-   while (current_entry!=ListHead)
-     {
-	current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
+	current = CONTAINING_RECORD(current_entry,
+				    MEMORY_AREA,
+				    Entry);
 	DPRINT("Scanning %x BaseAddress %x Length %x\n",
 	       current, current->BaseAddress, current->Length);
 	assert(current_entry->Blink->Flink == current_entry);
@@ -171,30 +92,30 @@ static MEMORY_AREA* MmInternalOpenMemoryAreaByAddress(PLIST_ENTRY ListHead,
    return(NULL);
 }
 
-
-MEMORY_AREA* MmInternalOpenMemoryAreaByRegion(PLIST_ENTRY ListHead, 
-					      PVOID Address, 
-					      ULONG Length)
+MEMORY_AREA* MmOpenMemoryAreaByRegion(PMADDRESS_SPACE AddressSpace, 
+				      PVOID Address,
+				      ULONG Length)
 {
+   MEMORY_AREA* Result;
    PLIST_ENTRY current_entry;
    MEMORY_AREA* current;
    ULONG Extent;
    
-   DPRINT("MmInternalOpenMemoryAreaByRegion(ListHead %x, Address %x, "
-	    "Length %x)\n",ListHead,Address,Length);
+   DPRINT("MmOpenMemoryByRegion(AddressSpace %x, Address %x, Length %x)\n",
+	  AddressSpace, Address, Length);
    
-//   MmDumpMemoryAreas(ListHead);
-   
-   current_entry = ListHead->Flink;
-   while (current_entry!=ListHead)
+   current_entry = AddressSpace->MAreaListHead.Flink;
+   while (current_entry != &AddressSpace->MAreaListHead)
      {
-	current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
+	current = CONTAINING_RECORD(current_entry,
+				    MEMORY_AREA,
+				    Entry);
 	DPRINT("current->BaseAddress %x current->Length %x\n",
 	       current->BaseAddress,current->Length);
 	if (current->BaseAddress >= Address &&
 	    current->BaseAddress < (Address+Length))
 	  {
-	     DPRINT("Finished MmInternalOpenMemoryAreaByRegion() = %x\n",
+	     DPRINT("Finished MmOpenMemoryAreaByRegion() = %x\n",
 		    current);
 	     return(current);
 	  }
@@ -202,87 +123,32 @@ MEMORY_AREA* MmInternalOpenMemoryAreaByRegion(PLIST_ENTRY ListHead,
 	if (Extent > (ULONG)Address &&
 	    Extent < (ULONG)(Address+Length))
 	  {
-	     DPRINT("Finished MmInternalOpenMemoryAreaByRegion() = %x\n",
+	     DPRINT("Finished MmOpenMemoryAreaByRegion() = %x\n",
 		    current);
 	     return(current);
 	  }
 	if (current->BaseAddress <= Address &&
 	    Extent >= (ULONG)(Address+Length))
 	  {
-	     DPRINT("Finished MmInternalOpenMemoryAreaByRegion() = %x\n",
+	     DPRINT("Finished MmOpenMemoryAreaByRegion() = %x\n",
 		    current);
 	     return(current);
 	  }
 	if (current->BaseAddress >= (Address+Length))
 	  {
-	     DPRINT("Finished MmInternalOpenMemoryAreaByRegion()= NULL\n",0);
+	     DPRINT("Finished MmOpenMemoryAreaByRegion()= NULL\n",0);
 	     return(NULL);
 	  }
 	current_entry = current_entry->Flink;
      }
-   DPRINT("Finished MmInternalOpenMemoryAreaByRegion() = NULL\n",0);
+   DPRINT("Finished MmOpenMemoryAreaByRegion() = NULL\n",0);
    return(NULL);
-}
-
-MEMORY_AREA* MmOpenMemoryAreaByRegion(PEPROCESS Process, 
-				      PVOID Address,
-				      ULONG Length)
-{
-   KIRQL oldlvl;
-   MEMORY_AREA* Result;
-   PLIST_ENTRY ListHead;
    
-   DPRINT("MmOpenMemoryByRegion(Process %x, Address %x, Length %x)\n",
-	    Process,Address,Length);
-   
-   MmLockMemoryAreaList(Address,&oldlvl);
-   ListHead = MmGetRelatedListHead(Process,Address);   
-   Result = MmInternalOpenMemoryAreaByRegion(ListHead,Address,Length);
-   MmUnlockMemoryAreaList(Address,&oldlvl);
    return(Result);
 }
 
-
-MEMORY_AREA* MmOpenMemoryAreaByRegionWithoutLock(PEPROCESS Process,
-						 PVOID Address, 
-						 ULONG Length)
-{
-   MEMORY_AREA* Result;
-   PLIST_ENTRY ListHead;
-   
-   ListHead = MmGetRelatedListHead(Process, Address);   
-   Result = MmInternalOpenMemoryAreaByRegion(ListHead,Address,Length);
-   return(Result);
-}
-
-MEMORY_AREA* MmOpenMemoryAreaByAddress(PEPROCESS Process, PVOID Address)
-{
-   KIRQL oldlvl;
-   MEMORY_AREA* Result;
-   PLIST_ENTRY ListHead;
-   
-   DPRINT("MmOpenMemoryAreaByAddress(Address %x)\n",Address);
-   
-   MmLockMemoryAreaList(Address,&oldlvl);
-   ListHead = MmGetRelatedListHead(Process, Address);
-   Result = MmInternalOpenMemoryAreaByAddress(ListHead,Address);
-   MmUnlockMemoryAreaList(Address,&oldlvl);
-   return(Result);
-}
-
-MEMORY_AREA* MmOpenMemoryAreaByAddressWithoutLock(PEPROCESS Process, 
-						  PVOID Address)
-{
-   MEMORY_AREA* Result;
-   PLIST_ENTRY ListHead;
-   
-   ListHead = MmGetRelatedListHead(Process, Address);   
-   Result = MmInternalOpenMemoryAreaByAddress(ListHead, Address);
-   return(Result);
-}
-
-static VOID MmInsertMemoryAreaWithoutLock(PEPROCESS Process,
-					  MEMORY_AREA* marea)
+static VOID MmInsertMemoryArea(PMADDRESS_SPACE AddressSpace,
+			       MEMORY_AREA* marea)
 {
    PLIST_ENTRY ListHead;
    PLIST_ENTRY current_entry;
@@ -290,13 +156,11 @@ static VOID MmInsertMemoryAreaWithoutLock(PEPROCESS Process,
    MEMORY_AREA* current;
    MEMORY_AREA* next;   
    
-   DPRINT("MmInsertMemoryAreaWithoutLock(marea %x)\n",marea);
-   DPRINT("marea->BaseAddress %x\n",marea->BaseAddress);
-   DPRINT("marea->Length %x\n",marea->Length);
+   DPRINT("MmInsertMemoryArea(marea %x)\n", marea);
+   DPRINT("marea->BaseAddress %x\n", marea->BaseAddress);
+   DPRINT("marea->Length %x\n", marea->Length);
    
-   ListHead=MmGetRelatedListHead(Process,marea->BaseAddress);
-   
-//   MmDumpMemoryAreas(ListHead);
+   ListHead = &AddressSpace->MAreaListHead;
    
    current_entry = ListHead->Flink;
    CHECKPOINT;
@@ -354,8 +218,8 @@ static VOID MmInsertMemoryAreaWithoutLock(PEPROCESS Process,
    InsertTailList(ListHead,inserted_entry);
 }
 
-static PVOID MmFindGapWithoutLock(PEPROCESS Process,
-				  KPROCESSOR_MODE Mode, ULONG Length)
+static PVOID MmFindGap(PMADDRESS_SPACE AddressSpace,
+		       ULONG Length)
 {
    PLIST_ENTRY ListHead;
    PLIST_ENTRY current_entry;
@@ -363,19 +227,10 @@ static PVOID MmFindGapWithoutLock(PEPROCESS Process,
    MEMORY_AREA* next;
    ULONG Gap;
    
-   DPRINT("MmFindGapWithoutLock(Mode %x Length %x)\n",Mode,Length);
+   DPRINT("MmFindGap(Length %x)\n",Length);
    
-   
-   if (Mode == KernelMode)
-     {
-	ListHead = &SystemAreaList;
-     }
-   else
-      {
-	ListHead = &(Process->Pcb.MemoryAreaList);
-     }
-   
-   
+   ListHead = &AddressSpace->MAreaListHead;
+     
    current_entry = ListHead->Flink;
    while (current_entry->Flink!=ListHead)
      {
@@ -396,8 +251,7 @@ static PVOID MmFindGapWithoutLock(PEPROCESS Process,
    
    if (current_entry == ListHead)
      {
-	assert(Mode==UserMode);
-	return((PVOID)MM_LOWEST_USER_ADDRESS);
+	return((PVOID)AddressSpace->LowestAddress);
      }
    
    current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
@@ -412,44 +266,25 @@ NTSTATUS MmInitMemoryAreas(VOID)
  */
 {
    DPRINT("MmInitMemoryAreas()\n",0);
-   InitializeListHead(&SystemAreaList);
-   KeInitializeSpinLock(&SystemAreaListLock);
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS MmFreeMemoryArea(PEPROCESS Process,
+NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 			  PVOID BaseAddress,
 			  ULONG Length,
 			  BOOLEAN FreePages)
 {
    MEMORY_AREA* MemoryArea;
    ULONG i;
-   KIRQL oldlvl;
    LARGE_INTEGER PhysicalAddr;
    
-   DPRINT("MmFreeMemoryArea(Process %x, BaseAddress %x, Length %x,"
-          "FreePages %d)\n",Process,BaseAddress,Length,FreePages);			    
+   DPRINT("MmFreeMemoryArea(AddressSpace %x, BaseAddress %x, Length %x,"
+          "FreePages %d)\n",AddressSpace,BaseAddress,Length,FreePages);
 
-   if (SystemAreaList.Flink != (&SystemAreaList) &&
-       SystemAreaList.Flink->Flink != (&SystemAreaList))
+   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
+					  BaseAddress);
+   if (MemoryArea == NULL)
      {
-	#ifndef NDEBUG
-	PMEMORY_AREA Snd = CONTAINING_RECORD(SystemAreaList.Flink->Flink,
-					     MEMORY_AREA,
-					     Entry);
-	DPRINT("SystemAreaList.Flink->Flink->BaseAddress %x\n",
-	       Snd->BaseAddress);
-	#endif
-//	assert(Snd->BaseAddress == (PVOID)0x0c001c000);
-     }
-
-   MmLockMemoryAreaList(BaseAddress, &oldlvl);
-   
-   MemoryArea = MmOpenMemoryAreaByAddressWithoutLock(Process,
-						     BaseAddress);
-   if (MemoryArea==NULL)
-     {
-	MmUnlockMemoryAreaList(BaseAddress, &oldlvl);
 	KeBugCheck(0);
 	return(STATUS_UNSUCCESSFUL);
      }
@@ -472,67 +307,42 @@ NTSTATUS MmFreeMemoryArea(PEPROCESS Process,
    
    RemoveEntryList(&(MemoryArea->Entry));
    ExFreePool(MemoryArea);
-   MmUnlockMemoryAreaList(BaseAddress, &oldlvl);
-   
-   if (SystemAreaList.Flink != (&SystemAreaList) &&
-       SystemAreaList.Flink->Flink != (&SystemAreaList))
-     {
-	#ifndef NDEBUG
-	PMEMORY_AREA Snd = CONTAINING_RECORD(SystemAreaList.Flink->Flink,
-					     MEMORY_AREA,
-					     Entry);
-	DPRINT("SystemAreaList.Flink->Flink->BaseAddress %x\n",
-	       Snd->BaseAddress);
-	#endif
-//	assert(Snd->BaseAddress == (PVOID)0x0c001c000);
-     }
    
    return(STATUS_SUCCESS);
 }
 
 PMEMORY_AREA MmSplitMemoryArea(PEPROCESS Process,
+			       PMADDRESS_SPACE AddressSpace,
 			       PMEMORY_AREA OriginalMemoryArea,
 			       PVOID BaseAddress,
 			       ULONG Length,
 			       ULONG NewType,
 			       ULONG NewAttributes)
 {
-   KIRQL oldlvl;
    PMEMORY_AREA Result;
    PMEMORY_AREA Split;
    
    Result = ExAllocatePool(NonPagedPool,sizeof(MEMORY_AREA));
    RtlZeroMemory(Result,sizeof(MEMORY_AREA));
-   Result->Type=NewType;
-   Result->BaseAddress=BaseAddress;
-   Result->Length=Length;
-   Result->Attributes=NewAttributes;
-   Result->LockCount=0;
+   Result->Type = NewType;
+   Result->BaseAddress = BaseAddress;
+   Result->Length = Length;
+   Result->Attributes = NewAttributes;
+   Result->LockCount = 0;
    Result->Process = Process;
-   
-   MmLockMemoryAreaList(OriginalMemoryArea->BaseAddress,&oldlvl);
-   
-//   MmDumpMemoryAreas(MmGetRelatedListHead(Process,BaseAddress));
    
    if (BaseAddress == OriginalMemoryArea->BaseAddress)
      {
 	OriginalMemoryArea->BaseAddress = BaseAddress + Length;
 	OriginalMemoryArea->Length = OriginalMemoryArea->Length - Length;
-	MmInsertMemoryAreaWithoutLock(Process,Result);
-	MmUnlockMemoryAreaList(OriginalMemoryArea->BaseAddress,&oldlvl);
-	
-//	MmDumpMemoryAreas(MmGetRelatedListHead(Process,BaseAddress));
-
+	MmInsertMemoryArea(AddressSpace, Result);
 	return(Result);
      }
    if ((BaseAddress + Length) == 
        (OriginalMemoryArea->BaseAddress + OriginalMemoryArea->Length))
      {
 	OriginalMemoryArea->Length = OriginalMemoryArea->Length - Length; 
-	MmInsertMemoryAreaWithoutLock(Process,Result);
-	MmUnlockMemoryAreaList(OriginalMemoryArea->BaseAddress,&oldlvl);
-	
-//	MmDumpMemoryAreas(MmGetRelatedListHead(Process,BaseAddress));
+	MmInsertMemoryArea(AddressSpace, Result);
 
 	return(Result);
      }
@@ -545,57 +355,40 @@ PMEMORY_AREA MmSplitMemoryArea(PEPROCESS Process,
    
    OriginalMemoryArea->Length = BaseAddress - OriginalMemoryArea->BaseAddress;
       
-   MmUnlockMemoryAreaList(OriginalMemoryArea->BaseAddress,&oldlvl);
-   
-//   MmDumpMemoryAreas(MmGetRelatedListHead(Process,BaseAddress));
-   
    return(Split);
 }
 
-NTSTATUS MmCreateMemoryArea(KPROCESSOR_MODE Mode,
-			    PEPROCESS Process,
+NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
+			    PMADDRESS_SPACE AddressSpace,
 			    ULONG Type,
 			    PVOID* BaseAddress,
 			    ULONG Length,
 			    ULONG Attributes,
 			    MEMORY_AREA** Result)
+/*
+ * FUNCTION: Create a memory area
+ * ARGUMENTS:
+ *     AddressSpace = Address space to create the area in
+ *     Type = Type of the address space
+ *     BaseAddress = 
+ *     Length = Length to allocate
+ *     Attributes = Protection attributes for the memory area
+ *     Result = Receives a pointer to the memory area on exit
+ * RETURNS: Status
+ * NOTES: Lock the address space before calling this function
+ */
 {
-   KIRQL oldlvl;
-   
-   DPRINT("MmCreateMemoryArea(Mode %x, Type %d, BaseAddress %x,"
+   DPRINT("MmCreateMemoryArea(Type %d, BaseAddress %x,"
 	  "*BaseAddress %x, Length %x, Attributes %x, Result %x)\n",
-          Mode,Type,BaseAddress,*BaseAddress,Length,Attributes,Result);
-
-   if (SystemAreaList.Flink != (&SystemAreaList) &&
-       SystemAreaList.Flink->Flink != (&SystemAreaList))
-     {
-	#ifndef NDEBUG
-	PMEMORY_AREA Snd = CONTAINING_RECORD(SystemAreaList.Flink->Flink,
-					     MEMORY_AREA,
-					     Entry);
-	DPRINT("SystemAreaList.Flink->Flink->BaseAddress %x\n",
-	       Snd->BaseAddress);
-//	assert(Snd->BaseAddress == (PVOID)0x0c001c000);
-	#endif
-     }
-      
-   if ((*BaseAddress)==0)
-     {
-	MmLockMemoryAreaListByMode(Mode,&oldlvl);
-     }
-   else
-     {
-	MmLockMemoryAreaList(*BaseAddress,&oldlvl);
-     }
+          Type,BaseAddress,*BaseAddress,Length,Attributes,Result);
 
    if ((*BaseAddress)==0)
      {
-	*BaseAddress = MmFindGapWithoutLock(Process,Mode,PAGE_ROUND_UP(Length)
-					    +(PAGESIZE*2));
+	*BaseAddress = MmFindGap(AddressSpace,
+				 PAGE_ROUND_UP(Length) +(PAGESIZE*2));
 	if ((*BaseAddress)==0)
 	  {
 	     DPRINT("No suitable gap\n");
-	     MmUnlockMemoryAreaListByMode(Mode,&oldlvl);
 	     return(STATUS_UNSUCCESSFUL);
 	  }
 	(*BaseAddress)=(*BaseAddress)+PAGESIZE;
@@ -603,40 +396,24 @@ NTSTATUS MmCreateMemoryArea(KPROCESSOR_MODE Mode,
    else
      {
 	(*BaseAddress) = (PVOID)PAGE_ROUND_DOWN((*BaseAddress));
-	if (MmOpenMemoryAreaByRegionWithoutLock(Process,
-						*BaseAddress,
-						Length)!=NULL)
+	if (MmOpenMemoryAreaByRegion(AddressSpace,
+				     *BaseAddress,
+				     Length)!=NULL)
 	  {
 	     DPRINT("Memory area already occupied\n");
-	     MmUnlockMemoryAreaList(*BaseAddress,&oldlvl);
 	     return(STATUS_UNSUCCESSFUL);
 	  }
      }
    
    *Result = ExAllocatePool(NonPagedPool,sizeof(MEMORY_AREA));
    RtlZeroMemory(*Result,sizeof(MEMORY_AREA));
-   (*Result)->Type=Type;
-   (*Result)->BaseAddress=*BaseAddress;
-   (*Result)->Length=Length;
-   (*Result)->Attributes=Attributes;
-   (*Result)->LockCount=0;
+   (*Result)->Type = Type;
+   (*Result)->BaseAddress = *BaseAddress;
+   (*Result)->Length = Length;
+   (*Result)->Attributes = Attributes;
+   (*Result)->LockCount = 0;
    (*Result)->Process = Process;
    
-   MmInsertMemoryAreaWithoutLock(Process,*Result);
-   MmUnlockMemoryAreaList(*BaseAddress,&oldlvl);
-   
-   if (SystemAreaList.Flink != (&SystemAreaList) &&
-       SystemAreaList.Flink->Flink != (&SystemAreaList))
-     {
-	#ifndef NDEBUG
-	PMEMORY_AREA Snd = CONTAINING_RECORD(SystemAreaList.Flink->Flink,
-					     MEMORY_AREA,
-					     Entry);
-	DPRINT("SystemAreaList.Flink->Flink->BaseAddress %x\n",
-	       Snd->BaseAddress);
-	#endif
-//	assert(Snd->BaseAddress == (PVOID)0x0c001c000);
-     }
-   
+   MmInsertMemoryArea(AddressSpace, *Result);
    return(STATUS_SUCCESS);
 }

@@ -267,7 +267,7 @@ asmlinkage void exception_handler(unsigned int edi,
    DbgPrint("EDI: %.8x   EFLAGS: %.8x ",edi,eflags);
    if ((cs&0xffff) == KERNEL_CS)
      {
-	DbgPrint("kESP %.8x\n",esp);
+	DbgPrint("kESP %.8x ",esp);
 	if (PsGetCurrentThread() != NULL)
 	  {
 	     DbgPrint("kernel stack base %x\n",
@@ -285,9 +285,8 @@ asmlinkage void exception_handler(unsigned int edi,
        stack = (PULONG) (esp + 24);
 //       stack = (PULONG)(((ULONG)stack) & (~0x3));
        
-       DbgPrint("stack: %p\n", stack);
+       DbgPrint("stack<%p>: ", stack);
 	 
-	 DbgPrint("Stack:\n");
        for (i = 0; i < 16; i = i + 4)
 	 {
 	    DbgPrint("%.8x %.8x %.8x %.8x\n", 

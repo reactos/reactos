@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.29 2000/03/26 19:38:21 ea Exp $
+/* $Id: create.c,v 1.30 2000/03/29 13:11:53 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -320,7 +320,7 @@ IoCreateFile (
 	KEVENT			Event;
 	PIO_STACK_LOCATION	StackLoc;
    
-	DPRINT1("IoCreateFile(FileHandle %x, DesiredAccess %x, "
+	DPRINT("IoCreateFile(FileHandle %x, DesiredAccess %x, "
 	    "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
 	    FileHandle,DesiredAccess,ObjectAttributes,
 	    ObjectAttributes->ObjectName->Buffer);   

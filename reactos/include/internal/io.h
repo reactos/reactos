@@ -1,4 +1,4 @@
-/* $Id: io.h,v 1.9 2000/03/26 19:38:14 ea Exp $
+/* $Id: io.h,v 1.10 2000/03/29 13:11:51 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,13 +44,10 @@ PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
 				     PDEVICE_OBJECT DeviceToMount);
 VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost);
 
-NTSTATUS
-IopCreateFile (
-	PVOID			ObjectBody,
-	PVOID			Parent,
-	PWSTR			RemainingPath,
-	POBJECT_ATTRIBUTES	ObjectAttributes
-	);
+NTSTATUS IopCreateFile (PVOID ObjectBody,
+			PVOID Parent,
+			PWSTR RemainingPath,
+			POBJECT_ATTRIBUTES ObjectAttributes);
 NTSTATUS IopCreateDevice(PVOID ObjectBody,
 			 PVOID Parent,
 			 PWSTR RemainingPath,

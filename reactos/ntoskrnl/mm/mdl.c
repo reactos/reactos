@@ -64,8 +64,8 @@ PVOID MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
    DPRINT("PAGE_ROUND_UP(Mdl->ByteCount)/PAGESIZE) %x\n",
 	  PAGE_ROUND_UP(Mdl->ByteCount)/PAGESIZE);
    
-   MmCreateMemoryArea(KernelMode,
-		      NULL,
+   MmCreateMemoryArea(NULL,
+		      MmGetKernelAddressSpace(),
 		      MEMORY_AREA_MDL_MAPPING,
 		      &base,
 		      Mdl->ByteCount + Mdl->ByteOffset,
@@ -96,7 +96,7 @@ VOID MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
  */
 {
    DPRINT("MmUnmapLockedPages(BaseAddress %x, Mdl %x)\n", Mdl, BaseAddress);
-   (void)MmFreeMemoryArea(NULL,
+   (void)MmFreeMemoryArea(MmGetKernelAddressSpace(),
 			  BaseAddress-Mdl->ByteOffset,
 			  Mdl->ByteCount,
 			  FALSE);
@@ -145,11 +145,21 @@ VOID MmProbeAndLockPages(PMDL Mdl,
    int i;
    MEMORY_AREA* marea;
    PVOID Address;
+   PMADDRESS_SPACE AddressSpace;
    
    DPRINT("MmProbeAndLockPages(Mdl %x)\n",Mdl);
    DPRINT("StartVa %x\n",Mdl->StartVa);
    
-   marea = MmOpenMemoryAreaByAddress(Mdl->Process,
+   if (Mdl->StartVa > (PVOID)KERNEL_BASE)
+     {
+	AddressSpace = MmGetKernelAddressSpace();
+     }
+   else
+     {
+	AddressSpace = &Mdl->Process->Pcb.AddressSpace;
+     }
+   MmLockAddressSpace(AddressSpace);
+   marea = MmOpenMemoryAreaByAddress(AddressSpace,
 				     Mdl->StartVa);
    DPRINT("marea %x\n",marea);
   
@@ -161,6 +171,7 @@ VOID MmProbeAndLockPages(PMDL Mdl,
    if (marea==NULL )
      {
 	DbgPrint("(%s:%d) Area is invalid\n",__FILE__,__LINE__);
+	MmUnlockAddressSpace(AddressSpace);
 	ExRaiseStatus(STATUS_INVALID_PARAMETER);
      }
       
@@ -181,6 +192,7 @@ VOID MmProbeAndLockPages(PMDL Mdl,
         mdl_pages[i] = (MmGetPhysicalAddress(Address)).u.LowPart;
 	DPRINT("mdl_pages[i] %x\n",mdl_pages[i]);
      }
+   MmUnlockAddressSpace(AddressSpace);
 }
 
 ULONG MmGetMdlByteCount(PMDL Mdl)

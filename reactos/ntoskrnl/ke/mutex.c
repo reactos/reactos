@@ -33,7 +33,12 @@ LONG KeReadStateMutex(PKMUTEX Mutex)
 LONG KeReleaseMutex(PKMUTEX Mutex, BOOLEAN Wait)
 {
    KeAcquireDispatcherDatabaseLock(Wait);
-   KeDispatcherObjectWake(&Mutex->Header);
+   Mutex->Header.SignalState--;
+   assert(Mutex->Header.SignalState >= 0);
+   if (Mutex->Header.SignalState == 0)
+     {
+	KeDispatcherObjectWake(&Mutex->Header);
+     }
    KeReleaseDispatcherDatabaseLock(Wait);
    return(0);
 }

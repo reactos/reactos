@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.64 2000/03/26 19:38:17 ea Exp $
+# $Id: makefile_rex,v 1.65 2000/03/29 13:11:52 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -37,7 +37,7 @@ KE_I386_OBJECTS = ke/i386/thread.o ke/i386/usercall.o ke/i386/exp.o
 MM_OBJECTS = mm/mm.o mm/freelist.o mm/pool.o mm/virtual.o \
              mm/mdl.o mm/zone.o mm/paging.o mm/section.o \
 	     mm/marea.o mm/ppool.o mm/npool.o mm/pagefile.o \
-	     mm/cont.o mm/iospace.o mm/ncache.o
+	     mm/cont.o mm/iospace.o mm/ncache.o mm/aspace.o
 
 
 MM_I386_OBJECTS = mm/i386/page.o mm/i386/memsafe.o

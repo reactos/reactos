@@ -1,4 +1,4 @@
-/* $Id: iospace.c,v 1.2 2000/03/19 09:14:51 ea Exp $
+/* $Id: iospace.c,v 1.3 2000/03/29 13:11:54 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,7 +18,6 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
-
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -47,58 +46,41 @@
  * REVISIONS
  *
  */
-PVOID
-STDCALL
-MmMapIoSpace (
-	IN	PHYSICAL_ADDRESS	PhysicalAddress,
-	IN	ULONG			NumberOfBytes,
-	IN	BOOLEAN			CacheEnable
-	)
+PVOID STDCALL MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
+			    IN ULONG NumberOfBytes,
+			    IN BOOLEAN CacheEnable)
 {
-	PVOID		Result;
-	MEMORY_AREA	* marea;
-	NTSTATUS	Status;
-	ULONG		i;
-	ULONG		Attributes;
+   PVOID Result;
+   MEMORY_AREA* marea;
+   NTSTATUS Status;
+   ULONG i;
+   ULONG Attributes;
    
-	Result = NULL;
-	Status = MmCreateMemoryArea (
-			KernelMode,
-			PsGetCurrentProcess (),
-			MEMORY_AREA_IO_MAPPING,
-			& Result,
-			NumberOfBytes,
-			0,
-			& marea
-			);
-	if (STATUS_SUCCESS != Status)
-	{
-		return (NULL);
-	}
-	Attributes = (	PA_WRITE
-			| PA_READ
-			| PA_EXECUTE
-			| PA_SYSTEM
-			);
-	if (!CacheEnable)
-	{
-		Attributes |= (PA_PWT | PA_PCD);
-	}
-	for (	i = 0;
-		(i <= (NumberOfBytes / PAGESIZE));
-		i ++
-		)
-	{
-		MmSetPage (
-			NULL,
-			(Result + (i * PAGESIZE)),
-			PAGE_READWRITE,
-			(	PhysicalAddress.u.LowPart
-				+ (i * PAGESIZE)
-				)
-			);
-	}
-	return ((PVOID) Result);
+   Result = NULL;
+   Status = MmCreateMemoryArea (NULL,
+				MmGetKernelAddressSpace(),
+				MEMORY_AREA_IO_MAPPING,
+				&Result,
+				NumberOfBytes,
+				0,
+				&marea);
+   if (!NT_SUCCESS(STATUS_SUCCESS))
+     {
+	return (NULL);
+     }
+   Attributes = PA_WRITE | PA_READ | PA_EXECUTE | PA_SYSTEM;
+   if (!CacheEnable)
+     {
+	Attributes |= (PA_PWT | PA_PCD);
+     }
+   for (i = 0; (i <= (NumberOfBytes / PAGESIZE)); i++)
+     {
+	MmSetPage (NULL,
+		   (Result + (i * PAGESIZE)),
+		   PAGE_READWRITE,
+		   (PhysicalAddress.u.LowPart + (i * PAGESIZE)));
+     }
+   return ((PVOID)Result);
 }
  
 
@@ -125,19 +107,13 @@ MmMapIoSpace (
  * REVISIONS
  *
  */
-VOID
-STDCALL
-MmUnmapIoSpace (
-	IN	PVOID	BaseAddress,
-	IN	ULONG	NumberOfBytes
-	)
+VOID STDCALL MmUnmapIoSpace (IN PVOID BaseAddress,
+			     IN ULONG NumberOfBytes)
 {
-	(VOID) MmFreeMemoryArea (
-		PsGetCurrentProcess (),
-		BaseAddress,
-		NumberOfBytes,
-		FALSE
-		);
+   (VOID)MmFreeMemoryArea(&PsGetCurrentProcess()->Pcb.AddressSpace,
+			  BaseAddress,
+			  NumberOfBytes,
+			  FALSE);
 }
 
 

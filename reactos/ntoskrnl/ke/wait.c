@@ -72,7 +72,8 @@ VOID KeReleaseDispatcherDatabaseLock(BOOLEAN Wait)
      }
 }
 
-VOID KiSideEffectsBeforeWake(DISPATCHER_HEADER* hdr)
+VOID KiSideEffectsBeforeWake(DISPATCHER_HEADER* hdr,
+			     PKTHREAD Thread)
 /*
  * FUNCTION: Perform side effects on object before a wait for a thread is
  *           satisfied
@@ -104,6 +105,18 @@ VOID KiSideEffectsBeforeWake(DISPATCHER_HEADER* hdr)
       case InternalNotificationTimer:
 	break;
 	
+      case InternalMutexType:
+	  {
+	     PKMUTEX Mutex;
+	     
+	     Mutex = CONTAINING_RECORD(hdr,
+				       KMUTEX,
+				       Header);
+	     hdr->SignalState++;
+	     Mutex->OwnerThread = Thread;
+	  }
+	break;
+	
       default:
 	DbgPrint("(%s:%d) Dispatcher object %x has unknown type\n",
 		 __FILE__,__LINE__,hdr);
@@ -112,14 +125,39 @@ VOID KiSideEffectsBeforeWake(DISPATCHER_HEADER* hdr)
 
 }
 
-static BOOLEAN KiIsObjectSignalled(DISPATCHER_HEADER* hdr)
+static BOOLEAN KiIsObjectSignalled(DISPATCHER_HEADER* hdr,
+				   PKTHREAD Thread)
 {
+   if (hdr->Type == InternalMutexType)
+     {
+        PKMUTEX Mutex;
+	
+	Mutex = CONTAINING_RECORD(hdr,
+				  KMUTEX,
+				  Header);
+	
+	if ((hdr->SignalState <= 0 &&
+	    Mutex->OwnerThread == Thread) ||
+	    hdr->SignalState > 0)
+	  {
+	     KiSideEffectsBeforeWake(hdr,
+				     Thread);
+	     return(TRUE);
+	  }
+	else
+	  {
+	     return(FALSE);
+	  }
+     }
    if (hdr->SignalState <= 0)
      {
 	return(FALSE);
      }
-   KiSideEffectsBeforeWake(hdr);
-   return(TRUE);
+   else
+     {
+	KiSideEffectsBeforeWake(hdr, Thread);
+	return(TRUE);
+     }
 }
 
 VOID KeRemoveAllWaitsThread(PETHREAD Thread, NTSTATUS WaitStatus)
@@ -166,7 +204,8 @@ static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
    while (!IsListEmpty(&(hdr->WaitListHead)))
      {
 	current_entry = RemoveHeadList(&hdr->WaitListHead);
-	current = CONTAINING_RECORD(current_entry,KWAIT_BLOCK,
+	current = CONTAINING_RECORD(current_entry,
+				    KWAIT_BLOCK,
 				    WaitListEntry);
         DPRINT("Waking %x\n",current->Thread);
         if (current->WaitType == WaitAny)
@@ -200,10 +239,13 @@ static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
 		    }
 	       }
 	  }     
-	KiSideEffectsBeforeWake(hdr);
+	KiSideEffectsBeforeWake(hdr, current->Thread);
 	Status = current->WaitKey;
-	if( current->Thread->WaitBlockList == NULL )
-	  PsUnfreezeThread( CONTAINING_RECORD( current->Thread,ETHREAD,Tcb ), &Status );
+	if (current->Thread->WaitBlockList == NULL)
+	  {
+	     PsUnfreezeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb), 
+			      &Status);
+	  }
      }
    return(TRUE);
 }
@@ -260,9 +302,10 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
      }
 
    DPRINT("Waking %x\n",current->Thread);
-   KiSideEffectsBeforeWake(hdr);
+   KiSideEffectsBeforeWake(hdr, current->Thread);
    Status = current->WaitKey;
-   PsUnfreezeThread( CONTAINING_RECORD( current->Thread, ETHREAD, Tcb ), &Status );
+   PsUnfreezeThread(CONTAINING_RECORD(current->Thread, ETHREAD, Tcb), 
+		    &Status);
    return(TRUE);
 }
 
@@ -366,7 +409,7 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
 	
 	DPRINT("hdr->SignalState %d\n", hdr->SignalState);     
 	
-	if (KiIsObjectSignalled(hdr))
+	if (KiIsObjectSignalled(hdr, CurrentThread))
 	  {	     
 	     KeReleaseDispatcherDatabaseLock(FALSE);
 	     if (Timeout != NULL)
@@ -457,7 +500,7 @@ NTSTATUS KeWaitForMultipleObjects(ULONG Count,
 
         DPRINT("hdr->SignalState %d\n", hdr->SignalState);
 
-        if (KiIsObjectSignalled(hdr))
+        if (KiIsObjectSignalled(hdr, CurrentThread))
         {
             CountSignaled++;
 

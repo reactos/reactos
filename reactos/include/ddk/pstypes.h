@@ -234,7 +234,7 @@ typedef struct _KPROCESS
    /*
     * Added by David Welch (welch@mcmail.com)
     */
-   LIST_ENTRY           MemoryAreaList;
+   MADDRESS_SPACE       AddressSpace;
    HANDLE_TABLE         HandleTable;
    LIST_ENTRY           ProcessListEntry;
 
