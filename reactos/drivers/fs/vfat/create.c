@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.7 2000/09/12 10:12:13 jean Exp $
+/* $Id: create.c,v 1.8 2000/12/05 17:12:16 jean Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -448,6 +448,19 @@ DPRINT("FileName %S\n", FileName);
    next = &string[0];
    
    CHECKPOINT;
+   if(*next==0) // root
+   {
+     memset(Fcb->entry.Filename,' ',11);
+     Fcb->entry.FileSize=DeviceExt->rootDirectorySectors*BLOCKSIZE;
+     Fcb->entry.Attrib=FILE_ATTRIBUTE_DIRECTORY;
+     if (DeviceExt->FatType == FAT32)Fcb->entry.FirstCluster=2;
+     else Fcb->entry.FirstCluster=1;
+     //FIXME : is 1 the good value for mark root?
+     ParentFcb=Fcb;
+     Fcb=NULL;
+   }
+   else
+   {
    while (TRUE)
    {
       CHECKPOINT;
@@ -525,6 +538,7 @@ CHECKPOINT;
      Fcb = ParentFcb;
 CHECKPOINT;
    ParentFcb = Temp;
+   }
 
 
 CHECKPOINT;
@@ -592,7 +606,8 @@ NTSTATUS FsdCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
      {
       if(RequestedDisposition==FILE_CREATE
          ||RequestedDisposition==FILE_OPEN_IF
-         ||RequestedDisposition==FILE_OVERWRITE_IF)
+         ||RequestedDisposition==FILE_OVERWRITE_IF
+         ||RequestedDisposition==FILE_SUPERSEDE)
       {
 CHECKPOINT;
          Status=addEntry(DeviceExt,FileObject,RequestedOptions

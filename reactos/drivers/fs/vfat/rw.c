@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.10 2000/12/01 12:41:08 jean Exp $
+/* $Id: rw.c,v 1.11 2000/12/05 17:12:16 jean Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -55,14 +55,18 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    FirstCluster=CurrentCluster;
    DPRINT("DeviceExt->BytesPerCluster %x\n",DeviceExt->BytesPerCluster);
 
-   if (ReadOffset >= Fcb->entry.FileSize)
+   if ( !(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
+   {
+     if (ReadOffset >= Fcb->entry.FileSize)
      {
 	return(STATUS_END_OF_FILE);
      }
-   if ((ReadOffset + Length) > Fcb->entry.FileSize)
+     if ((ReadOffset + Length) > Fcb->entry.FileSize)
      {
 	Length = Fcb->entry.FileSize - ReadOffset;
      }
+   }
+CHECKPOINT;
    *LengthRead = 0;
    /* FIXME: optimize by remembering the last cluster read and using if possible */
    Temp = ExAllocatePool(NonPagedPool,DeviceExt->BytesPerCluster);
@@ -353,7 +357,8 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
                              &Fcb->entry.UpdateTime);
    Fcb->entry.AccessDate = Fcb->entry.UpdateDate;
 
-   if (Fcb->entry.FileSize < WriteOffset+Length)
+   if (Fcb->entry.FileSize < WriteOffset+Length
+        && ! (Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
      {
 	Fcb->entry.FileSize = WriteOffset+Length;
 	/*
