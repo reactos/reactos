@@ -22,7 +22,7 @@ ifdef UNICODE
 TARGET_CFLAGS += -DUNICODE
 TARGET_CPPFLAGS += -DUNICODE
 TARGET_RCFLAGS += -DUNICODE 
-MK_DEFENTRY := _wWinMain@16
+MK_DEFENTRY = _wWinMain@16
 endif
 
 VPATH += shell
@@ -38,8 +38,11 @@ WINE_INCLUDE = ./
 
 TARGET_GCCLIBS = comctl32 ole32 uuid stdc++
 
-all: explorer.exe
+all: buildno.h explorer.exe
 	@strip explorer.exe
+
+buildno.h: ../../../include/reactos/buildno.h
+	cp ../../../include/reactos/buildno.h $@
 
 TARGET_SDKLIBS = \
 	kernel32.a \

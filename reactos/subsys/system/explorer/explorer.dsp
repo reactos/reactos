@@ -545,6 +545,10 @@ SOURCE=.\shell\winfs.h
 # End Group
 # Begin Source File
 
+SOURCE=.\buildno.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\explorer.cpp
 # End Source File
 # Begin Source File

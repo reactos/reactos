@@ -69,7 +69,8 @@ static void draw_desktop_background(HWND hwnd, HDC hdc)
 	rect.right = rect.left + 250;
 	rect.bottom = rect.top + 40;
 
-	static const LPCTSTR BkgndText = _T("ReactOS 0.1.2 Explorer\nby Martin Fuchs");
+#include "../buildno.h"
+	static const LPCTSTR BkgndText = _T("ReactOS ")_T(KERNEL_VERSION_STR)_T(" Explorer\nby Martin Fuchs");
 
 	BkMode bkMode(hdc, TRANSPARENT);
 

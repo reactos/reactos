@@ -631,6 +631,7 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 	AddButton(ResString(IDS_DOCUMENTS),		0, true, IDC_DOCUMENTS);
 	AddButton(ResString(IDS_RECENT),		0, true, IDC_RECENT);
 	AddButton(ResString(IDS_SETTINGS),		0, true, IDC_SETTINGS);
+	AddButton(ResString(IDS_PRINTERS),		0, true, IDC_PRINTERS);
 	AddButton(ResString(IDS_SETTINGS_WND),	0, false, IDC_SETTINGS_WND);
 	AddButton(ResString(IDS_ADMIN),			0, true, IDC_ADMIN);
 	AddButton(ResString(IDS_DRIVES),		0, true, IDC_DRIVES);
@@ -707,6 +708,10 @@ int StartMenuRoot::Command(int id, int code)
 
 	  case IDC_SETTINGS:
 		CreateSubmenu(id, CSIDL_CONTROLS);
+		break;
+
+	  case IDC_PRINTERS:
+		CreateSubmenu(id, CSIDL_PRINTERS, CSIDL_PRINTHOOD);
 		break;
 
 	  case IDC_SETTINGS_WND:

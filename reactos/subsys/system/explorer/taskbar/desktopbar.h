@@ -54,6 +54,7 @@
 #define	IDC_CONNECTIONS			0x100F
 #define	IDC_DRIVES				0x1010
 #define	IDC_SETTINGS_WND		0x1011
+#define	IDC_PRINTERS			0x1012
 
 #define	IDC_FIRST_MENU			0x3000
 

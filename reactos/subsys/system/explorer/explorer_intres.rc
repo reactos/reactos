@@ -8,9 +8,7 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #ifndef _ROS_
-#ifndef __WINE__
 #include "afxres.h"
-#endif
 #endif
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -110,6 +108,7 @@ BEGIN
     IDS_DRIVES              "Discuri"
     IDS_SEARCH_COMPUTER     "Search Computer..."
     IDS_SETTINGS_WND        "Control Panel"
+    IDS_PRINTERS            "Printers"
 END
 
 #endif    // Romanian resources
@@ -143,7 +142,8 @@ IDB_LOGOV               BITMAP  DISCARDABLE     "res/logov.bmp"
 IDA_EXPLORER ACCELERATORS DISCARDABLE 
 BEGIN
     0x58,            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
-    0x53,            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, NOINVERT
+    0x53,            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
 END
 
 #endif    // Neutral resources
@@ -368,6 +368,7 @@ BEGIN
     IDS_DRIVES              "Verzeichnisse"
     IDS_SEARCH_COMPUTER     "Suche Computer..."
     IDS_SETTINGS_WND        "Systemsteuerung"
+    IDS_PRINTERS            "Drucker"
 END
 
 #endif    // German (Germany) resources
@@ -578,6 +579,7 @@ BEGIN
     IDS_DRIVES              "Drives"
     IDS_SEARCH_COMPUTER     "Search Computer..."
     IDS_SETTINGS_WND        "Control Panel"
+    IDS_PRINTERS            "Printers"
 END
 
 #endif    // English (U.S.) resources
