@@ -75,6 +75,7 @@ extern "C" {
 #define    IDE_CMD_FLUSH_CACHE_EXT  0xEA
 #define    IDE_CMD_IDENT_ATA_DRV    0xEC
 #define    IDE_CMD_IDENT_ATAPI_DRV  0xA1
+#define    IDE_CMD_GET_MEDIA_STATUS 0xDA
 
 //
 //  Access macros for command registers
@@ -179,7 +180,25 @@ typedef struct _IDE_DRIVE_IDENTIFY
   WORD  RWMultCurrent;       /*59*/
   WORD  TMSectorCountLo;     /*60*/
   WORD  TMSectorCountHi;     /*61*/
-  WORD  Reserved62[193];     /*62*/
+  WORD  DmaModes;            /*62*/
+  WORD  MultiDmaModes;       /*63*/
+  WORD  Reserved64[5];       /*64*/
+  WORD  Reserved69[2];       /*69*/
+  WORD  Reserved71[4];       /*71*/
+  WORD  MaxQueueDepth;       /*75*/
+  WORD  Reserved76[4];       /*79*/
+  WORD  MajorRevision;       /*80*/
+  WORD  MinorRevision;       /*81*/
+  WORD  SupportedFeatures82; /*82*/
+  WORD  SupportedFeatures83; /*83*/
+  WORD  SupportedFeatures84; /*84*/
+  WORD  EnabledFeatures85;   /*85*/
+  WORD  EnabledFeatures86;   /*86*/
+  WORD  EnabledFeatures87;   /*87*/
+  WORD  UltraDmaModes;       /*88*/
+  WORD  Reserved89[11];      /*89*/
+  WORD  Max48BitAddress[4];  /*100*/
+  WORD  Reserved104[151];    /*104*/
   WORD  Checksum;            /*255*/
 } IDE_DRIVE_IDENTIFY, *PIDE_DRIVE_IDENTIFY;
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.38 2003/04/06 10:45:15 chorns Exp $
+/* $Id: atapi.c,v 1.39 2003/06/24 12:29:02 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -74,12 +74,8 @@
 typedef struct _ATAPI_MINIPORT_EXTENSION
 {
   IDE_DRIVE_IDENTIFY DeviceParams[2];
-  BOOLEAN DevicePresent[2];
-  BOOLEAN DeviceAtapi[2];
-  ULONG TransferSize[2]; 
-  BOOLEAN MultiSectorCommand[2];
-  BOOLEAN DWordIo[2];
-
+  ULONG DeviceFlags[2];
+  ULONG TransferSize[2];
 
   ULONG CommandPortBase;
   ULONG ControlPortBase;
@@ -92,6 +88,14 @@ typedef struct _ATAPI_MINIPORT_EXTENSION
   PUCHAR DataBuffer;
   ULONG DataTransferLength;
 } ATAPI_MINIPORT_EXTENSION, *PATAPI_MINIPORT_EXTENSION;
+
+/* DeviceFlags */
+#define DEVICE_PRESENT           0x00000001
+#define DEVICE_ATAPI             0x00000002
+#define DEVICE_MULTI_SECTOR_CMD  0x00000004
+#define DEVICE_DWORD_IO          0x00000008
+#define DEVICE_48BIT_ADDRESS     0x00000010
+#define DEVICE_MEDIA_STATUS      0x00000020
 
 
 typedef struct _UNIT_EXTENSION
@@ -236,6 +240,10 @@ AtapiReadWrite(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 static ULONG
 AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 		PSCSI_REQUEST_BLOCK Srb);
+
+static ULONG
+AtapiTestUnitReady(PATAPI_MINIPORT_EXTENSION DeviceExtension,
+		   PSCSI_REQUEST_BLOCK Srb);
 
 static UCHAR
 AtapiErrorToScsi(PVOID DeviceExtension,
@@ -830,7 +838,7 @@ AtapiStartIo(IN PVOID DeviceExtension,
     {
       case SRB_FUNCTION_EXECUTE_SCSI:
 	DevExt->CurrentSrb = Srb;
-	if (DevExt->DeviceAtapi[Srb->TargetId] == TRUE)
+	if (DevExt->DeviceFlags[Srb->TargetId] & DEVICE_ATAPI)
 	  {
 	    Result = AtapiSendAtapiCommand(DevExt,
 					   Srb);
@@ -915,7 +923,7 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 
   DPRINT("CommandPortBase: %lx  ControlPortBase: %lx\n", CommandPortBase, ControlPortBase);
 
-  IsAtapi = DevExt->DeviceAtapi[Srb->TargetId];
+  IsAtapi = (DevExt->DeviceFlags[Srb->TargetId] & DEVICE_ATAPI);
   DPRINT("IsAtapi == %s\n", (IsAtapi) ? "TRUE" : "FALSE");
 
   IsLastBlock = FALSE;
@@ -974,22 +982,23 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	       !(IDEReadStatus(CommandPortBase) & IDE_SR_DRQ);
 	       Retries++)
 	    {
-		KeStallExecutionProcessor(10);
+	      KeStallExecutionProcessor(10);
 	    }
 
 	  /* Copy the block of data */
-	  if (DevExt->DWordIo[Srb->TargetId])
-	  {
-	     IDEReadBlock32(CommandPortBase,
-		            TargetAddress,
-		            TransferSize);
-	  }
+	  if (DevExt->DeviceFlags[Srb->TargetId] & DEVICE_DWORD_IO)
+	    {
+	      IDEReadBlock32(CommandPortBase,
+			     TargetAddress,
+			     TransferSize);
+	    }
 	  else
-	  {
-	     IDEReadBlock(CommandPortBase,
-		          TargetAddress,
-		          TransferSize);
-	  }
+	    {
+	      IDEReadBlock(CommandPortBase,
+			   TargetAddress,
+			   TransferSize);
+	    }
+
 	  /* check DRQ */
 	  if (IsLastBlock)
 	    {
@@ -1034,27 +1043,27 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	      /* Update DevExt data */
 	      TransferSize = DevExt->TransferSize[Srb->TargetId];
 	      if (DevExt->DataTransferLength < TransferSize)
-	      {
-		 TransferSize = DevExt->DataTransferLength;
-	      }
-		 
+		{
+		  TransferSize = DevExt->DataTransferLength;
+		}
+
 	      TargetAddress = DevExt->DataBuffer;
 	      DevExt->DataBuffer += TransferSize;
 	      DevExt->DataTransferLength -= TransferSize;
 
 	      /* Write the sector */
-              if (DevExt->DWordIo[Srb->TargetId])
-	      {
-	         IDEWriteBlock32(CommandPortBase,
-			         TargetAddress,
-			         TransferSize);
-	      }
+	      if (DevExt->DeviceFlags[Srb->TargetId] & DEVICE_DWORD_IO)
+		{
+		  IDEWriteBlock32(CommandPortBase,
+				  TargetAddress,
+				  TransferSize);
+		}
 	      else
-	      {
-	         IDEWriteBlock(CommandPortBase,
-			       TargetAddress,
-			       TransferSize);
-	      }
+		{
+		  IDEWriteBlock(CommandPortBase,
+				TargetAddress,
+				TransferSize);
+		}
 	    }
 
 	  Srb->SrbStatus = SRB_STATUS_SUCCESS;
@@ -1179,7 +1188,7 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       if (Retries >= 20000)
 	{
 	  DPRINT("Timeout on drive %lu\n", UnitNumber);
-	  DeviceExtension->DevicePresent[UnitNumber] = FALSE;
+	  DeviceExtension->DeviceFlags[UnitNumber] &= ~DEVICE_PRESENT;
 	  continue;
 	}
 
@@ -1200,11 +1209,10 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 				  &DeviceExtension->DeviceParams[UnitNumber]))
 	    {
 	      DPRINT("  ATAPI drive found!\n");
-	      DeviceExtension->DevicePresent[UnitNumber] = TRUE;
-	      DeviceExtension->DeviceAtapi[UnitNumber] = TRUE;
-	      DeviceExtension->TransferSize[UnitNumber] = DeviceExtension->DeviceParams[UnitNumber].BytesPerSector;
-              DeviceExtension->MultiSectorCommand[UnitNumber] = FALSE;
-              DeviceExtension->DWordIo[UnitNumber] = FALSE;
+	      DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_PRESENT;
+	      DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_ATAPI;
+	      DeviceExtension->TransferSize[UnitNumber] =
+		DeviceExtension->DeviceParams[UnitNumber].BytesPerSector;
 	      DeviceFound = TRUE;
 	    }
 	  else
@@ -1221,22 +1229,22 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 				  &DeviceExtension->DeviceParams[UnitNumber]))
 	    {
 	      DPRINT("  IDE drive found!\n");
-	      DeviceExtension->DevicePresent[UnitNumber] = TRUE;
-	      DeviceExtension->DeviceAtapi[UnitNumber] = FALSE;
+	      DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_PRESENT;
 	      DeviceExtension->TransferSize[UnitNumber] = DeviceExtension->DeviceParams[UnitNumber].BytesPerSector;
 	      if ((DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0x8000) && 
 		  (DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0xff) &&
 		  (DeviceExtension->DeviceParams[UnitNumber].RWMultCurrent & 0x100) &&
 		  (DeviceExtension->DeviceParams[UnitNumber].RWMultCurrent & 0xff))
-	      {
-		 DeviceExtension->TransferSize[UnitNumber] *= (DeviceExtension->DeviceParams[UnitNumber].RWMultCurrent & 0xff);
-		 DeviceExtension->MultiSectorCommand[UnitNumber] = TRUE;
-	      }
-	      else
-	      {
-                 DeviceExtension->MultiSectorCommand[UnitNumber] = FALSE;
-	      }
-              DeviceExtension->DWordIo[UnitNumber] = DeviceExtension->DeviceParams[UnitNumber].DWordIo ? TRUE : FALSE;
+		{
+		  DeviceExtension->TransferSize[UnitNumber] *= (DeviceExtension->DeviceParams[UnitNumber].RWMultCurrent & 0xff);
+		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_MULTI_SECTOR_CMD;
+		}
+
+	      if (DeviceExtension->DeviceParams[UnitNumber].DWordIo)
+		{
+		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DWORD_IO;
+		}
+
 	      DeviceFound = TRUE;
 	    }
 	  else
@@ -1677,7 +1685,7 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
       return(SRB_STATUS_INVALID_LUN);
     }
 
-  if (DeviceExtension->DevicePresent[Srb->TargetId] == FALSE)
+  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_PRESENT))
     {
       Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
       return(SRB_STATUS_NO_DEVICE);
@@ -1823,8 +1831,12 @@ AtapiSendIdeCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 				    Srb);
 	break;
 
-      case SCSIOP_MODE_SENSE:
       case SCSIOP_TEST_UNIT_READY:
+	SrbStatus = AtapiTestUnitReady(DeviceExtension,
+				       Srb);
+	break;
+
+      case SCSIOP_MODE_SENSE:
       case SCSIOP_VERIFY:
       case SCSIOP_START_STOP_UNIT:
       case SCSIOP_REQUEST_SENSE:
@@ -1872,7 +1884,7 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       return(SRB_STATUS_INVALID_LUN);
     }
 
-  if (DeviceExtension->DevicePresent[Srb->TargetId] == FALSE)
+  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_PRESENT))
     {
       Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
       return(SRB_STATUS_NO_DEVICE);
@@ -1888,16 +1900,16 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
     }
 
   /* set device class */
-  if (DeviceExtension->DeviceAtapi[Srb->TargetId] == FALSE)
-    {
-      /* hard-disk */
-      InquiryData->DeviceType = DIRECT_ACCESS_DEVICE;
-    }
-  else
+  if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_ATAPI)
     {
       /* get it from the ATAPI configuration word */
       InquiryData->DeviceType = (DeviceParams->ConfigBits >> 8) & 0x1F;
       DPRINT("Device class: %u\n", InquiryData->DeviceType);
+    }
+  else
+    {
+      /* hard-disk */
+      InquiryData->DeviceType = DIRECT_ACCESS_DEVICE;
     }
 
   DPRINT("ConfigBits: 0x%x\n", DeviceParams->ConfigBits);
@@ -1963,7 +1975,7 @@ AtapiReadCapacity(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       return(SRB_STATUS_INVALID_LUN);
     }
 
-  if (DeviceExtension->DevicePresent[Srb->TargetId] == FALSE)
+  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_PRESENT))
     {
       Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
       return(SRB_STATUS_NO_DEVICE);
@@ -2038,7 +2050,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       return(SRB_STATUS_INVALID_LUN);
     }
 
-  if (DeviceExtension->DevicePresent[Srb->TargetId] == FALSE)
+  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_PRESENT))
     {
       Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
       return(SRB_STATUS_NO_DEVICE);
@@ -2086,11 +2098,11 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 
   if (Srb->SrbFlags & SRB_FLAGS_DATA_IN)
     {
-      Command = DeviceExtension->MultiSectorCommand[Srb->TargetId] ? IDE_CMD_READ_MULTIPLE : IDE_CMD_READ;
+      Command = (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_MULTI_SECTOR_CMD) ? IDE_CMD_READ_MULTIPLE : IDE_CMD_READ;
     }
   else
     {
-      Command = DeviceExtension->MultiSectorCommand[Srb->TargetId] ? IDE_CMD_WRITE_MULTIPLE : IDE_CMD_WRITE;
+      Command = (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_MULTI_SECTOR_CMD) ? IDE_CMD_WRITE_MULTIPLE : IDE_CMD_WRITE;
     }
 
   if (DrvHead & IDE_DH_LBA)
@@ -2205,27 +2217,27 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       /* Update DeviceExtension data */
       TransferSize = DeviceExtension->TransferSize[Srb->TargetId];
       if (DeviceExtension->DataTransferLength < TransferSize)
-      {
-	 TransferSize = DeviceExtension->DataTransferLength;
-      }
+	{
+	  TransferSize = DeviceExtension->DataTransferLength;
+	}
 
       TargetAddress = DeviceExtension->DataBuffer;
       DeviceExtension->DataBuffer += TransferSize;
       DeviceExtension->DataTransferLength -= TransferSize;
 
       /* Write data block */
-      if (DeviceExtension->DWordIo[Srb->TargetId])
-      {
-         IDEWriteBlock32(DeviceExtension->CommandPortBase,
-		         TargetAddress,
-		         TransferSize);
-      }
+      if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_DWORD_IO)
+	{
+	  IDEWriteBlock32(DeviceExtension->CommandPortBase,
+			  TargetAddress,
+			  TransferSize);
+	}
       else
-      {
-         IDEWriteBlock(DeviceExtension->CommandPortBase,
-		       TargetAddress,
-		       TransferSize);
-      }
+	{
+	  IDEWriteBlock(DeviceExtension->CommandPortBase,
+			TargetAddress,
+			TransferSize);
+	}
     }
 
   DPRINT("AtapiReadWrite() done!\n");
@@ -2262,7 +2274,7 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       return(SRB_STATUS_INVALID_LUN);
     }
 
-  if (DeviceExtension->DevicePresent[Srb->TargetId] == FALSE)
+  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_PRESENT))
     {
       Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
       return(SRB_STATUS_NO_DEVICE);
@@ -2323,6 +2335,116 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 }
 
 
+static ULONG
+AtapiTestUnitReady(PATAPI_MINIPORT_EXTENSION DeviceExtension,
+		   PSCSI_REQUEST_BLOCK Srb)
+{
+  ULONG Retries;
+  UCHAR Status;
+  UCHAR Error;
+
+  DPRINT1("AtapiTestUnitReady() called!\n");
+
+  if (Srb->PathId != 0)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_PATH_ID;
+      return(SRB_STATUS_INVALID_PATH_ID);
+    }
+
+  if (Srb->TargetId > 1)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_TARGET_ID;
+      return(SRB_STATUS_INVALID_TARGET_ID);
+    }
+
+  if (Srb->Lun != 0)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_LUN;
+      return(SRB_STATUS_INVALID_LUN);
+    }
+
+  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_PRESENT))
+    {
+      Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
+      return(SRB_STATUS_NO_DEVICE);
+    }
+
+  DPRINT1("SCSIOP_TEST_UNIT_READY: TargetId: %lu\n",
+	 Srb->TargetId);
+
+  /* Return success if media status is not supported */
+  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_MEDIA_STATUS))
+    {
+      Srb->SrbStatus = SRB_STATUS_SUCCESS;
+      return(SRB_STATUS_SUCCESS);
+    }
+
+  /* Wait for BUSY to clear */
+  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
+    {
+      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
+      if (!(Status & IDE_SR_BUSY))
+        {
+          break;
+        }
+      ScsiPortStallExecution(10);
+    }
+  DPRINT1("Status=%02x\n", Status);
+  DPRINT1("Waited %ld usecs for busy to clear\n", Retries * 10);
+  if (Retries >= IDE_MAX_BUSY_RETRIES)
+    {
+      DPRINT1("Drive is BUSY for too long\n");
+      return(SRB_STATUS_BUSY);
+    }
+
+  /* Select the desired drive */
+  IDEWriteDriveHead(DeviceExtension->CommandPortBase,
+		    IDE_DH_FIXED | (Srb->TargetId ? IDE_DH_DRV1 : 0));
+  ScsiPortStallExecution(10);
+
+  /* Issue command to drive */
+  IDEWriteCommand(DeviceExtension->CommandPortBase, IDE_CMD_GET_MEDIA_STATUS);
+
+  /* Wait for controller ready */
+  for (Retries = 0; Retries < IDE_MAX_WRITE_RETRIES; Retries++)
+    {
+      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
+      if (!(Status & IDE_SR_BUSY) || (Status & IDE_SR_ERR))
+	{
+	  break;
+	}
+      KeStallExecutionProcessor(10);
+    }
+  if (Retries >= IDE_MAX_WRITE_RETRIES)
+    {
+      DPRINT1("Drive is BUSY for too long after sending write command\n");
+      return(SRB_STATUS_BUSY);
+    }
+
+  if (Status & IDE_SR_ERR)
+    {
+      Error = IDEReadError(DeviceExtension->CommandPortBase);
+      if (Error == IDE_ER_UNC)
+	{
+	  /* Handle write protection 'error' */
+	  Srb->SrbStatus = SRB_STATUS_SUCCESS;
+	  return(SRB_STATUS_SUCCESS);
+	}
+      else
+	{
+	  /* Indicate expecting an interrupt. */
+	  DeviceExtension->ExpectingInterrupt = TRUE;
+	  return(SRB_STATUS_PENDING);
+	}
+    }
+
+  DPRINT1("AtapiTestUnitReady() done!\n");
+
+  Srb->SrbStatus = SRB_STATUS_SUCCESS;
+  return(SRB_STATUS_SUCCESS);
+}
+
+
 static UCHAR
 AtapiErrorToScsi(PVOID DeviceExtension,
 		 PSCSI_REQUEST_BLOCK Srb)
@@ -2343,7 +2465,7 @@ AtapiErrorToScsi(PVOID DeviceExtension,
 
   ErrorReg = IDEReadError(CommandPortBase);
 
-  if (DevExt->DeviceAtapi[Srb->TargetId])
+  if (DevExt->DeviceFlags[Srb->TargetId] & DEVICE_ATAPI)
     {
       switch (ErrorReg >> 4)
 	{
