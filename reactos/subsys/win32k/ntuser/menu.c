@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.16 2003/08/18 13:37:54 weiden Exp $
+/* $Id: menu.c,v 1.17 2003/08/18 14:09:13 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -236,11 +236,11 @@ W32kDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse)
     W32kDeleteMenuItems(MenuObject, bRecurse); /* do not destroy submenus */
     ExReleaseFastMutexUnsafe (&MenuObject->MenuItemsLock);
     
-    W32kReleaseMenuObject(MenuObject);
-    
     ExAcquireFastMutexUnsafe(&W32Process->MenuListLock);
-    // FIXME RemoveEntryList(); remove 
+    RemoveEntryList(&MenuObject->ListEntry);
     ExReleaseFastMutexUnsafe(&W32Process->MenuListLock);
+    
+    W32kReleaseMenuObject(MenuObject); // needed?
     
     ObmCloseHandle(W32Process->WindowStation->HandleTable, MenuObject->Self);
   
@@ -753,7 +753,6 @@ W32kSetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT uItem, UINT fByPos)
 
 /*!
  * Internal function. Called when the process is destroyed to free the remaining menu handles.
- * \param	Process - PID of the process that will be destroyed.
 */
 BOOL FASTCALL
 W32kCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process)
@@ -807,7 +806,7 @@ NtUserBuildMenuItemList(
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-    return -1;
+    return (DWORD)-1;
   }
   
   if(lpmiil)
