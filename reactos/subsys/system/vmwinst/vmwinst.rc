@@ -101,7 +101,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "Please select the graphics driver you would like to use:",-1,25,25,225,15
   PUSHBUTTON "ReactOS VGA Driver", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
-  PUSHBUTTON "ReactOS VBE Driver (Experimental!)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "ReactOS VBE Driver (SVGA)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
   LTEXT "Click 'Finish' to complete the operation or 'Cancel' to exit the setup without changes.", -1, 25, 93, 225, 20
 END
 
