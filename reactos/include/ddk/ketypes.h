@@ -36,18 +36,7 @@ typedef VOID STDCALL_FUNC
 
 struct _DISPATCHER_HEADER;
 
-typedef struct _KWAIT_BLOCK
-/*
- * PURPOSE: Object describing the wait a thread is currently performing
- */
-{
-   LIST_ENTRY WaitListEntry;
-   struct _KTHREAD* Thread;
-   struct _DISPATCHER_HEADER *Object;
-   struct _KWAIT_BLOCK* NextWaitBlock;
-   USHORT WaitKey;
-   USHORT WaitType;
-} KWAIT_BLOCK, *PKWAIT_BLOCK;
+
 
 #include <pshpack1.h>
 
@@ -163,6 +152,29 @@ typedef struct _KEVENT_PAIR
 
 struct _KDPC;
 
+typedef struct _KSPIN_LOCK_QUEUE {
+    struct _KSPIN_LOCK_QUEUE * volatile Next;
+    PKSPIN_LOCK volatile Lock;
+} KSPIN_LOCK_QUEUE, *PKSPIN_LOCK_QUEUE;
+
+typedef struct _KLOCK_QUEUE_HANDLE {
+    KSPIN_LOCK_QUEUE LockQueue;
+    KIRQL OldIrql;
+} KLOCK_QUEUE_HANDLE, *PKLOCK_QUEUE_HANDLE;
+
+typedef struct _KWAIT_BLOCK
+/*
+ * PURPOSE: Object describing the wait a thread is currently performing
+ */
+{
+   LIST_ENTRY WaitListEntry;
+   struct _KTHREAD* Thread;
+   struct _DISPATCHER_HEADER *Object;
+   struct _KWAIT_BLOCK* NextWaitBlock;
+   USHORT WaitKey;
+   USHORT WaitType;
+} KWAIT_BLOCK, *PKWAIT_BLOCK;
+
 /*
  * PURPOSE: Defines a delayed procedure call routine
  * NOTE:
@@ -229,6 +241,31 @@ typedef struct _WAIT_CONTEXT_BLOCK
   PKDPC BufferChainingDpc;
 } WAIT_CONTEXT_BLOCK, *PWAIT_CONTEXT_BLOCK;
 
+typedef enum _KBUGCHECK_CALLBACK_REASON {
+    KbCallbackInvalid,
+    KbCallbackReserved1,
+    KbCallbackSecondaryDumpData,
+    KbCallbackDumpIo,
+} KBUGCHECK_CALLBACK_REASON;
+
+typedef
+VOID
+(*PKBUGCHECK_REASON_CALLBACK_ROUTINE) (
+    IN KBUGCHECK_CALLBACK_REASON Reason,
+    IN PVOID Record, // This should be struct _KBUGCHECK_REASON_CALLBACK_RECORD* but minggw doesn't want to allow that...
+    IN OUT PVOID ReasonSpecificData,
+    IN ULONG ReasonSpecificDataLength
+    );
+
+typedef struct _KBUGCHECK_REASON_CALLBACK_RECORD {
+    LIST_ENTRY Entry;
+    PKBUGCHECK_REASON_CALLBACK_ROUTINE CallbackRoutine;
+    PUCHAR Component;
+    ULONG_PTR Checksum;
+    KBUGCHECK_CALLBACK_REASON Reason;
+    UCHAR State;
+} KBUGCHECK_REASON_CALLBACK_RECORD, *PKBUGCHECK_REASON_CALLBACK_RECORD;
+
 struct _KINTERRUPT;
 
 typedef BOOLEAN STDCALL_FUNC
@@ -245,6 +282,45 @@ typedef LONG FLOAT_LONG, *PFLOAT_LONG;
 typedef LONG FLOATL;
 
 typedef LONG FIX; /* fixed-point number */
+
+typedef struct _M128 {
+    ULONGLONG Low;
+    LONGLONG High;
+} M128, *PM128;
+
+typedef struct _KEXCEPTION_FRAME {
+    ULONG64 P1Home;
+    ULONG64 P2Home;
+    ULONG64 P3Home;
+    ULONG64 P4Home;
+    ULONG64 P5;
+    ULONG64 InitialStack;
+    M128 Xmm6;
+    M128 Xmm7;
+    M128 Xmm8;
+    M128 Xmm9;
+    M128 Xmm10;
+    M128 Xmm11;
+    M128 Xmm12;
+    M128 Xmm13;
+    M128 Xmm14;
+    M128 Xmm15;
+    ULONG64 TrapFrame;
+    ULONG64 CallbackStack;
+    ULONG64 OutputBuffer;
+    ULONG64 OutputLength;
+    UCHAR ExceptionRecord[64];
+    ULONG64 Fill1;
+    ULONG64 Rbp;
+    ULONG64 Rbx;
+    ULONG64 Rdi;
+    ULONG64 Rsi;
+    ULONG64 R12;
+    ULONG64 R13;
+    ULONG64 R14;
+    ULONG64 R15;
+    ULONG64 Return;
+} KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
 
 /* copied from W32API */
 typedef struct _KFLOATING_SAVE
