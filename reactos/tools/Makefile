@@ -44,7 +44,7 @@ rline$(EXE_POSTFIX): rline.c
 	@$(HOST_CC) $(CFLAGS) -DUNIX_PATHS rline.c -o rline$(EXE_POSTFIX)
 endif
 ifeq ($(HOST),mingw32-windows)
-rline$(EXE_POSTFIX): rmkdir.c
+rline$(EXE_POSTFIX): rline.c
 	@$(HOST_CC) $(CFLAGS) -DDOS_PATHS rline.c -o rline$(EXE_POSTFIX)
 endif
 
