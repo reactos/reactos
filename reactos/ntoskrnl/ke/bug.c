@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.27 2002/09/08 10:23:28 chorns Exp $
+/* $Id: bug.c,v 1.28 2003/04/07 23:10:08 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -158,14 +158,18 @@ KeBugCheckEx(ULONG BugCheckCode,
   MmDumpToPagingFile(BugCheckCode, BugCheckParameter1, 
 		     BugCheckParameter2, BugCheckParameter3,
 		     BugCheckParameter4, NULL);
-  
+
   if (KdDebuggerEnabled)
     {
       __asm__("sti\n\t");
       DbgBreakPoint();
+      __asm__("cli\n\t");
     }
 
-  for(;;);
+  for (;;)
+    {
+      __asm__("hlt\n\t");
+    }
 }
 
 VOID STDCALL

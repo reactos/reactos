@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.12 2003/03/16 14:16:54 chorns Exp $
+/* $Id: exception.c,v 1.13 2003/04/07 23:10:08 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -58,7 +58,7 @@ KiUserExceptionDispatcher(PEXCEPTION_RECORD ExceptionRecord,
 VOID STDCALL
 RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
 {
-	DbgPrint("RtlRaiseException()");
+  DPRINT("RtlRaiseException()\n");
 }
 
 VOID STDCALL

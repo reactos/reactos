@@ -90,7 +90,7 @@
 #include <internal/module.h>
 #include <internal/ldr.h>
 
-#undef NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 extern LIST_ENTRY PiThreadListHead;
@@ -354,7 +354,7 @@ GspPutPacketNoWait (PCHAR Buffer)
 /* Indicate to caller of GspMem2Hex or GspHex2Mem that there has been an
    error.  */
 static volatile BOOLEAN GspMemoryError = FALSE;
-static void *GspAccessLocation = NULL;
+static volatile void *GspAccessLocation = NULL;
 
 
 /* Convert the memory pointed to by Address into hex, placing result in Buffer */
@@ -369,6 +369,12 @@ GspMem2Hex (PCHAR Address,
 {
   ULONG i;
   CHAR ch;
+
+  if (NULL == Address && MayFault)
+    {
+      GspMemoryError = TRUE;
+      return Buffer;
+    }
 
   for (i = 0; i < (ULONG) Count; i++)
     {
@@ -457,14 +463,12 @@ GspComputeSignal (NTSTATUS ExceptionCode)
       SigVal = 8;
       break;			/* divide by zero */
     case STATUS_SINGLE_STEP:
-      SigVal = 5;
-      break;			/* debug exception */
+      				/* debug exception */
     case STATUS_BREAKPOINT:
       SigVal = 5;
       break;			/* breakpoint */
     case STATUS_INTEGER_OVERFLOW:
-      SigVal = 16;
-      break;			/* into instruction (overflow) */
+      				/* into instruction (overflow) */
     case STATUS_ARRAY_BOUNDS_EXCEEDED:
       SigVal = 16;
       break;			/* bound instruction */
@@ -477,11 +481,12 @@ GspComputeSignal (NTSTATUS ExceptionCode)
       break;			/* coprocessor not available */
 #endif
     case STATUS_STACK_OVERFLOW:
-      SigVal = 11;
-      break;			/* stack exception */
+      				/* stack exception */
     case STATUS_DATATYPE_MISALIGNMENT:
-      SigVal = 11;
-      break;			/* page fault */
+      				/* page fault */
+    case STATUS_ACCESS_VIOLATION:
+      SigVal = 11;		/* access violation */
+      break;
     default:
       SigVal = 7;		/* "software generated" */
     }
@@ -746,7 +751,6 @@ GspQuery(PCHAR Request)
       ETHREAD, Tcb.ThreadListEntry);
     Value = (ULONG) GspEnumThread->Cid.UniqueThread;
     GspLong2Hex (&ptr, Value);
-DPRINT("fThreadInfo 0x%08x\n", (ULONG) GspEnumThread->Cid.UniqueThread);
   }
   else if (strncmp (Command, "sThreadInfo", 11) == 0)
   {
@@ -760,12 +764,10 @@ DPRINT("fThreadInfo 0x%08x\n", (ULONG) GspEnumThread->Cid.UniqueThread);
 	    GspOutBuffer[0] = 'm';
 	    Value = (ULONG) GspEnumThread->Cid.UniqueThread;
       GspLong2Hex (&ptr, Value);
-DPRINT("sThreadInfo 0x%08x\n", (ULONG) GspEnumThread->Cid.UniqueThread);
     }
 		else
 		{
 	    GspOutBuffer[0] = 'l';
-DPRINT("End of threads\n");
 		}
   }
   else if (strncmp (Command, "ThreadExtraInfo", 15) == 0)
@@ -983,13 +985,15 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
   /* Disable hardware debugging while we are inside the stub */
   __asm__("movl %0,%%db7" : /* no output */ : "r" (0));
 
-  if (NULL != GspAccessLocation &&
+  if (STATUS_ACCESS_VIOLATION == ExceptionRecord->ExceptionCode &&
+      NULL != GspAccessLocation &&
       (ULONG_PTR) GspAccessLocation ==
       (ULONG_PTR) ExceptionRecord->ExceptionInformation[1])
     {
       GspAccessLocation = NULL;
       GspMemoryError = TRUE;
       TrapFrame->Eip += 2;
+      ExceptionRecord->ExceptionFlags &= ~EXCEPTION_NONCONTINUABLE;
     }
   else
     {
@@ -1044,16 +1048,9 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
               break;
             case 'g':		/* return the value of the CPU Registers */
               if (GspDbgThread)
-{
-DPRINT("GspDbgThread active\n");
                 GspGetRegistersFromTrapFrame (&GspOutBuffer[0], Context, GspDbgThread->Tcb.TrapFrame);
-/*GspGetRegistersFromTrapFrame (&GspOutBuffer[0], Context, TrapFrame);*/
-}
               else
-{
-DPRINT("GspDbgThread not active\n");
                 GspGetRegistersFromTrapFrame (&GspOutBuffer[0], Context, TrapFrame);
-}
               break;
             case 'G':		/* set the value of the CPU Registers - return OK */
               if (GspDbgThread)

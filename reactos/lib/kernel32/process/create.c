@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.64 2003/03/26 22:11:27 hbirr Exp $
+/* $Id: create.c,v 1.65 2003/04/07 23:10:07 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -171,29 +171,32 @@ _except_handler(
     struct _CONTEXT *ContextRecord,
     void * DispatcherContext )
 {
-	DPRINT("Process terminated abnormally...\n");
+  DPRINT1("Process terminated abnormally due to unhandled exception\n");
 
-	if (++_except_recursion_trap > 3) {
-        DPRINT("_except_handler(...) appears to be recursing.\n");
-        DPRINT("Process HALTED.\n");
-		for (;;) {}
-	}
-
-	if (/* FIXME: */ TRUE) /* Not a service */
+  if (3 < ++_except_recursion_trap)
+    {
+      DPRINT1("_except_handler(...) appears to be recursing.\n");
+      DPRINT1("Process HALTED.\n");
+      for (;;)
 	{
-        DPRINT("  calling ExitProcess(0) no, lets try ExitThread . . .\n");
-		//ExitProcess(0);
-		ExitThread(0);
 	}
-	else
-	{
-        DPRINT("  calling ExitThread(0) . . .\n");
-		ExitThread(0);
-	}
+    }
 
-    DPRINT("  We should not get to here !!!\n");
-	/* We should not get to here */
-	return ExceptionContinueSearch;
+  if (/* FIXME: */ TRUE) /* Not a service */
+    {
+      DPRINT("  calling ExitProcess(0) no, lets try ExitThread . . .\n");
+      /* ExitProcess(0); */
+      ExitThread(0);
+    }
+  else
+    {
+    DPRINT("  calling ExitThread(0) . . .\n");
+    ExitThread(0);
+    }
+
+  DPRINT1("  We should not get to here !!!\n");
+  /* We should not get to here */
+  return ExceptionContinueSearch;
 }
 
 VOID STDCALL

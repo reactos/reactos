@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.29 2003/03/06 23:57:02 gvg Exp $
+/* $Id: catch.c,v 1.30 2003/04/07 23:10:08 gvg Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -53,6 +53,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 {
   EXCEPTION_DISPOSITION Value;
   CONTEXT TContext;
+  KD_CONTINUE_TYPE Action = kdContinue;
 
   DPRINT("KiDispatchException() called\n");
 
@@ -77,69 +78,65 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
       Context->Eip--;
     }
 #endif
-  if (PreviousMode == UserMode)
-    {
-      if (SearchFrames)
-	{
-	  PULONG Stack;
-	  ULONG CDest;
-
-	  /* FIXME: Give the kernel debugger a chance */
-
-	  /* FIXME: Forward exception to user mode debugger */
-
-	  /* FIXME: Check user mode stack for enough space */
-
-	  
-	  /*
-	   * Let usermode try and handle the exception
-	   */
-	  Tf->Esp = Tf->Esp - 
-	    (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT));
-	  Stack = (PULONG)Tf->Esp;
-	  CDest = 3 + (ROUND_UP(sizeof(EXCEPTION_RECORD), 4) / 4);
-	  /* Return address */
-	  Stack[0] = 0;    
-	  /* Pointer to EXCEPTION_RECORD structure */
-	  Stack[1] = (ULONG)&Stack[3];   
-	  /* Pointer to CONTEXT structure */
-	  Stack[2] = (ULONG)&Stack[CDest];     
-	  memcpy(&Stack[3], ExceptionRecord, sizeof(EXCEPTION_RECORD));
-	  memcpy(&Stack[CDest], Context, sizeof(CONTEXT));
-
-	  Tf->Eip = (ULONG)LdrpGetSystemDllExceptionDispatcher();
-	  return;
-	}
       
-      /* FIXME: Forward the exception to the debugger */
-
-      /* FIXME: Forward the exception to the process exception port */
-
-      /* Terminate the offending thread */
-      ZwTerminateThread(NtCurrentThread(), ExceptionRecord->ExceptionCode);
-
-      /* If that fails then bugcheck */
-      DbgPrint("Could not terminate thread\n");
-      KeBugCheck(KMODE_EXCEPTION_NOT_HANDLED);
+  if (KdDebuggerEnabled && KdDebugState & KD_DEBUG_GDB)
+    {
+      Action = KdEnterDebuggerException (ExceptionRecord, Context, Tf);
     }
-  else
-    {
-      KD_CONTINUE_TYPE Action = kdContinue;
-
-      /* PreviousMode == KernelMode */
-      
-      if (KdDebuggerEnabled && KdDebugState & KD_DEBUG_GDB)
-	{
-	  Action = KdEnterDebuggerException (ExceptionRecord, Context, Tf);
-	}
 #ifdef KDBG
-      else if (KdDebuggerEnabled && KdDebugState & KD_DEBUG_KDB)
-	{
-	  Action = KdbEnterDebuggerException (ExceptionRecord, Context, Tf);
-	}
+  else if (KdDebuggerEnabled && KdDebugState & KD_DEBUG_KDB)
+    {
+      Action = KdbEnterDebuggerException (ExceptionRecord, Context, Tf);
+    }
 #endif /* KDBG */
-      if (Action != kdHandleException)
+  if (Action != kdHandleException)
+    {
+      if (PreviousMode == UserMode)
 	{
+	  if (SearchFrames)
+	    {
+	      PULONG Stack;
+	      ULONG CDest;
+
+	      /* FIXME: Forward exception to user mode debugger */
+
+	      /* FIXME: Check user mode stack for enough space */
+	  
+	      /*
+	       * Let usermode try and handle the exception
+	       */
+	      Tf->Esp = Tf->Esp - 
+	        (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT));
+	      Stack = (PULONG)Tf->Esp;
+	      CDest = 3 + (ROUND_UP(sizeof(EXCEPTION_RECORD), 4) / 4);
+	      /* Return address */
+	      Stack[0] = 0;    
+	      /* Pointer to EXCEPTION_RECORD structure */
+	      Stack[1] = (ULONG)&Stack[3];   
+	      /* Pointer to CONTEXT structure */
+	      Stack[2] = (ULONG)&Stack[CDest];     
+	      memcpy(&Stack[3], ExceptionRecord, sizeof(EXCEPTION_RECORD));
+	      memcpy(&Stack[CDest], Context, sizeof(CONTEXT));
+
+	      Tf->Eip = (ULONG)LdrpGetSystemDllExceptionDispatcher();
+	      return;
+	    }
+      
+	  /* FIXME: Forward the exception to the debugger */
+
+	  /* FIXME: Forward the exception to the process exception port */
+
+	  /* Terminate the offending thread */
+	  DPRINT1("Unhandled UserMode exception, terminating thread\n");
+	  ZwTerminateThread(NtCurrentThread(), ExceptionRecord->ExceptionCode);
+
+	  /* If that fails then bugcheck */
+	  DPRINT1("Could not terminate thread\n");
+	  KeBugCheck(KMODE_EXCEPTION_NOT_HANDLED);
+	}
+      else
+	{
+	  /* PreviousMode == KernelMode */
 	  Value = RtlpDispatchException (ExceptionRecord, Context);
 	  
 	  DPRINT("RtlpDispatchException() returned with 0x%X\n", Value);
@@ -147,17 +144,16 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	   * If RtlpDispatchException() does not handle the exception then 
 	   * bugcheck 
 	   */
-#ifdef TODO
-	  if (Value != ExceptionContinueExecution)
-#endif
+	  if (Value != ExceptionContinueExecution ||
+	      0 != (ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE))
 	    {
 	      KeBugCheck (KMODE_EXCEPTION_NOT_HANDLED);	      
 	    }
 	}
-      else
-        {
-          KeContextToTrapFrame (Context, KeGetCurrentThread()->TrapFrame);
-        }
+    }
+  else
+    {
+      KeContextToTrapFrame (Context, KeGetCurrentThread()->TrapFrame);
     }
 }
 
