@@ -1,4 +1,4 @@
-/* $Id: mem.c,v 1.7 2000/02/21 22:37:36 ekohl Exp $
+/* $Id: mem.c,v 1.8 2000/03/09 00:14:10 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,6 +44,36 @@ RtlCompareMemory(PVOID Source1, PVOID Source2, ULONG Length)
    return(total);
 }
 
+ULONG
+STDCALL
+RtlCompareMemoryUlong (
+	PVOID	Source,
+	ULONG	Length,
+	ULONG	Value
+	)
+/*
+ * FUNCTION: Compares a block of ULONGs with an ULONG and returns the number of equal bytes
+ * ARGUMENTS:
+ *      Source = Block to compare
+ *      Length = Number of bytes to compare
+ *      Value = Value to compare
+ * RETURNS: Number of equal bytes
+ */
+{
+	PULONG ptr = (PULONG)Source;
+	ULONG  len = Length / sizeof(ULONG);
+	int i;
+
+	for (i = 0; i < len; i++)
+	{
+		if (*ptr != Value)
+			break;
+		ptr++;
+	}
+
+	return (ULONG)((PCHAR)ptr - (PCHAR)Source);
+}
+
 #if 0
 VOID RtlCopyBytes(PVOID Destination,
 		  CONST VOID* Source,
@@ -74,6 +104,25 @@ RtlFillMemory (
 		Fill,
 		Length
 		);
+}
+
+VOID
+STDCALL
+RtlFillMemoryUlong (
+	PVOID	Destination,
+	ULONG	Length,
+	ULONG	Fill
+	)
+{
+	PULONG Dest  = Destination;
+	ULONG  Count = Length / sizeof(ULONG);
+
+	while (Count > 0)
+	{
+		*Dest = Fill;
+		Dest++;
+		Count--;
+	}
 }
 
 
