@@ -14,7 +14,6 @@
 #include <user32/debug.h>
 
 #define MAKEINTRESOURCEA(x) "x"
-#define MAX(x,y) x > y ? x : y 
 
 static HBITMAP hUpArrow = 0;
 static HBITMAP hDnArrow = 0;

@@ -14,8 +14,6 @@
 
 #define MAX_DOS_DRIVES 26
 
-#define MAX(x,y) x > y ? x : y 
-#define MIN(x,y) x < y ? x : y 
 #define abs(x) 	((x) < 0 ? -(x) : (x))
 
 #define WM_LBTRACKPOINT     0x0131

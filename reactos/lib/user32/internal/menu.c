@@ -583,9 +583,9 @@ void MENU_CalcItemSize( HDC hdc, MENUITEM *lpitem, HWND hwndOwner,
         GetTextExtentPointW( hdc, lpitem->text, wcslen(lpitem->text), &szSize  );
         lpitem->rect.right  += LOWORD(szSize.cx);
 	if (TWEAK_WineLook == WIN31_LOOK)
-            lpitem->rect.bottom += max( HIWORD(szSize.cy), SYSMETRICS_CYMENU );
+            lpitem->rect.bottom += MAX( HIWORD(szSize.cy), SYSMETRICS_CYMENU );
         else
-            lpitem->rect.bottom += max(HIWORD(szSize.cy), sysMetrics[SM_CYMENU]- 1);
+            lpitem->rect.bottom += MAX(HIWORD(szSize.cy), sysMetrics[SM_CYMENU]- 1);
         lpitem->xTab = 0;
 
         if (menuBar) lpitem->rect.right += MENU_BAR_ITEMS_SPACE;
@@ -645,24 +645,24 @@ void MENU_PopupMenuCalcSize( LPPOPUPMENU lppop, HWND hwndOwner )
 
 	    MENU_CalcItemSize( hdc, lpitem, hwndOwner, orgX, orgY, FALSE );
             if (lpitem->fType & MF_MENUBARBREAK) orgX++;
-	    maxX = max( maxX, lpitem->rect.right );
+	    maxX = MAX( maxX, lpitem->rect.right );
 	    orgY = lpitem->rect.bottom;
 	    if (IS_STRING_ITEM(lpitem->fType) && lpitem->xTab)
 	    {
-		maxTab = max( maxTab, lpitem->xTab );
-		maxTabWidth = max(maxTabWidth,lpitem->rect.right-lpitem->xTab);
+		maxTab = MAX( maxTab, lpitem->xTab );
+		maxTabWidth = MAX(maxTabWidth,lpitem->rect.right-lpitem->xTab);
 	    }
 	}
 
 	  /* Finish the column (set all items to the largest width found) */
-	maxX = max( maxX, maxTab + maxTabWidth );
+	maxX = MAX( maxX, maxTab + maxTabWidth );
 	for (lpitem = &lppop->items[start]; start < i; start++, lpitem++)
 	{
 	    lpitem->rect.right = maxX;
 	    if (IS_STRING_ITEM(lpitem->fType) && lpitem->xTab)
                 lpitem->xTab = maxTab;
 	}
-	lppop->Height = max( lppop->Height, orgY );
+	lppop->Height = MAX( lppop->Height, orgY );
     }
 
     

@@ -279,7 +279,7 @@ LRESULT CALLBACK MSGBOX_DlgProc( HWND hwnd, UINT message,WPARAM wParam, LPARAM l
 	    lRet = DrawTextA( hdc, lpmb->lpszText, -1, &rect,
                         DT_LEFT | DT_EXPANDTABS | DT_WORDBREAK | DT_CALCRECT);
     	theight = rect.bottom  - rect.top;
-    	tiheight = 16 + max(iheight, theight);
+    	tiheight = 16 + MAX(iheight, theight);
     	ReleaseDC(hItem, hdc);
     
     	/* Position the text */

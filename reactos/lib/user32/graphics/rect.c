@@ -6,6 +6,7 @@
  */
 
 #include <windows.h>
+#include <user32/win.h>
 
 WINBOOL
 STDCALL
@@ -149,10 +150,10 @@ IntersectRect(
 	SetRectEmpty( lprcDst );
 	return FALSE;
     }
-    lprcDst->left   = max( lprcSrc1->left, lprcSrc2->left );
-    lprcDst->right  = min( lprcSrc1->right, lprcSrc2->right );
-    lprcDst->top    = max( lprcSrc1->top, lprcSrc2->top );
-    lprcDst->bottom = min( lprcSrc1->bottom, lprcSrc2->bottom );
+    lprcDst->left   = MAX( lprcSrc1->left, lprcSrc2->left );
+    lprcDst->right  = MIN( lprcSrc1->right, lprcSrc2->right );
+    lprcDst->top    = MAX( lprcSrc1->top, lprcSrc2->top );
+    lprcDst->bottom = MIN( lprcSrc1->bottom, lprcSrc2->bottom );
     return TRUE;
 }
 
@@ -180,10 +181,10 @@ WINBOOL STDCALL UnionRect( LPRECT lprcDst, const RECT *lprcSrc1,
 		*lprcDst = *lprcSrc1;
 	else
 	{
-	    lprcDst->left   = min( lprcSrc1->left, lprcSrc2->left );
-	    lprcDst->right  = max( lprcSrc1->right, lprcSrc2->right );
-	    lprcDst->top    = min( lprcSrc1->top, lprcSrc2->top );
-	    lprcDst->bottom = max( lprcSrc1->bottom, lprcSrc2->bottom );	    
+	    lprcDst->left   = MIN( lprcSrc1->left, lprcSrc2->left );
+	    lprcDst->right  = MAX( lprcSrc1->right, lprcSrc2->right );
+	    lprcDst->top    = MIN( lprcSrc1->top, lprcSrc2->top );
+	    lprcDst->bottom = MAX( lprcSrc1->bottom, lprcSrc2->bottom );	    
 	}
     }
     return TRUE;

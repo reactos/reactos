@@ -13,9 +13,6 @@
 #include <user32/syscolor.h>
 #include <user32/debug.h>
 
-#define MAX(x,y) x > y ? x : y 
-#define MIN(x,y) x < y ? x : y 
-
 static HBITMAP hUpArrow = 0;
 static HBITMAP hDnArrow = 0;
 static HBITMAP hLfArrow = 0;

@@ -152,10 +152,10 @@ WINBOOL DCE_GetVisRect( WND *wndPtr, WINBOOL clientArea, RECT *lprect )
 		(lprect->bottom <= wndPtr->rectClient.top) )
 		goto fail;
 
-	    lprect->left = max( lprect->left, wndPtr->rectClient.left );
-	    lprect->right = min( lprect->right, wndPtr->rectClient.right );
-	    lprect->top = max( lprect->top, wndPtr->rectClient.top );
-	    lprect->bottom = min( lprect->bottom, wndPtr->rectClient.bottom );
+	    lprect->left = MAX( lprect->left, wndPtr->rectClient.left );
+	    lprect->right = MIN( lprect->right, wndPtr->rectClient.right );
+	    lprect->top = MAX( lprect->top, wndPtr->rectClient.top );
+	    lprect->bottom = MIN( lprect->bottom, wndPtr->rectClient.bottom );
 	}
 	OffsetRect( lprect, -xoffset, -yoffset );
 	return TRUE;

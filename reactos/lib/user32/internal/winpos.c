@@ -415,9 +415,9 @@ void WINPOS_GetMinMaxInfo( WND *wndPtr, POINT *maxSize, POINT *maxPos,
       /* Some sanity checks */
 
    
-    MinMax.ptMaxTrackSize.x = max( MinMax.ptMaxTrackSize.x,
+    MinMax.ptMaxTrackSize.x = MAX( MinMax.ptMaxTrackSize.x,
                                    MinMax.ptMinTrackSize.x );
-    MinMax.ptMaxTrackSize.y = max( MinMax.ptMaxTrackSize.y,
+    MinMax.ptMaxTrackSize.y = MAX( MinMax.ptMaxTrackSize.y,
                                    MinMax.ptMinTrackSize.y );
 
     if (maxSize) *maxSize = MinMax.ptMaxSize;
@@ -885,8 +885,8 @@ LONG WINPOS_HandleWindowPosChanging( WND *wndPtr, WINDOWPOS *winpos )
 	((wndPtr->dwStyle & (WS_POPUP | WS_CHILD)) == 0))
     {
 	WINPOS_GetMinMaxInfo( wndPtr, &maxSize, NULL, NULL, NULL );
-	winpos->cx = min( winpos->cx, maxSize.x );
-	winpos->cy = min( winpos->cy, maxSize.y );
+	winpos->cx = MIN( winpos->cx, maxSize.x );
+	winpos->cy = MIN( winpos->cy, maxSize.y );
     }
     return 0;
 }

@@ -20,9 +20,6 @@
 #include <user32/widgets.h>
 #include <user32/debug.h>
 
-#define MAX(x,y) x > y ? x : y 
-#define MIN(x,y) x < y ? x : y 
-
 #define BUFLIMIT_MULTI		65534	/* maximum buffer size (not including '\0')
 					   FIXME: BTW, new specs say 65535 (do you dare ???) */
 #define BUFLIMIT_SINGLE		766	/* maximum buffer size (not including '\0') */
