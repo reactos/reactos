@@ -1598,10 +1598,15 @@ IDEBeginControllerReset(PIDE_CONTROLLER_EXTENSION ControllerExtension)
 {
   int Retries;
 
-    // Assert drive reset line
+  DPRINT("Controller Reset initiated on %04x\n", 
+         ControllerExtension->ControlPortBase);
+
+    /*  Assert drive reset line  */
+  DPRINT("Asserting reset line\n");
   IDEWriteDriveControl(ControllerExtension->ControlPortBase, IDE_DC_SRST);
 
-    // FIXME: wait for BSY assertion
+    /*  Wait for BSY assertion  */
+  DPRINT("Waiting for BSY assertion\n");
   for (Retries = 0; Retries < IDE_MAX_RESET_RETRIES; Retries++) 
     {
       BYTE Status = IDEReadStatus(ControllerExtension->CommandPortBase);
@@ -1611,13 +1616,18 @@ IDEBeginControllerReset(PIDE_CONTROLLER_EXTENSION ControllerExtension)
         }
       KeStallExecutionProcessor(10);
     }
+  if (Retries == IDE_MAX_RESET_RETRIES)
+    {
+      DPRINT("Timeout on BSY assertion\n");
+    }
 
-    // Negate drive reset line
+    /*  Negate drive reset line  */
+  DPRINT("Negating reset line\n");
   IDEWriteDriveControl(ControllerExtension->ControlPortBase, 0);
 
   // FIXME: handle case of no device 0
 
-    // FIXME: set timer to check for end of reset
+    /*  Set timer to check for end of reset  */
   ControllerExtension->TimerState = IDETimerResetWaitForBusyNegate;
   ControllerExtension->TimerCount = IDE_RESET_BUSY_TIMEOUT;
 }
@@ -1946,17 +1956,17 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
   PIDE_CONTROLLER_EXTENSION  ControllerExtension;
 
     //  Setup Extension pointer
-CHECKPOINT;
   ControllerExtension = (PIDE_CONTROLLER_EXTENSION) Context;
+  DPRINT("Timer activated for %04lx\n", ControllerExtension->CommandPortBase);
 
     //  Handle state change if necessary
   switch (ControllerExtension->TimerState) 
     {
       case IDETimerResetWaitForBusyNegate:
-CHECKPOINT;
         if (!(IDEReadStatus(ControllerExtension->CommandPortBase) & 
             IDE_SR_BUSY))
           {
+            DPRINT("Busy line has negated, waiting for DRDY assert\n");
             ControllerExtension->TimerState = IDETimerResetWaitForDrdyAssert;
             ControllerExtension->TimerCount = IDE_RESET_DRDY_TIMEOUT;
             return;
@@ -1964,16 +1974,16 @@ CHECKPOINT;
         break;
         
       case IDETimerResetWaitForDrdyAssert:
-CHECKPOINT;
         if (IDEReadStatus(ControllerExtension->CommandPortBase) & 
             IDE_SR_DRQ)
           {
+            DPRINT("DRDY has asserted, reset complete\n");
             ControllerExtension->TimerState = IDETimerIdle;
             ControllerExtension->TimerCount = 0;
 
               // FIXME: get diagnostic code from drive 0
 
-              //  Start current packet command again
+              /*  Start current packet command again  */
             if (!KeSynchronizeExecution(ControllerExtension->Interrupt, 
                                         IDEStartController,
                                         ControllerExtension->DeviceForOperation))
@@ -1991,27 +2001,28 @@ CHECKPOINT;
     //  If we're counting down, then count.
   if (ControllerExtension->TimerCount > 0) 
     {
-CHECKPOINT;
       ControllerExtension->TimerCount--;
 
       //  Else we'll check the state and process if necessary
     } 
   else 
     {
-CHECKPOINT;
       switch (ControllerExtension->TimerState) 
         {
           case IDETimerIdle:
             break;
 
           case IDETimerCmdWait:
-              //  Command timed out, reset drive and try again or fail
-CHECKPOINT;
+              /*  Command timed out, reset drive and try again or fail  */
+            DPRINT("Timeout waiting for command completion\n");
             if (++ControllerExtension->Retries > IDE_MAX_CMD_RETRIES)
               {
+                DPRINT("Max retries has been reached, IRP finished with error\n");
                 ControllerExtension->CurrentIrp->IoStatus.Status = STATUS_IO_TIMEOUT;
                 ControllerExtension->CurrentIrp->IoStatus.Information = 0;
                 IDEFinishOperation(ControllerExtension);
+                ControllerExtension->TimerState = IDETimerIdle;
+                ControllerExtension->TimerCount = 0;
               }
             else
               {
@@ -2021,10 +2032,16 @@ CHECKPOINT;
 
           case IDETimerResetWaitForBusyNegate:
           case IDETimerResetWaitForDrdyAssert:
-CHECKPOINT;
-            ControllerExtension->CurrentIrp->IoStatus.Status = STATUS_IO_TIMEOUT;
-            ControllerExtension->CurrentIrp->IoStatus.Information = 0;
-            IDEFinishOperation(ControllerExtension);
+            DPRINT("Timeout waiting for drive reset, giving up on IRP\n");
+            if (ControllerExtension->CurrentIrp != NULL)
+              {
+                ControllerExtension->CurrentIrp->IoStatus.Status = 
+                  STATUS_IO_TIMEOUT;
+                ControllerExtension->CurrentIrp->IoStatus.Information = 0;
+                IDEFinishOperation(ControllerExtension);
+              }
+            ControllerExtension->TimerState = IDETimerIdle;
+            ControllerExtension->TimerCount = 0;
             break;
         }
     }
