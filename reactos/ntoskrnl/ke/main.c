@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.123 2002/06/12 14:06:29 chorns Exp $
+/* $Id: main.c,v 1.124 2002/06/12 23:30:08 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -970,6 +970,8 @@ ExpInitializeExecutive(VOID)
   KdbEnter();
 #endif /* KDBG */
 
+  IoCreateDriverList();
+
   /*  Pass 3: process boot loaded drivers  */
   BootDriverCount = 0;
   for (i=1; i < KeLoaderBlock.ModsCount; i++)
@@ -984,8 +986,8 @@ ExpInitializeExecutive(VOID)
 	         name, start, length);
 	  LdrInitializeBootStartDriver((PVOID)start, name, length);
 	}
-	  if (RtlpCheckFileNameExtension(name, ".sys"))
-        BootDriverCount++;
+      if (RtlpCheckFileNameExtension(name, ".sys"))
+	BootDriverCount++;
     }
 
   if (BootDriverCount == 0)
@@ -1029,6 +1031,9 @@ ExpInitializeExecutive(VOID)
    */
   LdrLoadAutoConfigDrivers();
 #endif
+
+  IoDestroyDriverList();
+
   /*
    * Assign drive letters
    */

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.109 2002/06/12 14:05:03 chorns Exp $
+/* $Id: loader.c,v 1.110 2002/06/12 23:30:36 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -247,6 +247,7 @@ LdrInitModuleManagement(VOID)
 /*
  * load the auto config drivers.
  */
+#if 0
 static VOID
 LdrLoadAutoConfigDriver(LPWSTR RelativeDriverName)
 {
@@ -273,6 +274,7 @@ LdrLoadAutoConfigDriver(LPWSTR RelativeDriverName)
 
    NtLoadDriver(&DriverName);
 }
+#endif
 
 #ifdef KDBG
 
@@ -744,6 +746,7 @@ VOID LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject)
 #endif /* KDBG */
 
 
+#if 0
 VOID LdrLoadAutoConfigDrivers (VOID)
 {
 
@@ -832,6 +835,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
    LdrLoadAutoConfigDriver(L"ndis.sys");
 #endif
 }
+#endif
 
 
 NTSTATUS
@@ -1105,7 +1109,8 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
   wcsncpy(Buffer, Start, Length);
   RtlCreateUnicodeString(&DeviceNode->ServiceName, Buffer);
 
-  Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode);
+  Status = IopInitializeDriver(ModuleObject->EntryPoint,
+			       DeviceNode, FALSE);
   if (!NT_SUCCESS(Status))
     {
       IopFreeDeviceNode(DeviceNode);

@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.3 2002/06/12 14:05:03 chorns Exp $
+/* $Id: driver.c,v 1.4 2002/06/12 23:29:23 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -25,14 +25,47 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+
+typedef struct _SERVICE_GROUP
+{
+  LIST_ENTRY GroupListEntry;
+  UNICODE_STRING GroupName;
+
+  BOOLEAN ServicesRunning;
+
+} SERVICE_GROUP, *PSERVICE_GROUP;
+
+
+typedef struct _SERVICE
+{
+  LIST_ENTRY ServiceListEntry;
+  UNICODE_STRING ServiceName;
+  UNICODE_STRING RegistryPath;
+  UNICODE_STRING ServiceGroup;
+  UNICODE_STRING ImagePath;
+
+  ULONG Start;
+  ULONG Type;
+  ULONG ErrorControl;
+  ULONG Tag;
+
+  BOOLEAN ServiceRunning;	// needed ??
+
+} SERVICE, *PSERVICE;
+
+
 /* GLOBALS *******************************************************************/
+
+static LIST_ENTRY GroupListHead = {NULL, NULL};
+static LIST_ENTRY ServiceListHead  = {NULL, NULL};
 
 POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
 
 #define TAG_DRIVER             TAG('D', 'R', 'V', 'R')
 #define TAG_DRIVER_EXTENSION   TAG('D', 'R', 'V', 'E')
 
-#define DRIVER_REGISTRY_KEY_BASENAME  L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"
+//#define REGSTR_PATH_SERVICES  L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"
+//#define REGSTR_PATH_SERVICES_LENGTH (sizeof(REGSTR_PATH_SERVICES)-sizeof(WCHAR))
 
 
 /* FUNCTIONS ***************************************************************/
@@ -100,16 +133,65 @@ IopInitDriverImplementation(VOID)
 NTSTATUS STDCALL
 NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 {
-  PDEVICE_NODE DeviceNode;
+  RTL_QUERY_REGISTRY_TABLE QueryTable[3];
+  WCHAR ImagePathBuffer[MAX_PATH];
+  WCHAR FullImagePathBuffer[MAX_PATH];
+  UNICODE_STRING ImagePath;
+  UNICODE_STRING FullImagePath;
   NTSTATUS Status;
-
+  ULONG Type;
+  PDEVICE_NODE DeviceNode;
   PMODULE_OBJECT ModuleObject;
-  WCHAR Buffer[MAX_PATH];
-  ULONG Length;
   LPWSTR Start;
-  LPWSTR Ext;
 
-  /* FIXME: this should lookup the filename from the registry */
+  DPRINT("DriverServiceName: '%wZ'\n", DriverServiceName);
+
+  ImagePath.Length = 0;
+  ImagePath.MaximumLength = MAX_PATH * sizeof(WCHAR);
+  ImagePath.Buffer = ImagePathBuffer;
+  RtlZeroMemory(ImagePathBuffer,
+		MAX_PATH * sizeof(WCHAR));
+
+  /* Get service data */
+  RtlZeroMemory(&QueryTable,
+		sizeof(QueryTable));
+
+  QueryTable[0].Name = L"Type";
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+  QueryTable[0].EntryContext = &Type;
+
+  QueryTable[1].Name = L"ImagePath";
+  QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[1].EntryContext = &ImagePath;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+				  DriverServiceName->Buffer,
+				  QueryTable,
+				  NULL,
+				  NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
+      return(Status);
+    }
+
+  if (ImagePath.Length == 0)
+    {
+      wcscpy(FullImagePathBuffer, L"\\SystemRoot\\system32\\drivers");
+      wcscat(ImagePathBuffer, wcsrchr(DriverServiceName->Buffer, L'\\'));
+      wcscat(ImagePathBuffer, L".sys");
+    }
+  else
+    {
+      wcscpy(FullImagePathBuffer, L"\\SystemRoot\\");
+      wcscat(FullImagePathBuffer, ImagePathBuffer);
+    }
+
+  RtlInitUnicodeString(&FullImagePath, FullImagePathBuffer);
+
+  DPRINT("FullImagePath: '%S'\n", FullImagePathBuffer);
+  DPRINT("Type %lx\n", Type);
+
 
   /* Use IopRootDeviceNode for now */
   Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
@@ -118,7 +200,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
       return(Status);
     }
 
-  Status = LdrLoadModule(DriverServiceName, &ModuleObject);
+  Status = LdrLoadModule(&FullImagePath, &ModuleObject);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("LdrLoadModule() failed (Status %lx)\n", Status);
@@ -127,24 +209,16 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
     }
 
   /* Set a service name for the device node */
-
-  /* Get the service name from the module name */
-  Start = wcsrchr(ModuleObject->BaseName.Buffer, L'\\');
+  Start = wcsrchr(DriverServiceName->Buffer, L'\\');
   if (Start == NULL)
-    Start = ModuleObject->BaseName.Buffer;
+    Start = DriverServiceName->Buffer;
   else
     Start++;
+  RtlCreateUnicodeString(&DeviceNode->ServiceName, Start);
 
-  Ext = wcsrchr(ModuleObject->BaseName.Buffer, L'.');
-  if (Ext != NULL)
-    Length = Ext - Start;
-  else
-    Length = wcslen(Start);
-
-  wcsncpy(Buffer, Start, Length);
-  RtlCreateUnicodeString(&DeviceNode->ServiceName, Buffer);
-
-  Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode);
+  Status = IopInitializeDriver(ModuleObject->EntryPoint,
+			       DeviceNode,
+			       (Type == 2 || Type == 8));
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("IopInitializeDriver() failed (Status %lx)\n", Status);
@@ -160,6 +234,396 @@ NTSTATUS STDCALL
 NtUnloadDriver(IN PUNICODE_STRING DriverServiceName)
 {
   UNIMPLEMENTED;
+}
+
+
+static NTSTATUS STDCALL
+IopCreateGroupListEntry(PWSTR ValueName,
+			ULONG ValueType,
+			PVOID ValueData,
+			ULONG ValueLength,
+			PVOID Context,
+			PVOID EntryContext)
+{
+  PSERVICE_GROUP Group;
+
+  if (ValueType == REG_SZ)
+    {
+      DPRINT("GroupName: '%S'\n", (PWCHAR)ValueData);
+
+      Group = ExAllocatePool(NonPagedPool,
+			     sizeof(SERVICE_GROUP));
+      if (Group == NULL)
+	{
+	  return(STATUS_INSUFFICIENT_RESOURCES);
+	}
+
+      RtlZeroMemory(Group, sizeof(SERVICE_GROUP));
+
+      if (!RtlCreateUnicodeString(&Group->GroupName,
+				  (PWSTR)ValueData))
+	{
+	  return(STATUS_INSUFFICIENT_RESOURCES);
+	}
+
+
+      InsertTailList(&GroupListHead,
+		     &Group->GroupListEntry);
+    }
+
+  return(STATUS_SUCCESS);
+}
+
+
+static NTSTATUS STDCALL
+IopCreateServiceListEntry(PUNICODE_STRING ServiceName)
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[6];
+  WCHAR ServiceGroupBuffer[MAX_PATH];
+  WCHAR ImagePathBuffer[MAX_PATH];
+  UNICODE_STRING ServiceGroup;
+  UNICODE_STRING ImagePath;
+  PSERVICE Service;
+  NTSTATUS Status;
+  ULONG Start, Type, ErrorControl;
+
+  DPRINT("ServiceName: '%wZ'\n", ServiceName);
+
+  ServiceGroup.Length = 0;
+  ServiceGroup.MaximumLength = MAX_PATH * sizeof(WCHAR);
+  ServiceGroup.Buffer = ServiceGroupBuffer;
+  RtlZeroMemory(ServiceGroupBuffer,
+		MAX_PATH * sizeof(WCHAR));
+
+  ImagePath.Length = 0;
+  ImagePath.MaximumLength = MAX_PATH * sizeof(WCHAR);
+  ImagePath.Buffer = ImagePathBuffer;
+  RtlZeroMemory(ImagePathBuffer,
+		MAX_PATH * sizeof(WCHAR));
+
+  /* Get service data */
+  RtlZeroMemory(&QueryTable,
+		sizeof(QueryTable));
+
+  QueryTable[0].Name = L"Start";
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+  QueryTable[0].EntryContext = &Start;
+
+  QueryTable[1].Name = L"Type";
+  QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+  QueryTable[1].EntryContext = &Type;
+
+  QueryTable[2].Name = L"ErrorControl";
+  QueryTable[2].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+  QueryTable[2].EntryContext = &ErrorControl;
+
+  QueryTable[3].Name = L"Group";
+  QueryTable[3].Flags = RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[3].EntryContext = &ServiceGroup;
+
+  QueryTable[4].Name = L"ImagePath";
+  QueryTable[4].Flags = RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[4].EntryContext = &ImagePath;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
+				  ServiceName->Buffer,
+				  QueryTable,
+				  NULL,
+				  NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
+      return(Status);
+    }
+
+  if (Start < 2)
+    {
+      /* Allocate service entry */
+      Service = (PSERVICE)ExAllocatePool(NonPagedPool, sizeof(SERVICE));
+      if (Service == NULL)
+	{
+	  DPRINT1("ExAllocatePool() failed\n");
+	  return(STATUS_INSUFFICIENT_RESOURCES);
+	}
+      RtlZeroMemory(Service, sizeof(SERVICE));
+
+      /* Copy service name */
+      Service->ServiceName.Length = ServiceName->Length;
+      Service->ServiceName.MaximumLength = ServiceName->Length + sizeof(WCHAR);
+      Service->ServiceName.Buffer = ExAllocatePool(NonPagedPool,
+						   Service->ServiceName.MaximumLength);
+      RtlCopyMemory(Service->ServiceName.Buffer,
+		    ServiceName->Buffer,
+		    ServiceName->Length);
+      Service->ServiceName.Buffer[ServiceName->Length / sizeof(WCHAR)] = 0;
+
+      /* Build registry path */
+      Service->RegistryPath.MaximumLength = MAX_PATH * sizeof(WCHAR);
+      Service->RegistryPath.Buffer = ExAllocatePool(NonPagedPool,
+						    MAX_PATH * sizeof(WCHAR));
+      wcscpy(Service->RegistryPath.Buffer,
+	     L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
+      wcscat(Service->RegistryPath.Buffer,
+	     Service->ServiceName.Buffer);
+      Service->RegistryPath.Length = wcslen(Service->RegistryPath.Buffer) * sizeof(WCHAR);
+
+      /* Copy service group */
+      if (ServiceGroup.Length > 0)
+	{
+	  Service->ServiceGroup.Length = ServiceGroup.Length;
+	  Service->ServiceGroup.MaximumLength = ServiceGroup.Length + sizeof(WCHAR);
+	  Service->ServiceGroup.Buffer = ExAllocatePool(NonPagedPool,
+							ServiceGroup.Length + sizeof(WCHAR));
+	  RtlCopyMemory(Service->ServiceGroup.Buffer,
+			ServiceGroup.Buffer,
+			ServiceGroup.Length);
+	  Service->ServiceGroup.Buffer[ServiceGroup.Length / sizeof(WCHAR)] = 0;
+	}
+
+      /* Copy image path */
+      if (ImagePath.Length > 0)
+	{
+	  Service->ImagePath.Length = ImagePath.Length;
+	  Service->ImagePath.MaximumLength = ImagePath.Length + sizeof(WCHAR);
+	  Service->ImagePath.Buffer = ExAllocatePool(NonPagedPool,
+						     ImagePath.Length + sizeof(WCHAR));
+	  RtlCopyMemory(Service->ImagePath.Buffer,
+			ImagePath.Buffer,
+			ImagePath.Length);
+	  Service->ImagePath.Buffer[ImagePath.Length / sizeof(WCHAR)] = 0;
+	}
+
+      Service->Start = Start;
+      Service->Type = Type;
+      Service->ErrorControl = ErrorControl;
+
+      DPRINT("ServiceName: '%wZ'\n", &Service->ServiceName);
+      DPRINT("RegistryPath: '%wZ'\n", &Service->RegistryPath);
+      DPRINT("ServiceGroup: '%wZ'\n", &Service->ServiceGroup);
+      DPRINT("ImagePath: '%wZ'\n", &Service->ImagePath);
+      DPRINT("Start %lx  Type %lx  ErrorControl %lx\n",
+	     Service->Start, Service->Type, Service->ErrorControl);
+
+      /* Append service entry */
+      InsertTailList(&ServiceListHead,
+		     &Service->ServiceListEntry);
+    }
+
+  return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS
+IoCreateDriverList(VOID)
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  PKEY_BASIC_INFORMATION KeyInfo = NULL;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING ServicesKeyName;
+  UNICODE_STRING SubKeyName;
+  HANDLE KeyHandle;
+  NTSTATUS Status;
+  ULONG Index;
+
+  ULONG KeyInfoLength = 0;
+  ULONG ReturnedLength;
+
+  DPRINT("IoCreateDriverList() called\n");
+
+  /* Initialize basic variables */
+  InitializeListHead(&GroupListHead);
+  InitializeListHead(&ServiceListHead);
+
+  /* Build group order list */
+  RtlZeroMemory(&QueryTable,
+		sizeof(QueryTable));
+
+  QueryTable[0].Name = L"List";
+  QueryTable[0].QueryRoutine = IopCreateGroupListEntry;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+				  L"ServiceGroupOrder",
+				  QueryTable,
+				  NULL,
+				  NULL);
+  if (!NT_SUCCESS(Status))
+    return(Status);
+
+  /* Enumerate services and create the service list */
+  RtlInitUnicodeString(&ServicesKeyName,
+		       L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &ServicesKeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+
+  Status = NtOpenKey(&KeyHandle,
+		     0x10001,
+		     &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    return(Status);
+
+  KeyInfoLength = sizeof(KEY_BASIC_INFORMATION) + MAX_PATH * sizeof(WCHAR);
+  KeyInfo = ExAllocatePool(NonPagedPool, KeyInfoLength);
+  if (KeyInfo == NULL)
+    {
+      NtClose(KeyHandle);
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+  Index = 0;
+  while (TRUE)
+    {
+      Status = NtEnumerateKey(KeyHandle,
+			      Index,
+			      KeyBasicInformation,
+			      KeyInfo,
+			      KeyInfoLength,
+			      &ReturnedLength);
+      if (NT_SUCCESS(Status))
+	{
+	  if (KeyInfo->NameLength < MAX_PATH * sizeof(WCHAR))
+	    {
+
+	      SubKeyName.Length = KeyInfo->NameLength;
+	      SubKeyName.MaximumLength = KeyInfo->NameLength + sizeof(WCHAR);
+	      SubKeyName.Buffer = KeyInfo->Name;
+	      SubKeyName.Buffer[SubKeyName.Length / sizeof(WCHAR)] = 0;
+
+	      DPRINT("KeyName: '%wZ'\n", &SubKeyName);
+	      IopCreateServiceListEntry(&SubKeyName);
+
+	    }
+	}
+
+      if (!NT_SUCCESS(Status))
+	break;
+
+      Index++;
+    }
+
+  ExFreePool(KeyInfo);
+  NtClose(KeyHandle);
+
+  DPRINT("IoCreateDriverList() done\n");
+
+  return(STATUS_SUCCESS);
+}
+
+
+VOID
+LdrLoadAutoConfigDrivers(VOID)
+{
+  PLIST_ENTRY GroupEntry;
+  PLIST_ENTRY ServiceEntry;
+  PSERVICE_GROUP CurrentGroup;
+  PSERVICE CurrentService;
+  NTSTATUS Status;
+
+  DPRINT("LdrLoadAutoConfigDrivers() called\n");
+
+  GroupEntry = GroupListHead.Flink;
+  while (GroupEntry != &GroupListHead)
+    {
+      CurrentGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
+
+      DPRINT("Group: %wZ\n", &CurrentGroup->GroupName);
+
+      ServiceEntry = ServiceListHead.Flink;
+      while (ServiceEntry != &ServiceListHead)
+	{
+	  CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+
+	  if ((RtlCompareUnicodeString(&CurrentGroup->GroupName, &CurrentService->ServiceGroup, TRUE) == 0) &&
+	      (CurrentService->Start == 1 /*SERVICE_SYSTEM_START*/))
+	    {
+	      DPRINT("  Path: %wZ\n", &CurrentService->RegistryPath);
+	      Status = NtLoadDriver(&CurrentService->RegistryPath);
+	      if (!NT_SUCCESS(Status))
+		{
+		  DPRINT1("NtLoadDriver() failed (Status %lx)\n", Status);
+#if 0
+		  if (CurrentService->ErrorControl == 1)
+		    {
+		      /* Log error */
+
+		    }
+		  else if (CurrentService->ErrorControl == 2)
+		    {
+		      if (IsLastKnownGood == FALSE)
+			{
+			  /* Boot last known good configuration */
+
+			}
+		    }
+		  else if (CurrentService->ErrorControl == 3)
+		    {
+		      if (IsLastKnownGood == FALSE)
+			{
+			  /* Boot last known good configuration */
+
+			}
+		      else
+			{
+			  /* BSOD! */
+
+			}
+		    }
+#endif
+		}
+	    }
+	  ServiceEntry = ServiceEntry->Flink;
+	}
+
+      GroupEntry = GroupEntry->Flink;
+    }
+
+  DPRINT("LdrLoadAutoConfigDrivers() done\n");
+}
+
+
+NTSTATUS
+IoDestroyDriverList(VOID)
+{
+  PLIST_ENTRY GroupEntry;
+  PLIST_ENTRY ServiceEntry;
+  PSERVICE_GROUP CurrentGroup;
+  PSERVICE CurrentService;
+
+  DPRINT("IoDestroyDriverList() called\n");
+
+  /* Destroy group list */
+  GroupEntry = GroupListHead.Flink;
+  while (GroupEntry != &GroupListHead)
+    {
+      CurrentGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
+
+      RtlFreeUnicodeString(&CurrentGroup->GroupName);
+
+      RemoveEntryList(GroupEntry);
+      GroupEntry = GroupListHead.Flink;
+    }
+
+  /* Destroy service list */
+  ServiceEntry = ServiceListHead.Flink;
+  while (ServiceEntry != &ServiceListHead)
+    {
+      CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+
+      RtlFreeUnicodeString(&CurrentService->ServiceName);
+      RtlFreeUnicodeString(&CurrentService->RegistryPath);
+      RtlFreeUnicodeString(&CurrentService->ServiceGroup);
+      RtlFreeUnicodeString(&CurrentService->ImagePath);
+
+      RemoveEntryList(ServiceEntry);
+      ServiceEntry = ServiceListHead.Flink;
+    }
+
+  DPRINT("IoDestroyDriverList() done\n");
+
+  return(STATUS_SUCCESS);
 }
 
 /* EOF */

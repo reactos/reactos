@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.44 2002/06/12 14:05:03 chorns Exp $
+/* $Id: device.c,v 1.45 2002/06/12 23:29:23 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -242,14 +242,14 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
   OBJECT_ATTRIBUTES ObjectAttributes;
   NTSTATUS Status;
 
-  DPRINT1("IopCreateDriverObject(%p '%wZ' %x)\n", DriverObject, ServiceName, FileSystem);
+  DPRINT("IopCreateDriverObject(%p '%wZ' %x)\n", DriverObject, ServiceName, FileSystem);
 
   *DriverObject = NULL;
 
   /*  Create ModuleName string  */
   if (ServiceName != NULL)
     {
-      if (FileSystem)
+      if (FileSystem == TRUE)
 	wcscpy(NameBuffer, FILESYSTEM_ROOT_NAME);
       else
 	wcscpy(NameBuffer, DRIVER_ROOT_NAME);
@@ -257,7 +257,7 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
 
       RtlInitUnicodeString(&DriverName,
 			   NameBuffer);
-      DPRINT1("Driver name: '%wZ'\n", &DriverName);
+      DPRINT("Driver name: '%wZ'\n", &DriverName);
     }
 
   /*  Initialize ObjectAttributes for ModuleObject  */
@@ -421,7 +421,7 @@ IopInitializeService(
       return(Status);
     }
 
-    Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode);
+    Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode, FALSE);
     if (!NT_SUCCESS(Status))
     {
       /* FIXME: Log the error */
@@ -486,7 +486,8 @@ IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode)
 
 NTSTATUS
 IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
-		    PDEVICE_NODE DeviceNode)
+		    PDEVICE_NODE DeviceNode,
+		    BOOLEAN FileSystemDriver)
 /*
  * FUNCTION: Called to initalize a loaded driver
  * ARGUMENTS:
@@ -502,7 +503,9 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
   DPRINT("IopInitializeDriver(DriverEntry %08lx, DeviceNode %08lx)\n",
     DriverEntry, DeviceNode);
 
-  Status = IopCreateDriverObject(&DriverObject, &DeviceNode->ServiceName, FALSE);
+  Status = IopCreateDriverObject(&DriverObject,
+				 &DeviceNode->ServiceName,
+				 FileSystemDriver);
   if (!NT_SUCCESS(Status))
     {
       return(Status);
