@@ -43,6 +43,28 @@ struct _KIRQ_TRAPFRAME;
 struct _KPCR;
 struct _KEXCEPTION_FRAME;
 
+#define IPI_REQUEST_FUNCTIONCALL    1
+#define IPI_REQUEST_APC		    2
+#define IPI_REQUEST_DPC		    4
+
+/* ipi.c ********************************************************************/
+
+BOOLEAN STDCALL 
+KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame, 
+		    IN struct _KEXCEPTION_FRAME* ExceptionFrame);
+
+VOID  
+KiIpiSendRequest(ULONG TargetSet, 
+		 ULONG IpiRequest);
+
+VOID  
+KeIpiGenericCall(VOID STDCALL (*WorkerRoutine)(PVOID), 
+		 PVOID Argument);
+
+/* next file ***************************************************************/
+
+
+
 VOID STDCALL 
 DbgBreakPointNoBugCheck(VOID);
 
@@ -58,11 +80,6 @@ KeProfileInterruptWithSource(
 	IN PKTRAP_FRAME   		TrapFrame,
 	IN KPROFILE_SOURCE		Source
 );
-
-BOOLEAN
-STDCALL
-KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
-	            IN struct _KEXCEPTION_FRAME* ExceptionFrame);
 
 VOID STDCALL KeUpdateSystemTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);
 VOID STDCALL KeUpdateRunTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);

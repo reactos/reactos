@@ -1,4 +1,4 @@
-/* $Id: ipi.c,v 1.3 2004/11/14 20:00:06 hbirr Exp $
+/* $Id: ipi.c,v 1.4 2004/11/27 16:32:10 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,127 +20,167 @@
 
 KSPIN_LOCK KiIpiLock;
 
-struct
-{
-   VOID STDCALL (*Function)(PVOID);
-   PVOID Argument;
-   BOOLEAN Synchronize;
-   ULONG StartCount;
-   ULONG EndCount;
-} KiIpiInfo;
-
 /* FUNCTIONS *****************************************************************/
 
+VOID 
+KiIpiSendRequest(ULONG TargetSet, ULONG IpiRequest)
+{
+   ULONG i;
+   PKPCR Pcr;
+
+   for (i = 0; i < KeNumberProcessors; i++)
+   {
+      if (TargetSet & (1 << i))
+      {
+         Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
+	 Pcr->PrcbData.IpiFrozen |= IpiRequest;
+	 HalRequestIpi(i);
+      }
+   }
+}
+
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL
 KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
                     IN PKEXCEPTION_FRAME ExceptionFrame)
 {
-    LARGE_INTEGER StartTime, CurrentTime, Frequency;
+#ifdef DBG	
+   LARGE_INTEGER StartTime, CurrentTime, Frequency;
+   ULONG Count = 5;
+#endif   
+   ULONG TargetSet, Processor;
 
-    ASSERT(KeGetCurrentIrql() == IPI_LEVEL);
+   PKPCR Pcr;
 
-    DPRINT("KiIpiServiceRoutine\n");
+   ASSERT(KeGetCurrentIrql() == IPI_LEVEL);
 
+   DPRINT("KiIpiServiceRoutine\n");
 
-    if (KiIpiInfo.Synchronize)
-    {
-       InterlockedDecrement(&KiIpiInfo.StartCount);
-       StartTime = KeQueryPerformanceCounter(&Frequency);
-       while (0 != InterlockedCompareExchange(&KiIpiInfo.StartCount, 0, 0))
-       {
-          CurrentTime = KeQueryPerformanceCounter(NULL);
-	  if (CurrentTime.QuadPart > StartTime.QuadPart + Frequency.QuadPart)
-	  {
-	     DPRINT1("Waiting longer than 1 seconds to start the ipi routine\n");
-	     KEBUGCHECK(0);
-	  }
-       }
-    }
-    KiIpiInfo.Function(KiIpiInfo.Argument);
-    if (KiIpiInfo.Synchronize)
-    {
-       InterlockedDecrement(&KiIpiInfo.EndCount);
-       StartTime = KeQueryPerformanceCounter(&Frequency);
-       while (0 != InterlockedCompareExchange(&KiIpiInfo.EndCount, 0, 0))
-       {
-          CurrentTime = KeQueryPerformanceCounter(NULL);
-	  if (CurrentTime.QuadPart > StartTime.QuadPart + Frequency.QuadPart)
-	  {
-	     DPRINT1("Waiting longer than 1 seconds after executing the ipi routine\n");
-	     KEBUGCHECK(0);
-	  }
-       }
-    }
-    return TRUE;
+   Pcr = KeGetCurrentKPCR();
+
+   if (Pcr->PrcbData.IpiFrozen & IPI_REQUEST_APC)
+   {
+      Pcr->PrcbData.IpiFrozen &= ~IPI_REQUEST_APC;
+      HalRequestSoftwareInterrupt(APC_LEVEL);
+   }
+
+   if (Pcr->PrcbData.IpiFrozen & IPI_REQUEST_DPC)
+   {
+      Pcr->PrcbData.IpiFrozen &= ~IPI_REQUEST_DPC;
+      Pcr->PrcbData.DpcInterruptRequested = TRUE;
+      HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+   }
+
+   if (Pcr->PrcbData.IpiFrozen & IPI_REQUEST_FUNCTIONCALL)
+   {
+      InterlockedDecrement((PLONG)&Pcr->PrcbData.SignalDone->CurrentPacket[1]);
+      if (Pcr->PrcbData.SignalDone->CurrentPacket[2])
+      {
+#ifdef DBG      	
+         StartTime = KeQueryPerformanceCounter(&Frequency);
+#endif         
+         while (0 != InterlockedCompareExchange((PLONG)&Pcr->PrcbData.SignalDone->CurrentPacket[1], 0, 0))
+	 {
+#ifdef DBG	 	
+            CurrentTime = KeQueryPerformanceCounter(NULL);
+	    if (CurrentTime.QuadPart > StartTime.QuadPart + Count * Frequency.QuadPart)
+	    {
+	       DPRINT1("Waiting longer than %d seconds to start the ipi routine\n", Count);
+	       KEBUGCHECK(0);
+	    }
+#endif	 
+         }
+      }
+      ((VOID STDCALL(*)(PVOID))(Pcr->PrcbData.SignalDone->WorkerRoutine))(Pcr->PrcbData.SignalDone->CurrentPacket[0]);
+      do
+      {
+         Processor = 1 << KeGetCurrentProcessorNumber();
+	 TargetSet = Pcr->PrcbData.SignalDone->TargetSet;
+      } while (Processor & InterlockedCompareExchange(&Pcr->PrcbData.SignalDone->TargetSet, TargetSet & ~Processor, TargetSet)); 
+      if (Pcr->PrcbData.SignalDone->CurrentPacket[2])
+      {
+#ifdef DBG      	
+         StartTime = KeQueryPerformanceCounter(&Frequency);
+#endif         
+         while (0 != InterlockedCompareExchange(&Pcr->PrcbData.SignalDone->TargetSet, 0, 0))
+         {
+#ifdef DBG         	
+	    CurrentTime = KeQueryPerformanceCounter(NULL);
+	    if (CurrentTime.QuadPart > StartTime.QuadPart + Count * Frequency.QuadPart)
+	    {
+	       DPRINT1("Waiting longer than %d seconds after executing the ipi routine\n", Count);
+	       KEBUGCHECK(0);
+	    }
+#endif	 
+         }
+      }
+      InterlockedExchangePointer(&Pcr->PrcbData.SignalDone, NULL);
+      Pcr->PrcbData.IpiFrozen &= ~IPI_REQUEST_FUNCTIONCALL;
+   }
+   DPRINT("KiIpiServiceRoutine done\n");
+   return TRUE;
 }
 
 VOID
 STDCALL
-KiIpiSendPacket(ULONG Processors, VOID STDCALL (*Function)(PVOID), PVOID Argument, ULONG Count, BOOLEAN Synchronize)
+KiIpiSendPacket(ULONG TargetSet, VOID STDCALL (*WorkerRoutine)(PVOID), PVOID Argument, ULONG Count, BOOLEAN Synchronize)
 {
-    ULONG i;
+    ULONG i, Processor, CurrentProcessor;
+    PKPCR Pcr, CurrentPcr;
+    KIRQL oldIrql;
+
 
     ASSERT(KeGetCurrentIrql() == SYNCH_LEVEL);
 
-    /* 
-     * FIXME
-     *   M$ puts the ipi information anywhere into the KPCR of the requestor.
-     *   The KPCR of the target contains a pointer of the KPCR of the requestor.
-     */
+    CurrentPcr = KeGetCurrentKPCR();
+    CurrentPcr->PrcbData.TargetSet = TargetSet;
+    CurrentPcr->PrcbData.WorkerRoutine = (ULONG_PTR)WorkerRoutine;
+    CurrentPcr->PrcbData.CurrentPacket[0] = Argument;
+    CurrentPcr->PrcbData.CurrentPacket[1] = (PVOID)Count;
+    CurrentPcr->PrcbData.CurrentPacket[2] = (PVOID)(ULONG)Synchronize;
 
-    KiIpiInfo.Function = Function;
-    KiIpiInfo.Argument = Argument;
-    if (Synchronize)
-    {
-       KiIpiInfo.StartCount = Count;
-       KiIpiInfo.EndCount = Count;
-    }
-    KiIpiInfo.Synchronize = Synchronize;
+    CurrentProcessor = 1 << KeGetCurrentProcessorNumber();
 
-    for (i = 0; i < KeNumberProcessors; i++)
+    for (i = 0, Processor = 1; i < KeNumberProcessors; i++, Processor <<= 1)
     {
-       if (Processors & (1 << i))
+       if (TargetSet & Processor)
        {
-	  HalRequestIpi(i);
+          Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
+          while(0 != InterlockedCompareExchange((PLONG)&Pcr->PrcbData.SignalDone, (LONG)&CurrentPcr->PrcbData, 0));
+	  Pcr->PrcbData.IpiFrozen |= IPI_REQUEST_FUNCTIONCALL;
+	  if (Processor != CurrentProcessor)
+	  {
+	     HalRequestIpi(i);
+	  }
        }
+    }
+    if (TargetSet & CurrentProcessor)
+    {
+       KeRaiseIrql(IPI_LEVEL, &oldIrql);
+       KiIpiServiceRoutine(NULL, NULL);
+       KeLowerIrql(oldIrql);
     }
 }
 
 VOID
-STDCALL
 KeIpiGenericCall(VOID STDCALL (*Function)(PVOID), PVOID Argument)
 {
-   KIRQL oldIrql, oldIrql2;
-   ULONG Count, i;
-   ULONG Processors = 0;
+   KIRQL oldIrql;
+   ULONG TargetSet;
 
    DPRINT("KeIpiGenericCall on CPU%d\n", KeGetCurrentProcessorNumber());
 
    KeRaiseIrql(SYNCH_LEVEL, &oldIrql);
 
-   Count = KeNumberProcessors;
-   for (i = 0; i < KeNumberProcessors; i++)
-   {
-      if (KeGetCurrentProcessorNumber() != i)
-      {
-         Processors |= (1 << i);
-      }
-   }
-
    KiAcquireSpinLock(&KiIpiLock);
 
-   KiIpiSendPacket(Processors, Function, Argument, Count, TRUE);
-   
-   KeRaiseIrql(IPI_LEVEL, &oldIrql2);
-   
-   KiIpiServiceRoutine(NULL, NULL);
-   
-   KeLowerIrql(oldIrql2);
+   TargetSet = (1 << KeNumberProcessors) - 1;
 
+   KiIpiSendPacket(TargetSet, Function, Argument, KeNumberProcessors, TRUE);
+   
    KiReleaseSpinLock(&KiIpiLock);
    
    KeLowerIrql(oldIrql);
@@ -148,41 +188,5 @@ KeIpiGenericCall(VOID STDCALL (*Function)(PVOID), PVOID Argument)
    DPRINT("KeIpiGenericCall on CPU%d done\n", KeGetCurrentProcessorNumber());
 }
 
-VOID
-STDCALL
-KeIpiCallForBootProcessor(VOID STDCALL (*Function)(PVOID), PVOID Argument)
-{
-   KIRQL oldIrql, oldIrql2;
-   LARGE_INTEGER StartCount, CurrentCount;
-   LARGE_INTEGER Frequency;
-
-   KeRaiseIrql(SYNCH_LEVEL, &oldIrql);
-
-   ASSERT (KeGetCurrentProcessorNumber() != 0);
-
-   KiAcquireSpinLock(&KiIpiLock);
-
-   KiIpiSendPacket(1, Function, Argument, 1, TRUE);
-   
-   KeRaiseIrql(IPI_LEVEL, &oldIrql2);
-
-   StartCount = KeQueryPerformanceCounter(&Frequency);
-   while (0 != InterlockedCompareExchange(&KiIpiInfo.EndCount, 0, 0))
-   {
-      CurrentCount = KeQueryPerformanceCounter(NULL);
-      if (CurrentCount.QuadPart > StartCount.QuadPart + Frequency.QuadPart)
-      {
-         DPRINT1("Waiting longer than 1 second after sending the ipi to the boot processor\n");
-	 KEBUGCHECK(0);
-      }
-   }
-
-   KeLowerIrql(oldIrql2);
-
-   KiReleaseSpinLock(&KiIpiLock);
-   
-   KeLowerIrql(oldIrql);
-
-}
 
 /* EOF */
