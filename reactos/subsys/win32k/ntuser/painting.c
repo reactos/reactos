@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.87 2004/11/15 23:10:42 gvg Exp $
+ *  $Id: painting.c,v 1.88 2004/12/04 22:07:24 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -640,6 +640,11 @@ IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax,
          Message->lParam = 0;
          if (Remove)
          {
+            if ((HANDLE) 1 != Window->NCUpdateRegion &&
+                NULL != Window->NCUpdateRegion)
+              {
+                GDIOBJ_SetOwnership(Window->NCUpdateRegion, PsGetCurrentProcess());
+              }
             IntValidateParent(Window, Window->NCUpdateRegion);
             Window->NCUpdateRegion = NULL;
             Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
