@@ -288,10 +288,9 @@ UserDrawCaptionButtonWnd(HWND hWnd, HDC hDC, BOOL bDown, ULONG Type)
  * - Correct drawing of size-box
  */
 LRESULT
-DefWndNCPaint(HWND hWnd, HRGN hRgn)
+DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
 {
    HDC hDC;
-   BOOL Active;
    DWORD Style, ExStyle;
    HWND Parent;
    RECT ClientRect, WindowRect, CurrentRect, TempRect;
@@ -309,15 +308,18 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
    
    Parent = GetParent(hWnd);
    ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
-   if (ExStyle & WS_EX_MDICHILD)
+   if (Active == -1)
    {
-      Active = IsChild(GetForegroundWindow(), hWnd);
-      if (Active)
-         Active = (hWnd == (HWND)SendMessageW(Parent, WM_MDIGETACTIVE, 0, 0));
-   }
-   else
-   {
-      Active = (GetForegroundWindow() == hWnd);
+      if (ExStyle & WS_EX_MDICHILD)
+      {
+         Active = IsChild(GetForegroundWindow(), hWnd);
+         if (Active)
+            Active = (hWnd == (HWND)SendMessageW(Parent, WM_MDIGETACTIVE, 0, 0));
+      }
+      else
+      {
+         Active = (GetForegroundWindow() == hWnd);
+      }
    }
    GetWindowRect(hWnd, &WindowRect);
    GetClientRect(hWnd, &ClientRect);
@@ -660,7 +662,7 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
 LRESULT
 DefWndNCActivate(HWND hWnd, WPARAM wParam)
 {
-   DefWndNCPaint(hWnd, (HRGN)1);
+   DefWndNCPaint(hWnd, (HRGN)1, wParam);
    return TRUE;
 }
 
