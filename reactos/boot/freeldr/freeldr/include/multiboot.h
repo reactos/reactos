@@ -137,8 +137,8 @@ LOADER_PARAMETER_BLOCK LoaderBlock; /* Multiboot info structure passed to kernel
 char					multiboot_kernel_cmdline[255];	// Command line passed to kernel
 FRLDR_MODULE			multiboot_modules[64];		// Array to hold boot module info loaded for the kernel
 char					multiboot_module_strings[64][256];	// Array to hold module names
-unsigned long			multiboot_memory_map_descriptor_size;
-memory_map_t			multiboot_memory_map[32];		// Memory map
+extern unsigned long			multiboot_memory_map_descriptor_size;
+extern memory_map_t			multiboot_memory_map[32];		// Memory map
 
 
 void	boot_reactos(void);
