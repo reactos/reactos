@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.44 2002/02/23 23:08:58 ekohl Exp $
+/* $Id: object.c,v 1.45 2002/03/01 00:47:40 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -227,11 +227,11 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
  * RETURN VALUE
  */
 NTSTATUS STDCALL
-ObCreateObject(PHANDLE Handle,
-	       ACCESS_MASK DesiredAccess,
-	       POBJECT_ATTRIBUTES ObjectAttributes,
-	       POBJECT_TYPE Type,
-	       PVOID *Object)
+ObCreateObject(OUT PHANDLE Handle,
+	       IN ACCESS_MASK DesiredAccess,
+	       IN POBJECT_ATTRIBUTES ObjectAttributes,
+	       IN POBJECT_TYPE Type,
+	       OUT PVOID *Object)
 {
   PVOID Parent = NULL;
   UNICODE_STRING RemainingPath;
@@ -329,10 +329,10 @@ ObCreateObject(PHANDLE Handle,
 
 
 NTSTATUS STDCALL
-ObReferenceObjectByPointer(PVOID ObjectBody,
-			   ACCESS_MASK DesiredAccess,
-			   POBJECT_TYPE ObjectType,
-			   KPROCESSOR_MODE AccessMode)
+ObReferenceObjectByPointer(IN PVOID Object,
+			   IN ACCESS_MASK DesiredAccess,
+			   IN POBJECT_TYPE ObjectType,
+			   IN KPROCESSOR_MODE AccessMode)
 /*
  * FUNCTION: Increments the pointer reference count for a given object
  * ARGUMENTS:
@@ -343,37 +343,37 @@ ObReferenceObjectByPointer(PVOID ObjectBody,
  * RETURNS: Status
  */
 {
-   POBJECT_HEADER ObjectHeader;
+   POBJECT_HEADER Header;
 
-//   DPRINT("ObReferenceObjectByPointer(ObjectBody %x, ObjectType %x)\n",
-//	  ObjectBody,ObjectType);
+//   DPRINT("ObReferenceObjectByPointer(Object %x, ObjectType %x)\n",
+//	  Object,ObjectType);
    
-   ObjectHeader = BODY_TO_HEADER(ObjectBody);
+   Header = BODY_TO_HEADER(Object);
    
-   if (ObjectType != NULL && ObjectHeader->ObjectType != ObjectType)
+   if (ObjectType != NULL && Header->ObjectType != ObjectType)
      {
 	DPRINT("Failed %x (type was %x %S) should be %x %S\n",
-		ObjectHeader,
-		ObjectHeader->ObjectType,
-		ObjectHeader->ObjectType->TypeName.Buffer,
+		Header,
+		Header->ObjectType,
+		Header->ObjectType->TypeName.Buffer,
 		ObjectType,
     ObjectType->TypeName.Buffer);
 	return(STATUS_UNSUCCESSFUL);
      }
-   if (ObjectHeader->ObjectType == PsProcessType)
+   if (Header->ObjectType == PsProcessType)
      {
 	DPRINT("Ref p 0x%x refcount %d type %x ",
-		ObjectBody, ObjectHeader->RefCount, PsProcessType);
-	DPRINT("eip %x\n", ((PULONG)&ObjectBody)[-1]);
+		Object, Header->RefCount, PsProcessType);
+	DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
      }
-   if (ObjectHeader->ObjectType == PsThreadType)
+   if (Header->ObjectType == PsThreadType)
      {
 	DPRINT("Deref t 0x%x with refcount %d type %x ",
-		ObjectBody, ObjectHeader->RefCount, PsThreadType);
-	DPRINT("eip %x\n", ((PULONG)&ObjectBody)[-1]);
+		Object, Header->RefCount, PsThreadType);
+	DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
      }
    
-   ObjectHeader->RefCount++;
+   Header->RefCount++;
    
    return(STATUS_SUCCESS);
 }
@@ -413,56 +413,43 @@ ObOpenObjectByPointer(IN POBJECT Object,
 }
 
 
-NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header)
+static NTSTATUS
+ObpPerformRetentionChecks(POBJECT_HEADER Header)
 {
-//   DPRINT("ObPerformRetentionChecks(Header %x), RefCount %d, HandleCount %d\n",
-//	   Header,Header->RefCount,Header->HandleCount);
-   
-   if (Header->RefCount < 0)
-     {
-	CPRINT("Object %x/%x has invalid reference count (%d)\n",
-		 Header, HEADER_TO_BODY(Header), Header->RefCount);
-	KeBugCheck(0);
-     }
-   if (Header->HandleCount < 0)
-     {
-	CPRINT("Object %x/%x has invalid handle count (%d)\n",
-		 Header, HEADER_TO_BODY(Header), Header->HandleCount);
-	KeBugCheck(0);
-     }
-   
-   if (Header->RefCount == 0 && Header->HandleCount == 0 &&
-       !Header->Permanent)
-     {
-	if (Header->ObjectType != NULL &&
-	    Header->ObjectType->Delete != NULL)
-	  {
-	     Header->ObjectType->Delete(HEADER_TO_BODY(Header));
-	  }
-	if (Header->Name.Buffer != NULL)
-	  {
-	     ObpRemoveEntryDirectory(Header);
-	     RtlFreeUnicodeString( &Header->Name );
-	  }
-	DPRINT("ObPerformRetentionChecks() = Freeing object\n");
-	ExFreePool(Header);
-     }
-   return(STATUS_SUCCESS);
-}
-
-
-ULONG ObGetReferenceCount(PVOID ObjectBody)
-{
-   POBJECT_HEADER Header = BODY_TO_HEADER(ObjectBody);
-   
-   return(Header->RefCount);
-}
-
-ULONG ObGetHandleCount(PVOID ObjectBody)
-{
-   POBJECT_HEADER Header = BODY_TO_HEADER(ObjectBody);
-   
-   return(Header->HandleCount);
+//  DPRINT("ObPerformRetentionChecks(Header %x), RefCount %d, HandleCount %d\n",
+//	  Header,Header->RefCount,Header->HandleCount);
+  
+  if (Header->RefCount < 0)
+    {
+      CPRINT("Object %x/%x has invalid reference count (%d)\n",
+	     Header, HEADER_TO_BODY(Header), Header->RefCount);
+      KeBugCheck(0);
+    }
+  if (Header->HandleCount < 0)
+    {
+      CPRINT("Object %x/%x has invalid handle count (%d)\n",
+	     Header, HEADER_TO_BODY(Header), Header->HandleCount);
+      KeBugCheck(0);
+    }
+  
+  if (Header->RefCount == 0 &&
+      Header->HandleCount == 0 &&
+      Header->Permanent == FALSE)
+    {
+      if (Header->ObjectType != NULL &&
+	  Header->ObjectType->Delete != NULL)
+	{
+	  Header->ObjectType->Delete(HEADER_TO_BODY(Header));
+	}
+      if (Header->Name.Buffer != NULL)
+	{
+	  ObpRemoveEntryDirectory(Header);
+	  RtlFreeUnicodeString(&Header->Name);
+	}
+      DPRINT("ObPerformRetentionChecks() = Freeing object\n");
+      ExFreePool(Header);
+    }
+  return(STATUS_SUCCESS);
 }
 
 
@@ -480,54 +467,77 @@ ULONG ObGetHandleCount(PVOID ObjectBody)
  * RETURN VALUE
  * 	None.
  */
-VOID FASTCALL ObfReferenceObject(PVOID Object)
+VOID FASTCALL
+ObfReferenceObject(IN PVOID Object)
 {
-   POBJECT_HEADER	Header;
+  POBJECT_HEADER Header;
 
-   assert (Object);
+  assert(Object);
 
-   Header = BODY_TO_HEADER(Object);
+  Header = BODY_TO_HEADER(Object);
 
-   Header->RefCount++;
+  Header->RefCount++;
 
-   ObPerformRetentionChecks (Header);
+  ObpPerformRetentionChecks(Header);
 }
 
 
-VOID FASTCALL ObfDereferenceObject (PVOID Object)
-/*
- * FUNCTION: Decrements a given object's reference count and performs
- * retention checks
- * ARGUMENTS:
- *        Object = Body of the object
+/**********************************************************************
+ * NAME							EXPORTED
+ *	ObfDereferenceObject@4
+ *
+ * DESCRIPTION
+ *	Decrements a given object's reference count and performs
+ *	retention checks.
+ *
+ * ARGUMENTS
+ *	ObjectBody = Body of the object.
+ *
+ * RETURN VALUE
+ * 	None.
  */
+VOID FASTCALL
+ObfDereferenceObject(IN PVOID Object)
 {
-   POBJECT_HEADER Header;
-   extern POBJECT_TYPE PsProcessType;
+  POBJECT_HEADER Header;
+  extern POBJECT_TYPE PsProcessType;
 
-   assert (Object);
+  assert(Object);
 
-   Header = BODY_TO_HEADER(Object);
+  Header = BODY_TO_HEADER(Object);
 
-   if (Header->ObjectType == PsProcessType)
-     {
-	DPRINT("Deref p 0x%x with refcount %d type %x ",
-		Object, Header->RefCount, PsProcessType);
-	DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
-     }
-   if (Header->ObjectType == PsThreadType)
-     {
-	DPRINT("Deref t 0x%x with refcount %d type %x ",
-		Object, Header->RefCount, PsThreadType);
-	DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
-     }
-   
-   Header->RefCount--;
-   
-   ObPerformRetentionChecks(Header);
+  if (Header->ObjectType == PsProcessType)
+    {
+      DPRINT("Deref p 0x%x with refcount %d type %x ",
+	     Object, Header->RefCount, PsProcessType);
+      DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
+    }
+  if (Header->ObjectType == PsThreadType)
+    {
+      DPRINT("Deref t 0x%x with refcount %d type %x ",
+	     Object, Header->RefCount, PsThreadType);
+      DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
+    }
+  
+  Header->RefCount--;
+  
+  ObpPerformRetentionChecks(Header);
 }
 
 
+/**********************************************************************
+ * NAME							EXPORTED
+ *	ObGetObjectPointerCount@4
+ *
+ * DESCRIPTION
+ *	Retrieves the reference count of the given object.
+ *
+ * ARGUMENTS
+ *	ObjectBody = Body of the object.
+ *
+ * RETURN VALUE
+ * 	Reference count.
+ */
 ULONG STDCALL
 ObGetObjectPointerCount(PVOID Object)
 {

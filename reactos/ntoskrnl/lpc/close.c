@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.7 2001/12/02 23:34:42 dwelch Exp $
+/* $Id: close.c,v 1.8 2002/03/01 00:47:21 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,7 +12,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/ob.h>
 #include <internal/port.h>
 #include <internal/dbg.h>
 
@@ -44,7 +43,7 @@ NiClosePort (PVOID	ObjectBody, ULONG	HandleCount)
    * happened and disconnect this port.
    */
   if (HandleCount == 0 && Port->State == EPORT_CONNECTED_CLIENT && 
-      ObGetReferenceCount(Port) == 2)
+      ObGetObjectPointerCount(Port) == 2)
     {
       Message.MessageSize = sizeof(LPC_MESSAGE);
       Message.DataSize = 0;
@@ -66,7 +65,7 @@ NiClosePort (PVOID	ObjectBody, ULONG	HandleCount)
    * don't actually notify the client until it attempts an operation.
    */
   if (HandleCount == 0 && Port->State == EPORT_CONNECTED_SERVER && 
-      ObGetReferenceCount(Port) == 2)
+      ObGetObjectPointerCount(Port) == 2)
     {
 	Port->OtherPort->OtherPort = NULL;
 	Port->OtherPort->State = EPORT_DISCONNECTED;

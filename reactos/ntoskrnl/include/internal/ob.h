@@ -22,7 +22,7 @@ typedef struct
 typedef PVOID POBJECT;
 
 typedef struct _DIRECTORY_OBJECT
-{   
+{
    CSHORT Type;
    CSHORT Size;
    
@@ -32,6 +32,16 @@ typedef struct _DIRECTORY_OBJECT
    LIST_ENTRY head;
    KSPIN_LOCK Lock;
 } DIRECTORY_OBJECT, *PDIRECTORY_OBJECT;
+
+
+typedef struct _TYPE_OBJECT
+{
+  CSHORT Type;
+  CSHORT Size;
+  
+  /* pointer to object type data */
+  POBJECT_TYPE ObjectType;
+} TYPE_OBJECT, *PTYPE_OBJECT;
 
 
 /*
@@ -66,7 +76,6 @@ VOID ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
 			  PWSTR Name);
 VOID ObpRemoveEntryDirectory(POBJECT_HEADER Header);
 
-NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header);
 
 
 NTSTATUS ObCreateHandle(struct _EPROCESS* Process,
@@ -81,11 +90,12 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 		      PVOID* ReturnedObject,
 		      PUNICODE_STRING RemainingPath,
 		      POBJECT_TYPE ObjectType);
-ULONG ObGetReferenceCount(PVOID Object);
-ULONG ObGetHandleCount(PVOID Object);
 VOID ObCloseAllHandles(struct _EPROCESS* Process);
 VOID ObDeleteHandleTable(struct _EPROCESS* Process);
 PVOID ObDeleteHandle(struct _EPROCESS* Process,
 		     HANDLE Handle);
+
+NTSTATUS
+ObpCreateTypeObject(POBJECT_TYPE ObjectType);
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */

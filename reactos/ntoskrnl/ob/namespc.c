@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.28 2002/02/19 00:09:24 ekohl Exp $
+/* $Id: namespc.c,v 1.29 2002/03/01 00:47:40 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -23,6 +23,7 @@
 /* GLOBALS ****************************************************************/
 
 POBJECT_TYPE ObDirectoryType = NULL;
+POBJECT_TYPE ObTypeObjectType = NULL;
 
 PDIRECTORY_OBJECT NameSpaceRoot = NULL;
 
@@ -31,6 +32,12 @@ static GENERIC_MAPPING ObpDirectoryMapping = {
 	STANDARD_RIGHTS_WRITE|DIRECTORY_CREATE_OBJECT|DIRECTORY_CREATE_SUBDIRECTORY,
 	STANDARD_RIGHTS_EXECUTE|DIRECTORY_QUERY|DIRECTORY_TRAVERSE,
 	DIRECTORY_ALL_ACCESS};
+
+static GENERIC_MAPPING ObpTypeMapping = {
+	STANDARD_RIGHTS_READ,
+	STANDARD_RIGHTS_WRITE,
+	STANDARD_RIGHTS_EXECUTE,
+	0x000F0001};
 
 /* FUNCTIONS **************************************************************/
 
@@ -106,13 +113,13 @@ DPRINT("Object %p\n", Object);
  * 	Status.
  */
 NTSTATUS STDCALL
-ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
-		   POBJECT_TYPE ObjectType,
-		   PVOID ParseContext,
-		   KPROCESSOR_MODE AccessMode,
-		   ACCESS_MASK DesiredAccess,
-		   PACCESS_STATE PassedAccessState,
-		   PHANDLE Handle)
+ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
+		   IN POBJECT_TYPE ObjectType,
+		   IN OUT PVOID ParseContext,
+		   IN KPROCESSOR_MODE AccessMode,
+		   IN ACCESS_MASK DesiredAccess,
+		   IN PACCESS_STATE PassedAccessState,
+		   OUT PHANDLE Handle)
 {
    UNICODE_STRING RemainingPath;
    PVOID Object = NULL;
@@ -316,40 +323,141 @@ ObpCreateDirectory(PVOID ObjectBody,
   return(STATUS_SUCCESS);
 }
 
-VOID ObInit(VOID)
+
+VOID
+ObInit(VOID)
 /*
  * FUNCTION: Initialize the object manager namespace
  */
 {
-   ObDirectoryType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
-   
-   ObDirectoryType->Tag = TAG('D', 'I', 'R', 'T');
-   ObDirectoryType->TotalObjects = 0;
-   ObDirectoryType->TotalHandles = 0;
-   ObDirectoryType->MaxObjects = ULONG_MAX;
-   ObDirectoryType->MaxHandles = ULONG_MAX;
-   ObDirectoryType->PagedPoolCharge = 0;
-   ObDirectoryType->NonpagedPoolCharge = sizeof(DIRECTORY_OBJECT);
-   ObDirectoryType->Mapping = &ObpDirectoryMapping;
-   ObDirectoryType->Dump = NULL;
-   ObDirectoryType->Open = NULL;
-   ObDirectoryType->Close = NULL;
-   ObDirectoryType->Delete = NULL;
-   ObDirectoryType->Parse = ObpParseDirectory;
-   ObDirectoryType->Security = NULL;
-   ObDirectoryType->QueryName = NULL;
-   ObDirectoryType->OkayToClose = NULL;
-   ObDirectoryType->Create = ObpCreateDirectory;
-   ObDirectoryType->DuplicationNotify = NULL;
-   
-   RtlInitUnicodeString(&ObDirectoryType->TypeName,
-			L"Directory");
-   
-   ObCreateObject(NULL,
-		  STANDARD_RIGHTS_REQUIRED,
-		  NULL,
-		  ObDirectoryType,
-		  (PVOID*)&NameSpaceRoot);
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING Name;
+
+  /* create 'directory' object type */
+  ObDirectoryType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
+  
+  ObDirectoryType->Tag = TAG('D', 'I', 'R', 'T');
+  ObDirectoryType->TotalObjects = 0;
+  ObDirectoryType->TotalHandles = 0;
+  ObDirectoryType->MaxObjects = ULONG_MAX;
+  ObDirectoryType->MaxHandles = ULONG_MAX;
+  ObDirectoryType->PagedPoolCharge = 0;
+  ObDirectoryType->NonpagedPoolCharge = sizeof(DIRECTORY_OBJECT);
+  ObDirectoryType->Mapping = &ObpDirectoryMapping;
+  ObDirectoryType->Dump = NULL;
+  ObDirectoryType->Open = NULL;
+  ObDirectoryType->Close = NULL;
+  ObDirectoryType->Delete = NULL;
+  ObDirectoryType->Parse = ObpParseDirectory;
+  ObDirectoryType->Security = NULL;
+  ObDirectoryType->QueryName = NULL;
+  ObDirectoryType->OkayToClose = NULL;
+  ObDirectoryType->Create = ObpCreateDirectory;
+  ObDirectoryType->DuplicationNotify = NULL;
+  
+  RtlInitUnicodeString(&ObDirectoryType->TypeName,
+		       L"Directory");
+
+  /* create 'type' object type*/
+  ObTypeObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
+  
+  ObTypeObjectType->Tag = TAG('T', 'y', 'p', 'T');
+  ObTypeObjectType->TotalObjects = 0;
+  ObTypeObjectType->TotalHandles = 0;
+  ObTypeObjectType->MaxObjects = ULONG_MAX;
+  ObTypeObjectType->MaxHandles = ULONG_MAX;
+  ObTypeObjectType->PagedPoolCharge = 0;
+  ObTypeObjectType->NonpagedPoolCharge = sizeof(TYPE_OBJECT);
+  ObTypeObjectType->Mapping = &ObpTypeMapping;
+  ObTypeObjectType->Dump = NULL;
+  ObTypeObjectType->Open = NULL;
+  ObTypeObjectType->Close = NULL;
+  ObTypeObjectType->Delete = NULL;
+  ObTypeObjectType->Parse = NULL;
+  ObTypeObjectType->Security = NULL;
+  ObTypeObjectType->QueryName = NULL;
+  ObTypeObjectType->OkayToClose = NULL;
+  ObTypeObjectType->Create = NULL;
+  ObTypeObjectType->DuplicationNotify = NULL;
+  
+  RtlInitUnicodeString(&ObTypeObjectType->TypeName,
+		       L"ObjectType");
+
+  /* create root directory */
+  ObCreateObject(NULL,
+		 STANDARD_RIGHTS_REQUIRED,
+		 NULL,
+		 ObDirectoryType,
+		 (PVOID*)&NameSpaceRoot);
+
+  /* create '\ObjectTypes' directory */
+  RtlInitUnicodeString(&Name,
+		       L"\\ObjectTypes");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     OBJ_PERMANENT,
+			     NULL,
+			     NULL);
+  ObCreateObject(NULL,
+		 STANDARD_RIGHTS_REQUIRED,
+		 &ObjectAttributes,
+		 ObDirectoryType,
+		 NULL);
+
+  ObpCreateTypeObject(ObDirectoryType);
+  ObpCreateTypeObject(ObTypeObjectType);
 }
+
+
+NTSTATUS
+ObpCreateTypeObject(POBJECT_TYPE ObjectType)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  WCHAR NameString[80];
+  PTYPE_OBJECT TypeObject = NULL;
+  UNICODE_STRING Name;
+  HANDLE TypesDir;
+  NTSTATUS Status;
+
+  RtlInitUnicodeString(&Name,
+		       L"\\ObjectTypes");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     0,
+			     NULL,
+			     NULL);
+  
+  Status = NtOpenDirectoryObject(&TypesDir,
+				 STANDARD_RIGHTS_REQUIRED,
+				 &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    return(Status);
+
+  DPRINT("ObjectType: %wZ\n", &ObjectType->TypeName);
+  wcscpy(NameString, L"\\");
+  wcscat(NameString, ObjectType->TypeName.Buffer);
+  RtlInitUnicodeString(&Name,
+		       NameString);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     OBJ_PERMANENT,
+			     TypesDir,
+			     NULL);
+  Status = ObCreateObject(NULL,
+			  STANDARD_RIGHTS_REQUIRED,
+			  &ObjectAttributes,
+			  ObTypeObjectType,
+			  (PVOID*)&TypeObject);
+  if (NT_SUCCESS(Status))
+    {
+      TypeObject->ObjectType = ObjectType;
+    }
+
+  NtClose(TypesDir);
+
+  return(STATUS_SUCCESS);
+}
+
 
 /* EOF */
