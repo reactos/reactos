@@ -1,0 +1,6 @@
+8/12/98:       Corrected bug in shell (Read two keypresses and assumed they
+               where the key going up and down respectively)
+	       Corrected race in dpc handling
+	       Took out cleanup sections in ZwReadFile (now handled by the APC)
+	       Disabled broken code in kernel32
+               
