@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.65 2003/07/21 21:53:52 royce Exp $
+/* $Id: mm.c,v 1.66 2003/07/26 12:45:37 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -71,16 +71,13 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
        break;	
 
      case MEMORY_AREA_SHARED_DATA:
+     case MEMORY_AREA_NO_ACCESS:
        Status = MmFreeMemoryArea(&Process->AddressSpace,
 				 Marea->BaseAddress,
 				 0,
 				 NULL,
 				 NULL);
        break;
-
-     case MEMORY_AREA_NO_ACCESS:
-	return(STATUS_SUCCESS);
-
      default:
        KEBUGCHECK(0);
      }
@@ -98,13 +95,11 @@ NTSTATUS MmReleaseMmInfo(PEPROCESS Process)
    
    MmLockAddressSpace(&Process->AddressSpace);
 
-   CurrentEntry = Process->AddressSpace.MAreaListHead.Flink;
-   while (CurrentEntry != &Process->AddressSpace.MAreaListHead)
+   while(!IsListEmpty(&Process->AddressSpace.MAreaListHead))
      {
-	Current = CONTAINING_RECORD(CurrentEntry, MEMORY_AREA, Entry);
-	CurrentEntry = CurrentEntry->Flink;
-	
-	MmReleaseMemoryArea(Process, Current);
+       CurrentEntry = Process->AddressSpace.MAreaListHead.Flink;
+       Current = CONTAINING_RECORD(CurrentEntry, MEMORY_AREA, Entry);
+       MmReleaseMemoryArea(Process, Current);
      }
    
    Mmi386ReleaseMmInfo(Process);
@@ -149,7 +144,7 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
 					  VirtualAddress);
 
-   if (MemoryArea == NULL)
+   if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
      {
 	MmUnlockAddressSpace(AddressSpace);
 	return(FALSE);
@@ -207,7 +202,7 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
    do
      {
        MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, (PVOID)Address);
-       if (MemoryArea == NULL)
+       if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
 	 {
 	   if (!FromMdl)
 	     {
@@ -340,7 +335,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
    do
      {
        MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, (PVOID)Address);
-       if (MemoryArea == NULL)
+       if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
 	 {
 	   if (!FromMdl)
 	     {
