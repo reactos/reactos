@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.20 2003/08/10 10:09:51 ekohl Exp $
+/* $Id: nls.c,v 1.21 2003/10/11 17:23:52 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -217,7 +217,7 @@ RtlCustomCPToUnicodeN(IN PCPTABLEINFO CustomCP,
 
       for (i = 0; i < Size; i++)
 	{
-	  *UnicodeString = CustomCP->MultiByteTable[(unsigned int)*CustomString];
+	  *UnicodeString = CustomCP->MultiByteTable[(UCHAR)*CustomString];
 	  UnicodeString++;
 	  CustomString++;
 	}
@@ -373,7 +373,7 @@ RtlMultiByteToUnicodeN(PWCHAR UnicodeString,
 	*ResultSize = Size * sizeof(WCHAR);
 
       for (i = 0; i < Size; i++)
-	UnicodeString[i] = NlsAnsiToUnicodeTable[(unsigned int)MbString[i]];
+	UnicodeString[i] = NlsAnsiToUnicodeTable[(UCHAR)MbString[i]];
     }
   else
     {
@@ -446,7 +446,7 @@ RtlOemToUnicodeN(PWCHAR UnicodeString,
 
       for (i = 0; i < Size; i++)
 	{
-	  *UnicodeString = NlsOemToUnicodeTable[(unsigned int)*OemString];
+	  *UnicodeString = NlsOemToUnicodeTable[(UCHAR)*OemString];
 	  UnicodeString++;
 	  OemString++;
 	}
@@ -517,7 +517,7 @@ RtlUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
 
       for (i = 0; i < Size; i++)
 	{
-	  *CustomString = ((PCHAR)CustomCP->WideCharTable)[(unsigned int)*UnicodeString];
+	  *CustomString = ((PCHAR)CustomCP->WideCharTable)[(USHORT)*UnicodeString];
 	  CustomString++;
 	  UnicodeString++;
 	}
@@ -559,7 +559,7 @@ RtlUnicodeToMultiByteN(PCHAR MbString,
 
       for (i = 0; i < Size; i++)
 	{
-	  *MbString = NlsUnicodeToAnsiTable[(unsigned int)*UnicodeString];
+	  *MbString = NlsUnicodeToAnsiTable[(USHORT)*UnicodeString];
 	  MbString++;
 	  UnicodeString++;
 	}
@@ -597,7 +597,7 @@ RtlUnicodeToMultiByteSize(PULONG MbSize,
       MbLength = 0;
       while (UnicodeLength > 0)
 	{
-	  if (NlsLeadByteInfo[*UnicodeString] & 0xff00)
+	  if (NlsLeadByteInfo[(USHORT)*UnicodeString] & 0xff00)
 	    MbLength++;
 
 	  MbLength++;
@@ -638,7 +638,7 @@ RtlUnicodeToOemN(PCHAR OemString,
 
       for (i = 0; i < Size; i++)
 	{
-	  *OemString = NlsUnicodeToOemTable[(unsigned int)*UnicodeString];
+	  *OemString = NlsUnicodeToOemTable[(USHORT)*UnicodeString];
 	  OemString++;
 	  UnicodeString++;
 	}
@@ -709,7 +709,7 @@ RtlUpcaseUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
       for (i = 0; i < Size; i++)
 	{
 	  wc = RtlUpcaseUnicodeChar(*UnicodeString);
-	  *CustomString = ((PCHAR)CustomCP->WideCharTable)[(unsigned int)wc];
+	  *CustomString = ((PCHAR)CustomCP->WideCharTable)[(USHORT)wc];
 	  CustomString++;
 	  UnicodeString++;
 	}
@@ -752,7 +752,7 @@ RtlUpcaseUnicodeToMultiByteN(PCHAR MbString,
       for (i = 0; i < Size; i++)
 	{
 	  wc = RtlUpcaseUnicodeChar(*UnicodeString);
-	  *MbString = NlsUnicodeToAnsiTable[(unsigned int)wc];
+	  *MbString = NlsUnicodeToAnsiTable[(USHORT)wc];
 	  MbString++;
 	  UnicodeString++;
 	}
@@ -795,7 +795,7 @@ RtlUpcaseUnicodeToOemN(PCHAR OemString,
       for (i = 0; i < Size; i++)
 	{
 	  wc = RtlUpcaseUnicodeChar(*UnicodeString);
-	  *OemString = NlsUnicodeToOemTable[(unsigned int)wc];
+	  *OemString = NlsUnicodeToOemTable[(USHORT)wc];
 	  OemString++;
 	  UnicodeString++;
 	}
@@ -824,13 +824,13 @@ RtlUpperChar (IN CHAR Source)
       /* single-byte code page */
 
       /* ansi->unicode */
-      Unicode = NlsAnsiToUnicodeTable[(unsigned int)Source];
+      Unicode = NlsAnsiToUnicodeTable[(UCHAR)Source];
 
       /* upcase conversion */
       Unicode = RtlUpcaseUnicodeChar (Unicode);
 
       /* unicode -> ansi */
-      Destination = NlsUnicodeToAnsiTable[(unsigned int)Unicode];
+      Destination = NlsUnicodeToAnsiTable[(USHORT)Unicode];
     }
   else
     {
