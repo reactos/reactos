@@ -517,6 +517,9 @@ typedef struct _LOADER_PARAMETER_BLOCK
    ULONG DrivesAddr;
    ULONG ConfigTable;
    ULONG BootLoaderName;
+   ULONG PageDirectoryStart;
+   ULONG PageDirectoryEnd;
+   ULONG KernelBase;
 } LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
 
 typedef enum _KAPC_ENVIRONMENT

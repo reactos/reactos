@@ -22,7 +22,7 @@
 #ifndef __RS232_H
 #define __RS232_H
 
-BOOL Rs232PortInitialize(U32 ComPort, U32 BaudRate);
+BOOL Rs232PortInitialize(ULONG ComPort, ULONG BaudRate);
 BOOL Rs232PortGetByte(PUCHAR ByteRecieved);
 BOOL Rs232PortPollByte(PUCHAR ByteRecieved);
 VOID Rs232PortPutByte(UCHAR ByteToSend);

@@ -41,13 +41,13 @@ VOID RunLoader(VOID)
 {
 	UCHAR	SettingName[80];
 	UCHAR	SettingValue[80];
-	U32		SectionId;
-	U32		OperatingSystemCount;
+	ULONG		SectionId;
+	ULONG		OperatingSystemCount;
 	PUCHAR	*OperatingSystemSectionNames;
 	PUCHAR	*OperatingSystemDisplayNames;
-	U32		DefaultOperatingSystem;
-	S32		TimeOut;
-	U32		SelectedOperatingSystem;
+	ULONG		DefaultOperatingSystem;
+	LONG		TimeOut;
+	ULONG		SelectedOperatingSystem;
 
 	if (!IniFileInitialize())
 	{
@@ -159,13 +159,13 @@ reboot:
 	return;
 }
 
-U32	 GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], U32	 OperatingSystemCount)
+ULONG	 GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], ULONG	 OperatingSystemCount)
 {
 	UCHAR	DefaultOSText[80];
 	char*	DefaultOSName;
-	U32	SectionId;
-	U32	DefaultOS = 0;
-	U32	Idx;
+	ULONG	SectionId;
+	ULONG	DefaultOS = 0;
+	ULONG	Idx;
 
 	if (!IniOpenSection("FreeLoader", &SectionId))
 	{
@@ -196,11 +196,11 @@ U32	 GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], U32	 OperatingSyste
 	return DefaultOS;
 }
 
-S32 GetTimeOut(VOID)
+LONG GetTimeOut(VOID)
 {
 	UCHAR	TimeOutText[20];
-	S32		TimeOut;
-	U32		SectionId;
+	LONG		TimeOut;
+	ULONG		SectionId;
 
 	TimeOut = CmdLineGetTimeOut();
 	if (0 <= TimeOut)
@@ -225,7 +225,7 @@ S32 GetTimeOut(VOID)
 	return TimeOut;
 }
 
-BOOL MainBootMenuKeyPressFilter(U32 KeyPress)
+BOOL MainBootMenuKeyPressFilter(ULONG KeyPress)
 {
 	if (KeyPress == KEY_F8)
 	{

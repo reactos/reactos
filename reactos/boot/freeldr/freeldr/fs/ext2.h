@@ -113,7 +113,7 @@
 # define EXT3_BLOCK_SIZE(s)		(EXT3_MIN_BLOCK_SIZE << (s)->s_log_block_size)
 #endif
 #define EXT3_ACLE_PER_BLOCK(s)		(EXT3_BLOCK_SIZE(s) / sizeof (struct ext3_acl_entry))
-#define	EXT3_ADDR_PER_BLOCK(s)		(EXT3_BLOCK_SIZE(s) / sizeof (__u32))
+#define	EXT3_ADDR_PER_BLOCK(s)		(EXT3_BLOCK_SIZE(s) / sizeof (ULONG))
 #ifdef __KERNEL__
 # define EXT3_BLOCK_SIZE_BITS(s)	((s)->s_blocksize_bits)
 #else
@@ -151,20 +151,20 @@
  */
 struct ext3_acl_header	/* Header of Access Control Lists */
 {
-	__u32	aclh_size;
-	__u32	aclh_file_count;
-	__u32	aclh_acle_count;
-	__u32	aclh_first_acle;
+	ULONG	aclh_size;
+	ULONG	aclh_file_count;
+	ULONG	aclh_acle_count;
+	ULONG	aclh_first_acle;
 };
 
 struct ext3_acl_entry	/* Access Control List Entry */
 {
-	__u32	acle_size;
-	__u16	acle_perms;	/* Access permissions */
-	__u16	acle_type;	/* Type of entry */
-	__u16	acle_tag;	/* User or group identity */
-	__u16	acle_pad1;
-	__u32	acle_next;	/* Pointer on next entry for the */
+	ULONG	acle_size;
+	USHORT	acle_perms;	/* Access permissions */
+	USHORT	acle_type;	/* Type of entry */
+	USHORT	acle_tag;	/* User or group identity */
+	USHORT	acle_pad1;
+	ULONG	acle_next;	/* Pointer on next entry for the */
 					/* same inode or on next free entry */
 };
 
@@ -173,14 +173,14 @@ struct ext3_acl_entry	/* Access Control List Entry */
  */
 struct ext3_group_desc
 {
-	__u32	bg_block_bitmap;		/* Blocks bitmap block */
-	__u32	bg_inode_bitmap;		/* Inodes bitmap block */
-	__u32	bg_inode_table;		/* Inodes table block */
-	__u16	bg_free_blocks_count;	/* Free blocks count */
-	__u16	bg_free_inodes_count;	/* Free inodes count */
-	__u16	bg_used_dirs_count;	/* Directories count */
-	__u16	bg_pad;
-	__u32	bg_reserved[3];
+	ULONG	bg_block_bitmap;		/* Blocks bitmap block */
+	ULONG	bg_inode_bitmap;		/* Inodes bitmap block */
+	ULONG	bg_inode_table;		/* Inodes table block */
+	USHORT	bg_free_blocks_count;	/* Free blocks count */
+	USHORT	bg_free_inodes_count;	/* Free inodes count */
+	USHORT	bg_used_dirs_count;	/* Directories count */
+	USHORT	bg_pad;
+	ULONG	bg_reserved[3];
 };
 
 /*
@@ -254,55 +254,55 @@ struct ext3_group_desc
  * Structure of an inode on the disk
  */
 struct ext3_inode {
-	__u16	i_mode;		/* File mode */
-	__u16	i_uid;		/* Low 16 bits of Owner Uid */
-	__u32	i_size;		/* Size in bytes */
-	__u32	i_atime;	/* Access time */
-	__u32	i_ctime;	/* Creation time */
-	__u32	i_mtime;	/* Modification time */
-	__u32	i_dtime;	/* Deletion Time */
-	__u16	i_gid;		/* Low 16 bits of Group Id */
-	__u16	i_links_count;	/* Links count */
-	__u32	i_blocks;	/* Blocks count */
-	__u32	i_flags;	/* File flags */
+	USHORT	i_mode;		/* File mode */
+	USHORT	i_uid;		/* Low 16 bits of Owner Uid */
+	ULONG	i_size;		/* Size in bytes */
+	ULONG	i_atime;	/* Access time */
+	ULONG	i_ctime;	/* Creation time */
+	ULONG	i_mtime;	/* Modification time */
+	ULONG	i_dtime;	/* Deletion Time */
+	USHORT	i_gid;		/* Low 16 bits of Group Id */
+	USHORT	i_links_count;	/* Links count */
+	ULONG	i_blocks;	/* Blocks count */
+	ULONG	i_flags;	/* File flags */
 	union {
 		struct {
-			__u32  l_i_reserved1;
+			ULONG  l_i_reserved1;
 		} linux1;
 		struct {
-			__u32  h_i_translator;
+			ULONG  h_i_translator;
 		} hurd1;
 		struct {
-			__u32  m_i_reserved1;
+			ULONG  m_i_reserved1;
 		} masix1;
 	} osd1;				/* OS dependent 1 */
-	__u32	i_block[EXT3_N_BLOCKS];/* Pointers to blocks */
-	__u32	i_generation;	/* File version (for NFS) */
-	__u32	i_file_acl;	/* File ACL */
-	__u32	i_dir_acl;	/* Directory ACL */
-	__u32	i_faddr;	/* Fragment address */
+	ULONG	i_block[EXT3_N_BLOCKS];/* Pointers to blocks */
+	ULONG	i_generation;	/* File version (for NFS) */
+	ULONG	i_file_acl;	/* File ACL */
+	ULONG	i_dir_acl;	/* Directory ACL */
+	ULONG	i_faddr;	/* Fragment address */
 	union {
 		struct {
-			__u8	l_i_frag;	/* Fragment number */
-			__u8	l_i_fsize;	/* Fragment size */
-			__u16	i_pad1;
-			__u16	l_i_uid_high;	/* these 2 fields    */
-			__u16	l_i_gid_high;	/* were reserved2[0] */
-			__u32	l_i_reserved2;
+			UCHAR	l_i_frag;	/* Fragment number */
+			UCHAR	l_i_fsize;	/* Fragment size */
+			USHORT	i_pad1;
+			USHORT	l_i_uid_high;	/* these 2 fields    */
+			USHORT	l_i_gid_high;	/* were reserved2[0] */
+			ULONG	l_i_reserved2;
 		} linux2;
 		struct {
-			__u8	h_i_frag;	/* Fragment number */
-			__u8	h_i_fsize;	/* Fragment size */
-			__u16	h_i_mode_high;
-			__u16	h_i_uid_high;
-			__u16	h_i_gid_high;
-			__u32	h_i_author;
+			UCHAR	h_i_frag;	/* Fragment number */
+			UCHAR	h_i_fsize;	/* Fragment size */
+			USHORT	h_i_mode_high;
+			USHORT	h_i_uid_high;
+			USHORT	h_i_gid_high;
+			ULONG	h_i_author;
 		} hurd2;
 		struct {
-			__u8	m_i_frag;	/* Fragment number */
-			__u8	m_i_fsize;	/* Fragment size */
-			__u16	m_pad1;
-			__u32	m_i_reserved2[2];
+			UCHAR	m_i_frag;	/* Fragment number */
+			UCHAR	m_i_fsize;	/* Fragment size */
+			USHORT	m_pad1;
+			ULONG	m_i_reserved2[2];
 		} masix2;
 	} osd2;				/* OS dependent 2 */
 };
@@ -398,31 +398,31 @@ struct ext3_inode {
  * Structure of the super block
  */
 struct ext3_super_block {
-/*00*/	__u32	s_inodes_count;		/* Inodes count */
-	__u32	s_blocks_count;		/* Blocks count */
-	__u32	s_r_blocks_count;	/* Reserved blocks count */
-	__u32	s_free_blocks_count;	/* Free blocks count */
-/*10*/	__u32	s_free_inodes_count;	/* Free inodes count */
-	__u32	s_first_data_block;	/* First Data Block */
-	__u32	s_log_block_size;	/* Block size */
-	__s32	s_log_frag_size;	/* Fragment size */
-/*20*/	__u32	s_blocks_per_group;	/* # Blocks per group */
-	__u32	s_frags_per_group;	/* # Fragments per group */
-	__u32	s_inodes_per_group;	/* # Inodes per group */
-	__u32	s_mtime;		/* Mount time */
-/*30*/	__u32	s_wtime;		/* Write time */
-	__u16	s_mnt_count;		/* Mount count */
-	__s16	s_max_mnt_count;	/* Maximal mount count */
-	__u16	s_magic;		/* Magic signature */
-	__u16	s_state;		/* File system state */
-	__u16	s_errors;		/* Behaviour when detecting errors */
-	__u16	s_minor_rev_level;	/* minor revision level */
-/*40*/	__u32	s_lastcheck;		/* time of last check */
-	__u32	s_checkinterval;	/* max. time between checks */
-	__u32	s_creator_os;		/* OS */
-	__u32	s_rev_level;		/* Revision level */
-/*50*/	__u16	s_def_resuid;		/* Default uid for reserved blocks */
-	__u16	s_def_resgid;		/* Default gid for reserved blocks */
+/*00*/	ULONG	s_inodes_count;		/* Inodes count */
+	ULONG	s_blocks_count;		/* Blocks count */
+	ULONG	s_r_blocks_count;	/* Reserved blocks count */
+	ULONG	s_free_blocks_count;	/* Free blocks count */
+/*10*/	ULONG	s_free_inodes_count;	/* Free inodes count */
+	ULONG	s_first_data_block;	/* First Data Block */
+	ULONG	s_log_block_size;	/* Block size */
+	LONG	s_log_frag_size;	/* Fragment size */
+/*20*/	ULONG	s_blocks_per_group;	/* # Blocks per group */
+	ULONG	s_frags_per_group;	/* # Fragments per group */
+	ULONG	s_inodes_per_group;	/* # Inodes per group */
+	ULONG	s_mtime;		/* Mount time */
+/*30*/	ULONG	s_wtime;		/* Write time */
+	USHORT	s_mnt_count;		/* Mount count */
+	SHORT	s_max_mnt_count;	/* Maximal mount count */
+	USHORT	s_magic;		/* Magic signature */
+	USHORT	s_state;		/* File system state */
+	USHORT	s_errors;		/* Behaviour when detecting errors */
+	USHORT	s_minor_rev_level;	/* minor revision level */
+/*40*/	ULONG	s_lastcheck;		/* time of last check */
+	ULONG	s_checkinterval;	/* max. time between checks */
+	ULONG	s_creator_os;		/* OS */
+	ULONG	s_rev_level;		/* Revision level */
+/*50*/	USHORT	s_def_resuid;		/* Default uid for reserved blocks */
+	USHORT	s_def_resgid;		/* Default gid for reserved blocks */
 	/*
 	 * These fields are for EXT3_DYNAMIC_REV superblocks only.
 	 *
@@ -436,32 +436,32 @@ struct ext3_super_block {
 	 * feature set, it must abort and not try to meddle with
 	 * things it doesn't understand...
 	 */
-	__u32	s_first_ino;		/* First non-reserved inode */
-	__u16   s_inode_size;		/* size of inode structure */
-	__u16	s_block_group_nr;	/* block group # of this superblock */
-	__u32	s_feature_compat;	/* compatible feature set */
-/*60*/	__u32	s_feature_incompat;	/* incompatible feature set */
-	__u32	s_feature_ro_compat;	/* readonly-compatible feature set */
-/*68*/	__u8	s_uuid[16];		/* 128-bit uuid for volume */
+	ULONG	s_first_ino;		/* First non-reserved inode */
+	USHORT   s_inode_size;		/* size of inode structure */
+	USHORT	s_block_group_nr;	/* block group # of this superblock */
+	ULONG	s_feature_compat;	/* compatible feature set */
+/*60*/	ULONG	s_feature_incompat;	/* incompatible feature set */
+	ULONG	s_feature_ro_compat;	/* readonly-compatible feature set */
+/*68*/	UCHAR	s_uuid[16];		/* 128-bit uuid for volume */
 /*78*/	char	s_volume_name[16];	/* volume name */
 /*88*/	char	s_last_mounted[64];	/* directory where last mounted */
-/*C8*/	__u32	s_algorithm_usage_bitmap; /* For compression */
+/*C8*/	ULONG	s_algorithm_usage_bitmap; /* For compression */
 	/*
 	 * Performance hints.  Directory preallocation should only
 	 * happen if the EXT3_FEATURE_COMPAT_DIR_PREALLOC flag is on.
 	 */
-	__u8	s_prealloc_blocks;	/* Nr of blocks to try to preallocate*/
-	__u8	s_prealloc_dir_blocks;	/* Nr to preallocate for dirs */
-	__u16	s_padding1;
+	UCHAR	s_prealloc_blocks;	/* Nr of blocks to try to preallocate*/
+	UCHAR	s_prealloc_dir_blocks;	/* Nr to preallocate for dirs */
+	USHORT	s_padding1;
 	/*
 	 * Journaling support valid if EXT3_FEATURE_COMPAT_HAS_JOURNAL set.
 	 */
-/*D0*/	__u8	s_journal_uuid[16];	/* uuid of journal superblock */
-/*E0*/	__u32	s_journal_inum;		/* inode number of journal file */
-	__u32	s_journal_dev;		/* device number of journal file */
-	__u32	s_last_orphan;		/* start of list of inodes to delete */
+/*D0*/	UCHAR	s_journal_uuid[16];	/* uuid of journal superblock */
+/*E0*/	ULONG	s_journal_inum;		/* inode number of journal file */
+	ULONG	s_journal_dev;		/* device number of journal file */
+	ULONG	s_last_orphan;		/* start of list of inodes to delete */
 
-/*EC*/	__u32	s_reserved[197];	/* Padding to the end of the block */
+/*EC*/	ULONG	s_reserved[197];	/* Padding to the end of the block */
 };
 
 #ifdef __KERNEL__
@@ -555,9 +555,9 @@ struct ext3_super_block {
 #define EXT3_NAME_LEN 255
 
 struct ext3_dir_entry {
-	__u32	inode;			/* Inode number */
-	__u16	rec_len;		/* Directory entry length */
-	__u16	name_len;		/* Name length */
+	ULONG	inode;			/* Inode number */
+	USHORT	rec_len;		/* Directory entry length */
+	USHORT	name_len;		/* Name length */
 	char	name[EXT3_NAME_LEN];	/* File name */
 };
 
@@ -568,10 +568,10 @@ struct ext3_dir_entry {
  * file_type field.
  */
 struct ext3_dir_entry_2 {
-	__u32	inode;			/* Inode number */
-	__u16	rec_len;		/* Directory entry length */
-	__u8	name_len;		/* Name length */
-	__u8	file_type;
+	ULONG	inode;			/* Inode number */
+	USHORT	rec_len;		/* Directory entry length */
+	UCHAR	name_len;		/* Name length */
+	UCHAR	file_type;
 	char	name[EXT3_NAME_LEN];	/* File name */
 };
 
@@ -653,45 +653,45 @@ typedef struct ext3_dir_entry_2	EXT2_DIR_ENTRY, *PEXT2_DIR_ENTRY;
 #define EXT2_S_IFLNK	0xA000	// Symbolic link
 #define EXT2_S_IFSOCK	0xC000	// Socket
 
-#define FAST_SYMLINK_MAX_NAME_SIZE	(EXT3_N_BLOCKS * sizeof(U32)) /* 60 bytes */
+#define FAST_SYMLINK_MAX_NAME_SIZE	(EXT3_N_BLOCKS * sizeof(ULONG)) /* 60 bytes */
 
 typedef struct
 {
-	U64			FileSize;			// File size
-	U64			FilePointer;		// File pointer
-	U32*		FileBlockList;		// File block list
-	U8			DriveNumber;		// Drive number of open file
+	ULONGLONG			FileSize;			// File size
+	ULONGLONG			FilePointer;		// File pointer
+	ULONG*		FileBlockList;		// File block list
+	UCHAR			DriveNumber;		// Drive number of open file
 	EXT2_INODE	Inode;				// File's inode
 } EXT2_FILE_INFO, * PEXT2_FILE_INFO;
 
 
 
-BOOL	Ext2OpenVolume(U8 DriveNumber, U64 VolumeStartSector);
+BOOL	Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector);
 FILE*	Ext2OpenFile(PUCHAR FileName);
 BOOL	Ext2LookupFile(PUCHAR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer);
-BOOL	Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, U32 DirectorySize, PUCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry);
-BOOL	Ext2ReadFile(FILE *FileHandle, U64 BytesToRead, U64* BytesRead, PVOID Buffer);
-U64		Ext2GetFileSize(FILE *FileHandle);
-VOID	Ext2SetFilePointer(FILE *FileHandle, U64 NewFilePointer);
-U64		Ext2GetFilePointer(FILE *FileHandle);
-BOOL	Ext2ReadVolumeSectors(U8 DriveNumber, U64 SectorNumber, U64 SectorCount, PVOID Buffer);
+BOOL	Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PUCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry);
+BOOL	Ext2ReadFile(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer);
+ULONGLONG		Ext2GetFileSize(FILE *FileHandle);
+VOID	Ext2SetFilePointer(FILE *FileHandle, ULONGLONG NewFilePointer);
+ULONGLONG		Ext2GetFilePointer(FILE *FileHandle);
+BOOL	Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONGLONG SectorCount, PVOID Buffer);
 
 BOOL	Ext2ReadSuperBlock(VOID);
 BOOL	Ext2ReadGroupDescriptors(VOID);
-BOOL	Ext2ReadDirectory(U32 Inode, PVOID* DirectoryBuffer, PEXT2_INODE InodePointer);
-BOOL	Ext2ReadBlock(U32 BlockNumber, PVOID Buffer);
-BOOL	Ext2ReadPartialBlock(U32 BlockNumber, U32 StartingOffset, U32 Length, PVOID Buffer);
-U32		Ext2GetGroupDescBlockNumber(U32 Group);
-U32		Ext2GetGroupDescOffsetInBlock(U32 Group);
-U32		Ext2GetInodeGroupNumber(U32 Inode);
-U32		Ext2GetInodeBlockNumber(U32 Inode);
-U32		Ext2GetInodeOffsetInBlock(U32 Inode);
-BOOL	Ext2ReadInode(U32 Inode, PEXT2_INODE InodeBuffer);
-BOOL	Ext2ReadGroupDescriptor(U32 Group, PEXT2_GROUP_DESC GroupBuffer);
-U32*	Ext2ReadBlockPointerList(PEXT2_INODE Inode);
-U64		Ext2GetInodeFileSize(PEXT2_INODE Inode);
-BOOL	Ext2CopyIndirectBlockPointers(U32* BlockList, U32* CurrentBlockInList, U32 BlockCount, U32 IndirectBlock);
-BOOL	Ext2CopyDoubleIndirectBlockPointers(U32* BlockList, U32* CurrentBlockInList, U32 BlockCount, U32 DoubleIndirectBlock);
-BOOL	Ext2CopyTripleIndirectBlockPointers(U32* BlockList, U32* CurrentBlockInList, U32 BlockCount, U32 TripleIndirectBlock);
+BOOL	Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE InodePointer);
+BOOL	Ext2ReadBlock(ULONG BlockNumber, PVOID Buffer);
+BOOL	Ext2ReadPartialBlock(ULONG BlockNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer);
+ULONG		Ext2GetGroupDescBlockNumber(ULONG Group);
+ULONG		Ext2GetGroupDescOffsetInBlock(ULONG Group);
+ULONG		Ext2GetInodeGroupNumber(ULONG Inode);
+ULONG		Ext2GetInodeBlockNumber(ULONG Inode);
+ULONG		Ext2GetInodeOffsetInBlock(ULONG Inode);
+BOOL	Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer);
+BOOL	Ext2ReadGroupDescriptor(ULONG Group, PEXT2_GROUP_DESC GroupBuffer);
+ULONG*	Ext2ReadBlockPointerList(PEXT2_INODE Inode);
+ULONGLONG		Ext2GetInodeFileSize(PEXT2_INODE Inode);
+BOOL	Ext2CopyIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG IndirectBlock);
+BOOL	Ext2CopyDoubleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG DoubleIndirectBlock);
+BOOL	Ext2CopyTripleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG TripleIndirectBlock);
 
 #endif // #defined __EXT2_H

@@ -18,13 +18,7 @@
  */
 
 #include "freeldr.h"
-#include "disk.h"
-#include "rtl.h"
-#include "arch.h"
 #include "debug.h"
-#include "portio.h"
-#include "machine.h"
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
@@ -32,7 +26,7 @@
 
 #ifdef __i386__
 
-BOOL DiskResetController(U32 DriveNumber)
+BOOL DiskResetController(ULONG DriveNumber)
 {
 	REGS	RegsIn;
 	REGS	RegsOut;
@@ -55,7 +49,7 @@ BOOL DiskResetController(U32 DriveNumber)
 	return INT386_SUCCESS(RegsOut);
 }
 
-BOOL DiskInt13ExtensionsSupported(U32 DriveNumber)
+BOOL DiskInt13ExtensionsSupported(ULONG DriveNumber)
 {
 	REGS	RegsIn;
 	REGS	RegsOut;
@@ -133,11 +127,11 @@ VOID DiskStopFloppyMotor(VOID)
 	WRITE_PORT_UCHAR((PUCHAR)0x3F2, 0);
 }
 
-BOOL DiskGetExtendedDriveParameters(U32 DriveNumber, PVOID Buffer, U16 BufferSize)
+BOOL DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT BufferSize)
 {
 	REGS	RegsIn;
 	REGS	RegsOut;
-	PU16	Ptr = (PU16)(BIOSCALLBUFFER);
+	PUSHORT	Ptr = (PUSHORT)(BIOSCALLBUFFER);
 
 	DbgPrint((DPRINT_DISK, "DiskGetExtendedDriveParameters()\n"));
 

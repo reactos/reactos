@@ -39,7 +39,7 @@ VOID DiskReportError (BOOL bError)
 	bReportError = bError;
 }
 
-VOID DiskError(PUCHAR ErrorString, U32 ErrorCode)
+VOID DiskError(PUCHAR ErrorString, ULONG ErrorCode)
 {
 	UCHAR	ErrorCodeString[200];
 
@@ -53,7 +53,7 @@ VOID DiskError(PUCHAR ErrorString, U32 ErrorCode)
 	UiMessageBox(ErrorCodeString);
 }
 
-PUCHAR DiskGetErrorCodeString(U32 ErrorCode)
+PUCHAR DiskGetErrorCodeString(ULONG ErrorCode)
 {
 	switch (ErrorCode)
 	{
@@ -89,9 +89,9 @@ PUCHAR DiskGetErrorCodeString(U32 ErrorCode)
 }
 
 // This function is in arch/i386/i386disk.c
-//BOOL DiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer)
+//BOOL DiskReadLogicalSectors(ULONG DriveNumber, U64 SectorNumber, ULONG SectorCount, PVOID Buffer)
 
-BOOL DiskIsDriveRemovable(U32 DriveNumber)
+BOOL DiskIsDriveRemovable(ULONG DriveNumber)
 {
 	// Hard disks use drive numbers >= 0x80
 	// So if the drive number indicates a hard disk
@@ -109,4 +109,4 @@ BOOL DiskIsDriveRemovable(U32 DriveNumber)
 //VOID DiskStopFloppyMotor(VOID)
 
 // This function is in arch/i386/i386disk.c
-//U32 DiskGetCacheableBlockCount(U32 DriveNumber)
+//ULONG DiskGetCacheableBlockCount(ULONG DriveNumber)

@@ -65,7 +65,7 @@ MachConsGetCh()
 }
 
 VOID
-MachVideoClearScreen(U8 Attr)
+MachVideoClearScreen(UCHAR Attr)
 {
   MachVtbl.VideoClearScreen(Attr);
 }
@@ -77,19 +77,19 @@ MachVideoSetDisplayMode(char *DisplayMode, BOOL Init)
 }
 
 VOID
-MachVideoGetDisplaySize(PU32 Width, PU32 Height, PU32 Depth)
+MachVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth)
 {
   return MachVtbl.VideoGetDisplaySize(Width, Height, Depth);
 }
 
-U32
+ULONG
 MachVideoGetBufferSize(VOID)
 {
   return MachVtbl.VideoGetBufferSize();
 }
 
 VOID
-MachVideoSetTextCursorPosition(U32 X, U32 Y)
+MachVideoSetTextCursorPosition(ULONG X, ULONG Y)
 {
   return MachVtbl.VideoSetTextCursorPosition(X, Y);
 }
@@ -101,7 +101,7 @@ MachVideoHideShowTextCursor(BOOL Show)
 }
 
 VOID
-MachVideoPutChar(int Ch, U8 Attr, unsigned X, unsigned Y)
+MachVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
 {
   MachVtbl.VideoPutChar(Ch, Attr, X, Y);
 }
@@ -119,13 +119,13 @@ MachVideoIsPaletteFixed(VOID)
 }
 
 VOID
-MachVideoSetPaletteColor(U8 Color, U8 Red, U8 Green, U8 Blue)
+MachVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue)
 {
   return MachVtbl.VideoSetPaletteColor(Color, Red, Green, Blue);
 }
 
 VOID
-MachVideoGetPaletteColor(U8 Color, U8 *Red, U8 *Green, U8 *Blue)
+MachVideoGetPaletteColor(UCHAR Color, UCHAR *Red, UCHAR *Green, UCHAR *Blue)
 {
   return MachVtbl.VideoGetPaletteColor(Color, Red, Green, Blue);
 }
@@ -142,38 +142,38 @@ MachVideoPrepareForReactOS(VOID)
   MachVtbl.VideoPrepareForReactOS();
 }
 
-U32
-MachGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize)
+ULONG
+MachGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
 {
   return MachVtbl.GetMemoryMap(BiosMemoryMap, MaxMemoryMapSize);
 }
 
 BOOL
-MachDiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer)
+MachDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
   return MachVtbl.DiskReadLogicalSectors(DriveNumber, SectorNumber, SectorCount, Buffer);
 }
 
 BOOL
-MachDiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+MachDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
   return MachVtbl.DiskGetPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
 }
 
 BOOL
-MachDiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY DriveGeometry)
+MachDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry)
 {
   return MachVtbl.DiskGetDriveGeometry(DriveNumber, DriveGeometry);
 }
 
-U32
-MachDiskGetCacheableBlockCount(U32 DriveNumber)
+ULONG
+MachDiskGetCacheableBlockCount(ULONG DriveNumber)
 {
   return MachVtbl.DiskGetCacheableBlockCount(DriveNumber);
 }
 
 VOID
-MachRTCGetCurrentDateTime(PU32 Year, PU32 Month, PU32 Day, PU32 Hour, PU32 Minute, PU32 Second)
+MachRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second)
 {
   MachVtbl.RTCGetCurrentDateTime(Year, Month, Day, Hour, Minute, Second);
 }

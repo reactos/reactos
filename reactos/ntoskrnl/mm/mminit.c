@@ -48,6 +48,8 @@ PVOID MiNonPagedPoolStart;
 ULONG MiNonPagedPoolLength;
 //PVOID MiKernelMapStart;
 
+extern ULONG init_stack;
+extern ULONG init_stack_top;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -289,16 +291,11 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    ULONG i;
    ULONG kernel_len;
    ULONG_PTR MappingAddress;
-#ifndef CONFIG_SMP
-   extern unsigned int unmap_me, unmap_me2, unmap_me3;
-#endif
-   extern unsigned int pagetable_start, pagetable_end;
 
    DPRINT("MmInit1(FirstKrnlPhysAddr, %p, LastKrnlPhysAddr %p, LastKernelAddress %p)\n",
           FirstKrnlPhysAddr,
           LastKrnlPhysAddr,
           LastKernelAddress);
-
 
    if ((BIOSMemoryMap != NULL) && (AddressRangeCount > 0))
    {
@@ -375,6 +372,7 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    MmInitGlobalKernelPageDirectory();
    
    DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGE_SIZE) / 1024);
+   DPRINT1("Kernel Stack Limits. InitTop = 0x%x, Init = 0x%x\n", init_stack_top, init_stack);
 
    LastKernelAddress = (ULONG_PTR)MmInitializePageList(
                        FirstKrnlPhysAddr,
@@ -395,8 +393,6 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    MmDeletePageTable(NULL, 0);
 #endif
 
-
-
    DPRINT("Invalidating between %x and %x\n",
           LastKernelAddress, KERNEL_BASE + 0x00600000);
    for (MappingAddress = LastKernelAddress;
@@ -406,20 +402,7 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
       MmRawDeleteVirtualMapping((PVOID)MappingAddress);
    }
 
-   for (MappingAddress = (ULONG_PTR)&pagetable_start;
-        MappingAddress < (ULONG_PTR)&pagetable_end;
-        MappingAddress += PAGE_SIZE)
-   {
-      MmDeleteVirtualMapping(NULL, (PVOID)MappingAddress, FALSE, NULL, NULL);
-   }
-
    DPRINT("Almost done MmInit()\n");
-#ifndef CONFIG_SMP
-   /* FIXME: This is broken in SMP mode */
-   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me, TRUE, NULL, NULL);
-   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me2, TRUE, NULL, NULL);
-   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me3, TRUE, NULL, NULL);
-#endif
    /*
     * Intialize memory areas
     */

@@ -61,122 +61,122 @@
 
 typedef struct
 {
-	U8		JumpBoot[3];			// Jump to the boot loader routine
-	U8		SystemId[8];			// System Id ("NTFS    ")
-	U16		BytesPerSector;			// Bytes per sector
-	U8		SectorsPerCluster;		// Number of sectors in a cluster
-	U8		Unused1[7];
-	U8		MediaDescriptor;		// Media descriptor byte
-	U8		Unused2[2];
-	U16		SectorsPerTrack;		// Number of sectors in a track
-	U16		NumberOfHeads;			// Number of heads on the disk
-	U8		Unused3[8];
-	U8		DriveNumber;			// Int 0x13 drive number (e.g. 0x80)
-	U8		CurrentHead;
-	U8		BootSignature;			// Extended boot signature (0x80)
-	U8		Unused4;
-	U64		VolumeSectorCount;		// Number of sectors in the volume
-	U64		MftLocation;
-	U64		MftMirrorLocation;
-	S8		ClustersPerMftRecord;		// Clusters per MFT Record
-	U8		Unused5[3];
-	S8		ClustersPerIndexRecord;		// Clusters per Index Record
-	U8		Unused6[3];
-	U64		VolumeSerialNumber;		// Volume serial number
-	U8		BootCodeAndData[430];		// The remainder of the boot sector
-	U16		BootSectorMagic;		// 0xAA55
+	UCHAR		JumpBoot[3];			// Jump to the boot loader routine
+	UCHAR		SystemId[8];			// System Id ("NTFS    ")
+	USHORT		BytesPerSector;			// Bytes per sector
+	UCHAR		SectorsPerCluster;		// Number of sectors in a cluster
+	UCHAR		Unused1[7];
+	UCHAR		MediaDescriptor;		// Media descriptor byte
+	UCHAR		Unused2[2];
+	USHORT		SectorsPerTrack;		// Number of sectors in a track
+	USHORT		NumberOfHeads;			// Number of heads on the disk
+	UCHAR		Unused3[8];
+	UCHAR		DriveNumber;			// Int 0x13 drive number (e.g. 0x80)
+	UCHAR		CurrentHead;
+	UCHAR		BootSignature;			// Extended boot signature (0x80)
+	UCHAR		Unused4;
+	ULONGLONG		VolumeSectorCount;		// Number of sectors in the volume
+	ULONGLONG		MftLocation;
+	ULONGLONG		MftMirrorLocation;
+	CHAR		ClustersPerMftRecord;		// Clusters per MFT Record
+	UCHAR		Unused5[3];
+	CHAR		ClustersPerIndexRecord;		// Clusters per Index Record
+	UCHAR		Unused6[3];
+	ULONGLONG		VolumeSerialNumber;		// Volume serial number
+	UCHAR		BootCodeAndData[430];		// The remainder of the boot sector
+	USHORT		BootSectorMagic;		// 0xAA55
 } PACKED NTFS_BOOTSECTOR, *PNTFS_BOOTSECTOR;
 
 typedef struct
 {
-	U32		Magic;
-	U16		USAOffset;					// Offset to the Update Sequence Array from the start of the ntfs record
-	U16		USACount;
+	ULONG		Magic;
+	USHORT		USAOffset;					// Offset to the Update Sequence Array from the start of the ntfs record
+	USHORT		USACount;
 } PACKED NTFS_RECORD, *PNTFS_RECORD;
 
 typedef struct
 {
-	U32		Magic;
-	U16		USAOffset;					// Offset to the Update Sequence Array from the start of the ntfs record
-	U16		USACount;
-	U64		LogSequenceNumber;
-	U16		SequenceNumber;
-	U16		LinkCount;
-	U16		AttributesOffset;
-	U16		Flags;
-	U32		BytesInUse;					// Number of bytes used in this mft record.
-	U32		BytesAllocated;
-	U64		BaseMFTRecord;
-	U16		NextAttributeInstance;
+	ULONG		Magic;
+	USHORT		USAOffset;					// Offset to the Update Sequence Array from the start of the ntfs record
+	USHORT		USACount;
+	ULONGLONG		LogSequenceNumber;
+	USHORT		SequenceNumber;
+	USHORT		LinkCount;
+	USHORT		AttributesOffset;
+	USHORT		Flags;
+	ULONG		BytesInUse;					// Number of bytes used in this mft record.
+	ULONG		BytesAllocated;
+	ULONGLONG		BaseMFTRecord;
+	USHORT		NextAttributeInstance;
 } PACKED NTFS_MFT_RECORD, *PNTFS_MFT_RECORD;
 
 typedef struct
 {
-	U32		Type;
-	U32		Length;
-	U8		IsNonResident;
-	U8		NameLength;
-	U16		NameOffset;
-	U16		Flags;
-	U16		Instance;
+	ULONG		Type;
+	ULONG		Length;
+	UCHAR		IsNonResident;
+	UCHAR		NameLength;
+	USHORT		NameOffset;
+	USHORT		Flags;
+	USHORT		Instance;
 	union
 	{
 		// Resident attributes
 		struct
 		{
-			U32		ValueLength;
-			U16		ValueOffset;
-			U16		Flags;
+			ULONG		ValueLength;
+			USHORT		ValueOffset;
+			USHORT		Flags;
 		} PACKED Resident;
 		// Non-resident attributes
 		struct
 		{
-			U64		LowestVCN;
-			U64		HighestVCN;
-			U16		MappingPairsOffset;
-			U8		CompressionUnit;
-			U8		Reserved[5];
-			S64		AllocatedSize;
-			S64		DataSize;
-			S64		InitializedSize;
-			S64		CompressedSize;
+			ULONGLONG		LowestVCN;
+			ULONGLONG		HighestVCN;
+			USHORT		MappingPairsOffset;
+			UCHAR		CompressionUnit;
+			UCHAR		Reserved[5];
+			LONGLONG		AllocatedSize;
+			LONGLONG		DataSize;
+			LONGLONG		InitializedSize;
+			LONGLONG		CompressedSize;
 		} PACKED NonResident;
 	} PACKED;
 } PACKED NTFS_ATTR_RECORD, *PNTFS_ATTR_RECORD;
 
 typedef struct
 {
-	U32		EntriesOffset;
-	U32		IndexLength;
-	U32		AllocatedSize;
-	U8		Flags;
-	U8		Reserved[3];
+	ULONG		EntriesOffset;
+	ULONG		IndexLength;
+	ULONG		AllocatedSize;
+	UCHAR		Flags;
+	UCHAR		Reserved[3];
 } PACKED NTFS_INDEX_HEADER, *PNTFS_INDEX_HEADER;
 
 typedef struct
 {
-	U32		Type;
-	U32		CollationRule;
-	U32		IndexBlockSize;
-	U8		ClustersPerIndexBlock;
-	U8		Reserved[3];
+	ULONG		Type;
+	ULONG		CollationRule;
+	ULONG		IndexBlockSize;
+	UCHAR		ClustersPerIndexBlock;
+	UCHAR		Reserved[3];
 	NTFS_INDEX_HEADER	IndexHeader;
 } PACKED NTFS_INDEX_ROOT, *PNTFS_INDEX_ROOT;
 
 typedef struct
 {
-	U64		ParentDirectory;
-	S64		CreationTime;
-	S64		LastDataChangeTime;
-	S64		LastMftChangeTime;
-	S64		LastAccessTime;
-	S64		AllocatedSize;
-	S64		DataSize;
-	U32		FileAttributes;
-	U16		PackedExtendedAttributeSize;
-	U16		Reserved;
-	U8		FileNameLength;
-	U8		FileNameType;
+	ULONGLONG		ParentDirectory;
+	LONGLONG		CreationTime;
+	LONGLONG		LastDataChangeTime;
+	LONGLONG		LastMftChangeTime;
+	LONGLONG		LastAccessTime;
+	LONGLONG		AllocatedSize;
+	LONGLONG		DataSize;
+	ULONG		FileAttributes;
+	USHORT		PackedExtendedAttributeSize;
+	USHORT		Reserved;
+	UCHAR		FileNameLength;
+	UCHAR		FileNameType;
 	WCHAR		FileName[0];
 } PACKED NTFS_FILE_NAME_ATTR, *PNTFS_FILE_NAME_ATTR;
 
@@ -185,19 +185,19 @@ typedef struct {
 	{
 		struct
 		{
-			U64	IndexedFile;
+			ULONGLONG	IndexedFile;
 		} PACKED Directory;
 		struct
 		{
-			U16	DataOffset;
-			U16	DataLength;
-			U32	Reserved;
+			USHORT	DataOffset;
+			USHORT	DataLength;
+			ULONG	Reserved;
 		} PACKED ViewIndex;
 	} PACKED Data;
-	U16			Length;
-	U16			KeyLength;
-	U16			Flags;
-	U16			Reserved;
+	USHORT			Length;
+	USHORT			KeyLength;
+	USHORT			Flags;
+	USHORT			Reserved;
 	NTFS_FILE_NAME_ATTR	FileName;
 } PACKED NTFS_INDEX_ENTRY, *PNTFS_INDEX_ENTRY;
 
@@ -205,24 +205,24 @@ typedef struct
 {
 	PNTFS_ATTR_RECORD	Record;
 	PUCHAR			CacheRun;
-	U64			CacheRunOffset;
-	S64			CacheRunStartLCN;
-	U64			CacheRunLength;
-	S64			CacheRunLastLCN;
-	U64			CacheRunCurrentOffset;
+	ULONGLONG			CacheRunOffset;
+	LONGLONG			CacheRunStartLCN;
+	ULONGLONG			CacheRunLength;
+	LONGLONG			CacheRunLastLCN;
+	ULONGLONG			CacheRunCurrentOffset;
 } NTFS_ATTR_CONTEXT, *PNTFS_ATTR_CONTEXT;
 
 typedef struct
 {
 	NTFS_ATTR_CONTEXT	DataContext;
-	U64			Offset;
+	ULONGLONG			Offset;
 } PACKED NTFS_FILE_HANDLE, *PNTFS_FILE_HANDLE;
 
-BOOL	NtfsOpenVolume(U32 DriveNumber, U32 VolumeStartSector);
+BOOL	NtfsOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector);
 FILE*	NtfsOpenFile(PUCHAR FileName);
-BOOL	NtfsReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer);
-U32	NtfsGetFileSize(FILE *FileHandle);
-VOID	NtfsSetFilePointer(FILE *FileHandle, U32 NewFilePointer);
-U32	NtfsGetFilePointer(FILE *FileHandle);
+BOOL	NtfsReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
+ULONG	NtfsGetFileSize(FILE *FileHandle);
+VOID	NtfsSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
+ULONG	NtfsGetFilePointer(FILE *FileHandle);
 
 #endif // #defined __NTFS_H

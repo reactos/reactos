@@ -36,7 +36,7 @@
 
 #define MAX_INF_STRING_LENGTH  512
 
-typedef PU32 HINF, *PHINF;
+typedef PULONG HINF, *PHINF;
 
 typedef struct _INFCONTEXT
 {
@@ -52,7 +52,7 @@ typedef struct _INFCONTEXT
 BOOLEAN
 InfOpenFile (PHINF InfHandle,
 	     PCHAR FileName,
-	     PU32 ErrorLine);
+	     PULONG ErrorLine);
 
 VOID
 InfCloseFile (HINF InfHandle);
@@ -79,39 +79,39 @@ InfFindNextMatchLine (PINFCONTEXT ContextIn,
 		      PINFCONTEXT ContextOut);
 
 
-S32
+LONG
 InfGetLineCount (HINF InfHandle,
 		 PCHAR Section);
 
-S32
+LONG
 InfGetFieldCount (PINFCONTEXT Context);
 
 
 BOOLEAN
 InfGetBinaryField (PINFCONTEXT Context,
-		   U32 FieldIndex,
-		   PU8 ReturnBuffer,
-		   U32 ReturnBufferSize,
-		   PU32 RequiredSize);
+		   ULONG FieldIndex,
+		   PUCHAR ReturnBuffer,
+		   ULONG ReturnBufferSize,
+		   PULONG RequiredSize);
 
 BOOLEAN
 InfGetIntField (PINFCONTEXT Context,
-		U32 FieldIndex,
-		S32 *IntegerValue);
+		ULONG FieldIndex,
+		LONG *IntegerValue);
 
 BOOLEAN
 InfGetMultiSzField (PINFCONTEXT Context,
-		    U32 FieldIndex,
+		    ULONG FieldIndex,
 		    PCHAR ReturnBuffer,
-		    U32 ReturnBufferSize,
-		    PU32 RequiredSize);
+		    ULONG ReturnBufferSize,
+		    PULONG RequiredSize);
 
 BOOLEAN
 InfGetStringField (PINFCONTEXT Context,
-		   U32 FieldIndex,
+		   ULONG FieldIndex,
 		   PCHAR ReturnBuffer,
-		   U32 ReturnBufferSize,
-		   PU32 RequiredSize);
+		   ULONG ReturnBufferSize,
+		   PULONG RequiredSize);
 
 
 
@@ -122,7 +122,7 @@ InfGetData (PINFCONTEXT Context,
 
 BOOLEAN
 InfGetDataField (PINFCONTEXT Context,
-		 U32 FieldIndex,
+		 ULONG FieldIndex,
 		 PCHAR *Data);
 
 #endif /* __INFCACHE_H__ */

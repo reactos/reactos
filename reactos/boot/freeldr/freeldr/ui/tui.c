@@ -136,10 +136,10 @@ VOID TuiDrawBackdrop(VOID)
  * FillArea()
  * This function assumes coordinates are zero-based
  */
-VOID TuiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */)
+VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
-	U32		i, j;
+	ULONG		i, j;
 
 	// Clip the area to the screen
 	// FIXME: This code seems to have problems... Uncomment and view ;-)
@@ -172,10 +172,10 @@ VOID TuiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR
  * DrawShadow()
  * This function assumes coordinates are zero-based
  */
-VOID TuiDrawShadow(U32 Left, U32 Top, U32 Right, U32 Bottom)
+VOID TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
-	U32		Idx;
+	ULONG		Idx;
 
 	// Shade the bottom of the area
 	if (Bottom < (UiScreenHeight - 1))
@@ -232,7 +232,7 @@ VOID TuiDrawShadow(U32 Left, U32 Top, U32 Right, U32 Bottom)
  * DrawBox()
  * This function assumes coordinates are zero-based
  */
-VOID TuiDrawBox(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr)
+VOID TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr)
 {
 	UCHAR	ULCorner, URCorner, LLCorner, LRCorner;
 
@@ -304,10 +304,10 @@ VOID TuiDrawBox(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR VertStyle, UCHAR
  * DrawText()
  * This function assumes coordinates are zero-based
  */
-VOID TuiDrawText(U32 X, U32 Y, PUCHAR Text, UCHAR Attr)
+VOID TuiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
-	U32		i, j;
+	ULONG		i, j;
 
 	// Draw the text
 	for (i=X, j=0; Text[j]  && i<UiScreenWidth; i++,j++)
@@ -317,18 +317,18 @@ VOID TuiDrawText(U32 X, U32 Y, PUCHAR Text, UCHAR Attr)
 	}
 }
 
-VOID TuiDrawCenteredText(U32 Left, U32 Top, U32 Right, U32 Bottom, PUCHAR TextString, UCHAR Attr)
+VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PUCHAR TextString, UCHAR Attr)
 {
-	U32		TextLength;
-	U32		BoxWidth;
-	U32		BoxHeight;
-	U32		LineBreakCount;
-	U32		Index;
-	U32		LastIndex;
-	U32		RealLeft;
-	U32		RealTop;
-	U32		X;
-	U32		Y;
+	ULONG		TextLength;
+	ULONG		BoxWidth;
+	ULONG		BoxHeight;
+	ULONG		LineBreakCount;
+	ULONG		Index;
+	ULONG		LastIndex;
+	ULONG		RealLeft;
+	ULONG		RealTop;
+	ULONG		X;
+	ULONG		Y;
 	UCHAR	Temp[2];
 
 	TextLength = strlen(TextString);
@@ -380,7 +380,7 @@ VOID TuiDrawCenteredText(U32 Left, U32 Top, U32 Right, U32 Bottom, PUCHAR TextSt
 
 VOID TuiDrawStatusText(PUCHAR StatusText)
 {
-	U32		i;
+	ULONG		i;
 
 	TuiDrawText(0, UiScreenHeight-1, " ", ATTR(UiStatusBarFgColor, UiStatusBarBgColor));
 	TuiDrawText(1, UiScreenHeight-1, StatusText, ATTR(UiStatusBarFgColor, UiStatusBarBgColor));
@@ -395,8 +395,8 @@ VOID TuiDrawStatusText(PUCHAR StatusText)
 
 VOID TuiUpdateDateTime(VOID)
 {
-	U32	Year, Month, Day;
-	U32	Hour, Minute, Second;
+	ULONG	Year, Month, Day;
+	ULONG	Hour, Minute, Second;
 	UCHAR	DateString[40];
 	UCHAR	TimeString[40];
 	UCHAR	TempString[20];
@@ -479,7 +479,7 @@ VOID TuiUpdateDateTime(VOID)
 VOID TuiSaveScreen(PUCHAR Buffer)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
-	U32		i;
+	ULONG		i;
 
 	for (i=0; i < (UiScreenWidth * UiScreenHeight * 2); i++)
 	{
@@ -490,7 +490,7 @@ VOID TuiSaveScreen(PUCHAR Buffer)
 VOID TuiRestoreScreen(PUCHAR Buffer)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
-	U32		i;
+	ULONG		i;
 
 	for (i=0; i < (UiScreenWidth * UiScreenHeight * 2); i++)
 	{
@@ -603,11 +603,11 @@ VOID TuiMessageBoxCritical(PUCHAR MessageText)
 }
 
 
-VOID TuiDrawProgressBarCenter(U32 Position, U32 Range, PUCHAR ProgressText)
+VOID TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PUCHAR ProgressText)
 {
-	U32		Left, Top, Right, Bottom;
-	U32		Width = 50; // Allow for 50 "bars"
-	U32		Height = 2;
+	ULONG		Left, Top, Right, Bottom;
+	ULONG		Width = 50; // Allow for 50 "bars"
+	ULONG		Height = 2;
 
 	Left = (UiScreenWidth - Width - 4) / 2;
 	Right = Left + Width + 3;
@@ -618,10 +618,10 @@ VOID TuiDrawProgressBarCenter(U32 Position, U32 Range, PUCHAR ProgressText)
 	TuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 }
 
-VOID TuiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range, PUCHAR ProgressText)
+VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PUCHAR ProgressText)
 {
-	U32		i;
-	U32		ProgressBarWidth = (Right - Left) - 3;
+	ULONG		i;
+	ULONG		ProgressBarWidth = (Right - Left) - 3;
 
 	// First make sure the progress bar text fits
 	UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);
@@ -765,7 +765,7 @@ VOID TuiFadeOut(VOID)
 
 }
 
-BOOL TuiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, U32 Length)
+BOOL TuiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, ULONG Length)
 {
 	int		width = 8;
 	int		height = 1;

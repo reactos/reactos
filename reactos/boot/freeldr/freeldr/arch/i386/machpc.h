@@ -32,28 +32,28 @@ VOID PcConsPutChar(int Ch);
 BOOL PcConsKbHit();
 int PcConsGetCh();
 
-VOID PcVideoClearScreen(U8 Attr);
+VOID PcVideoClearScreen(UCHAR Attr);
 VIDEODISPLAYMODE PcVideoSetDisplayMode(char *DisplayMode, BOOL Init);
-VOID PcVideoGetDisplaySize(PU32 Width, PU32 Height, PU32 Depth);
-U32 PcVideoGetBufferSize(VOID);
-VOID PcVideoSetTextCursorPosition(U32 X, U32 Y);
+VOID PcVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
+ULONG PcVideoGetBufferSize(VOID);
+VOID PcVideoSetTextCursorPosition(ULONG X, ULONG Y);
 VOID PcVideoHideShowTextCursor(BOOL Show);
-VOID PcVideoPutChar(int Ch, U8 Attr, unsigned X, unsigned Y);
+VOID PcVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y);
 VOID PcVideoCopyOffScreenBufferToVRAM(PVOID Buffer);
 BOOL PcVideoIsPaletteFixed(VOID);
-VOID PcVideoSetPaletteColor(U8 Color, U8 Red, U8 Green, U8 Blue);
-VOID PcVideoGetPaletteColor(U8 Color, U8* Red, U8* Green, U8* Blue);
+VOID PcVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue);
+VOID PcVideoGetPaletteColor(UCHAR Color, UCHAR* Red, UCHAR* Green, UCHAR* Blue);
 VOID PcVideoSync(VOID);
 VOID PcVideoPrepareForReactOS(VOID);
 
-U32 PcMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize);
+ULONG PcMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
 
-BOOL PcDiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer);
-BOOL PcDiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOL PcDiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY DriveGeometry);
-U32 PcDiskGetCacheableBlockCount(U32 DriveNumber);
+BOOL PcDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
+BOOL PcDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOL PcDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
+ULONG PcDiskGetCacheableBlockCount(ULONG DriveNumber);
 
-VOID PcRTCGetCurrentDateTime(PU32 Year, PU32 Month, PU32 Day, PU32 Hour, PU32 Minute, PU32 Second);
+VOID PcRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
 
 VOID PcHwDetect(VOID);
 

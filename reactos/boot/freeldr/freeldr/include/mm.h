@@ -29,23 +29,23 @@
 
 typedef struct
 {
-	U64		BaseAddress;
-	U64		Length;
-	U32		Type;
-	U32		Reserved;
+	ULONGLONG		BaseAddress;
+	ULONGLONG		Length;
+	ULONG		Type;
+	ULONG		Reserved;
 } PACKED BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
 
 
-U32		GetSystemMemorySize(VOID);								// Returns the amount of total memory in the system
+ULONG		GetSystemMemorySize(VOID);								// Returns the amount of total memory in the system
 
 
-//BOOL	MmInitializeMemoryManager(U32 LowMemoryStart, U32 LowMemoryLength);
+//BOOL	MmInitializeMemoryManager(ULONG LowMemoryStart, ULONG LowMemoryLength);
 BOOL	MmInitializeMemoryManager(VOID);
-PVOID	MmAllocateMemory(U32 MemorySize);
+PVOID	MmAllocateMemory(ULONG MemorySize);
 VOID	MmFreeMemory(PVOID MemoryPointer);
-//PVOID	MmAllocateLowMemory(U32 MemorySize);
+//PVOID	MmAllocateLowMemory(ULONG MemorySize);
 //VOID	MmFreeLowMemory(PVOID MemoryPointer);
-PVOID	MmAllocateMemoryAtAddress(U32 MemorySize, PVOID DesiredAddress);
-PVOID	MmAllocateHighestMemoryBelowAddress(U32 MemorySize, PVOID DesiredAddress);
+PVOID	MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress);
+PVOID	MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress);
 
 #endif // defined __MEMORY_H

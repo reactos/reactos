@@ -29,25 +29,25 @@
 #include <cache.h>
 #include <machine.h>
 
-U32			BytesPerSector;			/* Number of bytes per sector */
-U32			SectorsPerCluster;		/* Number of sectors per cluster */
-U32			FatVolumeStartSector;		/* Absolute starting sector of the partition */
-U32			FatSectorStart;			/* Starting sector of 1st FAT table */
-U32			ActiveFatSectorStart;		/* Starting sector of active FAT table */
-U32			NumberOfFats;			/* Number of FAT tables */
-U32			SectorsPerFat;			/* Sectors per FAT table */
-U32			RootDirSectorStart;		/* Starting sector of the root directory (non-fat32) */
-U32			RootDirSectors;			/* Number of sectors of the root directory (non-fat32) */
-U32			RootDirStartCluster;		/* Starting cluster number of the root directory (fat32 only) */
-U32			DataSectorStart;		/* Starting sector of the data area */
+ULONG			BytesPerSector;			/* Number of bytes per sector */
+ULONG			SectorsPerCluster;		/* Number of sectors per cluster */
+ULONG			FatVolumeStartSector;		/* Absolute starting sector of the partition */
+ULONG			FatSectorStart;			/* Starting sector of 1st FAT table */
+ULONG			ActiveFatSectorStart;		/* Starting sector of active FAT table */
+ULONG			NumberOfFats;			/* Number of FAT tables */
+ULONG			SectorsPerFat;			/* Sectors per FAT table */
+ULONG			RootDirSectorStart;		/* Starting sector of the root directory (non-fat32) */
+ULONG			RootDirSectors;			/* Number of sectors of the root directory (non-fat32) */
+ULONG			RootDirStartCluster;		/* Starting cluster number of the root directory (fat32 only) */
+ULONG			DataSectorStart;		/* Starting sector of the data area */
 
-U32			FatType = 0;			/* FAT12, FAT16, FAT32, FATX16 or FATX32 */
-U32			FatDriveNumber = 0;
+ULONG			FatType = 0;			/* FAT12, FAT16, FAT32, FATX16 or FATX32 */
+ULONG			FatDriveNumber = 0;
 
-BOOL FatOpenVolume(U32 DriveNumber, U32 VolumeStartSector, U32 PartitionSectorCount)
+BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG PartitionSectorCount)
 {
 	char ErrMsg[80];
-	U32 FatSize;
+	ULONG FatSize;
 	PFAT_BOOTSECTOR	FatVolumeBootSector;
 	PFAT32_BOOTSECTOR Fat32VolumeBootSector;
 	PFATX_BOOTSECTOR FatXVolumeBootSector;
@@ -288,13 +288,13 @@ BOOL FatOpenVolume(U32 DriveNumber, U32 VolumeStartSector, U32 PartitionSectorCo
 	return TRUE;
 }
 
-U32 FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, U32 PartitionSectorCount)
+ULONG FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONG PartitionSectorCount)
 {
-	U32			RootDirSectors;
-	U32			DataSectorCount;
-	U32			SectorsPerFat;
-	U32			TotalSectors;
-	U32			CountOfClusters;
+	ULONG			RootDirSectors;
+	ULONG			DataSectorCount;
+	ULONG			SectorsPerFat;
+	ULONG			TotalSectors;
+	ULONG			CountOfClusters;
 	PFAT32_BOOTSECTOR	Fat32BootSector = (PFAT32_BOOTSECTOR)FatBootSector;
 	PFATX_BOOTSECTOR	FatXBootSector = (PFATX_BOOTSECTOR)FatBootSector;
 
@@ -343,7 +343,7 @@ U32 FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, U32 PartitionSectorCount)
 	}
 }
 
-PVOID FatBufferDirectory(U32 DirectoryStartCluster, U32 *DirectorySize, BOOL RootDirectory)
+PVOID FatBufferDirectory(ULONG DirectoryStartCluster, ULONG *DirectorySize, BOOL RootDirectory)
 {
 	PVOID	DirectoryBuffer;
 
@@ -405,15 +405,15 @@ PVOID FatBufferDirectory(U32 DirectoryStartCluster, U32 *DirectorySize, BOOL Roo
 	return DirectoryBuffer;
 }
 
-BOOL FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, U32 DirectorySize, PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
+BOOL FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 {
-	U32		EntryCount;
-	U32		CurrentEntry;
+	ULONG		EntryCount;
+	ULONG		CurrentEntry;
 	PDIRENTRY	DirEntry;
 	PLFN_DIRENTRY	LfnDirEntry;
 	UCHAR		LfnNameBuffer[265];
 	UCHAR		ShortNameBuffer[20];
-	U32		StartCluster;
+	ULONG		StartCluster;
 
 	EntryCount = DirectorySize / sizeof(DIRENTRY);
 
@@ -590,7 +590,7 @@ BOOL FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, U32 DirectorySize, P
 			//
 			// Get the cluster chain
 			//
-			StartCluster = ((U32)DirEntry->ClusterHigh << 16) + DirEntry->ClusterLow;
+			StartCluster = ((ULONG)DirEntry->ClusterHigh << 16) + DirEntry->ClusterLow;
 			DbgPrint((DPRINT_FILESYSTEM, "StartCluster = 0x%x\n", StartCluster));
 			FatFileInfoPointer->FileFatChain = FatGetClusterChainArray(StartCluster);
 
@@ -616,12 +616,12 @@ BOOL FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, U32 DirectorySize, P
 	return FALSE;
 }
 
-BOOL FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, U32 DirectorySize, PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
+BOOL FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 {
-	U32		EntryCount;
-	U32		CurrentEntry;
+	ULONG		EntryCount;
+	ULONG		CurrentEntry;
 	PFATX_DIRENTRY	DirEntry;
-	U32		FileNameLen;
+	ULONG		FileNameLen;
 
 	EntryCount = DirectorySize / sizeof(FATX_DIRENTRY);
 
@@ -690,11 +690,11 @@ BOOL FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, U32 DirectorySize, 
 BOOL FatLookupFile(PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 {
 	int		i;
-	U32		NumberOfPathParts;
+	ULONG		NumberOfPathParts;
 	UCHAR		PathPart[261];
 	PVOID		DirectoryBuffer;
-	U32		DirectoryStartCluster = 0;
-	U32		DirectorySize;
+	ULONG		DirectoryStartCluster = 0;
+	ULONG		DirectorySize;
 	FAT_FILE_INFO	FatFileInfo;
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatLookupFile() FileName = %s\n", FileName));
@@ -779,7 +779,7 @@ BOOL FatLookupFile(PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
  */
 void FatParseShortFileName(PUCHAR Buffer, PDIRENTRY DirEntry)
 {
-	U32		Idx;
+	ULONG		Idx;
 
 	Idx = 0;
 	RtlZeroMemory(Buffer, 13);
@@ -824,9 +824,9 @@ void FatParseShortFileName(PUCHAR Buffer, PDIRENTRY DirEntry)
  * FatGetFatEntry()
  * returns the Fat entry for a given cluster number
  */
-BOOL FatGetFatEntry(U32 Cluster, U32* ClusterPointer)
+BOOL FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 {
-	U32		fat = 0;
+	ULONG		fat = 0;
 	int		FatOffset;
 	int		ThisFatSecNum;
 	int		ThisFatEntOffset;
@@ -860,7 +860,7 @@ BOOL FatGetFatEntry(U32 Cluster, U32* ClusterPointer)
 			}
 		}
 
-		fat = *((U16 *) ((PVOID)FILESYSBUFFER + ThisFatEntOffset));
+		fat = *((USHORT *) ((PVOID)FILESYSBUFFER + ThisFatEntOffset));
 		if (Cluster & 0x0001) 
 			fat = fat >> 4;	/* Cluster number is ODD */
 		else
@@ -880,7 +880,7 @@ BOOL FatGetFatEntry(U32 Cluster, U32* ClusterPointer)
 			return FALSE;
 		}
 
-		fat = *((U16 *) ((PVOID)FILESYSBUFFER + ThisFatEntOffset));
+		fat = *((USHORT *) ((PVOID)FILESYSBUFFER + ThisFatEntOffset));
 
 		break;
 
@@ -897,7 +897,7 @@ BOOL FatGetFatEntry(U32 Cluster, U32* ClusterPointer)
 		}
 
 		// Get the fat entry
-		fat = (*((U32 *) ((PVOID)FILESYSBUFFER + ThisFatEntOffset))) & 0x0FFFFFFF;
+		fat = (*((ULONG *) ((PVOID)FILESYSBUFFER + ThisFatEntOffset))) & 0x0FFFFFFF;
 
 		break;
 
@@ -939,9 +939,9 @@ FILE* FatOpenFile(PUCHAR FileName)
 	return (FILE*)FileHandle;
 }
 
-U32 FatCountClustersInChain(U32 StartCluster)
+ULONG FatCountClustersInChain(ULONG StartCluster)
 {
-	U32	ClusterCount = 0;
+	ULONG	ClusterCount = 0;
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatCountClustersInChain() StartCluster = %d\n", StartCluster));
 
@@ -976,17 +976,17 @@ U32 FatCountClustersInChain(U32 StartCluster)
 	return ClusterCount;
 }
 
-U32* FatGetClusterChainArray(U32 StartCluster)
+ULONG* FatGetClusterChainArray(ULONG StartCluster)
 {
-	U32	ClusterCount;
-	U32		ArraySize;
-	U32*	ArrayPointer;
-	U32		Idx;
+	ULONG	ClusterCount;
+	ULONG		ArraySize;
+	ULONG*	ArrayPointer;
+	ULONG		Idx;
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatGetClusterChainArray() StartCluster = %d\n", StartCluster));
 
 	ClusterCount = FatCountClustersInChain(StartCluster) + 1; // Lets get the 0x0ffffff8 on the end of the array
-	ArraySize = ClusterCount * sizeof(U32);
+	ArraySize = ClusterCount * sizeof(ULONG);
 
 	//
 	// Allocate array memory
@@ -1036,9 +1036,9 @@ U32* FatGetClusterChainArray(U32 StartCluster)
  * FatReadCluster()
  * Reads the specified cluster into memory
  */
-BOOL FatReadCluster(U32 ClusterNumber, PVOID Buffer)
+BOOL FatReadCluster(ULONG ClusterNumber, PVOID Buffer)
 {
-	U32		ClusterStartSector;
+	ULONG		ClusterStartSector;
 
 	ClusterStartSector = ((ClusterNumber - 2) * SectorsPerCluster) + DataSectorStart;
 
@@ -1058,9 +1058,9 @@ BOOL FatReadCluster(U32 ClusterNumber, PVOID Buffer)
  * FatReadClusterChain()
  * Reads the specified clusters into memory
  */
-BOOL FatReadClusterChain(U32 StartClusterNumber, U32 NumberOfClusters, PVOID Buffer)
+BOOL FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID Buffer)
 {
-	U32		ClusterStartSector;
+	ULONG		ClusterStartSector;
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatReadClusterChain() StartClusterNumber = %d NumberOfClusters = %d Buffer = 0x%x\n", StartClusterNumber, NumberOfClusters, Buffer));
 
@@ -1119,9 +1119,9 @@ BOOL FatReadClusterChain(U32 StartClusterNumber, U32 NumberOfClusters, PVOID Buf
  * FatReadPartialCluster()
  * Reads part of a cluster into memory
  */
-BOOL FatReadPartialCluster(U32 ClusterNumber, U32 StartingOffset, U32 Length, PVOID Buffer)
+BOOL FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer)
 {
-	U32		ClusterStartSector;
+	ULONG		ClusterStartSector;
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatReadPartialCluster() ClusterNumber = %d StartingOffset = %d Length = %d Buffer = 0x%x\n", ClusterNumber, StartingOffset, Length, Buffer));
 
@@ -1142,14 +1142,14 @@ BOOL FatReadPartialCluster(U32 ClusterNumber, U32 StartingOffset, U32 Length, PV
  * Reads BytesToRead from open file and
  * returns the number of bytes read in BytesRead
  */
-BOOL FatReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer)
+BOOL FatReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
 {
 	PFAT_FILE_INFO	FatFileInfo = (PFAT_FILE_INFO)FileHandle;
-	U32			ClusterNumber;
-	U32			OffsetInCluster;
-	U32			LengthInCluster;
-	U32			NumberOfClusters;
-	U32			BytesPerCluster;
+	ULONG			ClusterNumber;
+	ULONG			OffsetInCluster;
+	ULONG			LengthInCluster;
+	ULONG			NumberOfClusters;
+	ULONG			BytesPerCluster;
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatReadFile() BytesToRead = %d Buffer = 0x%x\n", BytesToRead, Buffer));
 
@@ -1296,7 +1296,7 @@ BOOL FatReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer
 	return TRUE;
 }
 
-U32 FatGetFileSize(FILE *FileHandle)
+ULONG FatGetFileSize(FILE *FileHandle)
 {
 	PFAT_FILE_INFO	FatFileHandle = (PFAT_FILE_INFO)FileHandle;
 
@@ -1305,7 +1305,7 @@ U32 FatGetFileSize(FILE *FileHandle)
 	return FatFileHandle->FileSize;
 }
 
-VOID FatSetFilePointer(FILE *FileHandle, U32 NewFilePointer)
+VOID FatSetFilePointer(FILE *FileHandle, ULONG NewFilePointer)
 {
 	PFAT_FILE_INFO	FatFileHandle = (PFAT_FILE_INFO)FileHandle;
 
@@ -1314,7 +1314,7 @@ VOID FatSetFilePointer(FILE *FileHandle, U32 NewFilePointer)
 	FatFileHandle->FilePointer = NewFilePointer;
 }
 
-U32 FatGetFilePointer(FILE *FileHandle)
+ULONG FatGetFilePointer(FILE *FileHandle)
 {
 	PFAT_FILE_INFO	FatFileHandle = (PFAT_FILE_INFO)FileHandle;
 
@@ -1323,7 +1323,7 @@ U32 FatGetFilePointer(FILE *FileHandle)
 	return FatFileHandle->FilePointer;
 }
 
-BOOL FatReadVolumeSectors(U32 DriveNumber, U32 SectorNumber, U32 SectorCount, PVOID Buffer)
+BOOL FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
 	return CacheReadDiskSectors(DriveNumber, SectorNumber + FatVolumeStartSector, SectorCount, Buffer);
 }

@@ -75,10 +75,13 @@
 #define X86_EFLAGS_VM           0x00020000 /* Virtual Mode */
 #define X86_EFLAGS_ID           0x00200000 /* CPUID detection flag */
 
+#define X86_CR0_PE              0x00000001 /* enable Protected Mode */
 #define X86_CR0_NE              0x00000020 /* enable native FPU error reporting */
 #define X86_CR0_TS              0x00000008 /* enable exception on FPU instruction for task switch */
 #define X86_CR0_EM              0x00000004 /* enable FPU emulation (disable FPU) */
 #define X86_CR0_MP              0x00000002 /* enable FPU monitoring */
+#define X86_CR0_WP              0x00010000 /* enable Write Protect (copy on write) */
+#define X86_CR0_PG              0x80000000 /* enable Paging */
 
 #define X86_CR4_PAE             0x00000020 /* enable physical address extensions */
 #define X86_CR4_PGE             0x00000080 /* enable global pages */
@@ -208,8 +211,20 @@ NtEarlyInitVdm(VOID);
                                  __asm__("movl %%cr3,%0\n\t" : "=d" (X));
 #define Ke386SetPageTableDirectory(X) \
                                  __asm__("movl %0,%%cr3\n\t" \
-	                                 : /* no outputs */ \
-	                                 : "r" (X));
+                                     : /* no outputs */ \
+                                     : "r" (X));
+#define Ke386SetFileSelector(X) \
+                                 __asm__("movl %0,%%cr3\n\t" \
+                                     : /* no outputs */ \
+                                     : "r" (X));
+#define Ke386SetLocalDescriptorTable(X) \
+                                 __asm__("lldt %0\n\t" \
+                                     : /* no outputs */ \
+                                     : "m" (X));                                      
+#define Ke386SetGlobalDescriptorTable(X) \
+                                 __asm__("lgdt %0\n\t" \
+                                     : /* no outputs */ \
+                                     : "m" (X));
 #define Ke386SaveFlags(x)        __asm__ __volatile__("pushfl ; popl %0":"=g" (x): /* no input */)
 #define Ke386RestoreFlags(x)     __asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"g" (x):"memory")
 

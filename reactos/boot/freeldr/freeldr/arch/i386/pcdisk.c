@@ -29,13 +29,13 @@
 
 typedef struct
 {
-	U8		PacketSize;				// 00h - Size of packet (10h or 18h)
-	U8		Reserved;				// 01h - Reserved (0)
-	U16		LBABlockCount;			// 02h - Number of blocks to transfer (max 007Fh for Phoenix EDD)
-	U16		TransferBufferOffset;	// 04h - Transfer buffer offset (seg:off)
-	U16		TransferBufferSegment;	//       Transfer buffer segment (seg:off)
-	U64		LBAStartBlock;			// 08h - Starting absolute block number
-	U64		TransferBuffer64;		// 10h - (EDD-3.0, optional) 64-bit flat address of transfer buffer
+	UCHAR		PacketSize;				// 00h - Size of packet (10h or 18h)
+	UCHAR		Reserved;				// 01h - Reserved (0)
+	USHORT		LBABlockCount;			// 02h - Number of blocks to transfer (max 007Fh for Phoenix EDD)
+	USHORT		TransferBufferOffset;	// 04h - Transfer buffer offset (seg:off)
+	USHORT		TransferBufferSegment;	//       Transfer buffer segment (seg:off)
+	ULONGLONG		LBAStartBlock;			// 08h - Starting absolute block number
+	ULONGLONG		TransferBuffer64;		// 10h - (EDD-3.0, optional) 64-bit flat address of transfer buffer
 									//       used if DWORD at 04h is FFFFh:FFFFh
 } PACKED I386_DISK_ADDRESS_PACKET, *PI386_DISK_ADDRESS_PACKET;
 
@@ -43,7 +43,7 @@ typedef struct
 // FUNCTIONS
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-static BOOL PcDiskResetController(U32 DriveNumber)
+static BOOL PcDiskResetController(ULONG DriveNumber)
 {
 	REGS	RegsIn;
 	REGS	RegsOut;
@@ -66,11 +66,11 @@ static BOOL PcDiskResetController(U32 DriveNumber)
 	return INT386_SUCCESS(RegsOut);
 }
 
-static BOOL PcDiskReadLogicalSectorsLBA(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer)
+static BOOL PcDiskReadLogicalSectorsLBA(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
 	REGS						RegsIn;
 	REGS						RegsOut;
-	U32							RetryCount;
+	ULONG							RetryCount;
 	PI386_DISK_ADDRESS_PACKET	Packet = (PI386_DISK_ADDRESS_PACKET)(BIOSCALLBUFFER);
 
 	DbgPrint((DPRINT_DISK, "PcDiskReadLogicalSectorsLBA() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, SectorCount, Buffer));
@@ -86,8 +86,8 @@ static BOOL PcDiskReadLogicalSectorsLBA(U32 DriveNumber, U64 SectorNumber, U32 S
 	Packet->PacketSize = sizeof(I386_DISK_ADDRESS_PACKET);
 	Packet->Reserved = 0;
 	Packet->LBABlockCount = SectorCount;
-	Packet->TransferBufferOffset = ((U32)Buffer) & 0x0F;
-	Packet->TransferBufferSegment = ((U32)Buffer) >> 4;
+	Packet->TransferBufferOffset = ((ULONG)Buffer) & 0x0F;
+	Packet->TransferBufferSegment = ((ULONG)Buffer) >> 4;
 	Packet->LBAStartBlock = SectorNumber;
 	Packet->TransferBuffer64 = 0;
 
@@ -130,16 +130,16 @@ static BOOL PcDiskReadLogicalSectorsLBA(U32 DriveNumber, U64 SectorNumber, U32 S
 	return FALSE;
 }
 
-static BOOL PcDiskReadLogicalSectorsCHS(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer)
+static BOOL PcDiskReadLogicalSectorsCHS(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
-	U32			PhysicalSector;
-	U32			PhysicalHead;
-	U32			PhysicalTrack;
+	ULONG			PhysicalSector;
+	ULONG			PhysicalHead;
+	ULONG			PhysicalTrack;
 	GEOMETRY	DriveGeometry;
-	U32			NumberOfSectorsToRead;
+	ULONG			NumberOfSectorsToRead;
 	REGS		RegsIn;
 	REGS		RegsOut;
-	U32			RetryCount;
+	ULONG			RetryCount;
 
 	DbgPrint((DPRINT_DISK, "PcDiskReadLogicalSectorsCHS()\n"));
 
@@ -215,8 +215,8 @@ static BOOL PcDiskReadLogicalSectorsCHS(U32 DriveNumber, U64 SectorNumber, U32 S
 		RegsIn.b.cl = (PhysicalSector + ((PhysicalTrack & 0x300) >> 2));
 		RegsIn.b.dh = PhysicalHead;
 		RegsIn.b.dl = DriveNumber;
-		RegsIn.w.es = ((U32)Buffer) >> 4;
-		RegsIn.w.bx = ((U32)Buffer) & 0x0F;
+		RegsIn.w.es = ((ULONG)Buffer) >> 4;
+		RegsIn.w.bx = ((ULONG)Buffer) & 0x0F;
 
 		//
 		// Perform the read
@@ -266,9 +266,9 @@ static BOOL PcDiskReadLogicalSectorsCHS(U32 DriveNumber, U64 SectorNumber, U32 S
 	return TRUE;
 }
 
-static BOOL PcDiskInt13ExtensionsSupported(U32 DriveNumber)
+static BOOL PcDiskInt13ExtensionsSupported(ULONG DriveNumber)
 {
-	static U32	LastDriveNumber = 0xffffffff;
+	static ULONG	LastDriveNumber = 0xffffffff;
 	static BOOL	LastSupported;
 	REGS	RegsIn;
 	REGS	RegsOut;
@@ -355,7 +355,7 @@ static BOOL PcDiskInt13ExtensionsSupported(U32 DriveNumber)
 	return TRUE;
 }
 
-BOOL PcDiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer)
+BOOL PcDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
 
 	DbgPrint((DPRINT_DISK, "PcDiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, SectorCount, Buffer));
@@ -385,18 +385,18 @@ BOOL PcDiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount
 }
 
 BOOL
-PcDiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+PcDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
   /* Just use the standard routine */
   return DiskGetPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
 }
 
 BOOL
-PcDiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY Geometry)
+PcDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY Geometry)
 {
   REGS RegsIn;
   REGS RegsOut;
-  U32 Cylinders;
+  ULONG Cylinders;
 
   DbgPrint((DPRINT_DISK, "DiskGetDriveGeometry()\n"));
 
@@ -442,8 +442,8 @@ PcDiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY Geometry)
   return TRUE;
 }
 
-U32
-PcDiskGetCacheableBlockCount(U32 DriveNumber)
+ULONG
+PcDiskGetCacheableBlockCount(ULONG DriveNumber)
 {
   GEOMETRY	Geometry;
 

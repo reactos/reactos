@@ -92,9 +92,9 @@ BOOL RtlListIsEmpty(PLIST_ITEM ListHead)
 	return (ListHead->ListNext == NULL);
 }
 
-U32 RtlListCountEntries(PLIST_ITEM ListHead)
+ULONG RtlListCountEntries(PLIST_ITEM ListHead)
 {
-	U32		Count = 0;
+	ULONG		Count = 0;
 
 	while (ListHead != NULL)
 	{

@@ -23,7 +23,7 @@
 #include <rtl.h>
 
 
-BOOL DissectArcPath(char *ArcPath, char *BootPath, U32* BootDrive, U32* BootPartition)
+BOOL DissectArcPath(char *ArcPath, char *BootPath, ULONG* BootDrive, ULONG* BootPartition)
 {
 	char *p;
 
@@ -73,7 +73,7 @@ BOOL DissectArcPath(char *ArcPath, char *BootPath, U32* BootDrive, U32* BootPart
 	return TRUE;
 }
 
-void ConstructArcPath(PUCHAR ArcPath, PUCHAR SystemFolder, U32 Disk, U32 Partition)
+void ConstructArcPath(PUCHAR ArcPath, PUCHAR SystemFolder, ULONG Disk, ULONG Partition)
 {
 	char	tmp[50];
 
@@ -109,10 +109,10 @@ void ConstructArcPath(PUCHAR ArcPath, PUCHAR SystemFolder, U32 Disk, U32 Partiti
 	}
 }
 
-U32 ConvertArcNameToBiosDriveNumber(PUCHAR ArcPath)
+ULONG ConvertArcNameToBiosDriveNumber(PUCHAR ArcPath)
 {
 	char *	p;
-	U32		DriveNumber = 0;
+	ULONG		DriveNumber = 0;
 
 	if (strnicmp(ArcPath, "multi(0)disk(0)", 15) != 0)
 		return 0;

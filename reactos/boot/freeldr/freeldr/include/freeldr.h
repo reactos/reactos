@@ -20,68 +20,29 @@
 #ifndef __FREELDR_H
 #define __FREELDR_H
 
-#define	NULL	0
-#define	TRUE	1
-#define FALSE	0
-
-#define BOOL	int
-#define BOOLEAN	int
-typedef BOOLEAN *PBOOLEAN;
-
-#define CHAR		char
-#define PCHAR		char *
-#define UCHAR		unsigned char
-#define PUCHAR		unsigned char *
-#define WCHAR		unsigned short
-#define PWCHAR		unsigned short *
-#define ULONG		unsigned long
-#if defined(_WIN64)
-#define ULONG_PTR	__int64
-#else
-#define ULONG_PTR	unsigned long
-#endif
-
-#define VOID	void
-#define PVOID	VOID*
-
-#ifdef __i386__
-
-#define	size_t	unsigned int
-
-typedef unsigned char		U8;
-typedef char				S8;
-typedef unsigned short		U16;
-typedef short				S16;
-typedef unsigned long		U32;
-typedef long				S32;
-typedef unsigned long long	U64;
-typedef long long			S64;
-
-typedef U8					__u8;
-typedef S8					__s8;
-typedef U16					__u16;
-typedef S16					__s16;
-typedef U32					__u32;
-typedef S32					__s32;
-typedef U64					__u64;
-typedef S64					__s64;
-
-#endif // __i386__
-
-typedef U8 *PU8;
-typedef U16 *PU16;
-typedef U32 *PU32;
+#include <ddk/ntddk.h>
+#include <arch.h>
+#include <reactos.h>
+#include <rtl.h>
+#include <disk.h>
+#include <fs.h>
+#include <ui.h>
+#include <multiboot.h>
+#include <mm.h>
+#include <machine.h>
+#include <inifile.h>
+#include <video.h>
+#include <portio.h>
 
 #define ROUND_UP(N, S) (((N) + (S) - 1) & ~((S) - 1))
 #define ROUND_DOWN(N, S) ((N) & ~((S) - 1))
+#define Ke386EraseFlags(x)     __asm__ __volatile__("pushl $0 ; popfl\n")
+                                           
+extern ULONG BootDrive; /* BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc. */
+extern ULONG BootPartition; /* Boot Partition, 1-4 */
+extern BOOL UserInterfaceUp;	/* Tells us if the user interface is displayed */
 
-#define PACKED __attribute__((packed))
-
-extern U32			BootDrive;			// BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc.
-extern U32			BootPartition;		// Boot Partition, 1-4
-extern BOOL			UserInterfaceUp;	// Tells us if the user interface is displayed
-
-void	BootMain(char *CmdLine);
-VOID	RunLoader(VOID);
+VOID BootMain(LPSTR CmdLine);
+VOID RunLoader(VOID);
 
 #endif  // defined __FREELDR_H

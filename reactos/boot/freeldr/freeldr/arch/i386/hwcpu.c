@@ -35,60 +35,60 @@
 
 typedef struct _MP_FLOATING_POINT_TABLE
 {
-  U32 Signature;			/* "_MP_" */
-  U32 PhysicalAddressPointer;
-  U8  Length;
-  U8  SpecRev;
-  U8  Checksum;
-  U8  FeatureByte[5];
+  ULONG Signature;			/* "_MP_" */
+  ULONG PhysicalAddressPointer;
+  UCHAR  Length;
+  UCHAR  SpecRev;
+  UCHAR  Checksum;
+  UCHAR  FeatureByte[5];
 } PACKED MP_FLOATING_POINT_TABLE, *PMP_FLOATING_POINT_TABLE;
 
 
 typedef struct _MPS_CONFIG_TABLE_HEADER
 {
-  U32 Signature;			/* "PCMP" */
-  U16 BaseTableLength;
-  U8  SpecRev;
-  U8  Checksum;
-  U8  OemIdString[8];
-  U8  ProductIdString[12];
-  U32 OemTablePointer;
-  U16 OemTableLength;
-  U16 EntryCount;
-  U32 AddressOfLocalAPIC;
-  U16 ExtendedTableLength;
-  U8  ExtendedTableChecksum;
-  U8  Reserved;
+  ULONG Signature;			/* "PCMP" */
+  USHORT BaseTableLength;
+  UCHAR  SpecRev;
+  UCHAR  Checksum;
+  UCHAR  OemIdString[8];
+  UCHAR  ProductIdString[12];
+  ULONG OemTablePointer;
+  USHORT OemTableLength;
+  USHORT EntryCount;
+  ULONG AddressOfLocalAPIC;
+  USHORT ExtendedTableLength;
+  UCHAR  ExtendedTableChecksum;
+  UCHAR  Reserved;
 } PACKED MP_CONFIGURATION_TABLE, *PMP_CONFIGURATION_TABLE;
 
 
 typedef struct _MP_PROCESSOR_ENTRY
 {
-  U8  EntryType;
-  U8  LocalApicId;
-  U8  LocalApicVersion;
-  U8  CpuFlags;
-  U32 CpuSignature;
-  U32 FeatureFlags;
-  U32 Reserved1;
-  U32 Reserved2;
+  UCHAR  EntryType;
+  UCHAR  LocalApicId;
+  UCHAR  LocalApicVersion;
+  UCHAR  CpuFlags;
+  ULONG CpuSignature;
+  ULONG FeatureFlags;
+  ULONG Reserved1;
+  ULONG Reserved2;
 } PACKED MP_PROCESSOR_ENTRY, *PMP_PROCESSOR_ENTRY;
 
 
 /* FUNCTIONS ****************************************************************/
 
-static U32
+static ULONG
 GetCpuSpeed(VOID)
 {
-  U64 Timestamp1;
-  U64 Timestamp2;
-  U64 Diff;
+  ULONGLONG Timestamp1;
+  ULONGLONG Timestamp2;
+  ULONGLONG Diff;
 
   /* Read TSC (Time Stamp Counter) */
   Timestamp1 = RDTSC();
 
   /* Wait for 0.1 seconds (= 100 milliseconds = 100000 microseconds)*/
-  KeStallExecutionProcessor(100000);
+  StallExecutionProcessor(100000);
 
   /* Read TSC (Time Stamp Counter) again */
   Timestamp2 = RDTSC();
@@ -100,30 +100,30 @@ GetCpuSpeed(VOID)
     }
   else
     {
-      Diff = Timestamp2 + (((U64)-1) - Timestamp1);
+      Diff = Timestamp2 + (((ULONGLONG)-1) - Timestamp1);
     }
 
-  return (U32)(Diff / 100000);
+  return (ULONG)(Diff / 100000);
 }
 
 
 static VOID
-DetectCPU(HKEY CpuKey,
-	  HKEY FpuKey)
+DetectCPU(FRLDRHKEY CpuKey,
+	  FRLDRHKEY FpuKey)
 {
   char VendorIdentifier[13];
   char Identifier[64];
-  U32 FeatureSet;
-  HKEY CpuInstKey;
-  HKEY FpuInstKey;
-  U32 eax = 0;
-  U32 ebx = 0;
-  U32 ecx = 0;
-  U32 edx = 0;
-  U32 *Ptr;
-  S32 Error;
+  ULONG FeatureSet;
+  FRLDRHKEY CpuInstKey;
+  FRLDRHKEY FpuInstKey;
+  ULONG eax = 0;
+  ULONG ebx = 0;
+  ULONG ecx = 0;
+  ULONG edx = 0;
+  ULONG *Ptr;
+  LONG Error;
   BOOL SupportTSC = FALSE;
-  U32 CpuSpeed;
+  ULONG CpuSpeed;
 
 
   /* Create the CPU instance key */
@@ -154,7 +154,7 @@ DetectCPU(HKEY CpuKey,
       /* Get vendor identifier */
       GetCpuid(0, &eax, &ebx, &ecx, &edx);
       VendorIdentifier[12] = 0;
-      Ptr = (U32*)&VendorIdentifier[0];
+      Ptr = (ULONG*)&VendorIdentifier[0];
       *Ptr = ebx;
       Ptr++;
       *Ptr = edx;
@@ -195,8 +195,8 @@ DetectCPU(HKEY CpuKey,
   Error = RegSetValue(CpuInstKey,
 		      "FeatureSet",
 		      REG_DWORD,
-		      (PU8)&FeatureSet,
-		      sizeof(U32));
+		      (PUCHAR)&FeatureSet,
+		      sizeof(ULONG));
   if (Error != ERROR_SUCCESS)
     {
       DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
@@ -208,7 +208,7 @@ DetectCPU(HKEY CpuKey,
   Error = RegSetValue(CpuInstKey,
 		      "Identifier",
 		      REG_SZ,
-		      (PU8)Identifier,
+		      (PUCHAR)Identifier,
 		      strlen(Identifier) + 1);
   if (Error != ERROR_SUCCESS)
     {
@@ -218,7 +218,7 @@ DetectCPU(HKEY CpuKey,
   Error = RegSetValue(FpuInstKey,
 		      "Identifier",
 		      REG_SZ,
-		      (PU8)Identifier,
+		      (PUCHAR)Identifier,
 		      strlen(Identifier) + 1);
   if (Error != ERROR_SUCCESS)
     {
@@ -231,7 +231,7 @@ DetectCPU(HKEY CpuKey,
   Error = RegSetValue(CpuInstKey,
 		      "VendorIdentifier",
 		      REG_SZ,
-		      (PU8)VendorIdentifier,
+		      (PUCHAR)VendorIdentifier,
 		      strlen(VendorIdentifier) + 1);
   if (Error != ERROR_SUCCESS)
     {
@@ -250,8 +250,8 @@ DetectCPU(HKEY CpuKey,
       Error = RegSetValue(CpuInstKey,
 			  "~MHz",
 			  REG_DWORD,
-			  (PU8)&CpuSpeed,
-			  sizeof(U32));
+			  (PUCHAR)&CpuSpeed,
+			  sizeof(ULONG));
       if (Error != ERROR_SUCCESS)
 	{
 	  DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
@@ -261,23 +261,23 @@ DetectCPU(HKEY CpuKey,
 
 
 static VOID
-SetMpsProcessor(HKEY CpuKey,
-		HKEY FpuKey,
+SetMpsProcessor(FRLDRHKEY CpuKey,
+		FRLDRHKEY FpuKey,
 		PMP_PROCESSOR_ENTRY CpuEntry)
 {
   char VendorIdentifier[13];
   char Identifier[64];
   char Buffer[8];
-  U32 FeatureSet;
-  HKEY CpuInstKey;
-  HKEY FpuInstKey;
-  U32 eax = 0;
-  U32 ebx = 0;
-  U32 ecx = 0;
-  U32 edx = 0;
-  U32 *Ptr;
-  S32 Error;
-  U32 CpuSpeed;
+  ULONG FeatureSet;
+  FRLDRHKEY CpuInstKey;
+  FRLDRHKEY FpuInstKey;
+  ULONG eax = 0;
+  ULONG ebx = 0;
+  ULONG ecx = 0;
+  ULONG edx = 0;
+  ULONG *Ptr;
+  LONG Error;
+  ULONG CpuSpeed;
 
   /* Get processor instance number */
   sprintf(Buffer, "%u", CpuEntry->LocalApicId);
@@ -305,7 +305,7 @@ SetMpsProcessor(HKEY CpuKey,
   /* Get 'VendorIdentifier' */
   GetCpuid(0, &eax, &ebx, &ecx, &edx);
   VendorIdentifier[12] = 0;
-  Ptr = (U32*)&VendorIdentifier[0];
+  Ptr = (ULONG*)&VendorIdentifier[0];
   *Ptr = ebx;
   Ptr++;
   *Ptr = edx;
@@ -315,9 +315,9 @@ SetMpsProcessor(HKEY CpuKey,
   /* Get 'Identifier' */
   sprintf(Identifier,
 	  "x86 Family %u Model %u Stepping %u",
-	  (U32)((CpuEntry->CpuSignature >> 8) & 0x0F),
-	  (U32)((CpuEntry->CpuSignature >> 4) & 0x0F),
-	  (U32)(CpuEntry->CpuSignature & 0x0F));
+	  (ULONG)((CpuEntry->CpuSignature >> 8) & 0x0F),
+	  (ULONG)((CpuEntry->CpuSignature >> 4) & 0x0F),
+	  (ULONG)(CpuEntry->CpuSignature & 0x0F));
 
   /* Get FeatureSet */
   FeatureSet = CpuEntry->FeatureFlags;
@@ -339,8 +339,8 @@ SetMpsProcessor(HKEY CpuKey,
   Error = RegSetValue(CpuInstKey,
 		      "FeatureSet",
 		      REG_DWORD,
-		      (PU8)&FeatureSet,
-		      sizeof(U32));
+		      (PUCHAR)&FeatureSet,
+		      sizeof(ULONG));
   if (Error != ERROR_SUCCESS)
     {
       DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
@@ -352,7 +352,7 @@ SetMpsProcessor(HKEY CpuKey,
   Error = RegSetValue(CpuInstKey,
 		      "Identifier",
 		      REG_SZ,
-		      (PU8)Identifier,
+		      (PUCHAR)Identifier,
 		      strlen(Identifier) + 1);
   if (Error != ERROR_SUCCESS)
     {
@@ -362,7 +362,7 @@ SetMpsProcessor(HKEY CpuKey,
   Error = RegSetValue(FpuInstKey,
 		      "Identifier",
 		      REG_SZ,
-		      (PU8)Identifier,
+		      (PUCHAR)Identifier,
 		      strlen(Identifier) + 1);
   if (Error != ERROR_SUCCESS)
     {
@@ -375,7 +375,7 @@ SetMpsProcessor(HKEY CpuKey,
   Error = RegSetValue(CpuInstKey,
 		      "VendorIdentifier",
 		      REG_SZ,
-		      (PU8)VendorIdentifier,
+		      (PUCHAR)VendorIdentifier,
 		      strlen(VendorIdentifier) + 1);
   if (Error != ERROR_SUCCESS)
     {
@@ -394,8 +394,8 @@ SetMpsProcessor(HKEY CpuKey,
       Error = RegSetValue(CpuInstKey,
 			  "~MHz",
 			  REG_DWORD,
-			  (PU8)&CpuSpeed,
-			  sizeof(U32));
+			  (PUCHAR)&CpuSpeed,
+			  sizeof(ULONG));
       if (Error != ERROR_SUCCESS)
 	{
 	  DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
@@ -409,12 +409,12 @@ GetMpFloatingPointTable(VOID)
 {
   PMP_FLOATING_POINT_TABLE FpTable;
   char *Ptr;
-  U8 Sum;
-  U32 Length;
-  U32 i;
+  UCHAR Sum;
+  ULONG Length;
+  ULONG i;
 
   FpTable = (PMP_FLOATING_POINT_TABLE)0xF0000;
-  while ((U32)FpTable < 0x100000)
+  while ((ULONG)FpTable < 0x100000)
     {
       if (FpTable->Signature == MP_FP_SIGNATURE)
 	{
@@ -440,7 +440,7 @@ GetMpFloatingPointTable(VOID)
 	  return FpTable;
 	}
 
-      FpTable = (PMP_FLOATING_POINT_TABLE)((U32)FpTable + 0x10);
+      FpTable = (PMP_FLOATING_POINT_TABLE)((ULONG)FpTable + 0x10);
     }
 
   return NULL;
@@ -452,9 +452,9 @@ GetMpConfigurationTable(PMP_FLOATING_POINT_TABLE FpTable)
 {
   PMP_CONFIGURATION_TABLE ConfigTable;
   char *Ptr;
-  U8 Sum;
-  U32 Length;
-  U32 i;
+  UCHAR Sum;
+  ULONG Length;
+  ULONG i;
 
   if (FpTable->FeatureByte[0] != 0 ||
       FpTable->PhysicalAddressPointer == 0)
@@ -466,7 +466,7 @@ GetMpConfigurationTable(PMP_FLOATING_POINT_TABLE FpTable)
 
   DbgPrint((DPRINT_HWDETECT, 
 	    "MP Configuration Table at: %x\n",
-	    (U32)ConfigTable));
+	    (ULONG)ConfigTable));
 
   /* Calculate base table checksum */
   Length = ConfigTable->BaseTableLength;
@@ -498,14 +498,14 @@ GetMpConfigurationTable(PMP_FLOATING_POINT_TABLE FpTable)
 
 
 static BOOL
-DetectMps(HKEY CpuKey,
-	  HKEY FpuKey)
+DetectMps(FRLDRHKEY CpuKey,
+	  FRLDRHKEY FpuKey)
 {
   PMP_FLOATING_POINT_TABLE FpTable;
   PMP_CONFIGURATION_TABLE ConfigTable;
   PMP_PROCESSOR_ENTRY CpuEntry;
   char *Ptr;
-  U32 Offset;
+  ULONG Offset;
 
   /* Get floating point table */
   FpTable = GetMpFloatingPointTable();
@@ -514,7 +514,7 @@ DetectMps(HKEY CpuKey,
 
   DbgPrint((DPRINT_HWDETECT,
 	    "MP Floating Point Table at: %x\n",
-	    (U32)FpTable));
+	    (ULONG)FpTable));
 
   if (FpTable->FeatureByte[0] == 0)
     {
@@ -530,7 +530,7 @@ DetectMps(HKEY CpuKey,
       Offset = sizeof(MP_CONFIGURATION_TABLE);
       while (Offset < ConfigTable->BaseTableLength)
 	{
-	  Ptr = (char*)((U32)ConfigTable + Offset);
+	  Ptr = (char*)((ULONG)ConfigTable + Offset);
 
 	  switch (*Ptr)
 	    {
@@ -548,9 +548,9 @@ DetectMps(HKEY CpuKey,
 		DbgPrint((DPRINT_HWDETECT,
 			  "Processor %u: x86 Family %u Model %u Stepping %u\n",
 			  CpuEntry->LocalApicId,
-			  (U32)((CpuEntry->CpuSignature >> 8) & 0x0F),
-			  (U32)((CpuEntry->CpuSignature >> 4) & 0x0F),
-			  (U32)(CpuEntry->CpuSignature & 0x0F)));
+			  (ULONG)((CpuEntry->CpuSignature >> 8) & 0x0F),
+			  (ULONG)((CpuEntry->CpuSignature >> 4) & 0x0F),
+			  (ULONG)(CpuEntry->CpuSignature & 0x0F)));
 
 		SetMpsProcessor(CpuKey, FpuKey, CpuEntry);
 		Offset += 0x14;
@@ -577,7 +577,7 @@ DetectMps(HKEY CpuKey,
 		break;
 
 	      default:
-		DbgPrint((DPRINT_HWDETECT, "Unknown Entry %u\n",(U32)*Ptr));
+		DbgPrint((DPRINT_HWDETECT, "Unknown Entry %u\n",(ULONG)*Ptr));
 		return FALSE;
 	    }
 	}
@@ -599,11 +599,11 @@ DetectMps(HKEY CpuKey,
 
 
 VOID
-DetectCPUs(HKEY SystemKey)
+DetectCPUs(FRLDRHKEY SystemKey)
 {
-  HKEY CpuKey;
-  HKEY FpuKey;
-  S32 Error;
+  FRLDRHKEY CpuKey;
+  FRLDRHKEY FpuKey;
+  LONG Error;
 
   /* Create the 'CentralProcessor' key */
   Error = RegCreateKey(SystemKey,

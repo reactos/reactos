@@ -23,10 +23,10 @@
 
 typedef struct _GEOMETRY
 {
-	U32		Cylinders;						// Number of cylinders on the disk
-	U32		Heads;							// Number of heads on the disk
-	U32		Sectors;						// Number of sectors per track
-	U32		BytesPerSector;					// Number of bytes per sector
+	ULONG		Cylinders;						// Number of cylinders on the disk
+	ULONG		Heads;							// Number of heads on the disk
+	ULONG		Sectors;						// Number of sectors per track
+	ULONG		BytesPerSector;					// Number of bytes per sector
 
 } GEOMETRY, *PGEOMETRY;
 
@@ -35,14 +35,14 @@ typedef struct _GEOMETRY
 //
 typedef struct _EXTENDED_GEOMETRY
 {
-	U16		Size;
-	U16		Flags;
-	U32		Cylinders;
-	U32		Heads;
-	U32		SectorsPerTrack;
-	U64		Sectors;
-	U16		BytesPerSector;
-	U32		PDPTE;
+	USHORT		Size;
+	USHORT		Flags;
+	ULONG		Cylinders;
+	ULONG		Heads;
+	ULONG		SectorsPerTrack;
+	ULONGLONG		Sectors;
+	USHORT		BytesPerSector;
+	ULONG		PDPTE;
 } __attribute__((packed)) EXTENDED_GEOMETRY, *PEXTENDED_GEOMETRY;
 
 //
@@ -50,16 +50,16 @@ typedef struct _EXTENDED_GEOMETRY
 //
 typedef struct _PARTITION_TABLE_ENTRY
 {
-	U8		BootIndicator;					// 0x00 - non-bootable partition, 0x80 - bootable partition (one partition only)
-	U8		StartHead;						// Beginning head number
-	U8		StartSector;					// Beginning sector (2 high bits of cylinder #)
-	U8		StartCylinder;					// Beginning cylinder# (low order bits of cylinder #)
-	U8		SystemIndicator;				// System indicator
-	U8		EndHead;						// Ending head number
-	U8		EndSector;						// Ending sector (2 high bits of cylinder #)
-	U8		EndCylinder;					// Ending cylinder# (low order bits of cylinder #)
-	U32		SectorCountBeforePartition;		// Number of sectors preceding the partition
-	U32		PartitionSectorCount;			// Number of sectors in the partition
+	UCHAR		BootIndicator;					// 0x00 - non-bootable partition, 0x80 - bootable partition (one partition only)
+	UCHAR		StartHead;						// Beginning head number
+	UCHAR		StartSector;					// Beginning sector (2 high bits of cylinder #)
+	UCHAR		StartCylinder;					// Beginning cylinder# (low order bits of cylinder #)
+	UCHAR		SystemIndicator;				// System indicator
+	UCHAR		EndHead;						// Ending head number
+	UCHAR		EndSector;						// Ending sector (2 high bits of cylinder #)
+	UCHAR		EndCylinder;					// Ending cylinder# (low order bits of cylinder #)
+	ULONG		SectorCountBeforePartition;		// Number of sectors preceding the partition
+	ULONG		PartitionSectorCount;			// Number of sectors in the partition
 
 } PACKED PARTITION_TABLE_ENTRY, *PPARTITION_TABLE_ENTRY;
 
@@ -68,11 +68,11 @@ typedef struct _PARTITION_TABLE_ENTRY
 //
 typedef struct _MASTER_BOOT_RECORD
 {
-	U8			MasterBootRecordCodeAndData[0x1b8];	/* 0x000 */
-	U32			Signature;				/* 0x1B8 */
-	U16			Reserved;				/* 0x1BC */
+	UCHAR			MasterBootRecordCodeAndData[0x1b8];	/* 0x000 */
+	ULONG			Signature;				/* 0x1B8 */
+	USHORT			Reserved;				/* 0x1BC */
 	PARTITION_TABLE_ENTRY	PartitionTable[4];			/* 0x1BE */
-	U16			MasterBootRecordMagic;			/* 0x1FE */
+	USHORT			MasterBootRecordMagic;			/* 0x1FE */
 
 } PACKED MASTER_BOOT_RECORD, *PMASTER_BOOT_RECORD;
 
@@ -106,10 +106,10 @@ typedef struct _MASTER_BOOT_RECORD
 ///////////////////////////////////////////////////////////////////////////////////////
 #ifdef __i386__
 
-BOOL	DiskResetController(U32 DriveNumber);
-BOOL	DiskInt13ExtensionsSupported(U32 DriveNumber);
+BOOL	DiskResetController(ULONG DriveNumber);
+BOOL	DiskInt13ExtensionsSupported(ULONG DriveNumber);
 //VOID	DiskStopFloppyMotor(VOID);
-BOOL	DiskGetExtendedDriveParameters(U32 DriveNumber, PVOID Buffer, U16 BufferSize);
+BOOL	DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT BufferSize);
 
 #endif // defined __i386__
 
@@ -119,10 +119,10 @@ BOOL	DiskGetExtendedDriveParameters(U32 DriveNumber, PVOID Buffer, U16 BufferSiz
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 VOID	DiskReportError (BOOL bError);
-VOID	DiskError(PUCHAR ErrorString, U32 ErrorCode);
-PUCHAR	DiskGetErrorCodeString(U32 ErrorCode);
-BOOL	DiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer); // Implemented in i386disk.c
-BOOL	DiskIsDriveRemovable(U32 DriveNumber);
+VOID	DiskError(PUCHAR ErrorString, ULONG ErrorCode);
+PUCHAR	DiskGetErrorCodeString(ULONG ErrorCode);
+BOOL	DiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer); // Implemented in i386disk.c
+BOOL	DiskIsDriveRemovable(ULONG DriveNumber);
 VOID	DiskStopFloppyMotor(VOID);	// Implemented in i386disk.c
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -130,10 +130,10 @@ VOID	DiskStopFloppyMotor(VOID);	// Implemented in i386disk.c
 // Fixed Disk Partition Management Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOL	DiskGetActivePartitionEntry(U32 DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOL	DiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOL	DiskGetActivePartitionEntry(ULONG DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOL	DiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOL	DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOL	DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOL	DiskReadBootRecord(U32 DriveNumber, U64 LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord);
+BOOL	DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord);
 
 #endif  // defined __DISK_H

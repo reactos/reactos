@@ -1187,8 +1187,8 @@ DbgBackTraceCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 	}
       else
 	{
-	  StackBase = (ULONG_PTR)&init_stack_top;
-	  StackLimit = (ULONG_PTR)&init_stack;
+	  StackBase = (ULONG_PTR)init_stack_top;
+	  StackLimit = (ULONG_PTR)init_stack;
 	}
       DbgPrintBackTrace((PULONG)&Tf->DebugEbp, StackBase, StackLimit);
     }

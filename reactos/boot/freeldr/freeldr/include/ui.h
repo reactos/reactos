@@ -21,8 +21,8 @@
 #define __UI_H
 
 
-extern	U32		UiScreenWidth;									// Screen Width
-extern	U32		UiScreenHeight;									// Screen Height
+extern	ULONG		UiScreenWidth;									// Screen Width
+extern	ULONG		UiScreenHeight;									// Screen Height
 
 extern	UCHAR	UiStatusBarFgColor;								// Status bar foreground color
 extern	UCHAR	UiStatusBarBgColor;								// Status bar background color
@@ -57,26 +57,26 @@ extern	UCHAR	UiMonthNames[12][15];
 BOOL	UiInitialize(BOOLEAN ShowGui);								// Initialize User-Interface
 VOID	UiUnInitialize(PUCHAR BootText);						// Un-initialize User-Interface
 VOID	UiDrawBackdrop(VOID);									// Fills the entire screen with a backdrop
-VOID	UiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
-VOID	UiDrawShadow(U32 Left, U32 Top, U32 Right, U32 Bottom);	// Draws a shadow on the bottom and right sides of the area specified
-VOID	UiDrawBox(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr);	// Draws a box around the area specified
-VOID	UiDrawText(U32 X, U32 Y, PUCHAR Text, UCHAR Attr);	// Draws text at coordinates specified
-VOID	UiDrawCenteredText(U32 Left, U32 Top, U32 Right, U32 Bottom, PUCHAR TextString, UCHAR Attr);	// Draws centered text at the coordinates specified and clips the edges
+VOID	UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
+VOID	UiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);	// Draws a shadow on the bottom and right sides of the area specified
+VOID	UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr);	// Draws a box around the area specified
+VOID	UiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr);	// Draws text at coordinates specified
+VOID	UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PUCHAR TextString, UCHAR Attr);	// Draws centered text at the coordinates specified and clips the edges
 VOID	UiDrawStatusText(PUCHAR StatusText);					// Draws text at the very bottom line on the screen
 VOID	UiUpdateDateTime(VOID);									// Updates the date and time
 VOID	UiInfoBox(PUCHAR MessageText);							// Displays a info box on the screen
 VOID	UiMessageBox(PUCHAR MessageText);						// Displays a message box on the screen with an ok button
 VOID	UiMessageBoxCritical(PUCHAR MessageText);				// Displays a message box on the screen with an ok button using no system resources
-VOID	UiDrawProgressBarCenter(U32 Position, U32 Range, PUCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
-VOID	UiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range, PUCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
+VOID	UiDrawProgressBarCenter(ULONG Position, ULONG Range, PUCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
+VOID	UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PUCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
 VOID	UiShowMessageBoxesInSection(PUCHAR SectionName);		// Displays all the message boxes in a given section
 VOID	UiEscapeString(PUCHAR String);							// Processes a string and changes all occurances of "\n" to '\n'
-BOOL	UiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, U32 Length);
+BOOL	UiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, ULONG Length);
 
 UCHAR	UiTextToColor(PUCHAR ColorText);						// Converts the text color into it's equivalent color value
 UCHAR	UiTextToFillStyle(PUCHAR FillStyleText);				// Converts the text fill into it's equivalent fill value
 
-VOID	UiTruncateStringEllipsis(PUCHAR StringText, U32 MaxChars);	// Truncates a string to MaxChars by adding an ellipsis on the end '...'
+VOID	UiTruncateStringEllipsis(PUCHAR StringText, ULONG MaxChars);	// Truncates a string to MaxChars by adding an ellipsis on the end '...'
 
 VOID	UiFadeInBackdrop(VOID);									// Draws the backdrop and fades the screen in
 VOID	UiFadeOut(VOID);										// Fades the screen out
@@ -86,9 +86,9 @@ VOID	UiFadeOut(VOID);										// Fades the screen out
 // Menu Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-typedef BOOL	(*UiMenuKeyPressFilterCallback)(U32 KeyPress);
+typedef BOOL	(*UiMenuKeyPressFilterCallback)(ULONG KeyPress);
 
-BOOL	UiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOL	UiDisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 
 
 

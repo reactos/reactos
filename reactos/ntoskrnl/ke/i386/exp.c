@@ -285,8 +285,8 @@ KiDoubleFaultHandler(VOID)
 	}
       else
 	{
-	  StackLimit = (ULONG)&init_stack_top;
-	  StackBase = (ULONG)&init_stack;
+	  StackLimit = (ULONG)init_stack_top;
+	  StackBase = (ULONG)init_stack;
 	}
 
       /*
@@ -453,7 +453,7 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
      }
    else
      {
-       StackLimit = (ULONG)&init_stack_top;
+       StackLimit = (ULONG)init_stack_top;
      }
 
    /*

@@ -89,38 +89,34 @@ typedef struct elf_section_header_table
   unsigned long shndx;
 } elf_section_header_table_t;
 
-/* The Multiboot information. */
-typedef struct multiboot_info
+typedef struct _LOADER_PARAMETER_BLOCK
 {
-  unsigned long flags;
-  unsigned long mem_lower;
-  unsigned long mem_upper;
-  unsigned long boot_device;
-  unsigned long cmdline;
-  unsigned long mods_count;
-  unsigned long mods_addr;
-#if 0
-  /* reactos and loadros define this entry with a size of 12 byte but the union is 16 byte */
-  union
-  {
-    aout_symbol_table_t aout_sym;
-    elf_section_header_table_t elf_sec;
-  } u;
-#else
-  char syms[12];        
-#endif
-  unsigned long mmap_length;
-  unsigned long mmap_addr;
-} multiboot_info_t;
+   ULONG Flags;
+   ULONG MemLower;
+   ULONG MemHigher;
+   ULONG BootDevice;
+   ULONG CommandLine;
+   ULONG ModsCount;
+   ULONG ModsAddr;
+   UCHAR Syms[12];
+   ULONG MmapLength;
+   ULONG MmapAddr;
+   ULONG DrivesCount;
+   ULONG DrivesAddr;
+   ULONG ConfigTable;
+   ULONG BootLoaderName;
+   ULONG PageDirectoryStart;
+   ULONG PageDirectoryEnd;
+   ULONG KernelBase;
+} LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
 
 /* The module structure. */
-typedef struct module
-{
-  unsigned long mod_start;
-  unsigned long mod_end;
-  unsigned long string;
-  unsigned long reserved;
-} module_t;
+typedef struct _FRLDR_MODULE {
+  ULONG_PTR ModuleStart;
+  ULONG_PTR ModuleEnd;
+  LPSTR ModuleName;
+  ULONG Reserved;
+} FRLDR_MODULE, *PFRLDR_MODULE;
 
 /* The memory map. Be careful that the offset 0 is base_addr_low
    but no size. */
@@ -136,27 +132,92 @@ typedef struct memory_map
 } memory_map_t;
 
 
-multiboot_header_t		mb_header;							// Multiboot header structure defined in kernel image file
-multiboot_info_t		mb_info;							// Multiboot info structure passed to kernel
-char					multiboot_kernel_cmdline[255];		// Command line passed to kernel
-module_t				multiboot_modules[64];				// Array to hold boot module info loaded for the kernel
+LOADER_PARAMETER_BLOCK LoaderBlock; /* Multiboot info structure passed to kernel */
+char					multiboot_kernel_cmdline[255];	// Command line passed to kernel
+FRLDR_MODULE			multiboot_modules[64];		// Array to hold boot module info loaded for the kernel
 char					multiboot_module_strings[64][256];	// Array to hold module names
 unsigned long			multiboot_memory_map_descriptor_size;
-memory_map_t			multiboot_memory_map[32];				// Memory map
+memory_map_t			multiboot_memory_map[32];		// Memory map
 
 
 void	boot_reactos(void);
 
 #include "fs.h"		// Included FILE structure definition
 
-BOOL	MultiBootLoadKernel(FILE *KernelImage);
-//BOOL	MultiBootLoadModule(FILE *ModuleImage, char *ModuleName);
-PVOID	MultiBootLoadModule(FILE *ModuleImage, char *ModuleName, U32* ModuleSize);
+BOOL
+STDCALL
+FrLdrBootReactOs(VOID);
+
+BOOL
+STDCALL
+FrLdrMapKernel(FILE *KernelImage);
+
+ULONG_PTR
+STDCALL
+FrLdrCreateModule(LPSTR ModuleName);
+
+ULONG_PTR 
+STDCALL 
+FrLdrLoadModule(FILE *ModuleImage, 
+                LPSTR ModuleName, 
+                PULONG ModuleSize);
+
+BOOL
+STDCALL
+FrLdrLoadKernel(PCHAR szFileName,
+                INT nPos);
+                
+BOOL
+FrLdrLoadNlsFile(PCHAR szSystemRoot,     
+                 PCHAR szErrorOut);
+                 
+BOOL
+FrLdrLoadDriver(PCHAR szFileName, 
+                INT nPos);
+BOOL
+LoadSymbolFile(PCHAR szSystemRoot,
+               PCHAR ModuleName,
+               INT nPos);
+               
+VOID
+FrLdrLoadBootDrivers(PCHAR szSystemRoot, 
+                     INT nPos);
+                
+BOOL
+STDCALL
+FrLdrCloseModule(ULONG_PTR ModuleBase, 
+                 ULONG dwModuleSize);
+
+VOID
+STDCALL 
+FrLdrStartup(ULONG Magic);
+
+VOID 
+FASTCALL 
+FrLdrGetKernelBase(VOID);
+
+VOID 
+FASTCALL 
+FrLdrSetupPae(ULONG Magic);
+
+VOID
+FASTCALL
+FrLdrGetPaeMode(VOID);
+
+VOID
+FASTCALL 
+FrLdrSetupPageDirectory(VOID);
+
+VOID
+LoadAndBootReactOS(PUCHAR OperatingSystemName);
+
+VOID FASTCALL AsmCode(VOID);
+typedef VOID (FASTCALL *ASMCODE)(ULONG Magic,
+                                 PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 int	GetBootPartition(char *OperatingSystemName);
 
-PVOID MultiBootCreateModule(char *ModuleName);
-BOOL MultiBootCloseModule(PVOID ModuleBase, U32 dwModuleSize);
+
 
 #endif /* ! ASM */
 

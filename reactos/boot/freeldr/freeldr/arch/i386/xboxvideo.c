@@ -30,10 +30,10 @@
 #define I2C_IO_BASE 0xc000
 
 static PVOID FrameBuffer;
-static U32 ScreenWidth;
-static U32 ScreenHeight;
-static U32 BytesPerPixel;
-static U32 Delta;
+static ULONG ScreenWidth;
+static ULONG ScreenHeight;
+static ULONG BytesPerPixel;
+static ULONG Delta;
 
 #define CHAR_WIDTH  8
 #define CHAR_HEIGHT 16
@@ -45,16 +45,16 @@ static U32 Delta;
 #define MAKE_COLOR(Red, Green, Blue) (0xff000000 | (((Red) & 0xff) << 16) | (((Green) & 0xff) << 8) | ((Blue) & 0xff))
 
 static VOID
-XboxVideoOutputChar(U8 Char, unsigned X, unsigned Y, U32 FgColor, U32 BgColor)
+XboxVideoOutputChar(UCHAR Char, unsigned X, unsigned Y, ULONG FgColor, ULONG BgColor)
 {
-  PU8 FontPtr;
-  PU32 Pixel;
-  U8 Mask;
+  PUCHAR FontPtr;
+  PULONG Pixel;
+  UCHAR Mask;
   unsigned Line;
   unsigned Col;
 
   FontPtr = XboxFont8x16 + Char * 16;
-  Pixel = (PU32) ((char *) FrameBuffer + (Y * CHAR_HEIGHT + TOP_BOTTOM_LINES) * Delta
+  Pixel = (PULONG) ((char *) FrameBuffer + (Y * CHAR_HEIGHT + TOP_BOTTOM_LINES) * Delta
                   + X * CHAR_WIDTH * BytesPerPixel);
   for (Line = 0; Line < CHAR_HEIGHT; Line++)
     {
@@ -64,14 +64,14 @@ XboxVideoOutputChar(U8 Char, unsigned X, unsigned Y, U32 FgColor, U32 BgColor)
           Pixel[Col] = (0 != (FontPtr[Line] & Mask) ? FgColor : BgColor);
           Mask = Mask >> 1;
         }
-      Pixel = (PU32) ((char *) Pixel + Delta);
+      Pixel = (PULONG) ((char *) Pixel + Delta);
     }
 }
 
-static U32
-XboxVideoAttrToSingleColor(U8 Attr)
+static ULONG
+XboxVideoAttrToSingleColor(UCHAR Attr)
 {
-  U8 Intensity;
+  UCHAR Intensity;
 
   Intensity = (0 == (Attr & 0x08) ? 127 : 255);
 
@@ -82,21 +82,21 @@ XboxVideoAttrToSingleColor(U8 Attr)
 }
 
 static VOID
-XboxVideoAttrToColors(U8 Attr, U32 *FgColor, U32 *BgColor)
+XboxVideoAttrToColors(UCHAR Attr, ULONG *FgColor, ULONG *BgColor)
 {
   *FgColor = XboxVideoAttrToSingleColor(Attr & 0xf);
   *BgColor = XboxVideoAttrToSingleColor((Attr >> 4) & 0xf);
 }
 
 static VOID
-XboxVideoClearScreenColor(U32 Color, BOOL FullScreen)
+XboxVideoClearScreenColor(ULONG Color, BOOL FullScreen)
 {
-  U32 Line, Col;
-  PU32 p;
+  ULONG Line, Col;
+  PULONG p;
 
   for (Line = 0; Line < ScreenHeight - (FullScreen ? 0 : 2 * TOP_BOTTOM_LINES); Line++)
     {
-      p = (PU32) ((char *) FrameBuffer + (Line + (FullScreen ? 0 : TOP_BOTTOM_LINES)) * Delta);
+      p = (PULONG) ((char *) FrameBuffer + (Line + (FullScreen ? 0 : TOP_BOTTOM_LINES)) * Delta);
       for (Col = 0; Col < ScreenWidth; Col++)
         {
           *p++ = Color;
@@ -105,9 +105,9 @@ XboxVideoClearScreenColor(U32 Color, BOOL FullScreen)
 }
 
 VOID
-XboxVideoClearScreen(U8 Attr)
+XboxVideoClearScreen(UCHAR Attr)
 {
-  U32 FgColor, BgColor;
+  ULONG FgColor, BgColor;
 
   XboxVideoAttrToColors(Attr, &FgColor, &BgColor);
 
@@ -115,9 +115,9 @@ XboxVideoClearScreen(U8 Attr)
 }
 
 VOID
-XboxVideoPutChar(int Ch, U8 Attr, unsigned X, unsigned Y)
+XboxVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
 {
-  U32 FgColor, BgColor;
+  ULONG FgColor, BgColor;
 
   XboxVideoAttrToColors(Attr, &FgColor, &BgColor);
 
@@ -125,11 +125,11 @@ XboxVideoPutChar(int Ch, U8 Attr, unsigned X, unsigned Y)
 }
 
 static BOOL
-ReadfromSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, U32 *Data_to_smbus)
+ReadfromSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, ULONG *Data_to_smbus)
 {
   int nRetriesToLive=50;
 
-  while (0 != (READ_PORT_USHORT((PU16) (I2C_IO_BASE + 0)) & 0x0800))
+  while (0 != (READ_PORT_USHORT((PUSHORT) (I2C_IO_BASE + 0)) & 0x0800))
     {
       ;  /* Franz's spin while bus busy with any master traffic */
     }
@@ -142,8 +142,8 @@ ReadfromSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, U32 *Data_to_smbus)
       WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 4), (Address << 1) | 1);
       WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 8), bRegister);
 
-      temp = READ_PORT_USHORT((U16 *) (I2C_IO_BASE + 0));
-      WRITE_PORT_USHORT((PU16) (I2C_IO_BASE + 0), temp);  /* clear down all preexisting errors */
+      temp = READ_PORT_USHORT((USHORT *) (I2C_IO_BASE + 0));
+      WRITE_PORT_USHORT((PUSHORT) (I2C_IO_BASE + 0), temp);  /* clear down all preexisting errors */
 
       switch (Size)
         {
@@ -186,7 +186,7 @@ ReadfromSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, U32 *Data_to_smbus)
                 READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 9));
                 break;
               case 2:
-                *Data_to_smbus = READ_PORT_USHORT((U16 *) (I2C_IO_BASE + 6));
+                *Data_to_smbus = READ_PORT_USHORT((USHORT *) (I2C_IO_BASE + 6));
                 break;
               default:
                 *Data_to_smbus = READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 6));
@@ -203,7 +203,7 @@ ReadfromSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, U32 *Data_to_smbus)
 
 
 static BOOL
-I2CTransmitByteGetReturn(UCHAR bPicAddressI2cFormat, UCHAR bDataToWrite, U32 *Return)
+I2CTransmitByteGetReturn(UCHAR bPicAddressI2cFormat, UCHAR bDataToWrite, ULONG *Return)
 {
   return ReadfromSMBus(bPicAddressI2cFormat, bDataToWrite, 1, Return);
 }
@@ -212,9 +212,9 @@ I2CTransmitByteGetReturn(UCHAR bPicAddressI2cFormat, UCHAR bDataToWrite, U32 *Re
 VOID
 XboxVideoInit(VOID)
 {
-  U32 AvMode;
+  ULONG AvMode;
 
-  FrameBuffer = (PVOID)((U32) XboxMemReserveMemory(FB_SIZE_MB) | 0xf0000000);
+  FrameBuffer = (PVOID)((ULONG) XboxMemReserveMemory(FB_SIZE_MB) | 0xf0000000);
 
   if (I2CTransmitByteGetReturn(0x10, 0x04, &AvMode))
     {
@@ -247,7 +247,7 @@ XboxVideoInit(VOID)
   XboxVideoClearScreenColor(MAKE_COLOR(0, 0, 0), TRUE);
 
   /* Tell the nVidia controller about the framebuffer */
-  *((PU32) 0xfd600800) = (U32) FrameBuffer;
+  *((PULONG) 0xfd600800) = (ULONG) FrameBuffer;
 }
 
 VIDEODISPLAYMODE
@@ -258,21 +258,21 @@ XboxVideoSetDisplayMode(char *DisplayMode, BOOL Init)
 }
 
 VOID
-XboxVideoGetDisplaySize(PU32 Width, PU32 Height, PU32 Depth)
+XboxVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth)
 {
   *Width = ScreenWidth / CHAR_WIDTH;
   *Height = (ScreenHeight - 2 * TOP_BOTTOM_LINES) / CHAR_HEIGHT;
   *Depth = 0;
 }
 
-U32
+ULONG
 XboxVideoGetBufferSize(VOID)
 {
   return (ScreenHeight - 2 * TOP_BOTTOM_LINES) / CHAR_HEIGHT * (ScreenWidth / CHAR_WIDTH) * 2;
 }
 
 VOID
-XboxVideoSetTextCursorPosition(U32 X, U32 Y)
+XboxVideoSetTextCursorPosition(ULONG X, ULONG Y)
 {
   /* We don't have a cursor yet */
 }
@@ -286,8 +286,8 @@ XboxVideoHideShowTextCursor(BOOL Show)
 VOID
 XboxVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
 {
-  PU8 OffScreenBuffer = (PU8) Buffer;
-  U32 Col, Line;
+  PUCHAR OffScreenBuffer = (PUCHAR) Buffer;
+  ULONG Col, Line;
 
   for (Line = 0; Line < (ScreenHeight - 2 * TOP_BOTTOM_LINES) / CHAR_HEIGHT; Line++)
     {
@@ -306,13 +306,13 @@ XboxVideoIsPaletteFixed(VOID)
 }
 
 VOID
-XboxVideoSetPaletteColor(U8 Color, U8 Red, U8 Green, U8 Blue)
+XboxVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue)
 {
   /* Not supported */
 }
 
 VOID
-XboxVideoGetPaletteColor(U8 Color, U8* Red, U8* Green, U8* Blue)
+XboxVideoGetPaletteColor(UCHAR Color, UCHAR* Red, UCHAR* Green, UCHAR* Blue)
 {
   /* Not supported */
 }

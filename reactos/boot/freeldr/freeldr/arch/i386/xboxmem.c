@@ -29,8 +29,8 @@
 #include "machxbox.h"
 #include "portio.h"
 
-static U32 InstalledMemoryMb = 0;
-static U32 AvailableMemoryMb = 0;
+static ULONG InstalledMemoryMb = 0;
+static ULONG AvailableMemoryMb = 0;
 
 #define TEST_SIZE     0x200
 #define TEST_PATTERN1 0xaa
@@ -39,15 +39,15 @@ static U32 AvailableMemoryMb = 0;
 VOID
 XboxMemInit(VOID)
 {
-  U8 ControlRegion[TEST_SIZE];
+  UCHAR ControlRegion[TEST_SIZE];
   PVOID MembaseTop = (PVOID)(64 * 1024 * 1024);
   PVOID MembaseLow = (PVOID)0;
 
-  (*(PU32)(0xfd000000 + 0x100200)) = 0x03070103 ;
-  (*(PU32)(0xfd000000 + 0x100204)) = 0x11448000 ;
+  (*(PULONG)(0xfd000000 + 0x100200)) = 0x03070103 ;
+  (*(PULONG)(0xfd000000 + 0x100204)) = 0x11448000 ;
 
-  WRITE_PORT_ULONG((U32*) 0xcf8, CONFIG_CMD(0, 0, 0x84));
-  WRITE_PORT_ULONG((U32*) 0xcfc, 0x7ffffff);             /* Prep hardware for 128 Mb */
+  WRITE_PORT_ULONG((ULONG*) 0xcf8, CONFIG_CMD(0, 0, 0x84));
+  WRITE_PORT_ULONG((ULONG*) 0xcfc, 0x7ffffff);             /* Prep hardware for 128 Mb */
 
   InstalledMemoryMb = 64;
   memset(ControlRegion, TEST_PATTERN1, TEST_SIZE);
@@ -76,16 +76,16 @@ XboxMemInit(VOID)
     }
 
   /* Set hardware for amount of memory detected */
-  WRITE_PORT_ULONG((U32*) 0xcf8, CONFIG_CMD(0, 0, 0x84));
-  WRITE_PORT_ULONG((U32*) 0xcfc, InstalledMemoryMb * 1024 * 1024 - 1);
+  WRITE_PORT_ULONG((ULONG*) 0xcf8, CONFIG_CMD(0, 0, 0x84));
+  WRITE_PORT_ULONG((ULONG*) 0xcfc, InstalledMemoryMb * 1024 * 1024 - 1);
 
   AvailableMemoryMb = InstalledMemoryMb;
 }
 
-U32
-XboxMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize)
+ULONG
+XboxMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
 {
-  U32 EntryCount = 0;
+  ULONG EntryCount = 0;
 
   /* Synthesize memory map */
   if (1 <= MaxMemoryMapSize)
@@ -110,7 +110,7 @@ XboxMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize)
 }
 
 PVOID
-XboxMemReserveMemory(U32 MbToReserve)
+XboxMemReserveMemory(ULONG MbToReserve)
 {
   if (0 == InstalledMemoryMb)
     {

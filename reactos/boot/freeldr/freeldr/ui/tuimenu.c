@@ -28,12 +28,12 @@
 #include <video.h>
 
 
-BOOL TuiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
+BOOL TuiDisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
 	TUI_MENU_INFO	MenuInformation;
-	U32		LastClockSecond;
-	U32		CurrentClockSecond;
-	U32		KeyPress;
+	ULONG		LastClockSecond;
+	ULONG		CurrentClockSecond;
+	ULONG		KeyPress;
 
 	//
 	// The first thing we need to check is the timeout
@@ -145,10 +145,10 @@ BOOL TuiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuIte
 
 VOID TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo)
 {
-	U32		Idx;
-	U32		Width;
-	U32		Height;
-	U32		Length;
+	ULONG		Idx;
+	ULONG		Width;
+	ULONG		Height;
+	ULONG		Length;
 
 	//
 	// Height is the menu item count plus 2 (top border & bottom border)
@@ -186,7 +186,7 @@ VOID TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo)
 
 VOID TuiDrawMenu(PTUI_MENU_INFO MenuInfo)
 {
-	U32		Idx;
+	ULONG		Idx;
 
 	//
 	// Draw the backdrop
@@ -218,7 +218,7 @@ VOID TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
 {
 	UCHAR	MenuLineText[80];
 	UCHAR	TempString[80];
-	U32		Idx;
+	ULONG		Idx;
 
 	//
 	// Draw the menu box
@@ -262,13 +262,13 @@ VOID TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
 	}
 }
 
-VOID TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, U32 MenuItemNumber)
+VOID TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, ULONG MenuItemNumber)
 {
-	U32		Idx;
+	ULONG		Idx;
 	UCHAR	MenuLineText[80];
-	U32		SpaceTotal;
-	U32		SpaceLeft;
-	U32		SpaceRight;
+	ULONG		SpaceTotal;
+	ULONG		SpaceLeft;
+	ULONG		SpaceRight;
 	UCHAR	Attribute;
 
 	//
@@ -335,9 +335,9 @@ VOID TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, U32 MenuItemNumber)
 	}
 }
 
-U32 TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter)
+ULONG TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
-	U32		KeyEvent = 0;
+	ULONG		KeyEvent = 0;
 
 	//
 	// Check for a keypress

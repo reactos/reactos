@@ -28,12 +28,12 @@
 #include "portio.h"
 #include "rtl.h"
 
-static U32
+static ULONG
 PcMemGetExtendedMemorySize(VOID)
 {
   REGS RegsIn;
   REGS RegsOut;
-  U32 MemorySize;
+  ULONG MemorySize;
 
   DbgPrint((DPRINT_MEMORY, "GetExtendedMemorySize()\n"));
 
@@ -119,7 +119,7 @@ PcMemGetExtendedMemorySize(VOID)
   return MemorySize;
 }
 
-static U32
+static ULONG
 PcMemGetConventionalMemorySize(VOID)
 {
   REGS Regs;
@@ -141,14 +141,14 @@ PcMemGetConventionalMemorySize(VOID)
   DbgPrint((DPRINT_MEMORY, "Int12h\n"));
   DbgPrint((DPRINT_MEMORY, "AX = 0x%x\n\n", Regs.w.ax));
 
-  return (U32)Regs.w.ax;
+  return (ULONG)Regs.w.ax;
 }
 
-static U32
-PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize)
+static ULONG
+PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
 {
   REGS Regs;
-  U32 MapCount;
+  ULONG MapCount;
 
   DbgPrint((DPRINT_MEMORY, "GetBiosMemoryMap()\n"));
 
@@ -225,10 +225,10 @@ PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize)
   return MapCount;
 }
 
-U32
-PcMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize)
+ULONG
+PcMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
 {
-  U32 EntryCount;
+  ULONG EntryCount;
 
   EntryCount = PcMemGetBiosMemoryMap(BiosMemoryMap, MaxMemoryMapSize);
 

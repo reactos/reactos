@@ -32,13 +32,13 @@
 
 #define SECTORSIZE 2048
 
-static U32		IsoRootSector;		// Starting sector of the root directory
-static U32		IsoRootLength;		// Length of the root directory
+static ULONG		IsoRootSector;		// Starting sector of the root directory
+static ULONG		IsoRootLength;		// Length of the root directory
 
-U32			IsoDriveNumber = 0;
+ULONG			IsoDriveNumber = 0;
 
 
-BOOL IsoOpenVolume(U32 DriveNumber)
+BOOL IsoOpenVolume(ULONG DriveNumber)
 {
 	PPVD Pvd = (PPVD)DISKREADBUFFER;
 
@@ -65,11 +65,11 @@ BOOL IsoOpenVolume(U32 DriveNumber)
 }
 
 
-static BOOL IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, U32 DirectoryLength, PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
+static BOOL IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryLength, PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
 	PDIR_RECORD	Record;
-	U32		Offset;
-	U32 i;
+	ULONG		Offset;
+	ULONG i;
 	UCHAR Name[32];
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectoryLength = %d FileName = %s\n", DirectoryBuffer, DirectoryLength, FileName));
@@ -133,12 +133,12 @@ static BOOL IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, U32 Directory
  * if allocation or read fails. The directory is specified by its
  * starting sector and length.
  */
-static PVOID IsoBufferDirectory(U32 DirectoryStartSector, U32 DirectoryLength)
+static PVOID IsoBufferDirectory(ULONG DirectoryStartSector, ULONG DirectoryLength)
 {
 	PVOID	DirectoryBuffer;
 	PVOID	Ptr;
-	U32	SectorCount;
-	U32	i;
+	ULONG	SectorCount;
+	ULONG	i;
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoBufferDirectory() DirectoryStartSector = %d DirectoryLength = %d\n", DirectoryStartSector, DirectoryLength));
 
@@ -183,11 +183,11 @@ static PVOID IsoBufferDirectory(U32 DirectoryStartSector, U32 DirectoryLength)
 static BOOL IsoLookupFile(PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
 	int		i;
-	U32			NumberOfPathParts;
+	ULONG			NumberOfPathParts;
 	UCHAR		PathPart[261];
 	PVOID		DirectoryBuffer;
-	U32		DirectorySector;
-	U32		DirectoryLength;
+	ULONG		DirectorySector;
+	ULONG		DirectoryLength;
 	ISO_FILE_INFO	IsoFileInfo;
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoLookupFile() FileName = %s\n", FileName));
@@ -293,14 +293,14 @@ FILE* IsoOpenFile(PUCHAR FileName)
  * Reads BytesToRead from open file and
  * returns the number of bytes read in BytesRead
  */
-BOOL IsoReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer)
+BOOL IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
 {
 	PISO_FILE_INFO	IsoFileInfo = (PISO_FILE_INFO)FileHandle;
-	U32		SectorNumber;
-	U32		OffsetInSector;
-	U32		LengthInSector;
-	U32		NumberOfSectors;
-	U32		i;
+	ULONG		SectorNumber;
+	ULONG		OffsetInSector;
+	ULONG		LengthInSector;
+	ULONG		NumberOfSectors;
+	ULONG		i;
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoReadFile() BytesToRead = %d Buffer = 0x%x\n", BytesToRead, Buffer));
 
@@ -451,7 +451,7 @@ BOOL IsoReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer
 }
 
 
-U32 IsoGetFileSize(FILE *FileHandle)
+ULONG IsoGetFileSize(FILE *FileHandle)
 {
 	PISO_FILE_INFO	IsoFileHandle = (PISO_FILE_INFO)FileHandle;
 
@@ -460,7 +460,7 @@ U32 IsoGetFileSize(FILE *FileHandle)
 	return IsoFileHandle->FileSize;
 }
 
-VOID IsoSetFilePointer(FILE *FileHandle, U32 NewFilePointer)
+VOID IsoSetFilePointer(FILE *FileHandle, ULONG NewFilePointer)
 {
 	PISO_FILE_INFO	IsoFileHandle = (PISO_FILE_INFO)FileHandle;
 
@@ -469,7 +469,7 @@ VOID IsoSetFilePointer(FILE *FileHandle, U32 NewFilePointer)
 	IsoFileHandle->FilePointer = NewFilePointer;
 }
 
-U32 IsoGetFilePointer(FILE *FileHandle)
+ULONG IsoGetFilePointer(FILE *FileHandle)
 {
 	PISO_FILE_INFO	IsoFileHandle = (PISO_FILE_INFO)FileHandle;
 

@@ -25,91 +25,6 @@
 #include "../../reactos/registry.h"
 #endif
 
-typedef enum
-{
-  InterfaceTypeUndefined = -1,
-  Internal,
-  Isa,
-  Eisa,
-  MicroChannel,
-  TurboChannel,
-  PCIBus,
-  VMEBus,
-  NuBus,
-  PCMCIABus,
-  CBus,
-  MPIBus,
-  MPSABus,
-  ProcessorInternal,
-  InternalPowerBus,
-  PNPISABus,
-  MaximumInterfaceType
-} INTERFACE_TYPE, *PINTERFACE_TYPE;
-
-
-typedef enum _CM_RESOURCE_TYPE
-{
-  CmResourceTypeNull = 0,
-  CmResourceTypePort,
-  CmResourceTypeInterrupt,
-  CmResourceTypeMemory,
-  CmResourceTypeDma,
-  CmResourceTypeDeviceSpecific,
-  CmResourceTypeMaximum
-} CM_RESOURCE_TYPE;
-
-
-typedef enum _CM_SHARE_DISPOSITION
-{
-  CmResourceShareUndetermined = 0,
-  CmResourceShareDeviceExclusive,
-  CmResourceShareDriverExclusive,
-  CmResourceShareShared
-} CM_SHARE_DISPOSITION;
-
-
-typedef U64 PHYSICAL_ADDRESS;
-
-
-typedef struct
-{
-  U8 Type;
-  U8 ShareDisposition;
-  U16 Flags;
-  union
-    {
-      struct
-	{
-	  PHYSICAL_ADDRESS Start;
-	  U32 Length;
-	} __attribute__((packed)) Port;
-      struct
-	{
-	  U32 Level;
-	  U32 Vector;
-	  U32 Affinity;
-	} __attribute__((packed)) Interrupt;
-      struct
-	{
-	  PHYSICAL_ADDRESS Start;
-	  U32 Length;
-	} __attribute__((packed)) Memory;
-      struct
-	{
-	  U32 Channel;
-	  U32 Port;
-	  U32 Reserved1;
-	} __attribute__((packed)) Dma;
-      struct
-	{
-	  U32 DataSize;
-	  U32 Reserved1;
-	  U32 Reserved2;
-	} __attribute__((packed)) DeviceSpecificData;
-    } __attribute__((packed)) u;
-} __attribute__((packed)) CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
-
-
 /* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags */
 #define CM_RESOURCE_PORT_MEMORY               0x0000
 #define CM_RESOURCE_PORT_IO                   0x0001
@@ -117,30 +32,12 @@ typedef struct
 #define CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE 0x0000
 #define CM_RESOURCE_INTERRUPT_LATCHED         0x0001
 
-
-typedef struct
-{
-  U16 Version;
-  U16 Revision;
-  U32 Count;
-  CM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptors[1];
-} __attribute__((packed))CM_PARTIAL_RESOURCE_LIST, *PCM_PARTIAL_RESOURCE_LIST;
-
-
-typedef struct
-{
-  INTERFACE_TYPE InterfaceType;
-  U32 BusNumber;
-  CM_PARTIAL_RESOURCE_LIST PartialResourceList;
-} __attribute__((packed)) CM_FULL_RESOURCE_DESCRIPTOR, *PCM_FULL_RESOURCE_DESCRIPTOR;
-
-
 typedef struct _CM_COMPONENT_INFORMATION
 {
-  U32 Flags;
-  U32 Version;
-  U32 Key;
-  U32 Affinity;
+  ULONG Flags;
+  ULONG Version;
+  ULONG Key;
+  ULONG Affinity;
 } __attribute__((packed)) CM_COMPONENT_INFORMATION, *PCM_COMPONENT_INFORMATION;
 
 
@@ -154,46 +51,48 @@ typedef struct _CM_COMPONENT_INFORMATION
 #define Output      0x00000040
 
 #define CONFIG_CMD(bus, dev_fn, where) \
-	(0x80000000 | (((U32)(bus)) << 16) | (((dev_fn) & 0x1F) << 11) | (((dev_fn) & 0xE0) << 3) | ((where) & ~3))
+	(0x80000000 | (((ULONG)(bus)) << 16) | (((dev_fn) & 0x1F) << 11) | (((dev_fn) & 0xE0) << 3) | ((where) & ~3))
 
 /* PROTOTYPES ***************************************************************/
 
 /* hardware.c */
-VOID HalpCalibrateStallExecution(VOID);
-VOID KeStallExecutionProcessor(U32 Microseconds);
 
-VOID SetComponentInformation(HKEY ComponentKey,
-			     U32 Flags,
-			     U32 Key,
-			     U32 Affinity);
+VOID StallExecutionProcessor(ULONG Microseconds);
+
+VOID HalpCalibrateStallExecution(VOID);
+
+VOID SetComponentInformation(FRLDRHKEY ComponentKey,
+			     ULONG Flags,
+			     ULONG Key,
+			     ULONG Affinity);
 
 /* hwacpi.c */
-VOID DetectAcpiBios(HKEY SystemKey, U32 *BusNumber);
+VOID DetectAcpiBios(FRLDRHKEY SystemKey, ULONG *BusNumber);
 
 /* hwapm.c */
-VOID DetectApmBios(HKEY SystemKey, U32 *BusNumber);
+VOID DetectApmBios(FRLDRHKEY SystemKey, ULONG *BusNumber);
 
 /* hwcpu.c */
-VOID DetectCPUs(HKEY SystemKey);
+VOID DetectCPUs(FRLDRHKEY SystemKey);
 
 /* hwpci.c */
-VOID DetectPciBios(HKEY SystemKey, U32 *BusNumber);
+VOID DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber);
 
 /* i386cpu.S */
-U32 CpuidSupported(VOID);
-VOID GetCpuid(U32 Level,
-	      U32 *eax,
-	      U32 *ebx,
-	      U32 *ecx,
-	      U32 *edx);
-U64 RDTSC(VOID);
+ULONG CpuidSupported(VOID);
+VOID GetCpuid(ULONG Level,
+	      ULONG *eax,
+	      ULONG *ebx,
+	      ULONG *ecx,
+	      ULONG *edx);
+ULONGLONG RDTSC(VOID);
 
 /* i386pnp.S */
-U32 PnpBiosSupported(VOID);
-U32 PnpBiosGetDeviceNodeCount(U32 *NodeSize,
-			      U32 *NodeCount);
-U32 PnpBiosGetDeviceNode(U8 *NodeId,
-			 U8 *NodeBuffer);
+ULONG PnpBiosSupported(VOID);
+ULONG PnpBiosGetDeviceNodeCount(ULONG *NodeSize,
+			      ULONG *NodeCount);
+ULONG PnpBiosGetDeviceNode(UCHAR *NodeId,
+			 UCHAR *NodeBuffer);
 
 #endif /* __I386_HARDWARE_H_ */
 

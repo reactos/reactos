@@ -30,40 +30,40 @@
 
 typedef struct _ROUTING_SLOT
 {
-  U8  BusNumber;
-  U8  DeviceNumber;
-  U8  LinkA;
-  U16 BitmapA;
-  U8  LinkB;
-  U16 BitmapB;
-  U8  LinkC;
-  U16 BitmapC;
-  U8  LinkD;
-  U16 BitmapD;
-  U8  SlotNumber;
-  U8  Reserved;
+  UCHAR  BusNumber;
+  UCHAR  DeviceNumber;
+  UCHAR  LinkA;
+  USHORT BitmapA;
+  UCHAR  LinkB;
+  USHORT BitmapB;
+  UCHAR  LinkC;
+  USHORT BitmapC;
+  UCHAR  LinkD;
+  USHORT BitmapD;
+  UCHAR  SlotNumber;
+  UCHAR  Reserved;
 } __attribute__((packed)) ROUTING_SLOT, *PROUTING_SLOT;
 
 typedef struct _PCI_IRQ_ROUTING_TABLE
 {
-  U32 Signature;
-  U16 Version;
-  U16 Size;
-  U8  RouterBus;
-  U8  RouterSlot;
-  U16 ExclusiveIRQs;
-  U32 CompatibleRouter;
-  U32 MiniportData;
-  U8  Reserved[11];
-  U8  Checksum;
+  ULONG Signature;
+  USHORT Version;
+  USHORT Size;
+  UCHAR  RouterBus;
+  UCHAR  RouterSlot;
+  USHORT ExclusiveIRQs;
+  ULONG CompatibleRouter;
+  ULONG MiniportData;
+  UCHAR  Reserved[11];
+  UCHAR  Checksum;
   ROUTING_SLOT Slot[1];
 } __attribute__((packed)) PCI_IRQ_ROUTING_TABLE, *PPCI_IRQ_ROUTING_TABLE;
 
 typedef struct _CM_PCI_BUS_DATA
 {
-  U8  BusCount;
-  U16 PciVersion;
-  U8  HardwareMechanism;
+  UCHAR  BusCount;
+  USHORT PciVersion;
+  UCHAR  HardwareMechanism;
 } __attribute__((packed)) CM_PCI_BUS_DATA, *PCM_PCI_BUS_DATA;
 
 
@@ -71,19 +71,19 @@ static PPCI_IRQ_ROUTING_TABLE
 GetPciIrqRoutingTable(VOID)
 {
   PPCI_IRQ_ROUTING_TABLE Table;
-  PU8 Ptr;
-  U32 Sum;
-  U32 i;
+  PUCHAR Ptr;
+  ULONG Sum;
+  ULONG i;
 
   Table = (PPCI_IRQ_ROUTING_TABLE)0xF0000;
-  while ((U32)Table < 0x100000)
+  while ((ULONG)Table < 0x100000)
     {
       if (Table->Signature == 0x52495024)
 	{
 	  DbgPrint((DPRINT_HWDETECT,
 		    "Found signature\n"));
 
-	  Ptr = (PU8)Table;
+	  Ptr = (PUCHAR)Table;
 	  Sum = 0;
 	  for (i = 0; i < Table->Size; i++)
 	    {
@@ -103,7 +103,7 @@ GetPciIrqRoutingTable(VOID)
 	  return Table;
 	}
 
-      Table = (PPCI_IRQ_ROUTING_TABLE)((U32)Table + 0x10);
+      Table = (PPCI_IRQ_ROUTING_TABLE)((ULONG)Table + 0x10);
     }
 
   return NULL;
@@ -145,14 +145,14 @@ FindPciBios(PCM_PCI_BUS_DATA BusData)
 
 
 static VOID
-DetectPciIrqRoutingTable(HKEY BusKey)
+DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
   PPCI_IRQ_ROUTING_TABLE Table;
-  HKEY TableKey;
-  U32 Size;
-  S32 Error;
+  FRLDRHKEY TableKey;
+  ULONG Size;
+  LONG Error;
 
   Table = GetPciIrqRoutingTable();
   if (Table != NULL)
@@ -178,7 +178,7 @@ DetectPciIrqRoutingTable(HKEY BusKey)
       Error = RegSetValue(TableKey,
 			  "Identifier",
 			  REG_SZ,
-			  (PU8)"PCI Real-mode IRQ Routing Table",
+			  (PUCHAR)"PCI Real-mode IRQ Routing Table",
 			  32);
       if (Error != ERROR_SUCCESS)
 	{
@@ -216,7 +216,7 @@ DetectPciIrqRoutingTable(HKEY BusKey)
       Error = RegSetValue(TableKey,
 			  "Configuration Data",
 			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PU8) FullResourceDescriptor,
+			  (PUCHAR) FullResourceDescriptor,
 			  Size);
       MmFreeMemory(FullResourceDescriptor);
       if (Error != ERROR_SUCCESS)
@@ -231,17 +231,17 @@ DetectPciIrqRoutingTable(HKEY BusKey)
 
 
 VOID
-DetectPciBios(HKEY SystemKey, U32 *BusNumber)
+DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   CM_PCI_BUS_DATA BusData;
   char Buffer[80];
-  HKEY BiosKey;
-  U32 Size;
-  S32 Error;
+  FRLDRHKEY BiosKey;
+  ULONG Size;
+  LONG Error;
 #if 0
-  HKEY BusKey;
-  U32 i;
+  FRLDRHKEY BusKey;
+  ULONG i;
 #endif
 
   /* Report the PCI BIOS */
@@ -272,7 +272,7 @@ DetectPciBios(HKEY SystemKey, U32 *BusNumber)
       Error = RegSetValue(BiosKey,
 			  "Identifier",
 			  REG_SZ,
-			  (PU8)"PCI BIOS",
+			  (PUCHAR)"PCI BIOS",
 			  9);
       if (Error != ERROR_SUCCESS)
 	{
@@ -301,7 +301,7 @@ DetectPciBios(HKEY SystemKey, U32 *BusNumber)
       Error = RegSetValue(BiosKey,
 			  "Configuration Data",
 			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PU8) FullResourceDescriptor,
+			  (PUCHAR) FullResourceDescriptor,
 			  Size);
       MmFreeMemory(FullResourceDescriptor);
       if (Error != ERROR_SUCCESS)
@@ -322,7 +322,7 @@ DetectPciBios(HKEY SystemKey, U32 *BusNumber)
        */
 
       /* Report PCI buses */
-      for (i = 0; i < (U32)BusData.BusCount; i++)
+      for (i = 0; i < (ULONG)BusData.BusCount; i++)
 	{
 	  sprintf(Buffer,
 		  "MultifunctionAdapter\\%u", *BusNumber);
@@ -350,7 +350,7 @@ DetectPciBios(HKEY SystemKey, U32 *BusNumber)
 	  Error = RegSetValue(BusKey,
 			      "Identifier",
 			      REG_SZ,
-			      (PU8)"PCI",
+			      (PUCHAR)"PCI",
 			      4);
 	  if (Error != ERROR_SUCCESS)
 	    {

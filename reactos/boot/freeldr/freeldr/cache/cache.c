@@ -34,11 +34,11 @@
 CACHE_DRIVE		CacheManagerDrive;
 BOOL			CacheManagerInitialized = FALSE;
 BOOL			CacheManagerDataInvalid = FALSE;
-U32			CacheBlockCount = 0;
-U32			CacheSizeLimit = 0;
-U32			CacheSizeCurrent = 0;
+ULONG			CacheBlockCount = 0;
+ULONG			CacheSizeLimit = 0;
+ULONG			CacheSizeCurrent = 0;
 
-BOOL CacheInitializeDrive(U32 DriveNumber)
+BOOL CacheInitializeDrive(ULONG DriveNumber)
 {
 	PCACHE_BLOCK	NextCacheBlock;
 	GEOMETRY	DriveGeometry;
@@ -116,16 +116,16 @@ VOID CacheInvalidateCacheData(VOID)
 	CacheManagerDataInvalid = TRUE;
 }
 
-BOOL CacheReadDiskSectors(U32 DiskNumber, U32 StartSector, U32 SectorCount, PVOID Buffer)
+BOOL CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount, PVOID Buffer)
 {
 	PCACHE_BLOCK	CacheBlock;
-	U32				StartBlock;
-	U32				SectorOffsetInStartBlock;
-	U32				CopyLengthInStartBlock;
-	U32				EndBlock;
-	U32				SectorOffsetInEndBlock;
-	U32				BlockCount;
-	U32				Idx;
+	ULONG				StartBlock;
+	ULONG				SectorOffsetInStartBlock;
+	ULONG				CopyLengthInStartBlock;
+	ULONG				EndBlock;
+	ULONG				SectorOffsetInEndBlock;
+	ULONG				BlockCount;
+	ULONG				Idx;
 
 	DbgPrint((DPRINT_CACHE, "CacheReadDiskSectors() DiskNumber: 0x%x StartSector: %d SectorCount: %d Buffer: 0x%x\n", DiskNumber, StartSector, SectorCount, Buffer));
 
@@ -248,13 +248,13 @@ BOOL CacheReadDiskSectors(U32 DiskNumber, U32 StartSector, U32 SectorCount, PVOI
 	return TRUE;
 }
 
-BOOL CacheForceDiskSectorsIntoCache(U32 DiskNumber, U32 StartSector, U32 SectorCount)
+BOOL CacheForceDiskSectorsIntoCache(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount)
 {
 	PCACHE_BLOCK	CacheBlock;
-	U32				StartBlock;
-	U32				EndBlock;
-	U32				BlockCount;
-	U32				Idx;
+	ULONG				StartBlock;
+	ULONG				EndBlock;
+	ULONG				BlockCount;
+	ULONG				Idx;
 
 	DbgPrint((DPRINT_CACHE, "CacheForceDiskSectorsIntoCache() DiskNumber: 0x%x StartSector: %d SectorCount: %d\n", DiskNumber, StartSector, SectorCount));
 
@@ -294,9 +294,9 @@ BOOL CacheForceDiskSectorsIntoCache(U32 DiskNumber, U32 StartSector, U32 SectorC
 	return TRUE;
 }
 
-BOOL CacheReleaseMemory(U32 MinimumAmountToRelease)
+BOOL CacheReleaseMemory(ULONG MinimumAmountToRelease)
 {
-	U32				AmountReleased;
+	ULONG				AmountReleased;
 
 	DbgPrint((DPRINT_CACHE, "CacheReleaseMemory() MinimumAmountToRelease = %d\n", MinimumAmountToRelease));
 

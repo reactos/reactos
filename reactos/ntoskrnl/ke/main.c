@@ -68,6 +68,15 @@ extern CHAR KiTimerSystemAuditing;
 
 extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
 
+/* We allocate 4 pages, but we only use 3. The 4th is to guarantee page alignment */
+ULONG kernel_stack[4096];
+ULONG double_trap_stack[4096];
+
+/* These point to the aligned 3 pages */
+ULONG init_stack;
+ULONG init_stack_top;
+ULONG trap_stack;
+ULONG trap_stack_top;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -674,7 +683,7 @@ ExpInitializeExecutive(VOID)
 
   /* Create the SystemRoot symbolic link */
   CPRINT("CommandLine: %s\n", (PCHAR)KeLoaderBlock.CommandLine);
-  DPRINT1("MmSystemRangeStart: 0x%x\n", MmSystemRangeStart);
+  DPRINT1("MmSystemRangeStart: 0x%x PageDir: 0x%x\n", MmSystemRangeStart, KeLoaderBlock.PageDirectoryStart);
   Status = IoCreateSystemRootLink((PCHAR)KeLoaderBlock.CommandLine);
   if (!NT_SUCCESS(Status))
   {
@@ -825,6 +834,7 @@ ExpInitializeExecutive(VOID)
 VOID __attribute((noinline))
 KiSystemStartup(BOOLEAN BootProcessor)
 {
+  DPRINT1("KiSystemStartup(%d)\n", BootProcessor);
   if (BootProcessor)
   {
   }
@@ -866,11 +876,16 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 {
   ULONG i;
   ULONG size;
-  extern ULONG _bss_end__;
   ULONG HalBase;
   ULONG DriverBase;
   ULONG DriverSize;
 
+  /* Set up the Stacks */
+  trap_stack = PAGE_ROUND_UP(&double_trap_stack);
+  trap_stack_top = trap_stack + 3 * PAGE_SIZE;
+  init_stack = PAGE_ROUND_UP(&kernel_stack);
+  init_stack_top = init_stack + 3 * PAGE_SIZE;
+            
   /*
    * Copy the parameters to a local buffer because lowmem will go away
    */
@@ -880,6 +895,9 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
   KeLoaderBlock.ModsCount++;
   KeLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
 
+  /* Save the Base Address */
+  MmSystemRangeStart = (PVOID)KeLoaderBlock.KernelBase;
+  
   /*
    * Convert a path specification in the grub format to one understood by the
    * rest of the kernel.
@@ -937,32 +955,13 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
     }
   KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
   
-  /* Gotta check 3GB setting right *here* before we use KERNEL_BASE! */
-  if (!_strnicmp(KeLoaderCommandLine, "3GB", 3)) {
-  
-    /* Use 3GB */
-    MmSystemRangeStart = (PVOID)0xC0000000;
-  
-  } else {
-   
-    /* Use 2GB */
-    MmSystemRangeStart = (PVOID)0x80000000;
-  }
-  
   strcpy(KeLoaderModuleStrings[0], "ntoskrnl.exe");
   KeLoaderModules[0].String = (ULONG)KeLoaderModuleStrings[0];
   KeLoaderModules[0].ModStart = KERNEL_BASE;
-#ifdef  __GNUC__
-  KeLoaderModules[0].ModEnd = PAGE_ROUND_UP((ULONG)&_bss_end__);
-#else
   /* Take this value from the PE... */
-  {
     PIMAGE_NT_HEADERS      NtHeader = RtlImageNtHeader((PVOID)KeLoaderModules[0].ModStart);
     PIMAGE_OPTIONAL_HEADER OptHead  = &NtHeader->OptionalHeader;
-    KeLoaderModules[0].ModEnd =
-      KeLoaderModules[0].ModStart + PAGE_ROUND_UP((ULONG)OptHead->SizeOfImage);
-  }
-#endif
+    KeLoaderModules[0].ModEnd = KeLoaderModules[0].ModStart + PAGE_ROUND_UP((ULONG)OptHead->SizeOfImage);
   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
     {      
       CHAR* s;
@@ -974,7 +973,6 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 	{
 	  strcpy(KeLoaderModuleStrings[i], (PCHAR)KeLoaderModules[i].String);
 	}
-      /* TODO: Fix this hardcoded load address stuff... */
       KeLoaderModules[i].ModStart -= 0x200000;
       KeLoaderModules[i].ModStart += KERNEL_BASE;
       KeLoaderModules[i].ModEnd -= 0x200000;
@@ -1036,6 +1034,9 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 
   KdInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
   HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+
+  DPRINT1("_main (%x, %x)\n", MultiBootMagic, _LoaderBlock);
+
 
   KiSystemStartup(1);
 }

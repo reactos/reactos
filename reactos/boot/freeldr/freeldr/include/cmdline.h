@@ -24,13 +24,13 @@
 typedef struct tagCMDLINEINFO
 {
   char *DefaultOperatingSystem;
-  S32 TimeOut;
+  LONG TimeOut;
 } CMDLINEINFO, *PCMDLINEINFO;
 
 extern void CmdLineParse(char *CmdLine);
 
 extern char *CmdLineGetDefaultOS(void);
-extern S32 CmdLineGetTimeOut(void);
+extern LONG CmdLineGetTimeOut(void);
 
 #endif /* __CMDLINE_H__ */
 

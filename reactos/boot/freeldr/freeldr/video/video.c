@@ -28,7 +28,7 @@ PVOID	VideoOffScreenBuffer = NULL;
 
 PVOID VideoAllocateOffScreenBuffer(VOID)
 {
-	U32		BufferSize;
+	ULONG		BufferSize;
 
 	if (VideoOffScreenBuffer != NULL)
 	{

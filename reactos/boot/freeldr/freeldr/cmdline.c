@@ -112,7 +112,7 @@ CmdLineGetDefaultOS(void)
   return CmdLineInfo.DefaultOperatingSystem;
 }
 
-S32
+LONG
 CmdLineGetTimeOut(void)
 {
   return CmdLineInfo.TimeOut;

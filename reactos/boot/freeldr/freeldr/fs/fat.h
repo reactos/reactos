@@ -22,77 +22,77 @@
 
 typedef struct _FAT_BOOTSECTOR
 {
-	U8		JumpBoot[3];				// Jump instruction to boot code
-	U8		OemName[8];					// "MSWIN4.1" for MS formatted volumes
-	U16		BytesPerSector;				// Bytes per sector
-	U8		SectorsPerCluster;			// Number of sectors in a cluster
-	U16		ReservedSectors;			// Reserved sectors, usually 1 (the bootsector)
-	U8		NumberOfFats;				// Number of FAT tables
-	U16		RootDirEntries;				// Number of root directory entries (fat12/16)
-	U16		TotalSectors;				// Number of total sectors on the drive, 16-bit
-	U8		MediaDescriptor;			// Media descriptor byte
-	U16		SectorsPerFat;				// Sectors per FAT table (fat12/16)
-	U16		SectorsPerTrack;			// Number of sectors in a track
-	U16		NumberOfHeads;				// Number of heads on the disk
-	U32		HiddenSectors;				// Hidden sectors (sectors before the partition start like the partition table)
-	U32		TotalSectorsBig;			// This field is the new 32-bit total count of sectors on the volume
-	U8		DriveNumber;				// Int 0x13 drive number (e.g. 0x80)
-	U8		Reserved1;					// Reserved (used by Windows NT). Code that formats FAT volumes should always set this byte to 0.
-	U8		BootSignature;				// Extended boot signature (0x29). This is a signature byte that indicates that the following three fields in the boot sector are present.
-	U32		VolumeSerialNumber;			// Volume serial number
-	U8		VolumeLabel[11];			// Volume label. This field matches the 11-byte volume label recorded in the root directory
-	U8		FileSystemType[8];			// One of the strings "FAT12   ", "FAT16   ", or "FAT     "
+	UCHAR		JumpBoot[3];				// Jump instruction to boot code
+	UCHAR		OemName[8];					// "MSWIN4.1" for MS formatted volumes
+	USHORT		BytesPerSector;				// Bytes per sector
+	UCHAR		SectorsPerCluster;			// Number of sectors in a cluster
+	USHORT		ReservedSectors;			// Reserved sectors, usually 1 (the bootsector)
+	UCHAR		NumberOfFats;				// Number of FAT tables
+	USHORT		RootDirEntries;				// Number of root directory entries (fat12/16)
+	USHORT		TotalSectors;				// Number of total sectors on the drive, 16-bit
+	UCHAR		MediaDescriptor;			// Media descriptor byte
+	USHORT		SectorsPerFat;				// Sectors per FAT table (fat12/16)
+	USHORT		SectorsPerTrack;			// Number of sectors in a track
+	USHORT		NumberOfHeads;				// Number of heads on the disk
+	ULONG		HiddenSectors;				// Hidden sectors (sectors before the partition start like the partition table)
+	ULONG		TotalSectorsBig;			// This field is the new 32-bit total count of sectors on the volume
+	UCHAR		DriveNumber;				// Int 0x13 drive number (e.g. 0x80)
+	UCHAR		Reserved1;					// Reserved (used by Windows NT). Code that formats FAT volumes should always set this byte to 0.
+	UCHAR		BootSignature;				// Extended boot signature (0x29). This is a signature byte that indicates that the following three fields in the boot sector are present.
+	ULONG		VolumeSerialNumber;			// Volume serial number
+	UCHAR		VolumeLabel[11];			// Volume label. This field matches the 11-byte volume label recorded in the root directory
+	UCHAR		FileSystemType[8];			// One of the strings "FAT12   ", "FAT16   ", or "FAT     "
 
-	U8		BootCodeAndData[448];		// The remainder of the boot sector
+	UCHAR		BootCodeAndData[448];		// The remainder of the boot sector
 
-	U16		BootSectorMagic;			// 0xAA55
+	USHORT		BootSectorMagic;			// 0xAA55
 	
 } PACKED FAT_BOOTSECTOR, *PFAT_BOOTSECTOR;
 
 typedef struct _FAT32_BOOTSECTOR
 {
-	U8		JumpBoot[3];				// Jump instruction to boot code
-	U8		OemName[8];					// "MSWIN4.1" for MS formatted volumes
-	U16		BytesPerSector;				// Bytes per sector
-	U8		SectorsPerCluster;			// Number of sectors in a cluster
-	U16		ReservedSectors;			// Reserved sectors, usually 1 (the bootsector)
-	U8		NumberOfFats;				// Number of FAT tables
-	U16		RootDirEntries;				// Number of root directory entries (fat12/16)
-	U16		TotalSectors;				// Number of total sectors on the drive, 16-bit
-	U8		MediaDescriptor;			// Media descriptor byte
-	U16		SectorsPerFat;				// Sectors per FAT table (fat12/16)
-	U16		SectorsPerTrack;			// Number of sectors in a track
-	U16		NumberOfHeads;				// Number of heads on the disk
-	U32		HiddenSectors;				// Hidden sectors (sectors before the partition start like the partition table)
-	U32		TotalSectorsBig;			// This field is the new 32-bit total count of sectors on the volume
-	U32		SectorsPerFatBig;			// This field is the FAT32 32-bit count of sectors occupied by ONE FAT. BPB_FATSz16 must be 0
-	U16		ExtendedFlags;				// Extended flags (fat32)
-	U16		FileSystemVersion;			// File system version (fat32)
-	U32		RootDirStartCluster;		// Starting cluster of the root directory (fat32)
-	U16		FsInfo;						// Sector number of FSINFO structure in the reserved area of the FAT32 volume. Usually 1.
-	U16		BackupBootSector;			// If non-zero, indicates the sector number in the reserved area of the volume of a copy of the boot record. Usually 6.
-	U8		Reserved[12];				// Reserved for future expansion
-	U8		DriveNumber;				// Int 0x13 drive number (e.g. 0x80)
-	U8		Reserved1;					// Reserved (used by Windows NT). Code that formats FAT volumes should always set this byte to 0.
-	U8		BootSignature;				// Extended boot signature (0x29). This is a signature byte that indicates that the following three fields in the boot sector are present.
-	U32		VolumeSerialNumber;			// Volume serial number
-	U8		VolumeLabel[11];			// Volume label. This field matches the 11-byte volume label recorded in the root directory
-	U8		FileSystemType[8];			// Always set to the string "FAT32   "
+	UCHAR		JumpBoot[3];				// Jump instruction to boot code
+	UCHAR		OemName[8];					// "MSWIN4.1" for MS formatted volumes
+	USHORT		BytesPerSector;				// Bytes per sector
+	UCHAR		SectorsPerCluster;			// Number of sectors in a cluster
+	USHORT		ReservedSectors;			// Reserved sectors, usually 1 (the bootsector)
+	UCHAR		NumberOfFats;				// Number of FAT tables
+	USHORT		RootDirEntries;				// Number of root directory entries (fat12/16)
+	USHORT		TotalSectors;				// Number of total sectors on the drive, 16-bit
+	UCHAR		MediaDescriptor;			// Media descriptor byte
+	USHORT		SectorsPerFat;				// Sectors per FAT table (fat12/16)
+	USHORT		SectorsPerTrack;			// Number of sectors in a track
+	USHORT		NumberOfHeads;				// Number of heads on the disk
+	ULONG		HiddenSectors;				// Hidden sectors (sectors before the partition start like the partition table)
+	ULONG		TotalSectorsBig;			// This field is the new 32-bit total count of sectors on the volume
+	ULONG		SectorsPerFatBig;			// This field is the FAT32 32-bit count of sectors occupied by ONE FAT. BPB_FATSz16 must be 0
+	USHORT		ExtendedFlags;				// Extended flags (fat32)
+	USHORT		FileSystemVersion;			// File system version (fat32)
+	ULONG		RootDirStartCluster;		// Starting cluster of the root directory (fat32)
+	USHORT		FsInfo;						// Sector number of FSINFO structure in the reserved area of the FAT32 volume. Usually 1.
+	USHORT		BackupBootSector;			// If non-zero, indicates the sector number in the reserved area of the volume of a copy of the boot record. Usually 6.
+	UCHAR		Reserved[12];				// Reserved for future expansion
+	UCHAR		DriveNumber;				// Int 0x13 drive number (e.g. 0x80)
+	UCHAR		Reserved1;					// Reserved (used by Windows NT). Code that formats FAT volumes should always set this byte to 0.
+	UCHAR		BootSignature;				// Extended boot signature (0x29). This is a signature byte that indicates that the following three fields in the boot sector are present.
+	ULONG		VolumeSerialNumber;			// Volume serial number
+	UCHAR		VolumeLabel[11];			// Volume label. This field matches the 11-byte volume label recorded in the root directory
+	UCHAR		FileSystemType[8];			// Always set to the string "FAT32   "
 
-	U8		BootCodeAndData[420];		// The remainder of the boot sector
+	UCHAR		BootCodeAndData[420];		// The remainder of the boot sector
 
-	U16		BootSectorMagic;			// 0xAA55
+	USHORT		BootSectorMagic;			// 0xAA55
 	
 } PACKED FAT32_BOOTSECTOR, *PFAT32_BOOTSECTOR;
 
 typedef struct _FATX_BOOTSECTOR
 {
-	U8		FileSystemType[4];			/* String "FATX" */
-	U32		VolumeSerialNumber;			/* Volume serial number */
-	U32		SectorsPerCluster;			/* Number of sectors in a cluster */
-	U16		NumberOfFats;				/* Number of FAT tables */
-	U32		Unknown;				/* Always 0? */
-	U8		Unused[494];				/* Actually size should be 4078 (boot block is 4096 bytes) */
+	UCHAR		FileSystemType[4];			/* String "FATX" */
+	ULONG		VolumeSerialNumber;			/* Volume serial number */
+	ULONG		SectorsPerCluster;			/* Number of sectors in a cluster */
+	USHORT		NumberOfFats;				/* Number of FAT tables */
+	ULONG		Unknown;				/* Always 0? */
+	UCHAR		Unused[494];				/* Actually size should be 4078 (boot block is 4096 bytes) */
 	
 } PACKED FATX_BOOTSECTOR, *PFATX_BOOTSECTOR;
 
@@ -102,74 +102,74 @@ typedef struct _FATX_BOOTSECTOR
 typedef struct //_DIRENTRY
 {
 	UCHAR	FileName[11];	/* Filename + extension */
-	U8	Attr;		/* File attributes */
-	U8	ReservedNT;	/* Reserved for use by Windows NT */
-	U8	TimeInTenths;	/* Millisecond stamp at file creation */
-	U16	CreateTime;	/* Time file was created */
-	U16	CreateDate;	/* Date file was created */
-	U16	LastAccessDate;	/* Date file was last accessed */
-	U16	ClusterHigh;	/* High word of this entry's start cluster */
-	U16	Time;		/* Time last modified */
-	U16	Date;		/* Date last modified */
-	U16	ClusterLow;	/* First cluster number low word */
-	U32	Size;		/* File size */
+	UCHAR	Attr;		/* File attributes */
+	UCHAR	ReservedNT;	/* Reserved for use by Windows NT */
+	UCHAR	TimeInTenths;	/* Millisecond stamp at file creation */
+	USHORT	CreateTime;	/* Time file was created */
+	USHORT	CreateDate;	/* Date file was created */
+	USHORT	LastAccessDate;	/* Date file was last accessed */
+	USHORT	ClusterHigh;	/* High word of this entry's start cluster */
+	USHORT	Time;		/* Time last modified */
+	USHORT	Date;		/* Date last modified */
+	USHORT	ClusterLow;	/* First cluster number low word */
+	ULONG	Size;		/* File size */
 } PACKED DIRENTRY, * PDIRENTRY;
 
 typedef struct
 {
-	U8	SequenceNumber;		/* Sequence number for slot */
+	UCHAR	SequenceNumber;		/* Sequence number for slot */
 	WCHAR	Name0_4[5];		/* First 5 characters in name */
-	U8	EntryAttributes;	/* Attribute byte */
-	U8	Reserved;		/* Always 0 */
-	U8	AliasChecksum;		/* Checksum for 8.3 alias */
+	UCHAR	EntryAttributes;	/* Attribute byte */
+	UCHAR	Reserved;		/* Always 0 */
+	UCHAR	AliasChecksum;		/* Checksum for 8.3 alias */
 	WCHAR	Name5_10[6];		/* 6 more characters in name */
-	U16	StartCluster;		/* Starting cluster number */
+	USHORT	StartCluster;		/* Starting cluster number */
 	WCHAR	Name11_12[2];		/* Last 2 characters in name */
 } PACKED LFN_DIRENTRY, * PLFN_DIRENTRY;
 
 typedef struct
 {
-	U8	FileNameSize;	/* Size of filename (max 42) */
-	U8	Attr;		/* File attributes */
+	UCHAR	FileNameSize;	/* Size of filename (max 42) */
+	UCHAR	Attr;		/* File attributes */
 	UCHAR	FileName[42];	/* Filename in ASCII, padded with 0xff (not zero-terminated) */
-	U32	StartCluster;	/* Starting cluster number */
-	U32	Size;		/* File size */
-	U16	Time;		/* Time last modified */
-	U16	Date;		/* Date last modified */
-	U16	CreateTime;	/* Time file was created */
-	U16	CreateDate;	/* Date file was created */
-	U16	LastAccessTime;	/* Time file was last accessed */
-	U16	LastAccessDate;	/* Date file was last accessed */
+	ULONG	StartCluster;	/* Starting cluster number */
+	ULONG	Size;		/* File size */
+	USHORT	Time;		/* Time last modified */
+	USHORT	Date;		/* Date last modified */
+	USHORT	CreateTime;	/* Time file was created */
+	USHORT	CreateDate;	/* Date file was created */
+	USHORT	LastAccessTime;	/* Time file was last accessed */
+	USHORT	LastAccessDate;	/* Date file was last accessed */
 } PACKED FATX_DIRENTRY, * PFATX_DIRENTRY;
 
 typedef struct
 {
-	U32	FileSize;		/* File size */
-	U32	FilePointer;		/* File pointer */
-	U32*	FileFatChain;		/* File fat chain array */
-	U32	DriveNumber;
+	ULONG	FileSize;		/* File size */
+	ULONG	FilePointer;		/* File pointer */
+	ULONG*	FileFatChain;		/* File fat chain array */
+	ULONG	DriveNumber;
 } FAT_FILE_INFO, * PFAT_FILE_INFO;
 
 
 
-BOOL	FatOpenVolume(U32 DriveNumber, U32 VolumeStartSector, U32 PartitionSectorCount);
-U32	FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, U32 PartitionSectorCount);
-PVOID	FatBufferDirectory(U32 DirectoryStartCluster, U32* EntryCountPointer, BOOL RootDirectory);
-BOOL	FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, U32 EntryCount, PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
+BOOL	FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG PartitionSectorCount);
+ULONG	FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONG PartitionSectorCount);
+PVOID	FatBufferDirectory(ULONG DirectoryStartCluster, ULONG* EntryCountPointer, BOOL RootDirectory);
+BOOL	FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG EntryCount, PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
 BOOL	FatLookupFile(PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
 void	FatParseShortFileName(PUCHAR Buffer, PDIRENTRY DirEntry);
-BOOL	FatGetFatEntry(U32 Cluster, U32* ClusterPointer);
+BOOL	FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer);
 FILE*	FatOpenFile(PUCHAR FileName);
-U32	FatCountClustersInChain(U32 StartCluster);
-U32*	FatGetClusterChainArray(U32 StartCluster);
-BOOL	FatReadCluster(U32 ClusterNumber, PVOID Buffer);
-BOOL	FatReadClusterChain(U32 StartClusterNumber, U32 NumberOfClusters, PVOID Buffer);
-BOOL	FatReadPartialCluster(U32 ClusterNumber, U32 StartingOffset, U32 Length, PVOID Buffer);
-BOOL	FatReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer);
-U32		FatGetFileSize(FILE *FileHandle);
-VOID	FatSetFilePointer(FILE *FileHandle, U32 NewFilePointer);
-U32		FatGetFilePointer(FILE *FileHandle);
-BOOL	FatReadVolumeSectors(U32 DriveNumber, U32 SectorNumber, U32 SectorCount, PVOID Buffer);
+ULONG	FatCountClustersInChain(ULONG StartCluster);
+ULONG*	FatGetClusterChainArray(ULONG StartCluster);
+BOOL	FatReadCluster(ULONG ClusterNumber, PVOID Buffer);
+BOOL	FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID Buffer);
+BOOL	FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer);
+BOOL	FatReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
+ULONG		FatGetFileSize(FILE *FileHandle);
+VOID	FatSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
+ULONG		FatGetFilePointer(FILE *FileHandle);
+BOOL	FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 
 
 #define	ATTR_NORMAL		0x00

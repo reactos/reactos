@@ -423,6 +423,17 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
                               &MmPageArray[1].ListEntry);
 	       MmStats.NrReservedPages++;
 	    }
+        /* Protect the Page Directory. This will be changed in r3 */
+        else if (j >= (KeLoaderBlock.PageDirectoryStart / PAGE_SIZE) && j < (KeLoaderBlock.PageDirectoryEnd / PAGE_SIZE))
+	    {
+               MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
+               MmPageArray[j].Flags.Zero = 0;
+               MmPageArray[j].Flags.Consumer = MC_NPPOOL;
+               MmPageArray[j].ReferenceCount = 1;
+               InsertTailList(&BiosPageListHead,
+                              &MmPageArray[j].ListEntry);
+	       MmStats.NrReservedPages++;
+	    }
 	    else if (j >= 0xa0000 / PAGE_SIZE && j < 0x100000 / PAGE_SIZE)
 	    {
                MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_BIOS;

@@ -26,9 +26,9 @@
 #include <machine.h>
 
 
-BOOL DiskGetActivePartitionEntry(U32 DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+BOOL DiskGetActivePartitionEntry(ULONG DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-	U32					BootablePartitionCount = 0;
+	ULONG					BootablePartitionCount = 0;
 	MASTER_BOOT_RECORD	MasterBootRecord;
 
 	// Read master boot record
@@ -77,13 +77,13 @@ BOOL DiskGetActivePartitionEntry(U32 DriveNumber, PPARTITION_TABLE_ENTRY Partiti
 	return TRUE;
 }
 
-BOOL DiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+BOOL DiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
 	MASTER_BOOT_RECORD		MasterBootRecord;
 	PARTITION_TABLE_ENTRY	ExtendedPartitionTableEntry;
-	U32						ExtendedPartitionNumber;
-	U32						ExtendedPartitionOffset;
-	U32						Index;
+	ULONG						ExtendedPartitionNumber;
+	ULONG						ExtendedPartitionOffset;
+	ULONG						Index;
 
 	// Read master boot record
 	if (!DiskReadBootRecord(DriveNumber, 0, &MasterBootRecord))
@@ -157,7 +157,7 @@ BOOL DiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABL
 
 BOOL DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-	U32		Index;
+	ULONG		Index;
 
 	for (Index=0; Index<4; Index++)
 	{
@@ -178,7 +178,7 @@ BOOL DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION
 
 BOOL DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-	U32		Index;
+	ULONG		Index;
 
 	for (Index=0; Index<4; Index++)
 	{
@@ -195,11 +195,11 @@ BOOL DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PP
 	return FALSE;
 }
 
-BOOL DiskReadBootRecord(U32 DriveNumber, U64 LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord)
+BOOL DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord)
 {
 	char		ErrMsg[64];
 #ifdef DEBUG
-	U32		Index;
+	ULONG		Index;
 #endif
 
 	// Read master boot record

@@ -26,18 +26,18 @@
 
 #include <ui.h>
 
-static HKEY RootKey;
+static FRLDRHKEY RootKey;
 
 
 VOID
 RegInitializeRegistry (VOID)
 {
 #if 0
-  HKEY TestKey;
+  FRLDRHKEY TestKey;
 #endif
 
   /* Create root key */
-  RootKey = (HKEY) MmAllocateMemory (sizeof(KEY));
+  RootKey = (FRLDRHKEY) MmAllocateMemory (sizeof(KEY));
 
   InitializeListHead (&RootKey->SubKeyList);
   InitializeListHead (&RootKey->ValueList);
@@ -94,19 +94,19 @@ RegInitializeRegistry (VOID)
 }
 
 
-S32
+LONG
 RegInitCurrentControlSet(BOOL LastKnownGood)
 {
   CHAR ControlSetKeyName[80];
-  HKEY SelectKey;
-  HKEY SystemKey;
-  HKEY ControlSetKey;
-  HKEY LinkKey;
-  U32 CurrentSet = 0;
-  U32 DefaultSet = 0;
-  U32 LastKnownGoodSet = 0;
-  U32 DataSize;
-  S32 Error;
+  FRLDRHKEY SelectKey;
+  FRLDRHKEY SystemKey;
+  FRLDRHKEY ControlSetKey;
+  FRLDRHKEY LinkKey;
+  ULONG CurrentSet = 0;
+  ULONG DefaultSet = 0;
+  ULONG LastKnownGoodSet = 0;
+  ULONG DataSize;
+  LONG Error;
 
   Error = RegOpenKey(NULL,
 		     "\\Registry\\Machine\\SYSTEM\\Select",
@@ -117,7 +117,7 @@ RegInitCurrentControlSet(BOOL LastKnownGood)
       return(Error);
     }
 
-  DataSize = sizeof(U32);
+  DataSize = sizeof(ULONG);
   Error = RegQueryValue(SelectKey,
 			"Default",
 			NULL,
@@ -129,7 +129,7 @@ RegInitCurrentControlSet(BOOL LastKnownGood)
       return(Error);
     }
 
-  DataSize = sizeof(U32);
+  DataSize = sizeof(ULONG);
   Error = RegQueryValue(SelectKey,
 			"LastKnownGood",
 			NULL,
@@ -204,15 +204,15 @@ RegInitCurrentControlSet(BOOL LastKnownGood)
 }
 
 
-S32
-RegCreateKey(HKEY ParentKey,
+LONG
+RegCreateKey(FRLDRHKEY ParentKey,
 	     PCHAR KeyName,
-	     PHKEY Key)
+	     PFRLDRHKEY Key)
 {
   PLIST_ENTRY Ptr;
-  HKEY SearchKey = INVALID_HANDLE_VALUE;
-  HKEY CurrentKey;
-  HKEY NewKey;
+  FRLDRHKEY SearchKey = INVALID_HANDLE_VALUE;
+  FRLDRHKEY CurrentKey;
+  FRLDRHKEY NewKey;
   PCHAR p;
   PCHAR name;
   int subkeyLength;
@@ -237,7 +237,7 @@ RegCreateKey(HKEY ParentKey,
   /* Check whether current key is a link */
   if (CurrentKey->DataType == REG_LINK)
     {
-      CurrentKey = (HKEY)CurrentKey->Data;
+      CurrentKey = (FRLDRHKEY)CurrentKey->Data;
     }
 
   while (*KeyName != 0)
@@ -279,7 +279,7 @@ RegCreateKey(HKEY ParentKey,
       if (Ptr == &CurrentKey->SubKeyList)
 	{
 	  /* no key found -> create new subkey */
-	  NewKey = (HKEY)MmAllocateMemory(sizeof(KEY));
+	  NewKey = (FRLDRHKEY)MmAllocateMemory(sizeof(KEY));
 	  if (NewKey == NULL)
 	   return(ERROR_OUTOFMEMORY);
 
@@ -315,7 +315,7 @@ RegCreateKey(HKEY ParentKey,
 	  /* Check whether current key is a link */
 	  if (CurrentKey->DataType == REG_LINK)
 	    {
-	      CurrentKey = (HKEY)CurrentKey->Data;
+	      CurrentKey = (FRLDRHKEY)CurrentKey->Data;
 	    }
 	}
 
@@ -329,8 +329,8 @@ RegCreateKey(HKEY ParentKey,
 }
 
 
-S32
-RegDeleteKey(HKEY Key,
+LONG
+RegDeleteKey(FRLDRHKEY Key,
 	     PCHAR Name)
 {
 
@@ -344,16 +344,16 @@ RegDeleteKey(HKEY Key,
 }
 
 
-S32
-RegEnumKey(HKEY Key,
-	   U32 Index,
+LONG
+RegEnumKey(FRLDRHKEY Key,
+	   ULONG Index,
 	   PCHAR Name,
-	   U32* NameSize)
+	   ULONG* NameSize)
 {
   PLIST_ENTRY Ptr;
-  HKEY SearchKey;
-  U32 Count = 0;
-  U32 Size;
+  FRLDRHKEY SearchKey;
+  ULONG Count = 0;
+  ULONG Size;
 
   Ptr = Key->SubKeyList.Flink;
   while (Ptr != &Key->SubKeyList)
@@ -382,14 +382,14 @@ RegEnumKey(HKEY Key,
 }
 
 
-S32
-RegOpenKey(HKEY ParentKey,
+LONG
+RegOpenKey(FRLDRHKEY ParentKey,
 	   PCHAR KeyName,
-	   PHKEY Key)
+	   PFRLDRHKEY Key)
 {
   PLIST_ENTRY Ptr;
-  HKEY SearchKey = INVALID_HANDLE_VALUE;
-  HKEY CurrentKey;
+  FRLDRHKEY SearchKey = INVALID_HANDLE_VALUE;
+  FRLDRHKEY CurrentKey;
   PCHAR p;
   PCHAR name;
   int subkeyLength;
@@ -416,7 +416,7 @@ RegOpenKey(HKEY ParentKey,
   /* Check whether current key is a link */
   if (CurrentKey->DataType == REG_LINK)
     {
-      CurrentKey = (HKEY)CurrentKey->Data;
+      CurrentKey = (FRLDRHKEY)CurrentKey->Data;
     }
 
   while (*KeyName != 0)
@@ -468,7 +468,7 @@ RegOpenKey(HKEY ParentKey,
 	  /* Check whether current key is a link */
 	  if (CurrentKey->DataType == REG_LINK)
 	    {
-	      CurrentKey = (HKEY)CurrentKey->Data;
+	      CurrentKey = (FRLDRHKEY)CurrentKey->Data;
 	    }
 	}
 
@@ -482,12 +482,12 @@ RegOpenKey(HKEY ParentKey,
 }
 
 
-S32
-RegSetValue(HKEY Key,
+LONG
+RegSetValue(FRLDRHKEY Key,
 	    PCHAR ValueName,
-	    U32 Type,
+	    ULONG Type,
 	    PUCHAR Data,
-	    U32 DataSize)
+	    ULONG DataSize)
 {
   PLIST_ENTRY Ptr;
   PVALUE Value = NULL;
@@ -583,14 +583,14 @@ RegSetValue(HKEY Key,
 }
 
 
-S32
-RegQueryValue(HKEY Key,
+LONG
+RegQueryValue(FRLDRHKEY Key,
 	      PCHAR ValueName,
-	      U32* Type,
+	      ULONG* Type,
 	      PUCHAR Data,
-	      U32* DataSize)
+	      ULONG* DataSize)
 {
-  U32 Size;
+  ULONG Size;
   PLIST_ENTRY Ptr;
   PVALUE Value = NULL;
 
@@ -670,8 +670,8 @@ RegQueryValue(HKEY Key,
 }
 
 
-S32
-RegDeleteValue(HKEY Key,
+LONG
+RegDeleteValue(FRLDRHKEY Key,
 	       PCHAR ValueName)
 {
   PLIST_ENTRY Ptr;
@@ -727,18 +727,18 @@ RegDeleteValue(HKEY Key,
 }
 
 
-S32
-RegEnumValue(HKEY Key,
-	     U32 Index,
+LONG
+RegEnumValue(FRLDRHKEY Key,
+	     ULONG Index,
 	     PCHAR ValueName,
-	     U32* NameSize,
-	     U32* Type,
+	     ULONG* NameSize,
+	     ULONG* Type,
 	     PUCHAR Data,
-	     U32* DataSize)
+	     ULONG* DataSize)
 {
   PLIST_ENTRY Ptr;
   PVALUE Value;
-  U32 Count = 0;
+  ULONG Count = 0;
 
   if (Key->Data != NULL)
     {
@@ -813,15 +813,15 @@ RegEnumValue(HKEY Key,
 }
 
 
-U32
-RegGetSubKeyCount (HKEY Key)
+ULONG
+RegGetSubKeyCount (FRLDRHKEY Key)
 {
   return Key->SubKeyCount;
 }
 
 
-U32
-RegGetValueCount (HKEY Key)
+ULONG
+RegGetValueCount (FRLDRHKEY Key)
 {
   if (Key->DataSize != 0)
     return Key->ValueCount + 1;

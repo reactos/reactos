@@ -38,8 +38,11 @@
 
 typedef struct __attribute__((packed)) _COMMON_AREA_INFO
 {
-   ULONG Stack;      /* Location of AP stack */
-   ULONG Debug[16];  /* For debugging */
+   ULONG Stack;		    /* Location of AP stack */
+   ULONG PageDirectory;	    /* Page directory for an AP */
+   ULONG NtProcessStartup;  /* Kernel entry point for an AP */
+   ULONG PaeModeEnabled;    /* PAE mode is enabled */
+   ULONG Debug[16];	    /* For debugging */
 } COMMON_AREA_INFO, *PCOMMON_AREA_INFO;
 
 CPU_INFO CPUMap[MAX_CPU];          /* Map of all CPUs in the system */
@@ -81,6 +84,7 @@ extern VOID MpsIpiInterrupt(VOID);
    WRITE_PORT_UCHAR((PUCHAR)0x71, value); \
 })
 
+extern PVOID IMPORTED MmSystemRangeStart;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1094,6 +1098,15 @@ HalStartNextProcessor(ULONG Unknown1,
 
    /* Write the location of the AP stack */
    Common->Stack = (ULONG)ProcessorStack;
+   /* Write the page directory page */
+   Ke386GetPageTableDirectory(Common->PageDirectory);
+   /* Write the kernel entry point */
+   Common->NtProcessStartup = (ULONG_PTR)RtlImageNtHeader(MmSystemRangeStart)->OptionalHeader.AddressOfEntryPoint + (ULONG_PTR)MmSystemRangeStart;
+   /* Write the state of the mae mode */
+   Common->PaeModeEnabled = Ke386GetCr4() & X86_CR4_PAE ? 1 : 0;
+
+   DPRINT1("%x %x %x %x\n", Common->Stack, Common->PageDirectory, Common->NtProcessStartup, Common->PaeModeEnabled);
+
 
    DPRINT("CPU %d got stack at 0x%X\n", CPU, Common->Stack);
 #if 0

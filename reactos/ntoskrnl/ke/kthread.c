@@ -85,7 +85,7 @@ KeReleaseThread(PKTHREAD Thread)
   /* FIXME - lock the process */
   RemoveEntryList(&Thread->ThreadListEntry);
   
-  if (Thread->StackLimit != (ULONG_PTR)&init_stack)
+  if (Thread->StackLimit != (ULONG_PTR)init_stack)
     {       
       MmLockAddressSpace(MmGetKernelAddressSpace());
       MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),
@@ -193,10 +193,10 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
     }
   else
     {
-      Thread->InitialStack = (PCHAR)&init_stack_top;
-      Thread->StackBase = (PCHAR)&init_stack_top;
-      Thread->StackLimit = (ULONG_PTR)&init_stack;
-      Thread->KernelStack = (PCHAR)&init_stack_top;
+      Thread->InitialStack = (PCHAR)init_stack_top;
+      Thread->StackBase = (PCHAR)init_stack_top;
+      Thread->StackLimit = (ULONG_PTR)init_stack;
+      Thread->KernelStack = (PCHAR)init_stack_top;
     }
 
   /* 

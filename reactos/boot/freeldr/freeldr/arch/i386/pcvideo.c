@@ -56,69 +56,69 @@
 
 typedef struct
 {
-  U16 ModeAttributes;             /* mode attributes (see #00080) */
-  U8  WindowAttributesA;          /* window attributes, window A (see #00081) */
-  U8  WindowsAttributesB;         /* window attributes, window B (see #00081) */
-  U16 WindowGranularity;          /* window granularity in KB */
-  U16 WindowSize;                 /* window size in KB */
-  U16 WindowAStartSegment;        /* start segment of window A (0000h if not supported) */
-  U16 WindowBStartSegment;        /* start segment of window B (0000h if not supported) */
-  U32 WindowPositioningFunction;  /* -> FAR window positioning function (equivalent to AX=4F05h) */
-  U16 BytesPerScanLine;           /* bytes per scan line */
+  USHORT ModeAttributes;             /* mode attributes (see #00080) */
+  UCHAR  WindowAttributesA;          /* window attributes, window A (see #00081) */
+  UCHAR  WindowsAttributesB;         /* window attributes, window B (see #00081) */
+  USHORT WindowGranularity;          /* window granularity in KB */
+  USHORT WindowSize;                 /* window size in KB */
+  USHORT WindowAStartSegment;        /* start segment of window A (0000h if not supported) */
+  USHORT WindowBStartSegment;        /* start segment of window B (0000h if not supported) */
+  ULONG WindowPositioningFunction;  /* -> FAR window positioning function (equivalent to AX=4F05h) */
+  USHORT BytesPerScanLine;           /* bytes per scan line */
   /* ---remainder is optional for VESA modes in v1.0/1.1, needed for OEM modes--- */
-  U16 WidthInPixels;              /* width in pixels (graphics) or characters (text) */
-  U16 HeightInPixels;             /* height in pixels (graphics) or characters (text) */
-  U8  CharacterWidthInPixels;     /* width of character cell in pixels */
-  U8  CharacterHeightInPixels;    /* height of character cell in pixels */
-  U8  NumberOfMemoryPlanes;       /* number of memory planes */
-  U8  BitsPerPixel;               /* number of bits per pixel */
-  U8  NumberOfBanks;              /* number of banks */
-  U8  MemoryModel;                /* memory model type (see #00082) */
-  U8  BankSize;                   /* size of bank in KB */
-  U8  NumberOfImagePanes;         /* number of image pages (less one) that will fit in video RAM */
-  U8  Reserved1;                  /* reserved (00h for VBE 1.0-2.0, 01h for VBE 3.0) */
+  USHORT WidthInPixels;              /* width in pixels (graphics) or characters (text) */
+  USHORT HeightInPixels;             /* height in pixels (graphics) or characters (text) */
+  UCHAR  CharacterWidthInPixels;     /* width of character cell in pixels */
+  UCHAR  CharacterHeightInPixels;    /* height of character cell in pixels */
+  UCHAR  NumberOfMemoryPlanes;       /* number of memory planes */
+  UCHAR  BitsPerPixel;               /* number of bits per pixel */
+  UCHAR  NumberOfBanks;              /* number of banks */
+  UCHAR  MemoryModel;                /* memory model type (see #00082) */
+  UCHAR  BankSize;                   /* size of bank in KB */
+  UCHAR  NumberOfImagePanes;         /* number of image pages (less one) that will fit in video RAM */
+  UCHAR  Reserved1;                  /* reserved (00h for VBE 1.0-2.0, 01h for VBE 3.0) */
   /* ---VBE v1.2+ --- */
-  U8  RedMaskSize;                /* red mask size */
-  U8  RedMaskPosition;            /* red field position */
-  U8  GreenMaskSize;              /* green mask size */
-  U8  GreenMaskPosition;          /* green field size */
-  U8  BlueMaskSize;               /* blue mask size */
-  U8  BlueMaskPosition;           /* blue field size */
-  U8  ReservedMaskSize;           /* reserved mask size */
-  U8  ReservedMaskPosition;       /* reserved mask position */
-  U8  DirectColorModeInfo;        /* direct color mode info */
+  UCHAR  RedMaskSize;                /* red mask size */
+  UCHAR  RedMaskPosition;            /* red field position */
+  UCHAR  GreenMaskSize;              /* green mask size */
+  UCHAR  GreenMaskPosition;          /* green field size */
+  UCHAR  BlueMaskSize;               /* blue mask size */
+  UCHAR  BlueMaskPosition;           /* blue field size */
+  UCHAR  ReservedMaskSize;           /* reserved mask size */
+  UCHAR  ReservedMaskPosition;       /* reserved mask position */
+  UCHAR  DirectColorModeInfo;        /* direct color mode info */
                                   /* bit 0:Color ramp is programmable */
                                   /* bit 1:Bytes in reserved field may be used by application */
   /* ---VBE v2.0+ --- */
-  U32 LinearVideoBufferAddress;   /* physical address of linear video buffer */
-  U32 OffscreenMemoryPointer;     /* pointer to start of offscreen memory */
-  U16 OffscreenMemorySize;        /* KB of offscreen memory */
+  ULONG LinearVideoBufferAddress;   /* physical address of linear video buffer */
+  ULONG OffscreenMemoryPointer;     /* pointer to start of offscreen memory */
+  USHORT OffscreenMemorySize;        /* KB of offscreen memory */
   /* ---VBE v3.0 --- */
-  U16 LinearBytesPerScanLine;     /* bytes per scan line in linear modes */
-  U8  BankedNumberOfImages;       /* number of images (less one) for banked video modes */
-  U8  LinearNumberOfImages;       /* number of images (less one) for linear video modes */
-  U8  LinearRedMaskSize;          /* linear modes:Size of direct color red mask (in bits) */
-  U8  LinearRedMaskPosition;      /* linear modes:Bit position of red mask LSB (e.g. shift count) */
-  U8  LinearGreenMaskSize;        /* linear modes:Size of direct color green mask (in bits) */
-  U8  LinearGreenMaskPosition;    /* linear modes:Bit position of green mask LSB (e.g. shift count) */
-  U8  LinearBlueMaskSize;         /* linear modes:Size of direct color blue mask (in bits) */
-  U8  LinearBlueMaskPosition;     /* linear modes:Bit position of blue mask LSB (e.g. shift count) */
-  U8  LinearReservedMaskSize;     /* linear modes:Size of direct color reserved mask (in bits) */
-  U8  LinearReservedMaskPosition; /* linear modes:Bit position of reserved mask LSB */
-  U32 MaximumPixelClock;          /* maximum pixel clock for graphics video mode, in Hz */
-  U8  Reserved2[190];             /* 190 BYTEs  reserved (0) */
+  USHORT LinearBytesPerScanLine;     /* bytes per scan line in linear modes */
+  UCHAR  BankedNumberOfImages;       /* number of images (less one) for banked video modes */
+  UCHAR  LinearNumberOfImages;       /* number of images (less one) for linear video modes */
+  UCHAR  LinearRedMaskSize;          /* linear modes:Size of direct color red mask (in bits) */
+  UCHAR  LinearRedMaskPosition;      /* linear modes:Bit position of red mask LSB (e.g. shift count) */
+  UCHAR  LinearGreenMaskSize;        /* linear modes:Size of direct color green mask (in bits) */
+  UCHAR  LinearGreenMaskPosition;    /* linear modes:Bit position of green mask LSB (e.g. shift count) */
+  UCHAR  LinearBlueMaskSize;         /* linear modes:Size of direct color blue mask (in bits) */
+  UCHAR  LinearBlueMaskPosition;     /* linear modes:Bit position of blue mask LSB (e.g. shift count) */
+  UCHAR  LinearReservedMaskSize;     /* linear modes:Size of direct color reserved mask (in bits) */
+  UCHAR  LinearReservedMaskPosition; /* linear modes:Bit position of reserved mask LSB */
+  ULONG MaximumPixelClock;          /* maximum pixel clock for graphics video mode, in Hz */
+  UCHAR  Reserved2[190];             /* 190 BYTEs  reserved (0) */
 } PACKED SVGA_MODE_INFORMATION, *PSVGA_MODE_INFORMATION;
 
-static U32 BiosVideoMode;                              /* Current video mode as known by BIOS */
-static U32 ScreenWidth = 80;	                       /* Screen Width in characters */
-static U32 ScreenHeight = 25;                          /* Screen Height in characters */
-static U32 BytesPerScanLine = 160;                     /* Number of bytes per scanline (delta) */
+static ULONG BiosVideoMode;                              /* Current video mode as known by BIOS */
+static ULONG ScreenWidth = 80;	                       /* Screen Width in characters */
+static ULONG ScreenHeight = 25;                          /* Screen Height in characters */
+static ULONG BytesPerScanLine = 160;                     /* Number of bytes per scanline (delta) */
 static VIDEODISPLAYMODE DisplayMode = VideoTextMode;   /* Current display mode */
 static BOOL VesaVideoMode = FALSE;                     /* Are we using a VESA mode? */
 static SVGA_MODE_INFORMATION VesaVideoModeInformation; /* Only valid when in VESA mode */
-static U32 CurrentMemoryBank = 0;                      /* Currently selected VESA bank */
+static ULONG CurrentMemoryBank = 0;                      /* Currently selected VESA bank */
 
-static U32
+static ULONG
 PcVideoDetectVideoCard(VOID)
 {
   REGS Regs;
@@ -192,7 +192,7 @@ PcVideoDetectVideoCard(VOID)
     }
 }
 
-static VOID PcVideoSetBiosMode(U32 VideoMode)
+static VOID PcVideoSetBiosMode(ULONG VideoMode)
 {
   REGS Regs;
 
@@ -297,7 +297,7 @@ VOID PcVideoDisableCursorEmulation(VOID)
 }
 
 static VOID
-PcVideoDefineCursor(U32 StartScanLine, U32 EndScanLine)
+PcVideoDefineCursor(ULONG StartScanLine, ULONG EndScanLine)
 {
   REGS Regs;
 
@@ -333,7 +333,7 @@ PcVideoDefineCursor(U32 StartScanLine, U32 EndScanLine)
 }
 
 static VOID
-PcVideoSetVerticalResolution(U32 ScanLines)
+PcVideoSetVerticalResolution(ULONG ScanLines)
 {
   REGS Regs;
 
@@ -439,7 +439,7 @@ PcVideoSetDisplayEnd(VOID)
 }
 
 static BOOL
-PcVideoVesaGetSVGAModeInformation(U16 Mode, PSVGA_MODE_INFORMATION ModeInformation)
+PcVideoVesaGetSVGAModeInformation(USHORT Mode, PSVGA_MODE_INFORMATION ModeInformation)
 {
   REGS Regs;
 
@@ -511,7 +511,7 @@ PcVideoVesaGetSVGAModeInformation(U16 Mode, PSVGA_MODE_INFORMATION ModeInformati
 }
 
 static BOOL
-PcVideoSetBiosVesaMode(U16 Mode)
+PcVideoSetBiosVesaMode(USHORT Mode)
 {
   REGS Regs;
 
@@ -697,7 +697,7 @@ PcVideoSetMode80x60(VOID)
 }
 
 static BOOL
-PcVideoSetMode(U32 NewMode)
+PcVideoSetMode(ULONG NewMode)
 {
   CurrentMemoryBank = 0;
 
@@ -735,7 +735,7 @@ PcVideoSetMode(U32 NewMode)
     {
       /* 640x480x16 */
       PcVideoSetBiosMode(NewMode);
-      WRITE_PORT_USHORT((U16*)0x03CE, 0x0F01); /* For some reason this is necessary? */
+      WRITE_PORT_USHORT((USHORT*)0x03CE, 0x0F01); /* For some reason this is necessary? */
       ScreenWidth = 640;
       ScreenHeight = 480;
       BytesPerScanLine = 80;
@@ -830,7 +830,7 @@ PcVideoSetBlinkBit(BOOL Enable)
 }
 
 static VOID
-PcVideoSetMemoryBank(U16 BankNumber)
+PcVideoSetMemoryBank(USHORT BankNumber)
 {
   REGS Regs;
 
@@ -870,7 +870,7 @@ PcVideoSetMemoryBank(U16 BankNumber)
 VIDEODISPLAYMODE
 PcVideoSetDisplayMode(char *DisplayModeName, BOOL Init)
 {
-  U32 VideoMode = VIDEOMODE_NORMAL_TEXT;
+  ULONG VideoMode = VIDEOMODE_NORMAL_TEXT;
 
   if (NULL == DisplayModeName || '\0' == *DisplayModeName)
     {
@@ -927,7 +927,7 @@ PcVideoSetDisplayMode(char *DisplayModeName, BOOL Init)
 }
 
 VOID
-PcVideoGetDisplaySize(PU32 Width, PU32 Height, PU32 Depth)
+PcVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth)
 {
   *Width = ScreenWidth;
   *Height = ScreenHeight;
@@ -950,14 +950,14 @@ PcVideoGetDisplaySize(PU32 Width, PU32 Height, PU32 Depth)
     }
 }
 
-U32
+ULONG
 PcVideoGetBufferSize(VOID)
 {
   return ScreenHeight * BytesPerScanLine;
 }
 
 VOID
-PcVideoSetTextCursorPosition(U32 X, U32 Y)
+PcVideoSetTextCursorPosition(ULONG X, ULONG Y)
 {
   REGS Regs;
 
@@ -997,10 +997,10 @@ PcVideoHideShowTextCursor(BOOL Show)
 VOID
 PcVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
 {
-  U32 BanksToCopy;
-  U32 BytesInLastBank;
-  U32 CurrentBank;
-  U32 BankSize;
+  ULONG BanksToCopy;
+  ULONG BytesInLastBank;
+  ULONG CurrentBank;
+  ULONG BankSize;
 
   /* PcVideoWaitForVerticalRetrace(); */
 
@@ -1036,14 +1036,14 @@ PcVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
 }
 
 VOID
-PcVideoClearScreen(U8 Attr)
+PcVideoClearScreen(UCHAR Attr)
 {
-  U16 AttrChar;
-  U16 *BufPtr;
+  USHORT AttrChar;
+  USHORT *BufPtr;
 
-  AttrChar = ((U16) Attr << 8) | ' ';
-  for (BufPtr = (U16 *) VIDEOTEXT_MEM_ADDRESS;
-       BufPtr < (U16 *) (VIDEOTEXT_MEM_ADDRESS + VIDEOTEXT_MEM_SIZE);
+  AttrChar = ((USHORT) Attr << 8) | ' ';
+  for (BufPtr = (USHORT *) VIDEOTEXT_MEM_ADDRESS;
+       BufPtr < (USHORT *) (VIDEOTEXT_MEM_ADDRESS + VIDEOTEXT_MEM_SIZE);
        BufPtr++)
     {
       *BufPtr = AttrChar;
@@ -1051,12 +1051,12 @@ PcVideoClearScreen(U8 Attr)
 }
 
 VOID
-PcVideoPutChar(int Ch, U8 Attr, unsigned X, unsigned Y)
+PcVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
 {
-  U16 *BufPtr;
+  USHORT *BufPtr;
 
-  BufPtr = (U16 *) (VIDEOTEXT_MEM_ADDRESS + Y * BytesPerScanLine + X * 2);
-  *BufPtr = ((U16) Attr << 8) | (Ch & 0xff);
+  BufPtr = (USHORT *) (VIDEOTEXT_MEM_ADDRESS + Y * BytesPerScanLine + X * 2);
+  *BufPtr = ((USHORT) Attr << 8) | (Ch & 0xff);
 }
 
 BOOL
@@ -1066,27 +1066,27 @@ PcVideoIsPaletteFixed(VOID)
 }
 
 VOID
-PcVideoSetPaletteColor(U8 Color, U8 Red, U8 Green, U8 Blue)
+PcVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue)
 {
-  WRITE_PORT_UCHAR((U8*) VIDEOPORT_PALETTE_WRITE, Color);
-  WRITE_PORT_UCHAR((U8*) VIDEOPORT_PALETTE_DATA, Red);
-  WRITE_PORT_UCHAR((U8*) VIDEOPORT_PALETTE_DATA, Green);
-  WRITE_PORT_UCHAR((U8*) VIDEOPORT_PALETTE_DATA, Blue);
+  WRITE_PORT_UCHAR((UCHAR*) VIDEOPORT_PALETTE_WRITE, Color);
+  WRITE_PORT_UCHAR((UCHAR*) VIDEOPORT_PALETTE_DATA, Red);
+  WRITE_PORT_UCHAR((UCHAR*) VIDEOPORT_PALETTE_DATA, Green);
+  WRITE_PORT_UCHAR((UCHAR*) VIDEOPORT_PALETTE_DATA, Blue);
 }
 
 VOID
-PcVideoGetPaletteColor(U8 Color, U8* Red, U8* Green, U8* Blue)
+PcVideoGetPaletteColor(UCHAR Color, UCHAR* Red, UCHAR* Green, UCHAR* Blue)
 {
-  WRITE_PORT_UCHAR((U8*) VIDEOPORT_PALETTE_READ, Color);
-  *Red = READ_PORT_UCHAR((U8*) VIDEOPORT_PALETTE_DATA);
-  *Green = READ_PORT_UCHAR((U8*) VIDEOPORT_PALETTE_DATA);
-  *Blue = READ_PORT_UCHAR((U8*) VIDEOPORT_PALETTE_DATA);
+  WRITE_PORT_UCHAR((UCHAR*) VIDEOPORT_PALETTE_READ, Color);
+  *Red = READ_PORT_UCHAR((UCHAR*) VIDEOPORT_PALETTE_DATA);
+  *Green = READ_PORT_UCHAR((UCHAR*) VIDEOPORT_PALETTE_DATA);
+  *Blue = READ_PORT_UCHAR((UCHAR*) VIDEOPORT_PALETTE_DATA);
 }
 
 VOID
 PcVideoSync(VOID)
 {
-  while (1 == (READ_PORT_UCHAR((U8*)VIDEOPORT_VERTICAL_RETRACE) & 0x08))
+  while (1 == (READ_PORT_UCHAR((UCHAR*)VIDEOPORT_VERTICAL_RETRACE) & 0x08))
     {
       /*
        * Keep reading the port until bit 3 is clear
@@ -1096,7 +1096,7 @@ PcVideoSync(VOID)
        */
     }
 
-  while (0 == (READ_PORT_UCHAR((U8*)VIDEOPORT_VERTICAL_RETRACE) & 0x08))
+  while (0 == (READ_PORT_UCHAR((UCHAR*)VIDEOPORT_VERTICAL_RETRACE) & 0x08))
     {
       /*
        * Keep reading the port until bit 3 is set

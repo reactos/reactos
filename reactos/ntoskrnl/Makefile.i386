@@ -5,7 +5,7 @@
 # Defines $(OBJECTS_HAL)
 # include hal/x86/sources
 
-OBJECTS_BOOT := ke/i386/multiboot.o
+OBJECTS_BOOT := ke/i386/main.o
 
 OBJECTS_EX_I386 := \
 	ex/i386/interlck.o

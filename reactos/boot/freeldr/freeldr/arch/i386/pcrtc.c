@@ -25,7 +25,7 @@
 #define BCD_INT(bcd) (((bcd & 0xf0) >> 4) * 10 + (bcd &0x0f))
 
 VOID
-PcRTCGetCurrentDateTime(PU32 Year, PU32 Month, PU32 Day, PU32 Hour, PU32 Minute, PU32 Second)
+PcRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second)
 {
   REGS Regs;
 

@@ -21,10 +21,10 @@
 #ifndef __CACHE_H
 #define __CACHE_H
 
-BOOL	CacheInitializeDrive(U32 DriveNumber);
+BOOL	CacheInitializeDrive(ULONG DriveNumber);
 VOID	CacheInvalidateCacheData(VOID);
-BOOL	CacheReadDiskSectors(U32 DiskNumber, U32 StartSector, U32 SectorCount, PVOID Buffer);
-BOOL	CacheForceDiskSectorsIntoCache(U32 DiskNumber, U32 StartSector, U32 SectorCount);
-BOOL	CacheReleaseMemory(U32 MinimumAmountToRelease);
+BOOL	CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount, PVOID Buffer);
+BOOL	CacheForceDiskSectorsIntoCache(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount);
+BOOL	CacheReleaseMemory(ULONG MinimumAmountToRelease);
 
 #endif // defined __CACHE_H

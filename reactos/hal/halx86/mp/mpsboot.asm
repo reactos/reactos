@@ -15,15 +15,13 @@
 ;
 
 ;
-; Base address of common area for BSP and APs
-;
-LOAD_BASE   equ 00200000h
-
-;
 ; Magic value to be put in EAX when multiboot.S is called as part of the
 ; application processor initialization process
 ;
 AP_MAGIC    equ 12481020h
+
+
+X86_CR4_PAE equ 00000020h
 
 ;
 ; Segment selectors
@@ -48,9 +46,22 @@ _APstart:
 
   mov   eax, 3000h + APgdt - _APstart
 	lgdt  [eax]
+	
+  mov	eax, [2004h]	  ; Set the page directory
+  mov   cr3, eax  
+  
+  mov	eax, [200ch]
+  cmp	eax,0
+  je	NoPae
+  
+  mov	eax,cr4
+  or	eax,X86_CR4_PAE
+  mov	cr4,eax
+  
+NoPae:  
 
   mov   eax, cr0
-  or    eax, 00010001h    ; Turn on protected mode and write protection
+  or    eax, 80010001h    ; Turn on protected mode, paging and write protection
   mov   cr0, eax
 
   db    0eah
@@ -72,9 +83,10 @@ flush:
   mov   eax, [eax]
   mov   esp, eax
 
-  ; Jump to start of the kernel with AP magic in eax
-  mov      eax, AP_MAGIC
-  jmp      dword KERNEL_CS:(LOAD_BASE + 0x1000)
+  ; Jump to start of the kernel with AP magic in ecx
+  mov      ecx, AP_MAGIC
+  mov	   eax,[2008h]
+  jmp      eax
 
   ; Never get here
 

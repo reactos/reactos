@@ -24,30 +24,23 @@
 
 #define INVALID_HANDLE_VALUE  NULL
 
-typedef struct _LIST_ENTRY
-{
-  struct _LIST_ENTRY *Flink;
-  struct _LIST_ENTRY *Blink;
-} LIST_ENTRY, *PLIST_ENTRY;
-
-
 typedef struct _REG_KEY
 {
   LIST_ENTRY KeyList;
   LIST_ENTRY SubKeyList;
   LIST_ENTRY ValueList;
 
-  U32 SubKeyCount;
-  U32 ValueCount;
+  ULONG SubKeyCount;
+  ULONG ValueCount;
 
-  U32 NameSize;
+  ULONG NameSize;
   PUCHAR Name;
 
   /* default data */
-  U32 DataType;
-  U32 DataSize;
+  ULONG DataType;
+  ULONG DataSize;
   PUCHAR Data;
-} KEY, *HKEY, **PHKEY;
+} KEY, *FRLDRHKEY, **PFRLDRHKEY;
 
 
 typedef struct _REG_VALUE
@@ -55,18 +48,17 @@ typedef struct _REG_VALUE
   LIST_ENTRY ValueList;
 
   /* value name */
-  U32 NameSize;
+  ULONG NameSize;
   PUCHAR Name;
 
   /* value data */
-  U32 DataType;
-  U32 DataSize;
+  ULONG DataType;
+  ULONG DataSize;
   PUCHAR Data;
 } VALUE, *PVALUE;
 
 
 #define ERROR_SUCCESS                    0L
-#define ERROR_PATH_NOT_FOUND             2L
 #define ERROR_OUTOFMEMORY                14L
 #define ERROR_INVALID_PARAMETER          87L
 #define ERROR_MORE_DATA                  234L
@@ -150,22 +142,6 @@ typedef struct _REG_VALUE
 }
 
 /*
- * BOOLEAN
- * IsListEmpty (
- *	PLIST_ENTRY	ListHead
- *	);
- *
- * FUNCTION:
- *	Checks if a double linked list is empty
- *
- * ARGUMENTS:
- *	ListHead = Head of the list
-*/
-#define IsListEmpty(ListHead) \
-	((ListHead)->Flink == (ListHead))
-
-
-/*
  *VOID
  *RemoveEntryList (
  *	PLIST_ENTRY	Entry
@@ -194,23 +170,6 @@ typedef struct _REG_VALUE
 	(ListEntry)->Blink = NULL; \
 }
 
-/*
- * PURPOSE: Returns the byte offset of a field within a structure
- */
-#define FIELD_OFFSET(Type,Field) (S32)(&(((Type *)(0))->Field))
-
-/*
- * PURPOSE: Returns the base address structure if the caller knows the 
- * address of a field within the structure
- * ARGUMENTS:
- *          Address = address of the field
- *          Type = Type of the whole structure
- *          Field = Name of the field whose address is none
- */
-#define CONTAINING_RECORD(Address,Type,Field) \
-	(Type *)(((S32)Address) - FIELD_OFFSET(Type,Field))
-
-
 #define REG_NONE 0
 #define REG_SZ 1
 #define REG_EXPAND_SZ 2
@@ -229,73 +188,73 @@ typedef struct _REG_VALUE
 VOID
 RegInitializeRegistry(VOID);
 
-S32
+LONG
 RegInitCurrentControlSet(BOOL LastKnownGood);
 
 
-S32
-RegCreateKey(HKEY ParentKey,
+LONG
+RegCreateKey(FRLDRHKEY ParentKey,
 	     PCHAR KeyName,
-	     PHKEY Key);
+	     PFRLDRHKEY Key);
 
-S32
-RegDeleteKey(HKEY Key,
+LONG
+RegDeleteKey(FRLDRHKEY Key,
 	     PCHAR Name);
 
-S32
-RegEnumKey(HKEY Key,
-	   U32 Index,
+LONG
+RegEnumKey(FRLDRHKEY Key,
+	   ULONG Index,
 	   PCHAR Name,
-	   U32* NameSize);
+	   ULONG* NameSize);
 
-S32
-RegOpenKey(HKEY ParentKey,
+LONG
+RegOpenKey(FRLDRHKEY ParentKey,
 	   PCHAR KeyName,
-	   PHKEY Key);
+	   PFRLDRHKEY Key);
 
 
-S32
-RegSetValue(HKEY Key,
+LONG
+RegSetValue(FRLDRHKEY Key,
 	    PCHAR ValueName,
-	    U32 Type,
+	    ULONG Type,
 	    PUCHAR Data,
-	    U32 DataSize);
+	    ULONG DataSize);
 
-S32
-RegQueryValue(HKEY Key,
+LONG
+RegQueryValue(FRLDRHKEY Key,
 	      PCHAR ValueName,
-	      U32* Type,
+	      ULONG* Type,
 	      PUCHAR Data,
-	      U32* DataSize);
+	      ULONG* DataSize);
 
-S32
-RegDeleteValue(HKEY Key,
+LONG
+RegDeleteValue(FRLDRHKEY Key,
 	       PCHAR ValueName);
 
-S32
-RegEnumValue(HKEY Key,
-	     U32 Index,
+LONG
+RegEnumValue(FRLDRHKEY Key,
+	     ULONG Index,
 	     PCHAR ValueName,
-	     U32* NameSize,
-	     U32* Type,
+	     ULONG* NameSize,
+	     ULONG* Type,
 	     PUCHAR Data,
-	     U32* DataSize);
+	     ULONG* DataSize);
 
-U32
-RegGetSubKeyCount (HKEY Key);
+ULONG
+RegGetSubKeyCount (FRLDRHKEY Key);
 
-U32
-RegGetValueCount (HKEY Key);
+ULONG
+RegGetValueCount (FRLDRHKEY Key);
 
 
 BOOL
 RegImportBinaryHive (PCHAR ChunkBase,
-		     U32 ChunkSize);
+		     ULONG ChunkSize);
 
 BOOL
 RegExportBinaryHive (PCHAR KeyName,
 		     PCHAR ChunkBase,
-		     U32* ChunkSize);
+		     ULONG* ChunkSize);
 
 
 #endif /* __REGISTRY_H */

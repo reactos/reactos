@@ -41,7 +41,7 @@ HalpQueryCMOS(UCHAR Reg)
 }
 
 VOID
-XboxRTCGetCurrentDateTime(PU32 Year, PU32 Month, PU32 Day, PU32 Hour, PU32 Minute, PU32 Second)
+XboxRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second)
 {
   while (HalpQueryCMOS (RTC_REGISTER_A) & RTC_REG_A_UIP)
     {

@@ -97,7 +97,7 @@ LoadKernel(PCHAR szSourcePath, PCHAR szFileName)
   /*
    * Load the kernel
    */
-  MultiBootLoadKernel(FilePointer);
+  FrLdrMapKernel(FilePointer);
 
   return(TRUE);
 }
@@ -162,7 +162,7 @@ LoadDriver(PCHAR szSourcePath, PCHAR szFileName)
 #endif
 
   /* Load the driver */
-  MultiBootLoadModule(FilePointer, szFileName, NULL);
+  FrLdrLoadModule(FilePointer, szFileName, NULL);
 
   return(TRUE);
 }
@@ -227,7 +227,7 @@ LoadNlsFile(PCHAR szSourcePath, PCHAR szFileName, PCHAR szModuleName)
 #endif
 
   /* Load the driver */
-  MultiBootLoadModule(FilePointer, szModuleName, NULL);
+  FrLdrLoadModule(FilePointer, szModuleName, NULL);
 
   return(TRUE);
 }
@@ -235,44 +235,44 @@ LoadNlsFile(PCHAR szSourcePath, PCHAR szFileName, PCHAR szModuleName)
 
 VOID RunLoader(VOID)
 {
-  PVOID Base;
-  U32 Size;
+  ULONG_PTR Base;
+  ULONG Size;
   char *SourcePath;
   char *LoadOptions;
   int i;
 
   HINF InfHandle;
-  U32 ErrorLine;
+  ULONG ErrorLine;
   INFCONTEXT InfContext;
 
   /* Setup multiboot information structure */
-  mb_info.flags = MB_INFO_FLAG_BOOT_DEVICE | MB_INFO_FLAG_COMMAND_LINE | MB_INFO_FLAG_MODULES;
-  mb_info.boot_device = 0xffffffff;
-  mb_info.cmdline = (unsigned long)multiboot_kernel_cmdline;
-  mb_info.mods_count = 0;
-  mb_info.mods_addr = (unsigned long)multiboot_modules;
-  mb_info.mmap_length = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)(PVOID)&multiboot_memory_map, 32) * sizeof(memory_map_t);
-  if (mb_info.mmap_length)
+  LoaderBlock.Flags = MB_INFO_FLAG_BOOT_DEVICE | MB_INFO_FLAG_COMMAND_LINE | MB_INFO_FLAG_MODULES;
+  LoaderBlock.BootDevice = 0xffffffff;
+  LoaderBlock.CommandLine = (unsigned long)multiboot_kernel_cmdline;
+  LoaderBlock.ModsCount = 0;
+  LoaderBlock.ModsAddr = (unsigned long)multiboot_modules;
+  LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)(PVOID)&multiboot_memory_map, 32) * sizeof(memory_map_t);
+  if (LoaderBlock.MmapLength)
     {
-      mb_info.mmap_addr = (unsigned long)&multiboot_memory_map;
-      mb_info.flags |= MB_INFO_FLAG_MEM_SIZE | MB_INFO_FLAG_MEMORY_MAP;
+      LoaderBlock.MmapAddr = (unsigned long)&multiboot_memory_map;
+      LoaderBlock.Flags |= MB_INFO_FLAG_MEM_SIZE | MB_INFO_FLAG_MEMORY_MAP;
       multiboot_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
-      for (i = 0; i < (mb_info.mmap_length / sizeof(memory_map_t)); i++)
+      for (i = 0; i < (LoaderBlock.MmapLength / sizeof(memory_map_t)); i++)
         {
           if (MEMTYPE_USABLE == multiboot_memory_map[i].type &&
               0 == multiboot_memory_map[i].base_addr_low)
             {
-              mb_info.mem_lower = (multiboot_memory_map[i].base_addr_low + multiboot_memory_map[i].length_low) / 1024;
-              if (640 < mb_info.mem_lower)
+              LoaderBlock.MemLower = (multiboot_memory_map[i].base_addr_low + multiboot_memory_map[i].length_low) / 1024;
+              if (640 < LoaderBlock.MemLower)
                 {
-                  mb_info.mem_lower = 640;
+                  LoaderBlock.MemLower = 640;
                 }
             }
           if (MEMTYPE_USABLE == multiboot_memory_map[i].type &&
               multiboot_memory_map[i].base_addr_low <= 1024 * 1024 &&
               1024 * 1024 <= multiboot_memory_map[i].base_addr_low + multiboot_memory_map[i].length_low)
             {
-              mb_info.mem_upper = (multiboot_memory_map[i].base_addr_low + multiboot_memory_map[i].length_low) / 1024 - 1024;
+              LoaderBlock.MemHigher = (multiboot_memory_map[i].base_addr_low + multiboot_memory_map[i].length_low) / 1024 - 1024;
             }
 #if 0
 	    printf("start: %x\t size: %x\t type %d\n", 
@@ -283,8 +283,8 @@ VOID RunLoader(VOID)
         }
     }
 #if 0
-  printf("low_mem = %d\n", mb_info.mem_lower);
-  printf("high_mem = %d\n", mb_info.mem_upper);
+  printf("low_mem = %d\n", LoaderBlock.MemLower);
+  printf("high_mem = %d\n", LoaderBlock.MemHigher);
   MachConsGetCh();
 #endif
 
@@ -308,8 +308,8 @@ VOID RunLoader(VOID)
 #endif
 
   /* set boot drive and partition */
-  ((char *)(&mb_info.boot_device))[0] = (char)BootDrive;
-  ((char *)(&mb_info.boot_device))[1] = (char)BootPartition;
+  ((char *)(&LoaderBlock.BootDevice))[0] = (char)BootDrive;
+  ((char *)(&LoaderBlock.BootDevice))[1] = (char)BootPartition;
 
 
   /* Open boot drive */
@@ -383,9 +383,9 @@ VOID RunLoader(VOID)
 
 
   /* Export the hardware hive */
-  Base = MultiBootCreateModule ("HARDWARE");
-  RegExportBinaryHive ("\\Registry\\Machine\\HARDWARE", Base, &Size);
-  MultiBootCloseModule (Base, Size);
+  Base = FrLdrCreateModule ("HARDWARE");
+  RegExportBinaryHive ("\\Registry\\Machine\\HARDWARE", (PVOID)Base, &Size);
+  FrLdrCloseModule (Base, Size);
 
 #if 0
   printf("Base: %x\n", Base);
@@ -571,7 +571,8 @@ for(;;);
 
   /* Now boot the kernel */
   DiskStopFloppyMotor();
-  boot_reactos();
+  MachVideoPrepareForReactOS();
+  FrLdrStartup(0x2badb002);
 }
 
 /* EOF */

@@ -28,9 +28,9 @@ static unsigned CurrentAttr = 0x0f;
 VOID
 XboxConsPutChar(int c)
 {
-  U32 Width;
-  U32 Height;
-  U32 Depth;
+  ULONG Width;
+  ULONG Height;
+  ULONG Depth;
 
   if ('\r' == c)
     {

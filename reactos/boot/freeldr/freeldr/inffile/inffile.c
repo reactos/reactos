@@ -56,7 +56,7 @@ typedef struct _INFCACHELINE
   struct _INFCACHELINE *Next;
   struct _INFCACHELINE *Prev;
 
-  S32 FieldCount;
+  LONG FieldCount;
 
   PCHAR Key;
 
@@ -74,7 +74,7 @@ typedef struct _INFCACHESECTION
   PINFCACHELINE FirstLine;
   PINFCACHELINE LastLine;
 
-  S32 LineCount;
+  LONG LineCount;
 
   CHAR Name[1];
 } INFCACHESECTION, *PINFCACHESECTION;
@@ -241,7 +241,7 @@ InfpCacheAddSection (PINFCACHE Cache,
 		     PCHAR Name)
 {
   PINFCACHESECTION Section = NULL;
-  U32 Size;
+  ULONG Size;
 
   if (Cache == NULL || Name == NULL)
     {
@@ -341,7 +341,7 @@ InfpAddFieldToLine (PINFCACHELINE Line,
 		    PCHAR Data)
 {
   PINFCACHEFIELD Field;
-  U32 Size;
+  ULONG Size;
 
   Size = sizeof(INFCACHEFIELD) + strlen(Data);
   Field = (PINFCACHEFIELD)MmAllocateMemory (Size);
@@ -839,7 +839,7 @@ static BOOLEAN
 InfpParseBuffer (PINFCACHE file,
 		 const CHAR *buffer,
 		 const CHAR *end,
-		 PU32 error_line)
+		 PULONG error_line)
 {
   struct parser parser;
   const CHAR *pos = buffer;
@@ -877,17 +877,17 @@ InfpParseBuffer (PINFCACHE file,
 BOOLEAN
 InfOpenFile(PHINF InfHandle,
 	    PCHAR FileName,
-	    PU32 ErrorLine)
+	    PULONG ErrorLine)
 {
   PFILE FileHandle;
   PCHAR FileBuffer;
-  U32 FileSize;
+  ULONG FileSize;
   PINFCACHE Cache;
   BOOLEAN Success;
 
 
   *InfHandle = NULL;
-  *ErrorLine = (U32)-1;
+  *ErrorLine = (ULONG)-1;
 
 
   /* Open the inf file */
@@ -1144,7 +1144,7 @@ InfFindNextMatchLine (PINFCONTEXT ContextIn,
 }
 
 
-S32
+LONG
 InfGetLineCount(HINF InfHandle,
 		PCHAR Section)
 {
@@ -1184,7 +1184,7 @@ InfGetLineCount(HINF InfHandle,
 /* InfGetLineText */
 
 
-S32
+LONG
 InfGetFieldCount(PINFCONTEXT Context)
 {
   if (Context == NULL || Context->Line == NULL)
@@ -1196,16 +1196,16 @@ InfGetFieldCount(PINFCONTEXT Context)
 
 BOOLEAN
 InfGetBinaryField (PINFCONTEXT Context,
-		   U32 FieldIndex,
-		   PU8 ReturnBuffer,
-		   U32 ReturnBufferSize,
-		   PU32 RequiredSize)
+		   ULONG FieldIndex,
+		   PUCHAR ReturnBuffer,
+		   ULONG ReturnBufferSize,
+		   PULONG RequiredSize)
 {
   PINFCACHELINE CacheLine;
   PINFCACHEFIELD CacheField;
-  U32 Index;
-  U32 Size;
-  PU8 Ptr;
+  ULONG Index;
+  ULONG Size;
+  PUCHAR Ptr;
 
   if (Context == NULL || Context->Line == NULL || FieldIndex == 0)
     {
@@ -1252,12 +1252,12 @@ InfGetBinaryField (PINFCONTEXT Context,
 
 BOOLEAN
 InfGetIntField (PINFCONTEXT Context,
-		U32 FieldIndex,
-		S32 *IntegerValue)
+		ULONG FieldIndex,
+		LONG *IntegerValue)
 {
   PINFCACHELINE CacheLine;
   PINFCACHEFIELD CacheField;
-  U32 Index;
+  ULONG Index;
   PCHAR Ptr;
 
   if (Context == NULL || Context->Line == NULL || IntegerValue == NULL)
@@ -1295,16 +1295,16 @@ InfGetIntField (PINFCONTEXT Context,
 
 BOOLEAN
 InfGetMultiSzField (PINFCONTEXT Context,
-		    U32 FieldIndex,
+		    ULONG FieldIndex,
 		    PCHAR ReturnBuffer,
-		    U32 ReturnBufferSize,
-		    PU32 RequiredSize)
+		    ULONG ReturnBufferSize,
+		    PULONG RequiredSize)
 {
   PINFCACHELINE CacheLine;
   PINFCACHEFIELD CacheField;
   PINFCACHEFIELD FieldPtr;
-  U32 Index;
-  U32 Size;
+  ULONG Index;
+  ULONG Size;
   PCHAR Ptr;
 
   if (Context == NULL || Context->Line == NULL || FieldIndex == 0)
@@ -1364,16 +1364,16 @@ InfGetMultiSzField (PINFCONTEXT Context,
 
 BOOLEAN
 InfGetStringField (PINFCONTEXT Context,
-		   U32 FieldIndex,
+		   ULONG FieldIndex,
 		   PCHAR ReturnBuffer,
-		   U32 ReturnBufferSize,
-		   PU32 RequiredSize)
+		   ULONG ReturnBufferSize,
+		   PULONG RequiredSize)
 {
   PINFCACHELINE CacheLine;
   PINFCACHEFIELD CacheField;
-  U32 Index;
+  ULONG Index;
   PCHAR Ptr;
-  U32 Size;
+  ULONG Size;
 
   if (Context == NULL || Context->Line == NULL || FieldIndex == 0)
     {
@@ -1456,12 +1456,12 @@ InfGetData (PINFCONTEXT Context,
 
 BOOLEAN
 InfGetDataField (PINFCONTEXT Context,
-		 U32 FieldIndex,
+		 ULONG FieldIndex,
 		 PCHAR *Data)
 {
   PINFCACHELINE CacheLine;
   PINFCACHEFIELD CacheField;
-  U32 Index;
+  ULONG Index;
 
   if (Context == NULL || Context->Line == NULL || Data == NULL)
     {

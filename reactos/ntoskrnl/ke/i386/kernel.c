@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,7 +24,6 @@ CHAR Ke386CpuidModel[49] = {0,};
 ULONG Ke386L1CacheSize;
 BOOLEAN Ke386NoExecute = FALSE;
 BOOLEAN Ke386Pae = FALSE;
-BOOLEAN Ke386PaeEnabled = FALSE;
 BOOLEAN Ke386GlobalPagesEnabled = FALSE;
 ULONG KiFastSystemCallDisable = 1;
 
@@ -286,7 +285,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
       }
       p1 = p2;
    }
-
+#if 0
    /* 
     * FIXME:
     *   Make the detection of the noexecute feature more portable.
@@ -311,15 +310,17 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    {
       NoExecute=FALSE;
    }
+#endif
 
-      
+   Ke386Pae = Ke386GetCr4() & X86_CR4_PAE ? TRUE : FALSE; 
+#if 0      
    /* Enable PAE mode */
    if ((Pae && (KPCR->PrcbData.FeatureBits & X86_FEATURE_PAE)) || NoExecute)
    {
       MiEnablePAE((PVOID*)LastKernelAddress);
       Ke386PaeEnabled = TRUE;
    }
-
+#endif
    if (KPCR->PrcbData.FeatureBits & X86_FEATURE_SYSCALL)
    {
       extern void KiFastCallEntry(void);
@@ -423,7 +424,7 @@ Ki386SetProcessorFeatures(VOID)
       (Ke386CpuidExFlags & X86_EXT_FEATURE_3DNOW);
    SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] =
       (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC);
-   SharedUserData->ProcessorFeatures[PF_PAE_ENABLED] = Ke386PaeEnabled;
+   SharedUserData->ProcessorFeatures[PF_PAE_ENABLED] = Ke386Pae;
    SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
       (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2);
 

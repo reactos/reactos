@@ -89,94 +89,41 @@
 #define CONTROLLER_TIMEOUT                              250
 
 
-typedef struct _CM_INT13_DRIVE_PARAMETER
-{
-  U16 DriveSelect;
-  U32 MaxCylinders;
-  U16 SectorsPerTrack;
-  U16 MaxHeads;
-  U16 NumberDrives;
-} CM_INT13_DRIVE_PARAMETER, *PCM_INT13_DRIVE_PARAMETER;
-
-
 typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA
 {
-  U32 BytesPerSector;
-  U32 NumberOfCylinders;
-  U32 SectorsPerTrack;
-  U32 NumberOfHeads;
+  ULONG BytesPerSector;
+  ULONG NumberOfCylinders;
+  ULONG SectorsPerTrack;
+  ULONG NumberOfHeads;
 } CM_DISK_GEOMETRY_DEVICE_DATA, *PCM_DISK_GEOMETRY_DEVICE_DATA;
 
 
 typedef struct _CM_PNP_BIOS_DEVICE_NODE
 {
-  U16 Size;
-  U8  Node;
-  U32 ProductId;
-  U8  DeviceType[3];
-  U16 DeviceAttributes;
+  USHORT Size;
+  UCHAR  Node;
+  ULONG ProductId;
+  UCHAR  DeviceType[3];
+  USHORT DeviceAttributes;
 } __attribute__((packed)) CM_PNP_BIOS_DEVICE_NODE, *PCM_PNP_BIOS_DEVICE_NODE;
 
 
 typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK
 {
-  U8  Signature[4];
-  U8  Revision;
-  U8  Length;
-  U16 ControlField;
-  U8  Checksum;
-  U32 EventFlagAddress;
-  U16 RealModeEntryOffset;
-  U16 RealModeEntrySegment;
-  U16 ProtectedModeEntryOffset;
-  U32 ProtectedModeCodeBaseAddress;
-  U32 OemDeviceId;
-  U16 RealModeDataBaseAddress;
-  U32 ProtectedModeDataBaseAddress;
+  UCHAR  Signature[4];
+  UCHAR  Revision;
+  UCHAR  Length;
+  USHORT ControlField;
+  UCHAR  Checksum;
+  ULONG EventFlagAddress;
+  USHORT RealModeEntryOffset;
+  USHORT RealModeEntrySegment;
+  USHORT ProtectedModeEntryOffset;
+  ULONG ProtectedModeCodeBaseAddress;
+  ULONG OemDeviceId;
+  USHORT RealModeDataBaseAddress;
+  ULONG ProtectedModeDataBaseAddress;
 } __attribute__((packed)) CM_PNP_BIOS_INSTALLATION_CHECK, *PCM_PNP_BIOS_INSTALLATION_CHECK;
-
-
-typedef struct _CM_SERIAL_DEVICE_DATA
-{
-  U16 Version;
-  U16 Revision;
-  U32 BaudClock;
-} __attribute__((packed)) CM_SERIAL_DEVICE_DATA, *PCM_SERIAL_DEVICE_DATA;
-
-
-typedef struct _CM_FLOPPY_DEVICE_DATA
-{
-  U16 Version;
-  U16 Revision;
-  CHAR Size[8];
-  U32 MaxDensity;
-  U32 MountDensity;
-
-  /* Version 2.0 data */
-  U8 StepRateHeadUnloadTime;
-  U8 HeadLoadTime;
-  U8 MotorOffTime;
-  U8 SectorLengthCode;
-  U8 SectorPerTrack;
-  U8 ReadWriteGapLength;
-  U8 DataTransferLength;
-  U8 FormatGapLength;
-  U8 FormatFillCharacter;
-  U8 HeadSettleTime;
-  U8 MotorSettleTime;
-  U8 MaximumTrackValue;
-  U8 DataTransferRate;
-} __attribute__((packed)) CM_FLOPPY_DEVICE_DATA, *PCM_FLOPPY_DEVICE_DATA;
-
-
-typedef struct _CM_KEYBOARD_DEVICE_DATA
-{
-  U16 Version;
-  U16 Revision;
-  U8 Type;
-  U8 Subtype;
-  U16 KeyboardFlags;
-} __attribute__((packed)) CM_KEYBOARD_DEVICE_DATA, *PCM_KEYBOARD_DEVICE_DATA;
 
 
 static char Hex[] = "0123456789ABCDEF";
@@ -187,28 +134,28 @@ static unsigned int delay_count = 1;
 
 
 static VOID
-__KeStallExecutionProcessor(U32 Loops)
+__StallExecutionProcessor(ULONG Loops)
 {
   register unsigned int i;
   for (i = 0; i < Loops; i++);
 }
 
 
-VOID KeStallExecutionProcessor(U32 Microseconds)
+VOID StallExecutionProcessor(ULONG Microseconds)
 {
-  U64 LoopCount = ((U64)delay_count * (U64)Microseconds) / 1000ULL;
-  __KeStallExecutionProcessor((U32)LoopCount);
+  ULONGLONG LoopCount = ((ULONGLONG)delay_count * (ULONGLONG)Microseconds) / 1000ULL;
+  __StallExecutionProcessor((ULONG)LoopCount);
 }
 
 
-static U32
+static ULONG
 Read8254Timer(VOID)
 {
-  U32 Count;
+  ULONG Count;
 
-  WRITE_PORT_UCHAR((PU8)0x43, 0x00);
-  Count = READ_PORT_UCHAR((PU8)0x40);
-  Count |= READ_PORT_UCHAR((PU8)0x40) << 8;
+  WRITE_PORT_UCHAR((PUCHAR)0x43, 0x00);
+  Count = READ_PORT_UCHAR((PUCHAR)0x40);
+  Count |= READ_PORT_UCHAR((PUCHAR)0x40) << 8;
 
   return Count;
 }
@@ -217,9 +164,9 @@ Read8254Timer(VOID)
 static VOID
 WaitFor8254Wraparound(VOID)
 {
-  U32 CurCount;
-  U32 PrevCount = ~0;
-  S32 Delta;
+  ULONG CurCount;
+  ULONG PrevCount = ~0;
+  LONG Delta;
 
   CurCount = Read8254Timer();
 
@@ -242,14 +189,14 @@ WaitFor8254Wraparound(VOID)
 VOID
 HalpCalibrateStallExecution(VOID)
 {
-  U32 i;
-  U32 calib_bit;
-  U32 CurCount;
+  ULONG i;
+  ULONG calib_bit;
+  ULONG CurCount;
 
   /* Initialise timer interrupt with MILLISECOND ms interval        */
-  WRITE_PORT_UCHAR((PU8)0x43, 0x34);  /* binary, mode 2, LSB/MSB, ch 0 */
-  WRITE_PORT_UCHAR((PU8)0x40, LATCH & 0xff); /* LSB */
-  WRITE_PORT_UCHAR((PU8)0x40, LATCH >> 8); /* MSB */
+  WRITE_PORT_UCHAR((PUCHAR)0x43, 0x34);  /* binary, mode 2, LSB/MSB, ch 0 */
+  WRITE_PORT_UCHAR((PUCHAR)0x40, LATCH & 0xff); /* LSB */
+  WRITE_PORT_UCHAR((PUCHAR)0x40, LATCH >> 8); /* MSB */
   
   /* Stage 1:  Coarse calibration                                   */
   
@@ -262,7 +209,7 @@ HalpCalibrateStallExecution(VOID)
 
     WaitFor8254Wraparound();
   
-    __KeStallExecutionProcessor(delay_count);      /* Do the delay */
+    __StallExecutionProcessor(delay_count);      /* Do the delay */
   
     CurCount = Read8254Timer();
   } while (CurCount > LATCH / 2);
@@ -281,7 +228,7 @@ HalpCalibrateStallExecution(VOID)
   
     WaitFor8254Wraparound();
   
-    __KeStallExecutionProcessor(delay_count);      /* Do the delay */
+    __StallExecutionProcessor(delay_count);      /* Do the delay */
   
     CurCount = Read8254Timer();
     if (CurCount <= LATCH / 2)   /* If a tick has passed, turn the */
@@ -294,13 +241,13 @@ HalpCalibrateStallExecution(VOID)
 
 
 VOID
-SetComponentInformation(HKEY ComponentKey,
-			U32 Flags,
-			U32 Key,
-			U32 Affinity)
+SetComponentInformation(FRLDRHKEY ComponentKey,
+			ULONG Flags,
+			ULONG Key,
+			ULONG Affinity)
 {
   CM_COMPONENT_INFORMATION CompInfo;
-  S32 Error;
+  LONG Error;
 
   CompInfo.Flags = Flags;
   CompInfo.Version = 0;
@@ -311,7 +258,7 @@ SetComponentInformation(HKEY ComponentKey,
   Error = RegSetValue(ComponentKey,
 		      "Component Information",
 		      REG_BINARY,
-		      (PU8)&CompInfo,
+		      (PUCHAR)&CompInfo,
 		      sizeof(CM_COMPONENT_INFORMATION));
   if (Error != ERROR_SUCCESS)
     {
@@ -321,23 +268,23 @@ SetComponentInformation(HKEY ComponentKey,
 
 
 static VOID
-DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
+DetectPnpBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PNP_BIOS_DEVICE_NODE DeviceNode;
   PCM_PNP_BIOS_INSTALLATION_CHECK InstData;
   char Buffer[80];
-  HKEY BusKey;
-  U32 x;
-  U32 NodeSize = 0;
-  U32 NodeCount = 0;
-  U8 NodeNumber;
-  U32 FoundNodeCount;
+  FRLDRHKEY BusKey;
+  ULONG x;
+  ULONG NodeSize = 0;
+  ULONG NodeCount = 0;
+  UCHAR NodeNumber;
+  ULONG FoundNodeCount;
   int i;
-  U32 PnpBufferSize;
-  U32 Size;
+  ULONG PnpBufferSize;
+  ULONG Size;
   char *Ptr;
-  S32 Error;
+  LONG Error;
 
   InstData = (PCM_PNP_BIOS_INSTALLATION_CHECK)PnpBiosSupported();
   if (InstData == NULL || strncmp(InstData->Signature, "$PnP", 4))
@@ -388,7 +335,7 @@ DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
   Error = RegSetValue(BusKey,
 		      "Identifier",
 		      REG_SZ,
-		      (PU8)"PNP BIOS",
+		      (PUCHAR)"PNP BIOS",
 		      9);
   if (Error != ERROR_SUCCESS)
     {
@@ -428,7 +375,7 @@ DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
   PnpBufferSize = sizeof(CM_PNP_BIOS_INSTALLATION_CHECK);
   for (i = 0; i < 0xFF; i++)
     {
-      NodeNumber = (U8)i;
+      NodeNumber = (UCHAR)i;
 
       x = PnpBiosGetDeviceNode(&NodeNumber, (PVOID)DISKREADBUFFER);
       if (x == 0)
@@ -466,7 +413,7 @@ DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
   Error = RegSetValue(BusKey,
 		      "Configuration Data",
 		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PU8) FullResourceDescriptor,
+		      (PUCHAR) FullResourceDescriptor,
 		      Size);
   MmFreeMemory(FullResourceDescriptor);
   if (Error != ERROR_SUCCESS)
@@ -480,15 +427,15 @@ DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
 
 
 static VOID
-SetHarddiskConfigurationData(HKEY DiskKey,
-			     U32 DriveNumber)
+SetHarddiskConfigurationData(FRLDRHKEY DiskKey,
+			     ULONG DriveNumber)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_DISK_GEOMETRY_DEVICE_DATA DiskGeometry;
   EXTENDED_GEOMETRY ExtGeometry;
   GEOMETRY Geometry;
-  U32 Size;
-  S32 Error;
+  ULONG Size;
+  LONG Error;
 
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) +
@@ -548,7 +495,7 @@ SetHarddiskConfigurationData(HKEY DiskKey,
   Error = RegSetValue(DiskKey,
 		      "Configuration Data",
 		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PU8) FullResourceDescriptor,
+		      (PUCHAR) FullResourceDescriptor,
 		      Size);
   MmFreeMemory(FullResourceDescriptor);
   if (Error != ERROR_SUCCESS)
@@ -561,16 +508,16 @@ SetHarddiskConfigurationData(HKEY DiskKey,
 
 
 static VOID
-SetHarddiskIdentifier(HKEY DiskKey,
-		      U32 DriveNumber)
+SetHarddiskIdentifier(FRLDRHKEY DiskKey,
+		      ULONG DriveNumber)
 {
   PMASTER_BOOT_RECORD Mbr;
-  U32 *Buffer;
-  U32 i;
-  U32 Checksum;
-  U32 Signature;
+  ULONG *Buffer;
+  ULONG i;
+  ULONG Checksum;
+  ULONG Signature;
   char Identifier[20];
-  S32 Error;
+  LONG Error;
 
   /* Read the MBR */
   if (!MachDiskReadLogicalSectors(DriveNumber, 0ULL, 1, (PVOID)DISKREADBUFFER))
@@ -579,7 +526,7 @@ SetHarddiskIdentifier(HKEY DiskKey,
       return;
     }
 
-  Buffer = (U32*)DISKREADBUFFER;
+  Buffer = (ULONG*)DISKREADBUFFER;
   Mbr = (PMASTER_BOOT_RECORD)DISKREADBUFFER;
 
   Signature =  Mbr->Signature;
@@ -621,7 +568,7 @@ SetHarddiskIdentifier(HKEY DiskKey,
   Error = RegSetValue(DiskKey,
 		      "Identifier",
 		      REG_SZ,
-		      (PU8) Identifier,
+		      (PUCHAR) Identifier,
 		      20);
   if (Error != ERROR_SUCCESS)
     {
@@ -633,18 +580,18 @@ SetHarddiskIdentifier(HKEY DiskKey,
 
 
 static VOID
-DetectBiosDisks(HKEY SystemKey,
-		HKEY BusKey)
+DetectBiosDisks(FRLDRHKEY SystemKey,
+		FRLDRHKEY BusKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_INT13_DRIVE_PARAMETER Int13Drives;
   GEOMETRY Geometry;
   CHAR Buffer[80];
-  HKEY DiskKey;
-  U32 DiskCount;
-  U32 Size;
-  U32 i;
-  S32 Error;
+  FRLDRHKEY DiskKey;
+  ULONG DiskCount;
+  ULONG Size;
+  ULONG i;
+  LONG Error;
   BOOL Changed;
 
   /* Count the number of visible drives */
@@ -726,7 +673,7 @@ DetectBiosDisks(HKEY SystemKey,
   Error = RegSetValue(SystemKey,
 		      "Configuration Data",
 		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PU8) FullResourceDescriptor,
+		      (PUCHAR) FullResourceDescriptor,
 		      Size);
   MmFreeMemory(FullResourceDescriptor);
   if (Error != ERROR_SUCCESS)
@@ -762,10 +709,10 @@ DetectBiosDisks(HKEY SystemKey,
 }
 
 
-static U32
+static ULONG
 GetFloppyCount(VOID)
 {
-  U8 Data;
+  UCHAR Data;
 
   WRITE_PORT_UCHAR((PUCHAR)0x70, 0x10);
   Data = READ_PORT_UCHAR((PUCHAR)0x71);
@@ -774,10 +721,10 @@ GetFloppyCount(VOID)
 }
 
 
-static U8
-GetFloppyType(U8 DriveNumber)
+static UCHAR
+GetFloppyType(UCHAR DriveNumber)
 {
-  U8 Data;
+  UCHAR Data;
 
   WRITE_PORT_UCHAR((PUCHAR)0x70, 0x10);
   Data = READ_PORT_UCHAR((PUCHAR)0x71);
@@ -794,28 +741,28 @@ GetFloppyType(U8 DriveNumber)
 static PVOID
 GetInt1eTable(VOID)
 {
-  PU16 SegPtr = (PU16)0x7A;
-  PU16 OfsPtr = (PU16)0x78;
+  PUSHORT SegPtr = (PUSHORT)0x7A;
+  PUSHORT OfsPtr = (PUSHORT)0x78;
 
-  return (PVOID)(((U32)(*SegPtr)) << 4) + (U32)(*OfsPtr);
+  return (PVOID)(((ULONG)(*SegPtr)) << 4) + (ULONG)(*OfsPtr);
 }
 
 
 static VOID
-DetectBiosFloppyPeripheral(HKEY ControllerKey)
+DetectBiosFloppyPeripheral(FRLDRHKEY ControllerKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
   PCM_FLOPPY_DEVICE_DATA FloppyData;
   char KeyName[32];
   char Identifier[20];
-  HKEY PeripheralKey;
-  U32 Size;
-  S32 Error;
-  U32 FloppyNumber;
-  U8 FloppyType;
-  U32 MaxDensity[6] = {0, 360, 1200, 720, 1440, 2880};
-  PU8 Ptr;
+  FRLDRHKEY PeripheralKey;
+  ULONG Size;
+  LONG Error;
+  ULONG FloppyNumber;
+  UCHAR FloppyType;
+  ULONG MaxDensity[6] = {0, 360, 1200, 720, 1440, 2880};
+  PUCHAR Ptr;
 
   for (FloppyNumber = 0; FloppyNumber < 2; FloppyNumber++)
   {
@@ -882,7 +829,7 @@ DetectBiosFloppyPeripheral(HKEY ControllerKey)
     Error = RegSetValue(PeripheralKey,
 			"Configuration Data",
 			REG_FULL_RESOURCE_DESCRIPTOR,
-			(PU8) FullResourceDescriptor,
+			(PUCHAR) FullResourceDescriptor,
 			Size);
     MmFreeMemory(FullResourceDescriptor);
     if (Error != ERROR_SUCCESS)
@@ -898,7 +845,7 @@ DetectBiosFloppyPeripheral(HKEY ControllerKey)
     Error = RegSetValue(PeripheralKey,
 			"Identifier",
 			REG_SZ,
-			(PU8)Identifier,
+			(PUCHAR)Identifier,
 			strlen(Identifier) + 1);
     if (Error != ERROR_SUCCESS)
     {
@@ -911,15 +858,15 @@ DetectBiosFloppyPeripheral(HKEY ControllerKey)
 
 
 static VOID
-DetectBiosFloppyController(HKEY SystemKey,
-			   HKEY BusKey)
+DetectBiosFloppyController(FRLDRHKEY SystemKey,
+			   FRLDRHKEY BusKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
-  HKEY ControllerKey;
-  U32 Size;
-  S32 Error;
-  U32 FloppyCount;
+  FRLDRHKEY ControllerKey;
+  ULONG Size;
+  LONG Error;
+  ULONG FloppyCount;
 
   FloppyCount = GetFloppyCount();
   DbgPrint((DPRINT_HWDETECT,
@@ -967,7 +914,8 @@ DetectBiosFloppyController(HKEY SystemKey,
   PartialDescriptor->Type = CmResourceTypePort;
   PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
   PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
-  PartialDescriptor->u.Port.Start = (U64)0x03F0;
+  PartialDescriptor->u.Port.Start.LowPart = 0x03F0;
+  PartialDescriptor->u.Port.Start.HighPart = 0x0;
   PartialDescriptor->u.Port.Length = 8;
 
   /* Set Interrupt */
@@ -991,7 +939,7 @@ DetectBiosFloppyController(HKEY SystemKey,
   Error = RegSetValue(ControllerKey,
 		      "Configuration Data",
 		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PU8) FullResourceDescriptor,
+		      (PUCHAR) FullResourceDescriptor,
 		      Size);
   MmFreeMemory(FullResourceDescriptor);
   if (Error != ERROR_SUCCESS)
@@ -1007,8 +955,8 @@ DetectBiosFloppyController(HKEY SystemKey,
 
 
 static VOID
-InitializeSerialPort(U32 Port,
-		     U32 LineControl)
+InitializeSerialPort(ULONG Port,
+		     ULONG LineControl)
 {
   WRITE_PORT_UCHAR((PUCHAR)Port + 3, 0x80);  /* set DLAB on   */
   WRITE_PORT_UCHAR((PUCHAR)Port,     0x60);  /* speed LO byte */
@@ -1020,18 +968,18 @@ InitializeSerialPort(U32 Port,
 }
 
 
-static U32
-DetectSerialMouse(U32 Port)
+static ULONG
+DetectSerialMouse(ULONG Port)
 {
   CHAR Buffer[4];
-  U32 i;
-  U32 TimeOut = 200;
-  U8 LineControl;
+  ULONG i;
+  ULONG TimeOut = 200;
+  UCHAR LineControl;
 
   /* Shutdown mouse or something like that */
   LineControl = READ_PORT_UCHAR((PUCHAR)Port + 4);
   WRITE_PORT_UCHAR((PUCHAR)Port + 4, (LineControl & ~0x02) | 0x01);
-  KeStallExecutionProcessor(100000);
+  StallExecutionProcessor(100000);
 
   /* Clear buffer */
   while (READ_PORT_UCHAR((PUCHAR)Port + 5) & 0x01)
@@ -1044,14 +992,14 @@ DetectSerialMouse(U32 Port)
   WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x0b);
 
   /* Wait 10 milliseconds for the mouse getting ready */
-  KeStallExecutionProcessor(10000);
+  StallExecutionProcessor(10000);
 
   /* Read first four bytes, which contains Microsoft Mouse signs */
   for (i = 0; i < 4; i++)
     {
       while (((READ_PORT_UCHAR((PUCHAR)Port + 5) & 1) == 0) && (TimeOut > 0))
 	{
-	  KeStallExecutionProcessor(1000);
+	  StallExecutionProcessor(1000);
 	  --TimeOut;
 	  if (TimeOut == 0)
 	    return MOUSE_TYPE_NONE;
@@ -1107,29 +1055,29 @@ DetectSerialMouse(U32 Port)
 }
 
 
-static U32
-GetSerialMousePnpId(U32 Port, char *Buffer)
+static ULONG
+GetSerialMousePnpId(ULONG Port, char *Buffer)
 {
-  U32 TimeOut;
-  U32 i = 0;
+  ULONG TimeOut;
+  ULONG i = 0;
   char c;
   char x;
 
   WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x09);
 
   /* Wait 10 milliseconds for the mouse getting ready */
-  KeStallExecutionProcessor(10000);
+  StallExecutionProcessor(10000);
 
   WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x0b);
 
-  KeStallExecutionProcessor(10000);
+  StallExecutionProcessor(10000);
 
   for (;;)
     {
       TimeOut = 200;
       while (((READ_PORT_UCHAR((PUCHAR)Port + 5) & 1) == 0) && (TimeOut > 0))
 	{
-	  KeStallExecutionProcessor(1000);
+	  StallExecutionProcessor(1000);
 	  --TimeOut;
 	  if (TimeOut == 0)
 	    {
@@ -1150,7 +1098,7 @@ GetSerialMousePnpId(U32 Port, char *Buffer)
       TimeOut = 200;
       while (((READ_PORT_UCHAR((PUCHAR)Port + 5) & 1) == 0) && (TimeOut > 0))
 	{
-	  KeStallExecutionProcessor(1000);
+	  StallExecutionProcessor(1000);
 	  --TimeOut;
 	  if (TimeOut == 0)
 	    return 0;
@@ -1168,18 +1116,18 @@ GetSerialMousePnpId(U32 Port, char *Buffer)
 
 
 static VOID
-DetectSerialPointerPeripheral(HKEY ControllerKey,
-			      U32 Base)
+DetectSerialPointerPeripheral(FRLDRHKEY ControllerKey,
+			      ULONG Base)
 {
   CM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   char Buffer[256];
   char Identifier[256];
-  HKEY PeripheralKey;
-  U32 MouseType;
-  U32 Length;
-  U32 i;
-  U32 j;
-  S32 Error;
+  FRLDRHKEY PeripheralKey;
+  ULONG MouseType;
+  ULONG Length;
+  ULONG i;
+  ULONG j;
+  LONG Error;
 
   DbgPrint((DPRINT_HWDETECT,
 	    "DetectSerialPointerPeripheral()\n"));
@@ -1332,7 +1280,7 @@ DetectSerialPointerPeripheral(HKEY ControllerKey,
       Error = RegSetValue(PeripheralKey,
 			  "Configuration Data",
 			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PU8)&FullResourceDescriptor,
+			  (PUCHAR)&FullResourceDescriptor,
 			  sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
 			  sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
       if (Error != ERROR_SUCCESS)
@@ -1346,7 +1294,7 @@ DetectSerialPointerPeripheral(HKEY ControllerKey,
       Error = RegSetValue(PeripheralKey,
 			  "Identifier",
 			  REG_SZ,
-			  (PU8)Identifier,
+			  (PUCHAR)Identifier,
 			  strlen(Identifier) + 1);
       if (Error != ERROR_SUCCESS)
 	{
@@ -1359,28 +1307,28 @@ DetectSerialPointerPeripheral(HKEY ControllerKey,
 
 
 static VOID
-DetectSerialPorts(HKEY BusKey)
+DetectSerialPorts(FRLDRHKEY BusKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
   PCM_SERIAL_DEVICE_DATA SerialDeviceData;
-  U32 Irq[4] = {4, 3, 4, 3};
-  U32 Base;
+  ULONG Irq[4] = {4, 3, 4, 3};
+  ULONG Base;
   char Buffer[80];
-  PU16 BasePtr;
-  U32 ControllerNumber = 0;
-  HKEY ControllerKey;
-  U32 i;
-  S32 Error;
-  U32 Size;
+  PUSHORT BasePtr;
+  ULONG ControllerNumber = 0;
+  FRLDRHKEY ControllerKey;
+  ULONG i;
+  LONG Error;
+  ULONG Size;
 
   DbgPrint((DPRINT_HWDETECT, "DetectSerialPorts()\n"));
 
   ControllerNumber = 0;
-  BasePtr = (PU16)0x400;
+  BasePtr = (PUSHORT)0x400;
   for (i = 0; i < 4; i++, BasePtr++)
     {
-      Base = (U32)*BasePtr;
+      Base = (ULONG)*BasePtr;
       if (Base == 0)
         continue;
 
@@ -1433,7 +1381,8 @@ DetectSerialPorts(HKEY BusKey)
       PartialDescriptor->Type = CmResourceTypePort;
       PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
       PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
-      PartialDescriptor->u.Port.Start = (U64)Base;
+      PartialDescriptor->u.Port.Start.LowPart = Base;
+      PartialDescriptor->u.Port.Start.HighPart = 0x0;
       PartialDescriptor->u.Port.Length = 7;
 
       /* Set Interrupt */
@@ -1460,7 +1409,7 @@ DetectSerialPorts(HKEY BusKey)
       Error = RegSetValue(ControllerKey,
 			  "Configuration Data",
 			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PU8) FullResourceDescriptor,
+			  (PUCHAR) FullResourceDescriptor,
 			  Size);
       MmFreeMemory(FullResourceDescriptor);
       if (Error != ERROR_SUCCESS)
@@ -1477,7 +1426,7 @@ DetectSerialPorts(HKEY BusKey)
       Error = RegSetValue(ControllerKey,
 			  "Identifier",
 			  REG_SZ,
-			  (PU8)Buffer,
+			  (PUCHAR)Buffer,
 			  strlen(Buffer) + 1);
       if (Error != ERROR_SUCCESS)
 	{
@@ -1499,27 +1448,27 @@ DetectSerialPorts(HKEY BusKey)
 
 
 static VOID
-DetectParallelPorts(HKEY BusKey)
+DetectParallelPorts(FRLDRHKEY BusKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
-  U32 Irq[3] = {7, 5, (U32)-1};
+  ULONG Irq[3] = {7, 5, (ULONG)-1};
   char Buffer[80];
-  HKEY ControllerKey;
-  PU16 BasePtr;
-  U32 Base;
-  U32 ControllerNumber;
-  U32 i;
-  S32 Error;
-  U32 Size;
+  FRLDRHKEY ControllerKey;
+  PUSHORT BasePtr;
+  ULONG Base;
+  ULONG ControllerNumber;
+  ULONG i;
+  LONG Error;
+  ULONG Size;
 
   DbgPrint((DPRINT_HWDETECT, "DetectParallelPorts() called\n"));
 
   ControllerNumber = 0;
-  BasePtr = (PU16)0x408;
+  BasePtr = (PUSHORT)0x408;
   for (i = 0; i < 3; i++, BasePtr++)
     {
-      Base = (U32)*BasePtr;
+      Base = (ULONG)*BasePtr;
       if (Base == 0)
         continue;
 
@@ -1551,7 +1500,7 @@ DetectParallelPorts(HKEY BusKey)
 
       /* Build full device descriptor */
       Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
-      if (Irq[i] != (U32)-1)
+      if (Irq[i] != (ULONG)-1)
 	Size += sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 
       FullResourceDescriptor = MmAllocateMemory(Size);
@@ -1566,18 +1515,19 @@ DetectParallelPorts(HKEY BusKey)
       /* Initialize resource descriptor */
       FullResourceDescriptor->InterfaceType = Isa;
       FullResourceDescriptor->BusNumber = 0;
-      FullResourceDescriptor->PartialResourceList.Count = (Irq[i] != (U32)-1) ? 2 : 1;
+      FullResourceDescriptor->PartialResourceList.Count = (Irq[i] != (ULONG)-1) ? 2 : 1;
 
       /* Set IO Port */
       PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[0];
       PartialDescriptor->Type = CmResourceTypePort;
       PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
       PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
-      PartialDescriptor->u.Port.Start = (U64)Base;
+      PartialDescriptor->u.Port.Start.LowPart = Base;
+      PartialDescriptor->u.Port.Start.HighPart = 0x0;
       PartialDescriptor->u.Port.Length = 3;
 
       /* Set Interrupt */
-      if (Irq[i] != (U32)-1)
+      if (Irq[i] != (ULONG)-1)
 	{
 	  PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[1];
 	  PartialDescriptor->Type = CmResourceTypeInterrupt;
@@ -1592,7 +1542,7 @@ DetectParallelPorts(HKEY BusKey)
       Error = RegSetValue(ControllerKey,
 			  "Configuration Data",
 			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PU8) FullResourceDescriptor,
+			  (PUCHAR) FullResourceDescriptor,
 			  Size);
       MmFreeMemory(FullResourceDescriptor);
       if (Error != ERROR_SUCCESS)
@@ -1609,7 +1559,7 @@ DetectParallelPorts(HKEY BusKey)
       Error = RegSetValue(ControllerKey,
 			  "Identifier",
 			  REG_SZ,
-			  (PU8)Buffer,
+			  (PUCHAR)Buffer,
 			  strlen(Buffer) + 1);
       if (Error != ERROR_SUCCESS)
 	{
@@ -1638,7 +1588,7 @@ DetectKeyboardDevice(VOID)
   WRITE_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA,
 		   0xF2);
 
-  KeStallExecutionProcessor(10000);
+  StallExecutionProcessor(10000);
 
   Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
   if ((Status & 0x01) != 0x01)
@@ -1654,7 +1604,7 @@ DetectKeyboardDevice(VOID)
       return FALSE;
     }
 
-  KeStallExecutionProcessor(10000);
+  StallExecutionProcessor(10000);
   Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
   if ((Status & 0x01) != 0x01)
     {
@@ -1669,7 +1619,7 @@ DetectKeyboardDevice(VOID)
       return FALSE;
     }
 
-  KeStallExecutionProcessor(10000);
+  StallExecutionProcessor(10000);
   Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
   if ((Status & 0x01) != 0x01)
     {
@@ -1690,15 +1640,15 @@ DetectKeyboardDevice(VOID)
 
 
 static VOID
-DetectKeyboardPeripheral(HKEY ControllerKey)
+DetectKeyboardPeripheral(FRLDRHKEY ControllerKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
   PCM_KEYBOARD_DEVICE_DATA KeyboardData;
-  HKEY PeripheralKey;
+  FRLDRHKEY PeripheralKey;
   char Buffer[80];
-  U32 Size;
-  S32 Error;
+  ULONG Size;
+  LONG Error;
 
   if (DetectKeyboardDevice())
   {
@@ -1752,7 +1702,7 @@ DetectKeyboardPeripheral(HKEY ControllerKey)
     Error = RegSetValue(PeripheralKey,
 			"Configuration Data",
 			REG_FULL_RESOURCE_DESCRIPTOR,
-			(PU8)FullResourceDescriptor,
+			(PUCHAR)FullResourceDescriptor,
 			Size);
     MmFreeMemory(FullResourceDescriptor);
     if (Error != ERROR_SUCCESS)
@@ -1768,7 +1718,7 @@ DetectKeyboardPeripheral(HKEY ControllerKey)
     Error = RegSetValue(ControllerKey,
 			"Identifier",
 			REG_SZ,
-			(PU8)Buffer,
+			(PUCHAR)Buffer,
 			strlen(Buffer) + 1);
     if (Error != ERROR_SUCCESS)
     {
@@ -1781,13 +1731,13 @@ DetectKeyboardPeripheral(HKEY ControllerKey)
 
 
 static VOID
-DetectKeyboardController(HKEY BusKey)
+DetectKeyboardController(FRLDRHKEY BusKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
-  HKEY ControllerKey;
-  U32 Size;
-  S32 Error;
+  FRLDRHKEY ControllerKey;
+  ULONG Size;
+  LONG Error;
 
   /* Create controller key */
   Error = RegCreateKey(BusKey,
@@ -1837,7 +1787,8 @@ DetectKeyboardController(HKEY BusKey)
   PartialDescriptor->Type = CmResourceTypePort;
   PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
   PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
-  PartialDescriptor->u.Port.Start = (U64)0x60;
+  PartialDescriptor->u.Port.Start.LowPart = 0x60;
+  PartialDescriptor->u.Port.Start.HighPart = 0x0;
   PartialDescriptor->u.Port.Length = 1;
 
   /* Set IO Port 0x64 */
@@ -1845,14 +1796,15 @@ DetectKeyboardController(HKEY BusKey)
   PartialDescriptor->Type = CmResourceTypePort;
   PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
   PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
-  PartialDescriptor->u.Port.Start = (U64)0x64;
+  PartialDescriptor->u.Port.Start.LowPart = 0x64;
+  PartialDescriptor->u.Port.Start.HighPart = 0x0;
   PartialDescriptor->u.Port.Length = 1;
 
   /* Set 'Configuration Data' value */
   Error = RegSetValue(ControllerKey,
 		      "Configuration Data",
 		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PU8)FullResourceDescriptor,
+		      (PUCHAR)FullResourceDescriptor,
 		      Size);
   MmFreeMemory(FullResourceDescriptor);
   if (Error != ERROR_SUCCESS)
@@ -1870,8 +1822,8 @@ DetectKeyboardController(HKEY BusKey)
 static VOID
 PS2ControllerWait(VOID)
 {
-  U32 Timeout;
-  U8 Status;
+  ULONG Timeout;
+  UCHAR Status;
 
   for (Timeout = 0; Timeout < CONTROLLER_TIMEOUT; Timeout++)
     {
@@ -1880,7 +1832,7 @@ PS2ControllerWait(VOID)
 	return;
 
       /* Sleep for one millisecond */
-      KeStallExecutionProcessor(1000);
+      StallExecutionProcessor(1000);
     }
 }
 
@@ -1888,9 +1840,9 @@ PS2ControllerWait(VOID)
 static BOOLEAN
 DetectPS2AuxPort(VOID)
 {
-  U32 Loops;
-  U8 Scancode;
-  U8 Status;
+  ULONG Loops;
+  UCHAR Scancode;
+  UCHAR Status;
 
   /* Put the value 0x5A in the output buffer using the
    * "WriteAuxiliary Device Output Buffer" command (0xD3).
@@ -1922,7 +1874,7 @@ DetectPS2AuxPort(VOID)
 	  break;
 	}
 
-      KeStallExecutionProcessor(10000);
+      StallExecutionProcessor(10000);
     }
 
   return FALSE;
@@ -1932,8 +1884,8 @@ DetectPS2AuxPort(VOID)
 static BOOLEAN
 DetectPS2AuxDevice(VOID)
 {
-  U8 Scancode;
-  U8 Status;
+  UCHAR Scancode;
+  UCHAR Status;
 
   PS2ControllerWait();
   WRITE_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_CONTROL,
@@ -1944,7 +1896,7 @@ DetectPS2AuxDevice(VOID)
   WRITE_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA,
 		   0xF2);
 
-  KeStallExecutionProcessor(10000);
+  StallExecutionProcessor(10000);
 
   Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
   if ((Status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL) == 0)
@@ -1956,7 +1908,7 @@ DetectPS2AuxDevice(VOID)
   if (Scancode != 0xFA)
     return FALSE;
 
-  KeStallExecutionProcessor(10000);
+  StallExecutionProcessor(10000);
 
   Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
   if ((Status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL) == 0)
@@ -1973,12 +1925,12 @@ DetectPS2AuxDevice(VOID)
 
 
 static VOID
-DetectPS2Mouse(HKEY BusKey)
+DetectPS2Mouse(FRLDRHKEY BusKey)
 {
   CM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
-  HKEY ControllerKey;
-  HKEY PeripheralKey;
-  S32 Error;
+  FRLDRHKEY ControllerKey;
+  FRLDRHKEY PeripheralKey;
+  LONG Error;
 
   if (DetectPS2AuxPort())
     {
@@ -2020,7 +1972,7 @@ DetectPS2Mouse(HKEY BusKey)
       Error = RegSetValue(ControllerKey,
 			  "Configuration Data",
 			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PU8)&FullResourceDescriptor,
+			  (PUCHAR)&FullResourceDescriptor,
 			  sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
       if (Error != ERROR_SUCCESS)
 	{
@@ -2062,7 +2014,7 @@ DetectPS2Mouse(HKEY BusKey)
 	  Error = RegSetValue(PeripheralKey,
 			      "Configuration Data",
 			      REG_FULL_RESOURCE_DESCRIPTOR,
-			      (PU8)&FullResourceDescriptor,
+			      (PUCHAR)&FullResourceDescriptor,
 			      sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
 			      sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 	  if (Error != ERROR_SUCCESS)
@@ -2077,7 +2029,7 @@ DetectPS2Mouse(HKEY BusKey)
 	  Error = RegSetValue(PeripheralKey,
 			      "Identifier",
 			      REG_SZ,
-			      (PU8)"MICROSOFT PS2 MOUSE",
+			      (PUCHAR)"MICROSOFT PS2 MOUSE",
 			      20);
 	  if (Error != ERROR_SUCCESS)
 	    {
@@ -2092,12 +2044,12 @@ DetectPS2Mouse(HKEY BusKey)
 
 
 static VOID
-DetectDisplayController(HKEY BusKey)
+DetectDisplayController(FRLDRHKEY BusKey)
 {
   CHAR Buffer[80];
-  HKEY ControllerKey;
-  U16 VesaVersion;
-  S32 Error;
+  FRLDRHKEY ControllerKey;
+  USHORT VesaVersion;
+  LONG Error;
 
   Error = RegCreateKey(BusKey,
 		       "DisplayController\\0",
@@ -2146,7 +2098,7 @@ DetectDisplayController(HKEY BusKey)
   Error = RegSetValue(ControllerKey,
 		      "Identifier",
 		      REG_SZ,
-		      (PU8)Buffer,
+		      (PUCHAR)Buffer,
 		      strlen(Buffer) + 1);
   if (Error != ERROR_SUCCESS)
     {
@@ -2161,13 +2113,13 @@ DetectDisplayController(HKEY BusKey)
 
 
 static VOID
-DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
+DetectIsaBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   char Buffer[80];
-  HKEY BusKey;
-  U32 Size;
-  S32 Error;
+  FRLDRHKEY BusKey;
+  ULONG Size;
+  LONG Error;
 
   /* Create new bus key */
   sprintf(Buffer,
@@ -2194,7 +2146,7 @@ DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
   Error = RegSetValue(BusKey,
 		      "Identifier",
 		      REG_SZ,
-		      (PU8)"ISA",
+		      (PUCHAR)"ISA",
 		      4);
   if (Error != ERROR_SUCCESS)
     {
@@ -2223,7 +2175,7 @@ DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
   Error = RegSetValue(BusKey,
 		      "Configuration Data",
 		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PU8) FullResourceDescriptor,
+		      (PUCHAR) FullResourceDescriptor,
 		      Size);
   MmFreeMemory(FullResourceDescriptor);
   if (Error != ERROR_SUCCESS)
@@ -2256,9 +2208,9 @@ DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
 VOID
 PcHwDetect(VOID)
 {
-  HKEY SystemKey;
-  U32 BusNumber = 0;
-  S32 Error;
+  FRLDRHKEY SystemKey;
+  ULONG BusNumber = 0;
+  LONG Error;
 
   DbgPrint((DPRINT_HWDETECT, "DetectHardware()\n"));
 

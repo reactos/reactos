@@ -29,14 +29,14 @@
 VOID
 MachInit(VOID)
 {
-  U32 PciId;
+  ULONG PciId;
 
   memset(&MachVtbl, 0, sizeof(MACHVTBL));
 
   /* Check for Xbox by identifying device at PCI 0:0:0, if it's
    * 0x10de/0x02a5 then we're running on an Xbox */
-  WRITE_PORT_ULONG((U32*) 0xcf8, CONFIG_CMD(0, 0, 0));
-  PciId = READ_PORT_ULONG((U32*) 0xcfc);
+  WRITE_PORT_ULONG((ULONG*) 0xcf8, CONFIG_CMD(0, 0, 0));
+  PciId = READ_PORT_ULONG((ULONG*) 0xcfc);
   if (0x02a510de == PciId)
     {
       XboxMachInit();
