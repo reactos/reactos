@@ -637,9 +637,8 @@ MmAllocatePagesForMdl ( IN PHYSICAL_ADDRESS LowAddress,
       memory. When a driver wants to access physical memory described by a
       sub-MDL it must map the sub-MDL using MmGetSystemAddressForMdlSafe.
    
-    Konstantin Gusev
-   
-*/
+      Konstantin Gusev
+      */
    
    PMDL Mdl;
    PPFN_TYPE Pages;
@@ -652,7 +651,11 @@ MmAllocatePagesForMdl ( IN PHYSICAL_ADDRESS LowAddress,
           SkipBytes.QuadPart, Totalbytes);
    
    /* SkipBytes must be a multiple of the page size */
-   ASSERT((SkipBytes.QuadPart % PAGE_SIZE) == 0);
+   if ((SkipBytes.QuadPart % PAGE_SIZE) != 0)
+   {
+      DPRINT1("Warning: SkipBytes is not a multiple of PAGE_SIZE\n");
+      return NULL;
+   }
 
    /* Allocate memory for the MDL */
    Mdl = MmCreateMdl(NULL, 0, Totalbytes);
@@ -689,6 +692,11 @@ MmAllocatePagesForMdl ( IN PHYSICAL_ADDRESS LowAddress,
    {
       ExFreePool(Mdl);
       Mdl = NULL;
+   }
+   else if (NumberOfPagesWanted > 0)
+   {
+      Mdl->ByteCount = (ULONG)(NumberOfPagesAllocated * PAGE_SIZE);
+      /* FIXME: I don't know if Mdl->Size should also be changed -- blight */
    }
    return Mdl;
 }
