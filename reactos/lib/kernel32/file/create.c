@@ -4,13 +4,19 @@
  * FILE:            lib/kernel32/file/create.c
  * PURPOSE:         Directory functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
-		    GetTempFileName is modified from WINE [ Alexandre Juiliard ]
+ *		    GetTempFileName is modified from WINE [ Alexandre Juiliard ]
  * UPDATE HISTORY:
  *                  Created 01/11/98
+ *                  Removed use of SearchPath (not used by Windows)
  */
 
+/*
+ * NOTES: Please don't alter without debugging
+ * 
+ */
 
-#undef WIN32_LEAN_AND_MEAN
+/* INCLUDES *****************************************************************/
+
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <wstring.h>
@@ -18,8 +24,10 @@
 #include <ddk/li.h>
 #include <ddk/rtl.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <kernel32/kernel32.h>
+
+/* FUNCTIONS ****************************************************************/
 
 HANDLE STDCALL CreateFileA(LPCSTR lpFileName,
 			   DWORD dwDesiredAccess,
@@ -33,7 +41,7 @@ HANDLE STDCALL CreateFileA(LPCSTR lpFileName,
    WCHAR FileNameW[MAX_PATH];
    ULONG i = 0;
    
- //  OutputDebugStringA("CreateFileA\n");
+   DPRINT("CreateFileA(lpFileName %s)\n",lpFileName);
    
    while ((*lpFileName)!=0 && i < MAX_PATH)
      {
@@ -61,8 +69,7 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
 			   HANDLE hTemplateFile)
 {
    HANDLE FileHandle;
-   NTSTATUS Status;
-  
+   NTSTATUS Status;  
    OBJECT_ATTRIBUTES ObjectAttributes;
    IO_STATUS_BLOCK IoStatusBlock;
    UNICODE_STRING FileNameString;
@@ -72,48 +79,39 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
    WCHAR *FilePart;
    UINT Len = 0;
    
+   DPRINT("CreateFileW(lpFileName %w)\n",lpFileName);
+  
    if (!(dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED))
      {
 	Flags |= FILE_SYNCHRONOUS_IO_ALERT;
      }
-
-//   dprintf("CreateFile %S\n",lpFileName);
-
-   if ( lpFileName[0] == L'\\' || lpFileName[1] == L':') {
+   
+   if ( lpFileName[0] == L'\\' || lpFileName[1] == L':') 
+     {
 	wcscpy(PathNameW,lpFileName);
-   }
-   else if ( ( ( dwCreationDisposition & OPEN_EXISTING ) == OPEN_EXISTING ) || ( ( dwCreationDisposition & TRUNCATE_EXISTING ) == TRUNCATE_EXISTING ) )  {
-	dprintf("Before SearchPath\n");
-	Len = SearchPathW(NULL,lpFileName,NULL,MAX_PATH,PathNameW,&FilePart); 
-	if ( Len == 0 )
-		return NULL;
-   }
-   else  {
+     }
+   else  
+     {
 	Len =  GetCurrentDirectoryW(MAX_PATH,PathNameW);
 	if ( Len == 0 )
-		return NULL;
+	  return NULL;
 	if ( PathNameW[Len-1] != L'\\' ) {
-		PathNameW[Len] = L'\\';
-		PathNameW[Len+1] = 0;
+	   PathNameW[Len] = L'\\';
+	   PathNameW[Len+1] = 0;
 	}
 	wcscat(PathNameW,lpFileName); 
-   }
-
-   if (  PathNameW[1] == L':' ) {
-	FileNameW[0] = '\\';
-   	FileNameW[1] = '?';
-   	FileNameW[2] = '?';
-   	FileNameW[3] = '\\';
-   	FileNameW[4] = 0;
-	wcscat(FileNameW,PathNameW);
-   }
-   else
-	wcscpy(FileNameW,PathNameW);
-
-  
-
+     }
+   
+   FileNameW[0] = '\\';
+   FileNameW[1] = '?';
+   FileNameW[2] = '?';
+   FileNameW[3] = '\\';
+   FileNameW[4] = 0;
+   wcscat(FileNameW,PathNameW);
+   
+   
    FileNameString.Length = wcslen( FileNameW)*sizeof(WCHAR);
-	 
+   
    if ( FileNameString.Length == 0 )
 	return NULL;
 
@@ -130,7 +128,7 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
    ObjectAttributes.SecurityDescriptor = NULL;
    ObjectAttributes.SecurityQualityOfService = NULL;
 
-//   dprintf("File Name %S\n",FileNameW);
+   DPRINT("File Name %w\n",FileNameW);
    
    Status = ZwCreateFile(&FileHandle,
 			 dwDesiredAccess,
