@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.59 2003/07/16 22:09:07 royce Exp $
+# $Id: makefile,v 1.60 2003/07/24 15:59:46 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -29,7 +29,6 @@ TARGET_CLEAN = \
 	float/*.o \
 	io/*.o \
 	libc/*.o \
-	locale/*.o \
 	malloc/*.o \
 	math/*.o \
 	mbstring/*.o \
