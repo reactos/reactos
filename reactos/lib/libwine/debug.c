@@ -203,7 +203,12 @@ const char *wine_dbgstr_guid(const GUID *id)
 /* varargs wrapper for __wine_dbg_vsprintf */
 const char *wine_dbg_sprintf( const char *format, ... )
 {
-    static char fixme[] = "FIXME: implement wine_dbg_sprintf";
+    char* buffer = gimme1(1024);
+    va_list ap;
 
-    return fixme;
+    va_start(ap, format);
+    release(buffer+vsnprintf(buffer, 1024, format, ap));
+    va_end(ap);
+
+    return buffer;
 }
