@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.5 2002/09/08 10:23:06 chorns Exp $
+/* $Id: misc.c,v 1.6 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -65,6 +65,8 @@ RtlGetNtGlobalFlags(VOID)
  *
  * REVISIONS
  * 	2000-08-10 ekohl
+ *
+ * @implemented
  */
 
 BOOLEAN STDCALL

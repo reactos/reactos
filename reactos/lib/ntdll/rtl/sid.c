@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.7 2003/06/07 10:35:27 ekohl Exp $
+/* $Id: sid.c,v 1.8 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -33,6 +33,9 @@ RtlValidSid(IN PSID Sid)
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 RtlLengthRequiredSid(IN UCHAR SubAuthorityCount)
 {
@@ -40,6 +43,9 @@ RtlLengthRequiredSid(IN UCHAR SubAuthorityCount)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlInitializeSid(IN PSID Sid,
 		 IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
@@ -54,6 +60,9 @@ RtlInitializeSid(IN PSID Sid,
 }
 
 
+/*
+ * @implemented
+ */
 PULONG STDCALL
 RtlSubAuthoritySid(IN PSID Sid,
 		   IN ULONG SubAuthority)
@@ -62,6 +71,9 @@ RtlSubAuthoritySid(IN PSID Sid,
 }
 
 
+/*
+ * @implemented
+ */
 PUCHAR STDCALL
 RtlSubAuthorityCountSid(IN PSID Sid)
 {
@@ -69,6 +81,9 @@ RtlSubAuthorityCountSid(IN PSID Sid)
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 RtlEqualSid(IN PSID Sid1,
 	    IN PSID Sid2)
@@ -89,6 +104,9 @@ RtlEqualSid(IN PSID Sid1,
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 RtlLengthSid(IN PSID Sid)
 {
@@ -96,6 +114,9 @@ RtlLengthSid(IN PSID Sid)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlCopySid(ULONG BufferLength,
 	   PSID Dest,
@@ -112,6 +133,9 @@ RtlCopySid(ULONG BufferLength,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlCopySidAndAttributesArray(ULONG Count,
 			     PSID_AND_ATTRIBUTES Src,
@@ -148,6 +172,9 @@ RtlCopySidAndAttributesArray(ULONG Count,
 }
 
 
+/*
+ * @implemented
+ */
 PSID_IDENTIFIER_AUTHORITY STDCALL
 RtlIdentifierAuthoritySid(IN PSID Sid)
 {
@@ -155,6 +182,9 @@ RtlIdentifierAuthoritySid(IN PSID Sid)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlAllocateAndInitializeSid (
@@ -218,6 +248,9 @@ RtlAllocateAndInitializeSid (
 }
 
 
+/*
+ * @implemented
+ */
 PSID STDCALL
 RtlFreeSid(IN PSID Sid)
 {
@@ -228,6 +261,9 @@ RtlFreeSid(IN PSID Sid)
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 RtlEqualPrefixSid(IN PSID Sid1,
 		  IN PSID Sid2)
@@ -238,6 +274,9 @@ RtlEqualPrefixSid(IN PSID Sid1,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlConvertSidToUnicodeString(PUNICODE_STRING String,
 			     PSID Sid,

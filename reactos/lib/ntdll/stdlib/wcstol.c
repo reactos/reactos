@@ -4,6 +4,9 @@
 #include <stdlib.h>
 
 
+/*
+ * @implemented
+ */
 long
 wcstol(const wchar_t *nptr, wchar_t **endptr, int base)
 {

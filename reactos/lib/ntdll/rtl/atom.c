@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.4 2002/09/08 10:23:04 chorns Exp $
+/* $Id: atom.c,v 1.5 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -55,6 +55,9 @@ static VOID RtlpDestroyAtomHandleTable(PRTL_ATOM_TABLE AtomTable);
 /* FUNCTIONS *****************************************************************/
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlCreateAtomTable(ULONG TableSize,
 		   PRTL_ATOM_TABLE *AtomTable)
@@ -112,6 +115,9 @@ RtlCreateAtomTable(ULONG TableSize,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlDestroyAtomTable(IN PRTL_ATOM_TABLE AtomTable)
 {
@@ -156,6 +162,9 @@ RtlDestroyAtomTable(IN PRTL_ATOM_TABLE AtomTable)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlEmptyAtomTable(PRTL_ATOM_TABLE AtomTable,
 		  BOOLEAN DeletePinned)
@@ -205,6 +214,9 @@ RtlEmptyAtomTable(PRTL_ATOM_TABLE AtomTable,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 		      IN PWSTR AtomName,
@@ -298,6 +310,9 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlDeleteAtomFromAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 			   IN RTL_ATOM Atom)
@@ -360,6 +375,9 @@ RtlDeleteAtomFromAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlLookupAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 			 IN PWSTR AtomName,
@@ -420,6 +438,9 @@ RtlLookupAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlPinAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 		      IN RTL_ATOM Atom)
@@ -461,6 +482,9 @@ RtlPinAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
 			RTL_ATOM Atom,

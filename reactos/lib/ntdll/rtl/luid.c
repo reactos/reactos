@@ -1,4 +1,4 @@
-/* $Id: luid.c,v 1.6 2003/05/31 11:08:50 ekohl Exp $
+/* $Id: luid.c,v 1.7 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -25,6 +25,9 @@ RtlCopyLuid(PLUID LuidDest,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlCopyLuidAndAttributesArray(ULONG Count,
 			      PLUID_AND_ATTRIBUTES Src,
@@ -41,6 +44,9 @@ RtlCopyLuidAndAttributesArray(ULONG Count,
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 RtlEqualLuid(PLUID Luid1,
 	     PLUID Luid2)

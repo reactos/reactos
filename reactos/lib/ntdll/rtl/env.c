@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.19 2003/07/09 20:25:00 hbirr Exp $
+/* $Id: env.c,v 1.20 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,6 +22,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlCreateEnvironment(BOOLEAN Inherit,
 		     PWSTR *Environment)
@@ -94,6 +97,9 @@ RtlCreateEnvironment(BOOLEAN Inherit,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlDestroyEnvironment(PWSTR Environment)
 {
@@ -106,6 +112,9 @@ RtlDestroyEnvironment(PWSTR Environment)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlExpandEnvironmentStrings_U(PWSTR Environment,
 			      PUNICODE_STRING Source,
@@ -192,6 +201,9 @@ copy:
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlSetCurrentEnvironment(PWSTR NewEnvironment,
 			 PWSTR *OldEnvironment)
@@ -213,6 +225,9 @@ RtlSetCurrentEnvironment(PWSTR NewEnvironment,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlSetEnvironmentVariable(PWSTR *Environment,
 			  PUNICODE_STRING Name,
@@ -424,6 +439,9 @@ found:
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlQueryEnvironmentVariable_U(PWSTR Environment,
 			      PUNICODE_STRING Name,

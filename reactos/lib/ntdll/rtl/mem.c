@@ -1,4 +1,4 @@
-/* $Id: mem.c,v 1.12 2002/12/08 15:57:39 robd Exp $
+/* $Id: mem.c,v 1.13 2003/07/11 13:50:23 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -42,6 +42,9 @@ RtlCompareMemory(PVOID Source1,
    return(total);
 }
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlCompareMemoryUlong (
@@ -89,6 +92,9 @@ VOID RtlCopyMemory(VOID* Destination, CONST VOID* Source, ULONG Length)
 }
 #endif
 
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 RtlFillMemory (
@@ -100,6 +106,9 @@ RtlFillMemory (
 	memset(Destination, Fill, Length);
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlFillMemoryUlong (
@@ -120,6 +129,9 @@ RtlFillMemoryUlong (
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlMoveMemory (
@@ -136,6 +148,9 @@ RtlMoveMemory (
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlZeroMemory (
@@ -149,6 +164,5 @@ RtlZeroMemory (
 		0
 		);
 }
-
 
 /* EOF */

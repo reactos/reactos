@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.10 2003/06/01 18:14:24 ekohl Exp $
+/* $Id: sd.c,v 1.11 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -37,6 +37,9 @@ RtlCreateSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
   return(STATUS_SUCCESS);
 }
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
@@ -97,6 +100,9 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlGetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 			     PBOOLEAN DaclPresent,
@@ -141,6 +147,9 @@ RtlGetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlSetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 			     BOOLEAN DaclPresent,
@@ -171,6 +180,9 @@ RtlSetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 RtlValidSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
@@ -240,6 +252,9 @@ RtlValidSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlSetOwnerSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 			      PSID Owner,
@@ -262,6 +277,9 @@ RtlSetOwnerSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
    return(STATUS_SUCCESS);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlGetOwnerSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 			      PSID* Owner,
@@ -298,6 +316,9 @@ RtlGetOwnerSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
    return(STATUS_SUCCESS);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlSetGroupSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 			      PSID Group,
@@ -320,6 +341,9 @@ RtlSetGroupSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
    return(STATUS_SUCCESS);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlGetGroupSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 			      PSID* Group,
@@ -456,6 +480,9 @@ RtlpQuerySecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlMakeSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
 		      PSECURITY_DESCRIPTOR RelSD,
@@ -536,6 +563,9 @@ RtlMakeSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlAbsoluteToSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
 			    PSECURITY_DESCRIPTOR RelSD,
@@ -551,6 +581,9 @@ RtlAbsoluteToSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlGetControlSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 				PSECURITY_DESCRIPTOR_CONTROL Control,
@@ -569,6 +602,9 @@ RtlGetControlSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlGetSaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 			     PBOOLEAN SaclPresent,
@@ -612,6 +648,9 @@ RtlGetSaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
    return(STATUS_SUCCESS);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlSetSaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 			     BOOLEAN SaclPresent,
@@ -642,6 +681,9 @@ RtlSetSaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlSelfRelativeToAbsoluteSD(PSECURITY_DESCRIPTOR RelSD,
 			    PSECURITY_DESCRIPTOR AbsSD,

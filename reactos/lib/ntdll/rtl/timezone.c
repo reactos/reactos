@@ -1,4 +1,4 @@
-/* $Id: timezone.c,v 1.4 2002/09/08 10:23:07 chorns Exp $
+/* $Id: timezone.c,v 1.5 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -21,6 +21,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlQueryTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
 {
@@ -92,6 +95,9 @@ RtlQueryTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
 {

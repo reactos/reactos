@@ -2,6 +2,9 @@
 #include <string.h>
 #include <ctype.h>
 
+/*
+ * @implemented
+ */
 int _strnicmp(const char *s1, const char *s2, size_t n)
 {
 

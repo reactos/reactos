@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.6 2002/09/08 10:23:03 chorns Exp $
+/* $Id: print.c,v 1.7 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,6 +26,9 @@ __asm__ ("\n\t.global _DbgService\n\t"
          "int $0x2D\n\t"
          "ret\n\t");
 
+/*
+ * @implemented
+ */
 ULONG
 DbgPrint(PCH Format, ...)
 {
@@ -47,6 +50,9 @@ DbgPrint(PCH Format, ...)
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 DbgPrompt (

@@ -1,4 +1,4 @@
-/* $Id: brkpoint.c,v 1.5 2003/04/26 23:13:28 hyperion Exp $
+/* $Id: brkpoint.c,v 1.6 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,12 +18,17 @@
 
 #if 0
 /*
- FIXME: DbgBreakPoint must not have a stack frame, but GCC doesn't support
- __declspec(naked) yet
-*/
+ * FIXME: DbgBreakPoint must not have a stack frame, but GCC doesn't support
+ * __declspec(naked) yet
+ *
+ * @implemented
+ */
 __declspec(naked) VOID STDCALL DbgBreakPoint(VOID)
 { __asm__(ASM_BREAKPOINT_STR); }
 
+/*
+ * @implemented
+ */
 VOID STDCALL DbgUserBreakPoint(VOID)
 { __asm__(ASM_BREAKPOINT_STR); }
 #else

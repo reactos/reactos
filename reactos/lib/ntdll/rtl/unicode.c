@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.29 2003/07/09 20:13:56 hbirr Exp $
+/* $Id: unicode.c,v 1.30 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -46,6 +46,9 @@ RtlAnsiCharToUnicodeChar (IN CHAR AnsiChar)
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 RtlAnsiStringToUnicodeSize (IN PANSI_STRING AnsiString)
 {
@@ -59,6 +62,9 @@ RtlAnsiStringToUnicodeSize (IN PANSI_STRING AnsiString)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlAnsiStringToUnicodeString(
@@ -122,6 +128,9 @@ RtlAnsiStringToUnicodeString(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlAppendAsciizToString(
@@ -151,6 +160,9 @@ RtlAppendAsciizToString(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlAppendStringToString(
@@ -178,6 +190,9 @@ RtlAppendStringToString(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlAppendUnicodeStringToString(
@@ -196,6 +211,9 @@ RtlAppendUnicodeStringToString(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
 			 IN PWSTR Source)
@@ -215,6 +233,9 @@ RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlCharToInteger(
@@ -256,6 +277,9 @@ RtlCharToInteger(
 }
 
 
+/*
+ * @implemented
+ */
 LONG
 STDCALL
 RtlCompareString(
@@ -303,6 +327,9 @@ RtlCompareString(
 }
 
 
+/*
+ * @implemented
+ */
 LONG
 STDCALL
 RtlCompareUnicodeString(
@@ -350,6 +377,9 @@ RtlCompareUnicodeString(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlCopyString(
@@ -372,6 +402,9 @@ RtlCopyString(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlCopyUnicodeString(
@@ -394,6 +427,9 @@ RtlCopyUnicodeString(
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 RtlCreateUnicodeString(
@@ -421,6 +457,9 @@ RtlCreateUnicodeString(
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 RtlCreateUnicodeStringFromAsciiz(
@@ -441,6 +480,9 @@ RtlCreateUnicodeStringFromAsciiz(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlDowncaseUnicodeString(
@@ -491,6 +533,9 @@ RtlDowncaseUnicodeString(
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 RtlEqualComputerName(
@@ -502,6 +547,9 @@ RtlEqualComputerName(
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 RtlEqualDomainName (
@@ -531,6 +579,9 @@ RtlEqualDomainName (
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 RtlEqualString(
@@ -571,6 +622,9 @@ RtlEqualString(
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 RtlEqualUnicodeString(
@@ -612,6 +666,9 @@ RtlEqualUnicodeString(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlEraseUnicodeString(
@@ -631,6 +688,9 @@ RtlEraseUnicodeString(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlFreeAnsiString(
@@ -649,6 +709,9 @@ RtlFreeAnsiString(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlFreeOemString(
@@ -667,6 +730,9 @@ RtlFreeOemString(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlFreeUnicodeString(
@@ -685,6 +751,9 @@ RtlFreeUnicodeString(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlInitAnsiString(
@@ -708,6 +777,9 @@ RtlInitAnsiString(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlInitString(
@@ -731,6 +803,9 @@ RtlInitString(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlInitUnicodeString(
@@ -754,6 +829,9 @@ RtlInitUnicodeString(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlIntegerToChar(
@@ -801,6 +879,9 @@ RtlIntegerToChar(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlIntegerToUnicodeString(
@@ -833,6 +914,9 @@ RtlIntegerToUnicodeString(
 
 #define ITU_IMPLEMENTED_TESTS (IS_TEXT_UNICODE_ODD_LENGTH|IS_TEXT_UNICODE_SIGNATURE)
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 RtlIsTextUnicode (PVOID Buffer,
 		  ULONG Length,
@@ -886,6 +970,9 @@ done:
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlLargeIntegerToChar(
@@ -933,6 +1020,9 @@ RtlLargeIntegerToChar(
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlOemStringToUnicodeSize(
@@ -948,6 +1038,9 @@ RtlOemStringToUnicodeSize(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlOemStringToUnicodeString(
@@ -1011,6 +1104,9 @@ RtlOemStringToUnicodeString(
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 RtlPrefixString(
@@ -1053,6 +1149,9 @@ RtlPrefixString(
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 RtlPrefixUnicodeString(
@@ -1096,6 +1195,9 @@ RtlPrefixUnicodeString(
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlUnicodeStringToAnsiSize(
@@ -1111,6 +1213,9 @@ RtlUnicodeStringToAnsiSize(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlUnicodeStringToAnsiString(
@@ -1168,6 +1273,9 @@ RtlUnicodeStringToAnsiString(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlUnicodeStringToInteger(
@@ -1257,6 +1365,9 @@ RtlUnicodeStringToInteger(
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlUnicodeStringToOemSize(
@@ -1272,6 +1383,9 @@ RtlUnicodeStringToOemSize(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlUnicodeStringToCountedOemString(
@@ -1338,6 +1452,9 @@ RtlUnicodeStringToCountedOemString(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlUnicodeStringToOemString(
@@ -1404,6 +1521,9 @@ RtlUnicodeStringToOemString(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlUpcaseUnicodeString(
@@ -1444,6 +1564,9 @@ RtlUpcaseUnicodeString(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlUpcaseUnicodeStringToAnsiString(
@@ -1510,6 +1633,9 @@ RtlUpcaseUnicodeStringToAnsiString(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlUpcaseUnicodeStringToCountedOemString(
@@ -1576,6 +1702,9 @@ RtlUpcaseUnicodeStringToCountedOemString(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlUpcaseUnicodeStringToOemString (
@@ -1643,6 +1772,9 @@ RtlUpcaseUnicodeStringToOemString (
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlUpperString (IN OUT PSTRING DestinationString,
 		IN PSTRING SourceString)
@@ -1668,6 +1800,9 @@ RtlUpperString (IN OUT PSTRING DestinationString,
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 RtlxAnsiStringToUnicodeSize (IN PANSI_STRING AnsiString)
 {
@@ -1675,6 +1810,9 @@ RtlxAnsiStringToUnicodeSize (IN PANSI_STRING AnsiString)
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 RtlxOemStringToUnicodeSize (IN POEM_STRING OemString)
 {
@@ -1682,6 +1820,9 @@ RtlxOemStringToUnicodeSize (IN POEM_STRING OemString)
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 RtlxUnicodeStringToAnsiSize (IN PUNICODE_STRING UnicodeString)
 {
@@ -1689,6 +1830,9 @@ RtlxUnicodeStringToAnsiSize (IN PUNICODE_STRING UnicodeString)
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 RtlxUnicodeStringToOemSize (IN PUNICODE_STRING UnicodeString)
 {

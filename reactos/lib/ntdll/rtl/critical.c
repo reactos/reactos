@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.12 2002/09/08 10:23:04 chorns Exp $
+/* $Id: critical.c,v 1.13 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -18,6 +18,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlDeleteCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
@@ -25,6 +28,9 @@ RtlDeleteCriticalSection(PCRITICAL_SECTION CriticalSection)
    CriticalSection->Reserved = -1;
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
@@ -74,6 +80,9 @@ RtlEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
 #endif
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlInitializeCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
@@ -92,6 +101,9 @@ RtlInitializeCriticalSection(PCRITICAL_SECTION CriticalSection)
    return Status;
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlLeaveCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
@@ -142,6 +154,9 @@ RtlLeaveCriticalSection(PCRITICAL_SECTION CriticalSection)
 #endif
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 RtlTryEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
@@ -162,10 +177,4 @@ RtlTryEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
    return FALSE;
 }
 
-
 /* EOF */
-
-
-
-
-

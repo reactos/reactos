@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.3 2003/04/10 19:12:15 gvg Exp $
+/* $Id: res.c,v 1.4 2003/07/11 13:50:23 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -150,6 +150,9 @@ found:;
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 LdrAccessResource(IN  PVOID BaseAddress,
                   IN  PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry,
@@ -193,6 +196,9 @@ LdrAccessResource(IN  PVOID BaseAddress,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 LdrFindResourceDirectory_U(IN PVOID BaseAddress,
                            WCHAR** name,

@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.9 2002/10/25 21:48:00 chorns Exp $
+/* $Id: acl.c,v 1.10 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -61,6 +61,9 @@ RtlFirstFreeAce(PACL Acl,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlGetAce(PACL Acl,
 	  ULONG AceIndex,
@@ -145,6 +148,9 @@ RtlpAddKnownAce(PACL Acl,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlAddAccessAllowedAce(PACL Acl,
 		       ULONG Revision,
@@ -155,6 +161,9 @@ RtlAddAccessAllowedAce(PACL Acl,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlAddAccessDeniedAce(PACL Acl,
 		      ULONG Revision,
@@ -187,6 +196,9 @@ RtlpAddData(PVOID AceList,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlAddAce(PACL Acl,
 	  ULONG AclRevision,
@@ -265,6 +277,9 @@ RtlAddAce(PACL Acl,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlAddAuditAccessAce(PACL Acl,
 		     ULONG Revision,
@@ -352,6 +367,9 @@ RtlpDeleteData(PVOID Ace,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlDeleteAce(PACL Acl,
 	     ULONG AceIndex)
@@ -391,6 +409,9 @@ RtlDeleteAce(PACL Acl,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlCreateAcl(PACL Acl,
 	     ULONG AclSize,
@@ -423,6 +444,9 @@ RtlCreateAcl(PACL Acl,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlQueryInformationAcl(PACL Acl,
 		       PVOID Information,
@@ -487,6 +511,9 @@ RtlQueryInformationAcl(PACL Acl,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlSetInformationAcl(PACL Acl,
 		     PVOID Information,
@@ -527,6 +554,9 @@ RtlSetInformationAcl(PACL Acl,
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 RtlValidAcl(PACL Acl)
 {

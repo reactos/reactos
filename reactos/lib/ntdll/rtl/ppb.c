@@ -1,4 +1,4 @@
-/* $Id: ppb.c,v 1.17 2002/11/14 18:21:05 chorns Exp $
+/* $Id: ppb.c,v 1.18 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -29,6 +29,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlAcquirePebLock(VOID)
 {
@@ -37,6 +40,9 @@ RtlAcquirePebLock(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlReleasePebLock(VOID)
 {
@@ -60,6 +66,9 @@ RtlpCopyParameterString(PWCHAR *Ptr,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 			   PUNICODE_STRING ImagePathName,
@@ -235,6 +244,9 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
    return STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlDestroyProcessParameters(PRTL_USER_PROCESS_PARAMETERS ProcessParameters)
 {
@@ -248,6 +260,8 @@ RtlDestroyProcessParameters(PRTL_USER_PROCESS_PARAMETERS ProcessParameters)
 
 /*
  * denormalize process parameters (Pointer-->Offset)
+ *
+ * @implemented
  */
 PRTL_USER_PROCESS_PARAMETERS STDCALL
 RtlDeNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)
@@ -271,6 +285,8 @@ RtlDeNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)
 
 /*
  * normalize process parameters (Offset-->Pointer)
+ *
+ * @implemented
  */
 PRTL_USER_PROCESS_PARAMETERS STDCALL
 RtlNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.20 2003/06/07 16:16:39 chorns Exp $
+/* $Id: registry.c,v 1.21 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -30,6 +30,9 @@
 
 /* FUNCTIONS ***************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlCheckRegistryKey(IN ULONG RelativeTo,
 		    IN PWSTR Path)
@@ -50,6 +53,9 @@ RtlCheckRegistryKey(IN ULONG RelativeTo,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlCreateRegistryKey(IN ULONG RelativeTo,
 		     IN PWSTR Path)
@@ -70,6 +76,9 @@ RtlCreateRegistryKey(IN ULONG RelativeTo,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlDeleteRegistryValue(IN ULONG RelativeTo,
 		       IN PCWSTR Path,
@@ -98,6 +107,9 @@ RtlDeleteRegistryValue(IN ULONG RelativeTo,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlFormatCurrentUserKeyPath(PUNICODE_STRING KeyPath)
 {
@@ -110,6 +122,9 @@ RtlFormatCurrentUserKeyPath(PUNICODE_STRING KeyPath)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 		   OUT PHANDLE KeyHandle)
@@ -147,6 +162,9 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlQueryRegistryValues(IN ULONG RelativeTo,
 		       IN PCWSTR Path,
@@ -656,6 +674,9 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlWriteRegistryValue(IN ULONG RelativeTo,
 		      IN PCWSTR Path,
@@ -691,6 +712,9 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlpNtCreateKey(OUT HANDLE KeyHandle,
 		IN ACCESS_MASK DesiredAccess,
@@ -712,6 +736,9 @@ RtlpNtCreateKey(OUT HANDLE KeyHandle,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
 		      OUT PUNICODE_STRING SubKeyName,
@@ -767,6 +794,9 @@ RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlpNtMakeTemporaryKey(IN HANDLE KeyHandle)
 {
@@ -774,6 +804,9 @@ RtlpNtMakeTemporaryKey(IN HANDLE KeyHandle)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlpNtOpenKey(OUT HANDLE KeyHandle,
 	      IN ACCESS_MASK DesiredAccess,
@@ -789,6 +822,9 @@ RtlpNtOpenKey(OUT HANDLE KeyHandle,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlpNtQueryValueKey(IN HANDLE KeyHandle,
 		    OUT PULONG Type OPTIONAL,
@@ -845,6 +881,9 @@ RtlpNtQueryValueKey(IN HANDLE KeyHandle,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlpNtSetValueKey(IN HANDLE KeyHandle,
 		  IN ULONG Type,

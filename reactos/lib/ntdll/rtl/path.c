@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.19 2003/07/09 20:11:41 hbirr Exp $
+/* $Id: path.c,v 1.20 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -162,12 +162,18 @@ static VOID RtlpEatPath (PWSTR Path)
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL RtlGetLongestNtPathLength (VOID)
 {
    return (MAX_PATH + 9);
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 RtlDetermineDosPathNameType_U(PWSTR Path)
 {
@@ -213,6 +219,9 @@ RtlDetermineDosPathNameType_U(PWSTR Path)
  * offset in bytes to DOS device name from beginning of buffer in high word
  * and size in bytes of DOS device name in low word */
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 RtlIsDosDeviceName_U(PWSTR DeviceName)
 {
@@ -303,6 +312,9 @@ RtlIsDosDeviceName_U(PWSTR DeviceName)
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 RtlGetCurrentDirectory_U(ULONG MaximumLength,
 			 PWSTR Buffer)
@@ -343,6 +355,9 @@ RtlGetCurrentDirectory_U(ULONG MaximumLength,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlSetCurrentDirectory_U(PUNICODE_STRING name)
 {
@@ -519,6 +534,9 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING name)
    return STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 RtlGetFullPathName_U(PWSTR DosName,
 		     ULONG size,
@@ -704,6 +722,9 @@ CHECKPOINT;
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 RtlDosPathNameToNtPathName_U(PWSTR dosname,
 			     PUNICODE_STRING ntname,
@@ -819,6 +840,9 @@ RtlDosPathNameToNtPathName_U(PWSTR dosname,
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlDosSearchPath_U (
@@ -893,6 +917,9 @@ RtlDosSearchPath_U (
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 RtlDoesFileExists_U(IN PWSTR FileName)
 {

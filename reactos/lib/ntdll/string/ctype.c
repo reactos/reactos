@@ -1,4 +1,4 @@
-/* $Id: ctype.c,v 1.12 2003/02/16 18:54:26 hbirr Exp $
+/* $Id: ctype.c,v 1.13 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -286,82 +286,130 @@ int _isctype (int c, int ctypeFlags)
   return (_pctype[(unsigned char)(c & 0xFF)] & ctypeFlags);
 }
 
+/*
+ * @implemented
+ */
 int iswctype(wint_t wc, wctype_t wctypeFlags)
 {
    return (_pwctype[(unsigned char)(wc & 0xFF)] & wctypeFlags);
 }
 
+/*
+ * @implemented
+ */
 int isalpha(int c)
 {
    return(_isctype(c, _ALPHA));
 }
 
+/*
+ * @implemented
+ */
 int isalnum(int c)
 {
    return(_isctype(c, _ALPHA | _DIGIT));
 }
 
+/*
+ * @implemented
+ */
 int __isascii(int c)
 {
    return ((unsigned char)c <= 0x7f);
 }
 
+/*
+ * @implemented
+ */
 int iscntrl(int c)
 {
    return(_isctype(c, _CONTROL));
 }
 
+/*
+ * @implemented
+ */
 int __iscsym(int c)
 {
    return(isalnum(c)||(c == '_'));
 }
 
+/*
+ * @implemented
+ */
 int __iscsymf(int c)
 {
    return(isalpha(c)||(c == '_'));
 }
 
+/*
+ * @implemented
+ */
 int isdigit(int c)
 {
    return(_isctype(c, _DIGIT));
 }
 
+/*
+ * @implemented
+ */
 int isgraph(int c)
 {
    return (_isctype (c, _PUNCT | _ALPHA | _DIGIT));
 }
 
+/*
+ * @implemented
+ */
 int islower(int c)
 {
    return (_isctype (c, _LOWER));
 }
 
+/*
+ * @implemented
+ */
 int isprint(int c)
 {
    return (_isctype (c, _BLANK | _PUNCT | _ALPHA | _DIGIT));
 }
 
+/*
+ * @implemented
+ */
 int ispunct(int c)
 {
    return (_isctype (c, _PUNCT));
 }
 
+/*
+ * @implemented
+ */
 int isspace(int c)
 {
    return (_isctype (c, _SPACE));
 }
 
+/*
+ * @implemented
+ */
 int isupper(int c)
 {
    return (_isctype (c, _UPPER));
 }
 
+/*
+ * @implemented
+ */
 int isxdigit(int c)
 {
    return (_isctype (c, _HEX));
 }
 
 
+/*
+ * @implemented
+ */
 int iswalpha(wint_t c)
 {
    return (iswctype (c, _ALPHA));
@@ -388,11 +436,17 @@ int iswxdigit(wint_t c)
 }
 
 
+/*
+ * @implemented
+ */
 int __toascii(int c)
 {
    return((unsigned)(c) & 0x7f);
 }
 
+/*
+ * @implemented
+ */
 int _tolower(int c)
 {
    if (_isctype (c, _UPPER))
@@ -400,6 +454,9 @@ int _tolower(int c)
    return(c);
 }
 
+/*
+ * @implemented
+ */
 int _toupper(int c)
 {
    if (_isctype (c, _LOWER))
@@ -407,6 +464,9 @@ int _toupper(int c)
    return(c);
 }
 
+/*
+ * @implemented
+ */
 int tolower(int c)
 {
    if (_isctype (c, _UPPER))
@@ -414,6 +474,9 @@ int tolower(int c)
    return(c);
 }
 
+/*
+ * @implemented
+ */
 int toupper(int c)
 {
    if (_isctype (c, _LOWER))
@@ -421,6 +484,9 @@ int toupper(int c)
    return(c);
 }
 
+/*
+ * @implemented
+ */
 wchar_t towlower(wchar_t c)
 {
    if (iswctype (c, _UPPER))
@@ -428,6 +494,9 @@ wchar_t towlower(wchar_t c)
    return(c);
 }
 
+/*
+ * @implemented
+ */
 wchar_t towupper(wchar_t c)
 {
    if (iswctype (c, _LOWER))

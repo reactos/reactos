@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dos8dot3.c,v 1.5 2002/09/08 10:23:04 chorns Exp $
+/* $Id: dos8dot3.c,v 1.6 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -56,6 +56,9 @@ RtlpIsShortIllegal(WCHAR Char)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
 		     IN BOOLEAN AllowExtendedCharacters,
@@ -174,6 +177,9 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 RtlIsNameLegalDOS8Dot3(IN PUNICODE_STRING UnicodeName,
 		       IN PANSI_STRING AnsiName,

@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.10 2002/09/13 18:45:10 hbirr Exp $
+/* $Id: sprintf.c,v 1.11 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -241,6 +241,9 @@ stringw(char* buf, char* end, const wchar_t* sw, int len, int field_width, int p
 	return buf;
 }
 
+/*
+ * @implemented
+ */
 int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 {
 	int len;
@@ -507,6 +510,9 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 }
 
 
+/*
+ * @implemented
+ */
 int sprintf(char * buf, const char *fmt, ...)
 {
 	va_list args;
@@ -519,6 +525,9 @@ int sprintf(char * buf, const char *fmt, ...)
 }
 
 
+/*
+ * @implemented
+ */
 int _snprintf(char * buf, size_t cnt, const char *fmt, ...)
 {
 	va_list args;
@@ -531,6 +540,9 @@ int _snprintf(char * buf, size_t cnt, const char *fmt, ...)
 }
 
 
+/*
+ * @implemented
+ */
 int vsprintf(char *buf, const char *fmt, va_list args)
 {
 	return _vsnprintf(buf,INT_MAX,fmt,args);

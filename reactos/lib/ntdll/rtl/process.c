@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.33 2003/04/26 23:13:29 hyperion Exp $
+/* $Id: process.c,v 1.34 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -193,6 +193,7 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
    /* create the PPB */
    PpbBase = NULL;
    PpbSize = Ppb->AllocationSize;
+
    Status = NtAllocateVirtualMemory(ProcessHandle,
 				    &PpbBase,
 				    0,
@@ -212,6 +213,7 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 			PpbBase,
 			Ppb,
 			Ppb->AllocationSize,
+
 			&BytesWritten);
    RtlNormalizeProcessParams (Ppb);
 
@@ -242,7 +244,9 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
    return(STATUS_SUCCESS);
 }
 
-
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlCreateUserProcess(PUNICODE_STRING ImageFileName,
 		     ULONG Attributes,

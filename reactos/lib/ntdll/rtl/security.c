@@ -1,4 +1,4 @@
-/* $Id: security.c,v 1.9 2003/06/17 10:52:56 ekohl Exp $
+/* $Id: security.c,v 1.10 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,6 +18,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 {
@@ -68,6 +71,9 @@ RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlAdjustPrivilege(IN ULONG Privilege,
 		   IN BOOLEAN Enable,

@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.14 2002/12/08 15:57:39 robd Exp $
+/* $Id: time.c,v 1.15 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -55,6 +55,9 @@ static __inline void NormalizeTimeFields(CSHORT *FieldToNormalize,
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 RtlTimeToTimeFields(
@@ -137,6 +140,9 @@ RtlTimeToTimeFields(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN
 STDCALL
 RtlTimeFieldsToTime(
@@ -204,6 +210,9 @@ RtlTimeFieldsToTime(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlSecondsSince1970ToTime(
@@ -218,6 +227,9 @@ RtlSecondsSince1970ToTime(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlSecondsSince1980ToTime(
@@ -232,6 +244,9 @@ RtlSecondsSince1980ToTime(
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 RtlTimeToSecondsSince1970(
@@ -252,6 +267,9 @@ RtlTimeToSecondsSince1970(
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 RtlTimeToSecondsSince1980(
@@ -272,6 +290,9 @@ RtlTimeToSecondsSince1980(
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlLocalTimeToSystemTime(PLARGE_INTEGER LocalTime,
@@ -294,6 +315,9 @@ RtlLocalTimeToSystemTime(PLARGE_INTEGER LocalTime,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 RtlSystemTimeToLocalTime(PLARGE_INTEGER SystemTime,
@@ -316,6 +340,9 @@ RtlSystemTimeToLocalTime(PLARGE_INTEGER SystemTime,
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlTimeToElapsedTimeFields(IN PLARGE_INTEGER Time,

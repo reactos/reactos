@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.4 2002/09/08 10:23:05 chorns Exp $
+/* $Id: handle.c,v 1.5 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -31,6 +31,9 @@ RtlInitializeHandleTable(ULONG TableSize,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlDestroyHandleTable(PRTL_HANDLE_TABLE HandleTable)
 {
@@ -47,6 +50,9 @@ RtlDestroyHandleTable(PRTL_HANDLE_TABLE HandleTable)
 }
 
 
+/*
+ * @implemented
+ */
 PRTL_HANDLE STDCALL
 RtlAllocateHandle(PRTL_HANDLE_TABLE HandleTable,
 		  PULONG Index)
@@ -106,6 +112,9 @@ RtlAllocateHandle(PRTL_HANDLE_TABLE HandleTable,
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 RtlFreeHandle(PRTL_HANDLE_TABLE HandleTable,
 	      PRTL_HANDLE Handle)
@@ -125,6 +134,9 @@ RtlFreeHandle(PRTL_HANDLE_TABLE HandleTable,
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 RtlIsValidHandle(PRTL_HANDLE_TABLE HandleTable,
 		 PRTL_HANDLE Handle)
@@ -138,6 +150,9 @@ RtlIsValidHandle(PRTL_HANDLE_TABLE HandleTable,
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 RtlIsValidIndexHandle(PRTL_HANDLE_TABLE HandleTable,
 		      PRTL_HANDLE *Handle,

@@ -11,6 +11,9 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 #include <stdlib.h>
 
+/*
+ * @implemented
+ */
 char *
 _i64toa(__int64 value, char *string, int radix)
 {
@@ -51,6 +54,9 @@ _i64toa(__int64 value, char *string, int radix)
 }
 
 
+/*
+ * @implemented
+ */
 char *
 _itoa(int value, char *string, int radix)
 {
@@ -91,6 +97,9 @@ _itoa(int value, char *string, int radix)
 }
 
 
+/*
+ * @implemented
+ */
 char *
 _ltoa(long value, char *string, int radix)
 {
@@ -131,6 +140,9 @@ _ltoa(long value, char *string, int radix)
 }
 
 
+/*
+ * @implemented
+ */
 char *
 _ultoa(unsigned long value, char *string, int radix)
 {

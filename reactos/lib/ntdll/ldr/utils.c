@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.66 2003/06/09 13:43:42 ekohl Exp $
+/* $Id: utils.c,v 1.67 2003/07/11 13:50:23 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -480,6 +480,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
  *
  * NOTE
  *
+ * @implemented
  */
 
 NTSTATUS STDCALL
@@ -653,6 +654,7 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
  *
  * NOTE
  *
+ * @implemented
  */
 NTSTATUS STDCALL
 LdrFindEntryForAddress(PVOID Address,
@@ -1484,6 +1486,9 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 LdrUnloadDll (IN PVOID BaseAddress)
 {
@@ -1554,6 +1559,9 @@ LdrUnloadDll (IN PVOID BaseAddress)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
 {
@@ -1585,6 +1593,9 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 LdrGetDllHandle(IN ULONG Unknown1,
                 IN ULONG Unknown2,
@@ -1634,6 +1645,9 @@ LdrGetDllHandle(IN ULONG Unknown1,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 LdrGetProcedureAddress (IN PVOID BaseAddress,
                         IN PANSI_STRING Name,
@@ -1695,6 +1709,9 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 LdrShutdownProcess (VOID)
 {
@@ -1739,6 +1756,9 @@ LdrShutdownProcess (VOID)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 LdrShutdownThread (VOID)
 {
@@ -1794,6 +1814,8 @@ LdrShutdownThread (VOID)
  * REVISIONS
  *
  * NOTE
+ *
+ * @implemented
  */
 NTSTATUS STDCALL
 LdrQueryProcessModuleInformation(IN PMODULE_INFORMATION ModuleInformation OPTIONAL,
@@ -1963,6 +1985,8 @@ LdrpCheckImageChecksum (IN PVOID BaseAddress,
  * REVISIONS
  *
  * NOTE
+ *
+ * @implemented
  */
 NTSTATUS STDCALL
 LdrVerifyImageMatchesChecksum (IN HANDLE FileHandle,

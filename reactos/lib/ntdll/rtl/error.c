@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.12 2002/12/08 15:57:38 robd Exp $
+/* $Id: error.c,v 1.13 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -824,6 +824,9 @@ RPC_NT_SS_CONTEXT_MISMATCH           ERROR_INVALID_HANDLE
 
 /* FUNCTIONS ***************************************************************/
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlAssert(PVOID FailedAssertion,
@@ -914,6 +917,8 @@ RtlNtStatusToDosErrorNoTeb(NTSTATUS Status)
  *
  * REMARK
  *	RtlNtStatusToDosErrorNoTeb() does the real work.
+ *
+ * @implemented
  */
 DWORD STDCALL
 RtlNtStatusToDosError(NTSTATUS Status)

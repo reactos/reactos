@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.3 2002/09/08 10:23:02 chorns Exp $
+/* $Id: thread.c,v 1.4 2003/07/11 13:50:22 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,12 +16,18 @@
 #define NDEBUG
 #include <ntdll/ntdll.h>
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 CsrNewThread(VOID)
 {
    return (NtRegisterThreadTerminatePort(WindowsApiPort));
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 CsrSetPriorityClass(HANDLE Process,
 		    PULONG PriorityClass)
@@ -32,6 +38,9 @@ CsrSetPriorityClass(HANDLE Process,
    return (STATUS_NOT_IMPLEMENTED);
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 CsrIdentifyAlertableThread (VOID)

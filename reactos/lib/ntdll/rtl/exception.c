@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.14 2003/05/15 11:03:20 ekohl Exp $
+/* $Id: exception.c,v 1.15 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -55,6 +55,9 @@ KiUserExceptionDispatcher(PEXCEPTION_RECORD ExceptionRecord,
   RtlRaiseException(&NestedExceptionRecord);
 }
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
 {

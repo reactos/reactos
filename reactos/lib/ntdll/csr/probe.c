@@ -1,4 +1,4 @@
-/* $Id: probe.c,v 1.3 2002/09/08 10:23:02 chorns Exp $
+/* $Id: probe.c,v 1.4 2003/07/11 13:50:22 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,9 @@
 #define NDEBUG
 #include <ntdll/rtl.h>
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 CsrProbeForRead(IN CONST PVOID Address,
 		IN ULONG Length,
@@ -33,6 +36,9 @@ CsrProbeForRead(IN CONST PVOID Address,
    Data = *Pointer;
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 CsrProbeForWrite(IN CONST PVOID Address,
 		 IN ULONG Length,

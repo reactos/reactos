@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.4 2003/06/07 10:14:39 chorns Exp $
+/* $Id: exception.c,v 1.5 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -247,6 +247,9 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
   return ExceptionContinueExecution;  
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlRaiseStatus(NTSTATUS Status)
 {
@@ -261,6 +264,9 @@ RtlRaiseStatus(NTSTATUS Status)
   RtlRaiseException (& ExceptionRecord);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
   PVOID ReturnAddress,

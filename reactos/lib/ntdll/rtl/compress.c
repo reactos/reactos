@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: compress.c,v 1.1 2002/08/10 21:57:41 ekohl Exp $
+/* $Id: compress.c,v 1.2 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -76,6 +76,9 @@ RtlpWorkSpaceSizeLZNT1(USHORT Engine,
 
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlCompressBuffer(IN USHORT CompressionFormatAndEngine,
 		  IN PUCHAR UncompressedBuffer,
@@ -122,6 +125,9 @@ RtlCompressChunks(IN PUCHAR UncompressedBuffer,
 #endif
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlDecompressBuffer(IN USHORT CompressionFormat,
 		    OUT PUCHAR UncompressedBuffer,
@@ -149,6 +155,9 @@ RtlDecompressChunks(OUT PUCHAR UncompressedBuffer,
 #endif
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlDecompressFragment(IN USHORT CompressionFormat,
 		      OUT PUCHAR UncompressedFragment,
@@ -176,6 +185,9 @@ RtlDescribeChunk(IN USHORT CompressionFormat,
 #endif
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlGetCompressionWorkSpaceSize(IN USHORT CompressionFormatAndEngine,
 			       OUT PULONG CompressBufferAndWorkSpaceSize,

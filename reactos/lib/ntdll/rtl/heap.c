@@ -997,6 +997,8 @@ static BOOL HEAP_IsRealArena(
  * RETURNS
  *	Handle of heap: Success
  *	NULL: Failure
+ *
+ * @implemented
  */
 HANDLE STDCALL
 RtlCreateHeap(ULONG flags,
@@ -1040,6 +1042,8 @@ RtlCreateHeap(ULONG flags,
  * RETURNS
  *	TRUE: Success
  *	FALSE: Failure
+ *
+ * @implemented
  */
 BOOL STDCALL
 RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
@@ -1091,6 +1095,8 @@ RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
  * RETURNS
  *	Pointer to allocated memory block
  *	NULL: Failure
+ *
+ * @implemented
  */
 PVOID STDCALL
 RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
@@ -1157,6 +1163,8 @@ RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
  * RETURNS
  *	TRUE: Success
  *	FALSE: Failure
+ *
+ * @implemented
  */
 BOOLEAN STDCALL RtlFreeHeap(
               HANDLE heap, /* [in] Handle of heap */
@@ -1207,6 +1215,8 @@ BOOLEAN STDCALL RtlFreeHeap(
  * RETURNS
  *	Pointer to reallocated memory block
  *	NULL: Failure
+ *
+ * @implemented
  */
 LPVOID STDCALL RtlReAllocateHeap(
               HANDLE heap, /* [in] Handle of heap block */
@@ -1326,6 +1336,8 @@ LPVOID STDCALL RtlReAllocateHeap(
 
 /***********************************************************************
  *           HeapCompact   (KERNEL32.335)
+ *
+ * @unimplemented
  */
 DWORD STDCALL RtlCompactHeap( HANDLE heap, DWORD flags )
 {
@@ -1341,6 +1353,8 @@ DWORD STDCALL RtlCompactHeap( HANDLE heap, DWORD flags )
  * RETURNS
  *	TRUE: Success
  *	FALSE: Failure
+ *
+ * @implemented
  */
 BOOL STDCALL RtlLockHeap(
               HANDLE heap /* [in] Handle of heap to lock for exclusive access */
@@ -1359,6 +1373,8 @@ BOOL STDCALL RtlLockHeap(
  * RETURNS
  *	TRUE: Success
  *	FALSE: Failure
+ *
+ * @implemented
  */
 BOOL STDCALL RtlUnlockHeap(
               HANDLE heap /* [in] Handle to the heap to unlock */
@@ -1375,6 +1391,8 @@ BOOL STDCALL RtlUnlockHeap(
  * RETURNS
  *	Size in bytes of allocated memory
  *	0xffffffff: Failure
+ *
+ * @implemented
  */
 DWORD STDCALL RtlSizeHeap(
              HANDLE heap, /* [in] Handle of heap */
@@ -1416,6 +1434,8 @@ DWORD STDCALL RtlSizeHeap(
  * RETURNS
  *	TRUE: Success
  *	FALSE: Failure
+ *
+ * @implemented
  */
 BOOL STDCALL RtlValidateHeap(
               HANDLE heap, /* [in] Handle to the heap */
@@ -1567,6 +1587,9 @@ RtlInitializeHeapManager(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlEnumProcessHeaps(DWORD STDCALL(*func)(void*,LONG),
 		    LONG lParam)
@@ -1589,6 +1612,9 @@ RtlEnumProcessHeaps(DWORD STDCALL(*func)(void*,LONG),
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 RtlGetProcessHeaps(ULONG HeapCount,
 		   HANDLE *HeapArray)
@@ -1611,6 +1637,9 @@ RtlGetProcessHeaps(ULONG HeapCount,
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 RtlValidateProcessHeaps(VOID)
 {

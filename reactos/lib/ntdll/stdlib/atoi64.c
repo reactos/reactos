@@ -1,4 +1,4 @@
-/* $Id: atoi64.c,v 1.3 2002/07/18 18:12:59 ekohl Exp $
+/* $Id: atoi64.c,v 1.4 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,6 +9,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+/*
+ * @implemented
+ */
 __int64
 _atoi64 (const char *nptr)
 {

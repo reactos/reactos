@@ -1,4 +1,4 @@
-/* $Id: image.c,v 1.5 2003/05/15 11:03:21 ekohl Exp $
+/* $Id: image.c,v 1.6 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,6 +17,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 PIMAGE_NT_HEADERS STDCALL
 RtlImageNtHeader (IN PVOID BaseAddress)
 {
@@ -40,6 +43,9 @@ RtlImageNtHeader (IN PVOID BaseAddress)
 }
 
 
+/*
+ * @implemented
+ */
 PVOID
 STDCALL
 RtlImageDirectoryEntryToData (
@@ -85,6 +91,9 @@ RtlImageDirectoryEntryToData (
 }
 
 
+/*
+ * @implemented
+ */
 PIMAGE_SECTION_HEADER
 STDCALL
 RtlImageRvaToSection (
@@ -112,6 +121,9 @@ RtlImageRvaToSection (
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlImageRvaToVa (

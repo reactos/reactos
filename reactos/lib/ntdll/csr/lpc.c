@@ -1,4 +1,4 @@
-/* $Id: lpc.c,v 1.9 2002/11/03 20:01:05 chorns Exp $
+/* $Id: lpc.c,v 1.10 2003/07/11 13:50:22 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -83,6 +83,9 @@ CsrReleaseParameterBuffer(PVOID ClientAddress)
   return(STATUS_SUCCESS);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 CsrClientCallServer(PCSRSS_API_REQUEST Request,
 		    PCSRSS_API_REPLY Reply OPTIONAL,
@@ -107,6 +110,9 @@ CsrClientCallServer(PCSRSS_API_REQUEST Request,
    return(Status);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 CsrClientConnectToServer(VOID)
 {

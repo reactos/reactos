@@ -1,4 +1,4 @@
-/* $Id: debug.c,v 1.9 2003/04/26 23:13:28 hyperion Exp $
+/* $Id: debug.c,v 1.10 2003/07/11 13:50:23 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -62,6 +62,9 @@ DbgSsServerThread(PVOID Unused)
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 DbgSsHandleKmApiMsg(ULONG Unknown1,
 		    HANDLE EventHandle)
@@ -70,6 +73,9 @@ DbgSsHandleKmApiMsg(ULONG Unknown1,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 DbgSsInitialize(HANDLE ReplyPort,
 		ULONG Unknown1,
@@ -116,6 +122,9 @@ DbgSsInitialize(HANDLE ReplyPort,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 DbgUiConnectToDbg(VOID)
 {
@@ -154,6 +163,9 @@ DbgUiConnectToDbg(VOID)
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 DbgUiContinue(PCLIENT_ID ClientId,
 	      ULONG ContinueStatus)
@@ -162,6 +174,9 @@ DbgUiContinue(PCLIENT_ID ClientId,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 DbgUiWaitStateChange(ULONG Unknown1,
 		     ULONG Unknown2)
