@@ -4,6 +4,9 @@
  * (RJJ) taken from WINE
  */
 
+#ifndef __WIN32K_GDIOBJ_H
+#define __WIN32K_GDIOBJ_H
+
   /* GDI objects magic numbers */
 #define GO_PEN_MAGIC             0x4f47
 #define GO_BRUSH_MAGIC           0x4f48
@@ -25,5 +28,12 @@ typedef struct _GDIOBJHDR
   HANDLE  hNext;
   WORD  wMagic;
   DWORD  dwCount;
+  KSPIN_LOCK  Lock;
 } GDIOBJHDR, *PGDIOBJHDR;
+
+typedef PVOID PGDIOBJ;
+
+PGDIOBJ  GDIOBJ_AllocObject(WORD Size, WORD Magic);
+
+#endif
 

@@ -24,10 +24,10 @@ typedef struct _WIN_DC_INFO
   HPEN  hPen;
   HBRUSH  hBrush;
   HFONT  hFont;
-  
+  HBITMAP  hBitmap;
+  HBITMAP  hFirstBitmap; /* Bitmap selected at creation of the DC */
+
 #if 0
-    HBITMAP     hBitmap;
-    HBITMAP     hFirstBitmap; /* Bitmap selected at creation of the DC */
     HANDLE      hDevice;
     HPALETTE    hPalette;
     
@@ -76,6 +76,12 @@ typedef struct _WIN_DC_INFO
 #endif
 } WIN_DC_INFO;
 
+  /* DC flags */
+#define DC_MEMORY     0x0001   /* It is a memory DC */
+#define DC_SAVED      0x0002   /* It is a saved DC */
+#define DC_DIRTY      0x0004   /* hVisRgn has to be updated */
+#define DC_THUNKHOOK  0x0008   /* DC hook is in the 16-bit code */ 
+
 #define  GDI_DC_TYPE  (1)
 
 typedef struct _DC
@@ -101,6 +107,8 @@ typedef struct _DC
   INT  vportOrgY;
   INT  vportExtX;        /* Viewport extent */
   INT  vportExtY;
+
+  INT  saveLevel;
 
   WIN_DC_INFO  w;
 } DC, *PDC;
@@ -177,6 +185,7 @@ INT STDCALL  W32kSetPolyFillMode(HDC  hDC, INT polyFillMode);
 INT STDCALL  W32kSetRelAbs(HDC  hDC, INT  relAbsMode);
 INT STDCALL  W32kSetROP2(HDC  hDC, INT  ROPmode);
 INT STDCALL  W32kSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
+COLORREF STDCALL  W32kSetTextColor(HDC hDC, COLORREF color);
 
 #endif
 
