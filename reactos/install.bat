@@ -210,6 +210,14 @@ copy apps\tests\icontest\icon.ico %ROS_INSTALL_TESTS%
 
 echo.
 echo installing tests (5)...
+copy apps\tests\wm_paint\wm_paint.exe %ROS_INSTALL_TESTS%
+copy apps\tests\primitives\primitives.exe %ROS_INSTALL_TESTS%
+copy apps\tests\patblt\patblt.exe %ROS_INSTALL_TESTS%
+copy apps\tests\patblt\Penguin.bmp %ROS_INSTALL_TESTS%
+copy apps\tests\wm_erasebkgnd\wm_erasebkgnd.exe %ROS_INSTALL_TESTS%
+copy apps\tests\wm_erasebkgnd\BACKBITMAP.BMP %ROS_INSTALL_TESTS%
+copy apps\tests\stretchblt\stretchblt.exe %ROS_INSTALL_TESTS%
+copy apps\tests\txtscale\txtscale.exe %ROS_INSTALL_TESTS%
 copy apps\tests\linetest\linetest.exe %ROS_INSTALL_TESTS%
 rem copy apps\tests\restest\restest.exe %ROS_INSTALL_TESTS%
 rem copy apps\testsets\msvcrt\fileio\fileio.exe %ROS_INSTALL_TESTS%
