@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.10 2002/09/17 23:43:28 dwelch Exp $
+/* $Id: message.c,v 1.11 2002/10/31 00:03:31 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -216,7 +216,7 @@ NtUserGetMessage(LPMSG lpMsg,
       /* Nothing found so far. Wait for new messages. */
       Status = MsqWaitForNewMessages(ThreadQueue);
     }
-  while (Status == STATUS_WAIT_0);
+  while (Status >= STATUS_WAIT_0 && Status <= STATUS_WAIT_63);
   return((BOOLEAN)(-1));
 }
 

@@ -36,6 +36,9 @@ ClassReferenceClassByNameOrAtom(PWNDCLASS_OBJECT *Class,
 PWNDCLASS_OBJECT
 W32kCreateClass(LPWNDCLASSEX lpwcx,
 		BOOL bUnicodeClass);
+struct _WINDOW_OBJECT;
+ULONG
+W32kGetClassLong(struct _WINDOW_OBJECT* WindowObject, ULONG Offset);
 
 #endif /* __WIN32K_CLASS_H */
 

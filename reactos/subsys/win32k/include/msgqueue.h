@@ -38,10 +38,10 @@ typedef struct _USER_MESSAGE_QUEUE
   LIST_ENTRY SentMessagesListHead;
   /* Queue of messages posted to the queue. */
   LIST_ENTRY PostedMessagesListHead;
-  /* Queue of hardware messages for the queue. */
-  LIST_ENTRY HardwareMessagesListHead;
   /* Queue of sent-message notifies for the queue. */
   LIST_ENTRY NotifyMessagesListHead;
+  /* Queue for hardware messages for the queue. */
+  LIST_ENTRY HardwareMessagesListHead;
   /* Lock for the queue. */
   FAST_MUTEX Lock;
   /* True if a WM_QUIT message is pending. */
@@ -76,8 +76,7 @@ VOID
 MsqDestroyMessage(PUSER_MESSAGE Message);
 VOID
 MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-	       PUSER_MESSAGE Message,
-	       BOOLEAN Hardware);
+	       PUSER_MESSAGE Message);
 BOOLEAN
 MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	       IN BOOLEAN Hardware,
@@ -117,6 +116,10 @@ W32kSendMessage(HWND hWnd,
 		WPARAM wParam,
 		LPARAM lParam,
 		BOOL KernelMessage);
+VOID
+MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+VOID
+MsqInsertSystemMessage(MSG* Msg);
 
 #define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))
 

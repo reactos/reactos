@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.18 2002/09/17 23:43:28 dwelch Exp $
+/* $Id: window.c,v 1.19 2002/10/31 00:03:31 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -901,8 +901,6 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index)
   NTSTATUS Status;
   DWORD Result;
 
-  DPRINT("NtUserGetWindowLong(hWnd %X, Index %d)\n", hWnd, Index);
-  
   W32kGuiCheck();
 
   Status = 
@@ -912,7 +910,6 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index)
 			       (PVOID*)&WindowObject);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtUserGetWindowLong(): Bad handle.\n");
       return(0);
     }
 
@@ -945,7 +942,6 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index)
     }
 
   ObmDereferenceObject(WindowObject);
-  DPRINT("NtUserGetWindowLong(): %X\n", Result);
   return(Result);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: keyboard.c,v 1.1 2002/01/27 14:47:44 dwelch Exp $
+/* $Id: keyboard.c,v 1.2 2002/10/31 00:03:31 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -202,9 +202,7 @@ NtUserTranslateMessage(LPMSG lpMsg,
 	  NewMsg.wParam = wp[0];
 	  NewMsg.lParam = lpMsg->lParam;
 	  UMsg = MsqCreateMessage(&NewMsg);
-	  MsqPostMessage(PsGetWin32Thread()->MessageQueue,
-			 UMsg,
-			 FALSE);
+	  MsqPostMessage(PsGetWin32Thread()->MessageQueue, UMsg);
 	  return(TRUE);
 	}
     }
@@ -217,9 +215,7 @@ NtUserTranslateMessage(LPMSG lpMsg,
       NewMsg.lParam = lpMsg->lParam;
       dead_char = wp[0];
       UMsg = MsqCreateMessage(&NewMsg);
-      MsqPostMessage(PsGetWin32Thread()->MessageQueue,
-		     UMsg,
-		     FALSE);
+      MsqPostMessage(PsGetWin32Thread()->MessageQueue, UMsg);
       return(TRUE);
     }
   return(FALSE);

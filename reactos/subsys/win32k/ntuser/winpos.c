@@ -1,4 +1,4 @@
-/* $Id: winpos.c,v 1.5 2002/09/17 23:43:28 dwelch Exp $
+/* $Id: winpos.c,v 1.6 2002/10/31 00:03:31 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -59,10 +59,11 @@ NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
   WindowObject = W32kGetWindowObject(hWnd);
   if (WindowObject == NULL)
     {
-      return(FALSE);
+      Point->x = Point->y = 0;
+      return(TRUE);
     }
   Point->x = WindowObject->ClientRect.left;
-  Point->y = WindowObject->ClientRect.right;
+  Point->y = WindowObject->ClientRect.top;
   return(TRUE);
 }
 
@@ -728,4 +729,100 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
     }
   ObmDereferenceObject(Window);
   return(WasVisible);
+}
+
+BOOL STATIC
+WinPosPtInWindow(PWINDOW_OBJECT Window, POINT Point)
+{
+  return(Point.x >= Window->WindowRect.left &&
+	 Point.x < Window->WindowRect.right &&
+	 Point.y >= Window->WindowRect.top &&
+	 Point.y < Window->WindowRect.bottom);
+}
+
+USHORT STATIC
+WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
+		     PWINDOW_OBJECT* Window)
+{
+  PLIST_ENTRY CurrentEntry;
+  PWINDOW_OBJECT Current;
+
+  CurrentEntry = ScopeWin->ChildrenListHead.Flink;
+  while (CurrentEntry != &ScopeWin->ChildrenListHead)
+    {
+      Current = 
+	CONTAINING_RECORD(CurrentEntry, WINDOW_OBJECT, SiblingListEntry);
+
+      if (Current->Style & WS_VISIBLE &&
+	  ((!(Current->Style & WS_DISABLED)) ||
+	   (Current->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD) &&
+	  WinPosPtInWindow(Current, Point))
+	{
+	  *Window = Current;
+	  if (Current->Style & WS_DISABLED)
+	    {
+	      return(HTERROR);
+	    }
+	  if (Current->Style & WS_MINIMIZE)
+	    {
+	      return(HTCAPTION);
+	    }
+	  if (Point.x >= Current->ClientRect.left &&
+	      Point.x < Current->ClientRect.right &&
+	      Point.y >= Current->ClientRect.top &&
+	      Point.y < Current->ClientRect.bottom)
+	    {
+	      Point.x -= Current->ClientRect.left;
+	      Point.y -= Current->ClientRect.top;
+
+	      return(WinPosSearchChildren(Current, Point, Window));
+	    }
+	  return(0);
+	}
+      CurrentEntry = CurrentEntry->Flink;
+    }
+  return(0);
+}
+
+USHORT
+WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint, 
+		      PWINDOW_OBJECT* Window)
+{
+  HWND DesktopWindowHandle;
+  PWINDOW_OBJECT DesktopWindow;
+  POINT Point = WinPoint;
+  USHORT HitTest;
+  
+  *Window = NULL;
+
+  if (ScopeWin->Style & WS_DISABLED)
+    {
+      return(HTERROR);
+    }
+
+  /* Translate the point to the space of the scope window. */
+  DesktopWindowHandle = W32kGetDesktopWindow();
+  DesktopWindow = W32kGetWindowObject(DesktopWindowHandle);
+  Point.x += ScopeWin->ClientRect.left - DesktopWindow->ClientRect.left;
+  Point.y += ScopeWin->ClientRect.top - DesktopWindow->ClientRect.top;
+  W32kReleaseWindowObject(DesktopWindow);
+
+  HitTest = WinPosSearchChildren(ScopeWin, Point, Window);
+  if (HitTest != 0)
+    {
+      return(HitTest);
+    }
+
+  if ((*Window)->MessageQueue == PsGetWin32Thread()->MessageQueue)
+    {
+      HitTest = W32kSendMessage((*Window)->Self, WM_NCHITTEST, 0,
+				MAKELONG(Point.x, Point.y), FALSE);
+      /* FIXME: Check for HTTRANSPARENT here. */
+    }
+  else
+    {
+      HitTest = HTCLIENT;
+    }
+
+  return(HitTest);
 }

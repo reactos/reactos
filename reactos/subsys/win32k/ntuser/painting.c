@@ -1,4 +1,4 @@
-/* $Id: painting.c,v 1.6 2002/09/17 23:43:28 dwelch Exp $
+/* $Id: painting.c,v 1.7 2002/10/31 00:03:31 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -546,7 +546,6 @@ PaintingFindWinToRepaint(HWND hWnd, PW32THREAD Thread)
   PWINDOW_OBJECT BaseWindow;
   PLIST_ENTRY current_entry;
   HWND hFoundWnd = NULL;
-  NTSTATUS Status;
 
   if (hWnd == NULL)
     {

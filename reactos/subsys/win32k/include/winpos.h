@@ -14,3 +14,6 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 		   INT cy, UINT flags);
 BOOLEAN
 WinPosShowWindow(HWND Wnd, INT Cmd);
+USHORT
+WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint, 
+		      PWINDOW_OBJECT* Window);

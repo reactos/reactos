@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.13 2002/09/08 10:23:52 chorns Exp $
+/* $Id: class.c,v 1.14 2002/10/31 00:03:31 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -265,17 +265,10 @@ NtUserRegisterClassExWOW(LPWNDCLASSEX lpwcx,
   return(Atom);
 }
 
-DWORD STDCALL
-NtUserGetClassLong(HWND hWnd, DWORD Offset)
+ULONG
+W32kGetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset)
 {
-  PWINDOW_OBJECT WindowObject;
   LONG Ret;
-
-  WindowObject = W32kGetWindowObject(hWnd);
-  if (WindowObject == NULL)
-    {
-      return(0);
-    }
   switch (Offset)
     {
     case GCL_STYLE:
@@ -288,15 +281,30 @@ NtUserGetClassLong(HWND hWnd, DWORD Offset)
       Ret = WindowObject->Class->Class.cbClsExtra;
       break;
     case GCL_HMODULE:
-      Ret = WindowObject->Class->Class.hInstance;
+      Ret = (ULONG)WindowObject->Class->Class.hInstance;
       break;
     case GCL_HBRBACKGROUND:
-      Ret = WindowObject->Class->Class.hbrBackground;
+      Ret = (ULONG)WindowObject->Class->Class.hbrBackground;
       break;
     default:
       Ret = 0;
       break;
     }
+  return(Ret);
+}
+
+DWORD STDCALL
+NtUserGetClassLong(HWND hWnd, DWORD Offset)
+{
+  PWINDOW_OBJECT WindowObject;
+  LONG Ret;
+
+  WindowObject = W32kGetWindowObject(hWnd);
+  if (WindowObject == NULL)
+    {
+      return(0);
+    }
+  Ret = W32kGetClassLong(WindowObject, Offset);
   W32kReleaseWindowObject(WindowObject);
   return(Ret);
 }

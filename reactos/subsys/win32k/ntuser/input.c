@@ -1,4 +1,4 @@
-/* $Id: input.c,v 1.3 2002/09/17 23:43:28 dwelch Exp $
+/* $Id: input.c,v 1.4 2002/10/31 00:03:31 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -55,7 +55,7 @@ KeyboardThreadMain(PVOID StartContext)
 		      &KeyboardObjectAttributes,
 		      &Iosb,
 		      0,
-		      0);
+		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("W32K: Failed to open keyboard.\n");
@@ -164,7 +164,6 @@ InitInputImpl(VOID)
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("W32K: Failed to create keyboard thread.\n");
-      NtClose(KeyboardThreadHandle);
     }
 
   /*
@@ -228,7 +227,7 @@ InitInputImpl(VOID)
        DbgPrint("W32K: Failed to connect to mouse driver.\n");
        return(Status);
      }
-
+   
    return(STATUS_SUCCESS);
 }
 
