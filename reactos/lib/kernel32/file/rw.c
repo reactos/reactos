@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.15 2001/01/16 09:55:02 dwelch Exp $
+/* $Id: rw.c,v 1.16 2001/10/12 19:13:01 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -148,7 +148,7 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
    return(TRUE);
 }
 
-VOID ApcRoutine(PVOID ApcContext, 
+VOID STDCALL ApcRoutine(PVOID ApcContext, 
 		struct _IO_STATUS_BLOCK* IoStatusBlock, 
 		ULONG NumberOfBytesTransfered)
 {
