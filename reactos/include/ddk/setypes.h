@@ -1,4 +1,4 @@
-/* $Id: setypes.h,v 1.14 2004/07/07 17:20:35 ekohl Exp $
+/* $Id: setypes.h,v 1.15 2004/07/11 16:09:37 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory for details
  * PROJECT:           ReactOS kernel
@@ -51,6 +51,7 @@
 
 /* SECURITY_DESCRIPTOR_CONTROL */
 #define SECURITY_DESCRIPTOR_REVISION	(1)
+#define SECURITY_DESCRIPTOR_REVISION1	(1)
 #define SECURITY_DESCRIPTOR_MIN_LENGTH	(20)
 #define SE_OWNER_DEFAULTED	(1)
 #define SE_GROUP_DEFAULTED	(2)
@@ -65,6 +66,10 @@
 #define SE_PRIVILEGE_ENABLED	(0x2L)
 #define SE_PRIVILEGE_USED_FOR_ACCESS	(0x80000000L)
 #define PRIVILEGE_SET_ALL_NECESSARY	(0x1)
+
+/* SID */
+#define SID_REVISION		(1)
+#define SID_MAX_SUB_AUTHORITIES	(15)
 
 typedef struct _ACCESS_TOKEN
 {
