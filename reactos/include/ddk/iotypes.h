@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.68 2004/10/31 23:40:10 ion Exp $
+/* $Id: iotypes.h,v 1.69 2004/11/06 04:12:59 ion Exp $
  *
  */
 
@@ -1065,15 +1065,15 @@ typedef VOID STDCALL_FUNC
 
 /*
  * PURPOSE: Special timer associated with each device
- * NOTES: This is a guess
  */
-typedef struct _IO_TIMER
-{
-   KTIMER timer;
-   KDPC dpc;
-   PDEVICE_OBJECT DeviceObject;
-   PIO_TIMER_ROUTINE TimerRoutine;
-   PVOID Context;
+ #define IO_TYPE_TIMER 9
+typedef struct _IO_TIMER {
+   USHORT Type;				/* Every IO Object has a Type */
+   USHORT TimerEnabled;			/* Tells us if the Timer is enabled or not */
+   LIST_ENTRY IoTimerList;		/* List of other Timers on the system */
+   PIO_TIMER_ROUTINE TimerRoutine;	/* The associated timer routine */
+   PVOID Context;			/* Context */
+   PDEVICE_OBJECT DeviceObject;		/* Driver that owns this IO Timer */
 } IO_TIMER, *PIO_TIMER;
 
 typedef struct _IO_WORKITEM *PIO_WORKITEM;

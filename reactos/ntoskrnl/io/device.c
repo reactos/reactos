@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.82 2004/10/23 17:32:50 navaraf Exp $
+/* $Id: device.c,v 1.83 2004/11/06 04:12:59 ion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -188,7 +188,7 @@ IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
    /* Remove the timer if it exists */
    if (DeviceObject->Timer)
    {
-      IoStopTimer(DeviceObject);
+      IopRemoveTimerFromTimerList(DeviceObject->Timer);
       ExFreePool(DeviceObject->Timer);
    }
 

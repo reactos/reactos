@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.47 2004/10/23 17:32:50 navaraf Exp $
+/* $Id: io.h,v 1.48 2004/11/06 04:12:59 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -512,4 +512,14 @@ IopInvalidateDeviceRelations(
    IN PDEVICE_NODE DeviceNode,
    IN DEVICE_RELATION_TYPE Type);
 
+/* timer.c */
+VOID
+FASTCALL
+IopInitTimerImplementation(VOID);
+
+VOID
+STDCALL
+IopRemoveTimerFromTimerList(
+	IN PIO_TIMER Timer
+);
 #endif
