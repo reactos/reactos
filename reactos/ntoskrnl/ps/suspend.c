@@ -1,4 +1,4 @@
-/* $Id: suspend.c,v 1.3 2001/02/06 00:11:20 dwelch Exp $
+/* $Id: suspend.c,v 1.4 2001/03/16 18:11:24 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -12,7 +12,6 @@
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
 #include <internal/ob.h>
-#include <internal/hal.h>
 #include <internal/ps.h>
 #include <internal/ob.h>
 

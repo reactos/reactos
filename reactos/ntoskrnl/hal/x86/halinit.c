@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.16 2000/10/22 13:27:34 ekohl Exp $
+/* $Id: halinit.c,v 1.17 2001/03/16 18:11:21 dwelch Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -12,7 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/hal.h>
+#include <internal/hal/hal.h>
 #include <internal/ntoskrnl.h>
 
 #define NDEBUG

@@ -2,8 +2,8 @@
  * Lowlevel memory managment definitions
  */
 
-#ifndef __INTERNAL_HAL_I386_MMHAL_H
-#define __INTERNAL_HAL_I386_MMHAL_H
+#ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H
+#define __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H
 
 struct _EPROCESS;
 
@@ -66,4 +66,4 @@ VOID MmSetPageProtect(struct _EPROCESS* Process,
 BOOLEAN MmIsPagePresent(struct _EPROCESS* Process, 
 			PVOID Address);
 
-#endif /* __INTERNAL_HAL_I386_MMHAL_H */
+#endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H */

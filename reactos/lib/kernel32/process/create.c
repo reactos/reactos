@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.36 2001/03/09 14:40:27 dwelch Exp $
+/* $Id: create.c,v 1.37 2001/03/16 18:11:21 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -398,6 +398,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    ULONG i;
    ANSI_STRING ProcedureName;
    UNICODE_STRING CurrentDirectoryW;
+   SECTION_IMAGE_INFORMATION Sii;
    
    DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
 	   lpApplicationName,lpCommandLine);
@@ -492,6 +493,15 @@ CreateProcessW(LPCWSTR lpApplicationName,
 			    NULL);
 
    /*
+    * Get some information about the executable
+    */
+   Status = ZwQuerySection(hSection,
+			   SectionImageInformation,
+			   &Sii,
+			   sizeof(Sii),
+			   &i);
+
+   /*
     * Close the section
     */
    NtClose(hSection);
@@ -562,8 +572,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    DPRINT("Creating thread for process\n");
    hThread =  KlCreateFirstThread(hProcess,
 				  lpThreadAttributes,
-//				  Headers.OptionalHeader.SizeOfStackReserve,
-				  0x200000,
+				  Sii.StackReserve,
 				  lpStartAddress,
 				  dwCreationFlags,
 				  &lpProcessInformation->dwThreadId);

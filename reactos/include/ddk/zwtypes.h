@@ -1,6 +1,16 @@
 #ifndef __INCLUDE_DDK_ZWTYPES_H
 #define __INCLUDE_DDK_ZWTYPES_H
 
+typedef enum _DEBUG_CONTROL_CODE
+{
+  DebugGetTraceInformation = 1,
+  DebugSetInternalBreakpoint,
+  DebugSetSpecialCalls,
+  DebugClearSpecialCalls,
+  DebugQuerySpecialCalls,
+  DebugDbgBreakPoint
+} DEBUG_CONTROL_CODE;
+
 typedef enum _KPROFILE_SOURCE
 {
   ProfileTime

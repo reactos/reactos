@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2000  David Welch <welch@cwcom.net>
+ *  Copyright (C) 2000  ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
  * FILE:            ntoskrnl/cc/cacheman.c
  * PURPOSE:         Cache manager
  * PROGRAMMER:      David Welch (welch@cwcom.net)
+ * PORTABILITY:     Checked
  * UPDATE HISTORY:
  *                  Created 22/05/98
  */

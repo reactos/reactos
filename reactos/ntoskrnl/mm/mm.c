@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.45 2001/03/13 16:25:54 dwelch Exp $
+/* $Id: mm.c,v 1.46 2001/03/16 18:11:23 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -36,7 +36,6 @@
 #include <internal/bitops.h>
 #include <internal/io.h>
 #include <internal/ps.h>
-#include <internal/mmhal.h>
 
 #define NDEBUG
 #include <internal/debug.h>

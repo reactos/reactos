@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.43 2001/03/16 16:05:34 dwelch Exp $
+/* $Id: virtual.c,v 1.44 2001/03/16 18:11:23 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -15,7 +15,6 @@
 
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
-#include <internal/mmhal.h>
 #include <internal/ob.h>
 #include <internal/io.h>
 #include <internal/ps.h>

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.13 2001/01/17 15:38:03 dwelch Exp $
+/* $Id: mminit.c,v 1.14 2001/03/16 18:11:23 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -18,7 +18,6 @@
 #include <internal/bitops.h>
 #include <internal/io.h>
 #include <internal/ps.h>
-#include <internal/mmhal.h>
 #include <napi/shared_data.h>
 
 #define NDEBUG

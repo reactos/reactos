@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.19 2001/02/06 00:11:19 dwelch Exp $
+/* $Id: usercall.c,v 1.20 2001/03/16 18:11:23 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,7 +16,7 @@
 #include <internal/ke.h>
 #include <internal/ps.h>
 #include <internal/i386/segment.h>
-#include <internal/mmhal.h>
+#include <internal/i386/mm.h>
 
 #define NDEBUG
 #include <internal/debug.h>

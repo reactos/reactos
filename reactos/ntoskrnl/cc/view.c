@@ -16,13 +16,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.20 2001/03/13 17:47:47 dwelch Exp $
+/* $Id: view.c,v 1.21 2001/03/16 18:11:21 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
  * PURPOSE:         Cache manager
  * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * PORTABILITY:     Checked
  * UPDATE HISTORY:
  *                  Created 22/05/98
  */

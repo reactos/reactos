@@ -13,9 +13,8 @@
 #include <ddk/ntddk.h>
 #include <internal/ntoskrnl.h>
 #include <internal/ps.h>
-#include <internal/hal.h>
 #include <internal/i386/segment.h>
-#include <internal/mmhal.h>
+#include <internal/i386/mm.h>
 #include <internal/ke.h>
 
 #define NDEBUG

@@ -1,4 +1,4 @@
-/* $Id: bus.c,v 1.6 2001/03/07 16:48:41 dwelch Exp $
+/* $Id: bus.c,v 1.7 2001/03/16 18:11:21 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,7 +16,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/hal.h>
 #include <internal/pool.h>
 
 #define NDEBUG

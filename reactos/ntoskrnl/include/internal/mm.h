@@ -6,7 +6,7 @@
 #define __INCLUDE_INTERNAL_MM_H
 
 #include <internal/ntoskrnl.h>
-#include <internal/mmhal.h>
+#include <internal/arch/mm.h>
 
 /* TYPES *********************************************************************/
 

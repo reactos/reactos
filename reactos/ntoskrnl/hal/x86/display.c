@@ -1,4 +1,4 @@
-/* $Id: display.c,v 1.11 2000/10/08 12:46:31 ekohl Exp $
+/* $Id: display.c,v 1.12 2001/03/16 18:11:21 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,7 +10,6 @@
  */
 
 #include <ddk/ntddk.h>
-#include <internal/hal.h>
 
 
 #define SCREEN_SYNCHRONIZATION

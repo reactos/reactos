@@ -1,4 +1,4 @@
-/* $Id: mpw.c,v 1.4 2000/10/22 16:36:52 ekohl Exp $
+/* $Id: mpw.c,v 1.5 2001/03/16 18:11:23 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -15,7 +15,6 @@
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
 #include <internal/mm.h>
-#include <internal/mmhal.h>
 
 #define NDEBUG
 #include <internal/debug.h>

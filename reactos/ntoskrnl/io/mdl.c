@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.7 2001/03/16 16:05:33 dwelch Exp $
+/* $Id: mdl.c,v 1.8 2001/03/16 18:11:22 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,7 +12,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/mmhal.h>
 #include <internal/pool.h>
 
 #include <internal/debug.h>

@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.5 2000/08/17 17:42:53 ekohl Exp $
+/* $Id: pci.c,v 1.6 2001/03/16 18:11:21 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,7 +18,6 @@
 /* INCLUDES ***************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/i386/hal.h>
 
 #define NDEBUG
 #include <internal/debug.h>

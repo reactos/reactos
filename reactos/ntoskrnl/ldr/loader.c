@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.68 2001/03/07 16:48:43 dwelch Exp $
+/* $Id: loader.c,v 1.69 2001/03/16 18:11:23 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,7 +25,6 @@
 #include <internal/module.h>
 #include <internal/ntoskrnl.h>
 #include <internal/mm.h>
-#include <internal/mmhal.h>
 #include <internal/ob.h>
 #include <internal/ps.h>
 #include <internal/ldr.h>

@@ -47,7 +47,6 @@
 
 #ifndef __ASM__
 
-#include <internal/hal.h>
 #include <internal/mm.h>
 
 struct _KTHREAD;

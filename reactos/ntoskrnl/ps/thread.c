@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.70 2001/03/07 16:48:45 dwelch Exp $
+/* $Id: thread.c,v 1.71 2001/03/16 18:11:24 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -23,7 +23,6 @@
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
 #include <internal/ob.h>
-#include <internal/hal.h>
 #include <internal/ps.h>
 #include <internal/ob.h>
 #include <internal/pool.h>

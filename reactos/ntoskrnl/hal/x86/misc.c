@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.7 2001/01/14 15:36:55 ekohl Exp $
+/* $Id: misc.c,v 1.8 2001/03/16 18:11:21 dwelch Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS kernel
@@ -10,7 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/hal.h>
+#include <internal/hal/hal.h>
 
 /* FUNCTIONS ****************************************************************/
 

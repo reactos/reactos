@@ -20,6 +20,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/dbgctrl.c
  * PURPOSE:         System debug control
+ * PORTABILITY:     Checked
  */
 
 /* INCLUDES *****************************************************************/
@@ -31,7 +32,12 @@
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS STDCALL 
-NtSystemDebugControl(VOID)
+NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,
+		     PVOID InputBuffer,
+		     ULONG InputBufferLength,
+		     PVOID OutputBuffer,
+		     ULONG OutputBufferLength,
+		     PULONG ReturnLength)
 {
    UNIMPLEMENTED;
 }

@@ -17,9 +17,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: debug.c,v 1.2 2001/03/14 16:30:08 dwelch Exp $
+/* $Id: debug.c,v 1.3 2001/03/16 18:11:24 dwelch Exp $
  *
- * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/debug.c
  * PURPOSE:                Thread managment
@@ -43,7 +42,6 @@
 #include <internal/ke.h>
 #include <internal/ob.h>
 #include <string.h>
-#include <internal/hal.h>
 #include <internal/ps.h>
 #include <internal/ob.h>
 

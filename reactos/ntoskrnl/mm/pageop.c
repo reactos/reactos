@@ -1,4 +1,4 @@
-/* $Id: pageop.c,v 1.3 2001/03/13 16:25:54 dwelch Exp $
+/* $Id: pageop.c,v 1.4 2001/03/16 18:11:23 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -13,7 +13,6 @@
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
 #include <internal/mm.h>
-#include <internal/mmhal.h>
 #include <internal/pool.h>
 
 #define NDEBUG

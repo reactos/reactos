@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.41 2001/03/16 16:05:32 dwelch Exp $
+/* $Id: zw.h,v 1.42 2001/03/16 18:11:20 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -5234,12 +5234,13 @@ NtSetSystemPowerState (
 
 /* --- DEBUG SUBSYSTEM --- */
 
-NTSTATUS
-STDCALL
-NtSystemDebugControl (
-	VOID
-	);
-
+NTSTATUS STDCALL 
+NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,
+		     PVOID InputBuffer,
+		     ULONG InputBufferLength,
+		     PVOID OutputBuffer,
+		     ULONG OutputBufferLength,
+		     PULONG ReturnLength);
 
 /* --- VIRTUAL DOS MACHINE (VDM) --- */
 

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.30 2001/02/02 20:47:14 ekohl Exp $
+/* $Id: create.c,v 1.31 2001/03/16 18:11:24 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -23,7 +23,6 @@
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
 #include <internal/ob.h>
-#include <internal/hal.h>
 #include <internal/ps.h>
 #include <internal/ob.h>
 #include <internal/id.h>

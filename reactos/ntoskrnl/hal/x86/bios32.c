@@ -16,9 +16,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
-#include <internal/mmhal.h>
 #include <internal/i386/segment.h>
-#include <internal/i386/hal.h>
 
 
 /* TYPES ******************************************************************/

@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.7 2001/03/14 23:19:14 dwelch Exp $
+/* $Id: kmap.c,v 1.8 2001/03/16 18:11:23 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -11,7 +11,6 @@
 
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
-#include <internal/mmhal.h>
 #include <internal/bitops.h>
 #include <internal/ntoskrnl.h>
 #include <internal/pool.h>
