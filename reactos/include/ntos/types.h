@@ -389,6 +389,9 @@ typedef char *LPSTR;
 
 typedef const unsigned short *LPCWSTR;
 
+typedef unsigned short RTL_ATOM;
+typedef unsigned short *PRTL_ATOM;
+
 typedef struct _COORD {
   SHORT X;
   SHORT Y;

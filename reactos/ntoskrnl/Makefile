@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.40 2001/05/05 19:13:08 chorns Exp $
+# $Id: Makefile,v 1.41 2001/05/27 11:17:01 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -76,7 +76,6 @@ include Makefile.$(ARCH)
 
 # System API (Nt/Zw)
 OBJECTS_NT = \
-	nt/atom.o \
 	nt/channel.o \
 	nt/evtpair.o \
 	nt/mutant.o \
@@ -92,9 +91,11 @@ OBJECTS_NT = \
 
 # Run-Time Library (Rtl)
 OBJECTS_RTL = \
+	rtl/atom.o \
 	rtl/bitmap.o \
 	rtl/ctype.o \
 	rtl/error.o \
+	rtl/handle.o \
 	rtl/interlck.o \
 	rtl/largeint.o \
 	rtl/mem.o \

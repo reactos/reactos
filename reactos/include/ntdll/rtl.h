@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.26 2001/05/24 11:27:10 ekohl Exp $
+/* $Id: rtl.h,v 1.27 2001/05/27 11:10:25 ekohl Exp $
  *
  */
 
@@ -49,6 +49,21 @@ typedef struct _RTL_RESOURCE
    ULONG TimeoutBoost; /* ?? */
    PVOID DebugInfo; /* ?? */
 } RTL_RESOURCE, *PRTL_RESOURCE;
+
+typedef struct _RTL_HANDLE
+{
+   struct _RTL_HANDLE *Next;	/* pointer to next free handle */
+} RTL_HANDLE, *PRTL_HANDLE;
+
+typedef struct _RTL_HANDLE_TABLE
+{
+   ULONG TableSize;		/* maximum number of handles */
+   ULONG HandleSize;		/* size of handle in bytes */
+   PRTL_HANDLE Handles;		/* pointer to handle array */
+   PRTL_HANDLE Limit;		/* limit of pointers */
+   PRTL_HANDLE FirstFree;	/* pointer to first free handle */
+   PRTL_HANDLE LastUsed;	/* pointer to last allocated handle */
+} RTL_HANDLE_TABLE, *PRTL_HANDLE_TABLE;
 
 
 #define HEAP_BASE (0xa0000000)
@@ -398,6 +413,51 @@ VOID
 STDCALL
 RtlReleaseResource (
 	IN	PRTL_RESOURCE	Resource
+	);
+
+/* handle table functions */
+
+PRTL_HANDLE
+STDCALL
+RtlAllocateHandle (
+	IN	PRTL_HANDLE_TABLE	HandleTable,
+	IN OUT	PULONG			Index
+	);
+
+VOID
+STDCALL
+RtlDestroyHandleTable (
+	IN	PRTL_HANDLE_TABLE	HandleTable
+	);
+
+BOOLEAN
+STDCALL
+RtlFreeHandle (
+	IN	PRTL_HANDLE_TABLE	HandleTable,
+	IN	PRTL_HANDLE		Handle
+	);
+
+VOID
+STDCALL
+RtlInitializeHandleTable (
+	IN	ULONG			TableSize,
+	IN	ULONG			HandleSize,
+	IN	PRTL_HANDLE_TABLE	HandleTable
+	);
+
+BOOLEAN
+STDCALL
+RtlIsValidHandle (
+	IN	PRTL_HANDLE_TABLE	HandleTable,
+	IN	PRTL_HANDLE		Handle
+	);
+
+BOOLEAN
+STDCALL
+RtlIsValidIndexHandle (
+	IN	PRTL_HANDLE_TABLE	HandleTable,
+	IN OUT	PRTL_HANDLE		*Handle,
+	IN	ULONG			Index
 	);
 
 #endif /* __INCLUDE_NTDLL_RTL_H */

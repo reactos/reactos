@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.44 2001/03/25 02:34:27 dwelch Exp $
+/* $Id: zw.h,v 1.45 2001/05/27 11:09:35 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -18,7 +18,6 @@
 #define __DDK_ZW_H
 
 #include <ntos/security.h>
-#include <ntos/atom.h>
 #include <napi/npipe.h>
 
 //#define LCID ULONG
@@ -113,25 +112,25 @@ ZwAccessCheckAndAuditAlarm(
 
 /*
  * FUNCTION: Adds an atom to the global atom table
- * ARGUMENTS: 
- *	  Atom (OUT) = Caller supplies storage for the resulting atom.
+ * ARGUMENTS:
  *        AtomString = The string to add to the atom table.
- * REMARKS: The arguments map to the win32 add GlobalAddAtom. 
+ *        Atom (OUT) = Caller supplies storage for the resulting atom.
+ * REMARKS: The arguments map to the win32 add GlobalAddAtom.
  * RETURNS: Status
  */
 NTSTATUS
 STDCALL
 NtAddAtom(
-	OUT ATOM *Atom,
-	IN PUNICODE_STRING AtomString
+	IN	PWSTR		AtomName,
+	IN OUT	PRTL_ATOM	Atom
 	);
 
 
 NTSTATUS
 STDCALL
 ZwAddAtom(
-	OUT ATOM *Atom,
-	IN PUNICODE_STRING AtomString
+	IN	PWSTR		AtomName,
+	IN OUT	PRTL_ATOM	Atom
 	);
 
 
@@ -1108,13 +1107,13 @@ ZwDelayExecution(
 NTSTATUS
 STDCALL
 NtDeleteAtom(
-	IN ATOM Atom
+	IN RTL_ATOM Atom
 	);
 
 NTSTATUS
 STDCALL
 ZwDeleteAtom(
-	IN ATOM Atom
+	IN RTL_ATOM Atom
 	);
 
 /*
@@ -1429,8 +1428,8 @@ ZwExtendSection(
 /*
  * FUNCTION: Finds a atom
  * ARGUMENTS:
+ *       AtomName = Name to search for.
  *       Atom = Caller supplies storage for the resulting atom
- *	 AtomString = String to search for.
  * RETURNS: Status 
  * REMARKS:
  *	This funciton maps to the win32 GlobalFindAtom
@@ -1438,16 +1437,17 @@ ZwExtendSection(
 NTSTATUS
 STDCALL
 NtFindAtom(
-	OUT ATOM *Atom,
-	IN PUNICODE_STRING AtomString
+	IN	PWSTR		AtomName,
+	OUT	PRTL_ATOM	Atom OPTIONAL
 	);
 
 NTSTATUS
 STDCALL
 ZwFindAtom(
-	OUT ATOM *Atom,
-	IN PUNICODE_STRING AtomString
+	IN	PWSTR		AtomName,
+	OUT	PRTL_ATOM	Atom OPTIONAL
 	);
+
 /*
  * FUNCTION: Flushes chached file data to disk
  * ARGUMENTS:
@@ -2794,22 +2794,22 @@ ZwQueryFullAttributesFile(
 NTSTATUS
 STDCALL
 NtQueryInformationAtom(
-	IN RTL_ATOM Atom,
-	IN CINT AtomInformationClass,
-	OUT PVOID AtomInformation,
-	IN ULONG AtomInformationLength,
-	OUT PULONG ReturnLength
+	IN	RTL_ATOM		Atom,
+	IN	ATOM_INFORMATION_CLASS	AtomInformationClass,
+	OUT	PVOID			AtomInformation,
+	IN	ULONG			AtomInformationLength,
+	OUT	PULONG			ReturnLength OPTIONAL
 	);
+
 NTSTATUS
 STDCALL
 NtQueryInformationAtom(
-	IN RTL_ATOM Atom,
-	IN CINT AtomInformationClass,
-	OUT PVOID AtomInformation,
-	IN ULONG AtomInformationLength,
-	OUT PULONG ReturnLength
+	IN	RTL_ATOM		Atom,
+	IN	ATOM_INFORMATION_CLASS	AtomInformationClass,
+	OUT	PVOID			AtomInformation,
+	IN	ULONG			AtomInformationLength,
+	OUT	PULONG			ReturnLength OPTIONAL
 	);
-
 
 
 /*

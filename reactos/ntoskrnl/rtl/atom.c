@@ -1,8 +1,8 @@
-/* $Id: atom.c,v 1.2 2001/05/27 11:12:50 ekohl Exp $
+/* $Id: atom.c,v 1.1 2001/05/27 11:16:09 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            lib/ntdll/rtl/atom.c
+ * FILE:            ntoskrnl/nt/atom.c
  * PURPOSE:         Atom managment
  * PROGRAMMER:      Nobody
  * UPDATE HISTORY:
@@ -12,14 +12,13 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <ntos/heap.h>
+#include <internal/handle.h>
+#include <internal/pool.h>
 
-#define NDEBUG
-#include <ntdll/ntdll.h>
+//#define NDEBUG
+#include <internal/debug.h>
 
 
-/* LOCAL TYPES ***************************************************************/
 
 typedef struct _RTL_ATOM_ENTRY
 {
@@ -28,17 +27,12 @@ typedef struct _RTL_ATOM_ENTRY
    ULONG RefCount;
    BOOLEAN Locked;
    ULONG Index;
-   PRTL_HANDLE Handle;
 } RTL_ATOM_ENTRY, *PRTL_ATOM_ENTRY;
-
-typedef struct _RTL_ATOM_HANDLE
-{
-   RTL_HANDLE Handle;
-   PRTL_ATOM_ENTRY Entry;
-} RTL_ATOM_HANDLE, *PRTL_ATOM_HANDLE;
 
 
 /* PROTOTYPES ****************************************************************/
+
+static PRTL_ATOM_TABLE RtlpGetGlobalAtomTable(VOID);
 
 static ULONG RtlpHashAtomName(ULONG TableSize, PWSTR AtomName);
 static BOOLEAN RtlpCheckIntegerAtom(PWSTR AtomName, PUSHORT AtomValue);
@@ -51,8 +45,110 @@ static VOID RtlpUnlockAtomTable(PRTL_ATOM_TABLE AtomTable);
 static BOOLEAN RtlpCreateAtomHandleTable(PRTL_ATOM_TABLE AtomTable);
 static VOID RtlpDestroyAtomHandleTable(PRTL_ATOM_TABLE AtomTable);
 
+static NTSTATUS RtlpQueryAtomInformation(PRTL_ATOM_TABLE AtomTable,
+					 RTL_ATOM Atom,
+					 PATOM_BASIC_INFORMATION AtomInformation,
+					 ULONG AtomInformationLength,
+					 PULONG ReturnLength);
+
+static NTSTATUS RtlpQueryAtomTableInformation(PRTL_ATOM_TABLE AtomTable,
+					      RTL_ATOM Atom,
+					      PATOM_TABLE_INFORMATION AtomInformation,
+					      ULONG AtomInformationLength,
+					      PULONG ReturnLength);
+
+
+/* GLOBALS *******************************************************************/
+
+static PRTL_ATOM_TABLE GlobalAtomTable = NULL;
 
 /* FUNCTIONS *****************************************************************/
+
+
+NTSTATUS STDCALL
+NtAddAtom(IN PWSTR AtomName,
+	  OUT PRTL_ATOM Atom)
+{
+   PRTL_ATOM_TABLE AtomTable;
+
+   AtomTable = RtlpGetGlobalAtomTable();
+   if (AtomTable == NULL)
+     return STATUS_ACCESS_DENIED;
+
+   return (RtlAddAtomToAtomTable(AtomTable,
+				 AtomName,
+				 Atom));
+}
+
+
+NTSTATUS STDCALL
+NtDeleteAtom(IN RTL_ATOM Atom)
+{
+   PRTL_ATOM_TABLE AtomTable;
+
+   AtomTable = RtlpGetGlobalAtomTable();
+   if (AtomTable == NULL)
+     return STATUS_ACCESS_DENIED;
+
+   return (RtlDeleteAtomFromAtomTable(AtomTable,
+				      Atom));
+}
+
+
+NTSTATUS STDCALL
+NtFindAtom(IN PWSTR AtomName,
+	   OUT PRTL_ATOM Atom)
+{
+   PRTL_ATOM_TABLE AtomTable;
+
+   AtomTable = RtlpGetGlobalAtomTable();
+   if (AtomTable == NULL)
+     return STATUS_ACCESS_DENIED;
+
+   return (RtlLookupAtomInAtomTable(AtomTable,
+				    AtomName,
+				    Atom));
+}
+
+
+NTSTATUS STDCALL
+NtQueryInformationAtom(RTL_ATOM Atom,
+		       ATOM_INFORMATION_CLASS AtomInformationClass,
+		       PVOID AtomInformation,
+		       ULONG AtomInformationLength,
+		       PULONG ReturnLength)
+{
+   PRTL_ATOM_TABLE AtomTable;
+   NTSTATUS Status;
+
+   AtomTable = RtlpGetGlobalAtomTable();
+   if (AtomTable == NULL)
+     return STATUS_ACCESS_DENIED;
+
+   switch (AtomInformationClass)
+     {
+     case AtomBasicInformation:
+	Status = RtlpQueryAtomInformation(AtomTable,
+					  Atom,
+					  AtomInformation,
+					  AtomInformationLength,
+					  ReturnLength);
+	break;
+
+     case AtomTableInformation:
+	Status = RtlpQueryAtomTableInformation(AtomTable,
+					       Atom,
+					       AtomInformation,
+					       AtomInformationLength,
+					       ReturnLength);
+	break;
+
+     default:
+	Status = STATUS_INVALID_INFO_CLASS;
+     }
+
+   return Status;
+}
 
 
 NTSTATUS STDCALL
@@ -72,17 +168,15 @@ RtlCreateAtomTable(ULONG TableSize,
      }
 
    /* allocate atom table */
-   Table = RtlAllocateHeap(RtlGetProcessHeap(),
-			   HEAP_ZERO_MEMORY,
-			   TableSize * sizeof(LIST_ENTRY) +
-			   sizeof(RTL_ATOM_TABLE));
+   Table = ExAllocatePool(NonPagedPool,
+			  TableSize * sizeof(RTL_ATOM_ENTRY) +
+			  sizeof(RTL_ATOM_TABLE));
    if (Table == NULL)
-     {
-	return STATUS_NO_MEMORY;
-     }
+     return STATUS_NO_MEMORY;
 
    /* initialize atom table */
    Table->TableSize = TableSize;
+   Table->NumberOfAtoms = 0;
 
    for (i = 0; i < TableSize; i++)
      {
@@ -92,18 +186,14 @@ RtlCreateAtomTable(ULONG TableSize,
    Status = RtlpInitAtomTableLock(Table);
    if (!NT_SUCCESS(Status))
      {
-	RtlFreeHeap(RtlGetProcessHeap(),
-		    0,
-		    Table);
+	ExFreePool(Table);
 	return Status;
      }
 
    if (RtlpCreateAtomHandleTable(Table) == FALSE)
      {
 	RtlpDestroyAtomTableLock(Table);
-	RtlFreeHeap(RtlGetProcessHeap(),
-		    0,
-		    Table);
+	ExFreePool(Table);
 	return STATUS_NO_MEMORY;
      }
 
@@ -134,9 +224,7 @@ RtlDestroyAtomTable(IN PRTL_ATOM_TABLE AtomTable)
 	     AtomEntry = (PRTL_ATOM_ENTRY)Current;
 	     RtlFreeUnicodeString(&AtomEntry->Name);
 	     RemoveEntryList(&AtomEntry->List);
-	     RtlFreeHeap(RtlGetProcessHeap(),
-			 0,
-			 AtomEntry);
+	     ExFreePool(AtomEntry);
 	     Current = AtomTable->Slot[i].Flink;
 	  }
 
@@ -148,17 +236,15 @@ RtlDestroyAtomTable(IN PRTL_ATOM_TABLE AtomTable)
 
    RtlpDestroyAtomTableLock(AtomTable);
 
-   RtlFreeHeap(RtlGetProcessHeap(),
-	       0,
-	       AtomTable);
+   ExFreePool(AtomTable);
 
    return STATUS_SUCCESS;
 }
 
 
 NTSTATUS STDCALL
-RtlEmptyAtomTable(PRTL_ATOM_TABLE AtomTable,
-		  BOOLEAN DeletePinned)
+RtlEmptyAtomTable(IN PRTL_ATOM_TABLE AtomTable,
+		  IN BOOLEAN DeletePinned)
 {
    PLIST_ENTRY Current, Next;
    PRTL_ATOM_ENTRY AtomEntry;
@@ -186,18 +272,18 @@ RtlEmptyAtomTable(PRTL_ATOM_TABLE AtomTable,
 	       {
 		  RtlFreeUnicodeString(&AtomEntry->Name);
 
-		  RtlFreeHandle(AtomTable->HandleTable,
-				AtomEntry->Handle);
+		  RtlpFreeHandle(AtomTable->HandleTable,
+				 AtomEntry->Index);
 
 		  RemoveEntryList(&AtomEntry->List);
-		  RtlFreeHeap(RtlGetProcessHeap(),
-			      0,
-			      AtomEntry);
+		  ExFreePool(AtomEntry);
 	       }
 	     Current = Next;
 	  }
 
      }
+
+   AtomTable->NumberOfAtoms = 0;
 
    RtlpUnlockAtomTable(AtomTable);
 
@@ -215,7 +301,6 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
    PRTL_ATOM_ENTRY Entry;
    USHORT AtomValue;
    NTSTATUS Status;
-   PRTL_ATOM_HANDLE AtomHandle;
    ULONG AtomIndex;
 
    DPRINT("RtlAddAtomToAtomTable (AtomTable %p AtomName %S Atom %p)\n",
@@ -264,9 +349,8 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
      }
 
    /* insert new atom */
-   Entry = RtlAllocateHeap(RtlGetProcessHeap(),
-			   HEAP_ZERO_MEMORY,
-			   sizeof(RTL_ATOM_ENTRY));
+   Entry = ExAllocatePool(NonPagedPool,
+			  sizeof(RTL_ATOM_ENTRY));
    if (Entry == NULL)
      {
 	RtlpUnlockAtomTable(AtomTable);
@@ -280,14 +364,14 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
    Entry->Locked = FALSE;
 
    /* FIXME: use general function instead !! */
-   AtomHandle = (PRTL_ATOM_HANDLE)RtlAllocateHandle(AtomTable->HandleTable,
-						    &AtomIndex);
+   RtlpAllocateHandle(AtomTable->HandleTable,
+		      (PVOID)Entry,
+		      &AtomIndex);
 
-   DPRINT("AtomHandle %p AtomIndex %x\n", AtomHandle, AtomIndex);
+   DPRINT("AtomIndex %x\n", AtomIndex);
 
-   AtomHandle->Entry = Entry;
    Entry->Index = AtomIndex;
-   Entry->Handle = (PRTL_HANDLE)AtomHandle;
+   AtomTable->NumberOfAtoms++;
 
    if (Atom)
      *Atom = (RTL_ATOM)(AtomIndex + 0xC000);
@@ -302,7 +386,6 @@ NTSTATUS STDCALL
 RtlDeleteAtomFromAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 			   IN RTL_ATOM Atom)
 {
-   PRTL_ATOM_HANDLE AtomHandle;
    PRTL_ATOM_ENTRY AtomEntry;
 
    DPRINT("RtlDeleteAtomFromAtomTable (AtomTable %p Atom %x)\n",
@@ -316,19 +399,15 @@ RtlDeleteAtomFromAtomTable(IN PRTL_ATOM_TABLE AtomTable,
    RtlpLockAtomTable(AtomTable);
 
    /* FIXME: use general function instead !! */
-   if (!RtlIsValidIndexHandle(AtomTable->HandleTable,
-			      (PRTL_HANDLE *)&AtomHandle,
-			      (ULONG)Atom - 0xC000))
+   AtomEntry = (PRTL_ATOM_ENTRY)RtlpMapHandleToPointer(AtomTable->HandleTable,
+						       (ULONG)Atom - 0xC000);
+   if (AtomEntry == NULL)
      {
 	RtlpUnlockAtomTable(AtomTable);
 	return STATUS_INVALID_HANDLE;
      }
 
-   DPRINT("AtomHandle %x\n", AtomHandle);
-   DPRINT("AtomHandle->Entry %x\n", AtomHandle->Entry);
-
-   AtomEntry = AtomHandle->Entry;
-
+   DPRINT("AtomEntry %x\n", AtomEntry);
    DPRINT("Atom name: %wZ\n", &AtomEntry->Name);
 
    AtomEntry->RefCount--;
@@ -347,11 +426,10 @@ RtlDeleteAtomFromAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 
 	RtlFreeUnicodeString(&AtomEntry->Name);
 	RemoveEntryList(&AtomEntry->List);
-	RtlFreeHeap(RtlGetProcessHeap(),
-		    0,
-		    AtomEntry);
-	RtlFreeHandle(AtomTable->HandleTable,
-		      (PRTL_HANDLE)AtomHandle);
+	ExFreePool(AtomEntry);
+	RtlpFreeHandle(AtomTable->HandleTable,
+		       (ULONG)Atom - 0xC000);
+	AtomTable->NumberOfAtoms++;
      }
 
    RtlpUnlockAtomTable(AtomTable);
@@ -424,7 +502,6 @@ NTSTATUS STDCALL
 RtlPinAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 		      IN RTL_ATOM Atom)
 {
-   PRTL_ATOM_HANDLE AtomHandle;
    PRTL_ATOM_ENTRY AtomEntry;
 
    DPRINT("RtlPinAtomInAtomTable (AtomTable %p Atom %x)\n",
@@ -438,19 +515,15 @@ RtlPinAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
    RtlpLockAtomTable(AtomTable);
 
    /* FIXME: use general function instead !! */
-   if (!RtlIsValidIndexHandle(AtomTable->HandleTable,
-			      (PRTL_HANDLE *)&AtomHandle,
-			      (ULONG)Atom - 0xC000))
+   AtomEntry = (PRTL_ATOM_ENTRY)RtlpMapHandleToPointer(AtomTable->HandleTable,
+						       (ULONG)Atom - 0xC000);
+   if (AtomEntry == NULL)
      {
 	RtlpUnlockAtomTable(AtomTable);
 	return STATUS_INVALID_HANDLE;
      }
 
-   DPRINT("AtomHandle %x\n", AtomHandle);
-   DPRINT("AtomHandle->Entry %x\n", AtomHandle->Entry);
-
-   AtomEntry = AtomHandle->Entry;
-
+   DPRINT("AtomEntry %x\n", AtomEntry);
    DPRINT("Atom name: %wZ\n", &AtomEntry->Name);
 
    AtomEntry->Locked = TRUE;
@@ -462,15 +535,14 @@ RtlPinAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 
 
 NTSTATUS STDCALL
-RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
-			RTL_ATOM Atom,
-			PULONG RefCount,
-			PULONG PinCount,
-			PWSTR AtomName,
-			PULONG NameLength)
+RtlQueryAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
+			IN RTL_ATOM Atom,
+			IN OUT PULONG RefCount,
+			IN OUT PULONG PinCount,
+			IN OUT PWSTR AtomName,
+			IN OUT PULONG NameLength)
 {
    ULONG Length;
-   PRTL_ATOM_HANDLE AtomHandle;
    PRTL_ATOM_ENTRY AtomEntry;
 
    if (Atom < 0xC000)
@@ -497,19 +569,15 @@ RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
    RtlpLockAtomTable(AtomTable);
 
    /* FIXME: use general function instead !! */
-   if (!RtlIsValidIndexHandle(AtomTable->HandleTable,
-			      (PRTL_HANDLE *)&AtomHandle,
-			      (ULONG)Atom - 0xC000))
+   AtomEntry = (PRTL_ATOM_ENTRY)RtlpMapHandleToPointer(AtomTable->HandleTable,
+						       (ULONG)Atom - 0xC000);
+   if (AtomEntry == NULL)
      {
 	RtlpUnlockAtomTable(AtomTable);
 	return STATUS_INVALID_HANDLE;
      }
 
-   DPRINT("AtomHandle %x\n", AtomHandle);
-   DPRINT("AtomHandle->Entry %x\n", AtomHandle->Entry);
-
-   AtomEntry = AtomHandle->Entry;
-
+   DPRINT("AtomEntry %x\n", AtomEntry);
    DPRINT("Atom name: %wZ\n", &AtomEntry->Name);
 
    if (RefCount != NULL)
@@ -543,6 +611,22 @@ RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
 
 /* INTERNAL FUNCTIONS ********************************************************/
 
+static PRTL_ATOM_TABLE
+RtlpGetGlobalAtomTable(VOID)
+{
+   NTSTATUS Status;
+
+   if (GlobalAtomTable != NULL)
+     return GlobalAtomTable;
+
+   Status = RtlCreateAtomTable(37, &GlobalAtomTable);
+   if (!NT_SUCCESS(Status))
+     return NULL;
+
+   return GlobalAtomTable;
+}
+
+
 static ULONG
 RtlpHashAtomName(ULONG TableSize,
 		 PWSTR AtomName)
@@ -572,8 +656,8 @@ RtlpCheckIntegerAtom(PWSTR AtomName,
 		     PUSHORT AtomValue)
 {
    UNICODE_STRING AtomString;
-   USHORT LoValue;
    ULONG LongValue;
+   USHORT LoValue;
    PWCHAR p;
 
    DPRINT("RtlpCheckIntegerAtom(AtomName '%S' AtomValue %p)\n",
@@ -612,7 +696,11 @@ RtlpCheckIntegerAtom(PWSTR AtomName,
    RtlInitUnicodeString(&AtomString,
 			p);
 
+   DPRINT1("AtomString: %wZ\n", &AtomString);
+
    RtlUnicodeStringToInteger(&AtomString,10, &LongValue);
+
+   DPRINT1("LongValue: %lu\n", LongValue);
 
    *AtomValue = (USHORT)(LongValue & 0x0000FFFF);
 
@@ -622,6 +710,42 @@ RtlpCheckIntegerAtom(PWSTR AtomName,
 
 /* lock functions */
 
+static NTSTATUS
+RtlpInitAtomTableLock(PRTL_ATOM_TABLE AtomTable)
+{
+   AtomTable->Lock = ExAllocatePool(NonPagedPool,
+				    sizeof(FAST_MUTEX));
+   if (AtomTable->Lock == NULL)
+     return STATUS_NO_MEMORY;
+
+   ExInitializeFastMutex((PFAST_MUTEX)AtomTable->Lock);
+
+   return STATUS_SUCCESS;
+}
+
+
+static VOID
+RtlpDestroyAtomTableLock(PRTL_ATOM_TABLE AtomTable)
+{
+   if (AtomTable->Lock)
+     ExFreePool(AtomTable->Lock);
+}
+
+
+static BOOLEAN
+RtlpLockAtomTable(PRTL_ATOM_TABLE AtomTable)
+{
+//   ExAcquireFastMutex((PFAST_MUTEX)AtomTable->Lock);
+   return TRUE;
+}
+
+static VOID
+RtlpUnlockAtomTable(PRTL_ATOM_TABLE AtomTable)
+{
+//   ExReleaseFastMutex((PFAST_MUTEX)AtomTable->Lock);
+}
+
+#if 0
 static NTSTATUS
 RtlpInitAtomTableLock(PRTL_ATOM_TABLE AtomTable)
 {
@@ -664,37 +788,130 @@ RtlpUnlockAtomTable(PRTL_ATOM_TABLE AtomTable)
 {
    RtlLeaveCriticalSection((PCRITICAL_SECTION)AtomTable->Lock);
 }
-
+#endif
 
 /* handle functions */
 
 static BOOLEAN
 RtlpCreateAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
 {
-   AtomTable->HandleTable = RtlAllocateHeap(RtlGetProcessHeap(),
-					    HEAP_ZERO_MEMORY,
-					    sizeof(RTL_HANDLE_TABLE));
+   AtomTable->HandleTable = ExAllocatePool(NonPagedPool,
+					   sizeof(RTL_HANDLE_TABLE));
    if (AtomTable->HandleTable == NULL)
      return FALSE;
 
-   RtlInitializeHandleTable(0xCFFF,
-			    sizeof(RTL_ATOM_HANDLE),
-			    (PRTL_HANDLE_TABLE)AtomTable->HandleTable);
+   RtlpInitializeHandleTable(0xCFFF,
+			     (PRTL_HANDLE_TABLE)AtomTable->HandleTable);
 
    return TRUE;
 }
+
 
 static VOID
 RtlpDestroyAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
 {
    if (AtomTable->HandleTable)
      {
-	RtlDestroyHandleTable((PRTL_HANDLE_TABLE)AtomTable->HandleTable);
-	RtlFreeHeap(RtlGetProcessHeap(),
-		    0,
-		    AtomTable->HandleTable);
+	RtlpDestroyHandleTable((PRTL_HANDLE_TABLE)AtomTable->HandleTable);
+	ExFreePool(AtomTable->HandleTable);
 	AtomTable->HandleTable = NULL;
      }
+}
+
+
+static NTSTATUS
+RtlpQueryAtomInformation(PRTL_ATOM_TABLE AtomTable,
+			 RTL_ATOM Atom,
+			 PATOM_BASIC_INFORMATION AtomInformation,
+			 ULONG AtomInformationLength,
+			 PULONG ReturnLength)
+{
+   NTSTATUS Status;
+   ULONG UsageCount;
+   ULONG Flags;
+   ULONG NameLength;
+
+   NameLength = AtomInformationLength - sizeof(ATOM_BASIC_INFORMATION) + sizeof(WCHAR);
+   Status = RtlQueryAtomInAtomTable(AtomTable,
+				    Atom,
+				    &UsageCount,
+				    &Flags,
+				    AtomInformation->Name,
+				    &NameLength);
+   if (!NT_SUCCESS(Status))
+     {
+	return Status;
+     }
+
+   DPRINT1("NameLength: %lu\n", NameLength);
+
+   if (ReturnLength != NULL)
+     {
+	*ReturnLength = NameLength + sizeof(ATOM_BASIC_INFORMATION);
+     }
+
+   if (NameLength + sizeof(ATOM_BASIC_INFORMATION) > AtomInformationLength)
+     {
+	return STATUS_BUFFER_TOO_SMALL;
+     }
+
+   AtomInformation->UsageCount = (USHORT)UsageCount;
+   AtomInformation->Flags = (USHORT)Flags;
+   AtomInformation->NameLength = (USHORT)NameLength;
+
+   return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
+RtlpQueryAtomTableInformation(PRTL_ATOM_TABLE AtomTable,
+			      RTL_ATOM Atom,
+			      PATOM_TABLE_INFORMATION AtomInformation,
+			      ULONG AtomInformationLength,
+			      PULONG ReturnLength)
+{
+   PLIST_ENTRY Current, Next;
+   PRTL_ATOM_ENTRY AtomEntry;
+   ULONG Length;
+   ULONG i, j;
+
+   Length = sizeof(ATOM_TABLE_INFORMATION);
+   if (AtomTable->NumberOfAtoms > 1)
+     {
+	Length += ((AtomTable->NumberOfAtoms - 1)* sizeof(RTL_ATOM));
+     }
+
+   DPRINT1("RequiredLength: %lu\n", Length);
+
+   if (ReturnLength != NULL)
+     {
+	*ReturnLength = Length;
+     }
+
+   if (Length > AtomInformationLength)
+     {
+	return STATUS_BUFFER_TOO_SMALL;
+     }
+
+   AtomInformation->NumberOfAtoms = AtomTable->NumberOfAtoms;
+
+   j = 0;
+   for (i = 0; i < AtomTable->TableSize; i++)
+     {
+	Current = AtomTable->Slot[i].Flink;
+	while (Current != &AtomTable->Slot[i])
+	  {
+	     Next = Current->Flink;
+	     AtomEntry = (PRTL_ATOM_ENTRY)Current;
+
+	     AtomInformation->Atoms[j] = AtomEntry->Index + 0xC000;
+	     j++;
+
+	     Current = Next;
+	  }
+     }
+
+   return STATUS_SUCCESS;
 }
 
 /* EOF */

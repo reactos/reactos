@@ -67,7 +67,7 @@ extern ULONG IMPORTED NtBuildNumber;
 #define ProcessWx86Information			19
 #define ProcessHandleCount			20
 #define ProcessAffinityMask			21
-#define ProcessImageFileName                    22
+#define ProcessImageFileName			22
 #define MaxProcessInfoClass			23
 
 /*
@@ -88,9 +88,9 @@ extern ULONG IMPORTED NtBuildNumber;
 #define ThreadAmILastThread			12
 #define ThreadIdealProcessor			13
 #define ThreadPriorityBoost			14
-#define ThreadSetTlsArrayAddress                15
-#define ThreadIsIoPending                       16
-#define ThreadHideFromDebugger                  17
+#define ThreadSetTlsArrayAddress		15
+#define ThreadIsIoPending			16
+#define ThreadHideFromDebugger			17
 #define MaxThreadInfoClass			17
 
 // object handle information
@@ -100,6 +100,28 @@ extern ULONG IMPORTED NtBuildNumber;
 #define ObjectTypeInformation			2
 #define ObjectAllInformation			3
 #define ObjectDataInformation			4
+
+// atom information
+
+typedef enum _ATOM_INFORMATION_CLASS
+{
+   AtomBasicInformation		= 0,
+   AtomTableInformation		= 1,
+} ATOM_INFORMATION_CLASS;
+
+typedef struct _ATOM_BASIC_INFORMATION
+{
+   USHORT UsageCount;
+   USHORT Flags;
+   USHORT NameLength;
+   WCHAR Name[1];
+} ATOM_BASIC_INFORMATION, *PATOM_BASIC_INFORMATION;
+
+typedef struct _ATOM_TABLE_INFORMATION
+{
+   ULONG NumberOfAtoms;
+   RTL_ATOM Atoms[1];
+} ATOM_TABLE_INFORMATION, *PATOM_TABLE_INFORMATION;
 
 
 // semaphore information

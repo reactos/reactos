@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.50 2001/05/26 16:48:36 ekohl Exp $
+/* $Id: rtl.h,v 1.51 2001/05/27 11:09:35 ekohl Exp $
  * 
  */
 
@@ -77,11 +77,10 @@ typedef struct {
 	ULONG		Unknown[11];
 } RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
 
-typedef USHORT RTL_ATOM, *PRTL_ATOM;
-
 typedef struct _RTL_ATOM_TABLE
 {
 	ULONG TableSize;
+	ULONG NumberOfAtoms;
 	PVOID Lock;		/* fast mutex (kernel mode)/ critical section (user mode) */
 	PVOID HandleTable;
 	LIST_ENTRY Slot[0];
