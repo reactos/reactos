@@ -9,7 +9,7 @@ include $(PATH_TO_TOP)/rules.mak
 # test_old tests
 TEST_APPS = accelerator SampleWindow alive apc args atomtest bench bitblt button \
 button2 capclock carets cliarea combo consume copymove count dibtest \
-dump_shared_data edit enumwnd event file global_mem hello \
+dump_shared_data edit enumwnd event file global_mem hello mdi \
 hivetest hotkey icontest isotest lineclip linetest lock lpc messagebox \
 mktime mstest multiwin mutex nptest patblt pipe primitives pteb regtest \
 sectest sertest shaptest shm statst statst2 stretchblt suspend \
