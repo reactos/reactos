@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.16 2002/03/22 23:05:13 ekohl Exp $
+/* $Id: atapi.c,v 1.17 2002/03/24 15:29:57 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -1442,6 +1442,9 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
       ByteCountLow = 0xFF;
       ByteCountHigh = 0xFF;
     }
+
+  /* Set feature register */
+  IDEWritePrecomp(DeviceExtension->CommandPortBase, 0);
 
   /* Set command packet length */
   IDEWriteCylinderHigh(DeviceExtension->CommandPortBase, ByteCountHigh);
