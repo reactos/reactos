@@ -46,6 +46,7 @@ void do_enumeratekey(PWSTR Name)
         dprintf("\n");
 	}
     }
+  NtClose(hKey1);
 }
 
 void test1(void)
@@ -322,12 +323,13 @@ void test3(void)
   RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos\\test3");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
 				, NULL, NULL);
-  Status = NtCreateKey ( &hKey1, KEY_ALL_ACCESS , &ObjectAttributes
+  Status = NtCreateKey ( &hKey, KEY_ALL_ACCESS , &ObjectAttributes
 		,0,NULL,REG_OPTION_NON_VOLATILE,NULL);
   dprintf("\t\t\t\t\tStatus=%x\n",Status);
   dprintf("NtOpenKey: ");
   Status=NtOpenKey( &hKey1, MAXIMUM_ALLOWED, &ObjectAttributes);
   dprintf("\t\tStatus=%x\n",Status);
+  NtClose(hKey);
   dprintf("  ...\\testNonVolatile :");
   RtlInitUnicodeString(&KeyName, L"TestNonVolatile");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
