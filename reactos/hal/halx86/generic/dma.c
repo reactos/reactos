@@ -1,4 +1,4 @@
-/* $Id: dma.c,v 1.1 2004/12/03 20:10:43 gvg Exp $
+/* $Id: dma.c,v 1.2 2004/12/10 19:05:33 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -154,9 +154,8 @@ HalGetAdapter (PDEVICE_DESCRIPTION	DeviceDescription,
 	}
 	
 	/* Devices that support Scatter/Gather do not need Map Registers */
-	if (DeviceDescription->ScatterGather && 
-	    (DeviceDescription->InterfaceType == Eisa ||
-	     DeviceDescription->InterfaceType == PCIBus)) {
+	if (DeviceDescription->ScatterGather ||
+	    DeviceDescription->InterfaceType == PCIBus) {
 		*NumberOfMapRegisters = 0;
 	}
 	
@@ -176,7 +175,7 @@ HalGetAdapter (PDEVICE_DESCRIPTION	DeviceDescription,
 	ChannelSelect = DeviceDescription->DmaChannel & 0x03;
 	
 	/* Get the Controller Setup */
-	Controller = (DeviceDescription->DmaChannel & 0x04) ? 1 : 2;
+	Controller = (DeviceDescription->DmaChannel & 0x04) ? 2 : 1;
 	
 	/* Get the Adapter Object */
 	if (HalpEisaAdapter[DeviceDescription->DmaChannel] != NULL) {
