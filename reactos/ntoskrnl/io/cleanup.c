@@ -48,18 +48,23 @@ IopCompleteRequest1(struct _KAPC* Apc,
      {
 	*Irp->UserIosb=Irp->IoStatus;
      }
-   if (Irp->UserEvent!=NULL)
-     {
-	KeSetEvent(Irp->UserEvent,PriorityBoost,FALSE);
-	// if the event is not the one in the file object, it needs dereferenced
-	if( FileObject && Irp->UserEvent != &FileObject->Event )
-	  ObDereferenceObject( Irp->UserEvent );
-     }
 
-   if (FileObject != NULL && IoStack->MajorFunction != IRP_MJ_CLOSE)
-     {
-	ObDereferenceObject(FileObject);
-     }
+   if (Irp->UserEvent)
+   {
+      KeSetEvent(Irp->UserEvent,PriorityBoost,FALSE);
+   }
+
+   if (!(Irp->Flags & IRP_PAGING_IO) && FileObject)
+   {
+      // if the event is not the one in the file object, it needs dereferenced
+      if (Irp->UserEvent && Irp->UserEvent != &FileObject->Event)
+	 ObDereferenceObject(Irp->UserEvent);
+
+      if (IoStack->MajorFunction != IRP_MJ_CLOSE)
+      {
+	 ObDereferenceObject(FileObject);
+      }
+   }
    
    IoFreeIrp(Irp);
 
@@ -241,18 +246,23 @@ VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
      {
 	*Irp->UserIosb=Irp->IoStatus;
      }
-   if (Irp->UserEvent!=NULL)
-     {
-	KeSetEvent(Irp->UserEvent,PriorityBoost,FALSE);
-	// if the event is not the one in the file object, it needs dereferenced
-	if( FileObject && Irp->UserEvent != &FileObject->Event )
-	  ObDereferenceObject( Irp->UserEvent );
-     }
 
-   if (FileObject != NULL && IoStack->MajorFunction != IRP_MJ_CLOSE)
-     {
-	ObDereferenceObject(FileObject);
-     }
+   if (Irp->UserEvent)
+   {
+      KeSetEvent(Irp->UserEvent,PriorityBoost,FALSE);
+   }
+
+   if (!(Irp->Flags & IRP_PAGING_IO) && FileObject)
+   {
+      // if the event is not the one in the file object, it needs dereferenced
+      if (Irp->UserEvent && Irp->UserEvent != &FileObject->Event)
+	 ObDereferenceObject(Irp->UserEvent);
+
+      if (IoStack->MajorFunction != IRP_MJ_CLOSE)
+      {
+	 ObDereferenceObject(FileObject);
+      }
+   }
 
    IoFreeIrp(Irp);
 }
