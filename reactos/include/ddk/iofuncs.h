@@ -1,6 +1,30 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.39 2003/08/07 11:47:32 silverblade Exp $ */
+/* $Id: iofuncs.h,v 1.40 2003/11/14 15:19:35 ekohl Exp $ */
+
+#ifdef __NTOSKRNL__
+extern POBJECT_TYPE EXPORTED IoAdapterObjectType;
+extern POBJECT_TYPE EXPORTED IoDeviceHandlerObjectType;
+extern POBJECT_TYPE EXPORTED IoDeviceObjectType;
+extern POBJECT_TYPE EXPORTED IoDriverObjectType;
+extern POBJECT_TYPE EXPORTED IoFileObjectType;
+extern ULONG EXPORTED IoReadOperationCount;
+extern ULONGLONG EXPORTED IoReadTransferCount;
+extern ULONG EXPORTED IoWriteOperationCount;
+extern ULONGLONG EXPORTED IoWriteTransferCount;
+extern KSPIN_LOCK EXPORTED IoStatisticsLock;
+#else
+extern POBJECT_TYPE IMPORTED IoAdapterObjectType;
+extern POBJECT_TYPE IMPORTED IoDeviceHandlerObjectType;
+extern POBJECT_TYPE IMPORTED IoDeviceObjectType;
+extern POBJECT_TYPE IMPORTED IoDriverObjectType;
+extern POBJECT_TYPE IMPORTED IoFileObjectType;
+extern ULONG IMPORTED IoReadOperationCount;
+extern ULONGLONG IMPORTED IoReadTransferCount;
+extern ULONG IMPORTED IoWriteOperationCount;
+extern ULONGLONG IMPORTED IoWriteTransferCount;
+extern KSPIN_LOCK IMPORTED IoStatisticsLock;
+#endif
 
 /* --- EXPORTED BY NTOSKRNL --- */
 

@@ -1,19 +1,7 @@
-/* $Id: extypes.h,v 1.20 2003/08/25 01:37:47 sedwards Exp $ */
+/* $Id: extypes.h,v 1.21 2003/11/14 15:19:35 ekohl Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
-
-#ifdef __NTOSKRNL__
-extern POBJECT_TYPE EXPORTED ExDesktopObjectType;
-extern POBJECT_TYPE EXPORTED ExEventObjectType;
-extern POBJECT_TYPE EXPORTED ExWindowStationObjectType;
-extern POBJECT_TYPE EXPORTED ExIoCompletionType;
-#else
-extern POBJECT_TYPE IMPORTED ExDesktopObjectType;
-extern POBJECT_TYPE IMPORTED ExEventObjectType;
-extern POBJECT_TYPE IMPORTED ExWindowStationObjectType;
-extern POBJECT_TYPE IMPORTED ExIoCompletionType;
-#endif
 
 typedef ULONG INTERLOCKED_RESULT;
 typedef ULONG WORK_QUEUE_TYPE;

@@ -3,6 +3,18 @@
 
 /* EXECUTIVE ROUTINES ******************************************************/
 
+#ifdef __NTOSKRNL__
+extern POBJECT_TYPE EXPORTED ExDesktopObjectType;
+extern POBJECT_TYPE EXPORTED ExEventObjectType;
+extern POBJECT_TYPE EXPORTED ExWindowStationObjectType;
+extern POBJECT_TYPE EXPORTED ExIoCompletionType;
+#else
+extern POBJECT_TYPE IMPORTED ExDesktopObjectType;
+extern POBJECT_TYPE IMPORTED ExEventObjectType;
+extern POBJECT_TYPE IMPORTED ExWindowStationObjectType;
+extern POBJECT_TYPE IMPORTED ExIoCompletionType;
+#endif
+
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
 VOID

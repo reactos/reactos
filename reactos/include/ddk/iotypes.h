@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.57 2003/11/05 22:49:06 gvg Exp $
+/* $Id: iotypes.h,v 1.58 2003/11/14 15:19:35 ekohl Exp $
  *
  */
 
@@ -8,21 +8,6 @@
 #include <ntos/obtypes.h>
 #include <ntos/disk.h>
 #include <ntos/file.h>
-
-#ifdef __NTOSKRNL__
-extern POBJECT_TYPE EXPORTED IoAdapterObjectType;
-extern POBJECT_TYPE EXPORTED IoDeviceHandlerObjectType;
-extern POBJECT_TYPE EXPORTED IoDeviceObjectType;
-extern POBJECT_TYPE EXPORTED IoDriverObjectType;
-extern POBJECT_TYPE EXPORTED IoFileObjectType;
-#else
-extern POBJECT_TYPE IMPORTED IoAdapterObjectType;
-extern POBJECT_TYPE IMPORTED IoDeviceHandlerObjectType;
-extern POBJECT_TYPE IMPORTED IoDeviceObjectType;
-extern POBJECT_TYPE IMPORTED IoDriverObjectType;
-extern POBJECT_TYPE IMPORTED IoFileObjectType;
-#endif
-
 
 /* from winddk.h */
 #define POINTER_ALIGNMENT
