@@ -21,6 +21,7 @@
 #define  REG_USERS_KEY_NAME		L"\\Registry\\User"
 #define  REG_USER_KEY_NAME		L"\\Registry\\User\\CurrentUser"
 #define  SYSTEM_REG_FILE		L"\\SystemRoot\\System32\\Config\\SYSTEM"
+#define  SYSTEM_LOG_FILE		L"\\SystemRoot\\System32\\Config\\SYSTEM.log"
 #define  SOFTWARE_REG_FILE		L"\\SystemRoot\\System32\\Config\\SOFTWARE"
 #define  USER_REG_FILE			L"\\SystemRoot\\System32\\Config\\DEFAULT"
 #define  SAM_REG_FILE			L"\\SystemRoot\\System32\\Config\\SAM"

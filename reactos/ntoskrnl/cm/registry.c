@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.88 2003/04/01 16:37:14 ekohl Exp $
+/* $Id: registry.c,v 1.89 2003/04/01 19:01:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -637,33 +637,21 @@ CmiCreateCurrentControlSetLink(VOID)
 
 
 NTSTATUS
-CmiConnectHive(PWSTR FileName,
-	       PWSTR FullName,
+CmiConnectHive(PREGISTRY_HIVE RegistryHive,
+	       PUNICODE_STRING FullName,
 	       PCHAR KeyName,
-	       PKEY_OBJECT Parent,
-	       BOOLEAN CreateNew)
+	       PKEY_OBJECT Parent)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  PREGISTRY_HIVE RegistryHive = NULL;
-  UNICODE_STRING uKeyName;
   PKEY_OBJECT NewKey;
   HANDLE KeyHandle;
   NTSTATUS Status;
 
-  DPRINT("CmiConnectHive(%S, %S, %s, %p, %d) - Called.\n", FileName, FullName, KeyName, Parent, CreateNew);
-
-  Status = CmiCreateRegistryHive(FileName, &RegistryHive, CreateNew);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("CmiCreateRegistryHive() failed (Status %lx)\n", Status);
-      KeBugCheck(0);
-      return(Status);
-    }
-
-  RtlInitUnicodeString(&uKeyName, FullName);
+  DPRINT("CmiConnectHive(%p, %wZ, %s, %p) called.\n",
+	 RegistryHive, FullName, KeyName, Parent);
 
   InitializeObjectAttributes(&ObjectAttributes,
-			     &uKeyName,
+			     FullName,
 			     0,
 			     NULL,
 			     NULL);
@@ -677,7 +665,6 @@ CmiConnectHive(PWSTR FileName,
     {
       DPRINT1("ObCreateObject() failed (Status %lx)\n", Status);
       KeBugCheck(0);
-      CmiRemoveRegistryHive(RegistryHive);
       return(Status);
     }
 
@@ -693,7 +680,6 @@ CmiConnectHive(PWSTR FileName,
     {
       DPRINT("NumberOfSubKeys %d\n", NewKey->KeyCell->NumberOfSubKeys);
       ZwClose(NewKey);
-      CmiRemoveRegistryHive(RegistryHive);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
@@ -706,7 +692,6 @@ CmiConnectHive(PWSTR FileName,
       if (NewKey->SubKeys != NULL)
 	ExFreePool(NewKey->SubKeys);
       ZwClose(NewKey);
-      CmiRemoveRegistryHive(RegistryHive);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
@@ -722,7 +707,7 @@ CmiConnectHive(PWSTR FileName,
 
 static NTSTATUS
 CmiInitializeSystemHive(PWSTR FileName,
-			PWSTR FullName,
+			PUNICODE_STRING FullName,
 			PCHAR KeyName,
 			PKEY_OBJECT Parent,
 			BOOLEAN CreateNew)
@@ -733,16 +718,30 @@ CmiInitializeSystemHive(PWSTR FileName,
   UNICODE_STRING ControlSetValueName;
   HANDLE KeyHandle;
   NTSTATUS Status;
+  PREGISTRY_HIVE RegistryHive;
 
   if (CreateNew == TRUE)
     {
-      Status = CmiConnectHive(FileName,
+      Status = CmiCreateRegistryHive(FileName,
+				     &RegistryHive,
+				     TRUE);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT1("CmiCreateRegistryHive() failed (Status %lx)\n", Status);
+	  KeBugCheck(0);
+	  return(Status);
+	}
+
+      Status = CmiConnectHive(RegistryHive,
 			      FullName,
 			      KeyName,
-			      Parent,
-			      TRUE);
+			      Parent);
       if (!NT_SUCCESS(Status))
-	return(Status);
+	{
+	  DPRINT1("CmiConnectHive() failed (Status %lx)\n", Status);
+	  CmiRemoveRegistryHive(RegistryHive);
+	  return(Status);
+	}
 
       /* Create 'ControlSet001' key */
       RtlInitUnicodeStringFromLiteral(&ControlSetKeyName,
@@ -801,10 +800,6 @@ CmiInitializeSystemHive(PWSTR FileName,
 	}
       NtClose(KeyHandle);
     }
-  else
-    {
-      /* FIXME: Set the SYSTEM hive's file name and mark it non-volatile */
-    }
 
   return(STATUS_SUCCESS);
 }
@@ -812,44 +807,44 @@ CmiInitializeSystemHive(PWSTR FileName,
 
 NTSTATUS
 CmiInitializeHive(PWSTR FileName,
-		  PWSTR FullName,
+		  PUNICODE_STRING FullName,
 		  PCHAR KeyName,
 		  PKEY_OBJECT Parent,
 		  BOOLEAN CreateNew)
 {
+  PREGISTRY_HIVE RegistryHive;
   NTSTATUS Status;
 
   DPRINT("CmiInitializeHive(%s) called\n", KeyName);
 
-  /* Try to connect the hive */
-  Status = CmiConnectHive(FileName, FullName, KeyName, Parent, CreateNew);
+  Status = CmiCreateRegistryHive(FileName,
+				 &RegistryHive,
+				 CreateNew);
   if (!NT_SUCCESS(Status))
     {
-#if 0
-#ifdef WIN32_REGDBG
-      WCHAR AltFileName[MAX_PATH];
+      DPRINT1("CmiCreateRegistryHive() failed (Status %lx)\n", Status);
 
-      CPRINT("WARNING! Registry file %S not found\n", FileName);
-      //DPRINT("Status %.08x\n", Status);
+      /* FIXME: Try to load the backup hive */
 
-      wcscpy(AltFileName, FileName);
-      wcscat(AltFileName, L".alt");
+      KeBugCheck(0);
+      return(Status);
+    }
 
-      DPRINT("Attempting to connect the alternative hive %S\n", AltFileName);
-      /* Try to connect the alternative hive */
-      Status = CmiConnectHive(AltFileName, FullName, KeyName, Parent, TRUE);
-
-      if (!NT_SUCCESS(Status)) {
-	      CPRINT("WARNING! Alternative registry file %S not found\n", AltFileName);
-	    //DPRINT("Status %.08x\n", Status);
-	  }
-#endif
-#endif
+  /* Connect the hive */
+  Status = CmiConnectHive(RegistryHive,
+			  FullName,
+			  KeyName,
+			  Parent);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("CmiConnectHive() failed (Status %lx)\n", Status);
+      CmiRemoveRegistryHive(RegistryHive);
+      return(Status);
     }
 
   DPRINT("CmiInitializeHive() done\n");
 
-  return(Status);
+  return(STATUS_SUCCESS);
 }
 
 
@@ -869,6 +864,8 @@ CmiInitHives(BOOLEAN SetUpBoot)
   ULONG BufferSize;
   ULONG ResultSize;
   PWSTR EndPtr;
+
+  UNICODE_STRING ParentKeyName;
 
 
   DPRINT("CmiInitHives() called\n");
@@ -940,8 +937,10 @@ CmiInitHives(BOOLEAN SetUpBoot)
   wcscpy(EndPtr, REG_SYSTEM_FILE_NAME);
   DPRINT("ConfigPath: %S\n", ConfigPath);
 
+  RtlInitUnicodeString (&ParentKeyName,
+			REG_SYSTEM_KEY_NAME);
   Status = CmiInitializeSystemHive(ConfigPath,
-				   REG_SYSTEM_KEY_NAME,
+				   &ParentKeyName,
 				   "System",
 				   CmiMachineKey,
 				   SetUpBoot);
@@ -955,8 +954,10 @@ CmiInitHives(BOOLEAN SetUpBoot)
   wcscpy(EndPtr, REG_SOFTWARE_FILE_NAME);
   DPRINT("ConfigPath: %S\n", ConfigPath);
 
+  RtlInitUnicodeString (&ParentKeyName,
+			REG_SOFTWARE_KEY_NAME);
   Status = CmiInitializeHive(ConfigPath,
-			     REG_SOFTWARE_KEY_NAME,
+			     &ParentKeyName,
 			     "Software",
 			     CmiMachineKey,
 			     SetUpBoot);
@@ -970,8 +971,10 @@ CmiInitHives(BOOLEAN SetUpBoot)
   wcscpy(EndPtr, REG_SAM_FILE_NAME);
   DPRINT1("ConfigPath: %S\n", ConfigPath);
 
+  RtlInitUnicodeString (&ParentKeyName,
+			REG_SAM_KEY_NAME);
   Status = CmiInitializeHive(ConfigPath,
-			     REG_SAM_KEY_NAME,
+			     &ParentKeyName,
 			     "Sam",
 			     CmiMachineKey,
 			     SetUpBoot);
@@ -984,8 +987,10 @@ CmiInitHives(BOOLEAN SetUpBoot)
   /* Connect the SECURITY hive */
   wcscpy(EndPtr, REG_SEC_FILE_NAME);
   DPRINT1("ConfigPath: %S\n", ConfigPath);
+  RtlInitUnicodeString (&ParentKeyName,
+			REG_SEC_KEY_NAME);
   Status = CmiInitializeHive(ConfigPath,
-			     REG_SEC_KEY_NAME,
+			     &ParentKeyName,
 			     "Security",
 			     CmiMachineKey,
 			     SetUpBoot);
@@ -999,8 +1004,10 @@ CmiInitHives(BOOLEAN SetUpBoot)
   wcscpy(EndPtr, REG_USER_FILE_NAME);
   DPRINT1("ConfigPath: %S\n", ConfigPath);
 
+  RtlInitUnicodeString (&ParentKeyName,
+			REG_USER_KEY_NAME);
   Status = CmiInitializeHive(ConfigPath,
-			     REG_USER_KEY_NAME,
+			     &ParentKeyName,
 			     ".Default",
 			     CmiUserKey,
 			     SetUpBoot);

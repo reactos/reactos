@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.13 2003/04/01 16:37:14 ekohl Exp $
+/* $Id: import.c,v 1.14 2003/04/01 19:01:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -893,6 +893,15 @@ CmImportSystemHive(PCHAR ChunkBase,
 
       memcpy(NewKey->Name, "System", NewKey->NameSize);
       CmiAddKeyToList(CmiMachineKey, NewKey);
+
+
+      /* Set the hive filename */
+      RtlCreateUnicodeString (&RegistryHive->HiveFileName,
+			      SYSTEM_REG_FILE);
+
+      /* Set the log filename */
+      RtlCreateUnicodeString (&RegistryHive->LogFileName,
+			      SYSTEM_LOG_FILE);
 
 
 #if 0
