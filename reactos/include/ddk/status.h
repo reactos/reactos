@@ -17,9 +17,21 @@
  * FIXME: These may not be the actual values used by NT
  */
 
-#define STATUS_SUCCESS                         (0x0)
-#define STATUS_MORE_ENTRIES                    (0x105)
+#define STATUS_SUCCESS                         (0x00000000)
+#define STATUS_WAIT_0                          (0x00000000)
+#define STATUS_WAIT_63                         (0x0000003F)
+#define STATUS_ABANDONED                       (0x00000080)
+#define STATUS_ABANDONED_WAIT_0                (0x00000080)
+#define STATUS_ABANDONED_WAIT_63               (0x000000BF)
+#define STATUS_USER_APC                        (0x000000C0)
+#define STATUS_KERNEL_APC                      (0x00000100)
+#define STATUS_ALERTED                         (0x00000101)
+#define STATUS_TIMEOUT                         (0x00000102)
+#define STATUS_PENDING                         (0x00000103)
+#define STATUS_REPARSE                         (0x00000104)
+#define STATUS_MORE_ENTRIES                    (0x00000105)
 #define STATUS_NOTIFY_ENUM_DIR                 (0x10C)
+
 #define STATUS_OBJECT_EXISTS                   (0x40000000)
 #define STATUS_THREAD_WAS_SUSPENDED            (0x40000001)
 #define STATUS_WORKING_SET_LIMIT_RANGE         (0x40000002)

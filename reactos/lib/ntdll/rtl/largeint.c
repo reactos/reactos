@@ -1,4 +1,5 @@
-/*
+/* $Id: largeint.c,v 1.4 1999/09/29 23:09:44 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            lib/ntdll/rtl/largeint.c
@@ -10,9 +11,9 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <ddk/ntddk.h>
 #include <internal/ke.h>
 #include <internal/linkage.h>
-#include <ddk/ntddk.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -26,9 +27,10 @@ typedef unsigned long long int ULLI, *PULLI;
 
 /* FUNCTIONS *****************************************************************/
 
-LARGE_INTEGER RtlLargeIntegerDivide(LARGE_INTEGER Dividend,
-				    LARGE_INTEGER Divisor,
-				    PLARGE_INTEGER Remainder)
+LARGE_INTEGER
+RtlLargeIntegerDivide(LARGE_INTEGER Dividend,
+                      LARGE_INTEGER Divisor,
+                      PLARGE_INTEGER Remainder)
 {
 }
 
@@ -107,10 +109,6 @@ RtlLargeIntegerEqualTo(LARGE_INTEGER Operand1,
                        LARGE_INTEGER Operand2)
 {
   return Operand1.QuadPart == Operand2.QuadPart;
-#if 0
-  return Operand1.HighPart == Operand2.HighPart && 
-         Operand1.LowPart == Operand2.LowPart;
-#endif
 }
 
 BOOLEAN 
@@ -124,11 +122,6 @@ RtlLargeIntegerGreaterThan(LARGE_INTEGER Operand1,
                            LARGE_INTEGER Operand2)
 {
   return Operand1.QuadPart > Operand2.QuadPart;
-#if 0
-  return Operand1.HighPart > Operand2.HighPart ||
-         (Operand1.HighPart == Operand2.HighPart && 
-          Operand1.LowPart > Operand2.LowPart);
-#endif
 }
 
 BOOLEAN 
@@ -136,30 +129,18 @@ RtlLargeIntegerGreaterThanOrEqualTo(LARGE_INTEGER Operand1,
                                     LARGE_INTEGER Operand2)
 {
   return Operand1.QuadPart >= Operand2.QuadPart;
-#if 0
-  return Operand1.HighPart > Operand2.HighPart ||
-         (Operand1.HighPart == Operand2.HighPart && 
-          Operand1.LowPart >= Operand2.LowPart);
-#endif
 }
 
 BOOLEAN 
 RtlLargeIntegerGreaterThanOrEqualToZero(LARGE_INTEGER Operand1)
 {
   return Operand1.QuadPart > 0;
-#if 0
-  return Operand1.HighPart >= 0;
-#endif
 }
 
 BOOLEAN 
 RtlLargeIntegerGreaterThanZero(LARGE_INTEGER Operand1)
 {
   return Operand1.QuadPart >= 0; 
-#if 0
-  return Operand1.HighPart > 0 || 
-         (Operand1.HighPart == 0 && Operand1.LowPart > 0);
-#endif
 }
 
 BOOLEAN 
@@ -167,11 +148,6 @@ RtlLargeIntegerLessThan(LARGE_INTEGER Operand1,
                         LARGE_INTEGER Operand2)
 {
   return Operand1.QuadPart < Operand2.QuadPart;
-#if 0
-  return Operand1.HighPart < Operand2.HighPart ||
-         (Operand1.HighPart == Operand2.HighPart && 
-          Operand1.LowPart < Operand2.LowPart);
-#endif
 }
 
 BOOLEAN 
@@ -179,33 +155,22 @@ RtlLargeIntegerLessThanOrEqualTo(LARGE_INTEGER Operand1,
                                  LARGE_INTEGER Operand2)
 {
   return Operand1.QuadPart <= Operand2.QuadPart;
-#if 0
-  return Operand1.HighPart < Operand2.HighPart ||
-         (Operand1.HighPart == Operand2.HighPart && 
-          Operand1.LowPart <= Operand2.LowPart);
-#endif
 }
 
 BOOLEAN 
 RtlLargeIntegerLessThanOrEqualToZero(LARGE_INTEGER Operand)
 {
   return Operand.QuadPart <= 0;
-#if 0
-  return Operand.HighPart < 0 || 
-         (Operand.HighPart == 0 && Operand.LowPart == 0);
-#endif
 }
 
 BOOLEAN 
 RtlLargeIntegerLessThanZero(LARGE_INTEGER Operand)
 {
   return Operand.QuadPart < 0;
-#if 0
-  return Operand.HighPart < 0;
-#endif
 }
 
-LARGE_INTEGER RtlLargeIntegerNegate(LARGE_INTEGER Subtrahend)
+LARGE_INTEGER
+RtlLargeIntegerNegate(LARGE_INTEGER Subtrahend)
 {
   LARGE_INTEGER RC;
 
@@ -219,23 +184,17 @@ RtlLargeIntegerNotEqualTo(LARGE_INTEGER Operand1,
                           LARGE_INTEGER Operand2)
 {
   return Operand1.QuadPart != Operand2.QuadPart;
-#if 0
-  return Operand1.LowPart != Operand2.LowPart || 
-         Operand1.HighPart != Operand2.HighPart; 
-#endif
 }
 
 BOOLEAN 
 RtlLargeIntegerNotEqualToZero(LARGE_INTEGER Operand)
 {
   return Operand.QuadPart != 0;
-#if 0
-  return Operand.LowPart != 0 || Operand.HighPart != 0; 
-#endif
 }
 
-LARGE_INTEGER RtlLargeIntegerShiftLeft(LARGE_INTEGER LargeInteger,
-				       CCHAR ShiftCount)
+LARGE_INTEGER
+RtlLargeIntegerShiftLeft(LARGE_INTEGER LargeInteger,
+                         CCHAR ShiftCount)
 {
   LARGE_INTEGER RC;
 
@@ -244,8 +203,9 @@ LARGE_INTEGER RtlLargeIntegerShiftLeft(LARGE_INTEGER LargeInteger,
   return RC;
 }
 
-LARGE_INTEGER RtlLargeIntegerShiftRight(LARGE_INTEGER LargeInteger,
-					CCHAR ShiftCount)
+LARGE_INTEGER
+RtlLargeIntegerShiftRight(LARGE_INTEGER LargeInteger,
+                          CCHAR ShiftCount)
 {
   LARGE_INTEGER RC;
 
@@ -254,8 +214,9 @@ LARGE_INTEGER RtlLargeIntegerShiftRight(LARGE_INTEGER LargeInteger,
   return RC;
 }
 
-LARGE_INTEGER RtlLargeIntegerSubtract(LARGE_INTEGER Minuend,
-				      LARGE_INTEGER Subtrahend)
+LARGE_INTEGER
+RtlLargeIntegerSubtract(LARGE_INTEGER Minuend,
+                        LARGE_INTEGER Subtrahend)
 {
   LARGE_INTEGER RC;
 
@@ -264,3 +225,4 @@ LARGE_INTEGER RtlLargeIntegerSubtract(LARGE_INTEGER Minuend,
   return RC;
 }
 
+/* EOF */

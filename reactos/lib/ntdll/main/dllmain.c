@@ -6,10 +6,9 @@
  * PROGRAMMER:      
  */
 
-#include <windows.h>
+#include <ddk/ntddk.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <ddk/ntddk.h>
 #include <ntdll/ntdll.h>
 
 void dprintf(char* fmt,...)
@@ -39,4 +38,4 @@ BOOL WINAPI DllMainCRTStartup(HINSTANCE hinstDll,
   return TRUE;
 }
 
-
+/* EOF */

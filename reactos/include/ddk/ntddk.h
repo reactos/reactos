@@ -18,6 +18,7 @@ extern "C"
 
 /* INCLUDES ***************************************************************/
 
+#define WIN32_NO_STATUS
 #include <windows.h>
 
 /* GCC can not handle __fastcall */

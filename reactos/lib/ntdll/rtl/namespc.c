@@ -1,4 +1,5 @@
-/*
+/* $Id: namespc.c,v 1.2 1999/09/29 23:10:25 ekohl Exp $
+ *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/lib/ntdll/namespc.c
@@ -10,7 +11,6 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <windows.h>
 #include <ddk/ntddk.h>
 
 /* FUNCTIONS **************************************************************/
@@ -43,3 +43,5 @@ VOID InitializeObjectAttributes(POBJECT_ATTRIBUTES InitializedAttributes,
    InitializedAttributes->SecurityDescriptor=SecurityDescriptor;
    InitializedAttributes->SecurityQualityOfService=NULL;
 }
+
+/* EOF */

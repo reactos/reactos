@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.9 1999/08/29 06:59:04 ea Exp $
+/* $Id: startup.c,v 1.10 1999/09/29 23:12:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,6 +11,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <reactos/config.h>
+#define WIN32_NO_STATUS
 #define WIN32_NO_PEHDR
 #include <windows.h>
 #include <ddk/ntddk.h>
