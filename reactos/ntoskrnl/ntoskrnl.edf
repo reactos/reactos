@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.93 2001/05/04 01:21:43 rex Exp $
+; $Id: ntoskrnl.edf,v 1.94 2001/06/01 17:14:40 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -692,7 +692,7 @@ RtlFindFirstRunClear=RtlFindFirstRunClear@8
 RtlFindFirstRunSet=RtlFindFirstRunSet@8
 RtlFindLongestRunClear=RtlFindLongestRunClear@8
 RtlFindLongestRunSet=RtlFindLongestRunSet@8
-;RtlFindMessage
+RtlFindMessage=RtlFindMessage@20
 RtlFindSetBits=RtlFindSetBits@12
 RtlFindSetBitsAndClear=RtlFindSetBitsAndClear@12
 ;RtlFindUnicodePrefix
@@ -753,7 +753,7 @@ RtlPrefixString=RtlPrefixString@12
 RtlPrefixUnicodeString=RtlPrefixUnicodeString@12
 RtlQueryAtomInAtomTable=RtlQueryAtomInAtomTable@24
 RtlQueryRegistryValues=RtlQueryRegistryValues@20
-;RtlQueryTimeZoneInformation
+RtlQueryTimeZoneInformation=RtlQueryTimeZoneInformation@4
 RtlRaiseException=RtlRaiseException@4
 ;RtlRandom
 ;RtlRemoveUnicodePrefix
@@ -766,7 +766,7 @@ RtlSetDaclSecurityDescriptor=RtlSetDaclSecurityDescriptor@16
 RtlSetGroupSecurityDescriptor=RtlSetGroupSecurityDescriptor@12
 RtlSetOwnerSecurityDescriptor=RtlSetOwnerSecurityDescriptor@12
 RtlSetSaclSecurityDescriptor=RtlSetSaclSecurityDescriptor@16
-;RtlSetTimeZoneInformation
+RtlSetTimeZoneInformation=RtlSetTimeZoneInformation@4
 ;RtlSplay
 RtlSubAuthorityCountSid=RtlSubAuthorityCountSid@4
 RtlSubAuthoritySid=RtlSubAuthoritySid@8

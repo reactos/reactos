@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.41 2001/05/27 11:17:01 ekohl Exp $
+# $Id: Makefile,v 1.42 2001/06/01 17:14:40 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -103,6 +103,7 @@ OBJECTS_RTL = \
 	rtl/memcpy.o \
 	rtl/memmove.o \
 	rtl/memset.o \
+	rtl/message.o \
 	rtl/nls.o \
 	rtl/qsort.o \
 	rtl/regio.o \
@@ -111,6 +112,7 @@ OBJECTS_RTL = \
 	rtl/string.o \
 	rtl/swprintf.o \
 	rtl/time.o \
+	rtl/timezone.o \
 	rtl/unicode.o \
 	rtl/wstring.o \
 	rtl/bitops.o \

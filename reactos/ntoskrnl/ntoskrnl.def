@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.106 2001/05/04 01:21:42 rex Exp $
+; $Id: ntoskrnl.def,v 1.107 2001/06/01 17:14:40 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -693,7 +693,7 @@ RtlFindFirstRunClear@8
 RtlFindFirstRunSet@8
 RtlFindLongestRunClear@8
 RtlFindLongestRunSet@8
-;RtlFindMessage
+RtlFindMessage@20
 RtlFindSetBits@12
 RtlFindSetBitsAndClear@12
 ;RtlFindUnicodePrefix
@@ -755,7 +755,7 @@ RtlPrefixString@12
 RtlPrefixUnicodeString@12
 RtlQueryAtomInAtomTable@24
 RtlQueryRegistryValues@20
-;RtlQueryTimeZoneInformation
+RtlQueryTimeZoneInformation@4
 RtlRaiseException@4
 ;RtlRandom
 ;RtlRemoveUnicodePrefix
@@ -768,7 +768,7 @@ RtlSetDaclSecurityDescriptor@16
 RtlSetGroupSecurityDescriptor@12
 RtlSetOwnerSecurityDescriptor@12
 RtlSetSaclSecurityDescriptor@16
-;RtlSetTimeZoneInformation
+RtlSetTimeZoneInformation@4
 ;RtlSplay
 RtlSubAuthorityCountSid@4
 RtlSubAuthoritySid@8

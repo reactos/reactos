@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.59 2001/05/30 14:40:36 ekohl Exp $
+/* $Id: registry.c,v 1.60 2001/06/01 17:12:33 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,6 +18,7 @@
 #include <limits.h>
 #include <string.h>
 #include <internal/pool.h>
+#include <internal/registry.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -209,12 +210,6 @@ static GENERIC_MAPPING CmiKeyMapping =
 	{KEY_READ, KEY_WRITE, KEY_EXECUTE, KEY_ALL_ACCESS};
 
 /*  -----------------------------------------  Forward Declarations  */
-
-
-static NTSTATUS RtlpGetRegistryHandle(ULONG RelativeTo,
-				      PWSTR Path,
-				      BOOLEAN Create,
-				      PHANDLE KeyHandle);
 
 static NTSTATUS CmiObjectParse(PVOID ParsedObject,
 		     PVOID *NextObject,
@@ -1941,10 +1936,11 @@ RtlFormatCurrentUserKeyPath(IN OUT PUNICODE_STRING KeyPath)
 /*  ------------------------------------------  Private Implementation  */
 
 
-static NTSTATUS RtlpGetRegistryHandle(ULONG RelativeTo,
-				      PWSTR Path,
-				      BOOLEAN Create,
-				      PHANDLE KeyHandle)
+NTSTATUS
+RtlpGetRegistryHandle(ULONG RelativeTo,
+		      PWSTR Path,
+		      BOOLEAN Create,
+		      PHANDLE KeyHandle)
 {
    UNICODE_STRING KeyName;
    WCHAR KeyBuffer[MAX_PATH];
