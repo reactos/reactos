@@ -1,4 +1,4 @@
-/* $Id: pccons.c,v 1.1 2004/11/08 22:02:47 gvg Exp $
+/* $Id: pccons.c,v 1.2 2004/11/10 23:45:37 gvg Exp $
  *
  *  FreeLoader
  *
@@ -18,7 +18,7 @@
  */
 
 #include "freeldr.h"
-#include "mm.h"
+#include "machine.h"
 #include "arch.h"
 #include "debug.h"
 #include "machpc.h"

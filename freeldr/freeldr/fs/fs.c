@@ -29,6 +29,7 @@
 #include <ui.h>
 #include <arch.h>
 #include <debug.h>
+#include <machine.h>
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -106,7 +107,7 @@ BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber)
 	else
 	{
 		// Get requested partition
-		if (DiskGetPartitionEntry(DriveNumber, PartitionNumber, &PartitionTableEntry) == FALSE)
+		if (MachDiskGetPartitionEntry(DriveNumber, PartitionNumber, &PartitionTableEntry) == FALSE)
 		{
 			FileSystemError("Partition not found.");
 			return FALSE;

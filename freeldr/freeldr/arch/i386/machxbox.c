@@ -1,4 +1,4 @@
-/* $Id: machxbox.c,v 1.2 2004/11/09 23:36:19 gvg Exp $
+/* $Id: machxbox.c,v 1.3 2004/11/10 23:45:37 gvg Exp $
  *
  *  FreeLoader
  *
@@ -35,4 +35,6 @@ XboxMachInit(VOID)
   MachVtbl.PutCharAttrAtLoc = XboxVideoPutCharAttrAtLoc;
   MachVtbl.GetMemoryMap = XboxMemGetMemoryMap;
   MachVtbl.DiskReadLogicalSectors = XboxDiskReadLogicalSectors;
+  MachVtbl.DiskGetPartitionEntry = XboxDiskGetPartitionEntry;
+
 }

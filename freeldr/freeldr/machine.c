@@ -1,4 +1,4 @@
-/* $Id: machine.c,v 1.2 2004/11/09 23:36:19 gvg Exp $
+/* $Id: machine.c,v 1.3 2004/11/10 23:45:37 gvg Exp $
  *
  *  FreeLoader
  *
@@ -25,6 +25,7 @@
 #undef MachPutCharAttrAtLoc
 #undef MachGetMemoryMap
 #undef MachDiskReadLogicalSectors
+#undef MachDiskGetPartitionEntry
 
 MACHVTBL MachVtbl;
 
@@ -56,6 +57,12 @@ BOOL
 MachDiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer)
 {
   return MachVtbl.DiskReadLogicalSectors(DriveNumber, SectorNumber, SectorCount, Buffer);
+}
+
+BOOL
+MachDiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+{
+  return MachVtbl.DiskGetPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
 }
 
 /* EOF */

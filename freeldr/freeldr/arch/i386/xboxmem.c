@@ -1,4 +1,4 @@
-/* $Id: xboxmem.c,v 1.2 2004/11/09 23:36:19 gvg Exp $
+/* $Id: xboxmem.c,v 1.3 2004/11/10 23:45:37 gvg Exp $
  *
  *  FreeLoader
  *
@@ -25,6 +25,7 @@
 #include "mm.h"
 #include "rtl.h"
 #include "hardware.h"
+#include "machine.h"
 #include "machxbox.h"
 #include "portio.h"
 

@@ -1,4 +1,4 @@
-/* $Id: xboxfont.c,v 1.1 2004/11/08 22:02:47 gvg Exp $
+/* $Id: xboxfont.c,v 1.2 2004/11/10 23:45:37 gvg Exp $
  *
  *  FreeLoader
  *
@@ -20,6 +20,7 @@
  */
 
 #include "freeldr.h"
+#include "machine.h"
 #include "machxbox.h"
 
 U8 XboxFont8x16[256 * 16] =

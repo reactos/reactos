@@ -1,4 +1,4 @@
-/* $Id: machxbox.h,v 1.2 2004/11/09 23:36:19 gvg Exp $
+/* $Id: machxbox.h,v 1.3 2004/11/10 23:45:37 gvg Exp $
  *
  *  FreeLoader
  *
@@ -38,6 +38,7 @@ PVOID XboxMemReserveMemory(U32 MbToReserve);
 U32 XboxMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize);
 
 BOOL XboxDiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer);
+BOOL XboxDiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 
 #endif /* __I386_HWXBOX_H_ */
 

@@ -363,3 +363,12 @@ BOOL PcDiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount
 
 	return TRUE;
 }
+
+BOOL
+PcDiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+{
+  /* Just use the standard routine */
+  return DiskGetPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
+}
+
+/* EOF */

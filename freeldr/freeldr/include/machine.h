@@ -1,4 +1,4 @@
-/* $Id: machine.h,v 1.2 2004/11/09 23:36:20 gvg Exp $
+/* $Id: machine.h,v 1.3 2004/11/10 23:45:37 gvg Exp $
  *
  *  FreeLoader
  *
@@ -20,6 +20,10 @@
 #ifndef __MACHINE_H_
 #define __MACHINE_H_
 
+#ifndef __DISK_H
+#include "disk.h"
+#endif
+
 #ifndef __MEMORY_H
 #include "mm.h"
 #endif
@@ -33,6 +37,7 @@ typedef struct tagMACHVTBL
   U32 (*GetMemoryMap)(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize);
 
   BOOL (*DiskReadLogicalSectors)(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer);
+  BOOL (*DiskGetPartitionEntry)(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 } MACHVTBL, *PMACHVTBL;
 
 VOID MachInit(VOID);
@@ -44,6 +49,7 @@ extern MACHVTBL MachVtbl;
 #define MachPutCharAttrAtLoc(Ch, Attr, X, Y)	MachVtbl.PutCharAttrAtLoc((Ch), (Attr), (X), (Y))
 #define MachGetMemoryMap(MMap, Size)		MachVtbl.GetMemoryMap((MMap), (Size))
 #define MachDiskReadLogicalSectors(Drive, Start, Count, Buf)	MachVtbl.DiskReadLogicalSectors((Drive), (Start), (Count), (Buf))
+#define MachDiskGetPartitionEntry(Drive, Part, Entry)	MachVtbl.DiskGetPartitionEntry((Drive), (Part), (Entry))
 
 #endif /* __MACHINE_H_ */
 
