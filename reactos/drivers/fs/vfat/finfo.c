@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.9 2001/08/14 20:47:30 hbirr Exp $
+/* $Id: finfo.c,v 1.10 2001/11/01 10:44:11 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -30,7 +30,6 @@ VfatGetStandardInformation(PVFATFCB FCB,
  */
 {
   PDEVICE_EXTENSION DeviceExtension;
-  unsigned long AllocSize;
 
   if (*BufferLength < sizeof(FILE_STANDARD_INFORMATION))
     return STATUS_BUFFER_OVERFLOW;
@@ -45,25 +44,12 @@ VfatGetStandardInformation(PVFATFCB FCB,
   RtlZeroMemory(StandardInfo,
 		sizeof(FILE_STANDARD_INFORMATION));
 
-  /* Make allocsize a rounded up multiple of BytesPerCluster */
-  AllocSize = ((FCB->entry.FileSize + DeviceExtension->BytesPerCluster - 1) /
-	       DeviceExtension->BytesPerCluster) *
-    DeviceExtension->BytesPerCluster;
-
-  StandardInfo->AllocationSize = RtlConvertUlongToLargeInteger (AllocSize);
-  StandardInfo->EndOfFile =
-    RtlConvertUlongToLargeInteger (FCB->entry.FileSize);
+  StandardInfo->AllocationSize = FCB->RFCB.AllocationSize;
+  StandardInfo->EndOfFile = FCB->RFCB.FileSize;
   StandardInfo->NumberOfLinks = 0;
-  StandardInfo->DeletePending = FALSE;
-  if ((FCB->entry.Attrib & 0x10) > 0)
-    {
-      StandardInfo->Directory = TRUE;
-    }
-  else
-    {
-      StandardInfo->Directory = FALSE;
-    }
-  
+  StandardInfo->DeletePending = FCB->Flags & FCB_DELETE_PENDING ? TRUE : FALSE;
+  StandardInfo->Directory = FCB->entry.Attrib & 0x10 ? TRUE : FALSE;
+
   *BufferLength -= sizeof(FILE_STANDARD_INFORMATION);
   return(STATUS_SUCCESS);
 }
@@ -236,7 +222,21 @@ VfatGetNameInformation(PFILE_OBJECT FileObject,
   return STATUS_SUCCESS;
 }
 
+static NTSTATUS
+VfatGetInternalInformation(PVFATFCB Fcb,
+                           PFILE_INTERNAL_INFORMATION InternalInfo,
+                           PULONG BufferLength)
+{
+  assert (InternalInfo);
+  assert (Fcb);
 
+  if (*BufferLength < sizeof(FILE_INTERNAL_INFORMATION))
+    return STATUS_BUFFER_OVERFLOW;
+  // FIXME: get a real index, that can be used in a create operation
+  InternalInfo->IndexNumber.QuadPart = 0;
+  *BufferLength -= sizeof(FILE_INTERNAL_INFORMATION);
+  return STATUS_SUCCESS;
+}
 
 NTSTATUS STDCALL
 VfatQueryInformation(PDEVICE_OBJECT DeviceObject,
@@ -269,7 +269,7 @@ VfatQueryInformation(PDEVICE_OBJECT DeviceObject,
 
   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
   BufferLength = Stack->Parameters.QueryFile.Length;
-  
+
   switch (FileInformationClass)
     {
     case FileStandardInformation:
@@ -300,6 +300,10 @@ VfatQueryInformation(PDEVICE_OBJECT DeviceObject,
 				  &BufferLength);
       break;
     case FileInternalInformation:
+      RC = VfatGetInternalInformation(FCB,
+                                      SystemBuffer,
+                                      &BufferLength);
+      break;
     case FileAlternateNameInformation:
     case FileAllInformation:
       RC = STATUS_NOT_IMPLEMENTED;
