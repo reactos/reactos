@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.18 2003/05/18 17:16:17 ea Exp $
+/* $Id: message.c,v 1.19 2003/05/18 22:07:02 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -63,7 +63,6 @@ LRESULT STDCALL
 NtUserDispatchMessage(CONST MSG* lpMsg)
 {
   LRESULT Result;
-  ULONG PaintingFlag;
   PWINDOW_OBJECT WindowObject;
   NTSTATUS Status;
 
@@ -95,13 +94,6 @@ NtUserDispatchMessage(CONST MSG* lpMsg)
       return(0);
     }
 
-  /* FIXME: Check for paint message. */
-  PaintingFlag = (lpMsg->message == WM_PAINT);
-  if (PaintingFlag)
-    {
-      WindowObject->Flags |= WINDOWOBJECT_NEED_BEGINPAINT;
-    }
-
   /* FIXME: Call hook procedures. */
 
   /* Call the window procedure. */
@@ -110,12 +102,6 @@ NtUserDispatchMessage(CONST MSG* lpMsg)
 			      lpMsg->message,
 			      lpMsg->wParam,
 			      lpMsg->lParam);
-
-  if (PaintingFlag && WindowObject->Flags & WINDOWOBJECT_NEED_BEGINPAINT &&
-      WindowObject->UpdateRegion)
-    {
-      DbgBreakPoint();
-    }
 
   return(Result);
 }

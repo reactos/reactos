@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: painting.c,v 1.13 2003/05/18 17:16:17 ea Exp $
+/* $Id: painting.c,v 1.14 2003/05/18 22:07:02 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -780,8 +780,6 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
     }
   IsIcon = Window->Style & WS_MINIMIZE &&
     NtUserGetClassLong(Window->Self, GCL_HICON);
-
-  Window->Flags &= ~WINDOWOBJECT_NEED_BEGINPAINT;
 
   /* Send WM_NCPAINT */
   PaintUpdateNCRegion(Window, 0, UNC_UPDATE | UNC_IN_BEGINPAINT);
