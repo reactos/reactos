@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.3 2000/01/16 18:32:34 ea Exp $
+/* $Id: stubs.c,v 1.1 1999/11/24 23:11:17 ea Exp $
  *
  * services/net/ndis/ndis/stubs.c
  *
@@ -8,15 +8,9 @@
  */
 #include <ntos.h>
 
-ULONG
-STDCALL
-NDIS_BUFFER_TO_SPAN_PAGES(
-	IN	PNDIS_BUFFER	Buffer
-	)
-{
-	return 0;
-}
-
+/*
+NDIS_BUFFER_TO_SPAN_PAGES
+*/
 
 VOID
 STDCALL
@@ -70,7 +64,7 @@ NdisAllocateMemory (
 	IN	NDIS_PHYSICAL_ADDRESS	HighestAcceptableAddress
 	)
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return 0;
 }
 
 
@@ -113,7 +107,7 @@ NdisAnsiStringToUnicodeString (
         IN	PNDIS_ANSI_STRING	SourceString
 	)
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return 0;
 }
 
 
@@ -423,7 +417,7 @@ NdisIMDeInitializeDeviceInstance (
 	IN	NDIS_HANDLE	NdisMiniportHandle
 	)
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return 0;
 }
 
 
@@ -434,7 +428,7 @@ NdisIMInitializeDeviceInstance (
 	IN	PNDIS_STRING	DeviceInstance
 	)
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return 0;
 }
 
 
@@ -575,7 +569,7 @@ NdisIMRegisterLayeredMiniport (
 	OUT	PNDIS_HANDLE			DriverHandle
 	)
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return 0;
 }
 
 
@@ -704,7 +698,7 @@ NdisMAllocateMapRegisters (
 	IN	ULONG		MaximumPhysicalMapping
 	)
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return 0;
 }
 
 
@@ -730,7 +724,7 @@ NdisMAllocateSharedMemoryAsync (
 	IN	PVOID		Context
 	)
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return 0;
 }
 
 
@@ -818,7 +812,7 @@ NdisMCreateLog (
 	OUT	PNDIS_HANDLE	LogHandle
 	)
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return 0;
 }
 
 
@@ -994,7 +988,7 @@ NdisMMapIoSpace (
 	IN	UINT			Length
 	)
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -1050,7 +1044,7 @@ NdisMPciAssignResources (
 	OUT	PNDIS_RESOURCE_LIST	* AssignedResources
 	)
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -1108,7 +1102,7 @@ NdisMRegisterDmaChannel (
 	IN	ULONG			MaximumLength
 	)
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -1124,7 +1118,7 @@ NdisMRegisterInterrupt (
 	IN	NDIS_INTERRUPT_MODE		InterruptMode
 	)
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -1137,7 +1131,7 @@ NdisMRegisterIoPortRange (
 	IN	UINT		NumberOfPorts
 	)
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -1149,7 +1143,7 @@ NdisMRegisterMiniport (
 	IN	UINT				CharacteristicsLength
 	)
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -1354,51 +1348,15 @@ NdisMWriteLogData (
 	IN	UINT		LogBufferSize
 	)
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 
-VOID
-STDCALL
-NdisMapFile (
-	OUT	PNDIS_STATUS	Status,
-	OUT	PVOID		* MappedBuffer,
-	IN	NDIS_HANDLE	FileHandle
-	)
-{
-}
-
-
-VOID
-STDCALL
-NdisMapIoSpace (
-	OUT	PNDIS_STATUS		Status,
-	OUT	PVOID			* VirtualAddress,
-	IN	NDIS_HANDLE		NdisAdapterHandle,
-	IN	NDIS_PHYSICAL_ADDRESS	PhysicalAddress,
-	IN	UINT			Length
-	)
-{
-}
-
-
-VOID
-STDCALL
-NdisOpenAdapter (
-	OUT	PNDIS_STATUS		Status,
-	OUT	PNDIS_STATUS		OpenErrorStatus,
-	OUT	PNDIS_HANDLE		NdisBindingHandle,
-	OUT	PUINT			SelectedMediumIndex,
-	IN	PNDIS_MEDIUM		MediumArray,
-	IN	UINT			MediumArraySize,
-	IN	NDIS_HANDLE		NdisProtocolHandle,
-	IN	NDIS_HANDLE		ProtocolBindingContext,
-	IN	PNDIS_STRING		AdapterName,
-	IN	UINT			OpenOptions,
-	IN	PSTRING			AddressingInformation	OPTIONAL
-	)
-{
-}
+/*
+NdisMapFile
+NdisMapIoSpace
+NdisOpenAdapter
+*/
 
 
 VOID
@@ -1433,42 +1391,10 @@ NdisOpenFile (
 
 /*
 NdisOpenGlobalConfiguration
+NdisOpenProtocolConfiguration
+NdisOverrideBusNumber
+NdisPciAssignResources
 */
-
-VOID
-STDCALL
-NdisOpenProtocolConfiguration (
-	OUT	PNDIS_STATUS	Status,
-	OUT	PNDIS_HANDLE	ConfigurationHandle,
-	IN	PNDIS_STRING	ProtocolSection
-	)
-{
-}
-
-
-VOID
-STDCALL
-NdisOverrideBusNumber (
-	IN	NDIS_HANDLE	WrapperConfigurationContext,
-	IN	NDIS_HANDLE	MiniportAdapterHandle		OPTIONAL,
-	IN	ULONG		BusNumber
-	)
-{
-}
-
-
-NDIS_STATUS
-STDCALL
-NdisPciAssignResources (
-	IN	NDIS_HANDLE	NdisMacHandle,
-	IN	NDIS_HANDLE	NdisWrapperHandle,
-	IN	NDIS_HANDLE	WrapperConfigurationContext,
-	IN	ULONG		SlotNumber,
-	OUT PNDIS_RESOURCE_LIST * AssignedResources
-	)
-{
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
-}
 
 
 VOID
@@ -1500,35 +1426,14 @@ NdisQueryMapRegisterCount (
 	OUT	PUINT			MapRegisterCount
 	)
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 
-NDIS_STATUS
-STDCALL
-NdisQueryReceiveInformation (
-	IN	NDIS_HANDLE	NdisBindingHandle,
-	IN	NDIS_HANDLE	MacContext,
-	OUT	PLONGLONG	TimeSent		OPTIONAL,
-	OUT	PLONGLONG	TimeReceived		OPTIONAL,
-	IN	PUCHAR		Buffer,
-	IN	UINT		BufferSize,
-	OUT	PUINT		SizeNeeded
-	)
-{
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
-}
-
-
-VOID
-STDCALL
-NdisReadBindingInformation (
-	OUT	PNDIS_STATUS	Status,
-	OUT	PNDIS_STRING	* Binding,
-	IN	NDIS_HANDLE	ConfigurationHandle
-	)
-{
-}
+/*
+NdisQueryReceiveInformation
+NdisReadBindingInformation
+*/
 
 
 VOID
@@ -1607,74 +1512,14 @@ NdisReadPciSlotInformation (
 }
 
 
-NDIS_STATUS
-STDCALL
-NdisRegisterAdapter(
-	OUT PNDIS_HANDLE			NdisAdapterHandle,
-	IN	NDIS_HANDLE				NdisMacHandle,
-	IN	NDIS_HANDLE				MacAdapterContext,
-	IN	NDIS_HANDLE				WrapperConfigurationContext,
-	IN	PNDIS_STRING			AdapterName,
-	IN	PVOID					AdapterInformation
-	)
-{
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
-}
-
-
-VOID
-STDCALL
-NdisRegisterAdapterShutdownHandler (
-	IN	NDIS_HANDLE			NdisAdapterHandle,
-	IN	PVOID				ShutdownContext,
-	IN	ADAPTER_SHUTDOWN_HANDLER	ShutdownHandler
-	)
-{
-}
-
-
-VOID
-STDCALL
-NdisRegisterMac (
-	OUT	PNDIS_STATUS			Status,
-	OUT	PNDIS_HANDLE			NdisMacHandle,
-	IN	NDIS_HANDLE			NdisWrapperHandle,
-	IN	NDIS_HANDLE			MacMacContext,
-	IN	PNDIS_MAC_CHARACTERISTICS	MacCharacteristics,
-	IN	UINT				CharacteristicsLength
-	)
-{
-}
-
-
-VOID
-STDCALL
-NdisRegisterProtocol (
-	OUT	PNDIS_STATUS			Status,
-	OUT	PNDIS_HANDLE			NdisProtocolHandle,
-	IN	PNDIS_PROTOCOL_CHARACTERISTICS	ProtocolCharacteristics,
-	IN	UINT				CharacteristicsLength
-	)
-{
-}
-
-
-VOID
-STDCALL
-NdisRegisterTdiCallBack (
-	IN	TDI_REGISTER_CALLBACK	RegsterCallback
-	)
-{
-}
-
-
-VOID
-STDCALL
-NdisReleaseAdapterResources (
-	IN	NDIS_HANDLE	NdisAdapterHandle
-	)
-{
-}
+/*
+NdisRegisterAdapter
+NdisRegisterAdapterShutdownHandler
+NdisRegisterMac
+NdisRegisterProtocol
+NdisRegisterTdiCallBack
+NdisReleaseAdapterResources
+*/
 
 
 VOID
@@ -1686,32 +1531,11 @@ NdisReleaseSpinLock (
 }
 
 
-VOID
-STDCALL
-NdisRemoveInterrupt(
-	IN	PNDIS_INTERRUPT	Interrupt
-	)
-{
-}
-
-
-VOID
-NdisRequest (
-	OUT	PNDIS_STATUS	Status,
-	IN	NDIS_HANDLE	NdisBindingHandle,
-	IN	PNDIS_REQUEST	NdisRequest
-	)
-{
-}
-
-
-VOID
-NdisReset(
-	OUT	PNDIS_STATUS	Status,
-	IN	NDIS_HANDLE	NdisBindingHandle
-	)
-{
-}
+/*
+NdisRemoveInterrupt
+NdisRequest
+NdisReset
+*/
 
 
 VOID
@@ -1723,37 +1547,12 @@ NdisResetEvent (
 }
 
 
-VOID
-STDCALL
-NdisReturnPackets (
-	IN	PNDIS_PACKET	* PacketsToReturn,
-	IN	UINT		NumberOfPackets
-	)
-{
-}
-
 /*
+NdisReturnPackets
 NdisScheduleWorkItem
+NdisSend
+NdisSendPackets
 */
-
-VOID
-NdisSend(
-	OUT	PNDIS_STATUS	Status,
-	IN	NDIS_HANDLE	NdisBindingHandle,
-	IN	PNDIS_PACKET	Packet
-	)
-{
-}
-
-
-VOID
-NdisSendPackets(
-	IN	NDIS_HANDLE	NdisBindingHandle,
-	IN	PPNDIS_PACKET	PacketArray,
-	IN	UINT		NumberOfPackets
-	)
-{
-}
 
 
 VOID
@@ -1765,54 +1564,12 @@ NdisSetEvent (
 }
 
 
-VOID
-STDCALL
-NdisSetProtocolFilter (
-	OUT	PNDIS_STATUS		Status,
-	IN	NDIS_HANDLE		NdisBindingHandle,
-	IN	RECEIVE_HANDLER		ReceiveHandler,
-	IN	RECEIVE_PACKET_HANDLER	ReceivePacketHandler,
-	IN	NDIS_MEDIUM		Medium,
-	IN	UINT			Offset,
-	IN	UINT			Size,
-	IN	PUCHAR			Pattern
-	)
-{
-}
-
-
-VOID
-STDCALL
-NdisSetTimer (
-	IN	PNDIS_TIMER	Timer,
-	IN	UINT		MillisecondsToDelay
-	)
-{
-}
-
-
-VOID
-STDCALL
-NdisSetupDmaTransfer (
-	OUT	PNDIS_STATUS	Status,
-	IN	PNDIS_HANDLE	NdisDmaHandle,
-	IN	PNDIS_BUFFER	Buffer,
-	IN	ULONG		Offset,
-	IN	ULONG		Length,
-	IN	BOOLEAN		WriteToDevice
-	)
-{
-}
-
-
-CCHAR
-STDCALL
-NdisSystemProcessorCount(
-	VOID
-	)
-{
-	return (CCHAR) 1; /* ? */
-}
+/*
+NdisSetProtocolFilter
+NdisSetTimer
+NdisSetupDmaTransfer
+NdisSystemProcessorCount
+*/
 
 
 VOID
@@ -1825,18 +1582,9 @@ NdisTerminateWrapper (
 }
 
 
-VOID
-NdisTransferData(
-	OUT	PNDIS_STATUS	Status,
-	IN	NDIS_HANDLE	NdisBindingHandle,
-	IN	NDIS_HANDLE	MacReceiveContext,
-	IN	UINT		ByteOffset,
-	IN	UINT		BytesToTransfer,
-	IN OUT	PNDIS_PACKET	Packet,
-	OUT	PUINT		BytesTransferred
-	)
-{
-}
+/*
+NdisTransferData
+*/
 
 
 VOID
@@ -1866,7 +1614,7 @@ NdisUnicodeStringToAnsiString (
 	IN	PNDIS_STRING		SourceString
         )
 {
-	return (NDIS_STATUS) STATUS_NOT_IMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -1881,13 +1629,13 @@ NdisUnmapFile (
 
 /*
 NdisUpcaseUnicodeString
-NdisUpdateSharedMemory@4
+NdisUpdateSharedMemory
 */
 
 
 BOOLEAN
 STDCALL
-NdisWaitEvent (
+NdisWaitEvent(
 	IN	PNDIS_EVENT	Event,
 	IN	UINT		MsToWait
 	)
