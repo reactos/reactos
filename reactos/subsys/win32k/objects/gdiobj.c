@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.62 2004/03/09 20:34:28 dwelch Exp $
+ * $Id: gdiobj.c,v 1.63 2004/03/14 12:16:50 weiden Exp $
  *
  */
 
@@ -46,6 +46,8 @@
 
 /* enable/disable GDI object caching */
 #define GDI_CACHE_OBJECTS 0
+/* count all gdi objects */
+#define GDI_COUNT_OBJECTS 1
 
 /*! Size of the GDI handle table
  * http://www.windevnet.com/documents/s=7290/wdj9902b/9902b.htm
@@ -89,6 +91,9 @@ typedef struct _GDI_HANDLE_TABLE
 {
   WORD wTableSize;
   WORD AllocationHint;
+  #if GDI_COUNT_OBJECTS
+  ULONG HandlesCount;
+  #endif
   #if GDI_CACHE_OBJECTS
   ULONG ObjHdrSize;
   PGDIOBJHDR *CachedObjects;
@@ -241,6 +246,9 @@ GDIOBJ_iAllocHandleTable (WORD Size)
   handleTable = ExAllocatePoolWithTag(PagedPool, MemSize, TAG_GDIHNDTBLE);
   ASSERT( handleTable );
   memset (handleTable, 0, MemSize);
+#if GDI_COUNT_OBJECTS
+  handleTable->HandlesCount = 0;
+#endif
 #if GDI_CACHE_OBJECTS
   handleTable->CachedObjects = &handleTable->Handles[Size];
   handleTable->ObjHdrSize = sizeof(GDIOBJHDR) + GDI_MaxGdiObjHeaderSize();
@@ -388,6 +396,9 @@ GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
   newObject->lockline = 0;
   ExInitializeFastMutex(&newObject->Lock);
   HandleTable->Handles[Index] = newObject;
+#if GDI_COUNT_OBJECTS
+  HandleTable->HandlesCount++;
+#endif
   ExReleaseFastMutex(&HandleTableMutex);
   
   W32Process = PsGetCurrentProcess()->Win32Process;
@@ -468,7 +479,12 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ObjectType, DWORD Flag)
 #else
   ExFreePool(objectHeader);
 #endif
+  ExAcquireFastMutexUnsafe (&HandleTableMutex);
   HandleTable->Handles[GDI_HANDLE_GET_INDEX(hObj)] = NULL;
+#if GDI_COUNT_OBJECTS
+  HandleTable->HandlesCount--;
+#endif
+  ExReleaseFastMutexUnsafe (&HandleTableMutex);
   
   W32Process = PsGetCurrentProcess()->Win32Process;
   if(W32Process)
