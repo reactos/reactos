@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.23 2003/11/16 15:20:39 hbirr Exp $
+/* $Id: balance.c,v 1.24 2003/11/24 16:15:00 gvg Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -391,7 +391,7 @@ MiInitBalancerThread(VOID)
   KPRIORITY Priority;
   NTSTATUS Status;
 
-  CHECKPOINT1;
+  CHECKPOINT;
 
   KeInitializeEvent(&MiBalancerEvent, SynchronizationEvent, FALSE);
   KeInitializeTimerEx(&MiBalancerTimer, SynchronizationTimer);

@@ -1,4 +1,4 @@
-/* $Id: fdo.c,v 1.3 2003/09/25 15:21:11 navaraf Exp $
+/* $Id: fdo.c,v 1.4 2003/11/24 16:15:00 gvg Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            fdo.c
@@ -9,7 +9,7 @@
  */
 #include <pci.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /*** PRIVATE *****************************************************************/

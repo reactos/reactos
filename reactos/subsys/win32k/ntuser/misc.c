@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.30 2003/11/23 13:46:33 weiden Exp $
+/* $Id: misc.c,v 1.31 2003/11/24 16:19:58 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -32,10 +32,10 @@ void W32kRegisterPrimitiveMessageQueue() {
     pThread = PsGetWin32Thread();
     if( pThread && pThread->MessageQueue ) {
       pmPrimitiveMessageQueue = pThread->MessageQueue;
-      DbgPrint( "Installed primitive input queue.\n" );
+      DPRINT( "Installed primitive input queue.\n" );
     }    
   } else {
-    DbgPrint( "Alert! Someone is trying to steal the primitive queue.\n" );
+    DPRINT1( "Alert! Someone is trying to steal the primitive queue.\n" );
   }
 }
 

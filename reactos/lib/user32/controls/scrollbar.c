@@ -1,4 +1,4 @@
-/* $Id: scrollbar.c,v 1.19 2003/10/02 23:21:42 weiden Exp $
+/* $Id: scrollbar.c,v 1.20 2003/11/24 16:15:00 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -127,7 +127,6 @@ arrowSize, PSCROLLBARINFO psbi)
   HPEN hSavePen;
   HBRUSH hSaveBrush, hBrush;
   BOOLEAN top_selected = FALSE, bottom_selected = FALSE;
-DbgPrint("[SCROLL_DrawInterior:%d]\n", nBar);
   if(psbi->rgstate[SCROLL_TOP_RECT] & STATE_SYSTEM_PRESSED)
   {
     top_selected = TRUE;

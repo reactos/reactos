@@ -13,6 +13,9 @@
 #include "mouse.h"
 #include "psaux.h"
 
+#define NDEBUG
+#include <debug.h>
+
 static PIRP  CurrentIrp;
 static ULONG MouseDataRead;
 static ULONG MouseDataRequired;
@@ -87,7 +90,7 @@ PS2MouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	break;
 
       default:
-        DbgPrint("NOT IMPLEMENTED\n");
+        DPRINT1("NOT IMPLEMENTED\n");
         Status = STATUS_NOT_IMPLEMENTED;
 	break;
      }
@@ -201,8 +204,7 @@ AllocatePointerDevice(PDRIVER_OBJECT DriverObject)
 		Status = IoCreateDevice(DriverObject, sizeof(DEVICE_EXTENSION),
 			&DeviceName, FILE_DEVICE_SERIAL_MOUSE_PORT, 0, TRUE, &DeviceObject);
 		RtlUnicodeStringToAnsiString(&DebugString, &DeviceName, TRUE);
-		DbgPrint(DebugString.Buffer);
-		DbgPrint("\n");
+		DPRINT("%s", DebugString.Buffer);
 		RtlFreeAnsiString(&DebugString);
 		/* Device successfully created, leave the cyclus */
 		if (NT_SUCCESS(Status))
@@ -242,9 +244,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    PDEVICE_OBJECT DeviceObject;
 
    if (DetectPS2Port() == TRUE) {
-     DbgPrint("PS2 Port Driver version 0.0.2\n");
+     DPRINT("PS2 Port Driver version 0.0.2\n");
    } else {
-     DbgPrint("PS2 port not found.\n");
+     DPRINT1("PS2 port not found.\n");
      return STATUS_UNSUCCESSFUL;
    }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.21 2003/11/24 00:22:53 arty Exp $
+/* $Id: input.c,v 1.22 2003/11/24 16:15:00 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -90,13 +90,13 @@ KeyboardThreadMain(PVOID StartContext)
       /*
        * Wait to start input.
        */
-      DbgPrint( "Input Thread Waiting for start event\n" );
+      DPRINT( "Input Thread Waiting for start event\n" );
       Status = KeWaitForSingleObject(&InputThreadsStart,
 				     0,
 				     UserMode,
 				     TRUE,
 				     NULL);
-      DbgPrint( "Input Thread Starting...\n" );
+      DPRINT( "Input Thread Starting...\n" );
 
       /*
        * Receive and process keyboard input.
@@ -218,7 +218,7 @@ KeyboardThreadMain(PVOID StartContext)
 	      MsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
 	    }
 	}
-      DbgPrint( "Input Thread Stopped...\n" );
+      DPRINT( "Input Thread Stopped...\n" );
     }
 }
 
@@ -228,7 +228,7 @@ NtUserAcquireOrReleaseInputOwnership(BOOLEAN Release)
 {
   if (Release && InputThreadsRunning && !pmPrimitiveMessageQueue)
     {
-      DbgPrint( "Releasing input: PM = %08x\n", pmPrimitiveMessageQueue );
+      DPRINT( "Releasing input: PM = %08x\n", pmPrimitiveMessageQueue );
       KeClearEvent(&InputThreadsStart);
       InputThreadsRunning = FALSE;
       

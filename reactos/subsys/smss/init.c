@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.52 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: init.c,v 1.53 2003/11/24 16:15:00 gvg Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -616,8 +616,8 @@ SmPagingFilesQueryRoutine(PWSTR ValueName,
       return (STATUS_SUCCESS);
     }
 
-  DbgPrint("SMSS: Created paging file %wZ with size %dKB\n",
-	   &FileName, InitialSize.QuadPart / 1024);
+  DPRINT("SMSS: Created paging file %wZ with size %dKB\n",
+	 &FileName, InitialSize.QuadPart / 1024);
   Status = NtCreatePagingFile(&FileName,
 			      &InitialSize,
 			      &MaximumSize,

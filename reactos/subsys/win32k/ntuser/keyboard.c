@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.15 2003/11/24 00:22:53 arty Exp $
+/* $Id: keyboard.c,v 1.16 2003/11/24 16:15:00 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -484,7 +484,7 @@ void InitKbdLayout( PVOID *pkKeyboardLayout ) {
     Status = ReadRegistryValue(&KeyName,&ValueName,&DefaultLocale);
     
     if( !NT_SUCCESS(Status) ) {
-      DbgPrint( "Could not get default locale (%08x).\n", Status );
+      DPRINT1( "Could not get default locale (%08x).\n", Status );
     } else {
       DPRINT( "DefaultLocale = %wZ\n", &DefaultLocale );
 
@@ -501,7 +501,7 @@ void InitKbdLayout( PVOID *pkKeyboardLayout ) {
       RtlInitUnicodeString(&FullLayoutPath,SYSTEMROOT_DIR);
 
       if( !NT_SUCCESS(Status) ) {
-	DbgPrint("Got default locale but not layout file. (%08x)\n",
+	DPRINT1("Got default locale but not layout file. (%08x)\n",
 		 Status);
 	RtlFreeUnicodeString(&LayoutFile);
       } else {
@@ -520,7 +520,7 @@ void InitKbdLayout( PVOID *pkKeyboardLayout ) {
 					    sizeof(WCHAR));
 
 	if( !KeyboardLayoutWSTR ) {
-	  DbgPrint("Couldn't allocate a string for the keyboard layout name.\n");
+	  DPRINT1("Couldn't allocate a string for the keyboard layout name.\n");
 	  RtlFreeUnicodeString(&FullLayoutPath);
 	  return;
 	}
@@ -532,7 +532,7 @@ void InitKbdLayout( PVOID *pkKeyboardLayout ) {
 	DPRINT( "Load Keyboard Layout: %S\n", KeyboardLayoutWSTR );
 
         if( !kbModule )
-	  DbgPrint( "Load Keyboard Layout: No %wZ\n", &FullLayoutPath );
+	  DPRINT1( "Load Keyboard Layout: No %wZ\n", &FullLayoutPath );
       }
 
       RtlFreeUnicodeString(&FullLayoutPath);
@@ -540,12 +540,12 @@ void InitKbdLayout( PVOID *pkKeyboardLayout ) {
 
     if( !kbModule )
     {
-      DbgPrint("Trying to load US Keyboard Layout\n");
+      DPRINT1("Trying to load US Keyboard Layout\n");
       kbModule = EngLoadImage(L"\\SystemRoot\\system32\\kbdus.dll");
       
       if (!kbModule)
       {
-        DbgPrint("Failed to load any Keyboard Layout\n");
+        DPRINT1("Failed to load any Keyboard Layout\n");
         return;
 	    }
     }
@@ -563,7 +563,7 @@ void InitKbdLayout( PVOID *pkKeyboardLayout ) {
   } while (FALSE);
 
   if( !*pkKeyboardLayout ) {
-    DbgPrint("Failed to load the keyboard layout.\n");
+    DPRINT1("Failed to load the keyboard layout.\n");
   }
 
 #undef XX_STATUS
@@ -828,12 +828,12 @@ NtUserToUnicodeEx(
   if( !NT_SUCCESS(MmCopyFromCaller(KeyStateBuf,
 				   lpKeyState,
 				   sizeof(KeyStateBuf))) ) {
-    DbgPrint( "Couldn't copy key state from caller.\n" );
+    DPRINT1( "Couldn't copy key state from caller.\n" );
     return 0;
   }
   OutPwszBuff = ExAllocatePool(NonPagedPool,sizeof(WCHAR) * cchBuff);
   if( !OutPwszBuff ) {
-    DbgPrint( "ExAllocatePool(%d) failed\n", sizeof(WCHAR) * cchBuff);
+    DPRINT1( "ExAllocatePool(%d) failed\n", sizeof(WCHAR) * cchBuff);
     return 0;
   }
   RtlZeroMemory( OutPwszBuff, sizeof( WCHAR ) * cchBuff );

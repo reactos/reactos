@@ -10,6 +10,8 @@
 #include "controller.h"
 #include "mouse.h"
 #include "psaux.h"
+
+#define NDEBUG
 #include <debug.h>
 
 
