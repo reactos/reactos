@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.11 2004/01/11 20:46:06 navaraf Exp $
+# $Id: makefile,v 1.12 2004/02/15 00:04:07 arty Exp $
 
 PATH_TO_TOP = ../..
 
@@ -15,6 +15,12 @@ THREAD_OBJECTS = \
  thread/exit.o \
  thread/stack.o
 
+STRING_OBJECTS = \
+ string/append.o
+
+REGISTRY_OBJECTS = \
+ registry/registry.o
+
 MISC_OBJECTS = \
  misc/devmode.o \
  misc/logfont.o \
@@ -30,7 +36,8 @@ TARGET_NAME = rosrtl
 
 TARGET_CFLAGS = -D__USE_W32API -Wall -Werror
 
-TARGET_OBJECTS = $(THREAD_OBJECTS) $(MISC_OBJECTS)
+TARGET_OBJECTS = $(THREAD_OBJECTS) $(MISC_OBJECTS) $(STRING_OBJECTS) \
+		 $(REGISTRY_OBJECTS)
  
 DEP_OBJECTS = $(TARGET_OBJECTS)
 
