@@ -1,4 +1,4 @@
-#include <crtdll/wchar.h>
+#include <crtdll/string.h>
 
 char * _strrev(char *s) 
 {
