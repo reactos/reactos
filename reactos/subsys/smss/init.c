@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.35 2002/05/24 07:49:41 ekohl Exp $
+/* $Id: init.c,v 1.36 2002/05/24 18:07:56 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -441,7 +441,6 @@ SmCreatePagingFiles(VOID)
 }
 
 
-#if 0
 static NTSTATUS STDCALL
 SmEnvironmentQueryRoutine(PWSTR ValueName,
 			  ULONG ValueType,
@@ -450,26 +449,75 @@ SmEnvironmentQueryRoutine(PWSTR ValueName,
 			  PVOID Context,
 			  PVOID EntryContext)
 {
-//  NTSTATUS Status;
+  UNICODE_STRING EnvVariable;
+  UNICODE_STRING EnvValue;
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
   PrintString("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
   PrintString("ValueData '%S'\n", (PWSTR)ValueData);
-//#endif
+#endif
 
-//  return(Status);
+  if (ValueType != REG_SZ)
+    {
+      return(STATUS_SUCCESS);
+    }
+
+  RtlInitUnicodeString(&EnvVariable,
+		       ValueName);
+  RtlInitUnicodeString(&EnvValue,
+		       (PWSTR)ValueData);
+  RtlSetEnvironmentVariable(Context,
+			    &EnvVariable,
+			    &EnvValue);
+
   return(STATUS_SUCCESS);
 }
-#endif
 
 
 static NTSTATUS
 SmSetEnvironmentVariables(VOID)
 {
-#if 0
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  UNICODE_STRING EnvVariable;
+  UNICODE_STRING EnvValue;
+  WCHAR ValueBuffer[MAX_PATH];
   NTSTATUS Status;
 
+  /*
+   * The following environment variables must be set prior to reading
+   * other variables from the registry.
+   *
+   * Variables (example):
+   *    SystemRoot = "C:\reactos"
+   *    SystemDrive = "C:"
+   */
+
+  /* Copy system root into value buffer */
+  wcscpy(ValueBuffer,
+	 SharedUserData->NtSystemRoot);
+
+  /* Cet SystemRoot = "C:\reactos" */
+  RtlInitUnicodeString(&EnvVariable,
+		       L"SystemRoot");
+  RtlInitUnicodeString(&EnvValue,
+		       ValueBuffer);
+  RtlSetEnvironmentVariable(&SmSystemEnvironment,
+			    &EnvVariable,
+			    &EnvValue);
+
+  /* Cut off trailing path */
+  ValueBuffer[2] = 0;
+
+  /* Set SystemDrive = "C:" */
+  RtlInitUnicodeString(&EnvVariable,
+		       L"SystemDrive");
+  RtlInitUnicodeString(&EnvValue,
+		       ValueBuffer);
+  RtlSetEnvironmentVariable(&SmSystemEnvironment,
+			    &EnvVariable,
+			    &EnvValue);
+
+  /* Read system environment from the registry. */
   RtlZeroMemory(&QueryTable,
 		sizeof(QueryTable));
 
@@ -478,107 +526,10 @@ SmSetEnvironmentVariables(VOID)
   Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
 				  L"\\Session Manager\\Environment",
 				  QueryTable,
-				  NULL,
-				  NULL);
-
-  PrintString("*** System stopped ***\n");
-  for(;;);
+				  &SmSystemEnvironment,
+				  SmSystemEnvironment);
 
   return(Status);
-#endif
-//#if 0
-	UNICODE_STRING EnvVariable;
-	UNICODE_STRING EnvValue;
-	UNICODE_STRING EnvExpandedValue;
-	ULONG ExpandedLength;
-	WCHAR ExpandBuffer[512];
-	WCHAR ValueBuffer[MAX_PATH];
-
-	/*
-	 * The following environment variables are read from the registry.
-	 * Because the registry does not work yet, the environment variables
-	 * are set one by one, using information from the shared user page.
-	 *
-	 * Variables (example):
-	 *    SystemRoot = C:\reactos
-	 *    SystemDrive = C:
-	 *
-	 *    OS = ReactOS
-	 *    Path = %SystemRoot%\system32;%SystemRoot%
-	 *    windir = %SystemRoot%
-	 */
-
-	/* copy system root into value buffer */
-	wcscpy (ValueBuffer, SharedUserData->NtSystemRoot);
-
-	/* set "SystemRoot = C:\reactos" */
-	RtlInitUnicodeString (&EnvVariable,
-	                      L"SystemRoot");
-	RtlInitUnicodeString (&EnvValue,
-	                      ValueBuffer);
-	RtlSetEnvironmentVariable (&SmSystemEnvironment,
-	                           &EnvVariable,
-	                           &EnvValue);
-
-	/* cut off trailing path */
-	ValueBuffer[2] = 0;
-
-	/* Set "SystemDrive = C:" */
-	RtlInitUnicodeString (&EnvVariable,
-	                      L"SystemDrive");
-	RtlInitUnicodeString (&EnvValue,
-	                      ValueBuffer);
-	RtlSetEnvironmentVariable (&SmSystemEnvironment,
-	                           &EnvVariable,
-	                           &EnvValue);
-
-
-	/* Set "OS = ReactOS" */
-	RtlInitUnicodeString (&EnvVariable,
-	                      L"OS");
-	RtlInitUnicodeString (&EnvValue,
-	                      L"ReactOS");
-	RtlSetEnvironmentVariable (&SmSystemEnvironment,
-	                           &EnvVariable,
-	                           &EnvValue);
-
-
-	/* Set "Path = %SystemRoot%\system32;%SystemRoot%" */
-	RtlInitUnicodeString (&EnvVariable,
-	                      L"Path");
-	RtlInitUnicodeString (&EnvValue,
-	                      L"%SystemRoot%\\system32;%SystemRoot%");
-	EnvExpandedValue.Length = 0;
-	EnvExpandedValue.MaximumLength = 512 * sizeof(WCHAR);
-	EnvExpandedValue.Buffer = ExpandBuffer;
-	*ExpandBuffer = 0;
-	RtlExpandEnvironmentStrings_U (SmSystemEnvironment,
-	                               &EnvValue,
-	                               &EnvExpandedValue,
-	                               &ExpandedLength);
-	RtlSetEnvironmentVariable (&SmSystemEnvironment,
-	                           &EnvVariable,
-	                           &EnvExpandedValue);
-
-	/* Set "windir = %SystemRoot%" */
-	RtlInitUnicodeString (&EnvVariable,
-	                      L"windir");
-	RtlInitUnicodeString (&EnvValue,
-	                      L"%SystemRoot%");
-	EnvExpandedValue.Length = 0;
-	EnvExpandedValue.MaximumLength = 512 * sizeof(WCHAR);
-	EnvExpandedValue.Buffer = ExpandBuffer;
-	*ExpandBuffer = 0;
-	RtlExpandEnvironmentStrings_U (SmSystemEnvironment,
-	                               &EnvValue,
-	                               &EnvExpandedValue,
-	                               &ExpandedLength);
-	RtlSetEnvironmentVariable (&SmSystemEnvironment,
-	                           &EnvVariable,
-	                           &EnvExpandedValue);
-
-  return(STATUS_SUCCESS);
-//#endif
 }
 
 

@@ -363,12 +363,6 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      StringPtr = (PWSTR)((PUCHAR)StringPtr + StringLen);
 		    }
 		}
-	      else if ((ValueInfo->Type == REG_EXPAND_SZ) &&
-		       !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
-		{
-		  DPRINT1("FIXME: expand REG_EXPAND_SZ\n");
-
-		}
 	      else
 		{
 		  Status = QueryEntry->QueryRoutine(QueryEntry->Name,
@@ -409,7 +403,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	      BufferSize = sizeof(KEY_VALUE_FULL_INFORMATION) + 4096;
 	      FullValueInfo = ExAllocatePool(PagedPool,
 					     BufferSize);
-	      if (ValueInfo == NULL)
+	      if (FullValueInfo == NULL)
 		{
 		  Status = STATUS_NO_MEMORY;
 		  break;
@@ -439,11 +433,11 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      break;
 		    }
 
-		  if ((ValueInfo->Type == REG_MULTI_SZ) &&
+		  if ((FullValueInfo->Type == REG_MULTI_SZ) &&
 		      !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
 		    {
 		      DPRINT("Expand REG_MULTI_SZ type\n");
-		      StringPtr = (PWSTR)ValueInfo->Data;
+		      StringPtr = (PWSTR)((PVOID)FullValueInfo + FullValueInfo->DataOffset);
 		      while (*StringPtr != 0)
 			{
 			  StringLen = (wcslen(StringPtr) + 1) * sizeof(WCHAR);
@@ -457,12 +451,6 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 			    break;
 			  StringPtr = (PWSTR)((PUCHAR)StringPtr + StringLen);
 			}
-		    }
-		  else if ((ValueInfo->Type == REG_EXPAND_SZ) &&
-			   !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
-		    {
-		      DPRINT1("FIXME: expand REG_EXPAND_SZ\n");
-		
 		    }
 		  else
 		    {
@@ -482,7 +470,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		  Index++;
 		}
 
-	      ExFreePool(ValueInfo);
+	      ExFreePool(FullValueInfo);
 
 	      if (!NT_SUCCESS(Status))
 		break;

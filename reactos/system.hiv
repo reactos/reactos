@@ -53,6 +53,10 @@ REGEDIT4
 "UNC"="\Device\Mup"
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Control\Session Manager\Environment]
+"ComSpec"=expand:"%SystemRoot%\system32\shell.exe"
+"OS"=expand:"ReactOS"
+"Path"=expand:"%SystemRoot%\system32;%SystemRoot%"
+"windir"=expand:"%SystemRoot%"
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management]
 "PagingFiles"=multi:"C:\reactos\pagefile.sys"
@@ -60,85 +64,91 @@ REGEDIT4
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services]
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Atapi]
-"ImagePath"="system32\drivers\atapi.sys"
 "Group"="SCSI Miniport"
+"ImagePath"="system32\drivers\atapi.sys"
 "Start"=dword:00000000
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Beep]
-"ImagePath"="system32\drivers\beep.sys"
 "Group"="Base"
+"ImagePath"="system32\drivers\beep.sys"
 "Start"=dword:00000001
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Cdfs]
-"ImagePath"="system32\drivers\cdfs.sys"
 "Group"="File System"
+"ImagePath"="system32\drivers\cdfs.sys"
 "Start"=dword:00000004
 "Type"=dword:00000002
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Cdrom]
-"ImagePath"="system32\drivers\cdrom.sys"
 "Group"="SCSI Class"
+"ImagePath"="system32\drivers\cdrom.sys"
 "Start"=dword:00000000
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Class2]
-"ImagePath"="system32\drivers\class2.sys"
 "Group"="SCSI Class Helper"
+"ImagePath"="system32\drivers\class2.sys"
 "Start"=dword:00000000
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Disk]
-"ImagePath"="system32\drivers\disk.sys"
 "Group"="SCSI Class"
+"ImagePath"="system32\drivers\disk.sys"
 "Start"=dword:00000000
 "Type"=dword:00000001
 
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\EventLog]
+"Group"="Error log"
+"ImagePath"="%SystemRoot%\system32\services.exe"
+"Start"=dword:00000004
+"Type"=dword:00000020
+
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Floppy]
-"ImagePath"="system32\drivers\floppy.sys"
 "Group"="Primary Disk"
+"ImagePath"="system32\drivers\floppy.sys"
 "Start"=dword:00000001
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Fs_Rec]
-"ImagePath"="system32\drivers\fs_rec.sys"
 "Group"="Boot file system"
+"ImagePath"="system32\drivers\fs_rec.sys"
 "Start"=dword:00000000
 "Type"=dword:00000008
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Ide]
-"ImagePath"="system32\drivers\ide.sys"
 "Group"="Primary Disk"
+"ImagePath"="system32\drivers\ide.sys"
 "Start"=dword:00000004
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Msfs]
-"ImagePath"="system32\drivers\msfs.sys"
 "Group"="File System"
+"ImagePath"="system32\drivers\msfs.sys"
 "Start"=dword:00000001
 "Type"=dword:00000002
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Npfs]
-"ImagePath"="system32\drivers\npfs.sys"
 "Group"="File System"
+"ImagePath"="system32\drivers\npfs.sys"
 "Start"=dword:00000001
 "Type"=dword:00000002
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Null]
-"ImagePath"="system32\drivers\null.sys"
 "Group"="Base"
+"ImagePath"="system32\drivers\null.sys"
 "Start"=dword:00000001
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Scsiport]
-"ImagePath"="system32\drivers\scsiport.sys"
 "Group"="SCSI Port"
+"ImagePath"="system32\drivers\scsiport.sys"
 "Start"=dword:00000000
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Vfatfs]
-"ImagePath"="system32\drivers\vfatfs.sys"
 "Group"="Boot File System"
+"ImagePath"="system32\drivers\vfatfs.sys"
 "Start"=dword:00000000
 "Type"=dword:00000002
