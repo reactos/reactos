@@ -1,4 +1,4 @@
-/* $Id: ioctrl.c,v 1.8 1999/11/07 14:07:35 ekohl Exp $
+/* $Id: ioctrl.c,v 1.9 2000/04/24 04:17:55 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,7 +16,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-
+#include <internal/io.h>
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -62,7 +62,7 @@ NtDeviceIoControlFile (
 
    Status = ObReferenceObjectByHandle(DeviceHandle,
 				      FILE_READ_DATA | FILE_WRITE_DATA,
-				      NULL,
+				      IoFileObjectType,
 				      KernelMode,
 				      (PVOID *) &FileObject,
 				      NULL);
