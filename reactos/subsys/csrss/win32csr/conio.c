@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.3 2004/01/11 17:31:16 gvg Exp $
+/* $Id: conio.c,v 1.4 2004/02/19 06:59:50 arty Exp $
  *
  * reactos/subsys/csrss/win32csr/conio.c
  *
@@ -1125,30 +1125,6 @@ ConioGetShiftState(PBYTE KeyState)
           UINT vk = MapVirtualKeyExW(i, 3, 0) & 0xff;
           switch(vk)
             {
-              case VK_LSHIFT:
-              case VK_RSHIFT:
-              case VK_SHIFT:
-                ssOut |= SHIFT_PRESSED;
-                break;
-
-              case VK_LCONTROL:
-              case VK_CONTROL:
-                ssOut |= LEFT_CTRL_PRESSED;
-                break;
-
-              case VK_RCONTROL:
-                ssOut |= RIGHT_CTRL_PRESSED | ENHANCED_KEY;
-                break;
-
-              case VK_LMENU:
-              case VK_MENU:
-                ssOut |= LEFT_ALT_PRESSED;
-                break;
-
-              case VK_RMENU:
-                ssOut |= RIGHT_ALT_PRESSED | ENHANCED_KEY;
-                break;
-
               case VK_CAPITAL:
                 ssOut |= CAPSLOCK_ON;
                 break;
@@ -1163,6 +1139,19 @@ ConioGetShiftState(PBYTE KeyState)
             }
         }
     }
+
+  if (KeyState[VK_LSHIFT] || KeyState[VK_RSHIFT] & 0x80)
+      ssOut |= SHIFT_PRESSED;
+
+  if (KeyState[VK_LCONTROL] & 0x80)
+      ssOut |= RIGHT_CTRL_PRESSED;
+  else if (KeyState[VK_RCONTROL] & 0x80)
+      ssOut |= LEFT_CTRL_PRESSED;
+
+  if (KeyState[VK_LMENU] & 0x80)
+      ssOut |= RIGHT_ALT_PRESSED;
+  else if (KeyState[VK_RMENU] & 0x80)
+      ssOut |= LEFT_ALT_PRESSED;
 
   return ssOut;
 }
@@ -1270,7 +1259,7 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
     }
     
   ConInRec->InputEvent = er;
-  ConInRec->Fake = AsciiChar && 
+  ConInRec->Fake = 
     (msg->message != WM_CHAR && msg->message != WM_SYSCHAR &&
      msg->message != WM_KEYUP && msg->message != WM_SYSKEYUP);
   ConInRec->NotChar = (msg->message != WM_CHAR && msg->message != WM_SYSCHAR);
@@ -1278,16 +1267,16 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
   if (ConInRec->NotChar)
     LastVirtualKey = msg->wParam;
 
-  DPRINT("csrss: %s %s %s %s %02x %02x '%c' %04x\n",
-	 Down ? "down" : "up  ",
-	 (msg->message == WM_CHAR || msg->message == WM_SYSCHAR) ?
-	 "char" : "key ",
-	 ConInRec->Fake ? "fake" : "real",
-	 ConInRec->NotChar ? "notc" : "char",
-	 VirtualScanCode,
-	 VirtualKeyCode,
-	 (AsciiChar >= ' ') ? AsciiChar : '.',
-	 ShiftState);
+  DPRINT  ("csrss: %s %s %s %s %02x %02x '%c' %04x\n",
+	   Down ? "down" : "up  ",
+	   (msg->message == WM_CHAR || msg->message == WM_SYSCHAR) ?
+	   "char" : "key ",
+	   ConInRec->Fake ? "fake" : "real",
+	   ConInRec->NotChar ? "notc" : "char",
+	   VirtualScanCode,
+	   VirtualKeyCode,
+	   (AsciiChar >= ' ') ? AsciiChar : '.',
+	   ShiftState);
     
   if (! ConInRec->Fake || ! ConInRec->NotChar)
     {

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.92 2004/02/08 21:37:52 weiden Exp $
+# $Id: makefile,v 1.93 2004/02/19 06:59:50 arty Exp $
 
 PATH_TO_TOP = ../..
 
@@ -42,7 +42,7 @@ ENG_OBJECTS= eng/debug.o eng/error.o eng/mem.o eng/brush.o eng/bitblt.o \
     eng/clip.o eng/copybits.o eng/device.o eng/handle.o eng/lineto.o \
     eng/paint.o eng/palette.o eng/perfcnt.o eng/semaphor.o eng/surface.o \
     eng/xlate.o eng/transblt.o eng/mouse.o eng/misc.o eng/nls.o eng/sort.o \
-    eng/gradient.o
+    eng/gradient.o 
 
 MAIN_OBJECTS = main/dllmain.o main/svctabm.o
 

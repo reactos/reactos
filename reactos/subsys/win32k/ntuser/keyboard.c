@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.22 2004/02/19 03:45:44 arty Exp $
+/* $Id: keyboard.c,v 1.23 2004/02/19 06:59:50 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -55,7 +55,6 @@
 /* Key States */
 #define KS_DOWN_MASK     0xc0
 #define KS_DOWN_BIT      0x80
-#define KS_EXT_BIT       0x40
 #define KS_LOCK_BIT    0x01
 /* lParam bits */
 #define LP_EXT_BIT       (1<<24)
@@ -78,25 +77,43 @@ NTSTATUS FASTCALL InitKeyboardImpl(VOID) {
 
 /*** Statics used by TranslateMessage ***/
 
-/*** Shift state code needs to be cleaned up here.  Sorry, I let it get out
- * of hand. */
+/*** Shift state code was out of hand, sorry. --- arty */
 
 static UINT DontDistinguishShifts( UINT ret ) {
-    if( ret == VK_LSHIFT || ret == VK_RSHIFT ) ret = VK_SHIFT;
-    if( ret == VK_LCONTROL || ret == VK_RCONTROL ) ret = VK_CONTROL;
-    if( ret == VK_LMENU || ret == VK_RMENU ) ret = VK_MENU;
+    if( ret == VK_LSHIFT || ret == VK_RSHIFT ) ret = VK_LSHIFT;
+    if( ret == VK_LCONTROL || ret == VK_RCONTROL ) ret = VK_LCONTROL;
+    if( ret == VK_LMENU || ret == VK_RMENU ) ret = VK_LMENU;
     return ret;
 }
 
 static VOID STDCALL SetKeyState(DWORD key, DWORD vk, DWORD ext, BOOL down) {
   /* Special handling for toggles like numpad and caps lock */
+
   if (vk == VK_CAPITAL || vk == VK_NUMLOCK) 
     {
       if (down) QueueKeyStateTable[key] ^= 1;
     } 
 
+  if (vk == VK_LSHIFT && ext) {
+      SetKeyState(VK_RSHIFT, 0, 0, down);
+  } else if (vk == VK_LSHIFT || vk == VK_SHIFT) {
+      SetKeyState(VK_LSHIFT, 0, 0, down);
+  }
+
+  if (vk == VK_LCONTROL && ext) {
+      SetKeyState(VK_RCONTROL, 0, 0, down);
+  } else if (vk == VK_LCONTROL || vk == VK_CONTROL) {
+      SetKeyState(VK_LCONTROL, 0, 0, down);
+  }
+
+  if (vk == VK_LMENU && ext) {
+      SetKeyState(VK_RMENU, 0, 0, down);
+  } else if (vk == VK_LMENU || vk == VK_MENU) {
+      SetKeyState(VK_LMENU, 0, 0, down);
+  }
+
   if (down)
-    QueueKeyStateTable[key] |= KS_DOWN_BIT | (ext ? KS_EXT_BIT : 0);
+    QueueKeyStateTable[key] |= KS_DOWN_BIT;
   else
     QueueKeyStateTable[key] &= ~KS_DOWN_MASK;
 }
@@ -112,71 +129,64 @@ VOID DumpKeyState( PBYTE KeyState ) {
 }
 
 static BYTE KeysSet( PKBDTABLES pkKT, PBYTE KeyState, 
-		     int Mod, int FakeModLeft, int FakeModRight ) {
-  int i;
-  UINT Vk = 0;
-
+		     int FakeModLeft, int FakeModRight ) {
   if( !KeyState || !pkKT ) return 0;
 
-  for( i = 0; i < pkKT->bMaxVSCtoVK; i++ ) {
-    Vk = pkKT->pusVSCtoVK[i] & 0xff;
-    if( KeyState[i] && 
-	((Vk == Mod) ||
-	 (FakeModLeft && Vk == FakeModLeft) ||
-	 (FakeModRight && Vk == FakeModRight)) ) {
-      return KeyState[i];
-    }
-  }
+  /* Search special codes first */
+  if( FakeModLeft && KeyState[FakeModLeft] )
+      return KeyState[FakeModLeft];
+  else if( FakeModRight && KeyState[FakeModRight] )
+      return KeyState[FakeModRight];
+
+  return 0;
+}
+
+/* Search the keyboard layout modifiers table for the shift bit.  I don't
+ * want to count on the shift bit not moving, because it can be specified
+ * in the layout */
+
+static DWORD FASTCALL GetShiftBit( PKBDTABLES pkKT, DWORD Vk ) {
+  int i;
+
+  for( i = 0; pkKT->pCharModifiers->pVkToBit[i].Vk; i++ ) 
+    if( pkKT->pCharModifiers->pVkToBit[i].Vk == Vk ) 
+      return pkKT->pCharModifiers->pVkToBit[i].ModBits;
 
   return 0;
 }
 
 static DWORD ModBits( PKBDTABLES pkKT, PBYTE KeyState ) {
-  int i;
   DWORD ModBits = 0;
-  BYTE Mask;
 
   if( !KeyState ) return 0;
 
   /* DumpKeyState( KeyState ); */
 
-  for( i = 0; pkKT->pCharModifiers->pVkToBit[i].Vk; i++ ) {
-    int Vk = pkKT->pCharModifiers->pVkToBit[i].Vk;
-    switch(Vk)
-      {
-        case VK_SHIFT:
-	  Mask = KeysSet( pkKT, KeyState, Vk, VK_LSHIFT, VK_RSHIFT );
-          if (Mask & KS_DOWN_MASK)
-	    ModBits |= pkKT->pCharModifiers->pVkToBit[i].ModBits;
-	  break;
-        case VK_CONTROL:
-	  Mask = KeysSet( pkKT, KeyState, Vk, VK_LCONTROL, VK_RCONTROL );
-          if (Mask & KS_DOWN_MASK)
-	    ModBits |= pkKT->pCharModifiers->pVkToBit[i].ModBits;
-	  break;
-        case VK_MENU:
-	  Mask = KeysSet( pkKT, KeyState, Vk, VK_LMENU, VK_RMENU );
-          if (Mask & KS_DOWN_MASK)
-	    ModBits |= pkKT->pCharModifiers->pVkToBit[i].ModBits;
-          if (Mask & KS_EXT_BIT)
-            ModBits |= MOD_KCTRL;
-	  break;
-	default:
-	  Mask = KeysSet( pkKT, KeyState, Vk, 0, 0 );
-          if (Mask & KS_DOWN_BIT)
-	    ModBits |= pkKT->pCharModifiers->pVkToBit[i].ModBits;
-	  break;
-      }
-  }
+  if (KeysSet( pkKT, KeyState, VK_LSHIFT, VK_RSHIFT ) & 
+      KS_DOWN_BIT)
+      ModBits |= GetShiftBit( pkKT, VK_SHIFT );
+  
+  if (KeysSet( pkKT, KeyState, VK_LCONTROL, VK_RCONTROL ) & 
+      KS_DOWN_BIT )
+      ModBits |= GetShiftBit( pkKT, VK_CONTROL );
 
-  /* Deal with VK_CAPITAL */
-  if (KeysSet( pkKT, KeyState, VK_CAPITAL, 0, 0 ) & KS_LOCK_BIT) 
+  if (KeysSet( pkKT, KeyState, VK_LMENU, VK_RMENU ) &
+      KS_DOWN_BIT )
+      ModBits |= GetShiftBit( pkKT, VK_MENU );
+
+  /* Handle Alt+Gr */
+  if (KeysSet( pkKT, KeyState, VK_RMENU, 0 ) &
+      KS_DOWN_BIT )
+      ModBits |= GetShiftBit( pkKT, VK_CONTROL );
+      
+      /* Deal with VK_CAPITAL */
+  if (KeysSet( pkKT, KeyState, VK_CAPITAL, 0 ) & KS_LOCK_BIT) 
     {
       ModBits |= CAPITAL_BIT;
     }
 
   /* Deal with VK_NUMLOCK */
-  if (KeysSet( pkKT, KeyState, VK_NUMLOCK, 0, 0 ) & KS_LOCK_BIT) 
+  if (KeysSet( pkKT, KeyState, VK_NUMLOCK, 0 ) & KS_LOCK_BIT) 
     {
       ModBits |= NUMLOCK_BIT;
     }
@@ -209,13 +219,9 @@ static BOOL TryToTranslateChar(WORD wVirtKey,
       return FALSE;
     }
   shift = keyLayout->pCharModifiers->ModNumber[ModBits];
-
+  
   for (nMod = 0; keyLayout->pVkToWcharTable[nMod].nModifications; nMod++)
     {
-      if (shift > keyLayout->pVkToWcharTable[nMod].nModifications)
-        {
-	  continue;
-	}
       vtwTbl = &keyLayout->pVkToWcharTable[nMod];
       size_this_entry = vtwTbl->cbSize;
       vkPtr = (PVK_TO_WCHARS10)((BYTE *)vtwTbl->pVkToWchars);
@@ -225,13 +231,24 @@ static BOOL TryToTranslateChar(WORD wVirtKey,
 	    {
 	      CapsMod = 
 		shift | ((CapsState & CAPITAL_BIT) ? vkPtr->Attributes : 0);
+
+	      if( CapsMod > keyLayout->pVkToWcharTable[nMod].nModifications ) {
+		  DWORD MaxBit = 1;
+		  while( MaxBit < 
+			 keyLayout->pVkToWcharTable[nMod].nModifications )
+		      MaxBit <<= 1;
+
+		  CapsMod &= MaxBit - 1; /* Guarantee that CapsMod lies
+					    in bounds. */
+	      }
 	      
 	      *pbDead = vkPtr->wch[CapsMod] == WCH_DEAD;
 	      *pbLigature = vkPtr->wch[CapsMod] == WCH_LGTR;
 	      *pwcTranslatedChar = vkPtr->wch[CapsMod];
 	      
-	      DPRINT("CapsMod %08x CapsState %08x shift %08x Char %04x\n",
-		     CapsMod, CapsState, shift, *pwcTranslatedChar);
+	      DPRINT("%d %04x: CapsMod %08x CapsState %08x shift %08x Char %04x\n",
+		       nMod, wVirtKey,
+		       CapsMod, CapsState, shift, *pwcTranslatedChar);
 
 	      if( *pbDead ) 
 	        {
@@ -299,7 +316,6 @@ NtUserGetKeyState(
   ExAcquireFastMutex(&QueueStateLock);
   if( key < 0x100 ) {
     ret = ((DWORD)(QueueKeyStateTable[key] & KS_DOWN_BIT) << 8 ) |
-      (QueueKeyStateTable[key] & KS_EXT_BIT) |
       (QueueKeyStateTable[key] & KS_LOCK_BIT);
   }
   ExReleaseFastMutex(&QueueStateLock);
@@ -780,6 +796,7 @@ static UINT IntMapVirtualKeyEx( UINT Code, UINT Type, PKBDTABLES keyLayout ) {
   } break;
 
   case 3:
+      
     ret = ScanToVk( Code, FALSE, keyLayout );
     break;
   }
@@ -914,20 +931,6 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize ) {
   return ret;
 }
 
-/* Search the keyboard layout modifiers table for the shift bit.  I don't
- * want to count on the shift bit not moving, because it can be specified
- * in the layout */
-
-static DWORD FASTCALL GetShiftBit( PKBDTABLES pkKT ) {
-  int i;
-
-  for( i = 0; pkKT->pCharModifiers->pVkToBit[i].Vk; i++ ) 
-    if( pkKT->pCharModifiers->pVkToBit[i].Vk == VK_SHIFT ) 
-      return pkKT->pCharModifiers->pVkToBit[i].ModBits;
-
-  return 0;
-}
-
 /*
  * Filter this message according to the current key layout, setting wParam
  * appropriately.
@@ -975,7 +978,7 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
   RawVk = KeyboardLayout->pusVSCtoVK[ScanCode];
 
   if ((ModifierBits & NUMLOCK_BIT) && 
-      !(ModifierBits & GetShiftBit(KeyboardLayout)) && 
+      !(ModifierBits & GetShiftBit(KeyboardLayout, VK_SHIFT)) && 
       (RawVk & KNUMP) &&
       !(Msg->lParam & LP_EXT_BIT))
     {
@@ -1005,6 +1008,12 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
       SetKeyState( ScanCode, Msg->wParam, Msg->lParam & LP_EXT_BIT,
 		   FALSE ); /* Release key */
     }
+
+  /* We need to unset SYSKEYDOWN if the ALT key is an ALT+Gr */
+  if( QueueKeyStateTable[VK_RMENU] & KS_DOWN_BIT ) {
+      if( Msg->message == WM_SYSKEYDOWN ) Msg->message = WM_KEYDOWN;
+      else Msg->message = WM_KEYUP;
+  }
 
   ExReleaseFastMutex(&QueueStateLock);
 }
