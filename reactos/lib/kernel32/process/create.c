@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.82 2004/05/01 18:09:53 tamlin Exp $
+/* $Id: create.c,v 1.83 2004/05/11 20:44:29 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -871,6 +871,7 @@ CreateProcessW
      {
         return FALSE;
      }
+   DPRINT("TidyCmdLine '%S'\n", TidyCmdLine);
 
    if (lpApplicationName != NULL && lpApplicationName[0] != 0)
      {
@@ -977,7 +978,7 @@ CreateProcessW
     * Process the application name and command line
     */
    RtlInitUnicodeString(&ImagePathName_U, ImagePathName);
-   RtlInitUnicodeString(&CommandLine_U, lpCommandLine);
+   RtlInitUnicodeString(&CommandLine_U, TidyCmdLine);
 
    DPRINT("ImagePathName_U %S\n", ImagePathName_U.Buffer);
    DPRINT("CommandLine_U %S\n", CommandLine_U.Buffer);

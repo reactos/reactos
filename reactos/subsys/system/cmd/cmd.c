@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.12 2004/04/30 16:52:41 navaraf Exp $
+/* $Id: cmd.c,v 1.13 2004/05/11 20:44:30 gvg Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -296,7 +296,7 @@ static BOOL IsConsoleProcess(HANDLE Process)
  */
 
 static VOID
-Execute (LPTSTR first, LPTSTR rest)
+Execute (LPTSTR full, LPTSTR first, LPTSTR rest)
 {
 	TCHAR szFullName[MAX_PATH];
 #ifndef __REACTOS__
@@ -352,17 +352,13 @@ Execute (LPTSTR first, LPTSTR rest)
 	else
 	{
 		/* exec the program */
-		TCHAR szFullCmdLine [CMDLINE_LENGTH];
 		PROCESS_INFORMATION prci;
 		STARTUPINFO stui;
 
 #ifdef _DEBUG
-		DebugPrintf (_T("[EXEC: %s %s]\n"), szFullName, rest);
+		DebugPrintf (_T("[EXEC: %s %s]\n"), full, rest);
 #endif
 		/* build command line for CreateProcess() */
-		_tcscpy (szFullCmdLine, first);
-		_tcscat (szFullCmdLine, _T(" "));
-		_tcscat (szFullCmdLine, rest);
 
 		/* fill startup info */
 		memset (&stui, 0, sizeof (STARTUPINFO));
@@ -373,9 +369,9 @@ Execute (LPTSTR first, LPTSTR rest)
 		// return console to standard mode
 		SetConsoleMode (GetStdHandle(STD_INPUT_HANDLE),
 		                ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT );
-		
+
 		if (CreateProcess (szFullName,
-		                   szFullCmdLine,
+		                   full,
 		                   NULL,
 		                   NULL,
 		                   FALSE,
@@ -433,7 +429,7 @@ DoCommand (LPTSTR line)
 	TCHAR com[CMDLINE_LENGTH];  /* the first word in the command */
 	LPTSTR cp = com;
 	LPTSTR cstart;
-	LPTSTR rest = line;   /* pointer to the rest of the command line */
+	LPTSTR rest;   /* pointer to the rest of the command line */
 	INT cl;
 	LPCOMMAND cmdptr;
 
@@ -442,8 +438,9 @@ DoCommand (LPTSTR line)
 #endif /* DEBUG */
 
 	/* Skip over initial white space */
-	while (_istspace (*rest))
-		rest++;
+	while (_istspace (*line))
+		line++;
+	rest = line;
 
 	cstart = rest;
 
@@ -458,6 +455,8 @@ DoCommand (LPTSTR line)
 
 			while(*rest != _T('\0') && *rest != _T('"'))
 				*cp++ = _totlower (*rest++);
+			if (*rest == _T('"'))
+				rest++;
 		}
 		else
 		{
@@ -486,7 +485,7 @@ DoCommand (LPTSTR line)
 			/* If end of table execute ext cmd */
 			if (cmdptr->name == NULL)
 			{
-				Execute (com, rest);
+				Execute (line, com, rest);
 				break;
 			}
 

@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.20 2004/01/31 13:29:19 navaraf Exp $
+/* $Id: dllmain.c,v 1.21 2004/05/11 20:44:30 gvg Exp $
  *
  * dllmain.c
  *
@@ -14,9 +14,9 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.20 $
- * $Author: navaraf $
- * $Date: 2004/01/31 13:29:19 $
+ * $Revision: 1.21 $
+ * $Author: gvg $
+ * $Date: 2004/05/11 20:44:30 $
  *
  */
 
@@ -90,7 +90,7 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         if (!CreateThreadData())
             return FALSE;
 
-        _acmdln = (char *)GetCommandLineA();
+        _acmdln = strdup(GetCommandLineA());
 
         /* FIXME: This crashes all applications */
         if (BlockEnvToEnviron() < 0)
