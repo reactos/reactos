@@ -563,7 +563,6 @@ includelogicentry_t *pp_includelogiclist = NULL;
 			pplval.cptr = get_string();
 			if (is_c_h_include(pplval.cptr, 1)) pass_data=0;
 			else pass_data=1;
-//fprintf(stderr, "%s pass_data %d\n", pplval.cptr, pass_data);
 			return tDQSTRING;
 		default:
 			put_string();
@@ -1418,7 +1417,7 @@ static int is_c_h_include(char *fname, int quoted)
 	int sl=strlen(fname);
 	if (sl < 2 + 2 * quoted) return 0;
 	if ((toupper(fname[sl-1-quoted])!='H') && (toupper(fname[sl-1-quoted])!='C')) return 0;
-        if (fname[sl-2-quoted]!='.') return 0;
+	if (fname[sl-2-quoted]!='.') return 0;
 	return 1;
 }
 
