@@ -1,4 +1,4 @@
-/* $Id: rtl.c,v 1.18 2003/12/30 18:52:05 fireball Exp $
+/* $Id: rtl.c,v 1.19 2004/06/27 14:15:33 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -175,7 +175,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
    AddressPtr = (PULONG)RVA((char*)BaseAddress, ExportDir->AddressOfFunctions);
    if (Name && Name->Length)
      {
-       ULONG minn, maxn;
+       LONG minn, maxn;
 
 	/* by name */
        OrdinalPtr = 
@@ -185,7 +185,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
 	minn = 0; maxn = ExportDir->NumberOfNames;
 	while (minn <= maxn)
 	  {
-	    ULONG mid;
+	    LONG mid;
 	    LONG res;
 
 	    mid = (minn + maxn) / 2;
