@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2003/11/14 17:13:32 weiden Exp $
+# $Id: Makefile,v 1.6 2003/12/01 18:28:54 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -25,12 +25,7 @@ TARGET_BASE = 0x77a90000
 TARGET_SDKLIBS = ntdll.a kernel32.a
 
 TARGET_OBJECTS = \
-	debug.o \
-	libmain.o \
-	porting.o \
-	trace.o \
-	winedbgc.o \
-	winedbgc.dll.dbg.o
+	winedbgc.o
 
 include $(PATH_TO_TOP)/rules.mak
 

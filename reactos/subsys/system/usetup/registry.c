@@ -34,6 +34,8 @@
 #include "registry.h"
 #include "infcache.h"
 
+#define NDEBUG
+#include <debug.h>
 
 
 #define FLG_ADDREG_BINVALUETYPE           0x00000001

@@ -32,16 +32,8 @@
 #endif
 #define assert(x)
 
-#define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
-#define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
-
-#define DPRINT(args...)
-#define CHECKPOINT
-
-
 #define ROUND_DOWN(N, S) (((N) / (S)) * (S))
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
-
 
 extern HANDLE ProcessHeap;
 

@@ -1,18 +1,13 @@
 /*
  * Debugging channels functions for WINE support on ROS.
  */
+
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <tchar.h>
 #include "porting.h"
 #include "trace.h"
-
-//#include <ntddk.h>
-#include <wine/debugtools.h>
-
-DECLARE_DEBUG_CHANNEL(winedbgc);
-
 
 /* ---------------------------------------------------------------------- */
 
@@ -191,69 +186,7 @@ const char *wine_dbgstr_guid(const GUID *id)
     return str;
 }
 
-/***********************************************************************
- *              wine_dbg_vprintf (NTDLL.@)
- */
-int wine_dbg_vprintf(const char *format, va_list args)
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    struct debug_info *info = get_info();
-    char *p;
-
-    int ret = _vsnprintf(info->out_pos, sizeof(info->output) - (info->out_pos - info->output),
-                         format, args);
-
-    p = strrchr(info->out_pos, '\n');
-    if (!p) {
-        info->out_pos += ret;
-    } else {
-        char *pos = info->output;
-        char saved_ch;
-        p++;
-        saved_ch = *p;
-        *p = 0;
-        DbgPrint(pos);
-        *p = saved_ch;
-        /* move beginning of next line to start of buffer */
-        while ((*pos = *p++)) pos++;
-        info->out_pos = pos;
-    }
-    return ret;
-}
-
-/***********************************************************************
- *              wine_dbg_printf (NTDLL.@)
- */
-int wine_dbg_printf(const char *format, ...)
-{
-    int ret;
-    va_list valist;
-
-    va_start(valist, format);
-//
-    Trace(format, valist);
-//
-    ret = wine_dbg_vprintf(format, valist);
-    va_end(valist);
-    return ret;
-}
-
-/***********************************************************************
- *              wine_dbg_log (NTDLL.@)
- */
-int wine_dbg_log(enum __DEBUG_CLASS cls, const char *channel,
-                 const char *function, const char *format, ...)
-{
-    static const char *classes[__DBCL_COUNT] = { "fixme", "err", "warn", "trace" };
-    va_list valist;
-    int ret = 0;
-
-    va_start(valist, format);
-    if (TRACE_ON(winedbgc))
-        ret = wine_dbg_printf("%08lx:", (DWORD)NtCurrentTeb()->Cid.UniqueThread);
-    if (cls < __DBCL_COUNT)
-        ret += wine_dbg_printf("%s:%s:%s ", classes[cls], channel + 1, function);
-    if (format)
-        ret += wine_dbg_vprintf(format, valist);
-    va_end(valist);
-    return ret;
+   return TRUE;
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.25 2003/11/14 17:13:34 weiden Exp $
+/* $Id: partlist.c,v 1.26 2003/12/01 18:28:54 navaraf Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -37,6 +37,9 @@
 #include "partlist.h"
 #include "drivesup.h"
 #include "bootsup.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
 

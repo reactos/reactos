@@ -43,3 +43,5 @@ rpcrt4_main.o
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
+
+include $(TOOLS_PATH)/config.mk

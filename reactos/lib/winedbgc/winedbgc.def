@@ -1,37 +1,10 @@
-; $Id: winedbgc.def,v 1.2 2003/01/12 01:54:39 robd Exp $
+; $Id: winedbgc.def,v 1.3 2003/12/01 18:28:54 navaraf Exp $
 ;
 ; ReactOS Operating System
 ;
 LIBRARY winedbgc.dll
 
 EXPORTS
-
-wine_dbg_log
-wine_dbg_printf
 wine_dbgstr_an
 wine_dbgstr_guid
 wine_dbgstr_wn
-__wine_dbg_register
-__wine_dbg_unregister
-__wine_dbg_vlog DATA 
-__wine_dbg_vprintf DATA 
-__wine_dbgstr_an DATA 
-__wine_dbgstr_guid DATA 
-__wine_dbgstr_wn DATA 
-
-
-;
-;wine_dbg_log @1 
-;__wine_dbg_register @2 
-;__wine_dbg_unregister @3 
-;__wine_dbg_vlog @4 DATA 
-;__wine_dbg_vprintf @5 DATA 
-;__wine_dbgstr_an @6 DATA 
-;__wine_dbgstr_guid @7 DATA 
-;__wine_dbgstr_wn @8 DATA 
-;
-;wine_dbg_printf @34 
-;wine_dbgstr_an @36 
-;wine_dbgstr_guid @37 
-;wine_dbgstr_wn @39 
-;

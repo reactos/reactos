@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.30 2003/11/19 12:25:03 weiden Exp $
+# $Id: Makefile,v 1.31 2003/12/01 18:28:54 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -94,5 +94,7 @@ include $(PATH_TO_TOP)/rules.mak
 include $(TOOLS_PATH)/helper.mk
 
 include $(TOOLS_PATH)/depend.mk
+
+include $(TOOLS_PATH)/config.mk
 
 # EOF

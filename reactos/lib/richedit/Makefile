@@ -16,3 +16,5 @@ TARGET_OBJECTS = charlist.o reader.o richedit.o text-writer.o
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
+
+include $(TOOLS_PATH)/config.mk

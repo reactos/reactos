@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: infcache.c,v 1.9 2003/11/14 17:13:33 weiden Exp $
+/* $Id: infcache.c,v 1.10 2003/12/01 18:28:54 navaraf Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/infcache.c
@@ -31,6 +31,8 @@
 #include "usetup.h"
 #include "infcache.h"
 
+#define NDEBUG
+#include <debug.h>
 
 #define CONTROL_Z  '\x1a'
 #define MAX_SECTION_NAME_LEN  255

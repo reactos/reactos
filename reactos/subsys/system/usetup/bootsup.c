@@ -31,6 +31,8 @@
 #include "inicache.h"
 #include "bootsup.h"
 
+#define NDEBUG
+#include <debug.h>
 
 #define SECTORSIZE 512
 
