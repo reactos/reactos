@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.54 2004/03/11 16:17:25 weiden Exp $
+/* $Id: message.c,v 1.55 2004/04/07 17:52:32 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -725,14 +725,14 @@ IntSendMessage(HWND hWnd,
   return 0;
 }
 
-LRESULT STDCALL
-IntSendMessageTimeout(HWND hWnd,
-                      UINT Msg,
-                      WPARAM wParam,
-                      LPARAM lParam,
-                      UINT uFlags,
-                      UINT uTimeout,
-                      ULONG_PTR *uResult)
+static LRESULT STDCALL
+IntSendMessageTimeoutSingle(HWND hWnd,
+                            UINT Msg,
+                            WPARAM wParam,
+                            LPARAM lParam,
+                            UINT uFlags,
+                            UINT uTimeout,
+                            ULONG_PTR *uResult)
 {
   LRESULT Result;
   NTSTATUS Status;
@@ -741,8 +741,6 @@ IntSendMessageTimeout(HWND hWnd,
   INT lParamBufferSize;
   LPARAM lParamPacked;
   PW32THREAD Win32Thread;
-
-  /* FIXME: Check for a broadcast or topmost destination. */
 
   /* FIXME: Call hooks. */
   Window = IntGetWindowObject(hWnd);
@@ -814,7 +812,7 @@ IntSendMessageTimeout(HWND hWnd,
   }
   
   Status = MsqSendMessage(Window->MessageQueue, hWnd, Msg, wParam, lParam, 
-                          (uFlags & SMTO_BLOCK), uTimeout, &Result);
+                          uTimeout, (uFlags & SMTO_BLOCK), &Result);
   if(Status == STATUS_TIMEOUT)
   {
     IntReleaseWindowObject(Window);
@@ -826,6 +824,45 @@ IntSendMessageTimeout(HWND hWnd,
   if(uResult)
     *uResult = Result;
   return TRUE;
+}
+
+LRESULT STDCALL
+IntSendMessageTimeout(HWND hWnd,
+                      UINT Msg,
+                      WPARAM wParam,
+                      LPARAM lParam,
+                      UINT uFlags,
+                      UINT uTimeout,
+                      ULONG_PTR *uResult)
+{
+  PWINDOW_OBJECT DesktopWindow;
+  HWND *Children;
+  HWND *Child;
+
+  if (HWND_BROADCAST != hWnd)
+    {
+      return IntSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, uFlags, uTimeout, uResult);
+    }
+
+  DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
+  if (NULL == DesktopWindow)
+    {
+      SetLastWin32Error(ERROR_INTERNAL_ERROR);
+      return 0;
+    }
+  Children = IntWinListChildren(DesktopWindow);
+  IntReleaseWindowObject(DesktopWindow);
+  if (NULL == Children)
+    {
+      return 0;
+    }
+
+  for (Child = Children; NULL != *Child; Child++)
+    {
+      IntSendMessageTimeoutSingle(*Child, Msg, wParam, lParam, uFlags, uTimeout, uResult);
+    }
+
+  return (LRESULT) TRUE;
 }
 
 static NTSTATUS FASTCALL
@@ -938,25 +975,26 @@ IntDoSendMessage(HWND Wnd,
   MSG UserModeMsg;
   MSG KernelModeMsg;
 
-  /* FIXME: Check for a broadcast or topmost destination. */
-
   RtlZeroMemory(&Info, sizeof(NTUSERSENDMESSAGEINFO));
 
   /* FIXME: Call hooks. */
-  Window = IntGetWindowObject(Wnd);
-  if (NULL == Window)
+  if (HWND_BROADCAST != Wnd)
     {
-      /* Tell usermode to not touch this one */
-      Info.HandledByKernel = TRUE;
-      MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERSENDMESSAGEINFO));
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return 0;
+      Window = IntGetWindowObject(Wnd);
+      if (NULL == Window)
+        {
+          /* Tell usermode to not touch this one */
+          Info.HandledByKernel = TRUE;
+          MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERSENDMESSAGEINFO));
+          SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+          return 0;
+        }
     }
 
   /* FIXME: Check for an exiting window. */
 
   /* See if the current thread can handle the message */
-  if (NULL != PsGetWin32Thread() &&
+  if (HWND_BROADCAST != Wnd && NULL != PsGetWin32Thread() &&
       Window->MessageQueue == PsGetWin32Thread()->MessageQueue)
     {
       /* Gather the information usermode needs to call the window proc directly */
@@ -992,7 +1030,10 @@ IntDoSendMessage(HWND Wnd,
   else
     {
       /* Must be handled by other thread */
-      IntReleaseWindowObject(Window);
+      if (HWND_BROADCAST != Wnd)
+        {
+          IntReleaseWindowObject(Window);
+        }
       Info.HandledByKernel = TRUE;
       UserModeMsg.hwnd = Wnd;
       UserModeMsg.message = Msg;
@@ -1046,7 +1087,7 @@ NtUserSendMessageTimeout(HWND hWnd,
 {
   DOSENDMESSAGE dsm;
   LRESULT Result;
-  
+
   dsm.uFlags = uFlags;
   dsm.uTimeout = uTimeout;
   Result = IntDoSendMessage(hWnd, Msg, wParam, lParam, &dsm, UnsafeInfo);
