@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.48.2.1 2000/07/21 22:06:33 dwelch Exp $
+# $Id: makefile,v 1.48.2.2 2000/07/24 23:33:02 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -88,7 +88,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) def/ntdll.def def/ntdll.edf
 		-mdll \
 		-o $(TARGET).dll \
 		$(TARGET).o \
-		-Wl,--entry=_LdrStartup \
+		-Wl,--entry=0x00000000 \
 		-Wl,--image-base,$(IMAGE_BASE) \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \

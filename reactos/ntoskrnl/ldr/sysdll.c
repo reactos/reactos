@@ -18,6 +18,7 @@
 #include <internal/ps.h>
 #include <string.h>
 #include <internal/string.h>
+#include <internal/ldr.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -69,6 +70,8 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
    PIMAGE_NT_HEADERS	NTHeaders;
    ULONG			InitialViewSize;
    ULONG			i;
+   PEPROCESS Process;
+   ANSI_STRING ProcedureName;
 
    /*
     * Locate and open NTDLL to determine ImageBase
@@ -125,20 +128,6 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
      }
    ImageBase = NTHeaders->OptionalHeader.ImageBase;
    ImageSize = NTHeaders->OptionalHeader.SizeOfImage;
-   
-   /*
-    * FIXME: retrieve the offset of LdrStartup from NTDLL
-    */
-   DPRINT("ImageBase %x\n",ImageBase);
-   *LdrStartupAddr = 
-     (PVOID)ImageBase + NTHeaders->OptionalHeader.AddressOfEntryPoint;
-   DPRINT("LdrStartupAddr %x\n", LdrStartupAddr);
-   SystemDllEntryPoint = *LdrStartupAddr;
-   
-   /*
-    * FIXME: retrieve the offset of the APC dispatcher from NTDLL
-    */
-   SystemDllApcDispatcher = NULL;
    
    /*
     * Create a section for NTDLL
@@ -215,7 +204,72 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 	  }
      }
    DPRINT("Finished mapping\n");
+
+
+   DPRINT("Referencing process\n");
+   Status = ObReferenceObjectByHandle(ProcessHandle,
+				      PROCESS_ALL_ACCESS,
+				      PsProcessType,
+				      KernelMode,
+				      (PVOID*)&Process,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("ObReferenceObjectByProcess() failed (Status %x)\n", Status);
+	return(Status);
+     }
+
+   DPRINT("Attaching to Process\n");
+   KeAttachProcess(Process);
+
+   /*
+    * retrieve ntdll's startup address
+    */
+   RtlInitAnsiString (&ProcedureName,
+		      "LdrInitializeThunk");
+   Status = LdrGetProcedureAddress ((PVOID)ImageBase,
+				    &ProcedureName,
+				    0,
+				    &SystemDllEntryPoint);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
+	KeDetachProcess();
+	ObDereferenceObject(Process);
+	ZwClose(NTDllSectionHandle);
+	return (Status);
+     }
+   DPRINT("SystemDllEntryPoint 0x%08lx\n",
+	  SystemDllEntryPoint);
+   *LdrStartupAddr = SystemDllEntryPoint;
+
+   /*
+    * FIXME: retrieve the offset of the APC dispatcher from NTDLL
+    */
+/*
+   RtlInitAnsiString (&ProcedureName,
+		      "KiUserApcDispatcher");
+   Status = LdrGetProcedureAddress ((PVOID)ImageBase,
+				    &ProcedureName,
+				    0,
+				    (PULONG)&SystemDllApcDispatcher);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
+	KeDetachProcess();
+	ObDereferenceObject(Process);
+	ZwClose(NTDllSectionHandle);
+	return (Status);
+     }
+*/
+   SystemDllApcDispatcher = NULL;
+
+   KeDetachProcess();
+   ObDereferenceObject(Process);
+
    ZwClose(NTDllSectionHandle);
-	
+
    return(STATUS_SUCCESS);
 }
+
+/* EOF */

@@ -1,4 +1,4 @@
-/* $Id: ldr.c,v 1.6 2000/07/01 17:07:00 ea Exp $
+/* $Id: ldr.c,v 1.6.2.1 2000/07/24 23:32:24 ekohl Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -129,12 +129,25 @@ FARPROC
 STDCALL
 GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
 {
-	FARPROC fnExp;
+	ANSI_STRING ProcedureName;
+	FARPROC fnExp = NULL;
 
-	if ( HIWORD(lpProcName )  != 0 )
-		fnExp = LdrGetExportByName (hModule,(LPSTR)lpProcName);
+	if (HIWORD(lpProcName) != 0)
+	{
+		RtlInitAnsiString (&ProcedureName,
+		                   (LPSTR)lpProcName);
+		LdrGetProcedureAddress ((PVOID)hModule,
+		                        &ProcedureName,
+		                        0,
+		                        (PVOID*)&fnExp);
+	}
 	else
-		fnExp = LdrGetExportByOrdinal (hModule,(ULONG)lpProcName);
+	{
+		LdrGetProcedureAddress ((PVOID)hModule,
+		                        NULL,
+		                        (ULONG)lpProcName,
+		                        (PVOID*)&fnExp);
+	}
 
 	return fnExp;
 }

@@ -1,4 +1,4 @@
-/* $Id: rtl.c,v 1.8 2000/06/29 23:35:40 dwelch Exp $
+/* $Id: rtl.c,v 1.8.2.1 2000/07/24 23:38:05 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,78 +24,6 @@
 
 /* FUNCTIONS ****************************************************************/
 
-#if 0
-static PVOID LdrGetExportAddress(PMODULE_OBJECT ModuleObject,
-				 PUCHAR Name,
-				 USHORT Hint)
-{
-  WORD  Idx;
-  DWORD  ExportsStartRVA, ExportsEndRVA;
-  PVOID  ExportAddress;
-  PWORD  OrdinalList;
-  PDWORD  FunctionList, NameList;
-  PIMAGE_SECTION_HEADER  SectionHeader;
-  PIMAGE_EXPORT_DIRECTORY  ExportDirectory;
-
-  ExportsStartRVA = ModuleObject->Image.PE.OptionalHeader->DataDirectory
-    [IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
-  ExportsEndRVA = ExportsStartRVA + 
-    ModuleObject->Image.PE.OptionalHeader->DataDirectory
-      [IMAGE_DIRECTORY_ENTRY_EXPORT].Size;
-
-  /*  Get the IMAGE_SECTION_HEADER that contains the exports.  This is
-      usually the .edata section, but doesn't have to be.  */
-  SectionHeader = LdrPEGetEnclosingSectionHeader(ExportsStartRVA, ModuleObject);
-
-  if (!SectionHeader)
-    {
-      return 0;
-    }
-
-  ExportDirectory = MakePtr(PIMAGE_EXPORT_DIRECTORY,
-                            ModuleObject->Base,
-                            SectionHeader->VirtualAddress);
-
-  FunctionList = (PDWORD)((DWORD)ExportDirectory->AddressOfFunctions + ModuleObject->Base);
-  NameList = (PDWORD)((DWORD)ExportDirectory->AddressOfNames + ModuleObject->Base);
-  OrdinalList = (PWORD)((DWORD)ExportDirectory->AddressOfNameOrdinals + ModuleObject->Base);
-
-  ExportAddress = 0;
-
-  if (Name != NULL)
-    {
-      for (Idx = 0; Idx < ExportDirectory->NumberOfNames; Idx++)
-        {
-#if 0
-          DPRINT("  Name:%s  NameList[%d]:%s\n", 
-                 Name, 
-                 Idx, 
-                 (DWORD) ModuleObject->Base + NameList[Idx]);
-
-#endif
-          if (!strcmp(Name, (PCHAR) ((DWORD)ModuleObject->Base + NameList[Idx])))
-            {
-              ExportAddress = (PVOID) ((DWORD)ModuleObject->Base +
-                FunctionList[OrdinalList[Idx]]);
-              break;
-            }
-        }
-    }
-  else  /*  use hint  */
-    {
-      ExportAddress = (PVOID) ((DWORD)ModuleObject->Base +
-        FunctionList[Hint - ExportDirectory->Base]);
-    }
-  if (ExportAddress == 0)
-    {
-       DbgPrint("Export not found for %d:%s\n", Hint, 
-		Name != NULL ? Name : "(Ordinal)");
-       KeBugCheck(0);
-    }
-
-  return  ExportAddress;
-}
-#endif
 
 PIMAGE_NT_HEADERS STDCALL RtlImageNtHeader (IN PVOID BaseAddress)
 {
@@ -119,5 +47,101 @@ PIMAGE_NT_HEADERS STDCALL RtlImageNtHeader (IN PVOID BaseAddress)
    return(NTHeaders);
 }
 
+
+PVOID STDCALL
+RtlImageDirectoryEntryToData (
+	IN PVOID	BaseAddress,
+	IN BOOLEAN	ImageLoaded,
+	IN ULONG	Directory,
+	OUT PULONG	Size
+	)
+{
+	PIMAGE_NT_HEADERS NtHeader;
+	PIMAGE_SECTION_HEADER SectionHeader;
+	ULONG Va;
+	ULONG Count;
+
+	NtHeader = RtlImageNtHeader (BaseAddress);
+	if (NtHeader == NULL)
+		return NULL;
+
+	if (Directory >= NtHeader->OptionalHeader.NumberOfRvaAndSizes)
+		return NULL;
+
+	Va = NtHeader->OptionalHeader.DataDirectory[Directory].VirtualAddress;
+	if (Va == 0)
+		return NULL;
+
+	if (Size)
+		*Size = NtHeader->OptionalHeader.DataDirectory[Directory].Size;
+
+	if (ImageLoaded)
+		return (PVOID)(BaseAddress + Va);
+
+	/* image mapped as ordinary file, we must find raw pointer */
+	SectionHeader = (PIMAGE_SECTION_HEADER)(NtHeader + 1);
+	Count = NtHeader->FileHeader.NumberOfSections;
+	while (Count--)
+	{
+		if (SectionHeader->VirtualAddress == Va)
+			return (PVOID)(BaseAddress + SectionHeader->PointerToRawData);
+		SectionHeader++;
+	}
+
+	return NULL;
+}
+
+
+NTSTATUS STDCALL
+LdrGetProcedureAddress (IN PVOID BaseAddress,
+                        IN PANSI_STRING Name,
+                        IN ULONG Ordinal,
+                        OUT PVOID *ProcedureAddress)
+{
+   PIMAGE_EXPORT_DIRECTORY ExportDir;
+   PUSHORT OrdinalPtr;
+   PULONG NamePtr;
+   PULONG AddressPtr;
+   ULONG i = 0;
+
+   /* get the pointer to the export directory */
+   ExportDir = (PIMAGE_EXPORT_DIRECTORY)
+	RtlImageDirectoryEntryToData (BaseAddress, TRUE, IMAGE_DIRECTORY_ENTRY_EXPORT, &i);
+
+   if (!ExportDir || !i || !ProcedureAddress)
+     {
+	return STATUS_INVALID_PARAMETER;
+     }
+
+   AddressPtr = (PULONG)((ULONG)BaseAddress + (ULONG)ExportDir->AddressOfFunctions);
+   if (Name && Name->Length)
+     {
+	/* by name */
+	OrdinalPtr = (PUSHORT)((ULONG)BaseAddress + (ULONG)ExportDir->AddressOfNameOrdinals);
+	NamePtr = (PULONG)((ULONG)BaseAddress + (ULONG)ExportDir->AddressOfNames);
+	for (i = 0; i < ExportDir->NumberOfNames; i++, NamePtr++, OrdinalPtr++)
+	  {
+	     if (!_strnicmp(Name->Buffer, (char*)(BaseAddress + *NamePtr), Name->Length))
+	       {
+		  *ProcedureAddress = (PVOID)((ULONG)BaseAddress + (ULONG)AddressPtr[*OrdinalPtr]);
+		  return STATUS_SUCCESS;
+	       }
+	  }
+	DbgPrint("LdrGetProcedureAddress: Can't resolve symbol '%Z'\n", Name);
+     }
+   else
+     {
+	/* by ordinal */
+	Ordinal &= 0x0000FFFF;
+	if (Ordinal - ExportDir->Base < ExportDir->NumberOfFunctions)
+	  {
+	     *ProcedureAddress = (PVOID)((ULONG)BaseAddress + (ULONG)AddressPtr[Ordinal - ExportDir->Base]);
+	     return STATUS_SUCCESS;
+	  }
+	DbgPrint("LdrGetProcedureAddress: Can't resolve symbol @%d\n", Ordinal);
+  }
+
+   return STATUS_PROCEDURE_NOT_FOUND;
+}
 
 /* EOF */

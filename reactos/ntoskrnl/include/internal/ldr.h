@@ -46,4 +46,20 @@ LdrpMapImage (
 	PVOID	* ImageBase
 	);
 
+
+NTSTATUS STDCALL
+LdrGetProcedureAddress (IN PVOID BaseAddress,
+                        IN PANSI_STRING Name,
+                        IN ULONG Ordinal,
+                        OUT PVOID *ProcedureAddress);
+
+
+PVOID STDCALL
+RtlImageDirectoryEntryToData (
+	IN PVOID	BaseAddress,
+	IN BOOLEAN	ImageLoaded,
+	IN ULONG	Directory,
+	OUT PULONG	Size);
+
+
 #endif /* __INCLUDE_INTERNAL_LDR_H */

@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.26 2000/07/06 14:34:49 dwelch Exp $
+/* $Id: startup.c,v 1.26.2.1 2000/07/24 23:34:55 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -36,7 +36,11 @@ ULONG NtGlobalFlag = 0;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID LdrStartup(VOID)
+VOID STDCALL
+LdrInitializeThunk (ULONG Unknown1,
+                    ULONG Unknown2,
+                    ULONG Unknown3,
+                    ULONG Unknown4)
 {
    PEPFUNC EntryPoint;
    PIMAGE_DOS_HEADER PEDosHeader;
@@ -45,7 +49,7 @@ VOID LdrStartup(VOID)
    PVOID ImageBase;
    PPEB Peb;
    
-   DPRINT("LdrStartup()\n");
+   DPRINT("LdrInitializeThunk()\n");
 
    LdrDllListHead.BaseAddress = (PVOID)&_image_base__;
    LdrDllListHead.Prev = &LdrDllListHead;
@@ -111,8 +115,8 @@ VOID LdrStartup(VOID)
    /* initalize peb lock support */
    RtlInitializeCriticalSection (&PebLock);
    Peb->FastPebLock = &PebLock;
-   Peb->FastPebLockRoutine = RtlEnterCriticalSection;
-   Peb->FastPebUnlockRoutine = RtlLeaveCriticalSection;
+   Peb->FastPebLockRoutine = (PPEBLOCKROUTINE)RtlEnterCriticalSection;
+   Peb->FastPebUnlockRoutine = (PPEBLOCKROUTINE)RtlLeaveCriticalSection;
 
    EntryPoint = LdrPEStartup((PVOID)ImageBase, NULL);
    if (EntryPoint == NULL)

@@ -27,16 +27,23 @@ LdrLoadDll (PDLL* Dll,PCHAR	Name);
 
 NTSTATUS LdrUnloadDll(PDLL Dll);
 
-
-PVOID
-LdrGetExportByOrdinal (PDLL Module, ULONG Ordinal );
-
-PVOID
-LdrGetExportByName (PDLL Module, PUCHAR	SymbolName );
-
 NTSTATUS
 STDCALL
 LdrDisableThreadCalloutsForDll (
 	PVOID	IN	ImageBase,
 	BOOLEAN	IN	Disable
 	);
+
+NTSTATUS STDCALL
+LdrGetProcedureAddress (IN PVOID BaseAddress,
+                        IN PANSI_STRING Name,
+                        IN ULONG Ordinal,
+                        OUT PVOID *ProcedureAddress);
+
+VOID STDCALL
+LdrInitializeThunk (ULONG Unknown1,
+                    ULONG Unknown2,
+                    ULONG Unknown3,
+                    ULONG Unknown4);
+
+/* EOF */
