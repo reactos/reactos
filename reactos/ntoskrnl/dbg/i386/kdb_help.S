@@ -1,35 +1,31 @@
 #include <internal/ke.h>
 #include <internal/i386/segment.h>
 
+	.data
+_KdbEipTemp:
+	.int	0
+
+	.text
 .globl _KdbEnter	
 _KdbEnter:
 	/*
-	 * Set up a stack frame
-	 */ 
-	pushl	%ebp
-	movl	%esp, %ebp
+	 * Record when we are inside the debugger.
+	 */
+	incl	_KdbEntryCount
 
 	/*
-	 * Save registers
-	 */ 
-	pushl	%edi
-	pushl	%esi
-	pushl	%ebx
-
+	 * Save the callers eip.
+	 */
+	popl	_KdbEipTemp
+		
 	/*
 	 * Set up a trap frame
 	 */
-	pushl	$0		/* V86_Gs */
-	pushl	$0		/* V86_Fs */
-	pushl	$0		/* V86_Ds */
-	pushl	$0		/* V86_Es */
-	pushl	%ss		/* Ss */
-	pushl	%ebp            /* Esp */
 	pushfl			/* Eflags */
 	pushl	%cs		/* Cs */
-	pushl	4(%ebp)		/* Eip */
+	pushl	_KdbEipTemp	/* Eip */
 	pushl	$0		/* ErrorCode */
-	pushl	0(%ebp)		/* Ebp */
+	pushl	%ebp		/* Ebp */
 	pushl	%ebx		/* Ebx */
 	pushl	%esi		/* Esi */
 	pushl	%edi		/* Edi */
@@ -42,12 +38,21 @@ _KdbEnter:
 	pushl	%ds		/* Ds */
 	pushl	%es		/* Es */
 	pushl	%gs		/* Gs */
-	pushl	$0		/* Dr7 */
-	pushl	$0		/* Dr6 */
-	pushl	$0		/* Dr3 */
-	pushl	$0		/* Dr2 */
-	pushl	$0		/* Dr1 */
-	pushl	$0		/* Dr0 */
+	movl	%dr7, %eax
+	pushl	%eax		/* Dr7 */
+	/* Clear all breakpoint enables in dr7. */
+	andl	$0xFFFF0000, %eax
+	movl	%eax, %dr7
+	movl	%dr6, %eax
+	pushl	%eax		/* Dr6 */
+	movl	%dr3, %eax
+	pushl	%eax		/* Dr3 */
+	movl	%dr2, %eax
+	pushl	%eax		/* Dr2 */
+	movl	%dr1, %eax
+	pushl	%eax		/* Dr1 */
+	movl	%dr0, %eax
+	pushl	%eax		/* Dr0 */
 	pushl	$0		/* TempEip */
 	pushl	$0		/* TempCs */
 	pushl	$0		/* DebugPointer */
@@ -66,23 +71,60 @@ _KdbEnter:
 	call	_KdbInternalEnter
 
 	/*
-	 * Pop the argument and destroy the trap frame
+	 * Pop the argument
 	 */
-	popl	%eax
-	addl	$KTRAP_FRAME_SIZE, %esp
+	popl	%eax	
 
 	/*
-	 * Restore registers
+	 * Ignore unused portions of the trap frame.
 	 */
-	popl	%ebx
-	popl	%esi
-	popl	%edi
+	popl	%eax		/* DebugEbp */
+	popl	%eax		/* DebugEip */
+	popl	%eax		/* DebugArgMark */
+	popl	%eax		/* DebugPointer */
+	popl	%eax		/* TempCs */
+	popl	%eax		/* TempEip */
+	popl	%eax		/* Dr0 */
+	movl	%eax, %dr0
+	popl	%eax		/* Dr1 */
+	movl	%eax, %dr1
+	popl	%eax		/* Dr2 */
+	movl	%eax, %dr2
+	popl	%eax		/* Dr3 */
+	movl	%eax, %dr3
+	popl	%eax		/* Dr6 */
+	movl	%eax, %dr6
+	popl	%eax		/* Dr7 */
+	movl	%eax, %dr7
 
 	/*
-	 * Return
+	 * Restore registers including any that might have been changed
+	 * inside the debugger.
 	 */
-	popl	%ebp
-	ret
+	popl	%gs		/* Gs */
+	popl	%es		/* Es */
+	popl	%ds		/* Ds */
+	popl	%edx		/* Edx */
+	popl	%ecx		/* Ecx */
+	popl	%eax		/* Eax */
+	addl	$4, %esp	/* PreviousMode */
+	addl	$4, %esp	/* ExceptionList */
+	popl	%fs		/* Fs */
+	popl	%edi		/* Edi */
+	popl	%esi		/* Esi */
+	popl	%ebx		/* Ebx */
+	popl	%ebp		/* Ebp */
+	addl	$4, %esp	/* ErrorCode */
+
+	/*
+	 * Record when we are in the debugger.
+	 */
+	decl	_KdbEntryCount
+
+	/*
+	 * Return to the caller.
+	 */
+	iret
 
 
 

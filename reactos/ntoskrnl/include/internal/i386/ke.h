@@ -79,12 +79,12 @@ typedef struct _KTRAP_FRAME
    PVOID DebugPointer;
    PVOID TempCs;
    PVOID TempEip;
-   PVOID Dr0;
-   PVOID Dr1;
-   PVOID Dr2;
-   PVOID Dr3;
-   PVOID Dr6;
-   PVOID Dr7;
+   ULONG Dr0;
+   ULONG Dr1;
+   ULONG Dr2;
+   ULONG Dr3;
+   ULONG Dr6;
+   ULONG Dr7;
    USHORT Gs;
    USHORT Reserved1;
    USHORT Es;

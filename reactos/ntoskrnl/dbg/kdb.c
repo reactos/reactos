@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.18 2004/02/24 21:25:40 weiden Exp $
+/* $Id: kdb.c,v 1.19 2004/03/13 18:21:56 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -34,6 +34,8 @@
 #include <internal/ps.h>
 #include <limits.h>
 #include <internal/kd.h>
+#include <internal/mm.h>
+#include <internal/i386/mm.h>
 #include "kdb.h"
 #include "kjs.h"
 
@@ -46,8 +48,31 @@
 
 #define BS 8
 #define DEL 127
+#define UPARROW 56
 
 BOOL KbdEchoOn = TRUE;
+
+typedef struct
+{
+  BOOLEAN Enabled;
+  BOOLEAN Temporary;
+  BOOLEAN Assigned;
+  ULONG Address;
+  UCHAR SavedInst;
+} KDB_ACTIVE_BREAKPOINT;
+
+#define KDB_MAXIMUM_BREAKPOINT_COUNT (255)
+
+static ULONG KdbBreakPointCount = 0;
+static KDB_ACTIVE_BREAKPOINT 
+ KdbActiveBreakPoints[KDB_MAXIMUM_BREAKPOINT_COUNT];
+
+static BOOLEAN KdbIgnoreNextSingleStep = FALSE;
+
+static ULONG KdbLastSingleStepFrom = 0xFFFFFFFF;
+static BOOLEAN KdbEnteredOnSingleStep = FALSE;
+
+ULONG KdbEntryCount = 0;
 
 int isalpha( int );
 VOID
@@ -84,6 +109,20 @@ ULONG
 DbgEnableFileCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG
 DbgDisableFileCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgDisassemble(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgSetBreakPoint(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgDeleteBreakPoint(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgSetMemoryBreakPoint(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgStep(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgStepOver(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgFinish(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 
 struct
 {
@@ -107,11 +146,27 @@ struct
   {"efile", "efile <filename>", "Enable debug prints from file", DbgEnableFileCommand},
   {"dfile", "dfile <filename>", "Disable debug prints from file", DbgDisableFileCommand},
   {"js", "js", "Script mode", DbgScriptCommand},
+  {"disasm", "disasm <address>", "Disables 10 instructions at <address> or "
+   "eip", DbgDisassemble},
+  {"bp", "bp <address>", "Sets an int3 breakpoint at a given address",
+   DbgSetBreakPoint},
+  {"bc", "bc <breakpoint number>", "Deletes a breakpoint",
+   DbgDeleteBreakPoint},
+  {"ba", "ba <debug register> <access type> <length> <address>", 
+   "Sets a breakpoint using a debug register", DbgSetMemoryBreakPoint},
+  {"t", "t", "Steps forward a single instructions", DbgStep},
+  {"p", "p", "Steps forward a single instructions skipping calls", 
+   DbgStepOver},
+  {"finish", "finish", "Runs until the current function exits", DbgFinish},
   {"help", "help", "Display help screen", DbgProcessHelpCommand},
   {NULL, NULL, NULL}
 };
 
 volatile DWORD x_dr0 = 0, x_dr1 = 0, x_dr2 = 0, x_dr3 = 0, x_dr7 = 0;
+
+extern LONG KdbDisassemble(ULONG Address);
+extern LONG KdbGetInstLength(ULONG Address);
+extern NTSTATUS MmGetPageEntry2(PVOID PAddress, PULONG* Pte, BOOLEAN MayWait);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -206,6 +261,7 @@ KdbGetCommand(PCH Buffer)
 {
   CHAR Key;
   PCH Orig = Buffer;
+  static UCHAR LastCommand[256] = "";
   
   KbdEchoOn = !((KdDebugState & KD_DEBUG_KDNOECHO) != 0);
   
@@ -219,7 +275,19 @@ KdbGetCommand(PCH Buffer)
       if (Key == '\r' || Key == '\n')
 	{
 	  DbgPrint("\n");
-	  *Buffer = 0;
+	  /*
+	    Repeat the last command if the user presses enter. Reduces the
+	    risk of RSI when single-stepping.
+	  */
+	  if (Buffer == Orig)
+	    {
+	      strcpy(Buffer, LastCommand);
+	    }
+	  else
+	    {
+	      *Buffer = 0;
+	      strcpy(LastCommand, Orig);
+	    }
 	  return;
 	}
       else if (Key == BS || Key == DEL)
@@ -234,6 +302,26 @@ KdbGetCommand(PCH Buffer)
 		DbgPrint(" %c", BS);
 	    }
         }
+      else if (Key == UPARROW)
+	{
+	  ULONG i;
+	  while (Buffer > Orig)
+	    {
+	      Buffer--;
+	      *Buffer = 0;
+	      if (KbdEchoOn)
+		DbgPrint("%c %c", BS, BS);
+	      else
+		DbgPrint(" %c", BS);
+	    }
+	  for (i = 0; LastCommand[i] != 0; i++)
+	    {
+	      if (KbdEchoOn)
+		DbgPrint("%c", LastCommand[i]);
+	      *Buffer = LastCommand[i];
+	      Buffer++;
+	    }
+	}
       else
         {
 	  if (KbdEchoOn)
@@ -243,6 +331,444 @@ KdbGetCommand(PCH Buffer)
           Buffer++;
         }
     }
+}
+
+BOOLEAN STATIC
+KdbDecodeAddress(PUCHAR Buffer, PULONG Address)
+{
+  while (isspace(*Buffer))
+    {
+      Buffer++;
+    }
+  if (Buffer[0] == '<')
+    {
+      PUCHAR ModuleName = Buffer + 1;
+      PUCHAR AddressString = strpbrk(Buffer, ":");
+      extern LIST_ENTRY ModuleTextListHead;
+      PLIST_ENTRY current_entry;
+      MODULE_TEXT_SECTION* current;
+      static WCHAR ModuleNameW[256];
+      ULONG i;
+
+      if (AddressString == NULL)
+	{
+	  DbgPrint("Address %x is malformed.\n", Buffer);
+	  return(FALSE);
+	}
+      *AddressString = 0;
+      AddressString++;
+      while (isspace(*AddressString))
+	{
+	  AddressString++;
+	}
+
+      for (i = 0; ModuleName[i] != 0 && !isspace(ModuleName[i]); i++)
+	{
+	  ModuleNameW[i] = (WCHAR)ModuleName[i];
+	}
+      ModuleNameW[i] = 0;
+
+      /* Find the module. */
+      current_entry = ModuleTextListHead.Flink;
+   
+      while (current_entry != &ModuleTextListHead &&
+	     current_entry != NULL)
+	{
+	  current = 
+	    CONTAINING_RECORD(current_entry, MODULE_TEXT_SECTION, ListEntry);
+	  if (wcscmp(ModuleNameW, current->Name) == 0)
+	    {
+	      break;
+	    }
+	  current_entry = current_entry->Flink;
+	}
+      if (current_entry == NULL || current_entry == &ModuleTextListHead)
+	{
+	  DbgPrint("Couldn't find module %s.\n", ModuleName);
+	  return(FALSE);
+	}
+      *Address = current->Base;
+      *Address += strtoul(AddressString, NULL, 16);
+      return(TRUE);
+    }
+  else
+    {
+      *Address = strtoul(Buffer, NULL, 0);
+      return(TRUE);
+    }
+}
+
+NTSTATUS STATIC
+KdbOverwriteInst(ULONG Address, PUCHAR PreviousInst, UCHAR NewInst)
+{
+  PULONG BreakPtePtr;
+  ULONG SavedPte;
+  NTSTATUS Status;
+  /* Get the pte for the page containing the address. */
+  Status =
+    MmGetPageEntry2((PVOID)PAGE_ROUND_DOWN(Address), &BreakPtePtr, FALSE);
+  /* Return if that page isn't present. */
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+  if (!((*BreakPtePtr) & (1 << 0)))
+    {
+      return(STATUS_MEMORY_NOT_ALLOCATED);
+    }
+  /* Saved the old pte and enable write permissions. */
+  SavedPte = *BreakPtePtr;
+  (*BreakPtePtr) |= (1 << 1);
+  /* Flush the TLB. */
+  __asm__ __volatile__ ("movl %%cr3, %%eax\n\t"
+			"movl %%eax, %%cr3\n\t" 
+			: : : "memory", "eax");
+  /* Copy the old instruction back to the caller. */
+  if (PreviousInst != NULL)
+    {
+      Status = MmSafeCopyFromUser(PreviousInst, (PUCHAR)Address, 1);
+      if (!NT_SUCCESS(Status))
+	{
+	  return(Status);
+	}
+    }
+  /* Copy the new instruction in its place. */
+  Status = MmSafeCopyToUser((PUCHAR)Address, &NewInst, 1);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+  /* Restore the old pte. */
+  *BreakPtePtr = SavedPte;
+  /* And flush the tlb again. */
+  __asm__ __volatile__ ("movl %%cr3, %%eax\n\t"
+			"movl %%eax, %%cr3\n\t" 
+			: : : "memory", "eax");
+  return(STATUS_SUCCESS);
+}
+
+
+VOID STATIC
+KdbRenableBreakPoints(VOID)
+{
+  ULONG i;
+  for (i = 0; i < KDB_MAXIMUM_BREAKPOINT_COUNT; i++)
+    {
+      if (KdbActiveBreakPoints[i].Assigned &&
+	  !KdbActiveBreakPoints[i].Enabled)
+	{
+	  KdbActiveBreakPoints[i].Enabled = TRUE;
+	  (VOID)KdbOverwriteInst(KdbActiveBreakPoints[i].Address,
+				 &KdbActiveBreakPoints[i].SavedInst, 
+				 0xCC);
+	}
+    }
+}
+
+LONG STATIC
+KdbIsBreakPointOurs(PKTRAP_FRAME Tf)
+{
+  ULONG i;
+  for (i = 0; i < KDB_MAXIMUM_BREAKPOINT_COUNT; i++)
+    {
+      if (KdbActiveBreakPoints[i].Assigned &&
+	  KdbActiveBreakPoints[i].Address == (Tf->Eip - 1))
+	{
+	  return(i);
+	}
+    }
+  return(-1);
+}
+
+VOID STATIC
+KdbDeleteBreakPoint(ULONG BreakPointNr)
+{
+  KdbBreakPointCount--;
+  KdbActiveBreakPoints[BreakPointNr].Assigned = FALSE;
+}
+
+NTSTATUS STATIC
+KdbInsertBreakPoint(ULONG Address, BOOLEAN Temporary)
+{
+  NTSTATUS Status;
+  UCHAR SavedInst;
+  ULONG i;  
+  if (KdbBreakPointCount == KDB_MAXIMUM_BREAKPOINT_COUNT)
+    {
+      return(STATUS_UNSUCCESSFUL);
+    }
+  for (i = 0; i < KDB_MAXIMUM_BREAKPOINT_COUNT; i++)
+    {
+      if (!KdbActiveBreakPoints[i].Assigned)
+	{
+	  break;
+	}
+    }
+  Status = KdbOverwriteInst(Address, &SavedInst, 0xCC);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+  KdbActiveBreakPoints[i].Assigned = TRUE;
+  KdbActiveBreakPoints[i].Enabled = TRUE;
+  KdbActiveBreakPoints[i].Address = Address;
+  KdbActiveBreakPoints[i].Temporary = Temporary;
+  KdbActiveBreakPoints[i].SavedInst = SavedInst;
+  return(STATUS_SUCCESS);
+}
+
+ULONG
+DbgSetBreakPoint(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
+{
+  ULONG Addr;
+  NTSTATUS Status;
+  ULONG i;
+  if (Argc < 2)
+    {
+      DbgPrint("Need an address to set the breakpoint at.\n");
+      return(1);
+    }
+  /* Stitch the remaining arguments back into a single string. */
+  for (i = 2; i < Argc; i++)
+    {
+      Argv[i][-1] = ' ';
+    }
+  if (!KdbDecodeAddress(Argv[1], &Addr))
+    {
+      return(1);
+    }
+  DbgPrint("Setting breakpoint at 0x%X\n", Addr);
+  if (!NT_SUCCESS(Status = KdbInsertBreakPoint(Addr, FALSE)))
+    {
+      DbgPrint("Failed to set breakpoint (Status %X)\n", Status);
+    }
+  return(1);
+}
+
+ULONG
+DbgDeleteBreakPoint(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
+{
+  ULONG BreakPointNr;
+  if (Argc != 2)
+    {
+      DbgPrint("Need a breakpoint number to delete.\n");
+      return(1);
+    }  
+  BreakPointNr = strtoul(Argv[1], NULL, 10);
+  DbgPrint("Deleting breakpoint %d.\n", BreakPointNr);
+  KdbDeleteBreakPoint(BreakPointNr);
+  return(1);
+}
+
+ULONG
+DbgSetMemoryBreakPoint(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
+{
+  ULONG DebugRegNr;
+  UCHAR BreakType;
+  ULONG Length, Address;
+  ULONG Rw;
+  ULONG i;
+  if (Argc != 2 && Argc < 5)
+    {
+      DbgPrint("ba <0-3> <r|w|e> <1|2|4> <address>\n");
+      return(1);
+    }
+  DebugRegNr = strtoul(Argv[1], NULL, 10);
+  if (DebugRegNr >= 4)
+    {
+      DbgPrint("Debug register number should be between 0 and 3.\n");
+      return(1);
+    }
+  if (Argc == 2)
+    {
+      /* Clear the breakpoint. */
+      Tf->Dr7 &= ~(0x3 << (DebugRegNr * 2));
+      if ((Tf->Dr7 & 0xFF) == 0)
+	{
+	  /* 
+	     If no breakpoints are enabled then 
+	     clear the exact match flags. 
+	  */
+	  Tf->Dr7 &= 0xFFFFFCFF;
+	}
+      return(1);
+    }
+  BreakType = Argv[2][0];
+  if (BreakType != 'r' && BreakType != 'w' && BreakType != 'e')
+    {
+      DbgPrint("Access type to break on should be either 'r', 'w' or 'e'.\n");
+      return(1);
+    }
+  Length = strtoul(Argv[3], NULL, 10);
+  if (Length != 1 && Length != 2 && Length != 4)
+    {
+      DbgPrint("Length of the breakpoint should be one, two or four.\n");
+      return(1);
+    }
+  if (Length != 1 && BreakType == 'e')
+    {
+      DbgPrint("The length of an execution breakpoint should be one.\n");
+      return(1);
+    }
+  /* Stitch the remaining arguments back into a single string. */
+  for (i = 4; i < Argc; i++)
+    {
+      Argv[i][-1] = ' ';
+    }
+  if (!KdbDecodeAddress(Argv[4], &Address))
+    {
+      return(1);
+    }
+  if ((Address & (Length - 1)) != 0)
+    {
+      DbgPrint("The breakpoint address should be aligned to a multiple of "
+	       "the breakpoint length.\n");
+      return(1);
+    }
+
+  /* Set the breakpoint address. */
+  switch (DebugRegNr)
+    {
+    case 0: Tf->Dr0 = Address; break;
+    case 1: Tf->Dr1 = Address; break;
+    case 2: Tf->Dr2 = Address; break;
+    case 3: Tf->Dr3 = Address; break;
+    }
+  /* Enable the breakpoint. */
+  Tf->Dr7 |= (0x3 << (DebugRegNr * 2));
+  /* Enable the exact match bits. */
+  Tf->Dr7 |= 0x00000300;
+  /* Clear existing state. */
+  Tf->Dr7 &= ~(0xF << (16 + (DebugRegNr * 4)));
+  /* Set the breakpoint type. */
+  switch (BreakType)
+    {
+    case 'r': Rw = 3; break;
+    case 'w': Rw = 1; break;
+    case 'e': Rw = 0; break;
+    }  
+  Tf->Dr7 |= (Rw << (16 + (DebugRegNr * 4)));
+  /* Set the breakpoint length. */
+  Tf->Dr7 |= ((Length - 1) << (18 + (DebugRegNr * 4)));
+
+  return(1);
+}
+
+ULONG
+DbgStep(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
+{
+  /* Set the single step flag and return to the interrupted code. */
+  Tf->Eflags |= (1 << 8);
+  KdbIgnoreNextSingleStep = FALSE;
+  KdbLastSingleStepFrom = Tf->Eip;
+  return(0);
+}
+
+ULONG
+DbgStepOver(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
+{
+  PUCHAR Eip = (PUCHAR)Tf->Eip;
+   /* Check if the current instruction is a call. */
+  while (Eip[0] == 0x66 || Eip[0] == 0x67)
+    {
+      Eip++;
+    }
+  if (Eip[0] == 0xE8 || Eip[0] == 0x9A ||
+      (Eip[0] == 0xFF && (Eip[0] & 0x3C) == 0x10))
+    {
+      ULONG NextInst = Tf->Eip + KdbGetInstLength(Tf->Eip);
+      KdbLastSingleStepFrom = Tf->Eip;
+      KdbInsertBreakPoint(NextInst, TRUE);
+      return(0);
+    }
+  else
+    {
+      return(DbgStep(Argc, Argv, Tf));
+    }
+}
+
+ULONG
+DbgFinish(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
+{
+  PULONG Ebp = (PULONG)Tf->Ebp;
+  ULONG ReturnAddress;
+  NTSTATUS Status;
+  PKTHREAD CurrentThread;
+
+  /* Check that ebp points onto the stack. */
+  CurrentThread = KeGetCurrentThread();
+  if (CurrentThread == NULL ||
+      !(Ebp >= (PULONG)CurrentThread->StackLimit && 
+	Ebp <= (PULONG)CurrentThread->StackBase))
+    {
+      DbgPrint("This function doesn't appear to have a valid stack frame.\n");
+      return(1);
+    }
+
+  /* Get the address of the caller. */
+  Status = MmSafeCopyFromUser(&ReturnAddress, Ebp + 1, sizeof(ULONG));
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Memory access error (%X) while getting return address.\n",
+	       Status);
+      return(1);
+    }
+
+  /* Set a temporary breakpoint at that location. */
+  Status = KdbInsertBreakPoint(ReturnAddress, TRUE);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Couldn't set a temporary breakpoint at %X (Status %X)\n",
+	       ReturnAddress, Status);
+      return(1);
+    }
+
+  /*
+    Otherwise start running again and with any luck we will break back into
+    the debugger when the current function returns.
+  */
+  return(0);
+}
+
+ULONG
+DbgDisassemble(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
+{
+  ULONG Address, i;
+  LONG InstLen;
+  if (Argc >= 2)
+    {
+      /* Stitch the remaining arguments back into a single string. */
+      for (i = 2; i < Argc; i++)
+	{
+	  Argv[i][-1] = ' ';
+	}
+      if (!KdbDecodeAddress(Argv[1], &Address))
+	{
+	  return(1);
+	}
+    }
+  else
+    {
+      Address = Tf->Eip;
+    }
+  for (i = 0; i < 10; i++)
+    {
+      if (!KdbPrintAddress((PVOID)Address))
+	{
+	  DbgPrint("<%x>", Address);
+	}
+      DbgPrint(": ");
+      InstLen = KdbDisassemble(Address);      
+      if (InstLen < 0)
+	{
+	  DbgPrint("<INVALID>\n");
+	  return(1);
+	}
+      DbgPrint("\n");
+      Address += InstLen;
+    }
+  
+  return(1);
 }
 
 ULONG
@@ -979,7 +1505,25 @@ KdbMainLoop(PKTRAP_FRAME Tf)
   CHAR Command[256];
   ULONG s;
 
-  DbgPrint("\nEntered kernel debugger (type \"help\" for a list of commands)\n");
+  if (!KdbEnteredOnSingleStep)
+    {
+      DbgPrint("\nEntered kernel debugger (type \"help\" for a list of commands)\n");
+    }
+  else
+    {
+      if (!KdbPrintAddress((PVOID)Tf->Eip))
+	{
+	  DbgPrint("<%x>", Tf->Eip);
+	}
+      DbgPrint(": ");
+      if (KdbDisassemble(Tf->Eip) < 0)
+	{
+	  DbgPrint("<INVALID>");
+	}
+      KdbEnteredOnSingleStep = FALSE;
+      KdbLastSingleStepFrom = 0xFFFFFFFF;
+    }
+
   do
     {
       DbgPrint("\nkdb:> ");
@@ -1004,8 +1548,99 @@ KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 			  PCONTEXT Context,
 			  PKTRAP_FRAME TrapFrame)
 {
-  DbgPrint("Entered debugger on exception number %d.\n", 
-	   TrapFrame->DebugArgMark);
+  LONG BreakPointNr;
+  ULONG ExpNr = (ULONG)TrapFrame->DebugArgMark;
+
+  /* Exception inside the debugger? Game over. */
+  if (KdbEntryCount > 0)
+    {
+      return(kdHandleException);
+    }
+  KdbEntryCount++;
+
+  /* Clear the single step flag. */
+  TrapFrame->Eflags &= ~(1 << 8);
+  /* 
+     Reenable any breakpoints we disabled so we could execute the breakpointed
+     instructions.
+  */
+  KdbRenableBreakPoints();
+  /* Silently ignore a debugger initiated single step. */
+  if (ExpNr == 1 && KdbIgnoreNextSingleStep)
+    {      
+      KdbIgnoreNextSingleStep = FALSE;
+      KdbEntryCount--;
+      return(kdContinue);
+    }
+  /* If we stopped on one of our breakpoints then let the user know. */
+  if (ExpNr == 3 && (BreakPointNr = KdbIsBreakPointOurs(TrapFrame)) >= 0)
+    {
+      DbgPrint("Entered debugger on breakpoint %d.\n", BreakPointNr);
+      /*
+	The breakpoint will point to the next instruction by default so
+	point it back to the start of original instruction.
+      */
+      TrapFrame->Eip--;
+      /*
+	..and restore the original instruction.
+      */
+      (VOID)KdbOverwriteInst(TrapFrame->Eip, NULL,
+			     KdbActiveBreakPoints[BreakPointNr].SavedInst);
+      /*
+	If this was a breakpoint set by the debugger then delete it otherwise
+	flag to enable it again after we step over this instruction.
+      */
+      if (KdbActiveBreakPoints[BreakPointNr].Temporary)
+	{
+	  KdbActiveBreakPoints[BreakPointNr].Assigned = FALSE;
+	  KdbBreakPointCount--;
+	  KdbEnteredOnSingleStep = TRUE;
+	}
+      else
+	{
+	  KdbActiveBreakPoints[BreakPointNr].Enabled = FALSE;
+	  TrapFrame->Eflags |= (1 << 8);
+	  KdbIgnoreNextSingleStep = TRUE;
+	}
+    }
+  else if (ExpNr == 1)
+    {
+      if ((TrapFrame->Dr6 & 0xF) != 0)
+	{
+	  DbgPrint("Entered debugger on memory breakpoint(s) %s%s%s%s.\n",
+		   (TrapFrame->Dr6 & 0x1) ? "1" : "",
+		   (TrapFrame->Dr6 & 0x2) ? "2" : "",
+		   (TrapFrame->Dr6 & 0x4) ? "3" : "",
+		   (TrapFrame->Dr6 & 0x8) ? "4" : "");
+	}
+      else if (KdbLastSingleStepFrom != 0xFFFFFFFF)
+	{
+	  KdbEnteredOnSingleStep = TRUE;
+	}
+      else
+	{
+	  DbgPrint("Entered debugger on unexpected debug trap.\n");
+	}
+    }
+  else
+    {
+      DbgPrint("Entered debugger on exception number %d.\n", ExpNr);
+    }
   KdbInternalEnter(TrapFrame);
-  return(kdHandleException);
+  KdbEntryCount--;
+  if (ExpNr != 1 && ExpNr != 3)
+    {
+      return(kdHandleException);
+    }
+  else
+    {
+      /* Clear dr6 status flags. */
+      TrapFrame->Dr6 &= 0xFFFF1F00;
+      /* Set the RF flag to we don't trigger the same breakpoint again. */
+      if (ExpNr == 1)
+	{
+	  TrapFrame->Eflags |= (1 << 16);
+	}
+      return(kdContinue);
+    }
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: trap.s,v 1.18 2003/04/27 16:21:16 hbirr Exp $
+/* $Id: trap.s,v 1.19 2004/03/13 18:21:57 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/trap.s
@@ -42,7 +42,19 @@ _KiTrapEpilog:
 	jmp	_KiV86Complete
 _KiTrapRet:				
 	/* Skip debug information and unsaved registers */
-	addl	$0x30, %esp
+	addl	$0x18, %esp
+	popl	%eax		/* Dr0 */
+	movl	%eax, %dr0
+	popl	%eax		/* Dr1 */
+	movl	%eax, %dr1
+	popl	%eax		/* Dr2 */
+	movl	%eax, %dr2
+	popl	%eax		/* Dr3 */
+	movl	%eax, %dr3
+	popl	%eax		/* Dr6 */
+	movl	%eax, %dr6
+	popl	%eax		/* Dr7 */
+	movl	%eax, %dr7
 	popl	%gs
 	popl	%es
 	popl	%ds
@@ -120,12 +132,21 @@ _KiTrapProlog:
 	pushl	%ds
 	pushl	%es
 	pushl	%gs
-	pushl	$0     /* DR7 */
-	pushl	$0     /* DR6 */
-	pushl	$0     /* DR3 */
-	pushl	$0     /* DR2 */
-	pushl	$0     /* DR1 */
-	pushl	$0     /* DR0 */
+	movl	%dr7, %eax
+	pushl	%eax		/* Dr7 */
+	/* Clear all breakpoint enables in dr7. */
+	andl	$0xFFFF0000, %eax
+	movl	%eax, %dr7
+	movl	%dr6, %eax
+	pushl	%eax		/* Dr6 */
+	movl	%dr3, %eax
+	pushl	%eax		/* Dr3 */
+	movl	%dr2, %eax
+	pushl	%eax		/* Dr2 */
+	movl	%dr1, %eax
+	pushl	%eax		/* Dr1 */
+	movl	%dr0, %eax
+	pushl	%eax		/* Dr0 */
 	pushl	$0     /* XXX: TempESP */
 	pushl	$0     /* XXX: TempCS */
 	pushl	$0     /* XXX: DebugPointer */

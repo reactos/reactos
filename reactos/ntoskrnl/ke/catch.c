@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.40 2004/03/06 22:24:13 dwelch Exp $
+/* $Id: catch.c,v 1.41 2004/03/13 18:21:57 dwelch Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -88,6 +88,10 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
   else if (KdDebuggerEnabled && KdDebugState & KD_DEBUG_KDB)
     {
       Action = KdbEnterDebuggerException (ExceptionRecord, Context, Tf);
+      if (Action == kdContinue)
+	{
+	  return;
+	}
     }
 #endif /* KDBG */
   if (Action != kdHandleException)
