@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.45 2003/11/08 02:16:31 sedwards Exp $ */
+/* $Id: bitmaps.c,v 1.46 2003/12/04 21:35:11 fireball Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -58,7 +58,7 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
   ULONG SourceMode, DestMode;
   PBRUSHOBJ BrushObj;
   BOOL UsesSource = ((ROP & 0xCC0000) >> 2) != (ROP & 0x330000);
-  BOOL UsesPattern = ((ROP & 0xF00000) >> 4) != (ROP & 0x0F0000);  
+  BOOL UsesPattern = TRUE;//((ROP & 0xF00000) >> 4) != (ROP & 0x0F0000);  
 
   DCDest = DC_LockDc(hDCDest);
   if (NULL == DCDest)
@@ -793,7 +793,188 @@ BOOL STDCALL NtGdiStretchBlt(HDC  hDCDest,
                      INT  HeightSrc,
                      DWORD  ROP)
 {
-  UNIMPLEMENTED;
+  PDC DCDest = NULL;
+  PDC DCSrc  = NULL;
+  PSURFOBJ SurfDest, SurfSrc;
+  PSURFGDI SurfGDIDest, SurfGDISrc;
+  RECTL DestRect;
+  POINTL SourcePoint;
+  BOOL Status;
+  PPALGDI PalDestGDI, PalSourceGDI;
+  PXLATEOBJ XlateObj = NULL;
+  HPALETTE SourcePalette, DestPalette;
+  ULONG SourceMode, DestMode;
+  PBRUSHOBJ BrushObj;
+  BOOL UsesSource = ((ROP & 0xCC0000) >> 2) != (ROP & 0x330000);
+  BOOL UsesPattern = ((ROP & 0xF00000) >> 4) != (ROP & 0x0F0000);  
+
+  DCDest = DC_LockDc(hDCDest);
+  if (NULL == DCDest)
+    {
+      DPRINT1("Invalid destination dc handle (0x%08x) passed to NtGdiStretchBlt\n", hDCDest);
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
+
+  if (UsesSource)
+    {
+      if (hDCSrc != hDCDest)
+        {
+          DCSrc = DC_LockDc(hDCSrc);
+          if (NULL == DCSrc)
+            {
+              DC_UnlockDc(hDCDest);
+              DPRINT1("Invalid source dc handle (0x%08x) passed to NtGdiStretchBlt\n", hDCSrc);
+              SetLastWin32Error(ERROR_INVALID_HANDLE);
+              return FALSE;
+            }
+        }
+      else
+        {
+           DCSrc = DCDest;
+        }
+    }
+  else
+    {
+      DCSrc = NULL;
+    }
+
+  /* Offset the destination and source by the origin of their DCs. */
+  XOriginDest += DCDest->w.DCOrgX;
+  YOriginDest += DCDest->w.DCOrgY;
+  if (UsesSource)
+    {
+      XOriginSrc += DCSrc->w.DCOrgX;
+      YOriginSrc += DCSrc->w.DCOrgY;
+    }
+
+  DestRect.left   = XOriginDest;
+  DestRect.top    = YOriginDest;
+  DestRect.right  = XOriginDest+WidthDest;
+  DestRect.bottom = YOriginDest+HeightDest;
+
+  SourcePoint.x = XOriginSrc;
+  SourcePoint.y = YOriginSrc;
+
+  /* Determine surfaces to be used in the bitblt */
+  SurfDest = (PSURFOBJ)AccessUserObject((ULONG)DCDest->Surface);
+  SurfGDIDest = (PSURFGDI)AccessInternalObjectFromUserObject(SurfDest);
+  if (UsesSource)
+    {
+      SurfSrc  = (PSURFOBJ)AccessUserObject((ULONG)DCSrc->Surface);
+      SurfGDISrc  = (PSURFGDI)AccessInternalObjectFromUserObject(SurfSrc);
+    }
+  else
+    {
+      SurfSrc  = NULL;
+      SurfGDISrc  = NULL;
+    }
+
+  if (UsesPattern)
+    {
+      BrushObj = BRUSHOBJ_LockBrush(DCDest->w.hBrush);
+      if (NULL == BrushObj)
+        {
+          if (UsesSource && hDCSrc != hDCDest)
+            {
+              DC_UnlockDc(hDCSrc);
+            }
+          DC_UnlockDc(hDCDest);
+          SetLastWin32Error(ERROR_INVALID_HANDLE);
+          return FALSE;
+        }
+    }
+  else
+    {
+      BrushObj = NULL;
+    }
+
+  if (DCDest->w.hPalette != 0)
+    {
+      DestPalette = DCDest->w.hPalette;
+    }
+  else
+    {
+      DestPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
+    }
+
+  if (UsesSource && DCSrc->w.hPalette != 0)
+    {
+      SourcePalette = DCSrc->w.hPalette;
+    }
+  else
+    {
+      SourcePalette = NtGdiGetStockObject(DEFAULT_PALETTE);
+    }
+
+  PalSourceGDI = PALETTE_LockPalette(SourcePalette);
+  if (NULL == PalSourceGDI)
+    {
+      if (UsesSource && hDCSrc != hDCDest)
+        {
+          DC_UnlockDc(hDCSrc);
+        }
+      DC_UnlockDc(hDCDest);
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
+  SourceMode = PalSourceGDI->Mode;
+  PALETTE_UnlockPalette(SourcePalette);
+
+  if (DestPalette == SourcePalette)
+    {
+      DestMode = SourceMode;
+    }
+  else
+    {
+      PalDestGDI = PALETTE_LockPalette(DestPalette);
+      if (NULL == PalDestGDI)
+        {
+          if (UsesSource && hDCSrc != hDCDest)
+            {
+              DC_UnlockDc(hDCSrc);
+            }
+          DC_UnlockDc(hDCDest);
+          SetLastWin32Error(ERROR_INVALID_HANDLE);
+          return FALSE;
+        }
+      DestMode = PalDestGDI->Mode;
+      PALETTE_UnlockPalette(DestPalette);
+    }
+
+  XlateObj = (PXLATEOBJ)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
+  if (NULL == XlateObj)
+    {
+      if (UsesSource && hDCSrc != hDCDest)
+        {
+          DC_UnlockDc(hDCSrc);
+        }
+      DC_UnlockDc(hDCDest);
+      SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+      return FALSE;
+    }
+
+  /* Perform the bitblt operation */
+//  Status = IntEngBitBlt(SurfDest, SurfSrc, NULL, DCDest->CombinedClip, XlateObj,
+  //                      &DestRect, &SourcePoint, NULL, BrushObj, NULL, ROP);
+             
+  //Status = IntEngStretchBlt(SurfDest, SurfSrc, NULL, DCDest->CombinedClip,
+  //                    XlateObj, &DestRect, &SourceRect, NULL, NULL, NULL, ROP);
+  Status = FALSE;
+             
+
+  EngDeleteXlate(XlateObj);
+  if (UsesPattern)
+    {
+      BRUSHOBJ_UnlockBrush(DCDest->w.hBrush);
+    }
+  if (UsesSource && hDCSrc != hDCDest)
+    {
+      DC_UnlockDc(hDCSrc);
+    }
+  DC_UnlockDc(hDCDest);
+
+  return Status;
 }
 
 /*  Internal Functions  */
