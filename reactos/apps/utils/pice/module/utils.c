@@ -613,29 +613,25 @@ BOOLEAN IsAddressValid(ULONG address)
 	PULONG pPGD;
 	PULONG pPTE;
 	BOOLEAN bResult = FALSE;
-	PEPROCESS my_current = IoGetCurrentProcess();
 
 	address &= (~(_PAGE_SIZE-1));
 
-	if(my_current)
-	{
-		pPGD = ADDR_TO_PDE(address);
-        if(pPGD && ((*pPGD)&_PAGE_PRESENT))
-        {
-            // not large page
-            if(!((*pPGD)&_PAGE_4M))
+	pPGD = ADDR_TO_PDE(address);
+    if(pPGD && ((*pPGD)&_PAGE_PRESENT))
+    {
+        // not large page
+        if(!((*pPGD)&_PAGE_4M))
+		{
+			pPTE = ADDR_TO_PTE(address);
+			if(pPTE)
 			{
-				pPTE = ADDR_TO_PTE(address);
-				if(pPTE)
-				{
-					bResult = (*pPTE)&(_PAGE_PRESENT | _PAGE_PSE);
-				}
+				bResult = (*pPTE)&(_PAGE_PRESENT | _PAGE_PSE);
 			}
-			// large page
-			else
-			{
-				bResult = TRUE;
-			}
+		}
+		// large page
+		else
+		{
+			bResult = TRUE;
 		}
 	}
 
@@ -655,35 +651,30 @@ BOOLEAN IsAddressWriteable(ULONG address)
 {
 	PULONG pPGD;
 	PULONG pPTE;
-	PEPROCESS my_current = IoGetCurrentProcess();
 
 	//address &= (~(_PAGE_SIZE-1));
+	pPGD = ADDR_TO_PDE(address);
+    if(pPGD && ((*pPGD)&_PAGE_PRESENT))
+    {
+        // not large page
+        if(!((*pPGD)&_PAGE_4M))
+		{
+		    if(!((*pPGD) & _PAGE_RW))
+					return FALSE;
 
-	if(my_current)
-	{
-		pPGD = ADDR_TO_PDE(address);
-        if(pPGD && ((*pPGD)&_PAGE_PRESENT))
-        {
-            // not large page
-            if(!((*pPGD)&_PAGE_4M))
+			pPTE = ADDR_TO_PTE(address);
+			if(pPTE)
 			{
-		        if(!((*pPGD) & _PAGE_RW))
-						return FALSE;
-
-				pPTE = ADDR_TO_PTE(address);
-				if(pPTE)
-				{
-					if( ((*pPTE)&(_PAGE_PRESENT | _PAGE_PSE)) &&
-								 ((*pPTE) & _PAGE_RW))
-					 	return TRUE;
-					else
-					 	return FALSE;
-				}
+				if( ((*pPTE)&(_PAGE_PRESENT | _PAGE_PSE)) &&
+							 ((*pPTE) & _PAGE_RW))
+					return TRUE;
+				else
+					return FALSE;
 			}
-			// large page
-			else
-				return ((*pPGD) & _PAGE_RW);
 		}
+		// large page
+		else
+			return ((*pPGD) & _PAGE_RW);
 	}
 
 	return FALSE;
@@ -698,43 +689,40 @@ BOOLEAN SetAddressWriteable(ULONG address,BOOLEAN bSet)
 {
 	PULONG pPGD;
 	PULONG pPTE;
-	PEPROCESS my_current = IoGetCurrentProcess();
 
 	//address &= (~(_PAGE_SIZE-1));
-	if(my_current)
-	{
-		pPGD = ADDR_TO_PDE(address);
-        if(pPGD && ((*pPGD)&_PAGE_PRESENT))
-        {
-            // not large page
-            if(!((*pPGD)&_PAGE_4M))
+
+	pPGD = ADDR_TO_PDE(address);
+    if(pPGD && ((*pPGD)&_PAGE_PRESENT))
+    {
+        // not large page
+        if(!((*pPGD)&_PAGE_4M))
+		{
+			pPTE = ADDR_TO_PTE(address);
+			if(pPTE)
 			{
-				pPTE = ADDR_TO_PTE(address);
-				if(pPTE)
+				if( (*pPTE)&(_PAGE_PRESENT | _PAGE_PSE) )
 				{
-					if( (*pPTE)&(_PAGE_PRESENT | _PAGE_PSE) )
-					{
-                        if( bSet ){
-							*pPTE |= _PAGE_RW;
-						}
-                        else{
-							*pPTE &= ~_PAGE_RW;
-						}
-						FLUSH_TLB;
-						return TRUE;
-                    }
-				}
+                    if( bSet ){
+						*pPTE |= _PAGE_RW;
+					}
+                    else{
+						*pPTE &= ~_PAGE_RW;
+					}
+					FLUSH_TLB;
+					return TRUE;
+                }
 			}
-			// large page
-			else
-			{
-                if( bSet )
-                    *pPGD |= _PAGE_RW;
-                else
-                    *pPGD &= ~_PAGE_RW;
-				FLUSH_TLB;
-                return TRUE;
-			}
+		}
+		// large page
+		else
+		{
+            if( bSet )
+                *pPGD |= _PAGE_RW;
+            else
+                *pPGD &= ~_PAGE_RW;
+			FLUSH_TLB;
+            return TRUE;
 		}
 	}
 	return FALSE;

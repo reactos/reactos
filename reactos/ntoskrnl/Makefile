@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.75 2002/07/18 18:15:09 ekohl Exp $
+# $Id: Makefile,v 1.76 2002/07/20 20:27:21 ei Exp $
 #
 # ReactOS Operating System
 #
@@ -55,7 +55,8 @@ all: \
 	bugcodes.rc \
 	$(TARGETNAME).nostrip.exe \
 	$(TARGETNAME).exe \
-	$(TARGETNAME).sym 
+	$(TARGETNAME).sym \
+	kernel.map
 
 #
 # Architecture specific Makefile
@@ -375,7 +376,7 @@ $(OBJECTS_PATH)/ke.o: $(OBJECTS_KE)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/ke.o \
-		$(OBJECTS_KE) 
+		$(OBJECTS_KE)
 
 $(OBJECTS_PATH)/rtl.o: $(OBJECTS_RTL)
 	$(LD) \
@@ -387,7 +388,7 @@ $(OBJECTS_PATH)/mm.o: $(OBJECTS_MM)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/mm.o \
-		$(OBJECTS_MM) 
+		$(OBJECTS_MM)
 
 $(OBJECTS_PATH)/ob.o: $(OBJECTS_OB)
 	$(LD) \
@@ -465,13 +466,13 @@ $(OBJECTS_PATH)/cc.o: $(OBJECTS_CC)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/cc.o \
-		$(OBJECTS_CC) 
+		$(OBJECTS_CC)
 
 $(OBJECTS_PATH)/kd.o: $(OBJECTS_KD)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/kd.o \
-		$(OBJECTS_KD) 
+		$(OBJECTS_KD)
 
 # Note: arch.o MUST be the first file!!!
 OBJECTS := \
@@ -500,7 +501,7 @@ CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o \
               ex/i386/*.o io/*.o ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o \
               rtl/*.o se/*.o ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o \
               lpc/*.o kd/*.o $(TARGETNAME).o junk.tmp base.tmp temp.exp \
-              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym \
+              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym kernel.map \
 	          $(TARGETNAME).coff bugcodes.rc msg?????.bin $(DEP_FILES)
 
 $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA)
@@ -620,6 +621,9 @@ $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk
 $(TARGETNAME).sym: $(TARGETNAME).nostrip.exe
 	$(RSYM) $(TARGETNAME).nostrip.exe $(TARGETNAME).sym
 
+kernel.map: $(TARGETNAME).nostrip.exe
+	$(NM) --numeric-sort $(TARGETNAME).nostrip.exe > kernel.map
+
 $(TARGETNAME).o: $(OBJECTS)
 	$(LD) \
 		-r \
@@ -641,10 +645,10 @@ $(DDK_PATH_LIB)/$(TARGETNAME).a: $(TARGETNAME).def
 
 implib: $(DDK_PATH_LIB)/$(TARGETNAME).a
 
-clean: 
+clean:
 	- $(RM) $(CLEAN_FILES)
 
-.PHONY: clean 
+.PHONY: clean
 
 install: all $(INSTALL_DIR)/system32/$(TARGETNAME).exe $(INSTALL_DIR)/symbols/$(TARGETNAME).sym
 
@@ -674,7 +678,7 @@ ke/main.o: ke/main.c $(PATH_TO_TOP)/include/reactos/buildno.h
 %.o: %.S
 	$(AS) $(ASFLAGS) -c $< -o $@
 %.o: %.s
-	$(AS) $(ASFLAGS) -c $< -o $@	
+	$(AS) $(ASFLAGS) -c $< -o $@
 %.o: %.asm
 	$(NASM_CMD) $(NFLAGS) $< -o $@
 %.coff: %.rc

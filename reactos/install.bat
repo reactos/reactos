@@ -111,3 +111,5 @@ copy apps\tests\tokentest\tokentest.exe %ROS_INSTALL%\bin
 copy media\fonts\helb____.ttf %ROS_INSTALL%\media\fonts
 copy media\fonts\timr____.ttf %ROS_INSTALL%\media\fonts
 copy media\nls\*.nls %ROS_INSTALL%\system32
+copy ntoskrnl\kernel.map %ROS_INSTALL%\symbols
+

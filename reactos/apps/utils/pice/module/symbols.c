@@ -270,12 +270,10 @@ BOOLEAN BuildModuleList( void )
 	ENTER_FUNC();
 
 	pdebug_module_tail = pdebug_module_head;
-
 	tsk = IoGetCurrentProcess();
 	ASSERT(IsAddressValid((ULONG)tsk));
 	if( tsk  ){
 		peb = tsk->Peb;
-		ASSERT(IsAddressValid((ULONG)peb));
 		if( peb ){
 			if( !ListUserModules( peb ) ){
 				LEAVE_FUNC();
@@ -485,6 +483,7 @@ PICE_SYMBOLFILE_HEADER* FindModuleSymbols(ULONG addr)
                     DPRINT((0,"FindModuleSymbols(): address matches %S %x-%x\n",pd->name,start,end));
                     for(i=0;i<ulNumSymbolsLoaded;i++)
                     {
+						DPRINT((0,"%S -", apSymbols[i]->name ));
                         if(PICE_wcsicmp(pd->name,apSymbols[i]->name) == 0)
 						{
 							if(ValidityCheckSymbols(apSymbols[i]))
@@ -1915,7 +1914,7 @@ BOOLEAN LoadExports(void)
 	ENTER_FUNC();
 
     Print(OUTPUT_WINDOW,"pICE: loading exports...\n");
-	hf = PICE_open(L"\\SystemRoot\\symbols\\ntoskrnl.sym",OF_READ);
+	hf = PICE_open(L"\\SystemRoot\\symbols\\kernel.map",OF_READ);
 	/*
 	if(hf)
     {
@@ -2415,14 +2414,14 @@ LPSTR ExtractTypeName(LPSTR p)
     static char temp[1024];
     ULONG i;
 
-    DPRINT((0,"ExtractTypeName(%s)\n",p));
+    DPRINT((1,"ExtractTypeName(%s)\n",p));
 
     for(i=0;IsAddressValid((ULONG)p) && *p!=0 && *p!=':';i++,p++)
         temp[i] = *p;
 
     if(!IsAddressValid((ULONG)p) )
     {
-        DPRINT((0,"hit invalid page %x!\n",(ULONG)p));
+        DPRINT((1,"hit invalid page %x!\n",(ULONG)p));
     }
 
     temp[i]=0;
@@ -2443,7 +2442,7 @@ LONG ExtractNumber(LPSTR p)
 
     if(!IsAddressValid((ULONG)p) )
     {
-        DPRINT((0,"ExtractNumber(): [1] invalid page %x hit!\n",p));
+        DPRINT((1,"ExtractNumber(): [1] invalid page %x hit!\n",p));
         return 0;
     }
 
@@ -2455,7 +2454,7 @@ LONG ExtractNumber(LPSTR p)
 
     if(!IsAddressValid((ULONG)p) )
     {
-        DPRINT((0,"ExtractNumber(): [2] invalid page %x hit!\n",p));
+        DPRINT((1,"ExtractNumber(): [2] invalid page %x hit!\n",p));
         return 0;
     }
 
@@ -2466,7 +2465,7 @@ LONG ExtractNumber(LPSTR p)
 
     if(!IsAddressValid((ULONG)p) )
     {
-        DPRINT((0,"ExtractNumber(): [3] invalid page %x hit!\n",p));
+        DPRINT((1,"ExtractNumber(): [3] invalid page %x hit!\n",p));
         return 0;
     }
 
@@ -2477,7 +2476,7 @@ LONG ExtractNumber(LPSTR p)
         p++;
         if(!IsAddressValid((ULONG)p) )
         {
-            DPRINT((0,"ExtractNumber(): [4] invalid page %x hit!\n",p));
+            DPRINT((1,"ExtractNumber(): [4] invalid page %x hit!\n",p));
             return 0;
         }
     }
@@ -2495,7 +2494,7 @@ BOOLEAN ExtractArray(PVRET pvr,LPSTR p)
     ULONG lower_bound,upper_bound;
     LPSTR pTypeDef;
 
-    DPRINT((0,"ExtractArray(%s)\n",p));
+    DPRINT((1,"ExtractArray(%s)\n",p));
 
     // index-type index-type-number;lower;upper;element-type-number
     pvr->bArrayType = TRUE;
@@ -2519,7 +2518,7 @@ BOOLEAN ExtractArray(PVRET pvr,LPSTR p)
 
                 type_number = ExtractTypeNumber(p);
 
-                DPRINT((0,"ExtractArray(): %x %x %x %x\n",index_typenumber,lower_bound,upper_bound,type_number));
+                DPRINT((1,"ExtractArray(): %x %x %x %x\n",index_typenumber,lower_bound,upper_bound,type_number));
 
                 pTypeDef = FindTypeDefinition(pvr->pSymbols,type_number,pvr->file);
                 if(pTypeDef)
@@ -2546,7 +2545,7 @@ PVRET ExtractStructMembers(PVRET pvr,LPSTR p)
     static VRET vr;
     LPSTR pTypeDef,pEqual;
 
-    DPRINT((0,"ExtractStructMembers(): %s\n",p));
+    DPRINT((1,"ExtractStructMembers(): %s\n",p));
 
     PICE_memset(&vr,0,sizeof(vr));
 
@@ -2557,14 +2556,14 @@ PVRET ExtractStructMembers(PVRET pvr,LPSTR p)
         // extract member name
 	    PICE_strncpy(member_name,p,len);
         member_name[len]=0;
-        DPRINT((0,"ExtractStructMembers(): member_name = %s\n",member_name));
+        DPRINT((1,"ExtractStructMembers(): member_name = %s\n",member_name));
 
         // go to char following ':'
         p += (len+1);
         if(IsAddressValid((ULONG)p) )
         {
             type_number = ExtractTypeNumber(p);
-            DPRINT((0,"ExtractStructMembers(): type_number = %x\n",type_number));
+            DPRINT((1,"ExtractStructMembers(): type_number = %x\n",type_number));
 
             vr.type = type_number;
 
@@ -2578,7 +2577,7 @@ PVRET ExtractStructMembers(PVRET pvr,LPSTR p)
                     p++;
                     if(*p == 'a')
                     {
-                        DPRINT((0,"ExtractStructMembers(): member is array\n"));
+                        DPRINT((1,"ExtractStructMembers(): member is array\n"));
                         vr.bArrayType = TRUE;
                         p = PICE_strchr(p,';');
                         p = PICE_strchr(p,';');
@@ -2591,15 +2590,15 @@ PVRET ExtractStructMembers(PVRET pvr,LPSTR p)
                     }
                     else if(*p == '*')
                     {
-                        DPRINT((0,"ExtractStructMembers(): member is ptr\n"));
+                        DPRINT((1,"ExtractStructMembers(): member is ptr\n"));
                         vr.bPtrType = TRUE;
                         type_number = ExtractTypeNumber(p);
-                        DPRINT((0,"ExtractStructMembers(): type_number = %x\n",type_number));
+                        DPRINT((1,"ExtractStructMembers(): type_number = %x\n",type_number));
                         vr.father_type = type_number;
                     }
                     else if(*p == 'u')
                     {
-                        DPRINT((0,"ExtractStructMembers(): member is union\n"));
+                        DPRINT((1,"ExtractStructMembers(): member is union\n"));
                         while(*p!=';' && *(p+1)!=';' && *p!=0)p++;
                     }
                 }
@@ -2610,14 +2609,14 @@ PVRET ExtractStructMembers(PVRET pvr,LPSTR p)
             {
                 p++;
                 bit_offset = ExtractNumber(p);
-                DPRINT((0,"ExtractStructMembers(): bit_offset = %x\n",bit_offset));
+                DPRINT((1,"ExtractStructMembers(): bit_offset = %x\n",bit_offset));
                 p = PICE_strchr(p,',');
                 if(p)
                 {
                     p++;
 
                     bit_size = ExtractNumber(p);
-                    DPRINT((0,"ExtractStructMembers(): bit_size = %x\n",bit_size));
+                    DPRINT((1,"ExtractStructMembers(): bit_size = %x\n",bit_size));
 
                     vr.address = pvr->value + bit_offset/8;
                     vr.file = pvr->file;
@@ -2643,19 +2642,19 @@ PVRET ExtractStructMembers(PVRET pvr,LPSTR p)
                         }
                     }
 
-                    DPRINT((0,"ExtractStructMembers(): member %s type %x bit_offset %x bit_size%x\n",member_name,type_number,bit_offset,bit_size));
+                    DPRINT((1,"ExtractStructMembers(): member %s type %x bit_offset %x bit_size%x\n",member_name,type_number,bit_offset,bit_size));
 
                     pTypeDef = FindTypeDefinition(pvr->pSymbols,type_number,pvr->file);
                     if(pTypeDef)
                     {
-                        DPRINT((0,"ExtractStructMembers(): pTypedef= %s\n",pTypeDef));
+                        DPRINT((1,"ExtractStructMembers(): pTypedef= %s\n",pTypeDef));
                         PICE_strcpy(vr.type_name,ExtractTypeName(pTypeDef));
                         pTypeDef = PICE_strchr(pTypeDef,':');
                         if(pTypeDef)
                         {
                             pTypeDef++;
                             type_number = ExtractTypeNumber(pTypeDef);
-                            DPRINT((0,"ExtractStructMembers(): type_number = %x\n",type_number));
+                            DPRINT((1,"ExtractStructMembers(): type_number = %x\n",type_number));
                             vr.father_type = type_number;
                         }
                     }
@@ -2679,11 +2678,11 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
     LONG lLowerRange,lUpperRange,lDelta;
     static char type_def[2048];
 
-    DPRINT((0,"EvaluateSymbol(%s)\n",pToken));
+    DPRINT((1,"EvaluateSymbol(%s)\n",pToken));
 
 	if(FindGlobalStabSymbol(pToken,&pvr->value,&pvr->type,&pvr->file))
     {
-        DPRINT((0,"EvaluateSymbol(%s) pvr->value = %x pvr->type = %x\n",pToken,pvr->value,pvr->type));
+        DPRINT((1,"EvaluateSymbol(%s) pvr->value = %x pvr->type = %x\n",pToken,pvr->value,pvr->type));
         while(!bDone)
         {
             if(!(pTypeDef = FindTypeDefinition(pvr->pSymbols,pvr->type,pvr->file)))
@@ -2694,7 +2693,7 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
 
             pTypeName = ExtractTypeName(pTypeDef);
 
-            DPRINT((0,"%s %s\n",pTypeName,pToken));
+            DPRINT((1,"%s %s\n",pTypeName,pToken));
 
             PICE_strcpy(pvr->type_name,pTypeName);
 
@@ -2709,16 +2708,16 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
             {
                 case '(': // type reference
                     ulType = ExtractTypeNumber(pTypeBase);
-                    DPRINT((0,"%x is a type reference to %x\n",pvr->type,ulType));
+                    DPRINT((1,"%x is a type reference to %x\n",pvr->type,ulType));
                     pvr->type = ulType;
                     break;
                 case 'r': // subrange
                     pTypeBase++;
                     ulType = ExtractTypeNumber(pTypeBase);
-                    DPRINT((0,"%x is sub range of %x\n",pvr->type,ulType));
+                    DPRINT((1,"%x is sub range of %x\n",pvr->type,ulType));
                     if(pvr->type == ulType)
                     {
-                        DPRINT((0,"%x is a self reference\n",pvr->type));
+                        DPRINT((1,"%x is a self reference\n",pvr->type));
                         pSemiColon = PICE_strchr(pTypeBase,';');
                         pSemiColon++;
                         lLowerRange = ExtractNumber(pSemiColon);
@@ -2726,7 +2725,7 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
                         pSemiColon++;
                         lUpperRange = ExtractNumber(pSemiColon);
                         lDelta = lUpperRange-lLowerRange;
-                        DPRINT((0,"bounds %x-%x range %x\n",lLowerRange,lUpperRange,lDelta));
+                        DPRINT((1,"bounds %x-%x range %x\n",lLowerRange,lUpperRange,lDelta));
                         ulBits=0;
                         do
                         {
@@ -2736,7 +2735,7 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
                         ulBytes = (ulBits+1)/8;
                         if(!ulBytes)
                             ulBytes = 4;
-                        DPRINT((0,"# of bytes = %x\n",ulBytes));
+                        DPRINT((1,"# of bytes = %x\n",ulBytes));
                         pvr->address = pvr->value;
                         if(IsRangeValid(pvr->value,ulBytes))
                         {
@@ -2759,7 +2758,7 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
                         pvr->type = ulType;
                     break;
                 case 'a': // array type
-                    DPRINT((0,"%x array\n",pvr->type));
+                    DPRINT((1,"%x array\n",pvr->type));
                     pTypeBase++;
                     if(!ExtractArray(pvr,pTypeBase))
                     {
@@ -2768,7 +2767,7 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
                     }
                     break;
                 case '*': // ptr type
-                    DPRINT((0,"%x is ptr to\n",pvr->type));
+                    DPRINT((1,"%x is ptr to\n",pvr->type));
                     bDone = TRUE; // meanwhile
                     break;
                 case 's': // struct type [name:T(#,#)=s#membername1:(#,#),#,#;membername1:(#,#),#,#;;]
@@ -2777,7 +2776,7 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
 
                     // extract the the struct size
                     lLowerRange = ExtractNumber(pTypeBase);
-                    DPRINT((0,"%x struct size = %x\n",pvr->type,lLowerRange));
+                    DPRINT((1,"%x struct size = %x\n",pvr->type,lLowerRange));
 
                     // skip over the digits
                     while(PICE_isdigit(*pTypeBase))
@@ -2792,7 +2791,7 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
 
                     while(pStructMembers && *pStructMembers && *pStructMembers!=';' && ulNumStructMembers<DIM(vrStructMembers))
                     {
-                        DPRINT((0,"EvaluateSymbol(): member #%u\n",ulNumStructMembers));
+                        DPRINT((1,"EvaluateSymbol(): member #%u\n",ulNumStructMembers));
                         // put this into our array
                         vrStructMembers[ulNumStructMembers] = *ExtractStructMembers(pvr,pStructMembers);
 
@@ -2801,15 +2800,15 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
                             ULONG i;
                             PVRET pvrThis = &vrStructMembers[ulNumStructMembers];
 
-                            DPRINT((0,"EvaluateSymbol(): no type name\n"));
+                            DPRINT((1,"EvaluateSymbol(): no type name\n"));
                             for(i=0;i<ulNumStructMembers;i++)
                             {
-                                DPRINT((0,"EvaluateSymbol(): vr[i].type_name = %s\n",vrStructMembers[i].type_name));
-                                DPRINT((0,"EvaluateSymbol(): vr[i].name = %s\n",vrStructMembers[i].name));
-                                DPRINT((0,"EvaluateSymbol(): vr[i].address = %.8X\n",vrStructMembers[i].address));
-                                DPRINT((0,"EvaluateSymbol(): vr[i].value = %.8X\n",vrStructMembers[i].value));
-                                DPRINT((0,"EvaluateSymbol(): vr[i].size = %.8X\n",vrStructMembers[i].size));
-                                DPRINT((0,"EvaluateSymbol(): vr[i].type = %.8X\n",vrStructMembers[i].type));
+                                DPRINT((1,"EvaluateSymbol(): vr[i].type_name = %s\n",vrStructMembers[i].type_name));
+                                DPRINT((1,"EvaluateSymbol(): vr[i].name = %s\n",vrStructMembers[i].name));
+                                DPRINT((1,"EvaluateSymbol(): vr[i].address = %.8X\n",vrStructMembers[i].address));
+                                DPRINT((1,"EvaluateSymbol(): vr[i].value = %.8X\n",vrStructMembers[i].value));
+                                DPRINT((1,"EvaluateSymbol(): vr[i].size = %.8X\n",vrStructMembers[i].size));
+                                DPRINT((1,"EvaluateSymbol(): vr[i].type = %.8X\n",vrStructMembers[i].type));
                                 if(pvrThis->type == vrStructMembers[i].type)
                                 {
                                     PICE_strcpy(pvrThis->type_name,vrStructMembers[i].type_name);
@@ -2821,12 +2820,12 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
                             }
                         }
 
-                        DPRINT((0,"EvaluateSymbol(): vr.type_name = %s\n",vrStructMembers[ulNumStructMembers].type_name));
-                        DPRINT((0,"EvaluateSymbol(): vr.name = %s\n",vrStructMembers[ulNumStructMembers].name));
-                        DPRINT((0,"EvaluateSymbol(): vr.address = %.8X\n",vrStructMembers[ulNumStructMembers].address));
-                        DPRINT((0,"EvaluateSymbol(): vr.value = %.8X\n",vrStructMembers[ulNumStructMembers].value));
-                        DPRINT((0,"EvaluateSymbol(): vr.size = %.8X\n",vrStructMembers[ulNumStructMembers].size));
-                        DPRINT((0,"EvaluateSymbol(): vr.type = %.8X\n",vrStructMembers[ulNumStructMembers].type));
+                        DPRINT((1,"EvaluateSymbol(): vr.type_name = %s\n",vrStructMembers[ulNumStructMembers].type_name));
+                        DPRINT((1,"EvaluateSymbol(): vr.name = %s\n",vrStructMembers[ulNumStructMembers].name));
+                        DPRINT((1,"EvaluateSymbol(): vr.address = %.8X\n",vrStructMembers[ulNumStructMembers].address));
+                        DPRINT((1,"EvaluateSymbol(): vr.value = %.8X\n",vrStructMembers[ulNumStructMembers].value));
+                        DPRINT((1,"EvaluateSymbol(): vr.size = %.8X\n",vrStructMembers[ulNumStructMembers].size));
+                        DPRINT((1,"EvaluateSymbol(): vr.type = %.8X\n",vrStructMembers[ulNumStructMembers].type));
 
                         ulNumStructMembers++;
 
@@ -2835,7 +2834,7 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
                         pStructMembers = PICE_strchr(pStructMembers,':');
                         if(pStructMembers)
                         {
-                            DPRINT((0,"EvaluateSymbol(): ptr is now %s\n",pStructMembers));
+                            DPRINT((1,"EvaluateSymbol(): ptr is now %s\n",pStructMembers));
                             // go back to where member name starts
                             while(*pStructMembers!=';')
                                 pStructMembers--;
@@ -2848,15 +2847,15 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
                     bDone = TRUE; // meanwhile
                     break;
                 case 'u': // union type
-                    DPRINT((0,"%x union\n",pvr->type));
+                    DPRINT((1,"%x union\n",pvr->type));
                     bDone = TRUE; // meanwhile
                     break;
                 case 'e': // enum type
-                    DPRINT((0,"%x enum\n",pvr->type));
+                    DPRINT((1,"%x enum\n",pvr->type));
                     bDone = TRUE; // meanwhile
                     break;
                 default:
-                    DPRINT((0,"DEFAULT %x, base: %c\n",pvr->type, *pTypeBase));
+                    DPRINT((1,"DEFAULT %x, base: %c\n",pvr->type, *pTypeBase));
 		    pvr->address = pvr->value;
 		    if(IsRangeValid(pvr->value,ulBytes))
 		      {
@@ -2894,7 +2893,7 @@ BOOLEAN Symbol(PVRET pvr)
 
 	ExtractToken(SymbolToken);
 
-	DPRINT((0,"SymbolToken = %s\n",SymbolToken));
+	DPRINT((1,"SymbolToken = %s\n",SymbolToken));
 
     return EvaluateSymbol(pvr,SymbolToken);
 }
@@ -2928,8 +2927,8 @@ void Evaluate(PICE_SYMBOLFILE_HEADER* pSymbols,LPSTR p)
     ulNumStructMembers=0;
 	if(Expression(&vr))
 	{
-		DPRINT((0,"\nOK!\n"));
-		DPRINT((0,"value = %x type = %x\n",vr.value,vr.type));
+		DPRINT((1,"\nOK!\n"));
+		DPRINT((1,"value = %x type = %x\n",vr.value,vr.type));
         if(vr.bStructType)
         {
             PICE_sprintf(tempSym,"struct %s %s @ %x\n",vr.type_name,p,vr.address);
@@ -2980,6 +2979,6 @@ void Evaluate(PICE_SYMBOLFILE_HEADER* pSymbols,LPSTR p)
 	}
 	else
 	{
-		DPRINT((0,"\nERROR: code %x\n",vr.error));
+		DPRINT((1,"\nERROR: code %x\n",vr.error));
 	}
 }
