@@ -23,7 +23,6 @@ md %ROS_INSTALL%\media\fonts
 copy boot.bat %ROS_INSTALL%
 copy bootc.lst %ROS_INSTALL%
 copy aboot.bat %ROS_INSTALL%
-copy system.hiv %ROS_INSTALL%\system32\config
 copy loaders\dos\loadros.com %ROS_INSTALL%
 copy ntoskrnl\ntoskrnl.exe %ROS_INSTALL%\system32
 copy ntoskrnl\ntoskrnl.sym %ROS_INSTALL%\symbols
@@ -145,7 +144,9 @@ copy apps\testsets\msvcrt\mbtowc\mbtowc.exe %ROS_INSTALL_TESTS%
 copy apps\testsets\test\test.exe %ROS_INSTALL_TESTS%
 copy apps\testsets\testperl\testperl.exe %ROS_INSTALL_TESTS%
 copy media\fonts\*.ttf %ROS_INSTALL%\media\fonts
-rem copy media\nls\*.nls %ROS_INSTALL%\system32
+copy media\nls\c_1252.nls %ROS_INSTALL%\system32\ansi.nls
+copy media\nls\c_437.nls %ROS_INSTALL%\system32\oem.nls
+copy media\nls\l_intl.nls %ROS_INSTALL%\system32\casemap.nls
 copy ntoskrnl\ntoskrnl.map %ROS_INSTALL%\symbols
 
 tools\mkhive\mkhive bootdata %ROS_INSTALL%\system32\config

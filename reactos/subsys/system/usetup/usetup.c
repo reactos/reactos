@@ -426,7 +426,7 @@ StartPage(PINPUT_RECORD Ir)
 
   /* Load txtsetup.sif from install media. */
   wcscpy(FileNameBuffer, SourceRootPath.Buffer);
-  wcscat(FileNameBuffer, L"\\install\\txtsetup.sif");
+  wcscat(FileNameBuffer, L"\\reactos\\txtsetup.sif");
   RtlInitUnicodeString(&FileName,
 		       FileNameBuffer);
 
@@ -1709,7 +1709,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
       if (!SetupQueueCopy(SetupFileQueue,
 			  SourceRootPath.Buffer,
-			  L"\\install",
+			  L"\\reactos",
 			  FileKeyName,
 			  DirKeyValue,
 			  NULL))

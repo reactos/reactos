@@ -938,8 +938,8 @@ crlf_msg	db CR, LF, 0
 diskerr_msg:	db 'Disk error ', 0
 ondrive_str:	db ', drive ', 0
 err_bootfailed	db CR, LF, 'Boot failed: press a key to retry...'
-isolinux_dir	db '\REACTOS', 0
-no_dir_msg	db 'Could not find the REACTOS directory.', CR, LF, 0
+isolinux_dir	db '\LOADER', 0
+no_dir_msg	db 'Could not find the LOADER directory.', CR, LF, 0
 isolinux_bin	db 'SETUPLDR.SYS', 0
 no_isolinux_msg	db 'Could not find SETUPLDR.SYS.', CR, LF, 0
 

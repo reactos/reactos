@@ -579,7 +579,7 @@ ImportRegistryFile(PWSTR Filename,
 
   /* Load inf file from install media. */
   wcscpy(FileNameBuffer, SourceRootPath.Buffer);
-  wcscat(FileNameBuffer, L"\\install\\");
+  wcscat(FileNameBuffer, L"\\reactos\\");
   wcscat(FileNameBuffer, Filename);
 
   RtlInitUnicodeString(&FileName,
