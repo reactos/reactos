@@ -39,7 +39,7 @@ ULONG CreateGDIHandle(ULONG InternalSize, ULONG UserSize)
 		return i;
 	}
   }
-  DPRINT("CreateGDIHandle: Out of available handles!!!\n");
+  DbgPrint("CreateGDIHandle: Out of available handles!!!\n");
   EngFreeMem( pObj );
   return 0;
 }
@@ -47,7 +47,7 @@ ULONG CreateGDIHandle(ULONG InternalSize, ULONG UserSize)
 VOID FreeGDIHandle(ULONG Handle)
 {
   if( Handle == 0 || Handle >= MAX_GDI_HANDLES ){
-	DPRINT("FreeGDIHandle: invalid handle!!!!\n");
+	DbgPrint("FreeGDIHandle: invalid handle!!!!\n");
 	return;
   }
   DPRINT("FreeGDIHandle: handle: %d\n", Handle);
@@ -60,7 +60,7 @@ PVOID AccessInternalObject(ULONG Handle)
   PENGOBJ pEngObj;
 
   if( Handle == 0 || Handle >= MAX_GDI_HANDLES ){
-	DPRINT("AccessInternalObject: invalid handle: %d!!!!\n", Handle);
+	DbgPrint("AccessInternalObject: invalid handle: %d!!!!\n", Handle);
 	return NULL;
   }
 
@@ -73,7 +73,7 @@ PVOID AccessUserObject(ULONG Handle)
   PENGOBJ pEngObj;
 
   if( Handle == 0 || Handle >= MAX_GDI_HANDLES ){
-	DPRINT("AccessUserObject: invalid handle: %d!!!!\n", Handle);
+	DbgPrint("AccessUserObject: invalid handle: %d!!!!\n", Handle);
 	return NULL;
   }
 
@@ -93,7 +93,7 @@ ULONG AccessHandleFromUserObject(PVOID UserObject)
   Handle = pEngObj->hObj;
 
   if( Handle == 0 || Handle >= MAX_GDI_HANDLES ){
-	DPRINT("AccessHandleFromUserObject: inv handle: %d, obj: %x!!!!\n", Handle, pEngObj);
+	DbgPrint("AccessHandleFromUserObject: inv handle: %d, obj: %x!!!!\n", Handle, pEngObj);
   	return INVALID_HANDLE;
   }
   return Handle;

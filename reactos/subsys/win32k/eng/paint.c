@@ -20,7 +20,7 @@
 #include "brush.h"
 #include "clip.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <win32k/debug1.h>
 
 BOOL FillSolid(SURFOBJ *Surface, PRECTL pRect, ULONG iColor)
