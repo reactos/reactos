@@ -337,6 +337,21 @@ SetPixel(HDC  hDC,
 
 
 /*
+ * @unimplemented
+ */
+COLORREF
+STDCALL
+GetPixel(
+	HDC	a0,
+	int	a1,
+	int	a2
+	)
+{
+	return NtGdiGetPixel(a0, a1, a2);
+}
+
+
+/*
  * @implemented
  */
 BOOL STDCALL

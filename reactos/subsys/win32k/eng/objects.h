@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objects.h,v 1.23 2003/12/20 14:51:41 navaraf Exp $
+/* $Id: objects.h,v 1.24 2003/12/21 10:27:10 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -188,6 +188,7 @@ typedef struct _SURFGDI {
 
   /* DIB functions */
   PFN_DIB_PutPixel   DIB_PutPixel;
+  PFN_DIB_GetPixel   DIB_GetPixel;
   PFN_DIB_HLine      DIB_HLine;
   PFN_DIB_VLine      DIB_VLine;
   PFN_DIB_BitBlt     DIB_BitBlt;

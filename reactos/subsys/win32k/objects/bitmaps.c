@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.49 2003/12/19 22:58:47 navaraf Exp $ */
+/* $Id: bitmaps.c,v 1.50 2003/12/21 10:27:10 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -24,6 +24,7 @@
 #include <win32k/gdiobj.h>
 #include <win32k/bitmaps.h>
 #include <win32k/brush.h>
+#include <win32k/region.h>
 //#include <win32k/debug.h>
 #include "../eng/handle.h"
 #include <include/inteng.h>
@@ -418,21 +419,36 @@ BOOL STDCALL NtGdiGetBitmapDimensionEx(HBITMAP  hBitmap,
   return  TRUE;
 }
 
-COLORREF STDCALL NtGdiGetPixel(HDC  hDC,
-                       INT  XPos,
-                       INT  YPos)
+COLORREF STDCALL NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 {
-  PDC      dc = NULL;
-  COLORREF cr = (COLORREF) 0;
+   PDC dc = NULL;
+   COLORREF Result = (COLORREF) 0;
+   PSURFGDI Surface;
+   PSURFOBJ SurfaceObject;
 
-  dc = DC_LockDc (hDC);
-  if (NULL == dc)
-  {
-    return (COLORREF) CLR_INVALID;
-  }
-  //FIXME: get actual pixel RGB value
-  DC_UnlockDc (hDC);
-  return cr;
+   dc = DC_LockDc (hDC);
+   if (dc == NULL)
+   {
+      return (COLORREF)CLR_INVALID;
+   }
+   if (XPos < dc->CombinedClip->rclBounds.left ||
+       XPos > dc->CombinedClip->rclBounds.right ||
+       YPos < dc->CombinedClip->rclBounds.top ||
+       YPos > dc->CombinedClip->rclBounds.top)
+   {
+      DC_UnlockDc(hDC);
+      return (COLORREF)CLR_INVALID;
+   }
+   SurfaceObject = (PSURFOBJ)AccessUserObject((ULONG)dc->Surface);
+   Surface = (PSURFGDI)AccessInternalObjectFromUserObject(SurfaceObject);
+   if (Surface == NULL || Surface->DIB_GetPixel == NULL)
+   {
+      DC_UnlockDc(hDC);
+      return (COLORREF)CLR_INVALID;
+   }
+   Result = Surface->DIB_GetPixel(SurfaceObject, XPos, YPos);
+   DC_UnlockDc(hDC);
+   return Result;
 }
 
 /***********************************************************************

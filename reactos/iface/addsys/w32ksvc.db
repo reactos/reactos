@@ -146,7 +146,7 @@ NtGdiGetObjectType			1
 NtGdiGetOutlineTextMetrics		3
 NtGdiGetPaletteEntries			4
 NtGdiGetPath				4
-NtGdiGetPixel				1
+NtGdiGetPixel				3
 NtGdiGetPixelFormat			1
 NtGdiGetPolyFillMode			1
 NtGdiGetROP2				1

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.28 2003/12/08 18:07:56 fireball Exp $
+/* $Id: surface.c,v 1.29 2003/12/21 10:27:10 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -93,6 +93,11 @@ static VOID Dummy_PutPixel(SURFOBJ* SurfObj, LONG x, LONG y, ULONG c)
   return;
 }
 
+static ULONG Dummy_GetPixel(SURFOBJ* SurfObj, LONG x, LONG y)
+{
+  return 0;
+}
+
 static VOID Dummy_HLine(SURFOBJ* SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   return;
@@ -125,6 +130,7 @@ static BOOLEAN Dummy_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 #define SURF_METHOD(c,n) DIB_##c##_##n
 #define SET_SURFGDI(c)\
  SurfGDI->DIB_PutPixel=SURF_METHOD(c,PutPixel);\
+ SurfGDI->DIB_GetPixel=SURF_METHOD(c,GetPixel);\
  SurfGDI->DIB_HLine=SURF_METHOD(c,HLine);\
  SurfGDI->DIB_VLine=SURF_METHOD(c,VLine);\
  SurfGDI->DIB_BitBlt=SURF_METHOD(c,BitBlt);\
@@ -155,6 +161,7 @@ VOID FASTCALL InitializeFuncs(SURFGDI *SurfGDI, ULONG BitmapFormat)
                BitmapFormat);
 
       SurfGDI->DIB_PutPixel     = Dummy_PutPixel;
+      SurfGDI->DIB_GetPixel     = Dummy_GetPixel;
       SurfGDI->DIB_HLine        = Dummy_HLine;
       SurfGDI->DIB_VLine        = Dummy_VLine;
       SurfGDI->DIB_BitBlt       = Dummy_BitBlt;
