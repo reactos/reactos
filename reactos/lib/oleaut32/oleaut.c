@@ -48,16 +48,6 @@ static BOOL BSTR_bCache = TRUE; /* Cache allocations to minimise alloc calls? */
 HMODULE OLEAUT32_hModule = NULL;
 
 
-#ifndef COLOR_GRADIENTINACTIVECAPTION
-/*FIXME There are missing some constants in MinGW: */
-#if(WINVER >= 0x0500)
-#define COLOR_HOTLIGHT                  26
-#define COLOR_GRADIENTACTIVECAPTION     27
-#define COLOR_GRADIENTINACTIVECAPTION   28
-#endif /* WINVER >= 0x0500 */
-#endif
-
-
 /******************************************************************************
  * BSTR  {OLEAUT32}
  *
