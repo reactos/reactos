@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.61 2003/06/02 13:03:15 ekohl Exp $
+/* $Id: object.c,v 1.62 2003/06/02 16:49:33 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -263,11 +263,6 @@ ObQueryNameString (IN PVOID Object,
 						    ObjectNameInfo,
 						    Length,
 						    ReturnLength);
-      if (!NT_SUCCESS (Status))
-	return Status;
-
-      Status = RtlAppendUnicodeStringToString (&ObjectNameInfo->Name,
-					       &ObjectHeader->Name);
     }
   else if (ObjectHeader->Name.Length > 0 && ObjectHeader->Name.Buffer != NULL)
     {
@@ -276,6 +271,7 @@ ObQueryNameString (IN PVOID Object,
       if (ObjectHeader->Parent == NameSpaceRoot)
 	{
 	  DPRINT ("Reached the root directory\n");
+	  ObjectNameInfo->Name.Length = 0;
 	  ObjectNameInfo->Name.Buffer[0] = 0;
 	  Status = STATUS_SUCCESS;
 	}
@@ -317,7 +313,7 @@ ObQueryNameString (IN PVOID Object,
     }
   else
     {
-      DPRINT("Object is unnamed\n");
+      DPRINT ("Object is unnamed\n");
 
       ObjectNameInfo->Name.MaximumLength = 0;
       ObjectNameInfo->Name.Length = 0;
