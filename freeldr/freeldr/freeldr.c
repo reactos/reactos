@@ -96,11 +96,10 @@ void BootMain(void)
 	{
 		nOSToBoot = RunMenu();
 
-		LoadAndBootLinux(0x80, 0, "vmlinuz", "");
 		switch (OSList[nOSToBoot].nOSType)
 		{
 		case OSTYPE_REACTOS:
-			LoadAndBootReactOS(nOSToBoot);
+			LoadAndBootReactOS(OSList[nOSToBoot].name);
 			break;
 		case OSTYPE_LINUX:
 			MessageBox("Cannot boot this OS type yet!");

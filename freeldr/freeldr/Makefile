@@ -24,12 +24,13 @@ export AR = ar
 export RM = cmd /C del
 export CP = cmd /C copy
 
-FLAGS = -Wall -nostdinc -fno-builtin
+#FLAGS = -Wall -nostdinc -fno-builtin
+FLAGS = -Wall -fno-builtin
 
 # asmcode.o has to be first in the link line because it contains the startup code
-OBJS = asmcode.a asmcode.o ros.o boot.o freeldr.o stdlib.o fs.a fs.o fs_fat.o \
+OBJS = asmcode.a asmcode.o multiboot.o boot.o freeldr.o stdlib.o fs.a fs.o fs_fat.o \
 	rosboot.o tui.o menu.o miscboot.o options.o linux.o
-ASM_OBJS = asmcode.o ros.o boot.o
+ASM_OBJS = asmcode.o multiboot.o boot.o
 C_OBJS = freeldr.o stdlib.o fs.a rosboot.o tui.o menu.o miscboot.o options.o linux.o
 
 all:	freeldr.sys
@@ -61,11 +62,11 @@ fs.o:	fs.c freeldr.h fs.h stdlib.h tui.h asmcode.h Makefile
 fs_fat.o:	fs_fat.c freeldr.h fs.h stdlib.h tui.h Makefile
 	$(CC) $(FLAGS) -o fs_fat.o -c fs_fat.c
 
-rosboot.o:	rosboot.c freeldr.h rosboot.h stdlib.h fs.h tui.h Makefile
+rosboot.o:	rosboot.c freeldr.h rosboot.h stdlib.h fs.h tui.h multiboot.h Makefile
 	$(CC) $(FLAGS) -o rosboot.o -c rosboot.c
 
-ros.o:	ros.S asmcode.h Makefile
-	$(CC) $(FLAGS) -o ros.o -c ros.S
+multiboot.o:	multiboot.S asmcode.h multiboot.h Makefile
+	$(CC) $(FLAGS) -o multiboot.o -c multiboot.S
 
 tui.o:	tui.c freeldr.h stdlib.h tui.h Makefile
 	$(CC) $(FLAGS) -o tui.o -c tui.c

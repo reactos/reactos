@@ -1116,6 +1116,37 @@ _get_sectors_done:
 	ret
 
 
+	/*
+	 * Needed for enabling the a20 address line
+	 */
+	.code16
+empty_8042:
+	.word	0x00eb,0x00eb            // jmp $+2, jmp $+2
+	inb     $0x64,%al
+    testb   $0x02,%al
+    jnz     empty_8042
+	ret
+
+	/*
+	 * Enable the A20 address line (to allow access to over 1mb)
+	 */
+	.code32
+EXTERN(_enable_a20)
+	call	switch_to_real
+	.code16
+
+	call	empty_8042
+    movb	$0xD1,%al                // command write
+    outb	%al,$0x64
+	call	empty_8042
+    mov		$0xDF,%al                // A20 on
+    out		%al,$0x60
+	call	empty_8042
+	call	switch_to_prot
+	.code32
+
+	ret
+
 
 
 

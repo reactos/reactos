@@ -26,50 +26,24 @@
 
 #define PACKED __attribute__((packed))
 
-void	LoadAndBootReactOS(int nOSToBoot);
-void	ReactOSMemInit(void);
-void	ReactOSBootKernel(void);
-BOOL	ReactOSLoadPEImage(FILE *pImage);
+#define MB_INFO_FLAG_MEM_SIZE			0x00000001
+#define MB_INFO_FLAG_BOOT_DEVICE		0x00000002
+#define MB_INFO_FLAG_COMMAND_LINE		0x00000004
+#define MB_INFO_FLAG_MODULES			0x00000008
+#define MB_INFO_FLAG_AOUT_SYMS			0x00000010
+#define MB_INFO_FLAG_ELF_SYMS			0x00000020
+#define MB_INFO_FLAG_MEMORY_MAP			0x00000040
+#define MB_INFO_FLAG_DRIVES				0x00000080
+#define MB_INFO_FLAG_CONFIG_TABLE		0x00000100
+#define MB_INFO_FLAG_BOOT_LOADER_NAME	0x00000200
+#define MB_INFO_FLAG_APM_TABLE			0x00000400
+#define MB_INFO_FLAG_GRAPHICS_TABLE		0x00000800
+
+void	LoadAndBootReactOS(char *OperatingSystemName);
+BOOL	MultiBootLoadKernel(FILE *KernelImage);
+BOOL	MultiBootLoadModule(FILE *ModuleImage, char *ModuleName);
 void	enable_a20(void);
 void	boot_ros(void);
 
-
-// WARNING:
-// This structure is prototyped here but allocated in ros.S
-// if you change this prototype make sure to update ros.S
-typedef struct
-{
-	/*
-	 * Magic value (useless really)
-	 */
-	unsigned int magic;
-
-	/*
-	 * Cursor position
-	 */
-	unsigned int cursorx;
-	unsigned int cursory;
-
-	/*
-	 * Number of files (including the kernel) loaded
-	 */
-	unsigned int nr_files;
-
-	/*
-	 * Range of physical memory being used by the system
-	 */
-	unsigned int start_mem;
-	unsigned int end_mem;
-
-	/*
-	 * List of module lengths (terminated by a 0)
-	 */
-	unsigned int module_lengths[64];
-
-	/*
-	 * Kernel parameter string
-	 */
-	char kernel_parameters[256];
-} boot_param PACKED;
 
 #endif // defined __ROSBOOT_H

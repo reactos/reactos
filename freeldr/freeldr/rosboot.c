@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1999, 2000  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1999, 2000, 2001  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,19 +24,11 @@
 #include "stdlib.h"
 #include "fs.h"
 #include "tui.h"
+#include "multiboot.h"
 
-extern boot_param	boot_parameters;			// Boot parameter structure passed to the kernel
-extern int	boot_param_struct_base;		// Physical address of the boot parameters structure
-extern int	start_mem;					// Start of the continuous range of physical kernel memory
-extern int	kernel_page_directory_base;	// Physical address of the kernel page directory
-extern int	system_page_table_base;		// Physical address of the system page table
-extern int	lowmem_page_table_base;		// Physical address of the low mem page table
-extern int	start_kernel;				// Physical address of the start of kernel code
-extern int	load_base;					// Physical address of the loaded kernel modules 
+unsigned long				next_module_load_base = 0;
 
-static int	next_load_base;
-
-void LoadAndBootReactOS(int nOSToBoot)
+void LoadAndBootReactOS(char *OperatingSystemName)
 {
 	FILE		file;
 	char		name[1024];
@@ -47,35 +39,27 @@ void LoadAndBootReactOS(int nOSToBoot)
 	int			nNumFilesLoaded=0;
 
 	/*
-	 * Enable a20 so we can load at 1mb and initialize the page tables
+	 * Setup multiboot information structure
 	 */
-	//enable_a20(); // enabled in freeldr.c
-	ReactOSMemInit();
-
-	// Setup kernel parameters
-	boot_param_struct_base = (int)&boot_parameters;
-	boot_parameters.magic = 0xdeadbeef;
-	boot_parameters.cursorx = 0;
-	boot_parameters.cursory = 0;
-	boot_parameters.nr_files = 0;
-	boot_parameters.start_mem = start_mem;
-	boot_parameters.end_mem = load_base;
-	boot_parameters.kernel_parameters[0] = 0;
-
-	next_load_base = load_base;
+	mb_info.flags = MB_INFO_FLAG_MEM_SIZE | MB_INFO_FLAG_BOOT_DEVICE | MB_INFO_FLAG_COMMAND_LINE | MB_INFO_FLAG_MODULES;
+	mb_info.mem_lower = 640;//(640 * 1024);
+	mb_info.mem_upper = (8 * 1024);
+	mb_info.boot_device = 0xffffffff;
+	mb_info.cmdline = (unsigned long)multiboot_kernel_cmdline;
+	mb_info.mods_count = 0;
+	mb_info.mods_addr = (unsigned long)multiboot_modules;
+	mb_info.mmap_length = 0;
+	mb_info.mmap_addr = 0;
 
 	/*
-	 * Read the optional kernel parameters
+	 * Read the optional kernel parameters (if any)
 	 */
-	if(ReadSectionSettingByName(OSList[nOSToBoot].name, "Options", name, value))
-	{
-		strcpy(boot_parameters.kernel_parameters,value);
-	}
+	ReadSectionSettingByName(OperatingSystemName, "Options", name, multiboot_kernel_cmdline);
 
 	/*
 	 * Find the kernel image name
 	 */
-	if(!ReadSectionSettingByName(OSList[nOSToBoot].name, "Kernel", name, value))
+	if(!ReadSectionSettingByName(OperatingSystemName, "Kernel", name, value))
 	{
 		MessageBox("Kernel image file not specified for selected operating system.");
 		return;
@@ -85,13 +69,16 @@ void LoadAndBootReactOS(int nOSToBoot)
 	 * Get the boot partition
 	 */
 	BootPartition = 0;
-	if (ReadSectionSettingByName(OSList[nOSToBoot].name, "BootPartition", name, value))
+	if (ReadSectionSettingByName(OperatingSystemName, "BootPartition", name, value))
+	{
 		BootPartition = atoi(value);
-
+	}
+	((char *)(&mb_info.boot_device))[1] = (char)BootPartition;
+	
 	/*
 	 * Make sure the boot drive is set in the .ini file
 	 */
-	if(!ReadSectionSettingByName(OSList[nOSToBoot].name, "BootDrive", name, value))
+	if(!ReadSectionSettingByName(OperatingSystemName, "BootDrive", name, value))
 	{
 		MessageBox("Boot drive not specified for selected operating system.");
 		return;
@@ -106,6 +93,7 @@ void LoadAndBootReactOS(int nOSToBoot)
 	 * Set the boot drive and try to open it
 	 */
 	BootDrive = atoi(value);
+	((char *)(&mb_info.boot_device))[0] = (char)BootDrive;
 	if (!OpenDiskDrive(BootDrive, BootPartition))
 	{
 		MessageBox("Failed to open boot drive.");
@@ -115,27 +103,62 @@ void LoadAndBootReactOS(int nOSToBoot)
 	/*
 	 * Parse the ini file and count the kernel and drivers
 	 */
-	for (i=1; i<=GetNumSectionItems(OSList[nOSToBoot].name); i++)
+	for (i=1; i<=GetNumSectionItems(OperatingSystemName); i++)
 	{
 		/*
 		 * Read the setting and check if it's a driver
 		 */
-		ReadSectionSettingByNumber(OSList[nOSToBoot].name, i, name, value);
+		ReadSectionSettingByNumber(OperatingSystemName, i, name, value);
 		if ((stricmp(name, "Kernel") == 0) || (stricmp(name, "Driver") == 0))
 			nNumDriverFiles++;
+	}
+
+	/*
+	 * Find the kernel image name
+	 * and try to load the kernel off the disk
+	 */
+	if(ReadSectionSettingByName(OperatingSystemName, "Kernel", name, value))
+	{
+		/*
+		 * Set the name and try to open the PE image
+		 */
+		strcpy(szFileName, value);
+		if (!OpenFile(szFileName, &file))
+		{
+			strcat(value, " not found.");
+			MessageBox(value);
+			return;
+		}
+
+		/*
+		 * Update the status bar with the current file
+		 */
+		strcpy(name, " Reading ");
+		strcat(name, value);
+		while (strlen(name) < 80)
+			strcat(name, " ");
+		DrawStatusText(name);
+
+		/*
+		 * Load the kernel image
+		 */
+		MultiBootLoadKernel(&file);
+		
+		nNumFilesLoaded++;
+		DrawProgressBar((nNumFilesLoaded * 100) / nNumDriverFiles);
 	}
 
 	/*
 	 * Parse the ini file and load the kernel and
 	 * load all the drivers specified
 	 */
-	for (i=1; i<=GetNumSectionItems(OSList[nOSToBoot].name); i++)
+	for (i=1; i<=GetNumSectionItems(OperatingSystemName); i++)
 	{
 		/*
 		 * Read the setting and check if it's a driver
 		 */
-		ReadSectionSettingByNumber(OSList[nOSToBoot].name, i, name, value);
-		if ((stricmp(name, "Kernel") == 0) || (stricmp(name, "Driver") == 0))
+		ReadSectionSettingByNumber(OperatingSystemName, i, name, value);
+		if (stricmp(name, "Driver") == 0)
 		{
 			/*
 			 * Set the name and try to open the PE image
@@ -160,13 +183,11 @@ void LoadAndBootReactOS(int nOSToBoot)
 			/*
 			 * Load the driver
 			 */
-			ReactOSLoadPEImage(&file);
+			MultiBootLoadModule(&file, szFileName);
+
 
 			nNumFilesLoaded++;
 			DrawProgressBar((nNumFilesLoaded * 100) / nNumDriverFiles);
-
-			// Increment the number of files we loaded
-			boot_parameters.nr_files++;
 		}
 		else if (stricmp(name, "MessageBox") == 0)
 		{
@@ -186,13 +207,6 @@ void LoadAndBootReactOS(int nOSToBoot)
 	}
 
 	/*
-	 * End the list of modules we load with a zero length entry
-	 * and update the end of kernel mem
-	 */
-	boot_parameters.module_lengths[boot_parameters.nr_files] = 0;
-	boot_parameters.end_mem = next_load_base;
-
-	/*
 	 * Clear the screen and redraw the backdrop and status bar
 	 */
 	DrawBackdrop();
@@ -202,7 +216,7 @@ void LoadAndBootReactOS(int nOSToBoot)
 	 * Wait for user
 	 */
 	strcpy(name, "Kernel and Drivers loaded.\nPress any key to boot ");
-	strcat(name, OSList[nOSToBoot].name);
+	strcat(name, OperatingSystemName);
 	strcat(name, ".");
 	//MessageBox(name);
 
@@ -212,179 +226,114 @@ void LoadAndBootReactOS(int nOSToBoot)
 	 * Now boot the kernel
 	 */
 	stop_floppy();
-	ReactOSBootKernel();
-}
-
-void ReactOSMemInit(void)
-{
-	int		base;
-
-	/* Calculate the start of extended memory */
-	base = 0x100000;
-
-	/* Set the start of the page directory */
-	kernel_page_directory_base = base;
-
-	/*
-	 * Set the start of the continuous range of physical memory
-	 * occupied by the kernel
-	 */
-	start_mem = base;
-	base += 0x1000;
-
-	/* Calculate the start of the system page table (0xc0000000 upwards) */
-	system_page_table_base = base;
-	base += 0x1000;
-
-	/* Calculate the start of the page table to map the first 4mb */
-	lowmem_page_table_base = base;
-	base += 0x1000;
-
-	/* Set the position for the first module to be loaded */
-	load_base = base;
-
-	/* Set the address of the start of kernel code */
-	start_kernel = base;
-}
-
-void ReactOSBootKernel(void)
-{
-	int		i;
-	int		*pPageDirectory = (int *)kernel_page_directory_base;
-	int		*pLowMemPageTable = (int *)lowmem_page_table_base;
-	int		*pSystemPageTable = (int *)system_page_table_base;
-
-	/* Zero out the kernel page directory */
-	for(i=0; i<1024; i++)
-		pPageDirectory[i] = 0;
-
-	/* Map in the lowmem page table */
-	pPageDirectory[(0x00/4)] = lowmem_page_table_base + 0x07;
-
-	/* Map in the lowmem page table (and reuse it for the identity map) */
-	pPageDirectory[(0xd00/4)] = lowmem_page_table_base + 0x07;
-	
-	/* Map the page tables from the page directory */
-	pPageDirectory[(0xf00/4)] = kernel_page_directory_base + 0x07;
-
-	/* Map in the kernel page table */
-	pPageDirectory[(0xc00/4)] = system_page_table_base + 0x07;
-
-	/* Setup the lowmem page table */
-	for(i=0; i<1024; i++)
-		pLowMemPageTable[i] = (i * 4096) + 0x07;
-
-	/* Setup the system page table */
-	for(i=0; i<1024; i++)
-		pSystemPageTable[i] = ((i * 4096) + start_kernel) + 0x07;
-
 	boot_ros();
 }
 
-BOOL ReactOSLoadPEImage(FILE *pImage)
+BOOL MultiBootLoadKernel(FILE *KernelImage)
 {
-	unsigned int			Idx, ImageBase;
-	PULONG					PEMagic;
-	PIMAGE_DOS_HEADER		PEDosHeader;
-	PIMAGE_FILE_HEADER		PEFileHeader;
-	PIMAGE_OPTIONAL_HEADER	PEOptionalHeader;
-	PIMAGE_SECTION_HEADER	PESectionHeaders;
-
-	ImageBase = next_load_base;
-	boot_parameters.module_lengths[boot_parameters.nr_files] = 0;
+	DWORD				ImageHeaders[2048];
+	int					Idx;
+	DWORD				dwHeaderChecksum;
+	DWORD				dwFileLoadOffset;
+	DWORD				dwDataSize;
+	DWORD				dwBssSize;
 
 	/*
-	 * Load the headers
+	 * Load the first 8192 bytes of the kernel image
+	 * so we can search for the multiboot header
 	 */
-	ReadFile(pImage, 0x1000, (void *)next_load_base);
+	ReadFile(KernelImage, 8192, ImageHeaders);
 
 	/*
-	 * Get header pointers
+	 * Now find the multiboot header and copy it
 	 */
-	PEDosHeader = (PIMAGE_DOS_HEADER) next_load_base;
-	PEMagic = (PULONG) ((unsigned int) next_load_base + 
-				PEDosHeader->e_lfanew);
-	PEFileHeader = (PIMAGE_FILE_HEADER) ((unsigned int) next_load_base + 
-					PEDosHeader->e_lfanew + sizeof(ULONG));
-	PEOptionalHeader = (PIMAGE_OPTIONAL_HEADER) ((unsigned int) next_load_base + 
-					PEDosHeader->e_lfanew + sizeof(ULONG) + sizeof(IMAGE_FILE_HEADER));
-	PESectionHeaders = (PIMAGE_SECTION_HEADER) ((unsigned int) next_load_base + 
-					PEDosHeader->e_lfanew + sizeof(ULONG) + sizeof(IMAGE_FILE_HEADER) +
-					sizeof(IMAGE_OPTIONAL_HEADER));
-
-	/*
-	 * Check file magic numbers
-	 */
-	if(PEDosHeader->e_magic != IMAGE_DOS_MAGIC)
+	for (Idx=0; Idx<2048; Idx++)
 	{
-		MessageBox("Incorrect MZ magic");
+		// Did we find it?
+		if (ImageHeaders[Idx] == MULTIBOOT_HEADER_MAGIC)
+		{
+			// Yes, copy it and break out of this loop
+			memcpy(&mb_header, &ImageHeaders[Idx], sizeof(multiboot_header_t));
+
+			break;
+		}
+	}
+
+	/*
+	 * If we reached the end of the 8192 bytes without
+	 * finding the multiboot header then return error
+	 */
+	if (Idx == 2048)
+	{
+		MessageBox("No multiboot header found!");
 		return FALSE;
 	}
-	if(PEDosHeader->e_lfanew == 0)
-	{
-		MessageBox("Invalid lfanew offset");
-		return 0;
-	}
-	if(*PEMagic != IMAGE_PE_MAGIC)
-	{
-		MessageBox("Incorrect PE magic");
-		return 0;
-	}
-	if(PEFileHeader->Machine != IMAGE_FILE_MACHINE_I386)
-	{
-		MessageBox("Incorrect Architecture");
-		return 0;
-	}
+
+	/*printf("multiboot header:\n");
+	printf("0x%x\n", mb_header.magic);
+	printf("0x%x\n", mb_header.flags);
+	printf("0x%x\n", mb_header.checksum);
+	printf("0x%x\n", mb_header.header_addr);
+	printf("0x%x\n", mb_header.load_addr);
+	printf("0x%x\n", mb_header.load_end_addr);
+	printf("0x%x\n", mb_header.bss_end_addr);
+	printf("0x%x\n", mb_header.entry_addr);
+	getch();*/
 
 	/*
-	 * Get header size and bump next_load_base
+	 * Calculate the checksum and make sure it matches
 	 */
-	next_load_base += ROUND_UP(PEOptionalHeader->SizeOfHeaders, PEOptionalHeader->SectionAlignment);
-	boot_parameters.module_lengths[boot_parameters.nr_files] += ROUND_UP(PEOptionalHeader->SizeOfHeaders, PEOptionalHeader->SectionAlignment);
-	boot_parameters.end_mem += ROUND_UP(PEOptionalHeader->SizeOfHeaders, PEOptionalHeader->SectionAlignment);
+	dwHeaderChecksum = mb_header.magic;
+	dwHeaderChecksum += mb_header.flags;
+	dwHeaderChecksum += mb_header.checksum;
+	if (dwHeaderChecksum != 0)
+	{
+		MessageBox("Multiboot header checksum invalid!");
+		return FALSE;
+	}
+	
+	/*
+	 * Get the file offset, this should be 0, and move the file pointer
+	 */
+	dwFileLoadOffset = (Idx * sizeof(DWORD)) - (mb_header.header_addr - mb_header.load_addr);
+	fseek(KernelImage, dwFileLoadOffset);
+	
+	/*
+	 * Load the file image
+	 */
+	dwDataSize = (mb_header.load_end_addr - mb_header.load_addr);
+	ReadFile(KernelImage, dwDataSize, (void*)mb_header.load_addr);
 
 	/*
-	 * Copy image sections into virtual section
+	 * Initialize bss area
 	 */
-//  memcpy(DriverBase, ModuleLoadBase, PESectionHeaders[0].PointerToRawData);
-//  CurrentBase = (PVOID) ((DWORD)DriverBase + PESectionHeaders[0].PointerToRawData);
-//	CurrentSize = 0;
-	for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
-	{
-		/*
-		 * Copy current section into current offset of virtual section
-		 */
-		if (PESectionHeaders[Idx].Characteristics & 
-			(IMAGE_SECTION_CHAR_CODE | IMAGE_SECTION_CHAR_DATA))
-		{
-			//memcpy(PESectionHeaders[Idx].VirtualAddress + DriverBase,
-			//	(PVOID)(ModuleLoadBase + PESectionHeaders[Idx].PointerToRawData),
-			//	PESectionHeaders[Idx].Misc.VirtualSize /*SizeOfRawData*/);
+	dwBssSize = (mb_header.bss_end_addr - mb_header.load_end_addr);
+	memset((void*)mb_header.load_end_addr, 0, dwBssSize);
 
-			//MessageBox("loading a section");
-			fseek(pImage, PESectionHeaders[Idx].PointerToRawData);
-			ReadFile(pImage, PESectionHeaders[Idx].Misc.VirtualSize /*SizeOfRawData*/, (void *)next_load_base);
-			//printf("PointerToRawData: %x\n", PESectionHeaders[Idx].PointerToRawData);
-			//printf("bytes at next_load_base: %x\n", *((unsigned long *)next_load_base));
-			//getch();
-		}
-		else
-		{
-			//memset(PESectionHeaders[Idx].VirtualAddress + DriverBase, 
-			//	'\0', PESectionHeaders[Idx].Misc.VirtualSize /*SizeOfRawData*/);
+	next_module_load_base = ROUND_UP(mb_header.bss_end_addr, /*PAGE_SIZE*/4096);
 
-			//MessageBox("zeroing a section");
-			memset((void *)next_load_base, '\0', PESectionHeaders[Idx].Misc.VirtualSize /*SizeOfRawData*/);
-		}
+	return TRUE;
+}
 
-		PESectionHeaders[Idx].PointerToRawData = next_load_base - ImageBase;
+BOOL MultiBootLoadModule(FILE *ModuleImage, char *ModuleName)
+{
+	DWORD		dwModuleSize;
+	module_t*	pModule = &multiboot_modules[mb_info.mods_count];
+	char*		ModuleNameString = multiboot_module_strings[mb_info.mods_count];
 
-		next_load_base += ROUND_UP(PESectionHeaders[Idx].Misc.VirtualSize,	PEOptionalHeader->SectionAlignment);
-		boot_parameters.module_lengths[boot_parameters.nr_files] += ROUND_UP(PESectionHeaders[Idx].Misc.VirtualSize,	PEOptionalHeader->SectionAlignment);
-		boot_parameters.end_mem += ROUND_UP(PESectionHeaders[Idx].Misc.VirtualSize,	PEOptionalHeader->SectionAlignment);
+	dwModuleSize = GetFileSize(ModuleImage);
+	pModule->mod_start = next_module_load_base;
+	pModule->mod_end = next_module_load_base + dwModuleSize;
+	strcpy(ModuleNameString, ModuleName);
+	pModule->string = (unsigned long)ModuleNameString;
+	
+	/*
+	 * Load the file image
+	 */
+	ReadFile(ModuleImage, dwModuleSize, (void*)next_module_load_base);
 
-		//DrawProgressBar((Idx * 100) / PEFileHeader->NumberOfSections);
-	}
+	next_module_load_base = ROUND_UP(pModule->mod_end, /*PAGE_SIZE*/4096);
+	mb_info.mods_count++;
 
 	return TRUE;
 }
