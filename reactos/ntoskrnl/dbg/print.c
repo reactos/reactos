@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.13 2002/02/25 22:45:04 phreak Exp $
+/* $Id: print.c,v 1.14 2002/03/17 17:23:03 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -62,7 +62,7 @@ DbgPrint(PCH Format, ...)
 
    /* init ansi string */
    DebugString.Buffer = Buffer;
-   DebugString.MaximumLength = 512;
+   DebugString.MaximumLength = sizeof(Buffer);
 
    va_start (ap, Format);
    DebugString.Length = _vsnprintf (Buffer, sizeof( Buffer ), Format, ap);
