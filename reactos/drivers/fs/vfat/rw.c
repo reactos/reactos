@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.39 2002/03/18 22:37:13 hbirr Exp $
+/* $Id: rw.c,v 1.40 2002/03/19 02:29:32 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -112,7 +112,7 @@ NextCluster(PDEVICE_EXTENSION DeviceExt,
 	      else
 		{
 		  *CurrentCluster = 0xffffffff;
-		  return STATUS_UNSUCCESSFUL;
+		  return STATUS_SUCCESS;
 		}
 	    }
 	  *CurrentCluster = Fcb->FatChain[i + 1];
@@ -395,7 +395,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   }
 
   /* Using the Cc-interface if possible. */
-  if (!NoCache)
+  if (!NoCache && !(Fcb->Flags & FCB_IS_PAGE_FILE))
     {
       FileOffset.QuadPart = ReadOffset;
       CcCopyRead(FileObject, &FileOffset, Length, TRUE, Buffer, &IoStatus);
@@ -653,7 +653,7 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
     }
   }
 
-  if (NoCache || PageIo)
+  if (NoCache || PageIo || Fcb->Flags & FCB_IS_PAGE_FILE)
   {
 
     FirstCluster = CurrentCluster = vfatDirEntryGetFirstCluster (DeviceExt, &Fcb->entry);
