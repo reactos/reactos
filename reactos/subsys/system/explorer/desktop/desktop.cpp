@@ -246,7 +246,15 @@ static void draw_desktop_background(HWND hwnd, HDC hdc)
 }
 
 
-LRESULT	BackgroundWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+BackgroundWindow::BackgroundWindow(HWND hwnd)
+ :	super(hwnd)
+{
+	 // set background brush for the short moment of displaying the
+	 // background color while moving foreground windows
+	SetClassLong(hwnd, GCL_HBRBACKGROUND, COLOR_BACKGROUND+1);
+}
+
+LRESULT BackgroundWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
 	  case WM_ERASEBKGND:
