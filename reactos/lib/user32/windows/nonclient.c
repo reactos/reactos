@@ -667,7 +667,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
          return HTBORDER;
    }
 
-   if (Style & WS_CAPTION)
+   if ((Style & WS_CAPTION) == WS_CAPTION)
    {
       if (ExStyle & WS_EX_TOOLWINDOW)
          WindowRect.top += GetSystemMetrics(SM_CYSMCAPTION);
@@ -697,7 +697,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
             return HTMAXBUTTON;
          if (Style & WS_MINIMIZEBOX)
             WindowRect.right -= GetSystemMetrics(SM_CXSIZE);
-	 if (Point.x >= WindowRect.right)
+         if (Point.x >= WindowRect.right)
             return HTMINBUTTON;
          return HTCAPTION;
       }
