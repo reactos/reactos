@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.10 $
+ * $Revision: 1.11 $
  * $Author: jfilby $
- * $Date: 2000/11/16 21:45:54 $
+ * $Date: 2001/03/31 15:40:33 $
  *
  */
 
@@ -164,11 +164,10 @@ DHPDEV VGADDIEnablePDEV(IN DEVMODEW  *DM,
 
   PDev = EngAllocMem(FL_ZERO_MEMORY, sizeof(PDEV), ALLOC_TAG);
   if (PDev == NULL)
-    {
-      EngDebugPrint(DBG_PREFIX, "EngAllocMem failed for PDEV\n", 0);
-      
-      return  NULL;
-    }
+  {
+    EngDebugPrint(DBG_PREFIX, "EngAllocMem failed for PDEV\n", 0);
+    return  NULL;
+  }
   PDev->KMDriver = Driver;
   DPRINT( "PDev: %x, Driver: %x\n", PDev, PDev->KMDriver );
   PDev->xyCursor.x = 320;
@@ -180,8 +179,7 @@ DHPDEV VGADDIEnablePDEV(IN DEVMODEW  *DM,
   // FIXME: fill out DevCaps
   // FIXME: full out DevInfo
 
-  devinfoVGA.hpalDefault = EngCreatePalette(PAL_INDEXED, 16,
-                           (PULONG)(VGApalette.PaletteEntry), 0, 0, 0);
+  devinfoVGA.hpalDefault = EngCreatePalette(PAL_INDEXED, 16, (PULONG)(VGApalette.PaletteEntry), 0, 0, 0);
 
   *DI = devinfoVGA;
 
@@ -211,27 +209,21 @@ VOID VGADDIAssertMode(IN DHPDEV  DPev,
     // Reenable our graphics mode
 
     if (!InitPointer(ppdev))
-     {
-        // Failed to set pointer
-        return FALSE;
-     }
+    {
+      // Failed to set pointer
+      return FALSE;
+    }
 
-     if (!InitVGA(ppdev, FALSE))
-     {
-        // Failed to initialize the VGA
-        return FALSE;
-     }
+    if (!InitVGA(ppdev, FALSE))
+    {
+      // Failed to initialize the VGA
+      return FALSE;
+    }
 
   } else {
     // Go back to last known mode
     DPRINT( "ppdev: %x, KMDriver: %x", ppdev, ppdev->KMDriver );
-    if (EngDeviceIoControl(ppdev->KMDriver,
-                           IOCTL_VIDEO_RESET_DEVICE,
-                           NULL,
-                           0,
-                           NULL,
-                           0,
-                           &returnedDataLength))
+    if (EngDeviceIoControl(ppdev->KMDriver, IOCTL_VIDEO_RESET_DEVICE, NULL, 0, NULL, 0, &returnedDataLength))
     {
       // Failed to go back to mode
       return FALSE;
@@ -253,7 +245,7 @@ VOID VGADDIDisablePDEV(IN DHPDEV PDev)
   if (ppdev->pucDIB4ToVGAConvBuffer != NULL)
   {
     EngFreeMem(ppdev->pucDIB4ToVGAConvBuffer);
-    }
+  }
   DPRINT( "Freeing PDEV\n" );
   EngFreeMem(PDev);
 }
@@ -269,11 +261,11 @@ VOID VGADDIDisableSurface(IN DHPDEV PDev)
   CHECKPOINT;
   if (pdsurf->BankInfo != NULL) {
     EngFreeMem(pdsurf->BankInfo);
-    }
+  }
   CHECKPOINT;
   if (pdsurf->BankInfo2RW != NULL) {
     EngFreeMem(pdsurf->BankInfo2RW);
-    }
+  }
   CHECKPOINT;
   if (pdsurf->BankBufferPlane0 != NULL) {
     EngFreeMem(pdsurf->BankBufferPlane0);
@@ -281,7 +273,7 @@ VOID VGADDIDisableSurface(IN DHPDEV PDev)
   CHECKPOINT;
   if (ppdev->pPointerAttributes != NULL) {
     EngFreeMem(ppdev->pPointerAttributes);
-    }
+  }
   CHECKPOINT;
   // free any pending saved screen bit blocks
   pSSB = pdsurf->ssbList;

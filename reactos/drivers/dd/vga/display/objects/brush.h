@@ -1,23 +1,23 @@
 typedef struct  _BRUSHINST
 {
-   // We need to removed ajC0-3 when color pattern code is complete!!!
-   //
-   BYTE    ajC0[8];                    // Color bits for plane 0
-   BYTE    ajC1[8];                    // Color bits for plane 1
-   BYTE    ajC2[8];                    // Color bits for plane 2
-   BYTE    ajC3[8];                    // Color bits for plane 3
+  // We need to removed ajC0-3 when color pattern code is complete!!!
+  //
+  BYTE    ajC0[8];                    // Color bits for plane 0
+  BYTE    ajC1[8];                    // Color bits for plane 1
+  BYTE    ajC2[8];                    // Color bits for plane 2
+  BYTE    ajC3[8];                    // Color bits for plane 3
 
-   BYTE    ajPattern[32];                // Color bits for the mask
-   USHORT  usStyle;                    // Brush style
-   BYTE    fjAccel;                    // Accelerator flags
-   BYTE    jFgColor;                   // Current foreground color
-   BYTE    jBkColor;                   // Current background color
-   BYTE    RealWidth;                  //
-   BYTE    YShiftValue;                //
-   BYTE    jOldBrushRealized;          //
-   DWORD   Width;                      // Width of brush
-   DWORD   Height;
-   BYTE    *pPattern;              //Pointer to realized mono pattern
+  BYTE    ajPattern[32];                // Color bits for the mask
+  USHORT  usStyle;                    // Brush style
+  BYTE    fjAccel;                    // Accelerator flags
+  BYTE    jFgColor;                   // Current foreground color
+  BYTE    jBkColor;                   // Current background color
+  BYTE    RealWidth;                  //
+  BYTE    YShiftValue;                //
+  BYTE    jOldBrushRealized;          //
+  DWORD   Width;                      // Width of brush
+  DWORD   Height;
+  BYTE    *pPattern;              //Pointer to realized mono pattern
 } BRUSHINST;
 
 #define BRI_SOLID           0

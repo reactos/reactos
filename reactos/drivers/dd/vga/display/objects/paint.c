@@ -5,63 +5,63 @@
 
 BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
 {
-	int x = Dimensions.left;
-	int y = Dimensions.top;
-	int w = Dimensions.right - Dimensions.left;
-	int h = Dimensions.bottom - Dimensions.top;
-	unsigned char *vp, *vpX;
-	volatile unsigned char dummy;
-	int byte_per_line;
-	int i;
+  int x = Dimensions.left;
+  int y = Dimensions.top;
+  int w = Dimensions.right - Dimensions.left;
+  int h = Dimensions.bottom - Dimensions.top;
+  unsigned char *vp, *vpX;
+  volatile unsigned char dummy;
+  int byte_per_line;
+  int i;
 
-	ASSIGNVP4(x, y, vpX)
-	get_masks(x, w);
-	byte_per_line = SCREEN_X >> 3;
-	WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);	/* write mode 2 */
-	saved_GC_mode = READ_PORT_UCHAR((PUCHAR)GRA_D);
-	WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x02);
-	WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);	/* replace */
-	saved_GC_fun = READ_PORT_UCHAR((PUCHAR)GRA_D);
-	WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
-	WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);	/* bit mask */
-	saved_GC_mask = READ_PORT_UCHAR((PUCHAR)GRA_D);
-	if (leftMask) {
-		WRITE_PORT_UCHAR((PUCHAR)GRA_D, leftMask);	/* bit mask */
-		/* write to video */
-		vp = vpX;
-		for (i=h; i>0; i--) {
-			dummy = *vp; *vp = iColor;
-			vp += byte_per_line;
-		}
-		vpX++;
-	}
-	if (byteCounter) {
-		WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0xff);	/* bit mask */
-		/* write to video */
-		vp = vpX;
-		for (i=h; i>0; i--) {
-			memset(vp, iColor, byteCounter);
-			vp += byte_per_line;
-		}
-		vpX += byteCounter;
-	}
-	if (rightMask) {
-		WRITE_PORT_UCHAR((PUCHAR)GRA_D, rightMask);	/* bit mask */
-		/* write to video */
-		vp = vpX;
-		for (i=h; i>0; i--) {
-			dummy = *vp; *vp = iColor;
-			vp += byte_per_line;
-		}
-	}
-	/* reset GC register */
-	WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_mask);
-	WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);
-	WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_fun);
-	WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);
-	WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_mode);
+  ASSIGNVP4(x, y, vpX)
+  get_masks(x, w);
+  byte_per_line = SCREEN_X >> 3;
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);  /* write mode 2 */
+  saved_GC_mode = READ_PORT_UCHAR((PUCHAR)GRA_D);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x02);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);  /* replace */
+  saved_GC_fun = READ_PORT_UCHAR((PUCHAR)GRA_D);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);  /* bit mask */
+  saved_GC_mask = READ_PORT_UCHAR((PUCHAR)GRA_D);
+  if (leftMask) {
+    WRITE_PORT_UCHAR((PUCHAR)GRA_D, leftMask);  /* bit mask */
+    /* write to video */
+    vp = vpX;
+    for (i=h; i>0; i--) {
+      dummy = *vp; *vp = iColor;
+      vp += byte_per_line;
+    }
+    vpX++;
+  }
+  if (byteCounter) {
+    WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0xff);  /* bit mask */
+    /* write to video */
+    vp = vpX;
+    for (i=h; i>0; i--) {
+      memset(vp, iColor, byteCounter);
+      vp += byte_per_line;
+    }
+    vpX += byteCounter;
+  }
+  if (rightMask) {
+    WRITE_PORT_UCHAR((PUCHAR)GRA_D, rightMask);  /* bit mask */
+    /* write to video */
+    vp = vpX;
+    for (i=h; i>0; i--) {
+      dummy = *vp; *vp = iColor;
+      vp += byte_per_line;
+    }
+  }
+  /* reset GC register */
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_mask);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_fun);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_mode);
 
-	return TRUE;
+  return TRUE;
 }
 
 BOOL VGADDIPaintRgn(SURFOBJ *Surface, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix,
@@ -146,7 +146,7 @@ BOOL VGADDIPaint(IN SURFOBJ *Surface, IN CLIPOBJ *ClipRegion,
          case R2_WHITE:
          case R2_BLACK:
 
-	// FIXME: The Paint region belongs HERE
+  // FIXME: The Paint region belongs HERE
 
          case R2_NOP:
             return(TRUE);

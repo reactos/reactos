@@ -14,16 +14,15 @@
 typedef BOOL (*PFN_VGABlt)(SURFOBJ *, SURFOBJ *, SURFOBJ *, XLATEOBJ *,
                            RECTL *, POINTL *);
 
-BOOL GDItoVGA(
+BOOL DIBtoVGA(
    SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask, XLATEOBJ *ColorTranslation,
    RECTL   *DestRect, POINTL *SourcePoint)
 {
-  LONG i, j, dx, dy, alterx, altery, idxColor, RGBulong = 0, BPP;
+  LONG i, j, dx, dy, alterx, altery, idxColor, RGBulong = 0;
   BYTE  *GDIpos, *initial;
 
-  BPP = bytesPerPixel(Source->iBitmapFormat);
-  GDIpos = Source->pvBits +
-           SourcePoint->y * Source->lDelta + SourcePoint->x;
+  GDIpos = Source->pvBits /* +
+           SourcePoint->y * Source->lDelta + (SourcePoint->x >> 1) */ ;
 
   dx = DestRect->right  - DestRect->left;
   dy = DestRect->bottom - DestRect->top;
@@ -31,12 +30,16 @@ BOOL GDItoVGA(
   alterx = abs(SourcePoint->x - DestRect->left);
   altery = abs(SourcePoint->y - DestRect->top);
 
+  // FIXME: ColorTranslation will never be null. We must always map the colors (see PCGPE's bmp.txt)
+
   if(ColorTranslation == NULL)
   {
+
     // No color translation necessary, we assume BPP = 1
-    BltToVGA(DestRect->left, DestRect->top, dx, dy, Source->pvBits, Source->lDelta);
+    DIB_BltToVGA(DestRect->left, DestRect->top, dx, dy, Source->pvBits, Source->lDelta);
 
   } else {
+
     // Perform color translation
     for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
     {
@@ -46,19 +49,18 @@ BOOL GDItoVGA(
       {
         idxColor = XLATEOBJ_iXlate(ColorTranslation, *GDIpos);
         vgaPutPixel(i+alterx, j+altery, idxColor);
-        GDIpos+=BPP;
+        GDIpos+=1;
       }
       GDIpos = initial + Source->lDelta;
     }
   }
-DPRINT("GDItoVGA: Done\n");
 }
 
-BOOL VGAtoGDI(
+BOOL VGAtoDIB(
    SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask, XLATEOBJ *ColorTranslation,
    RECTL   *DestRect, POINTL *SourcePoint)
 {
-  LONG i, j, dx, dy, RGBulong, BPP;
+  LONG i, j, dx, dy, RGBulong;
   BYTE  *GDIpos, *initial, idxColor;
 
   // Used by the temporary DFB
@@ -71,8 +73,7 @@ BOOL VGAtoGDI(
 
   // FIXME: Optimize to retrieve entire bytes at a time (see /display/vgavideo/vgavideo.c:vgaGetByte)
 
-  BPP = bytesPerPixel(Dest->iBitmapFormat);
-  GDIpos = Dest->pvBits + (DestRect->top * Dest->lDelta) + (DestRect->left * BPP);
+  GDIpos = Dest->pvBits /* + (DestRect->top * Dest->lDelta) + (DestRect->left >> 1) */ ;
   dx = DestRect->right  - DestRect->left;
   dy = DestRect->bottom - DestRect->top;
 
@@ -81,7 +82,8 @@ BOOL VGAtoGDI(
     // Prepare a Dest Dev Target and copy from the DFB to the DIB
     DestDevSurf.NextScan = Dest->lDelta;
     DestDevSurf.StartBmp = Dest->pvScan0;
-    BltFromVGA(SourcePoint->x, SourcePoint->y, dx, dy, Dest->pvBits, Dest->lDelta);
+
+    DIB_BltFromVGA(SourcePoint->x, SourcePoint->y, dx, dy, Dest->pvBits, Dest->lDelta);
 
   } else {
     // Color translation
@@ -91,12 +93,11 @@ BOOL VGAtoGDI(
        for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
        {
          *GDIpos = XLATEOBJ_iXlate(ColorTranslation, vgaGetPixel(i, j));
-         GDIpos+=BPP;
+         GDIpos+=1;
        }
        GDIpos = initial + Dest->lDelta;
     }
   }
-DPRINT("VGAtoGDI: Done\n");
 }
 
 BOOL DFBtoVGA(
@@ -186,13 +187,13 @@ DPRINT("VGADDIBitBlt: Dest->pvScan0: %08x\n", Dest->pvScan0);
 
    if((Source->iType == STYPE_BITMAP) && (Dest->iType == STYPE_DEVICE))
    {
-DPRINT("GDI2VGA\n");
-      BltOperation = GDItoVGA;
+DPRINT("DIB2VGA\n");
+      BltOperation = DIBtoVGA;
    } else
    if((Source->iType == STYPE_DEVICE) && (Dest->iType == STYPE_BITMAP))
    {
-DPRINT("VGA2GDI\n");
-      BltOperation = VGAtoGDI;
+DPRINT("VGA2DIB\n");
+      BltOperation = VGAtoDIB;
    } else
    if((Source->iType == STYPE_DEVICE) && (Dest->iType == STYPE_DEVICE))
    {

@@ -15,8 +15,6 @@ BOOL VGADDILineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
    LONG  deltax, deltay;
 
    iSolidColor = Brush->iSolidColor; // FIXME: Brush Realization...
-DbgPrint("Drawing with color %08x ", iSolidColor);
-DbgPrint("%u.%u to %u.%u\n", x1, y1, x2, y2);
 
    // FIXME: Implement clipping
 
