@@ -63,7 +63,7 @@ VOID DispCancelComplete(
  *     Context = Pointer to context information (FILE_OBJECT)
  */
 {
-    KIRQL OldIrql;
+    /*KIRQL OldIrql;*/
     PFILE_OBJECT FileObject;
     PTRANSPORT_CONTEXT TranContext;
     
@@ -76,7 +76,7 @@ VOID DispCancelComplete(
     KeSetEvent(&TranContext->CleanupEvent, 0, FALSE);
 
     /* We are expected to release the cancel spin lock */
-    IoReleaseCancelSpinLock(OldIrql);
+    /*IoReleaseCancelSpinLock(OldIrql);*/
 
     TI_DbgPrint(DEBUG_IRP, ("Leaving.\n"));
 }
@@ -150,7 +150,7 @@ VOID DDKAPI DispCancelRequest(
     PTRANSPORT_CONTEXT TranContext;
     PFILE_OBJECT FileObject;
     UCHAR MinorFunction;
-    NTSTATUS Status = STATUS_SUCCESS;
+    /*NTSTATUS Status = STATUS_SUCCESS;*/
 
     TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -211,10 +211,9 @@ VOID DDKAPI DispCancelRequest(
         break;
     }
 
-    if (Status != STATUS_PENDING)
-        DispCancelComplete(FileObject);
-    else
-        IoReleaseCancelSpinLock(Irp->CancelIrql);
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
+    
+    DispCancelComplete(FileObject);
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
