@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.33 2003/12/30 18:52:04 fireball Exp $
+/* $Id: driver.c,v 1.34 2004/01/10 14:24:30 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -599,7 +599,7 @@ IopInitializeBootDrivers(VOID)
        * Do not free the memory from symbol files, if the kernel debugger
        * is active
        */
-      if (!_stricmp(Extension, ".sym"))
+      if (_stricmp(Extension, ".sym"))
 #endif
       {
          MiFreeBootDriverMemory((PVOID)KeLoaderModules[i].ModStart,
