@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.11 2004/07/22 18:49:18 navaraf Exp $
+/* $Id: adapter.c,v 1.11.6.1 2004/10/24 22:57:51 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -54,7 +54,7 @@ HalAllocateAdapterChannel(
   LARGE_INTEGER BoundryAddressMultiple;
   IO_ALLOCATION_ACTION Retval;
   
-  assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
+  ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
   
   /*
   FIXME: return STATUS_INSUFFICIENT_RESOURCES if the NumberOfMapRegisters 
@@ -66,7 +66,7 @@ HalAllocateAdapterChannel(
   WaitContextBlock->NumberOfMapRegisters = NumberOfMapRegisters;
 
   /* returns true if queued, else returns false and sets the queue to busy */
-  if(KeInsertDeviceQueue(&AdapterObject->DeviceQueue, &WaitContextBlock->WaitQueueEntry))
+  if(KeInsertDeviceQueue(&AdapterObject->ChannelWaitQueue, &WaitContextBlock->WaitQueueEntry))
     return STATUS_SUCCESS;
 
   /* 24-bit max address due to 16-bit dma controllers */
@@ -95,7 +95,7 @@ HalAllocateAdapterChannel(
   if(!AdapterObject->MapRegisterBase)
     return STATUS_INSUFFICIENT_RESOURCES;
 
-  AdapterObject->AllocatedMapRegisters = NumberOfMapRegisters;
+  AdapterObject->CommittedMapRegisters = NumberOfMapRegisters;
 
   /* call the client's AdapterControl callback with its map registers and context */
   Retval = ExecutionRoutine(WaitContextBlock->DeviceObject, WaitContextBlock->CurrentIrp, 
@@ -119,7 +119,7 @@ HalAllocateAdapterChannel(
   else if(Retval == DeallocateObjectKeepRegisters)
     {
       /* don't free the allocated map registers - this is what IoFreeAdapterChannel checks */
-      AdapterObject->AllocatedMapRegisters = 0;
+      AdapterObject->CommittedMapRegisters = 0;
       IoFreeAdapterChannel(AdapterObject);
     }
 
@@ -129,6 +129,162 @@ HalAllocateAdapterChannel(
    */
 
   return STATUS_SUCCESS;
+}
+
+
+BOOLEAN
+HalpGrowMapBuffers(
+  IN PADAPTER_OBJECT	AdapterObject,
+  IN ULONG		SizeOfMapBuffers)
+/*
+ * FUNCTION: Allocate initial, or additional, map buffers for IO adapters.
+ * ARGUMENTS:
+ *     AdapterObject: DMA adapter to allocate buffers for.
+ *     SizeOfMapBuffers: Size of the map buffers to allocate
+ * NOTES:
+ *     - Needs to be tested...
+ */
+{
+	//ULONG PagesToAllocate = BYTES_TO_PAGES(SizeOfMapBuffers);
+	
+	/* TODO: Allocation */
+
+	return TRUE;
+}
+
+PADAPTER_OBJECT STDCALL
+HalpAllocateAdapterEx(
+  ULONG NumberOfMapRegisters,
+  BOOLEAN IsMaster,
+  BOOLEAN Dma32BitAddresses)
+/*
+ * FUNCTION: Allocates an ADAPTER_OBJECT, optionally creates the Master Adapter.
+ * ARGUMENTS:
+ *     - NumberOfMapRegisters: Number of map registers to allocate
+ *     - IsMaster: Wether this is a Master Device or not
+ *     - Dma32BitAddresses: Wether 32-bit Addresses are supported
+ * RETURNS:
+ *     - Pointer to Adapter Object, or NULL if failure.
+ * BUGS:
+ *     - Some stuff is unhandled/incomplete
+ */
+{
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	ULONG ObjectSize;
+	ULONG BitmapSize;
+	NTSTATUS Status;
+	ULONG AllowedMapRegisters = 64;
+	PADAPTER_OBJECT AdapterObject;
+	HANDLE Handle;
+	
+	/* Allocate the Master Adapter if we haven't already 
+	   but make sure we're not asked to do it now, and also check if we need it */
+	if ((MasterAdapter == NULL) && (!IsMaster) && (NumberOfMapRegisters)) {
+		
+		/* Allocate and Save */
+		MasterAdapter = HalpAllocateAdapterEx(NumberOfMapRegisters,
+						     TRUE,
+						     Dma32BitAddresses);
+		
+		/* Cancel on Failure */
+		if (!MasterAdapter) return NULL;
+	}
+	
+	/* Initialize the Object Attributes for the Adapter Object */
+	InitializeObjectAttributes(&ObjectAttributes,
+				   NULL,
+				   OBJ_PERMANENT,
+				   NULL,
+				   NULL);
+	
+	/* Check if this is the Master Adapter, in which case we need to allocate the bitmap */
+	if (IsMaster) {
+		/* Size due to the Bitmap + Bytes in the Bitmap Buffer (8 bytes, 64 bits)*/
+		BitmapSize = sizeof(RTL_BITMAP) + AllowedMapRegisters / 8;
+		
+		/* We will put the Bitmap Buffer after the Adapter Object for simplicity */
+		ObjectSize = sizeof(ADAPTER_OBJECT) + BitmapSize;
+	} else {
+		ObjectSize = sizeof(ADAPTER_OBJECT);
+	}
+	
+	/* Create and Allocate the Object */
+	Status = ObCreateObject(KernelMode,
+				IoAdapterObjectType,
+				&ObjectAttributes,
+				KernelMode,
+				NULL,
+				ObjectSize,
+				0,
+				0,
+				(PVOID)&AdapterObject);
+	
+	if (!Status) return NULL;
+	
+	/* Add a Reference */
+	Status = ObReferenceObjectByPointer(AdapterObject,
+					    FILE_READ_DATA | FILE_WRITE_DATA,
+					    IoAdapterObjectType,
+					    KernelMode);
+	
+	if (!Status) return NULL;
+	
+	/* It's a Valid Object, so now we can play with the memory */
+	RtlZeroMemory(AdapterObject, sizeof(ADAPTER_OBJECT));
+	
+	/* Insert it into the Object Table */
+	Status = ObInsertObject(AdapterObject,
+				NULL,
+				FILE_READ_DATA | FILE_WRITE_DATA,
+				0,
+				NULL,
+				&Handle);
+	
+	if (!Status) return NULL;
+	
+	/* We don't want the handle */
+	NtClose(Handle);	
+	
+	/* Set up the Adapter Object fields */
+	AdapterObject->MapRegistersPerChannel = 1;
+	
+	/* Set the Master if needed (master only needed if we use Map Registers) */
+	if (NumberOfMapRegisters) AdapterObject->MasterAdapter = MasterAdapter;
+	
+	/* Initalize the Channel Wait queue, which every adapter has */
+	KeInitializeDeviceQueue(&AdapterObject->ChannelWaitQueue);
+	
+	/* Initialize the SpinLock, Queue and Bitmap, which are kept in the Master Adapter only */
+	if (IsMaster) {
+		
+		KeInitializeSpinLock(&AdapterObject->SpinLock);
+		InitializeListHead(&AdapterObject->AdapterQueue);
+		
+		/* As said previously, we put them here for simplicity */
+		AdapterObject->MapRegisters = (PVOID)(AdapterObject + 1);
+		
+		/* Set up Bitmap */
+		RtlInitializeBitMap(AdapterObject->MapRegisters,
+				    (PULONG)(AdapterObject->MapRegisters + sizeof(RTL_BITMAP)),
+				    64);
+				    
+		/* Reset the Bitmap */	
+		RtlSetAllBits(AdapterObject->MapRegisters);
+		AdapterObject->NumberOfMapRegisters = 0;
+		AdapterObject->CommittedMapRegisters = 0;
+		
+		/* Allocate Memory for the Map Registers */
+		AdapterObject->MapRegisterBase = ExAllocatePool(NonPagedPool,
+								AllowedMapRegisters * sizeof(DWORD));
+		
+		/* Clear them */
+		RtlZeroMemory(AdapterObject->MapRegisterBase, AllowedMapRegisters * sizeof(DWORD));
+		
+		/* Allocate the contigous memory */
+		HalpGrowMapBuffers(AdapterObject, 0x1000000);
+	}
+	
+	return AdapterObject;	
 }
 
 
@@ -157,18 +313,28 @@ IoFlushAdapterBuffers (
  *     - This is only meaningful on a read operation.  Return immediately for a write.
  */
 {
-  assert(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+  ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
   
   /* this can happen if the card supports scatter/gather */
   if(!MapRegisterBase)
     return TRUE;
 
   /* mask out (disable) the dma channel */
-  if (AdapterObject->Channel < 4)
-    WRITE_PORT_UCHAR( (PVOID)0x0A, (UCHAR)(AdapterObject->Channel | 0x4) );
-  else
-    WRITE_PORT_UCHAR( (PVOID)0xD4, (UCHAR)((AdapterObject->Channel - 4) | 0x4) );
-
+  if (AdapterObject->AdapterNumber == 1) {
+  
+  		/* Set this for Ease */
+  		PDMA1_CONTROL DmaControl1 = AdapterObject->AdapterBaseVa;
+	
+		/* Set Channel */
+		WRITE_PORT_UCHAR(&DmaControl1->SingleMask, AdapterObject->ChannelNumber | DMA_SETMASK);
+  } else {
+  		/* Set this for Ease */
+  		PDMA2_CONTROL DmaControl2 = AdapterObject->AdapterBaseVa;
+	
+		/* Set Channel */
+		WRITE_PORT_UCHAR(&DmaControl2->SingleMask, (AdapterObject->ChannelNumber - 4) | DMA_SETMASK);
+  }
+  
   if(WriteToDevice)
     return TRUE;
     
@@ -202,10 +368,10 @@ IoFreeAdapterChannel (PADAPTER_OBJECT	AdapterObject)
   while(1)
     {
       /* To keep map registers, call here with the following set to 0 */
-      if(AdapterObject->AllocatedMapRegisters)
-        IoFreeMapRegisters(AdapterObject, AdapterObject->MapRegisterBase, AdapterObject->AllocatedMapRegisters);
+      if(AdapterObject->CommittedMapRegisters)
+        IoFreeMapRegisters(AdapterObject, AdapterObject->MapRegisterBase, AdapterObject->CommittedMapRegisters);
 
-      if(!(WaitContextBlock = (PWAIT_CONTEXT_BLOCK)KeRemoveDeviceQueue(&AdapterObject->DeviceQueue)))
+      if(!(WaitContextBlock = (PWAIT_CONTEXT_BLOCK)KeRemoveDeviceQueue(&AdapterObject->ChannelWaitQueue)))
         break;
 
       /*
@@ -241,7 +407,7 @@ IoFreeAdapterChannel (PADAPTER_OBJECT	AdapterObject)
       else if(Retval == DeallocateObjectKeepRegisters)
         {
           /* hide the map registers so they aren't deallocated next time around */
-          AdapterObject->AllocatedMapRegisters = 0;
+          AdapterObject->CommittedMapRegisters = 0;
         }
     }
 }
@@ -265,7 +431,7 @@ IoFreeMapRegisters (
  *     - needs to be improved to use a real map register implementation
  */
 {
-  if( AdapterObject->AllocatedMapRegisters )
+  if( AdapterObject->CommittedMapRegisters )
     {
       MmFreeContiguousMemory(AdapterObject->MapRegisterBase);
       AdapterObject->MapRegisterBase = 0;
@@ -302,9 +468,8 @@ IoMapTransfer (
  */
 {
   PHYSICAL_ADDRESS Address;
-  PVOID MaskReg, ClearReg, ModeReg;
-  UCHAR ModeMask, LengthShift;
   KIRQL OldIrql;
+  UCHAR Mode;
 
 #if defined(__GNUC__)
   Address.QuadPart = 0ULL;
@@ -313,14 +478,8 @@ IoMapTransfer (
 #endif
 
   /* Isa System (slave) DMA? */
-  if (AdapterObject && AdapterObject->InterfaceType == Isa && !AdapterObject->Master)
+  if (MapRegisterBase && !AdapterObject->MasterDevice)
   {
-#if 0
-    /* channel 0 is reserved for DRAM refresh */
-    assert(AdapterObject->Channel != 0);
-    /* channel 4 is reserved for cascade */
-    assert(AdapterObject->Channel != 4);
-#endif
 
     KeAcquireSpinLock(&AdapterObject->SpinLock, &OldIrql);
 
@@ -341,56 +500,77 @@ IoMapTransfer (
      * -- Filip Navara, 19/07/2004     
      */
 
+     /* Get the mode for easier coding */
+     Mode = AdapterObject->AdapterMode;
+     
     /* if it is a write to the device, copy the caller buffer to the low buffer */
-    if( WriteToDevice && !AdapterObject->AutoInitialize )
+    if ((WriteToDevice) && !((PDMA_MODE)&Mode)->AutoInitialize)
     {
       memcpy(MapRegisterBase,
              (char*)MmGetSystemAddressForMdl(Mdl) + ((ULONG)CurrentVa - (ULONG)MmGetMdlVirtualAddress(Mdl)),
 	           *Length );
     }
-             
-    // 16-bit DMA
-    if( AdapterObject->Channel >= 4 )
-    {
-      MaskReg = (PVOID)0xD4; ClearReg = (PVOID)0xD8; ModeReg = (PVOID)0xD6;
-      LengthShift = 1;
-    }
-    else
-    {
-      MaskReg = (PVOID)0x0A; ClearReg = (PVOID)0x0C; ModeReg = (PVOID)0x0B;
-      LengthShift = 0;
-    }
 
-    // calculate the mask we will later set to the mode register
-    ModeMask = (AdapterObject->Channel & 3) | ( WriteToDevice ? 0x8 : 0x4 );
-    // FIXME: if not demand mode, which mode to use? 0x40 for single mode
-    if (!AdapterObject->DemandMode)
-      ModeMask |= 0x40;
-    if (AdapterObject->AutoInitialize)
-      ModeMask |= 0x10;
+    /* Writer Adapter Mode, transfer type */
+    ((PDMA_MODE)&Mode)->TransferType = (WriteToDevice ? WRITE_TRANSFER : READ_TRANSFER);
 
     // program up the dma controller, and return
-    if (!AdapterObject->AutoInitialize)
+    if (!((PDMA_MODE)&Mode)->AutoInitialize) {
       Address = MmGetPhysicalAddress( MapRegisterBase );
-    else
+    } else {
       Address = MmGetPhysicalAddress( CurrentVa );
-    // disable and select the channel number
-    WRITE_PORT_UCHAR( MaskReg, (UCHAR)((AdapterObject->Channel & 3) | 0x4) );
-    // write zero to the reset register
-    WRITE_PORT_UCHAR( ClearReg, 0 );
-    // mode register, or channel with 0x4 for write memory, 0x8 for read memory, 0x10 for auto initialize
-    WRITE_PORT_UCHAR( ModeReg, ModeMask);
-    // set the 64k page register for the channel
-    WRITE_PORT_UCHAR( AdapterObject->PagePort, (UCHAR)(Address.u.LowPart >> 16) );
-    // low, then high address byte, which is always 0 for us, because we have a 64k alligned address
-    WRITE_PORT_UCHAR( AdapterObject->OffsetPort, 0 );
-    WRITE_PORT_UCHAR( AdapterObject->OffsetPort, 0 );
-    // count is 1 less than length, low then high
-    WRITE_PORT_UCHAR( AdapterObject->CountPort, (UCHAR)((*Length >> LengthShift) - 1) );
-    WRITE_PORT_UCHAR( AdapterObject->CountPort, (UCHAR)(((*Length >> LengthShift) - 1)>>8) );
-    // unmask the channel to let it rip
-    WRITE_PORT_UCHAR( MaskReg, AdapterObject->Channel & 3 );
-
+    }
+    
+    /* 16-bit DMA has a shifted length */
+    if (AdapterObject->Width16Bits) *Length = (*Length >> 1);
+     
+    /* Make the Transfer */
+    if (AdapterObject->AdapterNumber == 1) {
+    
+    	PDMA1_CONTROL DmaControl1 = AdapterObject->AdapterBaseVa; /* For Writing Less Code */
+    	
+	/* Reset Register */
+	WRITE_PORT_UCHAR(&DmaControl1->ClearBytePointer, 0);
+	
+	/* Set the Mode */
+	WRITE_PORT_UCHAR(&DmaControl1->Mode, (UCHAR)(Mode));
+	
+	/* Set the Page Register (apparently always 0 for us if I trust the previous comment) */
+	WRITE_PORT_UCHAR(&DmaControl1->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseAddress, 0);
+	WRITE_PORT_UCHAR(&DmaControl1->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseAddress, 0);
+	
+	/* Set the Length */
+ 	WRITE_PORT_UCHAR(&DmaControl1->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseCount,
+			(UCHAR)((*Length) - 1));
+	WRITE_PORT_UCHAR(&DmaControl1->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseCount,
+			(UCHAR)((*Length) - 1) >> 8);
+			
+	/* Unmask the Channel */
+	WRITE_PORT_UCHAR(&DmaControl1->SingleMask, AdapterObject->ChannelNumber | DMA_CLEARMASK);
+    } else {
+        PDMA2_CONTROL DmaControl2 = AdapterObject->AdapterBaseVa; /* For Writing Less Code */
+    	
+	/* Reset Register */
+	WRITE_PORT_UCHAR(&DmaControl2->ClearBytePointer, 0);
+	
+	/* Set the Mode */
+	WRITE_PORT_UCHAR(&DmaControl2->Mode, (UCHAR)(Mode));
+	
+	/* Set the Page Register (apparently always 0 for us if I trust the previous comment) */
+	WRITE_PORT_UCHAR(&DmaControl2->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseAddress, 0);
+	WRITE_PORT_UCHAR(&DmaControl2->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseAddress, 0);
+	
+	/* Set the Length */
+ 	WRITE_PORT_UCHAR(&DmaControl2->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseCount,
+			(UCHAR)((*Length) - 1));
+	WRITE_PORT_UCHAR(&DmaControl2->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseCount,
+			(UCHAR)((*Length) - 1) >> 8);
+			
+	/* Unmask the Channel */
+	WRITE_PORT_UCHAR(&DmaControl2->SingleMask, AdapterObject->ChannelNumber | DMA_CLEARMASK);
+    }
+	
+    /* Release Spinlock */
     KeReleaseSpinLock(&AdapterObject->SpinLock, OldIrql);
 
     /* 
@@ -409,7 +589,7 @@ IoMapTransfer (
   being NULL is used to detect a s/g busmaster.
   */
   if ((!AdapterObject && !MapRegisterBase) ||
-      (AdapterObject && AdapterObject->Master && AdapterObject->ScatterGather))
+      (AdapterObject && AdapterObject->MasterDevice && AdapterObject->ScatterGather))
   {
     /* 
     Just return the passed VA's corresponding phys. address. 
@@ -459,7 +639,7 @@ IoMapTransfer (
   not being NULL is used to detect a non s/g busmaster.
   */
   if ((!AdapterObject && MapRegisterBase) ||
-      (AdapterObject && AdapterObject->Master && !AdapterObject->ScatterGather))
+      (AdapterObject && AdapterObject->MasterDevice && !AdapterObject->ScatterGather))
   {
     /*
     NOTE: Busmasters doing common-buffer DMA shouldn't call IoMapTransfer, but I don't

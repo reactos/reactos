@@ -1,4 +1,4 @@
-/* $Id: kdbg.c,v 1.8 2004/04/29 17:06:21 navaraf Exp $
+/* $Id: kdbg.c,v 1.8.16.1 2004/10/24 22:57:52 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,7 +12,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
+#include <ndk/kdtypes.h>
+#include <ndk/rtlfuncs.h>
+#include <reactos/helper.h>
 
 #define NDEBUG
 #include <internal/debug.h>

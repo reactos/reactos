@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.11 2003/12/28 22:38:09 fireball Exp $
+/* $Id: pci.c,v 1.11.22.1 2004/10/24 22:57:52 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -645,7 +645,7 @@ HalpAssignPciSlotResources(IN PBUS_HANDLER BusHandler,
       if (0 != PciConfig.u.type0.BaseAddresses[Address])
 	{
 	  ResourceCount++;
-          Offset = offsetof(PCI_COMMON_CONFIG, u.type0.BaseAddresses[Address]);
+          Offset = FIELD_OFFSET(PCI_COMMON_CONFIG, u.type0.BaseAddresses[Address]);
 	  Status = WritePciConfigUlong((UCHAR)BusNumber, (UCHAR)SlotNumber, Offset, 0xffffffff);
 	  if (! NT_SUCCESS(Status))
 	    {

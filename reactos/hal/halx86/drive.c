@@ -1,4 +1,4 @@
-/* $Id: drive.c,v 1.4 2003/02/26 14:14:03 ekohl Exp $
+/* $Id: drive.c,v 1.4.32.1 2004/10/24 22:57:51 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,6 +12,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ndk/haltypes.h>
+#include <ndk/halfuncs.h>
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/

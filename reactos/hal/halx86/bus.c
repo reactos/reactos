@@ -1,4 +1,4 @@
-/* $Id: bus.c,v 1.7 2003/12/28 22:38:09 fireball Exp $
+/* $Id: bus.c,v 1.7.22.1 2004/10/24 22:57:51 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,7 +15,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
+#include <ndk/halfuncs.h>
 #include <hal.h>
 #include <bus.h>
 

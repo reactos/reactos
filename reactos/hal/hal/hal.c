@@ -1,4 +1,4 @@
-/* $Id: hal.c,v 1.6 2003/10/20 06:03:28 vizzini Exp $
+/* $Id: hal.c,v 1.6.28.1 2004/10/24 22:57:51 ion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -12,10 +12,12 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
-#include <roscfg.h>
+#include <ndk/haltypes.h>
+#include <ndk/kdtypes.h>
+#include <reactos/helper.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <reactos/debug.h>
 
 /* DATA **********************************************************************/
 
@@ -730,7 +732,9 @@ KeGetCurrentIrql(VOID)
   return (KIRQL)0;
 }
 
-
+#ifdef KeLowerIrql
+#undef KeLowerIrql
+#endif
 VOID
 STDCALL
 KeLowerIrql(
@@ -754,7 +758,9 @@ KeQueryPerformanceCounter(
   return Value;
 }
 
-
+#ifdef KeRaiseIrql
+#undef KeRaiseIrql
+#endif
 VOID
 STDCALL
 KeRaiseIrql(
