@@ -1,6 +1,6 @@
-/* $Id: wapi.c,v 1.3 2000/02/27 02:12:07 ekohl Exp $
+/* $Id: wapi.c,v 1.4 2000/02/29 23:57:46 ea Exp $
  * 
- * reactos/subsys/csrss/init.c
+ * reactos/subsys/csrss/api/wapi.c
  *
  * Initialize the CSRSS subsystem server process.
  *
@@ -41,14 +41,14 @@ static void Thread_Api2(HANDLE ServerPort)
 					&LpcRequest);
 	if (!NT_SUCCESS(Status))
 	  {
-	     DisplayString(L"NtReplyWaitReceivePort failed\n");
+	     DisplayString(L"CSR: NtReplyWaitReceivePort failed\n");
 	  }
 	
 	Request = (PCSRSS_API_REQUEST)LpcRequest.MessageData;
 	
 	ProcessData = CsrGetProcessData(LpcRequest.ClientProcessId);
 	
-	DisplayString(L"Received request\n");
+	DisplayString(L"CSR: Received request\n");
 	
 	switch (Request->Type)
 	  {
@@ -120,7 +120,7 @@ void Thread_Api(PVOID PortHandle)
 				NULL);
    if (CsrssApiHeap == NULL)
      {
-	PrintString("Failed to create private heap, aborting\n");
+	PrintString("CSR: Failed to create private heap, aborting\n");
 	return;
      }
 
@@ -131,7 +131,7 @@ void Thread_Api(PVOID PortHandle)
 	Status = NtListenPort(PortHandle, &Request);
 	if (!NT_SUCCESS(Status))
 	  {
-	     DisplayString(L"NtListenPort() failed\n");
+	     DisplayString(L"CSR: NtListenPort() failed\n");
 	     NtTerminateThread(NtCurrentThread(), Status);
 	  }
 	
@@ -143,14 +143,14 @@ void Thread_Api(PVOID PortHandle)
 				     NULL);
 	if (!NT_SUCCESS(Status))
 	  {
-	     DisplayString(L"NtAcceptConnectPort() failed\n");
+	     DisplayString(L"CSR: NtAcceptConnectPort() failed\n");
 	     NtTerminateThread(NtCurrentThread(), Status);
 	  }
 	
 	Status = NtCompleteConnectPort(ServerPort);
 	if (!NT_SUCCESS(Status))
 	  {
-	     DisplayString(L"NtCompleteConnectPort() failed\n");
+	     DisplayString(L"CSR: NtCompleteConnectPort() failed\n");
 	     NtTerminateThread(NtCurrentThread(), Status);
 	  }
 	
@@ -166,7 +166,7 @@ void Thread_Api(PVOID PortHandle)
 				     NULL);
 	if (!NT_SUCCESS(Status))
 	  {
-	     DisplayString(L"Unable to create server thread\n");
+	     DisplayString(L"CSR: Unable to create server thread\n");
 	     NtClose(ServerPort);
 	     NtTerminateThread(NtCurrentThread(), Status);
 	  }

@@ -1,4 +1,12 @@
-#include <ddk/ntddk.h>
+/* $Id: shell.c,v 1.32 2000/02/29 23:57:44 ea Exp $
+ *
+ * PROJECT    : ReactOS Operating System
+ * DESCRIPTION: ReactOS' Native Shell
+ * LICENSE    : See top level directory
+ *
+ */
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <windows.h>
 #include <stdarg.h>
 #include <string.h>
@@ -233,6 +241,25 @@ ExecuteKill(char * lpPid)
 	return;
 }
 
+void ExecuteHelp (void * dummy)
+{
+	debug_printf (
+		"A:\t\t\tCurrent drive is A:\n"
+		"C:\t\t\tCurrent drive is C:\n"
+		"cd [directory]\t\tChange current directory\n"
+		"dir [directory]\t\tList directory\n"
+		"exit\t\t\tTerminate the shell\n"
+		"help\t\t\tPrint this help message\n"
+		"kill [pid]\t\tKill process which PID is pid\n"
+		"reboot\t\t\tRestart the system\n"
+		"start [program.exe]\tDetach program.exe\n"
+		"type [file]\t\tPrint the file on console\n"
+		"validate\t\tValidate the process' heap\n"
+		"ver\t\t\tPrint version information\n"
+		"[program.exe]\t\tStart synchronously program.exe\n\n"
+		);
+}
+
 void ExecuteCommand(char* line)
 {
    char* cmd;
@@ -343,6 +370,11 @@ void ExecuteCommand(char* line)
 	ExecuteStart(tail);
 	return;
      }
+   if ((strcmp(cmd,"help") * strcmp(cmd,"?")) == 0)
+     {
+	ExecuteHelp(tail);
+	return;
+     }
    if (strcmp(cmd,"exit")==0)
      {
         if (bCanExit == TRUE)
@@ -436,3 +468,4 @@ int main(void)
    return 0;
 }
 
+/* EOF */

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 1999/10/03 22:12:07 ekohl Exp $
+# $Id: makefile,v 1.3 2000/02/29 23:57:47 ea Exp $
 #
 # ReactOS System Utilities
 #
@@ -12,10 +12,13 @@
 # 1999-03-16 (Emanuele Aliberti)
 #	Added regnav.c
 #
+# 1999-12-19 (ea)
+#	Added qsi.c
+#
 
 ROSINC=../../reactos/include
 
-TARGET=regnav.exe
+TARGET=regnav.exe chklib.exe
 # chkdsk.exe format.exe \
 #        chklib.exe shutdown.exe regnav.exe
 #	login.exe chklib.exe shutdown.exe regnav.exe
@@ -39,14 +42,8 @@ format.exe: format.o win32err.o wmain.o
 		-lcrtdll \
 		-lfmifs
 	$(NM) --numeric-sort format.exe > format.sym
-#---
 
-#login.exe: login.o
-#	$(CC) login.o \
-#		-o login.exe \
-#		-lntdll \
-#		-Wl,--subsystem native:4.0
-#	$(NM) --numeric-sort login.exe > login.sym
+#---
 
 chklib.exe: chklib.o win32err.o
 	$(CC) chklib.o win32err.o \
@@ -71,6 +68,16 @@ shutdown.exe: shutdown.o win32err.o
 		-luser32 \
 		-lcrtdll
 	$(NM) --numeric-sort shutdown.exe > shutdown.sym
+
+qsi.exe: qsi.o
+	$(CC) qsi.o \
+		../../reactos/lib/ntdll/ntdll.a
+		-o qsi.exe \
+		-lkernel32 \
+		-lcrtdll
+	$(NM) --numeric-sort qsi.exe > qsi.sym
+
+qsi.o: qsi.c
 
 #---
 

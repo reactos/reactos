@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.5 2000/02/27 02:11:54 ekohl Exp $
+/* $Id: init.c,v 1.6 2000/02/29 23:57:45 ea Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -98,7 +98,7 @@ CsrServerInitialization (
    Status = CsrParseCommandLine (ArgumentCount, ArgumentArray);
    if (!NT_SUCCESS(Status))
      {
-	PrintString("Unable to parse the command line (Status: %x)\n", Status);
+	PrintString("CSR: Unable to parse the command line (Status: %x)\n", Status);
 	return(FALSE);
      }
 
@@ -117,7 +117,7 @@ CsrServerInitialization (
 			 0);
    if (!NT_SUCCESS(Status))
      {
-	PrintString("Unable to create \\ApiPort (Status %x)\n", Status);
+	PrintString("CSR: Unable to create \\ApiPort (Status %x)\n", Status);
 	return(FALSE);
      }
 
@@ -133,7 +133,7 @@ CsrServerInitialization (
 				NULL);
    if (!NT_SUCCESS(Status))
      {
-	PrintString("Unable to create server thread\n");
+	PrintString("CSR: Unable to create server thread\n");
 	NtClose(ApiPortHandle);
 	return FALSE;
      }

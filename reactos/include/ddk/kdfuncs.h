@@ -1,10 +1,15 @@
 #ifndef __INCLUDE_DDK_KDFUNCS_H
 #define __INCLUDE_DDK_KDFUNCS_H
-/* $Id: kdfuncs.h,v 1.1 2000/02/26 22:41:34 ea Exp $ */
+/* $Id: kdfuncs.h,v 1.2 2000/02/29 23:57:44 ea Exp $ */
 
 /* --- NTOSKRNL.EXE --- */
-extern BOOLEAN KdDebuggerEnabled;
-extern BOOLEAN KdDebuggerNotPresent;
+#if defined(__NTOSKRNL__)
+extern BOOLEAN KdDebuggerEnabled __declspec(dllexport);
+extern BOOLEAN KdDebuggerNotPresent __declspec(dllexport);
+#else
+extern BOOLEAN KdDebuggerEnabled __declspec(dllimport);
+extern BOOLEAN KdDebuggerNotPresent __declspec(dllimport);
+#endif
 
 BYTE
 STDCALL
@@ -13,7 +18,11 @@ KdPollBreakIn (
 	);
 
 /* --- HAL.DLL --- */
-extern ULONG KdComPortInUse;
+#if defined(__NTOSKRNL__)
+extern ULONG KdComPortInUse __declspec(dllexport);
+#else
+extern ULONG KdComPortInUse __declspec(dllimport);
+#endif
 
 BOOLEAN
 STDCALL

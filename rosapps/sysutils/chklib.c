@@ -1,4 +1,4 @@
-/* $Id: chklib.c,v 1.1 1999/05/16 07:27:35 ea Exp $
+/* $Id: chklib.c,v 1.2 2000/02/29 23:57:46 ea Exp $
  * 
  * chklib.c
  * 
@@ -7,17 +7,17 @@
  * --------------------------------------------------------------------
  *
  * This software is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public License as
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this software; see the file COPYING.LIB. If
+ * You should have received a copy of the GNU General Public
+ * License along with this software; see the file COPYING. If
  * not, write to the Free Software Foundation, Inc., 675 Mass Ave,
  * Cambridge, MA 02139, USA.  
  *
@@ -132,7 +132,7 @@ main(
 	HINSTANCE	dll;
 	TCHAR		ModuleName [_MAX_PATH];
 
-	if (argc != 2 && argc != 3) 
+	if (argc < 2) 
 	{
 		fprintf(
 			stderr, 
@@ -140,7 +140,7 @@ main(
 ReactOS System Tools\n\
 Check a Dynamic Link Library (DLL) for loading\n\
 Copyright (c) 1998, 1999 Emanuele Aliberti\n\n\
-usage: %s module [symbol]\n",
+usage: %s module [symbol [, ...]]\n",
 			argv[0]
 			);
 		exit(EXIT_FAILURE);
@@ -173,7 +173,18 @@ usage: %s module [symbol]\n",
 #ifdef DISPLAY_VERSION
 	DisplayVersion(dll,ModuleName);
 #endif
-	if (argc == 3) DisplayEntryPoint( dll, argv[2] );
+	if (argc > 2)
+	{
+		int	CurrentSymbol;
+
+		for (	CurrentSymbol = 2;
+			(CurrentSymbol < argc);
+			++CurrentSymbol
+			)
+		{
+			DisplayEntryPoint( dll, argv[CurrentSymbol] );
+		}
+	}
 	FreeLibrary(dll);
 	printf(
 		"%s unloaded.\n",

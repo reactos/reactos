@@ -1,6 +1,6 @@
 //======================================================================
 //
-// $Id: chkdsk.c,v 1.1 1999/05/16 07:27:35 ea Exp $
+// $Id: chkdsk.c,v 1.2 2000/02/29 23:57:46 ea Exp $
 //
 // Chkdskx
 //
@@ -40,7 +40,7 @@
 #define UNICODE
 #include <windows.h>
 #include <stdio.h>
-#include "fmifs.h"
+#include <fmifs.h>
 #define _UNICODE 1
 #include <tchar.h>
 #include "config.h"
@@ -63,7 +63,7 @@ WCHAR	CurrentDirectory[1024];
 //
 // FMIFS function
 //
-PCHKDSK   Chkdsk;
+//PCHKDSK   ChkDsk;
 #endif /* ndef FMIFS_IMPORT_DLL */
 
 
@@ -127,7 +127,7 @@ ParseCommandLine(
 	BOOLEAN gotFix = FALSE;
 	BOOLEAN gotVerbose = FALSE;
 	BOOLEAN gotClean = FALSE;
-	BOOLEAN gotScan = FALSE;
+	/*BOOLEAN gotScan = FALSE;*/
 
 
 	for (	i = 1;
@@ -200,7 +200,7 @@ ParseCommandLine(
 //
 //----------------------------------------------------------------------
 BOOLEAN
-__stdcall
+STDCALL
 ChkdskCallback(
 	CALLBACKCOMMAND	Command,
 	DWORD		Modifier,
@@ -217,21 +217,73 @@ ChkdskCallback(
 	//
 	switch( Command )
 	{
+	case UNKNOWN2:
+		wprintf(L"UNKNOWN2\r");
+		break;
+		
+	case UNKNOWN3:
+		wprintf(L"UNKNOWN3\r");
+		break;
+		
+	case UNKNOWN4:
+		wprintf(L"UNKNOWN4\r");
+		break;
+		
+	case UNKNOWN5:
+		wprintf(L"UNKNOWN5\r");
+		break;
+		
+	case UNKNOWN7:
+		wprintf(L"UNKNOWN7\r");
+		break;
+		
+	case UNKNOWN8:
+		wprintf(L"UNKNOWN8\r");
+		break;
+		
+	case UNKNOWN9:
+		wprintf(L"UNKNOWN9\r");
+		break;
+		
+	case UNKNOWNA:
+		wprintf(L"UNKNOWNA\r");
+		break;
+		
+	case UNKNOWNC:
+		wprintf(L"UNKNOWNC\r");
+		break;
+		
+	case UNKNOWND:
+		wprintf(L"UNKNOWND\r");
+		break;
+		
+	case INSUFFICIENTRIGHTS:
+		wprintf(L"INSUFFICIENTRIGHTS\r");
+		break;
+		
+	case STRUCTUREPROGRESS:
+		wprintf(L"STRUCTUREPROGRESS\r");
+		break;
+		
+	case DONEWITHSTRUCTURE:
+		wprintf(L"DONEWITHSTRUCTURE\r");
+		break;
+		
 	case PROGRESS:
 		percent = (PDWORD) Argument;
-		_tprintf(L"%d percent completed.\r", *percent);
+		wprintf(L"%d percent completed.\r", *percent);
 		break;
 
 	case OUTPUT:
 		output = (PTEXTOUTPUT) Argument;
-		fprintf(stdout, "%s", output->Output);
+		fwprintf(stdout, L"%s", output->Output);
 		break;
 
 	case DONE:
 		status = (PBOOLEAN) Argument;
-		if( *status == TRUE ) {
-
-			_tprintf(L"Chkdsk was unable to complete successfully.\n\n");
+		if ( *status == TRUE )
+		{
+			wprintf(L"Chkdsk was unable to complete successfully.\n\n");
 			Error = TRUE;
 		}
 		break;
@@ -246,7 +298,7 @@ ChkdskCallback(
 //
 // Loads FMIFS.DLL and locates the entry point(s) we are going to use
 //
-// 19990216 EA User wide functions
+// 19990216 EA Used wide functions
 //
 //----------------------------------------------------------------------
 BOOLEAN
@@ -254,7 +306,7 @@ LoadFMIFSEntryPoints(VOID)
 {
 	LoadLibraryW( L"fmifs.dll" );
 
-	if( !(Chkdsk =
+	if( !(ChkDsk =
 		(void *) GetProcAddress(
 			GetModuleHandleW(L"fmifs.dll"),
 			"Chkdsk" ))
@@ -292,7 +344,7 @@ wmain( int argc, WCHAR *argv[] )
 
 	wprintf(
 		L"\n\
-Chkdskx v1.0 by Mark Russinovich\n\
+Chkdskx v1.0.1 by Mark Russinovich\n\
 Systems Internals - http://www.sysinternals.com/\n\
 ReactOS adaptation 1999 by Emanuele Aliberti\n\n"
 		);
@@ -311,7 +363,10 @@ ReactOS adaptation 1999 by Emanuele Aliberti\n\n"
 	//
 	if( (badArg = ParseCommandLine( argc, argv )))
 	{
-		wprintf(L"Unknown argument: %s\n", argv[badArg] );
+		wprintf(
+			L"Unknown argument: %s\n",
+			argv[badArg]
+			);
 
 		Usage(argv[0]);
 		return -1;
@@ -386,7 +441,7 @@ ReactOS adaptation 1999 by Emanuele Aliberti\n\n"
 				);
 		if( volumeHandle == INVALID_HANDLE_VALUE )
 		{
-			wprintf("Chdskx cannot run because the volume is in use by another process.\n\n");
+			wprintf(L"Chdskx cannot run because the volume is in use by another process.\n\n");
 			return -1;
 		}
 		CloseHandle( volumeHandle );
@@ -401,10 +456,10 @@ ReactOS adaptation 1999 by Emanuele Aliberti\n\n"
 	// Just do it
 	//
 	wprintf(
-		"The type of file system is %s.\n",
+		L"The type of file system is %s.\n",
 		fileSystem
 		);
-	Chkdsk(
+	ChkDsk(
 		Drive,
 		fileSystem,
 		FixErrors,

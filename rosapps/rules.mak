@@ -27,6 +27,7 @@ FLOPPY_DIR = A/
 DIST_DIR = dist
 endif
 
+
 ifeq ($(HOST),mingw32-windows)
 PREFIX = 
 EXE_POSTFIX = .exe
@@ -62,9 +63,16 @@ endif
 
 CC = $(PREFIX)gcc
 NATIVE_CC = gcc
-CFLAGS = -O2 -Wall -Wstrict-prototypes -fno-builtin \
-         $(LEAN_AND_MEAN_DEFINE) $(DEFINES) $(DEBUGGING_CFLAGS) \
-         $(EXTRA_CFLAGS)
+CFLAGS = \
+	-pipe \
+	-O2 \
+	-Wall \
+	-Wstrict-prototypes \
+	-fno-builtin \
+	$(LEAN_AND_MEAN_DEFINE) \
+	$(DEFINES) \
+	$(DEBUGGING_CFLAGS) \
+	$(EXTRA_CFLAGS)
 CXXFLAGS = $(CFLAGS)
 LD = $(PREFIX)ld
 NM = $(PREFIX)nm
@@ -74,11 +82,17 @@ AS = $(PREFIX)gcc -c -x assembler-with-cpp
 CPP = $(PREFIX)cpp
 AR = $(PREFIX)ar
 RC = $(PREFIX)windres
+RCINC = --include-dir ../reactos/include --include-dir ../../reactos/include --include-dir ../../../reactos/include
 
+%.o: %.cc
+	$(CC) $(CFLAGS) -c $< -o $@
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
+%.o: %.asm
+	$(NASM_CMD) $(NFLAGS) $< -o $@
 %.coff: %.rc
-	$(RC) $< $@
+	$(RC) $(RCINC) $< $@
+
 
 
 RULES_MAK_INCLUDED = 1

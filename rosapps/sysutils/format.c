@@ -1,6 +1,6 @@
 //======================================================================
 //
-// $Id: format.c,v 1.1 1999/05/16 07:27:35 ea Exp $
+// $Id: format.c,v 1.2 2000/02/29 23:57:46 ea Exp $
 //
 // Formatx
 //
@@ -38,7 +38,7 @@
 #define _UNICODE 1
 #include <windows.h>
 #include <stdio.h>
-#include "fmifs.h"
+#include "../../reactos/include/fmifs.h"
 //#include <tchar.h>
 #include "win32err.h"
 #include "config.h"
