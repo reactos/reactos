@@ -47,8 +47,8 @@ typedef struct _NTFS_INFO
   ULONG SectorsPerCluster;
   ULONG BytesPerCluster;
   ULONGLONG SectorCount;
-  ULONGLONG MftStart;
-  ULONGLONG MftMirrStart;
+  ULARGE_INTEGER MftStart;
+  ULARGE_INTEGER MftMirrStart;
   ULONGLONG SerialNumber;
 
 } NTFS_INFO, *PNTFS_INFO;
@@ -122,8 +122,6 @@ typedef struct _CCB
 
 #define TAG_CCB TAG('I', 'C', 'C', 'B')
 
-
-
 typedef struct
 {
   PDRIVER_OBJECT DriverObject;
@@ -131,13 +129,143 @@ typedef struct
   ULONG Flags;
 } NTFS_GLOBAL_DATA, *PNTFS_GLOBAL_DATA;
 
+
+typedef enum
+{
+  AttributeStandardInformation = 0x10,
+  AttributeAttributeList = 0x20,
+  AttributeFileName = 0x30,
+  AttributeObjectId = 0x40,
+  AttributeSecurityDescriptor = 0x50,
+  AttributeVolumeName = 0x60,
+  AttributeVolumeInformation = 0x70,
+  AttributeData = 0x80,
+  AttributeIndexRoot = 0x90,
+  AttributeIndexAllocation = 0xA0,
+  AttributeBitmap = 0xB0,
+  AttributeReparsePoint = 0xC0,
+  AttributeEAInformation = 0xD0,
+  AttributeEA = 0xE0,
+  AttributePropertySet = 0xF0,
+  AttributeLoggedUtilityStream = 0x100
+} ATTRIBUTE_TYPE, *PATTRIBUTE_TYPE;
+
+
+typedef struct
+{
+  ULONG Type;
+  USHORT UsnOffset;
+  USHORT UsnSize;
+  ULONGLONG Usn;
+} NTFS_RECORD_HEADER, *PNTFS_RECORD_HEADER;
+
+typedef struct
+{
+  NTFS_RECORD_HEADER Ntfs;
+  USHORT SequenceNumber;
+  USHORT LinkCount;
+  USHORT AttributeOffset;
+  USHORT Flags;
+  ULONG BytesInUse;
+  ULONG BytesAllocated;
+  ULONGLONG BaseFileRecord;
+  USHORT NextAttributeNumber;
+} FILE_RECORD_HEADER, *PFILE_RECORD_HEADER;
+
+typedef struct
+{
+  ATTRIBUTE_TYPE AttributeType;
+  ULONG Length;
+  BOOLEAN Nonresident;
+  UCHAR NameLength;
+  USHORT NameOffset;
+  USHORT Flags;
+  USHORT AttributeNumber;
+} ATTRIBUTE, *PATTRIBUTE;
+
+typedef struct
+{
+  ATTRIBUTE Attribute;
+  ULONG ValueLength;
+  USHORT ValueOffset;
+  UCHAR Flags;
+//  UCHAR Padding0;
+} RESIDENT_ATTRIBUTE, *PRESIDENT_ATTRIBUTE;
+
+typedef struct
+{
+  ATTRIBUTE Attribute;
+  ULONGLONG StartVcn; // LowVcn
+  ULONGLONG LastVcn; // HighVcn
+  USHORT RunArrayOffset;
+  USHORT CompressionUnit;
+  ULONG  Padding0;
+  UCHAR  IndexedFlag;
+  ULONGLONG AllocatedSize;
+  ULONGLONG DataSize;
+  ULONGLONG InitializedSize;
+  ULONGLONG CompressedSize;
+} NONRESIDENT_ATTRIBUTE, *PNONRESIDENT_ATTRIBUTE;
+
+
+typedef struct
+{
+  ULONGLONG CreationTime;
+  ULONGLONG ChangeTime;
+  ULONGLONG LastWriteTime;
+  ULONGLONG LastAccessTime;
+  ULONG FileAttribute;
+  ULONG AlignmentOrReserved[3];
+#if 0
+  ULONG QuotaId;
+  ULONG SecurityId;
+  ULONGLONG QuotaCharge;
+  USN Usn;
+#endif
+} STANDARD_INFORMATION, *PSTANDARD_INFORMATION;
+
+
+typedef struct
+{
+  ATTRIBUTE_TYPE AttributeType;
+  USHORT Length;
+  UCHAR NameLength;
+  UCHAR NameOffset;
+  ULONGLONG StartVcn; // LowVcn
+  ULONGLONG FileReferenceNumber;
+  USHORT AttributeNumber;
+  USHORT AlignmentOrReserved[3];
+} ATTRIBUTE_LIST, *PATTRIBUTE_LIST;
+
+
+typedef struct
+{
+  ULONGLONG DirectoryFileReferenceNumber;
+  ULONGLONG CreationTime;
+  ULONGLONG ChangeTime;
+  ULONGLONG LastWriteTime;
+  ULONGLONG LastAccessTime;
+  ULONGLONG AllocatedSize;
+  ULONGLONG DataSize;
+  ULONG FileAttributes;
+  ULONG AlignmentOrReserved;
+  UCHAR NameLength;
+  UCHAR NameType;
+  WCHAR Name[1];
+} FILENAME_ATTRIBUTE, *PFILENAME_ATTRIBUTE;
+
+
+
 extern PNTFS_GLOBAL_DATA NtfsGlobalData;
-
-
-
 
 //int CdfsStrcmpi( wchar_t *str1, wchar_t *str2 );
 //void CdfsWstrcpy( wchar_t *str1, wchar_t *str2, int max );
+
+
+/* attrib.c */
+
+VOID
+NtfsDumpAttribute(PATTRIBUTE Attribute);
 
 
 /* blockdev.c */
@@ -250,6 +378,13 @@ NtfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 NTSTATUS STDCALL
 NtfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp);
+
+
+/* mft.c */
+NTSTATUS
+NtfsOpenMft(PDEVICE_OBJECT DeviceObject,
+	    PDEVICE_EXTENSION Vcb);
+
 
 #if 0
 /* misc.c */

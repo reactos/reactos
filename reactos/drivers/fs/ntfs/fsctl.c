@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.1 2002/06/25 22:23:06 ekohl Exp $
+/* $Id: fsctl.c,v 1.2 2002/07/15 15:37:33 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -119,7 +119,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
 		  PDEVICE_EXTENSION Vcb)
 {
   DISK_GEOMETRY DiskGeometry;
-  PUCHAR Buffer;
+//  PUCHAR Buffer;
   ULONG Size;
   NTSTATUS Status;
   PBOOT_SECTOR BootSector;
@@ -160,8 +160,8 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
       Vcb->NtfsInfo.BytesPerCluster = BootSector->BytesPerSector * BootSector->SectorsPerCluster;
       Vcb->NtfsInfo.SectorCount = BootSector->SectorCount;
 
-      Vcb->NtfsInfo.MftStart = BootSector->MftLocation;
-      Vcb->NtfsInfo.MftMirrStart = BootSector->MftMirrLocation;
+      Vcb->NtfsInfo.MftStart.QuadPart = BootSector->MftLocation;
+      Vcb->NtfsInfo.MftMirrStart.QuadPart = BootSector->MftMirrLocation;
       Vcb->NtfsInfo.SerialNumber = BootSector->SerialNumber;
 
 //#indef NDEBUG
@@ -179,9 +179,12 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
 
       DbgPrint("  SerialNumber:           %I64x\n", BootSector->SerialNumber);
 //#endif
+
+      NtfsOpenMft(DeviceObject, Vcb);
+
     }
 
-  ExFreePool(Buffer);
+  ExFreePool(BootSector);
 
   return(Status);
 }
