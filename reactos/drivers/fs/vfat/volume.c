@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.12 2001/07/28 10:12:36 hbirr Exp $
+/* $Id: volume.c,v 1.13 2001/11/01 10:41:53 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -38,9 +38,8 @@ FsdGetFsVolumeInformation(PFILE_OBJECT FileObject,
   DPRINT("LabelLength %lu\n", LabelLength);
   DPRINT("Label %S\n", DeviceObject->Vpb->VolumeLabel);
 
-  /* FIXME: This does not work correctly! Why?? */
-//  if (*BufferLength < (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength));
-//    return(STATUS_BUFFER_OVERFLOW);
+  if (*BufferLength < (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength*sizeof(WCHAR)))
+    return(STATUS_BUFFER_OVERFLOW);
 
   /* valid entries */
   FsVolumeInfo->VolumeSerialNumber = DeviceObject->Vpb->SerialNumber;
@@ -100,9 +99,8 @@ FsdGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
   DPRINT("FsdGetFsSizeInformation()\n");
   DPRINT("FsSizeInfo = %p\n", FsSizeInfo);
 
-  /* FIXME: This does not work correctly! Why?? */
-//  if (*BufferLength < sizeof(FILE_FS_SIZE_INFORMATION));
-//    return(STATUS_BUFFER_OVERFLOW);
+  if (*BufferLength < sizeof(FILE_FS_SIZE_INFORMATION))
+    return(STATUS_BUFFER_OVERFLOW);
 
   DeviceExt = DeviceObject->DeviceExtension;
 
@@ -134,11 +132,11 @@ FsdGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
       FsSizeInfo->SectorsPerAllocationUnit = BootSect->SectorsPerCluster;
       FsSizeInfo->BytesPerSector = BootSect->BytesPerSector;
     }
-  
+
   DPRINT("Finished FsdGetFsSizeInformation()\n");
   if (NT_SUCCESS(Status))
     *BufferLength -= sizeof(FILE_FS_SIZE_INFORMATION);
-  
+
   return(Status);
 }
 
@@ -151,19 +149,18 @@ FsdGetFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
   DPRINT("FsDeviceInfo = %p\n", FsDeviceInfo);
   DPRINT("BufferLength %lu\n", *BufferLength);
   DPRINT("Required length %lu\n", sizeof(FILE_FS_DEVICE_INFORMATION));
-  
-  /* FIXME: This does not work correctly! Why?? */
-//  if (*BufferLength < sizeof(FILE_FS_DEVICE_INFORMATION));
-//    return(STATUS_BUFFER_OVERFLOW);
-  
+
+  if (*BufferLength < sizeof(FILE_FS_DEVICE_INFORMATION))
+    return(STATUS_BUFFER_OVERFLOW);
+
   FsDeviceInfo->DeviceType = FILE_DEVICE_DISK;
   FsDeviceInfo->Characteristics = 0; /* FIXME: fix this !! */
-  
+
   DPRINT("FsdGetFsDeviceInformation() finished.\n");
-  
+
   *BufferLength -= sizeof(FILE_FS_DEVICE_INFORMATION);
   DPRINT("BufferLength %lu\n", *BufferLength);
-  
+
   return(STATUS_SUCCESS);
 }
 
@@ -173,7 +170,7 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
 			 PFILE_FS_LABEL_INFORMATION FsLabelInfo)
 {
   DPRINT("FsdSetFsLabelInformation()\n");
-  
+
   return(STATUS_NOT_IMPLEMENTED);
 }
 
