@@ -42,7 +42,7 @@
 
 #define KPCR_EXCEPTION_LIST       0x0
 #define KPCR_SELF                 0x18
-#define KPCR_TSS                  0x3C
+#define KPCR_TSS                  0x40
 #define KPCR_CURRENT_THREAD       0x124	
 
 #ifndef __ASM__
@@ -205,6 +205,7 @@ typedef struct _KPCR_TIB {
     DWORD  Version;             /* 10 */
   };
   PVOID  ArbitraryUserPointer;  /* 14 */
+  struct _KPCR_TIB* Self;       /* 18 */
 } KPCR_TIB, *PKPCR_TIB; /* 18 */
 
 /*
@@ -235,7 +236,7 @@ typedef struct _KPCR {
   ULONG  L2CacheSize;           /* 8C */
   ULONG  HalReserved[16];       /* 90 */
   ULONG  InterruptMode;         /* D0 */
-  UCHAR  KernelReserved2[0x4C]; /* D4 */
+  UCHAR  KernelReserved2[0x48]; /* D4 */
   KPRCB  PrcbData;              /* 120 */
 } KPCR, *PKPCR;
 

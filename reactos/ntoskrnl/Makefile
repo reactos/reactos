@@ -36,13 +36,8 @@ else
 OBJECTS_KDBG :=
 endif
 
-ifeq ($(strip $(SDK_PATH_INC)),)
 TARGET_ASFLAGS = -I./include
 TARGET_CFLAGS = -I./include $(CFLAGS_KDBG) -Wall -Werror $(CFLAGS_OPT)
-else
-TARGET_ASFLAGS = -I./include -I$(SDK_PATH_INC)
-TARGET_CFLAGS = -I./include -I$(SDK_PATH_INC) -D__NTOSKRNL__ $(CFLAGS_KDBG) -Wall -Werror $(CFLAGS_OPT)
-endif
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS
