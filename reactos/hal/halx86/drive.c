@@ -1,4 +1,4 @@
-/* $Id: drive.c,v 1.4.32.1 2004/10/24 22:57:51 ion Exp $
+/* $Id: drive.c,v 1.4.32.2 2004/10/25 02:26:26 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
