@@ -518,9 +518,6 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 				 || CurrentDisplayDevice->CurrentSettings->dmPelsHeight != CurrentDisplayDevice->InitialSettings.dmPelsHeight
 				 || CurrentDisplayDevice->CurrentSettings->dmBitsPerPel != CurrentDisplayDevice->InitialSettings.dmBitsPerPel)
 				{
-#if 1
-					MessageBox(NULL, TEXT("Sorry... Applying changes is not implemented in ReactOS..."), TEXT("Display settings"), MB_OK | MB_ICONSTOP);
-#else
 					/* FIXME: Need to test changes */
 					/* Apply new settings */
 					LONG rc;
@@ -554,7 +551,6 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 							MessageBox(NULL, TEXT("Unknown error when applying new settings..."), TEXT("Display settings"), MB_OK | MB_ICONSTOP);
 							break;
 					}
-#endif
 				}
 			}
 			break;
