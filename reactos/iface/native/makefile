@@ -1,26 +1,43 @@
+# $Id: makefile,v 1.8 1999/06/17 00:10:30 ea Exp $
 #
+# ReactOS Operating System
 #
+# Generate:
+# - genntdll
+# - ntoskrnl.exe service table;
+# - ntoskrnl.exe Zw functions stubs to call Nt functions from kernel mode;
+# - ntdll.dll stubs to call system functions from user mode applications.
 #
+TARGET = genntdll
+SYSTEM_CALLS_DB = sysfuncs.lst
+NTDLL_STUBS = ../../lib/ntdll/napi.c
+KERNEL_SERVICE_TABLE = ../../include/ntdll/napi.h
+KERNEL_ZW_CALLS = ../../ntoskrnl/nt/zw.c
+NAPI_FILES = $(NTDLL_STUBS) $(KERNEL_SERVICE_TABLE) $(KERNEL_ZW_CALLS)
 
-NAPI_FILES = ../../lib/ntdll/napi.c ../../include/ntdll/napi.h
+all: $(TARGET)$(EXE_POSTFIX) $(NAPI_FILES)
 
-all: genntdll$(EXE_POSTFIX) $(NAPI_FILES)
-
-$(NAPI_FILES): sysfuncs.lst genntdll$(EXE_POSTFIX) 
-	genntdll$(EXE_POSTFIX) sysfuncs.lst ../../lib/ntdll/napi.c ../../include/ntdll/napi.h
+$(NAPI_FILES): $(SYSTEM_CALLS_DB) $(TARGET)$(EXE_POSTFIX) 
+	$(TARGET)$(EXE_POSTFIX) \
+		$(SYSTEM_CALLS_DB) \
+		$(NTDLL_STUBS) \
+		$(KERNEL_SERVICE_TABLE) \
+		$(KERNEL_ZW_CALLS)
 
 # (rjj) i removed the following option from line below: -If:\gnu\mingw32\include 
-genntdll$(EXE_POSTFIX): genntdll.c
-	$(NATIVE_CC) -g genntdll.c -o genntdll$(EXE_POSTFIX)	
+$(TARGET)$(EXE_POSTFIX): $(TARGET).c
+	$(NATIVE_CC) -g $(TARGET).c -o $(TARGET)$(EXE_POSTFIX)	
 
 clean:
-	- $(RM) genntdll$(EXE_POSTFIX)
+	- $(RM) $(TARGET)$(EXE_POSTFIX)
 ifeq ($(DOSCLI),yes)
 	- $(RM) ..\..\lib\ntdll\napi.c
 	- $(RM) ..\..\include\ntdll\napi.h
+	- $(RM) ..\..\ntoskrnl\nt\zw.c
 else
-	- $(RM) ../../lib/ntdll/napi.c
-	- $(RM) ../../include/ntdll/napi.h
+	- $(RM) $(NTDLL_STUBS)
+	- $(RM) $(KERNEL_SERVICE_TABLE)
+	- $(RM) $(KERNEL_ZW_CALLS)
 endif
 	
 .PHONY: all clean 
