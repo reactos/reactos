@@ -182,15 +182,16 @@ ULONG HandlePageFault(FRAME* ptr)
 	// current process
     tsk = IoGetCurrentProcess();
 	if( !tsk || !(IsAddressValid((ULONG)tsk))){
-		DPRINT((0,"tsk address not valid: tsk: %x\n", tsk));
+		DPRINT((2,"tsk address not valid: tsk: %x\n", tsk));
 		return 0;
 	}
 
 	// lookup VMA for this address
-	if( address > KERNEL_BASE )
-	  vma = my_init_mm;                // use kernel mem area for kernel addresses	    
+	if( (ULONG)address > KERNEL_BASE )
+	  vma = my_init_mm;                // use kernel mem area for kernel addresses
 	else vma = &(tsk->AddressSpace);   // otherwise, use user memory area
-	if( !vma || !(IsAddressValid((ULONG)vma))){
+
+	if( !vma ){
 		DPRINT((0,"vma not valid: vma: %x\n", vma));
 		return 0;
 	}
@@ -205,6 +206,7 @@ ULONG HandlePageFault(FRAME* ptr)
 		current = CONTAINING_RECORD(current_entry,
 						MEMORY_AREA,
 						Entry);
+
 		DPRINT((0,"address: %x    %x - %x Attrib: %x, Type: %x\n", address, current->BaseAddress, current->BaseAddress + current->Length, current->Attributes, current->Type));
 
 		if( (address >= current->BaseAddress) && (address <= current->BaseAddress + current->Length ))
@@ -218,13 +220,13 @@ ULONG HandlePageFault(FRAME* ptr)
 					current->Type == MEMORY_AREA_PAGED_POOL ||
 					current->Type == MEMORY_AREA_SHARED_DATA
 						){
-	                //Print(OUTPUT_WINDOW,"pICE: VMA Pageable Section.\n");
-					DPRINT((2,"return 0 1\n"));
+	                Print(OUTPUT_WINDOW,"pICE: VMA Pageable Section.\n");
+					//ei DPRINT((2,"return 0 1\n"));
 					return 0; //let the system handle this
 				}
 				Print(OUTPUT_WINDOW,"pICE: VMA Page not present in non-pageable Section!\n");
-				DPRINT((2,"Type: currenttype: %x return 1 2\n", current->Type));
-				return 1;
+				//ei DPRINT((2,"Type: currenttype: %x return 1 2\n", current->Type));
+				return 0;
 			}
 			else{ //access violation
 
@@ -233,10 +235,10 @@ ULONG HandlePageFault(FRAME* ptr)
 					if( (ULONG)address >= KERNEL_BASE )
 					{
 						Print(OUTPUT_WINDOW,"pICE: User mode program trying to access kernel memory!\n");
-						DPRINT((2,"return 1 3\n"));
+						//DPRINT((2,"return 0 3\n"));
 						return 1;
 					}
-					DPRINT((2,"return 0 4\n"));
+					//DPRINT((2,"return 0 4\n"));
 					return 0;
 				}
 				/*

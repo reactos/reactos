@@ -98,7 +98,6 @@ BOOLEAN PiceKbdIsr (
 		else if(bControl==TRUE && ucKey==AsciiToScan(ucBreakKey)) // CTRL-D
 		{
             // fake a CTRL-D release call
-			bForward=FALSE;
             bEnterNow=TRUE;
 			bControl=FALSE;
         // simulate an initial break
@@ -109,7 +108,8 @@ BOOLEAN PiceKbdIsr (
             pushl $" STR(REASON_CTRLF) "
             jmp NewInt31Handler
 			returnpoint:");
-
+			*pByte =  0x1d | 0x80 | 0x7f;
+			bForward=TRUE;
 		}
         else if((ucKey == 66|| ucKey == 68) && bStepping)
         {

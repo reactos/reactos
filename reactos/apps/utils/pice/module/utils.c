@@ -358,6 +358,44 @@ ULONG PICE_fncmp(char* s1,char* s2)
 	return result;
 }
 
+//*************************************************************************
+// PICE_fnncmp()
+//
+// compare function names ignoring decorations:
+// leading '_' or '@" and trailing "@xx" . Decorations are included in total length.
+//*************************************************************************
+ULONG PICE_fnncmp(char* s1,char* s2, ULONG len)
+{
+ 	ULONG result=1;
+	ULONG len1 = len, len2 = len;
+
+	if( IsAddressValid((ULONG)s1) && (*s1 == '_' || *s1 == '@')){
+			s1++;
+			len1--;
+	}
+
+	if( IsAddressValid((ULONG)s2) && (*s2 == '_' || *s2 == '@')){
+			s2++;
+			len2--;
+	}
+
+	while(len1 && len2 && IsAddressValid((ULONG)s1) && *s1 && // not end of string
+          IsAddressValid((ULONG)s2) && *s2 )
+    {
+		if( (*s1 != *s2) || *s1=='@' || *s2=='@' )
+				break;
+        s1++;
+        s2++;
+		len1--;
+		len2--;
+    }
+	// strings same length
+	if((len1==0 || *s1=='@') && (len2==0 || *s2 =='@')){
+        result=0;
+	}
+	return result;
+}
+
 ULONG PICE_wcsicmp(WCHAR* s1, WCHAR* s2)
 {
     ULONG result=1;

@@ -979,21 +979,23 @@ ULONG FindFunctionInModuleByName(LPSTR szFunctionname, PDEBUG_MODULE pd)
                 LPSTR pName;
 				PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + (pSym->SectionNumber-1);
 
-				DPRINT((0,"FindFunctionInModuleByName(): %s @ %x\n",pName,start));
 				start = ((ULONG)pd->BaseAddress+pShdrThis->VirtualAddress+pSym->Value);
+				DPRINT((0,"FindFunctionInModuleByName(): %s @ %x\n",szFunctionname,start));
 
 				if(pSym->N.Name.Short){ //if name is stored in the structure
 					//name may be not zero terminated but 8 characters max
-			        if((PICE_strncmpi(pName,szFunctionname, 8) == 0) && start)
+					pName = pSym->N.ShortName;  //name is in the header
+			        if((PICE_fnncmp(pName,szFunctionname, 8) == 0) && start)
 			        {
-						DPRINT((0,"FindFunctionInModuleByName(): symbol was in symbol table\n"));
+						DPRINT((0,"FindFunctionInModuleByName(): symbol was in symbol table, start: %x\n", start));
 			            LEAVE_FUNC();
 			            return start;
 			        }
 				}else{
-					if((PICE_strcmpi(pName,szFunctionname) == 0) && start)
+					pName = pStr+pSym->N.Name.Long;
+					if((PICE_fncmp(pName,szFunctionname) == 0) && start)
 	                {
-	                    DPRINT((0,"FindFunctionInModuleByName(): symbol was in string table\n"));
+	                    DPRINT((0,"FindFunctionInModuleByName(): symbol was in string table, start: %x\n", start));
 	                    LEAVE_FUNC();
 	                    return start;
 	                }
