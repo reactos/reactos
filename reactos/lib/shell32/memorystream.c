@@ -106,7 +106,7 @@ HRESULT CreateStreamOnFile (LPCWSTR pszFilename, DWORD grfMode, IStream ** ppstm
 
 	TRACE("Opening %s\n", debugstr_w(pszFilename) );
 
-	handle = CreateFileW( pszFilename, access, FILE_SHARE_READ, NULL, creat, 0, NULL );
+       handle = CreateFileW( pszFilename, access, FILE_SHARE_READ, NULL, creat, 0, NULL );
 	if( handle == INVALID_HANDLE_VALUE )
 		return E_FAIL;
 
@@ -197,17 +197,17 @@ static HRESULT WINAPI IStream_fnRead (IStream * iface, void* pv, ULONG cb, ULONG
 
 static HRESULT WINAPI IStream_fnWrite (IStream * iface, const void* pv, ULONG cb, ULONG* pcbWritten)
 {
-	DWORD dummy_count;
- 	ISHFileStream *This = (ISHFileStream *)iface;
+       DWORD dummy_count;
+	ISHFileStream *This = (ISHFileStream *)iface;
 
 	TRACE("(%p)\n",This);
 
 	if( !pv )
 		return STG_E_INVALIDPOINTER;
 
-	/* WriteFile() doesn't allow to specify NULL as write count pointer */
-	if (!pcbWritten)
-		pcbWritten = &dummy_count;
+       /* WriteFile() doesn't allow to specify NULL as write count pointer */
+       if (!pcbWritten)
+               pcbWritten = &dummy_count;
 
 	if( ! WriteFile( This->handle, pv, cb, pcbWritten, NULL ) )
 		return E_FAIL;
