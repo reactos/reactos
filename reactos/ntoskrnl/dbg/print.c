@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.3 1999/10/21 11:13:04 ekohl Exp $
+/* $Id: print.c,v 1.4 1999/12/06 05:48:34 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,7 +44,7 @@
 
 
 #ifdef BOCHS_DEBUGGING
-#define BOCHS_LOGGER_PORT (0x3ed)
+#define BOCHS_LOGGER_PORT (0xe9)
 #endif
 
 
