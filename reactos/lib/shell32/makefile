@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 2002/09/24 15:06:09 robd Exp $
+# $Id: makefile,v 1.7 2003/08/26 13:44:12 rcampbell Exp $
 
 PATH_TO_TOP = ../..
 
@@ -29,7 +29,6 @@ TARGET_BASE = 0x77260000
 
 MISC_OBJECTS = \
 	misc/dllmain.o \
-	misc/_stubs.o \
 	misc/stubs.o
 
 CONTROL_OBJECTS = \

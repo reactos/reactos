@@ -147,6 +147,7 @@ CPlApplet* Control_UnloadApplet(CPlApplet* applet);
 
 
 #ifdef __GNUC__
+/*
 typedef struct tagNMITEMACTIVATE{
     NMHDR   hdr;
     int     iItem;
@@ -158,11 +159,14 @@ typedef struct tagNMITEMACTIVATE{
     LPARAM  lParam;
     UINT    uKeyFlags;
 } NMITEMACTIVATE, FAR *LPNMITEMACTIVATE;
+*/
 #define HDITEM HD_ITEM
 #define LPNMLISTVIEW LPNM_LISTVIEW
 #define NMLISTVIEW NM_LISTVIEW
+/*
 #define HDN_ENDDRAG TBN_ENDDRAG
 #define LVSICF_NOSCROLL LVS_NOSCROLL
+*/
 #define HDM_GETORDERARRAY	(HDM_FIRST+19)   // TODO: FIX ME
 #endif
 

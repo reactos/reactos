@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: stubs.c,v 1.4 2003/01/07 17:35:56 robd Exp $
+/* $Id: stubs.c,v 1.5 2003/08/26 13:44:12 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -41,13 +41,13 @@
 
 #include "shell32.h"
 #include <malloc.h>
-
+/*
 #ifdef __GNUC__
 void* _alloca(size_t);
 #else
 #define __FUNCTION__ "unknown"
 #endif
-
+*/
 #define NO_SHLWAPI_STREAM
 #include "shlwapi.h"
 //#include <shellapi.h>
@@ -2572,7 +2572,8 @@ WOWShellExecute(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4, 
   STUB;
 }
 
-STDAPI
+
+INT WINAPI
 DllCanUnloadNow(VOID)
 {
   STUB;
@@ -2583,6 +2584,20 @@ VOID WINAPI
 DllGetVersion(DWORD Unknown1)
 {
   STUB;
+}
+
+VOID WINAPI
+DllGetClassObject(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
+{
+	STUB;
+}
+
+HWND WINAPI CreateStatusWindowW( LONG style,
+    LPCTSTR lpszText,
+    HWND hwndParent,
+	UINT wID )
+{
+	STUB;
 }
 
 VOID WINAPI

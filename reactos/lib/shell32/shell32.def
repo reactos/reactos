@@ -378,4 +378,4 @@ SHGetSpecialFolderPathA@16
 SHGetFolderPathA@20
 SHGetFolderPathW@20
 SHGetFolderLocation@20
-
+CreateStatusWindowW@16
