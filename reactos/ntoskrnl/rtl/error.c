@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.6 2002/11/10 18:17:42 chorns Exp $
+/* $Id: error.c,v 1.7 2002/12/08 16:23:32 robd Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -826,7 +826,8 @@ RPC_NT_SS_CONTEXT_MISMATCH           ERROR_INVALID_HANDLE
 
 /* FUNCTIONS ***************************************************************/
 
-VOID STDCALL
+VOID
+STDCALL
 RtlAssert(PVOID FailedAssertion,
 	  PVOID FileName,
 	  ULONG LineNumber,
@@ -880,7 +881,9 @@ RtlNtStatusToDosErrorNoTeb(IN NTSTATUS Status)
 			if (!ret)
 				ret = Status;  /* 0 means 1:1 mapping */
 			else if (ret == ERROR_MR_MID_NOT_FOUND)
+            {
 				DbgPrint("RTL: RtlNtStatusToDosErrorNoTeb(0x%lx): no valid W32 error mapping\n", Status);
+            }
 			return ret;
 		}
 		Table++;

@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.25 2002/11/10 18:17:42 chorns Exp $
+/* $Id: unicode.c,v 1.26 2002/12/08 16:23:32 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,7 +26,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
-WCHAR STDCALL
+WCHAR
+STDCALL
 RtlAnsiCharToUnicodeChar(IN CHAR AnsiChar)
 {
   ULONG Size;
@@ -47,7 +48,8 @@ RtlAnsiCharToUnicodeChar(IN CHAR AnsiChar)
 }
 
 
-ULONG STDCALL
+ULONG
+STDCALL
 RtlAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
 {
   ULONG Size;
@@ -60,7 +62,8 @@ RtlAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlAnsiStringToUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 			     IN PANSI_STRING SourceString,
 			     IN BOOLEAN AllocateDestinationString)
@@ -117,7 +120,8 @@ RtlAnsiStringToUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlAppendAsciizToString(IN OUT PSTRING Destination,
 			IN PCSZ Source)
 {
@@ -144,7 +148,8 @@ RtlAppendAsciizToString(IN OUT PSTRING Destination,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlAppendStringToString(IN OUT PSTRING Destination,
 			IN PSTRING Source)
 {
@@ -169,7 +174,8 @@ RtlAppendStringToString(IN OUT PSTRING Destination,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlAppendUnicodeStringToString(IN OUT PUNICODE_STRING Destination,
 			       IN PUNICODE_STRING Source)
 {
@@ -226,7 +232,8 @@ RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlCharToInteger(IN PCSZ String,
 		 IN ULONG Base,
 		 IN OUT PULONG Value)
@@ -265,7 +272,8 @@ RtlCharToInteger(IN PCSZ String,
 }
 
 
-LONG STDCALL
+LONG
+STDCALL
 RtlCompareString(IN PSTRING String1,
 		 IN PSTRING String2,
 		 IN BOOLEAN CaseInsensitive)
@@ -310,7 +318,8 @@ RtlCompareString(IN PSTRING String1,
 }
 
 
-LONG STDCALL
+LONG
+STDCALL
 RtlCompareUnicodeString(IN PUNICODE_STRING String1,
 			IN PUNICODE_STRING String2,
 			IN BOOLEAN CaseInsensitive)
@@ -355,7 +364,8 @@ RtlCompareUnicodeString(IN PUNICODE_STRING String1,
 }
 
 
-VOID STDCALL
+VOID
+STDCALL
 RtlCopyString(IN OUT PSTRING DestinationString,
 	      IN PSTRING SourceString)
 {
@@ -385,7 +395,8 @@ RtlCopyString(IN OUT PSTRING DestinationString,
 }
 
 
-VOID STDCALL
+VOID
+STDCALL
 RtlCopyUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 		     IN PUNICODE_STRING SourceString)
 {
@@ -415,7 +426,8 @@ RtlCopyUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 }
 
 
-BOOLEAN STDCALL
+BOOLEAN
+STDCALL
 RtlCreateUnicodeString(IN OUT PUNICODE_STRING Destination,
 		       IN PWSTR Source)
 {
@@ -440,7 +452,8 @@ RtlCreateUnicodeString(IN OUT PUNICODE_STRING Destination,
 }
 
 
-BOOLEAN STDCALL
+BOOLEAN
+STDCALL
 RtlCreateUnicodeStringFromAsciiz(IN OUT PUNICODE_STRING Destination,
 				 IN PCSZ Source)
 {
@@ -458,7 +471,8 @@ RtlCreateUnicodeStringFromAsciiz(IN OUT PUNICODE_STRING Destination,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlDowncaseUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 			 IN PUNICODE_STRING SourceString,
 			 IN BOOLEAN AllocateDestinationString)
@@ -510,7 +524,8 @@ RtlDowncaseUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 }
 
 
-BOOLEAN STDCALL
+BOOLEAN
+STDCALL
 RtlEqualString(IN PSTRING String1,
 	       IN PSTRING String2,
 	       IN BOOLEAN CaseInsensitive)
@@ -552,7 +567,8 @@ RtlEqualString(IN PSTRING String1,
 }
 
 
-BOOLEAN STDCALL
+BOOLEAN
+STDCALL
 RtlEqualUnicodeString(IN PUNICODE_STRING String1,
 		      IN PUNICODE_STRING String2,
 		      IN BOOLEAN CaseInsensitive)
@@ -593,7 +609,8 @@ RtlEqualUnicodeString(IN PUNICODE_STRING String1,
 }
 
 
-VOID STDCALL
+VOID
+STDCALL
 RtlFreeAnsiString(IN PANSI_STRING AnsiString)
 {
 	if (AnsiString->Buffer == NULL)
@@ -607,7 +624,8 @@ RtlFreeAnsiString(IN PANSI_STRING AnsiString)
 }
 
 
-VOID STDCALL
+VOID
+STDCALL
 RtlFreeOemString(IN POEM_STRING OemString)
 {
 	if (OemString->Buffer == NULL)
@@ -621,7 +639,8 @@ RtlFreeOemString(IN POEM_STRING OemString)
 }
 
 
-VOID STDCALL
+VOID
+STDCALL
 RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
 {
 	if (UnicodeString->Buffer == NULL)
@@ -635,7 +654,8 @@ RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
 }
 
 
-VOID STDCALL
+VOID
+STDCALL
 RtlInitAnsiString(IN OUT PANSI_STRING DestinationString,
 		  IN PCSZ SourceString)
 {
@@ -656,7 +676,8 @@ RtlInitAnsiString(IN OUT PANSI_STRING DestinationString,
 }
 
 
-VOID STDCALL
+VOID
+STDCALL
 RtlInitString(IN OUT PSTRING DestinationString,
 	      IN PCSZ SourceString)
 {
@@ -677,7 +698,8 @@ RtlInitString(IN OUT PSTRING DestinationString,
 }
 
 
-VOID STDCALL
+VOID
+STDCALL
 RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 		     IN PCWSTR SourceString)
 {
@@ -702,7 +724,8 @@ RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlIntegerToChar(IN ULONG Value,
 		 IN ULONG Base,
 		 IN ULONG Length,
@@ -747,7 +770,8 @@ RtlIntegerToChar(IN ULONG Value,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlIntegerToUnicodeString(IN ULONG Value,
 			  IN ULONG Base,	/* optional */
 			  IN OUT PUNICODE_STRING String)
@@ -775,7 +799,8 @@ RtlIntegerToUnicodeString(IN ULONG Value,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlOemStringToCountedUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 				   IN POEM_STRING SourceString,
 				   IN BOOLEAN AllocateDestinationString)
@@ -830,7 +855,8 @@ RtlOemStringToCountedUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 }
 
 
-ULONG STDCALL
+ULONG
+STDCALL
 RtlOemStringToUnicodeSize(IN POEM_STRING OemString)
 {
   ULONG Size;
@@ -843,7 +869,8 @@ RtlOemStringToUnicodeSize(IN POEM_STRING OemString)
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlOemStringToUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 			    IN POEM_STRING SourceString,
 			    IN BOOLEAN AllocateDestinationString)
@@ -900,7 +927,8 @@ RtlOemStringToUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 }
 
 
-BOOLEAN STDCALL
+BOOLEAN
+STDCALL
 RtlPrefixString(IN PANSI_STRING String1,
 		IN PANSI_STRING String2,
 		IN BOOLEAN CaseInsensitive)
@@ -940,7 +968,8 @@ RtlPrefixString(IN PANSI_STRING String1,
 }
 
 
-BOOLEAN STDCALL
+BOOLEAN
+STDCALL
 RtlPrefixUnicodeString(IN PUNICODE_STRING String1,
 		       IN PUNICODE_STRING String2,
 		       IN BOOLEAN CaseInsensitive)
@@ -981,7 +1010,8 @@ RtlPrefixUnicodeString(IN PUNICODE_STRING String1,
 }
 
 
-ULONG STDCALL
+ULONG
+STDCALL
 RtlUnicodeStringToAnsiSize(IN PUNICODE_STRING UnicodeString)
 {
   ULONG Size;
@@ -994,7 +1024,8 @@ RtlUnicodeStringToAnsiSize(IN PUNICODE_STRING UnicodeString)
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlUnicodeStringToAnsiString(IN OUT PANSI_STRING DestinationString,
 			     IN PUNICODE_STRING SourceString,
 			     IN BOOLEAN AllocateDestinationString)
@@ -1046,7 +1077,8 @@ RtlUnicodeStringToAnsiString(IN OUT PANSI_STRING DestinationString,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlUnicodeStringToCountedOemString(IN OUT POEM_STRING DestinationString,
 				   IN PUNICODE_STRING SourceString,
 				   IN BOOLEAN AllocateDestinationString)
@@ -1108,7 +1140,8 @@ RtlUnicodeStringToCountedOemString(IN OUT POEM_STRING DestinationString,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlUnicodeStringToInteger(IN PUNICODE_STRING String,
 			  IN ULONG Base,
 			  OUT PULONG Value)
@@ -1195,7 +1228,8 @@ RtlUnicodeStringToInteger(IN PUNICODE_STRING String,
 }
 
 
-ULONG STDCALL
+ULONG
+STDCALL
 RtlUnicodeStringToOemSize(IN PUNICODE_STRING UnicodeString)
 {
   ULONG Size;
@@ -1207,7 +1241,8 @@ RtlUnicodeStringToOemSize(IN PUNICODE_STRING UnicodeString)
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlUnicodeStringToOemString(IN OUT POEM_STRING DestinationString,
 			    IN PUNICODE_STRING SourceString,
 			    IN BOOLEAN AllocateDestinationString)
@@ -1259,7 +1294,8 @@ RtlUnicodeStringToOemString(IN OUT POEM_STRING DestinationString,
 }
 
 
-WCHAR STDCALL
+WCHAR
+STDCALL
 RtlUpcaseUnicodeChar(IN WCHAR Source)
 {
   if (Source < L'a')
@@ -1313,7 +1349,8 @@ RtlUpcaseUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlUpcaseUnicodeStringToAnsiString(IN OUT PANSI_STRING DestinationString,
 				   IN PUNICODE_STRING SourceString,
 				   IN BOOLEAN AllocateDestinationString)
@@ -1365,7 +1402,8 @@ RtlUpcaseUnicodeStringToAnsiString(IN OUT PANSI_STRING DestinationString,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlUpcaseUnicodeStringToCountedOemString(IN OUT POEM_STRING DestinationString,
 					 IN PUNICODE_STRING SourceString,
 					 IN BOOLEAN AllocateDestinationString)
@@ -1426,7 +1464,8 @@ RtlUpcaseUnicodeStringToCountedOemString(IN OUT POEM_STRING DestinationString,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlUpcaseUnicodeStringToOemString(IN OUT POEM_STRING DestinationString,
 				  IN PUNICODE_STRING SourceString,
 				  IN BOOLEAN AllocateDestinationString)
@@ -1478,7 +1517,8 @@ RtlUpcaseUnicodeStringToOemString(IN OUT POEM_STRING DestinationString,
 }
 
 
-CHAR STDCALL
+CHAR
+STDCALL
 RtlUpperChar(IN CHAR Source)
 {
   WCHAR Unicode;
@@ -1513,7 +1553,8 @@ RtlUpperChar(IN CHAR Source)
 }
 
 
-VOID STDCALL
+VOID
+STDCALL
 RtlUpperString(PSTRING DestinationString,
 	       PSTRING SourceString)
 {
@@ -1539,31 +1580,35 @@ RtlUpperString(PSTRING DestinationString,
 }
 
 
-ULONG STDCALL
+ULONG
+STDCALL
 RtlxAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
 {
-  return(RtlAnsiStringToUnicodeSize(AnsiString));
+  return RtlAnsiStringToUnicodeSize(AnsiString);
 }
 
 
-ULONG STDCALL
+ULONG
+STDCALL
 RtlxOemStringToUnicodeSize(IN POEM_STRING OemString)
 {
-  return(RtlOemStringToUnicodeSize((PANSI_STRING)OemString));
+  return RtlOemStringToUnicodeSize((PANSI_STRING)OemString);
 }
 
 
-ULONG STDCALL
+ULONG
+STDCALL
 RtlxUnicodeStringToAnsiSize(IN PUNICODE_STRING UnicodeString)
 {
-  return(RtlUnicodeStringToAnsiSize(UnicodeString));
+  return RtlUnicodeStringToAnsiSize(UnicodeString);
 }
 
 
-ULONG STDCALL
+ULONG
+STDCALL
 RtlxUnicodeStringToOemSize(IN PUNICODE_STRING UnicodeString)
 {
-  return(RtlUnicodeStringToOemSize(UnicodeString));
+  return RtlUnicodeStringToOemSize(UnicodeString);
 }
 
 /* EOF */

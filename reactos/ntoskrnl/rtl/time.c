@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.15 2002/11/10 18:17:42 chorns Exp $
+/* $Id: time.c,v 1.16 2002/12/08 16:23:32 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -60,10 +60,9 @@ static __inline void NormalizeTimeFields(CSHORT *FieldToNormalize,
 
 VOID
 STDCALL
-RtlTimeToTimeFields (
+RtlTimeToTimeFields(
 	PLARGE_INTEGER liTime,
-	PTIME_FIELDS TimeFields
-	)
+	PTIME_FIELDS TimeFields)
 {
   const int *Months;
   int LeapSecondCorrections, SecondsInDay, CurYear;
@@ -111,13 +110,13 @@ RtlTimeToTimeFields (
 
     /* compute year */
   CurYear = EPOCHYEAR;
-    /* FIXME: handle calendar modifications */
   CurYear += Days / DAYSPERLEAPYEAR;
   Days -= (CurYear - EPOCHYEAR) * DAYSPERLEAPYEAR;
   CurYear--; /* The next calculation needs CurYear - 1 */
   Days += CurYear - CurYear / 4 + CurYear / 100 - CurYear / 400;
   CurYear++;
   Days -= EPOCHYEAR - 1 - (EPOCHYEAR -1) / 4 + (EPOCHYEAR -1) / 100 - (EPOCHYEAR - 1) / 400;
+    /* FIXME: handle calendar modifications */
   while (1)
     {
       LeapYear = IsLeapYear(CurYear);
@@ -141,10 +140,9 @@ RtlTimeToTimeFields (
 
 BOOLEAN
 STDCALL
-RtlTimeFieldsToTime (
+RtlTimeFieldsToTime(
 	PTIME_FIELDS tfTimeFields,
-	PLARGE_INTEGER Time
-	)
+	PLARGE_INTEGER Time)
 {
   int CurMonth;
   long long int rcTime;
@@ -195,10 +193,9 @@ RtlTimeFieldsToTime (
 
 VOID
 STDCALL
-RtlSecondsSince1970ToTime (
+RtlSecondsSince1970ToTime(
 	ULONG SecondsSince1970,
-	PLARGE_INTEGER Time
-	)
+	PLARGE_INTEGER Time)
 {
    LONGLONG llTime;
 
@@ -210,10 +207,9 @@ RtlSecondsSince1970ToTime (
 
 VOID
 STDCALL
-RtlSecondsSince1980ToTime (
+RtlSecondsSince1980ToTime(
 	ULONG SecondsSince1980,
-	PLARGE_INTEGER Time
-	)
+	PLARGE_INTEGER Time)
 {
    LONGLONG llTime;
 
@@ -225,10 +221,9 @@ RtlSecondsSince1980ToTime (
 
 BOOLEAN
 STDCALL
-RtlTimeToSecondsSince1970 (
+RtlTimeToSecondsSince1970(
 	PLARGE_INTEGER Time,
-	PULONG SecondsSince1970
-	)
+	PULONG SecondsSince1970)
 {
    LARGE_INTEGER liTime;
 
@@ -246,10 +241,9 @@ RtlTimeToSecondsSince1970 (
 
 BOOLEAN
 STDCALL
-RtlTimeToSecondsSince1980 (
+RtlTimeToSecondsSince1980(
 	PLARGE_INTEGER Time,
-	PULONG SecondsSince1980
-	)
+	PULONG SecondsSince1980)
 {
    LARGE_INTEGER liTime;
 

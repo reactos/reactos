@@ -1,4 +1,4 @@
-/* $Id: largeint.c,v 1.12 2002/09/08 10:23:41 chorns Exp $
+/* $Id: largeint.c,v 1.13 2002/12/08 16:23:32 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -119,7 +119,8 @@ RtlExtendedLargeIntegerDivide (
 	return RC;
 }
 
-LARGE_INTEGER STDCALL
+LARGE_INTEGER
+STDCALL
 RtlExtendedMagicDivide (LARGE_INTEGER	Dividend,
 			LARGE_INTEGER	MagicDivisor,
 			CCHAR		ShiftCount)

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.86 2002/10/26 00:32:18 chorns Exp $
+# $Id: Makefile,v 1.87 2002/12/08 16:23:33 robd Exp $
 #
 # ReactOS Operating System
 #
@@ -350,7 +350,8 @@ TAG_OBJECTS := $(join $(dir $(DEP_OBJECTS)),$(patsubst %.o, .%.TAG, $(notdir $(D
 # Include automatic dependancy tracking
 #
 DEP_EXCLUDE_FILTER := ex/napi.% nt/zw.%
-include $(PATH_TO_TOP)/tools/depend.mk
+# FIXME: Disabled
+#include $(PATH_TO_TOP)/tools/depend.mk
 
 
 # Resources

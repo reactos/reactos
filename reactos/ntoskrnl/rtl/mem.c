@@ -1,4 +1,4 @@
-/* $Id: mem.c,v 1.17 2002/11/10 18:17:42 chorns Exp $
+/* $Id: mem.c,v 1.18 2002/12/08 16:23:32 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -64,11 +64,9 @@ MmCopyFromCaller(PVOID Dest, PVOID Src, ULONG NumberOfBytes)
 
 ULONG
 STDCALL
-RtlCompareMemory (
-	PVOID	Source1,
+RtlCompareMemory(PVOID	Source1,
 	PVOID	Source2,
-	ULONG	Length
-	)
+	ULONG	Length)
 /*
  * FUNCTION: Compares blocks of memory and returns the number of equal bytes
  * ARGUMENTS:
