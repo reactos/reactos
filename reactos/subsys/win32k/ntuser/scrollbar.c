@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.5 2003/05/18 17:16:17 ea Exp $
+/* $Id: scrollbar.c,v 1.6 2003/05/18 22:11:41 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -56,12 +56,9 @@
 static BOOL STDCALL
 SCROLL_GetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
 {
-  SCROLLBARINFO info;
-  INT pixels, thumbSize, arrowSize;
   BOOL vertical;
   RECT ClientRect = Window->ClientRect;
   RECT WindowRect = Window->WindowRect;
-  ULONG Style;
 
   switch (nBar)
     {
@@ -105,6 +102,7 @@ SCROLL_GetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
       return FALSE;
     }
 
+#if 0 /* The code below computes all kind of stuff without using it */
   if (vertical)
     pixels = lprect->bottom - lprect->top;
   else
@@ -148,6 +146,7 @@ SCROLL_GetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
 		  + MulDiv(pixels, (info->CurVal-info->MinVal),(max - info->MinVal));
         } */
   }
+#endif
 
   return vertical;
 }
@@ -162,7 +161,8 @@ DWORD FASTCALL SCROLL_CreateScrollBar(PWINDOW_OBJECT Window, LONG idObject)
 				  &Window->WindowRect,
 				  &Window->ClientRect);
 
-  psbi = ExAllocatePool(NonPagedPool, sizeof(SCROLLBARINFO));
+  psbi = ExAllocatePool(PagedPool, sizeof(SCROLLBARINFO));
+  psbi->cbSize = sizeof(SCROLLBARINFO);
 
   for (i=0; i<CCHILDREN_SCROLLBAR+1; i++)
     psbi->rgstate[i] = 0;
@@ -204,6 +204,8 @@ DWORD STDCALL SCROLL_GetScrollBarInfo(PWINDOW_OBJECT Window, LONG idObject, PSCR
       W32kReleaseWindowObject(Window);
       return FALSE;
   }
+
+  SCROLL_GetScrollBarRect (Window, idObject, &(psbi->rcScrollBar));
 
   return TRUE;
 }
