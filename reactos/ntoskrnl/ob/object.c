@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.65 2003/07/21 21:53:53 royce Exp $
+/* $Id: object.c,v 1.66 2003/07/29 14:37:39 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -101,21 +101,22 @@ VOID ObInitializeObject(POBJECT_HEADER ObjectHeader,
  *
  * RETURN VALUE
  */
-NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
-		      PVOID* ReturnedObject,
-		      PUNICODE_STRING RemainingPath,
-		      POBJECT_TYPE ObjectType)
+NTSTATUS
+ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
+	     PVOID* ReturnedObject,
+	     PUNICODE_STRING RemainingPath,
+	     POBJECT_TYPE ObjectType)
 {
    PVOID NextObject;
    PVOID CurrentObject;
    PVOID RootObject;
    POBJECT_HEADER CurrentHeader;
    NTSTATUS Status;
-   PWSTR Path;
    PWSTR current;
    UNICODE_STRING PathString;
    ULONG Attributes;
-   
+   PUNICODE_STRING ObjectName;
+
    DPRINT("ObFindObject(ObjectAttributes %x, ReturnedObject %x, "
 	  "RemainingPath %x)\n",ObjectAttributes,ReturnedObject,RemainingPath);
    DPRINT("ObjectAttributes->ObjectName %wZ\n",
@@ -144,31 +145,39 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	     return(Status);
 	  }
      }
-   
-   Path = ObjectAttributes->ObjectName->Buffer;
-   
-   if (Path[0] == 0)
-     {
-	*ReturnedObject = CurrentObject;
-	return(STATUS_SUCCESS);
-     }
-   
-   if ((ObjectAttributes->RootDirectory == NULL) && (Path[0] != '\\'))
-     {
-	ObDereferenceObject(CurrentObject);
-	return(STATUS_UNSUCCESSFUL);
-     }
-   
-   if (Path)
-     {
-	RtlCreateUnicodeString (&PathString, Path);
-	current = PathString.Buffer;
-     }
-   else
-     {
-	RtlInitUnicodeString (&PathString, NULL);
-	current = NULL;
-     }
+
+  ObjectName = ObjectAttributes->ObjectName;
+  if (ObjectName->Length == 0 ||
+      ObjectName->Buffer[0] == UNICODE_NULL)
+    {
+      *ReturnedObject = CurrentObject;
+      return STATUS_SUCCESS;
+    }
+
+  if (ObjectAttributes->RootDirectory == NULL &&
+      ObjectName->Buffer[0] != L'\\')
+    {
+      ObDereferenceObject (CurrentObject);
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  /* Create a zero-terminated copy of the object name */
+  PathString.Length = ObjectName->Length;
+  PathString.MaximumLength = ObjectName->Length + sizeof(WCHAR);
+  PathString.Buffer = ExAllocatePool (NonPagedPool,
+				      PathString.MaximumLength);
+  if (PathString.Buffer == NULL)
+    {
+      ObDereferenceObject (CurrentObject);
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  RtlCopyMemory (PathString.Buffer,
+		 ObjectName->Buffer,
+		 ObjectName->Length);
+  PathString.Buffer[PathString.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+  current = PathString.Buffer;
 
    RootObject = CurrentObject;
    Attributes = ObjectAttributes->Attributes;
