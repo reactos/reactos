@@ -7,16 +7,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-
-#include <internal/stddef.h>
-#include <internal/ntoskrnl.h>
-#include <internal/ke.h>
-#include <internal/bitops.h>
-#include <internal/linkage.h>
-#include <string.h>
-#include <internal/string.h>
-
-#include <internal/i386/segment.h>
 #include <internal/halio.h>
 
 #define NDEBUG
@@ -34,93 +24,97 @@
 #define RTC_REGISTER_A   0x0A
 #define   RTC_REG_A_UIP  0x80  /* Update In Progress bit */
 
+#define RTC_REGISTER_CENTURY   0x32
+
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
-HalQueryRealTimeClock(PTIME_FIELDS pTime)
+
+static BYTE
+HalQueryCMOS (BYTE Reg)
 {
-//FIXME : wait RTC ok?
-        UCHAR uip;  // Update In Progress
-#if 0
-  do
-  {
-   outb(0x70,0);
-   pTime->Second=BCD_INT(inb(0x71));
-  } while(pTime->Second>60);
-#endif
+    BYTE Val;
 
-  do
-  {
-   outb(0x70, RTC_REGISTER_A);
-   uip = inb(0x71) & RTC_REG_A_UIP;
-  } while(uip);
+    Reg |= 0x80;
+    __asm__("cli\n");  // AP unsure as to whether to do this here
+    outb (0x70, Reg);
+    Val=inb (0x71);
+    outb (0x70, 0);
+    __asm__("sti\n");  // AP unsure about this too..
 
-  outb(0x70,0);
-  pTime->Second=BCD_INT(inb(0x71));
+    return(Val);
+}
 
-  outb(0x70,2);
-  pTime->Minute=BCD_INT(inb(0x71));
-  outb(0x70,4);
-  pTime->Hour=BCD_INT(inb(0x71));
-  outb(0x70,6);
-  pTime->Weekday=BCD_INT(inb(0x71));
-  outb(0x70,7);
-  pTime->Day=BCD_INT(inb(0x71));
-  outb(0x70,8);
-  pTime->Month=BCD_INT(inb(0x71));
-  outb_p(0x70,9);
-  pTime->Year=BCD_INT(inb_p(0x71));
-  if(pTime->Year>80) pTime->Year +=1900;
-  else pTime->Year +=2000;
 
-#if 0
-        /* Century */
-        outb_p(0x70,0x32);
-        pTime->Year += BCD_INT(inb_p(0x71)) * 100;
-#endif
-
-  pTime->Milliseconds=0;
+static VOID
+HalSetCMOS (BYTE Reg, BYTE Val)
+{
+    Reg |= 0x80;
+    __asm__("cli\n");  // AP unsure as to whether to do this here
+    outb (0x70, Reg);
+    outb (0x71, Val);
+    outb (0x70, 0);
+    __asm__("sti\n");  // AP unsure about this too..
 }
 
 
 VOID
-HalSetRealTimeClock(PTIME_FIELDS pTime)
+HalQueryRealTimeClock (PTIME_FIELDS pTime)
 {
-        UCHAR uip;  // Update In Progress
+    /* check 'Update In Progress' bit */
+    while (HalQueryCMOS (RTC_REGISTER_A) & RTC_REG_A_UIP)
+        ;
 
-        do
-        {
-                outb(0x70,0xA);
-                uip = inb(0x71) & RTC_REG_A_UIP;
-        } while(uip);
+    pTime->Second = BCD_INT(HalQueryCMOS (0));
+    pTime->Minute = BCD_INT(HalQueryCMOS (2));
+    pTime->Hour = BCD_INT(HalQueryCMOS (4));
+    pTime->Weekday = BCD_INT(HalQueryCMOS (6));
+    pTime->Day = BCD_INT(HalQueryCMOS (7));
+    pTime->Month = BCD_INT(HalQueryCMOS (8));
+    pTime->Year = BCD_INT(HalQueryCMOS (9));
 
+    if (pTime->Year > 80)
+        pTime->Year += 1900;
+    else
+        pTime->Year += 2000;
 
-        outb(0x70,0);
-        outb(0x71, INT_BCD(pTime->Second));
-
-        outb(0x70,2);
-        outb(0x71, INT_BCD(pTime->Minute));
-
-        outb(0x70,4);
-        outb(0x71, INT_BCD(pTime->Hour));
-
-        outb(0x70,6);
-        outb(0x71, INT_BCD(pTime->Weekday));
-
-        outb(0x70,7);
-        outb(0x71, INT_BCD(pTime->Day));
-
-        outb(0x70,8);
-        outb(0x71, INT_BCD(pTime->Month));
-
-        outb_p(0x70,9);
-        outb(0x71, INT_BCD(pTime->Year % 100));
-
-
-        /* Century */
 #if 0
-        outb_p(0x70,0x32);
-        outb(0x71, INT_BCD(pTime->Year / 100));
+    /* Century */
+    pTime->Year += BCD_INT(HalQueryCMOS (RTC_REGISTER_CENTURY)) * 100;
+#endif
+
+#ifndef NDEBUG
+    DbgPrint ("HalQueryRealTimeClock() %d:%d:%d %d/%d/%d\n",
+              pTime->Hour,
+              pTime->Minute,
+              pTime->Second,
+              pTime->Day,
+              pTime->Month,
+              pTime->Year
+             );
+#endif
+
+    pTime->Milliseconds = 0;
+}
+
+
+VOID
+HalSetRealTimeClock (PTIME_FIELDS pTime)
+{
+    /* check 'Update In Progress' bit */
+    while (HalQueryCMOS (RTC_REGISTER_A) & RTC_REG_A_UIP)
+        ;
+
+    HalSetCMOS (0, INT_BCD(pTime->Second));
+    HalSetCMOS (2, INT_BCD(pTime->Minute));
+    HalSetCMOS (4, INT_BCD(pTime->Hour));
+    HalSetCMOS (6, INT_BCD(pTime->Weekday));
+    HalSetCMOS (7, INT_BCD(pTime->Day));
+    HalSetCMOS (8, INT_BCD(pTime->Month));
+    HalSetCMOS (9, INT_BCD(pTime->Year % 100));
+
+#if 0
+    /* Century */
+    HalSetCMOS (RTC_REGISTER_CENTURY, INT_BCD(pTime->Year / 100));
 #endif
 }
