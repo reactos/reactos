@@ -271,6 +271,8 @@ CmiObjectDelete(PVOID DeletedObject)
   DPRINT("Delete key object (%p)\n", DeletedObject);
 
   KeyObject = (PKEY_OBJECT) DeletedObject;
+ 
+  ObReferenceObject(KeyObject->ParentKey);
 
   if (!NT_SUCCESS(CmiRemoveKeyFromList(KeyObject)))
     {
@@ -292,6 +294,7 @@ CmiObjectDelete(PVOID DeletedObject)
 	  CmiSyncHives();
 	}
     }
+  ObDereferenceObject(KeyObject->ParentKey);
   if (KeyObject->NumberOfSubKeys)
     {
       KEBUGCHECK(0);
