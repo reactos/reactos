@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.168 2003/08/19 23:59:08 dwelch Exp $
+/* $Id: main.c,v 1.169 2003/08/24 12:08:16 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -529,13 +529,7 @@ ExpInitializeExecutive(VOID)
   FsRtlpInitFileLockingImplementation();
 
   /* Report all resources used by hal */
-  HalReportResourceUsage();
-
-  /* Display the boot screen image if not disabled */
-  if (!NoBootScreen)
-    {
-      InbvEnableBootDriver(TRUE);
-    }
+  HalReportResourceUsage();  
 
   /*
    * Clear the screen to blue
@@ -686,6 +680,12 @@ ExpInitializeExecutive(VOID)
       KEBUGCHECK(0);
     }
 
+  /* Display the boot screen image if not disabled */
+  if (!NoBootScreen)
+    {
+      InbvEnableBootDriver(TRUE);
+    }
+
   /* Create ARC names for boot devices */
   IoCreateArcNames();
 
@@ -704,7 +704,6 @@ ExpInitializeExecutive(VOID)
 #ifdef KDBG
   KdbInitProfiling2();
 #endif /* KDBG */
-
 
   PiInitDefaultLocale();
 

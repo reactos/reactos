@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.104 2003/08/11 18:50:12 chorns Exp $
+# $Id: Makefile,v 1.105 2003/08/24 12:08:16 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -342,8 +342,7 @@ OBJECTS_KD = \
 
 # Boot video (Inbv)
 OBJECTS_INBV = \
-	inbv/inbv.o \
-	inbv/bootvid.o
+	inbv/inbv.o
 
 DEP_OBJECTS := $(OBJECTS_NT) $(OBJECTS_MM) $(OBJECTS_ARCH) \
 	$(OBJECTS_IO) $(OBJECTS_KE) $(OBJECTS_OB) \

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.36 2003/08/22 14:49:54 gvg Exp $
+/* $Id: bug.c,v 1.37 2003/08/24 12:08:16 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -95,17 +95,8 @@ KeBugCheckWithTf(ULONG BugCheckCode,
   PRTL_MESSAGE_RESOURCE_ENTRY Message;
   NTSTATUS Status;
 
-  /*
-   * The bug check may have happened while the bootscreen image was displayed.
-   * If this happened, switch back to text mode.
-   */
-  if (InbvIsBootDriverInstalled())
-    {
-      InbvEnableBootDriver(FALSE);
-    }
-
   /* Make sure we're switching back to the blue screen and print messages on it */
-  HalReleaseDisplayOwnership();  
+  HalReleaseDisplayOwnership();
   if (0 == (KdDebugState & KD_DEBUG_GDB))
     {
       KdDebugState |= KD_DEBUG_SCREEN;
@@ -184,17 +175,8 @@ KeBugCheckEx(ULONG BugCheckCode,
   PRTL_MESSAGE_RESOURCE_ENTRY Message;
   NTSTATUS Status;
 
-  /*
-   * The bug check may have happened while the bootscreen image was displayed.
-   * If this happened, switch back to text mode.
-   */
-  if (InbvIsBootDriverInstalled())
-    {
-      InbvEnableBootDriver(FALSE);
-    }
-  
   /* Make sure we're switching back to the blue screen and print messages on it */
-  HalReleaseDisplayOwnership();  
+  HalReleaseDisplayOwnership();
   KdDebugState |= KD_DEBUG_SCREEN;
 
   __asm__("cli\n\t");

@@ -1,4 +1,4 @@
-/* $Id: inbv.c,v 1.1 2003/08/11 18:50:12 chorns Exp $
+/* $Id: inbv.c,v 1.2 2003/08/24 12:08:16 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <roskrnl.h>
 #include <ntos/bootvid.h>
+#include <ddk/ntbootvid.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -22,7 +23,43 @@
 
 /* DATA **********************************************************************/
 
+static HANDLE BootVidDevice = NULL;
+static BOOL BootVidDriverInstalled = FALSE;
+static NTBOOTVID_FUNCTION_TABLE BootVidFunctionTable;
+
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS
+STATIC
+InbvCheckBootVid(VOID)
+{
+  IO_STATUS_BLOCK Iosb;
+
+  if (BootVidDevice == NULL)
+    {
+      NTSTATUS Status;
+      OBJECT_ATTRIBUTES ObjectAttributes;
+      UNICODE_STRING BootVidName;
+
+      RtlInitUnicodeStringFromLiteral(&BootVidName, L"\\Device\\BootVid");
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &BootVidName,
+				 0,
+				 NULL,
+				 NULL);
+      Status = ZwOpenFile(&BootVidDevice,
+			  FILE_ALL_ACCESS,
+			  &ObjectAttributes,
+			  &Iosb,
+			  0,
+			  0);
+      if (!NT_SUCCESS(Status))
+	{
+	  return(Status);
+	}
+    }
+  return(STATUS_SUCCESS);
+}
 
 VOID
 STDCALL
@@ -46,18 +83,69 @@ InbvDisplayString(IN PCHAR String)
   return FALSE;
 }
 
+BOOLEAN
+STDCALL_FUNC
+InbvResetDisplayParameters(ULONG SizeX, ULONG SizeY)
+{
+  return(InbvResetDisplay());
+}
 
 VOID
 STDCALL
 InbvEnableBootDriver(IN BOOLEAN Enable)
 {
+  NTSTATUS Status;
+  IO_STATUS_BLOCK Iosb;
+
+  Status = InbvCheckBootVid();
+  if (!NT_SUCCESS(Status))
+    {
+      return;
+    }
+
   if (Enable)
     {
-      VidInitialize();
+      Status = NtDeviceIoControlFile(BootVidDevice,
+				     NULL,
+				     NULL,
+				     NULL,
+				     &Iosb,
+				     IOCTL_BOOTVID_INITIALIZE,
+				     NULL,
+				     0,
+				     &BootVidFunctionTable,
+				     sizeof(BootVidFunctionTable));
+      if (!NT_SUCCESS(Status))
+	{
+	  KeBugCheck(0);
+	}
+      BootVidDriverInstalled = TRUE;
+      /* Notify the hal we have acquired the display. */
+      CHECKPOINT;
+      HalAcquireDisplayOwnership(InbvResetDisplayParameters);
     }
   else
     {
-      VidCleanUp();
+      Status = NtDeviceIoControlFile(BootVidDevice,
+				     NULL,
+				     NULL,
+				     NULL,
+				     &Iosb,
+				     IOCTL_BOOTVID_CLEANUP,
+				     NULL,
+				     0,
+				     NULL,
+				     0);
+      if (!NT_SUCCESS(Status))
+	{
+	  KeBugCheck(0);
+	}
+      BootVidDriverInstalled = FALSE;
+      /* Notify the hal we have released the display. */
+      HalReleaseDisplayOwnership();
+
+      NtClose(BootVidDevice);
+      BootVidDevice = NULL;
     }
 }
 
@@ -80,7 +168,7 @@ BOOLEAN
 STDCALL
 InbvIsBootDriverInstalled(VOID)
 {
-  return VidIsBootDriverInstalled();
+  return(BootVidDriverInstalled);
 }
 
 
@@ -95,7 +183,11 @@ BOOLEAN
 STDCALL
 InbvResetDisplay(VOID)
 {
-  return VidResetDisplay();
+  if (!BootVidDriverInstalled)
+    {
+      return(FALSE);
+    }
+  return(BootVidFunctionTable.ResetDisplay());
 }
 
 
