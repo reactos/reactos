@@ -16,9 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.10 2001/03/16 18:11:22 dwelch Exp $
+/* $Id: catch.c,v 1.11 2001/03/16 23:04:59 dwelch Exp $
  *
- * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
  * PURPOSE:              Exception handling

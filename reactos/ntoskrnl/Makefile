@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.23 2001/03/15 23:41:31 dwelch Exp $
+# $Id: Makefile,v 1.24 2001/03/16 23:04:59 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -94,7 +94,6 @@ OBJECTS_KE = \
 	ke/dpc.o \
 	ke/error.o \
 	ke/event.o \
-	ke/kernel.o \
 	ke/kqueue.o \
 	ke/main.o \
 	ke/mutex.o \

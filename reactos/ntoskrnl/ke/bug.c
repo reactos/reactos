@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.16 2001/03/14 00:21:22 dwelch Exp $
+/* $Id: bug.c,v 1.17 2001/03/16 23:04:59 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -59,26 +59,26 @@ KeDeregisterBugCheckCallback (PKBUGCHECK_CALLBACK_RECORD CallbackRecord)
 }
 
 BOOLEAN STDCALL
-KeRegisterBugCheckCallback (PKBUGCHECK_CALLBACK_RECORD	CallbackRecord,
+KeRegisterBugCheckCallback (PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
 			    PKBUGCHECK_CALLBACK_ROUTINE	CallbackRoutine,
-			    PVOID				Buffer,
-			    ULONG				Length,
-			    PUCHAR				Component)
+			    PVOID Buffer,
+			    ULONG Length,
+			    PUCHAR Component)
 {
-  InsertTailList(&BugcheckCallbackListHead,&CallbackRecord->Entry);
-  CallbackRecord->Length=Length;
-  CallbackRecord->Buffer=Buffer;
-  CallbackRecord->Component=Component;
-  CallbackRecord->CallbackRoutine=CallbackRoutine;
+  InsertTailList(&BugcheckCallbackListHead, &CallbackRecord->Entry);
+  CallbackRecord->Length = Length;
+  CallbackRecord->Buffer = Buffer;
+  CallbackRecord->Component = Component;
+  CallbackRecord->CallbackRoutine = CallbackRoutine;
   return(TRUE);
 }
 
 VOID STDCALL
-KeBugCheckEx (ULONG	BugCheckCode,
-	      ULONG	BugCheckParameter1,
-	      ULONG	BugCheckParameter2,
-	      ULONG	BugCheckParameter3,
-	      ULONG	BugCheckParameter4)
+KeBugCheckEx (ULONG BugCheckCode,
+	      ULONG BugCheckParameter1,
+	      ULONG BugCheckParameter2,
+	      ULONG BugCheckParameter3,
+	      ULONG BugCheckParameter4)
 /*
  * FUNCTION: Brings the system down in a controlled manner when an 
  * inconsistency that might otherwise cause corruption has been detected
@@ -119,7 +119,7 @@ KeBugCheckEx (ULONG	BugCheckCode,
 }
 
 VOID STDCALL
-KeBugCheck (ULONG	BugCheckCode)
+KeBugCheck (ULONG BugCheckCode)
 /*
  * FUNCTION: Brings the system down in a controlled manner when an 
  * inconsistency that might otherwise cause corruption has been detected

@@ -1,5 +1,22 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
+ *  ReactOS kernel
+ *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/*
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/kernel.c
  * PURPOSE:         Initializes the kernel
@@ -14,40 +31,15 @@
 #include <internal/ke.h>
 #include <internal/mm.h>
 #include <internal/ps.h>
+#include <internal/arch/fpu.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS *******************************************************************/
-
-static ULONG HardwareMathSupport;
-
 /* FUNCTIONS *****************************************************************/
 
-VOID KiCheckFPU(VOID)
-{
-   unsigned short int status;
-   int cr0;
-   
-   HardwareMathSupport = 0;
-   
-   __asm__("clts\n\t");
-   __asm__("fninit\n\t");
-   __asm__("fstsw %0\n\t" : "=a" (status));
-   if (status != 0)
-     {
-	__asm__("movl %%cr0, %0\n\t" : "=a" (cr0));
-	cr0 = cr0 | 0x4;
-	__asm__("movl %0, %%cr0\n\t" :
-		: "a" (cr0));
-	DbgPrint("No FPU detected\n");
-	return;
-     }
-   /* FIXME: Do fsetpm */
-   HardwareMathSupport = 1;   
-}
-
-VOID KeInit1(VOID)
+VOID 
+KeInit1(VOID)
 {
    KiCheckFPU();
 
@@ -55,7 +47,8 @@ VOID KeInit1(VOID)
    KeInitInterrupts ();
 }
 
-VOID KeInit2(VOID)
+VOID 
+KeInit2(VOID)
 {
    PVOID PcrPage;
    
@@ -80,3 +73,9 @@ VOID KeInit2(VOID)
 			  (ULONG)PcrPage);
    memset((PVOID)KPCR_BASE, 0, 4096);
 }
+
+
+
+
+
+
