@@ -1992,7 +1992,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
     }
 
   /* Remove the key from the parent key's hash block */
-  if (ParentKey->KeyCell->HashTableOffset != -1)
+  if (ParentKey->KeyCell->HashTableOffset != (BLOCK_OFFSET) -1)
     {
       DPRINT1("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset)
       HashBlock = CmiGetBlock(RegistryHive,
@@ -2010,7 +2010,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
     }
 
   /* Remove the key's hash block */
-  if (SubKey->KeyCell->HashTableOffset != -1)
+  if (SubKey->KeyCell->HashTableOffset != (BLOCK_OFFSET) -1)
     {
       DPRINT1("SubKey HashTableOffset %lx\n", SubKey->KeyCell->HashTableOffset)
       HashBlock = CmiGetBlock(RegistryHive,
@@ -2757,7 +2757,7 @@ CmiMergeFree(PREGISTRY_HIVE RegistryHive,
   ULONG BlockSize;
   ULONG BinSize;
   PHBIN Bin;
-  LONG i;
+  ULONG i;
 
   DPRINT("CmiMergeFree(Block %lx  Offset %lx  Size %lx) called\n",
 	 FreeBlock, FreeOffset, FreeBlock->CellSize);
