@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.11 2003/10/18 20:41:10 vizzini Exp $
+/* $Id: keyboard.c,v 1.12 2003/10/18 21:29:26 mf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -537,63 +537,74 @@ void InitKbdLayout( PVOID *pkKeyboardLayout ) {
     
     if( !NT_SUCCESS(Status) ) {
       DbgPrint( "Could not get default locale (%08x).\n", Status );
-      return;
-    }
+    } else {
+      DPRINT( "DefaultLocale = %wZ\n", &DefaultLocale );
 
-    DPRINT( "DefaultLocale = %wZ\n", &DefaultLocale );
+      RtlInitUnicodeString(&LayoutKeyName,
+			   L"\\REGISTRY\\Machine\\SYSTEM\\CurrentControlSet"
+			   L"\\Control\\KeyboardLayouts\\");
+
+      ReallyAppendUnicodeString(&LayoutKeyName,&DefaultLocale,FALSE);
+
+      RtlFreeUnicodeString(&DefaultLocale);
+      RtlInitUnicodeString(&LayoutValueName,L"Layout File");
+
+      Status = ReadRegistryValue(&LayoutKeyName,&LayoutValueName,&LayoutFile);
+      RtlInitUnicodeString(&FullLayoutPath,SYSTEMROOT_DIR);
+
+      if( !NT_SUCCESS(Status) ) {
+	DbgPrint("Got default locale but not layout file. (%08x)\n",
+		 Status);
+	RtlFreeUnicodeString(&LayoutFile);
+      } else {
+	DPRINT("Read registry and got %wZ\n", &LayoutFile);
     
-    RtlInitUnicodeString(&LayoutKeyName,
-			 L"\\REGISTRY\\Machine\\SYSTEM\\CurrentControlSet"
-			 L"\\Control\\KeyboardLayouts\\");
+	RtlFreeUnicodeString(&LayoutKeyName);
 
-    ReallyAppendUnicodeString(&LayoutKeyName,&DefaultLocale,FALSE);
+	ReallyAppendUnicodeString(&FullLayoutPath,&LayoutFile,FALSE);
 
-    RtlFreeUnicodeString(&DefaultLocale);
-    RtlInitUnicodeString(&LayoutValueName,L"Layout File");
+	DPRINT("Loading Keyboard DLL %wZ\n", &FullLayoutPath);
 
-    Status = ReadRegistryValue(&LayoutKeyName,&LayoutValueName,&LayoutFile);
+	RtlFreeUnicodeString(&LayoutFile);
 
-    if( !NT_SUCCESS(Status) ) {
-      DbgPrint("Got default locale but not layout file. (%08x)\n",
-	       Status);
-      return;
-    }
+	KeyboardLayoutWSTR = ExAllocatePool(PagedPool,
+					    (FullLayoutPath.Length + 1) * 
+					    sizeof(WCHAR));
 
-    DPRINT("Read registry and got %wZ\n", &LayoutFile);
-      
-    RtlFreeUnicodeString(&LayoutKeyName);
+	if( !KeyboardLayoutWSTR ) {
+	  DbgPrint("Couldn't allocate a string for the keyboard layout name.\n");
+	  RtlFreeUnicodeString(&FullLayoutPath);
+	  return;
+	}
+	memcpy(KeyboardLayoutWSTR,FullLayoutPath.Buffer,
+	       (FullLayoutPath.Length + 1) * sizeof(WCHAR));
+	KeyboardLayoutWSTR[FullLayoutPath.Length] = 0;
 
-    RtlInitUnicodeString(&FullLayoutPath,SYSTEMROOT_DIR);
-    ReallyAppendUnicodeString(&FullLayoutPath,&LayoutFile,FALSE);
+	kbModule = EngLoadImage(KeyboardLayoutWSTR);
+	DPRINT( "Load Keyboard Layout: %S\n", KeyboardLayoutWSTR );
 
-    DPRINT("Loading Keyboard DLL %wZ\n", &FullLayoutPath);
+        if( !kbModule )
+	  DbgPrint( "Load Keyboard Layout: No %wZ\n", &FullLayoutPath );
+      }
 
-    RtlFreeUnicodeString(&LayoutFile);
-
-    KeyboardLayoutWSTR = ExAllocatePool(PagedPool,
-					(FullLayoutPath.Length + 1) * 
-					sizeof(WCHAR));
-  
-    if( !KeyboardLayoutWSTR ) {
-      DbgPrint("Couldn't allocate a string for the keyboard layout name.\n");
       RtlFreeUnicodeString(&FullLayoutPath);
-      return;
     }
 
-    memcpy(KeyboardLayoutWSTR,FullLayoutPath.Buffer,
-	   (FullLayoutPath.Length + 1) * sizeof(WCHAR));
-    KeyboardLayoutWSTR[FullLayoutPath.Length] = 0;
-    
-    kbModule = EngLoadImage(KeyboardLayoutWSTR);
-    DPRINT( "Load Keyboard Layout: %S\n", KeyboardLayoutWSTR );
-    
     if( !kbModule ) {
-      DbgPrint( "Load Keyboard Layout: No %wZ\n", &FullLayoutPath );
-      RtlFreeUnicodeString(&FullLayoutPath);
-      return;
+      DbgPrint("Trying to load GER Keyboard Layout\n");
+      kbModule = EngLoadImage(L"\\SystemRoot\\system32\\kbdgr.dll");
+
+      if( !kbModule ) {
+        DbgPrint("Trying to load US Keyboard Layout\n");
+	kbModule = EngLoadImage(L"\\SystemRoot\\system32\\kbdus.dll");
+
+        if (!kbModule) {
+	  DbgPrint("Failed to load any Keyboard Layout\n");
+	  return;
+	}
+      }
     }
-    
-    RtlFreeUnicodeString(&FullLayoutPath);
+
     RtlInitAnsiString( &kbdProcedureName, "KbdLayerDescriptor" );
 
     LdrGetProcedureAddress((PVOID)kbModule,
