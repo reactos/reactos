@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.14 2000/01/12 19:02:40 ekohl Exp $
+/* $Id: device.c,v 1.15 2000/03/05 19:17:42 ea Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -67,10 +67,15 @@ VOID IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
 }
 
 
-PDEVICE_OBJECT IoGetRelatedDeviceObject(PFILE_OBJECT FileObject)
+PDEVICE_OBJECT
+STDCALL
+IoGetRelatedDeviceObject (
+	IN	PFILE_OBJECT	FileObject
+	)
 {
-   return(FileObject->DeviceObject);
+	return (FileObject->DeviceObject);
 }
+
 
 NTSTATUS IoGetDeviceObjectPointer(PUNICODE_STRING ObjectName,
 				  ACCESS_MASK DesiredAccess,

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.38 2000/03/04 22:00:21 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.39 2000/03/05 19:17:40 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -7,6 +7,7 @@
 EXPORTS
 InitializeListHead
 CcInitializeFileCache=CcInitializeFileCache@8
+CcMdlReadComplete=CcMdlReadComplete@8
 CcRequestCachePage=CcRequestCachePage@20
 CcReleaseCachePage=CcReleaseCachePage@12
 CcReleaseFileCache=CcReleaseFileCache@8
@@ -120,11 +121,19 @@ FsRtlLookupLargeMcbEntry=FsRtlLookupLargeMcbEntry@32
 FsRtlLookupLastLargeMcbEntry=FsRtlLookupLastLargeMcbEntry@12
 FsRtlLookupLastMcbEntry=FsRtlLookupLastMcbEntry@12
 FsRtlLookupMcbEntry=FsRtlLookupMcbEntry@20
+FsRtlMdlRead=FsRtlMdlRead@24
+FsRtlMdlReadComplete=FsRtlMdlReadComplete@8
+FsRtlMdlReadCompleteDev=FsRtlMdlReadCompleteDev@12
+FsRtlMdlReadDev=FsRtlMdlReadDev@28
+FsRtlMdlWriteComplete=FsRtlMdlWriteComplete@12
+FsRtlMdlWriteCompleteDev=FsRtlMdlWriteCompleteDev@16
 FsRtlNormalizeNtstatus=FsRtlNormalizeNtstatus@8
 FsRtlNumberOfRunsInLargeMcb=FsRtlNumberOfRunsInLargeMcb@4
 FsRtlNumberOfRunsInMcb=FsRtlNumberOfRunsInMcb@4
 FsRtlPostPagingFileStackOverflow=FsRtlPostPagingFileStackOverflow@12
 FsRtlPostStackOverflow=FsRtlPostStackOverflow@12
+FsRtlPrepareMdlWrite=FsRtlPrepareMdlWrite@24
+FsRtlPrepareMdlWriteDev=FsRtlPrepareMdlWriteDev@28
 FsRtlPrivateLock=FsRtlPrivateLock@48
 FsRtlProcessFileLock=FsRtlProcessFileLock@12
 FsRtlRegisterUncProvider=FsRtlRegisterUncProvider@12
@@ -152,7 +161,9 @@ IoDeleteController
 IoDeleteDevice
 IoDisconnectInterrupt
 IoFreeController
+IoGetBaseFileSystemDeviceObject=IoGetBaseFileSystemDeviceObject@4
 IoGetCurrentIrpStackLocation
+IoGetRelatedDeviceObject=IoGetRelatedDeviceObject@4
 IoInitializeDpcRequest
 IoInitializeTimer
 IoMarkIrpPending

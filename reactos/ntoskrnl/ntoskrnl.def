@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.51 2000/03/04 22:00:21 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.52 2000/03/05 19:17:39 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -7,6 +7,7 @@
 EXPORTS
 InitializeListHead
 CcInitializeFileCache@8
+CcMdlReadComplete@8
 CcRequestCachePage@20
 CcReleaseCachePage@12
 CcReleaseFileCache@8
@@ -120,11 +121,19 @@ FsRtlLookupLargeMcbEntry@32
 FsRtlLookupLastLargeMcbEntry@12
 FsRtlLookupLastMcbEntry@12
 FsRtlLookupMcbEntry@20
+FsRtlMdlRead@24
+FsRtlMdlReadComplete@8
+FsRtlMdlReadCompleteDev@12
+FsRtlMdlReadDev@28
+FsRtlMdlWriteComplete@12
+FsRtlMdlWriteCompleteDev@16
 FsRtlNormalizeNtstatus@8
 FsRtlNumberOfRunsInLargeMcb@4
 FsRtlNumberOfRunsInMcb@4
 FsRtlPostPagingFileStackOverflow@12
 FsRtlPostStackOverflow@12
+FsRtlPrepareMdlWrite@24
+FsRtlPrepareMdlWriteDev@28
 FsRtlPrivateLock@48
 FsRtlProcessFileLock@12
 FsRtlRegisterUncProvider@12
@@ -152,7 +161,9 @@ IoDeleteController
 IoDeleteDevice
 IoDisconnectInterrupt
 IoFreeController
+IoGetBaseFileSystemDeviceObject@4
 IoGetCurrentIrpStackLocation
+IoGetRelatedDeviceObject@4
 IoInitializeDpcRequest
 IoInitializeTimer
 IoMarkIrpPending

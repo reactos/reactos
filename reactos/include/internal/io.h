@@ -1,4 +1,5 @@
-/*
+/* $Id: io.h,v 1.8 2000/03/05 19:17:39 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            include/internal/iomgr.h

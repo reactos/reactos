@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.57 2000/03/04 13:41:56 ekohl Exp $
+# $Id: makefile_rex,v 1.58 2000/03/05 19:17:39 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -59,7 +59,7 @@ EX_OBJECTS = ex/work.o ex/fmutex.o ex/resource.o ex/time.o ex/interlck.o \
              ex/stamp.o ex/init.o
 
 FS_OBJECTS = fs/dbcsname.o fs/name.o fs/mcb.o fs/unc.o fs/util.o \
-             fs/filelock.o fs/pool.o
+             fs/filelock.o fs/pool.o fs/mdl.o
 
 SE_OBJECTS = se/semgr.o se/acl.o se/sid.o se/sd.o se/token.o se/luid.o \
              se/priv.o

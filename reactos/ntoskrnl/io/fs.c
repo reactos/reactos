@@ -273,3 +273,64 @@ VOID IoUnregisterFileSystem(PDEVICE_OBJECT DeviceObject)
 }
 
 
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	IoGetBaseFileSystemDeviceObject@4
+ *
+ * DESCRIPTION
+ *	Get the DEVICE_OBJECT associated to
+ *	a FILE_OBJECT.
+ *
+ * ARGUMENTS
+ *	FileObject
+ *
+ * RETURN VALUE
+ *
+ * NOTE
+ * 	From Bo Branten's ntifs.h v13.
+ */
+PDEVICE_OBJECT
+STDCALL
+IoGetBaseFileSystemDeviceObject (
+	IN	PFILE_OBJECT	FileObject
+	)
+{
+	PDEVICE_OBJECT	DeviceObject = NULL;
+	PVPB		Vpb = NULL;
+
+	/*
+	 * If the FILE_OBJECT's VPB is defined,
+	 * get the device from it.
+	 */
+	if (NULL != (Vpb = FileObject->Vpb)) 
+	{
+		if (NULL != (DeviceObject = Vpb->DeviceObject))
+		{
+			/* Vpb->DeviceObject DEFINED! */
+			return DeviceObject;
+		}
+	}
+	/*
+	 * If that failed, try the VPB
+	 * in the FILE_OBJECT's DeviceObject.
+	 */
+	DeviceObject = FileObject->DeviceObject;
+	if (NULL == (Vpb = DeviceObject->Vpb)) 
+	{
+		/* DeviceObject->Vpb UNDEFINED! */
+		return DeviceObject;
+	}
+	/*
+	 * If that pointer to the VPB is again
+	 * undefined, return directly the
+	 * device object from the FILE_OBJECT.
+	 */
+	return (
+		(NULL == Vpb->DeviceObject)
+			? DeviceObject
+			: Vpb->DeviceObject
+		);
+}
+
+
+/* EOF */

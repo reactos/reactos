@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.7 2000/03/01 22:52:25 ea Exp $ */
+/* $Id: fsfuncs.h,v 1.8 2000/03/05 19:17:37 ea Exp $ */
 VOID
 STDCALL
 FsRtlAddLargeMcbEntry (
@@ -312,6 +312,76 @@ FsRtlLookupMcbEntry (
 	DWORD	Unknown2,
 	DWORD	Unknown3,
 	DWORD	Unknown4
+	);
+BOOLEAN
+STDCALL
+FsRtlMdlRead (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5
+	);
+BOOLEAN
+STDCALL
+FsRtlMdlReadComplete (
+	IN	PFILE_OBJECT	FileObject,
+	IN OUT	PMDL		Mdl
+	);
+BOOLEAN
+STDCALL
+FsRtlMdlReadCompleteDev (
+	IN	PFILE_OBJECT	FileObject,
+	IN	PMDL		MdlChain,
+	IN	PDEVICE_OBJECT	DeviceObject
+	);
+BOOLEAN
+STDCALL
+FsRtlMdlReadDev (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6
+	);
+BOOLEAN
+STDCALL
+FsRtlMdlWriteComplete (
+	IN	PFILE_OBJECT	FileObject,
+	IN	PLARGE_INTEGER	FileOffset,
+	IN	PMDL		MdlChain
+	);
+BOOLEAN
+STDCALL
+FsRtlMdlWriteCompleteDev (
+	IN	PFILE_OBJECT	FileObject,
+	IN	PLARGE_INTEGER	FileOffset,
+	IN	PMDL		MdlChain,
+	IN	PDEVICE_OBJECT	DeviceObject
+	);
+BOOLEAN
+STDCALL
+FsRtlPrepareMdlWrite (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5
+	);
+BOOLEAN
+STDCALL
+FsRtlPrepareMdlWriteDev (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6
 	);
 NTSTATUS
 STDCALL

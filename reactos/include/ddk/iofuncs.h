@@ -1,4 +1,4 @@
-/* $Id: iofuncs.h,v 1.5 1999/12/26 20:21:02 ea Exp $ */
+/* $Id: iofuncs.h,v 1.6 2000/03/05 19:17:37 ea Exp $ */
 /* IO MANAGER ***************************************************************/
 
 BOOLEAN
@@ -475,7 +475,11 @@ VOID
 IoFreeMdl (
 	PMDL	Mdl
 	);
-
+PDEVICE_OBJECT
+STDCALL
+IoGetBaseFileSystemDeviceObject (
+	IN	PFILE_OBJECT	FileObject
+	);
 PCONFIGURATION_INFORMATION
 IoGetConfigurationInformation (VOID);
 
@@ -524,6 +528,7 @@ IoGetNextIrpStackLocation (
 	);
 
 PDEVICE_OBJECT
+STDCALL
 IoGetRelatedDeviceObject (
 	PFILE_OBJECT	FileObject
 	);

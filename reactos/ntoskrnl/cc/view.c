@@ -1,4 +1,4 @@
-/* $Id: view.c,v 1.7 2000/02/26 22:41:34 ea Exp $
+/* $Id: view.c,v 1.8 2000/03/05 19:17:40 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
 #include <internal/mm.h>
+#include <internal/cc.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -185,6 +186,65 @@ NTSTATUS STDCALL CcInitializeFileCache(PFILE_OBJECT FileObject,
    DPRINT("Finished CcInitializeFileCache() = %x\n", *Bcb);
    
    return(STATUS_SUCCESS);
+}
+
+
+/**********************************************************************
+ * NAME							INTERNAL
+ * 	CcMdlReadCompleteDev@8
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *	MdlChain
+ *	DeviceObject
+ *	
+ * RETURN VALUE
+ * 	None.
+ *
+ * NOTE
+ * 	Used by CcMdlReadComplete@8 and FsRtl
+ */
+VOID
+STDCALL
+CcMdlReadCompleteDev (
+	IN	PMDL		MdlChain,
+	IN	PDEVICE_OBJECT	DeviceObject
+	)
+{
+	UNIMPLEMENTED;
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	CcMdlReadComplete@8
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ * 	None.
+ *
+ * NOTE
+ * 	From Bo Branten's ntifs.h v13.
+ */
+VOID
+STDCALL
+CcMdlReadComplete (
+	IN	PFILE_OBJECT	FileObject,
+	IN	PMDL		MdlChain
+	)
+{
+	PDEVICE_OBJECT	DeviceObject = NULL;
+
+	DeviceObject = IoGetRelatedDeviceObject (FileObject);
+	/* FIXME: try fast I/O first */
+	CcMdlReadCompleteDev (
+		MdlChain,
+		DeviceObject
+		);
 }
 
 

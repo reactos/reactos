@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.10 2000/02/26 09:58:06 ariadne Exp $
+/* $Id: iotypes.h,v 1.11 2000/03/05 19:17:37 ea Exp $
  * 
  */
 
@@ -393,6 +393,16 @@ typedef struct _DRIVER_EXTENSION
    UNICODE_STRING ServiceKeyName;
 } DRIVER_EXTENSION, *PDRIVER_EXTENSION;
 
+#if 0
+typedef
+struct _FAST_IO_DISPATCH_TABLE
+{
+	ULONG			Count;
+	PFAST_IO_DISPATCH	Dispatch;
+	
+} FAST_IO_DISPATCH_TABLE, * PFAST_IO_DISPATCH_TABLE;
+#endif
+
 typedef struct _DRIVER_OBJECT
 {
    CSHORT Type;
@@ -405,7 +415,11 @@ typedef struct _DRIVER_OBJECT
    PDRIVER_EXTENSION DriverExtension;
    UNICODE_STRING DriverName;
    PUNICODE_STRING HardwareDatabase;
+#if 0
+   PFAST_IO_DISPATCH_TABLE FastIoDispatch;
+#else
    PFAST_IO_DISPATCH FastIoDispatch;
+#endif
    PDRIVER_INITIALIZE DriverInit;
    PDRIVER_STARTIO DriverStartIo;
    PDRIVER_UNLOAD DriverUnload;

@@ -1,4 +1,5 @@
-/*
+/* $Id: mdl.c,v 1.4 2000/03/05 19:17:43 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/mdl.c
@@ -66,3 +67,6 @@ VOID IoFreeMdl(PMDL Mdl)
    MmUnlockPages(Mdl);
    ExFreePool(Mdl);
 }
+
+
+/* EOF */
