@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,14 +21,15 @@
 #include <debug.h>
 #include <rtl.h>
 #include <comm.h>
+#include <portio.h>
 
 #ifdef DEBUG
 
-#define DEBUG_ALL
-//#define DEBUG_INIFILE
+//#define DEBUG_ALL
+#define DEBUG_INIFILE
 //#define DEBUG_REACTOS
 //#define DEBUG_CUSTOM
-#define DEBUG_NONE
+//#define DEBUG_NONE
 
 #if defined (DEBUG_ALL)
 U32		DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |

@@ -1,3 +1,12 @@
+Changes in v1.8 (1/18/2003) (brianp)
+
+- Added F8 options menu
+- Added custom Boot functionality
+- Moved all OS= settings from [FreeLoader] section to [Operating Systems] section.
+- Removed MessageLine= setting. MessageBox= now accepts "\n" as an escape character for newlines.
+- Added descriptions for disk error codes returned by the BIOS.
+- Device names like "fd0" and "hd0" and "hd1" as well as BIOS drive numbers can now be used as BootDrive= settings.
+
 Changes in v1.7.12 (12/05/2002) (brianp)
 
 - Minor tweak to UI code to allow description

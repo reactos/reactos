@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -150,6 +150,13 @@ BOOL DriveMapIsValidDriveString(PUCHAR DriveString)
 U32 DriveMapGetBiosDriveNumber(PUCHAR DeviceName)
 {
 	U32		BiosDriveNumber = 0;
+
+	// If they passed in a number string then just
+	// convert it to decimal and return it
+	if (DeviceName[0] >= '0' && DeviceName[0] <= '9')
+	{
+		return atoi(DeviceName);
+	}
 
 	// Convert the drive number string into a number
 	// 'hd1' = 1

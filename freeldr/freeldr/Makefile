@@ -204,7 +204,8 @@ ARCH_OBJS	=	fathelp.o	\
 				i386vid.o	\
 				drvmap.o	\
 				int386.o	\
-				i386disk.o
+				i386disk.o	\
+				portio.o
 
 RTL_OBJS	=	print.o		\
 				stdlib.o	\
@@ -230,8 +231,7 @@ REACTOS_OBJS=	reactos.o	\
 				reghive.o	\
 				registry.o
 
-COMM_OBJS	=	rs232.o		\
-				portio.o
+COMM_OBJS	=	rs232.o
 
 DISK_OBJS	=	disk.o		\
 				geometry.o	\
@@ -269,7 +269,8 @@ FREELDR_OBJS=	bootmgr.o \
 				miscboot.o \
 				options.o \
 				linuxboot.o	\
-				oslist.o
+				oslist.o \
+				custom.o
 
 SETUPLDR_OBJS=	setupldr.o
 

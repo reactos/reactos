@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,10 +28,12 @@
 #include <mm.h>
 #include <inifile.h>
 #include <debug.h>
+#include <options.h>
 #include <oslist.h>
 #include <video.h>
 #include <bootmgr.h>
 #include <drivemap.h>
+#include <keycodes.h>
 
 BOOL IsSetupLdr = FALSE;
 
@@ -94,7 +96,7 @@ VOID RunLoader(VOID)
 		UiDrawBackdrop();
 
 		// Show the operating system list menu
-		if (!UiDisplayMenu(OperatingSystemDisplayNames, OperatingSystemCount, DefaultOperatingSystem, TimeOut, &SelectedOperatingSystem))
+		if (!UiDisplayMenu(OperatingSystemDisplayNames, OperatingSystemCount, DefaultOperatingSystem, TimeOut, &SelectedOperatingSystem, FALSE, MainBootMenuKeyPressFilter))
 		{
 			UiMessageBox("Press ENTER to reboot.\n");
 			goto reboot;
@@ -127,7 +129,7 @@ VOID RunLoader(VOID)
 		}
 		else if (stricmp(SettingValue, "Linux") == 0)
 		{
-			LoadAndBootLinux(OperatingSystemSectionNames[SelectedOperatingSystem]);
+			LoadAndBootLinux(OperatingSystemSectionNames[SelectedOperatingSystem], OperatingSystemDisplayNames[SelectedOperatingSystem]);
 		}
 		else if (stricmp(SettingValue, "BootSector") == 0)
 		{
@@ -145,8 +147,7 @@ VOID RunLoader(VOID)
 
 	
 reboot:
-	VideoClearScreen();
-	VideoShowTextCursor();
+	UiUnInitialize("Rebooting...");
 	return;
 }
 
@@ -198,4 +199,17 @@ S32 GetTimeOut(VOID)
 	}
 
 	return TimeOut;
+}
+
+BOOL MainBootMenuKeyPressFilter(U32 KeyPress)
+{
+	if (KeyPress == KEY_F8)
+	{
+		DoOptionsMenu();
+
+		return TRUE;
+	}
+
+	// We didn't handle the key
+	return FALSE;
 }
