@@ -73,10 +73,16 @@ static CRITICAL_SECTION IMalloc32_SpyCS = { &critsect_debug, -1, 0, 0, 0, 0 };
 /* resize the old table */
 static int SetSpyedBlockTableLength ( int NewLength )
 {
-	if (!Malloc32.SpyedBlocks) Malloc32.SpyedBlocks = (LPVOID*)LocalAlloc(NewLength, GMEM_ZEROINIT);
-        else Malloc32.SpyedBlocks = (LPVOID*)LocalReAlloc((HLOCAL)Malloc32.SpyedBlocks, NewLength, GMEM_ZEROINIT);
-        Malloc32.SpyedBlockTableLength = NewLength;
-        return Malloc32.SpyedBlocks ? 1 : 0;
+	LPVOID *NewSpyedBlocks;
+
+	if (!Malloc32.SpyedBlocks) NewSpyedBlocks = (LPVOID*)LocalAlloc(GMEM_ZEROINIT, NewLength);
+        else NewSpyedBlocks = (LPVOID*)LocalReAlloc((HLOCAL)Malloc32.SpyedBlocks, NewLength, GMEM_ZEROINIT);
+	if (NewSpyedBlocks) {
+		Malloc32.SpyedBlocks = NewSpyedBlocks;
+	        Malloc32.SpyedBlockTableLength = NewLength;
+	}
+
+	return NewSpyedBlocks ? 1 : 0;
 }
 
 /* add a location to the table */
