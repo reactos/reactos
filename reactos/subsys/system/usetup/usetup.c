@@ -2447,8 +2447,10 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 		return QUIT_PAGE;
 	    }
 
+#ifndef NDEBUG
 	  SetStatusText ("   Done.  Press any key ...");
 	  ConInKey(Ir);
+#endif
 
 	  return INSTALL_DIRECTORY_PAGE;
 	}
@@ -2665,7 +2667,9 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 
 
 static BOOLEAN
-PrepareCopyPageInfFile(HINF InfFile, PWCHAR SourceCabinet, PINPUT_RECORD Ir)
+PrepareCopyPageInfFile(HINF InfFile,
+		       PWCHAR SourceCabinet,
+		       PINPUT_RECORD Ir)
 {
   WCHAR PathBuffer[MAX_PATH];
   INFCONTEXT FilesContext;
@@ -2874,10 +2878,6 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
   SetTextXY(6, 8, "Setup prepares your computer for copying the ReactOS files. ");
 
-
-  /*
-   * Build the file copy list
-   */
   SetStatusText("   Building the file copy list...");
 
   /* Create the file queue */
@@ -2898,31 +2898,16 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 	}
     }
 
-
   if (!PrepareCopyPageInfFile(SetupInf, NULL, Ir))
     {
-      return(QUIT_PAGE);
+      return QUIT_PAGE;
     }
-
 
   /* Search for the 'Cabinets' section */
   if (!InfFindFirstLine (SetupInf, L"Cabinets", NULL, &CabinetsContext))
     {
-      PopupError("Setup failed to find the 'Cabinets' section\n"
-		 "in TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return(QUIT_PAGE);
-	    }
-	}
+      return FILE_COPY_PAGE;
     }
-
 
   /*
    * Enumerate the directory values in the 'Cabinets'
@@ -2957,7 +2942,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
 		  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 		    {
-		      return(QUIT_PAGE);
+		      return QUIT_PAGE;
 		    }
 		}
 	    }
@@ -2975,7 +2960,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
 	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 		{
-		  return(QUIT_PAGE);
+		  return QUIT_PAGE;
 		}
 	    }
 	}
@@ -2995,7 +2980,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
 	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 		{
-		  return(QUIT_PAGE);
+		  return QUIT_PAGE;
 		}
 	    }
 	}
@@ -3004,12 +2989,12 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
       if (!PrepareCopyPageInfFile(InfHandle, KeyValue, Ir))
         {
-          return(QUIT_PAGE);
+          return QUIT_PAGE;
         }
     }
   while (InfFindNextLine (&CabinetsContext, &CabinetsContext));
 
-  return(FILE_COPY_PAGE);
+  return FILE_COPY_PAGE;
 }
 
 
@@ -3046,7 +3031,7 @@ FileCopyCallback(PVOID Context,
 	break;
     }
 
-  return(0);
+  return 0;
 }
 
 
@@ -3080,7 +3065,7 @@ FileCopyPage(PINPUT_RECORD Ir)
 
   DestroyProgressBar(CopyContext.ProgressBar);
 
-  return(REGISTRY_PAGE);
+  return REGISTRY_PAGE;
 }
 
 
@@ -3088,13 +3073,11 @@ static PAGE_NUMBER
 RegistryPage(PINPUT_RECORD Ir)
 {
   INFCONTEXT InfContext;
-  NTSTATUS Status;
-
   PWSTR Action;
   PWSTR File;
   PWSTR Section;
   BOOLEAN Delete;
-
+  NTSTATUS Status;
 
   SetTextXY(6, 8, "Setup is updating the system configuration");
 
@@ -3112,7 +3095,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	}
     }
@@ -3131,7 +3114,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	}
     }
@@ -3151,7 +3134,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	}
     }
@@ -3181,7 +3164,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
       if (!ImportRegistryFile(File, Section, Delete))
 	{
-	  DPRINT1("Importing %S failed\n", File);
+	  DPRINT("Importing %S failed\n", File);
 
 	  PopupError("Setup failed to import a hive file.",
 		     "ENTER = Reboot computer");
@@ -3192,16 +3175,34 @@ RegistryPage(PINPUT_RECORD Ir)
 
 	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 		{
-		  return(QUIT_PAGE);
+		  return QUIT_PAGE;
 		}
 	    }
 	}
     }
   while (InfFindNextLine (&InfContext, &InfContext));
 
+  /* Update keyboard layout settings */
+  SetStatusText("   Updating keyboard layout settings...");
+  if (!ProcessKeyboardLayoutRegistry(LayoutList))
+    {
+      PopupError("Setup failed to update keyboard layout settings.",
+		 "ENTER = Reboot computer");
+
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return QUIT_PAGE;
+	    }
+	}
+    }
+
   SetStatusText("   Done...");
 
-  return(BOOT_LOADER_PAGE);
+  return BOOT_LOADER_PAGE;
 }
 
 
@@ -3228,7 +3229,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	}
     }
@@ -3247,7 +3248,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	}
     }
@@ -3265,7 +3266,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	}
     }
@@ -3283,7 +3284,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	}
     }
@@ -3323,7 +3324,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	  {
-	    return(QUIT_PAGE);
+	    return QUIT_PAGE;
 	  }
 	}
       }
@@ -3350,7 +3351,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	  }
 	}
@@ -3381,7 +3382,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	      {
-		return(QUIT_PAGE);
+		return QUIT_PAGE;
 	      }
 	    }
 	  }
@@ -3410,7 +3411,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	      {
-		return(QUIT_PAGE);
+		return QUIT_PAGE;
 	      }
 	    }
 	  }
@@ -3436,7 +3437,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	  }
 	}
@@ -3462,7 +3463,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	  }
 	}
@@ -3494,7 +3495,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	  {
-	    return(QUIT_PAGE);
+	    return QUIT_PAGE;
 	  }
 	}
       }
@@ -3521,7 +3522,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	  }
 	}
@@ -3546,7 +3547,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	  }
 	}
@@ -3573,7 +3574,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	      {
-		return(QUIT_PAGE);
+		return QUIT_PAGE;
 	      }
 	    }
 	  }
@@ -3598,7 +3599,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	      {
-		return(QUIT_PAGE);
+		return QUIT_PAGE;
 	      }
 	    }
 	  }
@@ -3624,7 +3625,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	  }
 	}
@@ -3655,7 +3656,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	  {
-	    return(QUIT_PAGE);
+	    return QUIT_PAGE;
 	  }
 	}
       }
@@ -3682,7 +3683,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	  }
 	}
@@ -3707,7 +3708,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	  }
 	}
