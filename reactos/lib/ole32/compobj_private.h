@@ -35,6 +35,13 @@
 #include "winreg.h"
 #include "winternl.h"
 
+/* Windows maps COINIT values to 0x80 for apartment threaded, 0x140
+ * for free threaded, and 0 for uninitialized apartments. There is
+ * no real advantage in us doing this and certainly no release version
+ * of an app should be poking around with these flags. So we need a
+ * special value for uninitialized */
+#define COINIT_UNINITIALIZED 0x100
+
 /* exported interface */
 typedef struct tagXIF {
   struct tagXIF *next;
@@ -96,6 +103,7 @@ typedef struct tagAPARTMENT {
   LPMESSAGEFILTER filter;  /* message filter */
   XOBJECT *objs;           /* exported objects */
   IOBJECT *proxies;        /* imported objects */
+  LPUNKNOWN state;         /* state object (see Co[Get,Set]State) */
   LPVOID ErrorInfo;        /* thread error info */
 } APARTMENT;
 
@@ -217,6 +225,7 @@ static inline APARTMENT* COM_CurrentApt(void)
 }
 
 /* compobj.c */
+APARTMENT* COM_CreateApartment(DWORD model);
 HWND COM_GetApartmentWin(OXID oxid);
 
 #endif /* __WINE_OLE_COMPOBJ_H */

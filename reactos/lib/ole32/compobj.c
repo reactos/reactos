@@ -184,16 +184,27 @@ static void COM_UninitMTA(void)
     MTA.oxid = 0;
 }
 
-static APARTMENT* COM_CreateApartment(DWORD model)
+/* creates an apartment structure which stores OLE thread-local
+ * information. Call with COINIT_UNINITIALIZED to create an apartment
+ * that will be initialized with a model later. Note: do not call
+ * with COINIT_UNINITIALIZED if the apartment has already been initialized
+ * with a different COINIT value */
+APARTMENT* COM_CreateApartment(DWORD model)
 {
     APARTMENT *apt;
+    BOOL create = (NtCurrentTeb()->ReservedForOle == NULL);
 
-    apt = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(APARTMENT));
+    if (create)
+    {
+        apt = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(APARTMENT));
+        apt->tid = GetCurrentThreadId();
+        DuplicateHandle(GetCurrentProcess(), GetCurrentThread(),
+                        GetCurrentProcess(), &apt->thread,
+                        THREAD_ALL_ACCESS, FALSE, 0);
+    }
+    else
+        apt = NtCurrentTeb()->ReservedForOle;
     apt->model = model;
-    apt->tid = GetCurrentThreadId();
-    DuplicateHandle(GetCurrentProcess(), GetCurrentThread(),
-                    GetCurrentProcess(), &apt->thread,
-                    THREAD_ALL_ACCESS, FALSE, 0);
     if (model & COINIT_APARTMENTTHREADED) {
       /* FIXME: how does windoze create OXIDs? */
       apt->oxid = MTA.oxid | GetCurrentThreadId();
@@ -202,14 +213,17 @@ static APARTMENT* COM_CreateApartment(DWORD model)
 			       0, 0, OLE32_hInstance, NULL);
       InitializeCriticalSection(&apt->cs);
     }
-    else {
+    else if (!(model & COINIT_UNINITIALIZED)) {
       apt->parent = &MTA;
       apt->oxid = MTA.oxid;
     }
     EnterCriticalSection(&csApartment);
-    if (apts) apts->prev = apt;
-    apt->next = apts;
-    apts = apt;
+    if (create)
+    {
+        if (apts) apts->prev = apt;
+        apt->next = apts;
+        apts = apt;
+    }
     LeaveCriticalSection(&csApartment);
     NtCurrentTeb()->ReservedForOle = apt;
     return apt;
@@ -384,8 +398,17 @@ HRESULT WINAPI CoInitializeEx(
   }
 
   apt = NtCurrentTeb()->ReservedForOle;
-  if (apt && dwCoInit != apt->model) return RPC_E_CHANGED_MODE;
-  hr = apt ? S_FALSE : S_OK;
+  if (apt && !(apt->model == COINIT_UNINITIALIZED))
+  {
+    if (dwCoInit != apt->model)
+    {
+      WARN("Apartment threading model already initialized with another model\n");
+      return RPC_E_CHANGED_MODE;
+    }
+    hr = S_FALSE;
+  }
+  else
+    hr = S_OK;
 
   /*
    * Check the lock count. If this is the first time going through the initialize
@@ -405,7 +428,7 @@ HRESULT WINAPI CoInitializeEx(
     RunningObjectTableImpl_Initialize();
   }
 
-  if (!apt) apt = COM_CreateApartment(dwCoInit);
+  if (!apt || apt->model == COINIT_UNINITIALIZED) apt = COM_CreateApartment(dwCoInit);
 
   InterlockedIncrement(&apt->inits);
   if (hr == S_OK) NtCurrentTeb()->ReservedForOle = apt;
@@ -1861,7 +1884,6 @@ HRESULT WINAPI CoInitializeWOW(DWORD x,DWORD y) {
     return 0;
 }
 
-static IUnknown * pUnkState = 0; /* FIXME: thread local */
 static int nStatCounter = 0;	 /* global */
 static HMODULE hOleAut32 = 0;	 /* global */
 
@@ -1872,11 +1894,13 @@ static HMODULE hOleAut32 = 0;	 /* global */
  */
 HRESULT WINAPI CoGetState(IUnknown ** ppv)
 {
+	APARTMENT * apt = COM_CurrentInfo();
+
 	FIXME("\n");
 
-	if(pUnkState) {
-	    IUnknown_AddRef(pUnkState);
-	    *ppv = pUnkState;
+	if(apt && apt->state) {
+	    IUnknown_AddRef(apt->state);
+	    *ppv = apt->state;
 	    FIXME("-- %p\n", *ppv);
 	    return S_OK;
 	}
@@ -1892,6 +1916,10 @@ HRESULT WINAPI CoGetState(IUnknown ** ppv)
  */
 HRESULT WINAPI CoSetState(IUnknown * pv)
 {
+    APARTMENT * apt = COM_CurrentInfo();
+
+    if (!apt) apt = COM_CreateApartment(COINIT_UNINITIALIZED);
+
 	FIXME("(%p),stub!\n", pv);
 
 	if (pv) {
@@ -1900,13 +1928,13 @@ HRESULT WINAPI CoSetState(IUnknown * pv)
 	    if (nStatCounter == 1) LoadLibraryA("OLEAUT32.DLL");
 	}
 
-	if (pUnkState) {
-	    TRACE("-- release %p now\n", pUnkState);
-	    IUnknown_Release(pUnkState);
+	if (apt->state) {
+	    TRACE("-- release %p now\n", apt->state);
+	    IUnknown_Release(apt->state);
 	    nStatCounter--;
 	    if (!nStatCounter) FreeLibrary(hOleAut32);
 	}
-	pUnkState = pv;
+	apt->state = pv;
 	return S_OK;
 }
 

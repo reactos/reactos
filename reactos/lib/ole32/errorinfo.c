@@ -484,13 +484,20 @@ HRESULT WINAPI CreateErrorInfo(ICreateErrorInfo **pperrinfo)
  */
 HRESULT WINAPI GetErrorInfo(ULONG dwReserved, IErrorInfo **pperrinfo)
 {
-	TRACE("(%ld, %p, %p): stub:\n", dwReserved, pperrinfo, COM_CurrentInfo()->ErrorInfo);
+	APARTMENT * apt = COM_CurrentInfo();
 
-	if(! pperrinfo ) return E_INVALIDARG;
-	if(!(*pperrinfo = (IErrorInfo*)(COM_CurrentInfo()->ErrorInfo))) return S_FALSE;
+	TRACE("(%ld, %p, %p)\n", dwReserved, pperrinfo, COM_CurrentInfo()->ErrorInfo);
 
+	if(!pperrinfo) return E_INVALIDARG;
+	if (!apt || !apt->ErrorInfo)
+	{
+	   *pperrinfo = NULL;
+	   return S_FALSE;
+	}
+
+	*pperrinfo = (IErrorInfo*)(apt->ErrorInfo);
 	/* clear thread error state */
-	COM_CurrentInfo()->ErrorInfo = NULL;
+	apt->ErrorInfo = NULL;
 	return S_OK;
 }
 
@@ -500,14 +507,18 @@ HRESULT WINAPI GetErrorInfo(ULONG dwReserved, IErrorInfo **pperrinfo)
 HRESULT WINAPI SetErrorInfo(ULONG dwReserved, IErrorInfo *perrinfo)
 {
 	IErrorInfo * pei;
-	TRACE("(%ld, %p): stub:\n", dwReserved, perrinfo);
+	APARTMENT * apt = COM_CurrentInfo();
+
+	TRACE("(%ld, %p)\n", dwReserved, perrinfo);
+	
+	if (!apt) apt = COM_CreateApartment(COINIT_UNINITIALIZED);
 
 	/* release old errorinfo */
-	pei = (IErrorInfo*)COM_CurrentInfo()->ErrorInfo;
+	pei = (IErrorInfo*)apt->ErrorInfo;
 	if(pei) IErrorInfo_Release(pei);
 
 	/* set to new value */
-	COM_CurrentInfo()->ErrorInfo = perrinfo;
+	apt->ErrorInfo = perrinfo;
 	if(perrinfo) IErrorInfo_AddRef(perrinfo);
 	return S_OK;
 }
