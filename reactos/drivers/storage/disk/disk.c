@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.9 2002/03/13 01:30:34 ekohl Exp $
+/* $Id: disk.c,v 1.10 2002/03/20 19:54:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -514,7 +514,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
     }
   else
     {
-      /* Clear the verify flag for non-removable media drives. */
+      /* Clear the verify flag for removable media drives. */
       DiskDeviceObject->Flags &= ~DO_VERIFY_VOLUME;
     }
 
@@ -573,7 +573,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 		 PartitionEntry->StartingOffset.QuadPart / 512 /*DrvParms.BytesPerSector*/,
 		 PartitionEntry->PartitionLength.QuadPart / 512 /* DrvParms.BytesPerSector*/);
 
-	  /* Create partition device (Partition 0) */
+	  /* Create partition device object */
 	  sprintf(NameBuffer2,
 		  "\\Device\\Harddisk%lu\\Partition%lu",
 		  DiskNumber,
@@ -610,6 +610,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	      PartitionDeviceExtension->PathId = InquiryData->PathId;
 	      PartitionDeviceExtension->TargetId = InquiryData->TargetId;
 	      PartitionDeviceExtension->Lun = InquiryData->Lun;
+	      PartitionDeviceExtension->SectorShift = DiskDeviceExtension->SectorShift;
 
 	      DiskData = (PDISK_DATA)(PartitionDeviceExtension + 1);
 	      DiskData->PartitionType = PartitionEntry->PartitionType;
