@@ -101,15 +101,11 @@ ParsePackets(PDEVICE_EXTENSION DeviceExtension, PMOUSE_INPUT_DATA Input)
   else
     Input->LastX = 0;
   
-  //Input->LastX = (packet[1] ? (int) packet[1] - (int) ((packet[0] << 4) & 0x100) : 0);
-  
   /* Determine LastY */
   if(packet[2])
     Input->LastY = -((packet[0] & 0x20) ? (int)(packet[2] - 256) : (int) packet[2]);
   else
     Input->LastY = 0;
-  
-  //Input->LastY = (packet[2] ? (int) ((packet[0] << 3) & 0x100) - (int) packet[2] : 0);
   
   /* Copy RawButtons to Previous Buttons for Input */
   DeviceExtension->PreviousButtons = Input->RawButtons;
@@ -173,7 +169,7 @@ MouseHandler(PKINTERRUPT Interrupt, PVOID ServiceContext)
     Input = &DeviceExtension->MouseInputData[Queue]
             [DeviceExtension->InputDataCount[Queue]];    
 
-    ParsePackets(DeviceExtension, Input);
+    ret = ParsePackets(DeviceExtension, Input);
       
     /* Send the Input data to the Mouse Class driver */
     DeviceExtension->InputDataCount[Queue]++;
