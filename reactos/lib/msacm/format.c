@@ -317,8 +317,8 @@ MMRESULT WINAPI acmFormatDetailsA(HACMDRIVER had, PACMFORMATDETAILSA pafd,
 MMRESULT WINAPI acmFormatDetailsW(HACMDRIVER had, PACMFORMATDETAILSW pafd, DWORD fdwDetails)
 {
     MMRESULT			mmr;
-    static WCHAR		fmt1[] = {'%','d',' ','H','z',0};
-    static WCHAR		fmt2[] = {';',' ','%','d',' ','b','i','t','s',0};
+    static const WCHAR		fmt1[] = {'%','d',' ','H','z',0};
+    static const WCHAR		fmt2[] = {';',' ','%','d',' ','b','i','t','s',0};
     ACMFORMATTAGDETAILSA	aftd;
 
     TRACE("(%p, %p, %ld)\n", had, pafd, fdwDetails);
@@ -411,6 +411,12 @@ MMRESULT WINAPI acmFormatEnumA(HACMDRIVER had, PACMFORMATDETAILSA pafda,
     ACMFORMATDETAILSW		afdw;
     struct MSACM_FormatEnumWtoA_Instance afei;
 
+    if (!pafda)
+        return MMSYSERR_INVALPARAM;
+
+    if (pafda->cbStruct < sizeof(*pafda))
+        return MMSYSERR_INVALPARAM;
+
     memset(&afdw, 0, sizeof(afdw));
     afdw.cbStruct = sizeof(afdw);
     afdw.dwFormatIndex = pafda->dwFormatIndex;
@@ -489,7 +495,11 @@ MMRESULT WINAPI acmFormatEnumW(HACMDRIVER had, PACMFORMATDETAILSW pafd,
     TRACE("(%p, %p, %p, %ld, %ld)\n",
 	  had, pafd, fnCallback, dwInstance, fdwEnum);
 
-    if (pafd->cbStruct < sizeof(*pafd)) return MMSYSERR_INVALPARAM;
+    if (!pafd)
+        return MMSYSERR_INVALPARAM;
+
+    if (pafd->cbStruct < sizeof(*pafd))
+        return MMSYSERR_INVALPARAM;
 
     if (fdwEnum & (ACM_FORMATENUMF_WFORMATTAG|ACM_FORMATENUMF_NCHANNELS|
 		   ACM_FORMATENUMF_NSAMPLESPERSEC|ACM_FORMATENUMF_WBITSPERSAMPLE|
@@ -731,6 +741,15 @@ MMRESULT WINAPI acmFormatTagEnumA(HACMDRIVER had, PACMFORMATTAGDETAILSA paftda,
     ACMFORMATTAGDETAILSW	aftdw;
     struct MSACM_FormatTagEnumWtoA_Instance aftei;
 
+    if (!paftda)
+        return MMSYSERR_INVALPARAM;
+
+    if (paftda->cbStruct < sizeof(*paftda))
+        return MMSYSERR_INVALPARAM;
+
+    if (fdwEnum != 0)
+        return MMSYSERR_INVALFLAG;
+
     memset(&aftdw, 0, sizeof(aftdw));
     aftdw.cbStruct = sizeof(aftdw);
     aftdw.dwFormatTagIndex = paftda->dwFormatTagIndex;
@@ -758,7 +777,14 @@ MMRESULT WINAPI acmFormatTagEnumW(HACMDRIVER had, PACMFORMATTAGDETAILSW paftd,
     TRACE("(%p, %p, %p, %ld, %ld)\n",
 	  had, paftd, fnCallback, dwInstance, fdwEnum);
 
-    if (paftd->cbStruct < sizeof(*paftd)) return MMSYSERR_INVALPARAM;
+    if (!paftd)
+        return MMSYSERR_INVALPARAM;
+
+    if (paftd->cbStruct < sizeof(*paftd))
+        return MMSYSERR_INVALPARAM;
+
+    if (fdwEnum != 0)
+        return MMSYSERR_INVALFLAG;
 
     /* (WS) MSDN info page says that if had != 0, then we should find
      * the specific driver to get its tags from. Therefore I'm removing

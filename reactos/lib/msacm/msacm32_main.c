@@ -120,6 +120,7 @@ MMRESULT WINAPI acmMetrics(HACMOBJ hao, UINT uMetric, LPVOID pMetric)
 	/* fall through */
     case ACM_METRIC_COUNT_LOCAL_DRIVERS:
 	if (hao) return MMSYSERR_INVALHANDLE;
+        if (!pMetric) return MMSYSERR_INVALPARAM;
 	for (padid = MSACM_pFirstACMDriverID; padid; padid = padid->pNextACMDriverID)
 	    if (!(padid->fdwSupport & ACMDRIVERDETAILS_SUPPORTF_DISABLED) && CheckLocal(padid))
 		val++;
@@ -131,6 +132,7 @@ MMRESULT WINAPI acmMetrics(HACMOBJ hao, UINT uMetric, LPVOID pMetric)
 	/* fall through */
     case ACM_METRIC_COUNT_LOCAL_CODECS:
 	if (hao) return MMSYSERR_INVALHANDLE;
+        if (!pMetric) return MMSYSERR_INVALPARAM;
 	for (padid = MSACM_pFirstACMDriverID; padid; padid = padid->pNextACMDriverID)
 	    if (!(padid->fdwSupport & ACMDRIVERDETAILS_SUPPORTF_DISABLED) &&
 		(padid->fdwSupport & ACMDRIVERDETAILS_SUPPORTF_CODEC) &&
@@ -144,6 +146,7 @@ MMRESULT WINAPI acmMetrics(HACMOBJ hao, UINT uMetric, LPVOID pMetric)
 	/* fall through */
     case ACM_METRIC_COUNT_LOCAL_CONVERTERS:
 	if (hao) return MMSYSERR_INVALHANDLE;
+        if (!pMetric) return MMSYSERR_INVALPARAM;
 	for (padid = MSACM_pFirstACMDriverID; padid; padid = padid->pNextACMDriverID)
 	    if (!(padid->fdwSupport & ACMDRIVERDETAILS_SUPPORTF_DISABLED) &&
 		 (padid->fdwSupport & ACMDRIVERDETAILS_SUPPORTF_CONVERTER) &&
@@ -157,6 +160,7 @@ MMRESULT WINAPI acmMetrics(HACMOBJ hao, UINT uMetric, LPVOID pMetric)
 	/* fall through */
     case ACM_METRIC_COUNT_LOCAL_FILTERS:
 	if (hao) return MMSYSERR_INVALHANDLE;
+        if (!pMetric) return MMSYSERR_INVALPARAM;
 	for (padid = MSACM_pFirstACMDriverID; padid; padid = padid->pNextACMDriverID)
 	    if (!(padid->fdwSupport & ACMDRIVERDETAILS_SUPPORTF_DISABLED) &&
 		(padid->fdwSupport & ACMDRIVERDETAILS_SUPPORTF_FILTER) &&
@@ -170,6 +174,7 @@ MMRESULT WINAPI acmMetrics(HACMOBJ hao, UINT uMetric, LPVOID pMetric)
 	/* fall through */
     case ACM_METRIC_COUNT_LOCAL_DISABLED:
 	if (hao) return MMSYSERR_INVALHANDLE;
+        if (!pMetric) return MMSYSERR_INVALPARAM;
 	for (padid = MSACM_pFirstACMDriverID; padid; padid = padid->pNextACMDriverID)
 	    if ((padid->fdwSupport & ACMDRIVERDETAILS_SUPPORTF_DISABLED) && CheckLocal(padid))
 		val++;
@@ -204,10 +209,17 @@ MMRESULT WINAPI acmMetrics(HACMOBJ hao, UINT uMetric, LPVOID pMetric)
 	} else {
 	    return MMSYSERR_INVALHANDLE;
 	}
+        if (!pMetric) return MMSYSERR_INVALPARAM;
 	*(LPDWORD)pMetric = val;
         break;
 
     case ACM_METRIC_COUNT_HARDWARE:
+        if (hao) return MMSYSERR_INVALHANDLE;
+        if (!pMetric) return MMSYSERR_INVALPARAM;
+        *(LPDWORD)pMetric = 0;
+        FIXME("ACM_METRIC_COUNT_HARDWARE not implemented\n");
+        break;
+
     case ACM_METRIC_HARDWARE_WAVE_INPUT:
     case ACM_METRIC_HARDWARE_WAVE_OUTPUT:
     case ACM_METRIC_MAX_SIZE_FILTER:

@@ -22,6 +22,8 @@ C_SRCS16 = \
 
 RC_SRCS = msacm.rc
 
+SUBDIRS = tests
+
 @MAKE_DLL_RULES@
 
 ### Dependencies:

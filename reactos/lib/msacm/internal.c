@@ -236,7 +236,7 @@ static	BOOL MSACM_WriteCache(PWINE_ACMDRIVERID padid)
 /***********************************************************************
  *           MSACM_RegisterDriver()
  */
-PWINE_ACMDRIVERID MSACM_RegisterDriver(LPWSTR pszDriverAlias, LPWSTR pszFileName,
+PWINE_ACMDRIVERID MSACM_RegisterDriver(LPCWSTR pszDriverAlias, LPCWSTR pszFileName,
 				       HINSTANCE hinstModule)
 {
     PWINE_ACMDRIVERID	padid;
@@ -283,48 +283,50 @@ PWINE_ACMDRIVERID MSACM_RegisterDriver(LPWSTR pszDriverAlias, LPWSTR pszFileName
  */
 void MSACM_RegisterAllDrivers(void)
 {
-    LPWSTR pszBuffer;
-    DWORD dwBufferLength;
-    static WCHAR msacm32[] = {'m','s','a','c','m','3','2','.','d','l','l','\0'};
-    static WCHAR msacmW[] = {'M','S','A','C','M','.'};
-    static WCHAR drv32[] = {'d','r','i','v','e','r','s','3','2','\0'};
-    static WCHAR sys[] = {'s','y','s','t','e','m','.','i','n','i','\0'};
+    static const WCHAR msacm32[] = {'m','s','a','c','m','3','2','.','d','l','l','\0'};
+    static const WCHAR msacmW[] = {'M','S','A','C','M','.'};
+    static const WCHAR drv32[] = {'d','r','i','v','e','r','s','3','2','\0'};
+    static const WCHAR sys[] = {'s','y','s','t','e','m','.','i','n','i','\0'};
+    static const WCHAR drvkey[] = {'S','o','f','t','w','a','r','e','\\',
+				   'M','i','c','r','o','s','o','f','t','\\',
+				   'W','i','n','d','o','w','s',' ','N','T','\\',
+				   'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+				   'D','r','i','v','e','r','s','3','2','\0'};
+    DWORD i, cnt = 0, bufLen, lRet;
+    WCHAR buf[2048], *name, *s;
+    FILETIME lastWrite;
+    HKEY hKey;
 
-    /* FIXME
-     *  What if the user edits system.ini while the program is running?
-     *  Does Windows handle that?
-     */
-    if (MSACM_pFirstACMDriverID)
-	return;
+    /* FIXME: What if the user edits system.ini while the program is running?
+     * Does Windows handle that?  */
+    if (MSACM_pFirstACMDriverID) return;
 
-    /* FIXME: Does not work! How do I determine the section length? */
-    dwBufferLength = 1024;
-/* EPP 	GetPrivateProfileSectionA("drivers32", NULL, 0, "system.ini"); */
-
-    pszBuffer = (LPWSTR) HeapAlloc(MSACM_hHeap, 0, dwBufferLength * sizeof(WCHAR));
-    if (GetPrivateProfileSectionW(drv32, pszBuffer, dwBufferLength, sys))
-    {
-	LPWSTR s = pszBuffer, s2;
-
-	while (*s)
-        {
-            CharUpperBuffW(s, 6);
-            if (memcmp(s, msacmW, 6 * sizeof(WCHAR)) == 0)
-            {
-                s2 = s;
-		while (*s2 != '\0' && *s2 != '=') s2++;
-		if (*s2)
-                {
-		    *s2 = '\0';
-		    MSACM_RegisterDriver(s, s2 + 1, 0);
-		    *s2 = '=';
-		}
-	    }
-	    s += strlenW(s) + 1; /* Either next char or \0 */
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE, drvkey, 0, KEY_QUERY_VALUE, &hKey);
+    if (lRet == ERROR_SUCCESS) {
+	RegQueryInfoKeyW( hKey, 0, 0, 0, &cnt, 0, 0, 0, 0, 0, 0, 0);
+	for (i = 0; i < cnt; i++) {
+	    bufLen = sizeof(buf) / sizeof(buf[0]);
+	    lRet = RegEnumKeyExW(hKey, i, buf, &bufLen, 0, 0, 0, &lastWrite);
+	    if (lRet != ERROR_SUCCESS) continue;
+	    if (strncmpiW(buf, msacmW, sizeof(msacmW)/sizeof(msacmW[0]))) continue;
+	    if (!(name = strchrW(buf, '='))) continue;
+	    *name = 0;
+	    MSACM_RegisterDriver(buf, name + 1, 0);
 	}
+    	RegCloseKey( hKey );
     }
 
-    HeapFree(MSACM_hHeap, 0, pszBuffer);
+    if (GetPrivateProfileSectionW(drv32, buf, sizeof(buf)/sizeof(buf[0]), sys))
+    {
+	for(s = buf; *s;  s += strlenW(s) + 1)
+	{
+	    if (strncmpiW(s, msacmW, sizeof(msacmW)/sizeof(msacmW[0]))) continue;
+	    if (!(name = strchrW(s, '='))) continue;
+	    *name = 0;
+	    MSACM_RegisterDriver(s, name + 1, 0);
+	    *name = '=';
+	}
+    }
 
     MSACM_RegisterDriver(msacm32, msacm32, 0);
 }
