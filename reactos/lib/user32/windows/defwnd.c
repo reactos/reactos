@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.21 2003/02/28 23:19:32 rcampbell Exp $
+/* $Id: defwnd.c,v 1.22 2003/02/28 23:20:41 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -225,7 +225,7 @@ static void UserDrawCloseButton ( HWND hWnd, HDC hDC, BOOL down )
     UserGetInsideRectNC( hWnd, &rect );
     hDCMem = CreateCompatibleDC( hDC );
     
-    SelectObject( hDCMem, (down ? hbitmapCloseD : hbitmapClose) );
+    SelectObject( hDCMem, (hbitmapClose) );
     
     BitBlt( hDC,rect.right - GetSystemMetrics(SM_CXSMSIZE), rect.top + 1, 
             GetSystemMetrics(SM_CXSMSIZE) + 1, GetSystemMetrics(SM_CYSMSIZE), 
