@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.24 2003/08/18 15:18:03 ea Exp $
+/* $Id: sysinfo.c,v 1.25 2003/09/14 09:03:54 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -506,6 +506,7 @@ QSI_DEF(SystemProcessInformation)
 		if (ovlSize > Size)
 		{
 			*ReqSize = ovlSize;
+			ObDereferenceObject(pr);
 
 			return (STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
 		}
@@ -556,7 +557,10 @@ QSI_DEF(SystemProcessInformation)
 	}  while ((pr != syspr) && (pr != NULL));
 
 	*ReqSize = ovlSize;
-
+	if (pr != NULL)
+	  {
+            ObDereferenceObject(pr);
+	  }
 	return (STATUS_SUCCESS);
 }
 
