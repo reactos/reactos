@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: volinfo.c,v 1.2 2002/05/01 21:52:05 ekohl Exp $
+/* $Id: volinfo.c,v 1.3 2002/05/07 22:42:46 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -118,7 +118,7 @@ CdfsGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
 			 PULONG BufferLength)
 {
   PDEVICE_EXTENSION DeviceExt;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   DPRINT("CdfsGetFsSizeInformation()\n");
   DPRINT("FsSizeInfo = %p\n", FsSizeInfo);
