@@ -7,11 +7,11 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = niclist
 
-TARGET_SDKLIBS = ws2_32.a
+TARGET_SDKLIBS =
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
-TARGET_GCCLIBS = iberty
+TARGET_GCCLIBS =
 
 include $(PATH_TO_TOP)/rules.mak
 
