@@ -365,7 +365,7 @@ static BOOL PathIsExeA (LPCSTR lpszPath)
 	TRACE("path=%s\n",lpszPath);
 
 	for(i=0; lpszExtensions[i]; i++)
-	  if (!strcasecmp(lpszExtension,lpszExtensions[i])) return TRUE;
+	  if (!lstrcmpiA(lpszExtension,lpszExtensions[i])) return TRUE;
 
 	return FALSE;
 }
@@ -1267,7 +1267,7 @@ static HRESULT _SHGetDefaultValue(BYTE folder, LPWSTR pszPath)
         }
         else
         {
-            FIXME("LoadString failed, missing translation?\n");
+            FIXME("(%d,%s), LoadString failed, missing translation?\n", folder, debugstr_w(pszPath));
             hr = E_FAIL;
         }
     }

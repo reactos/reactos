@@ -1,4 +1,8 @@
 /*
+ * UNIXFS - Shell namespace extension for the unix filesystem
+ *
+ * Copyright (C) 2005 Michael Jung
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -13,18 +17,5 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef __ENUMIDLIST_H__
-#define __ENUMIDLIST_H__
 
-#include "shlobj.h"
-
-/* Creates an IEnumIDList; add LPITEMIDLISTs to it with AddToEnumList. */
-LPENUMIDLIST IEnumIDList_Constructor(void);
-BOOL AddToEnumList(IEnumIDList *list, LPITEMIDLIST pidl);
-
-/* Enumerates the folders and/or files (depending on dwFlags) in lpszPath and
- * adds them to the already-created list.
- */
-BOOL CreateFolderEnumList(IEnumIDList *list, LPCWSTR lpszPath, DWORD dwFlags);
-
-#endif /* ndef __ENUMIDLIST_H__ */
+/* Placeholder in ReactOS, we don't need this */

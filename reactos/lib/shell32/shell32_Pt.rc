@@ -188,3 +188,35 @@ STRINGTABLE DISCARDABLE
        IDS_SHUTDOWN_TITLE      "Desligar"
        IDS_SHUTDOWN_PROMPT     "Você quer finalizar a sessão no ReactOS?"
 }
+
+/* shell folder path default values - */
+STRINGTABLE DISCARDABLE
+{
+	IDS_PROGRAMS                "Menu Iniciar\\Programas"
+	IDS_PERSONAL                "Meus Documentos"
+	IDS_FAVORITES               "Favoritos"
+	IDS_STARTUP                 "Menu Iniciar\\Programas\\Iniciar"
+	IDS_RECENT                  "Recent"
+	IDS_SENDTO                  "SendTo"
+	IDS_STARTMENU               "Menu Iniciar"
+	IDS_MYMUSIC                 "Meus Documentos\\Minhas Músicas"
+	IDS_MYVIDEO                 "Meus Documentos\\Meus Vídeos"
+	IDS_DESKTOPDIRECTORY        "Desktop"
+	IDS_NETHOOD                 "NetHood"
+	IDS_TEMPLATES               "Templates"
+	IDS_APPDATA                 "Application Data"
+	IDS_PRINTHOOD               "PrintHood"
+	IDS_LOCAL_APPDATA           "Configurações locais\\Dados de aplicativos"
+	IDS_INTERNET_CACHE          "Temporary Internet Files"
+	IDS_COOKIES                 "Cookies"
+	IDS_HISTORY                 "Histórico"
+	IDS_PROGRAM_FILES           "Arquivos de programas"
+	IDS_MYPICTURES              "Meus Documentos\\Minhas Imagens"
+	IDS_PROGRAM_FILES_COMMON    "Arquivos de programas\\Arquivos comuns"
+	IDS_COMMON_DOCUMENTS        "Documentos"
+	IDS_ADMINTOOLS              "Menu Iniciar\\Programas\\Ferramentas Administrativas"
+	IDS_COMMON_MUSIC            "Documentos\\Minhas Músicas"
+	IDS_COMMON_PICTURES         "Documentos\\Minhas Imagens"
+	IDS_COMMON_VIDEO            "Documentos\\Meus Vídeos"
+	IDS_CDBURN_AREA             "Configurações locais\\Dados de aplicativos\\Microsoft\\CD Burning"
+}

@@ -208,11 +208,14 @@ LPITEMIDLIST	_ILCreateGuid(PIDLTYPE type, REFIID guid);
 
 /* Like _ILCreateGuid, but using the string szGUID. */
 LPITEMIDLIST	_ILCreateGuidFromStrA(LPCSTR szGUID);
+LPITEMIDLIST	_ILCreateGuidFromStrW(LPCWSTR szGUID);
 
 /* Commonly used PIDLs representing file system objects. */
 LPITEMIDLIST	_ILCreateDesktop	(void);
 LPITEMIDLIST	_ILCreateFromFindDataA(WIN32_FIND_DATAA *stffile);
+LPITEMIDLIST	_ILCreateFromFindDataW(WIN32_FIND_DATAW *stffile);
 HRESULT		_ILCreateFromPathA	(LPCSTR szPath, LPITEMIDLIST* ppidl);
+HRESULT		_ILCreateFromPathW	(LPCWSTR szPath, LPITEMIDLIST* ppidl);
 
 /* Other helpers */
 LPITEMIDLIST	_ILCreateMyComputer	(void);

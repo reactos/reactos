@@ -454,7 +454,7 @@ static INT CALLBACK ShellView_ListViewCompareItems(LPVOID lParam1, LPVOID lParam
         {
             _ILGetFileAttributes(pItemIdList1, strName1, MAX_PATH);
             _ILGetFileAttributes(pItemIdList2, strName2, MAX_PATH);
-            nDiff = strcasecmp(strName1, strName2);
+            nDiff = lstrcmpiA(strName1, strName2);
         }
         /* Sort by FileName: Folder or Files can be sorted */
         else if(pSortInfo->nHeaderID == LISTVIEW_COLUMN_NAME || bIsBothFolder)
@@ -462,7 +462,7 @@ static INT CALLBACK ShellView_ListViewCompareItems(LPVOID lParam1, LPVOID lParam
             /* Sort by Text */
             _ILSimpleGetText(pItemIdList1, strName1, MAX_PATH);
             _ILSimpleGetText(pItemIdList2, strName2, MAX_PATH);
-            nDiff = strcasecmp(strName1, strName2);
+            nDiff = lstrcmpiA(strName1, strName2);
         }
         /* Sort by File Size, Only valid for Files */
         else if(pSortInfo->nHeaderID == LISTVIEW_COLUMN_SIZE)
@@ -475,7 +475,7 @@ static INT CALLBACK ShellView_ListViewCompareItems(LPVOID lParam1, LPVOID lParam
             /* Sort by Type */
             _ILGetFileType(pItemIdList1, strName1, MAX_PATH);
             _ILGetFileType(pItemIdList2, strName2, MAX_PATH);
-            nDiff = strcasecmp(strName1, strName2);
+            nDiff = lstrcmpiA(strName1, strName2);
         }
     }
     /*  If the Date, FileSize, FileType, Attrib was the same, sort by FileName */
@@ -484,7 +484,7 @@ static INT CALLBACK ShellView_ListViewCompareItems(LPVOID lParam1, LPVOID lParam
     {
         _ILSimpleGetText(pItemIdList1, strName1, MAX_PATH);
         _ILSimpleGetText(pItemIdList2, strName2, MAX_PATH);
-        nDiff = strcasecmp(strName1, strName2);
+        nDiff = lstrcmpiA(strName1, strName2);
     }
 
     if(!pSortInfo->bIsAscending)

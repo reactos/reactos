@@ -422,7 +422,7 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
 	if (SFGAO_LINK & *pdwAttributes) {
 	    char ext[MAX_PATH];
 
-	    if (!_ILGetExtension(pidl, ext, MAX_PATH) || strcasecmp(ext, "lnk"))
+	    if (!_ILGetExtension(pidl, ext, MAX_PATH) || lstrcmpiA(ext, "lnk"))
 		*pdwAttributes &= ~SFGAO_LINK;
 	}
     } else {
@@ -469,7 +469,7 @@ HRESULT SHELL32_CompareIDs (IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST p
     /* test for name of pidl */
     _ILSimpleGetText (pidl1, szTemp1, MAX_PATH);
     _ILSimpleGetText (pidl2, szTemp2, MAX_PATH);
-    nReturn = strcasecmp (szTemp1, szTemp2);
+    nReturn = lstrcmpiA (szTemp1, szTemp2);
     if (nReturn < 0)
         return MAKE_HRESULT( SEVERITY_SUCCESS, 0, (WORD)-1 );
     else if (nReturn > 0)
