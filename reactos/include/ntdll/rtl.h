@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.30 2001/06/22 12:40:45 ekohl Exp $
+/* $Id: rtl.h,v 1.31 2001/06/24 17:58:13 phreak Exp $
  *
  */
 
@@ -7,6 +7,11 @@
 
 #include <napi/teb.h>
 #include <ddk/ntddk.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 
 typedef struct _CRITICAL_SECTION_DEBUG {
     WORD   Type;
@@ -548,7 +553,14 @@ InterlockedExchangeAdd (
 	PLONG Addend,
 	LONG Increment
 	);
+
+
 #endif /* __NTDRIVER__ */
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
 
 #endif /* __INCLUDE_NTDLL_RTL_H */
 
