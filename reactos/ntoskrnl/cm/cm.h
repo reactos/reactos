@@ -414,15 +414,16 @@ CmiCreateHiveBitmap(PREGISTRY_HIVE Hive);
 
 
 VOID
-CmiAddKeyToList(PKEY_OBJECT ParentKey,
-  IN PKEY_OBJECT  NewKey);
+CmiAddKeyToList(IN PKEY_OBJECT ParentKey,
+		IN PKEY_OBJECT NewKey);
 
 NTSTATUS
-CmiRemoveKeyFromList(IN PKEY_OBJECT  NewKey);
+CmiRemoveKeyFromList(IN PKEY_OBJECT NewKey);
 
-PKEY_OBJECT  CmiScanKeyList(IN PKEY_OBJECT Parent,
-  IN PCHAR  KeyNameBuf,
-  IN ULONG  Attributes);
+PKEY_OBJECT
+CmiScanKeyList(IN PKEY_OBJECT Parent,
+	       IN PUNICODE_STRING KeyName,
+	       IN ULONG Attributes);
 
 NTSTATUS
 CmiCreateRegistryHive(PWSTR Filename,
@@ -453,22 +454,21 @@ CmiGetMaxValueDataLength(IN PREGISTRY_HIVE  RegistryHive,
 
 NTSTATUS
 CmiScanForSubKey(IN PREGISTRY_HIVE  RegistryHive,
-  IN PKEY_CELL  KeyCell,
-  OUT PKEY_CELL  *SubKeyCell,
-  OUT BLOCK_OFFSET *BlockOffset,
-  IN PCHAR  KeyName,
-  IN ACCESS_MASK  DesiredAccess,
-  IN ULONG Attributes);
+		 IN PKEY_CELL  KeyCell,
+		 OUT PKEY_CELL  *SubKeyCell,
+		 OUT BLOCK_OFFSET *BlockOffset,
+		 IN PUNICODE_STRING KeyName,
+		 IN ACCESS_MASK  DesiredAccess,
+		 IN ULONG Attributes);
 
 NTSTATUS
 CmiAddSubKey(IN PREGISTRY_HIVE  RegistryHive,
-  IN PKEY_OBJECT Parent,
-  OUT PKEY_OBJECT SubKey,
-  IN PWSTR  NewSubKeyName,
-  IN USHORT  NewSubKeyNameSize,
-  IN ULONG  TitleIndex,
-  IN PUNICODE_STRING  Class,
-  IN ULONG  CreateOptions);
+	     IN PKEY_OBJECT Parent,
+	     OUT PKEY_OBJECT SubKey,
+	     IN PUNICODE_STRING SubKeyName,
+	     IN ULONG  TitleIndex,
+	     IN PUNICODE_STRING  Class,
+	     IN ULONG  CreateOptions);
 
 NTSTATUS
 CmiRemoveSubKey(IN PREGISTRY_HIVE RegistryHive,
@@ -585,6 +585,23 @@ VOID
 CmiCopyPackedName(PWCHAR NameBuffer,
 		  PCHAR PackedNameBuffer,
 		  ULONG PackedNameSize);
+
+BOOLEAN
+CmiCompareHash(PUNICODE_STRING KeyName,
+	       PCHAR HashString);
+
+BOOLEAN
+CmiCompareHashI(PUNICODE_STRING KeyName,
+		PCHAR HashString);
+
+BOOLEAN
+CmiCompareKeyNames(PUNICODE_STRING KeyName,
+		   PKEY_CELL KeyCell);
+
+BOOLEAN
+CmiCompareKeyNamesI(PUNICODE_STRING KeyName,
+		    PKEY_CELL KeyCell);
+
 
 VOID
 CmiSyncHives(VOID);

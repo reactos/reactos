@@ -7,13 +7,12 @@
 */
 
 #include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
 #include <roscfg.h>
 #include <internal/ob.h>
 #include <limits.h>
 #include <string.h>
-#include <internal/pool.h>
 #include <internal/registry.h>
+#include <ntos/minmax.h>
 #include <reactos/bugcodes.h>
 
 #define NDEBUG
@@ -1996,18 +1995,17 @@ CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
 		 IN PKEY_CELL KeyCell,
 		 OUT PKEY_CELL *SubKeyCell,
 		 OUT BLOCK_OFFSET *BlockOffset,
-		 IN PCHAR KeyName,
+		 IN PUNICODE_STRING KeyName,
 		 IN ACCESS_MASK DesiredAccess,
 		 IN ULONG Attributes)
 {
   PHASH_TABLE_CELL HashBlock;
   PKEY_CELL CurSubKeyCell;
-  USHORT KeyLength;
   ULONG i;
 
   VERIFY_KEY_CELL(KeyCell);
 
-  //DPRINT("Scanning for sub key %s\n", KeyName);
+  DPRINT("Scanning for sub key %wZ\n", KeyName);
 
   assert(RegistryHive);
 
@@ -2027,14 +2025,14 @@ CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
       return STATUS_UNSUCCESSFUL;
     }
 
-  KeyLength = strlen(KeyName);
   for (i = 0; (i < KeyCell->NumberOfSubKeys) && (i < HashBlock->HashTableSize); i++)
     {
       if (Attributes & OBJ_CASE_INSENSITIVE)
 	{
-	  if ((HashBlock->Table[i].KeyOffset != 0) &&
-	      (HashBlock->Table[i].KeyOffset != (ULONG_PTR)-1) &&
-	      (_strnicmp(KeyName, (PCHAR) &HashBlock->Table[i].HashValue, 4) == 0))
+	  if (HashBlock->Table[i].KeyOffset != 0 &&
+	      HashBlock->Table[i].KeyOffset != (ULONG_PTR)-1 &&
+	      (HashBlock->Table[i].HashValue == 0 ||
+	       CmiCompareHashI(KeyName, (PCHAR)&HashBlock->Table[i].HashValue)))
 	    {
 	      CurSubKeyCell = CmiGetBlock(RegistryHive,
 					  HashBlock->Table[i].KeyOffset,
@@ -2045,20 +2043,20 @@ CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
 		  return STATUS_UNSUCCESSFUL;
 		}
 
-              if ((CurSubKeyCell->NameSize == KeyLength)
-                  && (_strnicmp(KeyName, CurSubKeyCell->Name, KeyLength) == 0))
-                {
-                  *SubKeyCell = CurSubKeyCell;
-                  *BlockOffset = HashBlock->Table[i].KeyOffset;
-                  break;
-                }
-            }
+	      if (CmiCompareKeyNamesI(KeyName, CurSubKeyCell))
+		{
+		  *SubKeyCell = CurSubKeyCell;
+		  *BlockOffset = HashBlock->Table[i].KeyOffset;
+		  break;
+		}
+	    }
 	}
       else
 	{
 	  if (HashBlock->Table[i].KeyOffset != 0 &&
 	      HashBlock->Table[i].KeyOffset != (ULONG_PTR) -1 &&
-	      !strncmp(KeyName, (PCHAR) &HashBlock->Table[i].HashValue, 4))
+	      (HashBlock->Table[i].HashValue == 0 ||
+	       CmiCompareHash(KeyName, (PCHAR)&HashBlock->Table[i].HashValue)))
 	    {
 	      CurSubKeyCell = CmiGetBlock(RegistryHive,
 					  HashBlock->Table[i].KeyOffset,
@@ -2069,14 +2067,13 @@ CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
 		  return STATUS_UNSUCCESSFUL;
 		}
 
-              if (CurSubKeyCell->NameSize == KeyLength
-                  && !_strnicmp(KeyName, CurSubKeyCell->Name, KeyLength))
-                {
-                  *SubKeyCell = CurSubKeyCell;
-                  *BlockOffset = HashBlock->Table[i].KeyOffset;
-                  break;
-                }
-            }
+	      if (CmiCompareKeyNames(KeyName, CurSubKeyCell))
+		{
+		  *SubKeyCell = CurSubKeyCell;
+		  *BlockOffset = HashBlock->Table[i].KeyOffset;
+		  break;
+		}
+	    }
 	}
     }
 
@@ -2088,8 +2085,7 @@ NTSTATUS
 CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
 	     PKEY_OBJECT Parent,
 	     PKEY_OBJECT SubKey,
-	     PWSTR NewSubKeyName,
-	     USHORT NewSubKeyNameSize,
+	     PUNICODE_STRING SubKeyName,
 	     ULONG TitleIndex,
 	     PUNICODE_STRING Class,
 	     ULONG CreateOptions)
@@ -2097,25 +2093,28 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
   PHASH_TABLE_CELL NewHashBlock;
   PHASH_TABLE_CELL HashBlock;
   BLOCK_OFFSET NKBOffset;
-  PKEY_CELL NewKeyCell; 
+  PKEY_CELL NewKeyCell;
   ULONG NewBlockSize;
   PKEY_CELL KeyCell;
   NTSTATUS Status;
   USHORT NameSize;
+  PWSTR NamePtr;
 
   KeyCell = Parent->KeyCell;
 
   VERIFY_KEY_CELL(KeyCell);
 
-  if (NewSubKeyName[0] == L'\\')
+  if (SubKeyName->Buffer[0] == L'\\')
     {
-      NewSubKeyName++;
-      NameSize = NewSubKeyNameSize / 2 - 1;
+      NamePtr = &SubKeyName->Buffer[1];
+      NameSize = SubKeyName->Length / 2 - 1;
     }
   else
     {
-      NameSize = NewSubKeyNameSize / 2;
+      NamePtr = SubKeyName->Buffer;
+      NameSize = SubKeyName->Length / 2;
     }
+
   Status = STATUS_SUCCESS;
 
   NewBlockSize = sizeof(KEY_CELL) + NameSize;
@@ -2130,7 +2129,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
   else
     {
       NewKeyCell->Id = REG_KEY_CELL_ID;
-      NewKeyCell->Flags = REG_KEY_NAME_PACKED;
+      NewKeyCell->Flags = 0;
       ZwQuerySystemTime((PTIME) &NewKeyCell->LastWriteTime);
       NewKeyCell->ParentKeyOffset = -1;
       NewKeyCell->NumberOfSubKeys = 0;
@@ -2138,9 +2137,11 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
       NewKeyCell->NumberOfValues = 0;
       NewKeyCell->ValuesOffset = -1;
       NewKeyCell->SecurityKeyOffset = -1;
-      NewKeyCell->NameSize = NameSize;
-      wcstombs(NewKeyCell->Name, NewSubKeyName, NameSize);
       NewKeyCell->ClassNameOffset = -1;
+
+      NewKeyCell->Flags |= REG_KEY_NAME_PACKED;
+      NewKeyCell->NameSize = NameSize;
+      wcstombs(NewKeyCell->Name, NamePtr, NameSize);
 
       VERIFY_KEY_CELL(NewKeyCell);
 
@@ -2185,7 +2186,9 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
     }
   else
     {
-      HashBlock = CmiGetBlock(RegistryHive, KeyCell->HashTableOffset, NULL);
+      HashBlock = CmiGetBlock(RegistryHive,
+			      KeyCell->HashTableOffset,
+			      NULL);
       if (HashBlock == NULL)
 	{
 	  DPRINT("CmiGetBlock() failed\n");
@@ -2723,9 +2726,13 @@ CmiAddKeyToHashTable(PREGISTRY_HIVE RegistryHive,
       if (HashBlock->Table[i].KeyOffset == 0)
 	{
 	  HashBlock->Table[i].KeyOffset = NKBOffset;
-	  RtlCopyMemory(&HashBlock->Table[i].HashValue,
-			NewKeyCell->Name,
-			4);
+	  HashBlock->Table[i].HashValue = 0;
+	  if (NewKeyCell->Flags & REG_KEY_NAME_PACKED)
+	    {
+	      RtlCopyMemory(&HashBlock->Table[i].HashValue,
+			    NewKeyCell->Name,
+			    min(NewKeyCell->NameSize, 4));
+	    }
 	  return STATUS_SUCCESS;
 	}
     }
@@ -2746,8 +2753,7 @@ CmiRemoveKeyFromHashTable(PREGISTRY_HIVE RegistryHive,
       if (HashBlock->Table[i].KeyOffset == NKBOffset)
 	{
 	  HashBlock->Table[i].KeyOffset = 0;
-	  RtlZeroMemory(&HashBlock->Table[i].HashValue,
-			4);
+	  HashBlock->Table[i].HashValue = 0;
 	  return STATUS_SUCCESS;
 	}
     }
@@ -3479,6 +3485,112 @@ CmiCopyPackedName(PWCHAR NameBuffer,
 
   for (i = 0; i < PackedNameSize; i++)
     NameBuffer[i] = (WCHAR)PackedNameBuffer[i];
+}
+
+
+BOOLEAN
+CmiCompareHash(PUNICODE_STRING KeyName,
+	       PCHAR HashString)
+{
+  CHAR Buffer[4];
+
+  Buffer[0] = (KeyName->Length >= 2) ? (CHAR)KeyName->Buffer[0] : 0;
+  Buffer[1] = (KeyName->Length >= 4) ? (CHAR)KeyName->Buffer[1] : 0;
+  Buffer[2] = (KeyName->Length >= 6) ? (CHAR)KeyName->Buffer[2] : 0;
+  Buffer[3] = (KeyName->Length >= 8) ? (CHAR)KeyName->Buffer[3] : 0;
+
+  return (strncmp(Buffer, HashString, 4) == 0);
+}
+
+
+BOOLEAN
+CmiCompareHashI(PUNICODE_STRING KeyName,
+	        PCHAR HashString)
+{
+  CHAR Buffer[4];
+
+  Buffer[0] = (KeyName->Length >= 2) ? (CHAR)KeyName->Buffer[0] : 0;
+  Buffer[1] = (KeyName->Length >= 4) ? (CHAR)KeyName->Buffer[1] : 0;
+  Buffer[2] = (KeyName->Length >= 6) ? (CHAR)KeyName->Buffer[2] : 0;
+  Buffer[3] = (KeyName->Length >= 8) ? (CHAR)KeyName->Buffer[3] : 0;
+
+  return (_strnicmp(Buffer, HashString, 4) == 0);
+}
+
+
+BOOLEAN
+CmiCompareKeyNames(PUNICODE_STRING KeyName,
+		   PKEY_CELL KeyCell)
+{
+  PWCHAR UnicodeName;
+  USHORT i;
+
+  DPRINT1("Flags: %hx\n", KeyCell->Flags);
+
+  if (KeyCell->Flags & REG_KEY_NAME_PACKED)
+    {
+      if (KeyName->Length != KeyCell->NameSize * sizeof(WCHAR))
+	return FALSE;
+
+      for (i = 0; i < KeyCell->NameSize; i++)
+	{
+	  if (KeyName->Buffer[i] != (WCHAR)KeyCell->Name[i])
+	    return FALSE;
+	}
+    }
+  else
+    {
+      if (KeyName->Length != KeyCell->NameSize)
+	return FALSE;
+
+      UnicodeName = (PWCHAR)KeyCell->Name;
+      for (i = 0; i < KeyCell->NameSize / sizeof(WCHAR); i++)
+	{
+	  if (KeyName->Buffer[i] != UnicodeName[i])
+	    return FALSE;
+	}
+    }
+
+  return TRUE;
+}
+
+
+BOOLEAN
+CmiCompareKeyNamesI(PUNICODE_STRING KeyName,
+		    PKEY_CELL KeyCell)
+{
+  PWCHAR UnicodeName;
+  USHORT i;
+
+  DPRINT1("Flags: %hx\n", KeyCell->Flags);
+
+  if (KeyCell->Flags & REG_KEY_NAME_PACKED)
+    {
+      if (KeyName->Length != KeyCell->NameSize * sizeof(WCHAR))
+	return FALSE;
+
+      for (i = 0; i < KeyCell->NameSize; i++)
+	{
+	  if (RtlUpcaseUnicodeChar(KeyName->Buffer[i]) !=
+	      RtlUpcaseUnicodeChar((WCHAR)KeyCell->Name[i]))
+	    return FALSE;
+	}
+    }
+  else
+    {
+      if (KeyName->Length != KeyCell->NameSize)
+	return FALSE;
+
+      UnicodeName = (PWCHAR)KeyCell->Name;
+      for (i = 0; i < KeyCell->NameSize / sizeof(WCHAR); i++)
+	{
+	  if (RtlUpcaseUnicodeChar(KeyName->Buffer[i]) !=
+	      RtlUpcaseUnicodeChar(UnicodeName[i]))
+	    return FALSE;
+	}
+    }
+
+  return TRUE;
 }
 
 /* EOF */

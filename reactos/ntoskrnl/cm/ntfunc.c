@@ -53,8 +53,6 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 	 KeyHandle,
 	 ObjectAttributes->RootDirectory);
 
-  /* FIXME: check for standard handle prefix and adjust objectAttributes accordingly */
-
   Status = ObFindObject(ObjectAttributes,
 			&Object,
 			&RemainingPath,
@@ -133,8 +131,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   Status = CmiAddSubKey(KeyObject->RegistryHive,
 			KeyObject->ParentKey,
 			KeyObject,
-			RemainingPath.Buffer,
-			RemainingPath.Length,
+			&RemainingPath,
 			TitleIndex,
 			Class,
 			CreateOptions);

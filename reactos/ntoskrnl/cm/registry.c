@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.96 2003/05/28 12:04:17 ekohl Exp $
+/* $Id: registry.c,v 1.97 2003/05/28 16:09:51 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -250,10 +250,8 @@ VOID
 CmInitializeRegistry(VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING RootKeyName;
+  UNICODE_STRING KeyName;
   PKEY_OBJECT RootKey;
-  PKEY_OBJECT MachineKey;
-  PKEY_OBJECT UserKey;
   HANDLE RootKeyHandle;
   HANDLE KeyHandle;
   NTSTATUS Status;
@@ -289,8 +287,8 @@ CmInitializeRegistry(VOID)
   assert(NT_SUCCESS(Status));
 
   /* Create '\Registry' key. */
-  RtlInitUnicodeString(&RootKeyName, REG_ROOT_KEY_NAME);
-  InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
+  RtlInitUnicodeString(&KeyName, REG_ROOT_KEY_NAME);
+  InitializeObjectAttributes(&ObjectAttributes, &KeyName, 0, NULL, NULL);
   Status = ObCreateObject(&RootKeyHandle,
 		STANDARD_RIGHTS_REQUIRED,
 		&ObjectAttributes,
@@ -317,54 +315,38 @@ CmInitializeRegistry(VOID)
   KeInitializeSpinLock(&CmiKeyListLock);
 
   /* Create '\Registry\Machine' key. */
-  Status = ObCreateObject(&KeyHandle,
-			  STANDARD_RIGHTS_REQUIRED,
-			  NULL,
-			  CmiKeyType,
-			  (PVOID*)&MachineKey);
+  RtlInitUnicodeString(&KeyName,
+		       L"Machine");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     0,
+			     RootKeyHandle,
+			     NULL);
+  Status = NtCreateKey(&KeyHandle,
+		       STANDARD_RIGHTS_REQUIRED,
+		       &ObjectAttributes,
+		       0,
+		       NULL,
+		       REG_OPTION_VOLATILE,
+		       NULL);
   assert(NT_SUCCESS(Status));
-  Status = CmiAddSubKey(CmiVolatileHive,
-			RootKey,
-			MachineKey,
-			L"Machine",
-			wcslen(L"Machine") * sizeof(WCHAR),
-			0,
-			NULL,
-			0);
-  assert(NT_SUCCESS(Status));
-  MachineKey->RegistryHive = CmiVolatileHive;
-  MachineKey->Flags = 0;
-  MachineKey->NumberOfSubKeys = 0;
-  MachineKey->SubKeys = NULL;
-  MachineKey->SizeOfSubKeys = MachineKey->KeyCell->NumberOfSubKeys;
-  Status = RtlCreateUnicodeString(&MachineKey->Name, L"Machine");
-  assert(NT_SUCCESS(Status));
-  CmiAddKeyToList(RootKey, MachineKey);
 
   /* Create '\Registry\User' key. */
-  Status = ObCreateObject(&KeyHandle,
-			  STANDARD_RIGHTS_REQUIRED,
-			  NULL,
-			  CmiKeyType,
-			  (PVOID*)&UserKey);
+  RtlInitUnicodeString(&KeyName,
+		       L"User");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     0,
+			     RootKeyHandle,
+			     NULL);
+  Status = NtCreateKey(&KeyHandle,
+		       STANDARD_RIGHTS_REQUIRED,
+		       &ObjectAttributes,
+		       0,
+		       NULL,
+		       REG_OPTION_VOLATILE,
+		       NULL);
   assert(NT_SUCCESS(Status));
-  Status = CmiAddSubKey(CmiVolatileHive,
-			RootKey,
-			UserKey,
-			L"User",
-			wcslen(L"User") * sizeof(WCHAR),
-			0,
-			NULL,
-			0);
-  assert(NT_SUCCESS(Status));
-  UserKey->RegistryHive = CmiVolatileHive;
-  UserKey->Flags = 0;
-  UserKey->NumberOfSubKeys = 0;
-  UserKey->SubKeys = NULL;
-  UserKey->SizeOfSubKeys = UserKey->KeyCell->NumberOfSubKeys;
-  Status = RtlCreateUnicodeString(&UserKey->Name, L"User");
-  assert(NT_SUCCESS(Status));
-  CmiAddKeyToList(RootKey, UserKey);
 }
 
 
