@@ -1,4 +1,22 @@
-/* $Id: class2.c,v 1.9 2002/03/04 22:31:22 ekohl Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 2001, 2002 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: class2.c,v 1.10 2002/03/08 11:59:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -129,7 +147,7 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
   StartingBlock.QuadPart = StartingOffset.QuadPart / 512; // >> deviceExtension->SectorShift;
   LogicalBlockAddress = (ULONG)StartingBlock.u.LowPart;
 
-  DPRINT1("Logical block address: %lu\n", LogicalBlockAddress);
+  DPRINT("Logical block address: %lu\n", LogicalBlockAddress);
 
   /* allocate and initialize an SRB */
   /* FIXME: use lookaside list instead */
@@ -180,14 +198,14 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
 
   if (CurrentIrpStack->MajorFunction == IRP_MJ_READ)
     {
-      DPRINT1("ScsiClassBuildRequest: Read Command\n");
+      DPRINT("ScsiClassBuildRequest: Read Command\n");
 
       Srb->SrbFlags |= SRB_FLAGS_DATA_IN;
       Cdb->CDB10.OperationCode = SCSIOP_READ;
     }
   else
     {
-      DPRINT1("ScsiClassBuildRequest: Write Command\n");
+      DPRINT("ScsiClassBuildRequest: Write Command\n");
 
       Srb->SrbFlags |= SRB_FLAGS_DATA_OUT;
       Cdb->CDB10.OperationCode = SCSIOP_WRITE;
@@ -223,7 +241,7 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
   CurrentIrpStack->Parameters.Others.Argument4 = (PVOID)MAXIMUM_RETRIES;
 #endif
 
-  DPRINT1("IoSetCompletionRoutine (Irp %p  Srb %p)\n", Irp, Srb);
+  DPRINT("IoSetCompletionRoutine (Irp %p  Srb %p)\n", Irp, Srb);
   IoSetCompletionRoutine(Irp,
 			 ScsiClassIoComplete,
 			 Srb,
@@ -523,6 +541,8 @@ ScsiClassGetInquiryData(PDEVICE_OBJECT PortDeviceObject,
   KEVENT Event;
   PIRP Irp;
 
+  DPRINT1("ScsiClassGetInquiryData() called\n");
+
   *ConfigInfo = NULL;
   Buffer = ExAllocatePool(NonPagedPool,
 			  INQUIRY_DATA_SIZE);
@@ -571,6 +591,8 @@ ScsiClassGetInquiryData(PDEVICE_OBJECT PortDeviceObject,
       *ConfigInfo = Buffer;
     }
 
+  DPRINT1("ScsiClassGetInquiryData() done\n");
+
   return(Status);
 }
 
@@ -607,6 +629,8 @@ ScsiClassInitialize(PVOID Argument1,
 
   ConfigInfo = IoGetConfigurationInformation();
 
+  DPRINT("ScsiPorts: %lu\n", ConfigInfo->ScsiPortCount);
+
   /* look for ScsiPortX scsi port devices */
   for (PortNumber = 0; PortNumber < ConfigInfo->ScsiPortCount; PortNumber++)
     {
@@ -635,9 +659,13 @@ ScsiClassInitialize(PVOID Argument1,
 	      DiskFound = TRUE;
 	    }
 	}
+      else
+	{
+	  DbgPrint("Couldn't find ScsiPort%lu (Status %lx)\n", PortNumber, Status);
+	}
     }
 
-  DPRINT1("ScsiClassInitialize() done!\n");
+  DPRINT("ScsiClassInitialize() done!\n");
 
   return((DiskFound == TRUE) ? STATUS_SUCCESS : STATUS_NO_SUCH_DEVICE);
 }
@@ -681,12 +709,12 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
   PSCSI_REQUEST_BLOCK Srb;
   NTSTATUS Status;
 
-  DPRINT1("ScsiClassIoComplete(DeviceObject %p  Irp %p  Context %p) called\n",
+  DPRINT("ScsiClassIoComplete(DeviceObject %p  Irp %p  Context %p) called\n",
 	  DeviceObject, Irp, Context);
 
   DeviceExtension = DeviceObject->DeviceExtension;
   Srb = (PSCSI_REQUEST_BLOCK)Context;
-  DPRINT1("Srb %p\n", Srb);
+  DPRINT("Srb %p\n", Srb);
 
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -710,7 +738,7 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 #endif
 
   /* FIXME: use lookaside list instead */
-  DPRINT1("Freed SRB %p\n", IrpStack->Parameters.Scsi.Srb);
+  DPRINT("Freed SRB %p\n", IrpStack->Parameters.Scsi.Srb);
   ExFreePool(IrpStack->Parameters.Scsi.Srb);
 
 //  Irp->IoStatus.Status = Status;
@@ -738,7 +766,7 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 	}
     }
 
-  DPRINT1("ScsiClassIoComplete() done (Status %lx)\n", Status);
+  DPRINT("ScsiClassIoComplete() done (Status %lx)\n", Status);
 
 //  return(Status);
   return(STATUS_SUCCESS);
@@ -825,7 +853,8 @@ ScsiClassReadDriveCapacity(IN PDEVICE_OBJECT DeviceObject)
 	DeviceExtension->DiskGeometry->BytesPerSector = SectorSize;
 
 	DeviceExtension->PartitionLength.QuadPart = (LONGLONG)(LastSector + 1);
-	WHICH_BIT(DeviceExtension->DiskGeometry->BytesPerSector, DeviceExtension->SectorShift);
+	WHICH_BIT(DeviceExtension->DiskGeometry->BytesPerSector,
+		  DeviceExtension->SectorShift);
 	DeviceExtension->PartitionLength.QuadPart =
 	  (DeviceExtension->PartitionLength.QuadPart << DeviceExtension->SectorShift);
 
@@ -841,12 +870,12 @@ ScsiClassReadDriveCapacity(IN PDEVICE_OBJECT DeviceObject)
 	DeviceExtension->DiskGeometry->SectorsPerTrack = 32;
 	DeviceExtension->DiskGeometry->TracksPerCylinder = 64;
 
-	DPRINT1("SectorSize: %lu  SectorCount: %lu\n", SectorSize, LastSector + 1);
+	DPRINT("SectorSize: %lu  SectorCount: %lu\n", SectorSize, LastSector + 1);
     }
 
   ExFreePool(CapacityBuffer);
 
-  DPRINT1("ScsiClassReadDriveCapacity() done\n");
+  DPRINT("ScsiClassReadDriveCapacity() done\n");
 
   return(Status);
 }
@@ -938,7 +967,7 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
 				      &IoStatusBlock);
   if (Irp == NULL)
     {
-      DPRINT("IoBuildDeviceIoControlRequest() failed\n");
+      DPRINT1("IoBuildDeviceIoControlRequest() failed\n");
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
@@ -974,7 +1003,7 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
       Status = STATUS_SUCCESS;
     }
 
-  DPRINT1("ScsiClassSendSrbSynchronous() done\n");
+  DPRINT("ScsiClassSendSrbSynchronous() done\n");
 
   return(Status);
 }
@@ -1023,12 +1052,12 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
   ULONG TransferPages;
   NTSTATUS Status;
 
-  DPRINT1("ScsiClassReadWrite() called\n");
+  DPRINT("ScsiClassReadWrite() called\n");
 
   DeviceExtension = DeviceObject->DeviceExtension;
   IrpStack  = IoGetCurrentIrpStackLocation(Irp);
 
-  DPRINT1("Relative Offset: %I64u  Length: %lu\n",
+  DPRINT("Relative Offset: %I64u  Length: %lu\n",
 	 IrpStack->Parameters.Read.ByteOffset.QuadPart,
 	 IrpStack->Parameters.Read.Length);
 
@@ -1079,7 +1108,7 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
 
   if (DeviceExtension->ClassStartIo != NULL)
     {
-      DPRINT1("ScsiClassReadWrite() starting packet\n");
+      DPRINT("ScsiClassReadWrite() starting packet\n");
 
       IoMarkIrpPending(Irp);
       IoStartPacket(DeviceObject,
@@ -1110,7 +1139,7 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
   ScsiClassBuildRequest(DeviceObject,
 			Irp);
 
-  DPRINT1("ScsiClassReadWrite() done\n");
+  DPRINT("ScsiClassReadWrite() done\n");
 
   /* Call the port driver */
   return(IoCallDriver(DeviceExtension->PortDeviceObject,
