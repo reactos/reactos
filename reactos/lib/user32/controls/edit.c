@@ -23,7 +23,6 @@
  * TODO:
  *   - ES_CENTER
  *   - ES_RIGHT
- *   - ES_NUMBER (new since win95)
  *   - ES_OEMCONVERT
  *   -!ES_AUTOVSCROLL (every multi line control *is* auto vscroll)
  *   -!ES_AUTOHSCROLL (every single line control *is* auto hscroll)
@@ -3766,6 +3765,10 @@ static void EDIT_WM_Char(EDITSTATE *es, WCHAR c)
 		break;
 
 	default:
+    /*If Edit control style is ES_NUMBER allow users to key in only numeric values*/
+    if( (es->style & ES_NUMBER) && !( c >= '0' && c <= '9') )
+      break;
+    
 		if (!(es->style & ES_READONLY) && (c >= ' ') && (c != 127)) {
 			WCHAR str[2];
  			str[0] = c;
