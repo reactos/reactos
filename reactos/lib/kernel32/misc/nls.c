@@ -58,7 +58,7 @@ static const unsigned char UTF8Mask[6] = {0x7f, 0x1f, 0x0f, 0x07, 0x03, 0x01};
 static LIST_ENTRY CodePageListHead;
 static CODEPAGE_ENTRY AnsiCodePage;
 static CODEPAGE_ENTRY OemCodePage;
-static CRITICAL_SECTION CodePageListLock;
+static RTL_CRITICAL_SECTION CodePageListLock;
 
 /* FORWARD DECLARATIONS *******************************************************/
 

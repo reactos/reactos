@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.38 2004/11/29 00:08:59 gdalsnes Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -33,8 +33,8 @@ DllMain(HANDLE hInst,
 	LPVOID lpReserved);
 
 /* Critical section for various kernel32 data structures */
-CRITICAL_SECTION DllLock;
-CRITICAL_SECTION ConsoleLock;
+RTL_CRITICAL_SECTION DllLock;
+RTL_CRITICAL_SECTION ConsoleLock;
 
 extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
 

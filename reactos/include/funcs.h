@@ -2082,8 +2082,6 @@ VOID STDCALL WEP();
 DWORD STDCALL RtlDeleteSecurityObject(DWORD x1);
 DWORD     STDCALL RtlNewSecurityObject(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6);
 NTSTATUS  STDCALL RtlWalkHeap( HANDLE heap, PVOID entry_ptr );
-NTSTATUS  STDCALL RtlpUnWaitCriticalSection(RTL_CRITICAL_SECTION *crit);
-NTSTATUS  STDCALL RtlpWaitForCriticalSection(RTL_CRITICAL_SECTION *crit);
 NTSTATUS STDCALL LdrLockLoaderLock(ULONG flags, ULONG *result, ULONG *magic);
 NTSTATUS STDCALL LdrUnlockLoaderLock(ULONG flags, ULONG magic);
 

@@ -6,6 +6,8 @@
  * PURPOSE:         Critical sections
  * UPDATE HISTORY:
  *                  Created 30/09/98
+ *                  Rewritten ROS version, based on WINE code plus
+ *                  some fixes useful only for ROS right now - 03/01/05
  */
 
 /* INCLUDES ******************************************************************/
@@ -19,391 +21,532 @@
 
 /* FUNCTIONS *****************************************************************/
 
-inline static HANDLE RtlGetCurrentThreadId()
+static RTL_CRITICAL_SECTION RtlCriticalSectionLock;
+static LIST_ENTRY RtlCriticalSectionList;
+static BOOLEAN RtlpCritSectInitialized = FALSE;
+
+/*++
+ * RtlDeleteCriticalSection 
+ * @implemented NT4
+ *
+ *     Deletes a Critical Section
+ *
+ * Params:
+ *     CriticalSection - Critical section to delete.
+ *
+ * Returns:
+ *     STATUS_SUCCESS, or error value returned by NtClose.
+ *
+ * Remarks:
+ *     The critical section members should not be read after this call.
+ *
+ *--*/
+NTSTATUS
+STDCALL
+RtlDeleteCriticalSection(
+    PRTL_CRITICAL_SECTION CriticalSection)
 {
-   return (HANDLE)NtCurrentTeb()->Cid.UniqueThread;
+    NTSTATUS Status = STATUS_SUCCESS;
+        
+    /* Close the Event Object Handle if it exists */
+    if (CriticalSection->LockSemaphore) {
+        Status = NtClose(CriticalSection->LockSemaphore);
+    }
+        
+    /* Protect List */
+    RtlEnterCriticalSection(&RtlCriticalSectionLock);
+               
+    /* Delete the Debug Data, if it exists */
+    if (CriticalSection->DebugInfo) {
+        
+        /* Remove it from the list */
+        RemoveEntryList(&CriticalSection->DebugInfo->ProcessLocksList);
+        
+        /* Free it */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, CriticalSection->DebugInfo);
+    }
+    
+    /* Unprotect */
+    RtlLeaveCriticalSection(&RtlCriticalSectionLock);
+    
+    /* Wipe it out */
+    RtlZeroMemory(CriticalSection, sizeof(RTL_CRITICAL_SECTION));
+    
+    /* Return */
+    return Status;
 }
 
-inline static void small_pause(void)
-{
-#ifdef __i386__
-    __asm__ __volatile__( "rep;nop" : : : "memory" );
-#else
-    __asm__ __volatile__( "" : : : "memory" );
-#endif
+/*++
+ * RtlSetCriticalSectionSpinCount 
+ * @implemented NT4
+ *
+ *     Sets the spin count for a critical section.
+ *
+ * Params:
+ *     CriticalSection - Critical section to set the spin count for.
+ *
+ *     SpinCount - Spin count for the critical section.
+ *
+ * Returns:
+ *     STATUS_SUCCESS.
+ *
+ * Remarks:
+ *     SpinCount is ignored on single-processor systems.
+ *
+ *--*/
+DWORD
+STDCALL
+RtlSetCriticalSectionSpinCount(
+   PRTL_CRITICAL_SECTION CriticalSection,
+   DWORD SpinCount
+   )
+{    
+    DWORD OldCount = CriticalSection->SpinCount;
+    
+    /* Set to parameter if MP, or to 0 if this is Uniprocessor */
+    CriticalSection->SpinCount = (NtCurrentPeb()->NumberOfProcessors > 1) ? SpinCount : 0;
+    return OldCount;
 }
 
-/***********************************************************************
- *           get_semaphore
- */
-static inline HANDLE get_semaphore( PCRITICAL_SECTION crit )
+/*++
+ * RtlEnterCriticalSection 
+ * @implemented NT4
+ *
+ *     Waits to gain ownership of the critical section.
+ *
+ * Params:
+ *     CriticalSection - Critical section to wait for.
+ *
+ * Returns:
+ *     STATUS_SUCCESS.
+ *
+ * Remarks:
+ *     Uses a fast-path unless contention happens.
+ *
+ *--*/
+NTSTATUS
+STDCALL
+RtlEnterCriticalSection(
+    PRTL_CRITICAL_SECTION CriticalSection)
 {
-   HANDLE ret = crit->LockSemaphore;
-   if (!ret)
-   {
-      HANDLE sem;
-      if (!NT_SUCCESS(NtCreateSemaphore( &sem, SEMAPHORE_ALL_ACCESS, NULL, 0, 1 ))) return 0;
-      if (!(ret = (HANDLE)InterlockedCompareExchangePointer( (PVOID *)&crit->LockSemaphore,
-                                                  (PVOID)sem, 0 )))
-         ret = sem;
-      else
-         NtClose(sem);  /* somebody beat us to it */
-   }
-   return ret;
+    HANDLE Thread = (HANDLE)NtCurrentTeb()->Cid.UniqueThread;
+    
+    /* Try to Lock it */
+    if (InterlockedIncrement(&CriticalSection->LockCount)) {
+
+        /* 
+         * We've failed to lock it! Does this thread
+         * actually own it?
+         */
+        if (Thread == CriticalSection->OwningThread) {
+            
+            /* You own it, so you'll get it when you're done with it! */
+            CriticalSection->RecursionCount++;
+            return STATUS_SUCCESS;
+        }
+        
+        /* We don't own it, so we must wait for it */
+        RtlpWaitForCriticalSection(CriticalSection);
+    }
+    
+    /* Lock successful */
+    CriticalSection->OwningThread = Thread;
+    CriticalSection->RecursionCount = 1;
+    return STATUS_SUCCESS;
 }
 
-/***********************************************************************
- *           RtlInitializeCriticalSection   (NTDLL.@)
+/*++
+ * RtlInitializeCriticalSection 
+ * @implemented NT4
  *
- * Initialises a new critical section.
+ *     Initialises a new critical section.
  *
- * PARAMS
- *  crit [O] Critical section to initialise
+ * Params:
+ *     CriticalSection - Critical section to initialise
  *
- * RETURNS
- *  STATUS_SUCCESS.
+ * Returns:
+ *     STATUS_SUCCESS.
  *
- * SEE
- *  RtlInitializeCriticalSectionAndSpinCount(), RtlDeleteCriticalSection(),
- *  RtlEnterCriticalSection(), RtlLeaveCriticalSection(),
- *  RtlTryEnterCriticalSection(), RtlSetCriticalSectionSpinCount()
- */
-NTSTATUS STDCALL RtlInitializeCriticalSection( PCRITICAL_SECTION crit )
-{
-   return RtlInitializeCriticalSectionAndSpinCount( crit, 0 );
+ * Remarks:
+ *     Simply calls RtlInitializeCriticalSectionAndSpinCount
+ *
+ *--*/
+NTSTATUS 
+STDCALL
+RtlInitializeCriticalSection(
+    PRTL_CRITICAL_SECTION CriticalSection)
+{ 
+    /* Call the Main Function */
+    return RtlInitializeCriticalSectionAndSpinCount(CriticalSection, 0);
 }
 
-/***********************************************************************
- *           RtlInitializeCriticalSectionAndSpinCount   (NTDLL.@)
+/*++
+ * RtlInitializeCriticalSectionAndSpinCount 
+ * @implemented NT4
  *
- * Initialises a new critical section with a given spin count.
+ *     Initialises a new critical section.
  *
- * PARAMS
- *   crit      [O] Critical section to initialise
- *   spincount [I] Spin count for crit
- * 
- * RETURNS
- *  STATUS_SUCCESS.
+ * Params:
+ *     CriticalSection - Critical section to initialise
  *
- * NOTES
- *  Available on NT4 SP3 or later.
+ *     SpinCount - Spin count for the critical section.
  *
- * SEE
- *  RtlInitializeCriticalSection(), RtlDeleteCriticalSection(),
- *  RtlEnterCriticalSection(), RtlLeaveCriticalSection(),
- *  RtlTryEnterCriticalSection(), RtlSetCriticalSectionSpinCount()
- */
-NTSTATUS STDCALL RtlInitializeCriticalSectionAndSpinCount( PCRITICAL_SECTION crit, ULONG spincount )
+ * Returns:
+ *     STATUS_SUCCESS.
+ *
+ * Remarks:
+ *     SpinCount is ignored on single-processor systems.
+ *
+ *--*/
+NTSTATUS
+STDCALL
+RtlInitializeCriticalSectionAndSpinCount (
+    PRTL_CRITICAL_SECTION CriticalSection,
+    DWORD SpinCount)
 {
-   /* Does ROS need this, or is this special to Wine? And if ros need it, should
-   it be enabled in the release build? -Gunnar */
-   if (RtlGetProcessHeap()) crit->DebugInfo = NULL;
-   else
-   {
-      crit->DebugInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(CRITICAL_SECTION_DEBUG));
-      if (crit->DebugInfo)
-      {
-         crit->DebugInfo->Type = 0;
-         crit->DebugInfo->CreatorBackTraceIndex = 0;
-         crit->DebugInfo->CriticalSection = crit;
-         crit->DebugInfo->ProcessLocksList.Blink = &(crit->DebugInfo->ProcessLocksList);
-         crit->DebugInfo->ProcessLocksList.Flink = &(crit->DebugInfo->ProcessLocksList);
-         crit->DebugInfo->EntryCount = 0;
-         crit->DebugInfo->ContentionCount = 0;
-         crit->DebugInfo->Spare[0] = 0;
-         crit->DebugInfo->Spare[1] = 0;
-      }
-   }
-   crit->LockCount      = -1;
-   crit->RecursionCount = 0;
-   crit->OwningThread   = 0;
-   crit->LockSemaphore  = 0;
-   crit->SpinCount      = (NtCurrentPeb()->NumberOfProcessors > 1) ? spincount : 0;
-   return STATUS_SUCCESS;
+    PRTL_CRITICAL_SECTION_DEBUG CritcalSectionDebugData;
+    PVOID Heap;
+    
+    /* First things first, set up the Object */
+    CriticalSection->LockCount = -1;
+    CriticalSection->RecursionCount = 0;
+    CriticalSection->OwningThread = 0;
+    CriticalSection->SpinCount = (NtCurrentPeb()->NumberOfProcessors > 1) ? SpinCount : 0;
+
+    /* 
+     * Now set up the Debug Data 
+     * Think of a better way to allocate it, because the Heap Manager won't
+     * have any debug data since the Heap isn't initalized! 
+     */
+    if ((Heap = RtlGetProcessHeap())) {
+
+        CritcalSectionDebugData = RtlAllocateHeap(Heap, 0, sizeof(RTL_CRITICAL_SECTION_DEBUG));
+        CritcalSectionDebugData->Type = RTL_CRITSECT_TYPE;
+        CritcalSectionDebugData->ContentionCount = 0;
+        CritcalSectionDebugData->EntryCount = 0;
+        CritcalSectionDebugData->CriticalSection = CriticalSection;
+        CriticalSection->DebugInfo = CritcalSectionDebugData;
+
+        /* 
+         * Add it to the List of Critical Sections owned by the process.
+         * If we've initialized the Lock, then use it. If not, then probably
+         * this is the lock initialization itself, so insert it directly.
+         */
+        if ((CriticalSection != &RtlCriticalSectionLock) && (RtlpCritSectInitialized)) {
+            
+            /* Protect List */
+            RtlEnterCriticalSection(&RtlCriticalSectionLock);
+
+            /* Add this one */
+            InsertTailList(&RtlCriticalSectionList, &CritcalSectionDebugData->ProcessLocksList);
+
+            /* Unprotect */
+            RtlLeaveCriticalSection(&RtlCriticalSectionLock);
+        
+        } else {
+
+            /* Add it directly */
+            InsertTailList(&RtlCriticalSectionList, &CritcalSectionDebugData->ProcessLocksList);
+        }
+        
+    } else {
+
+        /* This shouldn't happen... */
+        CritcalSectionDebugData = NULL;
+    }
+
+    return STATUS_SUCCESS;
 }
 
-/***********************************************************************
- *           RtlSetCriticalSectionSpinCount   (NTDLL.@)
+/*++
+ * RtlLeaveCriticalSection 
+ * @implemented NT4
  *
- * Sets the spin count of a critical section.
+ *     Releases a critical section and makes if available for new owners.
  *
- * PARAMS
- *   crit      [I/O] Critical section
- *   spincount [I] Spin count for crit
+ * Params:
+ *     CriticalSection - Critical section to release.
  *
- * RETURNS
- *  The previous spin count.
+ * Returns:
+ *     STATUS_SUCCESS.
  *
- * NOTES
- *  If the system is not SMP, spincount is ignored and set to 0.
+ * Remarks:
+ *     If another thread was waiting, the slow path is entered.
  *
- * SEE
- *  RtlInitializeCriticalSection(), RtlInitializeCriticalSectionAndSpinCount(),
- *  RtlDeleteCriticalSection(), RtlEnterCriticalSection(),
- *  RtlLeaveCriticalSection(), RtlTryEnterCriticalSection()
- */
-ULONG STDCALL RtlSetCriticalSectionSpinCount( PCRITICAL_SECTION crit, ULONG spincount )
-{
-   ULONG oldspincount = crit->SpinCount;
-   crit->SpinCount = (NtCurrentPeb()->NumberOfProcessors > 1) ? spincount : 0;
-   return oldspincount;
+ *--*/
+NTSTATUS
+STDCALL
+RtlLeaveCriticalSection(
+    PRTL_CRITICAL_SECTION CriticalSection)
+{     
+    /* Decrease the Recursion Count */    
+    if (--CriticalSection->RecursionCount) {
+    
+        /* Someone still owns us, but we are free */
+        InterlockedDecrement(&CriticalSection->LockCount);
+        
+    } else {
+        
+         /* Nobody owns us anymore */
+        CriticalSection->OwningThread = 0;
+        
+        /* Was someone wanting us? */
+        if (InterlockedDecrement(&CriticalSection->LockCount) >= 0) {
+        
+            /* Let him have us */
+            RtlpUnWaitCriticalSection(CriticalSection);
+        
+        }
+    }
+    
+    /* Sucessful! */
+    return STATUS_SUCCESS;
 }
 
-/***********************************************************************
- *           RtlDeleteCriticalSection   (NTDLL.@)
+/*++
+ * RtlTryEnterCriticalSection 
+ * @implemented NT4
  *
- * Frees the resources used by a critical section.
+ *     Attemps to gain ownership of the critical section without waiting.
  *
- * PARAMS
- *  crit [I/O] Critical section to free
+ * Params:
+ *     CriticalSection - Critical section to attempt acquiring.
  *
- * RETURNS
- *  STATUS_SUCCESS.
+ * Returns:
+ *     TRUE if the critical section has been acquired, FALSE otherwise.
  *
- * SEE
- *  RtlInitializeCriticalSection(), RtlInitializeCriticalSectionAndSpinCount(),
- *  RtlDeleteCriticalSection(), RtlEnterCriticalSection(),
- *  RtlLeaveCriticalSection(), RtlTryEnterCriticalSection()
- */
-NTSTATUS STDCALL RtlDeleteCriticalSection( PCRITICAL_SECTION crit )
-{
-   crit->LockCount      = -1;
-   crit->RecursionCount = 0;
-   crit->OwningThread   = (HANDLE)0;
-   if (crit->LockSemaphore) 
-      NtClose( crit->LockSemaphore );
-   crit->LockSemaphore  = 0;
-   if (crit->DebugInfo)
-   {
-      /* only free the ones we made in here */
-      if (!crit->DebugInfo->Spare[1])
-      {
-         RtlFreeHeap( RtlGetProcessHeap(), 0, crit->DebugInfo );
-         crit->DebugInfo = NULL;
-      }
-   }
-   return STATUS_SUCCESS;
+ * Remarks:
+ *     None
+ *
+ *--*/
+BOOLEAN 
+STDCALL
+RtlTryEnterCriticalSection(
+    PRTL_CRITICAL_SECTION CriticalSection)
+{   
+    /* Try to take control */
+    if (InterlockedCompareExchange(&CriticalSection->LockCount,
+                                   0,
+                                   -1) == -1) {
+
+        /* It's ours */                                
+        CriticalSection->OwningThread =  NtCurrentTeb()->Cid.UniqueThread;
+        CriticalSection->RecursionCount = 1;
+        return TRUE;
+   
+   } else if (CriticalSection->OwningThread == NtCurrentTeb()->Cid.UniqueThread) {
+       
+        /* It's already ours */
+        InterlockedIncrement(&CriticalSection->LockCount);
+        CriticalSection->RecursionCount++;
+        return TRUE;
+    }
+    
+    /* It's not ours */
+    return FALSE;
 }
 
-
-/***********************************************************************
- *           RtlpWaitForCriticalSection   (NTDLL.@)
+/*++
+ * RtlpWaitForCriticalSection 
  *
- * Waits for a busy critical section to become free.
- * 
- * PARAMS
- *  crit [I/O] Critical section to wait for
+ *     Slow path of RtlEnterCriticalSection. Waits on an Event Object.
  *
- * RETURNS
- *  STATUS_SUCCESS.
+ * Params:
+ *     CriticalSection - Critical section to acquire.
  *
- * NOTES
- *  Use RtlEnterCriticalSection() instead of this function as it is often much
- *  faster.
+ * Returns:
+ *     STATUS_SUCCESS, or raises an exception if a deadlock is occuring.
  *
- * SEE
- *  RtlInitializeCriticalSection(), RtlInitializeCriticalSectionAndSpinCount(),
- *  RtlDeleteCriticalSection(), RtlEnterCriticalSection(),
- *  RtlLeaveCriticalSection(), RtlTryEnterCriticalSection()
- */
-NTSTATUS STDCALL RtlpWaitForCriticalSection( PCRITICAL_SECTION crit )
+ * Remarks:
+ *     None
+ *
+ *--*/
+NTSTATUS
+STDCALL
+RtlpWaitForCriticalSection(
+    PRTL_CRITICAL_SECTION CriticalSection)
 {
-   for (;;)
-   {
-      EXCEPTION_RECORD rec;
-      HANDLE sem = get_semaphore( crit );
-      LARGE_INTEGER time;
-      NTSTATUS status;
-
-      time.QuadPart = -5000 * 10000;  /* 5 seconds */
-      status = NtWaitForSingleObject( sem, FALSE, &time );
-      if ( status == STATUS_TIMEOUT )
-      {
-         const char *name = NULL;
-         if (crit->DebugInfo) name = (char *)crit->DebugInfo->Spare[1];
-         if (!name) name = "?";
-         DPRINT1( "section %p %s wait timed out in thread %04lx, blocked by %04lx, retrying (60 sec)\n",
-              crit, name, RtlGetCurrentThreadId(), (DWORD)crit->OwningThread );
-         time.QuadPart = -60000 * 10000;
-         status = NtWaitForSingleObject( sem, FALSE, &time );
-         if ( status == STATUS_TIMEOUT /*&& TRACE_ON(relay)*/ )
-         {
-            DPRINT1( "section %p %s wait timed out in thread %04lx, blocked by %04lx, retrying (5 min)\n",
-               crit, name, RtlGetCurrentThreadId(), (DWORD) crit->OwningThread );
-            time.QuadPart = -300000 * (ULONGLONG)10000;
-            status = NtWaitForSingleObject( sem, FALSE, &time );
-         }
-      }
-      if (status == STATUS_WAIT_0) return STATUS_SUCCESS;
-
-      /* Throw exception only for Wine internal locks */
-      if ((!crit->DebugInfo) || (!crit->DebugInfo->Spare[1])) continue;
-
-      rec.ExceptionCode    = STATUS_POSSIBLE_DEADLOCK;
-      rec.ExceptionFlags   = 0;
-      rec.ExceptionRecord  = NULL;
-      rec.ExceptionAddress = RtlRaiseException;  /* sic */
-      rec.NumberParameters = 1;
-      rec.ExceptionInformation[0] = (DWORD)crit;
-      RtlRaiseException( &rec );
-   }
+    NTSTATUS Status;
+    EXCEPTION_RECORD ExceptionRecord;
+    BOOLEAN LastChance = FALSE;
+    LARGE_INTEGER Timeout;
+    
+    Timeout = RtlConvertLongToLargeInteger(150000);
+    /* ^^ HACK HACK HACK. Good way:
+    Timeout = &NtCurrentPeb()->CriticalSectionTimeout   */
+    
+    /* Do we have an Event yet? */
+    if (!CriticalSection->LockSemaphore) {
+        RtlpCreateCriticalSectionSem(CriticalSection);
+    }
+    
+    /* Increase the Debug Entry count */
+    CriticalSection->DebugInfo->EntryCount++;
+    
+    for (;;) {
+    
+        /* Increase the number of times we've had contention */
+        CriticalSection->DebugInfo->ContentionCount++;
+        
+        /* Wait on the Event */
+        Status = NtWaitForSingleObject(CriticalSection->LockSemaphore,
+                                       FALSE,
+                                       &Timeout);
+    
+        /* We have Timed out */
+        if (Status == STATUS_TIMEOUT) {
+            
+            /* Is this the 2nd time we've timed out? */
+            if (LastChance) {
+                
+                /* Yes it is, we are raising an exception */
+                ExceptionRecord.ExceptionCode    = STATUS_POSSIBLE_DEADLOCK;
+                ExceptionRecord.ExceptionFlags   = 0;
+                ExceptionRecord.ExceptionRecord  = NULL;
+                ExceptionRecord.ExceptionAddress = RtlRaiseException;
+                ExceptionRecord.NumberParameters = 1;
+                ExceptionRecord.ExceptionInformation[0] = (ULONG_PTR)CriticalSection;
+                RtlRaiseException(&ExceptionRecord);
+            
+            } 
+                
+            /* One more try */
+            LastChance = TRUE;
+        
+        } else {
+        
+            /* If we are here, everything went fine */
+            return STATUS_SUCCESS;
+        }
+    }
 }
 
-
-/***********************************************************************
- *           RtlpUnWaitCriticalSection   (NTDLL.@)
+/*++
+ * RtlpUnWaitCriticalSection 
  *
- * Notifies other threads waiting on the busy critical section that it has
- * become free.
- * 
- * PARAMS
- *  crit [I/O] Critical section
+ *     Slow path of RtlLeaveCriticalSection. Fires an Event Object.
  *
- * RETURNS
- *  Success: STATUS_SUCCESS.
- *  Failure: Any error returned by NtReleaseSemaphore()
+ * Params:
+ *     CriticalSection - Critical section to release.
  *
- * NOTES
- *  Use RtlLeaveCriticalSection() instead of this function as it is often much
- *  faster.
+ * Returns:
+ *     None. Raises an exception if the system call failed.
  *
- * SEE
- *  RtlInitializeCriticalSection(), RtlInitializeCriticalSectionAndSpinCount(),
- *  RtlDeleteCriticalSection(), RtlEnterCriticalSection(),
- *  RtlLeaveCriticalSection(), RtlTryEnterCriticalSection()
- */
-NTSTATUS STDCALL RtlpUnWaitCriticalSection( PCRITICAL_SECTION crit )
+ * Remarks:
+ *     None
+ *
+ *--*/
+VOID
+STDCALL
+RtlpUnWaitCriticalSection(
+    PRTL_CRITICAL_SECTION CriticalSection)
+    
 {
-   HANDLE sem = get_semaphore( crit );
-   NTSTATUS res = NtReleaseSemaphore( sem, 1, NULL );
-   if (!NT_SUCCESS(res)) RtlRaiseStatus( res );
-   return res;
+    NTSTATUS Status;
+    
+    /* Do we have an Event yet? */
+    if (!CriticalSection->LockSemaphore) {
+        RtlpCreateCriticalSectionSem(CriticalSection);
+    }
+    
+    /* Signal the Event */
+    Status = NtSetEvent(CriticalSection->LockSemaphore, NULL);
+            
+    if (!NT_SUCCESS(Status)) {
+        
+        /* We've failed */
+        RtlRaiseStatus(Status);
+    }
 }
 
-
-/***********************************************************************
- *           RtlEnterCriticalSection   (NTDLL.@)
+/*++
+ * RtlpCreateCriticalSectionSem 
  *
- * Enters a critical section, waiting for it to become available if necessary.
+ *     Checks if an Event has been created for the critical section.
  *
- * PARAMS
- *  crit [I/O] Critical section to enter
+ * Params:
+ *     None
  *
- * RETURNS
- *  STATUS_SUCCESS. The critical section is held by the caller.
- *  
- * SEE
- *  RtlInitializeCriticalSection(), RtlInitializeCriticalSectionAndSpinCount(),
- *  RtlDeleteCriticalSection(), RtlSetCriticalSectionSpinCount(),
- *  RtlLeaveCriticalSection(), RtlTryEnterCriticalSection()
- */
-NTSTATUS STDCALL RtlEnterCriticalSection( PCRITICAL_SECTION crit )
+ * Returns:
+ *     None. Raises an exception if the system call failed.
+ *
+ * Remarks:
+ *     None
+ *
+ *--*/
+VOID
+STDCALL
+RtlpCreateCriticalSectionSem(
+    PRTL_CRITICAL_SECTION CriticalSection)
 {
-   if (crit->SpinCount)
-   {
-      ULONG count;
-
-      if (RtlTryEnterCriticalSection( crit )) return STATUS_SUCCESS;
-      for (count = crit->SpinCount; count > 0; count--)
-      {
-         if (crit->LockCount > 0) break;  /* more than one waiter, don't bother spinning */
-         if (crit->LockCount == -1)       /* try again */
-         {
-             if (InterlockedCompareExchange(&crit->LockCount, 0,-1 ) == -1) goto done;
-         }
-         small_pause();
-      }
-   }
-
-   if (InterlockedIncrement( &crit->LockCount ))
-   {
-      if (crit->OwningThread == (HANDLE)RtlGetCurrentThreadId())
-      {
-         crit->RecursionCount++;
-         return STATUS_SUCCESS;
-      }
-
-      /* Now wait for it */
-      RtlpWaitForCriticalSection( crit );
-   }
-done:
-   crit->OwningThread   = (HANDLE)RtlGetCurrentThreadId();
-   crit->RecursionCount = 1;
-   return STATUS_SUCCESS;
+    HANDLE hEvent = CriticalSection->LockSemaphore;
+    HANDLE hNewEvent;
+    NTSTATUS Status;
+ 
+    /* Chevk if we have an event */
+    if (!hEvent) {
+        
+        /* No, so create it */
+        if (NT_SUCCESS(Status = NtCreateEvent(hNewEvent,
+                                              EVENT_ALL_ACCESS,
+                                              NULL,
+                                              SynchronizationEvent,
+                                              FALSE))) {
+                
+                /* We failed, this is bad... */
+                InterlockedDecrement(&CriticalSection->LockCount);
+                RtlRaiseStatus(Status);
+                return;
+        }
+        
+        if (!(hEvent = InterlockedCompareExchangePointer((PVOID*)&CriticalSection->LockSemaphore,
+                                                         (PVOID)hNewEvent,
+                                                         0))) {
+            
+            /* We created a new event succesffuly */             
+            hEvent = hNewEvent;
+        } else {
+        
+            /* Some just created an event */
+            NtClose(hNewEvent);
+        }
+        
+        /* Set either the new or the old */
+        CriticalSection->LockSemaphore = hEvent;
+    }
+    
+    return;
 }
 
-
-/***********************************************************************
- *           RtlTryEnterCriticalSection   (NTDLL.@)
+/*++
+ * RtlpInitDeferedCriticalSection 
  *
- * Tries to enter a critical section without waiting.
+ *     Initializes the Critical Section implementation.
  *
- * PARAMS
- *  crit [I/O] Critical section to enter
+ * Params:
+ *     None
  *
- * RETURNS
- *  Success: TRUE. The critical section is held by the caller.
- *  Failure: FALSE. The critical section is currently held by another thread.
+ * Returns:
+ *     None.
  *
- * SEE
- *  RtlInitializeCriticalSection(), RtlInitializeCriticalSectionAndSpinCount(),
- *  RtlDeleteCriticalSection(), RtlEnterCriticalSection(),
- *  RtlLeaveCriticalSection(), RtlSetCriticalSectionSpinCount()
- */
-BOOLEAN STDCALL RtlTryEnterCriticalSection( PCRITICAL_SECTION crit )
+ * Remarks:
+ *     After this call, the Process Critical Section list is protected.
+ *
+ *--*/
+VOID
+STDCALL
+RtlpInitDeferedCriticalSection(
+    VOID)
 {
-   BOOL ret = FALSE;
-   if (InterlockedCompareExchange(&crit->LockCount, 0L, -1 ) == -1)
-   {
-      crit->OwningThread   = (HANDLE)RtlGetCurrentThreadId();
-      crit->RecursionCount = 1;
-      ret = TRUE;
-   }
-   else if (crit->OwningThread == (HANDLE)RtlGetCurrentThreadId())
-   {
-      InterlockedIncrement( &crit->LockCount );
-      crit->RecursionCount++;
-      ret = TRUE;
-   }
-   return ret;
+           
+    /* Initialize the Process Critical Section List */
+    InitializeListHead(&RtlCriticalSectionList);
+    
+    /* Initialize the CS Protecting the List */
+    RtlInitializeCriticalSection(&RtlCriticalSectionLock);
+    
+    /* It's now safe to enter it */
+    RtlpCritSectInitialized = TRUE;
 }
-
-
-/***********************************************************************
- *           RtlLeaveCriticalSection   (NTDLL.@)
- *
- * Leaves a critical section.
- *
- * PARAMS
- *  crit [I/O] Critical section to leave.
- *
- * RETURNS
- *  STATUS_SUCCESS.
- *
- * SEE
- *  RtlInitializeCriticalSection(), RtlInitializeCriticalSectionAndSpinCount(),
- *  RtlDeleteCriticalSection(), RtlEnterCriticalSection(),
- *  RtlSetCriticalSectionSpinCount(), RtlTryEnterCriticalSection()
- */
-NTSTATUS STDCALL RtlLeaveCriticalSection( PCRITICAL_SECTION crit )
-{
-   if (crit->OwningThread != RtlGetCurrentThreadId())
-   {
-      DPRINT1("Freeing critical section not owned\n");
-   }
-
-   if (--crit->RecursionCount) InterlockedDecrement( &crit->LockCount );
-   else
-   {
-      crit->OwningThread = 0;
-      if (InterlockedDecrement( &crit->LockCount ) >= 0)
-      {
-         /* someone is waiting */
-         RtlpUnWaitCriticalSection( crit );
-      }
-   }
-   return STATUS_SUCCESS;
-}
-
 
 /* EOF */

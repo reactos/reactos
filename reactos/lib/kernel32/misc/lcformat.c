@@ -82,15 +82,15 @@ typedef struct _NLS_FORMAT_NODE
 #define GetShortMonth(fmt,mth) fmt->lppszStrings[30 + mth]
 
 /* Write access to the cache is protected by this critical section */
-static CRITICAL_SECTION NLS_FormatsCS;
-static CRITICAL_SECTION_DEBUG NLS_FormatsCS_debug =
+static RTL_CRITICAL_SECTION NLS_FormatsCS;
+static RTL_CRITICAL_SECTION_DEBUG NLS_FormatsCS_debug =
 {
     0, 0, &NLS_FormatsCS,
     { &NLS_FormatsCS_debug.ProcessLocksList,
       &NLS_FormatsCS_debug.ProcessLocksList },
       0, 0, { 0, (DWORD)(__FILE__ ": NLS_Formats") }
 };
-static CRITICAL_SECTION NLS_FormatsCS = { &NLS_FormatsCS_debug, -1, 0, 0, 0, 0 };
+static RTL_CRITICAL_SECTION NLS_FormatsCS = { &NLS_FormatsCS_debug, -1, 0, 0, 0, 0 };
 
 /**************************************************************************
  * NLS_GetLocaleNumber <internal>

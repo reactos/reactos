@@ -1,4 +1,4 @@
-/* $Id: api.h,v 1.7 2004/11/14 18:47:10 hbirr Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

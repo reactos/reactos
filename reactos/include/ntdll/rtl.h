@@ -99,8 +99,8 @@ typedef struct _CRITICAL_SECTION_DEBUG
   LIST_ENTRY ProcessLocksList;
   ULONG EntryCount;
   ULONG ContentionCount;
-  ULONG Depth;
-  PVOID Spare[ 2 ];
+  PVOID OwnerBackTrace[2];
+  PVOID Spare[2];
 } CRITICAL_SECTION_DEBUG, *PCRITICAL_SECTION_DEBUG;
 
 
@@ -114,9 +114,13 @@ typedef struct _CRITICAL_SECTION
   ULONG_PTR SpinCount;
 } CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
 
+#define RTL_CRITSECT_TYPE 0
+
 typedef CRITICAL_SECTION RTL_CRITICAL_SECTION;
 typedef PCRITICAL_SECTION PRTL_CRITICAL_SECTION;
 typedef LPCRITICAL_SECTION LPRTL_CRITICAL_SECTION;
+typedef CRITICAL_SECTION_DEBUG RTL_CRITICAL_SECTION_DEBUG;
+typedef PCRITICAL_SECTION_DEBUG PRTL_CRITICAL_SECTION_DEBUG;
 
 #endif /* !__USE_W32API */
 
@@ -166,6 +170,29 @@ typedef struct _RTL_HANDLE_TABLE
 #define PDI_HEAP_BLOCKS 0x10	/* The heap blocks */
 #define PDI_LOCKS       0x20	/* The locks created by the process */
 
+NTSTATUS
+STDCALL
+RtlpWaitForCriticalSection(
+    PRTL_CRITICAL_SECTION CriticalSection
+);
+
+VOID
+STDCALL
+RtlpUnWaitCriticalSection(
+    PRTL_CRITICAL_SECTION CriticalSection
+);
+
+VOID
+STDCALL
+RtlpCreateCriticalSectionSem(
+    PRTL_CRITICAL_SECTION CriticalSection
+);
+
+VOID
+STDCALL
+RtlpInitDeferedCriticalSection(
+    VOID
+);
 
 NTSTATUS STDCALL
 RtlAddAccessAllowedAceEx (IN OUT PACL Acl,
@@ -191,19 +218,19 @@ RtlAddAuditAccessAceEx(IN OUT PACL Acl,
                        IN BOOLEAN Failure);
 
 NTSTATUS STDCALL
-RtlDeleteCriticalSection (PCRITICAL_SECTION CriticalSection);
+RtlDeleteCriticalSection (PRTL_CRITICAL_SECTION CriticalSection);
 
 WCHAR STDCALL
 RtlDowncaseUnicodeChar(IN WCHAR Source);
 
 NTSTATUS STDCALL
-RtlEnterCriticalSection (PCRITICAL_SECTION CriticalSection);
+RtlEnterCriticalSection (PRTL_CRITICAL_SECTION CriticalSection);
 
 NTSTATUS STDCALL
-RtlInitializeCriticalSection (PCRITICAL_SECTION CriticalSection);
+RtlInitializeCriticalSection (PRTL_CRITICAL_SECTION CriticalSection);
 
 NTSTATUS STDCALL
-RtlInitializeCriticalSectionAndSpinCount (PCRITICAL_SECTION CriticalSection,
+RtlInitializeCriticalSectionAndSpinCount (PRTL_CRITICAL_SECTION CriticalSection,
 					  ULONG SpinCount);
 
 NTSTATUS STDCALL
@@ -212,10 +239,10 @@ RtlInt64ToUnicodeString (IN ULONGLONG Value,
 			 PUNICODE_STRING String);
 
 NTSTATUS STDCALL
-RtlLeaveCriticalSection (PCRITICAL_SECTION CriticalSection);
+RtlLeaveCriticalSection (PRTL_CRITICAL_SECTION CriticalSection);
 
 BOOLEAN STDCALL
-RtlTryEnterCriticalSection (PCRITICAL_SECTION CriticalSection);
+RtlTryEnterCriticalSection (PRTL_CRITICAL_SECTION CriticalSection);
 
 DWORD STDCALL
 RtlCompactHeap (

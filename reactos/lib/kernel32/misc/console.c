@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.89 2004/12/24 17:45:57 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -21,7 +21,7 @@
 
 extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
 extern __declspec(noreturn) VOID CALLBACK ConsoleControlDispatcher(DWORD CodeAndFlag);
-extern CRITICAL_SECTION ConsoleLock;
+extern RTL_CRITICAL_SECTION ConsoleLock;
 extern BOOL WINAPI IsDebuggerPresent(VOID);
 
 

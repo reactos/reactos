@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.26 2004/12/25 11:22:37 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

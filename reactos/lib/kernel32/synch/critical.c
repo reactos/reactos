@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.16 2004/01/29 23:41:36 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -26,7 +26,7 @@ InitializeCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
    NTSTATUS Status;
 
-   Status = RtlInitializeCriticalSection(lpCriticalSection);
+   Status = RtlInitializeCriticalSection((PRTL_CRITICAL_SECTION)lpCriticalSection);
    if (!NT_SUCCESS(Status))
      {
 	RtlRaiseStatus(Status);
@@ -45,7 +45,7 @@ InitializeCriticalSectionAndSpinCount(
 {
     NTSTATUS Status;
     
-    Status = RtlInitializeCriticalSectionAndSpinCount(lpCriticalSection, dwSpinCount);
+    Status = RtlInitializeCriticalSectionAndSpinCount((PRTL_CRITICAL_SECTION)lpCriticalSection, dwSpinCount);
     if (Status)
       {
          RtlRaiseStatus(Status);

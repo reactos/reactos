@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.67 2004/12/26 23:09:51 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -24,7 +24,7 @@
 
 /* GLOBALS ******************************************************************/
 
-static CRITICAL_SECTION HandleTableCS;
+static RTL_CRITICAL_SECTION HandleTableCS;
 static HANDLE DefaultHandleTable[MAX_DEFAULT_HANDLES];
 static HANDLE ProcessHeap;
 

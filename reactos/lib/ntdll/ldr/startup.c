@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.60 2004/12/15 03:00:33 royce Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -259,6 +259,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
        /*  If MZ header exists  */
        PEDosHeader = (PIMAGE_DOS_HEADER) ImageBase;
        DPRINT("PEDosHeader %x\n", PEDosHeader);
+
        if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC ||
            PEDosHeader->e_lfanew == 0L ||
            *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_PE_MAGIC)
@@ -279,6 +280,9 @@ __true_LdrInitializeThunk (ULONG Unknown1,
 
        NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + PEDosHeader->e_lfanew);
 
+       /* Initialize Critical Section Data */
+       RtlpInitDeferedCriticalSection();
+       
        /* create process heap */
        RtlInitializeHeapManager();
        Peb->ProcessHeap = RtlCreateHeap(HEAP_GROWABLE,
@@ -292,7 +296,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
            DPRINT1("Failed to create process heap\n");
            ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
          }
-
+      
        /* initalize peb lock support */
        RtlInitializeCriticalSection (&PebLock);
        Peb->FastPebLock = &PebLock;
@@ -311,7 +315,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
          RtlAllocateHeap(RtlGetProcessHeap(),
                          0,
                          sizeof(PVOID) * (USER32_CALLBACK_MAXIMUM + 1));
-
+       
        /* initalize loader lock */
        RtlInitializeCriticalSection (&LoaderLock);
        Peb->LoaderLock = &LoaderLock;

@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.19 2004/12/25 11:22:37 navaraf Exp $
+/* $Id$
  *
  * reactos/subsys/csrss/win32csr/conio.c
  *
@@ -139,7 +139,7 @@ CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console,
     {
       return STATUS_INSUFFICIENT_RESOURCES;
     }
-  RtlInitializeCriticalSection(&Buffer->Header.Lock);
+  InitializeCriticalSection(&Buffer->Header.Lock);
   ConioInitScreenBuffer(Console, Buffer);
   /* initialize buffer to be empty with default attributes */
   for (Buffer->CurrentY = 0 ; Buffer->CurrentY < Buffer->MaxY; Buffer->CurrentY++)
@@ -193,7 +193,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
       return STATUS_UNSUCCESSFUL;
     }
   Console->PrivateData = NULL;
-  RtlInitializeCriticalSection(&Console->Header.Lock);
+  InitializeCriticalSection(&Console->Header.Lock);
   GuiMode = DtbgIsDesktopVisible();
   if (! GuiMode)
     {
@@ -210,7 +210,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
       if (! NT_SUCCESS(Status))
         {
           RtlFreeUnicodeString(&Console->Title);
-	  RtlDeleteCriticalSection(&Console->Header.Lock);
+	  DeleteCriticalSection(&Console->Header.Lock);
           CloseHandle(Console->ActiveEvent);
           return Status;
         }
@@ -221,7 +221,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
     {
       ConioCleanupConsole(Console);
       RtlFreeUnicodeString(&Console->Title);
-      RtlDeleteCriticalSection(&Console->Header.Lock);
+      DeleteCriticalSection(&Console->Header.Lock);
       CloseHandle(Console->ActiveEvent);
       return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -230,7 +230,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
     {
       ConioCleanupConsole(Console);
       RtlFreeUnicodeString(&Console->Title);
-      RtlDeleteCriticalSection(&Console->Header.Lock);
+      DeleteCriticalSection(&Console->Header.Lock);
       CloseHandle(Console->ActiveEvent);
       HeapFree(Win32CsrApiHeap, 0, NewBuffer);
       return Status;
@@ -956,7 +956,7 @@ VOID STDCALL
 ConioDeleteScreenBuffer(Object_t *Object)
 {
   PCSRSS_SCREEN_BUFFER Buffer = (PCSRSS_SCREEN_BUFFER) Object;
-  RtlDeleteCriticalSection(&Buffer->Header.Lock);
+  DeleteCriticalSection(&Buffer->Header.Lock);
   HeapFree(Win32CsrApiHeap, 0, Buffer->Buffer);
   HeapFree(Win32CsrApiHeap, 0, Buffer);
 }
@@ -998,7 +998,7 @@ ConioDeleteConsole(Object_t *Object)
   ConioCleanupConsole(Console);
 
   CloseHandle(Console->ActiveEvent);
-  RtlDeleteCriticalSection(&Console->Header.Lock);
+  DeleteCriticalSection(&Console->Header.Lock);
   RtlFreeUnicodeString(&Console->Title);
   HeapFree(Win32CsrApiHeap, 0, Console);
 }

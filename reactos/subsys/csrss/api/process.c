@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.39 2004/12/25 22:58:59 gvg Exp $
+/* $Id$
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -25,7 +25,7 @@
 
 static ULONG NrProcess;
 static PCSRSS_PROCESS_DATA ProcessData[256];
-CRITICAL_SECTION ProcessDataLock;
+RTL_CRITICAL_SECTION ProcessDataLock;
 
 /* FUNCTIONS *****************************************************************/
 
