@@ -20,10 +20,7 @@
 #include <defines.h>
 #include "resource.h"
 
-#ifdef _WIN32
 LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
-#pragma code_page(850)
-#endif //_WIN32
 
 IDD_SECPAGE DIALOGEX 0, 0, 227, 215
 STYLE WS_CHILD | WS_VISIBLE | WS_CAPTION
