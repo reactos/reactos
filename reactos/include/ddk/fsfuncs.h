@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.22 2003/12/17 20:27:06 ekohl Exp $ */
+/* $Id: fsfuncs.h,v 1.23 2004/06/23 00:41:55 ion Exp $ */
 #define FlagOn(x,f) ((x) & (f))
 
 #include <ntos/fstypes.h>
@@ -11,6 +11,12 @@ STDCALL
 FsRtlFreeFileLock(
 	IN PFILE_LOCK FileLock
 	);
+
+STDCALL
+VOID
+FsRtlAcquireFileExclusive (
+    IN PFILE_OBJECT FileObject
+    );
 
 PFILE_LOCK
 STDCALL
@@ -257,6 +263,19 @@ FsRtlGetNextMcbEntry (IN PMCB     Mcb,
 		      OUT PULONG  SectorCount);
 #define FsRtlEnterFileSystem    KeEnterCriticalRegion
 #define FsRtlExitFileSystem     KeLeaveCriticalRegion
+
+VOID
+FsRtlIncrementCcFastReadNotPossible( VOID );
+
+VOID
+FsRtlIncrementCcFastReadWait( VOID );
+
+VOID
+FsRtlIncrementCcFastReadNoWait( VOID );
+
+VOID
+FsRtlIncrementCcFastReadResourceMiss( VOID );
+
 VOID
 STDCALL
 FsRtlInitializeFileLock (
@@ -276,11 +295,27 @@ FsRtlInitializeMcb (IN PMCB         Mcb,
 VOID STDCALL
 FsRtlInitializeOplock(IN OUT POPLOCK Oplock);
 
+
 VOID
 STDCALL
 FsRtlInitializeTunnelCache (
     IN PTUNNEL Cache
     );
+
+STDCALL
+NTSTATUS
+FsRtlInsertPerFileObjectContext (
+    IN PFSRTL_ADVANCED_FCB_HEADER PerFileObjectContext,
+    IN PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/ Ptr
+    );
+
+STDCALL
+NTSTATUS
+FsRtlInsertPerStreamContext (
+    IN PFSRTL_ADVANCED_FCB_HEADER PerStreamContext,
+    IN PFSRTL_PER_STREAM_CONTEXT Ptr
+    );
+
 BOOLEAN
 STDCALL
 FsRtlIsDbcsInExpression (
@@ -317,6 +352,11 @@ FsRtlIsNameInExpression (
 BOOLEAN STDCALL
 FsRtlIsNtstatusExpected(IN NTSTATUS NtStatus);
 
+ULONG
+FsRtlIsPagingFile (
+    IN PFILE_OBJECT FileObject
+    );
+
 BOOLEAN STDCALL
 FsRtlIsTotalDeviceFailure(IN NTSTATUS NtStatus);
 
@@ -339,6 +379,14 @@ BOOLEAN STDCALL
 FsRtlLookupLastLargeMcbEntry(IN PLARGE_MCB Mcb,
 			     OUT PLONGLONG Vbn,
 			     OUT PLONGLONG Lbn);
+STDCALL
+BOOLEAN
+FsRtlLookupLastLargeMcbEntryAndIndex (
+    IN PLARGE_MCB OpaqueMcb,
+    OUT PLONGLONG LargeVbn,
+    OUT PLONGLONG LargeLbn,
+    OUT PULONG Index
+    );
 
 BOOLEAN STDCALL
 FsRtlLookupLastMcbEntry (IN PMCB     Mcb,
@@ -350,6 +398,21 @@ FsRtlLookupMcbEntry (IN PMCB     Mcb,
 		     OUT PLBN    Lbn,
 		     OUT PULONG  SectorCount OPTIONAL,
 		     OUT PULONG  Index);
+STDCALL
+PFSRTL_PER_STREAM_CONTEXT
+FsRtlLookupPerStreamContextInternal (
+    IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
+    IN PVOID OwnerId OPTIONAL,
+    IN PVOID InstanceId OPTIONAL
+    );
+
+STDCALL
+PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/
+FsRtlLookupPerFileObjectContext (
+    IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
+    IN PVOID OwnerId OPTIONAL,
+    IN PVOID InstanceId OPTIONAL
+    );
 
 BOOLEAN
 STDCALL
@@ -424,6 +487,36 @@ BOOLEAN (*PCHECK_FOR_TRAVERSE_ACCESS) (
 	IN	PVOID				TargetContext,
 	IN	PSECURITY_SUBJECT_CONTEXT	SubjectContext
 	);
+STDCALL
+VOID
+FsRtlNotifyFilterChangeDirectory (
+    IN PNOTIFY_SYNC NotifySync,
+    IN PLIST_ENTRY NotifyList,
+    IN PVOID FsContext,
+    IN PSTRING FullDirectoryName,
+    IN BOOLEAN WatchTree,
+    IN BOOLEAN IgnoreBuffer,
+    IN ULONG CompletionFilter,
+    IN PIRP NotifyIrp,
+    IN PCHECK_FOR_TRAVERSE_ACCESS TraverseCallback OPTIONAL,
+    IN PSECURITY_SUBJECT_CONTEXT SubjectContext OPTIONAL,
+    IN PFILTER_REPORT_CHANGE FilterCallback OPTIONAL
+    );
+
+STDCALL
+VOID
+FsRtlNotifyFilterReportChange (
+    IN PNOTIFY_SYNC NotifySync,
+    IN PLIST_ENTRY NotifyList,
+    IN PSTRING FullTargetName,
+    IN USHORT TargetNameOffset,
+    IN PSTRING StreamName OPTIONAL,
+    IN PSTRING NormalizedParentName OPTIONAL,
+    IN ULONG FilterMatch,
+    IN ULONG Action,
+    IN PVOID TargetContext,
+    IN PVOID FilterContext
+    );
 VOID
 STDCALL
 FsRtlNotifyFullChangeDirectory (
@@ -551,10 +644,23 @@ FsRtlProcessFileLock (
     IN PVOID        Context OPTIONAL
     );
 
+STDCALL
+NTSTATUS
+FsRtlRegisterFileSystemFilterCallbacks (
+    IN struct _DRIVER_OBJECT *FilterDriverObject,
+    IN PFS_FILTER_CALLBACKS Callbacks
+    );
+
 NTSTATUS STDCALL
 FsRtlRegisterUncProvider(IN OUT PHANDLE Handle,
 			 IN PUNICODE_STRING RedirectorDeviceName,
 			 IN BOOLEAN MailslotsSupported);
+
+STDCALL
+VOID
+FsRtlReleaseFile (
+    IN PFILE_OBJECT FileObject
+    );
 
 VOID STDCALL
 FsRtlRemoveLargeMcbEntry(IN PLARGE_MCB Mcb,
@@ -565,6 +671,29 @@ VOID STDCALL
 FsRtlRemoveMcbEntry (IN PMCB     Mcb,
 		     IN VBN      Vbn,
 		     IN ULONG    SectorCount);
+
+STDCALL
+PFSRTL_PER_STREAM_CONTEXT
+FsRtlRemovePerStreamContext (
+    IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
+    IN PVOID OwnerId OPTIONAL,
+    IN PVOID InstanceId OPTIONAL
+    );
+
+STDCALL
+PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/
+FsRtlRemovePerFileObjectContext (
+   IN PFSRTL_ADVANCED_FCB_HEADER PerFileObjectContext,
+    IN PVOID OwnerId OPTIONAL,
+    IN PVOID InstanceId OPTIONAL
+    );
+
+STDCALL
+VOID
+FsRtlResetLargeMcb (
+    IN PLARGE_MCB Mcb,
+    IN BOOLEAN SelfSynchronized
+    );
 
 BOOLEAN STDCALL
 FsRtlSplitLargeMcb(IN PLARGE_MCB Mcb,
@@ -578,6 +707,12 @@ FsRtlSyncVolumes (
 	DWORD	Unknown1,
 	DWORD	Unknown2
 	);
+
+STDCALL
+VOID
+FsRtlTeardownPerStreamContexts (
+  IN PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader
+  );
 
 VOID STDCALL
 FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,

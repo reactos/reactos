@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSTYPES_H
 #define __INCLUDE_DDK_FSTYPES_H
-/* $Id: fstypes.h,v 1.15 2004/03/18 16:19:25 weiden Exp $ */
+/* $Id: fstypes.h,v 1.16 2004/06/23 00:41:55 ion Exp $ */
 
 #ifndef __USE_W32API
 
@@ -35,6 +35,90 @@ typedef VOID (*PUNLOCK_ROUTINE) (
     IN PFILE_LOCK_INFO  FileLockInfo
 );
 
+typedef
+BOOLEAN (*PFILTER_REPORT_CHANGE) (
+            IN PVOID NotifyContext,
+            IN PVOID FilterContext
+            );
+
+typedef enum _FS_FILTER_SECTION_SYNC_TYPE {
+    SyncTypeOther = 0,
+    SyncTypeCreateSection
+} FS_FILTER_SECTION_SYNC_TYPE, *PFS_FILTER_SECTION_SYNC_TYPE;
+
+typedef union _FS_FILTER_PARAMETERS {
+
+    /*  AcquireForModifiedPageWriter */
+    struct {
+        PLARGE_INTEGER EndingOffset;
+    } AcquireForModifiedPageWriter;
+
+    /*  ReleaseForModifiedPageWriter */
+    struct {
+        PERESOURCE ResourceToRelease;
+    } ReleaseForModifiedPageWriter;
+
+    /*  AcquireForSectionSynchronization */
+    struct {
+        FS_FILTER_SECTION_SYNC_TYPE SyncType;
+        ULONG PageProtection;
+    } AcquireForSectionSynchronization;
+
+    /*  Other */
+    struct {
+        PVOID Argument1;
+        PVOID Argument2;
+        PVOID Argument3;
+        PVOID Argument4;
+        PVOID Argument5;
+    } Others;
+
+} FS_FILTER_PARAMETERS, *PFS_FILTER_PARAMETERS;
+
+typedef struct _FS_FILTER_CALLBACK_DATA {
+
+    ULONG SizeOfFsFilterCallbackData;
+    UCHAR Operation;
+    UCHAR Reserved;
+    struct _DEVICE_OBJECT *DeviceObject;
+    struct _FILE_OBJECT *FileObject;
+    FS_FILTER_PARAMETERS Parameters;
+
+} FS_FILTER_CALLBACK_DATA, *PFS_FILTER_CALLBACK_DATA;
+
+typedef
+NTSTATUS
+(*PFS_FILTER_CALLBACK) (
+    IN PFS_FILTER_CALLBACK_DATA Data,
+    OUT PVOID *CompletionContext
+    );
+
+typedef
+VOID
+(*PFS_FILTER_COMPLETION_CALLBACK) (
+    IN PFS_FILTER_CALLBACK_DATA Data,
+    IN NTSTATUS OperationStatus,
+    IN PVOID CompletionContext
+    );
+
+typedef struct _FS_FILTER_CALLBACKS {
+
+    ULONG SizeOfFsFilterCallbacks;
+    ULONG Reserved;
+    PFS_FILTER_CALLBACK PreAcquireForSectionSynchronization;
+    PFS_FILTER_COMPLETION_CALLBACK PostAcquireForSectionSynchronization;
+    PFS_FILTER_CALLBACK PreReleaseForSectionSynchronization;
+    PFS_FILTER_COMPLETION_CALLBACK PostReleaseForSectionSynchronization;
+    PFS_FILTER_CALLBACK PreAcquireForCcFlush;
+    PFS_FILTER_COMPLETION_CALLBACK PostAcquireForCcFlush;
+    PFS_FILTER_CALLBACK PreReleaseForCcFlush;
+    PFS_FILTER_COMPLETION_CALLBACK PostReleaseForCcFlush;
+    PFS_FILTER_CALLBACK PreAcquireForModifiedPageWriter;
+    PFS_FILTER_COMPLETION_CALLBACK PostAcquireForModifiedPageWriter;
+    PFS_FILTER_CALLBACK PreReleaseForModifiedPageWriter;
+    PFS_FILTER_COMPLETION_CALLBACK PostReleaseForModifiedPageWriter;
+
+} FS_FILTER_CALLBACKS, *PFS_FILTER_CALLBACKS;
 
 typedef struct _FILE_LOCK {
     PCOMPLETE_LOCK_IRP_ROUTINE  CompleteLockIrpRoutine;
@@ -70,6 +154,21 @@ typedef struct _NOTIFY_SYNC
 	
 } NOTIFY_SYNC, * PNOTIFY_SYNC;
 
+
+typedef struct _FSRTL_ADVANCED_FCB_HEADER {
+    FSRTL_COMMON_FCB_HEADER Header;
+    PFAST_MUTEX FastMutex;
+    LIST_ENTRY FilterContexts;
+} FSRTL_ADVANCED_FCB_HEADER;
+
+typedef FSRTL_ADVANCED_FCB_HEADER *PFSRTL_ADVANCED_FCB_HEADER;
+
+typedef struct _FSRTL_PER_STREAM_CONTEXT {
+    LIST_ENTRY Links;
+    PVOID OwnerId;
+    PVOID InstanceId;
+    PFREE_FUNCTION FreeCallback;
+} FSRTL_PER_STREAM_CONTEXT, *PFSRTL_PER_STREAM_CONTEXT;
 
 typedef VOID
 (*POPLOCK_WAIT_COMPLETE_ROUTINE)(PVOID Context,
