@@ -1,4 +1,5 @@
 #include <msvcrt/internal/tls.h>
+#include <msvcrt/assert.h>
 
 /*
  * This is an MSVCRT internal function to return the lasttoken
@@ -9,6 +10,6 @@
 char** _lasttoken()
 {
 	PTHREADDATA ptd = GetThreadData();
-	_assert(ptd);
+	assert(ptd);
 	return &(ptd->lasttoken);
 }
