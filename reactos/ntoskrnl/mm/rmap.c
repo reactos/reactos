@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.12 2002/09/08 10:23:36 chorns Exp $
+/* $Id: rmap.c,v 1.13 2002/11/05 20:48:08 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -44,6 +44,8 @@ typedef struct _MM_RMAP_ENTRY
   PEPROCESS Process;
   PVOID Address;
 } MM_RMAP_ENTRY, *PMM_RMAP_ENTRY;
+
+#define TAG_RMAP    TAG('R', 'M', 'A', 'P')
 
 /* GLOBALS ******************************************************************/
 
@@ -353,7 +355,7 @@ MmInsertRmap(PHYSICAL_ADDRESS PhysicalAddress, PEPROCESS Process,
 
   Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
-  new_entry = ExAllocatePool(NonPagedPool, sizeof(MM_RMAP_ENTRY));
+  new_entry = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_RMAP_ENTRY), TAG_RMAP);
   if (new_entry == NULL)
     {
       KeBugCheck(0);
