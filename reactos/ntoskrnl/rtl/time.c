@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.13 2002/09/27 15:23:03 hbirr Exp $
+/* $Id: time.c,v 1.14 2002/09/30 20:54:59 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,7 +25,7 @@
 #define SECSPERMIN         60
 #define MINSPERHOUR        60
 #define HOURSPERDAY        24
-#define EPOCHWEEKDAY       0
+#define EPOCHWEEKDAY       1
 #define DAYSPERWEEK        7
 #define EPOCHYEAR          1601
 #define DAYSPERNORMALYEAR  365
