@@ -21,8 +21,14 @@ NTSTATUS STDCALL NtSystemDebugControl(VOID)
    UNIMPLEMENTED;
 }
 
-VOID DbgBreakPoint(VOID)
+VOID STDCALL DbgBreakPoint(VOID)
 {
    __asm__("int $3\n\t");
 }
 
+VOID STDCALL DbgBreakPointWithStatus(ULONG Status)
+{
+   __asm__("mov %0, %%eax\n\t"
+           "int $3\n\t"
+           ::"m"(Status));
+}

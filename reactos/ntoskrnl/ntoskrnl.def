@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.48 2000/03/01 22:52:27 ea Exp $
+; $Id: ntoskrnl.def,v 1.49 2000/03/03 00:43:28 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -10,6 +10,8 @@ CcInitializeFileCache@8
 CcRequestCachePage@20
 CcReleaseCachePage@12
 CcReleaseFileCache@8
+DbgBreakPoint@0
+DbgBreakPointWithStatus@4
 DbgPrint
 ExAcquireResourceExclusive
 ExAcquireResourceExclusiveLite
@@ -66,7 +68,9 @@ ExIsResourceAcquiredSharedLite
 ExLocalTimeToSystemTime
 ExQueryDepthSListHead
 ExQueueWorkItem
-ExRaiseStatus
+ExRaiseAccessViolation@0
+ExRaiseDatatypeMisalignment@0
+ExRaiseStatus@4
 ExReinitializeResourceLite
 ExReleaseFastMutexUnsafe
 ExReleaseResource
@@ -167,6 +171,7 @@ KeBugCheck
 KeBugCheckEx
 KeClearEvent
 KeDelayExecutionThread@12
+KeEnterKernelDebugger@0
 KeFlushIoBuffers
 KeGetPreviousMode
 KeInitializeDpc
@@ -183,8 +188,11 @@ KeSynchronizeExecution
 KeWaitForSingleObject
 MmGetSystemAddressForMdl
 MmMapIoSpace
-NlsMbCodePageTag
-NlsMbOemCodePageTag
+NlsAnsiCodePage DATA
+NlsLeadByteInfo DATA
+NlsMbCodePageTag DATA
+NlsMbOemCodePageTag DATA
+NlsOemLeadByteInfo DATA
 NtAddAtom@8
 NtAdjustPrivilegesToken@24
 NtAllocateLocallyUniqueId@4
@@ -243,7 +251,7 @@ READ_REGISTER_USHORT
 READ_REGISTER_BUFFER_UCHAR
 READ_REGISTER_BUFFER_ULONG
 READ_REGISTER_BUFFER_USHORT
-;RtlAbsoluteToSelfRelativeSD
+RtlAbsoluteToSelfRelativeSD@12
 ;RtlAddAccessAllowedAce
 ;RtlAddAce
 ;RtlAddAtomToAtomTable
@@ -264,8 +272,8 @@ RtlAppendUnicodeToString@8
 ;RtlCaptureStackBackTrace
 RtlCharToInteger@12
 ;RtlCheckRegistryKey
-;RtlClearAllBits
-;RtlClearBits
+RtlClearAllBits@4
+RtlClearBits@12
 RtlCompareMemory@12
 RtlCompareMemoryUlong@12
 RtlCompareString@12
@@ -283,7 +291,7 @@ RtlCopyUnicodeString@8
 ;RtlCreateAtomTable
 ;RtlCreateHeap
 ;RtlCreateRegistryKey
-;RtlCreateSecurityDescriptor
+RtlCreateSecurityDescriptor@8
 RtlCreateUnicodeString@8
 ;RtlCustomCPToUnicodeN
 ;RtlDecompressBuffer
@@ -331,17 +339,17 @@ RtlFreeUnicodeString@4
 ;RtlGenerate8dot3Name
 ;RtlGetCallersAddress
 ;RtlGetCompressionWorkSpaceSize
-;RtlGetDaclSecurityDescriptor
+RtlGetDaclSecurityDescriptor@16
 RtlGetDefaultCodePage@8
 ;RtlGetElementGenericTable
-;RtlGetGroupSecurityDescriptor
-;RtlGetOwnerSecurityDescriptor
-;RtlImageNtHeader@4
+RtlGetGroupSecurityDescriptor@12
+RtlGetOwnerSecurityDescriptor@12
+;RtlImageNtHeader
 RtlInitAnsiString@8
 ;RtlInitCodePageTable
 RtlInitString@8
 RtlInitUnicodeString@8
-;RtlInitializeBitmap
+RtlInitializeBitMap@12
 ;RtlInitializeGenericTable
 RtlInitializeSid@12
 ;RtlInitializeUnicodePrefix
@@ -358,7 +366,7 @@ RtlLargeIntegerShiftLeft@12
 RtlLargeIntegerShiftRight@12
 RtlLargeIntegerSubtract@16
 RtlLengthRequiredSid@4
-;RtlLengthRequiredSecurityDescriptor
+RtlLengthSecurityDescriptor@4
 RtlLengthSid@4
 ;RtlLookupAtomInAtomTable
 ;RtlLookupElementGenericTable
@@ -372,14 +380,14 @@ RtlMultiByteToUnicodeSize@12
 ;RtlNumberGenericTableElements
 ;RtlNumberOfClearBits
 ;RtlNumberOfSetBits
-;RtlOemStringToCountedUnicodeString
+RtlOemStringToCountedUnicodeString@12
 RtlOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString@12
 RtlOemToUnicodeN@20
 ;RtlPinAtomInAtomTable
 ;RtlPrefixString
 ;RtlPrefixUnicodeString
-;RtlQueryAtominAtomTable
+;RtlQueryAtomInAtomTable
 ;RtlQueryRegistryValues
 ;RtlQueryTimeZoneInformation
 ;RtlRaiseException
@@ -388,11 +396,11 @@ RtlOemToUnicodeN@20
 ;RtlReserveChunk
 RtlSecondsSince1970ToTime@8
 RtlSecondsSince1980ToTime@8
-;RtlSetAllBits
-;RtlSetBits
-;RtlSetDaclSecurityDescriptor
-;RtlSetGroupSecurityDescriptor
-;RtlSetOwnerSecurityDescriptor
+RtlSetAllBits@4
+RtlSetBits@12
+RtlSetDaclSecurityDescriptor@16
+RtlSetGroupSecurityDescriptor@12
+RtlSetOwnerSecurityDescriptor@12
 ;RtlSetSaclSecurityDescriptor
 ;RtlSetTimeZoneInformation
 ;RtlSplay
@@ -404,7 +412,7 @@ RtlTimeToSecondsSince1980@8
 RtlTimeToTimeFields@8
 RtlUnicodeStringToAnsiSize@4
 RtlUnicodeStringToAnsiString@12
-;RtlUnicodeStringToCountedOemString
+RtlUnicodeStringToCountedOemString@12
 RtlUnicodeStringToInteger@12
 RtlUnicodeStringToOemSize@4
 RtlUnicodeStringToOemString@12
@@ -416,14 +424,14 @@ RtlUnicodeToOemN@20
 RtlUpcaseUnicodeChar@4
 RtlUpcaseUnicodeString@12
 RtlUpcaseUnicodeStringToAnsiString@12
-;RtlUpcaseUnicodeStringToCountedOemString
+RtlUpcaseUnicodeStringToCountedOemString@12
 RtlUpcaseUnicodeStringToOemString@12
 ;RtlUpcaseUnicodeToCustomCPN
 RtlUpcaseUnicodeToMultiByteN@20
 RtlUpcaseUnicodeToOemN@20
 RtlUpperChar@4
 RtlUpperString@8
-;RtlValidSecurityDescriptor
+RtlValidSecurityDescriptor@4
 RtlValidSid@4
 ;RtlWriteRegistryValue
 ;RtlZeroHeap
@@ -600,7 +608,7 @@ wctomb
 ; exports from hal.dll
 ;
 ;
-;ExAcquireFastMutex
+ExAcquireFastMutex
 ExReleaseFastMutex
 ExTryToAcquireFastMutex
 HalAcquireDisplayOwnership
@@ -624,11 +632,11 @@ HalDisplayString
 HalGetBusDataByOffset
 ;HalGetEnvironmentVariable
 HalGetInterruptVector
-;HalHandleNMI
+HalHandleNMI@4
 HalInitSystem
 ;HalInitializeProcessor
 HalMakeBeep
-;HalProcessorIdle
+HalProcessorIdle@0
 HalQueryDisplayParameters
 HalQueryRealTimeClock
 ;HalReadDmaCounter

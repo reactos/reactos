@@ -1,4 +1,4 @@
-/* $Id: brkpoint.c,v 1.1 1999/12/29 17:12:28 ekohl Exp $
+/* $Id: brkpoint.c,v 1.2 2000/03/03 00:39:38 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,12 +16,12 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID DbgBreakPoint(VOID)
+VOID STDCALL DbgBreakPoint(VOID)
 {
    __asm__("int $3\n\t");
 }
 
-VOID DbgUserBreakPoint(VOID)
+VOID STDCALL DbgUserBreakPoint(VOID)
 {
    __asm__("int $3\n\t");
 }

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.35 2000/03/01 22:52:27 ea Exp $
+; $Id: ntoskrnl.edf,v 1.36 2000/03/03 00:43:29 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -10,6 +10,8 @@ CcInitializeFileCache=CcInitializeFileCache@8
 CcRequestCachePage=CcRequestCachePage@20
 CcReleaseCachePage=CcReleaseCachePage@12
 CcReleaseFileCache=CcReleaseFileCache@8
+DbgBreakPoint=DbgBreakPoint@0
+DbgBreakPointWithStatus=DbgBreakPointWithStatus@4
 DbgPrint
 ExAcquireResourceExclusive
 ExAcquireResourceExclusiveLite
@@ -66,7 +68,9 @@ ExIsResourceAcquiredSharedLite
 ExLocalTimeToSystemTime
 ExQueryDepthSListHead
 ExQueueWorkItem
-ExRaiseStatus
+ExRaiseAccessViolation=ExRaiseAccessViolation@0
+ExRaiseDatatypeMisalignment=ExRaiseDatatypeMisalignment@0
+ExRaiseStatus=ExRaiseStatus@4
 ExReinitializeResourceLite
 ExReleaseFastMutexUnsafe
 ExReleaseResource
@@ -167,6 +171,7 @@ KeBugCheck
 KeBugCheckEx
 KeClearEvent
 KeDelayExecutionThread=KeDelayExecutionThread@12
+KeEnterKernelDebugger=KeEnterKernelDebugger@0
 KeFlushIoBuffers
 KeGetPreviousMode
 KeInitializeDpc
@@ -183,8 +188,11 @@ KeSynchronizeExecution
 KeWaitForSingleObject
 MmGetSystemAddressForMdl
 MmMapIoSpace
-NlsMbCodePageTag
-NlsMbOemCodePageTag
+NlsAnsiCodePage DATA
+NlsLeadByteInfo DATA
+NlsMbCodePageTag DATA
+NlsMbOemCodePageTag DATA
+NlsOemLeadByteInfo DATA
 NtAddAtom=NtAddAtom@8
 NtAdjustPrivilegesToken=NtAdjustPrivilegesToken@24
 NtAllocateLocallyUniqueId=NtAllocateLocallyUniqueId@4
@@ -243,6 +251,7 @@ READ_REGISTER_USHORT
 READ_REGISTER_BUFFER_UCHAR
 READ_REGISTER_BUFFER_ULONG
 READ_REGISTER_BUFFER_USHORT
+RtlAbsoluteToSelfRelativeSD=RtlAbsoluteToSelfRelativeSD@12
 RtlAnsiCharToUnicodeChar=RtlAnsiCharToUnicodeChar@4
 RtlAnsiStringToUnicodeSize=RtlAnsiStringToUnicodeSize@4
 RtlAnsiStringToUnicodeString=RtlAnsiStringToUnicodeString@12
@@ -251,6 +260,8 @@ RtlAppendStringToString=RtlAppendStringToString@8
 RtlAppendUnicodeStringToString=RtlAppendUnicodeStringToString@8
 RtlAppendUnicodeToString=RtlAppendUnicodeToString@8
 RtlCharToInteger=RtlCharToInteger@12
+RtlClearAllBits=RtlClearAllBits@4
+RtlClearBits=RtlClearBits@12
 RtlCompareMemory=RtlCompareMemory@12
 RtlCompareMemoryUlong=RtlCompareMemoryUlong@12
 RtlCompareString=RtlCompareString@12
@@ -261,6 +272,7 @@ RtlCopyLuid=RtlCopyLuid@8
 RtlCopySid=RtlCopySid@12
 RtlCopyString=RtlCopyString@8
 RtlCopyUnicodeString=RtlCopyUnicodeString@8
+RtlCreateSecurityDescriptor=RtlCreateSecurityDescriptor@8
 RtlCreateUnicodeString=RtlCreateUnicodeString@8
 RtlDowncaseUnicodeString=RtlDowncaseUnicodeString@12
 RtlEnlargedIntegerMultiply=RtlEnlargedIntegerMultiply@8
@@ -278,11 +290,14 @@ RtlFillMemoryUlong=RtlFillMemoryUlong@12
 RtlFreeAnsiString=RtlFreeAnsiString@4
 RtlFreeOemString=RtlFreeOemString@4
 RtlFreeUnicodeString=RtlFreeUnicodeString@4
+RtlGetDaclSecurityDescriptor=RtlGetDaclSecurityDescriptor@16
 RtlGetDefaultCodePage=RtlGetDefaultCodePage@8
-;RtlImageNtHeader=RtlImageNtHeader@4
+RtlGetGroupSecurityDescriptor=RtlGetGroupSecurityDescriptor@12
+RtlGetOwnerSecurityDescriptor=RtlGetOwnerSecurityDescriptor@12
 RtlInitAnsiString=RtlInitAnsiString@8
 RtlInitString=RtlInitString@8
 RtlInitUnicodeString=RtlInitUnicodeString@8
+RtlInitializeBitMap=RtlInitializeBitMap@12
 RtlInitializeSid=RtlInitializeSid@12
 RtlIntegerToChar=RtlIntegerToChar@16
 RtlIntegerToUnicodeString=RtlIntegerToUnicodeString@12
@@ -294,14 +309,21 @@ RtlLargeIntegerShiftLeft=RtlLargeIntegerShiftLeft@12
 RtlLargeIntegerShiftRight=RtlLargeIntegerShiftRight@12
 RtlLargeIntegerSubtract=RtlLargeIntegerSubtract@16
 RtlLengthRequiredSid=RtlLengthRequiredSid@4
+RtlLengthSecurityDescriptor=RtlLengthSecurityDescriptor@4
 RtlLengthSid=RtlLengthSid@4
 RtlMoveMemory=RtlMoveMemory@12
 RtlMultiByteToUnicodeN=RtlMultiByteToUnicodeN@20
 RtlMultiByteToUnicodeSize=RtlMultiByteToUnicodeSize@12
+RtlOemStringToCountedUnicodeString=RtlOemStringToCountedUnicodeString@12
 RtlOemStringToUnicodeSize=RtlOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString=RtlOemStringToUnicodeString@12
 RtlSecondsSince1970ToTime=RtlSecondsSince1970ToTime@8
 RtlSecondsSince1980ToTime=RtlSecondsSince1980ToTime@8
+RtlSetAllBits=RtlSetAllBits@4
+RtlSetBits=RtlSetBits@12
+RtlSetDaclSecurityDescriptor=RtlSetDaclSecurityDescriptor@16
+RtlSetGroupSecurityDescriptor=RtlSetGroupSecurityDescriptor@12
+RtlSetOwnerSecurityDescriptor=RtlSetOwnerSecurityDescriptor@12
 RtlSubAuthorityCountSid=RtlSubAuthorityCountSid@4
 RtlSubAuthoritySid=RtlSubAuthoritySid@8
 RtlTimeFieldsToTime=RtlTimeFieldsToTime@8
@@ -310,6 +332,7 @@ RtlTimeToSecondsSince1980=RtlTimeToSecondsSince1980@8
 RtlTimeToTimeFields=RtlTimeToTimeFields@8
 RtlUnicodeStringToAnsiSize=RtlUnicodeStringToAnsiSize@4
 RtlUnicodeStringToAnsiString=RtlUnicodeStringToAnsiString@12
+RtlUnicodeStringToCountedOemString=RtlUnicodeStringToCountedOemString@12
 RtlUnicodeStringToInteger=RtlUnicodeStringToInteger@12
 RtlUnicodeStringToOemSize=RtlUnicodeStringToOemSize@4
 RtlUnicodeStringToOemString=RtlUnicodeStringToOemString@12
@@ -318,11 +341,13 @@ RtlUnicodeToMultiByteSize=RtlUnicodeToMultiByteSize@12
 RtlUpcaseUnicodeChar=RtlUpcaseUnicodeChar@4
 RtlUpcaseUnicodeString=RtlUpcaseUnicodeString@12
 RtlUpcaseUnicodeStringToAnsiString=RtlUpcaseUnicodeStringToAnsiString@12
+RtlUpcaseUnicodeStringToCountedOemString=RtlUpcaseUnicodeStringToCountedOemString@12
 RtlUpcaseUnicodeStringToOemString=RtlUpcaseUnicodeStringToOemString@12
 RtlUpcaseUnicodeToMultiByteN=RtlUpcaseUnicodeToMultiByteN@20
 RtlUpcaseUnicodeToOemN=RtlUpcaseUnicodeToOemN@20
 RtlUpperChar=RtlUpperChar@4
 RtlUpperString=RtlUpperString@8
+RtlValidSecurityDescriptor=RtlValidSecurityDescriptor@4
 RtlValidSid=RtlValidSid@4
 RtlZeroMemory=RtlZeroMemory@8
 RtlxAnsiStringToUnicodeSize=RtlxAnsiStringToUnicodeSize@4
@@ -497,7 +522,7 @@ wctomb
 ; exports from hal.dll
 ;
 ;
-;ExAcquireFastMutex
+ExAcquireFastMutex
 ExReleaseFastMutex
 ExTryToAcquireFastMutex
 HalAcquireDisplayOwnership
@@ -521,11 +546,11 @@ HalDisplayString
 HalGetBusDataByOffset
 ;HalGetEnvironmentVariable
 HalGetInterruptVector
-;HalHandleNMI
+HalHandleNMI=HalHandleNMI@4
 HalInitSystem
 ;HalInitializeProcessor
 HalMakeBeep
-;HalProcessorIdle
+HalProcessorIdle=HalProcessorIdle@0
 HalQueryDisplayParameters
 HalQueryRealTimeClock
 ;HalReadDmaCounter

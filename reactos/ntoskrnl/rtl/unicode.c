@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.13 2000/02/19 19:31:18 ekohl Exp $
+/* $Id: unicode.c,v 1.14 2000/03/03 00:48:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -480,11 +480,6 @@ RtlCreateUnicodeStringFromAsciiz (
 }
 
 
-/*
-RtlCustomCPToUnicodeN
-*/
-
-
 NTSTATUS
 STDCALL
 RtlDowncaseUnicodeString (
@@ -625,11 +620,6 @@ RtlEqualUnicodeString (
 
 	return TRUE;
 }
-
-
-/*
-RtlEraseUnicodeString
-*/
 
 
 VOID
@@ -838,9 +828,61 @@ RtlIntegerToUnicodeString (
 }
 
 
-/*
-RtlOemStringToCountedUnicodeString
-*/
+NTSTATUS
+STDCALL
+RtlOemStringToCountedUnicodeString (
+	IN OUT	PUNICODE_STRING	DestinationString,
+	IN	POEM_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
+	)
+{
+	NTSTATUS Status;
+	ULONG Length;
+
+	if (NlsMbCodePageTag == TRUE)
+		Length = RtlAnsiStringToUnicodeSize (SourceString);
+	else
+		Length = SourceString->Length * sizeof(WCHAR);
+
+	if (Length > 65535)
+		return STATUS_INVALID_PARAMETER_2;
+
+	if (AllocateDestinationString == TRUE)
+	{
+		DestinationString->MaximumLength = Length + sizeof(WCHAR);
+		DestinationString->Buffer =
+		        ExAllocatePool (NonPagedPool,
+		                        DestinationString->MaximumLength);
+		if (DestinationString->Buffer == NULL)
+			return STATUS_NO_MEMORY;
+	}
+	else
+	{
+		if (Length > DestinationString->MaximumLength)
+			return STATUS_BUFFER_TOO_SMALL;
+	}
+	DestinationString->Length = Length;
+
+	RtlZeroMemory (DestinationString->Buffer,
+	               DestinationString->Length);
+
+	Status = RtlOemToUnicodeN (DestinationString->Buffer,
+	                           DestinationString->Length,
+	                           NULL,
+	                           SourceString->Buffer,
+	                           SourceString->Length);
+	if (!NT_SUCCESS(Status))
+	{
+		if (AllocateDestinationString)
+			ExFreePool (DestinationString->Buffer);
+
+		return Status;
+	}
+
+	DestinationString->Buffer[Length / sizeof(WCHAR)] = 0;
+
+	return STATUS_SUCCESS;
+}
 
 
 ULONG
@@ -982,9 +1024,68 @@ RtlUnicodeStringToAnsiString (
 }
 
 
-/*
-RtlUnicodeStringToCountedOemString
-*/
+NTSTATUS
+STDCALL
+RtlUnicodeStringToCountedOemString (
+	IN OUT	POEM_STRING	DestinationString,
+	IN	PUNICODE_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
+	)
+{
+	NTSTATUS Status;
+	ULONG Length;
+	ULONG Size;
+
+	if (NlsMbOemCodePageTag == TRUE)
+		Length = RtlUnicodeStringToAnsiSize (SourceString) + 1;
+	else
+		Length = SourceString->Length / sizeof(WCHAR) + 1;
+
+	if (Length > 0x0000FFFF)
+		return STATUS_INVALID_PARAMETER_2;
+
+	DestinationString->Length = (WORD)(Length - 1);
+
+	if (AllocateDestinationString)
+	{
+		DestinationString->Buffer = ExAllocatePool (NonPagedPool,
+		                                            Length);
+
+		if (DestinationString->Buffer == NULL)
+			return STATUS_NO_MEMORY;
+
+		RtlZeroMemory (DestinationString->Buffer,
+		               Length);
+		DestinationString->MaximumLength = (WORD)Length;
+	}
+	else
+	{
+		if (Length > DestinationString->MaximumLength)
+		{
+			if (DestinationString->MaximumLength == 0)
+				return STATUS_BUFFER_OVERFLOW;
+			DestinationString->Length =
+				DestinationString->MaximumLength - 1;
+		}
+	}
+
+	Status = RtlUnicodeToOemN (DestinationString->Buffer,
+	                           DestinationString->Length,
+	                           &Size,
+	                           SourceString->Buffer,
+	                           SourceString->Length);
+	if (!NT_SUCCESS(Status))
+	{
+		if (AllocateDestinationString)
+			ExFreePool (DestinationString->Buffer);
+
+		return Status;
+	}
+
+	DestinationString->Buffer[Size] = 0;
+
+	return STATUS_SUCCESS;
+}
 
 
 NTSTATUS
@@ -1258,9 +1359,68 @@ RtlUpcaseUnicodeStringToAnsiString (
 }
 
 
-/*
-RtlUpcaseUnicodeStringToCountedOemString
-*/
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeStringToCountedOemString (
+	IN OUT	POEM_STRING	DestinationString,
+	IN	PUNICODE_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
+	)
+{
+	NTSTATUS Status;
+	ULONG Length;
+	ULONG Size;
+
+	if (NlsMbCodePageTag == TRUE)
+		Length = RtlUnicodeStringToAnsiSize (SourceString) + 1;
+	else
+		Length = SourceString->Length / sizeof(WCHAR) + 1;
+
+	if (Length > 0x0000FFFF)
+		return STATUS_INVALID_PARAMETER_2;
+
+	DestinationString->Length = (WORD)(Length - 1);
+
+	if (AllocateDestinationString == TRUE)
+	{
+		DestinationString->Buffer = ExAllocatePool (NonPagedPool,
+		                                            Length);
+
+		if (DestinationString->Buffer == NULL)
+			return STATUS_NO_MEMORY;
+
+		RtlZeroMemory (DestinationString->Buffer,
+		               Length);
+		DestinationString->MaximumLength = (WORD)Length;
+	}
+	else
+	{
+		if (Length > DestinationString->MaximumLength)
+		{
+			if (DestinationString->MaximumLength == 0)
+				return STATUS_BUFFER_OVERFLOW;
+			DestinationString->Length =
+				DestinationString->MaximumLength - 1;
+		}
+	}
+
+	Status = RtlUpcaseUnicodeToOemN (DestinationString->Buffer,
+	                                 DestinationString->Length,
+	                                 &Size,
+	                                 SourceString->Buffer,
+	                                 SourceString->Length);
+	if (!NT_SUCCESS(Status))
+	{
+		if (AllocateDestinationString)
+			ExFreePool (DestinationString->Buffer);
+
+		return Status;
+	}
+
+	DestinationString->Buffer[Size] = 0;
+
+	return STATUS_SUCCESS;
+}
 
 
 NTSTATUS
@@ -1313,11 +1473,6 @@ RtlUpcaseUnicodeStringToOemString (
 
 	return STATUS_SUCCESS;
 }
-
-
-/*
-RtlUpcaseUnicodeToCustomCP
-*/
 
 
 CHAR

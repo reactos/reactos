@@ -247,6 +247,17 @@ ExQueueWorkItem (
 	WORK_QUEUE_TYPE		QueueType
 	);
 VOID
+STDCALL
+ExRaiseAccessViolation (
+	VOID
+	);
+VOID
+STDCALL
+ExRaiseDatatypeMisalignment (
+	VOID
+	);
+VOID
+STDCALL
 ExRaiseStatus (
 	NTSTATUS	Status
 	);

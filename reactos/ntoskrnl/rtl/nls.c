@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.2 1999/11/20 21:45:20 ekohl Exp $
+/* $Id: nls.c,v 1.3 2000/03/03 00:48:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -53,6 +53,11 @@ CHAR UnicodeToOemTable [65536];
 
 
 /* FUNCTIONS *****************************************************************/
+
+/*
+ * RtlCustomCPToUnicodeN
+ */
+
 
 VOID
 STDCALL
@@ -138,11 +143,12 @@ RtlMultiByteToUnicodeSize (
 
 NTSTATUS
 STDCALL
-RtlOemToUnicodeN(PWCHAR UnicodeString,
-                 ULONG  UnicodeSize,
-                 PULONG ResultSize,
-                 PCHAR  OemString,
-                 ULONG  OemSize)
+RtlOemToUnicodeN (
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize,
+	PULONG	ResultSize,
+	PCHAR	OemString,
+	ULONG	OemSize)
 {
 	ULONG Size = 0;
 	ULONG i;
@@ -180,13 +186,19 @@ RtlOemToUnicodeN(PWCHAR UnicodeString,
 }
 
 
+/*
+ * RtlUnicodeToCustomCPN
+ */
+
+
 NTSTATUS
 STDCALL
-RtlUnicodeToMultiByteN(PCHAR  MbString,
-                       ULONG  MbSize,
-                       PULONG ResultSize,
-                       PWCHAR UnicodeString,
-                       ULONG  UnicodeSize)
+RtlUnicodeToMultiByteN (
+	PCHAR	MbString,
+	ULONG	MbSize,
+	PULONG	ResultSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize)
 {
 	ULONG Size = 0;
 	ULONG i;
@@ -226,9 +238,10 @@ RtlUnicodeToMultiByteN(PCHAR  MbString,
 
 NTSTATUS
 STDCALL
-RtlUnicodeToMultiByteSize(PULONG MbSize,
-                          PWCHAR UnicodeString,
-                          ULONG UnicodeSize)
+RtlUnicodeToMultiByteSize (
+	PULONG	MbSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize)
 {
 	if (NlsMbCodePageTag == FALSE)
 	{
@@ -248,11 +261,12 @@ RtlUnicodeToMultiByteSize(PULONG MbSize,
 
 NTSTATUS
 STDCALL
-RtlUnicodeToOemN(PCHAR  OemString,
-                 ULONG  OemSize,
-                 PULONG ResultSize,
-                 PWCHAR UnicodeString,
-                 ULONG  UnicodeSize)
+RtlUnicodeToOemN (
+	PCHAR	OemString,
+	ULONG	OemSize,
+	PULONG	ResultSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize)
 {
 	ULONG Size = 0;
 	ULONG i;
@@ -288,6 +302,11 @@ RtlUnicodeToOemN(PCHAR  OemString,
 
 	return STATUS_SUCCESS;
 }
+
+
+/*
+ * RtlUpcaseUnicodeToCustomCPN
+ */
 
 
 NTSTATUS
@@ -382,6 +401,5 @@ RtlUpcaseUnicodeToOemN (
 
 	return STATUS_SUCCESS;
 }
-
 
 /* EOF */

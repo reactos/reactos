@@ -1,6 +1,7 @@
 
-VOID DbgBreakPoint(VOID);
-ULONG DbgPrint(PCH Format,...);   
+VOID STDCALL DbgBreakPoint(VOID);
+VOID STDCALL DbgBreakPointWithStatus (ULONG Status);
+ULONG DbgPrint(PCH Format,...);
 
 #define DBG_GET_SHOW_FACILITY 0x0001
 #define DBG_GET_SHOW_SEVERITY 0x0002

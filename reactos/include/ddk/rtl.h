@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.27 2000/02/21 22:36:00 ekohl Exp $
+/* $Id: rtl.h,v 1.28 2000/03/03 00:38:15 ekohl Exp $
  * 
  */
 
@@ -275,6 +275,12 @@ STDCALL
 RtlCheckRegistryKey (
 	ULONG	RelativeTo,
 	PWSTR	Path
+	);
+
+VOID
+STDCALL
+RtlClearAllBits (
+	IN	PRTL_BITMAP	BitMapHeader
 	);
 
 UINT
@@ -556,6 +562,14 @@ STDCALL
 RtlInitUnicodeString (
 	PUNICODE_STRING	DestinationString,
 	PCWSTR		SourceString
+	);
+
+VOID
+STDCALL
+RtlInitializeBitMap (
+	IN OUT	PRTL_BITMAP	BitMapHeader,
+	IN	PULONG		BitMapBuffer,
+	IN	ULONG		SizeOfBitMap
 	);
 
 NTSTATUS
@@ -894,6 +908,12 @@ RtlSecondsSince1980ToTime (
 	PLARGE_INTEGER Time
 	);
 
+VOID
+STDCALL
+RtlSetAllBits (
+	IN	PRTL_BITMAP	BitMapHeader
+	);
+
 NTSTATUS
 STDCALL
 RtlSetDaclSecurityDescriptor (
@@ -911,12 +931,14 @@ RtlSizeHeap (
 	PVOID	pmem
 	);
 
+#if 0
 PWSTR
 RtlStrtok (
 	PUNICODE_STRING	_string,
 	PWSTR		_sep,
 	PWSTR		* temp
 	);
+#endif
 
 VOID
 RtlStoreLong (

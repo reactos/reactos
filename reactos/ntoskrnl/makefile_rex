@@ -1,10 +1,11 @@
-# $Id: makefile_rex,v 1.55 2000/03/01 22:52:27 ea Exp $
+# $Id: makefile_rex,v 1.56 2000/03/03 00:43:28 ekohl Exp $
 #
 # ReactOS Operating System
 #
 TARGET=ntoskrnl
 
 BASE_CFLAGS = -I../include -D__NTOSKRNL__
+
 
 all: objects $(TARGET).exe
 
@@ -22,12 +23,12 @@ RTL_OBJECTS = rtl/ctype.o rtl/interlck.o rtl/largeint.o  rtl/list.o \
               rtl/memmove.o rtl/memset.o  rtl/nls.o rtl/regio.o \
               rtl/return.o rtl/slist.o rtl/sprintf.o rtl/swprintf.o \
               rtl/stdlib.o rtl/string.o rtl/time.o rtl/unalign.o \
-              rtl/unicode.o rtl/wstring.o
+              rtl/unicode.o rtl/wstring.o rtl/bitmap.o
 
 KE_OBJECTS = ke/main.o ke/timer.o ke/error.o ke/catch.o \
              ke/dpc.o ke/wait.o ke/kqueue.o ke/dispatch.o \
 	     ke/sem.o ke/critical.o ke/event.o ke/apc.o ke/bug.o \
-	     ke/mutex.o ke/kernel.o ke/ldt.o \
+	     ke/mutex.o ke/kernel.o ke/ldt.o ke/spinlock.o\
 	     ke/process.o ke/gdt.o ke/idt.o ke/udelay.o
 
 KE_I386_OBJECTS = ke/i386/thread.o ke/i386/usercall.o ke/i386/exp.o
@@ -143,22 +144,23 @@ OBJECTS = objects/hal.o objects/ke.o objects/rtl.o objects/mm.o \
           objects/io.o objects/ob.o objects/ps.o objects/ex.o \
           objects/se.o objects/cm.o objects/dbg.o objects/nt.o \
           objects/cc.o objects/kd.o objects/ldr.o objects/fs.o \
-	  objects/po.o objects/nls.o \
+          objects/po.o objects/nls.o \
           $(TARGET).coff
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = objects\*.o cc\*.o cm\*.o dbg\*.o ex\*.o hal\x86\*.o io\*.o \
               ke\*.o ldr\*.o mm\*.o nt\*.o ob\*.o ps\*.o rtl\*.o se\*.o \
-	      ke\i386\*.o mm\i386\*.o fs\*.o po\*.o nls\*.o \
+              ke\i386\*.o mm\i386\*.o fs\*.o po\*.o nls\*.o \
               kd\*.o utils\export\export.exe $(TARGET).o $(TARGET).a junk.tmp \
               base.tmp temp.exp $(TARGET).exe $(TARGET).sym $(TARGET).coff
 else
 CLEAN_FILES = objects/*.o cc/*.o cm/*.o dbg/*.o ex/*.o hal/x86/*.o io/*.o \
               ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o rtl/*.o se/*.o \
-	      ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o \
+              ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o \
               kd/*.o utils/export/export $(TARGET).o $(TARGET).a junk.tmp \
               base.tmp temp.exp $(TARGET).exe $(TARGET).sym $(TARGET).coff
 endif
+
 
 $(TARGET).exe: $(OBJECTS) $(TARGET).def
 	$(LD) \
