@@ -53,7 +53,7 @@ WINBOOL STDCALL CreateDirectoryExA(LPCSTR lpTemplateDirectory,
     else pTemplateDirectoryW=NULL;
 
 	i = 0;
-   	while ((*lpNewDirectory)!=0 && i < MAX_PATH)
+   	while ((*lpNewDirectory)!=0 && i < MAX_PATH-1)
      	{
 		NewDirectoryW[i] = *lpNewDirectory;
 		lpNewDirectory++;
@@ -97,8 +97,8 @@ WINBOOL STDCALL CreateDirectoryExW(LPCWSTR lpTemplateDirectory,
    FileNameW[3] = '\\';
    FileNameW[4] = 0;
    wcscat(FileNameW,lpNewDirectory);
-   DirectoryNameString.Length = lstrlenW(lpNewDirectory)*sizeof(WCHAR);
-   DirectoryNameString.Buffer = (WCHAR *)lpNewDirectory;
+   DirectoryNameString.Length = lstrlenW(FileNameW)*sizeof(WCHAR);
+   DirectoryNameString.Buffer = (WCHAR *)FileNameW;
    DirectoryNameString.MaximumLength = DirectoryNameString.Length+sizeof(WCHAR);
 	
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
