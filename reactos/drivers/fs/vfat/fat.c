@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.42 2003/07/24 19:00:42 chorns Exp $
+ * $Id: fat.c,v 1.43 2003/07/24 20:52:58 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -15,9 +15,7 @@
 #include <wchar.h>
 #include <ntos/minmax.h>
 
-#ifndef NDEBUG
 #define NDEBUG
-#endif
 #include <debug.h>
 
 #include "vfat.h"

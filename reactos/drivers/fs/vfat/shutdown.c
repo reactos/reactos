@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.6 2003/07/24 19:00:42 chorns Exp $
+/* $Id: shutdown.c,v 1.7 2003/07/24 20:52:58 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -11,9 +11,7 @@
 
 #include <ddk/ntddk.h>
 
-#ifndef NDEBUG
 #define NDEBUG
-#endif
 #include <debug.h>
 
 #include "vfat.h"

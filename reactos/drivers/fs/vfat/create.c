@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.62 2003/07/24 19:00:42 chorns Exp $
+/* $Id: create.c,v 1.63 2003/07/24 20:52:58 chorns Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -31,9 +31,7 @@
 #include <wchar.h>
 #include <limits.h>
 
-#ifndef NDEBUG
 #define NDEBUG
-#endif
 #include <debug.h>
 
 #include "vfat.h"

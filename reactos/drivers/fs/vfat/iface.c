@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iface.c,v 1.69 2003/07/24 19:00:42 chorns Exp $
+/* $Id: iface.c,v 1.70 2003/07/24 20:52:58 chorns Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/iface.c
@@ -28,9 +28,7 @@
 
 #include <ddk/ntddk.h>
 
-#ifndef NDEBUG
 #define NDEBUG
-#endif
 #include <debug.h>
 
 #include "vfat.h"

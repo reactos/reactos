@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.31 2003/07/24 19:00:42 chorns Exp $
+/* $Id: fcb.c,v 1.32 2003/07/24 20:52:58 chorns Exp $
  *
  *
  * FILE:             fcb.c
@@ -15,9 +15,7 @@
 #include <wchar.h>
 #include <limits.h>
 
-#ifndef NDEBUG
 #define NDEBUG
-#endif
 #include <debug.h>
 
 #include "vfat.h"
