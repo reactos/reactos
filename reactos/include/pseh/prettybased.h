@@ -39,6 +39,10 @@ on this to access external variables
 to prevent variables from being optimized into registers.
 See: http://alphalinux.org/archives/axp-list/1998/February1998/0330.html
 
+-you can't use return within a try/except/finally block
+
+-you can't use __LEAVE within a (for/do/while) loop. it will only leave the loop
+and not the try-block itself
 
 
 USAGE:
@@ -98,7 +102,7 @@ typedef struct __SEHFrame
 {
  _SEHPortableFrame_t SEH_Header;
  _SEHJmpBuf_t SEH_JmpBuf;
-/* alternative: _SEHJmpBuf_t* SEH_JmpRetPtr; */
+ _SEHJmpBuf_t* SEH_JmpRetPtr;
 }
 _SEHFrame_t;
 
@@ -151,12 +155,8 @@ void __stdcall _FinallyPretty
     
    if(_SEHSetJmp(jmpRetBuf) == 0)
    {
-      _SEHLongJmp_KeepEsp(myframe->SEH_JmpBuf, (int)&jmpRetBuf);
-   
-      /* alternative:
       myframe->SEH_JmpRetPtr = &jmpRetBuf;
       _SEHLongJmp_KeepEsp(myframe->SEH_JmpBuf, 2);
-      */
    }
 }
 
@@ -259,10 +259,9 @@ void __stdcall _FinallyPretty
 #define ___ENDTRY                                                             \
             } while (0);                                                      \
                                                                               \
-            if (_ret > 1)                                                     \
+            if (_ret == 2)                                                    \
             {                                                                 \
-               _SEHLongJmp(*((_SEHJmpBuf_t*)_ret), 1);                        \
-               /* alternative: _SEHLongJmp(*_SEHFrame->SEH_JmpRetPtr, 1); */  \
+               _SEHLongJmp(*_SEHFrame->SEH_JmpRetPtr, 1);                     \
             }                                                                 \
             break;                                                            \
          }                                                                    \
@@ -282,6 +281,7 @@ void __stdcall _FinallyPretty
    #define __ENDTRY
    #define _SEH_STATIC_FILTER(ACTION_) (ACTION_)   
    #define __LEAVE __leave
+   #define __LEAVE2 __leave
 #else
    #define __TRY2 ___TRY
    #define __EXCEPT2 ___EXCEPT_DUAL
@@ -292,6 +292,7 @@ void __stdcall _FinallyPretty
    #define __FINALLY ___FINALLY_SINGLE
    #define __ENDTRY ___ENDTRY
    #define __LEAVE break
+   #define __LEAVE2 break
 #endif
 
 
