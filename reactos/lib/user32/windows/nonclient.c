@@ -1012,17 +1012,7 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
         case HTBOTTOMLEFT:
         case HTBOTTOMRIGHT:
         {
-            HWND Parent;
-            
-            if(wParam == HTBOTTOMRIGHT && (Parent = GetParent(hWnd)) &&
-               (GetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD) && 
-               !(GetWindowLongW(hWnd, GWL_EXSTYLE) & WS_EX_MDICHILD) && 
-               !(GetWindowLongW(Parent, GWL_STYLE) & WS_MAXIMIZE))
-            {
-              SendMessageW(Parent, WM_SYSCOMMAND, SC_SIZE + wParam - 2, lParam);
-              break;
-            }
-            SendMessageW(hWnd, WM_SYSCOMMAND, SC_SIZE + wParam - 2, lParam);
+            SendMessageW(hWnd, WM_SYSCOMMAND, SC_SIZE + wParam - (HTLEFT - WMSZ_LEFT), lParam);
             break;
         }
     }
