@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.52 2003/05/21 16:10:12 ekohl Exp $
+/* $Id: startup.c,v 1.53 2003/08/15 10:17:09 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -151,7 +151,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
    Peb->KernelCallbackTable = 
      RtlAllocateHeap(RtlGetProcessHeap(),
                      0,
-                     sizeof(PVOID) * USER32_CALLBACK_MAXIMUM);
+                     sizeof(PVOID) * (USER32_CALLBACK_MAXIMUM + 1));
 
    /* initalize loader lock */
    RtlInitializeCriticalSection (&LoaderLock);
