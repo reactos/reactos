@@ -37,8 +37,12 @@
 #include <sys/mman.h>
 #endif
 
+#ifdef WIN32
 #include "windef.h"
 #include "winbase.h"
+#else
+#include "winglue.h"
+#endif
 #include "build.h"
 
 #define ALIGNMENT 2 /* alignment for resource data */

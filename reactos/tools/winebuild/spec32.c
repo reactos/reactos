@@ -30,8 +30,12 @@
 #include <stdarg.h>
 #include <string.h>
 
+#ifdef WIN32
 #include "windef.h"
 #include "winbase.h"
+#else
+#include "winglue.h"
+#endif
 #if defined(WIN32)
 #define EXCEPTION_WINE_STUB       0x80000100  /* stub entry point called */
 #define EH_NONCONTINUABLE   0x01

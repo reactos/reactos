@@ -32,8 +32,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef WIN32
 #include "windef.h"
 #include "winbase.h"
+#else
+#include "winglue.h"
+#endif
 #include "build.h"
 
 int current_line = 0;
