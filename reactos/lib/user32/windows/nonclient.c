@@ -418,7 +418,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
          CaptionFlags |= DC_ACTIVE;
       }
 
-      if (Style & WS_EX_TOOLWINDOW)
+      if (ExStyle & WS_EX_TOOLWINDOW)
       {
          CaptionFlags |= DC_SMALLCAP;
          TempRect.bottom = TempRect.top + GetSystemMetrics(SM_CYSMCAPTION) - 1;
@@ -524,7 +524,12 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
       UserGetWindowBorders(Style, ExStyle, &WindowBorders, FALSE);
       InflateRect(Rect, -WindowBorders.cx, -WindowBorders.cy);
       if ((Style & WS_CAPTION) == WS_CAPTION)
-         Rect->top += GetSystemMetrics(SM_CYCAPTION);
+      {
+         if (ExStyle & WS_EX_TOOLWINDOW)
+            Rect->top += GetSystemMetrics(SM_CYSMCAPTION);
+         else
+            Rect->top += GetSystemMetrics(SM_CYCAPTION);
+      }
 
       if (UserHasMenu(hWnd, Style))
          Rect->top += MenuGetMenuBarHeight(hWnd, Rect->right - Rect->left, Rect->left, Rect->top);
@@ -1063,7 +1068,7 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
     if (Style & WS_SYSMENU)
     {
       r.right -= 3 + ButtonWidth;
-      if (! (GetWindowLongW(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
+      if (! (uFlags & DC_SMALLCAP))
       {
         if(Style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX))
 	      r.right -= 2 + 2 * ButtonWidth;
@@ -1077,8 +1082,7 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
     if (! SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), &nclm, 0)) goto cleanup;
 
     SetBkMode( MemDC, TRANSPARENT );
-    if (Style & WS_EX_TOOLWINDOW)
-//    if (uFlags & DC_SMALLCAP) // incorrect
+    if (uFlags & DC_SMALLCAP)
         hFont = CreateFontIndirectW(&nclm.lfSmCaptionFont);
     else
         hFont = CreateFontIndirectW(&nclm.lfCaptionFont);
