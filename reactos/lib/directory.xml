@@ -10,6 +10,15 @@
 <directory name="advapi32">
 	<xi:include href="advapi32/advapi32.xml" />
 </directory>
+<directory name="advpack">
+	<xi:include href="advpack/advpack.xml" />
+</directory>
+<directory name="cabinet">
+	<xi:include href="cabinet/cabinet.xml" />
+</directory>
+<directory name="cards">
+	<xi:include href="cards/cards.xml" />
+</directory>
 <directory name="comctl32">
 	<xi:include href="comctl32/comctl32.xml" />
 </directory>
@@ -40,11 +49,17 @@
 <directory name="ntdll">
 	<xi:include href="ntdll/ntdll.xml" />
 </directory>
+<directory name="ole32">
+	<xi:include href="ole32/ole32.xml" />
+</directory>
 <directory name="pseh">
 	<xi:include href="pseh/pseh.xml" />
 </directory>
 <directory name="rosrtl">
 	<xi:include href="rosrtl/rosrtl.xml" />
+</directory>
+<directory name="rpcrt4">
+	<xi:include href="rpcrt4/rpcrt4.xml" />
 </directory>
 <directory name="rtl">
 	<xi:include href="rtl/rtl.xml" />
@@ -54,6 +69,12 @@
 </directory>
 <directory name="user32">
 	<xi:include href="user32/user32.xml" />
+</directory>
+<directory name="uuid">
+	<xi:include href="uuid/uuid.xml" />
+</directory>
+<directory name="version">
+	<xi:include href="version/version.xml" />
 </directory>
 <directory name="winmm">
 	<xi:include href="winmm/winmm.xml" />
