@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2002/10/28 15:04:58 robd Exp $
+# $Id: Makefile,v 1.4 2002/10/28 15:20:37 robd Exp $
 #
 # PROJECT    : ReactOS Operating System
 # FILE       : reactos/dk/w32/Makefile
@@ -54,8 +54,7 @@ MODULES_CRT=\
 	$(TARGET_FOLDER_LIB)/msvcrt.a
 
 MODULES_MISC=\
-	$(TARGET_FOLDER_LIB)/version.a\
-	$(TARGET_FOLDER_LIB)/win32k.a
+	$(TARGET_FOLDER_LIB)/version.a
 
 MODULES =\
 	$(MODULES_CORE)\
@@ -215,12 +214,6 @@ $(TARGET_FOLDER_LIB)/version.a: $(PATH_TO_TOP)/lib/version/version.def
 		$(DTFLAGS)\
 		-D version.dll\
 		-d $(PATH_TO_TOP)/lib/version/version.def
-
-$(TARGET_FOLDER_LIB)/win32k.a: $(PATH_TO_TOP)/subsys/win32k/win32k.def
-	$(DLLTOOL) \
-		$(DTFLAGS)\
-		-D win32k.dll\
-		-d $(PATH_TO_TOP)/subsys/win32k/win32k.def
 
 # --- Service rules ---
 
