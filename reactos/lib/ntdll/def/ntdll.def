@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.66 2000/12/23 02:37:37 dwelch Exp $
+; $Id: ntdll.def,v 1.67 2000/12/29 13:49:15 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -28,10 +28,10 @@ DbgUiConnectToDbg@0
 DbgUiContinue@8
 DbgUiWaitStateChange@8
 DbgUserBreakPoint@0
-KiRaiseUserExceptionDispatcher
+;KiRaiseUserExceptionDispatcher
 KiUserApcDispatcher
 KiUserCallbackDispatcher
-;KiUserExceptionDispatcher
+KiUserExceptionDispatcher
 LdrAccessResource@16
 LdrDisableThreadCalloutsForDll@4
 ;LdrEnumResources
@@ -511,8 +511,8 @@ RtlQueryRegistryValues@20
 ;RtlQuerySecutityObject
 ;RtlQueryTagHeap
 ;RtlQueryTimeZoneInformation
-;RtlRaiseException
-;RtlRaiseStatus
+RtlRaiseException@4
+RtlRaiseStatus@4
 ;RtlRandom
 RtlReAllocateHeap@16
 ;RtlRealPredecessor
@@ -571,7 +571,7 @@ RtlUnicodeToMultiByteSize@12
 RtlUnicodeToOemN@20
 ;RtlUniform
 RtlUnlockHeap@4
-RtlUnwind@0
+RtlUnwind@16
 RtlUpcaseUnicodeChar@4
 RtlUpcaseUnicodeString@12
 RtlUpcaseUnicodeStringToAnsiString@12

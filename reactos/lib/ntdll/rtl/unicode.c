@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.16 2000/06/29 23:35:32 dwelch Exp $
+/* $Id: unicode.c,v 1.17 2000/12/29 13:48:30 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1785,16 +1785,6 @@ RtlxUnicodeStringToOemSize (
 	)
 {
 	return RtlUnicodeStringToAnsiSize (UnicodeString);
-}
-
-
-/* This one doesn't belong here! */
-VOID
-STDCALL
-RtlUnwind (
-	VOID
-	)
-{
 }
 
 /* EOF */

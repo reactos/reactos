@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.20 2000/12/28 20:38:27 ekohl Exp $
+/* $Id: rtl.h,v 1.21 2000/12/29 13:47:43 ekohl Exp $
  *
  */
 
@@ -340,6 +340,12 @@ STDCALL
 RtlSystemTimeToLocalTime (
 	PLARGE_INTEGER	SystemTime,
 	PLARGE_INTEGER	LocalTime
+	);
+
+VOID
+STDCALL
+RtlRaiseStatus (
+	IN	NTSTATUS	Status
 	);
 
 #endif /* __INCLUDE_NTDLL_RTL_H */

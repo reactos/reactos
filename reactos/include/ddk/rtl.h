@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.45 2000/12/28 20:38:26 ekohl Exp $
+/* $Id: rtl.h,v 1.46 2000/12/29 13:47:30 ekohl Exp $
  * 
  */
 
@@ -1418,6 +1418,12 @@ RtlQueryRegistryValues (
 	PVOID				Environment
 	);
 
+VOID
+STDCALL
+RtlRaiseException (
+	IN	PEXCEPTION_RECORD	ExceptionRecord
+	);
+
 LPVOID
 STDCALL
 RtlReAllocateHeap (
@@ -1663,6 +1669,15 @@ BOOL
 STDCALL
 RtlUnlockHeap (
 	HANDLE	hheap
+	);
+
+VOID
+STDCALL
+RtlUnwind (
+	ULONG	Unknown1,
+	ULONG	Unknown2,
+	ULONG	Unknown3,
+	ULONG	Unknown4
 	);
 
 WCHAR
