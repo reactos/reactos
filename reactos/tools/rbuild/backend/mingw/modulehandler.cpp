@@ -727,14 +727,13 @@ MingwModuleHandler::GenerateGccCommand ( const Module& module,
 	fprintf ( fMakefile,
 	          "%s: %s %s\n",
 	          objectFilename.c_str (),
-	          GetDirectory ( objectFilename ).c_str (),
-	          deps.c_str () );
+	          deps.c_str (),
+	          GetDirectory ( objectFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_CC)\n" );
 	fprintf ( fMakefile,
-	         "\t%s -c %s -o %s %s\n",
+	         "\t%s -c %s -o $@ %s\n",
 	         cc.c_str (),
 	         sourceFilename.c_str (),
-	         objectFilename.c_str (),
 	         cflagsMacro.c_str () );
 }
 
@@ -749,14 +748,13 @@ MingwModuleHandler::GenerateGccAssemblerCommand ( const Module& module,
 	fprintf ( fMakefile,
 	          "%s: %s %s\n",
 	          objectFilename.c_str (),
-	          GetDirectory ( objectFilename ).c_str (),
-	          sourceFilename.c_str () );
+	          sourceFilename.c_str (),
+	          GetDirectory ( objectFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_GAS)\n" );
 	fprintf ( fMakefile,
-	          "\t%s -x assembler-with-cpp -c %s -o %s -D__ASM__ %s\n",
+	          "\t%s -x assembler-with-cpp -c %s -o $@ -D__ASM__ %s\n",
 	          cc.c_str (),
 	          sourceFilename.c_str (),
-	          objectFilename.c_str (),
 	          cflagsMacro.c_str () );
 }
 
@@ -770,14 +768,13 @@ MingwModuleHandler::GenerateNasmCommand ( const Module& module,
 	fprintf ( fMakefile,
 	          "%s: %s %s\n",
 	          objectFilename.c_str (),
-	          GetDirectory ( objectFilename ).c_str (),
-	          sourceFilename.c_str () );
+	          sourceFilename.c_str (),
+	          GetDirectory ( objectFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_NASM)\n" );
 	fprintf ( fMakefile,
-	          "\t%s -f win32 %s -o %s %s\n",
+	          "\t%s -f win32 %s -o $@ %s\n",
 	          "$(Q)nasm",
 	          sourceFilename.c_str (),
-	          objectFilename.c_str (),
 	          nasmflagsMacro.c_str () );
 }
 
@@ -795,8 +792,8 @@ MingwModuleHandler::GenerateWindresCommand ( const Module& module,
 	fprintf ( fMakefile,
 	          "%s: %s %s $(WRC_TARGET)\n",
 	          objectFilename.c_str (),
-	          GetDirectory ( objectFilename ).c_str (),
-	          sourceFilename.c_str () );
+	          sourceFilename.c_str (),
+	          GetDirectory ( objectFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
 	fprintf ( fMakefile,
 	         "\t${gcc} -xc -E -DRC_INVOKED ${%s} %s > %s\n",
