@@ -2,6 +2,8 @@
 # WIN32K.SYS build spec
 #
 
+TARGET=win32k
+
 BASE_CFLAGS = -I../../include
 
 MAIN_OBJECTS = main/dllmain.o
@@ -12,45 +14,43 @@ OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/line.o objects/metafile.o objects/paint.o  \
                   objects/path.o objects/pen.o objects/print.o  \
                   objects/region.o objects/text.o objects/wingl.o
-RESOURCE_OBJECT = win32k.coff
+RESOURCE_OBJECT = $(TARGET).coff
 STUBS_OBJECTS = stubs/stubs.o
 
 OBJECTS = $(MAIN_OBJECTS) $(MISC_OBJECTS) $(OBJECTS_OBJECTS)  \
           $(RESOURCE_OBJECT) $(STUBS_OBJECTS) 
 
-TARGET=win32k.sys
+all: $(TARGET).sys
 
-all: win32k.sys
-
-win32k.coff: win32k.rc ../../include/reactos/resource.h
-	$(RC) win32k.rc win32k.coff
+$(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
+	$(RC) $(TARGET).rc $(TARGET).coff
 
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES = main\*.o misc\*.o stubs\*.o objects\*.o win32k.coff win32k.o  \
-              win32k.a junk.tmp base.tmp temp.exp win32k.sys win32k.sym
+CLEAN_FILES = main\*.o misc\*.o stubs\*.o objects\*.o $(TARGET).coff $(TARGET).o  \
+              $(TARGET).a junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sym
 else
-CLEAN_FILES = main/*.o misc/*.o stubs/*.o objects/*.o win32k.coff win32k.o  \
-              win32k.a junk.tmp base.tmp temp.exp win32k.sys win32k.sym
+CLEAN_FILES = main/*.o misc/*.o stubs/*.o objects/*.o $(TARGET).coff $(TARGET).o  \
+              $(TARGET).a junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sym
 endif
 
-win32k.sys: $(OBJECTS) win32k.def
-	$(LD) -r $(OBJECTS) -o win32k.o
-	$(DLLTOOL) --dllname win32k.sys --def win32k.def \
-	           --output-lib win32k.a
+$(TARGET).sys: $(OBJECTS) $(TARGET).def
+	$(LD) -r $(OBJECTS) -o $(TARGET).o
+	$(DLLTOOL) --dllname $(TARGET).sys --def $(TARGET).def \
+	           --output-lib $(TARGET).a
 	$(CC) --subsystem=windows -mdll --dll -e _DllMain@12 -o junk.tmp \
 	      -Wl,--image-base,0x0 \
 	      -Wl,--file-alignment,0x1000 \
 	      -Wl,--section-alignment,0x1000 \
 	      -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ \
-	      -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp win32k.o \
+	      -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp $(TARGET).o \
               ../../ntoskrnl/ntoskrnl.a
 	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname win32k.sys --base-file base.tmp \
-	           --output-exp temp.exp --def win32k.def
+	$(DLLTOOL) --dllname $(TARGET).sys --base-file base.tmp \
+	           --output-exp temp.exp --def $(TARGET).def
 	- $(RM) base.tmp
 	$(CC) --subsystem=windows -mdll --dll -e _DllMain@12 \
-              -o win32k.sys win32k.o ../../ntoskrnl/ntoskrnl.a \
+              -o $(TARGET).sys $(TARGET).o ../../ntoskrnl/ntoskrnl.a \
 	      -Wl,--image-base,0x0 \
 	      -Wl,--file-alignment,0x1000 \
 	      -Wl,--section-alignment,0x1000 \
@@ -59,7 +59,7 @@ win32k.sys: $(OBJECTS) win32k.def
 	      -Wl,--defsym,_etext=etext -Wl,temp.exp
               
 	- $(RM) temp.exp
-	$(NM) --numeric-sort win32k.sys > win32k.sym
+	$(NM) --numeric-sort $(TARGET).sys > $(TARGET).sym
 
 clean: $(CLEAN_FILES:%=%_clean)
 
@@ -68,25 +68,23 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
-floppy: $(FLOPPY_DIR)/subsys/win32k.sys
+floppy: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-$(FLOPPY_DIR)/subsys/$(TARGET).sys: $(TARGET).sys
+$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).sys $(FLOPPY_DIR)\subsys\$(TARGET).sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)\drivers\$(TARGET).sys
 else
-	$(CP) $(TARGET).sys $(FLOPPY_DIR)/subsys/$(TARGET).sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
 endif
 
+dist: $(DIST_DIR)/drivers/$(TARGET).sys
 
-dist: $(DIST_DIR)/subsys/$(TARGET).sys
-
-$(DIST_DIR)/subsys/$(TARGET).sys: $(TARGET).sys
+$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).sys ..\..\$(DIST_DIR)\subsys\$(TARGET).sys
+	$(CP) $(TARGET).sys ..\..\$(DIST_DIR)\drivers\$(TARGET).sys
 else
-	$(CP) $(TARGET).sys ../../$(DIST_DIR)/subsys/$(TARGET).sys
+	$(CP) $(TARGET).sys ../../$(DIST_DIR)/drivers/$(TARGET).sys
 endif
-
 
 #WITH_DEBUGGING = yes
 WIN32_LEAN_AND_MEAN = yes
