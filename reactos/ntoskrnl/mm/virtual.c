@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.87 2004/12/30 18:30:44 ion Exp $
+/* $Id$
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -704,7 +704,7 @@ MmUnsecureVirtualMemory(PVOID SecureMem)
  * @implemented
  */
 VOID STDCALL
-ProbeForRead (IN PVOID Address,
+ProbeForRead (IN CONST VOID *Address,
               IN ULONG Length,
               IN ULONG Alignment)
 {
@@ -729,7 +729,7 @@ ProbeForRead (IN PVOID Address,
  * @implemented
  */
 VOID STDCALL
-ProbeForWrite (IN PVOID Address,
+ProbeForWrite (IN CONST VOID *Address,
                IN ULONG Length,
                IN ULONG Alignment)
 {

@@ -6479,10 +6479,10 @@ ZwQuerySection(
 
 typedef struct _SECTION_IMAGE_INFORMATION
 {
-  ULONG EntryPoint;
+  ULONG_PTR EntryPoint;
   ULONG Unknown1;
-  ULONG StackReserve;
-  ULONG StackCommit;
+  ULONG_PTR StackReserve;
+  ULONG_PTR StackCommit;
   ULONG Subsystem;
   USHORT MinorSubsystemVersion;
   USHORT MajorSubsystemVersion;

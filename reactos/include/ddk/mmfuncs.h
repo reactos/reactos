@@ -196,9 +196,9 @@ MmFlushImageSection (
 BOOLEAN
 STDCALL
 MmForceSectionClosed (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	);
+    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    IN BOOLEAN                  DelayClose
+    );
 VOID
 STDCALL
 MmFreeContiguousMemory (
@@ -738,12 +738,12 @@ MmUnsecureVirtualMemory (
 	);
 
 VOID STDCALL
-ProbeForRead (IN PVOID Address,
+ProbeForRead (IN CONST VOID *Address,
 	      IN ULONG Length,
 	      IN ULONG Alignment);
 
 VOID STDCALL
-ProbeForWrite (IN PVOID Address,
+ProbeForWrite (IN CONST VOID *Address,
 	       IN ULONG Length,
 	       IN ULONG Alignment);
 

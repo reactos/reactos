@@ -126,7 +126,7 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
   ULONG_PTR ImageBase;
   ULONG_PTR StackReserve;
   ULONG_PTR StackCommit;
-  ULONG EntryPoint;
+  ULONG_PTR EntryPoint;
   ULONG Subsystem;
   ULONG ImageCharacteristics;
   USHORT MinorSubsystemVersion;

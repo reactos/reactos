@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.169 2004/12/30 08:05:11 hyperion Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -329,7 +329,7 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
       Page = PFN_FROM_SSE(Entry);
       FileObject = Section->FileObject;
       if (FileObject != NULL &&
-            !(Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED))
+            !(Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
       {
 
          if ((FileOffset % PAGE_SIZE) == 0 &&
@@ -352,7 +352,7 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
       {
          if (!PageOut &&
                ((Segment->Flags & MM_PAGEFILE_SEGMENT) ||
-                (Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED)))
+                (Segment->Characteristics & IMAGE_SCN_MEM_SHARED)))
          {
             /*
              * FIXME:
@@ -375,7 +375,7 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
       else
       {
          if ((Segment->Flags & MM_PAGEFILE_SEGMENT) ||
-               (Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED))
+               (Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
          {
             if (!PageOut)
             {
@@ -416,7 +416,7 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
 BOOL MiIsPageFromCache(PMEMORY_AREA MemoryArea,
                        ULONG SegOffset)
 {
-   if (!(MemoryArea->Data.SectionData.Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED))
+   if (!(MemoryArea->Data.SectionData.Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
    {
       PBCB Bcb;
       PCACHE_SEGMENT CacheSeg;
@@ -472,7 +472,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
     */
    if ((FileOffset % PAGE_SIZE) == 0 &&
        (SegOffset + PAGE_SIZE <= RawLength || !IsImageSection) &&
-       !(MemoryArea->Data.SectionData.Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED))
+       !(MemoryArea->Data.SectionData.Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
    {
 
       /*
@@ -873,7 +873,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Map anonymous memory for BSS sections
     */
-   if (Segment->Characteristics & IMAGE_SECTION_CHAR_BSS)
+   if (Segment->Characteristics & IMAGE_SCN_LNK_OTHER)
    {
       MmUnlockSectionSegment(Segment);
       Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, &Page);
@@ -1359,7 +1359,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    FileObject = Context.Section->FileObject;
    DirectMapped = FALSE;
    if (FileObject != NULL &&
-       !(Context.Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED))
+       !(Context.Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
    {
       Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
 
@@ -1405,7 +1405,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
     * Prepare the context structure for the rmap delete call.
     */
    Context.WasDirty = FALSE;
-   if (Context.Segment->Characteristics & IMAGE_SECTION_CHAR_BSS ||
+   if (Context.Segment->Characteristics & IMAGE_SCN_LNK_OTHER ||
          IS_SWAP_FROM_SSE(Entry) ||
          PFN_FROM_SSE(Entry) != Page)
    {
@@ -1441,7 +1441,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    if (!Context.Private && MmGetPageEntrySectionSegment(Context.Segment, Context.Offset) != 0)
    {
       if (!(Context.Segment->Flags & MM_PAGEFILE_SEGMENT) &&
-            !(Context.Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED))
+            !(Context.Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
       {
          KEBUGCHECK(0);
       }
@@ -1473,7 +1473,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
          return(STATUS_SUCCESS);
       }
    }
-   else if (Context.Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED)
+   else if (Context.Segment->Characteristics & IMAGE_SCN_MEM_SHARED)
    {
       if (Context.Private)
       {
@@ -1640,7 +1640,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    DPRINT("MM: Wrote section page 0x%.8X to swap!\n", Page << PAGE_SHIFT);
    MmSetSavedSwapEntryPage(Page, 0);
    if (Context.Segment->Flags & MM_PAGEFILE_SEGMENT ||
-         Context.Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED)
+         Context.Segment->Characteristics & IMAGE_SCN_MEM_SHARED)
    {
       MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, MAKE_SWAP_SSE(SwapEntry));
    }
@@ -1703,7 +1703,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
    FileObject = Section->FileObject;
    DirectMapped = FALSE;
    if (FileObject != NULL &&
-         !(Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED))
+         !(Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
    {
       Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
 
@@ -1747,7 +1747,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Check for a private (COWed) page.
     */
-   if (Segment->Characteristics & IMAGE_SECTION_CHAR_BSS ||
+   if (Segment->Characteristics & IMAGE_SCN_LNK_OTHER ||
          IS_SWAP_FROM_SSE(Entry) ||
          PFN_FROM_SSE(Entry) != Page)
    {
@@ -1860,7 +1860,7 @@ MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
             Page = MmGetPfnForProcess(AddressSpace->Process, Address);
 
             Protect = PAGE_READONLY;
-            if (Segment->Characteristics & IMAGE_SECTION_CHAR_BSS ||
+            if (Segment->Characteristics & IMAGE_SCN_LNK_OTHER ||
                   IS_SWAP_FROM_SSE(Entry) ||
                   PFN_FROM_SSE(Entry) != Page)
             {
@@ -2025,12 +2025,12 @@ MmpDeleteSection(PVOID ObjectBody)
 
       for (i = 0; i < NrSegments; i++)
       {
-         if (SectionSegments[i].Characteristics & IMAGE_SECTION_CHAR_SHARED)
+         if (SectionSegments[i].Characteristics & IMAGE_SCN_MEM_SHARED)
          {
             MmLockSectionSegment(&SectionSegments[i]);
          }
          RefCount = InterlockedDecrementUL(&SectionSegments[i].ReferenceCount);
-         if (SectionSegments[i].Characteristics & IMAGE_SECTION_CHAR_SHARED)
+         if (SectionSegments[i].Characteristics & IMAGE_SCN_MEM_SHARED)
          {
             if (RefCount == 0)
             {
@@ -3776,7 +3776,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
        * and calculate the image base address */
       for (i = 0; i < NrSegments; i++)
       {
-         if (!(SectionSegments[i].Characteristics & IMAGE_SECTION_NOLOAD))
+         if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
          {
             if (Segment == &SectionSegments[i])
             {
@@ -3792,7 +3792,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
 
       for (i = 0; i < NrSegments; i++)
       {
-         if (!(SectionSegments[i].Characteristics & IMAGE_SECTION_NOLOAD))
+         if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
          {
             PVOID SBaseAddress = (PVOID)
                                  ((char*)ImageBaseAddress + (ULONG_PTR)SectionSegments[i].VirtualAddress);
@@ -4197,7 +4197,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
       ImageSize = 0;
       for (i = 0; i < NrSegments; i++)
       {
-         if (!(SectionSegments[i].Characteristics & IMAGE_SECTION_NOLOAD))
+         if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
          {
             ULONG MaxExtent;
             MaxExtent = (ULONG)((char*)SectionSegments[i].VirtualAddress +
@@ -4227,7 +4227,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
       for (i = 0; i < NrSegments; i++)
       {
-         if (!(SectionSegments[i].Characteristics & IMAGE_SECTION_NOLOAD))
+         if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
          {
             PVOID SBaseAddress = (PVOID)
                                  ((char*)ImageBase + (ULONG_PTR)SectionSegments[i].VirtualAddress);
@@ -4357,8 +4357,9 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
  * @unimplemented
  */
 BOOLEAN STDCALL
-MmForceSectionClosed (DWORD Unknown0,
-                      DWORD Unknown1)
+MmForceSectionClosed (
+    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    IN BOOLEAN                  DelayClose)
 {
    UNIMPLEMENTED;
    return (FALSE);
