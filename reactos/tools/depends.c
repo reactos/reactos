@@ -44,7 +44,8 @@ int main(int argc, char* argv[])
     {
       *dot = 0;
     }
-  fprintf(out, "%s/.%s.d %s/%s.o:", prefix, buf, prefix,buf);
+  fprintf(out, "%s/.%s.TAG %s/.%s.d %s/%s.o:", prefix, buf, prefix, buf, 
+	  prefix,buf);
 
   while ((ch = fgetc(stdin)) != EOF)
     {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.130 2002/07/17 21:28:37 dwelch Exp $
+/* $Id: main.c,v 1.131 2002/07/20 21:49:35 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -817,7 +817,11 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 	 sizeof(LOADER_MODULE) * KeLoaderBlock.ModsCount);
   KeLoaderBlock.ModsCount++;
   KeLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
-  
+
+  /*
+   * Convert a path specification in the grub to one understood by the
+   * rest of the kernel.
+   */
   if (((PUCHAR)_LoaderBlock->CommandLine)[0] == '(')
     {
       ULONG DiskNumber, PartNumber;

@@ -1914,7 +1914,7 @@ BOOLEAN LoadExports(void)
 	ENTER_FUNC();
 
     Print(OUTPUT_WINDOW,"pICE: loading exports...\n");
-	hf = PICE_open(L"\\SystemRoot\\symbols\\kernel.map",OF_READ);
+	hf = PICE_open(L"\\SystemRoot\\symbols\\ntoskrnl.map",OF_READ);
 	/*
 	if(hf)
     {

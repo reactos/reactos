@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.76 2002/07/20 20:27:21 ei Exp $
+# $Id: Makefile,v 1.77 2002/07/20 21:49:35 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -56,7 +56,7 @@ all: \
 	$(TARGETNAME).nostrip.exe \
 	$(TARGETNAME).exe \
 	$(TARGETNAME).sym \
-	kernel.map
+	ntoskrnl.map
 
 #
 # Architecture specific Makefile
@@ -338,6 +338,7 @@ DEP_OBJECTS := $(OBJECTS_NT) $(OBJECTS_MM) $(OBJECTS_ARCH) \
 	$(OBJECTS_DBG) $(OBJECTS_CM) $(OBJECTS_LDR) $(OBJECTS_LPC) \
 	$(OBJECTS_PO) $(OBJECTS_KD) $(OBJECTS_RTL)
 
+TAG_OBJECTS := $(join $(dir $(DEP_OBJECTS)),$(patsubst %.o, .%.TAG, $(notdir $(DEP_OBJECTS))))
 
 #
 # Include automatic dependancy tracking
@@ -501,8 +502,9 @@ CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o \
               ex/i386/*.o io/*.o ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o \
               rtl/*.o se/*.o ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o \
               lpc/*.o kd/*.o $(TARGETNAME).o junk.tmp base.tmp temp.exp \
-              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym kernel.map \
-	          $(TARGETNAME).coff bugcodes.rc msg?????.bin $(DEP_FILES)
+              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym ntoskrnl.map \
+	          $(TARGETNAME).coff bugcodes.rc msg?????.bin $(DEP_FILES) \
+	      $(TAG_OBJECTS)
 
 $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA)
 	$(CC) \
@@ -621,8 +623,11 @@ $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk
 $(TARGETNAME).sym: $(TARGETNAME).nostrip.exe
 	$(RSYM) $(TARGETNAME).nostrip.exe $(TARGETNAME).sym
 
-kernel.map: $(TARGETNAME).nostrip.exe
-	$(NM) --numeric-sort $(TARGETNAME).nostrip.exe > kernel.map
+TAGS: $(TAG_OBJECTS)
+	etags $(addprefix -i , $(TAG_OBJECTS))
+
+ntoskrnl.map: $(TARGETNAME).nostrip.exe
+	$(NM) --numeric-sort $(TARGETNAME).nostrip.exe > ntoskrnl.map
 
 $(TARGETNAME).o: $(OBJECTS)
 	$(LD) \
@@ -683,5 +688,17 @@ ke/main.o: ke/main.c $(PATH_TO_TOP)/include/reactos/buildno.h
 	$(NASM_CMD) $(NFLAGS) $< -o $@
 %.coff: %.rc
 	$(RC) $(RCINC) $< -o $@
+
+#
+#
+#
+.%.TAG: %.S
+	etags -o $@ $<
+
+.%.TAG: %.s
+	etags -o $@ $<
+
+.%.TAG: %.c
+	etags -o $@ $^
 
 # EOF
