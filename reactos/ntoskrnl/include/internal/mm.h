@@ -372,8 +372,8 @@ VOID MmSetCleanPage(struct _EPROCESS* Process, PVOID Address);
 VOID MmLockPage(PHYSICAL_ADDRESS PhysicalPage);
 VOID MmUnlockPage(PHYSICAL_ADDRESS PhysicalPage);
 
-NTSTATUS MmSafeCopyFromUser(PVOID Dest, PVOID Src, ULONG Count);
-NTSTATUS MmSafeCopyToUser(PVOID Dest, PVOID Src, ULONG Count);
+NTSTATUS MmSafeCopyFromUser(PVOID Dest, const VOID *Src, ULONG Count);
+NTSTATUS MmSafeCopyToUser(PVOID Dest, const VOID *Src, ULONG Count);
 NTSTATUS 
 MmCreatePhysicalMemorySection(VOID);
 PHYSICAL_ADDRESS

@@ -1,4 +1,4 @@
-/* $Id: mem.c,v 1.19 2003/07/11 01:23:15 royce Exp $
+/* $Id: mem.c,v 1.20 2003/08/10 07:05:24 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,7 +20,7 @@
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS STDCALL
-MmCopyToCaller(PVOID Dest, PVOID Src, ULONG NumberOfBytes)
+MmCopyToCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes)
 {
   NTSTATUS Status;
 
@@ -41,7 +41,7 @@ MmCopyToCaller(PVOID Dest, PVOID Src, ULONG NumberOfBytes)
 }
 
 NTSTATUS STDCALL
-MmCopyFromCaller(PVOID Dest, PVOID Src, ULONG NumberOfBytes)
+MmCopyFromCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes)
 {
   NTSTATUS Status;
 
