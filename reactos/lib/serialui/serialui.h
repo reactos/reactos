@@ -26,6 +26,18 @@ typedef struct _DIALOG_INFO
 	LPCOMMCONFIG lpCC;
 } DIALOG_INFO, *LPDIALOG_INFO;
 
+typedef struct _PARITY_INFO
+{
+	BYTE Parity;
+	UINT StrId;
+} PARITY_INFO, *PPARITY_INFO;
+
+typedef struct _STOPBIT_INFO
+{
+	BYTE StopBit;
+	UINT StrId;
+} STOPBIT_INFO, *PSTOPBIT_INFO;
+
 
 /************************************
  *

@@ -19,49 +19,35 @@ static HINSTANCE hDllInstance;
  *
  ************************************/
 
-struct
-{
-	DWORD Baud;
-	CHAR *Str;
-} Bauds[] =
-{
-	{ CBR_110, "110" },
-	{ CBR_300, "300" },
-	{ CBR_600, "600" },
-	{ CBR_1200, "1200" },
-	{ CBR_2400, "2400" },
-	{ CBR_4800, "4800" },
-	{ CBR_9600, "9600" },
-	{ CBR_14400, "14400" },
-	{ CBR_19200, "19200" },
-	{ CBR_38400, "38400" },
-	{ CBR_56000, "56000" },
-	{ CBR_57600, "57600" },
-	{ CBR_115200, "115200" },
-	{ CBR_128000, "128000" },
-	{ CBR_256000, "256000" },
-	{ 0, 0 }
+const DWORD Bauds[] = {
+	CBR_110,
+	CBR_300,
+	CBR_600,
+	CBR_1200,
+	CBR_2400,
+	CBR_4800,
+	CBR_9600,
+	CBR_14400,
+	CBR_19200,
+	CBR_38400,
+	CBR_56000,
+	CBR_57600,
+	CBR_115200,
+	CBR_128000,
+	CBR_256000,
+	0
 };
 
-struct
-{
- BYTE ByteSize;
- CHAR *Str;
-} ByteSizes[] =
-{
-	{ 5, "5" },
-	{ 6, "6" },
-	{ 7, "7" },
-	{ 8, "8" },
-	{ 0, 0 }
+const BYTE ByteSizes[] = {
+	5,
+	6,
+	7,
+	8,
+	0
 };
 
-struct
-{
- BYTE Parity;
- UINT StrId;
-} Paritys[] =
-{
+
+const PARITY_INFO Parities[] = {
 	{ EVENPARITY, IDS_EVENPARITY },
 	{ MARKPARITY, IDS_MARKPARITY },
 	{ NOPARITY, IDS_NOPARITY },
@@ -70,12 +56,7 @@ struct
 	{ 0, 0 }
 };
 
-struct
-{
- BYTE StopBit;
- UINT StrId;
-} StopBits[] =
-{
+const STOPBIT_INFO StopBits[] = {
 	{ ONESTOPBIT, IDS_ONESTOPBIT },
 	{ ONE5STOPBITS, IDS_ONE5STOPBITS },
 	{ TWOSTOPBITS, IDS_TWOSTOPBITS },
@@ -218,27 +199,22 @@ LRESULT CommDlgProc(HWND hDlg,
 
 		case WM_INITDIALOG:
 		{
-			WCHAR wstr[255], *format;
-			CHAR str[255];
+			WCHAR wstr[255];
 			RECT rc, rcDlg, rcOwner;
 			HWND hOwner;
-			INT i, len;
+			INT i;
 
 			lpDlgInfo = (LPDIALOG_INFO)lParam;
-			SetWindowLong(hDlg, DWL_USER, (LONG)lpDlgInfo);
+			SetWindowLongPtrW(hDlg, DWL_USER, (LONG_PTR)lpDlgInfo);
 
 			/* Set title */
-			LoadStringA(hDllInstance, IDS_TITLE, str, 254);
-			len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
-			if((format = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR))))
+			if(LoadStringW(hDllInstance, IDS_TITLE, wstr, sizeof(wstr) / sizeof(wstr[0])))
 			{
-				MultiByteToWideChar(CP_ACP, 0, str, -1, format, len);
-				wnsprintfW(wstr, 254, format, lpDlgInfo->lpszDevice);
-				HeapFree(GetProcessHeap(), 0, format);
-				SetWindowTextW(hDlg, wstr);
+    				SetWindowTextW(hDlg, wstr);
 			}
 
-			if(!(hOwner = GetParent(hDlg)))
+                        /* FIXME - this won't work correctly systems with multiple monitors! */
+                        if(!(hOwner = GetParent(hDlg)))
 				hOwner = GetDesktopWindow();
 
 			/* Position dialog in the center of owner window */
@@ -257,46 +233,48 @@ LRESULT CommDlgProc(HWND hDlg,
 			if(!(hBox = GetDlgItem(hDlg, IDC_BAUDRATE)))
 				EndDialog(hDlg, 0);
 
-			for(i = 0; Bauds[i].Str; i++)
+			for(i = 0; Bauds[i]; i++)
 			{
-				SendMessageA(hBox, CB_INSERTSTRING, (WPARAM)i, (LPARAM)Bauds[i].Str);
-				if(Bauds[i].Baud == lpDlgInfo->lpCC->dcb.BaudRate)
-					SendMessageA(hBox, CB_SETCURSEL, (WPARAM)i, 0);
+                                wsprintf(wstr, L"%d", Bauds[i]);
+                                SendMessageW(hBox, CB_INSERTSTRING, (WPARAM)i, (LPARAM)wstr);
+				if(Bauds[i] == lpDlgInfo->lpCC->dcb.BaudRate)
+					SendMessageW(hBox, CB_SETCURSEL, (WPARAM)i, 0);
 			}
 
-			if(SendMessage(hBox, CB_GETCURSEL, 0, 0)==CB_ERR)
-				SendMessageA(hBox, CB_SETCURSEL, DEFAULT_BAUD_INDEX, 0);
+			if(SendMessageW(hBox, CB_GETCURSEL, 0, 0) == CB_ERR)
+				SendMessageW(hBox, CB_SETCURSEL, DEFAULT_BAUD_INDEX, 0);
 
 			/* Initialize byte size combo */
 			if(!(hBox = GetDlgItem(hDlg, IDC_BYTESIZE)))
 				EndDialog(hDlg, 0);
 
-			for(i = 0; ByteSizes[i].Str; i++)
+			for(i = 0; ByteSizes[i]; i++)
 			{
-				SendMessageA(hBox, CB_INSERTSTRING, (WPARAM)i, (LPARAM)ByteSizes[i].Str);
-				if(ByteSizes[i].ByteSize == lpDlgInfo->lpCC->dcb.ByteSize)
-					SendMessageA(hBox, CB_SETCURSEL, (WPARAM)i, 0);
+                                wsprintf(wstr, L"%d", Bauds[i]);
+                                SendMessageW(hBox, CB_INSERTSTRING, (WPARAM)i, (LPARAM)wstr);
+				if(ByteSizes[i] == lpDlgInfo->lpCC->dcb.ByteSize)
+					SendMessageW(hBox, CB_SETCURSEL, (WPARAM)i, 0);
 			}
 
-			if(SendMessage(hBox, CB_GETCURSEL, 0, 0)==CB_ERR)
-				SendMessageA(hBox, CB_SETCURSEL, DEFAULT_BYTESIZE_INDEX, 0);
+			if(SendMessageW(hBox, CB_GETCURSEL, 0, 0) == CB_ERR)
+				SendMessageW(hBox, CB_SETCURSEL, DEFAULT_BYTESIZE_INDEX, 0);
 
 			/* Initialize parity combo */
 			if(!(hBox = GetDlgItem(hDlg, IDC_PARITY)))
 				EndDialog(hDlg, 0);
 
-			for(i = 0; Paritys[i].StrId; i++)
+			for(i = 0; Parities[i].StrId; i++)
 			{
-				if(LoadStringA(hDllInstance, Paritys[i].StrId, str, 254))
+				if(LoadStringW(hDllInstance, Parities[i].StrId, wstr, sizeof(wstr) / sizeof(wstr[0])))
 				{
-					SendMessageA(hBox, CB_INSERTSTRING, (WPARAM)i, (LPARAM)str);
-					if(Paritys[i].Parity == lpDlgInfo->lpCC->dcb.Parity)
-						SendMessageA(hBox, CB_SETCURSEL, (WPARAM)i, 0);
+					SendMessageW(hBox, CB_INSERTSTRING, (WPARAM)i, (LPARAM)wstr);
+					if(Parities[i].Parity == lpDlgInfo->lpCC->dcb.Parity)
+						SendMessageW(hBox, CB_SETCURSEL, (WPARAM)i, 0);
 				}
 			}
 
-			if(SendMessage(hBox, CB_GETCURSEL, 0, 0)==CB_ERR)
-				SendMessageA(hBox, CB_SETCURSEL, DEFAULT_PARITY_INDEX, 0);
+			if(SendMessageW(hBox, CB_GETCURSEL, 0, 0)==CB_ERR)
+				SendMessageW(hBox, CB_SETCURSEL, DEFAULT_PARITY_INDEX, 0);
 
 			/* Initialize stop bits combo */
 			if(!(hBox = GetDlgItem(hDlg, IDC_STOPBITS)))
@@ -304,46 +282,46 @@ LRESULT CommDlgProc(HWND hDlg,
 
 			for(i = 0; StopBits[i].StrId; i++)
 			{
-				if(LoadStringA(hDllInstance,StopBits[i].StrId, str, 254))
+				if(LoadStringW(hDllInstance, StopBits[i].StrId, wstr, sizeof(wstr) / sizeof(wstr[0])))
 				{
-					SendMessageA(hBox, CB_INSERTSTRING, (WPARAM)i, (LPARAM)str);
+					SendMessageW(hBox, CB_INSERTSTRING, (WPARAM)i, (LPARAM)wstr);
 					if(StopBits[i].StopBit == lpDlgInfo->lpCC->dcb.StopBits)
-						SendMessageA(hBox, CB_SETCURSEL, (WPARAM)i, 0);
+						SendMessageW(hBox, CB_SETCURSEL, (WPARAM)i, 0);
 				}
 			}
 
-			if(SendMessage(hBox, CB_GETCURSEL, 0, 0)==CB_ERR)
-				SendMessageA(hBox, CB_SETCURSEL, DEFAULT_STOPBITS_INDEX, 0);
+			if(SendMessageW(hBox, CB_GETCURSEL, 0, 0)==CB_ERR)
+				SendMessageW(hBox, CB_SETCURSEL, DEFAULT_STOPBITS_INDEX, 0);
 
 			/* Initialize flow control combo */
 			if(!(hBox = GetDlgItem(hDlg, IDC_FLOW)))
 				EndDialog(hDlg, 0);
 
-			if(LoadStringA(hDllInstance,IDS_FC_NO, str, 254))
+			if(LoadStringW(hDllInstance, IDS_FC_NO, wstr, sizeof(wstr) / sizeof(wstr[0])))
 			{
-				SendMessageA(hBox, CB_INSERTSTRING, 0, (LPARAM)str);
-				SendMessageA(hBox, CB_SETCURSEL, 0, 0);
+				SendMessageW(hBox, CB_INSERTSTRING, 0, (LPARAM)wstr);
+				SendMessageW(hBox, CB_SETCURSEL, 0, 0);
 				lpDlgInfo->InitialFlowIndex = 0;
 			}
 
 
-			if(LoadStringA(hDllInstance,IDS_FC_CTSRTS, str, 254))
+			if(LoadStringW(hDllInstance, IDS_FC_CTSRTS, wstr, sizeof(wstr) / sizeof(wstr[0])))
 			{
-				SendMessageA(hBox, CB_INSERTSTRING, 1, (LPARAM)str);
+				SendMessageW(hBox, CB_INSERTSTRING, 1, (LPARAM)wstr);
 				if(lpDlgInfo->lpCC->dcb.fRtsControl == RTS_CONTROL_HANDSHAKE
 					|| lpDlgInfo->lpCC->dcb.fOutxCtsFlow == TRUE)
 				{
-					SendMessageA(hBox, CB_SETCURSEL, 1, 0);
+					SendMessageW(hBox, CB_SETCURSEL, 1, 0);
 					lpDlgInfo->InitialFlowIndex = 1;
 				}
 			}
 
-			if(LoadStringA(hDllInstance,IDS_FC_XONXOFF, str, 254))
+			if(LoadStringW(hDllInstance, IDS_FC_XONXOFF, wstr, sizeof(wstr) / sizeof(wstr[0])))
 			{
-				SendMessageA(hBox, CB_INSERTSTRING, 2, (LPARAM)str);
+				SendMessageW(hBox, CB_INSERTSTRING, 2, (LPARAM)wstr);
 				if(lpDlgInfo->lpCC->dcb.fOutX || lpDlgInfo->lpCC->dcb.fInX)
 				{
-					SendMessageA(hBox, CB_SETCURSEL, 2, 0);
+					SendMessageW(hBox, CB_SETCURSEL, 2, 0);
 					lpDlgInfo->InitialFlowIndex = 2;
 				}
 			}
@@ -387,26 +365,26 @@ VOID OkButton(HWND hDlg)
 	LPDIALOG_INFO lpDlgInfo;
 	UINT Index;
 
-	lpDlgInfo = (LPDIALOG_INFO) GetWindowLong(hDlg, DWL_USER);
+	lpDlgInfo = (LPDIALOG_INFO) GetWindowLongPtrW(hDlg, DWL_USER);
 
 	/* Baud rate */
-	Index = SendMessage(GetDlgItem(hDlg, IDC_BAUDRATE), CB_GETCURSEL, 0, 0);
-	lpDlgInfo->lpCC->dcb.BaudRate = Bauds[Index].Baud;
+	Index = SendMessageW(GetDlgItem(hDlg, IDC_BAUDRATE), CB_GETCURSEL, 0, 0);
+	lpDlgInfo->lpCC->dcb.BaudRate = Bauds[Index];
 
 	/* Byte size */
-	Index = SendMessage(GetDlgItem(hDlg, IDC_BYTESIZE), CB_GETCURSEL, 0, 0);
-	lpDlgInfo->lpCC->dcb.ByteSize = ByteSizes[Index].ByteSize;
+	Index = SendMessageW(GetDlgItem(hDlg, IDC_BYTESIZE), CB_GETCURSEL, 0, 0);
+	lpDlgInfo->lpCC->dcb.ByteSize = ByteSizes[Index];
 
 	/* Parity */
-	Index = SendMessage(GetDlgItem(hDlg, IDC_PARITY), CB_GETCURSEL, 0, 0);
-	lpDlgInfo->lpCC->dcb.Parity = Paritys[Index].Parity;
+	Index = SendMessageW(GetDlgItem(hDlg, IDC_PARITY), CB_GETCURSEL, 0, 0);
+	lpDlgInfo->lpCC->dcb.Parity = Parities[Index].Parity;
 
 	/* Stop bits */
-	Index = SendMessage(GetDlgItem(hDlg, IDC_STOPBITS), CB_GETCURSEL, 0, 0);
+	Index = SendMessageW(GetDlgItem(hDlg, IDC_STOPBITS), CB_GETCURSEL, 0, 0);
 	lpDlgInfo->lpCC->dcb.StopBits = StopBits[Index].StopBit;
 	
 	/* Flow Control */
-	Index = SendMessage(GetDlgItem(hDlg, IDC_FLOW), CB_GETCURSEL, 0, 0);
+	Index = SendMessageW(GetDlgItem(hDlg, IDC_FLOW), CB_GETCURSEL, 0, 0);
 	if(lpDlgInfo->InitialFlowIndex != Index)
 	{
 		switch(Index)
