@@ -124,7 +124,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_SIDE_BAR, MF_BYCOMMAND|MF_UNCHECKED/*MF_CHECKED*/);
 
 
-	 // create rebar window to manage toolbar and drivebar
+	 // create rebar window to manage toolbar and address bar
 #ifndef _NO_REBAR
 	_hwndrebar = CreateWindowEx(WS_EX_TOOLWINDOW, REBARCLASSNAME, NULL,
 					WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|
@@ -149,10 +149,17 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 	rbBand.cyMaxChild = 0;
 	rbBand.cyIntegral = btn_hgt;
 
-	rbBand.lpText = NULL;//TEXT("Toolbar");
+	rbBand.lpText = TEXT("Toolbar");
 	rbBand.hwndChild = _htoolbar;
 	rbBand.cxMinChild = 0;
 	rbBand.cyMinChild = btn_hgt + 4;
+	rbBand.cx = 182;
+	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
+
+	rbBand.lpText = TEXT("Address");
+	rbBand.hwndChild = _haddressedit;
+	rbBand.cxMinChild = 0;
+	rbBand.cyMinChild = btn_hgt - 2;
 	rbBand.cx = 284;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 #endif
@@ -393,13 +400,6 @@ void MainFrameBase::resize_frame(int cx, int cy)
 		SendMessage(_hstatusbar, SB_SETPARTS, 2, (LPARAM)&parts);
 		ClientRect rt(_hstatusbar);
 		rect.bottom -= rt.bottom;
-	}
-
-	if (IsWindowVisible(_haddressedit)) {
-		ClientRect rt(_haddressedit);
-		rect.bottom -= rt.bottom;
-
-		SetWindowPos(_haddressedit, 0, 0, rect.bottom, rect.right-rect.left, rt.bottom, SWP_NOACTIVATE|SWP_NOZORDER);
 	}
 
 	if (IsWindowVisible(_hsidebar)) {
@@ -725,13 +725,6 @@ void MainFrame::resize_frame(int cx, int cy)
 		SendMessage(_hstatusbar, SB_SETPARTS, 2, (LPARAM)&parts);
 		ClientRect rt(_hstatusbar);
 		rect.bottom -= rt.bottom;
-	}
-
-	if (IsWindowVisible(_haddressedit)) {
-		ClientRect rt(_haddressedit);
-		rect.bottom -= rt.bottom;
-
-		SetWindowPos(_haddressedit, 0, 0, rect.bottom, rect.right-rect.left, rt.bottom, SWP_NOACTIVATE|SWP_NOZORDER);
 	}
 
 	if (IsWindowVisible(_hsidebar)) {
