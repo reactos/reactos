@@ -66,14 +66,6 @@ WPUOpenCurrentThread(
     OUT LPWSATHREADID lpThreadId,
     OUT LPINT lpErrno);
 
-BOOL
-WSPAPI
-WPUPostMessage(
-    IN  HWND hWnd,
-    IN  UINT Msg,
-    IN  WPARAM wParam,
-    IN  LPARAM lParam);
-
 INT
 WSPAPI
 WPUQueryBlockingCallback(

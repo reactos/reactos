@@ -171,21 +171,6 @@ WPUOpenCurrentThread(
 
 
 /*
- * @implemented
- */
-BOOL
-WSPAPI
-WPUPostMessage(
-    IN  HWND hWnd,
-    IN  UINT Msg,
-    IN  WPARAM wParam,
-    IN  LPARAM lParam)
-{
-    return PostMessageW(hWnd, Msg, wParam, lParam);
-}
-
-
-/*
  * @unimplemented
  */
 INT

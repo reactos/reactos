@@ -710,7 +710,7 @@ DllMain(HANDLE hInstDll,
     UpcallTable.lpWPUFDIsSet            = WPUFDIsSet;
     UpcallTable.lpWPUGetProviderPath    = WPUGetProviderPath;
     UpcallTable.lpWPUModifyIFSHandle    = WPUModifyIFSHandle;
-    UpcallTable.lpWPUPostMessage        = WPUPostMessage;
+    UpcallTable.lpWPUPostMessage        = PostMessageW;
     UpcallTable.lpWPUQueryBlockingCallback    = WPUQueryBlockingCallback;
     UpcallTable.lpWPUQuerySocketHandleContext = WPUQuerySocketHandleContext;
     UpcallTable.lpWPUQueueApc           = WPUQueueApc;
