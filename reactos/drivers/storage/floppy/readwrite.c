@@ -708,6 +708,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
   /* That's all folks! */
   KdPrint(("floppy: ReadWritePassive(): success; Completing with STATUS_SUCCESS\n"));
   Irp->IoStatus.Status = STATUS_SUCCESS;
+  Irp->IoStatus.Information = Length;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
   StopMotor(DriveInfo->ControllerInfo);
 }
