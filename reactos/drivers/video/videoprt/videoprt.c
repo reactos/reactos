@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.24 2004/03/19 20:58:32 navaraf Exp $
+ * $Id: videoprt.c,v 1.25 2004/06/26 22:30:34 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -534,7 +534,8 @@ VideoPortInitialize(
    RtlCopyMemory(
       &DriverExtension->InitializationData,
       HwInitializationData,
-      sizeof(VIDEO_HW_INITIALIZATION_DATA));
+      min(sizeof(VIDEO_HW_INITIALIZATION_DATA),
+          HwInitializationData->HwInitDataSize));
    DriverExtension->HwContext = HwContext;
 
    RtlCopyMemory(&DriverExtension->RegistryPath, RegistryPath, sizeof(UNICODE_STRING));

@@ -1,4 +1,4 @@
-; $Id: videoprt.def,v 1.7 2004/03/08 20:27:33 dwelch Exp $
+; $Id: videoprt.def,v 1.8 2004/06/26 22:30:34 navaraf Exp $
 ;
 ; vidport.def - export definition file for ReactOS
 ;
@@ -39,6 +39,8 @@ VideoPortMapMemory@24
 VideoPortMoveMemory@12
 VideoPortPutDmaAdapter@8
 VideoPortQueueDpc@12
+VideoPortQueryPerformanceCounter@8
+VideoPortQueryServices@12
 VideoPortReadPortUchar@4
 VideoPortReadPortUshort@4
 VideoPortReadPortUlong@4
