@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.4 1999/12/18 17:48:22 dwelch Exp $
+/* $Id: usercall.c,v 1.5 2000/01/23 15:17:06 hochoa Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,6 +24,9 @@
 
 extern SERVICE_TABLE _SystemServiceTable[];
 
+extern KE_SERVICE_DESCRIPTOR_TABLE_ENTRY KeServiceDescriptorTable;
+extern KE_SERVICE_DESCRIPTOR_TABLE_ENTRY KeServiceDescriptorTableShadow[];
+
 /* The service dispatcher will take the service number passed in
  * by the user mode process, logical and it with ServiceNumberMask
  * and compare the resulting value with ServiceNumberValue.  If the
@@ -43,14 +46,14 @@ static KSPIN_LOCK DispatchTableLock = {0,};
 static DWORD DispatchTableCount = 0;
 static HAL_DISPATCH_TABLE_ENTRY DispatchTables[16];
 
-NTSTATUS HalRegisterServiceTable(DWORD  Mask, 
-                                 DWORD  Value, 
+NTSTATUS HalRegisterServiceTable(DWORD  Mask,
+                                 DWORD  Value,
                                  PSERVICE_TABLE  Table,
                                  DWORD  Count)
 {
   NTSTATUS  Status;
   KIRQL  OldLvl;
-  
+
   KeAcquireSpinLock(&DispatchTableLock, &OldLvl);
 
   Status = STATUS_SUCCESS;
@@ -61,7 +64,7 @@ NTSTATUS HalRegisterServiceTable(DWORD  Mask,
   DispatchTables[DispatchTableCount].ServiceTable = Table;
   DispatchTables[DispatchTableCount].TableCount = Count;
   DispatchTableCount++;
-  
+
   KeReleaseSpinLock(&DispatchTableLock, OldLvl);
 
   return  Status;
@@ -104,9 +107,9 @@ VOID KiSystemCallHook(ULONG Nr, ...)
 #ifdef TRACE_SYSTEM_CALLS
    va_list ap;
    ULONG i;
-   
+
    va_start(ap, Nr);
-   
+
    DbgPrint("%x/%d ", _SystemServiceTable[Nr].Function,Nr);
    DbgPrint("%x (", _SystemServiceTable[Nr].ParametersSize);
    for (i = 0; i < _SystemServiceTable[Nr].ParametersSize / 4; i++)
@@ -129,80 +132,101 @@ ULONG KiAfterSystemCallHook(ULONG NtStatus, PCONTEXT Context)
    return(NtStatus);
 }
 
+// This function should be used by win32k.sys to add its own user32/gdi32 services
+// SSDTIndex is 0 based
+// SyscallsCountTable its not used at the moment
+NTSTATUS KeAddSystemServiceTable( int SSDTindex, PSSDT pSSDT, PSSPT pSSPT, ULONG* SyscallsCountTable )
+{
+
+
+    // TODO: We could improve these checks to see if the pointers point to valid memory and so on...
+    // but we're in kernel mode, this function can get called only from kernel mode, so, why bother?
+    if(pSSDT == NULL || pSSPT == NULL || SSDTindex != 1)
+                    return STATUS_UNSUCCESSFUL;
+
+    // We update the KeServiceDescriptorTableShadow
+    KeServiceDescriptorTableShadow[SSDTindex].pSSDT = pSSDT;
+    KeServiceDescriptorTableShadow[SSDTindex].pSSPT = pSSPT;
+
+    return STATUS_SUCCESS;
+}
+
 void interrupt_handler2e(void);
    __asm__("\n\t.global _interrupt_handler2e\n\t"
            "_interrupt_handler2e:\n\t"
-           
+
 	   /* Save the user context */
 	   "pushl %ebp\n\t"       /* Ebp */
-	   
+
 	   "pushl %eax\n\t"       /* Eax */
 	   "pushl %ecx\n\t"       /* Ecx */
 	   "pushl %edx\n\t"       /* Edx */
 	   "pushl %ebx\n\t"       /* Ebx */
 	   "pushl %esi\n\t"       /* Esi */
 	   "pushl %edi\n\t"       /* Edi */
-	   
+
 	   "pushl %ds\n\t"        /* SegDs */
 	   "pushl %es\n\t"        /* SegEs */
 	   "pushl %fs\n\t"        /* SegFs */
 	   "pushl %gs\n\t"        /* SegGs */
-	   
+
 	   "subl $112,%esp\n\t"   /* FloatSave */
-	   
+
 	   "pushl $0\n\t"         /* Dr7 */
 	   "pushl $0\n\t"         /* Dr6 */
 	   "pushl $0\n\t"         /* Dr3 */
 	   "pushl $0\n\t"         /* Dr2 */
 	   "pushl $0\n\t"         /* Dr1 */
 	   "pushl $0\n\t"         /* Dr0 */
-	   
+
 	   "pushl $0\n\t"         /* ContextFlags */
-	   
+
            /*  Set ES to kernel segment  */
            "movw  $"STR(KERNEL_DS)",%bx\n\t"
            "movw %bx,%es\n\t"
-           
+
 	   /* Save pointer to user context as argument to system call */
 	   "pushl %esp\n\t"
-	   
+
            /*  Allocate new Kernel stack frame  */
            "movl %esp,%ebp\n\t"
-           
+
            /*  Users's current stack frame pointer is source  */
            "movl %edx,%esi\n\t"
 
            /* FIXME: determine system service table to use  */
            /* FIXME: chech to see if SS is valid/inrange  */
-           
+
            /*  Allocate room for argument list from kernel stack  */
-           "movl %es:__SystemServiceTable(,%eax,8),%ecx\n\t"
+           "movl %es:_MainSSPT(,%eax,4), %ecx\n\t"
+           //"movl %es:__SystemServiceTable(,%eax,8),%ecx\n\t"
            "subl %ecx,%esp\n\t"
-           
+
            /*  Copy the arguments from the user stack to the kernel stack  */
            "movl %esp,%edi\n\t"
            "rep\n\tmovsb\n\t"
-           
+
            /*  DS is now also kernel segment  */
            "movw %bx,%ds\n\t"
-           
+
 	   /* Call system call hook */
 	   "pushl %eax\n\t"
 	   "call _KiSystemCallHook\n\t"
 	   "popl %eax\n\t"
-	   
+
            /*  Make the system service call  */
-           "movl %ds:__SystemServiceTable+4(,%eax,8),%eax\n\t"
+           //"movl %ds:__SystemServiceTable+4(,%eax,8),%eax\n\t"
+            "movl %ds:_MainSSDT(,%eax,4),%eax\n\t"
            "call *%eax\n\t"
-           
+
            /*  Deallocate the kernel stack frame  */
            "movl %ebp,%esp\n\t"
-           
+
 	   /* Call the post system call hook and deliver any pending APCs */
 	   "pushl %eax\n\t"
 	   "call _KiAfterSystemCallHook\n\t"
 	   "addl $8,%esp\n\t"
-	   	   
+
            /*  Restore the user context  */
 	   "addl $4,%esp\n\t"    /* UserContext */
 	   "addl $24,%esp\n\t"   /* Dr[0-3,6-7] */
@@ -211,15 +235,15 @@ void interrupt_handler2e(void);
 	   "popl %fs\n\t"        /* SegFs */
 	   "popl %es\n\t"        /* SegEs */
 	   "popl %ds\n\t"        /* SegDs */
-	   
+
 	   "popl %edi\n\t"       /* Edi */
 	   "popl %esi\n\t"       /* Esi */
 	   "popl %ebx\n\t"       /* Ebx */
 	   "popl %edx\n\t"       /* Edx */
 	   "popl %ecx\n\t"       /* Ecx */
 	   "addl $4,%esp\n\t"       /* Eax (Not restored) */
-	   
+
 	   "popl %ebp\n\t"       /* Ebp */
-	   
+
            "iret\n\t");
 
