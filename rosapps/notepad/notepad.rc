@@ -1,0 +1,259 @@
+#include <windows.h>
+#include <reactos/resource.h>
+#include "resource.h"
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_NOTEPAD             ICON    DISCARDABLE     "res/notepad.ico"
+IDI_SMALL               ICON    DISCARDABLE     "res/small.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDC_NOTEPAD MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "E&xit",               ID_FILE_EXIT
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About ...",          ID_HELP_ABOUT
+    END
+END
+
+IDR_NOTEPAD_MENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New\tCtrl+N",        ID_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O",    ID_FILE_OPEN
+        MENUITEM "&Save\tCtrl+S",       ID_FILE_SAVE
+        MENUITEM "Save &As...",         ID_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "Page Set&up",         ID_FILE_PAGESETUP, GRAYED
+        MENUITEM "&Print\tCtrl+P",      ID_FILE_PRINT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",               ID_FILE_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo",                     ID_EDIT_UNDO, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",              ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",             ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",            ID_EDIT_PASTE
+        MENUITEM "De&lete\tDel",              ID_EDIT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Find...\tCtrl+F",          ID_EDIT_FIND, GRAYED
+        MENUITEM "Find Ne&xt\tF3",            ID_EDIT_FINDNEXT, GRAYED
+        MENUITEM "&Replace...\tCtrl+H",       ID_EDIT_REPLACE, GRAYED
+        MENUITEM "&Go To...\tCtrl+G",         ID_EDIT_GOTO, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All..\tCtrl+A",     ID_EDIT_SELECTALL
+        MENUITEM "Time/&Date...\tF5",         ID_EDIT_TIMEDATE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Status Bar",               ID_VIEW_STATUSBAR, GRAYED
+        MENUITEM "&Tool Bar",                 ID_VIEW_TOOLBAR, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Refresh\tF5",              ID_VIEW_REFRESH, GRAYED
+    END
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "&Word Wrap",                ID_FORMAT_WORDWRAP, GRAYED
+        MENUITEM "&Font...",                  ID_FORMAT_FONT
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",              ID_HELP_HELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&About Notepad",            ID_HELP_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  22, 17, 230, 75
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "System"
+BEGIN
+    ICON            IDI_NOTEPAD,IDI_NOTEPAD,14,9,16,16
+    LTEXT           "ReactOS Notepad Version 1.0",IDC_STATIC,49,10,119,8,
+                    SS_NOPREFIX
+    LTEXT           "Copyright (C) 2002 ReactOS Team",IDC_STATIC,49,20,119,8
+    DEFPUSHBUTTON   "OK",IDOK,195,6,30,11,WS_GROUP
+END
+
+IDD_DIALOG1 DIALOG DISCARDABLE  50, 50, 268, 98
+STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | 
+    WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+IDD_DIALOG2 DIALOG DISCARDABLE  0, 0, 187, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,130,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,130,24,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+(1) VERSIONINFO
+ FILEVERSION 0,0,21,3
+ PRODUCTVERSION 0,0,21,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "Absolutely no warranties whatsoever - Use at your own risk\0"
+            VALUE "CompanyName", "ReactOS Development Team\0"
+            VALUE "FileDescription", "ReactOS Notepad by Robert Dickenson\0"
+            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "InternalName", "notepad\0"
+            VALUE "LegalCopyright", "Copyright © 2002 Robert Dickenson\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "notepad.exe\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "ReactOS Operating System\0"
+            VALUE "ProductVersion", "0.0.21\0"
+            VALUE "SpecialBuild", "Non-versioned Development Beta Release\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0xc09, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APP_TITLE           "ReactOS Notepad"
+    IDC_NOTEPAD             "NOTEPAD"
+    IDC_NOTEPAD_FRAME       "NOTEPAD_FRAME"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_MENU            "Contains commands for loading and saving files"
+    ID_EDIT_MENU            "Contains commands for editing the current text"
+    ID_VIEW_MENU            "Contains commands for manipulating notepad's options"
+    ID_FORMAT_MENU          "Contains commands for customising the look of the text"
+    ID_HELP_MENU            "Contains commands for displaying help and information about notepad"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_NEW             "Creates and empty un-named text buffer"
+    ID_FILE_OPEN            "Opens a text file into notepads buffer"
+    ID_FILE_SAVE            "Saves the current text buffer to file"
+    ID_FILE_SAVEAS          "Saves the current text buffer to a new file"
+    ID_FILE_PAGESETUP       "Modify the setup options for printing the text"
+    ID_FILE_PRINT           "Prints all or part of the current text buffer"
+    ID_HELP_HELPTOPICS      "Opens notepad help"
+    ID_HELP_ABOUT           "Displays program information, version number and copyright"
+    ID_FILE_EXIT            "Quits this notepad text editor"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_EDIT_UNDO            "Undo the last buffer editing operation performed"
+    ID_EDIT_CUT             "Removes the selected text and places it on the clipboard"
+    ID_EDIT_COPY            "Copies the selected text to the clipboard"
+    ID_EDIT_PASTE           "Pastes the contents of the clipboard at the cursor location"
+    ID_EDIT_DELETE          "Deletes the selected text"
+    ID_EDIT_FIND            "Finds a text string in the buffer"
+    ID_EDIT_FINDNEXT        "Finds next occurrence of text specified in previous search"
+    ID_EDIT_GOTO            "Jump to specified line number in buffer"
+    ID_EDIT_SELECTALL       "Selects the entire text buffer"
+    ID_EDIT_TIMEDATE        "Inserts the current date and time at the cursor location"
+    ID_VIEW_STATUSBAR       "Shows or hides the status bar"
+    ID_VIEW_TOOLBAR         "Shows or hides the tool bar"
+    ID_VIEW_SPLIT           "Change position of split between two panes"
+    ID_VIEW_REFRESH         "Refreshes the text buffer from it's file"
+    ID_FORMAT_WORDWRAP      "Toggles word-wrap display mode"
+    ID_FORMAT_FONT          "Select font for displaying and printing buffer text"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (Australia) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENA)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_AUS
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_HELP_HELPTOPICS      "Opens Registry Editor Help."
+    ID_HELP_ABOUT           "Displays program information, version number, and copyright."
+END
+
+#endif    // English (Australia) resources
+/////////////////////////////////////////////////////////////////////////////
+
