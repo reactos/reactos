@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.44 2004/05/02 22:54:45 hbirr Exp $
+/* $Id: xhaldrv.c,v 1.45 2004/06/05 20:05:06 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1356,8 +1356,16 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 			((EndCylinder & 0x0300) >> 2) + (EndSector & 0x3f);
 
 		      /* Calculate start sector and sector count */
-		      StartBlock =
-			(PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart - ContainerOffset) / SectorSize;
+		      if (IsContainerPartition (PartitionBuffer->PartitionEntry[i + j].PartitionType))
+		        {
+		          StartBlock =
+			    (PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart - ContainerOffset) / SectorSize;
+			}
+		      else
+		        {
+		          StartBlock =
+			    (PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart - NextPartitionOffset) / SectorSize;
+		        }
 		      SectorCount =
 			PartitionBuffer->PartitionEntry[i + j].PartitionLength.QuadPart / SectorSize;
 		      DPRINT ("LBA (StartBlock:%lu  SectorCount:%lu)\n",
