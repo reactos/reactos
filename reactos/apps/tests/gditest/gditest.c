@@ -160,9 +160,9 @@ void rgntest( void )
 	RECT Rect;
 	int i;
 
-	hRgn1 = CreateRectRgn( 1, 1, 100, 100 );
+	hRgn1 = CreateRectRgn( 1, 2, 100, 101 );
 	if( hRgn1 == NULL ) {
-		printf("Failed at hRgn1 = CreateRectRgn( 1, 1, 100, 100 )\n");
+		printf("Failed at hRgn1 = CreateRectRgn( 1, 2, 100, 101 )\n");
 		return;
 	}
 	i = GetRgnBox( hRgn1, &Rect );
@@ -175,9 +175,9 @@ void rgntest( void )
 
 	DumpRgnData( hRgn1 );
 
-	hRgn2 = CreateRectRgn( 51, 51, 150, 150 );
+	hRgn2 = CreateRectRgn( 51, 53, 150, 152 );
 	if( hRgn2 == NULL ) {
-		printf("Failed at hRgn2 = CreateRectRgn( 51, 51, 150, 150 )\n");
+		printf("Failed at hRgn2 = CreateRectRgn( 51, 53, 150, 152 )\n");
 		return;
 	}
 	i = GetRgnBox( hRgn2, &Rect );
@@ -197,9 +197,9 @@ void rgntest( void )
 		printf("\t hRgn1, hRgn2 are NOT equal\n\n");
 	}
 
-	i = OffsetRgn(hRgn1,50,50);
+	i = OffsetRgn(hRgn1,50,51);
 	if( i==ERROR ){
-		printf("Failed OffsetRgn(hRgn1,50,50)\n");
+		printf("Failed OffsetRgn(hRgn1,50,51)\n");
 		return;
 	}
 
@@ -218,7 +218,7 @@ void rgntest( void )
 		printf("\t hRgn1, hRgn2 are NOT equal after offset!\n\n");
 	}
 
-	i = SetRectRgn(hRgn1, 10, 10, 110, 110 );
+	i = SetRectRgn(hRgn1, 10, 11, 110, 111 );
 	if( i==0 ){
 		printf("Failed SetRectRgn(hRgn1... )\n");
 		return;
@@ -228,7 +228,7 @@ void rgntest( void )
 		printf("Failed GetRgnBox( hRgn1, &Rect )\n");
 		return;
 	}
-	printf("after SetRectRgn(hRgn1, 10, 10, 110, 110 ):\n i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+	printf("after SetRectRgn(hRgn1, 10, 11, 110, 111 ):\n i=%d, left=%d top=%d right=%d bottom=%d\n\n",
 		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
 
 	hRgn3 = CreateRectRgn( 1, 1, 1, 1);
@@ -259,6 +259,49 @@ void rgntest( void )
 	printf("After CombineRgn( hRgn3, hRgn1, hRgn2, RGN_OR ): \nGetRgnBox( hRgn3, &Rect ): CR_i=%d, left=%d top=%d right=%d bottom=%d\n\n",
 		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
 	DumpRgnData( hRgn3 );
+
+	i = CombineRgn( hRgn3, hRgn1, hRgn2, RGN_DIFF );
+	if( i==ERROR ){
+		printf("Fail: CombineRgn( hRgn3, hRgn1, hRgn2, RGN_DIFF ). LastError: %d\n", GetLastError);
+		return;
+	}
+
+	if( GetRgnBox( hRgn3, &Rect )==0 ){
+		printf("Failed GetRgnBox( hRgn1, &Rect )\n");
+		return;
+	}
+	printf("After CombineRgn( hRgn3, hRgn1, hRgn2, RGN_DIFF ): \nGetRgnBox( hRgn3, &Rect ): CR_i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
+	DumpRgnData( hRgn3 );
+
+	i = CombineRgn( hRgn3, hRgn1, hRgn2, RGN_XOR );
+	if( i==ERROR ){
+		printf("Fail: CombineRgn( hRgn3, hRgn1, hRgn2, RGN_XOR ). LastError: %d\n", GetLastError);
+		return;
+	}
+
+	if( GetRgnBox( hRgn3, &Rect )==0 ){
+		printf("Failed GetRgnBox( hRgn3, &Rect )\n");
+		return;
+	}
+	printf("After CombineRgn( hRgn3, hRgn1, hRgn2, RGN_XOR ): \nGetRgnBox( hRgn3, &Rect ): CR_i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
+	DumpRgnData( hRgn3 );
+
+	i = CombineRgn( hRgn1, hRgn3, hRgn2, RGN_COPY );
+	if( i==ERROR ){
+		printf("Fail: CombineRgn( hRgn1, hRgn3, hRgn2, RGN_COPY ). LastError: %d\n", GetLastError);
+		return;
+	}
+
+	if( GetRgnBox( hRgn1, &Rect )==0 ){
+		printf("Failed GetRgnBox( hRgn1, &Rect )\n");
+		return;
+	}
+	printf("After CombineRgn( hRgn1, hRgn3, hRgn2, RGN_COPY ): \nGetRgnBox( hRgn1, &Rect ): CR_i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
+	DumpRgnData( hRgn1 );
+
 
 	DeleteObject( hRgn1 );
 	DeleteObject( hRgn2 );
