@@ -38,8 +38,11 @@ typedef struct
   INT LineHeight;
   INT CharWidth;
   HFONT hFont;
+  
   INT LeftMargin;
   INT TopMargin;
+  INT AddressSpacing;
+  INT SplitSpacing;
 } HEXEDIT_DATA, *PHEXEDIT_DATA;
 
 LRESULT WINAPI HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -119,11 +122,10 @@ HEXEDIT_Update(PHEXEDIT_DATA hed)
 }
 
 static HFONT
-HEXEDIT_GetFixedFont(PHEXEDIT_DATA hed)
+HEXEDIT_GetFixedFont(VOID)
 {
   LOGFONT lf;
   GetObject(GetStockObject(ANSI_FIXED_FONT), sizeof(LOGFONT), &lf);
-  lf.lfWeight = FW_BOLD;
   return CreateFontIndirect(&lf);
 }
 
@@ -131,7 +133,7 @@ static VOID
 HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWORD Last, RECT *rc)
 {
   DWORD x, dx, dy, linestart;
-  PBYTE buf, current, end;
+  PBYTE buf, current, end, line;
   UINT bufsize;
   TCHAR hex[3], addr[17];
   
@@ -160,19 +162,30 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
       int slen;
       
       dx = hed->LeftMargin;
+      
       /* draw address */
       _stprintf(addr, _T("%04X"), linestart);
-      slen = _tcslen(addr);
-      TextOut(hDC, dx, dy, addr, slen);
-      dx += (slen + 2) * hed->CharWidth;
+      TextOut(hDC, dx, dy, addr, 4);
+      dx += (4 + hed->AddressSpacing) * hed->CharWidth;
       
-      /* draw byte map */
-      for(x = 0; x < 8 && current < end; x++)
+      /* draw hex map */
+      line = current;
+      for(x = 0; x < hed->ColumnsPerLine && current < end; x++)
       {
 	_stprintf(hex, _T("%02X"), *(current++));
-	slen = _tcslen(hex);
-	TextOut(hDC, dx, dy, hex, slen);
-	dx += ((slen + 1) * hed->CharWidth);
+	TextOut(hDC, dx, dy, hex, 2);
+	dx += (3 * hed->CharWidth);
+      }
+      
+      /* draw ascii map */
+      dx = ((4 + hed->AddressSpacing + hed->SplitSpacing + (hed->ColumnsPerLine * 3)) * hed->CharWidth);
+      current = line;
+      for(x = 0; x < hed->ColumnsPerLine && current < end; x++)
+      {
+	_stprintf(hex, _T("%C"), *(current++));
+	hex[0] = ((hex[0] & _T('\x007f')) > _T(' ') ? hex[0] : _T('.'));
+	TextOut(hDC, dx, dy, hex, 1);
+	dx += hed->CharWidth;
       }
       
       dy += hed->LineHeight;
@@ -306,10 +319,10 @@ HEXEDIT_WM_NCCREATE(HWND hWnd, CREATESTRUCT *cs)
   hed->ColumnsPerLine = 8;
   hed->LeftMargin = 2;
   hed->TopMargin = 2;
+  hed->AddressSpacing = 2;
+  hed->SplitSpacing = 2;
   
   SetWindowLong(hWnd, 0, (LONG)hed);
-  
-  hed->hFont = HEXEDIT_GetFixedFont(hed);
   
   return TRUE;
 }
@@ -413,6 +426,11 @@ HEXEDIT_WM_SETFONT(PHEXEDIT_DATA hed, HFONT hFont, BOOL bRedraw)
   HDC hDC;
   TEXTMETRIC tm;
   HFONT hOldFont = 0;
+  
+  if(hFont == 0)
+  {
+    hFont = HEXEDIT_GetFixedFont();
+  }
   
   hed->hFont = hFont;
   hDC = GetDC(hed->hWndSelf);
@@ -535,7 +553,7 @@ HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   switch(uMsg)
   {
     case WM_ERASEBKGND:
-      return 0;
+      return TRUE;
     
     case WM_PAINT:
       return HEXEDIT_WM_PAINT(hed);

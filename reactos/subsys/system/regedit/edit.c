@@ -406,8 +406,11 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
         {
           SetDlgItemText(hwndDlg, IDC_VALUE_NAME, _T("(Default)"));
         }
-        HexEdit_LoadBuffer(GetDlgItem(hwndDlg, IDC_VALUE_DATA), binValueData, valueDataLen);
-        SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
+        hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA);
+        HexEdit_LoadBuffer(hwndValue, binValueData, valueDataLen);
+        /* reset the hex edit control's font */
+        SendMessage(hwndValue, WM_SETFONT, 0, 0);
+        SetFocus(hwndValue);
         return FALSE;
     case WM_COMMAND:
         switch (LOWORD(wParam))
