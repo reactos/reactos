@@ -4161,49 +4161,37 @@ RtlAssert(
 
 /** Runtime library routines **/
 
-/*
- * VOID
- * InitializeListHead(
- *   IN PLIST_ENTRY  ListHead)
- */
-#define InitializeListHead(_ListHead) \
-{ \
-  (_ListHead)->Flink = (_ListHead); \
-  (_ListHead)->Blink = (_ListHead); \
+static __inline VOID
+InitializeListHead(
+  IN PLIST_ENTRY  ListHead)
+{
+  ListHead->Flink = ListHead->Blink = ListHead;
 }
 
-/*
- * VOID
- * InsertHeadList(
- *   IN PLIST_ENTRY  ListHead,
- *   IN PLIST_ENTRY  Entry)
- */
-#define InsertHeadList(_ListHead, \
-                       _Entry) \
-{ \
-  PLIST_ENTRY _OldFlink; \
-  _OldFlink = (_ListHead)->Flink; \
-  (_Entry)->Flink = _OldFlink; \
-  (_Entry)->Blink = (_ListHead); \
-  _OldFlink->Blink = (_Entry); \
-  (_ListHead)->Flink = (_Entry); \
+static __inline VOID
+InsertHeadList(
+  IN PLIST_ENTRY  ListHead,
+  IN PLIST_ENTRY  Entry)
+{ 
+  PLIST_ENTRY OldFlink;
+  OldFlink = ListHead->Flink;
+  Entry->Flink = OldFlink;
+  Entry->Blink = ListHead;
+  OldFlink->Blink = Entry;
+  ListHead->Flink = Entry;
 }
 
-/*
- * VOID
- * InsertTailList(
- *   IN PLIST_ENTRY  ListHead,
- *   IN PLIST_ENTRY  Entry)
- */
-#define InsertTailList(_ListHead, \
-                       _Entry) \
-{ \
-	PLIST_ENTRY _OldBlink; \
-	_OldBlink = (_ListHead)->Blink; \
-	(_Entry)->Flink = (_ListHead); \
-	(_Entry)->Blink = _OldBlink; \
-	_OldBlink->Flink = (_Entry); \
-	(_ListHead)->Blink = (_Entry); \
+static __inline VOID
+InsertTailList(
+  IN PLIST_ENTRY  ListHead,
+  IN PLIST_ENTRY  Entry)
+{ 
+  PLIST_ENTRY OldBlink;
+  OldBlink = ListHead->Blink;
+  Entry->Flink = ListHead;
+  Entry->Blink = OldBlink;
+  OldBlink->Flink = Entry;
+  ListHead->Blink = Entry;
 }
 
 /*
@@ -4214,19 +4202,19 @@ RtlAssert(
 #define IsListEmpty(_ListHead) \
   ((_ListHead)->Flink == (_ListHead))
 
-static __inline PSINGLE_LIST_ENTRY 
-PopEntryList(
-  IN PSINGLE_LIST_ENTRY  ListHead)
-{
-	PSINGLE_LIST_ENTRY Entry;
-
-	Entry = ListHead->Next;
-	if (Entry != NULL)
-	{
-		ListHead->Next = Entry->Next;
-	}
-  return Entry;
-}
+/*
+ * PSINGLE_LIST_ENTRY
+ * PopEntryList(
+ *   IN PSINGLE_LIST_ENTRY  ListHead)
+ */
+#define PopEntryList(ListHead) \
+  (ListHead)->Next; \
+  { \
+    PSINGLE_LIST_ENTRY _FirstEntry; \
+    _FirstEntry = (ListHead)->Next; \
+    if (_FirstEntry != NULL) \
+      (ListHead)->Next = _FirstEntry->Next; \
+  }
 
 /*
  * VOID
@@ -4234,73 +4222,49 @@ PopEntryList(
  *   IN PSINGLE_LIST_ENTRY  ListHead,
  *   IN PSINGLE_LIST_ENTRY  Entry)
  */
-#define PushEntryList(_ListHead, \
-                      _Entry) \
-{ \
+#define PushEntryList(_ListHead, _Entry) \
 	(_Entry)->Next = (_ListHead)->Next; \
 	(_ListHead)->Next = (_Entry); \
-}
 
-/*
- * VOID
- * RemoveEntryList(
- *   IN PLIST_ENTRY  Entry)
- */
-#define RemoveEntryList(_Entry) \
-{ \
-	PLIST_ENTRY _OldFlink; \
-	PLIST_ENTRY _OldBlink; \
-	_OldFlink = (_Entry)->Flink; \
-	_OldBlink = (_Entry)->Blink; \
-	_OldFlink->Blink = _OldBlink; \
-	_OldBlink->Flink = _OldFlink; \
-  (_Entry)->Flink = NULL; \
-  (_Entry)->Blink = NULL; \
+static __inline BOOLEAN
+RemoveEntryList(
+  IN PLIST_ENTRY  Entry)
+{
+  PLIST_ENTRY OldFlink;
+  PLIST_ENTRY OldBlink;
+
+  OldFlink = Entry->Flink;
+  OldBlink = Entry->Blink;
+  OldFlink->Blink = OldBlink;
+  OldBlink->Flink = OldFlink;
+  return (OldFlink == OldBlink);
 }
 
 static __inline PLIST_ENTRY 
 RemoveHeadList(
   IN PLIST_ENTRY  ListHead)
 {
-	PLIST_ENTRY OldFlink;
-	PLIST_ENTRY OldBlink;
-	PLIST_ENTRY Entry;
+  PLIST_ENTRY Flink;
+  PLIST_ENTRY Entry;
 
-	Entry = ListHead->Flink;
-	OldFlink = ListHead->Flink->Flink;
-	OldBlink = ListHead->Flink->Blink;
-	OldFlink->Blink = OldBlink;
-	OldBlink->Flink = OldFlink;
-
-  if (Entry != ListHead)
-  {
-    Entry->Flink = NULL;
-    Entry->Blink = NULL;
-  }
-
-	return Entry;
+  Entry = ListHead->Flink;
+  Flink = Entry->Flink;
+  ListHead->Flink = Flink;
+  Flink->Blink = ListHead;
+  return Entry;
 }
 
 static __inline PLIST_ENTRY
 RemoveTailList(
   IN PLIST_ENTRY  ListHead)
 {
-	PLIST_ENTRY OldFlink;
-	PLIST_ENTRY OldBlink;
-	PLIST_ENTRY Entry;
+  PLIST_ENTRY Blink;
+  PLIST_ENTRY Entry;
 
-	Entry = ListHead->Blink;
-	OldFlink = ListHead->Blink->Flink;
-	OldBlink = ListHead->Blink->Blink;
-	OldFlink->Blink = OldBlink;
-	OldBlink->Flink = OldFlink;
-
-  if (Entry != ListHead)
-  {
-    Entry->Flink = NULL;
-    Entry->Blink = NULL;
-  }
-   
+  Entry = ListHead->Blink;
+  Blink = Entry->Blink;
+  ListHead->Blink = Blink;
+  Blink->Flink = ListHead;
   return Entry;
 }
 

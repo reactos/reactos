@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.99 2004/07/14 02:40:45 navaraf Exp $
+/* $Id: utils.c,v 1.100 2004/10/30 14:02:03 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -2415,7 +2415,7 @@ LdrpDetachProcess(BOOL UnloadAll)
                ((UnloadAll && Module->LoadCount >= 0) || Module->LoadCount == 0))
              {
                /* remove the module entry from the list */
-               RemoveEntryList (&Module->InLoadOrderModuleList)
+               RemoveEntryList (&Module->InLoadOrderModuleList);
                RemoveEntryList (&Module->InInitializationOrderModuleList);
 
                NtUnmapViewOfSection (NtCurrentProcess (), Module->BaseAddress);

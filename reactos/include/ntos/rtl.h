@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.37 2004/10/24 20:37:25 weiden Exp $
+/* $Id: rtl.h,v 1.38 2004/10/30 14:02:01 navaraf Exp $
  * 
  */
 #ifndef __DDK_RTL_H
@@ -88,10 +88,11 @@
  * ARGUMENTS:
  *         ListHead = Caller supplied storage for the head of the list
  */
-#define InitializeListHead(ListHead) \
-{ \
-	(ListHead)->Flink = (ListHead); \
-	(ListHead)->Blink = (ListHead); \
+static __inline VOID
+InitializeListHead(
+	IN PLIST_ENTRY  ListHead)
+{
+	ListHead->Flink = ListHead->Blink = ListHead;
 }
 
 
@@ -107,19 +108,17 @@
  *        ListHead = Head of the list
  *        Entry = Entry to insert
  */
-#define InsertHeadList(ListHead, ListEntry) \
-{ \
-	PLIST_ENTRY OldFlink; \
-	OldFlink = (ListHead)->Flink; \
-	(ListEntry)->Flink = OldFlink; \
-	(ListEntry)->Blink = (ListHead); \
-	OldFlink->Blink = (ListEntry); \
-	(ListHead)->Flink = (ListEntry); \
-	ASSERT((ListEntry) != NULL); \
-	ASSERT((ListEntry)->Blink!=NULL); \
-	ASSERT((ListEntry)->Blink->Flink == (ListEntry)); \
-	ASSERT((ListEntry)->Flink != NULL); \
-	ASSERT((ListEntry)->Flink->Blink == (ListEntry)); \
+static __inline VOID
+InsertHeadList(
+	IN PLIST_ENTRY  ListHead,
+	IN PLIST_ENTRY  Entry)
+{ 
+	PLIST_ENTRY OldFlink;
+	OldFlink = ListHead->Flink;
+	Entry->Flink = OldFlink;
+	Entry->Blink = ListHead;
+	OldFlink->Blink = Entry;
+	ListHead->Flink = Entry;
 }
 
 
@@ -137,14 +136,17 @@
  *	ListHead = Head of the list
  *	Entry = Entry to insert
  */
-#define InsertTailList(ListHead, ListEntry) \
-{ \
-	PLIST_ENTRY OldBlink; \
-	OldBlink = (ListHead)->Blink; \
-	(ListEntry)->Flink = (ListHead); \
-	(ListEntry)->Blink = OldBlink; \
-	OldBlink->Flink = (ListEntry); \
-	(ListHead)->Blink = (ListEntry); \
+static __inline VOID
+InsertTailList(
+	IN PLIST_ENTRY  ListHead,
+	IN PLIST_ENTRY  Entry)
+{ 
+	PLIST_ENTRY OldBlink;
+	OldBlink = ListHead->Blink;
+	Entry->Flink = ListHead;
+	Entry->Blink = OldBlink;
+	OldBlink->Flink = Entry;
+	ListHead->Blink = Entry;
 }
 
 /*
@@ -178,49 +180,24 @@
  * RETURNS:
  *	The removed entry
  */
-/*
 #define PopEntryList(ListHead) \
 	(ListHead)->Next; \
 	{ \
-		PSINGLE_LIST_ENTRY FirstEntry; \
-		FirstEntry = (ListHead)->Next; \
-		if (FirstEntry != NULL) \
-		{ \
-			(ListHead)->Next = FirstEntry->Next; \
-		} \
+		PSINGLE_LIST_ENTRY _FirstEntry; \
+		_FirstEntry = (ListHead)->Next; \
+		if (_FirstEntry != NULL) \
+			(ListHead)->Next = _FirstEntry->Next; \
 	}
-*/
-static inline PSINGLE_LIST_ENTRY
-PopEntryList(PSINGLE_LIST_ENTRY ListHead)
-{
-  PSINGLE_LIST_ENTRY ListEntry;
-
-  ListEntry = ListHead->Next;
-  if (ListEntry!=NULL)
-  {
-    ListHead->Next = ListEntry->Next;
-  }
-
-  return(ListEntry);
-}
 
 #define RtlCopyMemory(Destination,Source,Length) \
 	memcpy((Destination),(Source),(Length))
 
-static
-inline
-VOID
-PushEntryList (
-	PSINGLE_LIST_ENTRY	ListHead,
-	PSINGLE_LIST_ENTRY	Entry
-	)
-{
-	Entry->Next = ListHead->Next;
-	ListHead->Next = Entry;
-}
+#define PushEntryList(_ListHead, _Entry) \
+	(_Entry)->Next = (_ListHead)->Next; \
+	(_ListHead)->Next = (_Entry); \
 
 /*
- *VOID
+ *BOOLEAN
  *RemoveEntryList (
  *	PLIST_ENTRY	Entry
  *	);
@@ -231,21 +208,18 @@ PushEntryList (
  * ARGUMENTS:
  *	ListEntry = Entry to remove
  */
-#define RemoveEntryList(ListEntry) \
-{ \
-	PLIST_ENTRY OldFlink; \
-	PLIST_ENTRY OldBlink; \
-	ASSERT((ListEntry) != NULL); \
-	ASSERT((ListEntry)->Blink!=NULL); \
-	ASSERT((ListEntry)->Blink->Flink == (ListEntry)); \
-	ASSERT((ListEntry)->Flink != NULL); \
-	ASSERT((ListEntry)->Flink->Blink == (ListEntry)); \
-	OldFlink = (ListEntry)->Flink; \
-	OldBlink = (ListEntry)->Blink; \
-	OldFlink->Blink = OldBlink; \
-	OldBlink->Flink = OldFlink; \
-        (ListEntry)->Flink = NULL; \
-        (ListEntry)->Blink = NULL; \
+static __inline BOOLEAN
+RemoveEntryList(
+  IN PLIST_ENTRY  Entry)
+{
+  PLIST_ENTRY OldFlink;
+  PLIST_ENTRY OldBlink;
+
+  OldFlink = Entry->Flink;
+  OldBlink = Entry->Blink;
+  OldFlink->Blink = OldBlink;
+  OldBlink->Flink = OldFlink;
+  return (OldFlink == OldBlink);
 }
 
 
@@ -264,42 +238,18 @@ PushEntryList (
  * RETURNS:
  *	The removed entry
  */
-/*
-#define RemoveHeadList(ListHead) \
-	(ListHead)->Flink; \
-	{RemoveEntryList((ListHead)->Flink)}
-*/
-/*
-PLIST_ENTRY
-RemoveHeadList (
-	PLIST_ENTRY	ListHead
-	);
-*/
-
-static
-inline
-PLIST_ENTRY
-RemoveHeadList (
-	PLIST_ENTRY	ListHead
-	)
+static __inline PLIST_ENTRY 
+RemoveHeadList(
+  IN PLIST_ENTRY  ListHead)
 {
-	PLIST_ENTRY Old;
-	PLIST_ENTRY OldFlink;
-	PLIST_ENTRY OldBlink;
+  PLIST_ENTRY Flink;
+  PLIST_ENTRY Entry;
 
-	Old = ListHead->Flink;
-
-	OldFlink = ListHead->Flink->Flink;
-	OldBlink = ListHead->Flink->Blink;
-	OldFlink->Blink = OldBlink;
-	OldBlink->Flink = OldFlink;
-        if (Old != ListHead)
-     {
-        Old->Flink = NULL;
-        Old->Blink = NULL;
-     }
-   
-	return(Old);
+  Entry = ListHead->Flink;
+  Flink = Entry->Flink;
+  ListHead->Flink = Flink;
+  Flink->Blink = ListHead;
+  return Entry;
 }
 
 
@@ -318,42 +268,18 @@ RemoveHeadList (
  * RETURNS:
  *	The removed entry
  */
-/*
-#define RemoveTailList(ListHead) \
-	(ListHead)->Blink; \
-	{RemoveEntryList((ListHead)->Blink)}
-*/
-/*
-PLIST_ENTRY
-RemoveTailList (
-	PLIST_ENTRY	ListHead
-	);
-*/
-
-static
-inline
-PLIST_ENTRY
-RemoveTailList (
-	PLIST_ENTRY ListHead
-	)
+static __inline PLIST_ENTRY
+RemoveTailList(
+  IN PLIST_ENTRY  ListHead)
 {
-	PLIST_ENTRY Old;
-	PLIST_ENTRY OldFlink;
-	PLIST_ENTRY OldBlink;
+  PLIST_ENTRY Blink;
+  PLIST_ENTRY Entry;
 
-	Old = ListHead->Blink;
-
-	OldFlink = ListHead->Blink->Flink;
-	OldBlink = ListHead->Blink->Blink;
-	OldFlink->Blink = OldBlink;
-	OldBlink->Flink = OldFlink;
-   if (Old != ListHead)
-     {
-        Old->Flink = NULL;
-        Old->Blink = NULL;
-     }
-   
-	return(Old);
+  Entry = ListHead->Blink;
+  Blink = Entry->Blink;
+  ListHead->Blink = Blink;
+  Blink->Flink = ListHead;
+  return Entry;
 }
 
 

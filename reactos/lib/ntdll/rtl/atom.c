@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.6 2004/05/13 20:48:31 navaraf Exp $
+/* $Id: atom.c,v 1.7 2004/10/30 14:02:04 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -285,7 +285,7 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 	return STATUS_NO_MEMORY;
      }
 
-   InsertTailList(&AtomTable->Slot[Hash], &Entry->List)
+   InsertTailList(&AtomTable->Slot[Hash], &Entry->List);
    RtlCreateUnicodeString (&Entry->Name,
 			   AtomName);
    Entry->RefCount = 1;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.12 2004/08/15 16:39:01 chorns Exp $
+/* $Id: callback.c,v 1.13 2004/10/30 14:02:04 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/callback.c
@@ -391,7 +391,7 @@ ExRegisterCallback(
    /* Add Callback if 1) No Callbacks registered or 2) Multiple Callbacks allowed */
    if(CallbackObject->AllowMultipleCallbacks || IsListEmpty(&CallbackObject->RegisteredCallbacks))
    {
-      InsertTailList(&CallbackObject->RegisteredCallbacks,&CallbackRegistration->RegisteredCallbacks)
+      InsertTailList(&CallbackObject->RegisteredCallbacks,&CallbackRegistration->RegisteredCallbacks);
    }
    else
    {
