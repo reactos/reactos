@@ -25,7 +25,6 @@
 /* Everything below this line is generated automatically by cpmap.pl */
 /* ### cpmap begin ### */
 extern union cptable cptable_037;
-extern union cptable cptable_042;
 extern union cptable cptable_424;
 extern union cptable cptable_437;
 extern union cptable cptable_500;
@@ -85,10 +84,9 @@ extern union cptable cptable_28604;
 extern union cptable cptable_28605;
 extern union cptable cptable_28606;
 
-static const union cptable * const cptables[60] =
+static const union cptable * const cptables[59] =
 {
     &cptable_037,
-    &cptable_042,
     &cptable_424,
     &cptable_437,
     &cptable_500,

@@ -277,3 +277,22 @@ int wine_cp_mbstowcs( const union cptable *table, int flags,
             return mbstowcs_dbcs_decompose( &table->dbcs, src, srclen, dst, dstlen );
     }
 }
+
+/* CP_SYMBOL implementation */
+/* return -1 on dst buffer overflow */
+int wine_cpsymbol_mbstowcs( const char *src, int srclen, WCHAR *dst, int dstlen)
+{
+    int len, i;
+    if( dstlen == 0) return srclen;
+    len = dstlen > srclen ? srclen : dstlen;
+    for( i = 0; i < len; i++)
+    {
+        unsigned char c = src [ i ];
+        if( c < 0x20 )
+            dst[i] = c;
+        else
+            dst[i] = c + 0xf000;
+    }
+    if( srclen > len) return -1;
+    return len;
+}

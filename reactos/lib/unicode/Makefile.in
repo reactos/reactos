@@ -4,11 +4,11 @@ SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 LIBRARY   = wine_unicode
 SOVERSION = 1
+VERSCRIPT = $(SRCDIR)/wine_unicode.map
 EXTRADEFS = -D__WINESRC__ -DNO_LIBWINE_PORT -DWINE_UNICODE_API=""
 
 CODEPAGES = \
 	037 \
-	042 \
 	424 \
 	437 \
 	500 \
