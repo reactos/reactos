@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.14 2003/08/28 18:04:59 weiden Exp $
+/* $Id: misc.c,v 1.15 2003/08/29 09:29:11 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -239,6 +239,12 @@ NtUserSystemParametersInfo(
   PVOID pvParam,
   UINT fWinIni)
 {
+  /* FIXME: This should be obtained from the registry */
+  static LOGFONTW CaptionFont =
+  { 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+    0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"" };
+/*  { 12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, OEM_CHARSET,
+    0, 0, DEFAULT_QUALITY, FF_MODERN, L"Bitstream Vera Sans Bold" };*/
   NTSTATUS Status;
   PWINSTATION_OBJECT WinStaObject;
   
@@ -274,6 +280,50 @@ NtUserSystemParametersInfo(
       
       ObDereferenceObject(WinStaObject);
       return TRUE;
+
+    case SPI_GETWORKAREA:
+      {
+        ((PRECT)pvParam)->left = 0;
+        ((PRECT)pvParam)->top = 0;
+        ((PRECT)pvParam)->right = 640;
+        ((PRECT)pvParam)->bottom = 480;
+        return TRUE;
+      }
+    case SPI_GETICONTITLELOGFONT:
+      {
+        memcpy(pvParam, &CaptionFont, sizeof(CaptionFont));
+        return TRUE;
+      }
+    case SPI_GETNONCLIENTMETRICS:
+      {
+        LPNONCLIENTMETRICSW pMetrics = (LPNONCLIENTMETRICSW)pvParam;
+    
+        if (pMetrics->cbSize != sizeof(NONCLIENTMETRICSW) || 
+            uiParam != sizeof(NONCLIENTMETRICSW))
+        {
+          return FALSE;
+        }
+
+        memset((char *)pvParam + sizeof(pMetrics->cbSize), 0,
+          pMetrics->cbSize - sizeof(pMetrics->cbSize));
+
+        pMetrics->iBorderWidth = 1;
+        pMetrics->iScrollWidth = NtUserGetSystemMetrics(SM_CXVSCROLL);
+        pMetrics->iScrollHeight = NtUserGetSystemMetrics(SM_CYHSCROLL);
+        pMetrics->iCaptionWidth = NtUserGetSystemMetrics(SM_CXSIZE);
+        pMetrics->iCaptionHeight = NtUserGetSystemMetrics(SM_CYSIZE);
+        memcpy((LPVOID)&(pMetrics->lfCaptionFont), &CaptionFont, sizeof(CaptionFont));
+        pMetrics->lfCaptionFont.lfWeight = FW_BOLD;
+        pMetrics->iSmCaptionWidth = NtUserGetSystemMetrics(SM_CXSMSIZE);
+        pMetrics->iSmCaptionHeight = NtUserGetSystemMetrics(SM_CYSMSIZE);
+        memcpy((LPVOID)&(pMetrics->lfSmCaptionFont), &CaptionFont, sizeof(CaptionFont));
+        pMetrics->iMenuWidth = NtUserGetSystemMetrics(SM_CXMENUSIZE);
+        pMetrics->iMenuHeight = NtUserGetSystemMetrics(SM_CYMENUSIZE);
+        memcpy((LPVOID)&(pMetrics->lfMenuFont), &CaptionFont, sizeof(CaptionFont));
+        memcpy((LPVOID)&(pMetrics->lfStatusFont), &CaptionFont, sizeof(CaptionFont));
+        memcpy((LPVOID)&(pMetrics->lfMessageFont), &CaptionFont, sizeof(CaptionFont));
+        return TRUE;
+      }
     
   }
   return FALSE;

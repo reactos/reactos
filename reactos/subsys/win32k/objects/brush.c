@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: brush.c,v 1.25 2003/08/20 07:45:02 gvg Exp $
+/* $Id: brush.c,v 1.26 2003/08/29 09:29:11 gvg Exp $
  */
 
 
@@ -45,7 +45,8 @@ HBRUSH STDCALL NtGdiCreateBrushIndirect(CONST LOGBRUSH  *lb)
   }
 
   brushPtr = BRUSHOBJ_LockBrush (hBrush);
-  ASSERT( brushPtr ); //I want to know if this ever occurs
+/* FIXME: Occurs! FiN */
+/*  ASSERT( brushPtr ); *///I want to know if this ever occurs
 
   if( brushPtr ){
   	brushPtr->iSolidColor = lb->lbColor;

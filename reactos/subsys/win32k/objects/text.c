@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.47 2003/08/28 21:40:26 gvg Exp $ */
+/* $Id: text.c,v 1.48 2003/08/29 09:29:11 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -253,8 +253,9 @@ TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
     }
     else
     {
-      ASSERT(FALSE);
-      Status = STATUS_INVALID_HANDLE;
+/* FIXME */
+/*      ASSERT(FALSE);*/
+      Status = STATUS_INVALID_HANDLE;      
     }
   }
   else
@@ -302,7 +303,10 @@ NtGdiCreateFont(int  Height,
 
   if (NULL != Face)
   {
-    Status = MmCopyFromCaller(logfont.lfFaceName, Face, sizeof(logfont.lfFaceName));
+    int Size = sizeof(logfont.lfFaceName) / sizeof(WCHAR);
+    wcsncpy((wchar_t *)logfont.lfFaceName, Face, Size - 1);
+    /* Be 101% sure to have '\0' at end of string */
+    logfont.lfFaceName[Size - 1] = '\0';
   }
   else
   {

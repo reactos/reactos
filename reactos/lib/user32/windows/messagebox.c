@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.15 2003/08/22 16:01:01 weiden Exp $
+/* $Id: messagebox.c,v 1.16 2003/08/29 09:29:11 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -88,7 +88,7 @@ static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMS lpmb)
     NONCLIENTMETRICSW nclm;
 
     nclm.cbSize = sizeof(nclm);
-    SystemParametersInfoW (SPI_GETNONCLIENTMETRICS, 0, &nclm, 0);
+    SystemParametersInfoW (SPI_GETNONCLIENTMETRICS, sizeof(nclm), &nclm, 0);
     hFont = CreateFontIndirectW (&nclm.lfMessageFont);
     /* set button font */
     for (i = 1; i < 10; i++)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.75 2003/08/28 12:35:59 gvg Exp $
+/* $Id: dc.c,v 1.76 2003/08/29 09:29:11 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -363,12 +363,6 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
 
   DPRINT("Enabling PDev\n");
 
-#ifdef TODO
-PrimarySurface.DMW.dmBitsPerPel = 16;
-PrimarySurface.DMW.dmPelsWidth = 1024;
-PrimarySurface.DMW.dmPelsHeight = 768;
-PrimarySurface.DMW.dmDisplayFrequency = 60;
-#endif
   PrimarySurface.PDev =
     PrimarySurface.DriverFunctions.EnablePDev(&PrimarySurface.DMW,
 					     L"",
@@ -1525,7 +1519,7 @@ NtGdiSetDCState16 ( HDC hDC, HDC hDCSave )
 //  ----------------------------------------------------  Private Interface
 
 HDC FASTCALL
-DC_AllocDC(LPCWSTR  Driver)
+DC_AllocDC(LPCWSTR Driver)
 {
   PDC  NewDC;
   HDC  hDC;

@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.26 2003/08/28 18:04:59 weiden Exp $
+/* $Id: desktop.c,v 1.27 2003/08/29 09:29:11 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -41,34 +41,49 @@ SystemParametersInfoA(UINT uiAction,
 		      PVOID pvParam,
 		      UINT fWinIni)
 {
-  WINBOOL Ret;
-  NONCLIENTMETRICSA *nclma;
-  NONCLIENTMETRICSW nclmw;
-
   switch (uiAction)
     {
+      case SPI_GETWORKAREA:
+        {
+           return SystemParametersInfoW(uiAction, uiParam, pvParam, fWinIni);
+        }
       case SPI_GETNONCLIENTMETRICS:
-	nclma = pvParam;
-	nclmw.cbSize = sizeof(NONCLIENTMETRICSW);
-	uiParam = sizeof(NONCLIENTMETRICSW);
-	pvParam = &nclmw;
-	break;
-    }
-  Ret = SystemParametersInfoW(uiAction, uiParam, pvParam, fWinIni);
-  if (! Ret)
-    {
-      return FALSE;
+        {
+           LPNONCLIENTMETRICSA nclma = (LPNONCLIENTMETRICSA)pvParam;
+           NONCLIENTMETRICSW nclmw;
+           nclmw.cbSize = sizeof(NONCLIENTMETRICSW);
+
+           if (!SystemParametersInfoW(uiAction, sizeof(NONCLIENTMETRICSW),
+                                      &nclmw, fWinIni))
+             return FALSE;
+
+           nclma->iBorderWidth = nclmw.iBorderWidth;
+           nclma->iScrollWidth = nclmw.iScrollWidth;
+           nclma->iScrollHeight = nclmw.iScrollHeight;
+           nclma->iCaptionWidth = nclmw.iCaptionWidth;
+           nclma->iCaptionHeight = nclmw.iCaptionHeight;
+           nclma->iSmCaptionWidth = nclmw.iSmCaptionWidth;
+           nclma->iSmCaptionHeight = nclmw.iSmCaptionHeight;
+           nclma->iMenuWidth = nclmw.iMenuWidth;
+           nclma->iMenuHeight = nclmw.iMenuHeight;
+           RosRtlLogFontW2A(&(nclma->lfCaptionFont), &(nclmw.lfCaptionFont));
+           RosRtlLogFontW2A(&(nclma->lfSmCaptionFont), &(nclmw.lfSmCaptionFont));
+           RosRtlLogFontW2A(&(nclma->lfMenuFont), &(nclmw.lfMenuFont));
+           RosRtlLogFontW2A(&(nclma->lfStatusFont), &(nclmw.lfStatusFont));
+           RosRtlLogFontW2A(&(nclma->lfMessageFont), &(nclmw.lfMessageFont));
+           return TRUE;
+        }
+      case SPI_GETICONTITLELOGFONT:
+        {
+           LOGFONTW lfw;
+           if (!SystemParametersInfoW(uiAction, 0, &lfw, fWinIni))
+             return FALSE;
+           RosRtlLogFontW2A(pvParam, &lfw);
+           return TRUE;
+        }
     }
 
-  switch (uiAction)
-    {
-      case SPI_GETNONCLIENTMETRICS:
-	RosRtlLogFontW2A(&(nclma->lfCaptionFont), &(nclmw.lfCaptionFont));
-	RosRtlLogFontW2A(&(nclma->lfSmCaptionFont), &(nclmw.lfSmCaptionFont));
-	return TRUE;
-    }
-
-  return TRUE;
+  return FALSE;
 }
 
 
@@ -81,41 +96,7 @@ SystemParametersInfoW(UINT uiAction,
 		      PVOID pvParam,
 		      UINT fWinIni)
 {
-  NONCLIENTMETRICSW *nclm;
-
-  /* FIXME: This should be obtained from the registry */
-  static LOGFONTW CaptionFont =
-  { 12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, OEM_CHARSET,
-    0, 0, DEFAULT_QUALITY, FF_MODERN, L"Bitstream Vera Sans Bold" };
-
-  switch (uiAction)
-    {
-    case SPI_GETWORKAREA:
-      {
-    /* FIXME we should obtain the information using GetMonitorInfo(),
-             besides it is not the whole screen size! */
-	((PRECT)pvParam)->left = 0;
-	((PRECT)pvParam)->top = 0;
-	((PRECT)pvParam)->right = 640;
-	((PRECT)pvParam)->bottom = 480;
-	return(TRUE);
-      }
-    case SPI_GETNONCLIENTMETRICS:
-      {
-        nclm = pvParam;
-        memcpy(&nclm->lfCaptionFont, &CaptionFont, sizeof(CaptionFont));
-        memcpy(&nclm->lfSmCaptionFont, &CaptionFont, sizeof(CaptionFont));
-	return(TRUE);
-      }
-    default:
-      {
-        return NtUserSystemParametersInfo(uiAction,
-                                          uiParam,
-                                          pvParam,
-                                          fWinIni);
-      }
-    }
-  return(FALSE);
+  return NtUserSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
 }
 
 

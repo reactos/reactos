@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.28 2003/08/24 16:20:30 gvg Exp $
+/* $Id: winpos.c,v 1.29 2003/08/29 09:29:11 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -409,14 +409,18 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
       WindowRect->top = WinPos->y;
       WindowRect->right += WinPos->x - WindowObject->WindowRect.left;
       WindowRect->bottom += WinPos->y - WindowObject->WindowRect.top;
+      NtGdiOffsetRect(ClientRect,
+        WinPos->x - WindowObject->WindowRect.left,
+        WinPos->y - WindowObject->WindowRect.top);
     }
+
+  WinPos->flags |= SWP_NOCLIENTMOVE | SWP_NOCLIENTSIZE;
 
   if (!(WinPos->flags & SWP_NOSIZE) || !(WinPos->flags & SWP_NOMOVE))
     {
       WinPosGetNonClientSize(WindowObject->Self, WindowRect, ClientRect);
     }
 
-  WinPos->flags |= SWP_NOCLIENTMOVE | SWP_NOCLIENTSIZE;
   return(TRUE);
 }
 
@@ -957,7 +961,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
     }
 
   /* FIXME: Check some conditions before doing this. */
-  IntSendWINDOWPOSCHANGEDMessage(Window->Self, &WinPos);
+  IntSendWINDOWPOSCHANGEDMessage(WinPos.hwnd, &WinPos);
 
   ObmDereferenceObject(Window);
   return(TRUE);

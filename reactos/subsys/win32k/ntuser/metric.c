@@ -16,12 +16,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: metric.c,v 1.11 2003/08/28 18:04:59 weiden Exp $
+/* $Id: metric.c,v 1.12 2003/08/29 09:29:11 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window classes
- * FILE:             subsys/win32k/ntuser/class.c
+ * FILE:             subsys/win32k/ntuser/metric.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created

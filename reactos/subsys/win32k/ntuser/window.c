@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.105 2003/08/28 13:38:24 gvg Exp $
+/* $Id: window.c,v 1.106 2003/08/29 09:29:11 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1347,30 +1347,29 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     } 
   
   /* Send move and size messages. */
-  /* FIXME: Breaks Solitaire, probably shouldn't be there. FiN */
-#if 0		  
   if (!(WindowObject->Flags & WINDOWOBJECT_NEED_SIZE))
     {
       LONG lParam;
+
+      DPRINT("NtUserCreateWindow(): About to send WM_SIZE\n");
+
+      if ((WindowObject->ClientRect.right - WindowObject->ClientRect.left) < 0 ||
+          (WindowObject->ClientRect.bottom - WindowObject->ClientRect.top) < 0)
+         DPRINT("Sending bogus WM_SIZE\n");
       
-      lParam = 
-	MAKE_LONG(WindowObject->ClientRect.right - 
+      lParam = MAKE_LONG(WindowObject->ClientRect.right - 
 		  WindowObject->ClientRect.left,
 		  WindowObject->ClientRect.bottom - 
 		  WindowObject->ClientRect.top);
- 
-      DPRINT("NtUserCreateWindow(): About to send WM_SIZE\n");
       IntCallWindowProc(NULL, WindowObject->Self, WM_SIZE, SIZE_RESTORED, 
-			 lParam);
-      lParam = 
-	MAKE_LONG(WindowObject->ClientRect.left,
-		  WindowObject->ClientRect.top);
-      DPRINT("NtUserCreateWindow(): About to send WM_MOVE\n");
-      IntCallWindowProc(NULL, WindowObject->Self, WM_MOVE, 0, lParam);
+          lParam);
 
-      WindowObject->Flags &= ~WINDOWOBJECT_NEED_SIZE;
+      DPRINT("NtUserCreateWindow(): About to send WM_MOVE\n");
+
+      lParam = MAKE_LONG(WindowObject->ClientRect.left,
+          WindowObject->ClientRect.top);
+      IntCallWindowProc(NULL, WindowObject->Self, WM_MOVE, 0, lParam);
     }
-#endif
 
   /* Move from parent-client to screen coordinates */
   if (0 != (WindowObject->Style & WS_CHILD))

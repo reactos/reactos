@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.31 2003/08/28 10:39:44 weiden Exp $
+/* $Id: menu.c,v 1.32 2003/08/29 09:29:11 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -262,6 +262,7 @@ MenuInit(VOID)
   /* get the menu font */
   if(!hMenuFont || !hMenuFontBold)
   {
+    ncm.cbSize = sizeof(ncm);
     if(!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
     {
       DbgPrint("MenuInit(): SystemParametersInfoW(SPI_GETNONCLIENTMETRICS) failed!\n");
