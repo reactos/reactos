@@ -76,6 +76,7 @@ copy apps\mstest\msclient.exe %ROS_INSTALL%\bin
 copy apps\nptest\npserver.exe %ROS_INSTALL%\bin
 copy apps\nptest\npclient.exe %ROS_INSTALL%\bin
 copy apps\atomtest\atomtest.exe %ROS_INSTALL%\bin
+copy apps\partinfo\partinfo.exe %ROS_INSTALL%\bin
 copy apps\net\ping\ping.exe %ROS_INSTALL%\bin
 copy apps\net\roshttpd\roshttpd.exe %ROS_INSTALL%\bin
 copy apps\net\telnet\telnet.exe %ROS_INSTALL%\bin
