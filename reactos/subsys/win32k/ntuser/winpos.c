@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.10 2003/05/18 17:16:17 ea Exp $
+/* $Id: winpos.c,v 1.11 2003/05/18 22:09:08 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -386,9 +386,11 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
       WindowRect->top = WinPos->y;
       WindowRect->right += WinPos->x - WindowObject->WindowRect.left;
       WindowRect->bottom += WinPos->y - WindowObject->WindowRect.top;
+    }
 
-      W32kOffsetRect(ClientRect, WinPos->x - WindowObject->WindowRect.left,
-		     WinPos->y - WindowObject->WindowRect.top);
+  if (!(WinPos->flags & SWP_NOSIZE) || !(WinPos->flags & SWP_NOMOVE))
+    {
+      WinPosGetNonClientSize(WindowObject->Self, WindowRect, ClientRect);
     }
 
   WinPos->flags |= SWP_NOCLIENTMOVE | SWP_NOCLIENTSIZE;
@@ -546,14 +548,15 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	      PaintRedrawWindow(Window->Self, NULL,
 				(VisRgn == (HRGN) 1) ? 0 : VisRgn,
 				RDW_ERASE | RDW_FRAME | RDW_INVALIDATE |
-				RDW_ALLCHILDREN, 
+				RDW_ALLCHILDREN | RDW_ERASENOW, 
 				RDW_EX_XYWINDOW | RDW_EX_USEHRGN);
 	    }
 	  else
 	    {
 	      PaintRedrawWindow(Window->Self, NULL,
 				(VisRgn == (HRGN) 1) ? 0 : VisRgn,
-				RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN,
+				RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN |
+	                        RDW_ERASENOW,
 				RDW_EX_USEHRGN);
 	    }
 	  /* FIXME: Redraw the window parent. */
