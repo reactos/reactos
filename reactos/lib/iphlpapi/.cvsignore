@@ -17,3 +17,5 @@ temp.exp
 *.bak
 *.map
 *.tmp
+Makefile.ros
+iphlpapi.spec.def
