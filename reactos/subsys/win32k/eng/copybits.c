@@ -10,7 +10,7 @@
 
 #include <ddk/winddi.h>
 #include "objects.h"
-#include "enum.h"
+#include "clip.h"
 #include "../dib/dib.h"
 #include <include/mouse.h>
 #include <include/object.h>

@@ -16,7 +16,7 @@
 #include <include/surface.h>
 
 #include "brush.h"
-#include "enum.h"
+#include "clip.h"
 #include "objects.h"
 
 #include <include/mouse.h>

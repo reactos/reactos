@@ -12,7 +12,7 @@
 #include <ddk/ntddk.h>
 #include <ntos/minmax.h>
 #include "brush.h"
-#include "enum.h"
+#include "clip.h"
 #include "objects.h"
 #include <include/mouse.h>
 #include <include/object.h>

@@ -18,7 +18,7 @@
 #include "../dib/dib.h"
 
 #include "brush.h"
-#include "enum.h"
+#include "clip.h"
 
 //#define NDEBUG
 #include <win32k/debug1.h>
