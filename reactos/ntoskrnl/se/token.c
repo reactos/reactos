@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.40 2004/08/10 20:30:35 gvg Exp $
+/* $Id: token.c,v 1.41 2004/08/10 21:11:20 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -179,8 +179,7 @@ SepDuplicateToken(PACCESS_TOKEN Token,
   AccessToken->TokenInUse = 0;
   AccessToken->TokenType  = TokenType;
   AccessToken->ImpersonationLevel = Level;
-  AccessToken->AuthenticationId.LowPart = SYSTEM_LUID;
-  AccessToken->AuthenticationId.HighPart = 0;
+  RtlCopyLuid(&AccessToken->AuthenticationId, &Token->AuthenticationId);
 
   AccessToken->TokenSource.SourceIdentifier.LowPart = Token->TokenSource.SourceIdentifier.LowPart;
   AccessToken->TokenSource.SourceIdentifier.HighPart = Token->TokenSource.SourceIdentifier.HighPart;
