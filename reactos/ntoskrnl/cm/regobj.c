@@ -24,245 +24,290 @@ extern KSPIN_LOCK  CmiKeyListLock;
 
 NTSTATUS STDCALL
 CmiObjectParse(PVOID ParsedObject,
-	       PVOID *NextObject,
-	       PUNICODE_STRING FullPath,
-	       PWSTR *Path,
-	       POBJECT_TYPE ObjectType,
-	       ULONG Attributes)
+	PVOID *NextObject,
+	PUNICODE_STRING FullPath,
+	PWSTR *Path,
+	POBJECT_TYPE ObjectType,
+	ULONG Attributes)
 {
- CHAR cPath[MAX_PATH];
- PWSTR end;
- PKEY_OBJECT FoundObject;
- PKEY_OBJECT ParsedKey=ParsedObject;
- PKEY_BLOCK SubKeyBlock;
- BLOCK_OFFSET BlockOffset;
- NTSTATUS Status;
-   *NextObject = NULL;
-   if ((*Path) == NULL)
-     {
-	return STATUS_UNSUCCESSFUL;
-     }
-   
-   if((*Path[0])=='\\')
-   {
-     end = wcschr((*Path)+1, '\\');
-     if (end != NULL)
-	*end = 0;
-     wcstombs(cPath,(*Path)+1,wcslen((*Path)+1));
-     cPath[wcslen( (*Path)+1)]=0;
-   }
-   else
-   {
-     end = wcschr((*Path), '\\');
-     if (end != NULL)
-	*end = 0;
-     wcstombs(cPath,(*Path),wcslen((*Path)));
-     cPath[wcslen( (*Path))]=0;
-   }
-   
-   FoundObject = CmiScanKeyList(ParsedKey,cPath,Attributes);
-   if (FoundObject == NULL)
-   {
-      Status = CmiScanForSubKey(ParsedKey->RegistryFile,
-                                ParsedKey->KeyBlock,
-                                &SubKeyBlock,
-                                &BlockOffset,
-                                cPath,
-                                0,
-                                Attributes);
-       if(!NT_SUCCESS(Status) || SubKeyBlock == NULL)
-       {
+	BLOCK_OFFSET BlockOffset;
+	PKEY_OBJECT FoundObject;
+	PKEY_OBJECT ParsedKey;
+	PKEY_CELL SubKeyCell;
+	CHAR cPath[MAX_PATH];
+	NTSTATUS Status;
+	PWSTR end;
+
+	ParsedKey = ParsedObject;
+
+  VERIFY_KEY_OBJECT(ParsedKey);
+
+	*NextObject = NULL;
+
+	if ((*Path) == NULL)
+		{
+      DPRINT("*Path is NULL\n");
+		  return STATUS_UNSUCCESSFUL;
+		}
+	
+	if ((*Path[0]) == '\\')
+		{
+			end = wcschr((*Path) + 1, '\\');
+			if (end != NULL)
+			  *end = 0;
+			wcstombs(cPath, (*Path) + 1, wcslen((*Path) + 1));
+			cPath[wcslen((*Path) + 1)] = 0;
+		}
+	else
+		{
+			end = wcschr((*Path), '\\');
+			if (end != NULL)
+  			*end = 0;
+			wcstombs(cPath, (*Path), wcslen((*Path)));
+			cPath[wcslen((*Path))] = 0;
+		}
+
+	FoundObject = CmiScanKeyList(ParsedKey, cPath, Attributes);
+	if (FoundObject == NULL)
+		{
+		  Status = CmiScanForSubKey(ParsedKey->RegistryHive,
+	      ParsedKey->KeyCell,
+	      &SubKeyCell,
+	      &BlockOffset,
+	      cPath,
+	      0,
+	      Attributes);
+
+			if (!NT_SUCCESS(Status) || (SubKeyCell == NULL))
+			{
+				if (end != NULL)
+					{
+  					*end = '\\';
+					}
+				return STATUS_UNSUCCESSFUL;
+			}
+	
+  		/* Create new key object and put into linked list */
+			DPRINT("CmiObjectParse %s\n", cPath);
+			Status = ObCreateObject(NULL,
+				STANDARD_RIGHTS_REQUIRED,
+				NULL,
+				CmiKeyType,
+				(PVOID*) &FoundObject);
+
+			if (!NT_SUCCESS(Status))
+				{
+				  return Status;
+				}
+
+			FoundObject->Flags = 0;
+			FoundObject->Name = SubKeyCell->Name;
+			FoundObject->NameSize = SubKeyCell->NameSize;
+			FoundObject->KeyCell = SubKeyCell;
+			FoundObject->BlockOffset = BlockOffset;
+			FoundObject->RegistryHive = ParsedKey->RegistryHive;
+			CmiAddKeyToList(ParsedKey, FoundObject);
+			DPRINT("Created object 0x%x\n", FoundObject);
+		}
+	else
+    {
+		  ObReferenceObjectByPointer(FoundObject,
+		    STANDARD_RIGHTS_REQUIRED,
+		    NULL,
+		    UserMode);
+    }
+
+	DPRINT("CmiObjectParse %s\n", FoundObject->Name);
+
 	if (end != NULL)
-	  {
-	     *end = '\\';
-	  }
-	return STATUS_UNSUCCESSFUL;
-       }
-       /*  Create new key object and put into linked list  */
-DPRINT("CmiObjectParse %s\n",cPath);
-       Status = ObCreateObject(NULL,
-                               STANDARD_RIGHTS_REQUIRED,
-                               NULL,
-                               CmiKeyType,
-                               (PVOID*)&FoundObject);
-       if (!NT_SUCCESS(Status))
-         {
-           return(Status);
-         }
-       FoundObject->Flags = 0;
-       FoundObject->Name = SubKeyBlock->Name;
-       FoundObject->NameSize = SubKeyBlock->NameSize;
-       FoundObject->KeyBlock = SubKeyBlock;
-       FoundObject->BlockOffset = BlockOffset;
-       FoundObject->RegistryFile = ParsedKey->RegistryFile;
-       CmiAddKeyToList(ParsedKey,FoundObject);
-DPRINT("CmiObjectParse(): created object 0x%x\n",FoundObject);
-   }
-   else
-     ObReferenceObjectByPointer(FoundObject,
-			      STANDARD_RIGHTS_REQUIRED,
-			      NULL,
-			      UserMode);
-DPRINT("CmiObjectParse %s\n",FoundObject->Name);
-   if (end != NULL)
-     {
-	*end = '\\';
-	*Path = end;
-     }
-   else
-     {
-	*Path = NULL;
-     }
+		{
+			*end = '\\';
+		  *Path = end;
+		}
+  else
+		{
+			*Path = NULL;
+		}
 
-   *NextObject = FoundObject;
-
-   return STATUS_SUCCESS;
+VERIFY_KEY_OBJECT(FoundObject);
+	
+	*NextObject = FoundObject;
+	
+	return STATUS_SUCCESS;
 }
+
 
 NTSTATUS STDCALL
 CmiObjectCreate(PVOID ObjectBody,
-		PVOID Parent,
-		PWSTR RemainingPath,
-		struct _OBJECT_ATTRIBUTES* ObjectAttributes)
+	PVOID Parent,
+	PWSTR RemainingPath,
+	struct _OBJECT_ATTRIBUTES* ObjectAttributes)
 {
- PKEY_OBJECT pKey=ObjectBody;
-   pKey->ParentKey = Parent;
-   if (RemainingPath)
-   {
-     if(RemainingPath[0]== L'\\')
-     {
-       pKey->Name = (PCHAR) (&RemainingPath[1]);
-       pKey->NameSize = wcslen(RemainingPath)-1;
-     }
-     else
-     {
-       pKey->Name = (PCHAR) RemainingPath;
-       pKey->NameSize = wcslen(RemainingPath);
-     }
-   }
+  PKEY_OBJECT pKey = ObjectBody;
+	pKey->ParentKey = Parent;
+	if (RemainingPath)
+		{
+			if(RemainingPath[0]== L'\\')
+				{
+					pKey->Name = (PCHAR) (&RemainingPath[1]);
+					pKey->NameSize = wcslen(RemainingPath) - 1;
+				}
+			else
+				{
+					pKey->Name = (PCHAR) RemainingPath;
+					pKey->NameSize = wcslen(RemainingPath);
+				}
+	   }
    else
-     pKey->NameSize = 0;
+    {
+      pKey->NameSize = 0;
+    }
 
-   return STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
+
 
 VOID STDCALL
 CmiObjectDelete(PVOID DeletedObject)
 {
-  PKEY_OBJECT  KeyObject;
+  PKEY_OBJECT KeyObject;
 
-  DPRINT("delete object key\n");
+  DPRINT("Delete object key\n");
+
   KeyObject = (PKEY_OBJECT) DeletedObject;
-  if(!NT_SUCCESS(CmiRemoveKeyFromList(KeyObject)))
-  {
-    DPRINT1("Key not found in parent list ???\n");
-  }
+
+  if (!NT_SUCCESS(CmiRemoveKeyFromList(KeyObject)))
+	  {
+	    DPRINT1("Key not found in parent list ???\n");
+	  }
+
   if (KeyObject->Flags & KO_MARKED_FOR_DELETE)
     {
       DPRINT("delete really key\n");
-      CmiDestroyBlock(KeyObject->RegistryFile,
-                         KeyObject->KeyBlock,
-			 KeyObject->BlockOffset);
+      CmiDestroyBlock(KeyObject->RegistryHive,
+        KeyObject->KeyCell,
+			  KeyObject->BlockOffset);
     }
   else
     {
-      CmiReleaseBlock(KeyObject->RegistryFile,
-                      KeyObject->KeyBlock);
+      CmiReleaseBlock(KeyObject->RegistryHive, KeyObject->KeyCell);
     }
 }
 
-void
-CmiAddKeyToList(PKEY_OBJECT ParentKey,PKEY_OBJECT  NewKey)
+VOID
+CmiAddKeyToList(PKEY_OBJECT ParentKey,
+  PKEY_OBJECT NewKey)
 {
-  KIRQL  OldIrql;
+  KIRQL OldIrql;
+
+  DPRINT("ParentKey %.08x\n", ParentKey);
   
   KeAcquireSpinLock(&CmiKeyListLock, &OldIrql);
+
   if (ParentKey->SizeOfSubKeys <= ParentKey->NumberOfSubKeys)
-  {
-    PKEY_OBJECT *tmpSubKeys = ExAllocatePool(PagedPool
-		, (ParentKey->NumberOfSubKeys+1) * sizeof(DWORD));
-    if(ParentKey->NumberOfSubKeys > 0)
-      memcpy(tmpSubKeys,ParentKey->SubKeys
-		,ParentKey->NumberOfSubKeys*sizeof(DWORD));
-    if(ParentKey->SubKeys) ExFreePool(ParentKey->SubKeys);
-    ParentKey->SubKeys=tmpSubKeys;
-    ParentKey->SizeOfSubKeys = ParentKey->NumberOfSubKeys+1;
-  }
-  /* FIXME : please maintain the list in alphabetic order */
+	  {
+	    PKEY_OBJECT *tmpSubKeys = ExAllocatePool(PagedPool,
+        (ParentKey->NumberOfSubKeys + 1) * sizeof(DWORD));
+
+	    if (ParentKey->NumberOfSubKeys > 0)
+        {
+	        memcpy(tmpSubKeys,
+            ParentKey->SubKeys,
+			      ParentKey->NumberOfSubKeys * sizeof(DWORD));
+        }
+
+	    if (ParentKey->SubKeys)
+        ExFreePool(ParentKey->SubKeys);
+
+	    ParentKey->SubKeys = tmpSubKeys;
+	    ParentKey->SizeOfSubKeys = ParentKey->NumberOfSubKeys + 1;
+	  }
+
+  /* FIXME: Please maintain the list in alphabetic order */
   /*      to allow a dichotomic search */
   ParentKey->SubKeys[ParentKey->NumberOfSubKeys++] = NewKey;
+
 DPRINT("Reference parent key: 0x%x\n", ParentKey);
+
   ObReferenceObjectByPointer(ParentKey,
-			     STANDARD_RIGHTS_REQUIRED,
-			     NULL,
-			     UserMode);
+		STANDARD_RIGHTS_REQUIRED,
+		NULL,
+		UserMode);
   NewKey->ParentKey = ParentKey;
   KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
 }
 
+
 NTSTATUS
-CmiRemoveKeyFromList(PKEY_OBJECT  KeyToRemove)
+CmiRemoveKeyFromList(PKEY_OBJECT KeyToRemove)
 {
-  KIRQL  OldIrql;
-  PKEY_OBJECT  ParentKey;
+  PKEY_OBJECT ParentKey;
+  KIRQL OldIrql;
   DWORD Index;
 
-  ParentKey=KeyToRemove->ParentKey;
+  ParentKey = KeyToRemove->ParentKey;
   KeAcquireSpinLock(&CmiKeyListLock, &OldIrql);
-  /* FIXME : if list maintained in alphabetic order, use dichotomic search */
-  for (Index=0; Index < ParentKey->NumberOfSubKeys; Index++)
-  {
-    if(ParentKey->SubKeys[Index] == KeyToRemove)
-    {
-      if (Index < ParentKey->NumberOfSubKeys-1)
-        memmove(&ParentKey->SubKeys[Index]
-		,&ParentKey->SubKeys[Index+1]
-		,(ParentKey->NumberOfSubKeys-Index-1)*sizeof(PKEY_OBJECT));
-      ParentKey->NumberOfSubKeys--;
-      KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
-DPRINT("Dereference parent key: 0x%x\n",ParentKey);
-      ObDereferenceObject(ParentKey);
-      return STATUS_SUCCESS;
-    }
-  }
+  /* FIXME: If list maintained in alphabetic order, use dichotomic search */
+  for (Index = 0; Index < ParentKey->NumberOfSubKeys; Index++)
+	  {
+	    if (ParentKey->SubKeys[Index] == KeyToRemove)
+	    {
+		      if (Index < ParentKey->NumberOfSubKeys-1)
+		        RtlMoveMemory(&ParentKey->SubKeys[Index],
+				      &ParentKey->SubKeys[Index + 1],
+				      (ParentKey->NumberOfSubKeys - Index - 1) * sizeof(PKEY_OBJECT));
+		      ParentKey->NumberOfSubKeys--;
+		      KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
+
+DPRINT("Dereference parent key: 0x%x\n", ParentKey);
+	
+		      ObDereferenceObject(ParentKey);
+		      return STATUS_SUCCESS;
+		    }
+	  }
   KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
   return STATUS_UNSUCCESSFUL;
 }
 
+
 PKEY_OBJECT
 CmiScanKeyList(PKEY_OBJECT Parent,
-	       PCHAR KeyName,
-	       ULONG Attributes)
+	PCHAR KeyName,
+	ULONG Attributes)
 {
- KIRQL  OldIrql;
- PKEY_OBJECT  CurKey;
- DWORD Index;
- WORD NameSize;
-  NameSize=strlen(KeyName);
+	PKEY_OBJECT CurKey;
+	KIRQL OldIrql;
+	WORD NameSize;
+	DWORD Index;
+
+  DPRINT("Scanning key list for %s (Parent %s)\n",
+    KeyName, Parent->Name);
+
+  NameSize = strlen(KeyName);
   KeAcquireSpinLock(&CmiKeyListLock, &OldIrql);
-  /* FIXME : if list maintained in alphabetic order, use dichotomic search */
+  /* FIXME: if list maintained in alphabetic order, use dichotomic search */
   for (Index=0; Index < Parent->NumberOfSubKeys; Index++)
-  {
-    CurKey=Parent->SubKeys[Index];
-    if (Attributes & OBJ_CASE_INSENSITIVE)
-    {
-      if( NameSize == CurKey->NameSize
-	 && !_strnicmp(KeyName,CurKey->Name,NameSize))
-      {
-         KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
-         return CurKey;
-      }
-    }
-    else
-    {
-      if( NameSize == CurKey->NameSize
-	 && !strncmp(KeyName,CurKey->Name,NameSize))
-      {
-         KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
-         return CurKey;
-      }
-    }
-  }
+	  {
+	    CurKey = Parent->SubKeys[Index];
+	    if (Attributes & OBJ_CASE_INSENSITIVE)
+		    {
+		      if ((NameSize == CurKey->NameSize)
+	          && (_strnicmp(KeyName, CurKey->Name, NameSize) == 0))
+	          {
+	            KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
+	            return CurKey;
+	          }
+		    }
+	    else
+		    {
+		      if ((NameSize == CurKey->NameSize)
+			      && (strncmp(KeyName,CurKey->Name,NameSize) == 0))
+			      {
+			         KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
+			         return CurKey;
+			      }
+		    }
+	  }
   KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
   
   return NULL;
