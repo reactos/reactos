@@ -191,11 +191,6 @@ XMLFile::XMLFile()
 void
 XMLFile::close()
 {
-	while ( _f.size() )
-	{
-		fclose ( _f.back() );
-		_f.pop_back();
-	}
 	_buf.resize(0);
 	_p = _end = NULL;
 }
@@ -210,9 +205,9 @@ XMLFile::open(const string& filename)
 	unsigned long len = (unsigned long)filelen(f);
 	_buf.resize ( len );
 	fread ( &_buf[0], 1, len, f );
+	fclose ( f );
 	_p = _buf.c_str();
 	_end = _p + len;
-	_f.push_back ( f );
 	next_token();
 	return true;
 }

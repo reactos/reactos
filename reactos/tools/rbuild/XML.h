@@ -36,7 +36,6 @@ public:
 	bool get_token(std::string& token);
 
 private:
-	std::vector<FILE*> _f;
 	std::string _buf;
 
 	const char *_p, *_end;
