@@ -39,3 +39,4 @@
 						eliminated all warnings displayed when using -Wall
 						activated option for compiling as UNICODE version
 						merged start menus of the same name (e.g. "All Users\Startup" with "<User>\Startup")
+28.09.2003	m. fuchs	open cabinet windows then clicking on desktop folders

@@ -35,9 +35,9 @@ struct ShellEntry : public Entry
 	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
 
 	IShellFolder* get_parent_folder() const;
-	LPITEMIDLIST create_absolute_pidl(HWND hwnd);
+	ShellPath create_absolute_pidl(HWND hwnd);
 
-	ShellPath	_pidl;
+	ShellPath	_pidl;	// parent relative PIDL
 
 protected:
 	ShellEntry(LPITEMIDLIST shell_path) : Entry(ET_SHELL), _pidl(shell_path) {}

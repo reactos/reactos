@@ -86,7 +86,7 @@ LRESULT ShellBrowserChild::Init(LPCREATESTRUCT pcs)
 
 
 	 // create explorer treeview
-	if (_create_info._mode_explore)
+	if (_create_info._open_mode & OWM_EXPLORE)
 		_left_hwnd = CreateWindowEx(0, WC_TREEVIEW, NULL,
 						WS_CHILD|WS_TABSTOP|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_NOTOOLTIPS|TVS_SHOWSELALWAYS,
 						0, rect.top, _split_pos-SPLIT_WIDTH/2, rect.bottom-rect.top,
@@ -283,21 +283,22 @@ void ShellBrowserChild::OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh)
 	}
 
 	if (lpdi->item.mask & (TVIF_IMAGE|TVIF_SELECTEDIMAGE)) {
-		LPITEMIDLIST pidl = entry->create_absolute_pidl(_hwnd);
+		ShellPath pidl_abs = entry->create_absolute_pidl(_hwnd);	// Caching of absolute PIDLs could enhance performance.
+		LPCITEMIDLIST pidl = pidl_abs;
+
 		SHFILEINFO sfi;
 
-		if (lpdi->item.mask & TVIF_IMAGE) {
-			if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_SYSICONINDEX|SHGFI_SMALLICON|SHGFI_LINKOVERLAY))
+		if (lpdi->item.mask & TVIF_IMAGE)
+			if ((HIMAGELIST)SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_SYSICONINDEX|SHGFI_SMALLICON|SHGFI_LINKOVERLAY) == _himlSmall)
 				lpdi->item.iImage = sfi.iIcon;
-		}
+			else
+				lpdi->item.iImage = -1;
 
-		if (lpdi->item.mask & TVIF_SELECTEDIMAGE) {
-			if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_SYSICONINDEX|SHGFI_SMALLICON|SHGFI_OPENICON))
+		if (lpdi->item.mask & TVIF_SELECTEDIMAGE)
+			if ((HIMAGELIST)SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_SYSICONINDEX|SHGFI_SMALLICON|SHGFI_OPENICON) == _himlSmall)
 				lpdi->item.iSelectedImage = sfi.iIcon;
-		}
-
-		if (pidl != &*entry->_pidl)
-			ShellMalloc()->Free(pidl);
+			else
+				lpdi->item.iSelectedImage = -1;
 	}
 }
 
@@ -387,7 +388,7 @@ void ShellBrowserChild::UpdateFolderView(IShellFolder* folder)
 	if (pLastShellView)
 		pLastShellView->GetCurrentInfo(&fs);
 	else {
-		fs.ViewMode = _left_hwnd? FVM_DETAILS: FVM_ICON;
+		fs.ViewMode = _create_info._open_mode&OWM_DETAILS? FVM_DETAILS: FVM_ICON;
 		fs.fFlags = FWF_NOCLIENTEDGE;
 	}
 
@@ -442,76 +443,35 @@ int ShellBrowserChild::Notify(int id, NMHDR* pnmh)
 }
 
 
- // process default command: look for folders and traverse into them
-HRESULT ShellBrowserChild::OnDefaultCommand(IShellView* ppshv)
+HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pIDList)
 {
-	static UINT CF_IDLIST = RegisterClipboardFormat(CFSTR_SHELLIDLIST);
+	if (pIDList->cidl>=1 && _last_sel) {
+		ShellDirectory* parent = (ShellDirectory*)TreeView_GetItemData(_left_hwnd, _last_sel);
 
-	HRESULT ret = E_NOTIMPL;
-
-	IDataObject* selection;
-	HRESULT hr = ppshv->GetItemObject(SVGIO_SELECTION, IID_IDataObject, (void**)&selection);
-	if (FAILED(hr))
-		return hr;
-
-
-    FORMATETC fetc;
-    fetc.cfFormat = CF_IDLIST;
-    fetc.ptd = NULL;
-    fetc.dwAspect = DVASPECT_CONTENT;
-    fetc.lindex = -1;
-    fetc.tymed = TYMED_HGLOBAL;
-
-    hr = selection->QueryGetData(&fetc);
-	if (FAILED(hr))
-		return hr;
-
-
-	STGMEDIUM stgm = {sizeof(STGMEDIUM), {0}, 0};
-
-    hr = selection->GetData(&fetc, &stgm);
-	if (FAILED(hr))
-		return hr;
-
-
-    DWORD pData = (DWORD)GlobalLock(stgm.hGlobal);
-	CIDA* pIDList = (CIDA*)pData;
-
-	if (pIDList->cidl >= 1) {
-		//UINT folderOffset = pIDList->aoffset[0];
-		//LPITEMIDLIST folder = (LPITEMIDLIST)(pData+folderOffset);
-
-		UINT firstOffset = pIDList->aoffset[1];
-		LPITEMIDLIST pidl = (LPITEMIDLIST)(pData+firstOffset);
-
-		//HTREEITEM hitem_sel = TreeView_GetSelection(_left_hwnd);
-
-		if (_last_sel) {
-			ShellDirectory* parent = (ShellDirectory*)TreeView_GetItemData(_left_hwnd, _last_sel);
-
-			if (parent) {
-				try {
-					parent->smart_scan();
-				} catch(COMException& e) {
-					return e.Error();
-				}
-
-				Entry* entry = parent->find_entry(pidl);
-
-				if (entry && (entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
-					if (expand_folder(static_cast<ShellDirectory*>(entry)))
-						ret = S_OK;
+		if (parent) {
+			try {
+				parent->smart_scan();
+			} catch(COMException& e) {
+				return e.Error();
 			}
+
+			//UINT folderOffset = pIDList->aoffset[0];
+			//LPITEMIDLIST pidlFolder = (LPITEMIDLIST)((LPBYTE)pIDList+folderOffset);
+
+			UINT firstOffset = pIDList->aoffset[1];
+			LPITEMIDLIST pidl = (LPITEMIDLIST)((LPBYTE)pIDList+firstOffset);
+
+			Entry* entry = parent->find_entry(pidl);
+
+			if (entry && (entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
+				if (expand_folder(static_cast<ShellDirectory*>(entry)))
+					return S_OK;
 		}
 	}
 
-	GlobalUnlock(stgm.hGlobal);
-    ReleaseStgMedium(&stgm);
-
-	selection->Release();
-
-	return ret;
+	return E_NOTIMPL;
 }
+
 
 bool ShellBrowserChild::expand_folder(ShellDirectory* entry)
 {

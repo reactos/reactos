@@ -26,6 +26,10 @@
  //
 
 
+#define	PM_OPEN_WINDOW			(WM_APP+0x05)
+enum OPEN_WINDOW_MODE {OWM_EXPLORE=1, OWM_DETAILS=2, OWM_PIDL=4};
+
+
 struct MainFrame : public PreTranslateWindow
 {
 	typedef PreTranslateWindow super;
@@ -34,9 +38,11 @@ struct MainFrame : public PreTranslateWindow
 	~MainFrame();
 
 	static HWND Create();
-	static HWND Create(LPCTSTR path, BOOL mode_explore=TRUE);
+	static HWND Create(LPCTSTR path, int mode=OWM_EXPLORE|OWM_DETAILS);
+	static HWND Create(LPCITEMIDLIST pidl, int mode=OWM_EXPLORE|OWM_DETAILS|OWM_PIDL);
 
-	ChildWindow* CreateChild(LPCTSTR path=NULL, BOOL mode_explore=TRUE);
+	ChildWindow* CreateChild(LPCTSTR path=NULL, int mode=OWM_EXPLORE|OWM_DETAILS);
+	ChildWindow* CreateChild(LPCITEMIDLIST pidl, int mode=OWM_EXPLORE|OWM_DETAILS|OWM_PIDL);
 
 protected:
 	FullScreenParameters _fullscreen;

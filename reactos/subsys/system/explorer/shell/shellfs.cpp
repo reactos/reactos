@@ -102,15 +102,16 @@ bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN
 }
 
 
-LPITEMIDLIST ShellEntry::create_absolute_pidl(HWND hwnd)
+ShellPath ShellEntry::create_absolute_pidl(HWND hwnd)
 {
 	if (_up/* && _up->_etype==ET_SHELL*/) {
 		ShellDirectory* dir = static_cast<ShellDirectory*>(_up);
 
-		return _pidl.create_absolute_pidl(dir->_pidl, hwnd);
+		if (dir->_pidl->mkid.cb)	// Caching of absolute PIDLs could enhance performance.
+			return _pidl.create_absolute_pidl(dir->create_absolute_pidl(hwnd), hwnd);
 	}
 
-	return &*_pidl;
+	return _pidl;
 }
 
 
@@ -143,6 +144,8 @@ BOOL ShellEntry::launch_entry(HWND hwnd, UINT nCmdShow)
 {
 	BOOL ret = TRUE;
 
+	ShellPath shell_path = create_absolute_pidl(hwnd);
+
 	SHELLEXECUTEINFO shexinfo;
 
 	shexinfo.cbSize = sizeof(SHELLEXECUTEINFO);
@@ -153,15 +156,12 @@ BOOL ShellEntry::launch_entry(HWND hwnd, UINT nCmdShow)
 	shexinfo.lpParameters = NULL;
 	shexinfo.lpDirectory = NULL;
 	shexinfo.nShow = nCmdShow;
-	shexinfo.lpIDList = create_absolute_pidl(hwnd);
+	shexinfo.lpIDList = &*shell_path;
 
 	if (!ShellExecuteEx(&shexinfo)) {
 		display_error(hwnd, GetLastError());
 		ret = FALSE;
 	}
-
-	if (shexinfo.lpIDList != &*_pidl)
-		ShellMalloc()->Free(shexinfo.lpIDList);
 
 	return ret;
 }

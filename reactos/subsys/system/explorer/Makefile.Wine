@@ -20,6 +20,7 @@ CPP_SRCS = \
 	utility/utility.cpp \
 	utility/window.cpp \
 	utility/dragdropimpl.cpp \
+	utility/shellbrowserimpl.cpp \
 	shell/entries.cpp \
 	shell/winfs.cpp \
 	shell/unixfs.cpp \

@@ -210,6 +210,10 @@ SOURCE=.\utility\dragdropimpl.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\utility\shellbrowserimpl.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\utility\shellbrowserimpl.h
 # End Source File
 # Begin Source File

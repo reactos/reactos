@@ -167,7 +167,7 @@ HWND MainFrame::Create()
 				0/*hwndDesktop*/, hMenuFrame);
 }
 
-HWND MainFrame::Create(LPCTSTR path, BOOL mode_explore)
+HWND MainFrame::Create(LPCTSTR path, int mode)
 {
 	HWND hMainFrame = Create();
 	if (!hMainFrame)
@@ -178,15 +178,36 @@ HWND MainFrame::Create(LPCTSTR path, BOOL mode_explore)
 	MainFrame* pMainFrame = GET_WINDOW(MainFrame, hMainFrame);
 
 	if (pMainFrame)
-		pMainFrame->CreateChild(path, mode_explore);
+		pMainFrame->CreateChild(path, mode);
+
+	return hMainFrame;
+}
+
+HWND MainFrame::Create(LPCITEMIDLIST pidl, int mode)
+{
+	HWND hMainFrame = Create();
+	if (!hMainFrame)
+		return 0;
+
+	ShowWindow(hMainFrame, SW_SHOW);
+
+	MainFrame* pMainFrame = GET_WINDOW(MainFrame, hMainFrame);
+
+	if (pMainFrame)
+		pMainFrame->CreateChild(pidl, mode);
 
 	return hMainFrame;
 }
 
 
-ChildWindow* MainFrame::CreateChild(LPCTSTR path, BOOL mode_explore)
+ChildWindow* MainFrame::CreateChild(LPCTSTR path, int mode)
 {
-	return reinterpret_cast<ChildWindow*>(SendMessage(_hwnd, PM_OPEN_WINDOW, mode_explore, (LPARAM)path));
+	return reinterpret_cast<ChildWindow*>(SendMessage(_hwnd, PM_OPEN_WINDOW, mode, (LPARAM)path));
+}
+
+ChildWindow* MainFrame::CreateChild(LPCITEMIDLIST pidl, int mode)
+{
+	return reinterpret_cast<ChildWindow*>(SendMessage(_hwnd, PM_OPEN_WINDOW, mode|OWM_PIDL, (LPARAM)pidl));
 }
 
 
@@ -238,9 +259,15 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		ShellPath shell_path = DesktopFolder();
 
 		if (lparam) {
-			 // take over path from lparam
-			path = (LPCTSTR)lparam;
-			shell_path = path;	// create as "rooted" window
+			if (wparam & OWM_PIDL) {
+				 // take over PIDL from lparam
+				shell_path.assign((LPCITEMIDLIST)lparam);	// create as "rooted" window
+				path = FileSysShellPath(shell_path);
+			} else {
+				 // take over path from lparam
+				path = (LPCTSTR)lparam;
+				shell_path = path;	// create as "rooted" window
+			}
 		} else {
 			//TODO: read paths and window placements from registry
 			GetCurrentDirectory(MAX_PATH, buffer);
@@ -256,7 +283,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		create_info._pos.rcNormalPosition.right = 600;
 		create_info._pos.rcNormalPosition.bottom = 280;
 
-		create_info._mode_explore = wparam? true: false;
+		create_info._open_mode = (OPEN_WINDOW_MODE)wparam;
 
 	//	FileChildWindow::create(_hmdiclient, create_info);
 		return (LRESULT)ShellBrowserChild::create(_hmdiclient, create_info);}

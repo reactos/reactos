@@ -53,13 +53,13 @@ FileChildWndInfo::FileChildWndInfo(LPCTSTR path)
 	_pos.rcNormalPosition.right = CW_USEDEFAULT;
 	_pos.rcNormalPosition.bottom = CW_USEDEFAULT;
 
-	_mode_explore = true;
+	_open_mode = OWM_EXPLORE|OWM_DETAILS;
 }
 
 
 ShellChildWndInfo::ShellChildWndInfo(LPCTSTR path, const ShellPath& root_shell_path)
  :	FileChildWndInfo(path),
-	_shell_path(path),
+	_shell_path(path? path: root_shell_path),
 	_root_shell_path(root_shell_path)
 {
 	_etype = ET_SHELL;
@@ -121,7 +121,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 	_root._entry->_data.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 
 
-	if (info._mode_explore)	//TODO: Is not-explore-mode for FileChildWindow completely implemented?
+	if (info._open_mode & OWM_EXPLORE)	//TODO: Is not-explore-mode for FileChildWindow completely implemented?
 		_left_hwnd = *(_left=new Pane(_hwnd, IDW_TREE_LEFT, IDW_HEADER_LEFT, _root._entry, true, 0));
 
 	_right_hwnd = *(_right=new Pane(_hwnd, IDW_TREE_RIGHT, IDW_HEADER_RIGHT, NULL, false, COL_SIZE|COL_DATE|COL_TIME|COL_ATTRIBUTES|COL_INDEX|COL_LINKS));

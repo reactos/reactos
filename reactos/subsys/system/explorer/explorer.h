@@ -48,8 +48,6 @@
 #define	PM_FRM_CALC_CLIENT		(WM_APP+0x04)
 #define	Frame_CalcFrameClient(hwnd, prt) ((BOOL)SNDMSG(hwnd, PM_FRM_CALC_CLIENT, 0, (LPARAM)(PRECT)prt))
 
-#define	PM_OPEN_WINDOW			(WM_APP+0x05)
-
 #define	PM_GET_CONTROLWINDOW	(WM_APP+0x06)
 
 

@@ -75,4 +75,6 @@ protected:
 
 	IShellView*	_pShellView;
 	WindowHandle _desktopBar;
+
+	virtual HRESULT OnDefaultCommand(LPIDA pIDList);
 };

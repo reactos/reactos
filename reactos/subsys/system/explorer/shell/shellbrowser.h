@@ -100,8 +100,6 @@ struct ShellBrowserChild : public ChildWindow, public IShellBrowserImpl
 		return E_NOTIMPL;
 	}
 
-	STDMETHOD(OnDefaultCommand)(IShellView* ppshv);
-
 protected:
 	Root _root;
 
@@ -122,6 +120,8 @@ protected:
 	void	InitializeTree(/*const FileChildWndInfo& info*/);
 	void	InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder);
 	bool	InitDragDrop();
+
+	HRESULT OnDefaultCommand(LPIDA pIDList);
 
 	void	OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh);
 	void	OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv);
