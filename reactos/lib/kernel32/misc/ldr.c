@@ -1,4 +1,4 @@
-/* $Id: ldr.c,v 1.3 1999/10/31 22:41:15 ea Exp $
+/* $Id: ldr.c,v 1.4 1999/11/17 21:30:00 ariadne Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -21,29 +21,41 @@ LoadLibraryA( LPCSTR lpLibFileName )
 	HINSTANCE hInst;
 	int i;
 	LPSTR lpDllName;
+	NTSTATUS Status;
 	
 	
 	if ( lpLibFileName == NULL )
 		return NULL;
 		
 	i = lstrlen(lpLibFileName);
-	if ( lpLibFileName[i-1] == '.' ) {
+// full path specified
+	if ( lpLibFileName[2] == ':' ) {
+		lpDllName = HeapAlloc(GetProcessHeap(),0,i+3);
+		lstrcpyA(lpDllName,"\\??\\");
+		lstrcatA(lpDllName,lpLibFileName);
+	}
+// point at the end means no extension 
+	else if ( lpLibFileName[i-1] == '.' ) {
 		lpDllName = HeapAlloc(GetProcessHeap(),0,i+1);
-		lstrcpy(lpDllName,lpLibFileName);
+		lstrcpyA(lpDllName,lpLibFileName);
 		lpDllName[i-1] = 0;
 	}
+// no extension
 	else if (i > 3 && lpLibFileName[i-3] != '.' ) {
 		lpDllName = HeapAlloc(GetProcessHeap(),0,i+4);
-		lstrcpy(lpDllName,lpLibFileName);
-		lstrcat(lpDllName,".dll");	
+		lstrcpyA(lpDllName,lpLibFileName);
+		lstrcatA(lpDllName,".dll");	
 	}
 	else {
 		lpDllName = HeapAlloc(GetProcessHeap(),0,i+1);
-		lstrcpy(lpDllName,lpLibFileName);
+		lstrcpyA(lpDllName,lpLibFileName);
 	}
 	
-	if ( !NT_SUCCESS(LdrLoadDll((PDLL *)&hInst,lpDllName )))
+	Status = LdrLoadDll((PDLL *)&hInst,lpDllName );
+	HeapFree(GetProcessHeap(),0,lpDllName);
+	if ( !NT_SUCCESS(Status))
 	{
+		SetLastError(RtlNtStatusToDosError(Status));
 		return NULL;
 	}
 	
@@ -93,7 +105,23 @@ HMODULE
 STDCALL
 GetModuleHandleA ( LPCSTR lpModuleName )
 {
-	return LoadLibraryA(lpModuleName);
+	int len = 0;
+	HMODULE hModule;
+	WINBOOL restore = FALSE;
+	if ( lpModuleName != NULL ) {
+
+		len = lstrlenA(lpModuleName);
+		if ( len > 0 && lpModuleName[len-1] == '.' ) {
+			lpModuleName[len-1] = 0;
+			restore = TRUE;
+		}
+	}
+	hModule =  LoadLibraryA(lpModuleName);
+	if ( restore == TRUE )
+		lpModuleName[len-1] = '.';
+
+
+	return hModule;
 }
 
 
