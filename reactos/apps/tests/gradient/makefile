@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2003/11/14 17:13:16 weiden Exp $
+# $Id: makefile,v 1.1 2004/02/08 21:57:35 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -8,9 +8,9 @@ TARGET_TYPE = program
 
 TARGET_APPTYPE = windows
 
-TARGET_NAME = cliarea
+TARGET_NAME = gradient
 
-TARGET_SDKLIBS = kernel32.a gdi32.a
+TARGET_SDKLIBS = gdi32.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 

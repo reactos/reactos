@@ -8,8 +8,8 @@ include $(PATH_TO_TOP)/rules.mak
 
 # test_old tests
 TEST_APPS = accelerator alive apc args atomtest bench bitblt button \
-button2 capclock carets cliarea combo consume copymove count dibtest \
-dump_shared_data edit enumwnd enumws event global_mem hello mdi \
+button2 capclock carets combo consume copymove count dibtest dump_shared_data \
+edit enumwnd enumws event global_mem gradient hello mdi \
 hivetest icontest isotest lineclip linetest lock lpc \
 mktime mstest multithrdwin multiwin mutex nptest patblt primitives pteb \
 regtest sectest sertest shaptest shm statst statst2 stretchblt suspend \
