@@ -1,11 +1,16 @@
-/* $Id: cpp.c,v 1.2 2003/08/07 04:03:23 royce Exp $
+/* $Id: cpp.c,v 1.3 2003/08/20 21:41:22 gvg Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS C runtime
  * FILE:        cpp.c
  * PURPOSE:     C++ runtime
- * PROGRAMMERS: Ge van Geldorp (ge@gse.nl)
- * NOTES:       Copied from Wine and slightly adapter for ReactOS
+ * NOTES:       Copied from Wine and slightly adapted for ReactOS
+ *              This is a derivative work compiled of work written and
+ *              copyrighted by (at least):
+ *              Alexandre Juliard <juliard@winehq.org>
+ *              Patrik Stridvall <ps@leissner.se>
+ *              Dimitrie O. Paun <dpaun@rogers.com>
+ *              Jon Griffiths <jon_p_griffiths@yahoo.com>
  */
 
 #include <windows.h>
