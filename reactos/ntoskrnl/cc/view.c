@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.70 2003/12/30 18:52:03 fireball Exp $
+/* $Id: view.c,v 1.71 2003/12/31 05:33:03 jfilby Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -489,11 +489,13 @@ CcRosCreateCacheSegment(PBCB Bcb,
 #ifdef CACHE_BITMAP
   ULONG StartingOffset;
 #endif
-
+  PHYSICAL_ADDRESS BoundaryAddressMultiple;
+  
   assert(Bcb);
 
   DPRINT("CcRosCreateCacheSegment()\n");
 
+  BoundaryAddressMultiple.QuadPart = 0;
   if (FileOffset >= Bcb->FileSize.u.LowPart)
   {
      CacheSeg = NULL;
@@ -598,7 +600,8 @@ CcRosCreateCacheSegment(PBCB Bcb,
 			      PAGE_READWRITE,
 			      (PMEMORY_AREA*)&current->MemoryArea,
 			      FALSE,
-			      FALSE);
+			      FALSE,
+			      BoundaryAddressMultiple);
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
   if (!NT_SUCCESS(Status))
   {
@@ -1273,12 +1276,14 @@ CcInitView(VOID)
 #ifdef CACHE_BITMAP
   PMEMORY_AREA marea;
   PVOID Buffer;
+  PHYSICAL_ADDRESS BoundaryAddressMultiple;
 #endif
   NTSTATUS Status;
   KPRIORITY Priority;
-
+  
   DPRINT("CcInitView()\n");
 #ifdef CACHE_BITMAP
+  BoundaryAddressMultiple.QuadPart = 0;
   CiCacheSegMappingRegionHint = 0;
   CiCacheSegMappingRegionBase = NULL;
 
@@ -1292,7 +1297,8 @@ CcInitView(VOID)
 			      0,
 			      &marea,
 			      FALSE,
-			      FALSE);
+			      FALSE,
+			      BoundaryAddressMultiple);
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
   if (!NT_SUCCESS(Status))
     {

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.157 2003/11/22 11:56:17 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.158 2003/12/31 05:33:03 jfilby Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -499,8 +499,9 @@ LsaLogonUser=LsaLogonUser@56
 LsaLookupAuthenticationPackage=LsaLookupAuthenticationPackage@12
 LsaRegisterLogonProcess=LsaRegisterLogonProcess@12
 MmAdjustWorkingSetSize=MmAdjustWorkingSetSize@12
-MmAllocateContiguousAlignedMemory=MmAllocateContiguousAlignedMemory@16
+MmAllocateContiguousAlignedMemory=MmAllocateContiguousAlignedMemory@36
 MmAllocateContiguousMemory=MmAllocateContiguousMemory@12
+MmAllocateContiguousMemorySpecifyCache=MmAllocateContiguousMemorySpecifyCache@32
 MmAllocateNonCachedMemory=MmAllocateNonCachedMemory@4
 MmBuildMdlForNonPagedPool=MmBuildMdlForNonPagedPool@4
 MmCanFileBeTruncated=MmCanFileBeTruncated@8
@@ -513,6 +514,7 @@ MmDisableModifiedWriteOfSection=MmDisableModifiedWriteOfSection@4
 MmFlushImageSection=MmFlushImageSection@8
 MmForceSectionClosed=MmForceSectionClosed@8
 MmFreeContiguousMemory=MmFreeContiguousMemory@4
+MmFreeContiguousMemorySpecifyCache=MmFreeContiguousMemorySpecifyCache@12
 MmFreeNonCachedMemory=MmFreeNonCachedMemory@8
 MmGetPhysicalAddress=MmGetPhysicalAddress@4
 MmGrowKernelStack=MmGrowKernelStack@4

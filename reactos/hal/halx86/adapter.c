@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.9 2003/12/28 22:38:09 fireball Exp $
+/* $Id: adapter.c,v 1.10 2003/12/31 05:33:03 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -49,7 +49,9 @@ HalAllocateAdapterChannel(
  *     - there are many unhandled cases
  */
 {
+  LARGE_INTEGER MinAddress;
   LARGE_INTEGER MaxAddress;
+  LARGE_INTEGER BoundryAddressMultiple;
   IO_ALLOCATION_ACTION Retval;
   
   assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
@@ -68,7 +70,9 @@ HalAllocateAdapterChannel(
     return STATUS_SUCCESS;
 
   /* 24-bit max address due to 16-bit dma controllers */
+  MinAddress.QuadPart = 0x0000000;
   MaxAddress.QuadPart = 0x1000000;
+  BoundryAddressMultiple.QuadPart = 0;
 
   /* why 64K alignment? */
   /*
@@ -77,7 +81,12 @@ HalAllocateAdapterChannel(
    * that.  This can be optimized.
    */
   AdapterObject->MapRegisterBase = MmAllocateContiguousAlignedMemory( 
-      NumberOfMapRegisters * PAGE_SIZE, MaxAddress, 0x10000 );
+      NumberOfMapRegisters * PAGE_SIZE,
+      MinAddress,
+      MaxAddress,
+      BoundryAddressMultiple,
+      MmCached,
+      0x10000 );
 
   if(!AdapterObject->MapRegisterBase)
     return STATUS_INSUFFICIENT_RESOURCES;
@@ -188,6 +197,8 @@ IoFreeAdapterChannel (PADAPTER_OBJECT	AdapterObject)
  */
 {
   LARGE_INTEGER MaxAddress;
+  LARGE_INTEGER MinAddress;
+  LARGE_INTEGER BoundryAddressMultiple;
   PWAIT_CONTEXT_BLOCK WaitContextBlock;
   IO_ALLOCATION_ACTION Retval;
 
@@ -206,10 +217,17 @@ IoFreeAdapterChannel (PADAPTER_OBJECT	AdapterObject)
        */
 
       /* 24-bit max address due to 16-bit dma controllers */
+      MinAddress.QuadPart = 0x0000000;
       MaxAddress.QuadPart = 0x1000000;
+      BoundryAddressMultiple.QuadPart = 0;
 
       AdapterObject->MapRegisterBase = MmAllocateContiguousAlignedMemory( 
-          WaitContextBlock->NumberOfMapRegisters * PAGE_SIZE, MaxAddress, 0x10000 );
+          WaitContextBlock->NumberOfMapRegisters * PAGE_SIZE,
+          MinAddress,
+          MaxAddress,
+          BoundryAddressMultiple,
+          MmCached,
+          0x10000 );
 
       if(!AdapterObject->MapRegisterBase)
         return;

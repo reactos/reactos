@@ -487,7 +487,8 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
 			    ULONG Attributes,
 			    MEMORY_AREA** Result,
 			    BOOL FixedAddress,
-			    BOOL TopDown)
+			    BOOL TopDown,
+			    PHYSICAL_ADDRESS BoundaryAddressMultiple)
 /*
  * FUNCTION: Create a memory area
  * ARGUMENTS:
@@ -501,6 +502,7 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
  * NOTES: Lock the address space before calling this function
  */
 {
+   PVOID EndAddress;
    ULONG tmpLength;
    DPRINT("MmCreateMemoryArea(Type %d, BaseAddress %x,"
 	   "*BaseAddress %x, Length %x, Attributes %x, Result %x)\n",
@@ -543,6 +545,13 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
 	  {
 	    return STATUS_ACCESS_VIOLATION;
 	  }
+
+   if (BoundaryAddressMultiple.QuadPart != 0)
+     {
+      EndAddress = *BaseAddress + tmpLength-1;
+      assert((*BaseAddress/BoundaryAddressMultiple) == (EndAddress/BoundaryAddressMultiple));
+     }
+
 	if (MmOpenMemoryAreaByRegion(AddressSpace,
 				     *BaseAddress,
 				     tmpLength)!=NULL)
@@ -551,7 +560,7 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
 	     return(STATUS_CONFLICTING_ADDRESSES);
 	  }
      }
-   
+
    *Result = ExAllocatePoolWithTag(NonPagedPool, sizeof(MEMORY_AREA),
 				   TAG_MAREA);
    RtlZeroMemory(*Result,sizeof(MEMORY_AREA));

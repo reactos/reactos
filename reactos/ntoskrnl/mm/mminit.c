@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.58 2003/12/30 18:52:05 fireball Exp $
+/* $Id: mminit.c,v 1.59 2003/12/31 05:33:04 jfilby Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -105,10 +105,12 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
    ULONG Length;
    ULONG ParamLength = KernelLength;
    NTSTATUS Status;
+   PHYSICAL_ADDRESS BoundaryAddressMultiple;
    //ULONG i;
    
    DPRINT("MmInitVirtualMemory(%x, %x)\n",LastKernelAddress, KernelLength);
    
+   BoundaryAddressMultiple.QuadPart = 0;
    LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
 
    MmInitMemoryAreas();
@@ -139,7 +141,8 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_map_desc,
 		      FALSE,
-		      FALSE);
+		      FALSE,
+		      BoundaryAddressMultiple);
 
    BaseAddress = (PVOID)KPCR_BASE;
    MmCreateMemoryArea(NULL,
@@ -150,7 +153,8 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_kpcr_desc,
 		      FALSE,
-		      FALSE);
+		      FALSE,
+		      BoundaryAddressMultiple);
 
    BaseAddress = (PVOID)0xd0000000;
    MmCreateMemoryArea(NULL,
@@ -161,7 +165,8 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_mapped_low_mem_desc,
 		      FALSE,
-		      FALSE);
+		      FALSE,
+		      BoundaryAddressMultiple);
 
    BaseAddress = (PVOID)KERNEL_BASE;
    Length = PAGE_ROUND_UP(((ULONG)&_text_end__)) - KERNEL_BASE;
@@ -179,7 +184,8 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_text_desc,
 		      FALSE,
-		      FALSE);
+		      FALSE,
+		      BoundaryAddressMultiple);
 
    BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_text_end__));
    assert (BaseAddress == (PVOID)&_init_start__);
@@ -195,7 +201,8 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_init_desc,
 		      FALSE,
-		      FALSE);
+		      FALSE,
+		      BoundaryAddressMultiple);
 
    Length = PAGE_ROUND_UP(((ULONG)&_bss_end__)) - 
             PAGE_ROUND_UP(((ULONG)&_init_end__));
@@ -216,7 +223,8 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_data_desc,
 		      FALSE,
-		      FALSE);
+		      FALSE,
+		      BoundaryAddressMultiple);
 
    BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_bss_end__));
    Length = LastKernelAddress - (ULONG)BaseAddress;
@@ -228,7 +236,8 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_param_desc,
 		      FALSE,
-		      FALSE);
+		      FALSE,
+		      BoundaryAddressMultiple);
    
    BaseAddress = MiNonPagedPoolStart;
    MmCreateMemoryArea(NULL,
@@ -239,7 +248,8 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_pool_desc,
 		      FALSE,
-		      FALSE);
+		      FALSE,
+		      BoundaryAddressMultiple);
 
    BaseAddress = MiKernelMapStart;
    Status = MmCreateMemoryArea(NULL,
@@ -250,7 +260,8 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &MiKernelMapDescriptor,
 		      FALSE,
-		      FALSE);
+		      FALSE,
+		      BoundaryAddressMultiple);
    
    BaseAddress = MmPagedPoolBase;
    Status = MmCreateMemoryArea(NULL,
@@ -261,7 +272,8 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &MiPagedPoolDescriptor,
 		      FALSE,
-		      FALSE);
+		      FALSE,
+		      BoundaryAddressMultiple);
 
    MmInitializePagedPool();
 
@@ -278,7 +290,8 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_shared_data_desc,
 		      FALSE,
-		      FALSE);
+		      FALSE,
+		      BoundaryAddressMultiple);
    Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, 
 					&MmSharedDataPagePhysicalAddress);
    Status = MmCreateVirtualMapping(NULL,

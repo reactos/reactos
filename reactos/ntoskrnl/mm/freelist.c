@@ -169,6 +169,7 @@ MmGetLRUNextUserPage(PHYSICAL_ADDRESS PreviousPhysicalAddress)
 
 PHYSICAL_ADDRESS
 MmGetContinuousPages(ULONG NumberOfBytes,
+		     PHYSICAL_ADDRESS LowestAcceptableAddress,
 		     PHYSICAL_ADDRESS HighestAcceptableAddress,
 		     ULONG Alignment)
 {
@@ -184,7 +185,7 @@ MmGetContinuousPages(ULONG NumberOfBytes,
    
    start = -1;
    length = 0;
-   for (i = 0; i < (HighestAcceptableAddress.QuadPart / PAGE_SIZE); )
+   for (i = (LowestAcceptableAddress.QuadPart / PAGE_SIZE); i < (HighestAcceptableAddress.QuadPart / PAGE_SIZE); )
      {
 	if (MmPageArray[i].Flags.Type ==  MM_PHYSICAL_PAGE_FREE)
 	  {

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.18 2003/11/18 05:11:41 royce Exp $ */
+/* $Id: mmfuncs.h,v 1.19 2003/12/31 05:33:03 jfilby Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
 
@@ -72,10 +72,21 @@ MmAllocateContiguousMemory (
 	IN	PHYSICAL_ADDRESS	HighestAcceptableAddress
 	);
 
+PVOID STDCALL 
+MmAllocateContiguousMemorySpecifyCache (IN ULONG NumberOfBytes,
+                IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+			    IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+			    IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+			    IN MEMORY_CACHING_TYPE CacheType
+			    );
+
 PVOID STDCALL
 MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
+					  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
 			          IN PHYSICAL_ADDRESS HighestAcceptableAddress,
-				  IN ULONG Alignment);
+			          IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+			          IN MEMORY_CACHING_TYPE CacheType OPTIONAL,
+					  IN ULONG Alignment);
 
 PVOID
 STDCALL
@@ -156,6 +167,12 @@ STDCALL
 MmFreeContiguousMemory (
 	IN OUT	PVOID	BaseAddress
 	);
+VOID
+STDCALL
+MmFreeContiguousMemorySpecifyCache(IN PVOID BaseAddress,
+				IN ULONG NumberOfBytes,
+			    IN MEMORY_CACHING_TYPE CacheType
+			    );
 VOID
 STDCALL
 MmFreeNonCachedMemory (

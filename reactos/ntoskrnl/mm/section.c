@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.138 2003/12/30 18:52:05 fireball Exp $
+/* $Id: section.c,v 1.139 2003/12/31 05:33:04 jfilby Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -3096,6 +3096,9 @@ MmMapViewOfSegment(PEPROCESS Process,
   PMEMORY_AREA MArea;
   NTSTATUS Status;
   KIRQL oldIrql;
+  PHYSICAL_ADDRESS BoundaryAddressMultiple;
+
+  BoundaryAddressMultiple.QuadPart = 0;
 
   Status = MmCreateMemoryArea(Process,
 			      AddressSpace,
@@ -3105,7 +3108,8 @@ MmMapViewOfSegment(PEPROCESS Process,
 			      Protect,
 			      &MArea,
 			      FALSE,
-			      TopDown);
+			      TopDown,
+			      BoundaryAddressMultiple);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("Mapping between 0x%.8X and 0x%.8X failed.\n",
@@ -3665,9 +3669,11 @@ MmAllocateSection (IN ULONG Length)
    NTSTATUS Status;
    ULONG i;
    PMADDRESS_SPACE AddressSpace;
+   PHYSICAL_ADDRESS BoundaryAddressMultiple;
 
    DPRINT("MmAllocateSection(Length %x)\n",Length);
 
+   BoundaryAddressMultiple.QuadPart = 0;
    AddressSpace = MmGetKernelAddressSpace();
    Result = NULL;
    MmLockAddressSpace(AddressSpace);
@@ -3679,7 +3685,8 @@ MmAllocateSection (IN ULONG Length)
 				0,
 				&marea,
 				FALSE,
-				FALSE);
+				FALSE,
+				BoundaryAddressMultiple);
    MmUnlockAddressSpace(AddressSpace);
    if (!NT_SUCCESS(Status))
      {

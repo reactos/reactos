@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.29 2003/12/30 18:52:05 fireball Exp $
+/* $Id: cont.c,v 1.30 2003/12/31 05:33:03 jfilby Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,14 +33,28 @@ MmFreeContinuousPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 
 PVOID STDCALL
 MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
-			          IN PHYSICAL_ADDRESS HighestAcceptableAddress,
-				  IN ULONG Alignment)
+                IN PHYSICAL_ADDRESS LowestAcceptableAddress OPTIONAL,
+			    IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+			    IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+			    IN MEMORY_CACHING_TYPE CacheType OPTIONAL,
+				IN ULONG Alignment)
 {
    PMEMORY_AREA MArea;
    NTSTATUS Status;
    PVOID BaseAddress = 0;
    PHYSICAL_ADDRESS PBase;
+   ULONG Attributes;
    ULONG i;
+   
+   Attributes = PAGE_EXECUTE_READWRITE | PAGE_SYSTEM;
+   if (CacheType == MmNonCached || CacheType == MmWriteCombined)
+   {
+      Attributes |= PAGE_NOCACHE;
+   }
+   if (CacheType == MmWriteCombined)
+   {
+      Attributes |= PAGE_WRITECOMBINE;
+   }
    
    MmLockAddressSpace(MmGetKernelAddressSpace());
    Status = MmCreateMemoryArea(NULL,
@@ -51,7 +65,8 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
 			       0,
 			       &MArea,
 			       FALSE,
-			       FALSE);
+			       FALSE,
+			       BoundaryAddressMultiple);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 
    if (!NT_SUCCESS(Status))
@@ -60,6 +75,7 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
      }
    DPRINT( "Base = %x\n", BaseAddress );
    PBase = MmGetContinuousPages(NumberOfBytes,
+				LowestAcceptableAddress,
 				HighestAcceptableAddress,
 				Alignment);
 #if defined(__GNUC__)
@@ -85,7 +101,7 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
 #endif
 	MmCreateVirtualMapping(NULL,
 			       (char*)BaseAddress + (i * 4096),
-			       PAGE_EXECUTE_READWRITE | PAGE_SYSTEM,
+			       Attributes,
 #if defined(__GNUC__)
 			       (LARGE_INTEGER)(PBase.QuadPart + (i * 4096)),
 #else
@@ -127,8 +143,17 @@ PVOID STDCALL
 MmAllocateContiguousMemory (IN ULONG NumberOfBytes,
 			    IN PHYSICAL_ADDRESS HighestAcceptableAddress)
 {
+  PHYSICAL_ADDRESS LowestAcceptableAddress;
+  PHYSICAL_ADDRESS BoundaryAddressMultiple;
+  
+  LowestAcceptableAddress.QuadPart = 0;
+  BoundaryAddressMultiple.QuadPart = 0;
+  
   return(MmAllocateContiguousAlignedMemory(NumberOfBytes,
+					   LowestAcceptableAddress,
 					   HighestAcceptableAddress,
+					   BoundaryAddressMultiple,
+					   MmCached,
 					   PAGE_SIZE));
 }
 
@@ -167,5 +192,92 @@ MmFreeContiguousMemory(IN PVOID BaseAddress)
 		    NULL);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	MmAllocateContiguousMemorySpecifyCache@32
+ *
+ * DESCRIPTION
+  * 	Allocates a range of physically contiguous memory
+ *	with a cache parameter.
+ *	
+ * ARGUMENTS
+ *	NumberOfBytes
+ *		Size of the memory block to allocate;
+ *		
+ *	LowestAcceptableAddress
+ *		Lowest address valid for the caller.
+ *		
+ *	HighestAcceptableAddress
+ *		Highest address valid for the caller.
+ *		
+ *	BoundaryAddressMultiple
+ *		Address multiple not to be crossed by allocated buffer (optional).
+ *		
+ *	CacheType
+ *		Type of caching to use.
+ *		
+ * RETURN VALUE
+ * 	The virtual address of the memory block on success;
+ *	NULL on error.
+ *
+ * REVISIONS
+ *
+ * @implemented
+ */
+PVOID STDCALL 
+MmAllocateContiguousMemorySpecifyCache (IN ULONG NumberOfBytes,
+                IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+			    IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+			    IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+			    IN MEMORY_CACHING_TYPE CacheType)
+{
+  return(MmAllocateContiguousAlignedMemory(NumberOfBytes,
+                                           LowestAcceptableAddress,
+                                           HighestAcceptableAddress,
+                                           BoundaryAddressMultiple,
+                                           CacheType,
+                                           PAGE_SIZE));
+}
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	MmFreeContiguousMemorySpecifyCache@12
+ *
+ * DESCRIPTION
+ *	Releases a range of physically contiguous memory allocated
+ *	with MmAllocateContiguousMemorySpecifyCache.
+ *	
+ * ARGUMENTS
+ *	BaseAddress
+ *		Virtual address of the memory to be freed.
+ *
+ *	NumberOfBytes
+ *		Size of the memory block to free.
+ *		
+ *	CacheType
+ *		Type of caching used.
+ *		
+ * RETURN VALUE
+ * 	None.
+ *
+ * REVISIONS
+ *
+ * @implemented
+ */
+VOID STDCALL 
+MmFreeContiguousMemorySpecifyCache(IN PVOID BaseAddress,
+				IN ULONG NumberOfBytes,
+			    IN MEMORY_CACHING_TYPE CacheType)
+{
+   MmLockAddressSpace(MmGetKernelAddressSpace());
+   MmFreeMemoryArea(MmGetKernelAddressSpace(),
+		    BaseAddress,
+		    NumberOfBytes,
+		    MmFreeContinuousPage,
+		    NULL);
+   MmUnlockAddressSpace(MmGetKernelAddressSpace());
+}
+
 
 /* EOF */

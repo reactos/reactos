@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.122 2003/12/30 22:18:12 fireball Exp $
+/* $Id: process.c,v 1.123 2003/12/31 05:33:04 jfilby Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -578,9 +578,12 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    PEPORT ExceptionPort;
    PVOID BaseAddress;
    PMEMORY_AREA MemoryArea;
+   PHYSICAL_ADDRESS BoundaryAddressMultiple;
 
    DPRINT("NtCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
 
+   BoundaryAddressMultiple.QuadPart = 0;
+   
    Status = ObReferenceObjectByHandle(ParentProcessHandle,
 				      PROCESS_CREATE_PROCESS,
 				      PsProcessType,
@@ -751,7 +754,8 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 			       PAGE_NOACCESS,
 			       &MemoryArea,
 			       FALSE,
-			       FALSE);
+			       FALSE,
+			       BoundaryAddressMultiple);
    if (!NT_SUCCESS(Status))
      {
 	MmUnlockAddressSpace(&Process->AddressSpace);
@@ -770,7 +774,8 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 			       PAGE_NOACCESS,
 			       &MemoryArea,
 			       FALSE,
-			       FALSE);
+			       FALSE,
+			       BoundaryAddressMultiple);
    if (!NT_SUCCESS(Status))
      {
 	MmUnlockAddressSpace(&Process->AddressSpace);
@@ -789,7 +794,8 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 			       PAGE_NOACCESS,
 			       &MemoryArea,
 			       FALSE,
-			       FALSE);
+			       FALSE,
+			       BoundaryAddressMultiple);
    if (!NT_SUCCESS(Status))
      {
 	MmUnlockAddressSpace(&Process->AddressSpace);
@@ -807,7 +813,8 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 			       PAGE_READONLY,
 			       &MemoryArea,
 			       FALSE,
-			       FALSE);
+			       FALSE,
+			       BoundaryAddressMultiple);
    MmUnlockAddressSpace(&Process->AddressSpace);
    if (!NT_SUCCESS(Status))
      {

@@ -1,4 +1,4 @@
-/* $Id: mmtypes.h,v 1.17 2003/11/03 20:27:51 gdalsnes Exp $ */
+/* $Id: mmtypes.h,v 1.18 2003/12/31 05:33:03 jfilby Exp $ */
 
 #ifndef _INCLUDE_DDK_MMTYPES_H
 #define _INCLUDE_DDK_MMTYPES_H
@@ -76,11 +76,15 @@ typedef enum _MMFLUSH_TYPE
 	MmFlushForWrite
 } MMFLUSH_TYPE;
 
+typedef enum _MEMORY_CACHING_TYPE_ORIG {
+    MmFrameBufferCached = 2
+} MEMORY_CACHING_TYPE_ORIG;
+
 typedef enum _MEMORY_CACHING_TYPE
 {
 	MmNonCached = FALSE,
 	MmCached = TRUE,
-	MmFrameBufferCached,
+	MmWriteCombined = MmFrameBufferCached,
 	MmHardwareCoherentCached,
 	MmMaximumCacheType
 } MEMORY_CACHING_TYPE;

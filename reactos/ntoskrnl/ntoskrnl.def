@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.170 2003/11/22 11:56:17 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.171 2003/12/31 05:33:03 jfilby Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -498,8 +498,9 @@ LsaLogonUser@56
 LsaLookupAuthenticationPackage@12
 LsaRegisterLogonProcess@12
 MmAdjustWorkingSetSize@12
-MmAllocateContiguousAlignedMemory@16
+MmAllocateContiguousAlignedMemory@36
 MmAllocateContiguousMemory@12
+MmAllocateContiguousMemorySpecifyCache@32
 MmAllocateNonCachedMemory@4
 MmBuildMdlForNonPagedPool@4
 MmCanFileBeTruncated@8
@@ -512,6 +513,7 @@ MmDisableModifiedWriteOfSection@4
 MmFlushImageSection@8
 MmForceSectionClosed@8
 MmFreeContiguousMemory@4
+MmFreeContiguousMemorySpecifyCache@12
 MmFreeNonCachedMemory@8
 MmGetPhysicalAddress@4
 MmGrowKernelStack@4

@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.10 2003/12/30 18:52:05 fireball Exp $
+/* $Id: w32call.c,v 1.11 2003/12/31 05:33:04 jfilby Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -182,7 +182,9 @@ PsAllocateCallbackStack(ULONG StackSize)
   NTSTATUS Status;
   PMEMORY_AREA StackArea;
   ULONG i;
+  PHYSICAL_ADDRESS BoundaryAddressMultiple;
 
+  BoundaryAddressMultiple.QuadPart = 0;
   StackSize = PAGE_ROUND_UP(StackSize);
   MmLockAddressSpace(MmGetKernelAddressSpace());
   Status = MmCreateMemoryArea(NULL,
@@ -193,7 +195,8 @@ PsAllocateCallbackStack(ULONG StackSize)
 			      0,
 			      &StackArea,
 			      FALSE,
-			      FALSE);
+			      FALSE,
+			      BoundaryAddressMultiple);
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
   if (!NT_SUCCESS(Status))
     {

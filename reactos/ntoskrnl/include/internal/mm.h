@@ -194,7 +194,8 @@ NTSTATUS MmCreateMemoryArea(struct _EPROCESS* Process,
 			    ULONG Attributes,
 			    MEMORY_AREA** Result,
 			    BOOL FixedAddress,
-			    BOOL TopDown);
+			    BOOL TopDown,
+			    PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL);
 MEMORY_AREA* MmOpenMemoryAreaByAddress(PMADDRESS_SPACE AddressSpace, 
 				       PVOID Address);
 NTSTATUS MmInitMemoryAreas(VOID);
@@ -383,6 +384,7 @@ NTSTATUS
 MmCreatePhysicalMemorySection(VOID);
 PHYSICAL_ADDRESS
 MmGetContinuousPages(ULONG NumberOfBytes,
+		     PHYSICAL_ADDRESS LowestAcceptableAddress,
 		     PHYSICAL_ADDRESS HighestAcceptableAddress,
 		     ULONG Alignment);
 

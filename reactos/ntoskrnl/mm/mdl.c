@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.55 2003/12/30 18:52:05 fireball Exp $
+/* $Id: mdl.c,v 1.56 2003/12/31 05:33:04 jfilby Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -39,7 +39,9 @@ MmInitializeMdlImplementation(VOID)
   MEMORY_AREA* Result;
   NTSTATUS Status;
   PVOID Buffer;
+  PHYSICAL_ADDRESS BoundaryAddressMultiple;
 
+  BoundaryAddressMultiple.QuadPart = 0;
   MiMdlMappingRegionHint = 0;
   MiMdlMappingRegionBase = NULL;
 
@@ -52,7 +54,8 @@ MmInitializeMdlImplementation(VOID)
 			      0,
 			      &Result,
 			      FALSE,
-			      FALSE);
+			      FALSE,
+			      BoundaryAddressMultiple);
   if (!NT_SUCCESS(Status))
     {
       MmUnlockAddressSpace(MmGetKernelAddressSpace());

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.23 2003/12/30 18:52:05 fireball Exp $
+/* $Id: anonmem.c,v 1.24 2003/12/31 05:33:03 jfilby Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -548,6 +548,7 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
    ULONG RegionSize;
    PVOID PBaseAddress;
    ULONG PRegionSize;
+   PHYSICAL_ADDRESS BoundaryAddressMultiple;
 
    DPRINT("NtAllocateVirtualMemory(*UBaseAddress %x, "
 	  "ZeroBits %d, *URegionSize %x, AllocationType %x, Protect %x)\n",
@@ -568,6 +569,7 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
    
    PBaseAddress = *UBaseAddress;
    PRegionSize = *URegionSize;
+   BoundaryAddressMultiple.QuadPart = 0;
    
    BaseAddress = (PVOID)PAGE_ROUND_DOWN(PBaseAddress);
    RegionSize = PAGE_ROUND_UP(PBaseAddress + PRegionSize) -
@@ -627,7 +629,8 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 			       Protect,
 			       &MemoryArea,
 			       PBaseAddress != 0,
-			       (AllocationType & MEM_TOP_DOWN));
+			       (AllocationType & MEM_TOP_DOWN),
+			       BoundaryAddressMultiple);
    if (!NT_SUCCESS(Status))
      {
 	MmUnlockAddressSpace(AddressSpace);

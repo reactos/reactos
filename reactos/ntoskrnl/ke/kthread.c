@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.45 2003/12/30 18:52:04 fireball Exp $
+/* $Id: kthread.c,v 1.46 2003/12/31 05:33:03 jfilby Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -88,6 +88,9 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   extern unsigned int init_stack;
   PMEMORY_AREA StackArea;
   ULONG i;
+  PHYSICAL_ADDRESS BoundaryAddressMultiple;
+  
+  BoundaryAddressMultiple.QuadPart = 0;
   
   KeInitializeDispatcherHeader(&Thread->DispatcherHeader,
 			       InternalThreadType,
@@ -107,7 +110,8 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
 				  0,
 				  &StackArea,
 				  FALSE,
-				  FALSE);
+				  FALSE,
+				  BoundaryAddressMultiple);
       MmUnlockAddressSpace(MmGetKernelAddressSpace());
       
       if (!NT_SUCCESS(Status))
