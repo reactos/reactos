@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.8 2004/08/15 22:15:23 chorns Exp $
+/* $Id: console.c,v 1.9 2004/11/02 20:47:05 weiden Exp $
  *
  *  CONSOLE.C - console input/output functions.
  *
@@ -53,12 +53,7 @@ VOID ConInDummy (VOID)
 	if (hInput == INVALID_HANDLE_VALUE)
 		DebugPrintf (_T("Invalid input handle!!!\n"));
 #endif /* _DEBUG */
-#ifdef __REACTOS__
-	/* ReadConsoleInputW isn't implwmented within ROS. */
-	ReadConsoleInputA (hInput, &dummy, 1, &dwRead);
-#else
 	ReadConsoleInput (hInput, &dummy, 1, &dwRead);
-#endif
 }
 
 VOID ConInFlush (VOID)
@@ -79,12 +74,7 @@ VOID ConInKey (PINPUT_RECORD lpBuffer)
 
 	do
 	{
-#ifdef __REACTOS__
-		/* ReadConsoleInputW isn't implwmented within ROS. */
-		ReadConsoleInputA (hInput, lpBuffer, 1, &dwRead);
-#else
 		ReadConsoleInput (hInput, lpBuffer, 1, &dwRead);
-#endif
 		if ((lpBuffer->EventType == KEY_EVENT) &&
 			(lpBuffer->Event.KeyEvent.bKeyDown == TRUE))
 			break;
