@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.29 2004/03/28 12:21:41 weiden Exp $
+/* $Id: winlogon.c,v 1.30 2004/05/25 15:53:16 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -287,6 +287,54 @@ static BOOL RestartShell(void)
 }
 */
 
+VOID STDCALL
+RegisterHotKeys(VOID)
+{
+  RegisterHotKey(NULL, 0, MOD_ALT | MOD_CONTROL, VK_DELETE);
+}
+
+VOID STDCALL
+UnregisterHotKeys(VOID)
+{
+  UnregisterHotKey(NULL, 0);
+}
+
+VOID STDCALL
+HandleHotKey(MSG *Msg)
+{
+  DbgPrint("HOTKEY: Got hot key (%d)\n", Msg->wParam);
+
+  /* CTRL-ALT-DEL */
+  if (Msg->wParam == 0)
+  {
+    STARTUPINFO StartupInfo;
+    PROCESS_INFORMATION ProcessInformation;
+
+    StartupInfo.cb = sizeof(StartupInfo);
+    StartupInfo.lpReserved = NULL;
+    StartupInfo.lpDesktop = NULL;
+    StartupInfo.lpTitle = NULL;
+    StartupInfo.dwFlags = 0;
+    StartupInfo.cbReserved2 = 0;
+    StartupInfo.lpReserved2 = 0;
+
+    CreateProcessW(
+      L"taskmgr.exe",
+      NULL,
+      NULL,
+      NULL,
+      FALSE,
+      CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS,
+      NULL,
+      NULL,
+      &StartupInfo,
+      &ProcessInformation);
+
+    CloseHandle (ProcessInformation.hProcess);
+    CloseHandle (ProcessInformation.hThread);
+  }
+}
+
 #if SUPPORT_CONSOLESTART
 static BOOL StartIntoGUI(VOID)
 {
@@ -371,6 +419,7 @@ DoLogonUser (PWCHAR Name,
   PROFILEINFOW ProfileInfo;
   BOOL Result;
   LPVOID lpEnvironment = NULL;
+  MSG Msg;
 
   Result = LogonUserW (Name,
 		       NULL,
@@ -443,7 +492,25 @@ DoLogonUser (PWCHAR Name,
       return FALSE;
     }
 
+  /* Process the global hotkeys on #if 0 */
+#if 0
   WaitForSingleObject (ProcessInformation.hProcess, INFINITE);
+#else
+  RegisterHotKeys();
+
+  while (WaitForSingleObject (ProcessInformation.hProcess, 100) != WAIT_OBJECT_0)
+  {
+    if (PeekMessage(&Msg, 0, 0, 0, PM_REMOVE))
+    {
+      if (Msg.message == WM_HOTKEY)
+        HandleHotKey(&Msg);
+      TranslateMessage(&Msg);
+      DispatchMessage(&Msg);
+    }
+  }
+
+  UnregisterHotKeys();
+#endif
   CloseHandle (ProcessInformation.hProcess);
   CloseHandle (ProcessInformation.hThread);
 
@@ -458,7 +525,6 @@ DoLogonUser (PWCHAR Name,
   return TRUE;
 }
 #endif
-
 
 int STDCALL
 WinMain(HINSTANCE hInstance,
@@ -656,9 +722,13 @@ WinMain(HINSTANCE hInstance,
  else
  {
 #endif
+
+   RegisterHotKeys();
   
-  SessionLoop(WLSession);
+   SessionLoop(WLSession);
   
+   UnregisterHotKeys();
+
    /* FIXME - Flush disks and registry, ... */
    
    if(WLSession->LogonStatus == LOGON_SHUTDOWN)
@@ -833,6 +903,8 @@ SessionLoop(PWLSESSION Session)
     /* Message loop for the SAS window */
     while(GetMessage(&Msg, 0, 0, 0))
     {
+      if (Msg.message == WM_HOTKEY)
+        HandleHotKey(&Msg);
       TranslateMessage(&Msg);
       DispatchMessage(&Msg);
     }
