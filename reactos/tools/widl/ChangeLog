@@ -1,5 +1,15 @@
 ChangeLog
 
+2005-04-03 ekohl
+
+   tools/widl/client.c
+   tools/widl/parser.l
+   tools/widl/parser.y
+   tools/widl/server.c
+   tools/widl/widltypes.h
+
+Support 'ref' and 'unique' attributes for pointers.
+
 2005-03-27 Jacek Caban (from WINE)
 
   tools/widl/parser.y

@@ -162,6 +162,7 @@ static type_t std_uhyper = { "MIDL_uhyper" };
 %token tPOINTERDEFAULT
 %token tPROPERTIES
 %token tPROPGET tPROPPUT tPROPPUTREF
+%token tPTR
 %token tPUBLIC
 %token tREADONLY tREF
 %token tRESTRICTED
@@ -373,8 +374,10 @@ attribute:
 	| tPROPGET				{ $$ = make_attr(ATTR_PROPGET); }
 	| tPROPPUT				{ $$ = make_attr(ATTR_PROPPUT); }
 	| tPROPPUTREF				{ $$ = make_attr(ATTR_PROPPUTREF); }
+	| tPTR					{ $$ = make_attr(ATTR_PTR); }
 	| tPUBLIC				{ $$ = make_attr(ATTR_PUBLIC); }
 	| tREADONLY				{ $$ = make_attr(ATTR_READONLY); }
+	| tREF					{ $$ = make_attr(ATTR_REF); }
 	| tRESTRICTED				{ $$ = make_attr(ATTR_RESTRICTED); }
 	| tRETVAL				{ $$ = make_attr(ATTR_RETVAL); }
 	| tSIZEIS '(' m_exprs ')'		{ $$ = make_attrp(ATTR_SIZEIS, $3); }
@@ -383,6 +386,7 @@ attribute:
 	| tSWITCHIS '(' expr ')'		{ $$ = make_attrp(ATTR_SWITCHIS, $3); }
 	| tSWITCHTYPE '(' type ')'		{ $$ = make_attrp(ATTR_SWITCHTYPE, type_ref($3)); }
 	| tTRANSMITAS '(' type ')'		{ $$ = make_attrp(ATTR_TRANSMITAS, type_ref($3)); }
+	| tUNIQUE				{ $$ = make_attr(ATTR_UNIQUE); }
 	| tUUID '(' aUUID ')'			{ $$ = make_attrp(ATTR_UUID, $3); }
 	| tV1ENUM				{ $$ = make_attr(ATTR_V1ENUM); }
 	| tVARARG				{ $$ = make_attr(ATTR_VARARG); }
