@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.37 2004/01/28 20:53:46 ekohl Exp $
+/* $Id: fcb.c,v 1.38 2004/07/03 17:31:30 hbirr Exp $
  *
  *
  * FILE:             drivers/fs/vfat/fcb.c
@@ -594,6 +594,7 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
   UNICODE_STRING NameU;
   UNICODE_STRING RootNameU;
   PWCHAR curr, prev, last;
+  ULONG Length;
 
   DPRINT ("vfatGetFCBForFile (%x,%x,%x,%wZ)\n",
           pVCB,
@@ -626,6 +627,24 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
       NameU.Buffer = pFileNameU->Buffer;
       NameU.MaximumLength = NameU.Length = (curr - pFileNameU->Buffer) * sizeof(WCHAR);
       FCB = vfatGrabFCBFromTable(pVCB, &NameU);
+      if (FCB)
+        {
+	  Length = (curr - pFileNameU->Buffer) * sizeof(WCHAR);
+          if (Length != FCB->PathNameU.Length)
+	    {
+	      if (pFileNameU->Length + FCB->PathNameU.Length - Length > pFileNameU->MaximumLength)
+	        {
+		  vfatReleaseFCB (pVCB, FCB);
+		  return STATUS_OBJECT_NAME_INVALID;
+		}
+	      memmove(pFileNameU->Buffer + FCB->PathNameU.Length / sizeof(WCHAR), 
+		      curr, pFileNameU->Length - Length);
+	      pFileNameU->Length += FCB->PathNameU.Length - Length;
+	      curr = pFileNameU->Buffer + FCB->PathNameU.Length / sizeof(WCHAR);
+              last = pFileNameU->Buffer + pFileNameU->Length / sizeof(WCHAR) - 1;
+	    }
+	  memcpy(pFileNameU->Buffer, FCB->PathNameU.Buffer, FCB->PathNameU.Length);
+	}
     }
   else
     {
@@ -637,8 +656,10 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
       FCB = vfatOpenRootFCB(pVCB);
       curr = pFileNameU->Buffer;
     }
-  curr++;
+  
   parentFCB = NULL;
+  prev = curr;
+
   while (curr <= last)
     {
       if (parentFCB)
@@ -659,13 +680,34 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
           return  STATUS_OBJECT_PATH_NOT_FOUND;
 	}
       parentFCB = FCB;
-      NameU.Buffer = pFileNameU->Buffer;
+      if (prev < curr)
+        {
+	  Length = (curr - prev) * sizeof(WCHAR);
+	  if (Length != parentFCB->LongNameU.Length)
+	    {
+	      if (pFileNameU->Length + parentFCB->LongNameU.Length - Length > pFileNameU->MaximumLength)
+	        {
+		  vfatReleaseFCB (pVCB, parentFCB);
+		  return STATUS_OBJECT_NAME_INVALID;
+		}
+	      memmove(prev + parentFCB->LongNameU.Length / sizeof(WCHAR), curr, 
+		      pFileNameU->Length - (curr - pFileNameU->Buffer) * sizeof(WCHAR));
+	      pFileNameU->Length += parentFCB->LongNameU.Length - Length;
+	      curr = prev + parentFCB->LongNameU.Length / sizeof(WCHAR);
+              last = pFileNameU->Buffer + pFileNameU->Length / sizeof(WCHAR) - 1;
+	    }
+	  memcpy(prev, parentFCB->LongNameU.Buffer, parentFCB->LongNameU.Length);
+	}
+      curr++;      
       prev = curr;
       while (*curr != L'\\' && curr <= last)
         {
 	  curr++;
 	}
-      NameU.MaximumLength = NameU.Length = (curr - NameU.Buffer) * sizeof(WCHAR);
+      NameU.Buffer = pFileNameU->Buffer;
+      NameU.Length = (curr - NameU.Buffer) * sizeof(WCHAR);
+      NameU.MaximumLength = pFileNameU->MaximumLength;
+      DPRINT("%wZ\n", &NameU);
       FCB = vfatGrabFCBFromTable(pVCB, &NameU);
       if (FCB == NULL)
         {
@@ -694,7 +736,6 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
               return  status;
 	    }
 	}
-      curr++;
     }
 
   *pParentFCB = parentFCB;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.68 2004/06/23 20:23:59 hbirr Exp $
+/* $Id: create.c,v 1.69 2004/07/03 17:31:30 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/create.c
@@ -339,34 +339,35 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   PVFATFCB ParentFcb;
   PVFATFCB Fcb;
   NTSTATUS Status;
-  UNICODE_STRING NameU;
-  WCHAR Name[MAX_PATH];
   ULONG Size;
   ULONG MediaChangeCount;
 
 //  PDEVICE_OBJECT DeviceObject = DeviceExt->StorageDevice->Vpb->DeviceObject;
   
-  DPRINT ("VfatOpenFile(%08lx, %08lx, '%wZ')\n", DeviceExt, FileObject, FileNameU);
+  DPRINT ("VfatOpenFile(%08lx, %08lx, '%wZ')\n", DeviceExt, FileObject, &FileObject->FileName);
 
   if (FileObject->RelatedFileObject)
     {
       DPRINT ("Converting relative filename to absolute filename\n");
 
-      NameU.Buffer = Name;
-      NameU.Length = 0;
-      NameU.MaximumLength = sizeof(Name);
-
       Fcb = FileObject->RelatedFileObject->FsContext;
-      RtlCopyUnicodeString(&NameU, &Fcb->PathNameU);
+      RtlCopyUnicodeString(FileNameU, &Fcb->PathNameU);
       if (!vfatFCBIsRoot(Fcb))
         {
-	  NameU.Buffer[NameU.Length / sizeof(WCHAR)] = L'\\';
-	  NameU.Length += sizeof(WCHAR);
+	  RtlAppendUnicodeToString(FileNameU, L"\\");
 	}
-      RtlAppendUnicodeStringToString(&NameU, FileNameU);
-      NameU.Buffer[NameU.Length / sizeof(WCHAR)] = 0;
-      FileNameU = &NameU;
+      RtlAppendUnicodeStringToString(FileNameU, &FileObject->FileName);
     }
+  else
+    {
+      RtlCopyUnicodeString(FileNameU, &FileObject->FileName);
+    }
+  if (FileNameU->Length > sizeof(WCHAR) &&
+      FileNameU->Buffer[FileNameU->Length / sizeof(WCHAR) - 1] == L'\\')
+    {
+      FileNameU->Length -= sizeof(WCHAR);
+    }
+  FileNameU->Buffer[FileNameU->Length / sizeof(WCHAR)] = 0;
 
   DPRINT ("PathName to open: '%wZ'\n", FileNameU);
 
@@ -424,6 +425,10 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
           DPRINT ("Could not make a new FCB, status: %x\n", Status);
           return  Status;
 	}
+    }
+  else
+    {
+      RtlCopyUnicodeString(FileNameU, &Fcb->PathNameU);
     }
   if (Fcb->Flags & FCB_DELETE_PENDING)
     {
@@ -492,6 +497,8 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   BOOLEAN PagingFileCreate = FALSE;
   LARGE_INTEGER AllocationSize;
   BOOLEAN Dots;
+  UNICODE_STRING NameU;
+  WCHAR NameW[MAX_PATH];
   
   /* Unpack the various parameters. */
   Stack = IoGetCurrentIrpStackLocation (Irp);
@@ -568,8 +575,12 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	}
     }
 
+  NameU.Buffer = NameW;
+  NameU.Length = 0;
+  NameU.MaximumLength = sizeof(NameW);
+
   /* Try opening the file. */
-  Status = VfatOpenFile (DeviceExt, FileObject, &FileObject->FileName);
+  Status = VfatOpenFile (DeviceExt, FileObject, &NameU);
 
   /*
    * If the directory containing the file to open doesn't exist then
@@ -594,7 +605,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	{
 	  ULONG Attributes;
 	  Attributes = Stack->Parameters.Create.FileAttributes;
-	  Status = VfatAddEntry (DeviceExt, &FileObject->FileName, FileObject, RequestedOptions, 
+	  Status = VfatAddEntry (DeviceExt, &NameU, FileObject, RequestedOptions, 
 				 (UCHAR)(Attributes & FILE_ATTRIBUTE_VALID_FLAGS));
 	  if (NT_SUCCESS (Status))
 	    {
