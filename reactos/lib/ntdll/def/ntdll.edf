@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.67 2001/06/19 15:09:16 ekohl Exp $
+; $Id: ntdll.edf,v 1.68 2001/09/08 12:05:30 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -35,7 +35,7 @@ KiUserExceptionDispatcher=KiUserExceptionDispatcher@8
 LdrAccessResource=LdrAccessResource@16
 LdrDisableThreadCalloutsForDll=LdrDisableThreadCalloutsForDll@4
 ;LdrEnumResources
-;LdrFindEntryForAddress
+LdrFindEntryForAddress=LdrFindEntryForAddress@8
 ;LdrFindResourceDirectory_U
 LdrFindResource_U=LdrFindResource_U@16
 LdrGetDllHandle=LdrGetDllHandle@16
@@ -44,7 +44,7 @@ LdrInitializeThunk=LdrInitializeThunk@16
 LdrLoadDll=LdrLoadDll@16
 ;LdrProcessRelocationBlock
 ;LdrQueryImageFileExecutionOptions
-;LdrQueryProcessModuleInformation
+LdrQueryProcessModuleInformation=LdrQueryProcessModuleInformation@12
 LdrShutdownProcess=LdrShutdownProcess@0
 LdrShutdownThread=LdrShutdownThread@0
 LdrUnloadDll=LdrUnloadDll@4

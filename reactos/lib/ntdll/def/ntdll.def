@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.78 2001/06/19 15:09:16 ekohl Exp $
+; $Id: ntdll.def,v 1.79 2001/09/08 12:05:30 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -34,17 +34,17 @@ KiUserCallbackDispatcher
 KiUserExceptionDispatcher
 LdrAccessResource@16
 LdrDisableThreadCalloutsForDll@4
-;LdrEnumResources
-;LdrFindEntryForAddress
-;LdrFindResourceDirectory_U
+;LdrEnumResources@20
+LdrFindEntryForAddress@8
+;LdrFindResourceDirectory_U@16
 LdrFindResource_U@16
 LdrGetDllHandle@16
 LdrGetProcedureAddress@16
 LdrInitializeThunk@16
 LdrLoadDll@16
-;LdrProcessRelocationBlock
-;LdrQueryImageFileExecutionOptions
-;LdrQueryProcessModuleInformation
+;LdrProcessRelocationBlock@16
+;LdrQueryImageFileExecutionOptions@24
+LdrQueryProcessModuleInformation@12
 LdrShutdownProcess@0
 LdrShutdownThread@0
 LdrUnloadDll@4

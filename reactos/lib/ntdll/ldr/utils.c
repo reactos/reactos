@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.47 2001/09/01 19:36:30 rex Exp $
+/* $Id: utils.c,v 1.48 2001/09/08 12:06:33 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -36,16 +36,12 @@
 
 
 /* Type for a DLL's entry point */
-typedef
-WINBOOL
-STDCALL
-(* PDLLMAIN_FUNC) (
-	HANDLE	hInst,
-	ULONG	ul_reason_for_call,
-	LPVOID	lpReserved
-	);
+typedef WINBOOL STDCALL
+(* PDLLMAIN_FUNC)(HANDLE hInst,
+		  ULONG ul_reason_for_call,
+		  LPVOID lpReserved);
 
-static NTSTATUS LdrFindDll(PLDR_MODULE *Dll,PUNICODE_STRING Name);
+static NTSTATUS LdrFindEntryForName(PUNICODE_STRING Name, PLDR_MODULE *Module);
 static PVOID LdrFixupForward(PCHAR ForwardName);
 static PVOID LdrGetExportByName(PVOID BaseAddress, PUCHAR SymbolName, USHORT Hint);
 
@@ -209,7 +205,7 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
   /*
    * Test if dll is already loaded.
    */
-  if (LdrFindDll(&Module, &AdjustedName) == STATUS_SUCCESS)
+  if (LdrFindEntryForName(&AdjustedName, &Module) == STATUS_SUCCESS)
     {
       DPRINT("DLL %wZ already loaded.\n", &AdjustedName);
       if (Module->LoadCount != -1)
@@ -444,8 +440,8 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
 
 
 /***************************************************************************
- * NAME								LOCAL
- *	LdrFindDll
+ * NAME								EXPORTED
+ *	LdrFindEntryForAddress
  *
  * DESCRIPTION
  *
@@ -458,42 +454,104 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
  * NOTE
  *
  */
-static NTSTATUS LdrFindDll(PLDR_MODULE *Dll, PUNICODE_STRING Name)
+NTSTATUS STDCALL
+LdrFindEntryForAddress(PVOID Address,
+		       PLDR_MODULE *Module)
 {
-   PLIST_ENTRY ModuleListHead;
-   PLIST_ENTRY Entry;
-   PLDR_MODULE Module;
+  PLIST_ENTRY ModuleListHead;
+  PLIST_ENTRY Entry;
+  PLDR_MODULE ModulePtr;
 
-   DPRINT("NTDLL.LdrFindDll(Name %wZ)\n", Name);
+  DPRINT("NTDLL.LdrFindEntryForAddress(Address %p)\n", Address);
 
-   ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
-   Entry = ModuleListHead->Flink;
+  if (NtCurrentPeb()->Ldr == NULL)
+    return(STATUS_NO_MORE_ENTRIES);
 
-   // NULL is the current process
-   if ( Name == NULL )
-     {
-	*Dll = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
-	return STATUS_SUCCESS;
-     }
+  ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
+  Entry = ModuleListHead->Flink;
+  if (Entry == ModuleListHead)
+    return(STATUS_NO_MORE_ENTRIES);
 
-   while (Entry != ModuleListHead)
-     {
-	Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+  while (Entry != ModuleListHead)
+    {
+      ModulePtr = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
 
-	DPRINT("Scanning %wZ %wZ\n", &Module->BaseDllName, Name);
+      DPRINT("Scanning %wZ at %p\n", &ModulePtr->BaseDllName, ModulePtr->BaseAddress);
 
-	if (RtlCompareUnicodeString(&Module->BaseDllName, Name, TRUE) == 0)
-	  {
-	     *Dll = Module;
-	     return STATUS_SUCCESS;
-	  }
+      if ((Address >= ModulePtr->BaseAddress) &&
+	  (Address <= (ModulePtr->BaseAddress + ModulePtr->SizeOfImage)))
+	{
+	  *Module = ModulePtr;
+	  return(STATUS_SUCCESS);
+	}
 
-	Entry = Entry->Flink;
-     }
+      Entry = Entry->Flink;
+    }
 
-   DPRINT("Failed to find dll %wZ\n", Name);
+  DPRINT("Failed to find module entry.\n");
 
-   return STATUS_UNSUCCESSFUL;
+  return(STATUS_NO_MORE_ENTRIES);
+}
+
+
+/***************************************************************************
+ * NAME								LOCAL
+ *	LdrFindEntryForName
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * REVISIONS
+ *
+ * NOTE
+ *
+ */
+static NTSTATUS
+LdrFindEntryForName(PUNICODE_STRING Name,
+		    PLDR_MODULE *Module)
+{
+  PLIST_ENTRY ModuleListHead;
+  PLIST_ENTRY Entry;
+  PLDR_MODULE ModulePtr;
+
+  DPRINT("NTDLL.LdrFindEntryForName(Name %wZ)\n", Name);
+
+  if (NtCurrentPeb()->Ldr == NULL)
+    return(STATUS_NO_MORE_ENTRIES);
+
+  ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
+  Entry = ModuleListHead->Flink;
+  if (Entry == ModuleListHead)
+    return(STATUS_NO_MORE_ENTRIES);
+
+  // NULL is the current process
+  if (Name == NULL)
+    {
+      *Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+      return(STATUS_SUCCESS);
+    }
+
+  while (Entry != ModuleListHead)
+    {
+      ModulePtr = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+
+      DPRINT("Scanning %wZ %wZ\n", &ModulePtr->BaseDllName, Name);
+
+      if (RtlCompareUnicodeString(&ModulePtr->BaseDllName, Name, TRUE) == 0)
+	{
+	  *Module = ModulePtr;
+	  return(STATUS_SUCCESS);
+	}
+
+      Entry = Entry->Flink;
+    }
+
+  DPRINT("Failed to find dll %wZ\n", Name);
+
+  return(STATUS_NO_MORE_ENTRIES);
 }
 
 /**********************************************************************
@@ -1656,6 +1714,106 @@ LdrShutdownThread (VOID)
    DPRINT("LdrShutdownThread() done\n");
 
    return STATUS_SUCCESS;
+}
+
+
+/***************************************************************************
+ * NAME								EXPORTED
+ *	LdrQueryProcessModuleInformation
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * REVISIONS
+ *
+ * NOTE
+ */
+NTSTATUS STDCALL
+LdrQueryProcessModuleInformation(IN PMODULE_INFORMATION ModuleInformation OPTIONAL,
+				 IN ULONG Size OPTIONAL,
+				 OUT PULONG ReturnedSize)
+
+{
+  PLIST_ENTRY ModuleListHead;
+  PLIST_ENTRY Entry;
+  PLDR_MODULE Module;
+  PMODULE_ENTRY ModulePtr = NULL;
+  NTSTATUS Status = STATUS_SUCCESS;
+  ULONG UsedSize = sizeof(ULONG);
+  ANSI_STRING AnsiString;
+  PCHAR p;
+
+  DPRINT("LdrQueryProcessModuleInformation() called\n");
+
+  RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
+
+  if (ModuleInformation == NULL || Size == 0)
+    {
+      Status = STATUS_INFO_LENGTH_MISMATCH;
+    }
+  else
+    {
+      ModuleInformation->ModuleCount = 0;
+      ModulePtr = &ModuleInformation->ModuleEntry[0];
+      Status = STATUS_SUCCESS;
+    }
+
+  ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
+  Entry = ModuleListHead->Flink;
+
+  while (Entry != ModuleListHead)
+    {
+      Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+
+      DPRINT("  Module %wZ\n",
+	     &Module->FullDllName);
+
+      if (UsedSize > Size)
+	{
+	  Status = STATUS_INFO_LENGTH_MISMATCH;
+	}
+      else if (ModuleInformation != NULL)
+	{
+	  ModulePtr->Unknown0 = 0;	// FIXME: ??
+	  ModulePtr->Unknown1 = 0;	// FIXME: ??
+	  ModulePtr->BaseAddress = Module->BaseAddress;
+	  ModulePtr->SizeOfImage = Module->SizeOfImage;
+	  ModulePtr->Flags = Module->Flags;
+	  ModulePtr->Unknown2 = 0;	// FIXME: load order index ??
+	  ModulePtr->Unknown3 = 0;	// FIXME: ??
+	  ModulePtr->LoadCount = Module->LoadCount;
+
+	  AnsiString.Length = 0;
+	  AnsiString.MaximumLength = 256;
+	  AnsiString.Buffer = ModulePtr->ModuleName;
+	  RtlUnicodeStringToAnsiString(&AnsiString,
+				       &Module->FullDllName,
+				       FALSE);
+	  p = strrchr(ModulePtr->ModuleName, '\\');
+	  if (p != NULL)
+	    ModulePtr->PathLength = p - ModulePtr->ModuleName + 1;
+	  else
+	    ModulePtr->PathLength = 0;
+
+	  ModulePtr++;
+	  ModuleInformation->ModuleCount++;
+	}
+      UsedSize += sizeof(MODULE_ENTRY);
+
+      Entry = Entry->Flink;
+    }
+
+  RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
+
+  if (ReturnedSize != 0)
+    *ReturnedSize = UsedSize;
+
+  DPRINT("LdrQueryProcessModuleInformation() done\n");
+
+  return(Status);
 }
 
 /* EOF */
