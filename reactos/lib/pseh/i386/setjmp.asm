@@ -65,4 +65,25 @@ __SEHLongJmp@8:
  mov edi, [ecx+20]
  jmp edx
 
+
+global SEHLongJmp_KeepEsp
+global __SEHLongJmp_KeepEsp@8
+SEHLongJmp_KeepEsp:
+__SEHLongJmp_KeepEsp@8:
+ ; return value
+ mov eax, [esp+8]
+
+ ; jump buffer
+ mov ecx, [esp+4]
+
+ ; restore the saved context
+ mov ebp, [ecx+0]
+; don't restore esp 
+; mov esp, [ecx+4]
+ mov edx, [ecx+8]
+ mov ebx, [ecx+12]
+ mov esi, [ecx+16]
+ mov edi, [ecx+20]
+ jmp edx
+
 ; EOF
