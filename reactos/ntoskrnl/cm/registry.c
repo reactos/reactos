@@ -38,7 +38,7 @@ CmInitializeRegistry(VOID)
   CmKeyType->Open = NULL;
   CmKeyType->Close = NULL;
   CmKeyType->Delete = NULL;
-  CmKeyType->Parse = NULL;
+  CmKeyType->Parse = CmpObjectParse;
   CmKeyType->Security = NULL;
   CmKeyType->QueryName = NULL;
   CmKeyType->OkayToClose = NULL;
@@ -138,10 +138,15 @@ ZwCreateKey(PHANDLE KeyHandle,
       /*  Walk through key path and fail if any component does not exist */
       while ((T = wstrchr(S, '\\')) != NULL)
         {
+          /*  Move Key Object pointer to first child  */
           ParentKey = ParentKey->SubKeys;
+          
+          /*  Extract the next path component from requested path  */
           wstrncpy(CurLevel, S, T-S);
           CurLevel[T-S] = 0;
           DPRINT("CurLevel:[%w]", CurLevel);
+          
+          /*  Walk through children looking for path component  */
           while (ParentKey != NULL)
             {
               if (wstrcmp(CurLevel, ParentKey->Name) == 0)
@@ -150,10 +155,14 @@ ZwCreateKey(PHANDLE KeyHandle,
                 }
               ParentKey = ParentKey->NextKey;
             }
+          
+          /*  Fail if path component was not one of the children  */
           if (ParentKey == NULL)
             {
               return STATUS_UNSUCCESSFUL;
             }
+          
+          /*  Advance path string pointer to next component  */
           S = wstrchr(S, '\\') + 1;
         }
 
@@ -165,6 +174,7 @@ ZwCreateKey(PHANDLE KeyHandle,
         }
       if (CurSubKey != NULL)
         {
+          /* FIXME: Fail if key is marked for deletion  */
           *Disposition = REG_KEY_ALREADY_EXISTS;
           *KeyHandle = ObInsertHandle(KeGetCurrentProcess(),
                                       HEADER_TO_BODY(CurSubKey),
@@ -256,7 +266,7 @@ ZwCreateKey(PHANDLE KeyHandle,
     {
       return STATUS_UNSUCCESSFUL;
     }
-#endif  
+#endif
   
   UNIMPLEMENTED;
 }
