@@ -131,13 +131,32 @@ SepDuplicateToken(PTOKEN Token,
 		  KPROCESSOR_MODE PreviousMode,
 		  PTOKEN* NewAccessToken)
 {
-  NTSTATUS Status;
   ULONG uLength;
   ULONG i;
-  
   PVOID EndMem;
-
   PTOKEN AccessToken;
+  NTSTATUS Status;
+  
+  if(PreviousMode != KernelMode)
+  {
+    Status = STATUS_SUCCESS;
+    _SEH_TRY
+    {
+      ProbeForWrite(NewAccessToken,
+                    sizeof(TOKEN),
+                    sizeof(ULONG));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
 
   Status = ObCreateObject(PreviousMode,
 			  SepTokenObjectType,
@@ -244,8 +263,17 @@ SepDuplicateToken(PTOKEN Token,
 
   if ( NT_SUCCESS(Status) )
     {
-      *NewAccessToken = AccessToken;
-      return(STATUS_SUCCESS);
+      _SEH_TRY
+      {
+        *NewAccessToken = AccessToken;
+        Status = STATUS_SUCCESS;
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+      return Status;
     }
 
   ObDereferenceObject(AccessToken);
@@ -320,7 +348,7 @@ SeCopyClientToken(PACCESS_TOKEN Token,
 				TokenImpersonation,
 				Level,
 				PreviousMode,
-			    (PTOKEN*)&NewToken);
+			        (PTOKEN*)NewToken);
    
    return(Status);
 }
