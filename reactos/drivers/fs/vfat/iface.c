@@ -73,7 +73,7 @@ ULONG Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
    Block=(PUSHORT)DeviceExt->FAT;
    CurrentCluster = Block[CurrentCluster];
    if (CurrentCluster >= 0xfff8 && CurrentCluster <= 0xffff)
-     CurrentCluster = 0xffffffff;
+    CurrentCluster = 0xffffffff;
    DPRINT("Returning %x\n",CurrentCluster);
    return(CurrentCluster);
 }
@@ -623,17 +623,19 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB Fcb,
  ULONG NextCluster;
    DPRINT("FindFile(Parent %x, FileToFind %w)\n",Parent,FileToFind);
    
-   if (Parent == NULL)
+   if (Parent == NULL||Parent->entry.FirstCluster==1)
    {
      Size = DeviceExt->rootDirectorySectors;//FIXME : in fat32, no limit
      StartingSector = DeviceExt->rootStart;
+     NextCluster=0;
      if(FileToFind[0]==0 ||(FileToFind[0]=='\\' && FileToFind[1]==0))
      {// it's root : complete essentials fields then return ok
        memset(Fcb,0,sizeof(VfatFCB));
        memset(Fcb->entry.Filename,' ',11);
+       Fcb->entry.FileSize=DeviceExt->rootDirectorySectors*BLOCKSIZE;
        if (DeviceExt->FatType == FAT32)
          Fcb->entry.FirstCluster=2;
-       else Fcb->entry.FirstCluster=1;//FIXME : is 1 the good value ?
+       else Fcb->entry.FirstCluster=1;//FIXME : is 1 the good value for mark root?
        if(StartSector) *StartSector=StartingSector;
        if(Entry) *Entry=0;
        return(STATUS_SUCCESS);
@@ -645,7 +647,8 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB Fcb,
 	
      Size = ULONG_MAX;
      if (DeviceExt->FatType == FAT32)
-       NextCluster = Parent->entry.FirstCluster+Parent->entry.FirstClusterHigh*65536;
+       NextCluster = Parent->entry.FirstCluster
+               +Parent->entry.FirstClusterHigh*65536;
      else
        NextCluster = Parent->entry.FirstCluster;
      StartingSector = ClusterToSector(DeviceExt, NextCluster);
@@ -707,29 +710,26 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB Fcb,
      }
      // not found in this sector, try next :
 
-     /* It seems that directory sectors cannot be fragmented and therefore,
-          they only have a first cluster, but the one's after it are marked
-          with 0xffff. This theory is still not 100% certain, so the following
-          lines are commented and not removed */
-
-     StartingSector++;
+     /* directory can be fragmented although it is best to keep them
+        unfragmented */
      if(Entry) *Entry=0;
-     /*   if (Parent == NULL)
+     StartingSector++;
+     if ((Parent != NULL && Parent->entry.FirstCluster!=1)
+           || DeviceExt->FatType ==FAT32)
      {
-	     StartingSector++;
-     }
-     else
-     {
-       NextCluster = GetNextCluster(DeviceExt,NextCluster);
-       if (NextCluster == 0||NextCluster==0xffffffff)
+       if(StartingSector==ClusterToSector(DeviceExt,NextCluster+1))
        {
-         if(StartSector) *StartSector=StartingSector;
-         if(Entry) *Entry=i;
-         ExFreePool(block);
-         return(STATUS_UNSUCCESSFUL);
+         NextCluster = GetNextCluster(DeviceExt,NextCluster);
+         if (NextCluster == 0||NextCluster==0xffffffff)
+         {
+           if(StartSector) *StartSector=StartingSector;
+           if(Entry) *Entry=i;
+           ExFreePool(block);
+           return(STATUS_UNSUCCESSFUL);
+         }
+         StartingSector = ClusterToSector(DeviceExt,NextCluster);
        }
-       StartingSector = ClusterToSector(DeviceExt,NextCluster);
-     } */
+     }
    }
    ExFreePool(block);
    if(StartSector) *StartSector=StartingSector;
@@ -870,7 +870,7 @@ BOOLEAN FsdHasFileSystem(PDEVICE_OBJECT DeviceToMount)
  */
 {
    BootSector* Boot;
-   
+
    Boot = ExAllocatePool(NonPagedPool,512);
 
    VFATReadSectors(DeviceToMount, 0, 1, (UCHAR *)Boot);
@@ -988,6 +988,12 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    PVOID Temp;
    ULONG TempLength;
    
+   /* PRECONDITION */
+   assert(DeviceExt != NULL);
+   assert(DeviceExt->BytesPerCluster != 0);
+   assert(FileObject != NULL);
+   assert(FileObject->FsContext != NULL);
+
    DPRINT("FsdReadFile(DeviceExt %x, FileObject %x, Buffer %x, "
 	    "Length %d, ReadOffset %d)\n",DeviceExt,FileObject,Buffer,
 	    Length,ReadOffset);
@@ -995,7 +1001,8 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    FirstCluster = ReadOffset / DeviceExt->BytesPerCluster;
    Fcb = ((PVfatCCB)(FileObject->FsContext2))->pFcb;
    if (DeviceExt->FatType == FAT32)
-	CurrentCluster = Fcb->entry.FirstCluster+Fcb->entry.FirstClusterHigh*65536;
+	CurrentCluster = Fcb->entry.FirstCluster
+                +Fcb->entry.FirstClusterHigh*65536;
    else
 	CurrentCluster = Fcb->entry.FirstCluster;
    if (CurrentCluster<2)
@@ -1011,6 +1018,7 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	Length = Fcb->entry.FileSize - ReadOffset;
      }
    *LengthRead = 0;
+   /* FIXME: optimize by remembering the last cluster read and using if possible */
    Temp = ExAllocatePool(NonPagedPool,DeviceExt->BytesPerCluster);
    if(!Temp) return STATUS_UNSUCCESSFUL;
    for (FileOffset=0; FileOffset < FirstCluster; FileOffset++)
@@ -1248,14 +1256,23 @@ NTSTATUS FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    ULONG Length;
    PVOID Buffer;
    ULONG Offset;
-   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
-   PFILE_OBJECT FileObject = Stack->FileObject;
-   PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
+   PIO_STACK_LOCATION Stack;
+   PFILE_OBJECT FileObject;
+   PDEVICE_EXTENSION DeviceExt;
    NTSTATUS Status;
    ULONG LengthRead;
    
    DPRINT("FsdRead(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
-   
+
+   /* Precondition / Initialization */
+   assert(Irp != NULL);
+   Stack = IoGetCurrentIrpStackLocation(Irp);
+   assert(Stack != NULL);
+   FileObject = Stack->FileObject;
+   assert(FileObject != NULL);
+   DeviceExt = DeviceObject->DeviceExtension;
+   assert(DeviceExt != NULL);
+
    Length = Stack->Parameters.Read.Length;
    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
    Offset = GET_LARGE_INTEGER_LOW_PART(Stack->Parameters.Read.ByteOffset);
@@ -1309,6 +1326,8 @@ NTSTATUS FsdFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
    DPRINT("VFAT FSC\n");
 
+   /* FIXME: should make sure that this is actually a mount request!  */
+
    if (FsdHasFileSystem(DeviceToMount))
      {
 	Status = FsdMount(DeviceToMount);
@@ -1333,8 +1352,15 @@ NTSTATUS FsdGetStandardInformation(PVfatFCB FCB, PDEVICE_OBJECT DeviceObject,
  * FUNCTION: Retrieve the standard file information
  */
 {
-  PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+  PDEVICE_EXTENSION DeviceExtension;
   unsigned long AllocSize;
+
+  DeviceExtension = DeviceObject->DeviceExtension;
+  /* PRECONDITION */
+  assert(DeviceExtension != NULL);
+  assert(DeviceExtension->BytesPerCluster != 0);
+  assert(StandardInfo != NULL);
+  assert(FCB != NULL);
 
   RtlZeroMemory(StandardInfo, sizeof(FILE_STANDARD_INFORMATION));
 
@@ -1371,12 +1397,24 @@ NTSTATUS FsdQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    NTSTATUS RC = STATUS_SUCCESS;
    void *SystemBuffer;
 
+   /* PRECONDITION */
+   assert(DeviceObject != NULL);
+   assert(Irp != NULL);
+
+   /* INITIALIZATION */
+   Stack = IoGetCurrentIrpStackLocation(Irp);
+   FileInformationClass = Stack->Parameters.QueryFile.FileInformationClass;
    FileObject = Stack->FileObject;
 //   CCB = (PVfatCCB)(FileObject->FsContext2);
 //   FCB = CCB->Buffer; // Should be CCB->FCB???
    FCB = ((PVfatCCB)(FileObject->FsContext2))->pFcb;
 
-   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
+  // FIXME : determine Buffer for result :
+  if (Irp->MdlAddress) 
+    SystemBuffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+  else
+    SystemBuffer = Irp->UserBuffer;
+//   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
 
    switch(FileInformationClass) {
       case FileStandardInformation:
@@ -1417,7 +1455,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
 	return(ret);
      }
 
-   DeviceObject->Flags=0;
+   DeviceObject->Flags = DO_DIRECT_IO;
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = FsdClose;
    DriverObject->MajorFunction[IRP_MJ_CREATE] = FsdCreate;
    DriverObject->MajorFunction[IRP_MJ_READ] = FsdRead;
