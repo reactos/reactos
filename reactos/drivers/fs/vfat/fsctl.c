@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.14 2003/02/13 22:24:17 hbirr Exp $
+/* $Id: fsctl.c,v 1.15 2003/05/11 09:51:26 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -392,6 +392,112 @@ VfatVerify (PVFAT_IRP_CONTEXT IrpContext)
   return(STATUS_INVALID_DEVICE_REQUEST);
 }
 
+static NTSTATUS
+VfatGetVolumeBitmap(PVFAT_IRP_CONTEXT IrpContext)
+{
+   DPRINT("VfatGetVolumeBitmap (IrpContext %x)\n", IrpContext);
+
+   return STATUS_INVALID_DEVICE_REQUEST;
+}
+
+static NTSTATUS 
+VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)
+{
+   PIO_STACK_LOCATION Stack;
+   LARGE_INTEGER Vcn;
+   PGET_RETRIEVAL_DESCRIPTOR RetrievalPointers;
+   PFILE_OBJECT FileObject;
+   ULONG MaxExtentCount;
+   PVFATFCB Fcb;
+   PDEVICE_EXTENSION DeviceExt;
+   ULONG FirstCluster;
+   ULONG CurrentCluster;
+   ULONG LastCluster;
+   NTSTATUS Status;
+
+   DPRINT("VfatGetRetrievalPointers(IrpContext %x)\n", IrpContext);
+
+   DeviceExt = IrpContext->DeviceExt;
+   FileObject = IrpContext->FileObject;
+   Stack = IrpContext->Stack;
+   if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(LARGE_INTEGER) ||
+       Stack->Parameters.DeviceIoControl.Type3InputBuffer == NULL)
+   {
+      return STATUS_INVALID_PARAMETER;
+   }
+   if (IrpContext->Irp->UserBuffer == NULL ||
+       Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(GET_RETRIEVAL_DESCRIPTOR) + sizeof(MAPPING_PAIR))
+   {
+      return STATUS_BUFFER_TOO_SMALL;
+   }
+
+   Fcb = FileObject->FsContext;
+
+   ExAcquireResourceSharedLite(&Fcb->MainResource, TRUE);
+   
+   Vcn = *(PLARGE_INTEGER)Stack->Parameters.DeviceIoControl.Type3InputBuffer;
+   RetrievalPointers = IrpContext->Irp->UserBuffer;
+
+   MaxExtentCount = ((Stack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(GET_RETRIEVAL_DESCRIPTOR)) / sizeof(MAPPING_PAIR));
+
+
+   if (Vcn.QuadPart >= Fcb->RFCB.FileSize.QuadPart / DeviceExt->FatInfo.BytesPerCluster)
+   {
+      Status = STATUS_INVALID_PARAMETER;
+      goto ByeBye;
+   }
+
+   CurrentCluster = FirstCluster = vfatDirEntryGetFirstCluster(DeviceExt, &Fcb->entry);
+   Status = OffsetToCluster(DeviceExt, FirstCluster, 
+                            Vcn.u.LowPart * DeviceExt->FatInfo.BytesPerCluster, 
+			    &CurrentCluster, FALSE);
+   if (!NT_SUCCESS(Status))
+   {
+      goto ByeBye;
+   }
+
+   RetrievalPointers->StartVcn = Vcn.QuadPart;
+   RetrievalPointers->NumberOfPairs = 0;
+   RetrievalPointers->Pair[0].Lcn = CurrentCluster - 2;
+   LastCluster = 0;
+   while (CurrentCluster != 0xffffffff && RetrievalPointers->NumberOfPairs < MaxExtentCount)
+   {
+
+      LastCluster = CurrentCluster;
+      Status = NextCluster(DeviceExt, CurrentCluster, &CurrentCluster, FALSE);
+      Vcn.QuadPart++;
+      if (!NT_SUCCESS(Status))
+      {
+         goto ByeBye;
+      }
+      
+      if (LastCluster + 1 != CurrentCluster)
+      {
+	 RetrievalPointers->Pair[RetrievalPointers->NumberOfPairs].Vcn = Vcn.QuadPart;
+	 RetrievalPointers->NumberOfPairs++;
+	 if (RetrievalPointers->NumberOfPairs < MaxExtentCount)
+	 {
+	    RetrievalPointers->Pair[RetrievalPointers->NumberOfPairs].Lcn = CurrentCluster - 2;
+	 }
+      }
+   }
+   
+   IrpContext->Irp->IoStatus.Information = sizeof(GET_RETRIEVAL_DESCRIPTOR) + sizeof(MAPPING_PAIR) * RetrievalPointers->NumberOfPairs;
+   Status = STATUS_SUCCESS;
+
+ByeBye:
+   ExReleaseResourceLite(&Fcb->MainResource);
+
+   return Status;
+}
+
+static NTSTATUS
+VfatMoveFile(PVFAT_IRP_CONTEXT IrpContext)
+{
+   DPRINT("VfatMoveFile(IrpContext %x)\n", IrpContext);
+
+   return STATUS_INVALID_DEVICE_REQUEST;
+}
 
 NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 /*
@@ -404,12 +510,28 @@ NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
    DPRINT("VfatFileSystemControl(IrpContext %x)\n", IrpContext);
 
    assert (IrpContext);
+   assert (IrpContext->Irp);
+   assert (IrpContext->Stack);
+
+   IrpContext->Irp->IoStatus.Information = 0;
 
    switch (IrpContext->MinorFunction)
    {
       case IRP_MN_USER_FS_REQUEST:
-         DPRINT("VFAT FSC: IRP_MN_USER_FS_REQUEST\n");
-	 Status = STATUS_INVALID_DEVICE_REQUEST;
+         switch(IrpContext->Stack->Parameters.DeviceIoControl.IoControlCode)
+	 {
+	    case FSCTL_GET_VOLUME_BITMAP:
+               Status = VfatGetVolumeBitmap(IrpContext);
+	       break;
+	    case FSCTL_GET_RETRIEVAL_POINTERS:
+               Status = VfatGetRetrievalPointers(IrpContext);
+	       break;
+	    case FSCTL_MOVE_FILE:
+	       Status = VfatMoveFile(IrpContext);
+	       break;
+	    default:
+	       Status = STATUS_INVALID_DEVICE_REQUEST;
+	 }
 	 break;
 
       case IRP_MN_MOUNT_VOLUME:
@@ -427,7 +549,6 @@ NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
    }
 
    IrpContext->Irp->IoStatus.Status = Status;
-   IrpContext->Irp->IoStatus.Information = 0;
 
    IoCompleteRequest (IrpContext->Irp, IO_NO_INCREMENT);
    VfatFreeIrpContext(IrpContext);

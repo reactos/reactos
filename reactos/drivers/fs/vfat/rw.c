@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.55 2003/02/13 22:24:17 hbirr Exp $
+/* $Id: rw.c,v 1.56 2003/05/11 09:51:26 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -24,7 +24,6 @@
 
 NTSTATUS
 NextCluster(PDEVICE_EXTENSION DeviceExt,
-	    PVFATFCB Fcb,
 	    ULONG FirstCluster,
 	    PULONG CurrentCluster,
 	    BOOLEAN Extend)
@@ -33,88 +32,7 @@ NextCluster(PDEVICE_EXTENSION DeviceExt,
       * necessary
       */
 {
-  if (Fcb != NULL && Fcb->Flags & FCB_IS_PAGE_FILE)
-    {
-      ULONG i;
-      PULONG FatChain;
-      NTSTATUS Status;
-      DPRINT("NextCluster(Fcb %x, FirstCluster %x, Extend %d)\n", Fcb, 
-	     FirstCluster, Extend);
-      if (Fcb->FatChainSize == 0)
-	{
-	  /* Paging file with zero length. */
-	  *CurrentCluster = 0xffffffff;
-	  if (Extend)
-	    {
-	      Fcb->FatChain = ExAllocatePool(NonPagedPool, sizeof(ULONG));
-	      if (Fcb->FatChain == NULL)
-		{
-		  return(STATUS_NO_MEMORY);
-		}
-	      Status = GetNextCluster(DeviceExt, 0, CurrentCluster, TRUE);
-	      if (!NT_SUCCESS(Status))
-		{
-		  ExFreePool(Fcb->FatChain);
-		  return(Status);
-		}
-	      Fcb->FatChain[0] = *CurrentCluster;
-	      Fcb->FatChainSize = 1;
-	      return Status;
-	    }
-	  else
-	    {
-	      return STATUS_UNSUCCESSFUL;
-	    }
-	}
-      else
-	{
-	  for (i = 0; i < Fcb->FatChainSize; i++)
-	    {
-	      if (Fcb->FatChain[i] == *CurrentCluster)
-		break;
-	    }
-	  if (i >= Fcb->FatChainSize)
-	    {
-	      return STATUS_UNSUCCESSFUL;
-	    }
-	  if (i == Fcb->FatChainSize - 1)
-	    {
-	      if (Extend)
-		{
-		  FatChain = ExAllocatePool(NonPagedPool, 
-					    (i + 2) * sizeof(ULONG));
-		  if (!FatChain)
-		    {
-		      *CurrentCluster = 0xffffffff;
-		      return STATUS_NO_MEMORY;
-		    }
-		  Status = GetNextCluster(DeviceExt, *CurrentCluster, 
-					  CurrentCluster, TRUE);
-		  if (NT_SUCCESS(Status) && *CurrentCluster != 0xffffffff)
-		    {
-		      memcpy(FatChain, Fcb->FatChain, (i + 1) * sizeof(ULONG));
-		      FatChain[i + 1] = *CurrentCluster;
-		      ExFreePool(Fcb->FatChain);
-		      Fcb->FatChain = FatChain;
-		      Fcb->FatChainSize = i + 2;
-		    }
-		  else
-		    {
-		      ExFreePool(FatChain);
-		    }
-		  return Status;
-		}
-	      else
-		{
-		  *CurrentCluster = 0xffffffff;
-		  return STATUS_SUCCESS;
-		}
-	    }
-	  *CurrentCluster = Fcb->FatChain[i + 1];
-	  return STATUS_SUCCESS;
-	}
-    }
-  if (FirstCluster == 1)
+ if (FirstCluster == 1)
     {
       (*CurrentCluster) += DeviceExt->FatInfo.SectorsPerCluster;
       return(STATUS_SUCCESS);
@@ -146,7 +64,6 @@ NextCluster(PDEVICE_EXTENSION DeviceExt,
 
 NTSTATUS
 OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
-		PVFATFCB Fcb,
 		ULONG FirstCluster,
 		ULONG FileOffset,
 		PULONG Cluster,
@@ -168,68 +85,6 @@ OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
     KeBugCheck(0);
   }
 
-  if (Fcb != NULL && Fcb->Flags & FCB_IS_PAGE_FILE)
-    {
-      ULONG NCluster;
-      ULONG Offset = FileOffset / DeviceExt->FatInfo.BytesPerCluster;
-      PULONG FatChain;
-      int i;
-      if (Fcb->FatChainSize == 0)
-      {
-        DbgPrint("OffsetToCluster is called with FirstCluster = %x"
-                 " and Fcb->FatChainSize = 0!\n", FirstCluster);
-        KeBugCheck(0);
-      }
-      if (Offset < Fcb->FatChainSize)
-      {
-        *Cluster = Fcb->FatChain[Offset];
-        return STATUS_SUCCESS;
-      }
-      else
-      {
-        if (!Extend)
-        {
-          *Cluster = 0xffffffff;
-          return STATUS_UNSUCCESSFUL;
-        }
-        else
-	{
-          FatChain = ExAllocatePool(NonPagedPool, (Offset + 1) * sizeof(ULONG));
-          if (!FatChain)
-          {
-            *Cluster = 0xffffffff;
-            return STATUS_UNSUCCESSFUL;
-          }
-		  
-          CurrentCluster = Fcb->FatChain[Fcb->FatChainSize - 1];
-          FatChain[Fcb->FatChainSize - 1] = CurrentCluster;
-          for (i = Fcb->FatChainSize; i < Offset + 1; i++)
-          {
-            Status = GetNextCluster(DeviceExt, CurrentCluster, &CurrentCluster, TRUE);
-            if (!NT_SUCCESS(Status) || CurrentCluster == 0xFFFFFFFF)
-            {
-              while (i >= Fcb->FatChainSize)
-              {
-                WriteCluster(DeviceExt, FatChain[i - 1], 0xFFFFFFFF);
-                i--;
-              }
-              *Cluster = 0xffffffff;
-              ExFreePool(FatChain);
-              if (!NT_SUCCESS(Status))
-                 return Status;
-              return STATUS_UNSUCCESSFUL;
-            }
-            FatChain[i] = CurrentCluster;
-          }
-          memcpy (FatChain, Fcb->FatChain, Fcb->FatChainSize * sizeof(ULONG));
-          ExFreePool(Fcb->FatChain);
-          Fcb->FatChain = FatChain;
-          Fcb->FatChainSize = Offset + 1;
-        }
-      }
-      *Cluster = CurrentCluster;
-      return(STATUS_SUCCESS);
-    }
   if (FirstCluster == 1)
     {
       /* root of FAT16 or FAT12 */
@@ -361,7 +216,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext, PVOID Buffer,
   {
     CurrentCluster = Ccb->LastCluster;
   }
-  Status = OffsetToCluster(DeviceExt, Fcb, FirstCluster,
+  Status = OffsetToCluster(DeviceExt, FirstCluster,
 			   ROUND_DOWN(ReadOffset.u.LowPart, BytesPerCluster),
 			   &CurrentCluster, FALSE);
   if (!NT_SUCCESS(Status))
@@ -399,7 +254,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext, PVOID Buffer,
       	  BytesDone = Length;
       	}
       }
-      Status = NextCluster(DeviceExt, Fcb, FirstCluster, &CurrentCluster, FALSE);
+      Status = NextCluster(DeviceExt, FirstCluster, &CurrentCluster, FALSE);
     }
     while (StartCluster + ClusterCount == CurrentCluster && NT_SUCCESS(Status) && Length > BytesDone);
     DPRINT("start %08x, next %08x, count %d\n",
@@ -515,7 +370,7 @@ NTSTATUS VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
       CurrentCluster = Ccb->LastCluster;
    }
 
-   Status = OffsetToCluster(DeviceExt, Fcb, FirstCluster,
+   Status = OffsetToCluster(DeviceExt, FirstCluster,
 			    ROUND_DOWN(WriteOffset.u.LowPart, BytesPerCluster),
 			    &CurrentCluster, FALSE);
 
@@ -554,7 +409,7 @@ NTSTATUS VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
       	       BytesDone = Length;
       	    }
          }
-         Status = NextCluster(DeviceExt, Fcb, FirstCluster, &CurrentCluster, FALSE);
+         Status = NextCluster(DeviceExt, FirstCluster, &CurrentCluster, FALSE);
       }
       while (StartCluster + ClusterCount == CurrentCluster && NT_SUCCESS(Status) && Length > BytesDone);
       DPRINT("start %08x, next %08x, count %d\n",
@@ -608,6 +463,19 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
    assert(Fcb);
 
    DPRINT("<%S>\n", Fcb->PathName);
+
+   if (Fcb->Flags & FCB_IS_PAGE_FILE)
+   {
+      PIO_STACK_LOCATION Stack;
+      PFATINFO FatInfo = &IrpContext->DeviceExt->FatInfo;
+      IoCopyCurrentIrpStackLocationToNext(IrpContext->Irp);
+      Stack = IoGetNextIrpStackLocation(IrpContext->Irp);
+      Stack->Parameters.Read.ByteOffset.QuadPart += FatInfo->dataStart * FatInfo->BytesPerSector;
+      DPRINT("Read from page file, disk offset %I64x\n", Stack->Parameters.Read.ByteOffset.QuadPart);
+      Status = IoCallDriver(IrpContext->DeviceExt->StorageDevice, IrpContext->Irp);
+      VfatFreeIrpContext(IrpContext);
+      return Status;
+   }
 
    ByteOffset = IrpContext->Stack->Parameters.Read.ByteOffset;
    Length = IrpContext->Stack->Parameters.Read.Length;
@@ -833,7 +701,20 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
 
    DPRINT("<%S>\n", Fcb->PathName);
 
-   /* fail if file is a directory and no paged read */
+   if (Fcb->Flags & FCB_IS_PAGE_FILE)
+   {
+      PIO_STACK_LOCATION Stack;
+      PFATINFO FatInfo = &IrpContext->DeviceExt->FatInfo;
+      IoCopyCurrentIrpStackLocationToNext(IrpContext->Irp);
+      Stack = IoGetNextIrpStackLocation(IrpContext->Irp);
+      Stack->Parameters.Write.ByteOffset.QuadPart += FatInfo->dataStart * FatInfo->BytesPerSector;
+      DPRINT("Write to page file, disk offset %I64x\n", Stack->Parameters.Write.ByteOffset.QuadPart);
+      Status = IoCallDriver(IrpContext->DeviceExt->StorageDevice, IrpContext->Irp);
+      VfatFreeIrpContext(IrpContext);
+      return Status;
+   }
+
+  /* fail if file is a directory and no paged read */
    if (Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
    {
       Status = STATUS_INVALID_PARAMETER;

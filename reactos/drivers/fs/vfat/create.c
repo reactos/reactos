@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.55 2003/03/23 10:45:56 hbirr Exp $
+/* $Id: create.c,v 1.56 2003/05/11 09:51:26 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -465,46 +465,6 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 }
 
 VOID STATIC
-VfatPagingFileCreate(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb)
-{
-  ULONG CurrentCluster, NextCluster, i;
-  NTSTATUS Status;
-
-  Fcb->Flags |= FCB_IS_PAGE_FILE;
-  Fcb->FatChainSize =
-    ((Fcb->entry.FileSize + DeviceExt->FatInfo.BytesPerCluster - 1) / 
-     DeviceExt->FatInfo.BytesPerCluster);
-  if (Fcb->FatChainSize)
-    {
-      Fcb->FatChain = 
-	ExAllocatePool(NonPagedPool, Fcb->FatChainSize * sizeof(ULONG));
-    }
-  
-  if (DeviceExt->FatInfo.FatType == FAT32)
-    {
-      CurrentCluster = Fcb->entry.FirstCluster + 
-	Fcb->entry.FirstClusterHigh * 65536;
-    }
-  else
-    {
-      CurrentCluster = Fcb->entry.FirstCluster;
-    }
-  
-  i = 0;
-  if (Fcb->FatChainSize)
-    {
-      while (CurrentCluster != 0xffffffff)
-	{
-	  Fcb->FatChain[i] = CurrentCluster;	
-	  Status = GetNextCluster (DeviceExt, CurrentCluster, 
-				   &NextCluster, FALSE);
-	  i++;
-	  CurrentCluster = NextCluster;
-	}
-    }
-}
-
-VOID STATIC
 VfatSupersedeFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 		  PVFATFCB Fcb)
 {
@@ -663,6 +623,11 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 			       Stack->Parameters.Create.ShareAccess,
 			       FileObject,
 			       &pFcb->FCBShareAccess);
+
+	      if (PagingFileCreate)
+                {
+                  pFcb->Flags |= FCB_IS_PAGE_FILE;
+                }
 	    }
 	  else
 	    {
@@ -702,19 +667,35 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	  return(STATUS_NOT_A_DIRECTORY);
 	}
 
+      if ((PagingFileCreate && !(pFcb->Flags & FCB_IS_PAGE_FILE)) ||
+	  (!PagingFileCreate && (pFcb->Flags & FCB_IS_PAGE_FILE)))
+        {
+	  /* FIXME:
+	   *   Do more checking for page files. It is possible, 
+	   *   that the file was opened and closed previously 
+	   *   as a normal cached file. In this case, the cache 
+	   *   manager has referenced the fileobject and the fcb 
+	   *   is held in memory. Try to remove the fileobject 
+	   *   from cache manager and use the fcb.
+	   */
+	  VfatCloseFile(DeviceExt, FileObject);
+	  return(STATUS_INVALID_PARAMETER);
+	}
+        
+
       if (RequestedDisposition == FILE_OVERWRITE ||
           RequestedDisposition == FILE_OVERWRITE_IF)
 	{
-	AllocationSize.QuadPart = 0;
-	Status = VfatSetAllocationSizeInformation (FileObject,
-	                                           pFcb,
-	                                           DeviceExt,
-	                                           &AllocationSize);
-	if (!NT_SUCCESS (Status))
-	  {
-	  VfatCloseFile (DeviceExt, FileObject);
-	  return(Status);
-	  }
+	  AllocationSize.QuadPart = 0;
+	  Status = VfatSetAllocationSizeInformation (FileObject,
+	                                             pFcb,
+	                                             DeviceExt,
+	                                             &AllocationSize);
+	  if (!NT_SUCCESS (Status))
+	    {
+	      VfatCloseFile (DeviceExt, FileObject);
+	      return(Status);
+	    }
 	}
 	
       
@@ -730,15 +711,6 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	}
     }
   
-  /*
-   * If this create was for a paging file then make sure all the
-   * information needed to manipulate it is locked in memory.
-   */
-  if (PagingFileCreate)
-    {
-      VfatPagingFileCreate(DeviceExt, pFcb);
-    }
-
   /* FIXME : test share access */
   /* FIXME : test write access if requested */
 

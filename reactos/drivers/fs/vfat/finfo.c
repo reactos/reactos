@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.27 2003/02/13 22:24:16 hbirr Exp $
+/* $Id: finfo.c,v 1.28 2003/05/11 09:51:26 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -441,7 +441,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   {
     if (FirstCluster == 0)
     {
-      Status = NextCluster (DeviceExt, Fcb, FirstCluster, &FirstCluster, TRUE);
+      Status = NextCluster (DeviceExt, FirstCluster, &FirstCluster, TRUE);
       if (!NT_SUCCESS(Status))
       {
 	DPRINT1("NextCluster failed. Status = %x\n", Status);
@@ -451,7 +451,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
       {
          return STATUS_DISK_FULL;
       }
-      Status = OffsetToCluster(DeviceExt, Fcb, FirstCluster, 
+      Status = OffsetToCluster(DeviceExt, FirstCluster, 
 	         ROUND_DOWN(NewSize - 1, ClusterSize),
                  &NCluster, TRUE);
       if (NCluster == 0xffffffff || !NT_SUCCESS(Status))
@@ -461,7 +461,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
 	 Status = STATUS_SUCCESS;
          while (NT_SUCCESS(Status) && Cluster != 0xffffffff && Cluster > 1)
 	 {
-	    Status = NextCluster (DeviceExt, Fcb, FirstCluster, &NCluster, FALSE);
+	    Status = NextCluster (DeviceExt, FirstCluster, &NCluster, FALSE);
             WriteCluster (DeviceExt, Cluster, 0);
 	    Cluster = NCluster;
 	 }
@@ -472,24 +472,24 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
     }
     else
     {
-       Status = OffsetToCluster(DeviceExt, Fcb, FirstCluster, 
+       Status = OffsetToCluster(DeviceExt, FirstCluster, 
 	          Fcb->RFCB.AllocationSize.u.LowPart - ClusterSize,
 		  &Cluster, FALSE);
        /* FIXME: Check status */
        /* Cluster points now to the last cluster within the chain */
-       Status = OffsetToCluster(DeviceExt, Fcb, FirstCluster, 
+       Status = OffsetToCluster(DeviceExt, FirstCluster, 
 	         ROUND_DOWN(NewSize - 1, ClusterSize),
                  &NCluster, TRUE);
        if (NCluster == 0xffffffff || !NT_SUCCESS(Status))
        {
 	  /* disk is full */
 	  NCluster = Cluster; 
-          Status = NextCluster (DeviceExt, Fcb, FirstCluster, &NCluster, FALSE);
+          Status = NextCluster (DeviceExt, FirstCluster, &NCluster, FALSE);
 	  WriteCluster(DeviceExt, Cluster, 0xffffffff);
 	  Cluster = NCluster;
           while (NT_SUCCESS(Status) && Cluster != 0xffffffff && Cluster > 1)
 	  {
-	    Status = NextCluster (DeviceExt, Fcb, FirstCluster, &NCluster, FALSE);
+	    Status = NextCluster (DeviceExt, FirstCluster, &NCluster, FALSE);
             WriteCluster (DeviceExt, Cluster, 0);
 	    Cluster = NCluster;
 	  }
@@ -503,12 +503,12 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
     UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize);
     if (NewSize > 0)
     {
-      Status = OffsetToCluster(DeviceExt, Fcb, Cluster, 
+      Status = OffsetToCluster(DeviceExt, Cluster, 
 	          ROUND_DOWN(NewSize - 1, ClusterSize),
 		  &Cluster, FALSE);
 
       NCluster = Cluster;
-      Status = NextCluster (DeviceExt, Fcb, FirstCluster, &NCluster, FALSE);
+      Status = NextCluster (DeviceExt, FirstCluster, &NCluster, FALSE);
       WriteCluster(DeviceExt, Cluster, 0xffffffff);
       Cluster = NCluster;
     }
@@ -522,7 +522,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
     }
     while (NT_SUCCESS(Status) && 0xffffffff != Cluster && Cluster > 1)
     {
-       Status = NextCluster (DeviceExt, Fcb, FirstCluster, &NCluster, FALSE);
+       Status = NextCluster (DeviceExt, FirstCluster, &NCluster, FALSE);
        WriteCluster (DeviceExt, Cluster, 0);
        Cluster = NCluster;
     }
@@ -660,14 +660,7 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
   DPRINT("FileInformationClass %d\n", FileInformationClass);
   DPRINT("SystemBuffer %x\n", SystemBuffer);
   
-  if (FCB->Flags & FCB_IS_PAGE_FILE)
-    {
-      if (!ExAcquireResourceExclusiveLite(&FCB->PagingIoResource, CanWait))
-	{
-	  return(VfatQueueRequest (IrpContext));
-	}
-    }
-  else
+  if (!(FCB->Flags & FCB_IS_PAGE_FILE))
     {
       if (!ExAcquireResourceExclusiveLite(&FCB->MainResource, CanWait))
 	{
@@ -707,11 +700,7 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
       RC = STATUS_NOT_SUPPORTED;
     }
 
-  if (FCB->Flags & FCB_IS_PAGE_FILE)
-  {
-     ExReleaseResourceLite(&FCB->PagingIoResource);
-  }
-  else
+  if (!(FCB->Flags & FCB_IS_PAGE_FILE))
   {
      ExReleaseResourceLite(&FCB->MainResource);
   }

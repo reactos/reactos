@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.56 2003/02/13 22:24:17 hbirr Exp $ */
+/* $Id: vfat.h,v 1.57 2003/05/11 09:51:26 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -233,9 +233,6 @@ typedef struct _VFATFCB
   /* List of byte-range locks for this file */
   FILE_LOCK FileLock;
 
-  /* Structure members used only for paging files. */
-  ULONG FatChainSize;
-  PULONG FatChain;
 } VFATFCB, *PVFATFCB;
 
 typedef struct _VFATCCB
@@ -420,7 +417,6 @@ BOOL  vfatIsFileNameValid (PWCHAR pFileName);
 /*  -----------------------------------------------------------  fat.c  */
 
 NTSTATUS OffsetToCluster (PDEVICE_EXTENSION DeviceExt,
-                          PVFATFCB Fcb,
                           ULONG FirstCluster,
                           ULONG FileOffset,
                           PULONG Cluster,
@@ -512,7 +508,6 @@ NTSTATUS VfatRead (PVFAT_IRP_CONTEXT IrpContext);
 NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext);
 
 NTSTATUS NextCluster(PDEVICE_EXTENSION DeviceExt,
-                     PVFATFCB Fcb,
                      ULONG FirstCluster,
                      PULONG CurrentCluster,
                      BOOLEAN Extend);

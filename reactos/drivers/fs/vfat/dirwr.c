@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.35 2003/02/13 22:24:16 hbirr Exp $
+/* $Id: dirwr.c,v 1.36 2003/05/11 09:51:26 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -510,7 +510,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   if (RequestedOptions & FILE_DIRECTORY_FILE)
   {
     CurrentCluster = 0xffffffff;
-    Status = NextCluster (DeviceExt, NULL, 0, &CurrentCluster, TRUE);
+    Status = NextCluster (DeviceExt, 0, &CurrentCluster, TRUE);
     if (CurrentCluster == 0xffffffff || !NT_SUCCESS(Status))
     {
       vfatReleaseFCB(DeviceExt, pDirFcb);

@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.27 2003/02/13 22:24:16 hbirr Exp $
+/* $Id: fcb.c,v 1.28 2003/05/11 09:51:26 hbirr Exp $
  *
  *
  * FILE:             fcb.c
@@ -82,8 +82,6 @@ vfatDestroyFCB(PVFATFCB  pFCB)
   FsRtlUninitializeFileLock(&pFCB->FileLock); 
   ExDeleteResourceLite(&pFCB->PagingIoResource);
   ExDeleteResourceLite(&pFCB->MainResource);
-  if ((pFCB->Flags & FCB_IS_PAGE_FILE) && pFCB->FatChainSize)
-	ExFreePool(pFCB->FatChain);
   ExFreeToNPagedLookasideList(&VfatGlobalData->FcbLookasideList, pFCB);
 }
 
@@ -331,7 +329,7 @@ vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
     while (CurrentCluster != 0xffffffff && NT_SUCCESS(Status))
     {
       Size += pVCB->FatInfo.BytesPerCluster;
-      Status = NextCluster (pVCB, NULL, FirstCluster, &CurrentCluster, FALSE);
+      Status = NextCluster (pVCB, FirstCluster, &CurrentCluster, FALSE);
     }
   }
   else
@@ -421,7 +419,7 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
       while (CurrentCluster != 0xffffffff)
       {
          Size += vcb->FatInfo.BytesPerCluster;
-         Status = NextCluster (vcb, NULL, FirstCluster, &CurrentCluster, FALSE);
+         Status = NextCluster (vcb, FirstCluster, &CurrentCluster, FALSE);
       }
     }
   }
