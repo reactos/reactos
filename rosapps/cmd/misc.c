@@ -122,7 +122,7 @@ BOOL CheckCtrlBreak (INT mode)
 }
 
 /* add new entry for new argument */
-static BOOL add_entry (LPINT ac, LPTSTR **arg, LPTSTR entry)
+static BOOL add_entry (LPINT ac, LPTSTR **arg, LPCTSTR entry)
 {
 	LPTSTR q;
 	LPTSTR *oldarg;
@@ -149,24 +149,63 @@ static BOOL add_entry (LPINT ac, LPTSTR **arg, LPTSTR entry)
 	return TRUE;
 }
 
-static BOOL expand (LPINT ac, LPTSTR **arg, LPTSTR pattern)
+static BOOL expand (LPINT ac, LPTSTR **arg, LPCTSTR pattern)
 {
 	HANDLE hFind;
 	WIN32_FIND_DATA FindData;
 	BOOL ok;
+	LPCTSTR pathend;
+	LPTSTR dirpart, fullname;
 
+	pathend = _tcsrchr (pattern, _T('\\'));
+	if (NULL != pathend)
+	{
+		dirpart = malloc((pathend - pattern + 2) * sizeof(TCHAR));
+		if (NULL == dirpart)
+		{
+			return FALSE;
+		}
+		memcpy(dirpart, pattern, pathend - pattern + 1);
+		dirpart[pathend - pattern + 1] = '\0';
+	}
+	else
+	{
+		dirpart = NULL;
+	}
 	hFind = FindFirstFile (pattern, &FindData);
 	if (INVALID_HANDLE_VALUE != hFind)
 	{
 		do
 		{
-			ok = add_entry(ac, arg, FindData.cFileName);
+			if (NULL != dirpart)
+			{
+				fullname = malloc((_tcslen(dirpart) + _tcslen(FindData.cFileName) + 1) * sizeof(TCHAR));
+				if (NULL == fullname)
+				{
+					ok = FALSE;
+				}
+				else
+				{
+					_tcscat (_tcscpy (fullname, dirpart), FindData.cFileName);
+					ok = add_entry(ac, arg, fullname);
+					free (fullname);
+				}
+			}
+			else
+			{
+				ok = add_entry(ac, arg, FindData.cFileName);
+			}
 		} while (FindNextFile (hFind, &FindData) && ok);
 		FindClose (hFind);
 	}
 	else
 	{
 		ok = add_entry(ac, arg, pattern);
+	}
+
+	if (NULL != dirpart)
+	{
+		free (dirpart);
 	}
 
 	return ok;
