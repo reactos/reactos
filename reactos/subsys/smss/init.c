@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.33 2002/04/26 13:09:21 ekohl Exp $
+/* $Id: init.c,v 1.34 2002/05/22 15:55:51 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -36,15 +36,6 @@
 
 /* TYPES ********************************************************************/
 
-/*
- * NOTE: This is only used until the dos device links are
- *       read from the registry!!
- */
-typedef struct
-{
-   PWSTR DeviceName;
-   PWSTR LinkName;
-} LINKDATA, *PLINKDATA;
 
 /* GLOBAL VARIABLES *********************************************************/
 
@@ -57,18 +48,323 @@ PWSTR SmSystemEnvironment = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
-static VOID
-SmCreatePagingFiles (VOID)
+
+static NTSTATUS STDCALL
+SmObjectDirectoryQueryRoutine(PWSTR ValueName,
+			      ULONG ValueType,
+			      PVOID ValueData,
+			      ULONG ValueLength,
+			      PVOID Context,
+			      PVOID EntryContext)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING UnicodeString;
+  HANDLE WindowsDirectory;
+  NTSTATUS Status;
+
+#ifndef NDEBUG
+  PrintString("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
+  PrintString("ValueData '%S'\n", (PWSTR)ValueData);
+#endif
+
+  RtlInitUnicodeString(&UnicodeString,
+		       (PWSTR)ValueData);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &UnicodeString,
+			     0,
+			     NULL,
+			     NULL);
+
+  Status = ZwCreateDirectoryObject(&WindowsDirectory,
+				   0,
+				   &ObjectAttributes);
+
+  return(Status);
+}
+
+
+static NTSTATUS
+SmCreateObjectDirectories(VOID)
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  NTSTATUS Status;
+
+  RtlZeroMemory(&QueryTable,
+		sizeof(QueryTable));
+
+  QueryTable[0].Name = L"ObjectDirectories";
+  QueryTable[0].QueryRoutine = SmObjectDirectoryQueryRoutine;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+				  L"\\Session Manager",
+				  QueryTable,
+				  NULL,
+				  NULL);
+
+  return(Status);
+}
+
+
+static NTSTATUS STDCALL
+SmDosDevicesQueryRoutine(PWSTR ValueName,
+			 ULONG ValueType,
+			 PVOID ValueData,
+			 ULONG ValueLength,
+			 PVOID Context,
+			 PVOID EntryContext)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING DeviceName;
+  UNICODE_STRING LinkName;
+  HANDLE LinkHandle;
+  WCHAR LinkBuffer[80];
+  NTSTATUS Status = STATUS_SUCCESS;
+
+#ifndef NDEBUG
+  PrintString("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
+  PrintString("ValueData '%S'\n", (PWSTR)ValueData);
+#endif
+
+  if (ValueType = REG_SZ)
+    {
+      swprintf(LinkBuffer, L"\\??\\%s",
+	       ValueName);
+      RtlInitUnicodeString(&LinkName,
+			   LinkBuffer);
+      RtlInitUnicodeString(&DeviceName,
+			   (PWSTR)ValueData);
+
+#ifndef NDEBUG
+      PrintString("SM: Linking %wZ --> %wZ\n",
+		  &LinkName,
+		  &DeviceName);
+#endif
+
+      /* create symbolic link */
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &LinkName,
+				 OBJ_PERMANENT,
+				 NULL,
+				 NULL);
+      Status = NtCreateSymbolicLinkObject(&LinkHandle,
+					  SYMBOLIC_LINK_ALL_ACCESS,
+					  &ObjectAttributes,
+					  &DeviceName);
+      if (!NT_SUCCESS(Status))
+	{
+	  PrintString("SmDosDevicesQueryRoutine: NtCreateSymbolicLink( %wZ --> %wZ ) failed!\n",
+		      &LinkName,
+		      &DeviceName);
+	}
+      NtClose(LinkHandle);
+    }
+
+  return(Status);
+}
+
+
+static NTSTATUS
+SmInitDosDevices(VOID)
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  NTSTATUS Status;
+
+  RtlZeroMemory(&QueryTable,
+		sizeof(QueryTable));
+
+  QueryTable[0].QueryRoutine = SmDosDevicesQueryRoutine;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+				  L"\\Session Manager\\DOS Devices",
+				  QueryTable,
+				  NULL,
+				  NULL);
+  return(Status);
+}
+
+
+static NTSTATUS STDCALL
+SmRunBootAppsQueryRoutine(PWSTR ValueName,
+			  ULONG ValueType,
+			  PVOID ValueData,
+			  ULONG ValueLength,
+			  PVOID Context,
+			  PVOID EntryContext)
+{
+#if 0
+  PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
+  RTL_PROCESS_INFO ProcessInfo;
+  WCHAR Description[256];
+  WCHAR ImagePath[256];
+  WCHAR CommandLine[256];
+  PWSTR p1, p2;
+  ULONG len;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+#ifndef NDEBUG
+  PrintString("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
+  PrintString("ValueData '%S'\n", (PWSTR)ValueData);
+#endif
+
+  /* Extract the description */
+  p1 = wcschr((PWSTR)ValueData, L' ');
+  len = p1 - (PWSTR)ValueData;
+  memcpy(Description,ValueData, len * sizeof(WCHAR));
+  Description[len] = 0;
+
+  /* Extract the full image path */
+  p1++;
+  p2 = wcschr(p1, L' ');
+  if (p2 != NULL)
+    len = p2 - p1;
+  else
+    len = wcslen(p1);
+  memcpy(ImagePath, p1, len * sizeof(WCHAR));
+  ImagePath[len] = 0;
+
+  /* Extract the command line */
+  if (p2 == NULL)
+    {
+      CommandLine[0] = 0;
+    }
+  else
+    {
+      p2++;
+      wcscpy(CommandLine, p2);
+    }
+
+#ifndef NDEBUG
+  PrintString("Running %S...\n", Description);
+  PrintString("Executable: '%S'\n", ImagePath);
+  PrintString("CommandLine: '%S'\n", CommandLine);
+#endif
+
+#if 0
+  /* initialize executable path */
+  wcscpy(UnicodeBuffer, L"\\??\\");
+  wcscat(UnicodeBuffer, SharedUserData->NtSystemRoot);
+  wcscat(UnicodeBuffer, L"\\system32\\csrss.exe");
+  RtlInitUnicodeString(&ImagePathString,
+		       UnicodeBuffer);
+
+  RtlInitUnicodeString(&CommandLineString,
+		       CommandLine);
+
+  RtlCreateProcessParameters(&ProcessParameters,
+			     &ImagePathString,
+			     NULL,
+			     NULL,
+			     &CommandLineString,
+			     NULL,
+			     NULL,
+			     NULL,
+			     NULL,
+			     NULL);
+
+  Status = RtlCreateUserProcess(&UnicodeString,
+				OBJ_CASE_INSENSITIVE,
+				ProcessParameters,
+				NULL,
+				NULL,
+				NULL,
+				FALSE,
+				NULL,
+				NULL,
+				&ProcessInfo);
+
+  RtlDestroyProcessParameters (ProcessParameters);
+
+  /* FIXME: wait for process termination */
+
+#endif
+
+  return(Status);
+#endif
+  return(STATUS_SUCCESS);
+}
+
+
+/*
+ * Run native applications listed in the registry.
+ *
+ *  Key:
+ *    \Registry\Machine\SYSTEM\CurrentControlSet\Control\Session Manager
+ *
+ *  Value (format: "<description> <executable> <command line>":
+ *    BootExecute = "autocheck autochk *"
+ */
+static NTSTATUS
+SmRunBootApps(VOID)
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  NTSTATUS Status;
+
+  RtlZeroMemory(&QueryTable,
+		sizeof(QueryTable));
+
+  QueryTable[0].Name = L"BootExecute";
+  QueryTable[0].QueryRoutine = SmRunBootAppsQueryRoutine;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+				  L"\\Session Manager",
+				  QueryTable,
+				  NULL,
+				  NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      PrintString("SmRunBootApps: RtlQueryRegistryValues() failed! (Status %lx)\n", Status);
+    }
+
+//  PrintString("*** System stopped ***\n");
+//  for(;;);
+
+  return(Status);
+}
+
+
+static NTSTATUS
+SmProcessFileRenameList(VOID)
+{
+#ifndef NDEBUG
+  PrintString("SmProcessFileRenameList() called\n");
+#endif
+
+#ifndef NDEBUG
+  PrintString("SmProcessFileRenameList() done\n");
+#endif
+
+  return(STATUS_SUCCESS);
+}
+
+
+static NTSTATUS STDCALL
+SmPagingFilesQueryRoutine(PWSTR ValueName,
+			  ULONG ValueType,
+			  PVOID ValueData,
+			  ULONG ValueLength,
+			  PVOID Context,
+			  PVOID EntryContext)
 {
   UNICODE_STRING FileName;
   LARGE_INTEGER InitialSize;
   LARGE_INTEGER MaximumSize;
   NTSTATUS Status;
 
-  /* FIXME: Read file names from registry */
-  
-  RtlInitUnicodeString (&FileName,
-			L"\\SystemRoot\\pagefile.sys");
+#ifndef NDEBUG
+  PrintString("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
+  PrintString("ValueData '%S'\n", (PWSTR)ValueData);
+#endif
+
+  RtlInitUnicodeString(&FileName,
+		       (PWSTR)ValueData);
+
+  /*
+   * FIXME:
+   *  read initial and maximum size from the registry or use default values
+   *
+   * Format: "<path>[ <initial_size>[ <maximum_size>]]"
+   */
 
   InitialSize.QuadPart = 50 * 4096;
   MaximumSize.QuadPart = 80 * 4096;
@@ -77,95 +373,35 @@ SmCreatePagingFiles (VOID)
 			      &InitialSize,
 			      &MaximumSize,
 			      0);
-  if (!NT_SUCCESS(Status))
-    {
-      PrintString("SM: Failed to create paging file (Status was 0x%.8X)\n", Status);
-    }
+
+  return(STATUS_SUCCESS);
 }
 
 
-static VOID
-SmInitDosDevices(VOID)
+static NTSTATUS
+SmCreatePagingFiles(VOID)
 {
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING DeviceName;
-   UNICODE_STRING LinkName;
-   HANDLE LinkHandle;
-#if 0
-   HANDLE DeviceHandle;
-   IO_STATUS_BLOCK StatusBlock;
-#endif
-   NTSTATUS Status;
-   WCHAR LinkBuffer[80];
-   
-   PLINKDATA LinkPtr;
-   LINKDATA LinkData[] =
-	{{L"\\Device\\NamedPipe", L"PIPE"},
-	 {L"\\Device\\Null", L"NUL"},
-	 {L"\\Device\\Mup", L"UNC"},
-	 {L"\\Device\\MailSlot", L"MAILSLOT"},
-	 {L"\\DosDevices\\COM1", L"AUX"},
-	 {L"\\DosDevices\\LPT1", L"PRN"},
-	 {NULL, NULL}};
-   
-   /* FIXME: Read the list of symbolic links from the registry!! */
-   
-   LinkPtr = &LinkData[0];
-   while (LinkPtr->DeviceName != NULL)
-     {
-	swprintf(LinkBuffer, L"\\??\\%s",
-		 LinkPtr->LinkName);
-	RtlInitUnicodeString(&LinkName,
-			     LinkBuffer);
-	RtlInitUnicodeString(&DeviceName,
-			     LinkPtr->DeviceName);
-   
-#if 0
-	/* check if target device exists (can be opened) */
-	InitializeObjectAttributes(&ObjectAttributes,
-				   &DeviceName,
-				   0,
-				   NULL,
-				   NULL);
-   
-	Status = NtOpenFile(&DeviceHandle,
-			    0x10001,
-			    &ObjectAttributes,
-			    &StatusBlock,
-			    1,
-			    FILE_SYNCHRONOUS_IO_NONALERT);
-	if (NT_SUCCESS(Status))
-	  {
-	     NtClose(DeviceHandle);
-#endif
-	     /* create symbolic link */
-	     InitializeObjectAttributes(&ObjectAttributes,
-					&LinkName,
-					OBJ_PERMANENT,
-					NULL,
-					NULL);
-   
-	     Status = NtCreateSymbolicLinkObject(&LinkHandle,
-						 SYMBOLIC_LINK_ALL_ACCESS,
-						 &ObjectAttributes,
-						 &DeviceName);
-	     if (!NT_SUCCESS(Status))
-	       {
-		  PrintString("SM: NtCreateSymbolicLink( %wZ --> %wZ ) failed!\n",
-			      &LinkName,
-			      &DeviceName);
-	       }
-	     NtClose(LinkHandle);
-#if 0
-	  }
-#endif
-	LinkPtr++;
-     }
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  NTSTATUS Status;
+
+  RtlZeroMemory(&QueryTable,
+		sizeof(QueryTable));
+
+  QueryTable[0].Name = L"PagingFiles";
+  QueryTable[0].QueryRoutine = SmPagingFilesQueryRoutine;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+				  L"\\Session Manager\\Memory Management",
+				  QueryTable,
+				  NULL,
+				  NULL);
+
+  return(Status);
 }
 
 
-static VOID
-SmSetEnvironmentVariables (VOID)
+static NTSTATUS
+SmSetEnvironmentVariables(VOID)
 {
 	UNICODE_STRING EnvVariable;
 	UNICODE_STRING EnvValue;
@@ -256,10 +492,13 @@ SmSetEnvironmentVariables (VOID)
 	RtlSetEnvironmentVariable (&SmSystemEnvironment,
 	                           &EnvVariable,
 	                           &EnvExpandedValue);
+
+  return(STATUS_SUCCESS);
 }
 
 
-BOOL InitSessionManager (HANDLE	Children[])
+NTSTATUS
+InitSessionManager(HANDLE Children[])
 {
   NTSTATUS Status;
   UNICODE_STRING UnicodeString;
@@ -268,34 +507,14 @@ BOOL InitSessionManager (HANDLE	Children[])
   PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
   RTL_PROCESS_INFO ProcessInfo;
   HANDLE CsrssInitEvent;
-  HANDLE WindowsDirectory;
   WCHAR UnicodeBuffer[MAX_PATH];
 
-  /*
-   * FIXME: The '\Windows' directory is created by csrss.exe but
-   *        win32k.sys needs it at intialization and it is loaded
-   *        before csrss.exe
-   */
-
-  /*
-   * Create the '\Windows' directory
-   */
-  RtlInitUnicodeString(&UnicodeString,
-		       L"\\Windows");
-
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &UnicodeString,
-			     0,
-			     NULL,
-			     NULL);
-
-  Status = ZwCreateDirectoryObject(&WindowsDirectory,
-				   0,
-				   &ObjectAttributes);
+  /* Create object directories */
+  Status = SmCreateObjectDirectories();
   if (!NT_SUCCESS(Status))
     {
-      DisplayString(L"SM: Could not create \\Windows directory!\n");
-      return FALSE;
+      PrintString("SM: Failed to create object directories! (Status %lx)\n", Status);
+      return(Status);
     }
 
   /* Create the "\SmApiPort" object (LPC) */
@@ -314,7 +533,7 @@ BOOL InitSessionManager (HANDLE	Children[])
 			0);
   if (!NT_SUCCESS(Status))
     {
-      return FALSE;
+      return(Status);
     }
 
 #ifndef NDEBUG
@@ -333,48 +552,73 @@ BOOL InitSessionManager (HANDLE	Children[])
 		      NULL,
 		      NULL);
 
-   RtlCreateUserThread (NtCurrentProcess (),
-			NULL,
-			FALSE,
-			0,
-			NULL,
-			NULL,
-			(PTHREAD_START_ROUTINE)SmApiThread,
-			(PVOID)SmApiPort,
-			NULL,
-			NULL);
+  RtlCreateUserThread(NtCurrentProcess(),
+		      NULL,
+		      FALSE,
+		      0,
+		      NULL,
+		      NULL,
+		      (PTHREAD_START_ROUTINE)SmApiThread,
+		      (PVOID)SmApiPort,
+		      NULL,
+		      NULL);
 
   /* Create the system environment */
   Status = RtlCreateEnvironment(FALSE,
 				&SmSystemEnvironment);
   if (!NT_SUCCESS(Status))
     {
-      return FALSE;
+      return(Status);
     }
 #ifndef NDEBUG
-  DisplayString (L"SM: System Environment created\n");
+  DisplayString(L"SM: System Environment created\n");
 #endif
 
   /* Define symbolic links to kernel devices (MS-DOS names) */
-  SmInitDosDevices();
+  Status = SmInitDosDevices();
+  if (!NT_SUCCESS(Status))
+    {
+      PrintString("SM: Failed to create dos device links! (Status %lx)\n", Status);
+      return(Status);
+    }
 
-  /* FIXME: Run all programs in the boot execution list */
-//  SmRunBootApps();
+  /* Run all programs in the boot execution list */
+  Status = SmRunBootApps();
+  if (!NT_SUCCESS(Status))
+    {
+      PrintString("SM: Failed to run boot applications! (Status %lx)\n", Status);
+      return(Status);
+    }
 
-  /* FIXME: Process the file rename list */
-//  SmProcessFileRenameList();
+  /* Process the file rename list */
+  Status = SmProcessFileRenameList();
+  if (!NT_SUCCESS(Status))
+    {
+      PrintString("SM: Failed to process the file rename list (Status %lx)\n", Status);
+      return(Status);
+    }
 
   /* FIXME: Load the well known DLLs */
 //  SmPreloadDlls();
 
   /* Create paging files */
-  SmCreatePagingFiles();
+  Status = SmCreatePagingFiles();
+  if (!NT_SUCCESS(Status))
+    {
+      PrintString("SM: Failed to create paging files (Status %lx)\n", Status);
+      return(Status);
+    }
 
   /* Load remaining registry hives */
   NtInitializeRegistry(FALSE);
 
   /* Set environment variables from registry */
-  SmSetEnvironmentVariables();
+  Status = SmSetEnvironmentVariables();
+  if (!NT_SUCCESS(Status))
+    {
+      PrintString("SM: Failed to initialize the system environment (Status %lx)\n", Status);
+      return(Status);
+    }
 
   /* Load the kernel mode driver win32k.sys */
   RtlInitUnicodeString(&CmdLineW,
@@ -383,7 +627,7 @@ BOOL InitSessionManager (HANDLE	Children[])
 #if 0
   if (!NT_SUCCESS(Status))
     {
-      return FALSE;
+      return(Status);
     }
 #endif
 
@@ -443,7 +687,7 @@ BOOL InitSessionManager (HANDLE	Children[])
   if (!NT_SUCCESS(Status))
     {
       DisplayString(L"SM: Loading csrss.exe failed!\n");
-      return FALSE;
+      return(Status);
     }
 
   NtWaitForSingleObject(CsrssInitEvent,
@@ -492,7 +736,7 @@ BOOL InitSessionManager (HANDLE	Children[])
       DisplayString(L"SM: Loading winlogon.exe failed!\n");
       NtTerminateProcess(Children[CHILD_CSRSS],
 			 0);
-      return FALSE;
+      return(Status);
     }
   Children[CHILD_WINLOGON] = ProcessInfo.ProcessHandle;
 
@@ -513,7 +757,7 @@ BOOL InitSessionManager (HANDLE	Children[])
 
   if (!NT_SUCCESS(Status))
     {
-      return FALSE;
+      return(Status);
     }
 #ifndef NDEBUG
   DisplayString(L"SM: DbgSsApiPort created...\n");
@@ -535,13 +779,13 @@ BOOL InitSessionManager (HANDLE	Children[])
 			0);
   if (!NT_SUCCESS(Status))
     {
-      return FALSE;
+      return(Status);
     }
 #ifndef NDEBUG
   DisplayString (L"SM: DbgUiApiPort created...\n");
 #endif
 
-  return TRUE;
+  return(STATUS_SUCCESS);
 }
 
 /* EOF */

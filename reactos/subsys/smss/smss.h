@@ -15,7 +15,8 @@ extern HANDLE SmApiPort;
 /* FUNCTIONS ***********/
 
 /* init.c */
-BOOL InitSessionManager (HANDLE Children[]);
+NTSTATUS
+InitSessionManager(HANDLE Children[]);
 
 
 /* smss.c */
@@ -24,7 +25,8 @@ void PrintString (char* fmt,...);
 
 
 /* smapi.c */
-VOID STDCALL SmApiThread(HANDLE Port);
+VOID STDCALL
+SmApiThread(HANDLE Port);
 
 
 

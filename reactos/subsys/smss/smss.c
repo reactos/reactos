@@ -1,4 +1,4 @@
-/* $Id: smss.c,v 1.9 2002/02/08 02:57:10 chorns Exp $
+/* $Id: smss.c,v 1.10 2002/05/22 15:55:51 ekohl Exp $
  *
  * smss.c - Session Manager
  * 
@@ -65,47 +65,45 @@ PrintString (char* fmt,...)
 
 /* Native image's entry point */
 
-void NtProcessStartup (PPEB Peb)
+VOID
+NtProcessStartup(PPEB Peb)
 {
-   HANDLE Children[2]; /* csrss, winlogon */
+  HANDLE Children[2]; /* csrss, winlogon */
+  NTSTATUS Status;
 
-   if (TRUE == InitSessionManager(Children))
-     {
-	NTSTATUS	wws;
+  Status = InitSessionManager(Children);
+  if (!NT_SUCCESS(Status))
+    {
+      PrintString("SM: Initialization failed!\n");
+      goto ByeBye;
+    }
 
 #if 0
-	wws = NtWaitForMultipleObjects (
-					((LONG) sizeof Children / sizeof (HANDLE)),
-					Children,
-					WaitAny,
-					TRUE,	/* alertable */
-					NULL    /* NULL for infinite */
-					);
+  Status = NtWaitForMultipleObjects(((LONG) sizeof(Children) / sizeof(HANDLE)),
+				    Children,
+				    WaitAny,
+				    TRUE,	/* alertable */
+				    NULL);	/* NULL for infinite */
 #endif
-	wws = NtWaitForSingleObject (
-				     Children[CHILD_WINLOGON],
-				     TRUE,	/* alertable */
-				     NULL
-				     );
 
-//	if (!NT_SUCCESS(wws))
-	if (wws > 1)
-	  {
-	     DisplayString( L"SM: NtWaitForMultipleObjects failed!\n" );
-	  }
-	else
-	  {
-	     DisplayString( L"SM: Process terminated!\n" );
-	  }
-     }
-   else
-     {
-	DisplayString( L"SM: Initialization failed!\n" );
-     }
+  Status = NtWaitForSingleObject(Children[CHILD_WINLOGON],
+				 TRUE,		/* alertable */
+				 NULL);
 
-   /* Raise a hard error (crash the system/BSOD) */
-   NtRaiseHardError (STATUS_SYSTEM_PROCESS_TERMINATED,
-		     0,0,0,0,0);
+//  if (!NT_SUCCESS(Status))
+  if (Status > 1)
+    {
+      PrintString("SM: NtWaitForMultipleObjects failed!\n");
+    }
+  else
+    {
+      PrintString("SM: Process terminated!\n");
+    }
+
+ByeBye:
+  /* Raise a hard error (crash the system/BSOD) */
+  NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
+		   0,0,0,0,0);
 
 //   NtTerminateProcess(NtCurrentProcess(), 0);
 }

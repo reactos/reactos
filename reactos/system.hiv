@@ -41,6 +41,8 @@ REGEDIT4
 "List"="SCSI Port;SCSI Miniport;Primary Disk;SCSI Class Helper;SCSI Class;Boot File System;Base;Pointer Port;Keyboard Port;Pointer Class;Keyboard Class;Video;File System"
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Control\Session Manager]
+"BootExecute"=multi:"autocheck autochk *"
+"ObjectDirectories"=multi:"\Windows", "\RPC Control"
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices]
 "AUX"="\DosDevices\COM1"
@@ -49,6 +51,11 @@ REGEDIT4
 "PIPE"="\Device\NamedPipe"
 "PRN"="\DosDevices\LPT1"
 "UNC"="\Device\Mup"
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Control\Session Manager\Environment]
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management]
+"PagingFiles"=multi:"C:\reactos\pagefile.sys"
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services]
 
