@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.18 2003/08/09 08:42:35 mf Exp $
+/* $Id: desktop.c,v 1.19 2003/08/09 08:57:13 mf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -309,6 +309,7 @@ SwitchDesktop(
 
  /* globally stored handle to the shell window */
 HWND hwndShellWindow = 0;
+DWORD pidShellWindow = 0;
 
 
 /*
@@ -327,10 +328,16 @@ GetShellWindow(VOID)
 BOOL STDCALL
 SetShellWindow(HWND hwnd)
 {
-	if (hwndShellWindow)
+	 /* test if we are permitted to change the shell window */
+	if (pidShellWindow && GetCurrentProcessId()!=pidShellWindow)
 		return FALSE;
 
 	hwndShellWindow = hwnd;
+
+	if (hwnd)
+		pidShellWindow = GetCurrentProcessId();	/* request shell window for the calling process */
+	else
+		pidShellWindow = 0;	/* shell window is now free for other processes. */
 
 	return TRUE;
 }
