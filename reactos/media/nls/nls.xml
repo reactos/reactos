@@ -3,34 +3,6 @@
 <cdfile base="reactos">l_intl.nls</cdfile>
 
 <installfile base="system32">c_037.nls</installfile>
-<installfile base="system32">c_037.nls</installfile>
-<installfile base="system32">c_10000.nls</installfile>
-<installfile base="system32">c_10006.nls</installfile>
-<installfile base="system32">c_10007.nls</installfile>
-<installfile base="system32">c_10029.nls</installfile>
-<installfile base="system32">c_1006.nls</installfile>
-<installfile base="system32">c_10079.nls</installfile>
-<installfile base="system32">c_10081.nls</installfile>
-<installfile base="system32">c_1026.nls</installfile>
-<installfile base="system32">c_1250.nls</installfile>
-<installfile base="system32">c_1251.nls</installfile>
-<installfile base="system32" newname="ansi.nls">c_1252.nls</installfile>
-<installfile base="system32">c_1253.nls</installfile>
-<installfile base="system32">c_1254.nls</installfile>
-<installfile base="system32">c_1255.nls</installfile>
-<installfile base="system32">c_1256.nls</installfile>
-<installfile base="system32">c_1257.nls</installfile>
-<installfile base="system32">c_1258.nls</installfile>
-<installfile base="system32">c_20866.nls</installfile>
-<installfile base="system32">c_28591.nls</installfile>
-<installfile base="system32">c_28592.nls</installfile>
-<installfile base="system32">c_28593.nls</installfile>
-<installfile base="system32">c_28594.nls</installfile>
-<installfile base="system32">c_28595.nls</installfile>
-<installfile base="system32">c_28596.nls</installfile>
-<installfile base="system32">c_28597.nls</installfile>
-<installfile base="system32">c_28598.nls</installfile>
-<installfile base="system32">c_28599.nls</installfile>
 <installfile base="system32">c_424.nls</installfile>
 <installfile base="system32" newname="oem.nls">c_437.nls</installfile>
 <installfile base="system32">c_500.nls</installfile>
@@ -56,4 +28,31 @@
 <installfile base="system32">c_936.nls</installfile>
 <installfile base="system32">c_949.nls</installfile>
 <installfile base="system32">c_950.nls</installfile>
+<installfile base="system32">c_1006.nls</installfile>
+<installfile base="system32">c_1026.nls</installfile>
+<installfile base="system32">c_1250.nls</installfile>
+<installfile base="system32">c_1251.nls</installfile>
+<installfile base="system32" newname="ansi.nls">c_1252.nls</installfile>
+<installfile base="system32">c_1253.nls</installfile>
+<installfile base="system32">c_1254.nls</installfile>
+<installfile base="system32">c_1255.nls</installfile>
+<installfile base="system32">c_1256.nls</installfile>
+<installfile base="system32">c_1257.nls</installfile>
+<installfile base="system32">c_1258.nls</installfile>
+<installfile base="system32">c_10000.nls</installfile>
+<installfile base="system32">c_10006.nls</installfile>
+<installfile base="system32">c_10007.nls</installfile>
+<installfile base="system32">c_10029.nls</installfile>
+<installfile base="system32">c_10079.nls</installfile>
+<installfile base="system32">c_10081.nls</installfile>
+<installfile base="system32">c_20866.nls</installfile>
+<installfile base="system32">c_28591.nls</installfile>
+<installfile base="system32">c_28592.nls</installfile>
+<installfile base="system32">c_28593.nls</installfile>
+<installfile base="system32">c_28594.nls</installfile>
+<installfile base="system32">c_28595.nls</installfile>
+<installfile base="system32">c_28596.nls</installfile>
+<installfile base="system32">c_28597.nls</installfile>
+<installfile base="system32">c_28598.nls</installfile>
+<installfile base="system32">c_28599.nls</installfile>
 <installfile base="system32" newname="casemap.nls">l_intl.nls</installfile>

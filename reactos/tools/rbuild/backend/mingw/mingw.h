@@ -48,7 +48,11 @@ private:
 	std::string GetInstallDirectories ( const std::string& installDirectory );
 	void GetNonModuleInstallFiles ( std::vector<std::string>& out ) const;
 	void GetInstallFiles ( std::vector<std::string>& out ) const;
-	void OutputInstallfileCopyCommands ( const std::string& installDirectory );
+	void GetNonModuleInstallTargetFiles ( std::string installDirectory,
+	                                      std::vector<std::string>& out ) const;
+	void GetInstallTargetFiles ( std::string installDirectory,
+	                             std::vector<std::string>& out ) const;
+	void OutputInstallfileTargets ( const std::string& installDirectory );
 	void GenerateInstallTarget ();
 	FILE* fMakefile;
 	bool use_pch;

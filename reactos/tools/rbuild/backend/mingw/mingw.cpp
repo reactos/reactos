@@ -656,7 +656,9 @@ MingwBackend::GetInstallFiles (
 }
 
 void
-MingwBackend::OutputInstallfileCopyCommands ( const string& installDirectory )
+MingwBackend::GetNonModuleInstallTargetFiles (
+	string installDirectory,
+	vector<string>& out ) const
 {
 	for ( size_t i = 0; i < ProjectNode.installfiles.size (); i++ )
 	{
@@ -665,6 +667,37 @@ MingwBackend::OutputInstallfileCopyCommands ( const string& installDirectory )
 		string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
 			FixupTargetFilename ( targetFilenameNoFixup ),
 			true );
+		out.push_back ( targetFilename );
+	}
+}
+
+void
+MingwBackend::GetInstallTargetFiles (
+	string installDirectory,
+	vector<string>& out ) const
+{
+	GetNonModuleInstallTargetFiles ( installDirectory,
+	                                 out );
+}
+
+void
+MingwBackend::OutputInstallfileTargets ( const string& installDirectory )
+{
+	for ( size_t i = 0; i < ProjectNode.installfiles.size (); i++ )
+	{
+		const InstallFile& installfile = *ProjectNode.installfiles[i];
+		string targetFilenameNoFixup = installDirectory + SSEP + installfile.base + SSEP + installfile.newname;
+		string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
+			FixupTargetFilename ( targetFilenameNoFixup ),
+			true );
+		string targetDirectory = MingwModuleHandler::PassThruCacheDirectory (
+			FixupTargetFilename ( installDirectory + SSEP + installfile.base ),
+			true );
+		fprintf ( fMakefile,
+		          "%s: %s %s\n",
+		          targetFilename.c_str (),
+		          installfile.GetPath ().c_str (),
+		          targetDirectory.c_str () );
 		fprintf ( fMakefile,
 		          "\t$(ECHO_CP)\n" );
 		fprintf ( fMakefile,
@@ -679,19 +712,18 @@ MingwBackend::GenerateInstallTarget ()
 {
 	string installDirectoryNoFixup = "reactos";
 	string installDirectory = MingwModuleHandler::PassThruCacheDirectory (
-		FixupTargetFilename ( installDirectoryNoFixup ),
+		NormalizeFilename ( installDirectoryNoFixup ),
 		true );
-	string installDirectories = GetInstallDirectories ( installDirectoryNoFixup );
-	vector<string> vInstallFiles;
-	GetInstallFiles ( vInstallFiles );
-	string installFiles = v2s ( vInstallFiles, 5 );
+	vector<string> vInstallTargetFiles;
+	GetInstallTargetFiles ( installDirectoryNoFixup,
+	                        vInstallTargetFiles );
+	string installTargetFiles = v2s ( vInstallTargetFiles, 5 );
 
 	fprintf ( fMakefile,
-	          "install: all %s %s %s\n",
+	          "install: %s %s\n",
 	          installDirectory.c_str (),
-	          installDirectories.c_str (),
-	          installFiles.c_str () );
-	OutputInstallfileCopyCommands ( installDirectoryNoFixup );
+	          installTargetFiles.c_str () );
+	OutputInstallfileTargets ( installDirectoryNoFixup );
 	fprintf ( fMakefile,
 	          "\n" );
 }
