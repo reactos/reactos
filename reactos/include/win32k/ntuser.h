@@ -1086,9 +1086,7 @@ NtUserQueryUserCounters(
 
 DWORD
 STDCALL
-NtUserQueryWindow(
-  DWORD Unknown0,
-  DWORD Unknown1);
+NtUserQueryWindow(HWND hWnd, DWORD Index);
 
 DWORD
 STDCALL

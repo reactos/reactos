@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.60 2003/07/06 23:04:19 hyperion Exp $
+/* $Id: window.c,v 1.61 2003/07/07 06:09:45 jimtabor Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1419,13 +1419,45 @@ NtUserMoveWindow(
     return TRUE;
 }
 
-DWORD STDCALL
-NtUserQueryWindow(DWORD Unknown0,
-		  DWORD Unknown1)
-{
-  UNIMPLEMENTED
+/*
+	QueryWindow based on KJK::Hyperion and James Tabor.
 
-  return 0;
+	0 = QWUniqueProcessId
+	1 = QWUniqueThreadId
+	4 = QWIsHung            Implements IsHungAppWindow found
+                                by KJK::Hyperion.
+
+        9 = QWKillWindow        When I called this with hWnd ==
+                                DesktopWindow, it shutdown the system
+                                and rebooted.
+*/
+DWORD STDCALL
+NtUserQueryWindow(HWND hWnd, DWORD Index)
+{
+/*
+        W32kGetWndObj uses PsGetWin32Process() which came from
+        PsGetCurrentProcess() made from PsGetCurrentThread().
+        What would happen if hWnd was under a different EThread
+        all togeather?
+*/
+PWINDOW_OBJECT Window = W32kGetWindowObject(hWnd);
+
+        if(Window == NULL) return((DWORD)NULL);
+
+        W32kReleaseWindowObject(Window);
+
+        switch(Index)
+        {
+        case 0x00:
+                return((DWORD)PsGetCurrentProcessId());
+
+        case 0x01:
+                return((DWORD)PsGetCurrentThreadId());
+
+        default:
+                return((DWORD)NULL);
+        }
+
 }
 
 DWORD STDCALL
