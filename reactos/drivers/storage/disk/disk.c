@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.44 2004/07/05 21:42:05 hbirr Exp $
+/* $Id: disk.c,v 1.45 2004/07/13 02:43:06 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -870,12 +870,28 @@ DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
       return Status;
     }
 
+/* 
+   A previous partition table may exist for this Device Object.
+   We will need to delete this data and force a rebuild.
+ */
+  if(DiskDeviceExtension->StartingOffset.QuadPart)
+  {
+     DPRINT("Partition already installed!\n");
+     DiskData->PartitionType = 0;
+     DiskData->PartitionNumber = 0;
+     DiskData->PartitionOrdinal = 0;
+     DiskData->HiddenSectors = 0;
+     DiskData->BootIndicator = 0;
+     DiskData->DriveNotReady = FALSE;
+     DiskDeviceExtension->StartingOffset.QuadPart = 0;
+     DiskDeviceExtension->PartitionLength.QuadPart = 0;
+  }
+
   /* Read partition table */
-  Status = IoReadPartitionTable(DiskDeviceExtension->PhysicalDevice,
+  Status = IoReadPartitionTable(DiskDeviceObject,
 				DiskDeviceExtension->DiskGeometry->BytesPerSector,
 				TRUE,
 				&PartitionList);
-
 
   DPRINT("IoReadPartitionTable(): Status: %lx\n", Status);
 
@@ -925,14 +941,14 @@ DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
 	}
       else
         {
-      	  DiskData->PartitionType = 0;
-      	  DiskData->PartitionNumber = 1;
-      	  DiskData->PartitionOrdinal = 0;
-          DiskData->HiddenSectors = 0;
- 	  DiskData->BootIndicator = 0;
-  	  DiskData->DriveNotReady = FALSE;
-          DiskDeviceExtension->PartitionLength.QuadPart += DiskDeviceExtension->StartingOffset.QuadPart;
+	  DiskData->PartitionType = 0;
+	  DiskData->PartitionNumber = 1;
+	  DiskData->PartitionOrdinal = 0;
+	  DiskData->HiddenSectors = 0;
+	  DiskData->BootIndicator = 0;
+	  DiskData->DriveNotReady = FALSE;
 	  DiskDeviceExtension->StartingOffset.QuadPart = 0;
+	  DiskDeviceExtension->PartitionLength.QuadPart += DiskDeviceExtension->StartingOffset.QuadPart;
 	}    
     }
 
