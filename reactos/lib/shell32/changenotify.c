@@ -388,7 +388,8 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
                wEventId ),wEventId );
 
         ptr->wSignalledEvent |= wEventId;
-        SendMessageA(ptr->hwnd, ptr->uMsg, (WPARAM)ptr, GetCurrentProcessId());
+
+        SendMessageA(ptr->hwnd, ptr->uMsg, (WPARAM)Pidls, wEventId);
 
         TRACE("notifying %s, event %s(%lx) after\n", NodeName( ptr ), DumpEvent(
                 wEventId ),wEventId );

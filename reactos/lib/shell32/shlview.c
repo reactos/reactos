@@ -149,10 +149,10 @@ typedef struct
 
 MYTOOLINFO Tools[] =
 {
-{ FCIDM_SHVIEW_BIGICON,    0, 0, IDS_VIEW_LARGE,   TBSTATE_ENABLED, TBSTYLE_BUTTON },
-{ FCIDM_SHVIEW_SMALLICON,  0, 0, IDS_VIEW_SMALL,   TBSTATE_ENABLED, TBSTYLE_BUTTON },
-{ FCIDM_SHVIEW_LISTVIEW,   0, 0, IDS_VIEW_LIST,    TBSTATE_ENABLED, TBSTYLE_BUTTON },
-{ FCIDM_SHVIEW_REPORTVIEW, 0, 0, IDS_VIEW_DETAILS, TBSTATE_ENABLED, TBSTYLE_BUTTON },
+{ FCIDM_SHVIEW_BIGICON,    0, 0, IDS_VIEW_LARGE,   TBSTATE_ENABLED, BTNS_BUTTON },
+{ FCIDM_SHVIEW_SMALLICON,  0, 0, IDS_VIEW_SMALL,   TBSTATE_ENABLED, BTNS_BUTTON },
+{ FCIDM_SHVIEW_LISTVIEW,   0, 0, IDS_VIEW_LIST,    TBSTATE_ENABLED, BTNS_BUTTON },
+{ FCIDM_SHVIEW_REPORTVIEW, 0, 0, IDS_VIEW_DETAILS, TBSTATE_ENABLED, BTNS_BUTTON },
 { -1, 0, 0, 0, 0, 0}
 };
 
@@ -670,7 +670,7 @@ static LRESULT ShellView_OnCreate(IShellViewImpl * This)
 	if (ppf2)
 	{
 	  IPersistFolder2_GetCurFolder(ppf2, (LPITEMIDLIST*)&ntreg.pidl);
-	  ntreg.fRecursive = FALSE;
+	  ntreg.fRecursive = TRUE;
 	  This->hNotify = SHChangeNotifyRegister(This->hWnd, SHCNF_IDLIST, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
 	  SHFree((LPITEMIDLIST)ntreg.pidl);
 	  IPersistFolder2_Release(ppf2);
@@ -710,7 +710,7 @@ static HMENU ShellView_BuildFileMenu(IShellViewImpl * This)
 	    mii.cbSize = sizeof(mii);
 	    mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
 
-	    if(TBSTYLE_SEP != Tools[i].bStyle) /* no separator*/
+	    if(BTNS_SEP != Tools[i].bStyle) /* no separator*/
 	    {
 	      mii.fType = MFT_STRING;
 	      mii.fState = MFS_ENABLED;
@@ -1454,6 +1454,7 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 		  item_index = ListView_GetNextItem(This->hWndList,
 			item_index, LVNI_SELECTED);
 		  item.iItem = item_index;
+		  item.mask |= LVIF_PARAM;
 		  ListView_GetItemA(This->hWndList, &item);
 
 		  /* get item pidl */
