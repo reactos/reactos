@@ -86,7 +86,15 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
 
       if (FileObject->PrivateCacheMap == NULL)
 	{
+#ifdef ROS_USE_CC_AND_FS
 	  CcRosInitializeFileCache(FileObject, PAGE_SIZE);
+#else
+          CcInitializeCacheMap(FileObject,
+                               (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+		               FALSE,
+		               NULL,
+		               NULL);
+#endif
 	}
 
       FileOffset.QuadPart = (LONGLONG)ReadOffset;
