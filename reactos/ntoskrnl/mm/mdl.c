@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.59 2004/03/06 22:21:20 dwelch Exp $
+/* $Id: mdl.c,v 1.60 2004/03/13 19:14:16 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -152,42 +152,78 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
    KIRQL oldIrql;
    ULONG RegionSize;
    ULONG StartingOffset;
-   
+   PEPROCESS CurrentProcess, OldProcess;
+
    DPRINT("MmMapLockedPages(Mdl %x, AccessMode %x)\n", Mdl, AccessMode);
 
-   if (Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL)
+   if ((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) && AccessMode != UserMode)
      {
        return(Mdl->MappedSystemVa);
-     }
-
-   if (AccessMode == UserMode)
-     {
-       DPRINT1("MDL mapping to user-mode not yet handled.\n");
-       KEBUGCHECK(0);
      }
 
    /* Calculate the number of pages required. */
    RegionSize = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGE_SIZE;
 
-   /* Allocate that number of pages from the mdl mapping region. */
-   KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
+   if (AccessMode == UserMode)
+     {
+       MEMORY_AREA *Result;
+       LARGE_INTEGER BoundaryAddressMultiple;
+       NTSTATUS Status;
 
-   StartingOffset = RtlFindClearBitsAndSet(&MiMdlMappingRegionAllocMap, RegionSize, MiMdlMappingRegionHint);
-  
-   if (StartingOffset == 0xffffffff)
-   {
-      DPRINT1("Out of MDL mapping space\n");
-      KEBUGCHECK(0);
-   }
+       BoundaryAddressMultiple.QuadPart = 0;
+       Base = NULL;
 
-   Base = (char*)MiMdlMappingRegionBase + StartingOffset * PAGE_SIZE;
+       CurrentProcess = OldProcess = PsGetCurrentProcess();
+       if (Mdl->Process != CurrentProcess)
+	 {
+           KeAttachProcess(Mdl->Process);
+           CurrentProcess = Mdl->Process;
+	 }
 
-   if (MiMdlMappingRegionHint == StartingOffset)
-   {
-       MiMdlMappingRegionHint +=RegionSize; 
-   }
+       MmLockAddressSpace(&CurrentProcess->AddressSpace);
+       Status = MmCreateMemoryArea(CurrentProcess,
+     			      &CurrentProcess->AddressSpace,
+     			      MEMORY_AREA_MDL_MAPPING,
+     			      &Base,
+     			      RegionSize * PAGE_SIZE,
+     			      0, /* PAGE_READWRITE? */
+     			      &Result,
+     			      FALSE,
+     			      FALSE,
+     			      BoundaryAddressMultiple);
+       MmUnlockAddressSpace(&CurrentProcess->AddressSpace);
+       if (!NT_SUCCESS(Status))
+         {
+           KEBUGCHECK(0);
+           /* FIXME: handle this? */
+         }
+     }
+   else
+     {
+       CurrentProcess = OldProcess = NULL;
 
-   KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
+       /* Allocate that number of pages from the mdl mapping region. */
+       KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
+
+       StartingOffset = RtlFindClearBitsAndSet(&MiMdlMappingRegionAllocMap, RegionSize, MiMdlMappingRegionHint);
+
+       if (StartingOffset == 0xffffffff)
+         {
+           DPRINT1("Out of MDL mapping space\n");
+           KEBUGCHECK(0);
+         }
+
+       Base = (char*)MiMdlMappingRegionBase + StartingOffset * PAGE_SIZE;
+
+       if (MiMdlMappingRegionHint == StartingOffset)
+         {
+            MiMdlMappingRegionHint +=RegionSize;
+         }
+
+       KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
+     }
+
+
 
    /* Set the virtual mappings for the MDL pages. */
    MdlPages = (PULONG)(Mdl + 1);
@@ -198,7 +234,7 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 	PHYSICAL_ADDRESS dummyJunkNeeded;
 	dummyJunkNeeded.QuadPart = MdlPages[i];
 #endif
-       Status = MmCreateVirtualMapping(NULL,
+       Status = MmCreateVirtualMapping(CurrentProcess,
 				       (PVOID)((ULONG)Base+(i*PAGE_SIZE)),
 				       PAGE_READWRITE,
 #if defined(__GNUC__)
@@ -214,6 +250,11 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 	 }
      }
 
+   if (AccessMode == UserMode && CurrentProcess != OldProcess)
+     {
+       KeDetachProcess();
+     }
+
    /* Mark the MDL has having being mapped. */
    Mdl->MdlFlags = Mdl->MdlFlags | MDL_MAPPED_TO_SYSTEM_VA;
    Mdl->MappedSystemVa = (char*)Base + Mdl->ByteOffset;
@@ -223,7 +264,7 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 /*
  * @implemented
  */
-VOID STDCALL 
+VOID STDCALL
 MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 /*
  * FUNCTION: Releases a mapping set up by a preceding call to MmMapLockedPages
@@ -236,6 +277,7 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
   ULONG i;
   ULONG RegionSize;
   ULONG Base;
+  PEPROCESS CurrentProcess, OldProcess;
 
   DPRINT("MmUnmapLockedPages(BaseAddress %x, Mdl %x)\n", BaseAddress, Mdl);
 
@@ -243,9 +285,24 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
    * In this case, the MDL has the same system address as the base address
    * so there is no need to free it
    */
-  if (Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL)
+  if ((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) &&
+      ((ULONG_PTR)BaseAddress >= KERNEL_BASE))
     {
       return;
+    }
+
+  if ((ULONG_PTR)BaseAddress >= KERNEL_BASE)
+    {
+      CurrentProcess = OldProcess = NULL;
+    }
+  else
+    {
+      CurrentProcess = OldProcess = PsGetCurrentProcess();
+      if (Mdl->Process != CurrentProcess)
+	    {
+          KeAttachProcess(Mdl->Process);
+          CurrentProcess = Mdl->Process;
+        }
     }
 
   /* Calculate the number of pages we mapped. */
@@ -263,23 +320,44 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
   /* Unmap all the pages. */
   for (i = 0; i < RegionSize; i++)
     {
-      MmDeleteVirtualMapping(NULL, 
+      MmDeleteVirtualMapping(NULL,
 			     (char*)BaseAddress + (i * PAGE_SIZE),
 			     FALSE,
 			     NULL,
 			     NULL);
     }
 
-  KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
-  /* Deallocate all the pages used. */
-  Base = (ULONG)((char*)BaseAddress - (char*)MiMdlMappingRegionBase) / PAGE_SIZE;
-  
-  RtlClearBits(&MiMdlMappingRegionAllocMap, Base, RegionSize);
+  if ((DWORD)BaseAddress >= KERNEL_BASE)
+    {
+      KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
+      /* Deallocate all the pages used. */
+      Base = (ULONG)((char*)BaseAddress - (char*)MiMdlMappingRegionBase) / PAGE_SIZE;
 
-  MiMdlMappingRegionHint = min (MiMdlMappingRegionHint, Base);
+      RtlClearBits(&MiMdlMappingRegionAllocMap, Base, RegionSize);
 
-  KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
-  
+      MiMdlMappingRegionHint = min (MiMdlMappingRegionHint, Base);
+
+      KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
+    }
+  else
+    {
+      MEMORY_AREA *Marea;
+
+      Marea = MmOpenMemoryAreaByAddress( &CurrentProcess->AddressSpace, BaseAddress );
+      if (Marea == NULL)
+        {
+          DPRINT1( "Couldn't open memory area when unmapping user-space pages!\n" );
+          KEBUGCHECK(0);
+        }
+
+      MmFreeMemoryArea( &CurrentProcess->AddressSpace, Marea->BaseAddress, 0, NULL, NULL );
+
+      if (CurrentProcess != OldProcess)
+        {
+          KeDetachProcess();
+        }
+    }
+
   /* Reset the MDL state. */
   Mdl->MdlFlags = Mdl->MdlFlags & ~MDL_MAPPED_TO_SYSTEM_VA;
   Mdl->MappedSystemVa = NULL;

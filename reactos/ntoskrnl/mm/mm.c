@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.68 2004/02/15 19:03:29 hbirr Exp $
+/* $Id: mm.c,v 1.69 2004/03/13 19:14:15 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -35,6 +35,7 @@
 #include <internal/ntoskrnl.h>
 #include <internal/io.h>
 #include <internal/ps.h>
+#include <reactos/bugcodes.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -78,6 +79,11 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
 				 NULL,
 				 NULL);
        break;
+
+     case MEMORY_AREA_MDL_MAPPING:
+       KEBUGCHECK(PROCESS_HAS_LOCKED_PAGES);
+       break;
+
      default:
        KEBUGCHECK(0);
      }
