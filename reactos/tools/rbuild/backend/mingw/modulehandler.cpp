@@ -725,8 +725,9 @@ MingwModuleHandler::GenerateGccCommand ( const Module& module,
 	string objectFilename = PassThruCacheDirectory (
 		GetObjectFilename ( module, sourceFilename ) );
 	fprintf ( fMakefile,
-	          "%s: %s\n",
+	          "%s: %s %s\n",
 	          objectFilename.c_str (),
+	          GetDirectory ( objectFilename ).c_str (),
 	          deps.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_CC)\n" );
 	fprintf ( fMakefile,
@@ -748,7 +749,7 @@ MingwModuleHandler::GenerateGccAssemblerCommand ( const Module& module,
 	fprintf ( fMakefile,
 	          "%s: %s %s\n",
 	          objectFilename.c_str (),
-	          objectFilename.c_str (),
+	          GetDirectory ( objectFilename ).c_str (),
 	          sourceFilename.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_GAS)\n" );
 	fprintf ( fMakefile,
@@ -769,7 +770,7 @@ MingwModuleHandler::GenerateNasmCommand ( const Module& module,
 	fprintf ( fMakefile,
 	          "%s: %s %s\n",
 	          objectFilename.c_str (),
-	          objectFilename.c_str (),
+	          GetDirectory ( objectFilename ).c_str (),
 	          sourceFilename.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_NASM)\n" );
 	fprintf ( fMakefile,
@@ -794,7 +795,7 @@ MingwModuleHandler::GenerateWindresCommand ( const Module& module,
 	fprintf ( fMakefile,
 	          "%s: %s %s $(WRC_TARGET)\n",
 	          objectFilename.c_str (),
-	          objectFilename.c_str (),
+	          GetDirectory ( objectFilename ).c_str (),
 	          sourceFilename.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
 	fprintf ( fMakefile,
