@@ -40,7 +40,7 @@ LOADERS = dos
 DEVICE_DRIVERS = vidport vga blue ide null floppy
 
 #INPUT_DRIVERS = keyboard
-INPUT_DRIVERS = keyboard
+INPUT_DRIVERS = keyboard mouclass psaux
 
 #FS_DRIVERS = vfat minix ms np ext2 template
 FS_DRIVERS = vfat ms np
