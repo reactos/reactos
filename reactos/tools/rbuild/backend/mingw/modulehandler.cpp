@@ -1307,7 +1307,9 @@ string
 MingwModuleHandler::GetDefaultDependencies ( const Module& module ) const
 {
 	/* Avoid circular dependency */
-	if ( module.type == BuildTool || module.name == "zlib" )
+	if ( module.type == BuildTool
+		|| module.name == "zlib"
+		|| module.name == "hostzlib" )
 		return "$(ROS_INTERMEDIATE)." SSEP "tools $(ROS_INTERMEDIATE)." SSEP "lib" SSEP "zlib";
 	else
 		return "init";

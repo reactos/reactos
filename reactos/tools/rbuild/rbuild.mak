@@ -84,6 +84,9 @@ RBUILD_HOST_CXXFLAGS = -g -I$(RBUILD_BASE) -Werror -Wall
 
 RBUILD_HOST_LFLAGS = -g
 
+.PHONY: rbuild
+rbuild: $(RBUILD_TARGET)
+
 $(RBUILD_TARGET): $(RBUILD_OBJECTS)
 	$(ECHO_LD)
 	${host_gpp} $(RBUILD_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $(RBUILD_TARGET)
@@ -103,6 +106,8 @@ $(RBUILD_TEST_TARGET): $(RBUILD_TEST_OBJECTS)
 $(RBUILD_TEST_SPECIAL_OBJECTS): %.o: %.cpp
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+
 
 .PHONY: rbuild_test
 

@@ -3,15 +3,10 @@
 all: makefile.auto
 
 ifeq ($(HOST),)
-OSDETECT=$(word 1,$(shell gcc -dumpmachine))
- 
-all: detect_os
-
-detect_os:
-ifeq ($(OSDETECT),mingw32)
-	HOST=mingw32-windows
+ifeq ($(word 1,$(shell gcc -dumpmachine)),mingw32)
+HOST=mingw32-windows
 else
-	HOST=mingw32-linux
+HOST=mingw32-linux
 endif
 endif
 
