@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.83 2001/06/16 14:08:33 ekohl Exp $
+/* $Id: loader.c,v 1.84 2001/07/30 03:05:30 rex Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -41,6 +41,7 @@
 
 /* MACROS ********************************************************************/
 
+#define  KERNEL_MODULE_NAME  L"ntoskrnl.exe"
 #define  MODULE_ROOT_NAME  L"\\Modules\\"
 #define  FILESYSTEM_ROOT_NAME  L"\\FileSystem\\"
 
@@ -131,7 +132,7 @@ LdrInit1(VOID)
   NtoskrnlTextSection.Base = KERNEL_BASE;
   NtoskrnlTextSection.Length = SectionList[0].Misc.VirtualSize +
     SectionList[0].VirtualAddress;
-  NtoskrnlTextSection.Name = L"ntoskrnl.exe";
+  NtoskrnlTextSection.Name = KERNEL_MODULE_NAME;
   NtoskrnlTextSection.SymbolsBase = NULL;
   NtoskrnlTextSection.SymbolsLength = 0;
   InsertTailList(&ModuleTextListHead, &NtoskrnlTextSection.ListEntry);
@@ -195,7 +196,7 @@ VOID LdrInitModuleManagement(VOID)
 
   /*  Add module entry for NTOSKRNL  */
   wcscpy(NameBuffer, MODULE_ROOT_NAME);
-  wcscat(NameBuffer, L"ntoskrnl.exe");
+  wcscat(NameBuffer, KERNEL_MODULE_NAME);
   RtlInitUnicodeString (&ModuleName, NameBuffer);
   DPRINT("Kernel's Module name is: %wZ\n", &ModuleName);
 
@@ -223,7 +224,7 @@ VOID LdrInitModuleManagement(VOID)
    InsertTailList(&ModuleListHead,
 		  &ModuleObject->ListEntry);
    RtlCreateUnicodeString(&ModuleObject->FullName,
-			  L"ntoskrnl.exe");
+			  KERNEL_MODULE_NAME);
    LdrpBuildModuleBaseName(&ModuleObject->BaseName,
 			   &ModuleObject->FullName);
 
@@ -788,7 +789,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
   /* Load symbols for ntoskrnl.exe and hal.dll because \SystemRoot
      is created after their module entries */
 
-  RtlInitUnicodeString(&ModuleName, L"ntoskrnl.exe");
+  RtlInitUnicodeString(&ModuleName, KERNEL_MODULE_NAME);
 
   Status = LdrpFindModuleObject(&ModuleName, &ModuleObject);
   if (NT_SUCCESS(Status)) {
@@ -1570,13 +1571,22 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
           pName = (PCHAR) DriverBase + 
             ImportModuleDirectory->dwRVAModuleName;
           wcscpy(NameBuffer, MODULE_ROOT_NAME);
-          for (Idx = 0; NameBuffer[Idx] != 0; Idx++)
-            ;
-          for (Idx2 = 0; pName[Idx2] != '\0'; Idx2++)
+          /*FIXME: (RJJ) hack: if HAL is needed for import, substitute the kernel  */
+          /*  this is necessary until we break the hal out of the kernel  */
+          if (_stricmp (pName, "HAL.dll") == 0)
             {
-              NameBuffer[Idx + Idx2] = (WCHAR) pName[Idx2];
+              wcscat (NameBuffer, KERNEL_MODULE_NAME);
             }
-          NameBuffer[Idx + Idx2] = 0;
+          else
+            {
+              for (Idx = 0; NameBuffer[Idx] != 0; Idx++)
+                ;
+              for (Idx2 = 0; pName[Idx2] != '\0'; Idx2++)
+                {
+                  NameBuffer[Idx + Idx2] = (WCHAR) pName[Idx2];
+                }
+              NameBuffer[Idx + Idx2] = 0;
+            }
           RtlInitUnicodeString (&ModuleName, NameBuffer);
           DPRINT("Import module: %wZ\n", &ModuleName);
 

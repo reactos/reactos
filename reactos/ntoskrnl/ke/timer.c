@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.45 2001/04/17 23:39:25 dwelch Exp $
+/* $Id: timer.c,v 1.46 2001/07/30 03:05:29 rex Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -57,7 +57,7 @@ static unsigned long long system_time = 0;
 /*
  * Number of timer interrupts since initialisation
  */
-volatile ULONGLONG KiTimerTicks;
+volatile ULONGLONG KeTickCount;
 volatile ULONG KiRawTicks = 0;
 
 /*
@@ -350,7 +350,7 @@ KeQueryTickCount (PLARGE_INTEGER	TickCount)
  *         TickCount (OUT) = Points to storage for the number of ticks
  */
 {
-  TickCount->QuadPart = KiTimerTicks;
+  TickCount->QuadPart = KeTickCount;
 }
 
 STATIC VOID 
@@ -431,7 +431,7 @@ KiUpdateSystemTime (KIRQL oldIrql, ULONG Eip)
    /*
     * Increment the number of timers ticks 
     */
-   KiTimerTicks++;
+   KeTickCount++;
    system_time = system_time + CLOCK_INCREMENT;
    
    /*

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.97 2001/07/12 17:17:07 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.98 2001/07/30 03:05:29 rex Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -405,7 +405,7 @@ KeSetTimerEx=KeSetTimerEx@20
 ;KeSetTimeUpdateNotifyRoutine
 KeSynchronizeExecution=KeSynchronizeExecution@12
 ;KeTerminateThread
-;KeTickCount DATA
+KeTickCount DATA
 ;KeUpdateRunTime
 ;KeUserModeCallback
 KeWaitForMultipleObjects=KeWaitForMultipleObjects@32
