@@ -2,7 +2,38 @@
 Signature = "$ReactOS$"
 
 [AddReg]
-HKLM,"Control\ServiceGroupOrder","List",0x00010000,\
+
+; NLS Codepage settings
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","10000",0x00000000,"c_10000.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","1252",0x00000000,"c_1252.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","437",0x00000000,"c_437.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","850",0x00000000,"c_850.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","ACP",0x00000000,"1252"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","OEMCP",0x00000000,"437"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","MACCP",0x00000000,"10000"
+
+; NLS Language settings
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0401",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0402",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0403",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0404",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0405",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0406",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0407",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0408",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0409",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","040a",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","040b",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","040c",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","040d",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","040e",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","040f",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0410",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","Default",0x00000000,"0409"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x00000000,"0409"
+
+; Service groups
+HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "SCSI Port", \
  "SCSI Miniport", \
  "Primary Disk", \
@@ -11,9 +42,9 @@ HKLM,"Control\ServiceGroupOrder","List",0x00010000,\
  "Boot File System", \
  "Base", \
  "Pointer Port", \
- "Keyboard Port",
- "Pointer Class",
- "Keyboard Class",
+ "Keyboard Port", \
+ "Pointer Class", \
+ "Keyboard Class", \
  "Debug", \
  "Video Init", \
  "Video", \
@@ -23,253 +54,256 @@ HKLM,"Control\ServiceGroupOrder","List",0x00010000,\
  "PNP_TDI", \
  "TDI", \
  "Extended Base"
-HKLM,"Control\Session Manager","BootExecute", 0x00010000, \
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","BootExecute", 0x00010000, \
  "autocheck autochk *"
-HKLM,"Control\Session Manager","ObjectDirectories",0x00010000, \
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","ObjectDirectories",0x00010000, \
  "\Windows", \
  "\RPC Control"
 
-HKLM,"Control\Session Manager\DOS Devices","AUX",0x00000000,"\DosDevices\COM1"
-HKLM,"Control\Session Manager\DOS Devices","MAILSLOT",0x00000000,"\Device\MailSlot"
-HKLM,"Control\Session Manager\DOS Devices","NUL",0x00000000,"\Device\Null"
-HKLM,"Control\Session Manager\DOS Devices","PIPE",0x00000000,"\Device\NamedPipe"
-HKLM,"Control\Session Manager\DOS Devices","PRN",0x00000000,"\DosDevices\LPT1"
-HKLM,"Control\Session Manager\DOS Devices","UNC",0x00000000,"\Device\Mup"
+; DOS devices
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","AUX",0x00000000,"\DosDevices\COM1"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","MAILSLOT",0x00000000,"\Device\MailSlot"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","NUL",0x00000000,"\Device\Null"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","PIPE",0x00000000,"\Device\NamedPipe"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","PRN",0x00000000,"\DosDevices\LPT1"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","UNC",0x00000000,"\Device\Mup"
 
-HKLM,"Control\Session Manager\Environment","ComSpec",0x00020000,"%SystemRoot%\system32\shell.exe"
-HKLM,"Control\Session Manager\Environment","OS",0x00020000,"ReactOS"
-HKLM,"Control\Session Manager\Environment","Path",0x00020000,"%SystemRoot%\system32;%SystemRoot%"
-HKLM,"Control\Session Manager\Environment","windir",0x00020000,"%SystemRoot%"
+; System environment settings
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","ComSpec",0x00020000,"%SystemRoot%\system32\shell.exe"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","OS",0x00020000,"ReactOS"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","Path",0x00020000,"%SystemRoot%\system32;%SystemRoot%"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","windir",0x00020000,"%SystemRoot%"
 
-HKLM,"Control\Session Manager\Memory Management",0x00010000,"PagingFiles", \
+; Pagefile settings
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management",0x00010000,"PagingFiles", \
  "C:\reactos\pagefile.sys"
 
 ; Afd driver
-HKLM,"Services\Afd","ErrorControl",0x00010001,0x00000001
-HKLM,"Services\Afd","Group",0x00000000,"TDI"
-HKLM,"Services\Afd","ImagePath",0x00020000,"system32\drivers\afd.sys"
-HKLM,"Services\Afd","Start",0x00010001,0x00000002
-HKLM,"Services\Afd","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Afd","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Afd","Group",0x00000000,"TDI"
+HKLM,"SYSTEM\CurrentControlSet\Services\Afd","ImagePath",0x00020000,"system32\drivers\afd.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Afd","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Afd","Type",0x00010001,0x00000001
 
 ; Atapi miniport driver
-HKLM,"Services\Atapi","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Atapi","Group",0x00000000,"SCSI Miniport"
-HKLM,"Services\Atapi","ImagePath",0x00020000,"system32\drivers\atapi.sys"
-HKLM,"Services\Atapi","Start",0x00010001,0x00000000
-HKLM,"Services\Atapi","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Group",0x00000000,"SCSI Miniport"
+HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","ImagePath",0x00020000,"system32\drivers\atapi.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Type",0x00010001,0x00000001
 
 ; Beep device driver
-HKLM,"Services\Beep","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Beep","Group",0x00000000,"Base"
-HKLM,"Services\Beep","ImagePath",0x00020000,"system32\drivers\beep.sys"
-HKLM,"Services\Beep","Start",0x00010001,0x00000001
-HKLM,"Services\Beep","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Beep","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Beep","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\Beep","ImagePath",0x00020000,"system32\drivers\beep.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Beep","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Beep","Type",0x00010001,0x00000001
 
 ; BlueScreen device driver
-HKLM,"Services\Blue","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Blue","Group",0x00000000,"Video Init"
-HKLM,"Services\Blue","ImagePath",0x00020000,"system32\drivers\blue.sys"
-HKLM,"Services\Blue","Start",0x00010001,0x00000001
-HKLM,"Services\Blue","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Blue","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Group",0x00000000,"Video Init"
+HKLM,"SYSTEM\CurrentControlSet\Services\Blue","ImagePath",0x00020000,"system32\drivers\blue.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Type",0x00010001,0x00000001
 
 ; Cdfs (ISO96660) filesystem driver
-HKLM,"Services\Cdfs","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Cdfs","Group",0x00000000,"File System"
-HKLM,"Services\Cdfs","ImagePath",0x00020000,"system32\drivers\cdfs.sys"
-HKLM,"Services\Cdfs","Start",0x00010001,0x00000003
-HKLM,"Services\Cdfs","Type",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Group",0x00000000,"File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","ImagePath",0x00020000,"system32\drivers\cdfs.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Type",0x00010001,0x00000002
 
 ; Cdrom class driver
-HKLM,"Services\Cdrom","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Cdrom","Group",0x00000000,"SCSI Class"
-HKLM,"Services\Cdrom","ImagePath",0x00020000,"system32\drivers\cdrom.sys"
-HKLM,"Services\Cdrom","Start",0x00010001,0x00000001
-HKLM,"Services\Cdrom","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Group",0x00000000,"SCSI Class"
+HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","ImagePath",0x00020000,"system32\drivers\cdrom.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Type",0x00010001,0x00000001
 
 ; Class2 driver
-HKLM,"Services\Class2","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Class2","Group",0x00000000,"SCSI Class Helper"
-HKLM,"Services\Class2","ImagePath",0x00020000,"system32\drivers\class2.sys"
-HKLM,"Services\Class2","Start",0x00010001,0x00000000
-HKLM,"Services\Class2","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Class2","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Class2","Group",0x00000000,"SCSI Class Helper"
+HKLM,"SYSTEM\CurrentControlSet\Services\Class2","ImagePath",0x00020000,"system32\drivers\class2.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Class2","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Class2","Type",0x00010001,0x00000001
 
 ; Disk class driver
-HKLM,"Services\Disk","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Disk","Group",0x00000000,"SCSI Class"
-HKLM,"Services\Disk","ImagePath",0x00020000,"system32\drivers\disk.sys"
-HKLM,"Services\Disk","Start",0x00010001,0x00000000
-HKLM,"Services\Disk","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Disk","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Group",0x00000000,"SCSI Class"
+HKLM,"SYSTEM\CurrentControlSet\Services\Disk","ImagePath",0x00020000,"system32\drivers\disk.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Type",0x00010001,0x00000001
 
 ; Event logging service
-HKLM,"Services\EventLog","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\EventLog","Group",0x00000000,"Event log"
-HKLM,"Services\EventLog","ImagePath",0x00020000,"%SystemRoot%\system32\eventlog.exe"
-HKLM,"Services\EventLog","Start",0x00010001,0x00000002
-HKLM,"Services\EventLog","Type",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Group",0x00000000,"Event log"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","ImagePath",0x00020000,"%SystemRoot%\system32\eventlog.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Type",0x00010001,0x00000010
 
 ; Floppy driver
-HKLM,"Services\Floppy","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Floppy","Group",0x00000000,"Primary Disk"
-HKLM,"Services\Floppy","ImagePath",0x00020000,"system32\drivers\floppy.sys"
-HKLM,"Services\Floppy","Start",0x00010001,0x00000001
-HKLM,"Services\Floppy","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","Group",0x00000000,"Primary Disk"
+HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","ImagePath",0x00020000,"system32\drivers\floppy.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","Type",0x00010001,0x00000001
 
 ; Filesystem recognizer driver
-HKLM,"Services\Fs_Rec","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Fs_Rec","Group",0x00000000,"Boot file system"
-HKLM,"Services\Fs_Rec","ImagePath",0x00020000,"system32\drivers\fs_rec.sys"
-HKLM,"Services\Fs_Rec","Start",0x00010001,0x00000001
-HKLM,"Services\Fs_Rec","Type",0x00010001,0x00000008
+HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Group",0x00000000,"Boot file system"
+HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","ImagePath",0x00020000,"system32\drivers\fs_rec.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Type",0x00010001,0x00000008
 
 ; IDE driver (deprecated)
-;HKLM,"Services\Ide","ErrorControl",0x00010001,0x00000000
-;HKLM,"Services\Ide","Group",0x00000000,"Primary Disk"
-;HKLM,"Services\Ide","ImagePath",0x00020000,"system32\drivers\ide.sys"
-;HKLM,"Services\Ide","Start",0x00010001,0x00000004
-;HKLM,"Services\Ide","Type",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\Ide","ErrorControl",0x00010001,0x00000000
+;HKLM,"SYSTEM\CurrentControlSet\Services\Ide","Group",0x00000000,"Primary Disk"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Ide","ImagePath",0x00020000,"system32\drivers\ide.sys"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Ide","Start",0x00010001,0x00000004
+;HKLM,"SYSTEM\CurrentControlSet\Services\Ide","Type",0x00010001,0x00000001
 
 ; Keyboard driver
-HKLM,"Services\Keyboard","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Keyboard","Group",0x00000000,"Keyboard Port"
-HKLM,"Services\Keyboard","ImagePath",0x00020000,"system32\drivers\keyboard.sys"
-HKLM,"Services\Keyboard","Start",0x00010001,0x00000001
-HKLM,"Services\Keyboard","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","Group",0x00000000,"Keyboard Port"
+HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","ImagePath",0x00020000,"system32\drivers\keyboard.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","Type",0x00010001,0x00000001
 
 ; Mouse driver
-HKLM,"Services\Mouse","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Mouse","Group",0x00000000,"Pointer Class"
-HKLM,"Services\Mouse","ImagePath",0x00020000,"system32\drivers\mouclass.sys"
-HKLM,"Services\Mouse","Start",0x00010001,0x00000001
-HKLM,"Services\Mouse","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Mouse","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Mouse","Group",0x00000000,"Pointer Class"
+HKLM,"SYSTEM\CurrentControlSet\Services\Mouse","ImagePath",0x00020000,"system32\drivers\mouclass.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Mouse","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Mouse","Type",0x00010001,0x00000001
 
 ; Mailslot filesystem driver
-HKLM,"Services\Msfs","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Msfs","Group",0x00000000,"File System"
-HKLM,"Services\Msfs","ImagePath",0x00020000,"system32\drivers\msfs.sys"
-HKLM,"Services\Msfs","Start",0x00010001,0x00000001
-HKLM,"Services\Msfs","Type",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","Group",0x00000000,"File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","ImagePath",0x00020000,"system32\drivers\msfs.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","Type",0x00010001,0x00000002
 
 ; NDIS driver
-HKLM,"Services\Ndis","ErrorControl",0x00010001,0x00000001
-HKLM,"Services\Ndis","Group",0x00000000,"NDIS"
-HKLM,"Services\Ndis","ImagePath",0x00020000,"system32\drivers\ndis.sys"
-HKLM,"Services\Ndis","Start",0x00010001,0x00000001
-HKLM,"Services\Ndis","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Group",0x00000000,"NDIS"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","ImagePath",0x00020000,"system32\drivers\ndis.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
 
 ; NE2000 NIC driver
-HKLM,"Services\Ne2000","ErrorControl",0x00010001,0x00000001
-HKLM,"Services\Ne2000","Group",0x00000000,"NDIS"
-HKLM,"Services\Ne2000","ImagePath",0x00020000,"system32\drivers\ne2000.sys"
-HKLM,"Services\Ne2000","Start",0x00010001,0x00000001
-HKLM,"Services\Ne2000","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Group",0x00000000,"NDIS"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","ImagePath",0x00020000,"system32\drivers\ne2000.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Type",0x00010001,0x00000001
 
 ; Named Pipe filesystem driver
-HKLM,"Services\Npfs","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Npfs","Group",0x00000000,"File System"
-HKLM,"Services\Npfs","ImagePath",0x00020000,"system32\drivers\npfs.sys"
-HKLM,"Services\Npfs","Start",0x00010001,0x00000001
-HKLM,"Services\Npfs","Type",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","Group",0x00000000,"File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","ImagePath",0x00020000,"system32\drivers\npfs.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","Type",0x00010001,0x00000002
 
 ; NTFS filesystem driver
-HKLM,"Services\Ntfs","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Ntfs","Group",0x00000000,"File System"
-HKLM,"Services\Ntfs","ImagePath",0x00020000,"system32\drivers\ntfs.sys"
-HKLM,"Services\Ntfs","Start",0x00010001,0x00000003
-HKLM,"Services\Ntfs","Type",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Group",0x00000000,"File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","ImagePath",0x00020000,"system32\drivers\ntfs.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Type",0x00010001,0x00000002
 
 ; Null device driver
-HKLM,"Services\Null","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Null","Group",0x00000000,"Base"
-HKLM,"Services\Null","ImagePath",0x00020000,"system32\drivers\null.sys"
-HKLM,"Services\Null","Start",0x00010001,0x00000001
-HKLM,"Services\Null","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Null","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Null","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\Null","ImagePath",0x00020000,"system32\drivers\null.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Null","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Null","Type",0x00010001,0x00000001
 
 ; Serial device driver
-HKLM,"Services\Serial","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Serial","Group",0x00000000,"Base"
-HKLM,"Services\Serial","ImagePath",0x00020000,"system32\drivers\serial.sys"
-HKLM,"Services\Serial","Start",0x00010001,0x00000001
-HKLM,"Services\Serial","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Serial","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\Serial","ImagePath",0x00020000,"system32\drivers\serial.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Type",0x00010001,0x00000001
 
 ; Packet driver
-HKLM,"Services\Packet","ErrorControl",0x00010001,0x00000001
-HKLM,"Services\Packet","Group",0x00000000,"PNP_TDI"
-HKLM,"Services\Packet","ImagePath",0x00020000,"system32\drivers\packet.sys"
-HKLM,"Services\Packet","Start",0x00010001,0x00000002
-HKLM,"Services\Packet","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Packet","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Group",0x00000000,"PNP_TDI"
+HKLM,"SYSTEM\CurrentControlSet\Services\Packet","ImagePath",0x00020000,"system32\drivers\packet.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Type",0x00010001,0x00000001
 ; NOTE: These settings should be added by the network setup
-HKLM,"Services\Packet\Linkage","Bind",0x00020000,"\Device\ne2000"
-HKLM,"Services\Packet\Linkage","Export",0x00020000,"\Device\packet"
+HKLM,"SYSTEM\CurrentControlSet\Services\Packet\Linkage","Bind",0x00020000,"\Device\ne2000"
+HKLM,"SYSTEM\CurrentControlSet\Services\Packet\Linkage","Export",0x00020000,"\Device\packet"
 
 ; Private ICE driver
-HKLM,"Services\Pice","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Pice","Group",0x00000000,"Debug"
-HKLM,"Services\Pice","ImagePath",0x00020000,"system32\drivers\pice.sys"
-HKLM,"Services\Pice","Start",0x00010001,0x00000004
-HKLM,"Services\Pice","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Pice","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Pice","Group",0x00000000,"Debug"
+HKLM,"SYSTEM\CurrentControlSet\Services\Pice","ImagePath",0x00020000,"system32\drivers\pice.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Pice","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Pice","Type",0x00010001,0x00000001
 
 ; PS/2 mouse port driver
-HKLM,"Services\Psaux","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Psaux","Group",0x00000000,"Pointer Port"
-HKLM,"Services\Psaux","ImagePath",0x00020000,"system32\drivers\psaux.sys"
-HKLM,"Services\Psaux","Start",0x00010001,0x00000001
-HKLM,"Services\Psaux","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Group",0x00000000,"Pointer Port"
+HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","ImagePath",0x00020000,"system32\drivers\psaux.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Type",0x00010001,0x00000001
 
 ; RPC service
-HKLM,"Services\Rpcss","ErrorControl",0x00010001,0x00000001
-HKLM,"Services\Rpcss","ImagePath",0x00020000,"%SystemRoot%\system32\rpcss.exe"
-HKLM,"Services\Rpcss","Start",0x00010001,0x00000004
-HKLM,"Services\Rpcss","Type",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ImagePath",0x00020000,"%SystemRoot%\system32\rpcss.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Type",0x00010001,0x00000010
 
 ; Scsiport driver
-HKLM,"Services\Scsiport","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Scsiport","Group"="SCSI Port"
-HKLM,"Services\Scsiport","ImagePath"=expand:"system32\drivers\scsiport.sys"
-HKLM,"Services\Scsiport","Start",0x00010001,0x00000000
-HKLM,"Services\Scsiport","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Group"="SCSI Port"
+HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","ImagePath"=expand:"system32\drivers\scsiport.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Type",0x00010001,0x00000001
 
 ; TCP/IP driver
-HKLM,"Services\Tcpip","ErrorControl",0x00010001,0x00000001
-HKLM,"Services\Tcpip","Group",0x00000000,"PNP_TDI"
-HKLM,"Services\Tcpip","ImagePath",0x00020000,"system32\drivers\tcpip.sys"
-HKLM,"Services\Tcpip","Start",0x00010001,0x00000002
-HKLM,"Services\Tcpip","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","Group",0x00000000,"PNP_TDI"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","ImagePath",0x00020000,"system32\drivers\tcpip.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","Type",0x00010001,0x00000001
 ; NOTE: These settings should be added by the network setup
-HKLM,"Services\Tcpip\Linkage","Bind",0x00020000,"\Device\ne2000"
-HKLM,"Services\Tcpip\Linkage","Export",0x00020000,"\Device\tcpip"
-HKLM,"Services\Tcpip\Linkage","Route",0x00020000,""
-HKLM,"Services\Tcpip\Parameters","DataBasePath",0x00000000,"DataBasePath"
-HKLM,"Services\Tcpip\Parameters","Domain",0x00000000,""
-HKLM,"Services\Tcpip\Parameters","Hostname",0x00000000,"ROSHost"
-HKLM,"Services\Tcpip\Parameters","NameServer",0x00000000,"203.13.174.1"
-HKLM,"Services\Tcpip\Parameters","ForwardBroadcasts",0x00010001,0x00000000
-HKLM,"Services\Tcpip\Parameters","IPEnableRouter",0x00010001,0x00000000
-HKLM,"Services\Tcpip\Parameters","SearchList",0x00000000,""
-HKLM,"Services\Tcpip\Parameters","EnableSecurityFilters",0x00010001,0x00000000
-HKLM,"Services\Tcpip\Parameters\PersistentRoutes",,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Bind",0x00020000,"\Device\ne2000"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Export",0x00020000,"\Device\tcpip"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Route",0x00020000,""
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","DataBasePath",0x00000000,"DataBasePath"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Domain",0x00000000,""
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Hostname",0x00000000,"ROSHost"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","NameServer",0x00000000,"203.13.174.1"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","ForwardBroadcasts",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","IPEnableRouter",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","SearchList",0x00000000,""
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","EnableSecurityFilters",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\PersistentRoutes",,0x00000010
 
 ; Virtual FAT filesystem driver
-HKLM,"Services\Vfatfs","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Vfatfs","Group",0x00000000,"Boot File System"
-HKLM,"Services\Vfatfs","ImagePath",0x00020000,"system32\drivers\vfatfs.sys"
-HKLM,"Services\Vfatfs","Start",0x00010001,0x00000000
-HKLM,"Services\Vfatfs","Type",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Group",0x00000000,"Boot File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","ImagePath",0x00020000,"system32\drivers\vfatfs.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Type",0x00010001,0x00000002
 
 ; VGA miniport driver
-HKLM,"Services\Vga","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\Vga","Group",0x00000000,"Video"
-HKLM,"Services\Vga","ImagePath",0x00020000,"system32\drivers\vgamp.sys"
-HKLM,"Services\Vga","Start",0x00010001,0x00000001
-HKLM,"Services\Vga","Type",0x00010001,0x00000001
-HKLM,"Services\Vga\Device0","InstalledDisplayDrivers",0x00010000,"vgaddi"
+HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Group",0x00000000,"Video"
+HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ImagePath",0x00020000,"system32\drivers\vgamp.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Vga\Device0","InstalledDisplayDrivers",0x00010000,"vgaddi"
 
 ; VMware SVGA driver
-HKLM,"Services\vmx_svga","ErrorControl",0x00010001,0x00000000
-HKLM,"Services\vmx_svga","Group",0x00000000,"Video"
-HKLM,"Services\vmx_svga","ImagePath",0x00020000,"system32\drivers\vmx_svga.sys"
-HKLM,"Services\vmx_svga","Start",0x00010001,0x00000004
-HKLM,"Services\vmx_svga","Type",0x00010001,0x00000001
-HKLM,"Services\vmx_svga\Device0","InstalledDisplayDrivers",0x00010000,"vmx_fb"
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Group",0x00000000,"Video"
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","ImagePath",0x00020000,"system32\drivers\vmx_svga.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","InstalledDisplayDrivers",0x00010000,"vmx_fb"
 
 
 ; ControlSet selection settings
@@ -279,10 +313,10 @@ HKLM,"SYSTEM\Select","Failed",0x00010001,0x00000000
 HKLM,"SYSTEM\Select","LastKnownGood",0x00010001,0x00000000
 
 ; System setup settings
-HKLM,"SYSTEM\Select","CmdLine",0x00000000,"setup -newsetup"
-HKLM,"SYSTEM\Select","OsLoaderPath",0x00000000,"\"
-HKLM,"SYSTEM\Select","SetupType"0x00010001,0x00000000
-HKLM,"SYSTEM\Select","SystemPartition",0x00000000,"\Device\Harddisk0\Partition1"
-HKLM,"SYSTEM\Select","SystemSetupInProgress",0x00010001,0x00000000
+HKLM,"SYSTEM\Setup","CmdLine",0x00000000,"setup -newsetup"
+HKLM,"SYSTEM\Setup","OsLoaderPath",0x00000000,"\"
+HKLM,"SYSTEM\Setup","SetupType"0x00010001,0x00000000
+HKLM,"SYSTEM\Setup","SystemPartition",0x00000000,"\Device\Harddisk0\Partition1"
+HKLM,"SYSTEM\Setup","SystemSetupInProgress",0x00010001,0x00000000
 
 ; EOF
