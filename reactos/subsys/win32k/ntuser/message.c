@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.46 2003/12/29 10:09:33 gvg Exp $
+/* $Id: message.c,v 1.47 2004/01/27 13:21:35 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -566,7 +566,8 @@ NtUserQuerySendMessage(DWORD Unknown0)
 
 #define MMS_SIZE_WPARAM      -1
 #define MMS_SIZE_WPARAMWCHAR -2
-#define MMS_SIZE_SPECIAL     -3
+#define MMS_SIZE_LPARAMSZ    -3
+#define MMS_SIZE_SPECIAL     -4
 #define MMS_FLAG_READ        0x01
 #define MMS_FLAG_WRITE       0x02
 #define MMS_FLAG_READWRITE   (MMS_FLAG_READ | MMS_FLAG_WRITE)
@@ -584,7 +585,7 @@ static MSGMEMORY MsgMemory[] =
     { WM_GETTEXT, MMS_SIZE_WPARAMWCHAR, MMS_FLAG_WRITE },
     { WM_NCCALCSIZE, MMS_SIZE_SPECIAL, MMS_FLAG_READWRITE },
     { WM_NCCREATE, sizeof(CREATESTRUCTW), MMS_FLAG_READWRITE },
-    { WM_SETTEXT, MMS_SIZE_WPARAMWCHAR, MMS_FLAG_READ },
+    { WM_SETTEXT, MMS_SIZE_LPARAMSZ, MMS_FLAG_READ },
     { WM_STYLECHANGED, sizeof(STYLESTRUCT), MMS_FLAG_READ },
     { WM_STYLECHANGING, sizeof(STYLESTRUCT), MMS_FLAG_READWRITE },
     { WM_WINDOWPOSCHANGED, sizeof(WINDOWPOS), MMS_FLAG_READ },
@@ -611,7 +612,7 @@ FindMsgMemory(UINT Msg)
 }
 
 static UINT FASTCALL
-MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam)
+MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
 {
   if (MMS_SIZE_WPARAM == MsgMemoryEntry->Size)
     {
@@ -620,6 +621,10 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam)
   else if (MMS_SIZE_WPARAMWCHAR == MsgMemoryEntry->Size)
     {
       return (UINT) (wParam * sizeof(WCHAR));
+    }
+  else if (MMS_SIZE_LPARAMSZ == MsgMemoryEntry->Size)
+    {
+      return (UINT) ((wcslen((PWSTR) lParam) + 1) * sizeof(WCHAR));
     }
   else if (MMS_SIZE_SPECIAL == MsgMemoryEntry->Size)
     {
@@ -735,7 +740,7 @@ IntSendMessage(HWND hWnd,
         }
       else
         {
-          lParamBufferSize = MsgMemorySize(MsgMemoryEntry, wParam);
+          lParamBufferSize = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
         }
 
       if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam)))
@@ -792,7 +797,7 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg)
     }
 
   /* Determine required size */
-  Size = MsgMemorySize(MsgMemoryEntry, UserModeMsg->wParam);
+  Size = MsgMemorySize(MsgMemoryEntry, UserModeMsg->wParam, UserModeMsg->lParam);
 
   if (0 != Size)
     {
@@ -846,7 +851,7 @@ CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
     }
 
   /* Determine required size */
-  Size = MsgMemorySize(MsgMemoryEntry, UserModeMsg->wParam);
+  Size = MsgMemorySize(MsgMemoryEntry, UserModeMsg->wParam, UserModeMsg->lParam);
 
   if (0 != Size)
     {
