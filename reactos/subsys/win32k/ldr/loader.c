@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.6 2001/03/31 15:35:07 jfilby Exp $
+/* $Id: loader.c,v 1.7 2002/06/14 07:47:40 ekohl Exp $
  *
  */
 
@@ -9,14 +9,14 @@ HANDLE
 STDCALL
 EngLoadImage (LPWSTR DriverName)
 {
-  SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
+  SYSTEM_LOAD_IMAGE GdiDriverInfo;
   NTSTATUS Status;
 
-  RtlInitUnicodeString(&GdiDriverInfo.DriverName, DriverName);
-  Status = ZwSetSystemInformation (SystemLoadGdiDriverInformation, &GdiDriverInfo, sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
+  RtlInitUnicodeString(&GdiDriverInfo.ModuleName, DriverName);
+  Status = ZwSetSystemInformation(SystemLoadImage, &GdiDriverInfo, sizeof(SYSTEM_LOAD_IMAGE));
   if (!NT_SUCCESS(Status)) return NULL;
 
-  return (HANDLE)GdiDriverInfo.ImageAddress;
+  return (HANDLE)GdiDriverInfo.ModuleBase;
 }
 
 
@@ -24,16 +24,16 @@ HANDLE
 STDCALL
 EngLoadModule(LPWSTR ModuleName)
 {
-  SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
+  SYSTEM_LOAD_IMAGE GdiDriverInfo;
   NTSTATUS Status;
 
   // FIXME: should load as readonly
 
-  RtlInitUnicodeString (&GdiDriverInfo.DriverName, ModuleName);
-  Status = ZwSetSystemInformation (SystemLoadGdiDriverInformation, &GdiDriverInfo, sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
+  RtlInitUnicodeString (&GdiDriverInfo.ModuleName, ModuleName);
+  Status = ZwSetSystemInformation (SystemLoadImage, &GdiDriverInfo, sizeof(SYSTEM_LOAD_IMAGE));
   if (!NT_SUCCESS(Status)) return NULL;
 
-  return (HANDLE)GdiDriverInfo.ImageAddress;
+  return (HANDLE)GdiDriverInfo.ModuleBase;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.111 2002/06/13 15:14:28 ekohl Exp $
+/* $Id: loader.c,v 1.112 2002/06/14 07:46:02 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -839,11 +839,11 @@ VOID LdrLoadAutoConfigDrivers (VOID)
 
 
 NTSTATUS
-LdrLoadGdiDriver(PUNICODE_STRING DriverName,
-		 PVOID *ImageAddress,
-		 PVOID *SectionPointer,
-		 PVOID *EntryPoint,
-		 PVOID *ExportSectionPointer)
+LdrpLoadImage(PUNICODE_STRING DriverName,
+	      PVOID *ModuleBase,
+	      PVOID *SectionPointer,
+	      PVOID *EntryPoint,
+	      PVOID *ExportSectionPointer)
 {
   PMODULE_OBJECT ModuleObject;
   NTSTATUS Status;
@@ -854,8 +854,8 @@ LdrLoadGdiDriver(PUNICODE_STRING DriverName,
       return(Status);
     }
 
-  if (ImageAddress)
-    *ImageAddress = ModuleObject->Base;
+  if (ModuleBase)
+    *ModuleBase = ModuleObject->Base;
 
 //  if (SectionPointer)
 //    *SectionPointer = ModuleObject->
@@ -867,6 +867,38 @@ LdrLoadGdiDriver(PUNICODE_STRING DriverName,
 //    *ExportSectionPointer = ModuleObject->
 
   return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS
+LdrpUnloadImage(PVOID ModuleBase)
+{
+  return(STATUS_NOT_IMPLEMENTED);
+}
+
+
+NTSTATUS
+LdrpLoadAndCallImage(PUNICODE_STRING ModuleName)
+{
+  PDRIVER_INITIALIZE DriverEntry;
+  PMODULE_OBJECT ModuleObject;
+  NTSTATUS Status;
+
+  Status = LdrLoadModule(ModuleName, &ModuleObject);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
+  DriverEntry = (PDRIVER_INITIALIZE)ModuleObject->EntryPoint;
+
+  Status = DriverEntry(NULL, NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      LdrUnloadModule(ModuleObject);
+    }
+
+  return(Status);
 }
 
 
@@ -1441,6 +1473,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
   PCHAR pName;
   WORD Hint;
   UNICODE_STRING ModuleName;
+  UNICODE_STRING NameString;
   WCHAR  NameBuffer[60];
   MODULE_TEXT_SECTION* ModuleTextSection;
   NTSTATUS Status;
@@ -1635,10 +1668,19 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
           RtlCreateUnicodeStringFromAsciiz(&ModuleName, pName);
           DPRINT("Import module: %wZ\n", &ModuleName);
 
-          Status = LdrLoadModule(&ModuleName, &LibraryModuleObject);
-          if (!NT_SUCCESS(Status))
+          LibraryModuleObject = LdrGetModuleObject(&ModuleName);
+          if (LibraryModuleObject == NULL)
             {
-              CPRINT("Unknown import module: %wZ (Status %lx)\n", &ModuleName, Status);
+              DPRINT("Module '%wZ' not loaded\n", &ModuleName);
+              wcscpy(NameBuffer, L"\\SystemRoot\\system32\\drivers\\");
+              wcscat(NameBuffer, ModuleName.Buffer);
+              RtlInitUnicodeString(&NameString, NameBuffer);
+              Status = LdrLoadModule(&NameString, &LibraryModuleObject);
+              if (!NT_SUCCESS(Status))
+                {
+                  CPRINT("Unknown import module: %wZ (Status %lx)\n", &ModuleName, Status);
+                  return(Status);
+                }
             }
           /*  Get the import address list  */
           ImportAddressList = (PVOID *) ((DWORD)DriverBase + 

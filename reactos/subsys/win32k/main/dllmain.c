@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.24 2002/02/08 02:57:10 chorns Exp $
+/* $Id: dllmain.c,v 1.25 2002/06/14 07:49:58 ekohl Exp $
  * 
  *  Entry Point for win32k.sys
  */
@@ -96,9 +96,6 @@ STDCALL
 W32kInitialize (VOID)
 {
   InitGdiObjectHandleTable ();
-
-  // FIXME: Retrieve name from registry
-  EngLoadImage(L"\\SystemRoot\\system32\\drivers\\vidport.sys");
 
   // Create surface used to draw the internal font onto
   CreateCellCharSurface();

@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.14 2001/11/18 00:31:23 dwelch Exp $
+/* $Id: sysinfo.c,v 1.15 2002/06/14 07:43:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -657,29 +657,34 @@ QSI_DEF(SystemFullMemoryInformation)
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 26 - Load Gdi Driver Information */
-SSI_DEF(SystemLoadGdiDriverInformation)
+/* Class 26 - Load Image */
+SSI_DEF(SystemLoadImage)
 {
-	PSYSTEM_GDI_DRIVER_INFORMATION Sdi
-		= (PSYSTEM_GDI_DRIVER_INFORMATION) Buffer;
+  PSYSTEM_LOAD_IMAGE Sli = (PSYSTEM_LOAD_IMAGE)Buffer;
 
-	if (sizeof (SYSTEM_GDI_DRIVER_INFORMATION) != Size)
-	{
-		return (STATUS_INFO_LENGTH_MISMATCH);
-	}
+  if (sizeof(SYSTEM_LOAD_IMAGE) != Size)
+    {
+      return(STATUS_INFO_LENGTH_MISMATCH);
+    }
 
-	return LdrLoadGdiDriver (&Sdi->DriverName,
-				 &Sdi->ImageAddress,
-				 &Sdi->SectionPointer,
-				 &Sdi->EntryPoint,
-				 &Sdi->ExportSectionPointer);
+  return(LdrpLoadImage(&Sli->ModuleName,
+		       &Sli->ModuleBase,
+		       &Sli->SectionPointer,
+		       &Sli->EntryPoint,
+		       &Sli->ExportDirectory));
 }
 
-/* Class 27 - Unload Gdi Driver Information */
-SSI_DEF(SystemUnloadGdiDriverInformation)
+/* Class 27 - Unload Image */
+SSI_DEF(SystemUnloadImage)
 {
-	/* FIXME */
-	return (STATUS_NOT_IMPLEMENTED);
+  PSYSTEM_UNLOAD_IMAGE Sui = (PSYSTEM_UNLOAD_IMAGE)Buffer;
+
+  if (sizeof(SYSTEM_UNLOAD_IMAGE) != Size)
+    {
+      return(STATUS_INFO_LENGTH_MISMATCH);
+    }
+
+  return(LdrpUnloadImage(Sui->ModuleBase));
 }
 
 /* Class 28 - Time Adjustment Information */
@@ -773,11 +778,17 @@ SSI_DEF(SystemRegistryQuotaInformation)
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 38 - Extend Service Table Information */
-SSI_DEF(SystemExtendServiceTableInformation)
+/* Class 38 - Load And Call Image */
+SSI_DEF(SystemLoadAndCallImage)
 {
-	/* FIXME */
-	return (STATUS_NOT_IMPLEMENTED);
+  PSYSTEM_LOAD_AND_CALL_IMAGE Slci = (PSYSTEM_LOAD_AND_CALL_IMAGE)Buffer;
+
+  if (sizeof(SYSTEM_LOAD_AND_CALL_IMAGE) != Size)
+    {
+      return(STATUS_INFO_LENGTH_MISMATCH);
+    }
+
+  return(LdrpLoadAndCallImage(&Slci->ModuleName));
 }
 
 /* Class 39 - Priority Seperation */
@@ -982,8 +993,8 @@ CallQS [] =
 	SI_QX(SystemInterruptInformation),
 	SI_QS(SystemDpcBehaviourInformation),
 	SI_QX(SystemFullMemoryInformation), /* it should be SI_XX */
-	SI_XS(SystemLoadGdiDriverInformation),
-	SI_XS(SystemUnloadGdiDriverInformation),
+	SI_XS(SystemLoadImage),
+	SI_XS(SystemUnloadImage),
 	SI_QS(SystemTimeAdjustmentInformation),
 	SI_QX(SystemSummaryMemoryInformation), /* it should be SI_XX */
 	SI_QX(SystemNextEventIdInformation), /* it should be SI_XX */
@@ -994,7 +1005,7 @@ CallQS [] =
 	SI_QX(SystemKernelDebuggerInformation),
 	SI_QX(SystemContextSwitchInformation),
 	SI_QS(SystemRegistryQuotaInformation),
-	SI_XS(SystemExtendServiceTableInformation),
+	SI_XS(SystemLoadAndCallImage),
 	SI_XS(SystemPrioritySeperation),
 	SI_QX(SystemPlugPlayBusInformation), /* it should be SI_XX */
 	SI_QX(SystemDockInformation), /* it should be SI_XX */

@@ -64,11 +64,18 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
                         IN ULONG Ordinal,
                         OUT PVOID *ProcedureAddress);
 
-NTSTATUS LdrLoadGdiDriver (PUNICODE_STRING DriverName,
-			   PVOID *ImageAddress,
-			   PVOID *SectionPointer,
-			   PVOID *EntryPoint,
-			   PVOID *ExportSectionPointer);
+NTSTATUS
+LdrpLoadImage(PUNICODE_STRING DriverName,
+	      PVOID *ModuleBase,
+	      PVOID *SectionPointer,
+	      PVOID *EntryPoint,
+	      PVOID *ExportDirectory);
+
+NTSTATUS
+LdrpUnloadImage(PVOID ModuleBase);
+
+NTSTATUS
+LdrpLoadAndCallImage(PUNICODE_STRING DriverName);
 
 NTSTATUS
 LdrpQueryModuleInformation(PVOID Buffer,

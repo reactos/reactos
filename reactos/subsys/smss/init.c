@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.38 2002/06/12 23:26:56 ekohl Exp $
+/* $Id: init.c,v 1.39 2002/06/14 07:46:47 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -543,16 +543,18 @@ SmSetEnvironmentVariables(VOID)
 static NTSTATUS
 SmLoadSubsystems(VOID)
 {
-  SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
+  SYSTEM_LOAD_AND_CALL_IMAGE ImageInfo;
   NTSTATUS Status;
 
   /* Load kernel mode subsystem (aka win32k.sys) */
-  RtlInitUnicodeString(&GdiDriverInfo.DriverName,
+  RtlInitUnicodeString(&ImageInfo.ModuleName,
 		       L"\\SystemRoot\\system32\\drivers\\win32k.sys");
 
-  Status = NtSetSystemInformation(SystemLoadGdiDriverInformation,
-				  &GdiDriverInfo,
-				  sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
+  Status = NtSetSystemInformation(SystemLoadAndCallImage,
+				  &ImageInfo,
+				  sizeof(SYSTEM_LOAD_AND_CALL_IMAGE));
+
+  PrintString("SMSS: Loaded win32k.sys (Status %lx)\n", Status);
 #if 0
   if (!NT_SUCCESS(Status))
     {

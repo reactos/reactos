@@ -265,10 +265,8 @@ enum _SYSTEM_INFORMATION_CLASS
 	SystemFullMemoryInformation		= 25,
 	SystemNotImplemented6			= 25,	/* (GN) */
 	
-	SystemLoadGdiDriverInformation		= 26,	/* S (callable) */
 	SystemLoadImage				= 26,	/* S (callable) (GN) */
 	
-	SystemUnloadGdiDriverInformation	= 27,	/* S (callable) */
 	SystemUnloadImage			= 27,	/* S (callable) (GN) */
 	
 	SystemTimeAdjustmentInformation		= 28,	/* QS */
@@ -295,7 +293,6 @@ enum _SYSTEM_INFORMATION_CLASS
 	
 	SystemRegistryQuotaInformation		= 37,	/* QS */
 	
-	SystemExtendServiceTableInformation	= 38,	/* S */
 	SystemLoadAndCallImage			= 38,	/* S (GN) */
 	
 	SystemPrioritySeparation		= 39,	/* S */
@@ -833,17 +830,21 @@ struct _SYSTEM_DPC_INFORMATION
 // SystemInformation25 (25)
 // UNKNOWN
 
-// SystemLoadGdiDriverInformation (26)
-// SystemUnloadGdiDriverInformation (27)
-typedef struct _SYSTEM_GDI_DRIVER_INFORMATION
+// SystemLoadImage (26)
+typedef struct _SYSTEM_LOAD_IMAGE
 {
-	UNICODE_STRING		DriverName;
-	PVOID			ImageAddress;
-	PVOID			SectionPointer;
-	PVOID			EntryPoint;
-//	PIMAGE_EXPORT_DIRECTORY	ExportSectionPointer;
-	PVOID			ExportSectionPointer;
-} SYSTEM_GDI_DRIVER_INFORMATION, *PSYSTEM_GDI_DRIVER_INFORMATION;
+  UNICODE_STRING ModuleName;
+  PVOID ModuleBase;
+  PVOID SectionPointer;
+  PVOID EntryPoint;
+  PVOID ExportDirectory;
+} SYSTEM_LOAD_IMAGE, *PSYSTEM_LOAD_IMAGE;
+
+// SystemUnloadImage (27)
+typedef struct _SYSTEM_UNLOAD_IMAGE
+{
+  PVOID ModuleBase;
+} SYSTEM_UNLOAD_IMAGE, *PSYSTEM_UNLOAD_IMAGE;
 
 // SystemTimeAdjustmentInformation (28)
 typedef
@@ -899,13 +900,11 @@ struct _SYSTEM_QUOTA_INFORMATION
 	
 } SYSTEM_QUOTA_INFORMATION, *PSYSTEM_QUOTA_INFORMATION;
 
-// SystemLoadDriver (38)
-typedef
-struct _SYSTEM_DRIVER_LOAD
+// SystemLoadAndCallImage(38)
+typedef struct _SYSTEM_LOAD_AND_CALL_IMAGE
 {
-	UNICODE_STRING	DriverRegistryEntry;
-	
-} SYSTEM_DRIVER_LOAD, *PSYSTEM_DRIVER_LOAD;
+  UNICODE_STRING ModuleName;
+} SYSTEM_LOAD_AND_CALL_IMAGE, *PSYSTEM_LOAD_AND_CALL_IMAGE;
 
 // SystemTimeZoneInformation (44)
 typedef

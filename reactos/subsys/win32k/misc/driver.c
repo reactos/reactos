@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.18 2001/05/02 12:33:42 jfilby Exp $
+/* $Id: driver.c,v 1.19 2002/06/14 07:48:19 ekohl Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -58,7 +58,7 @@ BOOL  DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
 
 PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name)
 {
-  SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
+  SYSTEM_LOAD_IMAGE GdiDriverInfo;
   GRAPHICS_DRIVER *Driver = DriverList;
   NTSTATUS Status;
 
@@ -73,8 +73,8 @@ PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name)
   }
 
   /* If not, then load it */
-  RtlInitUnicodeString (&GdiDriverInfo.DriverName, (LPWSTR)Name);
-  Status = ZwSetSystemInformation (SystemLoadGdiDriverInformation, &GdiDriverInfo, sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
+  RtlInitUnicodeString (&GdiDriverInfo.ModuleName, (LPWSTR)Name);
+  Status = ZwSetSystemInformation (SystemLoadImage, &GdiDriverInfo, sizeof(SYSTEM_LOAD_IMAGE));
   if (!NT_SUCCESS(Status)) return NULL;
 
   DRIVER_RegisterDriver( L"DISPLAY", GdiDriverInfo.EntryPoint);
@@ -163,59 +163,33 @@ typedef VP_STATUS (*PMP_DRIVERENTRY)(PVOID, PVOID);
 
 HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
 {
-  SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
-  PWSTR  lName;
-  NTSTATUS  Status;
-  UNICODE_STRING  DeviceName;
-  HANDLE DriverHandle;
-  OBJECT_ATTRIBUTES  ObjectAttributes;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING DeviceName;
+  IO_STATUS_BLOCK Iosb;
+  HANDLE DisplayHandle;
+  NTSTATUS Status;
 
-  PDRIVER_OBJECT  DriverObject;
-  PMP_DRIVERENTRY PMP_DriverEntry;
-
-  /* Phase 1 */
-  RtlInitUnicodeString (&GdiDriverInfo.DriverName, L"\\SystemRoot\\system32\\drivers\\vgamp.sys");
-  Status = ZwSetSystemInformation (SystemLoadGdiDriverInformation, &GdiDriverInfo, sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
+  RtlInitUnicodeString(&DeviceName, L"\\??\\DISPLAY1");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &DeviceName,
+			     0,
+			     NULL,
+			     NULL);
+  Status = ZwOpenFile(&DisplayHandle,
+		      FILE_ALL_ACCESS,
+		      &ObjectAttributes,
+		      &Iosb,
+		      0,
+		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
-     return NULL;
-
-  /* Phase 2 */
-  if (Name[0] != '\\')
-  {
-    lName = ExAllocatePool(NonPagedPool, wcslen(Name) * sizeof(WCHAR) + 10 * sizeof(WCHAR));
-    wcscpy(lName, L"\\??\\");
-    if (!wcscmp (Name, L"DISPLAY"))
     {
-      /* FIXME: Read this information from the registry ??? */
-      wcscat(lName, L"DISPLAY1");
+      DPRINT("ZwOpenFile() failed (Status %lx)\n", Status);
+      return(NULL);
     }
-    else
-    {
-      wcscat(lName, Name);
-    }
-  }
-  else
-  {
-    lName = ExAllocatePool(NonPagedPool, wcslen(Name) * sizeof(WCHAR));
-    wcscpy(lName, Name);
-  }
-  
-  /* Phase 3 */
-  DriverObject = ExAllocatePool(NonPagedPool,sizeof(DRIVER_OBJECT));
-  if (DriverObject == NULL)
-  {
-    return NULL;
-  }
-  memset(DriverObject, 0, sizeof(DRIVER_OBJECT));
 
-  // We pass the DriverObject to the Miniport driver, which passes it to the VideoPort driver
-  // The VideoPort driver then creates the Device Object
-
-  PMP_DriverEntry = GdiDriverInfo.EntryPoint;
-  PMP_DriverEntry(DriverObject, NULL);
-
-  return  DriverObject;
+  return(DisplayHandle);
 }
+
 
 BOOL  DRIVER_UnregisterDriver(LPCWSTR  Name)
 {
@@ -268,7 +242,7 @@ INT  DRIVER_ReferenceDriver (LPCWSTR  Name)
   
   while (Driver && Name)
   {
-    DPRINT( "Comparting %S to %S\n", Driver->Name, Name );
+    DPRINT( "Comparing %S to %S\n", Driver->Name, Name );
     if (!_wcsicmp( Driver->Name, Name)) 
     {
       return ++Driver->ReferenceCount;
@@ -286,7 +260,7 @@ INT  DRIVER_UnreferenceDriver (LPCWSTR  Name)
   
   while (Driver && Name)
   {
-    DPRINT( "Comparting %S to %S\n", Driver->Name, Name );
+    DPRINT( "Comparing %S to %S\n", Driver->Name, Name );
     if (!_wcsicmp( Driver->Name, Name)) 
     {
       return --Driver->ReferenceCount;
