@@ -69,4 +69,3 @@ protected:
 	HACCEL	_hAccel;
 	TCHAR	_drives[BUFFER_LEN];
 };
-
