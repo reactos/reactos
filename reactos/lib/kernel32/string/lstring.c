@@ -51,21 +51,28 @@ lstrcpynA(
 	  )
 {
   /* Can't use strncpy, because strncpy will fill unused bytes in
-     lpString1 with NUL bytes while lstrcpynA doesn't */
+     lpString1 with NUL bytes while lstrcpynA doesn't. Also lstrcpynA
+     guarantees NUL termination while strncpy doesn't */
 
-  if (0 != iMaxLength)
+  if (1 < iMaxLength)
     {
       char *d = lpString1;
       const char *s = lpString2;
 
       do
         {
-          if (0 == (*d++ = *s++))
+          if ('\0' == (*d++ = *s++))
             {
               break;
             }
         }
-      while(0 != --iMaxLength);
+      while(1 != --iMaxLength);
+      *d = '\0';
+    }
+  else if (1 == iMaxLength)
+    {
+      /* Only space for the terminator */
+      *lpString1 = '\0';
     }
 
   return lpString1;
@@ -153,21 +160,28 @@ lstrcpynW(
     )
 {
   /* Can't use wcsncpy, because wcsncpy will fill unused bytes in
-     lpString1 with NUL bytes while lstrcpynW doesn't */
+     lpString1 with NUL bytes while lstrcpynW doesn't Also lstrcpynW
+     guarantees NUL termination while wcsncpy doesn't */
 
-  if (0 != iMaxLength)
+  if (1 < iMaxLength)
     {
       WCHAR *d = lpString1;
       const WCHAR *s = lpString2;
 
       do
         {
-          if (0 == (*d++ = *s++))
+          if (L'\0' == (*d++ = *s++))
             {
               break;
             }
         }
-      while(0 != --iMaxLength);
+      while(1 != --iMaxLength);
+      *d = L'\0';
+    }
+  else if (1 == iMaxLength)
+    {
+      /* Only space for the terminator */
+      *lpString1 = L'\0';
     }
 
   return lpString1;
