@@ -1,4 +1,4 @@
-/* $Id: spawn.c,v 1.8 2002/10/29 04:45:35 rex Exp $
+/* $Id: spawn.c,v 1.9 2002/12/26 18:14:36 robd Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -222,7 +222,7 @@ NTSTATUS STDCALL __PdxSpawnPosixProcess
  }
 
  /* 3.3.2: process parameters */
- nDestBufferSize = pppProcessParameters->Length;
+ nDestBufferSize = pppProcessParameters->Size;
 
  nErrCode = NtAllocateVirtualMemory
  (
@@ -317,7 +317,7 @@ NTSTATUS STDCALL __PdxSpawnPosixProcess
   hProcess,
   pParamsBuffer,
   pppProcessParameters,
-  pppProcessParameters->Length,
+  pppProcessParameters->Size,
   NULL
  );
 
@@ -417,7 +417,7 @@ undoPData:
      NtCurrentProcess(),
      ProcessData->FdTable.Descriptors[i].FileHandle,
      hProcess,
-     (PHANDLE)((ULONG)pParamsBuffer + offsetof(RTL_USER_PROCESS_PARAMETERS, InputHandle)),
+     (PHANDLE)((ULONG)pParamsBuffer + offsetof(RTL_USER_PROCESS_PARAMETERS, hStdInput)),
      0,
      0,
      DUPLICATE_SAME_ACCESS | 4 /* | DUPLICATE_SAME_ATTRIBUTES */ /* FIXME */
@@ -438,7 +438,7 @@ undoPData:
      NtCurrentProcess(),
      ProcessData->FdTable.Descriptors[i].FileHandle,
      hProcess,
-     (PHANDLE)((ULONG)pParamsBuffer + offsetof(RTL_USER_PROCESS_PARAMETERS, OutputHandle)),
+     (PHANDLE)((ULONG)pParamsBuffer + offsetof(RTL_USER_PROCESS_PARAMETERS, hStdOutput)),
      0,
      0,
      DUPLICATE_SAME_ACCESS | 4 /* | DUPLICATE_SAME_ATTRIBUTES */ /* FIXME */
@@ -459,7 +459,7 @@ undoPData:
      NtCurrentProcess(),
      ProcessData->FdTable.Descriptors[i].FileHandle,
      hProcess,
-     (PHANDLE)((ULONG)pParamsBuffer + offsetof(RTL_USER_PROCESS_PARAMETERS, ErrorHandle)),
+     (PHANDLE)((ULONG)pParamsBuffer + offsetof(RTL_USER_PROCESS_PARAMETERS, hStdError)),
      0,
      0,
      DUPLICATE_SAME_ACCESS | 4 /* | DUPLICATE_SAME_ATTRIBUTES */ /* FIXME */

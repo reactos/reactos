@@ -1,4 +1,4 @@
-/* $Id: lpcproto.h,v 1.5 2002/10/29 04:45:13 rex Exp $
+/* $Id: lpcproto.h,v 1.6 2002/12/26 18:14:34 robd Exp $
  *
  * ReactOS POSIX+ Environment Subsystem
  * LPC protocol spoken by PSXSS.EXE, PSXDLL.DLL, CSRTERM.EXE.
@@ -56,7 +56,8 @@ typedef PSX_MESSAGE_HEADER PSX_MESSAGE, * PPSX_MESSAGE;
 
 typedef struct _PSX_MAX_MESSAGE
 {
-    LPC_MESSAGE_HEADER Header;
+    //LPC_MESSAGE_HEADER Header;
+    LPC_MESSAGE Header;
     PSX_MESSAGE_HEADER PsxHeader;
     BYTE               Data [PSX_MAX_LPC_DATA_SIZE];
 } PSX_MAX_MESSAGE, * PPSX_MAX_MESSAGE;
@@ -75,7 +76,8 @@ typedef enum {
 
 typedef struct _PSX_TERMINAL_IO
 {
-    LPC_MESSAGE_HEADER Header;
+    //LPC_MESSAGE_HEADER Header;
+    LPC_MESSAGE Header;
     PSX_MESSAGE_HEADER PsxHeader;
     ULONG              Size;
     ULONG              Offset;

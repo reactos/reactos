@@ -1,4 +1,4 @@
-/* $Id: pdata.c,v 1.5 2002/10/29 04:45:33 rex Exp $
+/* $Id: pdata.c,v 1.6 2002/12/26 18:14:36 robd Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -121,26 +121,58 @@ __PdxProcessDataToProcessParameters
  fdDescriptor = __fdtable_entry_get(&ProcessData->FdTable, STDIN_FILENO);
 
  if(fdDescriptor != NULL)
-  (*ProcessParameters)->InputHandle = fdDescriptor->FileHandle;
+  (*ProcessParameters)->hStdInput = fdDescriptor->FileHandle;
 
  /* standard output handle */
  fdDescriptor = __fdtable_entry_get(&ProcessData->FdTable, STDOUT_FILENO);
 
  if(fdDescriptor != NULL)
-  (*ProcessParameters)->OutputHandle = fdDescriptor->FileHandle;
+  (*ProcessParameters)->hStdOutput = fdDescriptor->FileHandle;
 
  /* standard error handle */
  fdDescriptor = __fdtable_entry_get(&ProcessData->FdTable, STDERR_FILENO);
 
  if(fdDescriptor != NULL)
-  (*ProcessParameters)->ErrorHandle = fdDescriptor->FileHandle;
+  (*ProcessParameters)->hStdError = fdDescriptor->FileHandle;
 
  /* POSIX+ and NT environments are incompatible, we set the environment to
     nothing */
  (*ProcessParameters)->Environment = NULL;
 
- (*ProcessParameters)->ConsoleHandle = (PVOID)-1;
- (*ProcessParameters)->ConsoleFlags = 0;
+/*
+typedef struct _RTL_USER_PROCESS_PARAMETERS {
+	ULONG  AllocationSize;
+	ULONG  Size;
+	ULONG  Flags;
+	ULONG  DebugFlags;
+	HANDLE  hConsole;
+	ULONG  ProcessGroup;
+	HANDLE  hStdInput;
+	HANDLE  hStdOutput;
+	HANDLE  hStdError;
+	UNICODE_STRING  CurrentDirectoryName;
+	HANDLE  CurrentDirectoryHandle;
+	UNICODE_STRING  DllPath;
+	UNICODE_STRING  ImagePathName;
+	UNICODE_STRING  CommandLine;
+	PWSTR  Environment;
+	ULONG  dwX;
+	ULONG  dwY;
+	ULONG  dwXSize;
+	ULONG  dwYSize;
+	ULONG  dwXCountChars;
+	ULONG  dwYCountChars;
+	ULONG  dwFillAttribute;
+	ULONG  dwFlags;
+	ULONG  wShowWindow;
+	UNICODE_STRING  WindowTitle;
+	UNICODE_STRING  DesktopInfo;
+	UNICODE_STRING  ShellInfo;
+	UNICODE_STRING  RuntimeInfo;
+} RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
+ */
+ (*ProcessParameters)->hConsole = (PVOID)-1;
+ (*ProcessParameters)->Flags = 0;
 
  return (STATUS_SUCCESS);
 }
