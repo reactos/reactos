@@ -1,4 +1,4 @@
-/* $Id: isapnp.c,v 1.5 2002/11/13 21:57:47 chorns Exp $
+/* $Id: isapnp.c,v 1.6 2003/07/15 10:42:53 gvg Exp $
  *
  * PROJECT:         ReactOS ISA PnP Bus driver
  * FILE:            isapnp.c
@@ -514,7 +514,7 @@ static NTSTATUS AddResourceDescriptor(
   d = (PISAPNP_DESCRIPTOR)
     ExAllocatePool(PagedPool, sizeof(ISAPNP_DESCRIPTOR));
   if (!d)
-    return Status;
+    return STATUS_NO_MEMORY;
 
   RtlZeroMemory(d, sizeof(ISAPNP_DESCRIPTOR));
 
