@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.45 2002/10/01 19:27:25 chorns Exp $
+/* $Id: page.c,v 1.46 2002/11/05 20:39:03 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -161,7 +161,7 @@ NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
      }
    DPRINT("Addr %x\n",PAGETABLE_MAP / (4*1024*1024));
    PageDirectory[PAGETABLE_MAP / (4*1024*1024)] = 
-     (ULONG)PhysPageDirectory.QuadPart | 0x7;
+     PhysPageDirectory.u.LowPart | PA_PRESENT | PA_READWRITE;
    
    ExUnmapPage(PageDirectory);
    
@@ -180,7 +180,8 @@ VOID MmDeletePageTable(PEPROCESS Process, PVOID Address)
    *(ADDR_TO_PDE(Address)) = 0;
    if (Address >= (PVOID)KERNEL_BASE)
      {
-       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
+         KeBugCheck(0);
+//       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
      }
    FLUSH_TLB;
    if (Process != NULL && Process != CurrentProcess)
@@ -197,31 +198,37 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
    ULONG npage;
    
    if (Process != NULL && Process != CurrentProcess)
-     {
-	KeAttachProcess(Process);
-     }
+   {
+      KeAttachProcess(Process);
+   }
+
    PageTable = (PULONG)PAGE_ROUND_DOWN((PVOID)ADDR_TO_PTE(Address));
    for (i = 0; i < 1024; i++)
-     {
-	if (PageTable[i] != 0)
-	  {
-	    DbgPrint("Page table entry not clear at %x/%x (is %x)\n",
-		     ((ULONG)Address / 4*1024*1024), i, PageTable[i]);
-	    KeBugCheck(0);
-	  }
-     }
+   {
+      if (PageTable[i] != 0)
+      {
+         DbgPrint("Page table entry not clear at %x/%x (is %x)\n",
+		  ((ULONG)Address / 4*1024*1024), i, PageTable[i]);
+	 KeBugCheck(0);
+      }
+   }
    npage = *(ADDR_TO_PDE(Address));
    *(ADDR_TO_PDE(Address)) = 0;
-   if (Address >= (PVOID)KERNEL_BASE)
-     {
-       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
-     }
-   MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PAGE(npage));
    FLUSH_TLB;
+
+   if (Address >= (PVOID)KERNEL_BASE)
+   {
+//    MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
+      KeBugCheck(0);
+   }
+   else
+   {
+      MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PAGE(npage));
+   }
    if (Process != NULL && Process != CurrentProcess)
-     {
-	KeDetachProcess();
-     }
+   {
+      KeDetachProcess();
+   }
 }
 
 NTSTATUS MmGetPageEntry2(PVOID PAddress, PULONG* Pte, BOOLEAN MayWait)
@@ -229,41 +236,66 @@ NTSTATUS MmGetPageEntry2(PVOID PAddress, PULONG* Pte, BOOLEAN MayWait)
  * FUNCTION: Get a pointer to the page table entry for a virtual address
  */
 {
-   PULONG Pde;
-   ULONG Address = (ULONG)PAddress;
+   PULONG Pde, kePde;
    PHYSICAL_ADDRESS npage;
+   BOOLEAN Free = FALSE;
+   NTSTATUS Status;
+   KIRQL oldIrql;
    
-   DPRINT("MmGetPageEntry(Address %x)\n", Address);
+   DPRINT("MmGetPageEntry(Address %x)\n", PAddress);
    
-   Pde = ADDR_TO_PDE(Address);
-   if ((*Pde) == 0)     
-     {
-       if (Address >= KERNEL_BASE &&
-	   MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
+   Pde = ADDR_TO_PDE(PAddress);
+   if (*Pde == 0)     
+   {
+      if (PAddress >= (PVOID)KERNEL_BASE)
+      {
+	 kePde = MmGlobalKernelPageDirectory + ADDR_TO_PDE_OFFSET(PAddress);
+         oldIrql = KeRaiseIrqlToSynchLevel();
+	 if (*kePde != 0)
 	 {
- 	   (*Pde) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
-	   FLUSH_TLB;
+	    *Pde = *kePde;
+	    FLUSH_TLB;
 	 }
-       else
+         else
 	 {
-	   NTSTATUS Status;
-	   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, MayWait, &npage);
-	   if (!NT_SUCCESS(Status))
-	     {
-	       return(Status);
-	     }
-	   (*Pde) = npage.QuadPart | 0x7;		
-	   if (Address >= KERNEL_BASE)
-	     {
-	       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 
-		 *Pde;
-	     }
-	   memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGE_SIZE);
-	   FLUSH_TLB;
+	    KeLowerIrql(oldIrql);
+	    Status = MmRequestPageMemoryConsumer(MC_NPPOOL, MayWait, &npage);
+	    if (!NT_SUCCESS(Status))
+	    {
+	       KeBugCheck(0);
+	    }
+	    oldIrql = KeRaiseIrqlToSynchLevel();
+	    /* An other thread can set this pde entry, we must check again */
+	    if (*kePde == 0)
+	    {
+	       *kePde = npage.u.LowPart | PA_PRESENT | PA_READWRITE;
+	    }
+	    else
+	    {
+	       Free = TRUE;
+	    }
+	    *Pde = *kePde;
+	    FLUSH_TLB;
 	 }
-     }
-   *Pte = ADDR_TO_PTE(Address);
-   return(STATUS_SUCCESS);
+	 KeLowerIrql(oldIrql);
+      }
+      else
+      {
+	 Status = MmRequestPageMemoryConsumer(MC_NPPOOL, MayWait, &npage);
+         if (!NT_SUCCESS(Status))
+	 {
+	    return(Status);
+	 }
+	 *Pde = npage.u.LowPart | PA_PRESENT | PA_READWRITE | PA_USER;
+	 FLUSH_TLB;
+      }
+   }
+   *Pte = (PULONG)ADDR_TO_PTE(PAddress);
+   if (Free)
+   {
+      MmReleasePageMemoryConsumer(MC_NPPOOL, npage);
+   }
+   return STATUS_SUCCESS;
 }
 
 ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
@@ -288,27 +320,30 @@ ULONG MmGetPageEntry1(PVOID PAddress)
  * FUNCTION: Get a pointer to the page table entry for a virtual address
  */
 {
-   PULONG page_tlb;
-   PULONG page_dir;
-   ULONG Address = (ULONG)PAddress;
+   PULONG Pde, kePde;
+   ULONG Entry = 0;
    
-   DPRINT("MmGetPageEntry(Address %x)\n", Address);
+   DPRINT("MmGetPageEntry(Address %x)\n", PAddress);
    
-   page_dir = ADDR_TO_PDE(Address);
-   if ((*page_dir) == 0 &&
-       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
-     {
-       (*page_dir) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
-       FLUSH_TLB;
-     }
-   DPRINT("page_dir %x *page_dir %x\n",page_dir,*page_dir);
-   if ((*page_dir) == 0)
-     {
-	return(0);
-     }
-   page_tlb = ADDR_TO_PTE(Address);
-   DPRINT("page_tlb %x\n",page_tlb);
-   return(*page_tlb);
+   Pde = ADDR_TO_PDE(PAddress);
+   if (*Pde == 0)
+   {
+       if (PAddress >= (PVOID)KERNEL_BASE)
+       {
+          kePde = MmGlobalKernelPageDirectory + ADDR_TO_PDE_OFFSET(PAddress);
+	  if (*kePde != 0)
+	  {
+	     *Pde = *kePde;
+	     FLUSH_TLB;
+	     Entry = *(PULONG)ADDR_TO_PTE(PAddress);
+	  }
+       }
+   }
+   else
+   {
+      Entry = *(PULONG)ADDR_TO_PTE(PAddress);
+   }
+   return Entry;
 }
 
 ULONG MmGetPageEntryForProcess1(PEPROCESS Process, PVOID Address)
@@ -343,7 +378,7 @@ MmGetPhysicalAddressForProcess(PEPROCESS Process,
      }
    return(PTE_TO_PAGE(PageEntry));
 }
-
+#if 0
 VOID
 MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PHYSICAL_ADDRESS* PhysicalAddr)
 /*
@@ -413,7 +448,7 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PHYSIC
        PhysicalAddr->u.LowPart = PAGE_MASK(Pte);
      }
 }
-
+#endif
 VOID
 MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
 		       BOOL* WasDirty, PHYSICAL_ADDRESS* PhysicalAddr)
@@ -422,7 +457,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
  */
 {
    ULONG Pte;
-   PULONG Pde;
+   PULONG Pde, kePde;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
    BOOLEAN WasValid;
 
@@ -440,13 +475,17 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
     * the global page directory.
     */
    Pde = ADDR_TO_PDE(Address);
-   if ((*Pde) == 0 && 
-       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
-     {
-       (*Pde) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
-       FLUSH_TLB;
-     }
-   if ((*Pde) == 0)
+   if (*Pde == 0 && Address >= (PVOID)KERNEL_BASE)
+   {
+      kePde = MmGlobalKernelPageDirectory + ADDR_TO_PDE_OFFSET(Address);
+      if (*kePde != 0)
+      {
+         *Pde = *kePde;
+	 FLUSH_TLB;
+      }
+   }
+   
+   if (*Pde == 0)
      {
 	if (Process != NULL && Process != CurrentProcess)
 	  {
@@ -475,7 +514,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
      }
    if (FreePage && WasValid)
      {
-        MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PAGE(Pte));
+       MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PAGE(Pte));
      }
 
    /*
@@ -483,7 +522,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
     */
    if (Process != NULL && WasValid &&
        Process->AddressSpace.PageTableRefCountTable != NULL &&
-       ADDR_TO_PAGE_TABLE(Address) < 768)
+       Address < (PVOID)KERNEL_BASE)
      {
 	PUSHORT Ptrc;
 	
@@ -532,7 +571,7 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
  */
 {
    ULONG Pte;
-   PULONG Pde;
+   PULONG Pde, kePde;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
    BOOLEAN WasValid = FALSE;
 
@@ -550,13 +589,19 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
     * the global page directory.
     */
    Pde = ADDR_TO_PDE(Address);
-   if ((*Pde) == 0 && 
-       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
-     {
-       (*Pde) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
-       FLUSH_TLB;
-     }
-   if ((*Pde) == 0)
+   if (*Pde == 0)
+   {
+      if (Address >= (PVOID)KERNEL_BASE)
+      {
+         kePde = MmGlobalKernelPageDirectory + ADDR_TO_PDE_OFFSET(Address);
+	 if (*kePde != 0)
+	 {
+	    *Pde = *kePde;
+	    FLUSH_TLB;
+	 }
+      }
+   }
+   if (*Pde == 0)
      {
 	if (Process != NULL && Process != CurrentProcess)
 	  {
@@ -572,12 +617,14 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
    Pte = (ULONG)InterlockedExchange((PLONG)ADDR_TO_PTE(Address), 0);
    FLUSH_TLB;
 
+   WasValid = PAGE_MASK(Pte) == 0 ? FALSE : TRUE;
+
    /*
     * Decrement the reference count for this page table.
     */
    if (Process != NULL && WasValid &&
        Process->AddressSpace.PageTableRefCountTable != NULL &&
-       ADDR_TO_PAGE_TABLE(Address) < 768)
+       Address < (PVOID)KERNEL_BASE)
      {
 	PUSHORT Ptrc;
 	
@@ -607,63 +654,75 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
 BOOLEAN 
 Mmi386MakeKernelPageTableGlobal(PVOID PAddress)
 {
-   PULONG page_dir;
-   ULONG Address = (ULONG)PAddress;
+   PULONG kePde, Pde;
    
-   page_dir = ADDR_TO_PDE(Address);
-   if ((*page_dir) == 0 &&
-       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
-     {
-       (*page_dir) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
-       FLUSH_TLB;
-       return(TRUE);
-     }
+   Pde = ADDR_TO_PDE(PAddress);
+   if (*Pde == 0)
+   {
+      kePde = MmGlobalKernelPageDirectory + ADDR_TO_PDE_OFFSET(PAddress);
+      if (*kePde != 0)
+      {
+         *Pde = *kePde;
+	 FLUSH_TLB;
+         return(TRUE);
+      }
+   }
    return(FALSE);
 }
 
 BOOLEAN MmIsPageTablePresent(PVOID PAddress)
 {
-   PULONG page_dir;
-   ULONG Address = (ULONG)PAddress;
+   PULONG Pde, kePde;
    
-   page_dir = ADDR_TO_PDE(Address);
-   if ((*page_dir) == 0 &&
-       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
-     {
-       (*page_dir) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
-       FLUSH_TLB;
-     }
-   return((*page_dir) == 0);
+   Pde = ADDR_TO_PDE(PAddress);
+   if (*Pde == 0)
+   {
+      kePde = MmGlobalKernelPageDirectory + ADDR_TO_PDE_OFFSET(PAddress);
+      if (*kePde != 0)
+      {
+         *Pde = *kePde;
+	 FLUSH_TLB;
+	 return TRUE;
+      }
+   }
+   return FALSE;
 }
 
 NTSTATUS MmCreatePageTable(PVOID PAddress)
 {
-   PULONG page_dir;
-   ULONG Address = (ULONG)PAddress;
+   PULONG Pde, kePde;
    PHYSICAL_ADDRESS npage;
+   NTSTATUS Status;
    
-   DPRINT("MmGetPageEntry(Address %x)\n", Address);
+   DPRINT("MmGetPageEntry(Address %x)\n", PAddress);
    
-   page_dir = ADDR_TO_PDE(Address);
-   DPRINT("page_dir %x *page_dir %x\n",page_dir,*page_dir);
-   if ((*page_dir) == 0 &&
-       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
-     {
-       (*page_dir) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
-       FLUSH_TLB;
-     }
-   if ((*page_dir) == 0)
-     {
-       NTSTATUS Status;
-       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &npage);
-       if (!NT_SUCCESS(Status))
-	 {
-	   return(Status);
-	 }
-       (*page_dir) = npage.QuadPart | 0x7;
-       memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGE_SIZE);
-       FLUSH_TLB;
-     }
+   Pde = ADDR_TO_PDE(PAddress);
+   DPRINT("page_dir %x *page_dir %x\n", Pde, *Pde);
+   if (*Pde == 0 && PAddress >= (PVOID)KERNEL_BASE)
+   {
+      kePde = MmGlobalKernelPageDirectory + ADDR_TO_PDE_OFFSET(PAddress);
+      if (*kePde != 0)
+      {
+	 *Pde = *kePde;
+	 FLUSH_TLB;
+	 return STATUS_SUCCESS;
+      }
+      /* Should we create a kernel page table? */
+      DPRINT1("!!!!!!!!!!!!!!!!!!\n");
+      return STATUS_UNSUCCESSFUL;
+   }
+
+   if (*Pde == 0)
+   {
+      Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &npage);
+      if (!NT_SUCCESS(Status))
+      {
+         return(Status);
+      }
+      MiZeroPage(npage);
+      *Pde = npage.u.LowPart | PA_PRESENT | PA_READWRITE | PA_USER;
+      FLUSH_TLB;
+   }
    return(STATUS_SUCCESS);
 }
 
@@ -672,36 +731,69 @@ PULONG MmGetPageEntry(PVOID PAddress)
  * FUNCTION: Get a pointer to the page table entry for a virtual address
  */
 {
-   PULONG page_tlb;
-   PULONG page_dir;
-   ULONG Address = (ULONG)PAddress;
+   PULONG Pde, kePde;
    PHYSICAL_ADDRESS npage;
+   KIRQL oldIrql;
+   BOOLEAN Free = FALSE;
+   NTSTATUS Status;
    
-   DPRINT("MmGetPageEntry(Address %x)\n", Address);
+   DPRINT("MmGetPageEntry(Address %x)\n", PAddress);
    
-   page_dir = ADDR_TO_PDE(Address);
-   DPRINT("page_dir %x *page_dir %x\n",page_dir,*page_dir);
-   if ((*page_dir) == 0 &&
-       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
-     {
-       (*page_dir) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
-       FLUSH_TLB;
-     }
-   if ((*page_dir) == 0)
-     {
-       NTSTATUS Status;
-       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &npage);
-       if (!NT_SUCCESS(Status))
+   Pde = ADDR_TO_PDE(PAddress);
+   DPRINT("page_dir %x *page_dir %x\n",Pde,*Pde);
+   if (*Pde == 0)
+   {
+      if (PAddress >= (PVOID)KERNEL_BASE)
+      {
+	 oldIrql = KeRaiseIrqlToSynchLevel();
+	 kePde = MmGlobalKernelPageDirectory + ADDR_TO_PDE_OFFSET(PAddress);
+	 if (*kePde != 0)
 	 {
-	   KeBugCheck(0);
+	    *Pde = *kePde;
+	    FLUSH_TLB;
 	 }
-       (*page_dir) = npage.QuadPart | 0x7;
-       memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGE_SIZE);
-       FLUSH_TLB;
-     }
-   page_tlb = ADDR_TO_PTE(Address);
-   DPRINT("page_tlb %x\n",page_tlb);
-   return(page_tlb);
+	 else
+	 {
+	    KeLowerIrql(oldIrql);
+	    Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &npage);
+            if (!NT_SUCCESS(Status))
+	    {
+	       KeBugCheck(0);
+	    }
+	    MiZeroPage(npage);
+	    oldIrql = KeRaiseIrqlToSynchLevel();
+	    if (*kePde != 0)
+	    {
+	       *Pde = *kePde;
+	       FLUSH_TLB;
+	       Free = TRUE;
+	    }
+	    else
+	    {
+               *Pde = *kePde = npage.u.LowPart | PA_PRESENT | PA_READWRITE;
+	       FLUSH_TLB;
+	    }
+	 }
+	 KeLowerIrql(oldIrql);
+      }
+      else
+      {
+	 Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &npage);
+         if (!NT_SUCCESS(Status))
+	 {
+	    KeBugCheck(0);
+	 }
+	 MiZeroPage(npage);
+	 *Pde = npage.u.LowPart | PA_PRESENT | PA_READWRITE | PA_USER;
+	 FLUSH_TLB;
+      }
+      if (Free)
+      {
+	 MmReleasePageMemoryConsumer(MC_NPPOOL, npage);
+      }
+   }
+
+   return ADDR_TO_PTE(PAddress);
 }
 
 BOOLEAN MmIsDirtyPage(PEPROCESS Process, PVOID Address)
@@ -770,7 +862,7 @@ VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address)
 	KeDetachProcess();
      }
 }
-
+#if 0
 VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
 {
    PULONG PageEntry;
@@ -788,7 +880,7 @@ VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
 	KeDetachProcess();
      }
 }
-
+#endif
 BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address)
 {
    return((MmGetPageEntryForProcess1(Process, Address)) & PA_PRESENT);
