@@ -1306,6 +1306,8 @@ static HRESULT WINAPI IShellLinkA_fnResolve(IShellLinkA * iface, HWND hwnd, DWOR
 
     FIXME("(%p)->(hwnd=%p flags=%lx)\n",This, hwnd, fFlags);
 
+    /*FIXME: use IResolveShellLink interface */
+
     if (!This->sPath && This->pPidl) {
 	WCHAR buffer[MAX_PATH];
 
@@ -1732,6 +1734,8 @@ static HRESULT WINAPI IShellLinkW_fnResolve(IShellLinkW * iface, HWND hwnd, DWOR
     _ICOM_THIS_From_IShellLinkW(IShellLinkImpl, iface);
 
     FIXME("(%p)->(hwnd=%p flags=%lx)\n",This, hwnd, fFlags);
+
+    /*FIXME: use IResolveShellLink interface */
 
     if (!This->sPath && This->pPidl) {
 	WCHAR buffer[MAX_PATH];
