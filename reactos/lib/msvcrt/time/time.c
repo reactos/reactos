@@ -26,8 +26,12 @@ time(time_t *t)
 {
 	FILETIME  SystemTime;
 	DWORD Remainder;
+	time_t tt;
 	GetSystemTimeAsFileTime(&SystemTime);
-	return FileTimeToUnixTime( &SystemTime,&Remainder ); 
+	tt = FileTimeToUnixTime( &SystemTime,&Remainder ); 
+	if (t)
+		*t = tt;
+	return tt;
 }
 
 /***********************************************************************
