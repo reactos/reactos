@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: volinfo.c,v 1.1 2002/04/15 20:39:49 ekohl Exp $
+/* $Id: volinfo.c,v 1.2 2002/05/01 21:52:05 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,7 +29,7 @@
 
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "cdfs.h"
@@ -131,7 +131,7 @@ CdfsGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
   FsSizeInfo->AvailableAllocationUnits.QuadPart = 0;
   FsSizeInfo->TotalAllocationUnits.QuadPart = DeviceExt->CdInfo.VolumeSpaceSize;
   FsSizeInfo->SectorsPerAllocationUnit = 1;
-  FsSizeInfo->BytesPerSector = 2048; /* ?? */
+  FsSizeInfo->BytesPerSector = BLOCKSIZE;
 
   DPRINT("Finished FsdGetFsSizeInformation()\n");
   if (NT_SUCCESS(Status))
@@ -198,18 +198,18 @@ CdfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
 	Status = CdfsGetFsAttributeInformation(DeviceObject->DeviceExtension,
 					       SystemBuffer,
 					       &BufferLength);
-      break;
+	break;
 
       case FileFsSizeInformation:
 	Status = CdfsGetFsSizeInformation(DeviceObject,
 					  SystemBuffer,
 					  &BufferLength);
-      break;
+	break;
 
       case FileFsDeviceInformation:
 	Status = CdfsGetFsDeviceInformation(SystemBuffer,
 					    &BufferLength);
-      break;
+	break;
 
       default:
 	Status = STATUS_NOT_SUPPORTED;

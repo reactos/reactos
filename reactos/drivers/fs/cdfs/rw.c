@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rw.c,v 1.1 2002/04/15 20:39:49 ekohl Exp $
+/* $Id: rw.c,v 1.2 2002/05/01 21:52:05 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,11 +29,18 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntos/minmax.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "cdfs.h"
+
+
+/* GLOBALS *******************************************************************/
+
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
 
 /* FUNCTIONS ****************************************************************/
@@ -41,18 +48,23 @@
 static NTSTATUS
 CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
 	     PFILE_OBJECT FileObject,
-	     PVOID Buffer,
+	     PUCHAR Buffer,
 	     ULONG Length,
-	     ULONG Offset)
+	     ULONG ReadOffset,
+	     PULONG LengthRead)
 /*
  * FUNCTION: Reads data from a file
  */
 {
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
+  PUCHAR TempBuffer;
+  ULONG TempLength;
   PCCB Ccb;
   PFCB Fcb;
 
-  DPRINT("CdfsReadFile(Offset %lu  Length %lu)\n", Offset, Length);
+  DPRINT("CdfsReadFile(ReadOffset %lu  Length %lu)\n", ReadOffset, Length);
+
+  *LengthRead = 0;
 
   if (Length == 0)
     return STATUS_SUCCESS;
@@ -60,18 +72,88 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
   Ccb = (PCCB)FileObject->FsContext2;
   Fcb = Ccb->Fcb;
 
-  if (Offset + Length > Fcb->Entry.DataLengthL)
-    Length = Fcb->Entry.DataLengthL - Offset;
+  if (ReadOffset + Length > Fcb->Entry.DataLengthL)
+    Length = Fcb->Entry.DataLengthL - ReadOffset;
 
-  DPRINT( "Reading %d bytes at %d\n", Offset, Length );
+  DPRINT("Reading %d bytes at %d\n", Length, ReadOffset);
 
   if (Length == 0)
     return(STATUS_UNSUCCESSFUL);
 
-  Status = CdfsReadSectors(DeviceExt->StorageDevice,
-			   Fcb->Entry.ExtentLocationL + Offset / BLOCKSIZE,
-			   Length / BLOCKSIZE,
-			   Buffer);
+#if 0
+  if ((FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) == 0)
+    {
+      LARGE_INTEGER FileOffset;
+      IO_STATUS_BLOCK IoStatus;
+
+      FileOffset.QuadPart = ReadOffset;
+      CcCopyRead(FileObject,
+		 &FileOffset,
+		 Length,
+		 TRUE,
+		 Buffer,
+		 &IoStatus);
+      *LengthRead = IoStatus.Information;
+
+      return(IoStatus.Status);
+    }
+#endif
+
+  if ((ReadOffset % BLOCKSIZE) != 0)
+    {
+      TempLength = min(Length, BLOCKSIZE - (ReadOffset % BLOCKSIZE));
+      TempBuffer = ExAllocatePool(NonPagedPool, BLOCKSIZE);
+
+      Status = CdfsReadSectors(DeviceExt->StorageDevice,
+			       Fcb->Entry.ExtentLocationL + (ReadOffset / BLOCKSIZE),
+			       1,
+			       TempBuffer);
+      if (NT_SUCCESS(Status))
+	{
+	  memcpy(Buffer, TempBuffer + (ReadOffset % BLOCKSIZE), TempLength);
+	  (*LengthRead) = (*LengthRead) + TempLength;
+	  Length = Length - TempLength;
+	  Buffer = Buffer + TempLength;
+	  ReadOffset = ReadOffset + TempLength;
+	}
+      ExFreePool(TempBuffer);
+    }
+
+  DPRINT("Status %lx\n", Status);
+
+  if ((Length / BLOCKSIZE) != 0 && NT_SUCCESS(Status))
+    {
+      TempLength = ROUND_DOWN(Length, BLOCKSIZE);
+      Status = CdfsReadSectors(DeviceExt->StorageDevice,
+			       Fcb->Entry.ExtentLocationL + (ReadOffset / BLOCKSIZE),
+			       Length / BLOCKSIZE,
+			       Buffer);
+      if (NT_SUCCESS(Status))
+	{
+	  (*LengthRead) = (*LengthRead) + TempLength;
+	  Length = Length - TempLength;
+	  Buffer = Buffer + TempLength;
+	  ReadOffset = ReadOffset + TempLength;
+	}
+    }
+
+  DPRINT("Status %lx\n", Status);
+
+  if (Length > 0 && NT_SUCCESS(Status))
+    {
+      TempBuffer = ExAllocatePool(NonPagedPool, BLOCKSIZE);
+
+      Status = CdfsReadSectors(DeviceExt->StorageDevice,
+			       Fcb->Entry.ExtentLocationL + (ReadOffset / BLOCKSIZE),
+			       1,
+			       TempBuffer);
+      if (NT_SUCCESS(Status))
+	{
+	  memcpy(Buffer, TempBuffer, Length);
+	  (*LengthRead) = (*LengthRead) + Length;
+	}
+      ExFreePool(TempBuffer);
+    }
 
   return(Status);
 }
@@ -81,25 +163,56 @@ NTSTATUS STDCALL
 CdfsRead(PDEVICE_OBJECT DeviceObject,
 	 PIRP Irp)
 {
-  ULONG Length;
+  PDEVICE_EXTENSION DeviceExt;
+  PIO_STACK_LOCATION Stack;
+  PFILE_OBJECT FileObject;
   PVOID Buffer;
-  ULONG Offset;
-  PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
-  PFILE_OBJECT FileObject = Stack->FileObject;
-  PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
-  NTSTATUS Status;
+  ULONG ReadLength;
+  LARGE_INTEGER ReadOffset;
+  ULONG ReturnedReadLength = 0;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   DPRINT("CdfsRead(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
 
-  Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-  Length = Stack->Parameters.Read.Length;
-  Offset = Stack->Parameters.Read.ByteOffset.u.LowPart;
+  if (Irp->Flags & IRP_PAGING_IO)
+    {
+      Status = STATUS_NOT_SUPPORTED;
+      goto ByeBye;
+    }
 
-  Status = CdfsReadFile(DeviceExt,FileObject,Buffer,Length,Offset);
+  DeviceExt = DeviceObject->DeviceExtension;
+  Stack = IoGetCurrentIrpStackLocation(Irp);
+  FileObject = Stack->FileObject;
+
+  ReadLength = Stack->Parameters.Read.Length;
+  ReadOffset = Stack->Parameters.Read.ByteOffset;
+  Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+
+  Status = CdfsReadFile(DeviceExt,
+			FileObject,
+			Buffer,
+			ReadLength,
+			ReadOffset.u.LowPart,
+			&ReturnedReadLength);
+
+ByeBye:
+  if (NT_SUCCESS(Status))
+    {
+      if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+	{
+	  FileObject->CurrentByteOffset.QuadPart = 
+	    ReadOffset.QuadPart + ReturnedReadLength;
+	}
+      Irp->IoStatus.Information = ReturnedReadLength;
+    }
+  else
+    {
+      Irp->IoStatus.Information = 0;
+    }
 
   Irp->IoStatus.Status = Status;
-  Irp->IoStatus.Information = Length;
   IoCompleteRequest(Irp,IO_NO_INCREMENT);
+
   return(Status);
 }
 
@@ -110,9 +223,9 @@ CdfsWrite(PDEVICE_OBJECT DeviceObject,
 {
   DPRINT("CdfsWrite(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
 
-  Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+  Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
   Irp->IoStatus.Information = 0;
-  return(STATUS_UNSUCCESSFUL);
+  return(STATUS_NOT_SUPPORTED);
 }
 
 /* EOF */
