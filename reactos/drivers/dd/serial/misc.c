@@ -78,7 +78,7 @@ SerialReceiveByte(
 	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
 	
 	KeAcquireSpinLock(&DeviceExtension->InputBufferLock, &Irql);
-	while (READ_PORT_UCHAR(SER_LSR(ComPortBase)) & SR_LSR_DR)
+	while (READ_PORT_UCHAR(SER_LSR(ComPortBase)) & SR_LSR_DATA_RECEIVED)
 	{
 		Byte = READ_PORT_UCHAR(SER_RBR(ComPortBase));
 		DPRINT("Serial: Byte received on COM%lu: 0x%02x\n",
@@ -116,7 +116,7 @@ SerialSendByte(
 	
 	KeAcquireSpinLock(&DeviceExtension->OutputBufferLock, &Irql);
 	while (!IsCircularBufferEmpty(&DeviceExtension->OutputBuffer)
-		&& READ_PORT_UCHAR(SER_LSR(ComPortBase)) & SR_LSR_TBE)
+		&& READ_PORT_UCHAR(SER_LSR(ComPortBase)) & SR_LSR_THR_EMPTY)
 	{
 		Status = PopCircularBufferEntry(&DeviceExtension->OutputBuffer, &Byte);
 		if (!NT_SUCCESS(Status))
@@ -153,16 +153,28 @@ SerialInterruptService(
 	Iir &= SR_IIR_ID_MASK;
 	if ((Iir & SR_IIR_SELF) != 0) { return FALSE; }
 	
-	/* FIXME: sometimes, update DeviceExtension->MCR */
 	switch (Iir)
 	{
 		case SR_IIR_MSR_CHANGE:
 		{
-			UCHAR IER;
-			DPRINT1("Serial: SR_IIR_MSR_CHANGE\n");
+			UCHAR MSR, IER;
+			DPRINT("Serial: SR_IIR_MSR_CHANGE\n");
 			
-			DeviceExtension->MSR = READ_PORT_UCHAR(SER_MSR(ComPortBase));
-			/* FIXME: what to do? */
+			MSR = READ_PORT_UCHAR(SER_MSR(ComPortBase));
+			if (MSR & SR_MSR_CTS_CHANGED)
+			{
+				if (MSR & SR_MSR_CTS)
+					KeInsertQueueDpc(&DeviceExtension->SendByteDpc, NULL, NULL);
+				else
+					; /* FIXME: stop transmission */
+			}
+			if (MSR & SR_MSR_DSR_CHANGED)
+			{
+				if (MSR & SR_MSR_DSR)
+					KeInsertQueueDpc(&DeviceExtension->ReceivedByteDpc, NULL, NULL);
+				else
+					; /* FIXME: stop reception */
+			}
 			IER = READ_PORT_UCHAR(SER_IER(ComPortBase));
 			WRITE_PORT_UCHAR(SER_IER(ComPortBase), IER | SR_IER_MSR_CHANGE);
 			return TRUE;
@@ -183,24 +195,20 @@ SerialInterruptService(
 		}
 		case SR_IIR_ERROR:
 		{
-			/* FIXME: what to do? */
-			DPRINT1("Serial: SR_IIR_ERROR\n");
-			break;
-			/*Error = READ_PORT_UCHAR( Self->Port + UART_LSR );
-			if( Error & LSR_OVERRUN )
-			    Self->WaitingReadBytes.PushBack( SerialFifo::OVERRUN );
-			    DeviceExtension->SerialPerfStats.SerialOverrunErrorCount++;
-			if( Error & LSR_PARITY_ERROR )
-			    Self->WaitingReadBytes.PushBack( SerialFifo::PARITY );
-			    DeviceExtension->SerialPerfStats.ParityErrorCount++;
-			if( Error & LSR_FRAMING_ERROR )
-			    Self->WaitingReadBytes.PushBack( SerialFifo::FRAMING );
-			    DeviceExtension->SerialPerfStats.FrameErrorCount++;
-			if( Error & LSR_BREAK )
-			    Self->WaitingReadBytes.PushBack( SerialFifo::BREAK );
-			if( Error & LSR_TIMEOUT )
-			    Self->WaitingReadBytes.PushBack( SerialFifo::TIMEOUT );
-			return KeInsertQueueDpc( &Self->DataInDpc, Self, 0 );*/
+			UCHAR LSR;
+			DPRINT("Serial: SR_IIR_ERROR\n");
+			
+			LSR = READ_PORT_UCHAR(SER_LSR(ComPortBase));
+			if (LSR & SR_LSR_OVERRUN_ERROR)
+				InterlockedIncrement(&DeviceExtension->SerialPerfStats.SerialOverrunErrorCount);
+			if (LSR & SR_LSR_PARITY_ERROR)
+				InterlockedIncrement(&DeviceExtension->SerialPerfStats.ParityErrorCount);
+			if (LSR & SR_LSR_FRAMING_ERROR)
+				InterlockedIncrement(&DeviceExtension->SerialPerfStats.FrameErrorCount);
+			if (LSR & SR_LSR_BREAK_INT)
+				InterlockedIncrement(&DeviceExtension->BreakInterruptErrorCount);
+			
+			return TRUE;
 		}
 	}
 	return FALSE;

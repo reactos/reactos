@@ -274,25 +274,8 @@ SerialWrite(
 	if (!NT_SUCCESS(Status))
 		goto ByeBye;
 	
+	/* push  bytes into output buffer */
 	KeAcquireSpinLock(&DeviceExtension->OutputBufferLock, &Irql);
-	if (IsCircularBufferEmpty(&DeviceExtension->OutputBuffer))
-	{
-		/* Put the maximum amount of data in UART output buffer */
-		while (Information < Length)
-		{
-			/* if UART output buffer is not full, directly write to it */
-			if ((READ_PORT_UCHAR(SER_LSR(ComPortBase)) & SR_LSR_TBE) != 0)
-			{
-				DPRINT("Serial: direct write 0x%02x (%c)\n", Buffer[Information], Buffer[Information]);
-				WRITE_PORT_UCHAR(SER_THR(ComPortBase), Buffer[Information]);
-				DeviceExtension->SerialPerfStats.TransmittedCount++;
-				Information++;
-			}
-			else
-				break;
-		}
-	}
-	/* write remaining bytes into output buffer */
 	while (Information < Length)
 	{
 		Status = PushCircularBufferEntry(&DeviceExtension->OutputBuffer, Buffer[Information]);
@@ -302,11 +285,13 @@ SerialWrite(
 			DeviceExtension->SerialPerfStats.BufferOverrunErrorCount++;
 			break;
 		}
-		DPRINT1("Serial: write to buffer 0x%02x\n", Buffer[Information]);
 		Information++;
 	}
 	KeReleaseSpinLock(&DeviceExtension->OutputBufferLock, Irql);
 	IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+	
+	/* send bytes */
+	SerialSendByte(NULL, DeviceExtension, NULL, NULL);
 
 ByeBye:
 	Irp->IoStatus.Information = Information;

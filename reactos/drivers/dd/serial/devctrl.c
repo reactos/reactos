@@ -182,9 +182,10 @@ SerialSetLineControl(
 
 BOOLEAN
 SerialClearPerfStats(
-	IN PSERIALPERF_STATS pSerialPerfStats)
+	IN PSERIAL_DEVICE_EXTENSION DeviceExtension)
 {
-	RtlZeroMemory(pSerialPerfStats, sizeof(SERIALPERF_STATS));
+	RtlZeroMemory(&DeviceExtension->SerialPerfStats, sizeof(SERIALPERF_STATS));
+	DeviceExtension->BreakInterruptErrorCount = 0;
 	return TRUE;
 }
 
@@ -258,7 +259,18 @@ SerialGetCommStatus(
 	
 	RtlZeroMemory(pSerialStatus, sizeof(SERIAL_STATUS));
 	
-	pSerialStatus->Errors = 0; /* FIXME */
+	pSerialStatus->Errors = 0;
+	if (DeviceExtension->BreakInterruptErrorCount)
+		pSerialStatus->Errors |= SERIAL_ERROR_BREAK;
+	if (DeviceExtension->SerialPerfStats.FrameErrorCount)
+		pSerialStatus->Errors |= SERIAL_ERROR_FRAMING;
+	if (DeviceExtension->SerialPerfStats.SerialOverrunErrorCount)
+		pSerialStatus->Errors |= SERIAL_ERROR_OVERRUN;
+	if (DeviceExtension->SerialPerfStats.BufferOverrunErrorCount)
+		pSerialStatus->Errors |= SERIAL_ERROR_QUEUEOVERRUN;
+	if (DeviceExtension->SerialPerfStats.ParityErrorCount)
+		pSerialStatus->Errors |= SERIAL_ERROR_PARITY;
+	
 	pSerialStatus->HoldReasons = 0; /* FIXME */
 	
 	KeAcquireSpinLock(&DeviceExtension->InputBufferLock, &Irql);
@@ -311,7 +323,7 @@ SerialDeviceControl(
 			KeSynchronizeExecution(
 				DeviceExtension->Interrupt,
 				(PKSYNCHRONIZE_ROUTINE)SerialClearPerfStats,
-				&DeviceExtension->SerialPerfStats);
+				DeviceExtension);
 			Status = STATUS_SUCCESS;
 			break;
 		}
@@ -552,27 +564,52 @@ SerialDeviceControl(
 		}
 		case IOCTL_SERIAL_PURGE:
 		{
-			KIRQL Irql1, Irql2;
+			KIRQL Irql;
 			DPRINT("Serial: IOCTL_SERIAL_PURGE\n");
-			KeAcquireSpinLock(&DeviceExtension->InputBufferLock, &Irql1);
-			KeAcquireSpinLock(&DeviceExtension->OutputBufferLock, &Irql2);
-			DeviceExtension->InputBuffer.ReadPosition = DeviceExtension->InputBuffer.WritePosition = 0;
-			DeviceExtension->OutputBuffer.ReadPosition = DeviceExtension->OutputBuffer.WritePosition = 0;
-			/* Clear receive/transmit buffers */
-			if (DeviceExtension->UartType >= Uart16550A)
+			/* FIXME: SERIAL_PURGE_RXABORT and SERIAL_PURGE_TXABORT
+			 * should stop current request */
+			if (LengthIn != sizeof(ULONG) || BufferIn == NULL)
+				Status = STATUS_INVALID_PARAMETER;
+			else
 			{
-				/* 16550 UARTs also have FIFO queues, but they are unusable due to a bug */
-				Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
-				if (NT_SUCCESS(Status))
+				ULONG PurgeMask = *(PULONG)BufferIn;
+				
+				Status = STATUS_SUCCESS;
+				/* FIXME: use SERIAL_PURGE_RXABORT and SERIAL_PURGE_TXABORT flags */
+				if (PurgeMask & SERIAL_PURGE_RXCLEAR)
 				{
-					WRITE_PORT_UCHAR(SER_FCR(ComPortBase), SR_FCR_CLEAR_RCVR | SR_FCR_CLEAR_XMIT);
-					IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+					KeAcquireSpinLock(&DeviceExtension->InputBufferLock, &Irql);
+					DeviceExtension->InputBuffer.ReadPosition = DeviceExtension->InputBuffer.WritePosition = 0;
+					if (DeviceExtension->UartType >= Uart16550A)
+					{
+						/* Clear also Uart FIFO */
+						Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+						if (NT_SUCCESS(Status))
+						{
+							WRITE_PORT_UCHAR(SER_FCR(ComPortBase), SR_FCR_CLEAR_RCVR);
+							IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+						}
+					}
+					KeReleaseSpinLock(&DeviceExtension->InputBufferLock, Irql);
+				}
+				
+				if (PurgeMask & SERIAL_PURGE_TXCLEAR)
+				{
+					KeAcquireSpinLock(&DeviceExtension->OutputBufferLock, &Irql);
+					DeviceExtension->OutputBuffer.ReadPosition = DeviceExtension->OutputBuffer.WritePosition = 0;
+					if (DeviceExtension->UartType >= Uart16550A)
+					{
+						/* Clear also Uart FIFO */
+						Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+						if (NT_SUCCESS(Status))
+						{
+							WRITE_PORT_UCHAR(SER_FCR(ComPortBase), SR_FCR_CLEAR_XMIT);
+							IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
+						}
+					}
+					KeReleaseSpinLock(&DeviceExtension->OutputBufferLock, Irql);
 				}
 			}
-			else
-				Status = STATUS_SUCCESS;
-			KeReleaseSpinLock(&DeviceExtension->OutputBufferLock, Irql2);
-			KeReleaseSpinLock(&DeviceExtension->InputBufferLock, Irql1);
 			break;
 		}
 		case IOCTL_SERIAL_RESET_DEVICE:

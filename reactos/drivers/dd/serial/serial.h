@@ -90,6 +90,7 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	UART_TYPE UartType;
 	ULONG WaitMask;
 	
+	ULONG BreakInterruptErrorCount;
 	SERIALPERF_STATS SerialPerfStats;
 	SERIAL_TIMEOUTS SerialTimeOuts;
 	BOOLEAN IsOpened;
@@ -169,11 +170,23 @@ typedef struct _WORKITEM_DATA
 #define     SR_MCR_DTR 0x01
 #define     SR_MCR_RTS 0x02
 #define   SER_LSR(x)   ((x)+5) /* Line Status Register */
-#define     SR_LSR_DR  0x01
-#define     SR_LSR_TBE 0x20
+#define     SR_LSR_DATA_RECEIVED  0x01
+#define     SR_LSR_OVERRUN_ERROR  0x02
+#define     SR_LSR_PARITY_ERROR   0x04
+#define     SR_LSR_FRAMING_ERROR  0x08
+#define     SR_LSR_BREAK_INT      0x10
+#define     SR_LSR_THR_EMPTY      0x20
+#define     SR_LSR_TSR_EMPTY      0x40
+#define     SR_LSR_ERROR_IN_FIFO  0x80 /* Uart >= 16550A */
 #define   SER_MSR(x)   ((x)+6) /* Modem Status Register */
-#define     SR_MSR_CTS 0x10
-#define     SR_MSR_DSR 0x20
+#define     SR_MSR_CTS_CHANGED    0x01
+#define     SR_MSR_DSR_CHANGED    0x02
+#define     SR_MSR_RI_CHANGED     0x04
+#define     SR_MSR_DCD_CHANGED    0x08
+#define     SR_MSR_CTS            0x10 /* Clear To Send */
+#define     SR_MSR_DSR            0x20 /* Data Set Ready */
+#define     SI_MSR_RI             0x40 /* Ring Indicator */
+#define     SR_MSR_DCD            0x80 /* Data Carrier Detect */
 #define   SER_SCR(x)   ((x)+7) /* Scratch Pad Register */
 
 /************************************ circularbuffer.c */
