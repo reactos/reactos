@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: slayer.c,v 1.2 2004/09/26 10:43:00 weiden Exp $
+/* $Id: slayer.c,v 1.3 2004/09/26 13:25:42 weiden Exp $
  *
  * PROJECT:         ReactOS Compatibility Layer Shell Extension
  * FILE:            lib/shellext/cplsample/cplsample.c
@@ -413,13 +413,9 @@ ApplySettings(LPCOMPATIBILITYPAGE this, HWND hwndDlg)
       PCITEM sel = this->CItems;
       
       /* map the index to a CITEM structure */
-      for(i = index; i > 0; i--)
+      for(i = index; i > 0 && sel != NULL; i--)
       {
         sel = sel->next;
-        if(sel == NULL)
-        {
-          break;
-        }
       }
 
       /* update the CSelectedItem member */
