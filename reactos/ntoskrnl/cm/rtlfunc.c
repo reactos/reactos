@@ -133,151 +133,258 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		       IN PVOID Context,
 		       IN PVOID Environment)
 {
-   NTSTATUS Status;
-   HANDLE BaseKeyHandle;
-   HANDLE CurrentKeyHandle;
-   PRTL_QUERY_REGISTRY_TABLE QueryEntry;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING KeyName;
-   PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
-   ULONG BufferSize;
-   ULONG ResultSize;
-   
-   DPRINT("RtlQueryRegistryValues() called\n");
-   
-   Status = RtlpGetRegistryHandle(RelativeTo,
-				  Path,
-				  FALSE,
-				  &BaseKeyHandle);
-   if (!NT_SUCCESS(Status))
+  NTSTATUS Status;
+  HANDLE BaseKeyHandle;
+  HANDLE CurrentKeyHandle;
+  PRTL_QUERY_REGISTRY_TABLE QueryEntry;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyName;
+  PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+  PKEY_VALUE_FULL_INFORMATION FullValueInfo;
+  ULONG BufferSize;
+  ULONG ResultSize;
+  ULONG Index;
+
+  DPRINT("RtlQueryRegistryValues() called\n");
+
+  Status = RtlpGetRegistryHandle(RelativeTo,
+				 Path,
+				 FALSE,
+				 &BaseKeyHandle);
+  if (!NT_SUCCESS(Status))
     {
       DPRINT("RtlpGetRegistryHandle() failed with status %x\n", Status);
-      return Status;
+      return(Status);
     }
 
-   CurrentKeyHandle = BaseKeyHandle;
-   QueryEntry = QueryTable;
-   while ((QueryEntry->QueryRoutine != NULL) ||
-	  (QueryEntry->Name != NULL))
-     {
-    //CSH: Was:
-    //if ((QueryEntry->QueryRoutine == NULL) &&
-	  //  ((QueryEntry->Flags & (RTL_QUERY_REGISTRY_SUBKEY | RTL_QUERY_REGISTRY_DIRECT)) != 0))
-    // Which is more correct?
-	if ((QueryEntry->QueryRoutine == NULL) &&
-	    ((QueryEntry->Flags & RTL_QUERY_REGISTRY_SUBKEY) != 0))
-	  {
-       DPRINT("Bad parameters\n");
-	     Status = STATUS_INVALID_PARAMETER;
-	     break;
-	  }
+  CurrentKeyHandle = BaseKeyHandle;
+  QueryEntry = QueryTable;
+  while ((QueryEntry->QueryRoutine != NULL) ||
+	 (QueryEntry->Name != NULL))
+    {
+      //CSH: Was:
+      //if ((QueryEntry->QueryRoutine == NULL) &&
+      //  ((QueryEntry->Flags & (RTL_QUERY_REGISTRY_SUBKEY | RTL_QUERY_REGISTRY_DIRECT)) != 0))
+      // Which is more correct?
+      if ((QueryEntry->QueryRoutine == NULL) &&
+	  ((QueryEntry->Flags & RTL_QUERY_REGISTRY_SUBKEY) != 0))
+	{
+	  DPRINT("Bad parameters\n");
+	  Status = STATUS_INVALID_PARAMETER;
+	  break;
+	}
 
-	DPRINT("Name: %S\n", QueryEntry->Name);
+      DPRINT("Name: %S\n", QueryEntry->Name);
 
-	if (((QueryEntry->Flags & (RTL_QUERY_REGISTRY_SUBKEY | RTL_QUERY_REGISTRY_TOPKEY)) != 0) &&
-	    (BaseKeyHandle != CurrentKeyHandle))
-	  {
-	     NtClose(CurrentKeyHandle);
-	     CurrentKeyHandle = BaseKeyHandle;
-	  }
+      if (((QueryEntry->Flags & (RTL_QUERY_REGISTRY_SUBKEY | RTL_QUERY_REGISTRY_TOPKEY)) != 0) &&
+	  (BaseKeyHandle != CurrentKeyHandle))
+	{
+	  NtClose(CurrentKeyHandle);
+	  CurrentKeyHandle = BaseKeyHandle;
+	}
 
-	if (QueryEntry->Flags & RTL_QUERY_REGISTRY_SUBKEY)
-	  {
-	     DPRINT("Open new subkey: %S\n", QueryEntry->Name);
-	  
-	     RtlInitUnicodeString(&KeyName,
-				  QueryEntry->Name);
-	     InitializeObjectAttributes(&ObjectAttributes,
-					&KeyName,
-					OBJ_CASE_INSENSITIVE,
-					BaseKeyHandle,
-					NULL);
-	     Status = NtOpenKey(&CurrentKeyHandle,
-				KEY_ALL_ACCESS,
-				&ObjectAttributes);
-	     if (!NT_SUCCESS(Status))
-	       break;
-	  }
-	else if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DIRECT)
-	  {
-	     DPRINT("Query value directly: %S\n", QueryEntry->Name);
-	  
-	     RtlInitUnicodeString(&KeyName,
-				  QueryEntry->Name);
-	  
-	     BufferSize = sizeof (KEY_VALUE_PARTIAL_INFORMATION) + 4096;
-	     ValueInfo = ExAllocatePool(PagedPool, BufferSize);
-	     if (ValueInfo == NULL)
-	       {
+      if (QueryEntry->Flags & RTL_QUERY_REGISTRY_SUBKEY)
+	{
+	  DPRINT("Open new subkey: %S\n", QueryEntry->Name);
+
+	  RtlInitUnicodeString(&KeyName,
+			       QueryEntry->Name);
+	  InitializeObjectAttributes(&ObjectAttributes,
+				     &KeyName,
+				     OBJ_CASE_INSENSITIVE,
+				     BaseKeyHandle,
+				     NULL);
+	  Status = NtOpenKey(&CurrentKeyHandle,
+			     KEY_ALL_ACCESS,
+			     &ObjectAttributes);
+	  if (!NT_SUCCESS(Status))
+	    break;
+	}
+      else if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DIRECT)
+	{
+	  DPRINT("Query value directly: %S\n", QueryEntry->Name);
+
+	  RtlInitUnicodeString(&KeyName,
+			       QueryEntry->Name);
+
+	  BufferSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4096;
+	  ValueInfo = ExAllocatePool(PagedPool, BufferSize);
+	  if (ValueInfo == NULL)
+	    {
+	      Status = STATUS_NO_MEMORY;
+	      break;
+	    }
+
+	  Status = ZwQueryValueKey(CurrentKeyHandle,
+				   &KeyName,
+				   KeyValuePartialInformation,
+				   ValueInfo,
+				   BufferSize,
+				   &ResultSize);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT("ZwQueryValueKey() failed with status %x\n", Status);
+	      ExFreePool(ValueInfo);
+	      break;
+	    }
+	  else
+	    {
+	      if (ValueInfo->Type == REG_SZ)
+		{
+		  PUNICODE_STRING ValueString;
+
+		  ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
+		  if (ValueString->Buffer == 0)
+		    {
+		      RtlInitUnicodeString(ValueString,
+					   NULL);
+		      ValueString->MaximumLength = 256 * sizeof(WCHAR);
+		      ValueString->Buffer = ExAllocatePool(PagedPool,
+							   ValueString->MaximumLength);
+		      if (!ValueString->Buffer)
+			break;
+		      ValueString->Buffer[0] = 0;
+		    }
+		  ValueString->Length = RtlMin(ValueInfo->DataLength,
+					       ValueString->MaximumLength - sizeof(WCHAR));
+		  memcpy(ValueString->Buffer,
+			 ValueInfo->Data,
+			 ValueInfo->DataLength);
+		  ((PWSTR)ValueString->Buffer)[ValueString->Length / sizeof(WCHAR)] = 0;
+		}
+	      else
+		{
+		  memcpy(QueryEntry->EntryContext,
+			 ValueInfo->Data,
+			 ValueInfo->DataLength);
+		}
+	    }
+
+	  ExFreePool(ValueInfo);
+	}
+      else
+	{
+	  DPRINT("Query value via query routine: %S\n", QueryEntry->Name);
+
+	  if (QueryEntry->Name != NULL)
+	    {
+	      RtlInitUnicodeString(&KeyName,
+				   QueryEntry->Name);
+
+	      BufferSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4096;
+	      ValueInfo = ExAllocatePool(PagedPool,
+					 BufferSize);
+	      if (ValueInfo == NULL)
+		{
 		  Status = STATUS_NO_MEMORY;
 		  break;
-	       }
+		}
 
-	     Status = ZwQueryValueKey(CurrentKeyHandle,
-				      &KeyName,
-				      KeyValuePartialInformation,
-				      ValueInfo,
-				      BufferSize,
-				      &ResultSize);
-	     if (!NT_SUCCESS(Status))
-	       {
-      DPRINT("ZwQueryValueKey() failed with status %x\n", Status);
-		  ExFreePool(ValueInfo);
+	      Status = NtQueryValueKey(CurrentKeyHandle,
+				       &KeyName,
+				       KeyValuePartialInformation,
+				       ValueInfo,
+				       BufferSize,
+				       &ResultSize);
+	      if (!NT_SUCCESS(Status))
+		{
+		  Status = QueryEntry->QueryRoutine(QueryEntry->Name,
+						    QueryEntry->DefaultType,
+						    QueryEntry->DefaultData,
+						    QueryEntry->DefaultLength,
+						    Context,
+						    QueryEntry->EntryContext);
+		}
+	      else
+		{
+		  Status = QueryEntry->QueryRoutine(QueryEntry->Name,
+						    ValueInfo->Type,
+						    ValueInfo->Data,
+						    ValueInfo->DataLength,
+						    Context,
+						    QueryEntry->EntryContext);
+		}
+
+	      ExFreePool(ValueInfo);
+
+	      if (!NT_SUCCESS(Status))
+		break;
+	    }
+	  else if (QueryEntry->Flags & RTL_QUERY_REGISTRY_NOVALUE)
+	    {
+	      DPRINT("Simple callback\n");
+	      Status = QueryEntry->QueryRoutine(NULL,
+						REG_NONE,
+						NULL,
+						0,
+						Context,
+						QueryEntry->EntryContext);
+	      if (!NT_SUCCESS(Status))
+		break;
+	    }
+	  else
+	    {
+	      DPRINT("Enumerate values\n");
+
+	      BufferSize = sizeof(KEY_VALUE_FULL_INFORMATION) + 4096;
+	      FullValueInfo = ExAllocatePool(PagedPool,
+					     BufferSize);
+	      if (ValueInfo == NULL)
+		{
+		  Status = STATUS_NO_MEMORY;
 		  break;
-	       }
-	     else
-	       {
-		  if (ValueInfo->Type == REG_SZ)
+		}
+
+	      Index = 0;
+	      while (TRUE)
+		{
+		  Status = NtEnumerateValueKey(CurrentKeyHandle,
+					       Index,
+					       KeyValueFullInformation,
+					       FullValueInfo,
+					       BufferSize,
+					       &ResultSize);
+		  if (!NT_SUCCESS(Status))
 		    {
-		       PUNICODE_STRING ValueString;
-		       ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
-		       if (ValueString->Buffer == 0)
-			 {
-          RtlInitUnicodeString(ValueString, NULL);
-			    ValueString->MaximumLength = 256 * sizeof(WCHAR);
-			    ValueString->Buffer = ExAllocatePool(PagedPool, ValueString->MaximumLength);
-          if (!ValueString->Buffer)
-            break;
-          ValueString->Buffer[0] = 0;
-			 }
-		       ValueString->Length = RtlMin(ValueInfo->DataLength,
-						 ValueString->MaximumLength - sizeof(WCHAR));
-		       memcpy(ValueString->Buffer,
-			      ValueInfo->Data,
-			      ValueInfo->DataLength);
-			((PWSTR)ValueString->Buffer)[ValueString->Length / sizeof(WCHAR)] = 0;
+		      if (Status == STATUS_NO_MORE_ENTRIES)
+			Status = STATUS_SUCCESS;
+		      break;
 		    }
-		  else
-		    {
-		       memcpy(QueryEntry->EntryContext,
-			      ValueInfo->Data,
-			      ValueInfo->DataLength);
-		    }
-	       }
 
-	     ExFreePool (ValueInfo);
-	  }
-	else
-	  {
-	     DPRINT("Query value via query routine: %S\n", QueryEntry->Name);
-	     
-	  }
+		  Status = QueryEntry->QueryRoutine(FullValueInfo->Name,
+						    FullValueInfo->Type,
+						    (PVOID)FullValueInfo + FullValueInfo->DataOffset,
+						    FullValueInfo->DataLength,
+						    Context,
+						    QueryEntry->EntryContext);
+		  if (!NT_SUCCESS(Status))
+		    break;
 
-	if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DELETE)
-	  {
-	     DPRINT("Delete value: %S\n", QueryEntry->Name);
-	     
-	  }
+		  Index++;
+		}
 
-	QueryEntry++;
-     }
+	      ExFreePool(ValueInfo);
 
-   if (CurrentKeyHandle != BaseKeyHandle)
-     NtClose(CurrentKeyHandle);
+	      if (!NT_SUCCESS(Status))
+		break;
+	    }
+	}
 
-   NtClose(BaseKeyHandle);
+      if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DELETE)
+	{
+	  DPRINT1("FIXME: Delete value: %S\n", QueryEntry->Name);
 
-   return Status;
+	}
+
+      QueryEntry++;
+    }
+
+  if (CurrentKeyHandle != BaseKeyHandle)
+    NtClose(CurrentKeyHandle);
+
+  NtClose(BaseKeyHandle);
+
+  return(Status);
 }
 
 
@@ -289,40 +396,41 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
 		      IN PVOID ValueData,
 		      IN ULONG ValueLength)
 {
-   HANDLE KeyHandle;
-   NTSTATUS Status;
-   UNICODE_STRING Name;
+  HANDLE KeyHandle;
+  NTSTATUS Status;
+  UNICODE_STRING Name;
 
-   Status = RtlpGetRegistryHandle(RelativeTo,
-				  Path,
-				  TRUE,
-				  &KeyHandle);
-   if (!NT_SUCCESS(Status))
-     return Status;
+  Status = RtlpGetRegistryHandle(RelativeTo,
+				 Path,
+				 TRUE,
+				 &KeyHandle);
+  if (!NT_SUCCESS(Status))
+    return(Status);
 
-   RtlInitUnicodeString(&Name,
-			ValueName);
+  RtlInitUnicodeString(&Name,
+		       ValueName);
 
-   NtSetValueKey(KeyHandle,
-		 &Name,
-		 0,
-		 ValueType,
-		 ValueData,
-		 ValueLength);
+  NtSetValueKey(KeyHandle,
+		&Name,
+		0,
+		ValueType,
+		ValueData,
+		ValueLength);
 
-   NtClose(KeyHandle);
+  NtClose(KeyHandle);
 
-   return STATUS_SUCCESS;
+  return(STATUS_SUCCESS);
 }
+
 
 NTSTATUS STDCALL
 RtlFormatCurrentUserKeyPath(IN OUT PUNICODE_STRING KeyPath)
 {
-   /* FIXME: !!! */
-   RtlCreateUnicodeString(KeyPath,
-			  L"\\Registry\\User\\.Default");
+  /* FIXME: !!! */
+  RtlCreateUnicodeString(KeyPath,
+			 L"\\Registry\\User\\.Default");
 
-   return STATUS_SUCCESS;
+  return(STATUS_SUCCESS);
 }
 
 /*  ------------------------------------------  Private Implementation  */
