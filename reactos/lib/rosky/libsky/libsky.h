@@ -1,6 +1,8 @@
 #ifndef __LIBSKY_H
 #define __LIBSKY_H
 
+void __cdecl DbgPrint(char *, ...);
+
 #ifdef DEBUG
 # ifdef NDEBUG
 #  define DBG(...)

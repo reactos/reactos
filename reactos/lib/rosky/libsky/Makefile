@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2004/08/12 15:41:36 weiden Exp $
+# $Id: Makefile,v 1.3 2004/08/13 23:31:12 sedwards Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -12,6 +12,7 @@ TARGET_BASE = 0x71c10000
 
 TARGET_CFLAGS = \
  -I./include \
+ -D__USE_W32API \
  -DDEBUG \
  -Wall \
  -Werror \
