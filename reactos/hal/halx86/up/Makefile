@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/12/03 20:10:45 gvg Exp $
+# $Id: Makefile,v 1.2 2004/12/04 17:22:47 gvg Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -52,6 +52,7 @@ GENERIC_OBJECTS = \
 	isa.o \
 	kdbg.o \
 	mca.o \
+	mem.o \
 	misc.o \
 	pci.o \
 	portio.o \

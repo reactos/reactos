@@ -33,6 +33,9 @@ VOID HalpStartEnumerator (VOID);
 /* dma.c */
 VOID HalpInitDma (VOID);
 
+/* mem.c */
+PVOID HalpMapPhysMemory(ULONG PhysAddr, ULONG Size);
+
 /* Non-generic initialization */
 VOID HalpInitPhase0 (VOID);
 

@@ -119,6 +119,7 @@ _multiboot_entry:
 	movl	$(V2P(apic_pagetable) + 0x3), 0xFEC(%esi)
 #endif /* MP */
 	movl	$(V2P(kpcr_pagetable) + 0x3), 0xFF0(%esi)
+	movl	$(V2P(hal_pagetable) + 0x3), 0xFF4(%esi)
 
 	/*
 	 * Initialize the page table that maps low memory
@@ -174,17 +175,6 @@ _multiboot_entry:
 	movl	$0x1003, %eax
 	movl	%eax, (%esi, %edi)
 
-	/*
-	 * Initialize a part of the same pagetable to map the vga frame buffer (at FF3A0000).
-	 */
-	movl	$0xa0003, %eax
-	movl	$0x20, %ecx
-	movl	$0xE80, %edi
-.l9:
-	movl	%eax, (%esi, %edi)
-	add	$4, %edi
-	add	$0x1000, %eax
-	loop	.l9
 
 #ifdef MP
 
@@ -372,6 +362,10 @@ apic_pagetable:
 #endif /* MP */
 
 kpcr_pagetable:
+	.fill 4096, 1, 0
+
+/* Reserve a pagetable for HAL to play around with during early boot */
+hal_pagetable:
 	.fill 4096, 1, 0
 _pagetable_end:
 _unmap_me:

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.1 2004/12/03 20:10:43 gvg Exp $
+/* $Id: display.c,v 1.2 2004/12/04 17:22:46 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -125,6 +125,10 @@
 #include <hal.h>
 
 #define SCREEN_SYNCHRONIZATION
+
+#define VGA_GRAPH_MEM 0xa0000
+#define VGA_CHAR_MEM  0xb8000
+#define VGA_END_MEM   0xbffff
 
 #define VGA_AC_INDEX            0x3c0
 #define VGA_AC_READ             0x3c1
@@ -577,8 +581,8 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
       ULONG ScanLines;
       ULONG Data;
 
-      VideoBuffer = (PUSHORT)(0xff3b8000);
-      GraphVideoBuffer = (PUCHAR)(0xff3a0000);
+      GraphVideoBuffer = (PUCHAR) HalpMapPhysMemory(VGA_GRAPH_MEM, VGA_END_MEM - VGA_GRAPH_MEM + 1);
+      VideoBuffer = (PUSHORT) (GraphVideoBuffer + (VGA_CHAR_MEM - VGA_GRAPH_MEM));
 
       /* Set cursor position */
 //      CursorX = LoaderBlock->cursorx;
