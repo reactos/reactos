@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.27 2004/02/19 21:12:09 weiden Exp $
+/* $Id: scrollbar.c,v 1.28 2004/03/27 10:46:31 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -177,247 +177,244 @@ IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPS
   return TRUE;
 }
 
-BOOL FASTCALL
+static BOOL FASTCALL
 IntGetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi)
 {
   UINT Mask;
   LPSCROLLINFO psi;
   PSCROLLBARINFO Info;
   
-  switch(nBar)
-  {
-    case SB_HORZ:
-      Info = Window->pHScroll;
-      if(Info)
+  switch (nBar)
+    {
+      case SB_HORZ:
+        Info = Window->pHScroll;
         break;
-      /* fall through */
-    case SB_VERT:
-      Info = Window->pVScroll;
-      if(Info)
+      case SB_VERT:
+        Info = Window->pVScroll;
         break;
-      /* fall through */
-    case SB_CTL:
-      /* FIXME
-         Send a SBM_GETSCROLLINFO message to the window. Fail if the window
-         doesn't handle the message
-      */
-      return 0;
-      
-      Info = Window->wExtra;
-      if(Info)
+      case SB_CTL:
+        if (Window->ExtraDataSize < sizeof(SCROLLBARINFO) + sizeof(SCROLLINFO))
+          {
+            Info = NULL;
+          }
+        else
+          {
+            Info = (PSCROLLBARINFO) Window->ExtraData;
+          }
         break;
-      /* fall through */
-    default:
+      default:
+        DPRINT1("Trying to get scrollinfo for unknown scrollbar type %d", nBar);
+        return FALSE;
+    }
+
+  if (NULL == Info)
+    {
+      DPRINT1("No scrollinfo available\n");
       return FALSE;
-  }
+    }
   
-  psi = (LPSCROLLINFO)((PSCROLLBARINFO)(Info + 1));
+  psi = (LPSCROLLINFO)(Info + 1);
   
-  if(lpsi->fMask == SIF_ALL)
-    Mask = SIF_PAGE | SIF_POS | SIF_RANGE | SIF_TRACKPOS;
+  if (lpsi->fMask == SIF_ALL)
+    {
+      Mask = SIF_PAGE | SIF_POS | SIF_RANGE | SIF_TRACKPOS;
+    }
   else
-    Mask = lpsi->fMask;
+    {
+      Mask = lpsi->fMask;
+    }
 
-  if(Mask & SIF_PAGE)
-  {
-    lpsi->nPage = psi->nPage;
-  }
+  if (0 != (Mask & SIF_PAGE))
+    {
+      lpsi->nPage = psi->nPage;
+    }
   
-  if(Mask & SIF_POS)
-  {
-    lpsi->nPos = psi->nPos;
-  }
+  if (0 != (Mask & SIF_POS))
+    {
+      lpsi->nPos = psi->nPos;
+    }
   
-  if(Mask & SIF_RANGE)
-  {
-    lpsi->nMin = psi->nMin;
-    lpsi->nMax = psi->nMax;
-  }
+  if (0 != (Mask & SIF_RANGE))
+    {
+      lpsi->nMin = psi->nMin;
+      lpsi->nMax = psi->nMax;
+    }
 
-  if(Mask & SIF_TRACKPOS)
-  {
-    lpsi->nTrackPos = psi->nTrackPos;
-  }
+  if (0 != (Mask & SIF_TRACKPOS))
+    {
+      lpsi->nTrackPos = psi->nTrackPos;
+    }
   
   return TRUE;
 }
 
-DWORD FASTCALL
+static DWORD FASTCALL
 IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
 {
-   /*
-    * Update the scrollbar state and set action flags according to
-    * what has to be done graphics wise.
-    */
+  /*
+   * Update the scrollbar state and set action flags according to
+   * what has to be done graphics wise.
+   */
 
-   LPSCROLLINFO Info;
-   PSCROLLBARINFO psbi;
+  LPSCROLLINFO Info;
+  PSCROLLBARINFO psbi;
 /*   UINT new_flags;*/
-   BOOL bChangeParams = FALSE; /* don't show/hide scrollbar if params don't change */
+  BOOL bChangeParams = FALSE; /* don't show/hide scrollbar if params don't change */
 
-   if (lpsi->cbSize != sizeof(SCROLLINFO) && 
-       lpsi->cbSize != (sizeof(SCROLLINFO) - sizeof(lpsi->nTrackPos)))
-   {
+  if (lpsi->cbSize != sizeof(SCROLLINFO) && 
+      lpsi->cbSize != (sizeof(SCROLLINFO) - sizeof(lpsi->nTrackPos)))
+    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
-   }
-   if (lpsi->fMask & ~(SIF_ALL | SIF_DISABLENOSCROLL))
-   {
+    }
+  if (lpsi->fMask & ~(SIF_ALL | SIF_DISABLENOSCROLL))
+    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
-   }
-   switch(nBar)
-   {
+    }
+  switch (nBar)
+    {
       case SB_HORZ:
-         if (Window->pHScroll == NULL)
-         {
+        if (NULL == Window->pHScroll)
+          {
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
             return 0;
-         }
-         psbi = Window->pHScroll;
-         Info = (LPSCROLLINFO)(Window->pHScroll + 1);
-         break;
+          }
+        psbi = Window->pHScroll;
+        break;
       case SB_VERT:
-         if (Window->pVScroll == NULL)
-         {
+        if (NULL == Window->pVScroll)
+          {
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
             return 0;
-         }
-         psbi = Window->pVScroll;
-         Info = (LPSCROLLINFO)(Window->pVScroll + 1);
-         break;
+          }
+        psbi = Window->pVScroll;
+        break;
       case SB_CTL:
-         UNIMPLEMENTED;
-         break;
+        if (Window->ExtraDataSize < sizeof(SCROLLBARINFO) + sizeof(SCROLLINFO))
+          {
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            return 0;
+          }
+        psbi = (PSCROLLBARINFO) Window->ExtraData;
+        break;
       default:
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-         return 0;
-   }
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
 
-   /* Set the page size */
-   if (lpsi->fMask & SIF_PAGE)
-   {
+  Info = (LPSCROLLINFO)(psbi + 1);
+
+  /* Set the page size */
+  if (0 != (lpsi->fMask & SIF_PAGE))
+    {
       if (Info->nPage != lpsi->nPage)
-      {
-         Info->nPage = lpsi->nPage;
-#if 0
-         *Action |= SA_SSI_REFRESH;
-#endif
-         bChangeParams = TRUE;
-      }
-   }
+        {
+          Info->nPage = lpsi->nPage;
+          bChangeParams = TRUE;
+        }
+    }
 
-   /* Set the scroll pos */
-   if (lpsi->fMask & SIF_POS)
-   {
+  /* Set the scroll pos */
+  if (0 != (lpsi->fMask & SIF_POS))
+    {
       if (Info->nPos != lpsi->nPos)
-      {
-         Info->nPos = lpsi->nPos;
-#if 0
-         *Action |= SA_SSI_REFRESH;
-#endif
-      }
-   }
+        {
+          Info->nPos = lpsi->nPos;
+        }
+    }
 
-   /* Set the scroll range */
-   if (lpsi->fMask & SIF_RANGE)
-   {
+  /* Set the scroll range */
+  if (0 != (lpsi->fMask & SIF_RANGE))
+    {
       /* Invalid range -> range is set to (0,0) */
       if (lpsi->nMin > lpsi->nMax ||
-          (UINT)(lpsi->nMax - lpsi->nMin) >= 0x80000000)
-      {
-         Info->nMin = 0;
-         Info->nMax = 0;
-         bChangeParams = TRUE;
-      }
-      else
-      {
-         if (Info->nMin != lpsi->nMin || Info->nMax != lpsi->nMax)
-         {
-#if 0
-            *Action |= SA_SSI_REFRESH;
-#endif
-            Info->nMin = lpsi->nMin;
-            Info->nMax = lpsi->nMax;
-            bChangeParams = TRUE;
-         }
-      }
-   }
+          0x80000000 <= (UINT)(lpsi->nMax - lpsi->nMin))
+        {
+          Info->nMin = 0;
+          Info->nMax = 0;
+          bChangeParams = TRUE;
+        }
+      else if (Info->nMin != lpsi->nMin || Info->nMax != lpsi->nMax)
+        {
+          Info->nMin = lpsi->nMin;
+          Info->nMax = lpsi->nMax;
+          bChangeParams = TRUE;
+        }
+    }
 
-   /* Make sure the page size is valid */
-   if (Info->nPage < 0)
-   {
+  /* Make sure the page size is valid */
+  if (Info->nPage < 0)
+    {
       Info->nPage = 0;
-   }
-   else if (Info->nPage > Info->nMax - Info->nMin + 1)
-   {
+    }
+  else if (Info->nMax - Info->nMin + 1 < Info->nPage)
+    {
       Info->nPage = Info->nMax - Info->nMin + 1;
-   }
+    }
 
-   /* Make sure the pos is inside the range */
-   if (Info->nPos < Info->nMin)
-   {
+  /* Make sure the pos is inside the range */
+  if (Info->nPos < Info->nMin)
+    {
       Info->nPos = Info->nMin;
-   }
-   else if (Info->nPos > Info->nMax - max(Info->nPage - 1, 0))
-   {
+    }
+  else if (Info->nPos > Info->nMax - max(Info->nPage - 1, 0))
+    {
       Info->nPos = Info->nMax - max(Info->nPage - 1, 0);
-   }
+    }
 
-   /*
-    * Don't change the scrollbar state if SetScrollInfo is just called
-    * with SIF_DISABLENOSCROLL
-    */
-   if (!(lpsi->fMask & SIF_ALL))
-   {
+  /*
+   * Don't change the scrollbar state if SetScrollInfo is just called
+   * with SIF_DISABLENOSCROLL
+   */
+  if (0 == (lpsi->fMask & SIF_ALL))
+    {
       return Info->nPos;
-   }
+    }
 
-   /* Check if the scrollbar should be hidden or disabled */
-   if (lpsi->fMask & (SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL))
-   {
-/*      new_flags = Info->flags;*/
+  /* Check if the scrollbar should be hidden or disabled */
+  if (0 != (lpsi->fMask & (SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL)))
+    {
       if (Info->nMin >= Info->nMax - max(Info->nPage - 1, 0))
-      {
-         /* Hide or disable scroll-bar */
-         if (lpsi->fMask & SIF_DISABLENOSCROLL)
-	 {
+        {
+          /* Hide or disable scroll-bar */
+          if (0 != (lpsi->fMask & SIF_DISABLENOSCROLL))
+            {
 /*            new_flags = ESB_DISABLE_BOTH;*/
-#if 0
-	    *Action |= SA_SSI_REFRESH;
-#endif
-	 }
-         else if ((nBar != SB_CTL) && bChangeParams)
-         {
-            NtUserShowScrollBar(Window->Self, nBar, FALSE);
-            return Info->nPos;
-         }
-      }
+            }
+          else if ((nBar != SB_CTL) && bChangeParams)
+            {
+              NtUserShowScrollBar(Window->Self, nBar, FALSE);
+              return Info->nPos;
+            }
+        }
       else  /* Show and enable scroll-bar */
-      {
+        {
 /*         new_flags = 0;*/
-         if ((nBar != SB_CTL) && bChangeParams)
-            NtUserShowScrollBar(Window->Self, nBar, TRUE);
-      }
+          if ((nBar != SB_CTL) && bChangeParams)
+            {
+              NtUserShowScrollBar(Window->Self, nBar, TRUE);
+            }
+        }
 
 #if 0
       if (infoPtr->flags != new_flags) /* check arrow flags */
-      {
-         infoPtr->flags = new_flags;
-         *Action |= SA_SSI_REPAINT_ARROWS;
-      }
+        {
+          infoPtr->flags = new_flags;
+          *Action |= SA_SSI_REPAINT_ARROWS;
+        }
 #endif
-   }
+    }
 
-   if (bRedraw)
-   {
+  if (bRedraw)
+    {
       RECT UpdateRect = psbi->rcScrollBar;
       UpdateRect.left -= Window->ClientRect.left - Window->WindowRect.left;
       UpdateRect.right -= Window->ClientRect.left - Window->WindowRect.left;
       UpdateRect.top -= Window->ClientRect.top - Window->WindowRect.top;
       UpdateRect.bottom -= Window->ClientRect.top - Window->WindowRect.top;
       IntRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
-   }
+    }
 
    /* Return current position */
    return Info->nPos;
@@ -431,44 +428,38 @@ IntGetScrollBarInfo(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi)
   LPSCROLLINFO psi;
   
   switch(idObject)
-  {
-    case OBJID_HSCROLL:
-      if(Window->pHScroll)
-      {
+    {
+      case OBJID_HSCROLL:
         Bar = SB_HORZ;
         sbi = Window->pHScroll;
         break;
-      }
-      /* fall through */
-    case OBJID_VSCROLL:
-      if(Window->pVScroll)
-      {
+      case OBJID_VSCROLL:
         Bar = SB_VERT;
         sbi = Window->pVScroll;
         break;
-      }
-      /* fall through */
-    case OBJID_CLIENT:
-    
-      /* FIXME
-        Send a SBM_GETSCROLLBARINFO message if Window is not a system scrollbar.
-        If the window doesn't handle the message return FALSE.
-      */
-      return FALSE;
-    
-      if(Window->wExtra)
-      {
+      case OBJID_CLIENT:
         Bar = SB_CTL;
-        sbi = Window->wExtra;
+        if (Window->ExtraDataSize < sizeof(SCROLLBARINFO) + sizeof(SCROLLINFO))
+          {
+            sbi = NULL;
+          }
+        else
+          {
+            sbi = (PSCROLLBARINFO) Window->ExtraData;
+          }
         break;
-      }
-      /* fall through */
-    default:
+      default:
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+  if (NULL == sbi)
+    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
-  }
+    }
   
-  psi = (LPSCROLLINFO)((PSCROLLBARINFO)(sbi + 1));
+  psi = (LPSCROLLINFO)(sbi + 1);
 
   IntGetScrollBarRect(Window, Bar, &(sbi->rcScrollBar));
   IntCalculateThumb(Window, Bar, sbi, psi);

@@ -1,4 +1,4 @@
-/* $Id: regcontrol.c,v 1.17 2003/12/07 23:02:57 gvg Exp $
+/* $Id: regcontrol.c,v 1.18 2004/03/27 10:46:32 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -65,8 +65,8 @@ ControlsInit(LPCWSTR ClassName)
       &MDICLIENT_builtin_class,
 #if 0
       &MENU_builtin_class,
-      &SCROLL_builtin_class,
 #endif
+      &SCROLL_builtin_class,
       &BUTTON_builtin_class,
       &LISTBOX_builtin_class,
       &EDIT_builtin_class,
