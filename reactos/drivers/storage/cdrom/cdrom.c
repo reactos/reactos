@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.24 2003/11/07 17:14:22 ekohl Exp $
+/* $Id: cdrom.c,v 1.25 2003/11/10 18:09:54 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -706,7 +706,6 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
  * RETURNS:
  *	Status.
  */
-
 static NTSTATUS
 CdromClassReadTocEntry (PDEVICE_OBJECT DeviceObject,
 			UINT TrackNo,
@@ -815,7 +814,7 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   switch (ControlCode)
     {
       case IOCTL_CDROM_GET_DRIVE_GEOMETRY:
-	DPRINT("IOCTL_CDROM_GET_DRIVE_GEOMETRY\n");
+	DPRINT ("CdromClassDeviceControl: IOCTL_CDROM_GET_DRIVE_GEOMETRY\n");
 	if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(DISK_GEOMETRY))
 	  {
 	    Status = STATUS_INFO_LENGTH_MISMATCH;
@@ -829,7 +828,7 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	return STATUS_PENDING;
 
       case IOCTL_CDROM_CHECK_VERIFY:
-	DPRINT ("IOCTL_CDROM_CHECK_VERIFY\n");
+	DPRINT ("CdromClassDeviceControl: IOCTL_CDROM_CHECK_VERIFY\n");
 	if (OutputLength != 0 && OutputLength < sizeof (ULONG))
 	  {
 	    DPRINT1("Buffer too small\n");
@@ -964,10 +963,31 @@ CdromClassStartIo (IN PDEVICE_OBJECT DeviceObject,
 
   DPRINT("CdromClassStartIo() called!\n");
 
+  IoMarkIrpPending (Irp);
+
   DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
   IrpStack = IoGetCurrentIrpStackLocation (Irp);
 
   MaximumTransferLength = DeviceExtension->PortCapabilities->MaximumTransferLength;
+
+  if (DeviceObject->Flags & DO_VERIFY_VOLUME)
+    {
+      if (!(IrpStack->Flags & SL_OVERRIDE_VERIFY_VOLUME))
+	{
+	  DPRINT1 ("Verify required\n");
+
+	  if (Irp->Tail.Overlay.Thread)
+	    {
+	      IoSetHardErrorOrVerifyDevice (Irp,
+					    DeviceObject);
+	    }
+	  Irp->IoStatus.Status = STATUS_VERIFY_REQUIRED;
+
+	  /* FIXME: Update drive capacity */
+
+	  return;
+	}
+    }
 
   if (IrpStack->MajorFunction == IRP_MJ_READ)
     {
@@ -1100,11 +1120,12 @@ CdromClassStartIo (IN PDEVICE_OBJECT DeviceObject,
       switch (IrpStack->Parameters.DeviceIoControl.IoControlCode)
 	{
 	  case IOCTL_CDROM_GET_DRIVE_GEOMETRY:
-	    DPRINT1 ("CdromClassStartIo: IOCTL_CDROM_GET_DRIVE_GEOMETRY\n");
+	    DPRINT ("CdromClassStartIo: IOCTL_CDROM_GET_DRIVE_GEOMETRY\n");
 	    Srb->DataTransferLength = sizeof(READ_CAPACITY_DATA);
 	    Srb->CdbLength = 10;
 	    Srb->TimeOutValue = DeviceExtension->TimeOutValue;
 	    Srb->SrbFlags = SRB_FLAGS_DISABLE_SYNCH_TRANSFER | SRB_FLAGS_DATA_IN;
+	    Cdb->CDB10.OperationCode = SCSIOP_READ_CAPACITY;
 
 	    /* Allocate data buffer */
 	    DataBuffer = ExAllocatePool (NonPagedPoolCacheAligned,
@@ -1146,7 +1167,6 @@ CdromClassStartIo (IN PDEVICE_OBJECT DeviceObject,
 
 	    MmBuildMdlForNonPagedPool (SubIrp->MdlAddress);
 	    Srb->DataBuffer = DataBuffer;
-	    Cdb->CDB10.OperationCode = SCSIOP_READ_CAPACITY;
 
 	    IoCallDriver (DeviceExtension->PortDeviceObject,
 			  SubIrp);
@@ -1221,6 +1241,31 @@ CdromDeviceControlCompletion (IN PDEVICE_OBJECT DeviceObject,
 					   &Status);
       DPRINT ("Retry %u\n", Retry);
 
+      if (Retry == TRUE &&
+	  (ULONG)OrigNextIrpStack->Parameters.Others.Argument1 > 0)
+	{
+	  DPRINT1 ("Try again (Retry count %lu)\n",
+		   (ULONG)OrigNextIrpStack->Parameters.Others.Argument1);
+
+	  (ULONG)OrigNextIrpStack->Parameters.Others.Argument1--;
+
+	  /* Release 'old' buffers */
+	  ExFreePool (Srb->SenseInfoBuffer);
+	  if (Srb->DataBuffer)
+	    ExFreePool(Srb->DataBuffer);
+	  ExFreePool(Srb);
+
+	  if (Irp->MdlAddress != NULL)
+	    IoFreeMdl(Irp->MdlAddress);
+
+	  IoFreeIrp(Irp);
+
+	  /* Call the StartIo routine again */
+	  CdromClassStartIo (DeviceObject,
+			     OrigIrp);
+
+	  return STATUS_MORE_PROCESSING_REQUIRED;
+	}
 
       DPRINT ("Status %lx\n", Status);
     }
@@ -1235,7 +1280,7 @@ CdromDeviceControlCompletion (IN PDEVICE_OBJECT DeviceObject,
 	      ULONG LastSector;
 	      ULONG SectorSize;
 
-	      DPRINT1 ("CdromClassControlCompletion: IOCTL_CDROM_GET_DRIVE_GEOMETRY\n");
+	      DPRINT ("CdromClassControlCompletion: IOCTL_CDROM_GET_DRIVE_GEOMETRY\n");
 
 	      CapacityBuffer = (PREAD_CAPACITY_DATA)Srb->DataBuffer;
 	      SectorSize = (((PUCHAR)&CapacityBuffer->BytesPerBlock)[0] << 24) |
@@ -1292,7 +1337,6 @@ CdromDeviceControlCompletion (IN PDEVICE_OBJECT DeviceObject,
 		OrigIrp->IoStatus.Information = 0;
 	      }
 	    break;
-
 
 	  default:
 	    OrigIrp->IoStatus.Information = 0;
