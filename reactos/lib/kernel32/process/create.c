@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.84 2004/05/15 19:24:59 hbirr Exp $
+/* $Id: create.c,v 1.85 2004/05/15 20:25:09 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -100,19 +100,16 @@ VOID STDCALL RtlRosR32AttribsToNativeAttribsNamed
 /*
  * @implemented
  */
-BOOL STDCALL CreateProcessA
-(
- LPCSTR lpApplicationName,
- LPSTR lpCommandLine,
- LPSECURITY_ATTRIBUTES lpProcessAttributes,
- LPSECURITY_ATTRIBUTES lpThreadAttributes,
- BOOL bInheritHandles,
- DWORD dwCreationFlags,
- LPVOID lpEnvironment,
- LPCSTR lpCurrentDirectory,
- LPSTARTUPINFOA lpStartupInfo,
- LPPROCESS_INFORMATION lpProcessInformation
-)
+BOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
+			    LPSTR lpCommandLine,
+			    LPSECURITY_ATTRIBUTES lpProcessAttributes,
+			    LPSECURITY_ATTRIBUTES lpThreadAttributes,
+			    BOOL bInheritHandles,
+			    DWORD dwCreationFlags,
+			    LPVOID lpEnvironment,
+			    LPCSTR lpCurrentDirectory,
+			    LPSTARTUPINFOA lpStartupInfo,
+                            LPPROCESS_INFORMATION lpProcessInformation)
 /*
  * FUNCTION: The CreateProcess function creates a new process and its
  * primary thread. The new process executes the specified executable file
@@ -130,185 +127,159 @@ BOOL STDCALL CreateProcessA
  *     lpProcessInformation = Pointer to process information
  */
 {
- PWCHAR pwcEnv = NULL;
- UNICODE_STRING wstrApplicationName;
- UNICODE_STRING wstrCurrentDirectory;
- UNICODE_STRING wstrCommandLine;
- UNICODE_STRING wstrReserved;
- UNICODE_STRING wstrDesktop;
- UNICODE_STRING wstrTitle;
- ANSI_STRING strApplicationName;
- ANSI_STRING strCurrentDirectory;
- ANSI_STRING strCommandLine;
- ANSI_STRING strReserved;
- ANSI_STRING strDesktop;
- ANSI_STRING strTitle;
- BOOL bRetVal;
- STARTUPINFOW wsiStartupInfo;
+   UNICODE_STRING wstrApplicationName;
+   UNICODE_STRING wstrCurrentDirectory;
+   UNICODE_STRING wstrCommandLine;
+   UNICODE_STRING wstrReserved;
+   UNICODE_STRING wstrDesktop;
+   UNICODE_STRING wstrTitle;
+   UNICODE_STRING wstrEnvVar;
+   ANSI_STRING strApplicationName;
+   ANSI_STRING strCurrentDirectory;
+   ANSI_STRING strCommandLine;
+   ANSI_STRING strReserved;
+   ANSI_STRING strDesktop;
+   ANSI_STRING strTitle;
+   BOOL bRetVal;
+   STARTUPINFOW wsiStartupInfo;
 
- NTSTATUS STDCALL_FUNC (*pTrue)
- (
-  UNICODE_STRING *,
-  ANSI_STRING *,
-  BOOLEAN
- );
+   NTSTATUS STDCALL_FUNC (*pTrue)
+   (
+      UNICODE_STRING *,
+      ANSI_STRING *,
+      BOOLEAN
+   );
 
- ULONG STDCALL_FUNC (*pRtlMbStringToUnicodeSize)(ANSI_STRING *);
+   ULONG STDCALL_FUNC (*pRtlMbStringToUnicodeSize)(ANSI_STRING *);
 
- DPRINT("CreateProcessA(%s)\n", lpApplicationName);
+   DPRINT("dwCreationFlags %x, lpEnvironment %x, lpCurrentDirectory %x, "
+          "lpStartupInfo %x, lpProcessInformation %x\n",
+	  dwCreationFlags, lpEnvironment, lpCurrentDirectory,
+          lpStartupInfo, lpProcessInformation);
 
- DPRINT
- (
-   "dwCreationFlags %x, lpEnvironment %x, lpCurrentDirectory %x, "
-   "lpStartupInfo %x, lpProcessInformation %x\n",
-  dwCreationFlags, 
-  lpEnvironment,
-  lpCurrentDirectory,
-  lpStartupInfo,
-  lpProcessInformation
- );
+   /* multibyte strings are ANSI */
+   if(bIsFileApiAnsi)
+   {
+      pTrue = RtlAnsiStringToUnicodeString;
+      pRtlMbStringToUnicodeSize = RtlAnsiStringToUnicodeSize;
+   }
+   /* multibyte strings are OEM */
+   else
+   {
+      pTrue = RtlOemStringToUnicodeString;
+      pRtlMbStringToUnicodeSize = RtlOemStringToUnicodeSize;
+   }
 
- /* invalid parameter */
- if(lpStartupInfo == NULL)
- {
-  SetLastError(ERROR_INVALID_PARAMETER);
-  return FALSE;
- }
+   /* invalid parameter */
+   if(lpStartupInfo == NULL)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+   }
 
- /* multibyte strings are ANSI */
- if(bIsFileApiAnsi)
- {
-  pTrue = RtlAnsiStringToUnicodeString;
-  pRtlMbStringToUnicodeSize = RtlAnsiStringToUnicodeSize;
- }
- /* multibyte strings are OEM */
- else
- {
-  pTrue = RtlOemStringToUnicodeString;
-  pRtlMbStringToUnicodeSize = RtlOemStringToUnicodeSize;
- }
+   /* convert the environment */
+   if(lpEnvironment && !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
+   {
+      PCHAR pcScan;
+      SIZE_T nEnvLen = 0;
+      ANSI_STRING strEnvVar;
+      NTSTATUS Status;
 
- /* convert the environment */
- if(lpEnvironment && !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
- {
-  PCHAR pcScan;
-  SIZE_T nEnvLen = 0;
-  UNICODE_STRING wstrEnvVar;
-  ANSI_STRING strEnvVar;
+      /* scan the environment to calculate its Unicode size */
+      pcScan = lpEnvironment;
+      do
+      {
+         pcScan += strlen(pcScan) + 1;
+      }
+      while (*pcScan);
 
-  /* scan the environment to calculate its Unicode size */
-  for(pcScan = lpEnvironment; *pcScan; pcScan += strEnvVar.Length + sizeof(char))
-  {
-   /* add the size of the current variable */
-   RtlInitAnsiString(&strEnvVar, pcScan);
-   nEnvLen += pRtlMbStringToUnicodeSize(&strEnvVar) + sizeof(WCHAR);
-  }
+      nEnvLen = (ULONG_PTR)pcScan - (ULONG_PTR)lpEnvironment + 1;
+  
+      /* environment too large */
+      if(nEnvLen > ~((USHORT)0))
+      {
+         SetLastError(ERROR_OUTOFMEMORY);
+         return FALSE;
+      }
 
-  /* add the size of the final NUL character */
-  nEnvLen += sizeof(WCHAR);
+      strEnvVar.Buffer = lpEnvironment;
+      strEnvVar.MaximumLength = strEnvVar.Length = nEnvLen;
 
-  /* environment too large */
-  if(nEnvLen > ~((USHORT)0))
-  {
-   SetLastError(ERROR_OUTOFMEMORY);
-   return FALSE;
-  }
+      Status = K32MbStrToWcStr(pTrue, &wstrEnvVar, &strEnvVar, TRUE);
 
-  /* allocate the Unicode environment */
-  pwcEnv = (PWCHAR)RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, nEnvLen);
+      /* failure */
+      if (!NT_SUCCESS(Status))
+      {
+         SetLastError(ERROR_OUTOFMEMORY);
+         return FALSE;
+      }
+   }
+   
 
-  /* failure */
-  if(pwcEnv == NULL)
-  {
-   SetLastError(ERROR_OUTOFMEMORY);
-   return FALSE;
-  }
+   /* convert the strings */
+   RtlInitAnsiString(&strCommandLine, lpCommandLine);
+   RtlInitAnsiString(&strApplicationName, (LPSTR)lpApplicationName);
+   RtlInitAnsiString(&strCurrentDirectory, (LPSTR)lpCurrentDirectory);
+   RtlInitAnsiString(&strReserved, (LPSTR)lpStartupInfo->lpReserved);
+   RtlInitAnsiString(&strDesktop, (LPSTR)lpStartupInfo->lpDesktop);
+   RtlInitAnsiString(&strTitle, (LPSTR)lpStartupInfo->lpTitle);
 
-  wstrEnvVar.Buffer = pwcEnv;
-  wstrEnvVar.Length = 0;
-  wstrEnvVar.MaximumLength = nEnvLen;
+   K32MbStrToWcStr(pTrue, &wstrCommandLine, &strCommandLine, TRUE);
+   K32MbStrToWcStr(pTrue, &wstrApplicationName, &strApplicationName, TRUE);
+   K32MbStrToWcStr(pTrue, &wstrCurrentDirectory, &strCurrentDirectory, TRUE);
+   K32MbStrToWcStr(pTrue, &wstrReserved, &strReserved, TRUE);
+   K32MbStrToWcStr(pTrue, &wstrDesktop, &strDesktop, TRUE);
+   K32MbStrToWcStr(pTrue, &wstrTitle, &strTitle, TRUE);
 
-  /* scan the environment to convert it */
-  for(pcScan = lpEnvironment; *pcScan; pcScan += strEnvVar.Length + sizeof(char))
-  {
-   /* convert the current variable */
-   RtlInitAnsiString(&strEnvVar, pcScan);
-   K32MbStrToWcStr(pTrue, &wstrEnvVar, &strEnvVar, FALSE);
+   /* convert the startup information */
+   memcpy(&wsiStartupInfo, lpStartupInfo, sizeof(wsiStartupInfo));
 
-   /* advance the buffer to the next variable */
-   wstrEnvVar.Buffer += (wstrEnvVar.Length / sizeof(WCHAR) + 1);
-   wstrEnvVar.MaximumLength -= (wstrEnvVar.Length + sizeof(WCHAR));
-   wstrEnvVar.Length = 0;
-  }
+   wsiStartupInfo.lpReserved = wstrReserved.Buffer;
+   wsiStartupInfo.lpDesktop = wstrDesktop.Buffer;
+   wsiStartupInfo.lpTitle = wstrTitle.Buffer;
 
-  /* final NUL character */
-  wstrEnvVar.Buffer[0] = 0;	
- }
+   DPRINT("wstrApplicationName  %wZ\n", &wstrApplicationName);
+   DPRINT("wstrCommandLine      %wZ\n", &wstrCommandLine);
+   DPRINT("wstrCurrentDirectory %wZ\n", &wstrCurrentDirectory);
+   DPRINT("wstrReserved         %wZ\n", &wstrReserved);
+   DPRINT("wstrDesktop          %wZ\n", &wstrDesktop);
+   DPRINT("wstrTitle            %wZ\n", &wstrTitle);
 
- /* convert the strings */
- RtlInitAnsiString(&strCommandLine, lpCommandLine);
- RtlInitAnsiString(&strApplicationName, (LPSTR)lpApplicationName);
- RtlInitAnsiString(&strCurrentDirectory, (LPSTR)lpCurrentDirectory);
- RtlInitAnsiString(&strReserved, (LPSTR)lpStartupInfo->lpReserved);
- RtlInitAnsiString(&strDesktop, (LPSTR)lpStartupInfo->lpDesktop);
- RtlInitAnsiString(&strTitle, (LPSTR)lpStartupInfo->lpTitle);
+   DPRINT("wstrApplicationName.Buffer  %p\n", wstrApplicationName.Buffer);
+   DPRINT("wstrCommandLine.Buffer      %p\n", wstrCommandLine.Buffer);
+   DPRINT("wstrCurrentDirectory.Buffer %p\n", wstrCurrentDirectory.Buffer);
+   DPRINT("wstrReserved.Buffer         %p\n", wstrReserved.Buffer);
+   DPRINT("wstrDesktop.Buffer          %p\n", wstrDesktop.Buffer);
+   DPRINT("wstrTitle.Buffer            %p\n", wstrTitle.Buffer);
 
- K32MbStrToWcStr(pTrue, &wstrCommandLine, &strCommandLine, TRUE);
- K32MbStrToWcStr(pTrue, &wstrApplicationName, &strApplicationName, TRUE);
- K32MbStrToWcStr(pTrue, &wstrCurrentDirectory, &strCurrentDirectory, TRUE);
- K32MbStrToWcStr(pTrue, &wstrReserved, &strReserved, TRUE);
- K32MbStrToWcStr(pTrue, &wstrDesktop, &strDesktop, TRUE);
- K32MbStrToWcStr(pTrue, &wstrTitle, &strTitle, TRUE);
+   DPRINT("sizeof(STARTUPINFOA) %lu\n", sizeof(STARTUPINFOA));
+   DPRINT("sizeof(STARTUPINFOW) %lu\n", sizeof(STARTUPINFOW));
 
- /* convert the startup information */
- memcpy(&wsiStartupInfo, lpStartupInfo, sizeof(wsiStartupInfo));
+   /* call the Unicode function */
+   bRetVal = CreateProcessW(wstrApplicationName.Buffer,
+                            wstrCommandLine.Buffer,
+			    lpProcessAttributes,
+			    lpThreadAttributes,
+			    bInheritHandles,
+			    dwCreationFlags,
+			    !lpEnvironment || (dwCreationFlags & CREATE_UNICODE_ENVIRONMENT) ? lpEnvironment : wstrEnvVar.Buffer,
+			    wstrCurrentDirectory.Buffer,
+			    &wsiStartupInfo,
+			    lpProcessInformation);
 
- wsiStartupInfo.lpReserved = wstrReserved.Buffer;
- wsiStartupInfo.lpDesktop = wstrDesktop.Buffer;
- wsiStartupInfo.lpTitle = wstrTitle.Buffer;
+   RtlFreeUnicodeString(&wstrApplicationName);
+   RtlFreeUnicodeString(&wstrCommandLine);
+   RtlFreeUnicodeString(&wstrCurrentDirectory);
+   RtlFreeUnicodeString(&wstrReserved);
+   RtlFreeUnicodeString(&wstrDesktop);
+   RtlFreeUnicodeString(&wstrTitle);
 
- DPRINT("wstrApplicationName  %wZ\n", &wstrApplicationName);
- DPRINT("wstrCommandLine      %wZ\n", &wstrCommandLine);
- DPRINT("wstrCurrentDirectory %wZ\n", &wstrCurrentDirectory);
- DPRINT("wstrReserved         %wZ\n", &wstrReserved);
- DPRINT("wstrDesktop          %wZ\n", &wstrDesktop);
- DPRINT("wstrTitle            %wZ\n", &wstrTitle);
+   if (lpEnvironment && !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
+   {
+      RtlFreeUnicodeString(&wstrEnvVar);
+   }
 
- DPRINT("wstrApplicationName.Buffer  %p\n", wstrApplicationName.Buffer);
- DPRINT("wstrCommandLine.Buffer      %p\n", wstrCommandLine.Buffer);
- DPRINT("wstrCurrentDirectory.Buffer %p\n", wstrCurrentDirectory.Buffer);
- DPRINT("wstrReserved.Buffer         %p\n", wstrReserved.Buffer);
- DPRINT("wstrDesktop.Buffer          %p\n", wstrDesktop.Buffer);
- DPRINT("wstrTitle.Buffer            %p\n", wstrTitle.Buffer);
-
- DPRINT("sizeof(STARTUPINFOA) %lu\n", sizeof(STARTUPINFOA));
- DPRINT("sizeof(STARTUPINFOW) %lu\n", sizeof(STARTUPINFOW));
-
- /* call the Unicode function */
- bRetVal = CreateProcessW
- (
-  wstrApplicationName.Buffer,
-  wstrCommandLine.Buffer,
-  lpProcessAttributes,
-  lpThreadAttributes,
-  bInheritHandles,
-  dwCreationFlags,
-  dwCreationFlags & CREATE_UNICODE_ENVIRONMENT ? lpEnvironment : pwcEnv,
-  wstrCurrentDirectory.Buffer,
-  &wsiStartupInfo,
-  lpProcessInformation
- );
-
- RtlFreeUnicodeString(&wstrApplicationName);
- RtlFreeUnicodeString(&wstrCommandLine);
- RtlFreeUnicodeString(&wstrCurrentDirectory);
- RtlFreeUnicodeString(&wstrReserved);
- RtlFreeUnicodeString(&wstrDesktop);
- RtlFreeUnicodeString(&wstrTitle);
-
- RtlFreeHeap(GetProcessHeap(), 0, pwcEnv);
-
- return bRetVal;
+   return bRetVal;
 }
 
 
