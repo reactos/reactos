@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.93 2003/10/29 22:46:56 gvg Exp $
+/* $Id: dc.c,v 1.94 2003/10/30 18:27:33 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -1812,6 +1812,10 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
             MonoColorMap[0] = RGB(0, 0, 0);
             MonoColorMap[1] = RGB(255, 255, 255);
             dc->w.hPalette = PALETTE_AllocPalette(PAL_INDEXED, 2, MonoColorMap, 0, 0, 0);
+          }
+        else
+          {
+            dc->w.hPalette = dc->DevInfo->hpalDefault;
           }
       }
 
