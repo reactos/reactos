@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.21 2002/05/25 13:32:25 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.22 2002/05/26 20:18:18 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -64,73 +64,80 @@ NTSTATUS
 xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
 		     OUT PDRIVE_LAYOUT_INFORMATION *LayoutInfo)
 {
-   IO_STATUS_BLOCK StatusBlock;
-   DISK_GEOMETRY DiskGeometry;
-   PDEVICE_OBJECT DeviceObject = NULL;
-   PFILE_OBJECT FileObject;
-   KEVENT Event;
-   PIRP Irp;
-   NTSTATUS Status;
+  IO_STATUS_BLOCK StatusBlock;
+  DISK_GEOMETRY DiskGeometry;
+  PDEVICE_OBJECT DeviceObject = NULL;
+  PFILE_OBJECT FileObject;
+  KEVENT Event;
+  PIRP Irp;
+  NTSTATUS Status;
 
-   DPRINT("xHalpQueryDriveLayout %wZ %p\n",
-	  DeviceName,
-	  LayoutInfo);
+  DPRINT("xHalpQueryDriveLayout %wZ %p\n",
+	 DeviceName,
+	 LayoutInfo);
 
-   /* Get the drives sector size */
-   Status = IoGetDeviceObjectPointer(DeviceName,
-				     FILE_READ_DATA,
-				     &FileObject,
-				     &DeviceObject);
-   if (!NT_SUCCESS(Status))
-     {
-	DPRINT("Status %x\n",Status);
-	return Status;
-     }
+  /* Get the drives sector size */
+  Status = IoGetDeviceObjectPointer(DeviceName,
+				    FILE_READ_DATA,
+				    &FileObject,
+				    &DeviceObject);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Status %x\n",Status);
+      return(Status);
+    }
 
-   KeInitializeEvent(&Event,
-		     NotificationEvent,
-		     FALSE);
+  KeInitializeEvent(&Event,
+		    NotificationEvent,
+		    FALSE);
 
-   Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY,
-				       DeviceObject,
-				       NULL,
-				       0,
-				       &DiskGeometry,
-				       sizeof(DISK_GEOMETRY),
-				       FALSE,
-				       &Event,
-				       &StatusBlock);
-   if (Irp == NULL)
-     {
-	ObDereferenceObject(FileObject);
-	return STATUS_INSUFFICIENT_RESOURCES;
-     }
+  Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY,
+				      DeviceObject,
+				      NULL,
+				      0,
+				      &DiskGeometry,
+				      sizeof(DISK_GEOMETRY),
+				      FALSE,
+				      &Event,
+				      &StatusBlock);
+  if (Irp == NULL)
+    {
+      ObDereferenceObject(FileObject);
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
 
-   Status = IoCallDriver(DeviceObject,
-			 Irp);
-   if (Status == STATUS_PENDING)
-     {
-	KeWaitForSingleObject(&Event,
-			      Executive,
-			      KernelMode,
-			      FALSE,
-			      NULL);
-	Status = StatusBlock.Status;
-     }
-   if (!NT_SUCCESS(Status))
-     {
-	ObDereferenceObject(FileObject);
-	return Status;
-     }
+  Status = IoCallDriver(DeviceObject,
+			Irp);
+  if (Status == STATUS_PENDING)
+    {
+      KeWaitForSingleObject(&Event,
+			    Executive,
+			    KernelMode,
+			    FALSE,
+			    NULL);
+      Status = StatusBlock.Status;
+    }
+  if (!NT_SUCCESS(Status))
+    {
+      if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
+	{
+	  DiskGeometry.BytesPerSector = 512;
+	}
+      else
+	{
+	  ObDereferenceObject(FileObject);
+	  return(Status);
+	}
+    }
 
-   DPRINT("DiskGeometry.BytesPerSector: %d\n",
-	  DiskGeometry.BytesPerSector);
+  DPRINT("DiskGeometry.BytesPerSector: %d\n",
+	 DiskGeometry.BytesPerSector);
 
-   /* read the partition table */
-   Status = IoReadPartitionTable(DeviceObject,
-				 DiskGeometry.BytesPerSector,
-				 FALSE,
-				 LayoutInfo);
+  /* read the partition table */
+  Status = IoReadPartitionTable(DeviceObject,
+				DiskGeometry.BytesPerSector,
+				FALSE,
+				LayoutInfo);
 
   if ((!NT_SUCCESS(Status) || (*LayoutInfo)->PartitionCount == 0) &&
       DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
@@ -156,9 +163,9 @@ xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
 	}
     }
 
-   ObDereferenceObject(FileObject);
+  ObDereferenceObject(FileObject);
 
-   return Status;
+  return(Status);
 }
 
 
@@ -390,7 +397,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 				    &LayoutArray[i]);
       if (!NT_SUCCESS(Status))
 	{
-	  DbgPrint("xHalpQueryDriveLayout() failed (Status = 0x%lx)\n",
+	  DbgPrint("xHalQueryDriveLayout() failed (Status = 0x%lx)\n",
 		   Status);
 	  LayoutArray[i] = NULL;
 	  continue;
@@ -430,7 +437,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
   DPRINT("Assigning bootable primary partition on first harddisk:\n");
   if (ConfigInfo->DiskCount > 0)
     {
-      /* search for bootable partition */
+      /* Search for bootable partition */
       for (j = 0; j < LayoutArray[0]->PartitionCount; j++)
 	{
 	  if ((LayoutArray[0]->PartitionEntry[j].BootIndicator == TRUE) &&
@@ -442,7 +449,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 	      RtlInitUnicodeString(&UnicodeString2,
 				   Buffer2);
 
-	      /* assign it */
+	      /* Assign drive */
 	      DPRINT("  %wZ\n", &UnicodeString2);
 	      HalpAssignDrive(&UnicodeString2,
 			      AUTO_DRIVE,
@@ -455,12 +462,13 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
   DPRINT("Assigning remaining primary partitions:\n");
   for (i = 0; i < ConfigInfo->DiskCount; i++)
     {
-      /* search for primary partitions */
-      for (j = 0; j < PARTITION_TBL_SIZE; j++)
+      /* Search for primary partitions */
+      for (j = 0; (j < PARTITION_TBL_SIZE) && (j < LayoutArray[i]->PartitionCount); j++)
 	{
-	  if (!(i == 0 &&
-	      LayoutArray[i]->PartitionEntry[j].BootIndicator == TRUE) &&
-	      IsUsablePartition(LayoutArray[i]->PartitionEntry[j].PartitionType))
+	  if ((i == 0) && (LayoutArray[i]->PartitionEntry[j].BootIndicator == TRUE))
+	    continue;
+
+	  if (IsUsablePartition(LayoutArray[i]->PartitionEntry[j].PartitionType))
 	    {
 	      swprintf(Buffer2,
 		       L"\\Device\\Harddisk%d\\Partition%d",
@@ -469,7 +477,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 	      RtlInitUnicodeString(&UnicodeString2,
 				   Buffer2);
 
-	      /* assign it */
+	      /* Assign drive */
 	      DPRINT("  %wZ\n",
 		     &UnicodeString2);
 	      HalpAssignDrive(&UnicodeString2,
@@ -485,7 +493,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     {
       if (LayoutArray[i])
 	{
-	  /* search for extended partitions */
+	  /* Search for extended partitions */
 	  for (j = PARTITION_TBL_SIZE; j < LayoutArray[i]->PartitionCount; j++)
 	    {
 	      if (IsUsablePartition(LayoutArray[i]->PartitionEntry[j].PartitionType) &&
@@ -498,7 +506,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 		  RtlInitUnicodeString(&UnicodeString2,
 				       Buffer2);
 
-		  /* assign it */
+		  /* Assign drive */
 		  DPRINT("  %wZ\n",
 			 &UnicodeString2);
 		  HalpAssignDrive(&UnicodeString2,
@@ -509,32 +517,28 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}
     }
 
-#if 0
-/* TEST */
   /* Assign removable disk drives */
-  DPRINT("Assigning extended (logical) partitions:\n");
+  DPRINT("Assigning removable disk drives:\n");
   for (i = 0; i < ConfigInfo->DiskCount; i++)
     {
-	/* Search for virtual partitions */
-	if (LayoutArray[i]->PartitionCount == 1 &&
-	    LayoutArray[i]->PartitionEntry[0].PartitionType == 0)
-	  {
-	    swprintf(Buffer2,
-		     L"\\Device\\Harddisk%d\\Partition1",
-		     i);
-	    RtlInitUnicodeString(&UnicodeString2,
-				 Buffer2);
+      /* Search for virtual partitions */
+      if (LayoutArray[i]->PartitionCount == 1 &&
+	  LayoutArray[i]->PartitionEntry[0].PartitionType == 0)
+	{
+	  swprintf(Buffer2,
+		   L"\\Device\\Harddisk%d\\Partition1",
+		   i);
+	  RtlInitUnicodeString(&UnicodeString2,
+			       Buffer2);
 
-	    /* assign it */
-	    DPRINT("  %wZ\n",
-		   &UnicodeString2);
-	    HalpAssignDrive(&UnicodeString2,
-			    AUTO_DRIVE,
-			    DOSDEVICE_DRIVE_REMOVABLE);
-	  }
+	  /* Assign drive */
+	  DPRINT("  %wZ\n",
+		 &UnicodeString2);
+	  HalpAssignDrive(&UnicodeString2,
+			  AUTO_DRIVE,
+			  DOSDEVICE_DRIVE_REMOVABLE);
+	}
     }
-/* TEST END */
-#endif
 
   /* Free layout array */
   for (i = 0; i < ConfigInfo->DiskCount; i++)
@@ -554,7 +558,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
       RtlInitUnicodeString(&UnicodeString1,
 			   Buffer1);
 
-      /* assign drive letters A: or B: or first free drive letter */
+      /* Assign drive letters A: or B: or first free drive letter */
       DPRINT("  %wZ\n",
 	     &UnicodeString1);
       HalpAssignDrive(&UnicodeString1,
@@ -572,7 +576,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
       RtlInitUnicodeString(&UnicodeString1,
 			   Buffer1);
 
-      /* assign first free drive letter */
+      /* Assign first free drive letter */
       DPRINT("  %wZ\n", &UnicodeString1);
       HalpAssignDrive(&UnicodeString1,
 		      AUTO_DRIVE,
@@ -580,7 +584,6 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     }
 
   /* Anything else ?? */
-
 
   ExFreePool(Buffer2);
   ExFreePool(Buffer1);
@@ -666,11 +669,11 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 
 	if (!NT_SUCCESS(Status))
 	  {
-	     DbgPrint("xHalIoReadPartitonTable failed (Status = 0x%08lx)\n",
+	     DPRINT("Failed to read partition table sector (Status = 0x%08lx)\n",
 		    Status);
 	     ExFreePool(SectorBuffer);
 	     ExFreePool(LayoutBuffer);
-	     return Status;
+	     return(Status);
 	  }
 
 	PartitionTable = (PPARTITION_TABLE)(SectorBuffer+PARTITION_OFFSET);
@@ -799,6 +802,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 
    return STATUS_SUCCESS;
 }
+
 
 NTSTATUS FASTCALL
 xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
