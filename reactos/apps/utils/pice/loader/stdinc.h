@@ -12,7 +12,7 @@
 //#include <sys/wait.h>
 //#include <sys/ioctl.h>
 //#include <sys/signal.h>
-#include <SYS/STAT.H>
+#include <sys/stat.h>
 #include <errno.h>
 #include <fcntl.h>
 //#include <unistd.h>

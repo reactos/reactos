@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.18 2002/04/20 03:21:35 phreak Exp $
+/* $Id: irq.c,v 1.19 2002/05/02 23:45:33 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -371,6 +371,32 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
 
 #else /* MP */
 
+VOID STDCALL
+KiInterruptDispatch2 (ULONG Irq, KIRQL old_level)
+{
+  PKINTERRUPT isr;
+  PLIST_ENTRY current;
+
+  if (Irq == 0)
+    {
+      KiUpdateSystemTime(old_level, 0);
+    }
+  else
+    {
+      /*
+       * Iterate the list until one of the isr tells us its device interrupted
+       */
+      current = isr_table[Irq].Flink;
+      isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
+      while (current != &isr_table[Irq] && 
+	     !isr->ServiceRoutine(isr, isr->ServiceContext))
+	{
+	  current = current->Flink;
+	  isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
+	}
+   }
+}
+
 VOID 
 KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
 /*
@@ -380,24 +406,36 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
  */
 {
    KIRQL old_level;
-   PKINTERRUPT isr;
-   PLIST_ENTRY current;
+   static ULONG Irq0Count = 0;
 
-#ifdef DBG
-
+#if 0
    KTRAP_FRAME KernelTrapFrame;
 
    KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
    KeGetCurrentThread()->TrapFrame = &KernelTrapFrame;
-
 #endif /* DBG */
 
+   if (InterlockedIncrement(&Irq0Count) > 32)
+     {
+       __asm__("int $3\n\t");
+     }
+
    /*
-    * Notify the rest of the kernel of the raised irq level
+    * At this point we have interrupts disabled, nothing has been done to
+    * the PIC.
     */
-   HalBeginSystemInterrupt (irq + IRQ_BASE,
-			    PROFILE_LEVEL - irq,
-			    &old_level);
+
+   /*
+    * Notify the rest of the kernel of the raised irq level. For the
+    * default HAL this will send an EOI to the PIC and alter the IRQL.
+    */
+   if (!HalBeginSystemInterrupt (irq + IRQ_BASE,
+				 PROFILE_LEVEL - irq,
+				 &old_level))
+     {
+       InterlockedDecrement(&Irq0Count);
+       return;
+     }
 
    /*
     * Enable interrupts
@@ -405,67 +443,22 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
     */
    __asm__("sti\n\t");
 
-   if (irq == 0)
-     {
-       KiUpdateSystemTime(old_level, Trapframe->Eip);
-     }
-   else
-     {
-       DPRINT("KiInterruptDispatch(irq %d)\n",irq);
-      /*
-       * Iterate the list until one of the isr tells us its device interrupted
-       */
-      current = isr_table[irq].Flink;
-      isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
-      DPRINT("current %x isr %x\n",current,isr);
-      while (current!=(&isr_table[irq]) && 
-	     !isr->ServiceRoutine(isr,isr->ServiceContext))
-	{
-	   current = current->Flink;
-	   isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
-	   DPRINT("current %x isr %x\n",current,isr);
-	}
-   }
-   
    /*
-    * Disable interrupts
+    * Actually call the ISR.
     */
-   __asm__("cli\n\t");
-   
+   KiInterruptDispatch2(irq, old_level);
+
    /*
-    * Unmask the related irq
+    * End the system interrupt.
     */
-   HalEnableSystemInterrupt (irq + IRQ_BASE, 0, 0);
-   
-   /*
-    * If the processor level will drop below dispatch level on return then
-    * issue a DPC queue drain interrupt
-    */
-   __asm__("sti\n\t");
-
-   if (old_level < DISPATCH_LEVEL)
-     {
-	HalEndSystemInterrupt (DISPATCH_LEVEL, 0);
-
-	if (KeGetCurrentThread() != NULL)
-	  {
-	     KeGetCurrentThread()->LastEip = Trapframe->Eip;
-	  }
-	KiDispatchInterrupt();
-	if (irq == 0)
-	  {
-	    PsDispatchThread(THREAD_STATE_RUNNABLE);
-	  }
-	if (KeGetCurrentThread() != NULL &&
-	    KeGetCurrentThread()->Alerted[1] != 0 &&
-	    Trapframe->Cs != KERNEL_CS)
-	  {
-	    HalEndSystemInterrupt (APC_LEVEL, 0);
-	    KiDeliverNormalApc();
-	  }
-     }
-
    HalEndSystemInterrupt (old_level, 0);
+
+   InterlockedDecrement(&Irq0Count);
+
+   if (old_level < DISPATCH_LEVEL && irq == 0)
+     {
+       PsDispatchThread(THREAD_STATE_RUNNABLE);
+     }
 }
 
 #endif /* MP */

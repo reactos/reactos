@@ -69,8 +69,8 @@ KdPortDisableInterrupts@0
 KdPortEnableInterrupts@0
 KeAcquireSpinLock@8
 @KeAcquireSpinLockRaiseToSynch@4
-KeFlushWriteBuffer@0
 KeGetCurrentIrql@0
+KeFlushWriteBuffer@0
 KeLowerIrql@4
 KeQueryPerformanceCounter@4
 KeRaiseIrql@8

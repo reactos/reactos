@@ -212,6 +212,15 @@ KePushAndStackSwitchAndSysRet(ULONG A, ULONG B, ULONG C, ULONG D, ULONG E,
 			      ULONG F, PVOID NewStack);
 VOID STDCALL
 KeStackSwitchAndRet(PVOID NewStack);
+VOID STDCALL
+KeBugCheckWithTf(ULONG BugCheckCode, 	     
+		 ULONG BugCheckParameter1,
+		 ULONG BugCheckParameter2,
+		 ULONG BugCheckParameter3,
+		 ULONG BugCheckParameter4,
+		 PKTRAP_FRAME Tf);
+VOID
+KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG ExceptionNr, ULONG cr2);
 
 #endif /* not __ASM__ */
 

@@ -162,7 +162,8 @@ print_address(PVOID address)
           if ((Offset >= Symbol->RelativeAddress) &&
               (Offset < NextAddress))
             {
-              DbgPrint("<%ws: %x (%wZ)>", current->Name, Offset, &Symbol->Name);
+              DbgPrint("<%ws: %x (%wZ)>", current->Name, Offset, 
+		       &Symbol->Name);
               Printed = TRUE;
               break;
             }
@@ -203,14 +204,14 @@ KiKernelTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
     }
   else
     {
-		  if (ExceptionNr < 16)
-		  {
-		    Er.ExceptionCode = ExceptionToNtStatus[ExceptionNr];
-		  }
-			else
-			{
-		    Er.ExceptionCode = STATUS_ACCESS_VIOLATION;
-			}
+      if (ExceptionNr < 16)
+	{
+	  Er.ExceptionCode = ExceptionToNtStatus[ExceptionNr];
+	}
+      else
+	{
+	  Er.ExceptionCode = STATUS_ACCESS_VIOLATION;
+	}
       Er.NumberParameters = 0;
     }
 
@@ -223,18 +224,20 @@ ULONG
 KiDoubleFaultHandler(VOID)
 {
   unsigned int cr2;
-  ULONG i, j;
   ULONG StackLimit;
   ULONG StackBase;
   ULONG Esp0;
   ULONG ExceptionNr = 8;
   KTSS* OldTss;
   PULONG Frame;
+#if 0
+  ULONG i, j;
   static PVOID StackTrace[MM_STACK_SIZE / sizeof(PVOID)];
   static ULONG StackRepeatCount[MM_STACK_SIZE / sizeof(PVOID)];
   static ULONG StackRepeatLength[MM_STACK_SIZE / sizeof(PVOID)];
   ULONG TraceLength;
   BOOLEAN FoundRepeat;
+#endif
   
   /* Use the address of the trap frame as approximation to the ring0 esp */
   OldTss = KeGetCurrentKPCR()->TSS;
@@ -318,6 +321,15 @@ KiDoubleFaultHandler(VOID)
 	  StackBase = (ULONG)&init_stack;
 	}
 
+#if 1
+      DbgPrint("Frames: ");
+      Frame = (PULONG)OldTss->Ebp;
+      while (Frame != NULL && (ULONG)Frame >= StackBase)
+	{
+	  print_address((PVOID)Frame[1]);
+	  Frame = (PULONG)Frame[0];
+	}
+#else
       DbgPrint("Frames: ");
       i = 0;
       Frame = (PULONG)OldTss->Ebp;
@@ -395,93 +407,24 @@ KiDoubleFaultHandler(VOID)
 	      i = i + StackRepeatLength[i] * StackRepeatCount[i];
 	    }
 	}
+#endif
     }
    
    DbgPrint("\n");
    for(;;);
 }
 
-ULONG
-KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
-/*
- * FUNCTION: Called by the lowlevel execption handlers to print an amusing 
- * message and halt the computer
- * ARGUMENTS:
- *        Complete CPU context
- */
+VOID
+KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG ExceptionNr, ULONG cr2)
 {
-#define SEH
-   unsigned int cr2;
-#ifndef SEH
-   unsigned int cr3;
-   unsigned int i;
-   ULONG StackLimit;
-   PULONG Frame;
-#endif
-//   unsigned int j, sym;
-   NTSTATUS Status;
-   ULONG Esp0;
+  unsigned int cr3;
+  unsigned int i;
+  ULONG StackLimit;
+  PULONG Frame;
+  ULONG Esp0;
 
-   /* Use the address of the trap frame as approximation to the ring0 esp */
-   Esp0 = (ULONG)&Tf->Eip;
+  Esp0 = (ULONG)Tf;
   
-   /* Get CR2 */
-   __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));
-   
-   /*
-    * If this was a V86 mode exception then handle it specially
-    */
-   if (Tf->Eflags & (1 << 17))
-     {
-       return(KeV86Exception(ExceptionNr, Tf, cr2));
-     }
-
-   /*
-    * Check for stack underflow, this may be obsolete
-    */
-   if (PsGetCurrentThread() != NULL &&
-       Esp0 < (ULONG)PsGetCurrentThread()->Tcb.StackLimit)
-     {
-	DbgPrint("Stack underflow (tf->esp %x Limit %x)\n",
-		 Esp0, (ULONG)PsGetCurrentThread()->Tcb.StackLimit);
-	ExceptionNr = 12;
-     }
-
-   /*
-    * Maybe handle the page fault and return
-    */
-   if (ExceptionNr == 14)
-     {
-	__asm__("sti\n\t");
-	Status = MmPageFault(Tf->Cs&0xffff,
-			     &Tf->Eip,
-			     &Tf->Eax,
-			     cr2,
-			     Tf->ErrorCode);
-	if (NT_SUCCESS(Status))
-	  {
-	     return(0);
-	  }
-
-     }
-
-   /*
-    * Handle user exceptions differently
-    */
-   if ((Tf->Cs & 0xFFFF) == USER_CS)
-     {
-       return(KiUserTrapHandler(Tf, ExceptionNr, (PVOID)cr2));
-     }
-   else
-    {
-#ifdef SEH
-      return(KiKernelTrapHandler(Tf, ExceptionNr, (PVOID)cr2));
-#endif
-    }
-
-
-#ifndef SEH
-
    /*
     * Print out the CPU registers
     */
@@ -556,11 +499,75 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
      {
        DbgPrint("\n");
      }
+}
 
-   for(;;);
+ULONG
+KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
+/*
+ * FUNCTION: Called by the lowlevel execption handlers to print an amusing 
+ * message and halt the computer
+ * ARGUMENTS:
+ *        Complete CPU context
+ */
+{
+   unsigned int cr2;
+   NTSTATUS Status;
+   ULONG Esp0;
 
-   return 0;
-#endif
+   /* Use the address of the trap frame as approximation to the ring0 esp */
+   Esp0 = (ULONG)&Tf->Eip;
+  
+   /* Get CR2 */
+   __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));
+   
+   /*
+    * If this was a V86 mode exception then handle it specially
+    */
+   if (Tf->Eflags & (1 << 17))
+     {
+       return(KeV86Exception(ExceptionNr, Tf, cr2));
+     }
+
+   /*
+    * Check for stack underflow, this may be obsolete
+    */
+   if (PsGetCurrentThread() != NULL &&
+       Esp0 < (ULONG)PsGetCurrentThread()->Tcb.StackLimit)
+     {
+	DbgPrint("Stack underflow (tf->esp %x Limit %x)\n",
+		 Esp0, (ULONG)PsGetCurrentThread()->Tcb.StackLimit);
+	ExceptionNr = 12;
+     }
+
+   /*
+    * Maybe handle the page fault and return
+    */
+   if (ExceptionNr == 14)
+     {
+	__asm__("sti\n\t");
+	Status = MmPageFault(Tf->Cs&0xffff,
+			     &Tf->Eip,
+			     &Tf->Eax,
+			     cr2,
+			     Tf->ErrorCode);
+	if (NT_SUCCESS(Status))
+	  {
+	     return(0);
+	  }
+
+     }
+
+   /*
+    * Handle user exceptions differently
+    */
+   if ((Tf->Cs & 0xFFFF) == USER_CS)
+     {
+       return(KiUserTrapHandler(Tf, ExceptionNr, (PVOID)cr2));
+     }
+   else
+    {
+      return(KiKernelTrapHandler(Tf, ExceptionNr, (PVOID)cr2));
+    }
 }
 
 VOID 

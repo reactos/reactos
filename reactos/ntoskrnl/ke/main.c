@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.119 2002/04/26 19:57:11 ekohl Exp $
+/* $Id: main.c,v 1.120 2002/05/02 23:45:33 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -451,17 +451,17 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
    p = strchr (ParamBuffer, '\\');
    if (p)
      {
-	DPRINT("Boot path: %s\n", p);
-	RtlCreateUnicodeStringFromAsciiz (&BootPath, p);
-	*p = 0;
+       DPRINT("Boot path: %s\n", p);
+       RtlCreateUnicodeStringFromAsciiz (&BootPath, p);
+       *p = 0;
      }
    else
      {
-	DPRINT("Boot path: %s\n", "\\");
-	RtlCreateUnicodeStringFromAsciiz (&BootPath, "\\");
+       DPRINT("Boot path: %s\n", "\\");
+       RtlCreateUnicodeStringFromAsciiz (&BootPath, "\\");
      }
    DPRINT("Arc name: %s\n", ParamBuffer);
-
+   
    /* Only arc name left - build full arc name */
    ArcNameBuffer = ExAllocatePool (PagedPool, 256 * sizeof(WCHAR));
    swprintf (ArcNameBuffer, L"\\ArcName\\%S", ParamBuffer);
@@ -556,8 +556,8 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 	     DPRINT("DOS Boot path: %c:%wZ\n", 'A' + i, &BootPath);
 	     swprintf(SharedUserData->NtSystemRoot,
 		      L"%C:%wZ", 'A' + i, &BootPath);
-
-		BootDriveFound = TRUE;
+	     
+	     BootDriveFound = TRUE;
 	  }
 
 	NtClose (Handle);
@@ -567,7 +567,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
    RtlFreeUnicodeString (&DriveDeviceName);
    RtlFreeUnicodeString (&ArcDeviceName);
 
-   DPRINT("DosDeviceMap: 0x%x\n", SharedPage->DosDeviceMap);
+   DPRINT("DosDeviceMap: 0x%x\n", SharedUserData->DosDeviceMap);
 
    if (BootDriveFound == FALSE)
      {
@@ -1096,7 +1096,57 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
   KeLoaderBlock.ModsCount++;
   KeLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
   
-  strcpy(KeLoaderCommandLine, (PUCHAR)_LoaderBlock->CommandLine);
+  if (((PUCHAR)_LoaderBlock->CommandLine)[0] == '(')
+    {
+      ULONG DiskNumber, PartNumber;
+      PCH p;
+      CHAR Temp[256];
+      PCH options;
+      PCH s1;
+
+      if (((PUCHAR)_LoaderBlock->CommandLine)[1] == 'h' &&
+	  ((PUCHAR)_LoaderBlock->CommandLine)[2] == 'd')
+	{
+	  DiskNumber = ((PUCHAR)_LoaderBlock->CommandLine)[3] - '0';
+	  PartNumber = ((PUCHAR)_LoaderBlock->CommandLine)[5] - '0';
+	}
+      strcpy(Temp, &((PUCHAR)_LoaderBlock->CommandLine)[7]);
+      if ((options = strchr(Temp, ' ')) != NULL)
+	{
+	  *options = 0;
+	  options++;
+	}
+      else
+	{
+	  options = "";
+	}
+      if ((s1 = strrchr(Temp, '/')) != NULL)
+	{
+	  *s1 = 0;
+	  if ((s1 = strrchr(Temp, '/')) != NULL)
+	    {
+	      *s1 = 0;
+	    }
+	}
+      sprintf(KeLoaderCommandLine, 
+	      "multi(0)disk(0)rdisk(%ld)partition(%ld)%s %s",
+	      DiskNumber, PartNumber + 1, Temp, options);
+
+      p = KeLoaderCommandLine;
+      while (*p != 0 && *p != ' ')
+	{
+	  if ((*p) == '/')
+	    {
+	      (*p) = '\\';
+	    }
+	  p++;
+	}
+      DPRINT1("Command Line: %s\n", KeLoaderCommandLine);
+    }
+  else
+    {
+      strcpy(KeLoaderCommandLine, (PUCHAR)_LoaderBlock->CommandLine);
+    }
   KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
   
   strcpy(KeLoaderModuleStrings[0], "ntoskrnl.exe");
@@ -1118,7 +1168,8 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 #endif
 
   HalBase = KeLoaderModules[1].ModStart;
-  DriverBase = KeLoaderModules[KeLoaderBlock.ModsCount - 1].ModEnd;
+  DriverBase = 
+    PAGE_ROUND_UP(KeLoaderModules[KeLoaderBlock.ModsCount - 1].ModEnd);
 
   /*
    * Process hal.dll

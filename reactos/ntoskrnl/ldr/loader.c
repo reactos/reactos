@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.101 2002/04/27 19:24:15 hbirr Exp $
+/* $Id: loader.c,v 1.102 2002/05/02 23:45:33 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -373,7 +373,7 @@ static VOID LdrLoadAutoConfigDriver (LPWSTR	RelativeDriverName)
    Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
    if (!NT_SUCCESS(Status))
      {
-   return;
+       return;
      }
 
    Status = LdrLoadDriver(&DriverName, DeviceNode, FALSE);

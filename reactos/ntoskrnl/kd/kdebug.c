@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.34 2002/02/09 18:41:24 chorns Exp $
+/* $Id: kdebug.c,v 1.35 2002/05/02 23:45:32 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -297,7 +297,7 @@ KdpPrintString(PANSI_STRING String)
 	break;
 
       case GdbDebug:
-    KdGdbDebugPrint(pch);
+	KdGdbDebugPrint(pch);
 	break;
 
       case PiceDebug:

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.18 2002/02/09 18:41:24 chorns Exp $
+/* $Id: catch.c,v 1.19 2002/05/02 23:45:33 dwelch Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -270,24 +270,28 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
       KD_CONTINUE_TYPE Action;
 
       /* PreviousMode == KernelMode */
-
+      
       if (!KdDebuggerEnabled || KdDebugType != GdbDebug)
         {
-          KeBugCheck (KMODE_EXCEPTION_NOT_HANDLED);
-        }
+	  /* FIXME: Get ExceptionNr and CR2 */
+	  KeBugCheckWithTf (KMODE_EXCEPTION_NOT_HANDLED, 0, 0, 0, 0, Tf);
+	}
 
       Action = KdEnterDebuggerException (ExceptionRecord, Context, Tf);
       if (Action != kdHandleException)
-	      {
-		      Value = RtlpDispatchException (ExceptionRecord, Context);
-
-		      DPRINT("RtlpDispatchException() returned with 0x%X\n", Value);
-		      /* If RtlpDispatchException() does not handle the exception then bugcheck */
-		      if (Value != ExceptionContinueExecution)
-		        {
-		          KeBugCheck (KMODE_EXCEPTION_NOT_HANDLED);
-		        }
-	      }
+	{
+	  Value = RtlpDispatchException (ExceptionRecord, Context);
+	  
+	  DPRINT("RtlpDispatchException() returned with 0x%X\n", Value);
+	  /* 
+	   * If RtlpDispatchException() does not handle the exception then 
+	   * bugcheck 
+	   */
+	  if (Value != ExceptionContinueExecution)
+	    {
+	      KeBugCheck (KMODE_EXCEPTION_NOT_HANDLED);	      
+	    }
+	}
       else
         {
           KeContextToTrapFrame (Context, KeGetCurrentThread()->TrapFrame);

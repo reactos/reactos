@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.118 2002/03/23 19:44:46 chorns Exp $
+; $Id: ntoskrnl.edf,v 1.119 2002/05/02 23:45:32 dwelch Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -450,6 +450,7 @@ KeWaitForSingleObject=KeWaitForSingleObject@20
 ;KiCoprocessorError@0
 KiDeliverApc=KiDeliverApc@12
 KiDispatchInterrupt=KiDispatchInterrupt@0
+KiInterruptDispatch2=KiInterruptDispatch2@8
 ;KiIpiServiceRoutine@8
 ;KiReleaseSpinLock@4
 ;KiUnexpectedInterrupt

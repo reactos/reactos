@@ -11,13 +11,13 @@
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
 #include <internal/ps.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/
 
-/* FIXME: this should be in a header file */
 #define NR_IRQS         (16)
 #define IRQ_BASE        (0x40)
 
@@ -28,165 +28,107 @@ static KIRQL CurrentIrql = HIGH_LEVEL;
 
 extern IMPORTED ULONG DpcQueueSize;
 
-static VOID KeSetCurrentIrql(KIRQL newlvl);
+static ULONG HalpPendingInterruptCount[NR_IRQS];
 
 #define DIRQL_TO_IRQ(x)  (PROFILE_LEVEL - x)
 #define IRQ_TO_DIRQL(x)  (PROFILE_LEVEL - x)
 
+VOID STDCALL
+KiInterruptDispatch2 (ULONG Irq, KIRQL old_level);
+
 /* FUNCTIONS ****************************************************************/
 
-VOID HalpInitPICs(VOID)
-{
-   /* Initialization sequence */
-   WRITE_PORT_UCHAR((PUCHAR)0x20, 0x11);
-   WRITE_PORT_UCHAR((PUCHAR)0xa0, 0x11);
-   /* Start of hardware irqs (0x24) */
-   WRITE_PORT_UCHAR((PUCHAR)0x21, 0x40);
-   WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x48);
-   /* 8259-1 is master */
-   WRITE_PORT_UCHAR((PUCHAR)0x21, 0x4);
-   /* 8259-2 is slave */
-   WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x2);
-   /* 8086 mode */
-   WRITE_PORT_UCHAR((PUCHAR)0x21, 0x1);
-   WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x1);   
-   /* Mask off all interrupts from PICs */
-   WRITE_PORT_UCHAR((PUCHAR)0x21, 0xff);
-   WRITE_PORT_UCHAR((PUCHAR)0xa1, 0xff);
-
-   /* We can know enable interrupts */
-   __asm__ __volatile__ ("sti\n\t");
-}
-
-static ULONG 
-HiSetCurrentPICMask(unsigned int mask)
-{
-  WRITE_PORT_UCHAR((PUCHAR)0x21,mask & 0xff);
-  WRITE_PORT_UCHAR((PUCHAR)0xa1,(mask >> 8) & 0xff);
-  
-  return mask;
-}
-
-static VOID HiSwitchIrql(KIRQL oldIrql)
-/*
- * FUNCTION: Switches to the current irql
- * NOTE: Must be called with interrupt disabled
- */
-{
-   unsigned int i;
-   PKTHREAD CurrentThread;
-   
-   CurrentThread = KeGetCurrentThread();
-   
-   /*
-    * Disable all interrupts
-    */
-   if (CurrentIrql >= IPI_LEVEL)
-     {
-       HiSetCurrentPICMask(0xFFFF);
-       __asm__("sti\n\t");
-       return;
-     }
-
-   /*
-    * Disable all interrupts but the timer
-    */
-   if (CurrentIrql == PROFILE_LEVEL ||
-       CurrentIrql == CLOCK1_LEVEL ||
-       CurrentIrql == CLOCK2_LEVEL)
-     {
-	HiSetCurrentPICMask(0xFFFE);
-	__asm__("sti\n\t");
-	return;
-     }
-
-   /*
-    * Disable all interrupts of lesser priority
-    */
-   if (CurrentIrql > DISPATCH_LEVEL)
-     {
-       unsigned int current_mask = 0;
-	
-       for (i = CurrentIrql; i > (PROFILE_LEVEL - 15); i--)
-	  {
-	     current_mask = current_mask | (1 << (PROFILE_LEVEL - i));
-	  }
-	
-       HiSetCurrentPICMask(current_mask);
-       __asm__("sti\n\t");
-       return;
-     }
-   
-   /*
-    * Enable all interrupts
-    */
-   if (CurrentIrql == DISPATCH_LEVEL)
-     {
-	HiSetCurrentPICMask(0);
-	__asm__("sti\n\t");
-	return;
-     }
-   
-   /*
-    * APCs are disabled but execute any pending DPCs
-    */
-   if (CurrentIrql == APC_LEVEL)
-     {
-       HiSetCurrentPICMask(0);
-       __asm__("sti\n\t");
-       if (DpcQueueSize > 0)
-	  {
-	    CurrentIrql = DISPATCH_LEVEL;
-	    KiDispatchInterrupt();
-	    CurrentIrql = APC_LEVEL;
-	  }
-	return;
-     }
-   
-   /*
-    * Execute any pending DPCs or APCs
-    */
-   if (CurrentIrql == PASSIVE_LEVEL)
-     {
-       HiSetCurrentPICMask(0);
-       __asm__("sti");
-       if (DpcQueueSize > 0)
-	 {
-	   CurrentIrql = DISPATCH_LEVEL;
-	   KiDispatchInterrupt();
-	   CurrentIrql = PASSIVE_LEVEL;
-	 }
-       if (CurrentThread != NULL && 
-	   CurrentThread->ApcState.KernelApcPending)
-	 {
-	   CurrentIrql = APC_LEVEL;
-	   KiDeliverApc(0, 0, 0);
-	   CurrentIrql = PASSIVE_LEVEL;
-	 }
-     }
-}
-
-
-KIRQL STDCALL 
-KeGetCurrentIrql (VOID)
+KIRQL STDCALL KeGetCurrentIrql (VOID)
 /*
  * PURPOSE: Returns the current irq level
  * RETURNS: The current irq level
  */
 {
-   return(CurrentIrql);
+  return(CurrentIrql);
 }
 
-
-STATIC VOID 
-KeSetCurrentIrql(KIRQL newlvl)
-/*
- * PURPOSE: Sets the current irq level without taking any action
- */
+VOID HalpInitPICs(VOID)
 {
-  CurrentIrql = newlvl;
+  memset(HalpPendingInterruptCount, 0, sizeof(HalpPendingInterruptCount));
+
+  /* Initialization sequence */
+  WRITE_PORT_UCHAR((PUCHAR)0x20, 0x11);
+  WRITE_PORT_UCHAR((PUCHAR)0xa0, 0x11);
+  /* Start of hardware irqs (0x24) */
+  WRITE_PORT_UCHAR((PUCHAR)0x21, 0x40);
+  WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x48);
+  /* 8259-1 is master */
+  WRITE_PORT_UCHAR((PUCHAR)0x21, 0x4);
+  /* 8259-2 is slave */
+  WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x2);
+  /* 8086 mode */
+  WRITE_PORT_UCHAR((PUCHAR)0x21, 0x1);
+  WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x1);   
+  /* Enable all interrupts from PICs */
+  WRITE_PORT_UCHAR((PUCHAR)0x21, 0x0);
+  WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x0);
+  
+  /* We can now enable interrupts */
+  __asm__ __volatile__ ("sti\n\t");
 }
 
+VOID STATIC
+HalpExecuteIrqs(KIRQL NewIrql)
+{
+  ULONG IrqLimit, i;
+  
+  IrqLimit = min(PROFILE_LEVEL - NewIrql, NR_IRQS);
+
+  /*
+   * For each irq if there have been any deferred interrupts then now
+   * dispatch them.
+   */
+  for (i = 0; i < IrqLimit; i++)
+    {
+      while (HalpPendingInterruptCount[i] > 0)
+	{
+	  /*
+	   * For each deferred interrupt execute all the handlers at DIRQL.
+	   */
+	  CurrentIrql = IRQ_TO_DIRQL(i);
+	  KiInterruptDispatch2(i, NewIrql);
+	  HalpPendingInterruptCount[i]--;
+	}
+    }
+}
+
+VOID STATIC
+HalpLowerIrql(KIRQL NewIrql)
+{
+  if (NewIrql > PROFILE_LEVEL)
+    {
+      CurrentIrql = NewIrql;
+      return;
+    }
+  HalpExecuteIrqs(NewIrql);
+  if (NewIrql >= DISPATCH_LEVEL)
+    {
+      CurrentIrql = NewIrql;
+      return;
+    }
+  CurrentIrql = DISPATCH_LEVEL;
+  if (DpcQueueSize > 0)
+    {
+      KiDispatchInterrupt();
+    }
+  if (NewIrql == APC_LEVEL)
+    {
+      CurrentIrql = NewIrql;
+      return;
+    }
+  CurrentIrql = APC_LEVEL;
+  if (KeGetCurrentThread() != NULL && 
+      KeGetCurrentThread()->ApcState.KernelApcPending)
+    {
+      KiDeliverApc(0, 0, 0);
+    }
+  CurrentIrql = PASSIVE_LEVEL;
+}
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -204,13 +146,10 @@ KeSetCurrentIrql(KIRQL newlvl)
  * NOTES
  *	Uses fastcall convention
  */
-
 VOID FASTCALL
 KfLowerIrql (KIRQL	NewIrql)
 {
   KIRQL OldIrql;
-  
-  __asm__("cli\n\t");
   
   DPRINT("KfLowerIrql(NewIrql %d)\n", NewIrql);
   
@@ -222,9 +161,7 @@ KfLowerIrql (KIRQL	NewIrql)
       for(;;);
     }
   
-  OldIrql = CurrentIrql;
-  CurrentIrql = NewIrql;
-  HiSwitchIrql(OldIrql);
+  HalpLowerIrql(NewIrql);
 }
 
 
@@ -283,14 +220,8 @@ KfRaiseIrql (KIRQL	NewIrql)
       for(;;);
     }
   
-  __asm__("cli\n\t");
   OldIrql = CurrentIrql;
   CurrentIrql = NewIrql;
-  
-  DPRINT ("NewIrql %x OldIrql %x CurrentIrql %x\n",
-	  NewIrql, OldIrql, CurrentIrql);
-  HiSwitchIrql(OldIrql);
-  
   return OldIrql;
 }
 
@@ -374,7 +305,9 @@ HalBeginSystemInterrupt (ULONG Vector,
 			 PKIRQL OldIrql)
 {
   if (Vector < IRQ_BASE || Vector > IRQ_BASE + NR_IRQS)
-    return FALSE;
+    {
+      return(FALSE);
+    }
   
   /* Send EOI to the PICs */
   WRITE_PORT_UCHAR((PUCHAR)0x20,0x20);
@@ -383,23 +316,25 @@ HalBeginSystemInterrupt (ULONG Vector,
       WRITE_PORT_UCHAR((PUCHAR)0xa0,0x20);
     }
   
-  *OldIrql = KeGetCurrentIrql();
-  if (Vector-IRQ_BASE != 0)
+  if (CurrentIrql >= Irql)
     {
-      DPRINT("old_level %d\n",*OldIrql);
+      HalpPendingInterruptCount[Vector - IRQ_BASE]++;
+      return(FALSE);
     }
-  KeSetCurrentIrql(Irql);
-  
-  return TRUE;
+  *OldIrql = CurrentIrql;
+  CurrentIrql = Irql;
+
+  return(TRUE);
 }
 
 
-VOID STDCALL HalEndSystemInterrupt (KIRQL Irql,
-				    ULONG Unknown2)
+VOID STDCALL HalEndSystemInterrupt (KIRQL Irql, ULONG Unknown2)
+/*
+ * FUNCTION: Finish a system interrupt and restore the specified irq level.
+ */
 {
-  KeSetCurrentIrql(Irql);
+  HalpLowerIrql(Irql);
 }
-
 
 BOOLEAN STDCALL HalDisableSystemInterrupt (ULONG Vector,
 					   ULONG Unknown2)

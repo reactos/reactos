@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.20 2002/02/09 18:41:24 chorns Exp $
+/* $Id: bug.c,v 1.21 2002/05/02 23:45:32 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -71,6 +71,19 @@ KeRegisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
   CallbackRecord->Component = Component;
   CallbackRecord->CallbackRoutine = CallbackRoutine;
   return(TRUE);
+}
+
+VOID STDCALL
+KeBugCheckWithTf(ULONG BugCheckCode, 	     
+		 ULONG BugCheckParameter1,
+		 ULONG BugCheckParameter2,
+		 ULONG BugCheckParameter3,
+		 ULONG BugCheckParameter4,
+		 PKTRAP_FRAME Tf)
+{
+  DbgPrint("Bug detected code: 0x%X\n", BugCheckCode);
+  KiDumpTrapFrame(Tf, BugCheckParameter1, BugCheckParameter2);
+  for(;;);
 }
 
 VOID STDCALL
