@@ -11,6 +11,10 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 
+#define NDEBUG
+#include <kernel32/kernel32.h>
+
+
 WINBOOL
 STDCALL
 DeviceIoControl(
@@ -24,7 +28,6 @@ DeviceIoControl(
 		LPOVERLAPPED lpOverlapped
 		)
 {
-
 	NTSTATUS errCode = 0;
 	HANDLE hEvent = NULL;
 	PIO_STATUS_BLOCK IoStatusBlock;
@@ -41,7 +44,7 @@ DeviceIoControl(
 		bFsIoControlCode = TRUE;	
 	else
 		bFsIoControlCode = FALSE;
-  
+CHECKPOINT
     	if(lpOverlapped  != NULL) {
 		hEvent = lpOverlapped->hEvent;
 		lpOverlapped->Internal = STATUS_PENDING;
@@ -51,13 +54,13 @@ DeviceIoControl(
 		IoStatusBlock = &IIosb;
 	}
 
-
+CHECKPOINT
         if(bFsIoControlCode == TRUE) {
             	errCode = NtFsControlFile(hDevice,hEvent,NULL,NULL,IoStatusBlock,dwIoControlCode,lpInBuffer, nInBufferSize, lpOutBuffer, nOutBufferSize );
         } else {   
             	errCode = NtDeviceIoControlFile(hDevice,hEvent,NULL,NULL,IoStatusBlock,dwIoControlCode, lpInBuffer, nInBufferSize, lpOutBuffer, nOutBufferSize);
         }
-
+CHECKPOINT
 	if(errCode == STATUS_PENDING ) {
            
             	if(NtWaitForSingleObject(hDevice,FALSE,NULL) < 0) {
@@ -70,11 +73,13 @@ DeviceIoControl(
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
 	}
-        *lpBytesReturned = lpOverlapped->InternalHigh;
+CHECKPOINT
+        if (lpOverlapped)
+                *lpBytesReturned = lpOverlapped->InternalHigh;
+        else
+                *lpBytesReturned = IoStatusBlock->Information;
+CHECKPOINT
         return TRUE;
-
-
-
 }
 
 
