@@ -604,17 +604,17 @@ typedef struct _MEMORY_WORKING_SET_LIST { // Information Class 1
 } MEMORY_WORKING_SET_LIST, *PMEMORY_WORKING_SET_LIST;
 
 // Information Class 2
-#define _MEMORY_SECTION_NAME_STATIC(__bufsize__) \
+/*#define _MEMORY_SECTION_NAME_STATIC(__bufsize__) \
  { \
  UNICODE_STRING SectionFileName; \
  WCHAR          NameBuffer[(__bufsize__)]; \
-} 
+}*/
 
-#define MEMORY_SECTION_NAME_STATIC(__bufsize__) \
- struct _MEMORY_SECTION_NAME_STATIC((__bufsize__) 
-
-typedef struct _MEMORY_SECTION_NAME_STATIC(ANYSIZE_ARRAY)
- MEMORY_SECTION_NAME, *PMEMORY_SECTION_NAME;
+typedef struct
+{
+	UNICODE_STRING SectionFileName;
+	WCHAR          NameBuffer[ANYSIZE_ARRAY];
+} MEMORY_SECTION_NAME, *PMEMORY_SECTION_NAME;
 
 // Information class 0
 typedef struct _PROCESS_BASIC_INFORMATION
