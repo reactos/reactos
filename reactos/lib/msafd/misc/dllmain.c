@@ -133,7 +133,7 @@ WSPSocket(
 	SizeOfEA = SizeOfPacket + sizeof(FILE_FULL_EA_INFORMATION) + AFD_PACKET_COMMAND_LENGTH;
 
 	/* Set up EA Buffer */
-	EABuffer = HeapAlloc(GlobalHeap, 0, (SIZE_T)&SizeOfEA);
+	EABuffer = HeapAlloc(GlobalHeap, 0, SizeOfEA);
 	EABuffer->NextEntryOffset = 0;
 	EABuffer->Flags = 0;
 	EABuffer->EaNameLength = AFD_PACKET_COMMAND_LENGTH;
