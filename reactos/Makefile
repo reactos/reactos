@@ -32,7 +32,7 @@ BUS = acpi isapnp pci
 # oleaut32 psapi rpcrt4 secur32 shell32 user32 version ws2help ws2_32 wsock32 wshirda
 DLLS = advapi32 crtdll fmifs gdi32 kernel32 packet msafd msvcrt ntdll \
        secur32 user32 version winmm ws2help ws2_32 wshirda
-SUBSYS = smss win32k csrss
+SUBSYS = smss win32k csrss ntvdm
 
 #
 # Select the server(s) you want to build
@@ -62,7 +62,7 @@ INPUT_DRIVERS = keyboard mouclass psaux
 FS_DRIVERS = cdfs fs_rec ms np vfat mup ntfs
 
 # Kernel mode networking drivers
-# afd ndis packet tcpip tdi wshtcpip
+# afd ndis npf tcpip tdi wshtcpip
 NET_DRIVERS = afd ndis packet tcpip tdi wshtcpip
 
 # Kernel mode networking device drivers
@@ -90,38 +90,14 @@ TEST_APPS = alive apc args atomtest bench consume copymove count dump_shared_dat
             pteb regtest sectest shm simple thread tokentest vmtest winhello dibtest
 
 # Test applications
-# cabman cat net objdir partinfo pice ps stats
-UTIL_APPS = cat objdir partinfo stats
-
-#
-# Win32 Subsystem support (Based on WINE)
-# FIXME: Move to this its own Makefile
-#
-
-WINE_OTHER = unicode library
-
-WINE_TOOLS = bin2res wrc winebuild
-
-WINE_DLLS = comcat crtdll comctl32 commdlg dsound dplayx imagehlp ole32 richedit \
-shlwapi shell32 shdocvw twain wininet urlmon winspool \
-rpcrt4 mapi32 oleaut32 oledlg olepro32 olecli olesvr shfolder
-
-#rpcrt4 mapi32 # needed to make rcprt4 implib 
-
-# winmm ddraw dinput dplay serialui tapi32 wintrust 
-# msinfo lzexpand (missing imports)
-
-WINE_PROGS = control expand osversioncheck regedit regsvr32 winver
-# uninstaller
-# (waiting on wrc fix for the rest of these)
-# clock cmdlgtst  notepad  progman wcmd  
-# winefile winemine winetest uninstaller
-
+# cabman cat net objdir partinfo pice ps sc stats
+UTIL_APPS = cat objdir partinfo sc stats
 
 ifeq ($(ROS_BUILD_WINE),yes)
-WINE_MODULES = $(WINE_OTHER) $(WINE_TOOLS) $(WINE_DLLS) $(WINE_PROGS)
+
+# invoke wine global makefile here ?
+
 else
-WINE_MODULES =
 endif
 
 KERNEL_DRIVERS = $(DRIVERS_LIB) $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) \
@@ -129,20 +105,19 @@ KERNEL_DRIVERS = $(DRIVERS_LIB) $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS)
 
 all: tools dk implib $(COMPONENTS) $(HALS) $(BUS) $(DLLS) $(SUBSYS) \
      $(LOADERS) $(KERNEL_DRIVERS) $(SYS_APPS) $(SYS_SVC) $(TEST_APPS) \
-     $(UTIL_APPS) $(WINE_MODULES)
+     $(UTIL_APPS)
 
 implib: $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
         $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
         $(KERNEL_DRIVERS:%=%_implib) $(SUBSYS:%=%_implib) \
         $(SYS_APPS:%=%_implib) $(SYS_SVC:%=%_implib) \
-        $(TEST_APPS:%=%_implib) $(UTIL_APPS:%=%_implib) \
-        $(WINE_MODULES:%=%_implib)
+        $(TEST_APPS:%=%_implib) $(UTIL_APPS:%=%_implib)
 
 clean: tools dk_clean $(HALS:%=%_clean) \
        $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(DLLS:%=%_clean) \
        $(LOADERS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) $(SUBSYS:%=%_clean) \
        $(SYS_APPS:%=%_clean) $(SYS_SVC:%=%_clean) $(TEST_APPS:%=%_clean) \
-       $(UTIL_APPS:%=%_clean) $(NET_APPS:%=%_clean) $(WINE_MODULES:%=%_clean) \
+       $(UTIL_APPS:%=%_clean) $(NET_APPS:%=%_clean) \
        clean_after tools_clean
 
 clean_after:
@@ -153,14 +128,13 @@ install: tools install_dirs install_before \
          $(DLLS:%=%_install) $(LOADERS:%=%_install) \
          $(KERNEL_DRIVERS:%=%_install) $(SUBSYS:%=%_install) \
          $(SYS_APPS:%=%_install) $(SYS_SVC:%=%_install) \
-         $(TEST_APPS:%=%_install) $(UTIL_APPS:%=%_install) \
-         $(WINE_MODULES:%=%_install)
+         $(TEST_APPS:%=%_install) $(UTIL_APPS:%=%_install)
 
 dist: $(TOOLS_PATH)/rcopy$(EXE_POSTFIX) dist_clean dist_dirs \
       $(HALS:%=%_dist) $(COMPONENTS:%=%_dist) $(BUS:%=%_dist) $(DLLS:%=%_dist) \
       $(LOADERS:%=%_dist) $(KERNEL_DRIVERS:%=%_dist) $(SUBSYS:%=%_dist) \
       $(SYS_APPS:%=%_dist) $(SYS_SVC:%=%_dist) $(TEST_APPS:%=%_dist) \
-      $(UTIL_APPS:%=%_dist) $(NET_APPS:%=%_dist) $(WINE_MODULES:%=%_dist)
+      $(UTIL_APPS:%=%_dist) $(NET_APPS:%=%_dist)
 
 .PHONY: all implib clean clean_before install dist
 
@@ -246,90 +220,6 @@ $(UTIL_APPS:%=%_install): %_install:
 	make -C apps/utils/$* install
 
 .PHONY: $(UTIL_APPS) $(UTIL_APPS:%=%_implib) $(UTIL_APPS:%=%_clean) $(UTIL_APPS:%=%_install) $(UTIL_APPS:%=%_dist)
-
-
-#
-# Other Wine Modules
-#
-$(WINE_OTHER): %:
-	make -f makefile.ros -C $(WINE_PATH)/$*
-
-$(WINE_OTHER:%=%_implib): %_implib:
-	make -f makefile.ros -C $(WINE_PATH)/$* implib
-
-$(WINE_OTHER:%=%_clean): %_clean:
-	make -f makefile.ros -C $(WINE_PATH)/$* clean
-
-$(WINE_OTHER:%=%_dist): %_dist:
-	make -f makefile.ros -C $(WINE_PATH)/$* dist
-
-$(WINE_OTHER:%=%_install): %_install:
-	make -f makefile.ros -C $(WINE_PATH)/$* install
-
-.PHONY: $(WINE_OTHER) $(WINE_OTHER:%=%_implib) $(WINE_OTHER:%=%_clean) $(WINE_OTHER:%=%_install) $(WINE_OTHER:%=%_dist)
-
-
-#
-# Wine Tools
-#
-$(WINE_TOOLS): %:
-	make -f makefile.ros -C $(WINE_PATH)/tools/$*
-
-$(WINE_TOOLS:%=%_implib): %_implib:
-	make -f makefile.ros -C $(WINE_PATH)/tools/$* implib
-
-$(WINE_TOOLS:%=%_clean): %_clean:
-	make -f makefile.ros -C $(WINE_PATH)/tools/$* clean
-
-$(WINE_TOOLS:%=%_dist): %_dist:
-	make -f makefile.ros -C $(WINE_PATH)/tools/$* dist
-
-$(WINE_TOOLS:%=%_install): %_install:
-	make -f makefile.ros -C $(WINE_PATH)/tools/$* install
-
-.PHONY: $(WINE_DLLS) $(WINE_DLLS:%=%_implib) $(WINE_DLLS:%=%_clean) $(WINE_DLLS:%=%_install) $(WINE_DLLS:%=%_dist)
-
-
-#
-# Wine DLLs
-#
-$(WINE_DLLS): %:
-	make -f makefile.ros -C $(WINE_PATH)/dlls/$*
-
-$(WINE_DLLS:%=%_implib): %_implib:
-	make -f makefile.ros -C $(WINE_PATH)/dlls/$* implib
-
-$(WINE_DLLS:%=%_clean): %_clean:
-	make -f makefile.ros -C $(WINE_PATH)/dlls/$* clean
-
-$(WINE_DLLS:%=%_dist): %_dist:
-	make -f makefile.ros -C $(WINE_PATH)/dlls/$* dist
-
-$(WINE_DLLS:%=%_install): %_install:
-	make -f makefile.ros -C $(WINE_PATH)/dlls/$* install
-
-.PHONY: $(WINE_DLLS) $(WINE_DLLS:%=%_implib) $(WINE_DLLS:%=%_clean) $(WINE_DLLS:%=%_install) $(WINE_DLLS:%=%_dist)
-
-
-#
-# Wine programs
-#
-$(WINE_PROGS): %:
-	make -f makefile.ros -C $(WINE_PATH)/programs/$*
-
-$(WINE_PROGS:%=%_implib): %_implib:
-	make -f makefile.ros -C $(WINE_PATH)/programs/$* implib
-
-$(WINE_PROGS:%=%_clean): %_clean:
-	make -f makefile.ros -C $(WINE_PATH)/programs/$* clean
-
-$(WINE_PROGS:%=%_dist): %_dist:
-	make -f makefile.ros -C $(WINE_PATH)/programs/$* dist
-
-$(WINE_PROGS:%=%_install): %_install:
-	make -f makefile.ros -C $(WINE_PATH)/programs/$* install
-
-.PHONY: $(WINE_PROGS) $(WINE_PROGS:%=%_implib) $(WINE_PROGS:%=%_clean) $(WINE_PROGS:%=%_install) $(WINE_PROGS:%=%_dist)
 
 
 #
