@@ -755,6 +755,12 @@ POLICYDATA sh32_policy_table[] =
   },
 /* 0x4000050 - 0x4000060 */
   {
+    REST_NONLEGACYSHELLMODE,
+    strExplorer,
+    "NoneLegacyShellMode",
+    SHELL_NO_POLICY
+  },
+  {
     REST_STARTRUNNOHOMEPATH,
     strExplorer,
     "StartRunNoHOMEPATH",
