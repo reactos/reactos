@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: directory.c,v 1.6 2004/09/30 20:23:00 ekohl Exp $
+/* $Id: directory.c,v 1.7 2004/11/09 15:02:35 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -94,7 +94,7 @@ CopyDirectory (LPCWSTR lpDestinationPath,
 	    }
 	  else
 	    {
-	      DPRINT1 ("Copy file: %S -> %S\n", szFullSrcName, szFullDstName);
+	      DPRINT ("Copy file: %S -> %S\n", szFullSrcName, szFullDstName);
 	      if (!CopyFileW (szFullSrcName, szFullDstName, FALSE))
 		{
 		  DPRINT1 ("Error: %lu\n", GetLastError());
@@ -284,7 +284,7 @@ RemoveDirectoryPath (LPCWSTR lpPathName)
   if (!RecursiveRemoveDir (lpPathName))
     return FALSE;
 
-  DPRINT1 ("Delete directory: '%S'\n", lpPathName);
+  DPRINT ("Delete directory: '%S'\n", lpPathName);
   return RemoveDirectoryW (lpPathName);
 }
 

@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.2 2004/08/02 14:58:59 navaraf Exp $
+# $Id: Makefile.ros-template,v 1.3 2004/11/09 15:02:35 ion Exp $
 
 TARGET_NAME = midimap
 
@@ -8,13 +8,13 @@ TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
 
 TARGET_SDKLIBS = @IMPORTS@ winmm.a libwine.a wine_uuid.a ntdll.a
 
-TARGET_BASE = 0x76160000
+TARGET_BASE = $(TARGET_LIB_BASE_MIDIMAP)
 
 TARGET_RC_SRCS = @RC_SRCS@
 TARGET_RC_BINSRC = @RC_BINSRC@
 TARGET_RC_BINARIES = @RC_BINARIES@
 
-TARGET_EXTENSION = .drv
+TARGET_EXTENSION = .dll
 
 default: all
 

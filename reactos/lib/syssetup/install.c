@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.17 2004/10/19 14:33:07 ekohl Exp $
+/* $Id: install.c,v 1.18 2004/11/09 15:02:35 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -312,6 +312,7 @@ InstallReactOS (HINSTANCE hInstance)
 #if 0
   UNICODE_STRING SidString;
 #endif
+  ULONG LastError;
 
   if (!InitializeProfiles ())
     {
@@ -361,10 +362,18 @@ InstallReactOS (HINSTANCE hInstance)
   /* Create the Administrator account */
   if (!SamCreateUser(L"Administrator", L"", AdminSid))
   {
-    DebugPrint("SamCreateUser() failed!\n");
-    RtlFreeSid(AdminSid);
-    RtlFreeSid(DomainSid);
-    return 0;
+    /* Check what the error was.
+     * If the Admin Account already exists, then it means Setup
+     * wasn't allowed to finish properly. Instead of rebooting
+     * and not completing it, let it restart instead
+     */
+    LastError = GetLastError();
+    if (LastError != ERROR_USER_EXISTS) {
+      DebugPrint("SamCreateUser() failed!\n");
+      RtlFreeSid(AdminSid);
+      RtlFreeSid(DomainSid);
+      return 0;
+    }
   }
 
   /* Create the Administrator profile */

@@ -927,7 +927,7 @@ BOOL WINAPI SetupDiInstallClassW(
     HKEY hClassKey;
 
 
-    FIXME("\n");
+    FIXME("Incomplete function.\n");
 
     if ((Flags & DI_NOVCP) && (FileQueue == NULL || FileQueue == INVALID_HANDLE_VALUE))
     {

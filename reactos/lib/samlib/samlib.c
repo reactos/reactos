@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: samlib.c,v 1.3 2004/07/05 22:33:14 royce Exp $
+/* $Id: samlib.c,v 1.4 2004/11/09 15:02:35 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -76,7 +76,7 @@ SamInitializeSAM (VOID)
   HKEY hGroupsKey;
   HKEY hUsersKey;
 
-  DPRINT1("SamInitializeSAM() called\n");
+  DPRINT("SamInitializeSAM() called\n");
 
   if (RegCreateKeyExW (HKEY_LOCAL_MACHINE,
 		       L"SAM\\SAM",
@@ -298,7 +298,7 @@ SamInitializeSAM (VOID)
 
   RegCloseKey (hDomainsKey);
 
-  DPRINT1 ("SamInitializeSAM() done\n");
+  DPRINT ("SamInitializeSAM() done\n");
 
   return TRUE;
 }
@@ -307,7 +307,7 @@ SamInitializeSAM (VOID)
 BOOL STDCALL
 SamGetDomainSid (PSID *Sid)
 {
-  DPRINT1 ("SamGetDomainSid() called\n");
+  DPRINT ("SamGetDomainSid() called\n");
 
   return FALSE;
 }
@@ -318,7 +318,7 @@ SamSetDomainSid (PSID Sid)
 {
   HKEY hAccountKey;
 
-  DPRINT1 ("SamSetDomainSid() called\n");
+  DPRINT ("SamSetDomainSid() called\n");
 
   if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
 		     L"SAM\\SAM\\Domains\\Account",
@@ -344,7 +344,7 @@ SamSetDomainSid (PSID Sid)
 
   RegCloseKey (hAccountKey);
 
-  DPRINT1 ("SamSetDomainSid() called\n");
+  DPRINT ("SamSetDomainSid() called\n");
 
   return TRUE;
 }
@@ -362,7 +362,7 @@ SamCreateUser (PWSTR UserName,
   HKEY hUsersKey;
   HKEY hUserKey;
 
-  DPRINT1 ("SamCreateUser() called\n");
+  DPRINT ("SamCreateUser() called\n");
 
   /* FIXME: Check whether the SID is a real user sid */
 
@@ -445,7 +445,7 @@ SamCreateUser (PWSTR UserName,
 
   RegCloseKey (hUserKey);
 
-  DPRINT1 ("SamCreateUser() done\n");
+  DPRINT ("SamCreateUser() done\n");
 
   return TRUE;
 }
@@ -464,7 +464,7 @@ SamCheckUserPassword (PWSTR UserName,
   HKEY hUsersKey;
   HKEY hUserKey;
 
-  DPRINT1 ("SamCheckUserPassword() called\n");
+  DPRINT ("SamCheckUserPassword() called\n");
 
   /* Open the Users key */
   if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
@@ -525,7 +525,7 @@ SamCheckUserPassword (PWSTR UserName,
       return FALSE;
     }
 
-  DPRINT1 ("SamCheckUserPassword() done\n");
+  DPRINT ("SamCheckUserPassword() done\n");
 
   return TRUE;
 }
@@ -540,7 +540,7 @@ SamGetUserSid (PWSTR UserName,
   HKEY hUsersKey;
   HKEY hUserKey;
 
-  DPRINT1 ("SamGetUserSid() called\n");
+  DPRINT ("SamGetUserSid() called\n");
 
   if (Sid != NULL)
     *Sid = NULL;
@@ -594,7 +594,7 @@ SamGetUserSid (PWSTR UserName,
     }
 
   /* Allocate sid buffer */
-  DPRINT1 ("Required SID buffer size: %lu\n", dwLength);
+  DPRINT ("Required SID buffer size: %lu\n", dwLength);
   lpSid = (PSID)RtlAllocateHeap (RtlGetProcessHeap (),
 				 0,
 				 dwLength);
@@ -625,7 +625,7 @@ SamGetUserSid (PWSTR UserName,
 
   *Sid = lpSid;
 
-  DPRINT1 ("SamGetUserSid() done\n");
+  DPRINT ("SamGetUserSid() done\n");
 
   return TRUE;
 }
