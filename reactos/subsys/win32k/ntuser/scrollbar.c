@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.16 2003/10/02 23:21:42 weiden Exp $
+/* $Id: scrollbar.c,v 1.17 2003/10/06 17:25:16 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -227,7 +227,9 @@ IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPS
       {
         mx = psi->nMax - max(psi->nPage - 1, 0);
         if(psi->nMin < mx)
-          ThumbPos = Thumb + IntMulDiv(cxy, psi->nPos - psi->nMin, psi->nMax - psi->nMin + 1);
+          ThumbPos = Thumb + IntMulDiv(cxy - ThumbBox, psi->nPos - psi->nMin, mx - psi->nMin);
+        else
+          ThumbPos = Thumb + ThumbBox;
       }
       
       psbi->xyThumbTop = ThumbPos;
