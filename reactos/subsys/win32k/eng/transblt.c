@@ -82,6 +82,12 @@ EngTransparentBlt(PSURFOBJ Dest,
     MouseSafetyOnDrawEnd(Source, SourceGDI);
     MouseSafetyOnDrawEnd(Dest, DestGDI);
 
+    if(EngDeleteSurface(hTemp) == FALSE)
+    {
+      DbgPrint("Win32k: Failed to delete surface: %d\n", hTemp);	
+      return FALSE;
+    }
+
     return ret;
   }
 
