@@ -500,8 +500,20 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
    Frame = (PULONG)Tf->Ebp;
    while (Frame != NULL)
      {
-       print_address((PVOID)Frame[1]);
-       Frame = (PULONG)Frame[0];
+       NTSTATUS Status;
+       PVOID Eip;
+       Status = MmSafeCopyFromUser(&Eip, Frame + 1, sizeof(Eip));
+       if (!NT_SUCCESS(Status))
+	 {
+	   DbgPrint("<INVALID>");
+	   break;
+	 }
+       print_address(Eip);
+       Status = MmSafeCopyFromUser(&Frame, Frame, sizeof(Frame));
+       if (!NT_SUCCESS(Status))
+	 {
+	   break;
+	 }
        i++;
        DbgPrint(" ");
      }
