@@ -104,7 +104,7 @@ LPCTSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey)
     return pathBuffer;
 }
 
-static HTREEITEM AddEntryToTree(HWND hwndTV, HTREEITEM hParent, LPTSTR label, HKEY hKey, DWORD dwChildren)
+static HTREEITEM AddEntryToTree(HWND hwndTV, HTREEITEM hParent, LPTSTR label, HKEY hKey, DWORD dwChildren, HTREEITEM insAfter )
 {
     TVITEM tvi;
     TVINSERTSTRUCT tvins;
@@ -117,12 +117,7 @@ static HTREEITEM AddEntryToTree(HWND hwndTV, HTREEITEM hParent, LPTSTR label, HK
     tvi.cChildren = dwChildren;
     tvi.lParam = (LPARAM)hKey;
     tvins.u.item = tvi;
-    /* 
-     * Inserting items at front is faster then inserting to back.
-     * Sorting after inserting each item is painfully slow...
-     * -Gunnar
-     */
-    tvins.hInsertAfter = TVI_FIRST;//(HTREEITEM)(hKey ? TVI_LAST : TVI_SORT);
+    tvins.hInsertAfter = insAfter;
     tvins.hParent = hParent;
     return TreeView_InsertItem(hwndTV, &tvins);
 }
@@ -150,13 +145,11 @@ static BOOL InitTreeViewItems(HWND hwndTV, LPTSTR pHostName)
     /* Add the item to the tree view control.  */
     if (!(hRoot = TreeView_InsertItem(hwndTV, &tvins))) return FALSE;
 
-    if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_CLASSES_ROOT"), HKEY_CLASSES_ROOT, 1)) return FALSE;
-    if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_CURRENT_USER"), HKEY_CURRENT_USER, 1)) return FALSE;
-    if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_LOCAL_MACHINE"), HKEY_LOCAL_MACHINE, 1)) return FALSE;
-    if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_USERS"), HKEY_USERS, 1)) return FALSE;
-    if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_CURRENT_CONFIG"), HKEY_CURRENT_CONFIG, 1)) return FALSE;
-    
-    SendMessage(hwndTV, TVM_SORTCHILDREN, 0, hRoot);
+    if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_CLASSES_ROOT"), HKEY_CLASSES_ROOT, 1, TVI_LAST)) return FALSE;
+    if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_CURRENT_USER"), HKEY_CURRENT_USER, 1, TVI_LAST)) return FALSE;
+    if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_LOCAL_MACHINE"), HKEY_LOCAL_MACHINE, 1, TVI_LAST)) return FALSE;
+    if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_USERS"), HKEY_USERS, 1, TVI_LAST)) return FALSE;
+    if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_CURRENT_CONFIG"), HKEY_CURRENT_CONFIG, 1, TVI_LAST)) return FALSE;
     
     /* expand and select host name */
     TreeView_Expand(hwndTV, hRoot, TVE_EXPAND);
@@ -247,10 +240,10 @@ BOOL OnTreeExpanding(HWND hwndTV, NMTREEVIEW* pnmtv)
 	}
 	if (errCode != ERROR_SUCCESS) dwSubCount = 0;
 	printf("dwSubCount=%ld, Name=%s\n", dwSubCount, Name);
-        AddEntryToTree(hwndTV, pnmtv->itemNew.hItem, Name, NULL, dwSubCount);
+        AddEntryToTree(hwndTV, pnmtv->itemNew.hItem, Name, NULL, dwSubCount, TVI_FIRST);
     }
     
-    SendMessage(hwndTV, TVM_SORTCHILDREN, 0, pnmtv->itemNew.hItem);
+    SendMessage(hwndTV, TVM_SORTCHILDREN, 0, (LPARAM)pnmtv->itemNew.hItem);
    
     RegCloseKey(hNewKey);
     HeapFree(GetProcessHeap(), 0, Name);
