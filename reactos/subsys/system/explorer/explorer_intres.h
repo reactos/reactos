@@ -30,6 +30,7 @@
 #define IDS_SEARCH                      26
 #define IDS_ABOUT_EXPLORER              27
 #define IDS_LAUNCH_MANY_PROGRAMS        28
+#define IDS_DESKTOPBAR_SETTINGS         29
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
@@ -70,7 +71,15 @@
 #define IDI_COMPUTER                    149
 #define IDM_DESKTOPBAR                  150
 #define IDD_DESKBAR_TASKBAR             153
+#define IDB_ICON_ALIGN_0                153
 #define IDD_DESKBAR_STARTMENU           154
+#define IDB_ICON_ALIGN_1                154
+#define IDB_ICON_ALIGN_2                155
+#define IDB_ICON_ALIGN_3                156
+#define IDB_ICON_ALIGN_4                157
+#define IDB_ICON_ALIGN_5                158
+#define IDB_ICON_ALIGN_6                159
+#define IDB_ICON_ALIGN_7                160
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403
@@ -78,6 +87,15 @@
 #define ID_VIEW_DRIVE_BAR               507
 #define ID_VIEW_TOOL_BAR                508
 #define IDC_ROS_EXPLORER                1000
+#define IDC_BUTTON1                     1002
+#define IDC_ICON_ALIGN_0                1002
+#define IDC_ICON_ALIGN_1                1003
+#define IDC_ICON_ALIGN_2                1006
+#define IDC_ICON_ALIGN_3                1007
+#define IDC_ICON_ALIGN_4                1008
+#define IDC_ICON_ALIGN_5                1009
+#define IDC_ICON_ALIGN_6                1010
+#define IDC_ICON_ALIGN_7                1011
 #define IDC_WWW                         1012
 #define IDC_TOPIC                       1017
 #define IDC_MAILS_FOUND                 1018
@@ -111,9 +129,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        153
+#define _APS_NEXT_RESOURCE_VALUE        161
 #define _APS_NEXT_COMMAND_VALUE         40006
-#define _APS_NEXT_CONTROL_VALUE         1002
+#define _APS_NEXT_CONTROL_VALUE         1003
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

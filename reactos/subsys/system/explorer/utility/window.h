@@ -402,6 +402,8 @@ protected:
 	friend struct PropSheetPage;
 
 	static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
+
+	int	Command(int id, int code);
 };
 
 
@@ -686,15 +688,47 @@ struct PictureButton : public OwnerdrawnButton
 	typedef OwnerdrawnButton super;
 
 	PictureButton(HWND hwnd, HICON hIcon, HBRUSH hbrush=GetSysColorBrush(COLOR_BTNFACE), bool flat=false)
-	 :	super(hwnd), _hIcon(hIcon), _hBrush(hbrush), _flat(flat)
+	 :	super(hwnd), _hIcon(hIcon), _hBmp(0), _hBrush(hbrush), _flat(flat)
 	{
+		_cx = 16;
+		_cy = 16;
+	}
+
+	PictureButton(HWND hparent, int id, HICON hIcon, HBRUSH hbrush=GetSysColorBrush(COLOR_BTNFACE), bool flat=false)
+	 :	super(GetDlgItem(hparent, id)), _hIcon(hIcon), _hBmp(0), _hBrush(hbrush), _flat(flat)
+	{
+		_cx = 16;
+		_cy = 16;
+	}
+
+	PictureButton(HWND hwnd, HBITMAP hBmp, HBRUSH hbrush=GetSysColorBrush(COLOR_BTNFACE), bool flat=false)
+	 :	super(hwnd), _hIcon(0), _hBmp(hBmp), _hBrush(hbrush), _flat(flat)
+	{
+		BITMAP bmp;
+		GetObject(hBmp, sizeof(bmp), &bmp);
+		_cx = bmp.bmWidth;
+		_cy = bmp.bmHeight;
+	}
+
+	PictureButton(HWND hparent, int id, HBITMAP hBmp, HBRUSH hbrush=GetSysColorBrush(COLOR_BTNFACE), bool flat=false)
+	 :	super(GetDlgItem(hparent, id)), _hIcon(0), _hBmp(hBmp), _hBrush(hbrush), _flat(flat)
+	{
+		BITMAP bmp;
+		GetObject(hBmp, sizeof(bmp), &bmp);
+		_cx = bmp.bmWidth;
+		_cy = bmp.bmHeight;
 	}
 
 protected:
 	virtual void DrawItem(LPDRAWITEMSTRUCT dis);
 
 	HICON	_hIcon;
+	HBITMAP	_hBmp;
 	HBRUSH	_hBrush;
+
+	int		_cx;
+	int		_cy;
+
 	bool	_flat;
 };
 

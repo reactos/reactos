@@ -56,3 +56,5 @@ If you search for more information, look into the CVS repository.
 04.01.2004	m. fuchs	implemented icon cache
 11.01.2004	m. fuchs	keyboard navigation in start menu
 14.01.2004	m. fuchs	automatically adjusted size of notification area and quicklaunch bar in desktop bar
+18.01.2004	m. fuchs	explorer/desktop settings property sheet
+

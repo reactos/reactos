@@ -20,7 +20,7 @@
  //
  // Explorer clone
  //
- // searchprogram.h
+ // dialogs/searchprogram.h
  //
  // Explorer dialogs
  //

@@ -20,7 +20,7 @@
  //
  // Explorer clone
  //
- // searchprogram.cpp
+ // dialogs/searchprogram.cpp
  //
  // Explorer dialogs
  //

@@ -159,6 +159,8 @@ extern struct ExplorerGlobals
 
 	FileTypeManager	_ftype_mgr;
 	IconCache	_icon_cache;
+
+	HWND		_hwndDesktopBar;
 } g_Globals;
 
 

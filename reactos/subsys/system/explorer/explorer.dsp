@@ -495,6 +495,38 @@ SOURCE=.\res\folder.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\icoalig0.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\icoalig1.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\icoalig2.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\icoalig3.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\icoalig4.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\icoalig5.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\icoalig6.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\icoalig7.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\images.bmp
 # End Source File
 # Begin Source File
@@ -753,6 +785,14 @@ SOURCE=.\dialogs\searchprogram.cpp
 # Begin Source File
 
 SOURCE=.\dialogs\searchprogram.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\dialogs\settings.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\dialogs\settings.h
 # End Source File
 # End Group
 # Begin Source File

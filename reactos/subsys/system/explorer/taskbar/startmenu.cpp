@@ -39,7 +39,9 @@
 
 #include "desktopbar.h"
 #include "startmenu.h"
+
 #include "../dialogs/searchprogram.h"
+#include "../dialogs/settings.h"
 
 
 StartMenu::StartMenu(HWND hwnd)
@@ -1274,9 +1276,9 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
 }
 
 
-HWND StartMenuRoot::Create(HWND hwndDesktopBar)
+HWND StartMenuRoot::Create(HWND hwndOwner)
 {
-	WindowRect pos(hwndDesktopBar);
+	WindowRect pos(hwndOwner);
 
 	RECT rect = {pos.left, pos.top-STARTMENU_LINE_HEIGHT-4, pos.left+STARTMENU_WIDTH_MIN, pos.top};
 
@@ -1288,7 +1290,7 @@ HWND StartMenuRoot::Create(HWND hwndDesktopBar)
 
 	return Window::Create(WINDOW_CREATOR(StartMenuRoot), 0, GetWndClasss(), TITLE_STARTMENU,
 							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN,
-							rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, hwndDesktopBar);
+							rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, hwndOwner);
 }
 
 
@@ -1539,11 +1541,10 @@ int StartMenuHandler::Command(int id, int code)
 		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
 		break;
 
-	  case IDC_LAUNCH: {
-		HWND hwndDesktopBar = GetWindow(_hwnd, GW_OWNER);
+	  case IDC_LAUNCH:
 		CloseStartMenu(id);
-		ShowLaunchDialog(hwndDesktopBar);
-		break;}
+		ShowLaunchDialog(g_Globals._hwndDesktopBar);
+		break;
 
 	  case IDC_DOCUMENTS:
 		CreateSubmenu(id, CSIDL_PERSONAL, ResString(IDS_DOCUMENTS));
@@ -1569,28 +1570,30 @@ int StartMenuHandler::Command(int id, int code)
 		CreateSubmenu(id, ResString(IDS_SEARCH), STARTMENU_CREATOR(SearchMenu));
 		break;
 
-	  case IDC_START_HELP: {
-		HWND hwndDesktopBar = GetWindow(_hwnd, GW_OWNER);
+	  case IDC_START_HELP:
 		CloseStartMenu(id);
-		MessageBox(hwndDesktopBar, TEXT("Help not yet implemented"), ResString(IDS_TITLE), MB_OK);
-		break;}
+		MessageBox(g_Globals._hwndDesktopBar, TEXT("Help not yet implemented"), ResString(IDS_TITLE), MB_OK);
+		break;
 
 	  case IDC_LOGOFF:
 		/* The shell32 Dialog prompts about some system setting change. This is not what we want to display here.
-		HWND hwndDesktopBar = GetWindow(_hwnd, GW_OWNER);
 		CloseStartMenu(id);
-		ShowRestartDialog(hwndDesktopBar, EWX_LOGOFF);*/
+		ShowRestartDialog(g_Globals._hwndDesktopBar, EWX_LOGOFF);*/
 		DestroyWindow(GetParent(_hwnd));
 		break;
 
-	  case IDC_SHUTDOWN: {
-		HWND hwndDesktopBar = GetWindow(_hwnd, GW_OWNER);
+	  case IDC_SHUTDOWN:
 		CloseStartMenu(id);
-		ShowExitWindowsDialog(hwndDesktopBar);
-		break;}
+		ShowExitWindowsDialog(g_Globals._hwndDesktopBar);
+		break;
 
 
 	// settings menu
+
+	  case ID_DESKTOPBAR_SETTINGS:
+		CloseStartMenu(id);
+		ExplorerPropertySheet(g_Globals._hwndDesktopBar);
+		break;
 
 	  case IDC_SETTINGS_MENU:
 		CreateSubmenu(id, CSIDL_CONTROLS, ResString(IDS_SETTINGS_MENU));
@@ -1672,7 +1675,7 @@ void StartMenuHandler::ShowSearchComputer()
 		MessageBox(0, TEXT("SHFindComputer() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 }
 
-void StartMenuHandler::ShowLaunchDialog(HWND hwndDesktopBar)
+void StartMenuHandler::ShowLaunchDialog(HWND hwndOwner)
 {
 	 ///@todo All text phrases should be put into the resources.
 	static LPCSTR szTitle = "Create New Task";
@@ -1689,10 +1692,10 @@ void StartMenuHandler::ShowLaunchDialog(HWND hwndDesktopBar)
 			MultiByteToWideChar(CP_ACP, 0, szTitle, -1, wTitle, 40);
 			MultiByteToWideChar(CP_ACP, 0, szText, -1, wText, 256);
 
-			(*RunFileDlg)(hwndDesktopBar, 0, NULL, (LPCSTR)wTitle, (LPCSTR)wText, RFF_CALCDIRECTORY);
+			(*RunFileDlg)(hwndOwner, 0, NULL, (LPCSTR)wTitle, (LPCSTR)wText, RFF_CALCDIRECTORY);
 		}
 		else
-			(*RunFileDlg)(hwndDesktopBar, 0, NULL, szTitle, szText, RFF_CALCDIRECTORY);
+			(*RunFileDlg)(hwndOwner, 0, NULL, szTitle, szText, RFF_CALCDIRECTORY);
 	}
 }
 
@@ -1734,6 +1737,8 @@ void SettingsMenu::AddEntries()
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
 #endif
 		AddButton(ResString(IDS_SETTINGS_MENU),	ICID_CONFIG, true, IDC_SETTINGS_MENU);
+
+	AddButton(ResString(IDS_DESKTOPBAR_SETTINGS), ICID_CONFIG, false, ID_DESKTOPBAR_SETTINGS);
 }
 
 void BrowseMenu::AddEntries()

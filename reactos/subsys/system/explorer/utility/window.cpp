@@ -900,16 +900,42 @@ void ColorButton::DrawItem(LPDRAWITEMSTRUCT dis)
 void PictureButton::DrawItem(LPDRAWITEMSTRUCT dis)
 {
 	UINT state = DFCS_BUTTONPUSH;
+	int style = GetWindowStyle(_hwnd);
 
 	if (dis->itemState & ODS_DISABLED)
 		state |= DFCS_INACTIVE;
 
-	POINT iconPos = {dis->rcItem.left+2, (dis->rcItem.top+dis->rcItem.bottom-16)/2};
-	RECT textRect = {dis->rcItem.left+16+4, dis->rcItem.top+2, dis->rcItem.right-4, dis->rcItem.bottom-4};
+	POINT imagePos;
+	RECT textRect;
+	int dt_flags;
+
+	if (style & BS_BOTTOM) {
+		 // align horizontal centered, vertical floating
+		imagePos.x = (dis->rcItem.left + dis->rcItem.right - _cx) / 2;
+		imagePos.y = dis->rcItem.top + 2;
+
+		textRect.left = dis->rcItem.left + 2;
+		textRect.top = dis->rcItem.top + _cy + 4;
+		textRect.right = dis->rcItem.right - 4;
+		textRect.bottom = dis->rcItem.bottom - 4;
+
+		dt_flags = DT_SINGLELINE|DT_CENTER|DT_VCENTER;
+	} else {
+		 // horizontal floating, vertical centered
+		imagePos.x = dis->rcItem.left + 2;
+		imagePos.y = (dis->rcItem.top + dis->rcItem.bottom - _cy)/2;
+
+		textRect.left = dis->rcItem.left + _cx + 4;
+		textRect.top = dis->rcItem.top + 2;
+		textRect.right = dis->rcItem.right - 4;
+		textRect.bottom = dis->rcItem.bottom - 4;
+
+		dt_flags = DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/;
+	}
 
 	if (dis->itemState & ODS_SELECTED) {
 		state |= DFCS_PUSHED;
-		++iconPos.x;		++iconPos.y;
+		++imagePos.x;		++imagePos.y;
 		++textRect.left;	++textRect.top;
 		++textRect.right;	++textRect.bottom;
 	}
@@ -917,13 +943,19 @@ void PictureButton::DrawItem(LPDRAWITEMSTRUCT dis)
 	if (_flat) {
 		FillRect(dis->hDC, &dis->rcItem, _hBrush);
 
-		if (GetWindowStyle(_hwnd) & BS_FLAT)	// Only with BS_FLAT set, there will be drawn a frame without highlight.
+		if (style & BS_FLAT)	// Only with BS_FLAT set, there will be drawn a frame without highlight.
 			DrawEdge(dis->hDC, &dis->rcItem, EDGE_RAISED, BF_RECT|BF_FLAT);
 	} else
 		//DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, state);
 		DrawButton(dis->hDC, &dis->rcItem, state, _hBrush);
 
-	DrawIconEx(dis->hDC, iconPos.x, iconPos.y, _hIcon, 16, 16, 0, _hBrush, DI_NORMAL);
+	if (_hIcon)
+		DrawIconEx(dis->hDC, imagePos.x, imagePos.y, _hIcon, _cx, _cy, 0, _hBrush, DI_NORMAL);
+	else {
+		MemCanvas mem_dc;
+		BitmapSelection sel(mem_dc, _hBmp);
+		BitBlt(dis->hDC, imagePos.x, imagePos.y, _cx, _cy, mem_dc, 0, 0, SRCCOPY);
+	}
 
 	TCHAR title[BUFFER_LEN];
 	GetWindowText(_hwnd, title, BUFFER_LEN);
@@ -931,10 +963,10 @@ void PictureButton::DrawItem(LPDRAWITEMSTRUCT dis)
 	BkMode bk_mode(dis->hDC, TRANSPARENT);
 
 	if (dis->itemState & (ODS_DISABLED|ODS_GRAYED))
-		DrawGrayText(dis->hDC, &textRect, title, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
+		DrawGrayText(dis->hDC, &textRect, title, dt_flags);
 	else {
 		TextColor lcColor(dis->hDC, GetSysColor(COLOR_BTNTEXT));
-		DrawText(dis->hDC, title, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
+		DrawText(dis->hDC, title, -1, &textRect, dt_flags);
 	}
 
 	if (dis->itemState & ODS_FOCUS) {
@@ -1342,4 +1374,11 @@ INT_PTR CALLBACK PropSheetPageDlg::DialogProc(HWND hwnd, UINT nmsg, WPARAM wpara
 	}
 
 	return FALSE;	// message has not been processed
+}
+
+int PropSheetPageDlg::Command(int id, int code)
+{
+	// override call to EndDialog in Dialog::Command();
+
+	return FALSE;
 }

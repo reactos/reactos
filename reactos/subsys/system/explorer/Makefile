@@ -91,6 +91,7 @@ OBJECTS = \
 	traynotify.o \
 	quicklaunch.o \
 	searchprogram.o \
+	settings.o \
 	i386-stub-win32.o
 
 LIBS = gdi32 comctl32 ole32 uuid wsock32

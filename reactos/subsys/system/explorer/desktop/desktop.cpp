@@ -32,13 +32,13 @@
 #include "../utility/dragdropimpl.h"
 #include "../utility/window.h"
 
-#include "desktop.h"
-#include "../taskbar/desktopbar.h"
-#include "../shell/mainframe.h"	// for MainFrame::Create()
-
 #include "../globals.h"
 #include "../externals.h"
 #include "../explorer_intres.h"
+
+#include "desktop.h"
+#include "../taskbar/desktopbar.h"
+#include "../shell/mainframe.h"	// for MainFrame::Create()
 
 
 static BOOL (WINAPI*SetShellWindow)(HWND);
@@ -224,6 +224,7 @@ LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 
 	 // create the explorer bar
 	_desktopBar = DesktopBar::Create();
+	g_Globals._hwndDesktopBar = _desktopBar;
 
 	return 0;
 }

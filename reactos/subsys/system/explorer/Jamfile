@@ -35,6 +35,7 @@ exe explorer :
 	utility/utility.cpp
 	utility/window.cpp
 	dialogs/searchprogram.cpp
+	dialogs/settings.cpp
 	i386-stub-win32.c
  :	<define>WIN32 <define>_ROS_ <define>_WIN32_IE=0x0501 <define>_WIN32_WINNT=0x0501
 	<cxxflags>-I$(INCLUDE)

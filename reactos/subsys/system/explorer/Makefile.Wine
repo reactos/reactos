@@ -34,7 +34,8 @@ CPP_SRCS = \
 	taskbar/startmenu.cpp \
 	taskbar/traynotify.cpp \
 	taskbar/quicklaunch.cpp \
-	dialogs/searchprogram.cpp
+	dialogs/searchprogram.cpp \
+	dialogs/settings.cpp
 
 RC_SRCS = explorer_intres.rc
 EXTRARCFLAGS = -D__WRC__ -D_WIN32

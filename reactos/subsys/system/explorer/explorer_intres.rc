@@ -118,6 +118,7 @@ BEGIN
     IDS_ABOUT_EXPLORER      "&Despre Explorer..."
     IDS_LAUNCH_MANY_PROGRAMS 
                             "You have selected more than one program.\nAre you sure you want to launch all of them?"
+    IDS_DESKTOPBAR_SETTINGS "Desktop Settings"
 END
 
 #endif    // Romanian resources
@@ -353,6 +354,20 @@ BEGIN
 END
 
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_ICON_ALIGN_0        BITMAP  DISCARDABLE     "res/icoalig0.bmp"
+IDB_ICON_ALIGN_1        BITMAP  DISCARDABLE     "res/icoalig1.bmp"
+IDB_ICON_ALIGN_2        BITMAP  DISCARDABLE     "res/icoalig2.bmp"
+IDB_ICON_ALIGN_3        BITMAP  DISCARDABLE     "res/icoalig3.bmp"
+IDB_ICON_ALIGN_4        BITMAP  DISCARDABLE     "res/icoalig4.bmp"
+IDB_ICON_ALIGN_5        BITMAP  DISCARDABLE     "res/icoalig5.bmp"
+IDB_ICON_ALIGN_6        BITMAP  DISCARDABLE     "res/icoalig6.bmp"
+IDB_ICON_ALIGN_7        BITMAP  DISCARDABLE     "res/icoalig7.bmp"
+
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -467,6 +482,7 @@ BEGIN
     IDS_ABOUT_EXPLORER      "&‹ber Explorer..."
     IDS_LAUNCH_MANY_PROGRAMS 
                             "Sie haben mehrere Programme ausgew‰hlt.\nSind Sie sicher, daﬂ sie diese alle starten wollen?"
+    IDS_DESKTOPBAR_SETTINGS "Desktop-Einstellungen"
 END
 
 #endif    // German (Germany) resources
@@ -675,8 +691,24 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Desktop Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         IDC_STATIC,"Static",SS_BITMAP,74,20,21,98
-    // 130,
+    LTEXT           "Please select your prefered icon alignment algorithm:",
+                    IDC_STATIC,7,7,166,8
+    CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,25,44,41
+    CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,56,25,44,41
+    CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,111,25,44,41
+    CONTROL         "right/top up",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,159,25,44,41
+    CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,76,44,41
+    CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,56,76,44,41
+    CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,111,76,44,41
+    CONTROL         "right/bot. up",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,159,76,44,41
 END
 
 IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 154
@@ -684,8 +716,7 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Taskbar Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
-   CONTROL         IDC_STATIC,"Static",SS_BITMAP,129,19,21,98
-    //129,
+    CONTROL         129,IDC_STATIC,"Static",SS_BITMAP,129,19,21,98
 END
 
 IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 154
@@ -693,8 +724,7 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Startmenu Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL        IDC_STATIC,"Static",SS_BITMAP,74,20,21,98
-    // 130,
+    CONTROL         130,IDC_STATIC,"Static",SS_BITMAP,74,20,21,98
 END
 
 
@@ -781,6 +811,7 @@ BEGIN
     IDS_ABOUT_EXPLORER      "&About Explorer..."
     IDS_LAUNCH_MANY_PROGRAMS 
                             "You have selected more than one program.\nAre you sure you want to launch all of them?"
+    IDS_DESKTOPBAR_SETTINGS "Desktop Settings"
 END
 
 #endif    // English (U.S.) resources
@@ -893,6 +924,7 @@ BEGIN
     IDS_ABOUT_EXPLORER      "A propos de l'explorateur..."
     IDS_LAUNCH_MANY_PROGRAMS 
                             "You have selected more than one program.\nAre you sure you want to launch all of them?"
+    IDS_DESKTOPBAR_SETTINGS "Desktop Settings"
 END
 
 #endif    // French (France) resources
