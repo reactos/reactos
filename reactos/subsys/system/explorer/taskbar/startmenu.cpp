@@ -1679,12 +1679,13 @@ void StartMenuHandler::ShowLaunchDialog(HWND hwndOwner)
 {
 	 ///@todo All text phrases should be put into the resources.
 	static LPCSTR szTitle = "Create New Task";
-	static LPCSTR szText = "Type the name of a program, folder, document, or Internet resource, and Task Manager will open it for you.";
+	static LPCSTR szText = "Type the name of a program, folder, document, or Internet resource, and Explorer will open it for you.";
 
 	static DynamicFct<RUNFILEDLG> RunFileDlg(TEXT("SHELL32"), 61);
 
 	 // Show "Run..." dialog
 	if (RunFileDlg) {
+#ifndef _ROS_ /* FIXME: our shell32 always expects Ansi strings */
 #define	W_VER_NT 0
 		if ((HIWORD(GetVersion())>>14) == W_VER_NT) {
 			WCHAR wTitle[40], wText[256];
@@ -1695,6 +1696,7 @@ void StartMenuHandler::ShowLaunchDialog(HWND hwndOwner)
 			(*RunFileDlg)(hwndOwner, 0, NULL, (LPCSTR)wTitle, (LPCSTR)wText, RFF_CALCDIRECTORY);
 		}
 		else
+#endif
 			(*RunFileDlg)(hwndOwner, 0, NULL, szTitle, szText, RFF_CALCDIRECTORY);
 	}
 }
