@@ -21,6 +21,15 @@ FixSeparator ( const string& s )
 	return s2;
 }
 
+string
+NormalizeFilename ( const string& filename )
+{
+	Path path;
+	string normalizedPath = path.Fixup ( filename, true );
+	string relativeNormalizedPath = path.RelativeFromWorkingDirectory ( normalizedPath );
+	return FixSeparator ( relativeNormalizedPath );
+}
+
 Module::Module ( const Project& project,
                  const XMLElement& moduleNode,
                  const string& modulePath )
@@ -449,7 +458,7 @@ Invoke::GetTargets () const
 		InvokeFile& file = *output[i];
 		if ( targets.length () > 0 )
 			targets += " ";
-		targets += file.name;
+		targets += NormalizeFilename ( file.name );
 	}
 	return targets;
 }

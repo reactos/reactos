@@ -2,6 +2,7 @@
 #define __TEST_H
 
 #include "rbuild.h"
+#include "backend/mingw/mingw.h"
 
 class BaseTest
 {
@@ -90,6 +91,12 @@ public:
 
 
 class IfTest : public BaseTest
+{
+public:
+	void Run();
+};
+
+class FunctionTest : public BaseTest
 {
 public:
 	void Run();

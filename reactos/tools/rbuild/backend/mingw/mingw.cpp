@@ -184,6 +184,7 @@ MingwBackend::GenerateGlobalVariables ()
 	fprintf ( fMakefile, "mkdir = tools%crmkdir\n", CSEP );
 	fprintf ( fMakefile, "NUL=NUL\n" );
 	fprintf ( fMakefile, "winebuild = tools" SSEP "winebuild" SSEP "winebuild\n" );
+	fprintf ( fMakefile, "bin2res = tools" SSEP "winebuild" SSEP "bin2res\n" );
 	fprintf ( fMakefile, "\n" );
 	GenerateGlobalCFlagsAndProperties (
 		"=",
@@ -197,13 +198,12 @@ MingwBackend::GenerateGlobalVariables ()
 	fprintf ( fMakefile, "\n" );
 
 	fprintf ( fMakefile, ".PHONY: clean\n\n" );
-	//fprintf ( fMakefile, "clean:\n\t-@${rm} $(PROJECT_CLEAN)\n\n" );
 }
 
 void
 MingwBackend::GenerateAllTarget ()
 {
-        fprintf ( fMakefile, "all:" );
+	fprintf ( fMakefile, "all:" );
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
@@ -227,5 +227,5 @@ MingwBackend::ProcessModule ( Module& module )
 string
 FixupTargetFilename ( const string& targetFilename )
 {
-	return string("$(ROS_INTERMEDIATE)") + targetFilename;
+	return string("$(ROS_INTERMEDIATE)") + NormalizeFilename ( targetFilename );
 }

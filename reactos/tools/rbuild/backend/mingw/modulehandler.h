@@ -19,7 +19,7 @@ public:
         void GenerateDirectoryTargets () const;
 
 protected:
-        const std::string &PassThruCacheDirectory ( const std::string &f ) const;
+	const std::string &PassThruCacheDirectory ( const std::string &f ) const;
 	std::string GetWorkingDirectory () const;
         std::string GetDirectory (const std::string& filename ) const;
 	std::string GetExtension ( const std::string& filename ) const;
@@ -28,10 +28,14 @@ protected:
 	                               const std::string& newExtension ) const;
 	std::string GetActualSourceFilename ( const std::string& filename ) const;
 	std::string GetModuleArchiveFilename ( const Module& module ) const;
+	bool IsGeneratedFile ( const File& file ) const;
 	std::string GetImportLibraryDependencies ( const Module& module ) const;
 	std::string GetModuleDependencies ( const Module& module ) const;
 	std::string GetAllDependencies ( const Module& module ) const;
+	std::string GetSourceFilenames ( const Module& module,
+	                                 bool includeGeneratedFiles ) const;
 	std::string GetSourceFilenames ( const Module& module ) const;
+	std::string GetSourceFilenamesWithoutGeneratedFiles ( const Module& module ) const;
 
 	std::string GetObjectFilename ( const std::string& sourceFilename ) const;
 	std::string GetObjectFilenames ( const Module& module ) const;
@@ -54,7 +58,7 @@ protected:
 	std::string GetDefinitionDependencies ( const Module& module ) const;
 	std::string GetLinkingDependencies ( const Module& module ) const;
 	static FILE* fMakefile;
-        static std::set<std::string> directory_set;
+	static std::set<std::string> directory_set;
 private:
 	std::string ConcatenatePaths ( const std::string& path1,
 	                               const std::string& path2 ) const;
@@ -202,6 +206,7 @@ public:
 	MingwWin32DLLModuleHandler ();
 	virtual void Process ( const Module& module );
 private:
+	void GenerateExtractWineDLLResourcesTarget ( const Module& module );
 	void GenerateWin32DLLModuleTarget ( const Module& module );
 };
 

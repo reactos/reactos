@@ -136,6 +136,16 @@ MingwModuleHandler::GetModuleArchiveFilename ( const Module& module ) const
 	                          ".a" );
 }
 
+bool
+MingwModuleHandler::IsGeneratedFile ( const File& file ) const
+{
+	string extension = GetExtension ( file.name );
+	if ( extension == ".spec" || extension == "SPEC" )
+		return true;
+	else
+		return false;
+}
+	
 string
 MingwModuleHandler::GetImportLibraryDependencies ( const Module& module ) const
 {
@@ -191,13 +201,17 @@ MingwModuleHandler::GetAllDependencies ( const Module& module ) const
 }
 
 string
-MingwModuleHandler::GetSourceFilenames ( const Module& module ) const
+MingwModuleHandler::GetSourceFilenames ( const Module& module,
+	                                     bool includeGeneratedFiles ) const
 {
 	size_t i;
 
 	string sourceFilenames ( "" );
 	for ( i = 0; i < module.files.size (); i++ )
-		sourceFilenames += " " + GetActualSourceFilename ( module.files[i]->name );
+	{
+		if ( includeGeneratedFiles || !IsGeneratedFile ( *module.files[i] ) )
+			sourceFilenames += " " + GetActualSourceFilename ( module.files[i]->name );
+	}
 	vector<If*> ifs = module.ifs;
 	for ( i = 0; i < ifs.size(); i++ )
 	{
@@ -206,9 +220,26 @@ MingwModuleHandler::GetSourceFilenames ( const Module& module ) const
 		for ( j = 0; j < rIf.ifs.size(); j++ )
 			ifs.push_back ( rIf.ifs[j] );
 		for ( j = 0; j < rIf.files.size(); j++ )
-			sourceFilenames += " " + GetActualSourceFilename ( rIf.files[j]->name );
+		{
+			if ( includeGeneratedFiles || !IsGeneratedFile ( *rIf.files[j] ) )
+				sourceFilenames += " " + GetActualSourceFilename ( rIf.files[j]->name );
+		}
 	}
 	return sourceFilenames;
+}
+
+string
+MingwModuleHandler::GetSourceFilenames ( const Module& module ) const
+{
+	return GetSourceFilenames ( module,
+	                            true );
+}
+
+string
+MingwModuleHandler::GetSourceFilenamesWithoutGeneratedFiles ( const Module& module ) const
+{
+	return GetSourceFilenames ( module,
+	                            false );
 }
 
 string
@@ -1009,7 +1040,7 @@ MingwModuleHandler::GetInvocationParameters ( const Invoke& invoke ) const
 			parameters += invokeFile.switches;
 			parameters += " ";
 		}
-		parameters += invokeFile.name;
+		parameters += invokeFile.name ;
 	}
 
 	return parameters;
@@ -1033,20 +1064,20 @@ MingwModuleHandler::GenerateInvocations ( const Module& module ) const
 
 		string invokeTarget = module.GetInvocationTarget ( i );
 		fprintf ( fMakefile,
-		          "%s: %s\n\n",
-		          invoke.GetTargets ().c_str (),
+		          ".PHONY: %s\n\n",
 		          invokeTarget.c_str () );
 		fprintf ( fMakefile,
-		          "%s: %s\n",
+		          "%s: %s\n\n",
 		          invokeTarget.c_str (),
+		          invoke.GetTargets ().c_str () );
+		fprintf ( fMakefile,
+		          "%s: %s\n",
+		          invoke.GetTargets ().c_str (),
 		          FixupTargetFilename ( invoke.invokeModule->GetPath () ).c_str () );
 		fprintf ( fMakefile,
 		          "\t%s %s\n\n",
 		          FixupTargetFilename ( invoke.invokeModule->GetPath () ).c_str (),
 		          GetInvocationParameters ( invoke ).c_str () );
-		fprintf ( fMakefile,
-		          ".PNONY: %s\n\n",
-		          invokeTarget.c_str () );
 	}
 }
 
@@ -1061,7 +1092,7 @@ void
 MingwModuleHandler::GeneratePreconditionDependencies ( const Module& module ) const
 {
 	string preconditionDependenciesName = GetPreconditionDependenciesName ( module );
-	string sourceFilenames = GetSourceFilenames ( module );
+	string sourceFilenames = GetSourceFilenamesWithoutGeneratedFiles ( module );
 	string dependencies = GetModuleDependencies ( module );
 	string s = GetInvocationDependencies ( module );
 	if ( s.length () > 0 )
@@ -1330,9 +1361,9 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ( const Modul
 	}
 	else
 	{
-		fprintf ( fMakefile, "%s:\n",
-		          target.c_str ());
 		fprintf ( fMakefile, ".PHONY: %s\n\n",
+		          target.c_str ());
+		fprintf ( fMakefile, "%s:\n",
 		          target.c_str ());
 	}
 }
@@ -1385,10 +1416,10 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ( const
 	}
 	else
 	{
-		fprintf ( fMakefile, "%s:\n",
-		          target.c_str () );
 		fprintf ( fMakefile, ".PHONY: %s\n\n",
 		          target.c_str ());
+		fprintf ( fMakefile, "%s:\n",
+		          target.c_str () );
 	}
 }
 
@@ -1447,9 +1478,9 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& modul
 	}
 	else
 	{
-		fprintf ( fMakefile, "%s:\n\n",
-		          target.c_str ());
 		fprintf ( fMakefile, ".PHONY: %s\n\n",
+		          target.c_str ());
+		fprintf ( fMakefile, "%s:\n\n",
 		          target.c_str ());
 	}
 }
@@ -1465,9 +1496,31 @@ MingwWin32DLLModuleHandler::MingwWin32DLLModuleHandler ()
 void
 MingwWin32DLLModuleHandler::Process ( const Module& module )
 {
+	GenerateExtractWineDLLResourcesTarget ( module );
 	GeneratePreconditionDependencies ( module );
 	GenerateWin32DLLModuleTarget ( module );
 	GenerateInvocations ( module );
+}
+
+void
+MingwWin32DLLModuleHandler::GenerateExtractWineDLLResourcesTarget ( const Module& module )
+{
+	fprintf ( fMakefile, ".PHONY: %s_extractresources\n\n",
+	          module.name.c_str () );
+	fprintf ( fMakefile, "%s_extractresources: bin2res\n",
+	          module.name.c_str () );
+	for ( size_t i = 0; i < module.files.size (); i++ )
+	{
+		File& file = *module.files[i];
+		string extension = GetExtension ( file.name );
+		if ( extension == ".rc" || extension == ".RC" )
+		{
+			string resource = FixupTargetFilename ( file.name );
+			fprintf ( fMakefile, "\t@echo ${bin2res} -f -x %s\n",
+			          resource.c_str () );
+		}
+	}
+	fprintf ( fMakefile, "\n");
 }
 
 void
@@ -1497,10 +1550,10 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module 
 	}
 	else
 	{
-		fprintf ( fMakefile, "%s:\n\n",
-		          target.c_str ());
 		fprintf ( fMakefile, ".PHONY: %s\n\n",
-		          target.c_str ());
+		          target.c_str () );
+		fprintf ( fMakefile, "%s:\n\n",
+		          target.c_str () );
 	}
 }
 
@@ -1548,9 +1601,9 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ( const Module& module 
 	}
 	else
 	{
-		fprintf ( fMakefile, "%s:\n\n",
-		          target.c_str ());
 		fprintf ( fMakefile, ".PHONY: %s\n\n",
+		          target.c_str ());
+		fprintf ( fMakefile, "%s:\n\n",
 		          target.c_str ());
 	}
 }

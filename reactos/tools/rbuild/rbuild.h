@@ -315,4 +315,7 @@ public:
 extern std::string
 FixSeparator ( const std::string& s );
 
+extern std::string
+NormalizeFilename ( const std::string& filename );
+
 #endif /* __RBUILD_H */

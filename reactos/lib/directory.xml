@@ -1,8 +1,17 @@
+<directory name="acledit">
+	<xi:include href="acledit/acledit.xml" />
+</directory>
+<directory name="aclui">
+	<xi:include href="aclui/aclui.xml" />
+</directory>
 <directory name="adns">
 	<xi:include href="adns/adns.xml" />
 </directory>
 <directory name="advapi32">
 	<xi:include href="advapi32/advapi32.xml" />
+</directory>
+<directory name="comctl32">
+	<xi:include href="comctl32/comctl32.xml" />
 </directory>
 <directory name="dnsapi">
 	<xi:include href="dnsapi/dnsapi.xml" />
@@ -45,6 +54,9 @@
 </directory>
 <directory name="user32">
 	<xi:include href="user32/user32.xml" />
+</directory>
+<directory name="winmm">
+	<xi:include href="winmm/winmm.xml" />
 </directory>
 <directory name="ws2_32">
 	<xi:include href="ws2_32/ws2_32.xml" />

@@ -1,3 +1,6 @@
+<directory name="bin2res">
+	<xi:include href="bin2res/bin2res.xml" />
+</directory>
 <module name="buildno" type="buildtool">
 	<include base="buildno">.</include>
 	<file>buildno.c</file>
