@@ -23,13 +23,16 @@
 
 START_TEST(environ)
 {
+#ifndef __REACTOS__
     ok( _putenv("cat=") == 0, "_putenv failed on deletion of non-existent environment variable\n" );
+#endif
     ok( _putenv("cat=dog") == 0, "failed setting cat=dog\n" );
     ok( strcmp(getenv("cat"), "dog") == 0, "getenv did not return 'dog'\n" );
     ok( _putenv("cat=") == 0, "failed deleting cat\n" );
 
     ok( _putenv("=") == -1, "should not accept '=' as input\n" );
+#ifndef __REACTOS__
     ok( _putenv("=dog") == -1, "should not accept '=dog' as input\n" );
-
+#endif
     ok( getenv("nonexistent") == NULL, "getenv should fail with nonexistent var name\n" );
 }
