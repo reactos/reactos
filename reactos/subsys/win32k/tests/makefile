@@ -6,7 +6,9 @@ TARGET_NAME = regtests
 
 TARGET_LIBPATH = .
 
-TARGET_CFLAGS = -I$(REGTESTS_PATH_INC)
+TARGET_CFLAGS = -I$(REGTESTS_PATH_INC) \
+                -D__USE_W32API \
+                -D_WIN32K_
 
 -include Makefile.tests
 
