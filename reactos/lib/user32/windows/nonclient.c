@@ -42,6 +42,11 @@
 
 /* FUNCTIONS *****************************************************************/
 
+WINBOOL STDCALL
+DrawFrameControl(HDC hDc, LPRECT Rect, UINT Type, UINT State)
+{
+}
+
 /* Get the 'inside' rectangle of a window, i.e. the whole window rectangle
  * but without the borders (if any).
  * The rectangle is in window coordinates (for drawing with GetWindowDC()).

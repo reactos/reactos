@@ -73,7 +73,10 @@ LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule);
 
 #endif
 
-PEPFUNC LdrPEStartup(PVOID ImageBase, HANDLE SectionHandle);
+PEPFUNC LdrPEStartup (PVOID  ImageBase,
+		      HANDLE SectionHandle,
+		      PLDR_MODULE* Module,
+		      PWSTR FullDosName);
 NTSTATUS LdrMapSections(HANDLE ProcessHandle,
 			PVOID ImageBase,
 			HANDLE SectionHandle,

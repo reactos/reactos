@@ -171,7 +171,7 @@ DrawCaption@16
 DrawEdge@16
 DrawFocusRect@8
 ;DrawFrame
-;DrawFrameControl
+DrawFrameControl
 DrawIcon@16
 DrawIconEx@36
 DrawMenuBar@4

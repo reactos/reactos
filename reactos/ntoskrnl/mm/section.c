@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.94 2002/08/28 07:13:04 hbirr Exp $
+/* $Id: section.c,v 1.95 2002/08/29 22:12:16 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -462,6 +462,20 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 			 Address, NULL);
    MmLockSection(Section);
    MmLockSectionSegment(Segment);
+
+   /*
+    * Check if this page needs to be mapped COW
+    */
+   if ((Segment->WriteCopy || MemoryArea->Data.SectionData.WriteCopyView) &&
+       (Region->Protect == PAGE_READWRITE ||
+	Region->Protect == PAGE_EXECUTE_READWRITE))
+     {
+       Attributes = PAGE_READONLY;
+     }
+   else
+     {
+       Attributes = Region->Protect;
+     }
    
    /*
     * Get or create a page operation descriptor
@@ -544,7 +558,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 
 	   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 					   Address,
-					   MemoryArea->Attributes,
+					   Attributes,
 					   Page,
 					   FALSE);
 	   if (!NT_SUCCESS(Status))
@@ -713,20 +727,6 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        MmUnlockSection(Section);
        DPRINT("Address 0x%.8X\n", Address);
        return(STATUS_SUCCESS);
-     }
-
-   /*
-    * Check if this page needs to be mapped COW
-    */
-   if ((Segment->WriteCopy || MemoryArea->Data.SectionData.WriteCopyView) &&
-       (Region->Protect == PAGE_READWRITE ||
-	Region->Protect == PAGE_EXECUTE_READWRITE))
-     {
-       Attributes = PAGE_READONLY;
-     }
-   else
-     {
-       Attributes = Region->Protect;
      }
 
    /*
@@ -1731,7 +1731,8 @@ MmProtectSectionView(PMADDRESS_SPACE AddressSpace,
   PMM_REGION Region;
   NTSTATUS Status;
 
-  Length = min(Length, MemoryArea->Length);
+  Length = 
+    min(Length, MemoryArea->BaseAddress + MemoryArea->Length - BaseAddress);
   Region = MmFindRegion(MemoryArea->BaseAddress,
 			&MemoryArea->Data.SectionData.RegionListHead,
 			BaseAddress, NULL);

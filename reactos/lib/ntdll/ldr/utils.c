@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.53 2002/08/10 16:41:17 dwelch Exp $
+/* $Id: utils.c,v 1.54 2002/08/29 22:12:15 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -140,6 +140,53 @@ LdrAdjustDllName (PUNICODE_STRING FullDllName,
 			   Buffer);
 }
 
+PLDR_MODULE
+LdrAddModuleEntry(PVOID ImageBase, PIMAGE_NT_HEADERS NTHeaders,
+		  PWSTR FullDosName)
+{
+  PLDR_MODULE		Module;
+  Module = RtlAllocateHeap(RtlGetProcessHeap(),
+			   0,
+			   sizeof (LDR_MODULE));
+  assert(Module);
+  Module->BaseAddress = (PVOID)ImageBase;
+  Module->EntryPoint = NTHeaders->OptionalHeader.AddressOfEntryPoint;
+  if (Module->EntryPoint != 0)
+    Module->EntryPoint += (ULONG)Module->BaseAddress;
+  Module->SizeOfImage = NTHeaders->OptionalHeader.SizeOfImage;
+  if (NtCurrentPeb()->Ldr->Initialized == TRUE)
+    {
+      /* loading while app is running */
+      Module->LoadCount = 1;
+    }
+  else
+    {
+      /*
+       * loading while app is initializing
+       * dll must not be unloaded
+       */
+      Module->LoadCount = -1;
+    }
+
+  Module->TlsIndex = 0;
+  Module->CheckSum = NTHeaders->OptionalHeader.CheckSum;
+  Module->TimeDateStamp = NTHeaders->FileHeader.TimeDateStamp;
+
+  RtlCreateUnicodeString (&Module->FullDllName,
+			  FullDosName);
+  RtlCreateUnicodeString (&Module->BaseDllName,
+			  wcsrchr(FullDosName, L'\\') + 1);
+  DPRINT ("BaseDllName %wZ\n", &Module->BaseDllName);
+  
+  /* FIXME: aquire loader lock */
+  InsertTailList(&NtCurrentPeb()->Ldr->InLoadOrderModuleList,
+		 &Module->InLoadOrderModuleList);
+  InsertTailList(&NtCurrentPeb()->Ldr->InInitializationOrderModuleList,
+		 &Module->InInitializationOrderModuleList);
+  /* FIXME: release loader lock */
+
+  return(Module);
+}
 
 /***************************************************************************
  * NAME								EXPORTED
@@ -349,54 +396,14 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
       IMAGE_FILE_DLL)
     {
       Entrypoint =
-	(PDLLMAIN_FUNC) LdrPEStartup(ImageBase, SectionHandle);
+	(PDLLMAIN_FUNC) LdrPEStartup(ImageBase, SectionHandle, &Module,
+				     FullDosName);
       if (Entrypoint == NULL)
 	{
 	  return(STATUS_UNSUCCESSFUL);
 	}
     }
   
-  /* build module entry */
-  Module = RtlAllocateHeap(RtlGetProcessHeap(),
-			   0,
-			   sizeof (LDR_MODULE));
-  assert(Module);
-  Module->BaseAddress = (PVOID)ImageBase;
-  Module->EntryPoint = NTHeaders->OptionalHeader.AddressOfEntryPoint;
-  if (Module->EntryPoint != 0)
-    Module->EntryPoint += (ULONG)Module->BaseAddress;
-  Module->SizeOfImage = ImageSize;
-  if (NtCurrentPeb()->Ldr->Initialized == TRUE)
-    {
-      /* loading while app is running */
-      Module->LoadCount = 1;
-    }
-  else
-    {
-      /*
-       * loading while app is initializing
-       * dll must not be unloaded
-       */
-      Module->LoadCount = -1;
-    }
-
-  Module->TlsIndex = 0;
-  Module->CheckSum = NTHeaders->OptionalHeader.CheckSum;
-  Module->TimeDateStamp = NTHeaders->FileHeader.TimeDateStamp;
-
-  RtlCreateUnicodeString (&Module->FullDllName,
-			  FullDosName);
-  RtlCreateUnicodeString (&Module->BaseDllName,
-			  wcsrchr(FullDosName, L'\\') + 1);
-  DPRINT ("BaseDllName %wZ\n", &Module->BaseDllName);
-  
-  /* FIXME: aquire loader lock */
-  InsertTailList(&NtCurrentPeb()->Ldr->InLoadOrderModuleList,
-		 &Module->InLoadOrderModuleList);
-  InsertTailList(&NtCurrentPeb()->Ldr->InInitializationOrderModuleList,
-		 &Module->InInitializationOrderModuleList);
-  /* FIXME: release loader lock */
-
 #ifdef DBG
 
   LdrpLoadUserModuleSymbols(Module);
@@ -826,96 +833,133 @@ LdrGetExportByName(PVOID BaseAddress,
 static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS	NTHeaders,
 				       PVOID			ImageBase)
 {
-   USHORT			NumberOfEntries;
-   PUSHORT			pValue16;
-   ULONG			RelocationRVA;
-   ULONG			Delta32;
-   ULONG			Offset;
-   PULONG			pValue32;
-   PRELOCATION_DIRECTORY	RelocationDir;
-   PRELOCATION_ENTRY	RelocationBlock;
-   int			i;
+  USHORT			NumberOfEntries;
+  PUSHORT			pValue16;
+  ULONG			RelocationRVA;
+  ULONG			Delta32;
+  ULONG			Offset;
+  PULONG			pValue32;
+  PRELOCATION_DIRECTORY	RelocationDir;
+  PRELOCATION_ENTRY	RelocationBlock;
+  int			i;
+  PIMAGE_DATA_DIRECTORY RelocationDDir;
+  ULONG OldProtect;
+  NTSTATUS Status;
+  PIMAGE_SECTION_HEADER Sections;
+  ULONG MaxExtend;
+  ULONG LastOffset;
 
-
-   RelocationRVA = NTHeaders->OptionalHeader
-     .DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC]
-     .VirtualAddress;
-   
-   if (RelocationRVA)
+  Sections = 
+    (PIMAGE_SECTION_HEADER)((PVOID)NTHeaders + sizeof(IMAGE_NT_HEADERS));
+  MaxExtend = 0;
+  for (i = 0; i < NTHeaders->FileHeader.NumberOfSections; i++)
+    {
+      if (!(Sections[i].Characteristics & IMAGE_SECTION_NOLOAD))
 	{
-	   RelocationDir = (PRELOCATION_DIRECTORY)
-	     ((PCHAR)ImageBase + RelocationRVA);
-
-	   while (RelocationDir->SizeOfBlock)
-	     {
-		Delta32 = (ULONG)(ImageBase - 
-				  NTHeaders->OptionalHeader.ImageBase);
-		RelocationBlock = (PRELOCATION_ENTRY) (
-						       RelocationRVA
-						       + ImageBase
-						       + sizeof (RELOCATION_DIRECTORY)
-						       );
-		NumberOfEntries = (
-				   RelocationDir->SizeOfBlock
-				   - sizeof (RELOCATION_DIRECTORY)
-				   )
-		  / sizeof (RELOCATION_ENTRY);
-		
-		for (	i = 0;
-		     (i < NumberOfEntries);
-		     i++
-		     )
-		  {
-		     Offset = (
-			       RelocationBlock[i].TypeOffset
-			       & 0xfff
-			       )
-		       + RelocationDir->VirtualAddress;
-		     /*
-		      * What kind of relocations should we perform
-		      * for the current entry?
-		      */
-		     switch (RelocationBlock[i].TypeOffset >> 12)
-		       {
-			case TYPE_RELOC_ABSOLUTE:
-			  break;
-			  
-			case TYPE_RELOC_HIGH:
-			  pValue16 = (PUSHORT) (ImageBase + Offset);
-			  *pValue16 += Delta32 >> 16;
-			  break;
-			  
-			case TYPE_RELOC_LOW:
-			  pValue16 = (PUSHORT)(ImageBase + Offset);
-			  *pValue16 += Delta32 & 0xffff;
-			  break;
-			  
-			case TYPE_RELOC_HIGHLOW:
-			  pValue32 = (PULONG) (ImageBase + Offset);
-			  *pValue32 += Delta32;
-			  break;
-			  
-			case TYPE_RELOC_HIGHADJ:
-			  /* FIXME: do the highadjust fixup  */
-			  DPRINT(
-				 "TYPE_RELOC_HIGHADJ fixup not implemented"
-				 ", sorry\n"
-				 );
-			  return(STATUS_UNSUCCESSFUL);
-			  
-			default:
-			  DPRINT("unexpected fixup type\n");
-			  return STATUS_UNSUCCESSFUL;
-		       }
-		  }
-		RelocationRVA += RelocationDir->SizeOfBlock;
-		RelocationDir = (PRELOCATION_DIRECTORY) (
-				ImageBase
-							 + RelocationRVA
-							 );
-	     }
+	  ULONG Extend;
+	  Extend = 
+	    (ULONG)(Sections[i].VirtualAddress + Sections[i].Misc.VirtualSize);
+	  MaxExtend = max(MaxExtend, Extend);
 	}
-   return STATUS_SUCCESS;
+    }
+  
+  RelocationDDir = 
+    &NTHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
+  RelocationRVA = RelocationDDir->VirtualAddress;
+   
+  if (RelocationRVA)
+    {
+      RelocationDir = 
+	(PRELOCATION_DIRECTORY)((PCHAR)ImageBase + RelocationRVA);
+
+      while (RelocationDir->SizeOfBlock)
+	{
+	  if (RelocationDir->VirtualAddress > MaxExtend)
+	    {
+	      RelocationRVA += RelocationDir->SizeOfBlock;
+	      RelocationDir = 
+		(PRELOCATION_DIRECTORY) (ImageBase + RelocationRVA);
+	      continue;
+	    }
+
+	  Delta32 = (ULONG)(ImageBase - NTHeaders->OptionalHeader.ImageBase);
+	  RelocationBlock = 
+	    (PRELOCATION_ENTRY) (RelocationRVA + ImageBase + 
+				 sizeof (RELOCATION_DIRECTORY));	  
+	  NumberOfEntries = 
+	    RelocationDir->SizeOfBlock - sizeof (RELOCATION_DIRECTORY);
+	  NumberOfEntries = NumberOfEntries / sizeof (RELOCATION_ENTRY);
+
+	  Status = NtProtectVirtualMemory(NtCurrentProcess(),
+					  ImageBase + 
+					  RelocationDir->VirtualAddress,
+					  PAGESIZE,
+					  PAGE_READWRITE,
+					  &OldProtect);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT1("Failed to unprotect relocation target.\n");
+	      return(Status);
+	    }
+		
+	  for (i = 0; i < NumberOfEntries; i++)
+	    {
+	      Offset = (RelocationBlock[i].TypeOffset & 0xfff);
+	      Offset += (ULONG)(RelocationDir->VirtualAddress + ImageBase);
+
+	      /*
+	       * What kind of relocations should we perform
+	       * for the current entry?
+	       */
+	      switch (RelocationBlock[i].TypeOffset >> 12)
+		{
+		case TYPE_RELOC_ABSOLUTE:
+		  break;
+		  
+		case TYPE_RELOC_HIGH:
+		  pValue16 = (PUSHORT)Offset;
+		  *pValue16 += Delta32 >> 16;
+		  break;
+		  
+		case TYPE_RELOC_LOW:
+		  pValue16 = (PUSHORT)Offset;
+		  *pValue16 += Delta32 & 0xffff;
+		  break;
+		  
+		case TYPE_RELOC_HIGHLOW:
+		  pValue32 = (PULONG)Offset;
+		  *pValue32 += Delta32;
+		  break;
+			  
+		case TYPE_RELOC_HIGHADJ:
+		  /* FIXME: do the highadjust fixup  */
+		  DPRINT("TYPE_RELOC_HIGHADJ fixup not implemented, sorry\n");
+		  return(STATUS_UNSUCCESSFUL);
+		  
+		default:
+		  DPRINT("unexpected fixup type\n");
+		  return STATUS_UNSUCCESSFUL;
+		}	      
+	    }
+
+	  Status = NtProtectVirtualMemory(NtCurrentProcess(),
+					  ImageBase + 
+					  RelocationDir->VirtualAddress,
+					  PAGESIZE,
+					  OldProtect,
+					  &OldProtect);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT1("Failed to protect relocation target.\n");
+	      return(Status);
+	    }
+
+	  RelocationRVA += RelocationDir->SizeOfBlock;
+	  RelocationDir = 
+	    (PRELOCATION_DIRECTORY) (ImageBase + RelocationRVA);
+	}
+    }
+  return STATUS_SUCCESS;
 }
 
 
@@ -1116,7 +1160,9 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
  *
  */
 PEPFUNC LdrPEStartup (PVOID  ImageBase,
-		      HANDLE SectionHandle)
+		      HANDLE SectionHandle,
+		      PLDR_MODULE* Module,
+		      PWSTR FullDosName)
 {
    NTSTATUS		Status;
    PEPFUNC		EntryPoint = NULL;
@@ -1147,6 +1193,11 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
 	   DbgPrint("LdrPerformRelocations() failed\n");
 	   return NULL;
 	 }
+     }
+
+   if (Module != NULL)
+     {
+       *Module = LdrAddModuleEntry(ImageBase, NTHeaders, FullDosName);
      }
 
    /*

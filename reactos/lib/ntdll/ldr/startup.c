@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.41 2002/08/17 15:17:59 hbirr Exp $
+/* $Id: startup.c,v 1.42 2002/08/29 22:12:15 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -263,7 +263,7 @@ LdrInitializeThunk (ULONG Unknown1,
 
 #endif /* DBG */
 
-   EntryPoint = LdrPEStartup((PVOID)ImageBase, NULL);
+   EntryPoint = LdrPEStartup((PVOID)ImageBase, NULL, NULL, NULL);
    ExeModule->EntryPoint = (ULONG)EntryPoint;
 
    /* all required dlls are loaded now */
