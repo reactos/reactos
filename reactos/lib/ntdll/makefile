@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.80 2003/04/05 09:37:44 chorns Exp $
+# $Id: makefile,v 1.81 2003/04/23 22:58:02 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -28,7 +28,8 @@ DBG_OBJECTS = dbg/brkpoint.o dbg/debug.o dbg/print.o #dbg/winedbg.o
 
 RTL_I386_OBJECTS = \
 	rtl/i386/exception.o \
-	rtl/i386/except.o
+	rtl/i386/except.o \
+	rtl/i386/ftol.o
 
 RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
               rtl/math.o rtl/mem.o rtl/nls.o rtl/process.o rtl/sd.o \

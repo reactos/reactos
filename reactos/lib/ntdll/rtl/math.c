@@ -24,7 +24,6 @@ double ceil (double __x);
 double cos (double __x);
 double fabs (double __x);
 double floor (double __x);
-long _ftol (double fl);
 double log (double __x);
 double __log2 (double __x);
 double pow (double __x, double __y);
@@ -90,11 +89,6 @@ double floor (double __x)
   __asm __volatile ("fldcw %0" : : "m" (__cw));
 
   return __value;
-}
-
-long _ftol (double fl)
-{
-  return (long)fl;
 }
 
 double log (double __x)
