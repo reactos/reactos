@@ -221,10 +221,12 @@ __fileno_alloc(HANDLE hFile, int mode)
     fileno_modes_type *old_fileno_modes = fileno_modes;
 	maxfno  += 255;
     fileno_modes = (fileno_modes_type *)malloc(maxfno * sizeof(fileno_modes_type));
-	if ( old_fileno_modes != NULL )
-		memcpy(fileno_modes, old_fileno_modes, oldcount * sizeof(fileno_modes_type));
+    if ( old_fileno_modes != NULL )
+    {
+	memcpy(fileno_modes, old_fileno_modes, oldcount * sizeof(fileno_modes_type));
+        free ( old_fileno_modes );
+    }
     memset(fileno_modes + oldcount, 0, (maxfno-oldcount)*sizeof(fileno_modes));
-    free ( old_fileno_modes );
   }
 
   /* Fill in the value */
