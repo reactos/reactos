@@ -1,4 +1,4 @@
-/*  $Id: rdel.c,v 1.1 2001/07/15 21:18:48 rex Exp $  
+/*  $Id: rdel.c,v 1.2 2001/07/28 15:24:04 phreak Exp $  
  * COPYRIGHT:             See COPYING in the top level directory
  * PROGRAMMER:            Rex Jolliff (rex@lvcablemodem.com)
  * PURPOSE:               Platform independant delete command
@@ -6,7 +6,6 @@
 
 #include <dirent.h>
 #include <errno.h>
-#include <fnmatch.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
