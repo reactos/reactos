@@ -3,9 +3,11 @@
 #include <stdlib.h>
 #include <win32k/bitmaps.h>
 #include <win32k/debug.h>
-#include <debug.h>
 #include "../eng/handle.h"
 #include <ntos/minmax.h>
+
+#define NDEBUG
+#include <win32k/debug1.h>
 
 UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
                            UINT  StartIndex,
@@ -347,7 +349,7 @@ HBITMAP STDCALL W32kCreateDIBitmap(HDC hdc, const BITMAPINFOHEADER *header,
   }
   else
   {
-      DbgPrint("(%ld): wrong size for data\n", data->bmiHeader.biSize );
+      DPRINT("(%ld): wrong size for data\n", data->bmiHeader.biSize );
       return 0;
     }
   }
@@ -422,7 +424,7 @@ HBITMAP DIB_CreateDIBSection(
   UINT Entries = 0;
   BITMAP bm;
 
-  DbgPrint("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
+  DPRINT("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
 	bi->biWidth, bi->biHeight, bi->biPlanes, bi->biBitCount,
 	bi->biSizeImage, bi->biClrUsed, usage == DIB_PAL_COLORS? "PAL" : "RGB");
 
@@ -444,7 +446,7 @@ HBITMAP DIB_CreateDIBSection(
   if (section)
 /*    bm.bmBits = MapViewOfFile(section, FILE_MAP_ALL_ACCESS,
 			      0L, offset, totalSize); */
-    DbgPrint("DIB_CreateDIBSection: Cannot yet handle section DIBs\n");
+    DPRINT("DIB_CreateDIBSection: Cannot yet handle section DIBs\n");
   else if (ovr_pitch && offset)
     bm.bmBits = (LPVOID) offset;
   else {
@@ -525,7 +527,7 @@ HBITMAP DIB_CreateDIBSection(
   // Clean up in case of errors
   if (!res || !bmp || !dib || !bm.bmBits)
   {
-    DbgPrint("got an error res=%08x, bmp=%p, dib=%p, bm.bmBits=%p\n", res, bmp, dib, bm.bmBits);
+    DPRINT("got an error res=%08x, bmp=%p, dib=%p, bm.bmBits=%p\n", res, bmp, dib, bm.bmBits);
 /*      if (bm.bmBits)
       {
       if (section)
@@ -652,7 +654,7 @@ int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, DWORD *width,
     *compr  = 0;
     return 0;
   }
-  DbgPrint("(%ld): wrong size for header\n", header->biSize );
+  DPRINT("(%ld): wrong size for header\n", header->biSize );
   return -1;
 }
 
