@@ -32,8 +32,10 @@
 #ifndef _GNU_H_WINDOWS32_DEFINES
 #define _GNU_H_WINDOWS32_DEFINES
 
+#ifndef RC_INVOKED
 #include <ntos/ntdef.h>
 #include <ntos/registry.h>
+#endif
 
 #define WINBASEAPI
 
