@@ -16,7 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/*
+/* $Id: kthread.c,v 1.23 2002/05/07 22:34:17 hbirr Exp $
+ *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
  * PROGRAMMER:      David Welch (welch@cwcom.net)
@@ -65,11 +66,13 @@ KeReleaseThread(PETHREAD Thread)
 
   if (Thread->Tcb.StackLimit != (ULONG)&init_stack)
     {       
+      MmLockAddressSpace(MmGetKernelAddressSpace());
       MmFreeMemoryArea(MmGetKernelAddressSpace(),
 		       (PVOID)Thread->Tcb.StackLimit,
 		       MM_STACK_SIZE,
 		       KeFreeStackPage,
 		       NULL);
+      MmUnlockAddressSpace(MmGetKernelAddressSpace());
     }
   Thread->Tcb.StackLimit = 0;
   Thread->Tcb.InitialStack = NULL;
