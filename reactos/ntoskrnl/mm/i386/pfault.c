@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -75,18 +75,18 @@ NTSTATUS MmPageFault(ULONG Cs,
       KeLowerIrql(oldIrql);
    }
    if (!NT_SUCCESS(Status) && (Mode == KernelMode) &&
-         ((*Eip) >= (ULONG)MmSafeCopyFromUserUnsafeStart) &&
-         ((*Eip) <= (ULONG)MmSafeCopyFromUserRestart))
+         ((*Eip) >= (ULONG_PTR)MmSafeCopyFromUserUnsafeStart) &&
+         ((*Eip) <= (ULONG_PTR)MmSafeCopyFromUserRestart))
    {
-      (*Eip) = (ULONG)MmSafeCopyFromUserRestart;
+      (*Eip) = (ULONG_PTR)MmSafeCopyFromUserRestart;
       (*Eax) = STATUS_ACCESS_VIOLATION;
       return(STATUS_SUCCESS);
    }
    if (!NT_SUCCESS(Status) && (Mode == KernelMode) &&
-         ((*Eip) >= (ULONG)MmSafeCopyToUserUnsafeStart) &&
-         ((*Eip) <= (ULONG)MmSafeCopyToUserRestart))
+         ((*Eip) >= (ULONG_PTR)MmSafeCopyToUserUnsafeStart) &&
+         ((*Eip) <= (ULONG_PTR)MmSafeCopyToUserRestart))
    {
-      (*Eip) = (ULONG)MmSafeCopyToUserRestart;
+      (*Eip) = (ULONG_PTR)MmSafeCopyToUserRestart;
       (*Eax) = STATUS_ACCESS_VIOLATION;
       return(STATUS_SUCCESS);
    }
