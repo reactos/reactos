@@ -1,4 +1,4 @@
-/* $Id: tinfo.c,v 1.30 2004/10/24 20:37:27 weiden Exp $
+/* $Id: tinfo.c,v 1.31 2004/11/19 22:19:33 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -252,7 +252,11 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
 	     break;
 	   }
 	 
-	 TBI->ExitStatus = Thread->ExitStatus;
+    /* A test on W2K agains ntdll shows NtQueryInformationThread return STATUS_PENDING
+     * as ExitStatus for current/running thread, while KETHREAD's ExitStatus is 
+     * 0. So do the conversion here:
+     * -Gunnar     */
+    TBI->ExitStatus = (Thread->ExitStatus == 0) ? STATUS_PENDING : Thread->ExitStatus;
 	 TBI->TebBaseAddress = Thread->Tcb.Teb;
 	 TBI->ClientId = Thread->Cid;
 	 TBI->AffinityMask = Thread->Tcb.Affinity;
