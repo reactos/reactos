@@ -32,3 +32,36 @@ void _makepath(char *path, const char *drive, const char *dir, const char *fname
 	}
     }
 }
+
+
+void _wmakepath(wchar_t *path, const wchar_t *drive, const wchar_t *dir, const wchar_t *fname, const wchar_t *ext)
+{
+  int dir_len;
+
+  if ((drive != NULL) && (*drive))
+    {
+      wcscpy(path, drive);
+      wcscat(path, ":");
+    }
+  else
+    (*path)=0;
+
+  if (dir != NULL)
+    {
+      wcscat(path, dir);
+      dir_len = wcslen(dir);
+      if (dir_len && *(dir + dir_len - 1) != '\\')
+	wcscat(path, "\\");
+    }
+
+  if (fname != NULL)
+    {
+      wcscat(path, fname);
+      if (ext != NULL)
+	{
+	  if (*ext != '.')
+	    wcscat(path, ".");
+	  wcscat(path, ext);
+	}
+    }
+}
