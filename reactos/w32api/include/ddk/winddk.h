@@ -9131,17 +9131,17 @@ NTOSAPI
 NTSTATUS
 DDKAPI
 NtWaitForSingleObject(
-  IN HANDLE  Object,
+  IN HANDLE  ObjectHandle,
   IN BOOLEAN  Alertable,
-  IN PLARGE_INTEGER  Time);
+  IN PLARGE_INTEGER  TimeOut  OPTIONAL);
 
 NTOSAPI
 NTSTATUS
 DDKAPI
 ZwWaitForSingleObject(
-  IN HANDLE  Object,
+  IN HANDLE  ObjectHandle,
   IN BOOLEAN  Alertable,
-  IN PLARGE_INTEGER  Time);
+  IN PLARGE_INTEGER  TimeOut  OPTIONAL);
 
 NTOSAPI
 NTSTATUS

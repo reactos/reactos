@@ -785,45 +785,71 @@ VOID KeInitializeDispatcher(VOID)
 }
 
 NTSTATUS STDCALL
-NtWaitForMultipleObjects(IN ULONG Count,
-			 IN HANDLE Object [],
+NtWaitForMultipleObjects(IN ULONG ObjectCount,
+			 IN PHANDLE ObjectsArray,
 			 IN WAIT_TYPE WaitType,
 			 IN BOOLEAN Alertable,
-			 IN PLARGE_INTEGER UnsafeTime)
+			 IN PLARGE_INTEGER TimeOut  OPTIONAL)
 {
    KWAIT_BLOCK WaitBlockArray[MAXIMUM_WAIT_OBJECTS];
+   HANDLE SafeObjectsArray[MAXIMUM_WAIT_OBJECTS];
    PVOID ObjectPtrArray[MAXIMUM_WAIT_OBJECTS];
-   NTSTATUS Status;
    ULONG i, j;
-   KPROCESSOR_MODE WaitMode;
-   LARGE_INTEGER Time;
+   KPROCESSOR_MODE PreviousMode;
+   LARGE_INTEGER SafeTimeOut;
+   NTSTATUS Status = STATUS_SUCCESS;
 
-   DPRINT("NtWaitForMultipleObjects(Count %lu Object[] %x, Alertable %d, "
-	  "Time %x)\n", Count,Object,Alertable,Time);
+   DPRINT("NtWaitForMultipleObjects(ObjectCount %lu ObjectsArray[] %x, Alertable %d, "
+	  "TimeOut %x)\n", ObjectCount,ObjectsArray,Alertable,TimeOut);
 
-   if (Count > MAXIMUM_WAIT_OBJECTS)
+   PreviousMode = ExGetPreviousMode();
+
+   if (ObjectCount > MAXIMUM_WAIT_OBJECTS)
      return STATUS_UNSUCCESSFUL;
-   if (0 == Count)
+   if (0 == ObjectCount)
      return STATUS_INVALID_PARAMETER;
 
-   if (UnsafeTime)
+   if(PreviousMode != KernelMode)
+   {
+     _SEH_TRY
      {
-       Status = MmCopyFromCaller(&Time, UnsafeTime, sizeof(LARGE_INTEGER));
-       if (!NT_SUCCESS(Status))
-         {
-           return(Status);
-         }
+       ProbeForRead(ObjectsArray,
+                    ObjectCount * sizeof(ObjectsArray[0]),
+                    sizeof(ULONG));
+       /* make a copy so we don't have to guard with SEH later and keep track of
+          what objects we referenced in case dereferencing pointers suddenly fails */
+       RtlCopyMemory(SafeObjectsArray, ObjectsArray, ObjectCount * sizeof(ObjectsArray[0]));
+       ObjectsArray = SafeObjectsArray;
+       
+       if(TimeOut != NULL)
+       {
+         ProbeForRead(TimeOut,
+                      sizeof(LARGE_INTEGER),
+                      sizeof(ULONG));
+         /* make a local copy of the timeout on the stack */
+         SafeTimeOut = *TimeOut;
+         TimeOut = &SafeTimeOut;
+       }
      }
-
-   WaitMode = ExGetPreviousMode();
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
 
    /* reference all objects */
-   for (i = 0; i < Count; i++)
+   for (i = 0; i < ObjectCount; i++)
      {
-        Status = ObReferenceObjectByHandle(Object[i],
+        Status = ObReferenceObjectByHandle(ObjectsArray[i],
                                            SYNCHRONIZE,
                                            NULL,
-                                           WaitMode,
+                                           PreviousMode,
                                            &ObjectPtrArray[i],
                                            NULL);
         if (!NT_SUCCESS(Status) || !KiIsObjectWaitable(ObjectPtrArray[i]))
@@ -845,17 +871,17 @@ NtWaitForMultipleObjects(IN ULONG Count,
           }
      }
 
-   Status = KeWaitForMultipleObjects(Count,
+   Status = KeWaitForMultipleObjects(ObjectCount,
                                      ObjectPtrArray,
                                      WaitType,
                                      UserRequest,
-                                     WaitMode,
+                                     PreviousMode,
                                      Alertable,
-				     UnsafeTime ? &Time : NULL,
+				     TimeOut,
                                      WaitBlockArray);
 
    /* dereference all objects */
-   for (i = 0; i < Count; i++)
+   for (i = 0; i < ObjectCount; i++)
      {
         ObDereferenceObject(ObjectPtrArray[i]);
      }
@@ -868,33 +894,47 @@ NtWaitForMultipleObjects(IN ULONG Count,
  * @implemented
  */
 NTSTATUS STDCALL
-NtWaitForSingleObject(IN HANDLE Object,
+NtWaitForSingleObject(IN HANDLE ObjectHandle,
 		      IN BOOLEAN Alertable,
-		      IN PLARGE_INTEGER UnsafeTime)
+		      IN PLARGE_INTEGER TimeOut  OPTIONAL)
 {
    PVOID ObjectPtr;
-   NTSTATUS Status;
-   KPROCESSOR_MODE WaitMode;
-   LARGE_INTEGER Time;
+   KPROCESSOR_MODE PreviousMode;
+   LARGE_INTEGER SafeTimeOut;
+   NTSTATUS Status = STATUS_SUCCESS;
 
-   DPRINT("NtWaitForSingleObject(Object %x, Alertable %d, Time %x)\n",
-	  Object,Alertable,Time);
+   DPRINT("NtWaitForSingleObject(ObjectHandle %x, Alertable %d, TimeOut %x)\n",
+	  ObjectHandle,Alertable,TimeOut);
 
-   if (UnsafeTime)
+   PreviousMode = ExGetPreviousMode();
+   
+   if(TimeOut != NULL && PreviousMode != KernelMode)
+   {
+     _SEH_TRY
      {
-       Status = MmCopyFromCaller(&Time, UnsafeTime, sizeof(LARGE_INTEGER));
-       if (!NT_SUCCESS(Status))
-         {
-           return(Status);
-         }
+       ProbeForRead(TimeOut,
+                    sizeof(LARGE_INTEGER),
+                    sizeof(ULONG));
+       /* make a copy on the stack */
+       SafeTimeOut = *TimeOut;
+       TimeOut = &SafeTimeOut;
      }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
 
-   WaitMode = ExGetPreviousMode();
-
-   Status = ObReferenceObjectByHandle(Object,
+   Status = ObReferenceObjectByHandle(ObjectHandle,
 				      SYNCHRONIZE,
 				      NULL,
-				      WaitMode,
+				      PreviousMode,
 				      &ObjectPtr,
 				      NULL);
    if (!NT_SUCCESS(Status))
@@ -911,9 +951,9 @@ NtWaitForSingleObject(IN HANDLE Object,
      {
        Status = KeWaitForSingleObject(ObjectPtr,
 				      UserRequest,
-				      WaitMode,
+				      PreviousMode,
 				      Alertable,
-				      UnsafeTime ? &Time : NULL);
+				      TimeOut);
      }
 
    ObDereferenceObject(ObjectPtr);
@@ -923,22 +963,47 @@ NtWaitForSingleObject(IN HANDLE Object,
 
 
 NTSTATUS STDCALL
-NtSignalAndWaitForSingleObject(IN HANDLE SignalObject,
-			       IN HANDLE WaitObject,
+NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
+			       IN HANDLE WaitableObjectHandle,
 			       IN BOOLEAN Alertable,
-			       IN PLARGE_INTEGER Time)
+			       IN PLARGE_INTEGER TimeOut  OPTIONAL)
 {
-   KPROCESSOR_MODE WaitMode;
+   KPROCESSOR_MODE PreviousMode;
    DISPATCHER_HEADER* hdr;
    PVOID SignalObj;
    PVOID WaitObj;
-   NTSTATUS Status;
+   LARGE_INTEGER SafeTimeOut;
+   NTSTATUS Status = STATUS_SUCCESS;
 
-   WaitMode = ExGetPreviousMode();
-   Status = ObReferenceObjectByHandle(SignalObject,
+   PreviousMode = ExGetPreviousMode();
+   
+   if(TimeOut != NULL && PreviousMode != KernelMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForRead(TimeOut,
+                    sizeof(LARGE_INTEGER),
+                    sizeof(ULONG));
+       /* make a copy on the stack */
+       SafeTimeOut = *TimeOut;
+       TimeOut = &SafeTimeOut;
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
+   
+   Status = ObReferenceObjectByHandle(ObjectHandleToSignal,
 				      0,
 				      NULL,
-				      WaitMode,
+				      PreviousMode,
 				      &SignalObj,
 				      NULL);
    if (!NT_SUCCESS(Status))
@@ -946,10 +1011,10 @@ NtSignalAndWaitForSingleObject(IN HANDLE SignalObject,
 	return Status;
      }
 
-   Status = ObReferenceObjectByHandle(WaitObject,
+   Status = ObReferenceObjectByHandle(WaitableObjectHandle,
 				      SYNCHRONIZE,
 				      NULL,
-				      WaitMode,
+				      PreviousMode,
 				      &WaitObj,
 				      NULL);
    if (!NT_SUCCESS(Status))
@@ -988,9 +1053,9 @@ NtSignalAndWaitForSingleObject(IN HANDLE SignalObject,
 
    Status = KeWaitForSingleObject(WaitObj,
 				  UserRequest,
-				  WaitMode,
+				  PreviousMode,
 				  Alertable,
-				  Time);
+				  TimeOut);
 
    ObDereferenceObject(SignalObj);
    ObDereferenceObject(WaitObj);

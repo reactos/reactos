@@ -4423,28 +4423,28 @@ ZwShutdownSystem(
 /*
  * FUNCTION: Signals an object and wait for an other one.
  * ARGUMENTS: 
- *        SignalObject = Handle to the object that should be signaled
- *        WaitObject = Handle to the object that should be waited for
+ *        ObjectHandleToSignal = Handle to the object that should be signaled
+ *        WaitableObjectHandle = Handle to the object that should be waited for
  *        Alertable = True if the wait is alertable
- *        Time = The time to wait
+ *        TimeOut = The time to wait
  * RETURNS: Status
  */
 NTSTATUS
 STDCALL
 NtSignalAndWaitForSingleObject(
-	IN	HANDLE		SignalObject,
-	IN	HANDLE		WaitObject,
+	IN	HANDLE		ObjectHandleToSignal,
+	IN	HANDLE		WaitableObjectHandle,
 	IN	BOOLEAN		Alertable,
-	IN	PLARGE_INTEGER	Time
+	IN	PLARGE_INTEGER	TimeOut  OPTIONAL
 	);
 
 NTSTATUS
 STDCALL
 NtSignalAndWaitForSingleObject(
-	IN	HANDLE		SignalObject,
-	IN	HANDLE		WaitObject,
+	IN	HANDLE		ObjectHandleToSignal,
+	IN	HANDLE		WaitableObjectHandle,
 	IN	BOOLEAN		Alertable,
-	IN	PLARGE_INTEGER	Time
+	IN	PLARGE_INTEGER	TimeOut  OPTIONAL
 	);
 
 /*
@@ -4651,9 +4651,9 @@ ZwWriteVirtualMemory(
 /*
  * FUNCTION: Waits for an object to become signalled.
  * ARGUMENTS: 
- *       Object = The object handle
+ *       ObjectHandle = The object handle
  *       Alertable = If true the wait is alertable.
- *       Time = The maximum wait time.
+ *       TimeOut = The maximum wait time.
  * REMARKS:
  *       This function maps to the win32 WaitForSingleObjectEx.
  * RETURNS: Status
@@ -4661,17 +4661,17 @@ ZwWriteVirtualMemory(
 NTSTATUS
 STDCALL
 NtWaitForSingleObject (
-	IN HANDLE Object,
+	IN HANDLE ObjectHandle,
 	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time
+	IN PLARGE_INTEGER TimeOut  OPTIONAL
 	);
 
 NTSTATUS
 STDCALL
 ZwWaitForSingleObject (
-	IN HANDLE Object,
+	IN HANDLE ObjectHandle,
 	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time
+	IN PLARGE_INTEGER TimeOut  OPTIONAL
 	);
 
 /* --- EVENT PAIR OBJECT --- */
@@ -5583,11 +5583,11 @@ NtUnlockVirtualMemory(
 /*
  * FUNCTION: Waits for multiple objects to become signalled.
  * ARGUMENTS: 
- *       Count = The number of objects
- *       Object = The array of object handles
+ *       ObjectCount = The number of objects
+ *       ObjectsArray = The array of object handles
  *       WaitType = Can be one of the values UserMode or KernelMode
  *       Alertable = If true the wait is alertable.
- *       Time = The maximum wait time.
+ *       TimeOut = The maximum wait time.
  * REMARKS:
  *       This function maps to the win32 WaitForMultipleObjectEx.
  * RETURNS: Status
@@ -5595,11 +5595,11 @@ NtUnlockVirtualMemory(
 NTSTATUS
 STDCALL
 NtWaitForMultipleObjects (
-	IN ULONG Count,
-	IN HANDLE Object[],
+	IN ULONG ObjectCount,
+	IN PHANDLE ObjectsArray,
 	IN WAIT_TYPE WaitType,
 	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time
+	IN PLARGE_INTEGER TimeOut  OPTIONAL
 	);
 
 
@@ -6357,11 +6357,11 @@ ZwUnlockVirtualMemory(
 /*
  * FUNCTION: Waits for multiple objects to become signalled.
  * ARGUMENTS: 
- *       Count = The number of objects
- *       Object = The array of object handles
+ *       ObjectCount = The number of objects
+ *       ObjectsArray = The array of object handles
  *       WaitType = Can be one of the values UserMode or KernelMode
  *       Alertable = If true the wait is alertable.
- *       Time = The maximum wait time.
+ *       TimeOut = The maximum wait time.
  * REMARKS:
  *       This function maps to the win32 WaitForMultipleObjectEx.
  * RETURNS: Status
@@ -6369,11 +6369,11 @@ ZwUnlockVirtualMemory(
 NTSTATUS
 STDCALL
 ZwWaitForMultipleObjects (
-	IN ULONG Count,
-	IN HANDLE Object[],
+	IN ULONG ObjectCount,
+	IN PHANDLE ObjectsArray,
 	IN WAIT_TYPE WaitType,
 	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time
+	IN PLARGE_INTEGER TimeOut  OPTIONAL
 	);
 
 /*
