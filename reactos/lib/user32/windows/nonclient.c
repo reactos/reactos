@@ -920,6 +920,11 @@ DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam)
       SendMessageW(hWnd, WM_SYSCOMMAND, ((Style & (WS_MINIMIZE | WS_MAXIMIZE)) ? SC_RESTORE : SC_MAXIMIZE), 0);
       break;
     }
+    case HTSYSMENU:
+    {
+      SendMessageW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+      break;
+    }
   }
   return(0);
 }
