@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.40 2002/05/05 14:57:43 chorns Exp $
+/* $Id: device.c,v 1.41 2002/05/16 06:40:29 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -432,20 +432,20 @@ IopInitializeService(
   {
     /* The module is currently not loaded, so load it now */
 
-    ModuleObject = LdrLoadModule(ImagePath);
-    if (!ModuleObject)
+    Status = LdrLoadModule(ImagePath, &ModuleObject);
+    if (!NT_SUCCESS(Status))
     {
       /* FIXME: Log the error */
-	    CPRINT("Driver load failed\n");
-      return STATUS_UNSUCCESSFUL;
+      CPRINT("Driver load failed\n");
+      return(Status);
     }
 
     Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode);
     if (!NT_SUCCESS(Status))
     {
       /* FIXME: Log the error */
-	    CPRINT("A driver failed to initialize\n");
-      return Status;
+      CPRINT("A driver failed to initialize\n");
+      return(Status);
     }
   }
 
@@ -453,7 +453,7 @@ IopInitializeService(
 
   Status = IopInitializeDevice(DeviceNode, TRUE);
 
-  return Status;
+  return(Status);
 }
 
 NTSTATUS

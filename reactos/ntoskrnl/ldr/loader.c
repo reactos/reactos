@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.103 2002/05/08 17:05:32 chorns Exp $
+/* $Id: loader.c,v 1.104 2002/05/16 06:41:30 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -58,7 +58,6 @@ ULONG_PTR LdrHalBase;
 
 /* FORWARD DECLARATIONS ******************************************************/
 
-PMODULE_OBJECT  LdrLoadModule(PUNICODE_STRING Filename);
 NTSTATUS LdrProcessModule(PVOID ModuleLoadBase,
                           PUNICODE_STRING ModuleName,
                           PMODULE_OBJECT *ModuleObject);
@@ -1020,9 +1019,10 @@ LdrCreateModule(PVOID ObjectBody,
  * RETURNS: Status
  */
 
-NTSTATUS LdrLoadDriver(PUNICODE_STRING Filename,
-                       PDEVICE_NODE DeviceNode,
-                       BOOLEAN BootDriversOnly)
+NTSTATUS
+LdrLoadDriver(PUNICODE_STRING Filename,
+	      PDEVICE_NODE DeviceNode,
+	      BOOLEAN BootDriversOnly)
 {
   PMODULE_OBJECT ModuleObject;
   WCHAR Buffer[MAX_PATH];
@@ -1031,10 +1031,11 @@ NTSTATUS LdrLoadDriver(PUNICODE_STRING Filename,
   LPWSTR Start;
   LPWSTR Ext;
 
-  ModuleObject = LdrLoadModule(Filename);
-  if (!ModuleObject)
+  Status = LdrLoadModule(Filename, &ModuleObject);
+  if (!NT_SUCCESS(Status))
     {
-      return STATUS_UNSUCCESSFUL;
+      DPRINT1("LdrLoadModule() failed\n");
+      return(Status);
     }
 
   /* Set a service name for the device node */
@@ -1062,21 +1063,23 @@ NTSTATUS LdrLoadDriver(PUNICODE_STRING Filename,
       ObDereferenceObject(ModuleObject);
     }
 
-  return Status;
+  return(Status);
 }
 
-NTSTATUS LdrLoadGdiDriver (PUNICODE_STRING DriverName,
-			   PVOID *ImageAddress,
-			   PVOID *SectionPointer,
-			   PVOID *EntryPoint,
-			   PVOID *ExportSectionPointer)
+NTSTATUS
+LdrLoadGdiDriver(PUNICODE_STRING DriverName,
+		 PVOID *ImageAddress,
+		 PVOID *SectionPointer,
+		 PVOID *EntryPoint,
+		 PVOID *ExportSectionPointer)
 {
-  PMODULE_OBJECT  ModuleObject;
+  PMODULE_OBJECT ModuleObject;
+  NTSTATUS Status;
 
-  ModuleObject = LdrLoadModule(DriverName);
-  if (ModuleObject == 0)
+  Status = LdrLoadModule(DriverName, &ModuleObject);
+  if (!NT_SUCCESS(Status))
     {
-      return  STATUS_UNSUCCESSFUL;
+      return(Status);
     }
 
   if (ImageAddress)
@@ -1091,25 +1094,30 @@ NTSTATUS LdrLoadGdiDriver (PUNICODE_STRING DriverName,
 //  if (ExportSectionPointer)
 //    *ExportSectionPointer = ModuleObject->
 
-  return STATUS_SUCCESS;
+  return(STATUS_SUCCESS);
 }
 
 
-PMODULE_OBJECT
-LdrLoadModule(PUNICODE_STRING Filename)
+NTSTATUS
+LdrLoadModule(PUNICODE_STRING Filename,
+	      PMODULE_OBJECT *ModuleObject)
 {
   PVOID ModuleLoadBase;
   NTSTATUS Status;
   HANDLE FileHandle;
   OBJECT_ATTRIBUTES ObjectAttributes;
-  PMODULE_OBJECT  ModuleObject;
+  PMODULE_OBJECT Module;
   FILE_STANDARD_INFORMATION FileStdInfo;
   IO_STATUS_BLOCK IoStatusBlock;
 
+  *ModuleObject = NULL;
+
   /*  Check for module already loaded  */
-  if ((ModuleObject = LdrOpenModule(Filename)) != NULL)
+  Module = LdrOpenModule(Filename);
+  if (Module != NULL)
     {
-      return  ModuleObject;
+      *ModuleObject = Module;
+      return(STATUS_SUCCESS);
     }
 
   DPRINT("Loading Module %wZ...\n", Filename);
@@ -1131,7 +1139,7 @@ LdrLoadModule(PUNICODE_STRING Filename)
   if (!NT_SUCCESS(Status))
     {
       CPRINT("Could not open module file: %wZ\n", Filename);
-      return NULL;
+      return(Status);
     }
   CHECKPOINT;
 
@@ -1144,7 +1152,8 @@ LdrLoadModule(PUNICODE_STRING Filename)
   if (!NT_SUCCESS(Status))
     {
       CPRINT("Could not get file size\n");
-      return NULL;
+      NtClose(FileHandle);
+      return(Status);
     }
   CHECKPOINT;
 
@@ -1156,7 +1165,8 @@ LdrLoadModule(PUNICODE_STRING Filename)
   if (ModuleLoadBase == NULL)
     {
       CPRINT("Could not allocate memory for module");
-      return NULL;
+      NtClose(FileHandle);
+      return(Status);
     }
   CHECKPOINT;
 	
@@ -1171,7 +1181,8 @@ LdrLoadModule(PUNICODE_STRING Filename)
     {
       CPRINT("Could not read module file into memory");
       ExFreePool(ModuleLoadBase);
-      return NULL;
+      NtClose(FileHandle);
+      return(Status);
     }
   CHECKPOINT;
 
@@ -1179,12 +1190,12 @@ LdrLoadModule(PUNICODE_STRING Filename)
 
   Status = LdrProcessModule(ModuleLoadBase,
                             Filename,
-                            &ModuleObject);
+                            &Module);
   if (!NT_SUCCESS(Status))
     {
       CPRINT("Could not process module");
       ExFreePool(ModuleLoadBase);
-      return NULL;
+      return(Status);
     }
 
   /*  Cleanup  */
@@ -1192,12 +1203,14 @@ LdrLoadModule(PUNICODE_STRING Filename)
 
 #ifdef KDBG
 
-	/* Load symbols for module if available */
-  LdrpLoadModuleSymbols(ModuleObject);
+  /* Load symbols for module if available */
+  LdrpLoadModuleSymbols(Module);
 
 #endif /* KDBG */
 
-  return  ModuleObject;
+  *ModuleObject = Module;
+
+  return(STATUS_SUCCESS);
 }
 
 NTSTATUS
@@ -1720,10 +1733,10 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
           RtlInitUnicodeString (&ModuleName, NameBuffer);
           DPRINT("Import module: %wZ\n", &ModuleName);
 
-          LibraryModuleObject = LdrLoadModule(&ModuleName);
-          if (LibraryModuleObject == 0)
+          Status = LdrLoadModule(&ModuleName, &LibraryModuleObject);
+          if (!NT_SUCCESS(Status))
             {
-              CPRINT("Unknown import module: %wZ\n", &ModuleName);
+              CPRINT("Unknown import module: %wZ (Status %lx)\n", &ModuleName, Status);
             }
           /*  Get the import address list  */
           ImportAddressList = (PVOID *) ((DWORD)DriverBase + 

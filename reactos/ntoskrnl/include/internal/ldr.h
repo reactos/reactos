@@ -13,6 +13,11 @@
 #include <ntdll/ldr.h>
 #include <internal/module.h>
 
+#define  KERNEL_MODULE_NAME  L"ntoskrnl.exe"
+#define  HAL_MODULE_NAME  L"hal.dll"
+#define  MODULE_ROOT_NAME  L"\\Modules\\"
+#define  FILESYSTEM_ROOT_NAME  L"\\FileSystem\\"
+
 NTSTATUS
 LdrLoadDriver (
 	PUNICODE_STRING Filename,
@@ -52,7 +57,7 @@ PVOID
 LdrpGetSystemDllCallbackDispatcher(VOID);
 NTSTATUS
 LdrpMapImage (
-	HANDLE	ProcessHandle, 
+	HANDLE	ProcessHandle,
 	HANDLE	SectionHandle,
 	PVOID	* ImageBase
 	);
@@ -93,12 +98,13 @@ PVOID LdrSafePEProcessModule(
  	PVOID ImportModuleBase,
  	PULONG DriverSize);
 
-PMODULE_OBJECT
-LdrLoadModule(PUNICODE_STRING Filename);
+NTSTATUS
+LdrLoadModule(PUNICODE_STRING Filename,
+	      PMODULE_OBJECT *ModuleObject);
 
-NTSTATUS LdrFindModuleObject(
-  PUNICODE_STRING ModuleName,
-  PMODULE_OBJECT *ModuleObject);
+NTSTATUS
+LdrFindModuleObject(PUNICODE_STRING ModuleName,
+		    PMODULE_OBJECT *ModuleObject);
 
 NTSTATUS LdrpOpenModuleDirectory(PHANDLE Handle);
 
