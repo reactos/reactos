@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.8 2000/04/01 14:19:48 ea Exp $
+# $Id: makefile_rex,v 1.9 2000/05/13 17:34:15 ekohl Exp $
 #
 # Minix IFS Driver makefile
 #
@@ -14,13 +14,7 @@ OBJECTS = block.o rw.o inode.o dir.o mount.o blockdev.o cache.o \
 .phony: all
 
 clean:
-	- $(RM) minix.o
-	- $(RM) rw.o
-	- $(RM) inode.o
-	- $(RM) dir.o
-	- $(RM) mount.o
-	- $(RM) block.o
-	- $(RM) blockdev.o
+	- $(RM) *.o
 	- $(RM) junk.tmp
 	- $(RM) base.tmp
 	- $(RM) temp.exp
@@ -59,6 +53,24 @@ minixfs.sys: $(OBJECTS)
 	- $(RM) temp.exp
 
 minix.coff: ../../../include/reactos/buildno.h minix.rc
+
+floppy: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
+
+$(FLOPPY_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)\drivers\$(TARGETNAME).sys
+else
+	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
+endif
+
+dist: ../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
+
+../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGETNAME).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGETNAME).sys
+else
+	$(CP) $(TARGETNAME).sys ../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
+endif
 
 WIN32_LEAN_AND_MEAN = yes
 WARNINGS_ARE_ERRORS = yes
