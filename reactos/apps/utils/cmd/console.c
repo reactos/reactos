@@ -25,6 +25,7 @@ VOID DebugPrintf (LPTSTR szFormat, ...)
 {
 	TCHAR szOut[512];
 	va_list arg_ptr;
+	DWORD dwWritten;
 
 	va_start (arg_ptr, szFormat);
 	_vstprintf (szOut, szFormat, arg_ptr);
