@@ -58,6 +58,7 @@ ExplorerGlobals::ExplorerGlobals()
 #endif
 	_hwndDesktopBar = 0;
 	_hwndShellView = 0;
+	_hwndDesktop = 0;
 }
 
 
@@ -639,12 +640,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	 // initialize COM and OLE before creating the desktop window
 	OleInit usingCOM;
 
-	HWND hwndDesktop = 0;
-
 	if (startup_desktop) {
 		g_Globals._desktops.init();
 
-		hwndDesktop = DesktopWindow::Create();
+		g_Globals._hwndDesktop = DesktopWindow::Create();
 
 		if (autostart) {
 			char* argv[] = {"", "s"};	// call startup routine in SESSION_START mode
@@ -658,7 +657,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		lpCmdLine[_tcslen(lpCmdLine)-1] = '\0';
 	}
 
-	if (hwndDesktop)
+	if (g_Globals._hwndDesktop)
 		g_Globals._desktop_mode = true;
 
 	int ret = explorer_main(hInstance, lpCmdLine, nShowCmd);

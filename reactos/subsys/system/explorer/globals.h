@@ -161,8 +161,6 @@ struct Desktops : public vector<DesktopRef>
 	void	init();
 	void	SwitchToDesktop(int idx);
 
-	DesktopRef& get_current_Desktop() {return (*this)[_current_desktop];}
-
 	int		_current_desktop;
 };
 
@@ -192,6 +190,7 @@ extern struct ExplorerGlobals
 
 	HWND		_hwndDesktopBar;
 	HWND		_hwndShellView;
+	HWND		_hwndDesktop;
 
 	Desktops	_desktops;
 } g_Globals;
