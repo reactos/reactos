@@ -1,3 +1,8 @@
+Changes in v1.8.7 (4/22/2003) (brianp)
+
+- Added a file system recognizer to get around problems where
+  the partition id did not match the file system type.
+
 Changes in v1.8.6 (4/14/2003) (brianp)
 
 - Fixed a bug in fathelp.asm where is wasn't adding the hidden sector

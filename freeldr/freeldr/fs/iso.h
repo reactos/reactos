@@ -105,7 +105,6 @@ typedef struct
 } ISO_FILE_INFO, * PISO_FILE_INFO;
 
 
-BOOL	IsIsoFs(U32 DriveNumber);
 BOOL	IsoOpenVolume(U32 DriveNumber);
 FILE*	IsoOpenFile(PUCHAR FileName);
 BOOL	IsoReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer);

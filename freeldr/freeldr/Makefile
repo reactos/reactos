@@ -219,7 +219,8 @@ RTL_OBJS	=	print.o		\
 FS_OBJS		=	fs.o		\
 				fat.o		\
 				iso.o		\
-				ext2.o
+				ext2.o		\
+				fsrec.o
 
 UI_OBJS		=	tui.o		\
 				tuimenu.o	\

@@ -17,29 +17,12 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __VERSION_H
-#define __VERSION_H
+#ifndef __FSREC_H
+#define __FSREC_H
 
+BOOL	FsRecognizeVolume(U32 DriveNumber, U32 VolumeStartSector, U8* VolumeType);
+BOOL	FsRecIsIso9660(U32 DriveNumber);
+BOOL	FsRecIsExt2(U32 DriveNumber, U32 VolumeStartSector);
+BOOL	FsRecIsFat(U32 DriveNumber, U32 VolumeStartSector);
 
-/* just some stuff */
-#define VERSION			"FreeLoader v1.8.7"
-#define COPYRIGHT		"Copyright (C) 1998-2003 Brian Palmer <brianp@sginet.com>"
-#define AUTHOR_EMAIL	"<brianp@sginet.com>"
-#define BY_AUTHOR		"by Brian Palmer"
-
-// FreeLoader version defines
-//
-// NOTE:
-// If you fix bugs then you increment the patch version
-// If you add features then you increment the minor version and zero the patch version
-// If you add major functionality then you increment the major version and zero the minor & patch versions
-//
-#define FREELOADER_MAJOR_VERSION	1
-#define FREELOADER_MINOR_VERSION	8
-#define FREELOADER_PATCH_VERSION	7
-
-
-PUCHAR	GetFreeLoaderVersionString(VOID);
-
-
-#endif  // defined __VERSION_H
+#endif // #defined __FSREC_H

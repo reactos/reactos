@@ -37,25 +37,6 @@ static U32		IsoRootLength;		// Length of the root directory
 U32			IsoDriveNumber = 0;
 
 
-BOOL IsIsoFs(U32 DriveNumber)
-{
-	PUCHAR Sector = (PUCHAR)DISKREADBUFFER;
-
-	if (!DiskReadLogicalSectors(DriveNumber, 16, 1, Sector))
-	{
-		FileSystemError("Failed to read the PVD.");
-		return FALSE;
-	}
-
-	return (Sector[0] == 1 &&
-		Sector[1] == 'C' &&
-		Sector[2] == 'D' &&
-		Sector[3] == '0' &&
-		Sector[4] == '0' &&
-		Sector[5] == '1');
-}
-
-
 BOOL IsoOpenVolume(U32 DriveNumber)
 {
 	PPVD Pvd = (PPVD)DISKREADBUFFER;

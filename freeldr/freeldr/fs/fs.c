@@ -22,6 +22,7 @@
 #include "fat.h"
 #include "iso.h"
 #include "ext2.h"
+#include "fsrec.h"
 #include <disk.h>
 #include <rtl.h>
 #include <ui.h>
@@ -65,6 +66,7 @@ BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber)
 {
 	PARTITION_TABLE_ENTRY	PartitionTableEntry;
 	UCHAR					ErrorText[80];
+	U8						VolumeType;
 
 	DbgPrint((DPRINT_FILESYSTEM, "FsOpenVolume() DriveNumber: 0x%x PartitionNumber: 0x%x\n", DriveNumber, PartitionNumber));
 
@@ -79,7 +81,7 @@ BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber)
 	}
 
 	// Check for ISO9660 file system type
-	if (DriveNumber > 0x80 && IsIsoFs(DriveNumber))
+	if (DriveNumber > 0x80 && FsRecIsIso9660(DriveNumber))
 	{
 		DbgPrint((DPRINT_FILESYSTEM, "Drive is a cdrom drive. Assuming ISO-9660 file system.\n"));
 
@@ -117,7 +119,15 @@ BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber)
 		return FALSE;
 	}
 
-	switch (PartitionTableEntry.SystemIndicator)
+	// Try to recognize the file system
+	if (!FsRecognizeVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition, &VolumeType))
+	{
+		sprintf(ErrorText, "Unrecognized file system. Type: 0x%x", PartitionTableEntry.SystemIndicator);
+		FileSystemError(ErrorText);
+	}
+
+	//switch (PartitionTableEntry.SystemIndicator)
+	switch (VolumeType)
 	{
 	case PARTITION_FAT_12:
 	case PARTITION_FAT_16:
