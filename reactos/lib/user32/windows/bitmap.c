@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.24 2003/12/10 19:02:33 gvg Exp $
+/* $Id: bitmap.c,v 1.25 2003/12/16 06:51:02 rcampbell Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -670,6 +670,10 @@ CopyImage(HANDLE hnd, UINT type, INT desiredx, INT desiredy, UINT flags)
    {
       case IMAGE_BITMAP:
          {
+         	DbgPrint("WARNING:  Incomplete implementation of CopyImage!\n");
+         	/* FIXME:  support flags LR_COPYDELETEORG, LR_COPYFROMRESOURCE,
+         	   						 LR_COPYRETURNORG, LR_CREATEDIBSECTION,
+         	   						 and LR_MONOCHROME; */
             HBITMAP res;
             BITMAP bm;
 
@@ -682,7 +686,7 @@ CopyImage(HANDLE hnd, UINT type, INT desiredx, INT desiredy, UINT flags)
                SetBitmapBits(res, bm.bmWidthBytes * bm.bmHeight, buf);
                HeapFree(GetProcessHeap(), 0, buf);
             }
-            return (HICON)res;
+            return res;
         }
      case IMAGE_ICON:
         DbgPrint("FIXME: CopyImage doesn't support IMAGE_ICON correctly!\n");
