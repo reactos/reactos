@@ -18,16 +18,26 @@
  */
 
 #define STATUS_SUCCESS                         (0x00000000)
+#ifndef STATUS_WAIT_0
 #define STATUS_WAIT_0                          (0x00000000)
+#endif
 #define STATUS_WAIT_63                         (0x0000003F)
 #define STATUS_ABANDONED                       (0x00000080)
+#ifndef STATUS_ABANDONED_WAIT_0
 #define STATUS_ABANDONED_WAIT_0                (0x00000080)
+#endif
 #define STATUS_ABANDONED_WAIT_63               (0x000000BF)
+#ifndef STATUS_USER_APC
 #define STATUS_USER_APC                        (0x000000C0)
+#endif
 #define STATUS_KERNEL_APC                      (0x00000100)
 #define STATUS_ALERTED                         (0x00000101)
+#ifndef STATUS_TIMEOUT
 #define STATUS_TIMEOUT                         (0x00000102)
+#endif
+#ifndef STATUS_PENDING
 #define STATUS_PENDING                         (0x00000103)
+#endif
 #define STATUS_REPARSE                         (0x00000104)
 #define STATUS_MORE_ENTRIES                    (0x00000105)
 #define STATUS_NOTIFY_ENUM_DIR                 (0x10C)

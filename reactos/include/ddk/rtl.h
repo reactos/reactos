@@ -5,6 +5,8 @@
 #ifndef __DDK_RTL_H
 #define __DDK_RTL_H
 
+#include <stddef.h>
+
 typedef struct _CONTROLLER_OBJECT
 {
    CSHORT Type;
@@ -848,5 +850,75 @@ RtlCreateUserProcess(PUNICODE_STRING ApplicationName,
                      PHANDLE ProcessHandle,
                      PHANDLE ThreadHandle);
 
+/*  functions exported from NTOSKRNL.EXE which are considered RTL  */
+#if 0
+_stricmp
+_strlwr
+_strnicmp
+_strnset
+_strrev
+_strset
+_strupr
+;_vsnprintf
+#endif
+
+int _wcsicmp (const wchar_t* cs, const wchar_t* ct);
+wchar_t * _wcslwr (wchar_t *x);
+int _wcsnicmp (const wchar_t * cs,const wchar_t * ct,size_t count);
+wchar_t* _wcsnset (wchar_t* wsToFill, wchar_t wcFill, size_t sizeMaxFill);
+wchar_t * _wcsrev(wchar_t *s);
+wchar_t *_wcsupr(wchar_t *x);
+
+#if 0
+;atoi
+;atol
+isdigit
+islower
+isprint
+isspace
+isupper
+isxdigit
+;mbstowcs
+;mbtowc
+memchr
+memcpy
+memmove
+memset
+;qsort
+rand
+sprintf
+srand
+strcat
+strchr
+strcmp
+strcpy
+strlen
+strncat
+strncmp
+strcpy
+strrchr
+strspn
+strstr
+;strtok
+;swprintf
+tolower
+toupper
+towlower
+towupper
+vsprintf
+#endif
+
+wchar_t * wcscat(wchar_t *dest, const wchar_t *src);
+wchar_t * wcschr(const wchar_t *str, wchar_t ch);
+int wcscmp(const wchar_t *cs, const wchar_t *ct);
+wchar_t* wcscpy(wchar_t* str1, const wchar_t* str2);
+size_t wcscspn(const wchar_t *str,const wchar_t *reject);
+size_t wcslen(const wchar_t *s);
+wchar_t * wcsncat(wchar_t *dest, const wchar_t *src, size_t count);
+int wcsncmp(const wchar_t *cs, const wchar_t *ct, size_t count);
+wchar_t * wcsncpy(wchar_t *dest, const wchar_t *src, size_t count);
+wchar_t * wcsrchr(const wchar_t *str, wchar_t ch);
+size_t wcsspn(const wchar_t *str,const wchar_t *accept);
+wchar_t *wcsstr(const wchar_t *s,const wchar_t *b);
 
 #endif /* __DDK_RTL_H */
