@@ -48,10 +48,9 @@ SEP := \$(EMPTY_VAR)
 PIPE := -pipe
 endif
 
-# Sane TOPDIR for toplevel makefile
-ifeq ($(TOPDIR),)
-TOPDIR = .
-endif
+# TOPDIR is used by make bootcd but not defined anywhere.  Usurp pointed out
+# that it has the same meaning as PATH_TO_TOP.
+TOPDIR = $(PATH_TO_TOP)
 
 # Use environment var ROS_INSTALL to override default install dir
 ifeq ($(ROS_INSTALL),)
