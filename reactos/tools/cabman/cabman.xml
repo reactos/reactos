@@ -1,6 +1,6 @@
 <module name="cabman" type="buildtool">
 	<include base="cabman">.</include>
-	<include base="zlib">.</include>
+	<include base="hostzlib">.</include>
 	<library>hostzlib</library>
 	<file>cabinet.cxx</file>
 	<file>dfp.cxx</file>
