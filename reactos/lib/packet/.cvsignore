@@ -1,6 +1,3 @@
-packet.coff
-packet.dll
-packet.nostrip.dll
 *.sys
 *.exe
 *.dll
@@ -17,3 +14,4 @@ packet.nostrip.dll
 *.sym
 *.plg
 *.bak
+*.map

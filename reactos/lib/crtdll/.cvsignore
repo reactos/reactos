@@ -1,6 +1,6 @@
-crtdll.coff
-crtdll.dll
-crtdll.nostrip.dll
+*.coff
+*.dll
 *.d
 *.o
 *.sym
+*.map

@@ -1,4 +1,6 @@
-version.coff
-version.nostrip.dll
-version.dll
-version.sym
+*.coff
+*.dll
+*.sym
+*.map
+*.o
+*.d

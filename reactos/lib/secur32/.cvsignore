@@ -1,5 +1,6 @@
-secur32.dll
-secur32.nostrip.dll
-secur32.coff
-secur32.sym
+*.dll
+*.coff
+*.sym
 *.o
+*.d
+*.map

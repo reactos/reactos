@@ -1,2 +1,7 @@
-ole32.coff
-ole32.dll
+*.coff
+*.dll
+*.d
+*.o
+*.sym
+*.map
+

@@ -1,9 +1,9 @@
-wsock32.a
-wsock32.dll
-wsock32.nostrip.dll
-wsock32.coff
-wsock32.sym
-base.tmp
-junk.tmp
+*.a
+*.d
+*.o
+*.coff
+*.dll
+*.sym
+*.map
+*.tmp
 temp.exp
-.*.d

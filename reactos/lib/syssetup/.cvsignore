@@ -2,3 +2,4 @@
 *.coff
 *.sym
 *.o
+*.map

@@ -1,12 +1,9 @@
-iprtprio.a
-iprtprio.dll
-iprtprio.nostrip.dll
-iprtprio.coff
-base.tmp
-junk.tmp
 temp.exp
+*.a
 *.o
 *.d
+*.coff
+*.dll
 *.dsp
 *.dsw
 *.aps
@@ -15,3 +12,5 @@ temp.exp
 *.sym
 *.plg
 *.bak
+*.map
+*.tmp

@@ -1,5 +1,6 @@
-.*.d
-*.o
 nul
-freetype.dll
-freetype.nostrip.dll
+*.d
+*.o
+*.dll
+*.map
+*.sym

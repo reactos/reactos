@@ -1,9 +1,8 @@
-msafd.a
-msafd.dll
-msafd.nostrip.dll
-msafd.coff
-msafd.sym
-base.tmp
-junk.tmp
 temp.exp
+*.a
+*.dll
+*.coff
+*.sym
+*.tmp
 *.o
+*.map

@@ -1,7 +1,7 @@
-fmifs.coff
-fmifs.dll
-fmifs.nostrip.dll
-fmifs.sym
+*.coff
+*.dll
+*.sym
 *.o
 *.obj
 *.d
+*.map

@@ -1,5 +1,5 @@
-zlib.a
-zlib.nostrip.a
+*.a
 *.d
 *.o
 *.sym
+*.map

@@ -2,3 +2,5 @@
 *.coff
 *.dll
 *.o
+*.d
+*.map

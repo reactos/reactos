@@ -1,3 +1,6 @@
-oleaut32.coff
-oleaut32.dll
-oleaut32.nostrip.dll
+*.coff
+*.dll
+*.sym
+*.o
+*.d
+*.map

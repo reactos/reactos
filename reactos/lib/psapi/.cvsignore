@@ -1,9 +1,8 @@
-base.tmp
-junk.tmp
-psapi.sym
-psapi.coff
-psapi.dll
-psapi.nostrip.dll
 temp.exp
+*.tmp
+*.sym
+*.coff
+*.dll
 *.o
-.*.d
+*.d
+*.map

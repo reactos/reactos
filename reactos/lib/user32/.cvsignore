@@ -1,9 +1,8 @@
-base.tmp
-junk.tmp
-user32.coff
-user32.dll
-user32.nostrip.dll
+*.coff
+*.dll
 *.d
 *.a
 *.o
 *.sym
+*.map
+*.tmp

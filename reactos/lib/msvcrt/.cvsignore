@@ -1,6 +1,5 @@
-msvcrt.coff
-msvcrt.dll
-msvcrt.nostrip.dll
+*.coff
+*.dll
 *.d
 *.o
 *.sym
@@ -9,3 +8,4 @@ msvcrt.nostrip.dll
 *.ncb
 *.opt
 *.txt
+*.map
