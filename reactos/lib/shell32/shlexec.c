@@ -451,14 +451,16 @@ static UINT SHELL_FindExecutableByOperation(LPCWSTR lpPath, LPCWSTR lpFile, LPCW
     strcatW(filetype, lpOperation);
     strcatW(filetype, wCommand);
 
-    if (RegQueryValueW(HKEY_CLASSES_ROOT, filetype, command, &commandlen) == ERROR_SUCCESS)
+    if (RegQueryValueW(HKEY_CLASSES_ROOT, filetype, command,
+                       &commandlen) == ERROR_SUCCESS)
     {
 	commandlen /= sizeof(WCHAR);
         if (key) strcpyW(key, filetype);
 #if 0
-        LPSTR tmp;
-        char param[256];
-	LONG paramlen = 256;
+        LPWSTR tmp;
+        WCHAR param[256];
+	LONG paramlen = sizeof(param);
+        static const WCHAR wSpace[] = {' ',0};
 
         /* FIXME: it seems all Windows version don't behave the same here.
          * the doc states that this ddeexec information can be found after
@@ -467,14 +469,15 @@ static UINT SHELL_FindExecutableByOperation(LPCWSTR lpPath, LPCWSTR lpFile, LPCW
          */
 	/* Get the parameters needed by the application
 	   from the associated ddeexec key */
-	tmp = strstr(filetype, "command");
+	tmp = strstrW(filetype, wCommand);
 	tmp[0] = '\0';
-	strcat(filetype, "ddeexec");
-
-	if (RegQueryValueA(HKEY_CLASSES_ROOT, filetype, param, &paramlen) == ERROR_SUCCESS)
+	strcatW(filetype, wDdeexec);
+	if (RegQueryValueW(HKEY_CLASSES_ROOT, filetype, param,
+				     &paramlen) == ERROR_SUCCESS)
 	{
-            strcat(command, " ");
-            strcat(command, param);
+	    paramlen /= sizeof(WCHAR);
+            strcatW(command, wSpace);
+            strcatW(command, param);
             commandlen += paramlen;
 	}
 #endif
@@ -511,7 +514,7 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
     WCHAR *extension = NULL; /* pointer to file extension */
     WCHAR wtmpext[5];        /* local copy to mung as we please */
     WCHAR filetype[256];     /* registry name for this filetype */
-    LONG  filetypelen = 256; /* length of above */
+    LONG  filetypelen = sizeof(filetype); /* length of above */
     WCHAR command[256];      /* command from registry */
     WCHAR wBuffer[256];      /* Used to GetProfileString */
     UINT  retval = 31;       /* default - 'No association was found' */
@@ -652,7 +655,6 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
 		    if (retval > 32)
 			break;
 		}
-
 		RegCloseKey(hkey);
 	    }
 	}
@@ -748,7 +750,7 @@ static unsigned dde_connect(WCHAR * key, WCHAR* start, WCHAR* ddeexec,
     unsigned    ret = 31;
 
     strcpyW(endkey, wApplication);
-    applen = sizeof(app);   /* buffer length for RegQueryValueW() is in bytes! */
+    applen = sizeof(app);
     if (RegQueryValueW(HKEY_CLASSES_ROOT, key, app, &applen) != ERROR_SUCCESS)
     {
         FIXME("default app name NIY %s\n", debugstr_w(key));
@@ -833,8 +835,6 @@ static UINT execute_from_key(LPWSTR key, LPCWSTR lpFile, void *env, LPCWSTR szCo
         WCHAR param[256];
         LONG paramlen = sizeof(param);
 
-	cmdlen /= sizeof(WCHAR);
-
 	param[0] = '\0';
 
         /* Get the parameters needed by the application
@@ -851,6 +851,7 @@ static UINT execute_from_key(LPWSTR key, LPCWSTR lpFile, void *env, LPCWSTR szCo
         else
         {
             /* Is there a replace() function anywhere? */
+            cmdlen /= sizeof(WCHAR);
             cmd[cmdlen] = '\0';
             SHELL_ArgifyW(param, sizeof(param)/sizeof(WCHAR), cmd, lpFile, psei->lpIDList, szCommandline);
             retval = execfunc(param, env, FALSE, psei, psei_out);
