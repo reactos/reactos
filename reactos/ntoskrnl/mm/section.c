@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.104 2003/02/13 22:24:18 hbirr Exp $
+/* $Id: section.c,v 1.105 2003/04/05 13:19:05 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -3374,7 +3374,6 @@ MmMapViewOfSection(IN PVOID SectionObject,
    Section = (PSECTION_OBJECT)SectionObject;
    AddressSpace = &Process->AddressSpace;
 
-   MmLockAddressSpace(AddressSpace);
    MmLockSection(SectionObject);
    
    if (Section->AllocationAttributes & SEC_IMAGE)
@@ -3383,6 +3382,8 @@ MmMapViewOfSection(IN PVOID SectionObject,
        PVOID ImageBase;
        ULONG ImageSize;	   
        
+       MmLockAddressSpace(AddressSpace);
+
        ImageBase = *BaseAddress;
        if (ImageBase == NULL)
 	 {
@@ -3449,10 +3450,32 @@ MmMapViewOfSection(IN PVOID SectionObject,
 		 }
 	     }
 	 }
+
        *BaseAddress = ImageBase;
+
+       MmUnlockAddressSpace(AddressSpace);
+
+       /*
+        * Zero-fill the end of initialized data segments which are not completely
+        * present in the file
+        */
+       for (i = 0; i < Section->NrSegments; i++)
+	 {
+	   if (IMAGE_SECTION_INITIALIZED_DATA ==
+               (Section->Segments[i].Characteristics &
+	        (IMAGE_SECTION_NOLOAD | IMAGE_SECTION_INITIALIZED_DATA)) &&
+	       Section->Segments[i].RawLength < Section->Segments[i].Length)
+	     {
+	       RtlZeroMemory((PVOID) (ImageBase + (ULONG_PTR) Section->Segments[i].VirtualAddress) +
+	                     Section->Segments[i].RawLength,
+	                     Section->Segments[i].Length - Section->Segments[i].RawLength);
+	     }
+	 }
      }
    else
      {
+       MmLockAddressSpace(AddressSpace);
+
        if (SectionOffset == NULL)
 	 {
 	   ViewOffset = 0;
@@ -3488,16 +3511,16 @@ MmMapViewOfSection(IN PVOID SectionObject,
 				   Protect,
 				   ViewOffset);
        MmUnlockSectionSegment(Section->Segments);
+       MmUnlockAddressSpace(AddressSpace);
        if (!NT_SUCCESS(Status))
 	 {
 	   MmUnlockSection(Section);
-	   MmUnlockAddressSpace(AddressSpace);
 	   return(Status);
 	 }
+
      }
 
    MmUnlockSection(Section);
-   MmUnlockAddressSpace(AddressSpace);
 
    return(STATUS_SUCCESS);
 }
