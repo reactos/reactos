@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.48 2004/03/22 19:59:31 navaraf Exp $
+/* $Id: scsiport.c,v 1.49 2004/03/23 00:12:24 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,7 +33,7 @@
 #include <ddk/ntddscsi.h>
 #include <rosrtl/string.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 
