@@ -1,4 +1,5 @@
-/*
+/* $Id: kill.c,v 1.46 2001/07/28 07:57:24 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ps/kill.c
