@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.48 2004/03/07 19:48:45 hbirr Exp $
+/* $Id: atapi.c,v 1.49 2004/09/03 02:55:50 navaraf Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -525,11 +525,11 @@ AtapiClaimHwResources(PATAPI_MINIPORT_EXTENSION DevExt,
    ConfigInfo->BusInterruptVector = InterruptVector;
    ConfigInfo->InterruptMode = (InterfaceType == Isa) ? Latched : LevelSensitive;
 
-   if ((CommandPortBase == 0x1F0 || ControlPortBase == 0x3F4) && !ConfigInfo->AtdiskPrimaryClaimed)
+   if ((CommandPortBase == 0x1F0 || ControlPortBase == 0x3F6) && !ConfigInfo->AtdiskPrimaryClaimed)
    {
       ConfigInfo->AtdiskPrimaryClaimed = TRUE;
    }
-   if ((CommandPortBase == 0x170 || ControlPortBase == 0x374) && !ConfigInfo->AtdiskSecondaryClaimed)
+   if ((CommandPortBase == 0x170 || ControlPortBase == 0x376) && !ConfigInfo->AtdiskSecondaryClaimed)
    {
       ConfigInfo->AtdiskSecondaryClaimed = TRUE;
    }
@@ -1128,7 +1128,11 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	  continue;
 	}
 
-      AtapiExecuteCommand(DeviceExtension, IDE_CMD_RESET, NULL);
+      /* Soft reset */
+      IDEWriteDriveControl(ControlPortBase, IDE_DC_nIEN | IDE_DC_SRST);
+      ScsiPortStallExecution(500);
+      IDEWriteDriveControl(ControlPortBase, IDE_DC_nIEN);
+      ScsiPortStallExecution(500);
 
       for (Retries = 0; Retries < 20000; Retries++)
 	{
@@ -1172,6 +1176,8 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DMA_CMD;		  
 		}
 #endif
+              AtapiExecuteCommand(DeviceExtension, IDE_CMD_RESET, NULL);
+              ScsiPortStallExecution(500);
 	      DeviceFound = TRUE;
 	    }
 	  else
