@@ -35,7 +35,6 @@
 #include "pcnethw.h"
 #include "pcnet.h"
 
-#define USE_IMMEDIATE_PORT_IO 0
 
 VOID
 STDCALL
@@ -66,8 +65,124 @@ MiniportHandleInterrupt(
  *     - Called by NDIS at DISPATCH_LEVEL
  */
 {
-  /* XXX Implement me */
+  PADAPTER Adapter = (PADAPTER)MiniportAdapterContext;
+  USHORT Data;
+  BOOLEAN ErrorHandled = FALSE;
+  BOOLEAN ReceiveHandled = FALSE;
+  BOOLEAN IdonHandled = FALSE;
+  USHORT Temp;
+
   PCNET_DbgPrint(("Called\n"));
+
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
+  NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
+
+  PCNET_DbgPrint(("CSR0 is 0x%x\n", Data));
+
+  while(Data & CSR0_INTR)
+    {
+      if(Data & CSR0_ERR)
+        {
+          if(ErrorHandled)
+            {
+              PCNET_DbgPrint(("ERROR HANDLED TWO TIMES\n"));
+              __asm__("int $3\n");
+            }
+
+          ErrorHandled = TRUE;
+
+          PCNET_DbgPrint(("clearing an error\n"));
+          NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_MERR|CSR0_BABL|CSR0_CERR|CSR0_MISS);
+          NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Temp);
+          PCNET_DbgPrint(("CSR0 is now 0x%x\n", Temp));
+        }
+      else if(Data & CSR0_IDON)
+        {
+          if(IdonHandled)
+            {
+              PCNET_DbgPrint(("IDON HANDLED TWO TIMES\n"));
+              __asm__("int $3\n");
+            }
+
+          IdonHandled = TRUE;
+
+          PCNET_DbgPrint(("clearing IDON\n"));
+          NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_IDON);
+          NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Temp);
+          PCNET_DbgPrint(("CSR0 is now 0x%x\n", Temp));
+        }
+      else if(Data & CSR0_RINT)
+        {
+          if(ReceiveHandled)
+            {
+              PCNET_DbgPrint(("RECEIVE HANDLED TWO TIMES\n"));
+              __asm__("int $3\n");
+            }
+
+          ReceiveHandled = TRUE;
+
+          PCNET_DbgPrint(("receive interrupt - clearing\n"));
+          NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_RINT);
+          NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Temp);
+          PCNET_DbgPrint(("CSR0 is now 0x%x\n", Temp));
+
+          while(1)
+            {
+              PRECEIVE_DESCRIPTOR Descriptor = Adapter->ReceiveDescriptorRingVirt + Adapter->CurrentReceiveDescriptorIndex;
+              PCHAR Buffer;
+              ULONG ByteCount;
+
+              if(Descriptor->FLAGS & RD_OWN)
+                {
+                  PCNET_DbgPrint(("no more receive descriptors to process\n"));
+                  break;
+                }
+
+              if(Descriptor->FLAGS & RD_ERR)
+                {
+                  PCNET_DbgPrint(("receive descriptor error: 0x%x\n", Descriptor->FLAGS));
+                  break;
+                }
+
+              if(!((Descriptor->FLAGS & RD_STP) && (Descriptor->FLAGS & RD_ENP)))
+                {
+                  PCNET_DbgPrint(("receive descriptor not start&end: 0x%x\n", Descriptor->FLAGS));
+                  break;
+                }
+
+              Buffer = Adapter->ReceiveBufferPtrVirt + Adapter->CurrentReceiveDescriptorIndex * BUFFER_SIZE;
+              ByteCount = Descriptor->MCNT & 0xfff;
+
+              PCNET_DbgPrint(("Indicating a %d-byte packet (index %d)\n", ByteCount, Adapter->CurrentReceiveDescriptorIndex));
+
+              NdisMEthIndicateReceive(Adapter->MiniportAdapterHandle, 0, Buffer, 14, Buffer+14, ByteCount-14, ByteCount-14);
+
+              memset(Descriptor, 0, sizeof(RECEIVE_DESCRIPTOR));
+              Descriptor->RBADR = 
+                  (ULONG)(Adapter->ReceiveBufferPtrPhys + Adapter->CurrentReceiveDescriptorIndex * BUFFER_SIZE);
+              Descriptor->BCNT = (-BUFFER_SIZE) | 0xf000;
+              Descriptor->FLAGS &= RD_OWN;
+
+              Adapter->CurrentReceiveDescriptorIndex++;
+
+              if(Adapter->CurrentReceiveDescriptorIndex == NUMBER_OF_BUFFERS)
+                Adapter->CurrentReceiveDescriptorIndex = 0;
+            }
+        }
+      else
+        {
+          PCNET_DbgPrint(("UNHANDLED INTERRUPT\n"));
+          __asm__("int $3\n");
+        }
+
+      NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
+    }
+
+  /* re-enable interrupts */
+  NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_IENA);
+
+  NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
+  PCNET_DbgPrint(("CSR0 is now 0x%x\n", Data));
 }
 
 
@@ -224,12 +339,13 @@ MiAllocateSharedMemory(
 {
   PTRANSMIT_DESCRIPTOR TransmitDescriptor;
   PRECEIVE_DESCRIPTOR  ReceiveDescriptor;
+  NDIS_PHYSICAL_ADDRESS PhysicalAddress;
   ULONG i;
 
   /* allocate the initialization block */
   Adapter->InitializationBlockLength = sizeof(INITIALIZATION_BLOCK);
   NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->InitializationBlockLength, 
-      FALSE, (PVOID *)&Adapter->InitializationBlockVirt, &Adapter->InitializationBlockPhys);
+      FALSE, (PVOID *)&Adapter->InitializationBlockVirt, &PhysicalAddress);
   if(!Adapter->InitializationBlockVirt)
     {
       PCNET_DbgPrint(("insufficient resources\n"));
@@ -244,12 +360,13 @@ MiAllocateSharedMemory(
       return NDIS_STATUS_RESOURCES;
     }
 
+  Adapter->InitializationBlockPhys = (PINITIALIZATION_BLOCK)NdisGetPhysicalAddressLow(PhysicalAddress);
   memset(Adapter->InitializationBlockVirt, 0, sizeof(INITIALIZATION_BLOCK));
 
   /* allocate the transport descriptor ring */
   Adapter->TransmitDescriptorRingLength = sizeof(TRANSMIT_DESCRIPTOR) * NUMBER_OF_BUFFERS;
   NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->TransmitDescriptorRingLength,
-      FALSE, (PVOID *)&Adapter->TransmitDescriptorRingVirt, &Adapter->TransmitDescriptorRingPhys);
+      FALSE, (PVOID *)&Adapter->TransmitDescriptorRingVirt, &PhysicalAddress);
   if(!Adapter->TransmitDescriptorRingVirt)
     {
       PCNET_DbgPrint(("insufficient resources\n"));
@@ -264,12 +381,13 @@ MiAllocateSharedMemory(
       return NDIS_STATUS_RESOURCES;
     }
 
+  Adapter->TransmitDescriptorRingPhys = (PTRANSMIT_DESCRIPTOR)NdisGetPhysicalAddressLow(PhysicalAddress);
   memset(Adapter->TransmitDescriptorRingVirt, 0, sizeof(TRANSMIT_DESCRIPTOR) * NUMBER_OF_BUFFERS);
 
   /* allocate the receive descriptor ring */
   Adapter->ReceiveDescriptorRingLength = sizeof(RECEIVE_DESCRIPTOR) * NUMBER_OF_BUFFERS;
   NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->ReceiveDescriptorRingLength,
-      FALSE, (PVOID *)&Adapter->ReceiveDescriptorRingVirt, &Adapter->ReceiveDescriptorRingPhys);
+      FALSE, (PVOID *)&Adapter->ReceiveDescriptorRingVirt, &PhysicalAddress);
   if(!Adapter->ReceiveDescriptorRingVirt)
     {
       PCNET_DbgPrint(("insufficient resources\n"));
@@ -284,12 +402,13 @@ MiAllocateSharedMemory(
       return NDIS_STATUS_RESOURCES;
     }
 
+  Adapter->ReceiveDescriptorRingPhys = (PRECEIVE_DESCRIPTOR)NdisGetPhysicalAddressLow(PhysicalAddress);
   memset(Adapter->ReceiveDescriptorRingVirt, 0, sizeof(RECEIVE_DESCRIPTOR) * NUMBER_OF_BUFFERS);
 
   /* allocate transmit buffers */
   Adapter->TransmitBufferLength = BUFFER_SIZE * NUMBER_OF_BUFFERS;
   NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->TransmitBufferLength, 
-      FALSE, (PVOID *)&Adapter->TransmitBufferPtrVirt, &Adapter->TransmitBufferPtrPhys);
+      FALSE, (PVOID *)&Adapter->TransmitBufferPtrVirt, &PhysicalAddress);
   if(!Adapter->TransmitBufferPtrVirt)
     {
       PCNET_DbgPrint(("insufficient resources\n"));
@@ -304,12 +423,13 @@ MiAllocateSharedMemory(
       return NDIS_STATUS_RESOURCES;
     }
 
+  Adapter->TransmitBufferPtrPhys = (PCHAR)NdisGetPhysicalAddressLow(PhysicalAddress);
   memset(Adapter->TransmitBufferPtrVirt, 0, BUFFER_SIZE * NUMBER_OF_BUFFERS);
 
   /* allocate receive buffers */
   Adapter->ReceiveBufferLength = BUFFER_SIZE * NUMBER_OF_BUFFERS;
   NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->ReceiveBufferLength, 
-      FALSE, (PVOID *)&Adapter->ReceiveBufferPtrVirt, &Adapter->ReceiveBufferPtrPhys);
+      FALSE, (PVOID *)&Adapter->ReceiveBufferPtrVirt, &PhysicalAddress);
   if(!Adapter->ReceiveBufferPtrVirt)
     {
       PCNET_DbgPrint(("insufficient resources\n"));
@@ -324,14 +444,15 @@ MiAllocateSharedMemory(
       return NDIS_STATUS_RESOURCES;
     }
 
+  Adapter->ReceiveBufferPtrPhys = (PCHAR)NdisGetPhysicalAddressLow(PhysicalAddress);
   memset(Adapter->ReceiveBufferPtrVirt, 0, BUFFER_SIZE * NUMBER_OF_BUFFERS);
 
   /* initialize tx descriptors */
   TransmitDescriptor = Adapter->TransmitDescriptorRingVirt;
   for(i = 0; i < NUMBER_OF_BUFFERS; i++)
     {
-      (TransmitDescriptor+i)->TBADR = NdisGetPhysicalAddressLow(Adapter->TransmitBufferPtrPhys) + i * BUFFER_SIZE;
-      (TransmitDescriptor+i)->BCNT = 0xf000;
+      (TransmitDescriptor+i)->TBADR = (ULONG)Adapter->TransmitBufferPtrPhys + i * BUFFER_SIZE;
+      (TransmitDescriptor+i)->BCNT = 0xf000 | -BUFFER_SIZE; /* 2's compliment  + set top 4 bits */
       (TransmitDescriptor+i)->FLAGS = TD1_STP | TD1_ENP;
     }
 
@@ -341,8 +462,8 @@ MiAllocateSharedMemory(
   ReceiveDescriptor = Adapter->ReceiveDescriptorRingVirt;
   for(i = 0; i < NUMBER_OF_BUFFERS; i++)
     {
-      (ReceiveDescriptor+i)->RBADR = NdisGetPhysicalAddressLow(Adapter->ReceiveBufferPtrPhys) + i * BUFFER_SIZE;
-      (ReceiveDescriptor+i)->BCNT = 0xf000 | -BUFFER_SIZE; /* 2's compliment */
+      (ReceiveDescriptor+i)->RBADR = (ULONG)Adapter->ReceiveBufferPtrPhys + i * BUFFER_SIZE;
+      (ReceiveDescriptor+i)->BCNT = 0xf0000 | -BUFFER_SIZE; /* 2's compliment  + set top 4 bits */
       (ReceiveDescriptor+i)->FLAGS |= RD_OWN;
     }
 
@@ -365,20 +486,17 @@ MiPrepareInitializationBlock(
 
   /* read burned-in address from card */
   for(i = 0; i < 6; i++)
-#if USE_IMMEDIATE_PORT_IO
-    NdisImmediateReadPortUchar(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + i, 
-                               Adapter->InitializationBlockVirt->PADR);
-#else
     NdisRawReadPortUchar(Adapter->PortOffset + i, Adapter->InitializationBlockVirt->PADR + i);
-#endif
 
   /* set up receive ring */
-  Adapter->InitializationBlockVirt->RDRA = NdisGetPhysicalAddressLow(Adapter->ReceiveDescriptorRingPhys);
-  Adapter->InitializationBlockVirt->RLEN = LOG_NUMBER_OF_BUFFERS;
+  PCNET_DbgPrint(("Receive ring physical address: 0x%x\n", Adapter->ReceiveDescriptorRingPhys));
+  Adapter->InitializationBlockVirt->RDRA = (ULONG)Adapter->ReceiveDescriptorRingPhys;
+  Adapter->InitializationBlockVirt->RLEN = (LOG_NUMBER_OF_BUFFERS << 4) & 0xf0;
 
   /* set up transmit ring */
-  Adapter->InitializationBlockVirt->TDRA = NdisGetPhysicalAddressLow(Adapter->TransmitDescriptorRingPhys);
-  Adapter->InitializationBlockVirt->TLEN = LOG_NUMBER_OF_BUFFERS;
+  PCNET_DbgPrint(("Transmit ring physical address: 0x%x\n", Adapter->TransmitDescriptorRingPhys));
+  Adapter->InitializationBlockVirt->TDRA = (ULONG)Adapter->TransmitDescriptorRingPhys;
+  Adapter->InitializationBlockVirt->TLEN = (LOG_NUMBER_OF_BUFFERS << 4) & 0xf0;
 }
 
 
@@ -391,25 +509,44 @@ MiFreeSharedMemory(
  *     Adapter: pointer to the miniport's adapter struct
  */
 {
+  NDIS_PHYSICAL_ADDRESS PhysicalAddress;
+
+  PhysicalAddress.u.HighPart = 0;
+
   if(Adapter->InitializationBlockVirt)
-    NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->InitializationBlockLength, 
-        FALSE, (PVOID *)&Adapter->InitializationBlockVirt, &Adapter->InitializationBlockPhys);
+    {
+      PhysicalAddress.u.LowPart = (ULONG)Adapter->InitializationBlockPhys;
+      NdisMFreeSharedMemory(Adapter->MiniportAdapterHandle, Adapter->InitializationBlockLength, 
+          FALSE, (PVOID *)&Adapter->InitializationBlockVirt, PhysicalAddress);
+    }
 
   if(Adapter->TransmitDescriptorRingVirt)
-    NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->TransmitDescriptorRingLength,
-        FALSE, (PVOID *)&Adapter->TransmitDescriptorRingVirt, &Adapter->TransmitDescriptorRingPhys);
+    {
+      PhysicalAddress.u.LowPart = (ULONG)Adapter->TransmitDescriptorRingPhys;
+      NdisMFreeSharedMemory(Adapter->MiniportAdapterHandle, Adapter->TransmitDescriptorRingLength,
+        FALSE, (PVOID *)&Adapter->TransmitDescriptorRingVirt, PhysicalAddress);
+    }
 
   if(Adapter->ReceiveDescriptorRingVirt)
-    NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->ReceiveDescriptorRingLength,
-        FALSE, (PVOID *)&Adapter->ReceiveDescriptorRingVirt, &Adapter->ReceiveDescriptorRingPhys);
+    {
+      PhysicalAddress.u.LowPart = (ULONG)Adapter->ReceiveDescriptorRingPhys;
+      NdisMFreeSharedMemory(Adapter->MiniportAdapterHandle, Adapter->ReceiveDescriptorRingLength,
+          FALSE, (PVOID *)&Adapter->ReceiveDescriptorRingVirt, PhysicalAddress);
+    }
 
   if(Adapter->TransmitBufferPtrVirt)
-    NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->TransmitBufferLength, 
-        FALSE, (PVOID *)&Adapter->TransmitBufferPtrVirt, &Adapter->TransmitBufferPtrPhys);
+    {
+      PhysicalAddress.u.LowPart = (ULONG)Adapter->TransmitBufferPtrPhys;
+      NdisMFreeSharedMemory(Adapter->MiniportAdapterHandle, Adapter->TransmitBufferLength, 
+          FALSE, (PVOID *)&Adapter->TransmitBufferPtrVirt, PhysicalAddress);
+    }
 
   if(Adapter->ReceiveBufferPtrVirt)
-    NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->ReceiveBufferLength, 
-        FALSE, (PVOID *)&Adapter->ReceiveBufferPtrVirt, &Adapter->ReceiveBufferPtrPhys);
+    {
+      PhysicalAddress.u.LowPart = (ULONG)Adapter->ReceiveBufferPtrPhys;
+      NdisMFreeSharedMemory(Adapter->MiniportAdapterHandle, Adapter->ReceiveBufferLength, 
+          FALSE, (PVOID *)&Adapter->ReceiveBufferPtrVirt, PhysicalAddress);
+    }
 }
 
 
@@ -422,100 +559,68 @@ MiInitChip(
  *     Adapter: pointer to the miniport's adapter struct
  * NOTES:
  *     - should be coded to detect failure and return an error
+ *     - the vmware virtual lance chip doesn't support 32-bit i/o so don't do that.
  */
 {
-  ULONG Data = 0;
+  USHORT Data = 0;
 
   PCNET_DbgPrint(("Called\n"));
 
-  /* stop the chip */
-#if USE_IMMEDIATE_PORT_IO
-  NdisImmediateWritePortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RAP, CSR0);
-  NdisImmediateWritePortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RDP, CSR0_STOP);
-#else
-  NdisRawWritePortUlong(Adapter->PortOffset + RAP, CSR0);
-  NdisRawWritePortUlong(Adapter->PortOffset + RDP, CSR0_STOP);
-#endif
+  /*
+   * first reset the chip - 32-bit reset followed by 16-bit reset.  if it's in 32-bit mode, it'll reset
+   * twice.  if it's in 16-bit mode, the first read will be nonsense and the second will be a reset.  the
+   * card is reset by reading from the reset register.  on reset it's in 16-bit i/o mode.
+   */
+  NdisRawReadPortUshort(Adapter->PortOffset + RESET32, &Data);
+  NdisRawReadPortUshort(Adapter->PortOffset + RESET16, &Data);
 
-  NdisStallExecution(5);
+  /* stop the chip */
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
+  NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_STOP);
+
+  /* pause for 1ms so the chip will have time to reset */
+  NdisStallExecution(1);
 
   PCNET_DbgPrint(("chip stopped\n"));
 
-  /* set the software style to 32 bits */
-#if USE_IMMEDIATE_PORT_IO
-  NdisImmediateWritePortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RAP, CSR58);
-  NdisImmediateReadPortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RDP, &Data);
-#else
-  NdisRawWritePortUlong(Adapter->PortOffset + RAP, CSR58);
-  NdisRawReadPortUlong(Adapter->PortOffset + RDP, &Data);
-#endif
+  /* set the software style to 2 (32 bits) */
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR58);
+  NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
 
-  Data |= CSR58_SSIZE32;
   Data |= SW_STYLE_2;
 
-#if USE_IMMEDIATE_PORT_IO
-  NdisImmediateWritePortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RDP, Data);
-#else
-  NdisRawWritePortUlong(Adapter->PortOffset + RDP, Data);
-#endif
-
-  PCNET_DbgPrint(("software style set to 2 / 32-bit\n"));
+  NdisRawWritePortUshort(Adapter->PortOffset + RDP, Data);
 
   /* set up csr4: auto transmit pad, disable polling, disable transmit interrupt, dmaplus */
-#if USE_IMMEDIATE_PORT_IO
-  NdisImmediateWritePortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RAP, CSR4);
-  NdisImmediateReadPortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RDP, &Data);
-#else
-  NdisRawWritePortUlong(Adapter->PortOffset + RAP, CSR4);
-  NdisRawReadPortUlong(Adapter->PortOffset + RDP, &Data);
-#endif
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR4);
+  NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
 
-  Data |= CSR4_APAD_XMT | CSR4_DPOLL | CSR4_TXSTRTM | CSR4_DMAPLUS;
-#if USE_IMMEDIATE_PORT_IO
-  NdisImmediateWritePortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RDP, Data);
-#else
-  NdisRawWritePortUlong(Adapter->PortOffset + RDP, Data);
-#endif
+  Data |= CSR4_APAD_XMT | /* CSR4_DPOLL |*/ CSR4_TXSTRTM | CSR4_DMAPLUS;
+  NdisRawWritePortUshort(Adapter->PortOffset + RDP, Data);
 
   /* set up bcr18: burst read/write enable */
-#if USE_IMMEDIATE_PORT_IO
-  NdisImmediateWritePortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RAP, BCR18);
-  NdisImmediateReadPortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + BDP, &Data);
-#else
-  NdisRawWritePortUlong(Adapter->PortOffset + RAP, BCR18);
-  NdisRawReadPortUlong(Adapter->PortOffset + BDP, &Data);
-#endif
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, BCR18);
+  NdisRawReadPortUshort(Adapter->PortOffset + BDP, &Data);
 
   Data |= BCR18_BREADE | BCR18_BWRITE ;
-#if USE_IMMEDIATE_PORT_IO
-  NdisImmediateWritePortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + BDP, Data);
-#else
-  NdisRawWritePortUlong(Adapter->PortOffset + BDP, Data);
-#endif
+  NdisRawWritePortUshort(Adapter->PortOffset + BDP, Data);
 
   /* set up csr1 and csr2 with init block */
-#if USE_IMMEDIATE_PORT_IO
-  NdisImmediateWritePortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RAP, CSR1);
-  NdisImmediateWritePortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RDP, 
-                              NdisGetPhysicalAddressLow(Adapter->InitializationBlockPhys) & 0xffff);
-  NdisImmediateWritePortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RDP,
-                              (NdisGetPhysicalAddressLow(Adapter->InitializationBlockPhys) >> 16) & 0xffff);
-#else
-  NdisRawWritePortUlong(Adapter->PortOffset + RAP, CSR1);
-  NdisRawWritePortUlong(Adapter->PortOffset + RDP, NdisGetPhysicalAddressLow(Adapter->InitializationBlockPhys) & 0xffff);
-  NdisRawWritePortUlong(Adapter->PortOffset + RDP, (NdisGetPhysicalAddressLow(Adapter->InitializationBlockPhys) >> 16) & 0xffff);
-#endif
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR1);
+  NdisRawWritePortUshort(Adapter->PortOffset + RDP, (USHORT)((ULONG)Adapter->InitializationBlockPhys & 0xffff));
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR2);
+  NdisRawWritePortUshort(Adapter->PortOffset + RDP, (USHORT)((ULONG)Adapter->InitializationBlockPhys >> 16) & 0xffff);
 
   PCNET_DbgPrint(("programmed with init block\n"));
 
+  /* Set mode to 0 */
+  Data = 0;
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR15);
+  NdisRawWritePortUshort(Adapter->PortOffset + RDP, Data);
+
   /* load init block and start the card */
-#if USE_IMMEDIATE_PORT_IO
-  NdisImmediateWritePortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RAP, CSR0);
-  NdisImmediateWritePortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RDP, CSR0_STRT|CSR0_INIT|CSR0_IENA);
-#else
-  NdisRawWritePortUlong(Adapter->PortOffset + RAP, CSR0);
-  NdisRawWritePortUlong(Adapter->PortOffset + RDP, CSR0_STRT|CSR0_INIT|CSR0_IENA);
-#endif
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
+  NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_STRT|CSR0_INIT|CSR0_IENA);
 
   PCNET_DbgPrint(("card started\n"));
 
@@ -540,31 +645,49 @@ MiTestCard(
 {
   int i = 0;
   UCHAR address[6];
+  USHORT Data = 0;
 
-#if !(USE_IMMEDIATE_PORT_IO)
   /* see if we can read/write now */
-    {
-      ULONG Data = 0;
-      NdisRawWritePortUlong(Adapter->PortOffset + RAP, CSR0);
-      NdisRawReadPortUlong(Adapter->PortOffset + RDP, &Data);
-
-      PCNET_DbgPrint(("Port 0x%x RAP 0x%x CSR0 0x%x RDP 0x%x, Interupt status register is 0x%x\n", 
-          Adapter->PortOffset, RAP, CSR0, RDP, Data));
-    }
-#endif
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
+  NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
+  PCNET_DbgPrint(("Port 0x%x RAP 0x%x CSR0 0x%x RDP 0x%x, Interupt status register is 0x%x\n", Adapter->PortOffset, RAP, CSR0, RDP, Data));
 
   /* read the BIA */
-  for(i=0; i < 6; i++)
-    {
-#if USE_IMMEDIATE_PORT_IO
-      NdisImmediateReadPortUchar(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + i, &address[i]);
-#else
+  for(i = 0; i < 6; i++)
       NdisRawReadPortUchar(Adapter->PortOffset + i, &address[i]);
-#endif
-    }
 
-  PCNET_DbgPrint(("burned-in address: %x:%x:%x:%x:%x:%x\n", address[0], address[1], address[2], address[3],
-                  address[4], address[5]));
+  PCNET_DbgPrint(("burned-in address: %x:%x:%x:%x:%x:%x\n", address[0], address[1], address[2], address[3], address[4], address[5]));
+  /* Read status flags from CSR0 */
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
+  NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
+  PCNET_DbgPrint(("CSR0: 0x%x\n", Data));
+
+  /* Read status flags from CSR3 */
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR3);
+  NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
+
+  PCNET_DbgPrint(("CSR3: 0x%x\n", Data));
+  /* Read status flags from CSR4 */
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR4);
+  NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
+  PCNET_DbgPrint(("CSR4: 0x%x\n", Data));
+
+  /* Read status flags from CSR5 */
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR5);
+  NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
+  PCNET_DbgPrint(("CSR5: 0x%x\n", Data));
+
+  /* Read status flags from CSR6 */
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR6);
+  NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
+  PCNET_DbgPrint(("CSR6: 0x%x\n", Data));
+
+  /* finally, fire a test interrupt to test the ISR */
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR4);
+  NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
+  Data |= CSR4_UINTCMD;
+  NdisRawWritePortUshort(Adapter->PortOffset + RDP, Data);
+  PCNET_DbgPrint(("just wrote 0x%x to CSR4 for test interrupt\n", Data));
 
   return TRUE;
 }
@@ -762,37 +885,39 @@ MiniportISR(
  *       will be called
  */
 {
-  ULONG Data;
+  USHORT Data;
+  USHORT Rap;
   PADAPTER Adapter = (PADAPTER)MiniportAdapterContext;
 
   PCNET_DbgPrint(("Called\n"));
 
-  /* XXX change this once MiniportHandleInterrupt does something */
-  *QueueMiniportHandleInterrupt = FALSE;
+  /* save the old RAP value */
+  NdisRawReadPortUshort(Adapter->PortOffset + RAP, &Rap);
 
   /* is this ours? */
-#if USE_IMMEDIATE_PORT_IO
-  NdisImmediateWritePortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RAP, CSR0);
-  NdisImmediateReadPortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RDP, &Data);
-#else
-  NdisRawWritePortUlong(Adapter->PortOffset + RAP, CSR0);
-  NdisRawReadPortUlong(Adapter->PortOffset + RDP, &Data);
-#endif
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
+  NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
 
   if(!(Data & CSR0_INTR))
     {
+      PCNET_DbgPrint(("not our interrupt.\n"));
       *InterruptRecognized = FALSE;
-      return;
+      *QueueMiniportHandleInterrupt = FALSE;
+    }
+  else
+    {
+      PCNET_DbgPrint(("detected our interrupt\n"));
+
+      /* disable interrupts */
+      NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
+      NdisRawWritePortUshort(Adapter->PortOffset + RDP, 0);
+
+      *InterruptRecognized = TRUE;
+      *QueueMiniportHandleInterrupt = TRUE;
     }
 
-  /* clear the interrupt by writing back what we read */
-#if USE_IMMEDIATE_PORT_IO
-  NdisImmediateWritePortUlong(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress + RDP, Data);
-#else
-  NdisRawWritePortUlong(Adapter->PortOffset + RDP, Data);
-#endif
-
-  *InterruptRecognized = TRUE;
+  /* restore the rap */
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, Rap);
 }
 
 

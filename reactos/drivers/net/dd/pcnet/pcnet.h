@@ -25,6 +25,8 @@
  * NOTES:
  *     - this is hard-coded to NDIS4
  *     - this assumes a little-endian machine
+ *     - this assumes a 32-bit machine, where sizeof(PVOID) = 32 and sizeof(USHORT) = 16
+ *     - this assumes 32-bit physical addresses
  */
 
 #ifndef _PCNET_H_
@@ -41,31 +43,32 @@ typedef struct _ADAPTER
   ULONG IoBaseAddress;
   PVOID PortOffset;
   NDIS_MINIPORT_INTERRUPT InterruptObject;
+  ULONG CurrentReceiveDescriptorIndex;
 
   /* initialization block */
   ULONG InitializationBlockLength;
   PINITIALIZATION_BLOCK InitializationBlockVirt;
-  NDIS_PHYSICAL_ADDRESS InitializationBlockPhys;
+  PINITIALIZATION_BLOCK  InitializationBlockPhys;
 
   /* transmit descriptor ring */
   ULONG TransmitDescriptorRingLength;
   PTRANSMIT_DESCRIPTOR TransmitDescriptorRingVirt;
-  NDIS_PHYSICAL_ADDRESS TransmitDescriptorRingPhys;
+  PTRANSMIT_DESCRIPTOR  TransmitDescriptorRingPhys;
 
   /* transmit buffers */
   ULONG TransmitBufferLength;
   PCHAR TransmitBufferPtrVirt;
-  NDIS_PHYSICAL_ADDRESS TransmitBufferPtrPhys;
+  PCHAR TransmitBufferPtrPhys;
 
   /* receive descriptor ring */
   ULONG ReceiveDescriptorRingLength;
   PRECEIVE_DESCRIPTOR ReceiveDescriptorRingVirt;
-  NDIS_PHYSICAL_ADDRESS ReceiveDescriptorRingPhys;
+  PRECEIVE_DESCRIPTOR ReceiveDescriptorRingPhys;
 
   /* receive buffers */
   ULONG ReceiveBufferLength;
   PCHAR ReceiveBufferPtrVirt;
-  NDIS_PHYSICAL_ADDRESS ReceiveBufferPtrPhys;
+  PCHAR ReceiveBufferPtrPhys;
 
 } ADAPTER, *PADAPTER;
 

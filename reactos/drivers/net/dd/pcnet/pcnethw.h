@@ -27,13 +27,25 @@
  *       PCNet II chip documentation (Am79C790A, pub# 19436).
  */
 
+/* when in 32-bit mode, most registers require the top 16 bits be 0. */
+#define MASK16(__x__) ((__x__) & 0x0000ffff)
+
 #define NUMBER_OF_PORTS 0x20    /* number of i/o ports the board requires */
 
 /* offsets of important registers */
-#define RDP   0x10
-#define RAP   0x12
-#define RESET 0x14
-#define BDP   0x16
+#define RDP     0x10    /* same address in 16-bit and 32-bit IO mode */
+
+#define RAP16   0x12
+#define RESET16 0x14
+#define BDP16   0x16
+
+#define RAP32   0x14
+#define RESET32 0x18
+#define BDP32   0x1c
+
+/* NOTE:  vmware doesn't support 32-bit i/o programming so we use 16-bit */
+#define RAP RAP16
+#define BDP BDP16
 
 /* pci id of the device */
 #define PCI_ID 0x20001022
@@ -343,7 +355,7 @@ typedef struct _RECEIVE_DESCRIPTOR
 {
   ULONG  RBADR;         /* receive buffer address */
   USHORT BCNT;          /* two's compliment buffer byte count - NOTE: always OR with 0xf000 */
-  UCHAR  FLAGS;         /* flags - always and with 0xfff0 */
+  USHORT FLAGS;         /* flags - always and with 0xfff0 */
   USHORT MCNT;          /* message byte count ; always AND with 0x0fff */
   UCHAR  RPC;           /* runt packet count */
   UCHAR  RCC;           /* receive collision count */
