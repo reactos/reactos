@@ -26,10 +26,6 @@
  //
 
 
-#define COLOR_COMPRESSED	RGB(0,0,255)
-#define COLOR_SELECTION 	RGB(0,0,128)
-
-
 #define IDW_TREE_LEFT		3
 #define IDW_TREE_RIGHT		6
 #define IDW_HEADER_LEFT		2
@@ -79,6 +75,8 @@ struct Pane : public SubclassedWindow
 	int 	_visible_cols;
 	Entry*	_root;
 	Entry*	_cur;
+
+	COLORREF _clrCompressed;
 
 	void	init();
 	void	set_header();

@@ -189,6 +189,17 @@ void Pane::init()
 
 	SetWindowFont(_hwnd, _out_wrkr._hfont, FALSE);
 
+	 // read the color for compressed files from registry
+	HKEY hkeyExplorer = 0;
+	DWORD len = sizeof(_clrCompressed);
+
+	if (RegOpenKey(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"), &hkeyExplorer) ||
+		RegQueryValueEx(hkeyExplorer, _T("AltColor"), 0, NULL, (LPBYTE)&_clrCompressed, &len) || len!=sizeof(_clrCompressed))
+		_clrCompressed = RGB(0,0,255);
+
+	if (hkeyExplorer)
+		RegCloseKey(hkeyExplorer);
+
 	 // calculate column widths
 	_out_wrkr.init_output(_hwnd);
 	calc_widths(true);
@@ -447,15 +458,15 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 		focusRect.left = img_pos -2;
 
 		if (attrs & FILE_ATTRIBUTE_COMPRESSED)
-			textcolor = COLOR_COMPRESSED;
+			textcolor = _clrCompressed;
 		else
 			textcolor = RGB(0,0,0);
 
 		if (dis->itemState & ODS_FOCUS) {
-			textcolor = RGB(255,255,255);
-			bkcolor = COLOR_SELECTION;
+			textcolor = GetSysColor(COLOR_HIGHLIGHTTEXT);
+			bkcolor = GetSysColor(COLOR_HIGHLIGHT);
 		} else {
-			bkcolor = RGB(255,255,255);
+			bkcolor = GetSysColor(COLOR_WINDOW);
 		}
 
 		HBRUSH hbrush = CreateSolidBrush(bkcolor);
