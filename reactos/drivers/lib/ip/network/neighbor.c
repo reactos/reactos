@@ -407,10 +407,19 @@ PNEIGHBOR_CACHE_ENTRY NBFindOrCreateNeighbor(
   NCE = NBLocateNeighbor(Address);
   if (NCE == NULL)
     {
-	NCE = NBAddNeighbor(Interface, Address, NULL, 
-			    Interface->AddressLength, NUD_INCOMPLETE);
-	NCE->EventTimer = 1;
-	NCE->EventCount = 0;
+        TI_DbgPrint(MID_TRACE,("BCAST: %s\n", A2S(&Interface->Broadcast)));
+        if( AddrIsEqual(Address, &Interface->Broadcast) ) {
+            TI_DbgPrint(MID_TRACE,("Packet targeted at broadcast addr\n"));
+            NCE = NBAddNeighbor(Interface, Address, NULL,
+                                Interface->AddressLength, NUD_CONNECTED);
+            NCE->EventTimer = 0;
+            NCE->EventCount = 0;
+        } else {
+            NCE = NBAddNeighbor(Interface, Address, NULL, 
+                                Interface->AddressLength, NUD_INCOMPLETE);
+            NCE->EventTimer = 1;
+            NCE->EventCount = 0;
+        }
     }
 
   return NCE;

@@ -907,6 +907,14 @@ VOID BindAdapter(
     if(NT_SUCCESS(Status)) 
 	Status = ReadIPAddressFromRegistry( RegHandle, L"SubnetMask",
 					    &IF->Netmask );
+
+    IF->Broadcast.Type = IP_ADDRESS_V4;
+    IF->Broadcast.Address.IPv4Address = 
+        IF->Unicast.Address.IPv4Address | 
+        ~IF->Netmask.Address.IPv4Address;
+
+    TI_DbgPrint(MID_TRACE,("BCAST(IF) %s\n", A2S(&IF->Broadcast)));
+
     if(NT_SUCCESS(Status)) {
 	Status = ReadStringFromRegistry( RegHandle, L"DeviceDesc",
 					 &IF->Name );

@@ -14,7 +14,6 @@
 BOOLEAN UDPInitialized = FALSE;
 PORT_SET UDPPorts;
 
-
 NTSTATUS AddUDPHeaderIPv4(
     PIP_ADDRESS RemoteAddress,
     USHORT RemotePort,
@@ -408,7 +407,7 @@ NTSTATUS UDPStartup(
   RtlZeroMemory(&UDPStats, sizeof(UDP_STATISTICS));
 #endif
 
-  PortsStartup( &UDPPorts, UDP_STARTING_PORT, UDP_DYNAMIC_PORTS );
+  PortsStartup( &UDPPorts, 1, 0xfffe );
 
   /* Register this protocol with IP layer */
   IPRegisterProtocol(IPPROTO_UDP, UDPReceive);
@@ -440,9 +439,11 @@ NTSTATUS UDPShutdown(
 
 UINT UDPAllocatePort( UINT HintPort ) {
     if( HintPort ) {
-	if( AllocatePort( &UDPPorts, HintPort ) ) return HintPort; 
-	else return (UINT)-1;
-    } else return AllocateAnyPort( &UDPPorts );
+        if( AllocatePort( &UDPPorts, HintPort ) ) return HintPort;
+        else return (UINT)-1;
+    } else return AllocatePortFromRange
+               ( &UDPPorts, UDP_STARTING_PORT, 
+                 UDP_STARTING_PORT + UDP_DYNAMIC_PORTS );
 }
 
 VOID UDPFreePort( UINT Port ) {
