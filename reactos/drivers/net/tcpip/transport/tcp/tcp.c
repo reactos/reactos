@@ -15,7 +15,7 @@ static BOOLEAN TCPInitialized = FALSE;
 static NPAGED_LOOKASIDE_LIST TCPSegmentList;
 LIST_ENTRY SleepingThreadsList;
 FAST_MUTEX SleepingThreadsLock;
-FAST_MUTEX TCPLock;
+RECURSIVE_MUTEX TCPLock;
 
 VOID TCPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
 /*
@@ -31,13 +31,13 @@ VOID TCPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
 			   IPPacket->TotalSize,
 			   IPPacket->HeaderSize));
 
-    ExAcquireFastMutex( &TCPLock );
+    RecursiveMutexEnter( &TCPLock, TRUE );
 
     OskitTCPReceiveDatagram( IPPacket->Header, 
 			     IPPacket->TotalSize, 
 			     IPPacket->HeaderSize );
 
-    ExReleaseFastMutex( &TCPLock );
+    RecursiveMutexLeave( &TCPLock );
 }
 
 /* event.c */
@@ -83,7 +83,7 @@ NTSTATUS TCPStartup(VOID)
  *     Status of operation
  */
 {
-    ExInitializeFastMutex( &TCPLock );
+    RecursiveMutexInit( &TCPLock );
     ExInitializeFastMutex( &SleepingThreadsLock );
     InitializeListHead( &SleepingThreadsList );    
 
@@ -186,7 +186,6 @@ NTSTATUS TCPConnect
 ( PTDI_REQUEST Request,
   PTDI_CONNECTION_INFORMATION ConnInfo,
   PTDI_CONNECTION_INFORMATION ReturnInfo ) {
-    KIRQL OldIrql;
     NTSTATUS Status;
     SOCKADDR_IN AddressToConnect = { 0 }, AddressToBind = { 0 };
     PCONNECTION_ENDPOINT Connection = Request->Handle.ConnectionContext;
@@ -199,8 +198,7 @@ NTSTATUS TCPConnect
     Bucket = ExAllocatePool( NonPagedPool, sizeof(*Bucket) );
     if( !Bucket ) return STATUS_NO_MEMORY;
 
-    ExAcquireFastMutex( &TCPLock );
-    KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+    RecursiveMutexEnter( &TCPLock, TRUE );
 
     /* Freed in TCPSocketState */
     Bucket->Request = *Request;
@@ -217,7 +215,6 @@ NTSTATUS TCPConnect
 
     if (!NT_SUCCESS(Status)) {
 	TI_DbgPrint(MID_TRACE, ("Could not AddrBuildAddress in TCPConnect\n"));
-	KeReleaseSpinLock(&Connection->Lock, OldIrql);
 	return Status;
     }
     
@@ -239,8 +236,7 @@ NTSTATUS TCPConnect
 			     &AddressToConnect, 
 			     sizeof(AddressToConnect));
 
-    KeReleaseSpinLock(&Connection->Lock, OldIrql);
-    ExReleaseFastMutex( &TCPLock );
+    RecursiveMutexLeave( &TCPLock );
     
     if( Status == OSK_EINPROGRESS || Status == STATUS_SUCCESS ) 
 	return STATUS_PENDING;
@@ -250,20 +246,17 @@ NTSTATUS TCPConnect
 
 NTSTATUS TCPClose
 ( PTDI_REQUEST Request ) {
-    KIRQL OldIrql;
     PCONNECTION_ENDPOINT Connection;
     NTSTATUS Status;
     Connection = Request->Handle.ConnectionContext;
     
     TI_DbgPrint(MID_TRACE,("TCPClose started\n"));
 
-    ExAcquireFastMutex( &TCPLock );
-    KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+    RecursiveMutexEnter( &TCPLock, TRUE );
 
     Status = TCPTranslateError( OskitTCPClose( Connection->SocketContext ) );
 
-    KeReleaseSpinLock(&Connection->Lock, OldIrql);
-    ExReleaseFastMutex( &TCPLock );
+    RecursiveMutexLeave( &TCPLock );
     
     TI_DbgPrint(MID_TRACE,("TCPClose finished %x\n", Status));
 
@@ -275,18 +268,15 @@ NTSTATUS TCPListen
   UINT Backlog ) {
     PCONNECTION_ENDPOINT Connection;
     NTSTATUS Status;
-    KIRQL OldIrql;
 
     Connection = Request->Handle.ConnectionContext;
 
-    ExAcquireFastMutex( &TCPLock );
-    KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+    RecursiveMutexEnter( &TCPLock, TRUE );
 
     Status =  TCPTranslateError( OskitTCPListen( Connection->SocketContext,
 						 Backlog ) );
 
-    KeReleaseSpinLock(&Connection->Lock, OldIrql);
-    ExReleaseFastMutex( &TCPLock );
+    RecursiveMutexLeave( &TCPLock );
 
     return Status;
 }
@@ -303,7 +293,6 @@ NTSTATUS TCPReceiveData
   ULONG ReceiveLength,
   ULONG ReceiveFlags,
   PULONG BytesReceived ) {
-    KIRQL OldIrql;
     PCONNECTION_ENDPOINT Connection;
     PCHAR DataBuffer;
     UINT DataLen, Received = 0;
@@ -314,8 +303,7 @@ NTSTATUS TCPReceiveData
 
     Connection = Request->Handle.ConnectionContext;
 
-    ExAcquireFastMutex( &TCPLock );
-    KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+    RecursiveMutexEnter( &TCPLock, TRUE );
 
     NdisQueryBuffer( Buffer, &DataBuffer, &DataLen );
 
@@ -351,8 +339,7 @@ NTSTATUS TCPReceiveData
 	*BytesReceived = Received;
     }
 
-    KeReleaseSpinLock(&Connection->Lock, OldIrql);
-    ExReleaseFastMutex( &TCPLock );
+    RecursiveMutexLeave( &TCPLock );
 
     TI_DbgPrint(MID_TRACE,("Status %x\n", Status));
 
@@ -365,7 +352,6 @@ NTSTATUS TCPSendData
   ULONG DataSize,
   ULONG Flags,
   PULONG DataUsed ) {
-    KIRQL OldIrql;
     NTSTATUS Status;
     PCONNECTION_ENDPOINT Connection;
     PCHAR BufferData;
@@ -373,8 +359,7 @@ NTSTATUS TCPSendData
 
     Connection = Request->Handle.ConnectionContext;
 
-    ExAcquireFastMutex( &TCPLock );
-    KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+    RecursiveMutexEnter( &TCPLock, TRUE );
 
     NdisQueryBuffer( Buffer, &BufferData, &PacketSize );
     
@@ -387,8 +372,7 @@ NTSTATUS TCPSendData
     Status = OskitTCPSend( Connection->SocketContext, 
 			   BufferData, PacketSize, (PUINT)DataUsed, 0 );
 
-    KeReleaseSpinLock(&Connection->Lock, OldIrql);
-    ExReleaseFastMutex( &TCPLock );
+    RecursiveMutexLeave( &TCPLock );
 
     return Status;
 }
@@ -396,9 +380,9 @@ NTSTATUS TCPSendData
 VOID TCPTimeout(VOID) { 
     static int Times = 0;
     if( (Times++ % 5) == 0 ) {
-	ExAcquireFastMutex( &TCPLock );
+	RecursiveMutexEnter( &TCPLock, TRUE );
 	TimerOskitTCP();
-	ExReleaseFastMutex( &TCPLock );
+	RecursiveMutexLeave( &TCPLock );
     }
 }
 

@@ -1,6 +1,7 @@
 #include <limits.h>
 #include <ddk/ntddk.h>
 #include <rosrtl/string.h>
+#include <rosrtl/recmutex.h>
 #include <roscfg.h>
 #include <tcpip.h>
 #include <loopback.h>
