@@ -149,7 +149,6 @@ subsys\system\explorer\notifyhook\notifyhook.dll 1
 subsys\system\format\format.exe         1
 subsys\system\notepad\notepad.exe       1
 subsys\system\regedit\regedit.exe       4
-subsys\system\regedt32\regedt32.exe     1
 subsys\system\regsvr32\regsvr32.exe     1
 subsys\system\reporterror\reporterror.exe 1
 subsys\system\rundll32\rundll32.exe     1
