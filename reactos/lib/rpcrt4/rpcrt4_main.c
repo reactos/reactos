@@ -475,7 +475,7 @@ unsigned short WINAPI UuidHash(UUID *uuid, RPC_STATUS *Status)
 {
   BYTE *data = (BYTE*)uuid;
   short c0 = 0, c1 = 0, x, y;
-  int i;
+  unsigned int i;
 
   if (!uuid) data = (BYTE*)(uuid = &uuid_nil);
 
